@@ -35,6 +35,21 @@ typedef enum {
     BW_IR_SHF_R,        /* SHF.R.U32.HI Rd, RZ, imm, Ra */
     BW_IR_LOP3_AND,     /* LOP3.LUT Rd, Ra, imm, RZ, 0xc0, !PT (Bitwise AND) */
     BW_IR_LDG_E_U16,    /* LDG.E.U16 Rd, desc[URd][Ra.64] */
+    BW_IR_FADD,         /* FADD Rd, Ra, Rb */
+    BW_IR_FSUB,         /* FSUB Rd, Ra, Rb (FADD Rd, Ra, -Rb) */
+    BW_IR_FMUL,         /* FMUL Rd, Ra, Rb */
+    BW_IR_FFMA,         /* FFMA Rd, Ra, Rb, Rc (Rd = Ra * Rb + Rc) */
+    BW_IR_FSETP,        /* FSETP.cond.AND P0, PT, Ra, Rb, PT */
+    BW_IR_FSEL,         /* FSEL Rd, Ra, Rb, P0 */
+    BW_IR_FMNMX_MIN,    /* FMNMX Rd, Ra, Rb, PT (minimum) */
+    BW_IR_FMNMX_MAX,    /* FMNMX Rd, Ra, Rb, !PT (maximum) */
+    BW_IR_I2FP,         /* I2FP.F32.S32 Rd, Ra */
+    BW_IR_F2I,          /* F2I.TRUNC.NTZ Rd, Ra */
+    BW_IR_MUFU_RCP,     /* MUFU.RCP Rd, Ra */
+    BW_IR_MUFU_RSQ,     /* MUFU.RSQ Rd, Ra */
+    BW_IR_SHFL_DOWN,    /* SHFL.DOWN PT, Rd, Ra, offset, 0x1f */
+    BW_IR_LDS,          /* LDS Rd, [Ra] */
+    BW_IR_STS,          /* STS [Ra], Rb */
     BW_IR_EXIT,         /* EXIT */
     BW_IR_BRA           /* BRA target */
 } BlackwellIROpcode;
