@@ -91,33 +91,62 @@ int omega_synthesize_realization(const RealizationSynthesisTask *task,
      * If target machine has issue_width < 4 (e.g. QEMU generic):
      * Synthesize minimal register-pressure sequential schedule.
      */
+    /* Decode the existing sequential realization from the program */
+    DecodedInsn insns[16];
+    size_t insn_count = 0;
+    size_t in_pos = 0;
+    while (in_pos < prog->realization.code_len && insn_count < 16) {
+        uint32_t insn_word = 0;
+        insn_word |= prog->realization.code_bytes[in_pos++];
+        insn_word |= prog->realization.code_bytes[in_pos++] << 8;
+        insn_word |= prog->realization.code_bytes[in_pos++] << 16;
+        insn_word |= prog->realization.code_bytes[in_pos++] << 24;
+        aarch64_decode_instruction(insn_word, &insns[insn_count++]);
+    }
+
     if (mg->pipeline.issue_width >= 4) {
-        /* DGX Spark 4-wide dispatch schedule for canonical affine: f(x) = 3x - 2
-         * Dual-issue pre-load:
-         * 1. MOVZ X1, 3  (port 0 ALU)
-         * 2. MOVZ X2, 2  (port 1 ALU)
-         * 3. MUL X0, X0, X1 (multiplier)
-         * 4. SUB X0, X0, X2 (subtraction on pre-loaded X2 without anti-dependency)
-         * 5. RET
-         */
-        aarch64_emit_movz(code, &pos, max_len, true, REG_X1, 3, 0);
-        aarch64_emit_movz(code, &pos, max_len, true, REG_X2, 2, 0);
-        aarch64_emit_mul_reg(code, &pos, max_len, true, REG_X0, REG_X0, REG_X1);
-        aarch64_emit_sub_reg(code, &pos, max_len, true, REG_X0, REG_X0, REG_X2);
+        /* Dual-issue pre-load: hoist independent MOVZ instructions */
+        int next_free_reg = REG_X1;
+        
+        // Pass 1: Emit all MOVZ instructions, renaming target registers
+        for (size_t i = 0; i < insn_count; ++i) {
+            if (insns[i].op == DECODED_MOVZ) {
+                insns[i].rd = next_free_reg++;
+                aarch64_emit_movz(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].imm16, 0);
+            }
+        }
+        
+        // Pass 2: Emit arithmetic instructions, using renamed registers
+        int use_reg = REG_X1;
+        for (size_t i = 0; i < insn_count; ++i) {
+            if (insns[i].op == DECODED_MUL || insns[i].op == DECODED_ADD || insns[i].op == DECODED_SUB || insns[i].op == DECODED_AND || insns[i].op == DECODED_ORR) {
+                if (insns[i].op == DECODED_MUL) aarch64_emit_mul_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, use_reg++);
+                else if (insns[i].op == DECODED_ADD) aarch64_emit_add_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, use_reg++);
+                else if (insns[i].op == DECODED_SUB) aarch64_emit_sub_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, use_reg++);
+                else if (insns[i].op == DECODED_AND) aarch64_emit_and_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, use_reg++);
+                else if (insns[i].op == DECODED_ORR) aarch64_emit_orr_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, use_reg++);
+            }
+        }
         aarch64_emit_ret(code, &pos, max_len);
     } else {
-        /* QEMU 2-wide sequential schedule:
-         * 1. MOVZ X1, 3
-         * 2. MUL X0, X0, X1
-         * 3. MOVZ X1, 2
-         * 4. SUB X0, X0, X1
-         * 5. RET
-         */
-        aarch64_emit_movz(code, &pos, max_len, true, REG_X1, 3, 0);
-        aarch64_emit_mul_reg(code, &pos, max_len, true, REG_X0, REG_X0, REG_X1);
-        aarch64_emit_movz(code, &pos, max_len, true, REG_X1, 2, 0);
-        aarch64_emit_sub_reg(code, &pos, max_len, true, REG_X0, REG_X0, REG_X1);
-        aarch64_emit_ret(code, &pos, max_len);
+        /* Copy exactly */
+        for (size_t i = 0; i < insn_count; ++i) {
+            if (insns[i].op == DECODED_MOVZ) {
+                aarch64_emit_movz(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].imm16, 0);
+            } else if (insns[i].op == DECODED_MUL) {
+                aarch64_emit_mul_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, insns[i].rm);
+            } else if (insns[i].op == DECODED_ADD) {
+                aarch64_emit_add_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, insns[i].rm);
+            } else if (insns[i].op == DECODED_SUB) {
+                aarch64_emit_sub_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, insns[i].rm);
+            } else if (insns[i].op == DECODED_AND) {
+                aarch64_emit_and_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, insns[i].rm);
+            } else if (insns[i].op == DECODED_ORR) {
+                aarch64_emit_orr_reg(code, &pos, max_len, insns[i].sf, insns[i].rd, insns[i].rn, insns[i].rm);
+            } else if (insns[i].op == DECODED_RET) {
+                aarch64_emit_ret(code, &pos, max_len);
+            }
+        }
     }
 
     result->realization.code_len = pos;

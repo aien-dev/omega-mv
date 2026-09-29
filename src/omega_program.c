@@ -1,3 +1,4 @@
+#include "omega_realize_synth.h"
 #include "omega_program.h"
 #include "omega_core.h"
 #include "aarch64_encoder.h"
@@ -225,6 +226,20 @@ int omega_program_compose(const OmegaProgram *a, const OmegaProgram *b, OmegaPro
 int omega_program_exec(const OmegaProgram *prog, uint64_t in_val, uint64_t *out_val) {
     if (!prog || !out_val || !prog->is_realized || prog->realization.code_len == 0) return -1;
     return omega_exec_native_f3(&prog->realization, in_val, 0, 0, out_val);
+}
+
+
+int omega_program_realize(OmegaProgram *prog) {
+    if (!prog) return -1;
+    if (prog->is_realized) return 0;
+
+    RealizationSynthesisResult res;
+    if (omega_synthesize_for_qemu_virt(prog, &res) == 0) {
+        prog->realization = res.realization;
+        prog->is_realized = true;
+        return 0;
+    }
+    return -1;
 }
 
 int omega_program_verify(OmegaProgram *prog, VerifyReport *report) {
