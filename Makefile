@@ -964,3 +964,6 @@ bench-mixed-algebra: $(OMA_RZ_BENCH) $(OMA_RZ_SELECT)
 		./$(OMA_RZ_BENCH) $(MA3_EVIDENCE)/ma3_bench_run2.json
 	./$(OMA_RZ_SELECT) $(MA3_EVIDENCE)/ma3_select_receipt.json \
 		$(MA3_EVIDENCE)/ma3_bench_run1.json $(MA3_EVIDENCE)/ma3_bench_run2.json
+
+# POLYGLOT program targets live in mk/polyglot.mk (owner: POLYGLOT lane F).
+-include mk/polyglot.mk
