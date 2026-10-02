@@ -1,0 +1,18 @@
+# Pending first-cut qualification. Queue behind E1, never invoke to take its slot.
+GATE=gpu_engine
+OWNER=omega_gpu_engine
+TEST_SOURCE="tests/test_omega_gpu_engine_gb10.c"
+SOURCES="src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_unwritten_trap.c src/omega_vector.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_core.c src/omega_canonical.c src/omega_validate.c src/sha256.c"
+EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
+RUN_ARGS="--chip"
+VERDICT_RE='^GPU_ENGINE: '
+PASS_LINE='^GPU_ENGINE: PASS$'
+EVIDENCE_DIR="$HOME/workspace/evidence-out/OMEGA-GPU-ENGINE"
+REFUSE_EXIT=2
+REFUSE_VERDICT_LINE="GPU_ENGINE: NOT_RUN"
+RAISE_QUIET=1
+TAKE_GPU_LOCK=1
+REFUSE_DIRTY_OMEGA=1
+REQUIRE_ALL_PASS=1
+CHILD_EXIT_PASSTHROUGH=1
+HOST_TIER_CMD='make test-gpu-engine-host test-gpu-engine-mutations PHYSICS_DIR="$PHYSICS"'
