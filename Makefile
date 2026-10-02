@@ -899,16 +899,25 @@ RX_CAPQ_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_co
 RX_CAPQ_TEST = $(OUT_DIR)/rx_capability_query_test
 RX_CAPQ_OBJ = $(OUT_DIR)/rx_capq.o
 
-$(RX_CAPQ_OBJ): src/runtime/rx_capq.c src/runtime/rx_capq.h src/runtime/rx_graph.h \
+# One Pareto rule for the tree (rx_pareto.h): the query and path evaluation
+# share it. Pure integer calculator: no heap, no authority, no system calls.
+RX_PARETO_OBJ = $(OUT_DIR)/rx_pareto.o
+$(RX_PARETO_OBJ): src/rx_pareto.c src/rx_pareto.h | $(OUT_DIR)
+	$(CC) $(CFLAGS) -c -o $@ src/rx_pareto.c
+	@if nm -u $@ | grep -vE '^\s*$$' | grep -vE '__stack_chk|\bmem(set|cpy|move)\b' ; then \
+		echo "rx_pareto.o must stand alone: it references an outside symbol"; \
+		rm -f $@; exit 1; fi
+
+$(RX_CAPQ_OBJ): src/runtime/rx_capq.c src/runtime/rx_capq.h src/runtime/rx_graph.h src/rx_pareto.h \
 	src/runtime/rx_world.h src/runtime/aien_machine_id.h | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c -o $@ src/runtime/rx_capq.c
 	@if nm -u $@ | grep -E 'aienos_cap_|rx_caproot_mint|rx_caproot_revoke' ; then \
 		echo "rx_capq.o references an authority admin operation; a query must not mint"; \
 		rm -f $@; exit 1; fi
 
-$(RX_CAPQ_TEST): $(RX_CAPQ_SRCS) $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) src/runtime/rx_caproot.h \
+$(RX_CAPQ_TEST): $(RX_CAPQ_SRCS) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) src/runtime/rx_caproot.h \
 	src/runtime/aienos_cap.h $(AIENOS_CAP_LIB) | $(OUT_DIR)
-	$(CC) $(CFLAGS) -pthread -o $@ $(RX_CAPQ_SRCS) $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) \
+	$(CC) $(CFLAGS) -pthread -o $@ $(RX_CAPQ_SRCS) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) \
 		$(AIENOS_CAP_LIB) -lm
 
 test-capability-query: $(RX_CAPQ_TEST)
@@ -932,9 +941,9 @@ $(RX_SKILLROUTE_OBJ): src/runtime/rx_skillroute.c src/runtime/rx_skillroute.h \
 		echo "rx_skillroute.o references an authority admin operation; routing must not mint"; \
 		rm -f $@; exit 1; fi
 
-$(RX_CAPGRAPH_TEST): $(RX_CAPGRAPH_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) \
+$(RX_CAPGRAPH_TEST): $(RX_CAPGRAPH_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) \
 	src/runtime/rx_caproot.h src/runtime/aienos_cap.h $(AIENOS_CAP_LIB) | $(OUT_DIR)
-	$(CC) $(CFLAGS) -pthread -o $@ $(RX_CAPGRAPH_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) \
+	$(CC) $(CFLAGS) -pthread -o $@ $(RX_CAPGRAPH_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) \
 		$(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-capability-graph: $(RX_CAPGRAPH_TEST)
@@ -949,9 +958,9 @@ RX_SRCOMPOSE_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/
 	tests/runtime/rx_skillroute_compose_test.c
 RX_SRCOMPOSE_TEST = $(OUT_DIR)/rx_skillroute_compose_test
 
-$(RX_SRCOMPOSE_TEST): $(RX_SRCOMPOSE_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) \
+$(RX_SRCOMPOSE_TEST): $(RX_SRCOMPOSE_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) \
 	src/runtime/rx_caproot.h src/runtime/aienos_cap.h $(AIENOS_CAP_LIB) | $(OUT_DIR)
-	$(CC) $(CFLAGS) -pthread -o $@ $(RX_SRCOMPOSE_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) \
+	$(CC) $(CFLAGS) -pthread -o $@ $(RX_SRCOMPOSE_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) \
 		$(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-skillroute-compose: $(RX_SRCOMPOSE_TEST)
@@ -1533,10 +1542,10 @@ RX_COMPOSE_SRCS = src/runtime/rx_compose.c src/runtime/rx_jspace.c src/runtime/r
 	src/runtime/rx_world.c src/runtime/rx_coherent.c src/runtime/rx_native_bind.c \
 	src/runtime/rx_aegis.c src/runtime/rx_cortex_record.c src/runtime/aien_machine_id.c \
 	src/sha256.c src/omega_evidence.c src/omega_core.c src/omega_canonical.c
-RX_COMPOSE_DEPS = $(RX_COMPOSE_SRCS) $(OUT_DIR)/rx_cortex.o $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) \
+RX_COMPOSE_DEPS = $(RX_COMPOSE_SRCS) $(OUT_DIR)/rx_cortex.o $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) \
 	$(RX_GRAPH_OBJ) src/runtime/rx_compose.h tests/runtime/rx_compose_fixture.h \
 	src/runtime/rx_world.h src/runtime/rx_jspace.h src/runtime/aienos_cap.h $(AIENOS_CAP_LIB)
-RX_COMPOSE_LINK = $(OUT_DIR)/rx_cortex.o $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) \
+RX_COMPOSE_LINK = $(OUT_DIR)/rx_cortex.o $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) \
 	$(AIENOS_CAP_LIB) -lm
 # Test build ($(AIEN_TEST_FLAGS), Lane 32): the composition fault points and
 # rogue-candidate hook (rx_compose.h, RXC_TEST_HOOKS) exist only in the unit

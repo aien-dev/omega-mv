@@ -49,18 +49,18 @@ fabric-purity: $(FAB_DIR)/fabric.o $(FAB_DIR)/fab_hmac.o $(FAB_DIR)/fab_loopback
 	@echo "fabric-purity: fabric.o, fab_hmac.o, fab_loopback.o and fab_dispatch.o reference no forbidden symbol"
 
 test-fabric: fabric-purity
-	@$(MAKE) --no-print-directory $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB)
+	@$(MAKE) --no-print-directory $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB)
 	$(CC) $(CFLAGS) $(FAB_CFLAGS) -pthread -o $(FAB_DIR)/fabric_test tests/fabric/fabric_test.c \
-		$(FAB_SRCS) $(FAB_LINK_SRCS) $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
+		$(FAB_SRCS) $(FAB_LINK_SRCS) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
 	$(CC) $(CFLAGS) $(FAB_CFLAGS) $(FAB_ASAN) -pthread -o $(FAB_DIR)/fabric_test_asan \
-		tests/fabric/fabric_test.c $(FAB_SRCS) $(FAB_LINK_SRCS) $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) \
+		tests/fabric/fabric_test.c $(FAB_SRCS) $(FAB_LINK_SRCS) $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) \
 		$(AIENOS_CAP_LIB) -lm
 	$(abspath $(FAB_DIR)/fabric_test)
 	$(abspath $(FAB_DIR)/fabric_test_asan) > $(FAB_DIR)/asan.out
 	@grep -q '^F5_0_FABRIC_LOOPBACK_PASS$$' $(FAB_DIR)/asan.out && echo "test-fabric: ASan/UBSan run PASS"
 
 test-fabric-living: fabric-purity
-	@$(MAKE) --no-print-directory $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) $(RX_SKILLROUTE_OBJ) $(OUT_DIR)/rx_cortex.o $(AIENOS_CAP_LIB)
+	@$(MAKE) --no-print-directory $(RX_CAPQ_OBJ) $(RX_PARETO_OBJ) $(RX_GRAPH_OBJ) $(RX_SKILLROUTE_OBJ) $(OUT_DIR)/rx_cortex.o $(AIENOS_CAP_LIB)
 	$(CC) $(CFLAGS) $(FAB_CFLAGS) -Itests/runtime -Itests/fabric -pthread -o $(FAB_DIR)/fabric_living_test \
 		tests/fabric/fabric_living_test.c $(FAB_LIVING_SRCS) $(RX_COMPOSE_SRCS) $(RX_COMPOSE_LINK)
 	$(CC) $(CFLAGS) $(FAB_CFLAGS) $(FAB_ASAN) -Itests/runtime -Itests/fabric -pthread \

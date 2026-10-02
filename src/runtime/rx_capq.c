@@ -8,6 +8,7 @@
  */
 #include "rx_capq.h"
 
+#include "rx_pareto.h"
 #include "sha256.h"
 
 #include <stdlib.h>
@@ -446,44 +447,23 @@ uint64_t cq_dim_value(const CqCandidate *c, uint32_t dim) {
 }
 
 typedef struct {
-    const CqCandidate *c;
     const uint8_t *dims;
     uint32_t n_dims;
 } RankCtx;
 
-/* Strict order: the named dimensions, then the ids. */
-static int cmp_full(const CqCandidate *a, const CqCandidate *b, const uint8_t *dims, uint32_t nd) {
-    for (uint32_t i = 0; i < nd; i++) {
-        uint64_t x = cq_dim_value(a, dims[i]), y = cq_dim_value(b, dims[i]);
-        if (x != y) return x < y ? -1 : 1;
-    }
+static uint64_t rank_val(const void *items, uint32_t i, uint32_t dim, void *ctx) {
+    (void)ctx;
+    return cq_dim_value(&((const CqCandidate *)items)[i], dim);
+}
+
+static int rank_tie(const void *items, uint32_t ia, uint32_t ib, void *ctx) {
+    (void)ctx;
+    const CqCandidate *a = &((const CqCandidate *)items)[ia], *b = &((const CqCandidate *)items)[ib];
     uint32_t ka[4] = { a->capability_id, a->realization_id, a->machine_id, a->skill_id };
     uint32_t kb[4] = { b->capability_id, b->realization_id, b->machine_id, b->skill_id };
     for (int i = 0; i < 4; i++)
         if (ka[i] != kb[i]) return ka[i] < kb[i] ? -1 : 1;
     return 0;
-}
-
-static __thread RankCtx t_sort;   /* qsort has no context argument */
-
-static int cmp_idx(const void *a, const void *b) {
-    const RankCtx *r = &t_sort;
-    return cmp_full(&r->c[*(const uint32_t *)a], &r->c[*(const uint32_t *)b], r->dims, r->n_dims);
-}
-
-static int dominates(const CqCandidate *a, const CqCandidate *b, const uint8_t *dims, uint32_t nd) {
-    int strict = 0;
-    for (uint32_t i = 0; i < nd; i++) {
-        uint64_t x = cq_dim_value(a, dims[i]), y = cq_dim_value(b, dims[i]);
-        if (x > y) return 0;
-        if (x < y) strict = 1;
-    }
-    return strict;
-}
-
-static int within(uint64_t v, uint64_t best, uint32_t tol_ppm) {
-    unsigned __int128 lim = (unsigned __int128)best * (CQ_PPM + (uint64_t)tol_ppm);
-    return (unsigned __int128)v * CQ_PPM <= lim;
 }
 
 int cq_rank(const CqCandidate *in, uint32_t n, const CqTradeoffs *t, CqCandidate *out, uint32_t k,
@@ -497,63 +477,23 @@ int cq_rank(const CqCandidate *in, uint32_t n, const CqTradeoffs *t, CqCandidate
     if (front) *front = 0;
     if (n == 0 || k == 0) return 0;
 
+    /* One Pareto rule for the whole tree (rx_pareto.h); this is its
+     * CqCandidate binding. The kernel allocates nothing; the scratch is ours. */
     uint32_t *idx = malloc((size_t)n * sizeof *idx);
-    uint8_t *mark = calloc(n, 1);   /* 1 in pool, 2 taken */
-    if (!idx || !mark) { free(idx); free(mark); return CQ_E_NOMEM; }
-    for (uint32_t i = 0; i < n; i++) idx[i] = i;
-    t_sort = (RankCtx){ in, dims, nd };
-    qsort(idx, n, sizeof *idx, cmp_idx);
-
-    /* Pareto front: a dominator sorts earlier, and dominance is transitive,
-     * so checking against the front found so far is enough. */
-    uint32_t nf = 0;
     uint32_t *fr = malloc((size_t)n * sizeof *fr);
-    if (!fr) { free(idx); free(mark); return CQ_E_NOMEM; }
-    for (uint32_t i = 0; i < n; i++) {
-        const CqCandidate *x = &in[idx[i]];
-        int dom = 0;
-        for (uint32_t j = 0; j < nf && !dom; j++) dom = dominates(&in[fr[j]], x, dims, nd);
-        if (!dom) fr[nf++] = idx[i];
+    uint32_t *sel = malloc((size_t)(k < n ? k : n) * sizeof *sel);
+    uint8_t *mark = malloc(n), *live = malloc(n);
+    if (!idx || !fr || !sel || !mark || !live) {
+        free(idx); free(fr); free(sel); free(mark); free(live);
+        return CQ_E_NOMEM;
     }
-    if (front) *front = nf;
-    int all = t && t->include_dominated;
-    if (all) for (uint32_t i = 0; i < n; i++) mark[i] = 1;
-    else for (uint32_t j = 0; j < nf; j++) mark[fr[j]] = 1;
-    uint32_t pool = all ? n : nf;
-    if (k > pool) k = pool;
-
-    /* Caller's priorities: keep what is within the band of the best on the
-     * first dimension, let the next decide among those, and so on; the strict
-     * order (dimensions, then ids) breaks what remains. Pool members are
-     * visited in the strict order, so the first survivor wins. */
-    uint8_t *live = malloc(n);
-    if (!live) { free(idx); free(mark); free(fr); return CQ_E_NOMEM; }
-    uint32_t got = 0;
-    while (got < k) {
-        for (uint32_t i = 0; i < n; i++) live[i] = mark[i] == 1;
-        for (uint32_t d = 0; d < nd; d++) {
-            uint64_t best = UINT64_MAX;
-            for (uint32_t i = 0; i < n; i++)
-                if (live[i]) {
-                    uint64_t v = cq_dim_value(&in[i], dims[d]);
-                    if (v < best) best = v;
-                }
-            uint32_t tol = t ? t->tolerance_ppm[dims[d]] : 0;
-            for (uint32_t i = 0; i < n; i++)
-                if (live[i] && !within(cq_dim_value(&in[i], dims[d]), best, tol)) live[i] = 0;
-        }
-        uint32_t pick = UINT32_MAX;
-        for (uint32_t i = 0; i < n && pick == UINT32_MAX; i++)
-            if (live[idx[i]]) pick = idx[i];
-        if (pick == UINT32_MAX) break;
-        out[got++] = in[pick];
-        mark[pick] = 2;
-    }
-    free(live);
-    free(fr);
-    free(mark);
-    free(idx);
-    return (int)got;
+    RxParetoScratch s = { idx, fr, mark, live };
+    RxParetoRule r = { dims, nd, t ? t->tolerance_ppm : NULL, t ? (int)t->include_dominated : 0 };
+    int got = rx_pareto_rank(in, n, &r, rank_val, rank_tie, NULL, &s, sel, k < n ? k : n, front);
+    if (got < 0) got = CQ_E_ARG;
+    for (int i = 0; i < got; i++) out[i] = in[sel[i]];
+    free(idx); free(fr); free(sel); free(mark); free(live);
+    return got;
 }
 
 /* ---- run ---- */
