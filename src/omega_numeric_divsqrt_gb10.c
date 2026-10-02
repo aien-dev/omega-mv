@@ -1073,6 +1073,9 @@ int omega_ds_gb10_run(OmegaDsOp op, const uint32_t *a, const uint32_t *b, uint32
     volatile uint32_t *hmarker = (volatile uint32_t *)marker_mem.cpu;
     *hsem = 0;
     *hmarker = 0;
+    /* C3 FIX B: proper acquire after observing the release semaphore (load-acquire + dmb ish). */
+    (void)__atomic_load_n(hsem, __ATOMIC_ACQUIRE);
+    __asm__ volatile("dmb ish" ::: "memory");
     __asm__ volatile("dsb sy" ::: "memory");
 
     static uint32_t pb[1024];
