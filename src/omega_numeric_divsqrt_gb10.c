@@ -1445,6 +1445,14 @@ int omega_ds_check_qmd(const uint32_t *qmd1, uint64_t code_va, char *err, size_t
 
 /* ---- Executor ------------------------------------------------------------------ */
 
+/* One stderr line saying which device step failed, then the device error code. No other behaviour.
+ * Format as RED_DEVERR in omega_numeric_reduce_gb10.c and LDST_DEVERR in omega_numeric_ldst_gb10.c
+ * (op and n = element count of this launch). DS_DEVERR_LINE only prints; DS_DEVERR prints and yields
+ * OMEGA_NUMERIC_ERR_DEVICE. Every step name in omega_ds_gb10_run is unique to one site. */
+#define DS_DEVERR_LINE(step, rc, op, n) \
+    fprintf(stderr, "OMEGA_DEVERR step=%s rc=%d op=%s n=%zu\n", (step), (int)(rc), omega_ds_op_name(op), (size_t)(n))
+#define DS_DEVERR(step, rc, op, n) (DS_DEVERR_LINE(step, rc, op, n), OMEGA_NUMERIC_ERR_DEVICE)
+
 int omega_ds_gb10_run(OmegaDsOp op, const uint32_t *a, const uint32_t *b, uint32_t *out, size_t count) {
     char err[256];
     int rc = omega_ds_check_args(op, a, b, out, count, err, sizeof(err));
@@ -1472,7 +1480,7 @@ int omega_ds_gb10_run(OmegaDsOp op, const uint32_t *a, const uint32_t *b, uint32
         }
     }
 #ifdef OMEGA_NUMERIC_CPU_ONLY
-    return OMEGA_NUMERIC_ERR_DEVICE;
+    return DS_DEVERR("ds_cpu_only", OMEGA_NUMERIC_ERR_DEVICE, op, count);
 #else
     static const uint32_t SETUP[18] = {
         0x20012061, 0x0000cec0, 0x20012092, 0x00000001, 0x200120a8, 0x0000000f, 0x2001255d, 0x00000003,
@@ -1480,23 +1488,25 @@ int omega_ds_gb10_run(OmegaDsOp op, const uint32_t *a, const uint32_t *b, uint32
         0x20012559, 0x00000000,
     };
     M16NativeContext ctx;
-    if (m16_native_open(&ctx) != 0) return OMEGA_NUMERIC_ERR_DEVICE;
-    if (m16_native_create_channel(&ctx) != 0) { m16_native_close(&ctx); return OMEGA_NUMERIC_ERR_DEVICE; }
+    int drc;
+    if ((drc = m16_native_open(&ctx)) != 0) return DS_DEVERR("ds_open", drc, op, count);
+    if ((drc = m16_native_create_channel(&ctx)) != 0) { m16_native_close(&ctx); return DS_DEVERR("ds_channel", drc, op, count); }
     NvrmMem large_pb;
-    if (nvrm_alloc(&ctx.rm, 0x10000, &large_pb) != 0) { m16_native_close(&ctx); return OMEGA_NUMERIC_ERR_DEVICE; }
+    if ((drc = nvrm_alloc(&ctx.rm, 0x10000, &large_pb)) != 0) { m16_native_close(&ctx); return DS_DEVERR("ds_alloc_pb", drc, op, count); }
     ctx.pb_mem = large_pb;
     size_t bytes = (count * 4 + 0xfffULL) & ~0xfffULL;
     NvrmMem code_mem, cbank_mem, a_mem, b_mem, out_mem, marker_mem, qmd_mem;
-    if (nvrm_alloc(&ctx.rm, OMEGA_DS_MAX_CODE_BYTES, &code_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, 0x1000, &cbank_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, bytes, &a_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, bytes, &b_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, bytes, &out_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, 0x1000, &marker_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, 0x10000, &qmd_mem) != 0) {
-        m16_native_close(&ctx);
-        return OMEGA_NUMERIC_ERR_DEVICE;
-    }
+    /* the seven allocations in the original order, one step name each (same close-then-return on failure) */
+#define DS_ALLOC(step, size, mem) \
+    if ((drc = nvrm_alloc(&ctx.rm, (size), &(mem))) != 0) { m16_native_close(&ctx); return DS_DEVERR(step, drc, op, count); }
+    DS_ALLOC("ds_alloc_code", OMEGA_DS_MAX_CODE_BYTES, code_mem)
+    DS_ALLOC("ds_alloc_cbank", 0x1000, cbank_mem)
+    DS_ALLOC("ds_alloc_a", bytes, a_mem)
+    DS_ALLOC("ds_alloc_b", bytes, b_mem)
+    DS_ALLOC("ds_alloc_out", bytes, out_mem)
+    DS_ALLOC("ds_alloc_marker", 0x1000, marker_mem)
+    DS_ALLOC("ds_alloc_qmd", 0x10000, qmd_mem)
+#undef DS_ALLOC
     memcpy(a_mem.cpu, a, count * 4);
     if (b) memcpy(b_mem.cpu, b, count * 4); else memset(b_mem.cpu, 0, count * 4);
     memset(out_mem.cpu, 0x55, count * 4);
@@ -1576,14 +1586,17 @@ int omega_ds_gb10_run(OmegaDsOp op, const uint32_t *a, const uint32_t *b, uint32
     pb[n++] = (uint32_t)(marker_mem.va + 0x10); pb[n++] = (uint32_t)((marker_mem.va + 0x10) >> 32);
     pb[n++] = 0x46464646u; pb[n++] = 0; pb[n++] = 0x1 | (1u << 20);
 
-    if (m16_native_submit_methods(&ctx, pb, n) != 0) { m16_native_close(&ctx); return OMEGA_NUMERIC_ERR_DEVICE; }
+    if ((drc = m16_native_submit_methods(&ctx, pb, n)) != 0) { m16_native_close(&ctx); return DS_DEVERR("ds_submit", drc, op, count); }
     /* Wait long: closing the channel under a running kernel jams the seat. */
-    if (m16_native_wait_marker(hmarker, OMEGA_BW_MARKER_COMPLETION_PAYLOAD, 600000) != 0) {
+    if ((drc = m16_native_wait_marker(hmarker, OMEGA_BW_MARKER_COMPLETION_PAYLOAD, 600000)) != 0) {
         m16_native_close(&ctx);
-        return OMEGA_NUMERIC_ERR_DEVICE;
+        return DS_DEVERR("ds_wait_marker", drc, op, count);
     }
     volatile uint32_t *hmarker2 = (volatile uint32_t *)((uint8_t *)marker_mem.cpu + 0x10);
     if (m16_native_wait_marker(hmarker2, 0x46464646u, 600000) != 0) {
+        /* diagnostics only: the C3 lines of this block stay as merged in #201, so the return code is
+         * not captured here; m16_native_wait_marker returns only 0 or -1 (physics m16/m16_native.c). */
+        DS_DEVERR_LINE("ds_wait_marker2", -1, op, count);
         m16_native_close(&ctx);
         return OMEGA_NUMERIC_ERR_DEVICE;
     }
@@ -1591,9 +1604,9 @@ int omega_ds_gb10_run(OmegaDsOp op, const uint32_t *a, const uint32_t *b, uint32
      * first chip run (receipt 88930d2f...) read the 0x55 fill pattern for
      * 49,359,680 SQRT outputs. Read only after the QMD's own release
      * semaphore (written after the grid completes, with its membar) is 6. */
-    if (m16_native_wait_marker(hsem, OMEGA_BW_SEMAPHORE_INTERMEDIATE_DONE, 600000) != 0) {
+    if ((drc = m16_native_wait_marker(hsem, OMEGA_BW_SEMAPHORE_INTERMEDIATE_DONE, 600000)) != 0) {
         m16_native_close(&ctx);
-        return OMEGA_NUMERIC_ERR_DEVICE;
+        return DS_DEVERR("ds_wait_sem", drc, op, count);
     }
     __asm__ volatile("dsb sy" ::: "memory");
     memcpy(out, out_mem.cpu, count * 4);

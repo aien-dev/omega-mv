@@ -1661,6 +1661,20 @@ build/test_omega_unwritten_trap: tests/test_omega_unwritten_trap.c src/omega_unw
 test-unwritten-trap-host: build/test_omega_unwritten_trap
 	./build/test_omega_unwritten_trap
 
+# C3 A/B harness for the reduce and ldst launchers (tests/test_omega_c3_ab_gb10.c, E1 gap table).
+# The chip build, both arms and the verdict are ~/workspace/scripts/lt-e1-c3-ab.sh (forge queue
+# only). This target is host-only: it builds the CPU-only variant and runs --deverr-probe, which
+# checks that the three CPU-only launcher stubs print their OMEGA_DEVERR line. No GPU.
+C3AB_CPU_SRCS = tests/test_omega_c3_ab_gb10.c src/omega_numeric_reduce.c src/omega_numeric_reduce_gb10.c \
+                src/omega_numeric_ldst_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c \
+                src/omega_numeric_provenance.c $(NUMERIC_BW_SRCS)
+.PHONY: test-c3-ab-probe
+build/test_omega_c3_ab_cpu: $(C3AB_CPU_SRCS) src/omega_numeric_reduce.h src/omega_numeric_ldst_gb10.h $(NUMERIC_CPU_HDRS)
+	@mkdir -p build
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -DOMEGA_NUMERIC_CPU_ONLY -pthread -o $@ $(C3AB_CPU_SRCS)
+test-c3-ab-probe: build/test_omega_c3_ab_cpu
+	./build/test_omega_c3_ab_cpu --deverr-probe
+
 # E1 row 2: general global load/store on the GB10 (src/omega_numeric_ldst_gb10.h,
 # docs/numeric/E1_LDST_GB10.md). test-ldst-host needs no device; test-ldst-nvdisasm
 # decodes every table kernel offline; the chip run is tools/run_numeric_ldst_chip.sh.

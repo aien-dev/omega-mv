@@ -51,6 +51,16 @@ static unsigned g_last_launches;
 
 unsigned omega_reduce_gb10_last_launches(void) { return g_last_launches; }
 
+/* One stderr line saying which device step failed, then the device error code. No other behaviour.
+ * Format as LDST_DEVERR in omega_numeric_ldst_gb10.c, with op and n in place of spec. n is the
+ * element count of the launch that failed (one chunk, at most OMEGA_NUMERIC_MAX_COUNT, in run_chunk;
+ * the whole input at the cpu_only stub). rc is the failing call's own code; the sites that have no
+ * callee code (code image too short, CPU-only stub) print OMEGA_NUMERIC_ERR_DEVICE itself. Every
+ * step name below is unique to one site in this file. */
+#define RED_DEVERR(step, rc, op, n) \
+    (fprintf(stderr, "OMEGA_DEVERR step=%s rc=%d op=%s n=%zu\n", (step), (int)(rc), omega_reduce_op_name(op), (size_t)(n)), \
+     OMEGA_NUMERIC_ERR_DEVICE)
+
 static int refuse(char *err, size_t err_len, int code, const char *fmt, ...) __attribute__((format(printf, 4, 5)));
 static int refuse(char *err, size_t err_len, int code, const char *fmt, ...) {
     if (err && err_len) {
@@ -287,31 +297,40 @@ static int run_chunk(OmegaReduceOp op, const float *in, float *out_res, size_t c
     if (np <= 0 || count == 0 || count > OMEGA_NUMERIC_MAX_COUNT || count % 32u) return OMEGA_NUMERIC_ERR_BAD_ARGS;
 
     M16NativeContext ctx;
-    if (m16_native_open(&ctx) != 0) return OMEGA_NUMERIC_ERR_DEVICE;
-    if (m16_native_create_channel(&ctx) != 0) { m16_native_close(&ctx); return OMEGA_NUMERIC_ERR_DEVICE; }
+    int drc;
+    if ((drc = m16_native_open(&ctx)) != 0) return RED_DEVERR("red_open", drc, op, count);
+    if ((drc = m16_native_create_channel(&ctx)) != 0) { m16_native_close(&ctx); return RED_DEVERR("red_channel", drc, op, count); }
     NvrmMem large_pb;
-    if (nvrm_alloc(&ctx.rm, 0x10000, &large_pb) != 0) { m16_native_close(&ctx); return OMEGA_NUMERIC_ERR_DEVICE; }
+    if ((drc = nvrm_alloc(&ctx.rm, 0x10000, &large_pb)) != 0) { m16_native_close(&ctx); return RED_DEVERR("red_alloc_pb", drc, op, count); }
     ctx.pb_mem = large_pb;
 
     size_t bytes = (count * sizeof(float) + 0xfffULL) & ~0xfffULL;
     if (bytes < 0x1000) bytes = 0x1000;
     NvrmMem code_mem, cbank_mem, a_mem, b_mem, c_mem, out_mem, marker_mem, qmd_mem;
-    if (nvrm_alloc(&ctx.rm, 0x1000, &code_mem) != 0 || nvrm_alloc(&ctx.rm, 0x1000, &cbank_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, bytes, &a_mem) != 0 || nvrm_alloc(&ctx.rm, bytes, &b_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, bytes, &c_mem) != 0 || nvrm_alloc(&ctx.rm, bytes, &out_mem) != 0 ||
-        nvrm_alloc(&ctx.rm, 0x1000, &marker_mem) != 0 || nvrm_alloc(&ctx.rm, 0x10000, &qmd_mem) != 0) {
-        m16_native_close(&ctx);
-        return OMEGA_NUMERIC_ERR_DEVICE;
-    }
+    /* the eight allocations in the original order, one step name each (same close-then-return on failure) */
+#define RED_ALLOC(step, size, mem) \
+    if ((drc = nvrm_alloc(&ctx.rm, (size), &(mem))) != 0) { m16_native_close(&ctx); return RED_DEVERR(step, drc, op, count); }
+    RED_ALLOC("red_alloc_code", 0x1000, code_mem)
+    RED_ALLOC("red_alloc_cbank", 0x1000, cbank_mem)
+    RED_ALLOC("red_alloc_a", bytes, a_mem)
+    RED_ALLOC("red_alloc_b", bytes, b_mem)
+    RED_ALLOC("red_alloc_c", bytes, c_mem)
+    RED_ALLOC("red_alloc_out", bytes, out_mem)
+    RED_ALLOC("red_alloc_marker", 0x1000, marker_mem)
+    RED_ALLOC("red_alloc_qmd", 0x10000, qmd_mem)
+#undef RED_ALLOC
     memcpy(a_mem.cpu, in, count * sizeof(float));
     memset(b_mem.cpu, 0, count * sizeof(float));
     memset(out_mem.cpu, 0x55, count * sizeof(float));
 
     size_t code_len = 0;
-    if (omega_blackwell_encode_vecadd(code_mem.cpu, code_mem.size, &code_len) != 0 ||
-        code_len < OMEGA_NUMERIC_PATCH_OFFSET + (size_t)np * 16u) {
+    if ((drc = omega_blackwell_encode_vecadd(code_mem.cpu, code_mem.size, &code_len)) != 0) {
         m16_native_close(&ctx);
-        return OMEGA_NUMERIC_ERR_DEVICE;
+        return RED_DEVERR("red_encode", drc, op, count);
+    }
+    if (code_len < OMEGA_NUMERIC_PATCH_OFFSET + (size_t)np * 16u) {
+        m16_native_close(&ctx);
+        return RED_DEVERR("red_code_short", OMEGA_NUMERIC_ERR_DEVICE, op, count);
     }
     for (int i = 0; i < np; i++) memcpy((uint8_t *)code_mem.cpu + OMEGA_NUMERIC_PATCH_OFFSET + (size_t)i * 16u, patch[i].w, 16);
 
@@ -332,11 +351,17 @@ static int run_chunk(OmegaReduceOp op, const float *in, float *out_res, size_t c
     };
     omega_numeric_launch_shape(count, &qmd_cfg.threads_per_block, &qmd_cfg.grid_width);
     uint32_t qmd0_words[OMEGA_BW_QMD_WORDS], qmd1_words[OMEGA_BW_QMD_WORDS];
-    if (omega_blackwell_build_qmd0(qmd0_words, qmd0_va, qmd1_va) != 0 ||
-        omega_blackwell_build_qmd1(qmd1_words, &qmd_cfg) != 0 ||
-        omega_blackwell_verify_qmd_invariants(qmd1_words) != 0) {
+    if ((drc = omega_blackwell_build_qmd0(qmd0_words, qmd0_va, qmd1_va)) != 0) {
         m16_native_close(&ctx);
-        return OMEGA_NUMERIC_ERR_DEVICE;
+        return RED_DEVERR("red_qmd0", drc, op, count);
+    }
+    if ((drc = omega_blackwell_build_qmd1(qmd1_words, &qmd_cfg)) != 0) {
+        m16_native_close(&ctx);
+        return RED_DEVERR("red_qmd1", drc, op, count);
+    }
+    if ((drc = omega_blackwell_verify_qmd_invariants(qmd1_words)) != 0) {
+        m16_native_close(&ctx);
+        return RED_DEVERR("red_qmd_verify", drc, op, count);
     }
     { /* the structural check again, on the QMD actually submitted and the code image */
         char perr[256];
@@ -359,6 +384,9 @@ static int run_chunk(OmegaReduceOp op, const float *in, float *out_res, size_t c
     volatile uint32_t *hmarker = (volatile uint32_t *)marker_mem.cpu;
     *hsem = 0;
     *hmarker = 0;
+#ifndef OMEGA_C3_PROTECT_OFF /* C3 hardening, same as omega_ds_gb10_run (-DOMEGA_C3_PROTECT_OFF = A/B control arm) */
+    *(volatile uint32_t *)((uint8_t *)marker_mem.cpu + 0x10) = 0;
+#endif
     __asm__ volatile("dsb sy" ::: "memory");
 
     uint32_t pb[1024];
@@ -413,18 +441,41 @@ static int run_chunk(OmegaReduceOp op, const float *in, float *out_res, size_t c
     pb[pb_len++] = OMEGA_BW_MARKER_COMPLETION_PAYLOAD;
     pb[pb_len++] = 0;
     pb[pb_len++] = 0x1 | (1u << 20);
+#ifndef OMEGA_C3_PROTECT_OFF
+    /* C3 hardening, copied from omega_ds_gb10_run (src/omega_numeric_divsqrt_gb10.c): after the WFI
+     * marker flush GPU L2 dirty lines to memory (NVC96F_MEM_OP_A..D = 0x28..0x34, D bits 31:27
+     * OPERATION = L2_FLUSH_DIRTY 0x10), then a second WFI marker the host waits for before the readback. */
+    pb[pb_len++] = nvrm_mthd(0, 0x0028, 4);
+    pb[pb_len++] = 0;
+    pb[pb_len++] = 0;
+    pb[pb_len++] = 0;
+    pb[pb_len++] = (0x10u << 27);
+    pb[pb_len++] = nvrm_mthd(0, 0x005c, 5);
+    pb[pb_len++] = (uint32_t)(marker_mem.va + 0x10);
+    pb[pb_len++] = (uint32_t)((marker_mem.va + 0x10) >> 32);
+    pb[pb_len++] = 0x46464646u;
+    pb[pb_len++] = 0;
+    pb[pb_len++] = 0x1 | (1u << 20);
+#endif
 
-    if (m16_native_submit_methods(&ctx, pb, pb_len) != 0) { m16_native_close(&ctx); return OMEGA_NUMERIC_ERR_DEVICE; }
-    if (m16_native_wait_marker(hmarker, OMEGA_BW_MARKER_COMPLETION_PAYLOAD, 5000) != 0) {
+    if ((drc = m16_native_submit_methods(&ctx, pb, pb_len)) != 0) { m16_native_close(&ctx); return RED_DEVERR("red_submit", drc, op, count); }
+    if ((drc = m16_native_wait_marker(hmarker, OMEGA_BW_MARKER_COMPLETION_PAYLOAD, 5000)) != 0) {
         m16_native_close(&ctx);
-        return OMEGA_NUMERIC_ERR_DEVICE;
+        return RED_DEVERR("red_wait_marker", drc, op, count);
     }
+#ifndef OMEGA_C3_PROTECT_OFF
+    volatile uint32_t *hmarker2 = (volatile uint32_t *)((uint8_t *)marker_mem.cpu + 0x10);
+    if ((drc = m16_native_wait_marker(hmarker2, 0x46464646u, 5000)) != 0) {
+        m16_native_close(&ctx);
+        return RED_DEVERR("red_wait_marker2", drc, op, count);
+    }
+#endif
     /* The host marker can land before the last CTAs' stores are visible (seen
      * by the DIV/SQRT gate, PR #141). Read only after the QMD's own release
      * semaphore, written after the grid completes, is DONE. */
-    if (m16_native_wait_marker(hsem, OMEGA_BW_SEMAPHORE_INTERMEDIATE_DONE, 5000) != 0) {
+    if ((drc = m16_native_wait_marker(hsem, OMEGA_BW_SEMAPHORE_INTERMEDIATE_DONE, 5000)) != 0) {
         m16_native_close(&ctx);
-        return OMEGA_NUMERIC_ERR_DEVICE;
+        return RED_DEVERR("red_wait_sem", drc, op, count);
     }
     __asm__ volatile("dsb sy" ::: "memory");
     memcpy(out_res, out_mem.cpu, count * sizeof(float));
@@ -448,7 +499,7 @@ int omega_reduce_gb10(OmegaReduceOp op, const float *x, size_t n, float *out) {
         return OMEGA_NUMERIC_OK;
     }
 #ifdef OMEGA_NUMERIC_CPU_ONLY
-    return OMEGA_NUMERIC_ERR_DEVICE;
+    return RED_DEVERR("red_cpu_only", OMEGA_NUMERIC_ERR_DEVICE, op, n);
 #else
     const bool minmax = (op == OMEGA_RED_MAX || op == OMEGA_RED_MIN);
     const uint32_t pad = minmax ? OMEGA_REDUCE_MINMAX_PAD_BITS : OMEGA_REDUCE_SUM_PAD_BITS;
