@@ -19,7 +19,7 @@ SRCS = src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c 
 	src/omega_library.c src/omega_discovery.c src/omega_machine.c src/omega_realize_synth.c \
 	src/omega_matvec.c src/omega_accelerator.c src/omega_accelerator_world.c \
 	src/omega_vector.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-	src/omega_blackwell_realize.c src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_gates.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_gpu_session.c src/omega_gpu_matmul_api.c src/omega_gpu_elementwise_api.c src/omega_world_gates.c src/omega_gpu_wait.c \
+	src/omega_blackwell_realize.c src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_gates.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_gpu_session.c src/omega_gpu_matmul_api.c src/omega_gpu_elementwise_api.c src/omega_gpu_attention_api.c src/omega_world_gates.c src/omega_gpu_wait.c \
 	src/omega_evidence.c \
 	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
 	tools/omegatool.c
@@ -2157,3 +2157,16 @@ test-gpu-elementwise: $(GPU_EW_TEST)
 # FB-1 cut 4b: fresh-process device-open probe (flake investigation, tools/probe_gpu_open.sh)
 $(OUT_DIR)/gpu_session_probe: tests/gpu_session_probe.c src/omega_gpu_session.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -o $@ tests/gpu_session_probe.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# FB-1 cut 5: native gqa_attention (f32 KV) and paged_attention (bf16 KV, + batch).
+# test-gpu-attention runs host-only (refusals, codegen, nvdisasm listing) and then the
+# whole parity battery through the host IR simulator (--sim, no chip); the chip
+# gate is `./build/gpu_attention_test --out receipt.json` through the heavy queue
+# (tools/run_gpu_attention_chip.sh). -ffp-contract=off keeps the oracle free of FMA.
+.PHONY: test-gpu-attention
+GPU_ATTN_TEST = $(OUT_DIR)/gpu_attention_test
+$(GPU_ATTN_TEST): tests/gpu_attention_test.c src/omega_gpu_attention_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_attention_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-attention: $(GPU_ATTN_TEST)
+	./$(GPU_ATTN_TEST) --host-only
+	./$(GPU_ATTN_TEST) --sim
