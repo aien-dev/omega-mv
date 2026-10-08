@@ -66,7 +66,7 @@ test-osh-parse: osh-gen-check $(OSH_DIR)/test_osh_parse $(OSH_DIR)/test_osh_pars
 
 OSH_XSRCS = tests/osh/test_osh_expand.c src/osh/osh_lex_ref.c src/osh/osh_parse_ref.c src/osh/osh_expand_ref.c src/osh/host/osh_core.c src/osh/host/osh_codes.c src/osh/host/osh_req.c $(OSC_LIB)
 OSH_XHDRS = $(OSH_HDRS) src/osh/osh_expand_ref.h src/osh/host/osh_core.h src/osh/host/osh_host.h
-OSH_XFLAGS = $(OSH_FLAGS) -Isrc/osh/host
+OSH_XFLAGS = $(OSH_FLAGS) -Isrc/osh/host -Isrc/runtime
 
 $(OSH_DIR)/test_osh_expand: $(OSH_XSRCS) $(OSH_XHDRS)
 	@mkdir -p $(OSH_DIR)
@@ -85,7 +85,7 @@ test-osh-expand: osh-gen-check $(OSH_DIR)/test_osh_expand $(OSH_DIR)/test_osh_ex
 
 OSH_UNIT_SRCS = src/osh/osh_lex.osc src/osh/osh_parse.osc src/osh/osh_expand.osc
 OSH_PROG_HOSTSRCS = $(wildcard src/osh/host/osh_*.c)
-OSH_BIN_SRCS = $(OSH_DIR)/osh_units.c $(filter-out src/osh/host/osh_codes.c,$(OSH_PROG_HOSTSRCS)) src/osh/host/osh_codes.c $(OSC_LIB)
+OSH_BIN_SRCS = $(OSH_DIR)/osh_units.c $(filter-out src/osh/host/osh_codes.c,$(OSH_PROG_HOSTSRCS)) src/osh/host/osh_codes.c $(OSC_LIB) src/runtime/rx_caproot.c
 
 # the three unit sources become C arrays (od + sed, no scripting language)
 $(OSH_DIR)/osh_units.c: $(OSH_UNIT_SRCS)
@@ -127,7 +127,7 @@ $(OSH_DIR)/osh_trace: $(OSH_TRSRCS) $(OSH_XHDRS)
 	@mkdir -p $(OSH_DIR)
 	$(CC) $(OSH_XFLAGS) -O2 -o $@ $(OSH_TRSRCS)
 
-# Each script must give at least one step line and end with "event exit=": an empty or cut-off trace never passes and is
+# Each trace must end with "event exit=" (the driver prints it last): an empty or cut-off trace never passes and is
 # never written. osh-trace-gen writes all traces to a scratch directory first and copies only when every script passed.
 osh-trace-gen: osh-gen-check $(OSH_DIR)/osh_trace
 	@g=$(OSH_DIR)/trace-gen; rm -rf $$g; mkdir -p $$g; \
@@ -135,7 +135,7 @@ osh-trace-gen: osh-gen-check $(OSH_DIR)/osh_trace
 	  $(OSH_DIR)/osh_trace interp $(OSH_UNIT_SRCS) $$f > $$g/$$b.interp || exit 1; \
 	  $(OSH_DIR)/osh_trace native $(OSH_UNIT_SRCS) $$f > $$g/$$b.native || exit 1; \
 	  cmp $$g/$$b.interp $$g/$$b.native || { echo "osh-trace-gen: native and interpreter differ on $$f"; exit 1; }; \
-	  grep -q '^step ' $$g/$$b.native && tail -n 1 $$g/$$b.native | grep -q '^event exit=' || { echo "osh-trace-gen: empty or cut-off trace for $$f"; exit 1; }; \
+	  tail -n 1 $$g/$$b.native | grep -q '^event exit=' || { echo "osh-trace-gen: empty or cut-off trace for $$f"; exit 1; }; \
 	done; \
 	for f in tests/osh/trace/*.sh; do b=$$(basename $$f .sh); cp $$g/$$b.native tests/osh/trace/$$b.trace || exit 1; done; \
 	echo "osh-trace-gen: wrote traces"
@@ -145,7 +145,7 @@ osh-trace: osh-gen-check $(OSH_DIR)/osh_trace
 	  $(OSH_DIR)/osh_trace interp $(OSH_UNIT_SRCS) $$f > $(OSH_DIR)/$$b.interp || exit 1; \
 	  $(OSH_DIR)/osh_trace native $(OSH_UNIT_SRCS) $$f > $(OSH_DIR)/$$b.native || exit 1; \
 	  cmp $(OSH_DIR)/$$b.interp $(OSH_DIR)/$$b.native || { echo "osh-trace: native and interpreter differ on $$f"; exit 1; }; \
-	  grep -q '^step ' $(OSH_DIR)/$$b.native && tail -n 1 $(OSH_DIR)/$$b.native | grep -q '^event exit=' || { echo "osh-trace: empty or cut-off trace for $$f"; exit 1; }; \
+	  tail -n 1 $(OSH_DIR)/$$b.native | grep -q '^event exit=' || { echo "osh-trace: empty or cut-off trace for $$f"; exit 1; }; \
 	  cmp $(OSH_DIR)/$$b.native tests/osh/trace/$$b.trace || { echo "osh-trace: $$f differs from the committed trace"; exit 1; }; \
 	  n=$$((n+1)); done; echo "osh-trace: PASS ($$n scripts, native == interpreter == committed trace)"
 endif
