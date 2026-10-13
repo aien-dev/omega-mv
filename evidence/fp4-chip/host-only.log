@@ -1,0 +1,17 @@
+quantiser: rel RMS error 0.0895, tensor scale 3.6062e-04
+codegen k=2048 lpa=32 rows=2 warps=16: rc=0 insns=727 peak=77 declared=80 regfile=40960/65536 fits
+codegen k=2048 lpa=32 rows=1 warps=16: rc=0 insns=409 peak=60 declared=64 regfile=32768/65536 fits
+codegen k=2048 lpa=32 rows=2 warps=8: rc=0 insns=743 peak=77 declared=80 regfile=20480/65536 fits
+codegen k=2048 lpa=32 rows=1 warps=32: rc=0 insns=401 peak=60 declared=64 regfile=65536/65536 fits
+codegen k=768 lpa=16 rows=2 warps=12: rc=0 insns=559 peak=69 declared=72 regfile=27648/65536 fits
+codegen k=768 lpa=16 rows=1 warps=12: rc=0 insns=319 peak=56 declared=64 regfile=24576/65536 fits
+codegen k=768 lpa=16 rows=2 warps=24: rc=0 insns=555 peak=69 declared=72 regfile=55296/65536 fits
+codegen k=512 lpa=32 rows=2 warps=4: rc=0 insns=259 peak=53 declared=56 regfile=7168/65536 fits
+codegen k=256 lpa=16 rows=4 warps=8: rc=0 insns=419 peak=63 declared=72 regfile=18432/65536 fits
+codegen k=4096 lpa=32 rows=1 warps=16: rc=0 insns=745 peak=76 declared=80 regfile=40960/65536 fits
+codegen k=4096 lpa=32 rows=2 warps=16: rc=-1 insns=0 peak=0 declared=8 regfile=4096/65536 does not fit
+codegen k=1024 lpa=16 rows=2 warps=16: rc=0 insns=715 peak=77 declared=80 regfile=40960/65536 fits
+codegen k=8192 lpa=32 rows=1 warps=32: rc=-1 insns=0 peak=0 declared=8 regfile=8192/65536 does not fit
+nvdisasm k2048_lpa32_r2: rc=0 insns=728 undecodable=0 missing=0 (/tmp/omega_fp4_k2048_lpa32_r2_2070548.sass)
+nvdisasm k768_lpa16_r2: rc=0 insns=560 undecodable=0 missing=0 (/tmp/omega_fp4_k768_lpa16_r2_2070548.sass)
+gpu_fp4_test: 35 checks, 0 failed: PASS

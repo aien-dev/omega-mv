@@ -1,0 +1,16 @@
+chip one-hot tables: rc=OK 143/143 rows exact (16 codes, 127 scale bytes: no flush to zero)
+chip 8 experts gate+up shared x     rc=OK        differing=0 worst_vs_oracle=1.732e-08 grid=6x8 lpa=32 rows=2 warps=16 bytes=14155776 upload=2.5ms chip_med=122.2us (min 116.5 max 152.1) 115.8 GB/s call_med=134.8us reps=50
+chip 8 experts gate+up shared x     mutant 1: caught (rc=OK differing=12288 worst_vs_oracle=2.889e+01)
+chip 8 experts gate+up shared x     mutant 2: caught (rc=OK differing=12288 worst_vs_oracle=2.142e-01)
+chip 8 experts gate+up shared x     mutant 3: caught (rc=OK differing=12288 worst_vs_oracle=7.299e-02)
+chip 8 experts gate+up shared x     mutant 4: caught (rc=OK differing=12288 worst_vs_oracle=9.619e-01)
+chip 8 experts gate+up shared x     mutant 5: caught (rc=OK differing=12288 worst_vs_oracle=1.407e-01)
+chip 8 experts down per-group x     rc=OK        differing=0 worst_vs_oracle=3.278e-08 grid=6x8 lpa=16 rows=2 warps=12 bytes=7077888 upload=1.2ms chip_med=71.2us (min 68.1 max 77.8) 99.5 GB/s call_med=94.1us reps=50
+chip 8 experts down per-group x     mutant 1: caught (rc=OK differing=16384 worst_vs_oracle=1.643e+01)
+chip 8 experts down per-group x     mutant 2: caught (rc=OK differing=16384 worst_vs_oracle=3.522e-01)
+chip 8 experts down per-group x     mutant 3: caught (rc=OK differing=16384 worst_vs_oracle=1.210e-01)
+chip 8 experts down per-group x     mutant 4: caught (rc=OK differing=16384 worst_vs_oracle=2.315e+00)
+chip 8 experts down per-group x     mutant 5: caught (rc=OK differing=16384 worst_vs_oracle=2.631e-01)
+chip 8 of 16 experts gate+up        rc=OK        differing=0 worst_vs_oracle=1.823e-08 grid=6x8 lpa=32 rows=2 warps=16 bytes=14155776 upload=4.7ms chip_med=127.1us (min 121.6 max 131.6) 111.4 GB/s call_med=139.6us reps=50
+gpu_fp4_test: 14 checks, 0 failed: PASS
+--no-evict exit 0 (informational)

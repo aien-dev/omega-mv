@@ -1,0 +1,13 @@
+start 2026-10-13T22:17:57Z omega=9051613286aee3066eafba9d9670ec1c24c90004 branch=own30b/fp4 dirty=3 physics=/home/drakestapleton/workspace/physics-own30b-k physics_commit=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
+Linux spark-b87b 7.0.0-1019-nvidia #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2 aarch64 aarch64 aarch64 GNU/Linux
+NVIDIA GB10, 580.173.02
+               total        used        free      shared  buff/cache   available
+Mem:             121          29          34           2          61          92
+ 17:17:57 up 7 days, 10:46, 15 users,  load average: 7.39, 10.78, 9.78
+cpu-heavy processes now:
+    PID %CPU COMMAND
+2006482  101 tinyllama_parit
+1991822 46.0 python
+1991810 32.2 python
+1991779 31.9 python
+end 2026-10-13T22:18:15Z
