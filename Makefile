@@ -38,6 +38,8 @@ SRCS += src/omega_blackwell_codegen_router.c src/omega_gpu_router_api.c
 SRCS += src/omega_blackwell_codegen_bf16.c src/omega_gpu_bf16_gemv_api.c
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM, each expert streamed once per pass (omega_gpu_fp8gemm_api.h), new files only
 SRCS += src/omega_blackwell_codegen_gemm.c src/omega_gpu_fp8gemm_api.c
+# OWN-30B FP4 experts (2026-10-13, cut L3): OFP4v1 grouped GEMV (omega_gpu_fp4_api.h), new files only
+SRCS += src/omega_blackwell_codegen_fp4.c src/omega_gpu_fp4_pack.c src/omega_gpu_fp4_api.c
 OBJS = $(patsubst %.c,$(OUT_DIR)/%.o,$(notdir $(SRCS)))
 DEPS = $(OBJS:.o=.d)
 -include $(DEPS)
@@ -2457,3 +2459,13 @@ $(GPU_GPR_BOUNDARY_TEST): tests/gpu_gpr_boundary_test.c src/omega_blackwell_code
 	$(CC) $(CFLAGS) -o $@ tests/gpu_gpr_boundary_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-gpr-boundary: $(GPU_GPR_BOUNDARY_TEST)
 	$(GPU_GPR_BOUNDARY_TEST)
+
+# OWN-30B FP4 experts (2026-10-13, cut L3): test-gpu-fp4 is host-only (format proofs, emulation, budgets, disassembly) plus the
+# warp simulator with mutants; the chip gate is tools/run_gpu_fp4_chip.sh under the GB10 lock.
+.PHONY: test-gpu-fp4
+GPU_FP4_TEST = $(OUT_DIR)/gpu_fp4_test
+$(GPU_FP4_TEST): tests/gpu_fp4_test.c tests/bw_warp_sim_k.h src/omega_gpu_fp4_api.h src/omega_blackwell_codegen_fp4.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_fp4_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-fp4: $(GPU_FP4_TEST)
+	$(GPU_FP4_TEST) --host-only
+	$(GPU_FP4_TEST) --sim
