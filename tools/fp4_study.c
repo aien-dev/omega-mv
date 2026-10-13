@@ -24,6 +24,11 @@ typedef struct { const uint16_t *in_ln, *post_ln, *qn, *kn, *router; F8 q, k, v,
 static Layer L[NL];
 static const uint16_t *g_embed, *g_final, *g_head;
 static int g_threads = 8;
+static int g_rot_gu = 0, g_rot_dn = 0;           /* Hadamard block sizes applied to the input dim of gate|up and down (0 = none); the store must have been made with the same */
+static uint8_t g_fp8mask[NL][NE];                /* 1 = this expert stays FP8 in the FP4 stream (mixed precision) */
+static int g_nmask = 0;
+static FILE *g_capf[NL];                 /* calibration capture: per layer record = xn[D] f32, ids[TOPK] i32, wt[TOPK] f32, hh[TOPK][FF] f32 (FP8 stream) */
+static float g_cap_hh[TOPK][FF];
 
 static F8 f8(const StIndex *ix, int l, const char *what, int e, const char *proj) {
     char nm[160], ns[176]; F8 r;
@@ -84,16 +89,28 @@ typedef struct { float *kc, *vc; float h[D]; } Stream;
 static void stream_init(Stream *s) { s->kc = calloc((size_t)NL * MAXPOS * KVD, 4); s->vc = calloc((size_t)NL * MAXPOS * KVD, 4); }
 
 static void silu_mul(float *g, const float *u, int n) { for (int i = 0; i < n; i++) g[i] = g[i] / (1.0f + expf(-g[i])) * u[i]; }
+/* orthonormal Walsh-Hadamard transform in place, blocks of blk (power of two); H is symmetric and H*H = I, so W H and H x give back W x */
+static void wht(float *x, int n, int blk) {
+    if (blk <= 1) return;
+    for (int b = 0; b < n; b += blk) {
+        float *p = x + b;
+        for (int h = 1; h < blk; h <<= 1) for (int i = 0; i < blk; i += h << 1) for (int j = i; j < i + h; j++) { float a = p[j], c = p[j + h]; p[j] = a + c; p[j + h] = a - c; }
+        float sc = 1.0f / sqrtf((float)blk); for (int i = 0; i < blk; i++) p[i] *= sc;
+    }
+}
 /* MoE for the chosen experts; mode 0 = FP8 checkpoint, 1 = FP4 store. out[D] */
 static void moe(int l, int mode, const int *ids, const float *wt, const float *xn, float *out) {
-    float acc[TOPK][D]; Layer *La = &L[l];
+    float acc[TOPK][D]; Layer *La = &L[l]; float xr[D];
+    if (mode == 1 && g_rot_gu > 1) { memcpy(xr, xn, sizeof xr); wht(xr, D, g_rot_gu); }
     #pragma omp parallel for schedule(static, 1) num_threads(g_threads)
     for (int j = 0; j < TOPK; j++) {
-        int e = ids[j]; float gu[GU_N], hh[FF];
-        if (mode == 0) { mv8(La->eg[e], D, 0, FF, xn, gu); mv8(La->eu[e], D, 0, FF, xn, gu + FF); }
-        else mv4(La->gw + (size_t)e * GU_W, La->gs + (size_t)e * GU_S, La->gt[e], GU_N, D, xn, gu);
+        int e = ids[j]; float gu[GU_N], hh[FF]; int f8 = mode == 0 || g_fp8mask[l][e];
+        if (f8) { mv8(La->eg[e], D, 0, FF, xn, gu); mv8(La->eu[e], D, 0, FF, xn, gu + FF); }
+        else mv4(La->gw + (size_t)e * GU_W, La->gs + (size_t)e * GU_S, La->gt[e], GU_N, D, g_rot_gu > 1 ? xr : xn, gu);
         memcpy(hh, gu, sizeof hh); silu_mul(hh, gu + FF, FF);
-        if (mode == 0) mv8(La->ed[e], FF, 0, DN_N, hh, acc[j]); else mv4(La->dw + (size_t)e * DN_W, La->ds + (size_t)e * DN_S, La->dt[e], DN_N, FF, hh, acc[j]);
+        if (mode == 0 && g_capf[l]) memcpy(g_cap_hh[j], hh, sizeof hh);
+        if (f8) mv8(La->ed[e], FF, 0, DN_N, hh, acc[j]);
+        else { if (g_rot_dn > 1) wht(hh, FF, g_rot_dn); mv4(La->dw + (size_t)e * DN_W, La->ds + (size_t)e * DN_S, La->dt[e], DN_N, FF, hh, acc[j]); }
     }
     for (int i = 0; i < D; i++) { float a = 0; for (int j = 0; j < TOPK; j++) a += wt[j] * acc[j][i]; out[i] = a; }
 }
@@ -126,6 +143,7 @@ static void layer_fwd(Stream *s, int l, int pos, int mode, int probe) {
     for (int e = 0; e < NE; e++) lg[e] /= den;
     { float tmp[NE]; memcpy(tmp, lg, sizeof tmp); float sum = 0; for (int j = 0; j < TOPK; j++) { int b = 0; for (int e = 1; e < NE; e++) if (tmp[e] > tmp[b]) b = e; ids[j] = b; wt[j] = tmp[b]; sum += tmp[b]; tmp[b] = -1; } for (int j = 0; j < TOPK; j++) wt[j] /= sum; }
     float mo[D]; moe(l, mode, ids, wt, xn, mo);
+    if (mode == 0 && g_capf[l]) { fwrite(xn, 4, D, g_capf[l]); fwrite(ids, 4, TOPK, g_capf[l]); fwrite(wt, 4, TOPK, g_capf[l]); fwrite(g_cap_hh, 4, TOPK * FF, g_capf[l]); }
     if (probe) {
         float m4[D]; moe(l, 1, ids, wt, xn, m4); double nn = 0, dd = 0, dot = 0, n4 = 0;
         for (int i = 0; i < D; i++) { double d = (double)m4[i] - mo[i]; nn += d * d; dd += (double)mo[i] * mo[i]; dot += (double)mo[i] * m4[i]; n4 += (double)m4[i] * m4[i]; }
@@ -144,9 +162,17 @@ static int parse_list(const char *s, int *out, int cap) { int n = 0; while (*s >
 
 int main(int argc, char **argv) {
     if (argc < 4) { fprintf(stderr, "usage: fp4_study <ckpt> <store> <prompts.tsv> [--only a,b] [--max-pos N] [--out f.json] [--threads N]\n"); return 2; }
-    const char *only = NULL, *outp = NULL; int maxpos = 1 << 30;
+    const char *only = NULL, *outp = NULL, *cachedir = NULL, *calib = NULL; int noprobe = 0, nseq = 8, seed = 1, maxlen = 256; int maxpos = 1 << 30;
     for (int i = 4; i < argc; i++) { if (!strcmp(argv[i], "--only") && i + 1 < argc) only = argv[++i]; else if (!strcmp(argv[i], "--max-pos") && i + 1 < argc) maxpos = atoi(argv[++i]);
-        else if (!strcmp(argv[i], "--out") && i + 1 < argc) outp = argv[++i]; else if (!strcmp(argv[i], "--threads") && i + 1 < argc) g_threads = atoi(argv[++i]); }
+        else if (!strcmp(argv[i], "--out") && i + 1 < argc) outp = argv[++i]; else if (!strcmp(argv[i], "--threads") && i + 1 < argc) g_threads = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--rot") && i + 1 < argc) { sscanf(argv[++i], "%d,%d", &g_rot_gu, &g_rot_dn); }
+        else if (!strcmp(argv[i], "--mask") && i + 1 < argc) { FILE *mf = fopen(argv[++i], "r"); if (!mf) { perror("mask"); return 1; } int ml, me; while (fscanf(mf, "%d %d", &ml, &me) == 2) if (ml >= 0 && ml < NL && me >= 0 && me < NE) { if (!g_fp8mask[ml][me]) g_nmask++; g_fp8mask[ml][me] = 1; } fclose(mf); }
+        else if (!strcmp(argv[i], "--cache") && i + 1 < argc) cachedir = argv[++i];
+        else if (!strcmp(argv[i], "--noprobe")) noprobe = 1;
+        else if (!strcmp(argv[i], "--calib") && i + 1 < argc) calib = argv[++i];
+        else if (!strcmp(argv[i], "--nseq") && i + 1 < argc) nseq = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--seed") && i + 1 < argc) seed = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--maxlen") && i + 1 < argc) maxlen = atoi(argv[++i]); }
     for (int b = 0; b < 256; b++) g_e4m3[b] = st_e4m3((uint8_t)b);
     for (int c = 0; c < 16; c++) g_fp4v[c] = omega_fp4_value((uint8_t)c);
     for (int b = 0; b < 128; b++) g_sc4[b] = b == 0x7F ? 0.0f : omega_fp4_e4m3_unsigned((uint8_t)b);
@@ -164,6 +190,34 @@ int main(int argc, char **argv) {
         La->dw = (const uint8_t *)(La->gt + NE); La->ds = La->dw + (size_t)NE * DN_W; La->dt = (const float *)(La->ds + (size_t)NE * DN_S);
         if (omega_fp4_scan_scales(La->gs, (size_t)NE * GU_S) || omega_fp4_scan_scales(La->ds, (size_t)NE * DN_S)) { fprintf(stderr, "layer %d: illegal scale in store\n", l); return 1; }
     }
+    if (calib) { /* calibration mode: generate nseq sequences with the FP8 stream (sampled, NOT the golden prompts) and capture the expert activations */
+        char pth[600]; for (int l = 0; l < NL; l++) { snprintf(pth, sizeof pth, "%s/act_%02d.bin", calib, l); g_capf[l] = fopen(pth, "ab"); if (!g_capf[l]) { perror(pth); return 1; } }
+        snprintf(pth, sizeof pth, "%s/meta.txt", calib); FILE *mf = fopen(pth, "a");
+        uint64_t rng = 0x9E3779B97F4A7C15ull ^ ((uint64_t)seed * 0xD1B54A32D192ED03ull); float *lgc = malloc(151936 * 4); static int idx[151936];
+        for (int sq = 0; sq < nseq; sq++) {
+            #define RND() (rng ^= rng << 13, rng ^= rng >> 7, rng ^= rng << 17, rng)
+            int seq[MAXPOS], n = 0; seq[n++] = 151644; seq[n++] = 872; seq[n++] = 198;
+            int nw = 3 + (int)(RND() % 40); for (int i = 0; i < nw; i++) seq[n++] = 200 + (int)(RND() % 30000);
+            seq[n++] = 151645; seq[n++] = 198; seq[n++] = 151644; seq[n++] = 77091; seq[n++] = 198;
+            Stream *s = calloc(1, sizeof(Stream)); stream_init(s); int total = 0, pos = 0; double t0 = omp_get_wtime();
+            for (;;) {
+                embed(s, seq[pos]); for (int l = 0; l < NL; l++) layer_fwd(s, l, pos, 0, 0); total++;
+                if (pos == n - 1) { /* sample next token */
+                    if (n >= maxlen) break;
+                    logits_fwd(s, lgc); int kk = 40; for (int i = 0; i < 151936; i++) idx[i] = i;
+                    for (int a = 0; a < kk; a++) { int b = a; for (int i = a + 1; i < 151936; i++) if (lgc[idx[i]] > lgc[idx[b]]) b = i; int t = idx[a]; idx[a] = idx[b]; idx[b] = t; }
+                    float mx = lgc[idx[0]], pr[64], sm = 0; for (int a = 0; a < kk; a++) { pr[a] = expf((lgc[idx[a]] - mx) / 0.9f); sm += pr[a]; }
+                    double u = (RND() >> 11) * (1.0 / 9007199254740992.0) * sm, c = 0; int pick = idx[0]; for (int a = 0; a < kk; a++) { c += pr[a]; if (u <= c) { pick = idx[a]; break; } }
+                    if (pick == 151645 || pick == 151643) break; seq[n++] = pick;
+                }
+                pos++;
+            }
+            free(s->kc); free(s->vc); free(s);
+            fprintf(mf, "seq %d seed %d tokens %d\n", sq, seed, total); fflush(mf); for (int l = 0; l < NL; l++) fflush(g_capf[l]);
+            fprintf(stderr, "[calib] seq %d/%d tokens %d (%.0fs)\n", sq + 1, nseq, total, omp_get_wtime() - t0);
+        }
+        for (int l = 0; l < NL; l++) fclose(g_capf[l]); fclose(mf); return 0;
+    }
     FILE *tsv = fopen(argv[3], "r"); if (!tsv) { perror(argv[3]); return 1; }
     FILE *out = outp ? fopen(outp, "w") : NULL; if (out) fprintf(out, "{\"prompts\":[");
     char *line = malloc(1 << 20); int first = 1; long tot_pos = 0, tot_agree = 0, tot_gen = 0, tot_gen_fp4_ok = 0, tot_gen_fp8_ok = 0; double min_cos_all = 1.0;
@@ -179,12 +233,15 @@ int main(int argc, char **argv) {
         if (n > maxpos) n = maxpos; if (n > MAXPOS) { fprintf(stderr, "sequence too long\n"); return 1; }
         Stream *s0 = calloc(1, sizeof(Stream)), *s1 = calloc(1, sizeof(Stream)); stream_init(s0); stream_init(s1);
         long agree = 0, gen = 0, g4 = 0, g8 = 0; double cmin = 1, csum = 0; double t0 = omp_get_wtime(); int flips = 0; double flip_margin_min = 1e30;
+        FILE *cf = NULL; int cached = 0; char cpath[512];
+        if (cachedir) { snprintf(cpath, sizeof cpath, "%s/%s.lg0", cachedir, name); cf = fopen(cpath, "rb"); if (cf) { fseek(cf, 0, SEEK_END); cached = ftell(cf) == (long)n * 151936 * 4; if (cached) rewind(cf); else { fclose(cf); cf = NULL; } } if (!cf) cf = fopen(cpath, "wb"); }
         if (out) fprintf(out, "%s{\"name\":\"%s\",\"prompt_tokens\":%d,\"positions\":%d,\"per_position\":[", first ? "" : ",", name, np, n);
         first = 0;
         for (int pos = 0; pos < n; pos++) {
             embed(s0, seq[pos]); embed(s1, seq[pos]);
-            for (int l = 0; l < NL; l++) { layer_fwd(s0, l, pos, 0, 1); layer_fwd(s1, l, pos, 1, 0); }
-            logits_fwd(s0, lg0); logits_fwd(s1, lg1);
+            for (int l = 0; l < NL; l++) { if (!cached) layer_fwd(s0, l, pos, 0, !noprobe); layer_fwd(s1, l, pos, 1, 0); }
+            if (cached) { if (fread(lg0, 4, 151936, cf) != 151936) { fprintf(stderr, "short cache\n"); return 1; } } else { logits_fwd(s0, lg0); if (cf) fwrite(lg0, 4, 151936, cf); }
+            logits_fwd(s1, lg1);
             double dot = 0, a = 0, b = 0; int am0 = 0, am1 = 0; for (int i = 0; i < 151936; i++) { dot += (double)lg0[i] * lg1[i]; a += (double)lg0[i] * lg0[i]; b += (double)lg1[i] * lg1[i]; if (lg0[i] > lg0[am0]) am0 = i; if (lg1[i] > lg1[am1]) am1 = i; }
             double cs = dot / sqrt(a * b); float second = -1e30f; for (int i = 0; i < 151936; i++) if (i != am0 && lg0[i] > second) second = lg0[i];
             double margin = lg0[am0] - second; int ok = am0 == am1; agree += ok; csum += cs; if (cs < cmin) cmin = cs;
@@ -194,6 +251,7 @@ int main(int argc, char **argv) {
             if (out) fprintf(out, "%s{\"pos\":%d,\"cos\":%.7f,\"fp8_top1\":%d,\"fp4_top1\":%d,\"fp8_margin\":%.4f%s}", pos ? "," : "", pos, cs, am0, am1, margin, gi >= 0 && gi < ng ? ",\"gen\":true" : "");
             if (pos % 20 == 0 || pos == n - 1) { fprintf(stderr, "[%s] pos %d/%d agree %ld/%d cos %.6f (%.0fs)\n", name, pos + 1, n, agree, pos + 1, cs, omp_get_wtime() - t0); }
         }
+        if (cf) fclose(cf);
         printf("%s: positions %d, top-1 agree %ld (%.2f%%), logits cosine mean %.6f min %.6f, flips %d (smallest FP8 margin at a flip %.3f); generated positions %ld: FP8 matches golden %ld, FP4 matches golden %ld\n",
                name, n, agree, 100.0 * agree / n, csum / n, cmin, flips, flips ? flip_margin_min : 0.0, gen, g8, g4);
         fflush(stdout);

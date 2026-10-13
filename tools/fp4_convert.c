@@ -5,6 +5,7 @@
  * then per layer (layer stride = LS): gu_w[E][gu_n*gu_k/2], gu_s[E][gu_n*gu_k/16], gu_t[E] f32, dn_w[E][dn_n*dn_k/2], dn_s[E][dn_n*dn_k/16], dn_t[E] f32.
  * Also writes per-layer error statistics to stdout (weight relative RMS error per projection, mean over experts). */
 #include "fp4_st.h"
+#include "fp4_quant.h"
 #include "omega_gpu_fp4_api.h"
 #include <math.h>
 #include <omp.h>
@@ -26,7 +27,8 @@ static void fp8_dequant(const StTensor *w, const StTensor *s, float *dst, size_t
 
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: fp4_convert <checkpoint_dir> <out_file> [layers]\n"); return 2; }
-    int layers = argc > 3 ? atoi(argv[3]) : 48;
+    int layers = argc > 3 ? atoi(argv[3]) : 48, s_lo = -1, s_hi = 1, rot_gu = 0, rot_dn = 0;
+    for (int i = 4; i < argc; i++) { if (!strcmp(argv[i], "--search") && i + 1 < argc) sscanf(argv[++i], "%d,%d", &s_lo, &s_hi); else if (!strcmp(argv[i], "--rot") && i + 1 < argc) sscanf(argv[++i], "%d,%d", &rot_gu, &rot_dn); }
     StIndex ix = { 0 }; if (st_open_dir(&ix, argv[1])) return 1;
     FILE *out = fopen(argv[2], "wb"); if (!out) { perror(argv[2]); return 1; }
     uint8_t hdr[HDR] = { 0 }; memcpy(hdr, "AFP4v1\0\0", 8);
@@ -52,7 +54,8 @@ int main(int argc, char **argv) {
                     fp8_dequant(w, s, mat + (size_t)proj * 768 * GU_K, GU_K);
                 }
                 if (bad) continue;
-                gt[e] = omega_fp4_quantize(mat, GU_N, GU_K, gw + (size_t)e * GU_W, gs + (size_t)e * GU_S);
+                if (rot_gu > 1) for (int r = 0; r < GU_N; r++) fq_wht(mat + (size_t)r * GU_K, GU_K, rot_gu);
+                gt[e] = fq_quantize(mat, GU_N, GU_K, gw + (size_t)e * GU_W, gs + (size_t)e * GU_S, s_lo, s_hi);
                 { float *src = malloc((size_t)GU_N * GU_K * 4); memcpy(src, mat, (size_t)GU_N * GU_K * 4);
                   omega_fp4_dequantize(gw + (size_t)e * GU_W, gs + (size_t)e * GU_S, gt[e], GU_N, GU_K, dq);
                   double n = 0, d = 0; for (size_t i = 0; i < (size_t)GU_N * GU_K; i++) { double df = (double)src[i] - dq[i]; n += df * df; d += (double)src[i] * src[i]; }
@@ -60,7 +63,8 @@ int main(int argc, char **argv) {
                 snprintf(nm, sizeof nm, "model.layers.%d.mlp.experts.%d.down_proj.weight", L, e); w = st_get(&ix, nm);
                 snprintf(nm, sizeof nm, "model.layers.%d.mlp.experts.%d.down_proj.weight_scale_inv", L, e); s = st_get(&ix, nm);
                 fp8_dequant(w, s, mat, DN_K);
-                dt[e] = omega_fp4_quantize(mat, DN_N, DN_K, dw + (size_t)e * DN_W, ds + (size_t)e * DN_S);
+                if (rot_dn > 1) for (int r = 0; r < DN_N; r++) fq_wht(mat + (size_t)r * DN_K, DN_K, rot_dn);
+                dt[e] = fq_quantize(mat, DN_N, DN_K, dw + (size_t)e * DN_W, ds + (size_t)e * DN_S, s_lo, s_hi);
                 omega_fp4_dequantize(dw + (size_t)e * DN_W, ds + (size_t)e * DN_S, dt[e], DN_N, DN_K, dq);
                 { double n = 0, d = 0; for (size_t i = 0; i < (size_t)DN_N * DN_K; i++) { double df = (double)mat[i] - dq[i]; n += df * df; d += (double)mat[i] * mat[i]; }
                   dn_err[e] = n; dn_den[e] = d; }
