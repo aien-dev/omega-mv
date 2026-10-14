@@ -74,13 +74,16 @@ extern "C" {
 #define OMEGA_RES_ARG_SPINMAX 0x39cu
 #define OMEGA_RES_ARG_BAR 0x3a0u  /* u64 barrier word (arrive counter) */
 #define OMEGA_RES_ARG_BASE 0x3a8u /* u32 counter value at launch start (arrivals of earlier launches) */
-#define OMEGA_RES_ARGS_WORDS 11u
+#define OMEGA_RES_ARG_STAMP 0x3b0u /* u64 stamp buffer (spec.stamps = 1; W-L2g), 0x3ac is padding */
+#define OMEGA_RES_ARGS_WORDS 14u
+#define OMEGA_RES_STAMP_BYTES 256u /* per (stage, CTA) record, see spec.stamps */
 
 #define OMEGA_RES_ABORT_UNIT (1u << 23) /* added to the barrier word by an aborting CTA; arrival counts stay below it */
-#define OMEGA_RES_MAX_PATCHES 8u
+#define OMEGA_RES_MAX_PATCHES 24u
 #define OMEGA_RES_PATCH_LDG_GPU 1u
 #define OMEGA_RES_PATCH_ATOM_GPU 2u
 #define OMEGA_RES_PATCH_MEMBAR_GPU 3u
+#define OMEGA_RES_PATCH_CS2R 4u /* S2R placeholder -> CS2R.32 (oracle: w0 0x7805, fixed latency) */
 typedef struct { uint32_t n; uint32_t idx[OMEGA_RES_MAX_PATCHES]; uint32_t kind[OMEGA_RES_MAX_PATCHES]; } OmegaResidentPatches;
 
 typedef struct {
@@ -91,6 +94,11 @@ typedef struct {
     uint32_t scope_gpu;  /* 0: arrive + poll at system scope (r1); 1: GPU scope (patched words, barrier word in GPU-cached memory) */
     uint32_t fence;      /* before the arrive, every thread: 0 MEMBAR.ALL.SYS, 1 MEMBAR.ALL.GPU, 2 none (DIAGNOSTIC ONLY: unordered) */
     uint32_t abort;      /* 0 (r2): every CTA reads the error + cancel words each barrier; 1 (r4): abort bit in the barrier word, CTA 0 reads cancel */
+    uint32_t stamps;     /* W-L2g instrumentation: 1 = per (stage, CTA) timer record (OMEGA_RES_STAMP_BYTES) at OMEGA_RES_ARG_STAMP:
+                          *   w0 globaltimer_lo at stage start (thread 0), w1 at CTA done (after BAR.SYNC), w2 clock_lo start,
+                          *   w3 clock_lo done, w4 SM id, w8 + warp * 2 (+0 first row, +1 latest later row): globaltimer_lo when
+                          *   that warp finished that row (warps <= 28). 0 = production (no stamp code at all). */
+    uint32_t prefetch;   /* W-L2g variant: see omega_blackwell_codegen_resident.c (0 = production) */
 } OmegaResidentSpec;
 
 int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, BlackwellIRProgram *prog);

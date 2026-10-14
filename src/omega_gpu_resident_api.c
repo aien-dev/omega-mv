@@ -10,6 +10,7 @@ struct OmegaGpuResident {
     OmegaResidentSpec spec;
     uint32_t n_stages, peak, declared;
     uint32_t base;  /* barrier word value at the next launch start (sum of (n_stages - 1) x grid over earlier launches) */
+    uint64_t stamp_va; /* W-L2g: stamp buffer for spec.stamps (0 = none) */
     OmegaGpuMem code, table, ctl, bar;
 };
 
@@ -125,6 +126,8 @@ int omega_gpu_resident_record(OmegaGpuCmdList *cl, OmegaGpuResident *r, uint32_t
     args[2] = (uint32_t)r->table.va; args[3] = (uint32_t)(r->table.va >> 32);
     args[4] = r->n_stages; args[5] = grid; args[6] = grid * r->spec.warps; args[7] = spin_max;
     args[8] = (uint32_t)r->bar.va; args[9] = (uint32_t)(r->bar.va >> 32); args[10] = r->base;
+    args[11] = 0; args[12] = (uint32_t)r->stamp_va; args[13] = (uint32_t)(r->stamp_va >> 32);
+    if (r->spec.stamps && !r->stamp_va) { omega_gpu_session_set_error("resident: stamps spec without a stamp buffer"); return OMEGA_GPU_RESIDENT_BAD_ARGS; }
     OmegaGpuLaunch L = {
         .code_va = r->code.va, .gpr_count = r->declared, .threads_x = 32u * r->spec.warps, .threads_y = 1,
         .grid_x = grid, .grid_y = 1, .num_elements = (size_t)grid * 32u * r->spec.warps,
@@ -147,6 +150,8 @@ int omega_gpu_resident_status(OmegaGpuResident *r, uint32_t *progress, uint32_t 
     if (err != 0 || c[OMEGA_RES_CTL_CANCEL / 4] != 0) return bar_fresh(r);
     return OMEGA_GPU_RESIDENT_OK;
 }
+
+void omega_gpu_resident_set_stamps(OmegaGpuResident *r, uint64_t va) { if (r) r->stamp_va = va; }
 
 int omega_gpu_resident_cancel(OmegaGpuResident *r) {
     if (!r) return OMEGA_GPU_RESIDENT_BAD_ARGS;

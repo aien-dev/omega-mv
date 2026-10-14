@@ -29,6 +29,7 @@
 
 static int g_checks, g_failed;
 static uint32_t g_grid; /* --grid: resident grid for the CHAIN runs (0 = capacity) */
+static int g_only_real; /* --only-real: skip the tiny chain (W-L2g runs) */
 #define CHECK(c, ...) do { g_checks++; if (!(c)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } else { printf("ok: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 #define NMAX 16u
 #define REPMAX 64u
@@ -37,17 +38,22 @@ static int cmp_u64(const void *a, const void *b) { uint64_t x = *(const uint64_t
 static uint64_t median(const uint64_t *v0, uint32_t n) { uint64_t v[REPMAX]; memcpy(v, v0, n * sizeof *v); qsort(v, n, sizeof *v, cmp_u64); return v[n / 2]; }
 
 typedef struct { uint32_t k, n; } Shape;
-enum { M_LAUNCH, M_RES, M_RED, M_COUNT };
-static const char *MODE[M_COUNT] = { "launched", "resident", "red" };
+enum { M_LAUNCH, M_RES, M_RED, M_STM, M_ALL };
+#define M_COUNT 3
+static const char *MODE[M_ALL] = { "launched", "resident", "red", "stamped" };
+static int g_nmodes = M_COUNT; /* 4 with --stamps: M_STM = resident with spec.stamps (W-L2g camera) */
+static int g_stamps;
+static FILE *g_rawf; /* --stamps-raw: every stamped run appended (u32 records) */
 
 typedef struct {
     const char *name; uint32_t N; Shape sh[NMAX];
     OmegaGpuFp8Tensor *t[NMAX]; OmegaGpuMem tab[NMAX], buf[NMAX + 1]; size_t bytes[NMAX + 1];
     float *ref[NMAX + 1];
-    OmegaGpuResident *res, *red;
+    OmegaGpuResident *res, *red, *stm;
+    OmegaGpuMem stamp; size_t stamp_bytes;
 } Chain;
 
-static OmegaResidentSpec SPEC = { 16, 1, 8, 0, 1, 0, 1 }, SPEC_RED = { 16, 1, 8, 1, 1, 0, 1 }; /* production: GPU scope, MEMBAR.ALL.SYS, abort bit */
+static OmegaResidentSpec SPEC = { 16, 1, 8, 0, 1, 0, 1, 0, 0 }, SPEC_RED = { 16, 1, 8, 1, 1, 0, 1, 0, 0 }; /* production: GPU scope, MEMBAR.ALL.SYS, abort bit */
 
 /* caller holds the lock */
 static int setup(Chain *c, uint32_t *st) {
@@ -84,6 +90,13 @@ static int setup(Chain *c, uint32_t *st) {
     }
     int rc = omega_gpu_resident_create(&SPEC, stg, c->N, &c->res);
     if (rc == 0) rc = omega_gpu_resident_create(&SPEC_RED, stg, c->N, &c->red);
+    if (rc == 0 && g_stamps) {
+        OmegaResidentSpec ss = SPEC; ss.stamps = 1;
+        rc = omega_gpu_resident_create(&ss, stg, c->N, &c->stm);
+        c->stamp_bytes = (size_t)c->N * 256u * OMEGA_RES_STAMP_BYTES; /* any grid <= 256 */
+        if (rc == 0 && omega_gpu_session_alloc(c->stamp_bytes, &c->stamp) != 0) rc = -1;
+        if (rc == 0) omega_gpu_resident_set_stamps(c->stm, c->stamp.va);
+    }
     if (rc != 0) { printf("resident create %s: %d (%s)\n", c->name, rc, omega_gpu_session_last_error()); return -1; }
     return 0;
 }
@@ -91,6 +104,7 @@ static void teardown(Chain *c) {
     for (uint32_t i = 0; i < c->N; i++) { omega_gpu_session_unlock(); omega_gpu_fp8_tensor_free(c->t[i]); omega_gpu_session_lock(); omega_gpu_session_free(&c->tab[i]); }
     for (uint32_t i = 0; i <= c->N; i++) { omega_gpu_session_free(&c->buf[i]); free(c->ref[i]); }
     omega_gpu_resident_free(c->res); omega_gpu_resident_free(c->red);
+    if (c->stm) { omega_gpu_resident_free(c->stm); omega_gpu_session_free(&c->stamp); }
 }
 
 /* caller holds the lock. grid 0 = capacity. *ns list elapsed. 0 ok */
@@ -102,15 +116,70 @@ static int run(OmegaGpuCmdList *cl, Chain *c, int mode, uint32_t grid, uint32_t 
     if (mode == M_LAUNCH) {
         for (uint32_t i = 0; i < c->N && rc == 0; i++)
             if (omega_gpu_fp8_gemv_grouped_record(cl, c->t[i], 1, c->tab[i].va, c->buf[i].va, 1, c->buf[i + 1].va) != OMEGA_GPU_FP8_OK) { printf("record: %s\n", omega_gpu_fp8_last_error()); rc = -1; }
-    } else rc = omega_gpu_resident_record(cl, mode == M_RES ? c->res : c->red, grid, spin, force);
+    } else {
+        if (mode == M_STM) { memset(c->stamp.cpu, 0, c->stamp_bytes); if (omega_gpu_session_sync_to_gpu(&c->stamp) != 0) return -1; }
+        rc = omega_gpu_resident_record(cl, mode == M_RES ? c->res : mode == M_STM ? c->stm : c->red, grid, spin, force);
+    }
     if (rc != 0) { printf("record %s %s: %d (%s)\n", MODE[mode], c->name, rc, omega_gpu_session_last_error()); return -1; }
     OmegaGpuCmdListOpts o; memset(&o, 0, sizeof o); o.mode = OMEGA_GPU_CMDLIST_PCAS; o.barrier = OMEGA_GPU_CMDLIST_BARRIER_WFI;
     OmegaGpuCmdListStats s; memset(&s, 0, sizeof s);
     if (omega_gpu_cmdlist_submit(cl, &o, &s) != 0) { printf("submit %s %s: %s\n", MODE[mode], c->name, omega_gpu_session_last_error()); return -1; }
     *ns = s.elapsed_ns;
     for (uint32_t i = 1; i <= c->N; i++) if (omega_gpu_session_sync_to_cpu(&c->buf[i]) != 0) return -1;
+    if (mode == M_STM && omega_gpu_session_sync_to_cpu(&c->stamp) != 0) return -1;
     return 0;
 }
+/* W-L2g camera readout. Records (u32): w0 globaltimer_lo stage start (thread 0), w1 CTA done (after BAR.SYNC), w2/w3 clock_lo
+ * start/done, w4 SM id, w8 + warp * 2 (+0 first row, +1 last row when it has more than one) globaltimer_lo.
+ * Times relative to stage 0's earliest start (u32 differences). Prints per stage: start skew (barrier release spread), CTA done
+ * min / p50 / p90 / max, span (max done - min start), gap to the next stage's earliest start (barrier cost), rows per warp
+ * (min / max) and bytes per CTA (min / max), first-row and per-row times; then a done-time histogram over all stages
+ * (stage-relative, 2 us bins) and the timer granularity. Returns 0 when every record was written. */
+static int cmp_i64(const void *a, const void *b) { int64_t x = *(const int64_t *)a, y = *(const int64_t *)b; return x < y ? -1 : x > y; }
+static int stamp_report(const Chain *c, uint32_t grid, uint32_t rep, int verbose) {
+    const uint32_t W = SPEC.warps, stride = grid * W, R = OMEGA_RES_STAMP_BYTES / 4u;
+    const uint32_t *rec = c->stamp.cpu;
+    if (g_rawf) { uint32_t hdr[4] = { 0x504d5453u, c->N, grid, rep }; fwrite(hdr, 4, 4, g_rawf); fwrite(rec, 4, (size_t)c->N * grid * R, g_rawf); }
+    const uint32_t t0 = rec[0];
+    uint32_t missing = 0, gran = 0xffffffffu, lowbits = 0;
+    for (uint32_t s = 0; s < c->N; s++) for (uint32_t b = 0; b < grid; b++) { const uint32_t *q = rec + ((size_t)s * grid + b) * R; if (q[0] == 0 || q[1] == 0) missing++; lowbits |= q[0] | q[1]; }
+    if (missing) { printf("STAMP chain=%s N=%u grid=%u rep=%u MISSING %u records (camera failed)\n", c->name, c->N, grid, rep, missing); return -1; }
+    static int64_t done[256], hist[64]; memset(hist, 0, sizeof hist);
+    double sum_span = 0, sum_gap = 0, sum_skew = 0, sum_tail = 0, sum_first = 0, sum_row = 0; uint32_t n_gap = 0, n_row = 0, n_first = 0;
+    for (uint32_t s = 0; s < c->N; s++) {
+        int64_t smin = INT64_MAX, smax = INT64_MIN, dmax = INT64_MIN;
+        for (uint32_t b = 0; b < grid; b++) { const uint32_t *q = rec + ((size_t)s * grid + b) * R; int64_t st = (int32_t)(q[0] - t0), d = (int32_t)(q[1] - t0);
+            if (st < smin) { smin = st; } if (st > smax) { smax = st; } done[b] = d; if (d > dmax) { dmax = d; } }
+        for (uint32_t b = 0; b < grid; b++) { int64_t rel = done[b] - smin; int bin = (int)(rel / 2000); if (bin < 0) bin = 0; if (bin > 63) bin = 63; hist[bin]++; }
+        qsort(done, grid, sizeof *done, cmp_i64);
+        /* rows and bytes per CTA / warp for this stage's shape */
+        const uint32_t n = c->sh[s].n, k = c->sh[s].k; uint32_t rw_min = 0xffffffffu, rw_max = 0, rc_min = 0xffffffffu, rc_max = 0;
+        for (uint32_t b = 0; b < grid; b++) { uint32_t rc = 0; for (uint32_t w = 0; w < W; w++) { uint32_t g0 = b * W + w, rw = g0 < n ? (n - g0 + stride - 1) / stride : 0;
+            rc += rw; if (rw < rw_min) rw_min = rw; if (rw > rw_max) rw_max = rw; } if (rc < rc_min) rc_min = rc; if (rc > rc_max) rc_max = rc; }
+        /* per-warp row completion: first row (from its CTA's start), later rows (interval) */
+        double first = 0, rowt = 0; uint32_t nf = 0, nr = 0;
+        for (uint32_t b = 0; b < grid; b++) { const uint32_t *q = rec + ((size_t)s * grid + b) * R;
+            for (uint32_t w = 0; w < W; w++) { uint32_t g0 = b * W + w, rw = g0 < n ? (n - g0 + stride - 1) / stride : 0;
+                if (rw >= 1) { first += (double)(int32_t)(q[8 + w * 2] - q[0]); nf++; }
+                if (rw >= 2) { rowt += (double)(int32_t)(q[9 + w * 2] - q[8 + w * 2]) / (rw - 1); nr++; } } }
+        int64_t gap = -1;
+        if (s + 1 < c->N) { int64_t nmin = INT64_MAX; for (uint32_t b = 0; b < grid; b++) { int64_t st = (int32_t)(rec[((size_t)(s + 1) * grid + b) * R] - t0); if (st < nmin) nmin = st; } gap = nmin - dmax; sum_gap += (double)gap; n_gap++; }
+        sum_span += (double)(dmax - smin); sum_skew += (double)(smax - smin); sum_tail += (double)(dmax - done[grid / 2]);
+        if (nf) { sum_first += first / nf; n_first++; } if (nr) { sum_row += rowt / nr; n_row++; }
+        if (verbose)
+            printf("STAMP chain=%s N=%u grid=%u rep=%u stage=%u k=%u n=%u start_skew_us=%.2f done_us min=%.2f p50=%.2f p90=%.2f max=%.2f span_us=%.2f gap_to_next_us=%.2f rows_per_warp=%u..%u bytes_per_cta=%u..%u first_row_us=%.2f per_row_us=%.2f\n",
+                   c->name, c->N, grid, rep, s, k, n, (smax - smin) / 1e3, (done[0] - smin) / 1e3, (done[grid / 2] - smin) / 1e3, (done[grid * 9 / 10] - smin) / 1e3, (dmax - smin) / 1e3,
+                   (dmax - smin) / 1e3, gap / 1e3, rw_min, rw_max, rc_min * k, rc_max * k, nf ? first / nf / 1e3 : 0.0, nr ? rowt / nr / 1e3 : 0.0);
+    }
+    for (uint32_t g = 1; g < 32; g <<= 1) if (!(lowbits & g)) gran = g << 1; else break;
+    printf("STAMPSUM chain=%s N=%u grid=%u rep=%u mean_span_us=%.2f mean_gap_us=%.2f mean_start_skew_us=%.2f mean_tail_p50_to_max_us=%.2f mean_first_row_us=%.2f mean_per_row_us=%.2f timer_low_zero_bits_granularity_ns>=%u\n",
+           c->name, c->N, grid, rep, sum_span / c->N / 1e3, n_gap ? sum_gap / n_gap / 1e3 : 0.0, sum_skew / c->N / 1e3, sum_tail / c->N / 1e3,
+           n_first ? sum_first / n_first / 1e3 : 0.0, n_row ? sum_row / n_row / 1e3 : 0.0, gran == 0xffffffffu ? 1u : gran);
+    if (verbose) { printf("STAMPHIST chain=%s N=%u grid=%u rep=%u (CTA done, stage-relative, 2 us bins from 0):", c->name, c->N, grid, rep);
+        for (int i = 0; i < 64; i++) { if (hist[i]) printf(" [%d-%d)=%" PRId64, i * 2, i * 2 + 2, hist[i]); } printf("\n"); }
+    return 0;
+}
+
 static int same(const Chain *c) { for (uint32_t i = 1; i <= c->N; i++) if (memcmp(c->buf[i].cpu, c->ref[i], c->bytes[i]) != 0) return 0; return 1; }
 
 static void shapes(Chain *c, const char *name, uint32_t N) {
@@ -120,7 +189,7 @@ static void shapes(Chain *c, const char *name, uint32_t N) {
 }
 
 static int host_only(void) {
-    const OmegaResidentSpec specs[] = { { 16, 1, 8, 0, 1, 0, 1 }, { 16, 1, 8, 1, 0, 0, 0 }, { 8, 1, 8, 0, 1, 0, 0 }, { 16, 1, 32, 0, 0, 0, 0 }, { 16, 1, 16, 0, 0, 0, 0 }, { 16, 1, 8, 0, 0, 0, 0 }, { 16, 1, 8, 0, 1, 1, 0 }, { 16, 1, 8, 0, 1, 2, 1 }, { 16, 1, 8, 0, 1, 0, 0 } };
+    const OmegaResidentSpec specs[] = { { 16, 1, 8, 0, 1, 0, 1, 0, 0 }, { 16, 1, 8, 1, 0, 0, 0, 0, 0 }, { 8, 1, 8, 0, 1, 0, 0, 0, 0 }, { 16, 1, 32, 0, 0, 0, 0, 0, 0 }, { 16, 1, 16, 0, 0, 0, 0, 0, 0 }, { 16, 1, 8, 0, 0, 0, 0, 0, 0 }, { 16, 1, 8, 0, 1, 1, 0, 0, 0 }, { 16, 1, 8, 0, 1, 2, 1, 0, 0 }, { 16, 1, 8, 0, 1, 0, 0, 0, 0 }, { 16, 1, 8, 0, 1, 0, 1, 1, 0 }, { 16, 1, 8, 1, 1, 0, 1, 1, 0 } };
     for (unsigned i = 0; i < sizeof specs / sizeof *specs; i++) {
         uint32_t insns = 0, gprs = 0;
         int rc = omega_resident_prog_stats(&specs[i], &insns, &gprs);
@@ -130,7 +199,7 @@ static int host_only(void) {
         CHECK(rc == 0, "codegen lb=%u warps=%u mutant=%d: %u insns, peak %u regs (declared %u), %u CTAs/SM at default limits",
               specs[i].lane_bytes, specs[i].warps, specs[i].mutant, insns, gprs, decl, per);
     }
-    const OmegaResidentSpec bad[] = { { 16, 2, 8, 0, 0, 0, 0 }, { 4, 1, 8, 0, 0, 0, 0 }, { 16, 1, 1, 0, 0, 0, 0 }, { 16, 1, 8, 2, 0, 0, 0 }, { 16, 1, 8, 0, 2, 0, 0 }, { 16, 1, 8, 0, 0, 3, 0 }, { 16, 1, 8, 0, 0, 0, 2 } };
+    const OmegaResidentSpec bad[] = { { 16, 2, 8, 0, 0, 0, 0, 0, 0 }, { 4, 1, 8, 0, 0, 0, 0, 0, 0 }, { 16, 1, 1, 0, 0, 0, 0, 0, 0 }, { 16, 1, 8, 2, 0, 0, 0, 0, 0 }, { 16, 1, 8, 0, 2, 0, 0, 0, 0 }, { 16, 1, 8, 0, 0, 3, 0, 0, 0 }, { 16, 1, 8, 0, 0, 0, 2, 0, 0 }, { 16, 1, 8, 0, 1, 0, 1, 2, 0 }, { 16, 1, 32, 0, 1, 0, 1, 1, 0 } };
     for (unsigned i = 0; i < sizeof bad / sizeof *bad; i++) CHECK(omega_resident_prog_stats(&bad[i], NULL, NULL) != 0, "codegen refuses bad spec %u", i);
     /* encode the production kernel to a file for nvdisasm */
     static BlackwellIRProgram prog;
@@ -142,6 +211,17 @@ static int host_only(void) {
         if (buf && omega_blackwell_kernel_encode_into(&prog, buf, need, &k) == 0 && omega_resident_apply_patches(buf, need, &pt) == 0) { FILE *f = fopen("/tmp/wl2f-resident.bin", "wb"); if (f) { fwrite(buf, 1, need, f); fclose(f); } }
         CHECK(buf != NULL, "production kernel encoded (%zu bytes) to /tmp/wl2f-resident.bin", need);
         free(buf);
+    }
+    { /* W-L2g: stamped kernel, patched timer reads (5 CS2R + 3 scope words) to /tmp/wl2g-stamped.bin for nvdisasm */
+        OmegaResidentSpec ss = specs[0]; ss.stamps = 1;
+        if (omega_blackwell_codegen_resident_prog_p(&ss, &prog, &pt) == 0) {
+            size_t need = omega_bw_program_code_bytes(&prog); uint8_t *buf = malloc(need); OmegaBlackwellKernel k; uint32_t ncs = 0;
+            for (uint32_t i = 0; i < pt.n && i < OMEGA_RES_MAX_PATCHES; i++) ncs += pt.kind[i] == OMEGA_RES_PATCH_CS2R;
+            int enc = buf && omega_blackwell_kernel_encode_into(&prog, buf, need, &k) == 0 && omega_resident_apply_patches(buf, need, &pt) == 0;
+            if (enc) { FILE *f = fopen("/tmp/wl2g-stamped.bin", "wb"); if (f) { fwrite(buf, 1, need, f); fclose(f); } }
+            CHECK(enc && ncs == 5 && pt.n == 8, "stamped kernel encoded and patched (%u timer reads, %u patches) to /tmp/wl2g-stamped.bin", ncs, pt.n);
+            free(buf);
+        } else CHECK(0, "stamped kernel codegen");
     }
     printf("gpu_resident_chain_test --host: %d checks, %d failed: %s\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS");
     return g_failed ? 1 : 0;
@@ -155,6 +235,9 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--fence") == 0 && i + 1 < argc) { SPEC.fence = (uint32_t)atoi(argv[++i]); }
         else if (strcmp(argv[i], "--abort0") == 0) { SPEC.abort = 0; }
         else if (strcmp(argv[i], "--quick") == 0) { quick = 1; }
+        else if (strcmp(argv[i], "--stamps") == 0) { g_stamps = 1; g_nmodes = M_ALL; }
+        else if (strcmp(argv[i], "--stamps-raw") == 0 && i + 1 < argc) { g_rawf = fopen(argv[++i], "wb"); }
+        else if (strcmp(argv[i], "--only-real") == 0) { g_only_real = 1; }
         else if (strcmp(argv[i], "--grid") == 0 && i + 1 < argc) { g_grid = (uint32_t)atoi(argv[++i]); }
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
@@ -204,27 +287,31 @@ int main(int argc, char **argv) {
 
     /* ---- CHAIN ---- */
     int firstpt = 1;
-    double tmed[2][M_COUNT][3]; memset(tmed, 0, sizeof tmed);
+    double tmed[2][M_ALL][3]; memset(tmed, 0, sizeof tmed);
     const uint32_t NS[3] = { 2, 8, 16 };
     const char *chains[2] = { "tiny", "real" };
     for (int ci = 0; ci < 2 && !omega_gpu_session_is_blocked(); ci++)
         for (int ni = 0; ni < 3; ni++) {
             if (quick && ni == 1) continue;
+            if (g_only_real && ci == 0) continue;
             Chain c; shapes(&c, chains[ci], NS[ni]);
             if (setup(&c, &st) != 0) { g_failed++; printf("setup %s N=%u failed\n", c.name, c.N); continue; }
-            uint64_t t[M_COUNT][REPMAX]; int ident = 1, red_differs = 0, ctl_ok = 1, ok = 1; uint64_t dummy;
+            uint64_t t[M_ALL][REPMAX]; int ident = 1, red_differs = 0, ctl_ok = 1, ok = 1, stamp_ok = 1; uint64_t dummy;
             if (run(cl, &c, M_LAUNCH, 0, 1u << 22, 0, &dummy) != 0) ok = 0;
             for (uint32_t i = 1; i <= c.N && ok; i++) memcpy(c.ref[i], c.buf[i].cpu, c.bytes[i]);
             if (ok) { const float *y = c.ref[c.N]; size_t nz = 0, bad = 0;
                 for (size_t j = 0; j < c.bytes[c.N] / 4; j++) { if (y[j] != y[j] || y[j] == -999.0f) bad++; else if (y[j] != 0) nz++; }
                 CHECK(bad == 0 && nz > c.bytes[c.N] / 8, "%s N=%u: launched chain output finite and written (%zu non-zero)", c.name, c.N, nz); }
             for (uint32_t r = 0; r < reps && ok; r++)
-                for (int m = 0; m < M_COUNT && ok; m++) {
-                    const int mode = (m + (int)r) % M_COUNT;
+                for (int m = 0; m < g_nmodes && ok; m++) {
+                    const int mode = (m + (int)r) % g_nmodes;
                     if (run(cl, &c, mode, g_grid, 1u << 22, 0, &t[mode][r]) != 0) { ok = 0; break; }
                     const int eq = same(&c);
                     if (mode == M_RED) { if (!eq) red_differs = 1; }
                     else if (!eq) { ident = 0; if (mode == M_RES) printf("  rep %u resident differs\n", r); }
+                    if (mode == M_STM) { uint32_t arr = 0, err = 0; omega_gpu_resident_status(c.stm, &arr, &err);
+                        if (err != 0 || arr != c.N - 1) { ctl_ok = 0; printf("  rep %u stamped ctl error=%u progress=%u\n", r, err, arr); }
+                        if (eq) { const uint32_t gr = g_grid ? g_grid : omega_gpu_resident_capacity(c.stm); if (stamp_report(&c, gr, r, r == reps - 1) != 0) stamp_ok = 0; } }
                     if (mode == M_RES) { uint32_t arr = 0, err = 0; omega_gpu_resident_status(c.res, &arr, &err);
                         if (err != 0 || arr != c.N - 1) { ctl_ok = 0; printf("  rep %u ctl error=%u progress=%u want %u\n", r, err, arr, c.N - 1); } }
                     if (omega_gpu_session_is_blocked()) { printf("session latched\n"); ok = 0; }
@@ -233,8 +320,9 @@ int main(int argc, char **argv) {
             if (ok) {
                 CHECK(ident, "%s N=%u: resident bit-identical to launched on every rep (all %u stage outputs)", c.name, c.N, c.N);
                 CHECK(ctl_ok, "%s N=%u: control block error 0, progress == N-1 on every rep", c.name, c.N);
+                if (g_stamps) CHECK(stamp_ok, "%s N=%u: stamped kernel wrote every (stage, CTA) record on every rep (camera can say no: records zeroed before each run)", c.name, c.N);
                 CHECK(red_differs, "%s N=%u: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep", c.name, c.N);
-                for (int m = 0; m < M_COUNT; m++) {
+                for (int m = 0; m < g_nmodes; m++) {
                     tmed[ci][m][ni] = median(t[m], reps) / 1e3;
                     printf("RES chain=%s N=%u mode=%s median_us=%.1f per_stage_us=%.2f\n", c.name, c.N, MODE[m], tmed[ci][m][ni], tmed[ci][m][ni] / c.N);
                     if (out) { fprintf(out, "%s{\"chain\":\"%s\",\"N\":%u,\"mode\":\"%s\",\"median_ns\":%" PRIu64 ",\"times_ns\":[", firstpt ? "" : ",", c.name, c.N, MODE[m], median(t[m], reps));
@@ -245,7 +333,8 @@ int main(int argc, char **argv) {
         }
     if (out) fprintf(out, "],\"slopes\":[");
     for (int ci = 0; ci < 2; ci++)
-        for (int m = 0; m < 2; m++) {
+        for (int m = 0; m < (g_stamps ? 4 : 2); m++) {
+            if (m == M_RED) continue;
             const double sl = (tmed[ci][m][2] - tmed[ci][m][0]) / 14.0;
             printf("SLOPE chain=%s mode=%s per_stage_us=%.2f (T16 %.1f - T2 %.1f) / 14\n", chains[ci], MODE[m], sl, tmed[ci][m][2], tmed[ci][m][0]);
             if (out) fprintf(out, "%s{\"chain\":\"%s\",\"mode\":\"%s\",\"per_stage_us\":%.3f}", ci + m ? "," : "", chains[ci], MODE[m], sl);

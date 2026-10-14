@@ -21,7 +21,7 @@
 #define NOREG (-1)
 #define MAX_LOOPS 4
 
-enum { K_FIXED, K_PRED, K_VAR, K_VAR_MORE, K_UVAR, K_STORE, K_SYNC, K_EXIT, K_BRA, K_BSSY, K_BSYNC };
+enum { K_FIXED, K_PRED, K_VAR, K_VAR_MORE, K_UVAR, K_STORE, K_SYNC, K_EXIT, K_BRA, K_BSSY, K_BSYNC, K_TIMER };
 
 typedef struct {
     BlackwellIRProgram *p;
@@ -45,6 +45,7 @@ static void emit(Em *e, BlackwellIRInsn in, int kind) {
     case K_BRA:   in.control = CW(5, SB_NONE, SB_NONE, wait); e->pending = in.predicate_p0 ? wait : 0; break;
     case K_BSSY:  in.control = CW(1, SB_NONE, SB_NONE, wait) | CW_YIELD; e->pending = 0; break;
     case K_BSYNC: in.control = CW(5, SB_NONE, SB_NONE, wait) | CW_YIELD; e->pending = 0; break;
+    case K_TIMER: in.control = CW(15, SB_NONE, SB_NONE, wait); e->pending = 0; break; /* CS2R.32 (patched): fixed latency, no scoreboard */
     default: e->err = -1; return;
     }
     if (omega_bw_ir_append(e->p, &in) < 0) e->err = -1;
@@ -119,6 +120,8 @@ static int spec_ok(const OmegaResidentSpec *s) {
     if (s->warps < 2 || s->warps > 32) return 0;
     if (s->mutant < 0 || s->mutant > 1) return 0;
     if (s->scope_gpu > 1 || s->fence > 2 || s->abort > 1) return 0;
+    if (s->stamps > 1 || s->prefetch > 1) return 0;
+    if (s->stamps && s->warps > 28) return 0; /* per-warp words 8 .. 63 of the 256-byte record */
     return 1;
 }
 
@@ -137,6 +140,16 @@ static void mark(OmegaResidentPatches *pt, int at, uint32_t kind) {
     if (!pt || !kind) return;
     if (pt->n < OMEGA_RES_MAX_PATCHES) { pt->idx[pt->n] = (uint32_t)at; pt->kind[pt->n] = kind; } 
     pt->n++;
+}
+
+/* W-L2g: timer read. Emitted as S2R Rd, SR (same Rd and SR fields) and patched after encode to the oracle's
+ * CS2R.32 Rd, SR (w0 0x7919 -> 0x7805; runs/oracle/o.sass of investigation 2026-10-14-own30b-L2g-stage-time). */
+#define SR_CLOCKLO 0x50u
+#define SR_GLOBALTIMERLO 0x52u
+#define SR_VIRTUALSMID 0x43u
+static void timer(Em *e, int d, uint32_t sr, OmegaResidentPatches *pt) {
+    mark(pt, here(e), OMEGA_RES_PATCH_CS2R);
+    BlackwellIRInsn i = I0(BW_IR_S2R); i.dst_vreg = d; i.imm = sr; emit(e, i, K_TIMER);
 }
 
 int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, BlackwellIRProgram *prog) { return omega_blackwell_codegen_resident_prog_p(spec, prog, NULL); }
@@ -177,11 +190,34 @@ int omega_blackwell_codegen_resident_prog_p(const OmegaResidentSpec *spec, Black
     int pw = V64(e), ps = V64(e), pxc = V64(e), pyr = V64(e), acc = V(e), cnt = V(e), wq = LB == 16 ? V128(e) : V64(e);
     int xq[4], sc = V(e), dot = V(e), u = V(e), a = V(e), sg = V(e), f = V(e), t = V(e);
     for (uint32_t q = 0; q < WORDS; q++) xq[q] = V128(e);
+    /* W-L2g stamps (spec.stamps). Register budget: nothing extra may stay live across the k-loop (62 regs = 4 CTAs/SM), so
+     * every site uses its own short-lived vregs and recomputes the record address from st and cx (both live anyway). */
     if (e->err) return -1;
 
     /* ---- stage loop ---- */
     const int L_st = here(e);
     loop_begin(e);
+    if (spec->stamps) { /* stage start: thread 0 writes w0 (globaltimer) and w2 (clock) */
+        int g = V(e), c = V(e), ti = V(e), sb = V(e), sa = V(e), sp = V64(e), rec = V64(e);
+        if (e->err) return -1;
+        timer(e, g, SR_GLOBALTIMERLO, pt);
+        timer(e, c, SR_CLOCKLO, pt);
+        s2r(e, ti, BW_SR_TID_X);
+        ldc64(e, sp, OMEGA_RES_ARG_STAMP);
+        ldc32(e, sb, OMEGA_RES_ARG_GRID);
+        s2r(e, sa, BW_SR_CTAID_X);
+        imadr(e, sa, st, sb, sa);
+        imadw(e, rec, sa, OMEGA_RES_STAMP_BYTES, sp);
+        isetp_ge_u32(e, ti, one);
+        const int h_bssy = bssy_fwd(e);
+        const int h_skip = bra_if_p0_fwd(e);
+        stg(e, rec, 0, g, udesc);
+        stg(e, rec, 8, c, udesc);
+        const int h_bsync = here(e);
+        bsync(e);
+        patch_bra(e, h_skip, h_bsync);
+        patch_bra(e, h_bssy, h_bsync + 1);
+    }
     ldg_wide(e, BW_IR_LDG_E_64, wv, pdesc, 0, udesc, 1);
     ldg_wide(e, BW_IR_LDG_E_64, sv, pdesc, 8, udesc, 0);
     ldg_wide(e, BW_IR_LDG_E_64, xv, pdesc, 16, udesc, 0);
@@ -239,10 +275,55 @@ int omega_blackwell_codegen_resident_prog_p(const OmegaResidentSpec *spec, Black
         patch_bra(e, bra_skip, at_bsync);
         patch_bra(e, at_bssy, at_bsync + 1);
     }
+    if (spec->stamps) { /* this warp finished a row: every lane writes the same word, w8 + warp * 2 + (0 first row | 1 later row) */
+        int g = V(e), ti = V(e), sb = V(e), sa = V(e), sp = V64(e), rec = V64(e);
+        if (e->err) return -1;
+        timer(e, g, SR_GLOBALTIMERLO, pt);
+        s2r(e, ti, BW_SR_TID_X);
+        ldc64(e, sp, OMEGA_RES_ARG_STAMP);
+        ldc32(e, sb, OMEGA_RES_ARG_GRID);
+        s2r(e, sa, BW_SR_CTAID_X);
+        imadr(e, sa, st, sb, sa);
+        imadw(e, rec, sa, OMEGA_RES_STAMP_BYTES, sp);
+        shr(e, sa, ti, 0, 5);
+        imadi(e, sa, sa, 0, 8, NOREG);              /* warp * 8 bytes */
+        imadw(e, rec, sa, 1, rec);
+        isetp_ge_u32(e, rg, stride);                /* P0: not this warp's first row */
+        const int b_first = bra_if_p0_fwd(e);
+        stg(e, rec, 32, g, udesc);
+        const int b_join = bra_fwd(e);
+        patch_bra(e, b_first, here(e));
+        stg(e, rec, 36, g, udesc);
+        patch_bra(e, b_join, here(e));
+    }
     imadi(e, rg, stride, 0, 1, rg);
     bra(e, L_rg);
     loop_end(e);
     patch_bra(e, bra_rg_end, here(e));
+    if (spec->stamps) { /* CTA done: all warps past their rows (BAR.SYNC); thread 0 writes w1, w3, w4 */
+        int g = V(e), c = V(e), ti = V(e), sm = V(e), sb = V(e), sa = V(e), sp = V64(e), rec = V64(e);
+        if (e->err) return -1;
+        bar_sync(e);
+        timer(e, g, SR_GLOBALTIMERLO, pt);
+        timer(e, c, SR_CLOCKLO, pt);
+        s2r(e, ti, BW_SR_TID_X);
+        s2r(e, sm, SR_VIRTUALSMID);
+        ldc64(e, sp, OMEGA_RES_ARG_STAMP);
+        ldc32(e, sb, OMEGA_RES_ARG_GRID);
+        s2r(e, sa, BW_SR_CTAID_X);
+        imadr(e, sa, st, sb, sa);
+        imadw(e, rec, sa, OMEGA_RES_STAMP_BYTES, sp);
+        isetp_ge_u32(e, ti, one);
+        const int h_bssy = bssy_fwd(e);
+        const int h_skip = bra_if_p0_fwd(e);
+        stg(e, rec, 4, g, udesc);
+        stg(e, rec, 12, c, udesc);
+        stg(e, rec, 16, sm, udesc);
+        const int h_bsync = here(e);
+        bsync(e);
+        patch_bra(e, h_skip, h_bsync);
+        patch_bra(e, h_bssy, h_bsync + 1);
+    }
 
     /* ---- next stage? ---- */
     imadi(e, st, one, 0, 1, st);
@@ -374,6 +455,10 @@ int omega_resident_apply_patches(uint8_t *code, size_t bytes, const OmegaResiden
         if (pt->kind[i] == OMEGA_RES_PATCH_LDG_GPU) { if (w2 != 0x0c1f5900u) return -1; w2 = 0x0c1ef900u; }
         else if (pt->kind[i] == OMEGA_RES_PATCH_MEMBAR_GPU) { if (w2 != 0x0000b000u) return -1; w2 = 0x0000a000u; } /* MEMBAR.ALL.SYS -> MEMBAR.ALL.GPU (oracle: fence.acq_rel.gpu) */
         else if (pt->kind[i] == OMEGA_RES_PATCH_ATOM_GPU) { if ((w2 & 0xffffff00u) != 0x081f5100u) return -1; w2 = 0x081ef100u | (w2 & 0xffu); }
+        else if (pt->kind[i] == OMEGA_RES_PATCH_CS2R) { /* S2R Rd, SR (w0 0x....7919) -> CS2R.32 Rd, SR (w0 0x....7805), SR in w2 bits 8..15 */
+            uint32_t w0; memcpy(&w0, code + at - 8u, 4);
+            if ((w0 & 0xffffu) != 0x7919u || (w2 != 0x5000u && w2 != 0x5200u)) return -1;
+            w0 = (w0 & 0xffff0000u) | 0x7805u; memcpy(code + at - 8u, &w0, 4); }
         else return -1;
         memcpy(code + at, &w2, 4);
     }

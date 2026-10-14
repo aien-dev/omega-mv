@@ -62,6 +62,10 @@ int omega_gpu_resident_status(OmegaGpuResident *r, uint32_t *progress, uint32_t 
  * barrier after it is seen (abort bit through the barrier word). Safe while the kernel runs. */
 int omega_gpu_resident_cancel(OmegaGpuResident *r);
 
+/* W-L2g instrumentation: device address of a buffer of n_stages x grid x OMEGA_RES_STAMP_BYTES (host-readable, GPU-uncached)
+ * written by a spec.stamps = 1 kernel. Required before record() for such a kernel. */
+void omega_gpu_resident_set_stamps(OmegaGpuResident *r, uint64_t va);
+
 #ifdef __cplusplus
 }
 #endif
