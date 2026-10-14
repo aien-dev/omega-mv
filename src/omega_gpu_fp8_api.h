@@ -37,6 +37,8 @@
  *
  *   int omega_gpu_fp8_prepare(uint32_t k);        build and pin the kernel for width k now (serving).
  *   void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t);
+ *   int omega_gpu_fp8_tensor_alloc(experts, n, k, &out); int omega_gpu_fp8_tensor_fill(t, w, scale_inv_bf16);
+ *       two-phase upload (W-FL1): alloc in a fixed order, fill from any thread (see the declarations).
  *   void omega_gpu_fp8_tensor_shape(const OmegaGpuFp8Tensor *t, uint32_t *experts, uint32_t *n, uint32_t *k);
  *   const char *omega_gpu_fp8_rc_name(int rc);     const char *omega_gpu_fp8_last_error(void);
  *
@@ -88,6 +90,13 @@ typedef struct OmegaGpuFp8Tensor OmegaGpuFp8Tensor;
 
 int omega_gpu_fp8_tensor_upload(uint32_t experts, uint32_t n, uint32_t k, const uint8_t *w,
                                 const uint16_t *scale_inv_bf16, OmegaGpuFp8Tensor **out);
+/* W-FL1 two-phase upload, for loaders that read and copy on several threads but keep the allocation order fixed:
+ * alloc takes the device buffers (shape rule as upload; nothing is read), fill does what upload does after its
+ * allocation (NaN refusal, copy, scale fold, sync) without the session lock, from any thread, once per tensor.
+ * upload == alloc + fill except that upload refuses a NaN code before allocating. A tensor whose fill failed is
+ * freed by the caller; a tensor must not reach a GEMV before its fill returned OK. */
+int omega_gpu_fp8_tensor_alloc(uint32_t experts, uint32_t n, uint32_t k, OmegaGpuFp8Tensor **out);
+int omega_gpu_fp8_tensor_fill(OmegaGpuFp8Tensor *t, const uint8_t *w, const uint16_t *scale_inv_bf16);
 void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t);
 void omega_gpu_fp8_tensor_shape(const OmegaGpuFp8Tensor *t, uint32_t *experts, uint32_t *n, uint32_t *k);
 

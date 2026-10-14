@@ -248,17 +248,16 @@ void omega_gpu_fp8_tensor_shape(const OmegaGpuFp8Tensor *t, uint32_t *experts, u
     if (k) *k = t ? t->k : 0;
 }
 
-int omega_gpu_fp8_tensor_upload(uint32_t experts, uint32_t n, uint32_t k, const uint8_t *w, const uint16_t *scale, OmegaGpuFp8Tensor **out) {
-    if (out) *out = NULL;
-    if (!w || !scale || !out || experts == 0 || n == 0 || k == 0 || n % OMEGA_FP8_BLOCK || k % OMEGA_FP8_BLOCK) return OMEGA_GPU_FP8_BAD_ARGS;
+/* Shape rule shared by upload and alloc. */
+static int upload_shape_rc(uint32_t experts, uint32_t n, uint32_t k) {
+    if (experts == 0 || n == 0 || k == 0 || n % OMEGA_FP8_BLOCK || k % OMEGA_FP8_BLOCK) return OMEGA_GPU_FP8_BAD_ARGS;
     if (k > OMEGA_FP8_MAX_K) return OMEGA_GPU_FP8_TOO_LARGE;
+    return OMEGA_GPU_FP8_OK;
+}
+
+/* The device buffers of one tensor, taken under the session lock (the only part of an upload that talks to the driver). */
+static int tensor_alloc_core(uint32_t experts, uint32_t n, uint32_t k, OmegaGpuFp8Tensor **out) {
     const size_t wbytes = (size_t)experts * n * k, scount = (size_t)experts * (n / OMEGA_FP8_BLOCK) * (k / OMEGA_FP8_BLOCK);
-    size_t first = 0;
-    if (omega_fp8_pack_scan_nan(w, wbytes, &first)) {
-        char e[120]; omega_gpu_fmt(e, sizeof e, "fp8 upload: e4m3 NaN code at byte %zu", first);
-        omega_gpu_session_set_error(e);
-        return OMEGA_GPU_FP8_NAN_WEIGHT;
-    }
     OmegaGpuFp8Tensor *t = omega_gpu_host_calloc(1, sizeof *t);
     if (!t) return OMEGA_GPU_FP8_BAD_ARGS;
     t->experts = experts; t->n = n; t->k = k;
@@ -268,14 +267,55 @@ int omega_gpu_fp8_tensor_upload(uint32_t experts, uint32_t n, uint32_t k, const 
     int (*const alloc)(size_t, OmegaGpuMem *) = g.weights_cached ? omega_gpu_session_alloc_cached : omega_gpu_session_alloc;
     if (!dev_open_locked() || alloc(wbytes, &t->w) != 0 || alloc(scount * 4u, &t->s) != 0) rc = OMEGA_GPU_FP8_CHIP_FAIL;
     omega_gpu_session_unlock();
-    if (rc == OMEGA_GPU_FP8_OK) {
-        memcpy(t->w.cpu, w, wbytes);
-        if (omega_fp8_pack_scales(scale, scount, t->s.cpu, g.no_fold) != 0) { omega_gpu_session_set_error("fp8 upload: NaN, inf or overflowing scale"); rc = OMEGA_GPU_FP8_BAD_ARGS; }
-        else if (omega_gpu_session_sync_to_gpu(&t->w) != 0 || omega_gpu_session_sync_to_gpu(&t->s) != 0) rc = OMEGA_GPU_FP8_CHIP_FAIL;
-    }
     if (rc != OMEGA_GPU_FP8_OK) { omega_gpu_fp8_tensor_free(t); return rc; }
     *out = t;
     return OMEGA_GPU_FP8_OK;
+}
+
+/* Copy, fold and publish, no session lock held (as the upload always did): weights as-is, scales folded to f32. */
+static int tensor_fill_core(OmegaGpuFp8Tensor *t, const uint8_t *w, const uint16_t *scale) {
+    const size_t wbytes = (size_t)t->experts * t->n * t->k, scount = (size_t)t->experts * (t->n / OMEGA_FP8_BLOCK) * (t->k / OMEGA_FP8_BLOCK);
+    memcpy(t->w.cpu, w, wbytes);
+    if (omega_fp8_pack_scales(scale, scount, t->s.cpu, g.no_fold) != 0) { omega_gpu_session_set_error("fp8 upload: NaN, inf or overflowing scale"); return OMEGA_GPU_FP8_BAD_ARGS; }
+    if (omega_gpu_session_sync_to_gpu(&t->w) != 0 || omega_gpu_session_sync_to_gpu(&t->s) != 0) return OMEGA_GPU_FP8_CHIP_FAIL;
+    return OMEGA_GPU_FP8_OK;
+}
+
+static int nan_refusal(const uint8_t *w, size_t wbytes) {
+    size_t first = 0;
+    if (omega_fp8_pack_scan_nan(w, wbytes, &first)) {
+        char e[120]; omega_gpu_fmt(e, sizeof e, "fp8 upload: e4m3 NaN code at byte %zu", first);
+        omega_gpu_session_set_error(e);
+        return OMEGA_GPU_FP8_NAN_WEIGHT;
+    }
+    return OMEGA_GPU_FP8_OK;
+}
+
+int omega_gpu_fp8_tensor_upload(uint32_t experts, uint32_t n, uint32_t k, const uint8_t *w, const uint16_t *scale, OmegaGpuFp8Tensor **out) {
+    if (out) *out = NULL;
+    if (!w || !scale || !out) return OMEGA_GPU_FP8_BAD_ARGS;
+    int rc = upload_shape_rc(experts, n, k);
+    if (rc != OMEGA_GPU_FP8_OK) return rc;
+    if ((rc = nan_refusal(w, (size_t)experts * n * k)) != OMEGA_GPU_FP8_OK) return rc; /* refused before any allocation */
+    OmegaGpuFp8Tensor *t = NULL;
+    if ((rc = tensor_alloc_core(experts, n, k, &t)) != OMEGA_GPU_FP8_OK) return rc;
+    if ((rc = tensor_fill_core(t, w, scale)) != OMEGA_GPU_FP8_OK) { omega_gpu_fp8_tensor_free(t); return rc; }
+    *out = t;
+    return OMEGA_GPU_FP8_OK;
+}
+
+int omega_gpu_fp8_tensor_alloc(uint32_t experts, uint32_t n, uint32_t k, OmegaGpuFp8Tensor **out) {
+    if (out) *out = NULL;
+    if (!out) return OMEGA_GPU_FP8_BAD_ARGS;
+    int rc = upload_shape_rc(experts, n, k);
+    if (rc != OMEGA_GPU_FP8_OK) return rc;
+    return tensor_alloc_core(experts, n, k, out);
+}
+
+int omega_gpu_fp8_tensor_fill(OmegaGpuFp8Tensor *t, const uint8_t *w, const uint16_t *scale) {
+    if (!t || !w || !scale || !t->w.cpu || !t->s.cpu) return OMEGA_GPU_FP8_BAD_ARGS;
+    int rc = nan_refusal(w, (size_t)t->experts * t->n * t->k);
+    return rc != OMEGA_GPU_FP8_OK ? rc : tensor_fill_core(t, w, scale);
 }
 
 void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t) {
