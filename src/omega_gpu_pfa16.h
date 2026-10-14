@@ -9,7 +9,8 @@
  *   omega_gpu_pf_hconv    x (f32 or bf16 rows of k) -> xh bf16 rows of k: bf16_rn(x * 2^64), (0,2,1,3)-permuted per group of 4
  *   omega_gpu_pf_hgemm    y f32 rows of n = sum over 128-blocks kb of S'[c/128][kb] * (8 HMMA.16816.F32.BF16 steps from zero);
  *                         weights e4m3 -> bf16 exactly in registers (omega_blackwell_codegen_tc.h, the cut-1 kernel, chip
- *                         evidence OWN30B-T3-TCGEMM-6d2803ec); rowidx_va 0 = direct rows (sorted row r reads xh row r)
+ *                         evidence OWN30B-T3-TCGEMM-6d2803ec); rowidx_va required (the down GEMM passes an identity row index: the cut-1 kernel with a direct-rows variant
+ *                         peaks at 128 registers, over the 126 the 128-register declaration allows)
  *   omega_gpu_pf_hswiglu  gu f32 rows of 2I (gate | up, the gate_up GEMM's plain output) -> act bf16 rows of I in the
  *                         hconv format (silu as the W8A8 epilogue, then * 2^64, bf16 RN)
  *

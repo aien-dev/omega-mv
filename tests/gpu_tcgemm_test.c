@@ -111,7 +111,7 @@ static int host_only(void) {
     { char pm[200]; int pr = omega_tc_patch_selftest(pm, sizeof pm); printf("placeholder patch self-test: %s (%s)\n", pr ? "FAIL" : "ok", pm); if (pr) fail++; }
     /* production shapes: instructions and registers (declared = peak + 2 rounded to 8 <= 128; 32 * warps * declared <= 65536) */
     static const OmegaTcGemmSpec shapes[] = {
-        { 2048, 4, 2, 8, 0, 0 }, { 768, 4, 2, 8, 0, 0 }, { 4096, 4, 2, 8, 0, 0 }, { 2048, 4, 1, 8, 0, 0 }, { 2048, 2, 2, 4, 0, 0 }, { 2048, 4, 2, 4, 0, 0 }, { 768, 4, 2, 4, 0, 0 },
+        { 2048, 4, 2, 8, 0 }, { 768, 4, 2, 8, 0 }, { 4096, 4, 2, 8, 0 }, { 2048, 4, 1, 8, 0 }, { 2048, 2, 2, 4, 0 }, { 2048, 4, 2, 4, 0 }, { 768, 4, 2, 4, 0 },
     };
     static BlackwellIRProgram prog;
     for (size_t i = 0; i < sizeof shapes / sizeof shapes[0]; i++) {
@@ -175,12 +175,12 @@ static int sim_run(const Prob *p, const OmegaTcGemmSpec *sp, int order, float *y
 static int sim_tests(void) {
     int fail = 0;
     static const struct { uint32_t E, n, k, M, xr; int skew; OmegaTcGemmSpec sp; } pts[] = {
-        { 3, 256, 256, 40, 13, 0, { 256, 4, 2, 8, 0, 0 } },
-        { 2, 128, 384, 70, 9, 1, { 384, 4, 2, 8, 0, 0 } },   /* three blocks, a multi-tile segment */
-        { 4, 128, 128, 37, 11, 0, { 128, 2, 2, 4, 0, 0 } },
-        { 2, 256, 256, 20, 7, 0, { 256, 4, 1, 8, 0, 0 } },
-        { 2, 128, 256, 33, 5, 1, { 256, 1, 4, 4, 0, 0 } },
-        { 1, 512, 256, 64, 64, 0, { 256, 4, 2, 8, 0, 0 } },  /* dense: one expert, four CTAs across n */
+        { 3, 256, 256, 40, 13, 0, { 256, 4, 2, 8, 0 } },
+        { 2, 128, 384, 70, 9, 1, { 384, 4, 2, 8, 0 } },   /* three blocks, a multi-tile segment */
+        { 4, 128, 128, 37, 11, 0, { 128, 2, 2, 4, 0 } },
+        { 2, 256, 256, 20, 7, 0, { 256, 4, 1, 8, 0 } },
+        { 2, 128, 256, 33, 5, 1, { 256, 1, 4, 4, 0 } },
+        { 1, 512, 256, 64, 64, 0, { 256, 4, 2, 8, 0 } },  /* dense: one expert, four CTAs across n */
     };
     for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
         Prob p; prob_make(&p, pts[i].E, pts[i].n, pts[i].k, pts[i].M, pts[i].xr, pts[i].skew);
@@ -203,7 +203,7 @@ static int sim_tests(void) {
         Prob p; prob_make(&p, 2, 128, 384, 50, 9, 1);
         float *ye = malloc((size_t)p.M * p.n * 4), *ys = malloc((size_t)p.M * p.n * 4);
         emulate(&p, ye);
-        OmegaTcGemmSpec sp = { 384, 4, 2, 8, m, 0 };
+        OmegaTcGemmSpec sp = { 384, 4, 2, 8, m };
         char msg[240] = ""; int rc = sim_run(&p, &sp, 0, ys, msg, sizeof msg);
         size_t bad = 0; if (rc == 0) for (size_t q = 0; q < (size_t)p.M * p.n; q++) if (memcmp(&ys[q], &ye[q], 4)) bad++;
         printf("sim mutant %d: %s %s(%zu of %zu differ)\n", m, rc ? "ERROR (counts as FAIL)" : bad ? "caught" : "NOT CAUGHT", msg, bad, (size_t)p.M * p.n);
@@ -219,7 +219,7 @@ int chip_tests(int argc, char **argv);
 int main(int argc, char **argv) {
     if (argc > 2 && strcmp(argv[1], "--dump") == 0) { /* raw code words for nvdisasm -b SM121 (offline check only): --dump file [k rt ct warps mutant] */
         static BlackwellIRProgram dp; static uint8_t buf[OMEGA_BW_CODE_CAP_MAX]; size_t len = 0;
-        OmegaTcGemmSpec sp = { argc > 3 ? (uint32_t)atoi(argv[3]) : 2048u, argc > 4 ? (uint32_t)atoi(argv[4]) : 4u, argc > 5 ? (uint32_t)atoi(argv[5]) : 2u, argc > 6 ? (uint32_t)atoi(argv[6]) : 8u, argc > 7 ? atoi(argv[7]) : 0, 0 };
+        OmegaTcGemmSpec sp = { argc > 3 ? (uint32_t)atoi(argv[3]) : 2048u, argc > 4 ? (uint32_t)atoi(argv[4]) : 4u, argc > 5 ? (uint32_t)atoi(argv[5]) : 2u, argc > 6 ? (uint32_t)atoi(argv[6]) : 8u, argc > 7 ? atoi(argv[7]) : 0 };
         if (omega_blackwell_codegen_tcgemm_prog(&sp, &dp) != 0 || omega_bw_encode_program(&dp, buf, sizeof buf, &len) != 0) return 1;
         FILE *f = fopen(argv[2], "wb"); if (!f) return 1; fwrite(buf, 1, len, f); fclose(f); printf("peak %u, %zu bytes\n", dp.regalloc.peak_gpr_usage, len); return 0;
     }

@@ -1,10 +1,10 @@
 /* gpu_pfa16_test.c (OWN-30B W-L1H, 2026-10-14): the W8A16 whole-prompt prefill kernels (omega_gpu_pfa16.h).
  *   --host-only  host mirrors: the hx bf16 conversion equals omega_tcgemm_permute_x; the C emulation against a double oracle
- *   --sim        hx kernels (convert f32, convert bf16, swiglu) and the cut-1 GEMM with direct rows in the warp simulator,
+ *   --sim        hx kernels (convert f32, convert bf16, swiglu) and the cut-1 GEMM (identity and gathered rows) in the warp simulator,
  *                bit-identical to the host mirrors / emulation; mutants caught (a simulator error is a FAIL)
  *   --chip       (under flock /tmp/aien-gb10.lock) the chain on the device API with real Qwen3-30B-A3B layer shapes and synthetic
  *                weights read IN PLACE from an FP8 GEMV tensor: hconv bit-identical, hgemm bit-identical to the emulation on
- *                sampled rows, hswiglu bit-identical to its mirror (of the chip's own GEMM output), second launch identical,
+ *                sampled rows, hswiglu within 1 bf16 ulp of its mirror (MUFU), counted, second launch identical,
  *                mutants caught, medians at --tokens
  * Verdict line last: "GPU_PFA16: PASS|FAIL". */
 #include "omega_blackwell_codegen_tc.h"
@@ -36,6 +36,10 @@ static void swiglu_ref(const float *gu, uint32_t I, uint16_t *out, int mutant) {
         out[perm_ix(a)] = omega_hx_bf16_rn(omega_hx_swiglu(g, u) * (mutant == 2 ? 1.0f : 0x1p64f));
     }
 }
+/* bf16 ulp distance of two finite values of the same sign class (0 = identical bits) */
+static uint32_t ulp16(uint16_t a, uint16_t b) { int32_t x = (a & 0x8000u) ? -(int32_t)(a & 0x7fffu) : (int32_t)a, y = (b & 0x8000u) ? -(int32_t)(b & 0x7fffu) : (int32_t)b; return (uint32_t)(x > y ? x - y : y - x); }
+/* the SwiGLU rule (as gpu_qgemm_test.c for the W8A8 epilogue): MUFU.EX2 / MUFU.RCP are approximations, so within 1 bf16 ulp
+ * of the exp2f / 1/x mirror is allowed and counted; anything further is a FAIL */
 static float rand_act(void) { return frnd() * (rnd() % 16 == 0 ? 8.0f : 1.0f); }
 static float rand_gate(void) { uint32_t c = rnd() % 8; return c == 0 ? -80.0f - 20.0f * fabsf(frnd()) : c == 1 ? 12.0f * frnd() : 3.0f * frnd(); } /* covers the 125 cap */
 
@@ -173,11 +177,11 @@ static int sim_gemm(const Prob *p, const OmegaTcGemmSpec *sp, int order, float *
     uint8_t *smem = malloc(omega_tcgemm_shared_bytes(sp));
     static WsSim s; memset(&s, 0, sizeof s);
     s.p = &prog; s.threads = 32u * sp->warps; s.smem = smem; s.smem_bytes = omega_tcgemm_shared_bytes(sp); s.order = order;
-    const uint64_t a[4] = { (uintptr_t)tiles, sp->direct ? 0u : (uintptr_t)ridx, (uintptr_t)p->xh, (uintptr_t)y };
+    const uint64_t a[4] = { (uintptr_t)tiles, (uintptr_t)ridx, (uintptr_t)p->xh, (uintptr_t)y };
     for (int i = 0; i < 4; i++) { s.cbank[(0x380 + 8 * i) / 4] = (uint32_t)a[i]; s.cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(a[i] >> 32); }
     s.cbank[0x3a0 / 4] = p->n;
     s.ranges[0].lo = (uintptr_t)tiles; s.ranges[0].hi = (uintptr_t)(tiles + nt);
-    s.ranges[1].lo = (uintptr_t)ridx; s.ranges[1].hi = sp->direct ? (uintptr_t)ridx : (uintptr_t)(ridx + p->M + bm); /* direct: no row-index read allowed */
+    s.ranges[1].lo = (uintptr_t)ridx; s.ranges[1].hi = (uintptr_t)(ridx + p->M + bm);
     s.ranges[2].lo = (uintptr_t)p->xh; s.ranges[2].hi = (uintptr_t)(p->xh + (size_t)(p->xr + bm) * p->k);
     s.ranges[3].lo = (uintptr_t)y; s.ranges[3].hi = (uintptr_t)(y + (size_t)p->M * p->n);
     s.ranges[4].lo = (uintptr_t)p->w; s.ranges[4].hi = (uintptr_t)(p->w + (size_t)p->E * p->n * p->k);
@@ -205,9 +209,9 @@ static int sim_tests(void) {
         if (rc || !bad) fail++;
     }
     static const struct { uint32_t E, n, k, M, xr; int direct; OmegaTcGemmSpec sp; } g[] = {
-        { 3, 256, 256, 70, 0, 1, { 256, 4, 2, 8, 0, 1 } },  /* direct rows: the down GEMM's form */
-        { 2, 128, 384, 37, 0, 1, { 384, 2, 2, 4, 0, 1 } },
-        { 3, 256, 256, 40, 13, 0, { 256, 4, 2, 8, 0, 0 } }, /* row index: unchanged cut-1 behaviour */
+        { 3, 256, 256, 70, 0, 1, { 256, 4, 2, 8, 0 } },  /* identity rows: the down GEMM's form */
+        { 2, 128, 384, 37, 0, 1, { 384, 2, 2, 4, 0 } },
+        { 3, 256, 256, 40, 13, 0, { 256, 4, 2, 8, 0 } }, /* row index: unchanged cut-1 behaviour */
     };
     for (size_t c = 0; c < sizeof g / sizeof g[0]; c++) {
         Prob p; prob_make(&p, g[c].E, g[c].n, g[c].k, g[c].M, g[c].xr, g[c].direct, 16u * g[c].sp.rt);
@@ -217,7 +221,7 @@ static int sim_tests(void) {
         for (int order = 0; order < 2; order++) {
             char msg[200] = ""; int rc = sim_gemm(&p, &g[c].sp, order, ys, msg, sizeof msg);
             size_t bad = 0; if (!rc) for (size_t q = 0; q < (size_t)p.M * p.n; q++) if (memcmp(&ys[q], &ye[q], 4)) bad++;
-            printf("sim hgemm E %u n %u k %u M %u %s order %d: %s %s%zu differ\n", p.E, p.n, p.k, p.M, g[c].direct ? "direct" : "rowidx", order, rc ? "ERROR" : bad ? "MISMATCH" : "ok (bit-identical)", msg, bad);
+            printf("sim hgemm E %u n %u k %u M %u %s order %d: %s %s%zu differ\n", p.E, p.n, p.k, p.M, g[c].direct ? "identity rows" : "rowidx", order, rc ? "ERROR" : bad ? "MISMATCH" : "ok (bit-identical)", msg, bad);
             if (rc || bad) fail++;
         }
         free(ye); free(ys); prob_free(&p);
@@ -261,7 +265,7 @@ static int chip_shape(const char *name, uint32_t tokens, int reps, int check_row
     if (!nt) { printf("%s tile table failed\n", name); return 1; }
     { uint32_t *ri = ridx.cpu; for (uint32_t i = 0; i < M + bm; i++) ri[i] = i < M ? p.src[i] : 0; }
     omega_gpu_session_lock(); (void)omega_gpu_session_sync_to_gpu(&tab); (void)omega_gpu_session_sync_to_gpu(&ridx); omega_gpu_session_unlock();
-    const uint64_t rva = direct ? 0 : ridx.va;
+    const uint64_t rva = ridx.va; /* down: identity rows (p.src[i] = i) */
     uint64_t nsx[32] = { 0 }, ns[32] = { 0 }, nss[32] = { 0 };
     if (reps > 32) reps = 32;
     /* 1. activation conversion on the chip (down: hswiglu of gu), bit-identity of every converted row */
@@ -269,10 +273,11 @@ static int chip_shape(const char *name, uint32_t tokens, int reps, int check_row
     uint16_t *hx = malloc(hb);
     if (!rc) rc = omega_gpu_pf_download(&hd, 0, hx, hb & ~(size_t)15);
     if (!rc) {
-        size_t bad = 0; for (size_t i = 0; i < (size_t)p.xr * k; i++) if (hx[i] != p.xh[i]) bad++;
+        size_t bad = 0, ulp1 = 0; for (size_t i = 0; i < (size_t)p.xr * k; i++) if (hx[i] != p.xh[i]) { if (direct && ulp16(hx[i], p.xh[i]) == 1) ulp1++; else bad++; }
         qsort(nsx, reps, 8, cmp_u64);
-        printf("%s %s on %u rows of %u: %zu of %zu differ from the host mirror; median %.3f ms\n", name, direct ? "hswiglu" : "hconv", XR, k, bad, (size_t)p.xr * k, nsx[reps / 2] / 1e6);
+        printf("%s %s on %u rows of %u: %zu of %zu differ from the host mirror%s (%zu within 1 bf16 ulp); median %.3f ms\n", name, direct ? "hswiglu" : "hconv", XR, k, bad, (size_t)p.xr * k, direct ? " beyond 1 bf16 ulp" : "", ulp1, nsx[reps / 2] / 1e6);
         if (bad) fail++;
+        memcpy(p.xh, hx, (size_t)p.xr * k * 2); /* the GEMM check below uses the chip's own converted rows */
     }
     /* 2. the GEMM */
     float *y1 = malloc(yb), *y2 = calloc(1, yb);
@@ -303,10 +308,10 @@ static int chip_shape(const char *name, uint32_t tokens, int reps, int check_row
             for (int r = 0; r < reps && !rc; r++) rc = omega_gpu_pf_hswiglu(n / 2, M, yd.va, ad.va, &nss[r]);
             uint16_t *act = malloc(ab), *aref = malloc((size_t)(n / 2) * 2);
             if (!rc) rc = omega_gpu_pf_download(&ad, 0, act, ab & ~(size_t)15);
-            size_t sbad = 0;
-            if (!rc) for (uint32_t i = 0; i < M; i++) { swiglu_ref(y2 + (size_t)i * n, n / 2, aref, 0); for (uint32_t a = 0; a < n / 2; a++) if (aref[a] != act[(size_t)i * (n / 2) + a]) sbad++; }
+            size_t sbad = 0, s1 = 0;
+            if (!rc) for (uint32_t i = 0; i < M; i++) { swiglu_ref(y1 + (size_t)i * n, n / 2, aref, 0); for (uint32_t a = 0; a < n / 2; a++) { const uint32_t d = ulp16(aref[a], act[(size_t)i * (n / 2) + a]); if (d == 1) s1++; else if (d) sbad++; } }
             qsort(nss, reps, 8, cmp_u64);
-            printf("%s hswiglu of the chip GEMM output (%u rows): %s %zu differ; median %.3f ms\n", name, M, rc ? "launch failed" : "", sbad, nss[reps / 2] / 1e6);
+            printf("%s hswiglu of the chip GEMM output (%u rows): %s%zu differ beyond 1 bf16 ulp (%zu within 1 ulp); median %.3f ms\n", name, M, rc ? "launch failed " : "", sbad, s1, nss[reps / 2] / 1e6);
             if (rc || sbad) fail++;
             free(act); free(aref);
         }

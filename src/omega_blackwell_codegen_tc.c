@@ -47,7 +47,6 @@ int omega_tcgemm_spec_ok(const OmegaTcGemmSpec *s) {
     if (s->warps != 1 && s->warps != 2 && s->warps != 4 && s->warps != 8) return 0;
     if ((16u * s->rt * 8u) % (32u * s->warps)) return 0; /* whole LDG.128 staging slots per thread */
     if (s->mutant < 0 || s->mutant > 4 || (s->mutant == 3 && s->rt < 2)) return 0;
-    if (s->direct > 1) return 0;
     return 1;
 }
 uint32_t omega_tcgemm_shared_bytes(const OmegaTcGemmSpec *s) { return omega_tcgemm_spec_ok(s) ? 2u * 16u * s->rt * 128u : 0u; }
@@ -93,7 +92,7 @@ int omega_blackwell_codegen_tcgemm_prog(const OmegaTcGemmSpec *spec, BlackwellIR
     int n0w = V(e), tmp = V(e), tmp2 = V(e), pw = V64(e), ps = V64(e), la = V(e), ysn = V(e), pyr = V64(e);
     if (e->err) return -1;
     ldcu64(e, udesc, 0x358);
-    ldc64(e, ptab, OMEGA_TCGEMM_ARG_TILES); if (!spec->direct) ldc64(e, pidx, OMEGA_TCGEMM_ARG_ROWIDX); ldc64(e, px, OMEGA_TCGEMM_ARG_X); ldc64(e, py, OMEGA_TCGEMM_ARG_Y);
+    ldc64(e, ptab, OMEGA_TCGEMM_ARG_TILES); ldc64(e, pidx, OMEGA_TCGEMM_ARG_ROWIDX); ldc64(e, px, OMEGA_TCGEMM_ARG_X); ldc64(e, py, OMEGA_TCGEMM_ARG_Y);
     ldc32(e, nreg, OMEGA_TCGEMM_ARG_N);
     s2r(e, tid, BW_SR_TID_X); s2r(e, cx, BW_SR_CTAID_X); s2r(e, cy, BW_SR_CTAID_Y);
     movi(e, one, 1);
@@ -123,8 +122,8 @@ int omega_blackwell_codegen_tcgemm_prog(const OmegaTcGemmSpec *spec, BlackwellIR
     andi(e, s0, tid, 0, 1); imadi(e, s0, s0, 0, 2u, NOREG); /* s0 = (w0 % 8) / 2 */
     for (uint32_t jj = 0; jj < NJ; jj++) {
         shr(e, r, tid, 0, 3); imadi(e, r, one, 0, jj * T / 8u, r);
-        if (spec->direct) iadd(e, srow, row0, r);      /* W-L1H direct rows: no row-index load */
-        else { iadd(e, tmp, row0, r); imadw(e, sidx, tmp, 4u, pidx); ldg32(e, srow, sidx, udesc, 1); }
+        iadd(e, tmp, row0, r); imadw(e, sidx, tmp, 4u, pidx);
+        ldg32(e, srow, sidx, udesc, 1);
         imadw(e, gx[jj], srow, K * 2u, px); imadw(e, gx[jj], w0b, 1, gx[jj]);
         /* shared byte address ((i*4 + s0)*32 + g'*4 + t)*16 + h*4 with i = r/16, g' = r%8, h = (r/8)%2 */
         shr(e, tmp, r, 0, 4); imadi(e, tmp, tmp, 0, 4u, s0); imadi(e, tmp, tmp, 0, 32u, ts);

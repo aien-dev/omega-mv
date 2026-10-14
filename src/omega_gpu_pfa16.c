@@ -31,12 +31,11 @@ static int gen_hgemm(const OmegaPfKey *key, void *prog) { OmegaTcGemmSpec s; mem
 static int gen_hx(const OmegaPfKey *key, void *prog) { OmegaHxSpec s; memcpy(&s, key->words, sizeof s); return omega_blackwell_codegen_hx_prog(&s, prog); }
 
 int omega_gpu_pf_hgemm(uint32_t n, uint32_t k, uint64_t tiles_va, uint32_t ntiles, uint64_t rowidx_va, uint64_t xh_va, uint64_t y_va, uint64_t *ns) {
-    if (!tiles_va || !xh_va || !y_va) return OMEGA_GPU_PF_BAD_ARGS;
+    if (!tiles_va || !rowidx_va || !xh_va || !y_va) return OMEGA_GPU_PF_BAD_ARGS; /* direct rows: pass an identity row index */
     if (ntiles == 0) return OMEGA_GPU_PF_OK;
     if (ntiles > 65535u) return OMEGA_GPU_PF_TOO_LARGE;
     OmegaTcGemmSpec s; memset(&s, 0, sizeof s);
     s.k = k; s.rt = HRT(); s.ct = h.ct ? h.ct : (n % 128u == 0 ? 2u : 1u); s.warps = h.warps ? h.warps : 8u; s.mutant = h.gmutant;
-    s.direct = rowidx_va == 0;
     if (!omega_tcgemm_spec_ok(&s)) return OMEGA_GPU_PF_BAD_ARGS;
     const uint32_t span = omega_tcgemm_span(&s);
     if (n == 0 || n % span || n % 128u) return OMEGA_GPU_PF_BAD_ARGS;

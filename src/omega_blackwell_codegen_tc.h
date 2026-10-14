@@ -54,7 +54,6 @@ typedef struct {
     uint32_t ct;    /* column tiles (8 weight rows) per warp: 1, 2 or 4; rt * ct >= 4 */
     uint32_t warps; /* 1, 2, 4 or 8; (16 * rt * 8) % (32 * warps) == 0 */
     int mutant;
-    uint32_t direct; /* W-L1H: 1 = no row index, sorted row r reads X row r (rowidx argument ignored); 0 = the cut-1 kernel unchanged */
 } OmegaTcGemmSpec;
 #define OMEGA_TCGEMM_ARG_TILES 0x380u
 #define OMEGA_TCGEMM_ARG_ROWIDX 0x388u
