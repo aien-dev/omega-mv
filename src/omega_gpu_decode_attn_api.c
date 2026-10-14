@@ -247,6 +247,16 @@ static int dattn_core(OmegaGpuDecodeAttnCache *c, uint32_t layer, uint32_t pos, 
     return rc;
 }
 
+/* ---- read-only view for the prefill attention (omega_gpu_prefill_attn_api.c) ---- */
+int omega_gpu_decode_attn_cache_view(const OmegaGpuDecodeAttnCache *c, uint32_t layer, OmegaGpuDecodeAttnCacheView *v) {
+    if (!c || !v || layer >= c->layers) return OMEGA_GPU_DATTN_BAD_ARGS;
+    v->layers = c->layers; v->max_pos = c->max_pos;
+    v->k_va = c->kv[layer].va; v->v_va = c->kv[layer].va + c->plane_bytes;
+    v->rope_va = c->rope.va;
+    v->q_norm_va = c->norms.va + (uint64_t)layer * 1024u; v->k_norm_va = v->q_norm_va + 512u;
+    return OMEGA_GPU_DATTN_OK;
+}
+
 int omega_gpu_decode_attn(OmegaGpuDecodeAttnCache *c, uint32_t layer, uint32_t pos, const float *qkv, float eps, float out_scale, float *out, OmegaGpuDecodeAttnInfo *info) {
     return dattn_core(c, layer, pos, qkv, eps, out_scale, out, info, NULL, 0, 0);
 }
