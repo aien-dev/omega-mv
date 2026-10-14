@@ -195,6 +195,9 @@ void omega_gpu_decode_graph_set_resident(int on);
 int omega_gpu_decode_graph_resident(void);
 void omega_gpu_decode_graph_set_resident_grid(uint32_t grid);
 uint32_t omega_gpu_decode_graph_resident_grid(void);
+/* W-L2i: GEMV rows per warp at a time (1 default, 2 = row pairs); env AIEN_OMEGA_DGRAPH_RESIDENT_ROWS. Rebuilds the kernel on change. */
+void omega_gpu_decode_graph_set_resident_rows(uint32_t rows);
+uint32_t omega_gpu_decode_graph_resident_rows(void);
 /* TEST ONLY red: the resident kernel without its grid barrier (mutant 1): the token/logits comparison must FAIL. */
 void omega_gpu_decode_graph_test_set_resident_red(int on);
 

@@ -195,13 +195,19 @@ static int host_only(void) {
     CHECK(omega_gpu_router_record(fake, NULL, 0, 0, EPS, 1, 1.0f, NULL) == OMEGA_GPU_ROUTER_BAD_ARGS, "router record with a NULL router: BAD_ARGS");
     CHECK(omega_gpu_decode_attn_record(fake, NULL, 0, 0, 0, EPS, 1.0f, 1) == OMEGA_GPU_DATTN_BAD_ARGS, "decode attn record with a NULL cache: BAD_ARGS");
     for (int mu = 0; mu <= 1; mu++) { /* W-L2h resident decode kernel: builds; W-L2i: fits 4 CTAs per SM of 8 warps (64 declared registers, grid 192) */
-        OmegaResident2Spec rs = { 8u, mu }; uint32_t ins = 0, gpr = 0; int rc = omega_resident2_prog_stats(&rs, &ins, &gpr);
+        OmegaResident2Spec rs = { 8u, mu, 0 }; uint32_t ins = 0, gpr = 0; int rc = omega_resident2_prog_stats(&rs, &ins, &gpr);
         const uint32_t decl = omega_bw_gpr_declared(gpr), per = 65536u / (256u * decl);
         CHECK(rc == 0 && per >= 4u, "resident2 kernel mutant %d builds: %u instructions, peak %u registers (declared %u, %u CTAs/SM)", mu, ins, gpr, decl, per);
     }
-    { OmegaResident2Spec rs = { 16u, 0 }; CHECK(omega_resident2_prog_stats(&rs, NULL, NULL) != 0, "resident2 refuses warps != 8"); }
+    { OmegaResident2Spec rs = { 16u, 0, 0 }; CHECK(omega_resident2_prog_stats(&rs, NULL, NULL) != 0, "resident2 refuses warps != 8"); }
+    { /* W-L2i row pairs: builds; registers and CTAs per SM reported (the pair body needs about 10 more) */
+        OmegaResident2Spec rs = { 8u, 0, 2 }; uint32_t ins = 0, gpr = 0; int rc = omega_resident2_prog_stats(&rs, &ins, &gpr);
+        const uint32_t decl = omega_bw_gpr_declared(gpr), per = 65536u / (256u * decl);
+        CHECK(rc == 0 && per >= 3u, "resident2 rows-2 kernel builds: %u instructions, peak %u registers (declared %u, %u CTAs/SM)", ins, gpr, decl, per);
+        OmegaResident2Spec bad = { 8u, 0, 3 }; CHECK(omega_resident2_prog_stats(&bad, NULL, NULL) != 0, "resident2 refuses rows 3");
+    }
     { /* encoded + scope-patched production kernel to /tmp/wl2h-resident2.bin (offline nvdisasm check) */
-        static BlackwellIRProgram prog; OmegaResidentPatches pt; OmegaResident2Spec rs = { 8u, 0 };
+        static BlackwellIRProgram prog; OmegaResidentPatches pt; OmegaResident2Spec rs = { 8u, 0, 0 };
         if (omega_blackwell_codegen_resident2_prog_p(&rs, &prog, &pt) == 0) {
             size_t need = omega_bw_program_code_bytes(&prog); uint8_t *buf = malloc(need); OmegaBlackwellKernel k;
             int enc = buf && omega_blackwell_kernel_encode_into(&prog, buf, need, &k) == 0 && omega_resident_apply_patches(buf, need, &pt) == 0;
@@ -230,7 +236,7 @@ static void res_section(OmegaGpuDecodeGraph *gr, const Model *m, const Out *C0, 
     Out R; if (out_alloc(&R, vocab) != 0) { CHECK(0, "resident: alloc"); return; }
     uint64_t *t_off = calloc(reps, 8), *t_on = calloc(reps, 8), *c_off = calloc(reps, 8), *c_on = calloc(reps, 8);
     uint32_t l_off = 0, l_on = 0; int ok = 1, ident = 1, off_ident = 1;
-    printf("resident grid %u\n", omega_gpu_decode_graph_resident_grid());
+    printf("resident grid %u rows %u\n", omega_gpu_decode_graph_resident_grid(), omega_gpu_decode_graph_resident_rows());
     for (uint32_t r = 0; r < reps && ok; r++)
         for (int k = 0; k < 2 && ok; k++) {
             const int on = (k + (int)r) % 2;
@@ -465,6 +471,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--cached-weights") == 0) cached = 1;
         else if (strcmp(argv[i], "--resident") == 0) g_resident = 1;       /* W-L2h: resident decode chain section (ON vs OFF, red) */
         else if (strcmp(argv[i], "--resident-grid") == 0 && i + 1 < argc) omega_gpu_decode_graph_set_resident_grid((uint32_t)atoi(argv[++i]));
+        else if (strcmp(argv[i], "--resident-rows") == 0 && i + 1 < argc) omega_gpu_decode_graph_set_resident_rows((uint32_t)atoi(argv[++i])); /* W-L2i */
         else if (strcmp(argv[i], "--tl-reps") == 0 && i + 1 < argc) g_tl_reps = (uint32_t)atoi(argv[++i]); /* W-L2i */
         else if (strcmp(argv[i], "--prefetch") == 0) prefetch = 1;          /* W-L2d: o_proj weight prefetch beside the attention */
         else if (strcmp(argv[i], "--prefetch-red") == 0) prefetch = prefetch_red = 1; /* its red: o_proj unordered, MUST FAIL */

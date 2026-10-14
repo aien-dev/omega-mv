@@ -66,6 +66,7 @@ enum { OMEGA_RES2_GEMV16 = 0, OMEGA_RES2_SWIGLU = 1, OMEGA_RES2_RESNORM = 2, OME
 typedef struct {
     uint32_t warps; /* must be 8 */
     int mutant;     /* 0 production; 1 no barrier */
+    uint32_t rows;  /* W-L2i: 0 or 1 = one row per warp at a time; 2 = row pairs (two weight rows in flight per warp) */
 } OmegaResident2Spec;
 
 int omega_blackwell_codegen_resident2_prog_p(const OmegaResident2Spec *spec, BlackwellIRProgram *prog, OmegaResidentPatches *pt);

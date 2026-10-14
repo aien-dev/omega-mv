@@ -139,7 +139,7 @@ static void mark(OmegaResidentPatches *pt, int at, uint32_t kind) {
 }
 
 /* values every block may use (live for the whole kernel) */
-typedef struct { int udesc, pdesc, tid, cx, warp, lane, one, gw; } Ctx;
+typedef struct { int udesc, pdesc, tid, cx, warp, lane, one, gw; uint32_t rows; } Ctx; /* rows: not a register (W-L2i) */
 
 /* e4m3 byte i of word w -> f32 bits (value * 2^-120): the variant 1 decode, verbatim */
 static void decode_byte(Em *e, int f, int wq, unsigned word, unsigned i, int u, int a, int s) {
@@ -261,6 +261,149 @@ static int gemv_block(Em *e, const Ctx *c, uint32_t LB, int add) {
     bra(e, L_rg);
     loop_end(e);
     patch_bra(e, bra_rg_end, here(e));
+    patch_bra(e, bra_nogroup, here(e));
+    return bra_fwd(e);
+}
+
+/* W-L2i GEMV stage with ROW PAIRS (spec rows 2): warp gw serves rows rg and rg2 = rg + wpg together (two weight rows in flight
+ * per warp, one x load shared), rg += 2 wpg. A lone last row (rg + wpg >= n) computes row rg twice and stores it once. Per row
+ * the arithmetic is gemv_block's, in the same order (dot from 0 over the bytes, acc += dot * scale per step, the same shuffle
+ * tree, y, then the RES ADD), so the output is the same bit for bit. rt_add: one block serves kinds 0 and 4 (the add runs
+ * when kind == 4), which keeps the program under BW_MAX_IR_INSNS. */
+static int gemv_block2(Em *e, const Ctx *c, uint32_t LB, int rt_add) {
+    const uint32_t BPS = 32u * LB / OMEGA_FP8_BLOCK, LPB = OMEGA_FP8_BLOCK / LB, WORDS = LB / 4u;
+    const int log2lpb = log2u(LPB), log2rpb = log2u(OMEGA_FP8_BLOCK);
+    const BlackwellIROpcode ldw = LB == 16 ? BW_IR_LDG_E_128 : BW_IR_LDG_E_64;
+    if (log2lpb < 0) { e->err = -1; return -1; }
+    int tb = V64(e), xv = V64(e), yv = V64(e), av = rt_add ? V64(e) : NOREG, kks = V64(e), rgkb = V64(e), kg = V64(e), xw = V64(e);
+    int wv = V64(e), sv = V64(e), ent = V64(e), g = V(e), t = V(e), nwpg = V(e), goff = V(e), kind = rt_add ? V(e) : NOREG;
+    int kk = V(e), ks = V(e), rgn = V(e), kb4 = V(e), wpg = V(e), xlane = V64(e), rg = V(e), rg2 = V(e), off = V(e), srg = V(e);
+    int wlane = V(e), slane = V(e), xlo = V(e);
+    int pw = V64(e), ps = V64(e), pw2 = V64(e), ps2 = V64(e), pxc = V64(e), pyr = V64(e), acc = V(e), acc2 = V(e), cnt = V(e);
+    int wq = LB == 16 ? V128(e) : V64(e), wq2 = LB == 16 ? V128(e) : V64(e);
+    int xq[4] = { NOREG, NOREG, NOREG, NOREG }, sc = V(e), sc2 = V(e), dot = V(e), u = V(e), sg = V(e), tt = V(e);
+    for (uint32_t q = 0; q < WORDS; q++) xq[q] = V128(e);
+    if (e->err) return -1;
+    ldg_wide(e, BW_IR_LDG_E_64, tb, c->pdesc, OMEGA_RES2_D_TAB, c->udesc, 1);
+    ldg_wide(e, BW_IR_LDG_E_64, xv, c->pdesc, OMEGA_RES2_D_X, c->udesc, 0);
+    ldg_wide(e, BW_IR_LDG_E_64, yv, c->pdesc, OMEGA_RES2_D_Y, c->udesc, 0);
+    if (rt_add) ldg_wide(e, BW_IR_LDG_E_64, av, c->pdesc, OMEGA_RES2_D_ADD, c->udesc, 0);
+    ldg_wide(e, BW_IR_LDG_E_64, kks, c->pdesc, OMEGA_RES2_D_K, c->udesc, 0);
+    ldg_wide(e, BW_IR_LDG_E_64, rgkb, c->pdesc, OMEGA_RES2_D_N, c->udesc, 0);
+    ldg_wide(e, BW_IR_LDG_E_64, kg, c->pdesc, OMEGA_RES2_D_KIND, c->udesc, 0);
+    ldg_wide(e, BW_IR_LDG_E_64, xw, c->pdesc, OMEGA_RES2_D_XGS, c->udesc, 0);
+    imadi(e, kk, kks, 0, 1, NOREG);
+    imadi(e, ks, kks, 1, 1, NOREG);
+    imadi(e, rgn, rgkb, 0, 1, NOREG);
+    imadi(e, kb4, rgkb, 1, 1, NOREG);
+    imadi(e, wpg, xw, 1, 1, NOREG);
+    if (rt_add) imadi(e, kind, kg, 0, 1, NOREG);
+    imadi(e, nwpg, wpg, 0, 0xffffffffu, NOREG); /* -wpg */
+    imadi(e, t, c->gw, 0, 1, NOREG);
+    movrz(e, g);
+    const int L_g = here(e);
+    loop_begin(e);
+    isetp_ge_u32(e, t, wpg);
+    { BlackwellIRInsn i = I0(BW_IR_BRA); i.predicate_p0 = true; i.predicate_not = true; i.imm = 1; emit(e, i, K_BRA); }
+    const int bra_g_done = here(e) - 1;
+    imadr(e, t, nwpg, c->one, t);
+    imadi(e, g, c->one, 0, 1, g);
+    bra(e, L_g);
+    loop_end(e);
+    patch_bra(e, bra_g_done, here(e));
+    { int gg = V(e); if (e->err) return -1; imadi(e, gg, kg, 1, 1, NOREG); isetp_ge_u32(e, g, gg); }
+    const int bra_nogroup = bra_if_p0_fwd(e);
+    imadw(e, ent, g, 16u, tb);
+    ldg_wide(e, BW_IR_LDG_E_64, wv, ent, 0, c->udesc, 1);
+    ldg_wide(e, BW_IR_LDG_E_64, sv, ent, 8, c->udesc, 0);
+    imadrs(e, goff, g, 0, xw, 0, NOREG);
+    imadw(e, xv, goff, 1, xv);
+    imadr(e, goff, g, rgn, NOREG);
+    imadw(e, yv, goff, 4u, yv);
+    if (rt_add) imadw(e, av, goff, 4u, av);
+    imadi(e, wlane, c->lane, 0, LB, NOREG);
+    shr(e, slane, c->lane, 0, (uint32_t)log2lpb); imadi(e, slane, slane, 0, 4, NOREG);
+    imadi(e, xlo, c->lane, 0, LB * 4u, NOREG);
+    imadw(e, xlane, xlo, 1, xv);
+    imadi(e, rg, t, 0, 1, NOREG);
+
+    const int L_p = here(e);
+    loop_begin(e);
+    isetp_ge_u32(e, rg, rgn);
+    const int bra_p_end = bra_if_p0_fwd(e);
+    /* rg2 = rg + wpg, or rg when that is past the group's rows (warp-uniform branch) */
+    imadi(e, rg2, rg, 0, 1, NOREG);
+    imadi(e, off, wpg, 0, 1, rg);
+    isetp_ge_u32(e, off, rgn);
+    { const int bra_lone = bra_if_p0_fwd(e); imadi(e, rg2, off, 0, 1, NOREG); patch_bra(e, bra_lone, here(e)); }
+    imadr(e, off, rg, kk, NOREG); imadw(e, pw, off, 1, wv); imadw(e, pw, wlane, 1, pw);
+    imadr(e, off, rg2, kk, NOREG); imadw(e, pw2, off, 1, wv); imadw(e, pw2, wlane, 1, pw2);
+    shr(e, srg, rg, 0, (uint32_t)log2rpb);
+    imadr(e, off, srg, kb4, NOREG); imadw(e, ps, off, 1, sv); imadw(e, ps, slane, 1, ps);
+    shr(e, srg, rg2, 0, (uint32_t)log2rpb);
+    imadr(e, off, srg, kb4, NOREG); imadw(e, ps2, off, 1, sv); imadw(e, ps2, slane, 1, ps2);
+    imadw(e, pxc, c->one, 0, xlane);
+    movrz(e, acc); movrz(e, acc2);
+    imadi(e, cnt, ks, 0, 1, NOREG);
+    const int L_k = here(e);
+    loop_begin(e);
+    {
+        int first = 1;
+        for (uint32_t q = 0; q < WORDS; q++) { ldg_wide(e, BW_IR_LDG_E_128, xq[q], pxc, q * 16u, c->udesc, first); first = 0; }
+        ldg_wide(e, ldw, wq, pw, 0, c->udesc, 0);
+        ldg_wide(e, ldw, wq2, pw2, 0, c->udesc, 0);
+        ldg32(e, sc, ps, c->udesc, 0);
+        ldg32(e, sc2, ps2, c->udesc, 0);
+    }
+    movrz(e, dot);
+    for (uint32_t word = 0; word < WORDS; word++)
+        for (unsigned i = 0; i < 4; i++) { decode_byte(e, sg, wq, word, i, u, u, sg); ffma(e, dot, sg, xq[word], i, dot); }
+    ffma(e, acc, dot, sc, 0, acc);
+    movrz(e, dot);
+    for (uint32_t word = 0; word < WORDS; word++)
+        for (unsigned i = 0; i < 4; i++) { decode_byte(e, sg, wq2, word, i, u, u, sg); ffma(e, dot, sg, xq[word], i, dot); }
+    ffma(e, acc2, dot, sc2, 0, acc2);
+    imadw(e, pw, c->one, 32u * LB, pw);
+    imadw(e, pw2, c->one, 32u * LB, pw2);
+    imadw(e, pxc, c->one, 32u * LB * 4u, pxc);
+    imadw(e, ps, c->one, BPS * 4u, ps);
+    imadw(e, ps2, c->one, BPS * 4u, ps2);
+    imadi(e, cnt, c->one, 0, 0xffffffffu, cnt);
+    isetp_ge_u32(e, cnt, c->one);
+    bra_if_p0(e, L_k);
+    loop_end(e);
+
+    for (uint32_t o = 16; o >= 1; o /= 2) { shfl_down(e, tt, acc, o); fadd(e, R(acc), R(acc), R(tt)); }
+    for (uint32_t o = 16; o >= 1; o /= 2) { shfl_down(e, tt, acc2, o); fadd(e, R(acc2), R(acc2), R(tt)); }
+    isetp_ge_u32(e, c->lane, c->one);
+    {
+        const Region r = region_skip_if_p0(e);
+        for (int h = 0; h < 2; h++) {
+            const int row = h ? rg2 : rg, val = h ? acc2 : acc;
+            int bra_same = -1;
+            if (h) { isetp_ge_u32(e, rg, rg2); bra_same = bra_if_p0_fwd(e); } /* lone row: rg2 == rg, stored once */
+            imadw(e, pyr, row, 4u, yv);
+            stg(e, pyr, 0, val, c->udesc);
+            if (rt_add) { /* kind 4 only: skip when 3 >= kind */
+                int three = V(e), pa = V64(e), xa = V(e);
+                if (e->err) return -1;
+                movi(e, three, 3u);
+                isetp_ge_u32(e, three, kind);
+                const int bra_noadd = bra_if_p0_fwd(e);
+                imadw(e, pa, row, 4u, av);
+                ldg32(e, xa, pa, c->udesc, 1);
+                fadd(e, R(xa), R(xa), R(val));
+                stg(e, pa, 0, xa, c->udesc);
+                patch_bra(e, bra_noadd, here(e));
+            }
+            if (h) patch_bra(e, bra_same, here(e));
+        }
+        region_end(e, r);
+    }
+    imadi(e, rg, wpg, 0, 2, rg);
+    bra(e, L_p);
+    loop_end(e);
+    patch_bra(e, bra_p_end, here(e));
     patch_bra(e, bra_nogroup, here(e));
     return bra_fwd(e);
 }
@@ -408,7 +551,7 @@ static int resnorm_block(Em *e, const Ctx *c) {
 }
 
 int omega_blackwell_codegen_resident2_prog_p(const OmegaResident2Spec *spec, BlackwellIRProgram *prog, OmegaResidentPatches *pt) {
-    if (!spec || !prog || spec->warps != 8u || spec->mutant < 0 || spec->mutant > 1) return -1;
+    if (!spec || !prog || spec->warps != 8u || spec->mutant < 0 || spec->mutant > 1 || spec->rows > 2u) return -1;
     if (pt) memset(pt, 0, sizeof *pt);
     const uint32_t W = spec->warps;
     omega_bw_ir_init(prog);
@@ -416,7 +559,7 @@ int omega_blackwell_codegen_resident2_prog_p(const OmegaResident2Spec *spec, Bla
     Em *e = &em;
 
     /* ---- prologue: values live for the whole kernel ---- */
-    Ctx c;
+    Ctx c; c.rows = spec->rows;
     int st = V(e); /* W-L2i: ctl pointer and barrier target are rebuilt inside the barrier (constant bank), not held kernel-wide */
     c.udesc = UV64(e); c.pdesc = V64(e); c.tid = V(e); c.cx = V(e); c.warp = V(e); c.lane = V(e); c.one = V(e); c.gw = V(e);
     if (e->err) return -1;
@@ -448,11 +591,20 @@ int omega_blackwell_codegen_resident2_prog_p(const OmegaResident2Spec *spec, Bla
         bra_k[i] = here(e) - 1;
     }
     /* default: GEMV16 */
-    ends[ne++] = gemv_block(e, &c, 16u, 0);
-    patch_bra(e, bra_k[0], here(e)); ends[ne++] = swiglu_block(e, &c);
-    patch_bra(e, bra_k[1], here(e)); ends[ne++] = resnorm_block(e, &c);
-    patch_bra(e, bra_k[2], here(e)); ends[ne++] = gemv_block(e, &c, 8u, 0);
-    patch_bra(e, bra_k[3], here(e)); ends[ne++] = gemv_block(e, &c, 16u, 1);
+    if (c.rows == 2u) { /* W-L2i row pairs: kinds 0 and 4 share one block (the add runs when kind == 4) */
+        const int at16 = here(e);
+        ends[ne++] = gemv_block2(e, &c, 16u, 1);
+        patch_bra(e, bra_k[3], at16);
+        patch_bra(e, bra_k[0], here(e)); ends[ne++] = swiglu_block(e, &c);
+        patch_bra(e, bra_k[1], here(e)); ends[ne++] = resnorm_block(e, &c);
+        patch_bra(e, bra_k[2], here(e)); ends[ne++] = gemv_block2(e, &c, 8u, 0);
+    } else {
+        ends[ne++] = gemv_block(e, &c, 16u, 0);
+        patch_bra(e, bra_k[0], here(e)); ends[ne++] = swiglu_block(e, &c);
+        patch_bra(e, bra_k[1], here(e)); ends[ne++] = resnorm_block(e, &c);
+        patch_bra(e, bra_k[2], here(e)); ends[ne++] = gemv_block(e, &c, 8u, 0);
+        patch_bra(e, bra_k[3], here(e)); ends[ne++] = gemv_block(e, &c, 16u, 1);
+    }
     if (e->err) return -1;
     for (int i = 0; i < ne; i++) { if (ends[i] < 0) return -1; patch_bra(e, ends[i], here(e)); }
 

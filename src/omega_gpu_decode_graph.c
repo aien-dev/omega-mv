@@ -51,6 +51,7 @@ struct OmegaGpuDecodeGraph {
     /* W-L2h resident decode chain (omega_gpu_decode_graph_set_resident): built at the first resident token */
     OmegaGpuResident *res;
     int res_mutant;                      /* the mutant the resident kernel was built with (test red) */
+    uint32_t res_rows;                   /* W-L2i: rows per warp the resident kernel was built with */
     int res_used;                        /* this token recorded resident launches (end_token closes the batch) */
     int qkv_layer;                       /* layer whose qkv the previous chain already computed, -1 none */
 };
@@ -231,6 +232,13 @@ uint32_t omega_gpu_decode_graph_resident_grid(void) {
     return g_resident_grid;
 }
 void omega_gpu_decode_graph_test_set_resident_red(int on) { g_resident_red = on ? 1 : 0; }
+/* W-L2i: GEMV rows per warp at a time in the resident kernel: set_resident_rows, else env AIEN_OMEGA_DGRAPH_RESIDENT_ROWS ("2"), else 1. */
+static uint32_t g_resident_rows;
+void omega_gpu_decode_graph_set_resident_rows(uint32_t rows) { g_resident_rows = rows; }
+uint32_t omega_gpu_decode_graph_resident_rows(void) {
+    if (g_resident_rows == 0) { const char *e = getenv("AIEN_OMEGA_DGRAPH_RESIDENT_ROWS"); g_resident_rows = (e && e[0] == '2' && e[1] == 0) ? 2u : 1u; }
+    return g_resident_rows;
+}
 
 /* stage index of layer l's [o + add] launch; [gate_up, swiglu, down, combine+norm, next qkv] follow it */
 #define RES_PER_LAYER 6u
@@ -261,11 +269,11 @@ static int res_build(OmegaGpuDecodeGraph *g) {
                                                       .k = H, .n = OMEGA_GPU_DGRAPH_QKV, .groups = 1 };
         else { s[n] = s[n - 1]; n++; } /* padding: keeps RES_PER_LAYER stages per layer (never run) */
     }
-    OmegaResident2Spec spec = { 8u, g_resident_red ? 1 : 0 };
+    OmegaResident2Spec spec = { 8u, g_resident_red ? 1 : 0, omega_gpu_decode_graph_resident_rows() };
     int rc = omega_gpu_resident2_create(&spec, s, n, omega_gpu_decode_graph_resident_grid(), &g->res);
     omega_gpu_host_free(s);
     if (rc != OMEGA_GPU_RESIDENT_OK) { g->res = NULL; return fail(g, NULL, rc == OMEGA_GPU_RESIDENT_CODEGEN_FAIL ? OMEGA_GPU_DGRAPH_CODEGEN_FAIL : OMEGA_GPU_DGRAPH_CHIP_FAIL); }
-    g->res_mutant = spec.mutant;
+    g->res_mutant = spec.mutant; g->res_rows = spec.rows;
     return OMEGA_GPU_DGRAPH_OK;
 }
 
@@ -359,7 +367,7 @@ int omega_gpu_decode_graph_begin_token(OmegaGpuDecodeGraph *g, const float *x_em
     tok[0] = TOKEN_POISON; tok[1] = TOKEN_POISON;
     if (x_embed) memcpy(cpu_of(g, g->lo.x), x_embed, OMEGA_GPU_DGRAPH_HIDDEN * 4u);
     if (omega_gpu_session_sync_to_gpu(&g->buf) != 0) return fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
-    if (omega_gpu_decode_graph_resident() && (!g->res || g->res_mutant != (g_resident_red ? 1 : 0))) {
+    if (omega_gpu_decode_graph_resident() && (!g->res || g->res_mutant != (g_resident_red ? 1 : 0) || g->res_rows != omega_gpu_decode_graph_resident_rows())) {
         if (g->res) { omega_gpu_resident_free(g->res); g->res = NULL; }
         int rc = res_build(g);
         if (rc != OMEGA_GPU_DGRAPH_OK) return rc;
