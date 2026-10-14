@@ -53,8 +53,10 @@ void omega_gpu_resident_set_limits(uint32_t sms, uint32_t threads_per_sm, uint32
  * launch to cl. grid 0 = capacity. */
 int omega_gpu_resident_record(OmegaGpuCmdList *cl, OmegaGpuResident *r, uint32_t grid, uint32_t spin_max, int force);
 
-/* Reads the control block back (after the submit returned). */
-int omega_gpu_resident_status(OmegaGpuResident *r, uint32_t *arrive, uint32_t *error);
+/* Reads the control block back (after the submit returned): progress = barriers passed (CTA 0), error. A launch that
+ * aborted (error or cancel) leaves the barrier word unknown: status then replaces it with a fresh one. Every recorded
+ * launch must be submitted and followed by status() before the next record. */
+int omega_gpu_resident_status(OmegaGpuResident *r, uint32_t *progress, uint32_t *error);
 
 #ifdef __cplusplus
 }

@@ -13,7 +13,7 @@ make PHYSICS_DIR="$PHYS" -j10 build/gpu_resident_chain_test build/gpu_cmdlist_te
 sha256sum build/gpu_resident_chain_test build/gpu_cmdlist_test build/libomega_gpu.a > "$EVID/binaries.sha256"
 fail=0
 ./build/gpu_resident_chain_test --host > "$EVID/host.log" 2>&1 || fail=1
-timeout 900 ./build/gpu_resident_chain_test --reps "${REPS:-9}" --out "$EVID/receipt.json" > "$EVID/resident.log" 2>&1 || fail=1
+timeout 900 ./build/gpu_resident_chain_test ${RES_ARGS:-} --reps "${REPS:-9}" --out "$EVID/receipt.json" > "$EVID/resident.log" 2>&1 || fail=1
 grep -E "^PROBE|^RES|^SLOPE|^OVERSIZE|^capacity|FAIL|checks" "$EVID/resident.log"
 timeout 300 ./build/gpu_cmdlist_test > "$EVID/cmdlist.log" 2>&1 || fail=1; echo "cmdlist: $(tail -1 "$EVID/cmdlist.log")"
 echo "end $(date -u +%FT%TZ)" >> "$EVID/device.txt"

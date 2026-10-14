@@ -60,7 +60,7 @@ extern "C" {
 #define OMEGA_RES_CTL_VERSION 0x04u
 #define OMEGA_RES_CTL_NSTAGES 0x08u
 #define OMEGA_RES_CTL_GRID 0x0cu
-#define OMEGA_RES_CTL_ARRIVE 0x10u
+#define OMEGA_RES_CTL_PROGRESS 0x10u /* r2: barriers passed, written by CTA 0 (r1: the arrive counter itself) */
 #define OMEGA_RES_CTL_ERROR 0x14u
 #define OMEGA_RES_CTL_CANCEL 0x18u
 #define OMEGA_RES_CTL_SPINMAX 0x1cu
@@ -73,16 +73,26 @@ extern "C" {
 #define OMEGA_RES_ARG_GRID 0x394u
 #define OMEGA_RES_ARG_STRIDE 0x398u
 #define OMEGA_RES_ARG_SPINMAX 0x39cu
-#define OMEGA_RES_ARGS_WORDS 8u
+#define OMEGA_RES_ARG_BAR 0x3a0u  /* u64 barrier word (arrive counter) */
+#define OMEGA_RES_ARG_BASE 0x3a8u /* u32 counter value at launch start (arrivals of earlier launches) */
+#define OMEGA_RES_ARGS_WORDS 11u
+
+#define OMEGA_RES_MAX_PATCHES 8u
+#define OMEGA_RES_PATCH_LDG_GPU 1u
+#define OMEGA_RES_PATCH_ATOM_GPU 2u
+typedef struct { uint32_t n; uint32_t idx[OMEGA_RES_MAX_PATCHES]; uint32_t kind[OMEGA_RES_MAX_PATCHES]; } OmegaResidentPatches;
 
 typedef struct {
     uint32_t lane_bytes; /* 8 or 16 */
     uint32_t rows;       /* 1, 2, 4, 8 */
     uint32_t warps;      /* 2 .. 32 (warp 0 runs the barrier wait) */
     int mutant;          /* 0 production; 1 no barrier (negative control) */
+    uint32_t scope_gpu;  /* 0: arrive + poll at system scope (r1); 1: GPU scope (patched words, barrier word in GPU-cached memory) */
 } OmegaResidentSpec;
 
 int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, BlackwellIRProgram *prog);
+int omega_blackwell_codegen_resident_prog_p(const OmegaResidentSpec *spec, BlackwellIRProgram *prog, OmegaResidentPatches *pt);
+int omega_resident_apply_patches(uint8_t *code, size_t bytes, const OmegaResidentPatches *pt);
 int omega_resident_prog_stats(const OmegaResidentSpec *spec, uint32_t *insns, uint32_t *gprs);
 
 #ifdef __cplusplus

@@ -1,0 +1,11 @@
+ok: codegen lb=16 warps=8 mutant=0: 204 insns, peak 62 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=8 mutant=1: 160 insns, peak 59 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=8 warps=8 mutant=0: 162 insns, peak 52 regs (declared 56), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=32 mutant=0: 204 insns, peak 62 regs (declared 64), 1 CTAs/SM at default limits
+ok: codegen lb=16 warps=16 mutant=0: 204 insns, peak 62 regs (declared 64), 2 CTAs/SM at default limits
+ok: codegen refuses bad spec 0
+ok: codegen refuses bad spec 1
+ok: codegen refuses bad spec 2
+ok: codegen refuses bad spec 3
+ok: production kernel encoded (3328 bytes) to /tmp/wl2f-resident.bin
+gpu_resident_chain_test --host: 10 checks, 0 failed: PASS

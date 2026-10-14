@@ -118,6 +118,7 @@ static int spec_ok(const OmegaResidentSpec *s) {
     if (s->rows != 1) return 0; /* rows > 1 would need the runtime row offset r * k as an LDG immediate */
     if (s->warps < 2 || s->warps > 32) return 0;
     if (s->mutant < 0 || s->mutant > 1) return 0;
+    if (s->scope_gpu > 1) return 0;
     return 1;
 }
 
@@ -132,8 +133,17 @@ static void decode_byte(Em *e, int f, int wq, unsigned word, unsigned i, int u, 
     else imadi(e, f, s, 0, 1u, a);
 }
 
-int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, BlackwellIRProgram *prog) {
+static void mark(OmegaResidentPatches *pt, int at, uint32_t kind) {
+    if (!pt || !kind) return;
+    if (pt->n < OMEGA_RES_MAX_PATCHES) { pt->idx[pt->n] = (uint32_t)at; pt->kind[pt->n] = kind; } 
+    pt->n++;
+}
+
+int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, BlackwellIRProgram *prog) { return omega_blackwell_codegen_resident_prog_p(spec, prog, NULL); }
+
+int omega_blackwell_codegen_resident_prog_p(const OmegaResidentSpec *spec, BlackwellIRProgram *prog, OmegaResidentPatches *pt) {
     if (!spec_ok(spec) || !prog) return -1;
+    if (pt) memset(pt, 0, sizeof *pt);
     const uint32_t LB = spec->lane_bytes, W = spec->warps;
     const uint32_t BPS = 32u * LB / OMEGA_FP8_BLOCK, LPB = OMEGA_FP8_BLOCK / LB, WORDS = LB / 4u;
     const int log2lpb = log2u(LPB), log2rpb = log2u(OMEGA_FP8_BLOCK); /* rows = 1 */
@@ -159,7 +169,7 @@ int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, Blackwe
     shr(e, slane, lane, 0, (uint32_t)log2lpb); imadi(e, slane, slane, 0, 4, NOREG);
     imadi(e, xlo, lane, 0, LB * 4u, NOREG);
     imadi(e, rg0, cx, 0, W, warp);
-    movrz(e, st); movrz(e, target);
+    movrz(e, st); ldc32(e, target, OMEGA_RES_ARG_BASE);
 
     /* per-stage values */
     int wv = V64(e), sv = V64(e), xv = V64(e), yv = V64(e), kks = V64(e), rgkb = V64(e);
@@ -241,41 +251,37 @@ int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, Blackwe
     imadw(e, pdesc, one, OMEGA_RES_DESC_BYTES, pdesc);
 
     if (spec->mutant != 1) {
-        /* ---- grid barrier ---- */
-        int v = V(e), old = V(e), spins = V(e), verdict = V(e), smaddr = V(e), w0 = V(e), lim = V(e), pa = V64(e);
+        /* ---- grid barrier ----
+         * every thread: MEMBAR.ALL.SYS (its y stores ordered), BAR.SYNC; thread 0 alone (BSSY region): the error and cancel
+         * words (uncached control block, strong sys loads) and the arrive ATOMG are one batch (one round trip), then thread 0
+         * polls the barrier word until it reaches target (bounded by spin_max); CTA 0 publishes the stage reached to the
+         * control block's progress word; the verdict goes through shared memory to the whole CTA. */
+        int v = V(e), old = V(e), spins = V(e), verdict = V(e), smaddr = V(e), t0 = V(e), lim = V(e), c1 = V(e), pa = V64(e), pb = V64(e), pe = V64(e);
         if (e->err) return -1;
         membar(e);
         ldc32(e, lim, OMEGA_RES_ARG_GRID);
         imadi(e, target, lim, 0, 1, target);
         bar_sync(e);
-        s2r(e, w0, BW_SR_TID_X); shr(e, w0, w0, 0, 5);
-        isetp_ge_u32(e, w0, one);
-        const int bra_not_w0 = bra_if_p0_fwd(e); /* warp-uniform: warps 1.. skip */
-        movi(e, verdict, 1);
-        imadw(e, pa, one, OMEGA_RES_CTL_ERROR, pctl);
-        ldg_sys(e, v, pa, udesc);
-        isetp_ge_u32(e, v, one);
-        const int bra_abort1 = bra_if_p0_fwd(e);
-        imadw(e, pa, one, OMEGA_RES_CTL_CANCEL, pctl);
-        ldg_sys(e, v, pa, udesc);
-        isetp_ge_u32(e, v, one);
-        const int bra_abort2 = bra_if_p0_fwd(e);
-        imadw(e, pa, one, OMEGA_RES_CTL_ARRIVE, pctl);
-        isetp_ge_u32(e, lane, one);
-        {
-            const int at_bssy = bssy_fwd(e);
-            const int bra_skip = bra_if_p0_fwd(e);
-            atom_add(e, old, pa, one, udesc);
-            const int at_bsync = here(e);
-            bsync(e);
-            patch_bra(e, bra_skip, at_bsync);
-            patch_bra(e, at_bssy, at_bsync + 1);
-        }
-        movrz(e, spins);
+        s2r(e, t0, BW_SR_TID_X);
+        isetp_ge_u32(e, t0, one);
+        const int r_bssy = bssy_fwd(e);
+        const int r_skip = bra_if_p0_fwd(e);
+        ldc64(e, pb, OMEGA_RES_ARG_BAR);
         ldc32(e, lim, OMEGA_RES_ARG_SPINMAX);
+        imadw(e, pe, one, OMEGA_RES_CTL_ERROR, pctl);
+        imadw(e, pa, one, OMEGA_RES_CTL_CANCEL, pctl);
+        ldg_sys(e, v, pe, udesc);
+        { BlackwellIRInsn i = I0(BW_IR_LDG_STRONG_SYS); i.dst_vreg = c1; i.src1_vreg = pa; i.ureg = udesc; emit(e, i, K_VAR_MORE); }
+        { mark(pt, here(e), spec->scope_gpu ? OMEGA_RES_PATCH_ATOM_GPU : 0);
+          BlackwellIRInsn i = I0(BW_IR_ATOMG_ADD_STRONG_SYS); i.dst_vreg = old; i.src1_vreg = pb; i.src2_vreg = one; i.ureg = udesc; emit(e, i, K_VAR_MORE); }
+        imadi(e, verdict, v, 0, 1, c1);  /* error + cancel: nonzero = abort (we have arrived; others will not wait on us) */
+        isetp_ge_u32(e, verdict, one);
+        const int bra_abort = bra_if_p0_fwd(e);
+        movrz(e, spins);
         const int L_sp = here(e);
         loop_begin(e);
-        ldg_sys(e, v, pa, udesc);
+        mark(pt, here(e), spec->scope_gpu ? OMEGA_RES_PATCH_LDG_GPU : 0);
+        ldg_sys(e, v, pb, udesc);
         isetp_ge_u32(e, v, target);
         const int bra_arrived = bra_if_p0_fwd(e);
         imadi(e, spins, one, 0, 1, spins);
@@ -284,18 +290,27 @@ int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, Blackwe
         bra(e, L_sp);
         loop_end(e);
         patch_bra(e, bra_tmo, here(e));
-        imadw(e, pa, one, OMEGA_RES_CTL_ERROR, pctl);
-        atom_add(e, old, pa, one, udesc); /* every lane of warp 0: error word counts 32 per timed-out CTA (nonzero is what matters) */
+        atom_add(e, old, pe, one, udesc); /* error word (uncached, system scope): the host sees it after the kernel */
+        movi(e, verdict, 1);
         const int bra_to_abort = bra_fwd(e);
         patch_bra(e, bra_arrived, here(e));
+        /* CTA 0: progress word = stages finished (host-pollable while the kernel runs) */
+        s2r(e, t0, BW_SR_CTAID_X);
+        isetp_ge_u32(e, t0, one);
+        const int bra_not_c0 = bra_if_p0_fwd(e);
+        imadw(e, pa, one, OMEGA_RES_CTL_PROGRESS, pctl);
+        { BlackwellIRInsn i = I0(BW_IR_STG_STRONG_SYS); i.src1_vreg = pa; i.src2_vreg = st; i.ureg = udesc; emit(e, i, K_STORE); }
+        patch_bra(e, bra_not_c0, here(e));
         movrz(e, verdict);
         const int at_abort = here(e);
-        patch_bra(e, bra_abort1, at_abort);
-        patch_bra(e, bra_abort2, at_abort);
+        patch_bra(e, bra_abort, at_abort);
         patch_bra(e, bra_to_abort, at_abort);
         movrz(e, smaddr);
         sts32(e, smaddr, verdict);
-        patch_bra(e, bra_not_w0, here(e));
+        const int r_bsync = here(e);
+        bsync(e);
+        patch_bra(e, r_skip, r_bsync);
+        patch_bra(e, r_bssy, r_bsync + 1);
         bar_sync(e);
         movrz(e, smaddr);
         lds32(e, v, smaddr);
@@ -322,5 +337,25 @@ int omega_resident_prog_stats(const OmegaResidentSpec *spec, uint32_t *insns, ui
     if (omega_blackwell_codegen_resident_prog(spec, &prog) != 0) return -1;
     if (insns) *insns = (uint32_t)prog.count;
     if (gprs) *gprs = prog.regalloc.peak_gpr_usage;
+    return 0;
+}
+
+/* Scope patches (OWN-30B W-L2f r2). The shared IR has system-scope strong loads / atomics only; the GPU-scope forms differ
+ * in word 2 alone (SASS oracle: nvcc 13.0.88 -arch=sm_121 of atom.relaxed.gpu.global.add.u32 / ld.relaxed.gpu.global.u32,
+ * investigation 2026-10-14-own30b-L2f-resident/runs/oracle):
+ *   LDG.E.STRONG.SYS   w2 0x0c1f5900  ->  LDG.E.STRONG.GPU        w2 0x0c1ef900
+ *   ATOMG.E.ADD.STRONG.SYS w2 0x081f51uu -> ATOMG.E.ADD.STRONG.GPU w2 0x081ef1uu   (uu = uniform descriptor register)
+ * Each patched word is checked against the system form first; any mismatch refuses the whole kernel. */
+int omega_resident_apply_patches(uint8_t *code, size_t bytes, const OmegaResidentPatches *pt) {
+    if (!code || !pt || pt->n > OMEGA_RES_MAX_PATCHES) return -1;
+    for (uint32_t i = 0; i < pt->n; i++) {
+        const size_t at = (size_t)pt->idx[i] * 16u + 8u;
+        if (at + 4u > bytes) return -1;
+        uint32_t w2; memcpy(&w2, code + at, 4);
+        if (pt->kind[i] == OMEGA_RES_PATCH_LDG_GPU) { if (w2 != 0x0c1f5900u) return -1; w2 = 0x0c1ef900u; }
+        else if (pt->kind[i] == OMEGA_RES_PATCH_ATOM_GPU) { if ((w2 & 0xffffff00u) != 0x081f5100u) return -1; w2 = 0x081ef100u | (w2 & 0xffu); }
+        else return -1;
+        memcpy(code + at, &w2, 4);
+    }
     return 0;
 }

@@ -46,7 +46,7 @@ typedef struct {
     OmegaGpuResident *res, *red;
 } Chain;
 
-static const OmegaResidentSpec SPEC = { 16, 1, 8, 0 }, SPEC_RED = { 16, 1, 8, 1 };
+static OmegaResidentSpec SPEC = { 16, 1, 8, 0, 0 }, SPEC_RED = { 16, 1, 8, 1, 0 };
 
 /* caller holds the lock */
 static int setup(Chain *c, uint32_t *st) {
@@ -119,7 +119,7 @@ static void shapes(Chain *c, const char *name, uint32_t N) {
 }
 
 static int host_only(void) {
-    const OmegaResidentSpec specs[] = { { 16, 1, 8, 0 }, { 16, 1, 8, 1 }, { 8, 1, 8, 0 }, { 16, 1, 32, 0 }, { 16, 1, 16, 0 } };
+    const OmegaResidentSpec specs[] = { { 16, 1, 8, 0, 1 }, { 16, 1, 8, 1, 0 }, { 8, 1, 8, 0, 1 }, { 16, 1, 32, 0, 0 }, { 16, 1, 16, 0, 0 }, { 16, 1, 8, 0, 0 } };
     for (unsigned i = 0; i < sizeof specs / sizeof *specs; i++) {
         uint32_t insns = 0, gprs = 0;
         int rc = omega_resident_prog_stats(&specs[i], &insns, &gprs);
@@ -129,14 +129,16 @@ static int host_only(void) {
         CHECK(rc == 0, "codegen lb=%u warps=%u mutant=%d: %u insns, peak %u regs (declared %u), %u CTAs/SM at default limits",
               specs[i].lane_bytes, specs[i].warps, specs[i].mutant, insns, gprs, decl, per);
     }
-    const OmegaResidentSpec bad[] = { { 16, 2, 8, 0 }, { 4, 1, 8, 0 }, { 16, 1, 1, 0 }, { 16, 1, 8, 2 } };
+    const OmegaResidentSpec bad[] = { { 16, 2, 8, 0, 0 }, { 4, 1, 8, 0, 0 }, { 16, 1, 1, 0, 0 }, { 16, 1, 8, 2, 0 }, { 16, 1, 8, 0, 2 } };
     for (unsigned i = 0; i < sizeof bad / sizeof *bad; i++) CHECK(omega_resident_prog_stats(&bad[i], NULL, NULL) != 0, "codegen refuses bad spec %u", i);
     /* encode the production kernel to a file for nvdisasm */
     static BlackwellIRProgram prog;
-    if (omega_blackwell_codegen_resident_prog(&specs[0], &prog) == 0) {
+    OmegaResidentPatches pt;
+    if (omega_blackwell_codegen_resident_prog_p(&specs[0], &prog, &pt) == 0) {
         size_t need = omega_bw_program_code_bytes(&prog);
         uint8_t *buf = malloc(need); OmegaBlackwellKernel k;
-        if (buf && omega_blackwell_kernel_encode_into(&prog, buf, need, &k) == 0) { FILE *f = fopen("/tmp/wl2f-resident.bin", "wb"); if (f) { fwrite(buf, 1, need, f); fclose(f); } }
+        CHECK(pt.n == 2, "scope_gpu kernel marks 2 words for GPU scope (arrive ATOMG, poll LDG): %u", pt.n);
+        if (buf && omega_blackwell_kernel_encode_into(&prog, buf, need, &k) == 0 && omega_resident_apply_patches(buf, need, &pt) == 0) { FILE *f = fopen("/tmp/wl2f-resident.bin", "wb"); if (f) { fwrite(buf, 1, need, f); fclose(f); } }
         CHECK(buf != NULL, "production kernel encoded (%zu bytes) to /tmp/wl2f-resident.bin", need);
         free(buf);
     }
@@ -148,6 +150,7 @@ int main(int argc, char **argv) {
     uint32_t reps = 9; const char *out_path = NULL;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host") == 0) return host_only();
+        else if (strcmp(argv[i], "--scope-gpu") == 0) { SPEC.scope_gpu = 1; }
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
         else { printf("usage: %s [--host] [--reps R] [--out receipt.json]\n", argv[0]); return 2; }
@@ -159,7 +162,7 @@ int main(int argc, char **argv) {
     OmegaGpuCmdList *cl = NULL;
     if (omega_gpu_cmdlist_create(NMAX + 2, &cl) != 0) { printf("cmdlist create: %s\n", omega_gpu_session_last_error()); return 1; }
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
-    if (out) fprintf(out, "{\"test\":\"OMEGA_GPU_RESIDENT_CHAIN\",\"reps\":%u,\"spec\":{\"lane_bytes\":16,\"rows\":1,\"warps\":8}", reps);
+    if (out) fprintf(out, "{\"test\":\"OMEGA_GPU_RESIDENT_CHAIN\",\"reps\":%u,\"spec\":{\"lane_bytes\":16,\"rows\":1,\"warps\":8,\"scope_gpu\":%u}", reps, SPEC.scope_gpu);
     uint32_t st = 2026;
     omega_gpu_session_lock();
     if (!omega_gpu_session_open()) { printf("open: %s\n", omega_gpu_session_last_error()); return 1; }
@@ -217,13 +220,13 @@ int main(int argc, char **argv) {
                     if (mode == M_RED) { if (!eq) red_differs = 1; }
                     else if (!eq) { ident = 0; if (mode == M_RES) printf("  rep %u resident differs\n", r); }
                     if (mode == M_RES) { uint32_t arr = 0, err = 0; omega_gpu_resident_status(c.res, &arr, &err);
-                        if (err != 0 || arr != (c.N - 1) * cap) { ctl_ok = 0; printf("  rep %u ctl error=%u arrive=%u want %u\n", r, err, arr, (c.N - 1) * cap); } }
+                        if (err != 0 || arr != c.N - 1) { ctl_ok = 0; printf("  rep %u ctl error=%u progress=%u want %u\n", r, err, arr, c.N - 1); } }
                     if (omega_gpu_session_is_blocked()) { printf("session latched\n"); ok = 0; }
                 }
             CHECK(ok, "%s N=%u: %u reps x 3 modes ran", c.name, c.N, reps);
             if (ok) {
                 CHECK(ident, "%s N=%u: resident bit-identical to launched on every rep (all %u stage outputs)", c.name, c.N, c.N);
-                CHECK(ctl_ok, "%s N=%u: control block error 0, arrive == (N-1) x grid on every rep", c.name, c.N);
+                CHECK(ctl_ok, "%s N=%u: control block error 0, progress == N-1 on every rep", c.name, c.N);
                 CHECK(red_differs, "%s N=%u: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep", c.name, c.N);
                 for (int m = 0; m < M_COUNT; m++) {
                     tmed[ci][m][ni] = median(t[m], reps) / 1e3;
