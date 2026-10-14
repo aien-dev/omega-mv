@@ -142,10 +142,12 @@ static const uint32_t NEG_BIG = 0xF149F2CAu; /* -1e30f */
 
 int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, BlackwellIRProgram *prog) {
     if (!spec || !prog || spec->depth < 1 || spec->depth > OMEGA_DATTN_MAX_DEPTH || spec->mutant < 0 || spec->mutant > 4) return -1;
+    if (spec->rows_mode > 2 || (spec->rows_mode && (spec->log2_per < 8 || spec->log2_per > 16))) return -1;
     omega_bw_ir_init(prog);
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
     const uint32_t D = spec->depth;
     const int MUT = spec->mutant;
+    const uint32_t RM = spec->rows_mode;
 
     /* ---- arguments and identities ---- */
     int udesc = UV64(e);
@@ -164,6 +166,19 @@ int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, Bl
     movi(e, one, 1); movrz(e, R(zero)); movi(e, c7fff, 0x7fffu); movi(e, c16, 16);
     shr(e, warp, tid, 5);
     andi(e, R(lane), R(tid), 31u);
+    /* rows modes: row = cy >> 2, KV head hy = cy & 3, this row's position, qkv row and split count */
+    int hy = cy;
+    if (RM) {
+        int row = V(e);
+        hy = V(e);
+        if (e->err) return -1;
+        shr(e, row, cy, 2);
+        andi(e, R(hy), R(cy), 3u);
+        imadi(e, R(pos), R(row), 1u, pos);
+        imadw(e, pqkv, row, OMEGA_DATTN_QKV_ROW_BYTES, pqkv);
+        shr(e, splits, pos, spec->log2_per);
+        imadi(e, R(splits), R(splits), 1u, one);
+    }
 
     /* range of this CTA: base = cx * per; end = min(base + per, pos + 1) */
     int base = V(e), bend = V(e), ctx = V(e), t1 = V(e), t2 = V(e), end = V(e), endm1 = V(e), negendm1 = V(e), splitsm1 = V(e), cyk = V(e);
@@ -178,13 +193,19 @@ int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, Bl
     imadi(e, R(endm1), R(one), 0xffffffffu, end);
     imadi(e, R(negendm1), R(endm1), 0xffffffffu, NOREG);
     imadi(e, R(splitsm1), R(one), 0xffffffffu, splits);
-    imadr(e, cyk, cy, kvs, NOREG);                   /* byte offset of this KV head's plane */
+    imadr(e, cyk, hy, kvs, NOREG);                   /* byte offset of this KV head's plane */
+    if (RM == 2) {                                   /* CTAs past this row's split count: nothing to do (CTA-uniform, before any barrier) */
+        isetp_ge_u32(e, splitsm1, cx);
+        const int b_in = bra_if_p0_fwd(e);
+        exit_k(e);
+        patch_bra(e, b_in, here(e));
+    }
 
     /* ---- prologue: q' for the 8 heads of the group (warp = head) ---- */
     int q4 = V128(e), w4 = V128(e), pt4 = V128(e), cos4 = V128(e), sin4 = V128(e), k4 = V128(e), v4 = V128(e);
     int sq = V(e), ts = V(e), rs = V(e), a0 = V(e), a1 = V(e), a2 = V(e), a3 = V(e), ad64 = V64(e), rope64 = V64(e), sgn = V(e), pl = V(e);
     if (e->err) return -1;
-    imadi(e, R(t1), R(cy), 8u, warp);                /* q head index */
+    imadi(e, R(t1), R(hy), 8u, warp);                /* q head index */
     imadi(e, R(t1), R(t1), 512u, NOREG);
     imadi(e, R(t1), R(lane), 16u, t1);
     imadw(e, ad64, t1, 1u, pqkv);
@@ -231,7 +252,7 @@ int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, Bl
     sts32(e, a0, S(q4, 0)); sts32(e, a1, S(q4, 1)); sts32(e, a2, S(q4, 2)); sts32(e, a3, S(q4, 3));
 
     /* ---- the new token's K (norm + rope) and V, bf16 into the cache by the CTA that owns `pos` ---- */
-    imadi(e, R(t1), R(cy), 512u, NOREG); imadi(e, R(t1), R(lane), 16u, t1);
+    imadi(e, R(t1), R(hy), 512u, NOREG); imadi(e, R(t1), R(lane), 16u, t1);
     imadi(e, R(t1), R(one), 32u * 128u * 4u, t1);    /* k block of qkv */
     imadw(e, ad64, t1, 1u, pqkv);
     ldg_wide(e, BW_IR_LDG_E_128, k4, ad64, 0, udesc, 1);
@@ -269,7 +290,8 @@ int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, Bl
     imadi(e, R(t1), R(pos), OMEGA_DATTN_ROW_BYTES, cyk); imadi(e, R(t1), R(lane), 8u, t1);          /* 4 bf16 = 8 bytes per lane */
     /* key = (splits - 1 - cx) + warp: zero only for warp 0 of the last split */
     imadi(e, R(t2), R(cx), 0xffffffffu, splitsm1);
-    if (MUT != 3) {
+    if (RM == 1) movrz(e, R(t2));                    /* append mode: every CTA (one per row and KV head) stores its row */
+    if (MUT != 3 && RM != 2) {
         int ka = V64(e), kb = V64(e), key = V(e);
         imadi(e, R(key), R(t2), 1u, warp);
         isetp_ge_u32(e, key, one);
@@ -286,6 +308,7 @@ int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, Bl
     }
     membar(e);
     bar_sync(e);
+    if (RM == 1) { tail(e); if (e->err) return -1; return omega_bw_regalloc_solve(prog); } /* append mode ends here */
 
     /* ---- running state ---- */
     int acc[8], m[8], l[8], sc[8], dl[8], wd[8], mn = V(e);
@@ -398,8 +421,11 @@ int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, Bl
     int ep[8], ea[8], eb[8];
     for (unsigned h = 0; h < 8; h++) { ep[h] = V(e); ea[h] = V(e); eb[h] = V(e); }
     int pout = V64(e), ppart = V64(e), pcnt = V64(e), oscale = V(e);
+    int pstr = splits;                               /* partials stride: the split count, or ARG_SPLITS in rows modes */
+    if (RM) pstr = V(e);
     if (e->err) return -1;
     ldc64(e, pout, OMEGA_DATTN_ARG_OUT); ldc64(e, ppart, OMEGA_DATTN_ARG_PART); ldc64(e, pcnt, OMEGA_DATTN_ARG_CNT); ldc32(e, oscale, OMEGA_DATTN_ARG_OUT_SCALE);
+    if (RM) ldc32(e, pstr, OMEGA_DATTN_ARG_SPLITS);
     /* per-warp maxes to shared: lane 0 of warp w writes m[h] at SM_M + w*32 + h*4 */
     imadi(e, R(a0), R(warp), 32u, NOREG); imadi(e, R(a0), R(one), OMEGA_DATTN_SM_M, a0);
     isetp_ge_u32(e, lane, one);
@@ -428,7 +454,7 @@ int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, Bl
     { Region r = region_skip_if_p0(e); for (unsigned h = 0; h < 8; h++) { imadi(e, R(t1), R(one), h * 4u, a0); sts32(e, t1, R(l[h])); } region_end(e, r); }
     bar_sync(e);
     int pp = V64(e), pa64 = V64(e), pb64 = V64(e);
-    imadr(e, t2, cy, splits, cx);
+    imadr(e, t2, cy, pstr, cx);
     imadi(e, R(t2), R(t2), OMEGA_DATTN_PARTIAL_WORDS * 4u, NOREG);
     imadw(e, pp, t2, 1u, ppart);
     isetp_ge_u32(e, tid, ccnt);                       /* tid >= 8 skips */
@@ -485,7 +511,7 @@ int omega_blackwell_codegen_decode_attn_prog(const OmegaDecodeAttnSpec *spec, Bl
     mov(e, R(oidx), R(tid));
     movrz(e, R(rr));
     movi(e, ccnt, 4);
-    imadr(e, t2, cy, splits, NOREG);
+    imadr(e, t2, cy, pstr, NOREG);
     imadi(e, R(t2), R(t2), OMEGA_DATTN_PARTIAL_WORDS * 4u, NOREG); /* byte offset of partials[cy][0] */
     const int L_r = here(e);
     loop_begin(e);

@@ -2554,3 +2554,9 @@ $(GPU_FP8_OVERLAP_TEST): tests/gpu_fp8_overlap_test.c src/omega_gpu_fp8_api.h sr
 GPU_RESIDENT_CHAIN_TEST = $(OUT_DIR)/gpu_resident_chain_test
 $(GPU_RESIDENT_CHAIN_TEST): tests/gpu_resident_chain_test.c src/omega_gpu_resident_api.h src/omega_blackwell_codegen_resident.h src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_resident_chain_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+
+# W-L4d: multi-row exact decode attention vs per-row calls (chip only)
+GPU_DATTN_ROWS_TEST = $(OUT_DIR)/gpu_decode_attn_rows_test
+$(GPU_DATTN_ROWS_TEST): tests/gpu_decode_attn_rows_test.c src/omega_gpu_decode_attn_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_attn_rows_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm

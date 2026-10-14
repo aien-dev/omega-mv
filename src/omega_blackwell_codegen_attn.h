@@ -43,6 +43,7 @@
 #define OMEGA_DATTN_ROW_BYTES 256u             /* one bf16 K or V row */
 #define OMEGA_DATTN_ROPE_ROW_BYTES 512u        /* cos[64] then sin[64], f32 */
 #define OMEGA_DATTN_PARTIAL_WORDS 1040u        /* m[8], l[8], acc[8][128] */
+#define OMEGA_DATTN_QKV_ROW_BYTES 20480u       /* W-L4d rows modes: one qkv row, (32 + 2 * 4) * 128 f32 */
 #define OMEGA_DATTN_MAX_DEPTH 4u
 /* bytes past the last row of a K or V plane the prefetch may touch (clamped reads of the last rows) */
 #define OMEGA_DATTN_PLANE_SLACK (OMEGA_DATTN_MAX_DEPTH * 8u * OMEGA_DATTN_ROW_BYTES + 64u)
@@ -79,6 +80,19 @@ typedef struct {
     uint32_t depth;  /* prefetch depth of the K and V streams, 1..4 */
     int mutant;      /* TEST ONLY. 0 none; 1 no RoPE on q and k; 2 V read one position late; 3 the new K/V are not
                       * written to the cache; 4 the cross-split combine ignores the max (differs only when splits > 1). */
+    /* W-L4d (exact speculative verify, several new tokens per layer in two launches). 0: the decode kernel above, its
+     * program unchanged. Rows modes fold the batch row into grid y: cy = row * 4 + kv_head; the new token of row r is
+     * at pos + r (pos = ARG_POS = the first row's position); ARG_QKV holds the rows' qkv [rows][5120]; ARG_OUT,
+     * ARG_PART and ARG_CNT are indexed by cy (out [rows][32][128], partials [rows * 4][ARG_SPLITS][1040], counters
+     * [rows * 4]); ARG_SPLITS is the partials stride (the widest row's split count = grid x).
+     * 1 (append): grid (1, rows * 4). Each CTA computes its row's k_new / v_new with the decode prologue's own
+     *   instructions, stores them as bf16 at [kv_head][pos + r] (warp 0 K, warp 1 V), MEMBAR, exit.
+     * 2 (attend): grid (ARG_SPLITS, rows * 4). Each row uses its own context pos + r + 1 and its own split count
+     *   (pos + r) >> log2_per + 1 (CTAs past it exit at once); nothing is stored to the cache (mode 1 did); the rest
+     *   is the decode kernel, so every row reads exactly what a decode launch at pos + r would read and combines its
+     *   partials in the same order: the output is bit-identical to decode launches run one row at a time. */
+    uint32_t rows_mode;
+    uint32_t log2_per; /* rows modes: log2 of ARG_PER_SPLIT (the split width must be a power of two) */
 } OmegaDecodeAttnSpec;
 
 /* Builds the IR program (register-allocated) into *prog. 0 ok, -1 refused (depth 0 or > 4, mutant outside 0..4,

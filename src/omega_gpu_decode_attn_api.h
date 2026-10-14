@@ -87,6 +87,15 @@ typedef struct {
     uint64_t q_norm_va, k_norm_va; /* f32 [128] each for `layer` */
 } OmegaGpuDecodeAttnCacheView;
 int omega_gpu_decode_attn_cache_view(const OmegaGpuDecodeAttnCache *c, uint32_t layer, OmegaGpuDecodeAttnCacheView *out);
+/* W-L4d (exact speculative verify): `rows` new tokens at positions pos0 .. pos0 + rows - 1 of `layer` in TWO launches
+ * (omega_blackwell_codegen_attn.h rows modes: append all rows' K/V, then every row's attention). qkv: [rows][5120],
+ * out: [rows][32][128] * out_scale. Row r's output and the K/V it stores are bit-identical to omega_gpu_decode_attn(c,
+ * layer, pos0 + r, qkv + r * 5120, ...) called for r = 0, 1, .. in order (same instructions per row, same context,
+ * same split width and partial combine order). rows 1 .. OMEGA_GPU_DATTN_MAX_ROWS; the split width must be a power
+ * of two. Poison and counter checks as omega_gpu_decode_attn. info: elapsed_ns is the sum of both launches. */
+#define OMEGA_GPU_DATTN_MAX_ROWS 16u
+int omega_gpu_decode_attn_rows(OmegaGpuDecodeAttnCache *c, uint32_t layer, uint32_t pos0, uint32_t rows, const float *qkv, float eps,
+                               float out_scale, float *out, OmegaGpuDecodeAttnInfo *info);
 const char *omega_gpu_decode_attn_last_error(void);
 const char *omega_gpu_decode_attn_rc_name(int rc);
 
