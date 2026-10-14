@@ -58,6 +58,10 @@ int omega_gpu_resident_record(OmegaGpuCmdList *cl, OmegaGpuResident *r, uint32_t
  * launch must be submitted and followed by status() before the next record. */
 int omega_gpu_resident_status(OmegaGpuResident *r, uint32_t *progress, uint32_t *error);
 
+/* Host cancel: sets the control block cancel word (uncached). CTA 0 reads it at every barrier; the chain stops at the next
+ * barrier after it is seen (abort bit through the barrier word). Safe while the kernel runs. */
+int omega_gpu_resident_cancel(OmegaGpuResident *r);
+
 #ifdef __cplusplus
 }
 #endif

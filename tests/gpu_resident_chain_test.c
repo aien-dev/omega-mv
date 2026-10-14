@@ -46,7 +46,7 @@ typedef struct {
     OmegaGpuResident *res, *red;
 } Chain;
 
-static OmegaResidentSpec SPEC = { 16, 1, 8, 0, 0 }, SPEC_RED = { 16, 1, 8, 1, 0 };
+static OmegaResidentSpec SPEC = { 16, 1, 8, 0, 1, 0, 1 }, SPEC_RED = { 16, 1, 8, 1, 1, 0, 1 }; /* production: GPU scope, MEMBAR.ALL.SYS, abort bit */
 
 /* caller holds the lock */
 static int setup(Chain *c, uint32_t *st) {
@@ -119,7 +119,7 @@ static void shapes(Chain *c, const char *name, uint32_t N) {
 }
 
 static int host_only(void) {
-    const OmegaResidentSpec specs[] = { { 16, 1, 8, 0, 1 }, { 16, 1, 8, 1, 0 }, { 8, 1, 8, 0, 1 }, { 16, 1, 32, 0, 0 }, { 16, 1, 16, 0, 0 }, { 16, 1, 8, 0, 0 } };
+    const OmegaResidentSpec specs[] = { { 16, 1, 8, 0, 1, 0, 1 }, { 16, 1, 8, 1, 0, 0, 0 }, { 8, 1, 8, 0, 1, 0, 0 }, { 16, 1, 32, 0, 0, 0, 0 }, { 16, 1, 16, 0, 0, 0, 0 }, { 16, 1, 8, 0, 0, 0, 0 }, { 16, 1, 8, 0, 1, 1, 0 }, { 16, 1, 8, 0, 1, 2, 1 }, { 16, 1, 8, 0, 1, 0, 0 } };
     for (unsigned i = 0; i < sizeof specs / sizeof *specs; i++) {
         uint32_t insns = 0, gprs = 0;
         int rc = omega_resident_prog_stats(&specs[i], &insns, &gprs);
@@ -129,7 +129,7 @@ static int host_only(void) {
         CHECK(rc == 0, "codegen lb=%u warps=%u mutant=%d: %u insns, peak %u regs (declared %u), %u CTAs/SM at default limits",
               specs[i].lane_bytes, specs[i].warps, specs[i].mutant, insns, gprs, decl, per);
     }
-    const OmegaResidentSpec bad[] = { { 16, 2, 8, 0, 0 }, { 4, 1, 8, 0, 0 }, { 16, 1, 1, 0, 0 }, { 16, 1, 8, 2, 0 }, { 16, 1, 8, 0, 2 } };
+    const OmegaResidentSpec bad[] = { { 16, 2, 8, 0, 0, 0, 0 }, { 4, 1, 8, 0, 0, 0, 0 }, { 16, 1, 1, 0, 0, 0, 0 }, { 16, 1, 8, 2, 0, 0, 0 }, { 16, 1, 8, 0, 2, 0, 0 }, { 16, 1, 8, 0, 0, 3, 0 }, { 16, 1, 8, 0, 0, 0, 2 } };
     for (unsigned i = 0; i < sizeof bad / sizeof *bad; i++) CHECK(omega_resident_prog_stats(&bad[i], NULL, NULL) != 0, "codegen refuses bad spec %u", i);
     /* encode the production kernel to a file for nvdisasm */
     static BlackwellIRProgram prog;
@@ -137,7 +137,7 @@ static int host_only(void) {
     if (omega_blackwell_codegen_resident_prog_p(&specs[0], &prog, &pt) == 0) {
         size_t need = omega_bw_program_code_bytes(&prog);
         uint8_t *buf = malloc(need); OmegaBlackwellKernel k;
-        CHECK(pt.n == 2, "scope_gpu kernel marks 2 words for GPU scope (arrive ATOMG, poll LDG): %u", pt.n);
+        CHECK(pt.n == 3, "scope_gpu abort-bit kernel marks 3 words for GPU scope (arrive ATOMG, poll LDG, abort ATOMG): %u", pt.n);
         if (buf && omega_blackwell_kernel_encode_into(&prog, buf, need, &k) == 0 && omega_resident_apply_patches(buf, need, &pt) == 0) { FILE *f = fopen("/tmp/wl2f-resident.bin", "wb"); if (f) { fwrite(buf, 1, need, f); fclose(f); } }
         CHECK(buf != NULL, "production kernel encoded (%zu bytes) to /tmp/wl2f-resident.bin", need);
         free(buf);
@@ -147,10 +147,13 @@ static int host_only(void) {
 }
 
 int main(int argc, char **argv) {
-    uint32_t reps = 9; const char *out_path = NULL;
+    uint32_t reps = 9; const char *out_path = NULL; int quick = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host") == 0) return host_only();
-        else if (strcmp(argv[i], "--scope-gpu") == 0) { SPEC.scope_gpu = 1; }
+        else if (strcmp(argv[i], "--scope-sys") == 0) { SPEC.scope_gpu = 0; }
+        else if (strcmp(argv[i], "--fence") == 0 && i + 1 < argc) { SPEC.fence = (uint32_t)atoi(argv[++i]); }
+        else if (strcmp(argv[i], "--abort0") == 0) { SPEC.abort = 0; }
+        else if (strcmp(argv[i], "--quick") == 0) { quick = 1; }
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
         else { printf("usage: %s [--host] [--reps R] [--out receipt.json]\n", argv[0]); return 2; }
@@ -162,7 +165,7 @@ int main(int argc, char **argv) {
     OmegaGpuCmdList *cl = NULL;
     if (omega_gpu_cmdlist_create(NMAX + 2, &cl) != 0) { printf("cmdlist create: %s\n", omega_gpu_session_last_error()); return 1; }
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
-    if (out) fprintf(out, "{\"test\":\"OMEGA_GPU_RESIDENT_CHAIN\",\"reps\":%u,\"spec\":{\"lane_bytes\":16,\"rows\":1,\"warps\":8,\"scope_gpu\":%u}", reps, SPEC.scope_gpu);
+    if (out) fprintf(out, "{\"test\":\"OMEGA_GPU_RESIDENT_CHAIN\",\"reps\":%u,\"spec\":{\"lane_bytes\":16,\"rows\":1,\"warps\":8,\"scope_gpu\":%u,\"fence\":%u,\"abort\":%u,\"quick\":%d}", reps, SPEC.scope_gpu, SPEC.fence, SPEC.abort, quick);
     uint32_t st = 2026;
     omega_gpu_session_lock();
     if (!omega_gpu_session_open()) { printf("open: %s\n", omega_gpu_session_last_error()); return 1; }
@@ -177,7 +180,7 @@ int main(int argc, char **argv) {
         if (out) fprintf(out, ",\"default_capacity\":%u,\"declared_regs\":%u,\"probe\":[", cap, omega_gpu_resident_gpr_declared(c.res));
         int firstp = 1;
         const uint32_t sms = OMEGA_GPU_RESIDENT_SMS;
-        for (uint32_t p = 1; p <= 8 && !omega_gpu_session_is_blocked(); p++)
+        for (uint32_t p = quick ? 4 : 1; p <= (quick ? 4u : 8u) && !omega_gpu_session_is_blocked(); p++)
             for (uint32_t d = 0; d <= 1; d++) {
                 const uint32_t G = sms * p + d;
                 uint64_t ns = 0; uint32_t arr = 0, err = 0;
@@ -204,6 +207,7 @@ int main(int argc, char **argv) {
     const char *chains[2] = { "tiny", "real" };
     for (int ci = 0; ci < 2 && !omega_gpu_session_is_blocked(); ci++)
         for (int ni = 0; ni < 3; ni++) {
+            if (quick && ni == 1) continue;
             Chain c; shapes(&c, chains[ci], NS[ni]);
             if (setup(&c, &st) != 0) { g_failed++; printf("setup %s N=%u failed\n", c.name, c.N); continue; }
             uint64_t t[M_COUNT][REPMAX]; int ident = 1, red_differs = 0, ctl_ok = 1, ok = 1; uint64_t dummy;
@@ -247,8 +251,8 @@ int main(int argc, char **argv) {
     if (out) fprintf(out, "]");
 
     /* ---- OVERSIZE ---- */
-    if (!omega_gpu_session_is_blocked()) {
-        Chain c; shapes(&c, "real", 2);
+    if (!quick && !omega_gpu_session_is_blocked()) {
+        Chain c; shapes(&c, "real", 3);
         if (setup(&c, &st) == 0) {
             uint64_t ns = 0, dummy; uint32_t arr = 0, err = 0;
             omega_gpu_cmdlist_reset(cl);
@@ -265,6 +269,22 @@ int main(int argc, char **argv) {
             rc = run(cl, &c, M_RES, 0, 1u << 22, 0, &ns2);
             if (rc == 0) rc = omega_gpu_resident_status(c.res, &arr, &err);
             CHECK(rc == 0 && err == 0 && same(&c), "after the oversize run: resident at capacity bit-identical again, error 0 (recovery)");
+            /* CANCEL: cancel word set before the submit: the chain must stop at the first barrier (stage 0 written, stage 1 not) */
+            omega_gpu_cmdlist_reset(cl);
+            for (uint32_t i = 1; i <= c.N; i++) { uint32_t *p = c.buf[i].cpu; for (size_t j = 0; j < c.bytes[i] / 4; j++) p[j] = 0xC479C000u; omega_gpu_session_sync_to_gpu(&c.buf[i]); }
+            uint32_t prog = 99, cerr = 99; OmegaGpuCmdListOpts o; memset(&o, 0, sizeof o); o.mode = OMEGA_GPU_CMDLIST_PCAS; o.barrier = OMEGA_GPU_CMDLIST_BARRIER_WFI;
+            OmegaGpuCmdListStats cs; memset(&cs, 0, sizeof cs);
+            rc = omega_gpu_resident_record(cl, c.res, 0, 1u << 22, 0);
+            if (rc == 0) rc = omega_gpu_resident_cancel(c.res);
+            if (rc == 0) rc = omega_gpu_cmdlist_submit(cl, &o, &cs);
+            for (uint32_t i = 1; i <= c.N && rc == 0; i++) omega_gpu_session_sync_to_cpu(&c.buf[i]);
+            if (rc == 0) rc = omega_gpu_resident_status(c.res, &prog, &cerr);
+            const int s0 = rc == 0 && memcmp(c.buf[1].cpu, c.ref[1], c.bytes[1]) == 0, s1 = rc == 0 && ((uint32_t *)c.buf[3].cpu)[0] == 0xC479C000u;
+            printf("CANCEL rc=%d progress=%u error=%u stage0_written=%d stage2_poison=%d elapsed_us=%.1f\n", rc, prog, cerr, s0, s1, cs.elapsed_ns / 1e3);
+            CHECK(rc == 0 && s0 && s1 && prog == 0, "cancel word set: the chain stopped (stage 0 exact, stage 2 never written: CTA 0 reads cancel with its arrive, so a cancel lands within one stage; progress 0)");
+            rc = run(cl, &c, M_RES, 0, 1u << 22, 0, &ns2);
+            if (rc == 0) rc = omega_gpu_resident_status(c.res, &arr, &err);
+            CHECK(rc == 0 && err == 0 && same(&c), "after the cancel: resident bit-identical again (recovery)");
             if (out) fprintf(out, ",\"oversize\":{\"grid\":%u,\"error\":%u,\"ns\":%" PRIu64 "}", big, err, ns);
             teardown(&c);
         } else g_failed++;

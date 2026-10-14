@@ -114,6 +114,7 @@ int omega_gpu_resident_record(OmegaGpuCmdList *cl, OmegaGpuResident *r, uint32_t
         omega_gpu_session_set_error(e);
         return OMEGA_GPU_RESIDENT_TOO_LARGE;
     }
+    if (r->spec.mutant == 0 && (uint64_t)r->base + (uint64_t)(r->n_stages - 1u) * grid >= OMEGA_RES_ABORT_UNIT) { int b = bar_fresh(r); if (b != 0) return b; }
     uint32_t *c = r->ctl.cpu;
     memset(c, 0, OMEGA_RES_CTL_BYTES);
     c[OMEGA_RES_CTL_MAGIC / 4] = OMEGA_RES_MAGIC; c[OMEGA_RES_CTL_VERSION / 4] = OMEGA_RES_VERSION;
@@ -145,4 +146,11 @@ int omega_gpu_resident_status(OmegaGpuResident *r, uint32_t *progress, uint32_t 
     /* an aborted launch leaves the barrier word at an unknown count: start over on a fresh word */
     if (err != 0 || c[OMEGA_RES_CTL_CANCEL / 4] != 0) return bar_fresh(r);
     return OMEGA_GPU_RESIDENT_OK;
+}
+
+int omega_gpu_resident_cancel(OmegaGpuResident *r) {
+    if (!r) return OMEGA_GPU_RESIDENT_BAD_ARGS;
+    volatile uint32_t *c = r->ctl.cpu;
+    c[OMEGA_RES_CTL_CANCEL / 4] = 1u;
+    return omega_gpu_session_sync_to_gpu(&r->ctl) == 0 ? OMEGA_GPU_RESIDENT_OK : OMEGA_GPU_RESIDENT_CHIP_FAIL;
 }

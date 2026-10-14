@@ -77,9 +77,11 @@ extern "C" {
 #define OMEGA_RES_ARG_BASE 0x3a8u /* u32 counter value at launch start (arrivals of earlier launches) */
 #define OMEGA_RES_ARGS_WORDS 11u
 
+#define OMEGA_RES_ABORT_UNIT (1u << 23) /* added to the barrier word by an aborting CTA; arrival counts stay below it */
 #define OMEGA_RES_MAX_PATCHES 8u
 #define OMEGA_RES_PATCH_LDG_GPU 1u
 #define OMEGA_RES_PATCH_ATOM_GPU 2u
+#define OMEGA_RES_PATCH_MEMBAR_GPU 3u
 typedef struct { uint32_t n; uint32_t idx[OMEGA_RES_MAX_PATCHES]; uint32_t kind[OMEGA_RES_MAX_PATCHES]; } OmegaResidentPatches;
 
 typedef struct {
@@ -88,6 +90,8 @@ typedef struct {
     uint32_t warps;      /* 2 .. 32 (warp 0 runs the barrier wait) */
     int mutant;          /* 0 production; 1 no barrier (negative control) */
     uint32_t scope_gpu;  /* 0: arrive + poll at system scope (r1); 1: GPU scope (patched words, barrier word in GPU-cached memory) */
+    uint32_t fence;      /* before the arrive, every thread: 0 MEMBAR.ALL.SYS, 1 MEMBAR.ALL.GPU, 2 none (DIAGNOSTIC ONLY: unordered) */
+    uint32_t abort;      /* 0 (r2): every CTA reads the error + cancel words each barrier; 1 (r4): abort bit in the barrier word, CTA 0 reads cancel */
 } OmegaResidentSpec;
 
 int omega_blackwell_codegen_resident_prog(const OmegaResidentSpec *spec, BlackwellIRProgram *prog);

@@ -118,7 +118,7 @@ static int spec_ok(const OmegaResidentSpec *s) {
     if (s->rows != 1) return 0; /* rows > 1 would need the runtime row offset r * k as an LDG immediate */
     if (s->warps < 2 || s->warps > 32) return 0;
     if (s->mutant < 0 || s->mutant > 1) return 0;
-    if (s->scope_gpu > 1) return 0;
+    if (s->scope_gpu > 1 || s->fence > 2 || s->abort > 1) return 0;
     return 1;
 }
 
@@ -252,13 +252,19 @@ int omega_blackwell_codegen_resident_prog_p(const OmegaResidentSpec *spec, Black
 
     if (spec->mutant != 1) {
         /* ---- grid barrier ----
-         * every thread: MEMBAR.ALL.SYS (its y stores ordered), BAR.SYNC; thread 0 alone (BSSY region): the error and cancel
-         * words (uncached control block, strong sys loads) and the arrive ATOMG are one batch (one round trip), then thread 0
-         * polls the barrier word until it reaches target (bounded by spin_max); CTA 0 publishes the stage reached to the
-         * control block's progress word; the verdict goes through shared memory to the whole CTA. */
-        int v = V(e), old = V(e), spins = V(e), verdict = V(e), smaddr = V(e), t0 = V(e), lim = V(e), c1 = V(e), pa = V64(e), pb = V64(e), pe = V64(e);
+         * every thread: MEMBAR (its y stores ordered), BAR.SYNC; thread 0 alone (BSSY region) arrives (ATOMG +1 on the barrier
+         * word) and polls it until it reaches target (bounded by spin_max).
+         * abort = 0 (r2): before arriving, every CTA's thread 0 also reads the error and cancel words of the uncached control
+         *   block (same batch as the arrive); nonzero -> abort. Chip r3: these 2 x grid uncached loads cost ~95 us per barrier.
+         * abort = 1 (r4): the abort travels in the barrier word itself. Arrival counts stay below OMEGA_RES_ABORT_UNIT (the
+         *   host refreshes the word before they could reach it); an aborting CTA adds OMEGA_RES_ABORT_UNIT, so every poller
+         *   sees v >= target at once and then v >= ABORT_UNIT -> abort. Only CTA 0 reads the cancel word (same batch as its
+         *   arrive, checked after: a cancel stops the chain at the next barrier). A spin expiry adds 1 to the error word
+         *   (system scope, uncached: the host reads it after the kernel) and ABORT_UNIT to the barrier word.
+         * CTA 0 publishes the stages finished to the control block's progress word; the verdict goes through shared memory. */
+        int v = V(e), old = V(e), spins = V(e), verdict = V(e), smaddr = V(e), t0 = V(e), lim = V(e), c1 = V(e), au = V(e), pa = V64(e), pb = V64(e), pe = V64(e);
         if (e->err) return -1;
-        membar(e);
+        if (spec->fence != 2) { mark(pt, here(e), spec->fence == 1 ? OMEGA_RES_PATCH_MEMBAR_GPU : 0); membar(e); }
         ldc32(e, lim, OMEGA_RES_ARG_GRID);
         imadi(e, target, lim, 0, 1, target);
         bar_sync(e);
@@ -268,13 +274,19 @@ int omega_blackwell_codegen_resident_prog_p(const OmegaResidentSpec *spec, Black
         const int r_skip = bra_if_p0_fwd(e);
         ldc64(e, pb, OMEGA_RES_ARG_BAR);
         ldc32(e, lim, OMEGA_RES_ARG_SPINMAX);
+        movi(e, au, OMEGA_RES_ABORT_UNIT);
+        s2r(e, t0, BW_SR_CTAID_X);
         imadw(e, pe, one, OMEGA_RES_CTL_ERROR, pctl);
         imadw(e, pa, one, OMEGA_RES_CTL_CANCEL, pctl);
-        ldg_sys(e, v, pe, udesc);
-        { BlackwellIRInsn i = I0(BW_IR_LDG_STRONG_SYS); i.dst_vreg = c1; i.src1_vreg = pa; i.ureg = udesc; emit(e, i, K_VAR_MORE); }
+        movrz(e, v); movrz(e, c1);
+        int bra_check_skip = -1;
+        if (spec->abort == 1) { isetp_ge_u32(e, t0, one); bra_check_skip = bra_if_p0_fwd(e); } /* CTA 0 only */
+        if (spec->abort == 0) ldg_sys(e, v, pe, udesc);
+        { BlackwellIRInsn i = I0(BW_IR_LDG_STRONG_SYS); i.dst_vreg = c1; i.src1_vreg = pa; i.ureg = udesc; emit(e, i, spec->abort == 0 ? K_VAR_MORE : K_VAR); }
+        if (bra_check_skip >= 0) patch_bra(e, bra_check_skip, here(e));
         { mark(pt, here(e), spec->scope_gpu ? OMEGA_RES_PATCH_ATOM_GPU : 0);
           BlackwellIRInsn i = I0(BW_IR_ATOMG_ADD_STRONG_SYS); i.dst_vreg = old; i.src1_vreg = pb; i.src2_vreg = one; i.ureg = udesc; emit(e, i, K_VAR_MORE); }
-        imadi(e, verdict, v, 0, 1, c1);  /* error + cancel: nonzero = abort (we have arrived; others will not wait on us) */
+        imadi(e, verdict, v, 0, 1, c1);  /* error + cancel (0 when not read): nonzero = abort */
         isetp_ge_u32(e, verdict, one);
         const int bra_abort = bra_if_p0_fwd(e);
         movrz(e, spins);
@@ -291,20 +303,27 @@ int omega_blackwell_codegen_resident_prog_p(const OmegaResidentSpec *spec, Black
         loop_end(e);
         patch_bra(e, bra_tmo, here(e));
         atom_add(e, old, pe, one, udesc); /* error word (uncached, system scope): the host sees it after the kernel */
-        movi(e, verdict, 1);
-        const int bra_to_abort = bra_fwd(e);
+        const int bra_tmo_abort = bra_fwd(e);
         patch_bra(e, bra_arrived, here(e));
+        int bra_seen_abort = -1;
+        if (spec->abort == 1) { isetp_ge_u32(e, v, au); bra_seen_abort = bra_if_p0_fwd(e); }
         /* CTA 0: progress word = stages finished (host-pollable while the kernel runs) */
-        s2r(e, t0, BW_SR_CTAID_X);
         isetp_ge_u32(e, t0, one);
         const int bra_not_c0 = bra_if_p0_fwd(e);
         imadw(e, pa, one, OMEGA_RES_CTL_PROGRESS, pctl);
         { BlackwellIRInsn i = I0(BW_IR_STG_STRONG_SYS); i.src1_vreg = pa; i.src2_vreg = st; i.ureg = udesc; emit(e, i, K_STORE); }
         patch_bra(e, bra_not_c0, here(e));
         movrz(e, verdict);
+        const int bra_ok = bra_fwd(e);
+        /* abort paths: this CTA decided to abort (cancel seen, r2 error, or spin expiry): tell everyone through the word */
         const int at_abort = here(e);
         patch_bra(e, bra_abort, at_abort);
-        patch_bra(e, bra_to_abort, at_abort);
+        patch_bra(e, bra_tmo_abort, at_abort);
+        if (spec->abort == 1) { mark(pt, here(e), spec->scope_gpu ? OMEGA_RES_PATCH_ATOM_GPU : 0);
+                                BlackwellIRInsn i = I0(BW_IR_ATOMG_ADD_STRONG_SYS); i.dst_vreg = old; i.src1_vreg = pb; i.src2_vreg = au; i.ureg = udesc; emit(e, i, K_VAR); }
+        if (bra_seen_abort >= 0) patch_bra(e, bra_seen_abort, here(e));
+        movi(e, verdict, 1);
+        patch_bra(e, bra_ok, here(e));
         movrz(e, smaddr);
         sts32(e, smaddr, verdict);
         const int r_bsync = here(e);
@@ -353,6 +372,7 @@ int omega_resident_apply_patches(uint8_t *code, size_t bytes, const OmegaResiden
         if (at + 4u > bytes) return -1;
         uint32_t w2; memcpy(&w2, code + at, 4);
         if (pt->kind[i] == OMEGA_RES_PATCH_LDG_GPU) { if (w2 != 0x0c1f5900u) return -1; w2 = 0x0c1ef900u; }
+        else if (pt->kind[i] == OMEGA_RES_PATCH_MEMBAR_GPU) { if (w2 != 0x0000b000u) return -1; w2 = 0x0000a000u; } /* MEMBAR.ALL.SYS -> MEMBAR.ALL.GPU (oracle: fence.acq_rel.gpu) */
         else if (pt->kind[i] == OMEGA_RES_PATCH_ATOM_GPU) { if ((w2 & 0xffffff00u) != 0x081f5100u) return -1; w2 = 0x081ef100u | (w2 & 0xffu); }
         else return -1;
         memcpy(code + at, &w2, 4);
