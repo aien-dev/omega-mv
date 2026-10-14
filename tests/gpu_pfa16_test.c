@@ -30,13 +30,12 @@ static uint32_t perm_ix(uint32_t j) { static const uint32_t o[4] = { 0, 2, 1, 3 
 static void conv_ref(const float *x, uint32_t k, uint16_t *out, int mutant) {
     for (uint32_t j = 0; j < k; j++) out[mutant == 1 ? j : perm_ix(j)] = omega_hx_bf16_rn(x[j] * (mutant == 2 ? 1.0f : 0x1p64f));
 }
-static void swiglu_ref_m(const float *gu, uint32_t I, uint16_t *out, int mutant, int nat) {
+static void swiglu_ref(const float *gu, uint32_t I, uint16_t *out, int mutant) {
     for (uint32_t a = 0; a < I; a++) {
         const float g = mutant == 1 ? gu[I + a] : gu[a], u = mutant == 1 ? gu[a] : gu[I + a];
-        out[nat ? a : perm_ix(a)] = omega_hx_bf16_rn(omega_hx_swiglu(g, u) * (mutant == 2 || nat ? 1.0f : 0x1p64f));
+        out[perm_ix(a)] = omega_hx_bf16_rn(omega_hx_swiglu(g, u) * (mutant == 2 ? 1.0f : 0x1p64f));
     }
 }
-static void swiglu_ref(const float *gu, uint32_t I, uint16_t *out, int mutant) { swiglu_ref_m(gu, I, out, mutant, 0); }
 /* bf16 ulp distance of two finite values of the same sign class (0 = identical bits) */
 static uint32_t ulp16(uint16_t a, uint16_t b) { int32_t x = (a & 0x8000u) ? -(int32_t)(a & 0x7fffu) : (int32_t)a, y = (b & 0x8000u) ? -(int32_t)(b & 0x7fffu) : (int32_t)b; return (uint32_t)(x > y ? x - y : y - x); }
 /* the SwiGLU rule (as gpu_qgemm_test.c for the W8A8 epilogue): MUFU.EX2 / MUFU.RCP are approximations, so within 1 bf16 ulp
@@ -125,16 +124,16 @@ static int sim_hx(uint32_t mode, uint32_t k, uint32_t in_type, uint32_t rows, in
     static BlackwellIRProgram prog;
     OmegaHxSpec sp = { mode, k, in_type, mutant };
     if (omega_blackwell_codegen_hx_prog(&sp, &prog) != 0) { snprintf(msg, msgn, "codegen refused"); return -1; }
-    const uint32_t kin = mode != OMEGA_HX_CONVERT ? 2 * k : k;
+    const uint32_t kin = mode == OMEGA_HX_SWIGLU ? 2 * k : k;
     float *x = malloc((size_t)rows * kin * 4); uint16_t *xb = malloc((size_t)rows * kin * 2), *out = malloc((size_t)rows * k * 2), *ref = malloc((size_t)rows * k * 2);
     for (size_t i = 0; i < (size_t)rows * kin; i++) {
-        float v = mode != OMEGA_HX_CONVERT && (i % kin) < k ? rand_gate() : rand_act();
+        float v = mode == OMEGA_HX_SWIGLU && (i % kin) < k ? rand_gate() : rand_act();
         if (in_type == OMEGA_HX_IN_BF16) { xb[i] = bf16_trunc(v); v = u2f((uint32_t)xb[i] << 16); }
         x[i] = v;
     }
     for (uint32_t r = 0; r < rows; r++) {
         if (mode == OMEGA_HX_CONVERT) conv_ref(x + (size_t)r * k, k, ref + (size_t)r * k, 0);
-        else swiglu_ref_m(x + (size_t)r * kin, k, ref + (size_t)r * k, 0, mode == OMEGA_HX_SWIGLU_NAT);
+        else swiglu_ref(x + (size_t)r * kin, k, ref + (size_t)r * k, 0);
     }
     memset(out, 0xff, (size_t)rows * k * 2);
     static WsSim s; memset(&s, 0, sizeof s);
@@ -197,7 +196,7 @@ static int sim_tests(void) {
     int fail = 0;
     static const struct { uint32_t mode, k, in, rows; const char *name; } hx[] = {
         { OMEGA_HX_CONVERT, 256, OMEGA_HX_IN_F32, 5, "convert f32 k256" }, { OMEGA_HX_CONVERT, 384, OMEGA_HX_IN_BF16, 3, "convert bf16 k384" },
-        { OMEGA_HX_SWIGLU, 256, OMEGA_HX_IN_F32, 6, "swiglu I256" }, { OMEGA_HX_SWIGLU_NAT, 768, OMEGA_HX_IN_F32, 3, "swiglu_nat I768" }, { OMEGA_HX_CONVERT, 768, OMEGA_HX_IN_F32, 2, "convert f32 k768" },
+        { OMEGA_HX_SWIGLU, 256, OMEGA_HX_IN_F32, 6, "swiglu I256" }, { OMEGA_HX_CONVERT, 768, OMEGA_HX_IN_F32, 2, "convert f32 k768" },
     };
     for (size_t c = 0; c < sizeof hx / sizeof hx[0]; c++) {
         size_t bad = 0; char msg[200] = ""; int rc = sim_hx(hx[c].mode, hx[c].k, hx[c].in, hx[c].rows, 0, &bad, msg, sizeof msg);
@@ -314,18 +313,6 @@ static int chip_shape(const char *name, uint32_t tokens, int reps, int check_row
             qsort(nss, reps, 8, cmp_u64);
             printf("%s hswiglu of the chip GEMM output (%u rows): %s%zu differ beyond 1 bf16 ulp (%zu within 1 ulp); median %.3f ms\n", name, M, rc ? "launch failed " : "", sbad, s1, nss[reps / 2] / 1e6);
             if (rc || sbad) fail++;
-            {   /* the driver's form: hswiglu_nat (W8A8 act row) then hconv(bf16) must give the hswiglu rows bit for bit */
-                OmegaGpuMem nd = { 0 }, cd = { 0 }; uint16_t *act2 = malloc(ab);
-                int nrc = omega_gpu_pf_alloc_dev(ab, &nd);
-                if (!nrc) nrc = omega_gpu_pf_alloc_dev(ab, &cd);
-                if (!nrc) nrc = omega_gpu_pf_hswiglu_nat(n / 2, M, yd.va, nd.va, NULL);
-                if (!nrc) nrc = omega_gpu_pf_hconv(n / 2, OMEGA_GPU_PF_HX_BF16, M, nd.va, cd.va, NULL);
-                if (!nrc) nrc = omega_gpu_pf_download(&cd, 0, act2, ab & ~(size_t)15);
-                const int same = !nrc && !rc && memcmp(act, act2, (size_t)M * (n / 2) * 2) == 0;
-                printf("%s hswiglu_nat + hconv(bf16) equals hswiglu on %u rows: %s\n", name, M, nrc ? "launch failed" : same ? "yes (bit-identical)" : "NO");
-                if (!same) fail++;
-                omega_gpu_pf_free(&nd); omega_gpu_pf_free(&cd); free(act2);
-            }
             free(act); free(aref);
         }
         if (mutants) {

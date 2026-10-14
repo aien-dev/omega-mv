@@ -26,8 +26,6 @@ extern "C" {
 enum { OMEGA_GPU_PF_HX_F32 = 0, OMEGA_GPU_PF_HX_BF16 = 1 };
 int omega_gpu_pf_hconv(uint32_t k, uint32_t in_type, uint32_t rows, uint64_t x_va, uint64_t xh_va, uint64_t *ns);
 int omega_gpu_pf_hswiglu(uint32_t i, uint32_t rows, uint64_t gu_va, uint64_t act_va, uint64_t *ns);
-/* the same SwiGLU stored as the W8A8 act row (natural order bf16_rn(o), no 2^64): hconv(I, BF16) of it equals hswiglu exactly */
-int omega_gpu_pf_hswiglu_nat(uint32_t i, uint32_t rows, uint64_t gu_va, uint64_t act_va, uint64_t *ns);
 uint32_t omega_gpu_pf_hgemm_bm(void);
 int omega_gpu_pf_hgemm(uint32_t n, uint32_t k, uint64_t tiles_va, uint32_t ntiles, uint64_t rowidx_va, uint64_t xh_va, uint64_t y_va, uint64_t *ns);
 /* knobs: shape (all 0 restores rt 4, ct 2, warps 8), TEST ONLY mutants (GEMM: omega_blackwell_codegen_tc.h 1-4; hx: 1-2) */
