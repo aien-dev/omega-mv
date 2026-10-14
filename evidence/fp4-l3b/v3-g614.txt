@@ -1,0 +1,6 @@
+p1-one-token: positions 16, top-1 agree 13 (81.25%), logits cosine mean 0.999008 min 0.993871, flips 3 (smallest FP8 margin at a flip 0.042); generated positions 16: FP8 matches golden 16, FP4 matches golden 13
+p2-short: positions 27, top-1 agree 27 (100.00%), logits cosine mean 0.997868 min 0.982023, flips 0 (smallest FP8 margin at a flip 0.000); generated positions 8: FP8 matches golden 8, FP4 matches golden 8
+p3-medium: positions 219, top-1 agree 203 (92.69%), logits cosine mean 0.998081 min 0.881326, flips 16 (smallest FP8 margin at a flip 0.002); generated positions 16: FP8 matches golden 16, FP4 matches golden 15
+p4-long: positions 672, top-1 agree 659 (98.07%), logits cosine mean 0.994373 min 0.762725, flips 13 (smallest FP8 margin at a flip 0.006); generated positions 16: FP8 matches golden 16, FP4 matches golden 16
+TOTAL: positions 934, top-1 agree 902 (96.574%), min logits cosine 0.762725; generated positions 56: FP8 matches golden 56, FP4 matches golden 52
+per-layer MoE output error of FP4 experts vs FP8 experts on the FP8 stream's real activations (mean over positions):

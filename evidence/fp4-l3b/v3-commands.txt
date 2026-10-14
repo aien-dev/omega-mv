@@ -1,0 +1,7 @@
+# L3b v3 commands (host CPU only; binaries built from this commit's tools/, -O3 -march=native -fopenmp)
+OMP_NUM_THREADS=12 build/fp4_gptq <ckpt> ~/l3b/calib ~/l3b/store_g.afp4 --search -8,2            > gptq.log
+build/fp4_study_lab <ckpt> ~/l3b/store_g.afp4 ~/l3b/golden.tsv --threads 12 --cache ~/l3b/cache --noprobe --out v3-g.json
+OMP_NUM_THREADS=6 build/fp4_sens <ckpt> ~/l3b/store_s.afp4 ~/l3b/calib --tokens all --out sens-store_s.tsv
+sort -t$'\t' -k4,4gr sens-store_s.tsv | head -n K | awk '{print $1, $2}' > mask_K.txt     # K = 307, 614
+build/fp4_study_lab <ckpt> ~/l3b/store_g.afp4 ~/l3b/golden.tsv --threads 9 --cache ~/l3b/cache --noprobe --mask mask_K.txt --out v3-gK.json
+build/fp4_cov ~/l3b/calib > calib-coverage.txt
