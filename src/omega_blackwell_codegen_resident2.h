@@ -29,6 +29,9 @@
  * fence 0, abort 1 are fixed here). warps must be 8 (RESNORM's 256-thread mapping). Shared memory: 128 bytes (RESNORM's
  * per-warp partials at 0..31, the barrier verdict word at 64).
  *
+ * Registers (W-L2i): peak 61, declared 64, so 4 CTAs of 8 warps fit per SM and grid 192 (1536 warps) runs. The ctl pointer,
+ * barrier target and SWIGLU stride come from the constant bank where used, and the e4m3 decode reuses two temporaries.
+ *
  * mutant (tests only): 1 = no grid barrier (NEGATIVE CONTROL).
  */
 #include <stdint.h>

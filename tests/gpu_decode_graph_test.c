@@ -194,10 +194,10 @@ static int host_only(void) {
     CHECK(omega_gpu_bf16_gemv_record(fake, NULL, 0, 1) == OMEGA_GPU_BF16_BAD_ARGS, "bf16 record with x_va 0: BAD_ARGS");
     CHECK(omega_gpu_router_record(fake, NULL, 0, 0, EPS, 1, 1.0f, NULL) == OMEGA_GPU_ROUTER_BAD_ARGS, "router record with a NULL router: BAD_ARGS");
     CHECK(omega_gpu_decode_attn_record(fake, NULL, 0, 0, 0, EPS, 1.0f, 1) == OMEGA_GPU_DATTN_BAD_ARGS, "decode attn record with a NULL cache: BAD_ARGS");
-    for (int mu = 0; mu <= 1; mu++) { /* W-L2h resident decode kernel: builds, fits 3 CTAs per SM of 8 warps (grid 128 needs 128 / 48 -> 3) */
+    for (int mu = 0; mu <= 1; mu++) { /* W-L2h resident decode kernel: builds; W-L2i: fits 4 CTAs per SM of 8 warps (64 declared registers, grid 192) */
         OmegaResident2Spec rs = { 8u, mu }; uint32_t ins = 0, gpr = 0; int rc = omega_resident2_prog_stats(&rs, &ins, &gpr);
         const uint32_t decl = omega_bw_gpr_declared(gpr), per = 65536u / (256u * decl);
-        CHECK(rc == 0 && per >= 3u, "resident2 kernel mutant %d builds: %u instructions, peak %u registers (declared %u, %u CTAs/SM)", mu, ins, gpr, decl, per);
+        CHECK(rc == 0 && per >= 4u, "resident2 kernel mutant %d builds: %u instructions, peak %u registers (declared %u, %u CTAs/SM)", mu, ins, gpr, decl, per);
     }
     { OmegaResident2Spec rs = { 16u, 0 }; CHECK(omega_resident2_prog_stats(&rs, NULL, NULL) != 0, "resident2 refuses warps != 8"); }
     { /* encoded + scope-patched production kernel to /tmp/wl2h-resident2.bin (offline nvdisasm check) */
@@ -221,6 +221,7 @@ static int host_only(void) {
  * flush_each path with resident ON too; RED (resident kernel without its grid barrier) must differ; ON again after the red
  * must be identical (rebuilt kernel, fresh barrier state); timeline per kind with resident ON. */
 static int g_resident;
+static uint32_t g_tl_reps; /* W-L2i --tl-reps N: per-group stamped medians (0 = off) */
 static int same_out(const Out *a, const Out *b, uint32_t vocab) {
     return a->tok == b->tok && !memcmp(a->logits, b->logits, (size_t)vocab * 4) && !memcmp(a->x, b->x, sizeof a->x) && !memcmp(a->hidden, b->hidden, sizeof a->hidden);
 }
@@ -272,6 +273,55 @@ static void res_section(OmegaGpuDecodeGraph *gr, const Model *m, const Out *C0, 
                    int first = 1; for (unsigned k = 0; k < OMEGA_GPU_DGRAPH_K_COUNT; k++) if (cnt_kind[k]) { fprintf(out, "%s\"%s\":[%u,%" PRIu64 "]", first ? "" : ",", omega_gpu_decode_graph_kind_name((uint8_t)k), cnt_kind[k], per_kind[k]); first = 0; }
                    fprintf(out, "}},"); }
         omega_gpu_decode_graph_set_stamps(gr, 0);
+    }
+    /* W-L2i: per-group chip time, median of g_tl_reps stamped tokens, OFF and ON interleaved (order alternates).
+     * Groups compare like with like: OA = launched o_proj + res_add vs resident [o + add]; CH = launched gate_up + swiglu + down +
+     * combine_norm + every qkv but the first vs resident [moe chain .. next qkv]; ATTN, ROUTER the same launches on both sides;
+     * GAP = chip time - stamp span (launch gaps outside the stamped kernels). A stamp interval is launch start to next launch start. */
+    if (g_tl_reps && ok) {
+        enum { G_OA, G_CH, G_AT, G_RT, G_SP, G_GAP, G_N };
+        static const char *gn[G_N] = { "oa", "chain", "attn", "router", "span", "gap" };
+        static uint64_t sts[OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1]; static uint8_t kinds[OMEGA_GPU_CMDLIST_MAX_LAUNCHES];
+        uint64_t *v[2][G_N]; int tok_ok = 1, cnt_ok = 1;
+        for (int s = 0; s < 2; s++) for (int q = 0; q < G_N; q++) v[s][q] = calloc(g_tl_reps, 8);
+        omega_gpu_decode_graph_set_stamps(gr, 1);
+        for (uint32_t r = 0; r < g_tl_reps && tok_ok; r++)
+            for (int k = 0; k < 2; k++) {
+                const int on = (k + (int)r) % 2;
+                omega_gpu_decode_graph_set_resident(on);
+                if (run_graph(gr, m, &R, &st) != 0 || !same_out(&R, C0, vocab)) { tok_ok = 0; break; }
+                int n = omega_gpu_decode_graph_stamps(gr, sts, kinds, OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1);
+                if (n != (int)st.launches || n <= 0) { cnt_ok = 0; break; }
+                uint64_t g[G_N] = { 0 }; int seen_qkv = 0;
+                for (int i = 0; i < n; i++) {
+                    const uint64_t d = sts[i + 1] - sts[i];
+                    switch (kinds[i]) {
+                    case OMEGA_GPU_DGRAPH_K_O: case OMEGA_GPU_DGRAPH_K_ADD: case OMEGA_GPU_DGRAPH_K_RES_O: g[G_OA] += d; break;
+                    case OMEGA_GPU_DGRAPH_K_QKV: if (seen_qkv++) g[G_CH] += d; break;
+                    case OMEGA_GPU_DGRAPH_K_GATE_UP: case OMEGA_GPU_DGRAPH_K_SWIGLU: case OMEGA_GPU_DGRAPH_K_DOWN: case OMEGA_GPU_DGRAPH_K_COMBINE:
+                    case OMEGA_GPU_DGRAPH_K_RES_MOE: g[G_CH] += d; break;
+                    case OMEGA_GPU_DGRAPH_K_ATTN: g[G_AT] += d; break;
+                    case OMEGA_GPU_DGRAPH_K_ROUTER: g[G_RT] += d; break;
+                    default: break;
+                    }
+                }
+                g[G_SP] = sts[n] - sts[0]; g[G_GAP] = st.chip_ns > g[G_SP] ? st.chip_ns - g[G_SP] : 0;
+                for (int q = 0; q < G_N; q++) v[on][q][r] = g[q];
+            }
+        omega_gpu_decode_graph_set_stamps(gr, 0);
+        CHECK(tok_ok && cnt_ok, "TL medians: %u stamped reps x (OFF, ON), every token bit-identical to C0, one stamp per launch", g_tl_reps);
+        if (tok_ok && cnt_ok) {
+            printf("TLMED grid %u (median of %u, us per layer, OFF / ON / ON-OFF):", omega_gpu_decode_graph_resident_grid(), g_tl_reps);
+            if (out) fprintf(out, "\"tlmed\":{\"grid\":%u,\"reps\":%u", omega_gpu_decode_graph_resident_grid(), g_tl_reps);
+            for (int q = 0; q < G_N; q++) {
+                const double a = median_u64(v[0][q], g_tl_reps) / 1e3 / layers, b = median_u64(v[1][q], g_tl_reps) / 1e3 / layers;
+                printf(" %s %.2f / %.2f / %+.2f", gn[q], a, b, b - a);
+                if (out) fprintf(out, ",\"%s\":[%.3f,%.3f]", gn[q], a, b);
+            }
+            printf("\n");
+            if (out) fprintf(out, "},");
+        }
+        for (int s = 0; s < 2; s++) for (int q = 0; q < G_N; q++) free(v[s][q]);
     }
     omega_gpu_decode_graph_set_resident(0);
     if (ok) {
@@ -415,6 +465,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--cached-weights") == 0) cached = 1;
         else if (strcmp(argv[i], "--resident") == 0) g_resident = 1;       /* W-L2h: resident decode chain section (ON vs OFF, red) */
         else if (strcmp(argv[i], "--resident-grid") == 0 && i + 1 < argc) omega_gpu_decode_graph_set_resident_grid((uint32_t)atoi(argv[++i]));
+        else if (strcmp(argv[i], "--tl-reps") == 0 && i + 1 < argc) g_tl_reps = (uint32_t)atoi(argv[++i]); /* W-L2i */
         else if (strcmp(argv[i], "--prefetch") == 0) prefetch = 1;          /* W-L2d: o_proj weight prefetch beside the attention */
         else if (strcmp(argv[i], "--prefetch-red") == 0) prefetch = prefetch_red = 1; /* its red: o_proj unordered, MUST FAIL */
         else if (strcmp(argv[i], "--cta-budget") == 0 && i + 1 < argc) cta_budget = (uint32_t)atoi(argv[++i]);

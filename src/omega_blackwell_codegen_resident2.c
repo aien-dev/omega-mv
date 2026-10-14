@@ -139,7 +139,7 @@ static void mark(OmegaResidentPatches *pt, int at, uint32_t kind) {
 }
 
 /* values every block may use (live for the whole kernel) */
-typedef struct { int udesc, pdesc, tid, cx, warp, lane, one, gw, stride; } Ctx;
+typedef struct { int udesc, pdesc, tid, cx, warp, lane, one, gw; } Ctx;
 
 /* e4m3 byte i of word w -> f32 bits (value * 2^-120): the variant 1 decode, verbatim */
 static void decode_byte(Em *e, int f, int wq, unsigned word, unsigned i, int u, int a, int s) {
@@ -163,7 +163,7 @@ static int gemv_block(Em *e, const Ctx *c, uint32_t LB, int add) {
     int kk = V(e), ks = V(e), rgn = V(e), kb4 = V(e), wpg = V(e), xlane = V64(e), rg = V(e), off = V(e), srg = V(e);
     int wlane = V(e), slane = V(e), xlo = V(e);
     int pw = V64(e), ps = V64(e), pxc = V64(e), pyr = V64(e), acc = V(e), cnt = V(e), wq = LB == 16 ? V128(e) : V64(e);
-    int xq[4] = { NOREG, NOREG, NOREG, NOREG }, sc = V(e), dot = V(e), u = V(e), a = V(e), sg = V(e), f = V(e), tt = V(e);
+    int xq[4] = { NOREG, NOREG, NOREG, NOREG }, sc = V(e), dot = V(e), u = V(e), sg = V(e), tt = V(e);
     for (uint32_t q = 0; q < WORDS; q++) xq[q] = V128(e);
     if (e->err) return -1;
     ldg_wide(e, BW_IR_LDG_E_64, tb, c->pdesc, OMEGA_RES2_D_TAB, c->udesc, 1);
@@ -231,7 +231,7 @@ static int gemv_block(Em *e, const Ctx *c, uint32_t LB, int add) {
     }
     movrz(e, dot);
     for (uint32_t word = 0; word < WORDS; word++)
-        for (unsigned i = 0; i < 4; i++) { decode_byte(e, f, wq, word, i, u, a, sg); ffma(e, dot, f, xq[word], i, dot); }
+        for (unsigned i = 0; i < 4; i++) { decode_byte(e, sg, wq, word, i, u, u, sg); ffma(e, dot, sg, xq[word], i, dot); } /* W-L2i: a in u, f in sg */
     ffma(e, acc, dot, sc, 0, acc);
     imadw(e, pw, c->one, 32u * LB, pw);
     imadw(e, pxc, c->one, 32u * LB * 4u, pxc);
@@ -281,7 +281,8 @@ static int swiglu_block(Em *e, const Ctx *c) {
     imadrs(e, total, kg, 1, fi, 1, NOREG);          /* G * I */
     imadi(e, ninter, fi, 1, 0xffffffffu, NOREG);    /* -I */
     imadi(e, eid, c->gw, 0, 32u, c->lane);          /* (cta * warps + warp) * 32 + lane */
-    imadi(e, step, c->stride, 0, 32u, NOREG);
+    ldc32(e, step, OMEGA_RES_ARG_STRIDE);            /* W-L2i: from the constant bank here, not held kernel-wide */
+    imadi(e, step, step, 0, 32u, NOREG);
     const int L_e = here(e);
     loop_begin(e);
     isetp_ge_u32(e, eid, total);
@@ -416,18 +417,17 @@ int omega_blackwell_codegen_resident2_prog_p(const OmegaResident2Spec *spec, Bla
 
     /* ---- prologue: values live for the whole kernel ---- */
     Ctx c;
-    int pctl = V64(e), st = V(e), target = V(e);
-    c.udesc = UV64(e); c.pdesc = V64(e); c.stride = V(e); c.tid = V(e); c.cx = V(e); c.warp = V(e); c.lane = V(e); c.one = V(e); c.gw = V(e);
+    int st = V(e); /* W-L2i: ctl pointer and barrier target are rebuilt inside the barrier (constant bank), not held kernel-wide */
+    c.udesc = UV64(e); c.pdesc = V64(e); c.tid = V(e); c.cx = V(e); c.warp = V(e); c.lane = V(e); c.one = V(e); c.gw = V(e);
     if (e->err) return -1;
     ldcu64(e, c.udesc, 0x358);
-    ldc64(e, pctl, OMEGA_RES_ARG_CTL); ldc64(e, c.pdesc, OMEGA_RES_ARG_TABLE);
-    ldc32(e, c.stride, OMEGA_RES_ARG_STRIDE);
+    ldc64(e, c.pdesc, OMEGA_RES_ARG_TABLE);
     s2r(e, c.tid, BW_SR_TID_X); s2r(e, c.cx, BW_SR_CTAID_X);
     movi(e, c.one, 1);
     shr(e, c.warp, c.tid, 0, 5);
     andi(e, c.lane, c.tid, 0, 31);
     imadi(e, c.gw, c.cx, 0, W, c.warp);
-    movrz(e, st); ldc32(e, target, OMEGA_RES_ARG_BASE);
+    movrz(e, st);
 
     /* ---- stage loop: dispatch on kind ---- */
     const int L_st = here(e);
@@ -465,16 +465,19 @@ int omega_blackwell_codegen_resident2_prog_p(const OmegaResident2Spec *spec, Bla
     if (spec->mutant != 1) {
         /* ---- grid barrier: the W-L2f r4 production form (omega_blackwell_codegen_resident.c, scope_gpu 1, fence 0, abort 1) ---- */
         int v = V(e), old = V(e), spins = V(e), verdict = V(e), smaddr = V(e), t0 = V(e), lim = V(e), c1 = V(e), au = V(e), pa = V64(e), pb = V64(e), pe = V64(e);
+        int target = V(e), pctl = V64(e);
         if (e->err) return -1;
         membar(e);
         ldc32(e, lim, OMEGA_RES_ARG_GRID);
-        imadi(e, target, lim, 0, 1, target);
+        ldc32(e, target, OMEGA_RES_ARG_BASE);
+        imadr(e, target, st, lim, target);           /* W-L2i: target = base + st * grid (was: += grid per barrier; same value) */
         bar_sync(e);
         s2r(e, t0, BW_SR_TID_X);
         isetp_ge_u32(e, t0, c.one);
         const int r_bssy = bssy_fwd(e);
         const int r_skip = bra_if_p0_fwd(e);
         ldc64(e, pb, OMEGA_RES_ARG_BAR);
+        ldc64(e, pctl, OMEGA_RES_ARG_CTL);
         ldc32(e, lim, OMEGA_RES_ARG_SPINMAX);
         movi(e, au, OMEGA_RES_ABORT_UNIT);
         s2r(e, t0, BW_SR_CTAID_X);
