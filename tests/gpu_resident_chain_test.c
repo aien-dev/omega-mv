@@ -28,6 +28,7 @@
 #include <string.h>
 
 static int g_checks, g_failed;
+static uint32_t g_grid; /* --grid: resident grid for the CHAIN runs (0 = capacity) */
 #define CHECK(c, ...) do { g_checks++; if (!(c)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } else { printf("ok: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 #define NMAX 16u
 #define REPMAX 64u
@@ -154,6 +155,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--fence") == 0 && i + 1 < argc) { SPEC.fence = (uint32_t)atoi(argv[++i]); }
         else if (strcmp(argv[i], "--abort0") == 0) { SPEC.abort = 0; }
         else if (strcmp(argv[i], "--quick") == 0) { quick = 1; }
+        else if (strcmp(argv[i], "--grid") == 0 && i + 1 < argc) { g_grid = (uint32_t)atoi(argv[++i]); }
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
         else { printf("usage: %s [--host] [--reps R] [--out receipt.json]\n", argv[0]); return 2; }
@@ -219,7 +221,7 @@ int main(int argc, char **argv) {
             for (uint32_t r = 0; r < reps && ok; r++)
                 for (int m = 0; m < M_COUNT && ok; m++) {
                     const int mode = (m + (int)r) % M_COUNT;
-                    if (run(cl, &c, mode, 0, 1u << 22, 0, &t[mode][r]) != 0) { ok = 0; break; }
+                    if (run(cl, &c, mode, g_grid, 1u << 22, 0, &t[mode][r]) != 0) { ok = 0; break; }
                     const int eq = same(&c);
                     if (mode == M_RED) { if (!eq) red_differs = 1; }
                     else if (!eq) { ident = 0; if (mode == M_RES) printf("  rep %u resident differs\n", r); }

@@ -19,22 +19,21 @@
  *   +40 rg u32, kb4 u32   (rg = n / rows row groups; kb4 = (k / 128) * 4 bytes per scale row)
  * so one kernel per (lane_bytes, rows, warps, mutant) serves any chain whose k are multiples of 32 * lane_bytes.
  *
- * Grid barrier between stage s and s + 1 (none after the last stage), in the chip-proven forms already in the tree:
- *   every thread MEMBAR.ALL.SYS (its stores of y_s are ordered before what follows), BAR.SYNC (the CTA is done with s),
- *   warp 0: if the control block's error or cancel word is set -> abort; else lane 0 ATOMG.ADD.STRONG.SYS +1 on the
- *   arrive counter, then warp 0 polls it (LDG.E.STRONG.SYS) until it reaches (s + 1) * grid; the poll is bounded by
- *   spin_max polls, on expiry warp 0 adds 1 to the error word and aborts. Warp 0 writes the verdict to shared memory,
- *   BAR.SYNC, every thread reads it (abort -> EXIT), then CCTL.IVALL (drop L1 lines; ld.acquire.gpu's SASS pair, L2e).
- * The arrive counter is monotonic over the launch: the host writes 0 before the launch, never during it.
+ * Grid barrier between stage s and s + 1 (none after the last stage): every thread MEMBAR.ALL.SYS (fence 0), BAR.SYNC;
+ * thread 0 ATOMG.ADD +1 on the BARRIER WORD (GPU-cached, GPU scope when scope_gpu = 1) and polls it (bounded by spin_max)
+ * until it reaches base + (s + 1) * grid; verdict via shared memory; BAR.SYNC; CCTL.IVALL. Abort (abort = 1): an aborting
+ * CTA adds OMEGA_RES_ABORT_UNIT to the barrier word, every waiter sees it at once; only CTA 0 reads the cancel word,
+ * batched with its arrive. A spin expiry adds 1 to the control block error word. Full rules and chip costs:
+ * docs/own30b/resident-control-block.md.
  *
- * CONTROL BLOCK (u32 words, GPU-uncached memory: the host polls it; see docs/own30b/resident-control-block.md):
+ * CONTROL BLOCK (u32 words, GPU-uncached memory: the host polls it):
  *   +0x00 magic OMEGA_RES_MAGIC    +0x04 version OMEGA_RES_VERSION    +0x08 n_stages    +0x0c grid
- *   +0x10 arrive (GPU atomics)     +0x14 error (GPU: +1 per spin expiry)   +0x18 cancel (host: nonzero = stop at the next barrier)
- *   +0x1c spin_max (polls per barrier wait)
- * The kernel reads n_stages, grid and spin_max from constant bank arguments (identical copies), not from the block.
+ *   +0x10 progress (CTA 0)        +0x14 error (GPU: spin expiry)   +0x18 cancel (host)   +0x1c spin_max
+ * The kernel reads n_stages, grid, spin_max, the barrier word address and base from constant bank arguments.
  *
  * Constant bank 0 argument words (cbank + 0x380):
  *   0x380 ctl u64   0x388 table u64   0x390 n_stages u32   0x394 grid u32   0x398 stride u32 (grid * warps)   0x39c spin_max u32
+ *   0x3a0 barrier word u64   0x3a8 base u32
  *
  * Co-residency: every CTA of the grid must be resident at once or the barrier cannot complete. The generator cannot know
  * that; the launcher refuses grids above the measured capacity (omega_gpu_resident_api.c) and the bounded spin turns a
