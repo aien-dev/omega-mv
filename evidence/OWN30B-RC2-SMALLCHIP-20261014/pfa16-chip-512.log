@@ -1,0 +1,42 @@
+cmd flock /tmp/aien-gb10.lock env AIEN_OMEGA_SPIN_US=2000 ./gpu_pfa16_test --chip --tokens 512
+2026-10-14T04:32:14Z
+gateup hconv on 576 rows of 2048: 0 of 1048576 differ from the host mirror (0 within 1 bf16 ulp); median 0.022 ms
+gateup second launch identical: yes
+gateup hgemm bit-identity on 32 sampled rows: 0 of 49152 differ; worst error vs the double oracle 1.37e-07 of the sum of |terms|
+HGEMM-inplace gateup tokens 512 M 4096 n 1536 k 2048 tiles 128: median 1.928 ms (min 1.917), 13.4 TFLOPS
+gateup hswiglu of the chip GEMM output (4096 rows): 0 differ beyond 1 bf16 ulp (4 within 1 ulp); median 0.147 ms
+gateup hgemm mutant 1: caught
+gateup hgemm mutant 2: caught
+gateup hgemm mutant 3: caught
+gateup hgemm mutant 4: caught
+gateup hconv mutant 1: caught
+down hswiglu on 4160 rows of 768: 0 of 3145728 differ from the host mirror beyond 1 bf16 ulp (7 within 1 bf16 ulp); median 0.128 ms
+down second launch identical: yes
+down hgemm bit-identity on 32 sampled rows: 0 of 65536 differ; worst error vs the double oracle 3.24e-07 of the sum of |terms|
+HGEMM-inplace down tokens 512 M 4096 n 2048 k 768 tiles 128: median 1.120 ms (min 1.103), 11.5 TFLOPS
+down hgemm mutant 1: caught
+down hgemm mutant 2: caught
+down hgemm mutant 3: caught
+down hgemm mutant 4: caught
+down hswiglu mutant 1: caught
+qkv hconv on 576 rows of 2048: 0 of 1048576 differ from the host mirror (0 within 1 bf16 ulp); median 0.022 ms
+qkv second launch identical: yes
+qkv hgemm bit-identity on 32 sampled rows: 0 of 163840 differ; worst error vs the double oracle 1.52e-07 of the sum of |terms|
+HGEMM-inplace qkv tokens 512 M 512 n 5120 k 2048 tiles 8: median 0.362 ms (min 0.360), 29.7 TFLOPS
+qkv hgemm mutant 1: caught
+qkv hgemm mutant 2: caught
+qkv hgemm mutant 3: caught
+qkv hgemm mutant 4: caught
+qkv hconv mutant 1: caught
+o hconv on 576 rows of 4096: 0 of 2097152 differ from the host mirror (0 within 1 bf16 ulp); median 0.046 ms
+o second launch identical: yes
+o hgemm bit-identity on 32 sampled rows: 0 of 65536 differ; worst error vs the double oracle 1.2e-07 of the sum of |terms|
+HGEMM-inplace o tokens 512 M 512 n 2048 k 4096 tiles 8: median 0.219 ms (min 0.216), 39.3 TFLOPS
+o hgemm mutant 1: caught
+o hgemm mutant 2: caught
+o hgemm mutant 3: caught
+o hgemm mutant 4: caught
+o hconv mutant 1: caught
+GPU_PFA16: PASS
+rc=0
+2026-10-14T04:32:21Z
