@@ -2537,3 +2537,8 @@ $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h sr
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# W-L4d: multi-row exact decode attention vs per-row calls (chip only)
+GPU_DATTN_ROWS_TEST = $(OUT_DIR)/gpu_decode_attn_rows_test
+$(GPU_DATTN_ROWS_TEST): tests/gpu_decode_attn_rows_test.c src/omega_gpu_decode_attn_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_attn_rows_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
