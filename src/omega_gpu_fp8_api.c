@@ -295,7 +295,7 @@ void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t) {
  * and the caller's end-of-token checks replace the poison check). */
 static int gemv_core(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t *ids, const float *x32, const uint16_t *x16,
                      uint32_t x_rows, float *y, OmegaGpuFp8Info *info, uint64_t dev_tab, uint64_t dev_x,
-                     OmegaGpuCmdList *rec, uint64_t dev_y) {
+                     OmegaGpuCmdList *rec, uint64_t dev_y, uint64_t wait_sem, uint32_t warm) {
     uint64_t t0 = omega_gpu_session_now_ns();
     if (info) memset(info, 0, sizeof *info);
     if (rec && (!dev_tab || !dev_x || !dev_y)) return OMEGA_GPU_FP8_BAD_ARGS;
@@ -304,6 +304,7 @@ static int gemv_core(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t
     if (!dev_tab) for (uint32_t gi = 0; gi < groups; gi++) if (ids[gi] >= t->experts) return OMEGA_GPU_FP8_BAD_ARGS;
     const uint32_t n = t->n, k = t->k;
     OmegaFp8GemvSpec spec; spec_for(k, n, groups, &spec);
+    if (wait_sem) { if (variant_now() != 1) { omega_gpu_session_set_error("fp8 overlap: variant 1 only"); return OMEGA_GPU_FP8_BAD_ARGS; } spec.wait = 1; spec.warm = warm; }
     if (n % spec.rows) return OMEGA_GPU_FP8_CODEGEN_FAIL;
     const uint32_t RG = n / spec.rows;
     uint32_t grid_x = (RG + spec.warps - 1) / spec.warps;
@@ -343,12 +344,13 @@ static int gemv_core(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t
         if (omega_gpu_session_sync_to_gpu(&g.tab) != 0 || omega_gpu_session_sync_to_gpu(&g.x_buf.mem) != 0 || omega_gpu_session_sync_to_gpu(&g.y_buf.mem) != 0) rc = OMEGA_GPU_FP8_CHIP_FAIL;
     }
 
-    uint32_t args[OMEGA_FP8_ARGS_WORDS];
+    uint32_t args[OMEGA_FP8_ARGS_WAIT_WORDS];
     const uint64_t tab_va = dev_tab ? dev_tab : g.tab.va, x_va = dev_x ? dev_x : g.x_buf.mem.va, y_va = rec ? dev_y : g.y_buf.mem.va;
     args[0] = (uint32_t)tab_va; args[1] = (uint32_t)(tab_va >> 32);
     args[2] = (uint32_t)x_va; args[3] = (uint32_t)(x_va >> 32);
     args[4] = (uint32_t)y_va; args[5] = (uint32_t)(y_va >> 32);
     args[6] = RG; args[7] = x_rows == 1 ? 0u : k * 4u; args[8] = n * 4u; args[9] = grid_x * spec.warps;
+    args[10] = (uint32_t)wait_sem; args[11] = (uint32_t)(wait_sem >> 32); args[12] = OMEGA_GPU_CMDLIST_SEM_DONE;
     if (info) {
         info->experts = t->experts; info->n = n; info->k = k; info->groups = groups;
         info->lane_bytes = spec.lane_bytes; info->rows_per_warp = spec.rows; info->warps_per_cta = spec.warps; info->depth = spec.depth;
@@ -363,7 +365,7 @@ static int gemv_core(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t
             .code_va = ks->code.va, .gpr_count = gpr_declared(ks->kernel.gpr_count) + g.gpr_pad,
             .threads_x = 32u * spec.warps, .threads_y = 1, .grid_x = grid_x, .grid_y = groups,
             .num_elements = (size_t)groups * n,
-            .args = args, .n_args = OMEGA_FP8_ARGS_WORDS, .timeout_ms = MARKER_TIMEOUT_MS,
+            .args = args, .n_args = wait_sem ? OMEGA_FP8_ARGS_WAIT_WORDS : OMEGA_FP8_ARGS_WORDS, .timeout_ms = MARKER_TIMEOUT_MS,
             .shared_bytes = shared_for(variant, &spec),
         };
         if (L.gpr_count < ks->kernel.gpr_count + 2u) { omega_gpu_session_set_error("declared registers below peak + 2: refusing to launch"); rc = OMEGA_GPU_FP8_CHIP_FAIL; }
@@ -384,17 +386,17 @@ static int gemv_core(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t
 #undef UNLOCK
 
 int omega_gpu_fp8_gemv_f32(const OmegaGpuFp8Tensor *t, uint32_t expert, const float *x, float *y, OmegaGpuFp8Info *info) {
-    return gemv_core(t, 1, &expert, x, NULL, 1, y, info, 0, 0, NULL, 0);
+    return gemv_core(t, 1, &expert, x, NULL, 1, y, info, 0, 0, NULL, 0, 0, 0);
 }
 int omega_gpu_fp8_gemv_bf16(const OmegaGpuFp8Tensor *t, uint32_t expert, const uint16_t *x, float *y, OmegaGpuFp8Info *info) {
-    return gemv_core(t, 1, &expert, NULL, x, 1, y, info, 0, 0, NULL, 0);
+    return gemv_core(t, 1, &expert, NULL, x, 1, y, info, 0, 0, NULL, 0, 0, 0);
 }
 int omega_gpu_fp8_gemv_grouped_f32(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t *ids, const float *x, uint32_t x_rows, float *y, OmegaGpuFp8Info *info) {
-    return gemv_core(t, groups, ids, x, NULL, x_rows, y, info, 0, 0, NULL, 0);
+    return gemv_core(t, groups, ids, x, NULL, x_rows, y, info, 0, 0, NULL, 0, 0, 0);
 }
 int omega_gpu_fp8_gemv_grouped_dev(const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va, uint64_t x_va, float *y, OmegaGpuFp8Info *info) {
     if (!tab_va || !x_va) return OMEGA_GPU_FP8_BAD_ARGS;
-    return gemv_core(t, groups, NULL, NULL, NULL, 1, y, info, tab_va, x_va, NULL, 0);
+    return gemv_core(t, groups, NULL, NULL, NULL, 1, y, info, tab_va, x_va, NULL, 0, 0, 0);
 }
 int omega_gpu_fp8_tensor_entry(const OmegaGpuFp8Tensor *t, uint32_t expert, uint64_t *w_va, uint64_t *s_va) {
     if (!t || !t->w.cpu || expert >= t->experts || !w_va || !s_va) return OMEGA_GPU_FP8_BAD_ARGS;
@@ -408,9 +410,20 @@ int omega_gpu_fp8_tensor_entry(const OmegaGpuFp8Tensor *t, uint32_t expert, uint
 int omega_gpu_fp8_gemv_grouped_record(OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
                                       uint64_t x_va, uint32_t x_rows, uint64_t y_va) {
     if (!cl) return OMEGA_GPU_FP8_BAD_ARGS;
-    return gemv_core(t, groups, NULL, NULL, NULL, x_rows, NULL, NULL, tab_va, x_va, cl, y_va);
+    return gemv_core(t, groups, NULL, NULL, NULL, x_rows, NULL, NULL, tab_va, x_va, cl, y_va, 0, 0);
 }
 
 /* ---- weight cache policy (OWN-30B L2 kernel-time cut) ---- */
 void omega_gpu_fp8_set_weight_cache(int on) { omega_gpu_session_lock(); g.weights_cached = on ? 1 : 0; g.weights_cached_set = 1; omega_gpu_session_unlock(); }
 int omega_gpu_fp8_weight_cache(void) { return g.weights_cached; }
+
+/* ---- W-L2e overlapped record (off unless called) ---- */
+int omega_gpu_fp8_gemv_grouped_record_overlap(OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
+                                              uint64_t x_va, uint32_t x_rows, uint64_t y_va, uint32_t warm) {
+    uint64_t sem = 0;
+    const uint32_t n0 = omega_gpu_cmdlist_count(cl);
+    if (!cl || n0 == 0 || omega_gpu_cmdlist_sem_va(cl, n0 - 1u, &sem) != 0 || warm > OMEGA_FP8_MAX_WARM) return OMEGA_GPU_FP8_BAD_ARGS;
+    int rc = gemv_core(t, groups, NULL, NULL, NULL, x_rows, NULL, NULL, tab_va, x_va, cl, y_va, sem, warm);
+    if (rc == OMEGA_GPU_FP8_OK && omega_gpu_cmdlist_mark_overlap(cl) != 0) rc = OMEGA_GPU_FP8_CHIP_FAIL;
+    return rc;
+}

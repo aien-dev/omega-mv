@@ -71,6 +71,12 @@ extern "C" {
 #define OMEGA_FP8_ARG_YSTRIDE 0x3a0u
 #define OMEGA_FP8_ARG_STRIDE 0x3a4u
 #define OMEGA_FP8_ARGS_WORDS 10u
+/* wait = 1 kernels only (W-L2e): u64 producer semaphore VA, u32 value to reach */
+#define OMEGA_FP8_ARG_WAIT_SEM 0x3a8u
+#define OMEGA_FP8_ARG_WAIT_WANT 0x3b0u
+#define OMEGA_FP8_ARGS_WAIT_WORDS 13u
+#define OMEGA_FP8_WAIT_SPIN_MAX (1u << 20)
+#define OMEGA_FP8_MAX_WARM 64u
 
 typedef struct {
     uint32_t k;          /* input columns: multiple of 128 and of 32 * lane_bytes, <= OMEGA_FP8_MAX_K */
@@ -84,6 +90,17 @@ typedef struct {
                           * flight per warp); x comes from shared memory (LDS.128). Needs KS % D == 0,
                           * rows * D * lane_bytes <= 128, k % (32 * warps) == 0 and k <= 512 * warps (staging rounds). */
     int mutant;          /* 0 production; 1, 2, 3 as above */
+    /* Overlapped launch (W-L2e, 2026-10-14; off when 0). wait = 1: before reading x (and before the deep staging) warp 0
+     * spins on the PRODUCER launch's QMD release semaphore (u64 at OMEGA_FP8_ARG_WAIT_SEM, LDG.E.STRONG.SYS) until it is
+     * >= OMEGA_FP8_ARG_WAIT_WANT, then BAR.SYNC and CCTL.IVALL (drop L1 lines that could hold x from before the producer
+     * wrote it). The command list launches this grid with no barrier (omega_gpu_cmdlist_mark_overlap), so its CTAs start
+     * while the producer still runs. The spin is bounded (OMEGA_FP8_WAIT_SPIN_MAX polls); on expiry the kernel adds 1 to
+     * the word at sem + 4 (the list refuses the submit when that word is not 0) and continues.
+     * warm = W >= 1 (needs wait): each warp first reads the weights of its first W row groups (every row, every K step)
+     * and discards them, so they stream into L2 (GPU-cached weights only: uncached lines are not kept, W-L2d) while the
+     * producer finishes. Variant 2 refuses both. */
+    uint32_t wait;
+    uint32_t warm;
 } OmegaFp8GemvSpec;
 
 /* 0 on success (prog solved and register-allocated), -1 on a refused spec or an allocator failure. */

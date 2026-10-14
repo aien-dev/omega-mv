@@ -2492,3 +2492,7 @@ $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h sr
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+# OWN-30B W-L2e (2026-10-14): overlapped dependent FP8 GEMV launches (tests/gpu_fp8_overlap_test.c, chip only, GB10 lock).
+GPU_FP8_OVERLAP_TEST = $(OUT_DIR)/gpu_fp8_overlap_test
+$(GPU_FP8_OVERLAP_TEST): tests/gpu_fp8_overlap_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_fp8_overlap_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm

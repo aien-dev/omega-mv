@@ -109,6 +109,12 @@ int omega_gpu_fp8_gemv_grouped_dev(const OmegaGpuFp8Tensor *t, uint32_t groups, 
 struct OmegaGpuCmdList;
 int omega_gpu_fp8_gemv_grouped_record(struct OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
                                       uint64_t x_va, uint32_t x_rows, uint64_t y_va);
+/* W-L2e (off unless called): the same launch as grouped_record, but overlapped with the launch recorded just before it (the
+ * producer of x): no barrier between them; the kernel spins on the producer's release semaphore before it reads x, after
+ * reading (and dropping) the weights of each warp's first `warm` row groups (0..OMEGA_FP8_MAX_WARM; useful with GPU-cached
+ * weights only). Variant 1 only. Same caller rules as grouped_record. */
+int omega_gpu_fp8_gemv_grouped_record_overlap(struct OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
+                                              uint64_t x_va, uint32_t x_rows, uint64_t y_va, uint32_t warm);
 /* Device addresses of one expert's weights and scales (for a directory the router copies from). */
 int omega_gpu_fp8_tensor_entry(const OmegaGpuFp8Tensor *t, uint32_t expert, uint64_t *w_va, uint64_t *s_va);
 

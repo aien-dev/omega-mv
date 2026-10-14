@@ -135,6 +135,7 @@ int omega_fp8_gemv2_spec_ok(const OmegaFp8GemvSpec *s) {
     if (s->warps < 1 || s->warps > 32) return 0;
     if (s->k == 0 || s->k > OMEGA_FP8_MAX_K || s->k % OMEGA_FP8_BLOCK || s->k % (32u * s->lane_bytes)) return 0;
     if (s->mutant < 0 || s->mutant > 3) return 0;
+    if (s->wait || s->warm) return 0; /* W-L2e overlap: variant 1 only */
     const uint32_t ks = s->k / (32u * s->lane_bytes);
     if (ks > MAX_KS || s->rows * ks * s->lane_bytes > 128u) return 0; /* whole row group per register set */
     if (s->k > 512u * s->warps) return 0;                             /* at most 16 staging rounds */
