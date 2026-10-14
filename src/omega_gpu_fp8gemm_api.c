@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define CACHE_SLOTS 8
+#define CACHE_SLOTS 16 /* W-L4d: 3 widths x up to 3 rows-per-pass shapes are pinned by prepare (was 8: 2 shapes per width) */
 #define MARKER_TIMEOUT_MS 20000ull
 #define POISON_F32 (-999.0f)
 
@@ -92,6 +92,30 @@ static void spec_for(uint32_t k, uint32_t segs, OmegaFp8GemmSpec *spec) {
     spec->mutant = g.mutant;
 }
 
+/* W-L4d (speculative verify, 1..8 rows): rows per pass sized to the call. Every CTA iteration (W weight rows) stages
+ * MT x' rows from GPU-uncached memory at each K step: 4 * MT / W bytes of x' per weight byte (MT = 8, W = 16: twice the
+ * weights), so padding rows cost bandwidth. cost(MT) = sum over segments of passes * (W + 4 * MT); the cheapest MT wins,
+ * ties to the larger. Candidates {2, 4, 8} for a call with fewer than 8 segments (dense), {2, 4} otherwise (8 rows fill
+ * the shared memory and halve the rate there, the 2026-10-13 sweep). Reproduces the defaults for prefill-sized calls
+ * (dense >= 6 rows: 8; experts with >= 3 rows per segment on average: 4) and picks 2 for 1..2 rows per segment.
+ * Chip sweep 2026-10-14 (investigations/2026-10-14-own30b-l4d-exact-verify): qkv 3 rows 192 -> 106 us (MT 8 -> 4),
+ * o 1 row 261 -> 89 us (8 -> 2), gate|up 5 tokens x top-8 ~900 -> 615 us (4 -> 2). The arithmetic of a row does not
+ * depend on MT (each warp owns one weight row; the per-row FFMA chain, scale FMA and SHFL tree are the same), and the
+ * chip parity test checks every MT against the per-row GEMV bit for bit. */
+static uint32_t mt_for_rows(uint32_t warps, uint32_t lb, uint32_t segs, const uint32_t *cnt) {
+    static const uint32_t cand[3] = { 2u, 4u, 8u };
+    const uint32_t nc = segs < 8u ? 3u : 2u;
+    uint32_t best = 0; uint64_t best_cost = 0;
+    for (uint32_t c = 0; c < nc; c++) {
+        const uint32_t mt = cand[c];
+        if (mt * 128u * lb > OMEGA_GEMM_MAX_SHARED || (mt * lb) % warps) continue;
+        uint64_t cost = 0;
+        for (uint32_t s = 0; s < segs; s++) cost += (uint64_t)((cnt[s] + mt - 1u) / mt) * (warps + 4u * mt);
+        if (!best || cost <= best_cost) { best = mt; best_cost = cost; }
+    }
+    return best;
+}
+
 static int kernel_for(const OmegaFp8GemmSpec *spec, Slot **out, bool *hit) {
     for (unsigned i = 0; i < CACHE_SLOTS; i++) {
         Slot *s = &g.cache[i];
@@ -125,11 +149,13 @@ static int kernel_for(const OmegaFp8GemmSpec *spec, Slot **out, bool *hit) {
 
 int omega_gpu_fp8gemm_prepare(uint32_t k) {
     /* both variants: many experts (4 rows per pass) and dense (8 rows per pass) */
-    OmegaFp8GemmSpec sp[2]; spec_for(k, 64u, &sp[0]); spec_for(k, 1u, &sp[1]);
+    /* W-L4d: and the 2-rows-per-pass shape mt_for_rows picks for 1..2 rows per segment (when the shape knob is unset) */
+    OmegaFp8GemmSpec sp[3]; spec_for(k, 64u, &sp[0]); spec_for(k, 1u, &sp[1]); sp[2] = sp[0]; sp[2].mt = 2u;
+    const int nv = g.mt ? 2 : 3;
     omega_gpu_session_lock();
     int rc = OMEGA_GPU_FP8GEMM_OK;
     if (!dev_open_locked()) rc = OMEGA_GPU_FP8GEMM_CHIP_FAIL;
-    else for (int v = 0; v < 2 && rc == OMEGA_GPU_FP8GEMM_OK; v++) { Slot *s = NULL; bool hit = false; rc = kernel_for(&sp[v], &s, &hit); if (rc == OMEGA_GPU_FP8GEMM_OK) s->pinned = true; }
+    else for (int v = 0; v < nv && rc == OMEGA_GPU_FP8GEMM_OK; v++) { Slot *s = NULL; bool hit = false; rc = kernel_for(&sp[v], &s, &hit); if (rc == OMEGA_GPU_FP8GEMM_OK) s->pinned = true; }
     omega_gpu_session_unlock();
     return rc;
 }
@@ -158,12 +184,17 @@ static int gemm_core(const OmegaGpuFp8Tensor *t, uint32_t M, const uint32_t *ids
     if (!t || !experts || !ids || !trow || (!x32 && !x16) || !y || M == 0 || x_rows == 0) return OMEGA_GPU_FP8GEMM_BAD_ARGS;
     if (M > OMEGA_GPU_FP8GEMM_MAX_ROWS) return OMEGA_GPU_FP8GEMM_TOO_LARGE;
     uint32_t segs = 0;
+    uint32_t seg_cnt[OMEGA_GPU_FP8GEMM_MAX_SEGMENTS];
     for (uint32_t i = 0; i < M; i++) {
         if (ids[i] >= experts || trow[i] >= x_rows || (i && ids[i] < ids[i - 1])) return OMEGA_GPU_FP8GEMM_BAD_ARGS;
-        if (i == 0 || ids[i] != ids[i - 1]) segs++;
+        if (i == 0 || ids[i] != ids[i - 1]) {
+            if (segs == OMEGA_GPU_FP8GEMM_MAX_SEGMENTS) return OMEGA_GPU_FP8GEMM_TOO_LARGE;
+            seg_cnt[segs++] = 0;
+        }
+        seg_cnt[segs - 1]++;
     }
-    if (segs > OMEGA_GPU_FP8GEMM_MAX_SEGMENTS) return OMEGA_GPU_FP8GEMM_TOO_LARGE;
     OmegaFp8GemmSpec spec; spec_for(k, segs, &spec);
+    if (!g.mt) { const uint32_t mt = mt_for_rows(spec.warps, spec.lane_bytes, segs, seg_cnt); if (mt) spec.mt = mt; }
     const uint32_t MT = spec.mt, W = spec.warps;
     uint32_t grid_x = (n + W - 1) / W;
     uint32_t budget = g.ctas ? g.ctas : (segs >= 64u ? 2u : segs >= 8u ? 12u : 96u);
