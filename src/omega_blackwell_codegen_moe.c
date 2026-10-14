@@ -223,7 +223,7 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
         /* ---- W-L2e wait: warp 0 polls the producer's release semaphore (strong system load), the CTA meets at BAR.SYNC,
          * then CCTL.IVALL: the strong load + CCTL.IVALL pair is what nvcc 13.0 emits for PTX ld.acquire.gpu on sm_121
          * (oracle /tmp/l2e-oracle, investigation 2026-10-14-own30b-L2e-pdl). ---- */
-        int psem = V64(e), want = V(e), v = V(e), c32 = V(e), spins = V(e), smax = V(e), ptmo = V64(e), old = V(e);
+        int psem = V64(e), want = V(e), v = V(e), c32 = V(e), spins = V(e), smax = V(e), ptmo = V64(e), old = V(e), bo = V(e);
         if (e->err) return -1;
         ldc64(e, psem, OMEGA_FP8_ARG_WAIT_SEM); ldc32(e, want, OMEGA_FP8_ARG_WAIT_WANT);
         movi(e, c32, 32); movi(e, smax, OMEGA_FP8_WAIT_SPIN_MAX); movrz(e, spins);
@@ -237,6 +237,13 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
         imadi(e, spins, one, 0, 1, spins);
         isetp_ge_u32(e, spins, smax);
         const int bra_tmo = bra_if_p0_fwd(e);
+        if (OMEGA_FP8_WAIT_BACKOFF) { /* r2: a short delay loop between polls (r1: tight polling of the uncached word) */
+            movi(e, bo, OMEGA_FP8_WAIT_BACKOFF);
+            const int L_b = here(e);
+            imadi(e, bo, one, 0, 0xffffffffu, bo);
+            isetp_ge_u32(e, bo, one);
+            bra_if_p0(e, L_b);
+        }
         bra(e, L_s);
         loop_end(e);
         patch_bra(e, bra_tmo, here(e));

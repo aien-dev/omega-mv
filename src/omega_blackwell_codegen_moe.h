@@ -76,6 +76,7 @@ extern "C" {
 #define OMEGA_FP8_ARG_WAIT_WANT 0x3b0u
 #define OMEGA_FP8_ARGS_WAIT_WORDS 13u
 #define OMEGA_FP8_WAIT_SPIN_MAX (1u << 20)
+#define OMEGA_FP8_WAIT_BACKOFF 16u /* delay-loop iterations between semaphore polls (0 = tight polling, r1) */
 #define OMEGA_FP8_MAX_WARM 64u
 
 typedef struct {
