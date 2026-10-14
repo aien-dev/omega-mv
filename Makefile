@@ -2427,6 +2427,13 @@ test-gpu-fp8: $(GPU_FP8_TEST)
 	./$(GPU_FP8_TEST) --host-only
 	./$(GPU_FP8_TEST) --sim
 
+# W-FL1: fast NaN scan == byte loop on real checkpoint bytes (host only). make fp8-scan-check SCAN_FILES="<shards>"
+FP8_SCAN_CHECK = $(OUT_DIR)/fp8_scan_check
+$(FP8_SCAN_CHECK): tests/fp8_scan_check.c src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/fp8_scan_check.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+fp8-scan-check: $(FP8_SCAN_CHECK)
+	./$(FP8_SCAN_CHECK) $(SCAN_FILES)
+
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h). test-gpu-decode-attn is
 # host-only + simulator; the chip gate is tools/run_gpu_decode_attn_chip.sh.
 .PHONY: test-gpu-decode-attn

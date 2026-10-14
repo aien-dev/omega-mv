@@ -171,8 +171,11 @@ float omega_fp8_e4m3_ref(uint8_t b);
 /* The kernel's conversion: f32 bits equal to e4m3(b) * 2^-120 (wrong for the NaN codes, which are refused). */
 uint32_t omega_fp8_e4m3_kernel_bits(uint8_t b);
 int omega_fp8_e4m3_is_nan(uint8_t b);
-/* NaN codes in w; first = index of the first one. */
+/* NaN codes in w; first = index of the first one (written only when the count is non-zero). Vectorized; returns
+ * exactly what omega_fp8_pack_scan_nan_ref (the byte loop) returns. */
 size_t omega_fp8_pack_scan_nan(const uint8_t *w, size_t count, size_t *first);
+size_t omega_fp8_pack_scan_nan_ref(const uint8_t *w, size_t count, size_t *first);
+size_t omega_fp8_pack_scan_nan_swar(const uint8_t *w, size_t count, size_t *first);
 /* bf16 scales -> f32 * 2^56 (mutant_no_fold: * 1). -1 on a NaN/inf scale or fold overflow. */
 int omega_fp8_pack_scales(const uint16_t *bf16, size_t count, float *out, int mutant_no_fold);
 void omega_fp8_pack_x_f32(const float *x, uint32_t k, float *out);

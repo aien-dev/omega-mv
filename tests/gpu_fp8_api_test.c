@@ -110,6 +110,44 @@ static int nvdisasm_check_v(int variant, const OmegaFp8GemvSpec *spec, const cha
     return (rc == 0 && bad == 0 && miss == 0) ? 0 : -1;
 }
 
+/* W-FL1: the fast NaN scans (NEON on aarch64, u64 SWAR) give exactly the byte loop's count and first index: NaN codes
+ * at the start, middle and end of a buffer, in unaligned tails, at every block boundary, and on random data. */
+static void scan_one(const uint8_t *w, size_t len, const char *what) {
+    size_t f_ref = 77777, f_fast = 77777, f_swar = 77777;
+    size_t n_ref = omega_fp8_pack_scan_nan_ref(w, len, &f_ref);
+    size_t n_fast = omega_fp8_pack_scan_nan(w, len, &f_fast);
+    size_t n_swar = omega_fp8_pack_scan_nan_swar(w, len, &f_swar);
+    CHECK(n_fast == n_ref && f_fast == f_ref && n_swar == n_ref && f_swar == f_ref,
+          "NaN scan %s len %zu: ref %zu@%zu fast %zu@%zu swar %zu@%zu", what, len, n_ref, f_ref, n_fast, f_fast, n_swar, f_swar);
+}
+static void scan_battery(void) {
+    enum { CAP = 1024 + 64 };
+    uint8_t *buf = malloc(CAP); uint32_t rng = 0x5eed1234u; int cases = 0;
+    const uint8_t nan_codes[2] = { 0x7f, 0xff }, near[6] = { 0x7e, 0xfe, 0x3f, 0x77, 0x80, 0x00 };
+    for (size_t off = 0; off < 16; off++)
+        for (size_t len = 0; len <= 300; len++) {
+            uint8_t *w = buf + off;
+            for (size_t i = 0; i < len; i++) { rng = rng * 1664525u + 1013904223u; uint8_t b = (uint8_t)(rng >> 24); w[i] = omega_fp8_e4m3_is_nan(b) ? near[i % 6] : b; }
+            scan_one(w, len, "clean"); cases++;
+            if (len == 0) continue;
+            size_t at[5] = { 0, len / 2, len - 1, len >= 64 ? 63 : len - 1, len >= 65 ? 64 : 0 };
+            for (int a = 0; a < 5; a++) {
+                uint8_t keep = w[at[a]]; w[at[a]] = nan_codes[(len + a) & 1];
+                scan_one(w, len, a == 0 ? "start" : a == 1 ? "middle" : a == 2 ? "end" : "block edge"); cases++;
+                w[at[a]] = keep;
+            }
+            { size_t i1 = len / 3, i2 = len - 1; uint8_t k1 = w[i1], k2 = w[i2]; w[i1] = 0xff; w[i2] = 0x7f;
+              scan_one(w, len, "two codes"); cases++; w[i1] = k1; w[i2] = k2; }
+        }
+    /* a NaN code at every position of a 1 KB buffer (each block and the tail), and an all-NaN buffer */
+    for (size_t p = 0; p < 1024; p++) { memset(buf, 0x38, CAP); buf[p] = 0xff; scan_one(buf, 1024, "sweep"); scan_one(buf + 3, 1021, "sweep unaligned"); cases += 2; }
+    memset(buf, 0x7f, CAP); scan_one(buf, 1024, "all NaN"); scan_one(buf + 1, 1000, "all NaN unaligned"); cases += 2;
+    { size_t f = 4242; CHECK(omega_fp8_pack_scan_nan(buf, 0, &f) == 0 && f == 4242, "NaN scan: empty buffer leaves first untouched"); }
+    CHECK(omega_fp8_pack_scan_nan(buf, 5, NULL) == 5, "NaN scan: NULL first is allowed");
+    printf("NaN scan: %d cases, fast (NEON/SWAR) == byte loop on count and first index\n", cases);
+    free(buf);
+}
+
 static void host_only(void) {
     /* 1. exhaustive conversion: kernel bits * 2^120 == reference, bit for bit, for every non-NaN code;
      *    sign of zero preserved; NaN codes are exactly 0x7f and 0xff and are refused by the scan */
@@ -145,6 +183,7 @@ static void host_only(void) {
     { uint8_t w[8] = { 0x38, 0x7f, 0x00, 0xff, 1, 2, 3, 4 }; size_t first = 99;
       CHECK(omega_fp8_pack_scan_nan(w, 8, &first) == 2 && first == 1, "NaN scan finds both codes, first at 1");
       CHECK(omega_fp8_pack_scan_nan(w, 1, &first) == 0, "NaN scan clean prefix"); }
+    scan_battery();
     { uint16_t s[3] = { bf16_of(0.5f), 0x7fc0 /* NaN */, bf16_of(1.0f) }; float o[3];
       CHECK(omega_fp8_pack_scales(s, 1, o, 0) == 0 && o[0] == ldexpf(0.5f, OMEGA_FP8_SCALE_EXP), "scale fold exact");
       CHECK(omega_fp8_pack_scales(s, 3, o, 0) != 0, "NaN scale refused");
