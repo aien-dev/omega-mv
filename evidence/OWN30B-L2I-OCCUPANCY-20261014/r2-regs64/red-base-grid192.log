@@ -1,0 +1,37 @@
+dgraph prefetch 0 (red 0)
+fp8 knobs: variant 1 barrier 0 (wfi+inval_all) cta_budget 0 shape 0/0/0 cached 0
+model built in 0.7 s (layers 6, vocab 4096, pos 300)
+ok: A (baseline, host glue) 4 reps ran
+ok: A deterministic over 4 reps (token 1958)
+A: token 1958 logit 4.311814, runner-up 2788 logit 3.948663 (gap 0.363)
+ok: C (one list per token) 4 reps ran: 58 launches in 1 submission(s)
+ok: C deterministic over 4 reps (token 1958)
+A vs C: token 1958 vs 1958, logits max |d| 1.31e-06 (scale 4.99, rel 2.63e-07, tol 1e-04), x max rel 2.04e-07, hidden max rel 2.27e-07
+ok: argmax token identical: A 1958, C 1958
+ok: logits A vs C within 1e-04 of max|logit| (max |d| 1.31e-06, scale 4.99)
+ok: B (one launch per submission) 4 reps ran: 58 launches in 58 submissions
+ok: B bit-identical to C (x, hidden, logits, token) in every rep
+ok: negative control: SWIGLU mutant fails the comparison (token 2788 vs 1958, max |d| 2.93 = 0.588 of scale)
+ok: negative control: COMBINE mutant fails the comparison (token 1958 vs 1958, max |d| 0.288 = 0.0577 of scale)
+ok: C after the mutants bit-identical to the first C
+ok: timeline: rc 0, 58 stamps for 58 launches, monotonic 1, span 2896.6 us <= chip 2951.8 us, token and logits unchanged
+TIMELINE (6 layers, pos 300): norm x1 5.1 us qkv x6 452.2 us attn x6 408.9 us o_proj x6 347.3 us res_add x6 29.6 us router x6 132.2 us gate_up x6 848.1 us swiglu x6 19.0 us down x6 514.8 us combine_norm x6 59.4 us lm_head x1 71.9 us argmax x2 8.2 us
+ok: timeline off: token rc 0, stamps accessor refuses (-1)
+resident grid 192
+graph token rc -4: resident2: grid 192 exceeds the co-resident capacity 144 (72 registers)
+resident ON rep 0 failed: resident2: grid 192 exceeds the co-resident capacity 144 (72 registers)
+FAIL: resident: 4 reps x (OFF, ON) ran: OFF 58 launches, ON 0 launches
+FAIL: resident OFF bit-identical to C0 in every rep
+FAIL: resident ON bit-identical to C0 (x, hidden, logits, token) in every rep
+graph token rc -4: resident2: grid 192 exceeds the co-resident capacity 144 (72 registers)
+FAIL: resident ON, one launch per submission (0 submits): bit-identical to C0
+graph token rc -4: resident2: grid 192 exceeds the co-resident capacity 144 (72 registers)
+resident RED: rc -4 token 1958 (C0 1958)
+ok: NEGATIVE CONTROL: resident without its grid barrier differs from C0 (rc -4, token 1958 vs 1958)
+graph token rc -4: resident2: grid 192 exceeds the co-resident capacity 144 (72 registers)
+FAIL: resident ON after the red: bit-identical to C0 again
+graph token rc -4: resident2: grid 192 exceeds the co-resident capacity 144 (72 registers)
+FAIL: resident timeline: -1 stamps for 0 launches, token and logits unchanged
+TIMELINE resident ON (6 layers):
+PER TOKEN (median of 4, 6 layers): A host-glue 37 launches 4743.8 us | C one list 58 launches 2959.3 us (chip 2953.5 us, record 5.9 us) | B per-launch submits 58 launches 6622.3 us (chip sum 6598.5 us)
+chip: 20 checks, 6 failed: FAIL

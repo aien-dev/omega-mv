@@ -58,6 +58,18 @@ int omega_gpu_cmdlist_mark_independent(OmegaGpuCmdList *cl) {
     cl->indep[cl->n - 1] = 1;
     return 0;
 }
+int omega_gpu_cmdlist_mark_overlap(OmegaGpuCmdList *cl) {
+    if (!cl || cl->n < 2) { omega_gpu_session_set_error("cmdlist mark_overlap: needs a producer and a consumer"); return -1; }
+    cl->indep[cl->n - 1] = 2;
+    uint32_t *q1 = (uint32_t *)((uint8_t *)cl->qmds.cpu + (size_t)(cl->n - 2) * OMEGA_GPU_CMDLIST_QMD_BYTES);
+    q1[9] |= 1u << 3; /* RELEASE_MEMBAR_TYPE(0) = FE_SYSMEMBAR: QMDV05_01 MW(291:291), word 9 bit 3 */
+    return 0;
+}
+int omega_gpu_cmdlist_sem_va(const OmegaGpuCmdList *cl, uint32_t idx, uint64_t *va) {
+    if (!cl || !va || idx >= cl->n) return -1;
+    *va = cl->sems.va + (uint64_t)idx * 16u;
+    return 0;
+}
 
 static int build_nop(OmegaGpuCmdList *cl) {
     BlackwellIRProgram *prog = omega_gpu_host_calloc(1, sizeof *prog);
@@ -246,7 +258,7 @@ int omega_gpu_cmdlist_submit(OmegaGpuCmdList *cl, const OmegaGpuCmdListOpts *opt
 
     /* semaphores INIT, markers 0, everything the CPU wrote made visible */
     uint32_t *sem = cl->sems.cpu;
-    for (uint32_t i = 0; i < cl->n; i++) sem[4 * i] = OMEGA_BW_SEMAPHORE_INTERMEDIATE_INIT;
+    for (uint32_t i = 0; i < cl->n; i++) { sem[4 * i] = OMEGA_BW_SEMAPHORE_INTERMEDIATE_INIT; sem[4 * i + 1] = 0; } /* word 1: W-L2e spin timeouts */
     volatile uint32_t *mk = (volatile uint32_t *)((uint8_t *)marker->cpu + MARKER_OFF);
     mk[0] = 0; mk[4] = 0;
     if (p->sync_cpu_to_gpu(p->ctx, cl->banks.handle, 0, (uint64_t)cl->n * OMEGA_GPU_CMDLIST_BANK_BYTES) != OMEGA_GPU_PLAT_OK ||
@@ -336,6 +348,8 @@ int omega_gpu_cmdlist_submit(OmegaGpuCmdList *cl, const OmegaGpuCmdListOpts *opt
     }
     if (st) { st->launches = cl->n; st->submits = submits; st->words = words; st->elapsed_ns = elapsed; st->host_ns = host; st->sems_done = ok; st->first_missing = missing; }
     if (missing >= 0) { omega_gpu_session_set_error("cmdlist: a launch semaphore is not DONE (launch did not run)"); return -1; }
+    for (uint32_t i = 0; i < cl->n; i++)
+        if (sem[4 * i + 1]) { omega_gpu_session_set_error("cmdlist: an overlapped launch timed out waiting on its producer's semaphore (W-L2e)"); return -1; }
     return 0;
 }
 

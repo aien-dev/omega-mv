@@ -132,6 +132,7 @@ static int spec_ok(const OmegaFp8GemvSpec *s) {
     if (s->warps < 1 || s->warps > 32) return 0; /* threads_x = 32 * warps <= 1024 */
     if (s->k == 0 || s->k > OMEGA_FP8_MAX_K || s->k % OMEGA_FP8_BLOCK || s->k % (32u * s->lane_bytes)) return 0;
     if (s->mutant < 0 || s->mutant > 3) return 0;
+    if (s->wait > 1 || s->warm > OMEGA_FP8_MAX_WARM || (s->warm && !s->wait)) return 0; /* W-L2e overlap */
     if (s->depth) { /* deep kernel: staging rounds (32-bit words, one per thread per round) must be exact and few */
         uint32_t ks = s->k / (32u * s->lane_bytes);
         if (s->depth > 16 || ks % s->depth || s->rows * s->depth * s->lane_bytes > 128u) return 0; /* <= 128 weight bytes per lane per iteration: instruction and register budgets */
@@ -192,6 +193,67 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
     imadi(e, wlane, lane, 0, LB, NOREG);            /* byte offset of this lane's chunk in a row */
     shr(e, slane, lane, 0, (uint32_t)log2lpb); imadi(e, slane, slane, 0, 4, NOREG); /* scale word of this lane in a step */
     imadi(e, rg, cx, 0, W, warp);                   /* first row group of this warp */
+
+    if (spec->warm) {
+        /* ---- W-L2e warm: read (and drop) the weights of this warp's first `warm` row groups while the producer runs ---- */
+        enum { P = 8 };
+        const uint32_t KS0 = K / (32u * LB);
+        int pool[P], wj = V(e), pwm = V64(e), cw = V(e), junk = V(e);
+        for (int i = 0; i < P; i++) pool[i] = LB == 16 ? V128(e) : V64(e);
+        if (e->err) return -1;
+        imadi(e, wj, rg, 0, 1, NOREG);
+        movi(e, cw, spec->warm);
+        const int L_w = here(e);
+        loop_begin(e);
+        isetp_ge_u32(e, wj, rgn);
+        const int bra_wend = bra_if_p0_fwd(e);
+        imadw(e, pwm, wj, R * K, wbase); imadw(e, pwm, wlane, 1, pwm);
+        uint32_t c = 0;
+        for (uint32_t s = 0; s < KS0; s++)
+            for (uint32_t r = 0; r < R; r++, c++) ldg_wide(e, ldw, pool[c % P], pwm, r * K + s * 32u * LB, udesc, c % P == 0);
+        imadi(e, wj, stride, 0, 1, wj);
+        imadi(e, cw, one, 0, 0xffffffffu, cw);
+        isetp_ge_u32(e, cw, one);
+        bra_if_p0(e, L_w);
+        loop_end(e);
+        patch_bra(e, bra_wend, here(e));
+        for (int i = 0; i < P; i++) xorr(e, junk, pool[i], junk); /* keeps the pool registers distinct for the whole warm */
+    }
+    if (spec->wait) {
+        /* ---- W-L2e wait: warp 0 polls the producer's release semaphore (strong system load), the CTA meets at BAR.SYNC,
+         * then CCTL.IVALL: the strong load + CCTL.IVALL pair is what nvcc 13.0 emits for PTX ld.acquire.gpu on sm_121
+         * (oracle /tmp/l2e-oracle, investigation 2026-10-14-own30b-L2e-pdl). ---- */
+        int psem = V64(e), want = V(e), v = V(e), c32 = V(e), spins = V(e), smax = V(e), ptmo = V64(e), old = V(e), bo = V(e);
+        if (e->err) return -1;
+        ldc64(e, psem, OMEGA_FP8_ARG_WAIT_SEM); ldc32(e, want, OMEGA_FP8_ARG_WAIT_WANT);
+        movi(e, c32, 32); movi(e, smax, OMEGA_FP8_WAIT_SPIN_MAX); movrz(e, spins);
+        isetp_ge_u32(e, tid, c32);
+        const int bra_notw0 = bra_if_p0_fwd(e);
+        const int L_s = here(e);
+        loop_begin(e);
+        { BlackwellIRInsn i = I0(BW_IR_LDG_STRONG_SYS); i.dst_vreg = v; i.src1_vreg = psem; i.ureg = udesc; emit(e, i, K_VAR); }
+        isetp_ge_u32(e, v, want);
+        const int bra_done = bra_if_p0_fwd(e);
+        imadi(e, spins, one, 0, 1, spins);
+        isetp_ge_u32(e, spins, smax);
+        const int bra_tmo = bra_if_p0_fwd(e);
+        if (OMEGA_FP8_WAIT_BACKOFF) { /* r2: a short delay loop between polls (r1: tight polling of the uncached word) */
+            movi(e, bo, OMEGA_FP8_WAIT_BACKOFF);
+            const int L_b = here(e);
+            imadi(e, bo, one, 0, 0xffffffffu, bo);
+            isetp_ge_u32(e, bo, one);
+            bra_if_p0(e, L_b);
+        }
+        bra(e, L_s);
+        loop_end(e);
+        patch_bra(e, bra_tmo, here(e));
+        imadw(e, ptmo, one, 4, psem);
+        { BlackwellIRInsn i = I0(BW_IR_ATOMG_ADD_STRONG_SYS); i.dst_vreg = old; i.src1_vreg = ptmo; i.src2_vreg = one; i.ureg = udesc; emit(e, i, K_VAR); }
+        patch_bra(e, bra_done, here(e));
+        patch_bra(e, bra_notw0, here(e));
+        bar_sync(e);
+        emit(e, I0(BW_IR_CCTL_IVALL), K_FIXED);
+    }
 
     const uint32_t D = spec->depth ? spec->depth : 1u; /* K steps per loop iteration */
     const int deep = spec->depth != 0;

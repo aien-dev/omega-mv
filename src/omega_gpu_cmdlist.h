@@ -91,6 +91,18 @@ uint32_t omega_gpu_cmdlist_count(const OmegaGpuCmdList *cl);
  * prefetch beside the latency-bound attention). The launch after it gets the normal barrier, which waits for both.
  * Ignored for the first launch of a submission. 0 ok, -1 (no launch recorded). */
 int omega_gpu_cmdlist_mark_independent(OmegaGpuCmdList *cl);
+/* W-L2e overlapped dependent launch (off unless called). Caller holds the lock. Like mark_independent (no barrier before the
+ * most recent launch), but the launch DOES read what the launch before it (the producer) wrote: its kernel must spin on the
+ * producer's release semaphore (omega_gpu_cmdlist_sem_va of the producer, value OMEGA_GPU_CMDLIST_SEM_DONE) and then
+ * invalidate L1 before reading (the FP8 GEMV wait = 1 kernel does). This call also sets the producer QMD's
+ * RELEASE_MEMBAR_TYPE(0) = FE_SYSMEMBAR (clcec0qmd.h QMDV05_01 bit 291), so the semaphore is released after a sysmembar.
+ * submit refuses a list where any kernel reported a spin timeout (word 1 of a semaphore slot not 0). PCAS mode only.
+ * 0 ok, -1 (fewer than two launches). */
+int omega_gpu_cmdlist_mark_overlap(OmegaGpuCmdList *cl);
+/* Device address of launch idx's release semaphore word (INTERMEDIATE_INIT before submit, DONE when the grid completed).
+ * 0 ok, -1 (idx not recorded). */
+int omega_gpu_cmdlist_sem_va(const OmegaGpuCmdList *cl, uint32_t idx, uint64_t *va);
+#define OMEGA_GPU_CMDLIST_SEM_DONE 6u
 /* Caller holds the lock. Writes the launch's bank and QMD into the next slot. The launch's code must stay resident
  * until submit returns. Returns the launch index, or -1 (full, bad arguments, QMD refused). L->timeout_ms and
  * L->spin_us are ignored (the list has one completion). */

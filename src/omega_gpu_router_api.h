@@ -78,6 +78,9 @@ typedef struct { uint64_t xout_va, ids_va, wts_va, tab_gu_va, tab_dn_va; } Omega
 struct OmegaGpuCmdList;
 int omega_gpu_router_record(struct OmegaGpuCmdList *cl, OmegaGpuRouter *r, uint32_t layer, uint64_t x_va, float eps, int norm_topk,
                             float out_scale, OmegaGpuRouterDevOut *out);
+/* W-L2h: the same five device addresses router_record reports, without recording (the resident decode chain bakes them into
+ * its stage table once). */
+void omega_gpu_router_device_outputs_all(const OmegaGpuRouter *r, OmegaGpuRouterDevOut *out);
 int omega_gpu_router_read_back(OmegaGpuRouter *r, float *xout, uint64_t *tab_gu, uint64_t *tab_dn);
 const char *omega_gpu_router_last_error(void);
 const char *omega_gpu_router_rc_name(int rc);

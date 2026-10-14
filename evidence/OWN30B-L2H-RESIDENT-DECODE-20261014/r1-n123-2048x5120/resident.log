@@ -1,0 +1,33 @@
+capacity at default limits: 192 CTAs (declared regs 64)
+PROBE grid=192 per_sm=4 rc=0 error=0 arrive=1 elapsed_us=145.1
+PROBE grid=193 per_sm=4+1 rc=0 error=8 arrive=0 elapsed_us=544.0
+ok: probe: co-resident up to 192 CTAs, first non-co-resident grid 193 (monotonic)
+ok: launcher capacity 192 <= measured co-resident 192
+ok: real N=1: launched chain output finite and written (5120 non-zero)
+ok: real N=1: 9 reps x 3 modes ran
+ok: real N=1: resident bit-identical to launched on every rep (all 1 stage outputs)
+ok: real N=1: control block error 0, progress == N-1 on every rep
+RES chain=real N=1 mode=launched median_us=108.2 per_stage_us=108.16
+RES chain=real N=1 mode=resident median_us=109.8 per_stage_us=109.81
+RES chain=real N=1 mode=red median_us=107.9 per_stage_us=107.89
+ok: real N=2: launched chain output finite and written (2048 non-zero)
+ok: real N=2: 9 reps x 3 modes ran
+ok: real N=2: resident bit-identical to launched on every rep (all 2 stage outputs)
+ok: real N=2: control block error 0, progress == N-1 on every rep
+ok: real N=2: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep
+RES chain=real N=2 mode=launched median_us=154.9 per_stage_us=77.44
+RES chain=real N=2 mode=resident median_us=149.0 per_stage_us=74.50
+RES chain=real N=2 mode=red median_us=141.0 per_stage_us=70.51
+ok: real N=3: launched chain output finite and written (5120 non-zero)
+ok: real N=3: 9 reps x 3 modes ran
+ok: real N=3: resident bit-identical to launched on every rep (all 3 stage outputs)
+ok: real N=3: control block error 0, progress == N-1 on every rep
+ok: real N=3: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep
+RES chain=real N=3 mode=launched median_us=229.1 per_stage_us=76.36
+RES chain=real N=3 mode=resident median_us=206.2 per_stage_us=68.73
+RES chain=real N=3 mode=red median_us=226.4 per_stage_us=75.46
+SLOPE chain=tiny mode=launched per_stage_us=0.00 (T3 0.0 - T1 0.0) / 2
+SLOPE chain=tiny mode=resident per_stage_us=0.00 (T3 0.0 - T1 0.0) / 2
+SLOPE chain=real mode=launched per_stage_us=60.46 (T3 229.1 - T1 108.2) / 2
+SLOPE chain=real mode=resident per_stage_us=48.18 (T3 206.2 - T1 109.8) / 2
+gpu_resident_chain_test: 16 checks, 0 failed: PASS

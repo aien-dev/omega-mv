@@ -1,0 +1,34 @@
+dgraph prefetch 0 (red 0)
+fp8 knobs: variant 1 barrier 0 (wfi+inval_all) cta_budget 0 shape 0/0/0 cached 0
+model built in 0.7 s (layers 6, vocab 4096, pos 300)
+ok: A (baseline, host glue) 30 reps ran
+ok: A deterministic over 30 reps (token 1958)
+A: token 1958 logit 4.311814, runner-up 2788 logit 3.948663 (gap 0.363)
+ok: C (one list per token) 30 reps ran: 58 launches in 1 submission(s)
+ok: C deterministic over 30 reps (token 1958)
+A vs C: token 1958 vs 1958, logits max |d| 1.31e-06 (scale 4.99, rel 2.63e-07, tol 1e-04), x max rel 2.04e-07, hidden max rel 2.27e-07
+ok: argmax token identical: A 1958, C 1958
+ok: logits A vs C within 1e-04 of max|logit| (max |d| 1.31e-06, scale 4.99)
+ok: B (one launch per submission) 30 reps ran: 58 launches in 58 submissions
+ok: B bit-identical to C (x, hidden, logits, token) in every rep
+ok: negative control: SWIGLU mutant fails the comparison (token 2788 vs 1958, max |d| 2.93 = 0.588 of scale)
+ok: negative control: COMBINE mutant fails the comparison (token 1958 vs 1958, max |d| 0.288 = 0.0577 of scale)
+ok: C after the mutants bit-identical to the first C
+ok: timeline: rc 0, 58 stamps for 58 launches, monotonic 1, span 2852.8 us <= chip 2954.4 us, token and logits unchanged
+TIMELINE (6 layers, pos 300): norm x1 5.2 us qkv x6 405.6 us attn x6 414.3 us o_proj x6 329.2 us res_add x6 30.6 us router x6 133.5 us gate_up x6 849.4 us swiglu x6 19.4 us down x6 514.0 us combine_norm x6 61.2 us lm_head x1 82.2 us argmax x2 8.1 us
+ok: timeline off: token rc 0, stamps accessor refuses (-1)
+resident grid 192 rows 1
+ok: resident: 30 reps x (OFF, ON) ran: OFF 58 launches, ON 29 launches
+ok: resident OFF bit-identical to C0 in every rep
+ok: resident ON bit-identical to C0 (x, hidden, logits, token) in every rep
+ok: resident ON, one launch per submission (29 submits): bit-identical to C0
+resident RED: rc 0 token 2788 (C0 1958)
+ok: NEGATIVE CONTROL: resident without its grid barrier differs from C0 (rc 0, token 2788 vs 1958)
+ok: resident ON after the red: bit-identical to C0 again
+ok: resident timeline: 29 stamps for 29 launches, token and logits unchanged
+TIMELINE resident ON (6 layers): norm x1 5.4 us qkv x1 64.9 us attn x6 414.4 us router x6 136.8 us lm_head x1 82.7 us argmax x2 8.1 us res_o_add x6 379.3 us res_moe_chain x6 1774.3 us
+ok: TL medians: 30 stamped reps x (OFF, ON), every token bit-identical to C0, one stamp per launch
+TLMED grid 192 (median of 30, us per layer, OFF / ON / ON-OFF): oa 60.12 / 63.00 / +2.89 chain 296.93 / 295.90 / -1.03 attn 68.82 / 69.13 / +0.31 router 22.50 / 22.54 / +0.05 span 475.62 / 477.02 / +1.40 gap 7.24 / 4.89 / -2.35
+RESIDENT PER TOKEN (median of 30, 6 layers, interleaved): OFF 58 launches total 2902.0 us chip 2891.7 us | ON 29 launches total 2903.9 us chip 2897.4 us | chip saved -5.7 us/token = -0.95 us/layer
+PER TOKEN (median of 30, 6 layers): A host-glue 37 launches 4712.9 us | C one list 58 launches 2860.5 us (chip 2854.6 us, record 5.2 us) | B per-launch submits 58 launches 6619.6 us (chip sum 6593.5 us)
+chip: 21 checks, 0 failed: PASS

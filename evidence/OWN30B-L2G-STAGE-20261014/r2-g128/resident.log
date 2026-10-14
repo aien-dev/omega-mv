@@ -1,0 +1,70 @@
+capacity at default limits: 192 CTAs (declared regs 64)
+PROBE grid=192 per_sm=4 rc=0 error=0 arrive=1 elapsed_us=154.8
+PROBE grid=193 per_sm=4+1 rc=0 error=8 arrive=0 elapsed_us=550.4
+ok: probe: co-resident up to 192 CTAs, first non-co-resident grid 193 (monotonic)
+ok: launcher capacity 192 <= measured co-resident 192
+ok: real N=2: launched chain output finite and written (2048 non-zero)
+STAMPSUM chain=real N=2 grid=128 rep=0 mean_span_us=70.96 mean_gap_us=1.86 mean_start_skew_us=0.19 mean_tail_p50_to_max_us=10.54 mean_first_row_us=26.52 mean_per_row_us=21.76 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=2 grid=128 rep=1 mean_span_us=67.44 mean_gap_us=1.09 mean_start_skew_us=0.22 mean_tail_p50_to_max_us=9.76 mean_first_row_us=25.79 mean_per_row_us=18.85 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=2 grid=128 rep=2 mean_span_us=66.93 mean_gap_us=1.12 mean_start_skew_us=0.22 mean_tail_p50_to_max_us=10.30 mean_first_row_us=25.08 mean_per_row_us=18.82 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=2 grid=128 rep=3 mean_span_us=67.90 mean_gap_us=1.31 mean_start_skew_us=0.26 mean_tail_p50_to_max_us=10.93 mean_first_row_us=24.89 mean_per_row_us=19.91 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=2 grid=128 rep=4 mean_span_us=65.38 mean_gap_us=1.41 mean_start_skew_us=0.19 mean_tail_p50_to_max_us=10.94 mean_first_row_us=23.78 mean_per_row_us=18.46 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=2 grid=128 rep=5 mean_span_us=64.42 mean_gap_us=1.15 mean_start_skew_us=0.21 mean_tail_p50_to_max_us=10.75 mean_first_row_us=25.13 mean_per_row_us=15.88 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=2 grid=128 rep=6 mean_span_us=65.10 mean_gap_us=1.38 mean_start_skew_us=0.22 mean_tail_p50_to_max_us=9.30 mean_first_row_us=24.81 mean_per_row_us=17.52 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=2 grid=128 rep=7 mean_span_us=63.09 mean_gap_us=1.25 mean_start_skew_us=0.21 mean_tail_p50_to_max_us=10.99 mean_first_row_us=25.01 mean_per_row_us=14.81 timer_low_zero_bits_granularity_ns>=32
+STAMP chain=real N=2 grid=128 rep=8 stage=0 k=2048 n=4096 start_skew_us=0.22 done_us min=40.29 p50=49.89 p90=56.32 max=61.82 span_us=61.82 gap_to_next_us=1.79 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=18.51 per_row_us=10.53
+STAMP chain=real N=2 grid=128 rep=8 stage=1 k=4096 n=2048 start_skew_us=0.16 done_us min=35.68 p50=54.69 p90=60.96 max=62.62 span_us=62.62 gap_to_next_us=-0.00 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=31.37 per_row_us=19.82
+STAMPSUM chain=real N=2 grid=128 rep=8 mean_span_us=62.22 mean_gap_us=1.79 mean_start_skew_us=0.19 mean_tail_p50_to_max_us=9.94 mean_first_row_us=24.94 mean_per_row_us=15.17 timer_low_zero_bits_granularity_ns>=32
+STAMPHIST chain=real N=2 grid=128 rep=8 (CTA done, stage-relative, 2 us bins from 0): [34-36)=1 [36-38)=5 [38-40)=8 [40-42)=10 [42-44)=16 [44-46)=19 [46-48)=18 [48-50)=32 [50-52)=36 [52-54)=21 [54-56)=20 [56-58)=30 [58-60)=15 [60-62)=24 [62-64)=1
+ok: real N=2: 9 reps x 3 modes ran
+ok: real N=2: resident bit-identical to launched on every rep (all 2 stage outputs)
+ok: real N=2: control block error 0, progress == N-1 on every rep
+ok: real N=2: stamped kernel wrote every (stage, CTA) record on every rep (camera can say no: records zeroed before each run)
+ok: real N=2: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep
+RES chain=real N=2 mode=launched median_us=127.9 per_stage_us=63.93
+RES chain=real N=2 mode=resident median_us=129.1 per_stage_us=64.57
+RES chain=real N=2 mode=red median_us=124.4 per_stage_us=62.18
+RES chain=real N=2 mode=stamped median_us=140.6 per_stage_us=70.30
+ok: real N=16: launched chain output finite and written (2048 non-zero)
+STAMPSUM chain=real N=16 grid=128 rep=0 mean_span_us=63.00 mean_gap_us=2.04 mean_start_skew_us=0.22 mean_tail_p50_to_max_us=10.87 mean_first_row_us=27.61 mean_per_row_us=12.58 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=16 grid=128 rep=1 mean_span_us=62.50 mean_gap_us=2.04 mean_start_skew_us=0.19 mean_tail_p50_to_max_us=11.00 mean_first_row_us=27.54 mean_per_row_us=12.40 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=16 grid=128 rep=2 mean_span_us=63.20 mean_gap_us=1.93 mean_start_skew_us=0.20 mean_tail_p50_to_max_us=11.08 mean_first_row_us=27.85 mean_per_row_us=12.38 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=16 grid=128 rep=3 mean_span_us=61.95 mean_gap_us=2.24 mean_start_skew_us=0.19 mean_tail_p50_to_max_us=9.97 mean_first_row_us=27.72 mean_per_row_us=12.28 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=16 grid=128 rep=4 mean_span_us=62.33 mean_gap_us=2.43 mean_start_skew_us=0.21 mean_tail_p50_to_max_us=11.03 mean_first_row_us=27.55 mean_per_row_us=12.14 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=16 grid=128 rep=5 mean_span_us=63.44 mean_gap_us=1.92 mean_start_skew_us=0.20 mean_tail_p50_to_max_us=10.67 mean_first_row_us=28.03 mean_per_row_us=12.38 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=16 grid=128 rep=6 mean_span_us=62.92 mean_gap_us=1.99 mean_start_skew_us=0.21 mean_tail_p50_to_max_us=11.79 mean_first_row_us=27.51 mean_per_row_us=12.19 timer_low_zero_bits_granularity_ns>=32
+STAMPSUM chain=real N=16 grid=128 rep=7 mean_span_us=62.39 mean_gap_us=1.99 mean_start_skew_us=0.20 mean_tail_p50_to_max_us=11.15 mean_first_row_us=27.80 mean_per_row_us=11.98 timer_low_zero_bits_granularity_ns>=32
+STAMP chain=real N=16 grid=128 rep=8 stage=0 k=2048 n=4096 start_skew_us=0.19 done_us min=32.13 p50=46.37 p90=54.62 max=56.45 span_us=56.45 gap_to_next_us=2.88 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=18.29 per_row_us=9.55
+STAMP chain=real N=16 grid=128 rep=8 stage=1 k=4096 n=2048 start_skew_us=0.19 done_us min=30.82 p50=45.54 p90=52.35 max=59.62 span_us=59.62 gap_to_next_us=1.57 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=31.03 per_row_us=14.23
+STAMP chain=real N=16 grid=128 rep=8 stage=2 k=2048 n=4096 start_skew_us=0.22 done_us min=31.87 p50=50.30 p90=59.94 max=62.91 span_us=62.91 gap_to_next_us=7.26 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=21.63 per_row_us=9.40
+STAMP chain=real N=16 grid=128 rep=8 stage=3 k=4096 n=2048 start_skew_us=0.16 done_us min=40.77 p50=57.76 p90=60.99 max=65.57 span_us=65.57 gap_to_next_us=3.10 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=39.59 per_row_us=16.81
+STAMP chain=real N=16 grid=128 rep=8 stage=4 k=2048 n=4096 start_skew_us=0.22 done_us min=29.38 p50=52.90 p90=59.14 max=62.50 span_us=62.50 gap_to_next_us=4.86 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=20.34 per_row_us=10.31
+STAMP chain=real N=16 grid=128 rep=8 stage=5 k=4096 n=2048 start_skew_us=0.16 done_us min=29.41 p50=48.58 p90=59.04 max=62.62 span_us=62.62 gap_to_next_us=2.18 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=37.77 per_row_us=10.10
+STAMP chain=real N=16 grid=128 rep=8 stage=6 k=2048 n=4096 start_skew_us=0.19 done_us min=25.89 p50=47.62 p90=54.56 max=58.27 span_us=58.27 gap_to_next_us=5.44 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=18.70 per_row_us=9.41
+STAMP chain=real N=16 grid=128 rep=8 stage=7 k=4096 n=2048 start_skew_us=0.19 done_us min=37.92 p50=65.28 p90=74.02 max=76.90 span_us=76.90 gap_to_next_us=1.63 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=47.05 per_row_us=13.41
+STAMP chain=real N=16 grid=128 rep=8 stage=8 k=2048 n=4096 start_skew_us=0.22 done_us min=32.67 p50=57.86 p90=68.26 max=70.85 span_us=70.85 gap_to_next_us=3.20 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=23.27 per_row_us=10.49
+STAMP chain=real N=16 grid=128 rep=8 stage=9 k=4096 n=2048 start_skew_us=0.19 done_us min=27.62 p50=58.69 p90=75.10 max=87.97 span_us=87.97 gap_to_next_us=2.59 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=40.90 per_row_us=15.86
+STAMP chain=real N=16 grid=128 rep=8 stage=10 k=2048 n=4096 start_skew_us=0.19 done_us min=49.47 p50=64.38 p90=68.67 max=73.63 span_us=73.63 gap_to_next_us=8.13 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=21.12 per_row_us=13.62
+STAMP chain=real N=16 grid=128 rep=8 stage=11 k=4096 n=2048 start_skew_us=0.19 done_us min=58.78 p50=72.64 p90=78.78 max=81.92 span_us=81.92 gap_to_next_us=1.66 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=50.40 per_row_us=21.26
+STAMP chain=real N=16 grid=128 rep=8 stage=12 k=2048 n=4096 start_skew_us=0.16 done_us min=21.47 p50=46.40 p90=54.43 max=60.29 span_us=60.29 gap_to_next_us=3.74 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=22.07 per_row_us=7.15
+STAMP chain=real N=16 grid=128 rep=8 stage=13 k=4096 n=2048 start_skew_us=0.42 done_us min=29.28 p50=61.57 p90=68.96 max=74.37 span_us=74.37 gap_to_next_us=1.95 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=39.73 per_row_us=15.87
+STAMP chain=real N=16 grid=128 rep=8 stage=14 k=2048 n=4096 start_skew_us=0.29 done_us min=46.40 p50=54.24 p90=62.50 max=64.54 span_us=64.54 gap_to_next_us=3.81 rows_per_warp=4..4 bytes_per_cta=65536..65536 first_row_us=19.19 per_row_us=11.94
+STAMP chain=real N=16 grid=128 rep=8 stage=15 k=4096 n=2048 start_skew_us=0.22 done_us min=25.09 p50=40.45 p90=46.11 max=54.27 span_us=54.27 gap_to_next_us=-0.00 rows_per_warp=2..2 bytes_per_cta=65536..65536 first_row_us=25.69 per_row_us=12.92
+STAMPSUM chain=real N=16 grid=128 rep=8 mean_span_us=67.04 mean_gap_us=3.60 mean_start_skew_us=0.21 mean_tail_p50_to_max_us=12.63 mean_first_row_us=29.80 mean_per_row_us=12.65 timer_low_zero_bits_granularity_ns>=32
+STAMPHIST chain=real N=16 grid=128 rep=8 (CTA done, stage-relative, 2 us bins from 0): [20-22)=1 [22-24)=3 [24-26)=10 [26-28)=12 [28-30)=19 [30-32)=31 [32-34)=44 [34-36)=44 [36-38)=46 [38-40)=65 [40-42)=91 [42-44)=118 [44-46)=104 [46-48)=116 [48-50)=146 [50-52)=125 [52-54)=145 [54-56)=142 [56-58)=100 [58-60)=124 [60-62)=100 [62-64)=66 [64-66)=93 [66-68)=70 [68-70)=73 [70-72)=24 [72-74)=57 [74-76)=33 [76-78)=17 [78-80)=14 [80-82)=9 [82-84)=2 [84-86)=2 [86-88)=2
+ok: real N=16: 9 reps x 3 modes ran
+ok: real N=16: resident bit-identical to launched on every rep (all 16 stage outputs)
+ok: real N=16: control block error 0, progress == N-1 on every rep
+ok: real N=16: stamped kernel wrote every (stage, CTA) record on every rep (camera can say no: records zeroed before each run)
+ok: real N=16: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep
+RES chain=real N=16 mode=launched median_us=999.1 per_stage_us=62.45
+RES chain=real N=16 mode=resident median_us=951.0 per_stage_us=59.44
+RES chain=real N=16 mode=red median_us=1116.6 per_stage_us=69.79
+RES chain=real N=16 mode=stamped median_us=1043.5 per_stage_us=65.22
+SLOPE chain=tiny mode=launched per_stage_us=0.00 (T16 0.0 - T2 0.0) / 14
+SLOPE chain=tiny mode=resident per_stage_us=0.00 (T16 0.0 - T2 0.0) / 14
+SLOPE chain=tiny mode=stamped per_stage_us=0.00 (T16 0.0 - T2 0.0) / 14
+SLOPE chain=real mode=launched per_stage_us=62.23 (T16 999.1 - T2 127.9) / 14
+SLOPE chain=real mode=resident per_stage_us=58.70 (T16 951.0 - T2 129.1) / 14
+SLOPE chain=real mode=stamped per_stage_us=64.50 (T16 1043.5 - T2 140.6) / 14
+gpu_resident_chain_test: 14 checks, 0 failed: PASS

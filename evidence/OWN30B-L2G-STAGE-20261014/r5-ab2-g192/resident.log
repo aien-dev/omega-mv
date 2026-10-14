@@ -1,0 +1,26 @@
+capacity at default limits: 192 CTAs (declared regs 64)
+PROBE grid=192 per_sm=4 rc=0 error=0 arrive=1 elapsed_us=147.6
+PROBE grid=193 per_sm=4+1 rc=0 error=8 arrive=0 elapsed_us=527.5
+ok: probe: co-resident up to 192 CTAs, first non-co-resident grid 193 (monotonic)
+ok: launcher capacity 192 <= measured co-resident 192
+ok: real N=2: launched chain output finite and written (2048 non-zero)
+ok: real N=2: 15 reps x 3 modes ran
+ok: real N=2: resident bit-identical to launched on every rep (all 2 stage outputs)
+ok: real N=2: control block error 0, progress == N-1 on every rep
+ok: real N=2: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep
+RES chain=real N=2 mode=launched median_us=130.1 per_stage_us=65.06
+RES chain=real N=2 mode=resident median_us=126.2 per_stage_us=63.08
+RES chain=real N=2 mode=red median_us=131.2 per_stage_us=65.58
+ok: real N=16: launched chain output finite and written (2048 non-zero)
+ok: real N=16: 15 reps x 3 modes ran
+ok: real N=16: resident bit-identical to launched on every rep (all 16 stage outputs)
+ok: real N=16: control block error 0, progress == N-1 on every rep
+ok: real N=16: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep
+RES chain=real N=16 mode=launched median_us=1022.6 per_stage_us=63.91
+RES chain=real N=16 mode=resident median_us=1008.7 per_stage_us=63.05
+RES chain=real N=16 mode=red median_us=1557.2 per_stage_us=97.32
+SLOPE chain=tiny mode=launched per_stage_us=0.00 (T16 0.0 - T2 0.0) / 14
+SLOPE chain=tiny mode=resident per_stage_us=0.00 (T16 0.0 - T2 0.0) / 14
+SLOPE chain=real mode=launched per_stage_us=63.75 (T16 1022.6 - T2 130.1) / 14
+SLOPE chain=real mode=resident per_stage_us=63.04 (T16 1008.7 - T2 126.2) / 14
+gpu_resident_chain_test: 12 checks, 0 failed: PASS

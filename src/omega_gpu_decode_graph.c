@@ -8,6 +8,7 @@
 #include "omega_blackwell_codegen_dec.h"
 #include "omega_gpu_session.h"
 #include "omega_gpu_fmt.h"
+#include "omega_gpu_resident_api.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -47,6 +48,12 @@ struct OmegaGpuDecodeGraph {
     uint32_t n_kind, tagged_in_list, n_stamp;
     uint8_t kind[OMEGA_GPU_CMDLIST_MAX_LAUNCHES];
     uint64_t stamp[OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1];
+    /* W-L2h resident decode chain (omega_gpu_decode_graph_set_resident): built at the first resident token */
+    OmegaGpuResident *res;
+    int res_mutant;                      /* the mutant the resident kernel was built with (test red) */
+    uint32_t res_rows;                   /* W-L2i: rows per warp the resident kernel was built with */
+    int res_used;                        /* this token recorded resident launches (end_token closes the batch) */
+    int qkv_layer;                       /* layer whose qkv the previous chain already computed, -1 none */
 };
 
 static size_t al(size_t v) { return (v + 255u) & ~(size_t)255u; }
@@ -85,6 +92,7 @@ void omega_gpu_decode_graph_free(OmegaGpuDecodeGraph *g) {
     if (g->cl) omega_gpu_cmdlist_free(g->cl);
     omega_gpu_session_lock();
     for (unsigned i = 0; i < K_COUNT; i++) if (g->k[i].code.cpu) omega_gpu_session_free(&g->k[i].code);
+    if (g->res) omega_gpu_resident_free(g->res);
     if (g->buf.cpu) omega_gpu_session_free(&g->buf);
     omega_gpu_session_unlock();
     omega_gpu_host_free(g);
@@ -208,6 +216,67 @@ int omega_gpu_decode_graph_prefetch(void) {
     return g_prefetch;
 }
 void omega_gpu_decode_graph_test_set_prefetch_red(int on) { g_prefetch_red = on ? 1 : 0; }
+/* resident decode chain (W-L2h): omega_gpu_decode_graph_set_resident, else env AIEN_OMEGA_DGRAPH_RESIDENT ("1"); grid from
+ * omega_gpu_decode_graph_set_resident_grid, else env AIEN_OMEGA_DGRAPH_RESIDENT_GRID, else 128 (1024 warps: divides every
+ * decode GEMV's rows evenly, W-L2g). Read once. Default off. */
+static int g_resident = -1, g_resident_red;
+static uint32_t g_resident_grid;
+void omega_gpu_decode_graph_set_resident(int on) { g_resident = on ? 1 : 0; }
+int omega_gpu_decode_graph_resident(void) {
+    if (g_resident < 0) { const char *e = getenv("AIEN_OMEGA_DGRAPH_RESIDENT"); g_resident = (e && e[0] == '1' && e[1] == 0) ? 1 : 0; }
+    return g_resident;
+}
+void omega_gpu_decode_graph_set_resident_grid(uint32_t grid) { g_resident_grid = grid; }
+uint32_t omega_gpu_decode_graph_resident_grid(void) {
+    if (g_resident_grid == 0) { const char *e = getenv("AIEN_OMEGA_DGRAPH_RESIDENT_GRID"); int v = e ? atoi(e) : 0; g_resident_grid = v > 0 ? (uint32_t)v : 128u; }
+    return g_resident_grid;
+}
+void omega_gpu_decode_graph_test_set_resident_red(int on) { g_resident_red = on ? 1 : 0; }
+/* W-L2i: GEMV rows per warp at a time in the resident kernel: set_resident_rows, else env AIEN_OMEGA_DGRAPH_RESIDENT_ROWS ("2"), else 1. */
+static uint32_t g_resident_rows;
+void omega_gpu_decode_graph_set_resident_rows(uint32_t rows) { g_resident_rows = rows; }
+uint32_t omega_gpu_decode_graph_resident_rows(void) {
+    if (g_resident_rows == 0) { const char *e = getenv("AIEN_OMEGA_DGRAPH_RESIDENT_ROWS"); g_resident_rows = (e && e[0] == '2' && e[1] == 0) ? 2u : 1u; }
+    return g_resident_rows;
+}
+
+/* stage index of layer l's [o + add] launch; [gate_up, swiglu, down, combine+norm, next qkv] follow it */
+#define RES_PER_LAYER 6u
+/* barrier spin budget (polls): a wait this long only happens if a CTA is not co-resident or faulted (W-L2f r4: 2^22 ~ 20 ms) */
+#define RES_SPIN_MAX (1u << 22)
+
+/* lock held, every layer and the final norm set. One stage table for the whole model (5 or 6 stages per layer). */
+static int res_build(OmegaGpuDecodeGraph *g) {
+    const uint32_t L = g->cfg.layers, H = OMEGA_GPU_DGRAPH_HIDDEN, I = OMEGA_GPU_DGRAPH_INTER, TK = OMEGA_GPU_DGRAPH_TOPK;
+    for (uint32_t l = 0; l < L; l++) if (!g->layer[l].set) return fail(g, "decode graph: resident chain needs every layer set", OMEGA_GPU_DGRAPH_BAD_ARGS);
+    if (!g->final_set) return fail(g, "decode graph: resident chain needs the final norm", OMEGA_GPU_DGRAPH_BAD_ARGS);
+    OmegaGpuDecodeGraphVas v; omega_gpu_decode_graph_vas(g, &v);
+    OmegaGpuRouterDevOut r; omega_gpu_router_device_outputs_all(g->cfg.router, &r);
+    OmegaGpuResident2Stage *s = omega_gpu_host_calloc((size_t)L * RES_PER_LAYER, sizeof *s);
+    if (!s) return fail(g, "decode graph: resident stage table alloc", OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    uint32_t n = 0;
+    for (uint32_t l = 0; l < L; l++) {
+        const int last = l + 1 == L;
+        const uint64_t tab = va_of(g, g->lo.tabs) + (uint64_t)l * 32u, norm_next = va_of(g, g->lo.norms) + (uint64_t)(l + 1) * H * 4u;
+        s[n++] = (OmegaGpuResident2Stage){ .kind = OMEGA_RES2_GEMV16_ADD, .tab = tab + 16u, .x = v.attn, .y = v.o, .add = v.x,
+                                           .k = OMEGA_GPU_DGRAPH_ATTN, .n = H, .groups = 1 };
+        s[n++] = (OmegaGpuResident2Stage){ .kind = OMEGA_RES2_GEMV16, .tab = r.tab_gu_va, .x = r.xout_va, .y = v.gu, .k = H, .n = 2 * I, .groups = TK };
+        s[n++] = (OmegaGpuResident2Stage){ .kind = OMEGA_RES2_SWIGLU, .x = v.gu, .y = v.act, .n = I, .groups = TK, .scale = SCALE_2P64 };
+        s[n++] = (OmegaGpuResident2Stage){ .kind = OMEGA_RES2_GEMV8, .tab = r.tab_dn_va, .x = v.act, .y = v.dn, .k = I, .n = H, .groups = TK, .xgs = I * 4u };
+        s[n++] = (OmegaGpuResident2Stage){ .kind = OMEGA_RES2_RESNORM, .x = v.x, .dn = v.dn, .wts = r.wts_va, .nw = last ? va_of(g, g->lo.fnorm) : norm_next,
+                                           .y = last ? v.hidden : v.xq, .eps = g->cfg.eps, .scale = last ? 1.0f : SCALE_2P64 };
+        if (!last) s[n++] = (OmegaGpuResident2Stage){ .kind = OMEGA_RES2_GEMV16, .tab = va_of(g, g->lo.tabs) + (uint64_t)(l + 1) * 32u, .x = v.xq, .y = v.qkv,
+                                                      .k = H, .n = OMEGA_GPU_DGRAPH_QKV, .groups = 1 };
+        else { s[n] = s[n - 1]; n++; } /* padding: keeps RES_PER_LAYER stages per layer (never run) */
+    }
+    OmegaResident2Spec spec = { 8u, g_resident_red ? 1 : 0, omega_gpu_decode_graph_resident_rows() };
+    int rc = omega_gpu_resident2_create(&spec, s, n, omega_gpu_decode_graph_resident_grid(), &g->res);
+    omega_gpu_host_free(s);
+    if (rc != OMEGA_GPU_RESIDENT_OK) { g->res = NULL; return fail(g, NULL, rc == OMEGA_GPU_RESIDENT_CODEGEN_FAIL ? OMEGA_GPU_DGRAPH_CODEGEN_FAIL : OMEGA_GPU_DGRAPH_CHIP_FAIL); }
+    g->res_mutant = spec.mutant; g->res_rows = spec.rows;
+    return OMEGA_GPU_DGRAPH_OK;
+}
+
 static OmegaGpuCmdListBarrier barrier_now(void) { return (OmegaGpuCmdListBarrier)omega_gpu_decode_graph_barrier(); }
 
 static OmegaGpuCmdListOpts list_opts(const OmegaGpuDecodeGraph *g) {
@@ -289,6 +358,7 @@ int omega_gpu_decode_graph_begin_token(OmegaGpuDecodeGraph *g, const float *x_em
     omega_gpu_session_lock();
     g->t_begin = omega_gpu_session_now_ns();
     g->in_token = 1; g->failed = 0; g->xq_layer = -1; g->hidden_ready = 0;
+    g->qkv_layer = -1;
     memset(&g->acc, 0, sizeof g->acc);
     g->n_kind = 0; g->tagged_in_list = 0; g->n_stamp = 0;
     omega_gpu_cmdlist_reset(g->cl);
@@ -297,6 +367,11 @@ int omega_gpu_decode_graph_begin_token(OmegaGpuDecodeGraph *g, const float *x_em
     tok[0] = TOKEN_POISON; tok[1] = TOKEN_POISON;
     if (x_embed) memcpy(cpu_of(g, g->lo.x), x_embed, OMEGA_GPU_DGRAPH_HIDDEN * 4u);
     if (omega_gpu_session_sync_to_gpu(&g->buf) != 0) return fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    if (omega_gpu_decode_graph_resident() && (!g->res || g->res_mutant != (g_resident_red ? 1 : 0) || g->res_rows != omega_gpu_decode_graph_resident_rows())) {
+        if (g->res) { omega_gpu_resident_free(g->res); g->res = NULL; }
+        int rc = res_build(g);
+        if (rc != OMEGA_GPU_DGRAPH_OK) return rc;
+    }
     return OMEGA_GPU_DGRAPH_OK;
 }
 
@@ -309,6 +384,29 @@ int omega_gpu_decode_graph_record_layer(OmegaGpuDecodeGraph *g, uint32_t l, uint
     const float eps = g->cfg.eps;
     const uint64_t norm_l = va_of(g, g->lo.norms) + (uint64_t)l * OMEGA_GPU_DGRAPH_HIDDEN * 4u, tab = va_of(g, g->lo.tabs) + (uint64_t)l * 32u;
     int rc = OMEGA_GPU_DGRAPH_OK;
+    if (g->res && omega_gpu_decode_graph_resident()) {
+        /* W-L2h resident chain: launched NORM + qkv only when no chain computed them; attention and router stay launched;
+         * [o + add] and [gate_up, swiglu, down, combine + norm, next layer's qkv] are one resident launch each (same
+         * operations, same order: the token and logits must be bit-identical to the launched list). */
+        const uint32_t s0 = l * RES_PER_LAYER;
+        const int last = l + 1 == g->cfg.layers;
+        if (g->qkv_layer != (int)l) {
+            if (g->xq_layer != (int)l) rc = omega_gpu_decode_graph_record_res(g, OMEGA_DEC_RES_NORM, v.x, 0, 0, norm_l, v.xq, eps, SCALE_2P64);
+            if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_QKV, omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].qkv, 1, tab, v.xq, 1, v.qkv));
+        }
+        if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_ATTN, omega_gpu_decode_attn_record(g->cl, g->cfg.attn, l, pos, v.qkv, eps, g->mutant == 3 ? 1.0f : SCALE_2P64, v.attn));
+        if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_RES_O, omega_gpu_resident2_record_range(g->cl, g->res, s0, 1, RES_SPIN_MAX));
+        g->res_used = 1;
+        OmegaGpuRouterDevOut r; memset(&r, 0, sizeof r);
+        if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_ROUTER, omega_gpu_router_record(g->cl, g->cfg.router, l, v.x, eps, g->cfg.norm_topk, SCALE_2P64, &r));
+        if (rc == OMEGA_GPU_DGRAPH_OK) {
+            OmegaGpuRouterDevOut b; omega_gpu_router_device_outputs_all(g->cfg.router, &b);
+            if (memcmp(&b, &r, sizeof r) != 0) rc = fail(g, "decode graph: router outputs moved since the resident table was built", OMEGA_GPU_DGRAPH_CHIP_FAIL);
+        }
+        if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_RES_MOE, omega_gpu_resident2_record_range(g->cl, g->res, s0 + 1, last ? 4u : 5u, RES_SPIN_MAX));
+        if (rc == OMEGA_GPU_DGRAPH_OK) { if (last) g->hidden_ready = 1; else { g->xq_layer = (int)l + 1; g->qkv_layer = (int)l + 1; } }
+        return rc == OMEGA_GPU_DGRAPH_OK ? rc : fail(g, NULL, rc);
+    }
     if (g->xq_layer != (int)l) rc = omega_gpu_decode_graph_record_res(g, OMEGA_DEC_RES_NORM, v.x, 0, 0, norm_l, v.xq, eps, SCALE_2P64);
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_QKV, omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].qkv, 1, tab, v.xq, 1, v.qkv));
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_ATTN, omega_gpu_decode_attn_record(g->cl, g->cfg.attn, l, pos, v.qkv, eps, g->mutant == 3 ? 1.0f : SCALE_2P64, v.attn));
@@ -356,6 +454,15 @@ int omega_gpu_decode_graph_end_token(OmegaGpuDecodeGraph *g, uint32_t *token, Om
     int rc = g->failed ? OMEGA_GPU_DGRAPH_CHIP_FAIL : OMEGA_GPU_DGRAPH_OK;
     const uint64_t t_rec = omega_gpu_session_now_ns();
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = submit_now(g);
+    if (g->res && g->res_used) { /* W-L2h: close the batch; any failure leaves the barrier count unknown: fresh word */
+        uint32_t prog = 0, err = 0;
+        if (rc != OMEGA_GPU_DGRAPH_OK) (void)omega_gpu_resident2_reset(g->res);
+        else if (omega_gpu_resident_status(g->res, &prog, &err) != OMEGA_GPU_RESIDENT_OK || err != 0) {
+            char e[96]; omega_gpu_fmt(e, sizeof e, "decode graph: resident chain error word %u (barrier wait expired or aborted)", err);
+            rc = fail(g, e, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+        }
+        g->res_used = 0;
+    }
     if (rc == OMEGA_GPU_DGRAPH_OK && omega_gpu_decode_attn_counters_check(g->cfg.attn) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
     if (rc == OMEGA_GPU_DGRAPH_OK && omega_gpu_session_sync_to_cpu(&g->buf) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
     if (rc == OMEGA_GPU_DGRAPH_OK) {
@@ -407,6 +514,6 @@ int omega_gpu_decode_graph_stamps(const OmegaGpuDecodeGraph *g, uint64_t *stamps
 }
 
 const char *omega_gpu_decode_graph_kind_name(uint8_t kind) {
-    static const char *const names[OMEGA_GPU_DGRAPH_K_COUNT] = { "norm", "qkv", "attn", "o_proj", "res_add", "router", "gate_up", "swiglu", "down", "combine_norm", "lm_head", "argmax" };
+    static const char *const names[OMEGA_GPU_DGRAPH_K_COUNT] = { "norm", "qkv", "attn", "o_proj", "res_add", "router", "gate_up", "swiglu", "down", "combine_norm", "lm_head", "argmax", "res_o_add", "res_moe_chain" };
     return kind < OMEGA_GPU_DGRAPH_K_COUNT ? names[kind] : "?";
 }

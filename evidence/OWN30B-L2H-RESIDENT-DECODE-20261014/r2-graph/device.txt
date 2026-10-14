@@ -1,0 +1,4 @@
+omega base=7dd0829670ffc0db5285783c4073ff42c2b2a34d (+ uncommitted resident2 cut, committed next) physics=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
+Linux spark-b87b 7.0.0-1019-nvidia #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2 aarch64 aarch64 aarch64 GNU/Linux
+NVIDIA GB10, 580.173.02
+commands: flock /tmp/aien-gb10.lock ./build/gpu_decode_graph_test --resident [--resident-grid G] [--cached-weights] --reps R --layers L [--vocab 4096] --out <receipt>; ./build/gpu_cmdlist_test

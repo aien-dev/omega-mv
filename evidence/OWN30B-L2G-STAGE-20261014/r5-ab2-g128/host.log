@@ -1,0 +1,27 @@
+ok: codegen lb=16 warps=8 mutant=0: 212 insns, peak 62 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=8 mutant=1: 160 insns, peak 59 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=8 warps=8 mutant=0: 166 insns, peak 52 regs (declared 56), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=32 mutant=0: 208 insns, peak 62 regs (declared 64), 1 CTAs/SM at default limits
+ok: codegen lb=16 warps=16 mutant=0: 208 insns, peak 62 regs (declared 64), 2 CTAs/SM at default limits
+ok: codegen lb=16 warps=8 mutant=0: 208 insns, peak 62 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=8 mutant=0: 208 insns, peak 62 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=8 mutant=0: 211 insns, peak 62 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=8 mutant=0: 208 insns, peak 62 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=8 mutant=0: 258 insns, peak 62 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen lb=16 warps=8 mutant=1: 206 insns, peak 59 regs (declared 64), 4 CTAs/SM at default limits
+ok: codegen refuses bad spec 0
+ok: codegen refuses bad spec 1
+ok: codegen refuses bad spec 2
+ok: codegen refuses bad spec 3
+ok: codegen refuses bad spec 4
+ok: codegen refuses bad spec 5
+ok: codegen refuses bad spec 6
+ok: codegen refuses bad spec 7
+ok: codegen refuses bad spec 8
+ok: scope_gpu abort-bit kernel marks 3 words for GPU scope (arrive ATOMG, poll LDG, abort ATOMG): 3
+ok: production kernel encoded (3456 bytes) to /tmp/wl2f-resident.bin
+ok: prefetch kernel: 236 insns, peak 62 regs (<= 62: 4 CTAs/SM kept)
+ok: stamped prefetch kernel: 282 insns, peak 62 regs
+ok: stamped prefetch kernel encoded and patched (9 patches) to /tmp/wl2g-prefetch.bin
+ok: stamped kernel encoded and patched (5 timer reads, 8 patches) to /tmp/wl2g-stamped.bin
+gpu_resident_chain_test --host: 26 checks, 0 failed: PASS

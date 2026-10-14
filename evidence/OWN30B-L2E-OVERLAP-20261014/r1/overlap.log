@@ -1,0 +1,37 @@
+ok: single cached=0: base chain output finite, written, 2048/2048 non-zero (max |y| 3.92e+13)
+ok: single cached=0: 10 reps x 3 modes ran (no spin timeout, every semaphore DONE)
+ok: single cached=0: base repeats bit-identical
+ok: single cached=0: wait bit-identical to base on every rep
+ok: single cached=0: NEGATIVE CONTROL red (no barrier, no wait) differs from base on >= 1 rep
+OVL chain=single cached=0 mode=base launches=8 median_us=533.6 saved_per_launch_us=0.00
+OVL chain=single cached=0 mode=wait launches=8 median_us=3527.4 saved_per_launch_us=-427.68
+OVL chain=single cached=0 mode=red launches=8 median_us=519.7 saved_per_launch_us=1.99
+ok: grouped cached=0: base chain output finite, written, 16384/16384 non-zero (max |y| 2.58e+13)
+ok: grouped cached=0: 10 reps x 3 modes ran (no spin timeout, every semaphore DONE)
+ok: grouped cached=0: base repeats bit-identical
+ok: grouped cached=0: wait bit-identical to base on every rep
+ok: grouped cached=0: NEGATIVE CONTROL red (no barrier, no wait) differs from base on >= 1 rep
+OVL chain=grouped cached=0 mode=base launches=8 median_us=642.4 saved_per_launch_us=0.00
+OVL chain=grouped cached=0 mode=wait launches=8 median_us=1094.6 saved_per_launch_us=-64.59
+OVL chain=grouped cached=0 mode=red launches=8 median_us=604.5 saved_per_launch_us=5.42
+ok: single cached=1: base chain output finite, written, 2048/2048 non-zero (max |y| 3.18e+13)
+ok: single cached=1: 10 reps x 4 modes ran (no spin timeout, every semaphore DONE)
+ok: single cached=1: base repeats bit-identical
+ok: single cached=1: wait bit-identical to base on every rep
+ok: single cached=1: warm=2 bit-identical to base on every rep
+ok: single cached=1: NEGATIVE CONTROL red (no barrier, no wait) differs from base on >= 1 rep
+OVL chain=single cached=1 mode=base launches=8 median_us=478.0 saved_per_launch_us=0.00
+OVL chain=single cached=1 mode=wait launches=8 median_us=3741.5 saved_per_launch_us=-466.22
+OVL chain=single cached=1 mode=red launches=8 median_us=486.4 saved_per_launch_us=-1.20
+OVL chain=single cached=1 mode=warm launches=8 median_us=3935.4 saved_per_launch_us=-493.92
+ok: grouped cached=1: base chain output finite, written, 16384/16384 non-zero (max |y| 2.44e+13)
+ok: grouped cached=1: 10 reps x 4 modes ran (no spin timeout, every semaphore DONE)
+ok: grouped cached=1: base repeats bit-identical
+ok: grouped cached=1: wait bit-identical to base on every rep
+ok: grouped cached=1: warm=2 bit-identical to base on every rep
+ok: grouped cached=1: NEGATIVE CONTROL red (no barrier, no wait) differs from base on >= 1 rep
+OVL chain=grouped cached=1 mode=base launches=8 median_us=625.3 saved_per_launch_us=0.00
+OVL chain=grouped cached=1 mode=wait launches=8 median_us=1107.6 saved_per_launch_us=-68.90
+OVL chain=grouped cached=1 mode=red launches=8 median_us=591.4 saved_per_launch_us=4.85
+OVL chain=grouped cached=1 mode=warm launches=8 median_us=1054.0 saved_per_launch_us=-61.23
+gpu_fp8_overlap_test: 22 checks, 0 failed: PASS
