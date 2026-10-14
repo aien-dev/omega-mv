@@ -30,6 +30,8 @@
 static int g_checks, g_failed;
 static uint32_t g_grid; /* --grid: resident grid for the CHAIN runs (0 = capacity) */
 static int g_only_real; /* --only-real: skip the tiny chain (W-L2g runs) */
+static uint32_t g_ns[3] = { 2, 8, 16 }; static int g_ns_set; /* --ns a,b,c: chain lengths (W-L2h: N = 1 intercept) */
+static uint32_t g_shk, g_shn; /* --shape K,N: real chain shapes (K,N),(N,K),... (W-L2h: decode shapes) */
 static int g_wcache; /* --weight-cache: FP8 weights in GPU-cached memory (W-L2g prefetch needs L2 to keep them) */
 #define CHECK(c, ...) do { g_checks++; if (!(c)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } else { printf("ok: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 #define NMAX 16u
@@ -186,7 +188,7 @@ static int same(const Chain *c) { for (uint32_t i = 1; i <= c->N; i++) if (memcm
 static void shapes(Chain *c, const char *name, uint32_t N) {
     memset(c, 0, sizeof *c); c->name = name; c->N = N;
     for (uint32_t i = 0; i < N; i++)
-        c->sh[i] = strcmp(name, "tiny") == 0 ? (Shape){ 512, 512 } : (i % 2 == 0) ? (Shape){ 2048, 4096 } : (Shape){ 4096, 2048 };
+        c->sh[i] = strcmp(name, "tiny") == 0 ? (Shape){ 512, 512 } : g_shk ? ((i % 2 == 0) ? (Shape){ g_shk, g_shn } : (Shape){ g_shn, g_shk }) : (i % 2 == 0) ? (Shape){ 2048, 4096 } : (Shape){ 4096, 2048 };
 }
 
 static int host_only(void) {
@@ -253,12 +255,16 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--stamps") == 0) { g_stamps = 1; g_nmodes = M_ALL; }
         else if (strcmp(argv[i], "--stamps-raw") == 0 && i + 1 < argc) { g_rawf = fopen(argv[++i], "wb"); }
         else if (strcmp(argv[i], "--only-real") == 0) { g_only_real = 1; }
+        else if (strcmp(argv[i], "--ns") == 0 && i + 1 < argc) { if (sscanf(argv[++i], "%u,%u,%u", &g_ns[0], &g_ns[1], &g_ns[2]) != 3) return 2; g_ns_set = 1; }
+        else if (strcmp(argv[i], "--shape") == 0 && i + 1 < argc) { if (sscanf(argv[++i], "%u,%u", &g_shk, &g_shn) != 2) return 2; }
         else if (strcmp(argv[i], "--grid") == 0 && i + 1 < argc) { g_grid = (uint32_t)atoi(argv[++i]); }
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
         else { printf("usage: %s [--host] [--reps R] [--out receipt.json]\n", argv[0]); return 2; }
     }
     if (reps < 3 || reps > REPMAX) reps = 9;
+    for (int j = 0; j < 3; j++) if (g_ns[j] < 1 || g_ns[j] > NMAX || (j && g_ns[j] <= g_ns[j - 1])) { printf("--ns: 1 <= a < b < c <= %u\n", NMAX); return 2; }
+    if (g_shk && (g_shk % 512u || g_shn % 512u)) { printf("--shape: K and N multiples of 512\n"); return 2; }
     (void)omega_gpu_session_set_spin_us(2000);
     omega_gpu_fp8_set_variant(1);
     omega_gpu_fp8_set_weight_cache(g_wcache);
@@ -303,11 +309,11 @@ int main(int argc, char **argv) {
     /* ---- CHAIN ---- */
     int firstpt = 1;
     double tmed[2][M_ALL][3]; memset(tmed, 0, sizeof tmed);
-    const uint32_t NS[3] = { 2, 8, 16 };
+    const uint32_t *NS = g_ns;
     const char *chains[2] = { "tiny", "real" };
     for (int ci = 0; ci < 2 && !omega_gpu_session_is_blocked(); ci++)
         for (int ni = 0; ni < 3; ni++) {
-            if (quick && ni == 1) continue;
+            if (quick && ni == 1 && !g_ns_set) continue;
             if (g_only_real && ci == 0) continue;
             Chain c; shapes(&c, chains[ci], NS[ni]);
             if (setup(&c, &st) != 0) { g_failed++; printf("setup %s N=%u failed\n", c.name, c.N); continue; }
@@ -336,7 +342,7 @@ int main(int argc, char **argv) {
                 CHECK(ident, "%s N=%u: resident bit-identical to launched on every rep (all %u stage outputs)", c.name, c.N, c.N);
                 CHECK(ctl_ok, "%s N=%u: control block error 0, progress == N-1 on every rep", c.name, c.N);
                 if (g_stamps) CHECK(stamp_ok, "%s N=%u: stamped kernel wrote every (stage, CTA) record on every rep (camera can say no: records zeroed before each run)", c.name, c.N);
-                CHECK(red_differs, "%s N=%u: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep", c.name, c.N);
+                if (c.N > 1) CHECK(red_differs, "%s N=%u: NEGATIVE CONTROL red (no barrier) differs on >= 1 rep", c.name, c.N);
                 for (int m = 0; m < g_nmodes; m++) {
                     tmed[ci][m][ni] = median(t[m], reps) / 1e3;
                     printf("RES chain=%s N=%u mode=%s median_us=%.1f per_stage_us=%.2f\n", c.name, c.N, MODE[m], tmed[ci][m][ni], tmed[ci][m][ni] / c.N);
@@ -350,8 +356,8 @@ int main(int argc, char **argv) {
     for (int ci = 0; ci < 2; ci++)
         for (int m = 0; m < (g_stamps ? 4 : 2); m++) {
             if (m == M_RED) continue;
-            const double sl = (tmed[ci][m][2] - tmed[ci][m][0]) / 14.0;
-            printf("SLOPE chain=%s mode=%s per_stage_us=%.2f (T16 %.1f - T2 %.1f) / 14\n", chains[ci], MODE[m], sl, tmed[ci][m][2], tmed[ci][m][0]);
+            const double sl = (tmed[ci][m][2] - tmed[ci][m][0]) / (double)(NS[2] - NS[0]);
+            printf("SLOPE chain=%s mode=%s per_stage_us=%.2f (T%u %.1f - T%u %.1f) / %u\n", chains[ci], MODE[m], sl, NS[2], tmed[ci][m][2], NS[0], tmed[ci][m][0], NS[2] - NS[0]);
             if (out) fprintf(out, "%s{\"chain\":\"%s\",\"mode\":\"%s\",\"per_stage_us\":%.3f}", ci + m ? "," : "", chains[ci], MODE[m], sl);
         }
     if (out) fprintf(out, "]");
