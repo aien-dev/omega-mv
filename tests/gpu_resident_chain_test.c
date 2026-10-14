@@ -30,6 +30,7 @@
 static int g_checks, g_failed;
 static uint32_t g_grid; /* --grid: resident grid for the CHAIN runs (0 = capacity) */
 static int g_only_real; /* --only-real: skip the tiny chain (W-L2g runs) */
+static int g_wcache; /* --weight-cache: FP8 weights in GPU-cached memory (W-L2g prefetch needs L2 to keep them) */
 #define CHECK(c, ...) do { g_checks++; if (!(c)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } else { printf("ok: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 #define NMAX 16u
 #define REPMAX 64u
@@ -212,6 +213,18 @@ static int host_only(void) {
         CHECK(buf != NULL, "production kernel encoded (%zu bytes) to /tmp/wl2f-resident.bin", need);
         free(buf);
     }
+    { /* W-L2g: prefetch kernel (1 PF2 + 3 scope words), stamped + prefetch (1 + 5 + 3) */
+        OmegaResidentSpec sp = specs[0]; sp.prefetch = 1; uint32_t insns = 0, gprs = 0;
+        CHECK(omega_resident_prog_stats(&sp, &insns, &gprs) == 0 && gprs <= 62, "prefetch kernel: %u insns, peak %u regs (<= 62: 4 CTAs/SM kept)", insns, gprs);
+        sp.stamps = 1; CHECK(omega_resident_prog_stats(&sp, &insns, &gprs) == 0 && gprs <= 62, "stamped prefetch kernel: %u insns, peak %u regs", insns, gprs);
+        if (omega_blackwell_codegen_resident_prog_p(&sp, &prog, &pt) == 0) {
+            size_t need = omega_bw_program_code_bytes(&prog); uint8_t *buf = malloc(need); OmegaBlackwellKernel k;
+            int enc = buf && omega_blackwell_kernel_encode_into(&prog, buf, need, &k) == 0 && omega_resident_apply_patches(buf, need, &pt) == 0;
+            if (enc) { FILE *f = fopen("/tmp/wl2g-prefetch.bin", "wb"); if (f) { fwrite(buf, 1, need, f); fclose(f); } }
+            CHECK(enc && pt.n == 9, "stamped prefetch kernel encoded and patched (%u patches) to /tmp/wl2g-prefetch.bin", pt.n);
+            free(buf);
+        }
+    }
     { /* W-L2g: stamped kernel, patched timer reads (5 CS2R + 3 scope words) to /tmp/wl2g-stamped.bin for nvdisasm */
         OmegaResidentSpec ss = specs[0]; ss.stamps = 1;
         if (omega_blackwell_codegen_resident_prog_p(&ss, &prog, &pt) == 0) {
@@ -235,6 +248,8 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--fence") == 0 && i + 1 < argc) { SPEC.fence = (uint32_t)atoi(argv[++i]); }
         else if (strcmp(argv[i], "--abort0") == 0) { SPEC.abort = 0; }
         else if (strcmp(argv[i], "--quick") == 0) { quick = 1; }
+        else if (strcmp(argv[i], "--prefetch") == 0) { SPEC.prefetch = 1; }
+        else if (strcmp(argv[i], "--weight-cache") == 0) { g_wcache = 1; }
         else if (strcmp(argv[i], "--stamps") == 0) { g_stamps = 1; g_nmodes = M_ALL; }
         else if (strcmp(argv[i], "--stamps-raw") == 0 && i + 1 < argc) { g_rawf = fopen(argv[++i], "wb"); }
         else if (strcmp(argv[i], "--only-real") == 0) { g_only_real = 1; }
@@ -246,11 +261,11 @@ int main(int argc, char **argv) {
     if (reps < 3 || reps > REPMAX) reps = 9;
     (void)omega_gpu_session_set_spin_us(2000);
     omega_gpu_fp8_set_variant(1);
-    omega_gpu_fp8_set_weight_cache(0);
+    omega_gpu_fp8_set_weight_cache(g_wcache);
     OmegaGpuCmdList *cl = NULL;
     if (omega_gpu_cmdlist_create(NMAX + 2, &cl) != 0) { printf("cmdlist create: %s\n", omega_gpu_session_last_error()); return 1; }
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
-    if (out) fprintf(out, "{\"test\":\"OMEGA_GPU_RESIDENT_CHAIN\",\"reps\":%u,\"spec\":{\"lane_bytes\":16,\"rows\":1,\"warps\":8,\"scope_gpu\":%u,\"fence\":%u,\"abort\":%u,\"quick\":%d}", reps, SPEC.scope_gpu, SPEC.fence, SPEC.abort, quick);
+    if (out) fprintf(out, "{\"test\":\"OMEGA_GPU_RESIDENT_CHAIN\",\"reps\":%u,\"spec\":{\"lane_bytes\":16,\"rows\":1,\"warps\":8,\"scope_gpu\":%u,\"fence\":%u,\"abort\":%u,\"quick\":%d,\"prefetch\":%u,\"weight_cache\":%d,\"stamps\":%d,\"grid\":%u}", reps, SPEC.scope_gpu, SPEC.fence, SPEC.abort, quick, SPEC.prefetch, g_wcache, g_stamps, g_grid);
     uint32_t st = 2026;
     omega_gpu_session_lock();
     if (!omega_gpu_session_open()) { printf("open: %s\n", omega_gpu_session_last_error()); return 1; }

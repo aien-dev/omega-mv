@@ -21,7 +21,7 @@
 #define NOREG (-1)
 #define MAX_LOOPS 4
 
-enum { K_FIXED, K_PRED, K_VAR, K_VAR_MORE, K_UVAR, K_STORE, K_SYNC, K_EXIT, K_BRA, K_BSSY, K_BSYNC, K_TIMER };
+enum { K_FIXED, K_PRED, K_VAR, K_VAR_MORE, K_UVAR, K_STORE, K_SYNC, K_EXIT, K_BRA, K_BSSY, K_BSYNC, K_TIMER, K_PF };
 
 typedef struct {
     BlackwellIRProgram *p;
@@ -46,6 +46,7 @@ static void emit(Em *e, BlackwellIRInsn in, int kind) {
     case K_BSSY:  in.control = CW(1, SB_NONE, SB_NONE, wait) | CW_YIELD; e->pending = 0; break;
     case K_BSYNC: in.control = CW(5, SB_NONE, SB_NONE, wait) | CW_YIELD; e->pending = 0; break;
     case K_TIMER: in.control = CW(15, SB_NONE, SB_NONE, wait); e->pending = 0; break; /* CS2R.32 (patched): fixed latency, no scoreboard */
+    case K_PF:    in.control = CW(2, SB_NONE, SB_NONE, wait); e->pending = 0; break; /* CCTL.E.PF2 (patched): no scoreboard (oracle control 0x000fe2) */
     default: e->err = -1; return;
     }
     if (omega_bw_ir_append(e->p, &in) < 0) e->err = -1;
@@ -349,6 +350,53 @@ int omega_blackwell_codegen_resident_prog_p(const OmegaResidentSpec *spec, Black
         ldc32(e, lim, OMEGA_RES_ARG_GRID);
         imadi(e, target, lim, 0, 1, target);
         bar_sync(e);
+        if (spec->prefetch) {
+            /* W-L2g prefetch (spec.prefetch = 1): this CTA's work for the stage is done (MEMBAR + BAR.SYNC above); before thread 0
+             * arrives, every warp asks L2 to fetch the weight rows it will compute in the NEXT stage (pdesc already points at that
+             * descriptor): lane L prefetches bytes [128 L, 128 L + 128) of every 4 KB chunk of each of its rows (CCTL.E.PF2, no
+             * register written, fire-and-forget; nothing waits on it). Only useful when the weights are GPU-cached memory
+             * (uncached lines are never kept in L2, W-L2d). Arithmetic and data flow unchanged: outputs stay bit-identical. */
+            int nw = V64(e), nk = V64(e), nr = V64(e), kn = V(e), rgnn = V(e), prg = V(e), pc = V(e), p1 = V(e), lo = V(e), junk = V(e);
+            int prow = V64(e), paddr = V64(e);
+            if (e->err) return -1;
+            ldg_wide(e, BW_IR_LDG_E_64, nw, pdesc, 0, udesc, 1);
+            ldg_wide(e, BW_IR_LDG_E_64, nk, pdesc, 32, udesc, 0);
+            ldg_wide(e, BW_IR_LDG_E_64, nr, pdesc, 40, udesc, 0);
+            imadi(e, kn, nk, 0, 1, NOREG);
+            imadi(e, rgnn, nr, 0, 1, NOREG);
+            imadi(e, lo, lane, 0, 128, NOREG);
+            imadi(e, prg, rg0, 0, 1, NOREG);
+            const int L_p = here(e);
+            loop_begin(e);
+            isetp_ge_u32(e, prg, rgnn);
+            const int bra_p_end = bra_if_p0_fwd(e);
+            imadr(e, p1, prg, kn, NOREG);
+            imadw(e, prow, p1, 1, nw);
+            movrz(e, pc);
+            const int L_c = here(e);
+            loop_begin(e);
+            imadi(e, p1, pc, 0, 1, lo);
+            isetp_ge_u32(e, p1, kn);
+            {
+                const int at_bssy = bssy_fwd(e);
+                const int bra_skip = bra_if_p0_fwd(e);
+                imadw(e, paddr, p1, 1, prow);
+                mark(pt, here(e), OMEGA_RES_PATCH_PF2);
+                { BlackwellIRInsn i = I0(BW_IR_LDG_E); i.dst_vreg = junk; i.src1_vreg = paddr; i.ureg = udesc; emit(e, i, K_PF); }
+                const int at_bsync = here(e);
+                bsync(e);
+                patch_bra(e, bra_skip, at_bsync);
+                patch_bra(e, at_bssy, at_bsync + 1);
+            }
+            imadi(e, pc, one, 0, 4096, pc);
+            isetp_ge_u32(e, pc, kn);
+            { BlackwellIRInsn i = I0(BW_IR_BRA); i.predicate_p0 = true; i.predicate_not = true; i.imm = (uint32_t)(L_c - here(e)); emit(e, i, K_BRA); }
+            loop_end(e);
+            imadi(e, prg, stride, 0, 1, prg);
+            bra(e, L_p);
+            loop_end(e);
+            patch_bra(e, bra_p_end, here(e));
+        }
         s2r(e, t0, BW_SR_TID_X);
         isetp_ge_u32(e, t0, one);
         const int r_bssy = bssy_fwd(e);
@@ -455,6 +503,12 @@ int omega_resident_apply_patches(uint8_t *code, size_t bytes, const OmegaResiden
         if (pt->kind[i] == OMEGA_RES_PATCH_LDG_GPU) { if (w2 != 0x0c1f5900u) return -1; w2 = 0x0c1ef900u; }
         else if (pt->kind[i] == OMEGA_RES_PATCH_MEMBAR_GPU) { if (w2 != 0x0000b000u) return -1; w2 = 0x0000a000u; } /* MEMBAR.ALL.SYS -> MEMBAR.ALL.GPU (oracle: fence.acq_rel.gpu) */
         else if (pt->kind[i] == OMEGA_RES_PATCH_ATOM_GPU) { if ((w2 & 0xffffff00u) != 0x081f5100u) return -1; w2 = 0x081ef100u | (w2 & 0xffu); }
+        else if (pt->kind[i] == OMEGA_RES_PATCH_PF2) { /* LDG.E Rd, desc[UR][Ra.64] placeholder -> CCTL.E.PF2 [Ra] (oracle: w0 0x....798f, w1 0, w2 0x00800100) */
+            uint32_t w0; memcpy(&w0, code + at - 8u, 4);
+            if ((w0 & 0xffffu) != 0x7981u || w2 != 0x0c1e1900u) return -1;
+            w0 = (w0 & 0xff000000u) | 0x798fu; memcpy(code + at - 8u, &w0, 4);
+            const uint32_t w1 = 0; memcpy(code + at - 4u, &w1, 4);
+            w2 = 0x00800100u; }
         else if (pt->kind[i] == OMEGA_RES_PATCH_CS2R) { /* S2R Rd, SR (w0 0x....7919) -> CS2R.32 Rd, SR (w0 0x....7805), SR in w2 bits 8..15 */
             uint32_t w0; memcpy(&w0, code + at - 8u, 4);
             if ((w0 & 0xffffu) != 0x7919u || (w2 != 0x5000u && w2 != 0x5200u)) return -1;

@@ -84,6 +84,7 @@ extern "C" {
 #define OMEGA_RES_PATCH_ATOM_GPU 2u
 #define OMEGA_RES_PATCH_MEMBAR_GPU 3u
 #define OMEGA_RES_PATCH_CS2R 4u /* S2R placeholder -> CS2R.32 (oracle: w0 0x7805, fixed latency) */
+#define OMEGA_RES_PATCH_PF2 5u /* LDG.E placeholder -> CCTL.E.PF2 [Ra] (oracle: prefetch.global.L2) */
 typedef struct { uint32_t n; uint32_t idx[OMEGA_RES_MAX_PATCHES]; uint32_t kind[OMEGA_RES_MAX_PATCHES]; } OmegaResidentPatches;
 
 typedef struct {
