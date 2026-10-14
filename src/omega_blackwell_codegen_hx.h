@@ -14,6 +14,9 @@
  *   writes unchanged), out[r][perm(a)] = bf16_rn(o * 2^64) with o = (g * rcp(2^min(-g log2 e, 125) + 1)) * u: the instruction
  *   sequence of the W8A8 GEMM's SwiGLU epilogue (omega_blackwell_codegen_qg.h: FMUL, FMNMX, MUFU.EX2, FADD, MUFU.RCP, FMUL, FMUL),
  *   then the exact FMUL by 2^64 and F2FP.BF16 RN.
+ * ---- SWIGLU_NAT (mode OMEGA_HX_SWIGLU_NAT) ----
+ *   as SWIGLU but out[r][a] = bf16_rn(o) in natural order without the 2^64 (the W8A8 act row format); CONVERT with bf16 input
+ *   then gives exactly the SWIGLU row (the 2^64 is a power of two, so bf16_rn(o) * 2^64 = bf16_rn(o * 2^64)).
  * One CTA per row (ctaid.x = row), k / 4 threads (k a multiple of 128, 128 .. 4096); thread t owns elements 4t .. 4t+3.
  * Arguments (cbank 0x380): in u64, out u64.
  * mutant (tests only): 1 stores the natural order (no (0,2,1,3) permutation) / SWIGLU: swaps gate and up; 2 drops the 2^64.
@@ -24,7 +27,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-enum { OMEGA_HX_CONVERT = 0, OMEGA_HX_SWIGLU = 1 };
+enum { OMEGA_HX_CONVERT = 0, OMEGA_HX_SWIGLU = 1, OMEGA_HX_SWIGLU_NAT = 2 };
 enum { OMEGA_HX_IN_F32 = 0, OMEGA_HX_IN_BF16 = 1 };
 typedef struct { uint32_t mode, k, in_type; int mutant; } OmegaHxSpec;
 #define OMEGA_HX_ARGS_WORDS 4u

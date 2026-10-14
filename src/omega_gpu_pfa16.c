@@ -76,3 +76,6 @@ int omega_gpu_pf_hconv(uint32_t k, uint32_t in_type, uint32_t rows, uint64_t x_v
 int omega_gpu_pf_hswiglu(uint32_t i, uint32_t rows, uint64_t gu_va, uint64_t act_va, uint64_t *ns) {
     return hx_launch(OMEGA_HX_SWIGLU, i, OMEGA_HX_IN_F32, rows, gu_va, act_va, ns);
 }
+int omega_gpu_pf_hswiglu_nat(uint32_t i, uint32_t rows, uint64_t gu_va, uint64_t act_va, uint64_t *ns) {
+    return hx_launch(OMEGA_HX_SWIGLU_NAT, i, OMEGA_HX_IN_F32, rows, gu_va, act_va, ns);
+}

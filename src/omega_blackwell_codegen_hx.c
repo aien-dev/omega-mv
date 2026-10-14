@@ -8,9 +8,9 @@
 #define F_ONE 0x3f800000u
 
 int omega_hx_spec_ok(const OmegaHxSpec *s) {
-    if (!s || s->mode > OMEGA_HX_SWIGLU) return 0;
+    if (!s || s->mode > OMEGA_HX_SWIGLU_NAT) return 0;
     if (s->k < 128u || s->k > 4096u || s->k % 128u) return 0;
-    if (s->in_type > OMEGA_HX_IN_BF16 || (s->mode == OMEGA_HX_SWIGLU && s->in_type != OMEGA_HX_IN_F32)) return 0;
+    if (s->in_type > OMEGA_HX_IN_BF16 || (s->mode != OMEGA_HX_CONVERT && s->in_type != OMEGA_HX_IN_F32)) return 0;
     return s->mutant >= 0 && s->mutant <= 2;
 }
 
@@ -34,7 +34,8 @@ int omega_blackwell_codegen_hx_prog(const OmegaHxSpec *spec, BlackwellIRProgram 
     if (e->err) return -1;
     ldcu64(e, udesc, 0x358); ldc64(e, pin, 0x380); ldc64(e, pout, 0x388);
     s2r(e, tid, BW_SR_TID_X); s2r(e, row, BW_SR_CTAID_X);
-    movi(e, s64, spec->mutant == 2 ? F_ONE : F_2P64);
+    const int nat = spec->mode == OMEGA_HX_SWIGLU_NAT;
+    movi(e, s64, spec->mutant == 2 || nat ? F_ONE : F_2P64);
     if (spec->mode == OMEGA_HX_CONVERT) {
         if (spec->in_type == OMEGA_HX_IN_F32) { imadw(e, pin, row, K * 4u, pin); imadw(e, pin, tid, 16u, pin); ldg_wide(e, BW_IR_LDG_E_128, v, pin, 0, udesc, 1); }
         else {
@@ -65,8 +66,8 @@ int omega_blackwell_codegen_hx_prog(const OmegaHxSpec *spec, BlackwellIRProgram 
             for (unsigned q = 0; q < 4; q++) fop(e, BW_IR_FMUL, v, q, u, q, onef, 0);
         }
     }
-    for (unsigned q = 0; q < 4; q++) fop(e, BW_IR_FMUL, v, q, v, q, s64, 0);
-    if (spec->mutant == 1 && spec->mode == OMEGA_HX_CONVERT) { pack(e, p0, v, 1, 0); pack(e, p1, v, 3, 2); }
+    if (!nat) for (unsigned q = 0; q < 4; q++) fop(e, BW_IR_FMUL, v, q, v, q, s64, 0);
+    if (nat || (spec->mutant == 1 && spec->mode == OMEGA_HX_CONVERT)) { pack(e, p0, v, 1, 0); pack(e, p1, v, 3, 2); }
     else { pack(e, p0, v, 2, 0); pack(e, p1, v, 3, 1); }
     imadw(e, pout, row, K * 2u, pout); imadw(e, pout, tid, 8u, pout);
     stg(e, pout, 0, p0, udesc);
