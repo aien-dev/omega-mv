@@ -201,6 +201,35 @@ uint32_t omega_gpu_decode_graph_resident_rows(void);
 /* TEST ONLY red: the resident kernel without its grid barrier (mutant 1): the token/logits comparison must FAIL. */
 void omega_gpu_decode_graph_test_set_resident_red(int on);
 
+/* ---- batched exact verify (OWN-30B W-L4f, speculative decoding) ----
+ * int omega_gpu_decode_graph_verify(OmegaGpuDecodeGraph *g, uint32_t rows, const float *x_embed, uint32_t pos0, float *hidden,
+ *                                   OmegaGpuDecodeGraphStats *st);
+ *   `rows` new tokens at positions pos0 .. pos0 + rows - 1 (x_embed: [rows][2048], their embedding rows) through every layer;
+ *   hidden: [rows][2048], each row's final-normed hidden state (the lm_head input). Row r's hidden state and the K/V it
+ *   stores are bit-identical to omega_gpu_decode_graph_token at pos0 + r after the tokens of rows 0 .. r - 1 (launched or
+ *   resident list: the resident chain is bit-identical to the launched one). Why: every value-producing step is the one-list
+ *   token's own launch, recorded once per row (RES NORM / ADD / COMBINE|NORM, decode attention at the row's position in
+ *   row order, the router), SWIGLU is the same kernel over 8 x rows experts, and the FP8 projections run as the grouped
+ *   GEMM (omega_gpu_fp8gemm_api.h: bit-identical to the GEMV per row; the rows of one expert share its weight reads) on
+ *   rows the vrows kernel moves without arithmetic (omega_blackwell_codegen_vrows.h).
+ *   One list per layer, split after the routers (the host reads the 8 x rows expert ids and sorts them for the GEMM
+ *   segments): `layers` submissions. No lm_head (the caller runs it for the rows it needs). rows 1 ..
+ *   OMEGA_GPU_DGRAPH_VERIFY_MAX_ROWS. Takes the session lock for the whole call. st: launches, submits, chip_ns,
+ *   record_ns = host time outside the submissions (recording, sorting, tables), total_ns.
+ *   Every layer and the final norm must be set. Stamps are not recorded for a verify call.
+ * omega_gpu_decode_graph_verify_set_hook: CONTROL ONLY (numerics negative control): called after each layer's router sync
+ *   with the rows' expert input rows x' * 2^64 (`xr`, rows x OMEGA_GPU_DGRAPH_VERIFY_XR floats each; the first 2048 are x',
+ *   then ids and weights): the hook may change the 2048 x' values before the experts read them. NULL = none (default).
+ * omega_gpu_decode_graph_verify_test_set_mutant: TEST ONLY: 1 = the row copies ignore the gather table and the GEMM lane
+ *   layout (vrows mutant 1); 2 = the combine reads expert slots 0 and 1 of row 0 swapped. Each must be caught. 0 none. */
+#define OMEGA_GPU_DGRAPH_VERIFY_MAX_ROWS 16u
+#define OMEGA_GPU_DGRAPH_VERIFY_XR 2072u
+typedef void (*OmegaGpuDecodeGraphVerifyHook)(void *ctx, uint32_t layer, uint32_t rows, float *xr);
+int omega_gpu_decode_graph_verify(OmegaGpuDecodeGraph *g, uint32_t rows, const float *x_embed, uint32_t pos0, float *hidden,
+                                  OmegaGpuDecodeGraphStats *st);
+void omega_gpu_decode_graph_verify_set_hook(OmegaGpuDecodeGraph *g, OmegaGpuDecodeGraphVerifyHook hook, void *ctx);
+void omega_gpu_decode_graph_verify_test_set_mutant(OmegaGpuDecodeGraph *g, int mutant);
+
 #ifdef __cplusplus
 }
 #endif

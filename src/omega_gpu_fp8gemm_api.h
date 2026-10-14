@@ -81,6 +81,22 @@ void omega_gpu_fp8gemm_test_set_mutant(int mutant);
 /* host helper: the permuted, 2^64-scaled x' row the kernel reads (k values in, k out) */
 void omega_fp8gemm_permute_x(const float *x, uint32_t k, uint32_t lane_bytes, float *out);
 
+/* W-L4f (batched exact verify): the launch of omega_gpu_fp8gemm_f32 appended to a command list instead of submitted, on
+ * device-resident rows. The caller holds omega_gpu_session_lock(). Same kernel choice as the host call (rows per pass by
+ * the same rule, same grid budget), so row i is bit-identical to the host call on the same x' row.
+ *   ids:     M expert ids, non-decreasing (host array; one segment per run of equal ids)
+ *   seg_cpu / seg_va: the caller's GPU-uncached buffer for the segment table (>= segments * 32 bytes); written here, the
+ *            caller syncs it to the GPU before the submit and keeps it unchanged until the list ran
+ *   xp_va:   M rows of x' * 2^64 in the GEMM lane layout (omega_gpu_fp8gemm_shape_for: 16 lane bytes when k % 512 == 0,
+ *            else 8), k floats each, followed by OMEGA_GPU_FP8GEMM_RECORD_PAD readable rows (the last pass reads them)
+ *   y_va:    M rows of n floats, row-table order
+ * Nothing is staged, poisoned or read back. A kernel cache miss only fills an empty slot (a recorded launch's kernel is
+ * never evicted before its list runs): prepare the widths first (omega_gpu_fp8gemm_prepare), else TOO_LARGE. */
+#define OMEGA_GPU_FP8GEMM_RECORD_PAD 8u
+struct OmegaGpuCmdList;
+int omega_gpu_fp8gemm_record(struct OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t M, const uint32_t *ids, void *seg_cpu,
+                             uint64_t seg_va, uint64_t xp_va, uint64_t y_va, OmegaGpuFp8GemmInfo *info);
+
 #ifdef __cplusplus
 }
 #endif
