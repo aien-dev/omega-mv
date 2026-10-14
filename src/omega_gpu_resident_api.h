@@ -16,6 +16,7 @@
  */
 #include <stdint.h>
 #include "omega_blackwell_codegen_resident.h"
+#include "omega_blackwell_codegen_resident2.h"
 #include "omega_gpu_cmdlist.h"
 
 #ifdef __cplusplus
@@ -61,6 +62,28 @@ int omega_gpu_resident_status(OmegaGpuResident *r, uint32_t *progress, uint32_t 
 /* Host cancel: sets the control block cancel word (uncached). CTA 0 reads it at every barrier; the chain stops at the next
  * barrier after it is seen (abort bit through the barrier word). Safe while the kernel runs. */
 int omega_gpu_resident_cancel(OmegaGpuResident *r);
+
+/* ---- W-L2h: the decode-stage kernel (omega_blackwell_codegen_resident2.h) ----
+ * One resident2 object = the kind-dispatch kernel + one stage table for ONE grid (warps per group are baked into the
+ * descriptors) + control block + barrier word. record_range() appends one launch running stages [first, first + count) and
+ * may be called many times before one submit (a BATCH: the control block is written at the first record of a batch, the
+ * barrier base runs on across the launches); status() after the submit closes the batch. A launch of a batch that aborts
+ * makes every later launch of the batch abort at its first barrier (abort unit in the barrier word); status() reports it. */
+typedef struct {
+    uint32_t kind;              /* OMEGA_RES2_* */
+    uint64_t tab, w, s;         /* GEMV: group table (entry g at tab + 16 g = { w, s }); tab 0 = the inline entry w, s (groups 1) */
+    uint64_t x, y, add;         /* GEMV: x' (f32), y (f32), add target (GEMV16_ADD: add[r] += y[r]); SWIGLU: x = gate,up rows, y = act;
+                                 * RESNORM: x = residual (read, written), y = norm output */
+    uint32_t k, n, groups, xgs; /* GEMV: k, rows per group, groups (>= 1), x bytes between groups (0 = shared x);
+                                 * SWIGLU: n = I (768), groups */
+    uint64_t dn, wts, nw;       /* RESNORM: down outputs [8][2048], routing weights [8], norm weight [2048] */
+    float scale, eps;           /* SWIGLU scale; RESNORM scale, eps */
+} OmegaGpuResident2Stage;
+
+int omega_gpu_resident2_create(const OmegaResident2Spec *spec, const OmegaGpuResident2Stage *stages, uint32_t n_stages, uint32_t grid, OmegaGpuResident **out);
+int omega_gpu_resident2_record_range(OmegaGpuCmdList *cl, OmegaGpuResident *r, uint32_t first, uint32_t count, uint32_t spin_max);
+uint32_t omega_gpu_resident2_grid(const OmegaGpuResident *r);
+int omega_gpu_resident2_reset(OmegaGpuResident *r); /* failed or dropped batch: fresh barrier word, batch closed */
 
 /* W-L2g instrumentation: device address of a buffer of n_stages x grid x OMEGA_RES_STAMP_BYTES (host-readable, GPU-uncached)
  * written by a spec.stamps = 1 kernel. Required before record() for such a kernel. */

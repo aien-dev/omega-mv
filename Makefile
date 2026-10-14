@@ -34,6 +34,8 @@ SRCS += src/omega_blackwell_codegen_moe2.c
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # OWN-30B W-L2f (2026-10-14): resident FP8 GEMV chain with an on-chip grid barrier (omega_gpu_resident_api.h), new files only
 SRCS += src/omega_blackwell_codegen_resident.c src/omega_gpu_resident_api.c
+# OWN-30B W-L2h (2026-10-14): resident kernel with decode stage kinds (GEMV16/GEMV8/GEMV16_ADD/SWIGLU/RESNORM), new file only
+SRCS += src/omega_blackwell_codegen_resident2.c
 # OWN-30B (2026-10-13): libm-free host math (omega_gpu_hostmath.h) so libomega_gpu.a links without -lm
 SRCS += src/omega_gpu_hostmath.c
 # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h), new files only

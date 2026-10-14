@@ -150,7 +150,9 @@ int omega_gpu_decode_graph_read(OmegaGpuDecodeGraph *g, float *x, float *hidden,
 enum {
     OMEGA_GPU_DGRAPH_K_NORM = 0, OMEGA_GPU_DGRAPH_K_QKV, OMEGA_GPU_DGRAPH_K_ATTN, OMEGA_GPU_DGRAPH_K_O, OMEGA_GPU_DGRAPH_K_ADD,
     OMEGA_GPU_DGRAPH_K_ROUTER, OMEGA_GPU_DGRAPH_K_GATE_UP, OMEGA_GPU_DGRAPH_K_SWIGLU, OMEGA_GPU_DGRAPH_K_DOWN, OMEGA_GPU_DGRAPH_K_COMBINE,
-    OMEGA_GPU_DGRAPH_K_LM_HEAD, OMEGA_GPU_DGRAPH_K_ARGMAX, OMEGA_GPU_DGRAPH_K_COUNT
+    OMEGA_GPU_DGRAPH_K_LM_HEAD, OMEGA_GPU_DGRAPH_K_ARGMAX,
+    OMEGA_GPU_DGRAPH_K_RES_O, OMEGA_GPU_DGRAPH_K_RES_MOE, /* W-L2h resident launches: [o + add], [gate_up .. next qkv] */
+    OMEGA_GPU_DGRAPH_K_COUNT
 };
 /* 1: every token also records a GPU timestamp (ns) before the first launch and after each launch (after its WAIT_FOR_IDLE).
  * Call between tokens. Adds one report per launch to the list. 0 = off (default). */
@@ -181,6 +183,20 @@ void omega_gpu_decode_graph_set_prefetch(int on);
 int omega_gpu_decode_graph_prefetch(void);
 /* TEST ONLY red for the prefetch run: the real o_proj is also marked independent (unordered after the attention): must FAIL. */
 void omega_gpu_decode_graph_test_set_prefetch_red(int on);
+
+/* ---- resident decode chain (OWN-30B W-L2h) ----
+ * 1 = each layer records [o_proj + RES ADD] and [gate_up, SWIGLU, down, COMBINE + NORM, next layer's qkv] as one resident
+ * launch each (omega_gpu_resident_api.h resident2: on-chip grid barrier between the stages), attention and router stay
+ * launched: 9 launches per layer become 4. Same operations in the same order: token, logits, x and hidden are bit-identical
+ * to the launched list (the gate). The stage table is built at the first resident token (every layer and the final norm
+ * must be set). Process-wide; env AIEN_OMEGA_DGRAPH_RESIDENT ("1") when never set. Default 0 (off).
+ * Grid: set_resident_grid, else env AIEN_OMEGA_DGRAPH_RESIDENT_GRID, else 128. Call between tokens. */
+void omega_gpu_decode_graph_set_resident(int on);
+int omega_gpu_decode_graph_resident(void);
+void omega_gpu_decode_graph_set_resident_grid(uint32_t grid);
+uint32_t omega_gpu_decode_graph_resident_grid(void);
+/* TEST ONLY red: the resident kernel without its grid barrier (mutant 1): the token/logits comparison must FAIL. */
+void omega_gpu_decode_graph_test_set_resident_red(int on);
 
 #ifdef __cplusplus
 }

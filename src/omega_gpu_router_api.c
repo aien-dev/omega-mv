@@ -141,6 +141,14 @@ void omega_gpu_router_device_outputs(const OmegaGpuRouter *r, uint64_t *xout_va,
     if (tab_dn_va) *tab_dn_va = r ? r->lb.va + LB_TAB_DN : 0;
 }
 
+void omega_gpu_router_device_outputs_all(const OmegaGpuRouter *r, OmegaGpuRouterDevOut *out) {
+    if (!out) return;
+    memset(out, 0, sizeof *out);
+    if (!r) return;
+    out->xout_va = r->lb.va + LB_XOUT; out->ids_va = r->lb.va + LB_IDS; out->wts_va = r->lb.va + LB_WTS;
+    out->tab_gu_va = r->lb.va + LB_TAB_GU; out->tab_dn_va = r->lb.va + LB_TAB_DN;
+}
+
 int omega_gpu_router_read_back(OmegaGpuRouter *r, float *xout, uint64_t *tab_gu, uint64_t *tab_dn) {
     if (!r) return OMEGA_GPU_ROUTER_BAD_ARGS;
     omega_gpu_session_lock();
