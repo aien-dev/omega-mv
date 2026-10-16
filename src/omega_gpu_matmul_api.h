@@ -52,9 +52,19 @@ enum {
  * column tiles x, x + grid_x, ... so any shape is one launch inside the budget
  * (rows are split across launches only when m / 16 alone exceeds it). The
  * budget is a tunable (omega_gpu_matmul_set_cta_budget) so the chip test can
- * measure larger grids; the default stays at the proven value until a sealed
- * receipt says otherwise. */
-#define OMEGA_GPU_MATMUL_MAX_CTAS 64
+ * measure larger grids.
+ * Default 1024 since omega #473 R4 (sealed receipt evidence/R4-MATMUL-CTA-ffc3176a,
+ * tests/gpu_matmul_r4_receipt.c): every output element of every call compared
+ * with a double reference at 8192x768x{2304,768,3072}, 8192x3072x768,
+ * 1024x768x50304 and two single-tile-kernel shapes (1x2048x8192, 112x768x3072),
+ * budgets 64..1024, 3 repeats per sign, bit-identical repeats and runs, no
+ * stale (I42) element at any grid of 128 CTAs and up, mutant caught. 1024 has
+ * the least chip time summed over all seven shapes; it was 64 before. The
+ * speedup is for the five training shapes only (1.3x-1.7x less chip time than
+ * at 64). The small shape 112x768x3072 is 1.1x-2x SLOWER at 1024 than at 64
+ * (0.32 ms at 64, 0.62 ms at 1024 in run 2); callers dominated by small
+ * shapes can lower the budget with omega_gpu_matmul_set_cta_budget. */
+#define OMEGA_GPU_MATMUL_MAX_CTAS 1024
 
 typedef struct {
     uint32_t m, k, n;
@@ -89,6 +99,21 @@ int omega_gpu_tensor_upload_bf16(uint32_t k, uint32_t n, const uint16_t *b, Omeg
 int omega_gpu_tensor_upload_f32(uint32_t k, uint32_t n, const float *b, OmegaGpuTensor **out);
 void omega_gpu_tensor_free(OmegaGpuTensor *t);
 void omega_gpu_tensor_shape(const OmegaGpuTensor *t, uint32_t *k, uint32_t *n);
+
+/* Replace a resident tensor's values in place (a training step's new weights): b is k x n row-major and
+ * k, n must equal the tensor's shape (BAD_ARGS otherwise, nothing written); f32 is rounded to bf16 as at
+ * upload. The new values are packed straight into the tensor's existing GPU-uncached device buffer: no
+ * driver allocation or free and no host allocation, so it is allowed while the API is sealed and has no
+ * out-of-memory path. Refused (CHIP_FAIL, nothing written) when the session is latched or the handle's
+ * device was closed; BAD_ARGS for NULL arguments.
+ *
+ * Thread safety of the resident calls: omega_gpu_matmul_resident_* and omega_gpu_tensor_update_*
+ * each hold the session lock for the whole call, and a launch has completed before its call
+ * returns, so a resident matmul reads B entirely from before or entirely from after an update,
+ * never a mix, and an update never writes while the chip reads. upload builds a new buffer and
+ * needs no ordering. The caller must not free a tensor while another thread uses it. */
+int omega_gpu_tensor_update_bf16(OmegaGpuTensor *t, uint32_t k, uint32_t n, const uint16_t *b);
+int omega_gpu_tensor_update_f32(OmegaGpuTensor *t, uint32_t k, uint32_t n, const float *b);
 
 /* C[m x n] = A[m x k] * B, B resident (k and n come from the handle). No host
  * oracle: info->parity_verified is false, mismatch_count 0. */
@@ -126,6 +151,30 @@ int omega_gpu_matmul_is_blocked(void);
 
 /* Stage name of the most recent CHIP_FAIL ("" if none), for logs and receipts. */
 const char *omega_gpu_matmul_last_error(void);
+
+/* Where the time of one matmul goes (omega #473). A separate struct, not new OmegaGpuMatmulInfo fields:
+ * Rust callers mirror OmegaGpuMatmulInfo by size (no size assert), and the API memsets the caller's
+ * struct, so growing it would overrun every mirror that has not been updated. The stages tile the
+ * call's work in order; core_ns is their span, so core_ns - (the six stages) is clock overhead only.
+ *   setup_ns    lock wait, device open, launch shape, staging buffer growth
+ *   pack_ns     activation rows packed into the GPU-visible staging buffer (f32 -> bf16 on the way),
+ *               plus the result sentinels
+ *   upload_ns   CPU-to-GPU visibility of both staging buffers (platform sync)
+ *   launch_ns   kernel cache lookup (or build), submit and completion wait, every launch; contains chip_ns
+ *   chip_ns     = OmegaGpuMatmulInfo.elapsed_ns (launch to completion marker, summed over launches)
+ *   sync_ns     GPU-to-CPU visibility of the result buffer
+ *   copy_out_ns sentinel scan and copy of the real m x n block into the caller's array
+ * The non-resident calls add the B upload before and the host oracle after (in OmegaGpuMatmulInfo.call_ns,
+ * not here). */
+typedef struct {
+    uint64_t setup_ns, pack_ns, upload_ns, launch_ns, chip_ns, sync_ns, copy_out_ns;
+    uint64_t core_ns; /* entry to exit of the matmul body; a resident call's call_ns adds argument checks only */
+} OmegaGpuMatmulStages;
+/* Stages of the most recent matmul in this process. The record is ONE per process, shared by every thread:
+ * another thread's matmul can overwrite it between your call and this read, so read it from the thread that
+ * made the call, with no other matmul in between. Calls are serialized by the session lock, so a read never sees
+ * a half-written record. All zero before the first call; a call that fails records the stages it reached. */
+void omega_gpu_matmul_last_stages(OmegaGpuMatmulStages *out);
 
 /* CTA budget per launch (default OMEGA_GPU_MATMUL_MAX_CTAS; 0 restores it).
  * Clears the kernel cache (kernels bake in grid_x). Test and measurement knob. */

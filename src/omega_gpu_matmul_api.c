@@ -60,6 +60,7 @@ static struct {
     unsigned cache_next;
     unsigned slots; /* active kernel cache slots, <= CACHE_SLOTS_MAX */
     int sealed;     /* omega_gpu_matmul_seal: a kernel cache miss is refused, never built */
+    OmegaGpuMatmulStages stages; /* the most recent matmul_core call (omega #473), written under the session lock */
 } g = { .cta_budget = OMEGA_GPU_MATMUL_MAX_CTAS, .oracle = 1, .slots = CACHE_SLOTS };
 
 #define FAILAT(s) (omega_gpu_session_set_error(s), 1)
@@ -83,6 +84,13 @@ const char *omega_gpu_matmul_rc_name(int rc) {
 }
 
 int omega_gpu_matmul_is_blocked(void) { return omega_gpu_session_is_blocked(); }
+
+void omega_gpu_matmul_last_stages(OmegaGpuMatmulStages *out) {
+    if (!out) return;
+    omega_gpu_session_lock();
+    *out = g.stages;
+    omega_gpu_session_unlock();
+}
 
 /* ---- device-side state (caller holds the session lock) ---- */
 
@@ -356,6 +364,76 @@ int omega_gpu_tensor_upload_f32(uint32_t k, uint32_t n, const float *b, OmegaGpu
     return rc;
 }
 
+/* ---- in-place update ---- */
+
+/* f32 rounding staging for tensor_update: static, used only under the session lock, so an update never asks
+ * for memory (no out-of-memory path, no per-call allocation). 256 Ki elements (512 KiB): one chunk is
+ * UPDATE_STAGE_ELEMS / (k * 8) column tiles, capped at FRAG_PACK_TILES (42 tiles at k = 768, 2 at the
+ * largest k). */
+#define UPDATE_STAGE_ELEMS (256u * 1024u)
+_Static_assert(UPDATE_STAGE_ELEMS / (OMEGA_BW_MATMUL_MAX_K * 8u) >= 1u, "staging holds one column tile at the largest k");
+static uint16_t g_update_stage[UPDATE_STAGE_ELEMS];
+
+/* Packs b (k x n bf16, or f32 rounded as at upload) straight into the tensor's packed buffer dst, a chunk of
+ * column tiles at a time: each chunk is one contiguous run of dst, written while it is hot in cache. An f32
+ * chunk is first rounded into the staging block (omega_fp32_to_bf16_rne, the shared integer form of
+ * omega_fp32_to_bf16), then packed as a k x w matrix whose tiles 0 .. nt1 - nt0 are the tensor's tiles
+ * nt0 .. nt1 (columns past n stay zero either way). */
+static void pack_b_into(const OmegaGpuTensor *t, const uint16_t *b16, const float *b32, uint16_t *dst) {
+    const uint32_t k = t->k, n = t->n, kp = t->kp, nt = t->np / 8u;
+    uint32_t chunk = FRAG_PACK_TILES;
+    if (b32 && UPDATE_STAGE_ELEMS / (k * 8u) < chunk) chunk = UPDATE_STAGE_ELEMS / (k * 8u);
+    for (uint32_t nt0 = 0; nt0 < nt; nt0 += chunk) {
+        const uint32_t nt1 = nt - nt0 < chunk ? nt : nt0 + chunk;
+        uint16_t *out = &dst[(size_t)nt0 * kp * 8u];
+        if (b16) { omega_matmul_frag_pack_b(b16, k, n, kp, nt0, nt1, out); continue; }
+        const uint32_t c0 = nt0 * 8u, w = (nt1 * 8u < n ? nt1 * 8u : n) - c0;
+        for (uint32_t r = 0; r < k; r++) {
+            const float *src = &b32[(size_t)r * n + c0];
+            uint16_t *row = &g_update_stage[(size_t)r * w];
+            for (uint32_t j = 0; j < w; j++) row[j] = omega_fp32_to_bf16_rne(src[j]);
+        }
+        omega_matmul_frag_pack_b(g_update_stage, k, w, kp, 0, nt1 - nt0, out);
+    }
+}
+
+/* b16 or b32 (exactly one non-NULL). Holds the session lock for the whole update (see the header's thread
+ * safety note). The tensor must be a session DATA buffer: the session allocates every buffer GPU-uncached
+ * (mem_alloc, omega_gpu_session.h), so the chip reads what the CPU wrote once the sync below has ordered it;
+ * anything else is refused rather than risk the chip reading stale cached weights. The first sync validates
+ * the handle before anything is written: a handle from a closed or reopened device is refused by the
+ * platform, and its CPU view may be unmapped. */
+static int tensor_update(OmegaGpuTensor *t, uint32_t k, uint32_t n, const uint16_t *b16, const float *b32) {
+    if (!t || !t->mem.cpu || (!b16 && !b32)) return OMEGA_GPU_MATMUL_BAD_ARGS;
+    if (k != t->k || n != t->n) {
+        omega_gpu_session_lock();
+        omega_gpu_session_set_error("tensor update refused: shape differs from the tensor's");
+        omega_gpu_session_unlock();
+        return OMEGA_GPU_MATMUL_BAD_ARGS;
+    }
+    if (t->mem.kind != OMEGA_GPU_HANDLE_BUF_DATA) return OMEGA_GPU_MATMUL_BAD_ARGS;
+    int rc = OMEGA_GPU_MATMUL_OK;
+    omega_gpu_session_lock();
+    if (omega_gpu_session_is_blocked()) {
+        omega_gpu_session_set_error("tensor update refused: the session is latched (the device may still read the buffer)");
+        rc = OMEGA_GPU_MATMUL_CHIP_FAIL;
+    } else if (omega_gpu_session_sync_to_gpu(&t->mem) != 0) {
+        rc = OMEGA_GPU_MATMUL_CHIP_FAIL; /* stale handle or closed device: nothing written */
+    } else {
+        pack_b_into(t, b16, b32, t->mem.cpu);
+        if (omega_gpu_session_sync_to_gpu(&t->mem) != 0) rc = OMEGA_GPU_MATMUL_CHIP_FAIL;
+    }
+    omega_gpu_session_unlock();
+    return rc;
+}
+
+int omega_gpu_tensor_update_bf16(OmegaGpuTensor *t, uint32_t k, uint32_t n, const uint16_t *b) {
+    return b ? tensor_update(t, k, n, b, NULL) : OMEGA_GPU_MATMUL_BAD_ARGS;
+}
+int omega_gpu_tensor_update_f32(OmegaGpuTensor *t, uint32_t k, uint32_t n, const float *b) {
+    return b ? tensor_update(t, k, n, NULL, b) : OMEGA_GPU_MATMUL_BAD_ARGS;
+}
+
 void omega_gpu_tensor_free(OmegaGpuTensor *t) {
     if (!t) return;
     omega_gpu_session_lock();
@@ -366,14 +444,27 @@ void omega_gpu_tensor_free(OmegaGpuTensor *t) {
 
 /* ---- the matmul ---- */
 
+/* stage timer (omega #473): each mark closes one stage at the time it is called; put stores the record
+ * (caller holds the session lock) */
+#define STAGE_MARK(field) do { const uint64_t now_ = now_ns(); st.field = now_ - mark; mark = now_; } while (0)
+static void stages_put(OmegaGpuMatmulStages *st, uint64_t chip_ns, uint64_t t0) {
+    st->chip_ns = chip_ns;
+    st->core_ns = now_ns() - t0;
+    g.stages = *st;
+}
+
 /* a16 or a32 (exactly one non-NULL): the activation rows as bf16 or as f32, packed into fragment
  * order in one pass either way (f32 rows are converted while packing, no staging copy) */
 static int matmul_core(uint32_t m, const uint16_t *a16, const float *a32, const OmegaGpuTensor *b, float *c, OmegaGpuMatmulInfo *info) {
+    const uint64_t t0 = now_ns();
+    uint64_t mark = t0, chip_ns = 0;
+    OmegaGpuMatmulStages st;
+    memset(&st, 0, sizeof st);
     const uint32_t k = b->k, n = b->n, kp = b->kp, np = b->np;
     const uint32_t mp = round_up(m, OMEGA_GPU_MATMUL_TILE_M);
     omega_gpu_session_lock();
     int rc = OMEGA_GPU_MATMUL_OK;
-    if (!dev_open_locked()) { omega_gpu_session_unlock(); return OMEGA_GPU_MATMUL_CHIP_FAIL; }
+    if (!dev_open_locked()) { STAGE_MARK(setup_ns); stages_put(&st, 0, t0); omega_gpu_session_unlock(); return OMEGA_GPU_MATMUL_CHIP_FAIL; }
     uint32_t rows_per_launch, grid_x, rt, ct;
     launch_shape(mp, np, &rows_per_launch, &grid_x, &rt, &ct);
     uint32_t grid_y_full = rows_per_launch / 16u / rt;
@@ -388,12 +479,14 @@ static int matmul_core(uint32_t m, const uint16_t *a16, const float *a32, const 
         /* sealed means no driver allocation on the call path; without a scratch reservation the
          * buffers below could still grow, so refuse before touching them */
         omega_gpu_session_set_error("serving reservation exceeded: matmul sealed without a scratch reservation (call omega_gpu_reserve_serving first)");
+        STAGE_MARK(setup_ns); stages_put(&st, 0, t0);
         omega_gpu_session_unlock();
         return OMEGA_GPU_MATMUL_TOO_LARGE;
     }
     int src = omega_gpu_session_scratch(&g.a_buf, (size_t)mp * kp * 2u);
     if (src == 0) src = omega_gpu_session_scratch(&g.c_buf, (size_t)mp * np * 4u);
     if (src != 0) {
+        STAGE_MARK(setup_ns); stages_put(&st, 0, t0);
         omega_gpu_session_unlock();
         /* a serving reservation refuses growth loudly (TOO_LARGE, error text names the sizes); anything else is a driver failure */
         return src == OMEGA_GPU_SESSION_SCRATCH_RESERVED ? OMEGA_GPU_MATMUL_TOO_LARGE : OMEGA_GPU_MATMUL_CHIP_FAIL;
@@ -404,6 +497,7 @@ static int matmul_core(uint32_t m, const uint16_t *a16, const float *a32, const 
      * result rows poisoned. A one-row call (decode) writes row 0 only when the buffer already holds
      * a full one-row pack of this width (rows 1..15 of every block zero): the 15 zero rows are not
      * rewritten per token. */
+    STAGE_MARK(setup_ns);
     uint16_t *ad = g.a_buf.mem.cpu;
     const bool one_row = m == 1 && mp == 16u;
     if (one_row && g.a_row0_ready && g.a_row0_kp == kp && g.a_row0_cpu == ad) {
@@ -421,7 +515,9 @@ static int matmul_core(uint32_t m, const uint16_t *a16, const float *a32, const 
      * word was three passes over m x np (12.6 MB at m = 128, n = 24576: about 2 ms per prefill call, 2026-10-12). */
     float *cd = g.c_buf.mem.cpu;
     omega_matmul_result_sentinels(cd, m, n, np, POISON_F32, 1);
+    STAGE_MARK(pack_ns);
     if (omega_gpu_session_sync_to_gpu(&g.a_buf.mem) != 0 || omega_gpu_session_sync_to_gpu(&g.c_buf.mem) != 0) rc = OMEGA_GPU_MATMUL_CHIP_FAIL;
+    STAGE_MARK(upload_ns);
 
     for (uint32_t r0 = 0; r0 < mp && rc == OMEGA_GPU_MATMUL_OK; r0 += rows_per_launch) {
         uint32_t rows = mp - r0 < rows_per_launch ? mp - r0 : rows_per_launch;
@@ -431,19 +527,25 @@ static int matmul_core(uint32_t m, const uint16_t *a16, const float *a32, const 
         if (rc != OMEGA_GPU_MATMUL_OK) break;
         if (info && !hit) info->kernel_cache_hit = false;
         rc = launch(ks, g.a_buf.mem.va + (uint64_t)r0 * kp * 2u, b->mem.va, g.c_buf.mem.va + (uint64_t)r0 * np * 4u,
-                    grid_x, grid_y, info ? &info->elapsed_ns : NULL, info ? &info->completion_marker : NULL);
+                    grid_x, grid_y, &chip_ns, info ? &info->completion_marker : NULL);
         if (info) info->chip_calls++;
     }
+    if (info) info->elapsed_ns = chip_ns;
+    STAGE_MARK(launch_ns);
     if (rc == OMEGA_GPU_MATMUL_OK && omega_gpu_session_sync_to_cpu(&g.c_buf.mem) != 0) rc = OMEGA_GPU_MATMUL_CHIP_FAIL;
+    STAGE_MARK(sync_ns);
     if (rc == OMEGA_GPU_MATMUL_OK) {
         /* the chip must have stored every fragment tile with a real output word (sentinel check) */
         size_t unchanged = omega_matmul_result_sentinels(cd, m, n, np, POISON_F32, 0);
         if (unchanged && FAILAT("output poison survived")) rc = OMEGA_GPU_MATMUL_CHIP_FAIL;
         else for (uint32_t r = 0; r < m; r++) memcpy(&c[(size_t)r * n], &cd[(size_t)r * np], (size_t)n * sizeof *c);
     }
+    STAGE_MARK(copy_out_ns);
+    stages_put(&st, chip_ns, t0);
     omega_gpu_session_unlock();
     return rc;
 }
+#undef STAGE_MARK
 
 static int resident_entry(uint32_t m, const uint16_t *a, const OmegaGpuTensor *b, float *c, OmegaGpuMatmulInfo *info) {
     uint64_t t0 = now_ns();
