@@ -2471,6 +2471,7 @@ $(GPU_FP8_TEST): tests/gpu_fp8_api_test.c tests/bw_warp_sim.h src/omega_gpu_fp8_
 test-gpu-fp8: $(GPU_FP8_TEST)
 	./$(GPU_FP8_TEST) --host-only
 	AIEN_OMEGA_FP8_COAL=0 ./$(GPU_FP8_TEST) --coal-default
+	AIEN_OMEGA_FP8_DEEP=0 ./$(GPU_FP8_TEST) --deep-default
 	./$(GPU_FP8_TEST) --sim
 
 # omega #457 (2026-10-15): host rewrite of a GPU-cached buffer must be visible to the next launch. Chip only; the gate
