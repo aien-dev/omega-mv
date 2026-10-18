@@ -1,5 +1,9 @@
-/* fab_dispatch.c -- Fabric dispatch of remote composition candidates (fab_dispatch.h). */
+/* fab_dispatch.c -- Fabric dispatch of remote composition candidates (fab_dispatch.h).
+ * Steps 1-3 (pump, route revalidation, live remote member) are fab_route.c, the
+ * production-buildable check a real coordinator runs before it sends; only
+ * step 4 (the simulated procedure table) lives here. */
 #include "fab_dispatch.h"
+#include "fab_route.h"
 
 #include <string.h>
 
@@ -41,18 +45,7 @@ int fab_dispatch_add(FabDispatch *d, const AienMachineId *m, const AgSkillTable 
 
 /* Caller holds the lock. */
 static int pump_locked(FabDispatch *d, uint64_t now_us) {
-    int n = 0;
-    FabVerdict v;
-    for (;;) {
-        int rc = fab_poll(d->node, now_us, &v);
-        if (rc < 0) return rc;
-        if (rc == 0) break;
-        n++;
-        d->polled++;
-        if (v.code != FAB_OK) d->refused_msgs++;
-    }
-    (void)fab_tick(d->node, now_us);
-    return n;
+    return fab_route_pump(d->node, now_us, &d->polled, &d->refused_msgs);
 }
 
 int fab_dispatch_pump(FabDispatch *d, uint64_t now_us) {
@@ -75,22 +68,21 @@ int fab_dispatch_run(void *ctx, const SrRouter *router, const SrRoute *route, ui
     if (!d || !d->node) return FAB_DX_ARG;
     pthread_mutex_lock(&d->mu);
     int rc;
-    if (!router || !route || !result || router->graph != d->node->cfg.catalog) {
-        rc = refuse(d, FAB_DX_ARG);
-        goto out;
+    if (!result) { rc = refuse(d, FAB_DX_ARG); goto out; }
+    /* Steps 1-3: fab_route.c (shared with the production coordinator). */
+    AienMachineId target;
+    switch (fab_route_check(d->node, router, route, now_us, &target, &d->polled, &d->refused_msgs)) {
+    case FAB_RT_OK: break;
+    case FAB_RT_ARG: rc = refuse(d, FAB_DX_ARG); goto out;
+    case FAB_RT_TRANSPORT: rc = refuse(d, FAB_DX_TRANSPORT); goto out;
+    case FAB_RT_ROUTE: rc = refuse(d, FAB_DX_ROUTE); goto out;
+    case FAB_RT_TARGET: rc = refuse(d, FAB_DX_TARGET); goto out;
+    default: rc = refuse(d, FAB_DX_NOT_MEMBER); goto out;
     }
-    if (pump_locked(d, now_us) < 0) { rc = refuse(d, FAB_DX_TRANSPORT); goto out; }
-    if (sr_route_check(router, route, now_us) != SR_E_REMOTE) { rc = refuse(d, FAB_DX_ROUTE); goto out; }
-    if (!route->target_known) { rc = refuse(d, FAB_DX_TARGET); goto out; }
-    JsHome home;
-    if (fab_home(d->node, &route->target, now_us, &home) != FAB_OK ||
-        home.locality != JS_HOME_REMOTE_OWNED) {
-        rc = refuse(d, FAB_DX_NOT_MEMBER);
-        goto out;
-    }
+    /* Step 4 (loopback stand-in only): the simulated machine's procedure table. */
     const FabExecutor *ex = NULL;
     for (uint32_t i = 0; i < d->n_exec && !ex; i++)
-        if (aien_mid_equal(&d->exec[i].machine, &route->target)) ex = &d->exec[i];
+        if (aien_mid_equal(&d->exec[i].machine, &target)) ex = &d->exec[i];
     const AgSkill *s = NULL;
     for (uint32_t i = 0; ex && i < ex->skills->n && !s; i++)
         if (ex->skills->skill[i].id == route->chosen.skill_id) s = &ex->skills->skill[i];
