@@ -1,4 +1,4 @@
-# DOCTRINE: OMEGA — The Sovereign Semantic Substrate
+# DOCTRINE: OMEGA: The Sovereign Semantic Substrate
 
 ```text
 Status:       RATIFIED FOR MILESTONE 4 (OMEGA_SEMANTICS)
