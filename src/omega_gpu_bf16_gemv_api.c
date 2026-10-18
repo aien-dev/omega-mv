@@ -94,6 +94,9 @@ void omega_gpu_bf16_shape_for(uint32_t k, uint32_t *rows, uint32_t *warps, uint3
     uint32_t ks = k / 256u, w = 16u, r = 1u, d = ks;
     while (d > 16u || ks % d || r * d > 16u) d--;
     if (k % (32u * w) || k > 512u * w) w = 32u;
+    /* Neither default fits (e.g. k 9728 = Qwen3-4B down): the smallest warp count the spec accepts. */
+    if (k % (32u * w) || k > 512u * w)
+        for (w = (k + 511u) / 512u; w <= 32u && k % (32u * w); w++) {}
     if (rows) *rows = g.rows ? g.rows : r;
     if (warps) *warps = g.warps ? g.warps : w;
     if (depth) *depth = g.depth ? g.depth : d;
