@@ -10,6 +10,7 @@
  * Verdict line last: "gpu_gdn_test: N checks, F failed: PASS|FAIL".
  */
 #include "omega_gpu_gdn_api.h"
+#include "omega_gpu_hostmath.h"
 #include "omega_gpu_session.h"
 #include "omega_gpu_cmdlist.h"
 #include "bw_warp_sim_k.h"
@@ -96,7 +97,7 @@ static void oracle_step(const Layer *L, DState *d, const Inp *in, float in_scale
     }
     for (unsigned h = 0; h < VH; h++) {
         const unsigned hk = h / (VH / KH);
-        const double negA = -(double)expf(L->a_log[h]); /* the API's float negA */
+        const double negA = -(double)(float)exp((double)L->a_log[h]); /* the API's float negA (double exp, rounded) */
         const double g = (double)(float)negA * softplus_ref((double)in->ab[2 * h] + L->dtb[h]);
         const double decay = exp(g), beta = sigm(in->ab[2 * h + 1]);
         double *S = d->state + (size_t)h * HD * HD, kv[HD], o[HD], dl[HD];
@@ -146,7 +147,11 @@ static void host_only(void) {
     uint8_t *blk = malloc(OMEGA_GDN_PAR_BYTES);
     CHECK(omega_gdn_pack_params(L.conv_w, L.a_log, L.dtb, L.nw, blk) == 0, "pack params");
     const float *sc = (const float *)(blk + OMEGA_GDN_PAR_SCAL);
-    CHECK(sc[2 * 5] == -expf(L.a_log[5]) && sc[2 * 5 + 1] == L.dtb[5], "negA and dt_bias interleaved");
+    CHECK(sc[2 * 5] == -(float)omega_hostmath_exp((double)L.a_log[5]) && sc[2 * 5 + 1] == L.dtb[5], "negA and dt_bias interleaved");
+    for (unsigned h = 0; h < VH; h++) { /* the libm-free exp agrees with libm to within one float ulp */
+        const float want = -(float)exp((double)L.a_log[h]), got = sc[2 * h];
+        CHECK(fabsf(got - want) <= fabsf(want) * 0x1p-23f, "negA head %u: %.9g vs libm %.9g", h, (double)got, (double)want);
+    }
     CHECK(memcmp(blk + OMEGA_GDN_PAR_NORM, L.nw, HD * 4) == 0, "norm weight at its offset");
     CHECK(omega_gdn_pack_params(NULL, L.a_log, L.dtb, L.nw, blk) == -1, "pack params refuses NULL");
     free(blk);
