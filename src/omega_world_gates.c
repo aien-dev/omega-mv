@@ -1760,15 +1760,36 @@ static bool test_m19_gate15_zero_libcuda(void) {
 }
 
 /* Gate 16: OMEGA_ACCEL_RESIDENT_CLEAN_CLONE_PASS */
+static void m19_clean_clone_why(const char *why) {
+    fprintf(stderr, "OMEGA_ACCEL_RESIDENT_CLEAN_CLONE: %s\n", why);
+}
+
+/* The clone lives in the sandbox's private /tmp and is gone after the run, so
+ * on failure the last lines of its logs go to stderr, which the evidence
+ * record keeps. */
+static void m19_clean_clone_tail(const char *path) {
+    char cmd[1400];
+    int n = snprintf(cmd, sizeof(cmd),
+                     "echo '--- %s (last 30 lines) ---' >&2; tail -n 30 '%s' >&2 2>/dev/null", path, path);
+    if (n < 0 || (size_t)n >= sizeof(cmd)) return;
+    if (system(cmd) != 0) { /* diagnostics only */ }
+}
+
 static bool test_m19_gate16_clean_clone(void) {
     char src_sha[41] = {0};
-    if (!m19_git_head(".", src_sha)) return false;
+    if (!m19_git_head(".", src_sha)) {
+        m19_clean_clone_why("git rev-parse HEAD failed in the source tree");
+        return false;
+    }
     const char *record = getenv("OMEGA_QUAL_RECORD");
     const char *candidate = getenv("OMEGA_M19R_CANDIDATE");
     if ((record && strcmp(record, "1") == 0) || candidate) {
         if (!candidate || strlen(candidate) != 40 ||
             strspn(candidate, "0123456789abcdefABCDEF") != 40 ||
-            strcmp(candidate, src_sha) != 0 || omega_evidence_tree_dirty()) return false;
+            strcmp(candidate, src_sha) != 0 || omega_evidence_tree_dirty()) {
+            m19_clean_clone_why("OMEGA_M19R_CANDIDATE is not this HEAD, or the tree is dirty");
+            return false;
+        }
     }
 
     if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) {
@@ -1777,14 +1798,23 @@ static bool test_m19_gate16_clean_clone(void) {
         return true;
     }
     if (omega_evidence_tree_dirty()) {
+        m19_clean_clone_why("source tree is dirty; git status --porcelain, first lines:");
+        if (system("git status --porcelain --untracked-files=normal 2>/dev/null | head -n 10 >&2") != 0) { /* diagnostics only */ }
         return false;
     }
     char clone_template[] = "/tmp/omega_clean_m19_XXXXXX";
     char *clone = mkdtemp(clone_template);
-    if (!clone) return false;
-    char checkout[512];
+    if (!clone) {
+        m19_clean_clone_why("mkdtemp /tmp/omega_clean_m19_XXXXXX failed");
+        return false;
+    }
+    char checkout[512], build_log[512], qual_log[512];
     int cl = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
     if (cl < 0 || (size_t)cl >= sizeof(checkout)) return false;
+    cl = snprintf(build_log, sizeof(build_log), "%s/build.log", clone);
+    if (cl < 0 || (size_t)cl >= sizeof(build_log)) return false;
+    cl = snprintf(qual_log, sizeof(qual_log), "%s/qualification.log", clone);
+    if (cl < 0 || (size_t)cl >= sizeof(qual_log)) return false;
 
     /* Resolve the PHYSICS_DIR this process runs with (omega_physics_dir.h), as an
      * absolute path, so the nested build (running from a different cwd)
@@ -1793,22 +1823,39 @@ static bool test_m19_gate16_clean_clone(void) {
     char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
     if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
         fprintf(stderr, "%s\n", physics_err);
+        m19_clean_clone_why("pinned PHYSICS_DIR could not be resolved");
         return false;
     }
 
+    /* The nested build keeps its log; -j is capped at the core count (an
+     * unbounded -j on the shared judge starts hundreds of compilers). */
     char command[4608];
     int len = snprintf(command, sizeof(command),
                        "git clone --quiet --no-hardlinks . %s && cd %s && git checkout --quiet %s && "
-                       "make clean >/dev/null 2>&1 && make -j PHYSICS_DIR=%s >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m19-gates >%s/qualification.log 2>&1",
-                       checkout, checkout, src_sha, physics_dir_resolved, clone);
+                       "make clean >%s 2>&1 && make -j$(nproc) PHYSICS_DIR=%s >>%s 2>&1 && "
+                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m19-gates >%s 2>&1",
+                       checkout, checkout, src_sha, build_log, physics_dir_resolved, build_log, qual_log);
     if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    if (system(command) != 0) return false;
+    int rc = system(command);
+    if (rc != 0) {
+        char why[160];
+        snprintf(why, sizeof(why), "clone, nested build or nested run failed (system() returned %d)", rc);
+        m19_clean_clone_why(why);
+        m19_clean_clone_tail(build_log);
+        m19_clean_clone_tail(qual_log);
+        return false;
+    }
 
     /* The built checkout must be exactly the named candidate revision. */
     char clone_sha[41] = {0};
-    if (!m19_git_head(checkout, clone_sha)) return false;
-    if (strcmp(clone_sha, src_sha) != 0) return false;
+    if (!m19_git_head(checkout, clone_sha)) {
+        m19_clean_clone_why("git rev-parse HEAD failed in the clone");
+        return false;
+    }
+    if (strcmp(clone_sha, src_sha) != 0) {
+        m19_clean_clone_why("the clone's HEAD is not the candidate revision");
+        return false;
+    }
 
     memcpy(m19_candidate_commit, src_sha, sizeof(m19_candidate_commit));
     return true;
