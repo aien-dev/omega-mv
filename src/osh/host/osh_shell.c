@@ -223,6 +223,9 @@ static void refusal(OshShell *sh, uint64_t code, int syntax)
     fprintf(stderr, "osh: %s: %s at byte %llu\n", syntax ? "syntax error" : "refused", nm, (unsigned long long)sh->w[OSH_S_ERR_OFF]);
     sh->s.last_status = 2;
     sh->refused++;
+#ifdef OSH_DIFF_TEST_HOOKS
+    if (sh->diff.on_refusal) sh->diff.on_refusal(sh->diff.ctx, code, sh->w[OSH_S_ERR_OFF]);
+#endif
 }
 
 /* expand and run the parsed list. Returns 1 when the shell must stop (exit builtin, interrupted, fault). */
@@ -239,6 +242,10 @@ static int run_list(OshShell *sh)
             uint64_t nc = w[OSH_REQUEST + 1];
             OshResult res;
             osh_exec_record(&sh->s, w + OSH_REQUEST, (size_t)(OSH_REQ_HDR_CELLS + nc * OSH_CMD_CELLS), w + OSH_OUT, (size_t)w[OSH_REQUEST + 4], &res);
+#ifdef OSH_DIFF_TEST_HOOKS
+            if (sh->diff.on_pipeline)
+                sh->diff.on_pipeline(sh->diff.ctx, w + OSH_REQUEST, (size_t)(OSH_REQ_HDR_CELLS + nc * OSH_CMD_CELLS), w + OSH_OUT, (size_t)w[OSH_REQUEST + 4], &res);
+#endif
             w[OSH_S_LAST_STATUS] = (uint64_t)(unsigned)sh->s.last_status;
             if (sh->s.exit_requested) return 1;
             if (res.killed_by_int) return 0;
@@ -318,3 +325,8 @@ int osh_shell_run_fd(OshShell *sh, int fd)
     LineSrc src = {NULL, 0, 0, fd, 0};
     return run_src(sh, &src);
 }
+
+#ifdef OSH_DIFF_TEST_HOOKS
+/* marker symbol: the build checks the shipped osh does NOT contain it (so no test hook is compiled into production) */
+int osh_diff_test_hooks_compiled(void) { return 1; }
+#endif

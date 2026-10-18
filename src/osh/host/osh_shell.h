@@ -11,6 +11,17 @@
 #include "osh_core.h"
 #include "osh_host.h"
 
+#ifdef OSH_DIFF_TEST_HOOKS
+/* TEST-ONLY (tests/osh/diff, omega#568): a read-only observer of every request record the core produced, the result the
+ * host gave it, and every core refusal. It receives const views only and cannot change the record, the result or the
+ * session. Compiled only with -DOSH_DIFF_TEST_HOOKS; `make test-osh-diff` checks the shipped osh does not contain it. */
+typedef struct {
+    void (*on_pipeline)(void *ctx, const uint64_t *rec, size_t nrec, const uint64_t *out, size_t nout, const OshResult *res);
+    void (*on_refusal)(void *ctx, uint64_t code, uint64_t offset);
+    void *ctx;
+} OshDiffHooks;
+#endif
+
 typedef struct {
     OshCore core;
     OshSession s;
@@ -23,6 +34,9 @@ typedef struct {
     uint8_t *buf;        /* bytes of the list in progress */
     size_t blen, bcap;
     unsigned long lists, refused;
+#ifdef OSH_DIFF_TEST_HOOKS
+    OshDiffHooks diff;   /* TEST-ONLY observer, all NULL unless a test sets it */
+#endif
 } OshShell;
 
 /* Compile the units (embedded sources) and set up the session from envp. 0 ok, else -1 with a message on stderr. */
