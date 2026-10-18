@@ -49,6 +49,9 @@ pin() {
   ) 9>"$PINS/.$name.lock"
   obs "pin_${name//-/_}" "\"$sha\""
 }
+# Every step that builds against physics takes the commit from physics.lock, never a literal:
+# the Makefile's check-physics-lock refuses any other commit, so a literal here goes red on
+# the next lock bump (it did for e95e3ed -> 6d7cf0d4, omega#508; omega#523 needs the next bump).
 physics_pin() { pin physics-src physics "$(lock physics.lock)"; export PHYSICS_DIR="$PINS/physics-src"; }
 aienos_pin()  { pin aienos-src aienos "$(lock aienos.lock)"; export AIENOS_R7_DIR="$PINS/aienos-src"; export AIENOS_COMMIT="$(lock aienos.lock)"; }
 argus_pin()   { pin aienos-argus aienos "$(lock argus.lock)"; export ARGUS_REPO="$PINS/aienos-argus"; }
@@ -113,7 +116,7 @@ case "$step" in
   compiler)           make $NOPHYS test-compiler-quick; make $NOPHYS test-compiler-full ;;
   one-layer-acceptance) make $NOPHYS test-one-layer-acceptance ;;
   physics0)           make $NOPHYS physics0-test ;;
-  chip-tool-selftests) for t in test-m19r-qualify test-gate14-combine test-window-lane-guard test-unwritten-trap-host test-ldst-host; do make $NOPHYS $t; done ;;
+  chip-tool-selftests) for t in test-m19r-qualify test-gate14-combine test-gate-physics-pin test-window-lane-guard test-unwritten-trap-host test-ldst-host; do make $NOPHYS $t; done ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;
@@ -162,8 +165,7 @@ case "$step" in
     ;;
   # rx-host.yml
   rx-host-reference)
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_COMMIT=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    physics_pin; export PHYSICS_COMMIT="$(lock physics.lock)"
     aienos_pin; set -o pipefail; mkdir -p build
     make test-r3 test-r7 test-r16-operator-authority-misuse test-r8 test-r9 test-r12 test-rx-emergency test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-cortex test-jspace-prod test-composition test-composition-attach-asan test-composition-gate test-fabric test-fabric-living
     make test-machine-identity
@@ -191,8 +193,7 @@ case "$step" in
     tools/rx_host_receipts.sh generation "$generation" "$OMEGA_CANDIDATE_COMMIT"
     ;;
   faculty-arm)
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    physics_pin
     aienos_pin; argus_pin; set -o pipefail; mkdir -p build
     make OUT_DIR=build/pid $NOPHYS test-program-id
     make OUT_DIR=build/prz $NOPHYS test-program-realize
@@ -226,8 +227,7 @@ case "$step" in
   # rx-host.yml chip-only-declared and spark-only targets (SKIP on GitHub, never a pass there)
   chip:*|spark:*)
     t="${step#*:}"
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    physics_pin
     aienos_pin; argus_pin
     make "$t"
     ;;
