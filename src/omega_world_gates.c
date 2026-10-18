@@ -58,7 +58,7 @@ static bool m19_git_head(const char *repo_dir, char out[41]) {
     /* No shell (omega#565): git gets the directory as an argument. */
     char line[64];
     char *argv[] = {"git", "-C", (char *)repo_dir, "rev-parse", "HEAD", NULL};
-    if (!omega_cc_capture_line(NULL, argv, line, sizeof(line))) return false;
+    if (!omega_cc_capture_line(NULL, "git", argv, line, sizeof(line))) return false;
     if (strlen(line) != 40) return false;
     memcpy(out, line, 41);
     return true;
@@ -1838,11 +1838,12 @@ static bool test_m19_gate16_clean_clone(void) {
     char *make_argv[] = {"make", "-j", physics_arg, NULL};
     char *run_argv[] = {"./build/omegatool", "--run-m19-gates", NULL};
     const char *step = "git clone";
-    int rc = omega_cc_run(NULL, clone_argv, NULL, false);
-    if (rc == 0) { step = "git checkout"; rc = omega_cc_run(checkout, checkout_argv, NULL, false); }
-    if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, clean_argv, NULL, false); }
-    if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, make_argv, NULL, false); }
-    if (rc == 0) { step = "omegatool --run-m19-gates"; rc = omega_cc_run(checkout, run_argv, log_path, true); }
+    int rc = omega_cc_run(NULL, "git", clone_argv, NULL, false);
+    if (rc == 0) { step = "git checkout"; rc = omega_cc_run(checkout, "git", checkout_argv, NULL, false); }
+    if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, "make", clean_argv, NULL, false); }
+    if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, "make", make_argv, NULL, false); }
+    /* The log sits beside the checkout: <clone>/qualification.log. */
+    if (rc == 0) { step = "omegatool --run-m19-gates"; rc = omega_cc_run(checkout, "./build/omegatool", run_argv, "../qualification.log", true); }
     if (rc != 0) {
         fprintf(stderr, "M19 clean clone failed at %s (rc %d); log: %s\n", step, rc, log_path);
         m19_clean_clone_remove_checkout(checkout);

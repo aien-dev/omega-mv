@@ -1052,7 +1052,7 @@ static bool test_m18_gate16_clean_clone(void) {
     }
     char root[PATH_MAX], checkout[PATH_MAX], log_path[PATH_MAX], physics_arg[PATH_MAX + 16];
     char *git_top[] = {"git", "rev-parse", "--show-toplevel", NULL};
-    if (!omega_cc_capture_line(NULL, git_top, root, sizeof(root))) {
+    if (!omega_cc_capture_line(NULL, "git", git_top, root, sizeof(root))) {
         fprintf(stderr, "M18 clean clone: git rev-parse --show-toplevel failed\n");
         (void)rmdir(clone);
         return false;
@@ -1070,10 +1070,11 @@ static bool test_m18_gate16_clean_clone(void) {
     char *make_argv[] = {"make", "-j", physics_arg, NULL};
     char *run_argv[] = {"./build/omegatool", "--run-m18-gates", NULL};
     const char *step = "cp";
-    int rc = omega_cc_run(NULL, cp_argv, NULL, false);
-    if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, clean_argv, NULL, false); }
-    if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, make_argv, NULL, false); }
-    if (rc == 0) { step = "omegatool --run-m18-gates"; rc = omega_cc_run(checkout, run_argv, log_path, true); }
+    int rc = omega_cc_run(NULL, "cp", cp_argv, NULL, false);
+    if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, "make", clean_argv, NULL, false); }
+    if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, "make", make_argv, NULL, false); }
+    /* The log sits beside the checkout: <clone>/clean_clone_m18.log. */
+    if (rc == 0) { step = "omegatool --run-m18-gates"; rc = omega_cc_run(checkout, "./build/omegatool", run_argv, "../clean_clone_m18.log", true); }
     if (rc != 0) fprintf(stderr, "M18 clean clone failed at %s (rc %d); log: %s\n", step, rc, log_path);
     m18_clean_clone_remove_checkout(clone);
     return (rc == 0);

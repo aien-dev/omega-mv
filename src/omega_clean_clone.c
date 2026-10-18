@@ -24,14 +24,18 @@ bool omega_cc_path_is_plain(const char *s) {
 }
 
 /* Child side: environment, directory, output, then exec. Never returns. */
-static void cc_child(const char *dir, char *const argv[], int out_fd, bool in_clean_clone) {
+static void cc_child(const char *dir, const char *prog, char *const argv[], const char *out_rel, bool in_clean_clone) {
     if (unsetenv("OUT_DIR") != 0) _exit(127);
     if (in_clean_clone && setenv("OMEGA_IN_CLEAN_CLONE", "1", 1) != 0) _exit(127);
     if (dir && chdir(dir) != 0) _exit(127);
+    /* Opened after chdir: the name is fixed by the caller, never built from a path. */
+    int out_fd = out_rel ? open(out_rel, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0644)
+                         : open("/dev/null", O_WRONLY | O_CLOEXEC);
+    if (out_fd < 0) _exit(126);
     if (dup2(out_fd, STDOUT_FILENO) < 0) _exit(127);
     if (dup2(out_fd, STDERR_FILENO) < 0) _exit(127);
     if (out_fd != STDOUT_FILENO && out_fd != STDERR_FILENO) close(out_fd);
-    execvp(argv[0], argv);
+    execvp(prog, argv);
     _exit(127);
 }
 
@@ -45,24 +49,17 @@ static int cc_wait(pid_t pid) {
     return -1;
 }
 
-int omega_cc_run(const char *dir, char *const argv[], const char *out_path, bool in_clean_clone) {
-    if (!argv || !argv[0]) return -1;
-    int out_fd = out_path ? open(out_path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644)
-                          : open("/dev/null", O_WRONLY | O_CLOEXEC);
-    if (out_fd < 0) return -1;
+int omega_cc_run(const char *dir, const char *prog, char *const argv[], const char *out_rel, bool in_clean_clone) {
+    if (!prog || !argv || !argv[0]) return -1;
     fflush(NULL);
     pid_t pid = fork();
-    if (pid < 0) {
-        close(out_fd);
-        return -1;
-    }
-    if (pid == 0) cc_child(dir, argv, out_fd, in_clean_clone);
-    close(out_fd);
+    if (pid < 0) return -1;
+    if (pid == 0) cc_child(dir, prog, argv, out_rel, in_clean_clone);
     return cc_wait(pid);
 }
 
-bool omega_cc_capture_line(const char *dir, char *const argv[], char *out, size_t out_size) {
-    if (!argv || !argv[0] || !out || out_size == 0) return false;
+bool omega_cc_capture_line(const char *dir, const char *prog, char *const argv[], char *out, size_t out_size) {
+    if (!prog || !argv || !argv[0] || !out || out_size == 0) return false;
     out[0] = '\0';
     int fds[2];
     if (pipe2(fds, O_CLOEXEC) != 0) return false;
@@ -84,7 +81,7 @@ bool omega_cc_capture_line(const char *dir, char *const argv[], char *out, size_
         if (dir && chdir(dir) != 0) _exit(127);
         if (dup2(fds[1], STDOUT_FILENO) < 0) _exit(127);
         if (dup2(err_fd, STDERR_FILENO) < 0) _exit(127);
-        execvp(argv[0], argv);
+        execvp(prog, argv);
         _exit(127);
     }
     close(fds[1]);
