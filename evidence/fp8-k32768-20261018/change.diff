@@ -1,0 +1,126 @@
+diff --git a/src/omega_blackwell_codegen_moe.h b/src/omega_blackwell_codegen_moe.h
+index 4140f2fc..97bdcbff 100644
+--- a/src/omega_blackwell_codegen_moe.h
++++ b/src/omega_blackwell_codegen_moe.h
+@@ -59,7 +59,7 @@ extern "C" {
+ #define OMEGA_FP8_X_EXP 64      /* x' = x * 2^64 (host, exact) */
+ #define OMEGA_FP8_SCALE_EXP 56  /* S' = S * 2^56 (host, exact for every finite bf16 scale below 2^72) */
+ #define OMEGA_FP8_BLOCK 128u    /* scale block (rows and columns) */
+-#define OMEGA_FP8_MAX_K 16384u
++#define OMEGA_FP8_MAX_K 32768u /* the step kernel and the tensor-core kernel loop over k; 17408 is the Qwen3.8-27B down_proj (omega#541) */
+ #define OMEGA_FP8_MAX_GROUPS 64u /* group table entries per launch buffer (8 experts today) */
+ 
+ /* argument word offsets */
+diff --git a/src/omega_blackwell_codegen_tc.c b/src/omega_blackwell_codegen_tc.c
+index 1b7f55df..6b5f14f9 100644
+--- a/src/omega_blackwell_codegen_tc.c
++++ b/src/omega_blackwell_codegen_tc.c
+@@ -40,7 +40,7 @@ int omega_blackwell_codegen_tc_probe_prog(int mutant, BlackwellIRProgram *prog)
+ 
+ int omega_tcgemm_spec_ok(const OmegaTcGemmSpec *s) {
+     if (!s) return 0;
+-    if (s->k < 128u || s->k > 16384u || s->k % 128u) return 0;
++    if (s->k < 128u || s->k > OMEGA_TCGEMM_MAX_K || s->k % 128u) return 0;
+     if (s->rt != 1 && s->rt != 2 && s->rt != 4) return 0;
+     if (s->ct != 1 && s->ct != 2 && s->ct != 4) return 0;
+     if (s->rt * s->ct < 4u) return 0; /* >= 4 independent HMMAs between dependent ones (8 cycles each, nvcc's 29-cycle rule) */
+diff --git a/src/omega_blackwell_codegen_tc.h b/src/omega_blackwell_codegen_tc.h
+index cc5c8e56..b1374ef5 100644
+--- a/src/omega_blackwell_codegen_tc.h
++++ b/src/omega_blackwell_codegen_tc.h
+@@ -48,8 +48,9 @@ int omega_blackwell_codegen_tc_probe_prog(int mutant, BlackwellIRProgram *prog);
+  * Grid: grid_x = n / (warps * 8 * ct) (exact), grid_y = tiles. CTA: 32 * warps threads; shared 2 * 16 * rt * 128 bytes.
+  * mutant (tests only): 1 drops the block scale, 2 never advances the scale pointer, 3 row tile i reads tile i^1 (rt >= 2),
+  * 4 drops the last 64-element chunk of every 128 block. Each must be caught. */
++#define OMEGA_TCGEMM_MAX_K 32768u /* the K loop runs KB = k / 128 iterations; nothing else grows with k (omega#541) */
+ typedef struct {
+-    uint32_t k;     /* multiple of 128, 128 .. 16384 */
++    uint32_t k;     /* multiple of 128, 128 .. OMEGA_TCGEMM_MAX_K */
+     uint32_t rt;    /* row tiles (16 rows) per CTA: 1, 2 or 4 */
+     uint32_t ct;    /* column tiles (8 weight rows) per warp: 1, 2 or 4; rt * ct >= 4 */
+     uint32_t warps; /* 1, 2, 4 or 8; (16 * rt * 8) % (32 * warps) == 0 */
+diff --git a/tests/gpu_fp8_api_test.c b/tests/gpu_fp8_api_test.c
+index bec0db1b..bb9a9c1d 100644
+--- a/tests/gpu_fp8_api_test.c
++++ b/tests/gpu_fp8_api_test.c
+@@ -156,7 +156,7 @@ static void host_only(void) {
+       CHECK(o[0] == ldexpf(1.0f, 64) && o[1] == ldexpf(-2.0f, 64) && o[3] == 0.0f, "x fold exact"); }
+ 
+     /* 3. codegen: every shape builds inside the budgets; refusals */
+-    static const uint32_t ks[] = { 128, 256, 768, 2048, 4096, 16384 };
++    static const uint32_t ks[] = { 128, 256, 768, 2048, 4096, 16384, 17408, 32768 };
+     static const uint32_t lbs[] = { 8, 16 }, rows[] = { 1, 2, 4, 8 };
+     uint32_t worst_insns = 0, worst_gprs = 0; int built = 0;
+     for (size_t a = 0; a < sizeof ks / sizeof ks[0]; a++) for (size_t b = 0; b < 2; b++) for (size_t c = 0; c < 4; c++) for (int m = 0; m <= 3; m++) for (int deep = 0; deep < 2; deep++) {
+@@ -175,7 +175,7 @@ static void host_only(void) {
+       bad.k = 2048; bad.rows = 3; CHECK(omega_fp8_gemv_prog_stats(&bad, NULL, NULL) != 0, "rows 3 refused");
+       bad.rows = 8; bad.warps = 33; CHECK(omega_fp8_gemv_prog_stats(&bad, NULL, NULL) != 0, "warps 33 refused");
+       bad.warps = 8; bad.lane_bytes = 32; CHECK(omega_fp8_gemv_prog_stats(&bad, NULL, NULL) != 0, "lane_bytes 32 refused");
+-      bad.lane_bytes = 16; bad.k = 32768; CHECK(omega_fp8_gemv_prog_stats(&bad, NULL, NULL) != 0, "k past the limit refused"); }
++      bad.lane_bytes = 16; bad.k = OMEGA_FP8_MAX_K + 512u; CHECK(omega_fp8_gemv_prog_stats(&bad, NULL, NULL) != 0, "k past the limit refused"); }
+     /* Register file (chip-found 2026-10-13): 32 * warps * declared registers must be <= 65536; the API refuses the launch.
+      * The deep k=2048 kernel at 32 warps (72 declared x 1024 threads = 73728) faulted on the chip with Xid 13. */
+     { OmegaFp8GemvSpec deep = { .k = 2048, .lane_bytes = 16, .rows = 1, .warps = 32, .depth = 4 }; uint32_t gp = 0;
+@@ -192,7 +192,7 @@ static void host_only(void) {
+     { OmegaGpuFp8Tensor *t = NULL; uint8_t w[128 * 128]; uint16_t s[1] = { bf16_of(1.0f) }; memset(w, 0x38, sizeof w);
+       CHECK(omega_gpu_fp8_tensor_upload(1, 128, 128, NULL, s, &t) == OMEGA_GPU_FP8_BAD_ARGS, "NULL w refused");
+       CHECK(omega_gpu_fp8_tensor_upload(1, 100, 128, w, s, &t) == OMEGA_GPU_FP8_BAD_ARGS, "n not a multiple of 128 refused");
+-      CHECK(omega_gpu_fp8_tensor_upload(1, 128, 32768, w, s, &t) == OMEGA_GPU_FP8_TOO_LARGE, "k past the limit refused");
++      CHECK(omega_gpu_fp8_tensor_upload(1, 128, OMEGA_FP8_MAX_K + 256u, w, s, &t) == OMEGA_GPU_FP8_TOO_LARGE, "k past the limit refused");
+       w[77] = 0xff; CHECK(omega_gpu_fp8_tensor_upload(1, 128, 128, w, s, &t) == OMEGA_GPU_FP8_NAN_WEIGHT && t == NULL, "NaN weight refused before any device work");
+       CHECK(strstr(omega_gpu_fp8_last_error(), "byte 77") != NULL, "error names the byte (%s)", omega_gpu_fp8_last_error());
+       float y[8]; CHECK(omega_gpu_fp8_gemv_f32(NULL, 0, y, y, NULL) == OMEGA_GPU_FP8_BAD_ARGS, "NULL tensor refused"); }
+@@ -336,6 +336,7 @@ static void sim_battery(uint32_t cta_budget) {
+         { 6, 256, 768, 8, 8, 8, 4, 8, "8 groups per-group x, repeated ids (down)" },
+         { 3, 128, 256, 2, 2, 8, 8, 4, "2 groups per-group x" },
+         { 2, 256, 768, 2, 2, 8, 1, 7, "k768 w7: partial staging round (deep)" },
++        { 1, 128, 17408, 1, 1, 16, 2, 8, "k17408 lb16 r2 w8 (Qwen3.8-27B down width, step kernel)" },
+     };
+     const size_t npts = sizeof pts / sizeof pts[0];
+     double worst_all = 0.0;
+@@ -469,6 +470,15 @@ static int chip_run(const char *out_path, uint32_t reps) {
+         { 8, 2048, 768, 8, 8, "8 experts down per-group x", 1 },
+         { 16, 1536, 2048, 8, 1, "8 of 16 experts gate+up", 1 },
+         { 1, 16384, 2048, 1, 1, "large 16384x2048", 1 },
++        /* Qwen3.8-27B dense shapes (omega#541) and the new width cap */
++        { 1, 17408, 5120, 1, 1, "q38 gate 17408x5120", 1 },
++        { 1, 5120, 17408, 1, 1, "q38 down 5120x17408", 1 },
++        { 1, 12288, 5120, 1, 1, "q38 q_proj 12288x5120", 1 },
++        { 1, 1024, 5120, 1, 1, "q38 k_proj 1024x5120", 1 },
++        { 1, 10240, 5120, 1, 1, "q38 in_proj_qkv 10240x5120", 1 },
++        { 1, 6144, 5120, 1, 1, "q38 in_proj_z 6144x5120", 1 },
++        { 1, 5120, 6144, 1, 1, "q38 out_proj 5120x6144", 1 },
++        { 1, 256, 32768, 1, 1, "width cap 256x32768", 1 },
+     };
+     /* 0. one-hot conversion on the chip: row r holds code r at column 0 (NaN codes as 0x00), x = e_0, scale 1.
+      *    y[r] must equal the reference bit for bit. The e4m3 subnormal codes 0x01..0x07 (and negatives) travel
+diff --git a/tests/gpu_tcgemm_test.c b/tests/gpu_tcgemm_test.c
+index aaddd094..dfc43adc 100644
+--- a/tests/gpu_tcgemm_test.c
++++ b/tests/gpu_tcgemm_test.c
+@@ -112,6 +112,7 @@ static int host_only(void) {
+     /* production shapes: instructions and registers (declared = peak + 2 rounded to 8 <= 128; 32 * warps * declared <= 65536) */
+     static const OmegaTcGemmSpec shapes[] = {
+         { 2048, 4, 2, 8, 0 }, { 768, 4, 2, 8, 0 }, { 4096, 4, 2, 8, 0 }, { 2048, 4, 1, 8, 0 }, { 2048, 2, 2, 4, 0 }, { 2048, 4, 2, 4, 0 }, { 768, 4, 2, 4, 0 },
++        { 5120, 4, 2, 8, 0 }, { 17408, 4, 2, 8, 0 }, { 32768, 4, 2, 8, 0 }, /* Qwen3.8-27B widths and the new cap (omega#541) */
+     };
+     static BlackwellIRProgram prog;
+     for (size_t i = 0; i < sizeof shapes / sizeof shapes[0]; i++) {
+@@ -181,6 +182,7 @@ static int sim_tests(void) {
+         { 2, 256, 256, 20, 7, 0, { 256, 4, 1, 8, 0 } },
+         { 2, 128, 256, 33, 5, 1, { 256, 1, 4, 4, 0 } },
+         { 1, 512, 256, 64, 64, 0, { 256, 4, 2, 8, 0 } },  /* dense: one expert, four CTAs across n */
++        { 1, 128, 17408, 64, 64, 0, { 17408, 4, 2, 8, 0 } }, /* Qwen3.8-27B down width (omega#541) */
+     };
+     for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
+         Prob p; prob_make(&p, pts[i].E, pts[i].n, pts[i].k, pts[i].M, pts[i].xr, pts[i].skew);
+@@ -271,6 +273,9 @@ int chip_tests(int argc, char **argv) {
+     uint32_t E, n, k;
+     if (!strcmp(shape, "gateup")) { E = 128; n = 1536; k = 2048; } else if (!strcmp(shape, "down")) { E = 128; n = 2048; k = 768; }
+     else if (!strcmp(shape, "qkv")) { E = 1; n = 5120; k = 2048; } else if (!strcmp(shape, "o")) { E = 1; n = 2048; k = 4096; }
++    /* Qwen3.8-27B dense shapes (omega#541): MLP gate or up, down (k 17408), DeltaNet in_proj_qkv, out_proj / o_proj */
++    else if (!strcmp(shape, "q38gate")) { E = 1; n = 17408; k = 5120; } else if (!strcmp(shape, "q38down")) { E = 1; n = 5120; k = 17408; }
++    else if (!strcmp(shape, "q38qkv")) { E = 1; n = 10240; k = 5120; } else if (!strcmp(shape, "q38o")) { E = 1; n = 5120; k = 6144; }
+     else { printf("unknown shape %s\n", shape); return 1; }
+     const uint32_t M = E == 1 ? tokens : tokens * 8u;
+     if (reps > 64) reps = 64;
