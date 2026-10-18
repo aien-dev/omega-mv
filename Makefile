@@ -205,6 +205,12 @@ test-chipwait-campaign:
 test-gate14-combine:
 	tools/test_gate14_combine.sh
 
+# Host-only self-test of the gate physics pins (omega#523): every tests/gates/run.sh step
+# that builds against physics takes physics.lock, and its gate lists physics.lock as an input.
+.PHONY: test-gate-physics-pin
+test-gate-physics-pin:
+	tools/test_gate_physics_pin.sh
+
 # Host-only self-test of the E1 closure combiner (tools/e1_combine.sh): good
 # synthetic constituent set accepted, every hostile mutant refused. No GPU.
 .PHONY: test-e1-combine

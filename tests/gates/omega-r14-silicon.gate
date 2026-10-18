@@ -13,6 +13,7 @@ inputs:
   - tools/
   - aienos.lock
   - argus.lock
+  - physics.lock
   - tests/gates/
 run:
   exec: tests/gates/run.sh
