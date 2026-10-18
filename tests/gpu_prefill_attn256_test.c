@@ -163,24 +163,37 @@ static size_t parity(const Case *c, const uint16_t *kn, const uint16_t *vn, cons
     return bad;
 }
 /* the rows the kernel appended (K permuted, V model order; [4][256] per token at kchip/vchip + t * 1024 words) against
- * the reference rows: v exact, k within one bf16 ulp on at most 32 elements per token */
+ * the reference rows: v exact, k as below */
+static float bf16f(uint16_t h) { uint32_t u = (uint32_t)h << 16; float f; memcpy(&f, &u, 4); return f; }
+/* K rows: chip == ref, or one bf16 ulp apart (at most 32 per token), or, for a value left small by the rotation's
+ * cancellation (x1 cos - x2 sin), within 8 f32 roundings of the head row's largest |k| (8 * 2^-24 * rowmax): the
+ * chip rotates in f32, the oracle in double, and a 3-ulp gap at 7e-6 in a row of O(1) values is f32 rounding, not a
+ * kernel error (seen at 30720+2048 and 129024+2048 on 2026-10-18; the rows were bit-equal to the decode program's). */
 static int rows_ok(const Case *c, const uint16_t *kchip, const uint16_t *vchip, const uint16_t *kn, const uint16_t *vn, char *why, size_t n) {
-    unsigned flips = 0, worst_tok = 0;
+    unsigned flips = 0, worst_tok = 0, small = 0;
     for (size_t t = 0; t < c->m; t++) {
         unsigned tf = 0;
-        for (unsigned g = 0; g < KVH; g++) for (unsigned i = 0; i < HD; i++) {
-            size_t ci = (t * KVH + g) * HD + i, ri = (t * KVH + g) * HD + omega_dattn256_perm_slot(i, c->rotary);
-            if (vchip[ci] != vn[ci]) { snprintf(why, n, "token %zu v[%u][%u] chip %04x ref %04x", t, g, i, vchip[ci], vn[ci]); return 0; }
-            if (kchip[ci] != kn[ri]) { int d = (int)kchip[ci] - (int)kn[ri]; if (d < -1 || d > 1) { snprintf(why, n, "token %zu k[%u] slot %u chip %04x ref %04x", t, g, i, kchip[ci], kn[ri]); return 0; } tf++; }
+        for (unsigned g = 0; g < KVH; g++) {
+            float rowmax = 0;
+            for (unsigned i = 0; i < HD; i++) { float a = fabsf(bf16f(kn[(t * KVH + g) * HD + i])); if (a > rowmax) rowmax = a; }
+            for (unsigned i = 0; i < HD; i++) {
+                size_t ci = (t * KVH + g) * HD + i, ri = (t * KVH + g) * HD + omega_dattn256_perm_slot(i, c->rotary);
+                if (vchip[ci] != vn[ci]) { snprintf(why, n, "token %zu v[%u][%u] chip %04x ref %04x", t, g, i, vchip[ci], vn[ci]); return 0; }
+                if (kchip[ci] == kn[ri]) continue;
+                int d = (int)kchip[ci] - (int)kn[ri];
+                if (d >= -1 && d <= 1) { tf++; continue; }
+                if (fabsf(bf16f(kchip[ci]) - bf16f(kn[ri])) <= 8.0f * 0x1p-24f * rowmax) { small++; continue; }
+                snprintf(why, n, "token %zu k[%u] slot %u chip %04x ref %04x (row max %.3g)", t, g, i, kchip[ci], kn[ri], (double)rowmax);
+                return 0;
+            }
         }
         if (tf > 32) { snprintf(why, n, "token %zu: %u one-ulp k flips", t, tf); return 0; }
         if (tf > worst_tok) worst_tok = tf;
         flips += tf;
     }
-    snprintf(why, n, "ok (%u one-ulp k flips, worst token %u)", flips, worst_tok);
+    snprintf(why, n, "ok (%u one-ulp k flips, worst token %u; %u small-value k gaps within 8 f32 roundings of the row max)", flips, worst_tok, small);
     return 1;
 }
-
 /* ------------------------------------------------------------- host only */
 static void host_only(void) {
     for (int m = 0; m <= 2; m++) {
@@ -222,6 +235,7 @@ static void host_only(void) {
 
 /* ------------------------------------------------------------- simulator */
 static uint64_t g_sim_issues;
+static uint32_t g_poison;   /* --poison SEED: registers start as junk in every simulated CTA (tests/bw_warp_sim_pa.h reg_poison) */
 typedef struct {
     const Case *c;
     uint8_t *kv; size_t plane;
@@ -234,7 +248,7 @@ static int sim_decode_launch(const BlackwellIRProgram *prog, const SimBufs *b, u
                              void *out, size_t out_bytes, float *part, size_t part_bytes, uint32_t *cnt, uint32_t splits, int order, char *msg, size_t n) {
     static uint8_t smem[OMEGA_DATTN256_SHARED_BYTES];
     WsSim s; memset(&s, 0, sizeof s);
-    s.p = prog; s.threads = 256; s.order = order; s.smem = smem; s.smem_bytes = sizeof smem;
+    s.p = prog; s.threads = 256; s.order = order; s.reg_poison = g_poison; s.smem = smem; s.smem_bytes = sizeof smem;
     cb64(&s, OMEGA_DATTN256_ARG_QKV, qkv_k); cb64(&s, OMEGA_DATTN256_ARG_KC, b->kv); cb64(&s, OMEGA_DATTN256_ARG_VC, b->kv + b->plane);
     cb64(&s, OMEGA_DATTN256_ARG_ROPE, b->rope); cb64(&s, OMEGA_DATTN256_ARG_QN, b->norms); cb64(&s, OMEGA_DATTN256_ARG_KN, b->norms + HD);
     cb64(&s, OMEGA_DATTN256_ARG_OUT, out); cb64(&s, OMEGA_DATTN256_ARG_PART, part); cb64(&s, OMEGA_DATTN256_ARG_CNT, cnt);
@@ -260,7 +274,7 @@ static int sim_attend_launch(const BlackwellIRProgram *prog, const SimBufs *b, c
     static uint8_t smem[OMEGA_PATTN256_SHARED_BYTES];
     const Case *c = b->c;
     WsSim s; memset(&s, 0, sizeof s);
-    s.p = prog; s.threads = OMEGA_PATTN256_THREADS; s.order = order; s.smem = smem; s.smem_bytes = sizeof smem;
+    s.p = prog; s.threads = OMEGA_PATTN256_THREADS; s.order = order; s.reg_poison = g_poison; s.smem = smem; s.smem_bytes = sizeof smem;
     cb64(&s, OMEGA_PATTN256_ARG_QF, qf); cb64(&s, OMEGA_PATTN256_ARG_KC, b->kv); cb64(&s, OMEGA_PATTN256_ARG_VC, b->kv + b->plane); cb64(&s, OMEGA_PATTN256_ARG_OUT, out);
     s.cbank[OMEGA_PATTN256_ARG_POS0 / 4] = c->pos0; s.cbank[OMEGA_PATTN256_ARG_MC / 4] = c->m; s.cbank[OMEGA_PATTN256_ARG_KV_STRIDE / 4] = c->max_pos * RB;
     cbf(&s, OMEGA_PATTN256_ARG_OUT_SCALE, 1.0f);
@@ -537,6 +551,14 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--host-only")) host = 1;
         else if (!strcmp(argv[i], "--sim")) sim = 1;
+        else if (!strcmp(argv[i], "--poison") && i + 1 < argc) g_poison = (uint32_t)strtoul(argv[++i], NULL, 0);
+        else if (!strcmp(argv[i], "--sim-point") && i + 3 < argc) {   /* one simulator point: MAX_POS POS0 M */
+            uint32_t a = (uint32_t)atoi(argv[i + 1]), b = (uint32_t)atoi(argv[i + 2]), m = (uint32_t)atoi(argv[i + 3]); i += 3;
+            char msg[400]; double worst = 0; size_t bad = 0; double t0 = now_ms();
+            int err = sim_point(a, b, m, 64, 1.0f, 77, 1, 0, 0, msg, sizeof msg, &worst, &bad);
+            CHECK(err == 0 && bad == 0, "sim point %u+%u (max_pos %u): %s", b, m, a, msg);
+            printf("sim point %u tokens from %u (max_pos %u): %s %s (%.1f s)\n", m, b, a, err ? "ERROR" : bad ? "MISMATCH" : "ok", msg, (now_ms() - t0) / 1e3);
+            host = 1; }
         else if (!strcmp(argv[i], "--quick")) quick = 1;
         else if (!strcmp(argv[i], "--timing-only")) timing_only = 1;
         else if (!strcmp(argv[i], "--reps") && i + 1 < argc) reps = atoi(argv[++i]);

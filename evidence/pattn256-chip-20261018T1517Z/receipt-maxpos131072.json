@@ -1,0 +1,6 @@
+{"test": "gpu_prefill_attn256", "rotary_dim": 64, "points": [
+  {"pos0": 0, "m": 2048, "max_pos": 4096, "reps": 5, "prep_ns": 1942474, "attend_ns": 9989011, "call_ns": 23974698, "attend_useful_flops": 51564773376, "attend_kv_bytes": 1082130432, "parity_bad": 0, "parity_worst_ratio": 0.1755},
+  {"pos0": 6144, "m": 2048, "max_pos": 8192, "reps": 5, "prep_ns": 1937178, "attend_ns": 38489524, "call_ns": 51604343, "attend_useful_flops": 360802418688, "attend_kv_bytes": 7524581376, "parity_bad": 0, "parity_worst_ratio": 0.0122},
+  {"pos0": 30720, "m": 2048, "max_pos": 32768, "reps": 5, "prep_ns": 1968362, "attend_ns": 150496801, "call_ns": 167198679, "attend_useful_flops": 1597752999936, "attend_kv_bytes": 33294385152, "parity_bad": 0, "parity_worst_ratio": 0.0073},
+  {"pos0": 129024, "m": 2048, "max_pos": 131072, "reps": 5, "prep_ns": 1959146, "attend_ns": 591289547, "call_ns": 606530682, "attend_useful_flops": 6545555324928, "attend_kv_bytes": 136373600256, "parity_bad": 0, "parity_worst_ratio": 0.0026}
+], "checks": 50, "failed": 0}

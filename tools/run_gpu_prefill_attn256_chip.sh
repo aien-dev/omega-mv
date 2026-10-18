@@ -5,6 +5,7 @@
 # Caller holds the GB10 lock: flock /tmp/aien-gb10.lock tools/run_gpu_prefill_attn256_chip.sh EVID
 #   0. host proofs first (never hardware results): --host-only (codegen budgets, refusals, layout, reference sanity) and
 #      --sim (warp-simulator parity on 7 points, rows bit-equal to the decode program, mutants)
+#      and the encoder control-word check (tests/bw_encode_control_test.c: every opcode carries its scheduled waits)
 #   1. baseline: the already-proven decode attention chip test at its quick points (chip and session path work first)
 #   2. main: parity, rows bit-identical to m decode calls, next decode step identical, second call identical, out_scale,
 #      device entry, mutants, timing of 2048-token chunks at contexts 2k, 8k, 32k
@@ -19,9 +20,10 @@ cd "$HERE" || exit 2
   echo "start $(date -u +%FT%TZ) omega=$(git rev-parse HEAD) branch=$(git rev-parse --abbrev-ref HEAD) dirty=$(git status --porcelain | wc -l) physics=$PHYS physics_commit=$(git -C "$PHYS" rev-parse HEAD) physics_lock=$(cat physics.lock 2>/dev/null | head -1)"
   uname -a; nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null; free -g | head -2
 } > "$EVID/device.txt"
-make PHYSICS_DIR="$PHYS" -j10 build/gpu_prefill_attn256_test build/gpu_decode_attn256_test > "$EVID/build.log" 2>&1 || { echo "GPU_PREFILL_ATTN256_CHIP: FAIL build"; exit 1; }
+make PHYSICS_DIR="$PHYS" -j10 build/gpu_prefill_attn256_test build/gpu_decode_attn256_test build/bw_encode_control_test > "$EVID/build.log" 2>&1 || { echo "GPU_PREFILL_ATTN256_CHIP: FAIL build"; exit 1; }
 T=./build/gpu_prefill_attn256_test
 fail=0
+./build/bw_encode_control_test 2>&1 | tee "$EVID/encode-control.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
 $T --host-only 2>&1 | tee "$EVID/host-only.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
 $T --sim 2>&1 | tee "$EVID/sim.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
 ./build/gpu_decode_attn256_test --reps 5 --only "context 301" --out "$EVID/receipt-baseline-decode.json" 2>&1 | tee "$EVID/baseline-decode.log"

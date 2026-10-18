@@ -1,0 +1,12 @@
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+-- chip 2048 tokens from 0 (max_pos 4096)
+FAIL: prefill 0+2048: CHIP_FAIL marker wait timed out (latched)
+-- chip 2048 tokens from 6144 (max_pos 8192)
+FAIL: cache with history: CHIP_FAIL process latched
+-- chip 2048 tokens from 30720 (max_pos 32768)
+FAIL: cache with history: CHIP_FAIL process latched
+-- chip 2048 tokens from 129024 (max_pos 131072)
+FAIL: cache with history: CHIP_FAIL process latched
+gpu_prefill_attn256_test: 23 checks, 4 failed: FAIL
+max-pos 131072 exit 1 (informational)
