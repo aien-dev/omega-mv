@@ -1883,9 +1883,13 @@ static bool test_m19_gate18_receipt(void) {
         if (!candidate || strcmp(candidate, head_sha) != 0 ||
             omega_evidence_tree_dirty()) return false;
     }
+    /* Hash the binary that is running these gates. Under tests/gates/run.sh it is
+     * $OUT_DIR/omegatool (per-step build dir, omega#511), so the fixed path
+     * build/omegatool does not exist in a fresh judge worktree and this gate
+     * failed with every other gate passing (omega#526). */
     uint8_t digest[32];
     char hex[65];
-    return compute_file_sha256("build/omegatool", digest, hex);
+    return compute_file_sha256("/proc/self/exe", digest, hex);
 }
 
 int run_m19_gates(void) {
