@@ -36,6 +36,8 @@ SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 SRCS += src/omega_gpu_hostmath.c
 # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h), new files only
 SRCS += src/omega_blackwell_codegen_router.c src/omega_gpu_router_api.c
+# Qwen3.8-27B Gated DeltaNet decode step (omega#542, 2026-10-18): one launch per layer (omega_gpu_gdn_api.h), new files only
+SRCS += src/omega_blackwell_codegen_gdn.c src/omega_gpu_gdn_api.c
 # OWN-30B W-L2 (2026-10-13): decode launch collapse, new files only: command list (N launches, one submit) + glue kernels
 SRCS += src/omega_gpu_cmdlist.c src/omega_blackwell_codegen_dec.c
 SRCS += src/omega_gpu_mem_cached.c
@@ -2497,6 +2499,16 @@ $(GPU_ROUTER_TEST): tests/gpu_router_test.c tests/bw_warp_sim_k.h src/omega_gpu_
 test-gpu-router: $(GPU_ROUTER_TEST)
 	./$(GPU_ROUTER_TEST) --host-only
 	./$(GPU_ROUTER_TEST) --sim
+
+# Qwen3.8-27B Gated DeltaNet decode step (omega#542, 2026-10-18): one launch per layer (omega_gpu_gdn_api.h).
+# test-gpu-gdn is host-only plus the warp simulator over the whole grid; the chip run is ./build/gpu_gdn_test under the GB10 lock.
+.PHONY: test-gpu-gdn
+GPU_GDN_TEST = $(OUT_DIR)/gpu_gdn_test
+$(GPU_GDN_TEST): tests/gpu_gdn_test.c tests/bw_warp_sim_k.h src/omega_gpu_gdn_api.h src/omega_blackwell_codegen_gdn.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-gdn: $(GPU_GDN_TEST)
+	./$(GPU_GDN_TEST) --host-only
+	./$(GPU_GDN_TEST) --sim
 
 # OWN-30B (2026-10-13): bf16 streaming GEMV, the lm_head (omega_gpu_bf16_gemv_api.h). test-gpu-bf16-gemv is host-only
 # (emulation, budgets) plus the warp simulator (bit-identical to the host f32 emulation, mutants 1-3 caught); the chip
