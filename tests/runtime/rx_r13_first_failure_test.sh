@@ -30,6 +30,11 @@ check "unreachable goal: receipt written" '[ -s "$receipt" ]'
 check "unreachable goal: gate is FAIL" '[ "$(jq -r ".gate | to_entries[0].value" "$receipt")" = FAIL ]'
 check "first_failure names the goal check" 'jq -r .first_failure "$receipt" | grep -q "AIEN.s belief does not show the goal met"'
 check "first_failure is the first stderr R13 failure line" '[ "$(jq -r .first_failure "$receipt")" = "$(grep -m1 "^R13 mode" "$T/fail/stderr.log")" ]'
+# omega #527: the judge keeps stdout in its receipt; the reason must be there, not only on stderr.
+check "stdout carries the first failure" '[ "$(sed -n "s/^R13 first failure: //p" "$T/fail/stdout.log")" = "$(jq -r .first_failure "$receipt")" ]'
+check "stdout carries the FAILED counts line" 'grep -q "^R13 positive FAILED: plan " "$T/fail/stdout.log"'
+check "stdout carries the AIEN, Omega and GPU state" 'grep -q "^R13 positive AIEN: prediction " "$T/fail/stdout.log" && grep -q "^R13 positive Omega: search epoch " "$T/fail/stdout.log" && grep -q "^R13 positive GPU: claims .*why no GPU result: " "$T/fail/stdout.log"'
+check "normal run: no failure lines on stdout" '! grep -qE "^R13 (first failure|.* FAILED:)" "$T/pass/stdout.log"'
 check "nothing written under the real build/qual-runs by this test" '[ -z "$(find "$HERE/build/qual-runs" -newer "$T/make.log" 2>/dev/null | head -1)" ]'
 echo "rx_r13_first_failure_test: $FAILS failures"
 [ "$FAILS" = 0 ]
