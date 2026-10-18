@@ -101,10 +101,20 @@ $(OUT_DIR):
 $(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
+# The physics-built objects must be rebuilt when PHYSICS_DIR points somewhere else (#488), not only
+# when a file there is newer. The stamp records the resolved PHYSICS_DIR and its git HEAD, and is
+# rewritten only when that text changes, so an unchanged PHYSICS_DIR rebuilds nothing.
+PHYSICS_STAMP = $(OUT_DIR)/physics.stamp
+.PHONY: FORCE
+FORCE:
+$(PHYSICS_STAMP): FORCE | $(OUT_DIR)
+	@new="$$(cd '$(PHYSICS_DIR)' 2>/dev/null && pwd -P || echo '$(PHYSICS_DIR)') $$(git -C '$(PHYSICS_DIR)' rev-parse HEAD 2>/dev/null || echo nogit)"; \
+	if [ "$$(cat $@ 2>/dev/null)" != "$$new" ]; then printf '%s\n' "$$new" > $@; fi
+
+$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_STAMP) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c | $(OUT_DIR)
+$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c $(PHYSICS_STAMP) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OUT_DIR)/crumbline/%.o: src/crumbline/%.c | $(OUT_DIR)
