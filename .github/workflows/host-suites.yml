@@ -26,6 +26,10 @@ name: Host suites
 #       compiler (OSC-1, own path guard),
 #       one-layer-acceptance (test-one-layer-acceptance: stage-1 harness
 #       selftest on the public sample corpus; omega #443),
+#       exp445-tools (test-omega-emit test-exp445: stage-2 driver, scorer and
+#       mutants on dev tasks with a fake server; omega #445),
+#       omegese-oracle (test-omegese: the Omegese legal-word oracle, soundness
+#       walks and mutants on the -O2 build and under ASan and UBSan; omega #464),
 #       chip-tool-selftests (test-m19r-qualify test-gate14-combine
 #       test-window-lane-guard test-unwritten-trap-host test-ldst-host: the
 #       host-only self-tests of chip tooling; omega #425)
@@ -34,7 +38,7 @@ name: Host suites
 #   test-composition-gate-gpu, test-r12-silicon, test-r13-silicon,
 #   test-r14-silicon, test-r15-parity-silicon, test-r16-authpath-silicon,
 #   test-m5, test-m16..test-m19 (chip milestones; test-m17 is a skipped job in
-#   host-suites-3.yml), test-polyglot-mojo (needs Mojo toolchain), test-r13-host / test-r14-host
+#   host-suites-3.yml), test-r13-host / test-r14-host
 #   (need both GB10 core classes; rx-host builds them only).
 # Not yet wired (host-only, follow-up): test-numeric-sweep,
 #   test-numeric-e1-exhaustive (2^32 inputs per op, too long), visor-*,
@@ -43,67 +47,10 @@ name: Host suites
 #   branch-reuse, r15-*-host, r16-inventory/negative/surface.
 
 on:
+  # Retired from pull requests and pushes on 2026-10-16 (ADR 0033 Decision 11, phase 3): the Spark
+  # runs these gates (tests/gates/) and the required AIEN Verification check verifies its signed
+  # bundle. Kept as a manual trigger so a hosted run is still possible when needed.
   workflow_dispatch:
-  push:
-    branches: [main]
-  pull_request:
-    paths:
-      - 'Makefile'
-      - '.github/workflows/host-suites.yml'
-      - 'src/sha256.*'
-      # searchtrace (links the Omega core and realization)
-      - 'src/searchtrace/**'
-      - 'tests/searchtrace/**'
-      - 'mk/searchtrace.mk'
-      - 'src/omega_*'
-      - 'src/aarch64_*'
-      # estimation
-      - 'src/estimation/**'
-      - 'tests/estimation/**'
-      - 'tools/estimation/**'
-      - 'mk/estimation*.mk'
-      # ans (Inertial Alignment v1, ARCH-0032)
-      - 'src/ans/**'
-      - 'tests/ans/**'
-      - 'mk/ans.mk'
-      - 'docs/ans/**'
-      - 'docs/estimation/EST3C_PROTOCOL_V3.md'
-      - 'docs/estimation/receipts/est3c-v3/**'
-      - 'evidence/R15/raw/**'
-      # numeric (Gate 5 CPU tier)
-      - 'tests/test_omega_numeric.c'
-      - 'tests/numeric_oracle.h'
-      - 'tests/run_numeric_gates.sh'
-      - 'tools/test_numeric_qualify.sh'
-      - 'tools/numeric_*'
-      - 'tools/m19r_qualify.sh'
-      - 'tools/m19r_campaign.sh'
-      - 'tools/chipwait_campaign.sh'
-      - 'tools/test_chipwait_campaign.sh'
-      - 'tools/json_canon.c'
-      - 'tools/e1_*'
-      # chip-tool-selftests (host-only self-tests of chip tooling, omega #425)
-      - 'tools/gate14_combine.sh'
-      - 'tools/test_gate14_combine.sh'
-      - 'tools/window_lane_guard.sh'
-      - 'tests/window_lane_guard_test.sh'
-      - 'tests/test_omega_unwritten_trap.c'
-      - 'tests/test_omega_ldst_gb10.c'
-      # train (M22 optimizer substrate + E5 provenance)
-      - 'src/train/**'
-      - 'tests/train/**'
-      - 'mk/train.mk'
-      # OSC-1 compiler slice + OSC-0B model (compiler job only; see its guard step;
-      # the job also runs on src/aarch64_* changes, already listed above: OSC-2 item 4)
-      - 'src/compiler/**'
-      - 'tests/compiler/**'
-      - 'mk/compiler.mk'
-      # checker2 + signed realization receipts (one-layer stage 3, omega#446); its differential
-      # and LRAT gate also run when the compiler, sha256 or the vendored Ed25519 change
-      - 'src/checker2/**'
-      - 'tests/checker2/**'
-      - 'mk/checker2.mk'
-      - 'spec/one-layer-receipts.md'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -292,6 +239,56 @@ jobs:
       - name: Stage-1 acceptance harness selftest (sample corpus)
         if: steps.guard.outputs.run == 'true'
         run: make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-one-layer-acceptance
+
+  exp445-tools:
+    # One-layer stage 2 (omega#445): omega_emit and the exp445 experiment driver, scorer and their
+    # mutants, against a fake local server on dev tasks only (no model, no GPU, no held-out data).
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Changed-path guard (stage-2 tools only)
+        id: guard
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          CHANGED=$(git diff --name-only HEAD^1 HEAD)
+          if echo "$CHANGED" | grep -Eq '^(tools/omega_emit/|tools/exp445/|tools/omegese/|mk/omega-emit\.mk$|mk/omegese\.mk$|mk/one-layer-acceptance\.mk$|tests/one_layer/|docs/one_layer/EXP445_PROTOCOL\.md$|src/compiler/|src/checker2/|src/sha256\.|\.github/workflows/host-suites\.yml$)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"; echo "no stage-2 tool files changed; skipping"
+          fi
+      - name: Tools the driver needs (jq, curl, flock)
+        if: steps.guard.outputs.run == 'true'
+        run: command -v jq && command -v curl && command -v flock
+      - name: omega_emit and exp445 driver self-tests (dev tasks, fake server)
+        if: steps.guard.outputs.run == 'true'
+        run: make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-omega-emit test-exp445
+
+  omegese-oracle:
+    # Omegese (omega#464): the legal-word oracle `omegese next`, `complete` and `emit`, its soundness
+    # walks through omega_emit and checker2, and its mutants, on the -O2 build and on an ASan and
+    # UBSan build. Dev programs only (no model, no GPU, no held-out data).
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Changed-path guard (Omegese and its downstream checks)
+        id: guard
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          CHANGED=$(git diff --name-only HEAD^1 HEAD)
+          if echo "$CHANGED" | grep -Eq '^(tools/omegese/|tests/one_layer/omegese/|tools/omega_emit/|mk/omegese\.mk$|mk/checker2\.mk$|mk/omega-emit\.mk$|docs/one_layer/OMEGESE\.md$|src/compiler/|src/checker2/|src/sha256\.|\.github/workflows/host-suites\.yml$)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"; echo "no Omegese files changed; skipping"
+          fi
+      - name: Omegese oracle self-tests (-O2, then ASan and UBSan)
+        if: steps.guard.outputs.run == 'true'
+        run: make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-omegese
 
   chip-tool-selftests:
     # Host-only self-tests of chip tooling that previously ran nowhere in CI

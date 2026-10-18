@@ -55,6 +55,8 @@ SRCS += src/omega_blackwell_codegen_pf.c src/omega_gpu_prefill.c src/omega_black
 SRCS += src/omega_blackwell_codegen_qmma.c src/omega_blackwell_codegen_qg.c
 # OWN-30B W-L1G-D (2026-10-14): router logits + MoE combine for the whole-prompt prefill, new files only
 SRCS += src/omega_blackwell_codegen_pfhost.c src/omega_gpu_pfhost.c
+# Ternary engine T0 (2026-10-15): KT1, the W2A8 ternary GEMV (omega_gpu_tern_api.h), new files only
+SRCS += src/omega_blackwell_codegen_tern.c src/omega_gpu_tern_api.c
 OBJS = $(patsubst %.c,$(OUT_DIR)/%.o,$(notdir $(SRCS)))
 DEPS = $(OBJS:.o=.d)
 -include $(DEPS)
@@ -2387,13 +2389,21 @@ test-vc-bridge: tests/test_omega_vc_bridge.c src/omega_vc_bridge.c src/omega_vc_
 # byte-identical for any PHYSICS_DIR and any omega checkout directory.
 GPU_API_OBJS = $(filter-out $(OUT_DIR)/omegatool.o $(OUT_DIR)/omega_blackwell_gates.o $(OUT_DIR)/omega_world_gates.o,$(OBJS))
 GPU_API_TEST = $(OUT_DIR)/gpu_matmul_api_test
+GPU_R4_RECEIPT = $(OUT_DIR)/gpu_matmul_r4_receipt
 $(OUT_DIR)/libomega_gpu.a: $(GPU_API_OBJS) | check-physics-lock
 	ar rcs $@ $(GPU_API_OBJS)
 libomega_gpu: $(OUT_DIR)/libomega_gpu.a
 $(GPU_API_TEST): tests/gpu_matmul_api_test.c src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
-test-gpu-matmul-api: $(GPU_API_TEST)
+test-gpu-matmul-api: $(GPU_API_TEST) $(GPU_R4_RECEIPT)
 	./$(GPU_API_TEST) --host-only
+	./$(GPU_R4_RECEIPT) --host-only
+
+# omega #473 R4: the sealed CTA-budget receipt (full-output comparison at the training shapes,
+# every budget, repeats, I42 stale-output check, negative controls). Host-only self-test above; the
+# chip receipt is `quietlock run -- ./build/gpu_matmul_r4_receipt --out receipt.json`.
+$(GPU_R4_RECEIPT): tests/gpu_matmul_r4_receipt.c src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_r4_receipt.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 
 # FB-1 cut 4: native rmsnorm / rope / swiglu (+ EX2 and shared-exchange probes).
 # test-gpu-elementwise is host-only (refusals, codegen, word fixtures, nvdisasm
@@ -2498,6 +2508,17 @@ $(GPU_BF16_TEST): tests/gpu_bf16_gemv_test.c tests/bw_warp_sim_k.h src/omega_gpu
 test-gpu-bf16-gemv: $(GPU_BF16_TEST)
 	$(GPU_BF16_TEST) --host-only
 	$(GPU_BF16_TEST) --sim
+
+# Ternary engine T0 (2026-10-15): KT1 W2A8 ternary GEMV (omega_gpu_tern_api.h). test-gpu-tern is host-only (word
+# arithmetic, packing, segments, budgets, refusals) plus the warp simulator (bit-equal to oma_rz_oracle, f32 segment
+# epilogue, mutants 1-3 caught); the chip gate is tools/run_gpu_tern_chip.sh with the quiet flag held.
+.PHONY: test-gpu-tern
+GPU_TERN_TEST = $(OUT_DIR)/gpu_tern_test
+$(GPU_TERN_TEST): tests/gpu_tern_test.c tests/bw_warp_sim_k.h src/omega_gpu_tern_api.h src/omega_blackwell_codegen_tern.h $(OMA_RZ_SRCS) $(OMA_RZ_HDRS) $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off $(OMA_RZ_ARCH) -Itests -o $@ tests/gpu_tern_test.c $(OMA_RZ_SRCS) $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-tern: $(GPU_TERN_TEST)
+	$(GPU_TERN_TEST) --host-only
+	$(GPU_TERN_TEST) --sim
 
 # OWN-30B (2026-10-13): report-only lm_head study, fp8 vs bf16 argmax agreement on the real checkpoint (chip, GB10 lock).
 $(OUT_DIR)/gpu_lmhead_fp8_study: tests/gpu_lmhead_fp8_study.c src/omega_gpu_bf16_gemv_api.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
