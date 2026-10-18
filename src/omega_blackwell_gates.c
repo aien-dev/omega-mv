@@ -35,6 +35,8 @@
 #include <limits.h>
 #include <errno.h>
 #include "omega_physics_dir.h"
+#include "omega_clean_clone.h"
+#include <unistd.h>
 
 static int m17_gate_count = 0;
 static int m17_gate_passed = 0;
@@ -996,11 +998,13 @@ fail:
  * log beside it stays for the reader. Hundreds of MB per run otherwise pile up
  * in /tmp (omega#526). */
 static void m18_clean_clone_remove_checkout(const char *clone) {
-    char cmd[PATH_MAX + 32];
-    int n = snprintf(cmd, sizeof(cmd), "rm -rf -- '%s/checkout'", clone);
-    if (n < 0 || (size_t)n >= sizeof(cmd)) return;
-    int rc = system(cmd);
-    (void)rc;
+    char checkout[PATH_MAX];
+    int n = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
+    if (n < 0 || (size_t)n >= sizeof(checkout)) return;
+    /* No shell: a file-tree walk that never follows a symlink (omega#565). */
+    if (omega_cc_remove_tree(checkout) != 0) {
+        fprintf(stderr, "M18 clean clone: could not remove %s\n", checkout);
+    }
 }
 
 static bool test_m18_gate16_clean_clone(void) {
@@ -1037,19 +1041,40 @@ static bool test_m18_gate16_clean_clone(void) {
         fprintf(stderr, "M18 clean clone: mkdtemp %s: %s\n", clone, strerror(errno));
         return false;
     }
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "unset OUT_DIR; "
-                       "root=$(git rev-parse --show-toplevel) && "
-                       "cp -r \"$root\" '%s/checkout' && "
-                       "cd '%s/checkout' && "
-                       "make OUT_DIR=build clean >/dev/null 2>&1 && "
-                       "make -j OUT_DIR=build PHYSICS_DIR='%s' >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >'%s/clean_clone_m18.log' 2>&1",
-                       clone, clone, physics_dir_resolved, clone);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    int rc = system(command);
-    if (rc != 0) fprintf(stderr, "M18 clean clone failed (rc %d); log: %s/clean_clone_m18.log\n", rc, clone);
+    /* No shell (omega#565): each step is its own program with an argument vector,
+     * so nothing in TMPDIR or PHYSICS_DIR can change what runs. Paths outside the
+     * plain charset are refused (fail closed); make would also expand a '$'. */
+    if (!omega_cc_path_is_plain(clone) || !omega_cc_path_is_plain(physics_dir_resolved)) {
+        fprintf(stderr, "M18 clean clone: refusing a path with characters outside [A-Za-z0-9/._+-]: %s | %s\n",
+                clone, physics_dir_resolved);
+        (void)rmdir(clone);
+        return false;
+    }
+    char root[PATH_MAX], checkout[PATH_MAX], log_path[PATH_MAX], physics_arg[PATH_MAX + 16];
+    char *git_top[] = {"git", "rev-parse", "--show-toplevel", NULL};
+    if (!omega_cc_capture_line(NULL, git_top, root, sizeof(root))) {
+        fprintf(stderr, "M18 clean clone: git rev-parse --show-toplevel failed\n");
+        (void)rmdir(clone);
+        return false;
+    }
+    int n1 = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
+    int n2 = snprintf(log_path, sizeof(log_path), "%s/clean_clone_m18.log", clone);
+    int n3 = snprintf(physics_arg, sizeof(physics_arg), "PHYSICS_DIR=%s", physics_dir_resolved);
+    if (n1 < 0 || (size_t)n1 >= sizeof(checkout) || n2 < 0 || (size_t)n2 >= sizeof(log_path) ||
+        n3 < 0 || (size_t)n3 >= sizeof(physics_arg)) {
+        (void)rmdir(clone);
+        return false;
+    }
+    char *cp_argv[] = {"cp", "-r", "--", root, checkout, NULL};
+    char *clean_argv[] = {"make", "clean", NULL};
+    char *make_argv[] = {"make", "-j", physics_arg, NULL};
+    char *run_argv[] = {"./build/omegatool", "--run-m18-gates", NULL};
+    const char *step = "cp";
+    int rc = omega_cc_run(NULL, cp_argv, NULL, false);
+    if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, clean_argv, NULL, false); }
+    if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, make_argv, NULL, false); }
+    if (rc == 0) { step = "omegatool --run-m18-gates"; rc = omega_cc_run(checkout, run_argv, log_path, true); }
+    if (rc != 0) fprintf(stderr, "M18 clean clone failed at %s (rc %d); log: %s\n", step, rc, log_path);
     m18_clean_clone_remove_checkout(clone);
     return (rc == 0);
 }

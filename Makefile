@@ -19,7 +19,7 @@ SRCS = src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c 
 	src/omega_matvec.c src/omega_accelerator.c src/omega_accelerator_world.c \
 	src/omega_vector.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
 	src/omega_blackwell_realize.c src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_gates.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c src/omega_gpu_fmt.c src/omega_gpu_matmul_api.c src/omega_gpu_elementwise_api.c src/omega_gpu_attention_api.c src/omega_gpu_serving.c src/omega_world_gates.c src/omega_gpu_wait.c \
-	src/omega_evidence.c \
+	src/omega_evidence.c src/omega_clean_clone.c \
 	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
 	tools/omegatool.c
 # OWN-30B cut 2 (2026-10-13): column windows over a resident bf16 tensor for the MoE path. New file,
@@ -2396,7 +2396,7 @@ test-vc-bridge: tests/test_omega_vc_bridge.c src/omega_vc_bridge.c src/omega_vc_
 # they compile the physics checkout path into the object (-DOMEGA_PHYSICS_DIR), which made the
 # archive digest depend on where physics was checked out. Without them libomega_gpu.a is
 # byte-identical for any PHYSICS_DIR and any omega checkout directory.
-GPU_API_OBJS = $(filter-out $(OUT_DIR)/omegatool.o $(OUT_DIR)/omega_blackwell_gates.o $(OUT_DIR)/omega_world_gates.o,$(OBJS))
+GPU_API_OBJS = $(filter-out $(OUT_DIR)/omegatool.o $(OUT_DIR)/omega_blackwell_gates.o $(OUT_DIR)/omega_world_gates.o $(OUT_DIR)/omega_clean_clone.o,$(OBJS))
 GPU_API_TEST = $(OUT_DIR)/gpu_matmul_api_test
 GPU_R4_RECEIPT = $(OUT_DIR)/gpu_matmul_r4_receipt
 $(OUT_DIR)/libomega_gpu.a: $(GPU_API_OBJS) | check-physics-lock
