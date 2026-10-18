@@ -988,19 +988,30 @@ static bool test_m18_gate16_clean_clone(void) {
         fprintf(stderr, "%s\n", physics_err);
         return false;
     }
+    /* The nested build keeps its log and -j is capped at the core count; on
+     * failure the last lines of both logs go to stderr, because the copy lives
+     * in the sandbox's private /tmp and is gone after the run. */
     char command[4608];
     int len = snprintf(command, sizeof(command),
                        "root=$(git rev-parse --show-toplevel) && "
                        "rm -rf /tmp/omega_clean_m18 && "
                        "cp -r \"$root\" /tmp/omega_clean_m18 && "
                        "cd /tmp/omega_clean_m18 && "
-                       "make clean >/dev/null 2>&1 && "
-                       "make -j PHYSICS_DIR='%s' >/dev/null 2>&1 && "
+                       "make clean >/tmp/clean_clone_m18_build.log 2>&1 && "
+                       "make -j$(nproc) PHYSICS_DIR='%s' >>/tmp/clean_clone_m18_build.log 2>&1 && "
                        "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1",
                        physics_dir_resolved);
     if (len < 0 || (size_t)len >= sizeof(command)) return false;
     int rc = system(command);
-    return (rc == 0);
+    if (rc != 0) {
+        fprintf(stderr, "OMEGA_BW_MATMUL_CLEAN_CLONE: copy, nested build or nested run failed (system() returned %d)\n", rc);
+        if (system("for f in /tmp/clean_clone_m18_build.log /tmp/clean_clone_m18.log; do "
+                   "echo \"--- $f (last 30 lines) ---\" >&2; tail -n 30 \"$f\" >&2 2>/dev/null; done") != 0) {
+            /* diagnostics only */
+        }
+        return false;
+    }
+    return true;
 }
 
 
