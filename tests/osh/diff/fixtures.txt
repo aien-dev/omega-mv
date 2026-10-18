@@ -1,0 +1,387 @@
+# OSH cross-adapter stage/stream fixtures (omega#568, parent aien-architecture-mv#158). Format: README.md in this directory.
+# Implementation-agnostic: every fixture names toy operations (README, "Toy operations"), never a host path, so the request
+# record the shell core builds is the same bytes on every adapter. Expected values were written by hand from
+# OSH_PLATFORM_ABI.md v1 DRAFT (sections 5, 7, 8, 10, 12) and the toy contract; stream checksums are FNV-1a 32 computed by
+# separate code, not by the runner. scope portable = every adapter must agree; scope linux = Linux-only mechanism
+# (rlimits, stop signals, EMFILE), host column only, native reports NOT_RUN.
+abi aien-protocols-mv@fb5fca98e6676bb104888c73268e0f9a81e9c63e specs/osh-platform/OSH_PLATFORM_ABI.md v1-draft
+
+fixture f01_two_stage
+scope portable
+covers two-stage pipeline; producer shutdown: EOF reaches the consumer when the only writer exits
+text "emit a b | pass\n"
+req P0 conn=1 | C0 b=0 argv="emit","a","b" as= rd= | C1 b=0 argv="pass" as= rd=
+stdout "a\nb\n"
+status 0
+stages P0=ok,ok
+err P0=OK
+end
+
+fixture f02_three_stage
+scope portable
+covers three-stage pipeline with a short-read/short-write stage in the middle position
+text "emit x y | pass | trickle\n"
+req P0 conn=1 | C0 b=0 argv="emit","x","y" as= rd= | C1 b=0 argv="pass" as= rd= | C2 b=0 argv="trickle" as= rd=
+stdout "x\ny\n"
+status 0
+stages P0=ok,ok,ok
+err P0=OK
+end
+
+fixture f03_argv_boundary_text
+scope portable
+covers argument boundaries from shell text: quoted blanks, empty argument, escaped quote
+text "args a 'b  c' '' \"x\\\"y\"\n"
+req P0 conn=1 | C0 b=0 argv="args","a","b  c","","x\"y" as= rd=
+stdout "4\n1:a\n4:b  c\n0:\n3:x\"y\n"
+status 0
+stages P0=ok
+err P0=OK
+end
+
+fixture f04_argv_boundary_direct
+scope portable
+covers AIEN direct-argv submission (ABI section 11): no shell text, blank, empty, non-ASCII and glob bytes pass as given
+direct "args","a b","","\x80\xff","*"
+req P0 conn=0 direct | C0 b=0 argv="args","a b","","\x80\xff","*" as= rd=
+stdout "4\n3:a b\n0:\n2:\x80\xff\n1:*\n"
+status 0
+stages P0=ok
+err P0=OK
+end
+
+fixture f05_direct_pipeline
+scope portable
+covers direct-argv two-stage pipeline (ABI section 11 allows ncmds 1 to 8)
+direct "bytes" | "sink"
+req P0 conn=0 direct | C0 b=0 argv="bytes" as= rd= | C1 b=0 argv="sink" as= rd=
+stdout "n=256 sum=90a458c5\n"
+status 0
+stages P0=ok,ok
+err P0=OK
+end
+
+fixture f06_binary_bytes
+scope portable
+covers all 256 byte values through two pipes unchanged (bytes are bytes, ABI section 2)
+text "bytes | pass | sink\n"
+req P0 conn=1 | C0 b=0 argv="bytes" as= rd= | C1 b=0 argv="pass" as= rd= | C2 b=0 argv="sink" as= rd=
+stdout "n=256 sum=90a458c5\n"
+status 0
+stages P0=ok,ok,ok
+err P0=OK
+end
+
+fixture f07_large_output
+scope portable
+covers 4 MiB through a bounded pipe (64 KiB minimum, ABI 8.5): backpressure, no loss, no truncation
+text "flood 4194304 | pass | sink\n"
+req P0 conn=1 | C0 b=0 argv="flood","4194304" as= rd= | C1 b=0 argv="pass" as= rd= | C2 b=0 argv="sink" as= rd=
+stdout "n=4194304 sum=2d569a25\n"
+status 0
+stages P0=ok,ok,ok
+err P0=OK
+end
+
+fixture f08_short_reads_writes
+scope portable
+covers one-byte reads and writes on both sides of a pipe, four stages, odd total length
+text "flood 100003 | trickle | trickle | sink\n"
+req P0 conn=1 | C0 b=0 argv="flood","100003" as= rd= | C1 b=0 argv="trickle" as= rd= | C2 b=0 argv="trickle" as= rd= | C3 b=0 argv="sink" as= rd=
+stdout "n=100003 sum=05db6bd3\n"
+status 0
+stages P0=ok,ok,ok,ok
+err P0=OK
+end
+
+fixture f09_consumer_early_exit
+scope portable
+covers consumer early exit: the writer of a pipe with no reader gets BROKEN_PIPE (Linux: SIGPIPE); pipeline status is the last stage
+text "flood 4194304 | take 5\n"
+req P0 conn=1 | C0 b=0 argv="flood","4194304" as= rd= | C1 b=0 argv="take","5" as= rd=
+stdout "abcde"
+status 0
+stages P0=broken_pipe,ok
+err P0=OK
+end
+
+fixture f10_early_exit_middle
+scope portable
+covers early exit in the middle of three stages: upstream broken, downstream sees EOF after the bytes it got
+text "flood 4194304 | take 3 | sink\n"
+req P0 conn=1 | C0 b=0 argv="flood","4194304" as= rd= | C1 b=0 argv="take","3" as= rd= | C2 b=0 argv="sink" as= rd=
+stdout "n=3 sum=1a47e90b\n"
+status 0
+stages P0=broken_pipe,ok,ok
+err P0=OK
+end
+
+fixture f11_zero_length_stream
+scope portable
+covers a producer that writes nothing: zero-length stream, EOF only when all writers close
+text "emit | pass | sink\n"
+req P0 conn=1 | C0 b=0 argv="emit" as= rd= | C1 b=0 argv="pass" as= rd= | C2 b=0 argv="sink" as= rd=
+stdout "n=0 sum=811c9dc5\n"
+status 0
+stages P0=ok,ok,ok
+err P0=OK
+end
+
+fixture f12_exit_statuses
+scope portable
+covers stage exit statuses; pipeline status = last stage; $? feeds the next pipeline's request
+text "status 3 | status 4; emit $?\n"
+req P0 conn=1 | C0 b=0 argv="status","3" as= rd= | C1 b=0 argv="status","4" as= rd= | P1 conn=1 | C0 b=0 argv="emit","4" as= rd=
+stdout "4\n"
+status 0
+stages P0=exit:3,exit:4 P1=ok
+err P0=OK P1=OK
+end
+
+fixture f13_failed_producer
+scope portable
+covers a producer that fails without output: the consumer still completes and owns the pipeline status
+text "status 9 | sink\n"
+req P0 conn=1 | C0 b=0 argv="status","9" as= rd= | C1 b=0 argv="sink" as= rd=
+stdout "n=0 sum=811c9dc5\n"
+status 0
+stages P0=exit:9,ok
+err P0=OK
+end
+
+fixture f14_and_or
+scope portable
+covers && and || connectors: a skipped pipeline is never expanded and never produces a request
+text "status 1 && emit no || emit yes\n"
+req P0 conn=2 | C0 b=0 argv="status","1" as= rd= | P1 conn=1 | C0 b=0 argv="emit","yes" as= rd=
+stdout "yes\n"
+status 0
+stages P0=exit:1 P1=ok
+err P0=OK P1=OK
+end
+
+fixture f15_redir_order_dup_first
+scope portable
+covers redirection order 2>&1 >FILE: stderr follows the old stdout, stdout goes to the file (ABI 7.2)
+text "oe 2>&1 >o1\n"
+req P0 conn=1 | C0 b=0 argv="oe" as= rd=DUP2:1,OUT1:"o1"
+stdout "E"
+outfile o1 "O"
+status 0
+stages P0=ok
+err P0=OK
+end
+
+fixture f16_redir_order_file_first
+scope portable
+covers redirection order >FILE 2>&1: both streams in the file
+text "oe >o2 2>&1\n"
+req P0 conn=1 | C0 b=0 argv="oe" as= rd=OUT1:"o2",DUP2:1
+stdout ""
+outfile o2 "OE"
+status 0
+stages P0=ok
+err P0=OK
+end
+
+fixture f17_redir_in_pipeline
+scope portable
+covers input redirection on the first stage and output redirection on the last stage of a pipeline
+file in1 "q\nr\n"
+text "pass <in1 | pass >o3\n"
+req P0 conn=1 | C0 b=0 argv="pass" as= rd=IN0:"in1" | C1 b=0 argv="pass" as= rd=OUT1:"o3"
+stdout ""
+outfile o3 "q\nr\n"
+status 0
+stages P0=ok,ok
+err P0=OK
+end
+
+fixture f18_failed_redirection
+scope portable
+covers a failed input redirection: that stage does not run (status 1), its neighbour still completes
+text "pass <missing | emit after\n"
+req P0 conn=1 | C0 b=0 argv="pass" as= rd=IN0:"missing" | C1 b=0 argv="emit","after" as= rd=
+stdout "after\n"
+stderr_has "missing"
+status 0
+stages P0=exit:1,ok
+err P0=OK
+end
+
+fixture f19_not_found
+scope portable
+covers an unresolvable stage name: status 127 for that stage, no fallback to another resolution class
+text "nosuchop a | emit z\n"
+req P0 conn=1 | C0 b=0 argv="nosuchop","a" as= rd= | C1 b=0 argv="emit","z" as= rd=
+stdout "z\n"
+stderr_has "nosuchop"
+status 0
+stages P0=not_found,ok
+err P0=OK
+end
+
+fixture f20_builtin_in_pipeline
+scope portable
+covers the printf builtin as a pipeline stage (runs in a child context, ABI 7.2)
+text "printf '%s-' a b | sink\n"
+req P0 conn=1 | C0 b=3 argv="printf","%s-","a","b" as= rd= | C1 b=0 argv="sink" as= rd=
+stdout "n=4 sum=450a87ca\n"
+status 0
+stages P0=ok,ok
+err P0=OK
+end
+
+fixture f21_refuse_background
+scope portable
+covers unsupported syntax is refused by the core before any effect (ABI 5.3, 227 BACKGROUND)
+text "emit a & emit b\n"
+refuse 227 BACKGROUND off=7
+stdout ""
+status 2
+end
+
+fixture f22_refuse_later_list
+scope portable
+covers incremental validation: the first list runs, the second is refused (226 CMDSUB), no whole-script atomicity (ABI 5.4)
+text "emit first\nemit $(x)\n"
+req P0 conn=1 | C0 b=0 argv="emit","first" as= rd=
+refuse 226 CMDSUB off=6
+stdout "first\n"
+status 2
+stages P0=ok
+err P0=OK
+end
+
+fixture f23_refuse_nul
+scope portable
+covers a NUL byte in shell input is refused (220 NUL_BYTE) and nothing runs
+text "emit a\x00b\n"
+refuse 220 NUL_BYTE off=6
+stdout ""
+status 2
+end
+
+fixture f24_revoked_spawn
+scope portable
+covers a capability revoked before the spawn effect: that stage has no effect (REVOKED); the consumer sees EOF
+fault revoke_spawn=emit
+text "emit a | sink\n"
+req P0 conn=1 | C0 b=0 argv="emit","a" as= rd= | C1 b=0 argv="sink" as= rd=
+stdout "n=0 sum=811c9dc5\n"
+stderr_has "REVOKED"
+status 0
+stages P0=refused:REVOKED,ok
+err P0=REVOKED
+end
+
+fixture f25_cancel_interrupt
+scope portable
+covers cancellation in interrupt mode after every stage launched: all stages interrupted, status 130 (ABI 8.4)
+fault interrupt_after_launch
+text "stall | stall\n"
+req P0 conn=1 | C0 b=0 argv="stall" as= rd= | C1 b=0 argv="stall" as= rd=
+stdout ""
+status 130
+stages P0=interrupted,interrupted
+err P0=OK
+end
+
+fixture f26_partial_launch_2
+scope portable
+covers partial launch: stage 2 fails to launch, stage 1 is cancelled and reaped, PARTIAL_LAUNCH (ABI 10, 12)
+fault launch_fail_at=2
+text "stall | stall\n"
+req P0 conn=1 | C0 b=0 argv="stall" as= rd= | C1 b=0 argv="stall" as= rd=
+stdout ""
+status 1
+stages P0=cancelled,not_started
+err P0=PARTIAL_LAUNCH
+end
+
+fixture f27_partial_launch_3
+scope portable
+covers partial launch in a three-stage pipeline: two started stages cancelled and reaped, the third not started
+fault launch_fail_at=3
+text "stall | stall | stall\n"
+req P0 conn=1 | C0 b=0 argv="stall" as= rd= | C1 b=0 argv="stall" as= rd= | C2 b=0 argv="stall" as= rd=
+stdout ""
+status 1
+stages P0=cancelled,cancelled,not_started
+err P0=PARTIAL_LAUNCH
+end
+
+fixture f28_launch_fail_first
+scope portable
+covers launch failure of the first stage: nothing started, LIMIT, not PARTIAL_LAUNCH
+fault launch_fail_at=1
+text "emit a | pass\n"
+req P0 conn=1 | C0 b=0 argv="emit","a" as= rd= | C1 b=0 argv="pass" as= rd=
+stdout ""
+status 1
+stages P0=not_started,not_started
+err P0=LIMIT
+end
+
+fixture f29_stopped_member
+scope linux
+covers Linux stop signal on a member (no job control in R1): the whole pipeline is killed, status 128+SIGSTOP
+fault stop_first_after_launch
+text "stall | stall\n"
+req P0 conn=1 | C0 b=0 argv="stall" as= rd= | C1 b=0 argv="stall" as= rd=
+stdout ""
+status 147
+stages P0=cancelled,cancelled
+err P0=INTERRUPTED
+end
+
+fixture f30_no_descriptors
+scope linux
+covers RLIMIT_NOFILE leaves one free descriptor: pipe creation fails, nothing starts, LIMIT (Linux EMFILE)
+limit nofile=tight
+text "emit a | pass\n"
+req P0 conn=1 | C0 b=0 argv="emit","a" as= rd= | C1 b=0 argv="pass" as= rd=
+stdout ""
+stderr_has "pipe"
+status 1
+stages P0=failed:LIMIT,failed:LIMIT
+err P0=LIMIT
+end
+
+fixture f31_no_processes
+scope linux
+covers RLIMIT_NPROC 1 (not root): the first fork fails, nothing starts, LIMIT
+limit nproc=1
+text "emit a | pass\n"
+req P0 conn=1 | C0 b=0 argv="emit","a" as= rd= | C1 b=0 argv="pass" as= rd=
+stdout ""
+stderr_has "fork"
+status 1
+stages P0=not_started,not_started
+err P0=LIMIT
+end
+
+fixture f32_file_size_limit
+scope linux
+covers RLIMIT_FSIZE 4096 on an output redirection: the writer is stopped by the limit (SIGXFSZ, status 153), file keeps 4096 bytes
+limit fsize=4096
+text "flood 100000 >o4\n"
+req P0 conn=1 | C0 b=0 argv="flood","100000" as= rd=OUT1:"o4"
+stdout ""
+outlen o4 4096
+status 153
+stages P0=limit
+err P0=OK
+end
+
+fixture f33_bounded_memory
+scope linux
+covers 4 MiB through three stages under RLIMIT_AS 256 MiB on the shell and every stage: streaming, never whole-stream buffering
+limit as=268435456
+text "flood 4194304 | pass | sink\n"
+req P0 conn=1 | C0 b=0 argv="flood","4194304" as= rd= | C1 b=0 argv="pass" as= rd= | C2 b=0 argv="sink" as= rd=
+stdout "n=4194304 sum=2d569a25\n"
+status 0
+stages P0=ok,ok,ok
+err P0=OK
+end
