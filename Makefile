@@ -700,8 +700,8 @@ RX_COMPOSE_LIVING_CHECKS = $(OUT_DIR)/rx_graph.o $(OUT_DIR)/rx_capq.o $(OUT_DIR)
 # docs/r16-production-entry-point.md has the table.
 AIEN_TEST_FLAGS = -DAIEN_TEST_BUILD=1
 RX_FABRIC_TEST_SRCS = src/fabric/fabric.c src/fabric/fab_hmac.c src/fabric/fab_loopback.c \
-	src/fabric/fab_dispatch.c
-RX_R13_TEST_CHECKS = tests/runtime/rx_compose_fixture.h src/fabric/fab_dispatch.h \
+	src/fabric/fab_dispatch.c src/fabric/fab_route.c
+RX_R13_TEST_CHECKS = tests/runtime/rx_compose_fixture.h src/fabric/fab_dispatch.h src/fabric/fab_route.h \
 	src/fabric/fab_loopback.h src/fabric/fab_hmac.h tests/fabric/fab_living_phase.h
 # The production build refuses the flag outright.
 RX_PROD_REFUSE_TEST = $(if $(findstring AIEN_TEST_BUILD,$(CFLAGS))$(findstring RXC_TEST_HOOKS,$(CFLAGS)),\
