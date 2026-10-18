@@ -17,6 +17,7 @@
  * Verdict: exit 0 when every CHECK passed.
  */
 #include "omega_gpu_q38_graph.h"
+#include "omega_gpu_cmdlist.h"
 #include "omega_gpu_session.h"
 #include <inttypes.h>
 #include <math.h>
@@ -258,6 +259,20 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
     }
     printf("timing: %u reps, median chip %.1f us, median total %.1f us per token (%u layers)\n", reps, median_u64(chip, reps) / 1e3, median_u64(tot, reps) / 1e3, layers);
     free(chip); free(tot);
+    /* timeline: one stamped token, GPU time per launch kind */
+    {
+        static uint64_t stp[OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1]; static uint8_t kd[OMEGA_GPU_CMDLIST_MAX_LAUNCHES];
+        omega_gpu_q38_graph_set_stamps(g, 1);
+        if (state_reset(&m) != 0 || graph_token(g, &m, m.x0[0], 2, &M, &st) != 0) { CHECK(0, "stamped token"); return 1; }
+        int n = omega_gpu_q38_graph_stamps(g, stp, kd, OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1);
+        CHECK(n == (int)st.launches, "timeline: %d stamped launches", n);
+        uint64_t ns[OMEGA_GPU_Q38_K_COUNT] = { 0 }; uint32_t cnt[OMEGA_GPU_Q38_K_COUNT] = { 0 };
+        for (int i = 0; i < n; i++) { ns[kd[i]] += stp[i + 1] - stp[i]; cnt[kd[i]]++; }
+        for (unsigned k = 0; k < OMEGA_GPU_Q38_K_COUNT; k++)
+            if (cnt[k]) printf("timeline %-8s %3u launches %9.1f us\n", omega_gpu_q38_graph_kind_name((uint8_t)k), cnt[k], ns[k] / 1e3);
+        if (n > 0) printf("timeline span %.1f us\n", (stp[n] - stp[0]) / 1e3);
+        omega_gpu_q38_graph_set_stamps(g, 0);
+    }
     omega_gpu_q38_graph_free(g);
     return g_failed ? 1 : 0;
 }
