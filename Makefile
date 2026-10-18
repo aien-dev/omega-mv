@@ -2422,6 +2422,15 @@ $(GPU_EW_TEST): tests/gpu_elementwise_test.c src/omega_gpu_elementwise_api.h $(O
 test-gpu-elementwise: $(GPU_EW_TEST)
 	./$(GPU_EW_TEST) --host-only
 
+# omega-mv#545: every opcode the encoder accepts carries the emitter's control word (stall, scoreboards, wait mask)
+# into instruction word 3. Host only; the golden-word checks compare words 0..2, so this is the check for word 3.
+.PHONY: test-bw-encode-control
+BW_ENCODE_CONTROL_TEST = $(OUT_DIR)/bw_encode_control_test
+$(BW_ENCODE_CONTROL_TEST): tests/bw_encode_control_test.c src/omega_blackwell_codegen.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/bw_encode_control_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-bw-encode-control: $(BW_ENCODE_CONTROL_TEST)
+	./$(BW_ENCODE_CONTROL_TEST)
+
 # omega #308: structured warp reconvergence (BSSY/BSYNC regions). test-gpu-reconv is
 # host-only (encoder goldens, region bookkeeping, refusals, nvdisasm listing, every probe
 # kernel through the SIMT warp simulator tests/bw_warp_sim.h against the oracle, mutation
