@@ -46,6 +46,8 @@ SRCS += src/omega_blackwell_codegen_gdn.c src/omega_gpu_gdn_api.c
 SRCS += src/omega_gpu_cmdlist.c src/omega_blackwell_codegen_dec.c
 SRCS += src/omega_gpu_mem_cached.c
 SRCS += src/omega_gpu_decode_graph.c
+# sc #642 (2026-10-18): one Qwen3.8-27B decode token as one command list (GDN + hd256 attention layers, dense MLP)
+SRCS += src/omega_gpu_q38_graph.c
 # OWN-30B (2026-10-13): bf16 streaming GEMV for the lm_head (omega_gpu_bf16_gemv_api.h), new files only
 SRCS += src/omega_blackwell_codegen_bf16.c src/omega_gpu_bf16_gemv_api.c
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM, each expert streamed once per pass (omega_gpu_fp8gemm_api.h), new files only
@@ -2645,3 +2647,11 @@ $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h sr
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# sc #642 (2026-10-18): Qwen3.8-27B decode graph (one token = one command list), chip test vs the APIs one call at a time
+.PHONY: test-gpu-q38-graph-host
+GPU_Q38_GRAPH_TEST = $(OUT_DIR)/gpu_q38_graph_test
+$(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
+	./$(GPU_Q38_GRAPH_TEST) --host-only
