@@ -32,6 +32,8 @@ SRCS += src/omega_blackwell_codegen_moe.c src/omega_gpu_fp8_pack.c src/omega_gpu
 SRCS += src/omega_blackwell_codegen_moe2.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
+# Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
+SRCS += src/omega_blackwell_codegen_attn256.c src/omega_gpu_decode_attn256_api.c
 # OWN-30B (2026-10-13): libm-free host math (omega_gpu_hostmath.h) so libomega_gpu.a links without -lm
 SRCS += src/omega_gpu_hostmath.c
 # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h), new files only
@@ -2489,6 +2491,17 @@ $(GPU_DATTN_TEST): tests/gpu_decode_attn_test.c tests/bw_warp_sim_k.h src/omega_
 test-gpu-decode-attn: $(GPU_DATTN_TEST)
 	$(GPU_DATTN_TEST) --host-only
 	$(GPU_DATTN_TEST) --sim
+
+# Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, 24 q / 4 kv heads, partial RoPE by permutation
+# (omega_gpu_decode_attn256_api.h). test-gpu-decode-attn256 is host-only + simulator; the chip gate is
+# tools/run_gpu_decode_attn256_chip.sh.
+.PHONY: test-gpu-decode-attn256
+GPU_DATTN256_TEST = $(OUT_DIR)/gpu_decode_attn256_test
+$(GPU_DATTN256_TEST): tests/gpu_decode_attn256_test.c tests/bw_warp_sim_k.h src/omega_gpu_decode_attn256_api.h src/omega_blackwell_codegen_attn256.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn256_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-decode-attn256: $(GPU_DATTN256_TEST)
+	$(GPU_DATTN256_TEST) --host-only
+	$(GPU_DATTN256_TEST) --sim
 
 # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h). test-gpu-router is host-only
 # (oracle, budgets) plus the warp simulator; the chip gate is tools/run_gpu_router_chip.sh under the GB10 lock.
