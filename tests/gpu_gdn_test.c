@@ -12,6 +12,7 @@
 #include "omega_gpu_gdn_api.h"
 #include "omega_gpu_session.h"
 #include "omega_gpu_cmdlist.h"
+#include "omega_blackwell_codegen_tc.h"
 #include "bw_warp_sim_k.h"
 #include <inttypes.h>
 #include <math.h>
@@ -190,6 +191,23 @@ static void host_only(void) {
         free(y); inp_free(&in); dstate_free(&d);
     }
     layer_free(&L);
+    /* the prefill kernels encode, and every SHFL.BFLY placeholder is patched (the count kernel_for demands) */
+    for (unsigned k = 0; k < 3; k++) {
+        static BlackwellIRProgram p;
+        OmegaGdnSpec spec = { 0 };
+        int rc = k == 0 ? omega_blackwell_codegen_gdn_prep_prog(&spec, &p) : k == 1 ? omega_blackwell_codegen_gdn_scan_prog(&spec, &p)
+                                                                         : omega_blackwell_codegen_gdn_post_prog(&spec, &p);
+        size_t need = rc == 0 ? omega_bw_program_code_bytes(&p) : 0;
+        uint8_t *code = need ? malloc(need) : NULL;
+        OmegaBlackwellKernel kern;
+        int enc = code ? omega_blackwell_kernel_encode_into(&p, code, need, &kern) : -1;
+        int np = enc == 0 ? omega_tc_patch_code(&p, code, need) : -1;
+        const uint32_t want = omega_gdn_bfly_count(&p);
+        if (getenv("GDN_DUMP") && code && atoi(getenv("GDN_DUMP")) == (int)k) { FILE *f = fopen("gdn_pf.bin", "wb"); if (f) { fwrite(code, 1, need, f); fclose(f); } }
+        CHECK(rc == 0 && enc == 0 && np >= 0 && (uint32_t)np == want && (k == 0 || want > 0),
+              "prefill kernel %u encodes: %zu insns, %u registers, %d of %u butterflies patched", k, p.count, p.regalloc.peak_gpr_usage, np, want);
+        free(code);
+    }
 }
 
 /* ---- simulator ---- */
@@ -281,6 +299,110 @@ static void sim_battery(void) {
     printf("sim warp issues: %" PRIu64 "\n", g_sim_issues);
 }
 
+/* ---- prefill on the simulator (omega#543): prep, scan, post over T tokens against T oracle steps ---- */
+typedef struct { uint32_t off; void *p; size_t bytes; } SimBuf;
+typedef struct { uint32_t off; uint32_t word; } SimWord;
+static int sim_launch(const BlackwellIRProgram *prog, uint32_t threads, uint32_t gx, uint32_t gy, uint32_t smem_bytes, int order,
+                      const SimBuf *b, int nb, const SimWord *w, int nw, char *msg, size_t n) {
+    static uint8_t smem[OMEGA_GDN_SCAN_SHARED_BYTES];
+    WsSim s; memset(&s, 0, sizeof s);
+    s.p = prog; s.threads = threads; s.order = order;
+    memset(smem, 0xcd, sizeof smem); /* poison: a read before a write shows */
+    s.smem = smem; s.smem_bytes = smem_bytes ? smem_bytes : 4u;
+    for (int i = 0; i < nb; i++) {
+        const uint64_t a = (uintptr_t)b[i].p;
+        s.cbank[b[i].off / 4] = (uint32_t)a; s.cbank[b[i].off / 4 + 1] = (uint32_t)(a >> 32);
+        s.ranges[i].lo = a; s.ranges[i].hi = a + b[i].bytes;
+    }
+    s.nranges = nb;
+    for (int i = 0; i < nw; i++) s.cbank[w[i].off / 4] = w[i].word;
+    int err = ws_run(&s, gx, gy);
+    if (err) snprintf(msg, n, "%.150s (pc %d)", s.msg, s.err_pc);
+    g_sim_issues += s.warp_issues;
+    return err;
+}
+static uint32_t fw(float f) { uint32_t u; memcpy(&u, &f, 4); return u; }
+static int sim_prefill(int mutant, uint32_t T, float in_scale, float out_scale, Errs *worst, char *msg, size_t n) {
+    static BlackwellIRProgram pp, ps, pq;
+    OmegaGdnSpec spec = { mutant };
+    if (omega_blackwell_codegen_gdn_prep_prog(&spec, &pp) != 0 || omega_blackwell_codegen_gdn_scan_prog(&spec, &ps) != 0 ||
+        omega_blackwell_codegen_gdn_post_prog(&spec, &pq) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
+    Layer L; layer_make(&L, 21);
+    DState d; dstate_init(&d, &L);
+    const uint32_t T8 = (T + OMEGA_GDN_SCAN_CHUNK - 1u) / OMEGA_GDN_SCAN_CHUNK * OMEGA_GDN_SCAN_CHUNK;
+    const size_t s_qkv = (size_t)T * CD * 4u, s_z = (size_t)T * VD * 4u, s_ab = (size_t)T * VH * 8u;
+    const size_t s_rec = (size_t)T8 * VH * OMEGA_GDN_REC_BYTES, s_o = (size_t)T * VD * 4u;
+    float *qkv = aligned_alloc(256, s_qkv), *z = aligned_alloc(256, s_z), *ab = aligned_alloc(256, s_ab);
+    uint8_t *par = aligned_alloc(256, OMEGA_GDN_PAR_BYTES), *tail = aligned_alloc(256, OMEGA_GDN_TAIL_BYTES);
+    uint8_t *state = aligned_alloc(256, OMEGA_GDN_STATE_BYTES), *rec = aligned_alloc(256, s_rec);
+    float *o = aligned_alloc(256, s_o), *out = aligned_alloc(256, s_o), *out0 = malloc(s_o);
+    uint8_t *tail0 = malloc(OMEGA_GDN_TAIL_BYTES), *state0 = malloc(OMEGA_GDN_STATE_BYTES);
+    double *y = malloc((size_t)T * VD * 8);
+    float *tref = malloc((size_t)NT * 4);
+    for (uint32_t t = 0; t < T; t++) {
+        Inp in; inp_make(&in, 1000 + t, in_scale);
+        memcpy(qkv + (size_t)t * CD, in.qkv, CD * 4u); memcpy(z + (size_t)t * VD, in.z, VD * 4u); memcpy(ab + (size_t)t * VH * 2u, in.ab, VH * 8u);
+        oracle_step(&L, &d, &in, in_scale, out_scale, y + (size_t)t * VD);
+        inp_free(&in);
+    }
+    omega_gdn_pack_params(L.conv_w, L.a_log, L.dtb, L.nw, par);
+    int err = 0;
+    for (int order = 0; order < 2 && !err; order++) {
+        omega_gdn_pack_tail(L.tail0, (float *)tail);
+        memcpy(state, L.state0, OMEGA_GDN_STATE_BYTES);
+        memset(rec, 0xcd, s_rec);
+        for (size_t i = 0; i < (size_t)T * VD; i++) { o[i] = -999.0f; out[i] = -999.0f; }
+        const SimBuf bp[] = { { OMEGA_GDN_PREP_ARG_QKV, qkv, s_qkv }, { OMEGA_GDN_PREP_ARG_AB, ab, s_ab }, { OMEGA_GDN_PREP_ARG_PAR, par, OMEGA_GDN_PAR_BYTES },
+                              { OMEGA_GDN_PREP_ARG_TAIL, tail, OMEGA_GDN_TAIL_BYTES }, { OMEGA_GDN_PREP_ARG_REC, rec, s_rec } };
+        const SimWord wp[] = { { OMEGA_GDN_PREP_ARG_T, T }, { OMEGA_GDN_PREP_ARG_EPS_L2, fw(EPS_L2) }, { OMEGA_GDN_PREP_ARG_IN_SCALE, fw(in_scale) } };
+        const SimBuf bs[] = { { OMEGA_GDN_SCAN_ARG_REC, rec, s_rec }, { OMEGA_GDN_SCAN_ARG_QKV, qkv, s_qkv }, { OMEGA_GDN_SCAN_ARG_TAIL, tail, OMEGA_GDN_TAIL_BYTES },
+                              { OMEGA_GDN_SCAN_ARG_STATE, state, OMEGA_GDN_STATE_BYTES }, { OMEGA_GDN_SCAN_ARG_O, o, s_o } };
+        const SimWord wsc[] = { { OMEGA_GDN_SCAN_ARG_T, T }, { OMEGA_GDN_SCAN_ARG_IN_SCALE, fw(in_scale) } };
+        const SimBuf bq[] = { { OMEGA_GDN_POST_ARG_O, o, s_o }, { OMEGA_GDN_POST_ARG_Z, z, s_z }, { OMEGA_GDN_POST_ARG_PAR, par, OMEGA_GDN_PAR_BYTES },
+                              { OMEGA_GDN_POST_ARG_OUT, out, s_o } };
+        const SimWord wq[] = { { OMEGA_GDN_POST_ARG_EPS_NORM, fw(EPS_N) }, { OMEGA_GDN_POST_ARG_IN_SCALE, fw(in_scale) }, { OMEGA_GDN_POST_ARG_OUT_SCALE, fw(out_scale) } };
+        char m2[200] = "";
+        if (sim_launch(&pp, OMEGA_GDN_PREP_THREADS, (T + OMEGA_GDN_PREP_TOKENS - 1u) / OMEGA_GDN_PREP_TOKENS, KH, OMEGA_GDN_PREP_SHARED_BYTES, order, bp, 5, wp, 3, m2, sizeof m2)) { snprintf(msg, n, "prep: %s", m2); err = -1; break; }
+        if (sim_launch(&ps, OMEGA_GDN_THREADS, OMEGA_GDN_GRID_X, OMEGA_GDN_GRID_Y, OMEGA_GDN_SCAN_SHARED_BYTES, order, bs, 5, wsc, 2, m2, sizeof m2)) { snprintf(msg, n, "scan: %s", m2); err = -1; break; }
+        if (sim_launch(&pq, OMEGA_GDN_THREADS, T, OMEGA_GDN_POST_GRID_Y, 0, order, bq, 4, wq, 3, m2, sizeof m2)) { snprintf(msg, n, "post: %s", m2); err = -1; break; }
+        size_t unwritten = 0; for (size_t i = 0; i < (size_t)T * VD; i++) if (out[i] == -999.0f) unwritten++;
+        if (unwritten) { snprintf(msg, n, "%zu output words never written", unwritten); err = -1; break; }
+        if (order == 0) { memcpy(out0, out, s_o); memcpy(tail0, tail, OMEGA_GDN_TAIL_BYTES); memcpy(state0, state, OMEGA_GDN_STATE_BYTES); }
+        else if (memcmp(out0, out, s_o) || memcmp(tail0, tail, OMEGA_GDN_TAIL_BYTES) || memcmp(state0, state, OMEGA_GDN_STATE_BYTES)) {
+            snprintf(msg, n, "the warp order changed the result"); err = -1;
+        }
+    }
+    if (!err) {
+        double *ts = malloc((size_t)NT * 8);
+        for (size_t i = 0; i < NT; i++) ts[i] = d.tail[i];
+        worst->out = nerr(out, y, (size_t)T * VD);
+        worst->tail = omega_gdn_unpack_tail((const float *)tail, tref) != 0 ? INFINITY : nerr(tref, ts, NT);
+        worst->state = nerr((const float *)state, d.state, NS);
+        free(ts);
+    }
+    free(qkv); free(z); free(ab); free(par); free(tail); free(state); free(rec); free(o); free(out); free(out0);
+    free(tail0); free(state0); free(y); free(tref);
+    dstate_free(&d); layer_free(&L);
+    return err;
+}
+static void sim_prefill_battery(void) {
+    struct { int mutant; uint32_t T; float in_scale, out_scale; const char *name; } pts[] = {
+        { 0, 37, 1.0f, 1.0f, "prefill T 37" }, { 0, 3, 1.0f, 1.0f, "prefill T 3" },
+        { 0, 17, 0.0009765625f, 18446744073709551616.0f, "prefill T 17, in 2^-10, out 2^64" },
+        { 1, 19, 1.0f, 1.0f, "prefill mutant 1 (no decay)" }, { 2, 19, 1.0f, 1.0f, "prefill mutant 2 (beta 1)" },
+        { 3, 19, 1.0f, 1.0f, "prefill mutant 3 (gate z)" }, { 4, 19, 1.0f, 1.0f, "prefill mutant 4 (tail kept)" },
+    };
+    for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
+        char msg[300] = ""; Errs w = { 0, 0, 0 };
+        double t0 = now_ms();
+        int err = sim_prefill(pts[i].mutant, pts[i].T, pts[i].in_scale, pts[i].out_scale, &w, msg, sizeof msg);
+        printf("sim %-44s err out %.3g tail %.3g state %.3g (%.0f ms)%s%s\n", pts[i].name, w.out, w.tail, w.state, now_ms() - t0, err ? " ERROR " : "", msg);
+        CHECK(err == 0, "sim %s ran (%s)", pts[i].name, msg);
+        if (pts[i].mutant == 0) CHECK(errs_ok(&w), "sim %s within tolerance", pts[i].name);
+        else CHECK(!errs_ok(&w), "sim %s caught", pts[i].name);
+    }
+}
+
 /* ---- chip ---- */
 static int chip_steps(OmegaGpuGdn *g, uint32_t layer, const Layer *L, DState *d, uint32_t steps, uint32_t seed, float in_scale,
                       float out_scale, Errs *worst, float *last_out) {
@@ -305,6 +427,175 @@ static int chip_steps(OmegaGpuGdn *g, uint32_t layer, const Layer *L, DState *d,
     if (last_out) memcpy(last_out, out, (size_t)VD * 4);
     free(out); free(tail); free(state); free(y); free(td);
     return rc;
+}
+/* ---- prefill on the chip (omega#543) ---- */
+typedef struct { float *qkv, *z, *ab; } PfIn;
+static void pf_in_make(PfIn *p, uint32_t T, uint32_t seed, float in_scale) {
+    p->qkv = malloc((size_t)T * CD * 4); p->z = malloc((size_t)T * VD * 4); p->ab = malloc((size_t)T * VH * 8);
+    for (uint32_t t = 0; t < T; t++) {
+        Inp in; inp_make(&in, seed + t, in_scale);
+        memcpy(p->qkv + (size_t)t * CD, in.qkv, CD * 4u); memcpy(p->z + (size_t)t * VD, in.z, VD * 4u); memcpy(p->ab + (size_t)t * VH * 2u, in.ab, VH * 8u);
+        inp_free(&in);
+    }
+}
+static void pf_in_free(PfIn *p) { free(p->qkv); free(p->z); free(p->ab); }
+/* oracle over the same T rows; y [T][VD] */
+static void pf_oracle(const Layer *L, DState *d, uint32_t T, uint32_t seed, float in_scale, float out_scale, double *y) {
+    for (uint32_t t = 0; t < T; t++) { Inp in; inp_make(&in, seed + t, in_scale); oracle_step(L, d, &in, in_scale, out_scale, y + (size_t)t * VD); inp_free(&in); }
+}
+/* prefill T tokens on `layer` from its current state, then `dec` decode steps; worst errors over every row, the tail and
+ * the state after the prefill and after each step */
+static int chip_prefill_chain(OmegaGpuGdn *g, uint32_t layer, const Layer *L, uint32_t T, uint32_t dec, uint32_t seed, float in_scale,
+                              float out_scale, Errs *worst, float *out_copy) {
+    DState d; dstate_init(&d, L);
+    PfIn p; pf_in_make(&p, T, seed, in_scale);
+    float *out = malloc((size_t)T * VD * 4), *tail = malloc((size_t)NT * 4), *state = malloc((size_t)NS * 4);
+    double *y = malloc((size_t)T * VD * 8), *td = malloc((size_t)NT * 8);
+    memset(worst, 0, sizeof *worst);
+    int rc = omega_gpu_gdn_prefill(g, layer, T, p.qkv, p.z, p.ab, EPS_L2, EPS_N, in_scale, out_scale, out, NULL);
+    if (rc == 0) rc = omega_gpu_gdn_get_state(g, layer, tail, state);
+    if (rc == 0) {
+        pf_oracle(L, &d, T, seed, in_scale, out_scale, y);
+        for (size_t i = 0; i < NT; i++) td[i] = d.tail[i];
+        worst->out = nerr(out, y, (size_t)T * VD); worst->tail = nerr(tail, td, NT); worst->state = nerr(state, d.state, NS);
+        if (out_copy) memcpy(out_copy, out, (size_t)T * VD * 4);
+    }
+    if (rc == 0 && dec) {
+        Errs e;
+        rc = chip_steps(g, layer, L, &d, dec, seed + T, in_scale, out_scale, &e, NULL);
+        if (e.out > worst->out) worst->out = e.out;
+        if (e.tail > worst->tail) worst->tail = e.tail;
+        if (e.state > worst->state) worst->state = e.state;
+    }
+    free(out); free(tail); free(state); free(y); free(td);
+    pf_in_free(&p); dstate_free(&d);
+    return rc;
+}
+static void chip_prefill(OmegaGpuGdn *g, Layer *L, FILE *out, int *first, uint32_t reps) {
+#define PPOINT(name, e, extra) do { if (out) { fprintf(out, "%s{\"name\":\"%s\",\"err_out\":%.6g,\"err_tail\":%.6g,\"err_state\":%.6g%s}", *first ? "" : ",", name, (e).out, (e).tail, (e).state, extra); *first = 0; } } while (0)
+    struct { uint32_t layer, T, dec, seed; float in_scale, out_scale; const char *name; } pp[] = {
+        { 1, 37, 3, 2000, 1.0f, 1.0f, "prefill layer 1, T 37, then 3 decode steps" },
+        { 0, 3, 1, 2100, 1.0f, 1.0f, "prefill layer 0, T 3, then 1 decode step" },
+        { 0, 41, 0, 2200, 0.0009765625f, 18446744073709551616.0f, "prefill layer 0, T 41, in 2^-10 out 2^64" },
+    };
+    for (size_t i = 0; i < sizeof pp / sizeof pp[0]; i++) {
+        CHECK(omega_gpu_gdn_set_state(g, pp[i].layer, L[pp[i].layer].tail0, L[pp[i].layer].state0) == 0, "set state for %s", pp[i].name);
+        Errs e;
+        int rc = chip_prefill_chain(g, pp[i].layer, &L[pp[i].layer], pp[i].T, pp[i].dec, pp[i].seed, pp[i].in_scale, pp[i].out_scale, &e, NULL);
+        printf("chip %-48s rc=%s err out %.3g tail %.3g state %.3g %s\n", pp[i].name, omega_gpu_gdn_rc_name(rc), e.out, e.tail, e.state, rc ? omega_gpu_gdn_last_error() : "");
+        CHECK(rc == 0 && errs_ok(&e), "chip %s", pp[i].name);
+        PPOINT(pp[i].name, e, "");
+    }
+    /* rerun from the same state: bit-identical rows */
+    {
+        float *a = malloc((size_t)37 * VD * 4), *b = malloc((size_t)37 * VD * 4);
+        Errs e1, e2;
+        CHECK(omega_gpu_gdn_set_state(g, 1, L[1].tail0, L[1].state0) == 0, "set state for prefill rerun");
+        int rc = chip_prefill_chain(g, 1, &L[1], 37, 0, 2000, 1.0f, 1.0f, &e1, a);
+        CHECK(omega_gpu_gdn_set_state(g, 1, L[1].tail0, L[1].state0) == 0, "set state for prefill rerun 2");
+        int rc2 = chip_prefill_chain(g, 1, &L[1], 37, 0, 2000, 1.0f, 1.0f, &e2, b);
+        CHECK(rc == 0 && rc2 == 0 && memcmp(a, b, (size_t)37 * VD * 4) == 0, "prefill rerun from the same state is bit-identical");
+        free(a); free(b);
+    }
+    /* mutants */
+    for (int m = 1; m <= 4; m++) {
+        omega_gpu_gdn_test_set_mutant(m);
+        CHECK(omega_gpu_gdn_set_state(g, 1, L[1].tail0, L[1].state0) == 0, "set state prefill mutant %d", m);
+        Errs e;
+        int rc = chip_prefill_chain(g, 1, &L[1], 19, 0, 2300, 1.0f, 1.0f, &e, NULL);
+        char nm[40]; snprintf(nm, sizeof nm, "prefill mutant %d", m);
+        printf("chip %-48s rc=%s err out %.3g tail %.3g state %.3g\n", nm, omega_gpu_gdn_rc_name(rc), e.out, e.tail, e.state);
+        CHECK(rc == 0 && !errs_ok(&e), "chip prefill mutant %d caught", m);
+        PPOINT(nm, e, "");
+    }
+    omega_gpu_gdn_test_set_mutant(0);
+    /* the record path: prefill 37 tokens and one decode step in one command list on layer 0 */
+    {
+        const uint32_t T = 37;
+        CHECK(omega_gpu_gdn_set_state(g, 0, L[0].tail0, L[0].state0) == 0, "set state for prefill record");
+        CHECK(omega_gpu_gdn_prefill_reserve(g, 64) == 0, "prefill reserve 64 tokens");
+        PfIn p; pf_in_make(&p, T, 2400, 1.0f);
+        Inp nx; inp_make(&nx, 2400 + T, 1.0f);
+        DState d; dstate_init(&d, &L[0]);
+        double *y = malloc((size_t)T * VD * 8), *y1 = malloc((size_t)VD * 8);
+        pf_oracle(&L[0], &d, T, 2400, 1.0f, 1.0f, y);
+        oracle_step(&L[0], &d, &nx, 1.0f, 1.0f, y1);
+        /* warm all four kernels on layer 1 (a cache miss inside the record is refused) */
+        float *tmp = malloc((size_t)T * VD * 4);
+        CHECK(omega_gpu_gdn_prefill(g, 1, T, p.qkv, p.z, p.ab, EPS_L2, EPS_N, 1.0f, 1.0f, tmp, NULL) == 0, "prefill warm-up");
+        CHECK(omega_gpu_gdn_step(g, 1, nx.qkv, nx.z, nx.ab, EPS_L2, EPS_N, 1.0f, 1.0f, tmp, NULL) == 0, "decode warm-up");
+        OmegaGpuCmdList *cl = NULL; /* create and free take the session lock themselves (omega_gpu_cmdlist.h) */
+        const int cl_ok = omega_gpu_cmdlist_create(8, &cl) == 0;
+        omega_gpu_session_lock();
+        OmegaGpuMem inb; memset(&inb, 0, sizeof inb);
+        const size_t s_qkv = (size_t)T * CD * 4, s_z = (size_t)T * VD * 4, s_ab = (size_t)T * VH * 8;
+        const size_t o_nx = (s_qkv + s_z + s_ab + 255) & ~(size_t)255;
+        int ok = cl_ok && omega_gpu_session_open() != NULL && omega_gpu_session_alloc(o_nx + (size_t)CD * 4 + VD * 4 + VH * 8, &inb) == 0;
+        if (ok) {
+            uint8_t *c = inb.cpu;
+            memcpy(c, p.qkv, s_qkv); memcpy(c + s_qkv, p.z, s_z); memcpy(c + s_qkv + s_z, p.ab, s_ab);
+            memcpy(c + o_nx, nx.qkv, (size_t)CD * 4); memcpy(c + o_nx + CD * 4, nx.z, (size_t)VD * 4); memcpy(c + o_nx + CD * 4 + VD * 4, nx.ab, VH * 8);
+            ok = omega_gpu_session_sync_to_gpu(&inb) == 0;
+        }
+        uint64_t pf_out = 0, dec_out = 0;
+        if (ok) ok = omega_gpu_gdn_prefill_record(cl, g, 0, T, inb.va, inb.va + s_qkv, inb.va + s_qkv + s_z, EPS_L2, EPS_N, 1.0f, 1.0f, &pf_out) == 0;
+        if (ok) ok = omega_gpu_gdn_record(cl, g, 0, inb.va + o_nx, inb.va + o_nx + CD * 4, inb.va + o_nx + CD * 4 + VD * 4, EPS_L2, EPS_N, 1.0f, 1.0f, &dec_out) == 0;
+        OmegaGpuCmdListOpts opts; memset(&opts, 0, sizeof opts);
+        OmegaGpuCmdListStats stc; memset(&stc, 0, sizeof stc);
+        if (ok) ok = omega_gpu_cmdlist_submit(cl, &opts, &stc) == 0;
+        if (inb.cpu) omega_gpu_session_free(&inb);
+        omega_gpu_session_unlock();
+        if (cl) omega_gpu_cmdlist_free(cl);
+        CHECK(ok, "record prefill + decode step and submit (%s)", ok ? "" : omega_gpu_gdn_last_error());
+        if (ok) {
+            float *t = malloc((size_t)NT * 4), *s = malloc((size_t)NS * 4), *yo = malloc((size_t)T * VD * 4), *y1o = malloc((size_t)VD * 4);
+            double *td = malloc((size_t)NT * 8);
+            ok = omega_gpu_gdn_get_state(g, 0, t, s) == 0 && omega_gpu_gdn_prefill_read_out(g, T, yo) == 0 && omega_gpu_gdn_read_out(g, y1o) == 0;
+            for (size_t i = 0; i < NT; i++) td[i] = d.tail[i];
+            Errs e = { nerr(yo, y, (size_t)T * VD), nerr(t, td, NT), nerr(s, d.state, NS) };
+            const double e1 = nerr(y1o, y1, VD);
+            if (e1 > e.out) e.out = e1;
+            printf("chip %-48s err out %.3g tail %.3g state %.3g\n", "record path, prefill 37 + 1 decode step", e.out, e.tail, e.state);
+            CHECK(ok && errs_ok(&e), "record path: prefill then a decode step match the oracle");
+            PPOINT("record path, prefill 37 + 1 decode step", e, "");
+            free(t); free(s); free(yo); free(y1o); free(td);
+        }
+        free(tmp); free(y); free(y1); dstate_free(&d); pf_in_free(&p); inp_free(&nx);
+        /* the reservation pins the scratch: a longer prefill is refused, not reallocated */
+        PfIn q; pf_in_make(&q, 65, 2500, 1.0f);
+        float *o65 = malloc((size_t)65 * VD * 4);
+        CHECK(omega_gpu_gdn_prefill(g, 1, 65, q.qkv, q.z, q.ab, EPS_L2, EPS_N, 1.0f, 1.0f, o65, NULL) == OMEGA_GPU_GDN_TOO_LARGE, "prefill past the reservation is refused");
+        free(o65); pf_in_free(&q);
+    }
+    /* timing per launch at three prompt lengths (a fresh, unreserved scratch per length) */
+    const uint32_t Ts[3] = { 512, 2048, 8192 };
+    for (unsigned k = 0; k < 3; k++) {
+        const uint32_t T = Ts[k], nrep = reps < 5 ? reps : 5;
+        CHECK(omega_gpu_gdn_prefill_reserve(g, T) == 0, "reserve %u tokens", T);
+        PfIn p; pf_in_make(&p, T, 3000, 1.0f);
+        float *o = malloc((size_t)T * VD * 4);
+        uint64_t e[3][5], c[5];
+        uint32_t done = 0;
+        OmegaGpuGdnPfInfo info;
+        for (uint32_t r = 0; r < nrep; r++) {
+            if (omega_gpu_gdn_prefill(g, 0, T, p.qkv, p.z, p.ab, EPS_L2, EPS_N, 1.0f, 1.0f, o, &info) != 0) break;
+            for (unsigned j = 0; j < 3; j++) e[j][done] = info.elapsed_ns[j];
+            c[done] = info.call_ns; done++;
+        }
+        CHECK(done == nrep, "prefill T %u timing reps ran (%u of %u): %s", T, done, nrep, done == nrep ? "" : omega_gpu_gdn_last_error());
+        if (done) {
+            for (unsigned j = 0; j < 3; j++) qsort(e[j], done, 8, cmp_u64);
+            qsort(c, done, 8, cmp_u64);
+            const double us[3] = { e[0][done / 2] / 1e3, e[1][done / 2] / 1e3, e[2][done / 2] / 1e3 }, tot = us[0] + us[1] + us[2];
+            printf("timing prefill T %u (medians of %u): prep %.1f us, scan %.1f us, post %.1f us, chip total %.1f us = %.2f us/token, call %.1f us; insns %u/%u/%u, registers %u/%u/%u\n",
+                   T, done, us[0], us[1], us[2], tot, tot / T, c[done / 2] / 1e3, info.insns[0], info.insns[1], info.insns[2], info.gprs[0], info.gprs[1], info.gprs[2]);
+            if (out) fprintf(out, "%s{\"name\":\"timing prefill\",\"tokens\":%u,\"reps\":%u,\"prep_us\":%.3f,\"scan_us\":%.3f,\"post_us\":%.3f,\"chip_us\":%.3f,\"us_per_token\":%.4f,\"call_us\":%.3f,\"insns\":[%u,%u,%u],\"gprs\":[%u,%u,%u]}",
+                             *first ? "" : ",", T, done, us[0], us[1], us[2], tot, tot / T, c[done / 2] / 1e3, info.insns[0], info.insns[1], info.insns[2], info.gprs[0], info.gprs[1], info.gprs[2]);
+            *first = 0;
+        }
+        free(o); pf_in_free(&p);
+    }
+#undef PPOINT
 }
 static int chip_run(const char *out_path, uint32_t reps) {
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
@@ -419,6 +710,7 @@ static int chip_run(const char *out_path, uint32_t reps) {
         }
         free(tmp); free(y); dstate_free(&d); inp_free(&in[0]); inp_free(&in[1]);
     }
+    chip_prefill(g, L, out, &first, reps);
     /* timing */
     {
         Inp in; inp_make(&in, 950, 1.0f);
@@ -461,7 +753,7 @@ int main(int argc, char **argv) {
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
     if (host) host_only();
-    if (sim) sim_battery();
+    if (sim) { sim_battery(); sim_prefill_battery(); }
     if (!host && !sim) {
         (void)omega_gpu_session_set_spin_us(spin);
         chip_run(out_path, reps ? reps : 50);
