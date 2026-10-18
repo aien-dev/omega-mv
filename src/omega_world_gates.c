@@ -1806,9 +1806,12 @@ static bool test_m19_gate16_clean_clone(void) {
         return false;
     }
 
+    /* OUT_DIR is unset for the nested build so the copy builds ./build/omegatool:
+     * tests/gates/run.sh exports a per-step OUT_DIR (omega#511) that would move the
+     * binary to $OUT_DIR/omegatool (sh exit 127, omega#526). */
     char command[4608];
     int len = snprintf(command, sizeof(command),
-                       "git clone --quiet --no-hardlinks . %s && cd %s && git checkout --quiet %s && "
+                       "unset OUT_DIR; git clone --quiet --no-hardlinks . %s && cd %s && git checkout --quiet %s && "
                        "make clean >/dev/null 2>&1 && make -j PHYSICS_DIR=%s >/dev/null 2>&1 && "
                        "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m19-gates >%s/qualification.log 2>&1",
                        checkout, checkout, src_sha, physics_dir_resolved, clone);

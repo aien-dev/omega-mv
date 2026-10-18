@@ -1000,7 +1000,13 @@ static bool test_m18_gate16_clean_clone(void) {
      * /tmp path is shared by every user of the machine, and the sticky /tmp lets
      * neither the judge user nor the operator remove or overwrite what the other
      * left behind ("rm: Permission denied", "cannot create ...log: Permission denied"),
-     * so the gate failed for whoever ran second. */
+     * so the gate failed for whoever ran second.
+     *
+     * OUT_DIR is unset for the nested build: tests/gates/run.sh exports a per-step
+     * OUT_DIR (omega#511), so `make` in the copy would put the binary at
+     * $OUT_DIR/omegatool and "./build/omegatool" would not exist (sh exit 127 in
+     * the judge run of e466b138, omega#526). The copy is private, so it needs no
+     * per-step build directory. */
     char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
     if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
         fprintf(stderr, "%s\n", physics_err);
@@ -1017,6 +1023,7 @@ static bool test_m18_gate16_clean_clone(void) {
     }
     char command[4608];
     int len = snprintf(command, sizeof(command),
+                       "unset OUT_DIR; "
                        "root=$(git rev-parse --show-toplevel) && "
                        "cp -r \"$root\" '%s/checkout' && "
                        "cd '%s/checkout' && "
