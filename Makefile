@@ -34,6 +34,8 @@ SRCS += src/omega_blackwell_codegen_moe2.c
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
 SRCS += src/omega_blackwell_codegen_attn256.c src/omega_gpu_decode_attn256_api.c
+# Qwen3.8-27B (omega-mv#545, 2026-10-18): prefill attention head_dim 256 on the decode cache, new files only
+SRCS += src/omega_blackwell_codegen_pattn256.c src/omega_gpu_prefill_attn256_api.c
 # OWN-30B (2026-10-13): libm-free host math (omega_gpu_hostmath.h) so libomega_gpu.a links without -lm
 SRCS += src/omega_gpu_hostmath.c
 # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h), new files only
@@ -2585,6 +2587,11 @@ $(GPU_TC_PEAK_TEST): tests/gpu_tc_peak_test.c tests/bw_hmma_model.h tests/bw_war
 GPU_PATTN_TEST = $(OUT_DIR)/gpu_prefill_attn_test
 $(GPU_PATTN_TEST): tests/gpu_prefill_attn_test.c tests/bw_hmma_model.h tests/bw_warp_sim_pa.h src/omega_gpu_prefill_attn_api.h src/omega_blackwell_codegen_pattn.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_prefill_attn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+# Qwen3.8-27B (omega-mv#545, 2026-10-18): head_dim 256 prefill attention on the decode cache. --host-only and --sim
+# are host proofs; the chip run is the default mode (under the GB10 lock).
+GPU_PATTN256_TEST = $(OUT_DIR)/gpu_prefill_attn256_test
+$(GPU_PATTN256_TEST): tests/gpu_prefill_attn256_test.c tests/bw_hmma_model.h tests/bw_warp_sim_pa.h src/omega_gpu_prefill_attn256_api.h src/omega_blackwell_codegen_pattn256.h src/omega_blackwell_codegen_attn256.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_prefill_attn256_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 # OWN-30B T3b (2026-10-13): device-resident prefill module tests (host sim first; chip parts under the GB10 lock)
 GPU_PF_MEM_TEST = $(OUT_DIR)/gpu_pf_mem_test
 $(GPU_PF_MEM_TEST): tests/gpu_pf_mem_test.c tests/bw_warp_sim_tc.h src/omega_gpu_prefill.h src/omega_blackwell_codegen_pf.h $(OUT_DIR)/libomega_gpu.a
