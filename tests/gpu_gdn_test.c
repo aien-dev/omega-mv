@@ -382,10 +382,11 @@ static int chip_run(const char *out_path, uint32_t reps) {
         /* warm the kernel cache outside the record (a miss inside is refused) */
         float *tmp = malloc((size_t)VD * 4);
         CHECK(omega_gpu_gdn_step(g, 1, in[0].qkv, in[0].z, in[0].ab, EPS_L2, EPS_N, 1.0f, 1.0f, tmp, NULL) == 0, "warm-up step");
+        OmegaGpuCmdList *cl = NULL; /* create and free take the session lock themselves (omega_gpu_cmdlist.h) */
+        const int cl_ok = omega_gpu_cmdlist_create(4, &cl) == 0;
         omega_gpu_session_lock();
         OmegaGpuMem inb[2]; memset(inb, 0, sizeof inb);
-        OmegaGpuCmdList *cl = NULL;
-        int ok = omega_gpu_session_open() != NULL;
+        int ok = cl_ok && omega_gpu_session_open() != NULL;
         const size_t ib = (size_t)CD * 4 + (size_t)VD * 4 + VH * 8;
         for (int i = 0; ok && i < 2; i++) {
             ok = omega_gpu_session_alloc(ib, &inb[i]) == 0;
@@ -396,15 +397,14 @@ static int chip_run(const char *out_path, uint32_t reps) {
             }
         }
         uint64_t out_va = 0;
-        if (ok) ok = omega_gpu_cmdlist_create(4, &cl) == 0;
         for (int i = 0; ok && i < 2; i++)
             ok = omega_gpu_gdn_record(cl, g, 0, inb[i].va, inb[i].va + CD * 4, inb[i].va + CD * 4 + VD * 4, EPS_L2, EPS_N, 1.0f, 1.0f, &out_va) == 0;
         OmegaGpuCmdListOpts opts; memset(&opts, 0, sizeof opts);
         OmegaGpuCmdListStats stc; memset(&stc, 0, sizeof stc);
         if (ok) ok = omega_gpu_cmdlist_submit(cl, &opts, &stc) == 0;
-        if (cl) omega_gpu_cmdlist_free(cl);
         for (int i = 0; i < 2; i++) if (inb[i].cpu) omega_gpu_session_free(&inb[i]);
         omega_gpu_session_unlock();
+        if (cl) omega_gpu_cmdlist_free(cl);
         CHECK(ok, "record two steps and submit (%s)", ok ? "" : omega_gpu_gdn_last_error());
         if (ok) {
             float *t = malloc((size_t)NT * 4), *s = malloc((size_t)NS * 4), *yo = malloc((size_t)VD * 4);
@@ -450,6 +450,7 @@ static int chip_run(const char *out_path, uint32_t reps) {
 }
 
 int main(int argc, char **argv) {
+    setvbuf(stdout, NULL, _IOLBF, 0); /* a stuck chip run still leaves every finished line in its log */
     int host = 0, sim = 0; const char *out_path = NULL; uint32_t reps = 0, spin = 2000;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
