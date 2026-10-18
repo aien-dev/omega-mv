@@ -1,0 +1,11 @@
+== shape n=1536 k=2048, 12 resident experts, pool of 5 slots, 64 churn rounds (MUTANT)
+ok   pool driver bytes 15732736 for 15732480 payload bytes (page rounding only)
+ok   references: experts 0 and 1 give different y
+info mutant: load into the pinned slot returned OK
+FAIL NEGATIVE CONTROL: list output equals pinned expert 0 (expected to FAIL under the mutant; read B=1)
+stats slots=5 device_bytes=15732480 loads=6 load_failures=0 busy=0 stale=0 pins=2 pinned_now=0 pinned_high=1 bytes_loaded=18878976 load_ns=6618002 load_GBps=2.853
+ok   no pin leaked (pinned_now 0, high-water 1 <= 5)
+ok   pool freed
+ok   pool returned its 2 driver buffers (frees 9 -> 11)
+GPU_FP8_SLOTS_NEGATIVE_CONTROL: CAUGHT (1 of 6 checks failed)
+# exit 1
