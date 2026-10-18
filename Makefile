@@ -101,10 +101,18 @@ $(OUT_DIR):
 $(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
+# The two physics objects in libomega_gpu.a are built only after check-physics-lock passed, and rebuilt whenever the
+# physics checkout changes (path or commit): physics.stamp is rewritten only when its content changes. Without this, a
+# -j build whose lock check failed still compiled them from the default ../physics, and a rerun with the right
+# PHYSICS_DIR kept those objects (2026-10-18: an old nvrm.c with a GPU-cached GPFIFO stalled every second command list).
+$(OUT_DIR)/physics.stamp: check-physics-lock | $(OUT_DIR)
+	@want="$(abspath $(PHYSICS_DIR)) $$(git -C $(PHYSICS_DIR) rev-parse HEAD 2>/dev/null || echo unknown)"; \
+		if [ "$$(cat $@ 2>/dev/null)" != "$$want" ]; then echo "$$want" > $@; fi
+
+$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c $(OUT_DIR)/physics.stamp | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c | $(OUT_DIR)
+$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c $(OUT_DIR)/physics.stamp | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OUT_DIR)/crumbline/%.o: src/crumbline/%.c | $(OUT_DIR)
