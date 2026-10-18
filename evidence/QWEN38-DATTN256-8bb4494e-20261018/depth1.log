@@ -1,0 +1,16 @@
+cache alloc (1 layer, 32768 positions, 128 MiB): rc=OK 177.4 ms ()
+chip context 1                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=1 kv_bytes=4096 fill=0.0ms chip_med=49.0us (0.1 GB/s) call_med=51.6us reps=20
+chip context 7                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=1 kv_bytes=28672 fill=0.0ms chip_med=56.4us (0.5 GB/s) call_med=59.2us reps=20
+chip context 256              rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=1 kv_bytes=1048576 fill=0.1ms chip_med=107.4us (9.8 GB/s) call_med=110.2us reps=20
+chip context 301 sharp q      rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=2x4 per_split=256 depth=1 kv_bytes=1232896 fill=0.1ms chip_med=122.5us (10.1 GB/s) call_med=125.6us reps=20
+chip context 301 sharp q      mutant 1: caught (rc=OK bad=4815 worst=17.399)
+chip context 301 sharp q      mutant 2: caught (rc=OK bad=5666 worst=40.991)
+chip context 301 sharp q      mutant 3: caught (rc=OK bad=899 worst=3.363)
+chip context 301 sharp q      mutant 4: caught (rc=OK bad=2752 worst=30.582)
+chip context 301 sharp q      mutant 5: caught (rc=OK bad=2937 worst=78.730)
+chip context 1024             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=4x4 per_split=256 depth=1 kv_bytes=4194304 fill=0.4ms chip_med=148.7us (28.2 GB/s) call_med=151.5us reps=20
+chip context 4096             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=16x4 per_split=256 depth=1 kv_bytes=16777216 fill=1.3ms chip_med=312.8us (53.6 GB/s) call_med=315.7us reps=20
+chip context 8192             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=32x4 per_split=256 depth=1 kv_bytes=33554432 fill=1.8ms chip_med=591.1us (56.8 GB/s) call_med=594.1us reps=20
+chip context 32768            rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=128x4 per_split=256 depth=1 kv_bytes=134217728 fill=11.4ms chip_med=1863.3us (72.0 GB/s) call_med=1866.0us reps=20
+gpu_decode_attn256_test: 30 checks, 0 failed: PASS
+depth 1 exit 0 (informational)
