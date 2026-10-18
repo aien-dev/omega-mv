@@ -2122,6 +2122,108 @@ static void receipt(int tests_ok) {
     printf("R13 gate: " R13_GATE_KEY "=%s\nR13 receipt: %s\n", gate, path);
 }
 
+/* omega #527: why a mode failed, on STDOUT (the judge keeps stdout in its receipt) as well as stderr.
+ * The counts line alone said "GPU 0" without saying why no GPU experiment ran. These lines name the
+ * state AIEN, Omega and the seat transport were in when the mode gave up. They only read the world. */
+static const char *pred_state_name(uint64_t s) {
+    return s == RX_AIEN_PRED_HOLDING ? "holding" : s == RX_AIEN_PRED_CONFIRMED ? "confirmed" :
+           s == RX_AIEN_PRED_FAILED ? "failed" : s == 0 ? "none" : "?";
+}
+static const char *hyp_state_name(uint64_t s) {
+    return s == RX_AIEN_HYP_OPEN ? "open" : s == RX_AIEN_HYP_TESTING ? "testing (a plan is out)" :
+           s == RX_AIEN_HYP_SUPPORTED ? "supported" : s == RX_AIEN_HYP_UNSUPPORTED ? "unsupported" :
+           s == RX_AIEN_HYP_EXHAUSTED ? "exhausted" : s == 0 ? "none" : "?";
+}
+static const char *why_name(uint64_t w) {
+    return w == RX_AIEN_WHY_CORE_CLASS ? "core class" : w == RX_AIEN_WHY_DRIFT ? "drift" :
+           w == RX_AIEN_WHY_GOAL ? "goal" : w == 0 ? "none" : "?";
+}
+static void both(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+static void both(const char *fmt, ...) {
+    char line[768];
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(line, sizeof line, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "%s\n", line);
+    printf("%s\n", line);
+}
+static void explain_failure(Rig *r, const char *name) {
+    if (g_first_failure[0]) printf("R13 first failure: %s\n", g_first_failure);
+    both("R13 %s FAILED: plan %llu search %llu GPU %llu evidence %llu "
+         "belief %llu selection %llu candidate %llu promotion %llu in force %llu "
+         "result %d prepare refusal %d", name,
+         U(field(r, r->aien.o.plan, 0)), U(field(r, r->omega.o.search, 0)),
+         U(field(r, r->living.o.output, 0)), U(field(r, r->living.o.evidence, 0)),
+         U(field(r, r->aien.o.experiment_belief, 0)),
+         U(field(r, r->omega.o.selection, 0)), U(field(r, r->living.o.candidate, 0)),
+         U(field(r, r->living.o.promotion, 0)), U(field(r, r->living.o.inforce, 0)),
+         r->promoter.result, r->living.last_refusal);
+    if (!r->ready) return;   /* setup failed: the objects below may not exist */
+    both("R13 %s AIEN: prediction %llu %s on record %llu, hits %llu, expects %llu ns, failed at %llu ns; "
+         "belief record %llu, intervals %llu, baseline %llu ns, last %llu ns, misses %llu; "
+         "hypothesis %llu %s for prediction %llu, %s; plan %llu (%s, hypothesis %llu, goal %llu); goal %llu",
+         name, U(field(r, r->aien.o.prediction, 0)), pred_state_name(field(r, r->aien.o.prediction, 6)),
+         U(field(r, r->aien.o.prediction, 1)), U(field(r, r->aien.o.prediction, 3)),
+         U(field(r, r->aien.o.prediction, 5)), U(field(r, r->aien.o.prediction, 7)),
+         U(field(r, r->aien.o.belief, 0)), U(field(r, r->aien.o.belief, 5)),
+         U(field(r, r->aien.o.belief, 4)), U(field(r, r->aien.o.belief, 6)),
+         U(field(r, r->aien.o.belief, 7)),
+         U(field(r, r->aien.o.hypothesis, 0)),
+         field(r, r->aien.o.hypothesis, 1) == RX_AIEN_HYP_CORE_CLASS ? "core class" :
+         field(r, r->aien.o.hypothesis, 1) == RX_AIEN_HYP_DRIFT ? "drift" : "-",
+         U(field(r, r->aien.o.hypothesis, 2)), hyp_state_name(field(r, r->aien.o.hypothesis, 7)),
+         U(field(r, r->aien.o.plan, 0)), why_name(field(r, r->aien.o.plan, 5)),
+         U(field(r, r->aien.o.plan, 4)), U(field(r, r->aien.o.plan, 6)),
+         U(field(r, r->aien.o.goal, 0)));
+    uint64_t search = field(r, r->omega.o.search, 0), sel = field(r, r->omega.o.selection, 0);
+    both("R13 %s Omega: search epoch %llu (for plan %llu), selection epoch %llu realization %016llx; "
+         "production calls %llu using realization %016llx, in force epoch %llu realization %016llx%s", name,
+         U(search), U(field(r, r->omega.o.search, 6)), U(sel), U(field(r, r->omega.o.selection, 1)),
+         U(field(r, r->omega.o.demand, 0)), U(field(r, r->omega.o.demand, 6)),
+         U(field(r, r->living.o.inforce, 0)), U(field(r, r->living.o.inforce, 1)),
+         search != sel ? "; that search waits for the GPU experiment's evidence before it can select" : "");
+    uint64_t claims = r->w.stats.resident_claims, seat_acts = acts(r, r->living.r_seat);
+    int err = atomic_load(&r->acceptor_error);
+    const char *why;
+    char buf[160];
+    uint64_t prepared = field(r, r->living.o.input, 2);   /* search epoch the experiment is for */
+    if (err != 0) { snprintf(buf, sizeof buf, "seat transport error %d (the seat's own line is on stderr)", err); why = buf; }
+    else if (seat_blocked(r, 0)) why = "the seat was stopped by the authority check";
+    else if (r->living.last_refusal != 0) { snprintf(buf, sizeof buf, "experiment prepare refused (%d)", r->living.last_refusal); why = buf; }
+    else if (prepared == 0)
+        why = r->acceptor_live ? "no GPU experiment was prepared (no AIEN plan taken up by an Omega search)"
+                               : "no GPU experiment was prepared, and the seat transport was not started yet "
+                                 "(it starts with the goal)";
+    else if (!r->acceptor_live)
+        why = "a GPU experiment was prepared but the seat transport that completes claims was not started yet "
+              "(it starts with the goal)";
+    else if (claims != 0) why = "the seat claimed; see the counts above";
+    else why = "a GPU experiment was prepared and the seat transport ran, but no claim completed";
+    both("R13 %s GPU: claims %llu, seat activations %llu, transport %s, transport error %d, "
+         "experiment input search %llu trial %llu; why no GPU result: %s", name,
+         U(claims), U(seat_acts), r->acceptor_live ? "started" : "not started", err,
+         U(field(r, r->living.o.input, 2)), U(field(r, r->living.o.input, 3)), why);
+    /* The two pre-goal dead ends behind "AIEN never confirmed the incumbent cost" (omega #527).
+     * Both start from wall-clock jitter; neither is a GPU failure, and neither can recover before
+     * the goal, so the 60 s wait only runs out. */
+    uint64_t sel_real = field(r, r->omega.o.selection, 1), used = field(r, r->omega.o.demand, 6);
+    if (field(r, r->aien.o.goal, 0) == 0 && field(r, r->aien.o.prediction, 6) != RX_AIEN_PRED_CONFIRMED) {
+        if (sel != 0 && sel_real != used && field(r, r->living.o.inforce, 0) == 0)
+            both("R13 %s diagnosis: Omega's first search selected realization %016llx, but production serves "
+                 "the in-force record (%016llx, the reference) and nothing can be promoted before the goal; "
+                 "AIEN discards every interval as \"production has not switched yet\", so it can never "
+                 "confirm. Not a GPU failure.", name, U(sel_real), U(used));
+        else if (field(r, r->aien.o.prediction, 6) == RX_AIEN_PRED_FAILED && search != sel)
+            both("R13 %s diagnosis: AIEN's prediction failed before the goal (baseline %llu ns, observed "
+                 "%llu ns); its %s plan opened Omega search %llu, which waits for GPU evidence while the seat "
+                 "transport starts only with the goal, and the failed prediction is not relearned while its "
+                 "hypothesis is under test, so it can never confirm. Not a GPU failure.", name,
+                 U(field(r, r->aien.o.prediction, 5)), U(field(r, r->aien.o.prediction, 7)),
+                 why_name(field(r, r->aien.o.plan, 5)), U(search));
+    }
+}
+
 int main(int argc, char **argv) {
     signal(SIGPIPE, SIG_IGN);
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -2177,16 +2279,7 @@ int main(int argc, char **argv) {
                          names[mode]);
             rc = -1;
         }
-        if (rc != 0 && rc != OP_SHUTDOWN)
-            fprintf(stderr, "R13 %s FAILED: plan %llu search %llu GPU %llu evidence %llu "
-                    "belief %llu selection %llu candidate %llu promotion %llu in force %llu "
-                    "result %d prepare refusal %d\n", names[mode],
-                    U(field(r, r->aien.o.plan, 0)), U(field(r, r->omega.o.search, 0)),
-                    U(field(r, r->living.o.output, 0)), U(field(r, r->living.o.evidence, 0)),
-                    U(field(r, r->aien.o.experiment_belief, 0)),
-                    U(field(r, r->omega.o.selection, 0)), U(field(r, r->living.o.candidate, 0)),
-                    U(field(r, r->living.o.promotion, 0)), U(field(r, r->living.o.inforce, 0)),
-                    r->promoter.result, r->living.last_refusal);
+        if (rc != 0 && rc != OP_SHUTDOWN) explain_failure(r, names[mode]);
         if (r->admin && r->view) stop(r);
         free(r);
         if (rc == OP_SHUTDOWN) {
