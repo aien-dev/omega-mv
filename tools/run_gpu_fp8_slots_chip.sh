@@ -18,6 +18,12 @@ cd "$HERE" || exit 2
   uname -a; nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null; free -g | head -2
 } > "$EVID/device.txt"
 make PHYSICS_DIR="$PHYS" -j10 build/gpu_fp8_slots_test > "$EVID/build.log" 2>&1 || { echo "GPU_FP8_SLOTS_CHIP: FAIL build"; exit 1; }
+# A stale nvrm.o compiled from another physics checkout survives a PHYSICS_DIR change (make sees it up to
+# date) and changes the allocator under the test: refuse the run unless nvrm.o came from $PHYS.
+NVRM_D=$(find build -name nvrm.d | head -1)
+if [ -z "$NVRM_D" ] || ! grep -q "$(cd "$PHYS" && pwd)/nvrm/nvrm.c" "$NVRM_D"; then
+    echo "GPU_FP8_SLOTS_CHIP: FAIL build (nvrm.o not built from $PHYS; rm -rf build and rerun)"; exit 1
+fi
 T=./build/gpu_fp8_slots_test
 fail=0
 $T --host-only > "$EVID/host.log" 2>&1; e=$?; echo "# exit $e" >> "$EVID/host.log"; [ "$e" = 0 ] || fail=1

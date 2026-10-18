@@ -1,0 +1,5 @@
+host GPU_FP8_SLOTS: PASS (24 checks, 0 failed) exit=0
+chip r1 GPU_FP8_SLOTS: PASS (32 checks, 0 failed) exit=0
+chip r2 GPU_FP8_SLOTS: PASS (32 checks, 0 failed) exit=0
+chip r3 GPU_FP8_SLOTS: PASS (32 checks, 0 failed) exit=0
+control GPU_FP8_SLOTS_NEGATIVE_CONTROL: CAUGHT (1 of 6 checks failed) exit=1
