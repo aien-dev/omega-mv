@@ -14,6 +14,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 step="${1:?usage: tests/gates/run.sh <step>}"
+
+# Every step builds in its own directory. The Spark judge (aien-test) runs a repository's host gates
+# at the same moment in one worktree; with one shared build/ a gate links an object another gate's
+# compiler is still writing (omega#511: OMEGA-M12 "undefined reference to omega_tern_*" with the
+# object on the link line). OUT_DIR is read by the Makefile (?=) and by every make it spawns.
+# The pins stay at build/pins, shared read-only under their own lock. The directory name keeps
+# only [A-Za-z0-9_.-] from the step word: "spark:test-r13-host" would put a colon in a make
+# target ("multiple target patterns").
+export OUT_DIR="build/step-$(printf '%s' "$step" | tr -c 'A-Za-z0-9_.-' '-')"
+mkdir -p "$OUT_DIR"
 obs() { printf 'AIEN-OBS %s %s\n' "$1" "$2"; }
 
 PINS="$ROOT/build/pins"
@@ -152,8 +162,8 @@ case "$step" in
     ;;
   # rx-host.yml
   rx-host-reference)
-    pin physics-src-e95e3ed physics e95e3ed2a86fe4bffe4d954fa94c27dfb5284280
-    export PHYSICS_COMMIT=e95e3ed2a86fe4bffe4d954fa94c27dfb5284280 PHYSICS_DIR="$PINS/physics-src-e95e3ed"
+    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
+    export PHYSICS_COMMIT=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
     aienos_pin; set -o pipefail; mkdir -p build
     make test-r3 test-r7 test-r16-operator-authority-misuse test-r8 test-r9 test-r12 test-rx-emergency test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-cortex test-jspace-prod test-composition test-composition-attach-asan test-composition-gate test-fabric test-fabric-living
     make test-machine-identity
@@ -181,8 +191,8 @@ case "$step" in
     tools/rx_host_receipts.sh generation "$generation" "$OMEGA_CANDIDATE_COMMIT"
     ;;
   faculty-arm)
-    pin physics-src-e95e3ed physics e95e3ed2a86fe4bffe4d954fa94c27dfb5284280
-    export PHYSICS_DIR="$PINS/physics-src-e95e3ed"
+    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
+    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
     aienos_pin; argus_pin; set -o pipefail; mkdir -p build
     make OUT_DIR=build/pid $NOPHYS test-program-id
     make OUT_DIR=build/prz $NOPHYS test-program-realize
@@ -191,8 +201,8 @@ case "$step" in
     make test-regulate
     make test-r11
     receipt rx_aien_faculty_receipt.json '"failures": 0,' '"candidate_bound": true,' '"tree_dirty": false,'
-    make build/rx_r13_living_host build/rx_r13_living_testbuild_host
-    make build/rx_r14_recovery_host
+    make "$OUT_DIR/rx_r13_living_host" "$OUT_DIR/rx_r13_living_testbuild_host"
+    make "$OUT_DIR/rx_r14_recovery_host"
     make test-r16-authpath-linkmap | tee build/r16-g3-linkmap-host.log
     grep -qx 'R16-G3 static: R16_G3_LINKMAP=STATIC_PASS mode=host (checks 1-3 of 5 on this build; not the gate)' build/r16-g3-linkmap-host.log
     grep -qx 'R16 gate: R16_G3_AUTHPATH=NOT_RUN (checks 4-5, exec trace and living run, not run in static-only mode)' build/r16-g3-linkmap-host.log
@@ -216,8 +226,8 @@ case "$step" in
   # rx-host.yml chip-only-declared and spark-only targets (SKIP on GitHub, never a pass there)
   chip:*|spark:*)
     t="${step#*:}"
-    pin physics-src-e95e3ed physics e95e3ed2a86fe4bffe4d954fa94c27dfb5284280
-    export PHYSICS_DIR="$PINS/physics-src-e95e3ed"
+    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
+    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
     aienos_pin; argus_pin
     make "$t"
     ;;
