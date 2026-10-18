@@ -45,6 +45,12 @@ make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-realize
 
 The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. CI definitions in `.github/workflows/` list the suites that run on every push.
 
+Two host checks know that the Spark judge runs several test lanes at once, so its load average is
+never below 2: `tests/runtime/r11_own_hold_test.sh` sets `R11_HOST_LOAD_CHECK=0` so the R11 hold
+test proves the quiet-flag ownership rule instead of the host load, and the action-graph 2x speedup
+claim (`tests/runtime/rx_action_graph.c`) is recorded but not judged while the 1-minute load average
+is above 2 (`SKIPPED-LOADED` in the log; the wall-time-beats-sum-of-work check still applies).
+
 ## Repository layout
 
 `src/` core and C compiler (`src/compiler/`), `src/runtime/` reaction runtime, `src/fabric/` host-only fabric interface, `src/physics0/` Physics Zero apparatus, `spec/` and `docs/` specifications, `tests/` gate suites, `evidence/` content-addressed receipts, `tools/` harnesses, `mk/` make fragments included by the `Makefile`. Also `bench/prime_race/` (Prime Drag Race implementation), `calibration/` (Turing calibration experiments, preregistration and blinding protocol), `research/` (experiments and prototypes) and `doctrine/` (the Milestone 4 doctrine).

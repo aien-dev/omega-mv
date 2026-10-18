@@ -9,7 +9,7 @@ trap 'rm -rf "$H"' EXIT
 mkdir -p "$H/workspace"
 echo "other quietlock X start=2026-10-05T00:00:00Z expected_end=2099-01-01T00:00:00Z pid=1 hold=q1-abc" > "$H/workspace/.spark-quiet"
 for hold in "" q1-ab q1-abcd q1-abc; do
-    out=$(HOME=$H QUIETLOCK_HOLD=$hold "$B" 2>&1)
+    out=$(HOME=$H QUIETLOCK_HOLD=$hold R11_HOST_LOAD_CHECK=0 "$B" 2>&1)
     if printf '%s\n' "$out" | grep -Fq "living run not exercised"; then got=refused; else got=ran; fi
     if [ "$hold" = q1-abc ]; then want=ran; else want=refused; fi
     printf '%s\n' "$out" | grep -Eq '^checks [0-9]+ failures 0$' || { got="$got+failures"; }
