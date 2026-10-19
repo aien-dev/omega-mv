@@ -1,0 +1,27 @@
+host off: 305 positions in 266.5 s
+host floor: 305 positions in 386.9 s
+host ceil: 305 positions in 339.9 s
+{
+ "name": "cascade-w4-host-codelong",
+ "cmd": "flock -s /tmp/aien-quiet.lock nice -n 10 /home/drakestapleton/workspace/targets/cascade-w4b/sc-h/release/qwen38_w4_host /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/ab-w4-work/seq/codelong.json out.json --rules floor,ceil,mse --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-codelong-h1-20261019T133103Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-W-20261019T160729Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-WW-20261019T161302Z/out.logits",
+ "exit": 143,
+ "git_head": null,
+ "start": "2026-10-19T12:10:24.424362",
+ "seconds": 1086.474,
+ "samples": 494,
+ "wall_W_mean": 248.4412955465587,
+ "wall_J": 269925.0386369711,
+ "idle_W_before": 303.84615384615387,
+ "incremental_J": -60195.94481784325,
+ "gpu_W_mean": 6.868117408906882,
+ "gpu_util_mean": 0.0,
+ "load1_start": "99.62",
+ "load1_end": "88.55",
+ "mem_avail_kB_start": "29499020",
+ "mem_avail_kB_end": "12061840",
+ "lock_holders_max": 11,
+ "nvrm_errors_delta": 3,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-cascade-w4-host-codelong.json
+rc=143
