@@ -1,0 +1,55 @@
+tv q38o: n 5120 k 6144 (weights 31.5 MB), rows 1,2,8,16,32,64, weight cache 1
+tv N 64: emulation check on 2 rows: 0 of 10240 differ (bit-identical)
+tv N 64: rt 4 ct 2 warps 8; 0 of 327680 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 64: rt 2 ct 2 warps 8; ok, 0 of 327680 differ from the reference (same bits); chip median 202.8 us (11), weights 155.1 GB/s
+tv f32 call N 64: ok, 0 of 327680 differ from the device pass; whole call median 935.6 us (5 calls)
+TVGEMM q38o N 64 (median of 11, min 194.3, max 257.7 us): chip 198.0 us; weights 158.9 GB/s; 20.34 TFLOPS
+tv N 1: rt 1 ct 4 warps 4; 0 of 5120 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 1: rt 1 ct 4 warps 4; ok, 0 of 5120 differ from the reference (same bits); chip median 169.7 us (11), weights 185.4 GB/s
+tv f32 call N 1: ok, 0 of 5120 differ from the device pass; whole call median 198.1 us (5 calls)
+TVGEMM q38o N 1 (median of 11, min 165.9, max 180.6 us): chip 169.9 us; weights 185.2 GB/s; 0.37 TFLOPS
+tv N 2: rt 1 ct 4 warps 4; 0 of 10240 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 2: rt 1 ct 4 warps 4; ok, 0 of 10240 differ from the reference (same bits); chip median 171.9 us (11), weights 183.0 GB/s
+tv f32 call N 2: ok, 0 of 10240 differ from the device pass; whole call median 209.6 us (5 calls)
+TVGEMM q38o N 2 (median of 11, min 166.5, max 179.0 us): chip 168.4 us; weights 186.9 GB/s; 0.75 TFLOPS
+tv N 8: rt 1 ct 4 warps 4; 0 of 40960 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 8: rt 1 ct 4 warps 4; ok, 0 of 40960 differ from the reference (same bits); chip median 171.6 us (11), weights 183.3 GB/s
+tv f32 call N 8: ok, 0 of 40960 differ from the device pass; whole call median 269.6 us (5 calls)
+TVGEMM q38o N 8 (median of 11, min 166.7, max 178.7 us): chip 169.8 us; weights 185.2 GB/s; 2.96 TFLOPS
+tv N 16: rt 1 ct 4 warps 4; 0 of 81920 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 16: rt 1 ct 4 warps 4; ok, 0 of 81920 differ from the reference (same bits); chip median 171.3 us (11), weights 183.6 GB/s
+tv f32 call N 16: ok, 0 of 81920 differ from the device pass; whole call median 459.0 us (5 calls)
+TVGEMM q38o N 16 (median of 11, min 168.6, max 182.0 us): chip 171.6 us; weights 183.3 GB/s; 5.87 TFLOPS
+tv N 32: rt 2 ct 2 warps 8; 0 of 163840 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 32: rt 2 ct 2 warps 8; ok, 0 of 163840 differ from the reference (same bits); chip median 182.6 us (11), weights 172.3 GB/s
+tv f32 call N 32: ok, 0 of 163840 differ from the device pass; whole call median 526.6 us (5 calls)
+TVGEMM q38o N 32 (median of 11, min 178.8, max 258.9 us): chip 184.2 us; weights 170.8 GB/s; 10.93 TFLOPS
+tv mutant 1 (N 64): caught (327680 of 327680 differ)
+tv mutant 2 (N 64): caught (327680 of 327680 differ)
+tv mutant 3 (N 64): caught (327680 of 327680 differ)
+tv mutant 4 (N 64): caught (327680 of 327680 differ)
+tv: PASS
+GPU_TCGEMM: PASS
+{
+ "name": "tvg-tv5-q38o",
+ "cmd": "quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-00659ce6 --tv --shape q38o --rows 1,2,8,16,32,64 --emu-rows 2 --reps 11 --out /home/drakestapleton/workspace/targets/cascade/runs/tv5-q38o.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T13:13:04.210982",
+ "seconds": 179.933,
+ "samples": 82,
+ "wall_W_mean": 301.3414634146341,
+ "wall_J": 54221.269036764046,
+ "idle_W_before": 302.85714285714283,
+ "incremental_J": -272.7207264958362,
+ "gpu_W_mean": 35.6059756097561,
+ "gpu_util_mean": 77.28048780487805,
+ "load1_start": "62.13",
+ "load1_end": "58.31",
+ "mem_avail_kB_start": "19436472",
+ "mem_avail_kB_end": "53564036",
+ "lock_holders_max": 5,
+ "nvrm_errors_delta": 4,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-tv5-q38o.json
