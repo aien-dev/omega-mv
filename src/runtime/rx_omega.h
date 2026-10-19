@@ -103,7 +103,15 @@ typedef struct {
     uint64_t hot_ns;
     uint32_t margin_pct;        /* a realization must beat the reference by this */
     uint32_t sandbox_ms;
+    /* Test only (R15 SEQ parity): when set, the cost of `calls` matvec calls
+     * replaces the wall-clock time measured around them, in serve and in
+     * measure. The calls still run. kind is the realization kind, or
+     * RX_OMEGA_COST_REFERENCE for the reference. NULL measures, as always. */
+    uint64_t (*cost_ns)(void *ctx, uint32_t kind, uint32_t M, uint32_t N, uint64_t calls);
+    void *cost_ctx;
 } RxOmegaConfig;
+
+#define RX_OMEGA_COST_REFERENCE UINT32_MAX
 
 typedef struct {
     RxObjRef request, demand, result, search, selection;
