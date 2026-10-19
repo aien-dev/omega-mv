@@ -80,3 +80,13 @@ term does not earn its keep and the scheduling step (pick the branchy or the bra
 the default kernel stays as it is. Across odds 0.016 to 1.0 the time moves less than the box's run-to-run noise.
 The kernel is far from the bandwidth ceiling (0.23 to 0.25 of 273 GB/s), so its time is set by something else
 than this branch; that is the speed lead this study hands on.
+
+Caveats (final review, 2026-10-19):
+- Physics bound: every warp runs 64 V steps per launch at every position, so the whole rescale block adds at most
+  36 x 64 = 2304 instructions to a warp's path (calc:bf0bc01e), small against residuals of 100 to 340 us. Read the
+  result as "the effect is below this rig's resolution", not "the odds can never matter".
+- In the repeat the data term alone favoured M by 69 bits (calc:56041e81), below the 128-bit price of the four slopes,
+  and the shuffled control favoured it by 89 bits (calc:898d1bcb): the 69 bits are fitted noise, not odds.
+- The repeat reuses seeds 111/222: same inputs, shares, output hashes and launch order; it re-samples timing only and
+  its held-out was not sealed on its own. Git proves the profile came before the held-out, not before the first look
+  (null.tsv precedes the profile commit).

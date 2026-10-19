@@ -15,5 +15,7 @@ docs/turing/F2_FREQUENCY_TIMING_PROFILE_V0.md (v1 amendment). Repeat run of the 
 
 Verdict under the pre-registered rule: the frequency term does NOT earn its keep (T < 0 on every block; the shuffled
 control is not below the real score, as expected when the odds carry no timing information). Repeat: -59 / -52 / -135 /
--39 bits. Held-out ran about 10% slower than train at 65535 (4255 vs 3854 us, calc:3d375f78): box load, the same for
+-39 bits (a re-execution with the same seeds 111/222, so the same inputs and order: it re-samples the box timing only,
+and its held-out was not sealed separately). Run 1 held-out ran under heavier box load than its train (65535: 4255 vs
+3854 us, calc:3d375f78; mean residual 340 us against 118 us in the repeat): the repeat is the cleaner run. Same for
 both models. At 65535 the default kernel streams K+V at 0.231 of the 273 GB/s ceiling (calc:98727d19).
