@@ -68,12 +68,18 @@ void omega_gpu_w4_spec_for(uint32_t k, uint32_t n, OmegaW4GemvSpec *spec); /* ho
 const char *omega_gpu_w4_last_error(void);
 
 typedef struct {
-    uint64_t weights, groups, zero_groups, saturated; /* saturated: |v| / X above 6 (never by the X rule; counted as a check) */
+    uint64_t weights, groups, zero_groups, saturated; /* saturated: weights with |v| / X above 6, clipped to 6 X (OCP rule: amax / X is in [4, 8)) */
     double sq_err, sq_ref;                            /* sum (q X - v)^2 and sum v^2 (relative RMS error) */
 } OmegaW4Stats;
 
 int omega_gpu_w4_from_fp8(uint32_t n, uint32_t k, const uint8_t *w8, const uint16_t *scale_bf16, uint32_t row0, uint32_t rows,
                           uint8_t *w4, uint8_t *e8, OmegaW4Stats *stats);
+/* The scale rule (2026-10-19): OCP is the rule above (the f7 converter); FIT steps X up one power of two in a group that
+ * would clip (no clipping, coarser steps); BEST keeps whichever of the two has the smaller squared error per group.
+ * omega_gpu_w4_from_fp8 = rule OCP. */
+enum { OMEGA_W4_RULE_OCP = 0, OMEGA_W4_RULE_FIT = 1, OMEGA_W4_RULE_BEST = 2 };
+int omega_gpu_w4_from_fp8_rule(uint32_t n, uint32_t k, const uint8_t *w8, const uint16_t *scale_bf16, uint32_t row0, uint32_t rows,
+                               int rule, uint8_t *w4, uint8_t *e8, OmegaW4Stats *stats);
 /* host oracle: y[r] in double from the packed tensor */
 void omega_w4_gemv_oracle(const uint8_t *w4, const uint8_t *e8, uint32_t n, uint32_t k, const float *x, double *y);
 /* round |a| (a >= 0, finite) to the e2m1 magnitude code 0..7: nearest, ties to the even code, saturating at 6 */

@@ -14,6 +14,7 @@
 #include "omega_blackwell_codegen_moe.h"
 #include "omega_gpu_session.h"
 #include "bw_warp_sim.h"
+#include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -109,6 +110,24 @@ static void host_only(void) {
         omega_gpu_w4_from_fp8(n, k, w8, s, 0, 1, w4, e8, NULL);
         CHECK(w4[0] == 0x97u, "nibble order: byte 0 = %02x, want 97 (weight 0 low nibble)", w4[0]);
         CHECK(omega_gpu_w4_from_fp8(n, 100, w8, s, 0, 1, w4, e8, NULL) == OMEGA_GPU_W4_BAD_ARGS, "k not a multiple of 128 refused");
+        /* scale rules: one weight 1.75 (e4m3 0x3E) in group 0: OCP X = 2^-2 clips it to 1.5; FIT steps to X = 2^-1, nothing
+         * clips; BEST no worse than either; the exact rows identical under all three; an unknown rule refused */
+        {
+            w8[0] = 0x3E;
+            OmegaW4Stats so, sf, sb; uint8_t *w4b = malloc((size_t)k / 2u), *e8b = malloc(k / 32u), *w4c = malloc((size_t)k / 2u), *e8c = malloc(k / 32u);
+            const int r0 = omega_gpu_w4_from_fp8_rule(n, k, w8, s, 0, 1, OMEGA_W4_RULE_OCP, w4, e8, &so);
+            const int r1 = omega_gpu_w4_from_fp8_rule(n, k, w8, s, 0, 1, OMEGA_W4_RULE_FIT, w4b, e8b, &sf);
+            const int r2 = omega_gpu_w4_from_fp8_rule(n, k, w8, s, 0, 1, OMEGA_W4_RULE_BEST, w4c, e8c, &sb);
+            CHECK(r0 == 0 && r1 == 0 && r2 == 0, "rules rc %d %d %d", r0, r1, r2);
+            CHECK(so.saturated == 1 && e8[0] == 125u, "OCP: 1.75 clips (saturated %" PRIu64 ", E %u)", so.saturated, e8[0]);
+            CHECK(sf.saturated == 0 && e8b[0] == 126u, "FIT: no clipping, E one up (saturated %" PRIu64 ", E %u)", sf.saturated, e8b[0]);
+            CHECK(sb.sq_err <= so.sq_err && sb.sq_err <= sf.sq_err, "BEST error %.4g <= OCP %.4g and FIT %.4g", sb.sq_err, so.sq_err, sf.sq_err);
+            CHECK(memcmp(e8 + 1, e8b + 1, k / 32u - 1u) == 0 && memcmp(w4 + 16, w4b + 16, k / 2u - 16u) == 0 &&
+                  memcmp(e8 + 1, e8c + 1, k / 32u - 1u) == 0 && memcmp(w4 + 16, w4c + 16, k / 2u - 16u) == 0,
+                  "rules agree on every group that does not clip");
+            CHECK(omega_gpu_w4_from_fp8_rule(n, k, w8, s, 0, 1, 3, w4, e8, NULL) == OMEGA_GPU_W4_BAD_ARGS, "unknown rule refused");
+            free(w4b); free(e8b); free(w4c); free(e8c);
+        }
         free(w8); free(w4); free(e8); free(s);
     }
     /* 5. codegen: every production shape builds within the instruction and register budgets */

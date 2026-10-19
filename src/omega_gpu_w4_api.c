@@ -272,9 +272,29 @@ uint8_t omega_w4_e2m1_rne(double a) {
 /* floor(log2 v) of a positive normal double: its exponent field (exact) */
 static int floor_log2(double v) { uint64_t b; memcpy(&b, &v, 8); return (int)((b >> 52) & 0x7FFu) - 1023; }
 
+/* one group at scale 2^e: the nibbles, the squared error and the count above 6 (clipped) */
+static void w4_group_at(const double *v, int e, uint8_t *nib, double *err, uint64_t *sat) {
+    double X = 1.0; for (int q = 0; q < (e < 0 ? -e : e); q++) X = e < 0 ? X / 2.0 : X * 2.0;
+    double se = 0.0; uint64_t s = 0;
+    for (uint32_t c = 0; c < OMEGA_W4_GROUP; c++) {
+        const double a = (v[c] < 0 ? -v[c] : v[c]) / X;
+        if (a > 6.0) s++;
+        nib[c] = (uint8_t)(omega_w4_e2m1_rne(a) | (v[c] < 0 ? 8u : 0u));
+        const double back = (double)omega_w4_e2m1_ref(nib[c]) * X;
+        se += (back - v[c]) * (back - v[c]);
+    }
+    *err = se; *sat = s;
+}
+
 int omega_gpu_w4_from_fp8(uint32_t n, uint32_t k, const uint8_t *w8, const uint16_t *scale_bf16, uint32_t row0, uint32_t rows,
                           uint8_t *w4, uint8_t *e8, OmegaW4Stats *st) {
+    return omega_gpu_w4_from_fp8_rule(n, k, w8, scale_bf16, row0, rows, OMEGA_W4_RULE_OCP, w4, e8, st);
+}
+
+int omega_gpu_w4_from_fp8_rule(uint32_t n, uint32_t k, const uint8_t *w8, const uint16_t *scale_bf16, uint32_t row0, uint32_t rows,
+                               int rule, uint8_t *w4, uint8_t *e8, OmegaW4Stats *st) {
     if (!w8 || !scale_bf16 || !w4 || !e8 || n % 128u || k % 128u || k == 0 || (uint64_t)row0 + rows > n) return OMEGA_GPU_W4_BAD_ARGS;
+    if (rule != OMEGA_W4_RULE_OCP && rule != OMEGA_W4_RULE_FIT && rule != OMEGA_W4_RULE_BEST) return OMEGA_GPU_W4_BAD_ARGS;
     const uint32_t kb = k / 128u, gpr = k / OMEGA_W4_GROUP;
     OmegaW4Stats loc; memset(&loc, 0, sizeof loc);
     for (uint32_t r = row0; r < row0 + rows; r++) {
@@ -297,18 +317,20 @@ int omega_gpu_w4_from_fp8(uint32_t n, uint32_t k, const uint8_t *w8, const uint1
                 loc.zero_groups++;
                 continue;
             }
-            const int e = floor_log2(amax) - 2;
+            /* OCP: X = 2^(floor(log2 amax) - 2), so amax / X is in [4, 8): a group's values above 6 X clip to 6 X.
+             * FIT: one step up when that clips (amax / X <= 6, nothing clips). BEST: whichever of the two has less squared error. */
+            int e = floor_log2(amax) - 2;
+            uint8_t nib[OMEGA_W4_GROUP], nib2[OMEGA_W4_GROUP];
+            double err = 0.0, err2 = 0.0; uint64_t sat = 0, sat2 = 0;
+            w4_group_at(v, e, nib, &err, &sat);
+            if (rule != OMEGA_W4_RULE_OCP && sat) {
+                w4_group_at(v, e + 1, nib2, &err2, &sat2);
+                if (rule == OMEGA_W4_RULE_FIT || err2 < err) { e++; memcpy(nib, nib2, sizeof nib); err = err2; sat = sat2; }
+            }
             if (e + 127 < 0 || e + 127 > (int)OMEGA_W4_E_MAX) return OMEGA_GPU_W4_BAD_ARGS;
             e8[(size_t)r * gpr + gi] = (uint8_t)(e + 127);
-            double X = 1.0; for (int q = 0; q < (e < 0 ? -e : e); q++) X = e < 0 ? X / 2.0 : X * 2.0;
-            for (uint32_t c = 0; c < OMEGA_W4_GROUP; c++) {
-                const double a = (v[c] < 0 ? -v[c] : v[c]) / X;
-                if (a > 6.0) loc.saturated++;
-                const uint8_t m = omega_w4_e2m1_rne(a), nib = (uint8_t)(m | (v[c] < 0 ? 8u : 0u));
-                OMEGA_W4_SET_NIBBLE(dst, gi * OMEGA_W4_GROUP + c, nib);
-                const double back = (double)omega_w4_e2m1_ref(nib) * X;
-                loc.sq_err += (back - v[c]) * (back - v[c]);
-            }
+            for (uint32_t c = 0; c < OMEGA_W4_GROUP; c++) OMEGA_W4_SET_NIBBLE(dst, gi * OMEGA_W4_GROUP + c, nib[c]);
+            loc.sq_err += err; loc.saturated += sat;
         }
     }
     loc.weights = (uint64_t)rows * k;
