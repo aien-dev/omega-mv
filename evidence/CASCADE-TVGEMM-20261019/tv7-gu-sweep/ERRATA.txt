@@ -1,0 +1,6 @@
+Errata added 2026-10-19 (after publishing; nothing above was changed).
+The binary used here is NOT a build of the source head named in README.txt. The build of that head failed (the physics header
+directory it pointed at had been removed), and an older gpu_tcgemm_test from 11:40 was copied under the name -9aef9bbe by mistake.
+That older build ignored the extra tile list (no extra tiles ran) and its source version is not known. So the 969 us at 32 rows
+in this run is NOT a claim about this branch. A clean rebuild and rerun follows as a new run. The bits-identical lines in the
+log are still true for whatever that binary was, but they do not count as a check of the branch.
