@@ -32,6 +32,8 @@ SRCS += src/omega_blackwell_codegen_moe.c src/omega_gpu_fp8_pack.c src/omega_gpu
 SRCS += src/omega_blackwell_codegen_moe2.c
 # qwen38/w4-gemv (2026-10-19): MXFP4 GEMV (omega_gpu_w4_api.h), new files only
 SRCS += src/omega_blackwell_codegen_w4.c src/omega_gpu_w4_api.c
+# flashnext/port (2026-10-19): grouped NVFP4 GEMV for the Qwen3.8-Flash-Next experts (omega_gpu_nv4_api.h), new files only
+SRCS += src/omega_blackwell_codegen_nv4.c src/omega_gpu_nv4_api.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
@@ -2670,3 +2672,14 @@ $(GPU_W4_TEST): tests/gpu_w4_api_test.c tests/bw_warp_sim.h src/omega_gpu_w4_api
 test-gpu-w4: $(GPU_W4_TEST)
 	./$(GPU_W4_TEST) --host-only
 	./$(GPU_W4_TEST) --sim
+
+# flashnext/port (2026-10-19): grouped NVFP4 GEMV (omega_gpu_nv4_api.h). test-gpu-nv4 is host-only (e4m3 kernel bits for
+# every code, codegen budgets) then the warp-simulator battery (one-hot incl. tail lanes, parity, groups, mutants 1..7);
+# the chip run is tools/run_gpu_nv4_chip.sh.
+.PHONY: test-gpu-nv4
+GPU_NV4_TEST = $(OUT_DIR)/gpu_nv4_api_test
+$(GPU_NV4_TEST): tests/gpu_nv4_api_test.c tests/bw_warp_sim.h src/omega_gpu_nv4_api.h src/omega_blackwell_codegen_nv4.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_nv4_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-nv4: $(GPU_NV4_TEST)
+	./$(GPU_NV4_TEST) --host-only
+	./$(GPU_NV4_TEST) --sim
