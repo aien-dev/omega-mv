@@ -1,0 +1,26 @@
+# start=2026-10-19T21:14:33Z load=13.25/15.51/20.10 memavail_kb=24151384
+RWCHECK-SUMMARY proven_in_scope=25 probe_agreement=0 rejected=0 semantics=omega.v0.wrap.1 cpu_ns=11243839344
+# end=2026-10-19T21:14:45Z load=11.98/15.16/19.94 memavail_kb=25264652
+{
+ "name": "rw-249-coldcheck",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/omega-rw-249/run_record.sh cold",
+ "exit": 0,
+ "git_head": "de779dff",
+ "start": "2026-10-19T16:08:23.510180",
+ "seconds": 381.736,
+ "samples": 179,
+ "wall_W_mean": 256.20111731843576,
+ "wall_J": 97801.30750453673,
+ "idle_W_before": 248.57142857142858,
+ "incremental_J": 2912.5303711400243,
+ "gpu_W_mean": 29.309385474860335,
+ "gpu_util_mean": 63.90502793296089,
+ "load1_start": "8.96",
+ "load1_end": "11.98",
+ "mem_avail_kB_start": "21869812",
+ "mem_avail_kB_end": "25278508",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 4,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-rw-249-coldcheck.json

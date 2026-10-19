@@ -1,0 +1,8 @@
+# arm=Bi reps=5 set=evidence/REWRITE-249/sets/heldout-seed249.set blob=evidence/REWRITE-249/calibration/model.blob head=de779dff5e03ba9b50c6f1839cbc6ca1613ccbb6 start=2026-10-19T21:23:42Z load_start=10.81/12.56/16.80 memavail_bytes_start=20720414720
+rep,arm,search_cpu_ns,search_wall_ns,search_peak_rss_bytes,check_cpu_ns,check_peak_rss_bytes,accepted,failed_candidates,unchanged,removed_ops,best_found_under_budget,unranked,exec_timed,sum_saving_ps_per_call,sum_null_ps,exec_cpu_ns,exec_peak_rss_bytes,outputs_sha256
+1,Bi,6395968,8024792,1830912,1254650672,10137600,175,0,65,374,2,0,175,738400.4,7086.6,2374574032,1699840,a34ac6f8ecda2eba
+2,Bi,3636448,4565401,1896448,1206914192,9990144,175,0,65,374,2,0,175,146581.7,2415.6,420075072,1699840,a34ac6f8ecda2eba
+3,Bi,3578352,4445304,1892352,1193444880,9887744,175,0,65,374,2,0,175,108000.1,11418.3,2548568112,1691648,a34ac6f8ecda2eba
+4,Bi,6413232,8097417,1896448,1274501472,9883648,175,0,65,374,2,0,175,103847.8,7381.1,2545715568,1691648,a34ac6f8ecda2eba
+5,Bi,6450080,8007048,1896448,1210931760,9887744,175,0,65,374,2,0,175,104579.0,9263.1,2543054000,1634304,a34ac6f8ecda2eba
+# end=2026-10-19T21:23:58Z load_end=9.55/12.15/16.57 memavail_bytes_end=19729973248

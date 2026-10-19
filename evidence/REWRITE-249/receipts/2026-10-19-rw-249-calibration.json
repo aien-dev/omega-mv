@@ -1,0 +1,22 @@
+{
+ "name": "rw-249-calibration",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/omega-rw-249/rw249/rwsearch calibrate --out evidence/REWRITE-249/calibration/model.blob --obs 16",
+ "exit": 0,
+ "git_head": "0969fb83",
+ "start": "2026-10-19T16:04:44.579365",
+ "seconds": 178.1,
+ "samples": 84,
+ "wall_W_mean": 252.73809523809524,
+ "wall_J": 45012.56603882426,
+ "idle_W_before": 267.3333333333333,
+ "incremental_J": -2599.406781139824,
+ "gpu_W_mean": 41.834761904761905,
+ "gpu_util_mean": 93.77380952380952,
+ "load1_start": "10.52",
+ "load1_end": "5.18",
+ "mem_avail_kB_start": "25260200",
+ "mem_avail_kB_end": "26808680",
+ "lock_holders_max": 4,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}

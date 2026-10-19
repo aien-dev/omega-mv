@@ -1,0 +1,22 @@
+{
+ "name": "rw-249-Bi",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure flock /tmp/aien-gb10.lock tools/rw249/run_arm.sh Bi 5 evidence/REWRITE-249/sets/heldout-seed249.set evidence/REWRITE-249/calibration/model.blob /home/drakestapleton/workspace/targets/omega-rw-249/record/Bi /home/drakestapleton/workspace/targets/omega-rw-249/record/contracts.cache /home/drakestapleton/workspace/targets/omega-rw-249/rw249",
+ "exit": 0,
+ "git_head": "de779dff",
+ "start": "2026-10-19T16:21:09.157249",
+ "seconds": 169.841,
+ "samples": 79,
+ "wall_W_mean": 247.46835443037975,
+ "wall_J": 42030.15698556659,
+ "idle_W_before": 247.14285714285714,
+ "incremental_J": 55.282632498371186,
+ "gpu_W_mean": 34.10392405063291,
+ "gpu_util_mean": 75.81012658227849,
+ "load1_start": "14.09",
+ "load1_end": "9.55",
+ "mem_avail_kB_start": "18273236",
+ "mem_avail_kB_end": "19152664",
+ "lock_holders_max": 5,
+ "nvrm_errors_delta": 4,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}

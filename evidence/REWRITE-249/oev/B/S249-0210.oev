@@ -1,0 +1,13 @@
+oev version=1
+machine id=spark-b87b soc=GB10 cores=20 mem_bytes=137438953472 prov=specified src=omega-research-583/spec/offline-evidence-v1.md
+build repo=omega-mv sha=de779dff5e03ba9b50c6f1839cbc6ca1613ccbb6
+calibration id=rw249-cal taken=2026-10-19 valid_days=7 load1=10.52 src=evidence/REWRITE-249/calibration model=evidence/REWRITE-249/calibration/model.blob
+resource id=cpu kind=compute slots=1 prov=specified src=single-thread-chain
+op id=S249-0210_base kind=compute engine=cpu t_ns=0.5129 prov=fitted src=rx_costmodel_arms_stand_in
+op id=S249-0210_s0 kind=compute engine=cpu t_ns=0.2527 prov=fitted src=rx_costmodel_arms_stand_in
+dep S249-0210_base S249-0210_s0
+energy instrument=none
+removed op=S249-0210_s1 reason=eliminated proof=rwcheck:evidence/REWRITE-249/runs/B/rep1/derivs.rwd#S249-0210
+removed op=S249-0210_s2 reason=eliminated proof=rwcheck:evidence/REWRITE-249/runs/B/rep1/derivs.rwd#S249-0210
+removed op=S249-0210_s3 reason=eliminated proof=rwcheck:evidence/REWRITE-249/runs/B/rep1/derivs.rwd#S249-0210
+removed op=S249-0210_s4 reason=eliminated proof=rwcheck:evidence/REWRITE-249/runs/B/rep1/derivs.rwd#S249-0210

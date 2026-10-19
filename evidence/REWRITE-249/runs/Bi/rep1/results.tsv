@@ -1,0 +1,241 @@
+id	w	in	out	n_in	n_out	insn_in	insn_out	cost_ps_in	cost_ps_out	removed_ids	status	nodes	evals	search_cpu_ns
+S249-0000	32	or 0xfffffff0; or 0x1; and 0x1; and 0x0	and 0x0	4	1	13	6	1524.6	765.6	0,1,3	complete	35	171	35360
+S249-0001	64	add 0x20; and 0x1; or 0xf; and 0xffffffffffffffff; sub 0x0	add 0x20; and 0x1; or 0xf	5	3	14	7	1779.4	1271.0	3,4	complete	48	232	47600
+S249-0002	64	add 0x7; and 0xfffffffffff; sub 0xfffff00000000000; add 0xfffffffffe000000; add 0x1ffffff; mul 0x3fff	add 0x7; and 0xfffffffffff; add 0xfffffffffff; mul 0x3fff	6	4	21	13	2292.8	1783.3	3,4	complete	120	628	138208
+S249-0003	64	add 0xffffffffffffffff; mul 0xfffffffffffffe00; add 0x0; and 0x4000000	mul 0xfffffffffffffe00; add 0x200; and 0x4000000	4	3	16	11	1786.3	1530.6	2	complete	12	38	10832
+S249-0004	16	mul 0x2; sub 0x3fff; or 0xffff	or 0xffff	3	1	9	5	1526.6	765.6	0,1	complete	4	5	3312
+S249-0005	64	and 0x1000000000; sub 0x40000000000000; sub 0x0; or 0xffffffffffffffff; or 0xffffffffffffffff	or 0xffffffffffffffff	5	1	19	6	1784.5	768.6	0,1,2,4	complete	21	91	18912
+S249-0006	64	or 0x80; sub 0xfffff; and 0xff; mul 0x20; sub 0x0	or 0x80; sub 0xfffff; and 0xff; mul 0x20	5	4	12	10	2033.1	1780.3	4	complete	6	14	6320
+S249-0007	64	mul 0xfffe000000000000	mul 0xfffe000000000000	1	1	4	4	1022.2	1022.2	-	complete	1	0	1152
+S249-0008	8	sub 0xa	sub 0xa	1	1	5	5	765.7	765.7	-	complete	2	2	1680
+S249-0009	16	sub 0xffff; sub 0x2; and 0x1; sub 0x1; add 0x3; sub 0x5	sub 0x1; and 0x1; add 0xfffd	6	3	15	9	2029.4	1271.1	1,4,5	complete	108	648	113184
+S249-0010	16	add 0xffff; and 0x0; or 0x3; mul 0xfffc; and 0x1; add 0x8	and 0x0; or 0x8	6	2	15	7	2284.6	1018.2	0,3,4,5	complete	183	955	172656
+S249-0011	32	and 0xfffff800; and 0x0; sub 0x0; add 0xffffffff	or 0xffffffff	4	1	14	7	1525.8	766.6	0,1,3	complete	55	317	47104
+S249-0012	16	mul 0x0; or 0x1; mul 0x7ff; or 0xf800	mul 0x0; or 0x1; mul 0x7ff; or 0xf800	4	4	11	11	2034.7	2034.7	-	complete	1	0	1552
+S249-0013	32	add 0x3ffff; or 0x80000000; sub 0xffffffff; or 0x7	add 0x3ffff; or 0x80000000; add 0x1; or 0x7	4	4	15	14	1526.8	1525.7	-	complete	4	8	4256
+S249-0014	32	sub 0xffffffff; add 0x3fffff; add 0x0; or 0x2; sub 0x1; sub 0x10000000	add 0x400000; or 0x2; sub 0x10000001	6	3	19	12	2032.4	1273.1	1,2,5	complete	108	720	124320
+S249-0015	32	mul 0x7	mul 0x7	1	1	6	6	1021.2	1021.2	-	complete	1	0	1152
+S249-0016	8	mul 0xff; sub 0x4; and 0x0; sub 0xf0; sub 0xe; or 0x3	and 0x0; or 0x3	6	2	15	7	2284.8	1018.2	0,1,4,5	complete	88	278	82832
+S249-0017	32	sub 0x1	sub 0x1	1	1	6	6	765.7	765.7	-	complete	2	2	1584
+S249-0018	32	add 0x7ffff; or 0x20; or 0xffffffff; or 0x0; or 0x1f	or 0xffffffff	5	1	16	7	1778.3	766.6	0,2,3,4	complete	15	50	12464
+S249-0019	64	or 0x7ffffffff; add 0x0	or 0x7ffffffff	2	1	7	5	1020.3	767.6	1	complete	3	4	2352
+S249-0020	64	mul 0xc; sub 0x1; add 0x1fffff; and 0x8	mul 0xc; add 0x1ffffe; and 0x8	4	3	10	8	1780.3	1527.6	2	complete	6	14	5632
+S249-0021	16	mul 0x200; mul 0x1	mul 0x200	2	1	7	5	1529.4	1021.2	1	complete	2	2	6512
+S249-0022	16	add 0x0; sub 0x1; and 0x7; and 0x7; sub 0xffff	add 0xffff; and 0x7; sub 0xffff	5	3	13	9	1776.5	1271.1	1,3	complete	24	108	22320
+S249-0023	64	sub 0x4; or 0xd	sub 0x4; or 0xd	2	2	5	5	1018.4	1018.4	-	complete	2	2	1840
+S249-0024	8	sub 0x1; and 0xc	sub 0x1; and 0xc	2	2	7	7	1018.4	1018.4	-	complete	2	2	1744
+S249-0025	64	or 0x1	or 0x1	1	1	3	3	765.6	765.6	-	complete	1	0	1072
+S249-0026	16	and 0xf; and 0xd	and 0xd	2	1	7	5	1018.2	765.6	1	complete	2	1	1664
+S249-0027	16	sub 0x20; mul 0x0	mul 0x0	2	1	7	5	1274.0	1021.2	0	complete	5	10	3712
+S249-0028	16	add 0xf800; sub 0x1; sub 0xfffe; or 0x6; mul 0xfff; and 0xff00	add 0xf801; or 0x6; mul 0xfff; and 0xff00	6	4	15	11	2284.8	1779.2	1,2	complete	18	66	19744
+S249-0029	16	and 0xffff; sub 0x2; add 0x0	add 0xfffe	3	1	9	5	1271.1	765.7	0,2	complete	12	42	8880
+S249-0030	16	mul 0x5; and 0x1; and 0x0	and 0x0	3	1	9	5	1526.5	765.6	0,2	complete	3	3	2400
+S249-0031	16	add 0xffff; mul 0x4; or 0x1; or 0xc000; add 0x0; or 0xffff	or 0xffff	6	1	15	5	2284.6	765.6	0,1,3,4,5	complete	36	141	34128
+S249-0032	64	add 0x0; sub 0xffffffffffffffff	add 0x1	2	1	8	3	1021.4	765.7	1	complete	6	18	4192
+S249-0033	8	add 0x80; and 0x7f; mul 0x80	add 0x80; and 0x7f; mul 0x80	3	3	9	9	1526.6	1526.6	-	complete	2	2	2144
+S249-0034	8	sub 0xa; and 0x0	and 0x0	2	1	7	5	1018.4	765.6	0	complete	3	4	2384
+S249-0035	8	sub 0x1; add 0x1; sub 0xf0; and 0x0; add 0x1	and 0x0; add 0x1	5	2	13	7	1776.6	1018.3	0,1,2	complete	135	707	118208
+S249-0036	32	add 0xffffffff; sub 0xffffffff	id	2	0	10	4	1020.4	512.9	0,1	complete	7	16	4592
+S249-0037	8	or 0x0; add 0x1f; and 0x0	and 0x0	3	1	9	5	1271.0	765.6	0,1	complete	7	16	5008
+S249-0038	8	and 0x0; and 0xc; and 0xff; sub 0x80; mul 0x0	mul 0x0	5	1	13	5	2031.9	1021.2	0,1,2,3	complete	128	853	121424
+S249-0039	64	add 0x8	add 0x8	1	1	3	3	765.7	765.7	-	complete	2	2	1584
+S249-0040	8	or 0xff; and 0x40	or 0xff; and 0x40	2	2	7	7	1018.2	1018.2	-	complete	3	3	2288
+S249-0041	32	mul 0x1fff; or 0xa	mul 0x1fff; or 0xa	2	2	8	8	1273.8	1273.8	-	complete	1	0	1200
+S249-0042	16	add 0xffff; and 0x1; mul 0x20; or 0xffdf	add 0xffff; and 0x1; mul 0x20; or 0xffdf	4	4	11	11	1779.2	1779.2	-	complete	2	2	2432
+S249-0043	32	add 0x9; mul 0x5; mul 0xffffffff	add 0x9; mul 0xfffffffb	3	2	11	9	1783.1	1274.9	2	complete	10	20	7600
+S249-0044	8	and 0x80; mul 0x0; sub 0x7	mul 0x0; sub 0x7	3	2	9	7	1526.6	1274.0	0	complete	4	6	3216
+S249-0045	64	and 0xffffffffffffffff; mul 0xfffff80000000000	mul 0xfffff80000000000	2	1	10	5	1278.8	1023.2	0	complete	2	1	1728
+S249-0046	8	or 0x10; and 0x1	and 0x1	2	1	7	5	1018.2	765.6	0	complete	4	7	2848
+S249-0047	64	or 0xff00000000000000; or 0x0; and 0x0; and 0x1; add 0x9	and 0x0; add 0x9	5	2	12	5	1777.3	1018.3	0,1,3	complete	100	672	97808
+S249-0048	8	mul 0x40	mul 0x40	1	1	5	5	1021.2	1021.2	-	complete	1	0	1136
+S249-0049	8	mul 0x5; add 0xe; mul 0xf1	mul 0xb5; add 0x2e	3	2	9	7	1782.1	1273.9	2	complete	6	10	4672
+S249-0050	16	sub 0xffff; add 0x1fff; sub 0xffff; sub 0xffff; and 0xe	add 0x2002; and 0xe	5	2	13	7	1776.7	1018.3	1,2,3	complete	54	270	48320
+S249-0051	32	add 0xa; and 0x0	and 0x0	2	1	8	6	1018.3	765.6	0	complete	3	4	2336
+S249-0052	8	add 0x3f; and 0x7f; sub 0x20; add 0xdf; sub 0x0	add 0x3f; and 0x7f; add 0xbf	5	3	13	9	1776.6	1271.0	3,4	complete	36	192	34192
+S249-0053	32	or 0x1; or 0xffffffff; and 0x200000; sub 0x1; add 0xb; and 0x1f	or 0xffffffff; and 0x200000; add 0xa; and 0x1f	6	4	18	14	2031.1	1525.6	1,4	complete	60	272	68640
+S249-0054	64	or 0xfffffff000000000; mul 0xfffffffff; and 0x1; and 0xfffffffffffffffe	and 0x0	4	1	16	3	1786.2	765.6	0,1,3	complete	6	11	4592
+S249-0055	16	add 0xfffc; or 0x7; or 0x9; mul 0xd; and 0x0	and 0x0	5	1	13	5	2031.9	765.6	0,1,2,3	complete	32	147	26272
+S249-0056	8	sub 0xff; sub 0x3	sub 0x2	2	1	7	5	1018.5	765.7	1	complete	6	14	4016
+S249-0057	16	and 0x1; sub 0x1; sub 0x0; mul 0xffff	and 0x1; sub 0x1; mul 0xffff	4	3	11	9	1779.4	1526.6	2	complete	16	58	14048
+S249-0058	16	or 0x1ff; or 0x7f; mul 0x3; and 0x0	and 0x0	4	1	11	5	1779.2	765.6	0,1,2	complete	12	43	8576
+S249-0059	16	mul 0x1; mul 0x1; and 0x8000; mul 0x0; sub 0x7fff; mul 0x6	mul 0x0; sub 0xfffa	6	2	15	7	3051.4	1274.0	0,1,2,5	complete	36	150	33568
+S249-0060	64	or 0xffffffffffffffff; sub 0x1; and 0x2; or 0x80000000	or 0xffffffffffffffff; sub 0x1; and 0x2; or 0x80000000	4	4	13	13	1527.7	1527.7	-	complete	6	12	6032
+S249-0061	32	or 0xffffffff; or 0x0	or 0xffffffff	2	1	9	7	1019.2	766.6	1	complete	2	2	1696
+S249-0062	8	or 0x1	or 0x1	1	1	5	5	765.6	765.6	-	complete	1	0	1088
+S249-0063	8	and 0xf8; add 0x0; mul 0xff; or 0x0	and 0xf8; mul 0xff	4	2	11	7	1779.2	1273.8	1,3	complete	10	25	8320
+S249-0064	32	or 0xfffffff8	or 0xfffffff8	1	1	7	7	766.6	766.6	-	complete	1	0	1344
+S249-0065	8	or 0x1; or 0x9	or 0x9	2	1	7	5	1018.2	765.6	1	complete	2	1	1648
+S249-0066	64	add 0xffffc00000000000; and 0xffffffffffffffe0; or 0xfffffffffffffffc; mul 0xffffffffffffffff	sub 0x400000000000; and 0xffffffffffffffe0; or 0xfffffffffffffffc; mul 0xffffffffffffffff	4	4	20	19	1790.2	1789.3	-	complete	6	12	6064
+S249-0067	64	mul 0x1; add 0x4	add 0x4	2	1	5	3	1273.9	765.7	0	complete	4	6	2736
+S249-0068	64	or 0x2; and 0x4; mul 0xffffffffffffffff; and 0x7ffffffffffffff; add 0x0	and 0x4; mul 0xffffffffffffffff; and 0x7ffffffffffffff	5	3	17	13	2037.9	1532.5	0,4	complete	12	37	12384
+S249-0069	16	mul 0x100; or 0x3ff; or 0xfc00; and 0x0; or 0x3; mul 0xf000	and 0x0; or 0xd000	6	2	15	7	2540.1	1018.2	0,1,2,5	complete	127	492	122864
+S249-0070	8	mul 0xff; or 0xf	mul 0xff; or 0xf	2	2	7	7	1273.8	1273.8	-	complete	1	0	1312
+S249-0071	32	sub 0xa; and 0x0; sub 0x1; and 0x7; or 0xfffffff8; or 0x1	or 0xffffffff	6	1	17	7	2030.1	766.6	0,1,3,4,5	best_found_under_budget	512	3315	549648
+S249-0072	32	add 0x1; add 0x200; and 0x3ff	add 0x201; and 0x3ff	3	2	10	8	1271.0	1018.3	1	complete	6	14	9232
+S249-0073	64	add 0x3fffffffffffff; and 0x0	and 0x0	2	1	8	3	1021.3	765.6	0	complete	3	4	2368
+S249-0074	16	or 0x0; or 0x2000; sub 0x0; add 0x0; mul 0xfff0; or 0xa	or 0x2000; mul 0xfff0; or 0xa	6	3	15	9	2284.7	1526.5	1,2,3	complete	34	182	37088
+S249-0075	16	sub 0x1; sub 0x1; sub 0xfffe; sub 0xf; or 0xffff; mul 0x0	mul 0x0	6	1	15	5	2285.0	1021.2	0,1,2,3,4	complete	292	2141	284096
+S249-0076	32	add 0xb; mul 0x7ffff	add 0xb; mul 0x7ffff	2	2	9	9	1274.9	1274.9	-	complete	4	6	3088
+S249-0077	32	or 0x8; add 0xd; add 0xfffffff2; mul 0x7f; add 0xffffff80	or 0x8; mul 0x7f; sub 0xff	5	3	16	10	2034.0	1526.6	2,4	complete	42	170	40304
+S249-0078	64	and 0x9; or 0xffffffffffffffff	or 0xffffffffffffffff	2	1	8	6	1021.2	768.6	0	complete	4	9	3088
+S249-0079	64	add 0xfffffffffffe0000; add 0x2000000000000000; add 0x0; mul 0x0	mul 0x0	4	1	13	3	1783.3	1021.2	0,1,2	complete	59	368	50848
+S249-0080	8	and 0x0; and 0x6; mul 0x3; sub 0xfc; mul 0x2	and 0x0; or 0x8	5	2	13	7	2287.5	1018.2	1,3,4	complete	107	606	101712
+S249-0081	64	and 0xfff; and 0x80000; sub 0x7fffffff; or 0xffffffffffff8000; or 0x0; add 0xffffffffffffffff	and 0x0; or 0xffffffffffff8000	6	2	21	8	2037.1	1021.2	1,3,4,5	complete	63	241	61376
+S249-0082	16	and 0xfc00; mul 0xffff; add 0x0; and 0xffff	and 0xfc00; mul 0xffff	4	2	11	7	1779.2	1273.8	2,3	complete	6	11	5120
+S249-0083	32	and 0x9; mul 0x80000000	and 0x9; mul 0x80000000	2	2	9	9	1274.8	1274.8	-	complete	1	0	1216
+S249-0084	32	and 0x1f	and 0x1f	1	1	6	6	765.6	765.6	-	complete	1	0	1120
+S249-0085	8	mul 0x80; sub 0x7f; sub 0x8; add 0x1; sub 0x0	mul 0x80; add 0x7a	5	2	13	7	2032.2	1273.9	2,3,4	complete	54	306	48576
+S249-0086	32	mul 0xf	mul 0xf	1	1	6	6	1021.2	1021.2	-	complete	1	0	1120
+S249-0087	64	add 0xfffffffffffc0000; sub 0x1; add 0xffffffe000000000; add 0x1ffffffffffffff; or 0x7fffffffffff	add 0x1ffffdffffbfffe; or 0x7fffffffffff	5	2	21	10	1786.5	1023.3	1,2,3	complete	54	270	49760
+S249-0088	32	or 0x10000	or 0x10000	1	1	7	7	766.6	766.6	-	complete	1	0	1280
+S249-0089	8	or 0xb; and 0x6; and 0x0	and 0x0	3	1	9	5	1270.9	765.6	0,2	complete	12	38	8864
+S249-0090	32	mul 0x2	mul 0x2	1	1	6	6	1021.2	1021.2	-	complete	1	0	1120
+S249-0091	8	add 0xff	add 0xff	1	1	5	5	765.7	765.7	-	complete	2	2	1552
+S249-0092	64	and 0x7f; add 0x0; sub 0x4; or 0xb	and 0x7f; sub 0x4; or 0xb	4	3	9	7	1523.8	1271.0	1	complete	6	18	5664
+S249-0093	32	sub 0x3fff; and 0xffe00000	sub 0x3fff; and 0xffe00000	2	2	9	9	1019.4	1019.4	-	complete	2	2	1888
+S249-0094	32	mul 0xffffff80; and 0xffffffff; add 0x1f; and 0x1ff; and 0xfffff; and 0x0	and 0x0	6	1	19	6	2287.5	765.6	0,1,2,4,5	complete	15	46	14384
+S249-0095	8	mul 0xf0; add 0x80; mul 0x0	mul 0x0	3	1	9	5	1782.1	1021.2	1,2	complete	8	20	5920
+S249-0096	32	and 0xffffffff	id	1	0	7	4	766.6	512.9	0	complete	2	1	1488
+S249-0097	16	or 0xffff; mul 0xd; mul 0x4; add 0x0; and 0xffff; or 0x7f	or 0xffff; mul 0x34; or 0x7f	6	3	15	9	2540.1	1526.5	2,3,4	complete	18	63	18336
+S249-0098	64	and 0xffffffffffffffff; and 0xfffffffffffffff; mul 0xc; and 0xfff0000000000000; or 0x0	and 0xfffffffffffffff; mul 0xc; and 0xfff0000000000000	5	3	18	11	2038.8	1530.5	1,4	complete	6	16	6288
+S249-0099	16	sub 0x0; sub 0x2	sub 0x2	2	1	7	5	1018.5	765.7	1	complete	6	18	4160
+S249-0100	32	add 0xffffff	add 0xffffff	1	1	7	7	766.7	766.7	-	complete	2	2	1584
+S249-0101	32	mul 0x1; or 0xc0000000	or 0xc0000000	2	1	9	7	1274.8	766.6	0	complete	2	1	1632
+S249-0102	16	add 0x4000; sub 0x4; or 0xfffb; mul 0x0; mul 0xf	mul 0x0	5	1	13	5	2287.6	1021.2	0,1,2,4	complete	64	291	51808
+S249-0103	32	or 0x5	or 0x5	1	1	6	6	765.6	765.6	-	complete	1	0	1328
+S249-0104	32	sub 0xffffffff; sub 0x1; mul 0x40000; and 0xfff	mul 0x40000; and 0xfff	4	2	14	9	1781.4	1274.8	0,1	complete	17	50	14368
+S249-0105	64	or 0xb; add 0xfffffffffffffff4	or 0xb; sub 0xc	2	2	8	5	1021.3	1018.4	-	complete	2	2	2080
+S249-0106	64	or 0xffffffffffffffff; sub 0xffffffe000000000; sub 0x1; add 0x100000000000	or 0xffffffffffffffff; add 0x101fffffffff	4	2	15	10	1529.9	1023.3	2,3	complete	18	66	15024
+S249-0107	32	or 0xfff80000	or 0xfff80000	1	1	7	7	766.6	766.6	-	complete	1	0	1152
+S249-0108	16	or 0xffff; or 0x0; and 0x0; and 0x8; mul 0x1	and 0x0	5	1	13	5	2031.8	765.6	0,1,3,4	complete	69	489	64400
+S249-0109	64	add 0x7; sub 0xffffffffffffffff; mul 0x0; mul 0x7fffffffff; and 0xffffffffffffffff	mul 0x0	5	1	19	3	2295.6	1021.2	0,1,3,4	complete	104	542	89792
+S249-0110	8	or 0x9; add 0xf6; mul 0xff; mul 0x0	mul 0x0	4	1	11	5	2034.8	1021.2	0,1,3	complete	15	41	11600
+S249-0111	8	mul 0xe0; and 0x40; sub 0x0; sub 0xff; add 0xf0; sub 0x6	mul 0xe0; and 0x40; add 0xeb	6	3	15	9	2284.9	1526.6	3,4,5	complete	54	306	55968
+S249-0112	16	or 0x9; add 0xfff6; sub 0xffff; mul 0x6; or 0x0	or 0x9; add 0xfff7; mul 0x6	5	3	13	9	2032.0	1526.6	2,4	complete	32	108	28512
+S249-0113	16	sub 0x1; or 0xfc00; mul 0xfff0; mul 0x1; and 0x1ff	sub 0x1; or 0xfc00; mul 0xfff0; and 0x1ff	5	4	13	11	2287.5	1779.3	3	complete	4	8	4320
+S249-0114	32	sub 0x20000000; and 0x3fffff; add 0x0; mul 0x1	sub 0x20000000; and 0x3fffff	4	2	14	10	1781.3	1020.4	2,3	complete	16	54	13616
+S249-0115	32	or 0xffffffff; or 0x8000000	or 0xffffffff	2	1	10	7	1020.2	766.6	1	complete	2	1	1696
+S249-0116	32	mul 0xc	mul 0xc	1	1	6	6	1021.2	1021.2	-	complete	1	0	1072
+S249-0117	16	add 0x0; and 0x3fff; and 0x400	and 0x400	3	1	9	5	1271.0	765.6	0,2	complete	6	11	4304
+S249-0118	32	mul 0x1; or 0xffffffff; and 0x0; mul 0xffffffff; and 0x0	and 0x0	5	1	16	6	2289.4	765.6	0,1,3,4	complete	68	479	63728
+S249-0119	32	add 0xa; add 0x4	add 0xe	2	1	8	6	1018.4	765.7	1	complete	6	14	4224
+S249-0120	64	and 0x7fffffff; add 0x7fffffffffffffff; mul 0x1; or 0xb	and 0x7fffffff; sub 0x8000000000000001; or 0xb	4	3	13	9	1783.2	1273.0	2	complete	6	12	5760
+S249-0121	8	sub 0xff; mul 0x0; add 0x8	mul 0x0; add 0x8	3	2	9	7	1526.7	1273.9	0	complete	10	34	7696
+S249-0122	8	add 0xff; sub 0x0; mul 0x0; sub 0x9	mul 0x0; sub 0x9	4	2	11	7	1779.5	1274.0	0,1	complete	34	202	28896
+S249-0123	32	or 0xffc00000; and 0x7; or 0x10000000; mul 0x0; sub 0xffffffff	mul 0x0; add 0x1	5	2	17	8	2034.9	1273.9	0,1,2	complete	58	216	56448
+S249-0124	8	add 0x3; or 0x1; sub 0x0; add 0xff; mul 0x3	add 0x3; or 0x1; add 0xff; mul 0x3	5	4	13	11	2032.1	1779.3	3	complete	32	148	31792
+S249-0125	8	sub 0xb	sub 0xb	1	1	5	5	765.7	765.7	-	complete	2	2	1520
+S249-0126	8	mul 0xfe; mul 0xff; sub 0x0; add 0xc	mul 0x2; add 0xc	4	2	11	7	2034.9	1273.9	1,3	complete	12	42	9488
+S249-0127	16	or 0xc	or 0xc	1	1	5	5	765.6	765.6	-	complete	1	0	1072
+S249-0128	16	or 0x7; add 0x800; mul 0xe; and 0x8; and 0x40; add 0x1	and 0x0; add 0x1	6	2	15	7	2284.6	1018.3	0,1,2,4	complete	66	209	57328
+S249-0129	8	or 0x2; add 0x0	or 0x2	2	1	7	5	1018.3	765.6	1	complete	3	4	2272
+S249-0130	8	sub 0xe0; sub 0x7f; and 0xff; and 0x1; add 0xff; sub 0x80	sub 0x5f; and 0x1; add 0x7f	6	3	15	9	2029.3	1271.1	1,3,5	complete	72	408	73456
+S249-0131	32	mul 0xffffffff; sub 0x0; and 0x1; add 0x7f	mul 0xffffffff; and 0x1; add 0x7f	4	3	13	11	1780.3	1527.6	1	complete	6	14	5648
+S249-0132	32	sub 0x20000; mul 0x7fffff; or 0x1ffff; sub 0x800; and 0x7ffff; add 0xc	sub 0x20000; mul 0x7fffff; or 0x1ffff; sub 0x800; and 0x7ffff; add 0xc	6	6	20	20	2288.8	2288.8	-	complete	16	56	18496
+S249-0133	8	or 0x0; sub 0x20; or 0x0; mul 0x0	mul 0x0	4	1	11	5	1779.3	1021.2	0,1,2	complete	14	42	10160
+S249-0134	8	or 0xff; sub 0x8; mul 0x7f; or 0xff; or 0xa	or 0xff	5	1	13	5	2031.9	765.6	1,2,3,4	complete	18	43	15008
+S249-0135	8	add 0xff; sub 0x1	add 0xfe	2	1	7	5	1018.4	765.7	1	complete	6	14	4080
+S249-0136	32	sub 0xffffffff	add 0x1	1	1	7	6	766.7	765.7	-	complete	2	2	1616
+S249-0137	64	and 0xd; sub 0x2000000; mul 0xfffffffffdffffff; add 0xfffff80000000000	and 0xd; mul 0xfffffffffdffffff; add 0x3f80002000000	4	3	15	13	1785.3	1532.6	3	complete	10	26	9248
+S249-0138	8	mul 0xb; mul 0x2; add 0xf	mul 0x16; add 0xf	3	2	9	7	1782.1	1273.9	1	complete	4	6	3168
+S249-0139	8	and 0x10	and 0x10	1	1	5	5	765.6	765.6	-	complete	1	0	1152
+S249-0140	8	and 0x0; or 0xfe; or 0x1; sub 0xd	or 0xff; sub 0xd	4	2	11	7	1523.7	1018.4	0,2	complete	27	93	21472
+S249-0141	64	mul 0x80; and 0xffffffffffffff7f; sub 0x7ffff; and 0x40000000; or 0xffffffffffffffff	or 0xffffffffffffffff	5	1	19	6	2039.9	768.6	0,1,2,3	complete	23	90	20288
+S249-0142	32	add 0xfffffff8	sub 0x8	1	1	7	6	766.7	765.7	-	complete	2	2	1616
+S249-0143	16	add 0xfffc; or 0x3; mul 0x0; and 0x0; or 0x4000	and 0x0; or 0x4000	5	2	13	7	2031.9	1018.2	0,1,2	complete	53	184	44624
+S249-0144	8	or 0xff; or 0x1; and 0x10; and 0xff; or 0xff; and 0x0	and 0x0	6	1	15	5	2028.9	765.6	0,1,2,3,4	best_found_under_budget	435	4107	510752
+S249-0145	16	sub 0xffff; mul 0x800; and 0x2; add 0x1	sub 0xffff; mul 0x800; and 0x2; add 0x1	4	4	11	11	1779.3	1779.3	-	complete	8	20	7552
+S249-0146	16	or 0x0; mul 0x4; and 0x0	and 0x0	3	1	9	5	1526.5	765.6	0,1	complete	5	9	3568
+S249-0147	16	mul 0xf800; or 0xf800; sub 0x7; sub 0xffc0; sub 0xff; add 0xfff	mul 0xf800; or 0xf800; add 0xf39	6	3	15	9	2284.9	1526.6	3,4,5	complete	54	270	54800
+S249-0148	8	add 0xff; and 0x8; and 0x0; mul 0x0	mul 0x0	4	1	11	5	1779.2	1021.2	0,1,2	complete	29	102	21472
+S249-0149	16	sub 0x0	id	1	0	5	3	765.7	512.9	0	complete	3	4	1984
+S249-0150	64	or 0xffffffffffffffff; or 0x1; add 0xffffffffffffff00	or 0xffffffffffffffff; sub 0x100	3	2	13	8	1277.0	1021.4	1	complete	4	6	3344
+S249-0151	16	sub 0x1; or 0x1	sub 0x1; or 0x1	2	2	7	7	1018.4	1018.4	-	complete	2	2	1904
+S249-0152	64	and 0xb; mul 0xfffffffffffffff4; mul 0x20000000000; or 0xe	and 0xb; mul 0xffffe80000000000; or 0xe	4	3	13	9	2038.7	1528.5	2	complete	2	1	2176
+S249-0153	16	and 0x0; or 0xe000; and 0xd; mul 0xe	and 0x0	4	1	11	5	1779.2	765.6	1,2,3	complete	31	138	25664
+S249-0154	16	and 0xffff; sub 0x4; add 0xffff; sub 0xf; or 0x1000; and 0xefff	add 0xffec; and 0xefff	6	2	15	7	2029.2	1018.3	0,2,3,4	complete	144	852	143488
+S249-0155	16	or 0xffff; sub 0x0; add 0x0; and 0x1	or 0xffff; and 0x1	4	2	11	7	1523.8	1018.2	1,2	complete	9	27	7648
+S249-0156	16	add 0xffff	add 0xffff	1	1	5	5	765.7	765.7	-	complete	2	2	1552
+S249-0157	8	mul 0x1; mul 0x1; and 0xff; and 0x1	and 0x1	4	1	11	5	2034.7	765.6	0,1,3	complete	6	14	4720
+S249-0158	16	add 0x1; and 0x9; mul 0xffff; mul 0x1; sub 0x1000; or 0x7f	add 0x1; and 0x9; mul 0xffff; sub 0x1000; or 0x7f	6	5	15	13	2540.2	2032.0	3	complete	8	24	19248
+S249-0159	32	mul 0x2	mul 0x2	1	1	6	6	1021.2	1021.2	-	complete	1	0	1152
+S249-0160	64	add 0x1000000000000000; and 0x9; add 0x0; mul 0xc; and 0x1000000	add 0x1000000000000000; and 0x9; mul 0xc; and 0x1000000	5	4	13	11	2033.9	1781.2	2	complete	10	30	10432
+S249-0161	8	mul 0xff; or 0x80; add 0x4; or 0x7; or 0x7; mul 0xd	mul 0xff; or 0x80; add 0x4; or 0x7; mul 0xd	6	5	15	13	2540.1	2287.5	4	complete	4	6	4752
+S249-0162	32	sub 0xffc00000; and 0x0; sub 0xff	and 0x0; sub 0xff	3	2	11	8	1272.2	1018.4	0	complete	15	37	11056
+S249-0163	16	and 0x1000	and 0x1000	1	1	5	5	765.6	765.6	-	complete	1	0	1072
+S249-0164	8	or 0x9; or 0x7; add 0x1; or 0xff; mul 0xa	or 0xff; mul 0xa	5	2	13	7	2031.9	1273.8	1,2,3	complete	8	17	7232
+S249-0165	16	or 0x400	or 0x400	1	1	5	5	765.6	765.6	-	complete	1	0	1072
+S249-0166	8	mul 0xff; sub 0x4	mul 0xff; sub 0x4	2	2	7	7	1274.0	1274.0	-	complete	2	2	1776
+S249-0167	64	or 0x7; mul 0xb; and 0x7ffffff; sub 0x1; sub 0xc; and 0x0	and 0x0	6	1	14	3	2285.7	765.6	0,1,3,4,5	complete	14	36	12928
+S249-0168	64	mul 0xffffffffffffffff; and 0x40	mul 0xffffffffffffffff; and 0x40	2	2	8	8	1276.8	1276.8	-	complete	1	0	1248
+S249-0169	32	or 0x0; and 0xffffffff; mul 0xf; or 0x0	mul 0xf	4	1	13	6	1780.2	1021.2	0,1,3	complete	10	25	7792
+S249-0170	8	or 0x0; sub 0x2	sub 0x2	2	1	7	5	1018.4	765.7	0	complete	4	6	2704
+S249-0171	16	or 0x4; and 0x0; or 0xffff; add 0x1; sub 0x1; and 0x3ff	or 0xffff; and 0x3ff	6	2	15	7	2029.1	1018.2	0,1,3,4	complete	273	1761	290848
+S249-0172	32	and 0x1ff; add 0x1; and 0x8000; and 0x0	and 0x0	4	1	12	6	1523.6	765.6	1,2,3	complete	6	12	5120
+S249-0173	8	or 0x5	or 0x5	1	1	5	5	765.6	765.6	-	complete	1	0	1120
+S249-0174	64	sub 0x7	sub 0x7	1	1	3	3	765.7	765.7	-	complete	2	2	1536
+S249-0175	64	and 0x0; sub 0x1; and 0x200; mul 0xfffffffffffffdff	and 0x0; or 0xfffffffffffbfe00	4	2	12	8	1782.3	1021.2	2,3	complete	30	86	24848
+S249-0176	16	mul 0xffff; add 0xffff	mul 0xffff; add 0xffff	2	2	7	7	1273.9	1273.9	-	complete	2	2	1968
+S249-0177	16	add 0x1; or 0x3ff; mul 0x0; sub 0x7f; sub 0xf800; add 0xc	mul 0x0; add 0x78d	6	2	15	7	2284.8	1273.9	0,1,4,5	complete	126	750	125856
+S249-0178	16	add 0xd; or 0xb; and 0x1; add 0x0	add 0xd; or 0xb; and 0x1	4	3	11	9	1523.7	1271.0	3	complete	18	60	15264
+S249-0179	64	mul 0xf	mul 0xf	1	1	3	3	1021.2	1021.2	-	complete	1	0	1104
+S249-0180	8	or 0xf	or 0xf	1	1	5	5	765.6	765.6	-	complete	1	0	1088
+S249-0181	8	add 0x6; add 0xff; or 0x9; and 0x1; sub 0x2; or 0x0	add 0x5; or 0x9; and 0x1; sub 0x2	6	4	15	11	2029.1	1523.8	1,5	complete	72	348	74960
+S249-0182	32	and 0x5; and 0x0; or 0xffffffff; or 0xffffffff; or 0xffffffff; mul 0xf	or 0xffffffff; mul 0xf	6	2	19	9	2287.5	1274.8	0,1,3,4	complete	59	356	59344
+S249-0183	8	and 0x2; and 0xa; sub 0x1; and 0xb; add 0xb	and 0x2; sub 0x1; and 0xb; add 0xb	5	4	13	11	1776.4	1523.8	1	complete	8	20	8144
+S249-0184	16	add 0x1; or 0x3f; add 0xffc0; or 0x1fff; sub 0x1fff; or 0x1f	add 0x1; or 0x3f; add 0xffc0; or 0x1fff; sub 0x1fff; or 0x1f	6	6	15	15	2029.1	2029.1	-	complete	8	24	9472
+S249-0185	8	mul 0x0; and 0x1; mul 0x2	mul 0x0; and 0x1; mul 0x2	3	3	9	9	1782.1	1782.1	-	complete	1	0	1376
+S249-0186	32	and 0x80000000; mul 0x1fffffff; add 0xe0000000	and 0x80000000; mul 0x1fffffff; add 0xe0000000	3	3	13	13	1529.6	1529.6	-	complete	2	2	2176
+S249-0187	16	and 0x9; or 0x0; add 0x0; sub 0x0	and 0x9	4	1	11	5	1523.8	765.6	1,2,3	complete	21	107	17072
+S249-0188	8	sub 0xff; or 0x1	sub 0xff; or 0x1	2	2	7	7	1018.4	1018.4	-	complete	2	2	1824
+S249-0189	32	add 0xfffe0000; or 0xa; mul 0x3; add 0x0; or 0x0	add 0xfffe0000; or 0xa; mul 0x3	5	3	15	11	2032.9	1527.6	3,4	complete	12	34	11168
+S249-0190	16	add 0x6; or 0xfff9	add 0x6; or 0xfff9	2	2	7	7	1018.3	1018.3	-	complete	2	2	1808
+S249-0191	32	sub 0x1; and 0x0; sub 0xffffffff	and 0x0; or 0x1	3	2	11	8	1272.2	1018.2	0	complete	15	37	10912
+S249-0192	32	add 0x8000; mul 0x0; mul 0x1	mul 0x0	3	1	10	6	1782.1	1021.2	0,2	complete	12	38	8752
+S249-0193	8	or 0x2; or 0x10	or 0x12	2	1	7	5	1018.2	765.6	1	complete	2	1	1712
+S249-0194	8	sub 0xff; mul 0x7f; sub 0xd; or 0xd; add 0x10	mul 0x7f; sub 0x8e; or 0xd; add 0x10	5	4	13	11	2032.1	1779.3	2	complete	20	72	19904
+S249-0195	64	add 0xfffffffffff80000; sub 0xfffff80000000000; or 0x7; sub 0xa	add 0x7fffff80000; or 0x7; sub 0xa	4	3	14	9	1528.9	1273.1	1	complete	12	40	16224
+S249-0196	32	and 0xffffffff; add 0x40000	add 0x40000	2	1	10	7	1020.3	766.7	0	complete	4	6	2768
+S249-0197	8	and 0x0; sub 0xff	and 0x0; sub 0xff	2	2	7	7	1018.4	1018.4	-	complete	5	7	3600
+S249-0198	16	add 0xffff; add 0x1	id	2	0	7	3	1018.4	512.9	0,1	complete	7	16	4352
+S249-0199	16	sub 0xfff0; add 0x3ff; or 0xfc00; and 0x1	add 0x40f; and 0x1	4	2	11	7	1523.8	1018.3	1,2	complete	24	98	19920
+S249-0200	64	mul 0xffffffffffff; sub 0x1; mul 0x3fffffff; and 0xffffffe000000000; or 0x1	mul 0xfffeffffc0000001; sub 0x3fffffff; and 0xffffffe000000000; or 0x1	5	4	16	15	2292.5	1785.3	2	complete	18	48	17664
+S249-0201	16	or 0x3f	or 0x3f	1	1	5	5	765.6	765.6	-	complete	1	0	1072
+S249-0202	32	add 0x1ffffff; or 0x9; add 0xffffffff; add 0x0; and 0x1ff	add 0x1ffffff; or 0x9; sub 0x1; and 0x1ff	5	4	16	13	1778.4	1524.8	3	complete	12	48	12432
+S249-0203	32	add 0x0; mul 0xffffffff; mul 0xffffffff	id	3	0	12	4	1784.1	512.9	0,1,2	complete	15	40	10016
+S249-0204	16	add 0x0; sub 0x100; mul 0x8; add 0xffff	mul 0x8; add 0xf7ff	4	2	11	7	1779.4	1273.9	1,3	complete	42	202	35136
+S249-0205	8	mul 0x0; and 0x1	mul 0x0; and 0x1	2	2	7	7	1273.8	1273.8	-	complete	1	0	1248
+S249-0206	32	and 0x0; mul 0x0; and 0xfff; and 0x7fffffff; mul 0xffffffff	and 0x0	5	1	16	6	2289.4	765.6	1,2,3,4	complete	48	280	45888
+S249-0207	16	sub 0xd	sub 0xd	1	1	5	5	765.7	765.7	-	complete	2	2	1568
+S249-0208	8	add 0xff; or 0x1f	add 0xff; or 0x1f	2	2	7	7	1018.3	1018.3	-	complete	2	2	1840
+S249-0209	64	or 0x40000; add 0xffffffff; and 0x4	or 0x40000; add 0xffffffff; and 0x4	3	3	9	9	1273.0	1273.0	-	complete	2	2	2112
+S249-0210	16	sub 0xffff; add 0x1; add 0x100; sub 0x1; sub 0xfffe	add 0x103	5	1	13	5	1776.7	765.7	1,2,3,4	complete	162	1026	141440
+S249-0211	32	mul 0x9	mul 0x9	1	1	6	6	1021.2	1021.2	-	complete	1	0	1248
+S249-0212	8	and 0x0; and 0x1; mul 0xfe	and 0x0	3	1	9	5	1526.5	765.6	1,2	complete	10	34	7504
+S249-0213	16	sub 0xb; mul 0x1	sub 0xb	2	1	7	5	1274.0	765.7	1	complete	6	12	3872
+S249-0214	16	or 0x0; add 0x1	add 0x1	2	1	7	5	1018.3	765.7	0	complete	4	6	2720
+S249-0215	64	sub 0x0; mul 0x0; and 0xfffffffffffffffc; mul 0xffffffffffffffff	mul 0x0; and 0xfffffffffffffffc; mul 0xffffffffffffffff	4	3	15	13	2040.9	1788.1	0	complete	5	12	5072
+S249-0216	16	sub 0x1; mul 0xff; add 0x40; sub 0x3	mul 0xff; add 0xff3e	4	2	11	7	1779.5	1273.9	2,3	complete	30	118	24080
+S249-0217	16	and 0xffff; add 0x8; or 0x7f; sub 0x1; and 0x400	add 0x8; or 0x7f; sub 0x1; and 0x400	5	4	13	11	1776.4	1523.8	0	complete	8	20	8112
+S249-0218	64	sub 0x3fff; add 0xffffff0000000000	sub 0x10000003fff	2	1	7	4	1020.4	766.7	1	complete	6	14	4016
+S249-0219	64	or 0x800000000000000; or 0x0; mul 0xffffffffffffffff; mul 0xfff; add 0x0; sub 0xffffffffffffe000	or 0x800000000000000; mul 0xfffffffffffff001; add 0x2000	6	3	20	11	2547.2	1530.6	1,3,5	complete	24	108	24592
+S249-0220	8	and 0x3; or 0xfc; or 0x6; and 0xff; and 0x0	and 0x0	5	1	13	5	1776.2	765.6	0,1,2,4	complete	111	834	104848
+S249-0221	32	mul 0x1ffffff; mul 0x8; add 0x1ff; sub 0x1; sub 0x0; add 0xffffffc0	mul 0xffffff8; add 0x1be	6	2	18	9	2542.4	1274.9	1,3,4,5	complete	84	526	84080
+S249-0222	32	and 0x0	and 0x0	1	1	6	6	765.6	765.6	-	complete	1	0	1168
+S249-0223	64	mul 0x7fffffffffff	mul 0x7fffffffffff	1	1	5	5	1023.2	1023.2	-	complete	1	0	1088
+S249-0224	8	mul 0x0	mul 0x0	1	1	5	5	1021.2	1021.2	-	complete	1	0	1088
+S249-0225	32	sub 0xffffffff; mul 0x1; or 0xb; mul 0xffffffff; or 0x1fffff	add 0x1; or 0xb; mul 0xffffffff; or 0x1fffff	5	4	17	14	2290.5	1781.2	1	complete	6	12	6464
+S249-0226	32	and 0xd	and 0xd	1	1	6	6	765.6	765.6	-	complete	1	0	1104
+S249-0227	64	add 0x5; mul 0x0; add 0x7fffffff; or 0xf; mul 0xfffffffffffff800; and 0x7ff	mul 0x0; add 0x7fffffff; or 0xf; mul 0xfffffffffffff800; and 0x7ff	6	5	17	15	2544.2	2291.5	0	complete	10	34	12048
+S249-0228	32	or 0x1; mul 0x0; add 0x6; add 0x40	mul 0x0; add 0x46	4	2	12	8	1779.3	1273.9	0,3	complete	12	34	9696
+S249-0229	16	mul 0x0; mul 0x1	mul 0x0	2	1	7	5	1529.4	1021.2	1	complete	2	2	1760
+S249-0230	32	sub 0x9; mul 0xfffffff6; sub 0xb; add 0x0	mul 0xfffffff6; add 0x4f	4	2	13	9	1780.5	1274.9	2,3	complete	30	138	24656
+S249-0231	8	and 0xff; sub 0x0; mul 0xff	mul 0xff	3	1	9	5	1526.6	1021.2	0,1	complete	10	25	7072
+S249-0232	8	and 0x0; or 0xff; mul 0x0; and 0x0	and 0x0	4	1	11	5	1779.2	765.6	0,1,2	complete	25	111	18688
+S249-0233	8	or 0xff; sub 0x1; or 0x0; add 0xf; add 0x20	or 0xff; add 0x2e	5	2	13	7	1776.5	1018.3	2,3,4	complete	30	118	25808
+S249-0234	16	and 0x3fff; sub 0x10; sub 0x0; add 0x1	and 0x3fff; add 0xfff1	4	2	11	7	1523.9	1018.3	2,3	complete	14	62	11632
+S249-0235	8	add 0x1f; and 0xa	add 0x1f; and 0xa	2	2	7	7	1018.3	1018.3	-	complete	2	2	1808
+S249-0236	32	add 0xffffffff; and 0x1; mul 0xffffffff	sub 0x1; and 0x1; mul 0xffffffff	3	3	12	11	1528.6	1527.6	-	complete	2	2	2144
+S249-0237	64	and 0x4	and 0x4	1	1	3	3	765.6	765.6	-	complete	1	0	1072
+S249-0238	8	add 0x1f; sub 0x2	add 0x1d	2	1	7	5	1018.4	765.7	1	complete	6	14	3808
+S249-0239	8	and 0x0; add 0x1f; add 0x0; add 0x1; mul 0xfe	and 0x0; or 0xc0	5	2	13	7	2032.0	1018.2	2,3,4	complete	197	1158	190768
