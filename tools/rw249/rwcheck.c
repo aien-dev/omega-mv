@@ -855,7 +855,7 @@ static int parse_chain(const char *s, Chain *ch) {
     char *save;
     for (char *part = strtok_r(t, ";", &save); part; part = strtok_r(NULL, ";", &save)) {
         char o[16]; unsigned long long v;
-        if (sscanf(part, " %15s %lli", o, (long long *)&v) != 2) return -1;
+        { char vs[40]; char *e; if (sscanf(part, " %15s %39s", o, vs) != 2) return -1; errno = 0; v = strtoull(vs, &e, 0); if (errno || *e) return -1; }
         int k = op_kind(o);
         if (k != K_ADD && k != K_SUB && k != K_MUL && k != K_AND && k != K_OR) return -1;
         if (ch->n >= 16) return -1;
