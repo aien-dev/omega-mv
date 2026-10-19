@@ -1,0 +1,7 @@
+{"test": "gpu_qmd_smem", "ctas": 96, "threads": 256, "points": [
+  {"shared_bytes": 32768, "config_code": 9, "ran": 1, "bad_words": 0, "ns": 219842},
+  {"shared_bytes": 33792, "config_code": 17, "ran": 1, "bad_words": 0, "ns": 103889},
+  {"shared_bytes": 65536, "config_code": 17, "ran": 1, "bad_words": 0, "ns": 103249},
+  {"shared_bytes": 98304, "config_code": 26, "ran": 1, "bad_words": 0, "ns": 97745},
+  {"shared_bytes": 101376, "config_code": 26, "ran": 1, "bad_words": 0, "ns": 103408}
+], "checks": 24, "failed": 0}

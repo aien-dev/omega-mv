@@ -1,0 +1,7 @@
+probe: 30 instructions, 12 registers
+chip shared  32768 bytes (config code 9): ran, 0 bad words of 49152, 219842 ns
+chip shared  33792 bytes (config code 17): ran, 0 bad words of 49152, 103889 ns
+chip shared  65536 bytes (config code 17): ran, 0 bad words of 49152, 103249 ns
+chip shared  98304 bytes (config code 26): ran, 0 bad words of 49152, 97745 ns
+chip shared 101376 bytes (config code 26): ran, 0 bad words of 49152, 103408 ns
+gpu_qmd_smem_test: 24 checks, 0 failed: PASS

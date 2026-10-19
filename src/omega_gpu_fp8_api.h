@@ -140,6 +140,10 @@ uint32_t omega_gpu_fp8_depth_for(const OmegaFp8GemvSpec *spec, uint32_t n, uint3
  * 32 KiB cap (#559, Qwen3.8 bf16 GEMV) would newly admit the 30B o_proj (16464 bytes), which no run has measured. The
  * automatic choice keeps the measured bound; set_depth still reaches anything the descriptor allows. */
 #define OMEGA_GPU_FP8_DEEP_MAX_SHARED_BYTES 16384u
+/* The partial-depth (big-k) deep kernel's x' bound: the launch descriptor's cap when the big-k rule was measured
+ * (qwen38/decode-speed, 32 KiB). Pinned here so lifting the descriptor cap (omega-mv#560, OMEGA_BW_QMD_MAX_SHARED_BYTES
+ * 99 KiB) does not move any decode spec choice; a wider partial kernel is a separate measured change. */
+#define OMEGA_GPU_FP8_PARTIAL_MAX_SHARED_BYTES 32768u
 /* Register-file check for a spec (chip-found rule: 32 * warps * declared registers <= 65536, declared = peak + 1 rounded
  * up to 8). OK, TOO_LARGE (last_error names the counts) or CODEGEN_FAIL. The automatic depth choice and every build apply it. */
 int omega_gpu_fp8_kernel_fits(const OmegaFp8GemvSpec *spec, uint32_t *declared);

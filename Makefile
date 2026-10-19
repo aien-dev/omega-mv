@@ -2612,6 +2612,14 @@ $(GPU_PF_MEM_TEST): tests/gpu_pf_mem_test.c tests/bw_warp_sim_tc.h src/omega_gpu
 GPU_PFGEMM_TEST = $(OUT_DIR)/gpu_pfgemm_test
 $(GPU_PFGEMM_TEST): tests/gpu_pfgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h src/omega_gpu_prefill.h src/omega_blackwell_codegen_tc2.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_pfgemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+# omega-mv#560 (2026-10-19): the launch descriptor's shared-memory cap above 32 KiB. --host-only is a host proof
+# (word 36 bits, simulator); the default mode launches the probe on the chip at 32 .. 99 KiB (under the GB10 lock).
+GPU_QMD_SMEM_TEST = $(OUT_DIR)/gpu_qmd_smem_test
+$(GPU_QMD_SMEM_TEST): tests/gpu_qmd_smem_test.c tests/bw_warp_sim_pa.h src/omega_blackwell_qmd.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_qmd_smem_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+.PHONY: test-gpu-qmd-smem
+test-gpu-qmd-smem: $(GPU_QMD_SMEM_TEST)
+	./$(GPU_QMD_SMEM_TEST) --host-only
 GPU_QMMA_PROBE_TEST = $(OUT_DIR)/gpu_qmma_probe_test
 $(GPU_QMMA_PROBE_TEST): tests/gpu_qmma_probe_test.c tests/bw_qmma_model.h src/omega_blackwell_codegen_qmma.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_qmma_probe_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm

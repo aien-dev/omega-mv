@@ -36,6 +36,14 @@ static const uint32_t CBANK0_DRIVER_TEMPLATE[OMEGA_BW_CBANK_DRIVER_WORDS] = {
     0x00000040, 0x00000001, 0x00000001, 0x00000000, 0x00000001, 0x00000001, 0x00000001, 0x00fffdc0,
 };
 
+uint32_t omega_blackwell_qmd_sm_config_code(uint32_t bytes) {
+    /* mesa nak gv100_smem_size_to_hw: the smallest SM shared-memory config holding the CTA, as KB / 4 + 1.
+     * 32 KB (9) is the floor so every launch at or below the old cap keeps the captured word. */
+    if (bytes <= 32768u) return 9u;
+    if (bytes <= 65536u) return 17u;
+    return 26u;
+}
+
 int omega_blackwell_build_qmd0(uint32_t *qmd0_words, uint64_t qmd0_va, uint64_t qmd1_va) {
     if (!qmd0_words) return -1;
     (void)qmd0_va;
@@ -111,11 +119,14 @@ int omega_blackwell_build_qmd1(uint32_t *qmd1_words, const OmegaBlackwellQmdConf
     if (gpr < 16) gpr = 16;
     qmd1_words[35] = (tz & 0xff) | ((gpr & 0x1ff) << 8) | (1u << 17);
 
-    /* Word 36: SHARED_MEMORY_SIZE_SHIFTED7 in bits 10:0 (default 8 = 1024 bytes), then the
-     * MIN/MAX/TARGET_SM_CONFIG_SHARED_MEM_SIZE fields (9, 26, 9) kept as they were. */
+    /* Word 36: SHARED_MEMORY_SIZE_SHIFTED7 in bits 10:0 (default 8 = 1024 bytes), then
+     * MIN_SM_CONFIG_SHARED_MEM_SIZE (bits 16:11), MAX_ (22:17, 26 = 100 KB, as captured) and TARGET_ (28:23).
+     * Up to 32 KiB the word is the captured 0x04b44808 with the size patched in (MIN = TARGET = 9); above it
+     * MIN and TARGET follow the size (omega_blackwell_qmd_sm_config_code), omega-mv#560. */
     if (cfg->shared_bytes > OMEGA_BW_QMD_MAX_SHARED_BYTES) return -1;
     uint32_t smem7 = cfg->shared_bytes ? (cfg->shared_bytes + 127u) / 128u : 8u;
-    qmd1_words[36] = (0x04b44808u & ~0x7ffu) | smem7;
+    uint32_t cfgcode = omega_blackwell_qmd_sm_config_code(cfg->shared_bytes);
+    qmd1_words[36] = (0x04b44808u & ~(0x7ffu | (0x3fu << 11) | (0x3fu << 23))) | smem7 | (cfgcode << 11) | (cfgcode << 23);
 
     /* Word 37: SHADER_LOCAL_MEMORY_HIGH_SIZE_SHIFTED4 = 0 (SKEDCHECK05 compliance) */
     qmd1_words[37] = 0x00000000;
