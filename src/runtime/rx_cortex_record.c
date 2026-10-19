@@ -62,27 +62,32 @@ static uint64_t subject_in(const CortexLink *l, const RxObjRef *ref) {
     return 0;
 }
 
-/* One crumb into one link. Called with the world mutex held. */
-static void record_link(CortexLink *l, const RxWorld *w, const RxCrumb *k) {
-    /* An operator stop or resume (R16 G6) is about no World object and has no
-     * Cortex kind; its evidence is the crumb log and the durable halt mark. */
-    if (k->kind == RX_CRUMB_OPERATOR_STOP || k->kind == RX_CRUMB_OPERATOR_RESUME) return;
-    const RxObjRef *ref = k->n_outputs ? &k->outputs[0].obj
+/* One record of crumb `k` into link `l`, about output `idx` (0 = the first
+ * output, else the first input, as before). `primary` is the Cortex id of the
+ * crumb's index 0 record in this link, 0 if none (idx 0 itself). Returns the
+ * new record's id, 0 if the link does not record it or the append failed. */
+static uint64_t record_obj(CortexLink *l, const RxWorld *w, const RxCrumb *k, uint32_t idx,
+                           uint64_t primary) {
+    const RxObjRef *ref = k->n_outputs ? &k->outputs[idx].obj
                         : k->n_inputs ? &k->inputs[0].obj : NULL;
     uint64_t subject = subject_in(l, ref);
-    if (l->scoped && !subject) return;   /* not about this link's objects */
+    if (l->scoped && !subject) return 0;   /* not about this link's objects */
     CxHeader h;
     memset(&h, 0, sizeof h);
     kind_of(k->kind, &h.cls, &h.kind, &h.protect);
-    uint64_t version = k->n_outputs ? k->outputs[0].version
+    uint64_t version = k->n_outputs ? k->outputs[idx].version
                      : k->n_inputs ? k->inputs[0].version : 0;
     h.subject = subject;
     h.t = l->s->n + 1;
     h.generation = ref ? ref->generation : 0;
-    h.tag = (uint64_t)k->kind;
+    h.tag = (uint64_t)k->kind | ((uint64_t)idx << CX_WREC_OUT_SHIFT);
     uint32_t nl = 0;
     uint64_t cause = cx_of(l, k->wake_cause);
-    if (cause) h.links[nl++] = cause;
+    if (idx) {            /* links[0] stays the cause; links[1] is the primary record */
+        h.links[0] = cause;
+        h.links[1] = primary;
+        nl = 2;
+    } else if (cause) h.links[nl++] = cause;
     for (uint32_t i = 0; i < k->n_parents && nl < CX_LINKS; i++) {
         uint64_t p = cx_of(l, k->parents[i]);
         int dup = p == 0;
@@ -118,10 +123,34 @@ static void record_link(CortexLink *l, const RxWorld *w, const RxCrumb *k) {
     uint64_t id = 0;
     if (cx_append_as(l->s, l->token, &h, p, CX_WREC_WORDS, &id) != CX_OK) {
         l->errors++;
-        return;
+        return 0;
     }
-    if (k->id < l->cap) l->cx_of_crumb[k->id] = id;
     l->records++;
+    return id;
+}
+
+/* One crumb into one link: one record for its first output (else first
+ * input), and for a crumb that wrote several objects one more record per
+ * further output object, so every output's values after the crumb are in the
+ * journal. Called with the world mutex held. */
+static void record_link(CortexLink *l, const RxWorld *w, const RxCrumb *k) {
+    /* An operator stop or resume (R16 G6) is about no World object and has no
+     * Cortex kind; its evidence is the crumb log and the durable halt mark. */
+    if (k->kind == RX_CRUMB_OPERATOR_STOP || k->kind == RX_CRUMB_OPERATOR_RESUME) return;
+    uint64_t first = record_obj(l, w, k, 0, 0);
+    uint32_t cls, kind, protect;
+    kind_of(k->kind, &cls, &kind, &protect);
+    uint64_t any = first;
+    for (uint32_t i = 1; cls != CX_FAILURE && i < k->n_outputs; i++) {
+        int dup = 0;                      /* one record per object, not per mutation */
+        for (uint32_t j = 0; j < i && !dup; j++)
+            dup = k->outputs[j].obj.id == k->outputs[i].obj.id &&
+                  k->outputs[j].obj.generation == k->outputs[i].obj.generation;
+        if (dup) continue;
+        uint64_t id = record_obj(l, w, k, i, first);
+        if (!any) any = id;
+    }
+    if (any && k->id < l->cap) l->cx_of_crumb[k->id] = any;
 }
 
 /* The World's recorder: every crumb to every link. World mutex held. */

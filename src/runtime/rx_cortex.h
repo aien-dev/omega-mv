@@ -355,6 +355,14 @@ enum {
     CX_WREC_WORDS
 };
 
+/* Header tag of a World record: low 32 bits = RxCrumbKind, high 32 bits = the
+ * output index inside the crumb. A crumb that wrote several objects gets one
+ * record per output object: index 0 is the first output (else first input),
+ * exactly the record older writers made; index i > 0 is the i-th output, same
+ * payload layout and kind, links[0] = cause as for index 0, links[1] = the
+ * index 0 record (0 if this store did not record it). */
+#define CX_WREC_OUT_SHIFT 32
+
 typedef struct {
     uint64_t cx_id;
     uint32_t kind;          /* CX_K_* */
@@ -365,6 +373,8 @@ typedef struct {
     uint8_t crumb_digest[32];
     uint32_t n_inputs, n_outputs;
     uint64_t cause;         /* Cortex id of the record of the crumb that caused it, 0 = none */
+    uint32_t out_index;     /* 0 = first output of the crumb, i = i-th output (tag >> 32) */
+    uint64_t primary;       /* Cortex id of the crumb's index 0 record (own id when out_index 0) */
 } CxWorldRecord;
 
 /* Decode a World execution record: CX_OK, or CX_ERR_ARG if `r` is not one. */

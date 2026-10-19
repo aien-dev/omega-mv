@@ -336,6 +336,95 @@ static void test_execution(void) {
     cx_close(&s);
 }
 
+/* 5b. a commit that writes several objects ------------------------------------
+ * One crumb, two outputs: the first output's values were recorded and the
+ * second's were lost (L086: arrangement unit moves never reached the journal).
+ * Every output object's slot, generation, version and field values after the
+ * crumb must be recoverable from the journal. */
+
+static int fn_two_outputs(RxCtx *c) {
+    const RxObjRef *outs = c->user;   /* [0] primary, [1] secondary */
+    c->out[c->n_out++] = (RxMutation){ outs[0], 0, c->in[0].field[0] * 2 };
+    c->out[c->n_out++] = (RxMutation){ outs[1], 0, c->in[0].field[0] * 3 };
+    c->out[c->n_out++] = (RxMutation){ outs[1], 1, 7 };
+    return 0;
+}
+
+static void test_multi_output(void) {
+    g_test = "multi-output commit";
+    printf("[*] %s\n", g_test);
+    char path[512];
+    path_of(path, sizeof path, "multi.cx");
+    CxStore s;
+    CHECK(cx_open(&s, path, RX_CORTEX_SUBJECTS, 0) == CX_OK, "open journal");
+    Env e;
+    memset(&e, 0, sizeof e);
+    CHECK(rx_caproot_start(&e.root, &e.admin) == RX_CAP_OK, "caproot");
+    CHECK(rx_world_init(&e.w, &e.root, 2, 1u << 12) == RX_OK, "world init");
+    e.w.external_subject = SUBJ_EXTERNAL;
+    uint64_t init[RX_MAX_FIELDS] = { 0 };
+    RxObjRef outs[2];
+    rx_world_create(&e.w, 1, RX_PERSIST_DURABLE, RES_IN, init, &e.in);
+    rx_world_create(&e.w, 1, RX_PERSIST_DURABLE, RES_OUT, init, &outs[0]);
+    rx_world_create(&e.w, 1, RX_PERSIST_DURABLE, RES_OUT, init, &outs[1]);
+    e.c_ext = mint(&e, SUBJ_EXTERNAL, RES_IN, RX_RIGHT_WRITE);
+    RxReactionDesc d;
+    memset(&d, 0, sizeof d);
+    d.name = "work.two_outputs";
+    d.faculty = RX_FACULTY_OMEGA;
+    d.subject = SUBJ_WORKER;
+    d.priority = RX_PRIO_FOREGROUND;
+    d.fn = fn_two_outputs;
+    d.user = outs;
+    d.triggers[d.n_triggers++] = (RxDep){ e.in, RX_FIELD(0) };
+    d.writes[d.n_writes++] = (RxDep){ outs[0], RX_FIELD(0) };
+    d.writes[d.n_writes++] = (RxDep){ outs[1], RX_FIELD(0) | RX_FIELD(1) };
+    d.caps[d.n_caps++] = (RxCapNeed){ mint(&e, SUBJ_WORKER, RES_IN, RX_RIGHT_READ), RES_IN,
+                                      RX_RIGHT_READ };
+    d.caps[d.n_caps++] = (RxCapNeed){ mint(&e, SUBJ_WORKER, RES_OUT, RX_RIGHT_WRITE), RES_OUT,
+                                      RX_RIGHT_WRITE };
+    uint32_t rid;
+    CHECK(rx_world_add_reaction(&e.w, &d, &rid) == RX_OK, "reaction");
+    CHECK(rx_cortex_attach(&e.w, &s, 1) == RX_OK, "attach");
+    CHECK(submit(&e, 21) > 0, "submit");
+    CHECK(rx_world_wait_quiescent(&e.w, 10000) == RX_OK, "quiesce");
+
+    CxWorldRecord a, b;
+    uint64_t a_id = rx_cortex_recall_result(&s, outs[0].id, &a);
+    CHECK(a_id && a.field[0] == 42 && a.obj == outs[0].id, "first output record");
+    uint64_t b_id = rx_cortex_recall_result(&s, outs[1].id, &b);
+    CHECK(b_id != 0, "second output has no committed result in the journal");
+    if (b_id) {
+        const RxObject *ob = &e.w.objects[outs[1].id];
+        CHECK(b.obj == outs[1].id && b.obj_gen == outs[1].generation &&
+              b.obj_version == ob->version && b.field[0] == 63 && b.field[1] == 7,
+              "second output values obj=%llu v=%llu f0=%llu f1=%llu", (unsigned long long)b.obj,
+              (unsigned long long)b.obj_version, (unsigned long long)b.field[0],
+              (unsigned long long)b.field[1]);
+        CHECK(b.crumb == a.crumb && b.session == a.session &&
+              memcmp(b.crumb_digest, a.crumb_digest, 32) == 0 && b.n_outputs == 2,
+              "second output not tied to the same crumb");
+        CHECK(b.out_index == 1 && b.primary == a_id && a.out_index == 0 && a.primary == a_id &&
+              b.cause == a.cause && b.kind == CX_K_EXEC_COMMIT,
+              "second output index %u primary %llu (first %llu)", b.out_index,
+              (unsigned long long)b.primary, (unsigned long long)a_id);
+        CHECK(rx_cortex_record_of(&e.w, a.crumb) == a_id, "record_of crumb is not the first output");
+    }
+    uint64_t recs = 0, errs = 0;
+    rx_cortex_status(&e.w, &recs, &errs);
+    CHECK(errs == 0 && recs == e.w.n_crumbs + 1, "records %llu crumbs %llu errors %llu",
+          (unsigned long long)recs, (unsigned long long)e.w.n_crumbs, (unsigned long long)errs);
+    CHECK(cx_verify_chain(&s) == CX_OK, "chain");
+    rx_world_destroy(&e.w);
+    rx_caproot_stop(&e.root, &e.admin);
+    cx_close(&s);
+    /* The second object's values survive a restart (replay verifies every digest). */
+    CHECK(cx_open(&s, path, 0, 0) == CX_OK, "reopen");
+    CHECK(rx_cortex_recall_result(&s, outs[1].id, &b) == b_id && b.field[0] == 63 &&
+          b.field[1] == 7, "second output lost across restart");
+    cx_close(&s);
+}
+
 /* 6. duplicate-writer prevention ------------------------------------------- */
 static void test_single_writer(void) {
     g_test = "duplicate-writer prevention";
@@ -384,6 +473,7 @@ int main(void) {
     test_persistence();
     test_chain_derived();
     test_execution();
+    test_multi_output();
     test_single_writer();
     char cmd[300];
     snprintf(cmd, sizeof cmd, "rm -rf '%s'", g_dir);

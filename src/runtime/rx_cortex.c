@@ -613,6 +613,8 @@ int cx_world_decode(const CxRecord *r, CxWorldRecord *out) {
     out->n_inputs = (uint32_t)p[CX_WREC_N_INPUTS];
     out->n_outputs = (uint32_t)p[CX_WREC_N_OUTPUTS];
     out->cause = r->hdr.links[0];
+    out->out_index = (uint32_t)(r->hdr.tag >> CX_WREC_OUT_SHIFT);
+    out->primary = out->out_index ? r->hdr.links[1] : r->hdr.id;
     return CX_OK;
 }
 

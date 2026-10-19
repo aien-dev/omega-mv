@@ -17,6 +17,20 @@
  * Provenance: links[0] is the record of the crumb that woke this work,
  * links[1..3] records of its parent crumbs (writers of what it read).
  *
+ * Several outputs (format change L086, backward compatible). A COMMIT (or
+ * other non-failure crumb) that wrote more than one object is recorded once
+ * per output object, each with the same crumb id, digest and kind: record 0
+ * is the first output exactly as before (tag = crumb kind); each further
+ * object gets its own record under its own subject, with its slot,
+ * generation, version and field values after the crumb, tag = crumb kind |
+ * (output index << CX_WREC_OUT_SHIFT), links[0] = the same cause, links[1] =
+ * record 0, links[2..3] = parents. Payload layout, cx_world_decode and
+ * rx_cortex_recall_result are unchanged (the latter now also finds the newest
+ * commit of any output object). CxWorldRecord.out_index and .primary tell the
+ * records of one crumb apart. Several mutations of one object are one record.
+ * Journals written before this change hold only index 0 records and decode
+ * as before. A scoped link records each output that is in its scope.
+ *
  * Subject = World object slot + 1 (0 = no object). Slots are runtime
  * indices, not identity. Logical time t = the store's next id, so it keeps
  * increasing across sessions on one journal.
@@ -47,7 +61,8 @@ int rx_cortex_attach(RxWorld *w, CxStore *s, uint64_t session);
 int rx_cortex_detach(RxWorld *w);
 
 /* COMPOSITION-2 attach: a scoped link. Records only crumbs whose object
- * (first output, else first input) is one of `objs` (live ref, generation
+ * (first output, else first input, and each further output) is one of `objs`
+ * (live ref, generation
  * included), under the matching `subjects` (stable across Worlds, unlike
  * slots), into its own store `s`. It shares the World's recorder slot with
  * the whole-World link and other scoped links (scopes must be disjoint):
