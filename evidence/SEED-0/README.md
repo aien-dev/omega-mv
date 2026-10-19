@@ -1,0 +1,7 @@
+# evidence/SEED-0: receipts for the seed chain (seed/README.md)
+
+- `rung0/gate0.log`: rung 0 gate run (self-rebuild, both decoders, controls). `rung0/seed0.readelf`:
+  GNU readelf (reference only) reading the hand-written ELF header. `rung0/seed0.sha256`.
+- `rung0-worksheet.sh`: the arithmetic behind seed0.hex (manual field layouts with values put in).
+- Manual: Arm DDI 0487 revision M.d, sha256 80d589a4645feba6bdb9d77edfaf04d4394d5d5444a4c41f97cf4fdd20eee3d5
+  (downloaded 2026-10-19 from documentation-service.arm.com, the public Arm documentation site).
