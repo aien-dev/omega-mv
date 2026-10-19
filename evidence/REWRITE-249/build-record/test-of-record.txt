@@ -1,0 +1,28 @@
+date=2026-10-19T20:09:41Z head=09083bd498cdfc2a7f793e6f51617e75fca7f368 load=49.13 33.27 22.27 memavail_kb=35665416
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -o /home/drakestapleton/workspace/targets/omega-rw-249/rw249/rwcheck tools/rw249/rwcheck.c src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_realize_synth.c src/omega_machine.c src/omega_exec.c src/omega_verify.c src/omega_program.c src/omega_synthesis.c src/omega_library.c -lm
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -o /home/drakestapleton/workspace/targets/omega-rw-249/rw249/rwsearch tools/rw249/rwsearch.c src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_realize_synth.c src/omega_machine.c src/omega_exec.c src/omega_verify.c src/omega_program.c src/omega_synthesis.c src/omega_library.c src/runtime/rx_costmodel.c -lm
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -o /home/drakestapleton/workspace/targets/omega-rw-249/rw249/rwprobe tools/rw249/rwprobe.c src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_realize_synth.c src/omega_machine.c src/omega_exec.c src/omega_verify.c src/omega_program.c src/omega_synthesis.c src/omega_library.c -lm
+PASS axiom base sound
+RED M5 unsound axiom in base (mutant caught, bad rows 1)
+PASS R01-R25 and P01-P03 proven_in_scope
+PASS N01-N07 rejected
+PASS derivation layer rejects N01-N04 N06 on its own
+RED M1 corrupted derivation step (mutant caught, bad rows 1)
+RED M2 dropped assumption (mutant caught, bad rows 1)
+RED M6 semantic guard off (mutant caught, bad rows 1)
+PASS M7 baseline: bogus step 2 flagged
+RED M7 step skipped (mutant caught, bad rows 1)
+PASS cache hit on same semantics, miss on changed semantics
+RED M3 cache key without semantics version (mutant caught, bad rows 1)
+PASS probe counterexamples (4)
+PASS unknown cost ineligible (synthetic model)
+RED M8 unknown cost counted as zero (mutant caught, bad rows 2)
+PASS e2e arm M: every accepted output equal on omega's evaluator
+PASS e2e arm G: every accepted output equal on omega's evaluator
+PASS e2e arm Bi: every accepted output equal on omega's evaluator
+PASS e2e arm B: every accepted output equal on omega's evaluator
+PASS injected probe-only rule R99 rejected by the checker (failed candidate)
+RED M4 checker bypassed (mutant caught, bad rows 192)
+PASS determinism (same model blob, same set)
+TEST-RW249 failures=0
+make_exit=0 end=2026-10-19T21:04:05Z load=12.07 15.41 24.87 memavail_kb=24272972
