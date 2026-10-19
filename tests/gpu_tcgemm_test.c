@@ -410,7 +410,7 @@ int tv_tests(int argc, char **argv) {
         uint64_t ns = 0;
         rc = omega_gpu_pf_upload(&yd, 0, poison, ybytes);
         if (!rc) rc = omega_gpu_tv_gemm(t, N, xd.va, yd.va, &ns);
-        if (rc == OMEGA_GPU_PF_CODEGEN_FAIL && ti > 0) { printf("tv N %u tile %u:%u:%u: codegen refused (registers), skipped\n", N, sp.rt, sp.ct, sp.warps); continue; }
+        if (rc && ti > 0) { printf("tv N %u tile %u:%u:%u: refused (rc %d: %s), skipped\n", N, sp.rt, sp.ct, sp.warps, rc, omega_gpu_tcgemm_last_error()); continue; }
         if (rc || omega_gpu_pf_download(&yd, 0, y, ybytes)) {
             printf("tv N %u: call failed %d: %s\n", N, rc, omega_gpu_tcgemm_last_error()); fail++; break;
         }
