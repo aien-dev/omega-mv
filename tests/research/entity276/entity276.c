@@ -84,6 +84,7 @@ typedef struct {
     uint64_t lookups, hits, misses, arrange, snapshots, plan_views, admits, refusals, bad;
 } Cnt;
 static Cnt C;
+static uint64_t g_cog_cpu, g_rebuild_cpu;  /* thread CPU in cognition (view, goal, lookup, search) and theta rebuild */
 static int g_checks, g_fail;
 #define CHECK(cond, ...) do { g_checks++; if (!(cond)) { g_fail++; C.bad++;                  \
         fprintf(stderr, "  BAD %s:%d ", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__);    \
@@ -228,6 +229,9 @@ static void shutdown_entity(void) {
 
 /* Role objects whose committed values make up the entity state, in a fixed order. */
 #define N_ROLES (N_UNITS + PL_ENV_COUNT + 2u)
+#define N_ROLES_W (N_ROLES * 10u)
+#define OBS_KIND 0x2760u              /* writer kind (below CX_K_BASE): entity state observation */
+#define OBS_TAG  0x276A0003ull
 static RxObjRef role(uint32_t r) {
     if (r < N_UNITS) return E.unit[r];
     r -= N_UNITS;
@@ -252,28 +256,45 @@ static void entity_digest_world(uint8_t out[32]) {
     sha256_final(&c, out);
 }
 
-/* Newest World record about a role object (slot and generation), by scanning its
- * subject's records. Returns 1 and the field values after that record. */
-static int journal_fields(CxStore *s, RxObjRef ref, uint64_t f[RX_MAX_FIELDS]) {
-    CxRecord rec[64];
-    uint64_t subj = (uint64_t)ref.id + 1u;
-    uint64_t n = cx_count_subject(s, subj);
-    int found = 0;
-    for (uint64_t t0 = 0, seen = 0; seen < n;) {
-        CxFilter any = { 0, 0, 0, 1 };
-        uint32_t k = cx_recall(s, subj, t0, UINT64_MAX - 1, &any, rec, 64);
-        if (!k) break;
-        for (uint32_t i = 0; i < k; i++) {
-            CxWorldRecord wr;
-            if (!rec[i].verified || cx_world_decode(&rec[i], &wr) != CX_OK) continue;
-            if (wr.obj != ref.id || wr.obj_gen != ref.generation) continue;
-            memcpy(f, wr.field, sizeof(uint64_t) * RX_MAX_FIELDS);
-            found = 1;
-        }
-        seen += k;
-        t0 = rec[k - 1].hdr.t + 1;
+/* The journal records one object per crumb (the first output, rx_cortex_record.c), and a
+ * move commit names its graph cell first, so unit values never reach the journal as World
+ * records (MISSING PREREQUISITE E). The entity therefore appends a state observation
+ * (class OBSERVATION, writer kind OBS_KIND below CX_K_BASE) through the World's attached
+ * writer after each commit: per role object its slot, generation and field values. */
+static uint64_t obs_latest(CxStore *s, const uint64_t **payload) {
+    for (uint64_t id = s->n; id >= 1; id--) {
+        const CxObject *o = cx_get(s, id);
+        if (o->cls != CX_OBSERVATION || o->kind != OBS_KIND || o->tag != OBS_TAG) continue;
+        if (cx_verify(s, id) != CX_OK || o->n != N_ROLES_W) return 0;
+        *payload = cx_payload(s, o);
+        return id;
     }
-    return found;
+    return 0;
+}
+
+static int journal_fields(CxStore *s, RxObjRef ref, uint64_t f[RX_MAX_FIELDS]) {
+    const uint64_t *p;
+    if (!obs_latest(s, &p)) return 0;
+    for (uint32_t r = 0; r < N_ROLES; r++, p += 10)
+        if (p[0] == ref.id && p[1] == ref.generation) { memcpy(f, p + 2, 8 * RX_MAX_FIELDS); return 1; }
+    return 0;
+}
+
+static int observe(uint64_t cause_crumb) {
+    static uint64_t p[N_ROLES_W];
+    for (uint32_t r = 0; r < N_ROLES; r++) {
+        RxObject o;
+        RxObjRef ref = role(r);
+        memset(&p[10 * r], 0, 80);
+        p[10 * r] = ref.id;
+        p[10 * r + 1] = ref.generation;
+        if (rx_world_read(&E.w, ref, &o) == RX_OK) memcpy(&p[10 * r + 2], o.field, 8 * RX_MAX_FIELDS);
+    }
+    CxHeader h = { CX_OBSERVATION, OBS_KIND, (uint64_t)E.env.obj[PL_ENV_GOAL].id + 1u, rx_cortex_next_t(&E.w),
+                   0, 0, 0, OBS_TAG, { 0 } };
+    h.links[0] = cause_crumb ? rx_cortex_record_of(&E.w, cause_crumb) : 0;
+    uint64_t id;
+    return rx_cortex_append(&E.w, &h, p, N_ROLES_W, &id) == RX_OK ? 0 : -1;
 }
 
 static void entity_digest_journal(CxStore *s, uint8_t out[32], uint32_t *missing) {
@@ -528,6 +549,7 @@ static int goal_holds(void) {
 
 /* probe_only: decide and report, execute nothing (counterfactual before a correction). */
 static int solve(Out *o, int probe_only) {
+    uint64_t k0 = cpu_ns();
     memset(o, 0, sizeof *o);
     PlCost cost;
     memset(&cost, 0, sizeof cost);
@@ -536,7 +558,7 @@ static int solve(Out *o, int probe_only) {
     if (pla_goal_read(&g_v, &E.env, &g, &cost) != 0) return -1;
     RxObjRef slots[PL_MAX_SLOTS];
     PlanTemplate *use = decide(&g, slots, &cost, o);
-    if (probe_only) { o->path = use ? 2 : 1; return 0; }
+    if (probe_only) { o->path = use ? 2 : 1; g_cog_cpu += cpu_ns() - k0; return 0; }
     const PlanTemplate *run = use;
     if (use) {
         o->path = 2;
@@ -552,6 +574,7 @@ static int solve(Out *o, int probe_only) {
         o->path = 1;
         run = &g_tmp;
     }
+    g_cog_cpu += cpu_ns() - k0;
     int64_t crumb = rx_plan_decide(&E.w, E.ext_decision, E.decision, g.seq, use ? PL_AX_OK : o->refused ? o->refused_axis : PL_AX_SHAPE,
                                    use, -1, ++E.seq, NULL);
     o->decision_crumb = crumb > 0 ? (uint64_t)crumb : 0;
@@ -580,6 +603,7 @@ static int solve(Out *o, int probe_only) {
     }
     if (o->t) rx_plan_publish_index(&E.w, E.ext_index, E.index, &g_cache, o->t);
     rx_world_wait_quiescent(&E.w, 30000);
+    if (observe(o->decision_crumb) != 0) return -7;
     return 0;
 }
 
@@ -609,6 +633,7 @@ static int admit(uint32_t k) {
     objective_mutations(k, E.ext_goal, &rc);
     rx_world_wait_quiescent(&E.w, 30000);
     if (rc > 0) C.admits++;
+    if (rc > 0 && observe(0) != 0) return -1;
     return rc > 0 ? 0 : -1;
 }
 
@@ -616,13 +641,13 @@ static int admit(uint32_t k) {
 
 typedef struct {
     char name[40];
-    uint64_t cpu, pcpu, wall, jbytes, records;
+    uint64_t cpu, pcpu, wall, jbytes, records, cog;
     Cnt c;
     long rss_kib;
 } Row;
 static Row g_rows[32];
 static uint32_t g_n_rows;
-static uint64_t r_cpu, r_pcpu, r_wall, r_jb, r_rec;
+static uint64_t r_cpu, r_pcpu, r_wall, r_jb, r_rec, r_cog;
 static Cnt r_c;
 
 static uint64_t journal_size(void) {
@@ -633,6 +658,7 @@ static void step_begin(void) {
     r_c = C;
     r_jb = journal_size();
     r_rec = g_cx.n;
+    r_cog = g_cog_cpu;
     r_wall = wall_ns();
     r_pcpu = pcpu_ns();
     r_cpu = cpu_ns();
@@ -647,6 +673,7 @@ static Row *step_end(const char *name) {
     r->wall = w1 - r_wall;
     r->jbytes = journal_size() - r_jb;
     r->records = g_cx.n - r_rec;
+    r->cog = g_cog_cpu - r_cog;
     r->c.lookups = C.lookups - r_c.lookups;
     r->c.hits = C.hits - r_c.hits;
     r->c.misses = C.misses - r_c.misses;
@@ -694,6 +721,13 @@ static void view_reattach(const char *tag, int expect_goal) {
                   "%s: U%u shown where it rests", tag, k);
         CHECK(goal_holds(), "%s: committed goal holds", tag);
     }
+    /* The history must not lag the World: its observation is newer than every commit. */
+    const uint64_t *op;
+    uint64_t obs = obs_latest(&g_cx, &op), last_commit = 0;
+    for (uint64_t id = g_cx.n; id >= 1 && !last_commit; id--)
+        if (cx_get(&g_cx, id)->kind == CX_K_EXEC_COMMIT) last_commit = id;
+    CHECK(obs > last_commit, "%s: history observation (%llu) newer than the last commit (%llu)", tag,
+          (unsigned long long)obs, (unsigned long long)last_commit);
     uint32_t tb = theta_check(tag);
     C.bad += tb;
     g_view_last_id = g_cx.n;
@@ -740,12 +774,12 @@ static void write_outputs(void) {
     if (f) {
         fprintf(f, "# load1_start=%.2f memavail_kib_start=%ld load1_end=%.2f memavail_kib_end=%ld\n",
                 g_load0, g_mem0, l1, m1);
-        fprintf(f, "step,cpu_ns,proc_cpu_ns,wall_ns,journal_bytes,records,lookups,hits,misses,arrange_calls,"
+        fprintf(f, "step,cpu_ns,proc_cpu_ns,cog_cpu_ns,wall_ns,journal_bytes,records,lookups,hits,misses,arrange_calls,"
                    "snapshot_calls,plan_views,admits,refusals,bad_rows,peak_rss_kib\n");
         for (uint32_t i = 0; i < g_n_rows; i++) {
             Row *r = &g_rows[i];
-            fprintf(f, "%s,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%ld\n", r->name,
-                    (unsigned long long)r->cpu, (unsigned long long)r->pcpu, (unsigned long long)r->wall,
+            fprintf(f, "%s,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%ld\n", r->name,
+                    (unsigned long long)r->cpu, (unsigned long long)r->pcpu, (unsigned long long)r->cog, (unsigned long long)r->wall,
                     (unsigned long long)r->jbytes, (unsigned long long)r->records,
                     (unsigned long long)r->c.lookups, (unsigned long long)r->c.hits,
                     (unsigned long long)r->c.misses, (unsigned long long)r->c.arrange,
@@ -786,11 +820,11 @@ static void write_outputs(void) {
     if (f) {
         fprintf(f, "{\"lineage\":\"%s\",\"chain\":\"%s\",\"records\":%llu,\"entity_digest\":\"%s\","
                    "\"idle_proc_cpu_ns\":%llu,\"idle_vol_ctxsw\":%llu,\"idle_invol_ctxsw\":%llu,"
-                   "\"idle_rchar\":%llu,\"idle_wchar\":%llu,\"idle_ms_measured\":%llu}\n",
+                   "\"idle_rchar\":%llu,\"idle_wchar\":%llu,\"idle_ms_measured\":%llu,\"rebuild_cpu_ns\":%llu}\n",
                 lin, ch, (unsigned long long)g_cx.n, edh, (unsigned long long)g_idle.idle_pcpu,
                 (unsigned long long)g_idle.idle_vcsw, (unsigned long long)g_idle.idle_ivcsw,
                 (unsigned long long)g_idle.idle_rchar, (unsigned long long)g_idle.idle_wchar,
-                (unsigned long long)g_idle.idle_ms_measured);
+                (unsigned long long)g_idle.idle_ms_measured, (unsigned long long)g_rebuild_cpu);
         fclose(f);
     }
 }
@@ -884,6 +918,7 @@ static int run_pilot(int shadow, int viewwrite, uint32_t idlepoll) {
     rx_world_wait_quiescent(&E.w, 30000);
     memcpy(g_lineage, cx_get(&g_cx, 1)->digest, 32);
     rx_plan_cache_init(&g_cache);
+    CHECK(observe(0) == 0, "boot state observed");
 
     /* Step 1: admit one objective, view attached. An unauthorized attempt is refused first. */
     step_begin();
@@ -940,6 +975,7 @@ static int run_pilot(int shadow, int viewwrite, uint32_t idlepoll) {
     rx_world_wait_quiescent(&E.w, 30000);
     CHECK(crc > 0, "correction admitted");
     if (crc > 0) C.admits++;
+    CHECK(observe(0) == 0, "state observed after the correction");
     if (shadow) {
         /* Mutant: retained knowledge written outside the journal/commit path. */
         g_cache.t[0]->verified_cog_gen = COG_GEN + 1;
@@ -996,7 +1032,9 @@ static int run_restart(int cold) {
     static uint64_t restore_f[N_ROLES][RX_MAX_FIELDS];
     static int restore_ok[N_ROLES];
     if (!g_restore_refused) {
+        uint64_t b0 = cpu_ns();
         if (!cold) theta_rebuild(&g_cx);
+        g_rebuild_cpu = cpu_ns() - b0;
         entity_digest_journal(&g_cx, ej, &missing);
         for (uint32_t r = 0; r < N_ROLES; r++) restore_ok[r] = journal_fields(&g_cx, role(r), restore_f[r]);
     }
@@ -1024,6 +1062,7 @@ static int run_restart(int cold) {
         CHECK(rx_world_publish_external(&E.w, cap, m, n) > 0, "restore role %u", r);
     }
     rx_world_wait_quiescent(&E.w, 30000);
+    CHECK(observe(0) == 0, "restored state observed");
     memcpy(g_lineage, cx_get(&g_cx, 1)->digest, 32);
     view_attach("5_restart_attached");
     /* Identity against process 1 (the expectations file is the checker's oracle; the
@@ -1149,6 +1188,24 @@ int main(int argc, char **argv) {
             idle_interval(0);
             entity_digest_world(g_final_ed);
             shutdown_entity();
+        } else if (!strcmp(mode, "dump")) {
+            /* Read-only listing of the journal: id, class, kind, subject, object, outputs. */
+            CxStore s;
+            if (cx_open(&s, g_jpath, RX_CORTEX_SUBJECTS, CX_OPEN_READONLY) != CX_OK) return 2;
+            for (uint64_t id = 1; id <= s.n; id++) {
+                CxRecord r;
+                CxWorldRecord wr;
+                cx_recall_id(&s, id, &r);
+                int isw = cx_world_decode(&r, &wr) == CX_OK;
+                printf("%llu cls %u kind %#x subj %llu", (unsigned long long)id, r.hdr.cls, r.hdr.kind,
+                       (unsigned long long)r.hdr.subject);
+                if (isw) printf(" crumb_kind %u obj %llu outs %u ins %u f0 %#llx", wr.crumb_kind,
+                                (unsigned long long)wr.obj, wr.n_outputs, wr.n_inputs,
+                                (unsigned long long)wr.field[0]);
+                printf("\n");
+            }
+            cx_close(&s);
+            return 0;
         } else if (!strcmp(mode, "tamper-file")) {
             rc = tamper_file() == 0 ? 0 : 2;
             printf("tamper-file %s checks %d bad %llu\n", rc ? "FAILED" : "done", g_checks,
@@ -1157,9 +1214,9 @@ int main(int argc, char **argv) {
         } else return 2;
     }
     write_outputs();
-    cx_close(&g_cx);
     printf("entity276 %s: checks %d failed %d bad_rows %llu records %llu\n", g_mode, g_checks, g_fail,
            (unsigned long long)C.bad, (unsigned long long)g_cx.n);
+    cx_close(&g_cx);
     if (rc) return rc;
     return C.bad ? 1 : 0;
 }
