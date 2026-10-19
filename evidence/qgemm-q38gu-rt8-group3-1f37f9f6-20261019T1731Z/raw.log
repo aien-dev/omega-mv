@@ -1,0 +1,25 @@
+q38gu run: TOO_LARGE (prefill kernel: more than 128 registers)
+GPU_QGEMM: FAIL
+{
+ "name": "qgemm-q38gu-rt8-group3-1f37f9f6-20261019T1731Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/qgemm-1f37f9f6 --chip --shape q38gu --tokens 4096 --reps 7 --rt 8 --group 3",
+ "exit": 1,
+ "git_head": "c317a685",
+ "start": "2026-10-19T13:45:05.926645",
+ "seconds": 0.687,
+ "samples": 1,
+ "wall_W_mean": 310.0,
+ "wall_J": 212.91494846343994,
+ "idle_W_before": 305.3333333333333,
+ "incremental_J": 3.205171267191582,
+ "gpu_W_mean": 43.63,
+ "gpu_util_mean": 95.0,
+ "load1_start": "28.65",
+ "load1_end": "28.65",
+ "mem_avail_kB_start": "28452568",
+ "mem_avail_kB_end": "28452568",
+ "lock_holders_max": 2,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-qgemm-q38gu-rt8-group3-1f37f9f6-20261019T1731Z.json
