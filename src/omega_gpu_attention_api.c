@@ -1114,16 +1114,20 @@ static uint32_t rows_per_launch(uint32_t num_rows, uint32_t num_q_heads, size_t 
     return per;
 }
 
-int omega_gpu_gqa_attention_rows_f32(const float *q, const float *k_cache, const float *v_cache,
-                                     uint32_t base_len, uint32_t num_rows, uint32_t num_q_heads,
-                                     uint32_t num_kv_heads, uint32_t head_dim, float *out, OmegaGpuAttnInfo *info) {
+/* Shared body of the rows entries. The KV holds `total` tokens. causal != 0: row i attends over the
+ * first base_len + i + 1 tokens (omega_gpu_gqa_attention_rows_f32); causal == 0: every row attends
+ * over all `total` tokens (omega_gpu_attention_full_rows_f32). Only the per-row context-length table
+ * differs; the kernel, staging and launches are the same. */
+static int rows_impl(const float *q, const float *k_cache, const float *v_cache, uint32_t base_len,
+                     uint32_t total, int causal, uint32_t num_rows, uint32_t num_q_heads,
+                     uint32_t num_kv_heads, uint32_t head_dim, float *out, OmegaGpuAttnInfo *info) {
     uint64_t t0 = now_ns();
-    if (!q || !k_cache || !v_cache || !out || num_rows == 0) return OMEGA_GPU_ATTN_BAD_ARGS;
+    if (!q || !k_cache || !v_cache || !out || num_rows == 0 || total == 0) return OMEGA_GPU_ATTN_BAD_ARGS;
     uint32_t log2gqa;
     int rc = check_heads(num_q_heads, num_kv_heads, head_dim, &log2gqa);
     if (rc != OMEGA_GPU_ATTN_OK) return rc;
-    if ((uint64_t)base_len + num_rows > OMEGA_GPU_ATTN_MAX_GQA_CTX) return OMEGA_GPU_ATTN_TOO_LARGE;
-    const uint32_t HD = head_dim, total = base_len + num_rows;
+    if ((uint64_t)total > OMEGA_GPU_ATTN_MAX_GQA_CTX) return OMEGA_GPU_ATTN_TOO_LARGE;
+    const uint32_t HD = head_dim;
     const size_t row = (size_t)num_q_heads * HD;
     Slot *ks = NULL;
     const uint32_t log2bs = 12; /* one block of 4096 slots, as the single-row call */
@@ -1144,7 +1148,7 @@ int omega_gpu_gqa_attention_rows_f32(const float *q, const float *k_cache, const
     if (!tab) { omega_gpu_host_free(host_tmp); UNLOCK(); return OMEGA_GPU_ATTN_CHIP_FAIL; }
     for (uint32_t r0 = 0; r0 < num_rows && rc == OMEGA_GPU_ATTN_OK; r0 += per) {
         const uint32_t nr = num_rows - r0 < per ? num_rows - r0 : per;
-        for (uint32_t i = 0; i < nr; i++) { tab[i] = 0; tab[nr + i] = base_len + r0 + i + 1; }
+        for (uint32_t i = 0; i < nr; i++) { tab[i] = 0; tab[nr + i] = causal ? base_len + r0 + i + 1 : total; }
         Launch L = {
             .q = q + (size_t)r0 * row, .q_bytes = (size_t)nr * row * 4, .pool = pool, .pool_bytes = 2 * plane,
             .tab = tab, .tab_bytes = (size_t)2 * nr * 4, .out = out + (size_t)r0 * row, .out_bytes = (size_t)nr * row * 4,
@@ -1158,6 +1162,20 @@ int omega_gpu_gqa_attention_rows_f32(const float *q, const float *k_cache, const
     UNLOCK();
     if (info) info->call_ns = now_ns() - t0;
     return rc;
+}
+
+int omega_gpu_gqa_attention_rows_f32(const float *q, const float *k_cache, const float *v_cache,
+                                     uint32_t base_len, uint32_t num_rows, uint32_t num_q_heads,
+                                     uint32_t num_kv_heads, uint32_t head_dim, float *out, OmegaGpuAttnInfo *info) {
+    if ((uint64_t)base_len + num_rows > OMEGA_GPU_ATTN_MAX_GQA_CTX) return OMEGA_GPU_ATTN_TOO_LARGE;
+    return rows_impl(q, k_cache, v_cache, base_len, base_len + num_rows, 1, num_rows, num_q_heads, num_kv_heads,
+                     head_dim, out, info);
+}
+
+int omega_gpu_attention_full_rows_f32(const float *q, const float *k_cache, const float *v_cache,
+                                      uint32_t kv_len, uint32_t num_rows, uint32_t num_q_heads,
+                                      uint32_t num_kv_heads, uint32_t head_dim, float *out, OmegaGpuAttnInfo *info) {
+    return rows_impl(q, k_cache, v_cache, 0, kv_len, 0, num_rows, num_q_heads, num_kv_heads, head_dim, out, info);
 }
 
 /* Paged path shared by the single and batched entries. tables[s] has n_blocks[s] entries

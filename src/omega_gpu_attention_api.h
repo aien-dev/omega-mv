@@ -151,6 +151,18 @@ int omega_gpu_gqa_attention_rows_f32(const float *q, const float *k_cache, const
                                      uint32_t num_kv_heads, uint32_t head_dim, float *out,
                                      OmegaGpuAttnInfo *info);
 
+/* Bidirectional (no mask) attention, many query rows in one call (rig/speech, 2026-10-19: the
+ * Whisper encoder's self-attention and the decoder's cross-attention). q and out are
+ * [num_rows][num_q_heads][head_dim]; k_cache and v_cache hold kv_len tokens as
+ * [token][num_kv_heads][head_dim]. Every row attends over all kv_len tokens. Same kernel, staging
+ * and launch envelope as omega_gpu_gqa_attention_rows_f32; only the per-row context lengths in the
+ * launch table differ (kv_len for every row instead of base_len + i + 1). kv_len <=
+ * OMEGA_GPU_ATTN_MAX_GQA_CTX; num_rows is independent of kv_len. */
+int omega_gpu_attention_full_rows_f32(const float *q, const float *k_cache, const float *v_cache,
+                                      uint32_t kv_len, uint32_t num_rows, uint32_t num_q_heads,
+                                      uint32_t num_kv_heads, uint32_t head_dim, float *out,
+                                      OmegaGpuAttnInfo *info);
+
 /* Paged bf16 KV (TensorBackend::paged_attention). pool points at the pool base. */
 int omega_gpu_paged_attention_bf16(const float *q, const void *pool, const OmegaGpuKvLayout *layout,
                                    const uint32_t *block_ids, uint32_t num_block_ids,

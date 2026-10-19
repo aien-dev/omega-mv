@@ -405,6 +405,53 @@ static int chip(const char *out_path) {
         } else run_mutants(&c, no_mutants, run_rows, &rx, got, want, n, 2e-4, 2e-5);
         record(c, out); free(q); free(kc); free(vc); free(got); free(want);
     }
+    /* 1c. full rows path (rig/speech, 2026-10-19: Whisper encoder self-attention and decoder
+     * cross-attention): kv_len tokens in the KV, num_rows query rows, every row attends over all
+     * kv_len tokens (no mask). Expected per row from oracle_gqa over the whole KV. Shapes: the
+     * GQA model shapes plus Whisper's 20 query heads = 20 KV heads (large-v3-turbo) and 6 = 6
+     * (tiny). 60 rows at 20 heads exceed the 1024-CTA launch bound (51 rows): 2 launches. */
+    for (int sh = 0; sh < 4; sh++) for (int ri = 0; ri < 3; ri++) {
+        static const uint32_t kvls[3] = { 1, 70, 300 }, nrows[3] = { 1, 7, 60 };
+        uint32_t nqh = sh < 2 ? shapes[sh].nqh : (sh == 2 ? 20u : 6u), nkv = sh < 2 ? shapes[sh].nkv : nqh;
+        uint32_t kvl = kvls[ri], nr = nrows[ri];
+        size_t row = (size_t)nqh * hd, n = row * nr, nkvs = (size_t)kvl * nkv * hd;
+        float *q = malloc(n * 4), *kc = malloc(nkvs * 4), *vc = malloc(nkvs * 4), *got = malloc(n * 4), *want = malloc(n * 4);
+        for (size_t i = 0; i < n; i++) q[i] = frand(&seed, -1.0f, 1.0f);
+        for (size_t i = 0; i < nkvs; i++) { kc[i] = frand(&seed, -1.0f, 1.0f); vc[i] = frand(&seed, -1.0f, 1.0f); }
+        for (uint32_t i = 0; i < nr; i++) oracle_gqa(q + i * row, kc, vc, kvl, nqh, nkv, hd, want + i * row);
+        char name[96]; snprintf(name, sizeof name, "full_rows_f32_%s_%uq%ukv_kv%u_rows%u", sh < 2 ? shapes[sh].model : (sh == 2 ? "whisper-turbo" : "whisper-tiny"), nqh, nkv, kvl, nr);
+        Case c = { .name = strdup(name), .n = n };
+        OmegaGpuAttnInfo info;
+        c.rc = omega_gpu_attention_full_rows_f32(q, kc, vc, kvl, nr, nqh, nkv, hd, got, &info);
+        c.bad = compare(got, want, n, 2e-4, 2e-5, &c.worst);
+        c.pass = c.rc == OMEGA_GPU_ATTN_OK && c.bad == 0; case_info(&c, &info);
+        if (nr == 1) {
+            /* one row over the whole KV is the single-row call, bit for bit */
+            float *one = malloc(row * 4); OmegaGpuAttnInfo i1;
+            int rc1 = omega_gpu_gqa_attention_f32(q, kc, vc, kvl, nqh, nkv, hd, one, &i1);
+            CHECK(rc1 == OMEGA_GPU_ATTN_OK && memcmp(got, one, row * 4) == 0, "%s equals omega_gpu_gqa_attention_f32 bit for bit", name);
+            free(one);
+        }
+        if (nr == 60) {
+            uint32_t per = OMEGA_GPU_ATTN_ROWS_MAX_CTAS / nqh, launches = (nr + per - 1) / per;
+            CHECK(info.chip_calls == launches, "%s 60 rows x %u heads go in %u launches (got %u)", name, nqh, launches, info.chip_calls);
+            CHECK(info.kv_bytes_staged == 2 * nkvs * 4, "%s KV staged once (%" PRIu64 " bytes, expected %zu)", name, info.kv_bytes_staged, 2 * nkvs * 4);
+            /* negative control: a causal expectation (row i over the first i + 1 tokens) must be flagged */
+            float *wrong = malloc(n * 4); double w2;
+            for (uint32_t i = 0; i < nr; i++) oracle_gqa(q + i * row, kc, vc, i + 1 < kvl ? i + 1 : kvl, nqh, nkv, hd, wrong + i * row);
+            size_t neg = compare(got, wrong, n, 2e-4, 2e-5, &w2);
+            CHECK(neg > n / 4, "%s negative control: causal expectation flagged (%zu of %zu)", name, neg, n);
+            free(wrong);
+        }
+        record(c, out); free(q); free(kc); free(vc); free(got); free(want);
+    }
+    {   /* full rows path refusals */
+        float d[1]; OmegaGpuAttnInfo i0;
+        CHECK(omega_gpu_attention_full_rows_f32(d, d, d, 1, 0, 20, 20, hd, d, &i0) == OMEGA_GPU_ATTN_BAD_ARGS, "full rows: zero rows refused");
+        CHECK(omega_gpu_attention_full_rows_f32(d, d, d, 0, 1, 20, 20, hd, d, &i0) == OMEGA_GPU_ATTN_BAD_ARGS, "full rows: empty KV refused");
+        CHECK(omega_gpu_attention_full_rows_f32(d, d, d, OMEGA_GPU_ATTN_MAX_GQA_CTX + 1, 1, 20, 20, hd, d, &i0) == OMEGA_GPU_ATTN_TOO_LARGE, "full rows: KV past the context bound refused");
+        CHECK(omega_gpu_attention_full_rows_f32(NULL, d, d, 1, 1, 20, 20, hd, d, &i0) == OMEGA_GPU_ATTN_BAD_ARGS, "full rows: NULL q refused");
+    }
     {   /* rows path refusals */
         float d[1]; OmegaGpuAttnInfo i0;
         CHECK(omega_gpu_gqa_attention_rows_f32(d, d, d, 0, 0, 32, 4, hd, d, &i0) == OMEGA_GPU_ATTN_BAD_ARGS, "rows: zero rows refused");
