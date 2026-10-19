@@ -1,0 +1,69 @@
+checkpoint layer  3: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer  7: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 11: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 15: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 19: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 23: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 27: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 31: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 35: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 39: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 43: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 47: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 51: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 55: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 59: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 63: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint: gather fold eligible in 0 of 16 attention layers
+ok: checkpoint scales read (0 eligible)
+ok: synthetic layer 3: fold side condition holds (eligible: every new block maps onto one scale row)
+ok: graph F layer 3 folded
+ok: rewrite layer's launch list matches the recorded list (41 launches)
+ok: folded list has 40 launches, 1 fewer
+gather fold on chip: x, logits and token BYTE-IDENTICAL over 3 tokens
+timeline span: baseline 19738.1 us, folded 19824.5 us (21 tokens each, interleaved), gather 5.09 us baseline
+  norm     baseline      13.1 us  folded      12.9 us
+  mix      baseline    1494.5 us  folded    1492.7 us
+  ab       baseline       1.2 us  folded       1.2 us
+  gdn      baseline      86.0 us  folded      85.8 us
+  gather   baseline       5.1 us  folded       0.0 us
+  attn     baseline      57.6 us  folded      57.8 us
+  gate     baseline       2.8 us  folded       2.7 us
+  o_proj   baseline     652.1 us  folded     653.2 us
+  res      baseline     108.6 us  folded     104.2 us
+  gate_up  baseline    3166.2 us  folded    3160.6 us
+  swiglu   baseline      11.9 us  folded      11.6 us
+  down     baseline    1747.8 us  folded    1755.4 us
+  lm_head  baseline   12428.1 us  folded   12446.2 us
+  argmax   baseline      19.6 us  folded      19.7 us
+ok: gather fold is bit-exact on the chip (the FP8 GEMV is row independent)
+ok: fp8 head built
+fp8 lm_head: 248319 of 248320 logits differ (worst 0.255), token 19649 vs 19649
+ok: the verifier refutes the FP8 head as an exact rewrite
+ok: barrier analysis ran (0)
+barriers: 40 recorded edges, 3 already dropped (a|b beside mix), 37 needed, 0 droppable; glue 304.8 us of span 19794.7 us (1.54%)
+gpu_q38_symbolic_test: 9 checks, 0 failed: PASS
+{
+ "name": "symbolic-q38-chip-20261019T1732Z",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure nice -n 10 flock /tmp/aien-gb10.lock sh -c echo loadavg_start $(cat /proc/loadavg) >> evidence/symbolic-rewrite/q38-chip-20261019T1732Z/ground.txt; evidence/symbolic-rewrite/q38-chip-20261019T1732Z/gpu_q38_symbolic_test --layers 4 --mask 0x8 --reps 21 --model /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --out evidence/symbolic-rewrite/q38-chip-20261019T1732Z; rc=$?; echo loadavg_end $(cat /proc/loadavg) >> evidence/symbolic-rewrite/q38-chip-20261019T1732Z/ground.txt; exit $rc",
+ "exit": 0,
+ "git_head": "4e2f38f1",
+ "start": "2026-10-19T12:32:32.580432",
+ "seconds": 1974.99,
+ "samples": 903,
+ "wall_W_mean": 266.578073089701,
+ "wall_J": 526488.9374965528,
+ "idle_W_before": 250.0,
+ "incremental_J": 32741.522907624574,
+ "gpu_W_mean": 15.056500553709856,
+ "gpu_util_mean": 33.602436323366554,
+ "load1_start": "93.08",
+ "load1_end": "72.92",
+ "mem_avail_kB_start": "25964732",
+ "mem_avail_kB_end": "7115600",
+ "lock_holders_max": 64,
+ "nvrm_errors_delta": 14,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-symbolic-q38-chip-20261019T1732Z.json
+rc=0

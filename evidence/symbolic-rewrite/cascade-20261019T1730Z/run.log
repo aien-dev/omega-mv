@@ -1,0 +1,52 @@
+request codelong    prompt   50 tokens, generated  256; graph 158.50 ms/token (255 stamped tokens); rows k0..4: 215.5 151.0 185.7 162.6 217.6
+request prose       prompt   34 tokens, generated  256; graph 156.14 ms/token (255 stamped tokens); rows k0..4: 212.5 169.1 253.1 255.8 349.5
+request golden-code prompt   24 tokens, generated   30; graph 155.36 ms/token (29 stamped tokens); rows k0..4: 203.5 143.4 186.9 155.5 169.5
+request codelong   : 10 admissible arms; selected graph1/none/fp8/k0, predicted 156.09, realized 158.50 ms/token (measured) (prior p mtp 0.805, ngram prompt hit 0.15 accept 0.00)
+    fixed graph1 (today)             158.50 ms/token (measured)
+    fixed rows/mtp/k1                151.01 ms/token (measured)
+    fixed rows/mtp/k3                162.62 ms/token (measured)
+    fixed rows/ngram/k4              315.03 ms/token (replay: 185 rounds, 96 verify, 89 graph, accepted 70 of 373 drafted, host draft 249 us)
+    fixed rows/ngram/k4 adaptive     158.50 ms/token (replay: 255 rounds, 0 verify, 255 graph, accepted 0 of 0 drafted, host draft 288 us)
+    oracle (best arm on this request, chosen after the fact): rows/mtp/fp8/k1 151.01 ms/token
+request prose      : 10 admissible arms; selected rows/mtp/fp8/k1, predicted 148.78, realized 169.06 ms/token (measured) (prior p mtp 0.904, ngram prompt hit 0.32 accept 0.03)
+    fixed graph1 (today)             156.14 ms/token (measured)
+    fixed rows/mtp/k1                169.06 ms/token (measured)
+    fixed rows/mtp/k3                255.79 ms/token (measured)
+    fixed rows/ngram/k4              351.48 ms/token (replay: 250 rounds, 99 verify, 151 graph, accepted 5 of 390 drafted, host draft 325 us)
+    fixed rows/ngram/k4 adaptive     156.14 ms/token (replay: 255 rounds, 0 verify, 255 graph, accepted 0 of 0 drafted, host draft 331 us)
+    oracle (best arm on this request, chosen after the fact): rows/ngram/k4 adaptive 156.14 ms/token
+request golden-code: 10 admissible arms; selected graph1/none/fp8/k0, predicted 157.34, realized 155.36 ms/token (measured) (prior p mtp 0.776, ngram prompt hit 0.20 accept 0.00)
+    fixed graph1 (today)             155.36 ms/token (measured)
+    fixed rows/mtp/k1                143.35 ms/token (measured)
+    fixed rows/mtp/k3                155.52 ms/token (measured)
+    fixed rows/ngram/k4              290.31 ms/token (replay: 28 rounds, 9 verify, 19 graph, accepted 1 of 31 drafted, host draft 10 us)
+    fixed rows/ngram/k4 adaptive     155.36 ms/token (replay: 29 rounds, 0 verify, 29 graph, accepted 0 of 0 drafted, host draft 10 us)
+    oracle (best arm on this request, chosen after the fact): rows/mtp/fp8/k1 143.35 ms/token
+
+mean over the 3 requests (ms/token): selected 160.97 | graph1 (today) 156.67 | rows/mtp/k1 154.47 | rows/mtp/k3 191.31 | rows/ngram/k4 318.94 | rows/ngram/k4 adaptive 156.67 | oracle (best measured arm) 150.17
+cost-model prediction error on measured arms: mean 4.9%
+rx_cascade_test: checks 6 failures 0 -> PASS
+{
+ "name": "symbolic-cascade-20261019T1730Z",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure sh -c echo loadavg_start $(cat /proc/loadavg) >> evidence/symbolic-rewrite/cascade-20261019T1730Z/ground.txt; evidence/symbolic-rewrite/cascade-20261019T1730Z/rx_cascade_test --f7 /home/drakestapleton/workspace/sc-f7/evidence/qwen38-spec-20261019T0323Z --out evidence/symbolic-rewrite/cascade-20261019T1730Z; rc=$?; echo loadavg_end $(cat /proc/loadavg) >> evidence/symbolic-rewrite/cascade-20261019T1730Z/ground.txt; exit $rc",
+ "exit": 0,
+ "git_head": "4e2f38f1",
+ "start": "2026-10-19T12:30:30.750020",
+ "seconds": 1943.682,
+ "samples": 889,
+ "wall_W_mean": 264.2294713160855,
+ "wall_J": 513578.15714295453,
+ "idle_W_before": 250.0,
+ "incremental_J": 27657.572106676787,
+ "gpu_W_mean": 14.140899887514061,
+ "gpu_util_mean": 31.31496062992126,
+ "load1_start": "101.91",
+ "load1_end": "91.04",
+ "mem_avail_kB_start": "45127612",
+ "mem_avail_kB_end": "31438112",
+ "lock_holders_max": 64,
+ "nvrm_errors_delta": 18,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-symbolic-cascade-20261019T1730Z.json
+rc=0

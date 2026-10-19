@@ -1,0 +1,15 @@
+graph	arm	nodes_before	nodes_after	reactions	critical_us	crumbs_per_run	median_run_ns	p10_run_ns	p90_run_ns	rewritten	same_result_as_baseline
+linear	baseline	6	5	5	0	6	44848	34608	58945	0	yes
+linear	rewrite	6	5	5	0	6	45105	34240	57169	1	yes
+diamond	baseline	6	6	6	0	7	54416	37920	60977	0	yes
+diamond	rewrite	6	4	4	0	5	36801	27728	41329	1	yes
+branch	baseline	9	9	9	0	12	64289	58144	94449	0	yes
+branch	rewrite	9	9	9	0	12	64193	58289	94481	0	yes
+failure	baseline	7	7	7	0	8	63681	42401	78321	0	yes
+failure	rewrite	7	7	7	0	8	62849	42081	76401	0	yes
+effects	baseline	10	10	10	0	12	72192	66656	106849	0	yes
+effects	rewrite	10	10	10	0	13	71937	66833	106833	0	yes
+redundant	baseline	16	8	8	0	9	56560	48256	82736	0	yes
+redundant	rewrite	16	5	5	0	6	44737	33920	54705	3	yes
+parallel	baseline	8	8	8	3000	9	7015009	6003112	12001393	0	yes
+parallel	rewrite	8	8	8	3000	9	7959275	6005368	12001025	0	yes

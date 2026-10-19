@@ -1,0 +1,22 @@
+{
+ "name": "symbolic-cascade-20261019T1730Z",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure sh -c echo loadavg_start $(cat /proc/loadavg) >> evidence/symbolic-rewrite/cascade-20261019T1730Z/ground.txt; evidence/symbolic-rewrite/cascade-20261019T1730Z/rx_cascade_test --f7 /home/drakestapleton/workspace/sc-f7/evidence/qwen38-spec-20261019T0323Z --out evidence/symbolic-rewrite/cascade-20261019T1730Z; rc=$?; echo loadavg_end $(cat /proc/loadavg) >> evidence/symbolic-rewrite/cascade-20261019T1730Z/ground.txt; exit $rc",
+ "exit": 0,
+ "git_head": "4e2f38f1",
+ "start": "2026-10-19T12:30:30.750020",
+ "seconds": 1943.682,
+ "samples": 889,
+ "wall_W_mean": 264.2294713160855,
+ "wall_J": 513578.15714295453,
+ "idle_W_before": 250.0,
+ "incremental_J": 27657.572106676787,
+ "gpu_W_mean": 14.140899887514061,
+ "gpu_util_mean": 31.31496062992126,
+ "load1_start": "101.91",
+ "load1_end": "91.04",
+ "mem_avail_kB_start": "45127612",
+ "mem_avail_kB_end": "31438112",
+ "lock_holders_max": 64,
+ "nvrm_errors_delta": 18,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}

@@ -1,0 +1,36 @@
+section	item	baseline	rewrite	detail
+checkpoint	3	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	7	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	11	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	15	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	19	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	23	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	27	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	31	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	35	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	39	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	43	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	47	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	51	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	55	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	59	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	63	refused	56	56 of 112 new 128-row blocks would need two different scales
+timeline_us	norm	13.12	12.90	median of 21
+timeline_us	mix	1494.50	1492.74	median of 21
+timeline_us	ab	1.25	1.15	median of 21
+timeline_us	gdn	85.98	85.79	median of 21
+timeline_us	gather	5.09	0.00	median of 21
+timeline_us	attn	57.60	57.76	median of 21
+timeline_us	gate	2.82	2.72	median of 21
+timeline_us	o_proj	652.13	653.15	median of 21
+timeline_us	res	108.64	104.16	median of 21
+timeline_us	gate_up	3166.18	3160.61	median of 21
+timeline_us	swiglu	11.90	11.58	median of 21
+timeline_us	down	1747.78	1755.36	median of 21
+timeline_us	lm_head	12428.10	12446.24	median of 21
+timeline_us	argmax	19.65	19.71	median of 21
+timeline_us	span	19738.14	19824.51	median of 21 interleaved stamped tokens
+verify	gather-fold synthetic	-	byte-identical	x, logits, token over 3 tokens
+verify	lm-head-fp8	-	DIFFERENT (refuted)	248319 logits differ, worst 0.255
+barriers	recorded	40	40	already dropped 3, needed 37, droppable 0
+bound	glue_share_of_span	0.0154	-	glue 304.8 us, weight GEMVs 19489.9 us; the most any rewrite of glue can remove

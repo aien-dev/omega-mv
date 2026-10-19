@@ -1,0 +1,41 @@
+request	policy	arm	predicted_ms_per_token	realized_ms_per_token	realized_kind	detail
+codelong	selected	graph1/none/fp8/k0	156.089	158.503	measured	leave-one-out priors
+codelong	fixed	graph1 (today)	-	158.503	measured	
+codelong	fixed	rows/mtp/k1	-	151.011	measured	
+codelong	fixed	rows/mtp/k3	-	162.621	measured	
+codelong	fixed	rows/ngram/k4	-	315.029	replay	
+codelong	fixed	rows/ngram/k4 adaptive	-	158.503	replay	online acceptance posterior
+codelong	prediction-check	rows/mtp/fp8/k1	156.912	151.011	measured	cost model vs end-to-end run
+codelong	prediction-check	rows/mtp/fp8/k2	211.712	185.657	measured	cost model vs end-to-end run
+codelong	prediction-check	rows/mtp/fp8/k3	184.118	162.621	measured	cost model vs end-to-end run
+codelong	prediction-check	rows/mtp/fp8/k4	211.616	217.618	measured	cost model vs end-to-end run
+codelong	oracle	rows/mtp/fp8/k1	-	151.011	mixed	best arm after the fact
+prose	selected	rows/mtp/fp8/k1	148.779	169.057	measured	leave-one-out priors
+prose	fixed	graph1 (today)	-	156.144	measured	
+prose	fixed	rows/mtp/k1	-	169.057	measured	
+prose	fixed	rows/mtp/k3	-	255.792	measured	
+prose	fixed	rows/ngram/k4	-	351.484	replay	
+prose	fixed	rows/ngram/k4 adaptive	-	156.144	replay	online acceptance posterior
+prose	prediction-check	rows/mtp/fp8/k1	148.779	169.057	measured	cost model vs end-to-end run
+prose	prediction-check	rows/mtp/fp8/k2	191.152	253.108	measured	cost model vs end-to-end run
+prose	prediction-check	rows/mtp/fp8/k3	158.080	255.792	measured	cost model vs end-to-end run
+prose	prediction-check	rows/mtp/fp8/k4	177.699	349.458	measured	cost model vs end-to-end run
+prose	oracle	rows/ngram/k4 adaptive	-	156.144	mixed	best arm after the fact
+golden-code	selected	graph1/none/fp8/k0	157.337	155.356	measured	leave-one-out priors
+golden-code	fixed	graph1 (today)	-	155.356	measured	
+golden-code	fixed	rows/mtp/k1	-	143.354	measured	
+golden-code	fixed	rows/mtp/k3	-	155.515	measured	
+golden-code	fixed	rows/ngram/k4	-	290.311	replay	
+golden-code	fixed	rows/ngram/k4 adaptive	-	155.356	replay	online acceptance posterior
+golden-code	prediction-check	rows/mtp/fp8/k1	161.049	143.354	measured	cost model vs end-to-end run
+golden-code	prediction-check	rows/mtp/fp8/k2	208.767	186.884	measured	cost model vs end-to-end run
+golden-code	prediction-check	rows/mtp/fp8/k3	186.625	155.515	measured	cost model vs end-to-end run
+golden-code	prediction-check	rows/mtp/fp8/k4	233.551	169.480	measured	cost model vs end-to-end run
+golden-code	oracle	rows/mtp/fp8/k1	-	143.354	mixed	best arm after the fact
+mean	selected	-	-	160.972	-	
+mean	fixed	graph1 (today)	-	156.667	-	
+mean	fixed	rows/mtp/k1	-	154.474	-	
+mean	fixed	rows/mtp/k3	-	191.309	-	
+mean	fixed	rows/ngram/k4	-	318.942	-	
+mean	fixed	rows/ngram/k4 adaptive	-	156.667	-	
+mean	fixed	oracle (best measured arm)	-	150.169	-	

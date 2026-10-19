@@ -1,0 +1,22 @@
+{
+ "name": "symbolic-q38-chip-20261019T1732Z",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure nice -n 10 flock /tmp/aien-gb10.lock sh -c echo loadavg_start $(cat /proc/loadavg) >> evidence/symbolic-rewrite/q38-chip-20261019T1732Z/ground.txt; evidence/symbolic-rewrite/q38-chip-20261019T1732Z/gpu_q38_symbolic_test --layers 4 --mask 0x8 --reps 21 --model /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --out evidence/symbolic-rewrite/q38-chip-20261019T1732Z; rc=$?; echo loadavg_end $(cat /proc/loadavg) >> evidence/symbolic-rewrite/q38-chip-20261019T1732Z/ground.txt; exit $rc",
+ "exit": 0,
+ "git_head": "4e2f38f1",
+ "start": "2026-10-19T12:32:32.580432",
+ "seconds": 1974.99,
+ "samples": 903,
+ "wall_W_mean": 266.578073089701,
+ "wall_J": 526488.9374965528,
+ "idle_W_before": 250.0,
+ "incremental_J": 32741.522907624574,
+ "gpu_W_mean": 15.056500553709856,
+ "gpu_util_mean": 33.602436323366554,
+ "load1_start": "93.08",
+ "load1_end": "72.92",
+ "mem_avail_kB_start": "25964732",
+ "mem_avail_kB_end": "7115600",
+ "lock_holders_max": 64,
+ "nvrm_errors_delta": 14,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}

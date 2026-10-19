@@ -1,0 +1,48 @@
+[*] placed on 10 Cortex-X925 cores: 5,6,7,8,9,15,16,17,18,19
+[*] symbolic terms: SEMANTIC_ID, hash-consing, canonical object
+[*] machine arithmetic: affine normal form over Z/2^64, verifier proofs and refutations
+[*] physics budget filter
+[*] gather fold side conditions (data-checked)
+[*] rewrite pass: unsound candidate refuted, assumption rule, verdict cache
+[*] workload 1: existing action graphs (rx_action_graph templates), 400 interleaved runs per arm
+    linear    baseline nodes  6 ->  5  reactions  5  crumbs/run   6  median    44848 ns  rewritten 0
+    linear    rewrite  nodes  6 ->  5  reactions  5  crumbs/run   6  median    45105 ns  rewritten 1
+    diamond   baseline nodes  6 ->  6  reactions  6  crumbs/run   7  median    54416 ns  rewritten 0
+    diamond   rewrite  nodes  6 ->  4  reactions  4  crumbs/run   5  median    36801 ns  rewritten 1
+    branch    baseline nodes  9 ->  9  reactions  9  crumbs/run  12  median    64289 ns  rewritten 0
+    branch    rewrite  nodes  9 ->  9  reactions  9  crumbs/run  12  median    64193 ns  rewritten 0
+    failure   baseline nodes  7 ->  7  reactions  7  crumbs/run   8  median    63681 ns  rewritten 0
+    failure   rewrite  nodes  7 ->  7  reactions  7  crumbs/run   8  median    62849 ns  rewritten 0
+    effects   baseline nodes 10 -> 10  reactions 10  crumbs/run  12  median    72192 ns  rewritten 0
+    effects   rewrite  nodes 10 -> 10  reactions 10  crumbs/run  13  median    71937 ns  rewritten 0
+    redundant baseline nodes 16 ->  8  reactions  8  crumbs/run   9  median    56560 ns  rewritten 0
+    redundant rewrite  nodes 16 ->  5  reactions  5  crumbs/run   6  median    44737 ns  rewritten 3
+    parallel  baseline nodes  8 ->  8  reactions  8  crumbs/run   9  median  7015009 ns  rewritten 0
+    parallel  rewrite  nodes  8 ->  8  reactions  8  crumbs/run   9  median  7959275 ns  rewritten 0
+    reactions over all graphs 53 -> 48; verdict cache lookups 5 hits 0
+    wrote evidence/symbolic-rewrite/action-graphs-20261019T1731Z/trace-action-graphs.evidence.json
+rx_symbolic_test: checks 11386 failures 0 -> PASS
+{
+ "name": "symbolic-action-graphs-20261019T1731Z",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure sh -c echo loadavg_start $(cat /proc/loadavg) >> evidence/symbolic-rewrite/action-graphs-20261019T1731Z/ground.txt; evidence/symbolic-rewrite/action-graphs-20261019T1731Z/rx_symbolic_test --runs 400 --out evidence/symbolic-rewrite/action-graphs-20261019T1731Z; rc=$?; echo loadavg_end $(cat /proc/loadavg) >> evidence/symbolic-rewrite/action-graphs-20261019T1731Z/ground.txt; exit $rc",
+ "exit": 0,
+ "git_head": "4e2f38f1",
+ "start": "2026-10-19T12:31:31.534930",
+ "seconds": 1949.557,
+ "samples": 892,
+ "wall_W_mean": 265.9641255605381,
+ "wall_J": 518512.2794672833,
+ "idle_W_before": 250.0,
+ "incremental_J": 31122.976140676546,
+ "gpu_W_mean": 15.027701793721972,
+ "gpu_util_mean": 33.634529147982065,
+ "load1_start": "98.98",
+ "load1_end": "75.62",
+ "mem_avail_kB_start": "46973440",
+ "mem_avail_kB_end": "49359204",
+ "lock_holders_max": 64,
+ "nvrm_errors_delta": 18,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-symbolic-action-graphs-20261019T1731Z.json
+rc=0

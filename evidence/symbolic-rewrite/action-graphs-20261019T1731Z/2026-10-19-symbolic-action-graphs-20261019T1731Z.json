@@ -1,0 +1,22 @@
+{
+ "name": "symbolic-action-graphs-20261019T1731Z",
+ "cmd": "/home/drakestapleton/.local/bin/quiet-measure sh -c echo loadavg_start $(cat /proc/loadavg) >> evidence/symbolic-rewrite/action-graphs-20261019T1731Z/ground.txt; evidence/symbolic-rewrite/action-graphs-20261019T1731Z/rx_symbolic_test --runs 400 --out evidence/symbolic-rewrite/action-graphs-20261019T1731Z; rc=$?; echo loadavg_end $(cat /proc/loadavg) >> evidence/symbolic-rewrite/action-graphs-20261019T1731Z/ground.txt; exit $rc",
+ "exit": 0,
+ "git_head": "4e2f38f1",
+ "start": "2026-10-19T12:31:31.534930",
+ "seconds": 1949.557,
+ "samples": 892,
+ "wall_W_mean": 265.9641255605381,
+ "wall_J": 518512.2794672833,
+ "idle_W_before": 250.0,
+ "incremental_J": 31122.976140676546,
+ "gpu_W_mean": 15.027701793721972,
+ "gpu_util_mean": 33.634529147982065,
+ "load1_start": "98.98",
+ "load1_end": "75.62",
+ "mem_avail_kB_start": "46973440",
+ "mem_avail_kB_end": "49359204",
+ "lock_holders_max": 64,
+ "nvrm_errors_delta": 18,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
