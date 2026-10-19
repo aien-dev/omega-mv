@@ -1,0 +1,8 @@
+start 2026-10-19T18:06:24Z omega=9b9399b95578d84bf50279b1b3df76d8c537c5aa dirty=3
+loadavg_start 88.66 82.68 80.74 93/2463 1752408
+               total        used        free      shared  buff/cache   available
+Mem:          124607      112974        4395          97       12425       11633
+command: nice -n 10 ~/.local/bin/quiet-measure flock /tmp/aien-gb10.lock spark-receipt pattn256-v2-chip-timing-01fe32d4-20261019T1731Z -- /home/drakestapleton/workspace/pf-tools/bin/pattn-01fe32d4 --timing-only --no-8k --reps 5
+loadavg_locked 2026-10-19T18:07:20Z 98.15 86.27 82.08 100/2503 1779557
+loadavg_end 2026-10-19T18:07:29Z 96.85 86.20 82.08 103/2480 1783937
+exit 0 end 2026-10-19T18:07:30Z

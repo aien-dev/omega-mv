@@ -1,0 +1,22 @@
+{
+ "name": "pattn256-v2-chip-timing-01fe32d4-20261019T1731Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/pattn-01fe32d4 --timing-only --no-8k --reps 5",
+ "exit": 0,
+ "git_head": "9b9399b9",
+ "start": "2026-10-19T13:07:20.955808",
+ "seconds": 6.016,
+ "samples": 3,
+ "wall_W_mean": 283.3333333333333,
+ "wall_J": 1704.6027859052022,
+ "idle_W_before": 296.15384615384613,
+ "incremental_J": -77.13134777851592,
+ "gpu_W_mean": 18.05333333333333,
+ "gpu_util_mean": 26.0,
+ "load1_start": "98.15",
+ "load1_end": "96.85",
+ "mem_avail_kB_start": "19994680",
+ "mem_avail_kB_end": "19621680",
+ "lock_holders_max": 5,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}

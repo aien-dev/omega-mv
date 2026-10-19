@@ -1,0 +1,38 @@
+attend kernel under test: v2
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+attend v2: 998 instructions, 204 registers (declared 208, 256 threads -> 53248 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+-- chip 2048 tokens from 0 (max_pos 4096)
+   prep 330 insns 64 regs, attend 998 insns 204 regs; first call 65.569 ms (prep 2.783, attend 5.385)
+   parity: 0 bad, worst ratio 0.175 of the tolerance (0.1 s reference); rows: ok (23 one-ulp k flips, worst token 1; 0 small-value k gaps within 8 f32 roundings of the row max)
+   v2 vs v1: 0 of 12582912 words differ (v1 attend 10.908 ms on this call)
+   timing (median of 5): prep 3.021 ms, attend 5.407 ms, call 31.603 ms -> 243002 tokens/s; attend 9.54 TFLOPS useful, 100.1 GB/s K/V streamed
+-- chip 2048 tokens from 30720 (max_pos 32768)
+   prep 330 insns 64 regs, attend 998 insns 204 regs; first call 114.009 ms (prep 3.139, attend 84.018)
+   parity: 0 bad, worst ratio 0.007 of the tolerance (3.1 s reference); rows: ok (26 one-ulp k flips, worst token 1; 1 small-value k gaps within 8 f32 roundings of the row max)
+   v2 vs v1: 0 of 12582912 words differ (v1 attend 167.504 ms on this call)
+   timing (median of 5): prep 2.284 ms, attend 84.799 ms, call 107.973 ms -> 23518 tokens/s; attend 18.84 TFLOPS useful, 196.3 GB/s K/V streamed
+gpu_prefill_attn256_test: 43 checks, 0 failed: PASS
+{
+ "name": "pattn256-v2-chip-timing-01fe32d4-20261019T1731Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/pattn-01fe32d4 --timing-only --no-8k --reps 5",
+ "exit": 0,
+ "git_head": "9b9399b9",
+ "start": "2026-10-19T13:07:20.955808",
+ "seconds": 6.016,
+ "samples": 3,
+ "wall_W_mean": 283.3333333333333,
+ "wall_J": 1704.6027859052022,
+ "idle_W_before": 296.15384615384613,
+ "incremental_J": -77.13134777851592,
+ "gpu_W_mean": 18.05333333333333,
+ "gpu_util_mean": 26.0,
+ "load1_start": "98.15",
+ "load1_end": "96.85",
+ "mem_avail_kB_start": "19994680",
+ "mem_avail_kB_end": "19621680",
+ "lock_holders_max": 5,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-pattn256-v2-chip-timing-01fe32d4-20261019T1731Z.json
