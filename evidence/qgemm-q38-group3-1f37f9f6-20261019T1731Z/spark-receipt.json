@@ -1,0 +1,22 @@
+{
+ "name": "qgemm-q38-group3-1f37f9f6-20261019T1731Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/qgemm-1f37f9f6 --chip --shape q38 --tokens 4096 --reps 7 --group 3",
+ "exit": 0,
+ "git_head": "2d4d63e0",
+ "start": "2026-10-19T13:28:56.008110",
+ "seconds": 445.814,
+ "samples": 212,
+ "wall_W_mean": 241.08490566037736,
+ "wall_J": 107479.00041269806,
+ "idle_W_before": 250.0,
+ "incremental_J": -3974.4729168460053,
+ "gpu_W_mean": 7.108632075471698,
+ "gpu_util_mean": 0.0047169811320754715,
+ "load1_start": "40.92",
+ "load1_end": "23.50",
+ "mem_avail_kB_start": "28298756",
+ "mem_avail_kB_end": "27913728",
+ "lock_holders_max": 6,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}

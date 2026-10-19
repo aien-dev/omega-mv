@@ -1,0 +1,8 @@
+start 2026-10-19T18:24:09Z omega=2d4d63e067a5ab21b5ceef5c7d410bf9db49fb5b dirty=2
+loadavg_start 54.44 56.73 66.78 49/2168 2111049
+               total        used        free      shared  buff/cache   available
+Mem:          124607       76652        4005          28       50317       47955
+command: nice -n 10 ~/.local/bin/quiet-measure flock /tmp/aien-gb10.lock spark-receipt qgemm-q38-group3-1f37f9f6-20261019T1731Z -- /home/drakestapleton/workspace/pf-tools/bin/qgemm-1f37f9f6 --chip --shape q38 --tokens 4096 --reps 7 --group 3
+loadavg_locked 2026-10-19T18:28:55Z 40.92 51.46 62.15 5/2170 2220506
+loadavg_end 2026-10-19T18:36:24Z 23.50 29.57 47.44 6/2182 2362925
+exit 0 end 2026-10-19T18:36:24Z
