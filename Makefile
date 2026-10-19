@@ -2522,9 +2522,13 @@ test-gpu-decode-attn256: $(GPU_DATTN256_TEST)
 GPU_ATTN256_FREQ_TEST = $(OUT_DIR)/gpu_attn256_freq_test
 $(GPU_ATTN256_FREQ_TEST): tests/gpu_attn256_freq_test.c tests/bw_warp_sim_k.h src/omega_gpu_decode_attn256_api.h src/omega_blackwell_codegen_attn256.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_attn256_freq_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
-test-gpu-attn256-freq: $(GPU_ATTN256_FREQ_TEST)
+F2_TIMING_SCORE = $(OUT_DIR)/f2_timing_score
+$(F2_TIMING_SCORE): tools/f2_timing_score.c src/turing/ty_math.c src/turing/ty_math.h
+	$(CC) $(CFLAGS) -o $@ tools/f2_timing_score.c src/turing/ty_math.c -lm
+test-gpu-attn256-freq: $(GPU_ATTN256_FREQ_TEST) $(F2_TIMING_SCORE)
 	$(GPU_ATTN256_FREQ_TEST) --host-only
 	$(GPU_ATTN256_FREQ_TEST) --sim
+	tools/f2_timing_score_test.sh $(F2_TIMING_SCORE) $(OUT_DIR)/f2-score-selftest
 
 # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h). test-gpu-router is host-only
 # (oracle, budgets) plus the warp simulator; the chip gate is tools/run_gpu_router_chip.sh under the GB10 lock.
