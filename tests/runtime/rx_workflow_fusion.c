@@ -108,6 +108,7 @@ static struct {
     /* measurement */
     AgFusionMeasure m_compiled, m_hybrid, m_parallel;
     uint32_t parallel_state, hybrid_state;
+    uint32_t parallel_judged, parallel_rounds, parallel_overlap_permille;   /* see measure_parallel */
     /* canary */
     uint32_t canary_runs, canary_divergences, poisoned_state, poisoned_verified, poisoned_promote_refused;
     uint32_t poisoned_canary_runs;
@@ -1033,7 +1034,7 @@ static int cmp_u64(const void *a, const void *b) {
 
 /* 41 interleaved runs per leg at 4 workers: reactions that computed per
  * run, crumbs per run, median latency, CPU time, outcomes. */
-static void measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_energy, const char *what) {
+static void measure_once(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_energy, const char *what) {
     Pair *p = &g_pair;
     CHECK(pair_start(p, goal, m, 4) == 0, "%s: pair", what);
     memset(ms, 0, sizeof *ms);
@@ -1080,6 +1081,9 @@ static void measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with
     ms->objects_after = p->gf.n_nodes + 1;
     if (with_energy) measure_energy(p, ms);
     pair_stop(p);
+}
+
+static void measure_print(const AgFusionMeasure *ms, const char *what) {
     printf("    %s: reactions computing per run %.1f -> %.1f, crumbs %.1f -> %.1f, median %.1f -> %.1f us, "
            "CPU %.1f -> %.1f us/run", what, ms->commits_before, ms->commits_after, ms->crumbs_before,
            ms->crumbs_after, ms->median_ns_before / 1e3, ms->median_ns_after / 1e3,
@@ -1089,6 +1093,66 @@ static void measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with
                "(+/- %.1f) uJ, performance cores %.1f -> %.1f (+/- %.1f) uJ", ms->energy_uj_before,
                ms->energy_uj_after, ms->energy_noise_uj, cpu_mean(0), cpu_mean(1), cpu_noise());
     printf("\n");
+}
+
+static void measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_energy, const char *what) {
+    measure_once(m, goal, ms, with_energy, what);
+    measure_print(ms, what);
+}
+
+/* The parallel fragment is refused because fusing it serializes two steps
+ * that the original runs side by side. That is a statement about the
+ * original's wall-clock time only while the host really lets it run them
+ * side by side. On a loaded host the original's two workers wait for cores,
+ * its wall time climbs toward the fused one's, and the latency comparison
+ * stops being about the fragment (it once read 2963 -> 3035 us, inside the
+ * tolerance, and the fragment was accepted by the test's own measurement).
+ *
+ * Two figures from the same runs say whether the comparison can be judged.
+ * The original's overlap is its CPU time per run over its median wall time
+ * per run: about 2 when its two heavy steps run side by side, about 1 when
+ * the host serialized them. The speedup that overlap shows is overlap - 1.
+ * The library accepts a fused fragment that is slower by no more than the
+ * original's own run-to-run spread (at least 5 %), so a spread that is not
+ * well under that speedup hides the very difference being tested (a loaded
+ * round once read 1774 -> 3041 us and was accepted for that reason). A round
+ * is judged only when twice the tolerance the library will use is under the
+ * speedup the overlap shows. Any other round is not a measurement of the
+ * fragment: it is taken again (up to PAR_ROUNDS, with a short pause so the
+ * host can change). The first judgeable round goes to the unchanged library
+ * rule. If none is, nothing is accepted: the MetaSkill stays VERIFIED, which
+ * cannot enter a canary, the test says out loud that the latency was not
+ * judged, and the receipt records it. WORKFLOW_FUSION_REQUIRE_JUDGED=1 turns
+ * that outcome into a failure, for a judge that is meant to be quiet. */
+
+#define PAR_ROUNDS 12
+static uint32_t overlap_permille(const AgFusionMeasure *ms) {
+    return ms->median_ns_before ? (uint32_t)(ms->cpu_ns_before * 1000u / ms->median_ns_before) : 0;
+}
+
+static uint32_t tolerance_permille(const AgFusionMeasure *ms) {
+    return ms->spread_permille_before > 50u ? ms->spread_permille_before : 50u;
+}
+
+static int latency_judgeable(const AgFusionMeasure *ms) {
+    uint32_t ov = overlap_permille(ms);
+    return ov > 1000u && 2u * tolerance_permille(ms) < ov - 1000u;
+}
+
+static int measure_parallel(AgMetaSkill *m, AgFusionMeasure *ms) {
+    for (uint32_t round = 1; round <= PAR_ROUNDS; round++) {
+        measure_once(m, GOAL_PARALLEL, ms, 0, "parallel");
+        measure_print(ms, "parallel");
+        R.parallel_rounds = round;
+        R.parallel_overlap_permille = overlap_permille(ms);
+        if (latency_judgeable(ms)) return 1;
+        printf("    parallel: not judged, round %u of %u: the original's overlap is %u.%03u and its own spread %u per mille, "
+               "so the host hid the difference between side by side and one after the other\n", round, PAR_ROUNDS,
+               R.parallel_overlap_permille / 1000, R.parallel_overlap_permille % 1000, ms->spread_permille_before);
+        struct timespec ts = { 0, 20 * 1000 * 1000 };
+        nanosleep(&ts, NULL);
+    }
+    return 0;
 }
 
 static void t_measure(void) {
@@ -1104,13 +1168,24 @@ static void t_measure(void) {
     R.m_hybrid = MH.measure;
     R.hybrid_state = MH.state;
     CHECK(MH.state == AG_MS_MEASURED, "hybrid accepted");
-    measure(&MP, GOAL_PARALLEL, &R.m_parallel, 0, "parallel");
-    CHECK(rx_fusion_accept_measure(&MP, &R.m_parallel, 50) != 0 && MP.state == AG_MS_SLOWER,
-          "parallel fragment refused: fusing it serializes independent work (%.0f -> %.0f us)",
-          R.m_parallel.median_ns_before / 1e3, R.m_parallel.median_ns_after / 1e3);
+    R.parallel_judged = (uint32_t)measure_parallel(&MP, &R.m_parallel);
+    if (R.parallel_judged) {
+        CHECK(rx_fusion_accept_measure(&MP, &R.m_parallel, 50) != 0 && MP.state == AG_MS_SLOWER,
+              "parallel fragment refused: fusing it serializes independent work (%.0f -> %.0f us)",
+              R.m_parallel.median_ns_before / 1e3, R.m_parallel.median_ns_after / 1e3);
+        R.m_parallel = MP.measure;
+    } else {
+        const char *need = getenv("WORKFLOW_FUSION_REQUIRE_JUDGED");
+        printf("    parallel: LATENCY NOT JUDGED after %u rounds (last overlap %u.%03u, spread %u per mille); the "
+               "fragment is not accepted and cannot enter a canary\n", R.parallel_rounds,
+               R.parallel_overlap_permille / 1000, R.parallel_overlap_permille % 1000,
+               R.m_parallel.spread_permille_before);
+        CHECK(!(need && need[0] && need[0] != '0'),
+              "parallel fragment latency judged: the host never let the original run its two steps side by "
+              "side in %u rounds (WORKFLOW_FUSION_REQUIRE_JUDGED is set)", R.parallel_rounds);
+    }
     R.parallel_state = MP.state;
-    R.m_parallel = MP.measure;
-    CHECK(rx_fusion_canary(&MP, 0, 1) == AG_FUSION_E_STATE, "a slower MetaSkill cannot enter canary");
+    CHECK(rx_fusion_canary(&MP, 0, 1) == AG_FUSION_E_STATE, "a slower or unmeasured MetaSkill cannot enter canary");
     unpublished_refused(&MC, "measured");
 }
 
@@ -1523,7 +1598,8 @@ static void write_receipt(void) {
     int pass = g_fail == 0 && R.bypass == 0 && R.evidence_missing == 0 && R.ancestry_mismatch == 0 &&
                R.eq_mismatch == 0 && R.cross_mismatch == 0 && R.steps_mismatch == 0 && R.det_mismatch == 0 &&
                R.tamper_caught == R.tamper_cases && MC.state == AG_MS_PUBLISHED &&
-               R.parallel_state == AG_MS_SLOWER && R.poisoned_state == AG_MS_QUARANTINED;
+               (R.parallel_state == AG_MS_SLOWER ||
+                (!R.parallel_judged && R.parallel_state == AG_MS_VERIFIED)) && R.poisoned_state == AG_MS_QUARANTINED;
     static const char *kinds[4] = { "compiled", "hybrid", "learned", "hardware" };
     fprintf(fp,
             "{\n"
@@ -1570,7 +1646,12 @@ static void write_receipt(void) {
             R.unpublished_digest_equal, R.refused_after_publish);
     measure_json(fp, "compiled", &R.m_compiled, 0);
     measure_json(fp, "hybrid", &R.m_hybrid, 0);
-    measure_json(fp, "parallel_fragment", &R.m_parallel, 1);
+    measure_json(fp, "parallel_fragment", &R.m_parallel, 0);
+    fprintf(fp,
+            "    \"parallel_fragment_latency\": {\"judged\": %s, \"rounds\": %u, \"original_overlap_permille\": %u, "
+            "\"original_spread_permille\": %u}\n",
+            R.parallel_judged ? "true" : "false", R.parallel_rounds, R.parallel_overlap_permille,
+            R.m_parallel.spread_permille_before);
     fprintf(fp,
             "  },\n"
             "  \"promotion\": {\"parallel_fragment\": \"%s\", \"hybrid\": \"%s\",\n"

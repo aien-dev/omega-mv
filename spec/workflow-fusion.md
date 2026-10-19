@@ -170,6 +170,15 @@ spread and the tolerance used. A fragment of two
 independent heavy steps is refused (SLOWER): fused, they no longer run side
 by side.
 
+The test judges that refusal only on a measurement of the fragment: the
+original must have run its two steps side by side (its CPU time per run over
+its median wall time per run, the overlap) with its own spread under half of
+the speedup the overlap shows. On a loaded host a round fails this and is
+taken again, up to 12 times. If none is judgeable, nothing is accepted (the
+MetaSkill stays VERIFIED and cannot enter a canary), the test prints that
+the latency was not judged, and the receipt records `judged: false`;
+`WORKFLOW_FUSION_REQUIRE_JUDGED=1` makes that a failure.
+
 ## Canary
 
 The fused graph runs in shadow beside the original on production traffic,
