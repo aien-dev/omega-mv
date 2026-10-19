@@ -1,0 +1,11 @@
+== host ==
+  class rho0     context 4096: steps 32768 rescales 520 share 0.0159
+  class rho1000  context 4096: steps 32768 rescales 32768 share 1.0000
+  class rho500   context 4096: steps 32768 rescales 17136 share 0.5229
+  class iid      context 4096: steps 32768 rescales 2056 share 0.0627
+PASS: 16 checks, 0 failed
+== simulator ==
+  mutant: counters differ in 96 of 192 words (expected > 0)
+PASS: 49 checks, 0 failed
+effect T=552000000 ub  null T=-59000000 ub  shuffled T=-1174000000 ub
+f2_timing_score_test: PASS

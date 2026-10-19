@@ -1,0 +1,5 @@
+fit: 1280 lines, 4 positions, kB 7 kM 7 -> evidence/attn256-freq-20261019T0159Z-repeat/model.txt
+  pos   4095  B: 450698 ns   M: 441628 + 42422 * share ns
+  pos  16383  B: 1126623 ns   M: 1150470 + -111265 * share ns
+  pos  65535  B: 3914335 ns   M: 3946091 + -146896 * share ns
+  pos   1023  B: 225304 ns   M: 226456 + -5384 * share ns

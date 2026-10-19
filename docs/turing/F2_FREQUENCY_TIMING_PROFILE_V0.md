@@ -65,3 +65,18 @@ v1 changes only the collection order; models, code, prices and the decision rule
   each kernel switch) and inside a mode every (class, position) pair in a shuffled order.
 - Train: tag `train1`, seed 111, classes rho0, iid, rho250, rho500, 40 reps. Held-out: tag `held1`, seed 222,
   classes rho0, iid, rho250, rho500, rho750, rho1000, 40 reps, sealed by sha256 before scoring.
+
+## Result (2026-10-19, evidence/attn256-freq-20261019T0151Z, repeat evidence/attn256-freq-20261019T0159Z-repeat)
+
+| block | T, run 1 (bits) | T, repeat (bits) |
+|---|---|---|
+| all held-out (960 mode-0 launches) | -195 | -59 |
+| intervention rho750 + rho1000 | -193 | -52 |
+| in-distribution | -130 | -135 |
+| shuffled control | -182 | -39 |
+
+Output bits: 0 differing launches in 3200 (run 1) and 3200 (repeat), both modes. Rule 1 and 2 fail, so the frequency
+term does not earn its keep and the scheduling step (pick the branchy or the branchless rescale by odds) is not taken:
+the default kernel stays as it is. Across odds 0.016 to 1.0 the time moves less than the box's run-to-run noise.
+The kernel is far from the bandwidth ceiling (0.23 to 0.25 of 273 GB/s), so its time is set by something else
+than this branch; that is the speed lead this study hands on.

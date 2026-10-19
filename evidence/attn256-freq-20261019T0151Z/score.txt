@@ -1,0 +1,18 @@
+score evidence/attn256-freq-20261019T0151Z/held1.tsv classes=all shuffle=no: launches 960
+  L(B) 269 bits  L(D|B) 16506 bits  (mean |r| 340.17 us)
+  L(M) 397 bits  L(D|M) 16573 bits  (mean |r| 342.64 us)
+  T(M; B, D) = -195000000 ub = -195.000000 bits  (-0.2031 bits per launch)
+score evidence/attn256-freq-20261019T0151Z/held1.tsv classes=rho750,rho1000 shuffle=no: launches 320
+  L(B) 269 bits  L(D|B) 5324 bits  (mean |r| 321.99 us)
+  L(M) 397 bits  L(D|M) 5389 bits  (mean |r| 329.26 us)
+  T(M; B, D) = -193000000 ub = -193.000000 bits  (-0.6031 bits per launch)
+score evidence/attn256-freq-20261019T0151Z/held1.tsv classes=rho0,iid,rho250,rho500 shuffle=no: launches 640
+  L(B) 269 bits  L(D|B) 11182 bits  (mean |r| 349.26 us)
+  L(M) 397 bits  L(D|M) 11184 bits  (mean |r| 349.33 us)
+  T(M; B, D) = -130000000 ub = -130.000000 bits  (-0.2031 bits per launch)
+score evidence/attn256-freq-20261019T0151Z/held1.tsv classes=all shuffle=yes: launches 960
+  L(B) 269 bits  L(D|B) 16506 bits  (mean |r| 340.17 us)
+  L(M) 397 bits  L(D|M) 16560 bits  (mean |r| 342.22 us)
+  T(M; B, D) = -182000000 ub = -182.000000 bits  (-0.1896 bits per launch)
+bits evidence/attn256-freq-20261019T0151Z/held1.tsv: 1920 launches in 24 groups, 0 differ from their group's first launch
+bits evidence/attn256-freq-20261019T0151Z/train1.tsv: 1280 launches in 16 groups, 0 differ from their group's first launch
