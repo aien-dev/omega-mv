@@ -313,6 +313,8 @@ static int qg_sim(void) {
         { 3, 256, 256, 200, 0, OMEGA_GPU_PF_PLAIN, 1, 4, 8 },
         { 2, 256, 128, 150, 64, OMEGA_GPU_PF_PLAIN, 0, 4, 8 },
         { 2, 512, 1024, 140, 0, OMEGA_GPU_PF_SWIGLU_NAT, 1, 4, 8 },
+        { 3, 256, 384, 300, 120, OMEGA_GPU_PF_SWIGLU_NAT, 0, 8, 8 },   /* rt 8: 128 rows per CTA (cascade/prefill-kernels) */
+        { 2, 512, 1024, 333, 0, OMEGA_GPU_PF_PLAIN, 1, 8, 8 },
     };
     for (size_t c = 0; c < sizeof cs / sizeof cs[0]; c++) {
         const uint32_t bm = 16 * cs[c].rt;

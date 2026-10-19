@@ -71,7 +71,7 @@ int omega_blackwell_codegen_pq_prog(const OmegaPqSpec *spec, BlackwellIRProgram 
 int omega_qg_spec_ok(const OmegaQgSpec *s) {
     if (!s) return 0;
     if (s->k < 128u || s->k > 32768u || s->k % 128u) return 0; /* the k loop counts at run time: no k-sized immediate */
-    if (s->rt != 4) return 0; /* rt 8 needs more than 128 registers and 17408 shared bytes (QMD cap 16384) */
+    if (s->rt != 4 && s->rt != 8) return 0; /* rt 8 (128 rows per CTA, cascade/prefill-kernels): registers past 128 (opt-in) and 17408 shared bytes (the 99 KiB descriptor, #560) */
     if (s->warps != 8 && s->warps != 16) return 0;
     if (s->epi > OMEGA_QG_EPI_SWIGLU || s->direct > 1 || s->wait > 120u) return 0;
     if (s->epi == OMEGA_QG_EPI_SWIGLU && s->n % 256u) return 0; /* gate and up halves start on a 128-row scale block */
@@ -96,6 +96,7 @@ int omega_blackwell_codegen_qgemm_prog(const OmegaQgSpec *spec, BlackwellIRProgr
     const uint32_t BM = 16u * RT, KB = K / 128u, SPAN = W * 16u, NJ = BM * 4u / T, ABUF = BM * 64u, BUF = ABUF + BM * 4u;
     const uint32_t NS = spec->epi == OMEGA_QG_EPI_SWIGLU ? 2u : 1u; /* scale rows per warp: gate + up block, or one block */
     omega_bw_ir_init(prog);
+    if (RT > 4u && omega_bw_ir_set_gpr_limit(prog, BW_PHYS_GPR_HW_LIMIT) != 0) return -1;
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
 
     int udesc = UV64(e), ptab = V64(e), pidx = V64(e), px = V64(e), pxs = V64(e);

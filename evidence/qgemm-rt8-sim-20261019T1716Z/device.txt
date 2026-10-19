@@ -1,0 +1,2 @@
+start 2026-10-19T17:16:18Z loadavg 87.11 79.55 70.57 97/3045 540981; command: flock -s /tmp/aien-quiet.lock ./build-v2/gpu_qgemm_test --sim (build OUT_DIR=build-v2 from this commit)
+exit 0 end 2026-10-19T17:17:15Z loadavg 92.23 82.68 72.22 81/2827 571161
