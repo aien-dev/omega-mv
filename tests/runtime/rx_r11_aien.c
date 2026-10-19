@@ -388,7 +388,8 @@ static void t_core_class(void) {
 }
 
 static void t_drift(void) {
-    printf("[*] a failure with nothing else changed is drift; a second failure refutes it\n");
+    printf("[*] a failure with nothing else changed is drift: relearned first, researched only "
+           "if the cost moved; a second failure refutes it\n");
     Env e;
     CHECK(envA_start(&e) == 0, "setup");
     RxAienFaculty *a = &e.a;
@@ -399,15 +400,90 @@ static void t_drift(void) {
     windows(&e, 2, 9000, 0xAA);
     CHECK(fld(&e, a->o.hypothesis, 1) == RX_AIEN_HYP_DRIFT && fld(&e, a->o.hypothesis, 3) == P1 &&
           fld(&e, a->o.hypothesis, 4) == P1, "drift hypothesis");
-    CHECK(fld(&e, a->o.plan, 0) == 1 && fld(&e, a->o.plan, 5) == RX_AIEN_WHY_DRIFT, "drift plan");
+    CHECK(fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_OPEN && fld(&e, a->o.plan, 0) == 0,
+          "drift researched before the record was relearned");
+    /* The same record, learned again where it runs: the cost really moved. */
+    windows(&e, 2 + a->cfg.baseline_intervals + a->cfg.confirm_intervals, 9000, 0xAA);
+    CHECK(fld(&e, a->o.prediction, 0) == 2 && fld(&e, a->o.prediction, 6) == RX_AIEN_PRED_CONFIRMED &&
+          fld(&e, a->o.prediction, 5) == 9000, "relearned prediction");
+    CHECK(fld(&e, a->o.plan, 0) == 1 && fld(&e, a->o.plan, 5) == RX_AIEN_WHY_DRIFT &&
+          fld(&e, a->o.plan, 4) == fld(&e, a->o.hypothesis, 0), "drift plan");
+    CHECK(fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_TESTING, "hypothesis state %llu",
+          (unsigned long long)fld(&e, a->o.hypothesis, 7));
     record(&e, 2, 0xBB);
     windows(&e, 1 + a->cfg.baseline_intervals, 9000, 0xBB);
     windows(&e, 2, 15000, 0xBB);
-    CHECK(fld(&e, a->o.prediction, 0) == 2 && fld(&e, a->o.prediction, 6) == RX_AIEN_PRED_FAILED,
+    CHECK(fld(&e, a->o.prediction, 0) == 3 && fld(&e, a->o.prediction, 6) == RX_AIEN_PRED_FAILED,
           "second prediction");
     CHECK(fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_UNSUPPORTED, "hypothesis state %llu",
           (unsigned long long)fld(&e, a->o.hypothesis, 7));
     CHECK(fld(&e, a->o.plan, 0) == 1, "planned again");
+    env_stop(&e);
+}
+
+/* Seen in R13 under whole-machine load (omega #527): a burst failed the
+ * prediction with nothing changed, then the cost came back. The drift plan
+ * went out at once and its research could not run before the goal, so the
+ * failed prediction was never relearned and the incumbent cost never
+ * confirmed. Drift is now tested by relearning first: a cost back where it
+ * was refutes it, with no research. A real change later is still noticed. */
+static void t_drift_burst_refuted(void) {
+    printf("[*] a burst that passes is refuted by relearning: no research, a later move is noticed\n");
+    Env e;
+    CHECK(envA_start(&e) == 0, "setup");
+    RxAienFaculty *a = &e.a;
+    place(&e, P1);
+    window(&e, 5000, 0);          /* production runs before any record exists */
+    record(&e, 1, 0xAA);
+    confirm_at(&e, 5000, 0xAA);
+    windows(&e, 2, 9000, 0xAA);   /* the burst */
+    CHECK(fld(&e, a->o.prediction, 6) == RX_AIEN_PRED_FAILED &&
+          fld(&e, a->o.hypothesis, 1) == RX_AIEN_HYP_DRIFT, "the burst was not noticed");
+    windows(&e, 2 + a->cfg.baseline_intervals + a->cfg.confirm_intervals, 5100, 0xAA);
+    CHECK(fld(&e, a->o.prediction, 0) == 2 && fld(&e, a->o.prediction, 6) == RX_AIEN_PRED_CONFIRMED &&
+          fld(&e, a->o.prediction, 5) == 5100, "not relearned: seq %llu state %llu cost %llu",
+          (unsigned long long)fld(&e, a->o.prediction, 0), (unsigned long long)fld(&e, a->o.prediction, 6),
+          (unsigned long long)fld(&e, a->o.prediction, 5));
+    CHECK(fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_UNSUPPORTED, "hypothesis state %llu",
+          (unsigned long long)fld(&e, a->o.hypothesis, 7));
+    CHECK(fld(&e, a->o.plan, 0) == 0 && fld(&e, a->o.memory, 0) == 0, "researched a burst");
+    place(&e, P2);
+    windows(&e, 2, 2000, 0xAA);
+    CHECK(fld(&e, a->o.hypothesis, 1) == RX_AIEN_HYP_CORE_CLASS &&
+          fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_TESTING &&
+          fld(&e, a->o.plan, 0) == 1 && fld(&e, a->o.plan, 5) == RX_AIEN_WHY_CORE_CLASS,
+          "the move was not planned");
+    check_only_reactive(&e);
+    env_stop(&e);
+}
+
+/* R13 under load: baseline intervals 16361, 26203, 8370, 7708 ns averaged to
+ * 14660 ns, a cost no interval paid. A baseline interval that disagrees with
+ * the ones before it by more than the tolerance starts the baseline again. */
+static void t_baseline_must_agree(void) {
+    printf("[*] a burst inside the baseline restarts it; the prediction is what production pays\n");
+    Env e;
+    CHECK(envA_start(&e) == 0, "setup");
+    RxAienFaculty *a = &e.a;
+    place(&e, P1);
+    window(&e, 5000, 0);          /* production runs before any record exists */
+    record(&e, 1, 0xAA);
+    window(&e, 5000, 0xAA);       /* warm-up */
+    window(&e, 5000, 0xAA);
+    window(&e, 12000, 0xAA);      /* the burst */
+    windows(&e, a->cfg.baseline_intervals - 1, 5000, 0xAA);
+    CHECK(fld(&e, a->o.prediction, 0) == 0, "predicted from a baseline that disagrees with itself");
+    window(&e, 5000, 0xAA);
+    CHECK(fld(&e, a->o.prediction, 0) == 1 && fld(&e, a->o.prediction, 5) == 5000,
+          "prediction %llu expects %llu ns", (unsigned long long)fld(&e, a->o.prediction, 0),
+          (unsigned long long)fld(&e, a->o.prediction, 5));
+    windows(&e, a->cfg.confirm_intervals, 5000, 0xAA);
+    CHECK(fld(&e, a->o.prediction, 6) == RX_AIEN_PRED_CONFIRMED, "not confirmed");
+    /* A steady, slower cost is learned at what it is. */
+    record(&e, 2, 0xBB);
+    confirm_at(&e, 9000, 0xBB);
+    CHECK(fld(&e, a->o.prediction, 0) == 2 && fld(&e, a->o.prediction, 5) == 9000 &&
+          fld(&e, a->o.prediction, 6) == RX_AIEN_PRED_CONFIRMED, "a steady slower cost was not learned");
     env_stop(&e);
 }
 
@@ -426,7 +502,9 @@ static void t_settled_failure_relearns(void) {
     window(&e, 5000, 0);          /* production runs before any record exists */
     record(&e, 1, 0xAA);
     confirm_at(&e, 5000, 0xAA);
-    windows(&e, 2, 9000, 0xAA);   /* jitter: drift hypothesis, drift plan */
+    windows(&e, 2, 9000, 0xAA);   /* jitter: drift hypothesis */
+    windows(&e, 2 + a->cfg.baseline_intervals + a->cfg.confirm_intervals, 9000, 0xAA);
+                                  /* relearned: the cost stays moved, so a drift plan */
     CHECK(fld(&e, a->o.plan, 0) == 1 && fld(&e, a->o.plan, 5) == RX_AIEN_WHY_DRIFT, "drift plan");
     record(&e, 2, 0xAA);          /* the research kept the same realization */
     windows(&e, 1 + a->cfg.baseline_intervals, 9000, 0xAA);
@@ -1034,6 +1112,8 @@ int main(void) {
     t_steady_and_outlier();
     t_core_class();
     t_drift();
+    t_drift_burst_refuted();
+    t_baseline_must_agree();
     t_settled_failure_relearns();
     t_goal();
     t_authority();

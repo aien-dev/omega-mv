@@ -35,6 +35,19 @@ static int failure_settled(const RxSnapshotDep *p, const RxSnapshotDep *h) {
     return 0;
 }
 
+/* A failed prediction is relearned from fresh intervals when its failure is
+ * settled, and also while a drift hypothesis for it is open: nothing that
+ * AIEN knows of changed, so the first test of "this record's cost moved" is
+ * to learn the same record again where it runs. aien.plan asks for research
+ * only if the relearned cost really moved (omega #527: a burst under load
+ * failed the prediction, the cost came back, but the drift plan waited for
+ * a new record that could not come, so the cost was never confirmed). */
+static int relearns(const RxSnapshotDep *p, const RxSnapshotDep *h) {
+    if (failure_settled(p, h)) return 1;
+    return p->field[6] == RX_AIEN_PRED_FAILED && h->field[2] == p->field[0] &&
+           h->field[1] == RX_AIEN_HYP_DRIFT && h->field[7] == RX_AIEN_HYP_OPEN;
+}
+
 static int explored(const RxSnapshotDep *mem, uint64_t key) {
     uint64_t n = mem->field[0] < RX_AIEN_MEMORY_SLOTS ? mem->field[0] : RX_AIEN_MEMORY_SLOTS;
     for (uint64_t i = 0; i < n; i++)
@@ -71,14 +84,15 @@ static int fn_observe(RxCtx *c) {
         return 0;
     }
     /* A prediction about this record failed on this belief and the failure
-     * is settled (explained, nothing left to try). The belief has served its
+     * is settled (explained, nothing left to try) or is open drift (see
+     * relearns). The belief has served its
      * purpose: relearn what this record costs from fresh intervals. Without
      * this a failed belief stays failed until a new record exists, and a
      * later, real change (a core move) could never be noticed. */
     const RxSnapshotDep *p = in_of(c, f->o.prediction);
     const RxSnapshotDep *h = in_of(c, f->o.hypothesis);
     if (!p || !h) return -1;
-    if (p->field[1] == epoch && b->field[7] >= f->cfg.misses_to_fail && failure_settled(p, h)) {
+    if (p->field[1] == epoch && b->field[7] >= f->cfg.misses_to_fail && relearns(p, h)) {
         put(c, f->o.belief, 2, calls);
         put(c, f->o.belief, 3, spent);
         put(c, f->o.belief, 4, 0);
@@ -99,6 +113,14 @@ static int fn_observe(RxCtx *c) {
     if (seen == 0) {
         /* warm-up interval, discarded */
     } else if (seen <= f->cfg.baseline_intervals) {
+        /* A baseline is a claim that the record costs `mean` within the
+         * tolerance, so its own intervals must agree within it. One that
+         * disagrees with the intervals before it starts the baseline again
+         * from itself: averaging a burst into the mean gives a cost nothing
+         * pays, and every steady interval after it then misses (R13 under
+         * load: 16361, 26203, 8370, 7708 ns learned as 14660 ns, then 391
+         * intervals at 7.0 to 8.8 us all failed against it). */
+        if (seen > 1 && !within(x, mean, f->cfg.tolerance_pct)) seen = 1;
         mean = (mean * (seen - 1) + x) / seen;
     } else {
         miss = within(x, mean, f->cfg.tolerance_pct) ? 0 : miss + 1;
@@ -140,7 +162,7 @@ static int fn_predict(RxCtx *c) {
          * prediction, so the next real change is noticed. */
         const RxSnapshotDep *h = in_of(c, f->o.hypothesis);
         if (!h) return -1;
-        if (failure_settled(p, h) && b->field[0] == p->field[1] &&
+        if (relearns(p, h) && b->field[0] == p->field[1] &&
             b->field[7] < f->cfg.misses_to_fail) {
             put(c, f->o.prediction, 0, p->field[0] + 1);
             put(c, f->o.prediction, 1, b->field[0]);
@@ -180,8 +202,11 @@ static int fn_explain(RxCtx *c) {
     uint64_t pseq = p->field[0], state = p->field[6];
     if (pseq == 0) return 0;
 
-    /* A later prediction under the hypothesized condition tests it. */
-    if (h->field[7] == RX_AIEN_HYP_TESTING && pseq > h->field[2] && p->field[4] == h->field[4]) {
+    /* A later prediction under the hypothesized condition tests it. A drift
+     * plan is made on the relearned prediction (aien.plan), so only a later
+     * one tests a drift hypothesis. */
+    uint64_t tested_from = h->field[2] + (h->field[1] == RX_AIEN_HYP_DRIFT);
+    if (h->field[7] == RX_AIEN_HYP_TESTING && pseq > tested_from && p->field[4] == h->field[4]) {
         if (state == RX_AIEN_PRED_CONFIRMED) put(c, f->o.hypothesis, 7, RX_AIEN_HYP_SUPPORTED);
         else if (state == RX_AIEN_PRED_FAILED) put(c, f->o.hypothesis, 7, RX_AIEN_HYP_UNSUPPORTED);
         return 0;
@@ -275,7 +300,20 @@ static int fn_plan(RxCtx *c) {
     }
 
     if (h->field[7] == RX_AIEN_HYP_OPEN) {
-        if (p->field[0] != h->field[2]) return 0;  /* prediction moved on; wait for it */
+        if (h->field[1] == RX_AIEN_HYP_DRIFT) {
+            /* Drift is first tested by relearning the same record (see
+             * relearns). Research only if the relearned cost really moved;
+             * if it is back within the tolerance of what the failed
+             * prediction expected, the failure was a burst, not drift. */
+            if (p->field[0] != h->field[2] + 1 || p->field[6] != RX_AIEN_PRED_CONFIRMED ||
+                p->field[4] != h->field[4]) return 0;
+            if (within(p->field[5], h->field[5], f->cfg.tolerance_pct)) {
+                put(c, f->o.hypothesis, 7, RX_AIEN_HYP_UNSUPPORTED);
+                return 0;
+            }
+        } else if (p->field[0] != h->field[2]) {
+            return 0;                              /* prediction moved on; wait for it */
+        }
         uint64_t regime = p->field[2], cls = h->field[4];
         uint64_t key = rx_aien_key(cls, regime);
         if (explored(m, key)) {
@@ -465,7 +503,7 @@ int rx_aien_register(RxAienFaculty *f, const RxAienCaps *caps) {
     trig(&b, f->o.hypothesis, RX_FIELD(7));
     trig(&b, f->o.assessment, RX_FIELD(4) | RX_FIELD(0));
     rd(&b, f->o.memory);
-    rd(&b, f->o.prediction);
+    trig(&b, f->o.prediction, RX_FIELD(0) | RX_FIELD(6));   /* a relearned drift prediction */
     rd(&b, f->o.plan);
     wr(&b, f->o.plan);
     wr(&b, f->o.memory);

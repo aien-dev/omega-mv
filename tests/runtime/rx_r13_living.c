@@ -1089,6 +1089,16 @@ static int run(Rig *r, int mode) {
     }
     /* Production is a workload of its own, already running when the goal
      * arrives. From here this thread only observes. */
+    /* A burst that passes is refuted by AIEN relearning the record; a cost
+     * that really moved before the goal is researched as drift, so the
+     * episode below is no longer the goal's alone. Say so: it is a real
+     * slowdown of this machine, not a fault of the episode. */
+    if (with_aien && field(r, r->aien.o.plan, 0) != 0 &&
+        field(r, r->aien.o.plan, 5) == RX_AIEN_WHY_DRIFT)
+        fprintf(stderr, "R13 note (mode %d): the incumbent cost moved before the goal (AIEN "
+                "expected %llu ns, saw %llu ns, relearned %llu ns) and AIEN asked for drift "
+                "research\n", mode, U(field(r, r->aien.o.hypothesis, 5)),
+                U(field(r, r->aien.o.hypothesis, 6)), U(incumbent_ns));
     if (start_producer(r) != 0) FAIL("producer");
     if (mode == POSITIVE) rx_gen_set_disk_hook(r->gen, barrier_watch, r);
     /* The environment changes (the body now runs on the X925 cores) and the
