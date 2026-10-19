@@ -162,8 +162,7 @@ case "$step" in
     ;;
   # rx-host.yml
   rx-host-reference)
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_COMMIT=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    physics_pin; export PHYSICS_COMMIT="$(lock physics.lock)"
     aienos_pin; set -o pipefail; mkdir -p build
     make test-r3 test-r7 test-r16-operator-authority-misuse test-r8 test-r9 test-r12 test-rx-emergency test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-cortex test-jspace-prod test-composition test-composition-attach-asan test-composition-gate test-fabric test-fabric-living
     make test-machine-identity
@@ -191,8 +190,7 @@ case "$step" in
     tools/rx_host_receipts.sh generation "$generation" "$OMEGA_CANDIDATE_COMMIT"
     ;;
   faculty-arm)
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    physics_pin
     aienos_pin; argus_pin; set -o pipefail; mkdir -p build
     make OUT_DIR=build/pid $NOPHYS test-program-id
     make OUT_DIR=build/prz $NOPHYS test-program-realize
@@ -224,10 +222,13 @@ case "$step" in
     make test-c4-requal
     ;;
   # rx-host.yml chip-only-declared and spark-only targets (SKIP on GitHub, never a pass there)
+  # The chip build (and rx-host-reference, faculty-arm above) use physics at physics.lock, the commit
+  # `make check-physics-lock` demands. A hard-coded copy here drifted twice: e95e3ed after the lock moved to
+  # 6d7cf0d (#508), then 6d7cf0d after
+  # the lock had to move to aecb9d35 for the bounded RM_ALLOC retry on NV_ERR_NO_MEMORY (physics#64, #523).
   chip:*|spark:*)
     t="${step#*:}"
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    physics_pin
     aienos_pin; argus_pin
     make "$t"
     ;;
