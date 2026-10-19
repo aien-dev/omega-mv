@@ -40,6 +40,8 @@ SRCS += src/omega_blackwell_codegen_router_fn.c src/omega_gpu_router_fn_api.c
 SRCS += src/omega_blackwell_codegen_fnattn.c src/omega_gpu_fnattn_api.c
 # flashnext/port (2026-10-19): the 4-lane gated residual phases between the bf16 GEMVs (omega_gpu_fnhc_api.h), new files only
 SRCS += src/omega_blackwell_codegen_fnhc.c src/omega_gpu_fnhc_api.c
+# flashnext/port (2026-10-19): the QSA indexer (block scores, exact top-512 selection) (omega_gpu_fnidx_api.h), new files only
+SRCS += src/omega_blackwell_codegen_fnidx.c src/omega_gpu_fnidx_api.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
@@ -2545,6 +2547,14 @@ $(GPU_FNHC_TEST): tests/gpu_fnhc_test.c tests/bw_warp_sim.h src/omega_gpu_fnhc_a
 test-gpu-fnhc: $(GPU_FNHC_TEST)
 	$(GPU_FNHC_TEST) --host-only
 	$(GPU_FNHC_TEST) --sim
+
+.PHONY: test-gpu-fnidx
+GPU_FNIDX_TEST = $(OUT_DIR)/gpu_fnidx_test
+$(GPU_FNIDX_TEST): tests/gpu_fnidx_test.c tests/bw_warp_sim.h src/omega_gpu_fnidx_api.h src/omega_blackwell_codegen_fnidx.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_fnidx_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-fnidx: $(GPU_FNIDX_TEST)
+	$(GPU_FNIDX_TEST) --host-only
+	$(GPU_FNIDX_TEST) --sim
 
 # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h). test-gpu-router is host-only
 # (oracle, budgets) plus the warp simulator; the chip gate is tools/run_gpu_router_chip.sh under the GB10 lock.
