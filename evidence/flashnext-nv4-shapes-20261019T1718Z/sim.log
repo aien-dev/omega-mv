@@ -1,0 +1,8 @@
+# git fc4b75408ea5f2c44e42117df2b0dd3bf881eb01
+loadavg_start 87.52 83.11 72.94 97/2798 595011
+$ gpu_nv4_api_test --sim
+  sim k 2560 mutant 7: refused by the spec (equivalent to production at this k)
+  sim k 640 mutant 2: refused by the spec (equivalent to production at this k)
+GPU_NV4_API_TEST sim : 29 checks, 0 failed -> PASS
+rc=0
+loadavg_end 87.52 83.11 72.94 92/2801 595352

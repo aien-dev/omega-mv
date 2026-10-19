@@ -1,0 +1,24 @@
+# git fc4b75408ea5f2c44e42117df2b0dd3bf881eb01
+loadavg_start 87.52 83.11 72.94 99/2806 595004
+$ gpu_nv4_api_test --host-only
+  codegen k 2560 rows 1 sched 0: 168 insns, 53 GPRs
+  codegen k 2560 rows 1 sched 1: 168 insns, 61 GPRs
+  codegen k 2560 rows 2 sched 0: 276 insns, 59 GPRs
+  codegen k 2560 rows 2 sched 1: 276 insns, 68 GPRs
+  codegen k 2560 rows 4 sched 0: 492 insns, 71 GPRs
+  codegen k 2560 rows 4 sched 1: 492 insns, 80 GPRs
+  codegen k 2560 rows 8 sched 0: 924 insns, 95 GPRs
+  codegen k 2560 rows 8 sched 1: 924 insns, 104 GPRs
+  codegen k 640 rows 2 sched 0: 486 insns, 71 GPRs
+  codegen k 640 rows 2 sched 1: 486 insns, 81 GPRs
+  codegen k 1024 rows 2 sched 0: 276 insns, 59 GPRs
+  codegen k 1024 rows 2 sched 1: 276 insns, 68 GPRs
+  codegen k 576 rows 2 sched 0: 486 insns, 71 GPRs
+  codegen k 576 rows 2 sched 1: 486 insns, 81 GPRs
+  codegen k 64 rows 2 sched 0: 288 insns, 52 GPRs
+  codegen k 64 rows 2 sched 1: 288 insns, 61 GPRs
+  codegen k 6144 rows 2 sched 0: 276 insns, 59 GPRs
+  codegen k 6144 rows 2 sched 1: 276 insns, 68 GPRs
+GPU_NV4_API_TEST host : 55 checks, 0 failed -> PASS
+rc=0
+loadavg_end 87.52 83.11 72.94 99/2798 595009

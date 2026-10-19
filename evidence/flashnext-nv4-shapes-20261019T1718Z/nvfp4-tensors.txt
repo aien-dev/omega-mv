@@ -1,0 +1,5 @@
+# every NVFP4 weight_scale in nvidia/Qwen3.8-Flash-Next-NVFP4 @fc694b54, from the shard headers: count, name, shape, dtype
+  24576 model.language_model.layers.L.mlp.experts.E.down_proj.weight_scale	[2560,40]	F8_E4M3
+  24576 model.language_model.layers.L.mlp.experts.E.gate_proj.weight_scale	[640,160]	F8_E4M3
+  24576 model.language_model.layers.L.mlp.experts.E.up_proj.weight_scale	[640,160]	F8_E4M3
+      1 model.language_model.layers.L.ple.ple_embedding.ngram_embedding.weight_scale	[1]	BF16
