@@ -216,3 +216,46 @@ participants. The driver holds the existing `.argus-bench.lock` as well as its
 owned quiet flag. Workloads, seeds, stage selection, fitting and qualification
 thresholds above are unchanged. CI fixtures are synthetic and prove no hardware
 energy result. No timed data has been used to tune this amendment.
+
+2026-10-19, amendment 2, before any timed TY-4/TY-5 window (no data seen; ledger L109). The protocol cannot be
+followed as written on the box today, for three reasons found by inspection:
+
+1. **No package meter.** The `aien_spbm` hwmon is not loaded on this boot (no `/sys/class/hwmon/*/name` equals
+   `aien_spbm`). Loading it needs sudo, which agents do not use (handoff 2026-10-05-spbm-energy-operator-steps.md
+   gives the operator steps). `ty_energy_window` still runs workloads and records PMU counts, timing and box state
+   with `meter_ok: 0`, but every window is refused for energy by `ty_energy_reduce`, and stage 1's selection needs
+   valid windows, so the reducer cannot select or compute I.
+2. **The quiet rule changed.** `tools/ty_energy_run.sh` creates the machine-wide `~/workspace/.spark-quiet` flag and
+   waits for load1 < 2. Agents may no longer raise that flag without Drake, and the shared box has not been below
+   load 2 today (sensor log). The current mechanism is `quiet-measure` (holds off new builds) with the 20-minute
+   rule (if the wait exceeds 20 minutes, run and record the load).
+3. **A new meter exists.** Wall power from the UPS, `~/yardsticks/sensors/<date>.csv`, one row every ~2 s, 10 W
+   steps, whole UPS output (not the Spark alone).
+
+What runs instead (TY-4/TY-5 wall amendment, "TYW"):
+
+- Stage 1 is not run (its selection needs the package meter in the existing reducer). Two configurations are fixed
+  now without data: **S6** (A on cpus 5-9, B on 15-19: all ten X925 cores, both clusters, the largest power step
+  the wall meter can see and the strongest DRAM sharing) as the contention candidate, and **S2** (A on 5, B on 15:
+  one core each, cross L3) as the near-additive control.
+- Stage 2 as in section 6 but **3 rounds per configuration** (not 10): IDLE, A, B, AB shuffled per round with
+  `ty_energy_window --plan` (seeds `0x7459520001` for S6, `0x7459520002` for S2), 30 s windows, 2 s settle, 3 s
+  between windows, `ty_energy_window` and `ty_workload` unchanged. The whole run is one
+  `quiet-measure spark-receipt tyw -- tools/ty_energy_wall_run.sh OUT` invocation.
+- Energy per window, wall channel: `E_w = mean UPS W over sensor rows inside [GO, GO + planned] x planned`, with
+  the window's monotonic GO time mapped to epoch time by an offset recorded by the driver right before each window
+  (`date +%s%N` beside `/proc/uptime`, 10 ms resolution; the box does not suspend). `tools/ty_energy_wall.c`
+  computes it; package energy is UNAVAILABLE and printed as such.
+- Per round `I_r = E_AB - E_A - E_B + E_0` on the wall channel; mean over valid rounds with 95% Student-t interval
+  (2 degrees of freedom, t = 4.303). A window is refused if a participant failed (`ok`, `oracle_ok`, `pinned`), if it
+  has fewer than 10 sensor rows inside its 30 s, or if the offset cannot be read. Slowdowns
+  `s_X = 1 - calls_X(AB) / calls_X(solo)` are reported per round from the PMU-independent call counts.
+- **Check (a), wall form:** PASS iff all 3 rounds are valid and the 95% half-width of mean I_wall is <= 2% of mean
+  E_AB wall. I is distinguishable from zero iff the interval excludes zero. Prediction: FAIL. Reason: the UPS
+  meter steps by 10 W and other tenants on the shared box (load 5 to 25 today) move the wall draw by tens of watts
+  between windows, against an expected AB step of about 30 to 60 W for S6, so the half-width of I will be several
+  percent of E_AB or more; I for S2 is expected indistinguishable from zero.
+- **Check (b) is NOT RUN**: the counter model has three parameters and 3 rounds give 9 fit windows on a meter whose
+  noise is set by other tenants; a fit there would not test the attribution model. It waits for the package meter.
+
+The hostile fixture tests (`make test-turing-energy`) are run unchanged and reported.
