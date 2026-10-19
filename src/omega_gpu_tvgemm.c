@@ -40,6 +40,12 @@ int omega_gpu_tv_spec_x(uint32_t rows, uint32_t xform, uint32_t n, uint32_t k, O
     /* rt * ct >= 4 (HMMA spacing); 8 warps unless the A staging slots do not divide (rt 1: 4 warps) */
     spec->ct = g.ct ? g.ct : spec->rt >= 4u ? 2u : 4u / spec->rt;
     spec->warps = g.warps ? g.warps : spec->rt == 1u ? 4u : 8u;
+    if (!g.warps) {
+        /* blocks = n / (warps * 8 * ct) on 48 SMs: a narrow output (down, o_proj, qkv, mixer) needs fewer warps per block so every SM has
+           several blocks (measured, evidence tv8-down/amix-sweep: down 32 rows 583 -> 538 us, mixer 453 -> 414 us) */
+        if (spec->rt == 1u) { if (n / (spec->warps * 8u * spec->ct) < 64u) spec->warps = 2u; }
+        else while (spec->warps > 2u && n / (spec->warps * 8u * spec->ct) < 144u) spec->warps /= 2u;
+    }
     spec->mutant = g.mutant;
     if (!omega_tcgemm_spec_ok(spec)) return -1;
     if (n % omega_tcgemm_span(spec) || n % 128u) return -1;
