@@ -5,33 +5,93 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int omega_exec_native_f3(const RealizationObject *real, uint64_t a, uint64_t b, uint64_t c, uint64_t *out_res) {
-    if (!real || !out_res || real->code_len == 0) return -1;
+#include <pthread.h>
+
+typedef uint64_t (*OmegaExecFn3)(uint64_t, uint64_t, uint64_t);
+
+/* One resident executable mapping. Identity is the exact code bytes. */
+typedef struct {
+    void *mem;
+    size_t alloc_size;
+    size_t code_len;
+    uint8_t code[AARCH64_MAX_CODE_BYTES];
+    uint64_t last_use;
+} ExecSlot;
+
+static pthread_mutex_t g_cache_mu = PTHREAD_MUTEX_INITIALIZER;
+static ExecSlot g_slots[OMEGA_EXEC_CACHE_SLOTS];
+static OmegaExecCacheStats g_stats;
+static uint64_t g_tick;
+
+static void slot_drop(ExecSlot *s) {
+    if (s->mem) { munmap(s->mem, s->alloc_size); g_stats.resident--; }
+    memset(s, 0, sizeof *s);
+}
+
+void omega_exec_native_cache_reset(void) {
+    pthread_mutex_lock(&g_cache_mu);
+    for (unsigned i = 0; i < OMEGA_EXEC_CACHE_SLOTS; i++) slot_drop(&g_slots[i]);
+    memset(&g_stats, 0, sizeof g_stats);
+    g_tick = 0;
+    pthread_mutex_unlock(&g_cache_mu);
+}
+
+void omega_exec_native_cache_stats(OmegaExecCacheStats *out) {
+    if (!out) return;
+    pthread_mutex_lock(&g_cache_mu);
+    *out = g_stats;
+    pthread_mutex_unlock(&g_cache_mu);
+}
 
 #if defined(__aarch64__)
+/* Returns the slot holding these bytes, mapping them if needed; NULL on a mapping failure.
+ * Victim choice: the first empty slot, else the least recently used. */
+static ExecSlot *slot_acquire(const RealizationObject *real) {
+    ExecSlot *empty = NULL, *lru = NULL;
+    for (unsigned i = 0; i < OMEGA_EXEC_CACHE_SLOTS; i++) {
+        ExecSlot *s = &g_slots[i];
+        if (s->mem && s->code_len == real->code_len && memcmp(s->code, real->code_bytes, real->code_len) == 0) {
+            s->last_use = ++g_tick;
+            g_stats.hits++;
+            return s;
+        }
+        if (!s->mem) { if (!empty) empty = s; }
+        else if (!lru || s->last_use < lru->last_use) lru = s;
+    }
+    ExecSlot *victim = empty ? empty : lru;
+    if (victim->mem) { slot_drop(victim); g_stats.evictions++; }
+
     size_t page_size = (size_t)sysconf(_SC_PAGESIZE);
     size_t alloc_size = (real->code_len + page_size - 1) & ~(page_size - 1);
-
     void *mem = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-    if (mem == MAP_FAILED) return -1;
-
+    if (mem == MAP_FAILED) return NULL;
     memcpy(mem, real->code_bytes, real->code_len);
     __builtin___clear_cache((char*)mem, (char*)mem + real->code_len);
+    if (mprotect(mem, alloc_size, PROT_READ | PROT_EXEC) != 0) { munmap(mem, alloc_size); return NULL; }
 
-    if (mprotect(mem, alloc_size, PROT_READ | PROT_EXEC) != 0) {
-        munmap(mem, alloc_size);
-        return -1;
-    }
+    victim->mem = mem;
+    victim->alloc_size = alloc_size;
+    victim->code_len = real->code_len;
+    memcpy(victim->code, real->code_bytes, real->code_len);
+    victim->last_use = ++g_tick;
+    g_stats.misses++;
+    g_stats.resident++;
+    return victim;
+}
+#endif
 
-    typedef uint64_t (*Fn3)(uint64_t, uint64_t, uint64_t);
-    union {
-        void *ptr;
-        Fn3 fn;
-    } u;
-    u.ptr = mem;
+int omega_exec_native_f3(const RealizationObject *real, uint64_t a, uint64_t b, uint64_t c, uint64_t *out_res) {
+    if (!real || !out_res || real->code_len == 0 || real->code_len > AARCH64_MAX_CODE_BYTES) return -1;
+
+#if defined(__aarch64__)
+    union { void *ptr; OmegaExecFn3 fn; } u;
+    pthread_mutex_lock(&g_cache_mu);
+    ExecSlot *s = slot_acquire(real);
+    if (!s) { pthread_mutex_unlock(&g_cache_mu); return -1; }
+    u.ptr = s->mem;
+    /* Held under the lock: no other thread can unmap this slot during the (short) call. */
     *out_res = u.fn(a, b, c);
-
-    munmap(mem, alloc_size);
+    pthread_mutex_unlock(&g_cache_mu);
     return 0;
 #else
     (void)a; (void)b; (void)c;
