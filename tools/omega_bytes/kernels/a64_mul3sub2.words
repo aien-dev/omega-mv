@@ -1,0 +1,7 @@
+# a64: return a*3 - 2 (the M5 example). Hand-written AArch64 words, one per line.
+# Argument a arrives in X0; the answer leaves in X0. X9 is a scratch register.
+0xD2800069   # MOVZ X9, #3        put 3 in X9
+0x9B097C00   # MUL  X0, X0, X9    X0 = a * 3   (MADD X0, X0, X9, XZR)
+0xD2800049   # MOVZ X9, #2        put 2 in X9
+0xCB090000   # SUB  X0, X0, X9    X0 = a*3 - 2
+0xD65F03C0   # RET                back to the caller
