@@ -224,7 +224,9 @@ int omega_gpu_platform_check_buffer(const OmegaGpuBufferDesc *d, const OmegaGpuP
 
 /* ---- handle table (index + generation) ----------------------------------- */
 
-#define OMEGA_GPU_HANDLE_SLOTS 1024u /* 1.1: a serving session holds one buffer per weight tensor (Qwen3-8B: ~260) */
+#define OMEGA_GPU_HANDLE_SLOTS 4096u /* 1.1: a serving session holds one buffer per weight tensor (Qwen3-8B: ~260); 4096 = physics NVRM_MAX_LIVE, so a
+                                       * streamed model with per-conversation state (Qwen3.8 drum, 16 conversations: ~3,500) fits and the
+                                       * nvrm live table stays the clean backstop */
 
 typedef struct {
     uint32_t generation[OMEGA_GPU_HANDLE_SLOTS]; /* next generation to issue for the slot; starts at 1 */

@@ -1,0 +1,115 @@
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_engine.o src/omega_gpu_engine.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_platform.o src/omega_gpu_platform.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_blackwell_encoder.o src/omega_blackwell_encoder.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_blackwell_codegen.o src/omega_blackwell_codegen.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_blackwell_matmul.o src/omega_blackwell_matmul.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_blackwell_qmd.o src/omega_blackwell_qmd.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_blackwell_realize.o src/omega_blackwell_realize.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/sha256.o src/sha256.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_session.o src/omega_gpu_session.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_fmt.o src/omega_gpu_fmt.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_matmul_api.o src/omega_gpu_matmul_api.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_attention_api.o src/omega_gpu_attention_api.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_serving.o src/omega_gpu_serving.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_wait.o src/omega_gpu_wait.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_NUMERIC_CPU_ONLY -DOMEGA_GPU_NO_POSIX \
+	-o build/test_omega_gpu_engine_freestanding tests/test_omega_gpu_engine.c build/gpu_fs/omega_gpu_engine.o
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o build/test_omega_gpu_platform tests/test_omega_gpu_platform.c build/gpu_fs/omega_gpu_platform.o
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -pthread -Isrc -Itests -I/home/drakestapleton/workspace/physics-6d7cf0d4/m16 -I/home/drakestapleton/workspace/physics-6d7cf0d4/nvrm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include \
+	-o build/test_omega_gpu_platform_linux tests/test_omega_gpu_platform_linux.c tests/fake_m16_native.c src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c src/omega_gpu_fmt.c src/omega_blackwell_qmd.c src/omega_gpu_mem_cached.c src/omega_gpu_cmdlist.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_matmul.c src/omega_blackwell_realize.c src/sha256.c -lm
+gcc -r -nostdlib -o build/gpu_fs/omega_gpu_freestanding.o build/gpu_fs/omega_gpu_engine.o build/gpu_fs/omega_gpu_platform.o build/gpu_fs/omega_blackwell_encoder.o build/gpu_fs/omega_blackwell_codegen.o build/gpu_fs/omega_blackwell_matmul.o build/gpu_fs/omega_blackwell_qmd.o build/gpu_fs/omega_blackwell_realize.o build/gpu_fs/sha256.o build/gpu_fs/omega_gpu_session.o build/gpu_fs/omega_gpu_fmt.o build/gpu_fs/omega_gpu_matmul_api.o build/gpu_fs/omega_gpu_attention_api.o build/gpu_fs/omega_gpu_serving.o build/gpu_fs/omega_gpu_wait.o
+freestanding GPU link (14 files): only memcpy memset strcmp strlen undefined
+./build/test_omega_gpu_engine_freestanding
+[PASS] SUCCESS_FULL_RUN
+[PASS] CALL_ORDER_FULL_RUN
+[PASS] STATE_ADVANCES_STEP_BY_STEP
+[PASS] ROLES_BYTES_AND_REVERSE_FREE_ORDER
+[PASS] PER_STEP_TIMEOUTS_FROM_JOB
+[PASS] POISON_WRITTEN_BEFORE_SUBMIT
+[PASS] NO_C3_SKIPS_MARKER2_ONLY
+[PASS] FAIL_DEVICE_OPEN
+[PASS] FAIL_CHANNEL_CREATE
+[PASS] FAIL_ALLOC
+[PASS] FAIL_PREPARE_COPY_IN
+[PASS] FAIL_PREPARE_FILL_POISON
+[PASS] FAIL_PREPARE_BUILD
+[PASS] FAIL_SUBMIT_IS_NOT_UNCERTAIN
+[PASS] FAIL_VISIBILITY_BARRIER
+[PASS] FAIL_VISIBILITY_COPY_OUT
+[PASS] UNCERTAIN_MARKER_TIMEOUT
+[PASS] UNCERTAIN_BLOCKS_NEXT_JOB_NO_BACKEND_CALL
+[PASS] UNCERTAIN_TEST_RESET_CLEARS_BLOCK
+[PASS] UNCERTAIN_MARKER2_UNKNOWN_STATE
+[PASS] UNCERTAIN_RELEASE_DRIVER_FAULT
+[PASS] UNCHANGED_NOTHING_WRITTEN
+[PASS] UNCHANGED_PARTIAL_EXACT_COUNT
+[PASS] UNCHANGED_LAST_WORD_ONLY
+[PASS] UNCHANGED_FIRST_WORD_ONLY
+[PASS] UNCHANGED_ALL_WRITTEN_IS_SUCCESS
+[PASS] UNCHANGED_NEEDS_POISON_FILL
+[PASS] CLEANUP_FREE_FAILS_AFTER_GOOD_RUN
+[PASS] CLEANUP_CLOSE_FAILS_AFTER_GOOD_RUN
+[PASS] CLEANUP_FIRST_CLEANUP_FAULT_KEPT
+[PASS] CLEANUP_FAULT_NEVER_OVERWRITES_FIRST_FAILURE
+[PASS] CLEANUP_FAULT_AFTER_UNCHANGED_KEEPS_UNCHANGED
+[PASS] INVALID_ARGS_PROGRAM
+[PASS] INVALID_ARGS_LAYOUT
+[PASS] INVALID_ARGS_ZERO_ELEMENTS
+[PASS] INVALID_ARGS_BUFFERS
+[PASS] INVALID_ARGS_OUTPUT_ALIGNMENT
+[PASS] INVALID_ARGS_POISON
+[PASS] INVALID_ARGS_UNKNOWN_FLAG
+[PASS] INVALID_ARGS_ZERO_MARKER_TIMEOUT
+[PASS] INVALID_ARGS_ZERO_RELEASE_TIMEOUT
+[PASS] INVALID_ARGS_ZERO_VISIBILITY_TIMEOUT
+[PASS] INVALID_ARGS_ZERO_MARKER2_TIMEOUT_WITH_C3
+[PASS] INVALID_ARGS_NULL_JOB
+[PASS] INVALID_ARGS_NULL_RESULT
+[PASS] BLOCKED_REFUSES_BEFORE_ANY_CHECK_OR_CALL
+[PASS] BLOCK_RESET_ALLOWS_JOBS_AGAIN
+[PASS] NO_BACKEND_NOT_IMPLEMENTED
+[PASS] BACKEND_TABLE_INCOMPLETE_REFUSED
+[PASS] FREESTANDING_NO_CLOCK_REFUSED_BEFORE_ANY_CALL
+SUMMARY passed=50 failed=0
+./build/test_omega_gpu_platform
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_GPU_NO_POSIX -o build/test_omega_gpu_session_platform tests/test_omega_gpu_session_platform.c build/gpu_fs/omega_gpu_freestanding.o
+PASS REFUSAL_NAMES_DISTINCT
+PASS NEGOTIATE_ABI_SERVICES_LIMITS
+PASS SERVICE_TABLE_MATCHES_CLAIMS_NO_HIDDEN_FALLBACK
+PASS SESSION_SERVICES_ABI_1_1_POLLING_NOT_IRQ
+PASS BUFFER_DESC_KIND_LENGTH_RIGHTS_CACHE
+PASS HANDLES_TYPED_GENERATIONED_LIMITED
+PASS HANDLE_AND_ADDRESS_SHAPES
+SUMMARY passed=7 failed=0
+mutant release-when-latched killed: 1 case(s) failed
+mutant ignore-cancel killed: 1 case(s) failed
+mutant no-latch-on-timeout killed: 2 case(s) failed
+mutant stale-not-counted killed: 1 case(s) failed
+mutant marker-not-polled killed: 6 case(s) failed
+mutant close-while-latched killed: 3 case(s) failed
+test-gpu-session-mutants: 6 of 6 mutants killed
+./build/test_omega_gpu_session_platform
+PASS INSTALL_REFUSALS_ABI_1_1
+PASS FREESTANDING_NO_DEFAULT_PLATFORM
+PASS OPEN_LAUNCH_CLOSE_TYPED_UNCACHED_POLLING
+PASS OPEN_FAILURE_KEEPS_DRIVER_TEXT
+PASS CANCEL_BEFORE_SUBMIT_NOT_LATCHED
+PASS CANCEL_AFTER_SUBMIT_LATCHES_AND_PARKS
+PASS TIMEOUT_PARKS_NEVER_RELEASES
+PASS TIMEOUT_LATCH_REFUSES_CLOSE_REOPEN_INSTALL
+PASS STALE_HANDLE_REFUSED_AFTER_CLOSE_REOPEN
+PASS SERVING_RESERVATION_REFUSES_WITHOUT_ALLOC
+PASS MATMUL_CODE_BUFFER_ENCODED_IN_PLACE
+PASS WAIT_REFUSES_WITHOUT_CLOCK
+PASS FMT_BOUNDED_MATCHES_SNPRINTF
+test_omega_gpu_session_platform: 13 passed, 0 failed
+./build/test_omega_gpu_platform_linux
+PASS LINUX_REF_CAPS_NO_MMIO_NO_IRQ
+PASS HOSTED_DEFAULT_IS_LINUX_REFERENCE
+PASS SAME_DRIVER_CALLS_AND_ORDER_AS_BEFORE
+PASS REFERENCE_REFUSALS_CACHED_POLLED_RING_STALE
+PASS OPEN_FAILURE_KEEPS_DRIVER_TEXT
+PASS MARKER_NEVER_LATCHES_AND_PARKS
+PASS L2_INVAL_PREFIX_ONCE_AFTER_CACHED_HOST_WRITE
+PASS CMDLIST_NEAR_CAP_SUBMITS_WITH_L2_INVAL_PENDING
+test_omega_gpu_platform_linux (reference only, simulated driver): 8 passed, 0 failed
