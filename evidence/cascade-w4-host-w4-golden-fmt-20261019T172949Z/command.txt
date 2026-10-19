@@ -1,0 +1,1 @@
+spark-receipt cascade-w4-host-golden-fmt -- nice -n 19 ionice -c3 /home/drakestapleton/workspace/targets/cascade-w4b/sc-h2/release/qwen38_w4_host /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/ab-w4-work/seq/golden.json out.json --rules floor,nvfp4,int3

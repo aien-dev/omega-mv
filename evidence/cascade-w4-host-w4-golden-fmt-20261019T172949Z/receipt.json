@@ -1,0 +1,22 @@
+{
+ "name": "cascade-w4-host-golden-fmt",
+ "cmd": "nice -n 19 ionice -c3 /home/drakestapleton/workspace/targets/cascade-w4b/sc-h2/release/qwen38_w4_host /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/ab-w4-work/seq/golden.json out.json --rules floor,nvfp4,int3",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T12:29:49.494462",
+ "seconds": 567.224,
+ "samples": 257,
+ "wall_W_mean": 257.6653696498054,
+ "wall_J": 146153.89359598493,
+ "idle_W_before": 250.0,
+ "incremental_J": 4347.979015162935,
+ "gpu_W_mean": 13.660661478599222,
+ "gpu_util_mean": 29.63035019455253,
+ "load1_start": "96.92",
+ "load1_end": "72.75",
+ "mem_avail_kB_start": "49210952",
+ "mem_avail_kB_end": "24829004",
+ "lock_holders_max": 15,
+ "nvrm_errors_delta": 5,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
