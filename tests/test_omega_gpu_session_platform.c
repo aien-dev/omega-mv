@@ -296,6 +296,8 @@ static void check_latched(unsigned frees_before) {
     OmegaGpuMem m = {0};
     omega_gpu_session_lock();
     EXPECT(omega_gpu_session_alloc(64, &m) != 0); /* no new allocation after a latch */
+    /* omega-mv#580: the refusal names the latch, not a closed device (the roll test read "alloc without open device") */
+    EXPECT(strstr(omega_gpu_session_last_error(), "process latched") != NULL);
     omega_gpu_session_unlock();
     EXPECT(fk.frees == frees_before);
     omega_gpu_session_close();

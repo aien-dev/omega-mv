@@ -1,0 +1,5 @@
+ok: object built from the pinned physics
+FAIL: PHYSICS_DIR switch kept the stale nvrm.o (the omega-mv#580 failure)
+ok: switching back rebuilt from the pinned physics
+ok: same physics, nothing rebuilt
+PHYSICS_STAMP_TEST: FAIL

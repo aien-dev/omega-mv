@@ -223,7 +223,7 @@ static size_t page_up(size_t b) { b = (b + PAGE - 1) & ~(PAGE - 1); return b < P
 static int mem_alloc(uint32_t kind, uint32_t rights, size_t bytes, OmegaGpuMem *out) {
     const OmegaGpuPlatform *p = LOAD(g_p);
     memset(out, 0, sizeof *out);
-    if (!g_open || LOAD(g_blocked) || !p) { omega_gpu_session_set_error("alloc without open device"); return -1; }
+    if (!g_open || LOAD(g_blocked) || !p) { omega_gpu_session_set_error(LOAD(g_blocked) ? "process latched" : "alloc without open device"); return -1; }
     const size_t want = page_up(bytes);
     OmegaGpuBufferDesc d = {.kind = kind, .rights = rights, .gpu_cache = OMEGA_GPU_CACHE_GPU_UNCACHED, .align = (uint32_t)PAGE, .bytes = want};
     OmegaCpuView cpu; OmegaGpuVa va; OmegaGpuBusAddr bus; /* the bus address never leaves this function */

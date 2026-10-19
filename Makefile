@@ -5,6 +5,16 @@ OUT_DIR ?= build
 -include mk/*.mk
 PHYSICS_LOCK_CHECK ?= 1
 
+# Physics identity stamp (omega-mv#580 root cause, 2026-10-19). make compares mtimes only, so switching
+# PHYSICS_DIR to a tree whose sources are older than the objects already built kept nvrm.o and m16_native.o
+# from the previous tree: a build dir first built from ../physics (no 6d7cf0d4 GPU-uncached GPFIFO/USERD fix)
+# stayed stale after `make PHYSICS_DIR=<pinned>`, and the roll chip test timed out on its first marker.
+# Every object now depends on a stamp that changes whenever the physics commit or its nvrm/m16 sources change.
+# tests/test_physics_stamp.sh (make test-physics-stamp) is the guard.
+PHYS_ID := $(shell { git -C $(PHYSICS_DIR) rev-parse HEAD 2>/dev/null; cat $(PHYSICS_DIR)/nvrm/nvrm.c $(PHYSICS_DIR)/nvrm/nvrm.h $(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/m16/m16_native.h 2>/dev/null; } | sha256sum | cut -c1-64)
+PHYS_STAMP := $(OUT_DIR)/physics.stamp
+$(shell mkdir -p $(OUT_DIR); [ "$$(cat $(PHYS_STAMP) 2>/dev/null)" = "$(PHYS_ID)" ] || echo "$(PHYS_ID)" > $(PHYS_STAMP))
+
 CFLAGS ?= -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc \
 	-I$(PHYSICS_DIR)/m16 -I$(PHYSICS_DIR)/nvrm \
 	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc \
@@ -98,13 +108,13 @@ check-physics-lock:
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
-$(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
+$(OUT_DIR)/%.o: src/%.c $(PHYS_STAMP) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
+$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c $(PHYS_STAMP) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c | $(OUT_DIR)
+$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c $(PHYS_STAMP) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OUT_DIR)/crumbline/%.o: src/crumbline/%.c | $(OUT_DIR)
@@ -2578,6 +2588,9 @@ $(GPU_PFHOST_TEST): tests/gpu_pfhost_test.c tests/bw_warp_sim_tc.h src/omega_gpu
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_pfhost_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 # OWN-30B W-L2 (2026-10-13): command list (many launches, one submission) + decode glue kernels. test-gpu-cmdlist is
 # host-only + warp simulator; the chip gate is tools/run_gpu_cmdlist_chip.sh under the GB10 lock.
+.PHONY: test-physics-stamp
+test-physics-stamp:
+	tests/test_physics_stamp.sh $(PHYSICS_DIR)
 .PHONY: test-gpu-cmdlist
 GPU_CMDLIST_TEST = $(OUT_DIR)/gpu_cmdlist_test
 $(GPU_CMDLIST_TEST): tests/gpu_cmdlist_test.c tests/bw_warp_sim_k.h src/omega_gpu_cmdlist.h src/omega_blackwell_codegen_dec.h $(OUT_DIR)/libomega_gpu.a

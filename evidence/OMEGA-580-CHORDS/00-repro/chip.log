@@ -1,0 +1,13 @@
+# repro 2026-10-19T11:32:35-05:00 loadavg=11.90 12.36 16.06 head=72e19a13 physics=6d7cf0d4 MemAvailable=67340296
+L=64: baseline 103.7 us/launch (chip 103.7 us, wall 104.1 us per launch); PCAS ok 3.24 us/launch (wall 3.25, 1 submits); INLINE ok 4.87 us/launch (1 submits)
+L=289: baseline 104.1 us/launch (chip 104.1 us, wall 104.6 us per launch); PCAS ok 2.85 us/launch (wall 2.86, 1 submits); INLINE ok 3.95 us/launch (4 submits)
+L=1024: baseline 104.3 us/launch (chip 104.3 us, wall 104.8 us per launch); PCAS ok 2.81 us/launch (wall 2.82, 1 submits); INLINE ok 3.95 us/launch (13 submits)
+negative control skip_launch=33: rc -1 first_missing 32 sems_done 63/64 x x0+63a
+heavy chain (32 x 1M elements): WFI rc 0 0 differ 1450.7 us; BARRIER_NONE rc 0 21632 differ 1445.3 us (informational: grids overlapped without the barrier: the WFI is load-bearing)
+glue list tie 0: rc 0, 5 launches in 1 submit(s) 109.7 us chip; x identical, y 0 bad, act 0 bad, argmax 45508 (ref 45508)
+glue list tie 1: rc 0, 5 launches in 1 submit(s) 106.7 us chip; x identical, y 0 bad, act 0 bad, argmax 1007 (ref 1007)
+chip mutant 1: rc 0, x same, y 2048 bad, argmax 1007 (ref 1007): caught
+chip mutant 2: rc 0, x differs, y 2047 bad, argmax 1007 (ref 1007): caught
+chip mutant 3: rc 0, x same, y 0 bad, argmax 83730 (ref 1007): caught
+chip: 31 checks, 0 failed: PASS
+# exit=0 2026-10-19T11:42:18-05:00

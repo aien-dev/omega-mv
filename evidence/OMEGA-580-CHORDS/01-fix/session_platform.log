@@ -1,0 +1,38 @@
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/gpu_fs/omega_gpu_session.o src/omega_gpu_session.c
+gcc -r -nostdlib -o build/gpu_fs/omega_gpu_freestanding.o build/gpu_fs/omega_gpu_engine.o build/gpu_fs/omega_gpu_platform.o build/gpu_fs/omega_blackwell_encoder.o build/gpu_fs/omega_blackwell_codegen.o build/gpu_fs/omega_blackwell_matmul.o build/gpu_fs/omega_blackwell_qmd.o build/gpu_fs/omega_blackwell_realize.o build/gpu_fs/sha256.o build/gpu_fs/omega_gpu_session.o build/gpu_fs/omega_gpu_fmt.o build/gpu_fs/omega_gpu_matmul_api.o build/gpu_fs/omega_gpu_attention_api.o build/gpu_fs/omega_gpu_serving.o build/gpu_fs/omega_gpu_wait.o
+freestanding GPU link (14 files): only memcpy memset strcmp strlen undefined
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_GPU_NO_POSIX -o build/test_omega_gpu_session_platform tests/test_omega_gpu_session_platform.c build/gpu_fs/omega_gpu_freestanding.o
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -pthread -Isrc -Itests -I/home/drakestapleton/workspace/physics-6d7cf0d4/m16 -I/home/drakestapleton/workspace/physics-6d7cf0d4/nvrm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include \
+	-o build/test_omega_gpu_platform_linux tests/test_omega_gpu_platform_linux.c tests/fake_m16_native.c src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c src/omega_gpu_fmt.c src/omega_blackwell_qmd.c src/omega_gpu_mem_cached.c src/omega_gpu_cmdlist.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_matmul.c src/omega_blackwell_realize.c src/sha256.c -lm
+mutant release-when-latched killed: 1 case(s) failed
+mutant ignore-cancel killed: 1 case(s) failed
+mutant no-latch-on-timeout killed: 2 case(s) failed
+mutant stale-not-counted killed: 1 case(s) failed
+mutant marker-not-polled killed: 6 case(s) failed
+mutant close-while-latched killed: 3 case(s) failed
+test-gpu-session-mutants: 6 of 6 mutants killed
+./build/test_omega_gpu_session_platform
+PASS INSTALL_REFUSALS_ABI_1_1
+PASS FREESTANDING_NO_DEFAULT_PLATFORM
+PASS OPEN_LAUNCH_CLOSE_TYPED_UNCACHED_POLLING
+PASS OPEN_FAILURE_KEEPS_DRIVER_TEXT
+PASS CANCEL_BEFORE_SUBMIT_NOT_LATCHED
+PASS CANCEL_AFTER_SUBMIT_LATCHES_AND_PARKS
+PASS TIMEOUT_PARKS_NEVER_RELEASES
+PASS TIMEOUT_LATCH_REFUSES_CLOSE_REOPEN_INSTALL
+PASS STALE_HANDLE_REFUSED_AFTER_CLOSE_REOPEN
+PASS SERVING_RESERVATION_REFUSES_WITHOUT_ALLOC
+PASS MATMUL_CODE_BUFFER_ENCODED_IN_PLACE
+PASS WAIT_REFUSES_WITHOUT_CLOCK
+PASS FMT_BOUNDED_MATCHES_SNPRINTF
+test_omega_gpu_session_platform: 13 passed, 0 failed
+./build/test_omega_gpu_platform_linux
+PASS LINUX_REF_CAPS_NO_MMIO_NO_IRQ
+PASS HOSTED_DEFAULT_IS_LINUX_REFERENCE
+PASS SAME_DRIVER_CALLS_AND_ORDER_AS_BEFORE
+PASS REFERENCE_REFUSALS_CACHED_POLLED_RING_STALE
+PASS OPEN_FAILURE_KEEPS_DRIVER_TEXT
+PASS MARKER_NEVER_LATCHES_AND_PARKS
+PASS L2_INVAL_PREFIX_ONCE_AFTER_CACHED_HOST_WRITE
+PASS CMDLIST_NEAR_CAP_SUBMITS_WITH_L2_INVAL_PENDING
+test_omega_gpu_platform_linux (reference only, simulated driver): 8 passed, 0 failed

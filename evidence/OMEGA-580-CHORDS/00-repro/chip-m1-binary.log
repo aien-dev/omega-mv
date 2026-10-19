@@ -1,0 +1,10 @@
+# exact m1 binary (10:08:37 build) 2026-10-19T11:43:03-05:00 loadavg=30.28 23.75 20.55
+FAIL: baseline launch: marker wait timed out (latched)
+FAIL: negative control: skipped launch 32 caught (rc -1, first_missing -1, sems_done 0)
+FAIL: negative control: x == x0 + 63 a (the other 63 launches ran)
+negative control skip_launch=33: rc -1 first_missing -1 sems_done 0/64 x UNEXPECTED
+FAIL: heavy chain with WFI: rc -1, 1048576 of 1048576 elements differ
+heavy chain (32 x 1M elements): WFI rc -1 1048576 differ 0.0 us; BARRIER_NONE rc -1 1048576 differ 0.0 us (informational: grids overlapped without the barrier: the WFI is load-bearing)
+FAIL: alloc glue: alloc without open device
+chip: 5 checks, 5 failed: FAIL
+# exit=1 2026-10-19T11:51:58-05:00
