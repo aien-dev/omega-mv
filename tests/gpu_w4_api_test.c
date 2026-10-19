@@ -3,7 +3,7 @@
  *   ./gpu_w4_api_test --host-only   e2m1 bits for all 16 codes, rounding, converter, codegen budgets for every shape
  *   ./gpu_w4_api_test --sim         the kernel through tests/bw_warp_sim.h: one-hot codes, parity, mutants 1..6 red
  *   ./gpu_w4_api_test --chip [--reps N] [--out f.json] [--fp8]
- *                                   chip parity at every Qwen3.8-27B shape, one-hot codes (subnormals 1 and 9),
+ *                                   chip parity at every Qwen3.8-27B shape incl. the lm_head, one-hot codes (subnormals 1 and 9),
  *                                   mutants red, then timing: weight GB/s against 273; --fp8 also times the FP8 kernel
  *                                   on the same shapes in the same process (same method, same session)
  *   --shape LB ROWS WARPS, --sched S, --coal C, --ctas N: kernel knobs for sweeps
@@ -221,6 +221,7 @@ typedef struct { uint32_t n, k; const char *name; } ChipPoint;
 static const ChipPoint g_pts[] = {
     { 16384, 5120, "gdn mix 16384x5120" }, { 14336, 5120, "attn mix 14336x5120" }, { 5120, 6144, "o_proj 5120x6144" },
     { 34816, 5120, "gate_up 34816x5120" }, { 5120, 17408, "down 5120x17408" },
+    { 248320, 5120, "lm_head 248320x5120" }, /* cascade/w4-gemv: the word-scoring head (set_lm_head_w4), 636 MB of nibbles */
 };
 
 static double median_ns(uint64_t *v, uint32_t n) { qsort(v, n, sizeof *v, cmp_u64); return (double)v[n / 2]; }
