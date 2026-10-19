@@ -1,0 +1,5 @@
+omega head b28b09a0ade23c0f8da7c8d80b42a49d2797d17c
+test binary /home/drakestapleton/workspace/targets/dflash/omega/gpu_dynconv_test sha256 801b2c5a2242261cbca0c3a24a2fc00c001f59d0800c96bdcde1ac5d1d8d18bc
+library /home/drakestapleton/workspace/targets/dflash/omega/libomega_gpu.a sha256 78d6e08945c23c96e8f7ede36d32f345a148d96dce571c211a5364b2cb2a6c0a
+physics /home/drakestapleton/workspace/physics-6d7cf0d4 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
+build: make OUT_DIR=/home/drakestapleton/workspace/targets/dflash/omega PHYSICS_DIR=/home/drakestapleton/workspace/physics-6d7cf0d4 /home/drakestapleton/workspace/targets/dflash/omega/libomega_gpu.a /home/drakestapleton/workspace/targets/dflash/omega/gpu_dynconv_test
