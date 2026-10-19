@@ -160,6 +160,7 @@ case "$step" in
     make "test-$step" | tee "build/gate-$step.log"
     gates_pass "build/gate-$step.log"
     ;;
+  memfrag)            make $NOPHYS test-memfrag ;;
   # rx-host.yml
   rx-host-reference)
     pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
