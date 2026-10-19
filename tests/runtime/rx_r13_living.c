@@ -98,6 +98,9 @@ typedef struct {
     int op_gate_held, op_restored, ready;
     atomic_ullong op_halt_since, op_halt_total;   /* ns; stopped time is not run time */
     atomic_int op_shutdown, op_teardown;
+    /* POSITIVE: what production did while the promotion barrier was held
+     * (barrier_watch, on the store executor). */
+    uint64_t barrier_calls, barrier_commits, barrier_wait_ns;
 } Rig;
 static int g_stage;
 typedef struct {
@@ -740,6 +743,31 @@ static void *producer_main(void *arg) {
     return NULL;
 }
 
+/* The store calls this on its executor inside the promotion barrier: the
+ * barrier lock is held and the candidate is closing, after the candidate is
+ * written and before the root flips (as R15 G7 does). It waits until
+ * production has committed three more requests, at most 3 s (under the
+ * producer's 5 s request limit, so a stop is reported here). Without it the
+ * window is as long as the barrier's disk work, and on a tmpfs state
+ * directory (the judge's /tmp) that is about 0.35 ms: whether a request
+ * lands in it measured the scheduler, not the barrier. A barrier that stops
+ * production cannot pass: nothing commits while it is held, the wait runs
+ * out, and the check finds fewer than three. (A request stuck behind such a
+ * stop commits the moment it ends, before the promotion crumb, so the
+ * window count alone could not see it.) It reads one counter, takes no lock. */
+static void barrier_watch(const char *dir, void *ctx) {
+    (void)dir;
+    Rig *r = ctx;
+    const uint64_t *commits = &r->w.reactions[r->omega.r_serve].commits;
+    uint64_t c0 = __atomic_load_n(commits, __ATOMIC_RELAXED), t0 = now_ns();
+    while (__atomic_load_n(commits, __ATOMIC_RELAXED) < c0 + 3 &&
+           now_ns() - t0 < 3000000000ull)
+        pause_us(50);
+    r->barrier_calls++;
+    r->barrier_commits = __atomic_load_n(commits, __ATOMIC_RELAXED) - c0;
+    r->barrier_wait_ns = now_ns() - t0;
+}
+
 static int start_producer(Rig *r) {
     atomic_store(&r->producer_stop, 0);
     if (pthread_create(&r->producer, NULL, producer_main, r) != 0) return -1;
@@ -1062,6 +1090,7 @@ static int run(Rig *r, int mode) {
     /* Production is a workload of its own, already running when the goal
      * arrives. From here this thread only observes. */
     if (start_producer(r) != 0) FAIL("producer");
+    if (mode == POSITIVE) rx_gen_set_disk_hook(r->gen, barrier_watch, r);
     /* The environment changes (the body now runs on the X925 cores) and the
      * human states the goal. After this, the harness only serves and reads. */
     if (move_threads(&x) <= 0 || publish_placement(r, CLASS_X925) != 0 ||
@@ -1276,7 +1305,10 @@ static int run(Rig *r, int mode) {
     uint64_t during_gpu = production_between(r, gpu_input, evidence);
     uint64_t before_promotion = production_between(r, goal_crumb, promotion);
     /* The R9 barrier runs inside generation.promote. Production that committed
-     * between the candidate and its promotion shows it is not a global stop. */
+     * between the candidate and its promotion shows it is not a global stop.
+     * In POSITIVE the barrier is held until production commits (barrier_watch),
+     * so a live production always lands in this window; the watch must have run
+     * once, inside that barrier, and seen three commits while it was held. */
     uint64_t during_promotion = production_between(r, candidate, promotion);
     printf("R13 costs: incumbent %llu ns, target %llu ns, selected %llu ps, reference on new "
            "cores %llu ps, AIEN now expects %llu ns, goal status %llu\n",
@@ -1293,12 +1325,15 @@ static int run(Rig *r, int mode) {
 #endif
     if (mode == POSITIVE && (!during_aien || !during_omega ||
                              (need_gpu_overlap && !during_gpu) || !before_promotion ||
-                             !during_promotion))
+                             !during_promotion || r->barrier_calls != 1 ||
+                             r->barrier_commits < 3))
         FAIL("production intervals: AIEN=%llu Omega=%llu GPU=%llu before promotion=%llu "
-             "during promotion=%llu",
+             "during promotion=%llu (barrier watch: %llu calls, %llu commits in %llu us)",
              (unsigned long long)during_aien, (unsigned long long)during_omega,
              (unsigned long long)during_gpu, (unsigned long long)before_promotion,
-             (unsigned long long)during_promotion);
+             (unsigned long long)during_promotion, (unsigned long long)r->barrier_calls,
+             (unsigned long long)r->barrier_commits,
+             (unsigned long long)(r->barrier_wait_ns / 1000u));
     const RxCrumb *gpu_c = rx_world_crumb(&r->w, gpu);
 #ifdef R13_SILICON
     if (!r->seat || !gpu_c || gpu_c->worker != RX_SEAT_BLACKWELL)
