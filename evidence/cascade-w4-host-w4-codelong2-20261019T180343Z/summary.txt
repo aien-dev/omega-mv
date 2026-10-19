@@ -1,0 +1,22 @@
+host off: 305 positions in 356.3 s
+host floor: 305 positions in 319.9 s
+host mse: 305 positions in 268.5 s
+host nvfp4: 305 positions in 217.5 s
+host int3: 305 positions in 162.0 s
+floor: argmax 285/305, residual cosine min 0.467251, logits cosine min 0.403491, KL mean 0.05732 max 2.84893, NLL off 0.96401 floor 0.93122
+mse: argmax 286/305, residual cosine min 0.519593, logits cosine min 0.535142, KL mean 0.03649 max 1.20872, NLL off 0.96401 mse 0.94180
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-codelong-h1-20261019T133103Z/out.logits vs host off: logits cosine min 0.999224 mean 0.999778, KL mean 0.00025 max 0.00448, argmax 303/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-codelong-h1-20261019T133103Z/out.logits vs host floor: logits cosine min 0.402738 mean 0.983708, KL mean 0.05421 max 2.23297, argmax 283/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-codelong-h1-20261019T133103Z/out.logits vs host mse: logits cosine min 0.534526 mean 0.985786, KL mean 0.03757 max 1.27567, argmax 284/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-codelong-h1-20261019T133103Z/out.logits vs host nvfp4: logits cosine min 0.850675 mean 0.991381, KL mean 0.02264 max 1.35322, argmax 294/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-codelong-h1-20261019T133103Z/out.logits vs host int3: logits cosine min 0.559675 mean 0.947126, KL mean 0.20189 max 3.41319, argmax 268/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-W-20261019T160729Z/out.logits vs host off: logits cosine min 0.403902 mean 0.983711, KL mean 0.05729 max 2.84649, argmax 284/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-W-20261019T160729Z/out.logits vs host floor: logits cosine min 0.999288 mean 0.999773, KL mean 0.00027 max 0.00343, argmax 303/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-W-20261019T160729Z/out.logits vs host mse: logits cosine min 0.920735 mean 0.995286, KL mean 0.01314 max 1.04591, argmax 301/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-W-20261019T160729Z/out.logits vs host nvfp4: logits cosine min 0.523524 mean 0.980419, KL mean 0.05238 max 3.07319, argmax 285/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-W-20261019T160729Z/out.logits vs host int3: logits cosine min 0.468799 mean 0.943236, KL mean 0.21340 max 6.10938, argmax 271/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-WW-20261019T161302Z/out.logits vs host off: logits cosine min 0.402184 mean 0.978784, KL mean 0.05869 max 3.11345, argmax 286/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-WW-20261019T161302Z/out.logits vs host floor: logits cosine min 0.983769 mean 0.994920, KL mean 0.00627 max 0.08800, argmax 296/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-WW-20261019T161302Z/out.logits vs host mse: logits cosine min 0.915527 mean 0.990453, KL mean 0.01877 max 1.01130, argmax 294/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-WW-20261019T161302Z/out.logits vs host nvfp4: logits cosine min 0.520963 mean 0.975559, KL mean 0.05384 max 3.01732, argmax 283/305
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-WW-20261019T161302Z/out.logits vs host int3: logits cosine min 0.462918 mean 0.938755, KL mean 0.21055 max 6.01962, argmax 269/305

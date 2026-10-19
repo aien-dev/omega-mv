@@ -1,0 +1,22 @@
+{
+ "name": "cascade-w4-host-codelong2",
+ "cmd": "nice -n 19 ionice -c3 /home/drakestapleton/workspace/targets/cascade-w4b/sc-h2/release/qwen38_w4_host /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/ab-w4-work/seq/codelong.json out.json --rules floor,mse,nvfp4,int3 --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-codelong-h1-20261019T133103Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-W-20261019T160729Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-codelong-WW-20261019T161302Z/out.logits",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T13:03:43.949994",
+ "seconds": 1360.756,
+ "samples": 623,
+ "wall_W_mean": 275.7142857142857,
+ "wall_J": 375179.9163069044,
+ "idle_W_before": 302.85714285714283,
+ "incremental_J": -36934.81041363303,
+ "gpu_W_mean": 20.347560192616374,
+ "gpu_util_mean": 36.446227929374,
+ "load1_start": "77.60",
+ "load1_end": "51.59",
+ "mem_avail_kB_start": "55274864",
+ "mem_avail_kB_end": "35560120",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 44,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
