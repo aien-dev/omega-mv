@@ -1,0 +1,67 @@
+tv q38amix: n 14336 k 5120 (weights 73.4 MB), rows 1,16,32, weight cache 1
+tv N 32: emulation check on 2 rows: 0 of 28672 differ (bit-identical)
+tv N 32: rt 2 ct 2 warps 8; 0 of 458752 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 32: rt 2 ct 2 warps 8; ok, 0 of 458752 differ from the reference (same bits); chip median 453.3 us (21), weights 161.9 GB/s
+tv f32 call N 32: ok, 0 of 458752 differ from the device pass; whole call median 1017.0 us (5 calls)
+TVGEMM q38amix N 32 (median of 21, min 441.3, max 462.9 us): chip 450.6 us; weights 162.9 GB/s; 10.42 TFLOPS
+tv N 1: rt 1 ct 4 warps 4; 0 of 14336 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 1: rt 1 ct 4 warps 4; ok, 0 of 14336 differ from the reference (same bits); chip median 386.2 us (21), weights 190.1 GB/s
+tv f32 call N 1: ok, 0 of 14336 differ from the device pass; whole call median 445.2 us (5 calls)
+TVGEMM q38amix N 1 (median of 21, min 377.5, max 393.1 us): chip 384.1 us; weights 191.1 GB/s; 0.38 TFLOPS
+tv N 16: rt 1 ct 4 warps 4; 0 of 229376 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 16: rt 1 ct 4 warps 4; ok, 0 of 229376 differ from the reference (same bits); chip median 386.1 us (21), weights 190.1 GB/s
+tv f32 call N 16: ok, 0 of 229376 differ from the device pass; whole call median 670.1 us (5 calls)
+TVGEMM q38amix N 16 (median of 21, min 383.0, max 397.5 us): chip 388.8 us; weights 188.8 GB/s; 6.04 TFLOPS
+tv N 32: rt 2 ct 2 warps 4; 0 of 458752 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 32: ok, 0 of 458752 differ from the device pass; whole call median 1174.6 us (5 calls)
+TVGEMM q38amix N 32 (median of 21, min 406.2, max 419.3 us): chip 413.8 us; weights 177.4 GB/s; 11.35 TFLOPS
+tv N 1: rt 2 ct 2 warps 4; 0 of 14336 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 14336 differ from the device pass; whole call median 441.1 us (5 calls)
+TVGEMM q38amix N 1 (median of 21, min 395.3, max 415.7 us): chip 405.9 us; weights 180.8 GB/s; 0.36 TFLOPS
+tv N 16: rt 2 ct 2 warps 4; 0 of 229376 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 229376 differ from the device pass; whole call median 709.8 us (5 calls)
+TVGEMM q38amix N 16 (median of 21, min 410.7, max 650.2 us): chip 427.6 us; weights 171.7 GB/s; 5.49 TFLOPS
+tv N 32: rt 2 ct 2 warps 2; 0 of 458752 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 32: ok, 0 of 458752 differ from the device pass; whole call median 1034.2 us (5 calls)
+TVGEMM q38amix N 32 (median of 21, min 439.6, max 462.9 us): chip 452.3 us; weights 162.3 GB/s; 10.39 TFLOPS
+tv N 1: rt 2 ct 2 warps 2; 0 of 14336 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 14336 differ from the device pass; whole call median 457.3 us (5 calls)
+TVGEMM q38amix N 1 (median of 21, min 412.8, max 428.7 us): chip 421.8 us; weights 174.0 GB/s; 0.35 TFLOPS
+tv N 16: rt 2 ct 2 warps 2; 0 of 229376 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 229376 differ from the device pass; whole call median 714.9 us (5 calls)
+TVGEMM q38amix N 16 (median of 21, min 415.0, max 650.2 us): chip 423.3 us; weights 173.4 GB/s; 5.55 TFLOPS
+tv N 32 tile 1:4:2: 2 row tiles (weights read 2 times), skipped
+tv N 1: rt 1 ct 4 warps 2; 0 of 14336 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 14336 differ from the device pass; whole call median 442.9 us (5 calls)
+TVGEMM q38amix N 1 (median of 21, min 383.8, max 560.6 us): chip 393.6 us; weights 186.5 GB/s; 0.37 TFLOPS
+tv N 16: rt 1 ct 4 warps 2; 0 of 229376 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 229376 differ from the device pass; whole call median 701.4 us (5 calls)
+TVGEMM q38amix N 16 (median of 21, min 386.8, max 463.4 us): chip 400.5 us; weights 183.3 GB/s; 5.87 TFLOPS
+tv N 32 tile 2:4:4: refused (rc -3: prefill codegen refused the shape), skipped
+tv N 1 tile 2:4:4: refused (rc -3: prefill codegen refused the shape), skipped
+tv N 16 tile 2:4:4: refused (rc -3: prefill codegen refused the shape), skipped
+tv: PASS
+GPU_TCGEMM: PASS
+{
+ "name": "tvg-tv8-amix-sweep",
+ "cmd": "quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-fba0f728 --tv --shape q38amix --rows 1,16,32 --emu-rows 2 --reps 21 --no-mutants --tiles 2:2:4,2:2:2,1:4:2,2:4:4 --out /home/drakestapleton/workspace/targets/cascade/runs/tv8-amix-sweep.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T16:55:36.968843",
+ "seconds": 35.174,
+ "samples": 17,
+ "wall_W_mean": 270.0,
+ "wall_J": 9496.965200901031,
+ "idle_W_before": 263.57142857142856,
+ "incremental_J": 226.11821906907275,
+ "gpu_W_mean": 37.52058823529412,
+ "gpu_util_mean": 82.70588235294117,
+ "load1_start": "10.50",
+ "load1_end": "12.94",
+ "mem_avail_kB_start": "30086000",
+ "mem_avail_kB_end": "28760048",
+ "lock_holders_max": 3,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-tv8-amix-sweep.json

@@ -1,0 +1,1 @@
+/home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-fba0f728 --tv --shape q38amix --rows 1,16,32 --emu-rows 2 --reps 21 --no-mutants --tiles 2:2:4,2:2:2,1:4:2,2:4:4 --out /home/drakestapleton/workspace/targets/cascade/runs/tv8-amix-sweep.json

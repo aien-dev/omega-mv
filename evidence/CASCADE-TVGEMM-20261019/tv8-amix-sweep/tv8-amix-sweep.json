@@ -1,0 +1,14 @@
+{"shape":"q38amix","n":14336,"k":5120,"rows":32,"xform":"f32","rt":2,"ct":2,"warps":8,"weight_cache":1,"reps":21,"chip_median_ns":453300,"weights_gbps":161.92}
+{"shape":"q38amix","n":14336,"k":5120,"rows":32,"rt":2,"ct":2,"warps":8,"weight_cache":1,"reps":21,"chip_median_ns":450628,"chip_min_ns":441252,"weights_gbps":162.88}
+{"shape":"q38amix","n":14336,"k":5120,"rows":1,"xform":"f32","rt":1,"ct":4,"warps":4,"weight_cache":1,"reps":21,"chip_median_ns":386164,"weights_gbps":190.08}
+{"shape":"q38amix","n":14336,"k":5120,"rows":1,"rt":1,"ct":4,"warps":4,"weight_cache":1,"reps":21,"chip_median_ns":384099,"chip_min_ns":377459,"weights_gbps":191.10}
+{"shape":"q38amix","n":14336,"k":5120,"rows":16,"xform":"f32","rt":1,"ct":4,"warps":4,"weight_cache":1,"reps":21,"chip_median_ns":386052,"weights_gbps":190.13}
+{"shape":"q38amix","n":14336,"k":5120,"rows":16,"rt":1,"ct":4,"warps":4,"weight_cache":1,"reps":21,"chip_median_ns":388755,"chip_min_ns":382980,"weights_gbps":188.81}
+{"shape":"q38amix","n":14336,"k":5120,"rows":32,"rt":2,"ct":2,"warps":4,"weight_cache":1,"reps":21,"chip_median_ns":413828,"chip_min_ns":406180,"weights_gbps":177.37}
+{"shape":"q38amix","n":14336,"k":5120,"rows":1,"rt":2,"ct":2,"warps":4,"weight_cache":1,"reps":21,"chip_median_ns":405924,"chip_min_ns":395348,"weights_gbps":180.82}
+{"shape":"q38amix","n":14336,"k":5120,"rows":16,"rt":2,"ct":2,"warps":4,"weight_cache":1,"reps":21,"chip_median_ns":427572,"chip_min_ns":410660,"weights_gbps":171.67}
+{"shape":"q38amix","n":14336,"k":5120,"rows":32,"rt":2,"ct":2,"warps":2,"weight_cache":1,"reps":21,"chip_median_ns":452292,"chip_min_ns":439604,"weights_gbps":162.29}
+{"shape":"q38amix","n":14336,"k":5120,"rows":1,"rt":2,"ct":2,"warps":2,"weight_cache":1,"reps":21,"chip_median_ns":421828,"chip_min_ns":412820,"weights_gbps":174.01}
+{"shape":"q38amix","n":14336,"k":5120,"rows":16,"rt":2,"ct":2,"warps":2,"weight_cache":1,"reps":21,"chip_median_ns":423300,"chip_min_ns":414996,"weights_gbps":173.40}
+{"shape":"q38amix","n":14336,"k":5120,"rows":1,"rt":1,"ct":4,"warps":2,"weight_cache":1,"reps":21,"chip_median_ns":393636,"chip_min_ns":383779,"weights_gbps":186.47}
+{"shape":"q38amix","n":14336,"k":5120,"rows":16,"rt":1,"ct":4,"warps":2,"weight_cache":1,"reps":21,"chip_median_ns":400452,"chip_min_ns":386819,"weights_gbps":183.29}
