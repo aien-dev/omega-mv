@@ -1,0 +1,7 @@
+random: 120000 ops, 985 overflow refusals, unsafe (correct code) 0; broken check: 331 unsafe cases, 331 caught by omega_tf_check
+attend insns plane 632 block 639, regs plane 172 block 176
+fixed-maximum conversation (KV for 131072 positions + one live DeltaNet set): 8755349504 bytes
+context 1700: arena conversation 282591232 bytes (with one snapshot 447741952); in the fixed reservation: 30 conversations, or one conversation + 51 snapshots
+context 30000: arena conversation 2144862208 bytes (with one snapshot 2310012928); in the fixed reservation: 4 conversations, or one conversation + 40 snapshots
+context 131072: arena conversation 8755085312 bytes (with one snapshot 8920236032); in the fixed reservation: 1 conversations, or one conversation + 0 snapshots
+gpu_two_front_test: 35 checks, 0 failed: PASS

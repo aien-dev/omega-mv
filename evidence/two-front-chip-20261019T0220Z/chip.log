@@ -1,0 +1,49 @@
+random: 120000 ops, 985 overflow refusals, unsafe (correct code) 0; broken check: 331 unsafe cases, 331 caught by omega_tf_check
+attend insns plane 632 block 639, regs plane 172 block 176
+fixed-maximum conversation (KV for 131072 positions + one live DeltaNet set): 8755349504 bytes
+context 1700: arena conversation 282591232 bytes (with one snapshot 447741952); in the fixed reservation: 30 conversations, or one conversation + 51 snapshots
+context 30000: arena conversation 2144862208 bytes (with one snapshot 2310012928); in the fixed reservation: 4 conversations, or one conversation + 40 snapshots
+context 131072: arena conversation 8755085312 bytes (with one snapshot 8920236032); in the fixed reservation: 1 conversations, or one conversation + 0 snapshots
+memory: old 16-layer KV cache needs 8192 MiB, MemAvailable 69758 MiB
+BYTES old 16-layer cache at 131072 positions: 8737394688 driver bytes in 26 allocations
+BYTES shared cache (no KV; RoPE, norms, partials, staging): 146993152 driver bytes
+BYTES DeltaNet 48 layers own memory (params + tails + states + launch buffer): 173154304 driver bytes
+memory: arena + 2-layer plane cache needs 9242 MiB, MemAvailable 69702 MiB
+TIME arena zero 8617472000 bytes: 135.9 ms (host memset of the handed-out blocks)
+two-front arena: 8617459712 bytes (+ 12288 read slack), KV block 16777216 bytes per 256 positions
+offset	bytes	kind	lifetime	owner	position	name
+0	8589934592	kv	conversation	1	131072	recall kv
+8589934592	13762560	GAP	-	-	-	free: the only slack
+8603697152	6881280	gdn-snapshot	turn	1	3	recall snapshot
+8610578432	6881280	gdn-live	conversation	1	0	recall gdn live
+low front 8589934592 bytes (live KV 8589934592), high front 13762560 bytes (live records 13762560), gap 13762560, smallest gap so far 13762560, refusals 0
+RECALL decode: 11 of 11 positions bit-identical (outputs + appended K/V rows), plane cache vs arena
+CONTROL decode mutant 6 (in-block mask dropped) at pos 1699: caught (outputs differ)
+RECALL prefill: 4 of 4 chunks bit-identical (outputs + written rows), crossing block edges
+CONTROL prefill attend mutant 3 (no block jump) at pos0 1500 m 300: caught (outputs differ)
+RECALL DeltaNet: arena live set == own memory for 6 tokens x 2 layers; snapshot at 3, restore, replay 3: bit-identical
+TIME decode attention pos 1699 (context 1700, 6963200 KV bytes): plane median 204210 ns (min 203889), block median 203986 ns (min 203906), 15 reps
+TIME decode attention pos 29999 (context 30000, 122880000 KV bytes): plane median 1821775 ns (min 1727694), block median 1829311 ns (min 1754142), 15 reps
+TIME decode attention pos 131071 (context 131072, 536870912 KV bytes): plane median 7713534 ns (min 7500652), block median 7652173 ns (min 7397051), 15 reps
+two-front arena: 83886080 bytes (+ 12288 read slack), KV block 16777216 bytes per 256 positions
+offset	bytes	kind	lifetime	owner	position	name
+0	67108864	kv	conversation	1	1024	kv
+67108864	0	GAP	-	-	-	free: the only slack
+67108864	3014656	scratch	engine	0	0	engine scratch
+70123520	6881280	gdn-snapshot	turn	1	1024	turn snapshot
+77004800	6881280	gdn-live	conversation	1	0	live
+low front 67108864 bytes (live KV 67108864), high front 16777216 bytes (live records 16777216), gap 0, smallest gap so far 0, refusals 1
+overflow: meet rc OK gap 0; next block rc OVERFLOW: two-front overflow: growing the top KV extent needs 16777216 bytes, gap 0 (low front at 67108864, high front at 67108864): short by 16777216
+overflow: decoded positions 1000..1023 in 16 layers; snapshot intact; omega_tf_check: ok
+two-front arena: 83886080 bytes (+ 12288 read slack), KV block 16777216 bytes per 256 positions
+offset	bytes	kind	lifetime	owner	position	name
+0	83886080	kv	conversation	1	1280	kv
+83886080	0	GAP	-	-	-	free: the only slack
+67108864	3014656	scratch	engine	0	0	engine scratch
+70123520	6881280	gdn-snapshot	turn	1	1024	turn snapshot
+77004800	6881280	gdn-live	conversation	1	0	live
+low front 83886080 bytes (live KV 83886080), high front 16777216 bytes (live records 16777216), gap 0, smallest gap so far 0, refusals 0
+overflow (CHECK SKIPPED): meet rc OK gap 0; next block rc OK: granted
+overflow (CHECK SKIPPED): decoded positions 1000..1279 in 16 layers; snapshot CORRUPTED; omega_tf_check: fronts crossed: low 83886080 high 67108864 bytes 83886080
+CONTROL overflow check skipped: snapshot overrun (expected overrun)
+gpu_two_front_test: 327 checks, 0 failed: PASS
