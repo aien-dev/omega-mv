@@ -42,6 +42,8 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
+# Build outputs follow OUT_DIR like the Makefile (omega#511: every gate step builds in its own dir).
+BLD="${OUT_DIR:-build}"; case "$BLD" in /*) ;; *) BLD="$ROOT/$BLD" ;; esac
 die() { echo "score.sh: $*" >&2; exit 2; }
 TEST="${EXP445_TEST:-0}"
 PARAMS="$HERE/PARAMS"
@@ -64,7 +66,7 @@ NAMED="$(awk -F= '$1 ~ /^config\.[A-Za-z0-9]+\.model$/ { split($1, p, "."); prin
 AVAIL=""; for c in ${NAMED//,/ }; do [ -n "$(kv "config.$c.unavailable")" ] || AVAIL="$AVAIL${AVAIL:+,}$c"; done
 [ -n "$CONFIGS" ] || CONFIGS="$AVAIL"
 for c in ${CONFIGS//,/ }; do un="$(kv "config.$c.unavailable")"; [ -z "$un" ] || die "config $c is unavailable: $un"; done
-B="$ROOT/build/omega_emit" X="$ROOT/build/omega_emit/x445" EMIT="$ROOT/build/omega_emit/omega_emit" G="$ROOT/build/omegese/omegese"
+B="$BLD/omega_emit" X="$BLD/omega_emit/x445" EMIT="$BLD/omega_emit/omega_emit" G="$BLD/omegese/omegese"
 make -s -C "$ROOT" PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 omega-emit omegese >&2
 . "$HERE/reader.sh"
 OUT="${runs[0]}/../score-$(date -u +%Y%m%dT%H%M%SZ)-$$"

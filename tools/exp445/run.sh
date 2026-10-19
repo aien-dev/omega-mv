@@ -38,6 +38,8 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
+# Build outputs follow OUT_DIR like the Makefile (omega#511: every gate step builds in its own dir).
+BLD="${OUT_DIR:-build}"; case "$BLD" in /*) ;; *) BLD="$ROOT/$BLD" ;; esac
 die() { echo "run.sh: $*" >&2; exit 2; }
 PARAMS="${EXP445_PARAMS:-$HERE/PARAMS}"
 [ -f "$PARAMS" ] || die "no PARAMS file $PARAMS"
@@ -103,10 +105,10 @@ if [ "$HELD" = 1 ]; then
   case "$SERVER" in PLACEHOLDER*) die "config $CONFIG server is still a placeholder in PARAMS: held-out generation waits for the commit that freezes it (protocol 13.3)" ;; esac
   [ "$MODE" = "$(kv heldout_prompt_mode)" ] || die "a held-out run uses the $(kv heldout_prompt_mode) prompt mode (protocol 13.4), not $MODE"
 fi
-B="$ROOT/build/omega_emit"
+B="$BLD/omega_emit"
 make -s -C "$ROOT" PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 omega-emit >&2
 case ",$ARMS," in *,omegese,*) make -s -C "$ROOT" PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 omegese >&2 ;; esac
-X="$B/x445" EMIT="$B/omega_emit" G="$ROOT/build/omegese/omegese"
+X="$B/x445" EMIT="$B/omega_emit" G="$BLD/omegese/omegese"
 weights_ok "$OUT" "$WLIST" "$FMODEL" ||
   die "$OUT/weights.check + server.json missing or not all OK: run tools/exp445/check_weights.sh $CONFIG $OUT first (protocol section 9)"
 # G0 (13.4): a PASS for this configuration, server and PARAMS, re-derived from its raw responses
