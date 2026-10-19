@@ -246,8 +246,8 @@ static uint64_t ch_hash(const Ch *c) {
 }
 
 static uint64_t g_match_attempts;
-static double g_match_ns;
 static int g_profile;
+static volatile uint64_t g_sink;
 
 static void finish(Result *r, const Ch *in, unsigned w) {
     r->insn_in = insn_count(in, w);
@@ -318,9 +318,9 @@ static void arm_bounded(const Ch *in, unsigned w, const Budget *bg, int rank_cm,
         for (int at = 0; at < cur.n; ++at)
             for (int k = 0; k < NRULES_ALL; ++k) {
                 Ch nx;
-                double m0 = g_profile ? now(CLOCK_THREAD_CPUTIME_ID) : 0;
                 int ok = rule(RULES_ALL[k], &cur, at, w, &nx);
-                if (g_profile) { g_match_ns += now(CLOCK_THREAD_CPUTIME_ID) - m0; g_match_attempts++; }
+                g_match_attempts++;
+                if (g_profile) { Ch dup; g_sink ^= (uint64_t)rule(RULES_ALL[k], &cur, at, w, &dup) + dup.n; }   /* profile: every match done twice; the time difference is the matching cost */
                 if (!ok) continue;
                 r->evals++;
                 uint64_t h = ch_hash(&nx) & (uint64_t)(tsz - 1);
@@ -415,7 +415,6 @@ static Fn map_chain(const Ch *c, unsigned w, void **mem, size_t *sz) {
     return (Fn)p;
 }
 
-static volatile uint64_t g_sink;
 /* ps per call, dependent chain x = f(x) over `calls` calls */
 static double time_fn(Fn f, uint64_t m, uint32_t calls) {
     uint64_t x = 0x1234 & m;
@@ -586,7 +585,7 @@ static int mode_run(const char *arm, const char *set, const char *dir, const Bud
             "search_cpu_ns=%.0f search_wall_ns=%.0f peak_rss_bytes=%ld nodes_max=%d evals_max=%d cpu_ns_max=%.0f ranking=%s\n",
             arm, set, n, changed, removed_total, hit, unranked, total_cpu, now(CLOCK_MONOTONIC) - w0, peak_rss_bytes(),
             bg->nodes_max, bg->evals_max, bg->cpu_ns_max, rank_cm ? "rx_costmodel" : !strcmp(arm, "Bi") || !strcmp(arm, "G") ? "insn_count" : "first_applicable");
-    if (g_profile) fprintf(fs, "profile match_attempts=%llu match_cpu_ns=%.0f\n", (unsigned long long)g_match_attempts, g_match_ns);
+    fprintf(fs, "profile=matching_doubled match_attempts=%llu\n", (unsigned long long)g_match_attempts);
     fclose(fs);
     printf("RWSEARCH arm=%s n=%d changed=%d removed_ops=%d best_found_under_budget=%d unranked=%d search_cpu_ns=%.0f peak_rss_bytes=%ld\n",
            arm, n, changed, removed_total, hit, unranked, total_cpu, peak_rss_bytes());
