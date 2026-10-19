@@ -75,12 +75,14 @@ static int sim_dynconv(const BlackwellIRProgram *p, uint32_t rows, uint32_t hidd
     s.cbank[0x380 / 4] = (uint32_t)aa; s.cbank[0x380 / 4 + 1] = (uint32_t)(aa >> 32);
     s.cbank[0x388 / 4] = (uint32_t)ba; s.cbank[0x388 / 4 + 1] = (uint32_t)(ba >> 32);
     s.cbank[0x390 / 4] = (uint32_t)ca; s.cbank[0x390 / 4 + 1] = (uint32_t)(ca >> 32);
+    uint32_t chunks = hidden / OMEGA_GPU_EW_THREADS;
     s.cbank[0x398 / 4] = hidden; s.cbank[0x39c / 4] = groups;
+    s.cbank[0x3a0 / 4] = (uint32_t)(((1ull << 32) + chunks - 1) / chunks); s.cbank[0x3a4 / 4] = 0u - chunks;
     s.ranges[0] = (WsRange){ (uintptr_t)aa, (uintptr_t)aa + aw * 4 };
     s.ranges[1] = (WsRange){ (uintptr_t)ba, (uintptr_t)ba + bw * 4 };
     s.ranges[2] = (WsRange){ (uintptr_t)ca, (uintptr_t)ca + cw * 4 };
     s.nranges = 3;
-    int err = ws_run(&s, hidden / OMEGA_GPU_EW_THREADS, rows);
+    int err = ws_run(&s, rows * chunks, 1);
     free(a); free(b);
     return err;
 }
@@ -121,6 +123,7 @@ static void host_only(void) {
     CHECK(omega_gpu_dynconv2_f32(1, 128, 16, NULL, b, d, c, NULL) == OMEGA_GPU_EW_BAD_ARGS, "NULL refused");
     CHECK(omega_gpu_dynconv2_f32(1025, 128, 16, a, b, d, c, NULL) == OMEGA_GPU_EW_TOO_LARGE, "rows 1025 too large");
     CHECK(omega_gpu_dynconv2_f32(1, 16512, 16, a, b, d, c, NULL) == OMEGA_GPU_EW_TOO_LARGE, "hidden 16512 too large");
+    CHECK(omega_gpu_dynconv2_f32(1000, 256, 16, a, b, d, c, NULL) == OMEGA_GPU_EW_TOO_LARGE, "rows x chunks over the CTA budget");
     host_sim();
     for (int m = 0; m <= 1; m++) {
         OmegaBlackwellKernel k;

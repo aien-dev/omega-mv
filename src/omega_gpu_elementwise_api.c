@@ -348,19 +348,26 @@ static void gen_swiglu(Em *e, int mutant) {
 }
 
 static void shr_i(Em *e, int d, int a, uint32_t n);
-/* DFlash 2 dynamic conv (cascade/dflash-drafter). Grid (hidden/128, rows), 128 threads.
- * a = v with one zero row in front ([rows+1][hidden]: padded row p is v[p-1], row p+1 is v[p]),
- * b = base [2][hidden] then dynk [rows][2][groups], c = out [rows][hidden].
- * P0 = hidden, P1 = groups. Channel c = ctaid.x*128 + tid, row p = ctaid.y, group = c >> 4.
- * Mutant: base tap 0 and tap 1 swapped. */
+static void imadhi(Em *e, int d, int a, int b);
+/* DFlash 2 dynamic conv (cascade/dflash-drafter). One-dimensional grid of rows * chunks CTAs
+ * (chunks = hidden/128), 128 threads. a = v with one zero row in front ([rows+1][hidden]: padded
+ * row p is v[p-1], row p+1 is v[p]), b = base [2][hidden] then dynk [rows][2][groups],
+ * c = out [rows][hidden]. P0 = hidden, P1 = groups, P2 = magic = ceil(2^32 / chunks) (the host
+ * checks hi32(cta * magic) == cta / chunks for every cta of the launch), P3 = -chunks (mod 2^32).
+ * row p = hi32(cta * magic), chunk = cta - p * chunks, channel c = chunk*128 + tid, group c >> 4.
+ * (A first cut used grid_y for the row: its second launch in a process never completed on the
+ * chip, evidence/dflash-dynconv2-chip-20261019T1651Z and T1710Z; cause not found, the 1D grid is
+ * the launch shape every other elementwise kernel uses.)
+ * Mutant: the base taps swapped (the registers, same loads). */
 static void gen_dynconv2(Em *e, int mutant) {
     Pro p = prologue(e);
-    int hid = V(e), grp = V(e), row = V(e), ch = V(e), rowoff = V(e), iout = V(e), iv0 = V(e), ib1 = V(e);
+    int hid = V(e), grp = V(e), magic = V(e), negch = V(e), row = V(e), chunk = V(e), ch = V(e), rowoff = V(e), iout = V(e), iv0 = V(e), ib1 = V(e);
     int g = V(e), twog = V(e), hid2 = V(e), dkb = V(e), id0 = V(e), id1 = V(e), off = V64(e);
     int v0 = V(e), v1 = V(e), b0 = V(e), b1 = V(e), d0 = V(e), d1 = V(e), t = V(e), o = V(e);
-    ldc32(e, hid, ARG_P0); ldc32(e, grp, ARG_P1);
-    s2r(e, row, BW_SR_CTAID_Y);
-    imadi(e, ch, p.cta, OMEGA_GPU_EW_THREADS, p.tid);
+    ldc32(e, hid, ARG_P0); ldc32(e, grp, ARG_P1); ldc32(e, magic, ARG_P2); ldc32(e, negch, ARG_P3);
+    imadhi(e, row, p.cta, magic);
+    imadr(e, chunk, row, negch, p.cta);
+    imadi(e, ch, chunk, OMEGA_GPU_EW_THREADS, p.tid);
     imadr(e, rowoff, row, hid, NOREG);
     iadd3(e, iout, rowoff, ch);
     iadd3(e, iv0, iout, hid);
@@ -373,8 +380,9 @@ static void gen_dynconv2(Em *e, int mutant) {
     iadd3(e, id1, id0, grp);
     addr4(e, off, iout, p.pa); ldg(e, v1, off, p.udesc);
     addr4(e, off, iv0, p.pa); ldg(e, v0, off, p.udesc);
-    addr4(e, off, mutant ? ib1 : ch, p.pb); ldg(e, b0, off, p.udesc);
-    addr4(e, off, mutant ? ch : ib1, p.pb); ldg(e, b1, off, p.udesc);
+    addr4(e, off, ch, p.pb); ldg(e, b0, off, p.udesc);
+    addr4(e, off, ib1, p.pb); ldg(e, b1, off, p.udesc);
+    if (mutant) { int sw = b0; b0 = b1; b1 = sw; }
     addr4(e, off, id0, p.pb); ldg(e, d0, off, p.udesc);
     addr4(e, off, id1, p.pb); ldg(e, d1, off, p.udesc);
     movrz(e, o);
@@ -1159,7 +1167,12 @@ int omega_gpu_dynconv2_f32(uint32_t rows, uint32_t hidden, uint32_t group, const
     uint64_t t0 = now_ns();
     if (!v || !dynk || !base || !out || rows == 0 || hidden == 0 || group != 16 || hidden % OMEGA_GPU_EW_THREADS != 0)
         return OMEGA_GPU_EW_BAD_ARGS;
-    if (hidden > OMEGA_GPU_EW_MAX_DIM || rows > OMEGA_GPU_EW_MAX_CTAS) return OMEGA_GPU_EW_TOO_LARGE;
+    uint32_t chunks = hidden / OMEGA_GPU_EW_THREADS;
+    if (hidden > OMEGA_GPU_EW_MAX_DIM || rows > OMEGA_GPU_EW_MAX_CTAS || (uint64_t)rows * chunks > OMEGA_GPU_EW_MAX_CTAS)
+        return OMEGA_GPU_EW_TOO_LARGE;
+    uint32_t magic = (uint32_t)(((1ull << 32) + chunks - 1) / chunks);
+    for (uint32_t cta = 0; cta < rows * chunks; cta++)
+        if ((uint32_t)(((uint64_t)cta * magic) >> 32) != cta / chunks) return OMEGA_GPU_EW_TOO_LARGE;
     uint32_t groups = hidden / group;
     size_t a_words = (size_t)(rows + 1) * hidden, b_words = (size_t)2 * hidden + (size_t)rows * 2 * groups;
     float *a = calloc(a_words, sizeof *a), *b = malloc(b_words * sizeof *b);
@@ -1170,9 +1183,9 @@ int omega_gpu_dynconv2_f32(uint32_t rows, uint32_t hidden, uint32_t group, const
     Slot *k = NULL;
     int rc = begin(OMEGA_GPU_EW_DYNCONV2, &k, info);
     if (rc == OMEGA_GPU_EW_OK) {
-        uint32_t params[4] = { hidden, groups, 0, 0 };
-        rc = run_abc_y(k, a, a_words * 4, b, b_words * 4, out, (size_t)rows * hidden * 4, OMEGA_GPU_EW_THREADS,
-                       hidden / OMEGA_GPU_EW_THREADS, rows, params, info);
+        uint32_t params[4] = { hidden, groups, magic, (uint32_t)(0u - chunks) };
+        rc = run_abc(k, a, a_words * 4, b, b_words * 4, out, (size_t)rows * hidden * 4, OMEGA_GPU_EW_THREADS,
+                     rows * chunks, params, info);
         UNLOCK();
     }
     free(a); free(b);
