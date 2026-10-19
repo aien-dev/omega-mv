@@ -1,0 +1,25 @@
+# tests/gates/omega-gpu-engine.gate
+# Restored: hosted host-suites-2.yml gpu-engine: GPU engine core on the fake backend, freestanding link and codegen, engine mutants, session over OmegaGpuPlatform, Linux reference platform (host, no device). The hosted job was removed in phase 3 (#564) without a gate; same command here.
+gate: OMEGA-GPU-ENGINE
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/
+  - tools/
+  - docs/
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["gpu-engine"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 20m
+exactness: EXACT
+cache_scope: machine

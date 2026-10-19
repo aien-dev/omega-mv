@@ -8,9 +8,11 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
+# Build outputs follow OUT_DIR like the Makefile (omega#511: every gate step builds in its own dir).
+BLD="${OUT_DIR:-build}"; case "$BLD" in /*) ;; *) BLD="$ROOT/$BLD" ;; esac
 [ $# -eq 3 ] || { echo "usage: measure.sh <base-url> <model> <dev cases dir>" >&2; exit 2; }
 BASE="${1%/}" MODEL="$2" CASES="$3"
-make -s -C "$ROOT" PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 omega-emit build/compiler/oscc >&2
+make -s -C "$ROOT" PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 omega-emit "${OUT_DIR:-build}/compiler/oscc" >&2
 T="$(mktemp -d "${TMPDIR:-/tmp}/exp445-measure.XXXXXXXX")"; trap 'rm -rf "$T"' EXIT
 ptoks() { # ptoks <file>: prompt tokens of one user message holding the file
   jq -n -c --arg m "$MODEL" --rawfile c "$1" '{model: $m, messages: [{role: "user", content: $c}], max_tokens: 1, temperature: 0}' |
@@ -20,8 +22,8 @@ ptoks() { # ptoks <file>: prompt tokens of one user message holding the file
 echo "# task text bytes structured (tokens; empty-message baseline $base subtracted)"
 for c in "$CASES"/*/; do
   id="$(basename "$c")"
-  "$ROOT/build/compiler/oscc" "$c/hidden/reference.osc" "$T/$id" > /dev/null
-  "$ROOT/build/omega_emit/x445" tohex "$T/$id.ir" > "$T/$id.hex"
-  "$ROOT/build/omega_emit/omega_emit" lift "$T/$id.ir" > "$T/$id.json"
+  "$BLD/compiler/oscc" "$c/hidden/reference.osc" "$T/$id" > /dev/null
+  "$BLD/omega_emit/x445" tohex "$T/$id.ir" > "$T/$id.hex"
+  "$BLD/omega_emit/omega_emit" lift "$T/$id.ir" > "$T/$id.json"
   echo "$id $(( $(ptoks "$c/hidden/reference.osc") - base )) $(( $(ptoks "$T/$id.hex") - base )) $(( $(ptoks "$T/$id.json") - base ))"
 done
