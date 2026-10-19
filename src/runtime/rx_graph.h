@@ -316,8 +316,21 @@ typedef struct {
     uint64_t total_work_us;
     uint32_t nodes_before, nodes_after;
     uint32_t reactions_before, reactions_after;
-    struct { uint32_t const_folded, cse, world_reads, fused, dead, deps_dropped; } passes;
+    struct { uint32_t const_folded, cse, world_reads, fused, dead, deps_dropped;
+             uint32_t rewritten;    /* symbolic rewrites applied (rx_graph_optimize_ex hook) */
+    } passes;
 } AgReport;
+
+/* Symbolic rewrite pass (rx_symbolic.h). rx_graph_optimize_ex runs it first in
+ * every round of the optimizer's fixpoint loop, so its rewrites and the
+ * passes below open work for each other. It returns the number of rewrites
+ * it applied this round (each one verified bit for bit by the hook before it
+ * is applied), or a negative AG_E_*. Rewrites only replace what a node
+ * computes and which inputs it reads; they never touch boundaries, evidence,
+ * conditions or control dependencies. */
+typedef struct AgRewriteHook {
+    int (*pass)(struct AgRewriteHook *h, AgGraph *g);
+} AgRewriteHook;
 
 /* Goal -> typed graph. Validates capabilities through w's authority view; it
  * never mints and has no handle that could. Runs rx_graph_optimize when
@@ -327,6 +340,10 @@ typedef struct {
 int rx_graph_compile(const AgGoal *goal, RxWorld *w, const AgCapTable *caps,
                      const AgConstraints *cons, const AgLibrary *lib, int optimize,
                      AgGraph *out, AgReport *rep);
+/* The same, with the symbolic rewrite hook passed to rx_graph_optimize_ex. */
+int rx_graph_compile_ex(const AgGoal *goal, RxWorld *w, const AgCapTable *caps,
+                        const AgConstraints *cons, const AgLibrary *lib, int optimize,
+                        AgRewriteHook *hook, AgGraph *out, AgReport *rep);
 
 /* The tail of compile: costs and the critical-path constraint, missing
  * authority, resource-blocked nodes. Also used after a graph is rewritten
@@ -342,6 +359,10 @@ int rx_graph_report_needs(const AgGraph *g, RxWorld *w, const AgCapTable *caps,
  * boundary nodes are roots). Parallelism needs no pass: lowering adds no order the
  * graph does not state. Returns 0 and fills rep->passes. */
 int rx_graph_optimize(AgGraph *g, AgReport *rep);
+
+/* The same passes with a symbolic rewrite hook run first in each round
+ * (hook NULL: exactly rx_graph_optimize). */
+int rx_graph_optimize_ex(AgGraph *g, AgReport *rep, AgRewriteHook *hook);
 
 /* 0 when `after` keeps every effect boundary of `before` (same identity,
  * same pairwise order), every evidence node, and every success/failure

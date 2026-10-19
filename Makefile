@@ -1072,6 +1072,23 @@ $(RX_GRAPH_TEST): $(RX_GRAPH_SRCS) $(RX_GRAPH_OBJ) src/runtime/rx_caproot.h \
 test-action-graph: $(RX_GRAPH_TEST)
 	./$(RX_GRAPH_TEST)
 
+# OMEGA_SYMBOLIC_REWRITE: typed symbolic terms (SEMANTIC_ID objects), verified
+# rewrite rules run inside rx_graph_optimize through AgRewriteHook, verdicts in
+# the rx_semantic cache, evidence-graph traces. The test reuses the action
+# graph workload (tests/runtime/rx_action_graph.c) as its workload 1.
+RX_SYMBOLIC_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
+	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/sha256.c src/omega_evidence.c \
+	src/omega_core.c src/omega_canonical.c src/runtime/rx_semantic.c \
+	src/runtime/rx_symbolic.c src/runtime/rx_symbolic_cache.c tests/runtime/rx_symbolic_test.c
+RX_SYMBOLIC_TEST = $(OUT_DIR)/rx_symbolic_test
+
+$(RX_SYMBOLIC_TEST): $(RX_SYMBOLIC_SRCS) $(RX_GRAPH_OBJ) src/runtime/rx_symbolic.h src/runtime/rx_symbolic_cache.h \
+	tests/runtime/rx_action_graph.c $(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(CC) $(CFLAGS) -pthread -o $@ $(RX_SYMBOLIC_SRCS) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
+
+test-symbolic: $(RX_SYMBOLIC_TEST)
+	./$(RX_SYMBOLIC_TEST)
+
 # OMEGA_CAPABILITY_QUERY: AIEN states a CapabilityNeed; Omega compiles it into
 # probes of the capability sources and returns a bounded list of candidates
 # ranked on explicit dimensions. rx_capq.o is built alone first and must not

@@ -906,19 +906,28 @@ static int strict_ancestor(const AgGraph *g, uint32_t a, uint32_t b, int skip_de
     return (seen >> b) & 1u;
 }
 
-int rx_graph_optimize(AgGraph *g, AgReport *rep) {
+int rx_graph_optimize(AgGraph *g, AgReport *rep) { return rx_graph_optimize_ex(g, rep, NULL); }
+
+int rx_graph_optimize_ex(AgGraph *g, AgReport *rep, AgRewriteHook *hook) {
     AgReport dummy;
     if (!rep) { memset(&dummy, 0, sizeof dummy); rep = &dummy; }
     uint16_t ord[AG_MAX_NODES];
     int cnt;
 
-    /* Passes 1-4 can open work for each other (dropping an order edge can
-     * make two nodes identical; merging can make a producer single-use), so
-     * they repeat until a round changes nothing. Each round only removes
-     * nodes or edges, so this ends. */
+    /* Passes 0-4 can open work for each other (dropping an order edge can
+     * make two nodes identical; merging can make a producer single-use; a
+     * rewrite can leave a producer unused), so they repeat until a round
+     * changes nothing. Passes 1-4 only remove nodes or edges; pass 0 is
+     * bounded by its own fuel, so this ends. */
     for (;;) {
         uint32_t before_round = rep->passes.const_folded + rep->passes.cse + rep->passes.world_reads +
-                                rep->passes.fused + rep->passes.deps_dropped;
+                                rep->passes.fused + rep->passes.deps_dropped + rep->passes.rewritten;
+        /* 0. Symbolic rewrites (rx_symbolic.h), each verified before it lands. */
+        if (hook && hook->pass) {
+            int r = hook->pass(hook, g);
+            if (r < 0) return r;
+            rep->passes.rewritten += (uint32_t)r;
+        }
         /* 1. Constant propagation: a PURE node whose inputs are all CONST, with
          * no control dependency, becomes a CONST. Guarded nodes keep their guard. */
         for (int changed = 1; changed;) {
@@ -1033,7 +1042,7 @@ int rx_graph_optimize(AgGraph *g, AgReport *rep) {
         }
 
         if (rep->passes.const_folded + rep->passes.cse + rep->passes.world_reads +
-            rep->passes.fused + rep->passes.deps_dropped == before_round)
+            rep->passes.fused + rep->passes.deps_dropped + rep->passes.rewritten == before_round)
             break;
     }
 
@@ -1125,6 +1134,12 @@ static int fits(const RxResourceNeed *n, const RxResourceBudget *b) {
 int rx_graph_compile(const AgGoal *goal, RxWorld *w, const AgCapTable *caps,
                      const AgConstraints *cons, const AgLibrary *lib, int optimize,
                      AgGraph *out, AgReport *rep) {
+    return rx_graph_compile_ex(goal, w, caps, cons, lib, optimize, NULL, out, rep);
+}
+
+int rx_graph_compile_ex(const AgGoal *goal, RxWorld *w, const AgCapTable *caps,
+                        const AgConstraints *cons, const AgLibrary *lib, int optimize,
+                        AgRewriteHook *hook, AgGraph *out, AgReport *rep) {
     if (!goal || !w || !caps || !cons || !lib || !out || !rep) return AG_E_ARG;
     memset(rep, 0, sizeof *rep);
     const AgGraph *tmpl = NULL;
@@ -1176,7 +1191,7 @@ int rx_graph_compile(const AgGoal *goal, RxWorld *w, const AgCapTable *caps,
     for (uint32_t n = 0; n < out->n_nodes; n++) rep->nodes_before += out->nodes[n].alive;
     AgGraph before = *out;
     if (optimize) {
-        if ((rc = rx_graph_optimize(out, rep)) != 0) return rep->verdict = rc;
+        if ((rc = rx_graph_optimize_ex(out, rep, hook)) != 0) return rep->verdict = rc;
         if ((rc = rx_graph_validate(out, w)) != 0) return rep->verdict = rc;
         if (rx_graph_check_preserved(&before, out) != 0) return rep->verdict = AG_E_CONSTRAINT;
     }
