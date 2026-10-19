@@ -146,6 +146,7 @@ case "$step" in
     ;;
   numeric2)           make $NOPHYS test-numeric-reduce-cpu test-divsqrt-host ;;
   tensor)             make $NOPHYS test-tensor; make $NOPHYS test-tensor-store; make $NOPHYS test-m20-receipt; make $NOPHYS test-tensor-mutations ;;
+  gpu-decode-graph)   physics_pin; make test-gpu-decode-graph ;;
   # host-suites-3.yml
   numeric-lifecycle)  make $NOPHYS test-numeric-lifecycle ;;
   numeric-transc-digest)
