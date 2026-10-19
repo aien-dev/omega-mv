@@ -25,7 +25,28 @@ uint32_t omega_fp8_e4m3_kernel_bits(uint8_t b) {
 
 int omega_fp8_e4m3_is_nan(uint8_t b) { return (b & 0x7fu) == 0x7fu; }
 
+/* Eight bytes per step (sc #677: the byte loop ran at 3.3 GB/s and was 70% of an upload): a word holds a NaN code
+ * exactly when one of its bytes, sign cleared, is 0x7f, i.e. when (word & 0x7f..) ^ 0x7f.. has a zero byte. The
+ * zero-byte test (v - 0x01..) & ~v & 0x80.. is exact for "has a zero byte" (a borrow only starts at a zero byte), so
+ * only words that really hold a NaN code take the byte loop, and the count and first index equal the byte loop's. */
 size_t omega_fp8_pack_scan_nan(const uint8_t *w, size_t count, size_t *first) {
+    const uint64_t lo7 = 0x7f7f7f7f7f7f7f7full, ones = 0x0101010101010101ull, hi = 0x8080808080808080ull;
+    size_t n = 0, i = 0;
+    for (; i + 8 <= count; i += 8) {
+        uint64_t v;
+        memcpy(&v, w + i, 8);
+        const uint64_t z = (v & lo7) ^ lo7;
+        if (((z - ones) & ~z & hi) == 0) continue;
+        for (size_t j = i; j < i + 8; j++)
+            if (omega_fp8_e4m3_is_nan(w[j])) { if (n == 0 && first) *first = j; n++; }
+    }
+    for (; i < count; i++)
+        if (omega_fp8_e4m3_is_nan(w[i])) { if (n == 0 && first) *first = i; n++; }
+    return n;
+}
+
+/* The byte loop the fast scan must equal (tests). */
+size_t omega_fp8_pack_scan_nan_bytes(const uint8_t *w, size_t count, size_t *first) {
     size_t n = 0;
     for (size_t i = 0; i < count; i++)
         if (omega_fp8_e4m3_is_nan(w[i])) { if (n == 0 && first) *first = i; n++; }

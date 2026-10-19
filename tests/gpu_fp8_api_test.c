@@ -1,6 +1,8 @@
 /* gpu_fp8_api_test: OWN-30B Cut 6 / Cut 5 gate for omega_gpu_fp8_api (FP8 e4m3 block-scaled GEMV).
  *
  *   ./gpu_fp8_api_test --host-only          exhaustive 256-code e4m3 conversion vs the reference decode
+ *   ./gpu_fp8_api_test --refill             chip: refill door (alloc, fill the mapping, commit) equals upload bit for bit,
+ *                                           a changed byte is caught, a NaN code refused; gate|up commit timed (sc #677)
  *                                           (subnormals, both zeros, NaN codes refused), pack refusals,
  *                                           codegen for every kernel shape (instruction and register budget),
  *                                           API argument refusals, nvdisasm listing when /usr/local/cuda/bin/nvdisasm exists
@@ -111,6 +113,47 @@ static int nvdisasm_check_v(int variant, const OmegaFp8GemvSpec *spec, const cha
     return (rc == 0 && bad == 0 && miss == 0) ? 0 : -1;
 }
 
+
+/* sc #677: the eight-byte NaN scan equals the byte loop (count and first index) for every NaN code at every offset of
+ * every length up to 80, around every code next to a NaN code, and on a large random buffer; then both are timed. */
+static void host_scan_nan(void) {
+    static const uint8_t near[] = { 0x00, 0x01, 0x7e, 0x7f, 0x80, 0x81, 0xfe, 0xff, 0x3f, 0xbf, 0x6f, 0xef };
+    uint8_t buf[96];
+    int same = 1, cases = 0;
+    for (size_t len = 0; len <= 80 && same; len++)
+        for (size_t fill = 0; fill < sizeof near && same; fill++)
+            for (size_t pos = 0; pos <= len && same; pos++)
+                for (int code = 0; code < 3 && same; code++) {
+                    memset(buf, near[fill], sizeof buf);
+                    if (pos < len && code > 0) buf[pos] = code == 1 ? 0x7f : 0xff;
+                    size_t f1 = 12345, f2 = 12345;
+                    size_t n1 = omega_fp8_pack_scan_nan(buf, len, &f1), n2 = omega_fp8_pack_scan_nan_bytes(buf, len, &f2);
+                    same = n1 == n2 && f1 == f2;
+                    cases++;
+                    if (!same) printf("scan differs: len %zu fill 0x%02x pos %zu code %d: %zu@%zu vs %zu@%zu\n", len, near[fill], pos, code, n1, f1, n2, f2);
+                }
+    CHECK(same, "fast NaN scan equals the byte loop on %d small cases", cases);
+    const size_t big = (size_t)64 << 20;
+    uint8_t *w = malloc(big);
+    CHECK(w != NULL, "scan buffer");
+    if (!w) return;
+    uint32_t s = 677;
+    for (size_t i = 0; i < big; i++) w[i] = rand_e4m3(&s);
+    size_t f0 = 0;
+    CHECK(omega_fp8_pack_scan_nan(w, big, &f0) == 0, "no NaN in a NaN-free buffer");
+    for (int k = 0; k < 9; k++) w[(lcg(&s) % big)] = (k & 1) ? 0x7f : 0xff;
+    size_t f1 = 0, f2 = 0;
+    struct timespec a, b, c;
+    clock_gettime(CLOCK_MONOTONIC, &a);
+    size_t n1 = omega_fp8_pack_scan_nan(w, big, &f1);
+    clock_gettime(CLOCK_MONOTONIC, &b);
+    size_t n2 = omega_fp8_pack_scan_nan_bytes(w, big, &f2);
+    clock_gettime(CLOCK_MONOTONIC, &c);
+    CHECK(n1 == n2 && f1 == f2 && n1 >= 1, "fast scan equals the byte loop on 64 MiB with planted NaN codes (%zu@%zu vs %zu@%zu)", n1, f1, n2, f2);
+    double t1 = (b.tv_sec - a.tv_sec) + (b.tv_nsec - a.tv_nsec) * 1e-9, t2 = (c.tv_sec - b.tv_sec) + (c.tv_nsec - b.tv_nsec) * 1e-9;
+    printf("host NaN scan over 64 MiB: eight-byte %.2f GB/s, byte loop %.2f GB/s (%zu codes, first at %zu)\n", big / t1 / 1e9, big / t2 / 1e9, n1, f1);
+    free(w);
+}
 static void host_only(void) {
     /* 1. exhaustive conversion: kernel bits * 2^120 == reference, bit for bit, for every non-NaN code;
      *    sign of zero preserved; NaN codes are exactly 0x7f and 0xff and are refused by the scan */
@@ -572,10 +615,68 @@ static int chip_run(const char *out_path, uint32_t reps) {
     return 0;
 }
 
+
+/* sc #677 chip check of the refill door: a tensor allocated empty, filled through its host mapping and committed gives
+ * the same y, bit for bit, as the same bytes uploaded; a changed byte after a recommit changes y (the check can fail);
+ * a NaN code is refused at commit; then a q38 gate|up sized commit is timed. */
+static void chip_refill(void) {
+    const uint32_t n = 512, k = 5120, sc = (n / 128) * (k / 128);
+    uint32_t s = 4677;
+    uint8_t *w = malloc((size_t)n * k);
+    uint16_t *scale = malloc(sc * sizeof *scale);
+    float *x = malloc(k * sizeof *x), *ya = malloc(n * sizeof *ya), *yb = malloc(n * sizeof *yb);
+    if (!w || !scale || !x || !ya || !yb) { CHECK(0, "refill buffers"); return; }
+    for (size_t i = 0; i < (size_t)n * k; i++) w[i] = rand_e4m3(&s);
+    for (uint32_t i = 0; i < sc; i++) scale[i] = bf16_of(frand(&s, 0.001f, 0.01f));
+    for (uint32_t i = 0; i < k; i++) x[i] = frand(&s, -1.0f, 1.0f);
+    OmegaGpuFp8Tensor *ta = NULL, *tb = NULL;
+    uint8_t *wb = NULL; size_t bytes = 0;
+    int rc = omega_gpu_fp8_tensor_upload(1, n, k, w, scale, &ta);
+    CHECK(rc == OMEGA_GPU_FP8_OK, "refill: upload twin rc %s", omega_gpu_fp8_rc_name(rc));
+    rc = omega_gpu_fp8_tensor_alloc(1, n, k, &tb);
+    CHECK(rc == OMEGA_GPU_FP8_OK, "refill: alloc rc %s", omega_gpu_fp8_rc_name(rc));
+    if (!ta || !tb) goto out;
+    CHECK(omega_gpu_fp8_tensor_weights(tb, &wb, &bytes) == OMEGA_GPU_FP8_OK && bytes == (size_t)n * k && ((uintptr_t)wb & 4095u) == 0, "refill: weights mapping page aligned, %zu bytes", bytes);
+    memcpy(wb, w, bytes);
+    CHECK(omega_gpu_fp8_tensor_commit(tb, scale) == OMEGA_GPU_FP8_OK, "refill: commit");
+    int ra = omega_gpu_fp8_gemv_f32(ta, 0, x, ya, NULL), rb = omega_gpu_fp8_gemv_f32(tb, 0, x, yb, NULL);
+    CHECK(ra == 0 && rb == 0 && memcmp(ya, yb, n * sizeof *ya) == 0, "refill: committed tensor equals the uploaded twin bit for bit (rc %d %d)", ra, rb);
+    printf("chip refill: y equal to upload twin: %s\n", memcmp(ya, yb, n * sizeof *ya) == 0 ? "yes" : "NO");
+    /* control: one byte changed (to another non-NaN code) and recommitted must change y */
+    wb[3 * k + 17] = (uint8_t)(wb[3 * k + 17] == 0x38 ? 0x40 : 0x38);
+    CHECK(omega_gpu_fp8_tensor_commit(tb, scale) == OMEGA_GPU_FP8_OK, "refill: recommit");
+    rb = omega_gpu_fp8_gemv_f32(tb, 0, x, yb, NULL);
+    CHECK(rb == 0 && memcmp(ya, yb, n * sizeof *ya) != 0, "refill control: a changed byte changes y");
+    printf("chip refill control (one byte changed): y %s\n", memcmp(ya, yb, n * sizeof *ya) != 0 ? "differs (caught)" : "SAME (missed)");
+    wb[7] = 0xff;
+    CHECK(omega_gpu_fp8_tensor_commit(tb, scale) == OMEGA_GPU_FP8_NAN_WEIGHT, "refill: a NaN code is refused at commit");
+    {   /* timing at the q38 gate|up shape */
+        OmegaGpuFp8Tensor *tg = NULL; uint8_t *wg = NULL; size_t gb = 0;
+        const uint32_t gn = 34816, gk = 5120, gs = (gn / 128) * (gk / 128);
+        uint16_t *gsc = malloc(gs * sizeof *gsc);
+        if (gsc && omega_gpu_fp8_tensor_alloc(1, gn, gk, &tg) == OMEGA_GPU_FP8_OK && omega_gpu_fp8_tensor_weights(tg, &wg, &gb) == OMEGA_GPU_FP8_OK) {
+            for (uint32_t i = 0; i < gs; i++) gsc[i] = bf16_of(0.005f);
+            for (size_t i = 0; i < gb; i++) wg[i] = (uint8_t)(i * 37u % 126u);
+            struct timespec a, b2;
+            clock_gettime(CLOCK_MONOTONIC, &a);
+            int rcg = omega_gpu_fp8_tensor_commit(tg, gsc);
+            clock_gettime(CLOCK_MONOTONIC, &b2);
+            double t = (b2.tv_sec - a.tv_sec) + (b2.tv_nsec - a.tv_nsec) * 1e-9;
+            CHECK(rcg == OMEGA_GPU_FP8_OK, "refill: gate|up commit");
+            printf("chip refill: commit of %zu B (q38 gate|up) %.1f ms = %.2f GB/s\n", gb, t * 1e3, gb / t / 1e9);
+        } else CHECK(0, "refill: gate|up alloc");
+        omega_gpu_fp8_tensor_free(tg); free(gsc);
+    }
+out:
+    omega_gpu_fp8_tensor_free(ta); omega_gpu_fp8_tensor_free(tb);
+    free(w); free(scale); free(x); free(ya); free(yb);
+}
 int main(int argc, char **argv) {
+    int refill = 0;
     int host = 0, sim = 0; const char *out_path = NULL; uint32_t reps = 20, lb = 0, rows = 0, warps = 0, budget = 0, spin = 2000, depth = 0; int depth_set = 0;
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--host-only") == 0) host = 1;
+        if (strcmp(argv[i], "--refill") == 0) refill = 1;
+        else         if (strcmp(argv[i], "--host-only") == 0) host = 1;
         else if (strcmp(argv[i], "--sim") == 0) sim = 1;
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
@@ -593,7 +694,8 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--variant") == 0 && i + 1 < argc) omega_gpu_fp8_set_variant(atoi(argv[++i])); /* 1 (default) or 2 (W-L2c row-pipelined) */
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
-    if (host) host_only();
+    if (host) { host_only(); host_scan_nan(); }
+    if (refill) { chip_refill(); omega_gpu_session_close(); host = 1; }
     if (sim) sim_battery(budget ? budget : 4);
     if (!host && !sim) {
         if (lb || rows || warps) omega_gpu_fp8_set_shape(lb, rows, warps);

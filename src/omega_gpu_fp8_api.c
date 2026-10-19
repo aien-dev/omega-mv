@@ -287,6 +287,49 @@ void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t) {
     omega_gpu_host_free(t);
 }
 
+/* ---- refill in place (sc #677 READ DRUM) ---- */
+
+int omega_gpu_fp8_tensor_alloc(uint32_t experts, uint32_t n, uint32_t k, OmegaGpuFp8Tensor **out) {
+    if (out) *out = NULL;
+    if (!out || experts == 0 || n == 0 || k == 0 || n % OMEGA_FP8_BLOCK || k % OMEGA_FP8_BLOCK) return OMEGA_GPU_FP8_BAD_ARGS;
+    if (k > OMEGA_FP8_MAX_K) return OMEGA_GPU_FP8_TOO_LARGE;
+    const size_t wbytes = (size_t)experts * n * k, scount = (size_t)experts * (n / OMEGA_FP8_BLOCK) * (k / OMEGA_FP8_BLOCK);
+    OmegaGpuFp8Tensor *t = omega_gpu_host_calloc(1, sizeof *t);
+    if (!t) return OMEGA_GPU_FP8_BAD_ARGS;
+    t->experts = experts; t->n = n; t->k = k;
+    int rc = OMEGA_GPU_FP8_OK;
+    omega_gpu_session_lock();
+    if (!g.weights_cached_set) { const char *v = getenv("AIEN_OMEGA_FP8_WEIGHT_CACHE"); g.weights_cached = (v && v[0] == '1' && v[1] == 0) ? 1 : 0; g.weights_cached_set = 1; }
+    int (*const alloc)(size_t, OmegaGpuMem *) = g.weights_cached ? omega_gpu_session_alloc_cached : omega_gpu_session_alloc;
+    if (!dev_open_locked() || alloc(wbytes, &t->w) != 0 || alloc(scount * 4u, &t->s) != 0) rc = OMEGA_GPU_FP8_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    if (rc != OMEGA_GPU_FP8_OK) { omega_gpu_fp8_tensor_free(t); return rc; }
+    *out = t;
+    return OMEGA_GPU_FP8_OK;
+}
+
+int omega_gpu_fp8_tensor_weights(OmegaGpuFp8Tensor *t, uint8_t **w_cpu, size_t *bytes) {
+    if (!t || !w_cpu || !bytes || !t->w.cpu) return OMEGA_GPU_FP8_BAD_ARGS;
+    *w_cpu = t->w.cpu;
+    *bytes = (size_t)t->experts * t->n * t->k;
+    return OMEGA_GPU_FP8_OK;
+}
+
+int omega_gpu_fp8_tensor_commit(OmegaGpuFp8Tensor *t, const uint16_t *scale) {
+    if (!t || !scale || !t->w.cpu || !t->s.cpu) return OMEGA_GPU_FP8_BAD_ARGS;
+    const size_t wbytes = (size_t)t->experts * t->n * t->k;
+    const size_t scount = (size_t)t->experts * (t->n / OMEGA_FP8_BLOCK) * (t->k / OMEGA_FP8_BLOCK);
+    size_t first = 0;
+    if (omega_fp8_pack_scan_nan(t->w.cpu, wbytes, &first)) {
+        char e[120]; omega_gpu_fmt(e, sizeof e, "fp8 commit: e4m3 NaN code at byte %zu", first);
+        omega_gpu_session_set_error(e);
+        return OMEGA_GPU_FP8_NAN_WEIGHT;
+    }
+    if (omega_fp8_pack_scales(scale, scount, t->s.cpu, g.no_fold) != 0) { omega_gpu_session_set_error("fp8 commit: NaN, inf or overflowing scale"); return OMEGA_GPU_FP8_BAD_ARGS; }
+    if (omega_gpu_session_sync_to_gpu(&t->w) != 0 || omega_gpu_session_sync_to_gpu(&t->s) != 0) return OMEGA_GPU_FP8_CHIP_FAIL;
+    return OMEGA_GPU_FP8_OK;
+}
+
 /* ---- the GEMV (lock held inside) ---- */
 
 /* dev_tab / dev_x non-zero: the group table / the x' row already sit on the device (written by the router launch).

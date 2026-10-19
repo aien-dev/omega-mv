@@ -38,6 +38,8 @@
  *   int omega_gpu_fp8_prepare(uint32_t k);        build and pin the kernel for width k now (serving).
  *   void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t);
  *   void omega_gpu_fp8_tensor_shape(const OmegaGpuFp8Tensor *t, uint32_t *experts, uint32_t *n, uint32_t *k);
+ *   int omega_gpu_fp8_tensor_alloc(experts, n, k, &t); omega_gpu_fp8_tensor_weights(t, &w_cpu, &bytes);
+ *   int omega_gpu_fp8_tensor_commit(t, scale_inv_bf16);   refill in place (see below)
  *   const char *omega_gpu_fp8_rc_name(int rc);     const char *omega_gpu_fp8_last_error(void);
  *
  * Return codes: 0 OK; negative OMEGA_GPU_FP8_* below. An uncertain completion latches the process
@@ -90,6 +92,17 @@ int omega_gpu_fp8_tensor_upload(uint32_t experts, uint32_t n, uint32_t k, const 
                                 const uint16_t *scale_inv_bf16, OmegaGpuFp8Tensor **out);
 void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t);
 void omega_gpu_fp8_tensor_shape(const OmegaGpuFp8Tensor *t, uint32_t *experts, uint32_t *n, uint32_t *k);
+
+/* Refill in place (sc #677, READ DRUM: a model larger than memory streams its layers through a few fixed tensors).
+ * alloc makes a tensor of the given shape with undefined contents; weights gives the host mapping of its weight bytes
+ * (experts * n * k, page aligned, so an O_DIRECT read can land there with no staging copy); commit refuses e4m3 NaN
+ * codes in those bytes (OMEGA_GPU_FP8_NAN_WEIGHT, as upload does), packs the scales and syncs. A tensor may only be
+ * launched after a successful commit of its current contents, and must not be refilled while a launch that reads it
+ * is in flight (the caller orders the two). commit takes no session lock: it may run on another thread beside launches
+ * that read other tensors. */
+int omega_gpu_fp8_tensor_alloc(uint32_t experts, uint32_t n, uint32_t k, OmegaGpuFp8Tensor **out);
+int omega_gpu_fp8_tensor_weights(OmegaGpuFp8Tensor *t, uint8_t **w_cpu, size_t *bytes);
+int omega_gpu_fp8_tensor_commit(OmegaGpuFp8Tensor *t, const uint16_t *scale_inv_bf16);
 
 int omega_gpu_fp8_gemv_f32(const OmegaGpuFp8Tensor *t, uint32_t expert, const float *x, float *y, OmegaGpuFp8Info *info);
 int omega_gpu_fp8_gemv_bf16(const OmegaGpuFp8Tensor *t, uint32_t expert, const uint16_t *x, float *y, OmegaGpuFp8Info *info);
@@ -167,6 +180,8 @@ uint32_t omega_fp8_e4m3_kernel_bits(uint8_t b);
 int omega_fp8_e4m3_is_nan(uint8_t b);
 /* NaN codes in w; first = index of the first one. */
 size_t omega_fp8_pack_scan_nan(const uint8_t *w, size_t count, size_t *first);
+/* The plain byte loop the fast scan above must equal (tests only). */
+size_t omega_fp8_pack_scan_nan_bytes(const uint8_t *w, size_t count, size_t *first);
 /* bf16 scales -> f32 * 2^56 (mutant_no_fold: * 1). -1 on a NaN/inf scale or fold overflow. */
 int omega_fp8_pack_scales(const uint16_t *bf16, size_t count, float *out, int mutant_no_fold);
 void omega_fp8_pack_x_f32(const float *x, uint32_t k, float *out);
