@@ -20,6 +20,7 @@ is a loaded-box number; load averages are in the file headers.
 | `round2_fit/`, `fixtures/round2_*.oev`, `round2_predictions/`, `round2_predictions.csv` | same-state refit (k=1, k=8) and predictions committed before the held-out rows | `FIT_DIR=round2_fit ... predict` |
 | `round2_heldout/`, `round2_heldout_results.md` | round 2 held-out rows and verdicts (G-err FAIL 3/4, G-cov PASS 3/4) | `measure.sh`, `... compare` |
 | `heldout_round2_interpretation.md` | pipe regime retained, low-k independence falsified, next experiment | hand-written |
+| `PRECOMMIT_round3.md`, `round3_x925/`, `round3_a725/`, `heldout_round3_interpretation.md` | core-class pinned k=1,2,3; INCONCLUSIVE at load 56 | `measure.sh PIN=`, hand-written |
 | `cli-example/` | `run_cli.sh` outputs on the pinned M1 fixtures (JSON, Pareto table) | `tests/dagsim/run_cli.sh` |
 | `test-dagsim.log` | `make test-dagsim` output (unit + CLI checks) through `quiet-build` | Makefile |
 
