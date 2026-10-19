@@ -1,5 +1,5 @@
 #!/bin/sh
-# measure.sh PROBE_BIN EVIDENCE_DIR [SUBDIR]   (KS="1 8" env selects thread counts)
+# measure.sh PROBE_BIN EVIDENCE_DIR [SUBDIR]   (KS="1 8" env selects thread counts; PIN="5-9,15-19" pins with taskset)
 # Runs the held-out memcpy rows under the GB10 lock, held only for the
 # measurement (about 20 s total). Wrap the call in quiet-measure so builds
 # drain first. If the GB10 lock is not free within 20 minutes, the
@@ -18,7 +18,8 @@ runs() {
       sleep 10; i=$((i+1))
     done
     if [ "$avail" -lt 15204352 ]; then echo "# SKIPPED k=$k: MemAvailable ${avail} kB under the 12 GiB headroom rule plus 2 GB for the probe" > "$EV/$SUB/memcpy_k$k.csv"; continue; fi
-    nice -n 10 "$PROBE" 1 $k 10 > "$EV/$SUB/memcpy_k$k.csv" 2>&1
+    if [ -n "${PIN:-}" ]; then nice -n 10 taskset -c "$PIN" "$PROBE" 1 $k 10 > "$EV/$SUB/memcpy_k$k.csv" 2>&1
+    else nice -n 10 "$PROBE" 1 $k 10 > "$EV/$SUB/memcpy_k$k.csv" 2>&1; fi
   done
 }
 exec 9>/tmp/aien-gb10.lock
