@@ -45,6 +45,8 @@ make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-realize
 
 The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. CI definitions in `.github/workflows/` list the suites that run on every push.
 
+`make test-bw-hazard` (host only, links `libomega_gpu.a`, so it needs the physics checkout like `make`) reads the encoded bytes of every GPU kernel the generators build and checks the scoreboard waits: a register written by a load must be waited on before it is read, and a register a queued load or store still reads must be waited on before it is overwritten (omega-mv#554). The simulators do not model these waits, so this is the host check that would have caught the omega-mv#545 chip fault. Known findings on older kernels are listed, with how each was confirmed, in `tests/bw_hazard_test.c`.
+
 ## Repository layout
 
 `src/` core and C compiler (`src/compiler/`), `src/runtime/` reaction runtime, `src/fabric/` host-only fabric interface, `src/physics0/` Physics Zero apparatus, `spec/` and `docs/` specifications, `tests/` gate suites, `evidence/` content-addressed receipts, `tools/` harnesses, `mk/` make fragments included by the `Makefile`. Also `bench/prime_race/` (Prime Drag Race implementation), `calibration/` (Turing calibration experiments, preregistration and blinding protocol), `research/` (experiments and prototypes) and `doctrine/` (the Milestone 4 doctrine).
