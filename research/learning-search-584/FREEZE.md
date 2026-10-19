@@ -91,9 +91,15 @@ must answer with a clarification/abstention and never commit. Then, in this orde
    (table capacity 32 forces eviction pressure: retention is measured, not assumed).
 6. changed rules (201..224): 24 SOLVE on seen keys whose hidden rule has changed
    (examples disagree with the retained program): a retained answer must be refused.
-7. correction handling (225..240): 16 CORRECT: the key's rule changed, the first answer
-   from retained state would be wrong; the harness delivers one counterexample; the
-   arm's second answer is scored. Both answers' costs are charged.
+7. correction handling (225..240): 16 CORRECT: the key's rule changed to one that agrees
+   with the old rule on the 4 structured inputs, which are the only examples given, so a
+   retained answer passes the applicability check and is wrong; the harness delivers one
+   counterexample (an input where old and new rules differ); the arm's second answer is
+   scored on the new rule. Both answers' costs are charged. When no agreeing new rule is
+   found in 4096 tries the change is an ordinary one and is recorded as such (key_a=0).
+   Because 5 examples underdetermine the rule, success in this block is expected to be
+   low for every arm; the block measures correction mechanics (refusal of the stale
+   entry, second attempt, cost), not identification.
 
 Retention intervals (frozen): recall is tested at 112 to 136 objectives after first
 exposure (block 5 positions minus block 1 positions).

@@ -117,6 +117,7 @@ typedef struct {
     uint32_t seq, kind, block;
     uint64_t key, key_a, key_b;    /* COMPOSE names a and b */
     Body rule;                     /* hidden */
+    uint32_t n_ex;
     uint64_t ex_x[LS_NEX], ex_y[LS_NEX];
     uint64_t chk_x[LS_NCHECK], chk_y[LS_NCHECK];
     uint64_t fix_x, fix_y;         /* CORRECT counterexample */
@@ -134,11 +135,12 @@ static Body rnd_rule(uint32_t n) {
 }
 static uint32_t rnd_len(void) { uint32_t r = rnd_below(10); return r < 4 ? 1 : r < 8 ? 2 : 3; }
 
+static const uint64_t STRUCTURED[4] = { 0, 1, 0xFFFFFFFFull, 0x80000000ull };
 static void fill_examples(Objective *o) {
-    const uint64_t structured[4] = { 0, 1, 0xFFFFFFFFull, 0x80000000ull };
-    for (uint32_t i = 0; i < 4; i++) o->ex_x[i] = structured[i];
-    for (uint32_t i = 4; i < LS_NEX; i++) o->ex_x[i] = rnd() & wmask();
-    for (uint32_t i = 0; i < LS_NEX; i++) o->ex_y[i] = interp(&o->rule, o->ex_x[i]);
+    if (!o->n_ex) o->n_ex = LS_NEX;
+    for (uint32_t i = 0; i < 4 && i < o->n_ex; i++) o->ex_x[i] = STRUCTURED[i];
+    for (uint32_t i = 4; i < o->n_ex; i++) o->ex_x[i] = rnd() & wmask();
+    for (uint32_t i = 0; i < o->n_ex; i++) o->ex_y[i] = interp(&o->rule, o->ex_x[i]);
     for (uint32_t i = 0; i < LS_NCHECK; i++) { o->chk_x[i] = rnd() & wmask(); o->chk_y[i] = interp(&o->rule, o->chk_x[i]); }
 }
 
@@ -148,7 +150,7 @@ static void render_text(Objective *o) {
     p += snprintf(p, (size_t)(e - p), "%s k=%016" PRIx64 " w=%u", k, o->key, LS_WIDTH);
     if (o->kind == K_COMPOSE) p += snprintf(p, (size_t)(e - p), " a=%016" PRIx64 " b=%016" PRIx64, o->key_a, o->key_b);
     p += snprintf(p, (size_t)(e - p), " ex=");
-    for (uint32_t i = 0; i < LS_NEX; i++) p += snprintf(p, (size_t)(e - p), "%s%" PRIx64 ":%" PRIx64, i ? "," : "", o->ex_x[i], o->ex_y[i]);
+    for (uint32_t i = 0; i < o->n_ex; i++) p += snprintf(p, (size_t)(e - p), "%s%" PRIx64 ":%" PRIx64, i ? "," : "", o->ex_x[i], o->ex_y[i]);
     if (o->kind == K_CORRECT) p += snprintf(p, (size_t)(e - p), " fix=%" PRIx64 ":%" PRIx64, o->fix_x, o->fix_y);
 }
 
@@ -233,18 +235,31 @@ static void build_stream(uint64_t seed, int control) {
         o->seq = seq++; o->block = 6; o->kind = K_SOLVE; o->key = pool[k].key; o->rule = r;
         fill_examples(o); render_text(o);
     }
-    /* block 7: correction: rule changed, examples still the OLD rule's (so retained state
-     * looks applicable); the counterexample reveals the change; second answer scored. */
+    /* block 7: correction. The rule changes to r' which agrees with the old rule on the
+     * 4 structured inputs (the only examples given), so retained state passes the
+     * applicability check and the committed answer is wrong; the counterexample (a
+     * random input where old and new differ) is the human correction. The second
+     * answer is scored on the new rule. When no agreeing r' is found in 4096 tries the
+     * change is an ordinary one (refused up front) and is counted as such. */
     for (uint32_t i = 0; i < 16; i++) {
         uint32_t k = rnd_below(64);
-        Body old = pool[k].rule, r; do r = rnd_rule(rnd_len()); while (memcmp(&r, &old, sizeof r) == 0);
+        Body old = pool[k].rule, r; int agreeing = 0;
+        for (uint32_t t = 0; t < 4096 && !agreeing; t++) {
+            r = rnd_rule(rnd_len());
+            if (memcmp(&r, &old, sizeof r) == 0) continue;
+            int ok = 1; for (uint32_t s = 0; s < 4; s++) if (interp(&r, STRUCTURED[s]) != interp(&old, STRUCTURED[s])) ok = 0;
+            if (!ok) continue;
+            int differs = 0; for (uint32_t s = 0; s < 16 && !differs; s++) { uint64_t x = rnd() & wmask(); differs = interp(&r, x) != interp(&old, x); }
+            agreeing = differs;
+        }
+        if (!agreeing) do r = rnd_rule(rnd_len()); while (memcmp(&r, &old, sizeof r) == 0);
         Objective *o = &stream[stream_n++]; memset(o, 0, sizeof *o);
-        o->seq = seq++; o->block = 7; o->kind = K_CORRECT; o->key = pool[k].key; o->rule = old;
-        fill_examples(o);                       /* examples under the old rule */
-        o->rule = r; pool[k].rule = r;
-        for (uint32_t c = 0; c < LS_NCHECK; c++) o->chk_y[c] = interp(&r, o->chk_x[c]);   /* scored on the new rule */
+        o->seq = seq++; o->block = 7; o->kind = K_CORRECT; o->key = pool[k].key; o->rule = r; o->n_ex = 4;
+        fill_examples(o);                       /* 4 structured examples under the NEW rule */
+        pool[k].rule = r;
         uint32_t tries = 0;
-        do { o->fix_x = rnd() & wmask(); o->fix_y = interp(&r, o->fix_x); } while (interp(&old, o->fix_x) == o->fix_y && ++tries < 64);
+        do { o->fix_x = rnd() & wmask(); o->fix_y = interp(&r, o->fix_x); } while (interp(&old, o->fix_x) == o->fix_y && ++tries < 4096);
+        o->key_a = agreeing;                    /* recorded: correction scenario realized */
         render_text(o);
     }
     if (control == CTL_SHUFFLE) {
@@ -254,6 +269,7 @@ static void build_stream(uint64_t seed, int control) {
             Objective *o = &stream[i], *q = &stream[j];
             memcpy(o->ex_y, q->ex_y, sizeof o->ex_y);
             memcpy(o->ex_x, q->ex_x, sizeof o->ex_x);
+            o->n_ex = q->n_ex;
             o->fix_x = q->fix_x; o->fix_y = q->fix_y;
             render_text(o);
         }
