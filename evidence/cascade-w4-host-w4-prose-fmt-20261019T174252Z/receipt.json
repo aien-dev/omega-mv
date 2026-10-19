@@ -1,0 +1,22 @@
+{
+ "name": "cascade-w4-host-prose-fmt",
+ "cmd": "nice -n 19 ionice -c3 /home/drakestapleton/workspace/targets/cascade-w4b/sc-h2/release/qwen38_w4_host /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/ab-w4-work/seq/prose.json out.json --rules floor,nvfp4,int3",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T12:42:52.382022",
+ "seconds": 1236.525,
+ "samples": 565,
+ "wall_W_mean": 269.30973451327435,
+ "wall_J": 333008.28440944705,
+ "idle_W_before": 250.0,
+ "incremental_J": 23876.974125309345,
+ "gpu_W_mean": 15.399893805309736,
+ "gpu_util_mean": 32.332743362831856,
+ "load1_start": "54.55",
+ "load1_end": "84.68",
+ "mem_avail_kB_start": "47590948",
+ "mem_avail_kB_end": "54002036",
+ "lock_holders_max": 64,
+ "nvrm_errors_delta": 13,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
