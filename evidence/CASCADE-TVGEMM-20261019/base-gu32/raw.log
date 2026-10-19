@@ -1,0 +1,36 @@
+quiet_lock NOT_HELD_waited_over_20min
+loadavg_start 56.69 70.80 76.46 42/2515 1305599
+chip q38gu: 32 tokens, M 32 rows, 1 segments, 1 tiles, grid 272 x 1, rt 4 ct 2 warps 8, declared 128 registers
+chip bit-identity: 0 of 139264 sampled outputs (4 rows) differ from the emulation (bit-identical)
+chip second call: identical
+chip mutant 1: caught (1114112 of 1114112 differ)
+chip mutant 2: caught (1114112 of 1114112 differ)
+chip mutant 3: caught (1114112 of 1114112 differ)
+chip mutant 4: caught (1114111 of 1114112 differ)
+TCGEMM q38gu (medians of 9): chip 1270.3 us, call 2626.6 us; 8.98 TFLOPS; weights streamed 178 MB (140.3 GB/s), activations gathered 178 MB, output 4 MB; total 284.2 GB/s
+chip: PASS
+GPU_TCGEMM: PASS
+{
+ "name": "tvg-base-gu32",
+ "cmd": "/home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-00659ce6 --chip --shape q38gu --tokens 32 --check-rows 4",
+ "exit": 0,
+ "git_head": "00659ce6",
+ "start": "2026-10-19T12:42:03.836168",
+ "seconds": 6.511,
+ "samples": 4,
+ "wall_W_mean": 250.0,
+ "wall_J": 1627.6870965957642,
+ "idle_W_before": 259.3333333333333,
+ "incremental_J": -60.766984939575075,
+ "gpu_W_mean": 7.2975,
+ "gpu_util_mean": 0.0,
+ "load1_start": "56.69",
+ "load1_end": "55.59",
+ "mem_avail_kB_start": "30907080",
+ "mem_avail_kB_end": "27604708",
+ "lock_holders_max": 9,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-base-gu32.json
+loadavg_end 53.62 69.68 76.03 40/2474 1306990
