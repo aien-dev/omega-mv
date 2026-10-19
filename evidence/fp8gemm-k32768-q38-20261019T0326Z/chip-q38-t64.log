@@ -1,0 +1,45 @@
+== q38mix: 1 experts, n 16384, k 5120, 64 tokens x top-1
+upload 84 MB: rc=OK 78 ms
+parity vs per-row GEMV (64 calls, 26 ms): 0 of 1048576 outputs differ (bit-identical)
+4 sampled outputs: 0 differ from the host emulation, worst relative error vs the double oracle 3.63e-09
+second call: bit-identical
+chip mutant 1: caught (1048576 of 1048576 outputs differ)
+chip mutant 2: caught (1048576 of 1048576 outputs differ)
+chip mutant 3: caught (1048576 of 1048576 outputs differ)
+GEMM (medians of 9, evict 1): mt 8 warps 16 ctas 96 x 1 segments, 64 rows, up to 8 passes: chip 14846.5 us, call 16114.3 us; streams 671 MB (distinct experts 84 MB) = 45.2 GB/s on streamed, 5.7 GB/s on distinct
+per-token grouped GEMV baseline (64 tokens, medians of 9): chip 28136.9 us, call 28935.8 us => GEMM is 1.90x faster (chip), 1.80x (call)
+per token: GEMM chip 232.0 us/token, call 251.8 us/token
+== q38o: 1 experts, n 5120, k 6144, 64 tokens x top-1
+upload 31 MB: rc=OK 14 ms
+parity vs per-row GEMV (64 calls, 11 ms): 0 of 327680 outputs differ (bit-identical)
+4 sampled outputs: 0 differ from the host emulation, worst relative error vs the double oracle 1.00e-08
+second call: bit-identical
+chip mutant 1: caught (327680 of 327680 outputs differ)
+chip mutant 2: caught (327680 of 327680 outputs differ)
+chip mutant 3: caught (327680 of 327680 outputs differ)
+GEMM (medians of 9, evict 1): mt 8 warps 16 ctas 96 x 1 segments, 64 rows, up to 8 passes: chip 8404.2 us, call 8883.2 us; streams 252 MB (distinct experts 31 MB) = 29.9 GB/s on streamed, 3.7 GB/s on distinct
+per-token grouped GEMV baseline (64 tokens, medians of 9): chip 11196.8 us, call 11571.4 us => GEMM is 1.33x faster (chip), 1.30x (call)
+per token: GEMM chip 131.3 us/token, call 138.8 us/token
+== q38gu: 1 experts, n 34816, k 5120, 64 tokens x top-1
+upload 178 MB: rc=OK 78 ms
+parity vs per-row GEMV (64 calls, 58 ms): 0 of 2228224 outputs differ (bit-identical)
+4 sampled outputs: 0 differ from the host emulation, worst relative error vs the double oracle 3.54e-09
+second call: bit-identical
+chip mutant 1: caught (2228224 of 2228224 outputs differ)
+chip mutant 2: caught (2228224 of 2228224 outputs differ)
+chip mutant 3: caught (2228224 of 2228224 outputs differ)
+GEMM (medians of 9, evict 1): mt 8 warps 16 ctas 96 x 1 segments, 64 rows, up to 8 passes: chip 35279.1 us, call 37111.0 us; streams 1426 MB (distinct experts 178 MB) = 40.4 GB/s on streamed, 5.1 GB/s on distinct
+per-token grouped GEMV baseline (64 tokens, medians of 9): chip 56406.7 us, call 57825.6 us => GEMM is 1.60x faster (chip), 1.56x (call)
+per token: GEMM chip 551.2 us/token, call 579.9 us/token
+== q38down: 1 experts, n 5120, k 17408, 64 tokens x top-1
+upload 89 MB: rc=OK 39 ms
+parity vs per-row GEMV (64 calls, 33 ms): 0 of 327680 outputs differ (bit-identical)
+4 sampled outputs: 0 differ from the host emulation, worst relative error vs the double oracle 7.50e-09
+second call: bit-identical
+chip mutant 1: caught (327680 of 327680 outputs differ)
+chip mutant 2: caught (327680 of 327680 outputs differ)
+chip mutant 3: caught (327680 of 327680 outputs differ)
+GEMM (medians of 9, evict 1): mt 8 warps 16 ctas 96 x 1 segments, 64 rows, up to 8 passes: chip 11918.6 us, call 12878.0 us; streams 713 MB (distinct experts 89 MB) = 59.8 GB/s on streamed, 7.5 GB/s on distinct
+per-token grouped GEMV baseline (64 tokens, medians of 9): chip 32456.7 us, call 33028.3 us => GEMM is 2.72x faster (chip), 2.56x (call)
+per token: GEMM chip 186.2 us/token, call 201.2 us/token
+gpu_fp8gemm_test: 36 checks, 0 failed: PASS
