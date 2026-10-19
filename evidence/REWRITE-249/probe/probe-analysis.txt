@@ -1,0 +1,4 @@
+# rwprobe at 3b6e8304, 2026-10-19T20:07:46Z; counts only, no timing
+RWPROBE universe=u8-len1-2-K16 programs=6480 distinct_functions=2762 signature_groups=2230 mixed_groups=226 misgrouped_programs=939 true_equivalences_split=0 omega_pruned=3886 functions_lost_to_pruning=496 table_entries=1024 table_capacity=1024 ce_written=0
+# set: widths <= 16 compared on every input; widths >= 32 on 4096 frozen samples (a difference there is a witness, an equality is not a proof)
+RWPROBE evidence/REWRITE-249/sets/heldout-seed249.set programs=240 distinct_functions=176 signature_groups=167 mixed_groups=6 misgrouped_programs=11 true_equivalences_split=0 omega_pruned=70 functions_lost_to_pruning=12 table_entries=154 table_capacity=1024 ce_written=0

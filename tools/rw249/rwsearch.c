@@ -710,6 +710,8 @@ static int mode_exec(const char *dir, const char *verdicts, uint32_t calls) {
 }
 
 /* OEV1 files (omega-mv#583 spec v1): one per accepted expression with removed ops. */
+static const char *g_load1 = "unknown";
+static const char *g_proof = "derivs.rwd";
 static int mode_account(const char *dir, const char *verdicts, const char *oev, const char *build, const char *blob) {
     Row *r; int n = load_rows(dir, verdicts, &r);
     int acc = 0, rej = 0, unchanged = 0, removed = 0, files = 0;
@@ -727,8 +729,8 @@ static int mode_account(const char *dir, const char *verdicts, const char *oev, 
         fprintf(f, "oev version=1\n");
         fprintf(f, "machine id=spark-b87b soc=GB10 cores=20 mem_bytes=137438953472 prov=specified src=omega-research-583/spec/offline-evidence-v1.md\n");
         fprintf(f, "build repo=omega-mv sha=%s\n", build ? build : "0000000000000000000000000000000000000000");
-        fprintf(f, "calibration id=rw249-cal taken=2026-10-19 valid_days=7 load1=0 src=evidence/REWRITE-249/calibration%s%s\n",
-                blob ? " model=" : "", blob ? blob : "");
+        fprintf(f, "calibration id=rw249-cal taken=2026-10-19 valid_days=7 load1=%s src=evidence/REWRITE-249/calibration%s%s\n",
+                g_load1, blob ? " model=" : "", blob ? blob : "");
         fprintf(f, "resource id=cpu kind=compute slots=1 prov=specified src=single-thread-chain\n");
         int prevk = -1;
         for (int k = 0; k < r[i].out.n; ++k) {
@@ -745,7 +747,7 @@ static int mode_account(const char *dir, const char *verdicts, const char *oev, 
         char rem[256]; snprintf(rem, sizeof rem, "%s", r[i].removed);
         char *save;
         for (char *t = strtok_r(rem, ",", &save); t; t = strtok_r(NULL, ",", &save))
-            fprintf(f, "removed op=%s_s%s reason=eliminated proof=rwcheck:%s/derivs.rwd#%s\n", r[i].id, t, dir, r[i].id);
+            fprintf(f, "removed op=%s_s%s reason=eliminated proof=rwcheck:%s#%s\n", r[i].id, t, g_proof, r[i].id);
         fclose(f);
         files++;
     }
@@ -808,6 +810,8 @@ int main(int argc, char **argv) {
         else if (!strcmp(a, "--cpu-us") && v) { bg.cpu_ns_max = atof(v) * 1000.0; i++; }
         else if (!strcmp(a, "--inject-probe-rule")) g_inject = 1;
         else if (!strcmp(a, "--profile")) g_profile = 1;
+        else if (!strcmp(a, "--load1") && v) { g_load1 = v; i++; }
+        else if (!strcmp(a, "--proof") && v) { g_proof = v; i++; }
         else die("unknown flag");
     }
     const char *mu = getenv("RW_MUTANT");
