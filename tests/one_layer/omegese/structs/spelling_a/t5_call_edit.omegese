@@ -1,0 +1,14 @@
+struct C n uint last uint end
+fn bump c edit C v uint to void
+put c n add get c n v
+put c last v
+end
+fn run a uint b uint to uint
+c = new C
+put c n a
+put c last a
+bump c b
+r = add get c n get c last
+free c
+ret r
+end

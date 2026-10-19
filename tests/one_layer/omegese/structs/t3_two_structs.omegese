@@ -1,0 +1,11 @@
+struct A x int end
+struct B y int z int end
+fn mix a int b int to int
+p = new A a
+q = new B b a
+put q z mul get p x get q y
+d = sub get q z get p x
+free q
+free p
+ret d
+end

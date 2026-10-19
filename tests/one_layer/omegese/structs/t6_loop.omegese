@@ -1,0 +1,11 @@
+struct Acc sum long v long 4 end
+fn run a long to long
+s = new Acc a a
+for i long 4
+put s v i add get s v i i
+put s sum add get s sum get s v i
+end
+r = get s sum
+free s
+ret r
+end

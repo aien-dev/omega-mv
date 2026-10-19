@@ -1,0 +1,9 @@
+// entry: sum2
+// Omegese struct twin 1 (one scalar struct): the same IR as t1_scalar.omegese.
+struct P { x: u32, y: u32 }
+
+fn sum2(a: u32, b: u32) -> u32 {
+    let p: own P = P { x: a, y: b };
+    return p.x + p.y;
+}
+// expect-run: sum2 3 4 -> 7

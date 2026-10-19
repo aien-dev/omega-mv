@@ -55,25 +55,38 @@ static const char *const REFIR[] = {"", "own", "mut", "shared"};
 #define S_INT 0x1FEu
 #define S_SIGNED 0x1E0u
 
-typedef struct { int ref; int s; int len; } Ty; /* ref R_NONE: scalar s; else array of s, len */
+typedef struct { int ref; int s; int len; int st; } Ty; /* ref R_NONE: scalar s; else array of s, len, or (st > 0) a
+                                                   * struct: structs[st - 1] (s and len 0) */
 
 static int is_int(Ty t) { return t.ref == R_NONE && t.s != T_BOOL; }
 static int is_signed(int s) { return s >= T_I8; }
-static int teq(Ty a, Ty b) { return a.ref == b.ref && a.s == b.s && a.len == b.len; }
+static int teq(Ty a, Ty b) { return a.ref == b.ref && a.s == b.s && a.len == b.len && a.st == b.st; }
+static Ty with_ref(Ty t, int rf) { t.ref = rf; return t; }
+/* structs (OSC-2 section 2): declared before the first fn; fields in declaration order, each field whole
+ * 8-byte cells (scalar 1, array len), offsets the prefix sums; at most 16 structs, 16 fields, 64 cells */
+#define MAX_STRUCTS 16
+#define MAX_FIELDS 16
+#define MAX_CELLS 64
+typedef struct { char name[NAME_MAX_LEN + 1]; int s; int len; } Field; /* len 0: a scalar field */
+typedef struct { char name[NAME_MAX_LEN + 1]; int nf; int ncells; Field f[MAX_FIELDS]; } Struct;
+static Struct structs[MAX_STRUCTS];
+static int nstructs;
 static const char *tname(Ty t) {
-    static char buf[4][48];
+    static char buf[4][80];
     static int k;
     char *b = buf[k++ & 3];
-    if (t.ref == R_NONE) snprintf(b, 48, "%s", GW[t.s]);
-    else snprintf(b, 48, "%s %s %d", REFW[t.ref], GW[t.s], t.len);
+    if (t.ref == R_NONE) snprintf(b, 80, "%s", GW[t.s]);
+    else if (t.st) snprintf(b, 80, "%s %s", REFW[t.ref], structs[t.st - 1].name);
+    else snprintf(b, 80, "%s %s %d", REFW[t.ref], GW[t.s], t.len);
     return b;
 }
 static const char *tir(Ty t) {
-    static char buf[4][48];
+    static char buf[4][80];
     static int k;
     char *b = buf[k++ & 3];
-    if (t.ref == R_NONE) snprintf(b, 48, "%s", IRN[t.s]);
-    else snprintf(b, 48, "%s:%s:%d", REFIR[t.ref], IRN[t.s], t.len);
+    if (t.ref == R_NONE) snprintf(b, 80, "%s", IRN[t.s]);
+    else if (t.st) snprintf(b, 80, "%s:%s", REFIR[t.ref], structs[t.st - 1].name);
+    else snprintf(b, 80, "%s:%s:%d", REFIR[t.ref], IRN[t.s], t.len);
     return b;
 }
 
@@ -82,7 +95,7 @@ enum { OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_REM, OP_AND, OP_OR, OP_XOR, OP_SHL, OP
        OP_EQ, OP_NE, OP_LT, OP_LE, OP_GT, OP_GE, OP_NEG, OP_NOT, OP_GET, OP_NEW, OP_N };
 static const char *const OPW[OP_N] = {"add", "sub", "mul", "div", "rem", "and", "or", "xor", "shl", "shr",
                                       "eq", "ne", "lt", "le", "gt", "ge", "neg", "not", "get", "new"};
-static const char *const KW[] = {"fn", "to", "void", "end", "else", "if", "while", "for", "break", "ret",
+static const char *const KW[] = {"fn", "struct", "to", "void", "end", "else", "if", "while", "for", "break", "ret",
                                  "trap", "put", "free", "true", "false", "bound", "="};
 #define NKW (sizeof KW / sizeof KW[0])
 static int is_shift(int o) { return o == OP_SHL || o == OP_SHR; }
@@ -98,8 +111,19 @@ static int word_in(const char *w, const char *const *set, int n) {
 static int scalar_word(const char *w) { int s = word_in(w, GW, T_NSCALAR); return s >= 0 ? s : word_in(w, IRN, T_NSCALAR); }
 static int ref_word(const char *w) { int r = word_in(w, REFW + 1, 3); return r < 0 ? -1 : r + 1; }
 static int op_word(const char *w) { return word_in(w, OPW, OP_N); }
+static int find_struct(const char *w) {
+    for (int i = 0; i < nstructs; i++)
+        if (!strcmp(structs[i].name, w)) return i;
+    return -1;
+}
+static int find_field(const Struct *st, const char *w) {
+    for (int i = 0; i < st->nf; i++)
+        if (!strcmp(st->f[i].name, w)) return i;
+    return -1;
+}
+/* a fixed word of the language, or a declared struct name (a struct name is a type word from its line on) */
 static int reserved(const char *w) {
-    return scalar_word(w) >= 0 || ref_word(w) >= 0 || op_word(w) >= 0 || word_in(w, KW, (int)NKW) >= 0;
+    return scalar_word(w) >= 0 || ref_word(w) >= 0 || op_word(w) >= 0 || word_in(w, KW, (int)NKW) >= 0 || find_struct(w) >= 0;
 }
 
 /* ---- refusal ---- */
@@ -147,7 +171,7 @@ enum { OS_U = 1, OS_L = 2, OS_D = 4 };
 typedef struct { uint8_t b; uint64_t m; } Os;
 /* oin: if, the state the else path starts with; loop, the state before it. oacc: if, the then path's
  * end (ohas); loop, the joined states at its breaks (ohas). opost: loop, the state after its head */
-typedef struct { int kind; int depth; int els, join, has_else; int head, exit; int ctr; int ohas; Os oin[MAX_OWN], oacc[MAX_OWN], opost[MAX_OWN]; } Frame;
+typedef struct { int kind; int depth; int els, join, has_else; int head, exit; int ctr; int one1; int ohas; Os oin[MAX_OWN], oacc[MAX_OWN], opost[MAX_OWN]; } Frame;
 
 static Func funcs[MAX_FUNCS];
 static int nfuncs;
@@ -555,11 +579,21 @@ static int lit_reg(const char *w, Ty t) {
     return r;
 }
 
+/* a number in a fresh register written by const where it stands (not hoisted, not shared) */
+static int lit_fresh(const char *w, Ty t) {
+    int neg = 0;
+    uint64_t mag = 0;
+    if (lit_conv(w, t.s, &neg, &mag)) return fail("%s does not fit %s", w, GW[t.s]);
+    int r = new_reg(t);
+    TRY(r);
+    TRY(op("\"op\": \"const\", \"dst\": %d, \"value\": %s%" PRIu64, r, neg ? "-" : "", mag));
+    return r;
+}
 /* may a value of type a be passed for a parameter of type p (the IR's reference binding rule:
  * own from own, edit from own or edit, view from any array of the same element type and length) */
 static int binds(Ty p, Ty a) {
     if (p.ref == R_NONE || a.ref == R_NONE) return teq(p, a);
-    if (p.s != a.s || p.len != a.len) return 0;
+    if (p.s != a.s || p.len != a.len || p.st != a.st) return 0;
     return p.ref == R_SHARED || (p.ref == R_MUT && a.ref != R_SHARED) || (p.ref == R_OWN && a.ref == R_OWN);
 }
 /* may own|edit|view (rf) be applied to an array of type a */
@@ -574,11 +608,12 @@ static int parse_type(Ty *t) {
     int s = scalar_word(lw[lp]);
     if (s >= 0) { *t = (Ty){R_NONE, s, 0}; lp++; return 0; }
     int r = ref_word(lw[lp]);
-    if (r < 0) return fail("'%s' is not a type (%s ..., or own/edit/view <type> <length>)", lw[lp], GW[T_U32]);
+    if (r < 0) return fail("'%s' is not a type (%s ..., own/edit/view <type> <length>, or own/edit/view <struct>)", lw[lp], GW[T_U32]);
+    if (lp + 1 < ln && find_struct(lw[lp + 1]) >= 0) { *t = (Ty){r, 0, 0, find_struct(lw[lp + 1]) + 1}; lp += 2; return 0; }
     if (lp + 2 >= ln && !g_fill) return fail("an array type is %s <element type> <length>", REFW[r]);
     if (lp + 1 >= ln) TRY(fill_word(GW[T_U32]));
     s = scalar_word(lw[lp + 1]);
-    if (s < 0) return fail("'%s' is not an element type", lw[lp + 1]);
+    if (s < 0) return fail("'%s' is not an element type or a struct", lw[lp + 1]);
     if (lp + 2 >= ln) TRY(fill_word("1"));
     int neg;
     uint64_t len;
@@ -654,8 +689,27 @@ static int skip_value(int p) {
     if (scalar_word(t) >= 0) return skip_value(p + 1);
     if (ref_word(t) >= 0) return p + 2 <= ln ? p + 2 : -1;
     int o = op_word(t);
-    if (o == OP_GET) return p + 2 <= ln ? skip_value(p + 2) : -1;
-    if (o == OP_NEW) return p + 3 <= ln ? skip_value(p + 3) : -1;
+    if (o == OP_GET) {
+        Name *a = p + 1 < ln ? find_name(lw[p + 1]) : NULL;
+        if (a && regs[a->reg].st) { /* get <struct> <field> [<index>] */
+            const Struct *S = &structs[regs[a->reg].st - 1];
+            int k = p + 2 < ln ? find_field(S, lw[p + 2]) : -1;
+            if (k < 0) return -1;
+            return S->f[k].len ? skip_value(p + 3) : p + 3;
+        }
+        return p + 2 <= ln ? skip_value(p + 2) : -1;
+    }
+    if (o == OP_NEW) {
+        int st = p + 1 < ln ? find_struct(lw[p + 1]) : -1;
+        if (st >= 0) { /* new <struct> <value per field> */
+            p += 2;
+#ifndef OMEGESE_STRUCT_A
+            for (int k = 0; k < structs[st].nf && p >= 0; k++) p = skip_value(p);
+#endif
+            return p;
+        }
+        return p + 3 <= ln ? skip_value(p + 3) : -1;
+    }
     if (o == OP_NEG || o == OP_NOT) return skip_value(p + 1);
     if (o >= 0) { int q = skip_value(p + 1); return q < 0 ? -1 : skip_value(q); }
     return -1;
@@ -740,6 +794,21 @@ static void gen_scalar(int s, const char *base, Buf *b) {
         if (!in_r(i)) continue;
         Ty t = regs[names[i].reg];
         const char *nm = names[i].name;
+        if (t.st) { /* a struct: read a field (for an int, the first one that is not bool) */
+            const Struct *S = &structs[t.st - 1];
+            int k = 0;
+            if (s != T_BOOL) while (k < S->nf && S->f[k].s == T_BOOL) k++;
+            if (k == S->nf) { needb = 1; continue; }
+            char rd[2 * NAME_MAX_LEN + 16];
+            snprintf(rd, sizeof rd, "get %s %s%s", nm, S->f[k].name, S->f[k].len ? " 0" : "");
+            int fs = S->f[k].s;
+            if (s == T_BOOL) { if (fs == T_BOOL) bput(&tl, "%s\n", rd); else bput(&tl, "eq %s 0\n", rd); }
+            else if (fs == s) bput(&tl, "%s\n", rd);
+            else bput(&tl, "%s %s\n", GW[s], rd);
+            g_taken[i] = 1;
+            n++;
+            continue;
+        }
         if (s == T_BOOL) {
             if (t.ref == R_NONE && t.s == T_BOOL) bput(&tl, "%s\n", nm);
             else if (t.ref == R_NONE) bput(&tl, "eq %s %s\n", nm, nm);
@@ -784,6 +853,14 @@ static void gen_scalar(int s, const char *base, Buf *b) {
     join_terms(b, s == T_BOOL ? "and" : "add", &tl, n, base);
     free(tl.p);
 }
+/* the text of a new struct st with every field zero: new S 0 0 ... */
+static void new_struct_text(int st, Buf *b) {
+    const Struct *S = &structs[st - 1];
+    bput(b, "new %s", S->name);
+#ifndef OMEGESE_STRUCT_A
+    for (int k = 0; k < S->nf; k++) bput(b, " %s", S->f[k].s == T_BOOL ? "false" : "0");
+#endif
+}
 /* the words of one value for the slot w */
 static int gen_value(const Want *w) {
     memset(g_taken, 0, sizeof g_taken);
@@ -795,9 +872,10 @@ static int gen_value(const Want *w) {
         for (int rf = R_OWN; i < 0 && rf <= R_SHARED; rf++)
             for (int k = 0; k < nnames && i < 0; k++) {
                 Ty t = regs[names[k].reg];
-                if (ref_ok(rf, t) && want_ok(w, (Ty){rf, t.s, t.len}) && !own_dead(names[k].reg)) { i = k; bput(&b, "%s %s", REFW[rf], names[k].name); }
+                if (ref_ok(rf, t) && want_ok(w, with_ref(t, rf)) && !own_dead(names[k].reg)) { i = k; bput(&b, "%s %s", REFW[rf], names[k].name); }
             }
-        if (i < 0 && w->top && w->arr == A_EXACT && w->p.ref == R_OWN)
+        if (i < 0 && w->top && w->arr == A_EXACT && w->p.ref == R_OWN && w->p.st) new_struct_text(w->p.st, &b);
+        else if (i < 0 && w->top && w->arr == A_EXACT && w->p.ref == R_OWN)
             bput(&b, "new %s %d %s", GW[w->p.s], w->p.len, w->p.s == T_BOOL ? "false" : "0");
         else if (i < 0) r = fail("no array of a fitting type is in scope here");
     } else {
@@ -878,6 +956,12 @@ static int slot(const Want *w, int dst, Val *v, int head, int k, int arity) {
     if (r == MISSING) return fail("%s has %d value%s after it; it takes %d", lw[head], k, plural(k), arity);
     return r;
 }
+/* the scalar types of a struct's fields, one bit per type */
+static unsigned field_types(int st) {
+    unsigned m = 0;
+    for (int k = 0; k < structs[st - 1].nf; k++) m |= 1u << structs[st - 1].f[k].s;
+    return m;
+}
 enum { AN_GET, AN_PUT, AN_FREE, AN_REF };
 /* an array name after the word at head (arity: the values head takes) that fits: get (element type
  * in want), put (own or edit), free (own), own|edit|view rf (result in want). In fill mode a missing
@@ -891,8 +975,8 @@ static int array_name(int head, int arity, int kind, int rf, const Want *want, i
             for (int i = 0; i < nnames; i++) {
                 Ty a = regs[names[i].reg];
                 int ok = a.ref != R_NONE &&
-                         (kind == AN_GET ? (want->scal >> a.s & 1) : kind == AN_PUT ? a.ref != R_SHARED :
-                          kind == AN_FREE ? a.ref == R_OWN : ref_ok(rf, a) && want_ok(want, (Ty){rf, a.s, a.len}));
+                         (kind == AN_GET ? (a.st ? (want->scal & field_types(a.st)) != 0 : (want->scal >> a.s & 1)) : kind == AN_PUT ? a.ref != R_SHARED :
+                          kind == AN_FREE ? a.ref == R_OWN : ref_ok(rf, a) && want_ok(want, with_ref(a, rf)));
                 if (ok && own_dead(names[i].reg)) nd += !pass;
                 else if (ok && in_r(i) == !pass) cand[nc++] = i;
             }
@@ -913,7 +997,25 @@ static int array_name(int head, int arity, int kind, int rf, const Want *want, i
     nm->read = 1;
     *reg = nm->reg;
     *t = regs[nm->reg];
-    if (t->ref == R_NONE) return fail("'%s' is not an array", w);
+    if (t->ref == R_NONE) return fail("'%s' is not an array or a struct", w);
+    return 0;
+}
+
+/* the field after the struct name at word lp - 1 (st: its struct): in fill mode a missing one is
+ * chosen, the first whose type is in m. *fi gets its index */
+static int field_word(int head, int st, unsigned m, int *fi) {
+    const Struct *S = &structs[st - 1];
+    if (lp >= ln) {
+        if (!g_fill) return fail("%s %s needs a field of %s", lw[head], lw[lp - 1], S->name);
+        int k = 0;
+        while (k < S->nf && !(m >> S->f[k].s & 1)) k++;
+        if (k == S->nf) return fail("%s has no field of a fitting type", S->name);
+        TRY(fill_word(S->f[k].name));
+    }
+    int k = find_field(S, lw[lp]);
+    if (k < 0) return fail("%s has no field '%s'", S->name, lw[lp]);
+    lp++;
+    *fi = k;
     return 0;
 }
 
@@ -1029,7 +1131,7 @@ static int value(const Want *want, int dst, Val *v) {
         TRY(array_name(v->head, 1, AN_REF, rf, want, &a, &ta));
         if (rf == R_OWN && ta.ref != R_OWN) return fail("own moves an own array; '%s' is %s", lw[lp - 1], tname(ta));
         if (rf == R_MUT && ta.ref == R_SHARED) return fail("edit needs an own or edit array; '%s' is view only", lw[lp - 1]);
-        v->t = (Ty){rf, ta.s, ta.len};
+        v->t = with_ref(ta, rf);
         TRY(to_dst(&dst, v->t));
         TRY(op("\"op\": \"mov\", \"dst\": %d, \"a\": %d", dst, a));
         TRY(own_mov(dst, a));
@@ -1054,6 +1156,25 @@ static int value(const Want *want, int dst, Val *v) {
         int a;
         Ty ta;
         TRY(array_name(v->head, 2, AN_GET, 0, want, &a, &ta));
+        if (ta.st) { /* get <struct name> <field> [<index>]: a field, or an element of an array field */
+            const Struct *S = &structs[ta.st - 1];
+            int fi;
+            TRY(field_word(v->head, ta.st, want->scal, &fi));
+            const Field *fd = &S->f[fi];
+            Val i = {0};
+            if (fd->len) {
+                v->arity = 3;
+                Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0};
+                TRY(slot(&iw, -2, &i, v->head, 2, 3));
+                if (!is_int(i.t)) return fail("index '%s' is not a whole number", span(i.a, i.b));
+            }
+            v->t = (Ty){R_NONE, fd->s, 0};
+            TRY(to_dst(&dst, v->t));
+            if (fd->len) TRY(op("\"op\": \"fload\", \"dst\": %d, \"a\": %d, \"field\": \"%s\", \"index\": %d", dst, a, fd->name, i.reg));
+            else TRY(op("\"op\": \"fload\", \"dst\": %d, \"a\": %d, \"field\": \"%s\"", dst, a, fd->name));
+            TRY(own_use(a));
+            goto done;
+        }
         Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0};
         Val i;
         TRY(slot(&iw, -2, &i, v->head, 1, 2));
@@ -1066,7 +1187,51 @@ static int value(const Want *want, int dst, Val *v) {
     }
     if (o == OP_NEW) { /* new <type> <length> <init> */
         v->arity = 3;
-        if (!want->top) return fail("new makes an array for a name: write it on its own line (x = new ...)");
+        if (!want->top) return fail("new makes an array for a name (or a struct): write it on its own line (x = new ...)");
+        if (lp >= ln && g_fill && want->arr == A_EXACT && want->p.st) TRY(fill_word(structs[want->p.st - 1].name));
+        if (lp < ln && find_struct(lw[lp]) >= 0) { /* new <struct> <value per field>: a struct literal */
+            int st = find_struct(lw[lp++]) + 1;
+            const Struct *S = &structs[st - 1];
+            Ty u64 = {R_NONE, T_U64, 0};
+            int vals[MAX_FIELDS];
+#ifdef OMEGESE_STRUCT_A /* the spelling not chosen (OMEGESE.md section 3): new <struct>, every field zero */
+            v->arity = 1;
+            for (int k = 0; k < S->nf; k++) {
+                vals[k] = new_reg((Ty){R_NONE, S->f[k].s, 0});
+                TRY(vals[k]);
+                TRY(op("\"op\": \"const\", \"dst\": %d, \"value\": %s", vals[k], S->f[k].s == T_BOOL ? "false" : "0"));
+            }
+#else
+            v->arity = 1 + S->nf;
+            for (int k = 0; k < S->nf; k++) {
+                Want fw = want_type((Ty){R_NONE, S->f[k].s, 0});
+                Val fv;
+                TRY(slot(&fw, -2, &fv, v->head, k + 1, 1 + S->nf));
+                if (!teq(fv.t, fw.lt)) return fail("field %s of %s holds %s; '%s' is %s", S->f[k].name, S->name, tname(fw.lt), span(fv.a, fv.b), tname(fv.t));
+                vals[k] = fv.reg;
+            }
+#endif
+            /* as oscc lowers a literal (src/compiler/osc_lower.c ON_LET_ALLOC): the values, a zero cell
+             * value in a fresh ulong, one allocation, then one fstore per cell */
+            int z = new_reg(u64);
+            TRY(z);
+            TRY(op("\"op\": \"const\", \"dst\": %d, \"value\": 0", z));
+            v->t = (Ty){R_OWN, 0, 0, st};
+            TRY(to_dst(&dst, v->t));
+            TRY(op("\"op\": \"alloc\", \"dst\": %d, \"init\": %d", dst, z));
+            TRY(own_birth(dst));
+            int ix = -1;
+            for (int k = 0; k < S->nf; k++) {
+                const Field *fd = &S->f[k];
+                if (!fd->len) { TRY(op("\"op\": \"fstore\", \"a\": %d, \"field\": \"%s\", \"value\": %d", dst, fd->name, vals[k])); continue; }
+                for (int e = 0; e < fd->len; e++) {
+                    if (ix < 0) { ix = new_reg(u64); TRY(ix); }
+                    TRY(op("\"op\": \"const\", \"dst\": %d, \"value\": %d", ix, e));
+                    TRY(op("\"op\": \"fstore\", \"a\": %d, \"field\": \"%s\", \"value\": %d, \"index\": %d", dst, fd->name, vals[k], ix));
+                }
+            }
+            goto done;
+        }
         if (lp >= ln) {
             if (!g_fill) return fail("new has 0 values after it; it takes 3");
             TRY(fill_word(GW[want->arr == A_EXACT ? want->p.s : T_U32]));
@@ -1207,6 +1372,10 @@ static int fn_line(void) {
     if (ln < 2) TRY(fill_word(fresh_name()));
     if (!valid_ident(lw[1]) || reserved(lw[1])) return fail("'%s' cannot be a function name", lw[1]);
     if (find_func(lw[1]) >= 0) return fail("function '%s' is already defined", lw[1]);
+    if (nfuncs == 0) { /* the op list starts with the structs (when there are any) */
+        if (nstructs) bput(&out, "{\"structs\": [%s],\n \"functions\": [", sjs.p ? sjs.p : "");
+        else bput(&out, "{\"functions\": [");
+    }
     Func *f = &funcs[nfuncs];
     memset(f, 0, sizeof *f);
     snprintf(f->name, sizeof f->name, "%s", lw[1]);
@@ -1377,14 +1546,14 @@ static int for_line(void) {
         if (!parse_lit(kw, &neg, &kv) || neg || kv > 1000000) return fail("count '%s' must be 0..1000000", kw);
         lp = ln;
         TRY(line_end(NULL));
-        int zero = lit_reg("0", t);
-        TRY(zero);
-        int k = lit_reg(kw, t);
-        TRY(k);
-        TRY(lit_reg("1", t));
-        int ctr = new_reg(t);
+        /* as oscc lowers `for i in 0 .. K` (src/compiler/osc_lower.c ON_FOR): the counter, K and 1 are
+         * fresh registers written by const here, each defined once (checker2's loop rule) */
+        int ctr = lit_fresh("0", t);
         TRY(ctr);
-        TRY(op("\"op\": \"mov\", \"dst\": %d, \"a\": %d", ctr, zero));
+        int k = lit_fresh(kw, t);
+        TRY(k);
+        int one = lit_fresh("1", t);
+        TRY(one);
         int h = new_block(), body = new_block(), ex = new_block();
         TRY(h);
         TRY(body);
@@ -1401,6 +1570,7 @@ static int for_line(void) {
         own_loop_pushed(fr);
         fr->head = h;
         fr->exit = ex;
+        fr->one1 = one + 1;
         fr->ctr = ctr;
         TRY(bind(nm, ctr, 1));
         start_block(body);
@@ -1417,8 +1587,74 @@ static int for_line(void) {
     return guarded_loop(1, s, &c, nm);
 }
 
+/* struct <name> (<field> <type> [<length>])... end: one line, before the first fn */
+static Buf sjs; /* the "structs" list of the op list */
+static int struct_line(void) {
+    if (in_fn || nfuncs > 0) return fail("struct declarations come before the first fn");
+    lp = 1;
+    if (lp >= ln) {
+        if (!g_fill) return fail("struct <name> <field> <type> ... end");
+        TRY(fill_word(fresh_name()));
+    }
+    const char *nm = lw[lp++];
+    if (find_struct(nm) >= 0) return fail("struct %s is declared twice", nm);
+    if (!valid_ident(nm) || reserved(nm)) return fail("'%s' cannot be a struct name", nm);
+    if (nstructs >= MAX_STRUCTS) return fail("more than %d structs", MAX_STRUCTS);
+    Struct *S = &structs[nstructs];
+    memset(S, 0, sizeof *S);
+    snprintf(S->name, sizeof S->name, "%s", nm);
+    for (;;) {
+        if (lp >= ln) {
+            if (!g_fill) return fail("struct %s needs end after its fields", S->name);
+            TRY(fill_word(S->nf ? "end" : fresh_name()));
+        }
+        const char *w = lw[lp++];
+        if (!strcmp(w, "end")) {
+            if (!S->nf) return fail("struct %s needs at least one field", S->name);
+            if (lp < ln) return fail("extra words at the end of the line: '%s'", span(lp, ln));
+            break;
+        }
+        if (!valid_ident(w) || reserved(w) || !strcmp(w, S->name)) return fail("'%s' cannot be a field name", w);
+        if (find_field(S, w) >= 0) return fail("field %s is declared twice in %s", w, S->name);
+        if (S->nf >= MAX_FIELDS) return fail("struct %s has more than %d fields", S->name, MAX_FIELDS);
+        if (lp >= ln) {
+            if (!g_fill) return fail("field %s needs a type", w);
+            TRY(fill_word(GW[T_U32]));
+        }
+        int s = scalar_word(lw[lp]);
+        if (s < 0) return fail("'%s' is not a field type (a field is <name> <type>, or <name> <type> <length> for an array)", lw[lp]);
+        lp++;
+        int len = 0;
+        if (lp < ln && is_lit(lw[lp])) {
+            int neg;
+            uint64_t L;
+            if (!parse_lit(lw[lp], &neg, &L) || neg || L < 1 || L > 64) return fail("array field length '%s' must be 1..64", lw[lp]);
+            len = (int)L;
+            lp++;
+        }
+        if (S->ncells + (len ? len : 1) > MAX_CELLS) return fail("struct %s needs more than %d cells (an array field takes one per element)", S->name, MAX_CELLS);
+        Field *fd = &S->f[S->nf++];
+        snprintf(fd->name, sizeof fd->name, "%s", w);
+        fd->s = s;
+        fd->len = len;
+        S->ncells += len ? len : 1;
+    }
+    nstructs++;
+    if (!g_quiet) {
+        bput(&sjs, "%s{\"name\": \"%s\", \"fields\": [", nstructs > 1 ? ",\n  " : "", S->name);
+        for (int k = 0; k < S->nf; k++) {
+            bput(&sjs, "%s{\"name\": \"%s\", \"type\": \"%s\"", k ? ", " : "", S->f[k].name, IRN[S->f[k].s]);
+            if (S->f[k].len) bput(&sjs, ", \"len\": %d", S->f[k].len);
+            bput(&sjs, "}");
+        }
+        bput(&sjs, "]}");
+    }
+    return 0;
+}
+
 static int stmt(void) {
     if (!strcmp(lw[0], "fn")) return fn_line();
+    if (!strcmp(lw[0], "struct")) return struct_line();
     if (!in_fn) return fail("'%s' outside a function (start one with fn)", lw[0]);
     Func *f = &funcs[nfuncs - 1];
     const char *w0 = lw[0];
@@ -1445,7 +1681,7 @@ static int stmt(void) {
             TRY(own_loop_close(nframes - 1));
             if (cur >= 0) {
                 Ty t = regs[fr->ctr];
-                int one = lit_reg("1", t);
+                int one = fr->one1 ? fr->one1 - 1 : lit_reg("1", t);
                 TRY(one);
                 TRY(op("\"op\": \"add\", \"dst\": %d, \"a\": %d, \"b\": %d", fr->ctr, fr->ctr, one));
                 TRY(br(fr->head));
@@ -1560,7 +1796,27 @@ static int stmt(void) {
         Ty ta;
         Want none = {0};
         TRY(array_name(0, 3, AN_PUT, 0, &none, &a, &ta));
-        if (ta.ref == R_SHARED) return fail("'%s' is view only; put needs an own or edit array", lw[lp - 1]);
+        if (ta.ref == R_SHARED) return fail("'%s' is view only; put needs an own or edit %s", lw[lp - 1], ta.st ? "struct" : "array");
+        if (ta.st) { /* put <struct name> <field> [<index>] <value> */
+            const Struct *S = &structs[ta.st - 1];
+            int fi;
+            TRY(field_word(0, ta.st, S_ALL, &fi));
+            const Field *fd = &S->f[fi];
+            int ar = fd->len ? 4 : 3;
+            Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0}, vw = want_type((Ty){R_NONE, fd->s, 0});
+            Val i = {0}, v;
+            if (fd->len) {
+                TRY(slot(&iw, -2, &i, 0, 2, ar));
+                if (!is_int(i.t)) return fail("index '%s' is not a whole number", span(i.a, i.b));
+            }
+            TRY(slot(&vw, -2, &v, 0, ar - 1, ar));
+            if (!teq(v.t, vw.lt)) return fail("'%s' is %s; field %s of %s holds %s", span(v.a, v.b), tname(v.t), fd->name, S->name, tname(vw.lt));
+            Val whole = {.head = 0, .arity = ar};
+            TRY(line_end(&whole));
+            if (fd->len) TRY(op("\"op\": \"fstore\", \"a\": %d, \"field\": \"%s\", \"value\": %d, \"index\": %d", a, fd->name, v.reg, i.reg));
+            else TRY(op("\"op\": \"fstore\", \"a\": %d, \"field\": \"%s\", \"value\": %d", a, fd->name, v.reg));
+            return own_use(a);
+        }
         Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0}, vw = want_type((Ty){R_NONE, ta.s, 0});
         Val i, v;
         TRY(slot(&iw, -2, &i, 0, 1, 3));
@@ -1667,8 +1923,8 @@ static int run(char *src, int keep_tail, char **tail) {
     char *p = src;
     g_line = 0;
     out.n = 0;
-
-    bput(&out, "{\"functions\": [");
+    sjs.n = 0;
+    nstructs = 0;
     for (;;) {
         char *nl = strchr(p, '\n');
         if (!nl && keep_tail) { *tail = p; return 0; }
@@ -1707,6 +1963,8 @@ static int run(char *src, int keep_tail, char **tail) {
 typedef __int128 i128;
 
 /* the state after the head; every witness starts from it */
+static Struct S0s[MAX_STRUCTS];
+static int S0ns;
 static struct { int nfuncs, in_fn, nregs, nparams, nnames, depth, nconsts, nblocks, norder, cur, nframes, nown, nowq; uint64_t loops; } S0;
 static Ow S0q[MAX_OWQ];
 static int S0or[MAX_OWN];
@@ -1726,6 +1984,7 @@ static void save(void) {
     COPY(S0k, consts, nconsts); COPY(S0b, blocks, nblocks); COPY(S0fr, frames, nframes);
     S0.nown = nown; S0.loops = g_loops; COPY(S0or, own_reg, nown); COPY(S0os, ost, nown);
     S0.nowq = nowq; COPY(S0q, owq, nowq);
+    S0ns = nstructs; COPY(S0s, structs, nstructs);
 }
 static void restore(void) {
     nfuncs = S0.nfuncs; in_fn = S0.in_fn; nregs = S0.nregs; nparams = S0.nparams; nnames = S0.nnames;
@@ -1735,6 +1994,7 @@ static void restore(void) {
     COPY(consts, S0k, nconsts); COPY(blocks, S0b, nblocks); COPY(frames, S0fr, nframes);
     nown = S0.nown; g_loops = S0.loops; own_pk = -1; COPY(own_reg, S0or, nown); COPY(ost, S0os, nown);
     nowq = S0.nowq; COPY(owq, S0q, nowq);
+    nstructs = S0ns; COPY(structs, S0s, nstructs);
 }
 
 static char *W[MAX_WORDS + 1]; /* the complete words of the unfinished line */
@@ -1772,6 +2032,13 @@ static int own_repair(char *line, size_t cap) {
         const char *n = own_label(r);
         if (o.m || !n || find_name(n)->reg != r) continue;
         if ((e->kind == OW_USE || e->kind == OW_FREE) && !(o.b & OS_L) && !os_only(ost[s])) {
+            if (regs[r].st) {
+                Buf b = {0};
+                new_struct_text(regs[r].st, &b);
+                snprintf(line, cap, "%s = %s", n, b.p);
+                free(b.p);
+                return 1;
+            }
             snprintf(line, cap, "%s = new %s %d %s", n, GW[regs[r].s], regs[r].len, regs[r].s == T_BOOL ? "false" : "0");
             return 1;
         }
@@ -1893,7 +2160,7 @@ static int legal_eof(void) {
 }
 
 /* the fixed words, in the order they are printed */
-static const char *const KWORDER[] = {"fn", "if", "while", "for", "ret", "put", "free", "trap", "break", "else",
+static const char *const KWORDER[] = {"fn", "struct", "if", "while", "for", "ret", "put", "free", "trap", "break", "else",
                                       "end", "to", "void", "bound", "=", "true", "false"};
 #define NKWO ((int)(sizeof KWORDER / sizeof KWORDER[0]))
 #define NFIXED (NKWO + OP_N + T_NSCALAR + T_NSCALAR - 1 + 3)
@@ -1910,7 +2177,7 @@ static const char *fixed_word(int k) {
 
 /* the names that are decided one by one: names in scope, functions, and the names on the line. Every
  * other name behaves as a name not in use (the parser only compares names for equality), so one
- * representative decides them all. kind: 0 a name, 1 a function, 2 a name only on this line */
+ * representative decides them all. kind: 0 a name, 1 a function, 2 a name only on this line, 3 a struct, 4 a field */
 typedef struct { char name[NAME_MAX_LEN + 1]; int kind, legal; } Id;
 static Id *ids;
 static int nids;
@@ -1919,8 +2186,8 @@ static int find_id(const char *w) {
         if (!strcmp(ids[i].name, w)) return i;
     return -1;
 }
-static void add_id(const char *w, int kind) {
-    if (!valid_ident(w) || reserved(w) || find_id(w) >= 0) return;
+static void add_id_as(const char *w, int kind) {
+    if (find_id(w) >= 0) return;
     Id *p = realloc(ids, sizeof *ids * (size_t)(nids + 1));
     if (!p) { fputs("omegese: out of memory\n", stderr); exit(2); }
     ids = p;
@@ -1928,6 +2195,9 @@ static void add_id(const char *w, int kind) {
     ids[nids].kind = kind;
     ids[nids].legal = 0;
     nids++;
+}
+static void add_id(const char *w, int kind) {
+    if (valid_ident(w) && !reserved(w)) add_id_as(w, kind);
 }
 static int extends(const char *w, const char *u) { return !strncmp(w, u, strlen(u)); }
 /* a name not in use that extends u: u itself, or u with _ and a number after it */
@@ -2024,6 +2294,10 @@ static int oracle(char *src, int mode) {
     for (int i = 0; i < nnames; i++) add_id(names[i].name, 0);
     for (int g = 0; g < nfuncs; g++) add_id(funcs[g].name, 1);
     for (int i = 0; i < nW; i++) add_id(W[i], 2);
+    for (int k = 0; k < nstructs; k++) { /* struct names (reserved words of this program) and field names */
+        add_id_as(structs[k].name, 3);
+        for (int f = 0; f < structs[k].nf; f++) add_id(structs[k].f[f].name, 4);
+    }
 
     /* the items */
     char fx[NFIXED] = {0}, rep[NAME_MAX_LEN + 2];
@@ -2039,7 +2313,8 @@ static int oracle(char *src, int mode) {
     if (!*U || U[0] == '-' || isdigit((unsigned char)U[0])) {
         for (int k = 0; k < NBREAKS; k++) bp[nb++] = i128_of(BREAKS[k]);
         unsigned long long lens = 0; /* bit L-1: an array of length L is in scope */
-        for (int i = 0; i < S0.nnames; i++) { Ty t = S0r[S0n[i].reg]; if (t.ref != R_NONE) lens |= 1ull << (t.len - 1); }
+        for (int i = 0; i < S0.nnames; i++) { Ty t = S0r[S0n[i].reg]; if (t.ref != R_NONE && !t.st) lens |= 1ull << (t.len - 1); }
+        if (nW > 0 && !strcmp(W[0], "struct")) lens = ~0ull; /* a field length is compared with the cells left */
         for (int L = 1; L <= 64; L++) if (lens >> (L - 1) & 1) bp[nb++] = L;
         qsort(bp, (size_t)nb, sizeof bp[0], cmp128);
         int m = 0;
@@ -2098,14 +2373,14 @@ static int oracle(char *src, int mode) {
     } else if (mode == M_HUMAN) {
         Buf b = {0};
         int start = !nW && !*U;
-        for (int i = 0; i < nids; i++) if (ids[i].legal && ids[i].kind != 1) bput(&b, " %s", ids[i].name);
+        for (int i = 0; i < nids; i++) if (ids[i].legal && ids[i].kind != 1 && ids[i].kind < 3) bput(&b, " %s", ids[i].name);
         human_line(start ? "assign" : "names", &b);
         for (int k = 0; k < niv; k++) bput(&b, "%s %s..%s", k ? "," : "", str_of(lo[k], num), str_of(hi[k], num2));
         human_line("number", &b);
         if (nn) bput(&b, " any name not in use");
         human_line("new-name", &b);
         for (int k = 0; k < NFIXED; k++) if (fx[k]) bput(&b, " %s", fixed_word(k));
-        for (int i = 0; i < nids; i++) if (ids[i].legal && ids[i].kind == 1) bput(&b, " %s", ids[i].name);
+        for (int i = 0; i < nids; i++) if (ids[i].legal && (ids[i].kind == 1 || ids[i].kind >= 3)) bput(&b, " %s", ids[i].name);
         if (lpar) bput(&b, " (");
         if (rpar) bput(&b, " )");
         if (sp && *U) bput(&b, " (space)");

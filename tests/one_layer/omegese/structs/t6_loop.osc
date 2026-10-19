@@ -1,0 +1,13 @@
+// entry: run
+// Omegese struct twin 6 (a struct used inside a loop): the same IR as t6_loop.omegese.
+struct Acc { sum: i64, v: [i64; 4] }
+
+fn run(a: i64) -> i64 {
+    let s: own Acc = Acc { sum: a, v: [a; 4] };
+    for i in 0 .. 4 {
+        s.v[i] = s.v[i] + i;
+        s.sum = s.sum + s.v[i];
+    }
+    return s.sum;
+}
+// expect-run: run 1 -> 11

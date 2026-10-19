@@ -1,0 +1,11 @@
+// entry: hist
+// Omegese struct twin 2 (an array field): the same IR as t2_array_field.omegese.
+struct H { n: u32, v: [u32; 4] }
+
+fn hist(a: u32, i: u32) -> u32 {
+    let h: own H = H { n: a, v: [a; 4] };
+    h.v[i] = h.n + h.v[i];
+    return h.v[i];
+}
+// expect-run: hist 5 2 -> 10
+// expect-run: hist 5 4 -> trap=BOUNDS

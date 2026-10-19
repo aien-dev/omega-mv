@@ -1,0 +1,12 @@
+// entry: mix
+// Omegese struct twin 3 (two struct types): the same IR as t3_two_structs.omegese.
+struct A { x: i32 }
+struct B { y: i32, z: i32 }
+
+fn mix(a: i32, b: i32) -> i32 {
+    let p: own A = A { x: a };
+    let q: own B = B { y: b, z: a };
+    q.z = p.x * q.y;
+    return q.z - p.x;
+}
+// expect-run: mix 3 5 -> 12

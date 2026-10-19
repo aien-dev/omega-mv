@@ -1,0 +1,16 @@
+// entry: run
+// Omegese struct twin 5 (a struct passed to a call as edit, written inside): the same IR as
+// t5_call_edit.omegese.
+struct C { n: u32, last: u32 }
+
+fn bump(c: &mut C, v: u32) {
+    c.n = c.n + v;
+    c.last = v;
+}
+
+fn run(a: u32, b: u32) -> u32 {
+    let c: own C = C { n: a, last: a };
+    bump(&mut c, b);
+    return c.n + c.last;
+}
+// expect-run: run 10 3 -> 16

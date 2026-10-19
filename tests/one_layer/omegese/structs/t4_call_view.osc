@@ -1,0 +1,13 @@
+// entry: run
+// Omegese struct twin 4 (a struct passed to a call as a view): the same IR as t4_call_view.omegese.
+struct V { a: u64, b: u64 }
+
+fn total(v: &V) -> u64 {
+    return v.a + v.b;
+}
+
+fn run(x: u64, y: u64) -> u64 {
+    let s: own V = V { a: x, b: y };
+    return total(&s);
+}
+// expect-run: run 40 2 -> 42

@@ -1,0 +1,13 @@
+struct H n uint v uint 4 end
+fn hist a uint i uint to uint
+h = new H
+put h n a
+put h v 0 a
+put h v 1 a
+put h v 2 a
+put h v 3 a
+put h v i add get h n get h v i
+r = get h v i
+free h
+ret r
+end

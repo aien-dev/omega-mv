@@ -1,0 +1,12 @@
+struct V a ulong b ulong end
+fn total v view V to ulong
+ret add get v a get v b
+end
+fn run x ulong y ulong to ulong
+s = new V
+put s a x
+put s b y
+t = total s
+free s
+ret t
+end

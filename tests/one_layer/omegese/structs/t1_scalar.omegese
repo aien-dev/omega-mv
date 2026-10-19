@@ -1,0 +1,7 @@
+struct P x uint y uint end
+fn sum2 a uint b uint to uint
+p = new P a b
+s = add get p x get p y
+free p
+ret s
+end
