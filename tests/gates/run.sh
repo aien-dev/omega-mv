@@ -190,6 +190,7 @@ case "$step" in
     tools/rx_host_receipts.sh native "$native" "$OMEGA_CANDIDATE_COMMIT"
     tools/rx_host_receipts.sh generation "$generation" "$OMEGA_CANDIDATE_COMMIT"
     ;;
+  osh-diff)           make $NOPHYS test-osh-diff ;;
   faculty-arm)
     pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
     export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
