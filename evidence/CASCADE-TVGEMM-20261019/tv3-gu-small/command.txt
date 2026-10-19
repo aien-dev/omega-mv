@@ -1,0 +1,1 @@
+/home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-00659ce6 --tv --shape q38gu --rows 1,8,16,32,64 --emu-rows 2 --reps 11 --no-mutants --tiles 1:4:1,2:2:2,2:2:1,4:1:2,4:1:4,2:4:2 --out /home/drakestapleton/workspace/targets/cascade/runs/tv3-gu-small.json
