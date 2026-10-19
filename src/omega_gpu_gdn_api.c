@@ -29,6 +29,7 @@ struct OmegaGpuGdn {
     OmegaGpuMem state; /* [layers][OMEGA_GDN_STATE_BYTES] */
     OmegaGpuMem lb;    /* launch buffer */
     OmegaGpuScratch pf; /* prefill scratch (see pf_layout) */
+    int bound;          /* omega#571: tail and state are views into a caller arena (never freed here) */
 };
 
 typedef struct {
@@ -147,8 +148,8 @@ void omega_gpu_gdn_free(OmegaGpuGdn *g) {
     if (!g) return;
     omega_gpu_session_lock();
     if (g->par.cpu) omega_gpu_session_free(&g->par);
-    if (g->tail.cpu) omega_gpu_session_free(&g->tail);
-    if (g->state.cpu) omega_gpu_session_free(&g->state);
+    if (!g->bound && g->tail.cpu) omega_gpu_session_free(&g->tail);
+    if (!g->bound && g->state.cpu) omega_gpu_session_free(&g->state);
     if (g->lb.cpu) omega_gpu_session_free(&g->lb);
     omega_gpu_session_scratch_free(&g->pf);
     omega_gpu_session_unlock();
@@ -471,3 +472,49 @@ int omega_gpu_gdn_prefill_read_out(OmegaGpuGdn *g, uint32_t tokens, float *out) 
     omega_gpu_session_unlock();
     return rc;
 }
+
+/* ---- two-front arena (omega#571): the live DeltaNet set in caller memory; snapshots are plain copies ---- */
+uint64_t omega_gpu_gdn_state_set_bytes(uint32_t layers) { return (uint64_t)layers * (OMEGA_GDN_TAIL_BYTES + OMEGA_GDN_STATE_BYTES); }
+static int set_view(const OmegaGpuGdn *g, const OmegaGpuMem *arena, uint64_t off, OmegaGpuMem *tail, OmegaGpuMem *state) {
+    const uint64_t tb = (uint64_t)g->layers * OMEGA_GDN_TAIL_BYTES, sb = (uint64_t)g->layers * OMEGA_GDN_STATE_BYTES;
+    if (!arena || !arena->cpu || (off & 255u) || off > arena->size || tb + sb > arena->size - off) return OMEGA_GPU_GDN_BAD_ARGS;
+    /* views share the arena handle: for this memory a sync is a full barrier plus a handle range check
+     * (omega_gpu_platform_linux.c ref_sync: "uncached system memory: a full barrier is the whole sync") */
+    *tail = *arena; tail->cpu = (uint8_t *)arena->cpu + off; tail->va = arena->va + off; tail->size = tb;
+    *state = *arena; state->cpu = (uint8_t *)arena->cpu + off + tb; state->va = arena->va + off + tb; state->size = sb;
+    return OMEGA_GPU_GDN_OK;
+}
+int omega_gpu_gdn_bind_state(OmegaGpuGdn *g, const OmegaGpuMem *arena, uint64_t off) {
+    if (!g) return OMEGA_GPU_GDN_BAD_ARGS;
+    OmegaGpuMem t, s;
+    int rc = set_view(g, arena, off, &t, &s);
+    if (rc != OMEGA_GPU_GDN_OK) return rc;
+    omega_gpu_session_lock();
+    if (omega_gpu_session_sync_to_cpu(&g->tail) != 0 || omega_gpu_session_sync_to_cpu(&g->state) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
+    if (rc == OMEGA_GPU_GDN_OK && t.cpu != g->tail.cpu) {  /* carry the current set over, then drop the own buffers */
+        memmove(t.cpu, g->tail.cpu, (size_t)t.size); memmove(s.cpu, g->state.cpu, (size_t)s.size);
+        if (!g->bound) { omega_gpu_session_free(&g->tail); omega_gpu_session_free(&g->state); }
+        g->tail = t; g->state = s; g->bound = 1;
+        if (omega_gpu_session_sync_to_gpu(&g->tail) != 0 || omega_gpu_session_sync_to_gpu(&g->state) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
+    }
+    omega_gpu_session_unlock();
+    return rc;
+}
+static int copy_set(OmegaGpuGdn *g, const OmegaGpuMem *arena, uint64_t off, int to_arena) {
+    if (!g) return OMEGA_GPU_GDN_BAD_ARGS;
+    OmegaGpuMem t, s;
+    int rc = set_view(g, arena, off, &t, &s);
+    if (rc != OMEGA_GPU_GDN_OK) return rc;
+    if (t.cpu == g->tail.cpu) return OMEGA_GPU_GDN_BAD_ARGS;  /* the live set itself */
+    omega_gpu_session_lock();
+    OmegaGpuMem *st = to_arena ? &g->tail : &t, *ss = to_arena ? &g->state : &s, *dt = to_arena ? &t : &g->tail, *ds = to_arena ? &s : &g->state;
+    if (omega_gpu_session_sync_to_cpu(st) != 0 || omega_gpu_session_sync_to_cpu(ss) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
+    if (rc == OMEGA_GPU_GDN_OK) {
+        memcpy(dt->cpu, st->cpu, (size_t)t.size); memcpy(ds->cpu, ss->cpu, (size_t)s.size);
+        if (omega_gpu_session_sync_to_gpu(dt) != 0 || omega_gpu_session_sync_to_gpu(ds) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
+    }
+    omega_gpu_session_unlock();
+    return rc;
+}
+int omega_gpu_gdn_snapshot(OmegaGpuGdn *g, const OmegaGpuMem *arena, uint64_t off) { return copy_set(g, arena, off, 1); }
+int omega_gpu_gdn_restore(OmegaGpuGdn *g, const OmegaGpuMem *arena, uint64_t off) { return copy_set(g, arena, off, 0); }

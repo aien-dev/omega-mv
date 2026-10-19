@@ -57,7 +57,10 @@
 #define OMEGA_PATTN256_ARGS_WORDS 12u
 
 typedef struct {
-    int mutant;      /* TEST ONLY. 0 none; 1 no causal mask; 2 O is never rescaled by alpha. Each must be caught. */
+    int mutant;      /* TEST ONLY. 0 none; 1 no causal mask; 2 O is never rescaled by alpha. 3 (block layout only, omega#571) no jump
+                      * at a block edge (keys past 255 read from the wrong block). Each must be caught. */
+    uint32_t kv_chunk_stride; /* omega#571: 0 the plane layout, else the block layout of OmegaDecodeAttn256Spec.kv_chunk_stride
+                      * (the main loop steps 16 keys = 8 KiB and jumps to the next block every 16 steps) */
 } OmegaPrefillAttn256Spec;
 
 int omega_pattn256_spec_ok(const OmegaPrefillAttn256Spec *spec);

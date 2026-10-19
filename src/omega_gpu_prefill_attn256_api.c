@@ -53,10 +53,11 @@ void omega_gpu_prefill_attn256_release(void) {
     omega_gpu_session_unlock();
 }
 
-static void spec_of(unsigned kind, Slot *tmp) {
+/* cs: the cache layout (0 plane, else the block stride; omega#571) */
+static void spec_of(unsigned kind, uint32_t cs, Slot *tmp) {
     memset(tmp, 0, sizeof *tmp);
-    if (kind == KK_PREP) { tmp->spec.prep.depth = OMEGA_GPU_DATTN256_DEPTH; tmp->spec.prep.mutant = g.prep_mut; tmp->spec.prep.prep = 1; }
-    else tmp->spec.att.mutant = g.att_mut;
+    if (kind == KK_PREP) { tmp->spec.prep.depth = OMEGA_GPU_DATTN256_DEPTH; tmp->spec.prep.mutant = g.prep_mut; tmp->spec.prep.prep = 1; tmp->spec.prep.kv_chunk_stride = cs; }
+    else { tmp->spec.att.mutant = g.att_mut; tmp->spec.att.kv_chunk_stride = cs; }
 }
 static int prog_of(unsigned kind, const Slot *tmp, BlackwellIRProgram *prog) {
     return kind == KK_PREP ? omega_blackwell_codegen_decode_attn256_prog(&tmp->spec.prep, prog)
@@ -73,7 +74,7 @@ static uint32_t placeholders_of(const BlackwellIRProgram *prog) {
 
 size_t omega_gpu_prefill_attn256_encode(unsigned kind, uint8_t *code, size_t cap, uint32_t *gprs, int *patched) {
     if (kind >= KK_N) return 0;
-    Slot tmp; spec_of(kind, &tmp);
+    Slot tmp; spec_of(kind, 0u, &tmp);
     BlackwellIRProgram *prog = omega_gpu_host_calloc(1, sizeof *prog);
     if (!prog) return 0;
     size_t need = 0;
@@ -89,8 +90,8 @@ size_t omega_gpu_prefill_attn256_encode(unsigned kind, uint8_t *code, size_t cap
 }
 
 /* rec: a record call is running (lock held): a miss is refused instead of compiled */
-static int kernel_for(unsigned kind, int rec, Slot **out, bool *hit) {
-    Slot tmp; spec_of(kind, &tmp);
+static int kernel_for(unsigned kind, uint32_t cs, int rec, Slot **out, bool *hit) {
+    Slot tmp; spec_of(kind, cs, &tmp);
     Slot *s = &g.slot[kind];
     if (s->valid && memcmp(&s->spec, &tmp.spec, sizeof tmp.spec) == 0) { *out = s; *hit = true; return OMEGA_GPU_DATTN_OK; }
     if (rec) { omega_gpu_session_set_error("prefill attn256 record: kernel cache miss (warm up before recording)"); return OMEGA_GPU_DATTN_TOO_LARGE; }
@@ -128,14 +129,20 @@ static int qf_locked(uint32_t rows) {
     g.have_qf = true; g.qf_rows = rows;
     return 0;
 }
-int omega_gpu_prefill_attn256_reserve(uint32_t max_m) {
+static int reserve_core(uint32_t max_m, uint32_t cs) {
     if (max_m == 0 || max_m > OMEGA_GPU_PATTN256_MAX_M) return OMEGA_GPU_DATTN_BAD_ARGS;
     omega_gpu_session_lock();
     int rc = dev_open_locked() && qf_locked(max_m) == 0 ? OMEGA_GPU_DATTN_OK : OMEGA_GPU_DATTN_CHIP_FAIL;
     /* and builds both kernels, so a record call after reserve never misses the cache (sc #642 prefill graph) */
-    for (unsigned k = 0; k < KK_N && rc == OMEGA_GPU_DATTN_OK; k++) { Slot *s = NULL; bool hit = false; rc = kernel_for(k, 0, &s, &hit); }
+    for (unsigned k = 0; k < KK_N && rc == OMEGA_GPU_DATTN_OK; k++) { Slot *s = NULL; bool hit = false; rc = kernel_for(k, cs, 0, &s, &hit); }
     omega_gpu_session_unlock();
     return rc;
+}
+int omega_gpu_prefill_attn256_reserve(uint32_t max_m) { return reserve_core(max_m, 0u); }
+int omega_gpu_prefill_attn256_reserve_cache(const OmegaGpuDecodeAttn256Cache *c, uint32_t max_m) {
+    OmegaGpuDecodeAttn256CacheView v;
+    if (omega_gpu_decode_attn256_cache_view(c, 0, &v) != OMEGA_GPU_DATTN_OK) return OMEGA_GPU_DATTN_BAD_ARGS;
+    return reserve_core(max_m, v.chunk_stride);
 }
 static int bufs_locked(uint32_t rows) {
     if (g.have_bufs && g.buf_rows >= rows) return 0;
@@ -155,13 +162,13 @@ static int core(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos0, ui
     const int host = qkv != NULL;
     OmegaGpuDecodeAttn256CacheView v;
     if (!c || m == 0 || m > OMEGA_GPU_PATTN256_MAX_M || omega_gpu_decode_attn256_cache_view(c, layer, &v) != OMEGA_GPU_DATTN_OK ||
-        pos0 > v.max_pos || m > v.max_pos - pos0 || (host ? !out : (!qkv_va || !out_va || (qkv_va & 15u) || (out_va & 15u)))) return OMEGA_GPU_DATTN_BAD_ARGS;
+        pos0 > v.usable || m > v.usable - pos0 || (host ? !out : (!qkv_va || !out_va || (qkv_va & 15u) || (out_va & 15u)))) return OMEGA_GPU_DATTN_BAD_ARGS;
     if (!rec) omega_gpu_session_lock();
 #define UNLOCK() do { if (!rec) omega_gpu_session_unlock(); } while (0)
     if (!dev_open_locked()) { UNLOCK(); return OMEGA_GPU_DATTN_CHIP_FAIL; }
     Slot *ks[KK_N] = { NULL, NULL }; bool hit[KK_N] = { false, false };
     int rc = OMEGA_GPU_DATTN_OK;
-    for (unsigned k = 0; k < KK_N && rc == OMEGA_GPU_DATTN_OK; k++) rc = kernel_for(k, rec != NULL, &ks[k], &hit[k]);
+    for (unsigned k = 0; k < KK_N && rc == OMEGA_GPU_DATTN_OK; k++) rc = kernel_for(k, v.chunk_stride, rec != NULL, &ks[k], &hit[k]);
     if (rc != OMEGA_GPU_DATTN_OK) { UNLOCK(); return rc; }
     if (rec) { if (!g.have_qf || g.qf_rows < m) { omega_gpu_session_set_error("prefill attn256 record: q' scratch not reserved for m tokens"); return OMEGA_GPU_DATTN_TOO_LARGE; } }
     else if (qf_locked(m) != 0) { UNLOCK(); return OMEGA_GPU_DATTN_CHIP_FAIL; }
@@ -173,7 +180,7 @@ static int core(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos0, ui
         if (omega_gpu_session_sync_to_gpu(&g.qkv) != 0 || omega_gpu_session_sync_to_gpu(&g.out) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
         qkv_va = g.qkv.va; out_va = g.out.va;
     }
-    const uint32_t kvs = v.max_pos * OMEGA_DATTN256_ROW_BYTES, gx_att = (m + OMEGA_PATTN256_TOKENS - 1u) / OMEGA_PATTN256_TOKENS;
+    const uint32_t kvs = v.kv_stride, gx_att = (m + OMEGA_PATTN256_TOKENS - 1u) / OMEGA_PATTN256_TOKENS;
     float fe = eps, f1 = 1.0f, fo = out_scale, fq = (float)(0.0625 * 1.4426950408889634); /* log2(e) / sqrt(256) */
     uint32_t ue, u1, uo, uq; memcpy(&ue, &fe, 4); memcpy(&u1, &f1, 4); memcpy(&uo, &fo, 4); memcpy(&uq, &fq, 4);
     uint32_t ap[OMEGA_DATTN256_ARGS_WORDS], aa[OMEGA_PATTN256_ARGS_WORDS];

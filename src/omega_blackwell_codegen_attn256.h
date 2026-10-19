@@ -92,13 +92,22 @@ typedef struct {
     uint32_t depth;  /* prefetch depth of the K and V streams, 1..4 */
     int mutant;      /* TEST ONLY. 0 none; 1 no RoPE on q and k; 2 V read one position late; 3 the new K/V are not
                       * written to the cache; 4 the cross-split combine ignores the max (differs only when splits > 1);
-                      * 5 the odd warps' dim half is dropped from the partial (dims 128..255 wrong). */
+                      * 5 the odd warps' dim half is dropped from the partial (dims 128..255 wrong); 6 (block layout only, omega#571)
+                      * the score pass forgets the in-block mask (position p read at p * 512 inside its block). */
     uint32_t prep;   /* 1: the prefill prep launch (omega-mv#545): grid (m, 4), CTA (cx, cy) runs this kernel's prologue for
                       * token cx at position ARG_POS + cx (qkv row cx, 32768 bytes per row), writes k_new / v_new into the
                       * cache rows as the decode step does (same instruction sequence, so the same bits), writes q' as bf16
                       * to ARG_OUT in the attend kernel's A-fragment layout (OMEGA_PATTN256_QF_*), and exits. Mutants 1
                       * and 3 apply; ARG_PART, ARG_CNT, ARG_PER_SPLIT, ARG_SPLITS and ARG_OUT_SCALE are not read. */
+    uint32_t kv_chunk_stride; /* omega#571 two-front arena. 0: the plane layout above (row (h, p) at base + h * kv_stride
+                      * + p * 512), the original instruction stream unchanged. Non-zero: the BLOCK layout, row (h, p) at
+                      * base + (p >> 8) * kv_chunk_stride + h * kv_stride + (p & 255) * 512: one block of 256 positions
+                      * (= one CHUNK = the unit of a split) per kv_chunk_stride bytes, so the cache grows a block at a
+                      * time with no maximum. Bytes, a multiple of 4096, >= OMEGA_DATTN256_BLOCK_PLANE_BYTES. */
 } OmegaDecodeAttn256Spec;
+/* one (KV head, K or V) plane of a block: 256 positions x 512 bytes */
+#define OMEGA_DATTN256_BLOCK_PLANE_BYTES (OMEGA_DATTN256_CHUNK * OMEGA_DATTN256_ROW_BYTES)
+int omega_decode_attn256_chunk_stride_ok(uint32_t kv_chunk_stride); /* 1 when 0 or a valid block stride */
 
 /* Builds the IR program (register-allocated) into *prog. 0 ok, -1 refused (depth 0 or > 4, mutant outside 0..5,
  * or the program outgrew BW_MAX_IR_INSNS / BW_MAX_VREGS). */

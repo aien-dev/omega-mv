@@ -197,14 +197,14 @@ static int rows_ok(const Case *c, const uint16_t *kchip, const uint16_t *vchip, 
 /* ------------------------------------------------------------- host only */
 static void host_only(void) {
     for (int m = 0; m <= 2; m++) {
-        OmegaPrefillAttn256Spec s = { m }; uint32_t n = 0, gp = 0, ph = 0;
+        OmegaPrefillAttn256Spec s = { m, 0 }; uint32_t n = 0, gp = 0, ph = 0;
         int rc = omega_prefill_attn256_prog_stats(&s, &n, &gp, &ph);
         const uint32_t dec = omega_bw_gpr_declared(gp);
         CHECK(rc == 0 && n <= BW_MAX_IR_INSNS && gp <= BW_PHYS_GPR_HW_LIMIT && 256u * dec <= 65536u && ph > 0,
               "attend codegen mutant %d: rc %d insns %u gprs %u (declared %u) placeholders %u", m, rc, n, gp, dec, ph);
         if (rc == 0 && m == 0) printf("attend: %u instructions, %u registers (declared %u, 256 threads -> %u of 65536), %u placeholders\n", n, gp, dec, 256 * dec, ph);
     }
-    { OmegaPrefillAttn256Spec s = { 3 }; CHECK(omega_prefill_attn256_prog_stats(&s, NULL, NULL, NULL) != 0, "attend mutant 3 refused");
+    { OmegaPrefillAttn256Spec s = { 4, 0 }; CHECK(omega_prefill_attn256_prog_stats(&s, NULL, NULL, NULL) != 0, "attend mutant 4 refused (3 is the block-layout mutant, omega#571)");
       s.mutant = -1; CHECK(omega_prefill_attn256_prog_stats(&s, NULL, NULL, NULL) != 0, "attend mutant -1 refused"); }
     static const int pm[3] = { 0, 1, 3 };
     for (unsigned k = 0; k < 3; k++) {
@@ -291,7 +291,7 @@ static int sim_point(uint32_t max_pos, uint32_t pos0, uint32_t m, uint32_t rotar
                      char *msg, size_t n, double *worst, size_t *bad) {
     static BlackwellIRProgram pprog, aprog, dprog;
     OmegaDecodeAttn256Spec ps = { .depth = OMEGA_GPU_DATTN256_DEPTH, .mutant = prep_mut, .prep = 1 }, ds = { .depth = OMEGA_GPU_DATTN256_DEPTH };
-    OmegaPrefillAttn256Spec as = { att_mut };
+    OmegaPrefillAttn256Spec as = { att_mut, 0 };
     if (omega_blackwell_codegen_decode_attn256_prog(&ps, &pprog) != 0 || omega_blackwell_codegen_prefill_attn256_prog(&as, &aprog) != 0 ||
         omega_blackwell_codegen_decode_attn256_prog(&ds, &dprog) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
     Case c; case_make(&c, max_pos, pos0, m, rotary, seed, qscale);

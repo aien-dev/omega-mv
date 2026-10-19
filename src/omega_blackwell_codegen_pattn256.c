@@ -6,6 +6,7 @@
  */
 #include "omega_blackwell_codegen_pattn256.h"
 #include "omega_blackwell_codegen_tc.h"
+#include "omega_blackwell_codegen_attn256.h" /* omega_decode_attn256_chunk_stride_ok, the block plane (omega#571) */
 #include <string.h>
 
 #define CW(stall, wbar, rbar, wait) \
@@ -155,7 +156,9 @@ static void consume(Em *e, unsigned sb) { e->pending |= e->held & (1u << sb); e-
 #define SM_V 8192u         /* V block, [np 16][lane 32][16 B]: b0, b1 of dim tiles 2np and 2np + 1 */
 static const uint32_t NEG_BIG = 0xF149F2CAu; /* -1e30f */
 
-int omega_pattn256_spec_ok(const OmegaPrefillAttn256Spec *s) { return s && s->mutant >= 0 && s->mutant <= 2; }
+int omega_pattn256_spec_ok(const OmegaPrefillAttn256Spec *s) {
+    return s && s->mutant >= 0 && s->mutant <= 3 && omega_decode_attn256_chunk_stride_ok(s->kv_chunk_stride);
+}
 
 int omega_blackwell_codegen_prefill_attn256_prog(const OmegaPrefillAttn256Spec *spec, BlackwellIRProgram *prog) {
     if (!omega_pattn256_spec_ok(spec) || !prog) return -1;
@@ -163,6 +166,7 @@ int omega_blackwell_codegen_prefill_attn256_prog(const OmegaPrefillAttn256Spec *
     if (omega_bw_ir_set_gpr_limit(prog, BW_PHYS_GPR_HW_LIMIT) != 0) return -1;
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
     const int MUT = spec->mutant;
+    const uint32_t CS = spec->kv_chunk_stride; /* 0: plane layout; else the block layout (omega#571) */
 
     /* ---- arguments and identities ---- */
     int udesc = UV64(e);
@@ -217,6 +221,7 @@ int omega_blackwell_codegen_prefill_attn256_prog(const OmegaPrefillAttn256Spec *
     for (unsigned i = 0; i < 16; i++) o[i] = V128(e);
     int mA = V(e), mB = V(e), lA = V(e), lB = V(e), gK = V64(e), gV = V64(e), sKb = V(e), sVb = V(e);
     int lane16 = V(e), vfb = V(e), negc = V(e);
+    const int kbc = CS ? V(e) : NOREG, kbt = CS ? V(e) : NOREG; /* block layout: keys staged so far, jump flag */
     if (e->err) return -1;
     {
         int ka = V(e), c = V(e), tq = V(e); if (e->err) return -1;
@@ -250,6 +255,7 @@ int omega_blackwell_codegen_prefill_attn256_prog(const OmegaPrefillAttn256Spec *
     for (unsigned i = 0; i < 4; i++) vf[i] = V128(e);
     if (e->err) return -1;
 
+    if (CS) movrz(e, R(kbc));
     const int L_m = here(e);
     loop_begin(e);
     bar_sync(e);                                     /* every warp is done with the previous block */
@@ -323,6 +329,11 @@ int omega_blackwell_codegen_prefill_attn256_prog(const OmegaPrefillAttn256Spec *
         }
     }
     imadw(e, gK, one, 16u * 512u, gK); imadw(e, gV, one, 16u * 512u, gV);
+    if (CS) { /* the next 16 keys start a new block of 256: jump over the rest of the block (cs - 128 KiB) */
+        imadi(e, R(kbc), R(one), 16u, kbc); andi(e, R(kbt), R(kbc), 255u);
+        imadi(e, R(kbt), R(one), 0xffffffffu, kbt); shr(e, kbt, kbt, 31);  /* 1 when kbc % 256 == 0 */
+        if (MUT != 3) { imadw(e, gK, kbt, CS - OMEGA_DATTN256_BLOCK_PLANE_BYTES, gK); imadw(e, gV, kbt, CS - OMEGA_DATTN256_BLOCK_PLANE_BYTES, gV); }
+    }
     imadi(e, R(dqa), R(one), 0xfffffff0u, dqa);
     imadi(e, R(cnt), R(one), 0xffffffffu, cnt);
     isetp_ge_u32(e, cnt, one);

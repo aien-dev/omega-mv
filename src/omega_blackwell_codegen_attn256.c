@@ -146,6 +146,14 @@ static const uint32_t NEG_BIG = 0xF149F2CAu; /* -1e30f */
 #define RB OMEGA_DATTN256_ROW_BYTES
 #define PBYTES (OMEGA_DATTN256_PARTIAL_WORDS * 4u)
 
+/* d64 = the cache row at in-block byte offset off32: base64 + off32 (plane layout, cs 0) or base64 + blk * cs + off32
+ * (block layout, omega#571; IMAD.WIDE keeps the block offset 64-bit: a 128K cache is 8 GiB) */
+static void kv_row(Em *e, int d64, int off32, int blk, uint32_t cs, int base64) {
+    if (cs) { imadw(e, d64, blk, cs, base64); imadw(e, d64, off32, 1u, d64); }
+    else imadw(e, d64, off32, 1u, base64);
+}
+int omega_decode_attn256_chunk_stride_ok(uint32_t cs) { return cs == 0 || (cs % 4096u == 0 && cs >= OMEGA_DATTN256_BLOCK_PLANE_BYTES); }
+
 /* 8 consecutive f32 words (two quads) to shared at base + 0 .. 28 */
 static void sts8(Em *e, int base, int one, int t, int qa, int qb) {
     for (unsigned i = 0; i < 8; i++) { imadi(e, R(t), R(one), i * 4u, base); sts32(e, t, i < 4 ? S(qa, i) : S(qb, i - 4)); }
@@ -166,11 +174,13 @@ static void rms_scale(Em *e, int qa, int qb, int sq, int ts, int rs, int addr, i
 }
 
 int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *spec, BlackwellIRProgram *prog) {
-    if (!spec || !prog || spec->depth < 1 || spec->depth > OMEGA_DATTN256_MAX_DEPTH || spec->mutant < 0 || spec->mutant > 5 || spec->prep > 1) return -1;
+    if (!spec || !prog || spec->depth < 1 || spec->depth > OMEGA_DATTN256_MAX_DEPTH || spec->mutant < 0 || spec->mutant > 6 || spec->prep > 1 ||
+        !omega_decode_attn256_chunk_stride_ok(spec->kv_chunk_stride)) return -1;
     omega_bw_ir_init(prog);
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
     const uint32_t D = spec->depth;
     const int MUT = spec->mutant;
+    const uint32_t CS = spec->kv_chunk_stride; /* 0: plane layout; else the block layout (omega#571) */
 
     /* ---- arguments and identities ---- */
     int udesc = UV64(e);
@@ -290,6 +300,7 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     /* ---- the new token's K (warp 6: the rotated k) and V (warp 7: the raw v), bf16 into the cache by the CTA that owns `pos` ---- */
     if (MUT != 3) {
         int sa64 = V64(e), sb64 = V64(e), key = V(e), h0 = V(e), h1 = V(e), tb = V(e);
+        const int blk = CS ? V(e) : NOREG; /* block of pos (block layout only: the plane layout allocates nothing new) */
         /* key = (splits - 1 - cx) + 1 - f: zero only for warps 6, 7 of the last split */
         imadi(e, R(t2), R(cx), 0xffffffffu, splitsm1);
         imadi(e, R(t2), R(one), 1u, t2);
@@ -298,15 +309,17 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
         isetp_ge_u32(e, key, one);
         int b1 = bra_if_p0_fwd(e);
         /* cache row address of position pos for this lane: 8 bf16 = 16 bytes per lane; K plane, V plane for warp 7 */
-        imadi(e, R(t1), R(pos), RB, cyk); imadi(e, R(t1), R(lane), 16u, t1);
-        imadw(e, sa64, t1, 1u, pkc);
+        if (CS) { shr(e, blk, pos, 8); andi(e, R(t1), R(pos), 255u); imadi(e, R(t1), R(t1), RB, cyk); }
+        else imadi(e, R(t1), R(pos), RB, cyk);
+        imadi(e, R(t1), R(lane), 16u, t1);
+        kv_row(e, sa64, t1, blk, CS, pkc);
         movi(e, t2, 7u); imadi(e, R(t2), R(warp), 0xffffffffu, t2); /* 7 - warp: zero for warp 7 */
         isetp_ge_u32(e, t2, one);
         { Region r = region_skip_if_p0(e);
           imadw(e, sb64, voff, 1u, pqkv);
           ldg_wide(e, BW_IR_LDG_E_128, qa, sb64, 0, udesc, 1);
           ldg_wide(e, BW_IR_LDG_E_128, qb, sb64, 16, udesc, 0);
-          imadw(e, sa64, t1, 1u, pvc);
+          kv_row(e, sa64, t1, blk, CS, pvc);
           region_end(e, r); }
         for (unsigned w = 0; w < 4; w++) {
             int src = w < 2 ? qa : qb; unsigned s0 = (2 * w) % 4;
@@ -356,8 +369,9 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     imadi(e, R(t1), R(tpos), 1u, negendm1);           /* tpos - endm1 */
     imadr(e, t1, over, t1, NOREG);
     imadi(e, R(t1), R(t1), 0xffffffffu, tpos);        /* clamped position */
+    if (CS) { if (MUT != 6) andi(e, R(t1), R(t1), 255u); shr(e, over, cb, 8); } /* the clamped position stays in cb's block */
     imadi(e, R(t1), R(t1), RB, cyk);
-    imadw(e, krow, t1, 1u, pkc);
+    kv_row(e, krow, t1, over, CS, pkc);
     for (unsigned h = 0; h < H; h++) movrz(e, R(sc[h]));
     for (uint32_t d = 0; d < D; d++) ldg_wide(e, BW_IR_LDG_E_128, kq[d], krow, d * 16u, udesc, d == 0);
     imadw(e, kpf, one, D * 16u, krow);
@@ -395,10 +409,11 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     shr(e, n, n, 2);
     imadr(e, t2, over, n, NOREG);
     imadi(e, R(n), R(t2), 0xffffffffu, n);
-    imadi(e, R(t1), R(cb), 1u, wp);
+    if (CS) { mov(e, R(t1), R(wp)); shr(e, over, cb, 8); } /* cb is a multiple of 256: position cb + wp sits at wp in its block */
+    else imadi(e, R(t1), R(cb), 1u, wp);
     imadi(e, R(t1), R(t1), RB, hoff);
     imadi(e, R(t1), R(t1), 1u, cyk);
-    imadw(e, vrow, t1, 1u, pvc);
+    kv_row(e, vrow, t1, over, CS, pvc);
     for (uint32_t d = 0; d < D; d++) ldg_wide(e, BW_IR_LDG_E_64, vq[d], vrow, d * 4u * RB, udesc, d == 0);
     imadw(e, vpf, one, D * 4u * RB, vrow);
     imadi(e, R(pa), R(wp), 32u, smS);

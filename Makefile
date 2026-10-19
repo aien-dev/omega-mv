@@ -48,6 +48,8 @@ SRCS += src/omega_gpu_mem_cached.c
 SRCS += src/omega_gpu_decode_graph.c
 # sc #642 (2026-10-18): one Qwen3.8-27B decode token as one command list (GDN + hd256 attention layers, dense MLP)
 SRCS += src/omega_gpu_q38_graph.c
+# Two-front arena bookkeeping (omega#571, FORTRAN idea 3): KV from the bottom, DeltaNet state + snapshots from the top
+SRCS += src/omega_two_front.c
 # OWN-30B (2026-10-13): bf16 streaming GEMV for the lm_head (omega_gpu_bf16_gemv_api.h), new files only
 SRCS += src/omega_blackwell_codegen_bf16.c src/omega_gpu_bf16_gemv_api.c
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM, each expert streamed once per pass (omega_gpu_fp8gemm_api.h), new files only
@@ -2655,3 +2657,14 @@ $(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h $(OU
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
 	./$(GPU_Q38_GRAPH_TEST) --host-only
+
+# Two-front arena (omega#571, FORTRAN idea 3): bookkeeping + byte table (host), plane vs block layout in the warp
+# simulator (--sim), the exact-recall gate + overflow control on the chip (no flag, under /tmp/aien-gb10.lock:
+# tools/run_gpu_two_front_chip.sh). test-two-front runs the host and simulator parts.
+.PHONY: test-two-front
+GPU_TWO_FRONT_TEST = $(OUT_DIR)/gpu_two_front_test
+$(GPU_TWO_FRONT_TEST): tests/gpu_two_front_test.c tests/bw_warp_sim_k.h src/omega_two_front.h src/omega_gpu_decode_attn256_api.h src/omega_gpu_prefill_attn256_api.h src/omega_gpu_gdn_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_two_front_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-two-front: $(GPU_TWO_FRONT_TEST)
+	./$(GPU_TWO_FRONT_TEST) --host-only
+	./$(GPU_TWO_FRONT_TEST) --sim

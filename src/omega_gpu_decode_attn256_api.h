@@ -43,6 +43,7 @@
  */
 #include "omega_blackwell_codegen_attn256.h"
 #include "omega_gpu_decode_attn_api.h"
+#include "omega_gpu_session.h" /* OmegaGpuMem (the arena binding, omega#571) */
 #include <stdint.h>
 #include <stddef.h>
 
@@ -84,12 +85,38 @@ int omega_gpu_decode_attn256_cache_read(OmegaGpuDecodeAttn256Cache *c, uint32_t 
 typedef struct {
     uint32_t layers, max_pos, rotary_dim;
     double theta;
-    uint64_t k_va, v_va;        /* K and V plane bases of `layer` (row (kv_head, pos) at + (kv_head * max_pos + pos) * 512) */
+    uint64_t k_va, v_va;        /* K and V plane bases of `layer`: row (kv_head, pos) at + kv_head * kv_stride + pos * 512
+                                 * (plane layout) or + (pos >> 8) * chunk_stride + kv_head * kv_stride + (pos & 255) * 512 */
     uint64_t rope_va;           /* f32 [max_pos][cos 128 | sin 128] */
     uint64_t q_norm_va, k_norm_va; /* f32 [256] each for `layer` */
     uint64_t part_va, cnt_va;   /* the cross-split partials and counters (prefill may reuse them) */
+    uint32_t usable;            /* positions usable now (max_pos for an own-KV cache, cap_pos when bound to an arena) */
+    uint32_t kv_stride;         /* bytes between KV head planes (max_pos * 512, or 128 KiB in the block layout) */
+    uint32_t chunk_stride;      /* 0 = plane layout; else bytes per block of 256 positions (omega#571) */
 } OmegaGpuDecodeAttn256CacheView;
 int omega_gpu_decode_attn256_cache_view(const OmegaGpuDecodeAttn256Cache *c, uint32_t layer, OmegaGpuDecodeAttn256CacheView *out);
+
+/* ---- two-front arena (omega#571, FORTRAN idea 3): the KV lives in caller memory in the BLOCK layout ----
+ *   int omega_gpu_decode_attn256_cache_alloc_shared(layers, max_pos, theta, rotary_dim, &c);
+ *        The cache WITHOUT its KV planes: RoPE table (max_pos rows = the longest context the server takes, shared by every
+ *        conversation), norms, partials, counters, staging. No position is usable until bind_kv.
+ *   int omega_gpu_decode_attn256_cache_bind_kv(c, arena, off, cap_pos);
+ *        The KV of all `layers` layers at arena->va + off in the block layout: block b (positions 256 b .. 256 b + 255)
+ *        at + b * OMEGA_GPU_DATTN256_BLOCK_BYTES(layers); inside a block, layer L's K plane of KV head h at
+ *        L * LAYER_BLOCK_BYTES + h * 128 KiB, its V plane at + 512 KiB (rows of 512 bytes, position p & 255).
+ *        Positions < cap_pos (a multiple of 256, <= max_pos) are usable. A front that grew in place is re-bound with the
+ *        same off and a larger cap_pos (the kernels and any recorded list see the same addresses). The arena must hold
+ *        OMEGA_DATTN256_PLANE_SLACK readable bytes past the last block (the prefetch reads past the last row). The
+ *        memory stays the caller's: free never releases it. Rows a prefill reads past its last key must be finite
+ *        (the arena hands out zeroed blocks). cap_pos 0 unbinds.
+ *   uint32_t omega_gpu_decode_attn256_cache_usable(c): positions usable now (max_pos for an own-KV cache).
+ * The plane layout (cache_alloc) is unchanged: its kernels are the original instruction streams. */
+#define OMEGA_GPU_DATTN256_LAYER_BLOCK_BYTES (2u * OMEGA_DATTN256_KV_HEADS * OMEGA_DATTN256_BLOCK_PLANE_BYTES) /* 1 MiB */
+#define OMEGA_GPU_DATTN256_BLOCK_BYTES(layers) ((uint64_t)(layers) * OMEGA_GPU_DATTN256_LAYER_BLOCK_BYTES)
+int omega_gpu_decode_attn256_cache_alloc_shared(uint32_t layers, uint32_t max_pos, double rope_theta, uint32_t rotary_dim,
+                                                OmegaGpuDecodeAttn256Cache **out);
+int omega_gpu_decode_attn256_cache_bind_kv(OmegaGpuDecodeAttn256Cache *c, const OmegaGpuMem *arena, uint64_t off, uint32_t cap_pos);
+uint32_t omega_gpu_decode_attn256_cache_usable(const OmegaGpuDecodeAttn256Cache *c);
 
 /* ---- measurement knobs (tests; each clears the kernel cache) ---- */
 void omega_gpu_decode_attn256_set_depth(uint32_t depth);          /* 0 = default (OMEGA_GPU_DATTN256_DEPTH) */

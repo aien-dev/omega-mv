@@ -30,6 +30,7 @@
  * CHIP_FAIL.
  */
 #include "omega_blackwell_codegen_gdn.h"
+#include "omega_gpu_session.h" /* OmegaGpuMem (the arena binding, omega#571) */
 #include <stddef.h>
 #include <stdint.h>
 
@@ -101,6 +102,20 @@ int omega_gpu_gdn_prefill_record(struct OmegaGpuCmdList *cl, OmegaGpuGdn *g, uin
                                  uint64_t *out_va);
 /* Test helper: the out rows the last prefill wrote (after a record + submit). */
 int omega_gpu_gdn_prefill_read_out(OmegaGpuGdn *g, uint32_t tokens, float *out);
+
+
+/* ---- two-front arena (omega#571, FORTRAN idea 3): the live DeltaNet set in caller memory ----
+ * One SET = the conv tails of all layers ([layers][OMEGA_GDN_TAIL_BYTES], device layout) then their states
+ * ([layers][OMEGA_GDN_STATE_BYTES]): omega_gpu_gdn_state_set_bytes(layers) bytes (48 layers: 165,150,720).
+ *   bind_state(g, arena, off): the live set moves to arena + off (current contents carried over, own buffers freed);
+ *        the kernels read and write it there from now on. Re-record any command list after binding.
+ *   snapshot(g, arena, off) / restore(g, arena, off): copy the live set to / from another set in the arena (a per-turn
+ *        snapshot on the high front). Host copies under the session lock; no launch may be in flight.
+ * off: a multiple of 256; arena: one session allocation (the views share its handle; never freed here). */
+uint64_t omega_gpu_gdn_state_set_bytes(uint32_t layers);
+int omega_gpu_gdn_bind_state(OmegaGpuGdn *g, const OmegaGpuMem *arena, uint64_t off);
+int omega_gpu_gdn_snapshot(OmegaGpuGdn *g, const OmegaGpuMem *arena, uint64_t off);
+int omega_gpu_gdn_restore(OmegaGpuGdn *g, const OmegaGpuMem *arena, uint64_t off);
 
 /* Host layout helpers (no device; the test's simulator path uses them too). */
 /* The parameter block (OMEGA_GDN_PAR_BYTES) from the checkpoint tensors (see set_layer). -1 on a NULL pointer. */
