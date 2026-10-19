@@ -45,6 +45,7 @@
 #include "omega_gpu_decode_graph.h"
 #include "omega_gpu_decode_attn256_api.h"
 #include "omega_gpu_gdn_api.h"
+#include <stddef.h>
 #include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
@@ -102,6 +103,31 @@ int omega_gpu_q38_graph_read_buf(OmegaGpuQ38Graph *g, int which, float *out, uin
 /* The gather table (u32 [14336]): agg[n] = mix[tab[n]] (host side; the graph uploads it at create). */
 void omega_q38_gather_table(uint32_t *tab);
 
+/* ---- omega#569 (FORTRAN idea 1, EQUIVALENCE): lifetime-shared scratch, omega_lifetime.h ----
+ * Every op of a token declares the regions it reads and writes. omega_gpu_q38_graph_create_ex traces one whole token
+ * (all layers + final) without the device, and with OMEGA_GPU_Q38_SHARE lays the per-token scratch out by lifetime:
+ * regions never live at the same time share bytes. x, hidden, logits and the token are kept after the token; the norms,
+ * tables and the two argmax pads are pinned (never shared). With SHARE, every token's real trace is checked against the
+ * layout before the submit (red = refused, the reason in omega_gpu_session_last_error), and read_buf refuses a region
+ * whose bytes a later op reused. OMEGA_GPU_Q38_VERIFY also checks the recorded command list itself: every launch argument
+ * that points into the graph buffer must point into a region its op declared. omega_gpu_q38_graph_create = flags 0
+ * (the unshared layout, byte for byte the one before omega#569). */
+enum { OMEGA_GPU_Q38_SHARE = 1u, OMEGA_GPU_Q38_VERIFY = 2u };
+typedef struct {
+    uint64_t flat_bytes;     /* the graph buffer without sharing (the layout before) */
+    uint64_t shared_bytes;   /* the graph buffer with the lifetime plan */
+    uint64_t peak_live;      /* bytes live at the busiest op (no plan can need fewer) */
+    uint64_t pinned_bytes;   /* norms, tables, pads, x, token: never shared */
+    uint32_t ops, accesses;  /* one token's trace */
+} OmegaGpuQ38Plan;
+int omega_gpu_q38_graph_create_ex(const OmegaGpuQ38GraphConfig *cfg, uint32_t flags, OmegaGpuQ38Graph **out);
+/* No device: the plan for a model of `layers` layers (attn_mask, vocab as the config). map (if non-NULL): the storage map
+ * with every region's live ops and writers (omega_lt_map). 0 ok, OMEGA_GPU_DGRAPH_BAD_ARGS, -3 when the plan fails its own
+ * check (never expected). */
+int omega_gpu_q38_graph_plan(uint32_t layers, uint64_t attn_mask, uint32_t vocab, uint32_t flags, OmegaGpuQ38Plan *plan,
+                             char *map, size_t map_cap);
+int omega_gpu_q38_graph_get_plan(const OmegaGpuQ38Graph *g, OmegaGpuQ38Plan *plan);
+
 /* ---- timeline (measurement; as the decode graph) ---- */
 enum {
     OMEGA_GPU_Q38_K_NORM = 0, OMEGA_GPU_Q38_K_MIX, OMEGA_GPU_Q38_K_AB, OMEGA_GPU_Q38_K_GDN, OMEGA_GPU_Q38_K_GATHER, OMEGA_GPU_Q38_K_ATTN,
@@ -113,7 +139,10 @@ int omega_gpu_q38_graph_stamps(const OmegaGpuQ38Graph *g, uint64_t *stamps, uint
 const char *omega_gpu_q38_graph_kind_name(uint8_t kind);
 /* 1: submit after every launch (the comparison path). */
 void omega_gpu_q38_graph_set_flush_each(OmegaGpuQ38Graph *g, int on);
-/* TEST ONLY: 1 SWIGLU up half off by one, 2 GATHER index + 1, 3 GATE dropped, 4 post-norm without its weight. 0 none. */
+/* TEST ONLY: 1 SWIGLU up half off by one, 2 GATHER index + 1, 3 GATE dropped, 4 post-norm without its weight,
+ * 5 (SHARE) xq moved onto mix's bytes, both live in the mix GEMV: the pre-submit check must refuse the token,
+ * 6 the same layout with the check skipped: the token runs and its values must differ, 7 the GATHER op does not declare its
+ * table read: VERIFY must refuse the token. 0 none (restores the plan). */
 void omega_gpu_q38_graph_test_set_mutant(OmegaGpuQ38Graph *g, int mutant);
 
 #ifdef __cplusplus

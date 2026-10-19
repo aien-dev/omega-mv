@@ -104,6 +104,9 @@ int omega_gpu_cmdlist_is_latched(void);
 /* After a submit with opts.stamps = 1: out[0] = GPU timestamp (ns, PTIMER) before launch 0, out[i + 1] = after launch i completed
  * (taken after its WAIT_FOR_IDLE). Returns the count written (launches + 1) or -1 (stamps off, slot unwritten, cap too small). */
 int omega_gpu_cmdlist_stamps(const OmegaGpuCmdList *cl, uint64_t *out, uint32_t cap);
+/* Caller holds the lock. The argument words launch i was added with (its bank from 0x380), for checks that read the
+ * recorded list back (omega#569 VERIFY). Returns the count copied, or -1 (no such launch, cap too small). */
+int omega_gpu_cmdlist_launch_args(const OmegaGpuCmdList *cl, uint32_t i, uint32_t *out, uint32_t cap);
 
 #ifdef __cplusplus
 }

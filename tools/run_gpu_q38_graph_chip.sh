@@ -7,6 +7,8 @@
 #      synthetic model (GDN then attention) on random weights, vocab 248320, tokens at positions 0..2; token identical,
 #      logits and x within tolerance, B == C bit for bit, the four graph mutants caught; REPS timed tokens.
 #   2. LAYERS=4 MASK=0x8 (three GDN layers then attention, the checkpoint's period) as a second shape.
+#   omega#569: lifetime_test (host) first; main and layers4 also run the lifetime-shared layout and its mutants 5..7.
+#   OUT_DIR (default build) and JOBS (default 10) for a fresh build directory on a shared box.
 # Verdict line last: "GPU_Q38_GRAPH_CHIP: PASS|FAIL".
 set -u
 EVID="${1:?evidence dir}"; PHYS="${2:-$HOME/workspace/physics-own30b-k}"
@@ -18,13 +20,15 @@ cd "$HERE" || exit 2
   uname -a; nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null; free -g | head -2
 } > "$EVID/device.txt"
 git diff HEAD > "$EVID/worktree.diff"
-make PHYSICS_DIR="$PHYS" -j10 build/gpu_q38_graph_test build/gpu_cmdlist_test build/bw_encode_control_test > "$EVID/build.log" 2>&1 || { echo "GPU_Q38_GRAPH_CHIP: FAIL build"; exit 1; }
-T=./build/gpu_q38_graph_test
-sha256sum "$T" build/gpu_cmdlist_test build/libomega_gpu.a > "$EVID/binaries.sha256"
+B="${OUT_DIR:-build}"
+make OUT_DIR="$B" PHYSICS_DIR="$PHYS" -j"${JOBS:-10}" "$B/gpu_q38_graph_test" "$B/gpu_cmdlist_test" "$B/bw_encode_control_test" "$B/lifetime_test" > "$EVID/build.log" 2>&1 || { echo "GPU_Q38_GRAPH_CHIP: FAIL build"; exit 1; }
+T="$B/gpu_q38_graph_test"
+sha256sum "$T" "$B/gpu_cmdlist_test" "$B/lifetime_test" "$B/libomega_gpu.a" > "$EVID/binaries.sha256"
 fail=0
-./build/bw_encode_control_test 2>&1 | tee "$EVID/encode-control.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
-./build/gpu_cmdlist_test --host-only > "$EVID/glue-host.log" 2>&1 || fail=1; tail -1 "$EVID/glue-host.log"
-./build/gpu_cmdlist_test --sim > "$EVID/glue-sim.log" 2>&1 || fail=1; tail -1 "$EVID/glue-sim.log"
+"$B/bw_encode_control_test" 2>&1 | tee "$EVID/encode-control.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
+"$B/gpu_cmdlist_test" --host-only > "$EVID/glue-host.log" 2>&1 || fail=1; tail -1 "$EVID/glue-host.log"
+"$B/gpu_cmdlist_test" --sim > "$EVID/glue-sim.log" 2>&1 || fail=1; tail -1 "$EVID/glue-sim.log"
+"$B/lifetime_test" > "$EVID/lifetime.log" 2>&1 || fail=1; tail -1 "$EVID/lifetime.log"
 $T --host-only 2>&1 | tee "$EVID/host-only.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
 [ $fail = 0 ] || { echo "GPU_Q38_GRAPH_CHIP: FAIL host proofs"; exit 1; }
 $T --reps "${REPS:-10}" 2>&1 | tee "$EVID/main.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1

@@ -13,7 +13,10 @@
  *                   B  the same list submitted one launch per submission (flush_each)
  *                 Checks per token: B == C bit for bit (x, logits, token); A vs C token identical and logits within
  *                 tolerance; x within tolerance. Negative controls: graph mutants 1..4 (SWIGLU, GATHER, GATE, post-norm
- *                 weight) must each fail the A-vs-C comparison. Then --reps timed tokens (median).
+ *                 weight) must each fail the A-vs-C comparison.
+ *                 omega#569: the same tokens on a lifetime-shared layout (SHARE | VERIFY) must equal C bit for bit; mutant 5
+ *                 (xq forced onto mix) must be refused before it runs, mutant 6 (the same, unchecked) must change the values,
+ *                 mutant 7 (an undeclared table read) must fail the command-list check. Then --reps timed tokens (median).
  * Verdict: exit 0 when every CHECK passed.
  */
 #include "omega_gpu_q38_graph.h"
@@ -169,11 +172,11 @@ static int baseline_token(Model *m, const float *x0, uint32_t pos, Out *o) {
     return 0;
 }
 
-static int graph_build(Model *m, OmegaGpuQ38Graph **out) {
+static int graph_build(Model *m, uint32_t flags, OmegaGpuQ38Graph **out) {
     OmegaGpuQ38GraphConfig c; memset(&c, 0, sizeof c);
     c.layers = m->layers; c.attn_mask = m->mask; c.vocab = m->vocab; c.eps = EPS; c.eps_l2 = EPS;
     c.gdn = m->gdn[0]; c.attn = m->attn[0]; c.lm_head = m->lm;
-    int rc = omega_gpu_q38_graph_create(&c, out);
+    int rc = omega_gpu_q38_graph_create_ex(&c, flags, out);
     if (rc != 0) { printf("graph create %d: %s\n", rc, omega_gpu_session_last_error()); return -1; }
     for (uint32_t l = 0; l < m->layers; l++)
         if ((rc = omega_gpu_q38_graph_set_layer(*out, l, m->L[l].mix, m->L[l].ab, m->L[l].o, m->L[l].gu, m->L[l].dn, m->L[l].in_norm, m->L[l].post_norm)) != 0) { printf("set_layer %u: %d\n", l, rc); return -1; }
@@ -216,7 +219,7 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
     /* A first: it also warms every kernel the record paths need */
     for (uint32_t t = 0; t < TOKENS; t++) if (baseline_token(&m, m.x0[t], t, &A[t]) != 0) { CHECK(0, "baseline token %u", t); return 1; }
     OmegaGpuQ38Graph *g = NULL;
-    if (graph_build(&m, &g) != 0) { CHECK(0, "graph build"); return 1; }
+    if (graph_build(&m, 0, &g) != 0) { CHECK(0, "graph build"); return 1; }
     OmegaGpuDecodeGraphStats st;
     for (uint32_t t = 0; t < TOKENS; t++) {
         if (graph_token(g, &m, m.x0[t], t, &C[t], &st) != 0) { CHECK(0, "graph token %u", t); return 1; }
@@ -237,6 +240,59 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
     }
     omega_gpu_q38_graph_set_flush_each(g, 0);
     CHECK(bsame, "flush_each == one list, bit for bit, all %u tokens", TOKENS);
+    /* omega#569: the lifetime-shared layout (SHARE | VERIFY) over the same three tokens from a reset state: bit-identical
+     * to C; then its negative controls */
+    {
+        OmegaGpuQ38Graph *s = NULL;
+        if (graph_build(&m, OMEGA_GPU_Q38_SHARE | OMEGA_GPU_Q38_VERIFY, &s) != 0) { CHECK(0, "shared graph build"); return 1; }
+        OmegaGpuQ38Plan p;
+        CHECK(omega_gpu_q38_graph_get_plan(s, &p) == 0 && p.shared_bytes < p.flat_bytes, "shared plan smaller");
+        printf("shared layout: buffer %" PRIu64 " B (flat %" PRIu64 " B, saved %" PRIu64 " B, peak live %" PRIu64 " B)\n", p.shared_bytes, p.flat_bytes,
+               p.flat_bytes - p.shared_bytes, p.peak_live);
+        if (state_reset(&m) != 0) { CHECK(0, "state reset"); return 1; }
+        int same = 1;
+        for (uint32_t t = 0; t < TOKENS; t++) {
+            if (graph_token(s, &m, m.x0[t], t, &B, &st) != 0) { CHECK(0, "shared token %u", t); return 1; }
+            if (memcmp(B.x, C[t].x, sizeof B.x) || memcmp(B.logits, C[t].logits, vocab * 4u) || B.token != C[t].token) same = 0;
+            printf("shared token %u: %u (unshared %u)\n", t, B.token, C[t].token);
+        }
+        CHECK(same, "shared layout == unshared layout, bit for bit (x, logits, token), all %u tokens", TOKENS);
+        static float rb[2 * I];
+        CHECK(omega_gpu_q38_graph_read_buf(s, OMEGA_GPU_Q38_BUF_X, rb, H) == 0, "shared: x still readable");
+        CHECK(omega_gpu_q38_graph_read_buf(s, OMEGA_GPU_Q38_BUF_MIX, rb, 16) != 0, "shared: mix (bytes reused by the logits) refused");
+        /* 5: xq on mix's bytes, the check on: the token must be refused before it runs */
+        if (state_reset(&m) != 0) return 1;
+        omega_gpu_q38_graph_test_set_mutant(s, 5);
+        int r5 = omega_gpu_q38_graph_token(s, m.x0[0], 0, &B.token, &st);
+        printf("negative control 5 (xq forced onto mix, check on): rc %d: %s\n", r5, omega_gpu_session_last_error());
+        CHECK(r5 != 0 && strstr(omega_gpu_session_last_error(), "unsafe") != NULL, "mutant 5 refused by the pre-submit check");
+        /* 6: the same layout run unchecked: the values must differ from C (the check is what keeps them right) */
+        if (state_reset(&m) != 0) return 1;
+        omega_gpu_q38_graph_test_set_mutant(s, 6);
+        int differs = 0;
+        for (uint32_t t = 0; t < TOKENS; t++) {
+            if (graph_token(s, &m, m.x0[t], t, &M, &st) != 0) { differs = 1; break; }
+            if (memcmp(M.x, C[t].x, sizeof M.x) || memcmp(M.logits, C[t].logits, vocab * 4u) || M.token != C[t].token) differs = 1;
+        }
+        printf("negative control 6 (xq forced onto mix, unchecked): values %s\n", differs ? "DIFFER (red, as required)" : "identical");
+        CHECK(differs, "mutant 6: the unsafe layout changes the values");
+        /* 7: the gather op stops declaring its table read: VERIFY must find the launch pointing at an undeclared region */
+        if (state_reset(&m) != 0) return 1;
+        omega_gpu_q38_graph_test_set_mutant(s, 7);
+        int r7 = omega_gpu_q38_graph_token(s, m.x0[0], 0, &B.token, &st);
+        printf("negative control 7 (gather table read undeclared): rc %d: %s\n", r7, omega_gpu_session_last_error());
+        CHECK(m.n_attn == 0 || (r7 != 0 && strstr(omega_gpu_session_last_error(), "verify") != NULL), "mutant 7 caught by the list check");
+        /* back to the plan: identical again */
+        omega_gpu_q38_graph_test_set_mutant(s, 0);
+        if (state_reset(&m) != 0) return 1;
+        same = 1;
+        for (uint32_t t = 0; t < TOKENS; t++) {
+            if (graph_token(s, &m, m.x0[t], t, &B, &st) != 0) { CHECK(0, "shared token %u after the mutants", t); return 1; }
+            if (memcmp(B.x, C[t].x, sizeof B.x) || memcmp(B.logits, C[t].logits, vocab * 4u) || B.token != C[t].token) same = 0;
+        }
+        CHECK(same, "shared layout after the mutants == unshared, bit for bit");
+        omega_gpu_q38_graph_free(s);
+    }
     /* negative controls: each graph mutant must fail the A comparison on some token */
     const char *mname[5] = { "", "swiglu up half -1", "gather index +1", "gate dropped", "post-norm weight dropped" };
     for (int mu = 1; mu <= 4; mu++) {

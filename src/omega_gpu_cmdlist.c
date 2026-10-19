@@ -45,6 +45,7 @@ struct OmegaGpuCmdList {
     OmegaGpuMem nop_code; /* EXIT kernel used to force the session latch after a timeout */
     uint32_t nop_gpr;
     uint8_t *indep;       /* per launch: 1 = shares no data with the launch before it (mark_independent): no barrier before it */
+    uint8_t *nargs;       /* per launch: argument words (omega_gpu_cmdlist_launch_args) */
     int stamped;          /* the last submit had opts.stamps (the accessor refuses stale stamps from an earlier submit) */
 };
 
@@ -88,7 +89,8 @@ int omega_gpu_cmdlist_create(uint32_t cap, OmegaGpuCmdList **out) {
     cl->words_cap = RING_WORDS;
     cl->words = omega_gpu_host_alloc((size_t)cl->words_cap * 4u);
     cl->indep = omega_gpu_host_calloc(cap, 1);
-    int rc = cl->words && cl->indep ? 0 : -1;
+    cl->nargs = omega_gpu_host_calloc(cap, 1);
+    int rc = cl->words && cl->indep && cl->nargs ? 0 : -1;
     omega_gpu_session_lock();
     if (rc == 0 && !omega_gpu_session_open()) rc = -1;
     if (rc == 0 && (omega_gpu_session_alloc((size_t)cap * OMEGA_GPU_CMDLIST_BANK_BYTES, &cl->banks) != 0 ||
@@ -116,6 +118,7 @@ void omega_gpu_cmdlist_free(OmegaGpuCmdList *cl) {
     omega_gpu_session_unlock();
     omega_gpu_host_free(cl->words);
     omega_gpu_host_free(cl->indep);
+    omega_gpu_host_free(cl->nargs);
     omega_gpu_host_free(cl);
 }
 
@@ -151,6 +154,7 @@ int omega_gpu_cmdlist_add(OmegaGpuCmdList *cl, const OmegaGpuLaunch *L) {
     memcpy(qs, q1, sizeof q1);
     memcpy(qs + 0x200, q0, sizeof q0);
     cl->indep[cl->n] = 0;
+    cl->nargs[cl->n] = (uint8_t)L->n_args;
     cl->n++;
     return (int)i;
 }
@@ -366,4 +370,10 @@ const char *omega_gpu_cmdlist_barrier_name(OmegaGpuCmdListBarrier b) {
     case OMEGA_GPU_CMDLIST_BARRIER_FLUSH_DATA: return "flush_data";
     }
     return "?";
+}
+
+int omega_gpu_cmdlist_launch_args(const OmegaGpuCmdList *cl, uint32_t i, uint32_t *out, uint32_t cap) {
+    if (!cl || !out || i >= cl->n || cl->nargs[i] > cap) return -1;
+    memcpy(out, (const uint8_t *)cl->banks.cpu + (size_t)i * OMEGA_GPU_CMDLIST_BANK_BYTES + 0x380, (size_t)cl->nargs[i] * 4u);
+    return (int)cl->nargs[i];
 }
