@@ -1,0 +1,24 @@
+# tests/gates/omega-memfrag.gate
+# Host-only memory fragmentation scan (omega #528): make test-memfrag (scan tool, fixture test).
+gate: OMEGA-MEMFRAG
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/
+  - tools/
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["memfrag"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 15m
+exactness: EXACT
+cache_scope: machine
