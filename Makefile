@@ -2428,8 +2428,8 @@ test-gpu-elementwise: $(GPU_EW_TEST)
 # codegen here; the chip gate is `./build/gpu_dynconv_test --out receipt.json` under the GPU lock.
 .PHONY: test-gpu-dynconv
 GPU_DYNCONV_TEST = $(OUT_DIR)/gpu_dynconv_test
-$(GPU_DYNCONV_TEST): tests/gpu_dynconv_test.c src/omega_gpu_elementwise_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_dynconv_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_DYNCONV_TEST): tests/gpu_dynconv_test.c tests/bw_warp_sim.h src/omega_gpu_elementwise_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_dynconv_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-dynconv: $(GPU_DYNCONV_TEST)
 	./$(GPU_DYNCONV_TEST) --host-only
 
