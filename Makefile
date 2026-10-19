@@ -34,6 +34,8 @@ SRCS += src/omega_blackwell_codegen_moe2.c
 SRCS += src/omega_blackwell_codegen_w4.c src/omega_gpu_w4_api.c
 # flashnext/port (2026-10-19): grouped NVFP4 GEMV for the Qwen3.8-Flash-Next experts (omega_gpu_nv4_api.h), new files only
 SRCS += src/omega_blackwell_codegen_nv4.c src/omega_gpu_nv4_api.c
+# flashnext/port (2026-10-19): Qwen3.8-Flash-Next router, top-10 of 512 + shared slot (omega_gpu_router_fn_api.h), new files only
+SRCS += src/omega_blackwell_codegen_router_fn.c src/omega_gpu_router_fn_api.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
@@ -2683,3 +2685,13 @@ $(GPU_NV4_TEST): tests/gpu_nv4_api_test.c tests/bw_warp_sim.h src/omega_gpu_nv4_
 test-gpu-nv4: $(GPU_NV4_TEST)
 	./$(GPU_NV4_TEST) --host-only
 	./$(GPU_NV4_TEST) --sim
+
+# flashnext/port (2026-10-19): Qwen3.8-Flash-Next router (omega_gpu_router_fn_api.h): host codegen budgets, then the
+# warp-simulator battery against the double oracle with mutants; chip: tools/run_gpu_router_fn_chip.sh.
+.PHONY: test-gpu-router-fn
+GPU_ROUTER_FN_TEST = $(OUT_DIR)/gpu_router_fn_test
+$(GPU_ROUTER_FN_TEST): tests/gpu_router_fn_test.c tests/bw_warp_sim.h src/omega_gpu_router_fn_api.h src/omega_blackwell_codegen_router_fn.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_router_fn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-router-fn: $(GPU_ROUTER_FN_TEST)
+	./$(GPU_ROUTER_FN_TEST) --host-only
+	./$(GPU_ROUTER_FN_TEST) --sim

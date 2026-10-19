@@ -199,9 +199,11 @@ static void sim_battery(void) {
                 OmegaNv4GemvSpec sm = s; sm.mutant = m;
                 if (!omega_nv4_gemv_spec_ok(&sm)) { printf("  sim k %u mutant %d: refused by the spec (equivalent to production at this k)\n", pts[i].k, m); continue; }
                 int mrc = sim_gemv(&sm, t, G, pick, 3, x, XR, y, msg, sizeof msg);
-                double w2; size_t mb = mrc == 0 ? parity_groups(t, G, pick, x, XR, y, &w2) : 1;
-                CHECK(mrc != 0 || mb > 0, "sim k %u mutant %d caught (rc %d, %zu bad rows)", pts[i].k, m, mrc, mb);
-                if (mrc != 0 || mb > 0) caught[m] = 1;
+                double w2; size_t mb = mrc == 0 ? parity_groups(t, G, pick, x, XR, y, &w2) : 0;
+                /* caught = ran and differs, or a kernel fault in the simulator; a refused build proves nothing */
+                const int ok = (mrc == 0 && mb > 0) || (mrc != 0 && !strstr(msg, "codegen") && !strstr(msg, "configuration"));
+                CHECK(ok, "sim k %u mutant %d caught (rc %d, %zu bad rows%s%s)", pts[i].k, m, mrc, mb, mrc ? ": " : "", mrc ? msg : "");
+                if (ok) caught[m] = 1;
             }
         free(x); free(y); for (uint32_t q = 0; q < 3; q++) t4_free(&t[q]);
     }
@@ -313,8 +315,8 @@ static int chip_run(uint32_t reps, const char *out_path, const char *fixture) {
                 if (!omega_nv4_gemv_spec_ok(&sm)) continue;
                 omega_gpu_nv4_test_set_mutant(m);
                 int mrc = omega_gpu_nv4_gemv_grouped_f32(sl, ids, G, x, P[i].xrows, y, NULL);
-                double w2; size_t mb = mrc == 0 ? parity_groups(t, G, ids, x, P[i].xrows, y, &w2) : 1;
-                CHECK(mrc != 0 || mb > 0, "chip %s mutant %d caught (rc %d, %zu bad rows)", P[i].name, m, mrc, mb);
+                double w2; size_t mb = mrc == 0 ? parity_groups(t, G, ids, x, P[i].xrows, y, &w2) : 0;
+                CHECK((mrc == 0 && mb > 0) || mrc == OMEGA_GPU_NV4_CHIP_FAIL, "chip %s mutant %d caught (rc %d, %zu bad rows)", P[i].name, m, mrc, mb);
                 omega_gpu_nv4_test_set_mutant(0);
             }
         uint64_t *ns = calloc(reps, sizeof *ns);
