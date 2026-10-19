@@ -1,0 +1,2 @@
+head 974820021325fe203e79ada919da1a6131935dd3 queued 2026-10-19T20:55:06Z load 27.98 31.16 33.55
+~/.local/bin/quiet-measure flock /tmp/aien-gb10.lock ~/.local/bin/spark-receipt entity-276-pilot -- env ENTITY276_BIN=/home/drakestapleton/workspace/targets/omega-entity-276/record/tests-research/entity276 PILOT_OUT=/home/drakestapleton/workspace/targets/omega-entity-276/measure bash tests/research/entity276/measure.sh

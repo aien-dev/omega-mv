@@ -1,0 +1,56 @@
+world: attached
+  state:              resident
+  generation:         (not observable)
+  resident objects:   55 (shown 32)
+  reactions:          34
+  active work:        0
+  published results:  0 (not observable)
+  staged effects:     (not visible)
+  publication tail:   0
+  digest:             sha256:b8e14c216c82eb6052f6a8252565721ec4a6fa6f9219ee3e31924ba4fb2e857f
+  object rx:0@2                 RESIDENT   live
+  object rx:1@1                 EPHEMERAL  live
+  object rx:2@2                 RESIDENT   live
+  object rx:3@1                 EPHEMERAL  live
+  object rx:4@2                 RESIDENT   live
+  object rx:5@1                 EPHEMERAL  live
+  object rx:6@1                 RESIDENT   live
+  object rx:7@1                 RESIDENT   live
+  object rx:8@1                 RESIDENT   live
+  object rx:9@1                 RESIDENT   live
+  object rx:10@1                RESIDENT   live
+  object rx:11@1                RESIDENT   live
+  object rx:12@1                RESIDENT   live
+  object rx:13@1                RESIDENT   live
+  object rx:14@1                RESIDENT   live
+  object rx:15@1                RESIDENT   live
+  object rx:16@1                RESIDENT   live
+  object rx:17@1                RESIDENT   live
+  object rx:18@1                RESIDENT   live
+  object rx:19@1                RESIDENT   live
+  object rx:20@1                RESIDENT   live
+  object rx:21@1                RESIDENT   live
+  object rx:22@1                RESIDENT   live
+  object rx:23@1                RESIDENT   live
+  object rx:24@1                RESIDENT   live
+  object rx:25@1                RESIDENT   live
+  object rx:26@1                RESIDENT   live
+  object rx:27@1                RESIDENT   live
+  object rx:28@1                RESIDENT   live
+  object rx:29@1                RESIDENT   live
+  object rx:30@1                RESIDENT   live
+  object rx:31@1                RESIDENT   live
+  gap: object list truncated at 32; generation: RxWorld holds no RxGenStore; published results: kept per RcGate, not on RxWorld; staged effects: RxGenStore only, not visible; digest/tail read apart from objects, coherent only when quiescent
+  note: view only; this view holds no authority over the World
+history: records 113
+  U0 rests on U1
+  U1 rests on U2
+  U2 rests on U3
+  U3 rests on U4
+  U4 rests on U5
+  U5 rests on floor
+  U6 rests on floor
+  U7 rests on U6
+  U8 rests on floor
+  U9 rests on floor
+  note: value-only history view; holds no authority

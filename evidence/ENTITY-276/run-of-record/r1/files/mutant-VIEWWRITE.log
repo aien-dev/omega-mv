@@ -1,0 +1,3 @@
+  BAD tests/research/entity276/entity276.c:960 viewwrite: edited view still equals the runtime
+  BAD tests/research/entity276/entity276.c:962 viewwrite: edited outcome
+entity276 mutant-VIEWWRITE: checks 54 failed 2 bad_rows 2 records 191

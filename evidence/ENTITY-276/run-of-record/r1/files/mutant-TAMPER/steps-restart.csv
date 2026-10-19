@@ -1,0 +1,8 @@
+# load1_start=25.87 memavail_kib_start=25177656 load1_end=25.87 memavail_kib_end=25189736
+step,cpu_ns,proc_cpu_ns,cog_cpu_ns,wall_ns,journal_bytes,records,lookups,hits,misses,arrange_calls,snapshot_calls,plan_views,admits,refusals,bad_rows,peak_rss_kib
+5a_replay_rebuild,2573936,2752224,0,6435901,0,0,0,0,0,0,0,0,0,1,0,4072
+5b_restore_identity,2983936,2985744,0,122714483,0,37,0,0,0,0,1,0,0,0,7,4072
+5_obj2,9384368,13268816,142592,274263898,0,76,1,0,1,1,2,5,1,0,0,4712
+5_obj3,9899440,13996736,7888,279659708,0,77,1,1,0,0,2,4,1,0,0,5512
+5_obj4,9996928,13910416,8432,267496377,0,75,1,1,0,0,2,4,1,0,0,5992
+close,127984,273456,0,392356,0,0,0,0,0,0,0,0,0,0,0,5992

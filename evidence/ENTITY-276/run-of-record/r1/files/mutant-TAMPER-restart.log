@@ -1,0 +1,9 @@
+  journal refused by cx_open (rc -4); starting empty
+  BAD tests/research/entity276/entity276.c:1077 journal accepted by cx_open
+  BAD tests/research/entity276/entity276.c:1079 entity digest after restore equals process 1 (a6b936dbc880c3fbbe56b499957ccb193ebf25f5c1227e1b8e6a228303cc1570)
+  BAD tests/research/entity276/entity276.c:1081 restored World equals the journal's committed state
+  BAD tests/research/entity276/entity276.c:1082 lineage equals process 1
+  BAD tests/research/entity276/entity276.c:1083 chain at open equals process 1
+  BAD tests/research/entity276/entity276.c:1084 history count equals process 1 (0)
+  BAD tests/research/entity276/entity276.c:1088 the correction survived the restart
+entity276 restart: checks 71 failed 7 bad_rows 7 records 265

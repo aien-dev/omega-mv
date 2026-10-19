@@ -1,0 +1,44 @@
+world: attached
+  state:              resident
+  generation:         (not observable)
+  resident objects:   20 (shown 20)
+  reactions:          0
+  active work:        0
+  published results:  0 (not observable)
+  staged effects:     (not visible)
+  publication tail:   0
+  digest:             sha256:d50020d9492f9480f7a372e1b39d53209b9d4823e9469993ab947189965482ac
+  object rx:0@2                 RESIDENT   live
+  object rx:1@1                 EPHEMERAL  live
+  object rx:2@2                 RESIDENT   live
+  object rx:3@1                 EPHEMERAL  live
+  object rx:4@2                 RESIDENT   live
+  object rx:5@1                 EPHEMERAL  live
+  object rx:6@1                 RESIDENT   live
+  object rx:7@1                 RESIDENT   live
+  object rx:8@1                 RESIDENT   live
+  object rx:9@1                 RESIDENT   live
+  object rx:10@1                RESIDENT   live
+  object rx:11@1                RESIDENT   live
+  object rx:12@1                RESIDENT   live
+  object rx:13@1                RESIDENT   live
+  object rx:14@1                RESIDENT   live
+  object rx:15@1                RESIDENT   live
+  object rx:16@1                RESIDENT   live
+  object rx:17@1                RESIDENT   live
+  object rx:18@1                RESIDENT   live
+  object rx:19@1                RESIDENT   live
+  gap: generation: RxWorld holds no RxGenStore; published results: kept per RcGate, not on RxWorld; staged effects: RxGenStore only, not visible; digest/tail read apart from objects, coherent only when quiescent
+  note: view only; this view holds no authority over the World
+history: records 235
+  U0 rests on floor
+  U1 rests on U0
+  U2 rests on U1
+  U3 rests on U2
+  U4 rests on U3
+  U5 rests on U4
+  U6 rests on floor
+  U7 rests on U6
+  U8 rests on floor
+  U9 rests on floor
+  note: value-only history view; holds no authority

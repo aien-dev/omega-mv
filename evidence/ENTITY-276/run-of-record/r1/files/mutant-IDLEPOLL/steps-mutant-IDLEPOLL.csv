@@ -1,0 +1,8 @@
+# load1_start=26.21 memavail_kib_start=25159392 load1_end=25.87 memavail_kib_end=25153268
+step,cpu_ns,proc_cpu_ns,cog_cpu_ns,wall_ns,journal_bytes,records,lookups,hits,misses,arrange_calls,snapshot_calls,plan_views,admits,refusals,bad_rows,peak_rss_kib
+1_admit_attached,481504,485616,0,7082483,1840,2,0,0,0,0,1,0,1,1,0,3784
+2_detached_execute,8282304,11700448,137680,251591825,53320,74,1,0,1,1,0,3,0,0,0,4424
+3_reattach_check,1147296,1171408,0,1149531,0,0,0,0,0,0,1,2,0,0,0,4424
+4_correction,11237536,14825296,152672,281886706,57000,78,2,1,1,1,2,6,2,0,0,5064
+6_idle_control,11352176,11352992,0,3000479690,0,0,0,0,0,0,30,0,0,0,1,5064
+close,143440,289456,0,365700,0,0,0,0,0,0,0,0,0,0,0,5064

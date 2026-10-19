@@ -1,0 +1,22 @@
+{
+ "name": "entity-276-pilot",
+ "cmd": "env ENTITY276_BIN=/home/drakestapleton/workspace/targets/omega-entity-276/record/tests-research/entity276 PILOT_OUT=/home/drakestapleton/workspace/targets/omega-entity-276/measure bash tests/research/entity276/measure.sh",
+ "exit": 0,
+ "git_head": "97482002",
+ "start": "2026-10-19T15:56:28.060343",
+ "seconds": 133.281,
+ "samples": 64,
+ "wall_W_mean": 176.875,
+ "wall_J": 23574.134925603867,
+ "idle_W_before": 170.66666666666666,
+ "incremental_J": 827.4549125830345,
+ "gpu_W_mean": 6.19625,
+ "gpu_util_mean": 0.0,
+ "load1_start": "27.21",
+ "load1_end": "22.29",
+ "mem_avail_kB_start": "25302476",
+ "mem_avail_kB_end": "23923880",
+ "lock_holders_max": 4,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}

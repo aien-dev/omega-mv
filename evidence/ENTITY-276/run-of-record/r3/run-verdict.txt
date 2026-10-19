@@ -1,0 +1,21 @@
+OK   run1-pilot exit 0
+OK   run1-restart exit 0
+OK   run2-pilot exit 0
+OK   run2-restart exit 0
+OK   determinism summary-pilot identical
+OK   determinism summary-restart identical
+OK   cold-restart exit 0
+OK   control-idle exit 0
+OK   mutant-SHADOW exit 1
+OK   mutant-SHADOW red with bad_rows 1
+OK   mutant-VIEWWRITE exit 1
+OK   mutant-VIEWWRITE red with bad_rows 2
+OK   mutant-IDLEPOLL exit 1
+OK   mutant-IDLEPOLL red with bad_rows 1
+OK   mutant-SHADOW-restart exit 1
+OK   mutant-SHADOW-restart red with bad_rows 1
+OK   mutant-TAMPER-file exit 0
+OK   mutant-TAMPER-restart exit 1
+OK   mutant-TAMPER-restart red with bad_rows 7
+OK   mutant-TAMPER refused journal, 0 wrong answers
+RESULT fails=0
