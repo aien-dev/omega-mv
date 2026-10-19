@@ -511,13 +511,15 @@ int ds_eval(const ds_model *m, const ds_opts *o, ds_result *r) {
             if (state[i] == ST_LAUNCH) { any = 1; if (dt < 0 || rem_l[i] < dt) dt = rem_l[i]; }
             else if (state[i] == ST_RUN) {
                 any = 1;
-                double d = rem_t[i] > 0 ? rem_t[i] : 0;
+                /* next event for this op: the earlier of its two progress bars */
+                double d = -1;
+                if (rem_t[i] > 0) d = rem_t[i];
                 if (rem_b[i] > 0) {
                     double share = num[i].cap / active[m->ops[i].bw];
                     double db = rem_b[i] / share;
-                    if (db > d) d = db;
-                    if (rem_t[i] > 0 && rem_t[i] < db) d = rem_t[i];   /* earliest of the two progress bars */
+                    if (d < 0 || db < d) d = db;
                 }
+                if (d < 0) d = 0;
                 if (dt < 0 || d < dt) dt = d;
             }
         }

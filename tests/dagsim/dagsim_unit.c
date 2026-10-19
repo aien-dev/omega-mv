@@ -129,6 +129,14 @@ static void test_shared_bandwidth(void) {
         "op id=A kind=compute engine=cpu t_ns=5e8 bytes=1e9 bw=pipe prov=measured src=t\n", &m, &r, NULL);
     CHECK(rc == DS_OK && NEAR(r.makespan_ns, 1e9, 1e-3), "max(F/P,Q/B) floor, got %.0f", r.makespan_ns);
     CHECK(NEAR(r.op_floor_ns[0], 1e9, 1e-3), "op floor");
+    /* a compute-bound op streaming alone has no contention, whatever its busy time */
+    rc = eval_text(
+        "resource id=cpu kind=compute slots=1 prov=specified src=test\n"
+        "resource id=pipe kind=bandwidth cap=1e9 prov=measured src=t\n"
+        "op id=A kind=compute engine=cpu t_ns=4e9 bytes=1e9 bw=pipe prov=measured src=t\n", &m, &r, NULL);
+    CHECK(rc == DS_OK && NEAR(r.makespan_ns, 4e9, 1e-3) && NEAR(r.op_contention_ns[0], 0, 1e-3),
+          "compute-bound op alone: contention %.0f (want 0)", r.op_contention_ns[0]);
+    CHECK(NEAR(r.attr_ns[DS_ATTR_COMPUTE], 4e9, 1e-3), "attributed as compute");
     /* serialized sharing: one slot, so no contention and makespan = sum */
     rc = eval_text(
         "resource id=cpu kind=compute slots=1 prov=specified src=test\n"

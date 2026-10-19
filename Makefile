@@ -2621,8 +2621,9 @@ DS_UNIT = $(OUT_DIR)/dagsim_unit
 $(DS_UNIT): tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) src/sha256.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) src/sha256.c -lm
 
-test-dagsim: $(DS_UNIT)
+test-dagsim: $(DS_UNIT) $(DS_CLI)
 	./$(DS_UNIT)
+	sh tests/dagsim/run_cli.sh $(DS_CLI) $(OUT_DIR)/dagsim-cli-out
 
 DS_CLI = $(OUT_DIR)/dagsim
 $(DS_CLI): tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) src/sha256.c | $(OUT_DIR)
