@@ -2,14 +2,14 @@
 
 Issue aien-dev/aien-architecture-mv#249 (E06), parent #276, feeds omega-mv#583's removed-work ledger.
 Ledger L059. Design: `docs/research/249-checked-elimination.md`. Frozen plan: `FREEZE.md` (commit
-de779dff, 2026-10-19T21:07:59Z, before the first measured run at 21:14:33Z). Later changes: `AMENDMENTS.md`.
+de779dff, 2026-10-19T21:07:59Z, before the first run of record at 21:14:33Z; the calibration it freezes was measured at 21:04:44Z, before the freeze, as FREEZE states). Later changes: `AMENDMENTS.md`.
 
 ## Answer in one paragraph
 
 Bounded cost-guided search (arm B) found reductions the manual rules missed: on 18 of 240 held-out
 expressions its checked output emits fewer instructions than both the manual rules (M) and greedy
 instruction-count rewriting (G), against a predeclared threshold of 5. Every accepted rewrite of every
-arm was proof-checked and none failed. But at the frozen 1 000 000 executions per expression, no arm
+arm was checked by the independent checker and none failed (every derivation step is checked; the old-against-new comparison is exhaustive only at u8 with up to two constants and sampled at wider widths). But at the frozen 1 000 000 executions per expression, no arm
 pays for itself. The cost of checking (an exhaustive or sampled comparison of old and new program through
 the omega evaluator, about 1.2 to 1.5 s per arm per repetition) is far larger than the execution time
 saved, so net saving including search and check is negative for every arm in every repetition.
@@ -74,7 +74,7 @@ FREEZE requires before the whole-box UPS figure may be read.
 | Freeze budgets and held-out cases | PASS | FREEZE committed 21:07:59Z, first measured run 21:14:33Z; held-out set sha 40427407...6067 used only in the run of record |
 | Invalid assumptions and mutants rejected | PASS | negatives N01..N07 all rejected (N01 isqrt without sign, N02 isqrt in u32, N03 (x*2)/2 in u32, N04 f32 reassociation, N05 probe-agreeing masks, N06 dropped assumption, N07 wrong axiom); mutants M1..M8 RED; A1 replay mutant RED |
 | Independent derivation checker | PASS in scope | `rwcheck` is a separate program with its own parser and evaluators; it checks every step against the axiom base and compares old and new program directly, cross-checked against omega's own evaluator. Same author as the search, so G6 (independent reproduction) is still owed: ledger L061 |
-| Same accepted outputs and contracts | PASS | outputs digest identical across 5 reps in every arm; checker accepted every candidate in every rep (M 135, G 171, Bi 175, B 186; rejected 0, bad rows 0) |
+| Same accepted outputs and contracts | PASS in scope | outputs digest identical across 5 reps in every arm (reproducibility); equivalence of each output to its input rests on the checker, sampled above u8; checker accepted every candidate in every rep (M 135, G 171, Bi 175, B 186; rejected 0, bad rows 0) |
 | Total search, check and execution cost and memory measured, not expression size alone | PASS (measured) | table above; savings from measured execution only, never from the model |
 | Net saving including search (G4) | FAIL | even the best case (largest saving of any rep against the cheapest search plus check of any rep) is negative at E = 10^6: M -1100573408 ns (calc:e3f69ee3365b2fd2df1d0d8cbad88ddfa9ee493a324d103495b431d857117087), G -1084998444 ns (calc:803102f5b91400b96363faa6711ad0341138081c9506bc89746b155997675ce3), Bi -458622832 ns (calc:4a21387fd7eb0f835ee452d01b620549162f3897e34e2ee20107cb6cb932a2f4), B -1132357752 ns (calc:36486fccef034dd92898342dfe0a37876f678f5eb6cb45c4e4b8b59040df3b7e) |
 | Break-even executions per expression set (median rep) | reported | M 16099191.8 (rep4, calc:2c3b8dee41359c0a65fa60cd2e923a247234479b961a61368a27c3bd71deaa30), G 9568012.1 (rep3, calc:91935f6e22abcf461312b165d019c59b5d90369808d5aa7864d4a36a33e21093), Bi 11083538.2 (rep3, calc:0e489b962080b5ddc9696c05a44341c36158fdf8760308af6c0c93045acd0d32), B 9237769.0 (rep5, calc:a76b9a723feda68f809d914ca063155bd6dc70b4ab700b5ec84adc193ac223f9) |
@@ -86,7 +86,7 @@ Predeclared effects (FREEZE):
 
 | effect | verdict | numbers |
 |---|---|---|
-| H1: B fewer emitted instructions than both M and G | PASS (threshold 5) | 18 expressions, each accepted in all 5 reps: S249-0011 (M 9, G 8, B 7), 0016 (13, 9, 7), 0049 (9, 9, 7), 0059 (11, 9, 7), 0071 (15, 11, 7), 0077 (14, 12, 10), 0080 (11, 11, 7), 0081 (16, 13, 8), 0137 (15, 14, 13), 0175 (12, 12, 8), 0194 (13, 13, 11), 0200 (16, 16, 15), 0204 (9, 9, 7), 0206 (13, 11, 6), 0212 (7, 7, 5), 0216 (11, 9, 7), 0230 (11, 11, 9), 0239 (9, 9, 7). M's output is its unchanged input where M found nothing. B never emitted more instructions than G |
+| H1: B fewer emitted instructions than both M and G | PASS (threshold 5) | 18 expressions, each accepted in all 5 reps: S249-0011 (M 9, G 8, B 7), 0016 (13, 9, 7), 0049 (9, 9, 7), 0059 (11, 9, 7), 0071 (15, 11, 7), 0077 (14, 12, 10), 0080 (11, 11, 7), 0081 (16, 13, 8), 0137 (15, 14, 13), 0175 (12, 12, 8), 0194 (13, 13, 11), 0200 (16, 16, 15), 0204 (9, 9, 7), 0206 (13, 11, 6), 0212 (7, 7, 5), 0216 (11, 9, 7), 0230 (11, 11, 9), 0239 (9, 9, 7). M's output is its unchanged input where M found nothing (6 of the 18). S249-0071 is best_found_under_budget in B; FREEZE does not exclude it. B never emitted more instructions than G |
 | G3 execution saving detectable | M INCONCLUSIVE; G, Bi, B PASS | M rep3: sum of savings 9160.4 ps below the null control 19525.4 ps. G, Bi, B: sum of savings above the null control in all 5 reps |
 | Determinism | PASS | digests above |
 | Mutants M1..M8 | PASS (all RED) | `build-record/test-of-record.txt`; re-run with the A1 binary also all RED |
@@ -119,7 +119,7 @@ predicted cost was not regressed against measured per-call time), INCONCLUSIVE; 
 
 `oev/<arm>/<expression>.oev`: one file per accepted rewrite that removed operations (M 135, G 164,
 Bi 169, B 169), each `removed op=... reason=eliminated proof=rwcheck:<derivs.rwd>#<expression>`.
-Regenerated under amendment A1; dagsim (omega-research-583 @ d8c74201) accepts 637 of 637.
+Regenerated under amendment A1; dagsim (omega-research-583 @ d8c74201) accepts 637 of 637. Each file carries an op `<expression>_base` whose time (0.5129 ns) is fitted from the calibration blob, not measured on that program; per-step times are fitted the same way.
 
 ## MISSING PREREQUISITES
 
