@@ -6,11 +6,12 @@ writes. It checks every op as it reads it and refuses the first wrong one with t
 reason. `omega_emit lift` goes the other way: IR bytes back to an op list.
 
 - Shape of the op list: [SCHEMA.md](SCHEMA.md).
-- Since L093 (2026-10-19) the op list also carries OSC-2 structs (struct table, `own:`/`mut:`/
-  `shared:` struct references, `fload`/`fstore`), contract text and arenas. A program with a struct
-  reaches the same IR bytes on both roads: every positive struct program in `tests/compiler` and the
-  three in [structs/](structs/) give byte-identical IR from `oscc` and from `emit(lift(IR))`, and
-  checker2 accepts both (table: `evidence/EMIT-STRUCTS/round-trip.md`).
+- Since L093 (2026-10-19) the op list also carries OSC-2 structs (struct table, `own:`, `mut:` and
+  `shared:` struct references, `fload`/`fstore`), contract text and arenas, so a program with a
+  struct can reach the same IR bytes on both roads. The struct gate checks every positive struct
+  program in `tests/compiler` and the three in [structs/](structs/): IR from `oscc` must equal
+  `emit(lift(IR))` byte for byte, and checker2 must accept both (results:
+  `evidence/EMIT-STRUCTS/round-trip.md`).
 - Units without structs keep IR version byte 1 and the same bytes as before.
 
 Tests (host only; nothing here runs on the GPU):
