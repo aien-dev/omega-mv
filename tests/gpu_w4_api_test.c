@@ -194,6 +194,7 @@ static void sim_battery(void) {
     static const struct { uint32_t n, k, lb, rows, warps, sched, coal; } pts[] = {
         { 64, 1024, 16, 1, 1, 0, 0 }, { 64, 1024, 16, 2, 2, 1, 1 }, { 96, 2048, 16, 4, 2, 1, 1 }, { 64, 2048, 8, 8, 2, 1, 1 },
         { 128, 1024, 8, 2, 4, 0, 1 }, { 48, 3072, 16, 2, 8, 1, 0 }, { 64, 5120, 16, 2, 4, 1, 1 }, { 32, 17408, 16, 2, 2, 1, 1 },
+        { 64, 5120, 8, 8, 2, 1, 1 }, { 64, 6144, 16, 4, 4, 1, 1 },
     };
     for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
         T4 t; t4_make(&t, pts[i].n, pts[i].k, 11u + (uint32_t)i);

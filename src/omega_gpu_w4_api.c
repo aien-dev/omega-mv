@@ -68,7 +68,7 @@ void omega_gpu_w4_set_sched(int sched) { omega_gpu_session_lock(); g.sched = sch
 void omega_gpu_w4_set_coal(int coal) { omega_gpu_session_lock(); g.coal = coal; cache_clear_locked(); omega_gpu_session_unlock(); }
 void omega_gpu_w4_test_set_mutant(int m) { omega_gpu_session_lock(); g.mutant = m; cache_clear_locked(); omega_gpu_session_unlock(); }
 
-/* Automatic shape: 16-byte lanes (one whole MX group per lane step), 2 rows and 16 warps (the FP8 big-k shape,
+/* Automatic shape: 16-byte lanes (one whole MX group per lane step), 2 rows and 8 warps (measured below; the FP8 big-k shape has 16,
  * omega_gpu_fp8_api.c), the coalesced store when the round fits a warp, the pipelined decode. Sweep receipts:
  * ~/handoffs/2026-10-19-ab-fp8head-4bit.md. */
 void omega_gpu_w4_spec_for(uint32_t k, uint32_t n, OmegaW4GemvSpec *spec) {
@@ -77,7 +77,9 @@ void omega_gpu_w4_spec_for(uint32_t k, uint32_t n, OmegaW4GemvSpec *spec) {
     spec->k = k;
     spec->lane_bytes = g.lane_bytes ? g.lane_bytes : (k % 1024u == 0 ? 16u : 8u);
     spec->rows = g.rows ? g.rows : 2u;
-    spec->warps = g.warps ? g.warps : 16u;
+    /* 8 warps (2026-10-19, graph timeline, 2 layers, 3 interleaved rounds, runs/g4r): mix + o + gate_up + down median
+     * 1975.1 us at 16,2,8 vs 2006.6 at 16,2,16, 2107.9 at 16,4,4 (coal off), 2046.3 at 16,2,8 (coal off) */
+    spec->warps = g.warps ? g.warps : 8u;
     spec->sched = g.sched >= 0 ? (uint32_t)g.sched : 1u;
     spec->coal = (g.coal >= 0 ? g.coal : 1) && spec->warps * spec->rows <= 32u;
     spec->mutant = g.mutant;
