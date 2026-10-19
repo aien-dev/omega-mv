@@ -1,0 +1,34 @@
+# Agent guidance manifest, schema v1 (aien-architecture ADR 0038, proposed).
+# Agent-agnostic: `aien agents sync` (aien-sovereign-core) turns it into the files each agent reads.
+schema = 1
+
+[component]
+name = "omega"
+tree = "core"
+
+[[skills]]
+path = "skills/omega-basics"
+
+[[hooks]]
+event = "pre-command"
+command = "tools/agent-hooks/no-admin-merge.sh"
+
+[[hooks]]
+event = "pre-command"
+command = "tools/agent-hooks/no-force-push.sh"
+
+[[hooks]]
+event = "pre-command"
+command = "tools/agent-hooks/no-kill-jobs.sh"
+
+[[hooks]]
+event = "pre-edit"
+command = "tools/agent-hooks/protected-paths.sh"
+
+[[hooks]]
+event = "pre-edit"
+command = "tools/agent-hooks/skill-context.sh"
+
+[attachments]
+# An attachment's agents.toml is loaded only if its name is listed here.
+allow = []
