@@ -1,0 +1,6 @@
+; table3.s2 -- extra table lines for rung 3 (read after rung2/table.s2). Same format; Arm DDI 0487 M.d.
+= str.x.pre  0xf8000c00 r0 r5 s12.9 ; C6.2.415 STR (immediate), pre-index, 64-bit
+= ldr.w.r    0xb8607800 r0 r5 r16   ; C6.2.218 LDR (register), 32-bit, LSL #2 (index scaled by 4)
+= ldrb.r     0x38606800 r0 r5 r16   ; C6.2.221 LDRB (register), no shift
+= ubfm.x     0xd3400000 r0 r5 i16.6 i10.6 ; C6.2.487 UBFM 64-bit (Rd, Rn, immr, imms)
+= sbfm.x     0x93400000 r0 r5 i16.6 i10.6 ; C6.2.355 SBFM 64-bit
