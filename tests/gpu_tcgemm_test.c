@@ -345,7 +345,7 @@ static int parse_rows(const char *s, uint32_t *out, int cap) {
     return n;
 }
 int tv_tests(int argc, char **argv) {
-    const char *shape = "q38gu", *rows_s = "1,2,4,8,16,32,64", *outp = NULL; uint32_t reps = 15, emu = 4; int mut = 1, wcache = 1;
+    const char *shape = "q38gu", *rows_s = "1,2,4,8,16,32,64", *outp = NULL, *tiles_s = NULL; uint32_t reps = 15, emu = 4; int mut = 1, wcache = 1;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--shape") && i + 1 < argc) shape = argv[++i];
         else if (!strcmp(argv[i], "--rows") && i + 1 < argc) rows_s = argv[++i];
@@ -355,6 +355,7 @@ int tv_tests(int argc, char **argv) {
         else if (!strcmp(argv[i], "--out") && i + 1 < argc) outp = argv[++i];
         else if (!strcmp(argv[i], "--no-mutants")) mut = 0;
         else if (!strcmp(argv[i], "--tile") && i + 3 < argc) { omega_gpu_tv_set_shape((uint32_t)atoi(argv[i + 1]), (uint32_t)atoi(argv[i + 2]), (uint32_t)atoi(argv[i + 3])); i += 3; }
+        else if (!strcmp(argv[i], "--tiles") && i + 1 < argc) tiles_s = argv[++i];
     }
     uint32_t n, k;
     if (!strcmp(shape, "q38gu")) { n = 34816; k = 5120; } else if (!strcmp(shape, "q38gate")) { n = 17408; k = 5120; }
@@ -382,9 +383,17 @@ int tv_tests(int argc, char **argv) {
     /* the largest N first: its output is the reference for every other N */
     uint32_t order[16]; int no = 0; order[no++] = nmax; for (int i = 0; i < nr; i++) if (rl[i] != nmax) order[no++] = rl[i];
     FILE *jf = outp ? fopen(outp, "w") : NULL;
+    /* --tiles "rt:ct:w,...": extra row-tile shapes after the automatic one (0:0:0); every output of every shape and N must
+     * equal the reference bits (the per-row result does not depend on the tile) */
+    uint32_t tl[16][3]; int ntl = 1; tl[0][0] = tl[0][1] = tl[0][2] = 0;
+    for (const char *q = tiles_s; q && *q && ntl < 16;) { char *e; tl[ntl][0] = (uint32_t)strtoul(q, &e, 10); if (*e != ':') break; tl[ntl][1] = (uint32_t)strtoul(e + 1, &e, 10); if (*e != ':') break; tl[ntl][2] = (uint32_t)strtoul(e + 1, &e, 10); ntl++; q = *e == ',' ? e + 1 : e; }
+    for (int ti = 0; ti < ntl && !fail; ti++)
     for (int oi = 0; oi < no; oi++) {
         const uint32_t N = order[oi];
-        OmegaTcGemmSpec sp; omega_gpu_tv_spec(N, n, k, &sp);
+        omega_gpu_tv_set_shape(tl[ti][0], tl[ti][1], tl[ti][2]);
+        OmegaTcGemmSpec sp;
+        if (omega_gpu_tv_spec(N, n, k, &sp) != 0) { printf("tv N %u tile %u:%u:%u: shape refused, skipped\n", N, tl[ti][0], tl[ti][1], tl[ti][2]); if (ti == 0) fail++; continue; }
+        if (ti > 0 && 16u * sp.rt < N) { printf("tv N %u tile %u:%u:%u: %u row tiles (weights read %u times), skipped\n", N, sp.rt, sp.ct, sp.warps, (N + 16u * sp.rt - 1u) / (16u * sp.rt), (N + 16u * sp.rt - 1u) / (16u * sp.rt)); continue; }
         uint64_t ns = 0;
         if (omega_gpu_pf_upload(&yd, 0, poison, ybytes) || (rc = omega_gpu_tv_gemm(t, N, xd.va, yd.va, &ns)) != 0 || omega_gpu_pf_download(&yd, 0, y, ybytes)) {
             printf("tv N %u: call failed %d: %s\n", N, rc, omega_gpu_tcgemm_last_error()); fail++; break;
@@ -392,7 +401,7 @@ int tv_tests(int argc, char **argv) {
         size_t unwritten = 0, beyond = 0;
         for (size_t i = 0; i < (size_t)N * n; i++) if (y[i] == -999.0f) unwritten++;
         for (size_t i = (size_t)N * n; i < (size_t)nmax * n; i++) if (y[i] != -999.0f) beyond++;
-        if (oi == 0) {
+        if (oi == 0 && ti == 0) {
             memcpy(ref, y, ybytes);
             uint32_t ne = emu < N ? emu : N, *rows = calloc(ne ? ne : 1, 4); float *ye = malloc((size_t)ne * n * 4); size_t bad = 0;
             for (uint32_t i = 0; i < ne; i++) rows[i] = ne == 1 ? 0 : (uint32_t)((uint64_t)i * (N - 1) / (ne - 1));
@@ -427,6 +436,7 @@ int tv_tests(int argc, char **argv) {
                             shape, n, k, N, sp.rt, sp.ct, sp.warps, wcache, done, med, ce[0], (double)n * k / med);
         }
     }
+    omega_gpu_tv_set_shape(0, 0, 0);
     if (mut && !fail) for (int m = 1; m <= 4; m++) {
         OmegaTcGemmSpec sp; omega_gpu_tv_spec(nmax, n, k, &sp);
         if (m == 3 && sp.rt < 2) continue;
