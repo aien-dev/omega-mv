@@ -711,8 +711,34 @@ static int mode_exec(const char *dir, const char *verdicts, uint32_t calls) {
 /* OEV1 files (omega-mv#583 spec v1): one per accepted expression with removed ops. */
 static const char *g_load1 = "unknown";
 static const char *g_proof = "derivs.rwd";
+/* AMENDMENT A1 (evidence/REWRITE-249/AMENDMENTS.md): results.tsv does not carry the stable op ids of the
+ * output, so the accounting step replays the same deterministic arm under the budget recorded in
+ * summary.txt to recover them, and refuses if the replay differs from the recorded output. */
+static char g_acc_arm[8];
+static Budget g_acc_bg;
+static void acc_load_summary(const char *dir) {
+    char p[600]; snprintf(p, sizeof p, "%s/summary.txt", dir);
+    FILE *f = fopen(p, "r"); if (!f) die("cannot open summary.txt");
+    char line[2048]; if (!fgets(line, sizeof line, f)) die("empty summary"); fclose(f);
+    char *a = strstr(line, "arm="), *nm = strstr(line, "nodes_max="), *em = strstr(line, "evals_max="), *cm = strstr(line, "cpu_ns_max=");
+    if (!a || !nm || !em || !cm) die("summary lacks arm or budget");
+    sscanf(a + 4, "%7s", g_acc_arm);
+    g_acc_bg.nodes_max = atoi(nm + 10); g_acc_bg.evals_max = atoi(em + 10); g_acc_bg.cpu_ns_max = atof(cm + 11);
+    g_nodes = calloc((size_t)g_acc_bg.nodes_max + 1, sizeof *g_nodes);
+    int tsz = 1; while (tsz < 2 * g_acc_bg.nodes_max) tsz <<= 1;
+    g_tab = calloc((size_t)tsz, sizeof *g_tab);
+}
+static void acc_replay(const Row *row, Ch *out) {
+    Result rr; memset(&rr, 0, sizeof rr);
+    if (!strcmp(g_acc_arm, "M")) arm_manual(&row->in, row->w, &g_acc_bg, &rr);
+    else if (!strcmp(g_acc_arm, "G")) arm_greedy(&row->in, row->w, &g_acc_bg, &rr);
+    else arm_bounded(&row->in, row->w, &g_acc_bg, !strcmp(g_acc_arm, "B"), &rr);
+    if (!ch_eq(&rr.out, &row->out)) die("replay differs from the recorded output: refusing to label ops");
+    *out = rr.out;
+}
 static int mode_account(const char *dir, const char *verdicts, const char *oev, const char *build, const char *blob) {
     Row *r; int n = load_rows(dir, verdicts, &r);
+    if (oev) acc_load_summary(dir);
     int acc = 0, rej = 0, unchanged = 0, removed = 0, files = 0;
     if (oev) mkdir(oev, 0755);
     for (int i = 0; i < n; ++i) {
@@ -723,6 +749,8 @@ static int mode_account(const char *dir, const char *verdicts, const char *oev, 
         int nrem = 1; for (const char *q = r[i].removed; *q; ++q) nrem += *q == ',';
         removed += nrem;
         if (!oev) continue;
+        Ch lab; acc_replay(&r[i], &lab);   /* refuse before any file of this row is written */
+        r[i].out = lab;
         char p[600]; snprintf(p, sizeof p, "%s/%s.oev", oev, r[i].id);
         FILE *f = fopen(p, "w");
         fprintf(f, "oev version=1\n");
@@ -731,7 +759,11 @@ static int mode_account(const char *dir, const char *verdicts, const char *oev, 
         fprintf(f, "calibration id=rw249-cal taken=2026-10-19 valid_days=7 load1=%s src=evidence/REWRITE-249/calibration%s%s\n",
                 g_load1, blob ? " model=" : "", blob ? blob : "");
         fprintf(f, "resource id=cpu kind=compute slots=1 prov=specified src=single-thread-chain\n");
-        int prevk = -1;
+        /* the call, width mask and return remain for every program, including one whose steps all went */
+        double bps = 0;
+        if (g_model && arm_ps(ARM_BASE, &bps)) fprintf(f, "op id=%s_base kind=compute engine=cpu t_ns=%.4f prov=fitted src=rx_costmodel_arms_stand_in\n", r[i].id, bps / 1000.0);
+        else fprintf(f, "op id=%s_base kind=compute engine=cpu t_ns=0 prov=unknown src=no_scalar_cost_class\n", r[i].id);
+        int prevk = -2;
         for (int k = 0; k < r[i].out.n; ++k) {
             double ps = -1;
             int ok = 0;
@@ -739,7 +771,8 @@ static int mode_account(const char *dir, const char *verdicts, const char *oev, 
                 double base; ok = cm_cost(&one, &ps) && arm_ps(ARM_BASE, &base); if (ok) ps -= base; }
             if (ok) fprintf(f, "op id=%s_s%d kind=compute engine=cpu t_ns=%.4f prov=fitted src=rx_costmodel_arms_stand_in\n", r[i].id, r[i].out.id[k], ps / 1000.0);
             else fprintf(f, "op id=%s_s%d kind=compute engine=cpu t_ns=0 prov=unknown src=no_scalar_cost_class\n", r[i].id, r[i].out.id[k]);
-            if (prevk >= 0) fprintf(f, "dep %s_s%d %s_s%d\n", r[i].id, prevk, r[i].id, r[i].out.id[k]);
+            if (prevk == -2) fprintf(f, "dep %s_base %s_s%d\n", r[i].id, r[i].id, r[i].out.id[k]);
+            else fprintf(f, "dep %s_s%d %s_s%d\n", r[i].id, prevk, r[i].id, r[i].out.id[k]);
             prevk = r[i].out.id[k];
         }
         fprintf(f, "energy instrument=none\n");

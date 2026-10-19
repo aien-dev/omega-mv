@@ -15,3 +15,7 @@ independent checker proves it. Nothing here changes omega's runtime or its synth
 Build and test: `make OUT_DIR=<dir> PHYSICS_DIR=<physics> rw249 test-rw249`.
 Runs on any AArch64 Linux host (it runs the generated machine code on the CPU). No GPU.
 Design: `docs/research/249-checked-elimination.md`. Evidence: `evidence/REWRITE-249/`.
+
+`rwsearch account` writes one OEV1 file per accepted rewrite that removed steps. It replays the
+recorded arm to recover each surviving step's stable id and refuses if the replay differs from the
+recorded output (amendment A1 in `evidence/REWRITE-249/AMENDMENTS.md`).
