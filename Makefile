@@ -2592,7 +2592,7 @@ $(GPU_PFHOST_TEST): tests/gpu_pfhost_test.c tests/bw_warp_sim_tc.h src/omega_gpu
 .PHONY: test-gpu-roll
 GPU_ROLL_TEST = $(OUT_DIR)/gpu_roll_test
 $(GPU_ROLL_TEST): tests/gpu_roll_test.c src/omega_gpu_roll.c src/omega_gpu_roll.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -o $@ tests/gpu_roll_test.c src/omega_gpu_roll.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_roll_test.c src/omega_gpu_roll.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-roll: $(GPU_ROLL_TEST)
 	$(GPU_ROLL_TEST) --host
 .PHONY: test-physics-stamp
