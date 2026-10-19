@@ -93,3 +93,19 @@ graph digest). This ties the record to one build's struct layout. Smallest chang
 No UI, no GPU, no model inference, no new store or loop. The "screen" is the visor text
 and JSON projection written to a file, plus the harness history formatter. Ablations
 (elimination only / reuse only / incremental / combined) belong to #584 and #246.
+
+## Addendum (found by the pilot, before any run of record)
+
+E. Cortex World records carry one object per crumb. `record_link` in
+src/runtime/rx_cortex_record.c:70 takes the first output (else first input) and stores only
+that object's field values. A move committed by a lowered action graph names its graph cell
+first, so the arrangement units' new positions never reach the journal as World records:
+in a development run, every CX_K_EXEC_COMMIT record named a cell object and no record named
+a unit after boot. A history view or a restart that reads World records alone would show the
+boot arrangement. Smallest change (owner: runtime Cortex record): record the field values of
+every output of a crumb (one record per output, or one payload with per-output slot,
+generation, version and fields). The pilot's stand-in: after each commit the entity appends
+a state observation (class CX_OBSERVATION, writer kind 0x2760 below CX_K_BASE, payload = slot,
+generation and fields of each role object) through `rx_cortex_append`, the World's attached
+writer. The history view and the restart read the newest observation, and every reattach
+checks that the observation is newer than the last commit record.
