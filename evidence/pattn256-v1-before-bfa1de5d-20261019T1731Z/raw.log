@@ -1,0 +1,38 @@
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+-- chip 2048 tokens from 0 (max_pos 4096)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 53.279 ms (prep 3.664, attend 10.303)
+   parity: 0 bad, worst ratio 0.175 of the tolerance (0.1 s reference); rows: ok (23 one-ulp k flips, worst token 1; 0 small-value k gaps within 8 f32 roundings of the row max)
+   timing (median of 5): prep 2.206 ms, attend 10.368 ms, call 31.738 ms -> 162876 tokens/s; attend 4.97 TFLOPS useful, 104.4 GB/s K/V streamed
+-- chip 2048 tokens from 6144 (max_pos 8192)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 70.212 ms (prep 2.294, attend 41.233)
+   parity: 0 bad, worst ratio 0.012 of the tolerance (0.7 s reference); rows: ok (24 one-ulp k flips, worst token 1; 0 small-value k gaps within 8 f32 roundings of the row max)
+   timing (median of 5): prep 2.252 ms, attend 42.045 ms, call 67.034 ms -> 46234 tokens/s; attend 8.58 TFLOPS useful, 179.0 GB/s K/V streamed
+-- chip 2048 tokens from 30720 (max_pos 32768)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 199.956 ms (prep 2.697, attend 165.623)
+   parity: 0 bad, worst ratio 0.007 of the tolerance (2.1 s reference); rows: ok (26 one-ulp k flips, worst token 1; 1 small-value k gaps within 8 f32 roundings of the row max)
+   timing (median of 5): prep 2.199 ms, attend 162.643 ms, call 189.182 ms -> 12424 tokens/s; attend 9.82 TFLOPS useful, 204.7 GB/s K/V streamed
+gpu_prefill_attn256_test: 42 checks, 0 failed: PASS
+{
+ "name": "pattn256-v1-before-bfa1de5d-20261019T1731Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/pattn-bfa1de5d --timing-only --reps 5",
+ "exit": 0,
+ "git_head": "ca001d44",
+ "start": "2026-10-19T13:03:43.834412",
+ "seconds": 6.4,
+ "samples": 3,
+ "wall_W_mean": 310.0,
+ "wall_J": 1984.1408276557922,
+ "idle_W_before": 302.85714285714283,
+ "incremental_J": 45.717530591147444,
+ "gpu_W_mean": 20.423333333333336,
+ "gpu_util_mean": 7.333333333333333,
+ "load1_start": "77.60",
+ "load1_end": "75.31",
+ "mem_avail_kB_start": "55274864",
+ "mem_avail_kB_end": "50745732",
+ "lock_holders_max": 4,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-pattn256-v1-before-bfa1de5d-20261019T1731Z.json
