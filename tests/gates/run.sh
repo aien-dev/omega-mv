@@ -154,6 +154,14 @@ case "$step" in
     n=$(grep -c 'matches frozen digest' build/digest.log); obs frozen_digests_matched "$n"
     test "$n" -ge 1
     ;;
+  gpu-attention)      # host-suites-3.yml gpu-attention (omega#470): physics-src at physics.lock, lock check on;
+                      # host-only, sim and sweep tiers, nothing touches a GPU (the Spark has nvdisasm, so the
+                      # listing check runs here where the hosted runner printed "skipped")
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-attention | tee build/attn.log
+    test "$(grep -cE '^PASS: [0-9]+ checks, 0 failed$' build/attn.log)" -eq 6
+    ! grep -qE '^FAIL' build/attn.log
+    ;;
   numeric-transc-full) make $NOPHYS test-numeric-transc-full ;;
   m6|m7|m8|m9|m10|m11|m12|m13|m14|m15|m17|m5|m19|m19r-qualify|gate14-combine)
     physics_pin; set -o pipefail; mkdir -p build
