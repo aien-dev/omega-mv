@@ -18,8 +18,9 @@
 
 struct OmegaGpuW4Tensor {
     uint32_t n, k;
-    OmegaGpuMem w; /* n * k / 2 bytes */
-    OmegaGpuMem s; /* n * k / 32 bytes */
+    OmegaGpuMem w;  /* ONE buffer: n * k / 2 weight bytes, then the n * k / 32 scale bytes at s_off (one handle slot per tensor:
+                     * the whole 27B with its FP8 copy beside it needs ~900 of the 1022 buffer slots, two per tensor did not fit) */
+    size_t s_off;   /* wbytes rounded up to 4 KiB */
 };
 
 typedef struct {
@@ -137,12 +138,13 @@ int omega_gpu_w4_tensor_upload(uint32_t n, uint32_t k, const uint8_t *w4, const 
     t->n = n; t->k = k;
     int rc = OMEGA_GPU_W4_OK;
     omega_gpu_session_lock();
-    if (!dev_open_locked() || omega_gpu_session_alloc(wbytes, &t->w) != 0 || omega_gpu_session_alloc(sbytes, &t->s) != 0) rc = OMEGA_GPU_W4_CHIP_FAIL;
+    t->s_off = (wbytes + 4095u) & ~(size_t)4095u;
+    if (!dev_open_locked() || omega_gpu_session_alloc(t->s_off + sbytes, &t->w) != 0) rc = OMEGA_GPU_W4_CHIP_FAIL;
     omega_gpu_session_unlock();
     if (rc == OMEGA_GPU_W4_OK) {
         memcpy(t->w.cpu, w4, wbytes);
-        memcpy(t->s.cpu, e8, sbytes);
-        if (omega_gpu_session_sync_to_gpu(&t->w) != 0 || omega_gpu_session_sync_to_gpu(&t->s) != 0) rc = OMEGA_GPU_W4_CHIP_FAIL;
+        memcpy((uint8_t *)t->w.cpu + t->s_off, e8, sbytes);
+        if (omega_gpu_session_sync_to_gpu(&t->w) != 0) rc = OMEGA_GPU_W4_CHIP_FAIL;
     }
     if (rc != OMEGA_GPU_W4_OK) { omega_gpu_w4_tensor_free(t); return rc; }
     *out = t;
@@ -153,7 +155,6 @@ void omega_gpu_w4_tensor_free(OmegaGpuW4Tensor *t) {
     if (!t) return;
     omega_gpu_session_lock();
     if (t->w.cpu) omega_gpu_session_free(&t->w);
-    if (t->s.cpu) omega_gpu_session_free(&t->s);
     omega_gpu_session_unlock();
     omega_gpu_host_free(t);
 }
@@ -161,7 +162,7 @@ void omega_gpu_w4_tensor_shape(const OmegaGpuW4Tensor *t, uint32_t *n, uint32_t 
 size_t omega_gpu_w4_tensor_bytes(const OmegaGpuW4Tensor *t) { return t ? (size_t)t->n * t->k / 2u + (size_t)t->n * t->k / OMEGA_W4_GROUP : 0; }
 int omega_gpu_w4_tensor_entry(const OmegaGpuW4Tensor *t, uint64_t *w_va, uint64_t *s_va) {
     if (!t || !w_va || !s_va) return OMEGA_GPU_W4_BAD_ARGS;
-    *w_va = t->w.va; *s_va = t->s.va;
+    *w_va = t->w.va; *s_va = t->w.va + t->s_off;
     return OMEGA_GPU_W4_OK;
 }
 
@@ -200,7 +201,7 @@ static int gemv_core(const OmegaGpuW4Tensor *t, const float *x, float *y, OmegaG
     if (rc != OMEGA_GPU_W4_OK) { UNLOCK(); return rc; }
     float *yd = NULL;
     if (!rec) {
-        uint64_t *tab = g.tab.cpu; tab[0] = t->w.va; tab[1] = t->s.va;
+        uint64_t *tab = g.tab.cpu; tab[0] = t->w.va; tab[1] = t->w.va + t->s_off;
         omega_fp8_pack_x_f32(x, k, g.x_buf.mem.cpu);
         yd = g.y_buf.mem.cpu;
         for (uint32_t i = 0; i < n; i++) yd[i] = POISON_F32;
