@@ -556,6 +556,12 @@ static void setup_fail(const char *why)
 static void run_child(const Fixture *x, int native, const char *dir, const char *bindir)
 {
     setpgid(0, 0);
+    /* The run child stands in for a shell started from a terminal: SIGINT and SIGQUIT at their defaults.
+     * A harness started under nohup or `cmd &` (the Spark judge, a CI runner) inherits them as ignored;
+     * osh then rightly keeps them ignored in its children (POSIX), the stalled stages of f25 never see the
+     * ^C and the fixture times out. Reset them so the fixture's precondition holds wherever it runs. */
+    signal(SIGINT, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
     if (chdir(dir) != 0) setup_fail("chdir");
     for (int i = 0; i < x->nsetup; i++)
         if (write_file(dir, x->setup[i].name, &x->setup[i].content)) setup_fail("fixture file");
