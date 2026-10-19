@@ -1,0 +1,22 @@
+ok: vecadd args: a, b, c addresses at words 0, 2, 4, n at 6
+ok: matmul args: a, b, c addresses at words 0, 2, 4
+ok: 8 independent nodes, ORDER_NONE: accepted
+ok: dependency on a later node refused (a dependency on itself or a later node)
+ok: ORDER_NONE with a dependency refused (ORDER_NONE with dependencies)
+ok: ORDER_SEM with an earlier dependency accepted
+ok: self dependency refused (a dependency on itself or a later node)
+ok: data alias without its dependency refused (a data alias without the matching dependency)
+ok: data alias with its dependency accepted
+ok: alias to a later node refused (alias to the same or a later node)
+ok: buffers past data_bytes refused (buffers exceed data_bytes)
+ok: address argument past n_args refused (buffer address argument past n_args)
+ok: NONE: 4 launch words per node, no barrier
+ok: SERIAL: WFI + invalidate before nodes 1..7
+ok: SEM chain of 8: one 6-word ACQUIRE per edge (74 words)
+ok: SEM: ACQUIRE words (SEM_ADDR_LO 0x5c x5, address of node 0's semaphore, payload DONE, execute 0)
+ok: WAVE chain: a WFI before every dependent node
+ok: WAVE: 2 waves of 2 nodes, one WFI
+ok: ignore-deps control: no ordering words at all
+ok: skip_node drops exactly one launch
+ok: SEM complete 64-node DAG: 2016 acquires fit (12352 words)
+host: 21 checks, 0 failed: PASS

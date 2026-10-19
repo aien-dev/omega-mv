@@ -2588,6 +2588,13 @@ $(GPU_PFHOST_TEST): tests/gpu_pfhost_test.c tests/bw_warp_sim_tc.h src/omega_gpu
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_pfhost_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 # OWN-30B W-L2 (2026-10-13): command list (many launches, one submission) + decode glue kernels. test-gpu-cmdlist is
 # host-only + warp simulator; the chip gate is tools/run_gpu_cmdlist_chip.sh under the GB10 lock.
+# omega-mv#580 (2026-10-19): rolls, melodies, chords, harmony. --host is host only; --chip under the GB10 lock.
+.PHONY: test-gpu-roll
+GPU_ROLL_TEST = $(OUT_DIR)/gpu_roll_test
+$(GPU_ROLL_TEST): tests/gpu_roll_test.c src/omega_gpu_roll.c src/omega_gpu_roll.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/gpu_roll_test.c src/omega_gpu_roll.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-roll: $(GPU_ROLL_TEST)
+	$(GPU_ROLL_TEST) --host
 .PHONY: test-physics-stamp
 test-physics-stamp:
 	tests/test_physics_stamp.sh $(PHYSICS_DIR)
