@@ -2,7 +2,7 @@
 # tests/gates/run.sh: the one entry point for the local verification gates of omega.
 # Every step runs the SAME command as the hosted job it mirrors (.github/workflows/pr-smoke.yml,
 # host-suites.yml, host-suites-2.yml, host-suites-3.yml, rx-host.yml, turing-yield.yml,
-# evidence-immutable.yml, crumb.yml). Manifests under tests/gates/ name this script plus one
+# evidence-immutable.yml). Manifests under tests/gates/ name this script plus one
 # step word, so no manifest needs shell expansion (ADR 0028 P6).
 #
 # Pinned sibling sources. The hosted jobs check out aien-spark/physics at physics.lock (rx-host
@@ -68,21 +68,6 @@ receipt() {
 gates_pass() { grep -E 'TOTAL GATES: [0-9]+ \| PASSED: [0-9]+ \| FAILED: 0' "$1" && ! grep -E 'FAILED: [1-9]' "$1"; }
 
 case "$step" in
-  crumb-verify)
-    # Hosted crumb.yml builds the crumb tool from the aien-architecture commit in crumb.lock.
-    # Same here, from the sibling checkout ../aien-architecture into a temp dir outside the
-    # tree, so a newer crumb on PATH can never change the verdict.
-    if [ ! -d ../aien-architecture ]; then
-      echo "run.sh: ../aien-architecture is missing; the hosted job checks out aien-dev/aien-architecture at crumb.lock" >&2
-      exit 3
-    fi
-    tool="$(mktemp -d /tmp/omega-crumb-tool.XXXXXX)"
-    trap 'rm -rf "$tool" "$STEP_MARK"' EXIT
-    git -C ../aien-architecture archive "$(lock crumb.lock)" tools/crumb | tar -x -C "$tool"
-    make -s -C "$tool/tools/crumb" crumb
-    obs crumb_tool_commit "\"$(lock crumb.lock)\""
-    "$tool/tools/crumb/crumb" verify .
-    ;;
   # pr-smoke.yml
   base)
     physics_pin; set -o pipefail

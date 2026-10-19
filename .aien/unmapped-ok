@@ -6,3 +6,6 @@ LICENSE
 .gitignore
 README.md
 CONTRIBUTORS.md
+# Crumbs are advisory notes, never a merge check (RFC-0003 Amendment 2). `*` spans slashes.
+*.crumb
+.crumbignore
