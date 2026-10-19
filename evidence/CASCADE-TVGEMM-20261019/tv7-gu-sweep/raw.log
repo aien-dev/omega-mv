@@ -1,0 +1,33 @@
+tv q38gu: n 34816 k 5120 (weights 178.3 MB), rows 1,16,32, weight cache 1
+tv N 32: emulation check on 2 rows: 0 of 69632 differ (bit-identical)
+tv N 32: rt 2 ct 2 warps 8; 0 of 1114112 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+TVGEMM q38gu N 32 (median of 21, min 948.5, max 1198.5 us): chip 968.8 us; weights 184.0 GB/s; 11.78 TFLOPS
+tv N 1: rt 1 ct 4 warps 4; 0 of 34816 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+TVGEMM q38gu N 1 (median of 21, min 897.6, max 1213.2 us): chip 918.6 us; weights 194.1 GB/s; 0.39 TFLOPS
+tv N 16: rt 1 ct 4 warps 4; 0 of 557056 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+TVGEMM q38gu N 16 (median of 21, min 913.7, max 1002.6 us): chip 925.8 us; weights 192.5 GB/s; 6.16 TFLOPS
+tv: PASS
+GPU_TCGEMM: PASS
+{
+ "name": "tvg-tv7-gu-sweep",
+ "cmd": "quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-9aef9bbe --tv --shape q38gu --rows 1,16,32 --emu-rows 2 --reps 21 --no-mutants --tiles 2:4:8,2:4:4,2:4:2,2:2:2,4:2:8,4:2:4,4:1:4,1:4:8 --out /home/drakestapleton/workspace/targets/cascade/runs/tv7-gu-sweep.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T13:45:07.330634",
+ "seconds": 173.671,
+ "samples": 81,
+ "wall_W_mean": 302.962962962963,
+ "wall_J": 52616.01986072682,
+ "idle_W_before": 306.0,
+ "incremental_J": -527.4466538605819,
+ "gpu_W_mean": 40.5779012345679,
+ "gpu_util_mean": 88.25925925925925,
+ "load1_start": "27.23",
+ "load1_end": "26.10",
+ "mem_avail_kB_start": "27714356",
+ "mem_avail_kB_end": "30224508",
+ "lock_holders_max": 4,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-tv7-gu-sweep.json
