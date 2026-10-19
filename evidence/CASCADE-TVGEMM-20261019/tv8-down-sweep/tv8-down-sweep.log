@@ -1,0 +1,82 @@
+tv q38down: n 5120 k 17408 (weights 89.1 MB), rows 1,16,32, weight cache 1
+tv N 32: emulation check on 2 rows: 0 of 10240 differ (bit-identical)
+tv N 32: rt 2 ct 2 warps 8; 0 of 163840 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 32: rt 2 ct 2 warps 8; ok, 0 of 163840 differ from the reference (same bits); chip median 583.1 us (21), weights 152.9 GB/s
+tv f32 call N 32: ok, 0 of 163840 differ from the device pass; whole call median 1274.1 us (5 calls)
+TVGEMM q38down N 32 (median of 21, min 565.5, max 597.1 us): chip 573.1 us; weights 155.5 GB/s; 9.95 TFLOPS
+tv N 1: rt 1 ct 4 warps 4; 0 of 5120 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 1: rt 1 ct 4 warps 4; ok, 0 of 5120 differ from the reference (same bits); chip median 565.5 us (21), weights 157.6 GB/s
+tv f32 call N 1: ok, 0 of 5120 differ from the device pass; whole call median 607.0 us (5 calls)
+TVGEMM q38down N 1 (median of 21, min 553.7, max 800.4 us): chip 564.6 us; weights 157.9 GB/s; 0.32 TFLOPS
+tv N 16: rt 1 ct 4 warps 4; 0 of 81920 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 16: rt 1 ct 4 warps 4; ok, 0 of 81920 differ from the reference (same bits); chip median 580.6 us (21), weights 153.5 GB/s
+tv f32 call N 16: ok, 0 of 81920 differ from the device pass; whole call median 926.4 us (5 calls)
+TVGEMM q38down N 16 (median of 21, min 560.8, max 635.8 us): chip 568.4 us; weights 156.8 GB/s; 5.02 TFLOPS
+tv N 32: rt 2 ct 2 warps 4; 0 of 163840 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 32: ok, 0 of 163840 differ from the device pass; whole call median 1408.2 us (5 calls)
+TVGEMM q38down N 32 (median of 21, min 551.5, max 786.8 us): chip 568.4 us; weights 156.8 GB/s; 10.04 TFLOPS
+tv N 1: rt 2 ct 2 warps 4; 0 of 5120 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 5120 differ from the device pass; whole call median 608.7 us (5 calls)
+TVGEMM q38down N 1 (median of 21, min 562.0, max 775.1 us): chip 573.0 us; weights 155.5 GB/s; 0.31 TFLOPS
+tv N 16: rt 2 ct 2 warps 4; 0 of 81920 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 81920 differ from the device pass; whole call median 883.8 us (5 calls)
+TVGEMM q38down N 16 (median of 21, min 546.1, max 631.7 us): chip 564.4 us; weights 157.9 GB/s; 5.05 TFLOPS
+tv N 32: rt 2 ct 2 warps 2; 0 of 163840 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 32: ok, 0 of 163840 differ from the device pass; whole call median 1229.6 us (5 calls)
+TVGEMM q38down N 32 (median of 21, min 518.7, max 766.8 us): chip 538.4 us; weights 165.6 GB/s; 10.60 TFLOPS
+tv N 1: rt 2 ct 2 warps 2; 0 of 5120 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 5120 differ from the device pass; whole call median 563.4 us (5 calls)
+TVGEMM q38down N 1 (median of 21, min 517.1, max 765.7 us): chip 529.8 us; weights 168.2 GB/s; 0.34 TFLOPS
+tv N 16: rt 2 ct 2 warps 2; 0 of 81920 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 81920 differ from the device pass; whole call median 856.6 us (5 calls)
+TVGEMM q38down N 16 (median of 21, min 513.8, max 565.1 us): chip 524.9 us; weights 169.8 GB/s; 5.43 TFLOPS
+tv N 32 tile 2:4:4: refused (rc -3: prefill codegen refused the shape), skipped
+tv N 1 tile 2:4:4: refused (rc -3: prefill codegen refused the shape), skipped
+tv N 16 tile 2:4:4: refused (rc -3: prefill codegen refused the shape), skipped
+tv N 32 tile 2:4:2: refused (rc -3: prefill codegen refused the shape), skipped
+tv N 1 tile 2:4:2: refused (rc -3: prefill codegen refused the shape), skipped
+tv N 16 tile 2:4:2: refused (rc -3: prefill codegen refused the shape), skipped
+tv N 32 tile 1:4:2: 2 row tiles (weights read 2 times), skipped
+tv N 1: rt 1 ct 4 warps 2; 0 of 5120 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 5120 differ from the device pass; whole call median 578.9 us (5 calls)
+TVGEMM q38down N 1 (median of 21, min 532.9, max 566.5 us): chip 542.5 us; weights 164.3 GB/s; 0.33 TFLOPS
+tv N 16: rt 1 ct 4 warps 2; 0 of 81920 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 81920 differ from the device pass; whole call median 886.6 us (5 calls)
+TVGEMM q38down N 16 (median of 21, min 536.4, max 781.0 us): chip 550.2 us; weights 162.0 GB/s; 5.18 TFLOPS
+tv N 32 tile 1:4:8: shape refused, skipped
+tv N 1 tile 1:4:8: shape refused, skipped
+tv N 16 tile 1:4:8: shape refused, skipped
+tv N 32: rt 4 ct 1 warps 4; 0 of 163840 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 32: ok, 0 of 163840 differ from the device pass; whole call median 1365.2 us (5 calls)
+TVGEMM q38down N 32 (median of 21, min 636.8, max 1044.6 us): chip 659.7 us; weights 135.1 GB/s; 8.65 TFLOPS
+tv N 1: rt 4 ct 1 warps 4; 0 of 5120 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 5120 differ from the device pass; whole call median 681.8 us (5 calls)
+TVGEMM q38down N 1 (median of 21, min 633.1, max 653.6 us): chip 641.3 us; weights 139.0 GB/s; 0.28 TFLOPS
+tv N 16: rt 4 ct 1 warps 4; 0 of 81920 outputs differ from the N=32 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 81920 differ from the device pass; whole call median 988.4 us (5 calls)
+TVGEMM q38down N 16 (median of 21, min 634.1, max 1093.1 us): chip 651.3 us; weights 136.9 GB/s; 4.38 TFLOPS
+tv: PASS
+GPU_TCGEMM: PASS
+{
+ "name": "tvg-tv8-down-sweep",
+ "cmd": "quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-fba0f728 --tv --shape q38down --rows 1,16,32 --emu-rows 2 --reps 21 --no-mutants --tiles 2:2:4,2:2:2,2:4:4,2:4:2,1:4:2,1:4:8,4:1:4 --out /home/drakestapleton/workspace/targets/cascade/runs/tv8-down-sweep.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T16:43:14.038357",
+ "seconds": 739.864,
+ "samples": 345,
+ "wall_W_mean": 236.8985507246377,
+ "wall_J": 175272.77792071606,
+ "idle_W_before": 310.0,
+ "incremental_J": -54085.15183115696,
+ "gpu_W_mean": 16.699246376811594,
+ "gpu_util_mean": 26.904347826086955,
+ "load1_start": "52.24",
+ "load1_end": "10.28",
+ "mem_avail_kB_start": "24277500",
+ "mem_avail_kB_end": "30011692",
+ "lock_holders_max": 8,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-tv8-down-sweep.json

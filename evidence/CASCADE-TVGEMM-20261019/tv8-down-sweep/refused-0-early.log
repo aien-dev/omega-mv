@@ -1,0 +1,25 @@
+tv: upload failed -4: m16_native_create_channel: RM_ALLOC class 0xcec0 status 0x51
+GPU_TCGEMM: FAIL
+{
+ "name": "tvg-tv8-down-sweep",
+ "cmd": "quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-fba0f728 --tv --shape q38down --rows 1,16,32 --emu-rows 2 --reps 21 --no-mutants --tiles 2:2:4,2:2:2,2:4:4,2:4:2,1:4:2,1:4:8,4:1:4 --out /home/drakestapleton/workspace/targets/cascade/runs/tv8-down-sweep.json",
+ "exit": 1,
+ "git_head": null,
+ "start": "2026-10-19T16:14:13.270284",
+ "seconds": 138.044,
+ "samples": 65,
+ "wall_W_mean": 244.0,
+ "wall_J": 33682.64295768738,
+ "idle_W_before": 256.0,
+ "incremental_J": -1656.5234241485596,
+ "gpu_W_mean": 31.319384615384614,
+ "gpu_util_mean": 66.33846153846154,
+ "load1_start": "12.69",
+ "load1_end": "18.61",
+ "mem_avail_kB_start": "12386440",
+ "mem_avail_kB_end": "7851452",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 4,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-tv8-down-sweep.json

@@ -1,0 +1,22 @@
+{
+ "name": "tvg-tv8-down-sweep",
+ "cmd": "quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-fba0f728 --tv --shape q38down --rows 1,16,32 --emu-rows 2 --reps 21 --no-mutants --tiles 2:2:4,2:2:2,2:4:4,2:4:2,1:4:2,1:4:8,4:1:4 --out /home/drakestapleton/workspace/targets/cascade/runs/tv8-down-sweep.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T16:43:14.038357",
+ "seconds": 739.864,
+ "samples": 345,
+ "wall_W_mean": 236.8985507246377,
+ "wall_J": 175272.77792071606,
+ "idle_W_before": 310.0,
+ "incremental_J": -54085.15183115696,
+ "gpu_W_mean": 16.699246376811594,
+ "gpu_util_mean": 26.904347826086955,
+ "load1_start": "52.24",
+ "load1_end": "10.28",
+ "mem_avail_kB_start": "24277500",
+ "mem_avail_kB_end": "30011692",
+ "lock_holders_max": 8,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
