@@ -54,6 +54,36 @@ static uint64_t field(R15Rig *r, RxObjRef ref, uint32_t i) {
     return rx_world_read(&r->w, ref, &o) == RX_OK ? o.field[i] : UINT64_MAX;
 }
 
+/* Fixed matvec cost per call in ns, by core class and realization kind
+ * (0..3, then the reference; any other kind is priced as the reference):
+ * Omega's own measure of each kind on this GB10, unloaded, 2026-10-19. On
+ * A725 quad4 is inside the 10% margin, so the first search keeps the
+ * reference; on X925 quad4 wins and its cost is under 55% of the A725
+ * incumbent, so the goal is MET. */
+static const uint64_t k_model_ns[2][5] = {
+    {13300, 11100, 11300, 6060, 6200},      /* A725 */
+    {4900, 4400, 4900, 2700, 4600},         /* X925 */
+};
+
+static int g_cost_model;
+
+void r15_use_cost_model(int on) { g_cost_model = on; }
+
+/* X925 costs apply once the episode's goal is in the world. The goal is
+ * published after the X925 placement, so the cost change is tied to a world
+ * event, not to when the episode's thread gets to run: a thread paused
+ * between steps cannot open a window of X925 costs under the A725
+ * placement, or of A725 costs in the X925 search. The goal is read live, so
+ * the one demand window spanning the goal mixes both costs; it can only add
+ * a miss to the A725 prediction, which the X925 costs fail anyway. A failed
+ * read counts as X925. */
+static uint64_t model_cost(void *ctx, uint32_t kind, uint32_t M, uint32_t N, uint64_t calls) {
+    R15Rig *r = ctx;
+    (void)M; (void)N;                       /* the rig serves one shape, R15_M x R15_N */
+    uint32_t cls = field(r, r->aien.o.goal, 0) != 0;
+    return calls * k_model_ns[cls][kind < 4 ? kind : 4];
+}
+
 static const RxSnapshotDep *snapshot(RxCtx *c, RxObjRef ref) {
     for (uint32_t i = 0; i < c->n_in; i++)
         if (c->in[i].obj.id == ref.id) return &c->in[i];
@@ -313,6 +343,10 @@ int r15_start_with(R15Rig *r, R15Config config, const uint32_t *fixture_subjects
     RxOmegaConfig oc;
     rx_omega_default_config(&oc);
     oc.hot_calls = 64; oc.hot_ns = 200000; oc.margin_pct = 10;
+    if (g_cost_model) {
+        oc.cost_ns = model_cost;
+        oc.cost_ctx = r;
+    }
     if (rx_omega_create_objects(&r->omega, &r->w, &oc) != RX_OK) return -1;
     r->omega.keys = &r->keys_omega;
     RxAienConfig ac;
