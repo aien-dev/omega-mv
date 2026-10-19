@@ -12,7 +12,7 @@ s=$1; b=$2
 t=$(mktemp -d)
 objdump -D -z -b binary -m aarch64 -M no-aliases "$b" | grep -E '^ +[0-9a-f]+:' |
   awk -F"\t" '{a=$1; sub(/^ +/,"",a); sub(/:$/,"",a); print a "\t" $2 "\t" $3 "\t" $4}' > "$t/od"
-awk -v od="$t/od" '
+awk -M -v od="$t/od" '
 function strip(x) { sub(/;.*/, "", x); gsub(/,/, " ", x); return x }
 BEGIN {
   # asm2 name (up to the first dot, or the whole name for the forms below) -> objdump base mnemonic
@@ -21,7 +21,9 @@ BEGIN {
   m["lslv"]="lslv"; m["lsrv"]="lsrv"; m["asrv"]="asrv"; m["movz"]="movz"; m["movk"]="movk"
   m["ldr"]="ldr"; m["str"]="str"; m["ldrb"]="ldrb"; m["strb"]="strb"; m["b"]="b"; m["bl"]="bl"
   m["cbz"]="cbz"; m["cbnz"]="cbnz"; m["adr"]="adr"; m["ret"]="ret"; m["br"]="br"; m["blr"]="blr"
-  m["svc"]="svc"; m["ubfm"]="ubfm"; m["sbfm"]="sbfm"
+  m["svc"]="svc"; m["ubfm"]="ubfm"; m["sbfm"]="sbfm"; m["ldp"]="ldp"; m["stp"]="stp"; m["ldur"]="ldur"
+  m["stur"]="stur"; m["rev"]="rev"; m["extr"]="extr"; m["bic"]="bic"; m["adrp"]="adrp"; m["movn"]="movn"
+  m["msr"]="msr"; m["cmn"]="adds"; m["nop"]="hint"; m["wfe"]="hint"
   while ((getline l < od) > 0) { split(l, f, "\t"); a0 = strtonum("0x" f[1]); txt[a0] = f[3] " " f[4]; wd[a0] = f[2] }
 }
 # pass 1 (first file read): label offsets
@@ -39,7 +41,7 @@ FNR == NR {
   if (substr(w[k],1,1) == ":") next
   if (w[k] == ".b") { off2 += 1; data += 1; next }
   if (w[k] == ".w") { off2 += 4; data += 4; next }
-  name = w[k]; o = off2; off2 += 4; ins++
+  name = w[k]; o = off2 + 0; off2 += 4; ins++
   d = txt[o]
   split(d, dw, /[ \t,\[\]!]+/); mn = dw[1]
   base = name; if (name ~ /^b\./) base = "b.c"; else sub(/\..*/, "", base)
@@ -65,10 +67,22 @@ FNR == NR {
   # shows as "lsl #16*hw"; objdump leaves out a zero unsigned offset and a zero hw shift)
   ns = 0; delete sn
   for (i = k + 1; i <= n; i++) if (w[i] ~ /^-?(0x[0-9a-f]+|[0-9]+)$/) sn[++ns] = strtonum(w[i])
+  # (LDP/STP offsets are in register-size units, shown in bytes, a zero left out only in the plain
+  # signed-offset form; LDR (register) .w shows its fixed LSL #2; NOP and WFE show as HINT #0 / #2;
+  # AND (immediate) shows the mask that N:immr:imms stand for; ADRP shows the page it points at)
   sc = 0; if (name ~ /^(ldr|str)\.x$/) sc = 8; else if (name ~ /^(ldr|str)\.w$/) sc = 4; else if (name ~ /^(ldrb|strb)$/) sc = 1
   ne = 0; delete ex
   if (sc) { if (sn[1] != 0) ex[++ne] = sn[1] * sc }
-  else if (name ~ /^mov[zk]\./) { ex[++ne] = sn[1]; if (sn[2] != 0) ex[++ne] = sn[2] * 16 }
+  else if (name ~ /^(ldp|stp)\./) { ps = (name ~ /^(ldp|stp)\.x/) ? 8 : 4
+    if (sn[1] != 0 || name ~ /\.(pre|post)$/) ex[++ne] = sn[1] * ps }
+  else if (name ~ /^mov[zkn]\./) { ex[++ne] = sn[1]; if (sn[2] != 0) ex[++ne] = sn[2] * 16 }
+  else if (name == "ldr.w.r") ex[++ne] = 2
+  else if (name == "nop") ex[++ne] = 0
+  else if (name == "wfe") ex[++ne] = 2
+  else if (name == "and.x.bm") { if (sn[1] != 1) ok = 0
+    v = 2 ^ (sn[3] + 1) - 1; r = sn[2]; ex[++ne] = rshift(v, r) + lshift(v % 2 ^ r, 64 - r) }
+  else if (name == "adrp") { tg = ""; for (q = 2; q in dw; q++) if (dw[q] ~ /^0x[0-9a-f]+$/) tg = dw[q]
+    if (tg == "" || strtonum(tg) != o - o % 4096 + (sn[1] * 4 + sn[2]) * 4096) ok = 0 }
   else for (i = 1; i <= ns; i++) ex[++ne] = sn[i]
   nn = 0; delete dn
   for (i = 2; i in dw; i++) if (dw[i] ~ /^#-?(0x[0-9a-f]+|[0-9]+)$/) { v = substr(dw[i], 2); dn[++nn] = (v ~ /^-/) ? -strtonum(substr(v, 2)) : strtonum(v) }
