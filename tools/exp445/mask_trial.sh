@@ -12,7 +12,7 @@
 # ola.sh experiment (the sealed harness: checker2 and the dev cases' expected outputs).
 #
 # Writes <out>/<mode>/<task>/{r1.req.json,r1.resp.json,r1.transport,r1.*} and <out>/<mode>/rows.tsv:
-#   task seed http completion_tokens finish reader_check harness_verdict forced head_skipped allowed rule_us rule_us_max wall_s
+#   task seed http completion_tokens finish reader_check harness_verdict forced logits_skipped allowed rule_us rule_us_max wall_s
 # Needs built: build/omegese/omegese, build/omega_emit/{omega_emit,x445}, the acceptance tools (make omegese
 # omega-emit one-layer-acceptance-tools).
 set -euo pipefail
@@ -63,7 +63,7 @@ for task in "${TASKS[@]}"; do
     chk="$(cat "$g/r1.check")"
     if [ -f "$g/r1.candidate.oscir" ]; then mkdir -p "$D/cands/mask-$MODE/$task"; cp "$g/r1.candidate.oscir" "$D/cands/mask-$MODE/$task/candidate.oscir"; fi
     IFS=$'\t' read -r _pt ct fin <<< "$(usage_of "$g/r1.resp.json")"
-    m="$(jq -r '.usage.aien_constraint // {} | [(.forced // "-"), (.head_skipped // "-"), (.allowed // "-"), (.rule_us // "-"), (.rule_us_max // "-")] | @tsv' "$g/r1.resp.json")"
+    m="$(jq -r '.usage.aien_constraint // {} | [(.forced // "-"), (.logits_skipped // "-"), (.allowed // "-"), (.rule_us // "-"), (.rule_us_max // "-")] | @tsv' "$g/r1.resp.json")"
   else
     chk="HTTP $code"; ct=-; fin=-; m="$(printf -- '-\t-\t-\t-\t-')"
   fi
