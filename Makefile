@@ -48,6 +48,8 @@ SRCS += src/omega_gpu_mem_cached.c
 SRCS += src/omega_gpu_decode_graph.c
 # sc #642 (2026-10-18): one Qwen3.8-27B decode token as one command list (GDN + hd256 attention layers, dense MLP)
 SRCS += src/omega_gpu_q38_graph.c
+# omega#569 (2026-10-19, FORTRAN idea 1 EQUIVALENCE): lifetime-shared buffers (omega_lifetime.h), new file only
+SRCS += src/omega_lifetime.c
 # OWN-30B (2026-10-13): bf16 streaming GEMV for the lm_head (omega_gpu_bf16_gemv_api.h), new files only
 SRCS += src/omega_blackwell_codegen_bf16.c src/omega_gpu_bf16_gemv_api.c
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM, each expert streamed once per pass (omega_gpu_fp8gemm_api.h), new files only
@@ -2655,3 +2657,13 @@ $(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h $(OU
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
 	./$(GPU_Q38_GRAPH_TEST) --host-only
+
+# omega#569 (FORTRAN idea 1, EQUIVALENCE): lifetime-shared buffers. Host only: hand cases, 3000 random traces against an
+# independent byte oracle, the negative controls (forced share, a planner that forgets where lifetimes end, read before
+# write), and the Qwen3.8-27B decode graph's plan (flat == the old layout, shared plan safe, storage map printed).
+.PHONY: test-lifetime
+LIFETIME_TEST = $(OUT_DIR)/lifetime_test
+$(LIFETIME_TEST): tests/lifetime_test.c src/omega_lifetime.h src/omega_gpu_q38_graph.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/lifetime_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-lifetime: $(LIFETIME_TEST)
+	./$(LIFETIME_TEST)
