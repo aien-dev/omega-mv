@@ -1,0 +1,1 @@
+nice -n 10 flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/dflash/omega/gpu_dynconv_test --out /home/drakestapleton/workspace/omega-dflash/evidence/dflash-dynconv2-chip-20261019T2133Z/receipt.json
