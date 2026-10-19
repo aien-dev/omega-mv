@@ -1,0 +1,22 @@
+{
+ "name": "tvg-tv5-q38amix",
+ "cmd": "quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-00659ce6 --tv --shape q38amix --rows 1,2,8,16,32,64 --emu-rows 2 --reps 11 --out /home/drakestapleton/workspace/targets/cascade/runs/tv5-q38amix.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T13:28:51.237652",
+ "seconds": 601.031,
+ "samples": 285,
+ "wall_W_mean": 247.78947368421052,
+ "wall_J": 148929.2152147795,
+ "idle_W_before": 251.42857142857142,
+ "incremental_J": -2187.2114384012975,
+ "gpu_W_mean": 11.747894736842106,
+ "gpu_util_mean": 9.705263157894738,
+ "load1_start": "42.31",
+ "load1_end": "29.31",
+ "mem_avail_kB_start": "23399076",
+ "mem_avail_kB_end": "20178936",
+ "lock_holders_max": 6,
+ "nvrm_errors_delta": 1,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
