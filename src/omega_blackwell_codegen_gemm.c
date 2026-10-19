@@ -134,7 +134,7 @@ static int spec_ok(const OmegaFp8GemmSpec *s) {
     if (s->lane_bytes != 8 && s->lane_bytes != 16) return 0;
     if (s->mt == 0 || (s->mt & (s->mt - 1)) || s->mt * 128u * s->lane_bytes > OMEGA_GEMM_MAX_SHARED) return 0;
     if (s->warps < 1 || s->warps > 32 || (s->warps & (s->warps - 1)) || (s->mt * s->lane_bytes) % s->warps) return 0; /* power-of-two warps: the staging words per thread are whole */
-    if (s->k == 0 || s->k > 16384u || s->k % 128u || s->k % (32u * s->lane_bytes)) return 0;
+    if (s->k == 0 || s->k > OMEGA_GEMM_MAX_K || s->k % 128u || s->k % (32u * s->lane_bytes)) return 0;
     uint32_t ks = s->k / (32u * s->lane_bytes);
     if (ks % 2u && ks > 3u) return 0; /* odd step counts are fully unrolled: at most 3 */
     if (s->mutant < 0 || s->mutant > 3) return 0;

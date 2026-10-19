@@ -48,9 +48,10 @@ extern "C" {
 #define OMEGA_GEMM_ARGS_WORDS 8u
 #define OMEGA_GEMM_SEG_BYTES 32u
 #define OMEGA_GEMM_MAX_SHARED 16384u
+#define OMEGA_GEMM_MAX_K 32768u /* the K loop runs k / (32 * lane_bytes) steps; nothing else grows with k (the FP8 GEMV took the same raise for the Qwen3.8-27B down_proj, omega#541) */
 
 typedef struct {
-    uint32_t k;          /* multiple of 128 and of 32 * lane_bytes; <= 16384 */
+    uint32_t k;          /* multiple of 128 and of 32 * lane_bytes; <= OMEGA_GEMM_MAX_K */
     uint32_t lane_bytes; /* 8 or 16 (the GEMV's choice: 16 when k % 512 == 0, else 8) */
     uint32_t mt;         /* rows per pass: a power of two, mt * 128 * lane_bytes <= 16384 */
     uint32_t warps;      /* warps % lane_bytes == 0, (mt * lane_bytes) % warps == 0, 1 .. 32 (host simulator: build with -DWS_MAX_THREADS=512) */
