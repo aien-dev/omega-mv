@@ -1,0 +1,25 @@
+q38o setup: CHIP_FAIL (m16_native_create_channel: RM_ALLOC class 0xcec0 status 0x51)
+GPU_QGEMM: FAIL
+{
+ "name": "qgemm-q38o-rt8-group3-1f37f9f6-20261019T1731Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/qgemm-1f37f9f6 --chip --shape q38o --tokens 4096 --reps 7 --rt 8 --group 3",
+ "exit": 1,
+ "git_head": "1eeccbe0",
+ "start": "2026-10-19T13:55:23.278305",
+ "seconds": 0.908,
+ "samples": 1,
+ "wall_W_mean": 300.0,
+ "wall_J": 272.4006414413452,
+ "idle_W_before": 300.0,
+ "incremental_J": 0.0,
+ "gpu_W_mean": 9.47,
+ "gpu_util_mean": 0.0,
+ "load1_start": "45.87",
+ "load1_end": "45.87",
+ "mem_avail_kB_start": "21209760",
+ "mem_avail_kB_end": "21209760",
+ "lock_holders_max": 5,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-qgemm-q38o-rt8-group3-1f37f9f6-20261019T1731Z.json
