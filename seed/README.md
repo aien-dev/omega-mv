@@ -51,6 +51,28 @@ it came from.
   - controls: seed-0 refuses labels (it never learned them); missing, doubled and misplaced labels are
     refused with their own error codes.
 
+## Rung 2: asm2, instructions by name (done)
+
+- `rung2/table.s2`: the instruction table, plain text. One line per instruction: its name, the bits that
+  never change, and where each operand goes, for example `= add.x 0x8b000000 r0 r5 r16` ("add, 64-bit:
+  destination register at bit 0, first source at bit 5, second at bit 16"). Each line names its
+  manual section. Anyone can read and check it without knowing how asm2 works inside.
+- `rung2/asm2.hex1`: the assembler, 580 instructions written in hex1's language (with labels), built by
+  hex1 (2464 bytes). It reads the table first, then a program written with those names and with labels
+  of up to 16 characters, and writes the machine words. Mistakes stop it with the line number.
+- Checks (`rung2/gate2.sh`, results in `evidence/SEED-0/rung2/`):
+  - hex1 builds asm2; asm2 written in its own language (`rung2/asm2.s`) assembles back into exactly
+    the same 2464 bytes, so the readable table and my hand-made words agree on all 580 instructions;
+  - both decoders agree with every named instruction (0 disagreements, `rung2/asm2.audit`);
+  - against the C encoder (the referee): every one of the 25 instruction forms it knows, 5,496 cases
+    with registers and numbers at their limits and jumps out to the farthest distance each form can
+    hold: asm2 and the C encoder give the same word every time (`encoder-compare.tsv`). There was no
+    disagreement, so the manual did not have to settle one;
+  - both refuse the same out-of-range numbers; each of asm2's error messages fires on a broken input.
+  - Limit, said plainly: the farthest plain jump (`b`, about 128 MiB away) cannot be tested through a
+    label because asm2's output buffer is 8 MiB; it is tested at its limits with the number written in,
+    and through labels up to 1,048,575 words.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

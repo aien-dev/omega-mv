@@ -10,13 +10,17 @@
 set -eu
 hex=$1 bin=$2 chk=$3
 t=$(mktemp -d /tmp/seed-audit.XXXXXX)
-# 1. words + comments in file order
-awk '{ l=$0; c=""; i=index(l,"#"); if (i) { c=substr(l,i+1); l=substr(l,1,i-1) } gsub(/[ \t\r]/,"",l);
-       if (l!="") print l "\t" c }' "$hex" > "$t/w"
+# 1. words + comments in file order. In a hex1-language file, ":c" names the next word and "word@c"
+#    leaves the distance field (bits 5..23) for hex1 to fill: the comment names the operand "@c", which is
+#    replaced by the distance hex1 must have put there, and only the other bits are compared to the file.
+awk 'FNR==NR { l=$0; i=index(l,"#"); if (i) l=substr(l,1,i-1); gsub(/[ \t\r]/,"",l); if (l ~ /^:/) lab[substr(l,2,1)]=n; else if (l!="") n++; next }
+     { l=$0; c=""; i=index(l,"#"); if (i) { c=substr(l,i+1); l=substr(l,1,i-1) } gsub(/[ \t\r]/,"",l); if (l=="" || l ~ /^:/) next
+       m=0; if (index(l,"@")) { t=substr(l,index(l,"@")+1,1); l=substr(l,1,8); m=1; d=lab[t]-k; j=index(c,"@" t); if (j) c=substr(c,1,j-1) sprintf("%+d",d) substr(c,j+2) }
+       k++; print l "\t" c "\t" m }' "$hex" "$hex" > "$t/w"
 # 2. the words actually in the binary, read back with od (4-byte little-endian units)
 od -An -v -tx4 -w4 "$bin" | tr -d ' ' > "$t/b"
 cut -f1 "$t/w" | tr 'A-F' 'a-f' > "$t/wl"
-"$chk" decode < "$t/wl" > "$t/d"
+"$chk" decode < "$t/b" > "$t/d"
 objdump -D -z -b binary -m aarch64 -M no-aliases "$bin" | awk -F'\t' '/^ *[0-9a-f]+:\t/ { o=$3; if ($4!="") o=o "\t" $4; sub(/ *\/\/.*$/,"",o); sub(/^b\.cc\t/,"b.lo\t",o); sub(/^b\.cs\t/,"b.hs\t",o); print o }' > "$t/o"
 paste "$t/w" "$t/b" "$t/d" "$t/o" | awk -F'\t' '
 function hx(v) { return sprintf("0x%x", v) }
@@ -27,8 +31,8 @@ BEGIN { cc["eq"]=0;cc["ne"]=1;cc["hs"]=2;cc["cs"]=2;cc["lo"]=3;cc["cc"]=3;cc["mi
         cc["hi"]=8;cc["ls"]=9;cc["ge"]=10;cc["lt"]=11;cc["gt"]=12;cc["le"]=13;cc["al"]=14;cc["nv"]=15
         print "| Offset | Word | Bytes in file | Named (hand-decoded, from the comment) | Our decoder | ours | objdump -M no-aliases | objdump | Class |"
         print "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |" }
-{ w=$1; com=$2; fb=$3; dec=$4; ob=$5; if ($6!="") ob=ob " " $6; gsub(/\t/," ",ob); gsub(/ +/," ",ob)
-  off=(NR-1)*4; words++; if (fb!=tolower(w)) bytebad++
+{ w=$1; com=$2; pat=$3; fb=$4; dec=$5; ob=$6; if ($7!="") ob=ob " " $7; gsub(/\t/," ",ob); gsub(/ +/," ",ob)
+  off=(NR-1)*4; words++; if (pat ? (and(strtonum("0x" fb), 0xFF00001F) != strtonum("0x" w)) : (fb!=tolower(w))) bytebad++
   if (com !~ /^ *\[[0-9]+\]/) { data++; c=com; sub(/^ */,"",c); gsub(/\|/,"/",c)
     printf "| `0x%04x` | `%s` | `%s` | %s | - | n/a | - | n/a | DATA |\n", off, w, fb, c; next }
   code++
@@ -39,14 +43,15 @@ BEGIN { cc["eq"]=0;cc["ne"]=1;cc["hs"]=2;cc["cs"]=2;cc["lo"]=3;cc["cc"]=3;cc["mi
   # expected objdump text
   eo=m; ops=""
   for (j=1;j<=k;j++) { x=a[j]
-    if ((m=="b"||m ~ /^b\./||m=="cbz"||m=="cbnz") && j==k) x=hx(off+4*(x+0))
-    else if (x ~ /^#/ && x !~ /^#0x/) x="#" hx(x==""?0:substr(x,2)+0)
+    if ((m=="b"||m ~ /^b\./||m=="cbz"||m=="cbnz"||m=="adr") && j==k) x=hx(off+4*(x+0))
+    else if (x ~ /^#-?[0-9]/ && x !~ /^#0x/ && x !~ /\]$/) { match(x,/^#-?[0-9]+/); x="#" hx(substr(x,2,RLENGTH-1)+0) substr(x,RLENGTH+1) }
     else if (x ~ /^lsl #/) x=x
     ops=ops (j>1?", ":"") x }
   if (ops!="") eo=eo " " ops
   # expected decoder fields
   E_op="INVALID"; E_sf=0; E_rd=0; E_rn=0; E_rm=0; E_imm=0; E_hw=0; E_b=0; E_c=0
   if (m=="movz"||m=="movk") { E_op=toupper(m); E_sf=sf(a[1]); E_rd=reg(a[1]); E_imm=num(a[2]); if (k>=3) { s=a[3]; sub(/lsl #/,"",s); E_hw=s/16 } }
+  else if ((m=="add"||m=="sub") && a[3] ~ /^#/) { E_op="INVALID" }
   else if (m=="add"||m=="sub"||m=="orr"||m=="and"||m=="eor"||m=="mul") { E_op=toupper(m); E_sf=sf(a[1]); E_rd=reg(a[1]); E_rn=reg(a[2]); E_rm=reg(a[3]) }
   else if (m=="subs") { E_op="SUBS"; E_sf=sf(a[1]); E_rd=reg(a[1]); E_rn=reg(a[2]); if (a[3] !~ /^#/) E_rm=reg(a[3]) }
   else if (m ~ /^b\./) { E_op="B_COND"; E_c=cc[substr(m,3)]; E_b=(a[1]+524288)%524288 }
@@ -54,7 +59,9 @@ BEGIN { cc["eq"]=0;cc["ne"]=1;cc["hs"]=2;cc["cs"]=2;cc["lo"]=3;cc["cc"]=3;cc["mi
   else if (m=="cbz"||m=="cbnz") { E_op=toupper(m); E_sf=sf(a[1]); E_rd=reg(a[1]); E_b=(a[2]+524288)%524288 }
   else if (m=="ldrb"||m=="strb") { E_op=toupper(m); E_rd=reg(a[1]); r=a[2]; gsub(/[\[\]]/,"",r); E_rn=reg(r) }
   else if (m=="ldr"||m=="str") { E_op=toupper(m); E_sf=sf(a[1]); E_rd=reg(a[1]); r=a[2]; gsub(/[\[\]]/,"",r); E_rn=reg(r) }
-  else if (m=="ret") { E_op="RET" }
+  else if (m=="ret") { E_op="RET"; E_rn=30 }
+  else if (m=="adr") { E_op="ADR"; E_rd=reg(a[1]) }
+  else if (m=="madd" && a[4]=="xzr") { E_op="MUL"; E_sf=sf(a[1]); E_rd=reg(a[1]); E_rn=reg(a[2]); E_rm=reg(a[3]) }
   ed=sprintf("op=%s sf=%d rd=%d rn=%d rm=%d imm16=%d hw=%d bimm=%d cond=%d",E_op,E_sf,E_rd,E_rn,E_rm,E_imm,E_hw,E_b,E_c)
   dok=(ed==dec)?"agree":"MISMATCH"; if (E_op=="INVALID" && dec ~ /^op=INVALID/) dok="not covered (agree: INVALID)"
   if (dok=="MISMATCH") dbad++
