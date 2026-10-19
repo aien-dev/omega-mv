@@ -409,6 +409,15 @@ int tv_tests(int argc, char **argv) {
         uint64_t ce[64]; uint32_t done = 0;
         for (uint32_t r = 0; r < reps; r++) { uint64_t e = 0; if (omega_gpu_tv_gemm(t, N, xd.va, yd.va, &e) == 0) ce[done++] = e; }
         if (done != reps) { printf("tv timing: %u of %u calls failed\n", reps - done, reps); fail++; }
+        {   /* the host convenience call (f32 in, f32 out): same bits as the device-buffer pass, and its whole-call time */
+            float *yf = malloc((size_t)N * n * 4); OmegaGpuTvInfo ti; uint64_t cc[8]; uint32_t cd = 0; size_t fd = 0; int frc = 0;
+            for (uint32_t r = 0; r < 5; r++) { frc = omega_gpu_tv_f32(t, N, p.x, yf, &ti); if (frc) break; cc[cd++] = ti.call_ns; }
+            if (!frc) for (size_t i = 0; i < (size_t)N * n; i++) if (memcmp(&yf[i], &ref[i], 4)) fd++;
+            if (cd) qsort(cc, cd, 8, cmp_u64);
+            printf("tv f32 call N %u: %s, %zu of %zu differ from the device pass; whole call median %.1f us (5 calls)\n", N, frc ? "ERROR" : "ok", fd, (size_t)N * n, cd ? cc[cd / 2] / 1e3 : 0.0);
+            if (frc || fd) fail++;
+            free(yf);
+        }
         if (done) {
             qsort(ce, done, 8, cmp_u64);
             const double med = (double)ce[done / 2];

@@ -4,6 +4,7 @@
 #include "omega_gpu_cmdlist.h"
 #include "omega_gpu_fmt.h"
 #include <string.h>
+#include <stdlib.h>
 
 #define KIND_TV 0x60u
 #define TAB_CAP 4096u
@@ -20,9 +21,11 @@ static struct {
     OmegaGpuMem tab, ridx;
     TabKey keys[TAB_CAP];
     uint32_t nkeys, used;
+    OmegaGpuMem hx, hy; /* omega_gpu_tv_f32's device buffers */
 } g;
 
-static void on_close(void) { omega_gpu_session_free(&g.tab); omega_gpu_session_free(&g.ridx); memset(&g.tab, 0, sizeof g.tab); memset(&g.ridx, 0, sizeof g.ridx); g.nkeys = g.used = 0; }
+static void on_close(void) { omega_gpu_session_free(&g.hx); omega_gpu_session_free(&g.hy); memset(&g.hx, 0, sizeof g.hx); memset(&g.hy, 0, sizeof g.hy);
+    omega_gpu_session_free(&g.tab); omega_gpu_session_free(&g.ridx); memset(&g.tab, 0, sizeof g.tab); memset(&g.ridx, 0, sizeof g.ridx); g.nkeys = g.used = 0; }
 
 void omega_gpu_tv_set_shape(uint32_t rt, uint32_t ct, uint32_t w) { omega_gpu_session_lock(); g.rt = rt; g.ct = ct; g.warps = w; omega_gpu_session_unlock(); }
 void omega_gpu_tv_test_set_mutant(int m) { omega_gpu_session_lock(); g.mutant = m; omega_gpu_session_unlock(); }
@@ -99,5 +102,39 @@ int omega_gpu_tv_record_locked(OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, 
     OmegaPfKernel k; OmegaTcGemmSpec spec; uint32_t gx = 0, gy = 0, args[OMEGA_TCGEMM_ARGS_WORDS];
     int rc = prepare_locked(t, rows, x_va, y_va, &k, &spec, &gx, &gy, args);
     if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_pf_record_locked(cl, &k, 32u * spec.warps, gx, gy, omega_tcgemm_shared_bytes(&spec), args, OMEGA_TCGEMM_ARGS_WORDS);
+    return rc;
+}
+
+static int dev_grow(OmegaGpuMem *m, size_t bytes) {
+    if (m->va && m->size >= bytes) return OMEGA_GPU_PF_OK;
+    if (m->size) { omega_gpu_pf_free(m); memset(m, 0, sizeof *m); }
+    return omega_gpu_pf_alloc_dev(bytes, m);
+}
+int omega_gpu_tv_f32(const OmegaGpuFp8Tensor *t, uint32_t rows, const float *x, float *y, OmegaGpuTvInfo *info) {
+    const uint64_t t0 = omega_gpu_session_now_ns();
+    if (info) memset(info, 0, sizeof *info);
+    uint32_t experts = 0, n = 0, k = 0;
+    if (!t || !x || !y) return OMEGA_GPU_PF_BAD_ARGS;
+    omega_gpu_fp8_tensor_shape(t, &experts, &n, &k);
+    OmegaTcGemmSpec spec;
+    if (experts != 1 || omega_gpu_tv_spec(rows, n, k, &spec) != 0) return OMEGA_GPU_PF_BAD_ARGS;
+    const size_t xb = (size_t)rows * k * 2u, yb = (size_t)rows * n * 4u;
+    uint16_t *xs = malloc(xb); float *ys = malloc(yb);
+    if (!xs || !ys) { free(xs); free(ys); return OMEGA_GPU_PF_CHIP_FAIL; }
+    for (uint32_t r = 0; r < rows; r++) omega_tcgemm_permute_x(x + (size_t)r * k, k, xs + (size_t)r * k);
+    for (size_t i = 0; i < (size_t)rows * n; i++) ys[i] = -999.0f;
+    int rc = dev_grow(&g.hx, xb);
+    if (rc == OMEGA_GPU_PF_OK) rc = dev_grow(&g.hy, yb);
+    if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_pf_upload(&g.hx, 0, xs, xb);
+    if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_pf_upload(&g.hy, 0, ys, yb);
+    uint64_t ns = 0;
+    if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_tv_gemm(t, rows, g.hx.va, g.hy.va, &ns);
+    if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_pf_download(&g.hy, 0, ys, yb);
+    if (rc == OMEGA_GPU_PF_OK) {
+        for (size_t i = 0; i < (size_t)rows * n; i++) if (ys[i] == -999.0f) { omega_gpu_session_set_error("tv gemm: output poison survived"); rc = OMEGA_GPU_PF_CHIP_FAIL; break; }
+        if (rc == OMEGA_GPU_PF_OK) memcpy(y, ys, yb);
+    }
+    free(xs); free(ys);
+    if (info) { info->chip_ns = ns; info->rt = spec.rt; info->ct = spec.ct; info->warps = spec.warps; info->call_ns = omega_gpu_session_now_ns() - t0; }
     return rc;
 }

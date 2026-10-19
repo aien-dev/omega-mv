@@ -38,6 +38,12 @@ void omega_gpu_tv_test_set_mutant(int mutant);
 
 /* one launch: y[0..rows) = W . x[0..rows); *chip_ns gets the kernel's chip time (may be NULL) */
 int omega_gpu_tv_gemm(const OmegaGpuFp8Tensor *t, uint32_t rows, uint64_t x_va, uint64_t y_va, uint64_t *chip_ns);
+/* host convenience (the sovereign-core verify boundary while the rows path is host glue): x rows of k f32 (plain values,
+ * as omega_gpu_fp8gemm_f32), y rows of n f32 = W . x * scale. Permutes on the host, uploads through the prefill copy
+ * kernel into module-owned device buffers, one GEMM launch, downloads; refuses a result that still holds poison.
+ * chip_ns: the GEMM launch alone; call_ns: the whole call. info may be NULL. */
+typedef struct { uint64_t chip_ns, call_ns; uint32_t rt, ct, warps; } OmegaGpuTvInfo;
+int omega_gpu_tv_f32(const OmegaGpuFp8Tensor *t, uint32_t rows, const float *x, float *y, OmegaGpuTvInfo *info);
 /* the same launch appended to a command list (lock held by the caller, as for omega_gpu_pf_record_locked) */
 struct OmegaGpuCmdList;
 int omega_gpu_tv_record_locked(struct OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t rows, uint64_t x_va, uint64_t y_va);
