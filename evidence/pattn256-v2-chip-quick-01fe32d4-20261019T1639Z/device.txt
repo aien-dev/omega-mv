@@ -1,0 +1,5 @@
+start 2026-10-19T16:39:30Z omega=01fe32d4f3ec88efdc197f4adf2e26f0ce39ddba dirty=3
+loadavg_start 28.24 23.84 20.02 9/1932 3567150
+               total        used        free      shared  buff/cache   available
+Mem:          124607      104873        7040          27       20355       19734
+command: nice -n 10 flock -x /tmp/aien-quiet.lock flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/pf-tools/bin/pattn-01fe32d4 --quick
