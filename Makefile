@@ -55,6 +55,7 @@ SRCS += src/omega_blackwell_codegen_gemm.c src/omega_gpu_fp8gemm_api.c
 # OWN-30B T3 (2026-10-13): tensor-core prefill kernels (omega_blackwell_codegen_tc.h), new files only
 SRCS += src/omega_blackwell_codegen_tc.c
 SRCS += src/omega_gpu_tcgemm_api.c
+SRCS += src/omega_gpu_tvgemm.c
 # OWN-30B L1 attention (2026-10-13): tensor-core causal prefill attention (omega_gpu_prefill_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_pattn.c src/omega_gpu_prefill_attn_api.c
 # OWN-30B T3b (2026-10-13): device-resident prefill (omega_gpu_prefill.h), new files only
