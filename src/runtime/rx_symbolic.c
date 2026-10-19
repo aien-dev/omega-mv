@@ -323,6 +323,7 @@ static const char *verdict_name(int v) {
     case RX_SYM_V_REFUTED: return "refuted";
     case RX_SYM_V_CHIP_EQUAL: return "chip-equal";
     case RX_SYM_V_CHIP_DIFFERENT: return "chip-different";
+    case RX_SYM_V_SIDE_CONDITION_FAILED: return "side-condition-failed";
     default: return "not-verified";
     }
 }

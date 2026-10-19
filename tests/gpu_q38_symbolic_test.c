@@ -146,7 +146,7 @@ static int checkpoint_gather(const char *dir, FILE *tsv) {
         printf("checkpoint layer %2u: gather fold %s (%s)\n", l, e ? "ELIGIBLE" : "refused", why);
         if (tsv) fprintf(tsv, "checkpoint\t%u\t%s\t%u\t%s\n", l, e ? "eligible" : "refused", bad, why);
         char where[48]; snprintf(where, sizeof where, "checkpoint layer %u", l);
-        trace_rec("gather-fold/block-scales", where, RX_SYM_B_ADMIT, 0, 0, 1, 1, 0, 0, why);
+        trace_rec("gather-fold/block-scales", where, RX_SYM_B_ADMIT, e ? RX_SYM_V_TESTED : RX_SYM_V_SIDE_CONDITION_FAILED, 0, 1, 1, 0, 0, why);
     }
     free(index);
     printf("checkpoint: gather fold eligible in %d of %d attention layers\n", eligible, layers);

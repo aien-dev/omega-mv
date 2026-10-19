@@ -158,7 +158,8 @@ enum { RX_SYM_V_PROVED = 1,        /* affine proof plus vectors */
        RX_SYM_V_TESTED,            /* vectors only, inside the assumptions */
        RX_SYM_V_REFUTED,           /* a vector differs: counterexample recorded */
        RX_SYM_V_CHIP_EQUAL,        /* caller's chip run: every output byte equal */
-       RX_SYM_V_CHIP_DIFFERENT };
+       RX_SYM_V_CHIP_DIFFERENT,
+       RX_SYM_V_SIDE_CONDITION_FAILED };   /* a rule's side condition checked against the data and false */
 
 typedef struct {
     int verdict;
