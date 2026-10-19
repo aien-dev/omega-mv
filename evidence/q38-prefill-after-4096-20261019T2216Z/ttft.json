@@ -1,0 +1,27 @@
+{
+  "chunk": 4096,
+  "corpus": "/home/drakestapleton/workspace/pf-tools/data/corpus-arch.txt",
+  "mode": "ttft",
+  "runs": [
+    {
+      "first_token": 11817,
+      "stats": {
+        "ab_call_ns": 751206646,
+        "attn_call_ns": 705921829,
+        "attn_chip_ns": 300698375,
+        "chunks": 1,
+        "gdn_call_ns": 2264840411,
+        "gdn_chip_ns": 768674861,
+        "gemm_call_ns": 7077475946,
+        "gemm_chip_ns": 7073076469,
+        "gemm_launches": 512,
+        "head_ns": 12332112,
+        "host_ns": 2749833536,
+        "tokens": 4096,
+        "wall_ns": 16890185512
+      },
+      "tokens": 4096,
+      "ttft_s": 16.890185512
+    }
+  ]
+}

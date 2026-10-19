@@ -1,0 +1,8 @@
+start 2026-10-19T22:16:06Z omega=0e70a14fb8e4c70d382a1f8def6993fd854661a8 dirty=2
+loadavg_start 23.84 16.91 18.98 28/3746 4099895
+               total        used        free      shared  buff/cache   available
+Mem:          124607       57531       37863          29       35241       67076
+command: nice -n 10 ~/.local/bin/quiet-measure flock /tmp/aien-gb10.lock spark-receipt q38-prefill-after-4096-20261019T2216Z -- /home/drakestapleton/workspace/pf-tools/bin/qwen38_prefill-after-597cdef3 ttft /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/pf-tools/data/corpus-arch.txt 4096 4096 /home/drakestapleton/workspace/omega-prefill/evidence/q38-prefill-after-4096-20261019T2216Z/ttft.json
+loadavg_locked 2026-10-19T22:53:38Z 6.76 5.94 11.08 8/3406 739736
+loadavg_end 2026-10-19T22:54:43Z 5.81 5.85 10.71 4/3387 816797
+exit 0 end 2026-10-19T22:54:43Z
