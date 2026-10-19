@@ -2590,10 +2590,37 @@ test-gpu-cmdlist: $(GPU_CMDLIST_TEST)
 # host-only; the chip gate is tools/run_gpu_decode_graph_chip.sh under the GB10 lock.
 .PHONY: test-gpu-decode-graph
 GPU_DECODE_GRAPH_TEST = $(OUT_DIR)/gpu_decode_graph_test
+GPU_DGRAPH_ABORT_TEST = $(OUT_DIR)/test_omega_gpu_decode_graph_abort
 $(GPU_DECODE_GRAPH_TEST): tests/gpu_decode_graph_test.c src/omega_gpu_decode_graph.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
-test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST)
+test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST) $(GPU_DGRAPH_ABORT_TEST) test-gpu-decode-graph-abort-mutants
 	./$(GPU_DECODE_GRAPH_TEST) --host-only
+	./$(GPU_DGRAPH_ABORT_TEST)
+
+# omega #518: lock and token-state recovery of the split API (failed begin_token, abort_token, end_token after a failed
+# record, latched session) on a fake platform whose lock refuses a second acquisition. Host only, opens no device.
+# Each mutant breaks one rule in a copy of omega_gpu_decode_graph.c linked ahead of the library; the test must FAIL on it.
+.PHONY: test-gpu-decode-graph-abort-mutants
+GPU_DGRAPH_MUT_DIR = $(OUT_DIR)/dgraph_mut
+$(GPU_DGRAPH_ABORT_TEST): tests/test_omega_gpu_decode_graph_abort.c src/omega_gpu_decode_graph.h src/omega_gpu_platform.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/test_omega_gpu_decode_graph_abort.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-decode-graph-abort-mutants: $(OUT_DIR)/libomega_gpu.a
+	@mkdir -p $(GPU_DGRAPH_MUT_DIR)
+	@set -e; killed=0; \
+	dmut() { name=$$1; script=$$2; \
+	  sed -e "$$script" src/omega_gpu_decode_graph.c > $(GPU_DGRAPH_MUT_DIR)/$$name.c; \
+	  if cmp -s src/omega_gpu_decode_graph.c $(GPU_DGRAPH_MUT_DIR)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -c -o $(GPU_DGRAPH_MUT_DIR)/$$name.o $(GPU_DGRAPH_MUT_DIR)/$$name.c; \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_MUT_DIR)/$$name tests/test_omega_gpu_decode_graph_abort.c \
+	    $(GPU_DGRAPH_MUT_DIR)/$$name.o $(OUT_DIR)/libomega_gpu.a -lpthread -lm; \
+	  if ./$(GPU_DGRAPH_MUT_DIR)/$$name > $(GPU_DGRAPH_MUT_DIR)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
+	  echo "mutant $$name killed: $$(grep -c '^FAIL' $(GPU_DGRAPH_MUT_DIR)/$$name.log) case(s) failed"; killed=$$((killed+1)); }; \
+	dmut begin-fail-keeps-lock 's|    omega_gpu_session_unlock(); /\* begin_fail releases \*/|    ;|'; \
+	dmut begin-fail-stays-in-token 's|    g->in_token = 0; g->failed = 1;|    g->failed = 1;|'; \
+	dmut oneshot-old-bad-args-only 's|if (brc != OMEGA_GPU_DGRAPH_OK) {|if (brc == OMEGA_GPU_DGRAPH_BAD_ARGS) {|'; \
+	dmut abort-keeps-lock 's|g->n_stamp = 0; /\* no timeline for an abandoned token \*/|&\n    return OMEGA_GPU_DGRAPH_OK;|'; \
+	dmut abort-submits 's|^int omega_gpu_decode_graph_abort_token(OmegaGpuDecodeGraph \*g) {$$|&\n    if (g \&\& g->in_token) return omega_gpu_decode_graph_end_token(g, NULL, NULL);|'; \
+	echo "test-gpu-decode-graph-abort-mutants: $$killed of 5 mutants killed"
 
 # OWN-30B W-L2c (2026-10-14): per-launch fixed cost inside a command list (tests/gpu_launch_cost_test.c, chip only, GB10 lock).
 GPU_LAUNCH_COST_TEST = $(OUT_DIR)/gpu_launch_cost_test
