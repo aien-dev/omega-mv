@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include "omega_physics_dir.h"
+#include "omega_clean_clone.h"
 
 static int m19_gate_count = 0;
 static int m19_gate_passed = 0;
@@ -38,17 +39,13 @@ static bool m19_fault_zero_device_reset = false;
 
 /* Resolve the full 40-hex revision of a working tree via git. */
 static bool m19_git_head(const char *repo_dir, char out[41]) {
-    char cmd[512];
-    int n = snprintf(cmd, sizeof(cmd), "git -C %s rev-parse HEAD 2>/dev/null", repo_dir);
-    if (n < 0 || (size_t)n >= sizeof(cmd)) return false;
-    FILE *p = popen(cmd, "r");
-    if (!p) return false;
-    char *got = fgets(out, 41, p);
-    pclose(p);
-    if (!got) return false;
-    size_t len = strlen(out);
-    while (len > 0 && (out[len - 1] == '\n' || out[len - 1] == '\r')) out[--len] = '\0';
-    return (len == 40);
+    /* No shell (omega#565): git gets the directory as an argument. */
+    char line[64];
+    char *argv[] = {"git", "-C", (char *)repo_dir, "rev-parse", "HEAD", NULL};
+    if (!omega_cc_capture_line(NULL, "git", argv, line, sizeof(line))) return false;
+    if (strlen(line) != 40) return false;
+    memcpy(out, line, 41);
+    return true;
 }
 
 static const uint32_t WORLD_SETUP_WORDS[18] = {
@@ -1759,6 +1756,15 @@ static bool test_m19_gate15_zero_libcuda(void) {
     return true;
 }
 
+/* Remove the built copy under the private clone folder; qualification.log stays
+ * beside it (omega#526: five such copies per day filled /tmp). */
+static void m19_clean_clone_remove_checkout(const char *checkout) {
+    /* No shell: a file-tree walk that never follows a symlink (omega#565). */
+    if (omega_cc_remove_tree(checkout) != 0) {
+        fprintf(stderr, "M19 clean clone: could not remove %s\n", checkout);
+    }
+}
+
 /* Gate 16: OMEGA_ACCEL_RESIDENT_CLEAN_CLONE_PASS */
 static bool test_m19_gate16_clean_clone(void) {
     char src_sha[41] = {0};
@@ -1796,19 +1802,43 @@ static bool test_m19_gate16_clean_clone(void) {
         return false;
     }
 
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "git clone --quiet --no-hardlinks . %s && cd %s && git checkout --quiet %s && "
-                       "make clean >/dev/null 2>&1 && make -j PHYSICS_DIR=%s >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m19-gates >%s/qualification.log 2>&1",
-                       checkout, checkout, src_sha, physics_dir_resolved, clone);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    if (system(command) != 0) return false;
+    /* OUT_DIR is unset for the nested build so the copy builds ./build/omegatool:
+     * tests/gates/run.sh exports a per-step OUT_DIR (omega#511) that would move the
+     * binary to $OUT_DIR/omegatool (sh exit 127, omega#526). */
+    /* No shell (omega#565): each step is its own program with an argument vector.
+     * Paths outside the plain charset are refused (fail closed). */
+    if (!omega_cc_path_is_plain(checkout) || !omega_cc_path_is_plain(physics_dir_resolved)) {
+        fprintf(stderr, "M19 clean clone: refusing a path with characters outside [A-Za-z0-9/._+-]: %s | %s\n",
+                checkout, physics_dir_resolved);
+        return false;
+    }
+    char log_path[600], physics_arg[PATH_MAX + 16];
+    int n1 = snprintf(log_path, sizeof(log_path), "%s/qualification.log", clone);
+    int n2 = snprintf(physics_arg, sizeof(physics_arg), "PHYSICS_DIR=%s", physics_dir_resolved);
+    if (n1 < 0 || (size_t)n1 >= sizeof(log_path) || n2 < 0 || (size_t)n2 >= sizeof(physics_arg)) return false;
+    char *clone_argv[] = {"git", "clone", "--quiet", "--no-hardlinks", ".", checkout, NULL};
+    char *checkout_argv[] = {"git", "checkout", "--quiet", src_sha, NULL};
+    char *clean_argv[] = {"make", "clean", NULL};
+    char *make_argv[] = {"make", "-j", physics_arg, NULL};
+    char *run_argv[] = {"./build/omegatool", "--run-m19-gates", NULL};
+    const char *step = "git clone";
+    int rc = omega_cc_run(NULL, "git", clone_argv, NULL, false);
+    if (rc == 0) { step = "git checkout"; rc = omega_cc_run(checkout, "git", checkout_argv, NULL, false); }
+    if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, "make", clean_argv, NULL, false); }
+    if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, "make", make_argv, NULL, false); }
+    /* The log sits beside the checkout: <clone>/qualification.log. */
+    if (rc == 0) { step = "omegatool --run-m19-gates"; rc = omega_cc_run(checkout, "./build/omegatool", run_argv, "../qualification.log", true); }
+    if (rc != 0) {
+        fprintf(stderr, "M19 clean clone failed at %s (rc %d); log: %s\n", step, rc, log_path);
+        m19_clean_clone_remove_checkout(checkout);
+        return false;
+    }
 
     /* The built checkout must be exactly the named candidate revision. */
     char clone_sha[41] = {0};
-    if (!m19_git_head(checkout, clone_sha)) return false;
-    if (strcmp(clone_sha, src_sha) != 0) return false;
+    bool same = m19_git_head(checkout, clone_sha) && strcmp(clone_sha, src_sha) == 0;
+    m19_clean_clone_remove_checkout(checkout);
+    if (!same) return false;
 
     memcpy(m19_candidate_commit, src_sha, sizeof(m19_candidate_commit));
     return true;
@@ -1864,9 +1894,13 @@ static bool test_m19_gate18_receipt(void) {
         if (!candidate || strcmp(candidate, head_sha) != 0 ||
             omega_evidence_tree_dirty()) return false;
     }
+    /* Hash the binary that is running these gates. Under tests/gates/run.sh it is
+     * $OUT_DIR/omegatool (per-step build dir, omega#511), so the fixed path
+     * build/omegatool does not exist in a fresh judge worktree and this gate
+     * failed with every other gate passing (omega#526). */
     uint8_t digest[32];
     char hex[65];
-    return compute_file_sha256("build/omegatool", digest, hex);
+    return compute_file_sha256("/proc/self/exe", digest, hex);
 }
 
 int run_m19_gates(void) {

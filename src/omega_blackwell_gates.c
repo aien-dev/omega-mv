@@ -17,7 +17,10 @@
 #include <time.h>
 #include <math.h>
 #include <limits.h>
+#include <errno.h>
 #include "omega_physics_dir.h"
+#include "omega_clean_clone.h"
+#include <unistd.h>
 
 static int m17_gate_count = 0;
 static int m17_gate_passed = 0;
@@ -975,31 +978,89 @@ fail:
     return false;
 }
 
+/* Remove the built copy a clean-clone gate made under its private folder; the
+ * log beside it stays for the reader. Hundreds of MB per run otherwise pile up
+ * in /tmp (omega#526). */
+static void m18_clean_clone_remove_checkout(const char *clone) {
+    char checkout[PATH_MAX];
+    int n = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
+    if (n < 0 || (size_t)n >= sizeof(checkout)) return;
+    /* No shell: a file-tree walk that never follows a symlink (omega#565). */
+    if (omega_cc_remove_tree(checkout) != 0) {
+        fprintf(stderr, "M18 clean clone: could not remove %s\n", checkout);
+    }
+}
+
 static bool test_m18_gate16_clean_clone(void) {
     if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) {
         return true;
     }
     /* Copy the repo this omegatool runs from (the code under test), not a
      * hardcoded checkout, and pass the PHYSICS_DIR this process resolves at run time
-     * (omega_physics_dir.h) as an absolute path so the copy in /tmp does not fall back to
-     * the Makefile default ../physics (= /tmp/physics). Mirrors M19. */
+     * (omega_physics_dir.h) as an absolute path so the copy does not fall back to
+     * the Makefile default ../physics. Mirrors M19.
+     *
+     * The copy and its log live in a private mkdtemp folder (omega#526). A fixed
+     * /tmp path is shared by every user of the machine, and the sticky /tmp lets
+     * neither the judge user nor the operator remove or overwrite what the other
+     * left behind ("rm: Permission denied", "cannot create ...log: Permission denied"),
+     * so the gate failed for whoever ran second.
+     *
+     * OUT_DIR is unset for the nested build: tests/gates/run.sh exports a per-step
+     * OUT_DIR (omega#511), so `make` in the copy would put the binary at
+     * $OUT_DIR/omegatool and "./build/omegatool" would not exist (sh exit 127 in
+     * the judge run of e466b138, omega#526). The copy is private, so it needs no
+     * per-step build directory. */
     char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
     if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
         fprintf(stderr, "%s\n", physics_err);
         return false;
     }
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "root=$(git rev-parse --show-toplevel) && "
-                       "rm -rf /tmp/omega_clean_m18 && "
-                       "cp -r \"$root\" /tmp/omega_clean_m18 && "
-                       "cd /tmp/omega_clean_m18 && "
-                       "make clean >/dev/null 2>&1 && "
-                       "make -j PHYSICS_DIR='%s' >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1",
-                       physics_dir_resolved);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    int rc = system(command);
+    const char *tmp = getenv("TMPDIR");
+    if (!tmp || !*tmp) tmp = "/tmp";
+    char clone[PATH_MAX];
+    int cl = snprintf(clone, sizeof(clone), "%s/omega_clean_m18_XXXXXX", tmp);
+    if (cl < 0 || (size_t)cl >= sizeof(clone)) return false;
+    if (!mkdtemp(clone)) {
+        fprintf(stderr, "M18 clean clone: mkdtemp %s: %s\n", clone, strerror(errno));
+        return false;
+    }
+    /* No shell (omega#565): each step is its own program with an argument vector,
+     * so nothing in TMPDIR or PHYSICS_DIR can change what runs. Paths outside the
+     * plain charset are refused (fail closed); make would also expand a '$'. */
+    if (!omega_cc_path_is_plain(clone) || !omega_cc_path_is_plain(physics_dir_resolved)) {
+        fprintf(stderr, "M18 clean clone: refusing a path with characters outside [A-Za-z0-9/._+-]: %s | %s\n",
+                clone, physics_dir_resolved);
+        (void)rmdir(clone);
+        return false;
+    }
+    char root[PATH_MAX], checkout[PATH_MAX], log_path[PATH_MAX], physics_arg[PATH_MAX + 16];
+    char *git_top[] = {"git", "rev-parse", "--show-toplevel", NULL};
+    if (!omega_cc_capture_line(NULL, "git", git_top, root, sizeof(root))) {
+        fprintf(stderr, "M18 clean clone: git rev-parse --show-toplevel failed\n");
+        (void)rmdir(clone);
+        return false;
+    }
+    int n1 = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
+    int n2 = snprintf(log_path, sizeof(log_path), "%s/clean_clone_m18.log", clone);
+    int n3 = snprintf(physics_arg, sizeof(physics_arg), "PHYSICS_DIR=%s", physics_dir_resolved);
+    if (n1 < 0 || (size_t)n1 >= sizeof(checkout) || n2 < 0 || (size_t)n2 >= sizeof(log_path) ||
+        n3 < 0 || (size_t)n3 >= sizeof(physics_arg)) {
+        (void)rmdir(clone);
+        return false;
+    }
+    char *cp_argv[] = {"cp", "-r", "--", root, checkout, NULL};
+    char *clean_argv[] = {"make", "clean", NULL};
+    char *make_argv[] = {"make", "-j", physics_arg, NULL};
+    char *run_argv[] = {"./build/omegatool", "--run-m18-gates", NULL};
+    const char *step = "cp";
+    int rc = omega_cc_run(NULL, "cp", cp_argv, NULL, false);
+    if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, "make", clean_argv, NULL, false); }
+    if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, "make", make_argv, NULL, false); }
+    /* The log sits beside the checkout: <clone>/clean_clone_m18.log. */
+    if (rc == 0) { step = "omegatool --run-m18-gates"; rc = omega_cc_run(checkout, "./build/omegatool", run_argv, "../clean_clone_m18.log", true); }
+    if (rc != 0) fprintf(stderr, "M18 clean clone failed at %s (rc %d); log: %s\n", step, rc, log_path);
+    m18_clean_clone_remove_checkout(clone);
     return (rc == 0);
 }
 
