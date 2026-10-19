@@ -82,12 +82,15 @@ typedef struct {
     uint64_t mask;
     struct { OmegaGpuFp8Tensor *mix, *o, *gu, *dn; OmegaGpuBf16Tensor *ab; float in_norm[H], post_norm[H]; } L[8];
     OmegaGpuBf16Tensor *lm;
+    OmegaGpuFp8Tensor *lm8;      /* --fp8-head: the same lm_head quantised by omega_gpu_fp8_quantize_bf16 */
+    uint8_t *lm8_w; uint16_t *lm8_s; /* its host copy (the sampled-row host check) */
     float fnorm[H];
     float x0[TOKENS][H];
     /* the two state copies: [0] the graph's, [1] the baseline's */
     OmegaGpuGdn *gdn[2];
     OmegaGpuDecodeAttn256Cache *attn[2];
 } Model;
+static int g_fp8_head; /* --fp8-head: the graph and the baseline use the FP8-quantised lm_head */
 
 static int state_alloc(Model *m, int which, uint32_t seed) {
     uint32_t s = seed;
@@ -123,6 +126,13 @@ static int model_build(Model *m, uint32_t layers, uint64_t mask, uint32_t vocab)
         for (unsigned i = 0; i < H; i++) { m->L[l].in_norm[i] = frand(&s, 0.8f, 1.2f); m->L[l].post_norm[i] = frand(&s, 0.8f, 1.2f); }
     }
     if (bf16_random(600, vocab, H, -0.05f, 0.05f, 1.0f, &m->lm)) { printf("lm_head upload: %s\n", omega_gpu_bf16_last_error()); return -1; }
+    if (g_fp8_head) {
+        uint16_t *w = malloc((size_t)vocab * H * 2); m->lm8_w = malloc((size_t)vocab * H); m->lm8_s = malloc((size_t)(vocab / 128) * (H / 128) * 2);
+        if (!w || !m->lm8_w || !m->lm8_s) return -1;
+        uint32_t st = 600; for (size_t i = 0; i < (size_t)vocab * H; i++) w[i] = bf16_rne(frand(&st, -0.05f, 0.05f)); /* bf16_random(600, ...)'s values */
+        int qrc = omega_gpu_fp8_quantize_bf16(vocab, H, w, m->lm8_w, m->lm8_s); free(w);
+        if (qrc || omega_gpu_fp8_tensor_upload(1, vocab, H, m->lm8_w, m->lm8_s, &m->lm8)) { printf("fp8 lm_head: %s\n", omega_gpu_fp8_last_error()); return -1; }
+    }
     for (unsigned i = 0; i < H; i++) m->fnorm[i] = frand(&s, 0.8f, 1.2f);
     for (unsigned t = 0; t < TOKENS; t++) for (unsigned i = 0; i < H; i++) m->x0[t][i] = frand(&s, -1.0f, 1.0f);
     if (state_alloc(m, 0, 777) || state_alloc(m, 1, 777)) return -1;
@@ -164,6 +174,17 @@ static int baseline_token(Model *m, const float *x0, uint32_t pos, Out *o) {
         for (unsigned i = 0; i < H; i++) o->x[i] = o->x[i] + y[i];
     }
     rmsnorm(o->x, m->fnorm, xn);
+    if (m->lm8) {
+        int r_ = omega_gpu_fp8_gemv_f32(m->lm8, 0, xn, o->logits, NULL); if (r_ != 0) { printf("fp8 head rc %d: %s\n", r_, omega_gpu_fp8_last_error()); return -1; }
+        double worst = 0, ref_max = 0; /* every 97th row against the dequantised host product */
+        for (uint32_t r = 0; r < m->vocab; r += 97) {
+            double acc = 0;
+            for (uint32_t c = 0; c < H; c++) { uint8_t q = m->lm8_w[(size_t)r * H + c]; unsigned e = (q >> 3) & 15u, mm = q & 7u; double v = e ? (1.0 + mm / 8.0) * ldexp(1.0, (int)e - 7) : mm / 8.0 * ldexp(1.0, -6); if (q & 0x80u) v = -v;
+                uint32_t sb = (uint32_t)m->lm8_s[(r / 128) * (H / 128) + c / 128] << 16; float sf; memcpy(&sf, &sb, 4); acc += v * sf * xn[c]; }
+            double d = fabs(acc - o->logits[r]); if (d > worst) worst = d; if (fabs(acc) > ref_max) ref_max = fabs(acc);
+        }
+        CHECK(worst <= 1e-4 * ref_max + 1e-6, "fp8 head: sampled rows max diff %.3g vs host dequantised (max %.3g)", worst, ref_max);
+    } else
     { int r_ = omega_gpu_bf16_gemv_f32(m->lm, xn, o->logits, NULL); if (r_ != 0) { printf("bf16 gemv rc %d: %s\n", r_, omega_gpu_bf16_last_error()); return -1; } }
     o->token = argmax(o->logits, m->vocab);
     return 0;
@@ -178,6 +199,7 @@ static int graph_build(Model *m, OmegaGpuQ38Graph **out) {
     for (uint32_t l = 0; l < m->layers; l++)
         if ((rc = omega_gpu_q38_graph_set_layer(*out, l, m->L[l].mix, m->L[l].ab, m->L[l].o, m->L[l].gu, m->L[l].dn, m->L[l].in_norm, m->L[l].post_norm)) != 0) { printf("set_layer %u: %d\n", l, rc); return -1; }
     if (omega_gpu_q38_graph_set_final_norm(*out, m->fnorm) != 0) return -1;
+    if (m->lm8 && omega_gpu_q38_graph_set_lm_head_fp8(*out, m->lm8) != 0) { printf("set_lm_head_fp8 refused\n"); return -1; }
     return 0;
 }
 
@@ -273,6 +295,7 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
             if (m.L[l].ab) { omega_gpu_bf16_tensor_shape(m.L[l].ab, &n8, &k8); wb[OMEGA_GPU_Q38_K_AB] += 2ull * n8 * k8; }
         }
         omega_gpu_bf16_tensor_shape(m.lm, &n8, &k8); wb[OMEGA_GPU_Q38_K_LM_HEAD] = 2ull * n8 * k8;
+        if (m.lm8) wb[OMEGA_GPU_Q38_K_LM_HEAD] /= 2u; /* FP8 head: one byte per weight */
         const uint32_t tr = tl_reps > 1 ? tl_reps - 1 : 1;
         uint64_t *ns = calloc((size_t)tr * (OMEGA_GPU_Q38_K_COUNT + 1), 8), col[256];
         uint32_t cnt[OMEGA_GPU_Q38_K_COUNT] = { 0 };
@@ -313,6 +336,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--mask") == 0 && i + 1 < argc) mask = strtoull(argv[++i], NULL, 0);
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--tl-reps") == 0 && i + 1 < argc) tl_reps = (uint32_t)atoi(argv[++i]);
+        else if (strcmp(argv[i], "--fp8-head") == 0) g_fp8_head = 1;
         /* tuning knobs for sweeps (process-wide, before any kernel is built): FP8 GEMV lane_bytes,rows,warps / CTA budget,
          * bf16 GEMV (lm_head, a|b) rows,warps,depth / CTA budget */
         else if (strcmp(argv[i], "--fp8-shape") == 0 && i + 1 < argc) { unsigned a, b, c; if (sscanf(argv[++i], "%u,%u,%u", &a, &b, &c) != 3) return 2; omega_gpu_fp8_set_shape(a, b, c); }
