@@ -1,0 +1,31 @@
+# OEV1 fixture: #276 entity pilot, process 2 (restart) WITH retained knowledge.
+# Op times are one unreceipted development run (devB, load1 25.7), so they are labelled
+# synthetic: a sensitivity prediction, never a measurement. The ops form one serial chain on
+# the harness main thread (wall time); exec ops include admission, both snapshots, action-
+# graph execution on the reaction threads and the synchronous journal appends.
+# Subtractions (step wall minus cognition CPU) by aien-calc: calc:9d82079b calc:34ea820a calc:71fb64c6.
+oev version=1
+machine id=spark-b87b soc=GB10 cores=20 mem_bytes=137438953472 prov=specified src=nvidia-dgx-spark-datasheet
+build repo=omega-mv sha=ec0c2e2742ac80cdefdc46271eeaf230c06d92a1 physics=6d7cf0d4
+calibration id=ENTITY276-dev-20261019 taken=2026-10-19 valid_days=30 load1=25.7 src=targets/omega-entity-276/devB
+resource id=cpu kind=compute slots=1 prov=specified src=harness-main-thread-serial-chain
+resource id=unified_mem kind=capacity cap=137438953472 prov=specified src=nvidia-dgx-spark-datasheet
+energy instrument=none
+op id=replay kind=compute engine=cpu t_ns=2661481 prov=synthetic src=devB/steps-restart.csv:5a
+op id=rebuild kind=compute engine=cpu t_ns=458256 prov=synthetic src=devB/identity-restart.json:rebuild_cpu_ns
+op id=restore kind=compute engine=cpu t_ns=147642942 prov=synthetic src=devB/steps-restart.csv:5b
+op id=lookup2 kind=compute engine=cpu t_ns=27344 prov=synthetic src=devB:5_obj2:cog_cpu_ns
+op id=exec2 kind=compute engine=cpu t_ns=251126860 prov=synthetic src=devB:5_obj2:wall-cog
+op id=lookup3 kind=compute engine=cpu t_ns=19648 prov=synthetic src=devB:5_obj3:cog_cpu_ns
+op id=exec3 kind=compute engine=cpu t_ns=262605384 prov=synthetic src=devB:5_obj3:wall-cog
+op id=lookup4 kind=compute engine=cpu t_ns=25152 prov=synthetic src=devB:5_obj4:cog_cpu_ns
+op id=exec4 kind=compute engine=cpu t_ns=271862511 prov=synthetic src=devB:5_obj4:wall-cog
+dep replay rebuild
+dep rebuild restore
+dep restore lookup2
+dep lookup2 exec2
+dep exec2 lookup3
+dep lookup3 exec3
+dep exec3 lookup4
+dep lookup4 exec4
+removed op=search2 reason=reused ref=lookup2 proof=rx_plan_applicable:template-rebuilt-from-journal

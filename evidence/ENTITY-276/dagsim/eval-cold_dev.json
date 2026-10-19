@@ -1,0 +1,31 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "entity276_restart_cold_dev.oev",
+  "machine": "spark-b87b", "build_sha": "ec0c2e2742ac80cdefdc46271eeaf230c06d92a1",
+  "calibration": {"id": "ENTITY276-dev-20261019", "taken_day": 20745, "valid_days": 30, "load1": 25.7, "src": "targets/omega-entity-276/devB"},
+  "asof_day": 20745,
+  "status": "OK", "reason": "",
+  "provenance": ["synthetic", "specified"], "synthetic": 1, "offline": true, "gpu_executed": false,
+  "makespan_ns": {"nominal": 969313876, "lo": 969313876, "hi": 969313876, "interval_known": true},
+  "bounds_ns": {"critical_path": 969313876, "max": 969313876, "resources": {"cpu": 969313876, "unified_mem": 0}, "makespan_ge_bounds": true},
+  "ops": [
+    {"id": "replay", "start_ns": 0, "end_ns": 3320400, "floor_ns": 3320400, "contention_ns": 0, "prov": "synthetic", "src": "devB/cold/steps-restart-cold.csv:5a"},
+    {"id": "restore", "start_ns": 3320400, "end_ns": 134237104, "floor_ns": 130916704, "contention_ns": 0, "prov": "synthetic", "src": "devB/cold/steps-restart-cold.csv:5b"},
+    {"id": "search2", "start_ns": 134237104, "end_ns": 134337984, "floor_ns": 100880, "contention_ns": 0, "prov": "synthetic", "src": "devB/cold:5_obj2:cog_cpu_ns"},
+    {"id": "exec2", "start_ns": 134337984, "end_ns": 395690813, "floor_ns": 261352829, "contention_ns": 0, "prov": "synthetic", "src": "devB/cold:5_obj2:wall-cog"},
+    {"id": "lookup3", "start_ns": 395690813, "end_ns": 395697293, "floor_ns": 6480, "contention_ns": 0, "prov": "synthetic", "src": "devB/cold:5_obj3:cog_cpu_ns"},
+    {"id": "exec3", "start_ns": 395697293, "end_ns": 694337432, "floor_ns": 298640139, "contention_ns": 0, "prov": "synthetic", "src": "devB/cold:5_obj3:wall-cog"},
+    {"id": "lookup4", "start_ns": 694337432, "end_ns": 694349032, "floor_ns": 11600, "contention_ns": 0, "prov": "synthetic", "src": "devB/cold:5_obj4:cog_cpu_ns"},
+    {"id": "exec4", "start_ns": 694349032, "end_ns": 969313876, "floor_ns": 274964844, "contention_ns": 0, "prov": "synthetic", "src": "devB/cold:5_obj4:wall-cog"}
+  ],
+  "critical_path": ["replay", "restore", "search2", "exec2", "lookup3", "exec3", "lookup4", "exec4"],
+  "peak_live_bytes": {"unified_mem": {"bytes": 0, "at_ns": 0, "cap": 137438953472}},
+  "attribution_ns": {"compute": 969313876, "bandwidth": 0, "contention": 0, "launch": 0, "serialization": 0, "sync": 0, "residual": 0},
+  "energy": {"status": "UNMEASURED", "joules": null, "instrument": "none", "boundary": "", "ranking_valid": false},
+  "conservation": {"n_ops": 8, "total_bytes": 0, "total_busy_ns": 969313876, "total_launch_ns": 0, "instrument_overhead_ns": null},
+  "sensitivities": [
+    {"resource": "cpu", "kind": "compute", "makespan_if_doubled_ns": 969313876, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "measure the critical op at the next larger shape"},
+    {"resource": "unified_mem", "kind": "capacity", "makespan_if_doubled_ns": 969313876, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "none: capacity is a ledger, not a rate"}
+  ],
+  "unresolved_residual_ns": 0,
+  "note": "loaded-box calibration (load1 above); bounds are floors, not predictions; no performance claim from this simulation alone"
+}

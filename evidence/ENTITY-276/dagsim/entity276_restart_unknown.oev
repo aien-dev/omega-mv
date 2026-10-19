@@ -1,0 +1,29 @@
+# OEV1 fixture: #276 entity pilot, process 2 (restart) with retained knowledge, written
+# before any run of record. Every op cost is unknown: no receipted measurement of these
+# op classes exists (journal replay, template rebuild, World restore with synchronous
+# journal appends, plan lookup, action-graph execution). The evaluator must refuse.
+oev version=1
+machine id=spark-b87b soc=GB10 cores=20 mem_bytes=137438953472 prov=specified src=nvidia-dgx-spark-datasheet
+build repo=omega-mv sha=ec0c2e2742ac80cdefdc46271eeaf230c06d92a1 physics=6d7cf0d4
+calibration id=ENTITY276-dev-20261019 taken=2026-10-19 valid_days=30 load1=25.7 src=targets/omega-entity-276/devB
+resource id=cpu kind=compute slots=1 prov=specified src=harness-main-thread-serial-chain
+resource id=unified_mem kind=capacity cap=137438953472 prov=specified src=nvidia-dgx-spark-datasheet
+energy instrument=none
+op id=replay kind=compute engine=cpu prov=unknown src=none
+op id=rebuild kind=compute engine=cpu prov=unknown src=none
+op id=restore kind=compute engine=cpu prov=unknown src=none
+op id=lookup2 kind=compute engine=cpu prov=unknown src=none
+op id=exec2 kind=compute engine=cpu prov=unknown src=none
+op id=lookup3 kind=compute engine=cpu prov=unknown src=none
+op id=exec3 kind=compute engine=cpu prov=unknown src=none
+op id=lookup4 kind=compute engine=cpu prov=unknown src=none
+op id=exec4 kind=compute engine=cpu prov=unknown src=none
+dep replay rebuild
+dep rebuild restore
+dep restore lookup2
+dep lookup2 exec2
+dep exec2 lookup3
+dep lookup3 exec3
+dep exec3 lookup4
+dep lookup4 exec4
+removed op=search2 reason=reused ref=lookup2 proof=rx_plan_applicable:template-rebuilt-from-journal

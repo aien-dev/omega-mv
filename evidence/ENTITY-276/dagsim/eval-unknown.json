@@ -1,0 +1,8 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "entity276_restart_unknown.oev",
+  "machine": "spark-b87b", "build_sha": "ec0c2e2742ac80cdefdc46271eeaf230c06d92a1",
+  "calibration": {"id": "ENTITY276-dev-20261019", "taken_day": 20745, "valid_days": 30, "load1": 25.7, "src": "targets/omega-entity-276/devB"},
+  "asof_day": 20745,
+  "status": "REFUSED_UNKNOWN", "reason": "op replay has prov=unknown (none); unknown stays unknown",
+  "provenance": [], "synthetic": 0, "offline": true, "gpu_executed": false
+}
