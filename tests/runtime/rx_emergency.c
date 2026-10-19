@@ -36,7 +36,14 @@
  *                 object create and retire are refused under the stop and change
  *                 nothing; a symlink mark stops a new world (TORN) and resume
  *                 removes it.
- *
+ *   E8 flip hold a promotion holds its identity check across the root flip (HOLD
+ *                 until RELEASE, around the active pointer's write, fsync and
+ *                 rename). Production goes on inside that hold: an outside
+ *                 publication lands and R commits while it is in force. What the
+ *                 hold is for still holds: a revocation of the promoter and an
+ *                 operator stop started inside it are still waiting 50 ms later and
+ *                 land only after the release; the flip succeeds; the revoked
+ *                 promoter cannot promote again.
  * Host only, CPU only. Exit 0 = PASS.
  */
 #include "runtime/rx_caproot.h"
@@ -64,7 +71,8 @@ static void check(int ok, const char *what) {
 }
 
 enum { RES_E = 0x710, RES_O = 0x711, RES_Q = 0x712 };
-enum { SUBJ_EXT = 9001, SUBJ_R = 9002, SUBJ_R2 = 9003, SUBJ_R3 = 9004, OP = 9100, OP2 = 9101, INTRUDER = 9102 };
+enum { SUBJ_EXT = 9001, SUBJ_R = 9002, SUBJ_R2 = 9003, SUBJ_R3 = 9004, OP = 9100, OP2 = 9101, INTRUDER = 9102,
+       PROP = 9200, PRO = 9201 };
 
 /* ---- gate: R parks in its function until released ------------------------- */
 static struct {
@@ -73,6 +81,7 @@ static struct {
     int armed, armed3, inside, go;
 } g = { PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 0, 0, 0 };
 static int g_with_r3;   /* setup adds R3, a reaction woken by R's commit (E7) */
+static int g_with_gen;  /* setup enrolls the store's proposer and promoter before binding (E8) */
 
 typedef struct {
     RxCapRoot root;
@@ -82,6 +91,7 @@ typedef struct {
     uint32_t id_r, id_r2, id_r3;
     RxCapRef c_ext, c_op, c_op2;
     RxCallerCred cr_op, cr_op2, cr_intr, cr_r, cr_r2, cr_r3;
+    RxCallerCred cr_prop, cr_pro;
 } Env;
 
 static int fn_r(RxCtx *c) {
@@ -164,6 +174,10 @@ static int setup(Env *e, uint32_t workers, uint64_t crumb_cap) {
         rx_world_enroll_caller(&e->w, INTRUDER, &e->cr_intr) != RX_CALLER_OK ||
         rx_world_enroll_caller(&e->w, SUBJ_R, &e->cr_r) != RX_CALLER_OK ||
         rx_world_enroll_caller(&e->w, SUBJ_R2, &e->cr_r2) != RX_CALLER_OK)
+        return -1;
+    if (g_with_gen &&
+        (rx_world_enroll_caller(&e->w, PROP, &e->cr_prop) != RX_CALLER_OK ||
+         rx_world_enroll_caller(&e->w, PRO, &e->cr_pro) != RX_CALLER_OK))
         return -1;
     RxReactionDesc d;
     memset(&d, 0, sizeof d);
@@ -495,7 +509,6 @@ static void e4_race(Env *e) {
 }
 
 /* ---- E5 promotion -------------------------------------------------------------- */
-enum { PROP = 9200, PRO = 9201 };
 static int auth_any(void *c, uint32_t id, uint64_t gen, uint32_t s, uint64_t res, uint32_t rights) {
     (void)c; (void)id; (void)gen; (void)s; (void)res; (void)rights;
     return 0;
@@ -773,6 +786,151 @@ static void e7_budget_objects(void) {
     if (system(cmd) != 0) fprintf(stderr, "cleanup of %s failed\n", dir);
 }
 
+/* ---- E8 flip hold ---------------------------------------------------------------- */
+/* R9 with R16 C7: a promotion holds its identity check from the recheck before the
+ * flip until the flip is in memory (HOLD, RELEASE), around the active pointer's
+ * write, fsync and rename. That hold keeps a revocation and an operator stop out;
+ * it must not keep production out. An activation and a commit only read the
+ * caller table (validate_caps), so they go on while the hold is in force. */
+typedef struct {
+    Env *e;
+    int fired;
+    atomic_int commit_done, revoke_done, stop_done;
+    uint64_t hold_ns, release_ns, commit_ns, revoke_ns, stop_ns;
+    int64_t publish_rc;
+    int commit_in_hold, revoke_in_hold, stop_in_hold, revoke_rc, stop_rc;
+    pthread_t commit_t, revoke_t, stop_t;
+} Hold;
+
+static uint64_t mono_ns(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
+}
+
+/* Production: an outside publication wakes R, whose activation and commit both
+ * check the caller table. Stamped when R's commit is in the log. */
+static void *hold_commit_thread(void *a) {
+    Hold *h = a;
+    uint64_t before = reaction_commits(h->e, h->e->id_r);
+    h->publish_rc = publish(h->e, 0, 777);
+    if (h->publish_rc > 0 && wait_commits(h->e, h->e->id_r, before + 1) == 0) {
+        h->commit_ns = mono_ns();
+        atomic_store(&h->commit_done, 1);
+    }
+    return NULL;
+}
+static void *hold_revoke_thread(void *a) {
+    Hold *h = a;
+    h->revoke_rc = rx_world_revoke_caller(&h->e->w, PRO, &h->e->cr_pro);
+    h->revoke_ns = mono_ns();
+    atomic_store(&h->revoke_done, 1);
+    return NULL;
+}
+static void *hold_stop_thread(void *a) {
+    Hold *h = a;
+    h->stop_rc = stop(h->e, OP, &h->e->cr_op, h->e->c_op, 808);
+    h->stop_ns = mono_ns();
+    atomic_store(&h->stop_done, 1);
+    return NULL;
+}
+
+/* The store's caller check is the runtime's own, observed. On the first HOLD
+ * that passes, the probes run while the hold is in force: production first
+ * (bounded 2 s), then a revocation and a stop, which must still be waiting
+ * 50 ms later. RELEASE is stamped. */
+static int hold_caller(void *ctx, uint32_t subject, const RxCallerCred *cred, int op) {
+    Hold *h = ctx;
+    int rc = rx_world_caller_check_fn(&h->e->w, subject, cred, op);
+    if (op == RX_CALLER_OP_HOLD && rc == RX_CALLER_OK && !h->fired++) {
+        h->hold_ns = mono_ns();
+        pthread_create(&h->commit_t, NULL, hold_commit_thread, h);
+        for (int i = 0; i < 2000 && !atomic_load(&h->commit_done); i++) usleep(1000);
+        h->commit_in_hold = atomic_load(&h->commit_done);
+        pthread_create(&h->revoke_t, NULL, hold_revoke_thread, h);
+        pthread_create(&h->stop_t, NULL, hold_stop_thread, h);
+        usleep(50000);
+        h->revoke_in_hold = atomic_load(&h->revoke_done);
+        h->stop_in_hold = atomic_load(&h->stop_done);
+    }
+    if (op == RX_CALLER_OP_RELEASE) h->release_ns = mono_ns();
+    return rc;
+}
+
+static void e8_flip_hold(void) {
+    Env e;
+    char dir[64];
+    RxGenStore *gs = NULL;
+    Hold h;
+    memset(&h, 0, sizeof h);
+    h.e = &e;
+    g_with_gen = 1;
+    int ok = setup(&e, 2, 1u << 16) == 0;
+    g_with_gen = 0;
+    ok = ok && mkdtemp(strcpy(dir, "/tmp/rx-estop-hold-XXXXXX")) &&
+         rx_gen_open(dir, &gs) == RX_GEN_OK &&
+         rx_gen_bind_authority(gs, hold_caller, &h, auth_any, NULL) == RX_GEN_OK;
+    check(ok, "E8 setup: two workers, proposer and promoter enrolled before binding; bound store");
+    if (!ok) return;
+    uint64_t r0 = reaction_commits(&e, e.id_r);
+    check(publish(&e, 0, 1) > 0 && wait_commits(&e, e.id_r, r0 + 1) == 0,
+          "E8 control: R commits before the promotion");
+    static const uint8_t ev[] = "hold";
+    RxGenObject obj = { 1, 1, { 0 } };
+    RxGenDraft gd;
+    memset(&gd, 0, sizeof gd);
+    gd.proofs_ok = 1;
+    gd.n_objects = 1;
+    gd.objects = &obj;
+    gd.evidence = ev;
+    gd.evidence_len = sizeof ev - 1;
+    uint64_t cand = 0, a1 = 0, l1 = 0;
+    int prc = rx_gen_propose_as(gs, PROP, &e.cr_prop, &gd, &cand);
+    RxPromotionRequest req = { cand, PRO, 1, 1, RX_GEN_RES_PROMOTION, RX_GEN_RIGHT_PROMOTE, e.cr_pro };
+    int rc = prc == RX_GEN_OK ? rx_gen_promote(gs, &req, NULL, NULL, NULL, NULL, NULL, NULL) : prc;
+    rx_gen_active(gs, &a1, &l1);
+    RxRecoveryRecord d;
+    memset(&d, 0, sizeof d);
+    rx_gen_recover(dir, &d);
+    if (h.fired) {
+        pthread_join(h.commit_t, NULL);
+        pthread_join(h.revoke_t, NULL);
+        pthread_join(h.stop_t, NULL);
+    }
+    check(prc == RX_GEN_OK && h.fired == 1 && h.release_ns > h.hold_ns,
+          "E8 the promotion held the caller check across the flip and released it");
+    char what[240];
+    snprintf(what, sizeof what, "E8 production went on inside the hold (R's commit %s; publish rc %lld)",
+             h.commit_in_hold ? "landed" : "did NOT land within 2 s", (long long)h.publish_rc);
+    check(h.commit_in_hold && h.commit_ns >= h.hold_ns && h.commit_ns <= h.release_ns, what);
+    check(!h.revoke_in_hold && !h.stop_in_hold,
+          "E8 a revocation and an operator stop started inside the hold are still waiting 50 ms later");
+    check(h.revoke_rc == RX_CALLER_OK && h.revoke_ns >= h.release_ns,
+          "E8 the revocation landed only after the release (R16 C7)");
+    check(h.stop_rc == RX_OK && h.stop_ns >= h.release_ns,
+          "E8 the operator stop landed only after the release (R16 G6)");
+    check(rc == RX_GEN_OK && a1 == cand && d.active_id == cand,
+          "E8 the promotion flipped: active generation = candidate, in memory and on disk");
+    check(halted(&e), "E8 the world is stopped after the flip (the stop that waited)");
+    check(resume(&e, OP, &e.cr_op, e.c_op) == RX_OK, "E8 operator resumes");
+    uint64_t c2 = 0;
+    int p2 = rx_gen_propose_as(gs, PROP, &e.cr_prop, &gd, &c2);
+    RxPromotionRequest req2 = { c2, PRO, 1, 1, RX_GEN_RES_PROMOTION, RX_GEN_RIGHT_PROMOTE, e.cr_pro };
+    int rc2 = p2 == RX_GEN_OK ? rx_gen_promote(gs, &req2, NULL, NULL, NULL, NULL, NULL, NULL) : p2;
+    check(rc2 == RX_GEN_ERR_IDENTITY, "E8 the revoked promoter cannot promote again (RX_GEN_ERR_IDENTITY)");
+    printf("E8 hold %llu us: R's commit at +%lld us, revoke at +%lld us, stop at +%lld us, release at +%lld us\n",
+           U((h.release_ns - h.hold_ns) / 1000),
+           h.commit_in_hold ? (long long)(h.commit_ns - h.hold_ns) / 1000 : -1LL,
+           (long long)(h.revoke_ns - h.hold_ns) / 1000, (long long)(h.stop_ns - h.hold_ns) / 1000,
+           (long long)(h.release_ns - h.hold_ns) / 1000);
+    rx_gen_close(gs);
+    teardown(&e);
+    char cmd[128];
+    snprintf(cmd, sizeof cmd, "rm -rf '%s'", dir);
+    if (system(cmd) != 0) fprintf(stderr, "cleanup of %s failed\n", dir);
+}
+
+
 int main(void) {
     setvbuf(stdout, NULL, _IOLBF, 0);
     Env e;
@@ -792,6 +950,7 @@ int main(void) {
     e5_promotion();
     e6_durable();
     e7_budget_objects();
+    e8_flip_hold();
     printf("RX_EMERGENCY_STOP: %s (%d failures; host CPU, real caproot authority)\n",
            g_fail ? "FAIL" : "PASS", g_fail);
     return g_fail ? 1 : 0;
