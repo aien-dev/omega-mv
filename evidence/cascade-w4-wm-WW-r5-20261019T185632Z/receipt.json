@@ -1,0 +1,22 @@
+{
+ "name": "cascade-w4-wm-WW-r5",
+ "cmd": "flock -w 3600 /tmp/aien-gb10.lock nice -n 10 env AIEN_Q38_W4=1 AIEN_Q38_W4_HEAD=1 /home/drakestapleton/workspace/targets/cascade-w4b/sc/release/qwen38_omega_full /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a 64 /home/drakestapleton/workspace/cascade-w4b-work/seq/golden-full.json report.json",
+ "exit": 2,
+ "git_head": null,
+ "start": "2026-10-19T13:56:32.451984",
+ "seconds": 1876.668,
+ "samples": 894,
+ "wall_W_mean": 228.1208053691275,
+ "wall_J": 428107.0006097883,
+ "idle_W_before": 240.0,
+ "incremental_J": -22293.3036504656,
+ "gpu_W_mean": 6.709284116331097,
+ "gpu_util_mean": 0.1040268456375839,
+ "load1_start": "46.16",
+ "load1_end": "11.37",
+ "mem_avail_kB_start": "63751400",
+ "mem_avail_kB_end": "11515324",
+ "lock_holders_max": 10,
+ "nvrm_errors_delta": 1,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
