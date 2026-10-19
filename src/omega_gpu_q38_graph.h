@@ -90,6 +90,11 @@ int omega_gpu_q38_graph_set_final_norm(OmegaGpuQ38Graph *g, const float *final_n
  * omega_gpu_q38_graph_read returns the unscaled hidden (exact power-of-two rescale). Logits are those of the quantised head:
  * callers own the drift study against the bf16 head. */
 int omega_gpu_q38_graph_set_lm_head_fp8(OmegaGpuQ38Graph *g, const OmegaGpuFp8Tensor *head);
+/* Gather fold (rx_symbolic.h, rule gather-fold): attention layer `layer`'s mix tensor (set_layer) is already in the
+ * gathered row order (row n = original row omega_q38_gather_table()[n], its scale rows remapped block for block), so the
+ * GATHER launch is dropped and attention and GATE read the mix buffer directly. Off by default; only valid when
+ * rx_sym_gather_fold_check accepted the tensor's scales. Values are bit-identical iff the FP8 GEMV is row independent. */
+int omega_gpu_q38_graph_set_gather_folded(OmegaGpuQ38Graph *g, uint32_t layer, int on);
 /* GDN layers record the a|b GEMV first and the mix GEMV beside it (no barrier between the two; both only read xq), process-wide.
  * 1 (default) or 0 (mix then a|b, each behind a barrier); env AIEN_OMEGA_Q38_OVERLAP_AB when never set. Values are identical. */
 void omega_gpu_q38_graph_set_overlap_ab(int on);

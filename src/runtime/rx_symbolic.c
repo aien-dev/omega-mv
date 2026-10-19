@@ -789,11 +789,15 @@ int rx_sym_barriers(const RxSymLaunchList *ll, RxSymPass *pass, RxSymBarrierRepo
      * source of launch i (the optimizer keeps exactly the data edges). */
     for (uint32_t i = 1; i < ll->n; i++) {
         if (ll->l[i].marked_independent) continue;
+        /* needed: launch i reads or writes what i-1 touches; or i-1 itself runs beside i-2 (marked
+         * independent) and i has a hazard with i-2, which the barrier before i-1 no longer covers */
         int needed = 0;
         for (uint32_t e = 0; e < g.n_data; e++) {
             /* nodes were compacted; origins survive */
             const AgNode *f = &g.nodes[g.data[e].from], *t = &g.nodes[g.data[e].to];
-            if (t->origin == (uint32_t)node[i] && f->origin == (uint32_t)node[i - 1]) needed = 1;
+            if (t->origin != (uint32_t)node[i]) continue;
+            if (f->origin == (uint32_t)node[i - 1]) needed = 1;
+            if (i >= 2 && ll->l[i - 1].marked_independent && f->origin == (uint32_t)node[i - 2]) needed = 1;
         }
         if (needed) out->barriers_needed++;
         else { out->barriers_droppable++; out->droppable_at[out->n_droppable_at++] = i; }

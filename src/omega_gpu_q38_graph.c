@@ -44,7 +44,7 @@ struct OmegaGpuQ38Graph {
     OmegaGpuMem buf, dbuf;               /* the host-visible regions; the chip-only regions (see Layout) */
     Kern k[K_COUNT];
     OmegaGpuCmdList *cl;
-    struct { const OmegaGpuFp8Tensor *mix, *o, *gu, *dn; const OmegaGpuBf16Tensor *ab; uint32_t kind_index; int attn, set; } layer[OMEGA_GPU_Q38_MAX_LAYERS];
+    struct { const OmegaGpuFp8Tensor *mix, *o, *gu, *dn; const OmegaGpuBf16Tensor *ab; uint32_t kind_index; int attn, set, gather_folded; } layer[OMEGA_GPU_Q38_MAX_LAYERS];
     int final_set;
     const OmegaGpuFp8Tensor *head8;      /* set_lm_head_fp8: FP8 lm_head (hidden is then written x 2^64, read() undoes it) */
     /* token state */
@@ -233,6 +233,12 @@ int omega_gpu_q38_graph_set_lm_head_fp8(OmegaGpuQ38Graph *g, const OmegaGpuFp8Te
     return rc;
 }
 
+int omega_gpu_q38_graph_set_gather_folded(OmegaGpuQ38Graph *g, uint32_t layer, int on) {
+    if (!g || layer >= g->cfg.layers || !g->layer[layer].attn || g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    g->layer[layer].gather_folded = on ? 1 : 0;
+    return OMEGA_GPU_DGRAPH_OK;
+}
+
 void omega_gpu_q38_graph_set_flush_each(OmegaGpuQ38Graph *g, int on) { if (g) g->flush_each = on ? 1 : 0; }
 void omega_gpu_q38_graph_test_set_mutant(OmegaGpuQ38Graph *g, int mutant) { if (g) g->mutant = mutant; }
 
@@ -325,7 +331,8 @@ int omega_gpu_q38_graph_record_layer(OmegaGpuQ38Graph *g, uint32_t l, uint32_t p
     if (g->failed) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
     if (l >= g->cfg.layers || !g->layer[l].set || g->hidden_ready || (l + 1 == g->cfg.layers && !g->final_set))
         return fail(g, "q38 graph: layer not set, out of order, or final norm missing", OMEGA_GPU_DGRAPH_BAD_ARGS);
-    const uint64_t x = va_of(g, g->lo.x), xq = va_of(g, g->lo.xq), mix = va_of(g, g->lo.mix), agg = va_of(g, g->lo.agg);
+    const uint64_t x = va_of(g, g->lo.x), xq = va_of(g, g->lo.xq), mix = va_of(g, g->lo.mix);
+    uint64_t agg = va_of(g, g->lo.agg);
     const uint64_t att = va_of(g, g->lo.att), o = va_of(g, g->lo.o), gu = va_of(g, g->lo.gu), act = va_of(g, g->lo.act);
     const uint64_t in_norm = va_of(g, g->lo.norms) + (uint64_t)l * 2 * H * 4u, post_norm = in_norm + H * 4u, tab = va_of(g, g->lo.tabs) + (uint64_t)l * 64u;
     const uint32_t ki = g->layer[l].kind_index;
@@ -351,7 +358,10 @@ int omega_gpu_q38_graph_record_layer(OmegaGpuQ38Graph *g, uint32_t l, uint32_t p
     } else {
         uint32_t w[OMEGA_DEC_GA_WORDS]; memset(w, 0, sizeof w);
         put64(w, OMEGA_DEC_GA_IN, mix); put64(w, OMEGA_DEC_GA_TAB, va_of(g, g->lo.gtab)); put64(w, OMEGA_DEC_GA_OUT, agg);
-        if (rc == OMEGA_GPU_DGRAPH_OK)
+        /* set_gather_folded (rx_symbolic gather fold): the mix tensor already holds the gathered row order, so the mix
+         * GEMV writes agg's layout into mix and there is no GATHER launch; attention and GATE read mix as agg. */
+        if (g->layer[l].gather_folded) agg = mix;
+        else if (rc == OMEGA_GPU_DGRAPH_OK)
             rc = add_glue(g, OMEGA_GPU_Q38_K_GATHER, g->mutant == 2 ? K_GATHER_M1 : K_GATHER, (OMEGA_GPU_Q38_ATT_MIX + OMEGA_DEC_THREADS - 1) / OMEGA_DEC_THREADS, 1,
                           OMEGA_GPU_Q38_ATT_MIX, w, OMEGA_DEC_GA_WORDS);
         if (rc == OMEGA_GPU_DGRAPH_OK)

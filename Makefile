@@ -2672,5 +2672,14 @@ $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omeg
 GPU_Q38_GRAPH_TEST = $(OUT_DIR)/gpu_q38_graph_test
 $(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# OMEGA_SYMBOLIC_REWRITE workload 2: the Qwen3.8-27B decode graph (chip, caller holds the GB10 lock).
+GPU_Q38_SYM_TEST = $(OUT_DIR)/gpu_q38_symbolic_test
+GPU_Q38_SYM_SRCS = tests/gpu_q38_symbolic_test.c src/runtime/rx_symbolic.c \
+	src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c src/runtime/rx_native_bind.c \
+	src/runtime/rx_aegis.c src/omega_evidence.c src/omega_canonical.c
+$(GPU_Q38_SYM_TEST): $(GPU_Q38_SYM_SRCS) tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h src/runtime/rx_symbolic.h \
+	$(RX_GRAPH_OBJ) $(OUT_DIR)/libomega_gpu.a $(AIENOS_CAP_LIB)
+	$(CC) $(CFLAGS) -ffp-contract=off -pthread -o $@ $(GPU_Q38_SYM_SRCS) $(RX_GRAPH_OBJ) $(OUT_DIR)/libomega_gpu.a $(AIENOS_CAP_LIB) -lm
 test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
 	./$(GPU_Q38_GRAPH_TEST) --host-only
