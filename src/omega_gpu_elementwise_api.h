@@ -90,7 +90,10 @@ typedef enum {
     OMEGA_GPU_EW_RC_REFUSE_BAR_IN_REGION,  /* BAR.SYNC inside an open region */
     OMEGA_GPU_EW_RC_REFUSE_SHFL_IN_REGION, /* SHFL inside an open region */
     OMEGA_GPU_EW_RC_REFUSE_UNCLOSED,       /* region begun, never joined */
-    OMEGA_GPU_EW_RC_REFUSE_JOIN_ONLY       /* BSYNC with no BSSY */
+    OMEGA_GPU_EW_RC_REFUSE_JOIN_ONLY       /* BSYNC with no BSSY */,
+    /* DFlash 2 drafter (cascade/dflash-drafter, 2026-10-19): the two-tap grouped dynamic causal
+     * conv, omega_gpu_dynconv2_f32 below */
+    OMEGA_GPU_EW_DYNCONV2
 } OmegaGpuEwOp;
 
 /* Shape rules (checked, refused with BAD_ARGS / TOO_LARGE):
@@ -131,6 +134,18 @@ int omega_gpu_rope_f32(uint32_t heads, uint32_t head_dim, const float *v,
 /* out[i] = silu(gate[i]) * up[i] for i < n. */
 int omega_gpu_swiglu_f32(uint32_t n, const float *gate, const float *up, float *out,
                          OmegaGpuEwInfo *info);
+
+/* DFlash 2 grouped dynamic causal conv, two taps (docs/qwen38/DFLASH2.md in aien-sovereign-core):
+ *   out[p][c] = (((0 + base[0][c]*v[p][c]) + dynk[p][0][c/16]*v[p][c]) + base[1][c]*v[p-1][c])
+ *               + dynk[p][1][c/16]*v[p-1][c],   v[-1] = 0,
+ * every product rounded to f32 before its add (FMUL then FADD, no FFMA), so the chip result is
+ * bit-identical to the same f32 order on the host. v is [rows][hidden], dynk [rows][2][hidden/16],
+ * base [2][hidden], out [rows][hidden] (may not alias v). Shape rules: group == 16,
+ * hidden % 128 == 0, hidden <= OMEGA_GPU_EW_MAX_DIM, 1 <= rows <= OMEGA_GPU_EW_MAX_CTAS.
+ * One CTA of 128 threads per (128 channels, row). Mutant (test_set_mutant(OMEGA_GPU_EW_DYNCONV2)):
+ * the two base taps swapped. */
+int omega_gpu_dynconv2_f32(uint32_t rows, uint32_t hidden, uint32_t group, const float *v,
+                           const float *dynk, const float *base, float *out, OmegaGpuEwInfo *info);
 
 /* Probes. ex2: out[i] = 2^x[i]. xchg: out[i] = x[i ^ (OMEGA_GPU_EW_THREADS-1)] within each CTA. */
 int omega_gpu_ex2_f32(uint32_t n, const float *x, float *out, OmegaGpuEwInfo *info);

@@ -2424,6 +2424,15 @@ $(GPU_EW_TEST): tests/gpu_elementwise_test.c src/omega_gpu_elementwise_api.h $(O
 test-gpu-elementwise: $(GPU_EW_TEST)
 	./$(GPU_EW_TEST) --host-only
 
+# cascade/dflash-drafter: the DFlash 2 dynamic conv (omega_gpu_dynconv2_f32). Host-only refusals and
+# codegen here; the chip gate is `./build/gpu_dynconv_test --out receipt.json` under the GPU lock.
+.PHONY: test-gpu-dynconv
+GPU_DYNCONV_TEST = $(OUT_DIR)/gpu_dynconv_test
+$(GPU_DYNCONV_TEST): tests/gpu_dynconv_test.c src/omega_gpu_elementwise_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_dynconv_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-dynconv: $(GPU_DYNCONV_TEST)
+	./$(GPU_DYNCONV_TEST) --host-only
+
 # omega-mv#545: every opcode the encoder accepts carries the emitter's control word (stall, scoreboards, wait mask)
 # into instruction word 3. Host only; the golden-word checks compare words 0..2, so this is the check for word 3.
 .PHONY: test-bw-encode-control

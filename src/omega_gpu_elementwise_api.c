@@ -347,6 +347,46 @@ static void gen_swiglu(Em *e, int mutant) {
     tail(e);
 }
 
+static void shr_i(Em *e, int d, int a, uint32_t n);
+/* DFlash 2 dynamic conv (cascade/dflash-drafter). Grid (hidden/128, rows), 128 threads.
+ * a = v with one zero row in front ([rows+1][hidden]: padded row p is v[p-1], row p+1 is v[p]),
+ * b = base [2][hidden] then dynk [rows][2][groups], c = out [rows][hidden].
+ * P0 = hidden, P1 = groups. Channel c = ctaid.x*128 + tid, row p = ctaid.y, group = c >> 4.
+ * Mutant: base tap 0 and tap 1 swapped. */
+static void gen_dynconv2(Em *e, int mutant) {
+    Pro p = prologue(e);
+    int hid = V(e), grp = V(e), row = V(e), ch = V(e), rowoff = V(e), iout = V(e), iv0 = V(e), ib1 = V(e);
+    int g = V(e), twog = V(e), hid2 = V(e), dkb = V(e), id0 = V(e), id1 = V(e), off = V64(e);
+    int v0 = V(e), v1 = V(e), b0 = V(e), b1 = V(e), d0 = V(e), d1 = V(e), t = V(e), o = V(e);
+    ldc32(e, hid, ARG_P0); ldc32(e, grp, ARG_P1);
+    s2r(e, row, BW_SR_CTAID_Y);
+    imadi(e, ch, p.cta, OMEGA_GPU_EW_THREADS, p.tid);
+    imadr(e, rowoff, row, hid, NOREG);
+    iadd3(e, iout, rowoff, ch);
+    iadd3(e, iv0, iout, hid);
+    iadd3(e, ib1, ch, hid);
+    shr_i(e, g, ch, 4);
+    iadd3(e, twog, grp, grp);
+    iadd3(e, hid2, hid, hid);
+    imadr(e, dkb, row, twog, hid2);
+    iadd3(e, id0, dkb, g);
+    iadd3(e, id1, id0, grp);
+    addr4(e, off, iout, p.pa); ldg(e, v1, off, p.udesc);
+    addr4(e, off, iv0, p.pa); ldg(e, v0, off, p.udesc);
+    addr4(e, off, mutant ? ib1 : ch, p.pb); ldg(e, b0, off, p.udesc);
+    addr4(e, off, mutant ? ch : ib1, p.pb); ldg(e, b1, off, p.udesc);
+    addr4(e, off, id0, p.pb); ldg(e, d0, off, p.udesc);
+    addr4(e, off, id1, p.pb); ldg(e, d1, off, p.udesc);
+    movrz(e, o);
+    fmul(e, t, b0, v0); fadd(e, o, o, t);
+    fmul(e, t, d0, v0); fadd(e, o, o, t);
+    fmul(e, t, b1, v1); fadd(e, o, o, t);
+    fmul(e, t, d1, v1); fadd(e, o, o, t);
+    addr4(e, off, iout, p.pc);
+    stg(e, off, o, p.udesc);
+    tail(e);
+}
+
 /* ------------------------------------------- prime race sieve (2026-10-05) */
 static void lop3lut(Em *e, int d, int a, int b, int c, uint32_t lut) { BlackwellIRInsn i = I0(BW_IR_LOP3_LUT); i.dst_vreg = d; i.src1_vreg = a; i.src2_vreg = b; i.src3_vreg = c; i.imm = lut & 0xffu; emit(e, i, K_FIXED); }
 static void shl_r(Em *e, int d, int a, int n) { BlackwellIRInsn i = I0(BW_IR_SHF_L_U32); i.dst_vreg = d; i.src1_vreg = a; i.src2_vreg = n; emit(e, i, K_FIXED); }
@@ -813,6 +853,7 @@ static int build_kernel(OmegaGpuEwOp op, int mutant, OmegaBlackwellKernel *kerne
     case OMEGA_GPU_EW_RMSNORM: gen_rmsnorm(&e, math); break;
     case OMEGA_GPU_EW_ROPE: gen_rope(&e, math); break;
     case OMEGA_GPU_EW_SWIGLU: gen_swiglu(&e, math); break;
+    case OMEGA_GPU_EW_DYNCONV2: gen_dynconv2(&e, math); break;
     case OMEGA_GPU_EW_PRIME_SIEVE: gen_prime_sieve(&e, math, 0, 0); break;
     case OMEGA_GPU_EW_PRIME_SIEVE_SHARED: gen_prime_sieve(&e, math, 1, 0); break;
     case OMEGA_GPU_EW_PRIME_SIEVE_DIV1: gen_prime_sieve(&e, math, 0, 1); break;
@@ -972,9 +1013,9 @@ static int dev_open_locked(void) {
  * the shared session (omega_gpu_session_launch: shader-cache invalidate, constant bank,
  * QMD0/QMD1, first marker, L2_FLUSH_DIRTY, second marker), then readback and the
  * poison scan. b may be NULL when b_fill wrote the staging buffer already. */
-static int run_abc(const Slot *ks, const void *a, size_t a_bytes, const void *b, size_t b_bytes,
-                   void *c, size_t c_bytes, uint32_t threads_x, uint32_t grid_x,
-                   const uint32_t params[4], OmegaGpuEwInfo *info) {
+static int run_abc_y(const Slot *ks, const void *a, size_t a_bytes, const void *b, size_t b_bytes,
+                     void *c, size_t c_bytes, uint32_t threads_x, uint32_t grid_x, uint32_t grid_y,
+                     const uint32_t params[4], OmegaGpuEwInfo *info) {
     if (omega_gpu_session_scratch(&g_a, a_bytes) || omega_gpu_session_scratch(&g_b, b_bytes) || omega_gpu_session_scratch(&g_c, c_bytes))
         return OMEGA_GPU_EW_CHIP_FAIL;
     memcpy(g_a.mem.cpu, a, a_bytes);
@@ -991,7 +1032,7 @@ static int run_abc(const Slot *ks, const void *a, size_t a_bytes, const void *b,
     args[6] = params[0]; args[7] = params[1]; args[8] = params[2]; args[9] = params[3];
     OmegaGpuLaunch L = {
         .code_va = ks->code.va, .gpr_count = EW_GPR_BUDGET, .threads_x = threads_x, .threads_y = 1,
-        .grid_x = grid_x, .grid_y = 1, .num_elements = c_words,
+        .grid_x = grid_x, .grid_y = grid_y, .num_elements = c_words,
         .args = args, .n_args = OMEGA_BW_CBANK_MATMUL_ARGS_WORDS, .timeout_ms = EW_WAIT_MS,
     };
     uint64_t elapsed = 0; uint32_t marker = 0;
@@ -1009,6 +1050,11 @@ static int run_abc(const Slot *ks, const void *a, size_t a_bytes, const void *b,
         info->ctas_last_launch = grid_x;
     }
     return unwritten ? OMEGA_GPU_EW_UNWRITTEN : OMEGA_GPU_EW_OK;
+}
+static int run_abc(const Slot *ks, const void *a, size_t a_bytes, const void *b, size_t b_bytes,
+                   void *c, size_t c_bytes, uint32_t threads_x, uint32_t grid_x,
+                   const uint32_t params[4], OmegaGpuEwInfo *info) {
+    return run_abc_y(ks, a, a_bytes, b, b_bytes, c, c_bytes, threads_x, grid_x, 1, params, info);
 }
 
 /* ------------------------------------------------------- public entries */
@@ -1107,6 +1153,31 @@ static int run_1d(OmegaGpuEwOp op, uint32_t n, const void *a, const void *b, voi
 int omega_gpu_swiglu_f32(uint32_t n, const float *gate, const float *up, float *out, OmegaGpuEwInfo *info) {
     if (!gate || !up || !out || n == 0) return OMEGA_GPU_EW_BAD_ARGS;
     return run_1d(OMEGA_GPU_EW_SWIGLU, n, gate, up, out, info);
+}
+int omega_gpu_dynconv2_f32(uint32_t rows, uint32_t hidden, uint32_t group, const float *v,
+                           const float *dynk, const float *base, float *out, OmegaGpuEwInfo *info) {
+    uint64_t t0 = now_ns();
+    if (!v || !dynk || !base || !out || rows == 0 || hidden == 0 || group != 16 || hidden % OMEGA_GPU_EW_THREADS != 0)
+        return OMEGA_GPU_EW_BAD_ARGS;
+    if (hidden > OMEGA_GPU_EW_MAX_DIM || rows > OMEGA_GPU_EW_MAX_CTAS) return OMEGA_GPU_EW_TOO_LARGE;
+    uint32_t groups = hidden / group;
+    size_t a_words = (size_t)(rows + 1) * hidden, b_words = (size_t)2 * hidden + (size_t)rows * 2 * groups;
+    float *a = calloc(a_words, sizeof *a), *b = malloc(b_words * sizeof *b);
+    if (!a || !b) { free(a); free(b); return OMEGA_GPU_EW_CHIP_FAIL; }
+    memcpy(a + hidden, v, (size_t)rows * hidden * sizeof *a);
+    memcpy(b, base, (size_t)2 * hidden * sizeof *b);
+    memcpy(b + (size_t)2 * hidden, dynk, (size_t)rows * 2 * groups * sizeof *b);
+    Slot *k = NULL;
+    int rc = begin(OMEGA_GPU_EW_DYNCONV2, &k, info);
+    if (rc == OMEGA_GPU_EW_OK) {
+        uint32_t params[4] = { hidden, groups, 0, 0 };
+        rc = run_abc_y(k, a, a_words * 4, b, b_words * 4, out, (size_t)rows * hidden * 4, OMEGA_GPU_EW_THREADS,
+                       hidden / OMEGA_GPU_EW_THREADS, rows, params, info);
+        UNLOCK();
+    }
+    free(a); free(b);
+    info_end(info, t0);
+    return rc;
 }
 int omega_gpu_ex2_f32(uint32_t n, const float *x, float *out, OmegaGpuEwInfo *info) {
     if (!x || !out || n == 0) return OMEGA_GPU_EW_BAD_ARGS;
