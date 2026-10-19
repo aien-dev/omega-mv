@@ -7,13 +7,13 @@
 MUFU_FTZ_SIMS := bw_warp_sim bw_warp_sim_k bw_warp_sim_pa bw_warp_sim_tc
 MUFU_FTZ_CFLAGS := -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -Isrc -Itests
 .PHONY: test-mufu-ftz
-build/test_mufu_ftz_helper: tests/bw_mufu_ftz_test.c tests/bw_mufu_ftz.h
-	@mkdir -p build
+$(OUT_DIR)/test_mufu_ftz_helper: tests/bw_mufu_ftz_test.c tests/bw_mufu_ftz.h
+	@mkdir -p $(OUT_DIR)
 	gcc $(MUFU_FTZ_CFLAGS) -o $@ tests/bw_mufu_ftz_test.c -lm
-build/test_mufu_ftz_%: tests/bw_mufu_ftz_test.c tests/bw_mufu_ftz.h tests/%.h tests/bw_hmma_model.h src/omega_blackwell_codegen.h
-	@mkdir -p build
+$(OUT_DIR)/test_mufu_ftz_%: tests/bw_mufu_ftz_test.c tests/bw_mufu_ftz.h tests/%.h tests/bw_hmma_model.h tests/bw_qmma_model.h src/omega_blackwell_codegen.h
+	@mkdir -p $(OUT_DIR)
 	gcc $(MUFU_FTZ_CFLAGS) -DWS_SIM_HDR='"$*.h"' -o $@ tests/bw_mufu_ftz_test.c -lm
-test-mufu-ftz: build/test_mufu_ftz_helper $(addprefix build/test_mufu_ftz_,$(MUFU_FTZ_SIMS))
-	./build/test_mufu_ftz_helper
-	@for s in $(MUFU_FTZ_SIMS); do ./build/test_mufu_ftz_$$s || exit 1; done
+test-mufu-ftz: $(OUT_DIR)/test_mufu_ftz_helper $(addprefix $(OUT_DIR)/test_mufu_ftz_,$(MUFU_FTZ_SIMS))
+	./$(OUT_DIR)/test_mufu_ftz_helper
+	@for s in $(MUFU_FTZ_SIMS); do ./$(OUT_DIR)/test_mufu_ftz_$$s || exit 1; done
 	@echo "test-mufu-ftz: PASS (helper + $(words $(MUFU_FTZ_SIMS)) simulators)"

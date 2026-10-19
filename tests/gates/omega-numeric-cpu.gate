@@ -19,6 +19,7 @@ inputs:
   - tests/bw_warp_sim_pa.h
   - tests/bw_warp_sim_tc.h
   - tests/bw_hmma_model.h
+  - tests/bw_qmma_model.h
   - tools/
   - tests/gates/
 run:
