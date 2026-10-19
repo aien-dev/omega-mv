@@ -1,0 +1,18 @@
+dev run 2 requested 2026-10-19T20:02:01Z load 9.03 14.62 15.21 7/2381 240867 quiet_flags 4 commit c47be3b8f401606c96e8e93d6a7fb5a5f843d683
+quiet lock granted 2026-10-19T20:15:45Z load 50.41 48.12 32.83 60/2537 765450
+  FAIL tests/runtime/rx_plan_payback.c:1216 P0 dev sign negative (net 1141952 ns)
+[*] placed on 10 Cortex-X925 cores
+[*] stream S1_reverse: 12 tasks, seeds 200.., cache fresh
+    restart before task 6: 1 records serialised, 1 reloaded, 0 refused
+[*] stream S1_merge_P+: 12 tasks, seeds 200.., cache fresh
+[*] stream dev_P0_no_payoff: 6 tasks, seeds 250.., cache fresh
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 3 refused, 0 stored
+checks 290 failures 1 bad_rows 1
+dev: S1_reverse p 1.000 Delta -6863 ns [-624734, 892496] C 76608 ns; S1_merge p 1.000 Delta 119409 ns [80722, 1343950] C 99376 ns; P0 m 113456 ns [-801657, 124225]
+dev: net S1_reverse -2385745 ns, S1_merge 10959473 ns (P+ sign positive), P0 1141952 ns (sign POSITIVE); reconciliation OK; stale refused/rederived/revalidated; corrupt 3/3 refused
+receipt: build/payback-dev2/dev-receipt.json
+rc=1
+done 2026-10-19T20:15:46Z load 50.41 48.12 32.83 59/2518 766240
+ALLDONE

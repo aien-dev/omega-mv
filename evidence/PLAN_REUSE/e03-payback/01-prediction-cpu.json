@@ -1,0 +1,85 @@
+{
+  "schema": "OMEGA_PLAN_REUSE_PAYBACK_V1",
+  "mode": "dev",
+  "mutant": "",
+  "arm_B_variant": "existing reuse with adaptation/repair (frozen protocol)",
+  "run_commit": "c47be3b8f401606c96e8e93d6a7fb5a5f843d683",
+  "tree_dirty": true,
+  "test_binary_sha256": "4849084542cac03cb7c34765ba7c7c515b92b885338fb6969640abc426ac16e4",
+  "host": {"sysname": "Linux", "release": "7.0.0-1019-nvidia", "machine": "aarch64", "core_class_midr_part": "0xd85", "loadavg_start": "50.41 48.12 32.83 63/2536 765461", "loadavg_end": "50.41 48.12 32.83 62/2546 765988"},
+  "checks": 286,
+  "failures": 0,
+  "bad_rows": 0,
+  "units": "nanoseconds; cognition phases are thread CPU time, execution phases and e2e are wall time",
+  "arms": "A no reuse (e2e minus the identity hash it would not compute); B existing rx_plan reuse with adaptation (e2e plus restart costs). Arm C (#584 learning arm): not available at run time, two arms only.",
+  "joules": {"measured": false, "why": "no on-device package counter on this kernel (aien_spbm hwmon absent); UPS wall meter (upsc, 10 W x 2 s steps) cannot resolve a sub-millijoule per-task delta on a loaded box"},
+  "scope": "host processor; arrangement domain (blocks-world lifted onto World objects); explicit A* planner; no general-agent claim",
+  "partition": "development: seeds 200..211, H_dev 12 per shape; P0 dev 6 tasks",
+  "ledger": {
+      "arm_A": {"rows": 30, "e2e_wall_ns": 128330563, "cognition_cpu_ns": 3100240, "identity_hash_on_copy_ns": 2208880, "goal_read_cpu": 59952, "lookup_cpu": 0, "applicability_cpu": 0, "search_cpu": 681520, "generalize_cpu": 120224, "identify_cpu": 0, "store_cpu": 0, "decision_cpu": 0, "index_cpu": 0, "compile_wall": 93954790, "reference_wall": 0, "run_wall": 26495191, "verify_wall": 4562699, "repair_cpu": 0, "serialize_cpu": 0, "reload_cpu": 0},
+      "arm_B": {"rows": 30, "e2e_wall_ns": 116216179, "cognition_cpu_ns": 770064, "identity_hash_on_copy_ns": 541408, "goal_read_cpu": 51488, "lookup_cpu": 7680, "applicability_cpu": 44144, "search_cpu": 72224, "generalize_cpu": 23024, "identify_cpu": 535536, "store_cpu": 21872, "decision_cpu": 70192, "index_cpu": 79552, "compile_wall": 87675708, "reference_wall": 99569, "run_wall": 22683422, "verify_wall": 4588890, "repair_cpu": 1680, "serialize_cpu": 107776, "reload_cpu": 82048}
+  },
+  "reconciliation": {"ok": true, "bad_rows": 0, "unattributed_wall_ns": 508505, "rows": 60},
+  "streams": {
+    "dev_S1_reverse": {
+      "H": 12, "hits": 11, "misses": 1, "acquisitions": 1, "rederivations": 0, "adaptations": 0, "refusals": 0, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 1, "floors_ok": true,
+      "cost_A_total_ns": 44104877, "cost_B_total_ns": 46490622, "net_final_ns": -2385745, "break_even_tasks": -1,
+      "robust": {"task_net_median_ns": -6863, "task_net_q1_ns": -624734, "task_net_q3_ns": 892496, "net_robust_ns": -3078321, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "cognition_cpu": {"cpu_A_total_ns": 142688, "cpu_B_total_ns": 384256, "net_cpu_ns": -241568, "break_even_tasks_cpu": -1, "delta_cpu_per_hit_ns": {"median": 960, "q1": -824, "q3": 3024}, "task_cpu_net_ns": {"median": 960, "q1": -824, "q3": 3024}, "note": "thread CPU of every cognition phase (goal read, lookup, applicability, search, generalize without the hash, identify, store, decision, index, repair, serialize, reload); execution phases excluded as identical work in both arms (floors F2, F3)", "net_cpu_cumulative_ns": [-62976, -64624, -69168, -63904, -61024, -60064, -252432, -249264, -248976, -248976, -247312, -241568]},
+      "reinvestment_ledger_ns": {"saved_gross": 617083, "spent_learning": 266656, "spent_acquisition": 73856, "spent_maintenance": 2976, "spent_repair": 0, "spent_restart": 189824, "reinvested": 189824, "unfunded": 76832, "net": 350427},
+      "estimates": {"p_hat": 1.0000, "p_wilson95": [0.7412, 1.0000], "r_hat": 1.0000, "delta_ns": {"median": -6863, "q1": -624734, "q3": 892496}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 208, "lookup_cpu_ns_last": 240, "applicability_cpu_ns_first": 224, "applicability_cpu_ns_last": 1728},
+      "net_cumulative_ns": [-3002828, -3917748, -1469005, -595508, -602371, -587027, -2735765, -1824269, -4827561, -4964905, -2051198, -2385745]
+    },
+    "dev_S1_merge": {
+      "H": 12, "hits": 11, "misses": 1, "acquisitions": 1, "rederivations": 0, "adaptations": 0, "refusals": 0, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 0, "floors_ok": true,
+      "cost_A_total_ns": 60815678, "cost_B_total_ns": 49856205, "net_final_ns": 10959473, "break_even_tasks": 2,
+      "robust": {"task_net_median_ns": 119409, "task_net_q1_ns": 80722, "task_net_q3_ns": 1343950, "net_robust_ns": 1291659, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "cognition_cpu": {"cpu_A_total_ns": 663856, "cpu_B_total_ns": 243088, "net_cpu_ns": 420768, "break_even_tasks_cpu": 3, "delta_cpu_per_hit_ns": {"median": 46800, "q1": 42520, "q3": 49608}, "task_cpu_net_ns": {"median": 46800, "q1": 42520, "q3": 49608}, "note": "thread CPU of every cognition phase (goal read, lookup, applicability, search, generalize without the hash, identify, store, decision, index, repair, serialize, reload); execution phases excluded as identical work in both arms (floors F2, F3)", "net_cpu_cumulative_ns": [-85392, -33040, 14352, 64608, 111408, 154848, 198624, 240224, 278864, 331088, 371808, 420768]},
+      "reinvestment_ledger_ns": {"saved_gross": 10981313, "spent_learning": 99600, "spent_acquisition": 97072, "spent_maintenance": 2528, "spent_repair": 0, "spent_restart": 0, "reinvested": 0, "unfunded": 99600, "net": 10881713},
+      "estimates": {"p_hat": 1.0000, "p_wilson95": [0.7412, 1.0000], "r_hat": 1.0000, "delta_ns": {"median": 119409, "q1": 80722, "q3": 1343950}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 208, "lookup_cpu_ns_last": 224, "applicability_cpu_ns_first": 224, "applicability_cpu_ns_last": 1856},
+      "net_cumulative_ns": [-21840, 1862322, 1323231, 1411504, 1786484, 1872453, 3095842, 9722289, 11186800, 11262274, 11381683, 10959473]
+    },
+    "dev_P0_no_payoff": {
+      "H": 6, "hits": 0, "misses": 6, "acquisitions": 6, "rederivations": 5, "adaptations": 0, "refusals": 5, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 0, "floors_ok": true,
+      "cost_A_total_ns": 21201128, "cost_B_total_ns": 20059176, "net_final_ns": 1141952, "break_even_tasks": 4,
+      "robust": {"task_net_median_ns": -113456, "task_net_q1_ns": -124225, "task_net_q3_ns": 801657, "net_robust_ns": -885715, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "cognition_cpu": {"cpu_A_total_ns": 55152, "cpu_B_total_ns": 469872, "net_cpu_ns": -414720, "break_even_tasks_cpu": -1, "delta_cpu_per_hit_ns": {"median": 0, "q1": 0, "q3": 0}, "task_cpu_net_ns": {"median": -68352, "q1": -68512, "q3": -68064}, "note": "thread CPU of every cognition phase (goal read, lookup, applicability, search, generalize without the hash, identify, store, decision, index, repair, serialize, reload); execution phases excluded as identical work in both arms (floors F2, F3)", "net_cpu_cumulative_ns": [-73312, -141664, -209728, -285920, -346208, -414720]},
+      "reinvestment_ledger_ns": {"saved_gross": 0, "spent_learning": 423168, "spent_acquisition": 405056, "spent_maintenance": 18112, "spent_repair": 0, "spent_restart": 0, "reinvested": 0, "unfunded": 423168, "net": -423168},
+      "estimates": {"p_hat": 0.0000, "p_wilson95": [-0.0000, 0.4345], "r_hat": 1.0000, "delta_ns": {"median": 0, "q1": 0, "q3": 0}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 336, "applicability_cpu_ns_first": 176, "applicability_cpu_ns_last": 752},
+      "net_cumulative_ns": [-318435, -1394379, -1518604, 453751, 1255408, 1141952]
+    }
+  },
+  "controls": {"stale_refused": true, "stale_rederived": true, "stale_revalidated": true, "corrupt_cases": 3, "corrupt_refused": 3, "corrupt_stored": 0, "corrupt_why": ["decode", "canonical bytes differ from the carried body", "canonical bytes differ from the carried body"],
+    "sign_P+_dev": "positive", "sign_P0_dev": "positive"},
+  "prediction_rule": "#262: p, r, Delta, C, m from the development partition only; held-out H=40; net in ns over H-1 opportunities after one acquisition task (S1), or H opportunities with no acquisition (S2, sunk in dev)",
+  "prediction": {
+    "S1_reverse": {"p": 1.0000, "p_band": [0.7412, 1.0000], "Delta_ns": -6863, "Delta_band_ns": [-624734, 892496], "r": 1.0000, "C_ns": 76608, "m_ns": 0, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": -344265, "net_direct_sum_ns": -344265, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [-18134679, 34730756], "break_even_tasks": -1, "no_finite_payoff": true},
+    "S1_merge_P+": {"p": 1.0000, "p_band": [0.7412, 1.0000], "Delta_ns": 119409, "Delta_band_ns": [80722, 1343950], "r": 1.0000, "C_ns": 99376, "m_ns": 0, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": 4557575, "net_direct_sum_ns": 4557575, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [2233898, 52314674], "break_even_tasks": 2, "no_finite_payoff": false},
+    "P0_no_payoff": {"p": 0.0000, "p_band": [0.0000, 0.0000], "Delta_ns": 0, "Delta_band_ns": [0, 0], "r": 1.0000, "C_ns": 72624, "m_ns": 113456, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": -4497408, "net_direct_sum_ns": -4497408, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [-4497408, -4497408], "break_even_tasks": -1, "no_finite_payoff": true},
+    "P0_m_band_ns": [-801657, 124225],
+    "cognition_cpu": {
+    "S1_reverse": {"p": 1.0000, "p_band": [0.7412, 1.0000], "Delta_ns": 960, "Delta_band_ns": [-824, 3024], "r": 1.0000, "C_ns": 76608, "m_ns": 0, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": -39168, "net_direct_sum_ns": -39168, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [-100426, 41328], "break_even_tasks": 81, "no_finite_payoff": false},
+    "S1_merge_P+": {"p": 1.0000, "p_band": [0.7412, 1.0000], "Delta_ns": 46800, "Delta_band_ns": [42520, 49608], "r": 1.0000, "C_ns": 99376, "m_ns": 0, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": 1725824, "net_direct_sum_ns": 1725824, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [1129675, 1835336], "break_even_tasks": 4, "no_finite_payoff": false},
+    "P0_no_payoff": {"p": 0.0000, "p_band": [0.0000, 0.0000], "Delta_ns": 0, "Delta_band_ns": [0, 0], "r": 1.0000, "C_ns": 72624, "m_ns": 68352, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": -2738352, "net_direct_sum_ns": -2738352, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [-2738352, -2738352], "break_even_tasks": -1, "no_finite_payoff": true},
+      "P0_m_band_ns": [68064, 68512],
+      "note": "same model on cognition CPU (thread time of the cognition phases); C is the same CPU quantity in both blocks"
+    },
+    "derivation": "expected saving at opportunity k is p*Delta*r^(k-1); sum_{k=1..H} r^(k-1) = (1-r^H)/(1-r) for r<1, H for r=1, 1 for r=0 (0^0=1); no finite positive payoff when C >= p*Delta/(1-r); with maintenance m per opportunity the per-opportunity net is p*Delta-m",
+    "model_check_r_lt_1": {"p": 1, "Delta_ns": 1000000, "r": 0.9, "C_ns": 5000000, "m_ns": 0, "H": 39, "closed_form_ns": 4835767.967317, "direct_sum_ns": 4835767.967317, "no_finite_payoff": false, "sup_net_ns": 5000000.000000}
+  }
+}
