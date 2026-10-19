@@ -470,7 +470,7 @@ int main(int argc, char **argv)
 		readable &= rr;
 		if (q->base_rows < 5) incr_ok = 0;
 		const Row *s0 = row_near(q->t_first), *s1 = row_near(q->t_last);
-		printf("round %d: replies %u tokens %u symbols %u (end symbols %u) busy-retries %llu\n", r, q->replies, q->tokens, q->symbols, q->ends,
+		printf("round %d: replies %u tokens %u symbols %u (end symbols %u) request attempts %llu\n", r, q->replies, q->tokens, q->symbols, q->ends,
 		       (unsigned long long)q->tries);
 		printf("  L(D|uniform) %.3f  L(D|B) %.3f  L(D|B_warm) %.3f  L(D|M) %.3f bits\n", q->lu_bits, q->lb_bits, q->lbw_bits, q->lm_bits);
 		printf("  per symbol: uniform %.4f  B %.4f  B_warm %.4f  M %.4f bits\n", q->lu_bits / q->symbols, q->lb_bits / q->symbols,
