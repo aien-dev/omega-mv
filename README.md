@@ -41,7 +41,10 @@ Needs gcc and make on an AArch64 Linux host: CI runs the host suites on `ubuntu-
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-compiler-quick   # compiler, quick suite
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-numeric-cpu      # E1 CPU numerics
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-realize
+make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-memfrag          # host memory fragmentation tools
 ```
+
+`tools/memfrag_sample.sh` and `tools/memfrag_scan.c` measure what keeps the Spark from offering free 2 MiB blocks (read-only, root for `/proc/kpageflags`); findings and the proposed physics fix are in [host-memory-fragmentation-528](docs/host-memory-fragmentation-528.md).
 
 The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. CI definitions in `.github/workflows/` list the suites that run on every push.
 
