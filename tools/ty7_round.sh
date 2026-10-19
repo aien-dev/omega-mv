@@ -6,8 +6,9 @@
 # the hive GPU lock (/tmp/aien-gb10.lock, which the server takes itself for
 # each generation) is free at that instant, so the interval holds our
 # generation and not a wait behind another chip job (amendment 1). Refusals
-# (server_busy, HTTP 503 "GPU busy") are retried after 0.05 s and are not
-# inside any interval.
+# (HTTP 503: server_busy or "GPU busy") are retried after 0.05 s and are not
+# inside any interval. Any other non-200 reply is logged and the round is
+# refused by the reducer (no endless retry).
 set -u
 OUT=$1; PROMPTS=$2; R=$3; URL=$4
 LOCK=${TY7_GPU_LOCK:-/tmp/aien-gb10.lock}
@@ -28,7 +29,7 @@ while IFS= read -r line; do
 		t0=$(date +%s%N)
 		code=$(curl -s -m 1200 -o "$f" -w '%{http_code}' -H 'Content-Type: application/json' -d "$body" "$URL/v1/chat/completions")
 		t1=$(date +%s%N)
-		[ "$code" = 200 ] && break
+		[ "$code" = 503 ] || break
 		sleep 0.05
 	done
 	echo "$R $i $t0 $t1 http=$code tries=$tries lockwaits=$lockwaits" >> "$OUT/intervals.log"
