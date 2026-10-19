@@ -1,0 +1,55 @@
+tv q38qkv: n 10240 k 5120 (weights 52.4 MB), rows 1,2,8,16,32,64, weight cache 1
+tv N 64: emulation check on 2 rows: 0 of 20480 differ (bit-identical)
+tv N 64: rt 4 ct 2 warps 8; 0 of 655360 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 64: rt 2 ct 2 warps 8; ok, 0 of 655360 differ from the reference (same bits); chip median 544.5 us (11), weights 96.3 GB/s
+tv f32 call N 64: ok, 0 of 655360 differ from the device pass; whole call median 1527.0 us (5 calls)
+TVGEMM q38qkv N 64 (median of 11, min 305.7, max 322.0 us): chip 311.9 us; weights 168.1 GB/s; 21.51 TFLOPS
+tv N 1: rt 1 ct 4 warps 4; 0 of 10240 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 1: rt 1 ct 4 warps 4; ok, 0 of 10240 differ from the reference (same bits); chip median 292.2 us (11), weights 179.4 GB/s
+tv f32 call N 1: ok, 0 of 10240 differ from the device pass; whole call median 328.9 us (5 calls)
+TVGEMM q38qkv N 1 (median of 11, min 289.0, max 302.2 us): chip 296.3 us; weights 177.0 GB/s; 0.35 TFLOPS
+tv N 2: rt 1 ct 4 warps 4; 0 of 20480 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 2: rt 1 ct 4 warps 4; ok, 0 of 20480 differ from the reference (same bits); chip median 310.2 us (11), weights 169.0 GB/s
+tv f32 call N 2: ok, 0 of 20480 differ from the device pass; whole call median 341.9 us (5 calls)
+TVGEMM q38qkv N 2 (median of 11, min 294.1, max 459.8 us): chip 304.9 us; weights 171.9 GB/s; 0.69 TFLOPS
+tv N 8: rt 1 ct 4 warps 4; 0 of 81920 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 8: rt 1 ct 4 warps 4; ok, 0 of 81920 differ from the reference (same bits); chip median 301.0 us (11), weights 174.2 GB/s
+tv f32 call N 8: ok, 0 of 81920 differ from the device pass; whole call median 431.8 us (5 calls)
+TVGEMM q38qkv N 8 (median of 11, min 288.0, max 300.8 us): chip 295.8 us; weights 177.3 GB/s; 2.84 TFLOPS
+tv N 16: rt 1 ct 4 warps 4; 0 of 163840 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 16: rt 1 ct 4 warps 4; ok, 0 of 163840 differ from the reference (same bits); chip median 303.2 us (11), weights 172.9 GB/s
+tv f32 call N 16: ok, 0 of 163840 differ from the device pass; whole call median 563.6 us (5 calls)
+TVGEMM q38qkv N 16 (median of 11, min 296.4, max 313.2 us): chip 300.2 us; weights 174.6 GB/s; 5.59 TFLOPS
+tv N 32: rt 2 ct 2 warps 8; 0 of 327680 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 32: rt 2 ct 2 warps 8; ok, 0 of 327680 differ from the reference (same bits); chip median 309.1 us (11), weights 169.6 GB/s
+tv f32 call N 32: ok, 0 of 327680 differ from the device pass; whole call median 823.3 us (5 calls)
+TVGEMM q38qkv N 32 (median of 11, min 298.7, max 314.1 us): chip 306.9 us; weights 170.9 GB/s; 10.94 TFLOPS
+tv mutant 1 (N 64): caught (655360 of 655360 differ)
+tv mutant 2 (N 64): caught (655360 of 655360 differ)
+tv mutant 3 (N 64): caught (655360 of 655360 differ)
+tv mutant 4 (N 64): caught (655360 of 655360 differ)
+tv: PASS
+GPU_TCGEMM: PASS
+{
+ "name": "tvg-tv5-q38qkv",
+ "cmd": "quiet-measure flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-00659ce6 --tv --shape q38qkv --rows 1,2,8,16,32,64 --emu-rows 2 --reps 11 --out /home/drakestapleton/workspace/targets/cascade/runs/tv5-q38qkv.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T13:16:07.228910",
+ "seconds": 760.885,
+ "samples": 358,
+ "wall_W_mean": 258.0446927374302,
+ "wall_J": 196342.24743844412,
+ "idle_W_before": 306.0,
+ "incremental_J": -36488.457501874946,
+ "gpu_W_mean": 8.060698324022347,
+ "gpu_util_mean": 3.025139664804469,
+ "load1_start": "57.72",
+ "load1_end": "43.56",
+ "mem_avail_kB_start": "52909192",
+ "mem_avail_kB_end": "23414452",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 8,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-tv5-q38qkv.json
