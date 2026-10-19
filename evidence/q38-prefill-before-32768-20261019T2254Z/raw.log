@@ -1,0 +1,56 @@
+corpus: 32768 tokens in 0.6 s
+upload: need 29269 MiB, MemAvailable 58872 MiB
+len 32768: TTFT 254.942 s (129 tok/s), first token 8; gemm chip 83.3 s, gdn call 23.4 s, attn call 27.5 s, a|b 9.5 s, host 81.6 s
+{
+  "chunk": 4096,
+  "corpus": "/home/drakestapleton/workspace/pf-tools/data/corpus-arch.txt",
+  "mode": "ttft",
+  "runs": [
+    {
+      "first_token": 8,
+      "stats": {
+        "ab_call_ns": 9537208144,
+        "attn_call_ns": 27548316760,
+        "attn_chip_ns": 23007016864,
+        "chunks": 8,
+        "gdn_call_ns": 23420022584,
+        "gdn_chip_ns": 6636998500,
+        "gemm_call_ns": 83288537785,
+        "gemm_chip_ns": 83261004130,
+        "gemm_launches": 4096,
+        "head_ns": 13096136,
+        "host_ns": 81598296413,
+        "tokens": 32768,
+        "wall_ns": 254941519478
+      },
+      "tokens": 32768,
+      "ttft_s": 254.941519478
+    }
+  ]
+}
+PASS
+{
+ "name": "q38-prefill-before-32768-20261019T2254Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/qwen38_prefill-before-373d122c ttft /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/pf-tools/data/corpus-arch.txt 32768 4096 /home/drakestapleton/workspace/omega-prefill/evidence/q38-prefill-before-32768-20261019T2254Z/ttft.json",
+ "exit": 0,
+ "git_head": "7c205773",
+ "start": "2026-10-19T18:35:28.848474",
+ "seconds": 314.612,
+ "samples": 141,
+ "wall_W_mean": 267.6595745,
+ "wall_J": 84208.91238,
+ "idle_W_before": 284.2857143,
+ "incremental_J": -5230.782997,
+ "gpu_W_mean": 18.83276596,
+ "gpu_util_mean": 32.5106383,
+ "load1_start": "38.96",
+ "load1_end": "62.44",
+ "mem_avail_kB_start": "60290636",
+ "mem_avail_kB_end": "68290676",
+ "lock_holders_max": 6,
+ "nvrm_errors_delta": 2,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": null,
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-q38-prefill-before-32768-20261019T2254Z.json
