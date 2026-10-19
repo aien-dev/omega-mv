@@ -459,14 +459,6 @@ static int solve(Env *e, int arm, Row *r) {
         int grc = pla_generalize(&g_view, &g, &plan, origin, parent, cf[0], &g_tmp, slots);
         r->ph[PH_GENERALIZE] += cpu_ns() - p0;
         if (grc != 0) return -3;
-        /* pla_generalize hashes the identity inside; measure that hash alone
-         * on a copy. Arm A would not compute it: its cost is reported with
-         * this subtracted (ident_copy_cpu). Arm B counts it as acquisition. */
-        g_tmp2 = g_tmp;
-        p0 = cpu_ns();
-        rx_plan_identify(&g_tmp2);
-        r->ident_copy_cpu = cpu_ns() - p0;
-        if (c) r->ph[PH_IDENTIFY] += r->ident_copy_cpu;
         r->path = adapted ? PATH_ADAPT : PATH_FIRST;
         memcpy(r->semantic_id, g_tmp.semantic_id, 32);
         run = &g_tmp;
@@ -512,6 +504,20 @@ static int solve(Env *e, int arm, Row *r) {
     r->goal_ok = goal_holds(e);
     r->e2e_wall = now_ns() - e0;
     if (ex.evidence_present != ex.evidence_required || (ex.fail & PL_FAIL_CRUMBS)) r->success = 0;
+    if (run == &g_tmp) {
+        /* pla_generalize hashes the identity inside (it is in e2e and in the
+         * generalize phase of both arms). Measure that hash alone on a copy,
+         * outside the e2e window. Arm A would not compute it: cost_A subtracts
+         * it. Arm B counts it as acquisition: the generalize phase gives it up
+         * to the identify phase so no phase holds it twice. */
+        g_tmp2 = g_tmp;
+        p0 = cpu_ns();
+        rx_plan_identify(&g_tmp2);
+        r->ident_copy_cpu = cpu_ns() - p0;
+        uint64_t h = r->ident_copy_cpu < r->ph[PH_GENERALIZE] ? r->ident_copy_cpu : r->ph[PH_GENERALIZE];
+        r->ph[PH_GENERALIZE] -= h;
+        if (c) r->ph[PH_IDENTIFY] += h;
+    }
     return 0;
 }
 
@@ -528,15 +534,19 @@ static char g_outdir[512];
 static int snapshot_write(PlCache *c, const char *path, uint64_t *cpu) {
     uint64_t p0 = cpu_ns();
     g_snap.n = c->n;
-    for (uint32_t i = 0; i < c->n; i++) {
-        size_t n = rx_plan_encode(c->t[i], g_snap.t[i].enc, sizeof g_snap.t[i].enc);
-        if (!n) return -1;
-        g_snap.t[i].len = (uint32_t)n;
-        g_snap.t[i].raw = *c->t[i];
-    }
     FILE *f = fopen(path, "wb");
     if (!f) return -1;
-    int ok = fwrite(&g_snap, sizeof g_snap, 1, f) == 1;
+    int ok = fwrite(&g_snap.n, sizeof g_snap.n, 1, f) == 1;
+    for (uint32_t i = 0; i < c->n && ok; i++) {
+        size_t n = rx_plan_encode(c->t[i], g_snap.t[i].enc, sizeof g_snap.t[i].enc);
+        if (!n) { fclose(f); return -1; }
+        g_snap.t[i].len = (uint32_t)n;
+        g_snap.t[i].raw = *c->t[i];
+        /* Only what a record is: its length, canonical bytes and the carried body. */
+        ok = fwrite(&g_snap.t[i].len, sizeof g_snap.t[i].len, 1, f) == 1 &&
+             fwrite(g_snap.t[i].enc, 1, n, f) == n &&
+             fwrite(&g_snap.t[i].raw, sizeof g_snap.t[i].raw, 1, f) == 1;
+    }
     ok &= fclose(f) == 0;
     *cpu += cpu_ns() - p0;
     return ok ? 0 : -1;
@@ -565,7 +575,13 @@ static int snapshot_reload(PlCache *c, const char *path, uint64_t *cpu, uint32_t
     uint64_t p0 = cpu_ns();
     FILE *f = fopen(path, "rb");
     if (!f) return -1;
-    int ok = fread(&g_snap, sizeof g_snap, 1, f) == 1;
+    memset(&g_snap, 0, sizeof g_snap.n);
+    int ok = fread(&g_snap.n, sizeof g_snap.n, 1, f) == 1 && g_snap.n <= PL_MAX_TEMPLATES;
+    for (uint32_t i = 0; i < g_snap.n && ok; i++) {
+        ok = fread(&g_snap.t[i].len, sizeof g_snap.t[i].len, 1, f) == 1 && g_snap.t[i].len <= sizeof g_snap.t[i].enc &&
+             fread(g_snap.t[i].enc, 1, g_snap.t[i].len, f) == g_snap.t[i].len &&
+             fread(&g_snap.t[i].raw, sizeof g_snap.t[i].raw, 1, f) == 1;
+    }
     fclose(f);
     if (!ok) return -1;
     *stored = *refused = 0;
@@ -806,9 +822,14 @@ static int reconcile(const Row *rows, uint32_t n, const Ledger *L, uint64_t *una
     for (uint32_t i = 0; i < n; i++) {
         uint64_t wall = rows[i].ph[PH_COMPILE] + rows[i].ph[PH_REFERENCE] + rows[i].ph[PH_RUN] + rows[i].ph[PH_VERIFY];
         uint64_t cpu = 0;
-        for (int p = 0; p < PH_COUNT; p++) if (p < PH_COMPILE || p > PH_VERIFY) cpu += rows[i].ph[p];
-        if (rows[i].e2e_wall < wall + cpu) (*bad)++;
-        else *unattributed += rows[i].e2e_wall - wall - cpu;
+        /* Serialize and reload happen between tasks, outside any task's e2e
+         * window; cost_B carries them explicitly. Arm A's hash inside
+         * generalize is in e2e but in no phase (cost_A subtracts it). */
+        for (int p = 0; p < PH_COMPILE; p++) cpu += rows[i].ph[p];
+        cpu += rows[i].ph[PH_REPAIR];
+        uint64_t harness_hash = rows[i].arm == ARM_A ? rows[i].ident_copy_cpu : 0;
+        if (rows[i].e2e_wall < wall + cpu + harness_hash) (*bad)++;
+        else *unattributed += rows[i].e2e_wall - wall - cpu - harness_hash;
     }
     return *bad == 0;
 }
