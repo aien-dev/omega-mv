@@ -261,6 +261,23 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
     }
     omega_gpu_q38_graph_set_flush_each(g, 0);
     CHECK(bsame, "flush_each == one list, bit for bit, all %u tokens", TOKENS);
+    /* read_buf: x from the host-visible buffer; gu and act from the GPU-cached one (a chip copy into the staging region first).
+     * act = silu(gu[c]) * gu[I + c] * 2^64 (the last layer's SwiGLU) ties the two copies together. */
+    {
+        static float rx[H], rgu[2 * I], ract[I], rgu100[100];
+        const int r1 = omega_gpu_q38_graph_read_buf(g, OMEGA_GPU_Q38_BUF_X, rx, H), r2 = omega_gpu_q38_graph_read_buf(g, OMEGA_GPU_Q38_BUF_GU, rgu, 2 * I);
+        const int r3 = omega_gpu_q38_graph_read_buf(g, OMEGA_GPU_Q38_BUF_ACT, ract, I), r4 = omega_gpu_q38_graph_read_buf(g, OMEGA_GPU_Q38_BUF_GU, rgu100, 100);
+        CHECK(r1 == 0 && r2 == 0 && r3 == 0 && r4 == 0, "read_buf x, gu, act, gu[0..100): rc %d %d %d %d", r1, r2, r3, r4);
+        CHECK(memcmp(rx, B.x, sizeof rx) == 0, "read_buf x == read x, bit for bit");
+        CHECK(memcmp(rgu100, rgu, sizeof rgu100) == 0, "read_buf of 100 values == the first 100 of the whole row");
+        double worst = 0, amax = 0;
+        for (uint32_t c = 0; c < I; c++) {
+            const double v = rgu[c], want = v / (1.0 + exp(-v)) * (double)rgu[I + c] * 0x1p64;
+            if (fabs(want) > amax) amax = fabs(want);
+            if (fabs(want - ract[c]) > worst) worst = fabs(want - ract[c]);
+        }
+        CHECK(amax > 0 && worst <= 1e-5 * amax, "read_buf act == silu(gu) * up * 2^64 from read_buf gu: worst %.3g of %.3g", worst, amax);
+    }
     /* negative controls: each graph mutant must fail the A comparison on some token */
     const char *mname[5] = { "", "swiglu up half -1", "gather index +1", "gate dropped", "post-norm weight dropped" };
     for (int mu = 1; mu <= 4; mu++) {

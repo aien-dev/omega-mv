@@ -1,0 +1,53 @@
+model: 4 layers (3 GDN, 1 attention, mask 0x8), vocab 248320
+ok: fp8 head: sampled rows max diff 9.04e-07 vs host dequantised (max 6.84)
+ok: fp8 head: sampled rows max diff 8.85e-07 vs host dequantised (max 7.94)
+ok: fp8 head: sampled rows max diff 9.01e-07 vs host dequantised (max 7.98)
+ok: token 0: graph 19649 == baseline 19649
+ok: token 0: logits max diff 6.2e-06 <= 1e-04 * 9.72
+ok: token 0: x max diff 1.79e-06 <= 1e-04 * 2.65
+ok: token 0: 41 launches in 1 submit
+ok: token 1: graph 72160 == baseline 72160
+ok: token 1: logits max diff 5.96e-06 <= 1e-04 * 9.55
+ok: token 1: x max diff 1.53e-06 <= 1e-04 * 2.54
+ok: token 1: 41 launches in 1 submit
+ok: token 2: graph 114197 == baseline 114197
+ok: token 2: logits max diff 3.58e-06 <= 1e-04 * 9.5
+ok: token 2: x max diff 1.07e-06 <= 1e-04 * 2.59
+ok: token 2: 41 launches in 1 submit
+ok: flush_each == one list, bit for bit, all 3 tokens
+ok: read_buf x, gu, act, gu[0..100): rc 0 0 0 0
+ok: read_buf x == read x, bit for bit
+ok: read_buf of 100 values == the first 100 of the whole row
+ok: read_buf act == silu(gu) * up * 2^64 from read_buf gu: worst 8.1e+12 of 1.02e+20
+ok: mutant 1 (swiglu up half -1) caught
+ok: mutant 2 (gather index +1) caught
+ok: mutant 3 (gate dropped) caught
+ok: mutant 4 (post-norm weight dropped) caught
+timing: 10 reps, median chip 12829.6 us, median total 12839.9 us per token (4 layers)
+ok: timeline 0: 41 stamped launches
+ok: timeline 1: 41 stamped launches
+ok: timeline 2: 41 stamped launches
+ok: timeline 3: 41 stamped launches
+ok: timeline 4: 41 stamped launches
+ok: timeline 5: 41 stamped launches
+ok: timeline 6: 41 stamped launches
+ok: timeline 7: 41 stamped launches
+ok: timeline 8: 41 stamped launches
+ok: timeline 9: 41 stamped launches
+ok: timeline 10: 41 stamped launches
+timeline norm       1 launches      11.4 us (min 11.1 max 11.9)
+timeline mix        4 launches    1445.1 us (min 1438.3 max 1622.4)    325058560 weight B  224.9 GB/s
+timeline ab         3 launches       1.2 us (min 1.2 max 12.9)      2949120 weight B 2425.3 GB/s
+timeline gdn        3 launches      84.2 us (min 83.0 max 128.0)
+timeline gather     1 launches       3.9 us (min 3.9 max 4.1)
+timeline attn       1 launches      55.1 us (min 54.6 max 58.8)
+timeline gate       1 launches       2.6 us (min 2.6 max 2.7)
+timeline o_proj     4 launches     665.8 us (min 643.2 max 679.7)    125829120 weight B  189.0 GB/s
+timeline res        8 launches     100.9 us (min 98.6 max 126.0)
+timeline gate_up    4 launches    3074.9 us (min 3057.2 max 3089.8)    713031680 weight B  231.9 GB/s
+timeline swiglu     4 launches      12.6 us (min 12.2 max 13.5)
+timeline down       4 launches    1734.6 us (min 1712.1 max 1820.7)    356515840 weight B  205.5 GB/s
+timeline lm_head    1 launches    5460.0 us (min 5404.3 max 5816.2)   1271398400 weight B  232.9 GB/s
+timeline argmax     2 launches      18.2 us (min 16.5 max 21.3)
+timeline span 12672.7 us (median of 10, min 12596.6 max 12999.2)
+gpu_q38_graph_test: 35 checks, 0 failed: PASS
