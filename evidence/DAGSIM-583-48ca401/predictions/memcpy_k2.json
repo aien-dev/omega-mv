@@ -8,8 +8,8 @@
   "makespan_ns": {"nominal": 55850000, "lo": 53950000, "hi": 58300000, "interval_known": true},
   "bounds_ns": {"critical_path": 55850000, "max": 55850000, "resources": {"cpu": 5585000, "dram_cpu": 3.0581e+07, "unified_mem": 0}, "makespan_ge_bounds": true},
   "ops": [
-    {"id": "copy0", "start_ns": 0, "end_ns": 55850000, "floor_ns": 55850000, "contention_ns": 1.52905e+07, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"},
-    {"id": "copy1", "start_ns": 0, "end_ns": 55850000, "floor_ns": 55850000, "contention_ns": 1.52905e+07, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"}
+    {"id": "copy0", "start_ns": 0, "end_ns": 55850000, "floor_ns": 55850000, "contention_ns": 1.52905e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy1", "start_ns": 0, "end_ns": 55850000, "floor_ns": 55850000, "contention_ns": 1.52905e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"}
   ],
   "critical_path": ["copy0"],
   "peak_live_bytes": {"unified_mem": {"bytes": 2000000000, "at_ns": 0, "cap": 137438953472}},

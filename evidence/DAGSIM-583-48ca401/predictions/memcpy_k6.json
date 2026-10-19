@@ -8,12 +8,12 @@
   "makespan_ns": {"nominal": 3.0581e+07, "lo": 2.86533e+07, "hi": 3.28947e+07, "interval_known": true},
   "bounds_ns": {"critical_path": 18616667, "max": 3.0581e+07, "resources": {"cpu": 5.585e+06, "dram_cpu": 3.0581e+07, "unified_mem": 0}, "makespan_ge_bounds": true},
   "ops": [
-    {"id": "copy0", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"},
-    {"id": "copy1", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"},
-    {"id": "copy2", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"},
-    {"id": "copy3", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"},
-    {"id": "copy4", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"},
-    {"id": "copy5", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"}
+    {"id": "copy0", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy1", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy2", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy3", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy4", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy5", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 18616667, "contention_ns": 2.54842e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"}
   ],
   "critical_path": ["copy0"],
   "peak_live_bytes": {"unified_mem": {"bytes": 2000000000, "at_ns": 0, "cap": 137438953472}},
