@@ -1089,6 +1089,13 @@ $(RX_SYMBOLIC_TEST): $(RX_SYMBOLIC_SRCS) $(RX_GRAPH_OBJ) src/runtime/rx_symbolic
 test-symbolic: $(RX_SYMBOLIC_TEST)
 	./$(RX_SYMBOLIC_TEST)
 
+# OMEGA_SYMBOLIC_REWRITE M6: per-request kernel / draft-source selection for the cascade (host; reads f7 evidence).
+RX_CASCADE_SRCS = $(filter-out tests/runtime/rx_symbolic_test.c,$(RX_SYMBOLIC_SRCS)) src/runtime/rx_cascade.c \
+	src/runtime/rx_costmodel.c tests/runtime/rx_cascade_test.c
+RX_CASCADE_TEST = $(OUT_DIR)/rx_cascade_test
+$(RX_CASCADE_TEST): $(RX_CASCADE_SRCS) $(RX_GRAPH_OBJ) src/runtime/rx_cascade.h src/runtime/rx_symbolic.h $(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(CC) $(CFLAGS) -pthread -o $@ $(RX_CASCADE_SRCS) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
+
 # OMEGA_CAPABILITY_QUERY: AIEN states a CapabilityNeed; Omega compiles it into
 # probes of the capability sources and returns a bounded list of candidates
 # ranked on explicit dimensions. rx_capq.o is built alone first and must not
