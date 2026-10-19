@@ -15,7 +15,11 @@ is a loaded-box number; load averages are in the file headers.
 | `predictions.csv` | predicted seconds, lo/hi, GB/s, lookup control, spec-roofline control | same script |
 | `measured/memcpy_k*.csv` | fresh measurements, 10 reps each, block4 CSV shape, load in header | `tests/dagsim/measure.sh` under `quiet-measure` |
 | `measured/LOCK.txt` | whether the GB10 lock was held during the runs | same |
-| `heldout_results.md` | gate verdicts, errors, coverage, controls | `tests/dagsim/heldout_memcpy.sh compare` |
+| `heldout_results.md` | round 1 gate verdicts (FAIL, FAIL): block4 morning calibration vs afternoon box | `tests/dagsim/heldout_memcpy.sh compare` |
+| `heldout_round1_interpretation.md` | why round 1 failed (calibration taken under other tenants' DRAM traffic) | hand-written |
+| `round2_fit/`, `fixtures/round2_*.oev`, `round2_predictions/`, `round2_predictions.csv` | same-state refit (k=1, k=8) and predictions committed before the held-out rows | `FIT_DIR=round2_fit ... predict` |
+| `round2_heldout/`, `round2_heldout_results.md` | round 2 held-out rows and verdicts (G-err FAIL 3/4, G-cov PASS 3/4) | `measure.sh`, `... compare` |
+| `heldout_round2_interpretation.md` | pipe regime retained, low-k independence falsified, next experiment | hand-written |
 | `cli-example/` | `run_cli.sh` outputs on the pinned M1 fixtures (JSON, Pareto table) | `tests/dagsim/run_cli.sh` |
 | `test-dagsim.log` | `make test-dagsim` output (unit + CLI checks) through `quiet-build` | Makefile |
 
@@ -34,5 +38,8 @@ The `--asof` date is required so a rerun on a later day reproduces the same vali
 
 ## Status per #583 acceptance box
 
-See `heldout_results.md` for the measured boxes and the handoff
-`~/handoffs/2026-10-19-research-583.md` for the full checklist.
+Held-out verdict in one line: the shared-pipe rule is retained for k >= 3 on the same box state
+(within 1% at k=5,6, intervals cover); low-k per-thread independence is falsified (k=2 +36%);
+a calibration from a different box state does not transfer at all (round 1, 1.7x to 2.4x).
+Energy: UNMEASURED throughout. Selection regret: NOT_RUN. Independent reproduction: not done.
+Full checklist in `~/handoffs/2026-10-19-research-583.md`.
