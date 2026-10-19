@@ -668,15 +668,39 @@ static int quiet_flag_is_mine(const char *flag) {
     return 0;
 }
 
+/* Whose measurement holds the quiet flag? Decided before and apart from the
+ * host load, so a loaded machine can never hide this answer: main prints it
+ * and tests/runtime/r11_own_hold_test.sh reads it. */
+enum { QUIET_FLAG_NONE, QUIET_FLAG_OWN, QUIET_FLAG_OTHER };
+static int quiet_flag_state(void) {
+    const char *home = getenv("HOME");
+    char flag[512];
+    snprintf(flag, sizeof flag, "%s/workspace/.spark-quiet", home ? home : "");
+    if (access(flag, F_OK) != 0) return QUIET_FLAG_NONE;
+    return quiet_flag_is_mine(flag) ? QUIET_FLAG_OWN : QUIET_FLAG_OTHER;
+}
+
+/* The 1-minute load average above which the living run is not started.
+ * R11_LOAD_LIMIT raises it (tests/runtime/r11_own_hold_test.sh does, to see
+ * the quiet-flag decision on a busy judge); it can never lower it, so the
+ * override cannot make a run pass that the default would refuse. */
+#define R11_LOAD_LIMIT_DEFAULT 2.0
+static double load_limit(void) {
+    const char *v = getenv("R11_LOAD_LIMIT");
+    if (v && v[0]) {
+        char *end = NULL;
+        double d = strtod(v, &end);
+        if (end != v && *end == '\0' && d > R11_LOAD_LIMIT_DEFAULT) return d;
+    }
+    return R11_LOAD_LIMIT_DEFAULT;
+}
+
 /* A timed phase measures this host. When an R15 timed measurement is
  * running (its quiet flag exists or an R15 program is alive) or the machine
  * is already loaded, the numbers would describe the other work, so the
  * living run is not started. Same test as rx_plan_reuse.c. */
-static int other_load(char *why, size_t n) {
-    const char *home = getenv("HOME");
-    char flag[512];
-    snprintf(flag, sizeof flag, "%s/workspace/.spark-quiet", home ? home : "");
-    if (access(flag, F_OK) == 0 && !quiet_flag_is_mine(flag)) {
+static int other_load(int flag_state, char *why, size_t n) {
+    if (flag_state == QUIET_FLAG_OTHER) {
         snprintf(why, n, "an R15 timed measurement holds ~/workspace/.spark-quiet");
         return 1;
     }
@@ -706,8 +730,8 @@ static int other_load(char *why, size_t n) {
         if (fscanf(f, "%lf", &load) != 1) load = 0;
         fclose(f);
     }
-    if (load > 2.0) {
-        snprintf(why, n, "1-minute load average %.2f is above 2", load);
+    if (load > load_limit()) {
+        snprintf(why, n, "1-minute load average %.2f is above %.0f", load, load_limit());
         return 1;
     }
     return 0;
@@ -1016,7 +1040,11 @@ int main(void) {
 #if defined(__aarch64__)
     find_core_classes();
     char why[128];
-    if (g_nx > 0 && g_na > 0 && other_load(why, sizeof why)) {
+    int flag_state = quiet_flag_state();
+    printf("quiet flag: %s\n", flag_state == QUIET_FLAG_NONE ? "none"
+           : flag_state == QUIET_FLAG_OWN ? "this run's own hold"
+                                          : "another measurement's hold");
+    if (g_nx > 0 && g_na > 0 && other_load(flag_state, why, sizeof why)) {
         snprintf(g_b_skip_buf, sizeof g_b_skip_buf, "SKIPPED-LOADED: %s", why);
         g_b_skip = g_b_skip_buf;
         printf("[-] SKIPPED-LOADED: living run not started: %s\n", why);
