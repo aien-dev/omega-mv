@@ -109,6 +109,23 @@ static void host_only(void) {
         omega_gpu_w4_from_fp8(n, k, w8, s, 0, 1, w4, e8, NULL);
         CHECK(w4[0] == 0x97u, "nibble order: byte 0 = %02x, want 97 (weight 0 low nibble)", w4[0]);
         CHECK(omega_gpu_w4_from_fp8(n, 100, w8, s, 0, 1, w4, e8, NULL) == OMEGA_GPU_W4_BAD_ARGS, "k not a multiple of 128 refused");
+        /* scale rules: group 0 of row 0 holds 1.75 (e4m3 0x3E) then 31 x 0.125. FLOOR: X 2^-2 (E 125), 1.75 / X = 7
+         * clips to 6 (one saturated, err 0.0625), 0.125 exact. CEIL: X 2^-1 (E 126), 1.75 -> 3.5 ties to code 4 (2.0,
+         * err 0.0625), every 0.125 -> 0.25 ties to 0 (31 * 0.015625): no clip, more error. MSE keeps FLOOR here. */
+        {
+            memset(w8, 0, (size_t)n * k);
+            w8[0] = 0x3E;                                   /* 1.75 */
+            for (uint32_t c = 1; c < 32; c++) w8[c] = 0x20; /* 0.125 */
+            OmegaW4Stats a, b, m;
+            CHECK(omega_gpu_w4_from_fp8_rule(n, k, w8, s, 0, 1, w4, e8, &a, OMEGA_W4_RULE_FLOOR) == 0 && e8[0] == 125u && a.saturated == 1,
+                  "rule FLOOR: E %u (want 125), saturated %llu (want 1)", e8[0], (unsigned long long)a.saturated);
+            CHECK(omega_gpu_w4_from_fp8_rule(n, k, w8, s, 0, 1, w4, e8, &b, OMEGA_W4_RULE_CEIL) == 0 && e8[0] == 126u && b.saturated == 0,
+                  "rule CEIL: E %u (want 126), saturated %llu (want 0)", e8[0], (unsigned long long)b.saturated);
+            CHECK(omega_gpu_w4_from_fp8_rule(n, k, w8, s, 0, 1, w4, e8, &m, OMEGA_W4_RULE_MSE) == 0 && m.sq_err <= a.sq_err && m.sq_err <= b.sq_err
+                  && e8[0] == (a.sq_err <= b.sq_err ? 125u : 126u),
+                  "rule MSE: sq_err %g <= min(%g, %g), E %u", m.sq_err, a.sq_err, b.sq_err, e8[0]);
+            CHECK(omega_gpu_w4_from_fp8_rule(n, k, w8, s, 0, 1, w4, e8, NULL, 3) == OMEGA_GPU_W4_BAD_ARGS, "unknown rule refused");
+        }
         free(w8); free(w4); free(e8); free(s);
     }
     /* 5. codegen: every production shape builds within the instruction and register budgets */

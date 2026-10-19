@@ -272,9 +272,30 @@ uint8_t omega_w4_e2m1_rne(double a) {
 /* floor(log2 v) of a positive normal double: its exponent field (exact) */
 static int floor_log2(double v) { uint64_t b; memcpy(&b, &v, 8); return (int)((b >> 52) & 0x7FFu) - 1023; }
 
+/* 2^e exactly, by doubling / halving (the converter's X) */
+static double pow2i(int e) { double X = 1.0; for (int q = 0; q < (e < 0 ? -e : e); q++) X = e < 0 ? X / 2.0 : X * 2.0; return X; }
+
+/* sum of squared errors of one group at scale 2^e (same order and arithmetic as the write loop) */
+static double group_sq_err(const double *v, int e) {
+    const double X = pow2i(e);
+    double err = 0.0;
+    for (uint32_t c = 0; c < OMEGA_W4_GROUP; c++) {
+        const double a = (v[c] < 0 ? -v[c] : v[c]) / X;
+        const double back = (double)omega_w4_e2m1_ref((uint8_t)(omega_w4_e2m1_rne(a) | (v[c] < 0 ? 8u : 0u))) * X;
+        err += (back - v[c]) * (back - v[c]);
+    }
+    return err;
+}
+
 int omega_gpu_w4_from_fp8(uint32_t n, uint32_t k, const uint8_t *w8, const uint16_t *scale_bf16, uint32_t row0, uint32_t rows,
                           uint8_t *w4, uint8_t *e8, OmegaW4Stats *st) {
+    return omega_gpu_w4_from_fp8_rule(n, k, w8, scale_bf16, row0, rows, w4, e8, st, OMEGA_W4_RULE_FLOOR);
+}
+
+int omega_gpu_w4_from_fp8_rule(uint32_t n, uint32_t k, const uint8_t *w8, const uint16_t *scale_bf16, uint32_t row0,
+                               uint32_t rows, uint8_t *w4, uint8_t *e8, OmegaW4Stats *st, int rule) {
     if (!w8 || !scale_bf16 || !w4 || !e8 || n % 128u || k % 128u || k == 0 || (uint64_t)row0 + rows > n) return OMEGA_GPU_W4_BAD_ARGS;
+    if (rule != OMEGA_W4_RULE_FLOOR && rule != OMEGA_W4_RULE_CEIL && rule != OMEGA_W4_RULE_MSE) return OMEGA_GPU_W4_BAD_ARGS;
     const uint32_t kb = k / 128u, gpr = k / OMEGA_W4_GROUP;
     OmegaW4Stats loc; memset(&loc, 0, sizeof loc);
     for (uint32_t r = row0; r < row0 + rows; r++) {
@@ -297,10 +318,12 @@ int omega_gpu_w4_from_fp8(uint32_t n, uint32_t k, const uint8_t *w8, const uint1
                 loc.zero_groups++;
                 continue;
             }
-            const int e = floor_log2(amax) - 2;
+            int e = floor_log2(amax) - 2;
+            if (rule == OMEGA_W4_RULE_CEIL && amax / pow2i(e) > 6.0) e++;
+            else if (rule == OMEGA_W4_RULE_MSE && group_sq_err(v, e + 1) < group_sq_err(v, e)) e++;
             if (e + 127 < 0 || e + 127 > (int)OMEGA_W4_E_MAX) return OMEGA_GPU_W4_BAD_ARGS;
             e8[(size_t)r * gpr + gi] = (uint8_t)(e + 127);
-            double X = 1.0; for (int q = 0; q < (e < 0 ? -e : e); q++) X = e < 0 ? X / 2.0 : X * 2.0;
+            const double X = pow2i(e);
             for (uint32_t c = 0; c < OMEGA_W4_GROUP; c++) {
                 const double a = (v[c] < 0 ? -v[c] : v[c]) / X;
                 if (a > 6.0) loc.saturated++;

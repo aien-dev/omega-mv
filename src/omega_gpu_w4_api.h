@@ -74,6 +74,14 @@ typedef struct {
 
 int omega_gpu_w4_from_fp8(uint32_t n, uint32_t k, const uint8_t *w8, const uint16_t *scale_bf16, uint32_t row0, uint32_t rows,
                           uint8_t *w4, uint8_t *e8, OmegaW4Stats *stats);
+/* Group scale rules (cascade/w4-gemv). FLOOR: X = 2^(floor(log2 amax) - 2), the OCP / f7 rule, clips |v| / X in (6, 8)
+ * to 6 (omega_gpu_w4_from_fp8 is this rule). CEIL: the smallest power of two with amax / X <= 6 (never clips: FLOOR's X,
+ * doubled when amax / X > 6). MSE: of FLOOR's X and 2X the one with the smaller sum of squared errors over the 32
+ * weights (ties keep FLOOR). Host study (sc qwen38_w4_host, same rules): CEIL and MSE about halve the logits KL against
+ * FP8 that FLOOR gives. The tensor format and the kernel are the same for every rule. */
+enum { OMEGA_W4_RULE_FLOOR = 0, OMEGA_W4_RULE_CEIL = 1, OMEGA_W4_RULE_MSE = 2 };
+int omega_gpu_w4_from_fp8_rule(uint32_t n, uint32_t k, const uint8_t *w8, const uint16_t *scale_bf16, uint32_t row0,
+                               uint32_t rows, uint8_t *w4, uint8_t *e8, OmegaW4Stats *stats, int rule);
 /* host oracle: y[r] in double from the packed tensor */
 void omega_w4_gemv_oracle(const uint8_t *w4, const uint8_t *e8, uint32_t n, uint32_t k, const float *x, double *y);
 /* round |a| (a >= 0, finite) to the e2m1 magnitude code 0..7: nearest, ties to the even code, saturating at 6 */
