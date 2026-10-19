@@ -1,0 +1,19 @@
+section	item	baseline	rewrite	detail
+checkpoint	3	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	7	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	11	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	15	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	19	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	23	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	27	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	31	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	35	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	39	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	43	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	47	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	51	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	55	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	59	refused	56	56 of 112 new 128-row blocks would need two different scales
+checkpoint	63	refused	56	56 of 112 new 128-row blocks would need two different scales
+barriers	recorded	40	40	already dropped 3, needed 37, droppable 0
+bound	glue_share_of_span	0.5122	-	glue 21.0 us, weight GEMVs 20.0 us; the most any rewrite of glue can remove

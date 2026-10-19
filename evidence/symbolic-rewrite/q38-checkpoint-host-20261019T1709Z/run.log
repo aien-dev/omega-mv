@@ -1,0 +1,22 @@
+checkpoint layer  3: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer  7: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 11: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 15: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 19: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 23: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 27: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 31: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 35: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 39: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 43: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 47: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 51: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 55: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 59: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint layer 63: gather fold refused (56 of 112 new 128-row blocks would need two different scales)
+checkpoint: gather fold eligible in 0 of 16 attention layers
+ok: checkpoint scales read (0 eligible)
+ok: barrier analysis ran (0)
+barriers: 40 recorded edges, 3 already dropped (a|b beside mix), 37 needed, 0 droppable; glue 21.0 us of span 41.0 us (51.22%)
+gpu_q38_symbolic_test: 2 checks, 0 failed: PASS
+rc=0

@@ -1,0 +1,1 @@
+flock -s /tmp/aien-quiet.lock evidence/symbolic-rewrite/q38-checkpoint-host-20261019T1709Z/gpu_q38_symbolic_test --host-only --model /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --out evidence/symbolic-rewrite/q38-checkpoint-host-20261019T1709Z

@@ -1,0 +1,168 @@
+Conclusion: Qwen3.8-27B decode graph (4-layer prefix): rewrites the layer can verify touch only glue launches, 51.22% of the token [inferred, not checked] (omega:symbolic:qwe)
+
+Evaluation:
+1. [observed] rewrite gather-fold/block-scales at checkpoint layer 3: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+2. [observed] rewrite gather-fold/block-scales at checkpoint layer 43: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+3. [observed] rewrite gather-fold/block-scales at checkpoint layer 47: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+4. [observed] rewrite gather-fold/block-scales at checkpoint layer 51: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+5. [observed] rewrite gather-fold/block-scales at checkpoint layer 55: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+6. [observed] rewrite gather-fold/block-scales at checkpoint layer 59: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+7. [observed] rewrite gather-fold/block-scales at checkpoint layer 63: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+8. [checked fact] rewrite barrier-elimination/hazards at whole token: not applied; budget admit; verification proved over 0 vectors [omega omega:symbolic:qwe]
+9. [observed] rewrite gather-fold/block-scales at checkpoint layer 7: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+10. [observed] rewrite gather-fold/block-scales at checkpoint layer 11: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+11. [observed] rewrite gather-fold/block-scales at checkpoint layer 15: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+12. [observed] rewrite gather-fold/block-scales at checkpoint layer 19: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+13. [observed] rewrite gather-fold/block-scales at checkpoint layer 23: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+14. [observed] rewrite gather-fold/block-scales at checkpoint layer 27: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+15. [observed] rewrite gather-fold/block-scales at checkpoint layer 31: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+16. [observed] rewrite gather-fold/block-scales at checkpoint layer 35: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+17. [observed] rewrite gather-fold/block-scales at checkpoint layer 39: not applied; budget admit; verification side-condition-failed over 0 vectors [omega omega:symbolic:qwe]
+Conclusion:
+18. Therefore: Qwen3.8-27B decode graph (4-layer prefix): rewrites the layer can verify touch only glue launches, 51.22% of the token [inferred, not checked]
+Uncertainty:
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 0 of 40 recorded barriers carry no hazard
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+- caveat: 56 of 112 new 128-row blocks would need two different scales
+
+Evidence:
+Step 1: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 2: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 3: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 4: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 5: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 6: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 7: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 8: omega rx_symbolic barrier-elimination/hazards digest deef0aa24e4b7dafbe3a524611a8cd9f6a029fbd918a80016dddbaa4948b5f85
+  cost_before = 40 nodes
+  cost_after = 40 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = 1551849cbe3a1215b6c599ebed9f1a77a003e75702104c3d16227aa1296b6841 
+  rhs_semantic_id = deef0aa24e4b7dafbe3a524611a8cd9f6a029fbd918a80016dddbaa4948b5f85 
+Step 9: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 10: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 11: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 12: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 13: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 14: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 15: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 16: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 17: omega rx_symbolic gather-fold/block-scales digest 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810
+  cost_before = 1 nodes
+  cost_after = 1 nodes
+  lower_bound_ns = 0.000 ns
+  incumbent_ns = 0.000 ns
+  lhs_semantic_id = e75495cf0ac92114c92f2420cdeda187d47b4efec1ca73483c5ff15f63f2861c 
+  rhs_semantic_id = 0c6b2d9c39584ee03a6db80fad42ac299c40ad90212b3846dd2910b8bb285810 
+Step 18: omega rx_symbolic qwen38-decode
+  glue_us = 21.0 us
+  weight_gemv_us = 20.0 us
+  span_us = 41.0 us
+  droppable_barriers = 0 
+  checkpoint_fold_eligible_layers = 0 
+aienos-explain rc=0
