@@ -1,0 +1,2 @@
+build outside quiet lock (measurement queue refilled continuously, waited 35 min) 2026-10-19T19:41:00Z load 6.19 8.07 12.92 4/2387 3834324
+binary built outside the quiet lock at nice 19 ionice -c3 -j4 after a 35 min wait on a continuously refilled measurement queue; compile of the Visor core objects + harness, about 2 min

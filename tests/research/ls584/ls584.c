@@ -159,7 +159,6 @@ static uint32_t pool_n;
 static Objective *stream;              /* LS_NPREFACE + LS_NOBJ */
 static uint32_t stream_n;
 
-static uint32_t pool_find(uint64_t key) { for (uint32_t i = 0; i < pool_n; i++) if (pool[i].key == key) return i; return UINT32_MAX; }
 
 static void build_stream(uint64_t seed, int control) {
     rng_s = seed ^ 0x9E3779B97F4A7C15ull; if (!rng_s) rng_s = 1;
@@ -336,6 +335,7 @@ out:
 typedef struct {
     uint64_t key; Body body; uint8_t semantic_id[32]; uint32_t status;
     uint64_t uses, successes, failures, cx_id;      /* cx_id: Cortex record of the candidate */
+    int has_real; RealizationObject real;           /* VERIFIED: the machine-bound realization */
 } Entry;
 
 typedef struct {
@@ -347,7 +347,7 @@ typedef struct {
 
 static size_t arm_state_bytes(const Arm *a) {
     size_t b = 0;
-    if (a->learn_table) b += (size_t)a->n * (sizeof(uint64_t) + sizeof(Body) + 32 + 4);
+    if (a->learn_table) for (uint32_t i = 0; i < a->n; i++) b += sizeof(uint64_t) + sizeof(Body) + 32 + 4 + (a->t[i].has_real ? 96 + a->t[i].real.code_len : 0);
     if (a->learn_order) b += sizeof a->shape_count + sizeof a->const_count;
     return b;
 }
@@ -375,22 +375,48 @@ static uint64_t cx_store_candidate(const Entry *e) {
     persist_cpu += cpu_ns() - c0;
     return id;
 }
-static void cx_promote_entry(Entry *e, const SemanticId *realization_id) {
+static void cx_promote_entry(Entry *e, const RealizationObject *real) {
     if (!cx_on || !e->cx_id) return;
     uint64_t c0 = cpu_ns();
-    uint64_t w[4];
-    for (int i = 0; i < 4; i++) { uint64_t v = 0; for (int j = 0; j < 8; j++) v |= (uint64_t)realization_id->bytes[i * 8 + j] << (8 * j); w[i] = v; }
+    /* evidence payload: realization id (4), machine id (4), code_len, code words */
+    uint64_t w[9 + AARCH64_MAX_CODE_BYTES / 8];
+    uint32_t n = 0;
+    for (int i = 0; i < 4; i++) { uint64_t v = 0; for (int j = 0; j < 8; j++) v |= (uint64_t)real->realization_id.bytes[i * 8 + j] << (8 * j); w[n++] = v; }
+    for (int i = 0; i < 4; i++) { uint64_t v = 0; for (int j = 0; j < 8; j++) v |= (uint64_t)real->machine_id.bytes[i * 8 + j] << (8 * j); w[n++] = v; }
+    w[n++] = real->code_len;
+    for (size_t i = 0; i < real->code_len; i += 8) { uint64_t v = 0; for (size_t j = 0; j < 8 && i + j < real->code_len; j++) v |= (uint64_t)real->code_bytes[i + j] << (8 * j); w[n++] = v; }
     CxHeader h = { CX_EVIDENCE, CX_K_EVIDENCE_REF, LS_CX_SUBJECT, ++cx_t, 1, 0, CX_PROT_VERIFY_EVIDENCE, 0, { e->cx_id, 0, 0, 0 } };
     uint64_t ev = 0, pr = 0;
-    if (cx_append_as(&cx, CX_TOKEN, &h, w, 4, &ev) == CX_OK) cx_promote(&cx, CX_TOKEN, e->cx_id, ev, ++cx_t, &pr);
-    persist_bytes += 2 * (13 * 8 + 32) + 4 * 8;
+    if (cx_append_as(&cx, CX_TOKEN, &h, w, n, &ev) == CX_OK) cx_promote(&cx, CX_TOKEN, e->cx_id, ev, ++cx_t, &pr);
+    persist_bytes += 2 * (13 * 8 + 32) + n * 8;
     persist_cpu += cpu_ns() - c0;
 }
 
 /* Rebuild z from the journal: newest verified candidate per key; VERIFIED only with a
  * promotion record (OLD-or-NEW). Returns entries loaded, or -1 when the journal is refused. */
-typedef struct { Arm *a; uint64_t promoted[4096]; uint32_t np; } Reload;
-static int visit_promotion(void *u, const CxObject *o) { Reload *r = u; if (o->kind == CX_K_PROMOTION && r->np < 4096) r->promoted[r->np++] = o->links[0]; return 0; }
+typedef struct { Arm *a; uint64_t promoted[4096], evidence[4096]; uint32_t np; uint32_t bound_ok, bound_bad; } Reload;
+static int visit_promotion(void *u, const CxObject *o) { Reload *r = u; if (o->kind == CX_K_PROMOTION && r->np < 4096) { r->promoted[r->np] = o->links[0]; r->evidence[r->np++] = o->links[1]; } return 0; }
+/* Restore a VERIFIED entry's realization from its evidence record; the triple id must
+ * recompute from the stored bytes (digest-bound), else the entry stays CANDIDATE. */
+static int restore_real(Entry *e, uint64_t ev_id, Reload *r) {
+    const CxObject *o = cx_get(&cx, ev_id);
+    if (!o || o->kind != CX_K_EVIDENCE_REF || cx_verify(&cx, ev_id) != CX_OK) return -1;
+    const uint64_t *w = cx_payload(&cx, o);
+    if (o->n < 9) return -1;
+    RealizationObject real; memset(&real, 0, sizeof real);
+    for (int i = 0; i < 4; i++) for (int j = 0; j < 8; j++) { real.realization_id.bytes[i * 8 + j] = (uint8_t)(w[i] >> (8 * j)); real.machine_id.bytes[i * 8 + j] = (uint8_t)(w[4 + i] >> (8 * j)); }
+    real.code_len = (size_t)w[8];
+    if (real.code_len > AARCH64_MAX_CODE_BYTES || o->n != 9u + (real.code_len + 7) / 8) return -1;
+    for (size_t i = 0; i < real.code_len; i++) real.code_bytes[i] = (uint8_t)(w[9 + i / 8] >> (8 * (i % 8)));
+    memcpy(real.semantic_id.bytes, e->semantic_id, 32);
+    real.has_id = real.has_machine_id = true; real.target_profile = 0; real.entry_offset = 0;
+    OmegaMachineGraph mg; omega_machine_build_dgx_spark(&mg);
+    real.target_profile = mg.target_profile;
+    SemanticId id;
+    if (omega_realize_compute_triple_id(&real.semantic_id, &real.machine_id, &real, &id) != 0 || memcmp(id.bytes, real.realization_id.bytes, 32) != 0) { r->bound_bad++; return -1; }
+    e->real = real; e->has_real = 1; r->bound_ok++;
+    return 0;
+}
 static int visit_candidate(void *u, const CxObject *o) {
     Reload *r = u;
     if (o->kind != CX_K_CANDIDATE) return 0;
@@ -404,7 +430,7 @@ static int visit_candidate(void *u, const CxObject *o) {
     if (e.body.n > LS_MAX_ACTION || o->n != 7u + 2u * e.body.n) return 0;
     for (uint32_t i = 0; i < e.body.n; i++) { e.body.op[i] = (uint8_t)w[7 + 2 * i]; e.body.imm[i] = w[8 + 2 * i]; }
     e.cx_id = o->id; e.status = ST_CANDIDATE;
-    for (uint32_t i = 0; i < r->np; i++) if (r->promoted[i] == o->id) e.status = ST_VERIFIED;
+    for (uint32_t i = 0; i < r->np; i++) if (r->promoted[i] == o->id) { if (restore_real(&e, r->evidence[i], r) == 0) e.status = ST_VERIFIED; }
     /* identity must recompute: digest-bound reload */
     OmegaProgram p; if (make_prog(&p, &e.body) != 0 || memcmp(p.program_id.bytes, e.semantic_id, 32) != 0) return 0;
     Entry *have = table_find(r->a, e.key);
@@ -412,11 +438,13 @@ static int visit_candidate(void *u, const CxObject *o) {
     else if (r->a->n < LS_TABLE_CAP) r->a->t[r->a->n++] = e;
     return 0;
 }
+static uint32_t g_reload_bound_ok, g_reload_bound_bad;
 static int reload_from_cortex(Arm *a) {
-    Reload r = { a, { 0 }, 0 };
+    static Reload r; memset(&r, 0, sizeof r); r.a = a;
     CxFilter f = { 0, 0, 0, 1 };
     cx_range(&cx, LS_CX_SUBJECT, 0, UINT64_MAX, &f, visit_promotion, &r);
     cx_range(&cx, LS_CX_SUBJECT, 0, UINT64_MAX, &f, visit_candidate, &r);
+    g_reload_bound_ok = r.bound_ok; g_reload_bound_bad = r.bound_bad;
     return (int)a->n;
 }
 
@@ -424,7 +452,7 @@ static int reload_from_cortex(Arm *a) {
 typedef struct {
     uint32_t seq, block, kind;
     int outcome, path;                 /* path: 1 search, 2 reuse, 3 compose, 4 abstain */
-    uint32_t candidates, realizations, lookups, hits, refusals, compose_tries, attempts;
+    uint32_t candidates, realizations, lookups, hits, refusals, compose_tries, attempts, native_execs, verified_reuse;
     uint64_t cpu_ns, wall_ns, adapter_cpu_ns, adapter_bytes, persist_cpu_ns;
     uint32_t steps, verify_inputs, consistent_with_examples, sealed_agree;
     uint32_t bad_rows;                 /* harness checks that failed (mutant honesty) */
@@ -542,7 +570,7 @@ static int attempt(Arm *a, const Goal *g, Row *row, Body *committed, Entry **use
              * constant (a lying entry). The applicability check must refuse it; if the
              * arm commits it anyway the sealed check scores it WRONG (the test can fail). */
             Body m = e->body; m.imm[0] = m.imm[0] == LS_D[0] ? LS_D[1] : LS_D[0];
-            if (!consistent(&m, g)) { e->body = m; m2_injected = 1; }
+            if (!consistent(&m, g)) { e->body = m; e->has_real = 0; m2_injected = 1; }
         }
         if (e) {
             if (e->status == ST_STALE) { row->refusals++; snprintf(row->why, sizeof row->why, "refused: stale"); }
@@ -575,20 +603,44 @@ static int attempt(Arm *a, const Goal *g, Row *row, Body *committed, Entry **use
         if (agree < g->n_ex && !consistent(&m, g)) { row->bad_rows++; S.mutant_bad_rows++; }
     }
     if (row->realizations >= LS_REALIZE_BUDGET) { row->outcome = OUT_REFUSED_REALIZE; snprintf(row->why, sizeof row->why, "realization budget"); return -1; }
-    OmegaProgram p; RealizationSynthesisResult res;
-    if (realize(&b, &p, &res, row) != 0) { row->outcome = OUT_REFUSED_REALIZE; return -1; }
+    OmegaProgram p; static RealizationSynthesisResult res;
+    const RealizationObject *real = NULL;
+    if (*used && (*used)->status == ST_VERIFIED && (*used)->has_real) {
+        /* VERIFIED reuse (rx_plan lifecycle): no reference re-run. The realization is
+         * identity-bound: its triple id must recompute from the stored bytes. */
+        SemanticId id;
+        const RealizationObject *r = &(*used)->real;
+        if (omega_realize_compute_triple_id(&r->semantic_id, &r->machine_id, r, &id) == 0 && memcmp(id.bytes, r->realization_id.bytes, 32) == 0 && memcmp(r->semantic_id.bytes, (*used)->semantic_id, 32) == 0) {
+            real = r; row->verified_reuse = 1;
+        } else { row->refusals++; (*used)->status = ST_STALE; S.stale_marked++; snprintf(row->why, sizeof row->why, "refused: realization identity does not bind"); return -1; }
+    }
+    if (!real) {
+        if (realize(&b, &p, &res, row) != 0) { row->outcome = OUT_REFUSED_REALIZE; return -1; }
+        real = &res.realization;
+    }
     /* commit: native execution on the examples (the arm's own check of its answer) */
     for (uint32_t i = 0; i < g->n_ex; i++) {
         uint64_t y = 0;
-        if (omega_exec_native_f3(&res.realization, g->ex_x[i], 0, 0, &y) != 0 || y != g->ex_y[i]) {
-            row->outcome = OUT_REFUSED_REALIZE; snprintf(row->why, sizeof row->why, "native output disagrees with example"); S.inconsistent_commits++; return -1;
+        row->native_execs++;
+        if (omega_exec_native_f3(real, g->ex_x[i], 0, 0, &y) != 0 || y != g->ex_y[i]) {
+            row->outcome = OUT_REFUSED_REALIZE; snprintf(row->why, sizeof row->why, "native output disagrees with example"); S.inconsistent_commits++;
+            if (*used) { (*used)->status = ST_STALE; S.stale_marked++; }
+            return -1;
         }
     }
     row->consistent_with_examples = 1;
     row->steps = b.n;
     *committed = b;
-    if (*used) { (*used)->uses++; (*used)->successes++; if ((*used)->status == ST_CANDIDATE && a->update_on) { (*used)->status = ST_VERIFIED; S.promotions++; cx_promote_entry(*used, &res.realization_id); } }
-    else table_store(a, g->key, &b, p.program_id.bytes);
+    if (*used) {
+        (*used)->uses++; (*used)->successes++;
+        if ((*used)->status == ST_CANDIDATE && a->update_on) {
+            (*used)->status = ST_VERIFIED; (*used)->real = *real; (*used)->has_real = 1; S.promotions++;
+            cx_promote_entry(*used, real);
+        }
+    } else {
+        Entry *e = table_store(a, g->key, &b, real->semantic_id.bytes);
+        if (e) { e->real = *real; e->has_real = 1; }     /* kept in memory; persisted on promotion */
+    }
     update_counts(a, &b);
     return 0;
 }
@@ -642,7 +694,7 @@ static void apply_stale_control(Arm *a) {
     for (uint32_t i = 0; i < a->n; i += 2) {
         Body w = rnd_rule(rnd_len());
         if (memcmp(&w, &a->t[i].body, sizeof w) == 0) w.imm[0] = w.imm[0] == LS_D[0] ? LS_D[1] : LS_D[0];
-        a->t[i].body = w;      /* semantic id left as it was: the entry lies */
+        a->t[i].body = w; a->t[i].has_real = 0;      /* semantic id left as it was: the entry lies */
     }
 }
 
@@ -715,7 +767,7 @@ int main(int argc, char **argv) {
     char rpath[512]; snprintf(rpath, sizeof rpath, "%s/rows.csv", out);
     FILE *rf = fopen(rpath, "w");
     if (!rf) return 1;
-    fprintf(rf, "seq,block,kind,outcome,path,attempts,candidates,realizations,lookups,hits,refusals,compose_tries,steps,verify_inputs,sealed_agree,cpu_ns,wall_ns,adapter_cpu_ns,adapter_bytes,persist_cpu_ns,state_bytes,bad_rows,why\n");
+    fprintf(rf, "seq,block,kind,outcome,path,attempts,candidates,realizations,lookups,hits,refusals,compose_tries,steps,verify_inputs,sealed_agree,cpu_ns,wall_ns,adapter_cpu_ns,adapter_bytes,persist_cpu_ns,state_bytes,bad_rows,native_execs,verified_reuse,why\n");
     uint64_t wall0 = now_ns();
     int stale_applied = 0;
     for (uint32_t i = 0; i < stream_n; i++) {
@@ -738,10 +790,10 @@ int main(int argc, char **argv) {
         Row *row = &rows[nrows++];
         run_objective(&a, o, row);
         size_t sb = arm_state_bytes(&a); if (sb > S.peak_state_bytes) S.peak_state_bytes = sb;
-        fprintf(rf, "%u,%u,%u,%s,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%zu,%u,%s\n",
+        fprintf(rf, "%u,%u,%u,%s,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%zu,%u,%u,%u,%s\n",
                 row->seq, row->block, row->kind, outcome_name(row->outcome), row->path, row->attempts, row->candidates, row->realizations,
                 row->lookups, row->hits, row->refusals, row->compose_tries, row->steps, row->verify_inputs, row->sealed_agree,
-                row->cpu_ns, row->wall_ns, row->adapter_cpu_ns, row->adapter_bytes, row->persist_cpu_ns, sb, row->bad_rows, row->why);
+                row->cpu_ns, row->wall_ns, row->adapter_cpu_ns, row->adapter_bytes, row->persist_cpu_ns, sb, row->bad_rows, row->native_execs, row->verified_reuse, row->why);
         if (o->malformed) { S.preface_n++; continue; }
         S.n_obj++;
         S.by_block_n[o->block]++; S.cpu_by_block[o->block] += row->cpu_ns; S.cpu_total += row->cpu_ns;
@@ -779,7 +831,7 @@ int main(int argc, char **argv) {
     fprintf(sf, "  \"table\": {\"stored\": %u, \"dedup\": %u, \"refused_full\": %u, \"stale_marked\": %u, \"promotions\": %u, \"entries_at_end\": %u},\n",
             S.table_stored, S.table_dedup, S.table_refused_full, S.stale_marked, S.promotions, a.n);
     fprintf(sf, "  \"state\": {\"peak_bytes\": %zu, \"persist_bytes\": %" PRIu64 ", \"persist_cpu_ns\": %" PRIu64 "},\n", S.peak_state_bytes, S.persist_bytes, S.persist_cpu);
-    fprintf(sf, "  \"restart\": {\"loaded_entries\": %u, \"journal_refused\": %d},\n", S.restart_loaded, S.journal_refused);
+    fprintf(sf, "  \"restart\": {\"loaded_entries\": %u, \"journal_refused\": %d, \"realizations_bound\": %u, \"realizations_unbound\": %u},\n", S.restart_loaded, S.journal_refused, g_reload_bound_ok, g_reload_bound_bad);
     fprintf(sf, "  \"joules\": \"UNMEASURED\",\n  \"blocks\": {\n");
     static const char *bn[8] = { "preface", "first_exposure", "repeated", "novel_bindings", "compositions", "delayed_recall", "changed_rules", "correction" };
     for (uint32_t b = 1; b < 8; b++) {

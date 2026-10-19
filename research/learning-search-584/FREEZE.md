@@ -40,7 +40,7 @@ FAIL and INCONCLUSIVE are acceptable results.
 | arm | pi (action) | U (update) | z capacity |
 |---|---|---|---|
 | A incumbent, no learning | enumerate programs in fixed canonical order (section 3) until one matches all examples; realize it | none (z empty) | 0 B |
-| B existing verified reuse | look up k in a verified-program table (semantic id of P, status CANDIDATE/VERIFIED/STALE as in `rx_plan.h`); applicability = every example reproduces under P (the analogue of rx_plan's required-state check); on hit, realize from the stored body; on miss or refusal, arm A path, then store CANDIDATE | store on first verified solve (dedupe by semantic id); promote to VERIFIED on a verified reuse; mark STALE on a failed reuse; table full: refuse to store (same as `rx_plan_cache_store`, no eviction) | 32 entries (PL_MAX_TEMPLATES), each the canonical program bytes + 32-byte semantic id + counters |
+| B existing verified reuse | look up k in a verified-program table (semantic id of P, status CANDIDATE/VERIFIED/STALE as in `rx_plan.h`); applicability = every example reproduces under P (the analogue of rx_plan's required-state check); on a CANDIDATE hit, re-synthesize and re-verify the realization (the analogue of rx_plan's reference-first run), then promote; on a VERIFIED hit, reuse the stored machine-bound realization after its triple id recomputes from the stored bytes (no reference re-run, as `rx_plan` VERIFIED skips the reference); on miss or refusal, arm A path, then store CANDIDATE | store on first verified solve (dedupe by semantic id); promote to VERIFIED on a verified reuse; mark STALE on a failed reuse; table full: refuse to store (same as `rx_plan_cache_store`, no eviction) | 32 entries (PL_MAX_TEMPLATES), each the canonical program bytes + 32-byte semantic id + counters + (VERIFIED) the realization bytes and ids |
 | C bounded incremental rule learner | (1) B's lookup; (2) if the objective is COMPOSE(a, b) and both a and b are retained, propose concatenation P_a ++ P_b and verify; (3) else enumerate programs in LEARNED order: shapes (op sequences) ranked by retained frequency count, constants ranked by retained frequency, ties in canonical order; realize | B's update plus: increment the count of P's shape and of each (op, imm) pair; counts are bounded (saturating u16); per-key table as B with the same capacity | 32 entries + shape counts (5 + 25 + 125 u16 = 155 x 2 B) + constant counts (5 ops x 16 constants u16) |
 
 Every operation of C's predictor and of every proposed program is in the V0 subset,
@@ -118,8 +118,11 @@ exposure (block 5 positions minus block 1 positions).
   evidence, counted as `wrong` under F2, not a semantic error. (A faster incorrect
   candidate is still a failed experiment: `wrong` counts against F2 and is reported.)
 - Floor F2: success rate (success / objectives) >= 0.90 per sealed stream, per arm, and
-  wrong commits <= 2 per sealed stream (identification failures are reported with the
-  exact count; the arm cannot distinguish them from correct answers by construction).
+  wrong commits of a learning arm <= wrong commits of arm A on the same stream + 1
+  (learning must not degrade correctness relative to the incumbent; identification
+  failures are a property of the evidence, not of the mechanism, and the incumbent
+  itself has them: development seed 0x5841 gave A 7 wrong of 240 before this line was
+  written, which is why an absolute count of 2 was replaced before any calibration run).
 - Floor F3: stale/wrong-memory control: 0 wrong commits.
 - An arm below a floor is reported FAIL regardless of cost.
 
