@@ -1,0 +1,11 @@
+# gpu_roll_test --chip 2026-10-19T12:04:45-05:00 head=ac38202b physics=6d7cf0d loadavg=89.73 73.33 55.37 MemAvailable=27495904 nvrm_before=
+# lock acquired 2026-10-19T12:08:59-05:00 loadavg=102.29 91.14 67.01
+omega_gpu_roll_open: voice 0: channel: RM_ALLOC class 0xcec0 status 0x51
+# omega-mv#580 gpu_roll_test chip
+row,section,config,jobs,jobs_per_s,bad_jobs,check_fail,unwritten_words,gpu_p50_us,note
+row,note,engine vecadd65 one job at a time,600,590.1,0,0,0,,omega_gpu_execute persistent
+ok: note: 600 omega_gpu_execute vecadd jobs, every output exact (590.1 jobs/s)
+roll open failed (v=1 d=1 n=1 data=65536)
+kernel upload: no roll
+chip: 1 checks, 0 failed: FAIL
+# exit=1 2026-10-19T12:09:00-05:00 nvrm_after=

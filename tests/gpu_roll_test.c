@@ -490,32 +490,26 @@ static int chip_run(void) {
     for (int kd = K_EX2; kd <= K_ROPE; kd++) if (prog_ew(&pe[kd], ew[kd], 0) || prog_ew(&pm[kd], ew[kd], 1)) { printf("FAIL: codegen %s\n", KNAME[kd]); return 1; }
     if (prog_matmul(&pm[K_MATMUL], 1) || prog_matmul(&pe[K_MATMUL], 0)) { printf("FAIL: codegen matmul\n"); return 1; }
 
-    /* ---- 1. roll depth ---- */
+    /* ---- 1. roll depth (a fresh roll per depth: slots = depth, one channel open at a time) ---- */
     {
-        OmegaRoll *r = roll_open(1, 64, 1, 1u << 16);
-        if (!r) return 1;
-        OmegaRollKernel kv; if (upload(r, &pv, &kv)) return 1;
-        Case cv; case_build(&cv, K_VECADD, &kv, 65); Case *cs[1] = { &cv };
         const uint32_t depths[] = { 1, 4, 16, 64 };
         for (unsigned i = 0; i < 4; i++) {
-            /* a fresh roll per depth so slot count = depth exactly */
+            OmegaRoll *rd = roll_open(1, depths[i], 1, 1u << 16);
+            if (!rd) { ROW("roll,vecadd65 depth %u,0,,,,,,BLOCKED: roll open failed (driver: %s)", depths[i], "see log"); rc = 1; continue; }
+            OmegaRollKernel kd; if (upload(rd, &pv, &kd)) { rc = 1; omega_gpu_roll_close(rd); continue; }
+            Case cd; case_build(&cd, K_VECADD, &kd, 65); Case *cds[1] = { &cd };
             RollStat st;
-            OmegaRoll *rd = i == 3 ? r : roll_open(1, depths[i], 1, 1u << 16);
-            OmegaRollKernel kd; if (rd != r && upload(rd, &pv, &kd)) return 1;
-            Case cd = cv; cd.tmpl.k = rd == r ? &kv : &kd; Case *cds[1] = { &cd };
             if (roll_cases(rd, cds, 1, depths[i], 3000, 0, &st)) rc = 1;
             ROW("roll,vecadd65 depth %u,%" PRIu64 ",%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.1f,", depths[i], st.jobs, st.jps, st.bad_jobs, st.check_fail, st.unwritten, st.gpu_p50_ns / 1e3);
             CHECK(st.jobs == 3000 && st.bad_jobs == 0 && st.check_fail == 0 && st.unwritten == 0, "roll depth %u: 3000 jobs, every output exact, every semaphore DONE, no poison left", depths[i]);
-            if (rd != r) omega_gpu_roll_close(rd);
+            omega_gpu_roll_close(rd);
         }
-        (void)cs;
-        omega_gpu_roll_close(r);
     }
 
     /* ---- 2. melody ---- */
     {
         OmegaRoll *r = roll_open(1, 16, 1, 1u << 20);
-        if (!r) return 1;
+        if (!r) { ROW("melody,all,0,,,,,,BLOCKED: roll open failed"); rc = 1; goto chord; }
         OmegaRollKernel kk[K_COUNT], km[K_COUNT];
         for (int kd = 0; kd < K_COUNT; kd++) if (upload(r, &pe[kd], &kk[kd]) || upload(r, &pm[kd], &km[kd])) return 1;
         Case cs[K_COUNT], cm[K_COUNT];
@@ -558,9 +552,10 @@ static int chip_run(void) {
     }
 
     /* ---- 3. chord ---- */
+chord:
     {
         OmegaRoll *r = roll_open(1, 4, 64, 4u << 20);
-        if (!r) return 1;
+        if (!r) { ROW("chord,all,0,,,,,,BLOCKED: roll open failed"); rc = 1; goto harmony; }
         OmegaRollKernel kv; if (upload(r, &pv, &kv)) return 1;
         Case cv; case_build(&cv, K_VECADD, &kv, 65);
         const uint32_t Ks[] = { 1, 4, 16, 64 };
@@ -588,7 +583,7 @@ static int chip_run(void) {
         const uint32_t Vs[] = { 1, 2, 4 };
         for (unsigned i = 0; i < 3; i++) {
             OmegaRoll *rv = roll_open(Vs[i], 16, 1, 1u << 16);
-            if (!rv) { rc = 1; continue; }
+            if (!rv) { ROW("chord,vecadd65 voices=%u,0,,,,,,BLOCKED: open of %u channels failed (driver)", Vs[i], Vs[i]); rc = 1; continue; }
             OmegaRollKernel kk; if (upload(rv, &pv, &kk)) return 1;
             Case cc = cv; cc.tmpl.k = &kk;
             RollStat st;
@@ -600,10 +595,11 @@ static int chip_run(void) {
     }
 
     /* ---- 4. harmony ---- */
+harmony:
     {
         const uint32_t n_el = 262144; /* 1 MiB per buffer: grids long enough to overlap when the order is missing */
         OmegaRoll *r = roll_open(1, 2, 64, (size_t)64 * 3 * n_el * 4 + (1u << 20));
-        if (!r) return 1;
+        if (!r) { ROW("harmony,all,0,,,,,,BLOCKED: roll open failed"); rc = 1; goto done; }
         OmegaRollKernel kv; if (upload(r, &pv, &kv)) return 1;
         const char *shape[] = { "random DAG", "chain 64", "fan-in tree" };
         const char *oname[] = { "SERIAL", "NONE", "SEM", "WAVE" };
@@ -622,6 +618,7 @@ static int chip_run(void) {
         }
         omega_gpu_roll_close(r);
     }
+done:
     if (omega_gpu_roll_is_latched()) { printf("FAIL: roll latched\n"); rc = 1; }
     return rc || g_failed;
 }
