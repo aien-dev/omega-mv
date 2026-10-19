@@ -1,0 +1,25 @@
+# tests/gates/omega-checker2.gate
+# Restored: hosted host-suites.yml checker2: test-checker2 (independent checker2, LRAT gate, receipts, mutants; hosted 20 min). The hosted job was removed in phase 3 (#564) without a gate; same command here.
+gate: OMEGA-CHECKER2
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/
+  - tools/
+  - docs/
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["checker2"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 20m
+exactness: EXACT
+cache_scope: machine

@@ -1,0 +1,25 @@
+# tests/gates/omega-reservoir.gate
+# Restored: hosted reservoir.yml reservoir-gates: test-reservoir (omega#440 Gate 1, Gate 2 reader and config; CPU only). The hosted job was removed in phase 3 (#564) without a gate; same command here.
+gate: OMEGA-RESERVOIR
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/
+  - tools/
+  - docs/
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["reservoir"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 15m
+exactness: EXACT
+cache_scope: machine

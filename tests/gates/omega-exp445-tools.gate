@@ -1,0 +1,25 @@
+# tests/gates/omega-exp445-tools.gate
+# Restored: hosted host-suites.yml exp445-tools: test-omega-emit test-exp445 (stage-2 tools, fake server; needs jq curl flock). The hosted job was removed in phase 3 (#564) without a gate; same command here.
+gate: OMEGA-EXP445-TOOLS
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/
+  - tools/
+  - docs/
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["exp445-tools"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 20m
+exactness: EXACT
+cache_scope: machine

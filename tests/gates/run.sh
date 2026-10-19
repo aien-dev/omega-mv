@@ -114,6 +114,25 @@ case "$step" in
   one-layer-acceptance) make $NOPHYS test-one-layer-acceptance ;;
   physics0)           make $NOPHYS physics0-test ;;
   chip-tool-selftests) for t in test-m19r-qualify test-gate14-combine test-window-lane-guard test-unwritten-trap-host test-ldst-host; do make $NOPHYS $t; done ;;
+  # Restored: hosted jobs that phase 3 (#564) removed without a gate. Same commands as the removed jobs.
+  checker2)           make $NOPHYS test-checker2 ;;                         # host-suites.yml checker2
+  exp445-tools)       command -v jq && command -v curl && command -v flock; make $NOPHYS test-omega-emit test-exp445 ;;   # host-suites.yml exp445-tools
+  omegese-oracle)     make $NOPHYS test-omegese ;;                          # host-suites.yml omegese-oracle
+  gpu-engine)         # host-suites-2.yml gpu-engine
+    make $NOPHYS test-gpu-engine-compile test-gpu-engine
+    make $NOPHYS test-gpu-engine-freestanding
+    make $NOPHYS test-codegen-freestanding
+    make $NOPHYS test-gpu-engine-mutants
+    make $NOPHYS build/test_omega_gpu_session_platform test-gpu-session-mutants && ./build/test_omega_gpu_session_platform
+    physics_pin; make test-gpu-session-platform
+    ;;
+  reservoir)          # reservoir.yml reservoir-gates
+    set -o pipefail; mkdir -p build
+    make $NOPHYS test-reservoir | tee build/res.log
+    test "$(grep -cE '^test_reservoir: [0-9]+ checks, 0 failed' build/res.log)" -eq 2
+    test "$(grep -cE '^test_res_mat: [0-9]+ checks, 0 failed' build/res.log)" -eq 2
+    grep -q 'Gate 2 config unchanged' build/res.log
+    ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;

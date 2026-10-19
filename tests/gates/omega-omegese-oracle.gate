@@ -1,0 +1,25 @@
+# tests/gates/omega-omegese-oracle.gate
+# Restored: hosted host-suites.yml omegese-oracle: test-omegese (Omegese oracle self-tests, -O2 then ASan and UBSan; hosted 30 min). The hosted job was removed in phase 3 (#564) without a gate; same command here.
+gate: OMEGA-OMEGESE-ORACLE
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/
+  - tools/
+  - docs/
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["omegese-oracle"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 30m
+exactness: EXACT
+cache_scope: machine
