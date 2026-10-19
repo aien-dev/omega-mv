@@ -6,7 +6,7 @@
 #   <out>.candidate.oscir (bytes, structured) when the arm's reader makes one, and <out>.check (one
 #   line: OK or the refusal). The check uses public data only.
 reader() {
-  local X="$1" EMIT="$2" arm="$3" content="$4" o="$5" req="$6" line=""
+  local X="$1" EMIT="$2" arm="$3" content="$4" o="$5" req="$6" line="" NW="$(dirname "${BASH_SOURCE[0]}")/nowords/nowords.sh"
   "$X" extract "$content" "$o.payload" > "$o.fence"
   rm -f "$o.candidate.osc" "$o.candidate.oscir"
   case "$arm" in
@@ -17,6 +17,13 @@ reader() {
     omegese) if line="$("$G" emit "$o.payload" "$o.omegese.json" 2>&1)" && line="$("$EMIT" emit "$o.omegese.json" "$o.candidate.oscir" 2>&1)"; then
              line="$("$X" check oscir "$o.candidate.oscir" "$req" || true)"
            else rm -f "$o.candidate.oscir"; fi ;;
+    symbols|numbers) # the no-words spellings (evidence/NO-WORDS): back to Omegese words through the map, then the omegese reader;
+             # the refusal is shown in the arm's own spelling (nowords.sh msg)
+             if line="$("$NW" decode "$arm" "$o.payload" "$o.decoded.omegese")" && line="$("$G" emit "$o.decoded.omegese" "$o.omegese.json" 2>&1)" &&
+                line="$("$EMIT" emit "$o.omegese.json" "$o.candidate.oscir" 2>&1)"; then
+               line="$("$X" check oscir "$o.candidate.oscir" "$req" || true)"
+             else rm -f "$o.candidate.oscir"; fi
+             line="$(printf '%s\n' "$line" | head -n 1 | "$NW" msg "$arm")" ;;
     *) line="REFUSED checker: unknown arm $arm" ;;
   esac
   [ -n "$line" ] || line="REFUSED checker: no result"
@@ -95,11 +102,13 @@ weights_ok() {
 # both arms.
 system_prompt() {
   local A="$1" arm="$2" mode="$3" ext list e n=0 k
-  case "$arm" in omegese) ext=omegese ;; text) ext=osc ;; *) echo "system_prompt: arm $arm has no r3 prompt" >&2; return 1 ;; esac
+  local NW="$A/../nowords/nowords.sh"
+  case "$arm" in omegese|symbols|numbers) ext=omegese ;; text) ext=osc ;; *) echo "system_prompt: arm $arm has no r3 prompt" >&2; return 1 ;; esac
   case "$mode" in many|one) list="$A/examples/$mode.list" ;; *) echo "system_prompt: unknown prompt mode $mode" >&2; return 1 ;; esac
   [ -s "$list" ] || { echo "system_prompt: no example list $list" >&2; return 1; }
   k="$(grep -c . "$list")"
-  cat "$A/common.md"; echo; cat "$A/$arm.md"; echo
+  cat "$A/common.md"; echo
+  case "$arm" in symbols|numbers) "$NW" render "$arm" || return 1 ;; *) cat "$A/$arm.md" ;; esac; echo
   if [ "$k" = 1 ]; then echo "Worked example: a task as you receive it, then a correct program."
   else echo "Worked examples ($k): each is a task as you receive it, then a correct program."; fi
   while IFS= read -r e; do
@@ -107,7 +116,7 @@ system_prompt() {
     [ -f "$A/examples/$e/program.$ext" ] || { echo "system_prompt: example $e has no program.$ext" >&2; return 1; }
     n=$((n + 1))
     printf '\nExample %d.\n\n%s\n\n%s\n\n```\n%s\n```\n' "$n" "$(grep -E '^(entry|params|ret)( |$)' "$A/examples/$e/requirement")" \
-      "$(cat "$A/examples/$e/prompt")" "$(cat "$A/examples/$e/program.$ext")"
+      "$(cat "$A/examples/$e/prompt")" "$(case "$arm" in symbols|numbers) "$NW" encode "$arm" "$A/examples/$e/requirement" < "$A/examples/$e/program.$ext" ;; *) cat "$A/examples/$e/program.$ext" ;; esac)"
   done < "$list"
 }
 # TOOL_PATHS: the files a run's results depend on. meta.txt records the commit (plus -dirty when any of these
@@ -294,6 +303,8 @@ ask() {
       k="$(wc -l < "$p.transport.tmp")"
       while [ "$k" -le "$RETRIES" ]; do
         [ "$k" -eq 0 ] || sleep $((k * ${EXP445_TEST_BACKOFF_S:-5}))
+        # EXP445_WAIT_IDLE=<health URL>: on a shared one-request server, wait while it reports busy before each try
+        if [ -n "${EXP445_WAIT_IDLE:-}" ]; then while curl -s -m 10 "$EXP445_WAIT_IDLE" | jq -e '.busy == true' > /dev/null 2>&1; do sleep 3; done; fi
         t0="$EPOCHREALTIME"
         if out="$(curl -sS -m "$TIMEOUT" -o "$p.try" -w '%{http_code} %{time_total}' -H 'Content-Type: application/json' \
                    --data-binary @"$p.req.json" "$BASE/chat/completions" 2> "$p.curl.err")"; then e=0; else e=$?; fi

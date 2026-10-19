@@ -1,0 +1,107 @@
+REPRESENTATION: omegese{{arm}}
+
+Write the program in Omegese: one statement per line, words separated by single spaces. No commas,
+no semicolons, no indentation, no comments. A checker reads it line by line and refuses
+the first invalid line with a reason; a valid program becomes the program.
+
+Types (Omegese name = type): {{w:bool}} = bool, {{w:uchar}} = u8, {{w:ushort}} = u16, {{w:uint}} = u32, {{w:ulong}} = u64,
+{{w:byte}} = i8, {{w:short}} = i16, {{w:int}} = i32, {{w:long}} = i64. The names u8 .. i64 are accepted too.
+{{only:symbols}}
+{{only:symbols}}Names: every name you choose (values, parameters, helper functions) is one symbol from this list:
+{{only:symbols}}{{names}}. The function the task asks for keeps the name the task gives it.
+{{only:numbers}}
+{{only:numbers}}Names: every name you choose (values, parameters, helper functions) is one number from {{names}}.
+{{only:numbers}}The function the task asks for keeps the name the task gives it. A number value is written with #
+{{only:numbers}}in front ({{k:0}}, {{k:-3}}, {{k:1000}}); a number without # is a word (1 to 48) or a name.
+
+Statements:
+
+    {{w:fn}} <name> <param> <type> <param> <type> ... {{w:to}} <type>     (or: {{w:to}} {{w:void}}); {{w:end}} closes the function
+    <name> = <value>          write a value: a new name, or an existing name of the same type
+    {{w:if}} <cond>  ...  {{w:else}}  ...  {{w:end}}           ({{w:else}} is optional)
+    {{w:while}} <cond> {{w:bound}} <N>  ...  {{w:end}}         N in 1..1000000; more than N iterations is trap 4
+    {{w:for}} <i> <type> <count>  ...  {{w:end}}         i = 0, 1, ..., count-1 (count is a number or a value)
+    {{w:break}}                     leave the innermost {{w:while}} or {{w:for}}
+    {{w:ret}} <value>               ({{w:ret}} alone in a void function)
+    {{w:put}} <array> <index> <value>
+    {{w:free}} <array>
+    {{w:trap}} <code>               code 1..14; like {{w:ret}}, it ends the path
+    <function> <args>         call a void function
+
+Values (each op takes a fixed number of values; each value may itself be an op):
+
+    <name>  or  <number>
+    {{w:add}} {{w:sub}} {{w:mul}} {{w:div}} {{w:rem}} {{w:and}} {{w:or}} {{w:xor}} {{w:shl}} {{w:shr}}  <a> <b>
+    {{w:eq}} {{w:ne}} {{w:lt}} {{w:le}} {{w:gt}} {{w:ge}}  <a> <b>                (gives bool)
+    {{w:neg}} <a>  (signed)     {{w:not}} <a>  (bool: logical; number: bitwise)
+    <type> <number>       a typed number, e.g. {{w:uint}} {{k:0}}
+    <type> <value>        convert, e.g. {{w:ulong}} {{n:1:x}} (trap 5 if the value does not fit)
+    {{w:get}} <array> <index>
+    {{w:new}} <type> <len> <init>   only as a whole line: <name> = {{w:new}} ...
+    {{w:own}} <array>  {{w:edit}} <array>  {{w:view}} <array>
+    <function> <args>     call a function written earlier in the program
+
+Values nest in prefix order: `{{w:add}} {{w:mul}} {{n:1:a}} {{n:1:a}} {{k:1}}` is ({{n:1:a}}*{{n:1:a}})+1, `{{w:eq}} {{w:rem}} {{n:1:n}} {{k:2}} {{k:0}}` is {{n:1:n}}%2 == 0. Brackets are
+optional and change nothing: `{{w:add}} ({{w:mul}} {{n:1:a}} {{n:1:a}}) {{k:1}}`. A ( must hold exactly one value.
+
+Rules:
+- Types are inferred: a new name takes the type of its value. A plain number takes the type of the
+  other value of its op (`{{w:add}} {{n:1:x}} {{k:1}}`); where there is none, write the type (`{{n:1:s}} = {{w:uint}} {{k:0}}`). Both values
+  of an op have one type; convert explicitly. Two plain numbers in one op are refused.
+- A condition is any value giving bool (`{{w:while}} {{w:ne}} {{n:1:b}} {{k:0}} {{w:bound}} {{k:64}}`, `{{w:if}} {{w:or}} {{w:lt}} {{n:1:p}} {{k:0}} {{w:gt}} {{n:1:p}} {{k:9}}`).
+- A name first written inside {{w:if}}/{{w:else}}/{{w:while}}/{{w:for}} exists only until that block's end. To use a value
+  after the block, write it before the block, then overwrite it inside.
+- Every name you write must be read later. Parameters may be overwritten. A {{w:for}} counter may not.
+- Every path through a function that returns a value must end in {{w:ret}} or {{w:trap}}.
+- Parameters of array type: {{w:own}}|{{w:edit}}|{{w:view}} <type> <len>, e.g. `{{n:1:v}} {{w:view}} {{w:uint}} {{k:4}}`.
+
+Word card: every fixed word and what it does.
+
+    {{c:fn}}start a function: {{w:fn}} <name> <param> <type> ... {{w:to}} <type>
+    {{c:to}}in a {{w:fn}} line: the return type follows
+    {{c:void}}in a {{w:fn}} line: the function returns nothing ({{w:to}} {{w:void}})
+    {{c:end}}close the innermost {{w:fn}}, {{w:if}}, {{w:else}}, {{w:while}} or {{w:for}}
+    {{c:if}}{{w:if}} <cond>: run the lines up to {{w:else}} or {{w:end}} when cond is true
+    {{c:else}}the lines run when the {{w:if}} condition is false
+    {{c:while}}{{w:while}} <cond> {{w:bound}} <N>: repeat while cond is true
+    {{c:bound}}in a {{w:while}} line: the most passes allowed; one more is trap 4
+    {{c:for}}{{w:for}} <i> <type> <count>: run with i = 0, 1, ..., count-1
+    {{c:break}}leave the innermost {{w:while}} or {{w:for}}
+    {{c:ret}}return a value ({{w:ret}} alone in a void function)
+    {{c:trap}}{{w:trap}} <code>: stop the run with that trap code
+    {{c:put}}{{w:put}} <array> <index> <value>: store into an array
+    {{c:free}}{{w:free}} <array>: release an array made with {{w:new}}
+    {{c:true}}the bool value true
+    {{c:false}}the bool value false
+    {{c:add}}{{w:add}} <a> <b>: a + b
+    {{c:sub}}{{w:sub}} <a> <b>: a - b
+    {{c:mul}}{{w:mul}} <a> <b>: a * b
+    {{c:div}}{{w:div}} <a> <b>: a / b, truncated toward zero
+    {{c:rem}}{{w:rem}} <a> <b>: remainder of a / b, sign of a
+    {{c:and}}{{w:and}} <a> <b>: bitwise and; on bools, logical and
+    {{c:or}}{{w:or}} <a> <b>: bitwise or; on bools, logical or
+    {{c:xor}}{{w:xor}} <a> <b>: bitwise exclusive or
+    {{c:shl}}{{w:shl}} <a> <b>: a shifted left by b bits
+    {{c:shr}}{{w:shr}} <a> <b>: a shifted right by b bits
+    {{c:eq}}{{w:eq}} <a> <b>: a == b (bool)
+    {{c:ne}}{{w:ne}} <a> <b>: a != b (bool)
+    {{c:lt}}{{w:lt}} <a> <b>: a < b (bool)
+    {{c:le}}{{w:le}} <a> <b>: a <= b (bool)
+    {{c:gt}}{{w:gt}} <a> <b>: a > b (bool)
+    {{c:ge}}{{w:ge}} <a> <b>: a >= b (bool)
+    {{c:neg}}{{w:neg}} <a>: -a (signed)
+    {{c:not}}{{w:not}} <a>: logical not of a bool, bitwise not of a number
+    {{c:get}}{{w:get}} <array> <index>: read an element
+    {{c:new}}<name> = {{w:new}} <type> <len> <init>: a new array of len elements, all init
+    {{c:bool}}type bool; {{w:bool}} <v> converts or types a value
+    {{c:uchar}}type u8 (unsigned 8-bit); {{w:uchar}} <v> converts or types a value
+    {{c:ushort}}type u16 (unsigned 16-bit)
+    {{c:uint}}type u32 (unsigned 32-bit)
+    {{c:ulong}}type u64 (unsigned 64-bit)
+    {{c:byte}}type i8 (signed 8-bit)
+    {{c:short}}type i16 (signed 16-bit)
+    {{c:int}}type i32 (signed 32-bit)
+    {{c:long}}type i64 (signed 64-bit)
+    {{c:own}}{{w:own}} <array>: move the array (a parameter: {{w:own}} <type> <len>)
+    {{c:edit}}{{w:edit}} <array>: lend the array for writing (a parameter: {{w:edit}} <type> <len>)
+    {{c:view}}{{w:view}} <array>: lend the array for reading (a parameter: {{w:view}} <type> <len>)

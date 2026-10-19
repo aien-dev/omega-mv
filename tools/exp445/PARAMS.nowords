@@ -1,0 +1,28 @@
+# no-words experiment parameters (evidence/NO-WORDS, docs/one_layer/OMEGESE_MATH.md section 5), frozen before any
+# generation. Same harness, prompts and sampling as protocol r3 (PARAMS); what differs: the three arms are
+# three spellings of Omegese (omegese = the words, symbols = one non-word token per word and name, numbers =
+# word numbers 1..48, names 50..99, values #N; tools/exp445/nowords), the model is the 27B on :18091 (config N),
+# and only the 10 public dev tasks are run. run.sh and score.sh read this file through EXP445_PARAMS.
+revision=r3
+attempts=3
+max_tokens=3072
+temperature=0.7
+top_p=0.8
+seed_base=445000
+timeout_s=900
+retries=9
+arms=omegese,symbols,numbers
+prompt_modes=many
+heldout_prompt_mode=many
+heldout_tasks=60
+futility_max=30
+g0_gate_source=aien-spark/aien-sovereign-core f881710a scripts/sampling-gate.sh
+g0_gate_sha256=2934e348676e531f8c08584548f7d3e31e1320788c197da7304544ab1453f5cc
+g0_task=dev01
+g0_seeds=8
+config.N.model=qwen3.8-27b-fp8
+config.N.base_url=http://127.0.0.1:18091/v1
+config.N.extra={}
+config.N.server=/home/drakestapleton/.local/state/aien-q38/bin-fast-46134247/aien-serve-http sha256=df9360112fdc815539f3e289fccfd8070845129ef4ccb466bb90c729ec71d0e5 (--engine omega --model-dir qwen3.8-27b-fp8-017b9c7a --port 18091 --max-context 131072 --max-tokens-cap 16384 --thinking off)
+models_root=/home/drakestapleton/models
+config.N.weights=tools/exp445/weights.N.sha256

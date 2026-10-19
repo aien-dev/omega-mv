@@ -45,7 +45,15 @@ ROOT="$(cd "$HERE/../.." && pwd)"
 die() { echo "score.sh: $*" >&2; exit 2; }
 TEST="${EXP445_TEST:-0}"
 PARAMS="$HERE/PARAMS"
-if [ "$TEST" = 1 ]; then PARAMS="${EXP445_PARAMS:-$PARAMS}"; else unset OLA_ALLOW_DIRTY OLA_EVIDENCE_ROOT EXP445_PARAMS; fi
+if [ "$TEST" = 1 ]; then PARAMS="${EXP445_PARAMS:-$PARAMS}"
+elif [ -n "${EXP445_PARAMS:-}" ]; then
+  # a second frozen settings file beside PARAMS (PARAMS.<name>, e.g. PARAMS.nowords for evidence/NO-WORDS) may be scored
+  # outside test mode only when it is committed and unchanged in this tree, exactly as PARAMS itself
+  PARAMS="$(realpath -e "$EXP445_PARAMS")" || die "no EXP445_PARAMS file"
+  [ "$(dirname "$PARAMS")" = "$HERE" ] && [[ "$(basename "$PARAMS")" =~ ^PARAMS\.[a-z0-9-]+$ ]] || die "EXP445_PARAMS must be tools/exp445/PARAMS.<name>"
+  git -C "$ROOT" ls-files --error-unmatch "$PARAMS" > /dev/null 2>&1 && git -C "$ROOT" diff --quiet HEAD -- "$PARAMS" || die "$PARAMS is not committed unchanged"
+  unset OLA_ALLOW_DIRTY OLA_EVIDENCE_ROOT
+else unset OLA_ALLOW_DIRTY OLA_EVIDENCE_ROOT EXP445_PARAMS; fi
 kv() { awk -F= -v k="$1" '$1 == k { print substr($0, length(k) + 2); exit }' "$PARAMS"; }
 [ "$(kv revision)" = r3 ] || die "$PARAMS is not protocol revision r3: r1/r2 scoring is retired (protocol section 13)"
 CONFIGS="" INTERIM=0
@@ -358,6 +366,7 @@ if [ "$INTERIM" = 1 ]; then gl="${gl}GATE NOT EVALUATED: interim score of attemp
 elif [ "$scored" != "$allcfg" ]; then gl="${gl}GATE NOT EVALUATED: configs scored $scored, the protocol needs $allcfg; INTERIM result (protocol 13.3)"
 else gl="${gl}GATE $([ "$g" = 1 ] && echo PASS || echo FAIL) (omegese passes in every config)"; fi
 gate="$gl"
+[[ ",$ARMS," == *,text,* ]] || gate="GATE NOT EVALUATED: the arms of $(basename "$PARAMS") ($ARMS) hold no text arm; the r3 gate compares omegese with text"
 {
   echo "${mode}exp445 r3 results$([ "$INTERIM" = 1 ] && echo ', INTERIM: attempt 1 only') (harness: $valid; $(sed -n 's/^references_accepted=/references accepted /p' "$ev/score.txt"); provenance OK; prompt mode $MODE)"
   echo "success = harness ACCEPT on hidden inputs of the final candidate; attempt 1 is the pre-registered primary measure; round 1 = accepted without the repair round; 95% Wilson intervals"
@@ -370,9 +379,11 @@ gate="$gl"
       printf "cost config %s: omegese / text mean completion tokens per generation x%.2f (%.1f / %.1f); prompt tokens per generation %.1f / %.1f\n", c, mean[c, "omegese"] / mean[c, "text"], mean[c, "omegese"], mean[c, "text"], pm[c, "omegese"], pm[c, "text"] }' "$OUT/results.tsv"
   awk -F'\t' '{ k = $1 "\t" $2; t[k]++; a[k] += $4; s[k] += $5; if ($4 > 1 && $5 == 1) same[k]++; if ($4 > 1) multi[k]++ }
     END { for (k in t) { split(k, q, "\t"); printf "distinct candidates config %s arm %s: %.2f per task over %.2f attempts; every attempt identical on %d of %d tasks with 2+ attempts\n", q[1], q[2], s[k] / t[k], a[k] / t[k], same[k], multi[k] } }' "$OUT/distinct.tsv" | LC_ALL=C sort
+  if [[ ",$ARMS," == *,text,* ]]; then
   while IFS=$'\t' read -r c both bo bt none p; do
     echo "paired attempt 1 config $c: both $both, only omegese $bo, only text $bt, neither $none; exact two-sided McNemar p = $p"
   done < "$OUT/paired.tsv"
+  fi
   if [ "$heldout" = 1 ]; then for c in "${!FUTD[@]}"; do
     echo "stop rule config $c (omegese attempt 1 <= $FMAX): ${FUTD[$c]}$([ "${STOPPED[$c]:-0}" = 1 ] && echo ', attempts 2 and later not run')"; done; fi
   echo

@@ -85,7 +85,7 @@ EXTRA="$(jq -c . <<< "$EXTRA")"
 if [ -z "$BASE" ]; then BASE="$FBASE"; elif [ "$BASE" != "$FBASE" ]; then over="$over base_url"; fi
 if [ -z "$MODEL" ]; then MODEL="$FMODEL"; elif [ "$MODEL" != "$FMODEL" ]; then over="$over model"; fi
 for arm in ${ARMS//,/ }; do
-  case "$arm" in omegese|text) ;; bytes|structured) die "arm $arm is dropped by protocol r3 (section 13.1): refused" ;; *) die "unknown arm $arm" ;; esac
+  case "$arm" in omegese|text|symbols|numbers) ;; bytes|structured) die "arm $arm is dropped by protocol r3 (section 13.1): refused" ;; *) die "unknown arm $arm" ;; esac
 done
 [[ ",$(kv prompt_modes)," == *",$MODE,"* ]] || die "prompt mode '$MODE' is not one of PARAMS prompt_modes ($(kv prompt_modes))"
 WLIST="$(kv "config.$CONFIG.weights")"; case "$WLIST" in /*|"") ;; *) WLIST="$ROOT/$WLIST" ;; esac
@@ -105,7 +105,7 @@ if [ "$HELD" = 1 ]; then
 fi
 B="$ROOT/build/omega_emit"
 make -s -C "$ROOT" PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 omega-emit >&2
-case ",$ARMS," in *,omegese,*) make -s -C "$ROOT" PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 omegese >&2 ;; esac
+case ",$ARMS," in *,omegese,*|*,symbols,*|*,numbers,*) make -s -C "$ROOT" PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 omegese >&2 ;; esac
 X="$B/x445" EMIT="$B/omega_emit" G="$ROOT/build/omegese/omegese"
 weights_ok "$OUT" "$WLIST" "$FMODEL" ||
   die "$OUT/weights.check + server.json missing or not all OK: run tools/exp445/check_weights.sh $CONFIG $OUT first (protocol section 9)"
