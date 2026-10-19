@@ -1,0 +1,27 @@
+model: 64 layers in 1 windows of 64; 47 positions (24 generated)
+reference: 47 positions in 83.9 s; its greedy tokens equal the golden record
+qwen38_omega_full: lm_head fp8: omega_gpu rc=-4 (CHIP_FAIL: m16_native_create_channel: RM_ALLOC class 0xcec0 status 0x51)
+{
+ "name": "cascade-w4-wm-W-r3",
+ "cmd": "flock -w 3600 /tmp/aien-gb10.lock nice -n 10 env AIEN_Q38_W4=1 AIEN_Q38_FP8_HEAD=1 /home/drakestapleton/workspace/targets/cascade-w4b/sc/release/qwen38_omega_full /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a 64 /home/drakestapleton/workspace/cascade-w4b-work/seq/golden-full.json report.json",
+ "exit": 2,
+ "git_head": null,
+ "start": "2026-10-19T12:12:08.034934",
+ "seconds": 1168.439,
+ "samples": 531,
+ "wall_W_mean": 248.26741996233523,
+ "wall_J": 290085.2298742858,
+ "idle_W_before": 250.71428571428572,
+ "incremental_J": -2859.0123272468104,
+ "gpu_W_mean": 7.6817702448210925,
+ "gpu_util_mean": 2.1619585687382297,
+ "load1_start": "78.62",
+ "load1_end": "100.66",
+ "mem_avail_kB_start": "31599072",
+ "mem_avail_kB_end": "44142668",
+ "lock_holders_max": 11,
+ "nvrm_errors_delta": 7,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-cascade-w4-wm-W-r3.json
+rc=2
