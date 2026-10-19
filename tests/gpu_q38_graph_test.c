@@ -207,6 +207,8 @@ static int host_only(void) {
     return g_failed ? 1 : 0;
 }
 
+static uint32_t tl_reps = 1; /* --tl-reps: stamped tokens for the timeline (more than 1: the first is dropped, medians printed) */
+
 static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
     Model m;
     const uint32_t vocab = 248320u;
@@ -259,19 +261,45 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
     }
     printf("timing: %u reps, median chip %.1f us, median total %.1f us per token (%u layers)\n", reps, median_u64(chip, reps) / 1e3, median_u64(tot, reps) / 1e3, layers);
     free(chip); free(tot);
-    /* timeline: one stamped token, GPU time per launch kind */
+    /* timeline: tl_reps stamped tokens (first one dropped when there are more), median GPU time per launch kind, and the
+     * weight bytes each kind streams so the line reads as GB/s (activations and state are not counted) */
     {
         static uint64_t stp[OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1]; static uint8_t kd[OMEGA_GPU_CMDLIST_MAX_LAUNCHES];
+        uint64_t wb[OMEGA_GPU_Q38_K_COUNT] = { 0 }; uint32_t e, n8, k8;
+        for (uint32_t l = 0; l < m.layers; l++) {
+            const OmegaGpuFp8Tensor *f[4] = { m.L[l].mix, m.L[l].o, m.L[l].gu, m.L[l].dn };
+            const unsigned fk[4] = { OMEGA_GPU_Q38_K_MIX, OMEGA_GPU_Q38_K_O, OMEGA_GPU_Q38_K_GATE_UP, OMEGA_GPU_Q38_K_DOWN };
+            for (int j = 0; j < 4; j++) if (f[j]) { omega_gpu_fp8_tensor_shape(f[j], &e, &n8, &k8); wb[fk[j]] += (uint64_t)n8 * k8; }
+            if (m.L[l].ab) { omega_gpu_bf16_tensor_shape(m.L[l].ab, &n8, &k8); wb[OMEGA_GPU_Q38_K_AB] += 2ull * n8 * k8; }
+        }
+        omega_gpu_bf16_tensor_shape(m.lm, &n8, &k8); wb[OMEGA_GPU_Q38_K_LM_HEAD] = 2ull * n8 * k8;
+        const uint32_t tr = tl_reps > 1 ? tl_reps - 1 : 1;
+        uint64_t *ns = calloc((size_t)tr * (OMEGA_GPU_Q38_K_COUNT + 1), 8), col[256];
+        uint32_t cnt[OMEGA_GPU_Q38_K_COUNT] = { 0 };
+        if (!ns || tr > 256) { CHECK(0, "timeline buffers (tl-reps <= 257)"); return 1; }
         omega_gpu_q38_graph_set_stamps(g, 1);
-        if (state_reset(&m) != 0 || graph_token(g, &m, m.x0[0], 2, &M, &st) != 0) { CHECK(0, "stamped token"); return 1; }
-        int n = omega_gpu_q38_graph_stamps(g, stp, kd, OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1);
-        CHECK(n == (int)st.launches, "timeline: %d stamped launches", n);
-        uint64_t ns[OMEGA_GPU_Q38_K_COUNT] = { 0 }; uint32_t cnt[OMEGA_GPU_Q38_K_COUNT] = { 0 };
-        for (int i = 0; i < n; i++) { ns[kd[i]] += stp[i + 1] - stp[i]; cnt[kd[i]]++; }
-        for (unsigned k = 0; k < OMEGA_GPU_Q38_K_COUNT; k++)
-            if (cnt[k]) printf("timeline %-8s %3u launches %9.1f us\n", omega_gpu_q38_graph_kind_name((uint8_t)k), cnt[k], ns[k] / 1e3);
-        if (n > 0) printf("timeline span %.1f us\n", (stp[n] - stp[0]) / 1e3);
+        for (uint32_t r = 0; r < tl_reps; r++) {
+            if (state_reset(&m) != 0 || graph_token(g, &m, m.x0[0], 2, &M, &st) != 0) { CHECK(0, "stamped token %u", r); return 1; }
+            int n = omega_gpu_q38_graph_stamps(g, stp, kd, OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1);
+            CHECK(n == (int)st.launches, "timeline %u: %d stamped launches", r, n);
+            if (tl_reps > 1 && r == 0) continue;
+            uint64_t *row = ns + (size_t)(tl_reps > 1 ? r - 1 : 0) * (OMEGA_GPU_Q38_K_COUNT + 1);
+            memset(cnt, 0, sizeof cnt);
+            for (int i = 0; i < n; i++) { row[kd[i]] += stp[i + 1] - stp[i]; cnt[kd[i]]++; }
+            if (n > 0) row[OMEGA_GPU_Q38_K_COUNT] = stp[n] - stp[0];
+        }
         omega_gpu_q38_graph_set_stamps(g, 0);
+        for (unsigned k = 0; k <= OMEGA_GPU_Q38_K_COUNT; k++) {
+            if (k < OMEGA_GPU_Q38_K_COUNT && !cnt[k]) continue;
+            uint64_t lo = UINT64_MAX, hi = 0;
+            for (uint32_t r = 0; r < tr; r++) { col[r] = ns[(size_t)r * (OMEGA_GPU_Q38_K_COUNT + 1) + k]; if (col[r] < lo) lo = col[r]; if (col[r] > hi) hi = col[r]; }
+            const double med = (double)median_u64(col, tr);
+            if (k == OMEGA_GPU_Q38_K_COUNT) { printf("timeline span %.1f us (median of %u, min %.1f max %.1f)\n", med / 1e3, tr, lo / 1e3, hi / 1e3); break; }
+            printf("timeline %-8s %3u launches %9.1f us (min %.1f max %.1f)", omega_gpu_q38_graph_kind_name((uint8_t)k), cnt[k], med / 1e3, lo / 1e3, hi / 1e3);
+            if (wb[k]) printf(" %12" PRIu64 " weight B %6.1f GB/s", wb[k], (double)wb[k] / med);
+            printf("\n");
+        }
+        free(ns);
     }
     omega_gpu_q38_graph_free(g);
     return g_failed ? 1 : 0;
@@ -284,9 +312,16 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--layers") == 0 && i + 1 < argc) layers = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--mask") == 0 && i + 1 < argc) mask = strtoull(argv[++i], NULL, 0);
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
-        else { printf("usage: %s [--host-only] [--layers N (<= 8)] [--mask M] [--reps R]\n", argv[0]); return 2; }
+        else if (strcmp(argv[i], "--tl-reps") == 0 && i + 1 < argc) tl_reps = (uint32_t)atoi(argv[++i]);
+        /* tuning knobs for sweeps (process-wide, before any kernel is built): FP8 GEMV lane_bytes,rows,warps / CTA budget,
+         * bf16 GEMV (lm_head, a|b) rows,warps,depth / CTA budget */
+        else if (strcmp(argv[i], "--fp8-shape") == 0 && i + 1 < argc) { unsigned a, b, c; if (sscanf(argv[++i], "%u,%u,%u", &a, &b, &c) != 3) return 2; omega_gpu_fp8_set_shape(a, b, c); }
+        else if (strcmp(argv[i], "--fp8-ctas") == 0 && i + 1 < argc) omega_gpu_fp8_set_cta_budget((uint32_t)atoi(argv[++i]));
+        else if (strcmp(argv[i], "--bf16-shape") == 0 && i + 1 < argc) { unsigned a, b, c; if (sscanf(argv[++i], "%u,%u,%u", &a, &b, &c) != 3) return 2; omega_gpu_bf16_set_shape(a, b, c); }
+        else if (strcmp(argv[i], "--bf16-ctas") == 0 && i + 1 < argc) omega_gpu_bf16_set_cta_budget((uint32_t)atoi(argv[++i]));
+        else { printf("usage: %s [--host-only] [--layers N (<= 8)] [--mask M] [--reps R] [--tl-reps T (<= 257)]\n", argv[0]); return 2; }
     }
-    if (layers == 0 || layers > 8 || reps == 0) { printf("layers 1..8, reps >= 1\n"); return 2; }
+    if (layers == 0 || layers > 8 || reps == 0 || tl_reps == 0 || tl_reps > 257) { printf("layers 1..8, reps >= 1, tl-reps 1..257\n"); return 2; }
     int rc = host ? host_only() : chip_run(layers, mask, reps);
     printf("gpu_q38_graph_test%s: %d checks, %d failed: %s\n", host ? " (host-only)" : "", g_checks, g_failed, rc ? "FAIL" : "PASS");
     return rc;
