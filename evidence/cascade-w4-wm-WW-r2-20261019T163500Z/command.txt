@@ -1,0 +1,1 @@
+spark-receipt cascade-w4-wm-WW-r2 -- flock -w 3600 /tmp/aien-gb10.lock nice -n 10 env AIEN_Q38_W4=1 AIEN_Q38_W4_HEAD=1 /home/drakestapleton/workspace/targets/cascade-w4b/sc/release/qwen38_omega_full /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a 64 /home/drakestapleton/workspace/cascade-w4b-work/seq/golden-full.json report.json
