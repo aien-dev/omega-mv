@@ -158,13 +158,22 @@ static void host_only(void) {
     free(blk);
     /* codegen budgets */
     for (int m = 0; m <= 4; m++) {
-        OmegaGdnSpec sp = { m }; uint32_t ni = 0, ng = 0;
+        OmegaGdnSpec sp = { .mutant = m }; uint32_t ni = 0, ng = 0;
         int rc = omega_gdn_prog_stats(&sp, &ni, &ng);
         CHECK(rc == 0 && ni <= BW_MAX_IR_INSNS && ng + 2 <= BW_PHYS_GPR_MAX, "mutant %d codegen: rc %d, %u insns, %u registers", m, rc, ni, ng);
         if (m == 0) printf("kernel: %u instructions, peak %u registers (%u declared, %u threads)\n", ni, ng, omega_bw_gpr_declared(ng), OMEGA_GDN_THREADS);
     }
-    OmegaGdnSpec bad = { 5 };
+    OmegaGdnSpec bad = { .mutant = 5 };
     CHECK(omega_gdn_prog_stats(&bad, NULL, NULL) == -1, "mutant 5 refused");
+    /* the state copy / zero programs (cached tail and state) */
+    {
+        static BlackwellIRProgram cp;
+        OmegaGdnSpec c1 = { .copy = OMEGA_GDN_COPY }, c2 = { .copy = OMEGA_GDN_ZERO }, c3 = { .copy = 3 }, cm = { .mutant = 1, .copy = OMEGA_GDN_COPY };
+        CHECK(omega_blackwell_codegen_gdn_copy_prog(&c1, &cp) == 0 && cp.regalloc.peak_gpr_usage + 2 <= BW_PHYS_GPR_MAX, "copy codegen");
+        CHECK(omega_blackwell_codegen_gdn_copy_prog(&c2, &cp) == 0, "zero codegen");
+        CHECK(omega_blackwell_codegen_gdn_copy_prog(&c3, &cp) == -1 && omega_blackwell_codegen_gdn_copy_prog(&cm, &cp) == -1, "copy codegen refuses kind 3 and a mutant");
+        CHECK(omega_gdn_prog_stats(&c1, NULL, NULL) == -1, "decode codegen refuses a copy spec");
+    }
     /* the oracle's delta rule: from S = 0 with beta ~ 1, the step writes v along k, so S^T k = v (|k| = 1) */
     {
         DState d; dstate_init(&d, &L);
@@ -220,7 +229,7 @@ enum { SB_QKV, SB_Z, SB_AB, SB_PAR, SB_TAIL, SB_STATE, SB_OUT, SB_N };
 static uint64_t g_sim_issues;
 static int sim_run_steps(int mutant, uint32_t steps, float in_scale, float out_scale, Errs *worst, char *msg, size_t n) {
     static BlackwellIRProgram prog;
-    OmegaGdnSpec spec = { mutant };
+    OmegaGdnSpec spec = { .mutant = mutant };
     if (omega_blackwell_codegen_gdn_prog(&spec, &prog) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
     Layer L; layer_make(&L, 21);
     DState d; dstate_init(&d, &L);
@@ -329,7 +338,7 @@ static int sim_launch(const BlackwellIRProgram *prog, uint32_t threads, uint32_t
 static uint32_t fw(float f) { uint32_t u; memcpy(&u, &f, 4); return u; }
 static int sim_prefill(int mutant, uint32_t T, float in_scale, float out_scale, Errs *worst, char *msg, size_t n) {
     static BlackwellIRProgram pp, ps, pq;
-    OmegaGdnSpec spec = { mutant };
+    OmegaGdnSpec spec = { .mutant = mutant };
     if (omega_blackwell_codegen_gdn_prep_prog(&spec, &pp) != 0 || omega_blackwell_codegen_gdn_scan_prog(&spec, &ps) != 0 ||
         omega_blackwell_codegen_gdn_post_prog(&spec, &pq) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
     Layer L; layer_make(&L, 21);
@@ -405,6 +414,30 @@ static void sim_prefill_battery(void) {
         CHECK(err == 0, "sim %s ran (%s)", pts[i].name, msg);
         if (pts[i].mutant == 0) CHECK(errs_ok(&w), "sim %s within tolerance", pts[i].name);
         else CHECK(!errs_ok(&w), "sim %s caught", pts[i].name);
+    }
+}
+
+/* ---- the state copy / zero on the simulator: 3 CTAs; a 2-CTA launch leaves the last 1024 words (negative control) ---- */
+static void sim_copy_battery(void) {
+    static BlackwellIRProgram cp;
+    enum { W = 3 * OMEGA_GDN_COPY_WORDS_PER_CTA };
+    static uint32_t src[W], dst[W];
+    uint32_t x = 12345u;
+    for (unsigned i = 0; i < W; i++) { x = x * 1664525u + 1013904223u; src[i] = x; }
+    char msg[200] = "";
+    for (int kind = OMEGA_GDN_COPY; kind <= OMEGA_GDN_ZERO; kind++) {
+        OmegaGdnSpec sp = { .copy = kind };
+        CHECK(omega_blackwell_codegen_gdn_copy_prog(&sp, &cp) == 0, "copy kind %d codegen", kind);
+        for (uint32_t gx = 3; gx >= 2; gx--) {
+            memset(dst, 0xcd, sizeof dst);
+            SimBuf b[2] = { { OMEGA_GDN_COPY_ARG_SRC, src, sizeof src }, { OMEGA_GDN_COPY_ARG_DST, dst, sizeof dst } };
+            int err = sim_launch(&cp, OMEGA_GDN_COPY_THREADS, gx, 1, 0, 0, b, 2, NULL, 0, msg, sizeof msg);
+            unsigned bad = 0;
+            for (unsigned i = 0; i < W; i++) if (dst[i] != (kind == OMEGA_GDN_COPY ? src[i] : 0u)) bad++;
+            CHECK(err == 0, "sim copy kind %d grid %u ran (%s)", kind, gx, msg);
+            if (gx == 3) CHECK(bad == 0, "sim copy kind %d: every word (%u wrong)", kind, bad);
+            else CHECK(bad == OMEGA_GDN_COPY_WORDS_PER_CTA, "sim copy kind %d grid 2 caught: %u words untouched", kind, bad);
+        }
     }
 }
 
@@ -758,7 +791,7 @@ int main(int argc, char **argv) {
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
     if (host) host_only();
-    if (sim) { sim_battery(); sim_prefill_battery(); }
+    if (sim) { sim_battery(); sim_prefill_battery(); sim_copy_battery(); }
     if (!host && !sim) {
         (void)omega_gpu_session_set_spin_us(spin);
         chip_run(out_path, reps ? reps : 50);
