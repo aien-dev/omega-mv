@@ -1,0 +1,188 @@
+host off: 47 positions in 54.9 s
+host floor: 47 positions in 100.4 s
+host ceil: 47 positions in 89.2 s
+host mse: 47 positions in 110.5 s
+floor p   0 fed 248045 residual_cos 0.988677 logits_cos 0.996189 kl 0.00003 top 8678 8678 margin_off 0.590
+floor p   1 fed    846 residual_cos 0.960324 logits_cos 0.984264 kl 0.00000 top 198 198 margin_off 16.066
+floor p   2 fed    198 residual_cos 0.992440 logits_cos 0.995915 kl 0.02291 top 2523 2523 margin_off 0.077
+floor p   3 fed   7734 residual_cos 0.988893 logits_cos 0.996354 kl 0.02221 top 264 264 margin_off 0.455
+floor p   4 fed    264 residual_cos 0.986813 logits_cos 0.994674 kl 0.05928 top 248046 248046 margin_off 3.228
+floor p   5 fed    351 residual_cos 0.987733 logits_cos 0.994665 kl 0.07846 top 248046 248046 margin_off 1.814
+floor p   6 fed    709 residual_cos 0.988889 logits_cos 0.995388 kl 0.00455 top 248046 248046 margin_off 6.780
+floor p   7 fed    421 residual_cos 0.989771 logits_cos 0.996496 kl 0.00739 top 248046 248046 margin_off 5.180
+floor p   8 fed   4523 residual_cos 0.991249 logits_cos 0.994637 kl 0.01963 top 248046 248046 margin_off 3.832
+floor p   9 fed    279 residual_cos 0.977424 logits_cos 0.990125 kl 0.00382 top 248046 248046 margin_off 6.450
+floor p  10 fed   7875 residual_cos 0.991041 logits_cos 0.995344 kl 0.07290 top 248046 248046 margin_off 2.357
+floor p  11 fed    314 residual_cos 0.980475 logits_cos 0.990546 kl 0.03983 top 248046 248046 margin_off 2.388
+floor p  12 fed   1330 residual_cos 0.991407 logits_cos 0.996550 kl 0.02229 top 248046 248046 margin_off 1.222
+floor p  13 fed  52883 residual_cos 0.987750 logits_cos 0.995966 kl 0.00002 top 248046 248046 margin_off 11.425
+floor p  14 fed     13 residual_cos 0.980021 logits_cos 0.991572 kl 0.00000 top 248046 248046 margin_off 15.635
+floor p  15 fed 248046 residual_cos 0.956476 logits_cos 0.991700 kl 0.00000 top 198 198 margin_off 19.551
+floor p  16 fed    198 residual_cos 0.945013 logits_cos 0.931699 kl 0.00000 top 248045 248045 margin_off 17.947
+floor p  17 fed 248045 residual_cos 0.926137 logits_cos 0.945117 kl 0.15221 top 248068 248068 margin_off 4.381
+floor p  18 fed  74455 residual_cos 0.944293 logits_cos 0.979363 kl 0.58824 top 248068 248068 margin_off 6.649
+floor p  19 fed    198 residual_cos 0.965067 logits_cos 0.968108 kl 0.00000 top 248068 248068 margin_off 21.108
+floor p  20 fed 248068 residual_cos 0.896433 logits_cos 0.948175 kl 0.00531 top 198 198 margin_off 2.495
+floor p  21 fed    271 residual_cos 0.796917 logits_cos 0.782700 kl 0.00000 top 248069 248069 margin_off 15.354
+floor p  22 fed 248069 residual_cos 0.851647 logits_cos 0.958585 kl 0.00005 top 271 271 margin_off 10.381
+floor p  23 fed    271 residual_cos 0.946731 logits_cos 0.872705 kl 0.07150 top 71093 71093 margin_off 2.662
+floor p  24 fed  71093 residual_cos 0.949134 logits_cos 0.971624 kl 0.00007 top 66 66 margin_off 9.283
+floor p  25 fed     66 residual_cos 0.971362 logits_cos 0.991050 kl 0.00003 top 198 198 margin_off 10.508
+floor p  26 fed    198 residual_cos 0.981441 logits_cos 0.928002 kl 0.03515 top 390 390 margin_off 4.095
+floor p  27 fed    390 residual_cos 0.983883 logits_cos 0.996298 kl 0.00102 top 1866 1866 margin_off 3.743
+floor p  28 fed   1866 residual_cos 0.990663 logits_cos 0.991420 kl 0.01889 top 1494 1494 margin_off 1.715
+floor p  29 fed   1494 residual_cos 0.986023 logits_cos 0.995613 kl 0.00003 top 264 264 margin_off 9.045
+floor p  30 fed    264 residual_cos 0.988621 logits_cos 0.996734 kl 0.00000 top 11 11 margin_off 12.996
+floor p  31 fed     11 residual_cos 0.982648 logits_cos 0.996622 kl 0.00000 top 514 514 margin_off 12.021
+floor p  32 fed    514 residual_cos 0.963538 logits_cos 0.993435 kl 0.00002 top 292 292 margin_off 11.508
+floor p  33 fed    292 residual_cos 0.985197 logits_cos 0.994651 kl 0.00002 top 8 8 margin_off 9.347
+floor p  34 fed      8 residual_cos 0.986706 logits_cos 0.996459 kl 0.00022 top 313 313 margin_off 5.098
+floor p  35 fed    313 residual_cos 0.989931 logits_cos 0.997912 kl 0.00008 top 198 198 margin_off 9.316
+floor p  36 fed    198 residual_cos 0.989083 logits_cos 0.995559 kl 0.00001 top 262 262 margin_off 11.881
+floor p  37 fed    262 residual_cos 0.988531 logits_cos 0.992212 kl 0.00006 top 460 460 margin_off 4.739
+floor p  38 fed    460 residual_cos 0.988174 logits_cos 0.993997 kl 0.04833 top 318 318 margin_off 0.744
+floor p  39 fed    318 residual_cos 0.983516 logits_cos 0.988756 kl 0.00000 top 64 64 margin_off 15.366
+floor p  40 fed     64 residual_cos 0.989664 logits_cos 0.995447 kl 0.00020 top 835 835 margin_off 6.642
+floor p  41 fed    835 residual_cos 0.982994 logits_cos 0.997763 kl 0.00000 top 292 292 margin_off 12.714
+floor p  42 fed    292 residual_cos 0.980082 logits_cos 0.991699 kl 0.00000 top 8 8 margin_off 11.645
+floor p  43 fed      8 residual_cos 0.986764 logits_cos 0.994846 kl 0.00000 top 907 907 margin_off 14.974
+floor p  44 fed    907 residual_cos 0.986586 logits_cos 0.997292 kl 0.00000 top 264 264 margin_off 11.394
+floor p  45 fed    264 residual_cos 0.988179 logits_cos 0.996586 kl 0.00001 top 535 535 margin_off 12.304
+floor p  46 fed    535 residual_cos 0.775591 logits_cos 0.956999 kl 0.00002 top 292 292 margin_off 13.843
+floor: argmax 47/47, residual cosine min 0.775591, logits cosine min 0.782700, KL mean 0.02712 max 0.58824, NLL off 2.03104 floor 1.86493
+ceil p   0 fed 248045 residual_cos 0.989023 logits_cos 0.996846 kl 0.00198 top 8678 8678 margin_off 0.590
+ceil p   1 fed    846 residual_cos 0.964988 logits_cos 0.985875 kl 0.00000 top 198 198 margin_off 16.066
+ceil p   2 fed    198 residual_cos 0.992777 logits_cos 0.994741 kl 0.01897 top 2523 2523 margin_off 0.077
+ceil p   3 fed   7734 residual_cos 0.988305 logits_cos 0.996084 kl 0.06413 top 264 264 margin_off 0.455
+ceil p   4 fed    264 residual_cos 0.984216 logits_cos 0.994272 kl 0.08810 top 248046 248046 margin_off 3.228
+ceil p   5 fed    351 residual_cos 0.987376 logits_cos 0.994506 kl 0.09195 top 248046 248046 margin_off 1.814
+ceil p   6 fed    709 residual_cos 0.987703 logits_cos 0.995292 kl 0.00605 top 248046 248046 margin_off 6.780
+ceil p   7 fed    421 residual_cos 0.989304 logits_cos 0.996586 kl 0.01234 top 248046 248046 margin_off 5.180
+ceil p   8 fed   4523 residual_cos 0.991072 logits_cos 0.993678 kl 0.02069 top 248046 248046 margin_off 3.832
+ceil p   9 fed    279 residual_cos 0.308340 logits_cos 0.879076 kl 0.18265 top 248046 248046 margin_off 6.450
+ceil p  10 fed   7875 residual_cos 0.992630 logits_cos 0.996025 kl 0.04373 top 248046 248046 margin_off 2.357
+ceil p  11 fed    314 residual_cos 0.990778 logits_cos 0.996199 kl 0.01403 top 248046 248046 margin_off 2.388
+ceil p  12 fed   1330 residual_cos 0.991301 logits_cos 0.996488 kl 0.01325 top 248046 248046 margin_off 1.222
+ceil p  13 fed  52883 residual_cos 0.985866 logits_cos 0.995475 kl 0.00000 top 248046 248046 margin_off 11.425
+ceil p  14 fed     13 residual_cos 0.977541 logits_cos 0.990684 kl 0.00000 top 248046 248046 margin_off 15.635
+ceil p  15 fed 248046 residual_cos 0.968496 logits_cos 0.991710 kl 0.00000 top 198 198 margin_off 19.551
+ceil p  16 fed    198 residual_cos 0.926688 logits_cos 0.914612 kl 0.00000 top 248045 248045 margin_off 17.947
+ceil p  17 fed 248045 residual_cos 0.725192 logits_cos 0.702695 kl 0.01448 top 248068 248068 margin_off 4.381
+ceil p  18 fed  74455 residual_cos 0.957464 logits_cos 0.981620 kl 0.00527 top 248068 248068 margin_off 6.649
+ceil p  19 fed    198 residual_cos 0.928366 logits_cos 0.932121 kl 0.00000 top 248068 248068 margin_off 21.108
+ceil p  20 fed 248068 residual_cos 0.897059 logits_cos 0.937439 kl 0.00129 top 198 198 margin_off 2.495
+ceil p  21 fed    271 residual_cos 0.800536 logits_cos 0.798911 kl 0.00000 top 248069 248069 margin_off 15.354
+ceil p  22 fed 248069 residual_cos 0.854447 logits_cos 0.965698 kl 0.00061 top 271 271 margin_off 10.381
+ceil p  23 fed    271 residual_cos 0.961174 logits_cos 0.876474 kl 0.01382 top 71093 71093 margin_off 2.662
+ceil p  24 fed  71093 residual_cos 0.948566 logits_cos 0.971106 kl 0.00016 top 66 66 margin_off 9.283
+ceil p  25 fed     66 residual_cos 0.979486 logits_cos 0.993000 kl 0.00002 top 198 198 margin_off 10.508
+ceil p  26 fed    198 residual_cos 0.985434 logits_cos 0.981868 kl 0.01944 top 390 390 margin_off 4.095
+ceil p  27 fed    390 residual_cos 0.986482 logits_cos 0.996444 kl 0.00165 top 1866 1866 margin_off 3.743
+ceil p  28 fed   1866 residual_cos 0.990298 logits_cos 0.990845 kl 0.00883 top 1494 1494 margin_off 1.715
+ceil p  29 fed   1494 residual_cos 0.987540 logits_cos 0.996238 kl 0.00026 top 264 264 margin_off 9.045
+ceil p  30 fed    264 residual_cos 0.990139 logits_cos 0.997214 kl 0.00000 top 11 11 margin_off 12.996
+ceil p  31 fed     11 residual_cos 0.982588 logits_cos 0.996955 kl 0.00000 top 514 514 margin_off 12.021
+ceil p  32 fed    514 residual_cos 0.961004 logits_cos 0.992887 kl 0.00000 top 292 292 margin_off 11.508
+ceil p  33 fed    292 residual_cos 0.987868 logits_cos 0.995224 kl 0.00001 top 8 8 margin_off 9.347
+ceil p  34 fed      8 residual_cos 0.988023 logits_cos 0.996599 kl 0.00002 top 313 313 margin_off 5.098
+ceil p  35 fed    313 residual_cos 0.992188 logits_cos 0.998320 kl 0.00001 top 198 198 margin_off 9.316
+ceil p  36 fed    198 residual_cos 0.990303 logits_cos 0.995315 kl 0.00001 top 262 262 margin_off 11.881
+ceil p  37 fed    262 residual_cos 0.988953 logits_cos 0.992835 kl 0.00322 top 460 460 margin_off 4.739
+ceil p  38 fed    460 residual_cos 0.990260 logits_cos 0.995769 kl 0.01219 top 318 318 margin_off 0.744
+ceil p  39 fed    318 residual_cos 0.983051 logits_cos 0.988552 kl 0.00000 top 64 64 margin_off 15.366
+ceil p  40 fed     64 residual_cos 0.989216 logits_cos 0.995543 kl 0.00013 top 835 835 margin_off 6.642
+ceil p  41 fed    835 residual_cos 0.986420 logits_cos 0.997873 kl 0.00000 top 292 292 margin_off 12.714
+ceil p  42 fed    292 residual_cos 0.984479 logits_cos 0.993828 kl 0.00002 top 8 8 margin_off 11.645
+ceil p  43 fed      8 residual_cos 0.984261 logits_cos 0.994386 kl 0.00000 top 907 907 margin_off 14.974
+ceil p  44 fed    907 residual_cos 0.986654 logits_cos 0.997040 kl 0.00001 top 264 264 margin_off 11.394
+ceil p  45 fed    264 residual_cos 0.987732 logits_cos 0.995877 kl 0.00000 top 535 535 margin_off 12.304
+ceil p  46 fed    535 residual_cos 0.929323 logits_cos 0.985073 kl 0.00001 top 292 292 margin_off 13.843
+ceil: argmax 47/47, residual cosine min 0.308340, logits cosine min 0.702695, KL mean 0.01360 max 0.18265, NLL off 2.03104 ceil 1.93627
+mse p   0 fed 248045 residual_cos 0.990871 logits_cos 0.997201 kl 0.00045 top 8678 8678 margin_off 0.590
+mse p   1 fed    846 residual_cos 0.971608 logits_cos 0.988379 kl 0.00000 top 198 198 margin_off 16.066
+mse p   2 fed    198 residual_cos 0.993601 logits_cos 0.993478 kl 0.01957 top 2523 2523 margin_off 0.077
+mse p   3 fed   7734 residual_cos 0.990240 logits_cos 0.996837 kl 0.03279 top 264 264 margin_off 0.455
+mse p   4 fed    264 residual_cos 0.988882 logits_cos 0.995777 kl 0.03435 top 248046 248046 margin_off 3.228
+mse p   5 fed    351 residual_cos 0.988059 logits_cos 0.994819 kl 0.14683 top 248046 248046 margin_off 1.814
+mse p   6 fed    709 residual_cos 0.989676 logits_cos 0.995547 kl 0.00269 top 248046 248046 margin_off 6.780
+mse p   7 fed    421 residual_cos 0.990315 logits_cos 0.996894 kl 0.00712 top 248046 248046 margin_off 5.180
+mse p   8 fed   4523 residual_cos 0.992066 logits_cos 0.995371 kl 0.01004 top 248046 248046 margin_off 3.832
+mse p   9 fed    279 residual_cos 0.314488 logits_cos 0.880166 kl 0.23983 top 248046 248046 margin_off 6.450
+mse p  10 fed   7875 residual_cos 0.990903 logits_cos 0.994914 kl 0.01386 top 248046 248046 margin_off 2.357
+mse p  11 fed    314 residual_cos 0.984881 logits_cos 0.992005 kl 0.01056 top 248046 248046 margin_off 2.388
+mse p  12 fed   1330 residual_cos 0.992353 logits_cos 0.996959 kl 0.01100 top 248046 248046 margin_off 1.222
+mse p  13 fed  52883 residual_cos 0.987265 logits_cos 0.995920 kl 0.00000 top 248046 248046 margin_off 11.425
+mse p  14 fed     13 residual_cos 0.980651 logits_cos 0.990601 kl 0.00000 top 248046 248046 margin_off 15.635
+mse p  15 fed 248046 residual_cos 0.969780 logits_cos 0.993412 kl 0.00000 top 198 198 margin_off 19.551
+mse p  16 fed    198 residual_cos 0.944270 logits_cos 0.940151 kl 0.00000 top 248045 248045 margin_off 17.947
+mse p  17 fed 248045 residual_cos 0.956280 logits_cos 0.963962 kl 0.01255 top 248068 248068 margin_off 4.381
+mse p  18 fed  74455 residual_cos 0.956931 logits_cos 0.983057 kl 0.01324 top 248068 248068 margin_off 6.649
+mse p  19 fed    198 residual_cos 0.962770 logits_cos 0.964893 kl 0.00000 top 248068 248068 margin_off 21.108
+mse p  20 fed 248068 residual_cos 0.914914 logits_cos 0.950162 kl 0.00000 top 198 198 margin_off 2.495
+mse p  21 fed    271 residual_cos 0.813388 logits_cos 0.804210 kl 0.00000 top 248069 248069 margin_off 15.354
+mse p  22 fed 248069 residual_cos 0.862798 logits_cos 0.968440 kl 0.00068 top 271 271 margin_off 10.381
+mse p  23 fed    271 residual_cos 0.955445 logits_cos 0.913816 kl 0.04647 top 71093 71093 margin_off 2.662
+mse p  24 fed  71093 residual_cos 0.956360 logits_cos 0.975833 kl 0.00005 top 66 66 margin_off 9.283
+mse p  25 fed     66 residual_cos 0.977169 logits_cos 0.992810 kl 0.00002 top 198 198 margin_off 10.508
+mse p  26 fed    198 residual_cos 0.984315 logits_cos 0.961689 kl 0.00665 top 390 390 margin_off 4.095
+mse p  27 fed    390 residual_cos 0.986624 logits_cos 0.996628 kl 0.00411 top 1866 1866 margin_off 3.743
+mse p  28 fed   1866 residual_cos 0.991782 logits_cos 0.992636 kl 0.02657 top 1494 1494 margin_off 1.715
+mse p  29 fed   1494 residual_cos 0.989110 logits_cos 0.996685 kl 0.00005 top 264 264 margin_off 9.045
+mse p  30 fed    264 residual_cos 0.990604 logits_cos 0.997452 kl 0.00000 top 11 11 margin_off 12.996
+mse p  31 fed     11 residual_cos 0.984393 logits_cos 0.997213 kl 0.00000 top 514 514 margin_off 12.021
+mse p  32 fed    514 residual_cos 0.969175 logits_cos 0.994488 kl 0.00001 top 292 292 margin_off 11.508
+mse p  33 fed    292 residual_cos 0.987871 logits_cos 0.995174 kl 0.00002 top 8 8 margin_off 9.347
+mse p  34 fed      8 residual_cos 0.988322 logits_cos 0.996811 kl 0.00004 top 313 313 margin_off 5.098
+mse p  35 fed    313 residual_cos 0.991840 logits_cos 0.998272 kl 0.00006 top 198 198 margin_off 9.316
+mse p  36 fed    198 residual_cos 0.990466 logits_cos 0.995336 kl 0.00000 top 262 262 margin_off 11.881
+mse p  37 fed    262 residual_cos 0.989545 logits_cos 0.991537 kl 0.00145 top 460 460 margin_off 4.739
+mse p  38 fed    460 residual_cos 0.990858 logits_cos 0.995368 kl 0.01181 top 318 318 margin_off 0.744
+mse p  39 fed    318 residual_cos 0.984545 logits_cos 0.988332 kl 0.00000 top 64 64 margin_off 15.366
+mse p  40 fed     64 residual_cos 0.990505 logits_cos 0.995600 kl 0.00004 top 835 835 margin_off 6.642
+mse p  41 fed    835 residual_cos 0.986416 logits_cos 0.997885 kl 0.00000 top 292 292 margin_off 12.714
+mse p  42 fed    292 residual_cos 0.984441 logits_cos 0.993017 kl 0.00000 top 8 8 margin_off 11.645
+mse p  43 fed      8 residual_cos 0.987090 logits_cos 0.995028 kl 0.00000 top 907 907 margin_off 14.974
+mse p  44 fed    907 residual_cos 0.987188 logits_cos 0.997333 kl 0.00000 top 264 264 margin_off 11.394
+mse p  45 fed    264 residual_cos 0.987823 logits_cos 0.996081 kl 0.00000 top 535 535 margin_off 12.304
+mse p  46 fed    535 residual_cos 0.856262 logits_cos 0.970840 kl 0.00001 top 292 292 margin_off 13.843
+mse: argmax 47/47, residual cosine min 0.314488, logits cosine min 0.804210, KL mean 0.01389 max 0.23983, NLL off 2.03104 mse 1.90596
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h0-20261019T130509Z/out.logits vs host off: logits cosine min 0.999968 mean 0.999999, KL mean 0.00000 max 0.00003, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h0-20261019T130509Z/out.logits vs host floor: logits cosine min 0.782395 mean 0.979513, KL mean 0.06825 max 2.22948, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h0-20261019T130509Z/out.logits vs host ceil: logits cosine min 0.700242 mean 0.973229, KL mean 0.02235 max 0.57187, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h0-20261019T130509Z/out.logits vs host mse: logits cosine min 0.804508 mean 0.980851, KL mean 0.02590 max 0.75563, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h1-20261019T130903Z/out.logits vs host off: logits cosine min 0.999375 mean 0.999768, KL mean 0.00012 max 0.00153, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h1-20261019T130903Z/out.logits vs host floor: logits cosine min 0.782142 mean 0.979291, KL mean 0.06844 max 2.23696, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h1-20261019T130903Z/out.logits vs host ceil: logits cosine min 0.700036 mean 0.973013, KL mean 0.02213 max 0.55664, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h1-20261019T130903Z/out.logits vs host mse: logits cosine min 0.804247 mean 0.980628, KL mean 0.02545 max 0.73479, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-W-20261019T154726Z/out.logits vs host off: logits cosine min 0.782160 mean 0.979307, KL mean 0.02787 max 0.61236, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-W-20261019T154726Z/out.logits vs host floor: logits cosine min 0.999422 mean 0.999772, KL mean 0.00013 max 0.00159, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-W-20261019T154726Z/out.logits vs host ceil: logits cosine min 0.782767 mean 0.980257, KL mean 0.03773 max 0.70406, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-W-20261019T154726Z/out.logits vs host mse: logits cosine min 0.885093 mean 0.990449, KL mean 0.03616 max 0.92167, argmax 47/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-WW-20261019T155058Z/out.logits vs host off: logits cosine min 0.777344 mean 0.974374, KL mean 0.03377 max 0.84400, argmax 45/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-WW-20261019T155058Z/out.logits vs host floor: logits cosine min 0.987398 mean 0.994917, KL mean 0.00572 max 0.05705, argmax 45/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-WW-20261019T155058Z/out.logits vs host ceil: logits cosine min 0.779513 mean 0.975401, KL mean 0.05035 max 0.79885, argmax 45/47
+chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-WW-20261019T155058Z/out.logits vs host mse: logits cosine min 0.880120 mean 0.985581, KL mean 0.04807 max 0.92609, argmax 45/47
+{
+ "name": "cascade-w4-host-golden",
+ "cmd": "flock -s /tmp/aien-quiet.lock nice -n 10 /home/drakestapleton/workspace/targets/cascade-w4b/sc-h/release/qwen38_w4_host /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/ab-w4-work/seq/golden.json out.json --rules floor,ceil,mse --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h0-20261019T130509Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h1-20261019T130903Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-W-20261019T154726Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-WW-20261019T155058Z/out.logits",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T11:33:58.433239",
+ "seconds": 362.228,
+ "samples": 172,
+ "wall_W_mean": 198.8372093023256,
+ "wall_J": 72024.3551914082,
+ "idle_W_before": 110.71428571428571,
+ "incremental_J": 31920.568445315002,
+ "gpu_W_mean": 10.524941860465116,
+ "gpu_util_mean": 8.720930232558139,
+ "load1_start": "18.13",
+ "load1_end": "25.54",
+ "mem_avail_kB_start": "31556736",
+ "mem_avail_kB_end": "18221412",
+ "lock_holders_max": 8,
+ "nvrm_errors_delta": 1,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-cascade-w4-host-golden.json
+rc=0

@@ -1,0 +1,22 @@
+{
+ "name": "cascade-w4-host-golden",
+ "cmd": "flock -s /tmp/aien-quiet.lock nice -n 10 /home/drakestapleton/workspace/targets/cascade-w4b/sc-h/release/qwen38_w4_host /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/ab-w4-work/seq/golden.json out.json --rules floor,ceil,mse --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h0-20261019T130509Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpA-golden-h1-20261019T130903Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-W-20261019T154726Z/out.logits --chip /home/drakestapleton/workspace/ab-w4-work/runs/dumpB-golden-WW-20261019T155058Z/out.logits",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T11:33:58.433239",
+ "seconds": 362.228,
+ "samples": 172,
+ "wall_W_mean": 198.8372093023256,
+ "wall_J": 72024.3551914082,
+ "idle_W_before": 110.71428571428571,
+ "incremental_J": 31920.568445315002,
+ "gpu_W_mean": 10.524941860465116,
+ "gpu_util_mean": 8.720930232558139,
+ "load1_start": "18.13",
+ "load1_end": "25.54",
+ "mem_avail_kB_start": "31556736",
+ "mem_avail_kB_end": "18221412",
+ "lock_holders_max": 8,
+ "nvrm_errors_delta": 1,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
