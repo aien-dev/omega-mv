@@ -60,7 +60,8 @@ enum {
  *            4..7 realization id
  * selection: 0 epoch, 1..4 realization id (zero = reference), 5 ps/call,
  *            6 regime, 7 reference ps/call
- * regime = (M << 32) | N. */
+ * regime = (M << 32) | N. Every ns and ps above is the executing thread's CPU
+ * time (CLOCK_THREAD_CPUTIME_ID), not wall-clock time. */
 enum { RX_OMEGA_SYNTHESIZED = 1 };
 enum { RX_OMEGA_PASSED = 1, RX_OMEGA_REFUSED = 2 };
 enum { RX_OMEGA_MEASURED = 1, RX_OMEGA_DECLINED = 2 };
