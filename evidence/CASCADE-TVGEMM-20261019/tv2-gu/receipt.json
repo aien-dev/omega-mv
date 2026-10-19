@@ -1,0 +1,22 @@
+{
+ "name": "tvg-tv2-gu",
+ "cmd": "/home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-00659ce6 --tv --shape q38gu --rows 1,2,8,16,32,64 --emu-rows 3 --reps 11 --tiles 2:2:8,2:2:4,1:4:4,1:4:2,4:1:8 --out /home/drakestapleton/workspace/targets/cascade/runs/tv2-gu.json",
+ "exit": 0,
+ "git_head": "e55731d8",
+ "start": "2026-10-19T12:44:47.007601",
+ "seconds": 6.266,
+ "samples": 3,
+ "wall_W_mean": 300.0,
+ "wall_J": 1879.941987991333,
+ "idle_W_before": 300.0,
+ "incremental_J": 0.0,
+ "gpu_W_mean": 9.173333333333334,
+ "gpu_util_mean": 21.666666666666668,
+ "load1_start": "69.99",
+ "load1_end": "70.15",
+ "mem_avail_kB_start": "46368672",
+ "mem_avail_kB_end": "45070520",
+ "lock_holders_max": 9,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}

@@ -1,0 +1,136 @@
+quiet_lock NOT_HELD_waited_over_20min
+loadavg_start 69.99 69.46 74.87 77/2532 1330255
+tv q38gu: n 34816 k 5120 (weights 178.3 MB), rows 1,2,8,16,32,64, weight cache 1
+tv N 64: emulation check on 3 rows: 0 of 104448 differ (bit-identical)
+tv N 64: rt 4 ct 2 warps 8; 0 of 2228224 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 64: rt 2 ct 2 warps 8; ok, 0 of 2228224 differ from the reference (same bits); chip median 2049.8 us (11), weights 87.0 GB/s
+tv f32 call N 64: ok, 0 of 2228224 differ from the device pass; whole call median 5608.1 us (5 calls)
+TVGEMM q38gu N 64 (median of 11, min 1026.8, max 1081.7 us): chip 1049.1 us; weights 169.9 GB/s; 21.75 TFLOPS
+tv N 1: rt 1 ct 4 warps 4; 0 of 34816 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 1: rt 1 ct 4 warps 4; ok, 0 of 34816 differ from the reference (same bits); chip median 967.9 us (11), weights 184.2 GB/s
+tv f32 call N 1: ok, 0 of 34816 differ from the device pass; whole call median 1038.4 us (5 calls)
+TVGEMM q38gu N 1 (median of 11, min 969.8, max 1048.6 us): chip 984.5 us; weights 181.1 GB/s; 0.36 TFLOPS
+tv N 2: rt 1 ct 4 warps 4; 0 of 69632 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 2: rt 1 ct 4 warps 4; ok, 0 of 69632 differ from the reference (same bits); chip median 993.7 us (11), weights 179.4 GB/s
+tv f32 call N 2: ok, 0 of 69632 differ from the device pass; whole call median 1092.5 us (5 calls)
+TVGEMM q38gu N 2 (median of 11, min 973.1, max 1580.9 us): chip 984.0 us; weights 181.1 GB/s; 0.72 TFLOPS
+tv N 8: rt 1 ct 4 warps 4; 0 of 278528 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 8: rt 1 ct 4 warps 4; ok, 0 of 278528 differ from the reference (same bits); chip median 1031.3 us (11), weights 172.8 GB/s
+tv f32 call N 8: ok, 0 of 278528 differ from the device pass; whole call median 1446.6 us (5 calls)
+TVGEMM q38gu N 8 (median of 11, min 964.8, max 1031.2 us): chip 1002.4 us; weights 177.8 GB/s; 2.85 TFLOPS
+tv N 16: rt 1 ct 4 warps 4; 0 of 557056 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 16: rt 1 ct 4 warps 4; ok, 0 of 557056 differ from the reference (same bits); chip median 1230.0 us (11), weights 144.9 GB/s
+tv f32 call N 16: ok, 0 of 557056 differ from the device pass; whole call median 2654.9 us (5 calls)
+TVGEMM q38gu N 16 (median of 11, min 1021.9, max 1654.5 us): chip 1138.2 us; weights 156.6 GB/s; 5.01 TFLOPS
+tv N 32: rt 2 ct 2 warps 8; 0 of 1114112 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 32: rt 2 ct 2 warps 8; ok, 0 of 1114112 differ from the reference (same bits); chip median 1112.9 us (11), weights 160.2 GB/s
+tv f32 call N 32: ok, 0 of 1114112 differ from the device pass; whole call median 2915.8 us (5 calls)
+TVGEMM q38gu N 32 (median of 11, min 1022.6, max 4225.9 us): chip 1157.5 us; weights 154.0 GB/s; 9.86 TFLOPS
+tv N 64 tile 2:2:8: 2 row tiles (weights read 2 times), skipped
+tv N 1: rt 2 ct 2 warps 8; 0 of 34816 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 34816 differ from the device pass; whole call median 1177.2 us (5 calls)
+TVGEMM q38gu N 1 (median of 11, min 996.5, max 1217.2 us): chip 1028.9 us; weights 173.2 GB/s; 0.35 TFLOPS
+tv N 2: rt 2 ct 2 warps 8; 0 of 69632 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 2: ok, 0 of 69632 differ from the device pass; whole call median 1132.0 us (5 calls)
+TVGEMM q38gu N 2 (median of 11, min 993.9, max 3963.5 us): chip 1007.6 us; weights 176.9 GB/s; 0.71 TFLOPS
+tv N 8: rt 2 ct 2 warps 8; 0 of 278528 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 8: ok, 0 of 278528 differ from the device pass; whole call median 1519.1 us (5 calls)
+TVGEMM q38gu N 8 (median of 11, min 1011.2, max 1076.1 us): chip 1041.3 us; weights 171.2 GB/s; 2.74 TFLOPS
+tv N 16: rt 2 ct 2 warps 8; 0 of 557056 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 557056 differ from the device pass; whole call median 1961.4 us (5 calls)
+TVGEMM q38gu N 16 (median of 11, min 1022.7, max 1053.0 us): chip 1037.6 us; weights 171.8 GB/s; 5.50 TFLOPS
+tv N 32: rt 2 ct 2 warps 8; 0 of 1114112 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 32: ok, 0 of 1114112 differ from the device pass; whole call median 2957.7 us (5 calls)
+TVGEMM q38gu N 32 (median of 11, min 1028.4, max 1071.0 us): chip 1055.9 us; weights 168.8 GB/s; 10.80 TFLOPS
+tv N 64 tile 2:2:4: 2 row tiles (weights read 2 times), skipped
+tv N 1: rt 2 ct 2 warps 4; 0 of 34816 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 34816 differ from the device pass; whole call median 1094.6 us (5 calls)
+TVGEMM q38gu N 1 (median of 11, min 1012.4, max 1050.8 us): chip 1027.5 us; weights 173.5 GB/s; 0.35 TFLOPS
+tv N 2: rt 2 ct 2 warps 4; 0 of 69632 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 2: ok, 0 of 69632 differ from the device pass; whole call median 1138.7 us (5 calls)
+TVGEMM q38gu N 2 (median of 11, min 998.8, max 1036.6 us): chip 1016.0 us; weights 175.4 GB/s; 0.70 TFLOPS
+tv N 8: rt 2 ct 2 warps 4; 0 of 278528 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 8: ok, 0 of 278528 differ from the device pass; whole call median 1491.5 us (5 calls)
+TVGEMM q38gu N 8 (median of 11, min 1018.3, max 1049.1 us): chip 1034.0 us; weights 172.4 GB/s; 2.76 TFLOPS
+tv N 16: rt 2 ct 2 warps 4; 0 of 557056 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 557056 differ from the device pass; whole call median 2018.1 us (5 calls)
+TVGEMM q38gu N 16 (median of 11, min 1014.1, max 1039.5 us): chip 1031.6 us; weights 172.8 GB/s; 5.53 TFLOPS
+tv N 32: rt 2 ct 2 warps 4; 0 of 1114112 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 32: ok, 0 of 1114112 differ from the device pass; whole call median 2914.5 us (5 calls)
+TVGEMM q38gu N 32 (median of 11, min 1051.4, max 1086.3 us): chip 1064.8 us; weights 167.4 GB/s; 10.71 TFLOPS
+tv N 64 tile 1:4:4: 4 row tiles (weights read 4 times), skipped
+tv N 1: rt 1 ct 4 warps 4; 0 of 34816 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 34816 differ from the device pass; whole call median 1067.0 us (5 calls)
+TVGEMM q38gu N 1 (median of 11, min 993.2, max 1030.0 us): chip 1009.5 us; weights 176.6 GB/s; 0.35 TFLOPS
+tv N 2: rt 1 ct 4 warps 4; 0 of 69632 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 2: ok, 0 of 69632 differ from the device pass; whole call median 1133.8 us (5 calls)
+TVGEMM q38gu N 2 (median of 11, min 991.1, max 1040.3 us): chip 1009.0 us; weights 176.7 GB/s; 0.71 TFLOPS
+tv N 8: rt 1 ct 4 warps 4; 0 of 278528 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 8: ok, 0 of 278528 differ from the device pass; whole call median 1491.9 us (5 calls)
+TVGEMM q38gu N 8 (median of 11, min 1003.1, max 1033.3 us): chip 1015.9 us; weights 175.5 GB/s; 2.81 TFLOPS
+tv N 16: rt 1 ct 4 warps 4; 0 of 557056 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 557056 differ from the device pass; whole call median 2016.2 us (5 calls)
+TVGEMM q38gu N 16 (median of 11, min 991.7, max 1035.5 us): chip 1017.1 us; weights 175.3 GB/s; 5.61 TFLOPS
+tv N 32 tile 1:4:4: 2 row tiles (weights read 2 times), skipped
+tv N 64 tile 1:4:2: 4 row tiles (weights read 4 times), skipped
+tv N 1: rt 1 ct 4 warps 2; 0 of 34816 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 34816 differ from the device pass; whole call median 1058.3 us (5 calls)
+TVGEMM q38gu N 1 (median of 11, min 970.1, max 1065.8 us): chip 990.3 us; weights 180.0 GB/s; 0.36 TFLOPS
+tv N 2: rt 1 ct 4 warps 2; 0 of 69632 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 2: ok, 0 of 69632 differ from the device pass; whole call median 1114.4 us (5 calls)
+TVGEMM q38gu N 2 (median of 11, min 957.4, max 1030.3 us): chip 974.6 us; weights 182.9 GB/s; 0.73 TFLOPS
+tv N 8: rt 1 ct 4 warps 2; 0 of 278528 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 8: ok, 0 of 278528 differ from the device pass; whole call median 1473.8 us (5 calls)
+TVGEMM q38gu N 8 (median of 11, min 960.0, max 988.5 us): chip 972.1 us; weights 183.4 GB/s; 2.93 TFLOPS
+tv N 16: rt 1 ct 4 warps 2; 0 of 557056 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 557056 differ from the device pass; whole call median 1916.7 us (5 calls)
+TVGEMM q38gu N 16 (median of 11, min 965.3, max 1011.7 us): chip 975.7 us; weights 182.7 GB/s; 5.85 TFLOPS
+tv N 32 tile 1:4:2: 2 row tiles (weights read 2 times), skipped
+tv N 64: rt 4 ct 1 warps 8; 0 of 2228224 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 64: ok, 0 of 2228224 differ from the device pass; whole call median 4901.4 us (5 calls)
+TVGEMM q38gu N 64 (median of 11, min 1057.2, max 1089.8 us): chip 1072.9 us; weights 166.1 GB/s; 21.27 TFLOPS
+tv N 1: rt 4 ct 1 warps 8; 0 of 34816 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 34816 differ from the device pass; whole call median 1105.3 us (5 calls)
+TVGEMM q38gu N 1 (median of 11, min 1001.2, max 1404.6 us): chip 1028.7 us; weights 173.3 GB/s; 0.35 TFLOPS
+tv N 2: rt 4 ct 1 warps 8; 0 of 69632 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 2: ok, 0 of 69632 differ from the device pass; whole call median 1141.5 us (5 calls)
+TVGEMM q38gu N 2 (median of 11, min 982.3, max 1333.4 us): chip 1039.4 us; weights 171.5 GB/s; 0.69 TFLOPS
+tv N 8: rt 4 ct 1 warps 8; 0 of 278528 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 8: ok, 0 of 278528 differ from the device pass; whole call median 1478.5 us (5 calls)
+TVGEMM q38gu N 8 (median of 11, min 997.5, max 1389.2 us): chip 1033.8 us; weights 172.4 GB/s; 2.76 TFLOPS
+tv N 16: rt 4 ct 1 warps 8; 0 of 557056 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 16: ok, 0 of 557056 differ from the device pass; whole call median 2031.7 us (5 calls)
+TVGEMM q38gu N 16 (median of 11, min 1009.3, max 1413.9 us): chip 1028.6 us; weights 173.3 GB/s; 5.55 TFLOPS
+tv N 32: rt 4 ct 1 warps 8; 0 of 1114112 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 32: ok, 0 of 1114112 differ from the device pass; whole call median 3110.7 us (5 calls)
+TVGEMM q38gu N 32 (median of 11, min 1030.1, max 1073.1 us): chip 1050.2 us; weights 169.7 GB/s; 10.86 TFLOPS
+tv mutant 1 (N 64): caught (2228224 of 2228224 differ)
+tv mutant 2 (N 64): caught (2228224 of 2228224 differ)
+tv mutant 3 (N 64): caught (2228224 of 2228224 differ)
+tv mutant 4 (N 64): caught (2228223 of 2228224 differ)
+tv: PASS
+GPU_TCGEMM: PASS
+{
+ "name": "tvg-tv2-gu",
+ "cmd": "/home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-00659ce6 --tv --shape q38gu --rows 1,2,8,16,32,64 --emu-rows 3 --reps 11 --tiles 2:2:8,2:2:4,1:4:4,1:4:2,4:1:8 --out /home/drakestapleton/workspace/targets/cascade/runs/tv2-gu.json",
+ "exit": 0,
+ "git_head": "e55731d8",
+ "start": "2026-10-19T12:44:47.007601",
+ "seconds": 6.266,
+ "samples": 3,
+ "wall_W_mean": 300.0,
+ "wall_J": 1879.941987991333,
+ "idle_W_before": 300.0,
+ "incremental_J": 0.0,
+ "gpu_W_mean": 9.173333333333334,
+ "gpu_util_mean": 21.666666666666668,
+ "load1_start": "69.99",
+ "load1_end": "70.15",
+ "mem_avail_kB_start": "46368672",
+ "mem_avail_kB_end": "45070520",
+ "lock_holders_max": 9,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-tv2-gu.json
+loadavg_end 71.18 69.73 74.90 64/2547 1331311
