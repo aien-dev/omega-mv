@@ -1,0 +1,77 @@
+model: 64 layers in 1 windows of 64; 47 positions (24 generated)
+reference: 47 positions in 65.3 s; its greedy tokens equal the golden record
+window 0 (layers 0..63): uploaded in 311.4 s, weights 25675 MB, KV 16 MB
+window 0 layers 0..63: residual cosine(min) 0.775509 p95_rel(max) 7.6464
+step   0: token   8678 ref   8678 margin   0.590 cosine 0.995890 p95_rel 0.4488 max_abs 1.5408 chip 76.71 ms
+step   1: token    198 ref    198 margin  16.066 cosine 0.984092 p95_rel 1.7725 max_abs 2.8139 chip 81.68 ms
+step   2: token   2523 ref   2523 margin   0.077 cosine 0.995584 p95_rel 0.8149 max_abs 2.0087 chip 76.74 ms
+step   3: token    264 ref    264 margin   0.455 cosine 0.996185 p95_rel 0.6166 max_abs 1.7062 chip 77.16 ms
+step   4: token 248046 ref 248046 margin   3.228 cosine 0.994524 p95_rel 0.6067 max_abs 1.8377 chip 75.21 ms
+step   5: token 248046 ref 248046 margin   1.814 cosine 0.994459 p95_rel 0.9134 max_abs 1.6393 chip 78.93 ms
+step   6: token 248046 ref 248046 margin   6.780 cosine 0.995216 p95_rel 0.7340 max_abs 1.5890 chip 75.69 ms
+step   7: token 248046 ref 248046 margin   5.180 cosine 0.996319 p95_rel 0.5822 max_abs 1.6987 chip 76.16 ms
+step   8: token 248046 ref 248046 margin   3.832 cosine 0.994346 p95_rel 0.9897 max_abs 1.5418 chip 75.30 ms
+step   9: token 248046 ref 248046 margin   6.450 cosine 0.989973 p95_rel 1.2565 max_abs 2.5345 chip 76.09 ms
+step  10: token 248046 ref 248046 margin   2.357 cosine 0.995063 p95_rel 0.7934 max_abs 1.6290 chip 75.78 ms
+step  11: token 248046 ref 248046 margin   2.388 cosine 0.990317 p95_rel 1.1194 max_abs 2.0837 chip 76.25 ms
+step  12: token 248046 ref 248046 margin   1.222 cosine 0.996343 p95_rel 0.6378 max_abs 1.3531 chip 76.61 ms
+step  13: token 248046 ref 248046 margin  11.425 cosine 0.995800 p95_rel 0.6295 max_abs 1.9669 chip 76.46 ms
+step  14: token 248046 ref 248046 margin  15.635 cosine 0.991404 p95_rel 1.1097 max_abs 3.6936 chip 76.13 ms
+step  15: token    198 ref    198 margin  19.551 cosine 0.991574 p95_rel 0.8011 max_abs 3.8582 chip 76.26 ms
+step  16: token 248045 ref 248045 margin  17.947 cosine 0.931429 p95_rel 4.7615 max_abs 7.5173 chip 75.92 ms
+step  17: token 248068 ref 248068 margin   4.381 cosine 0.945399 p95_rel 3.9745 max_abs 5.4470 chip 76.80 ms
+step  18: token 248068 ref 248068 margin   6.649 cosine 0.979227 p95_rel 2.3758 max_abs 6.9118 chip 76.48 ms
+step  19: token 248068 ref 248068 margin  21.108 cosine 0.967737 p95_rel 3.0624 max_abs 3.3246 chip 75.89 ms
+step  20: token    198 ref    198 margin   2.495 cosine 0.947949 p95_rel 3.6106 max_abs 5.1960 chip 76.57 ms
+step  21: token 248069 ref 248069 margin  15.354 cosine 0.782160 p95_rel 7.7138 max_abs 6.6521 chip 75.51 ms
+step  22: token    271 ref    271 margin  10.381 cosine 0.958419 p95_rel 1.9455 max_abs 5.9940 chip 75.35 ms
+step  23: token  71093 ref  71093 golden  71093 margin   2.662 cosine 0.871947 p95_rel 7.5573 max_abs 4.2797 chip 75.47 ms
+step  24: token     66 ref     66 golden     66 margin   9.283 cosine 0.971342 p95_rel 2.5320 max_abs 3.5679 chip 74.90 ms
+step  25: token    198 ref    198 golden    198 margin  10.508 cosine 0.990885 p95_rel 0.8719 max_abs 3.4282 chip 75.66 ms
+step  26: token    390 ref    390 golden    390 margin   4.095 cosine 0.927464 p95_rel 6.3618 max_abs 4.4366 chip 76.74 ms
+step  27: token   1866 ref   1866 golden   1866 margin   3.743 cosine 0.996186 p95_rel 0.5488 max_abs 1.9362 chip 77.19 ms
+step  28: token   1494 ref   1494 golden   1494 margin   1.715 cosine 0.990930 p95_rel 1.6843 max_abs 1.7558 chip 77.24 ms
+step  29: token    264 ref    264 golden    264 margin   9.045 cosine 0.995478 p95_rel 0.5792 max_abs 2.3521 chip 76.92 ms
+step  30: token     11 ref     11 golden     11 margin  12.996 cosine 0.996565 p95_rel 0.3913 max_abs 1.6408 chip 79.15 ms
+step  31: token    514 ref    514 golden    514 margin  12.021 cosine 0.996513 p95_rel 0.4015 max_abs 2.4940 chip 79.04 ms
+step  32: token    292 ref    292 golden    292 margin  11.508 cosine 0.993350 p95_rel 0.5814 max_abs 3.6902 chip 76.79 ms
+step  33: token      8 ref      8 golden      8 margin   9.347 cosine 0.994437 p95_rel 0.7941 max_abs 2.1664 chip 76.44 ms
+step  34: token    313 ref    313 golden    313 margin   5.098 cosine 0.996298 p95_rel 0.4577 max_abs 2.0174 chip 76.18 ms
+step  35: token    198 ref    198 golden    198 margin   9.316 cosine 0.997769 p95_rel 0.3124 max_abs 1.7940 chip 76.05 ms
+step  36: token    262 ref    262 golden    262 margin  11.881 cosine 0.995289 p95_rel 0.5427 max_abs 1.5331 chip 76.09 ms
+step  37: token    460 ref    460 golden    460 margin   4.739 cosine 0.991925 p95_rel 0.9261 max_abs 1.8335 chip 78.25 ms
+step  38: token    318 ref    318 golden    318 margin   0.744 cosine 0.993747 p95_rel 0.7755 max_abs 2.0357 chip 81.81 ms
+step  39: token     64 ref     64 golden     64 margin  15.366 cosine 0.988400 p95_rel 1.8421 max_abs 2.0500 chip 75.86 ms
+step  40: token    835 ref    835 golden    835 margin   6.642 cosine 0.995178 p95_rel 0.7172 max_abs 1.5841 chip 74.62 ms
+step  41: token    292 ref    292 golden    292 margin  12.714 cosine 0.997676 p95_rel 0.2815 max_abs 2.0934 chip 74.95 ms
+step  42: token      8 ref      8 golden      8 margin  11.645 cosine 0.991493 p95_rel 1.0287 max_abs 2.4496 chip 74.63 ms
+step  43: token    907 ref    907 golden    907 margin  14.974 cosine 0.994647 p95_rel 0.7014 max_abs 1.8945 chip 74.75 ms
+step  44: token    264 ref    264 golden    264 margin  11.394 cosine 0.997177 p95_rel 0.3449 max_abs 1.6285 chip 74.61 ms
+step  45: token    535 ref    535 golden    535 margin  12.304 cosine 0.996422 p95_rel 0.4272 max_abs 2.1044 chip 74.96 ms
+step  46: token    292 ref    292 golden    292 margin  13.843 cosine 0.956879 p95_rel 1.7119 max_abs 8.4351 chip 74.08 ms
+CONTROL shifted-by-one: best cosine 0.950397; one window short: best cosine n/a -> caught
+QWEN38_OMEGA_FULL layers 64 windows 1 positions 47: generated 24/24 identical to golden, cosine(min) 0.782160 p95_rel(max) 7.7138 greedy agrees control caught -> FAIL
+{
+ "name": "cascade-w4-wm-W-r4",
+ "cmd": "flock -w 3600 /tmp/aien-gb10.lock nice -n 10 env AIEN_Q38_W4=1 AIEN_Q38_FP8_HEAD=1 /home/drakestapleton/workspace/targets/cascade-w4b/sc/release/qwen38_omega_full /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a 64 /home/drakestapleton/workspace/cascade-w4b-work/seq/golden-full.json report.json",
+ "exit": 1,
+ "git_head": null,
+ "start": "2026-10-19T12:51:05.260991",
+ "seconds": 408.709,
+ "samples": 187,
+ "wall_W_mean": 259.19786096256684,
+ "wall_J": 105936.38469187333,
+ "idle_W_before": 255.0,
+ "incremental_J": 1715.7017120511734,
+ "gpu_W_mean": 7.700106951871658,
+ "gpu_util_mean": 2.6363636363636362,
+ "load1_start": "83.97",
+ "load1_end": "81.43",
+ "mem_avail_kB_start": "45176524",
+ "mem_avail_kB_end": "30855548",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 1,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-cascade-w4-wm-W-r4.json
+rc=1
