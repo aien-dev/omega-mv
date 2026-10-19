@@ -5,6 +5,7 @@
 #              timing; with NV4_FIXTURE_DIR the real NVFP4 expert tensors against the sc host reference (flashnext_check nv4-fixture)
 #   router_fn  top-10 of 512 router + shared slot (omega_gpu_router_fn_api): same, with ROUTER_FIXTURE_ROOT/moe/L<l> real routers
 #   fnattn     decode attention, 2 KV heads, sparse position list (omega_gpu_fnattn_api): same, no fixture
+#   fnhc       the 4-lane gated residual phases (omega_gpu_fnhc_api): host, simulator, chip parity per phase, mutants, timing
 # Caller holds the locks: quiet-measure flock /tmp/aien-gb10.lock nice -n 10 tools/run_flashnext_chip.sh EVID ...
 # Builds are NOT done here (use quiet-build make ... first); the binaries must exist in OUT_DIR. Verdict line last: FLASHNEXT_CHIP: PASS|FAIL.
 set -u
@@ -18,10 +19,10 @@ cd "$HERE" || exit 2
   echo "loadavg start $(cat /proc/loadavg)"
 } > "$EVID/device.txt"
 fail=0
-for t in gpu_nv4_api_test gpu_router_fn_test gpu_fnattn_test; do
+for t in gpu_nv4_api_test gpu_router_fn_test gpu_fnattn_test gpu_fnhc_test; do
   [ -x "$OUT/$t" ] || { echo "FLASHNEXT_CHIP: FAIL missing binary $OUT/$t"; exit 1; }
 done
-sha256sum "$OUT"/gpu_nv4_api_test "$OUT"/gpu_router_fn_test "$OUT"/gpu_fnattn_test "$OUT"/libomega_gpu.a > "$EVID/binaries.sha256"
+sha256sum "$OUT"/gpu_nv4_api_test "$OUT"/gpu_router_fn_test "$OUT"/gpu_fnattn_test "$OUT"/gpu_fnhc_test "$OUT"/libomega_gpu.a > "$EVID/binaries.sha256"
 run() { # name, then the test's chip arguments
   local name="$1"; shift
   local T="$OUT/gpu_${name}_test"
@@ -42,6 +43,7 @@ T="$OUT/gpu_fnattn_test"
 $T --host-only 2>&1 | tee "$EVID/fnattn-host-only.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
 $T --sim 2>&1 | tee "$EVID/fnattn-sim.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
 $T --reps 20 --out "$EVID/receipt-fnattn-chip.json" 2>&1 | tee "$EVID/fnattn-chip.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
+run fnhc --reps "${REPS:-30}" --out "$EVID/receipt-fnhc-chip.json"
 { echo "loadavg end $(cat /proc/loadavg)"; echo "end $(date -u +%FT%TZ)"; } >> "$EVID/device.txt"
 (cd "$EVID" && sha256sum *.json *.log device.txt binaries.sha256 > SHA256SUMS)
 if [ $fail = 0 ]; then echo "FLASHNEXT_CHIP: PASS"; else echo "FLASHNEXT_CHIP: FAIL"; exit 1; fi
