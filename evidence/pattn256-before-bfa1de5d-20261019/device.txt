@@ -1,0 +1,6 @@
+start 2026-10-19T16:34:38Z omega=bfa1de5d43e08df4e4a5c0af0d960f5a54aa8481 dirty=1
+loadavg_start 18.47 14.77 16.48 25/1981 3464816
+               total        used        free      shared  buff/cache   available
+Mem:          124607      101424        7461          30       21804       23183
+command: nice -n 10 flock -x /tmp/aien-quiet.lock flock /tmp/aien-gb10.lock ./build/gpu_prefill_attn256_test --timing-only --reps 5
+aborted 2026-10-19T17:31:26Z: never got the exclusive quiet lock (raw flock -x starved by overlapping shared holders, load 60-100); killed by me and re-queued under ~/.local/bin/quiet-measure as pattn256-v1-before-bfa1de5d-<ts>. No measurement was taken.
