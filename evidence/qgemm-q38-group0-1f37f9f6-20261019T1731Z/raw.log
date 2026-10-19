@@ -1,0 +1,54 @@
+QUANT chip k 2048 f32 rows 4096: 0 differ from the reference; median 0.182 ms (232 GB/s moved)
+QUANT chip k 2048 mutant 1: caught
+QUANT chip k 768 bf16 rows 32768: 0 differ from the reference; median 0.344 ms (222 GB/s moved)
+QUANT chip k 768 mutant 1: caught
+QUANT chip k 5120 f32 rows 4096: 0 differ from the reference; median 0.474 ms (223 GB/s moved)
+QUANT chip k 5120 mutant 3: caught
+QUANT chip k 6144 bf16 rows 4096: 0 differ from the reference; median 0.361 ms (211 GB/s moved)
+QUANT chip k 6144 mutant 3: caught
+QUANT chip k 17408 bf16 rows 4096: 0 differ from the reference; median 1.092 ms (198 GB/s moved)
+QUANT chip k 17408 mutant 3: caught
+q38gu second launch identical: yes
+q38gu bit-identity on 64 sampled rows: 0 differ (beyond 1 bf16 ulp; 0 within 1 ulp of 1114112)
+QGEMM-inplace group 0 q38gu tokens 4096 M 4096 n 34816 k 5120 tiles 64: median 61.891 ms (min 61.271), 23.6 TFLOPS, weights 178 MB -> 3 GB/s of distinct weights
+q38gu mutant 1: caught
+q38gu mutant 2: caught
+q38gu mutant 3: caught
+q38gu mutant 4: caught
+q38down second launch identical: yes
+q38down bit-identity on 64 sampled rows: 0 differ
+QGEMM-inplace group 0 q38down tokens 4096 M 4096 n 5120 k 17408 tiles 64: median 32.127 ms (min 31.772), 22.7 TFLOPS, weights 89 MB -> 3 GB/s of distinct weights
+q38down mutant 1: caught
+q38down mutant 2: caught
+q38down mutant 3: caught
+q38down mutant 4: caught
+q38mix second launch identical: yes
+q38mix bit-identity on 64 sampled rows: 0 differ
+QGEMM-inplace group 0 q38mix tokens 4096 M 4096 n 16384 k 5120 tiles 64: median 30.684 ms (min 29.490), 22.4 TFLOPS, weights 84 MB -> 3 GB/s of distinct weights
+q38o second launch identical: yes
+q38o bit-identity on 64 sampled rows: 0 differ
+QGEMM-inplace group 0 q38o tokens 4096 M 4096 n 5120 k 6144 tiles 64: median 10.924 ms (min 10.842), 23.6 TFLOPS, weights 31 MB -> 3 GB/s of distinct weights
+GPU_QGEMM: PASS
+{
+ "name": "qgemm-q38-group0-1f37f9f6-20261019T1731Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/qgemm-1f37f9f6 --chip --shape q38 --tokens 4096 --reps 7 --group 0",
+ "exit": 0,
+ "git_head": "0f568614",
+ "start": "2026-10-19T13:16:04.173047",
+ "seconds": 480.15,
+ "samples": 226,
+ "wall_W_mean": 259.0265486725664,
+ "wall_J": 124371.7128549424,
+ "idle_W_before": 308.57142857142856,
+ "incremental_J": -23788.996177388795,
+ "gpu_W_mean": 6.984070796460178,
+ "gpu_util_mean": 0.13716814159292035,
+ "load1_start": "57.72",
+ "load1_end": "53.17",
+ "mem_avail_kB_start": "53345060",
+ "mem_avail_kB_end": "53717000",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-qgemm-q38-group0-1f37f9f6-20261019T1731Z.json
