@@ -184,3 +184,28 @@ log, health poll log, sensor CSV slice for the session, spark-receipt copies and
 reducer output, verdicts. Result in `docs/turing/TURING_YIELD_TY7_RESULT.md`.
 
 ## Amendments
+
+### Amendment 1 (2026-10-19, before any timed window; no TY-7 data seen)
+
+Found while probing (untimed, one request): the live server takes the hive GPU lock `/tmp/aien-gb10.lock` itself
+around every generation and waits up to 300 s for it (aien-sovereign-core `46134247`, the commit the live binary
+is built from: `crates/aien-serve-http/src/qwen38_engine.rs:7,27`, `omega_engine.rs:94`), answering HTTP 503
+"GPU busy with another job" when the wait runs out. Holding that lock around the session, as section 7 said, would
+make the server refuse our own requests. Changes:
+
+1. The session is NOT wrapped in `flock /tmp/aien-gb10.lock`. It runs as `quiet-measure spark-receipt ty7-session
+   -- tools/ty7_drive.sh ...` (builds held off, 20-minute rule unchanged). During each of our request intervals
+   the server itself holds the GPU lock, so no lock-respecting chip job runs inside an interval; that is the
+   window energy is counted over.
+2. A request is sent only when `flock -n /tmp/aien-gb10.lock true` succeeds at that instant (the lock is free, so
+   the server is not generating for anyone and no chip job holds it). This keeps lock waits out of our intervals.
+   The count of such waits is logged per request (`lockwaits=`).
+3. Refusals are retried after 0.05 s: `server_busy` (another generation in flight) and HTTP 503 "GPU busy". Only
+   the served attempt's interval is logged.
+4. Box context recorded: aien-translate (`~/aien-translate`, pid 2962056) drives the server almost continuously
+   (300 health polls at 5 per second, 0 free), currently for `scripts/translate_latex.py ... --langs pt` started by
+   `run-after-swap.sh`. It is another user's job and is not stopped. Its generations fall between ours; they are
+   outside our intervals but inside IDLE windows, which is why P_base uses only engine-idle IDLE rows (section 6).
+   If no engine-idle rows exist, E_incr is UNRESOLVED per section 6 and E_gross stands.
+
+Thresholds, predictions, prompts, models and pass rules are unchanged.
