@@ -1,0 +1,20 @@
+rw-contract v1
+id: R19
+name: and-over-or
+label: count-neutral
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: a m
+ops: -
+assume: -
+lhs: (and (or x a) m)
+rhs: (or (and x m) (and a m))
+derive:
+  (or (and x m) (and a m)) by and-distrib
+end

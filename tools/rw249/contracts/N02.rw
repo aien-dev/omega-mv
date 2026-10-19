@@ -1,0 +1,20 @@
+rw-contract v1
+id: N02
+name: isqrt-of-square-in-u32
+label: negative; machine arithmetic: x*x wraps modulo 2^32 even with x >= 0; checker-only isqrt
+semantics: omega.v0.wrap
+domain: wrap
+widths: 32
+overflow: wrap modulo 2^w
+rounding: isqrt is floor of the square root
+shape: scalar
+aliasing: none
+effects: none
+params: -
+ops: -
+assume: (ge x 0)
+lhs: (isqrt (mul x x))
+rhs: x
+derive:
+  x by isqrt-square
+end

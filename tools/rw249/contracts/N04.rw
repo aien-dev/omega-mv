@@ -1,0 +1,20 @@
+rw-contract v1
+id: N04
+name: f32-reassociation
+label: negative; IEEE 754 binary32 round-to-nearest-even, no FMA; checker-only (omega V0 has no FP op)
+semantics: checker.f32
+domain: f32
+widths: 32
+overflow: IEEE 754 (inf)
+rounding: round to nearest even after every operation
+shape: scalar
+aliasing: none
+effects: none (no FP exception flags modelled)
+params: a b
+ops: -
+assume: -
+lhs: (add (add x a) b)
+rhs: (add x (add a b))
+derive:
+  (add x (add a b)) by add-assoc
+end

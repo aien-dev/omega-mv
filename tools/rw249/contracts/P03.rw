@@ -1,0 +1,23 @@
+rw-contract v1
+id: P03
+name: plus-one-minus-one-in-u32
+label: positive control; holds in wrapping arithmetic too
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w
+rounding: none
+shape: scalar
+aliasing: none
+effects: none
+params: -
+ops: -
+assume: -
+lhs: (sub (add x 1) 1)
+rhs: x
+derive:
+  (add (add x 1) (neg 1)) by sub-def
+  (add x (add 1 (neg 1))) by add-assoc
+  (add x 0) by add-neg
+  x by add-zero
+end

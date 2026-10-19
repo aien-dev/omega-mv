@@ -1,0 +1,22 @@
+rw-contract v1
+id: R23
+name: absorb-and-over-or
+label: reducing
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: c m
+ops: -
+assume: (eq (and c m) 0)
+lhs: (and (or x c) m)
+rhs: (and x m)
+derive:
+  (or (and x m) (and c m)) by and-distrib
+  (or (and x m) 0) by assume
+  (and x m) by or-zero
+end

@@ -1,0 +1,17 @@
+rw-contract v1
+id: N05
+name: probe-agreeing-masks
+label: negative; agrees on omega's six probes 0 1 3 7 13 42 at u8, differs at x=16; no derivation
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8
+overflow: wrap modulo 2^w
+rounding: none
+shape: scalar
+aliasing: none
+effects: none
+params: -
+ops: -
+assume: -
+lhs: (and x 63)
+rhs: (and x 47)

@@ -1,0 +1,23 @@
+rw-contract v1
+id: R24
+name: mul-over-sub
+label: count-neutral
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: a m
+ops: -
+assume: -
+lhs: (mul (sub x a) m)
+rhs: (sub (mul x m) (mul a m))
+derive:
+  (mul (add x (neg a)) m) by sub-def
+  (add (mul x m) (mul (neg a) m)) by mul-distrib
+  (add (mul x m) (neg (mul a m))) by mul-neg
+  (sub (mul x m) (mul a m)) by sub-def rev
+end

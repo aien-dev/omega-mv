@@ -1,0 +1,22 @@
+rw-contract v1
+id: R03
+name: add-sub-merge
+label: reducing
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: a b
+ops: -
+assume: -
+lhs: (sub (add x a) b)
+rhs: (add x (sub a b))
+derive:
+  (add (add x a) (neg b)) by sub-def
+  (add x (add a (neg b))) by add-assoc
+  (add x (sub a b)) by sub-def rev
+end

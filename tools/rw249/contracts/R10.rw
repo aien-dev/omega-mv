@@ -1,0 +1,20 @@
+rw-contract v1
+id: R10
+name: mul-one-delete
+label: manual reducing
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: -
+ops: -
+assume: -
+lhs: (mul x 1)
+rhs: x
+derive:
+  x by mul-one
+end

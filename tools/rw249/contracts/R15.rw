@@ -1,0 +1,21 @@
+rw-contract v1
+id: R15
+name: or-ones-kills-prefix
+label: reducing
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: a
+ops: add sub mul and or
+assume: -
+lhs: (or (OP x a) ones)
+rhs: (or x ones)
+derive:
+  ones by or-ones
+  (or x ones) by or-ones rev
+end

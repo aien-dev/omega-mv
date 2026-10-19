@@ -1,0 +1,23 @@
+rw-contract v1
+id: R16
+name: fold-after-and-zero
+label: count-neutral
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: k
+ops: add sub mul and or
+assume: -
+lhs: (OP (and x 0) k)
+rhs: (or (and x 0) (OP 0 k))
+derive:
+  (OP 0 k) by and-zero
+  (or (OP 0 k) 0) by or-zero rev
+  (or 0 (OP 0 k)) by or-comm
+  (or (and x 0) (OP 0 k)) by and-zero rev
+end

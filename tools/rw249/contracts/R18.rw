@@ -1,0 +1,20 @@
+rw-contract v1
+id: R18
+name: mul-over-add
+label: count-neutral
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: a m
+ops: -
+assume: -
+lhs: (mul (add x a) m)
+rhs: (add (mul x m) (mul a m))
+derive:
+  (add (mul x m) (mul a m)) by mul-distrib
+end

@@ -1,0 +1,21 @@
+rw-contract v1
+id: R14
+name: mul-zero-kills-prefix
+label: reducing
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: a
+ops: add sub mul and or
+assume: -
+lhs: (mul (OP x a) 0)
+rhs: (mul x 0)
+derive:
+  0 by mul-zero
+  (mul x 0) by mul-zero rev
+end

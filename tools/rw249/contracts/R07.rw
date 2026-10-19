@@ -1,0 +1,20 @@
+rw-contract v1
+id: R07
+name: or-or-merge
+label: manual reducing
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: a b
+ops: -
+assume: -
+lhs: (or (or x a) b)
+rhs: (or x (or a b))
+derive:
+  (or x (or a b)) by or-assoc
+end

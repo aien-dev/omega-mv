@@ -1,0 +1,20 @@
+rw-contract v1
+id: P02
+name: times-two-over-two-in-Z
+label: positive control; real identity in Z; checker-only model (udiv is not in omega V0)
+semantics: checker.int
+domain: int
+widths: 64
+overflow: none (mathematical integers)
+rounding: division truncates toward zero
+shape: scalar
+aliasing: none
+effects: none
+params: -
+ops: -
+assume: (ne 2 0)
+lhs: (udiv (mul x 2) 2)
+rhs: x
+derive:
+  x by mul-div-cancel
+end

@@ -1,0 +1,20 @@
+rw-contract v1
+id: P01
+name: isqrt-of-square-with-sign
+label: positive control; real identity in Z; checker-only model (isqrt is not in omega V0)
+semantics: checker.int
+domain: int
+widths: 64
+overflow: none (mathematical integers)
+rounding: isqrt is floor of the square root
+shape: scalar
+aliasing: none
+effects: none
+params: -
+ops: -
+assume: (ge x 0)
+lhs: (isqrt (mul x x))
+rhs: x
+derive:
+  x by isqrt-square
+end

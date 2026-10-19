@@ -1,0 +1,32 @@
+rw-axioms v1
+# The trusted base. Each law holds at every width of its domains: "wrap" is the ring of
+# integers modulo 2^w with Boolean algebra on w-bit words; "int" is the integers Z.
+# rwcheck re-checks every law semantically before use (w=4 all rows, w=8 all rows or 262144
+# samples, int window) and refuses the whole base if any law has a counterexample.
+axiom add-assoc domains=wrap,int : (add (add ?p ?q) ?r) = (add ?p (add ?q ?r))
+axiom add-comm domains=wrap,int : (add ?p ?q) = (add ?q ?p)
+axiom mul-assoc domains=wrap,int : (mul (mul ?p ?q) ?r) = (mul ?p (mul ?q ?r))
+axiom mul-comm domains=wrap,int : (mul ?p ?q) = (mul ?q ?p)
+axiom and-assoc domains=wrap : (and (and ?p ?q) ?r) = (and ?p (and ?q ?r))
+axiom and-comm domains=wrap : (and ?p ?q) = (and ?q ?p)
+axiom or-assoc domains=wrap : (or (or ?p ?q) ?r) = (or ?p (or ?q ?r))
+axiom or-comm domains=wrap : (or ?p ?q) = (or ?q ?p)
+axiom sub-def domains=wrap,int : (sub ?p ?q) = (add ?p (neg ?q))
+axiom neg-add domains=wrap,int : (add (neg ?p) (neg ?q)) = (neg (add ?p ?q))
+axiom neg-neg domains=wrap,int : (neg (neg ?p)) = ?p
+axiom neg-zero domains=wrap,int : (neg 0) = 0
+axiom add-neg domains=wrap,int : (add ?p (neg ?p)) = 0
+axiom add-zero domains=wrap,int : (add ?p 0) = ?p
+axiom mul-one domains=wrap,int : (mul ?p 1) = ?p
+axiom mul-zero domains=wrap,int : (mul ?p 0) = 0
+axiom mul-neg domains=wrap,int : (mul (neg ?p) ?q) = (neg (mul ?p ?q))
+axiom mul-distrib domains=wrap,int : (mul (add ?p ?q) ?r) = (add (mul ?p ?r) (mul ?q ?r))
+axiom and-ones domains=wrap : (and ?p ones) = ?p
+axiom and-zero domains=wrap : (and ?p 0) = 0
+axiom or-zero domains=wrap : (or ?p 0) = ?p
+axiom or-ones domains=wrap : (or ?p ones) = ones
+axiom and-distrib domains=wrap : (and (or ?p ?q) ?r) = (or (and ?p ?r) (and ?q ?r))
+axiom or-distrib domains=wrap : (or (and ?p ?q) ?r) = (and (or ?p ?r) (or ?q ?r))
+# Integer-only laws (checker-only operations; never in the omega V0 grammar)
+axiom isqrt-square domains=int side=(ge ?p 0) : (isqrt (mul ?p ?p)) = ?p
+axiom mul-div-cancel domains=int side=(ne ?q 0) : (udiv (mul ?p ?q) ?q) = ?p

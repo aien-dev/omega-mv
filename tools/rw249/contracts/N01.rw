@@ -1,0 +1,20 @@
+rw-contract v1
+id: N01
+name: isqrt-of-square-without-sign
+label: negative; real identity in Z missing its sign assumption; checker-only model
+semantics: checker.int
+domain: int
+widths: 64
+overflow: none (mathematical integers)
+rounding: isqrt is floor of the square root
+shape: scalar
+aliasing: none
+effects: none
+params: -
+ops: -
+assume: -
+lhs: (isqrt (mul x x))
+rhs: x
+derive:
+  x by isqrt-square
+end

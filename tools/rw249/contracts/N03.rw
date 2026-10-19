@@ -1,0 +1,20 @@
+rw-contract v1
+id: N03
+name: times-two-over-two-in-u32
+label: negative; overflow-domain mismatch: true in Z, false in wrapping u32; checker-only udiv
+semantics: omega.v0.wrap
+domain: wrap
+widths: 32
+overflow: wrap modulo 2^w
+rounding: unsigned division truncates
+shape: scalar
+aliasing: none
+effects: none
+params: -
+ops: -
+assume: (ne 2 0)
+lhs: (udiv (mul x 2) 2)
+rhs: x
+derive:
+  x by mul-div-cancel
+end

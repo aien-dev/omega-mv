@@ -1,0 +1,22 @@
+rw-contract v1
+id: R09
+name: sub-zero-delete
+label: manual reducing
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w (OVERFLOW_WRAP)
+rounding: none (integer)
+shape: scalar u_w -> u_w
+aliasing: none (one register, no memory)
+effects: none (pure)
+params: -
+ops: -
+assume: -
+lhs: (sub x 0)
+rhs: x
+derive:
+  (add x (neg 0)) by sub-def
+  (add x 0) by neg-zero
+  x by add-zero
+end

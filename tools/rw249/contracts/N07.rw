@@ -1,0 +1,20 @@
+rw-contract v1
+id: N07
+name: true-claim-wrong-proof
+label: negative; R01's true claim with a derivation citing the wrong axiom
+semantics: omega.v0.wrap
+domain: wrap
+widths: 8 16 32 64
+overflow: wrap modulo 2^w
+rounding: none
+shape: scalar
+aliasing: none
+effects: none
+params: a b
+ops: -
+assume: -
+lhs: (add (add x a) b)
+rhs: (add x (add a b))
+derive:
+  (add x (add a b)) by mul-assoc
+end
