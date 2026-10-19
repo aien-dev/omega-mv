@@ -1,0 +1,48 @@
+quiet_lock NOT_HELD_waited_over_20min
+loadavg_start 81.43 83.96 79.93 63/2283 1567013
+tv q38gu: n 34816 k 5120 (weights 178.3 MB), rows 1,32,64, weight cache 0
+tv N 64: emulation check on 2 rows: 0 of 69632 differ (bit-identical)
+tv N 64: rt 4 ct 2 warps 8; 0 of 2228224 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 64: rt 2 ct 2 warps 8; ok, 0 of 2228224 differ from the reference (same bits); chip median 1948.1 us (11), weights 91.5 GB/s
+tv f32 call N 64: ok, 0 of 2228224 differ from the device pass; whole call median 4896.9 us (5 calls)
+TVGEMM q38gu N 64 (median of 11, min 965.6, max 1001.1 us): chip 972.5 us; weights 183.3 GB/s; 23.46 TFLOPS
+tv N 1: rt 1 ct 4 warps 4; 0 of 34816 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 1: rt 1 ct 4 warps 4; ok, 0 of 34816 differ from the reference (same bits); chip median 930.3 us (11), weights 191.6 GB/s
+tv f32 call N 1: ok, 0 of 34816 differ from the device pass; whole call median 1006.2 us (5 calls)
+TVGEMM q38gu N 1 (median of 11, min 928.7, max 1233.6 us): chip 939.6 us; weights 189.7 GB/s; 0.38 TFLOPS
+tv N 32: rt 2 ct 2 warps 8; 0 of 1114112 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 32: rt 2 ct 2 warps 8; ok, 0 of 1114112 differ from the reference (same bits); chip median 1007.5 us (11), weights 176.9 GB/s
+tv f32 call N 32: ok, 0 of 1114112 differ from the device pass; whole call median 2503.2 us (5 calls)
+TVGEMM q38gu N 32 (median of 11, min 951.2, max 1039.7 us): chip 962.0 us; weights 185.3 GB/s; 11.86 TFLOPS
+tv N 64 tile 1:4:2: 4 row tiles (weights read 4 times), skipped
+tv N 1: rt 1 ct 4 warps 2; 0 of 34816 outputs differ from the N=64 pass (same bits); 0 unwritten, 0 written beyond row N
+tv f32 call N 1: ok, 0 of 34816 differ from the device pass; whole call median 998.1 us (5 calls)
+TVGEMM q38gu N 1 (median of 11, min 931.6, max 959.3 us): chip 942.6 us; weights 189.1 GB/s; 0.38 TFLOPS
+tv N 32 tile 1:4:2: 2 row tiles (weights read 2 times), skipped
+tv N 64: call failed -2: prefill kernel: more than 128 registers
+tv: FAIL
+GPU_TCGEMM: FAIL
+{
+ "name": "tvg-tv3-gu-wc0",
+ "cmd": "/home/drakestapleton/workspace/targets/cascade/bin/gpu_tcgemm_test-00659ce6 --tv --shape q38gu --rows 1,32,64 --emu-rows 2 --reps 11 --no-mutants --weight-cache 0 --tiles 1:4:2,4:1:2 --out /home/drakestapleton/workspace/targets/cascade/runs/tv3-gu-wc0.json",
+ "exit": 1,
+ "git_head": "49cd504d",
+ "start": "2026-10-19T12:57:54.022679",
+ "seconds": 5.83,
+ "samples": 3,
+ "wall_W_mean": 260.0,
+ "wall_J": 1515.8730030059814,
+ "idle_W_before": 265.3333333333333,
+ "incremental_J": -31.094830830891816,
+ "gpu_W_mean": 7.04,
+ "gpu_util_mean": 0.0,
+ "load1_start": "81.43",
+ "load1_end": "81.56",
+ "mem_avail_kB_start": "50376752",
+ "mem_avail_kB_end": "50053776",
+ "lock_holders_max": 6,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-tvg-tv3-gu-wc0.json
+loadavg_end 79.11 83.39 79.79 47/2301 1568214
