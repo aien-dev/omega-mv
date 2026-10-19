@@ -1,0 +1,253 @@
+  codegen k 5120 lb 8 rows 1 sched 0 coal 0: 160 insns, 49 GPRs
+  codegen k 5120 lb 8 rows 1 sched 0 coal 1: 190 insns, 59 GPRs
+  codegen k 5120 lb 8 rows 1 sched 1 coal 0: 160 insns, 57 GPRs
+  codegen k 5120 lb 8 rows 1 sched 1 coal 1: 190 insns, 67 GPRs
+  codegen k 5120 lb 8 rows 2 sched 0 coal 0: 261 insns, 53 GPRs
+  codegen k 5120 lb 8 rows 2 sched 0 coal 1: 291 insns, 63 GPRs
+  codegen k 5120 lb 8 rows 2 sched 1 coal 0: 261 insns, 61 GPRs
+  codegen k 5120 lb 8 rows 2 sched 1 coal 1: 291 insns, 71 GPRs
+  codegen k 5120 lb 8 rows 4 sched 0 coal 0: 463 insns, 63 GPRs
+  codegen k 5120 lb 8 rows 4 sched 0 coal 0: 463 insns, 63 GPRs
+  codegen k 5120 lb 8 rows 4 sched 1 coal 0: 463 insns, 69 GPRs
+  codegen k 5120 lb 8 rows 4 sched 1 coal 0: 463 insns, 69 GPRs
+  codegen k 5120 lb 8 rows 8 sched 0 coal 0: 867 insns, 83 GPRs
+  codegen k 5120 lb 8 rows 8 sched 0 coal 0: 867 insns, 83 GPRs
+  codegen k 5120 lb 8 rows 8 sched 1 coal 0: 867 insns, 85 GPRs
+  codegen k 5120 lb 8 rows 8 sched 1 coal 0: 867 insns, 85 GPRs
+  codegen k 5120 lb 16 rows 1 sched 0 coal 0: 244 insns, 68 GPRs
+  codegen k 5120 lb 16 rows 1 sched 0 coal 1: 274 insns, 77 GPRs
+  codegen k 5120 lb 16 rows 1 sched 1 coal 0: 244 insns, 75 GPRs
+  codegen k 5120 lb 16 rows 1 sched 1 coal 1: 274 insns, 85 GPRs
+  codegen k 5120 lb 16 rows 2 sched 0 coal 0: 425 insns, 73 GPRs
+  codegen k 5120 lb 16 rows 2 sched 0 coal 1: 455 insns, 84 GPRs
+  codegen k 5120 lb 16 rows 2 sched 1 coal 0: 425 insns, 81 GPRs
+  codegen k 5120 lb 16 rows 2 sched 1 coal 1: 455 insns, 91 GPRs
+  codegen k 5120 lb 16 rows 4 sched 0 coal 0: 787 insns, 88 GPRs
+  codegen k 5120 lb 16 rows 4 sched 0 coal 0: 787 insns, 88 GPRs
+  codegen k 5120 lb 16 rows 4 sched 1 coal 0: 787 insns, 93 GPRs
+  codegen k 5120 lb 16 rows 4 sched 1 coal 0: 787 insns, 93 GPRs
+  codegen k 6144 lb 8 rows 1 sched 0 coal 0: 160 insns, 49 GPRs
+  codegen k 6144 lb 8 rows 1 sched 0 coal 1: 190 insns, 59 GPRs
+  codegen k 6144 lb 8 rows 1 sched 1 coal 0: 160 insns, 57 GPRs
+  codegen k 6144 lb 8 rows 1 sched 1 coal 1: 190 insns, 67 GPRs
+  codegen k 6144 lb 8 rows 2 sched 0 coal 0: 261 insns, 53 GPRs
+  codegen k 6144 lb 8 rows 2 sched 0 coal 1: 291 insns, 63 GPRs
+  codegen k 6144 lb 8 rows 2 sched 1 coal 0: 261 insns, 61 GPRs
+  codegen k 6144 lb 8 rows 2 sched 1 coal 1: 291 insns, 71 GPRs
+  codegen k 6144 lb 8 rows 4 sched 0 coal 0: 463 insns, 63 GPRs
+  codegen k 6144 lb 8 rows 4 sched 0 coal 0: 463 insns, 63 GPRs
+  codegen k 6144 lb 8 rows 4 sched 1 coal 0: 463 insns, 69 GPRs
+  codegen k 6144 lb 8 rows 4 sched 1 coal 0: 463 insns, 69 GPRs
+  codegen k 6144 lb 8 rows 8 sched 0 coal 0: 867 insns, 83 GPRs
+  codegen k 6144 lb 8 rows 8 sched 0 coal 0: 867 insns, 83 GPRs
+  codegen k 6144 lb 8 rows 8 sched 1 coal 0: 867 insns, 85 GPRs
+  codegen k 6144 lb 8 rows 8 sched 1 coal 0: 867 insns, 85 GPRs
+  codegen k 6144 lb 16 rows 1 sched 0 coal 0: 244 insns, 68 GPRs
+  codegen k 6144 lb 16 rows 1 sched 0 coal 1: 274 insns, 77 GPRs
+  codegen k 6144 lb 16 rows 1 sched 1 coal 0: 244 insns, 75 GPRs
+  codegen k 6144 lb 16 rows 1 sched 1 coal 1: 274 insns, 85 GPRs
+  codegen k 6144 lb 16 rows 2 sched 0 coal 0: 425 insns, 73 GPRs
+  codegen k 6144 lb 16 rows 2 sched 0 coal 1: 455 insns, 84 GPRs
+  codegen k 6144 lb 16 rows 2 sched 1 coal 0: 425 insns, 81 GPRs
+  codegen k 6144 lb 16 rows 2 sched 1 coal 1: 455 insns, 91 GPRs
+  codegen k 6144 lb 16 rows 4 sched 0 coal 0: 787 insns, 88 GPRs
+  codegen k 6144 lb 16 rows 4 sched 0 coal 0: 787 insns, 88 GPRs
+  codegen k 6144 lb 16 rows 4 sched 1 coal 0: 787 insns, 93 GPRs
+  codegen k 6144 lb 16 rows 4 sched 1 coal 0: 787 insns, 93 GPRs
+  codegen k 17408 lb 8 rows 1 sched 0 coal 0: 160 insns, 49 GPRs
+  codegen k 17408 lb 8 rows 1 sched 0 coal 1: 190 insns, 59 GPRs
+  codegen k 17408 lb 8 rows 1 sched 1 coal 0: 160 insns, 57 GPRs
+  codegen k 17408 lb 8 rows 1 sched 1 coal 1: 190 insns, 67 GPRs
+  codegen k 17408 lb 8 rows 2 sched 0 coal 0: 261 insns, 53 GPRs
+  codegen k 17408 lb 8 rows 2 sched 0 coal 1: 291 insns, 63 GPRs
+  codegen k 17408 lb 8 rows 2 sched 1 coal 0: 261 insns, 61 GPRs
+  codegen k 17408 lb 8 rows 2 sched 1 coal 1: 291 insns, 71 GPRs
+  codegen k 17408 lb 8 rows 4 sched 0 coal 0: 463 insns, 63 GPRs
+  codegen k 17408 lb 8 rows 4 sched 0 coal 0: 463 insns, 63 GPRs
+  codegen k 17408 lb 8 rows 4 sched 1 coal 0: 463 insns, 69 GPRs
+  codegen k 17408 lb 8 rows 4 sched 1 coal 0: 463 insns, 69 GPRs
+  codegen k 17408 lb 8 rows 8 sched 0 coal 0: 867 insns, 83 GPRs
+  codegen k 17408 lb 8 rows 8 sched 0 coal 0: 867 insns, 83 GPRs
+  codegen k 17408 lb 8 rows 8 sched 1 coal 0: 867 insns, 85 GPRs
+  codegen k 17408 lb 8 rows 8 sched 1 coal 0: 867 insns, 85 GPRs
+  codegen k 17408 lb 16 rows 1 sched 0 coal 0: 244 insns, 68 GPRs
+  codegen k 17408 lb 16 rows 1 sched 0 coal 1: 274 insns, 77 GPRs
+  codegen k 17408 lb 16 rows 1 sched 1 coal 0: 244 insns, 75 GPRs
+  codegen k 17408 lb 16 rows 1 sched 1 coal 1: 274 insns, 85 GPRs
+  codegen k 17408 lb 16 rows 2 sched 0 coal 0: 425 insns, 73 GPRs
+  codegen k 17408 lb 16 rows 2 sched 0 coal 1: 455 insns, 84 GPRs
+  codegen k 17408 lb 16 rows 2 sched 1 coal 0: 425 insns, 81 GPRs
+  codegen k 17408 lb 16 rows 2 sched 1 coal 1: 455 insns, 91 GPRs
+  codegen k 17408 lb 16 rows 4 sched 0 coal 0: 787 insns, 88 GPRs
+  codegen k 17408 lb 16 rows 4 sched 0 coal 0: 787 insns, 88 GPRs
+  codegen k 17408 lb 16 rows 4 sched 1 coal 0: 787 insns, 93 GPRs
+  codegen k 17408 lb 16 rows 4 sched 1 coal 0: 787 insns, 93 GPRs
+GPU_W4_API_TEST host : 291 checks, 0 failed -> PASS
+GPU_W4_API_TEST sim : 17 checks, 0 failed -> PASS
+  w4 gdn mix 16384x5120     lb 16 rows 2 warps 8 coal 1 sched 1 grid 342: median 313.5 us, 142.1 GB/s (0.521 of 273)
+  fp8 gdn mix 16384x5120    median 415.4 us, 201.9 GB/s (0.740 of 273)
+  w4 attn mix 14336x5120    lb 16 rows 2 warps 8 coal 1 sched 1 grid 299: median 310.1 us, 125.7 GB/s (0.461 of 273)
+  fp8 attn mix 14336x5120   median 407.9 us, 179.9 GB/s (0.659 of 273)
+  w4 o_proj 5120x6144       lb 16 rows 2 warps 8 coal 1 sched 1 grid 160: median 109.3 us, 152.9 GB/s (0.560 of 273)
+  fp8 o_proj 5120x6144      median 207.4 us, 151.7 GB/s (0.556 of 273)
+  w4 gate_up 34816x5120     lb 16 rows 2 warps 8 coal 1 sched 1 grid 363: median 517.2 us, 183.1 GB/s (0.671 of 273)
+  fp8 gate_up 34816x5120    median 826.8 us, 215.6 GB/s (0.790 of 273)
+  w4 down 5120x17408        lb 16 rows 2 warps 8 coal 1 sched 1 grid 160: median 515.4 us, 91.9 GB/s (0.336 of 273)
+  fp8 down 5120x17408       median 508.9 us, 175.1 GB/s (0.642 of 273)
+  w4 lm_head 248320x5120    lb 16 rows 2 warps 8 coal 1 sched 1 grid 379: median 3252.7 us, 207.7 GB/s (0.761 of 273)
+  fp8 lm_head 248320x5120   median 5593.8 us, 227.3 GB/s (0.833 of 273)
+GPU_W4_API_TEST chip: 12 checks, 0 failed -> PASS
+model: 2 layers (1 GDN, 1 attention, mask 0x2), vocab 248320
+ok: fp8 head: sampled rows max diff 9.67e-07 vs host dequantised (max 8.74)
+ok: fp8 head: sampled rows max diff 8.43e-07 vs host dequantised (max 9.63)
+ok: fp8 head: sampled rows max diff 9.7e-07 vs host dequantised (max 8)
+ok: token 0: graph 8422 == baseline 8422
+ok: token 0: logits max diff 1.82e-05 <= 1e-04 * 9.32
+ok: token 0: x max diff 4.1e-06 <= 1e-04 * 2.4
+ok: token 0: 23 launches in 1 submit
+ok: token 1: graph 121583 == baseline 121583
+ok: token 1: logits max diff 1.45e-05 <= 1e-04 * 9.88
+ok: token 1: x max diff 3.01e-06 <= 1e-04 * 1.89
+ok: token 1: 23 launches in 1 submit
+ok: token 2: graph 60455 == baseline 60455
+ok: token 2: logits max diff 1.41e-05 <= 1e-04 * 10.3
+ok: token 2: x max diff 3.96e-06 <= 1e-04 * 2.32
+ok: token 2: 23 launches in 1 submit
+ok: flush_each == one list, bit for bit, all 3 tokens
+ok: read_buf x, gu, act, gu[0..100): rc 0 0 0 0
+ok: read_buf x == read x, bit for bit
+ok: read_buf of 100 values == the first 100 of the whole row
+ok: read_buf act == silu(gu) * up * 2^64 from read_buf gu: worst 3.62e+12 of 7.17e+19
+ok: mutant 1 (swiglu up half -1) caught
+ok: mutant 2 (gather index +1) caught
+ok: mutant 3 (gate dropped) caught
+ok: mutant 4 (post-norm weight dropped) caught
+ok: w4 control: layer 0 on FP8 differs from the MXFP4 baseline
+ok: w4: layer 0 back on MXFP4
+timing: 10 reps, median chip 6120.5 us, median total 6138.1 us per token (2 layers)
+ok: timeline 0: 23 stamped launches
+ok: timeline 1: 23 stamped launches
+ok: timeline 2: 23 stamped launches
+ok: timeline 3: 23 stamped launches
+ok: timeline 4: 23 stamped launches
+ok: timeline 5: 23 stamped launches
+ok: timeline 6: 23 stamped launches
+ok: timeline 7: 23 stamped launches
+ok: timeline 8: 23 stamped launches
+ok: timeline 9: 23 stamped launches
+ok: timeline 10: 23 stamped launches
+ok: timeline 11: 23 stamped launches
+ok: timeline 12: 23 stamped launches
+ok: timeline 13: 23 stamped launches
+ok: timeline 14: 23 stamped launches
+ok: timeline 15: 23 stamped launches
+ok: timeline 16: 23 stamped launches
+ok: timeline 17: 23 stamped launches
+ok: timeline 18: 23 stamped launches
+ok: timeline 19: 23 stamped launches
+ok: timeline 20: 23 stamped launches
+timeline norm       1 launches       8.9 us (min 8.6 max 14.5)
+timeline mix        2 launches     465.2 us (min 448.4 max 480.0)     83558400 weight B  179.6 GB/s
+timeline ab         1 launches       0.4 us (min 0.4 max 0.6)       983040 weight B 2560.0 GB/s
+timeline gdn        1 launches      23.5 us (min 22.9 max 24.8)
+timeline gather     1 launches       3.8 us (min 3.6 max 4.2)
+timeline attn       1 launches      78.0 us (min 76.6 max 79.7)
+timeline gate       1 launches       2.7 us (min 2.6 max 3.0)
+timeline o_proj     2 launches     213.1 us (min 206.9 max 245.8)     33423360 weight B  156.9 GB/s
+timeline res        4 launches      56.3 us (min 54.3 max 99.0)
+timeline gate_up    2 launches     978.8 us (min 958.7 max 1037.3)    189399040 weight B  193.5 GB/s
+timeline swiglu     2 launches       6.2 us (min 5.9 max 7.6)
+timeline down       2 launches     555.1 us (min 537.6 max 599.6)     94699520 weight B  170.6 GB/s
+timeline lm_head    1 launches    3645.3 us (min 3587.9 max 3748.3)    675430400 weight B  185.3 GB/s
+timeline argmax     2 launches      18.5 us (min 17.0 max 20.1)
+timeline span 6060.9 us (median of 20, min 5952.9 max 6193.9)
+gpu_q38_graph_test: 47 checks, 0 failed: PASS
+model: 2 layers (1 GDN, 1 attention, mask 0x2), vocab 248320
+ok: fp8 head: sampled rows max diff 9.88e-07 vs host dequantised (max 8.31)
+ok: fp8 head: sampled rows max diff 8.75e-07 vs host dequantised (max 9.45)
+ok: fp8 head: sampled rows max diff 9.41e-07 vs host dequantised (max 8)
+ok: token 0: graph 119117 == baseline 119117
+ok: token 0: logits max diff 0.000327 <= 1e-04 * 9.14
+ok: token 0: x max diff 0.000126 <= 1e-04 * 2.44
+ok: token 0: 23 launches in 1 submit
+ok: token 1: graph 147744 == baseline 147744
+ok: token 1: logits max diff 6.2e-06 <= 1e-04 * 9.62
+ok: token 1: x max diff 2.03e-06 <= 1e-04 * 2.05
+ok: token 1: 23 launches in 1 submit
+ok: token 2: graph 60455 == baseline 60455
+ok: token 2: logits max diff 8.11e-06 <= 1e-04 * 9.84
+ok: token 2: x max diff 3.16e-06 <= 1e-04 * 2.55
+ok: token 2: 23 launches in 1 submit
+ok: flush_each == one list, bit for bit, all 3 tokens
+ok: read_buf x, gu, act, gu[0..100): rc 0 0 0 0
+ok: read_buf x == read x, bit for bit
+ok: read_buf of 100 values == the first 100 of the whole row
+ok: read_buf act == silu(gu) * up * 2^64 from read_buf gu: worst 7.18e+12 of 6.88e+19
+ok: mutant 1 (swiglu up half -1) caught
+ok: mutant 2 (gather index +1) caught
+ok: mutant 3 (gate dropped) caught
+ok: mutant 4 (post-norm weight dropped) caught
+timing: 10 reps, median chip 10303.9 us, median total 10324.2 us per token (2 layers)
+ok: timeline 0: 23 stamped launches
+ok: timeline 1: 23 stamped launches
+ok: timeline 2: 23 stamped launches
+ok: timeline 3: 23 stamped launches
+ok: timeline 4: 23 stamped launches
+ok: timeline 5: 23 stamped launches
+ok: timeline 6: 23 stamped launches
+ok: timeline 7: 23 stamped launches
+ok: timeline 8: 23 stamped launches
+ok: timeline 9: 23 stamped launches
+ok: timeline 10: 23 stamped launches
+ok: timeline 11: 23 stamped launches
+ok: timeline 12: 23 stamped launches
+ok: timeline 13: 23 stamped launches
+ok: timeline 14: 23 stamped launches
+ok: timeline 15: 23 stamped launches
+ok: timeline 16: 23 stamped launches
+ok: timeline 17: 23 stamped launches
+ok: timeline 18: 23 stamped launches
+ok: timeline 19: 23 stamped launches
+ok: timeline 20: 23 stamped launches
+timeline norm       1 launches      10.6 us (min 10.1 max 35.9)
+timeline mix        2 launches     776.8 us (min 718.1 max 897.3)    157286400 weight B  202.5 GB/s
+timeline ab         1 launches       0.4 us (min 0.4 max 0.6)       983040 weight B 2363.1 GB/s
+timeline gdn        1 launches      24.0 us (min 23.2 max 27.5)
+timeline gather     1 launches       4.3 us (min 4.1 max 4.9)
+timeline attn       1 launches      57.0 us (min 55.9 max 139.6)
+timeline gate       1 launches       2.6 us (min 2.5 max 3.6)
+timeline o_proj     2 launches     340.8 us (min 314.7 max 363.7)     62914560 weight B  184.6 GB/s
+timeline res        4 launches      58.9 us (min 53.2 max 76.1)
+timeline gate_up    2 launches    1747.0 us (min 1571.8 max 1866.2)    356515840 weight B  204.1 GB/s
+timeline swiglu     2 launches       6.6 us (min 5.8 max 25.6)
+timeline down       2 launches     959.7 us (min 864.2 max 1190.8)    178257920 weight B  185.7 GB/s
+timeline lm_head    1 launches    6188.3 us (min 5551.5 max 6855.3)   1271398400 weight B  205.5 GB/s
+timeline argmax     2 launches      18.6 us (min 17.6 max 28.4)
+timeline span 10184.5 us (median of 20, min 9198.5 max 11174.8)
+gpu_q38_graph_test: 45 checks, 0 failed: PASS
+fp8 graph exit 0 (timeline control)
+end 2026-10-19T16:10:21Z
+GPU_W4_CHIP: PASS
+{
+ "name": "cascade-w4-chipgate",
+ "cmd": "flock -w 1800 /tmp/aien-gb10.lock nice -n 10 env REPS=30 TL_REPS=21 tools/run_gpu_w4_chip.sh /home/drakestapleton/workspace/cascade-w4b-work/runs/chipgate-20261019T1605Z /home/drakestapleton/workspace/physics-6d7cf0d4 /home/drakestapleton/workspace/targets/cascade-w4b/omega",
+ "exit": 0,
+ "git_head": "ae900541",
+ "start": "2026-10-19T11:05:03.766351",
+ "seconds": 317.28,
+ "samples": 151,
+ "wall_W_mean": 139.0066225165563,
+ "wall_J": 44103.978766621345,
+ "idle_W_before": 154.0,
+ "incremental_J": -4757.094231902369,
+ "gpu_W_mean": 15.477483443708609,
+ "gpu_util_mean": 23.271523178807946,
+ "load1_start": "29.62",
+ "load1_end": "21.92",
+ "mem_avail_kB_start": "59559804",
+ "mem_avail_kB_end": "55853908",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 1,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-cascade-w4-chipgate.json
