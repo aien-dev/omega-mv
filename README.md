@@ -33,6 +33,27 @@ The live status is owned by [aien-architecture](https://github.com/aien-spark/ai
 
 Language rule: Rust is scaffolding, Omega is the destination, and C or assembly stay only where hardware, boot, ABI or measurement justifies them (aien-architecture ADR 0024, which supersedes the old "C is the target, no new Rust" rule). No Python anywhere (tools are C or shell). No CUDA toolkit or CUDA library dependence: the GB10 is driven natively. No systemd. Offline, in-house builds. Never overwrite failed experiments or old receipts. Verdict words: PASS, FAIL, NOT_RUN, BLOCKED_HARDWARE, BLOCKED_OPERATOR, MISSING_IMPLEMENTATION.
 
+## Run your first kernel
+
+You need a DGX Spark (GB10) running Linux with the open NVIDIA kernel driver, plus `git`, `gcc` and `make`. No CUDA is installed or used.
+
+```bash
+git clone https://github.com/aien-dev/omega-mv omega
+cd omega
+make hello-gpu
+```
+
+`make hello-gpu` downloads the one companion repository Omega needs (`physics`, at the exact version in `physics.lock`) into `build/`, compiles Omega and the example, and runs it. The example adds two arrays of 1,048,576 numbers on the GPU, with a kernel built by Omega's own kernel builder, and checks every answer on the CPU. You should see:
+
+```
+hello_gpu: c = a + b over 1048576 floats on the GPU, built with Omega's own kernel builder
+kernel: ... instructions, ... registers
+checked 1048576 of 1048576 elements: 0 wrong, 0 never written
+PASS
+```
+
+The program ends with `PASS` and exit code 0, or `FAIL` and a non-zero code. If it prints `NOT_RUN`, the GPU could not be opened (for example another program is holding its memory). The code to read is `examples/hello_gpu/hello_gpu.c`. Already have a physics checkout at the right version? Run `make PHYSICS_DIR=/path/to/physics hello-gpu` to skip the download.
+
 ## Build and verify
 
 Needs gcc and make on an AArch64 Linux host: CI runs the host suites on `ubuntu-24.04-arm`, and `test-realize` compiles with `-march=armv8.6-a+dotprod+i8mm+sve`. Host suites need no GPU and no physics checkout:
