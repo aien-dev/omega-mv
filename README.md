@@ -1,6 +1,29 @@
 # OMEGA
 
-Omega is the reaction runtime and the compiler for Omega Systems Core, written in C. It defines what computation means without committing that meaning to one machine representation: every program has a content-addressed semantic identity, and realizations (CPU, GB10 GPU) are derived from it and verified against it.
+**Omega is an open-source alternative to CUDA, built for anyone in the world to use.** It drives an NVIDIA GPU with our own code from top to bottom: our own way to write kernels, our own machine-code encoder, our own launch path and our own libraries. It needs no NVIDIA user-space software: no libcuda, no cuBLAS, no nvcc. The only NVIDIA parts it uses are the ones the hardware requires, the open-source kernel driver and its firmware. License: AGPL-3.0.
+
+Omega is pre-alpha. It runs today on one machine, the NVIDIA DGX Spark (GB10). What works and what does not is below, each with its receipt.
+
+### What works today
+
+- **Kernels written in Omega run on the GB10.** Kernels are built in C with Omega's kernel builder (`src/omega_blackwell_codegen.h`) and encoded straight to the chip's machine code. Matrix multiply, attention, FP8 and ternary matrix-vector, reductions and elementwise operations all have chip receipts in `evidence/` (for example `evidence/GPU_MATMUL_API/`, `evidence/FB1-CUT5-cd80bf4/` for attention, `evidence/TERN-T0-KT1-18185404-20261016T0151Z/` for ternary, `evidence/E1-CLOSURE/` for reductions).
+- **The driver path has no CUDA library in it.** Omega talks to the open kernel driver through the physics repository's driver client (`nvrm/nvrm.c`); its chip receipt records the "no libcuda link" check (`evidence/m16-blackwell-native-path-requalification-receipt.json` in physics).
+- **Real language models run on it.** AIEN's own inference engine runs Qwen3-30B-A3B end to end through Omega on the GB10 (aien-sovereign-core, `docs/inference/evidence/own30b-omega4799-20261015/`).
+- **We measure against the hardware's own limit.** On this machine Omega's probes measured 115.14 TFLOPS on the tensor cores and 195.1 GB/s of memory reads (`evidence/OWN30B-T3-TC-PEAK-BW-5faa0f70-20261013T2236Z/`). Library results are reported as a fraction of those ceilings.
+
+### What does not work yet
+
+- No written, versioned API specification yet. The C API lives in the `src/omega_gpu_*.h` headers.
+- No "hello GPU" example or kernel-writing guide for someone new. A GPU build needs the physics repository checked out beside Omega.
+- One GPU, one process at a time. No streams or events yet.
+- Libraries are shaped around the models AIEN runs; general any-shape versions are not built yet.
+- Only the GB10 has run Omega. Work toward the RTX 5070 (Blackwell desktop) has not touched a real card yet.
+
+The plan to close these gaps, in order, with a check for each step: [docs/runtime/ROADMAP.md](docs/runtime/ROADMAP.md).
+
+## The wider Omega
+
+Omega is also the reaction runtime and the compiler for Omega Systems Core, written in C. It defines what computation means without committing that meaning to one machine representation: every program has a content-addressed semantic identity, and realizations (CPU, GB10 GPU) are derived from it and verified against it.
 
 ```text
 SILICON -> ATLAS -> PHYSICS/FORGE -> OMEGA -> AIEN        (full picture: aien-architecture)
