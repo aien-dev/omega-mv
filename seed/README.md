@@ -33,6 +33,24 @@ it came from.
     words) and does not read the immediate number of the compare instructions; for those, objdump and
     the hand decode in the comment are the checks.
 
+## Rung 1: hex1, labels (done)
+
+- `rung1/hex1.hex`: 164 instructions plus the 30-word header, written in seed-0's language and built by
+  seed-0 (776 bytes).
+- What it adds: names for places. `:c` marks a spot in the program, `@c` after a branch word fills in
+  "how far to jump to c". That saves the writer from counting distances by hand, which is the most
+  error-prone part of writing machine words. Labels are one character long; there is one branch form
+  (the 19-bit distance field that conditional branches use; unconditional jumps use the "always"
+  condition so they fit the same form).
+- Checks (`rung1/gate1.sh`, results in `evidence/SEED-0/rung1/`):
+  - seed-0 builds hex1; hex1 then rebuilds itself to the same bytes;
+  - I counted all 50 jump distances inside hex1 by hand. As a cross-check, a copy of hex1 with those
+    distances wiped out and replaced by labels (`rung1/hex1.hex1`) is fed to hex1: it gives back exactly
+    the same program, so hex1's arithmetic and my counting agree on every jump;
+  - both decoders agree with every named instruction (0 disagreements, `rung1/hex1.audit`);
+  - controls: seed-0 refuses labels (it never learned them); missing, doubled and misplaced labels are
+    refused with their own error codes.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
