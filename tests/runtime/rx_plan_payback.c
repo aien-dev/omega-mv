@@ -60,7 +60,7 @@ enum { SUBJ_EXTERNAL = 100, ISSUER = 3, SUBJ_PLAN = 71 };
 #define SEED_HELD    300u
 #define MAX_ROWS     4096u
 
-static int g_checks, g_fail, g_bad_rows;
+static int g_checks, g_fail, g_bad_rows, g_no_adapt;
 static const char *g_mutant = "";
 
 #define CHECK(cond, ...) do {                                            \
@@ -301,7 +301,7 @@ typedef struct {
     int path, axis, success, goal_ok, status_before, status_after, restart_before, rederived;
     uint32_t moves, cache_n, candidates, refused, stale_refusals;
     uint64_t ph[PH_COUNT];
-    uint64_t e2e_wall, cog_cpu, cog_wall, ident_copy_cpu;
+    uint64_t e2e_wall, cog_cpu, cog_wall, ident_copy_cpu, hash_in_e2e;
     uint8_t semantic_id[32];
 } Row;
 
@@ -423,7 +423,7 @@ static int solve(Env *e, int arm, Row *r) {
         const uint8_t *parent = NULL;
         uint32_t origin = PL_ORIGIN_SEARCH;
         int adapted = 0;
-        if (c) {
+        if (c && !g_no_adapt) {
             /* Repair: for each candidate refused only on required state, plan
              * a prefix that reaches that state and keep the shortest whole plan. */
             p0 = cpu_ns();
@@ -515,6 +515,7 @@ static int solve(Env *e, int arm, Row *r) {
         rx_plan_identify(&g_tmp2);
         r->ident_copy_cpu = cpu_ns() - p0;
         uint64_t h = r->ident_copy_cpu < r->ph[PH_GENERALIZE] ? r->ident_copy_cpu : r->ph[PH_GENERALIZE];
+        r->hash_in_e2e = h;             /* the hash e2e holds: never more than generalize held */
         r->ph[PH_GENERALIZE] -= h;
         if (c) r->ph[PH_IDENTIFY] += h;
     }
@@ -827,7 +828,7 @@ static int reconcile(const Row *rows, uint32_t n, const Ledger *L, uint64_t *una
          * generalize is in e2e but in no phase (cost_A subtracts it). */
         for (int p = 0; p < PH_COMPILE; p++) cpu += rows[i].ph[p];
         cpu += rows[i].ph[PH_REPAIR];
-        uint64_t harness_hash = rows[i].arm == ARM_A ? rows[i].ident_copy_cpu : 0;
+        uint64_t harness_hash = rows[i].arm == ARM_A ? rows[i].hash_in_e2e : 0;
         if (rows[i].e2e_wall < wall + cpu + harness_hash) (*bad)++;
         else *unattributed += rows[i].e2e_wall - wall - cpu - harness_hash;
     }
@@ -836,7 +837,7 @@ static int reconcile(const Row *rows, uint32_t n, const Ledger *L, uint64_t *una
 
 /* Arm A cost per the protocol: measured e2e minus the identity hash it would
  * not compute. Arm B cost: measured e2e plus restart costs it carries. */
-static int64_t cost_a(const Row *r) { return (int64_t)r->e2e_wall - (int64_t)r->ident_copy_cpu; }
+static int64_t cost_a(const Row *r) { return (int64_t)r->e2e_wall - (int64_t)r->hash_in_e2e; }
 static int64_t cost_b(const Row *r) { return (int64_t)r->e2e_wall + (int64_t)r->ph[PH_SERIALIZE] + (int64_t)r->ph[PH_RELOAD]; }
 
 typedef struct {
@@ -848,6 +849,8 @@ typedef struct {
     int break_even;                      /* smallest H with net_cum >= 0, or -1 */
     uint64_t mem_bytes, lookup_cpu_first, lookup_cpu_last, applic_cpu_first, applic_cpu_last;
     double delta_med, delta_q1, delta_q3, p_hat, p_lo, p_hi, r_hat, C_ns, m_ns;
+    double task_net_med, task_net_q1, task_net_q3;   /* robust: per-task (A - B) over every task after the first */
+    int64_t net_robust;                               /* task_net_med x (H - 1) + task 0 net */
 } Account;
 
 static int cmp_i64(const void *a, const void *b) {
@@ -877,9 +880,9 @@ static Account account(const Row *rows, uint32_t n) {
     memset(&A, 0, sizeof A);
     A.break_even = -1;
     A.floors_ok = 1;
-    int64_t deltas[H_HELD];
-    uint32_t nd = 0;
-    int64_t cum = 0, saved_cum = 0;
+    int64_t deltas[H_HELD], tnets[H_HELD];
+    uint32_t nd = 0, nt = 0;
+    int64_t cum = 0, saved_cum = 0, net0 = 0;
     uint32_t opportunities = 0;
     int prev_usable = 0;
     for (uint32_t i = 0; i + 1 < n; i += 2) {
@@ -890,6 +893,8 @@ static Account account(const Row *rows, uint32_t n) {
         int64_t ca = cost_a(a), cb = cost_b(b), net = ca - cb;
         A.cost_a_total += ca;
         A.cost_b_total += cb;
+        if (k == 0) net0 = net;
+        else if (nt < H_HELD) tnets[nt++] = net;
         if (!(a->goal_ok && b->goal_ok && a->success && b->success && a->moves == b->moves)) A.floors_ok = 0;
         if (b->path == PATH_REUSE && b->moves > a->moves) A.neg_transfer++;
         if (b->path == PATH_REUSE && !b->success) A.neg_transfer++;
@@ -936,6 +941,10 @@ static Account account(const Row *rows, uint32_t n) {
         A.applic_cpu_last = b->ph[PH_APPLIC];
     }
     A.net_final = cum;
+    A.task_net_med = quantile(tnets, nt, 0.5);
+    A.task_net_q1 = quantile(tnets, nt, 0.25);
+    A.task_net_q3 = quantile(tnets, nt, 0.75);
+    A.net_robust = net0 + (int64_t)(A.task_net_med * (double)nt);
     A.delta_med = quantile(deltas, nd, 0.5);
     A.delta_q1 = quantile(deltas, nd, 0.25);
     A.delta_q3 = quantile(deltas, nd, 0.75);
@@ -1003,8 +1012,11 @@ static void json_account(FILE *f, const char *name, const Account *A) {
                "\"negative_transfer\": %u, \"restarts\": %u, \"floors_ok\": %s,\n",
             name, A->H, A->hits, A->misses, A->acquisitions, A->rederivations, A->adaptations, A->refusals,
             A->stale_refusals, A->stale_marks, A->forget_events, A->neg_transfer, A->restarts, A->floors_ok ? "true" : "false");
-    fprintf(f, "      \"cost_A_total_ns\": %lld, \"cost_B_total_ns\": %lld, \"net_final_ns\": %lld, \"break_even_tasks\": %d,\n",
-            (long long)A->cost_a_total, (long long)A->cost_b_total, (long long)A->net_final, A->break_even);
+    fprintf(f, "      \"cost_A_total_ns\": %lld, \"cost_B_total_ns\": %lld, \"net_final_ns\": %lld, \"break_even_tasks\": %d,\n"
+               "      \"robust\": {\"task_net_median_ns\": %.0f, \"task_net_q1_ns\": %.0f, \"task_net_q3_ns\": %.0f, \"net_robust_ns\": %lld, "
+               "\"note\": \"net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks\"},\n",
+            (long long)A->cost_a_total, (long long)A->cost_b_total, (long long)A->net_final, A->break_even,
+            A->task_net_med, A->task_net_q1, A->task_net_q3, (long long)A->net_robust);
     fprintf(f, "      \"reinvestment_ledger_ns\": {\"saved_gross\": %lld, \"spent_learning\": %lld, \"spent_acquisition\": %lld, "
                "\"spent_maintenance\": %lld, \"spent_repair\": %lld, \"spent_restart\": %lld, \"reinvested\": %lld, \"unfunded\": %lld, "
                "\"net\": %lld},\n",
@@ -1045,7 +1057,8 @@ static void json_head(FILE *f, const char *mode, const char *load0, const char *
     struct utsname u;
     memset(&u, 0, sizeof u);
     uname(&u);
-    fprintf(f, "{\n  \"schema\": \"OMEGA_PLAN_REUSE_PAYBACK_V1\",\n  \"mode\": \"%s\",\n  \"mutant\": \"%s\",\n", mode, g_mutant);
+    fprintf(f, "{\n  \"schema\": \"OMEGA_PLAN_REUSE_PAYBACK_V1\",\n  \"mode\": \"%s\",\n  \"mutant\": \"%s\",\n  \"arm_B_variant\": \"%s\",\n", mode, g_mutant,
+            g_no_adapt ? "reuse only (no adaptation/repair)" : "existing reuse with adaptation/repair (frozen protocol)");
     fprintf(f, "  \"run_commit\": \"%s\",\n  \"tree_dirty\": %s,\n  \"test_binary_sha256\": \"%s\",\n", commit,
             omega_evidence_tree_dirty() ? "true" : "false", digest);
     fprintf(f, "  \"host\": {\"sysname\": \"%s\", \"release\": \"%s\", \"machine\": \"%s\", \"core_class_midr_part\": \"0x%llx\", "
@@ -1264,8 +1277,8 @@ static int run_heldout(void) {
     const char *pn[3] = { "S1_reverse", "S1_merge_P+", "P0_no_payoff" };
     const Account *pa[3] = { &acc[0], &acc[1], p0 };
     for (int i = 0; i < 3; i++)
-        fprintf(f, "    \"%s\": {\"net_final_ns\": %lld, \"break_even_tasks\": %d, \"p_hat\": %.4f, \"r_hat\": %.4f, \"delta_median_ns\": %.0f, \"delta_q1_ns\": %.0f, \"delta_q3_ns\": %.0f}%s\n",
-                pn[i], (long long)pa[i]->net_final, pa[i]->break_even, pa[i]->p_hat, pa[i]->r_hat, pa[i]->delta_med, pa[i]->delta_q1, pa[i]->delta_q3, i < 2 ? "," : "");
+        fprintf(f, "    \"%s\": {\"net_final_ns\": %lld, \"net_robust_ns\": %lld, \"task_net_median_ns\": %.0f, \"break_even_tasks\": %d, \"p_hat\": %.4f, \"r_hat\": %.4f, \"delta_median_ns\": %.0f, \"delta_q1_ns\": %.0f, \"delta_q3_ns\": %.0f}%s\n",
+                pn[i], (long long)pa[i]->net_final, (long long)pa[i]->net_robust, pa[i]->task_net_med, pa[i]->break_even, pa[i]->p_hat, pa[i]->r_hat, pa[i]->delta_med, pa[i]->delta_q1, pa[i]->delta_q3, i < 2 ? "," : "");
     fprintf(f, "  }\n}\n");
     fclose(f);
     snprintf(path, sizeof path, "%s/heldout-receipt.json", g_outdir);
@@ -1284,6 +1297,8 @@ int main(int argc, char **argv) {
     const char *out = getenv("PAYBACK_OUT");
     snprintf(g_outdir, sizeof g_outdir, "%s", out ? out : "build/payback");
     mkdir(g_outdir, 0775);
+    g_no_adapt = getenv("PAYBACK_NO_ADAPT") != NULL;
+    if (g_no_adapt) printf("[*] ablation: arm B without the adaptation (repair) path: reuse only\n");
     place();
     memset(&g_skills, 0, sizeof g_skills);
     rx_plan_cache_init(&g_cache);
