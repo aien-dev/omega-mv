@@ -112,3 +112,19 @@ Example: `struct P { x: u32, v: [u8; 2] }` and `fn sum(p: &P) -> u32 { p.x + (p.
    ]}
 ]}
 ```
+
+## Contract text and arenas (OSC-2 items 1 and 3; added by L093 so every struct program round-trips)
+
+Both are optional additions: a unit that uses neither is unchanged.
+
+- A FUNCTION may carry `"requires": TEXT` and/or `"ensures": TEXT`: the contract's source text
+  (1..255 printable ASCII characters), recorded in the IR as `oscc` records it. The checks
+  themselves are ordinary ops in the blocks (`oscc` lowers them into compares, `cbr` and `trap`);
+  the text is bookkeeping that is part of the IR bytes. Leave the key out when there is no clause.
+- Arena ops (OSC-2 section 3; IR version byte 3):
+
+| op | fields | meaning |
+|---|---|---|
+| `aopen` | `dst`, `cells` (a number 1..64) | dst (u64) = a new arena of that many cells; each handle register is written by exactly one aopen |
+| `aalloc` | `dst`, `init`, `arena` | dst (`own:` array or `own:<S>` struct) = cells taken from arena handle `arena` (u64), as `alloc` (a struct's init obeys the same zero rule) |
+| `adestroy` | `arena` | destroy the arena and every object in it (arena objects are never `release`d) |

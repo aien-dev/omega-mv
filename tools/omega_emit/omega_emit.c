@@ -8,7 +8,8 @@
  *
  *   omega_emit emit <oplist.json> <out.oscir>   exit 0 written; 1 refused (one line on stdout:
  *                                               "REFUSED <stage>: <reason>"); 2 usage / I/O
- *   omega_emit lift <in.oscir>                  canonical IR -> op list JSON on stdout (exit 1 if the
+ *   omega_emit lift <in.oscir>                  canonical IR -> op list JSON on stdout, structs, contract
+ *                                               text and arenas included (exit 1 if the
  *                                               unit uses something the schema does not cover)
  *
  * Stages in a refusal: json (not strict JSON), schema (shape: keys, kinds, names), step (one op breaks
@@ -348,6 +349,9 @@ static const OpDef k_ops[] = {
     {"store", OSC_I_STORE, 0, {"arr", "index", "value"}, NULL},
     {"fload", OSC_I_FLOAD, 0, {"dst", "a", "field"}, "index"},
     {"fstore", OSC_I_FSTORE, 0, {"a", "field", "value"}, "index"},
+    {"aopen", OSC_I_AOPEN, 0, {"dst", "cells"}, NULL},
+    {"aalloc", OSC_I_AALLOC, 0, {"dst", "init", "arena"}, NULL},
+    {"adestroy", OSC_I_ADESTROY, 0, {"arena"}, NULL},
     {"call", OSC_I_CALL, 0, {"func", "args"}, "dst"},
     {"trap", OSC_I_TRAP, 0, {"code"}, NULL},
     {"br", OSC_I_BR, 0, {"to"}, NULL},
@@ -520,6 +524,26 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
         if (reg_field(c, o, "arr", &in->a)) return -1;
         if (!is_ref(&T[in->a]) || T[in->a].ref != OSC_REF_OWN) return STEP(AT "arr r%d is %s; release needs an own:<type>:<len> or own:<struct> register", ATV, in->a, tn(&T[in->a]));
         break;
+    case OSC_I_AOPEN: {
+        if (reg_field(c, o, "dst", &in->dst)) return -1;
+        if (!is_scalar(&T[in->dst]) || T[in->dst].s != OSC_T_U64) return STEP(AT "dst r%d is %s; an arena handle is a u64 register", ATV, in->dst, tn(&T[in->dst]));
+        int neg; uint64_t v;
+        if (jint(jget(o, "cells"), &neg, &v) || neg || v < 1 || v > OSC_MAX_ARRAY_LEN) return STEP(AT "\"cells\" must be 1..%d", ATV, OSC_MAX_ARRAY_LEN);
+        in->imm = v;
+        break;
+    }
+    case OSC_I_AALLOC:
+        if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "init", &in->a) || reg_field(c, o, "arena", &in->b)) return -1;
+        if (!is_ref(&T[in->dst]) || T[in->dst].ref != OSC_REF_OWN) return STEP(AT "dst r%d is %s; aalloc writes an own:<type>:<len> or own:<struct> register", ATV, in->dst, tn(&T[in->dst]));
+        if (is_sref(&T[in->dst])) {
+            if (!is_scalar(&T[in->a]) || T[in->a].s != OSC_T_U64) return STEP(AT "init r%d is %s; a struct aalloc takes a u64 register holding 0", ATV, in->a, tn(&T[in->a]));
+        } else if (!is_scalar(&T[in->a]) || T[in->a].s != T[in->dst].elem) return STEP(AT "init r%d is %s; it must be the element type of r%d", ATV, in->a, tn(&T[in->a]), in->dst);
+        if (!is_scalar(&T[in->b]) || T[in->b].s != OSC_T_U64) return STEP(AT "arena r%d is %s; an arena handle is a u64 register", ATV, in->b, tn(&T[in->b]));
+        break;
+    case OSC_I_ADESTROY:
+        if (reg_field(c, o, "arena", &in->a)) return -1;
+        if (!is_scalar(&T[in->a]) || T[in->a].s != OSC_T_U64) return STEP(AT "arena r%d is %s; an arena handle is a u64 register", ATV, in->a, tn(&T[in->a]));
+        break;
     case OSC_I_FLOAD:
     case OSC_I_FSTORE: {
         int ld = d->op == OSC_I_FLOAD;
@@ -688,7 +712,7 @@ static int read_structs(const J *ss)
     return 0;
 }
 
-/* A struct starts zeroed (OSC-2 2.3; oscc lowers a literal as const 0 into a fresh u64, alloc, then
+/* A struct starts zeroed (OSC-2 2.3; oscc lowers a literal as const 0 into a fresh u64, alloc or aalloc, then
  * fstores): the init register of a struct alloc is a local, not a parameter, and every write to it in
  * the function is const 0. Returns the instruction index of the first struct alloc that breaks this,
  * or -1. Used by emit (refuse) and lift (refuse to print). */
@@ -696,7 +720,7 @@ static int zero_inits(const OscFunc *f)
 {
     for (unsigned i = 0; i < f->ninsns; i++) {
         const OscInsn *x = &f->insns[i];
-        if (x->op != OSC_I_ALLOC || x->dst < 0 || x->dst >= f->nvregs || !f->vtype[x->dst].sid) continue;
+        if ((x->op != OSC_I_ALLOC && x->op != OSC_I_AALLOC) || x->dst < 0 || x->dst >= f->nvregs || !f->vtype[x->dst].sid) continue;
         int ok = x->a >= f->nparams; /* EMIT:zero-param */
         for (unsigned j = 0; ok && j < f->ninsns; j++)
             if (f->insns[j].dst == x->a && !(f->insns[j].op == OSC_I_CONST && f->insns[j].imm == 0)) ok = 0; /* EMIT:zero-write */
@@ -726,11 +750,24 @@ static int build(const J *root)
         if (F->t != J_OBJ) return fail("schema", "%s must be an object", where);
         const J *nm = jget(F, "name");
         if (nm && nm->t == J_STR && name_ok(nm->s)) snprintf(where, sizeof where, "function %s", nm->s);
-        if (only_keys(F, where, fk)) return -1;
+        const char *fkk[8]; int nk = 0;
+        for (int q = 0; fk[q]; q++) fkk[nk++] = fk[q];
+        if (jget(F, "requires")) fkk[nk++] = "requires";
+        if (jget(F, "ensures")) fkk[nk++] = "ensures";
+        fkk[nk] = NULL;
+        if (only_keys(F, where, fkk)) return -1;
         if (nm->t != J_STR || !name_ok(nm->s)) return fail("schema", "%s: \"name\" must match [A-Za-z_][A-Za-z0-9_]{0,62}", where);
         if (find_func(nm->s, (unsigned)fi) >= 0) return fail("schema", "%s: a function with this name already exists", where);
         OscFunc *f = &g_u.funcs[fi];
         snprintf(f->name, sizeof f->name, "%s", nm->s);
+        for (int q = 0; q < 2; q++) { /* optional contract source text (OSC-2 item 1; the checks are already in the blocks) */
+            const J *tx = jget(F, q ? "ensures" : "requires");
+            char *dst = q ? f->ensures_text : f->requires_text;
+            if (!tx) continue;
+            if (tx->t != J_STR || !tx->s[0] || strlen(tx->s) >= OSC_CLAUSE_MAX) return fail("schema", "%s: \"%s\" must be 1..%d characters of contract text (leave it out when there is none)", where, q ? "ensures" : "requires", OSC_CLAUSE_MAX - 1);
+            for (const char *p = tx->s; *p; p++) if (*p < 0x20 || *p > 0x7e) return fail("schema", "%s: \"%s\" holds a control character", where, q ? "ensures" : "requires");
+            memcpy(dst, tx->s, strlen(tx->s) + 1);
+        }
         const J *ps = jget(F, "params"), *rt = jget(F, "ret"), *ls = jget(F, "locals"), *bs = jget(F, "blocks");
         if (ps->t != J_ARR || ps->n > OSC_MAX_PARAMS) return fail("schema", "%s: \"params\" must be an array of 0..%d types", where, OSC_MAX_PARAMS);
         if (ls->t != J_ARR) return fail("schema", "%s: \"locals\" must be an array of types", where);
@@ -838,6 +875,14 @@ static int cmd_emit(const char *in, const char *out)
 
 /* ================================================================================== lift */
 
+/* a printable-ASCII string as a JSON string (only " and \ need escapes) */
+static void pjs(const char *s)
+{
+    putchar('"');
+    for (; *s; s++) { if (*s == '"' || *s == '\\') putchar('\\'); putchar(*s); }
+    putchar('"');
+}
+
 static int cmd_lift(const char *in)
 {
     size_t n;
@@ -856,7 +901,8 @@ static int cmd_lift(const char *in)
     /* check everything first: lift prints nothing for a unit it cannot express */
     for (unsigned fi = 0; fi < u.nfuncs; fi++) {
         const OscFunc *f = &u.funcs[fi];
-        if (f->requires_text[0] || f->ensures_text[0]) { printf("REFUSED lift: function %s carries requires/ensures text\n", f->name); return 1; }
+        for (const char *p = f->requires_text; *p; p++) if (*p < 0x20 || *p > 0x7e) { printf("REFUSED lift: function %s: requires text holds a control character\n", f->name); return 1; }
+        for (const char *p = f->ensures_text; *p; p++) if (*p < 0x20 || *p > 0x7e) { printf("REFUSED lift: function %s: ensures text holds a control character\n", f->name); return 1; }
         for (unsigned r = 0; r < f->nvregs; r++) {
             char t[96];
             type_name(&f->vtype[r], t, sizeof t);
@@ -893,7 +939,10 @@ static int cmd_lift(const char *in)
         char t[96];
         printf("  {\"name\": \"%s\", \"params\": [", f->name);
         for (unsigned r = 0; r < f->nparams; r++) { type_name(&f->vtype[r], t, sizeof t); printf("%s\"%s\"", r ? ", " : "", t); }
-        printf("], \"ret\": \"%s\", \"locals\": [", f->ret.s == OSC_T_VOID ? "void" : k_scal[f->ret.s]);
+        printf("], \"ret\": \"%s\", ", f->ret.s == OSC_T_VOID ? "void" : k_scal[f->ret.s]);
+        if (f->requires_text[0]) { printf("\"requires\": "); pjs(f->requires_text); printf(", "); }
+        if (f->ensures_text[0]) { printf("\"ensures\": "); pjs(f->ensures_text); printf(", "); }
+        printf("\"locals\": [");
         for (unsigned r = f->nparams; r < f->nvregs; r++) { type_name(&f->vtype[r], t, sizeof t); printf("%s\"%s\"", r > f->nparams ? ", " : "", t); }
         printf("],\n   \"blocks\": [\n");
         for (unsigned bi = 0; bi < f->nblocks; bi++) {
@@ -914,6 +963,9 @@ static int cmd_lift(const char *in)
                 case OSC_I_BIN: case OSC_I_CMP: printf(", \"dst\": %d, \"a\": %d, \"b\": %d", x->dst, x->a, x->b); break;
                 case OSC_I_ALLOC: printf(", \"dst\": %d, \"init\": %d", x->dst, x->a); break;
                 case OSC_I_RELEASE: printf(", \"arr\": %d", x->a); break;
+                case OSC_I_AOPEN: printf(", \"dst\": %d, \"cells\": %" PRIu64, x->dst, x->imm); break;
+                case OSC_I_AALLOC: printf(", \"dst\": %d, \"init\": %d, \"arena\": %d", x->dst, x->a, x->b); break;
+                case OSC_I_ADESTROY: printf(", \"arena\": %d", x->a); break;
                 case OSC_I_LOAD: printf(", \"dst\": %d, \"arr\": %d, \"index\": %d", x->dst, x->a, x->b); break;
                 case OSC_I_STORE: printf(", \"arr\": %d, \"index\": %d, \"value\": %d", x->a, x->b, x->c); break;
                 case OSC_I_FLOAD: case OSC_I_FSTORE: {
