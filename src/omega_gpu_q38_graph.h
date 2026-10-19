@@ -76,6 +76,9 @@ typedef struct OmegaGpuQ38Graph OmegaGpuQ38Graph;
 
 int omega_gpu_q38_graph_create(const OmegaGpuQ38GraphConfig *cfg, OmegaGpuQ38Graph **out);
 void omega_gpu_q38_graph_free(OmegaGpuQ38Graph *g);
+/* cascade/tree-verify-gemm: 1 = FP8 projections on the tensor-core GEMM (omega_gpu_tvgemm, N = 1), 0 = the FP8 GEMV (default;
+ * env AIEN_OMEGA_Q38_TV=1 sets it before the first token). Process-wide; call before recording. */
+void omega_gpu_q38_graph_set_tv(int on);
 /* Shapes are checked. GDN layer: mix [1][16384][5120], ab bf16 [96][5120] (row 2h = in_proj_a[h], 2h + 1 = in_proj_b[h],
  * each value * 2^-64), o [1][5120][6144]. Attention layer: mix [1][14336][5120], ab NULL, o [1][5120][6144].
  * Both: gate_up [1][34816][5120], down [1][5120][17408], in_norm and post_norm f32 [5120] as (1 + w). The tensors stay

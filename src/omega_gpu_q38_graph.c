@@ -11,6 +11,7 @@
 #include "omega_gpu_session.h"
 #include "omega_gpu_fmt.h"
 #include "omega_gpu_mem_cached.h"
+#include "omega_gpu_tvgemm.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -300,8 +301,21 @@ static int q38_overlap_ab(void) {
     return g_overlap_ab;
 }
 
+/* cascade/tree-verify-gemm: AIEN_OMEGA_Q38_TV=1 or set_tv(1) runs every FP8 projection on the tensor-core GEMM
+ * (omega_gpu_tvgemm, N = 1, f32 xq row converted in the kernel) instead of the FP8 GEMV: the same kernel and per-row bits as an
+ * N-row verify pass. Default off (the GEMV). */
+static int g_tv = -1;
+void omega_gpu_q38_graph_set_tv(int on) { g_tv = on ? 1 : 0; }
+static int q38_tv(void) {
+    if (g_tv < 0) { const char *e = getenv("AIEN_OMEGA_Q38_TV"); g_tv = (e && e[0] == '1' && e[1] == 0) ? 1 : 0; }
+    return g_tv;
+}
+static int fp8_record(OmegaGpuQ38Graph *g, const OmegaGpuFp8Tensor *t, uint64_t tab, uint64_t x, uint64_t y) {
+    if (q38_tv()) return omega_gpu_tv_record_x_locked(g->cl, t, 1, OMEGA_GPU_TV_X_F32, x, y);
+    return omega_gpu_fp8_gemv_grouped_record(g->cl, t, 1, tab, x, 1, y);
+}
 static int rec_fp8(OmegaGpuQ38Graph *g, uint8_t kind, const OmegaGpuFp8Tensor *t, uint64_t tab, uint64_t x, uint64_t y) {
-    return after_op(g, kind, omega_gpu_fp8_gemv_grouped_record(g->cl, t, 1, tab, x, 1, y));
+    return after_op(g, kind, fp8_record(g, t, tab, x, y));
 }
 
 int omega_gpu_q38_graph_begin_token(OmegaGpuQ38Graph *g, const float *x_embed) {
@@ -337,7 +351,7 @@ int omega_gpu_q38_graph_record_layer(OmegaGpuQ38Graph *g, uint32_t l, uint32_t p
     const int overlap = !g->layer[l].attn && q38_overlap_ab();
     if (overlap && rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_Q38_K_AB, omega_gpu_bf16_gemv_record(g->cl, g->layer[l].ab, xq, va_of(g, g->lo.ab)));
     if (rc == OMEGA_GPU_DGRAPH_OK) {
-        int mrc = omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].mix, 1, tab, xq, 1, mix);
+        int mrc = fp8_record(g, g->layer[l].mix, tab, xq, mix);
         if (mrc == 0 && overlap && !g->flush_each && omega_gpu_cmdlist_mark_independent(g->cl) != 0) mrc = -1;
         rc = after_op(g, OMEGA_GPU_Q38_K_MIX, mrc);
     }

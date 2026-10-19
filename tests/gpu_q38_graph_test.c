@@ -354,6 +354,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--tl-reps") == 0 && i + 1 < argc) tl_reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--fp8-head") == 0) g_fp8_head = 1;
+        else if (strcmp(argv[i], "--tv") == 0) omega_gpu_q38_graph_set_tv(1); /* cascade: FP8 projections on the tensor-core GEMM */
         /* tuning knobs for sweeps (process-wide, before any kernel is built): FP8 GEMV lane_bytes,rows,warps / CTA budget,
          * bf16 GEMV (lm_head, a|b) rows,warps,depth / CTA budget */
         else if (strcmp(argv[i], "--fp8-shape") == 0 && i + 1 < argc) { unsigned a, b, c; if (sscanf(argv[++i], "%u,%u,%u", &a, &b, &c) != 3) return 2; omega_gpu_fp8_set_shape(a, b, c); }
