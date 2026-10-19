@@ -22,55 +22,6 @@
     }
   ],
   "extensions": {
-    "generated": {
-      "children": [
-        {
-          "digest": "9cd3943087595dd868914a23a9fef7bebda3d78b773762c287ac4b7a6c2e2f40",
-          "last_commit": "05ed1a10",
-          "name": "argus",
-          "purpose": "Directory tools/argus. Purpose not yet described by a human."
-        },
-        {
-          "digest": "870928d3974d2e90f8bd2999a69a0e81e8d6026feecc2bd133988da61d8b4bba",
-          "last_commit": "7683eaaa",
-          "name": "brownian",
-          "purpose": "Directory tools/brownian. Purpose not yet described by a human."
-        },
-        {
-          "digest": "64fe22fe57fab7e61e65cb7652e73dbde613c260cb8677b05d8b98a067231e83",
-          "last_commit": "00f54b6b",
-          "name": "dual_experiment",
-          "purpose": "Runner for the DUAL applicability experiment: runs the pre-registered campaign and writes result"
-        },
-        {
-          "digest": "11eb4960ad04fe5bd01ee9d2bbb6900712176c0991ecc0b02b3204ac60248eeb",
-          "last_commit": "38a6a569",
-          "name": "estimation",
-          "purpose": "Directory tools/estimation. Purpose not yet described by a human."
-        },
-        {
-          "digest": "b91acbb0b29060651bc17dc79406adeb9376748f4d4a3005175cd307aa52b9c8",
-          "last_commit": "dd67f6bd",
-          "name": "reservoir",
-          "purpose": "Gate 2 tooling for the reservoir (omega#440): in-house zlib inflate and MAT v5 reader, the archi"
-        },
-        {
-          "digest": "98d1f4d802b90006977d73b14acb92971927f2cf5bdf05d8dc5653a1b10fcf1b",
-          "last_commit": "ae1dd00a",
-          "name": "turing_verify_indep",
-          "purpose": "Directory tools/turing_verify_indep. Purpose not yet described by a human."
-        }
-      ],
-      "children_root": "sha256:e1f826c2beb8604bb0dcba49575f7c6b48cf5488c40b616b212fda2ed70c62ee",
-      "compiled_at": "2026-10-16T19:04:20Z",
-      "compiler": "crumb-compile/1",
-      "digest": "sha256:566a123ba248da906e3c42430b73decd7c3ec030a4fd26c909d265aa9bf67db9",
-      "evidence_files": 0,
-      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 284,
-      "generated_at_commit": "88e24bdd57b27817d030d0ad95f62c3f3eacf426",
-      "source_tree": "sha256:eee0218ae5c8d003fa0a585291551799e81e6c329a7f5db1295e771a75aee167"
-    },
     "owner_lane": "",
     "provenance": {
       "entries": [

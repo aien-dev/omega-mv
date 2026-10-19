@@ -18,31 +18,6 @@
     }
   ],
   "extensions": {
-    "generated": {
-      "children": [
-        {
-          "digest": "5ada929bcb152309d4e3cbcf5dc197eab94972fd64efca8b471046a3a89ab6cd",
-          "last_commit": "59c24b2",
-          "name": "qualification",
-          "purpose": "Directory tests/visor/qualification. Purpose not yet described by a human."
-        },
-        {
-          "digest": "19402f2edf2008cb5b961c4a369f9b962d18ebe2076a102b0e30aba7f6cda306",
-          "last_commit": "aa78c3f",
-          "name": "sessions",
-          "purpose": "Directory tests/visor/sessions. Purpose not yet described by a human."
-        }
-      ],
-      "children_root": "sha256:0703c3283bea47ee0bfc6c0bbd8ec55bacd2487c17e31d0d80d1fb90aa592bb5",
-      "compiled_at": "2026-10-04T13:47:05Z",
-      "compiler": "crumb-compile/1",
-      "digest": "sha256:3f19e3034ff999211cb13ab8995ca6c38d0d8e1f5bfbbbd621caaa08412d3f1f",
-      "evidence_files": 8,
-      "evidence_root": "sha256:a2c4aaddc14ed3b6aae059061c23683b4ccf0562046ec883b40f14014fbce670",
-      "files": 33,
-      "generated_at_commit": "834ee93e4314a42c1127a2fcda8b29cf3b511245",
-      "source_tree": "sha256:faf6defc59051772c110d364658a03690cfb8928749e63a3935e164b0b524598"
-    },
     "owner_lane": "",
     "provenance": {
       "entries": [

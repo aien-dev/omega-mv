@@ -10,25 +10,6 @@
     }
   ],
   "extensions": {
-    "generated": {
-      "children": [
-        {
-          "digest": "9d36c14a9123dab52eeb62b71e5b455fcc1d88f8bb788f8aed354df9ca842ec3",
-          "last_commit": "487de8d",
-          "name": "fixtures",
-          "purpose": "Directory tests/turing/fixtures. Purpose not yet described by a human."
-        }
-      ],
-      "children_root": "sha256:2951d4a9ef3d92d064df34b295620ac4e0acfabe033a98cddf2f3da349e365a5",
-      "compiled_at": "2026-10-04T13:47:05Z",
-      "compiler": "crumb-compile/1",
-      "digest": "sha256:75d5e576c38a0497a55e9f5ee79550cb94f9b75008f3e4e126312802704b3f86",
-      "evidence_files": 0,
-      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 18,
-      "generated_at_commit": "834ee93e4314a42c1127a2fcda8b29cf3b511245",
-      "source_tree": "sha256:c40ab2d3b223a3bb197ba79eed510ed427db0689c8d46d18b798abbe39c44e84"
-    },
     "owner_lane": "",
     "provenance": {
       "entries": [
