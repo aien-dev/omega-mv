@@ -761,14 +761,15 @@ static void caller_digest(uint32_t subject, uint64_t generation, const uint8_t *
     sha256_final(&c, out);
 }
 
-/* Caller holds callers_mu. */
+/* Caller holds callers_mu, shared or exclusive. */
 static int caller_slot(const RxWorld *w, uint32_t subject) {
     for (uint32_t i = 0; i < w->n_callers; i++)
         if (w->callers[i].subject == subject) return (int)i;
     return -1;
 }
 
-/* Full check of a presented credential. Caller holds callers_mu. */
+/* Full check of a presented credential. Caller holds callers_mu, shared or
+ * exclusive. */
 static int caller_check_locked(const RxWorld *w, uint32_t subject, const RxCallerCred *cred) {
     if (!cred || cred->generation == 0) return RX_CALLER_ERR_ABSENT;
     int s = caller_slot(w, subject);
@@ -784,22 +785,24 @@ static int caller_check_locked(const RxWorld *w, uint32_t subject, const RxCalle
 
 /* The enrollment a registered reaction was admitted under is still live at
  * the same generation (its secret was checked at registration and is not
- * kept). Caller holds mu. */
+ * kept). Caller holds mu. Takes callers_mu shared: it only reads, so an
+ * activation or a commit goes on while a promotion holds the table across
+ * its flip (R9). */
 static int caller_still_live(const RxWorld *w, uint32_t subject, uint64_t generation) {
     RxWorld *mw = (RxWorld *)w;
-    pthread_mutex_lock(&mw->callers_mu);
+    pthread_rwlock_rdlock(&mw->callers_mu);
     int s = caller_slot(w, subject);
     int rc = s < 0 ? RX_CALLER_ERR_UNKNOWN
            : !w->callers[s].live ? RX_CALLER_ERR_REVOKED
            : w->callers[s].generation != generation ? RX_CALLER_ERR_STALE : RX_CALLER_OK;
-    pthread_mutex_unlock(&mw->callers_mu);
+    pthread_rwlock_unlock(&mw->callers_mu);
     return rc;
 }
 
 int rx_world_enroll_caller(RxWorld *w, uint32_t subject, RxCallerCred *out) {
     if (!w || !out) return RX_ERR_ARG;
     memset(out, 0, sizeof *out);
-    pthread_mutex_lock(&w->callers_mu);
+    pthread_rwlock_wrlock(&w->callers_mu);
     int rc = RX_CALLER_OK;
     if (w->callers_bound) { rc = RX_CALLER_ERR_CLOSED; goto out; }
     if (caller_slot(w, subject) >= 0) { rc = RX_CALLER_ERR_EXISTS; goto out; }
@@ -824,7 +827,7 @@ int rx_world_enroll_caller(RxWorld *w, uint32_t subject, RxCallerCred *out) {
     memcpy(out->secret, secret, sizeof secret);
     for (size_t i = 0; i < sizeof secret; i++) ((volatile uint8_t *)secret)[i] = 0;
 out:
-    pthread_mutex_unlock(&w->callers_mu);
+    pthread_rwlock_unlock(&w->callers_mu);
     return rc;
 }
 
@@ -839,9 +842,9 @@ int rx_world_bind_callers(RxWorld *w) {
         if (!w->reactions[i].removed && w->reactions[i].desc.caller.generation == 0)
             rc = RX_ERR_IDENTITY;
     if (rc == RX_OK) {
-        pthread_mutex_lock(&w->callers_mu);
+        pthread_rwlock_wrlock(&w->callers_mu);
         w->callers_bound = true;
-        pthread_mutex_unlock(&w->callers_mu);
+        pthread_rwlock_unlock(&w->callers_mu);
     }
     pthread_mutex_unlock(&w->mu);
     return rc;
@@ -855,23 +858,23 @@ int rx_world_revoke_caller(RxWorld *w, uint32_t subject, const RxCallerCred *cre
      * the publish, never lands between them. Never call with mu held. */
     const int serialize = 1;
     if (serialize) pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
+    pthread_rwlock_wrlock(&w->callers_mu);
     int rc = caller_check_locked(w, subject, cred);
     if (rc == RX_CALLER_OK) {
         int s = caller_slot(w, subject);
         w->callers[s].live = false;
         memset(w->callers[s].digest, 0, sizeof w->callers[s].digest);
     }
-    pthread_mutex_unlock(&w->callers_mu);
+    pthread_rwlock_unlock(&w->callers_mu);
     if (serialize) pthread_mutex_unlock(&w->mu);
     return rc;
 }
 
 int rx_world_check_caller(RxWorld *w, uint32_t subject, const RxCallerCred *cred) {
     if (!w) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->callers_mu);
+    pthread_rwlock_rdlock(&w->callers_mu);
     int rc = caller_check_locked(w, subject, cred);
-    pthread_mutex_unlock(&w->callers_mu);
+    pthread_rwlock_unlock(&w->callers_mu);
     return rc;
 }
 
@@ -879,19 +882,22 @@ int rx_world_caller_check_fn(void *world, uint32_t subject, const RxCallerCred *
     RxWorld *w = world;
     if (!w) return RX_ERR_ARG;
     if (op == RX_CALLER_OP_RELEASE) {
-        pthread_mutex_unlock(&w->callers_mu);
+        pthread_rwlock_unlock(&w->callers_mu);
         return RX_CALLER_OK;
     }
-    pthread_mutex_lock(&w->callers_mu);
+    pthread_rwlock_rdlock(&w->callers_mu);
     /* R16 G6: under an operator stop a bound generation store neither
-     * proposes nor promotes. halted is written under callers_mu too. */
+     * proposes nor promotes. halted is written under callers_mu exclusive,
+     * so this shared hold reads it. */
     if (w->halted) {
-        pthread_mutex_unlock(&w->callers_mu);
+        pthread_rwlock_unlock(&w->callers_mu);
         return RX_CALLER_ERR_HALTED;
     }
     int rc = caller_check_locked(w, subject, cred);
-    /* HOLD: a pass keeps the table locked until RELEASE (no revocation). */
-    if (op != RX_CALLER_OP_HOLD || rc != RX_CALLER_OK) pthread_mutex_unlock(&w->callers_mu);
+    /* HOLD: a pass keeps the table locked shared until RELEASE: no revocation
+     * and no operator stop (exclusive) lands, while activations and commits
+     * (shared) go on. */
+    if (op != RX_CALLER_OP_HOLD || rc != RX_CALLER_OK) pthread_rwlock_unlock(&w->callers_mu);
     return rc;
 }
 
@@ -1048,7 +1054,7 @@ static uint64_t halt_crumb(RxWorld *w, RxCrumbKind kind, RxCapRef cap, int32_t r
 int rx_world_set_halt_dir(RxWorld *w, const char *dir) {
     if (!w || !dir || !dir[0] || strlen(dir) >= sizeof w->halt_dir) return RX_ERR_ARG;
     pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
+    pthread_rwlock_wrlock(&w->callers_mu);
     snprintf(w->halt_dir, sizeof w->halt_dir, "%s", dir);
     RxHaltStatus h;
     char raw[600];
@@ -1072,7 +1078,7 @@ int rx_world_set_halt_dir(RxWorld *w, const char *dir) {
         w->halt = h;
         w->halted = true;
     }
-    pthread_mutex_unlock(&w->callers_mu);
+    pthread_rwlock_unlock(&w->callers_mu);
     pthread_mutex_unlock(&w->mu);
     return rc;
 }
@@ -1081,10 +1087,11 @@ int rx_world_emergency_stop(RxWorld *w, uint32_t subject, const RxCallerCred *cr
                             RxCapRef cap, int32_t reason, RxHaltStatus *out) {
     if (!w) return RX_ERR_ARG;
     /* mu then callers_mu (R16 C7 order): a commit or seat result holds mu from
-     * its checks to its publish, and a promotion holds callers_mu (HOLD) across
-     * its flip, so each finishes before the stop or sees it. */
+     * its checks to its publish, and a promotion holds callers_mu shared (HOLD)
+     * across its flip, so each finishes before the stop or sees it; the stop
+     * takes callers_mu exclusive and waits for the flip, never lands inside. */
     pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
+    pthread_rwlock_wrlock(&w->callers_mu);
     int rc = halt_authorize(w, subject, cred, cap);
     if (rc == RX_OK && w->halted) rc = RX_HALT_ALREADY;
     if (rc == RX_OK) {
@@ -1104,7 +1111,7 @@ int rx_world_emergency_stop(RxWorld *w, uint32_t subject, const RxCallerCred *cr
         w->halt.durable = halt_mark_write(w);
     }
     if (out) *out = w->halt;
-    pthread_mutex_unlock(&w->callers_mu);
+    pthread_rwlock_unlock(&w->callers_mu);
     pthread_mutex_unlock(&w->mu);
     return rc;
 }
@@ -1113,7 +1120,7 @@ int rx_world_emergency_resume(RxWorld *w, uint32_t subject, const RxCallerCred *
                               RxCapRef cap, RxHaltStatus *out) {
     if (!w) return RX_ERR_ARG;
     pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
+    pthread_rwlock_wrlock(&w->callers_mu);
     int rc = halt_authorize(w, subject, cred, cap);
     if (rc == RX_OK && !w->halted) rc = RX_HALT_NOT_STOPPED;
     if (rc == RX_OK && w->halt_dir[0]) {
@@ -1150,7 +1157,7 @@ int rx_world_emergency_resume(RxWorld *w, uint32_t subject, const RxCallerCred *
         pthread_cond_broadcast(&w->work_cv);
     }
     if (out) *out = w->halt;
-    pthread_mutex_unlock(&w->callers_mu);
+    pthread_rwlock_unlock(&w->callers_mu);
     pthread_mutex_unlock(&w->mu);
     return rc;
 }
@@ -1158,9 +1165,9 @@ int rx_world_emergency_resume(RxWorld *w, uint32_t subject, const RxCallerCred *
 int rx_world_operator_authorize(RxWorld *w, uint32_t subject, const RxCallerCred *cred, RxCapRef cap) {
     if (!w) return RX_ERR_ARG;
     pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
+    pthread_rwlock_rdlock(&w->callers_mu);
     int rc = halt_authorize(w, subject, cred, cap);
-    pthread_mutex_unlock(&w->callers_mu);
+    pthread_rwlock_unlock(&w->callers_mu);
     pthread_mutex_unlock(&w->mu);
     return rc;
 }
@@ -2095,7 +2102,13 @@ static int init_common(RxWorld *w, RxCapRoot *root, const void *auth_ctx,
     if (!root && !validate) return RX_ERR_ARG;
     memset(w, 0, sizeof(*w));
     w->root = root;
-    pthread_mutex_init(&w->callers_mu, NULL);
+    {   /* R16 C5: readers and writers apart, writers preferred (see rx_world.h). */
+        pthread_rwlockattr_t ra;
+        pthread_rwlockattr_init(&ra);
+        pthread_rwlockattr_setkind_np(&ra, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+        pthread_rwlock_init(&w->callers_mu, &ra);
+        pthread_rwlockattr_destroy(&ra);
+    }
     w->sequential = sequential;
     w->auth_ctx = auth_ctx;
     w->auth_validate = validate;
@@ -2175,7 +2188,7 @@ void rx_world_destroy(RxWorld *w) {
     pthread_cond_destroy(&w->idle_cv);
     pthread_cond_destroy(&w->claim_cv);
     pthread_mutex_destroy(&w->mu);
-    pthread_mutex_destroy(&w->callers_mu);
+    pthread_rwlock_destroy(&w->callers_mu);
 }
 
 int rx_world_create(RxWorld *w, uint32_t type, RxPersist persist, uint64_t resource,
@@ -2302,9 +2315,9 @@ int rx_world_add_reaction(RxWorld *w, const RxReactionDesc *d, uint32_t *out_id)
      * generation never survives binding; a reaction that names none is kept
      * as unauthenticated (generation 0), which bind refuses. */
     if (w->callers_bound || d->caller.generation != 0) {
-        pthread_mutex_lock(&w->callers_mu);
+        pthread_rwlock_rdlock(&w->callers_mu);
         int irc = caller_check_locked(w, d->subject, &d->caller);
-        pthread_mutex_unlock(&w->callers_mu);
+        pthread_rwlock_unlock(&w->callers_mu);
         if (irc != RX_CALLER_OK) { rc = RX_ERR_IDENTITY; goto out; }
     }
     /* A removed slot of the same subject and faculty is reused before the

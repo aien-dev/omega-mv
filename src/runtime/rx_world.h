@@ -652,8 +652,16 @@ typedef struct RxWorld {
     uint64_t seq_pulse_started, seq_idle_start;
 
     /* R16 C5 caller enrollments (rx_caller.h). Only digests are kept. Own
-     * lock: taken inside mu (activation) and alone (R9's check). */
-    pthread_mutex_t callers_mu;
+     * lock, readers and writers apart. An activation, a commit and the
+     * generation store's CHECK and HOLD only read the table: they take it
+     * shared (inside mu, or alone for the store). Enroll, bind, revoke and
+     * the operator stop and resume write it: they take it exclusive, after
+     * mu. A promotion's HOLD (shared) across the root flip keeps every
+     * writer out and no reader, so the world goes on while the active
+     * pointer is written (R9: the barrier is strict only for its candidate).
+     * Writers are preferred: a stream of checks cannot starve a revocation
+     * or a stop. */
+    pthread_rwlock_t callers_mu;
     struct {
         uint32_t subject;
         bool live;
@@ -665,7 +673,8 @@ typedef struct RxWorld {
     bool callers_bound;              /* one way: set once, never cleared */
 
     /* R16 G6 operator emergency stop (spec/r16-operator-emergency-stop.md).
-     * Written under mu and callers_mu together, so either lock reads it.
+     * Written under mu and callers_mu exclusive together, so mu or a shared
+     * callers_mu reads it.
      * No worker takes work and nothing publishes while it is set. */
     bool halted;
     RxHaltStatus halt;

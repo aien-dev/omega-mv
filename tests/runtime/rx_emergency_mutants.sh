@@ -14,7 +14,7 @@ SRCS="src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c 
 MUTANTS='M1 run_one publishes under a stop|src/runtime/rx_world.c|s/(on resume, against the state then \(rearm keeps its admission path\)\. \*\/\n    )if \(w->halted\) \{/${1}if (0) {/
 M2 workers take work under a stop|src/runtime/rx_world.c|s/\(w->halted \|\| !pop_ready\(w, &rid\)\)/(!pop_ready(w, \&rid))/
 M3 outside publication under a stop|src/runtime/rx_world.c|s/if \(w->halted\) \{( +)\/\* R16 G6: nothing outside publishes \*\//if (0) {$1\/* R16 G6: nothing outside publishes *\//
-M4 caller check ignores the stop|src/runtime/rx_world.c|s/if \(w->halted\) \{\n        pthread_mutex_unlock\(&w->callers_mu\);\n        return RX_CALLER_ERR_HALTED;/if (0) {\n        pthread_mutex_unlock(\&w->callers_mu);\n        return RX_CALLER_ERR_HALTED;/
+M4 caller check ignores the stop|src/runtime/rx_world.c|s/if \(w->halted\) \{\n        pthread_rwlock_unlock\(&w->callers_mu\);\n        return RX_CALLER_ERR_HALTED;/if (0) {\n        pthread_rwlock_unlock(\&w->callers_mu);\n        return RX_CALLER_ERR_HALTED;/
 M5 a reaction subject may stop the world|src/runtime/rx_world.c|s/if \(w->reactions\[i\]\.desc\.subject == subject\) return RX_ERR_AUTHORITY;/(void)i;/
 M6 store ignores the durable mark|src/runtime/rx_generation.c|s/(static int halt_marked\(const RxGenStore \*store\) \{\n)/$1    if (store) return 0;\n/
 M7 a restarted world ignores the mark|src/runtime/rx_world.c|s/\} else if \(rc != 0 && !w->halted\) \{/} else if (0) {/
