@@ -43,7 +43,7 @@ make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-numeric-cpu      # E1 CP
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-realize
 ```
 
-The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. CI definitions in `.github/workflows/` list the suites that run on every push.
+The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Some GPU suites build against physics but still open no device: `make test-gpu-decode-graph` checks the decode graph's glue kernels and, on a fake platform, that a failed or abandoned decode token always gives the GPU session lock back (shown on the fake only; the real-chip decode run is `tools/run_gpu_decode_graph_chip.sh`). Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. CI definitions in `.github/workflows/` list the suites that run on every push.
 
 ## Repository layout
 
