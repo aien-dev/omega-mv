@@ -1,0 +1,31 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "tests/dagsim/fixtures/m1_synthetic_power.oev",
+  "machine": "spark-b87b", "build_sha": "f4a9849f00000000000000000000000000000000",
+  "calibration": {"id": "M1-20261019", "taken_day": 20745, "valid_days": 30, "load1": 24.2, "src": "~/yardsticks/aien-model/M1/"},
+  "asof_day": 20746,
+  "status": "OK", "reason": "",
+  "provenance": ["synthetic", "measured", "specified"], "synthetic": 1, "offline": true, "gpu_executed": false,
+  "makespan_ns": {"nominal": 151756700, "lo": 148656100, "hi": 157359500, "interval_known": true},
+  "bounds_ns": {"critical_path": 151756700, "max": 151756700, "resources": {"cpu": 5551000, "gpu": 40736700, "dram_spec": 0, "dram_gpu": 0, "dram_cpu": 3.0581e+07, "unified_mem": 0, "gpu_launch": 40736700}, "makespan_ge_bounds": true},
+  "ops": [
+    {"id": "realize", "start_ns": 0, "end_ns": 20000, "floor_ns": 20000, "contention_ns": 0, "prov": "measured", "src": "M1/block1.csv:path_ns_per_call"},
+    {"id": "gpu_job", "start_ns": 20000, "end_ns": 40756700, "floor_ns": 40736700, "contention_ns": 0, "prov": "measured", "src": "M1/block2.csv:vecadd_65"},
+    {"id": "copy1g", "start_ns": 40756700, "end_ns": 151756700, "floor_ns": 111000000, "contention_ns": 0, "prov": "measured", "src": "M1/block4.csv:gb=1,threads=1"}
+  ],
+  "critical_path": ["realize", "gpu_job", "copy1g"],
+  "peak_live_bytes": {"unified_mem": {"bytes": 2000000000, "at_ns": 40756700, "cap": 137438953472}},
+  "attribution_ns": {"compute": 111020000, "bandwidth": 0, "contention": 0, "launch": 40736700, "serialization": 0, "sync": 0, "residual": 0},
+  "energy": {"status": "SYNTHETIC_SENSITIVITY_ONLY", "joules": 15.1757, "instrument": "what-if-100W", "boundary": "wall", "ranking_valid": false},
+  "conservation": {"n_ops": 3, "total_bytes": 2000000000, "total_busy_ns": 111020000, "total_launch_ns": 40736700, "instrument_overhead_ns": null},
+  "sensitivities": [
+    {"resource": "gpu_launch", "kind": "launch", "makespan_if_doubled_ns": 111020000, "delta_ns": 40736700, "interval_width_frac": 0, "decision_score": 2036835, "next_experiment": "measure launch with the device context held open (M1 block2 follow-up)"},
+    {"resource": "cpu", "kind": "compute", "makespan_if_doubled_ns": 151756700, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "measure the critical op at the next larger shape"},
+    {"resource": "gpu", "kind": "compute", "makespan_if_doubled_ns": 151756700, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "measure the critical op at the next larger shape"},
+    {"resource": "dram_spec", "kind": "bandwidth", "makespan_if_doubled_ns": 151756700, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "measure this bandwidth on this DAG's shapes (datasheet figure, never attained)"},
+    {"resource": "dram_gpu", "kind": "bandwidth", "makespan_if_doubled_ns": 151756700, "delta_ns": 0, "interval_width_frac": 0.00182983, "decision_score": 0, "next_experiment": "repeat the bandwidth receipt on a quiet box to tighten lo/hi"},
+    {"resource": "dram_cpu", "kind": "bandwidth", "makespan_if_doubled_ns": 151756700, "delta_ns": 0, "interval_width_frac": 0.137615, "decision_score": 0, "next_experiment": "repeat the bandwidth receipt on a quiet box to tighten lo/hi"},
+    {"resource": "unified_mem", "kind": "capacity", "makespan_if_doubled_ns": 151756700, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "none: capacity is a ledger, not a rate"}
+  ],
+  "unresolved_residual_ns": 0,
+  "note": "loaded-box calibration (load1 above); bounds are floors, not predictions; no performance claim from this simulation alone"
+}

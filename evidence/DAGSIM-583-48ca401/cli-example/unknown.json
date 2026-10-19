@@ -1,0 +1,8 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "tests/dagsim/fixtures/needs_arch244_trace.oev",
+  "machine": "spark-b87b", "build_sha": "f4a9849f00000000000000000000000000000000",
+  "calibration": {"id": "M1-20261019", "taken_day": 20745, "valid_days": 30, "load1": 24.2, "src": "~/yardsticks/aien-model/M1/"},
+  "asof_day": 20746,
+  "status": "REFUSED_UNKNOWN", "reason": "op objective_replay has prov=unknown (aien-architecture); unknown stays unknown",
+  "provenance": [], "synthetic": 0, "offline": true, "gpu_executed": false
+}

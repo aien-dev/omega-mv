@@ -1,0 +1,8 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "tests/dagsim/fixtures/m1_spark_subset.oev",
+  "machine": "spark-b87b", "build_sha": "f4a9849f00000000000000000000000000000000",
+  "calibration": {"id": "M1-20261019", "taken_day": 20745, "valid_days": 30, "load1": 24.2, "src": "~/yardsticks/aien-model/M1/"},
+  "asof_day": 20788,
+  "status": "REFUSED_STALE", "reason": "calibration M1-20261019 is stale: asof is 13 day(s) past the validity envelope",
+  "provenance": [], "synthetic": 0, "offline": true, "gpu_executed": false
+}
