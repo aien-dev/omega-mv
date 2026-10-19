@@ -90,10 +90,11 @@ sealed)
     [ -f "$EV/SELECTION.md" ] || { echo "SELECTION.md must exist before the sealed run"; exit 3; }
     SEL=$(sed -n 's/^selected_c: *//p' "$EV/SELECTION.md" | head -1)
     [ -n "$SEL" ] || { echo "SELECTION.md names no selected_c"; exit 3; }
-    LS584_SEL=$SEL batch sealed-inner ;;
+    EXTRA=$(sed -n 's/^extra_reported: *//p' "$EV/SELECTION.md" | head -1)
+    LS584_SEL=$SEL LS584_EXTRA=$EXTRA batch sealed-inner ;;
 sealed-inner)
     SEL=${LS584_SEL:?}
-    for s in $SEALED; do for a in A B $SEL; do one "$EV/sealed/$a-$s" --arm $a --seed $s; done; done
+    for s in $SEALED; do for a in A B $SEL ${LS584_EXTRA:-}; do one "$EV/sealed/$a-$s" --arm $a --seed $s; done; done
     for s in $SEALED; do
         one "$EV/sealed-controls/$SEL-$s-shuffle" --arm $SEL --seed $s --control shuffle
         one "$EV/sealed-controls/$SEL-$s-stale" --arm $SEL --seed $s --control stale

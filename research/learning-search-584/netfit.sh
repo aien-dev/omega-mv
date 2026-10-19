@@ -28,9 +28,11 @@ r=$(awk -v h="$h5" -v d="$dist" 'BEGIN{ if (h<=0) print 0; else if (h>=1) print 
 # persistence per key: persist_cpu_ns total / stored
 persist=$(sed -n 's/.*"persist_cpu_ns": \([0-9]*\).*/\1/p' "$L/summary.json"); stored=$(sed -n 's/.*"stored": \([0-9]*\).*/\1/p' "$L/summary.json")
 pk=$(awk -v p="$persist" -v s="$stored" 'BEGIN{printf "%.0f", s?p/s:0}')
-# C = (candidate first reuse - search path) + persistence per key, within the learning arm;
-# the first solve itself costs the same as A (same path) plus the store, which is in persist.
-C=$(awk -v lc="$l_cand" -v ar="$a_rep" -v pk="$pk" 'BEGIN{v=(lc-ar)+pk; if (v<0) v=0; printf "%.0f", v}')
+# C per key = persistence + the saving forgone on the first applicable use: a CANDIDATE hit
+# re-realizes (reference-first), so it costs about the search path and saves ~0; only the
+# second and later hits save Delta. In expectation that forgone saving is p * (cand - ver).
+# The first solve itself costs the same as A (same code path).
+C=$(awk -v lc="$l_cand" -v lv="$l_ver" -v p="$p" -v pk="$pk" 'BEGIN{v=p*(lc-lv)+pk; if (v<0) v=0; printf "%.0f", v}')
 Delta=$(awk -v ar="$a_rep" -v lv="$l_ver" 'BEGIN{printf "%.0f", ar-lv}')
 # observed: cumulative cpu of the stream, both arms
 a_tot=$(sed -n 's/.*"cpu_ns_total": \([0-9]*\).*/\1/p' "$A/summary.json" | head -1); l_tot=$(sed -n 's/.*"cpu_ns_total": \([0-9]*\).*/\1/p' "$L/summary.json" | head -1)
