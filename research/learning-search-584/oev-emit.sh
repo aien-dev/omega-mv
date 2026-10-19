@@ -23,14 +23,14 @@ build repo=omega-mv sha=$SHA physics=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
 calibration id=LS584-calib-$(date -u +%Y%m%d) taken=$(date -u +%F) valid_days=30 load1=$LOAD1 src=$S
 resource id=cpu kind=compute slots=20 prov=specified src=nproc
 resource id=unified_mem kind=capacity cap=137438953472 prov=specified src=nvidia-dgx-spark-datasheet
-resource id=nvme kind=bandwidth cap=1e9 prov=unknown src=not-measured-in-584
 op id=adapter kind=compute engine=cpu t_ns=$adapter prov=measured src=$R:adapter_cpu_ns:block1
 op id=first_solve kind=compute engine=cpu t_ns=$first_cpu prov=measured src=$R:cpu_ns:block1
 op id=repeat_solve kind=compute engine=cpu t_ns=$rep_cpu prov=measured src=$R:cpu_ns:block2
 op id=novel_solve kind=compute engine=cpu t_ns=$nov_cpu prov=measured src=$R:cpu_ns:block3
 op id=compose_solve kind=compute engine=cpu t_ns=$comp_cpu prov=measured src=$R:cpu_ns:block4
 op id=recall_solve kind=compute engine=cpu t_ns=$rec_cpu prov=measured src=$R:cpu_ns:block5
-op id=persist kind=persist engine=cpu t_ns=$persist prov=measured src=$R:persist_cpu_ns:block1 bytes=$pbytes bw=nvme
+# persist: CPU time of the Cortex journal append (measured); storage bandwidth was not measured in 584, so no bytes/bw claim is made ($pbytes B appended per stream is in summary.json).
+op id=persist kind=persist engine=cpu t_ns=$persist prov=measured src=$R:persist_cpu_ns:block1
 dep adapter first_solve
 dep first_solve persist
 dep persist repeat_solve

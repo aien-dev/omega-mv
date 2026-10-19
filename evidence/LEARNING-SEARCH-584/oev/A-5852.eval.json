@@ -1,0 +1,30 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "evidence/LEARNING-SEARCH-584/oev/A-5852.oev",
+  "machine": "spark-b87b", "build_sha": "40b8e43222f4d3db3a69d8941acfb545adb7ab1f",
+  "calibration": {"id": "LS584-calib-20261019", "taken_day": 20745, "valid_days": 30, "load1": 10.61, "src": "evidence/LEARNING-SEARCH-584/calib/A-5852/summary.json"},
+  "asof_day": 20746,
+  "status": "OK", "reason": "",
+  "provenance": ["measured", "specified"], "synthetic": 0, "offline": true, "gpu_executed": false,
+  "makespan_ns": {"nominal": 13136912, "lo": 13136912, "hi": 13136912, "interval_known": true},
+  "bounds_ns": {"critical_path": 13136912, "max": 13136912, "resources": {"cpu": 656846, "unified_mem": 0}, "makespan_ge_bounds": true},
+  "ops": [
+    {"id": "adapter", "start_ns": 0, "end_ns": 1264, "floor_ns": 1264, "contention_ns": 0, "prov": "measured", "src": "evidence/LEARNING-SEARCH-584/calib/A-5852/rows.csv:adapter_cpu_ns:block1"},
+    {"id": "first_solve", "start_ns": 1264, "end_ns": 2616496, "floor_ns": 2615232, "contention_ns": 0, "prov": "measured", "src": "evidence/LEARNING-SEARCH-584/calib/A-5852/rows.csv:cpu_ns:block1"},
+    {"id": "repeat_solve", "start_ns": 2616496, "end_ns": 5152192, "floor_ns": 2535696, "contention_ns": 0, "prov": "measured", "src": "evidence/LEARNING-SEARCH-584/calib/A-5852/rows.csv:cpu_ns:block2"},
+    {"id": "novel_solve", "start_ns": 5152192, "end_ns": 7941120, "floor_ns": 2788928, "contention_ns": 0, "prov": "measured", "src": "evidence/LEARNING-SEARCH-584/calib/A-5852/rows.csv:cpu_ns:block3"},
+    {"id": "compose_solve", "start_ns": 7941120, "end_ns": 10547056, "floor_ns": 2605936, "contention_ns": 0, "prov": "measured", "src": "evidence/LEARNING-SEARCH-584/calib/A-5852/rows.csv:cpu_ns:block4"},
+    {"id": "recall_solve", "start_ns": 10547056, "end_ns": 13136912, "floor_ns": 2589856, "contention_ns": 0, "prov": "measured", "src": "evidence/LEARNING-SEARCH-584/calib/A-5852/rows.csv:cpu_ns:block5"},
+    {"id": "persist", "start_ns": 2616496, "end_ns": 2616496, "floor_ns": 0, "contention_ns": 0, "prov": "measured", "src": "evidence/LEARNING-SEARCH-584/calib/A-5852/rows.csv:persist_cpu_ns:block1"}
+  ],
+  "critical_path": ["adapter", "first_solve", "persist", "repeat_solve", "novel_solve", "compose_solve", "recall_solve"],
+  "peak_live_bytes": {"unified_mem": {"bytes": 0, "at_ns": 0, "cap": 137438953472}},
+  "attribution_ns": {"compute": 13136912, "bandwidth": 0, "contention": 0, "launch": 0, "serialization": 0, "sync": 0, "residual": 0},
+  "energy": {"status": "UNMEASURED", "joules": null, "instrument": "none", "boundary": "", "ranking_valid": false},
+  "conservation": {"n_ops": 7, "total_bytes": 0, "total_busy_ns": 13136912, "total_launch_ns": 0, "instrument_overhead_ns": null},
+  "sensitivities": [
+    {"resource": "cpu", "kind": "compute", "makespan_if_doubled_ns": 13136912, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "measure the critical op at the next larger shape"},
+    {"resource": "unified_mem", "kind": "capacity", "makespan_if_doubled_ns": 13136912, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "none: capacity is a ledger, not a rate"}
+  ],
+  "unresolved_residual_ns": 0,
+  "note": "loaded-box calibration (load1 above); bounds are floors, not predictions; no performance claim from this simulation alone"
+}
