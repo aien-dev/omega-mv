@@ -1,0 +1,7 @@
+commit 6aca46f158d05292f448daa5b99c92fc65c41a4d
+flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-check
+flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evidence/attn256-freq-20261019T0151Z/null.tsv --classes rho0,rho1000 --pos 4095,32767,131071 --reps 10 --seed 1 --tag null
+flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evidence/attn256-freq-20261019T0151Z/train.tsv --classes rho0 --pos 1023,4095,16383,65535 --reps 25 --seed 101 --tag train
+flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evidence/attn256-freq-20261019T0151Z/train.tsv --classes iid --pos 1023,4095,16383,65535 --reps 25 --seed 101 --tag train
+flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evidence/attn256-freq-20261019T0151Z/train.tsv --classes rho250 --pos 1023,4095,16383,65535 --reps 25 --seed 101 --tag train
+flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evidence/attn256-freq-20261019T0151Z/train.tsv --classes rho500 --pos 1023,4095,16383,65535 --reps 25 --seed 101 --tag train

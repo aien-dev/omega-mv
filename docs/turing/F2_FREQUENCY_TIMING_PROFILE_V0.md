@@ -49,3 +49,19 @@ The frequency term earns its keep only if all of these hold on the held-out set:
 If it earns its keep, the scheduling step uses the measured odds to pick mode 0 or mode 1 per input class and
 reports the measured time of both. If not, the result is reported as a null: the branch odds do not matter for
 this kernel's time at these sizes, and the reason is stated against the bandwidth ceiling.
+
+## v1 amendment (2026-10-19, before any held-out trace existed)
+
+The v0 train set (`evidence/attn256-freq-20261019T0151Z/train.tsv`, one chip run per class, the two modes in
+sequential blocks) showed run-to-run drift of the machine larger than any branch effect: at position 4095 the same
+default kernel took a median 408 us in the first two runs (rho0, iid) and 306 us in the next two (rho250, rho500), and
+mode 1 minus mode 0 swung from -44 to +101 us at 16383 within one run. Because class was tied to the run, the v0 fit
+turned that drift into a share coefficient (g = -188155 ns at 4095). That design cannot separate the odds from the
+clock of the box, so it is replaced before the held-out set is collected. The v0 train file is kept as the evidence.
+
+v1 changes only the collection order; models, code, prices and the decision rule are unchanged:
+- `--chip-traces-mixed`: all classes in ONE chip run, each in its own cache layer (class-to-layer order shuffled by
+  the seed), one shared V history; each rep runs both modes in a shuffled order (one discarded warm-up launch after
+  each kernel switch) and inside a mode every (class, position) pair in a shuffled order.
+- Train: tag `train1`, seed 111, classes rho0, iid, rho250, rho500, 40 reps. Held-out: tag `held1`, seed 222,
+  classes rho0, iid, rho250, rho500, rho750, rho1000, 40 reps, sealed by sha256 before scoring.

@@ -18,6 +18,7 @@
  *   --sim         simulator (no chip): counters == replica per warp (4 classes x contexts 1, 257, 700); count mutant
  *                 goes red; rescale 0 and 1 outputs bit-equal (normal and subnormal V).
  *   --chip-check  on the chip: the same three checks at contexts 4096 and 32768.
+ *   --chip-traces-mixed FILE  the same with every class, position and mode interleaved in one run (profile v1).
  *   --chip-traces FILE  timing traces on the chip, one TSV line per launch (default program and rescale 1; the
  *                 counting build is never timed). --classes a,b,c --pos p1,p2 --reps N --seed S --tag T.
  * Each run prints PASS/FAIL lines and exits 0 only when every check passed.
@@ -354,9 +355,78 @@ static void chip_traces(const char *path, char *classes, char *posl, uint32_t re
     omega_gpu_decode_attn256_cache_free(cache);
 }
 
+/* Profile v1 (docs/turing/F2_FREQUENCY_TIMING_PROFILE_V0.md, "v1"): every class in its own cache layer (layer = position
+ * of the class in a seed-shuffled order), one shared V history, and each rep runs mode 0 and mode 1 (seed-shuffled
+ * order, one discarded warm-up after each kernel switch) over all (class, position) pairs in a seed-shuffled order,
+ * so slow drift of the machine lands on every class and both modes alike. Same TSV columns as --chip-traces. */
+static void shuffle_u32(uint32_t *a, uint32_t n, uint32_t *s) { for (uint32_t i = n; i > 1; i--) { uint32_t j = lcg(s) % i, t = a[i - 1]; a[i - 1] = a[j]; a[j] = t; } }
+static void chip_traces_mixed(const char *path, char *classes, char *posl, uint32_t reps, uint32_t seed, const char *tag) {
+    char *cn[16], *pn[16]; int ncl = split_list(classes, cn, 16), np = split_list(posl, pn, 16);
+    uint32_t pos[16], maxp = 0, rs = seed * 7919u + 3u;
+    for (int i = 0; i < np; i++) { pos[i] = (uint32_t)strtoul(pn[i], NULL, 10); if (pos[i] + 1 > maxp) maxp = pos[i] + 1; }
+    const uint32_t MP = (maxp + CH - 1) / CH * CH;
+    Class cl[16]; uint32_t layer_of[16], perm[16];
+    for (int k = 0; k < ncl; k++) { if (class_parse(cn[k], &cl[k]) != 0) { CHECK(0, "bad class %s", cn[k]); return; } perm[k] = (uint32_t)k; }
+    shuffle_u32(perm, (uint32_t)ncl, &rs);
+    for (int k = 0; k < ncl; k++) layer_of[perm[k]] = (uint32_t)k;
+    FILE *f = fopen(path, "a");
+    CHECK(f != NULL, "open %s", path);
+    if (!f) return;
+    OmegaGpuDecodeAttn256Cache *cache = NULL;
+    int rc = omega_gpu_decode_attn256_cache_alloc((uint32_t)ncl, MP, THETA, 64, &cache);
+    CHECK(rc == OMEGA_GPU_DATTN_OK, "cache alloc %d layers x %u: %s", ncl, MP, rc ? omega_gpu_decode_attn_last_error() : "");
+    if (rc) { fclose(f); return; }
+    float ones[HD]; for (unsigned i = 0; i < HD; i++) ones[i] = 1.0f;
+    for (int k = 0; k < ncl; k++) CHECK(omega_gpu_decode_attn256_set_norms(cache, (uint32_t)k, ones, ones) == OMEGA_GPU_DATTN_OK, "set norms");
+    int8_t *c = malloc((size_t)ncl * MP); uint16_t *vh = malloc((size_t)KVH * MP * HD * 2), *kr = malloc((size_t)MP * HD * 2);
+    uint32_t *pr = malloc((size_t)KVH * (MP / CH) * NW * 2 * 4);
+    uint64_t S[16][16], R[16][16];
+    v_rows(seed + 5, KVH * MP, 0, vh);
+    for (int k = 0; k < ncl; k++) {
+        int8_t *ck = c + (size_t)k * MP; gen_c(&cl[k], seed * 977u + (uint32_t)k, MP, ck);
+        for (uint32_t j = 0; j < MP; j++) k_row(ck[j], kr + (size_t)j * HD);
+        for (uint32_t g = 0; g < KVH; g++) CHECK(omega_gpu_decode_attn256_cache_write(cache, layer_of[k], g, 0, MP, kr, vh + (size_t)g * MP * HD) == OMEGA_GPU_DATTN_OK, "load %s", cn[k]);
+        for (int x = 0; x < np; x++) replica(ck, pos[x], pr, &S[k][x], &R[k][x]);
+    }
+    float qkv[QW], *y = malloc(OW * 4); make_qkv(qkv);
+    uint32_t pairs[256], npairs = (uint32_t)(ncl * np);
+    size_t lines = 0;
+    for (uint32_t r = 1; r <= reps; r++) {
+        uint32_t md[2] = { 0, 1 }; shuffle_u32(md, 2, &rs);
+        for (int mi = 0; mi < 2; mi++) {
+            const uint32_t mode = md[mi];
+            omega_gpu_decode_attn256_set_rescale(mode);
+            for (uint32_t i = 0; i < npairs; i++) pairs[i] = i;
+            shuffle_u32(pairs, npairs, &rs);
+            for (uint32_t i = 0; i <= npairs; i++) {               /* i == 0: warm-up after the kernel switch, not recorded */
+                const uint32_t pi = pairs[i == 0 ? 0 : i - 1], k = pi / (uint32_t)np, x = pi % (uint32_t)np;
+                OmegaGpuDecodeAttn256Info info; memset(&info, 0, sizeof info);
+                rc = omega_gpu_decode_attn256(cache, layer_of[k], pos[x], qkv, EPS, 1.0f, y, &info);
+                uint16_t krow[HD]; k_row(c[(size_t)k * MP + pos[x]], krow);
+                for (uint32_t g = 0; g < KVH; g++) (void)omega_gpu_decode_attn256_cache_write(cache, layer_of[k], g, pos[x], 1, krow, vh + ((size_t)g * MP + pos[x]) * HD);
+                CHECK(rc == OMEGA_GPU_DATTN_OK, "launch %s pos %u mode %u: %s", cn[k], pos[x], mode, rc ? omega_gpu_decode_attn_last_error() : "");
+                if (rc) break;
+                if (i == 0) continue;
+                fprintf(f, "%s\t%s\t%u\t%u\t%u\t%u\t%u\t%" PRIu64 "\t%" PRIu64 "\t%" PRIu64 "\t%" PRIu64 "\t%016" PRIx64 "\n", tag, cn[k], seed, pos[x], info.splits, mode, r,
+                        info.elapsed_ns, info.call_ns, S[k][x], R[k][x], fnv(y, OW * 4));
+                lines++;
+            }
+            if (rc) break;
+        }
+        if (rc) break;
+    }
+    fclose(f);
+    printf("mixed traces: %zu lines appended to %s (layers:", lines, path);
+    for (int k = 0; k < ncl; k++) printf(" %s=%u", cn[k], layer_of[k]);
+    printf(")\n");
+    omega_gpu_decode_attn256_set_rescale(0);
+    free(c); free(vh); free(kr); free(pr); free(y);
+    omega_gpu_decode_attn256_cache_free(cache);
+}
+
 int main(int argc, char **argv) {
     int host = 0, sim = 0, chk = 0, pins = 0;
-    const char *traces = NULL, *tag = "t";
+    const char *traces = NULL, *mixed = NULL, *tag = "t";
     char *classes = NULL, *posl = NULL; uint32_t reps = 10, seed = 1;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
@@ -364,6 +434,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--sim") == 0) sim = 1;
         else if (strcmp(argv[i], "--chip-check") == 0) chk = 1;
         else if (strcmp(argv[i], "--chip-traces") == 0 && i + 1 < argc) traces = argv[++i];
+        else if (strcmp(argv[i], "--chip-traces-mixed") == 0 && i + 1 < argc) mixed = argv[++i];
         else if (strcmp(argv[i], "--classes") == 0 && i + 1 < argc) classes = argv[++i];
         else if (strcmp(argv[i], "--pos") == 0 && i + 1 < argc) posl = argv[++i];
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
@@ -371,11 +442,12 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--tag") == 0 && i + 1 < argc) tag = argv[++i];
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
-    if (!host && !sim && !chk && !traces) host = 1;
+    if (!host && !sim && !chk && !traces && !mixed) host = 1;
     if (host) { printf("== host ==\n"); host_only(pins); }
     if (sim) { printf("== simulator ==\n"); sim_battery(); }
     if (chk) { printf("== chip check ==\n"); chip_check(); }
     if (traces) { printf("== chip traces ==\n"); if (!classes || !posl) { printf("--chip-traces needs --classes and --pos\n"); return 2; } chip_traces(traces, classes, posl, reps, seed, tag); }
+    if (mixed) { printf("== chip traces, mixed order ==\n"); if (!classes || !posl) { printf("--chip-traces-mixed needs --classes and --pos\n"); return 2; } chip_traces_mixed(mixed, classes, posl, reps, seed, tag); }
     printf("%s: %d checks, %d failed\n", g_failed ? "FAIL" : "PASS", g_checks, g_failed);
     return g_failed ? 1 : 0;
 }

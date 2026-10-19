@@ -1,0 +1,8 @@
+== chip check ==
+  chip mutant ctx 4096: counters differ in 512 of 1024 words (expected > 0)
+  chip mutant ctx 32768: counters differ in 4096 of 8192 words (expected > 0)
+PASS: 29 checks, 0 failed
+
+real	0m34.113s
+user	0m0.330s
+sys	0m0.096s
