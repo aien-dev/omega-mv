@@ -21,7 +21,7 @@ All timings ran through quiet-measure at load average 70 to 100 (the box was bus
   (span 19738 vs 19825 us, difference is noise). On the real checkpoint the fold side condition holds in 0 of 16 attention layers
   (56 of 112 new blocks would need two scales), so it cannot be applied there at all. The FP8 head candidate is refuted
   (248319 logits differ, worst 0.255). Barriers: 40 recorded, 37 needed, 0 droppable. Glue is 1.54% of the span, which is the most any glue rewrite could ever remove.
-  The 4-layer chip run is representative for glue because the glue kernels are the only thing the rewrite touches.
+  The chip run used 4 layers (--layers 4 --mask 0x8); glue and weight kernels both scale with layer count, so the share should hold for 64 layers, but a 64-layer chip run was not made.
 - Cascade selector (per-request kernel and draft source): NO. Mean 160.97 ms/token selected vs 156.67 today (2.7% worse);
   best arm chosen after the fact would be 150.17 (4.2% better than today). Cost model error on measured arms 4.9% mean.
   ngram arms are replays, not end to end.
