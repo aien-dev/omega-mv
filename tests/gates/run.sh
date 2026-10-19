@@ -155,6 +155,12 @@ case "$step" in
     test "$n" -ge 1
     ;;
   numeric-transc-full) make $NOPHYS test-numeric-transc-full ;;
+  gpu-libm-free)      # host-suites-3.yml gpu-libm-free (omega#471): physics-src at physics.lock, lock check on
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-libm-free | tee build/libm.log
+    grep -q '^test-gpu-libm-free: PASS$' build/libm.log
+    ! grep -q '^FAIL' build/libm.log
+    ;;
   m6|m7|m8|m9|m10|m11|m12|m13|m14|m15|m17|m5|m19|m19r-qualify|gate14-combine)
     physics_pin; set -o pipefail; mkdir -p build
     make "test-$step" | tee "build/gate-$step.log"
