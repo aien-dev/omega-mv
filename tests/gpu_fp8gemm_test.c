@@ -7,7 +7,7 @@
  *                 qkv 5120 x 2048 and o 2048 x 4096 over 64 rows: every output row bit-identical to omega_gpu_fp8_gemv_f32
  *                 on the same row, a few rows against the host emulation and the double oracle, mutants caught,
  *                 timing medians (host caches evicted) vs the per-token grouped-GEMV path.
- *                 knobs: --reps N --mt N --warps N --ctas N --no-evict --tokens N --spin-us N --shape gateup|down|qkv|o|all --out receipt.json
+ *                 knobs: --reps N --mt N --warps N --ctas N --no-evict --tokens N --spin-us N --shape gateup|down|qkv|o|d768|q38mix|q38o|q38gu|q38down|q38|all --out receipt.json
  * Verdict line last: "gpu_fp8gemm_test: N checks, F failed: PASS|FAIL".
  */
 #include "omega_gpu_fp8gemm_api.h"
@@ -47,7 +47,7 @@ static void weights_free(Weights *W) { free(W->w); free(W->s); }
  * bytes (word, byte), acc = fma(dot, S', acc), then the SHFL.DOWN tree 16..1. w: the row's k bytes, s: its k/128 scale words
  * (bf16 bits of one 128-row block), x: natural-order activation row. */
 static float emu_row(const uint8_t *w, const uint16_t *s, const float *x, uint32_t k, uint32_t lb) {
-    float xp[16384]; omega_fp8_pack_x_f32(x, k, xp);
+    float xp[OMEGA_GEMM_MAX_K]; omega_fp8_pack_x_f32(x, k, xp);
     float a[32]; const uint32_t steps = k / (32u * lb);
     for (unsigned lane = 0; lane < 32; lane++) {
         float acc = 0.0f;
@@ -111,7 +111,7 @@ static void host_only(void) {
       CHECK(ok, "permutation of a 768-row (lane 8) is a bijection"); free(seen);
       /* column c = lane L, word w, byte e of step 0 lands at (w*32 + L)*4 + e: c = 5 * 16 + 6 = 86 -> L 5, j 6 -> w 1, e 2 */
       CHECK(p[(1 * 32 + 5) * 4 + 2] / 18446744073709551616.0f == x[86], "column 86 sits at lane 5 word 1 element 2"); }
-    struct { uint32_t k, lb, mt, w; } shp[] = { { 2048, 16, 8, 16 }, { 4096, 16, 8, 16 }, { 1024, 16, 8, 16 }, { 768, 8, 8, 16 }, { 768, 8, 8, 8 }, { 2048, 8, 8, 16 }, { 2048, 16, 4, 16 }, { 2048, 16, 8, 32 }, { 2048, 16, 8, 8 }, { 2048, 16, 4, 8 }, { 4096, 16, 4, 8 } };
+    struct { uint32_t k, lb, mt, w; } shp[] = { { 2048, 16, 8, 16 }, { 4096, 16, 8, 16 }, { 1024, 16, 8, 16 }, { 768, 8, 8, 16 }, { 768, 8, 8, 8 }, { 2048, 8, 8, 16 }, { 2048, 16, 4, 16 }, { 2048, 16, 8, 32 }, { 2048, 16, 8, 8 }, { 2048, 16, 4, 8 }, { 4096, 16, 4, 8 }, { 5120, 16, 8, 16 }, { 6144, 16, 8, 16 }, { 17408, 16, 8, 16 }, { 32768, 16, 8, 16 } }; /* Qwen3.8-27B widths and the cap */
     for (unsigned i = 0; i < sizeof shp / sizeof shp[0]; i++) for (int m = 0; m <= 3; m++) {
         OmegaFp8GemmSpec s = { shp[i].k, shp[i].lb, shp[i].mt, shp[i].w, m }; uint32_t n = 0, gp = 0;
         int rc = omega_fp8gemm_prog_stats(&s, &n, &gp);
@@ -122,6 +122,7 @@ static void host_only(void) {
     { OmegaFp8GemmSpec s = { 2048, 16, 16, 16, 0 }; CHECK(omega_fp8gemm_prog_stats(&s, NULL, NULL) != 0, "mt 16 at lane 16 refused (32 KB of shared memory)"); }
     { OmegaFp8GemmSpec s = { 2048, 16, 6, 16, 0 }; CHECK(omega_fp8gemm_prog_stats(&s, NULL, NULL) != 0, "mt 6 refused"); }
     { OmegaFp8GemmSpec s = { 2048, 16, 8, 16, 4 }; CHECK(omega_fp8gemm_prog_stats(&s, NULL, NULL) != 0, "mutant 4 refused"); }
+    { OmegaFp8GemmSpec s = { OMEGA_GEMM_MAX_K + 512u, 16, 8, 16, 0 }; CHECK(omega_fp8gemm_prog_stats(&s, NULL, NULL) != 0, "k past OMEGA_GEMM_MAX_K refused"); }
     CHECK(OMEGA_GEMM_ARGS_WORDS <= OMEGA_GPU_SESSION_MAX_ARGS, "argument words fit the constant bank window");
     uint32_t ids[3] = { 2, 1, 1 }, tr[3] = { 0, 0, 0 }; float xr[2048] = { 0 }, yo[4];
     CHECK(omega_gpu_fp8gemm_f32(NULL, 3, ids, tr, xr, 1, yo, NULL) == OMEGA_GPU_FP8GEMM_BAD_ARGS, "a NULL tensor is refused");
@@ -186,6 +187,7 @@ static void sim_battery(void) {
         { 768, 130, 8, 8, 16, 2, { 4, 17 }, 2 },             /* lane 8, KS 3 (odd, unrolled), 2 row blocks of scales, 2 passes */
         { 768, 24, 8, 8, 8, 1, { 1, 8, 2 }, 3 },            /* lane 8 at 8 warps */
         { 2048, 16, 16, 4, 16, 1, { 6, 4 }, 2 },              /* mt 4 */
+        { 17408, 12, 16, 8, 16, 1, { 5, 3 }, 2 },           /* Qwen3.8-27B down_proj width: KS 34 (17 iterations), past the old 16384 cap */
     };
     for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
         char msg[300]; size_t bad = 1;
@@ -335,8 +337,10 @@ int main(int argc, char **argv) {
         if (ctas) omega_gpu_fp8gemm_set_cta_budget(ctas);
         (void)omega_gpu_session_set_spin_us(spin);
         if (out_path) { g_out = fopen(out_path, "w"); if (g_out) fprintf(g_out, "{\"receipt\":\"OMEGA_GPU_FP8GEMM_V1\",\"reps\":%u,\"evict\":%d,\"tokens\":%u,\"spin_us\":%u,\"points\":[", reps ? reps : 1, g_evict, tokens, omega_gpu_session_spin_us()); }
-        Shape shapes[] = { { "gateup", 128, 1536, 2048, tokens, 8 }, { "down", 128, 2048, 768, tokens, 8 }, { "qkv", 1, 5120, 2048, tokens, 1 }, { "o", 1, 2048, 4096, tokens, 1 }, { "d768", 1, 2048, 768, tokens, 1 } };
-        for (unsigned i = 0; i < 5; i++) if ((!strcmp(shape, "all") && i < 4) || !strcmp(shape, shapes[i].name)) run_shape(&shapes[i], reps ? reps : 1, 1000 + i);
+        Shape shapes[] = { { "gateup", 128, 1536, 2048, tokens, 8 }, { "down", 128, 2048, 768, tokens, 8 }, { "qkv", 1, 5120, 2048, tokens, 1 }, { "o", 1, 2048, 4096, tokens, 1 }, { "d768", 1, 2048, 768, tokens, 1 },
+            /* Qwen3.8-27B dense projections (sc #679 speculative verify rows): mixer, o_proj, gate|up, down */
+            { "q38mix", 1, 16384, 5120, tokens, 1 }, { "q38o", 1, 5120, 6144, tokens, 1 }, { "q38gu", 1, 34816, 5120, tokens, 1 }, { "q38down", 1, 5120, 17408, tokens, 1 } };
+        for (unsigned i = 0; i < sizeof shapes / sizeof shapes[0]; i++) if ((!strcmp(shape, "all") && i < 4) || (!strcmp(shape, "q38") && i >= 5) || !strcmp(shape, shapes[i].name)) run_shape(&shapes[i], reps ? reps : 1, 1000 + i);
         if (g_out) { fprintf(g_out, "],\"checks\":%d,\"failed\":%d,\"verdict\":\"%s\"}\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS"); fclose(g_out); }
         omega_gpu_session_close();
     }

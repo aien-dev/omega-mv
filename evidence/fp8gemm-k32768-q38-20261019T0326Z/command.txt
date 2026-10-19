@@ -1,0 +1,8 @@
+flock /tmp/aien-gb10.lock nice /tmp/f7-spec-decode-scratch/omega-build/gpu_fp8gemm_test --shape q38 --tokens 5 --reps 9 --out evidence/fp8gemm-k32768-q38-20261019T0326Z/receipt-q38-t5.json
+flock /tmp/aien-gb10.lock nice /tmp/f7-spec-decode-scratch/omega-build/gpu_fp8gemm_test --shape q38 --tokens 64 --reps 9 --out evidence/fp8gemm-k32768-q38-20261019T0326Z/receipt-q38-t64.json
+flock /tmp/aien-gb10.lock /tmp/f7-spec-decode-scratch/omega-build/gpu_fp8gemm_test --shape q38gu --tokens 5 --reps 9 --ctas 192
+flock /tmp/aien-gb10.lock /tmp/f7-spec-decode-scratch/omega-build/gpu_fp8gemm_test --shape q38gu --tokens 5 --reps 9 --ctas 384
+flock /tmp/aien-gb10.lock /tmp/f7-spec-decode-scratch/omega-build/gpu_fp8gemm_test --shape q38gu --tokens 5 --reps 9 --ctas 768
+flock /tmp/aien-gb10.lock /tmp/f7-spec-decode-scratch/omega-build/gpu_fp8gemm_test --shape q38gu --tokens 5 --reps 9 --mt 4 --ctas 384
+flock /tmp/aien-gb10.lock /tmp/f7-spec-decode-scratch/omega-build/gpu_fp8gemm_test --shape q38gu --tokens 5 --reps 9 --mt 2 --ctas 384
+flock /tmp/aien-gb10.lock /tmp/f7-spec-decode-scratch/omega-build/gpu_fp8gemm_test --shape q38gu --tokens 5 --reps 9 --warps 8 --ctas 384
