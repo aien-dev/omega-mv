@@ -1,0 +1,6 @@
+sim mutant 0: err 0, 0 of 768 differ, hazards 0
+sim mutant 1: err 0, 768 of 768 differ, hazards 0
+codegen mutant 0: 48 insns, 18 gprs
+codegen mutant 1: 48 insns, 18 gprs
+PASS: 16 checks, 0 failed
+rc=0

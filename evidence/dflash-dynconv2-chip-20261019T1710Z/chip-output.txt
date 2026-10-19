@@ -1,0 +1,23 @@
+FAIL: 8x5120 second launch: rc -4, 0 differ (marker wait timed out (latched))
+  mutant error: process latched
+FAIL: 8x5120 mutant: rc -4, 0 of 40960 differ (must be most)
+FAIL: 8x5120 after mutant cleared: rc -4, 0 differ
+dynconv2 8x5120: rc 0, differ 0, mutant differ 0, again 0, chip 3614.2 us, 18 gprs, 48 insns
+FAIL: 1x5120 rc -4 (process latched)
+FAIL: 1x5120: 5120 of 5120 words differ from the oracle
+  error: process latched
+FAIL: 1x5120 second launch: rc -4, 5120 differ (process latched)
+  mutant error: process latched
+FAIL: 1x5120 mutant: rc -4, 5120 of 5120 differ (must be most)
+FAIL: 1x5120 after mutant cleared: rc -4, 5120 differ
+dynconv2 1x5120: rc -4, differ 5120, mutant differ 5120, again 5120, chip 0.0 us, 18 gprs, 48 insns
+FAIL: 3x256 rc -4 (process latched)
+FAIL: 3x256: 768 of 768 words differ from the oracle
+  error: process latched
+FAIL: 3x256 second launch: rc -4, 768 differ (process latched)
+  mutant error: process latched
+FAIL: 3x256 mutant: rc -4, 768 of 768 differ (must be most)
+FAIL: 3x256 after mutant cleared: rc -4, 768 differ
+dynconv2 3x256: rc -4, differ 768, mutant differ 768, again 768, chip 0.0 us, 18 gprs, 48 insns
+FAIL: 18 checks, 13 failed
+rc=1
