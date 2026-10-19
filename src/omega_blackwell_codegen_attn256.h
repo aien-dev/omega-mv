@@ -98,7 +98,17 @@ typedef struct {
                       * cache rows as the decode step does (same instruction sequence, so the same bits), writes q' as bf16
                       * to ARG_OUT in the attend kernel's A-fragment layout (OMEGA_PATTN256_QF_*), and exits. Mutants 1
                       * and 3 apply; ARG_PART, ARG_CNT, ARG_PER_SPLIT, ARG_SPLITS and ARG_OUT_SCALE are not read. */
+    /* FREQUENCY (omega-mv#570). Both 0 = the kernel above, byte for byte. */
+    uint32_t rescale;     /* V-pass rescale: 0 skips alpha = EX2(m_old - m_new) when no head's max moved (warp-uniform
+                           * branch); 1 always applies it (no test, no branch). Same bits: when the max stayed, dl is +0,
+                           * EX2(+0) = 1 and x * 1 = x (tests/gpu_attn256_freq_test.c compares the outputs). */
+    uint32_t count_paths; /* MEASUREMENT ONLY: 1 = lane 0 of every warp writes {V steps, rescales applied} as two u32 to
+                           * ARG_PATHS[((cy * splits + cx) * 8 + warp) * 2]. Adds instructions, so never timed. */
+    int count_mutant;     /* TEST ONLY (count_paths 1): 1 counts the rescale at the join, so it reports every step. */
 } OmegaDecodeAttn256Spec;
+#define OMEGA_DATTN256_ARG_PATHS 0x3e8u    /* u32 [kv_heads][splits][8 warps][2] (count_paths 1 only) */
+#define OMEGA_DATTN256_ARGS_WORDS_PATHS 28u
+#define OMEGA_DATTN256_RESCALE_INSNS (OMEGA_DATTN256_Q_PER_KV * 6u) /* per V step taken: 6 EX2 + 6 x 5 FMUL */
 
 /* Builds the IR program (register-allocated) into *prog. 0 ok, -1 refused (depth 0 or > 4, mutant outside 0..5,
  * or the program outgrew BW_MAX_IR_INSNS / BW_MAX_VREGS). */

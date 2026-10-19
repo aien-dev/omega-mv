@@ -212,12 +212,12 @@ static void host_only(void) {
       free(ref); case_free(&c); }
     /* codegen budget */
     for (uint32_t d = 1; d <= 4; d++) for (int m = 0; m <= 5; m++) {
-        OmegaDecodeAttn256Spec s = { d, m, 0 }; uint32_t n = 0, gp = 0;
+        OmegaDecodeAttn256Spec s = { .depth = d, .mutant = m }; uint32_t n = 0, gp = 0;
         int rc = omega_decode_attn256_prog_stats(&s, &n, &gp);
         CHECK(rc == 0 && n <= 1024 && gp <= 126, "codegen depth %u mutant %d: rc %d insns %u gprs %u", d, m, rc, n, gp);
         if (rc == 0 && m == 0) printf("codegen depth %u: %u instructions, %u registers (declared %u, 256 threads -> %u of 65536)\n", d, n, gp, omega_bw_gpr_declared(gp), 256 * omega_bw_gpr_declared(gp));
     }
-    { OmegaDecodeAttn256Spec s = { 0, 0, 0 }; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 0 refused");
+    { OmegaDecodeAttn256Spec s = { .depth = 0 }; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 0 refused");
       s.depth = 5; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 5 refused");
       s.depth = 1; s.mutant = 6; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "mutant 6 refused"); }
     CHECK(omega_gpu_decode_attn256_cache_alloc(0, 256, THETA, 64, NULL) == OMEGA_GPU_DATTN_BAD_ARGS, "NULL out refused");
@@ -237,7 +237,7 @@ static void host_only(void) {
 static uint64_t g_sim_issues;
 static int sim_point(uint32_t max_pos, uint32_t pos, uint32_t rotary, uint32_t depth, int mutant, uint32_t per_split, float qscale, uint32_t seed, char *msg, size_t n, double *worst, size_t *bad, char *rows, size_t rn) {
     static BlackwellIRProgram prog;
-    OmegaDecodeAttn256Spec spec = { depth, mutant, 0 };
+    OmegaDecodeAttn256Spec spec = { .depth = depth, .mutant = mutant };
     if (omega_blackwell_codegen_decode_attn256_prog(&spec, &prog) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
     Case c; case_make(&c, max_pos, pos, rotary, seed, qscale);
     uint16_t *kcp = case_kc_perm(&c);

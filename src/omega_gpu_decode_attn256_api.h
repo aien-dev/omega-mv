@@ -93,6 +93,12 @@ int omega_gpu_decode_attn256_cache_view(const OmegaGpuDecodeAttn256Cache *c, uin
 
 /* ---- measurement knobs (tests; each clears the kernel cache) ---- */
 void omega_gpu_decode_attn256_set_depth(uint32_t depth);          /* 0 = default (OMEGA_GPU_DATTN256_DEPTH) */
+/* FREQUENCY (omega-mv#570): OmegaDecodeAttn256Spec.rescale (0 default = skip when no max moved, 1 = always) and the
+ * measurement-only path counters (count_paths; direct calls only, refused on the record path). After a counting call,
+ * paths_read copies u32 [4 kv heads][splits][8 warps][2] = {V steps, rescales applied}; unwritten words stay 0xffffffff. */
+void omega_gpu_decode_attn256_set_rescale(uint32_t mode);
+void omega_gpu_decode_attn256_set_count_paths(uint32_t on, int count_mutant);
+int omega_gpu_decode_attn256_paths_read(OmegaGpuDecodeAttn256Cache *c, uint32_t splits, uint32_t *out);
 void omega_gpu_decode_attn256_set_per_split(uint32_t per_split);  /* 0 = default; multiple of 256 */
 void omega_gpu_decode_attn256_test_set_mutant(int mutant);        /* TEST ONLY: OmegaDecodeAttn256Spec.mutant */
 

@@ -167,6 +167,8 @@ static void rms_scale(Em *e, int qa, int qb, int sq, int ts, int rs, int addr, i
 
 int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *spec, BlackwellIRProgram *prog) {
     if (!spec || !prog || spec->depth < 1 || spec->depth > OMEGA_DATTN256_MAX_DEPTH || spec->mutant < 0 || spec->mutant > 5 || spec->prep > 1) return -1;
+    if (spec->rescale > 1 || spec->count_paths > 1 || spec->count_mutant < 0 || spec->count_mutant > 1 || (spec->count_mutant && !spec->count_paths)) return -1;
+    if (spec->prep && (spec->rescale || spec->count_paths)) return -1;
     omega_bw_ir_init(prog);
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
     const uint32_t D = spec->depth;
@@ -332,7 +334,10 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     int qa4 = V128(e), qb4 = V128(e);
     int cb = V(e), tpos = V(e), over = V(e), krow = V64(e), kpf = V64(e), qoff = V(e), j = V(e), sa = V(e), smS = V(e);
     int n = V(e), vrow = V64(e), vpf = V64(e), pa = V(e), i = V(e), dsum = V(e), hoff = V(e), wp = V(e), negwp = V(e), ccnt = V(e);
+    const int CNT = (int)spec->count_paths;
+    int nstep = CNT ? V(e) : NOREG, nres = CNT ? V(e) : NOREG, ppaths = CNT ? V64(e) : NOREG;
     if (e->err) return -1;
+    if (CNT) { movrz(e, R(nstep)); movrz(e, R(nres)); }
     for (unsigned h = 0; h < H; h++) { for (unsigned q = 0; q < 4; q++) movrz(e, S(acc[h], q)); movi(e, m[h], NEG_BIG); movrz(e, R(l[h])); }
     movi(e, smS, OMEGA_DATTN256_SM_S);
     shr(e, wp, warp, 1);                              /* warp pair index 0..3 */
@@ -412,13 +417,18 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     lds128(e, qa4, pa, 0, 1); lds128(e, qb4, pa, 16, 0);
 #define SH(h) ((h) < 4 ? S(qa4, (h)) : S(qb4, (h) - 4))
     for (unsigned h = 0; h < H; h++) { fmaxx(e, R(mn), R(m[h]), SH(h)); fsub(e, R(dl[h]), R(m[h]), R(mn)); mov(e, R(m[h]), R(mn)); } /* dl <= 0; exactly +0 when the max stayed */
-    fadd(e, R(dsum), R(dl[0]), R(dl[1]));
-    for (unsigned h = 2; h < H; h++) fadd(e, R(dsum), R(dsum), R(dl[h]));
-    isetp_ge_u32(e, one, dsum);                       /* 1 >= bits(dsum): no head's max moved (dsum is +0); a negative dsum has the sign bit */
-    const int bra_nores = bra_if_p0_fwd(e);
+    int bra_nores = -1;
+    if (!spec->rescale) {
+        fadd(e, R(dsum), R(dl[0]), R(dl[1]));
+        for (unsigned h = 2; h < H; h++) fadd(e, R(dsum), R(dsum), R(dl[h]));
+        isetp_ge_u32(e, one, dsum);                   /* 1 >= bits(dsum): no head's max moved (dsum is +0); a negative dsum has the sign bit */
+        bra_nores = bra_if_p0_fwd(e);
+    }
+    if (CNT && !spec->count_mutant) imadi(e, R(nres), R(one), 1u, nres);
     for (unsigned h = 0; h < H; h++) mufu(e, BW_IR_MUFU_EX2, R(dl[h]), R(dl[h]));
     for (unsigned h = 0; h < H; h++) { for (unsigned q = 0; q < 4; q++) fmul(e, S(acc[h], q), S(acc[h], q), R(dl[h])); fmul(e, R(l[h]), R(l[h]), R(dl[h])); }
-    patch_bra(e, bra_nores, here(e));
+    if (bra_nores >= 0) patch_bra(e, bra_nores, here(e));
+    if (CNT) { imadi(e, R(nstep), R(one), 1u, nstep); if (spec->count_mutant) imadi(e, R(nres), R(one), 1u, nres); }
     for (unsigned h = 0; h < H; h++) { fsub(e, R(dl[h]), SH(h), R(m[h])); mufu(e, BW_IR_MUFU_EX2, R(dl[h]), R(dl[h])); }
 #undef SH
     for (unsigned h = 0; h < H; h++) { for (unsigned q = 0; q < 4; q++) ffma(e, S(acc[h], q), R(dl[h]), R(wd[q]), S(acc[h], q)); fadd(e, R(l[h]), R(l[h]), R(dl[h])); }
@@ -435,6 +445,14 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     bra(e, L_chunk);
     loop_end(e);
     patch_bra(e, bra_done, here(e));
+    if (CNT) {                                        /* lane 0: paths[((cy * splits + cx) * 8 + warp) * 2] = {steps, rescales} */
+        ldc64(e, ppaths, OMEGA_DATTN256_ARG_PATHS);
+        imadr(e, t1, cy, splits, cx);
+        imadi(e, R(t1), R(t1), 8u, warp);
+        imadw(e, ppaths, t1, 8u, ppaths);
+        isetp_ge_u32(e, lane, one);
+        { Region r = region_skip_if_p0(e); stg(e, BW_IR_STG_E, ppaths, R(nstep), udesc); imadw(e, ppaths, one, 4u, ppaths); stg(e, BW_IR_STG_E, ppaths, R(nres), udesc); region_end(e, r); }
+    }
 
     /* ---- epilogue: combine the warps, write the partial ---- */
     int ep[8], ea[8], eb[8];
