@@ -1,0 +1,22 @@
+{
+ "name": "q38-prefill-before-4096-20261019T2201Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/qwen38_prefill-before-373d122c ttft /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/pf-tools/data/corpus-arch.txt 4096 4096 /home/drakestapleton/workspace/omega-prefill/evidence/q38-prefill-before-4096-20261019T2201Z/ttft.json",
+ "exit": 2,
+ "git_head": "ac666a79",
+ "start": "2026-10-19T17:16:01.589105",
+ "seconds": 0.412,
+ "samples": 1,
+ "wall_W_mean": 240.0,
+ "wall_J": 98.87443542480469,
+ "idle_W_before": 272.6666666666667,
+ "incremental_J": -13.45790926615398,
+ "gpu_W_mean": 7.06,
+ "gpu_util_mean": 3.0,
+ "load1_start": "23.91",
+ "load1_end": "23.91",
+ "mem_avail_kB_start": "39838496",
+ "mem_avail_kB_end": "39838496",
+ "lock_holders_max": 5,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone"
+}
