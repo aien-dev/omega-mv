@@ -69,10 +69,13 @@ static int judge(uint32_t phase, const In *in, float *const bufs[5], char *msg, 
     const float *g1 = bufs[OUT1[phase]];
     double worst = 0, scale = 0; size_t bad = 0;
     for (size_t i = 0; i < OUT1N[phase]; i++) { double a = fabs(o1[i]); if (a > scale) scale = a; }
-    double tol = 3e-6;
+    /* relative to |value| + 0.1% of the output scale (so a cancelled sum is not judged on its tiny value): f32 sums for NORM and
+     * INJECT (a few ulp), MUFU.EX2 / RCP for ACT and COMBINE */
+    static const double TOL[4] = { 5e-6, 5e-6, 1e-4, 5e-6 };
+    const double tol = TOL[phase];
     for (size_t i = 0; i < OUT1N[phase]; i++) {
         double d = fabs((double)g1[i] - o1[i]) / (fabs(o1[i]) * 1.0 + 1e-3 * scale + 1e-9);
-        if (!(d <= tol * 50.0)) bad++; /* 1.5e-4 of |value| + 0.1% of the scale: MUFU units and f32 sums */
+        if (!(d <= tol)) bad++;
         if (d > worst || d != d) worst = d;
     }
     size_t bad2 = 0;
@@ -94,7 +97,7 @@ static void host_only(void) {
         CHECK((rc == 0) == (ph == mph[m]), "mutant %d phase %u %s", m, ph, rc == 0 ? "built" : "refused");
     }
     { OmegaFnHcSpec s = { 4, 0 }; CHECK(omega_fnhc_prog_stats(&s, NULL, NULL) != 0, "phase 4 refused"); s.phase = 0; s.mutant = 7; CHECK(omega_fnhc_prog_stats(&s, NULL, NULL) != 0, "mutant 7 refused"); }
-    CHECK(omega_fnhc_grid(OMEGA_FNHC_NORM) * 256 == L && omega_fnhc_grid(OMEGA_FNHC_INJECT) * 256 == L && omega_fnhc_grid(OMEGA_FNHC_COMBINE) * 256 == H, "grids cover the vectors");
+    CHECK(omega_fnhc_grid(OMEGA_FNHC_NORM) * 256 * 10 == L && omega_fnhc_grid(OMEGA_FNHC_INJECT) * 256 == L && omega_fnhc_grid(OMEGA_FNHC_COMBINE) * 256 == H, "grids cover the vectors");
 }
 
 static int sim_phase(uint32_t phase, int mutant, const In *in, char *msg, size_t ml) {

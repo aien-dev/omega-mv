@@ -265,16 +265,17 @@ int omega_blackwell_codegen_fnhc_prog(const OmegaFnHcSpec *spec, BlackwellIRProg
         break;
     }
     case OMEGA_FNHC_INJECT: {
-        int idx = V(e), l = V(e), j = V(e), lv = V(e), bv = V(e), iv = V(e);
+        int idx = V(e), l = V(e), li = V(e), j = V(e), lv = V(e), bv = V(e), iv = V(e);
         if (e->err) return -1;
         imadi(e, R(idx), R(cx), 256u, tid);                /* lane l * 2560 + j == cx * 256 + tid */
         imadi(e, R(l), R(cx), 103u, NOREG); shr(e, l, l, 10);   /* l = cx / 10 for cx < 40 */
-        if (MUT == 5) movrz(e, R(l));
         imadi(e, R(t1), R(l), 0xfffff600u /* -2560 */, idx);      /* j = idx - 2560 l */
         mov(e, R(j), R(t1));
+        mov(e, R(li), R(l));
+        if (MUT == 5) movrz(e, R(li));                      /* mutant: every lane takes inj[0] */
         imadw(e, ad, idx, 4u, pa); ldg32(e, BW_IR_LDG_E, lv, ad, udesc, 1);
         imadw(e, ad, j, 4u, pb);   ldg32(e, BW_IR_LDG_E, bv, ad, udesc, 0);
-        imadw(e, ad, l, 4u, pc);   ldg32(e, BW_IR_LDG_E, iv, ad, udesc, 0);
+        imadw(e, ad, li, 4u, pc);  ldg32(e, BW_IR_LDG_E, iv, ad, udesc, 0);
         fmul(e, R(bv), R(bv), R(iv));
         fadd(e, R(lv), R(lv), R(bv));
         imadw(e, ad, idx, 4u, pa);
