@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 #include <time.h>
 
 #define RW_MAX_NODES   65536
@@ -1209,7 +1210,8 @@ int main(int argc, char **argv) {
             if (strcmp(g_c[i].verdict, "proven_in_scope")) printf("RWCHECK %s %s %s\n", g_c[i].id, g_c[i].verdict, g_c[i].reason);
         }
         run_derivations(files[0]);
-        printf("RWCHECK-CPU cpu_ns=%.0f\n", now_ns(CLOCK_PROCESS_CPUTIME_ID) - c0);
+        { struct rusage u; getrusage(RUSAGE_SELF, &u);
+          printf("RWCHECK-CPU cpu_ns=%.0f peak_rss_bytes=%ld\n", now_ns(CLOCK_PROCESS_CPUTIME_ID) - c0, u.ru_maxrss * 1024L); }
         return 0;
     }
     fatal("unknown mode %s", mode);
