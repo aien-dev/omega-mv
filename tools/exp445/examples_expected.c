@@ -68,6 +68,12 @@ int main(int argc, char **argv)
         while (row(5, s, u)) { int k = 0; for (int i = 0; i < 4; i++) k += s[i] > s[4]; printf("%d\n", k); }
     } else if (!strcmp(t, "dot3")) {
         while (row(6, s, u)) printf("%" PRId64 "\n", s[0] * s[3] + s[1] * s[4] + s[2] * s[5]);
+    } else if (!strcmp(t, "minmax_span")) {
+        while (row(3, s, u)) {
+            uint32_t lo = (uint32_t)u[0], hi = lo;
+            for (int i = 1; i < 3; i++) { uint32_t v = (uint32_t)u[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+            printf("%" PRIu32 "\n", hi - lo);
+        }
     } else if (!strcmp(t, "power_mod")) {
         while (row(3, s, u)) {
             uint64_t b = u[0], e = u[1], m = u[2];

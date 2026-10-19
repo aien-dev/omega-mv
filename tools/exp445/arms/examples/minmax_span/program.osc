@@ -1,0 +1,13 @@
+struct Range { lo: u32, hi: u32 }
+
+fn widen(r: &mut Range, v: u32) {
+    if v < r.lo { r.lo = v; }
+    if v > r.hi { r.hi = v; }
+}
+
+fn minmax_span(a: u32, b: u32, c: u32) -> u32 {
+    let r: own Range = Range { lo: a, hi: a };
+    widen(&mut r, b);
+    widen(&mut r, c);
+    return r.hi - r.lo;
+}

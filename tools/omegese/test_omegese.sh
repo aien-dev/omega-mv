@@ -354,6 +354,23 @@ nxk=$((nxk + 1)); got="$(printf 'fn f a uint v view uint 4 to uint\nx = view v\n
 [ "$got" = "$(printf ' y\nend\nx = x\nret 0\nend')" ] || bad "complete inside an if: got '$got'"
 echo "next: $nxk prefixes give the expected words"
 
+# 1d. structs (OMEGESE.md section 3): the six twins of tests/one_layer/omegese/structs -> omega_emit ->
+#     checker2 ACCEPT (their byte identity with oscc is checked by tools/omegese/twin_structs.sh); then
+#     omegese next: after get or put <struct name> exactly its fields, after new the struct names
+ns=0
+for f in "$ROOT"/tests/one_layer/omegese/structs/t*.omegese; do accept "$f" "struct-$(basename "$f" .omegese)" && ns=$((ns + 1)); done
+[ "$ns" -eq 6 ] || bad "struct twins accepted $ns/6"
+SP='struct P x uint ok bool v ulong 2 end\nstruct Q y uint end\nfn g a uint to uint\np = new P a true ulong 7\n'
+nxs() { nxm "$1" | LC_ALL=C sort | tr '\n' '|'; }
+got="$(nxs "${SP}w = get p ")"; [ "$got" = "word ok|word v|word x|" ] || bad "next after get <struct>: got '$got'"
+got="$(nxs "${SP}put p ")"; [ "$got" = "word ok|word v|word x|" ] || bad "next after put <struct>: got '$got'"
+got="$(nxs "${SP}put p v ")"; case "$got" in *"word x"*|*"word ok"*) bad "next after put <struct> <array field>: a field offered: '$got'" ;; *number*) ;; *) bad "next after put <struct> <array field>: no index: '$got'" ;; esac
+got="$(nxs "${SP}free p\np = new ")"; [ "$got" = "word P|" ] || bad "next after new for an own P: got '$got'"
+got="$(nxs "${SP}w = new ")"; case "$got" in *"word P|word Q|"*) ;; *) bad "next after new for a new name: struct names missing: '$got'" ;; esac
+got="$(nxs 'struct P x uint end\nfn g p view P to void\n')"; case "$got" in *"word put|"*) bad "next: put offered with only a view struct: '$got'" ;; esac
+got="$(nxs 'struct P x uint ')"; case "$got" in *"number 1 63|"*"word end|"*) ;; *) bad "next inside a struct line: '$got'" ;; esac
+echo "structs: $ns/6 twin programs ACCEPT; next after get/put <struct> offers exactly its fields, after new the struct names"
+
 # 2. refusals: "== <expected reason substring>", the bad program, "-- control", the fixed program
 r=0
 awk -v d="$T" '
@@ -958,6 +975,155 @@ n = sub n 1
 end
 free a
 end
+== line 4: P has no field 'z'
+struct P x uint end
+fn f a uint to uint
+p = new P a
+v = get p z
+free p
+ret v
+end
+-- control
+struct P x uint end
+fn f a uint to uint
+p = new P a
+v = get p x
+free p
+ret v
+end
+== line 7: 'q' is own Q; total takes view P there
+struct P x uint end
+struct Q x uint end
+fn total p view P to uint
+ret get p x
+end
+fn f a uint to uint
+q = new Q a
+t = total q
+free q
+ret t
+end
+-- control
+struct P x uint end
+struct Q x uint end
+fn total p view P to uint
+ret get p x
+end
+fn f a uint to uint
+q = new P a
+t = total q
+free q
+ret t
+end
+== line 3: 'p' is view only; put needs an own or edit struct
+struct P x uint end
+fn f p view P a uint to void
+put p x a
+end
+-- control
+struct P x uint end
+fn f p edit P a uint to void
+put p x a
+end
+== line 1: struct P needs end after its fields
+struct P x uint y uint
+fn f p view P to uint
+ret get p y
+end
+-- control
+struct P x uint y uint end
+fn f p view P to uint
+ret get p y
+end
+== line 1: field x is declared twice in P
+struct P x uint x ulong end
+fn f p view P to uint
+ret get p x
+end
+-- control
+struct P x uint y ulong end
+fn f p view P to uint
+ret get p x
+end
+== line 2: struct declarations come before the first fn
+fn f a uint to uint
+struct P x uint end
+ret a
+end
+-- control
+struct P x uint end
+fn f a uint to uint
+ret a
+end
+== line 3: field x of P holds uint; 'b' is bool
+struct P x uint end
+fn f a uint b bool to uint
+p = new P b
+v = get p x
+free p
+ret v
+end
+-- control
+struct P x uint end
+fn f a uint b bool to uint
+p = new P a
+v = get p x
+free p
+ret v
+end
+== line 3: new has 1 value after it; it takes 3
+struct P x uint y uint end
+fn f a uint to uint
+p = new P a
+v = get p x
+free p
+ret v
+end
+-- control
+struct P x uint y uint end
+fn f a uint to uint
+p = new P a a
+v = get p x
+free p
+ret v
+end
+== line 4: get has 2 values after it; it takes 3
+struct P v uint 4 end
+fn f p view P to uint
+x = get p v
+ret x
+end
+-- control
+struct P v uint 4 end
+fn f p view P to uint
+x = get p v 3
+ret x
+end
+== line 5: 'p' holds no array here
+struct P x uint end
+fn f a uint to uint
+p = new P a
+free p
+v = get p x
+ret v
+end
+-- control
+struct P x uint end
+fn f a uint to uint
+p = new P a
+v = get p x
+free p
+ret v
+end
+== line 3: a function returns a number or bool, not an array
+struct P x uint end
+fn f a uint to own P
+end
+-- control
+struct P x uint end
+fn f a uint to uint
+ret a
+end
 EOF
 for want in "$T"/r*.want; do
   k="${want%.want}"
@@ -1062,7 +1228,7 @@ walk_in() { # <text>: every word is legal at its position and eof at the end; el
   items="$(mnext "$s")"
   mallowed "$items" EOF || { WHERE="the end of input: $(head -3 <<< "$items" | tr '\n' '|')"; return 1; }
 }
-progs=("$ROOT"/tests/one_layer/omegese/dev/*.omegese "$ROOT"/tests/one_layer/omegese/nested/*.omegese "$T"/c*.omegese "$T"/r*.ok)
+progs=("$ROOT"/tests/one_layer/omegese/dev/*.omegese "$ROOT"/tests/one_layer/omegese/nested/*.omegese "$ROOT"/tests/one_layer/omegese/structs/*.omegese "$T"/c*.omegese "$T"/r*.ok)
 for f in "$ROOT"/tests/one_layer/omegese/trial2/*.omegese; do [ "$(basename "$f")" = dev07.omegese ] || progs+=("$f"); done
 for f in "${progs[@]}"; do
   s="$(cat "$f")"$'\n'
@@ -1220,7 +1386,7 @@ echo "checker2 residual: $nrej of $nres completed walks that emit accepts are re
 [ "$nrej" -le "${OMEGESE_RESIDUAL_MAX:-0}" ] || bad "residual: $nrej walks pass emit and are rejected later (allowed ${OMEGESE_RESIDUAL_MAX:-0})"
 nf=0 nfs=0
 WC=$'[^ \t\r\n()]'
-for f in "$ROOT"/tests/one_layer/omegese/nested/*.omegese "$ROOT"/tests/one_layer/omegese/trial2/*.omegese "$T"/c*.omegese; do
+for f in "$ROOT"/tests/one_layer/omegese/nested/*.omegese "$ROOT"/tests/one_layer/omegese/trial2/*.omegese "$ROOT"/tests/one_layer/omegese/structs/*.omegese "$T"/c*.omegese; do
   s="$(cat "$f")"$'\n'
   # an accepted program: every byte prefix must also be open (next exit 0), allow the byte that
   # follows (the whole word it belongs to, a space, a newline, a bracket or the end), and be finished

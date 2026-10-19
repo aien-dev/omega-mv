@@ -1,0 +1,17 @@
+struct Range lo uint hi uint end
+fn widen r edit Range v uint to void
+if lt v get r lo
+put r lo v
+end
+if gt v get r hi
+put r hi v
+end
+end
+fn minmax_span a uint b uint c uint to uint
+r = new Range a a
+widen r b
+widen r c
+d = sub get r hi get r lo
+free r
+ret d
+end

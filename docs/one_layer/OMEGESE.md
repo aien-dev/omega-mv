@@ -51,6 +51,7 @@ bookkeeping and the punctuation. Its words are chosen from the writer model's ow
 A program is one or more functions. A line holds one statement; words are separated by spaces.
 
 ```
+struct <S> (<field> <type> [<len>])+ end    a struct, on one line, before the first fn (section 3.1)
 fn <name> (<param> <type>)* to <type> | void      a function; `end` closes it
 <name> = <value>          write a value (a new name, or an existing one of the same type);
 <name> <value>            the same, with `=` left out
@@ -61,7 +62,8 @@ for <name> <type> <count> / end   name = 0 .. count-1 (count a number, or a valu
 break                     leave the innermost loop
 ret [<value>]
 put <array> <index> <value>      store
-free <array>                     release an own array
+put <struct> <field> [<index>] <value>   set a field (the index only for an array field)
+free <array> | <struct>          release an own array or struct
 trap <code 1..14>         stop with that code; like ret, it ends the path (lines after it in the
                           same block can never run and are refused)
 <function> <args>         call a function that returns nothing
@@ -79,8 +81,10 @@ itself be an op, so no brackets are needed: `add mul r r 4` is add(mul(r, r), 4)
 | `neg` a / `not` a | 1 | negate (signed) / logical not (bool) or bitwise not (number) | un |
 | `<type>` a | 1 | a typed number (`uint 5`) or a conversion (`ulong x`, `ulong add a b`) | const / cast |
 | `get` arr i | 2 | load (arr is an array name) | load |
+| `get` s f [i] | 2 (3) | read field f of struct s (with an index for an array field) | fload |
 | `new` type len init | 3 | a new own array of len (1..64) elements; only as the whole value of `<name> =` | alloc |
-| `own` / `edit` / `view` arr | 1 | move / mutable borrow / shared borrow (arr is an array name) | mov |
+| `new` S v1 .. vn | 1 + fields | a new own struct S, one value per field in declaration order (an array field: one value for all its elements); only as the whole value of `<name> =` | const, alloc, fstore |
+| `own` / `edit` / `view` arr | 1 | move / mutable borrow / shared borrow (arr is an array or struct name) | mov |
 | `<function>` args | its parameter count | call an earlier function | call |
 
 Brackets are optional grouping: `( <value> )` holds exactly one complete value and changes nothing
@@ -120,14 +124,70 @@ ret a
 end
 ```
 
+### 3.1 Structs
+
+A struct is the OSC-2 struct (`docs/osc/OSC-2-DESIGN.md` section 2) written in words. It is declared on
+one line before the first `fn`, its fields in order, each field a name and a scalar type, an array
+field with its length after the type; `end` closes the line:
+
+```
+struct Acc sum long v long 4 end
+```
+
+The layout is OSC-2's: every field takes whole 8-byte cells (a scalar one, an array field one per
+element), in declaration order, no padding. At most 16 structs, 1 to 16 fields each, at most 64 cells.
+A struct name is a word of the program from its line on: no name, function or field may be spelled
+the same. Field names are unique within their struct (a variable may share a field's name).
+
+A struct is handled exactly like an array (section 2 rule 4, section 6.4): it is never a value, only an
+`own`, `edit` or `view` reference. A parameter is `p own S`, `p edit S` or `p view S`; a call binds own
+from own, edit from own or edit, view from any, always of the same struct; an own struct must be freed
+(`free p`) before every return, as an own array. `put` needs own or edit. A function never returns a
+struct.
+
+```
+p = new S v1 .. vn         a new own struct; one value per field, in declaration order; an array
+                           field takes one value, stored in every element (OSC `[e; N]`)
+get p f                    read field f;  get p f i  for an element of an array field f
+put p f v                  write field f; put p f i v for an element of an array field f
+```
+
+After `get p` or `put p` the next word is one of the fields of p's struct (and `omegese next` offers
+exactly those); after `new` the struct names (and, for a new name, the array element types). An index
+is any whole-number value, checked at run time (trap 3) as for arrays.
+
+Two spellings of a new struct were measured on the six struct twins (section 5.1) and the one with
+fewer tokens was kept: B, `new S v1 .. vn`. The other, A, `p = new S` with every field zero and a
+`put` for each, is kept only as the build flag `-DOMEGESE_STRUCT_A` so the count can be repeated.
+
+Example (twin 6):
+
+```
+struct Acc sum long v long 4 end
+fn run a long to long
+s = new Acc a a
+for i long 4
+put s v i add get s v i i
+put s sum add get s sum get s v i
+end
+r = get s sum
+free s
+ret r
+end
+```
+
 ## 4. Lowering
 
 Numbers are hoisted into the entry block, one CONST per distinct value and type (so the loop bound
-is defined exactly once, as checker2 requires). Blocks are numbered in the order they start.
+is defined exactly once, as checker2 requires). The numbers of a `for` with a number count are the
+exception (below). Blocks are numbered in the order they start.
 
 - `while c bound N`: hidden ulong counter = 0; head: c -> guard | exit; guard: `ge counter N` ->
   trap block (trap 4, br exit) | body; the body starts with `counter = add counter 1`.
-- `for i T K` (K a number): i = 0; head: `lt i K` -> body | exit; latch: `i = add i 1`.
+- `for i T K` (K a number): i = 0; head: `lt i K` -> body | exit; latch: `i = add i 1`. Its 0, K and 1 are
+  fresh registers written by CONST just before the loop (not hoisted), in that order, as oscc lowers OSC
+  `for i in 0 .. K`; each is still defined once, as checker2 requires. So `for i long K` gives the same IR
+  as the OSC loop (since 2026-10-19; before, the counter started with a MOV from a hoisted 0).
 - `for i T n` (n a name or any value that is not a number): as `while lt i n`, with the hidden guard,
   plus `i = add i 1` at the latch.
 - `if c` -> cbr then | else-or-join; a join block exists only if some branch reaches it.
@@ -144,6 +204,14 @@ is defined exactly once, as checker2 requires). Blocks are numbered in the order
   value is computed once, before the loop.
 - `trap N`: `trap N`, then a `ret` that is never reached (with a zero of the return type), because
   the IR block still needs a terminator.
+- Structs, exactly as oscc lowers them (`src/compiler/osc_lower.c`): `p = new S v1 .. vn` computes the
+  values in field order, then writes 0 into a fresh ulong with CONST, `alloc`s p with it, then stores
+  each cell in declaration order with `fstore` (an array field: a ulong index register, written by
+  CONST 0 .. N-1 before each of its stores, shared by every array field of the literal). That is OSC's
+  `let p: own S = S { f1: v1, ... }` with the fields listed in declaration order. `get p f [i]` is
+  `fload` (index first), `put p f [i] v` evaluates the index, then the value, then `fstore`; `free p`
+  is `release`. A struct passed to a call is the argument register itself (as `&s` and `&mut s` in OSC).
+  So a program written in the same shape in both languages gives the same IR bytes (section 5.1).
 
 ## 5. Measured (phase 1)
 
@@ -348,7 +416,7 @@ program (1575 mutants) and 500 walks of up to 40 items (17386 items) found no fa
    section 13), Omegese against OSC text. The `omegese` arm's system prompt is
    `tools/exp445/arms/common.md`, then `tools/exp445/arms/omegese.md` (the language and a word card:
    every fixed word on one line with what it does), then the worked examples
-   (`tools/exp445/arms/examples/`, built by `reader.sh system_prompt`): 14 dev-style tasks in the
+   (`tools/exp445/arms/examples/`, built by `reader.sh system_prompt`): 15 dev-style tasks in the
    many-shot mode, the r2 single example (`clamp_sub`) in the one-shot mode (Stage 0 only). The `text`
    arm gets the same tasks with the program in OSC. `make test-exp445` checks every example in both
    forms (reader, back end, the sealed harness on its own inputs), that the word card is exactly

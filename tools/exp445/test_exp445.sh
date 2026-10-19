@@ -64,9 +64,9 @@ head -c 30 "$T/d1.ir" > "$T/trunc.oscir"
 # ---- 2. worked examples (13.2) -----------------------------------------------------------------------
 mapfile -t MANY < <(grep . "$EXD/many.list"); mapfile -t ONE < <(grep . "$EXD/one.list")
 EXS=("${MANY[@]}" "${ONE[@]}")
-[ "${#MANY[@]}" = 14 ] && [ "${#ONE[@]}" = 1 ] && [ "$(printf '%s\n' "${EXS[@]}" | LC_ALL=C sort -u | wc -l)" = 15 ] &&
+[ "${#MANY[@]}" = 15 ] && [ "${#ONE[@]}" = 1 ] && [ "$(printf '%s\n' "${EXS[@]}" | LC_ALL=C sort -u | wc -l)" = 16 ] &&
 [ "$(printf '%s\n' "${EXS[@]}" | LC_ALL=C sort)" = "$(cd "$EXD" && find . -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | LC_ALL=C sort)" ] &&
-  ok "examples: 14 in the many-shot list, 1 (the r2 example) in the one-shot list, every example dir listed exactly once" || bad "example lists"
+  ok "examples: 15 in the many-shot list, 1 (the r2 example) in the one-shot list, every example dir listed exactly once" || bad "example lists"
 # format, inputs, expected computed from the prompt by examples_expected.c (not from the programs)
 devents="$(cat "$DEV"/*/requirement | awk '$1 == "entry" { print $2 }' | LC_ALL=C sort)"
 exform() { # exform <example dir>: 0 when the example is well formed and its expected file is the independent one
@@ -121,10 +121,10 @@ else bad "ola.sh experiment on the examples failed: $(tail -3 "$T/exh.err")"; fi
 tasktext() { awk '/^Worked example/ { w = 1 } w' | awk '/^```$/ { f = !f; print; next } !f'; }
 for mode in many one; do for arm in omegese text; do system_prompt "$HERE/arms" "$arm" "$mode" > "$T/p.$arm.$mode"; done; done
 cmp -s <(tasktext < "$T/p.omegese.many") <(tasktext < "$T/p.text.many") && cmp -s <(tasktext < "$T/p.omegese.one") <(tasktext < "$T/p.text.one") &&
-[ "$(grep -cE '^Example [0-9]+\.$' "$T/p.omegese.many")" = 14 ] && [ "$(grep -cE '^Example [0-9]+\.$' "$T/p.text.one")" = 1 ] &&
+[ "$(grep -cE '^Example [0-9]+\.$' "$T/p.omegese.many")" = 15 ] && [ "$(grep -cE '^Example [0-9]+\.$' "$T/p.text.one")" = 1 ] &&
 grep -qx 'entry clamp_sub' "$T/p.text.one" && not grep -qx 'entry clamp_sub' "$T/p.text.many" &&
 [ "$(grep -c '^```$' "$T/p.omegese.many")" = 28 ] && grep -qF "$(cat "$EXD/dot3/program.omegese")" "$T/p.omegese.many" && grep -qF "$(cat "$EXD/dot3/program.osc")" "$T/p.text.many" &&
-  ok "prompts: both arms carry the same task text (14 many-shot, 1 one-shot = clamp_sub), each with its own program form" || bad "prompt task text differs between arms"
+  ok "prompts: both arms carry the same task text (15 many-shot, 1 one-shot = clamp_sub), each with its own program form" || bad "prompt task text differs between arms"
 not cmp -s <(tasktext < "$T/p.omegese.many") <(tasktext < "$T/p.text.many" | sed '0,/signed/s//unsigned/') &&
   not system_prompt "$HERE/arms" bytes many 2> /dev/null > /dev/null && not system_prompt "$HERE/arms" omegese few 2> /dev/null > /dev/null &&
   ok "  (negative controls: one changed word is seen; the bytes arm and an unknown mode have no prompt)" || bad "prompt controls"

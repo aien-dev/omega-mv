@@ -1,0 +1,4 @@
+Write a function minmax_span that takes three unsigned 32-bit numbers a, b, c and returns the
+largest of them minus the smallest. Keep the smallest and the largest value seen so far in a struct
+with two fields, lo and hi, both starting at a, and update it with a helper function that takes the
+struct for writing and one more value. It never traps.

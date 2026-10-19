@@ -9,6 +9,8 @@
 #              omega_emit -> checker2 ACCEPT), refusals with reasons, the loop-guard negative control, the
 #              exact next oracle (completeness, soundness and truncation fuzz) and, when OMEGESE_TOKCOUNT
 #              and OMEGESE_TOKENIZER are set, the tokenizer gate (every fixed word is one token)
+#              Between the two runs, tools/omegese/twin_structs.sh: the six struct twins give the same IR
+#              bytes through oscc (OSC) and through omegese -> omega_emit, and checker2 accepts them
 ifndef OMEGESE_MK
 OMEGESE_MK := 1
 .PHONY: omegese test-omegese
@@ -30,8 +32,9 @@ $(OMEGESE_DIR)/omegese_canary%: tools/omegese/omegese.c
 
 omegese: $(OMEGESE_DIR)/omegese
 
-test-omegese: omegese omega-emit checker2 $(OMEGESE_DIR)/omegese_asan $(OMEGESE_DIR)/omegese_canary1 $(OMEGESE_DIR)/omegese_canary2
+test-omegese: omegese omega-emit checker2 $(OSC_DIR)/oscc $(OMEGESE_DIR)/omegese_asan $(OMEGESE_DIR)/omegese_canary1 $(OMEGESE_DIR)/omegese_canary2
 	bash tools/omegese/test_omegese.sh $(abspath $(OMEGESE_DIR)/omegese) $(abspath $(OUT_DIR)/omega_emit/omega_emit) $(abspath $(C2_DIR)/checker2)
+	bash tools/omegese/twin_structs.sh $(abspath $(OMEGESE_DIR)/omegese) $(abspath $(OUT_DIR)/omega_emit/omega_emit) $(abspath $(OSC_DIR)/oscc) $(abspath $(C2_DIR)/checker2)
 	OMEGESE_SANITIZED=1 OMEGESE_CANARIES="$(abspath $(OMEGESE_DIR)/omegese_canary1) $(abspath $(OMEGESE_DIR)/omegese_canary2)" \
 	OMEGESE_WALKS=10 OMEGESE_MUTANTS=1 \
 	bash tools/omegese/test_omegese.sh $(abspath $(OMEGESE_DIR)/omegese_asan) $(abspath $(OUT_DIR)/omega_emit/omega_emit) $(abspath $(C2_DIR)/checker2)

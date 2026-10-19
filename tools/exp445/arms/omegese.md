@@ -9,6 +9,8 @@ byte = i8, short = i16, int = i32, long = i64. The names u8 .. i64 are accepted 
 
 Statements:
 
+    struct <S> <field> <type> ... end    before the first fn: a struct S with these fields
+                              (an array field: <field> <type> <len>, e.g. `struct P x uint v long 4 end`)
     fn <name> <param> <type> <param> <type> ... to <type>     (or: to void); end closes the function
     <name> = <value>          write a value: a new name, or an existing name of the same type
     if <cond>  ...  else  ...  end           (else is optional)
@@ -17,7 +19,8 @@ Statements:
     break                     leave the innermost while or for
     ret <value>               (ret alone in a void function)
     put <array> <index> <value>
-    free <array>
+    put <struct> <field> <value>     (an array field: put <struct> <field> <index> <value>)
+    free <array>              (or free <struct>)
     trap <code>               code 1..14; like ret, it ends the path
     <function> <args>         call a void function
 
@@ -30,8 +33,11 @@ Values (each op takes a fixed number of values; each value may itself be an op):
     <type> <number>       a typed number, e.g. uint 0
     <type> <value>        convert, e.g. ulong x (trap 5 if the value does not fit)
     get <array> <index>
+    get <struct> <field>      (an array field: get <struct> <field> <index>)
     new <type> <len> <init>   only as a whole line: <name> = new ...
-    own <array>  edit <array>  view <array>
+    new <S> <value> ...       a new struct S: one value per field, in the order of its struct line;
+                              also only as a whole line (an array field takes one value for every element)
+    own <array>  edit <array>  view <array>     (the same for a struct)
     <function> <args>     call a function written earlier in the program
 
 Values nest in prefix order: `add mul a a 1` is (a*a)+1, `eq rem n 2 0` is n%2 == 0. Brackets are
@@ -47,13 +53,16 @@ Rules:
 - Every name you write must be read later. Parameters may be overwritten. A for counter may not.
 - Every path through a function that returns a value must end in ret or trap.
 - Parameters of array type: own|edit|view <type> <len>, e.g. `v view uint 4`.
+- Parameters of struct type: own|edit|view <S>, e.g. `p view P`. A struct is like an array: an own
+  struct is freed with free; put needs own or edit. A function returns a number or bool, never a struct.
 
 Word card: every fixed word and what it does.
 
     fn      start a function: fn <name> <param> <type> ... to <type>
+    struct  struct <S> <field> <type> ... end: declare a struct (before the first fn)
     to      in a fn line: the return type follows
     void    in a fn line: the function returns nothing (to void)
-    end     close the innermost fn, if, else, while or for
+    end     close the innermost fn, if, else, while or for; also ends a struct line
     if      if <cond>: run the lines up to else or end when cond is true
     else    the lines run when the if condition is false
     while   while <cond> bound <N>: repeat while cond is true
@@ -62,8 +71,8 @@ Word card: every fixed word and what it does.
     break   leave the innermost while or for
     ret     return a value (ret alone in a void function)
     trap    trap <code>: stop the run with that trap code
-    put     put <array> <index> <value>: store into an array
-    free    free <array>: release an array made with new
+    put     put <array> <index> <value>: store into an array; put <struct> <field> <value>: set a field
+    free    free <array>: release an array or a struct made with new
     true    the bool value true
     false   the bool value false
     add     add <a> <b>: a + b
@@ -84,8 +93,9 @@ Word card: every fixed word and what it does.
     ge      ge <a> <b>: a >= b (bool)
     neg     neg <a>: -a (signed)
     not     not <a>: logical not of a bool, bitwise not of a number
-    get     get <array> <index>: read an element
-    new     <name> = new <type> <len> <init>: a new array of len elements, all init
+    get     get <array> <index>: read an element; get <struct> <field>: read a field
+    new     <name> = new <type> <len> <init>: a new array of len elements, all init;
+            <name> = new <S> <value> ...: a new struct, one value per field
     bool    type bool; bool <v> converts or types a value
     uchar   type u8 (unsigned 8-bit); uchar <v> converts or types a value
     ushort  type u16 (unsigned 16-bit)
@@ -95,6 +105,6 @@ Word card: every fixed word and what it does.
     short   type i16 (signed 16-bit)
     int     type i32 (signed 32-bit)
     long    type i64 (signed 64-bit)
-    own     own <array>: move the array (a parameter: own <type> <len>)
-    edit    edit <array>: lend the array for writing (a parameter: edit <type> <len>)
-    view    view <array>: lend the array for reading (a parameter: view <type> <len>)
+    own     own <array>: move the array (a parameter: own <type> <len>, or own <S> for a struct)
+    edit    edit <array>: lend the array for writing (a parameter: edit <type> <len>, or edit <S>)
+    view    view <array>: lend the array for reading (a parameter: view <type> <len>, or view <S>)
