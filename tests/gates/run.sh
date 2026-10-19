@@ -144,6 +144,7 @@ case "$step" in
     ARGUS_STREAMS="$(mktemp -d /tmp/argus-streams.XXXXXX)"; export ARGUS_STREAMS
     make test-argus-runtime test-machine-identity-argus
     ;;
+  bw-hazard)          physics_pin; make test-bw-hazard ;;
   numeric2)           make $NOPHYS test-numeric-reduce-cpu test-divsqrt-host ;;
   tensor)             make $NOPHYS test-tensor; make $NOPHYS test-tensor-store; make $NOPHYS test-m20-receipt; make $NOPHYS test-tensor-mutations ;;
   # host-suites-3.yml
