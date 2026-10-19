@@ -36,6 +36,8 @@ SRCS += src/omega_blackwell_codegen_w4.c src/omega_gpu_w4_api.c
 SRCS += src/omega_blackwell_codegen_nv4.c src/omega_gpu_nv4_api.c
 # flashnext/port (2026-10-19): Qwen3.8-Flash-Next router, top-10 of 512 + shared slot (omega_gpu_router_fn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_router_fn.c src/omega_gpu_router_fn_api.c
+# flashnext/port (2026-10-19): Qwen3.8-Flash-Next decode attention, 2 KV heads and a sparse position list (omega_gpu_fnattn_api.h), new files only
+SRCS += src/omega_blackwell_codegen_fnattn.c src/omega_gpu_fnattn_api.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
@@ -2523,6 +2525,16 @@ $(GPU_DATTN256_TEST): tests/gpu_decode_attn256_test.c tests/bw_warp_sim_k.h src/
 test-gpu-decode-attn256: $(GPU_DATTN256_TEST)
 	$(GPU_DATTN256_TEST) --host-only
 	$(GPU_DATTN256_TEST) --sim
+
+# flashnext/port (2026-10-19): Flash-Next decode attention (omega_gpu_fnattn_api.h): host + simulator; the chip run is
+# tools/run_gpu_fnattn_chip.sh.
+.PHONY: test-gpu-fnattn
+GPU_FNATTN_TEST = $(OUT_DIR)/gpu_fnattn_test
+$(GPU_FNATTN_TEST): tests/gpu_fnattn_test.c tests/bw_warp_sim_k.h src/omega_gpu_fnattn_api.h src/omega_blackwell_codegen_fnattn.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_fnattn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-fnattn: $(GPU_FNATTN_TEST)
+	$(GPU_FNATTN_TEST) --host-only
+	$(GPU_FNATTN_TEST) --sim
 
 # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h). test-gpu-router is host-only
 # (oracle, budgets) plus the warp simulator; the chip gate is tools/run_gpu_router_chip.sh under the GB10 lock.
