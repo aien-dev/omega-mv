@@ -6,7 +6,7 @@ E="${1:?evidence dir}"; shift
 mkdir -p "$E"
 cd "$(dirname "$0")/.." || exit 2
 ARGS=("$@"); [ ${#ARGS[@]} -eq 0 ] && ARGS=(--chip --out "$E/rows.csv")
-echo "# gpu_roll_test ${ARGS[*]} queued $(date -Is) head=$(git rev-parse --short HEAD) dirty=$(git status --porcelain | wc -l) physics=$(git -C "$HOME/workspace/physics-6d7cf0d4" rev-parse --short HEAD)" > "$E/chip.log"
+echo "# gpu_roll_test ${ARGS[*]} queued $(date -Is) head=$(git rev-parse --short HEAD) dirty=$(git status --porcelain | wc -l) physics=$(git -C "$HOME/workspace/physics-pf-6d7cf0d4" rev-parse --short HEAD)" > "$E/chip.log"
 inner() {
   echo "# lock acquired $(date -Is) loadavg=$(cut -d' ' -f1-3 /proc/loadavg) MemAvailable_kB=$(awk '/MemAvailable/{print $2}' /proc/meminfo)"
   echo "# sensors before: $(tail -1 "$HOME/yardsticks/sensors/$(date +%F).csv")"
