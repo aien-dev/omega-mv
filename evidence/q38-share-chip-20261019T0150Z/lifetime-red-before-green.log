@@ -1,0 +1,13 @@
+# red before green: lifetime_test against two broken copies of src/omega_lifetime.c (built in /tmp, not committed)
+# m1 = rule 1 (live together, shared bytes) disabled; m2 = replay (rule 2) disabled
+== m1
+FAIL tests/lifetime_test.c:40 forced overlap must be red: ''
+FAIL sweep 305: the oracle finds the mutant plan unsafe, the check passed it
+lifetime_test: 29 of 31 checks passed
+exit 1
+== m2
+FAIL tests/lifetime_test.c:85 read before write red: ''
+lifetime_test: 32 of 33 checks passed
+exit 1
+== unmodified
+lifetime_test: 33 of 33 checks passed

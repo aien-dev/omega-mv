@@ -1,0 +1,37 @@
+negative control (forced share A,B): RED as required: check: A (live 0..1) and B (live 1..2) share bytes
+random sweep: 3000 traces safe, arena between peak live and flat; every mutant plan the byte oracle finds unsafe is red: 2712 of 3000 traces (plus 42 refused by the conservative live-together rule)
+q38 decode graph, 2 layers (mask 0x2): 23 ops, 71 accesses; buffer flat 1614848 B, shared 1217024 B, saved 397824 B; peak live 1216656 B; pinned 194704 B
+q38 decode graph, 4 layers (mask 0x8): 41 ops, 125 accesses; buffer flat 1696768 B, shared 1298944 B, saved 397824 B; peak live 1298704 B; pinned 276752 B
+q38 decode graph, 64 layers (mask 0x8888888888888888): 596 ops, 1820 accesses; buffer flat 4158208 B, shared 3760384 B, saved 397824 B; peak live 3760144 B; pinned 2738192 B
+storage map: 19 buffers, 11 slots, 596 ops
+slot 0 [0, 2621440) 2621440 B
+  norms @0 2621440 B live 0..596 pinned writers: host
+slot 1 [2621440, 3614720) 993280 B
+  gate_up @2621440 139264 B live 6..590 writers: fp8 gate_up x64
+  logits @2621440 993280 B live 593..596 out writers: bf16 lm_head x1
+  act @2760704 69632 B live 7..591 writers: swiglu x64
+  mix @2830336 65536 B live 1..584 writers: fp8 mix x64
+  agg @2895872 57344 B live 29..586 writers: gather x16
+  att @2953216 24576 B live 30..587 writers: attn x16 gate x16
+  xq @2977792 20480 B live 0..589 writers: norm x1 add+norm x127
+  o @2998272 20480 B live 4..592 writers: fp8 o x64 fp8 down x64
+  ab @3018752 384 B live 2..576 writers: bf16 ab x48
+slot 2 [3614720, 3620864) 6144 B
+  logits pad @3614720 6144 B live 0..596 pinned tail writers: host
+slot 3 [3620864, 3678208) 57344 B
+  gather table @3620864 57344 B live 0..596 pinned writers: host
+slot 4 [3678208, 3698688) 20480 B
+  x @3678208 20480 B live 0..596 in out writers: add+norm x128
+slot 5 [3698688, 3719168) 20480 B
+  hidden @3698688 20480 B live 592..596 out writers: add+norm x1
+slot 6 [3719168, 3739648) 20480 B
+  final norm @3719168 20480 B live 0..596 pinned writers: host
+slot 7 [3739648, 3747840) 8192 B
+  argmax v @3739648 8192 B live 0..596 pinned writers: argmax 1 x1
+slot 8 [3747840, 3756032) 8192 B
+  argmax i @3747840 8192 B live 594..595 writers: argmax 1 x1
+slot 9 [3756032, 3760128) 4096 B
+  tensor tables @3756032 4096 B live 0..596 pinned writers: host
+slot 10 [3760128, 3760144) 16 B
+  token @3760128 16 B live 0..596 in out writers: argmax 2 x1
+lifetime_test: 33 of 33 checks passed

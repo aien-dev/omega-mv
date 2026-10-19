@@ -471,3 +471,8 @@ int omega_gpu_gdn_prefill_read_out(OmegaGpuGdn *g, uint32_t tokens, float *out) 
     omega_gpu_session_unlock();
     return rc;
 }
+
+size_t omega_gpu_gdn_prefill_scratch_bytes(uint32_t tokens) {
+    size_t off[PF_N];
+    return tokens ? pf_layout(tokens, off) : 0;
+}

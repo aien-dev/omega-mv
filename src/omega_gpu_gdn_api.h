@@ -70,6 +70,8 @@ int omega_gpu_gdn_record(struct OmegaGpuCmdList *cl, OmegaGpuGdn *g, uint32_t la
                          uint64_t ab_va, float eps_l2, float eps_norm, float in_scale, float out_scale, uint64_t *out_va);
 /* Test helper: the out row the last launch wrote to the launch buffer (after a record + submit, for example). */
 int omega_gpu_gdn_read_out(OmegaGpuGdn *g, float *out);
+/* omega#569 (storage plans): bytes of the prefill scratch a call of `tokens` tokens grows to (one per OmegaGpuGdn). */
+size_t omega_gpu_gdn_prefill_scratch_bytes(uint32_t tokens);
 const char *omega_gpu_gdn_last_error(void);
 const char *omega_gpu_gdn_rc_name(int rc);
 

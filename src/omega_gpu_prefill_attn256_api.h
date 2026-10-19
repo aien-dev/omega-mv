@@ -29,6 +29,7 @@
  */
 #include "omega_gpu_decode_attn256_api.h"
 #include "omega_blackwell_codegen_pattn256.h"
+#include <stddef.h>
 #include <stdint.h>
 
 #define OMEGA_GPU_PATTN256_MAX_M 32768u
@@ -50,6 +51,9 @@ struct OmegaGpuCmdList;
 int omega_gpu_prefill_attn256_record(struct OmegaGpuCmdList *cl, OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos0,
                                      uint32_t m, uint64_t qkv_va, float eps, float out_scale, uint64_t out_va);
 int omega_gpu_prefill_attn256_reserve(uint32_t max_m);
+/* omega#569 (storage plans): the module buffers a call of m rows grows to: the Q staging, plus the host entry's qkv / out
+ * staging when host != 0. 0 for m out of range. */
+size_t omega_gpu_prefill_attn256_staging_bytes(uint32_t m, int host);
 void omega_gpu_prefill_attn256_release(void);
 
 /* ---- tests ---- */

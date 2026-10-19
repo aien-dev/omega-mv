@@ -7,6 +7,9 @@
  */
 #include "../src/omega_lifetime.h"
 #include "../src/omega_gpu_q38_graph.h"
+#include "../src/omega_gpu_gdn_api.h"
+#include "../src/omega_gpu_prefill_attn256_api.h"
+#include "../src/omega_gpu_prefill.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -191,6 +194,56 @@ static void q38_plan(uint32_t layers, uint64_t mask, int print_map) {
     CHECK(omega_gpu_q38_graph_plan(0, 0, 248320u, 0, &f, NULL, 0) != 0 && omega_gpu_q38_graph_plan(2, 0x4, 248320u, 0, &f, NULL, 0) != 0, "plan refusals");
 }
 
+/* The Qwen3.8-27B prefill chunk (sc qwen38/prefill-ttft 797a6052, src/qwen38_omega/prefill.rs: PfState + the omega
+ * modules it calls), one DeltaNet layer then one attention layer, as an omega_lifetime trace per memory kind (buffers
+ * of two kinds never share: GPU-uncached host-visible, GPU-cached device). A computed plan for the driver, not a chip run. */
+static void prefill_plan(uint32_t m, uint64_t *saved_host, uint64_t *flat_host, uint64_t *saved_dev, uint64_t *flat_dev) {
+    const uint64_t bm = omega_gpu_pf_qgemm_bm(), kq = OMEGA_GPU_Q38_INTER, tiles = (m + bm - 1) / bm + 1;
+    OmegaLt h, d;
+    omega_lt_init(&h, acc, 4096, names, 1024);
+    static OmegaLtAccess acc2[4096]; static const char *names2[1024];
+    omega_lt_init(&d, acc2, 4096, names2, 1024);
+    const int xin = omega_lt_buf(&h, "pf xin", (uint64_t)m * 6144 * 4, 256, 0), mix = omega_lt_buf(&h, "pf mix", (uint64_t)m * 16384 * 4, 256, 0);
+    const int out = omega_lt_buf(&h, "pf out", (uint64_t)m * 5120 * 4, 256, 0), tl = omega_lt_buf(&h, "pf tiles", tiles * 32, 256, 0);
+    const int gdn = omega_lt_buf(&h, "gdn prefill scratch", omega_gpu_gdn_prefill_scratch_bytes(m), 256, 0);
+    const int att = omega_lt_buf(&h, "attn256 staging", omega_gpu_prefill_attn256_staging_bytes(m, 1), 256, 0);
+    const int xq = omega_lt_buf(&d, "pf xq", (m + bm) * kq, 256, 0), xs = omega_lt_buf(&d, "pf xs", (m + bm) * (kq / 128) * 4, 256, 0);
+    const int act = omega_lt_buf(&d, "pf act", (uint64_t)m * kq * 2, 256, 0);
+#define OP(n) do { omega_lt_op(&h, n); omega_lt_op(&d, n); } while (0)
+#define QUANT_GEMM(w_host, w_dev) do { OP("quant"); omega_lt_use(&h, xin, 0); omega_lt_use(&d, xq, 1); omega_lt_use(&d, xs, 1); \
+        OP("tile table"); omega_lt_use(&h, tl, 1); \
+        OP("gemm"); omega_lt_use(&d, xq, 0); omega_lt_use(&d, xs, 0); omega_lt_use(&h, tl, 0); \
+        if ((w_host) >= 0) { omega_lt_use(&h, (w_host), 1); } \
+        if ((w_dev) >= 0) { omega_lt_use(&d, (w_dev), 1); } } while (0)
+    for (int attention = 0; attention <= 1; attention++) {
+        OP("copy in x"); omega_lt_use(&h, xin, 1);
+        QUANT_GEMM(mix, -1);
+        OP("copy out mix"); omega_lt_use(&h, mix, 0);
+        if (!attention) { OP("gdn stage in"); omega_lt_use(&h, gdn, 1); OP("gdn kernels, read back"); omega_lt_use(&h, gdn, 0); }
+        else { OP("attn256 stage in"); omega_lt_use(&h, att, 1); OP("attn256 kernels, read back"); omega_lt_use(&h, att, 0); }
+        OP("copy in mixer out"); omega_lt_use(&h, xin, 1);
+        QUANT_GEMM(out, -1);
+        OP("copy out o"); omega_lt_use(&h, out, 0);
+        OP("copy in post"); omega_lt_use(&h, xin, 1);
+        QUANT_GEMM(-1, act);
+        OP("quant act"); omega_lt_use(&d, act, 0); omega_lt_use(&d, xq, 1); omega_lt_use(&d, xs, 1);
+        OP("tile table"); omega_lt_use(&h, tl, 1);
+        OP("gemm down"); omega_lt_use(&d, xq, 0); omega_lt_use(&d, xs, 0); omega_lt_use(&h, tl, 0); omega_lt_use(&h, out, 1);
+        OP("copy out down"); omega_lt_use(&h, out, 0);
+    }
+#undef QUANT_GEMM
+#undef OP
+    uint64_t oh[OMEGA_LT_MAX_BUFS], od[OMEGA_LT_MAX_BUFS], fh[OMEGA_LT_MAX_BUFS], fd[OMEGA_LT_MAX_BUFS], ah = 0, ad = 0, fah = 0, fad = 0;
+    char why[256];
+    CHECK(omega_lt_live(&h) == 0 && omega_lt_live(&d) == 0 && omega_lt_plan(&h, oh, &ah) == 0 && omega_lt_plan(&d, od, &ad) == 0 &&
+          omega_lt_check(&h, oh, why, sizeof why) == 0 && omega_lt_check(&d, od, why, sizeof why) == 0, "prefill plan m %u safe: %s", m, why);
+    omega_lt_plan_flat(&h, fh, &fah); omega_lt_plan_flat(&d, fd, &fad);
+    printf("q38 prefill chunk m %u (plan, not run): host-visible %llu -> %llu B (peak live %llu), device %llu -> %llu B\n", m,
+           (unsigned long long)fah, (unsigned long long)ah, (unsigned long long)omega_lt_peak_live(&h), (unsigned long long)fad, (unsigned long long)ad);
+    if (m == 4096) { static char map[8192]; omega_lt_map(&h, oh, map, sizeof map); printf("%s", map); }
+    *saved_host = fah - ah; *flat_host = fah; *saved_dev = fad - ad; *flat_dev = fad;
+}
+
 int main(void) {
     chain();
     outputs_and_tail();
@@ -199,6 +252,7 @@ int main(void) {
     q38_plan(2, 0x2, 0);
     q38_plan(4, 0x8, 0);
     q38_plan(64, 0x8888888888888888ull, 1);
+    for (uint32_t m = 1024; m <= 32768; m *= 2) { uint64_t sh, fh, sd, fd; prefill_plan(m, &sh, &fh, &sd, &fd); CHECK(sh > 0, "prefill m %u: host-visible bytes saved", m); }
     printf("lifetime_test: %d of %d checks passed\n", checks - fails, checks);
     return fails ? 1 : 0;
 }

@@ -233,3 +233,8 @@ int omega_gpu_prefill_attn256_record(OmegaGpuCmdList *cl, OmegaGpuDecodeAttn256C
     if (!cl) return OMEGA_GPU_DATTN_BAD_ARGS;
     return core(c, layer, pos0, m, NULL, NULL, qkv_va, out_va, eps, out_scale, NULL, cl);
 }
+
+size_t omega_gpu_prefill_attn256_staging_bytes(uint32_t m, int host) {
+    if (m == 0 || m > OMEGA_GPU_PATTN256_MAX_M) return 0;
+    return qf_bytes(m) + (host ? (size_t)m * QKVW * 4u + (size_t)m * OUTW * 4u : 0u);
+}

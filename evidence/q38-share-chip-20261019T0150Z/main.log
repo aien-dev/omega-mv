@@ -1,0 +1,51 @@
+model: 2 layers (1 GDN, 1 attention, mask 0x2), vocab 248320
+ok: token 0: graph 119117 == baseline 119117
+ok: token 0: logits max diff 0.000327 <= 1e-04 * 9.13
+ok: token 0: x max diff 0.000126 <= 1e-04 * 2.44
+ok: token 0: 23 launches in 1 submit
+ok: token 1: graph 147744 == baseline 147744
+ok: token 1: logits max diff 6.68e-06 <= 1e-04 * 9.65
+ok: token 1: x max diff 2.03e-06 <= 1e-04 * 2.05
+ok: token 1: 23 launches in 1 submit
+ok: token 2: graph 60455 == baseline 60455
+ok: token 2: logits max diff 7.99e-06 <= 1e-04 * 9.83
+ok: token 2: x max diff 3.16e-06 <= 1e-04 * 2.55
+ok: token 2: 23 launches in 1 submit
+ok: flush_each == one list, bit for bit, all 3 tokens
+ok: shared plan smaller
+shared layout: buffer 1217024 B (flat 1614848 B, saved 397824 B, peak live 1216656 B)
+shared token 0: 119117 (unshared 119117)
+shared token 1: 147744 (unshared 147744)
+shared token 2: 60455 (unshared 60455)
+ok: shared layout == unshared layout, bit for bit (x, logits, token), all 3 tokens
+ok: shared: x still readable
+ok: shared: mix (bytes reused by the logits) refused
+negative control 5 (xq forced onto mix, check on): rc -1: q38 graph: shared layout unsafe for this token: check: xq (live 0..16) and mix (live 1..11) share bytes
+ok: mutant 5 refused by the pre-submit check
+negative control 6 (xq forced onto mix, unchecked): values DIFFER (red, as required)
+ok: mutant 6: the unsafe layout changes the values
+negative control 7 (gather table read undeclared): rc -4: q38 graph verify: launch 11 (op 11 gather) points at buffer byte 1081344, in no region the op declared
+ok: mutant 7 caught by the list check
+ok: shared layout after the mutants == unshared, bit for bit
+ok: mutant 1 (swiglu up half -1) caught
+ok: mutant 2 (gather index +1) caught
+ok: mutant 3 (gate dropped) caught
+ok: mutant 4 (post-norm weight dropped) caught
+timing: 10 reps, median chip 16006.5 us, median total 16019.3 us per token (2 layers)
+ok: timeline: 23 stamped launches
+timeline norm       1 launches      10.8 us
+timeline mix        2 launches     816.9 us
+timeline ab         1 launches      18.4 us
+timeline gdn        1 launches     102.8 us
+timeline gather     1 launches       4.6 us
+timeline attn       1 launches      64.6 us
+timeline gate       1 launches       3.1 us
+timeline o_proj     2 launches     361.5 us
+timeline res        4 launches      53.1 us
+timeline gate_up    2 launches    1864.0 us
+timeline swiglu     2 launches       7.2 us
+timeline down       2 launches    1208.8 us
+timeline lm_head    1 launches   11475.4 us
+timeline argmax     2 launches      17.1 us
+timeline span 16008.2 us
+gpu_q38_graph_test: 26 checks, 0 failed: PASS
