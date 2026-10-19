@@ -40,6 +40,7 @@
 #include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
+#include "rx_quiet_reps.h"
 
 enum { SUBJ_EXTERNAL = 100, ISSUER = 3, SUBJ_PLAN = 61, SUBJ_PROPOSER = 71, SUBJ_PROMOTER = 72 };
 
@@ -1040,26 +1041,57 @@ static void measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with
     AgResult ro, rf;
     for (uint64_t r = 1; r <= 3; r++) pair_run(p, r, a_value(r), &ro, &rf, NULL, NULL, 0);
     enum { RUNS = 41 };
+    /* RUNS undisturbed pairs (rx_quiet_reps.h): a pair counts only when
+     * neither leg's threads waited for a core, at most 60 attempts per pair.
+     * Every attempt is still checked for the same outcome on both legs. */
+    enum { ATTEMPTS = RUNS * 60 };
     uint64_t ns_o[RUNS], ns_f[RUNS], cpu_o = 0, cpu_f = 0, cr_o = 0, cr_f = 0, cm_o = 0, cm_f = 0;
-    for (uint64_t i = 0; i < RUNS; i++) {
-        uint64_t id = 10 + i, a = a_value(id);
+    uint32_t kept = 0, tried = 0;
+    int delay_known = 1;
+    for (uint64_t i = 0; i < ATTEMPTS && kept < RUNS; i++) {
+        uint64_t id = 10 + i, a = a_value(id), t_o = 0, t_f = 0;
         set_inputs(&p->o, a, id);
         set_inputs(&p->f, a, id);
         uint64_t c0 = p->o.w.n_crumbs, t0 = cpu_ns();
-        run(&p->o, &p->lo, id, &ro, &ns_o[i]);
-        cpu_o += cpu_ns() - t0;
-        cr_o += p->o.w.n_crumbs - c0;
-        cm_o += commits_between(&p->o, c0, p->o.w.n_crumbs);
+        int64_t d0 = rx_run_delay_ns();
+        run(&p->o, &p->lo, id, &ro, &t_o);
+        int64_t d1 = rx_run_delay_ns();
+        uint64_t u_o = cpu_ns() - t0, k_o = p->o.w.n_crumbs - c0;
+        uint64_t m_o = commits_between(&p->o, c0, p->o.w.n_crumbs);
         c0 = p->f.w.n_crumbs;
         t0 = cpu_ns();
-        run(&p->f, &p->lf, id, &rf, &ns_f[i]);
-        cpu_f += cpu_ns() - t0;
-        cr_f += p->f.w.n_crumbs - c0;
-        cm_f += commits_between(&p->f, c0, p->f.w.n_crumbs);
+        int64_t d2 = rx_run_delay_ns();
+        run(&p->f, &p->lf, id, &rf, &t_f);
+        int64_t d3 = rx_run_delay_ns();
+        uint64_t u_f = cpu_ns() - t0, k_f = p->f.w.n_crumbs - c0;
+        uint64_t m_f = commits_between(&p->f, c0, p->f.w.n_crumbs);
+        tried++;
+        CHECK(ro.outcome == rf.outcome, "%s: attempt %u: outcomes differ", what, tried);
+        if (d0 < 0 || d1 < 0 || d2 < 0 || d3 < 0) delay_known = 0;
+        if (!rx_quiet_rep(delay_known ? d1 - d0 : -1, t_o) ||
+            !rx_quiet_rep(delay_known ? d3 - d2 : -1, t_f))
+            continue;
+        ns_o[kept] = t_o;
+        ns_f[kept] = t_f;
+        kept++;
+        cpu_o += u_o;
+        cr_o += k_o;
+        cm_o += m_o;
+        cpu_f += u_f;
+        cr_f += k_f;
+        cm_f += m_f;
         ms->ok_before += ro.outcome == AG_RUN_SUCCESS;
         ms->failed_before += ro.outcome == AG_RUN_FAILURE;
         ms->ok_after += rf.outcome == AG_RUN_SUCCESS;
         ms->failed_after += rf.outcome == AG_RUN_FAILURE;
+    }
+    printf("    %s: undisturbed pairs %u of %u (%s)\n", what, kept, tried,
+           delay_known ? "run-queue delay from schedstat" : "schedstat missing: every pair counts");
+    if (kept < RUNS) {
+        CHECK(0, "%s: machine too busy to time: %u of %u undisturbed pairs in %u attempts", what,
+              kept, RUNS, (unsigned)ATTEMPTS);
+        pair_stop(p);
+        return;
     }
     qsort(ns_o, RUNS, sizeof ns_o[0], cmp_u64);
     qsort(ns_f, RUNS, sizeof ns_f[0], cmp_u64);
