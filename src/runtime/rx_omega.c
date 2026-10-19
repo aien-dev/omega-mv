@@ -180,7 +180,7 @@ int rx_omega_store_find(RxOmegaFaculty *f, uint64_t w0, RxOmegaRealization *out)
 }
 
 /* A realization the parent may execute: verified, and named by all 32 bytes. */
-static MatVecFn verified_fn(RxOmegaFaculty *f, const SemanticId *id) {
+static MatVecFn verified_fn(RxOmegaFaculty *f, const SemanticId *id, uint32_t *kind) {
     pthread_mutex_lock(&f->mu);
     RxOmegaRealization *e = store_find_locked(f, id);
     MatVecFn fn = NULL;
@@ -188,6 +188,7 @@ static MatVecFn verified_fn(RxOmegaFaculty *f, const SemanticId *id) {
         union { void *p; MatVecFn fn; } u;
         u.p = e->page;
         fn = u.fn;
+        if (kind) *kind = e->kind;
         e->parent_runs++;
     }
     pthread_mutex_unlock(&f->mu);
@@ -214,17 +215,20 @@ static int fn_serve(RxCtx *c) {
 
     /* Whatever the world currently records for this regime. Never waits. */
     MatVecFn fn = NULL;
+    uint32_t kind = RX_OMEGA_COST_REFERENCE;
     uint64_t used = 0;
     if (sel->field[0] != 0 && sel->field[6] == rx_omega_regime(M, N) && sel->field[1] != 0) {
         SemanticId id;
         id_from_words(&id, &sel->field[1]);
-        fn = verified_fn(f, &id);
+        fn = verified_fn(f, &id, &kind);
         if (fn) used = sel->field[1];
     }
     uint64_t t0 = cost_ns();
     if (fn) fn(A, x, y, M, N);
     else omega_matvec_reference(A, x, y, (uint32_t)M, (uint32_t)N);
     uint64_t ns = cost_ns() - t0;
+    if (f->cfg.cost_ns)
+        ns = f->cfg.cost_ns(f->cfg.cost_ctx, kind, (uint32_t)M, (uint32_t)N, 1);
     uint64_t digest = rx_omega_digest(y, (uint32_t)M);
     free(A); free(x); free(y);
 
@@ -607,14 +611,18 @@ static int fn_verify(RxCtx *c) {
 
 #define ROUNDS 7u
 
-static uint64_t time_calls(MatVecFn fn, const uint64_t *A, const uint64_t *x, uint64_t *y,
+static uint64_t time_calls(const RxOmegaFaculty *f, MatVecFn fn, uint32_t kind,
+                           const uint64_t *A, const uint64_t *x, uint64_t *y,
                            uint32_t M, uint32_t N, uint32_t iters) {
     uint64_t t0 = cost_ns();
     for (uint32_t i = 0; i < iters; i++) {
         if (fn) fn(A, x, y, M, N);
         else omega_matvec_reference(A, x, y, M, N);
     }
-    return cost_ns() - t0;
+    uint64_t ns = cost_ns() - t0;
+    if (f->cfg.cost_ns)
+        ns = f->cfg.cost_ns(f->cfg.cost_ctx, fn ? kind : RX_OMEGA_COST_REFERENCE, M, N, iters);
+    return ns;
 }
 
 static int fn_measure(RxCtx *c) {
@@ -633,7 +641,8 @@ static int fn_measure(RxCtx *c) {
     SemanticId id;
     id_from_words(&id, &cand->field[2]);
     uint64_t cps = 0, rps = 0, state = RX_OMEGA_DECLINED;
-    MatVecFn fn = v->field[1] == RX_OMEGA_PASSED ? verified_fn(f, &id) : NULL;
+    uint32_t kind = RX_OMEGA_COST_REFERENCE;
+    MatVecFn fn = v->field[1] == RX_OMEGA_PASSED ? verified_fn(f, &id, &kind) : NULL;
     uint32_t M = (uint32_t)s->field[1], N = (uint32_t)s->field[2];
     if (fn && shape_ok(M, N)) {
         uint64_t *A = malloc((size_t)M * N * sizeof(uint64_t));
@@ -646,14 +655,14 @@ static int fn_measure(RxCtx *c) {
         omega_matvec_reference(A, x, yr, M, N);
         if (memcmp(y, yr, (size_t)M * sizeof(uint64_t)) == 0) {
             /* Size one round to about 200 microseconds of the reference. */
-            uint64_t one = time_calls(NULL, A, x, yr, M, N, 1);
+            uint64_t one = time_calls(f, NULL, kind, A, x, yr, M, N, 1);
             uint32_t iters = one ? (uint32_t)(200000u / one) : 1000u;
             if (iters < 4) iters = 4;
             if (iters > 20000) iters = 20000;
             uint64_t best_c = UINT64_MAX, best_r = UINT64_MAX;
             for (uint32_t r = 0; r < ROUNDS; r++) {
-                uint64_t tc = time_calls(fn, A, x, y, M, N, iters);
-                uint64_t tr = time_calls(NULL, A, x, yr, M, N, iters);
+                uint64_t tc = time_calls(f, fn, kind, A, x, y, M, N, iters);
+                uint64_t tr = time_calls(f, NULL, kind, A, x, yr, M, N, iters);
                 if (tc < best_c) best_c = tc;
                 if (tr < best_r) best_r = tr;
             }

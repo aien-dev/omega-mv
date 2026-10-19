@@ -14,8 +14,16 @@
  * evidence, AIEN's belief, generation identity, the in-force realization
  * and the authority outcome. Gated on each side: goal MET, crumbs verify,
  * no crumb overflow, no illegal transition, no wrong result, no use of a
- * realization not in force, and no lost trigger. Measured costs are printed
- * and not compared.
+ * realization not in force, and no lost trigger.
+ *
+ * Both sides see the same costs: the rig gives Omega a fixed cost table
+ * (r15_use_cost_model) in place of wall-clock time, while the work itself
+ * still runs. Measured time differed between the two sides of a pair, and
+ * under machine load it crossed AIEN's and Omega's thresholds on one side
+ * only (a 20% miss read as drift opened an extra search; an X925 cost over
+ * the target left the goal UNMET), so a pair could differ for reasons that
+ * are not orchestration. With equal cost inputs any difference is the
+ * orchestration's. Costs are printed and not compared.
  *
  * R15_PARITY_PAIRS (default 5) sets the number of pairs.
  * Exit status 0 = SEQ_SEMANTIC_PARITY PASS.
@@ -101,7 +109,7 @@ static int run_side(R15Config c, uint64_t target, R15Outcome *o, char *first, si
 static void print_side(const char *side, const R15Outcome *o) {
     printf("    %-5s goal status %llu, plan action %llu reason %llu, epoch %llu, "
            "selected %016llx (verdict %llu), evidence %llu/%llu trials, belief %llu, "
-           "generation %llu -> %llu, in force %016llx; measured: incumbent %llu ns, "
+           "generation %llu -> %llu, in force %016llx; costs: incumbent %llu ns, "
            "selected %llu ps, reference %llu ps, served %llu, crumbs %llu\n",
            side, U(o->goal_status), U(o->plan_action), U(o->plan_reason), U(o->selection_epoch),
            U(o->selection_id[0]), U(o->selected_verdict), U(o->evidence[4]), U(o->evidence[3]),
@@ -160,7 +168,8 @@ int main(void) {
     printf("R15 SEQ parity: processor stand-in seat (host)\n");
 #endif
     /* Diagnostic only (not the gate): R15_PARITY_REPEAT=<RES4|RES1|SEQ>:<n>
-     * runs n episodes of one configuration and reports each outcome. */
+     * runs n episodes of one configuration and reports each outcome, with
+     * measured (wall-clock) costs. */
     const char *rep = getenv("R15_PARITY_REPEAT");
     if (rep) {
         R15Config c = strncmp(rep, "SEQ", 3) == 0 ? R15_SEQ
@@ -182,6 +191,7 @@ int main(void) {
         printf("R15 repeat %s: %d of %d failed\n", r15_config_name(c), bad, n);
         return bad ? 1 : 0;
     }
+    r15_use_cost_model(1);
     detector_control(R15_RES1);
     detector_control(R15_SEQ);
     for (int p = 0; p < pairs; p++) {
