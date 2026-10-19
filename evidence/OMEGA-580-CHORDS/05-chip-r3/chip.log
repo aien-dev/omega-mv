@@ -1,0 +1,95 @@
+# gpu_roll_test --chip --out evidence/OMEGA-580-CHORDS/05-chip-r3/rows.csv queued 2026-10-19T12:43:28-05:00 head=78fdbccc dirty=2 physics=
+# lock acquired 2026-10-19T12:49:30-05:00 loadavg=71.36 71.51 74.46 MemAvailable_kB=44917360
+# sensors before: 1792432168,2026-10-19T12:49:28-05:00,270,13.94,43,71.36,42906248,9,43
+# omega-mv#580 gpu_roll_test chip
+row,section,config,jobs,jobs_per_s,bad_jobs,check_fail,unwritten_words,gpu_p50_us,note
+row,note,engine vecadd65 one job at a time,600,749.7,0,0,0,,omega_gpu_execute persistent
+ok: note: 600 omega_gpu_execute vecadd jobs, every output exact (749.7 jobs/s)
+row,roll,vecadd65 depth 1,3000,113402.4,0,0,0,7.5,
+ok: roll depth 1: 3000 jobs, every output exact, every semaphore DONE, no poison left
+row,roll,vecadd65 depth 4,3000,245577.9,0,0,0,15.2,
+ok: roll depth 4: 3000 jobs, every output exact, every semaphore DONE, no poison left
+row,roll,vecadd65 depth 16,3000,257186.5,0,0,0,60.7,
+ok: roll depth 16: 3000 jobs, every output exact, every semaphore DONE, no poison left
+row,roll,vecadd65 depth 64,3000,258477.7,0,0,0,237.0,
+ok: roll depth 64: 3000 jobs, every output exact, every semaphore DONE, no poison left
+row,melody,vecadd alone depth 16,400,120002.8,0,0,0,117.6,
+ok: melody vecadd: 400 jobs, every output within tolerance, no poison left
+row,melody,vecadd no-store program control,16,,16,16,65536,,
+ok: vecadd no-store control: caught by the unwritten-word scan in all 16 jobs
+row,melody,ex2 alone depth 16,400,72892.8,0,0,0,199.5,
+ok: melody ex2: 400 jobs, every output within tolerance, no poison left
+row,melody,ex2 math mutant control,16,,16,0,0,,
+ok: ex2 math mutant: caught by the reference in all 16 jobs (16)
+row,melody,swiglu alone depth 16,400,72782.7,0,0,0,210.4,
+ok: melody swiglu: 400 jobs, every output within tolerance, no poison left
+row,melody,swiglu math mutant control,16,,16,0,0,,
+ok: swiglu math mutant: caught by the reference in all 16 jobs (16)
+row,melody,rmsnorm alone depth 16,400,33157.7,0,0,0,420.8,
+ok: melody rmsnorm: 400 jobs, every output within tolerance, no poison left
+row,melody,rmsnorm math mutant control,16,,16,0,0,,
+ok: rmsnorm math mutant: caught by the reference in all 16 jobs (16)
+row,melody,rope alone depth 16,400,145481.5,400,0,0,103.1,
+FAIL: melody rope: 400 jobs, every output within tolerance, no poison left
+row,melody,rope math mutant control,16,,16,0,0,,
+ok: rope math mutant: caught by the reference in all 16 jobs (16)
+row,melody,matmul alone depth 16,400,165805.5,0,0,0,89.6,
+ok: melody matmul: 400 jobs, every output within tolerance, no poison left
+row,melody,matmul math mutant control,16,,16,0,0,,
+ok: matmul math mutant: caught by the reference in all 16 jobs (16)
+row,melody,mixed 6 kernels depth 16,1200,76310.2,200,0,0,190.7,vecadd ex2 swiglu rmsnorm rope matmul round robin
+FAIL: melody mixed roll: 1200 jobs over 6 kernels, all correct
+row,melody,ex2 session API one call per job,200,3294.1,0,,,,omega_gpu_ex2_f32
+ok: session API ex2: 200 calls agree with the same reference
+row,melody,swiglu session API one call per job,200,8731.5,0,,,,omega_gpu_swiglu_f32
+ok: session API swiglu: 200 calls agree with the same reference
+row,melody,rmsnorm session API one call per job,200,7834.2,0,,,,omega_gpu_rmsnorm_f32
+ok: session API rmsnorm: 200 calls agree with the same reference
+row,melody,rope session API one call per job,200,8384.9,200,,,,omega_gpu_rope_f32
+FAIL: session API rope: 200 calls agree with the same reference
+row,chord,vecadd65 K=1 per submission depth 4,4096,124283.2,0,0,0,15.8,ORDER_NONE
+ok: chord K=1: 4096 jobs, all exact
+row,chord,vecadd65 K=4 per submission depth 4,4096,481076.7,0,0,0,22.6,ORDER_NONE
+ok: chord K=4: 4096 jobs, all exact
+row,chord,vecadd65 K=16 per submission depth 4,4096,940537.4,0,0,0,43.3,ORDER_NONE
+ok: chord K=16: 4096 jobs, all exact
+row,chord,vecadd65 K=64 per submission depth 4,4096,1402115.5,0,0,0,125.9,ORDER_NONE
+ok: chord K=64: 4096 jobs, all exact
+row,chord,swiglu8192 x16 SERIAL,3200,16256.8,0,0,0,2880.1,WFI between grids
+row,chord,swiglu8192 x16 NONE,3200,19569.8,0,0,0,2338.7,grids may overlap
+ok: chord swiglu x16: serial and chord both correct
+skip control: first_missing 5 first_unwritten 5 unwritten 65
+ok: skip control: the dropped node is caught in all 8 chords (sems + 65 unwritten words each)
+row,chord,vecadd65 voices=1 depth 16 each,3000,268480.1,0,0,0,58.4,channels round robin
+ok: voices=1: all exact
+row,chord,vecadd65 voices=2 depth 16 each,3000,168376.1,0,0,0,191.3,channels round robin
+ok: voices=2: all exact
+row,chord,vecadd65 voices=4 depth 16 each,3000,107960.7,0,0,0,538.2,channels round robin
+ok: voices=4: all exact
+row,harmony,random DAG SERIAL,6,33.07 graphs/s,0 wrong words,0,0,28098.6,64 nodes x 256K u32 adds
+ok: harmony random DAG SERIAL: 6 graphs, every node exact
+row,harmony,random DAG WAVE,6,33.92 graphs/s,0 wrong words,0,0,26870.7,64 nodes x 256K u32 adds
+ok: harmony random DAG WAVE: 6 graphs, every node exact
+row,harmony,random DAG SEM,6,44.09 graphs/s,0 wrong words,0,0,20387.9,64 nodes x 256K u32 adds
+ok: harmony random DAG SEM: 6 graphs, every node exact
+row,harmony,random DAG SEM with ordering removed (control),6,43.32 graphs/s,0 wrong words,0,0,19627.2,informational: wrong words mean the order is load-bearing
+harmony random DAG control: 0 wrong words without ordering (informational)
+row,harmony,chain 64 SERIAL,6,40.09 graphs/s,0 wrong words,0,0,20868.6,64 nodes x 256K u32 adds
+ok: harmony chain 64 SERIAL: 6 graphs, every node exact
+row,harmony,chain 64 WAVE,6,29.79 graphs/s,0 wrong words,0,0,28756.0,64 nodes x 256K u32 adds
+ok: harmony chain 64 WAVE: 6 graphs, every node exact
+row,harmony,chain 64 SEM,6,37.21 graphs/s,0 wrong words,0,0,23072.0,64 nodes x 256K u32 adds
+ok: harmony chain 64 SEM: 6 graphs, every node exact
+row,harmony,chain 64 SEM with ordering removed (control),6,38.12 graphs/s,0 wrong words,0,0,22271.2,informational: wrong words mean the order is load-bearing
+harmony chain 64 control: 0 wrong words without ordering (informational)
+row,harmony,fan-in tree SERIAL,6,38.01 graphs/s,0 wrong words,0,0,22276.6,64 nodes x 256K u32 adds
+ok: harmony fan-in tree SERIAL: 6 graphs, every node exact
+row,harmony,fan-in tree WAVE,6,37.23 graphs/s,0 wrong words,0,0,22525.1,64 nodes x 256K u32 adds
+ok: harmony fan-in tree WAVE: 6 graphs, every node exact
+row,harmony,fan-in tree SEM,6,39.03 graphs/s,0 wrong words,0,0,21347.1,64 nodes x 256K u32 adds
+ok: harmony fan-in tree SEM: 6 graphs, every node exact
+row,harmony,fan-in tree SEM with ordering removed (control),6,35.23 graphs/s,0 wrong words,0,0,21448.0,informational: wrong words mean the order is load-bearing
+harmony fan-in tree control: 0 wrong words without ordering (informational)
+chip: 40 checks, 3 failed: FAIL
+# sensors after: 1792432174,2026-10-19T12:49:34-05:00,270,10.65,3,71.01,43173408,7,47
+# exit=1 2026-10-19T12:49:35-05:00
