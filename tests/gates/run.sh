@@ -68,6 +68,8 @@ receipt() {
 gates_pass() { grep -E 'TOTAL GATES: [0-9]+ \| PASSED: [0-9]+ \| FAILED: 0' "$1" && ! grep -E 'FAILED: [1-9]' "$1"; }
 
 case "$step" in
+  # Retired: crumbs are advisory (RFC-0003 Am2). Kept so the CRUMB-VERIFY manifest still resolves.
+  crumb-verify)        echo "CRUMB-VERIFY retired: crumbs are advisory notes (RFC-0003 Am2); nothing to check" ;;
   # pr-smoke.yml
   base)
     physics_pin; set -o pipefail
