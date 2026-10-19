@@ -1,0 +1,5 @@
+attend kernel under test: v2
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+attend v2: 998 instructions, 204 registers (declared 208, 256 threads -> 53248 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+gpu_prefill_attn256_test: 25 checks, 0 failed: PASS

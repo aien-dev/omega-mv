@@ -10,7 +10,7 @@
  *     already in the cache). Appends K and V for those positions with the decode step's instruction sequence (the
  *     rows equal m decode steps' rows on the same chip) and writes out: host f32 [m][6144] (token-major, head h at
  *     h * 256, model dim order) multiplied by out_scale. pos0 + m <= max_pos, 1 <= m <= OMEGA_GPU_PATTN256_MAX_M.
- *     Two launches: prep (grid m x 4), attend (grid ceil(m / 8) x 4). Returns OMEGA_GPU_DATTN_OK or an
+ *     Two launches: prep (grid m x 4), attend (grid ceil(m / 16) x 4 for v2, ceil(m / 8) x 4 for v1). Returns OMEGA_GPU_DATTN_OK or an
  *     OMEGA_GPU_DATTN_* code; the text is in omega_gpu_decode_attn_last_error().
  *   int omega_gpu_prefill_attn256_dev(c, layer, pos0, m, qkv_va, eps, out_scale, out_va, info)
  *     The same with device buffers (qkv_va: f32 [m][8192], out_va: f32 [m][6144], 16-byte aligned GPU VAs in the
@@ -53,7 +53,9 @@ int omega_gpu_prefill_attn256_reserve(uint32_t max_m);
 void omega_gpu_prefill_attn256_release(void);
 
 /* ---- tests ---- */
-void omega_gpu_prefill_attn256_test_set_mutant(int prep_mutant, int attend_mutant); /* OmegaDecodeAttn256Spec / OmegaPrefillAttn256Spec .mutant */
+void omega_gpu_prefill_attn256_test_set_mutant(int prep_mutant, int attend_mutant);
+/* 1: attend v2 (the default), 0: the first cut; clears the kernel cache */
+void omega_gpu_prefill_attn256_test_set_version(int v2); /* OmegaDecodeAttn256Spec / OmegaPrefillAttn256Spec .mutant */
 /* host: build + encode + patch a kernel (0 prep, 1 attend) into code (cap bytes); returns the code size or 0 */
 size_t omega_gpu_prefill_attn256_encode(unsigned kind, uint8_t *code, size_t cap, uint32_t *gprs, int *patched);
 

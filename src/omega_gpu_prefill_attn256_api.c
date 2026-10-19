@@ -9,6 +9,7 @@
 #include "omega_blackwell_codegen_tc.h"
 #include "omega_gpu_session.h"
 #include "omega_gpu_cmdlist.h"
+#include <stdlib.h>
 #include <string.h>
 
 #define MARKER_TIMEOUT_MS 60000ull
@@ -29,6 +30,7 @@ static struct {
     bool hooked;
     Slot slot[KK_N];
     int prep_mut, att_mut;
+    int att_ver;                                              /* 0 unset (env), 1 v1, 2 v2 */
     OmegaGpuMem qf; uint32_t qf_rows; bool have_qf;           /* q' scratch for qf_rows tokens */
     OmegaGpuMem qkv, out; uint32_t buf_rows; bool have_bufs;  /* host-entry staging */
 } g;
@@ -41,6 +43,14 @@ static OmegaGpuSession *dev_open_locked(void) {
 }
 static void slots_clear_locked(void) {
     for (unsigned k = 0; k < KK_N; k++) { if (g.slot[k].valid) omega_gpu_session_free(&g.slot[k].code); memset(&g.slot[k], 0, sizeof g.slot[k]); }
+}
+/* v2 (16 tokens per CTA, 96 KiB shared memory, bit-identical to v1) is the default; OMEGA_PATTN256_V1=1 keeps v1 */
+static int att_v2(void) {
+    if (!g.att_ver) { const char *v = getenv("OMEGA_PATTN256_V1"); g.att_ver = (v && v[0] == '1') ? 1 : 2; }
+    return g.att_ver == 2;
+}
+void omega_gpu_prefill_attn256_test_set_version(int v2) {
+    omega_gpu_session_lock(); g.att_ver = v2 ? 2 : 1; slots_clear_locked(); omega_gpu_session_unlock();
 }
 void omega_gpu_prefill_attn256_test_set_mutant(int prep_mutant, int attend_mutant) {
     omega_gpu_session_lock(); g.prep_mut = prep_mutant; g.att_mut = attend_mutant; slots_clear_locked(); omega_gpu_session_unlock();
@@ -56,7 +66,7 @@ void omega_gpu_prefill_attn256_release(void) {
 static void spec_of(unsigned kind, Slot *tmp) {
     memset(tmp, 0, sizeof *tmp);
     if (kind == KK_PREP) { tmp->spec.prep.depth = OMEGA_GPU_DATTN256_DEPTH; tmp->spec.prep.mutant = g.prep_mut; tmp->spec.prep.prep = 1; }
-    else tmp->spec.att.mutant = g.att_mut;
+    else { tmp->spec.att.mutant = g.att_mut; tmp->spec.att.v2 = att_v2(); }
 }
 static int prog_of(unsigned kind, const Slot *tmp, BlackwellIRProgram *prog) {
     return kind == KK_PREP ? omega_blackwell_codegen_decode_attn256_prog(&tmp->spec.prep, prog)
@@ -173,7 +183,8 @@ static int core(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos0, ui
         if (omega_gpu_session_sync_to_gpu(&g.qkv) != 0 || omega_gpu_session_sync_to_gpu(&g.out) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
         qkv_va = g.qkv.va; out_va = g.out.va;
     }
-    const uint32_t kvs = v.max_pos * OMEGA_DATTN256_ROW_BYTES, gx_att = (m + OMEGA_PATTN256_TOKENS - 1u) / OMEGA_PATTN256_TOKENS;
+    const uint32_t att_tok = omega_pattn256_tokens(&ks[KK_ATTEND]->spec.att);
+    const uint32_t kvs = v.max_pos * OMEGA_DATTN256_ROW_BYTES, gx_att = (m + att_tok - 1u) / att_tok;
     float fe = eps, f1 = 1.0f, fo = out_scale, fq = (float)(0.0625 * 1.4426950408889634); /* log2(e) / sqrt(256) */
     uint32_t ue, u1, uo, uq; memcpy(&ue, &fe, 4); memcpy(&u1, &f1, 4); memcpy(&uo, &fo, 4); memcpy(&uq, &fq, 4);
     uint32_t ap[OMEGA_DATTN256_ARGS_WORDS], aa[OMEGA_PATTN256_ARGS_WORDS];
@@ -192,7 +203,7 @@ static int core(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos0, ui
         { .code_va = ks[KK_ATTEND]->code.va, .gpr_count = omega_bw_gpr_declared(ks[KK_ATTEND]->kernel.gpr_count),
           .threads_x = OMEGA_PATTN256_THREADS, .threads_y = 1, .grid_x = gx_att, .grid_y = OMEGA_DATTN256_KV_HEADS,
           .num_elements = (size_t)m * OUTW, .args = aa, .n_args = OMEGA_PATTN256_ARGS_WORDS, .timeout_ms = MARKER_TIMEOUT_MS,
-          .shared_bytes = OMEGA_PATTN256_SHARED_BYTES },
+          .shared_bytes = omega_pattn256_shared(&ks[KK_ATTEND]->spec.att) },
     };
     if (info) {
         info->layer = layer; info->pos0 = pos0; info->m = m; info->grid_x[0] = m; info->grid_x[1] = gx_att;

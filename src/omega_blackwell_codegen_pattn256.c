@@ -155,10 +155,14 @@ static void consume(Em *e, unsigned sb) { e->pending |= e->held & (1u << sb); e-
 #define SM_V 8192u         /* V block, [np 16][lane 32][16 B]: b0, b1 of dim tiles 2np and 2np + 1 */
 static const uint32_t NEG_BIG = 0xF149F2CAu; /* -1e30f */
 
-int omega_pattn256_spec_ok(const OmegaPrefillAttn256Spec *s) { return s && s->mutant >= 0 && s->mutant <= 2; }
+int omega_pattn256_spec_ok(const OmegaPrefillAttn256Spec *s) {
+    return s && (s->v2 == 0 || s->v2 == 1) && s->mutant >= 0 && s->mutant <= (s->v2 ? 3 : 2);
+}
+static int prog_v2(const OmegaPrefillAttn256Spec *spec, BlackwellIRProgram *prog);
 
 int omega_blackwell_codegen_prefill_attn256_prog(const OmegaPrefillAttn256Spec *spec, BlackwellIRProgram *prog) {
     if (!omega_pattn256_spec_ok(spec) || !prog) return -1;
+    if (spec->v2) return prog_v2(spec, prog);
     omega_bw_ir_init(prog);
     if (omega_bw_ir_set_gpr_limit(prog, BW_PHYS_GPR_HW_LIMIT) != 0) return -1;
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
@@ -356,6 +360,249 @@ int omega_blackwell_codegen_prefill_attn256_prog(const OmegaPrefillAttn256Spec *
             isetp_ge_u32(e, t1, emc);
             const int b = bra_if_p0_fwd(e);
             for (unsigned i = 0; i < 16; i++) {
+                const uint32_t off = row * OMEGA_PATTN256_OUT_WORDS * 4u + i * 32u;
+                stg(e, po, off, S(o[i], 2 * row), udesc); stg(e, po, off + 4u, S(o[i], 2 * row + 1), udesc);
+            }
+            patch_bra(e, b, here(e));
+        }
+        region_end(e, rg);
+    }
+    tail(e);
+    if (e->err) return -1;
+    if (omega_bw_regalloc_solve(prog) != 0) return -1;
+    return 0;
+}
+
+/* ================================================================ v2 (see the header) */
+#define V2_BUF 16384u   /* one K+V block buffer: K at +0 (SM_K layout), V at +SM_V; buffers at 0 and V2_BUF */
+#define V2_Q 32768u     /* Q fragments: [warp 8][k-step 16][lane 32][16 B] */
+
+/* a prefetch LDG.128 from memory: scoreboard 5 is held, not waited for, until consume(e, 5) */
+static void ldg_pf(Em *e, int d, int addr64, uint32_t imm, int udesc) {
+    BlackwellIRInsn in = I0(BW_IR_LDG_E_128); in.dst_vreg = d; in.src1_vreg = addr64; in.imm = imm; in.ureg = udesc;
+    in.control = CW(4, 5u, SB_RD, (e->pending & (1u << SB_RD))) | CW_YIELD;
+    e->pending |= 1u << SB_RD; e->held |= 1u << 5;
+    if (omega_bw_ir_append(e->p, &in) < 0) e->err = -1;
+}
+/* the v1 staging stores of one 16-key block (K units of keys ka, ka + 8; V pairs of keys 2ka, 2ka + 1) at bases bK / bV */
+static void stage_sts(Em *e, const int kq4[2], int va4, int vb4, int bK, int bV, int sa, int t1, int t2, int ev, int od, int one) {
+    for (unsigned i = 0; i < 2; i++) for (unsigned k = 0; k < 4; k++) { imadi(e, R(sa), R(one), i * 8u + 16u * k, bK); sts32(e, sa, S(kq4[i], k)); }
+    for (unsigned k = 0; k < 4; k++) {
+        andi(e, R(t1), S(va4, k), 0xffffu); imadi(e, R(ev), S(vb4, k), 65536u, t1);
+        shrs(e, t1, S(va4, k), 16); andi(e, R(t2), S(vb4, k), 0xffff0000u); iadd(e, od, t1, t2);
+        imadi(e, R(sa), R(one), (2u * k) * 64u, bV); sts32(e, sa, R(ev));
+        imadi(e, R(sa), R(one), (2u * k + 1u) * 64u, bV); sts32(e, sa, R(od));
+    }
+}
+
+static int prog_v2(const OmegaPrefillAttn256Spec *spec, BlackwellIRProgram *prog) {
+    omega_bw_ir_init(prog);
+    if (omega_bw_ir_set_gpr_limit(prog, BW_PHYS_GPR_HW_LIMIT) != 0) return -1;
+    Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
+    const int MUT = spec->mutant;
+    const uint32_t TOK = OMEGA_PATTN256_V2_TOKENS;
+
+    /* ---- arguments and identities ---- */
+    int udesc = UV64(e);
+    int pqf = V64(e), pkc = V64(e), pvc = V64(e);
+    int pos0 = V(e), mc = V(e), kvs = V(e);
+    int tid = V(e), cxr = V(e), cx = V(e), cy = V(e), warp = V(e), lane = V(e), one = V(e);
+    int cyk = V(e), nk = V(e), t1 = V(e), t2 = V(e), cxw = V(e), cnt = V(e), zero = V(e);
+    if (e->err) return -1;
+    ldcu64(e, udesc, 0x358);
+    ldc64(e, pqf, OMEGA_PATTN256_ARG_QF); ldc64(e, pkc, OMEGA_PATTN256_ARG_KC); ldc64(e, pvc, OMEGA_PATTN256_ARG_VC);
+    ldc32(e, pos0, OMEGA_PATTN256_ARG_POS0); ldc32(e, mc, OMEGA_PATTN256_ARG_MC); ldc32(e, kvs, OMEGA_PATTN256_ARG_KV_STRIDE);
+    s2r(e, tid, BW_SR_TID_X); s2r(e, cxr, BW_SR_CTAID_X); s2r(e, cy, BW_SR_CTAID_Y);
+    movi(e, R(one), 1); movrz(e, R(zero));
+    shr(e, warp, tid, 5);
+    andi(e, R(lane), R(tid), 31u);
+    imadr(e, cyk, cy, kvs, NOREG);
+    /* reverse order: cx = gx - 1 - ctaid.x, gx = (mc + 15) >> 4 */
+    imadi(e, R(t2), R(one), TOK - 1u, mc); shr(e, t2, t2, 4); imadi(e, R(t2), R(one), 0xffffffffu, t2);
+    imadi(e, R(cx), R(cxr), 0xffffffffu, t2);
+    imadi(e, R(cxw), R(cx), TOK, NOREG);                 /* first chunk token of the CTA */
+    imadi(e, R(t2), R(one), TOK, cxw);                    /* hi */
+    imadi(e, R(t1), R(t2), 0xffffffffu, mc);              /* mc - hi */
+    { int ov = V(e); if (e->err) return -1;
+      shr(e, ov, t1, 31); imadr(e, nk, ov, t1, t2); }     /* nk = min(cxw + 16, mc) */
+
+    /* ---- Q: this warp's 16 A fragments from QF into shared memory (once) ---- */
+    int tokA = V(e), dqa = V(e), lane16 = V(e), qad = V(e), sa = V(e);
+    if (e->err) return -1;
+    imadi(e, R(lane16), R(lane), 16u, NOREG);
+    {
+        int qv = V128(e), sq = V(e), qc = V(e);
+        int g = V(e), hg = V(e), tp = V(e), tpm = V(e), c5 = V(e), ad64 = V64(e); if (e->err) return -1;
+        shr(e, g, lane, 2);
+        movi(e, R(c5), 5u);
+        imadi(e, R(t1), R(g), 0xffffffffu, c5); shr(e, t2, t1, 31); imadr(e, hg, t2, t1, g);  /* min(g, 5) */
+        imadi(e, R(tokA), R(warp), 2u, cxw);              /* the tile's first chunk token */
+        shr(e, tp, tokA, 1);
+        imadi(e, R(tpm), R(one), 0xffffffffu, mc); shr(e, tpm, tpm, 1);
+        imadi(e, R(t1), R(tp), 0xffffffffu, tpm); shr(e, t2, t1, 31); imadr(e, tp, t2, t1, tp);
+        imadi(e, R(t1), R(tp), 4u, cy); imadi(e, R(t1), R(t1), 6u, hg); imadi(e, R(t1), R(t1), 1024u, NOREG);
+        andi(e, R(t2), R(lane), 3u); imadi(e, R(t1), R(t2), 16u, t1);
+        imadw(e, ad64, t1, 1u, pqf);
+        imadi(e, R(qad), R(warp), 8192u, lane16); imadi(e, R(qad), R(one), V2_Q, qad);
+        /* a 16-pass loop (one k-step per pass) keeps the program under BW_MAX_IR_INSNS */
+        mov(e, R(sq), R(qad)); movi(e, R(qc), 16u);
+        const int L_q = here(e);
+        loop_begin(e);
+        ldg_wide(e, BW_IR_LDG_E_128, qv, ad64, 0, udesc, 1);
+        for (unsigned k = 0; k < 4; k++) { imadi(e, R(sa), R(one), 4u * k, sq); sts32(e, sa, S(qv, k)); }
+        imadw(e, ad64, one, 64u, ad64); imadi(e, R(sq), R(one), 512u, sq);
+        imadi(e, R(qc), R(one), 0xffffffffu, qc);
+        isetp_ge_u32(e, qc, one);
+        bra_if_p0(e, L_q);
+        loop_end(e);
+        iadd(e, dqa, pos0, tokA);                         /* row-A position - kb (kb = 0) */
+    }
+
+    /* ---- loop state ---- */
+    int o[32], sc[4], kf[2], qq[2], pp, vf[4], kq4[2], va4, vb4;
+    for (unsigned i = 0; i < 32; i++) o[i] = V128(e);
+    int mA = V(e), mB = V(e), lA = V(e), lB = V(e), gK = V64(e), gV = V64(e), sKb = V(e), sVb = V(e);
+    int negc = V(e), cb = V(e), nb = V(e), kad = V(e), bK = V(e), bV = V(e), ev = V(e), od = V(e);
+    if (e->err) return -1;
+    {
+        int ka = V(e), c = V(e), tq = V(e); if (e->err) return -1;
+        iadd(e, t1, pos0, nk); imadi(e, R(t1), R(one), 0xffffffffu, t1); shr(e, t1, t1, 4); imadi(e, R(cnt), R(one), 1u, t1);
+        shr(e, ka, tid, 5); andi(e, R(c), R(tid), 31u);
+        imadi(e, R(t1), R(c), 16u, NOREG);
+        imadw(e, gK, cyk, 1u, pkc); imadw(e, gK, ka, 512u, gK); imadw(e, gK, t1, 1u, gK);
+        imadw(e, gV, cyk, 1u, pvc); imadw(e, gV, ka, 1024u, gV); imadw(e, gV, t1, 1u, gV);
+        shr(e, t1, c, 1); imadi(e, R(sKb), R(t1), 512u, NOREG);
+        imadi(e, R(sKb), R(ka), 64u, sKb);
+        andi(e, R(t2), R(c), 1u); imadi(e, R(sKb), R(t2), 4u, sKb);
+        shr(e, t1, c, 1); imadi(e, R(sVb), R(t1), 512u, NOREG);
+        andi(e, R(t1), R(ka), 3u); imadi(e, R(sVb), R(t1), 16u, sVb);
+        shr(e, tq, ka, 2); imadi(e, R(t1), R(t2), 2u, tq); imadi(e, R(sVb), R(t1), 4u, sVb);
+        imadi(e, R(sVb), R(one), SM_V, sVb);
+    }
+    for (unsigned i = 0; i < 2; i++) kq4[i] = V128(e);
+    va4 = V128(e); vb4 = V128(e);
+    for (unsigned j = 0; j < 4; j++) sc[j] = V128(e);
+    kf[0] = V128(e); kf[1] = V128(e); qq[0] = V128(e); qq[1] = V128(e); pp = V128(e);
+    for (unsigned i = 0; i < 4; i++) vf[i] = V128(e);
+    int mxA = V(e), mxB = V(e), alA = V(e), alB = V(e), sh = V(e), dql = V(e);
+    if (e->err) return -1;
+
+    /* ---- block 0 into buffer 0 ---- */
+    ldg_wide(e, BW_IR_LDG_E_128, kq4[0], gK, 0, udesc, 1);
+    ldg_wide(e, BW_IR_LDG_E_128, kq4[1], gK, 8u * 512u, udesc, 0);
+    ldg_wide(e, BW_IR_LDG_E_128, va4, gV, 0, udesc, 0);
+    ldg_wide(e, BW_IR_LDG_E_128, vb4, gV, 512u, udesc, 0);
+    stage_sts(e, kq4, va4, vb4, sKb, sVb, sa, t1, t2, ev, od, one);
+    for (unsigned i = 0; i < 32; i++) for (unsigned k = 0; k < 4; k++) movrz(e, S(o[i], k));
+    movi(e, R(negc), NEG_BIG); mov(e, R(mA), R(negc)); mov(e, R(mB), R(negc)); movrz(e, R(lA)); movrz(e, R(lB));
+    movrz(e, R(cb));
+    bar_sync(e);
+
+    const int L_m = here(e);
+    loop_begin(e);
+    /* ---- prefetch block i+1 (the same block again on the last pass: never past what v1 reads) ---- */
+    imadi(e, R(t1), R(one), 0xfffffffeu, cnt); shr(e, t1, t1, 31);               /* 1 when cnt < 2 */
+    imadi(e, R(t1), R(t1), 0xffffe000u, NOREG); imadi(e, R(t1), R(one), 8192u, t1); /* 0 or 16 * 512 */
+    imadw(e, gK, t1, 1u, gK); imadw(e, gV, t1, 1u, gV);
+    ldg_pf(e, kq4[0], gK, 0, udesc); ldg_pf(e, kq4[1], gK, 8u * 512u, udesc);
+    ldg_pf(e, va4, gV, 0, udesc); ldg_pf(e, vb4, gV, 512u, udesc);
+    if (MUT == 3) mov(e, R(kad), R(lane16)); else iadd(e, kad, lane16, cb);
+
+    /* ---- S = Q K^T (v1 order: even / odd k-steps into separate accumulators) ---- */
+    lds_pf(e, kf[0], kad, SM_K, 3); lds_pf(e, qq[0], qad, 0, 3);
+    consume(e, 3);
+    for (unsigned s = 0; s < 16; s++) {
+        const unsigned cur = s & 1u, nx = cur ^ 1u, sbn = 3u + nx, a = (s & 1u) * 2u;
+        if (s < 15) { lds_pf(e, kf[nx], kad, SM_K + (s + 1u) * 512u, sbn); lds_pf(e, qq[nx], qad, (s + 1u) * 512u, sbn); }
+        hmma(e, sc[a], qq[cur], kf[cur], 0, s >= 2 ? sc[a] : NOREG, 8);
+        hmma(e, sc[a + 1], qq[cur], kf[cur], 2, s >= 2 ? sc[a + 1] : NOREG, 8);
+        if (s < 15) consume(e, sbn);
+    }
+    nop(e, 15); nop(e, 14);
+    for (unsigned k = 0; k < 4; k++) { fadd(e, S(sc[0], k), S(sc[0], k), S(sc[2], k)); fadd(e, S(sc[1], k), S(sc[1], k), S(sc[3], k)); }
+
+    /* ---- causal mask (v1) ---- */
+    if (MUT != 1) {
+        imadi(e, R(t1), R(one), 0xfffffff1u, dqa); shr(e, t1, t1, 31);
+        isetp_ge_u32(e, zero, t1);
+        const int b = bra_if_p0_fwd(e);
+        shr(e, t2, lane16, 3); andi(e, R(t2), R(t2), 6u); imadi(e, R(dql), R(t2), 0xffffffffu, dqa);
+        for (unsigned j = 0; j < 2; j++) for (unsigned k = 0; k < 4; k++) {
+            int32_t cst = (k >= 2 ? 1 : 0) - 8 * (int32_t)j - (int32_t)(k & 1u);
+            imadi(e, R(t1), R(one), (uint32_t)cst, dql); shr(e, t1, t1, 31); imadi(e, R(t1), R(t1), NEG_BIG, NOREG);
+            fadd(e, S(sc[j], k), S(sc[j], k), R(t1));
+        }
+        patch_bra(e, b, here(e));
+    }
+
+    /* ---- online softmax (v1) ---- */
+    fmaxx(e, R(mxA), S(sc[0], 0), S(sc[0], 1)); fmaxx(e, R(mxB), S(sc[0], 2), S(sc[0], 3));
+    fmaxx(e, R(mxA), R(mxA), S(sc[1], 0)); fmaxx(e, R(mxA), R(mxA), S(sc[1], 1));
+    fmaxx(e, R(mxB), R(mxB), S(sc[1], 2)); fmaxx(e, R(mxB), R(mxB), S(sc[1], 3));
+    shfl_bfly(e, sh, mxA, 1); fmaxx(e, R(mxA), R(mxA), R(sh)); shfl_bfly(e, sh, mxA, 2); fmaxx(e, R(mxA), R(mxA), R(sh));
+    shfl_bfly(e, sh, mxB, 1); fmaxx(e, R(mxB), R(mxB), R(sh)); shfl_bfly(e, sh, mxB, 2); fmaxx(e, R(mxB), R(mxB), R(sh));
+    fmaxx(e, R(mxA), R(mxA), R(mA)); fmaxx(e, R(mxB), R(mxB), R(mB));
+    fsub(e, R(alA), R(mA), R(mxA)); fsub(e, R(alB), R(mB), R(mxB));
+    mov(e, R(mA), R(mxA)); mov(e, R(mB), R(mxB));
+    for (unsigned j = 0; j < 2; j++) for (unsigned k = 0; k < 4; k++) fsub(e, S(sc[j], k), S(sc[j], k), R(k < 2 ? mA : mB));
+    mufu(e, BW_IR_MUFU_EX2, R(alA), R(alA), 1); mufu(e, BW_IR_MUFU_EX2, R(alB), R(alB), 0);
+    for (unsigned j = 0; j < 2; j++) for (unsigned k = 0; k < 4; k++) mufu(e, BW_IR_MUFU_EX2, S(sc[j], k), S(sc[j], k), 0);
+    fmul(e, R(lA), R(lA), R(alA)); fmul(e, R(lB), R(lB), R(alB));
+    for (unsigned j = 0; j < 2; j++) for (unsigned k = 0; k < 4; k++) fadd(e, R(k < 2 ? lA : lB), R(k < 2 ? lA : lB), S(sc[j], k));
+    if (MUT != 2) for (unsigned i = 0; i < 32; i++) for (unsigned k = 0; k < 4; k++) fmul(e, S(o[i], k), S(o[i], k), R(k < 2 ? alA : alB));
+    f2fp(e, S(pp, 0), S(sc[0], 1), S(sc[0], 0)); f2fp(e, S(pp, 1), S(sc[0], 3), S(sc[0], 2));
+    f2fp(e, S(pp, 2), S(sc[1], 1), S(sc[1], 0)); f2fp(e, S(pp, 3), S(sc[1], 3), S(sc[1], 2));
+
+    /* ---- O += P V over all 256 dims: 32 dim tiles in four rounds of 4 fragments ---- */
+    for (unsigned r = 0; r < 4; r++) {
+        for (unsigned np = 0; np < 4; np++) lds128(e, vf[np], kad, SM_V + (r * 4u + np) * 512u, np == 0);
+        for (unsigned np = 0; np < 4; np++) {
+            const unsigned n = 2u * (4u * r + np);
+            hmma(e, o[n], pp, vf[np], 0, o[n], 8); hmma(e, o[n + 1], pp, vf[np], 2, o[n + 1], 8);
+        }
+    }
+    /* ---- block i+1 into the other buffer, one barrier ---- */
+    consume(e, 5);
+    imadi(e, R(nb), R(cb), 0xffffffffu, NOREG); imadi(e, R(nb), R(one), V2_BUF, nb);
+    iadd(e, bK, sKb, nb); iadd(e, bV, sVb, nb);
+    stage_sts(e, kq4, va4, vb4, bK, bV, sa, t1, t2, ev, od, one);
+    bar_sync(e);
+    mov(e, R(cb), R(nb));
+    imadi(e, R(dqa), R(one), 0xfffffff0u, dqa);
+    imadi(e, R(cnt), R(one), 0xffffffffu, cnt);
+    isetp_ge_u32(e, cnt, one);
+    bra_if_p0(e, L_m);
+    loop_end(e);
+
+    /* ---- epilogue: rows g < 6, tokens < mc ---- */
+    nop(e, 15); nop(e, 14);
+    {
+        int pout = V64(e), osc = V(e), po = V64(e), g = V(e), tq = V(e), etid = V(e), ecx = V(e), ecy = V(e), emc = V(e), ewarp = V(e), elane = V(e), etok = V(e), c6 = V(e);
+        if (e->err) return -1;
+        ldc64(e, pout, OMEGA_PATTN256_ARG_OUT); ldc32(e, osc, OMEGA_PATTN256_ARG_OUT_SCALE); ldc32(e, emc, OMEGA_PATTN256_ARG_MC);
+        s2r(e, etid, BW_SR_TID_X); s2r(e, ecx, BW_SR_CTAID_X); s2r(e, ecy, BW_SR_CTAID_Y);
+        shr(e, ewarp, etid, 5); andi(e, R(elane), R(etid), 31u);
+        imadi(e, R(t2), R(one), TOK - 1u, emc); shr(e, t2, t2, 4); imadi(e, R(t2), R(one), 0xffffffffu, t2);
+        imadi(e, R(ecx), R(ecx), 0xffffffffu, t2);       /* reversed, as the prologue */
+        imadi(e, R(t1), R(ewarp), 2u, NOREG); imadi(e, R(etok), R(ecx), TOK, t1);
+        shfl_bfly(e, sh, lA, 1); fadd(e, R(lA), R(lA), R(sh)); shfl_bfly(e, sh, lA, 2); fadd(e, R(lA), R(lA), R(sh));
+        shfl_bfly(e, sh, lB, 1); fadd(e, R(lB), R(lB), R(sh)); shfl_bfly(e, sh, lB, 2); fadd(e, R(lB), R(lB), R(sh));
+        mufu(e, BW_IR_MUFU_RCP, R(lA), R(lA), 1); mufu(e, BW_IR_MUFU_RCP, R(lB), R(lB), 0);
+        fmul(e, R(lA), R(lA), R(osc)); fmul(e, R(lB), R(lB), R(osc));
+        for (unsigned i = 0; i < 32; i++) for (unsigned k = 0; k < 4; k++) fmul(e, S(o[i], k), S(o[i], k), R(k < 2 ? lA : lB));
+        /* out + ((etok*24 + cy*6 + g)*256 + 2t)*4 */
+        shr(e, g, elane, 2); andi(e, R(tq), R(elane), 3u);
+        imadi(e, R(t1), R(etok), 24u, NOREG); imadi(e, R(t1), R(ecy), 6u, t1); iadd(e, t1, t1, g); imadi(e, R(t1), R(t1), 1024u, NOREG);
+        imadi(e, R(t1), R(tq), 8u, t1);
+        imadw(e, po, t1, 1u, pout);
+        movi(e, R(c6), 6u);
+        isetp_ge_u32(e, g, c6);
+        Region rg = region_skip_if_p0(e);
+        for (unsigned row = 0; row < 2; row++) {
+            imadi(e, R(t1), R(one), row, etok);
+            isetp_ge_u32(e, t1, emc);
+            const int b = bra_if_p0_fwd(e);
+            for (unsigned i = 0; i < 32; i++) {
                 const uint32_t off = row * OMEGA_PATTN256_OUT_WORDS * 4u + i * 32u;
                 stg(e, po, off, S(o[i], 2 * row), udesc); stg(e, po, off + 4u, S(o[i], 2 * row + 1), udesc);
             }

@@ -1,0 +1,4 @@
+start 2026-10-19T16:38:49Z loadavg 26.98 23.03 19.60 7/1955 3541063
+command: flock -s /tmp/aien-quiet.lock ./build-v2/gpu_prefill_attn256_test --host-only ; --sim (build OUT_DIR=build-v2, source = this commit)
+host-only exit 0
+sim exit 0 end 2026-10-19T16:39:04Z loadavg 27.90 23.35 19.75 40/1958 3551463

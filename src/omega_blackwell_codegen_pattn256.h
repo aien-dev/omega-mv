@@ -56,9 +56,26 @@
 #define OMEGA_PATTN256_ARG_OUT_SCALE 0x3acu /* f32 */
 #define OMEGA_PATTN256_ARGS_WORDS 12u
 
+/* ---- v2 (cascade/prefill-kernels, 2026-10-19; needs the 99 KiB launch descriptor of omega-mv#560) ----
+ * The same arithmetic per output row as v1 (key blocks of 16, even / odd k-step accumulators, the same mask, online
+ * softmax and P V sequence), so v2 output is bit-identical to v1; only the work split changes:
+ *   - CTA (cx, cy) serves 16 chunk tokens (8 row tiles of 16 rows, the v1 row layout); warp w owns tile w and ALL 256
+ *     output dims (O = 32 accumulator quads). v1 gave each tile two warps of 128 dims each, and both computed the same
+ *     S = Q K^T: v2 does that work once, and each K/V block read from memory now serves 16 tokens instead of 8.
+ *   - Q lives in shared memory (64 KiB: [warp 8][k-step 16][lane 32][16 B], staged once), read per k-step with LDS.128.
+ *   - K/V blocks are double-buffered (2 x 16 KiB): block i+1 is loaded from memory into registers (held scoreboard 5)
+ *     while block i is computed, stored to the other buffer after it, one barrier per block.
+ *   - CTAs run in reverse token order (cx = gx - 1 - ctaid.x): the longest causal rows start first.
+ * Shared memory: 98304 bytes (above the old 32 KiB cap). mutant 3 (v2 only): always read buffer 0 (the pipeline). */
+#define OMEGA_PATTN256_V2_TOKENS 16u
+#define OMEGA_PATTN256_V2_SHARED_BYTES 98304u
+
 typedef struct {
-    int mutant;      /* TEST ONLY. 0 none; 1 no causal mask; 2 O is never rescaled by alpha. Each must be caught. */
+    int mutant;      /* TEST ONLY. 0 none; 1 no causal mask; 2 O is never rescaled by alpha; 3 (v2) no buffer flip. Each must be caught. */
+    int v2;          /* 0: the first cut (8 tokens per CTA, 16 KiB); 1: v2 above */
 } OmegaPrefillAttn256Spec;
+static inline uint32_t omega_pattn256_tokens(const OmegaPrefillAttn256Spec *s) { return s->v2 ? OMEGA_PATTN256_V2_TOKENS : OMEGA_PATTN256_TOKENS; }
+static inline uint32_t omega_pattn256_shared(const OmegaPrefillAttn256Spec *s) { return s->v2 ? OMEGA_PATTN256_V2_SHARED_BYTES : OMEGA_PATTN256_SHARED_BYTES; }
 
 int omega_pattn256_spec_ok(const OmegaPrefillAttn256Spec *spec);
 /* Builds the register-allocated IR program. 0 ok, -1 refused or over BW_MAX_IR_INSNS / BW_MAX_VREGS / the registers. */
