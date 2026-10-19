@@ -1,0 +1,113 @@
+{
+  "schema": "OMEGA_PLAN_REUSE_PAYBACK_V1",
+  "mode": "heldout",
+  "mutant": "",
+  "arm_B_variant": "existing reuse with adaptation/repair (frozen protocol)",
+  "run_commit": "0012d413d4be3e98c74a3307d9d8aacf62f83110",
+  "tree_dirty": true,
+  "test_binary_sha256": "3e966f267a497a8ace417334204e2eedbb84ee6e0045319bc431a8abd72a0039",
+  "host": {"sysname": "Linux", "release": "7.0.0-1019-nvidia", "machine": "aarch64", "core_class_midr_part": "0xd85", "loadavg_start": "15.81 15.66 15.38 23/2357 155477", "loadavg_end": "16.54 15.82 15.43 29/2369 158604"},
+  "checks": 3058,
+  "failures": 53,
+  "bad_rows": 2,
+  "units": "nanoseconds; cognition phases are thread CPU time, execution phases and e2e are wall time",
+  "arms": "A no reuse (e2e minus the identity hash it would not compute); B existing rx_plan reuse with adaptation (e2e plus restart costs). Arm C (#584 learning arm): not available at run time, two arms only.",
+  "joules": {"measured": false, "why": "no on-device package counter on this kernel (aien_spbm hwmon absent); UPS wall meter (upsc, 10 W x 2 s steps) cannot resolve a sub-millijoule per-task delta on a loaded box"},
+  "scope": "host processor; arrangement domain (blocks-world lifted onto World objects); explicit A* planner; no general-agent claim",
+  "partition": "held-out: seeds 300.. per stream (+100 per stream), H 40; S2 cache warmed on development seeds 200..211 (sunk cost counted in S2_warmup_dev_seeds)",
+  "ledger": {
+      "arm_A": {"rows": 344, "e2e_wall_ns": 1253478836, "cognition_cpu_ns": 30766576, "identity_hash_on_copy_ns": 23654128, "goal_read_cpu": 725856, "lookup_cpu": 0, "applicability_cpu": 0, "search_cpu": 4696608, "generalize_cpu": 1430752, "identify_cpu": 0, "store_cpu": 0, "decision_cpu": 0, "index_cpu": 0, "compile_wall": 892591384, "reference_wall": 0, "run_wall": 277025214, "verify_wall": 50693158, "repair_cpu": 0, "serialize_cpu": 0, "reload_cpu": 0},
+      "arm_B": {"rows": 344, "e2e_wall_ns": 1301873861, "cognition_cpu_ns": 6599504, "identity_hash_on_copy_ns": 4234576, "goal_read_cpu": 697680, "lookup_cpu": 96688, "applicability_cpu": 651872, "search_cpu": 250288, "generalize_cpu": 220384, "identify_cpu": 4228944, "store_cpu": 130704, "decision_cpu": 1068832, "index_cpu": 952672, "compile_wall": 954396997, "reference_wall": 790810, "run_wall": 282739968, "verify_wall": 51596026, "repair_cpu": 54208, "serialize_cpu": 110784, "reload_cpu": 79376}
+  },
+  "reconciliation": {"ok": true, "bad_rows": 0, "unattributed_wall_ns": 6742292, "rows": 688},
+  "streams": {
+    "S1_reverse": {
+      "H": 40, "hits": 39, "misses": 1, "acquisitions": 1, "rederivations": 0, "adaptations": 0, "refusals": 0, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 0, "floors_ok": true,
+      "cost_A_total_ns": 131894181, "cost_B_total_ns": 132800784, "net_final_ns": -906603, "break_even_tasks": 2,
+      "robust": {"task_net_median_ns": 19057, "task_net_q1_ns": -70232, "task_net_q3_ns": 309828, "net_robust_ns": 824456, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": -987836, "spent_learning": 77872, "spent_acquisition": 75232, "spent_maintenance": 2640, "spent_repair": 0, "spent_restart": 0, "reinvested": 0, "unfunded": 77872, "net": -1065708},
+      "estimates": {"p_hat": 1.0000, "p_wilson95": [0.9103, 1.0000], "r_hat": 1.0000, "delta_ns": {"median": 19057, "q1": -70232, "q3": 309828}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 208, "applicability_cpu_ns_first": 208, "applicability_cpu_ns_last": 2336},
+      "net_cumulative_ns": [81233, 856921, 844506, 885595, 933852, 938206, 3037635, 3078740, 5893071, 4891143, 4399779, -1950744, -1976695, -2091337, -2055608, -2074599, -1762500, -1329791, -1315598, -387860, -383811, -1245179, -1395468, -1509981, -1490924, -1464491, -1483130, -1508697, -3408090, -3257688, -1533639, -1021937, -996752, -2285083, -1997864, -2009255, -3202450, -1741028, -1214159, -906603]
+    },
+    "S1_merge_P+": {
+      "H": 40, "hits": 39, "misses": 1, "acquisitions": 1, "rederivations": 0, "adaptations": 0, "refusals": 0, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 0, "floors_ok": true,
+      "cost_A_total_ns": 172823164, "cost_B_total_ns": 179342469, "net_final_ns": -6519305, "break_even_tasks": 4,
+      "robust": {"task_net_median_ns": 39408, "task_net_q1_ns": -680022, "task_net_q3_ns": 257060, "net_robust_ns": 935819, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": -5918212, "spent_learning": 111552, "spent_acquisition": 108896, "spent_maintenance": 2656, "spent_repair": 0, "spent_restart": 0, "reinvested": 0, "unfunded": 111552, "net": -6029764},
+      "estimates": {"p_hat": 1.0000, "p_wilson95": [0.9103, 1.0000], "r_hat": 1.0000, "delta_ns": {"median": 39408, "q1": -680022, "q3": 257060}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 352, "applicability_cpu_ns_first": 208, "applicability_cpu_ns_last": 2112},
+      "net_cumulative_ns": [-601093, -585860, -513330, 197382, -526544, -148027, 150536, 1009760, 1079953, 2144300, 1997756, 572576, -175271, 1276, -672457, -929130, -934201, -805686, -777301, 953116, -2010112, -1794237, -1637626, -1362551, -3290280, -4181103, -3464504, -2242955, -3338390, -4934901, -4695856, -5038322, -5002208, -5152496, -4398791, -5085101, -4974972, -4883322, -6558713, -6519305]
+    },
+    "S2_warmup_dev_seeds": {
+      "H": 24, "hits": 22, "misses": 2, "acquisitions": 2, "rederivations": 0, "adaptations": 1, "refusals": 12, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 11, "restarts": 0, "floors_ok": false,
+      "cost_A_total_ns": 95052621, "cost_B_total_ns": 108729519, "net_final_ns": -13676898, "break_even_tasks": -1,
+      "robust": {"task_net_median_ns": -483044, "task_net_q1_ns": -1472502, "task_net_q3_ns": -50072, "net_robust_ns": -10177379, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": -13171550, "spent_learning": 201456, "spent_acquisition": 189216, "spent_maintenance": 6032, "spent_repair": 6208, "spent_restart": 0, "reinvested": 0, "unfunded": 201456, "net": -13373006},
+      "estimates": {"p_hat": 0.9565, "p_wilson95": [0.7901, 0.9923], "r_hat": 1.0000, "delta_ns": {"median": -326930, "q1": -1484334, "q3": -46668}},
+      "memory": {"templates": 2, "bytes": 68112, "lookup_cpu_ns_first": 176, "lookup_cpu_ns_last": 352, "applicability_cpu_ns_first": 192, "applicability_cpu_ns_last": 2016},
+      "net_cumulative_ns": [932633, -505348, -562229, -1911842, -1800863, -3217132, -3387949, -3870993, -3948785, -5297645, -5448573, -7353423, -7393535, -8900557, -11908041, -13884235, -13861481, -9252828, -9296092, -10057410, -9689871, -11818402, -13596882, -13676898]
+    },
+    "S2_heldout_bindings_compositions": {
+      "H": 40, "hits": 39, "misses": 1, "acquisitions": 1, "rederivations": 0, "adaptations": 0, "refusals": 13, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 13, "restarts": 0, "floors_ok": false,
+      "cost_A_total_ns": 141597245, "cost_B_total_ns": 160521625, "net_final_ns": -18924380, "break_even_tasks": -1,
+      "robust": {"task_net_median_ns": -252803, "task_net_q1_ns": -1277924, "task_net_q3_ns": 26401, "net_robust_ns": -9860932, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": -18325447, "spent_learning": 72368, "spent_acquisition": 57456, "spent_maintenance": 14912, "spent_repair": 0, "spent_restart": 0, "reinvested": 0, "unfunded": 72368, "net": -18397815},
+      "estimates": {"p_hat": 1.0000, "p_wilson95": [0.9103, 1.0000], "r_hat": 1.0000, "delta_ns": {"median": -133441, "q1": -1277924, "q3": 26401}},
+      "memory": {"templates": 3, "bytes": 102168, "lookup_cpu_ns_first": 208, "lookup_cpu_ns_last": 320, "applicability_cpu_ns_first": 1792, "applicability_cpu_ns_last": 2480},
+      "net_cumulative_ns": [-1615, -1360444, -1959377, -2064258, -3107003, -689283, -580289, -1135317, -3099079, -3232520, -4984536, -4937879, -5647933, -6997481, -6991129, -6990584, -7492412, -7492540, -7295609, -8756790, -8741956, -8994759, -10527300, -10497379, -10552323, -12154946, -11805759, -13296877, -12964409, -10099534, -10089646, -11240088, -12287218, -13493517, -13283306, -16373799, -17363471, -19863622, -19840741, -18924380]
+    },
+    "S3_interference": {
+      "H": 40, "hits": 35, "misses": 5, "acquisitions": 5, "rederivations": 0, "adaptations": 3, "refusals": 48, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 14, "restarts": 0, "floors_ok": false,
+      "cost_A_total_ns": 142695143, "cost_B_total_ns": 160314270, "net_final_ns": -17619127, "break_even_tasks": -1,
+      "robust": {"task_net_median_ns": -276771, "task_net_q1_ns": -1122706, "task_net_q3_ns": 180315, "net_robust_ns": -11585147, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": -15451814, "spent_learning": 472288, "spent_acquisition": 422864, "spent_maintenance": 23456, "spent_repair": 25968, "spent_restart": 0, "reinvested": 0, "unfunded": 472288, "net": -15924102},
+      "estimates": {"p_hat": 0.8974, "p_wilson95": [0.7642, 0.9594], "r_hat": 1.0000, "delta_ns": {"median": -276771, "q1": -1260410, "q3": 180315}},
+      "memory": {"templates": 5, "bytes": 170280, "lookup_cpu_ns_first": 208, "lookup_cpu_ns_last": 400, "applicability_cpu_ns_first": 224, "applicability_cpu_ns_last": 3248},
+      "net_cumulative_ns": [-791078, -404562, -443266, -1458491, -2167313, -2005342, -3338490, -3900511, -6065491, -3990062, -3236183, -4612274, -4518704, -5823819, -6100590, -5964700, -6468640, -6699378, -7690538, -7491879, -7648537, -8451359, -8428542, -10304510, -9535623, -10246941, -10002090, -12954789, -15068153, -15182793, -18075619, -17597454, -15200487, -16416193, -17153912, -19324011, -20353716, -18836309, -17619528, -17619127]
+    },
+    "S4_changed_preconditions": {
+      "H": 40, "hits": 37, "misses": 3, "acquisitions": 3, "rederivations": 0, "adaptations": 2, "refusals": 30, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 9, "restarts": 0, "floors_ok": false,
+      "cost_A_total_ns": 136522712, "cost_B_total_ns": 151482088, "net_final_ns": -14959376, "break_even_tasks": 5,
+      "robust": {"task_net_median_ns": -23824, "task_net_q1_ns": -1346860, "task_net_q3_ns": 253035, "net_robust_ns": -1132177, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": -14421133, "spent_learning": 268016, "spent_acquisition": 247152, "spent_maintenance": 11008, "spent_repair": 9856, "spent_restart": 0, "reinvested": 0, "unfunded": 268016, "net": -14689149},
+      "estimates": {"p_hat": 0.9487, "p_wilson95": [0.8311, 0.9858], "r_hat": 1.0000, "delta_ns": {"median": -23824, "q1": -1157035, "q3": 192962}},
+      "memory": {"templates": 3, "bytes": 102168, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 368, "applicability_cpu_ns_first": 224, "applicability_cpu_ns_last": 4304},
+      "net_cumulative_ns": [-203041, -2739848, -2714888, -513283, 1025389, -1333113, -1310713, -1473114, -772819, -774498, -920659, -321757, -8649, -2773363, -2616497, -2668226, -2762051, -2441136, -2465040, -2535488, -2511631, -4245934, -4133069, -2743712, -2788336, -6972247, -6921430, -5640970, -4449167, -7132279, -9706303, -8252946, -8276770, -9813456, -12270311, -12173446, -12277719, -13434754, -13241792, -14959376]
+    },
+    "S5_stale_generations": {
+      "H": 40, "hits": 30, "misses": 10, "acquisitions": 10, "rederivations": 9, "adaptations": 0, "refusals": 9, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 0, "floors_ok": true,
+      "cost_A_total_ns": 139252769, "cost_B_total_ns": 138909884, "net_final_ns": 342885, "break_even_tasks": 2,
+      "robust": {"task_net_median_ns": -37168, "task_net_q1_ns": -335514, "task_net_q3_ns": 515293, "net_robust_ns": -549959, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": -636472, "spent_learning": 713696, "spent_acquisition": 680624, "spent_maintenance": 33072, "spent_repair": 0, "spent_restart": 0, "reinvested": 357376, "unfunded": 356320, "net": -1350168},
+      "estimates": {"p_hat": 0.7692, "p_wilson95": [0.6166, 0.8735], "r_hat": 1.0000, "delta_ns": {"median": 10169, "q1": -559652, "q3": 692903}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 208, "applicability_cpu_ns_first": 208, "applicability_cpu_ns_last": 1536},
+      "net_cumulative_ns": [899593, 126146, 858009, 563991, 736442, 1410528, 708329, 800234, 330134, -731076, -405584, 338408, 280600, -412221, 1983914, 2683089, 2715457, 3040821, 4070383, 4426883, 4389715, 4419284, 4410053, 4097411, 3739024, 3097035, 5435793, 8477774, 9408887, 6991649, 7992506, 7946330, 7901002, 5587221, 818040, 864138, 776761, 699192, 470262, 342885]
+    },
+    "S6_restart": {
+      "H": 40, "hits": 39, "misses": 1, "acquisitions": 1, "rederivations": 0, "adaptations": 0, "refusals": 0, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 1, "floors_ok": true,
+      "cost_A_total_ns": 128941633, "cost_B_total_ns": 135496918, "net_final_ns": -6555285, "break_even_tasks": 11,
+      "robust": {"task_net_median_ns": -25824, "task_net_q1_ns": -132448, "task_net_q3_ns": 152810, "net_robust_ns": -2540238, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": -5022183, "spent_learning": 264992, "spent_acquisition": 72304, "spent_maintenance": 2528, "spent_repair": 0, "spent_restart": 190160, "reinvested": 0, "unfunded": 264992, "net": -5287175},
+      "estimates": {"p_hat": 1.0000, "p_wilson95": [0.9103, 1.0000], "r_hat": 1.0000, "delta_ns": {"median": -25824, "q1": -132448, "q3": 152810}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 240, "applicability_cpu_ns_first": 224, "applicability_cpu_ns_last": 1744},
+      "net_cumulative_ns": [-1533102, -1533982, -2611624, -2590247, -3276557, -3201243, -3217195, -2145249, -1887934, -1890189, 11781, -18539, -1748138, -3953662, -3690155, -3743674, -3735593, -3834313, -2795823, -3374932, -3482547, -6023130, -5627558, -4832814, -4721388, -4096661, -4123477, -4253014, -4281669, -4307493, -2747974, -2702997, -2790454, -5713105, -5688417, -5839122, -6568856, -6374662, -6419925, -6555285]
+    },
+    "P0_no_payoff": {
+      "H": 40, "hits": 0, "misses": 40, "acquisitions": 40, "rederivations": 39, "adaptations": 0, "refusals": 39, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 0, "floors_ok": true,
+      "cost_A_total_ns": 141128008, "cost_B_total_ns": 134466464, "net_final_ns": 6661544, "break_even_tasks": 4,
+      "robust": {"task_net_median_ns": -57073, "task_net_q1_ns": -197194, "task_net_q3_ns": 210522, "net_robust_ns": -2412344, "note": "net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks"},
+      "reinvestment_ledger_ns": {"saved_gross": 0, "spent_learning": 2810976, "spent_acquisition": 2682528, "spent_maintenance": 128448, "spent_repair": 0, "spent_restart": 0, "reinvested": 0, "unfunded": 2810976, "net": -2810976},
+      "estimates": {"p_hat": 0.0000, "p_wilson95": [-0.0000, 0.0897], "r_hat": 1.0000, "delta_ns": {"median": 0, "q1": 0, "q3": 0}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 208, "applicability_cpu_ns_first": 224, "applicability_cpu_ns_last": 512},
+      "net_cumulative_ns": [-186497, -3087, -10752, 1897860, 3089920, 3124145, 2660606, 2026585, 1950649, 1899625, 1986107, 2760162, 2467361, 2283856, 2203824, 4138658, 4134259, 4826522, 3641088, 4107573, 3822563, 3765490, 3655170, 3530129, 2940235, 2878188, 2745996, 5269108, 5168900, 6149230, 8908792, 8987544, 8776662, 7724573, 7962208, 7845312, 7815329, 7798802, 6873146, 6661544]
+    }
+  },
+  "controls": {"stale_refused": true, "stale_rederived": true, "stale_revalidated": true, "corrupt_cases": 3, "corrupt_refused": 3, "corrupt_stored": 0, "corrupt_why": ["decode", "canonical bytes differ from the carried body", "canonical bytes differ from the carried body"],
+    "sign_P+": "negative", "sign_P0": "positive", "expected": "P+ positive, P0 negative"},
+  "measured_for_prediction": {
+    "S1_reverse": {"net_final_ns": -906603, "net_robust_ns": 824456, "task_net_median_ns": 19057, "break_even_tasks": 2, "p_hat": 1.0000, "r_hat": 1.0000, "delta_median_ns": 19057, "delta_q1_ns": -70232, "delta_q3_ns": 309828},
+    "S1_merge_P+": {"net_final_ns": -6519305, "net_robust_ns": 935819, "task_net_median_ns": 39408, "break_even_tasks": 4, "p_hat": 1.0000, "r_hat": 1.0000, "delta_median_ns": 39408, "delta_q1_ns": -680022, "delta_q3_ns": 257060},
+    "P0_no_payoff": {"net_final_ns": 6661544, "net_robust_ns": -2412344, "task_net_median_ns": -57073, "break_even_tasks": 4, "p_hat": 0.0000, "r_hat": 1.0000, "delta_median_ns": 0, "delta_q1_ns": 0, "delta_q3_ns": 0}
+  }
+}

@@ -23,3 +23,14 @@ cumulative sum carries every outlier (P0 task 0 alone was +2.3 ms).
 Addition: the receipt also reports a robust figure per stream (task-0 net plus the median per-task net times
 the remaining tasks, with the per-task IQR). The frozen cumulative sum remains the figure of record; the
 robust figure is reported beside it and labelled.
+
+## A4, 2026-10-19, after held-out runs 2 and 3 (heldout/heldout-run2-receipt.json, heldout-run3-noadapt-receipt.json)
+Reason: both runs fell in a window with 25 to 28 runnable processes on 20 cores (load 15.8 to 16.5; run 1 had
+4 to 6 runnable). Half the tasks carry wall outliers of 1 to 3 ms either way. The frozen cumulative wall sum then
+shows the wrong sign on BOTH controls (P+ negative, P0 positive) in run 2 and run 3. The controls did their job:
+the frozen wall figure cannot detect a 10 to 90 us per-task effect on this box under that load.
+Change: the receipt also reports the same accounting on cognition CPU (thread CPU time of every cognition phase;
+execution phases excluded because they are identical work in both arms, held by floors F2 and F3). The sign
+controls and the net(H) prediction are run on this figure too (the dev receipt gains a cognition_cpu prediction
+block, computed from the same development partition before held-out runs 4 and 5). The frozen wall figure stays
+in every receipt and the verdict says which figure each claim rests on.

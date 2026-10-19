@@ -839,6 +839,12 @@ static int reconcile(const Row *rows, uint32_t n, const Ledger *L, uint64_t *una
  * not compute. Arm B cost: measured e2e plus restart costs it carries. */
 static int64_t cost_a(const Row *r) { return (int64_t)r->e2e_wall - (int64_t)r->hash_in_e2e; }
 static int64_t cost_b(const Row *r) { return (int64_t)r->e2e_wall + (int64_t)r->ph[PH_SERIALIZE] + (int64_t)r->ph[PH_RELOAD]; }
+/* Cognition CPU: every CPU phase (arm A's generalize already excludes the hash; arm B carries it as identify). */
+static int64_t cost_cpu(const Row *r) {
+    int64_t s = 0;
+    for (int p = 0; p < PH_COMPILE; p++) s += (int64_t)r->ph[p];
+    return s + (int64_t)r->ph[PH_REPAIR] + (int64_t)r->ph[PH_SERIALIZE] + (int64_t)r->ph[PH_RELOAD];
+}
 
 typedef struct {
     uint32_t H, hits, misses, acquisitions, rederivations, adaptations, stale_marks, forget_events,
@@ -851,6 +857,10 @@ typedef struct {
     double delta_med, delta_q1, delta_q3, p_hat, p_lo, p_hi, r_hat, C_ns, m_ns;
     double task_net_med, task_net_q1, task_net_q3;   /* robust: per-task (A - B) over every task after the first */
     int64_t net_robust;                               /* task_net_med x (H - 1) + task 0 net */
+    /* Cognition CPU (thread time) accounting: execution phases excluded (same work in both arms, held by F2/F3). */
+    int64_t cpu_a_total, cpu_b_total, net_cpu, cpu_cum[H_HELD + 1];
+    int break_even_cpu;
+    double delta_cpu_med, delta_cpu_q1, delta_cpu_q3, task_cpu_med, task_cpu_q1, task_cpu_q3;
 } Account;
 
 static int cmp_i64(const void *a, const void *b) {
@@ -879,10 +889,11 @@ static Account account(const Row *rows, uint32_t n) {
     Account A;
     memset(&A, 0, sizeof A);
     A.break_even = -1;
+    A.break_even_cpu = -1;
     A.floors_ok = 1;
-    int64_t deltas[H_HELD], tnets[H_HELD];
-    uint32_t nd = 0, nt = 0;
-    int64_t cum = 0, saved_cum = 0, net0 = 0;
+    int64_t deltas[H_HELD], tnets[H_HELD], dcpu[H_HELD], tcpu[H_HELD];
+    uint32_t nd = 0, nt = 0, ndc = 0, ntc = 0;
+    int64_t cum = 0, saved_cum = 0, net0 = 0, cumc = 0;
     uint32_t opportunities = 0;
     int prev_usable = 0;
     for (uint32_t i = 0; i + 1 < n; i += 2) {
@@ -895,6 +906,14 @@ static Account account(const Row *rows, uint32_t n) {
         A.cost_b_total += cb;
         if (k == 0) net0 = net;
         else if (nt < H_HELD) tnets[nt++] = net;
+        int64_t ka = cost_cpu(a), kb = cost_cpu(b), netc = ka - kb;
+        A.cpu_a_total += ka;
+        A.cpu_b_total += kb;
+        if (k > 0 && ntc < H_HELD) tcpu[ntc++] = netc;
+        if (b->path == PATH_REUSE && ndc < H_HELD) dcpu[ndc++] = netc;
+        cumc += netc;
+        if (k < H_HELD) A.cpu_cum[k + 1] = cumc;
+        if (A.break_even_cpu < 0 && cumc >= 0 && k > 0) A.break_even_cpu = (int)k + 1;
         if (!(a->goal_ok && b->goal_ok && a->success && b->success && a->moves == b->moves)) A.floors_ok = 0;
         if (b->path == PATH_REUSE && b->moves > a->moves) A.neg_transfer++;
         if (b->path == PATH_REUSE && !b->success) A.neg_transfer++;
@@ -945,6 +964,13 @@ static Account account(const Row *rows, uint32_t n) {
     A.task_net_q1 = quantile(tnets, nt, 0.25);
     A.task_net_q3 = quantile(tnets, nt, 0.75);
     A.net_robust = net0 + (int64_t)(A.task_net_med * (double)nt);
+    A.net_cpu = cumc;
+    A.delta_cpu_med = quantile(dcpu, ndc, 0.5);
+    A.delta_cpu_q1 = quantile(dcpu, ndc, 0.25);
+    A.delta_cpu_q3 = quantile(dcpu, ndc, 0.75);
+    A.task_cpu_med = quantile(tcpu, ntc, 0.5);
+    A.task_cpu_q1 = quantile(tcpu, ntc, 0.25);
+    A.task_cpu_q3 = quantile(tcpu, ntc, 0.75);
     A.delta_med = quantile(deltas, nd, 0.5);
     A.delta_q1 = quantile(deltas, nd, 0.25);
     A.delta_q3 = quantile(deltas, nd, 0.75);
@@ -1017,6 +1043,13 @@ static void json_account(FILE *f, const char *name, const Account *A) {
                "\"note\": \"net_final is the frozen cumulative sum of per-task wall differences and carries every outlier; net_robust is task-0 net plus the median per-task net times the remaining tasks\"},\n",
             (long long)A->cost_a_total, (long long)A->cost_b_total, (long long)A->net_final, A->break_even,
             A->task_net_med, A->task_net_q1, A->task_net_q3, (long long)A->net_robust);
+    fprintf(f, "      \"cognition_cpu\": {\"cpu_A_total_ns\": %lld, \"cpu_B_total_ns\": %lld, \"net_cpu_ns\": %lld, \"break_even_tasks_cpu\": %d, "
+               "\"delta_cpu_per_hit_ns\": {\"median\": %.0f, \"q1\": %.0f, \"q3\": %.0f}, \"task_cpu_net_ns\": {\"median\": %.0f, \"q1\": %.0f, \"q3\": %.0f}, "
+               "\"note\": \"thread CPU of every cognition phase (goal read, lookup, applicability, search, generalize without the hash, identify, store, decision, index, repair, serialize, reload); execution phases excluded as identical work in both arms (floors F2, F3)\", \"net_cpu_cumulative_ns\": [",
+            (long long)A->cpu_a_total, (long long)A->cpu_b_total, (long long)A->net_cpu, A->break_even_cpu,
+            A->delta_cpu_med, A->delta_cpu_q1, A->delta_cpu_q3, A->task_cpu_med, A->task_cpu_q1, A->task_cpu_q3);
+    for (uint32_t k = 1; k <= A->H && k <= H_HELD; k++) fprintf(f, "%s%lld", k > 1 ? ", " : "", (long long)A->cpu_cum[k]);
+    fprintf(f, "]},\n");
     fprintf(f, "      \"reinvestment_ledger_ns\": {\"saved_gross\": %lld, \"spent_learning\": %lld, \"spent_acquisition\": %lld, "
                "\"spent_maintenance\": %lld, \"spent_repair\": %lld, \"spent_restart\": %lld, \"reinvested\": %lld, \"unfunded\": %lld, "
                "\"net\": %lld},\n",
@@ -1183,6 +1216,18 @@ static int run_dev(void) {
     CHECK(a0.net_final < 0, "P0 dev sign negative (net %lld ns)", (long long)a0.net_final);
     if (a2.net_final <= 0) g_bad_rows++;
     if (a0.net_final >= 0) g_bad_rows++;
+    CHECK(a2.net_cpu > 0, "P+ dev sign positive on cognition CPU (net %lld ns)", (long long)a2.net_cpu);
+    CHECK(a0.net_cpu < 0, "P0 dev sign negative on cognition CPU (net %lld ns)", (long long)a0.net_cpu);
+    if (a2.net_cpu <= 0) g_bad_rows++;
+    if (a0.net_cpu >= 0) g_bad_rows++;
+    /* m on cognition CPU: on P0 the per-task extra arm B pays beyond arm A, CPU only. */
+    int64_t mvc[8];
+    uint32_t nmc = 0;
+    for (uint32_t k = 1; k < p0.H; k++) {
+        const Row *a = &g_rows[p0.first_row + 2 * k], *b = &g_rows[p0.first_row + 2 * k + 1];
+        mvc[nmc++] = cost_cpu(b) - cost_cpu(a);
+    }
+    double m0c = quantile(mvc, nmc, 0.5), m0clo = quantile(mvc, nmc, 0.25), m0chi = quantile(mvc, nmc, 0.75);
     /* Prediction for the held-out streams, from development numbers only. */
     fprintf(f, "  \"prediction_rule\": \"#262: p, r, Delta, C, m from the development partition only; held-out H=%u; net in ns over H-1 opportunities after one acquisition task (S1), or H opportunities with no acquisition (S2, sunk in dev)\",\n", H_HELD);
     fprintf(f, "  \"prediction\": {\n");
@@ -1192,6 +1237,13 @@ static int run_dev(void) {
     fprintf(f, ",\n");
     json_model_block(f, "P0_no_payoff", 0, 0, 0, 0, 0, 0, a0.r_hat, C0, m0, H_HELD - 1, 1);
     fprintf(f, ",\n    \"P0_m_band_ns\": [%.0f, %.0f],\n", m0lo, m0hi);
+    fprintf(f, "    \"cognition_cpu\": {\n");
+    json_model_block(f, "S1_reverse", a1.p_hat, a1.delta_cpu_q1, a1.delta_cpu_med, a1.delta_cpu_q3, a1.p_lo, a1.p_hi, a1.r_hat, C1, 0, H_HELD - 1, 1);
+    fprintf(f, ",\n");
+    json_model_block(f, "S1_merge_P+", a2.p_hat, a2.delta_cpu_q1, a2.delta_cpu_med, a2.delta_cpu_q3, a2.p_lo, a2.p_hi, a2.r_hat, C2, 0, H_HELD - 1, 1);
+    fprintf(f, ",\n");
+    json_model_block(f, "P0_no_payoff", 0, 0, 0, 0, 0, 0, a0.r_hat, C0, m0c, H_HELD - 1, 1);
+    fprintf(f, ",\n      \"P0_m_band_ns\": [%.0f, %.0f],\n      \"note\": \"same model on cognition CPU (thread time of the cognition phases); C is the same CPU quantity in both blocks\"\n    },\n", m0clo, m0chi);
     fprintf(f, "    \"derivation\": \"expected saving at opportunity k is p*Delta*r^(k-1); sum_{k=1..H} r^(k-1) = (1-r^H)/(1-r) for r<1, H for r=1, 1 for r=0 (0^0=1); no finite positive payoff when C >= p*Delta/(1-r); with maintenance m per opportunity the per-opportunity net is p*Delta-m\",\n");
     fprintf(f, "    \"model_check_r_lt_1\": {\"p\": 1, \"Delta_ns\": 1000000, \"r\": 0.9, \"C_ns\": 5000000, \"m_ns\": 0, \"H\": 39, \"closed_form_ns\": %.6f, \"direct_sum_ns\": %.6f, \"no_finite_payoff\": %s, \"sup_net_ns\": %.6f}\n",
             net_model(1, 1e6, 0.9, 5e6, 0, 39), net_direct_sum(1, 1e6, 0.9, 5e6, 0, 39), 5e6 >= 1e6 / 0.1 ? "true" : "false", 1e6 / 0.1 - 5e6);
@@ -1231,9 +1283,9 @@ static int run_heldout(void) {
     for (uint32_t i = 0; i < NS; i++) {
         run_stream(&st[i]);
         acc[i] = account(&g_rows[st[i].first_row], st[i].n_rows);
-        printf("    %s: hits %u misses %u acq %u adapt %u refusals %u restarts %u; net %lld ns, break-even %d, floors %s, neg transfer %u\n",
+        printf("    %s: hits %u misses %u acq %u adapt %u refusals %u restarts %u; net %lld ns (cpu %lld ns, be %d), break-even %d, floors %s, neg transfer %u\n",
                stream_name(st[i].kind), acc[i].hits, acc[i].misses, acc[i].acquisitions, acc[i].adaptations, acc[i].refusals,
-               acc[i].restarts, (long long)acc[i].net_final, acc[i].break_even, acc[i].floors_ok ? "ok" : "VIOLATED", acc[i].neg_transfer);
+               acc[i].restarts, (long long)acc[i].net_final, (long long)acc[i].net_cpu, acc[i].break_even_cpu, acc[i].break_even, acc[i].floors_ok ? "ok" : "VIOLATED", acc[i].neg_transfer);
     }
     t_stale_control();
     t_corrupt_control();
@@ -1250,6 +1302,10 @@ static int run_heldout(void) {
     CHECK(p0->net_final < 0, "P0 sign negative (net %lld ns)", (long long)p0->net_final);
     if (pp->net_final <= 0) g_bad_rows++;
     if (p0->net_final >= 0) g_bad_rows++;
+    CHECK(pp->net_cpu > 0, "P+ sign positive on cognition CPU (net %lld ns)", (long long)pp->net_cpu);
+    CHECK(p0->net_cpu < 0, "P0 sign negative on cognition CPU (net %lld ns)", (long long)p0->net_cpu);
+    if (pp->net_cpu <= 0) g_bad_rows++;
+    if (p0->net_cpu >= 0) g_bad_rows++;
 
     char path[640];
     snprintf(path, sizeof path, "%s/heldout-trace.csv", g_outdir);
@@ -1269,16 +1325,19 @@ static int run_heldout(void) {
     fprintf(f, "  },\n");
     fprintf(f, "  \"controls\": {\"stale_refused\": %s, \"stale_rederived\": %s, \"stale_revalidated\": %s, "
                "\"corrupt_cases\": %d, \"corrupt_refused\": %d, \"corrupt_stored\": %d, \"corrupt_why\": [\"%s\", \"%s\", \"%s\"],\n"
-               "    \"sign_P+\": \"%s\", \"sign_P0\": \"%s\", \"expected\": \"P+ positive, P0 negative\"},\n",
+               "    \"sign_P+\": \"%s\", \"sign_P0\": \"%s\", \"sign_P+_cpu\": \"%s\", \"sign_P0_cpu\": \"%s\", \"expected\": \"P+ positive, P0 negative\"},\n",
             CTL.stale_refused ? "true" : "false", CTL.stale_rederived ? "true" : "false", CTL.stale_revalidated ? "true" : "false",
             CTL.corrupt_cases, CTL.corrupt_refused, CTL.corrupt_stored, CTL.corrupt_why[0], CTL.corrupt_why[1], CTL.corrupt_why[2],
-            pp->net_final > 0 ? "positive" : "negative", p0->net_final < 0 ? "negative" : "positive");
+            pp->net_final > 0 ? "positive" : "negative", p0->net_final < 0 ? "negative" : "positive",
+            pp->net_cpu > 0 ? "positive" : "negative", p0->net_cpu < 0 ? "negative" : "positive");
     fprintf(f, "  \"measured_for_prediction\": {\n");
     const char *pn[3] = { "S1_reverse", "S1_merge_P+", "P0_no_payoff" };
     const Account *pa[3] = { &acc[0], &acc[1], p0 };
     for (int i = 0; i < 3; i++)
-        fprintf(f, "    \"%s\": {\"net_final_ns\": %lld, \"net_robust_ns\": %lld, \"task_net_median_ns\": %.0f, \"break_even_tasks\": %d, \"p_hat\": %.4f, \"r_hat\": %.4f, \"delta_median_ns\": %.0f, \"delta_q1_ns\": %.0f, \"delta_q3_ns\": %.0f}%s\n",
-                pn[i], (long long)pa[i]->net_final, (long long)pa[i]->net_robust, pa[i]->task_net_med, pa[i]->break_even, pa[i]->p_hat, pa[i]->r_hat, pa[i]->delta_med, pa[i]->delta_q1, pa[i]->delta_q3, i < 2 ? "," : "");
+        fprintf(f, "    \"%s\": {\"net_final_ns\": %lld, \"net_robust_ns\": %lld, \"task_net_median_ns\": %.0f, \"break_even_tasks\": %d, \"p_hat\": %.4f, \"r_hat\": %.4f, \"delta_median_ns\": %.0f, \"delta_q1_ns\": %.0f, \"delta_q3_ns\": %.0f, "
+                   "\"cognition_cpu\": {\"net_cpu_ns\": %lld, \"break_even_tasks_cpu\": %d, \"delta_cpu_median_ns\": %.0f, \"delta_cpu_q1_ns\": %.0f, \"delta_cpu_q3_ns\": %.0f, \"task_cpu_median_ns\": %.0f}}%s\n",
+                pn[i], (long long)pa[i]->net_final, (long long)pa[i]->net_robust, pa[i]->task_net_med, pa[i]->break_even, pa[i]->p_hat, pa[i]->r_hat, pa[i]->delta_med, pa[i]->delta_q1, pa[i]->delta_q3,
+                (long long)pa[i]->net_cpu, pa[i]->break_even_cpu, pa[i]->delta_cpu_med, pa[i]->delta_cpu_q1, pa[i]->delta_cpu_q3, pa[i]->task_cpu_med, i < 2 ? "," : "");
     fprintf(f, "  }\n}\n");
     fclose(f);
     snprintf(path, sizeof path, "%s/heldout-receipt.json", g_outdir);
