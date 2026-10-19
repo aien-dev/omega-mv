@@ -24,6 +24,8 @@ hardware ceiling and bits of TURING Yield per joule, and every outside tool is a
 | R | the LLM runtime, written in Omega: decode loop, sampling, mask, tokenizer, server door | each stage replaced with a byte-identical or receipt-equal gate against today's build; the lineage inventory sets the order (L107) and the chain map names the host-side C per token (L097) | L097, L107, L085, L089, L090 |
 | M | the measure | fraction of the physical ceiling (QWEN38-SPEED gate, L068, now with J/token); bits of T per wall joule (TY-7, L109); one measurement window at a time with calibration and baseline (L113) | L068, L109, L113 |
 | F | the floor we stand on and do not replace | the open kernel module's 8 calls, the signed GPU firmware, CPU microcode: named and sized (L101) | L101 |
+| C | one chain of receipts: every bundle names the previous bundle digest for its repo and the node signs over both; verify-chain refuses a rewritten history; two registered nodes agreeing on the exact head = merge-grade, with a spot re-check by ours; every seed rung carries the digest of the rung that built it | verify-chain in aien-test, bundle v2 (old bundles still verify), rewritten-history test fails; two receipts on one real head | L119, L120, L122 |
+| B | the box: a broker owns the chip, the quiet state and one queue; waiting happens in the queue, never inside a lock; measurements one at a time in windows; builds cached by source hash; chosen by replayed wait times | replay numbers published; installed or not by the numbers | L113, L118 |
 
 Rung 4 (the fuller Omega language: bytes, big storage, I/O) comes after R proves what the runtime actually needs;
 Drake's rule: the compiler needs only the LLM plus calculations and semantics.
@@ -32,6 +34,10 @@ Drake's rule: the compiler needs only the LLM plus calculations and semantics.
 - No words: words vs meaningless symbols vs numbers under the same mask; prediction before run (L108).
 - Founding check: which OSC-0 rules are enforced by a gate today and which are only written down (L114).
 - Driver floor: keep / replace / already ours, per call (L101).
+
+## The chain, explicitly
+
+What blockchain is good for, kept; what it wastes, left out. Kept: a hash chain (each record carries the fingerprint of the one before, so a rewritten past breaks every later link), multi-party agreement (no single machine is final), and standing earned by useful work (judging PRs). Left out: coins, tokens, proof-of-work puzzles, global consensus protocols. The registry of nodes is a file Drake merges. The receipts shelf git history is the public ledger; the seed chain is the same shape for the compiler itself.
 
 ## How the pieces join
 - One repo per layer, one branch per rung, one desk item merges in rung order (L095 for structs; a desk item per rung as each READY lands).
