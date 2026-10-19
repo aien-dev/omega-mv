@@ -92,7 +92,9 @@ Semantics the evaluator is allowed to rely on:
   live from t=0 (resident state); missing `last` means live until the end. Peak live bytes
   per capacity resource must not exceed `cap`, else `REFUSED_CAPACITY` naming the time
   and the buffers.
-- `sync`: every op listed waits for every other op listed (an all-to-all barrier).
+- `sync id=X ops=a,b,...`: declares a barrier op `X` (no cost, no engine) that completes
+  when every listed op has completed. Order later work after it with `dep X y`. A barrier
+  with a measured cost is written as `op id=X kind=barrier t_ns=... prov=...` plus `dep` lines.
 - `energy`: `instrument=none` makes every energy figure `UNMEASURED`. A named instrument
   with `joules` and a receipt is a measured whole-run figure for the named boundary; the
   evaluator never splits it per op. `power_w` with `prov=synthetic` allows a labelled

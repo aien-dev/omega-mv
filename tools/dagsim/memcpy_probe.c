@@ -21,7 +21,7 @@ static void *worker(void *p) { slice *s = p; memcpy(s->dst, s->src, s->n); retur
 
 static double now(void) { struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts); return ts.tv_sec + ts.tv_nsec * 1e-9; }
 static void sysline(const char *tag) {
-    char load[128] = "?", mem[64] = "?";
+    char load[128] = "?", mem[256] = "?";
     FILE *f = fopen("/proc/loadavg", "r"); if (f) { if (fgets(load, sizeof load, f)) load[strcspn(load, "\n")] = 0; fclose(f); }
     f = fopen("/proc/meminfo", "r");
     if (f) { char l[256]; while (fgets(l, sizeof l, f)) if (!strncmp(l, "MemAvailable:", 13)) { snprintf(mem, sizeof mem, "%s", l + 13); mem[strcspn(mem, "\n")] = 0; break; } fclose(f); }
@@ -39,6 +39,10 @@ int main(int argc, char **argv) {
     memset(src, 1, n); memset(dst, 2, n);   /* touch every page before timing */
     printf("# omega-mv#583 memcpy_probe; cmd=memcpy_probe %s %s %s; bytes_copied=%zu (read+write counted twice below, as in M1 block4)\n", argv[1], argv[2], argv[3], n);
     sysline("before");
+    {   /* instrument overhead: one timer read, so the reader knows what the stamps cost */
+        double a = now(); for (int i = 0; i < 1000; i++) (void)now(); double b = now();
+        printf("# timer=CLOCK_MONOTONIC overhead_ns_per_read=%.1f (1000 reads)\n", (b - a) * 1e9 / 1000.0);
+    }
     printf("gb,threads,rep,seconds,GBps_read_plus_write\n");
     for (int r = 0; r < reps; r++) {
         pthread_t th[64]; slice sl[64];
