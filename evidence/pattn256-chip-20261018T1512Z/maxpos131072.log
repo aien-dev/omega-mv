@@ -1,0 +1,22 @@
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+-- chip 2048 tokens from 0 (max_pos 4096)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 48.745 ms (prep 2.061, attend 9.926)
+   parity: 0 bad, worst ratio 0.175 of the tolerance (0.1 s reference); rows: ok (23 one-ulp k flips, worst token 1)
+   timing (median of 5): prep 1.940 ms, attend 10.063 ms, call 23.550 ms -> 170621 tokens/s; attend 5.12 TFLOPS useful, 107.5 GB/s K/V streamed
+-- chip 2048 tokens from 6144 (max_pos 8192)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 60.095 ms (prep 1.949, attend 38.439)
+   parity: 0 bad, worst ratio 0.012 of the tolerance (0.4 s reference); rows: ok (24 one-ulp k flips, worst token 1)
+   timing (median of 5): prep 1.892 ms, attend 38.195 ms, call 52.593 ms -> 51089 tokens/s; attend 9.45 TFLOPS useful, 197.0 GB/s K/V streamed
+-- chip 2048 tokens from 30720 (max_pos 32768)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 178.046 ms (prep 1.977, attend 151.579)
+FAIL: 30720+2048: appended rows vs reference: token 961 k[3] slot 150 chip 36f0 ref 36f3
+   parity: 0 bad, worst ratio 0.007 of the tolerance (1.9 s reference); rows: FAIL
+   timing (median of 5): prep 1.965 ms, attend 147.270 ms, call 164.559 ms -> 13723 tokens/s; attend 10.85 TFLOPS useful, 226.1 GB/s K/V streamed
+-- chip 2048 tokens from 129024 (max_pos 131072)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 619.667 ms (prep 1.940, attend 596.310)
+FAIL: 129024+2048: appended rows vs reference: token 871 k[1] slot 141 chip b637 ref b63a
+   parity: 0 bad, worst ratio 0.003 of the tolerance (7.9 s reference); rows: FAIL
+   timing (median of 5): prep 1.939 ms, attend 604.868 ms, call 618.090 ms -> 3375 tokens/s; attend 10.82 TFLOPS useful, 225.5 GB/s K/V streamed
+gpu_prefill_attn256_test: 50 checks, 2 failed: FAIL
+max-pos 131072 exit 1 (informational)

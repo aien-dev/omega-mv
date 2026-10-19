@@ -1,0 +1,16 @@
+cache alloc (1 layer, 32768 positions, 128 MiB): rc=OK 183.8 ms ()
+chip context 1                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=4096 fill=0.0ms chip_med=52.4us (0.1 GB/s) call_med=55.8us reps=20
+chip context 7                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=28672 fill=0.0ms chip_med=56.8us (0.5 GB/s) call_med=59.9us reps=20
+chip context 256              rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=1048576 fill=0.1ms chip_med=105.6us (9.9 GB/s) call_med=108.3us reps=20
+chip context 301 sharp q      rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=1232896 fill=0.1ms chip_med=131.8us (9.4 GB/s) call_med=134.6us reps=20
+chip context 301 sharp q      mutant 1: caught (rc=OK bad=4815 worst=17.399)
+chip context 301 sharp q      mutant 2: caught (rc=OK bad=5666 worst=40.991)
+chip context 301 sharp q      mutant 3: caught (rc=OK bad=899 worst=3.363)
+chip context 301 sharp q      mutant 4: inert (1 split, the combine is not exercised)
+chip context 301 sharp q      mutant 5: caught (rc=OK bad=2969 worst=86.774)
+chip context 1024             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=4194304 fill=0.3ms chip_med=308.9us (13.6 GB/s) call_med=312.7us reps=20
+chip context 4096             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=4x4 per_split=1024 depth=4 kv_bytes=16777216 fill=1.2ms chip_med=362.7us (46.3 GB/s) call_med=365.3us reps=20
+chip context 8192             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=8x4 per_split=1024 depth=4 kv_bytes=33554432 fill=1.5ms chip_med=460.9us (72.8 GB/s) call_med=463.6us reps=20
+chip context 32768            rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=32x4 per_split=1024 depth=4 kv_bytes=134217728 fill=5.8ms chip_med=1412.2us (95.0 GB/s) call_med=1414.9us reps=20
+gpu_decode_attn256_test: 29 checks, 0 failed: PASS
+per-split 1024 exit 0 (informational)

@@ -1,0 +1,22 @@
+65925086e6bf17784dad274a2fcfd44704c20b8d
+ src/omega_blackwell_codegen_bf16.c  |  8 +++++++
+ src/omega_blackwell_codegen_bf16.h  |  5 +++-
+ src/omega_blackwell_codegen_qg.c    | 12 +++++++---
+ src/omega_blackwell_codegen_qg.h    | 10 ++++----
+ src/omega_gpu_bf16_gemv_api.c       | 20 +++++++++++-----
+ src/omega_gpu_bf16_gemv_api.h       |  3 +++
+ src/omega_gpu_fp8_api.h             |  2 +-
+ src/omega_gpu_gdn_api.c             |  3 ++-
+ src/omega_gpu_gdn_api.h             |  2 +-
+ src/omega_gpu_pfgemm.c              | 41 ++++++++++++++++++++++++++-------
+ src/omega_gpu_prefill.c             | 12 ++++++++++
+ src/omega_gpu_prefill.h             | 11 +++++++++
+ src/omega_gpu_prefill_attn256_api.c |  2 ++
+ src/omega_gpu_prefill_attn256_api.h |  3 ++-
+ tests/gpu_bf16_gemv_test.c          | 12 +++++-----
+ tests/gpu_qgemm_test.c              | 46 ++++++++++++++++++++++++-------------
+ 16 files changed, 144 insertions(+), 48 deletions(-)
+d88e28cd90cfadad5b431571d45361e3c19f14350a49c330c668538cae0a239a  build/gpu_qgemm_test
+122b4704d27c1fcc8b4d389bf9c31780280114ba7f2f9d6146beb111a368534c  build/libomega_gpu.a
+Mem:             121         108           4           1          15          12
+a855e364a9e93ea5db300573bf0e62000bcbd41ad2b6e0dedf00e12a277400f3  build/gpu_qgemm_test
