@@ -1,0 +1,65 @@
+{
+  "schema": "OMEGA_PLAN_REUSE_PAYBACK_V1",
+  "mode": "dev",
+  "mutant": "",
+  "run_commit": "503f990fa45590fbbe35bac2165c0b05784af0f0",
+  "tree_dirty": true,
+  "test_binary_sha256": "7127e0f51a6f179dd89457b728fc5df3cb7aa9c372ca05f839ce649a6884834d",
+  "host": {"sysname": "Linux", "release": "7.0.0-1019-nvidia", "machine": "aarch64", "core_class_midr_part": "0xd85", "loadavg_start": "12.95 9.45 13.87 3/2361 3782150", "loadavg_end": "12.95 9.45 13.87 3/2361 3782411"},
+  "checks": 286,
+  "failures": 0,
+  "bad_rows": 0,
+  "units": "nanoseconds; cognition phases are thread CPU time, execution phases and e2e are wall time",
+  "arms": "A no reuse (e2e minus the identity hash it would not compute); B existing rx_plan reuse with adaptation (e2e plus restart costs). Arm C (#584 learning arm): not available at run time, two arms only.",
+  "joules": {"measured": false, "why": "no on-device package counter on this kernel (aien_spbm hwmon absent); UPS wall meter (upsc, 10 W x 2 s steps) cannot resolve a sub-millijoule per-task delta on a loaded box"},
+  "scope": "host processor; arrangement domain (blocks-world lifted onto World objects); explicit A* planner; no general-agent claim",
+  "partition": "development: seeds 200..211, H_dev 12 per shape; P0 dev 6 tasks",
+  "ledger": {
+      "arm_A": {"rows": 30, "e2e_wall_ns": 98226735, "cognition_cpu_ns": 2833728, "identity_hash_on_copy_ns": 2109856, "goal_read_cpu": 46480, "lookup_cpu": 0, "applicability_cpu": 0, "search_cpu": 546128, "generalize_cpu": 102576, "identify_cpu": 0, "store_cpu": 0, "decision_cpu": 0, "index_cpu": 0, "compile_wall": 80781392, "reference_wall": 0, "run_wall": 10051982, "verify_wall": 4383398, "repair_cpu": 0, "serialize_cpu": 0, "reload_cpu": 0},
+      "arm_B": {"rows": 30, "e2e_wall_ns": 96636432, "cognition_cpu_ns": 708800, "identity_hash_on_copy_ns": 514064, "goal_read_cpu": 40496, "lookup_cpu": 7728, "applicability_cpu": 30240, "search_cpu": 64496, "generalize_cpu": 16272, "identify_cpu": 514064, "store_cpu": 17872, "decision_cpu": 67120, "index_cpu": 77968, "compile_wall": 80660155, "reference_wall": 94896, "run_wall": 10424597, "verify_wall": 4396505, "repair_cpu": 1600, "serialize_cpu": 81424, "reload_cpu": 75952}
+  },
+  "reconciliation": {"ok": true, "bad_rows": 0, "unattributed_wall_ns": 427346, "rows": 60},
+  "streams": {
+    "dev_S1_reverse": {
+      "H": 12, "hits": 11, "misses": 1, "acquisitions": 1, "rederivations": 0, "adaptations": 0, "refusals": 0, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 1, "floors_ok": true,
+      "cost_A_total_ns": 34360635, "cost_B_total_ns": 34959351, "net_final_ns": -598716, "break_even_tasks": -1,
+      "reinvestment_ledger_ns": {"saved_gross": -454012, "spent_learning": 231696, "spent_acquisition": 71872, "spent_maintenance": 2448, "spent_repair": 0, "spent_restart": 157376, "reinvested": 0, "unfunded": 231696, "net": -685708},
+      "estimates": {"p_hat": 1.0000, "p_wilson95": [0.7412, 1.0000], "r_hat": 1.0000, "delta_ns": {"median": -15167, "q1": -41472, "q3": -3703}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 256, "applicability_cpu_ns_first": 192, "applicability_cpu_ns_last": 1216},
+      "net_cumulative_ns": [-144704, -204769, -220897, -196208, -369537, -384704, -559391, -582271, -585102, -592958, -597533, -598716]
+    },
+    "dev_S1_merge": {
+      "H": 12, "hits": 11, "misses": 1, "acquisitions": 1, "rederivations": 0, "adaptations": 0, "refusals": 0, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 0, "floors_ok": true,
+      "cost_A_total_ns": 44793952, "cost_B_total_ns": 44469973, "net_final_ns": 323979, "break_even_tasks": 3,
+      "reinvestment_ledger_ns": {"saved_gross": 347787, "spent_learning": 92080, "spent_acquisition": 89600, "spent_maintenance": 2480, "spent_repair": 0, "spent_restart": 0, "reinvested": 0, "unfunded": 92080, "net": 255707},
+      "estimates": {"p_hat": 1.0000, "p_wilson95": [0.7412, 1.0000], "r_hat": 1.0000, "delta_ns": {"median": 42481, "q1": 14465, "q3": 61298}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 288, "applicability_cpu_ns_first": 240, "applicability_cpu_ns_last": 1200},
+      "net_cumulative_ns": [-23808, -36288, 42817, 105539, 120516, 134469, 189447, 226761, 122456, 221625, 281498, 323979]
+    },
+    "dev_P0_no_payoff": {
+      "H": 6, "hits": 0, "misses": 6, "acquisitions": 6, "rederivations": 5, "adaptations": 0, "refusals": 5, "stale_refusals": 0, "stale_marks": 0, "forget_events": 0, "negative_transfer": 0, "restarts": 0, "floors_ok": true,
+      "cost_A_total_ns": 16962292, "cost_B_total_ns": 17364484, "net_final_ns": -402192, "break_even_tasks": -1,
+      "reinvestment_ledger_ns": {"saved_gross": 0, "spent_learning": 405568, "spent_acquisition": 389760, "spent_maintenance": 15808, "spent_repair": 0, "spent_restart": 0, "reinvested": 0, "unfunded": 405568, "net": -405568},
+      "estimates": {"p_hat": 0.0000, "p_wilson95": [-0.0000, 0.4345], "r_hat": 1.0000, "delta_ns": {"median": 0, "q1": 0, "q3": 0}},
+      "memory": {"templates": 1, "bytes": 34056, "lookup_cpu_ns_first": 192, "lookup_cpu_ns_last": 288, "applicability_cpu_ns_first": 208, "applicability_cpu_ns_last": 288},
+      "net_cumulative_ns": [-62864, -122912, -204352, -280416, -338992, -402192]
+    }
+  },
+  "controls": {"stale_refused": true, "stale_rederived": true, "stale_revalidated": true, "corrupt_cases": 3, "corrupt_refused": 3, "corrupt_stored": 0, "corrupt_why": ["decode", "canonical bytes differ from the carried body", "canonical bytes differ from the carried body"],
+    "sign_P+_dev": "positive", "sign_P0_dev": "negative"},
+  "prediction_rule": "#262: p, r, Delta, C, m from the development partition only; held-out H=40; net in ns over H-1 opportunities after one acquisition task (S1), or H opportunities with no acquisition (S2, sunk in dev)",
+  "prediction": {
+    "S1_reverse": {"p": 1.0000, "p_band": [0.7412, 1.0000], "Delta_ns": -15167, "Delta_band_ns": [-41472, -3703], "r": 1.0000, "C_ns": 74128, "m_ns": 0, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": -665641, "net_direct_sum_ns": -665641, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [-1272901, -218545], "break_even_tasks": -1, "no_finite_payoff": true},
+    "S1_merge_P+": {"p": 1.0000, "p_band": [0.7412, 1.0000], "Delta_ns": 42481, "Delta_band_ns": [14465, 61298], "r": 1.0000, "C_ns": 91840, "m_ns": 0, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": 1564919, "net_direct_sum_ns": 1564919, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [326274, 2298762], "break_even_tasks": 4, "no_finite_payoff": false},
+    "P0_no_payoff": {"p": 0.0000, "p_band": [0.0000, 0.0000], "Delta_ns": 0, "Delta_band_ns": [0, 0], "r": 1.0000, "C_ns": 70304, "m_ns": 63200, "H_opportunities": 39, "acquisition_tasks": 1,
+      "net_closed_form_ns": -2535104, "net_direct_sum_ns": -2535104, "closed_form_equals_direct_sum": true,
+      "net_band_ns": [-2535104, -2535104], "break_even_tasks": -1, "no_finite_payoff": true},
+    "P0_m_band_ns": [60048, 76064],
+    "derivation": "expected saving at opportunity k is p*Delta*r^(k-1); sum_{k=1..H} r^(k-1) = (1-r^H)/(1-r) for r<1, H for r=1, 1 for r=0 (0^0=1); no finite positive payoff when C >= p*Delta/(1-r); with maintenance m per opportunity the per-opportunity net is p*Delta-m",
+    "model_check_r_lt_1": {"p": 1, "Delta_ns": 1000000, "r": 0.9, "C_ns": 5000000, "m_ns": 0, "H": 39, "closed_form_ns": 4835767.967317, "direct_sum_ns": 4835767.967317, "no_finite_payoff": false, "sup_net_ns": 5000000.000000}
+  }
+}

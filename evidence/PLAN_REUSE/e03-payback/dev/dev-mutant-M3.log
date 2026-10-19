@@ -1,0 +1,14 @@
+  FAIL tests/runtime/rx_plan_payback.c:1169 P+ dev sign positive (net -1094732 ns)
+[*] placed on 10 Cortex-X925 cores
+[*] MUTANT M3 active: this run must report bad rows > 0
+[*] stream S1_reverse: 12 tasks, seeds 200.., cache fresh
+    restart before task 6: 1 records serialised, 1 reloaded, 0 refused
+[*] stream S1_merge_P+: 12 tasks, seeds 200.., cache fresh
+[*] stream dev_P0_no_payoff: 6 tasks, seeds 250.., cache fresh
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 3 refused, 0 stored
+checks 288 failures 1 bad_rows 1
+dev: S1_reverse p 0.000 Delta 0 ns [0, 0] C 74352 ns; S1_merge p 0.000 Delta 0 ns [0, 0] C 93024 ns; P0 m 68529 ns [53007, 69728]
+dev: net S1_reverse -980471 ns, S1_merge -1094732 ns (P+ sign NEGATIVE), P0 -318192 ns (sign negative); reconciliation OK; stale refused/rederived/revalidated; corrupt 3/3 refused
+receipt: build/payback-M3/dev-receipt.json

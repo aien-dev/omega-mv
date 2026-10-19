@@ -1,0 +1,16 @@
+dev measurement requested 2026-10-19T19:20:04Z load 5.67 14.22 25.10 10/2041 3372611 quiet_flags 6
+quiet lock granted 2026-10-19T19:39:17Z load 12.95 9.45 13.87 3/2361 3782149
+[*] placed on 10 Cortex-X925 cores
+[*] stream S1_reverse: 12 tasks, seeds 200.., cache fresh
+    restart before task 6: 1 records serialised, 1 reloaded, 0 refused
+[*] stream S1_merge_P+: 12 tasks, seeds 200.., cache fresh
+[*] stream dev_P0_no_payoff: 6 tasks, seeds 250.., cache fresh
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 3 refused, 0 stored
+checks 288 failures 0 bad_rows 0
+dev: S1_reverse p 1.000 Delta -15167 ns [-41472, -3703] C 74128 ns; S1_merge p 1.000 Delta 42481 ns [14465, 61298] C 91840 ns; P0 m 63200 ns [60048, 76064]
+dev: net S1_reverse -598716 ns, S1_merge 323979 ns (P+ sign positive), P0 -402192 ns (sign negative); reconciliation OK; stale refused/rederived/revalidated; corrupt 3/3 refused
+receipt: build/payback-dev/dev-receipt.json
+rc=0
+done 2026-10-19T19:39:17Z load 12.95 9.45 13.87 3/2361 3782437

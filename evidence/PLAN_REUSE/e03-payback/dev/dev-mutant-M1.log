@@ -1,0 +1,14 @@
+  FAIL tests/runtime/rx_plan_payback.c:1129 ledger reconciles with traces (2 bad)
+[*] placed on 10 Cortex-X925 cores
+[*] MUTANT M1 active: this run must report bad rows > 0
+[*] stream S1_reverse: 12 tasks, seeds 200.., cache fresh
+    restart before task 6: 1 records serialised, 1 reloaded, 0 refused
+[*] stream S1_merge_P+: 12 tasks, seeds 200.., cache fresh
+[*] stream dev_P0_no_payoff: 6 tasks, seeds 250.., cache fresh
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 3 refused, 0 stored
+checks 288 failures 1 bad_rows 2
+dev: S1_reverse p 1.000 Delta 753 ns [-15696, 9698] C 73680 ns; S1_merge p 1.000 Delta 44433 ns [34265, 82538] C 92480 ns; P0 m 64224 ns [62449, 83520]
+dev: net S1_reverse 147085 ns, S1_merge 542143 ns (P+ sign positive), P0 -383392 ns (sign negative); reconciliation MISMATCH; stale refused/rederived/revalidated; corrupt 3/3 refused
+receipt: build/payback-M1/dev-receipt.json
