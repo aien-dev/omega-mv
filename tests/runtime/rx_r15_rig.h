@@ -154,6 +154,12 @@ int r15_placement(R15Rig *r, uint32_t cls);
 /* Confine every thread of the process to one core class. */
 int r15_move_class(uint32_t cls);
 const char *r15_config_name(R15Config c);
+/* Rigs started after this call (on = 1) give Omega a fixed cost table in
+ * place of wall-clock time for serve and measure, so every rig sees the same
+ * costs whatever the machine's load. The SEQ parity gate uses it for its
+ * detector controls and pairs; every other rig user (G7, the R15 harness,
+ * R16 negative) keeps measured costs (default off). */
+void r15_use_cost_model(int on);
 
 /* Reactions whose last activation read an older version of a trigger field
  * than the one now in the world (changes after the build baseline), in a
