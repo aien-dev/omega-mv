@@ -106,6 +106,9 @@ int omega_gpu_pf_qgemm_record(struct OmegaGpuCmdList *cl, uint32_t n, uint32_t k
                               uint64_t rowidx_va, uint64_t xq_va, uint64_t xs_va, uint64_t y_va);
 void omega_gpu_pf_qgemm_set_shape(uint32_t rt, uint32_t warps, uint32_t wait); /* knobs (all 0 restores rt 4, warps 8, wait 45) */
 void omega_gpu_pf_qgemm_test_set_mutant(int m);
+/* CTA order of the QMMA GEMM (OmegaQgSpec.group, 0 .. 5); without a call: OMEGA_QG_GROUP from the environment, else the default */
+#define OMEGA_GPU_PF_QG_GROUP_DEFAULT 0u
+void omega_gpu_pf_qgemm_set_group(uint32_t g);
 #ifdef __cplusplus
 }
 #endif

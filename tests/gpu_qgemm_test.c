@@ -290,7 +290,7 @@ static int qg_sim_run(const QProb *p, const OmegaQgSpec *sp, int order, void *y,
     s.p = &prog; s.threads = 32u * sp->warps; s.smem = smem; s.smem_bytes = omega_qg_shared_bytes(sp); s.order = order;
     const uint64_t a[5] = { (uintptr_t)tiles, sp->direct ? 0 : (uintptr_t)ridx, (uintptr_t)p->xq, (uintptr_t)y, (uintptr_t)p->xs };
     for (int i = 0; i < 5; i++) { s.cbank[(0x380 + 8 * i) / 4] = (uint32_t)a[i]; s.cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(a[i] >> 32); }
-    s.cbank[0x3a8 / 4] = p->n;
+    s.cbank[0x3a8 / 4] = p->n; s.cbank[0x3ac / 4] = nt;
     const size_t XR = p->xr + p->pad;
     s.ranges[0].lo = (uintptr_t)tiles; s.ranges[0].hi = (uintptr_t)(tiles + nt);
     s.ranges[1].lo = (uintptr_t)ridx; s.ranges[1].hi = (uintptr_t)(ridx + p->M + bm);
@@ -300,7 +300,8 @@ static int qg_sim_run(const QProb *p, const OmegaQgSpec *sp, int order, void *y,
     s.ranges[5].lo = (uintptr_t)p->swf; s.ranges[5].hi = (uintptr_t)(p->swf + (size_t)p->E * (p->n / 128) * KB);
     s.ranges[6].lo = (uintptr_t)p->xs; s.ranges[6].hi = (uintptr_t)(p->xs + XR * KB);
     s.nranges = 7;
-    const int err = ws_run(&s, p->n / span, nt);
+    const uint32_t G = 1u << sp->group;
+    const int err = sp->group ? ws_run(&s, G * (p->n / span), (nt + G - 1) / G) : ws_run(&s, p->n / span, nt);
     if (err) snprintf(msg, msgn, "simulator %.150s", s.msg);
     free(tiles); free(ridx); free(smem);
     return err ? -1 : 0;
@@ -316,14 +317,16 @@ static int qg_sim(void) {
     for (size_t c = 0; c < sizeof cs / sizeof cs[0]; c++) {
         const uint32_t bm = 16 * cs[c].rt;
         QProb p; qprob_make(&p, cs[c].E, cs[c].n, cs[c].k, cs[c].M, cs[c].xr, cs[c].layout, cs[c].direct, bm);
-        OmegaQgSpec sp = { cs[c].k, cs[c].rt, cs[c].warps, cs[c].layout == OMEGA_GPU_PF_PLAIN ? OMEGA_QG_EPI_F32 : OMEGA_QG_EPI_SWIGLU, cs[c].direct, cs[c].n, 45, 0 };
+        OmegaQgSpec sp = { cs[c].k, cs[c].rt, cs[c].warps, cs[c].layout == OMEGA_GPU_PF_PLAIN ? OMEGA_QG_EPI_F32 : OMEGA_QG_EPI_SWIGLU, cs[c].direct, cs[c].n, 45, 0, 0 };
         uint32_t *rows = malloc(p.M * 4); for (uint32_t i = 0; i < p.M; i++) rows[i] = i;
         void *y = malloc((size_t)(p.M + bm) * p.n * 4);
-        for (int order = 0; order < 2; order++) {
-            const int rc = qg_sim_run(&p, &sp, order, y, msg, sizeof msg);
+        for (int pass = 0; pass < 4; pass++) {   /* passes 2, 3: L2-grouped CTA order (group 1, 3), fragment order 0 */
+            const int order = pass < 2 ? pass : 0;
+            OmegaQgSpec gs = sp; gs.group = pass == 2 ? 1u : pass == 3 ? 3u : 0u;
+            const int rc = qg_sim_run(&p, &gs, order, y, msg, sizeof msg);
             size_t ulp1 = 0, bad = rc ? 0 : qcompare(&p, y, rows, p.M, 0, &ulp1);
-            printf("sim qgemm case %zu (n %u k %u M %u %s %s rt %u warps %u) order %d: %s, %zu differ\n", c, p.n, p.k, p.M, cs[c].layout ? "swiglu" : "f32",
-                   cs[c].direct ? "direct" : "indexed", cs[c].rt, cs[c].warps, order, rc ? msg : "ran", bad);
+            printf("sim qgemm case %zu (n %u k %u M %u %s %s rt %u warps %u) order %d group %u: %s, %zu differ\n", c, p.n, p.k, p.M, cs[c].layout ? "swiglu" : "f32",
+                   cs[c].direct ? "direct" : "indexed", cs[c].rt, cs[c].warps, order, gs.group, rc ? msg : "ran", bad);
             if (rc || bad) fail++;
         }
         if (c == 0 || c == 1) for (int m = 1; m <= 4; m++) {
@@ -339,6 +342,7 @@ static int qg_sim(void) {
 }
 
 static int g_cached; /* 1: weights in a GPU-cached device copy (GEMV layout), 0: read in place from the GEMV tensor */
+static int g_group = -1;   /* --group G: CTA order of the QMMA GEMM (-1: library default / OMEGA_QG_GROUP) */
 static int qg_chip_shape(const char *name, uint32_t tokens, int reps, int check_rows, int mutants) {
     uint32_t E, n, k, M, xr, layout, direct;
     if (!strcmp(name, "gateup")) { E = 128; n = 1536; k = 2048; M = tokens * 8; xr = tokens; layout = OMEGA_GPU_PF_SWIGLU_NAT; direct = 0; }
@@ -404,7 +408,7 @@ static int qg_chip_shape(const char *name, uint32_t tokens, int reps, int check_
         if (bad) fail++;
         qsort(ns, reps, 8, cmp_u64);
         const double fl = 2.0 * M * n * k, med = (double)ns[reps / 2];
-        printf("QGEMM%s %s tokens %u M %u n %u k %u tiles %u: median %.3f ms (min %.3f), %.1f TFLOPS, weights %.0f MB -> %.0f GB/s of distinct weights\n", g_cached ? "-cached" : "-inplace", name, tokens, M, n, k, nt,
+        printf("QGEMM%s group %d %s tokens %u M %u n %u k %u tiles %u: median %.3f ms (min %.3f), %.1f TFLOPS, weights %.0f MB -> %.0f GB/s of distinct weights\n", g_cached ? "-cached" : "-inplace", g_group, name, tokens, M, n, k, nt,
                med / 1e6, ns[0] / 1e6, fl / med / 1e3, (double)E * n * k / 1e6, (double)E * n * k / med);
         if (mutants) for (int m = 1; m <= 4; m++) {
             omega_gpu_pf_qgemm_test_set_mutant(m);
@@ -434,6 +438,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--rows") && i + 1 < argc) rows = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--shape") && i + 1 < argc) only = argv[++i];
         else if (!strcmp(argv[i], "--cached")) g_cached = 1;
+        else if (!strcmp(argv[i], "--group") && i + 1 < argc) { g_group = atoi(argv[++i]); omega_gpu_pf_qgemm_set_group((uint32_t)g_group); }
         else if (!strcmp(argv[i], "--rt") && i + 1 < argc) rt = (uint32_t)atoi(argv[++i]);
         else if (!strcmp(argv[i], "--warps") && i + 1 < argc) warps = (uint32_t)atoi(argv[++i]);
         else if (!strcmp(argv[i], "--wait") && i + 1 < argc) { wait = (uint32_t)atoi(argv[++i]); waitset = 1; }

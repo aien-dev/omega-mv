@@ -43,7 +43,7 @@ int omega_blackwell_codegen_pq_prog(const OmegaPqSpec *s, BlackwellIRProgram *pr
  * 0 .. I-1 then up rows I .. 2I-1, as the checkpoint): column tile 0 of a warp is gate rows n0w / 2 .. +7, tile 1 the up rows I later; act[row][n0w / 2 + 2t + q] = bf16_rn(g * rcp(2^min(-g log2 e, 125) + 1) * u), no extra scale
  * (the cap keeps the reciprocal normal: for g < -86.6 the result is g * 2^-125 * u instead of a flushed or subnormal value).
  * Tile entry (32 bytes): { w_va u64, s_va u64, row0 u32, cnt u32 (1 .. 16 rt), pad u64 }; rows past cnt are not stored.
- * Constant bank 0x380: tiles, rowidx (ignored when direct), xq, y, xs (u64 each), n u32 at 0x3a8.
+ * Constant bank 0x380: tiles, rowidx (ignored when direct), xq, y, xs (u64 each), n u32 at 0x3a8, tiles u32 at 0x3ac.
  * Grid: n / (warps * 16) x tiles; 32 * warps threads; shared 2 * (16 rt * 64 + 16 rt * 4) bytes.
  * mutant (tests only): 1 drops sa (uses sw only), 2 never advances the sw pointer, 3 row tile i reads tile i^1, 4 drops step 1
  * of every odd chunk. */
@@ -57,8 +57,14 @@ typedef struct {
     uint32_t n;      /* output width (weight rows), multiple of warps * 16 */
     uint32_t wait;   /* stall cycles between a row tile's last QMMA and the first FFMA reading its result */
     int mutant;
+    uint32_t group;  /* CTA order (cascade/prefill-kernels, 2026-10-19). 0: grid (n / span, tiles), x = column block, y = row
+                      * tile (consecutive CTAs share one row tile and sweep every weight column: the whole weight matrix is
+                      * read from memory once per row tile). g in 1..5: L2-grouped order, G = 2^g row tiles per group:
+                      * grid (G * n / span, ceil(tiles / G)), x = col * G + r, row tile = y * G + r (CTAs with tile >= tiles
+                      * exit at once; tiles at 0x3ac). Consecutive CTAs then share a weight panel across G row tiles.
+                      * Every output is computed by the same instructions in either order (bit-identical). */
 } OmegaQgSpec;
-#define OMEGA_QG_ARGS_WORDS 11u
+#define OMEGA_QG_ARGS_WORDS 12u
 #define OMEGA_QG_TILE_BYTES 32u
 int omega_qg_spec_ok(const OmegaQgSpec *s);
 uint32_t omega_qg_shared_bytes(const OmegaQgSpec *s);

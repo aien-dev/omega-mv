@@ -78,6 +78,7 @@ int omega_qg_spec_ok(const OmegaQgSpec *s) {
     if (s->n == 0 || s->n % (s->warps * 16u) || (uint64_t)(s->epi == OMEGA_QG_EPI_F32 ? 4u : 1u) * s->n * 16u * s->rt >= (1u << 23)) return 0; /* row stride (n f32, or n / 2 bf16 = n bytes) x 16 rt: the store offsets fit the signed 24-bit field */
     if ((16u * s->rt * 4u) % (32u * s->warps)) return 0; /* whole 16-byte staging slots per thread */
     if (s->mutant < 0 || s->mutant > 4) return 0;
+    if (s->group > 5u) return 0;
     return 1;
 }
 uint32_t omega_qg_shared_bytes(const OmegaQgSpec *s) { return omega_qg_spec_ok(s) ? 2u * (16u * s->rt * 64u + 16u * s->rt * 4u) : 0u; }
@@ -106,6 +107,15 @@ int omega_blackwell_codegen_qgemm_prog(const OmegaQgSpec *spec, BlackwellIRProgr
     ldc64(e, ptab, 0x380); if (!spec->direct) ldc64(e, pidx, 0x388); ldc64(e, px, 0x390); ldc64(e, pxs, 0x3a0);
     s2r(e, tid, BW_SR_TID_X); s2r(e, cx, BW_SR_CTAID_X); s2r(e, cy, BW_SR_CTAID_Y);
     movi(e, one, 1);
+    int at_exit = -1;
+    if (spec->group) {   /* L2-grouped order: x = col * G + r, tile = y * G + r; tiles past the table exit (CTA-uniform) */
+        int gr = V(e), ntl = V(e); if (e->err) return -1;
+        andi(e, gr, cx, 0, (1u << spec->group) - 1u); shr(e, cx, cx, 0, spec->group);
+        imadi(e, cy, cy, 0, 1u << spec->group, gr);
+        ldc32(e, ntl, 0x3ac);
+        isetp_ge_u32(e, cy, ntl);
+        at_exit = bra_if_p0_fwd(e);
+    }
     shr(e, warp, tid, 0, 5); andi(e, lane, tid, 0, 31); shr(e, g, lane, 0, 2); andi(e, tq, lane, 0, 3);
     imadw(e, tent, cy, OMEGA_QG_TILE_BYTES, ptab);
     ldg_wide(e, BW_IR_LDG_E_64, wbase, tent, 0, udesc, 1);
@@ -220,6 +230,7 @@ int omega_blackwell_codegen_qgemm_prog(const OmegaQgSpec *spec, BlackwellIRProgr
         if (e->err) return -1;
         ldc64(e, tab2, 0x380); ldc64(e, py2, 0x398); ldc32(e, n2, 0x3a8);
         s2r(e, tid2, BW_SR_TID_X); s2r(e, cx2, BW_SR_CTAID_X); s2r(e, cy2, BW_SR_CTAID_Y);
+        if (spec->group) { andi(e, tmp2, cx2, 0, (1u << spec->group) - 1u); shr(e, cx2, cx2, 0, spec->group); imadi(e, cy2, cy2, 0, 1u << spec->group, tmp2); }
         imadw(e, ten2, cy2, OMEGA_QG_TILE_BYTES, tab2);
         ldg_wide(e, BW_IR_LDG_E_64, rc2, ten2, 16, udesc, 1);
         andi(e, lane2, tid2, 0, 31); shr(e, g2, lane2, 0, 2); andi(e, tq3, lane2, 0, 3);
@@ -270,6 +281,7 @@ int omega_blackwell_codegen_qgemm_prog(const OmegaQgSpec *spec, BlackwellIRProgr
         bsync(e);
         for (uint32_t q = 0; q < nskip; q++) patch_bra(e, skips[q], at_bsync);
         patch_bra(e, at_bssy, at_bsync + 1); }
+    if (at_exit >= 0) patch_bra(e, at_exit, here(e));   /* to the EXIT */
     tail(e);
     if (e->err) return -1;
     return omega_bw_regalloc_solve(prog);
