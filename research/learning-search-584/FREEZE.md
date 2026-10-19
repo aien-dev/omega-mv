@@ -20,7 +20,7 @@ FAIL and INCONCLUSIVE are acceptable results.
 ## 1. State, action, update (the contract of #584)
 
 - Objective x: a bounded arithmetic transformation objective (Phase 0 family 1, #264):
-  key k (64-bit), width w = 32, a set of n_ex = 6 input/output examples (x_i, y_i) from a
+  key k (64-bit), width w = 32, a set of n_ex = 12 input/output examples (x_i, y_i) from a
   hidden rule R_k, and a kind tag (SOLVE, RECALL, COMPOSE, CORRECT).
 - Hidden rule R_k: a program in the Omega V0 realizable subset (`omega_program_realize_check`):
   1 to 3 steps, each (op, imm) with op in {ADD, SUB, MUL, AND, OR} and imm in the
@@ -29,9 +29,10 @@ FAIL and INCONCLUSIVE are acceptable results.
 - Action a = pi_theta(z, x): a program P (1 to 6 steps, same op set) and a verified
   Omega realization of P (`omega_synthesize_for_dgx_spark`, differential check against
   `omega_program_eval` on the 84 fixed differential inputs), or ABSTAIN.
-- Feedback: the harness checks P on the examples (cheap, included in the arm's own
-  cost) and on a sealed check set of 16 fresh inputs per objective (harness cost, not
-  charged to the arm). A CORRECT objective delivers one counterexample (x, R_k(x)).
+- Examples: 4 structured inputs (0, 1, 2^32-1, 2^31) plus 8 random 32-bit inputs.
+- Feedback: the arm checks P on the examples itself (native execution, charged to the
+  arm); the harness scores P on a sealed check set of 16 fresh random inputs per objective
+  (harness cost, not charged to the arm). A CORRECT objective delivers one counterexample (x, R_k(x)).
 - Update z_next = U_theta(z, x, a, feedback): what the arm stores (section 2).
 
 ## 2. The three arms (theta ranges over exactly these)
@@ -56,9 +57,10 @@ C0 = C without composition (steps 1 and 3), C1 = full C. No other variants exist
 - Rule length 1 to 3 steps (sealed distribution: 40% one step, 40% two, 20% three).
 - Candidate programs: shapes of length 1..3 over 5 ops (5 + 25 + 125 = 155 shapes), constants from D:
   total enumeration space 5*16 + 25*256 + 125*4096 = 518,480 programs.
-- Search budget per objective: at most 65,536 candidate programs evaluated on the examples
-  (a candidate evaluation = `omega_program_eval` on the 6 examples); exceeding it is a
-  FAILED SEARCH, counted and charged.
+- Search budget per objective: at most 524,288 candidate programs evaluated on the examples
+  (a candidate evaluation = the V0 semantics on the examples); the budget covers the whole
+  518,480-program space so that an incumbent failure is never an artefact of the budget.
+  Exceeding it is a FAILED SEARCH, counted and charged.
 - Realization budget per objective: at most 4 `omega_synthesize_for_dgx_spark` calls.
 - Program length of an action: at most 6 steps (compositions of two 3-step rules).
 - Table capacity: 32 keys (A has none). Update frequency: after every objective.
@@ -74,7 +76,10 @@ C0 = C without composition (steps 1 and 3), C1 = full C. No other variants exist
 
 ## 4. Task suite (same finite stream for every arm)
 
-A stream is 240 objectives from one seed, drawn from a pool of 64 keys, in this order:
+A stream is 8 preface commands plus 240 objectives from one seed, drawn from a pool of
+64 keys. Preface (not scored, adapter checks): 8 malformed or ambiguous commands (unknown
+kind, no examples, conflicting examples, width outside the frozen domain); the adapter
+must answer with a clarification/abstention and never commit. Then, in this order:
 1. warmup/first exposure (objectives 1..64): each key once (SOLVE).
 2. repeated objectives (65..112): 48 SOLVE on keys already seen, fresh example inputs.
 3. novel bindings (113..144): 32 SOLVE on 32 new keys whose rules reuse shapes seen in
@@ -101,9 +106,14 @@ exposure (block 5 positions minus block 1 positions).
 - Task success: the committed program agrees with R_k on all 16 sealed check inputs.
   (This is a sampled differential test and is labelled SAMPLED; it is not a proof of
   functional equivalence.)
-- Floor F1: no arm commits a wrong program on more than 0 objectives of a sealed stream
-  (a faster incorrect candidate is a failed experiment).
-- Floor F2: success rate (success / objectives) >= 0.90 per sealed stream, per arm.
+- Floor F1 (semantic): 0 commits whose native realization disagrees with the objective's
+  examples, and 0 realizations committed without a passing verification. A program that
+  fits all 12 examples but not the sealed inputs is an identification failure of the
+  evidence, counted as `wrong` under F2, not a semantic error. (A faster incorrect
+  candidate is still a failed experiment: `wrong` counts against F2 and is reported.)
+- Floor F2: success rate (success / objectives) >= 0.90 per sealed stream, per arm, and
+  wrong commits <= 2 per sealed stream (identification failures are reported with the
+  exact count; the arm cannot distinguish them from correct answers by construction).
 - Floor F3: stale/wrong-memory control: 0 wrong commits.
 - An arm below a floor is reported FAIL regardless of cost.
 
@@ -145,8 +155,8 @@ such; this is not open-domain conversation.
 - unseen composition: COMPOSE of keys never seen; C's composition rule must not fire;
   success only through search within budget.
 - Mutant checks (semantic correctness): (M1) flip one immediate in a realized program's
-  code bytes after synthesis; (M2) swap a retained program for one that reproduces 5 of 6
-  examples; (M3) corrupt one payload word of the persisted journal. Each mutant must
+  code bytes after synthesis; (M2) swap a retained program for one that differs in one
+  constant and does not reproduce the examples; (M3) corrupt one payload word of the persisted journal. Each mutant must
   produce bad rows > 0 in the harness's own checks; a mutant with 0 bad rows means the
   check cannot fail and the check is fixed before any PASS is counted.
 
