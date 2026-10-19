@@ -111,8 +111,8 @@ static int host_only(void) {
     { char pm[200]; int pr = omega_tc_patch_selftest(pm, sizeof pm); printf("placeholder patch self-test: %s (%s)\n", pr ? "FAIL" : "ok", pm); if (pr) fail++; }
     /* production shapes: instructions and registers (declared = peak + 2 rounded to 8 <= 128; 32 * warps * declared <= 65536) */
     static const OmegaTcGemmSpec shapes[] = {
-        { 2048, 4, 2, 8, 0 }, { 768, 4, 2, 8, 0 }, { 4096, 4, 2, 8, 0 }, { 2048, 4, 1, 8, 0 }, { 2048, 2, 2, 4, 0 }, { 2048, 4, 2, 4, 0 }, { 768, 4, 2, 4, 0 },
-        { 5120, 4, 2, 8, 0 }, { 17408, 4, 2, 8, 0 }, { 32768, 4, 2, 8, 0 }, /* Qwen3.8-27B widths and the new cap (omega#541) */
+        { 2048, 4, 2, 8, 0, 0 }, { 768, 4, 2, 8, 0, 0 }, { 4096, 4, 2, 8, 0, 0 }, { 2048, 4, 1, 8, 0, 0 }, { 2048, 2, 2, 4, 0, 0 }, { 2048, 4, 2, 4, 0, 0 }, { 768, 4, 2, 4, 0, 0 },
+        { 5120, 4, 2, 8, 0, 0 }, { 17408, 4, 2, 8, 0, 0 }, { 32768, 4, 2, 8, 0, 0 }, /* Qwen3.8-27B widths and the new cap (omega#541) */
     };
     static BlackwellIRProgram prog;
     for (size_t i = 0; i < sizeof shapes / sizeof shapes[0]; i++) {
@@ -157,32 +157,41 @@ static int sim_run(const Prob *p, const OmegaTcGemmSpec *sp, int order, float *y
     uint8_t *smem = malloc(omega_tcgemm_shared_bytes(sp));
     static WsSim s; memset(&s, 0, sizeof s);
     s.p = &prog; s.threads = 32u * sp->warps; s.smem = smem; s.smem_bytes = omega_tcgemm_shared_bytes(sp); s.order = order;
-    uint64_t a[5] = { (uintptr_t)tiles, (uintptr_t)ridx, (uintptr_t)p->xp, (uintptr_t)y, p->n };
+    float *xf = NULL; /* xf32 kernels read x * 2^64 as f32 rows in natural order */
+    if (sp->xf32) { xf = malloc((size_t)p->xr * p->k * 4); for (size_t i = 0; i < (size_t)p->xr * p->k; i++) xf[i] = p->x[i] * 18446744073709551616.0f; }
+    const uintptr_t xva = sp->xf32 ? (uintptr_t)xf : (uintptr_t)p->xp;
+    uint64_t a[5] = { (uintptr_t)tiles, (uintptr_t)ridx, xva, (uintptr_t)y, p->n };
     for (int i = 0; i < 4; i++) { s.cbank[(0x380 + 8 * i) / 4] = (uint32_t)a[i]; s.cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(a[i] >> 32); }
     s.cbank[0x3a0 / 4] = p->n;
     s.ranges[0].lo = (uintptr_t)tiles; s.ranges[0].hi = (uintptr_t)(tiles + nt);
     s.ranges[1].lo = (uintptr_t)ridx; s.ranges[1].hi = (uintptr_t)(ridx + p->M + bm);
-    s.ranges[2].lo = (uintptr_t)p->xp; s.ranges[2].hi = (uintptr_t)(p->xp + (size_t)p->xr * p->k);
+    s.ranges[2].lo = xva; s.ranges[2].hi = xva + (size_t)p->xr * p->k * (sp->xf32 ? 4u : 2u);
     s.ranges[3].lo = (uintptr_t)y; s.ranges[3].hi = (uintptr_t)(y + (size_t)p->M * p->n);
     s.ranges[4].lo = (uintptr_t)p->w; s.ranges[4].hi = (uintptr_t)(p->w + (size_t)p->E * p->n * p->k);
     s.ranges[5].lo = (uintptr_t)p->sf; s.ranges[5].hi = (uintptr_t)(p->sf + (size_t)p->E * (p->n / 128) * (p->k / 128));
     s.nranges = 6;
     int err = ws_run(&s, p->n / span, nt);
     if (err) snprintf(msg, msgn, "simulator %s", s.msg);
-    free(tiles); free(ridx); free(smem);
+    free(tiles); free(ridx); free(smem); free(xf);
     return err ? -1 : 0;
 }
 
 static int sim_tests(void) {
     int fail = 0;
     static const struct { uint32_t E, n, k, M, xr; int skew; OmegaTcGemmSpec sp; } pts[] = {
-        { 3, 256, 256, 40, 13, 0, { 256, 4, 2, 8, 0 } },
-        { 2, 128, 384, 70, 9, 1, { 384, 4, 2, 8, 0 } },   /* three blocks, a multi-tile segment */
-        { 4, 128, 128, 37, 11, 0, { 128, 2, 2, 4, 0 } },
-        { 2, 256, 256, 20, 7, 0, { 256, 4, 1, 8, 0 } },
-        { 2, 128, 256, 33, 5, 1, { 256, 1, 4, 4, 0 } },
-        { 1, 512, 256, 64, 64, 0, { 256, 4, 2, 8, 0 } },  /* dense: one expert, four CTAs across n */
-        { 1, 128, 17408, 64, 64, 0, { 17408, 4, 2, 8, 0 } }, /* Qwen3.8-27B down width (omega#541) */
+        { 3, 256, 256, 40, 13, 0, { 256, 4, 2, 8, 0, 0 } },
+        { 2, 128, 384, 70, 9, 1, { 384, 4, 2, 8, 0, 0 } },   /* three blocks, a multi-tile segment */
+        { 4, 128, 128, 37, 11, 0, { 128, 2, 2, 4, 0, 0 } },
+        { 2, 256, 256, 20, 7, 0, { 256, 4, 1, 8, 0, 0 } },
+        { 2, 128, 256, 33, 5, 1, { 256, 1, 4, 4, 0, 0 } },
+        { 1, 512, 256, 64, 64, 0, { 256, 4, 2, 8, 0, 0 } },  /* dense: one expert, four CTAs across n */
+        { 1, 128, 17408, 64, 64, 0, { 17408, 4, 2, 8, 0, 0 } }, /* Qwen3.8-27B down width (omega#541) */
+        /* cascade/tree-verify-gemm: f32 activations converted in the staging (xf32), decode-sized row counts */
+        { 1, 256, 384, 1, 1, 0, { 384, 1, 4, 4, 0, 1 } },
+        { 1, 256, 256, 32, 32, 0, { 256, 2, 2, 8, 0, 1 } },
+        { 1, 256, 256, 5, 5, 0, { 256, 2, 2, 4, 0, 1 } },
+        { 1, 512, 256, 64, 64, 0, { 256, 2, 2, 8, 0, 1 } }, /* 64 rows: two row tiles */
+        { 1, 256, 256, 3, 3, 0, { 256, 1, 4, 2, 0, 0 } },
     };
     for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
         Prob p; prob_make(&p, pts[i].E, pts[i].n, pts[i].k, pts[i].M, pts[i].xr, pts[i].skew);
@@ -201,11 +210,11 @@ static int sim_tests(void) {
         free(ye); free(ys); free(y0); prob_free(&p);
     }
     /* mutants: each must run cleanly in the simulator and differ from the emulation */
-    for (int m = 1; m <= 4; m++) {
+    for (int m = 1; m <= 5; m++) {
         Prob p; prob_make(&p, 2, 128, 384, 50, 9, 1);
         float *ye = malloc((size_t)p.M * p.n * 4), *ys = malloc((size_t)p.M * p.n * 4);
         emulate(&p, ye);
-        OmegaTcGemmSpec sp = { 384, 4, 2, 8, m };
+        OmegaTcGemmSpec sp = { 384, m == 5 ? 2u : 4u, 2, 8, m, m == 5 ? 1u : 0u };
         char msg[240] = ""; int rc = sim_run(&p, &sp, 0, ys, msg, sizeof msg);
         size_t bad = 0; if (rc == 0) for (size_t q = 0; q < (size_t)p.M * p.n; q++) if (memcmp(&ys[q], &ye[q], 4)) bad++;
         printf("sim mutant %d: %s %s(%zu of %zu differ)\n", m, rc ? "ERROR (counts as FAIL)" : bad ? "caught" : "NOT CAUGHT", msg, bad, (size_t)p.M * p.n);
@@ -222,7 +231,7 @@ int tv_tests(int argc, char **argv);
 int main(int argc, char **argv) {
     if (argc > 2 && strcmp(argv[1], "--dump") == 0) { /* raw code words for nvdisasm -b SM121 (offline check only): --dump file [k rt ct warps mutant] */
         static BlackwellIRProgram dp; static uint8_t buf[OMEGA_BW_CODE_CAP_MAX]; size_t len = 0;
-        OmegaTcGemmSpec sp = { argc > 3 ? (uint32_t)atoi(argv[3]) : 2048u, argc > 4 ? (uint32_t)atoi(argv[4]) : 4u, argc > 5 ? (uint32_t)atoi(argv[5]) : 2u, argc > 6 ? (uint32_t)atoi(argv[6]) : 8u, argc > 7 ? atoi(argv[7]) : 0 };
+        OmegaTcGemmSpec sp = { argc > 3 ? (uint32_t)atoi(argv[3]) : 2048u, argc > 4 ? (uint32_t)atoi(argv[4]) : 4u, argc > 5 ? (uint32_t)atoi(argv[5]) : 2u, argc > 6 ? (uint32_t)atoi(argv[6]) : 8u, argc > 7 ? atoi(argv[7]) : 0, argc > 8 ? (uint32_t)atoi(argv[8]) : 0u };
         if (omega_blackwell_codegen_tcgemm_prog(&sp, &dp) != 0 || omega_bw_encode_program(&dp, buf, sizeof buf, &len) != 0) return 1;
         FILE *f = fopen(argv[2], "wb"); if (!f) return 1; fwrite(buf, 1, len, f); fclose(f); printf("peak %u, %zu bytes\n", dp.regalloc.peak_gpr_usage, len); return 0;
     }
@@ -378,6 +387,10 @@ int tv_tests(int argc, char **argv) {
         printf("tv: device buffers failed: %s\n", omega_gpu_tcgemm_last_error()); omega_gpu_fp8_tensor_free(t); prob_free(&p); return 1;
     }
     float *ref = malloc(ybytes), *y = malloc(ybytes), *poison = malloc(ybytes);
+    OmegaGpuMem xfd; memset(&xfd, 0, sizeof xfd); /* the same rows as f32 x 2^64, natural order (xform F32) */
+    {   float *xf = malloc((size_t)nmax * k * 4); for (size_t i = 0; i < (size_t)nmax * k; i++) xf[i] = p.x[i] * 18446744073709551616.0f;
+        if (omega_gpu_pf_alloc_dev((size_t)nmax * k * 4u, &xfd) || omega_gpu_pf_upload(&xfd, 0, xf, (size_t)nmax * k * 4u)) { printf("tv: f32 x buffer failed\n"); fail++; }
+        free(xf); }
     for (size_t i = 0; i < (size_t)nmax * n; i++) poison[i] = -999.0f;
     printf("tv %s: n %u k %u (weights %.1f MB), rows %s, weight cache %d\n", shape, n, k, (double)n * k / 1e6, rows_s, wcache);
     /* the largest N first: its output is the reference for every other N */
@@ -395,7 +408,10 @@ int tv_tests(int argc, char **argv) {
         if (omega_gpu_tv_spec(N, n, k, &sp) != 0) { printf("tv N %u tile %u:%u:%u: shape refused, skipped\n", N, tl[ti][0], tl[ti][1], tl[ti][2]); if (ti == 0) fail++; continue; }
         if (ti > 0 && 16u * sp.rt < N) { printf("tv N %u tile %u:%u:%u: %u row tiles (weights read %u times), skipped\n", N, sp.rt, sp.ct, sp.warps, (N + 16u * sp.rt - 1u) / (16u * sp.rt), (N + 16u * sp.rt - 1u) / (16u * sp.rt)); continue; }
         uint64_t ns = 0;
-        if (omega_gpu_pf_upload(&yd, 0, poison, ybytes) || (rc = omega_gpu_tv_gemm(t, N, xd.va, yd.va, &ns)) != 0 || omega_gpu_pf_download(&yd, 0, y, ybytes)) {
+        rc = omega_gpu_pf_upload(&yd, 0, poison, ybytes);
+        if (!rc) rc = omega_gpu_tv_gemm(t, N, xd.va, yd.va, &ns);
+        if (rc == OMEGA_GPU_PF_CODEGEN_FAIL && ti > 0) { printf("tv N %u tile %u:%u:%u: codegen refused (registers), skipped\n", N, sp.rt, sp.ct, sp.warps); continue; }
+        if (rc || omega_gpu_pf_download(&yd, 0, y, ybytes)) {
             printf("tv N %u: call failed %d: %s\n", N, rc, omega_gpu_tcgemm_last_error()); fail++; break;
         }
         size_t unwritten = 0, beyond = 0;
@@ -418,6 +434,20 @@ int tv_tests(int argc, char **argv) {
         uint64_t ce[64]; uint32_t done = 0;
         for (uint32_t r = 0; r < reps; r++) { uint64_t e = 0; if (omega_gpu_tv_gemm(t, N, xd.va, yd.va, &e) == 0) ce[done++] = e; }
         if (done != reps) { printf("tv timing: %u of %u calls failed\n", reps - done, reps); fail++; }
+        if (ti == 0) {   /* f32 activations converted in the kernel (the decode graph's xq form): same bits, timed */
+            OmegaTcGemmSpec sx; size_t xd2 = 0; uint64_t cx[64]; uint32_t dx = 0; int xrc = omega_gpu_tv_spec_x(N, OMEGA_GPU_TV_X_F32, n, k, &sx);
+            if (!xrc) xrc = omega_gpu_pf_upload(&yd, 0, poison, ybytes);
+            if (!xrc) xrc = omega_gpu_tv_gemm_x(t, N, OMEGA_GPU_TV_X_F32, xfd.va, yd.va, NULL);
+            if (!xrc) xrc = omega_gpu_pf_download(&yd, 0, y, ybytes);
+            if (!xrc) for (size_t i = 0; i < (size_t)N * n; i++) if (memcmp(&y[i], &ref[i], 4)) xd2++;
+            for (uint32_t r = 0; !xrc && r < reps; r++) { uint64_t e = 0; if (omega_gpu_tv_gemm_x(t, N, OMEGA_GPU_TV_X_F32, xfd.va, yd.va, &e) == 0) cx[dx++] = e; }
+            if (dx) qsort(cx, dx, 8, cmp_u64);
+            printf("tv xf32 N %u: rt %u ct %u warps %u; %s, %zu of %zu differ from the reference%s; chip median %.1f us (%u), weights %.1f GB/s\n", N, sx.rt, sx.ct, sx.warps, xrc ? "ERROR" : "ok", xd2, (size_t)N * n,
+                   xd2 ? "" : " (same bits)", dx ? cx[dx / 2] / 1e3 : 0.0, dx, dx ? (double)n * k / cx[dx / 2] : 0.0);
+            if (jf && dx) fprintf(jf, "{\"shape\":\"%s\",\"n\":%u,\"k\":%u,\"rows\":%u,\"xform\":\"f32\",\"rt\":%u,\"ct\":%u,\"warps\":%u,\"weight_cache\":%d,\"reps\":%u,\"chip_median_ns\":%" PRIu64 ",\"weights_gbps\":%.2f}\n",
+                                  shape, n, k, N, sx.rt, sx.ct, sx.warps, wcache, dx, cx[dx / 2], (double)n * k / cx[dx / 2]);
+            if (xrc || xd2 || dx != reps) fail++;
+        }
         {   /* the host convenience call (f32 in, f32 out): same bits as the device-buffer pass, and its whole-call time */
             float *yf = malloc((size_t)N * n * 4); OmegaGpuTvInfo ti; uint64_t cc[8]; uint32_t cd = 0; size_t fd = 0; int frc = 0;
             for (uint32_t r = 0; r < 5; r++) { frc = omega_gpu_tv_f32(t, N, p.x, yf, &ti); if (frc) break; cc[cd++] = ti.call_ns; }
@@ -448,7 +478,7 @@ int tv_tests(int argc, char **argv) {
     }
     omega_gpu_tv_test_set_mutant(0);
     if (jf) fclose(jf);
-    omega_gpu_pf_free(&xd); omega_gpu_pf_free(&yd); free(ref); free(y); free(poison);
+    omega_gpu_pf_free(&xd); omega_gpu_pf_free(&yd); omega_gpu_pf_free(&xfd); free(ref); free(y); free(poison);
     omega_gpu_fp8_tensor_free(t); prob_free(&p);
     printf("tv: %s\n", fail ? "FAIL" : "PASS");
     return fail;

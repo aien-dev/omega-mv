@@ -30,11 +30,13 @@ static void on_close(void) { omega_gpu_session_free(&g.hx); omega_gpu_session_fr
 void omega_gpu_tv_set_shape(uint32_t rt, uint32_t ct, uint32_t w) { omega_gpu_session_lock(); g.rt = rt; g.ct = ct; g.warps = w; omega_gpu_session_unlock(); }
 void omega_gpu_tv_test_set_mutant(int m) { omega_gpu_session_lock(); g.mutant = m; omega_gpu_session_unlock(); }
 
-int omega_gpu_tv_spec(uint32_t rows, uint32_t n, uint32_t k, OmegaTcGemmSpec *spec) {
-    if (!spec || rows == 0 || rows > OMEGA_GPU_TV_MAX_ROWS) return -1;
+int omega_gpu_tv_spec(uint32_t rows, uint32_t n, uint32_t k, OmegaTcGemmSpec *spec) { return omega_gpu_tv_spec_x(rows, OMEGA_GPU_TV_X_BF16P, n, k, spec); }
+int omega_gpu_tv_spec_x(uint32_t rows, uint32_t xform, uint32_t n, uint32_t k, OmegaTcGemmSpec *spec) {
+    if (!spec || rows == 0 || rows > OMEGA_GPU_TV_MAX_ROWS || xform > OMEGA_GPU_TV_X_F32) return -1;
     memset(spec, 0, sizeof *spec);
     spec->k = k;
-    spec->rt = g.rt ? g.rt : rows <= 16u ? 1u : rows <= 32u ? 2u : 4u;
+    spec->xf32 = xform == OMEGA_GPU_TV_X_F32;
+    spec->rt = g.rt ? g.rt : rows <= 16u ? 1u : (rows <= 32u || spec->xf32) ? 2u : 4u;
     /* rt * ct >= 4 (HMMA spacing); 8 warps unless the A staging slots do not divide (rt 1: 4 warps) */
     spec->ct = g.ct ? g.ct : spec->rt >= 4u ? 2u : 4u / spec->rt;
     spec->warps = g.warps ? g.warps : spec->rt == 1u ? 4u : 8u;
@@ -50,12 +52,12 @@ static int gen_tv(const OmegaPfKey *key, void *prog) {
 }
 
 /* lock held, device open: kernel, launch shape and argument words for one call */
-static int prepare_locked(const OmegaGpuFp8Tensor *t, uint32_t rows, uint64_t x_va, uint64_t y_va, OmegaPfKernel *k, OmegaTcGemmSpec *spec,
+static int prepare_locked(const OmegaGpuFp8Tensor *t, uint32_t rows, uint32_t xform, uint64_t x_va, uint64_t y_va, OmegaPfKernel *k, OmegaTcGemmSpec *spec,
                           uint32_t *grid_x, uint32_t *grid_y, uint32_t args[OMEGA_TCGEMM_ARGS_WORDS]) {
     uint32_t experts = 0, n = 0, kk = 0;
     if (!t || !x_va || !y_va) return OMEGA_GPU_PF_BAD_ARGS;
     omega_gpu_fp8_tensor_shape(t, &experts, &n, &kk);
-    if (experts != 1 || omega_gpu_tv_spec(rows, n, kk, spec) != 0) { omega_gpu_session_set_error("tv gemm: shape or row count refused"); return OMEGA_GPU_PF_BAD_ARGS; }
+    if (experts != 1 || omega_gpu_tv_spec_x(rows, xform, n, kk, spec) != 0) { omega_gpu_session_set_error("tv gemm: shape or row count refused"); return OMEGA_GPU_PF_BAD_ARGS; }
     int rc = omega_gpu_pf_open_locked();
     if (rc != OMEGA_GPU_PF_OK) return rc;
     if (!g.hooked) { (void)omega_gpu_session_on_close(on_close); g.hooked = true; }
@@ -89,18 +91,24 @@ static int prepare_locked(const OmegaGpuFp8Tensor *t, uint32_t rows, uint64_t x_
 }
 
 int omega_gpu_tv_gemm(const OmegaGpuFp8Tensor *t, uint32_t rows, uint64_t x_va, uint64_t y_va, uint64_t *chip_ns) {
+    return omega_gpu_tv_gemm_x(t, rows, OMEGA_GPU_TV_X_BF16P, x_va, y_va, chip_ns);
+}
+int omega_gpu_tv_gemm_x(const OmegaGpuFp8Tensor *t, uint32_t rows, uint32_t xform, uint64_t x_va, uint64_t y_va, uint64_t *chip_ns) {
     if (chip_ns) *chip_ns = 0;
     omega_gpu_session_lock();
     OmegaPfKernel k; OmegaTcGemmSpec spec; uint32_t gx = 0, gy = 0, args[OMEGA_TCGEMM_ARGS_WORDS];
-    int rc = prepare_locked(t, rows, x_va, y_va, &k, &spec, &gx, &gy, args);
+    int rc = prepare_locked(t, rows, xform, x_va, y_va, &k, &spec, &gx, &gy, args);
     if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_pf_launch_locked(&k, 32u * spec.warps, gx, gy, omega_tcgemm_shared_bytes(&spec), args, OMEGA_TCGEMM_ARGS_WORDS, chip_ns);
     omega_gpu_session_unlock();
     return rc;
 }
 
 int omega_gpu_tv_record_locked(OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t rows, uint64_t x_va, uint64_t y_va) {
+    return omega_gpu_tv_record_x_locked(cl, t, rows, OMEGA_GPU_TV_X_BF16P, x_va, y_va);
+}
+int omega_gpu_tv_record_x_locked(OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t rows, uint32_t xform, uint64_t x_va, uint64_t y_va) {
     OmegaPfKernel k; OmegaTcGemmSpec spec; uint32_t gx = 0, gy = 0, args[OMEGA_TCGEMM_ARGS_WORDS];
-    int rc = prepare_locked(t, rows, x_va, y_va, &k, &spec, &gx, &gy, args);
+    int rc = prepare_locked(t, rows, xform, x_va, y_va, &k, &spec, &gx, &gy, args);
     if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_pf_record_locked(cl, &k, 32u * spec.warps, gx, gy, omega_tcgemm_shared_bytes(&spec), args, OMEGA_TCGEMM_ARGS_WORDS);
     return rc;
 }

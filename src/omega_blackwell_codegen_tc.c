@@ -46,7 +46,8 @@ int omega_tcgemm_spec_ok(const OmegaTcGemmSpec *s) {
     if (s->rt * s->ct < 4u) return 0; /* >= 4 independent HMMAs between dependent ones (8 cycles each, nvcc's 29-cycle rule) */
     if (s->warps != 1 && s->warps != 2 && s->warps != 4 && s->warps != 8) return 0;
     if ((16u * s->rt * 8u) % (32u * s->warps)) return 0; /* whole LDG.128 staging slots per thread */
-    if (s->mutant < 0 || s->mutant > 4 || (s->mutant == 3 && s->rt < 2)) return 0;
+    if (s->mutant < 0 || s->mutant > 5 || (s->mutant == 3 && s->rt < 2) || (s->mutant == 5 && !s->xf32)) return 0;
+    if (s->xf32 > 1 || (s->xf32 && s->rt > 2u)) return 0; /* rt 4 with the f32 staging registers does not fit 128 */
     return 1;
 }
 uint32_t omega_tcgemm_shared_bytes(const OmegaTcGemmSpec *s) { return omega_tcgemm_spec_ok(s) ? 2u * 16u * s->rt * 128u : 0u; }
@@ -75,11 +76,24 @@ static void decode_word(Em *e, int bpair, int wq, unsigned word, int m, int s, i
     { BlackwellIRInsn i = I0(BW_IR_IADD3); i.dst_vreg = bpair; i.dst_subreg = 1; i.src1_vreg = t; i.src2_vreg = s; emit(e, i, K_FIXED); }
 }
 
+/* f32 values x0..x3 (a) and x4..x7 (b) in natural order -> the four stored words (0,2,1,3 order, low half first):
+ * w0 = (x0 | x2 << 16), w1 = (x1 | x3 << 16), w2 = (x4 | x6 << 16), w3 = (x5 | x7 << 16), each half RN bf16 */
+static void pack_f32(Em *e, int pk[4], int a, int b, int swap) {
+    static const uint8_t lo[4] = { 0, 1, 0, 1 }, hi[4] = { 2, 3, 2, 3 };
+    for (unsigned q = 0; q < 4; q++) {
+        BlackwellIRInsn i = I0(BW_IR_FMNMX_MAX); i.dst_vreg = pk[q]; i.imm = OMEGA_TC_MARK_F2FP;
+        i.src1_vreg = q < 2 ? a : b; i.src1_subreg = swap ? lo[q] : hi[q];
+        i.src2_vreg = q < 2 ? a : b; i.src2_subreg = swap ? hi[q] : lo[q];
+        emit(e, i, K_FIXED);
+    }
+}
+
 int omega_blackwell_codegen_tcgemm_prog(const OmegaTcGemmSpec *spec, BlackwellIRProgram *prog) {
     if (!omega_tcgemm_spec_ok(spec) || !prog) return -1;
     const uint32_t K = spec->k, RT = spec->rt, CT = spec->ct, W = spec->warps, T = 32u * W;
     const uint32_t AQN = RT * CT >= 8u ? 1u : 2u; /* A fragments in flight: one for the 8-tile shapes keeps peak <= 126 */
     const uint32_t BM = 16u * RT, KB = K / 128u, SPAN = W * 8u * CT, NJ = BM * 8u / T, BUF = BM * 128u;
+    const uint32_t XB = spec->xf32 ? 4u : 2u; /* activation bytes per element in memory */
     omega_bw_ir_init(prog);
     Em em; memset(&em, 0, sizeof em); em.p = prog;
     Em *e = &em;
@@ -124,7 +138,7 @@ int omega_blackwell_codegen_tcgemm_prog(const OmegaTcGemmSpec *spec, BlackwellIR
         shr(e, r, tid, 0, 3); imadi(e, r, one, 0, jj * T / 8u, r);
         iadd(e, tmp, row0, r); imadw(e, sidx, tmp, 4u, pidx);
         ldg32(e, srow, sidx, udesc, 1);
-        imadw(e, gx[jj], srow, K * 2u, px); imadw(e, gx[jj], w0b, 1, gx[jj]);
+        imadw(e, gx[jj], srow, K * XB, px); imadw(e, gx[jj], w0b, XB / 2u, gx[jj]);
         /* shared byte address ((i*4 + s0)*32 + g'*4 + t)*16 + h*4 with i = r/16, g' = r%8, h = (r/8)%2 */
         shr(e, tmp, r, 0, 4); imadi(e, tmp, tmp, 0, 4u, s0); imadi(e, tmp, tmp, 0, 32u, ts);
         andi(e, tmp2, r, 0, 7); imadi(e, tmp2, tmp2, 0, 4u, tmp); imadi(e, sa[jj], tmp2, 0, 16u, NOREG);
@@ -136,18 +150,22 @@ int omega_blackwell_codegen_tcgemm_prog(const OmegaTcGemmSpec *spec, BlackwellIR
     for (uint32_t x = 0; x < RT * CT; x++) { acc[x] = V128(e); tm[x] = V128(e); }
     for (uint32_t j = 0; j < CT; j++) { wa[j] = V128(e); wb[j] = V128(e); bp[j] = V64(e); }
     for (uint32_t q = 0; q < AQN; q++) aq[q] = V128(e);
-    for (uint32_t jj = 0; jj < NJ; jj++) stg[jj] = V128(e);
+    int stg2[8], pkw[4];
+    for (uint32_t jj = 0; jj < NJ; jj++) { stg[jj] = V128(e); stg2[jj] = spec->xf32 ? V128(e) : NOREG; }
+    for (unsigned q = 0; q < 4; q++) pkw[q] = spec->xf32 ? V(e) : NOREG;
     if (e->err) return -1;
 
     /* issue the loads of one chunk: activations into stg (row chunk at gx + xoff), weights into wset (pw + woff) */
     #define ISSUE(wset, sb, xoff, woff, with_scale) do { \
-        for (uint32_t jj = 0; jj < NJ; jj++) ldw_pf(e, BW_IR_LDG_E_128, stg[jj], gx[jj], (xoff), udesc, (sb)); \
+        for (uint32_t jj = 0; jj < NJ; jj++) { ldw_pf(e, BW_IR_LDG_E_128, stg[jj], gx[jj], (xoff) * (XB / 2u), udesc, (sb)); \
+            if (spec->xf32) ldw_pf(e, BW_IR_LDG_E_128, stg2[jj], gx[jj], (xoff) * 2u + 16u, udesc, (sb)); } \
         for (uint32_t j = 0; j < CT; j++) ldw_pf(e, BW_IR_LDG_E_128, (wset)[j], pw, (woff) + j * 8u * K, udesc, (sb)); \
         if (with_scale) ldw_pf(e, BW_IR_LDG_E, sc, ps, 0, udesc, (sb)); } while (0)
     /* stage stg into buffer `buf` (byte offset): words w0, w0+1 -> s0 pair 0/1, w0+2, w0+3 -> s0+1 */
     #define STAGE(buf) do { for (uint32_t jj = 0; jj < NJ; jj++) { static const uint32_t off[4] = { 0, 8, 512, 520 }; \
+        if (spec->xf32) pack_f32(e, pkw, stg[jj], stg2[jj], spec->mutant == 5); \
         for (unsigned q = 0; q < 4; q++) { BlackwellIRInsn st = I0(BW_IR_STS32); imadi(e, tmp, one, 0, (buf) + off[q], sa[jj]); \
-            st.src1_vreg = tmp; st.src2_vreg = stg[jj]; st.src2_subreg = (uint8_t)q; emit(e, st, K_STORE); } } bar_sync(e); } while (0)
+            st.src1_vreg = tmp; if (spec->xf32) st.src2_vreg = pkw[q]; else { st.src2_vreg = stg[jj]; st.src2_subreg = (uint8_t)q; } emit(e, st, K_STORE); } } bar_sync(e); } while (0)
 
     /* compute one 64-element chunk from shared buffer `buf` with weight set wset; first: the first chunk of a block */
     #define COMPUTE(buf, wset, first, odd) do { \
@@ -183,7 +201,7 @@ int omega_blackwell_codegen_tcgemm_prog(const OmegaTcGemmSpec *spec, BlackwellIR
     {   /* chunk 2kb+2 (the next block's first chunk); the last iteration re-reads its own chunk (harmless, drained below) */
         int nf = V(e), inc = V(e); if (e->err) return -1;
         imadi(e, nf, one, 0, 0xfffffffeu, cntk); shr(e, nf, nf, 0, 31); imadi(e, nf, nf, 0, 0xffffffffu, one);
-        for (uint32_t jj = 0; jj < NJ; jj++) imadw(e, gx[jj], nf, 256u, gx[jj]);
+        for (uint32_t jj = 0; jj < NJ; jj++) imadw(e, gx[jj], nf, 128u * XB, gx[jj]);
         imadw(e, pw, nf, 128u, pw);
         imadi(e, inc, nf, 0, spec->mutant == 2 ? 0u : 4u, NOREG); imadw(e, ps, inc, 1, ps);
     }

@@ -47,7 +47,8 @@ int omega_blackwell_codegen_tc_probe_prog(int mutant, BlackwellIRProgram *prog);
  * Constant bank 0 (cbank + 0x380): tiles u64, rowidx u64, x u64 (bf16 rows of k), y u64 (f32 rows of n), n u32.
  * Grid: grid_x = n / (warps * 8 * ct) (exact), grid_y = tiles. CTA: 32 * warps threads; shared 2 * 16 * rt * 128 bytes.
  * mutant (tests only): 1 drops the block scale, 2 never advances the scale pointer, 3 row tile i reads tile i^1 (rt >= 2),
- * 4 drops the last 64-element chunk of every 128 block. Each must be caught. */
+ * 4 drops the last 64-element chunk of every 128 block, 5 (xf32 only) swaps the two values of every packed word. Each must
+ * be caught. */
 #define OMEGA_TCGEMM_MAX_K 32768u /* the K loop runs KB = k / 128 iterations; nothing else grows with k (omega#541) */
 typedef struct {
     uint32_t k;     /* multiple of 128, 128 .. OMEGA_TCGEMM_MAX_K */
@@ -55,6 +56,10 @@ typedef struct {
     uint32_t ct;    /* column tiles (8 weight rows) per warp: 1, 2 or 4; rt * ct >= 4 */
     uint32_t warps; /* 1, 2, 4 or 8; (16 * rt * 8) % (32 * warps) == 0 */
     int mutant;
+    uint32_t xf32;  /* cascade/tree-verify-gemm: 1 = x rows are f32 of k in natural order, already times 2^64 (the decode
+                     * graph's xq row); the staging converts each value with F2FP.BF16.F32.PACK_AB (RN) into the stored
+                     * order, so the HMMA sees exactly omega_tcgemm_permute_x(x / 2^64): the same bits as xf32 = 0;
+                     * rt 1 or 2 only (rt 4 needs more than 128 registers) */
 } OmegaTcGemmSpec;
 #define OMEGA_TCGEMM_ARG_TILES 0x380u
 #define OMEGA_TCGEMM_ARG_ROWIDX 0x388u
