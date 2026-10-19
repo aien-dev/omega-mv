@@ -1,0 +1,23 @@
+// L093 round-trip program 3: a struct reference passed into calls as &S, &mut S and own S.
+struct Acc { total: u64, hits: [u8; 3] }
+
+fn peek(a: &Acc) -> u64 {
+    return a.total + (a.hits[0] as u64);
+}
+
+fn bump(a: &mut Acc, by: u64) -> u64 {
+    a.total = a.total + by;
+    a.hits[0] = a.hits[0] + 1;
+    return a.total;
+}
+
+fn take(a: own Acc) -> u64 {
+    return a.total;
+}
+
+fn run(x: u64) -> u64 {
+    let a: own Acc = Acc { total: x, hits: [0; 3] };
+    let t: u64 = bump(&mut a, 5);
+    let u: u64 = peek(&a);
+    return take(a) + t + u;
+}

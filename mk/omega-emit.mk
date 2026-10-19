@@ -5,11 +5,14 @@
 # omega-emit          build/omega_emit/{omega_emit,x445,fake445,typediff}
 # test-omega-emit     omega_emit: every op of the schema, step refusals with reasons, negative controls,
 #                     lift -> emit byte-identical over the compiler corpus; x445 helper checks
+# test-omega-emit-structs  L093 gates RT + C2: every positive struct .osc (tests/compiler + tools/omega_emit/structs):
+#                     oscc IR == emit(lift(IR)) by sha256, checker2 ACCEPT with the same line; table in
+#                     evidence/EMIT-STRUCTS/round-trip.md
 # test-exp445         driver dry run against a fake local endpoint (no model, no network beyond loopback);
 #                     the r3 worked examples in both forms through the sealed harness; G0; held-out name check
 ifndef OMEGA_EMIT_MK
 OMEGA_EMIT_MK := 1
-.PHONY: omega-emit test-omega-emit test-exp445
+.PHONY: omega-emit test-omega-emit test-omega-emit-structs test-exp445
 OME_DIR = $(OUT_DIR)/omega_emit
 OME_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler
 OME_OSC_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/sha256.c
@@ -34,6 +37,9 @@ omega-emit: $(OME_DIR)/omega_emit $(OME_DIR)/x445 $(OME_DIR)/fake445 $(OME_DIR)/
 
 test-omega-emit: omega-emit $(OUT_DIR)/compiler/oscc
 	bash tools/omega_emit/test_omega_emit.sh $(abspath $(OME_DIR)) $(abspath $(OUT_DIR)/compiler/oscc)
+
+test-omega-emit-structs: omega-emit $(OUT_DIR)/compiler/oscc checker2
+	bash tools/omega_emit/structs/gate_structs.sh $(abspath $(OME_DIR)/omega_emit) $(abspath $(OUT_DIR)/compiler/oscc) $(abspath $(C2_DIR)/checker2) $(abspath evidence/EMIT-STRUCTS)
 
 $(OME_DIR)/examples_expected: tools/exp445/examples_expected.c
 	@mkdir -p $(OME_DIR)

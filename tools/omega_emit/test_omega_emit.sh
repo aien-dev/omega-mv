@@ -188,6 +188,61 @@ R step_trap_code 'step: function f block 0 op 0 (trap): trap code must be 1..14'
 R step_store_shared 'store needs an own: or mut: array' '{"functions": [{"name": "s", "params": ["shared:u8:4"], "ret": "void", "locals": ["u32", "u8"], "blocks": [[{"op": "const", "dst": 1, "value": 0}, {"op": "const", "dst": 2, "value": 0}, {"op": "store", "arr": 0, "index": 1, "value": 2}, {"op": "ret"}]]}]}'
 R validator_use_before_def 'validator: function f block 0 op 0 (add): vreg 3 may be used before it is defined' "$(unit '["u32", "u32"]' '[[{"op": "add", "dst": 2, "a": 0, "b": 3}, {"op": "ret", "a": 2}]]')"
 R validator_def_one_path 'validator: function f block 3 op 0 (ret): vreg 2 may be used before it is defined' "$(unit '["u32", "bool"]' '[[{"op": "lt", "dst": 3, "a": 0, "b": 1}, {"op": "cbr", "cond": 3, "then": 1, "else": 2}], [{"op": "mov", "dst": 2, "a": 0}, {"op": "br", "to": 3}], [{"op": "br", "to": 3}], [{"op": "ret", "a": 2}]]')"
+
+# ---- 3b. OSC-2 structs (L093): positives, version bytes, refusals with a place -------------------
+# su <params> <locals> <blocks>: one function "f" -> u32 over struct P { x: u32, v: [u8; 2] } and Q { b: bool }
+su() { printf '{"structs": [{"name": "P", "fields": [{"name": "x", "type": "u32"}, {"name": "v", "type": "u8", "len": 2}]}, {"name": "Q", "fields": [{"name": "b", "type": "bool"}]}], "functions": [{"name": "f", "params": %s, "ret": "u32", "locals": %s, "blocks": %s}]}' "$1" "$2" "$3"; }
+irver() { od -An -tu1 -j7 -N1 "$1" | tr -d ' '; }
+awk '/^```$/ { n++; next } n == 7 { print }' "$HERE/SCHEMA.md" > "$T/sexample.json"
+if [ -s "$T/sexample.json" ] && accepts "$E" sexample "$(cat "$T/sexample.json")" && [ "$(irver "$T/sexample.oscir")" = 2 ]; then ok "SCHEMA.md struct example emits (IR version 2); lift -> emit byte-identical"
+else bad "SCHEMA.md struct example"; cat "$T/sexample.out" 2>/dev/null; fi
+[ "$(irver "$T/example.oscir")" = 1 ] && ok "a unit without structs keeps IR version byte 1" || bad "unit without structs is not version 1"
+# every struct op and binding: literal (const 0, alloc, fstores), fload both kinds, mov own->own / own->mut / mut->shared,
+# calls binding shared:, mut: and own: struct parameters, release
+SALL='{"structs": [{"name": "P", "fields": [{"name": "x", "type": "u32"}, {"name": "v", "type": "u8", "len": 2}]}],
+ "functions": [
+  {"name": "rd", "params": ["shared:P"], "ret": "u32", "locals": ["u32"], "blocks": [[{"op": "fload", "dst": 1, "a": 0, "field": "x"}, {"op": "ret", "a": 1}]]},
+  {"name": "wr", "params": ["mut:P", "u8"], "ret": "void", "locals": ["u64"],
+   "blocks": [[{"op": "const", "dst": 2, "value": 1}, {"op": "fstore", "a": 0, "field": "v", "value": 1, "index": 2}, {"op": "ret"}]]},
+  {"name": "eat", "params": ["own:P"], "ret": "u32", "locals": ["u32"],
+   "blocks": [[{"op": "fload", "dst": 1, "a": 0, "field": "x"}, {"op": "release", "arr": 0}, {"op": "ret", "a": 1}]]},
+  {"name": "g", "params": ["u32", "u8"], "ret": "u32",
+   "locals": ["u64", "own:P", "u32", "own:P", "mut:P", "shared:P", "u32", "u8", "u32", "u32"],
+   "blocks": [[{"op": "const", "dst": 2, "value": 0}, {"op": "alloc", "dst": 3, "init": 2},
+     {"op": "fstore", "a": 3, "field": "x", "value": 0}, {"op": "const", "dst": 4, "value": 1},
+     {"op": "mov", "dst": 5, "a": 3}, {"op": "mov", "dst": 6, "a": 5}, {"op": "mov", "dst": 7, "a": 6},
+     {"op": "call", "func": "wr", "args": [6, 1]}, {"op": "call", "dst": 8, "func": "rd", "args": [7]},
+     {"op": "fload", "dst": 9, "a": 7, "field": "v", "index": 2}, {"op": "call", "dst": 10, "func": "eat", "args": [5]},
+     {"op": "add", "dst": 11, "a": 8, "b": 10}, {"op": "ret", "a": 11}]]}
+ ]}'
+if accepts "$E" sall "$SALL" && [ "$(irver "$T/sall.oscir")" = 2 ]; then ok "struct unit with every struct op and binding emits; lift -> emit byte-identical"
+else bad "struct all-ops unit: $(cat "$T/sall.out" 2>/dev/null)"; fi
+grep -qF '"structs": [' "$T/sall.lift.json" && grep -qF '{"name": "v", "type": "u8", "len": 2}' "$T/sall.lift.json" && grep -qF '"field": "v", "value": 1, "index": 2' "$T/sall.lift.json" &&
+  ok "  lift prints the struct table and fields by name" || bad "lift of struct unit does not show the table"
+Z='{"op": "const", "dst": 1, "value": 0}, {"op": "alloc", "dst": 2, "init": 1}'
+R st_unknown_struct 'schema: function f: register r0: type "own:R" names no struct in "structs"' "$(su '["own:R"]' '[]' '[[{"op": "ret", "a": 0}]]')"
+R st_unknown_field 'step: function f block 0 op 0 (fload): struct P has no field "z"' "$(su '["shared:P"]' '["u32"]' '[[{"op": "fload", "dst": 1, "a": 0, "field": "z"}, {"op": "ret", "a": 1}]]')"
+R st_fstore_shared 'step: function f block 0 op 1 (fstore): a r0 is shared:P; fstore needs an own: or mut: struct reference' "$(su '["shared:P"]' '["u32"]' '[[{"op": "const", "dst": 1, "value": 3}, {"op": "fstore", "a": 0, "field": "x", "value": 1}, {"op": "ret", "a": 1}]]')"
+R st_index_scalar 'step: function f block 0 op 1 (fload): field P.x is a scalar u32: leave out "index"' "$(su '["shared:P"]' '["u32", "u32"]' '[[{"op": "const", "dst": 1, "value": 0}, {"op": "fload", "dst": 2, "a": 0, "field": "x", "index": 1}, {"op": "ret", "a": 2}]]')"
+R st_no_index 'step: function f block 0 op 0 (fload): field P.v is an array [u8; 2]: "index" is required' "$(su '["shared:P"]' '["u8", "u32"]' '[[{"op": "fload", "dst": 1, "a": 0, "field": "v"}, {"op": "const", "dst": 2, "value": 0}, {"op": "ret", "a": 2}]]')"
+R st_fload_type 'step: function f block 0 op 0 (fload): dst r1 is u8; field P.x is u32' "$(su '["shared:P"]' '["u8", "u32"]' '[[{"op": "fload", "dst": 1, "a": 0, "field": "x"}, {"op": "const", "dst": 2, "value": 0}, {"op": "ret", "a": 2}]]')"
+R st_fstore_type 'step: function f block 0 op 1 (fstore): value r1 is u8; field P.x is u32' "$(su '["mut:P"]' '["u8", "u32"]' '[[{"op": "const", "dst": 1, "value": 3}, {"op": "fstore", "a": 0, "field": "x", "value": 1}, {"op": "const", "dst": 2, "value": 0}, {"op": "ret", "a": 2}]]')"
+R st_fload_array 'step: function f block 0 op 0 (fload): a r0 is shared:u8:2, not a struct reference' "$(su '["shared:u8:2"]' '["u32"]' '[[{"op": "fload", "dst": 1, "a": 0, "field": "x"}, {"op": "ret", "a": 1}]]')"
+R st_load_struct 'step: function f block 0 op 1 (load): arr r0 is shared:P, not an array' "$(su '["shared:P"]' '["u32", "u8", "u32"]' '[[{"op": "const", "dst": 1, "value": 0}, {"op": "load", "dst": 2, "arr": 0, "index": 1}, {"op": "ret", "a": 1}]]')"
+R st_alloc_nonzero 'step: function f block 0 op 1 (alloc): init r1 of a struct alloc must be a u64 local written only by const 0' "$(su '[]' '["u64", "own:P", "u32"]' '[[{"op": "const", "dst": 0, "value": 5}, {"op": "alloc", "dst": 1, "init": 0}, {"op": "fload", "dst": 2, "a": 1, "field": "x"}, {"op": "release", "arr": 1}, {"op": "ret", "a": 2}]]' | sed 's/"init": 0/"init": 0/')"
+R st_alloc_rewritten 'step: function f block 0 op 1 (alloc): init r0 of a struct alloc' "$(su '[]' '["u64", "own:P", "u32"]' '[[{"op": "const", "dst": 0, "value": 0}, {"op": "alloc", "dst": 1, "init": 0}, {"op": "const", "dst": 0, "value": 9}, {"op": "fload", "dst": 2, "a": 1, "field": "x"}, {"op": "release", "arr": 1}, {"op": "ret", "a": 2}]]')"
+R st_alloc_param 'step: function f block 0 op 0 (alloc): init r0 of a struct alloc' "$(su '["u64"]' '["own:P", "u32"]' '[[{"op": "alloc", "dst": 1, "init": 0}, {"op": "fload", "dst": 2, "a": 1, "field": "x"}, {"op": "release", "arr": 1}, {"op": "ret", "a": 2}]]')"
+R st_alloc_init_type 'step: function f block 0 op 1 (alloc): init r0 is u32; a struct alloc takes a u64 register holding 0' "$(su '[]' '["u32", "own:P"]' '[[{"op": "const", "dst": 0, "value": 0}, {"op": "alloc", "dst": 1, "init": 0}, {"op": "release", "arr": 1}, {"op": "ret", "a": 0}]]')"
+R st_mov_other 'step: function f block 0 op 0 (mov): mov to r1 (shared:Q) from r0 (shared:P)' "$(su '["shared:P"]' '["shared:Q", "u32"]' '[[{"op": "mov", "dst": 1, "a": 0}, {"op": "const", "dst": 2, "value": 0}, {"op": "ret", "a": 2}]]')"
+R st_mov_shared_mut 'step: function f block 0 op 0 (mov): mov to r1 (mut:P) from r0 (shared:P)' "$(su '["shared:P"]' '["mut:P", "u32"]' '[[{"op": "mov", "dst": 1, "a": 0}, {"op": "const", "dst": 2, "value": 0}, {"op": "ret", "a": 2}]]')"
+R st_empty_table 'schema: "structs" must be an array of 1..16 structs' '{"structs": [], "functions": [{"name": "f", "params": [], "ret": "void", "locals": [], "blocks": [[{"op": "ret"}]]}]}'
+R st_scalar_name 'schema: struct u32: a struct may not be named like a scalar type' '{"structs": [{"name": "u32", "fields": [{"name": "a", "type": "u8"}]}], "functions": [{"name": "f", "params": [], "ret": "void", "locals": [], "blocks": [[{"op": "ret"}]]}]}'
+R st_dup_struct 'schema: struct P: a struct with this name already exists' '{"structs": [{"name": "P", "fields": [{"name": "a", "type": "u8"}]}, {"name": "P", "fields": [{"name": "a", "type": "u8"}]}], "functions": [{"name": "f", "params": [], "ret": "void", "locals": [], "blocks": [[{"op": "ret"}]]}]}'
+R st_dup_field 'schema: struct P field a: a field with this name already exists' '{"structs": [{"name": "P", "fields": [{"name": "a", "type": "u8"}, {"name": "a", "type": "u16"}]}], "functions": [{"name": "f", "params": [], "ret": "void", "locals": [], "blocks": [[{"op": "ret"}]]}]}'
+R st_field_type 'schema: struct P field a: "type" must be bool, u8..u64 or i8..i64' '{"structs": [{"name": "P", "fields": [{"name": "a", "type": "own:u8:2"}]}], "functions": [{"name": "f", "params": [], "ret": "void", "locals": [], "blocks": [[{"op": "ret"}]]}]}'
+R st_field_len 'schema: struct P field a: "len" must be 1..64' '{"structs": [{"name": "P", "fields": [{"name": "a", "type": "u8", "len": 0}]}], "functions": [{"name": "f", "params": [], "ret": "void", "locals": [], "blocks": [[{"op": "ret"}]]}]}'
+R st_too_big 'schema: struct P field b: the struct takes more than 64 cells' '{"structs": [{"name": "P", "fields": [{"name": "a", "type": "u8", "len": 64}, {"name": "b", "type": "u8"}]}], "functions": [{"name": "f", "params": [], "ret": "void", "locals": [], "blocks": [[{"op": "ret"}]]}]}'
+R st_field_key 'schema: struct P field a: unknown key "size"' '{"structs": [{"name": "P", "fields": [{"name": "a", "type": "u8", "size": 2}]}], "functions": [{"name": "f", "params": [], "ret": "void", "locals": [], "blocks": [[{"op": "ret"}]]}]}'
 rm -f "$T/input_missing.json"; if { "$E" emit "$T/input_missing.json" "$T/x.oscir" || true; } | grep -q '^REFUSED input: cannot read'; then ok "missing input file refused"; else bad "missing input"; fi
 # usage
 if "$E" frob > /dev/null 2>&1; then bad "unknown command accepted"; else ok "unknown command refused (usage, exit 2)"; fi
@@ -218,8 +273,23 @@ M="lift prints unsigned constants off by one"; mut liftoff '/EMIT:lift-const/s/x
 M="duplicate JSON keys accepted"; mut nodup 's/if (!strcmp(j->key\[q\], k)) { fail/if (0) { fail/' &&
   caught not refuses "$T/m_nodup" mv6 'json: duplicate key' "$(unit '["u32"]' '[[{"op": "add", "op": "sub", "dst": 2, "a": 0, "b": 1}, {"op": "ret", "a": 2}]]')"
 td_clean() { typediff_chk "$1" > "$T/td.m"; [ ! -s "$T/td.m" ]; }
-M="array mov refused (the old scalar-only mov rule)"; mut movref '/EMIT:mov-ref/s/if (is_arr(&T\[in->dst\])) {/if (0) {/' && caught not td_clean "$T/m_movref"
+M="array mov refused (the old scalar-only mov rule)"; mut movref '/EMIT:mov-ref/s/if (is_ref(&T\[in->dst\])) {/if (0) {/' && caught not td_clean "$T/m_movref"
 M="shared array bound into mut: at a step"; mut refmut 's/(p->ref == OSC_REF_MUT \&\& a->ref != OSC_REF_SHARED)/(p->ref == OSC_REF_MUT)/' && caught not td_clean "$T/m_refmut"
+M="struct: fstore through shared: accepted at a step"; mut fsshared '/EMIT:fstore-shared/s/if (!ld \&\& A->ref == OSC_REF_SHARED)/if (0)/' &&
+  caught not refuses "$T/m_fsshared" ms1 'fstore needs an own: or mut: struct reference' "$(su '["shared:P"]' '["u32"]' '[[{"op": "const", "dst": 1, "value": 3}, {"op": "fstore", "a": 0, "field": "x", "value": 1}, {"op": "ret", "a": 1}]]')"
+M="struct: index on a scalar field accepted"; mut fidx '/EMIT:field-index/s/} else if (jget(o, "index"))/} else if (0)/' &&
+  caught not refuses "$T/m_fidx" ms2 'leave out "index"' "$(su '["shared:P"]' '["u32", "u32"]' '[[{"op": "const", "dst": 1, "value": 0}, {"op": "fload", "dst": 2, "a": 0, "field": "x", "index": 1}, {"op": "ret", "a": 2}]]')"
+M="struct: missing index on an array field accepted"; mut fnoidx '/EMIT:field-noindex/s/if (!jget(o, "index"))/if (0)/' &&
+  caught not refuses "$T/m_fnoidx" ms3 '"index" is required' "$(su '["shared:P"]' '["u8", "u32"]' '[[{"op": "fload", "dst": 1, "a": 0, "field": "v"}, {"op": "const", "dst": 2, "value": 0}, {"op": "ret", "a": 2}]]')"
+M="struct: field value type unchecked"; mut ftype '/EMIT:field-type/s/if (!is_scalar(&T\[v\]) || T\[v\].s != F->s)/if (0)/' &&
+  caught not refuses "$T/m_ftype" ms4 'value r1 is u8; field P.x is u32' "$(su '["mut:P"]' '["u8", "u32"]' '[[{"op": "const", "dst": 1, "value": 3}, {"op": "fstore", "a": 0, "field": "x", "value": 1}, {"op": "const", "dst": 2, "value": 0}, {"op": "ret", "a": 2}]]')"
+M="struct: alloc init written with a non-zero value accepted"; mut zwrite '/EMIT:zero-write/s/ok = 0;/ok = ok;/' &&
+  caught not refuses "$T/m_zwrite" ms5 'must be a u64 local written only by const 0' "$(su '[]' '["u64", "own:P", "u32"]' '[[{"op": "const", "dst": 0, "value": 5}, {"op": "alloc", "dst": 1, "init": 0}, {"op": "fload", "dst": 2, "a": 1, "field": "x"}, {"op": "release", "arr": 1}, {"op": "ret", "a": 2}]]')"
+M="struct: alloc init from a parameter accepted"; mut zparam '/EMIT:zero-param/s/int ok = x->a >= f->nparams;/int ok = 1;/' &&
+  caught not refuses "$T/m_zparam" ms6 'must be a u64 local written only by const 0' "$(su '["u64"]' '["own:P", "u32"]' '[[{"op": "alloc", "dst": 1, "init": 0}, {"op": "fload", "dst": 2, "a": 1, "field": "x"}, {"op": "release", "arr": 1}, {"op": "ret", "a": 2}]]')"
+lift_rt() { "$1" lift "$T/sall.oscir" > "$T/ll.json" && "$E" emit "$T/ll.json" "$T/ll.re" > /dev/null && cmp -s "$T/sall.oscir" "$T/ll.re"; }
+lift_rt "$E" && ok "struct unit: lift -> emit byte-identical (control for the lift mutant)" || bad "struct lift control"
+M="struct: lift drops array field lengths"; mut liftlen 's/if (fd->alen) printf(", \\"len\\": %u", fd->alen);/;/' && caught not lift_rt "$T/m_liftlen"
 refs_q() { refs_rt "$1" > /dev/null; }
 M="borrow fixture: array mov refused"; caught not refs_q "$T/m_movref"
 echo

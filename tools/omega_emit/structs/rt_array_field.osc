@@ -1,0 +1,20 @@
+// L093 round-trip program 1: a struct with array fields, written and read with dynamic indexes.
+struct Buf { n: u32, cells: [u16; 6], seen: [bool; 2] }
+
+fn fill_sum(k: u32, v: u16) -> u32 {
+    let b: own Buf = Buf { n: k, cells: [v; 6], seen: [false; 2] };
+    let mut i: u32 = 0;
+    while i < b.n bound 6 {
+        b.cells[i] = b.cells[i] + (i as u16);
+        i = i + 1;
+    }
+    b.seen[1] = b.n > 3;
+    let mut s: u32 = 0;
+    let mut j: u32 = 0;
+    while j < 6 bound 6 {
+        s = s + (b.cells[j] as u32);
+        j = j + 1;
+    }
+    if b.seen[1] { s = s + 100; }
+    return s;
+}

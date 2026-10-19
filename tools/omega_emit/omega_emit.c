@@ -234,13 +234,23 @@ static int jint(const J *j, int *neg, uint64_t *mag)
 static const char *const k_scal[] = {"void", "bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64"};
 static const char *const k_refk[] = {"", "own", "shared", "mut"};
 
+/* the unit whose struct table names struct reference types (emit: g_u; lift: the decoded unit) */
+static const OscUnit *g_tu;
+
 static int scalar_from(const char *s)
 {
     for (int i = 1; i <= 9; i++) if (!strcmp(s, k_scal[i])) return i;
     return -1;
 }
 
-/* "u32" | "own:u32:8" | "shared:u32:8" | "mut:u32:8" */
+static int struct_from(const char *s)
+{
+    for (unsigned k = 0; g_tu && k < g_tu->nstructs; k++) if (!strcmp(g_tu->structs[k].name, s)) return (int)k;
+    return -1;
+}
+
+/* "u32" | "own:u32:8" | "shared:u32:8" | "mut:u32:8" | "own:S" | "shared:S" | "mut:S" (S a declared struct).
+ * 0 ok; -1 not a type; -2 a struct reference to a struct that is not declared. */
 static int type_from(const char *s, OscType *t)
 {
     memset(t, 0, sizeof *t);
@@ -249,10 +259,16 @@ static int type_from(const char *s, OscType *t)
     const char *c1 = strchr(s, ':');
     if (!c1) return -1;
     const char *c2 = strchr(c1 + 1, ':');
-    if (!c2) return -1;
     int rk = 0;
     for (int k = 1; k <= 3; k++) if ((size_t)(c1 - s) == strlen(k_refk[k]) && !strncmp(s, k_refk[k], (size_t)(c1 - s))) rk = k;
     if (!rk) return -1;
+    if (!c2) { /* struct reference */
+        int k = struct_from(c1 + 1);
+        if (k < 0) return scalar_from(c1 + 1) > 0 || !c1[1] ? -1 : -2;
+        t->s = OSC_T_REF; t->ref = (OscRefKind)rk; t->elem = OSC_T_VOID;
+        t->len = g_tu->structs[k].ncells; t->sid = (uint8_t)(k + 1);
+        return 0;
+    }
     char el[8];
     size_t el_n = (size_t)(c2 - c1 - 1);
     if (el_n == 0 || el_n >= sizeof el) return -1;
@@ -272,6 +288,9 @@ static void type_name(const OscType *t, char *o, size_t n)
 {
     if (t->s == OSC_T_REF && t->sid == 0 && t->ref >= 1 && t->ref <= 3 && t->elem >= 1 && t->elem <= 9)
         snprintf(o, n, "%s:%s:%u", k_refk[t->ref], k_scal[t->elem], t->len);
+    else if (t->s == OSC_T_REF && t->sid && g_tu && t->sid <= g_tu->nstructs && t->ref >= 1 && t->ref <= 3 &&
+             t->elem == OSC_T_VOID && t->len == g_tu->structs[t->sid - 1].ncells)
+        snprintf(o, n, "%s:%s", k_refk[t->ref], g_tu->structs[t->sid - 1].name);
     else if (t->s <= OSC_T_I64 && t->ref == 0 && t->len == 0 && t->sid == 0) snprintf(o, n, "%s", k_scal[t->s]);
     else snprintf(o, n, "?");
 }
@@ -279,10 +298,13 @@ static void type_name(const OscType *t, char *o, size_t n)
 static int is_int(const OscType *t) { return t->s >= OSC_T_U8 && t->s <= OSC_T_I64 && t->ref == 0; }
 static int is_scalar(const OscType *t) { return t->s >= OSC_T_BOOL && t->s <= OSC_T_I64 && t->ref == 0; }
 static int is_arr(const OscType *t) { return t->s == OSC_T_REF && t->sid == 0; }
-/* may array register `a` be bound to array slot `p` (mov dst or call parameter)? osc_ir.c ref_bindable */
+static int is_sref(const OscType *t) { return t->s == OSC_T_REF && t->sid != 0; }
+static int is_ref(const OscType *t) { return t->s == OSC_T_REF; }
+/* may reference register `a` be bound to reference slot `p` (mov dst or call parameter)? osc_ir.c
+ * ref_bindable: the same array (element type, length) or the same struct, and the kind rule */
 static int ref_ok(const OscType *p, const OscType *a)
 {
-    return is_arr(p) && is_arr(a) && a->elem == p->elem && a->len == p->len &&
+    return is_ref(p) && is_ref(a) && a->elem == p->elem && a->len == p->len && a->sid == p->sid &&
            (p->ref == OSC_REF_SHARED || (p->ref == OSC_REF_MUT && a->ref != OSC_REF_SHARED) ||
             (p->ref == OSC_REF_OWN && a->ref == OSC_REF_OWN));
 }
@@ -324,6 +346,8 @@ static const OpDef k_ops[] = {
     {"release", OSC_I_RELEASE, 0, {"arr"}, NULL},
     {"load", OSC_I_LOAD, 0, {"dst", "arr", "index"}, NULL},
     {"store", OSC_I_STORE, 0, {"arr", "index", "value"}, NULL},
+    {"fload", OSC_I_FLOAD, 0, {"dst", "a", "field"}, "index"},
+    {"fstore", OSC_I_FSTORE, 0, {"a", "field", "value"}, "index"},
     {"call", OSC_I_CALL, 0, {"func", "args"}, "dst"},
     {"trap", OSC_I_TRAP, 0, {"code"}, NULL},
     {"br", OSC_I_BR, 0, {"to"}, NULL},
@@ -377,7 +401,7 @@ static int blk_field(Ctx *c, const J *o, const char *k, int16_t *out)
 
 static const char *tn(const OscType *t)
 {
-    static char b[4][32];
+    static char b[4][96];
     static int i;
     i = (i + 1) & 3;
     type_name(t, b[i], sizeof b[i]);
@@ -446,9 +470,9 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
     }
     case OSC_I_MOV:
         if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "a", &in->a)) return -1;
-        if (is_arr(&T[in->dst])) { /* EMIT:mov-ref: binding rule of osc_ir.c ref_bindable, as for call arguments */
+        if (is_ref(&T[in->dst])) { /* EMIT:mov-ref: binding rule of osc_ir.c ref_bindable, as for call arguments */
             if (!ref_ok(&T[in->dst], &T[in->a]))
-                return STEP(AT "mov to r%d (%s) from r%d (%s): an array register takes an own: (move), own: or mut: (into mut:), or any array (into shared:) of the same element type and length",
+                return STEP(AT "mov to r%d (%s) from r%d (%s): a reference register takes an own: (move), own: or mut: (into mut:), or any reference (into shared:) to the same array (element type and length) or struct",
                             ATV, in->dst, tn(&T[in->dst]), in->a, tn(&T[in->a]));
         } else if (!is_scalar(&T[in->dst]) || !teq(&T[in->dst], &T[in->a]))
             return STEP(AT "mov needs two scalar registers of the same type (r%d is %s, r%d is %s)", ATV, in->dst, tn(&T[in->dst]), in->a, tn(&T[in->a]));
@@ -487,13 +511,41 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
         break;
     case OSC_I_ALLOC:
         if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "init", &in->a)) return -1;
-        if (!is_arr(&T[in->dst]) || T[in->dst].ref != OSC_REF_OWN) return STEP(AT "dst r%d is %s; alloc writes an own:<type>:<len> register", ATV, in->dst, tn(&T[in->dst]));
-        if (!is_scalar(&T[in->a]) || T[in->a].s != T[in->dst].elem) return STEP(AT "init r%d is %s; it must be the element type of r%d", ATV, in->a, tn(&T[in->a]), in->dst);
+        if (!is_ref(&T[in->dst]) || T[in->dst].ref != OSC_REF_OWN) return STEP(AT "dst r%d is %s; alloc writes an own:<type>:<len> or own:<struct> register", ATV, in->dst, tn(&T[in->dst]));
+        if (is_sref(&T[in->dst])) { /* a struct starts zeroed; the init register is checked in zero_inits() */
+            if (!is_scalar(&T[in->a]) || T[in->a].s != OSC_T_U64) return STEP(AT "init r%d is %s; a struct alloc takes a u64 register holding 0", ATV, in->a, tn(&T[in->a]));
+        } else if (!is_scalar(&T[in->a]) || T[in->a].s != T[in->dst].elem) return STEP(AT "init r%d is %s; it must be the element type of r%d", ATV, in->a, tn(&T[in->a]), in->dst);
         break;
     case OSC_I_RELEASE:
         if (reg_field(c, o, "arr", &in->a)) return -1;
-        if (!is_arr(&T[in->a]) || T[in->a].ref != OSC_REF_OWN) return STEP(AT "arr r%d is %s; release needs an own:<type>:<len> register", ATV, in->a, tn(&T[in->a]));
+        if (!is_ref(&T[in->a]) || T[in->a].ref != OSC_REF_OWN) return STEP(AT "arr r%d is %s; release needs an own:<type>:<len> or own:<struct> register", ATV, in->a, tn(&T[in->a]));
         break;
+    case OSC_I_FLOAD:
+    case OSC_I_FSTORE: {
+        int ld = d->op == OSC_I_FLOAD;
+        if ((ld && reg_field(c, o, "dst", &in->dst)) || reg_field(c, o, "a", &in->a)) return -1;
+        if (!ld && reg_field(c, o, "value", &in->c)) return -1;
+        const OscType *A = &T[in->a];
+        if (!is_sref(A)) return STEP(AT "a r%d is %s, not a struct reference", ATV, in->a, tn(A));
+        if (!ld && A->ref == OSC_REF_SHARED) return STEP(AT "a r%d is %s; fstore needs an own: or mut: struct reference", ATV, in->a, tn(A)); /* EMIT:fstore-shared */
+        const OscStruct *S = &g_u.structs[A->sid - 1];
+        const J *fj = jget(o, "field");
+        if (fj->t != J_STR) return STEP(AT "\"field\" must be a field name of struct %s", ATV, S->name);
+        int fk = -1;
+        for (unsigned k = 0; k < S->nfields; k++) if (!strcmp(S->fields[k].name, fj->s)) fk = (int)k;
+        if (fk < 0) return STEP(AT "struct %s has no field \"%s\"", ATV, S->name, fj->s);
+        const OscField *F = &S->fields[fk];
+        in->imm = (uint64_t)fk;
+        if (F->alen) {
+            if (!jget(o, "index")) return STEP(AT "field %s.%s is an array [%s; %u]: \"index\" is required", ATV, S->name, F->name, k_scal[F->s], F->alen); /* EMIT:field-noindex */
+            if (reg_field(c, o, "index", &in->b)) return -1;
+            if (!is_int(&T[in->b])) return STEP(AT "index r%d is %s, not an integer", ATV, in->b, tn(&T[in->b]));
+        } else if (jget(o, "index")) return STEP(AT "field %s.%s is a scalar %s: leave out \"index\"", ATV, S->name, F->name, k_scal[F->s]); /* EMIT:field-index */
+        int v = ld ? in->dst : in->c;
+        if (!is_scalar(&T[v]) || T[v].s != F->s)
+            return STEP(AT "%s r%d is %s; field %s.%s is %s", ATV, ld ? "dst" : "value", v, tn(&T[v]), S->name, F->name, k_scal[F->s]); /* EMIT:field-type */
+        break;
+    }
     case OSC_I_LOAD:
         if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "arr", &in->a) || reg_field(c, o, "index", &in->b)) return -1;
         if (!is_arr(&T[in->a])) return STEP(AT "arr r%d is %s, not an array", ATV, in->a, tn(&T[in->a]));
@@ -582,13 +634,89 @@ static int only_keys(const J *o, const char *where, const char *const *ks)
     return 0;
 }
 
+/* "structs": the unit's struct table, OSC-2 2.3 layout (declaration order, whole cells, offsets are
+ * prefix sums, 1..64 cells). Struct k is OscUnit.structs[k]; a reference to it has sid k + 1. */
+static int read_structs(const J *ss)
+{
+    static const char *const sk[] = {"name", "fields", NULL};
+    static const char *const fk[] = {"name", "type", NULL}, *const fk_len[] = {"name", "type", "len", NULL};
+    if (ss->t != J_ARR || ss->n < 1 || ss->n > OSC_MAX_STRUCTS)
+        return fail("schema", "\"structs\" must be an array of 1..%d structs (leave the key out when there are none)", OSC_MAX_STRUCTS);
+    for (size_t k = 0; k < ss->n; k++) {
+        const J *S = ss->kid[k];
+        char where[96], fw[192];
+        snprintf(where, sizeof where, "structs[%zu]", k);
+        if (S->t != J_OBJ) return fail("schema", "%s must be an object", where);
+        const J *nm = jget(S, "name");
+        if (nm && nm->t == J_STR && name_ok(nm->s)) snprintf(where, sizeof where, "struct %s", nm->s);
+        if (only_keys(S, where, sk)) return -1;
+        if (nm->t != J_STR || !name_ok(nm->s)) return fail("schema", "%s: \"name\" must match [A-Za-z_][A-Za-z0-9_]{0,62}", where);
+        if (scalar_from(nm->s) > 0 || !strcmp(nm->s, "void")) return fail("schema", "%s: a struct may not be named like a scalar type", where);
+        if (struct_from(nm->s) >= 0) return fail("schema", "%s: a struct with this name already exists", where);
+        OscStruct *st = &g_u.structs[k];
+        snprintf(st->name, sizeof st->name, "%s", nm->s);
+        const J *fs = jget(S, "fields");
+        if (fs->t != J_ARR || fs->n < 1 || fs->n > OSC_MAX_FIELDS) return fail("schema", "%s: \"fields\" must be an array of 1..%d fields", where, OSC_MAX_FIELDS);
+        unsigned off = 0;
+        for (size_t i = 0; i < fs->n; i++) {
+            const J *F = fs->kid[i];
+            snprintf(fw, sizeof fw, "%s fields[%zu]", where, i);
+            if (F->t != J_OBJ) return fail("schema", "%s must be an object", fw);
+            const J *fn = jget(F, "name"), *ft = jget(F, "type"), *fl = jget(F, "len");
+            if (fn && fn->t == J_STR && name_ok(fn->s)) snprintf(fw, sizeof fw, "%s field %s", where, fn->s);
+            if (only_keys(F, fw, fl ? fk_len : fk)) return -1;
+            if (fn->t != J_STR || !name_ok(fn->s)) return fail("schema", "%s: \"name\" must match [A-Za-z_][A-Za-z0-9_]{0,62}", fw);
+            for (size_t g = 0; g < i; g++) if (!strcmp(st->fields[g].name, fn->s)) return fail("schema", "%s: a field with this name already exists", fw);
+            int sc = ft->t == J_STR ? scalar_from(ft->s) : -1;
+            if (sc < 0) return fail("schema", "%s: \"type\" must be bool, u8..u64 or i8..i64", fw);
+            unsigned len = 0;
+            if (fl) {
+                int neg; uint64_t v;
+                if (jint(fl, &neg, &v) || neg || v < 1 || v > OSC_MAX_ARRAY_LEN) return fail("schema", "%s: \"len\" must be 1..%d (leave it out for a scalar field)", fw, OSC_MAX_ARRAY_LEN);
+                len = (unsigned)v;
+            }
+            OscField *fd = &st->fields[i];
+            snprintf(fd->name, sizeof fd->name, "%s", fn->s);
+            fd->s = (OscScalar)sc; fd->alen = (uint16_t)len; fd->off = (uint16_t)off;
+            off += len ? len : 1;
+            if (off > OSC_MAX_ARRAY_LEN) return fail("schema", "%s: the struct takes more than %d cells (a scalar field takes 1, an array field its len)", fw, OSC_MAX_ARRAY_LEN);
+        }
+        st->nfields = (uint8_t)fs->n;
+        st->ncells = (uint16_t)off;
+        g_u.nstructs = (uint8_t)(k + 1);
+    }
+    return 0;
+}
+
+/* A struct starts zeroed (OSC-2 2.3; oscc lowers a literal as const 0 into a fresh u64, alloc, then
+ * fstores): the init register of a struct alloc is a local, not a parameter, and every write to it in
+ * the function is const 0. Returns the instruction index of the first struct alloc that breaks this,
+ * or -1. Used by emit (refuse) and lift (refuse to print). */
+static int zero_inits(const OscFunc *f)
+{
+    for (unsigned i = 0; i < f->ninsns; i++) {
+        const OscInsn *x = &f->insns[i];
+        if (x->op != OSC_I_ALLOC || x->dst < 0 || x->dst >= f->nvregs || !f->vtype[x->dst].sid) continue;
+        int ok = x->a >= f->nparams; /* EMIT:zero-param */
+        for (unsigned j = 0; ok && j < f->ninsns; j++)
+            if (f->insns[j].dst == x->a && !(f->insns[j].op == OSC_I_CONST && f->insns[j].imm == 0)) ok = 0; /* EMIT:zero-write */
+        if (!ok) return (int)i;
+    }
+    return -1;
+}
+
+static void where_insn(const char *err, char *o, size_t n);
+
 static int build(const J *root)
 {
     memset(&g_u, 0, sizeof g_u);
-    static const char *const top[] = {"functions", NULL};
+    static const char *const top[] = {"functions", NULL}, *const top_s[] = {"structs", "functions", NULL};
     static const char *const fk[] = {"name", "params", "ret", "locals", "blocks", NULL};
     if (root->t != J_OBJ) return fail("schema", "the top level must be an object {\"functions\": [...]}");
-    if (only_keys(root, "top level", top)) return -1;
+    g_tu = &g_u;
+    const J *ss = jget(root, "structs");
+    if (only_keys(root, "top level", ss ? top_s : top)) return -1;
+    if (ss && read_structs(ss)) return -1;
     const J *fs = jget(root, "functions");
     if (fs->t != J_ARR || fs->n < 1 || fs->n > OSC_MAX_FUNCS) return fail("schema", "\"functions\" must be an array of 1..%d functions", OSC_MAX_FUNCS);
     for (size_t fi = 0; fi < fs->n; fi++) {
@@ -611,8 +739,9 @@ static int build(const J *root)
         f->nvregs = (uint16_t)(ps->n + ls->n);
         for (size_t r = 0; r < ps->n + ls->n; r++) {
             const J *t = r < ps->n ? ps->kid[r] : ls->kid[r - ps->n];
-            if (t->t != J_STR || type_from(t->s, &f->vtype[r]))
-                return fail("schema", "%s: register r%zu: type must be bool, u8..u64, i8..i64, or own|shared|mut:<type>:<1..64>", where, r);
+            int tr = t->t == J_STR ? type_from(t->s, &f->vtype[r]) : -1;
+            if (tr == -2) return fail("schema", "%s: register r%zu: type \"%s\" names no struct in \"structs\"", where, r, t->s);
+            if (tr) return fail("schema", "%s: register r%zu: type must be bool, u8..u64, i8..i64, own|shared|mut:<type>:<1..64> or own|shared|mut:<struct>", where, r);
         }
         if (rt->t != J_STR) return fail("schema", "%s: \"ret\" must be a type name or \"void\"", where);
         if (!strcmp(rt->s, "void")) f->ret.s = OSC_T_VOID;
@@ -634,6 +763,13 @@ static int build(const J *root)
             }
         }
         f->nblocks = (uint16_t)bs->n;
+        int za = zero_inits(f);
+        if (za >= 0) {
+            char e[96], w[400];
+            snprintf(e, sizeof e, "func %u insn %d: ", (unsigned)fi, za);
+            where_insn(e, w, sizeof w);
+            return fail("step", "%sinit r%d of a struct alloc must be a u64 local written only by const 0 (a struct starts zeroed)", w, f->insns[za].a);
+        }
     }
     return 0;
 }
@@ -710,23 +846,51 @@ static int cmd_lift(const char *in)
     static OscUnit u;
     int rc = osc_ir_decode(b, n, &u);
     if (rc) { printf("REFUSED decoder: %s\n", osc_ir_refusal_name(rc)); return 1; }
-    if (u.nstructs) { printf("REFUSED lift: structs are not in the op-list schema\n"); return 1; }
+    g_tu = &u;
+    for (unsigned k = 0; k < u.nstructs; k++) { /* struct and field names must be schema NAMEs */
+        const OscStruct *s = &u.structs[k];
+        int ok = name_ok(s->name) && scalar_from(s->name) < 0 && strcmp(s->name, "void");
+        for (unsigned i = 0; ok && i < s->nfields; i++) ok = name_ok(s->fields[i].name) && s->fields[i].s >= OSC_T_BOOL && s->fields[i].s <= OSC_T_I64;
+        if (!ok) { printf("REFUSED lift: struct %u has a name or field outside the schema\n", k); return 1; }
+    }
     /* check everything first: lift prints nothing for a unit it cannot express */
     for (unsigned fi = 0; fi < u.nfuncs; fi++) {
         const OscFunc *f = &u.funcs[fi];
         if (f->requires_text[0] || f->ensures_text[0]) { printf("REFUSED lift: function %s carries requires/ensures text\n", f->name); return 1; }
         for (unsigned r = 0; r < f->nvregs; r++) {
-            char t[32];
+            char t[96];
             type_name(&f->vtype[r], t, sizeof t);
             if (!strcmp(t, "?")) { printf("REFUSED lift: function %s register r%u has a type outside the schema\n", f->name, r); return 1; }
         }
-        for (unsigned i = 0; i < f->ninsns; i++)
-            if (!opdef_of(f->insns[i].op, f->insns[i].sub)) { printf("REFUSED lift: function %s uses op %u, outside the schema\n", f->name, f->insns[i].op); return 1; }
+        for (unsigned i = 0; i < f->ninsns; i++) {
+            const OscInsn *x = &f->insns[i];
+            if (!opdef_of(x->op, x->sub)) { printf("REFUSED lift: function %s uses op %u, outside the schema\n", f->name, x->op); return 1; }
+            if ((x->op == OSC_I_FLOAD || x->op == OSC_I_FSTORE) &&
+                (x->a < 0 || x->a >= f->nvregs || !f->vtype[x->a].sid || f->vtype[x->a].sid > u.nstructs ||
+                 x->imm >= u.structs[f->vtype[x->a].sid - 1].nfields)) {
+                printf("REFUSED lift: function %s op %u names no field of a declared struct\n", f->name, i); return 1;
+            }
+        }
+        if (zero_inits(f) >= 0) { printf("REFUSED lift: function %s: a struct alloc init is not a u64 local written only by const 0\n", f->name); return 1; }
     }
-    printf("{\"functions\": [\n");
+    if (u.nstructs) { /* EMIT:lift-structs */
+        printf("{\"structs\": [\n");
+        for (unsigned k = 0; k < u.nstructs; k++) {
+            const OscStruct *s = &u.structs[k];
+            printf("  {\"name\": \"%s\", \"fields\": [", s->name);
+            for (unsigned i = 0; i < s->nfields; i++) {
+                const OscField *fd = &s->fields[i];
+                printf("%s{\"name\": \"%s\", \"type\": \"%s\"", i ? ", " : "", fd->name, k_scal[fd->s]);
+                if (fd->alen) printf(", \"len\": %u", fd->alen);
+                printf("}");
+            }
+            printf("]}%s\n", k + 1 < u.nstructs ? "," : "");
+        }
+        printf(" ],\n \"functions\": [\n");
+    } else printf("{\"functions\": [\n");
     for (unsigned fi = 0; fi < u.nfuncs; fi++) {
         const OscFunc *f = &u.funcs[fi];
-        char t[32];
+        char t[96];
         printf("  {\"name\": \"%s\", \"params\": [", f->name);
         for (unsigned r = 0; r < f->nparams; r++) { type_name(&f->vtype[r], t, sizeof t); printf("%s\"%s\"", r ? ", " : "", t); }
         printf("], \"ret\": \"%s\", \"locals\": [", f->ret.s == OSC_T_VOID ? "void" : k_scal[f->ret.s]);
@@ -752,6 +916,13 @@ static int cmd_lift(const char *in)
                 case OSC_I_RELEASE: printf(", \"arr\": %d", x->a); break;
                 case OSC_I_LOAD: printf(", \"dst\": %d, \"arr\": %d, \"index\": %d", x->dst, x->a, x->b); break;
                 case OSC_I_STORE: printf(", \"arr\": %d, \"index\": %d, \"value\": %d", x->a, x->b, x->c); break;
+                case OSC_I_FLOAD: case OSC_I_FSTORE: {
+                    const char *fn = u.structs[f->vtype[x->a].sid - 1].fields[x->imm].name;
+                    if (x->op == OSC_I_FLOAD) printf(", \"dst\": %d, \"a\": %d, \"field\": \"%s\"", x->dst, x->a, fn);
+                    else printf(", \"a\": %d, \"field\": \"%s\", \"value\": %d", x->a, fn, x->c);
+                    if (x->b >= 0) printf(", \"index\": %d", x->b);
+                    break;
+                }
                 case OSC_I_CALL:
                     if (x->dst >= 0) printf(", \"dst\": %d", x->dst);
                     printf(", \"func\": \"%s\", \"args\": [", u.funcs[x->callee].name);
