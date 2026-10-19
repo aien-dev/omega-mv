@@ -1,9 +1,9 @@
-    /* Timing sensitivity (omega #313 item 1): `target` is 55 percent of the incumbent cost AIEN confirmed
-     * on the old core class, and `final_expected` is the cost AIEN later confirmed on the new one. Both
-     * are wall-clock (CLOCK_MONOTONIC) measurements taken at different times, so CPU contention that
-     * slows the second more than the first can miss the goal. The check is deliberately unchanged: a
-     * CPU-time or repeat-and-median variant needs the measurement in src/runtime (rx_omega.c, rx_aien.c)
-     * changed, which is outside this test program and a separate, declared change. */
+    /* Timing sensitivity (omega #313 item 1, #527): `target` is 55 percent of the incumbent cost AIEN
+     * confirmed on the old core class, and `final_expected` is the cost AIEN later confirmed on the new
+     * one. Both are measured on this machine, as the CPU time the serving thread spent in the matvec
+     * (rx_omega.c cost_ns). Wall-clock time counted a preemption or a busy neighbour as cost: on a
+     * loaded host a slow interval failed AIEN's prediction before the goal, or tipped Omega's first
+     * selection, and the episode could not start. The checks are unchanged. */
 /* R13: one world; after the goal, only production requests and observation. */
 #include "runtime/rx_living.h"
 #include "runtime/rx_resident_gpu.h"

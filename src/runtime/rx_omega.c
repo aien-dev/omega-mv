@@ -40,6 +40,17 @@ static uint64_t now_ns(void) {
     return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
 }
 
+/* What a matvec costs: the time the calling thread spent executing it.
+ * Serve and measure time their calls with this, so a preemption or a busy
+ * neighbour on the same core does not count as cost, while the core it runs
+ * on and the code it runs still do (omega #313, #527). Deadlines stay on
+ * now_ns. */
+static uint64_t cost_ns(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
+    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
+}
+
 static uint64_t id_word(const SemanticId *id, uint32_t i) {
     uint64_t v = 0;
     for (uint32_t b = 0; b < 8; b++) v |= (uint64_t)id->bytes[i * 8 + b] << (8 * b);
@@ -212,10 +223,10 @@ static int fn_serve(RxCtx *c) {
         fn = verified_fn(f, &id, &kind);
         if (fn) used = sel->field[1];
     }
-    uint64_t t0 = now_ns();
+    uint64_t t0 = cost_ns();
     if (fn) fn(A, x, y, M, N);
     else omega_matvec_reference(A, x, y, (uint32_t)M, (uint32_t)N);
-    uint64_t ns = now_ns() - t0;
+    uint64_t ns = cost_ns() - t0;
     if (f->cfg.cost_ns)
         ns = f->cfg.cost_ns(f->cfg.cost_ctx, kind, (uint32_t)M, (uint32_t)N, 1);
     uint64_t digest = rx_omega_digest(y, (uint32_t)M);
@@ -603,12 +614,12 @@ static int fn_verify(RxCtx *c) {
 static uint64_t time_calls(const RxOmegaFaculty *f, MatVecFn fn, uint32_t kind,
                            const uint64_t *A, const uint64_t *x, uint64_t *y,
                            uint32_t M, uint32_t N, uint32_t iters) {
-    uint64_t t0 = now_ns();
+    uint64_t t0 = cost_ns();
     for (uint32_t i = 0; i < iters; i++) {
         if (fn) fn(A, x, y, M, N);
         else omega_matvec_reference(A, x, y, M, N);
     }
-    uint64_t ns = now_ns() - t0;
+    uint64_t ns = cost_ns() - t0;
     if (f->cfg.cost_ns)
         ns = f->cfg.cost_ns(f->cfg.cost_ctx, fn ? kind : RX_OMEGA_COST_REFERENCE, M, N, iters);
     return ns;
