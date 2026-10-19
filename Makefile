@@ -30,6 +30,8 @@ SRCS += src/omega_gpu_moe_api.c
 SRCS += src/omega_blackwell_codegen_moe.c src/omega_gpu_fp8_pack.c src/omega_gpu_fp8_api.c
 # OWN-30B W-L2c (2026-10-14): FP8 GEMV variant 2, row-pipelined (omega_blackwell_codegen_moe2.h), selectable, variant 1 untouched
 SRCS += src/omega_blackwell_codegen_moe2.c
+# qwen38/w4-gemv (2026-10-19): MXFP4 GEMV (omega_gpu_w4_api.h), new files only
+SRCS += src/omega_blackwell_codegen_w4.c src/omega_gpu_w4_api.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
@@ -2657,3 +2659,14 @@ $(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h $(OU
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
 	./$(GPU_Q38_GRAPH_TEST) --host-only
+
+# qwen38/w4-gemv (2026-10-19): MXFP4 GEMV (omega_gpu_w4_api.h). test-gpu-w4 is host-only (e2m1 bits for all 16 codes,
+# rounding, converter round trip, codegen budgets) then the warp-simulator battery (one-hot codes, parity, mutants);
+# the chip gate is tools/run_gpu_w4_chip.sh.
+.PHONY: test-gpu-w4
+GPU_W4_TEST = $(OUT_DIR)/gpu_w4_api_test
+$(GPU_W4_TEST): tests/gpu_w4_api_test.c tests/bw_warp_sim.h src/omega_gpu_w4_api.h src/omega_blackwell_codegen_w4.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_w4_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-w4: $(GPU_W4_TEST)
+	./$(GPU_W4_TEST) --host-only
+	./$(GPU_W4_TEST) --sim
