@@ -5,3 +5,6 @@ flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evide
 flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evidence/attn256-freq-20261019T0151Z/train.tsv --classes iid --pos 1023,4095,16383,65535 --reps 25 --seed 101 --tag train
 flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evidence/attn256-freq-20261019T0151Z/train.tsv --classes rho250 --pos 1023,4095,16383,65535 --reps 25 --seed 101 --tag train
 flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq --chip-traces evidence/attn256-freq-20261019T0151Z/train.tsv --classes rho500 --pos 1023,4095,16383,65535 --reps 25 --seed 101 --tag train
+commit 4e68339eea800984786feaa89337b5b5a8926e88 (v1 binary bin-freq-v1)
+flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq-v1 --chip-traces-mixed evidence/attn256-freq-20261019T0151Z/train1.tsv --classes rho0,iid,rho250,rho500 --pos 1023,4095,16383,65535 --reps 40 --seed 111 --tag train1
+flock /tmp/aien-gb10.lock /tmp/f2-frequency-scratch/bin-freq-v1 --chip-traces-mixed evidence/attn256-freq-20261019T0151Z/held1.tsv --classes rho0,iid,rho250,rho500,rho750,rho1000 --pos 1023,4095,16383,65535 --reps 40 --seed 222 --tag held1
