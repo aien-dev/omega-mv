@@ -14,11 +14,14 @@
  *                 Checks per token: B == C bit for bit (x, logits, token); A vs C token identical and logits within
  *                 tolerance; x within tolerance. Negative controls: graph mutants 1..4 (SWIGLU, GATHER, GATE, post-norm
  *                 weight) must each fail the A-vs-C comparison. Then --reps timed tokens (median).
+ *   --w4 / --w4-head (qwen38/w4-gemv): every projection / the lm_head as MXFP4 (omega_gpu_w4_from_fp8 of the FP8 data) in
+ *                 both A and C; control: layer 0 put back on FP8 must fail the comparison.
  * Verdict: exit 0 when every CHECK passed.
  */
 #include "omega_gpu_q38_graph.h"
 #include "omega_gpu_cmdlist.h"
 #include "omega_gpu_session.h"
+#include "omega_gpu_w4_api.h"
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
@@ -54,7 +57,8 @@ static uint32_t argmax(const float *v, uint32_t n) { uint32_t b = 0; for (uint32
 static double maxabs(const float *v, size_t n) { double m = 0; for (size_t i = 0; i < n; i++) if (fabs(v[i]) > m) m = fabs(v[i]); return m; }
 static double maxdiff(const float *a, const float *b, size_t n) { double m = 0; for (size_t i = 0; i < n; i++) { double d = fabs((double)a[i] - b[i]); if (d > m || d != d) m = d != d ? 1e30 : d; } return m; }
 
-static int fp8_random(uint32_t seed, uint32_t n, uint32_t k, OmegaGpuFp8Tensor **out) {
+static int g_w4; /* --w4: every projection also as MXFP4 (omega_gpu_w4_from_fp8 of the same FP8), read by the graph and the baseline */
+static int fp8_random(uint32_t seed, uint32_t n, uint32_t k, OmegaGpuFp8Tensor **out, OmegaGpuW4Tensor **out4) {
     size_t wb = (size_t)n * k, sb = (size_t)(n / 128) * (k / 128);
     uint8_t *w = malloc(wb); uint16_t *s = malloc(sb * 2);
     if (!w || !s) { free(w); free(s); return -1; }
@@ -63,6 +67,13 @@ static int fp8_random(uint32_t seed, uint32_t n, uint32_t k, OmegaGpuFp8Tensor *
     const float sc = 1.5f / sqrtf((float)k); /* outputs O(1) for O(1) inputs */
     for (size_t i = 0; i < sb; i++) s[i] = bf16_rne(frand(&st, 0.5f * sc, sc));
     int rc = omega_gpu_fp8_tensor_upload(1, n, k, w, s, out);
+    if (rc == 0 && out4) {
+        uint8_t *w4 = malloc(wb / 2), *e8 = malloc(wb / OMEGA_W4_GROUP);
+        rc = w4 && e8 ? omega_gpu_w4_from_fp8(n, k, w, s, 0, n, w4, e8, NULL) : -1;
+        if (rc == 0) rc = omega_gpu_w4_tensor_upload(n, k, w4, e8, out4);
+        if (rc != 0) printf("w4 convert/upload %d: %s\n", rc, omega_gpu_w4_last_error());
+        free(w4); free(e8);
+    }
     free(w); free(s);
     return rc;
 }
@@ -80,10 +91,11 @@ static int bf16_random(uint32_t seed, uint32_t n, uint32_t k, float lo, float hi
 typedef struct {
     uint32_t layers, vocab, n_gdn, n_attn;
     uint64_t mask;
-    struct { OmegaGpuFp8Tensor *mix, *o, *gu, *dn; OmegaGpuBf16Tensor *ab; float in_norm[H], post_norm[H]; } L[8];
+    struct { OmegaGpuFp8Tensor *mix, *o, *gu, *dn; OmegaGpuW4Tensor *mix4, *o4, *gu4, *dn4; OmegaGpuBf16Tensor *ab; float in_norm[H], post_norm[H]; } L[8];
     OmegaGpuBf16Tensor *lm;
     OmegaGpuFp8Tensor *lm8;      /* --fp8-head: the same lm_head quantised by omega_gpu_fp8_quantize_bf16 */
     uint8_t *lm8_w; uint16_t *lm8_s; /* its host copy (the sampled-row host check) */
+    OmegaGpuW4Tensor *lm4;       /* --w4-head: the FP8 head converted to MXFP4 (the graph reads it ahead of lm8) */
     float fnorm[H];
     float x0[TOKENS][H];
     /* the two state copies: [0] the graph's, [1] the baseline's */
@@ -91,6 +103,7 @@ typedef struct {
     OmegaGpuDecodeAttn256Cache *attn[2];
 } Model;
 static int g_fp8_head; /* --fp8-head: the graph and the baseline use the FP8-quantised lm_head */
+static int g_w4_head; /* --w4-head: lm_head as MXFP4 of the FP8-quantised head (implies the FP8 head data) */
 
 static int state_alloc(Model *m, int which, uint32_t seed) {
     uint32_t s = seed;
@@ -120,8 +133,9 @@ static int model_build(Model *m, uint32_t layers, uint64_t mask, uint32_t vocab)
     for (uint32_t l = 0; l < layers; l++) {
         const int attn = (int)((mask >> l) & 1u);
         if (attn) m->n_attn++; else m->n_gdn++;
-        if (fp8_random(100 + l, attn ? OMEGA_GPU_Q38_ATT_MIX : OMEGA_GPU_Q38_GDN_MIX, H, &m->L[l].mix) || fp8_random(200 + l, H, OMEGA_GPU_Q38_MIXER_OUT, &m->L[l].o) ||
-            fp8_random(300 + l, 2 * I, H, &m->L[l].gu) || fp8_random(400 + l, H, I, &m->L[l].dn)) { printf("fp8 upload: %s\n", omega_gpu_fp8_last_error()); return -1; }
+        if (fp8_random(100 + l, attn ? OMEGA_GPU_Q38_ATT_MIX : OMEGA_GPU_Q38_GDN_MIX, H, &m->L[l].mix, g_w4 ? &m->L[l].mix4 : NULL) ||
+            fp8_random(200 + l, H, OMEGA_GPU_Q38_MIXER_OUT, &m->L[l].o, g_w4 ? &m->L[l].o4 : NULL) ||
+            fp8_random(300 + l, 2 * I, H, &m->L[l].gu, g_w4 ? &m->L[l].gu4 : NULL) || fp8_random(400 + l, H, I, &m->L[l].dn, g_w4 ? &m->L[l].dn4 : NULL)) { printf("fp8 upload: %s\n", omega_gpu_fp8_last_error()); return -1; }
         if (!attn && bf16_random(500 + l, OMEGA_GPU_Q38_AB, H, -0.03f, 0.03f, SCALE_2M64, &m->L[l].ab)) { printf("bf16 upload: %s\n", omega_gpu_bf16_last_error()); return -1; }
         for (unsigned i = 0; i < H; i++) { m->L[l].in_norm[i] = frand(&s, 0.8f, 1.2f); m->L[l].post_norm[i] = frand(&s, 0.8f, 1.2f); }
     }
@@ -132,6 +146,13 @@ static int model_build(Model *m, uint32_t layers, uint64_t mask, uint32_t vocab)
         uint32_t st = 600; for (size_t i = 0; i < (size_t)vocab * H; i++) w[i] = bf16_rne(frand(&st, -0.05f, 0.05f)); /* bf16_random(600, ...)'s values */
         int qrc = omega_gpu_fp8_quantize_bf16(vocab, H, w, m->lm8_w, m->lm8_s); free(w);
         if (qrc || omega_gpu_fp8_tensor_upload(1, vocab, H, m->lm8_w, m->lm8_s, &m->lm8)) { printf("fp8 lm_head: %s\n", omega_gpu_fp8_last_error()); return -1; }
+        if (g_w4_head) {
+            uint8_t *w4 = malloc((size_t)vocab * H / 2), *e8 = malloc((size_t)vocab * H / OMEGA_W4_GROUP);
+            int wrc = w4 && e8 ? omega_gpu_w4_from_fp8(vocab, H, m->lm8_w, m->lm8_s, 0, vocab, w4, e8, NULL) : -1;
+            if (wrc == 0) wrc = omega_gpu_w4_tensor_upload(vocab, H, w4, e8, &m->lm4);
+            free(w4); free(e8);
+            if (wrc) { printf("w4 lm_head %d: %s\n", wrc, omega_gpu_w4_last_error()); return -1; }
+        }
     }
     for (unsigned i = 0; i < H; i++) m->fnorm[i] = frand(&s, 0.8f, 1.2f);
     for (unsigned t = 0; t < TOKENS; t++) for (unsigned i = 0; i < H; i++) m->x0[t][i] = frand(&s, -1.0f, 1.0f);
@@ -147,6 +168,13 @@ static int state_reset(Model *m) {
 /* ---- A: the APIs one call at a time ---- */
 typedef struct { float x[H], logits[248320]; uint32_t token; } Out;
 
+/* one projection one call at a time: the MXFP4 tensor when the model has one (--w4), else the FP8 one */
+static int proj(const OmegaGpuFp8Tensor *t, const OmegaGpuW4Tensor *t4, const float *x, float *y) {
+    int r_ = t4 ? omega_gpu_w4_gemv_f32(t4, x, y, NULL) : omega_gpu_fp8_gemv_f32(t, 0, x, y, NULL);
+    if (r_ != 0) printf("%s gemv rc %d: %s\n", t4 ? "w4" : "fp8", r_, t4 ? omega_gpu_w4_last_error() : omega_gpu_fp8_last_error());
+    return r_;
+}
+
 static int baseline_token(Model *m, const float *x0, uint32_t pos, Out *o) {
     static float xn[H], xs[H], mix[OMEGA_GPU_Q38_GDN_MIX], ab[OMEGA_GPU_Q38_AB], agg[OMEGA_GPU_Q38_ATT_MIX], att[OMEGA_GPU_Q38_MIXER_OUT], y[H], gu[2 * I], act[I];
     static uint32_t tab[OMEGA_GPU_Q38_ATT_MIX];
@@ -155,7 +183,7 @@ static int baseline_token(Model *m, const float *x0, uint32_t pos, Out *o) {
     uint32_t ng = 0, na = 0;
     for (uint32_t l = 0; l < m->layers; l++) {
         rmsnorm(o->x, m->L[l].in_norm, xn);
-        { int r_ = omega_gpu_fp8_gemv_f32(m->L[l].mix, 0, xn, mix, NULL); if (r_ != 0) { printf("fp8 gemv rc %d: %s\n", r_, omega_gpu_fp8_last_error()); return -1; } }
+        if (proj(m->L[l].mix, m->L[l].mix4, xn, mix) != 0) return -1;
         if (!((m->mask >> l) & 1u)) {
             for (unsigned i = 0; i < H; i++) xs[i] = xn[i] * SCALE_2P64; /* the a|b rows are uploaded * 2^-64 */
             { int r_ = omega_gpu_bf16_gemv_f32(m->L[l].ab, xs, ab, NULL); if (r_ != 0) { printf("bf16 gemv rc %d: %s\n", r_, omega_gpu_bf16_last_error()); return -1; } }
@@ -165,12 +193,12 @@ static int baseline_token(Model *m, const float *x0, uint32_t pos, Out *o) {
             if (omega_gpu_decode_attn256(m->attn[1], na++, pos, agg, EPS, 1.0f, att, NULL) != 0) { printf("attn: %s\n", omega_gpu_decode_attn_last_error()); return -1; }
             for (unsigned n = 0; n < OMEGA_GPU_Q38_MIXER_OUT; n++) att[n] = att[n] * (1.0f / (1.0f + expf(-agg[OMEGA_GPU_Q38_ATT_QKV + n])));
         }
-        { int r_ = omega_gpu_fp8_gemv_f32(m->L[l].o, 0, att, y, NULL); if (r_ != 0) { printf("fp8 gemv rc %d: %s\n", r_, omega_gpu_fp8_last_error()); return -1; } }
+        if (proj(m->L[l].o, m->L[l].o4, att, y) != 0) return -1;
         for (unsigned i = 0; i < H; i++) o->x[i] = o->x[i] + y[i];
         rmsnorm(o->x, m->L[l].post_norm, xn);
-        { int r_ = omega_gpu_fp8_gemv_f32(m->L[l].gu, 0, xn, gu, NULL); if (r_ != 0) { printf("fp8 gemv rc %d: %s\n", r_, omega_gpu_fp8_last_error()); return -1; } }
+        if (proj(m->L[l].gu, m->L[l].gu4, xn, gu) != 0) return -1;
         for (unsigned j = 0; j < I; j++) { float v = gu[j]; act[j] = v / (1.0f + expf(-v)) * gu[I + j]; }
-        { int r_ = omega_gpu_fp8_gemv_f32(m->L[l].dn, 0, act, y, NULL); if (r_ != 0) { printf("fp8 gemv rc %d: %s\n", r_, omega_gpu_fp8_last_error()); return -1; } }
+        if (proj(m->L[l].dn, m->L[l].dn4, act, y) != 0) return -1;
         for (unsigned i = 0; i < H; i++) o->x[i] = o->x[i] + y[i];
     }
     rmsnorm(o->x, m->fnorm, xn);
@@ -184,6 +212,7 @@ static int baseline_token(Model *m, const float *x0, uint32_t pos, Out *o) {
             double d = fabs(acc - o->logits[r]); if (d > worst) worst = d; if (fabs(acc) > ref_max) ref_max = fabs(acc);
         }
         CHECK(worst <= 1e-4 * ref_max + 1e-6, "fp8 head: sampled rows max diff %.3g vs host dequantised (max %.3g)", worst, ref_max);
+        if (m->lm4) { int r4 = omega_gpu_w4_gemv_f32(m->lm4, xn, o->logits, NULL); if (r4 != 0) { printf("w4 head rc %d: %s\n", r4, omega_gpu_w4_last_error()); return -1; } }
     } else
     { int r_ = omega_gpu_bf16_gemv_f32(m->lm, xn, o->logits, NULL); if (r_ != 0) { printf("bf16 gemv rc %d: %s\n", r_, omega_gpu_bf16_last_error()); return -1; } }
     o->token = argmax(o->logits, m->vocab);
@@ -200,6 +229,9 @@ static int graph_build(Model *m, OmegaGpuQ38Graph **out) {
         if ((rc = omega_gpu_q38_graph_set_layer(*out, l, m->L[l].mix, m->L[l].ab, m->L[l].o, m->L[l].gu, m->L[l].dn, m->L[l].in_norm, m->L[l].post_norm)) != 0) { printf("set_layer %u: %d\n", l, rc); return -1; }
     if (omega_gpu_q38_graph_set_final_norm(*out, m->fnorm) != 0) return -1;
     if (m->lm8 && omega_gpu_q38_graph_set_lm_head_fp8(*out, m->lm8) != 0) { printf("set_lm_head_fp8 refused\n"); return -1; }
+    for (uint32_t l = 0; l < m->layers; l++)
+        if (m->L[l].mix4 && (rc = omega_gpu_q38_graph_set_layer_w4(*out, l, m->L[l].mix4, m->L[l].o4, m->L[l].gu4, m->L[l].dn4)) != 0) { printf("set_layer_w4 %u: %d %s\n", l, rc, omega_gpu_session_last_error()); return -1; }
+    if (m->lm4 && omega_gpu_q38_graph_set_lm_head_w4(*out, m->lm4) != 0) { printf("set_lm_head_w4 refused\n"); return -1; }
     return 0;
 }
 
@@ -291,6 +323,19 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
         CHECK(caught, "mutant %d (%s) caught", mu, mname[mu]);
     }
     omega_gpu_q38_graph_test_set_mutant(g, 0);
+    /* --w4 control: layer 0 back on its FP8 tensors (set_layer) must fail the MXFP4 baseline (the comparison sees which
+     * weights the graph read), then set_layer_w4 again */
+    if (m.L[0].mix4) {
+        int caught = 0;
+        if (state_reset(&m) != 0 || omega_gpu_q38_graph_set_layer(g, 0, m.L[0].mix, m.L[0].ab, m.L[0].o, m.L[0].gu, m.L[0].dn, m.L[0].in_norm, m.L[0].post_norm) != 0) return 1;
+        for (uint32_t t = 0; t < TOKENS && !caught; t++) {
+            if (graph_token(g, &m, m.x0[t], t, &M, &st) != 0) { caught = 1; break; }
+            if (maxdiff(A[t].x, M.x, H) > TOL_REL * maxabs(A[t].x, H)) caught = 1;
+        }
+        CHECK(caught, "w4 control: layer 0 on FP8 differs from the MXFP4 baseline");
+        CHECK(omega_gpu_q38_graph_set_layer(g, 0, m.L[0].mix, m.L[0].ab, m.L[0].o, m.L[0].gu, m.L[0].dn, m.L[0].in_norm, m.L[0].post_norm) == 0 &&
+              omega_gpu_q38_graph_set_layer_w4(g, 0, m.L[0].mix4, m.L[0].o4, m.L[0].gu4, m.L[0].dn4) == 0, "w4: layer 0 back on MXFP4");
+    }
     /* timing: reps tokens at position 2 over the reset state (the time, not the values, is measured here) */
     uint64_t *chip = calloc(reps, 8), *tot = calloc(reps, 8);
     if (!chip || !tot) return 1;
@@ -307,12 +352,14 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
         uint64_t wb[OMEGA_GPU_Q38_K_COUNT] = { 0 }; uint32_t e, n8, k8;
         for (uint32_t l = 0; l < m.layers; l++) {
             const OmegaGpuFp8Tensor *f[4] = { m.L[l].mix, m.L[l].o, m.L[l].gu, m.L[l].dn };
+            const OmegaGpuW4Tensor *f4[4] = { m.L[l].mix4, m.L[l].o4, m.L[l].gu4, m.L[l].dn4 };
             const unsigned fk[4] = { OMEGA_GPU_Q38_K_MIX, OMEGA_GPU_Q38_K_O, OMEGA_GPU_Q38_K_GATE_UP, OMEGA_GPU_Q38_K_DOWN };
-            for (int j = 0; j < 4; j++) if (f[j]) { omega_gpu_fp8_tensor_shape(f[j], &e, &n8, &k8); wb[fk[j]] += (uint64_t)n8 * k8; }
+            for (int j = 0; j < 4; j++) if (f4[j]) wb[fk[j]] += omega_gpu_w4_tensor_bytes(f4[j]); else if (f[j]) { omega_gpu_fp8_tensor_shape(f[j], &e, &n8, &k8); wb[fk[j]] += (uint64_t)n8 * k8; }
             if (m.L[l].ab) { omega_gpu_bf16_tensor_shape(m.L[l].ab, &n8, &k8); wb[OMEGA_GPU_Q38_K_AB] += 2ull * n8 * k8; }
         }
         omega_gpu_bf16_tensor_shape(m.lm, &n8, &k8); wb[OMEGA_GPU_Q38_K_LM_HEAD] = 2ull * n8 * k8;
         if (m.lm8) wb[OMEGA_GPU_Q38_K_LM_HEAD] /= 2u; /* FP8 head: one byte per weight */
+        if (m.lm4) wb[OMEGA_GPU_Q38_K_LM_HEAD] = omega_gpu_w4_tensor_bytes(m.lm4);
         const uint32_t tr = tl_reps > 1 ? tl_reps - 1 : 1;
         uint64_t *ns = calloc((size_t)tr * (OMEGA_GPU_Q38_K_COUNT + 1), 8), col[256];
         uint32_t cnt[OMEGA_GPU_Q38_K_COUNT] = { 0 };
@@ -354,13 +401,19 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--tl-reps") == 0 && i + 1 < argc) tl_reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--fp8-head") == 0) g_fp8_head = 1;
+        else if (strcmp(argv[i], "--w4") == 0) g_w4 = 1;
+        else if (strcmp(argv[i], "--w4-head") == 0) g_w4_head = g_fp8_head = 1;
         /* tuning knobs for sweeps (process-wide, before any kernel is built): FP8 GEMV lane_bytes,rows,warps / CTA budget,
          * bf16 GEMV (lm_head, a|b) rows,warps,depth / CTA budget */
         else if (strcmp(argv[i], "--fp8-shape") == 0 && i + 1 < argc) { unsigned a, b, c; if (sscanf(argv[++i], "%u,%u,%u", &a, &b, &c) != 3) return 2; omega_gpu_fp8_set_shape(a, b, c); }
         else if (strcmp(argv[i], "--fp8-ctas") == 0 && i + 1 < argc) omega_gpu_fp8_set_cta_budget((uint32_t)atoi(argv[++i]));
         else if (strcmp(argv[i], "--bf16-shape") == 0 && i + 1 < argc) { unsigned a, b, c; if (sscanf(argv[++i], "%u,%u,%u", &a, &b, &c) != 3) return 2; omega_gpu_bf16_set_shape(a, b, c); }
         else if (strcmp(argv[i], "--bf16-ctas") == 0 && i + 1 < argc) omega_gpu_bf16_set_cta_budget((uint32_t)atoi(argv[++i]));
-        else { printf("usage: %s [--host-only] [--layers N (<= 8)] [--mask M] [--reps R] [--tl-reps T (<= 257)]\n", argv[0]); return 2; }
+        else if (strcmp(argv[i], "--w4-shape") == 0 && i + 1 < argc) { unsigned a, b, c; if (sscanf(argv[++i], "%u,%u,%u", &a, &b, &c) != 3) return 2; omega_gpu_w4_set_shape(a, b, c); }
+        else if (strcmp(argv[i], "--w4-ctas") == 0 && i + 1 < argc) omega_gpu_w4_set_cta_budget((uint32_t)atoi(argv[++i]));
+        else if (strcmp(argv[i], "--w4-sched") == 0 && i + 1 < argc) omega_gpu_w4_set_sched(atoi(argv[++i]));
+        else if (strcmp(argv[i], "--w4-coal") == 0 && i + 1 < argc) omega_gpu_w4_set_coal(atoi(argv[++i]));
+        else { printf("usage: %s [--host-only] [--layers N (<= 8)] [--mask M] [--reps R] [--tl-reps T (<= 257)] [--fp8-head] [--w4] [--w4-head]\n", argv[0]); return 2; }
     }
     if (layers == 0 || layers > 8 || reps == 0 || tl_reps == 0 || tl_reps > 257) { printf("layers 1..8, reps >= 1, tl-reps 1..257\n"); return 2; }
     int rc = host ? host_only() : chip_run(layers, mask, reps);
