@@ -70,6 +70,13 @@ void omega_gpu_w4_set_coal(int coal) { omega_gpu_session_lock(); g.coal = coal; 
 void omega_gpu_w4_set_pf(int pf) { omega_gpu_session_lock(); g.pf = pf; cache_clear_locked(); omega_gpu_session_unlock(); }
 void omega_gpu_w4_test_set_mutant(int m) { omega_gpu_session_lock(); g.mutant = m; cache_clear_locked(); omega_gpu_session_unlock(); }
 
+/* pf default: AIEN_OMEGA_W4_PF=0|1|2 when set_pf was never called (read once), else 0 */
+static uint32_t env_pf(void) {
+    static int v = -1;
+    if (v < 0) { const char *s = getenv("AIEN_OMEGA_W4_PF"); v = (s && s[0] >= '0' && s[0] <= '2' && s[1] == 0) ? s[0] - '0' : 0; }
+    return (uint32_t)v;
+}
+
 /* Automatic shape: 16-byte lanes (one whole MX group per lane step), 2 rows and 8 warps (measured below; the FP8 big-k shape has 16,
  * omega_gpu_fp8_api.c), the coalesced store when the round fits a warp, the pipelined decode. Sweep receipts:
  * ~/handoffs/2026-10-19-ab-fp8head-4bit.md. */
@@ -84,7 +91,7 @@ void omega_gpu_w4_spec_for(uint32_t k, uint32_t n, OmegaW4GemvSpec *spec) {
     spec->warps = g.warps ? g.warps : 8u;
     spec->sched = g.sched >= 0 ? (uint32_t)g.sched : 1u;
     spec->coal = (g.coal >= 0 ? g.coal : 1) && spec->warps * spec->rows <= 32u;
-    spec->pf = g.pf >= 0 ? (uint32_t)g.pf : 0u;
+    spec->pf = g.pf >= 0 ? (uint32_t)g.pf : env_pf();
     spec->mutant = g.mutant;
 }
 
