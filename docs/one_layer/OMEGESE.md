@@ -242,6 +242,21 @@ Limits: the Omegese programs were written by the designer, not by a model, and i
 shortest form (writing to parameters instead of copies), so the text column is not an equal-effort
 rewrite. Whether models write Omegese reliably is not measured yet.
 
+### 5.1 Structs: spelling A against spelling B
+
+The six struct twins (`tests/one_layer/omegese/structs`, each one program in OSC and in Omegese), the
+same method and tokenizer (`tools/omegese/tokens_structs.sh`, table in
+`evidence/OMEGESE-STRUCTS/tokens.md`). A = `p = new S` (all cells zero) then a `put` per cell
+(`structs/spelling_a`); B = `p = new S v1 .. vn`.
+
+| | OSC text | Omegese A | Omegese B |
+|---|---|---|---|
+| total, 6 twins | 509 | 461 | 363 |
+
+B is kept (98 tokens fewer than A). A loses most on array fields, where every element needs its own
+`put`. Each twin's Omegese B and OSC text compile to the same IR bytes (`tools/omegese/twin_structs.sh`,
+`evidence/OMEGESE-STRUCTS/twin.md`).
+
 ## 6. The next oracle and the checks (`make test-omegese`)
 
 ### 6.1 What `omegese next` promises
