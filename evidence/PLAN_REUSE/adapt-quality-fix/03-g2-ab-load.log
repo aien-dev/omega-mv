@@ -1,0 +1,32 @@
+# A/B of the G2 reverse CPU ratio, base (cc3261eb runtime, new test) vs fix (9562508d), alternating, PLAN_REUSE_NO_ENERGY=1, not a timing of record
+## base run 1 load/mem start: 70.16 66.17 52.67 mem_avail_kB=56885660
+checks 1326 failures 8
+OMEGA_PLAN_REUSE_PASS: FAIL (G1 FAIL, G2 PASS, G3 PASS, G4 PASS, G5 PASS, G6 PASS)
+  reverse_tower_6: ops 1.2x (G1 FAIL), cpu 19.6x (3.3x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.06x (G6 PASS)
+  merge_two_towers_3_3: ops 26.6x (G1 PASS), cpu 42.8x (16.7x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.05x (G6 PASS)
+## fix run 1 load/mem start: 71.03 66.42 52.82 mem_avail_kB=57172224
+checks 1326 failures 0
+OMEGA_PLAN_REUSE_PASS: FAIL (G1 FAIL, G2 PASS, G3 PASS, G4 PASS, G5 PASS, G6 PASS)
+  reverse_tower_6: ops 1.2x (G1 FAIL), cpu 21.8x (3.0x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.08x (G6 PASS)
+  merge_two_towers_3_3: ops 26.6x (G1 PASS), cpu 42.2x (16.7x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.05x (G6 PASS)
+## base run 2 load/mem start: 71.03 66.42 52.82 mem_avail_kB=57111232
+checks 1326 failures 8
+OMEGA_PLAN_REUSE_PASS: FAIL (G1 FAIL, G2 FAIL, G3 PASS, G4 PASS, G5 PASS, G6 PASS)
+  reverse_tower_6: ops 1.2x (G1 FAIL), cpu 7.2x (2.1x without the identity hash; G2 FAIL), outcome/evidence G3 PASS, end to end 1.10x (G6 PASS)
+  merge_two_towers_3_3: ops 26.6x (G1 PASS), cpu 17.9x (7.9x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.11x (G6 PASS)
+## fix run 2 load/mem start: 70.95 66.48 52.92 mem_avail_kB=56531916
+checks 1326 failures 0
+OMEGA_PLAN_REUSE_PASS: FAIL (G1 FAIL, G2 PASS, G3 PASS, G4 PASS, G5 PASS, G6 PASS)
+  reverse_tower_6: ops 1.2x (G1 FAIL), cpu 24.1x (2.9x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.07x (G6 PASS)
+  merge_two_towers_3_3: ops 26.6x (G1 PASS), cpu 33.6x (12.1x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.06x (G6 PASS)
+## base run 3 load/mem start: 70.95 66.48 52.92 mem_avail_kB=57860268
+checks 1326 failures 8
+OMEGA_PLAN_REUSE_PASS: FAIL (G1 FAIL, G2 PASS, G3 PASS, G4 PASS, G5 PASS, G6 PASS)
+  reverse_tower_6: ops 1.2x (G1 FAIL), cpu 23.1x (2.4x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.06x (G6 PASS)
+  merge_two_towers_3_3: ops 26.6x (G1 PASS), cpu 35.0x (13.1x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.07x (G6 PASS)
+## fix run 3 load/mem start: 70.95 66.48 52.92 mem_avail_kB=58042880
+checks 1326 failures 0
+OMEGA_PLAN_REUSE_PASS: FAIL (G1 FAIL, G2 PASS, G3 PASS, G4 PASS, G5 PASS, G6 PASS)
+  reverse_tower_6: ops 1.2x (G1 FAIL), cpu 15.6x (2.0x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.05x (G6 PASS)
+  merge_two_towers_3_3: ops 26.6x (G1 PASS), cpu 45.9x (16.3x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.08x (G6 PASS)
+# end load: 70.55 66.47 52.99
