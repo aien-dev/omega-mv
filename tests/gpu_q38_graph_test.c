@@ -16,6 +16,8 @@
  *                 weight) must each fail the A-vs-C comparison. Then --reps timed tokens (median).
  *   --w4 / --w4-head (qwen38/w4-gemv): every projection / the lm_head as MXFP4 (omega_gpu_w4_from_fp8 of the FP8 data) in
  *                 both A and C; control: layer 0 put back on FP8 must fail the comparison.
+ *                 With both: a W4-only graph (no FP8 projections, no bf16 lm_head, speed1/w4-default) == C bit for bit; a headless
+ *                 graph and a layer with neither FP8 nor MXFP4 are refused at the token.
  * Verdict: exit 0 when every CHECK passed.
  */
 #include "omega_gpu_q38_graph.h"
@@ -335,6 +337,39 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
         CHECK(caught, "w4 control: layer 0 on FP8 differs from the MXFP4 baseline");
         CHECK(omega_gpu_q38_graph_set_layer(g, 0, m.L[0].mix, m.L[0].ab, m.L[0].o, m.L[0].gu, m.L[0].dn, m.L[0].in_norm, m.L[0].post_norm) == 0 &&
               omega_gpu_q38_graph_set_layer_w4(g, 0, m.L[0].mix4, m.L[0].o4, m.L[0].gu4, m.L[0].dn4) == 0, "w4: layer 0 back on MXFP4");
+    }
+    /* --w4 --w4-head W4-only (speed1/w4-default): a second graph over the same state with no FP8 projection and no bf16
+     * lm_head must give C bit for bit; a graph with no head, and a W4-only layer without set_layer_w4, are refused at the token */
+    if (m.L[0].mix4 && m.lm4) {
+        OmegaGpuQ38GraphConfig c4; memset(&c4, 0, sizeof c4);
+        c4.layers = m.layers; c4.attn_mask = m.mask; c4.vocab = m.vocab; c4.eps = EPS; c4.eps_l2 = EPS;
+        c4.gdn = m.gdn[0]; c4.attn = m.attn[0]; c4.lm_head = NULL;
+        OmegaGpuQ38Graph *g4 = NULL;
+        CHECK(omega_gpu_q38_graph_create(&c4, &g4) == 0 && g4, "w4-only: create with no bf16 lm_head");
+        if (!g4) return 1;
+        int ok = 1;
+        for (uint32_t l = 0; l < m.layers && ok; l++)
+            ok = omega_gpu_q38_graph_set_layer(g4, l, NULL, m.L[l].ab, NULL, NULL, NULL, m.L[l].in_norm, m.L[l].post_norm) == 0 &&
+                 omega_gpu_q38_graph_set_layer_w4(g4, l, m.L[l].mix4, m.L[l].o4, m.L[l].gu4, m.L[l].dn4) == 0;
+        CHECK(ok, "w4-only: set_layer with no FP8 tensors, then set_layer_w4, every layer");
+        CHECK(omega_gpu_q38_graph_set_layer(g4, 0, m.L[0].mix, m.L[0].ab, NULL, m.L[0].gu, m.L[0].dn, m.L[0].in_norm, m.L[0].post_norm) == OMEGA_GPU_DGRAPH_BAD_ARGS,
+              "w4-only: set_layer refuses a partial FP8 set");
+        CHECK(omega_gpu_q38_graph_set_final_norm(g4, m.fnorm) == 0, "w4-only: final norm");
+        uint32_t tok = 0;
+        if (state_reset(&m) != 0) return 1;
+        CHECK(omega_gpu_q38_graph_token(g4, m.x0[0], 0, &tok, &st) != 0, "w4-only control: a token with no lm_head of any kind is refused");
+        CHECK(omega_gpu_q38_graph_set_lm_head_w4(g4, m.lm4) == 0, "w4-only: MXFP4 lm_head");
+        CHECK(omega_gpu_q38_graph_set_layer(g4, 0, NULL, m.L[0].ab, NULL, NULL, NULL, m.L[0].in_norm, m.L[0].post_norm) == 0 &&
+              omega_gpu_q38_graph_token(g4, m.x0[0], 0, &tok, &st) != 0, "w4-only control: a token over a layer with neither FP8 nor MXFP4 is refused");
+        CHECK(omega_gpu_q38_graph_set_layer_w4(g4, 0, m.L[0].mix4, m.L[0].o4, m.L[0].gu4, m.L[0].dn4) == 0, "w4-only: layer 0 back on MXFP4");
+        int same = 1;
+        if (state_reset(&m) != 0) return 1;
+        for (uint32_t t = 0; t < TOKENS; t++) {
+            if (graph_token(g4, &m, m.x0[t], t, &M, &st) != 0) { CHECK(0, "w4-only token %u", t); return 1; }
+            if (memcmp(M.x, C[t].x, sizeof M.x) || memcmp(M.logits, C[t].logits, vocab * 4u) || M.token != C[t].token) same = 0;
+        }
+        CHECK(same, "w4-only graph == FP8+MXFP4 graph, bit for bit, all %u tokens", TOKENS);
+        omega_gpu_q38_graph_free(g4);
     }
     /* timing: reps tokens at position 2 over the reset state (the time, not the values, is measured here) */
     uint64_t *chip = calloc(reps, 8), *tot = calloc(reps, 8);

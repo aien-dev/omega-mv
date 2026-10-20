@@ -69,7 +69,7 @@ typedef struct {
     float eps_l2;                       /* GDN q/k l2norm eps (1e-6) */
     OmegaGpuGdn *gdn;                   /* >= (layers - attention layers) entries, parameters set */
     OmegaGpuDecodeAttn256Cache *attn;   /* >= attention layers entries, q/k norms set; rotary 64 */
-    const OmegaGpuBf16Tensor *lm_head;  /* [vocab][5120] */
+    const OmegaGpuBf16Tensor *lm_head;  /* [vocab][5120]; NULL when an FP8 or MXFP4 head is set before the first token (W4-only) */
 } OmegaGpuQ38GraphConfig;
 
 typedef struct OmegaGpuQ38Graph OmegaGpuQ38Graph;
@@ -79,7 +79,8 @@ void omega_gpu_q38_graph_free(OmegaGpuQ38Graph *g);
 /* Shapes are checked. GDN layer: mix [1][16384][5120], ab bf16 [96][5120] (row 2h = in_proj_a[h], 2h + 1 = in_proj_b[h],
  * each value * 2^-64), o [1][5120][6144]. Attention layer: mix [1][14336][5120], ab NULL, o [1][5120][6144].
  * Both: gate_up [1][34816][5120], down [1][5120][17408], in_norm and post_norm f32 [5120] as (1 + w). The tensors stay
- * owned by the caller. */
+ * owned by the caller. W4-only (speed1/w4-default): mix, o, gate_up and down all NULL keeps no FP8 copy; set_layer_w4 must then
+ * follow before a token (a token refuses a layer with neither). */
 int omega_gpu_q38_graph_set_layer(OmegaGpuQ38Graph *g, uint32_t layer, const OmegaGpuFp8Tensor *mix, const OmegaGpuBf16Tensor *ab,
                                   const OmegaGpuFp8Tensor *o, const OmegaGpuFp8Tensor *gate_up, const OmegaGpuFp8Tensor *down,
                                   const float *in_norm, const float *post_norm);

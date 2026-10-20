@@ -122,12 +122,11 @@ void omega_gpu_q38_graph_free(OmegaGpuQ38Graph *g) {
 
 int omega_gpu_q38_graph_create(const OmegaGpuQ38GraphConfig *cfg, OmegaGpuQ38Graph **out) {
     if (out) *out = NULL;
-    if (!cfg || !out || cfg->layers == 0 || cfg->layers > OMEGA_GPU_Q38_MAX_LAYERS || !cfg->gdn || !cfg->attn || !cfg->lm_head ||
+    if (!cfg || !out || cfg->layers == 0 || cfg->layers > OMEGA_GPU_Q38_MAX_LAYERS || !cfg->gdn || !cfg->attn ||
         cfg->vocab == 0 || cfg->vocab > OMEGA_DEC_ARGMAX_SPAN * OMEGA_DEC_ARGMAX_SPAN) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     if (cfg->layers < 64u && (cfg->attn_mask >> cfg->layers) != 0) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     uint32_t n = 0, k = 0;
-    omega_gpu_bf16_tensor_shape(cfg->lm_head, &n, &k);
-    if (n != cfg->vocab || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    if (cfg->lm_head) { omega_gpu_bf16_tensor_shape(cfg->lm_head, &n, &k); if (n != cfg->vocab || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS; }
     OmegaGpuQ38Graph *g = omega_gpu_host_calloc(1, sizeof *g);
     if (!g) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     g->cfg = *cfg;
@@ -197,13 +196,14 @@ int omega_gpu_q38_graph_set_layer(OmegaGpuQ38Graph *g, uint32_t layer, const Ome
                                   const float *in_norm, const float *post_norm) {
     if (!g || layer >= g->cfg.layers || !in_norm || !post_norm || g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     const int attn = g->layer[layer].attn;
-    if (!shape_is(mix, attn ? OMEGA_GPU_Q38_ATT_MIX : OMEGA_GPU_Q38_GDN_MIX, H) || !shape_is(o, H, OMEGA_GPU_Q38_MIXER_OUT) ||
-        !shape_is(gate_up, 2 * I, H) || !shape_is(down, H, I)) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    const int w4only = !mix && !o && !gate_up && !down; /* the four FP8 tensors all NULL: set_layer_w4 must follow before a token */
+    if (!w4only && (!shape_is(mix, attn ? OMEGA_GPU_Q38_ATT_MIX : OMEGA_GPU_Q38_GDN_MIX, H) || !shape_is(o, H, OMEGA_GPU_Q38_MIXER_OUT) ||
+        !shape_is(gate_up, 2 * I, H) || !shape_is(down, H, I))) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     if (attn ? ab != NULL : ab == NULL) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     if (!attn) { uint32_t n = 0, k = 0; omega_gpu_bf16_tensor_shape(ab, &n, &k); if (n != OMEGA_GPU_Q38_AB || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS; }
-    uint64_t t[8];
-    if (omega_gpu_fp8_tensor_entry(mix, 0, &t[0], &t[1]) != 0 || omega_gpu_fp8_tensor_entry(o, 0, &t[2], &t[3]) != 0 ||
-        omega_gpu_fp8_tensor_entry(gate_up, 0, &t[4], &t[5]) != 0 || omega_gpu_fp8_tensor_entry(down, 0, &t[6], &t[7]) != 0) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    uint64_t t[8] = { 0 };
+    if (!w4only && (omega_gpu_fp8_tensor_entry(mix, 0, &t[0], &t[1]) != 0 || omega_gpu_fp8_tensor_entry(o, 0, &t[2], &t[3]) != 0 ||
+        omega_gpu_fp8_tensor_entry(gate_up, 0, &t[4], &t[5]) != 0 || omega_gpu_fp8_tensor_entry(down, 0, &t[6], &t[7]) != 0)) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     omega_gpu_session_lock();
     memcpy((uint8_t *)cpu_of(g, g->lo.tabs) + (size_t)layer * 64u, t, sizeof t);
     memcpy((float *)cpu_of(g, g->lo.norms) + (size_t)layer * 2 * H, in_norm, H * 4u);
@@ -385,6 +385,7 @@ int omega_gpu_q38_graph_record_layer(OmegaGpuQ38Graph *g, uint32_t l, uint32_t p
     if (g->failed) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
     if (l >= g->cfg.layers || !g->layer[l].set || g->hidden_ready || (l + 1 == g->cfg.layers && !g->final_set))
         return fail(g, "q38 graph: layer not set, out of order, or final norm missing", OMEGA_GPU_DGRAPH_BAD_ARGS);
+    if (!g->layer[l].mix && !g->layer[l].mix4) return fail(g, "q38 graph: layer has neither FP8 nor MXFP4 projections (set_layer_w4 missing)", OMEGA_GPU_DGRAPH_BAD_ARGS);
     const uint64_t x = va_of(g, g->lo.x), xq = va_of(g, g->lo.xq), mix = va_of(g, g->lo.mix), agg = va_of(g, g->lo.agg);
     const uint64_t att = va_of(g, g->lo.att), o = va_of(g, g->lo.o), gu = va_of(g, g->lo.gu), act = va_of(g, g->lo.act);
     const uint64_t in_norm = va_of(g, g->lo.norms) + (uint64_t)l * 2 * H * 4u, post_norm = in_norm + H * 4u, tab = va_of(g, g->lo.tabs) + (uint64_t)l * 64u;
@@ -444,6 +445,7 @@ int omega_gpu_q38_graph_record_final(OmegaGpuQ38Graph *g) {
     if (!g || !g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     if (g->failed) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
     if (!g->final_set) return fail(g, "q38 graph: final norm not set", OMEGA_GPU_DGRAPH_BAD_ARGS);
+    if (!g->head4 && !g->head8 && !g->cfg.lm_head) return fail(g, "q38 graph: no lm_head (bf16 in the config, FP8 or MXFP4)", OMEGA_GPU_DGRAPH_BAD_ARGS);
     const uint64_t x = va_of(g, g->lo.x), hidden = va_of(g, g->lo.hidden), logits = va_of(g, g->lo.logits), token = va_of(g, g->lo.token);
     int rc = OMEGA_GPU_DGRAPH_OK;
     if (!g->hidden_ready) rc = rec_res(g, K_NORM, x, 0, va_of(g, g->lo.fnorm), hidden, HEAD_SCALED(g) ? SCALE_2P64 : 1.0f);
