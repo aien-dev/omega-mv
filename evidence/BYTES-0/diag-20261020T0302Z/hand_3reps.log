@@ -1,0 +1,6 @@
+ 22:02:45 up 1 day, 17:10, 44 users,  load average: 61.69, 61.44, 53.25
+  rep 0: engine=OK step=NONE drv_rc=0 errno=0 drv_text="" mismatches=0 launch_to_done_ns=3438198 ok
+  rep 1: engine=OK step=NONE drv_rc=0 errno=0 drv_text="" mismatches=0 launch_to_done_ns=212065 ok
+  rep 2: engine=OK step=NONE drv_rc=0 errno=0 drv_text="" mismatches=0 launch_to_done_ns=212161 ok
+{"target":"gb10","file":"tools/omega_bytes/kernels/gb10_vadd_hand.words","instructions":32,"sha256":"59e6bdc874f27277b17f1e36dc080732f75c3fdaff4cad0bd48aa7ebbc295f14","n":1048576,"expect":"vadd","reps":3,"reps_ok":3,"first_fail":"none","first_fail_mismatches":0,"bytes_moved":12582912,"launch_to_done_ns":{"min":212065,"median":212161,"all":[3438198,212065,212161]},"verdict":"PASS"}
+DIAG_EXIT 0
