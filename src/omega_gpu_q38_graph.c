@@ -304,9 +304,14 @@ static int rec_fp8(OmegaGpuQ38Graph *g, uint8_t kind, const OmegaGpuFp8Tensor *t
     return after_op(g, kind, omega_gpu_fp8_gemv_grouped_record(g->cl, t, 1, tab, x, 1, y));
 }
 
+static int begin_locked(OmegaGpuQ38Graph *g, const float *x_embed);
 int omega_gpu_q38_graph_begin_token(OmegaGpuQ38Graph *g, const float *x_embed) {
     if (!g || g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     omega_gpu_session_lock();
+    return begin_locked(g, x_embed);
+}
+
+static int begin_locked(OmegaGpuQ38Graph *g, const float *x_embed) {
     g->t_begin = omega_gpu_session_now_ns();
     g->in_token = 1; g->failed = 0; g->xq_layer = -1; g->hidden_ready = 0;
     memset(&g->acc, 0, sizeof g->acc);
@@ -398,11 +403,19 @@ int omega_gpu_q38_graph_record_final(OmegaGpuQ38Graph *g) {
     return rc == OMEGA_GPU_DGRAPH_OK ? rc : fail(g, NULL, rc);
 }
 
+static int finish_locked(OmegaGpuQ38Graph *g, int rc, uint64_t t_rec, uint32_t *token, OmegaGpuDecodeGraphStats *st);
 int omega_gpu_q38_graph_end_token(OmegaGpuQ38Graph *g, uint32_t *token, OmegaGpuDecodeGraphStats *st) {
     if (!g || !g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     int rc = g->failed ? OMEGA_GPU_DGRAPH_CHIP_FAIL : OMEGA_GPU_DGRAPH_OK;
     const uint64_t t_rec = omega_gpu_session_now_ns();
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = submit_now(g);
+    rc = finish_locked(g, rc, t_rec, token, st);
+    omega_gpu_session_unlock();
+    return rc;
+}
+
+/* After the list was submitted (rc its result): check, read the token, reset; the caller unlocks. */
+static int finish_locked(OmegaGpuQ38Graph *g, int rc, uint64_t t_rec, uint32_t *token, OmegaGpuDecodeGraphStats *st) {
     if (rc == OMEGA_GPU_DGRAPH_OK && omega_gpu_decode_attn256_counters_check(g->cfg.attn) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
     if (rc == OMEGA_GPU_DGRAPH_OK && omega_gpu_session_sync_to_cpu(&g->buf) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
     if (rc == OMEGA_GPU_DGRAPH_OK) {
@@ -416,8 +429,49 @@ int omega_gpu_q38_graph_end_token(OmegaGpuQ38Graph *g, uint32_t *token, OmegaGpu
     g->in_token = 0;
     const uint64_t t_end = omega_gpu_session_now_ns();
     if (st) { *st = g->acc; st->record_ns = (g->flush_each ? t_end : t_rec) - g->t_begin; st->total_ns = t_end - g->t_begin; }
-    omega_gpu_session_unlock();
     return rc;
+}
+
+/* L136: both lists in flight at once, a on queue 0 and b on queue 1 (omega_gpu_cmdlist_submit_pair). */
+static int submit_pair_now(OmegaGpuQ38Graph *ga, OmegaGpuQ38Graph *gb) {
+    OmegaGpuCmdListOpts o = list_opts(ga);
+    OmegaGpuCmdListStats sa, sb; memset(&sa, 0, sizeof sa); memset(&sb, 0, sizeof sb);
+    const int rc = omega_gpu_cmdlist_submit_pair(ga->cl, gb->cl, &o, &sa, &sb);
+    OmegaGpuQ38Graph *G[2] = { ga, gb };
+    const OmegaGpuCmdListStats *S[2] = { &sa, &sb };
+    for (int k = 0; k < 2; k++) {
+        G[k]->acc.launches += S[k]->launches; G[k]->acc.submits += S[k]->submits; G[k]->acc.chip_ns += S[k]->elapsed_ns; G[k]->acc.sems_done += S[k]->sems_done;
+        G[k]->tagged_in_list = 0;
+        omega_gpu_cmdlist_reset(G[k]->cl);
+    }
+    if (rc != 0) { (void)fail(ga, NULL, 0); (void)fail(gb, NULL, 0); return OMEGA_GPU_DGRAPH_CHIP_FAIL; }
+    for (int k = 0; k < 2; k++)
+        if (S[k]->sems_done != S[k]->launches) {
+            char e[128]; omega_gpu_fmt(e, sizeof e, "q38 graph pair: %u of %u launch semaphores DONE (first missing %d)", S[k]->sems_done, S[k]->launches, S[k]->first_missing);
+            return fail(G[k], e, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+        }
+    return OMEGA_GPU_DGRAPH_OK;
+}
+
+int omega_gpu_q38_graph_token_pair(OmegaGpuQ38Graph *ga, const float *xa, uint32_t pos_a, OmegaGpuQ38Graph *gb, const float *xb, uint32_t pos_b,
+                                   uint32_t *ta, uint32_t *tb, OmegaGpuDecodeGraphStats *sa, OmegaGpuDecodeGraphStats *sb) {
+    if (!ga || !gb || ga == gb || ga->in_token || gb->in_token || ga->stamps || gb->stamps || ga->flush_each || gb->flush_each)
+        return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    omega_gpu_session_lock();
+    OmegaGpuQ38Graph *G[2] = { ga, gb };
+    const float *X[2] = { xa, xb };
+    const uint32_t P[2] = { pos_a, pos_b };
+    for (int k = 0; k < 2; k++) {
+        G[k]->in_token = 1;
+        (void)begin_locked(G[k], X[k]);
+        for (uint32_t l = 0; l < G[k]->cfg.layers && !G[k]->failed; l++) (void)omega_gpu_q38_graph_record_layer(G[k], l, P[k]);
+        if (!G[k]->failed) (void)omega_gpu_q38_graph_record_final(G[k]);
+    }
+    const uint64_t t_rec = omega_gpu_session_now_ns();
+    int rc = ga->failed || gb->failed ? OMEGA_GPU_DGRAPH_CHIP_FAIL : submit_pair_now(ga, gb);
+    const int ra = finish_locked(ga, rc, t_rec, ta, sa), rb = finish_locked(gb, rc, t_rec, tb, sb);
+    omega_gpu_session_unlock();
+    return ra != OMEGA_GPU_DGRAPH_OK ? ra : rb;
 }
 
 int omega_gpu_q38_graph_token(OmegaGpuQ38Graph *g, const float *x_embed, uint32_t pos, uint32_t *token, OmegaGpuDecodeGraphStats *st) {

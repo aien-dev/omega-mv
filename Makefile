@@ -2657,3 +2657,8 @@ $(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h $(OU
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
 	./$(GPU_Q38_GRAPH_TEST) --host-only
+
+# L136 (2026-10-20): two Qwen3.8-27B decode streams, serial on one channel vs paired on two (AIEN_OMEGA_GPU_CHANNELS=2), chip only
+GPU_Q38_CHANNELS_TEST = $(OUT_DIR)/gpu_q38_channels_test
+$(GPU_Q38_CHANNELS_TEST): tests/gpu_q38_channels_test.c src/omega_gpu_q38_graph.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_channels_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm

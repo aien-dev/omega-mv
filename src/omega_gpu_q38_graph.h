@@ -101,6 +101,12 @@ int omega_gpu_q38_graph_begin_token(OmegaGpuQ38Graph *g, const float *x_embed);
 int omega_gpu_q38_graph_record_layer(OmegaGpuQ38Graph *g, uint32_t layer, uint32_t pos);
 int omega_gpu_q38_graph_record_final(OmegaGpuQ38Graph *g);
 int omega_gpu_q38_graph_end_token(OmegaGpuQ38Graph *g, uint32_t *token, OmegaGpuDecodeGraphStats *st);
+/* L136 (roadblock R3): one token of graph a (on the session queue) and one of graph b (on extra queue 1) with both command
+ * lists in flight at once (omega_gpu_cmdlist_submit_pair; AIEN_OMEGA_GPU_CHANNELS >= 2 at device open). The graphs may
+ * share weight tensors (read only) but need their own GDN states and attention caches. Stamps and flush_each must be
+ * off. Same return codes as omega_gpu_q38_graph_token (the first failing graph's). */
+int omega_gpu_q38_graph_token_pair(OmegaGpuQ38Graph *ga, const float *xa, uint32_t pos_a, OmegaGpuQ38Graph *gb, const float *xb, uint32_t pos_b,
+                                   uint32_t *ta, uint32_t *tb, OmegaGpuDecodeGraphStats *sa, OmegaGpuDecodeGraphStats *sb);
 /* Takes the lock; copies the device x, hidden and logits (vocab values) of the last token; any pointer may be NULL. */
 int omega_gpu_q38_graph_read(OmegaGpuQ38Graph *g, float *x, float *hidden, float *logits);
 /* Test and trace reads of one intermediate of the last token (f32, n values from the start of the buffer). */
