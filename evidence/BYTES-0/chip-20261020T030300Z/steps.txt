@@ -1,0 +1,9 @@
+gate_hand exit=0 want=0 ok
+control_mutant exit=1 want=1 ok
+control_empty exit=0 want=0 ok
+gate_encoder exit=0 want=0 ok
+time_hand exit=0 want=0 ok
+time_encoder exit=0 want=0 ok
+time_empty exit=0 want=0 ok
+time_cpu_c exit=0 want=0 ok
+session PASS

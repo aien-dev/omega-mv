@@ -23,11 +23,13 @@ The tool itself is written in C, which the L098 brief allows for now.
 | a*3-2 written as CPU words, 16 argument sets against C | real Spark CPU | PASS 16/16 |
 | 64-element vector add as CPU words, 16 sets against C | real Spark CPU | PASS 16/16 |
 | Unknown CPU word and unknown GPU opcode are refused | real Spark CPU | refused, as required |
-| 1,048,576-element vector add as hand GPU words | GB10 chip | see `evidence/BYTES-0/` |
+| 1,048,576-element vector add as hand GPU words, every element against the CPU | GB10 chip | PASS, 11/11 timed reps too |
+| Same vector add, one hand word changed (deliberate mistake) | GB10 chip | caught as wrong |
+| Speed: hand words vs the C-built encoder words | GB10 chip, busy box (load 68) | both about 0.21 of the 273 GB/s limit; launch cost is half the time |
 
 Receipts: `evidence/BYTES-0/host/` (CPU gates), `evidence/BYTES-0/offline-disasm/` (the hand GPU
 words read back by a disassembler, matching what was meant), chip session and speed against the
-273 GB/s memory limit in `evidence/BYTES-0/ceiling.md` once the chip run has happened.
+273 GB/s memory limit in `evidence/BYTES-0/ceiling.md`.
 
 ## Use
 
