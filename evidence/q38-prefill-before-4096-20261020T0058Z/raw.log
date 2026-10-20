@@ -1,0 +1,28 @@
+corpus: 4096 tokens in 0.4 s
+upload: need 27449 MiB, MemAvailable 67091 MiB
+qwen38_prefill: lm_head: omega_gpu rc=-4 (CHIP_FAIL: m16_native_create_channel: RM_ALLOC class 0xcec0 status 0x51)
+{
+ "name": "q38-prefill-before-4096-20261020T0058Z",
+ "cmd": "/home/drakestapleton/workspace/pf-tools/bin/qwen38_prefill-before-373d122c ttft /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/pf-tools/data/corpus-arch.txt 4096 4096 /home/drakestapleton/workspace/omega-prefill/evidence/q38-prefill-before-4096-20261020T0058Z/ttft.json",
+ "exit": 2,
+ "git_head": "73441631",
+ "start": "2026-10-19T21:14:17.338105",
+ "seconds": 6.006,
+ "samples": 3,
+ "wall_W_mean": 203.3333333,
+ "wall_J": 1221.255349,
+ "idle_W_before": 237.8571429,
+ "incremental_J": -207.3560019,
+ "gpu_W_mean": 7.573333333,
+ "gpu_util_mean": 0.0,
+ "load1_start": "12.11",
+ "load1_end": "12.27",
+ "mem_avail_kB_start": "68753604",
+ "mem_avail_kB_end": "65962148",
+ "lock_holders_max": 6,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": null,
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-q38-prefill-before-4096-20261020T0058Z.json
