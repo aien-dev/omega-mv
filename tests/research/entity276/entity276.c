@@ -32,6 +32,14 @@
  *     chain + an entity-state digest over the role objects (object-digest rule of
  *     rx_world.c), because the whole-World digest covers session objects;
  *   - the "screen" is the visor text/JSON projection plus the history text, in files.
+ *
+ * Horizon mode (ledger L166, evidence/ENTITY-276/h40/FREEZE.md), read at omega 21913232
+ * (the run of record above) and the #246 E03 net(H) model (293b49a7). UNVERIFIED:
+ *   - arms share one process and the one capability library; each has its own World,
+ *     journal copy and plan cache, and process CPU includes the other arms' idle threads;
+ *   - the forget arm (never stores a template) is the comparator the r = 1 model needs;
+ *   - --release removes a finished run's reactions and retires its cells and run token
+ *     from the harness, because rx_plan_execute keeps them and a World holds 256 objects.
  */
 #include "runtime/aienos_cap.h"
 #include "runtime/rx_cortex.h"
