@@ -49,6 +49,8 @@ struct OmegaGpuCmdList {
 };
 
 static uint32_t g_latched;
+static uint64_t g_code_override; /* TEST ONLY: omega_gpu_cmdlist_test_set_code_override */
+void omega_gpu_cmdlist_test_set_code_override(uint64_t code_va) { g_code_override = code_va; }
 
 int omega_gpu_cmdlist_is_latched(void) { return __atomic_load_n(&g_latched, __ATOMIC_ACQUIRE) ? 1 : 0; }
 uint32_t omega_gpu_cmdlist_count(const OmegaGpuCmdList *cl) { return cl ? cl->n : 0; }
@@ -139,7 +141,7 @@ int omega_gpu_cmdlist_add(OmegaGpuCmdList *cl, const OmegaGpuLaunch *L) {
     const uint64_t sem_va = cl->sems.va + (uint64_t)i * 16u;
     uint32_t gpr = L->gpr_count > 64u ? round8(L->gpr_count) : 64u;
     OmegaBlackwellQmdConfig cfg = {
-        .code_va = L->code_va, .cbank_va = bank_va, .scratch_va = cl->scratch.va, .sem_va = sem_va,
+        .code_va = g_code_override ? g_code_override : L->code_va, .cbank_va = bank_va, .scratch_va = cl->scratch.va, .sem_va = sem_va,
         .qmd0_va = q0_va, .qmd1_va = q1_va, .num_elements = (uint32_t)L->num_elements,
         .threads_per_block = L->threads_x, .grid_width = L->grid_x * L->grid_y, .threads_x = L->threads_x, .threads_y = ty,
         .grid_x = L->grid_x, .grid_y = L->grid_y, .gpr_count = gpr, .shared_bytes = L->shared_bytes,

@@ -98,6 +98,11 @@ int omega_gpu_cmdlist_add(OmegaGpuCmdList *cl, const OmegaGpuLaunch *L);
 /* Caller holds the lock, device open, not latched. Submits every recorded launch in order, waits for the completion,
  * checks every launch semaphore. 0 ok; -1 with the stage named (omega_gpu_session_last_error). */
 int omega_gpu_cmdlist_submit(OmegaGpuCmdList *cl, const OmegaGpuCmdListOpts *opts, OmegaGpuCmdListStats *st);
+/* TEST ONLY (L137 launch-tax receipt): a nonzero code_va makes every later add use this resident kernel instead of
+ * L->code_va; bank, QMD (grid, threads, registers, shared memory) and barrier stay the launch's own. 0 restores. The
+ * empty-kernel list of a decode token is then the same method stream with no work in it. Caller holds the lock. */
+void omega_gpu_cmdlist_test_set_code_override(uint64_t code_va);
+
 /* 1 once a timeout latched this module. */
 int omega_gpu_cmdlist_is_latched(void);
 

@@ -12,6 +12,8 @@
  *                 Checks: C deterministic over the reps; B == C bit for bit (x, hidden, logits, token); A vs C token
  *                 identical and logits within tolerance; negative controls (SWIGLU mutant, COMBINE mutant) must fail
  *                 the A-vs-C comparison. Per-token medians over --reps (20). --out receipt.json
+ *   --launch-tax  also (L137) the same list with every kernel replaced by an empty one, and one empty launch alone:
+ *                 launch tax share = empty list / real list (chip time). --layers 48 is the real model's depth.
  *   --red         the C path with the wrong-wiring mutant 3 (attention at scale 1, not 2^64): this run MUST FAIL
  *                 (red-before-green receipt).
  * Verdict: exit 0 when every CHECK passed.
@@ -20,6 +22,7 @@
 #include "omega_gpu_cmdlist.h"
 #include "omega_blackwell_codegen_dec.h"
 #include "omega_gpu_session.h"
+#include "omega_blackwell_codegen.h" /* the empty kernel of --launch-tax */
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
@@ -42,6 +45,7 @@
 #define TOL_REL 1e-4
 
 static int g_checks, g_failed;
+static int g_launch_tax; /* --launch-tax (L137) */
 #define CHECK(c, ...) do { g_checks++; if (!(c)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } else { printf("ok: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 
 static uint32_t lcg(uint32_t *s) { *s = *s * 1664525u + 1013904223u; return *s; }
@@ -199,6 +203,100 @@ static int host_only(void) {
     return g_failed ? 1 : 0;
 }
 
+/* ---- L137 launch-tax receipt (--launch-tax): (a) the real list, (b) the same list with every kernel replaced by one
+ * empty kernel (EXIT; same banks, QMDs, grids, registers, shared memory, barriers; omega_gpu_cmdlist_test_set_code_override),
+ * (c) one launch of the empty kernel alone (1 CTA of 32 threads, its own one-entry list). Share = (b) / (a). The empty
+ * list writes nothing, so its token stays the poison word and end_token reports CHIP_FAIL by design; the check here is
+ * that every one of its launch semaphores reached DONE. ---- */
+static int build_empty_kernel(OmegaGpuMem *code) {
+    static BlackwellIRProgram prog;
+    omega_bw_ir_init(&prog);
+    BlackwellIRInsn x; memset(&x, 0, sizeof x);
+    x.dst_vreg = x.src1_vreg = x.src2_vreg = x.src3_vreg = x.ureg = -1;
+    x.op = BW_IR_EXIT;
+    if (omega_bw_ir_append(&prog, &x) < 0) return -1;
+    x.op = BW_IR_BRA; x.imm = 0;
+    if (omega_bw_ir_append(&prog, &x) < 0) return -1;
+    if (omega_bw_regalloc_solve(&prog) != 0) return -1;
+    static uint8_t buf[32 * 16]; size_t len = 0; /* the encoder pads every program to at least 32 instructions */
+    if (omega_bw_encode_program(&prog, buf, sizeof buf, &len) != 0) return -1;
+    omega_gpu_session_lock();
+    int rc = omega_gpu_session_alloc_code(len, code);
+    if (rc == 0) { memcpy(code->cpu, buf, len); rc = omega_gpu_session_sync_to_gpu(code); }
+    omega_gpu_session_unlock();
+    return rc;
+}
+
+static int launch_tax(OmegaGpuDecodeGraph *gr, const Model *m, uint32_t reps, uint64_t real_chip, uint64_t real_total, const Out *C0, FILE *out) {
+    OmegaGpuMem code; memset(&code, 0, sizeof code);
+    if (build_empty_kernel(&code) != 0) { CHECK(0, "launch tax: empty kernel built and resident (%s)", omega_gpu_session_last_error()); return 1; }
+    uint64_t *te = calloc(reps, 8), *tt = calloc(reps, 8), *t1 = calloc(reps, 8), *tn = calloc(reps, 8);
+    if (!te || !tt || !t1 || !tn) return 1;
+    OmegaGpuDecodeGraphStats st; Out E; out_alloc(&E, m->vocab);
+    /* (b) the token's own list, every kernel empty */
+    omega_gpu_session_lock(); omega_gpu_cmdlist_test_set_code_override(code.va); omega_gpu_session_unlock();
+    uint32_t le = 0, se = 0; int e_ok = 1;
+    for (uint32_t r = 0; r < reps; r++) {
+        memset(&st, 0, sizeof st);
+        int rc = omega_gpu_decode_graph_token(gr, m->x0, POS, &E.tok, &st);
+        if (rc != OMEGA_GPU_DGRAPH_CHIP_FAIL || st.sems_done != st.launches || st.launches == 0) { e_ok = 0; printf("empty list rc %d sems %u/%u: %s\n", rc, st.sems_done, st.launches, omega_gpu_session_last_error()); break; }
+        te[r] = st.chip_ns; tt[r] = st.total_ns; le = st.launches; se = st.submits;
+    }
+    /* per-kind empty spacing from one stamped run (stamps cost words of their own: breakdown only, not the share) */
+    static uint64_t sts[OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1]; static uint8_t kinds[OMEGA_GPU_CMDLIST_MAX_LAUNCHES];
+    uint64_t per_kind[OMEGA_GPU_DGRAPH_K_COUNT] = { 0 }; uint32_t cnt_kind[OMEGA_GPU_DGRAPH_K_COUNT] = { 0 };
+    omega_gpu_decode_graph_set_stamps(gr, 1);
+    (void)omega_gpu_decode_graph_token(gr, m->x0, POS, &E.tok, &st);
+    int ns = omega_gpu_decode_graph_stamps(gr, sts, kinds, OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1);
+    omega_gpu_decode_graph_set_stamps(gr, 0);
+    for (int i = 0; i < ns; i++) if (kinds[i] < OMEGA_GPU_DGRAPH_K_COUNT) { per_kind[kinds[i]] += sts[i + 1] - sts[i]; cnt_kind[kinds[i]]++; }
+    omega_gpu_session_lock(); omega_gpu_cmdlist_test_set_code_override(0); omega_gpu_session_unlock();
+    CHECK(e_ok, "launch tax (b): empty-kernel list ran %u reps, %u launches in %u submission(s), every semaphore DONE", reps, le, se);
+
+    /* (c) one empty launch alone; (c') the same tiny launch N times in one list (N = the token's launch count) */
+    OmegaGpuCmdList *cl = NULL; int c_ok = omega_gpu_cmdlist_create(OMEGA_GPU_CMDLIST_MAX_LAUNCHES, &cl) == 0;
+    uint32_t arg = 0; OmegaGpuLaunch L; memset(&L, 0, sizeof L);
+    L.code_va = code.va; L.gpr_count = 64; L.threads_x = 32; L.threads_y = 1; L.grid_x = 1; L.grid_y = 1; L.num_elements = 32; L.args = &arg; L.n_args = 1;
+    OmegaGpuCmdListOpts o; memset(&o, 0, sizeof o); o.mode = OMEGA_GPU_CMDLIST_PCAS; o.barrier = (OmegaGpuCmdListBarrier)omega_gpu_decode_graph_barrier(); o.timeout_ms = 20000;
+    for (uint32_t pass = 0; pass < 2 && c_ok; pass++) {
+        const uint32_t n = pass == 0 ? 1u : (le ? le : 1u);
+        for (uint32_t r = 0; r < reps && c_ok; r++) {
+            OmegaGpuCmdListStats cs; memset(&cs, 0, sizeof cs);
+            omega_gpu_session_lock();
+            omega_gpu_cmdlist_reset(cl);
+            for (uint32_t i = 0; i < n && c_ok; i++) if (omega_gpu_cmdlist_add(cl, &L) < 0) c_ok = 0;
+            if (c_ok && (omega_gpu_cmdlist_submit(cl, &o, &cs) != 0 || cs.sems_done != n)) c_ok = 0;
+            omega_gpu_session_unlock();
+            (pass == 0 ? t1 : tn)[r] = cs.elapsed_ns;
+        }
+    }
+    if (cl) omega_gpu_cmdlist_free(cl);
+    CHECK(c_ok, "launch tax (c): one empty launch alone and %u tiny empty launches in one list, %u reps each, semaphores DONE", le, reps);
+
+    /* the real list after all this: still bit-identical to the first C (no state left behind) */
+    Out P; out_alloc(&P, m->vocab);
+    int prc = run_graph(gr, m, &P, &st);
+    CHECK(prc == 0 && P.tok == C0->tok && !memcmp(P.logits, C0->logits, (size_t)m->vocab * 4) && !memcmp(P.x, C0->x, sizeof P.x),
+          "launch tax: real list after the empty runs bit-identical to the first C (token %u)", P.tok);
+    free(P.logits); free(E.logits);
+    if (!e_ok || !c_ok) return 1;
+    const uint64_t me = median_u64(te, reps), mt = median_u64(tt, reps), m1 = median_u64(t1, reps), mn = median_u64(tn, reps);
+    const double share = (double)me / (double)real_chip;
+    printf("LAUNCH TAX (median of %u, %u launches): (a) real chip %.1f us (host total %.1f) | (b) empty list chip %.1f us (host total %.1f) | (c) one empty launch %.1f us | (c') %u tiny empty launches %.1f us | share (b)/(a) %.4f | per extra launch (b-c)/(n-1) %.2f us\n",
+           reps, le, real_chip / 1e3, real_total / 1e3, me / 1e3, mt / 1e3, m1 / 1e3, le, mn / 1e3, share, le > 1 ? (me - (double)m1) / 1e3 / (le - 1) : 0.0);
+    printf("EMPTY TIMELINE (stamped run):");
+    for (unsigned k = 0; k < OMEGA_GPU_DGRAPH_K_COUNT; k++) if (cnt_kind[k]) printf(" %s x%u %.1f us", omega_gpu_decode_graph_kind_name((uint8_t)k), cnt_kind[k], per_kind[k] / 1e3);
+    printf("\n");
+    if (out) {
+        fprintf(out, "\"launch_tax\":{\"launches\":%u,\"submits\":%u,\"real_chip_ns\":%" PRIu64 ",\"real_total_ns\":%" PRIu64 ",\"empty_chip_ns\":%" PRIu64 ",\"empty_total_ns\":%" PRIu64 ",\"one_empty_ns\":%" PRIu64 ",\"n_tiny_empty_ns\":%" PRIu64 ",\"share\":%.6f,\"empty_per_kind_ns\":{",
+                le, se, real_chip, real_total, me, mt, m1, mn, share);
+        int first = 1; for (unsigned k = 0; k < OMEGA_GPU_DGRAPH_K_COUNT; k++) if (cnt_kind[k]) { fprintf(out, "%s\"%s\":[%u,%" PRIu64 "]", first ? "" : ",", omega_gpu_decode_graph_kind_name((uint8_t)k), cnt_kind[k], per_kind[k]); first = 0; }
+        fprintf(out, "}},");
+    }
+    free(te); free(tt); free(t1); free(tn);
+    return 0;
+}
+
 static int chip_run(uint32_t layers, uint32_t vocab, uint32_t reps, int red, int cached, const char *out_path) {
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
     if (out) fprintf(out, "{\"layers\":%u,\"vocab\":%u,\"pos\":%u,\"reps\":%u,\"red\":%d,\"cached_weights\":%d,", layers, vocab, POS, reps, red, cached);
@@ -311,6 +409,7 @@ static int chip_run(uint32_t layers, uint32_t vocab, uint32_t reps, int red, int
             free(S.logits);
         }
         uint64_t ma = median_u64(ta, reps), mc_ = median_u64(tc, reps), mb = median_u64(tb, reps), mcc = median_u64(cc, reps), mcb = median_u64(cb, reps), mr = median_u64(rcn, reps);
+        if (g_launch_tax && launch_tax(gr, &m, reps, mcc, mc_, &C0, out) != 0) CHECK(0, "launch tax measured");
         printf("PER TOKEN (median of %u, %u layers): A host-glue %u launches %.1f us | C one list %u launches %.1f us (chip %.1f us, record %.1f us) | B per-launch submits %u launches %.1f us (chip sum %.1f us)\n",
                reps, layers, la, ma / 1e3, lc, mc_ / 1e3, mcc / 1e3, mr / 1e3, lb, mb / 1e3, mcb / 1e3);
         if (out) fprintf(out, "\"median_ns\":{\"A_total\":%" PRIu64 ",\"C_total\":%" PRIu64 ",\"C_chip\":%" PRIu64 ",\"C_record\":%" PRIu64 ",\"B_total\":%" PRIu64 ",\"B_chip\":%" PRIu64 "},\"B\":{\"launches\":%u,\"submits\":%u,\"identical\":%d},",
@@ -326,6 +425,7 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
         else if (strcmp(argv[i], "--red") == 0) red = 1;
+        else if (strcmp(argv[i], "--launch-tax") == 0) g_launch_tax = 1; /* L137: real list vs empty-kernel list vs one empty launch */
         else if (strcmp(argv[i], "--cached-weights") == 0) cached = 1;
         else if (strcmp(argv[i], "--prefetch") == 0) prefetch = 1;          /* W-L2d: o_proj weight prefetch beside the attention */
         else if (strcmp(argv[i], "--prefetch-red") == 0) prefetch = prefetch_red = 1; /* its red: o_proj unordered, MUST FAIL */
@@ -337,10 +437,10 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--layers") == 0 && i + 1 < argc) layers = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--vocab") == 0 && i + 1 < argc) vocab = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out = argv[++i];
-        else { printf("usage: %s [--host-only] [--red] [--reps N] [--layers N] [--vocab V] [--out receipt.json]\n", argv[0]); return 2; }
+        else { printf("usage: %s [--host-only] [--red] [--launch-tax] [--reps N] [--layers N] [--vocab V] [--out receipt.json]\n", argv[0]); return 2; }
     }
     if (reps == 0) reps = 1;
-    if (layers == 0 || layers > 8) layers = 2;
+    if (layers == 0 || layers > OMEGA_GPU_DGRAPH_MAX_LAYERS) layers = 2; /* 48 = the real model (L137); weights stay shared across layers */
     if (variant) omega_gpu_fp8_set_variant(variant);
     omega_gpu_decode_graph_set_prefetch(prefetch); omega_gpu_decode_graph_test_set_prefetch_red(prefetch_red);
     if (barrier == 1) omega_gpu_decode_graph_test_set_barrier_none(); /* negative control: this run MUST FAIL */
