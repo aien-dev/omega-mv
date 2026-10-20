@@ -20,7 +20,7 @@
  *                  World's footprint (rx_world_footprint) is what it was
  *                  before the round, the reaction table does not grow after
  *                  the first round, and every attach gets the same 13
- *                  AIENOS capability slots back (close reclaimed them).
+ *                  Aienux capability slots back (close reclaimed them).
  *   full           a World with no room for four more reactions refuses the
  *                  attach (RX_ERR_FULL) before building anything.
  */

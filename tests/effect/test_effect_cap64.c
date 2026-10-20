@@ -9,13 +9,13 @@
  *   OMEGA_EFFECT_CAP64_IDENTITY_PASS      the SemanticId binds all 64 generation bits
  *   OMEGA_EFFECT_CAP64_STALE_REJECT_PASS  old / truncated / malformed bytes refused
  *                                         with the specific reason
- *   OMEGA_EFFECT_CAP64_AUTHORITY_PASS     the real AIENOS authority (pinned lib,
+ *   OMEGA_EFFECT_CAP64_AUTHORITY_PASS     the real Aienux authority (pinned lib,
  *                                         aienos.lock) accepts honest references
  *                                         carried through effect objects and refuses
  *                                         truncated, stale, wrong-slot, wrong-right
  *                                         and pre-restart ones
  *
- * The authority side uses the pinned AIENOS header and library directly
+ * The authority side uses the pinned Aienux header and library directly
  * (aienos_capability.h / libaienos_capability.a); the Omega side uses only
  * the physics-free core and the Visor effect-request adapter.
  */
@@ -445,7 +445,7 @@ static void test_stale_reject(void) {
     omega_graph_destroy(g);
 }
 
-/* ---- AUTHORITY (real AIENOS, pinned lib) ----------------------------------- */
+/* ---- AUTHORITY (real Aienux, pinned lib) ----------------------------------- */
 
 #define SUBJ 7u
 #define OTHER 9u

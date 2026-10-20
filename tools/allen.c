@@ -7,7 +7,7 @@
  *   allen make -o FILE --agent HEX32 --root HEX32 --prov HEX32
  *              [--intent REGIME,TARGET_NS]... [--cortex JOURNAL]
  *       Build a v0 subject object (test fixture: in production the object is
- *       committed into the AIENOS Store by continuity_subject.c; this verb
+ *       committed into the Aienux Store by continuity_subject.c; this verb
  *       writes the same bytes to a file for host qualification).
  *   allen inspect FILE          Decode, print identity, chain, bindings, intents.
  *   allen digest FILE           Print the subject id only.

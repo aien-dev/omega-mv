@@ -7,7 +7,7 @@
  *   -> B is published under the same rules as processor work -> the
  *   processor reaction waiting on B wakes and writes C.
  *
- * The seat is never called as a function. Authority is the native AIENOS
+ * The seat is never called as a function. Authority is the native Aienux
  * authority (C), not the Linux stand-in. silicon_observed stays false unless
  * this run saw the chip publish into the shared image.
  */

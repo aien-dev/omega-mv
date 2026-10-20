@@ -3,7 +3,7 @@
  *
  * DECISIONS where the ABI draft is silent (all UNVERIFIED against a second implementation; flagged in the PR):
  *  - Resolution classes: a request record carries no class. The adapter asks OshClassHook (RESOLVE). Anything other
- *    than OSH_CLASS_LINUX (omega native op, AIENOS artifact/service) is REFUSED for the whole pipeline before any
+ *    than OSH_CLASS_LINUX (omega native op, Aienux artifact/service) is REFUSED for the whole pipeline before any
  *    effect: status 126, platform error UNAVAILABLE, each command FAILED_NO_EFFECT. Never forwarded, never retried
  *    as a Linux path. Without a hook every name is a Linux executable.
  *  - Authority: spawn/chdir/open-for-write need a valid binding (domain 1 or 2; domain 1 with generation above

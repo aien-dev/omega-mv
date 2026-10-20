@@ -22,7 +22,7 @@
  * wrong-resource or amplified reference fails.
  *
  * Scope: this is the Linux-hosted development root. It is not the permanent
- * root and it is not R7. On AIENOS the kernel capability authority is the root
+ * root and it is not R7. On Aienux the kernel capability authority is the root
  * (ADR 0014). This host root only refuses to treat the control socket as
  * authority:
  *   - mint, revoke, reclaim, epoch, clock and shutdown each require a
@@ -197,7 +197,7 @@ static inline int rx_cap_add_u64(uint64_t a, uint64_t b, uint64_t *out) {
     return RX_CAP_OK;
 }
 
-/* Match AIENOS: generations are 64 bits and a slot whose generation is
+/* Match Aienux: generations are 64 bits and a slot whose generation is
  * already UINT64_MAX is retired. The old handle is not revived by wrapping. */
 static inline int rx_cap_generation_advance(uint64_t generation, uint64_t *out) {
     if (generation == UINT64_MAX) return RX_CAP_ERR_EXHAUSTED;

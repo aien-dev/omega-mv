@@ -4,7 +4,7 @@
 #
 # Fails (exit 1) when any Visor-side object, or the omega binary, references
 # an authority-mutating symbol from forbidden_symbols.txt, references any
-# runtime / AIENOS / publish-gate symbol at all (^rx_ ^aienos_cap_ ^rc_), or
+# runtime / Aienux / publish-gate symbol at all (^rx_ ^aienos_cap_ ^rc_), or
 # DEFINES a forbidden name (a local reimplementation). Also checks that
 # visor_effect_request.o exports only its four public functions and that no
 # Visor source assigns `authorized` anything but false.

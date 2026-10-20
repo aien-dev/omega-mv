@@ -154,7 +154,7 @@ Evidence scope is reported exactly as the receipt states it (`host`, `qemu`,
 `tests/visor/qualification/` + `tools/qualify_visor.sh` (shell glue only; every
 assertion lives in C tests and `.omega-session` scripts). Run it on a committed
 tree: `tools/qualify_visor.sh [--skip-regression] [--no-asan] [out-dir]`. It
-rebuilds the AIENOS capability library from the commit in `aienos.lock` (as CI
+rebuilds the Aienux capability library from the commit in `aienos.lock` (as CI
 and `tools/effect_cap64_receipt.sh` do) and records its identity (commit, source
 tree, lib sha256) in the receipt. Receipts live in `evidence/VISOR/` as
 content-addressed JSON, never overwritten; the tool writes only a new receipt and
@@ -192,5 +192,5 @@ OMEGA_VISOR_V1_PASS                  all of the above, recorded in evidence/VISO
 - **V4** AIEN conversational interface: natural language -> typed Visor requests;
   explanations backed by explicit evidence. Enabled by: the console dispatches
   structured `VisorCommand`s, so a language model can emit them instead of text.
-- **V5** native graphical environment over AIENOS/Omega with no desktop dependency.
+- **V5** native graphical environment over Aienux/Omega with no desktop dependency.
   Enabled by: no view depends on stdio; all formatters write into caller buffers.

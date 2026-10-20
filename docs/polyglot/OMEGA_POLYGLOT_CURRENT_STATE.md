@@ -129,7 +129,7 @@ Status vocabulary: IMPLEMENTED (code + passing test/receipt), PARTIAL (works for
 
 | Item | Status | Evidence |
 |---|---|---|
-| Resident AEGIS (R8) | IMPLEMENTED | `src/runtime/rx_aegis.{h,c}` (345 lines): authority as world objects, capability slots validated by native AIENOS authority (`rx_aegis.h:1-10`); receipts `evidence/R8/`. |
+| Resident AEGIS (R8) | IMPLEMENTED | `src/runtime/rx_aegis.{h,c}` (345 lines): authority as world objects, capability slots validated by native Aienux authority (`rx_aegis.h:1-10`); receipts `evidence/R8/`. |
 | Native capability authority (C) | IMPLEMENTED | aienos `native/capability/` (see §5); Omega binds via `src/runtime/aienos_cap.h`, `rx_native_bind.c`. |
 | FORGE v1 AEGIS token | PARTIAL | SHA-256 over compiled-in constant, not a keyed MAC (audit B §1.1). |
 | aienos-aegis Rust crate | CONFLICTING / undecided | `crates/aienos-aegis` host-side; migration plan §3 table "Not decided". |
@@ -190,7 +190,7 @@ Status vocabulary: IMPLEMENTED (code + passing test/receipt), PARTIAL (works for
 
 | Boundary | Status | Evidence |
 |---|---|---|
-| C <-> AIENOS C authority | IMPLEMENTED | 19 `aienos_cap_*` functions via hand-copied `src/runtime/aienos_cap.h`; only size and two offsets checked (OSC-0 §I.6, `rx_native_bind.c:10-16`). |
+| C <-> Aienux C authority | IMPLEMENTED | 19 `aienos_cap_*` functions via hand-copied `src/runtime/aienos_cap.h`; only size and two offsets checked (OSC-0 §I.6, `rx_native_bind.c:10-16`). |
 | C <-> physics nvrm/m16 | IMPLEMENTED | physics sources compiled into Omega; `Nvrm` layout is a de-facto ABI (OSC-0 §I.6). |
 | C <-> JIT code | IMPLEMENTED | W^X pages, canaries (OSC-0 §I.5). |
 | C <-> Rust | CONFLICTING | only inside aienos (`aienos-capability-ffi`); no Rust in Omega. |

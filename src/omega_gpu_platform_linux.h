@@ -4,7 +4,7 @@
  * (physics nvrm + m16_native, the open NVIDIA kernel driver), wrapped in the platform contract so the
  * portable session (src/omega_gpu_session.c) runs the same launch words it always ran. It is NOT the
  * native platform and is not part of the freestanding closure: it includes Linux headers, takes pthread
- * mutexes, reads CLOCK_MONOTONIC and calls malloc. The AIENOS platform implements the same table over its
+ * mutexes, reads CLOCK_MONOTONIC and calls malloc. The Aienux platform implements the same table over its
  * own device ownership (cut B); nothing in the session may depend on anything this file does beyond the
  * contract in src/omega_gpu_platform.h.
  *

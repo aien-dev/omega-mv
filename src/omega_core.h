@@ -40,7 +40,7 @@ OmegaObject* omega_build_param(OmegaGraph *g, const SemanticId *type_id, uint16_
 OmegaObject* omega_build_op_binary(OmegaGraph *g, OpCode op, OverflowPolicy ov, const SemanticId *type_id);
 OmegaObject* omega_build_apply(OmegaGraph *g, const SemanticId *op_id, const SemanticId *arg1, const SemanticId *arg2);
 
-/* Builder for effect. cap_gen is the full 64-bit AIENOS capability generation. */
+/* Builder for effect. cap_gen is the full 64-bit Aienux capability generation. */
 OmegaObject* omega_build_effect(OmegaGraph *g, uint16_t res_class, uint16_t op_code, uint32_t cap_slot, uint64_t cap_gen);
 
 /* Effect payload v2 (spec/effect-cap64-migration.md): explicit 178-byte

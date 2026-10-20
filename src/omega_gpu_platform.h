@@ -2,7 +2,7 @@
  *
  * Native v1 P07 cut A (aienos#286 cut A, aien-architecture#190). This header
  * names what a GPU backend may ask of the platform it runs on, in a form that
- * works the same under Linux (today's nvrm/m16 backend) and under AIENOS
+ * works the same under Linux (today's nvrm/m16 backend) and under Aienux
  * (the native backend of later cuts). It is pure C with no Linux header and
  * no libc call; it builds in the freestanding link target
  * (`make gpu-engine-freestanding`).

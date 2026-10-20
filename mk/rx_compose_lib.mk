@@ -8,7 +8,7 @@
 #
 # Sources: the production living set RX_R13_SRCS (top-level Makefile) minus
 # everything under tests/, plus rxc_host_abi.c. The variable is reused, not
-# copied, so the library follows the living build. The AIENOS capability
+# copied, so the library follows the living build. The Aienux capability
 # library pinned by aienos.lock ($(AIENOS_CAP_LIB)) is merged into the same
 # archive, so a host links one file (plus -lpthread -lm).
 #
@@ -42,7 +42,7 @@ $(RXC_LIB_DIR)/%.o: %.c src/runtime/rxc_host_abi.h
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(RXC_LIB_EXTRA) -c $< -o $@
 
-# One archive: the runtime objects plus the pinned AIENOS capability library
+# One archive: the runtime objects plus the pinned Aienux capability library
 # (GNU ar MRI script; built into a temp name, then moved, so a failed build
 # never leaves a half archive).
 $(RXC_LIB): $$(RXC_LIB_OBJS) $$(AIENOS_CAP_LIB)

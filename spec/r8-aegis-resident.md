@@ -7,10 +7,10 @@ ADR 0016 §41 and its 2026-09-28 scope note. Gate `R8_CONSTITUTIONAL_AEGIS_PASS`
 Authority relationships live in the world. A reaction that already holds a
 valid capability runs with no policy round trip. A reaction that needs new
 authority is not ready. Its principal publishes a request, AEGIS decides, and
-only the AIENOS root mints. Nothing is called and nothing waits.
+only the Aienux root mints. Nothing is called and nothing waits.
 
 "AEGIS" here is the verifier/policy faculty (ARCHITECTURE §2.5), not the
-`aegis-runtime` program. The root is the native AIENOS capability authority
+`aegis-runtime` program. The root is the native Aienux capability authority
 (aienos `native/capability/`, C).
 
 ## What runs
@@ -29,13 +29,13 @@ Test: `tests/runtime/rx_r8_aegis.c`, `make test-r8` (any host).
 - **Capability slots.** A reaction can declare that capability need *i* reads
   its reference from a slot object (fields 0–1) at every check, instead of a
   fixed reference. The slot is also a trigger, so filling it wakes the
-  reaction. A slot is not permission: the AIENOS view still validates
+  reaction. A slot is not permission: the Aienux view still validates
   whatever reference it holds.
 - **`aegis.decide`** applies the policy table. It denies privileged rights,
   resources no rule covers, and rights beyond the rule. It caps the lease at
   the rule's maximum. It escalates when the rule requires a human, and then
   grants or denies on the human's `approval`. A release becomes `REVOKE`.
-- **`root.install`** is the only holder of the AIENOS admin. It mints, or
+- **`root.install`** is the only holder of the Aienux admin. It mints, or
   revokes, only when all of these hold:
   1. every decision field was last written by that client's `aegis.decide`.
      `stamp_proposed` makes each AEGIS commit the author of every field it
@@ -59,7 +59,7 @@ request, and the policy decision by who wrote the decision.
 | | |
 |---|---|
 | Fast path: 2000 actions under a live grant | 0 AEGIS activations, 0 root activations |
-| One fast-path authority check | ~26 ns (AIENOS validate) |
+| One fast-path authority check | ~26 ns (Aienux validate) |
 | One in-process policy evaluation | ~3 ns (rule table) |
 | One process spawn + reap (`/bin/true`), the floor of any shell-out policy call like `spark-aegis` | ~260–310 µs |
 | Slow path, outside intent → work committed | ~44–130 µs |
@@ -87,7 +87,7 @@ dependency, not the arithmetic.
   next grant does not revoke the stuffed reference.
 - Privileged rights, unruled resources, rights beyond the rule, a slot out
   of range, and a human rejection are all denied.
-- A lease expires on the AIENOS clock and the reader stops. A renewal
+- A lease expires on the Aienux clock and the reader stops. A renewal
   replaces the grant: the old one is revoked, the new one is minted.
 - A release revokes through the root. The client stops; the world goes on.
 
@@ -96,8 +96,8 @@ verifies.
 
 ## Not claimed / limits
 
-- The AIENOS authority runs as a host library inside this process, not as
-  the AIENOS kernel. Keeping the admin handle away from other code is a
+- The Aienux authority runs as a host library inside this process, not as
+  the Aienux kernel. Keeping the admin handle away from other code is a
   property of how this program is built, not of an address-space boundary.
 - The policy is a fixed rule table given at start. Changing policy at run
   time, and revoking grants because the policy changed, is not implemented.

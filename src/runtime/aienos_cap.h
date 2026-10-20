@@ -1,5 +1,5 @@
 /*
- * aienos_cap.h -- C view of the native AIENOS capability authority.
+ * aienos_cap.h -- C view of the native Aienux capability authority.
  *
  * The view can check a reference. The admin can change the table. The
  * reaction world is given the view. Cognition has no path to the admin.

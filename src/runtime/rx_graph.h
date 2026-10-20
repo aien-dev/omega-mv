@@ -29,7 +29,7 @@
  * A requirement that is missing is reported. When an AEGIS client binding is
  * given to the lowering, the node reads its authority from a capability slot
  * and an ask reaction publishes the request, so new authority arrives only
- * through AEGIS policy and the AIENOS root (rx_aegis.h). The engine checks
+ * through AEGIS policy and the Aienux root (rx_aegis.h). The engine checks
  * every node's authority again when it starts and when it publishes.
  *
  * Effects. Proposing an effect (EFFECT_PROPOSE) is thinking: a value, no

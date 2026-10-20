@@ -4,7 +4,7 @@
  * The writable table stays in a separate non-dumpable process. The control
  * socket is not authority. Every privileged operation must present a
  * capability this process previously handed out (the delivered set lives only
- * here, not in the readable table). R7 is not claimed: AIENOS is not this
+ * here, not in the readable table). R7 is not claimed: Aienux is not this
  * process, and this Linux mint is not the permanent root.
  */
 #include "rx_caproot.h"
@@ -46,7 +46,7 @@ typedef struct {
  * reference from a dead root cannot validate against the new table: the
  * start is the larger of one past the last start and the time since boot in
  * nanoseconds shifted left by 8. A slot of the dead root would need more
- * than 256 reclaims per nanosecond to reach it. Same rule as AIENOS. */
+ * than 256 reclaims per nanosecond to reach it. Same rule as Aienux. */
 static _Atomic uint64_t g_last_boot_gen = 0;
 
 static uint64_t boot_time_seed(void) {
@@ -226,7 +226,7 @@ static int root_mint(RxCapTable *t, const uint8_t *delivered, uint8_t *delivered
 }
 
 /* A revoked parent makes every descendant unusable. Mark them revoked too,
- * the way AIENOS walks a derivation tree, so inspection does not still show
+ * the way Aienux walks a derivation tree, so inspection does not still show
  * a live child of a dead parent. */
 static void cascade_revoke(RxCapTable *t) {
     int guard = 0;

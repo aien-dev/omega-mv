@@ -1,6 +1,6 @@
 /*
  * rx_operator_authority_misuse.c -- the R16 operator control capability
- * against the locked native AIENOS authority (aienos#266, aienos#272).
+ * against the locked native Aienux authority (aienos#266, aienos#272).
  *
  * The operator's capability is minted as the R13 program mints it
  * (tests/runtime/rx_r13_living.c: RX_OPERATOR_SUBJ, RX_WORLD_RES_CONTROL,

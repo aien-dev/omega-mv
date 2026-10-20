@@ -1,6 +1,6 @@
-# R7 design: host authority onto the AIENOS capability table
+# R7 design: host authority onto the Aienux capability table
 
-Status: host parity is proven. The native authority lives in AIENOS
+Status: host parity is proven. The native authority lives in Aienux
 (`aienos-capability`). The same attack list was run against that authority
 and the Linux mint, and the outcomes matched. The reaction world can check
 references through the native view. The Linux mint is still built and is
@@ -27,7 +27,7 @@ And in the host reaction world:
 
 ## Mapping
 
-| Host today | AIENOS table today | What has to be true before R7 |
+| Host today | Aienux table today | What has to be true before R7 |
 | --- | --- | --- |
 | `RxCapRef` is `{cap_id, generation}` | `Handle` is `{index, generation}`. Generation 0 is never issued. | Same pair. A copied pair is still not permission. |
 | Subject on the capability, checked at validation | No subject. A slot has a resource id and rights. | Add a principal, or an equivalent the host check already depends on. |

@@ -1,6 +1,6 @@
 /* cx_config_freestanding.h -- allocation hooks for the CX_NO_POSIX build of
  * rx_cortex.c (tests/runtime/rx_cortex_journal.c supplies them). A real
- * freestanding host (AIENOS) names its own header through CX_CONFIG_H. */
+ * freestanding host (Aienux) names its own header through CX_CONFIG_H. */
 #ifndef CX_CONFIG_FREESTANDING_H
 #define CX_CONFIG_FREESTANDING_H
 #include <stddef.h>

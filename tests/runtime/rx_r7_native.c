@@ -1,6 +1,6 @@
 /*
  * rx_r7_native.c -- same attacks against the Linux mint and the native
- * AIENOS authority. The world is then pointed at the native view only.
+ * Aienux authority. The world is then pointed at the native view only.
  * The Linux oracle is not removed.
  */
 #include "omega_evidence.h"

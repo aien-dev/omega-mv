@@ -67,13 +67,13 @@ cost and is not the promoted realization. The receipt says so.
 
 - The experiment grant is acquired once, before the goal, through the real R8
   path: a client reaction publishes a request, `aegis.decide` applies policy,
-  `root.install` mints through the AIENOS admin and fills slot 0.
+  `root.install` mints through the Aienux admin and fills slot 0.
 - During the episode the seat runs 16 claims on that slot:
   `aegis.decide` and `root.install` activations during the episode are 0.
 - The authority table is swept at the end of every mode. Only subject 64 holds
   `RX_GEN_RIGHT_PROMOTE` (on `RX_GEN_RES_PROMOTION`, nothing else); AIEN,
   Omega, serve, the experiment subjects, AEGIS and the outside hold no mint,
-  revoke, reclaim, epoch, clock or promote right. Entry 0 is the AIENOS office
+  revoke, reclaim, epoch, clock or promote right. Entry 0 is the Aienux office
   itself.
 - R9 refuses a promoter that is the proposer, and validates the promotion
   right against the native authority.
@@ -156,4 +156,4 @@ one core class and no GB10.
 
 R14, R15, R16; cognition beyond R11's statistical model; realization invention
 beyond R10's emitters; kernel isolation of the authority (it is the host-library
-C port of AIENOS); that the GPU add measures matvec cost.
+C port of Aienux); that the GPU add measures matvec cost.

@@ -10,7 +10,7 @@
  * hard constraint, Fabric leases and locality, MCP sessions, caller-defined
  * tradeoffs (two orders, two winners), tolerance bands, determinism and
  * registration-order independence, authority decided through the native
- * AIENOS authority (held, not held, revoked), and the chosen candidate driving
+ * Aienux authority (held, not held, revoked), and the chosen candidate driving
  * an action graph.
  *
  * Scaling on synthetic catalogs of 100, 1,000, 10,000 and 100,000
@@ -448,7 +448,7 @@ static void t_determinism(void) {
     cq_catalog_free(&b);
 }
 
-/* ---- authority through the native AIENOS authority, and the action graph ---- */
+/* ---- authority through the native Aienux authority, and the action graph ---- */
 
 enum { SUBJ_EXTERNAL = 100, ISSUER = 3, SUBJ_PLAN = 61 };
 #define RES_CELL  0xA000001ull

@@ -604,7 +604,7 @@ static void consumer_place(pthread_t th) {
 _Static_assert(ARGUS_MACHINE_ID_LEN == AIEN_MID_ID_BYTES, "ARGUS machine slot is the canonical id");
 
 /* machine_id: the canonical AienMachineId slot bytes, or NULL for the provisional
- * per-run id (removal path: drop the fallback once AIENOS provisioning writes the
+ * per-run id (removal path: drop the fallback once Aienux provisioning writes the
  * local identity record for every runtime host). */
 static int rx_argus_start(const char *run_id, const uint8_t *machine_id, int consumer_mode,
                           const char *stream_path) {

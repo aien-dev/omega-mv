@@ -316,7 +316,7 @@ the new G3 to G5 tests on the R16 branch). No gate is loosened.
    - (6) "advance the world generation" means the records above plus the R9
      active generation and lineage, in memory and recovered from disk,
      which the test compares after every act.
-   After every act the watched objects, the R9 generation and the AIENOS
+   After every act the watched objects, the R9 generation and the Aienux
    table (observer) must be unchanged, except for the office's own planned
    revocations, which the test counts separately.
 4. "Removing any one guard turns the test red" is `make

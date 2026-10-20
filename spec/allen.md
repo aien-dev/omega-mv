@@ -6,7 +6,7 @@ kind 24. Nothing here is QUALIFIED on hardware, and no OS reboot or machine
 migration is claimed.
 
 > Note, 2026-10-08: this file originally read "ARCH-0035 PROPOSED". [ADR 0035](https://github.com/aien-spark/aien-architecture/blob/main/docs/adr/0035-persistent-cognitive-entity-boundary-allen.md)
-> was ACCEPTED on 2026-10-06; only the architecture label changed. Aienos ADR 0018 (the kind-24 format) is still
+> was ACCEPTED on 2026-10-06; only the architecture label changed. Aienux ADR 0018 (the kind-24 format) is still
 > PROPOSED and unfrozen, and nothing here is QUALIFIED on hardware. User-editable personalization (display name, tone,
 > working preferences) is a separate host record, not part of the subject format: see the personalization contract,
 > aien-architecture `docs/plans/allen-personalization/CONTRACT-v1.md` (pending PR, aien-spark/aien-architecture#160).
@@ -16,7 +16,7 @@ migration is claimed.
 AIEN is the organism (the resident World, its faculties, its Cortex) and the
 cognitive faculty inside it (`src/runtime/rx_aien.*`, "AIEN PROPOSES"). ALLEN
 is the durable subject the organism sustains: the same agent identity, the
-same standing intents and the same memory lineage, resolved from the AIENOS
+same standing intents and the same memory lineage, resolved from the Aienux
 Store after any restart. ALLEN is state. It has no cognition, no authority and
 no loop.
 
@@ -48,7 +48,7 @@ timer, no `max_turns`. Gate G5 checks the symbol tables of `allen_bind.o` and
 
 Inspection and qualification only: not a chat, not an agent runtime, not a
 planner, not a daemon, not a Visor, not an operator shell. Verbs: `make`
-(test fixture writer; in production the object is committed by the AIENOS
+(test fixture writer; in production the object is committed by the Aienux
 kernel), `inspect`, `digest`, `lineage`, `seed-journal`, `publish` (the
 R11 part-A rig: capability root, World, resident AIEN faculty; checks the
 memory binding, publishes every ACTIVE intent, waits for quiescence, prints

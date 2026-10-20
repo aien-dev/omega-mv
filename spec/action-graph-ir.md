@@ -24,7 +24,7 @@ node into one of those. The graph stays typed Omega state.
 | AIEN | states the goal (goal kind + World objects). Not changed by this work. |
 | Omega | compiles, validates, optimizes, lowers. Has no admin handle. |
 | AEGIS | decides policy when authority is missing (R8 slow path). |
-| AIENOS | the only minter (native C capability authority). |
+| Aienux | the only minter (native C capability authority). |
 | World | cells, run token, effect objects; readiness drives execution. |
 
 Omega gains no authority. `rx_graph.o` is linked alone first and the build
@@ -196,4 +196,4 @@ lowering with the slot reused).
 - The reference ignores resource budgets; resource scenarios compare after
   admission.
 - Host processor only. The authority is the native C library, not the
-  AIENOS kernel.
+  Aienux kernel.

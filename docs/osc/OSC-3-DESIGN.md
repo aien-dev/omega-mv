@@ -303,7 +303,7 @@ truncated generation can make a stale handle look live again.
 | `src/runtime/rx_jspace.c:1406, :1413, :1414` J-Space body writes branch/slot generations with `put32` | u32 on the wire | runtime lane | `put64` with a J-Space record version bump, same rule |
 | `src/omega_accelerator.h:67, :87` `uint32_t capability_generation` | u32 | accelerator owner (not OSC) | widen to u64, retire at max; ADR decision 1 names this file |
 | `src/compiler/osc_rt.h` `slot_serial[]`, `next_serial`, `pool_serial` | u32, never wraps (item 2) | OSC (this lane) | done in item 2: handle generations are u64 with retire-at-max; the serials stay u32 (hashed into the event log as 4 bytes) and an allocation, arena open, arena allocation or pool open with its counter at UINT32_MAX traps RUNTIME before any state changes (item 2, Limits) |
-| AIENOS ADR 0013 (`index u32; generation u32`, retire at u32::MAX) | u32 | aienos lane | request only, see item 5 (`docs/osc/OSC-3-ADR0013-REQUEST.md`); not edited from this repository |
+| Aienux ADR 0013 (`index u32; generation u32`, retire at u32::MAX) | u32 | aienos lane | request only, see item 5 (`docs/osc/OSC-3-ADR0013-REQUEST.md`); not edited from this repository |
 
 Only the `osc_rt` row is inside this lane's files. The others are listed so the
 owning lanes can schedule them; each is a versioned change with old records

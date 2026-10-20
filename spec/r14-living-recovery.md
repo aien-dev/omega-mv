@@ -63,7 +63,7 @@ scenarios (`build/rx_r14_recovery_silicon DE`).
 ## Not claimed
 
 R15, R16; neural or general cognition beyond R11; open-ended invention beyond
-R10; AIENOS kernel isolation (the authority is the host-library C port, its
+R10; Aienux kernel isolation (the authority is the host-library C port, its
 table does not survive a process restart); immunity to every hardware fault,
 Byzantine hardware or a compromised kernel; a chip-raised fault (the seat is
 killed by destroying its channel); performance.

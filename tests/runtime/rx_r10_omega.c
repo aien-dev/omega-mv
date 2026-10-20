@@ -12,7 +12,7 @@
  *     -> (next request) serve reads selection
  *
  * Every result is checked against the semantic reference computed here.
- * Authority is the native AIENOS capability authority.
+ * Authority is the native Aienux capability authority.
  */
 #include "runtime/aienos_cap.h"
 #include "runtime/rx_omega.h"

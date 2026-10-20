@@ -6,7 +6,7 @@
  * naming input A and output B, performs the seat's one fixed operation
  * (B.field0 = A.field0 + A.field1), and publishes back. The dependent
  * reaction wakes from that publication and writes C. Authority is the native
- * AIENOS authority. Nothing here calls the graphics seat as a function.
+ * Aienux authority. Nothing here calls the graphics seat as a function.
  */
 #include "runtime/aienos_cap.h"
 #include "runtime/rx_world.h"
@@ -58,7 +58,7 @@ static uint64_t window_field(RxWorld *w, uint32_t id, uint32_t field) {
     return load_u64(w->coherent + off + (uint64_t)field * 8u);
 }
 
-/* The world checks capabilities through the native AIENOS authority. */
+/* The world checks capabilities through the native Aienux authority. */
 typedef struct {
     AienosCapAdmin *admin;
     AienosCapView *view;
@@ -746,7 +746,7 @@ static void t_slot_renewal(void) {
 }
 
 /* R16 G6 operator emergency stop (spec/r16-operator-emergency-stop.md) on the
- * resident seat, with the native AIENOS authority: the seat's result lands
+ * resident seat, with the native Aienux authority: the seat's result lands
  * after the stop. It is not published (canonical B and B's window keep the
  * world's value, the dependent does not run, the claim closes); after resume
  * the seat runs again and the chain completes with the right values. */

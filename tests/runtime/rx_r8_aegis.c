@@ -6,13 +6,13 @@
  * slot. The test only publishes outside stimuli and reads the world:
  *
  *   intent (outside) -> worker.ask -> request -> aegis.decide -> decision
- *     -> root.install (AIENOS mint) -> slot -> worker.tick wakes and runs
+ *     -> root.install (Aienux mint) -> slot -> worker.tick wakes and runs
  *
  * and afterwards, with the slot live, every input runs worker.tick with no
  * AEGIS activation at all. Attacks on the slow path must be refused by the
  * root whatever AEGIS or a hostile writer publishes.
  *
- * Authority is the native AIENOS capability authority.
+ * Authority is the native Aienux capability authority.
  */
 #include "runtime/aienos_cap.h"
 #include "runtime/rx_aegis.h"

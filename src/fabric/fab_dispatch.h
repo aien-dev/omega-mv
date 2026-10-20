@@ -21,7 +21,7 @@
  * RENEW, ADVERTISE and LEAVE only), so step 4 calls the simulated machine's
  * procedure table in this process. Checks 1-3 are the ones a real dispatch
  * makes before it sends; sending the work and authenticating the reply is
- * the job of the AIENOS M6 transport (through AEGIS as an outbound effect).
+ * the job of the Aienux M6 transport (through AEGIS as an outbound effect).
  * The dispatcher mints no authority and touches no World (fabric-purity).
  *
  * Concurrency: fab_dispatch_run may be called by two candidate reactions at

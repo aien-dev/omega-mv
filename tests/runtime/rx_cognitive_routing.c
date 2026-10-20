@@ -4,7 +4,7 @@
  * 1. With no evidence the router runs each operation's reference realization.
  * 2. Labelled trials and metered energy go into a ledger. The ledger becomes a
  *    candidate generation. The routing does not change until the candidate is
- *    promoted with the promotion right on the native AIENOS authority; a
+ *    promoted with the promotion right on the native Aienux authority; a
  *    promotion by the proposer, or without the right, is refused.
  * 3. Gate: the same held-out workload runs routed and on the always-most-
  *    expensive realization. Both must meet the same quality requirement;

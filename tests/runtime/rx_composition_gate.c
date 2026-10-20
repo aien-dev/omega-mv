@@ -1,7 +1,7 @@
 /*
  * COMPOSITION-2 gate (WP-E): the whole causal path in one process, in fresh
  * directories, against the real World, J-Space, Cortex, Capability Graph and
- * AIENOS authority (nothing mocked). Writes a JSON receipt with one verdict
+ * Aienux authority (nothing mocked). Writes a JSON receipt with one verdict
  * per step; the wrapper (tools/composition_gate.sh) passes the commit and
  * stores the receipt under its content hash. A step is PASS only when its
  * check held; the gate verdict is PASS only when every step of both runs did.

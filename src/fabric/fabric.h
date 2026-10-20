@@ -6,7 +6,7 @@
  * Scope (F5-0). Everything here runs in one process over the loopback
  * transport (fab_loopback.h). No socket, no real network, no placement, no
  * topology/latency measurement, no failure recovery beyond withdrawing a lost
- * machine's capabilities. A real transport (AIENOS M6) plugs in through
+ * machine's capabilities. A real transport (Aienux M6) plugs in through
  * FabTransport and a real per-machine signature (TRUST-1 owner key) through
  * FabAuth; nothing else changes.
  *

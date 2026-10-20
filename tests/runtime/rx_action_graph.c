@@ -2,7 +2,7 @@
  * OMEGA_ACTION_GRAPH_IR -- the action graph compiled, optimized, lowered
  * onto resident reactions and run by readiness alone.
  *
- * Every scenario has its own world and its own native AIENOS authority. The
+ * Every scenario has its own world and its own native Aienux authority. The
  * test plays the outside: it holds the admin (to give the principal the
  * authority it is born with, and to revoke), publishes World inputs and run
  * tokens, and plays the human who approves an AEGIS escalation. The graph

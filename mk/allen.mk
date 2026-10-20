@@ -3,7 +3,7 @@
 # src/allen/allen_bind.{c,h}, tools/allen.c, tests/allen/run.sh, spec/allen.md.
 # Nothing here touches src/runtime; rx_aien.o is the same object R11 links.
 #
-# The subject object codec is the AIENOS one (native/kernel/svc/
+# The subject object codec is the Aienux one (native/kernel/svc/
 # continuity_subject.c at aienos.lock), compiled here from $(AIENOS_R7_DIR):
 # omega never redefines the format. The default extraction (Makefile, R7) only
 # takes native/capability, so $(ALLEN_STAMP) extends it with the four trees

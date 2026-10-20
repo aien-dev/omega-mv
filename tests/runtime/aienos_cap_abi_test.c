@@ -1,6 +1,6 @@
 /*
  * aienos_cap_abi_test.c -- OMEGA_AIENOS_CAP_ABI: src/runtime/aienos_cap.h, the
- * hand-kept copy the runtime compiles against, must match the pinned AIENOS
+ * hand-kept copy the runtime compiles against, must match the pinned Aienux
  * header aienos_capability.h (aienos.lock), the one libaienos_capability.a is
  * built from. Built and run only by tests/runtime/aienos_cap_abi.sh
  * (make test-aienos-cap-abi), which writes, for the copy under test:

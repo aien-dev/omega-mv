@@ -8,7 +8,7 @@
 #
 # Checks, in order, and stops at the first failure:
 #   1. sources: the living-system build lists only omega sources and the
-#      pinned native AIENOS capability library; no omegatool, no SEQ reference
+#      pinned native Aienux capability library; no omegatool, no SEQ reference
 #      loop, no Rust, nothing from aien-sovereign-core or aegis-runtime.
 #   2. link map: neither binary defines or references a legacy orchestrator
 #      symbol (omegatool legacy_oracle / demonstration / gate runners, the SEQ

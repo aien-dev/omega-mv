@@ -2,7 +2,7 @@
  * rx_aegis.c -- AEGIS resident authority (ADR 0016 §41, R8).
  *
  * See rx_aegis.h. aegis.decide.k is a reaction body with no side effect
- * outside the world. root.install.k mints and revokes through the AIENOS
+ * outside the world. root.install.k mints and revokes through the Aienux
  * root; it keeps a per-slot record of what it minted for which decision, so
  * a run that is invalidated and repeated never mints twice.
  */

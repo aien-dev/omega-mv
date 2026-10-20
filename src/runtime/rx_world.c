@@ -433,7 +433,7 @@ static int best_waiting(const RxWorld *w, int only_class) {
 
 /* Higher class wins. After starvation_bound admissions of something more
  * urgent, the highest class that has been waiting that long is served once.
- * Every class is protected, not only the lowest one. Adapted from the AIENOS
+ * Every class is protected, not only the lowest one. Adapted from the Aienux
  * run queue's bounded background interval. */
 static int pick_admit(RxWorld *w) {
     uint32_t bound = w->budget.starvation_bound;

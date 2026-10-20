@@ -99,7 +99,7 @@ Other tests print only pass/fail counts.
 
 ## 7. NOT MEASURED (gaps)
 - Any GPU / accelerator workload: `omegatool` `--run-gates` / `--demonstrate-arithmetic`, `make test`, `test-m5`..`test-m19` (omegatool links nvrm.c and m16_native.c; built but never executed, so only its size and build time are recorded). All `*-silicon`, r12, r13, r14, r15 (instr/parity/g7), m17 targets.
-- r7 (needs AIENOS native authority), r8, r9, r10, r11 (r11 known flaky under load), branch-reuse (`rx_branch_reuse`), visor targets in `mk/*.mk`, the `test-crumbline` conformance sweep (only one `--decode` measured): not run.
+- r7 (needs Aienux native authority), r8, r9, r10, r11 (r11 known flaky under load), branch-reuse (`rx_branch_reuse`), visor targets in `mk/*.mk`, the `test-crumbline` conformance sweep (only one `--decode` measured): not run.
 - Peak/steady-state fragmentation, per-thread arena stats (`malloc_stats()`), alternate allocators: not measured.
 - Verification of physics/aienos snapshot versions against lock files: not done.
 - Quiet-machine numbers: not obtained (shared machine, load 1-2.5 throughout).

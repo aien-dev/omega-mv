@@ -3,7 +3,7 @@
  *
  * One op = one AEGIS policy evaluation (rx_aegis_evaluate, the pure decide
  * core) + one authority validate on the reaction path (rx_world_validate_cap
- * on a world bound to the native AIENOS view, i.e. rx_native_bind's
+ * on a world bound to the native Aienux view, i.e. rx_native_bind's
  * native_validate, which is where the ARGUS CAPABILITY_USED emit sits).
  * Built identically for RX_ARGUS=0/1/2; the consumer mode for RX_ARGUS=2 is
  * chosen at run time by RX_ARGUS_CONSUMER=discard|ingest (rx_argus.c).

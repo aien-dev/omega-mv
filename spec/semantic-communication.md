@@ -18,7 +18,7 @@ first delivery only what changed travels.
 | Receiver (branch, worker) | declares an `InformationNeed`; holds its own capabilities |
 | Omega | computes the `SemanticProjection`, its encoding and deltas. No admin handle. Reads the World only. |
 | World (J-space) | objects, fields, per-field versions, writer crumbs (rx_world) |
-| AIENOS | the only minter (native C capability authority) |
+| Aienux | the only minter (native C capability authority) |
 
 `rx_semcomm.o` is linked alone first. The build fails if it references any
 `aienos_cap_*` admin operation, `rx_caproot_mint`/`revoke`, or a World write
@@ -182,7 +182,7 @@ reported, not gated.
 - Transport over a network or between processes: delivery is in-process
   decode of the real encoded bytes.
 - Graphics-processor senders or receivers.
-- The AIENOS kernel: the authority runs as a host library.
+- The Aienux kernel: the authority runs as a host library.
 - Learned or inferred needs: needs are declared.
 - Uncertainty estimation: Omega carries the producer's declared value.
 - Worlds above 256 objects (`RX_MAX_OBJECTS`).

@@ -149,7 +149,7 @@ EI = E[max(0, log2 cost(chosen) − log2 cost(competitor))]
 
    Beating the fixed rule alone is not enough. On the first Spark run, a model
    with its quad4 and scalar knowledge swapped still beat the fixed rule by 5%.
-3. Only a subject holding `RX_GEN_RIGHT_PROMOTE` on the native AIENOS
+3. Only a subject holding `RX_GEN_RIGHT_PROMOTE` on the native Aienux
    authority can promote.
 4. After promotion the store is closed and recovered, then reopened. The model
    is read back from the active generation and compared by digest.
@@ -219,7 +219,7 @@ not required.
 
 Candidate ff0109b, receipt
 `evidence/EMPIRICAL/7aab6079fab855675c89698e62dfb347af7a7c948ffa5fdd4d85aa0564a008a3.json`
-(bound, clean tree, AIENOS c8ab65e, load average 2.1 to 3.8). 44 checks, 0
+(bound, clean tree, Aienux c8ab65e, load average 2.1 to 3.8). 44 checks, 0
 failures; 20,212 runs checked against the reference, 0 mismatches; planted arm
 refused, 0 parent runs; 0 budget violations. Model blob 28,112 bytes.
 
@@ -282,4 +282,4 @@ were the online learner's cost and the replay.
 - Thermal or cognitive features varied in a controlled way.
 - Energy per call. Energy is measured per arm window and per replay block.
 - Transfer cost.
-- The AIENOS kernel. The authority runs as a host library, as in R7–R14.
+- The Aienux kernel. The authority runs as a host library, as in R7–R14.

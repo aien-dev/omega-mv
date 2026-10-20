@@ -5,10 +5,10 @@
  * The production body (the R13 living system, built by the R15 rig in RES-4)
  * is started and left quiescent. A legacy / reference / oracle context then
  * tries six acts. It holds what such code could hold after R16: the world
- * handle, the read-only AIENOS view, the R9 store handle, every capability
+ * handle, the read-only Aienux view, the R9 store handle, every capability
  * reference it could observe (the harness's external grants, the promoter's
  * grants) and grants of its own on its own resources. It never holds the
- * AIENOS admin handle; only this harness does, to build fixtures before the
+ * Aienux admin handle; only this harness does, to build fixtures before the
  * acts start.
  *
  *   (1) write authoritative AIEN belief
@@ -23,7 +23,7 @@
  * Every attempt must be refused by the R7 native authority, R9's promotion
  * rules or the publication boundary, with no change to authoritative state:
  * the watched objects (fields, version, generation), the R9 active generation
- * and lineage (in memory and recovered from disk) and the AIENOS table (no
+ * and lineage (in memory and recovered from disk) and the Aienux table (no
  * state change reported by the authority observer).
  *
  * "Removing any one guard turns the test red" is checked by
@@ -97,13 +97,13 @@ static int g_fail;
 #define CHECK(c, ...) do { if (!(c)) { printf("R16 G4 FAIL: "); printf(__VA_ARGS__); \
     printf("\n"); g_fail++; } } while (0)
 
-/* ---- authority observer: counts AIENOS state changes ------------------------ */
+/* ---- authority observer: counts Aienux state changes ------------------------ */
 static atomic_ullong g_auth_changes;
 static void observer(void *ctx, uint32_t op, const AienosCapEntry *entry, int result) {
     (void)ctx; (void)op;
     if (entry && result == 0) atomic_fetch_add(&g_auth_changes, 1);
 }
-/* AIENOS changes the harness itself makes during the acts (the office
+/* Aienux changes the harness itself makes during the acts (the office
  * revoking a grant, see revoked_in_flight and the end of act 5). Any change
  * beyond these fails the act. */
 static atomic_ullong g_expected_changes;

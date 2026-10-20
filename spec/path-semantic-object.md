@@ -355,7 +355,7 @@ Under no circumstances does PATH work weaken, bypass, or postpone R16 authority 
 
 1. **Zero Authority Granting**: A path that documents the sequence `ACTOR -> CAPABILITY -> OPERATION` grants zero rights. The recording of a capability reference in a path step is descriptive evidence that an access was modeled or previously observed; it provides no authority to execute.
 2. **Candidates Authorize Nothing**: A path step sequence `CANDIDATE -> PROMOTION` authorizes no generation promotion or state modification.
-3. **Fail-Closed Gate**: Any proposal derived from path analysis submitted to the production reaction runtime (`rx_world.h`) must pass through the native AIENOS capability verification root (`aienos_cap_validate`). If valid credentials are not presented, the request fails closed immediately with error code `RX_ERR_CAP_DENIED`.
+3. **Fail-Closed Gate**: Any proposal derived from path analysis submitted to the production reaction runtime (`rx_world.h`) must pass through the native Aienux capability verification root (`aienos_cap_validate`). If valid credentials are not presented, the request fails closed immediately with error code `RX_ERR_CAP_DENIED`.
 4. **Sequencing Guard**: No path components are linked into the production authoritative reaction loop until R16 qualification (`R16_ORCHESTRATOR_RETIRED = PASS`) is merged.
 
 ---
@@ -394,7 +394,7 @@ Protected Cortex memory classes (`CX_PROT_AUTHORITY`, `CX_PROT_COMMIT_RECEIPT`, 
 
 Every implementation of the Path Semantic Object must maintain eight fundamental architectural invariants:
 
-- **I1: PATH != AUTHORITY**: Recording a path grants no authority. Authority stems exclusively from the AIENOS capability root.
+- **I1: PATH != AUTHORITY**: Recording a path grants no authority. Authority stems exclusively from the Aienux capability root.
 - **I2: PATH != FACT**: A path recording a sequence of claims or hypotheses represents evidence of reasoning, not established fact. Inferred relationships remain candidates until promoted.
 - **I3: PATH != HIDDEN CHAIN OF THOUGHT**: Paths record externally verifiable, typed operations, observations, decisions, and evidence references. Unrecorded scratchpad deliberations or invisible internal states are prohibited.
 - **I4: SEMANTIC PATH != PATH REALIZATION**: Logical sequence identity is completely decoupled from execution medium, placement, scheduling, or runtime duration.
@@ -590,7 +590,7 @@ Path capability bring-up follows seven rigorous, pre-registered milestone gates:
 - **Objective**: Implement pre-flight trajectory capability validation.
 - **Pass Criteria**:
   - Invalid paths (requesting missing capabilities or unavailable hardware) are rejected before execution.
-  - Hostile test: Injected path claiming fabricated authority fails closed at the AIENOS boundary.
+  - Hostile test: Injected path claiming fabricated authority fails closed at the Aienux boundary.
 
 ### PATH-6: TURING Epistemic Integration
 - **Objective**: Integrate Minimum Description Length scoring for path abstractions.
@@ -617,7 +617,7 @@ Before production integration, the following formal ADRs must be drafted and sub
    - Standardizes the Merkle DAG prefix-sharing specification across memory arenas.
    - Establishes immutable parent freezing rules for divergent cognitive trajectories.
 3. **ADR-0023: Fail-Closed Authority Boundary for Relational Path Proposals**
-   - Mandates that all path-derived execution plans pass through the native AIENOS capability verification root.
+   - Mandates that all path-derived execution plans pass through the native Aienux capability verification root.
    - Enforces the absolute invariant: Path is evidence, never authority.
 4. **ADR-0024: Pareto Multi-Vector Path Scoring and TURING Integration**
    - Replaces scalar optimization with explicit 13-dimensional score vectors.

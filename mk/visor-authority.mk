@@ -4,7 +4,7 @@
 #                        (capability root, World publish check, AEGIS policy, generation record).
 #                        Links the runtime, so it is a test-only binary; build/omega never links it.
 #                        Uses the Makefile's $(CFLAGS) (same as RX_TEST); run with
-#                        PHYSICS_DIR=<physics checkout>. rx_aegis.c needs the native AIENOS
+#                        PHYSICS_DIR=<physics checkout>. rx_aegis.c needs the native Aienux
 #                        capability library; point VISOR_AUTH_CAP_LIB (default $(AIENOS_CAP_LIB))
 #                        at a built libaienos_capability.a.
 # visor-authority-check  link check: no Visor object references/defines an authority-mutating symbol.

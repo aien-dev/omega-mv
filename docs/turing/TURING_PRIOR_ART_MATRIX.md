@@ -84,7 +84,7 @@ Columns: **Solves** = what it already solves. **Reuse** = what to reuse conceptu
 |---|---|---|---|---|
 | Dapper | Production tracing with sampling and instrumentation in a few common libraries; low overhead, app transparency (Google tech report 2010) | Sampling; trace trees; instrument the shared layer, not every app | Span/trace model; sampling policy | Traces become evidence that changes selection, not only debugging data |
 | LTTng | Low-impact kernel + user tracing, reentrant, NMI-safe tracepoints, flight-recorder mode (OLS 2006) | Lock-free per-CPU buffers; flight recorder for post-hoc explanation | Ring-buffer tracer | Semantic events keyed by operation identity |
-| eBPF | Verified, JIT-compiled sandboxed programs at kernel hook points with maps; used for tracing/observability | Verifier-gated observers; hook points | Safe in-kernel probes (on Linux) | AIENOS is not Linux, so the idea transfers, the implementation does not |
+| eBPF | Verified, JIT-compiled sandboxed programs at kernel hook points with maps; used for tracing/observability | Verifier-gated observers; hook points | Safe in-kernel probes (on Linux) | Aienux is not Linux, so the idea transfers, the implementation does not |
 
 ### 2.6 Fabric (semantic transport)
 

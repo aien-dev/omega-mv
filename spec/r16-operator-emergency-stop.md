@@ -40,7 +40,7 @@ lock in this order:
    authority policy; the same applies to pausing or un-pausing.
 3. **Capability.** `cap` is a live capability for `subject` on
    `RX_WORLD_RES_CONTROL` (0x906) with right `RX_WORLD_RIGHT_HALT`, validated by
-   the world's authority (rx_caproot or the native AIENOS authority). The right
+   the world's authority (rx_caproot or the native Aienux authority). The right
    is `RX_RIGHT_EPOCH`: privileged, never delegable. The right that may void every
    capability may also pause the world. Wrong right, wrong resource, another
    subject's capability or a revoked capability: `RX_ERR_AUTHORITY`.
@@ -152,7 +152,7 @@ generation store; built with the normal flags; E1 to E6 in the file header):
   unmutated copy. A mutant whose pattern does not match exactly once fails the
   script.
 
-`make test-r12` `t_emergency_stop` (native AIENOS authority, resident seat
+`make test-r12` `t_emergency_stop` (native Aienux authority, resident seat
 stand-in): a seat result that lands after the stop is refused, canonical B and
 B's window keep the world's value, the dependent does not run, no claim is posted
 under the stop; after resume the seat runs again and B = X + Y, C = X + Y + 1.

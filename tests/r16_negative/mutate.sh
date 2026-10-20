@@ -125,7 +125,7 @@ mutant commit_cap_recheck $W 2 \
     'if (validate_caps(w, d, &cap_err) != 0) {' 'if (0 && validate_caps(w, d, &cap_err) != 0) {'
 mutant both_cap_checks $W all \
     'if (validate_caps(w, d, &cap_err) != 0) {' 'if (0 && validate_caps(w, d, &cap_err) != 0) {'
-# act 3: cognition mint / admin in the native AIENOS authority
+# act 3: cognition mint / admin in the native Aienux authority
 mutant cognition_mint aienos 1 '(void)token;' '(void)token; if (view) return 0;'
 mutant cognition_admin aienos 1 '(void)target;' '(void)target; if (view) return 0;'
 # act 4: promotion

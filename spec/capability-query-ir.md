@@ -89,7 +89,7 @@ built once over the catalog. An entry is feasible when all of these hold:
 `held` is decided for each feasible candidate by validating the principal's
 capabilities through the world's authority view (`rx_world_validate_cap`).
 The query mints nothing. `rx_capq.o` is linked alone first and the build fails
-if it references any AIENOS admin operation.
+if it references any Aienux admin operation.
 
 ## Ranking
 
@@ -144,7 +144,7 @@ x10 while the full scan grows more than x100.
 Scenarios: alias and specialization, each hard constraint, Fabric leases and
 locality, MCP sessions and applicability, tolerance bands, two orders -> two
 winners, determinism over repeated queries and registration orders, held /
-not held / forged / revoked authority through the native AIENOS authority,
+not held / forged / revoked authority through the native Aienux authority,
 and a chosen candidate driving an action graph (runs when held; reported
 missing when not).
 

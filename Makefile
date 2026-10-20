@@ -392,7 +392,7 @@ $(RX_SEM_TEST): $(RX_SEM_SRCS) src/runtime/rx_semantic.h src/runtime/rx_caproot.
 test-sem-incremental: $(RX_SEM_TEST)
 	./$(RX_SEM_TEST)
 
-# R7: native AIENOS authority versus the Linux oracle, then the world view.
+# R7: native Aienux authority versus the Linux oracle, then the world view.
 # The authority source is the FULL commit in aienos.lock, proven by
 # tools/aienos_lock_source.sh from git objects (a directory name, a short SHA or an
 # override is not proof). Default: extracted with `git archive` from a repository holding
@@ -435,8 +435,8 @@ $(AIENOS_CAP_LIB): aienos-authority-capability
 	rc=$$?; rm -rf $$t; exit $$rc
 
 # OMEGA_EFFECT_CAP64 (spec/effect-cap64-migration.md): effect objects carry the
-# full 64-bit AIENOS capability generation. Physics-free: the Omega core, the
-# Visor effect-request adapter, and the pinned AIENOS header + library
+# full 64-bit Aienux capability generation. Physics-free: the Omega core, the
+# Visor effect-request adapter, and the pinned Aienux header + library
 # (aienos.lock) used directly. Prints OMEGA_EFFECT_CAP64_{ROUNDTRIP,IDENTITY,
 # STALE_REJECT,AUTHORITY}_PASS gate lines.
 EFFECT_CAP64_CAP_LIB ?= $(AIENOS_CAP_LIB)
@@ -501,7 +501,7 @@ $(RX_R9_TEST): $(RX_R9_SRCS) src/runtime/rx_generation.h src/runtime/rx_caproot.
 test-r9: $(RX_R9_TEST)
 	./$(RX_R9_TEST)
 
-# R12 host rules against the native AIENOS authority. The graphics processor is
+# R12 host rules against the native Aienux authority. The graphics processor is
 # not started. A pass here does not claim the resident-seat gate.
 RX_R12_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_native_bind.c src/sha256.c src/omega_evidence.c \
@@ -520,7 +520,7 @@ test-r12: $(RX_R12_TEST)
 # generation store under a stop, the durable mark across a restart, and resume.
 # The mutant script then removes each guard in turn from a temporary copy and
 # requires the test to fail against every one. The resident-seat case lives in
-# test-r12 (t_emergency_stop, native AIENOS authority).
+# test-r12 (t_emergency_stop, native Aienux authority).
 RX_EMERGENCY_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_generation.c src/sha256.c tests/runtime/rx_emergency.c
 RX_EMERGENCY_TEST = $(OUT_DIR)/rx_emergency_test
@@ -553,7 +553,7 @@ test-r10: $(RX_R10_TEST)
 	./$(RX_R10_TEST)
 
 # R8: AEGIS resident authority. Capability slots in the world; AEGIS decides,
-# only root.install mints, through the native AIENOS authority.
+# only root.install mints, through the native Aienux authority.
 RX_R8_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/sha256.c src/omega_evidence.c \
 	tests/runtime/rx_r8_aegis.c
@@ -599,7 +599,7 @@ test-r11-own-hold: $(RX_R11_TEST)
 
 # OMEGA_STATE_PROJECTION: cognition gets a compiled state projection from
 # Cortex, not everything Cortex knows. Part B drives the real R11 AIEN faculty
-# under the native AIENOS authority. The projection objects are built alone
+# under the native Aienux authority. The projection objects are built alone
 # first and may reference nothing but Cortex and SHA-256: no world, no faculty,
 # no Omega realization code.
 RX_SP_OBJS = $(OUT_DIR)/rx_cortex.o $(OUT_DIR)/rx_projection.o
@@ -656,7 +656,7 @@ test-cortex: $(RX_CX_TEST) $(RX_CXJ_TEST)
 	./$(RX_CX_TEST)
 	./$(RX_CXJ_TEST)
 
-# Physical graphics seat against the native AIENOS authority. Not part of
+# Physical graphics seat against the native Aienux authority. Not part of
 # GitHub checks. A pass on this machine is the only run that may set
 # silicon_observed.
 RX_R12_SILICON_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c \
@@ -1042,7 +1042,7 @@ test-r16-surface: $(TARGET)
 
 # OMEGA_ACTION_GRAPH_IR: goals compile to typed action graphs that run as
 # resident reactions by readiness alone. rx_graph.o is built alone first and
-# must not reference any AIENOS admin operation: compilation can find that
+# must not reference any Aienux admin operation: compilation can find that
 # authority is missing, never create it.
 RX_GRAPH_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/sha256.c src/omega_evidence.c \
@@ -1067,7 +1067,7 @@ test-action-graph: $(RX_GRAPH_TEST)
 # OMEGA_CAPABILITY_QUERY: AIEN states a CapabilityNeed; Omega compiles it into
 # probes of the capability sources and returns a bounded list of candidates
 # ranked on explicit dimensions. rx_capq.o is built alone first and must not
-# reference any AIENOS admin operation: a query can learn that authority is
+# reference any Aienux admin operation: a query can learn that authority is
 # held or missing, never create it.
 RX_CAPQ_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/sha256.c src/omega_evidence.c \
@@ -1138,7 +1138,7 @@ test-skillroute-compose: $(RX_SRCOMPOSE_TEST)
 	./$(RX_SRCOMPOSE_TEST)
 
 # OMEGA_PLAN_REUSE: plan IR and verified plan cache. rx_plan.o must not
-# reference any AIENOS admin operation (the cache checks authority, never
+# reference any Aienux admin operation (the cache checks authority, never
 # creates it); rx_plan_arrange.o (AIEN's planner) must only read the World.
 RX_PLAN_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/sha256.c src/omega_evidence.c \
@@ -1194,7 +1194,7 @@ test-semantic-comm: $(RX_SEMCOMM_TEST)
 # OMEGA_COGNITIVE_ROUTING: each cognitive step goes to the cheapest
 # realization the evidence says meets it, escalating only on insufficient
 # verification or calibrated confidence. rx_route.o is built alone first and
-# must not reference promotion or any AIENOS admin operation: routing profiles
+# must not reference promotion or any Aienux admin operation: routing profiles
 # change only through a promoted generation.
 RX_ROUTE_SRCS = src/runtime/rx_generation.c src/sha256.c src/omega_evidence.c \
 	tests/runtime/rx_cog_engines.c tests/runtime/rx_cognitive_routing.c
@@ -1254,7 +1254,7 @@ test-empirical: $(RX_EMP_TEST)
 # OMEGA_WORKFLOW_FUSION: repeated verified action-graph fragments become
 # MetaSkills; only a verified, measured, canaried, promoted (R9 barrier) and
 # published one replaces the steps. rx_fusion.o, like rx_graph.o, must not
-# reference any AIENOS admin operation.
+# reference any Aienux admin operation.
 .PHONY: test-workflow-fusion
 RX_FUSION_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/runtime/rx_generation.c src/sha256.c \
@@ -1280,7 +1280,7 @@ test-workflow-fusion: $(RX_FUSION_TEST)
 # OMEGA_TYPED_RESULT_CONSTRAINTS: structured results of cognition are checked
 # against typed contracts; the publish gate is the only writer of what is
 # published. rx_contract.o is built alone first and must not reference any
-# AIENOS admin operation: a contract can find that authority is missing, never
+# Aienux admin operation: a contract can find that authority is missing, never
 # create it.
 RX_TYPED_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/sha256.c src/omega_evidence.c \

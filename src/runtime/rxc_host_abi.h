@@ -3,7 +3,7 @@
  * (rx_compose) for a host program in another language (the sovereign-core
  * aien-omega-compose crate).
  *
- * A FACADE, nothing more: open = rx_compose_open on a fresh AIENOS authority,
+ * A FACADE, nothing more: open = rx_compose_open on a fresh Aienux authority,
  * run = rx_compose_run, recall = cx_recall / cx_recall_id on the composition's
  * own Cortex journal (<dir>/cortex.cx), close = rx_compose_close. No new
  * scheduler, store or receipt format. The record of a run is the ordinary

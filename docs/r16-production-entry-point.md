@@ -9,7 +9,7 @@ The production path is the resident reaction world: the R13 living system
 (goal in, AIEN reacts, Omega reacts, authority, GPU, evidence, generation
 promotes) and its R14 recovery paths. Nothing sequences the faculties; each
 reaction wakes on the objects it declared and commits under the grants it
-holds, checked by the native AIENOS capability authority (C, pinned by
+holds, checked by the native Aienux capability authority (C, pinned by
 `aienos.lock`).
 
 Who may act is fixed by the runtime too (spec C6): at startup the entry point

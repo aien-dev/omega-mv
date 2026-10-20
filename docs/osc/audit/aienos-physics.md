@@ -1,8 +1,8 @@
 > Appendix to OMEGA_SYSTEMS_CORE_CODE_AUDIT.md. Worker report (Opus, read-only), aienos 8706fb8 (native/capability byte-identical to Omega lock 4c21386), physics fecbedb. Reviewed: spot-checked nvrm.c:440 function-static UVM params, m16_native.c:97-108 poll without acquire, aienos_capability.h:7-10,77 u64 generation (all confirmed). Correction to its OPEN item 14: the Makefile default AIENOS_R7_DIR=../aienos-r9 on this host has no native/capability directory (checked 2026-09-29), so local R7 builds need an override; the build does not enforce aienos.lock. Not authoritative on its own; Part II of the main document rules.
 
-# OSC-0 / OSC-0B audit: AIENOS + PHYSICS C and assembly (read-only)
+# OSC-0 / OSC-0B audit: Aienux + PHYSICS C and assembly (read-only)
 
-Sources: AIENOS snapshot @ 8706fb8 (`aienos-snap/`), PHYSICS snapshot @ fecbedb (`physics-snap/`),
+Sources: Aienux snapshot @ 8706fb8 (`aienos-snap/`), PHYSICS snapshot @ fecbedb (`physics-snap/`),
 Omega link points in `omega/.claude/worktrees/osc-0` (Makefile, `.github/workflows/rx-host.yml`,
 `src/runtime/aienos_cap.h`, `src/runtime/rx_native_bind.c`, a few `src/` call sites),
 aien-architecture @ 873025c (local HEAD, 2026-09-27; may lag origin).
@@ -17,7 +17,7 @@ Paths below are relative to the snapshot roots (`aienos-snap/…` = A:, `physics
 
 ## 1. Inventory
 
-### 1.1 AIENOS C and assembly (non-vendored) — 1,268 lines total
+### 1.1 Aienux C and assembly (non-vendored) — 1,268 lines total
 
 | Path | Lines | Purpose | Class |
 |---|---|---|---|
@@ -30,7 +30,7 @@ Paths below are relative to the snapshot roots (`aienos-snap/…` = A:, `physics
 | A:…/p2_5/p25wx/probe.S | 12 | W^X probe: store to own code page must fault | test fixture |
 | A:…/p2_5/p25spin/probe.S | 6 | Runaway loop; only timer IRQ budget can end it | test fixture |
 
-AIENOS Rust (to be rewritten under the no-Rust rule; line counts only), 57,841 lines in 14 crates:
+Aienux Rust (to be rewritten under the no-Rust rule; line counts only), 57,841 lines in 14 crates:
 
 | Crate | Lines | Purpose |
 |---|---|---|
@@ -119,7 +119,7 @@ Class totals (C + asm lines, excluding tests/fixtures, approximate):
 | ioctl / mmap | 19 in nvrm.c | nvrm.c:59 (all RM escapes), 145 (UVM), 177 (mmap RM memory), 485 (PROT_NONE reservation), 596 munmap |
 | Page-table / SMMU code | 0 in C/asm | Only in Rust kernel (smmu.rs 1,392 lines, pagetable.rs 658) and M15 model. PHYSICS M2/M3 run with MMU off. |
 | DMA code | GPU only | Coherent sysmem via RM `NV01_MEMORY_SYSTEM` + `RM_MAP_MEMORY_DMA` with `CACHE_SNOOP_ENABLE` (nvrm.c:434) + UVM external range (nvrm.c:417-450) |
-| `_Static_assert` | **0 in AIENOS/PHYSICS**; 4 in Omega's shim (O:rx_native_bind.c:10-16) | — |
+| `_Static_assert` | **0 in Aienux/PHYSICS**; 4 in Omega's shim (O:rx_native_bind.c:10-16) | — |
 | packed / `__attribute__` layout | 0 packed; 3 `aligned(16)` scratch buffers | — |
 
 ---
@@ -130,13 +130,13 @@ Class totals (C + asm lines, excluding tests/fixtures, approximate):
 - [FACT] PHYSICS M2 has **no interrupt handling**: Atlas masks DAIF (`msr daifset,#0xf`, P:atlas_m2.s:56) and nothing unmasks it. All 16 vectors (P:vector_table.s:35-130) store the slot in x0 (after stashing x0 in TPIDR_EL1) and branch to `common_trap_entry`, which saves all GPRs + SP + ESR/ELR/SPSR/FAR to a fixed frame at 0x40205880 **without touching the stack**, writes magic `TRAPFRM1` last, `dsb sy`, switches to a known stack, prints, then `wfe` forever (:161-268). Every exception is terminal. Nothing in exception context can allocate (there is no allocator call) or block (it halts by design).
 - [FACT] PHYSICS M3 vectors (P:m3/vector_table.s:32-35, 116-140) put the slot in x0 **before** saving x0 and load the frame base into x1 **before** saving x1 → original x0/x1 are lost; FAR is marked valid for EC 0x26 (SP alignment, FAR not architecturally valid) and FnV is not checked. M3 is a regression from M2.
 - [FACT] The collector overwrites TPIDR_EL0/EL1 (vector_table.s:37,162); a nested fault overwrites the single frame. Acceptable because it never returns.
-- [FACT] AIENOS C has no interrupt code. The AIENOS kernel (Rust) takes IRQs: `irq_dispatcher_inner` acknowledges GIC, handles only PPI 30 (timer) by reprogramming compare and calling a hook transmuted from an `AtomicUsize` (A:crates/aienos-kernel/src/thread.rs:229-248, fatal.rs:169-183). No allocation in that path.
-- [SETTLED] aien-architecture ADR 0014 (873025c): AIENOS owns "boot continuation, address spaces, tasks, interrupts, capabilities, DMA confinement … native device ownership"; FORGE (ex-PHYSICS) is realization only.
+- [FACT] Aienux C has no interrupt code. The Aienux kernel (Rust) takes IRQs: `irq_dispatcher_inner` acknowledges GIC, handles only PPI 30 (timer) by reprogramming compare and calling a hook transmuted from an `AtomicUsize` (A:crates/aienos-kernel/src/thread.rs:229-248, fatal.rs:169-183). No allocation in that path.
+- [SETTLED] aien-architecture ADR 0014 (873025c): Aienux owns "boot continuation, address spaces, tasks, interrupts, capabilities, DMA confinement … native device ownership"; FORGE (ex-PHYSICS) is realization only.
 
 ### (b) MMIO / volatile / barriers / cache / DMA / page tables / SMMU
 - [FACT] GPU submission ordering: ring entry written via `volatile uint64_t*`, `dsb sy`, GPPut store, `dsb sy` (P:nvrm/nvrm.c:729-734); pushbuffer copied then `dsb sy` (m16_native.c:72-73). Doorbell store `*rm->doorbell = token` has **no barrier of its own and no NULL check** (nvrm.c:742-744); it relies on the trailing `dsb` in enqueue. `dsb sy` is stronger than needed (`dmb oshst`/`dsb st` would do) but correct.
 - [FACT] Completion observation: `m16_native_wait_marker_ge` polls a `volatile uint32_t*` with `usleep(50)` + `yield` and **no acquire barrier** after success (m16_native.c:97-108). Subsequent reads of GPU-written results are not ordered after the marker read on AArch64.
-- [FACT] No `dc`/`ic` cache maintenance anywhere in PHYSICS or AIENOS C. GPU memory is coherent system memory with `NVOS46_FLAGS_CACHE_SNOOP_ENABLE` (nvrm.c:434) and optionally GPU-uncached (`nvrm_alloc_gpu_uncached`, nvrm.c:473). PHYSICS M2/M3 run MMU-off (no MMU/TTBR/SCTLR.M code; only the KAT test sets SCTLR_EL1.A, m3/tests/sha256_kat.s:52-54), so all data accesses are Device-nGnRnE.
+- [FACT] No `dc`/`ic` cache maintenance anywhere in PHYSICS or Aienux C. GPU memory is coherent system memory with `NVOS46_FLAGS_CACHE_SNOOP_ENABLE` (nvrm.c:434) and optionally GPU-uncached (`nvrm_alloc_gpu_uncached`, nvrm.c:473). PHYSICS M2/M3 run MMU-off (no MMU/TTBR/SCTLR.M code; only the KAT test sets SCTLR_EL1.A, m3/tests/sha256_kat.s:52-54), so all data accesses are Device-nGnRnE.
 - [FACT] Atlas hands off with `br x19` and no `ic iallu`/`dsb`/`isb` (P:atlas_m2.s:130-134). Fine with caches off under QEMU; not fine natively once I-cache is on.
 - [FACT] No page table, SMMU or IOMMU programming in any C/asm. SMMU on GB10 is owned by Linux (P:evidence/physics_accelerator_link_qualification_receipt.json:38 "takeover deferred"). The Rust kernel has host-testable SMMUv3 bring-up (GBPA.ABORT first, abort STEs by default, A:crates/aienos-kernel/src/smmu.rs:1-12) and a BME gate (dma_gate.rs:1-20), plus `dc cvac`/`dc civac` + `dsb` helpers (arch/aarch64.rs:262-337).
 - [FACT] GPU VA == CPU VA by construction: PROT_NONE `MAP_FIXED_NOREPLACE` reservation at the chosen VA (nvrm.c:485-489), then `MAP_FIXED` RM mapping over it (nvrm.c:177), then `RM_MAP_MEMORY_DMA` with `DMA_OFFSET_FIXED` at the same VA (nvrm.c:433-437) and UVM external range (nvrm.c:419-450).
@@ -150,17 +150,17 @@ Class totals (C + asm lines, excluding tests/fixtures, approximate):
 - [FACT] Rust kernel uses Release 50×, Acquire 31×, SeqCst 14×, Relaxed 13×, AcqRel 1×.
 
 ### (d) Layout, hardware formats, endianness, hashing
-- [FACT] No `packed` structs and **zero `_Static_assert`** in AIENOS/PHYSICS C. `AienosCapRef` {u32, u64} has 4 bytes of interior padding (size 16); `AienosCapEntry` has padding after `cap_id`, `parent_id`, `minted_by_id`. Omega re-declares both structs by hand (O:src/runtime/aienos_cap.h:18-47) and checks only size + two offsets (O:rx_native_bind.c:10-16).
+- [FACT] No `packed` structs and **zero `_Static_assert`** in Aienux/PHYSICS C. `AienosCapRef` {u32, u64} has 4 bytes of interior padding (size 16); `AienosCapEntry` has padding after `cap_id`, `parent_id`, `minted_by_id`. Omega re-declares both structs by hand (O:src/runtime/aienos_cap.h:18-47) and checks only size + two offsets (O:rx_native_bind.c:10-16).
 - [FACT] M15 hashes raw struct bytes (`sizeof(EffectIntent)`, first 128 B of `EffectReceipt`, physics_accel.c:103, 119-121). By hand both are padding-free (64 B and 192 B) on LP64, but nothing enforces it. Receipts copy `out_receipt` including `length = sizeof(EffectReceipt)`.
 - [FACT] Hardware formats done with shifts, not bitfields: GP entry (nvrm.c:712-714), method header `nvrm_mthd` (nvrm.h:111-113, `count` not masked to 13 bits), semaphore release stream (m16_native.c:56-65). Stores are native little-endian; correct only because host and GPU are both LE.
 - [FACT] PHYSICS asm records and hash inputs are built at explicit byte offsets, little-endian (m3/capability.s:412-429; m3/effect_broker.s:66-79). `sha256_clean.c` writes the length big-endian explicitly (:91-95), reads input bytewise; output is native u32 words (callers convert). Contract declares `"endianness": "little"` (P:machine_contract.json).
-- [SETTLED] AIENOS ADR 0013 (ABI v1) and ADR 0015 (Store v1) define explicit LE wire layouts with offsets (e.g. adr/0015:92-93, adr/0013:57).
+- [SETTLED] Aienux ADR 0013 (ABI v1) and ADR 0015 (Store v1) define explicit LE wire layouts with offsets (e.g. adr/0015:92-93, adr/0013:57).
 
 ### (e) Failure handling
 - [FACT] PHYSICS M2/M3 ingress and invariant failures are **fail-closed panic traps**: distinct string then `wfe` loop (P:physics.s:193-241). Frame exhaustion returns 0 (not a panic, memory_alloc.s:112, 158). Invalid capability returns 0/decision code (capability.s:125; m3/capability.s DEC_* codes). Any CPU exception = capture + halt.
-- [FACT] AIENOS C authority: every failure is a negative error code (17 codes, aienos_capability.h:27-43); no abort/assert/exit anywhere in aienos_capability.c, nvrm.c or m16_native.c. OOM in `aienos_cap_start/restart` → `AIENOS_CAP_ERR_IO` (:426-430, :515).
+- [FACT] Aienux C authority: every failure is a negative error code (17 codes, aienos_capability.h:27-43); no abort/assert/exit anywhere in aienos_capability.c, nvrm.c or m16_native.c. OOM in `aienos_cap_start/restart` → `AIENOS_CAP_ERR_IO` (:426-430, :515).
 - [FACT] nvrm: error code −1 + message in `rm->err[256]` + **sticky `rm->faulted`**; after any irreversible partial failure the allocation is quarantined (VA never reused) (nvrm.c:453-460, 575-600). Device loss has no dedicated path: the channel error notifier is allocated and registered (`hObjectError`, nvrm.c:629, 635) but **never read** by PHYSICS or Omega; a lost/faulted GPU shows up only as a marker-poll timeout (m16_native.c:102-108).
-- [SETTLED] aien-architecture doctrine/TRUST.md:260 lists "OOM panic, core" under catastrophic failure; ADR 0006 (AIENOS) requires deterministic crash records.
+- [SETTLED] aien-architecture doctrine/TRUST.md:260 lists "OOM panic, core" under catastrophic failure; ADR 0006 (Aienux) requires deterministic crash records.
 
 ### (f) Capability authority generation / rights model
 - [FACT] C authority (the one Omega links): reference = `{u32 cap_id, u64 generation}`; 256 slots; max delegation depth 8. Reclaim advances generation by 1 (`aienos_cap_generation_advance`, :80-84); a slot at `UINT64_MAX` is skipped as exhausted, never wrapped (:262-266). Restart starts every slot above `max(last start + 1, table_floor, CLOCK_BOOTTIME_ns << 8)` so references from an earlier table or process fail (:45-79, 97-107, 507-527).
@@ -212,7 +212,7 @@ physics/atlas_m2.s:130-134 | handoff `br x19` | No `ic iallu; dsb; isb` before j
 
 ## 5. C ABI dependencies that cannot immediately disappear
 
-**Omega → AIENOS capability authority** [FACT] O:Makefile:184-197 (and 210, 224, 242, 256, 282, 310, 329, 351): links `$(AIENOS_R7_DIR)/native/capability/out/libaienos_capability.a` (default dir `../aienos-r9`; CI checks out the commit in `aienos.lock` = 4c21386, O:.github/workflows/rx-host.yml:38-58). Header: Omega's own copy `src/runtime/aienos_cap.h` (no constants). Calls (count in src+tests): office 49, mint 30, stop 27, start 23, revoke 22, validate 15, inspect 7, clock 5, advance_clock 5, reclaim 4, cognition_mint 4, restart 3, cognition_admin 3, bump_epoch 3, kill 2, generation_advance 2, force_generation 2.
+**Omega → Aienux capability authority** [FACT] O:Makefile:184-197 (and 210, 224, 242, 256, 282, 310, 329, 351): links `$(AIENOS_R7_DIR)/native/capability/out/libaienos_capability.a` (default dir `../aienos-r9`; CI checks out the commit in `aienos.lock` = 4c21386, O:.github/workflows/rx-host.yml:38-58). Header: Omega's own copy `src/runtime/aienos_cap.h` (no constants). Calls (count in src+tests): office 49, mint 30, stop 27, start 23, revoke 22, validate 15, inspect 7, clock 5, advance_clock 5, reclaim 4, cognition_mint 4, restart 3, cognition_admin 3, bump_epoch 3, kill 2, generation_advance 2, force_generation 2.
 Pointer passing and implied ownership:
 - `start(Admin **, View **)`: library allocates both; caller owns them and must call `stop` exactly once each (no double stop, no use after).
 - `mint(Admin *, const Mint *, Ref *out)`, `validate/inspect(View *, Ref, …, Entry *out)`: borrowed in/out pointers for the call only; entries are copied out by value (no pointer into the table escapes — good).
@@ -227,7 +227,7 @@ Pointer passing and implied ownership:
 - `nvrm_enqueue(Nvrm *, const NvrmMem *pb, off, nwords)`: GPU reads `pb` asynchronously after the call returns → caller must keep `pb` alive and unmodified until a completion is observed (not enforced).
 - `m16_native_wait_marker_ge(volatile uint32_t *marker, …)`: marker must point into a live coherent allocation.
 - **De facto ABI beyond functions**: Omega reads `Nvrm` internals directly (`.entries`, `.faulted`, `.put`, `.retired`, `.root`, `.device`, `.vaspace`; O:src/omega_accelerator_world.c:112,159,670,732,984; omega_world_gates.c:122-124). The struct layout is part of the boundary.
-- Below that, the NVIDIA RM/UVM ioctl ABI (driver 580.173.02 headers) is an unavoidable class-D boundary until AIENOS owns the GPU natively.
+- Below that, the NVIDIA RM/UVM ioctl ABI (driver 580.173.02 headers) is an unavoidable class-D boundary until Aienux owns the GPU natively.
 
 **Not linked by Omega** [FACT]: PHYSICS M2/M3 asm images (QEMU-only, separate binaries), M15 model, tools.
 
@@ -277,8 +277,8 @@ Pointer passing and implied ownership:
 
 ## 8. Contradictions (docs vs code, code vs code)
 
-1. **Generation width.** C authority: u64, never wraps, EXHAUSTED at max (A:native/capability/aienos_capability.h:8-10, .c:80-84). Omega header: u64 (O:src/runtime/aienos_cap.h:7-8). AIENOS ADR 0013 + Rust kernel: u32, retire at `u32::MAX` (A:docs/adr/0013-aienos-abi-v1.md:57, 83-94; A:crates/aienos-kernel/src/caps.rs:76, abi.rs:141). Rust aienos-capability crate: u32 (src lib :86-87). PHYSICS M3: u32 retire on wrap (m3/capability.s:403-408). M2: u32, unchecked. M15: u32 (physics_accel.h:88).
-2. **Who owns authority.** PHYSICS README "Trusted Machine Authority … PHYSICS AUTHORIZES", governor of SMMUv3/devices (P:README.md:1-40). aien-architecture ADR 0013/0014 (873025c): PHYSICS→FORGE is realization only, "not a gatekeeper"; AIENOS owns interrupts, capabilities, DMA confinement (docs/adr/0014:5-10; doctrine/SOVEREIGNTY.md:383). The M3 capability ledger and effect broker in PHYSICS asm are authority code under the old model.
+1. **Generation width.** C authority: u64, never wraps, EXHAUSTED at max (A:native/capability/aienos_capability.h:8-10, .c:80-84). Omega header: u64 (O:src/runtime/aienos_cap.h:7-8). Aienux ADR 0013 + Rust kernel: u32, retire at `u32::MAX` (A:docs/adr/0013-aienos-abi-v1.md:57, 83-94; A:crates/aienos-kernel/src/caps.rs:76, abi.rs:141). Rust aienos-capability crate: u32 (src lib :86-87). PHYSICS M3: u32 retire on wrap (m3/capability.s:403-408). M2: u32, unchecked. M15: u32 (physics_accel.h:88).
+2. **Who owns authority.** PHYSICS README "Trusted Machine Authority … PHYSICS AUTHORIZES", governor of SMMUv3/devices (P:README.md:1-40). aien-architecture ADR 0013/0014 (873025c): PHYSICS→FORGE is realization only, "not a gatekeeper"; Aienux owns interrupts, capabilities, DMA confinement (docs/adr/0014:5-10; doctrine/SOVEREIGNTY.md:383). The M3 capability ledger and effect broker in PHYSICS asm are authority code under the old model.
 3. **Release requires DMA quiescence** (P:docs/native-frame-authority.md §6.4) vs M3 `release_frame` checks only the bitmap bit (P:m3/memory_alloc.s:185-222) and nvrm_free has no GPU completion check.
 4. **README claims SMMUv3 DMA protection** (P:README.md:38) vs no SMMU code in PHYSICS; evidence says Linux programs the SMMU, "takeover deferred" (P:evidence/physics_accelerator_link_qualification_receipt.json:38-39).
 5. **M2 cap comment vs code**: header says `resource_type = 0xFFFFFFFF` (P:capability.s:24) but code stores 1 (:47-49); contract says 1.
@@ -304,7 +304,7 @@ Pointer passing and implied ownership:
 8. [PROPOSED] **Pinned memory**: fixed-address PHYSICS regions and identity-VA GPU memory are `pin<T>`/`device<T>` created only in `unsafe physical block`s; everything above borrows `slice<T>`.
 9. [PROPOSED] **Minimal ordering vocabulary**: acquire/release on `device<T>`, `dmb ish/oshld/oshst`, `dsb`, `isb`, cache clean/invalidate by range; nothing else in safe code.
 10. [PROPOSED] **Retire/merge**: M15 model (F), Rust aienos-capability(+ffi) (F), M3 trap collector (replace with M2's). Keep sha256_clean.c pattern. Remove `aienos_cap_force_generation` from the production ABI; make `restart` unable to revive a killed writer without an explicit right.
-11. [OPEN] Where authority lives long-term: C authority in AIENOS (current Omega link) vs PHYSICS M3 ledger (old doctrine). ADR 0014 points to AIENOS; PHYSICS M3 ledger is then legacy evidence.
+11. [OPEN] Where authority lives long-term: C authority in Aienux (current Omega link) vs PHYSICS M3 ledger (old doctrine). ADR 0014 points to Aienux; PHYSICS M3 ledger is then legacy evidence.
 12. [OPEN] Native GB10 coherence for all engines, and whether GPU-uncached allocations need CPU-side cache maintenance natively.
 13. [OPEN] Atlas handoff I-cache sync requirement once caches are on natively (atlas_m2.s:130-134).
-14. [OPEN] Which AIENOS commit Omega actually links (lock 4c21386 vs snapshot 8706fb8).
+14. [OPEN] Which Aienux commit Omega actually links (lock 4c21386 vs snapshot 8706fb8).

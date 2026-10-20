@@ -5,20 +5,20 @@
  * capability slots: objects that hold the reference it presents for one
  * resource. A reaction declares a slotted capability need, and the world
  * reads the reference from the slot at every check (rx_world.h,
- * cap_slotted). Holding a slot is not permission; the native AIENOS authority
+ * cap_slotted). Holding a slot is not permission; the native Aienux authority
  * still validates the reference.
  *
  *   fast path   slot holds a live reference -> the reaction runs. No AEGIS
  *               activation, no policy round trip.
  *   slow path   client publishes a request -> aegis.decide.k applies policy
  *               (GRANT, DENY, ESCALATE to a human, REVOKE on release)
- *               -> root.install.k mints through the AIENOS root and writes
+ *               -> root.install.k mints through the Aienux root and writes
  *               the slot -> the client's reaction wakes on the slot.
  *
  * Nothing here is called. The client does not wait for AEGIS; its reaction
  * is simply not ready until its slot holds authority.
  *
- * Mint authentication. root.install is the only holder of the AIENOS admin.
+ * Mint authentication. root.install is the only holder of the Aienux admin.
  * It mints only when
  *   - every decision field it uses was last written by that client's
  *     aegis.decide reaction (subject RX_AEGIS_SUBJ, faculty AEGIS),

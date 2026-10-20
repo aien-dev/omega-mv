@@ -11,7 +11,7 @@ Authority:    AIENOS 4c213863c840f77264e6851f5f6f393e80cfdb95 (aienos.lock; aien
 
 ## 1. Problem
 
-AIENOS capability references are `(uint32 cap_id, uint64 generation)`. Since
+Aienux capability references are `(uint32 cap_id, uint64 generation)`. Since
 aienos#158 a restarted table starts above every generation the old table used,
 and every table seeds its generations from `CLOCK_BOOTTIME` ns << 8, so live
 generations are normally above 2^32. Omega's runtime view (`aienos_cap.h`,
@@ -93,7 +93,7 @@ decoded with their old meaning and not accepted for inspection.
 Why refuse rather than "decode with the original meaning and refuse for
 authority use":
 
-1. The only thing the old format could say about a live AIENOS reference was
+1. The only thing the old format could say about a live Aienux reference was
    a truncated generation. There is no correct authority representation to
    preserve, and the brief forbids keeping a wrong one alive.
 2. Old bytes were a host-struct image (host byte order, padding). Their
@@ -166,12 +166,12 @@ so the refusal tests refuse the real old format.
 
 ## 4. Tests (`make test-effect-cap64`)
 
-`tests/effect/test_effect_cap64.c`, linked with the pinned AIENOS
+`tests/effect/test_effect_cap64.c`, linked with the pinned Aienux
 `libaienos_capability.a` (4c21386; `EFFECT_CAP64_CAP_LIB`, default
 `$(AIENOS_CAP_LIB)`). Physics-free. Prints one line per gate:
 
 - **ROUNDTRIP**: generations 0, 1, UINT32_MAX, UINT32_MAX+1, 1<<63,
-  0xFFFFFFFFFFFFFFFE, UINT64_MAX, and live AIENOS generations, survive
+  0xFFFFFFFFFFFFFFFE, UINT64_MAX, and live Aienux generations, survive
   build -> canonical encode -> OMGG serialize -> decode -> validate -> Visor
   request (text and JSON print the exact decimal) with every field equal.
 - **IDENTITY**: ids differ for generations that differ only in the high word
@@ -182,7 +182,7 @@ so the refusal tests refuse the real old format.
   cut, non-zero padding, resource 0, param_len > 128, wrong length. All
   refused with the specific code; a v1 non-effect object in the same stream
   still decodes (control).
-- **AUTHORITY** (real AIENOS 4c21386): live references forced to
+- **AUTHORITY** (real Aienux 4c21386): live references forced to
   UINT32_MAX, UINT32_MAX+1 and 1<<63 validate after the round trip; the
   same reference with the high 32 bits cut is `STALE_GEN`; revoke ->
   `REVOKED`; reclaim -> `STALE_GEN`; wrong slot -> refused; wrong right ->
@@ -198,8 +198,8 @@ so the refusal tests refuse the real old format.
 - The accelerator `OmegaEffectIntent` / `OmegaEffectReceipt`
   (`src/omega_accelerator.h`) still carry a 32-bit `capability_generation`.
   They belong to the physics accelerator port model (its own capability
-  table), not to AIENOS, and are not changed here.
+  table), not to Aienux, and are not changed here.
 - The Visor JSON prints the generation as an exact decimal integer. JSON
   consumers that parse numbers as IEEE doubles lose precision above 2^53.
 - No effect is executed; the mapping from `operation_code` / `resource_class`
-  to AIENOS rights / resources is still a test convention.
+  to Aienux rights / resources is still a test convention.

@@ -17,7 +17,7 @@
  * for redirections, and cd. A child that was allowed to start runs with the full authority of the Linux user (any file
  * that user may open, any program, the network). A prefix allowlist is not a sandbox and no containment is claimed:
  * nothing here uses seccomp, Landlock or namespaces. The check and the syscall are two steps (a path swapped in between
- * is not prevented). The root is the Linux development root (rx_caproot.h); on AIENOS the kernel authority is the root.
+ * is not prevented). The root is the Linux development root (rx_caproot.h); on Aienux the kernel authority is the root.
  */
 #ifndef OSH_CAPS_H
 #define OSH_CAPS_H

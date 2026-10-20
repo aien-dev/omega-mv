@@ -1,5 +1,5 @@
 # M20 canonical machine identity (src/runtime/aien_machine_id.h). Host-only, no
-# Physics or AIENOS sources needed. Run from the repo root.
+# Physics or Aienux sources needed. Run from the repo root.
 AIEN_MID_TEST = $(OUT_DIR)/aien_machine_id_test
 
 $(AIEN_MID_TEST): tests/runtime/aien_machine_id_test.c src/runtime/aien_machine_id.c \

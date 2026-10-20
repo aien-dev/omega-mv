@@ -13,11 +13,11 @@ authority code paths outside the Visor, listed below.
 |---|---|---|---|
 | Capability root | `src/runtime/rx_caproot.h/.c` | `rx_caproot_validate`, `rx_caproot_inspect` | Is `(cap_id, generation)` live, current epoch, unexpired, chain intact, for this subject, resource and rights? (`RX_CAP_ERR_BOUNDS/STALE_GEN/REVOKED/EPOCH/SUBJECT/RESOURCE/RIGHTS/...`) |
 | Root administration | same | `rx_capadmin_mint/revoke/reclaim/advance_clock/bump_epoch` | Only the admin channel holder with the right token and an office authority may change the table (`RX_CAP_ERR_UNAUTHORIZED` otherwise). Reclaim advances the slot generation. |
-| World check | `src/runtime/rx_world.h`, `rx_world.c` | `rx_world_validate_cap`, `rx_world_inspect_cap` | Same question, routed to the Linux oracle or the native AIENOS view (`rx_world_init_with_auth`). |
+| World check | `src/runtime/rx_world.h`, `rx_world.c` | `rx_world_validate_cap`, `rx_world_inspect_cap` | Same question, routed to the Linux oracle or the native Aienux view (`rx_world_init_with_auth`). |
 | World publish | same | `rx_world_publish_external` | An outside stimulus needs a cap for `(external_subject, object resource, WRITE)` and a live object ref (`RX_ERR_AUTHORITY`, `RX_ERR_STALE_GEN`). |
-| AEGIS policy | `src/runtime/rx_aegis.h/.c` | `rx_aegis_evaluate` (pure), `aegis.decide.k` / `root.install.k` reactions | GRANT / DENY (`WHY_NO_RULE`, `WHY_PRIVILEGED`, `WHY_BAD_REQUEST`) / ESCALATE. Only `root.install` mints (through the native AIENOS admin). Nothing calls AEGIS; a reaction is simply not ready until its slot holds authority. |
+| AEGIS policy | `src/runtime/rx_aegis.h/.c` | `rx_aegis_evaluate` (pure), `aegis.decide.k` / `root.install.k` reactions | GRANT / DENY (`WHY_NO_RULE`, `WHY_PRIVILEGED`, `WHY_BAD_REQUEST`) / ESCALATE. Only `root.install` mints (through the native Aienux admin). Nothing calls AEGIS; a reaction is simply not ready until its slot holds authority. |
 | Generation barrier | `src/runtime/rx_generation.h/.c` | `rx_gen_propose`, `rx_gen_add_work`, `rx_gen_promote`, `rx_gen_reject_replay` | Promotion needs `RX_RIGHT_PROMOTE` on `RX_GEN_RES_PROMOTION`; the promoted root records committed external effect ids, and `rx_gen_reject_replay` refuses a recorded id (`RX_GEN_ERR_REPLAY`). |
-| Design references | `spec/r7-aienos-authority-mapping.md`, `spec/r8-aegis-resident.md` | | Host authority onto the AIENOS table; AEGIS resident authority and its attack list. |
+| Design references | `spec/r7-aienos-authority-mapping.md`, `spec/r8-aegis-resident.md` | | Host authority onto the Aienux table; AEGIS resident authority and its attack list. |
 
 Route of a legitimate effect:
 `Visor -> EffectIntent -> AEGIS/PHYSICS authority -> bounded execution -> receipt`.
@@ -128,7 +128,7 @@ design point is that nothing trusts it.
    not driven; only the World's external publish check is.
 4. AEGIS is not on a call path. The resident `aegis.decide` / `root.install`
    reactions are not run; `rx_aegis_evaluate` is exercised as the pure policy
-   function. The native AIENOS authority is linked (for `rx_aegis.c`) but
+   function. The native Aienux authority is linked (for `rx_aegis.c`) but
    validation in this test uses the Linux oracle (`rx_caproot_validate`).
 5. The operation-code-to-rights and resource-class-to-resource mappings are
    test conventions. Omega's `EffectPayload` has no canonical mapping to

@@ -216,7 +216,7 @@ History that crumbs would have recorded, reconstructed from git first-parent his
 - 2026-09-29 805a3a6 #75 aien-dev: Merge pull request #75 from aien-dev/fix/program-id-body [backfill-git]
 - 2026-09-29 470dcae #70 aien-dev: Merge pull request #70: ARGUS producer v1.1 (emit on transition, use summaries), re-pinned to aienos d39dd5b [backfill-git]
 - 2026-09-29 7064e6a #74 aien-dev: Merge pull request #74 from aien-dev/fix/visor-qualify-no-python [backfill-git]
-- 2026-09-29 f308ac7 #72 aien-dev: Merge pull request #72: pin AIENOS authority to d39dd5b (observer hook) [backfill-git]
+- 2026-09-29 f308ac7 #72 aien-dev: Merge pull request #72: pin Aienux authority to d39dd5b (observer hook) [backfill-git]
 - 2026-09-29 5560b40 #73 aien-dev: Merge pull request #73 from aien-dev/fix/crumb-cap-gen64 [backfill-git]
 - 2026-09-29 8e7a445 #71 aien-dev: Merge pull request #71 from aien-dev/fix/effect-cap64 [backfill-git]
 - 2026-09-29 193a7e7 #69 aien-dev: Merge pull request #69 from aien-dev/feat/omega-visor-v1 [backfill-git]

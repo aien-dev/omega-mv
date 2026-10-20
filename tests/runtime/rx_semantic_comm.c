@@ -20,7 +20,7 @@
  *
  * The World moves between rounds: field writes, retired and replaced
  * objects, new conclusions, a revoked and later re-granted capability. The
- * test plays the outside: it holds the AIENOS admin to give principals the
+ * test plays the outside: it holds the Aienux admin to give principals the
  * authority they start with, to revoke and to re-grant. Projection is given
  * the world and the receiver's capability table only.
  */

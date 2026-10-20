@@ -5,7 +5,7 @@
 Repo: aien-spark/omega at 193a7e7 (worktree osc-0). Read-only audit; nothing built or run.
 Scope: all C in src/**, tests/** (harness), tools/*.c = 87,486 lines in 212 files.
 Labels: [FACT] code fact with file:line; [SETTLED] decided in a spec/doc (cited); [PROPOSED] recommended OSC-0B decision; [OPEN] unresolved.
-Non-overlap: src/language, aarch64 encoder/decoder/emitters, canonical/SemanticId (omega_canonical, omega_codec, sha256), self-host and compiler determinism belong to another worker and are only inventoried here. PHYSICS (nvrm.c, m16_native.c, the NVIDIA-open headers) and AIENOS (libaienos_capability.a) belong to a third worker; only their boundary with Omega is noted.
+Non-overlap: src/language, aarch64 encoder/decoder/emitters, canonical/SemanticId (omega_canonical, omega_codec, sha256), self-host and compiler determinism belong to another worker and are only inventoried here. PHYSICS (nvrm.c, m16_native.c, the NVIDIA-open headers) and Aienux (libaienos_capability.a) belong to a third worker; only their boundary with Omega is noted.
 
 Counts are grep counts over src+tests+tools (*.c, *.h). They are "sites", not proven bugs.
 
@@ -20,8 +20,8 @@ Class key: A semantic / B safe systems / C physical realization / D unavoidable 
 | Subsystem (files) | Lines | Purpose | Class |
 |---|---:|---|---|
 | src/runtime rx-core: rx_world.c/.h, rx_coherent.c, rx_seq_reference.c/.h | 3,848 | Resident reaction runtime: object slots, reactions, scheduler/workers, causal crumb log, CPU image of the shared world, resident-seat ring protocol | B (rx_coherent ring part D) |
-| src/runtime/omega_shared_world_abi.h, aienos_cap.h, rx_native_bind.c | 414 | Frozen OMEGA_SHARED_WORLD_V1 wire ABI; C view of AIENOS capability authority; layout asserts binding the two | D (ABI) |
-| src/runtime/rx_caproot.c/.h | 891 | Linux host-reference capability root: separate process, sealed memfd table, seqlock readers | B, E (Linux oracle; to be replaced by AIENOS native root) |
+| src/runtime/omega_shared_world_abi.h, aienos_cap.h, rx_native_bind.c | 414 | Frozen OMEGA_SHARED_WORLD_V1 wire ABI; C view of Aienux capability authority; layout asserts binding the two | D (ABI) |
+| src/runtime/rx_caproot.c/.h | 891 | Linux host-reference capability root: separate process, sealed memfd table, seqlock readers | B, E (Linux oracle; to be replaced by Aienux native root) |
 | src/runtime/rx_resident_gpu.c/.h | 1,146 | Persistent Blackwell "seat": builds SASS program, launches via PHYSICS, heartbeat/lease threads, kill/relaunch | D |
 | src/runtime/rx_generation.c/.h | 1,630 | R9 generation store on disk (candidate/active, rename flip, journal, receipts) | B |
 | src/runtime rx-state: rx_jspace, rx_cortex, rx_projection, rx_semantic, rx_semcomm (.c/.h) | 4,684 | Branch-shared cognitive state (refcounted realizations, spill), Cortex append store, state projection, semantic reuse cache, semantic communication | A/B |
@@ -46,7 +46,7 @@ Class key: A semantic / B safe systems / C physical realization / D unavoidable 
 | tests/visor, tests/language | 2,921 | Visor + language tests | E |
 | research/m15/{spbm,pmu}/*.c,*.h (listed only) | n/a | aien_spbm_readonly.c, contract_test.c, contract.h, reduce.c, sample.c, load.c, pmu_probe.c | F/E (research) |
 
-[FACT] External deps (Makefile:3-25, 186-197): libc, pthread, libm; PHYSICS sources compiled in (`$(PHYSICS_DIR)/m16/m16_native.c`, `nvrm/nvrm.c`) plus NVIDIA open-kernel 580.173.02 headers (-I paths Makefile:9-13); AIENOS `libaienos_capability.a` (Makefile:186); NVML `libnvidia-ml.so.1` via dlopen in tests/runtime/r15_measure.c:195-203; perf_event ioctl (r15_measure.c:104-112, rx_plan_reuse.c:88). No libcuda. GPU entry points from Omega: nvrm_* / m16_native_* only in omega_blackwell_submit.c, rx_resident_gpu.c, omega_world_gates.c, omega_accelerator_world.c.
+[FACT] External deps (Makefile:3-25, 186-197): libc, pthread, libm; PHYSICS sources compiled in (`$(PHYSICS_DIR)/m16/m16_native.c`, `nvrm/nvrm.c`) plus NVIDIA open-kernel 580.173.02 headers (-I paths Makefile:9-13); Aienux `libaienos_capability.a` (Makefile:186); NVML `libnvidia-ml.so.1` via dlopen in tests/runtime/r15_measure.c:195-203; perf_event ioctl (r15_measure.c:104-112, rx_plan_reuse.c:88). No libcuda. GPU entry points from Omega: nvrm_* / m16_native_* only in omega_blackwell_submit.c, rx_resident_gpu.c, omega_world_gates.c, omega_accelerator_world.c.
 
 ---
 
@@ -188,8 +188,8 @@ Format: repository/path | function/type | hazard | current ownership model | cur
 10. omega/src/runtime/rx_resident_gpu.c:34-43 | SeatArgs (packed) | hardware-format struct with no size/offset asserts; carries live GPU VA | stack, copied to cbank | one launch | `device<T>` ABI struct with compiler-checked layout; VA as `device ptr` type, never serializable | low | SASS kernel argument layout
 11. omega/src/omega_blackwell_submit.c:131,343,573; omega_accelerator_world.c:906,1126 | execute_* / dispatch_* | `uint32_t pb[1024]` stack array filled via `pb[n++]` without bound check | stack | call | `slice<u32>` builder with checked push | low | pushbuffer word format (PHYSICS)
 12. omega/src/runtime/rx_resident_gpu.c:786-839 | launch_main | pushbuffer bound checked only after writes (`if (n > 1024)`) | stack | call | checked builder | low | same
-13. omega/src/runtime/rx_caproot.c:569-618 | rx_caproot_inspect/validate | seqlock with plain memcpy of entries; unbounded spin while writer alive | root process owns table; readers map RO memfd | root process lifetime | `unsafe physical block` seqlock primitive with bounded retry; entries as `device<T>`-like shared view | med | AIENOS cap entry layout (rx_native_bind.c)
-14. omega/src/runtime/rx_caproot.h:120-133 | RxCapEntry | implicit padding in a cross-process, cross-repo layout | memfd | root lifetime | explicit fixed layout with reserved fields; layout asserted on both sides | low | AIENOS AienosCapEntry (C ABI adapter)
+13. omega/src/runtime/rx_caproot.c:569-618 | rx_caproot_inspect/validate | seqlock with plain memcpy of entries; unbounded spin while writer alive | root process owns table; readers map RO memfd | root process lifetime | `unsafe physical block` seqlock primitive with bounded retry; entries as `device<T>`-like shared view | med | Aienux cap entry layout (rx_native_bind.c)
+14. omega/src/runtime/rx_caproot.h:120-133 | RxCapEntry | implicit padding in a cross-process, cross-repo layout | memfd | root lifetime | explicit fixed layout with reserved fields; layout asserted on both sides | low | Aienux AienosCapEntry (C ABI adapter)
 15. omega/src/runtime/rx_world.c:139-156 | crumb_hash | hashes slot ids/generations; cap generation truncated to 32 bits (:147) | world | world lifetime | hash `SemanticId<T>` / full 64-bit generation via canonical encoder | low | existing crumb digests in evidence
 16. omega/src/runtime/rx_world.h:146-152 | claim payload bytes 40/44 | u64 cap generation split across frozen u32 field + payload | ring | per message | ABI v2 with u64 generation field | med | frozen OMEGA_SHARED_WORLD_V1
 17. omega/src/runtime/rx_world.c:15-26, 231-233 | crumb_log_map / rx_world_crumb | raw pointer into MAP_NORESERVE log returned unlocked; relies on pinning | world | world lifetime | `handle<Crumb>` (dense id) + `&T` scoped borrow; log as `pin<arena>` | low | crumb ids in evidence

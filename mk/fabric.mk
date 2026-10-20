@@ -9,7 +9,7 @@
 # production program carries no Fabric until a real transport exists (TRUST-1).
 # It uses the Capability Graph only
 # through src/runtime/rx_capq.h and links the same objects test-capability-graph
-# links (rx_capq.o, rx_graph.o, the pinned AIENOS capability library).
+# links (rx_capq.o, rx_graph.o, the pinned Aienux capability library).
 #
 # test-fabric         purity check, then the exit-gate test plain and with ASan/UBSan
 # fabric-purity       fabric objects reference no authority, World, socket or process call

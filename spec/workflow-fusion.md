@@ -191,7 +191,7 @@ refuses a proposer promoting its own candidate. `rx_fusion_publish` then
 requires the generation to be active and re-reads the bytes: a MetaSkill
 changed after promotion is not published.
 
-`rx_fusion.o` references no AIENOS admin operation (checked by the build).
+`rx_fusion.o` references no Aienux admin operation (checked by the build).
 
 ## Gate evidence (what the test proves)
 
@@ -221,5 +221,5 @@ changed after promotion is not published.
   hardware realization is built.
 - Energy saved per run is only claimed where it exceeds the meter's
   round-to-round spread.
-- Host processor only. The authority is the native C library, not the AIENOS
+- Host processor only. The authority is the native C library, not the Aienux
   kernel.

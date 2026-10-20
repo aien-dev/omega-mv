@@ -17,7 +17,7 @@
  *        admission per loser), release the superseded branch.
  *
  * Routing discovers (rx_skillroute, no mint). Authority is minted here, at
- * open, by the system owner through the AIENOS admin: each reaction holds
+ * open, by the system owner through the Aienux admin: each reaction holds
  * only the rights its step needs, so a candidate cannot write the state and
  * only the AEGIS verifier can write the verdict.
  *
@@ -296,7 +296,7 @@ void rx_compose_close(RxCompose *c);
  * and returning while a step still runs would leave it using freed memory.
  * A Skill that never returns therefore hangs close (the safe choice);
  * (4) removes its binder, retires the five objects and reclaims the revoked
- * capabilities (their AIENOS slots become free; the slot generation
+ * capabilities (their Aienux slots become free; the slot generation
  * advances, so the old references never validate again); (5) removes its
  * four reactions from the World (rx_world_remove_reaction): their
  * subscriptions go, the slots are marked removed and the next attach of the
@@ -305,7 +305,7 @@ void rx_compose_close(RxCompose *c);
  * Invariant: close reclaims everything attach allocated. After close the
  * World's footprint (rx_world_footprint: active reactions, subscriptions,
  * live objects, binders, bound fields, in-flight work, backlog, resource
- * use) and the AIENOS capability table are what they were before attach; the
+ * use) and the Aienux capability table are what they were before attach; the
  * reaction table does not grow across attach/close cycles (a removed slot is
  * reused only by the same subject and faculty, so crumb provenance of old
  * runs still names the right subject). Only the crumb log grows: it is

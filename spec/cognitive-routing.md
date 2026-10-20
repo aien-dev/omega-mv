@@ -96,7 +96,7 @@ failures, confidence bins, per-call time for p99) and batch costs (processor
 time per call from a batch, metered energy per call). `rx_route_propose`
 serializes the ledger into a generation's `model` blob and proposes it. The
 routing does not change until that candidate is promoted by a principal
-holding `RX_GEN_RIGHT_PROMOTE` on `RX_GEN_RES_PROMOTION` on the native AIENOS
+holding `RX_GEN_RIGHT_PROMOTE` on `RX_GEN_RES_PROMOTION` on the native Aienux
 authority, and the proposer may not promote its own candidate
 (`rx_generation`).
 

@@ -3,7 +3,7 @@
  *
  * THE VISOR CAN ASK. THE VISOR CANNOT GRANT.
  *
- * Pure over OmegaGraph. References no runtime (rx_*), AIENOS (aienos_cap_*)
+ * Pure over OmegaGraph. References no runtime (rx_*), Aienux (aienos_cap_*)
  * or publish-gate (rc_*) symbol; tests/visor/check_authority_link.sh enforces
  * that on the object file. The only write to `authorized` in this file is the
  * zero-initialisation in request_reset(); the field is never set true.

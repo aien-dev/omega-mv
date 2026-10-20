@@ -1,7 +1,7 @@
 /* allen_bind.h -- ALLEN inside the resident organism: the three bindings.
  *
  * ARCH-0035 (PROPOSED). ALLEN is the durable subject the AIEN organism
- * sustains. Its state is an AIENOS continuity object (kind 24,
+ * sustains. Its state is an Aienux continuity object (kind 24,
  * aienos native/kernel/svc/continuity_subject.h; OS-0018 PROPOSED). This
  * module is the omega side of that contract and nothing more:
  *

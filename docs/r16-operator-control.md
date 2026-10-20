@@ -22,7 +22,7 @@ its own world. Every statement below holds for each of those worlds.
   program enrolls the operator with `rx_world_enroll_caller`: a fresh 32-byte random
   secret and a generation, issued by the runtime. The program keeps no copy after
   handing it over (below) and wipes its buffer.
-* **Capability.** The program mints, through the native AIENOS authority it already
+* **Capability.** The program mints, through the native Aienux authority it already
   starts (`aienos_cap_start`, the same `mint()` path every production grant uses), one
   capability for `RX_OPERATOR_SUBJ` on `RX_WORLD_RES_CONTROL` (0x906) with
   `RX_WORLD_RIGHT_HALT` (`RX_RIGHT_EPOCH`: privileged, never delegable). No other

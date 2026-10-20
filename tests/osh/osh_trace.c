@@ -10,7 +10,7 @@
  * and on each pipeline request:     request <n> sha256=<hex of the request record cells>
  * and for driver-level events:      event <text>; the last line is always  event exit=<status>  (2 after a refusal)
  * Not modelled (nothing runs): the exit builtin, exit with too many arguments dropping the list, ^C, -c exact end of
- * input. INPUT_MAX models the AIENOS read-only input window (4096 bytes): a list buffer that would exceed it is
+ * input. INPUT_MAX models the Aienux read-only input window (4096 bytes): a list buffer that would exceed it is
  * refused, so above 4096 bytes this is not a reference for the Linux shell (its buffer is 1 MiB). Native mode needs
  * an AArch64 host, as every osh test does.
  */

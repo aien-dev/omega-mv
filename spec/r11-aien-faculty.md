@@ -21,7 +21,7 @@ Omega / authority / effects react to it, or do not
 
 `rx_aien.o` is compiled on its own and the build fails if it has any
 undefined `omega` symbol. AIEN reaches Omega only through objects, under
-capabilities the native AIENOS authority checks.
+capabilities the native Aienux authority checks.
 
 ## What runs
 

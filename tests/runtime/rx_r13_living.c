@@ -880,7 +880,7 @@ static int authority_sweep(Rig *r, uint64_t *swept, uint64_t *holders) {
     AienosCapRef office;
     if (aienos_cap_office(r->admin, &office) != 0) return -4;
     *swept = 0; *holders = 0;
-    /* Entry 0 is the AIENOS root office itself: the mint, not a holder. Every
+    /* Entry 0 is the Aienux root office itself: the mint, not a holder. Every
      * other entry starts on the boot generation and moves only on reclaim. */
     for (uint32_t id = 1; id < 1024; id++)
         for (uint64_t gen = office.generation; gen < office.generation + 8; gen++) {
@@ -1413,7 +1413,7 @@ static void stop(Rig *r) {
 }
 
 /* ---- COMPOSITION-2 in the living system (host phase) ----------------------
- * The living system's provisioned machine identity, its AIENOS authority and
+ * The living system's provisioned machine identity, its Aienux authority and
  * its durable home carry one goal at a time through rx_compose: Capability
  * Graph registration of digest-pinned Skills for this machine, route, two
  * staged J-Space candidates, AEGIS verify, World commit binder (seal), settle

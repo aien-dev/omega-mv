@@ -20,7 +20,7 @@
  * back against Cortex; every excluded object is classified with one reason
  * and checked intact; a tampered source must be caught.
  *
- * Part B. The real R11 AIEN faculty (rx_aien.o, native AIENOS authority) is
+ * Part B. The real R11 AIEN faculty (rx_aien.o, native Aienux authority) is
  * fed one regime's whole lifetime history, and then only the projection for
  * "why did this prediction fail". Both are scored against the planted cause.
  *

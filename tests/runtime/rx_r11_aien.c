@@ -16,7 +16,7 @@
  * plan, and Omega takes it up by itself. A control world without AIEN makes
  * the same move and stays on the old record.
  *
- * Authority is the native AIENOS capability authority.
+ * Authority is the native Aienux capability authority.
  */
 #include "runtime/aienos_cap.h"
 #include "runtime/rx_aien.h"

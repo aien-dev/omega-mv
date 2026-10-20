@@ -1,7 +1,7 @@
 /*
  * OMEGA_PLAN_REUSE -- plan IR and verified plan cache (spec/plan-reuse.md).
  *
- * Every instance has its own World and its own native AIENOS authority. The
+ * Every instance has its own World and its own native Aienux authority. The
  * test plays the outside: it holds the admin (to give the principal its
  * authority, and to revoke it), builds the World an instance starts from,
  * and publishes run tokens. Cognition (goal shape, retrieval, applicability,

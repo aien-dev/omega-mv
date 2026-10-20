@@ -161,7 +161,7 @@ includes building the whole-store view. The gate also requires the projection
 end-to-end to beat the whole-store *reasoning alone*, so the result does not
 rest on the cost of handing the store over.
 
-**Part B** uses the real R11 faculty (`rx_aien.o`, native AIENOS authority).
+**Part B** uses the real R11 faculty (`rx_aien.o`, native Aienux authority).
 Each of 8 histories covers one regime's lifetime (24 records under changing
 placements), interleaved with three other regimes. It ends in a failed
 prediction whose planted cause is a core-class change or drift. The history is

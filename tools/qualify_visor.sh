@@ -11,7 +11,7 @@
 # gate summary goes to stdout.
 #
 # Steps (all make / test runs wrapped in `flock $BENCH_LOCK`):
-#   0. the AIENOS capability library, rebuilt from `git archive` of the commit in
+#   0. the Aienux capability library, rebuilt from `git archive` of the commit in
 #      aienos.lock (AIENOS_REPO, default ~/workspace/aienos-repo), as
 #      tools/effect_cap64_receipt.sh and CI do; its identity goes into the receipt
 #   1. physics-free omega binary (build/q8r) + physics-free Visor suites and link checks
@@ -20,7 +20,7 @@
 #   4. the console campaign (runner) on the release binary, then on an ASan+UBSan build
 #   5. five gates -> verdict OMEGA_VISOR_V1_PASS / OMEGA_VISOR_V1_FAIL
 # Verdict PASS needs all five gates PASS, a tree that did not change during the run
-# (HEAD and each dirty file's sha256), the AIENOS library built from aienos.lock and the
+# (HEAD and each dirty file's sha256), the Aienux library built from aienos.lock and the
 # physics checkout at physics.lock. The ASan pass is recorded but, as before, does not
 # gate the verdict. Builds only into private OUT_DIRs; never touches build/ itself
 # (except the pre-existing test-m5 QEMU path, see non_claims).
@@ -155,7 +155,7 @@ rm -rf "$OUT"
 flock "$BENCH_LOCK" make OUT_DIR="$OUT" "${PF[@]}" "$OUT/omega" > "$LOGS/omega-build.log" 2>&1
 binary_rc=$?
 for t in "${FREE_SUITES[@]}" visor-authority-check visor-physics-free-check; do suite "$t" "$OUT" "${PF[@]}"; done
-# 2. runtime-linked suites (AIENOS capability library pinned by aienos.lock)
+# 2. runtime-linked suites (Aienux capability library pinned by aienos.lock)
 for t in "${LINKED_SUITES[@]}"; do suite "$t" "$OUT" "${RT[@]}"; done
 # 3. regression (CPU gates only)
 for t in "${REGRESSION[@]}"; do

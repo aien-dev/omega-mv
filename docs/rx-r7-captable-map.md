@@ -1,4 +1,4 @@
-# R7 design: host capability checks onto the AIENOS table
+# R7 design: host capability checks onto the Aienux table
 
 The mapping itself is `spec/r7-aienos-authority-mapping.md`. This note is the
 short version.
@@ -13,12 +13,12 @@ Grounded in:
 
 - host validation: `rx_caproot_validate` in `src/runtime/rx_caproot.c`, after
   the split that keeps `RxCapAdmin` off `RxWorld`
-- AIENOS table: `CapTable` in `crates/aienos-kernel/src/caps.rs` on aienos
+- Aienux table: `CapTable` in `crates/aienos-kernel/src/caps.rs` on aienos
   `main`, and `Handle` in `crates/aienos-kernel/src/abi.rs`
 
 ## What already matches
 
-| Host check | AIENOS table today |
+| Host check | Aienux table today |
 | --- | --- |
 | A reference is `{id, generation}` | `Handle` is `{index, generation}`. Generation 0 is never issued. |
 | A reused slot must not honor the old reference | `lookup` requires the slot generation to match. A stale handle is `InvalidHandle`. |
