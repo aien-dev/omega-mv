@@ -1,0 +1,53 @@
+--- a/tests/runtime/rx_plan_payback.c (research/e03-payback-246 @66e092ac)
++++ b/tests/runtime/rx_plan_payback.c (L168: calls pla_adapt)
+@@ -423,37 +423,26 @@
+         const uint8_t *parent = NULL;
+         uint32_t origin = PL_ORIGIN_SEARCH;
+         int adapted = 0;
++        /* L168 fix: search first, then the runtime repair (pla_adapt), which
++         * admits a repaired plan only when no longer than this search plan. */
++        p0 = cpu_ns();
++        pla_target_from_goal(&g, &tg);
++        int prc = pla_plan(&g_view, &g, &tg, MAX_EXPAND, &plan, &cost);
++        r->ph[PH_SEARCH] += cpu_ns() - p0;
+         if (c && !g_no_adapt) {
+-            /* Repair: for each candidate refused only on required state, plan
+-             * a prefix that reaches that state and keep the shortest whole plan. */
+             p0 = cpu_ns();
+-            for (uint32_t i = 0; i < rf.n; i++) {
+-                if (rf.ax[i] != PL_AX_STATE) continue;
+-                PlaTarget tt;
+-                PlaPlan prefix, rest;
+-                if (pla_target_from_template(rf.t[i], rf.slots[i], &tt) != 0) continue;
+-                if (pla_plan(&g_view, &g, &tt, MAX_EXPAND, &prefix, &cost) != 0) continue;
+-                if (pla_template_moves(rf.t[i], rf.slots[i], &rest) != 0) continue;
+-                if (prefix.n + rest.n > PLA_MAX_MOVES || (adapted && prefix.n + rest.n >= plan.n)) continue;
+-                plan = prefix;
+-                for (uint32_t k = 0; k < rest.n; k++) {
+-                    plan.mover[plan.n] = rest.mover[k];
+-                    plan.dest[plan.n] = rest.dest[k];
+-                    plan.to_floor[plan.n++] = rest.to_floor[k];
+-                }
++            PlaPlan rep;
++            int k = pla_adapt(&g_view, &g, rf.n, rf.t, rf.ax, (const RxObjRef(*)[PL_MAX_SLOTS])rf.slots,
++                              prc == 0 ? &plan : NULL, MAX_EXPAND, &rep, NULL, NULL, &cost);
++            if (k >= 0) {
++                plan = rep;
+                 adapted = 1;
+                 origin = PL_ORIGIN_ADAPTED;
+-                parent = rf.t[i]->semantic_id;
++                parent = rf.t[k]->semantic_id;
+             }
+             r->ph[PH_REPAIR] += cpu_ns() - p0;
+         }
+-        if (!adapted) {
+-            p0 = cpu_ns();
+-            pla_target_from_goal(&g, &tg);
+-            int prc = pla_plan(&g_view, &g, &tg, MAX_EXPAND, &plan, &cost);
+-            r->ph[PH_SEARCH] += cpu_ns() - p0;
+-            if (prc != 0) return -2;
+-        }
++        if (!adapted && prc != 0) return -2;
+         const uint64_t *cf = g_view.o[e->env.obj[PL_ENV_COGNITION].id].field;
+         p0 = cpu_ns();
+         int grc = pla_generalize(&g_view, &g, &plan, origin, parent, cf[0], &g_tmp, slots);
