@@ -64,6 +64,7 @@ void omega_gpu_w4_set_cta_budget(uint32_t ctas);
 void omega_gpu_w4_set_sched(int sched); /* -1 automatic */
 void omega_gpu_w4_set_coal(int coal);   /* -1 automatic */
 void omega_gpu_w4_set_pf(int pf);       /* -1 automatic; 1: next K step in flight while one decodes (speed3/w4-gemv) */
+void omega_gpu_w4_set_rows_small(uint32_t rows); /* 0 automatic; rows for launches with n <= 8192 when the shape is not forced */
 void omega_gpu_w4_test_set_mutant(int mutant);
 void omega_gpu_w4_spec_for(uint32_t k, uint32_t n, OmegaW4GemvSpec *spec); /* host only */
 const char *omega_gpu_w4_last_error(void);

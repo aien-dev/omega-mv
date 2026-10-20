@@ -33,7 +33,7 @@ typedef struct {
 static struct {
     OmegaGpuScratch x_buf, y_buf;
     OmegaGpuMem tab;
-    uint32_t cta_budget, lane_bytes, rows, warps;
+    uint32_t cta_budget, lane_bytes, rows, warps, rows_small;
     int sched, coal, pf, mutant;
     bool hooked;
     Slot cache[CACHE_SLOTS];
@@ -68,8 +68,16 @@ void omega_gpu_w4_set_cta_budget(uint32_t ctas) { omega_gpu_session_lock(); g.ct
 void omega_gpu_w4_set_sched(int sched) { omega_gpu_session_lock(); g.sched = sched; cache_clear_locked(); omega_gpu_session_unlock(); }
 void omega_gpu_w4_set_coal(int coal) { omega_gpu_session_lock(); g.coal = coal; cache_clear_locked(); omega_gpu_session_unlock(); }
 void omega_gpu_w4_set_pf(int pf) { omega_gpu_session_lock(); g.pf = pf; cache_clear_locked(); omega_gpu_session_unlock(); }
+void omega_gpu_w4_set_rows_small(uint32_t rows) { omega_gpu_session_lock(); g.rows_small = rows; cache_clear_locked(); omega_gpu_session_unlock(); }
 void omega_gpu_w4_test_set_mutant(int m) { omega_gpu_session_lock(); g.mutant = m; cache_clear_locked(); omega_gpu_session_unlock(); }
 
+/* a small unsigned from the environment, read once per slot (spec_for and grid_for run on every record) */
+static uint32_t env_u32(const char *name, int *seen, uint32_t *v) {
+    if (!*seen) { const char *s = getenv(name); *v = s ? (uint32_t)strtoul(s, NULL, 10) : 0u; *seen = 1; }
+    return *v;
+}
+static uint32_t env_rows_small(void) { static int seen; static uint32_t v; return env_u32("AIEN_OMEGA_W4_ROWS_SMALL", &seen, &v); }
+static uint32_t env_ctas(void) { static int seen; static uint32_t v; return env_u32("AIEN_OMEGA_W4_CTAS", &seen, &v); }
 /* pf default: AIEN_OMEGA_W4_PF=0|1|2 when set_pf was never called (read once), else 0 */
 static uint32_t env_pf(void) {
     static int v = -1;
@@ -81,11 +89,13 @@ static uint32_t env_pf(void) {
  * omega_gpu_fp8_api.c), the coalesced store when the round fits a warp, the pipelined decode. Sweep receipts:
  * ~/handoffs/2026-10-19-ab-fp8head-4bit.md. */
 void omega_gpu_w4_spec_for(uint32_t k, uint32_t n, OmegaW4GemvSpec *spec) {
-    (void)n;
     memset(spec, 0, sizeof *spec);
     spec->k = k;
     spec->lane_bytes = g.lane_bytes ? g.lane_bytes : (k % 1024u == 0 ? 16u : 8u);
     spec->rows = g.rows ? g.rows : 2u;
+    /* speed3: n <= 8192 (o_proj, down: n 5120) can take finer row groups so the last round of warps is nearly full;
+     * set_rows_small or AIEN_OMEGA_W4_ROWS_SMALL=1|2|4, only when the shape was not forced */
+    if (!g.rows && n <= 8192u) { const uint32_t rs = g.rows_small ? g.rows_small : env_rows_small(); if (rs == 1u || rs == 2u || rs == 4u) spec->rows = rs; }
     /* 8 warps (2026-10-19, graph timeline, 2 layers, 3 interleaved rounds, runs/g4r): mix + o + gate_up + down median
      * 1975.1 us at 16,2,8 vs 2006.6 at 16,2,16, 2107.9 at 16,4,4 (coal off), 2046.3 at 16,2,8 (coal off) */
     spec->warps = g.warps ? g.warps : 8u;
@@ -177,9 +187,10 @@ int omega_gpu_w4_tensor_entry(const OmegaGpuW4Tensor *t, uint64_t *w_va, uint64_
 
 /* grid: up to the CTA budget, split so every warp gets the same number of row groups, at least two */
 static uint32_t grid_for(const OmegaW4GemvSpec *spec, uint32_t n) {
-    const uint32_t RG = n / spec->rows, budget = g.cta_budget ? g.cta_budget : OMEGA_GPU_W4_CTAS;
+    const uint32_t forced = g.cta_budget ? g.cta_budget : env_ctas(); /* AIEN_OMEGA_W4_CTAS: whole-model sweeps */
+    const uint32_t RG = n / spec->rows, budget = forced ? forced : OMEGA_GPU_W4_CTAS;
     uint32_t grid_x = (RG + spec->warps - 1u) / spec->warps;
-    if (!g.cta_budget) { uint32_t waves = (grid_x + budget - 1u) / budget; if (waves < 2u) waves = 2u; grid_x = (grid_x + waves - 1u) / waves; }
+    if (!forced) { uint32_t waves = (grid_x + budget - 1u) / budget; if (waves < 2u) waves = 2u; grid_x = (grid_x + waves - 1u) / waves; }
     if (grid_x > budget) grid_x = budget;
     return grid_x ? grid_x : 1u;
 }

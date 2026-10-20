@@ -414,6 +414,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--w4-sched") == 0 && i + 1 < argc) omega_gpu_w4_set_sched(atoi(argv[++i]));
         else if (strcmp(argv[i], "--w4-coal") == 0 && i + 1 < argc) omega_gpu_w4_set_coal(atoi(argv[++i]));
         else if (strcmp(argv[i], "--w4-pf") == 0 && i + 1 < argc) omega_gpu_w4_set_pf(atoi(argv[++i]));
+        else if (strcmp(argv[i], "--w4-rows-small") == 0 && i + 1 < argc) omega_gpu_w4_set_rows_small((uint32_t)atoi(argv[++i]));
         else { printf("usage: %s [--host-only] [--layers N (<= 8)] [--mask M] [--reps R] [--tl-reps T (<= 257)] [--fp8-head] [--w4] [--w4-head]\n", argv[0]); return 2; }
     }
     if (layers == 0 || layers > 8 || reps == 0 || tl_reps == 0 || tl_reps > 257) { printf("layers 1..8, reps >= 1, tl-reps 1..257\n"); return 2; }
