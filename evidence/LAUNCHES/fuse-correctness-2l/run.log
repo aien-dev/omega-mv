@@ -1,0 +1,41 @@
+dgraph prefetch 0 (red 0)
+fp8 knobs: variant 1 barrier 0 (wfi+inval_all) cta_budget 0 shape 0/0/0 cached 0
+model built in 1.4 s (layers 2, vocab 151936, pos 300)
+ok: A (baseline, host glue) 3 reps ran
+ok: A deterministic over 3 reps (token 62700)
+A: token 62700 logit 5.820572, runner-up 107672 logit 5.779164 (gap 0.0414)
+ok: C (one list per token) 3 reps ran: 22 launches in 1 submission(s)
+ok: C deterministic over 3 reps (token 62700)
+A vs C: token 62700 vs 62700, logits max |d| 1.19e-06 (scale 6.03, rel 1.98e-07, tol 1e-04), x max rel 1.4e-07, hidden max rel 1.57e-07
+ok: argmax token identical: A 62700, C 62700
+ok: logits A vs C within 1e-04 of max|logit| (max |d| 1.19e-06, scale 6.03)
+ok: B (one launch per submission) 3 reps ran: 22 launches in 22 submissions
+ok: B bit-identical to C (x, hidden, logits, token) in every rep
+ok: negative control: SWIGLU mutant fails the comparison (token 107672 vs 62700, max |d| 1.35 = 0.223 of scale)
+ok: negative control: COMBINE mutant fails the comparison (token 62700 vs 62700, max |d| 0.124 = 0.0205 of scale)
+ok: C after the mutants bit-identical to the first C
+ok: timeline: rc 0, 22 stamps for 22 launches, monotonic 1, span 4056.9 us <= chip 4078.9 us, token and logits unchanged
+TIMELINE (2 layers, pos 300): norm x1 6.4 us qkv x2 139.2 us attn x2 146.1 us o_proj x2 123.2 us res_add x2 10.7 us router x2 50.8 us gate_up x2 301.5 us swiglu x2 6.8 us down x2 181.3 us combine_norm x2 20.4 us lm_head x1 3050.7 us argmax x2 19.8 us
+ok: timeline off: token rc 0, stamps accessor refuses (-1)
+ok: fuse 1: fused list ran 3 reps (ok)
+ok: fuse 1: 20 launches per token (unfused 22, 2 fewer)
+ok: fuse 1: fused list BIT-IDENTICAL to the unfused list (x, hidden, logits, token) in every rep
+ok: fuse 1: negative control mutant 4 (SWIGLU epilogue scale 1) breaks the identity (rc 0, token 77077 vs 62700)
+ok: fuse 1: fused list after the mutants still bit-identical
+FUSE 1 (median of 3): unfused 22 launches chip 3942.1 us (host 3949.0) | fused 20 launches chip 4186.9 us (host 4232.9) | chip saved -244.8 us/token
+ok: fuse 2: fused list ran 3 reps (ok)
+ok: fuse 2: 20 launches per token (unfused 22, 2 fewer)
+ok: fuse 2: fused list BIT-IDENTICAL to the unfused list (x, hidden, logits, token) in every rep
+ok: fuse 2: negative control mutant 5 (o_proj adds into o, not x) breaks the identity (rc 0, token 70886 vs 62700)
+ok: fuse 2: fused list after the mutants still bit-identical
+FUSE 2 (median of 3): unfused 22 launches chip 3942.1 us (host 3949.0) | fused 20 launches chip 3920.6 us (host 4045.2) | chip saved 21.5 us/token
+ok: fuse 3: fused list ran 3 reps (ok)
+ok: fuse 3: 18 launches per token (unfused 22, 4 fewer)
+ok: fuse 3: fused list BIT-IDENTICAL to the unfused list (x, hidden, logits, token) in every rep
+ok: fuse 3: negative control mutant 4 (SWIGLU epilogue scale 1) breaks the identity (rc 0, token 77077 vs 62700)
+ok: fuse 3: negative control mutant 5 (o_proj adds into o, not x) breaks the identity (rc 0, token 70886 vs 62700)
+ok: fuse 3: fused list after the mutants still bit-identical
+FUSE 3 (median of 3): unfused 22 launches chip 3942.1 us (host 3949.0) | fused 18 launches chip 3918.3 us (host 3930.2) | chip saved 23.8 us/token
+PER TOKEN (median of 3, 2 layers): A host-glue 13 launches 5105.2 us | C one list 22 launches 3949.0 us (chip 3942.1 us, record 8.5 us) | B per-launch submits 22 launches 5344.3 us (chip sum 5331.8 us)
+chip: 29 checks, 0 failed: PASS
+RC=0
