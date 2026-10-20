@@ -1,0 +1,20 @@
+21:53:31Z model /home/drakestapleton/models/qwen3-30b-a3b-instruct-2507-fp8 bin /home/drakestapleton/workspace/targets/sc-engine/release/engine out ./30b-host-20261020T2153Z load 23.06 23.22 22.20 memavail_kb 36302392
+21:53:31Z trace (host reference through the ring, routes + argmax)
+trace: 66 positions, generated "A four-stroke engine keeps its pistons in time through a precisely synchronized camshaft, which is driven by the crankshaft via a timing belt, chain, or gears. The camshaft controls the"
+{"cache":"CacheStats { lookups: 25344, hits: 10999, misses: 14345, fill_bytes: 67696464960, fill_s: 64.68762838099998, prefetched: 0 }","generated":[32,3040,5477,7441,4712,13598,1181,23875,2382,304,882,1526,264,23638,21466,6592,96413,11,892,374,16227,553,279,50258,96413,4566,264,18405,19125,11,8781,11,476,53160,13,576,6592,96413,11574,279],"generated_text":"A four-stroke engine keeps its pistons in time through a precisely synchronized camshaft, which is driven by the crankshaft via a timing belt, chain, or gears. The camshaft controls the","host_ms_per_token":2438.400999,"positions":66,"prompt_tokens":26,"ring_slots":512}
+21:56:22Z plan from trace (head = union of routed experts per layer over 66 positions)
+plan: 48 layers, head sizes [95, 99, 83, 85, 79, 78, 66, 65, 70, 69, 71, 80, 80, 78, 68, 72, 73, 77, 64, 60, 66, 61, 61, 77, 73, 74, 72, 68, 69, 78, 59, 56, 66, 60, 70, 79, 78, 74, 67, 67, 69, 72, 77, 70, 73, 65, 79, 84] (min 56 max 99), buffers 2, synthetic true
+21:56:22Z schedule + host check
+schedule: 3168 beats, 3476 parts, 2 buffers x 99 slots x 4719168 bytes; check PASS: complete true acyclic true no_collision true bytes/beat 264273408..467197632 total 1082652645888
+21:56:22Z movement engine alone, fixed head 8 experts x 48 layers, buffers 2, beat 0/2000/4000 us
+plan: 48 layers, head sizes [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8] (min 8 max 8), buffers 2, synthetic true
+schedule: 1920 beats, 384 parts, 2 buffers x 8 slots x 4719168 bytes; check PASS: complete true acyclic true no_collision true bytes/beat 37753344..37753344 total 72486420480
+21:56:46Z move beat 0us: {"beats":1920,"misfires":0,"late_beats":0,"gap_us":20.928,"fill_us":9209.204,"beat_us":9221.076,"gbps":3.042808451409353}
+21:57:08Z move beat 2000us: {"beats":1920,"misfires":0,"late_beats":0,"gap_us":28.32,"fill_us":9879.306,"beat_us":9892.09,"gbps":3.410662587215158}
+21:57:29Z move beat 4000us: {"beats":1920,"misfires":0,"late_beats":0,"gap_us":24.672,"fill_us":9665.752,"beat_us":9668.713,"gbps":3.3613570532984527}
+21:57:55Z move b3 beat 2000us: {"beats":1920,"late_beats":0,"gap_us":26.096,"fill_us":10222.063,"beat_us":10230.623}
+21:57:55Z both engines on the host (identical tokens gate vs the trace)
+22:04:47Z loop rc 0: identity gate PASS: 66/66 tokens, routes identical at 66/66 positions
+22:04:47Z today's path (18091) on the same prompt
+22:04:48Z today: {"same_prefix_ids":0,"of":41,"today_ms":1.664065}
+22:04:48Z done
