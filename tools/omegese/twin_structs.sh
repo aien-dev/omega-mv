@@ -2,7 +2,9 @@
 # tools/omegese/twin_structs.sh <omegese> <omega_emit> <oscc> <checker2> [<table.md>] -- the struct twin gate
 # (docs/one_layer/OMEGESE.md section 3, "Structs"). Each of the six twins in tests/one_layer/omegese/structs
 # is one program written twice, in OSC and in Omegese. Both paths must give the same IR bytes:
-#   sha256(oscc t.osc) == sha256(omega_emit emit (omegese emit t.omegese)),
+#   oscc t.osc ir_sha256 == sha256(omega_emit emit (omegese emit t.omegese)),
+# where oscc runs without OUT: its ir_sha256 is the SHA-256 of the encoded IR bytes (osc_ir_digest), and
+# the unit container that OUT writes refuses struct-reference parameters (twins 4 and 5),
 # and checker2 must ACCEPT the unit Omegese made. With <table.md>, the 12 digests are written there as a
 # Markdown table. Exit 0 only when all six are identical and accepted.
 set -euo pipefail
@@ -17,9 +19,9 @@ rows=""
 for o in "$ROOT"/tests/one_layer/omegese/structs/t*.omegese; do
   id="$(basename "$o" .omegese)" s="${o%.omegese}.osc"
   covers="$(sed -n '2s/^\/\/ Omegese struct twin [0-9] (\(.*\)): .*/\1/p' "$s")"
-  if ! "$OSCC" "$s" "$T/$id.osc" > "$T/$id.oscc" 2>&1; then bad "$id: oscc refused: $(head -2 "$T/$id.oscc")"; continue; fi
-  hs="$(sha256sum < "$T/$id.osc.ir" | cut -d' ' -f1)"
-  grep -qx "ir_sha256=$hs" "$T/$id.oscc" || bad "$id: oscc printed $(grep ir_sha256 "$T/$id.oscc"), its IR file hashes to $hs"
+  if ! "$OSCC" "$s" > "$T/$id.oscc" 2>&1; then bad "$id: oscc refused: $(head -2 "$T/$id.oscc")"; continue; fi
+  hs="$(sed -n "s/^ir_sha256=//p" "$T/$id.oscc")"
+  [ -n "$hs" ] || { bad "$id: oscc printed no ir_sha256"; continue; }
   if ! "$G" emit "$o" "$T/$id.json" > "$T/$id.g" 2>&1; then bad "$id: omegese: $(cat "$T/$id.g")"; continue; fi
   if ! "$OME" emit "$T/$id.json" "$T/$id.e.ir" > "$T/$id.e" 2>&1; then bad "$id: omega_emit: $(cat "$T/$id.e")"; continue; fi
   hg="$(sha256sum < "$T/$id.e.ir" | cut -d' ' -f1)"
