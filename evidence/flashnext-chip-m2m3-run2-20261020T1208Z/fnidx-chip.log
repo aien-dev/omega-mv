@@ -1,0 +1,31 @@
+chip SCORE  nb 1      grid 1  : ok, 82 insns, 28 regs, median 75.4 us (0.0 GB/s of block keys) over 30 launches
+chip SCORE  nb 7      grid 1  : ok, 82 insns, 28 regs, median 75.0 us (0.0 GB/s of block keys) over 30 launches
+chip SCORE  nb 256    grid 1  : ok, 82 insns, 28 regs, median 103.2 us (1.3 GB/s of block keys) over 30 launches
+chip SCORE  nb 257    grid 2  : ok, 82 insns, 28 regs, median 103.0 us (1.3 GB/s of block keys) over 30 launches
+chip SCORE  nb 700    grid 3  : ok, 82 insns, 28 regs, median 103.2 us (3.5 GB/s of block keys) over 30 launches
+chip SCORE mutant 1: caught (661 of 700 scores out of tolerance, worst 827.433 of tol)
+chip SCORE mutant 2: caught (360 of 700 scores out of tolerance, worst 437.096 of tol)
+chip SCORE mutant 3: caught (663 of 700 scores out of tolerance, worst 10313.702 of tol)
+chip SCORE  nb 4096   grid 16 : ok, 82 insns, 28 regs, median 103.2 us (20.3 GB/s of block keys) over 30 launches
+chip SCORE  nb 65536  grid 256: ok, 82 insns, 28 regs, median 688.1 us (48.8 GB/s of block keys) over 30 launches
+chip SELECT nb 1      tail 0 kind 0: ok (4 words equal), 237 insns, 42 regs, median 74.2 us over 30 launches
+chip SELECT nb 300    tail 1 kind 0: ok (1201 words equal), 237 insns, 42 regs, median 74.0 us over 30 launches
+chip SELECT nb 513    tail 2 kind 0: ok (2050 words equal), 237 insns, 42 regs, median 75.3 us over 30 launches
+chip SELECT nb 1000   tail 0 kind 1: ok (2048 words equal), 237 insns, 42 regs, median 102.7 us over 30 launches
+chip SELECT nb 2000   tail 3 kind 2: ok (2051 words equal), 237 insns, 42 regs, median 88.3 us over 30 launches
+chip SELECT mutant 6 at nb 2000: caught (word 2048: got 4294967295 want 8000 (of 2051))
+chip SELECT mutant 7 at nb 2000: caught (word 0: got 7972 want 8 (of 2051))
+chip SELECT nb 2000   tail 0 kind 3: ok (2048 words equal), 237 insns, 42 regs, median 87.8 us over 30 launches
+chip SELECT mutant 5 at nb 2000: caught (word 976: got 2940 want 2968 (of 2048))
+FAIL: chip SELECT mutant 6 at nb 2000 NOT caught
+chip SELECT mutant 6 at nb 2000: MISSED (2048 words equal)
+chip SELECT mutant 7 at nb 2000: caught (word 0: got 7968 want 0 (of 2048))
+chip SELECT nb 6000   tail 0 kind 1: ok (2048 words equal), 237 insns, 42 regs, median 171.4 us over 30 launches
+chip SELECT mutant 4 at nb 6000: caught (word 0: got 4294967295 want 60 (of 2048))
+FAIL: chip SELECT mutant 6 at nb 6000 NOT caught
+chip SELECT mutant 6 at nb 6000: MISSED (2048 words equal)
+chip SELECT mutant 7 at nb 6000: caught (word 0: got 19872 want 60 (of 2048))
+chip SELECT nb 20000  tail 1 kind 0: ok (2049 words equal), 237 insns, 42 regs, median 323.3 us over 30 launches
+chip SELECT nb 65536  tail 3 kind 0: ok (2051 words equal), 237 insns, 42 regs, median 3024.4 us over 30 launches
+chip SELECT nb 65536  tail 0 kind 1: ok (2048 words equal), 237 insns, 42 regs, median 3757.6 us over 30 launches
+gpu_fnidx_test: 45 checks, 2 failed: FAIL

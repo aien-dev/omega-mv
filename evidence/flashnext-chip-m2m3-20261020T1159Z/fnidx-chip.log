@@ -1,0 +1,18 @@
+FAIL: SCORE nb 1: buffers (alloc without open device)
+FAIL: SCORE nb 7: buffers (alloc without open device)
+FAIL: SCORE nb 256: buffers (alloc without open device)
+FAIL: SCORE nb 257: buffers (alloc without open device)
+FAIL: SCORE nb 700: buffers (alloc without open device)
+FAIL: SCORE nb 4096: buffers (alloc without open device)
+FAIL: SCORE nb 65536: buffers (alloc without open device)
+FAIL: SELECT nb 1: buffers
+FAIL: SELECT nb 300: buffers
+FAIL: SELECT nb 513: buffers
+FAIL: SELECT nb 1000: buffers
+FAIL: SELECT nb 2000: buffers
+FAIL: SELECT nb 2000: buffers
+FAIL: SELECT nb 6000: buffers
+FAIL: SELECT nb 20000: buffers
+FAIL: SELECT nb 65536: buffers
+FAIL: SELECT nb 65536: buffers
+gpu_fnidx_test: 17 checks, 17 failed: FAIL

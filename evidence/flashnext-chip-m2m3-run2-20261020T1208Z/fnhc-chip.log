@@ -1,0 +1,12 @@
+chip NORM     grid 4: ok, 183 insns, 31 regs, median 102.8 us over 30 launches
+chip NORM     mutant 1: caught (10240 + 0 elements out of tolerance, worst 9.95e-01)
+chip NORM     mutant 6: caught (10240 + 0 elements out of tolerance, worst 1.95e-04)
+chip ACT      grid 2: ok, 34 insns, 12 regs, median 103.0 us over 30 launches
+chip ACT      mutant 2: caught (320 + 0 elements out of tolerance, worst 4.62e+00)
+chip COMBINE  grid 10: ok, 87 insns, 24 regs, median 102.7 us over 30 launches
+chip COMBINE  mutant 3: caught (2560 + 0 elements out of tolerance, worst 2.62e+03)
+chip COMBINE  mutant 4: caught (0 + 4 elements out of tolerance, worst 9.89e-01)
+FAIL: chip INJECT: rc 0 () 2 + 0 elements out of tolerance, worst 6.86e-06, 0 poison words
+chip INJECT   grid 40: MISMATCH, 33 insns, 14 regs, median 102.8 us over 30 launches
+chip INJECT   mutant 5: caught (7680 + 0 elements out of tolerance, worst 2.55e+02)
+gpu_fnhc_test: 14 checks, 1 failed: FAIL
