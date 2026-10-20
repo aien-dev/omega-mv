@@ -105,6 +105,20 @@ int pla_generalize(const PlView *v0, const PlaGoal *g, const PlaPlan *p, uint32_
 /* The template's moves under a binding, in plan order (read from its graph). */
 int pla_template_moves(const PlanTemplate *t, const RxObjRef *slots, PlaPlan *out);
 
+/* Adaptation (repair) of templates refused only on the World state they need.
+ * For each i with ax[i] == PL_AX_STATE: search a prefix that reaches t[i]'s
+ * required state under slots[i], then t[i]'s own moves; keep the shortest
+ * whole plan. It is admitted only when it is no longer than `searched`, the
+ * plan pla_plan found for the goal itself from the same view (pass NULL only
+ * when that search found none within its budget). Returns the index of the
+ * admitted parent, with out = the repaired plan and *prefix_n its prefix; -1
+ * when none is admitted (out untouched): the caller keeps the search plan.
+ * *repaired_n receives the shortest repair found, admitted or not (0 none).
+ * The parent is not marked STALE: it was refused, not reused and failed. */
+int pla_adapt(const PlView *v, const PlaGoal *g, uint32_t n, PlanTemplate *const *t, const PlAxis *ax,
+              const RxObjRef (*slots)[PL_MAX_SLOTS], const PlaPlan *searched, uint64_t max_expand,
+              PlaPlan *out, uint32_t *prefix_n, uint32_t *repaired_n, PlCost *cost);
+
 /* Domain legality: every live unit rests on the floor or on a live unit, no
  * unit carries two, no cycle, and its self reference is intact. */
 int pla_legal(const PlView *v);

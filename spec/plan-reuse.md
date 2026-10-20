@@ -144,6 +144,11 @@ step of the plan to be legal and for the success predicate to follow.
 Adaptation: when a template of the goal's shape fails only on required state,
 the planner searches for a short prefix that reaches the template's required
 state, then runs prefix and template. Adaptation overhead is reported.
+The repaired plan is admitted only when it is no longer than the plan search
+finds for the goal itself from the same World; otherwise the search plan is
+run and stored (pla_adapt). Without that guard a merge goal repaired from the
+reverse template ran and retained 12 moves where search finds 9 (E03 payback,
+2026-10-19). The parent is not marked STALE: it was refused, not reused.
 
 ## 7. Gate OMEGA_PLAN_REUSE_PASS (binding)
 

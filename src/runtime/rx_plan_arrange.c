@@ -655,3 +655,36 @@ int pla_template_moves(const PlanTemplate *t, const RxObjRef *slots, PlaPlan *ou
     }
     return 0;
 }
+
+int pla_adapt(const PlView *v, const PlaGoal *g, uint32_t n, PlanTemplate *const *t, const PlAxis *ax,
+              const RxObjRef (*slots)[PL_MAX_SLOTS], const PlaPlan *searched, uint64_t max_expand,
+              PlaPlan *out, uint32_t *prefix_n, uint32_t *repaired_n, PlCost *cost) {
+    int best = -1;
+    uint32_t pre = 0;
+    PlaPlan plan;
+    plan.n = 0;
+    for (uint32_t i = 0; i < n; i++) {
+        if (ax[i] != PL_AX_STATE) continue;
+        PlaTarget tt;
+        PlaPlan prefix, rest;
+        if (pla_target_from_template(t[i], slots[i], &tt) != 0) continue;
+        if (pla_plan(v, g, &tt, max_expand, &prefix, cost) != 0) continue;
+        if (pla_template_moves(t[i], slots[i], &rest) != 0) continue;
+        if (prefix.n + rest.n > PLA_MAX_MOVES || (best >= 0 && prefix.n + rest.n >= plan.n)) continue;
+        plan = prefix;
+        pre = prefix.n;
+        for (uint32_t k = 0; k < rest.n; k++) {
+            plan.mover[plan.n] = rest.mover[k];
+            plan.dest[plan.n] = rest.dest[k];
+            plan.to_floor[plan.n++] = rest.to_floor[k];
+        }
+        best = (int)i;
+    }
+    if (repaired_n) *repaired_n = best >= 0 ? plan.n : 0;
+    /* The guard: a repair longer than search's own plan for this goal is
+     * negative transfer; once stored it would be reused at that length. */
+    if (best < 0 || (searched && plan.n > searched->n)) return -1;
+    *out = plan;
+    if (prefix_n) *prefix_n = pre;
+    return best;
+}

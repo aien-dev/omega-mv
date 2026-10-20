@@ -477,34 +477,24 @@ static int solve(Env *e, PlCache *c, int mode, Trial *t) {
         const uint8_t *parent = NULL;
         uint32_t origin = PL_ORIGIN_SEARCH;
         int adapted = 0;
+        pla_target_from_goal(&g, &tg);
+        t->plan_rc = pla_plan(&g_view, &g, &tg, MAX_EXPAND, &plan, &t->cost);
         if (mode == MODE_WARM_ADAPT) {
-            /* For each candidate refused only on the World state it needs:
-             * reach that state, then run it. Keep the shortest whole plan. */
-            for (uint32_t i = 0; i < rf->n; i++) {
-                if (rf->ax[i] != PL_AX_STATE) continue;
-                PlaTarget tt;
-                PlaPlan prefix, rest;
-                if (pla_target_from_template(rf->t[i], rf->slots[i], &tt) != 0) continue;
-                if (pla_plan(&g_view, &g, &tt, MAX_EXPAND, &prefix, &t->cost) != 0) continue;
-                if (pla_template_moves(rf->t[i], rf->slots[i], &rest) != 0) continue;
-                if (prefix.n + rest.n > PLA_MAX_MOVES || (adapted && prefix.n + rest.n >= plan.n)) continue;
-                plan = prefix;
-                t->prefix_moves = prefix.n;
-                for (uint32_t k = 0; k < rest.n; k++) {
-                    plan.mover[plan.n] = rest.mover[k];
-                    plan.dest[plan.n] = rest.dest[k];
-                    plan.to_floor[plan.n++] = rest.to_floor[k];
-                }
+            /* Candidates refused only on the World state they need: reach
+             * that state, then run them; admitted only when no longer than
+             * the search plan. */
+            PlaPlan rep;
+            int k = pla_adapt(&g_view, &g, rf->n, rf->t, rf->ax, (const RxObjRef(*)[PL_MAX_SLOTS])rf->slots,
+                              t->plan_rc == 0 ? &plan : NULL, MAX_EXPAND, &rep, &t->prefix_moves, NULL,
+                              &t->cost);
+            if (k >= 0) {
+                plan = rep;
                 adapted = 1;
                 origin = PL_ORIGIN_ADAPTED;
-                parent = rf->t[i]->semantic_id;
+                parent = rf->t[k]->semantic_id;
             }
         }
-        if (!adapted) {
-            pla_target_from_goal(&g, &tg);
-            t->plan_rc = pla_plan(&g_view, &g, &tg, MAX_EXPAND, &plan, &t->cost);
-            if (t->plan_rc != 0) { cog_end(t, w0, c0, i0); return -2; }
-        }
+        if (!adapted && t->plan_rc != 0) { cog_end(t, w0, c0, i0); return -2; }
         const uint64_t *cf = g_view.o[e->env.obj[PL_ENV_COGNITION].id].field;
         t->gen_rc = pla_generalize(&g_view, &g, &plan, origin, parent, cf[0], &g_tmp, t->slots);
         if (t->gen_rc != 0) { cog_end(t, w0, c0, i0); return -3; }
