@@ -151,7 +151,7 @@ static void host_only(void) {
     for (size_t i = 0; i < 3; i++)
         for (uint32_t lb = 8; lb <= 16; lb += 8)
             for (uint32_t rows = 1; rows <= 4; rows *= 2)
-                for (uint32_t pf = 0; pf <= 1; pf++)
+                for (uint32_t pf = 0; pf <= 2; pf++)
                     for (uint32_t coal = 0; coal <= 1; coal++) {
                         OmegaW4GemvSpec s = base_spec(ks[i], lb, rows, 8, 1, coal); s.pf = pf;
                         static BlackwellIRProgram prog;
@@ -247,9 +247,13 @@ static void sim_battery(void) {
         size_t bad = 0; double worst = rc == 0 ? parity(&t, x, y, &bad) : INFINITY;
         CHECK(rc == 0 && bad == 0, "sim n %u k %u lb %u rows %u warps %u sched %u coal %u: %s worst %.2e bad %zu", t.n, t.k, s.lane_bytes, s.rows, s.warps, s.sched, s.coal, rc ? msg : "ok", worst, bad);
         if (rc == 0) { /* speed3 pf: the same arithmetic in the same order, so the outputs must be bit-identical */
-            float *y1 = malloc(t.n * 4); OmegaW4GemvSpec sp = s; sp.pf = 1;
-            const int prc = sim_gemv(&sp, &t, x, y1, msg, sizeof msg);
-            CHECK(prc == 0 && memcmp(y, y1, (size_t)t.n * 4) == 0, "sim pf 1 bit-identical to pf 0: n %u k %u lb %u rows %u warps %u coal %u: %s", t.n, t.k, s.lane_bytes, s.rows, s.warps, s.coal, prc ? msg : "ran");
+            float *y1 = malloc(t.n * 4);
+            for (uint32_t pfv = 1; pfv <= 2; pfv++) {
+                OmegaW4GemvSpec sp = s; sp.pf = pfv; static BlackwellIRProgram bp;
+                if (omega_blackwell_codegen_w4_gemv_prog(&sp, &bp) != 0) { printf("  sim pf %u n %u k %u lb %u rows %u: over the instruction or register budget, skipped\n", pfv, t.n, t.k, s.lane_bytes, s.rows); continue; }
+                const int prc = sim_gemv(&sp, &t, x, y1, msg, sizeof msg);
+                CHECK(prc == 0 && memcmp(y, y1, (size_t)t.n * 4) == 0, "sim pf %u bit-identical to pf 0: n %u k %u lb %u rows %u warps %u coal %u: %s", pfv, t.n, t.k, s.lane_bytes, s.rows, s.warps, s.coal, prc ? msg : "ran");
+            }
             free(y1);
         }
         if (i == 6) /* mutants on one shape: each must change y past the tolerance (or fail to run) */

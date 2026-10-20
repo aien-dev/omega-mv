@@ -59,6 +59,10 @@ static int bw_sb_lint(const BlackwellIRProgram *p, char *msg, size_t ml) {
                 snprintf(msg, ml, "insn %zu (op %d) overwrites R%d still pending (write 0x%x, read 0x%x)", i, (int)x->op, dlo + k, s.w[dlo + k], s.r[dlo + k]);
                 rc = -1;
             }
+            if (x->op == BW_IR_EXIT && !x->predicate_p0)
+                for (int g = 0; g < SBL_REGS && rc == 0; g++) if (s.w[g]) {
+                    snprintf(msg, ml, "insn %zu EXIT with R%d still pending on barrier mask 0x%x", i, g, s.w[g]); rc = -1;
+                }
             if (rc) break;
             if (wb != 7u) for (int k = 0; k < dc; k++) s.w[dlo + k] |= (uint8_t)(1u << wb);
             if (rb != 7u)

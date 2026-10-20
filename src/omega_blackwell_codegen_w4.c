@@ -231,7 +231,7 @@ static int spec_ok(const OmegaW4GemvSpec *s) {
     if (s->warps < 1 || s->warps > 32) return 0;
     if (s->k == 0 || s->k > OMEGA_W4_MAX_K || s->k % (64u * s->lane_bytes)) return 0;
     if (s->mutant < 0 || s->mutant > 7 || (s->mutant == 6 && !s->coal) || (s->mutant == 7 && !s->pf)) return 0;
-    if (s->sched > 1 || s->coal > 1 || s->pf > 1) return 0;
+    if (s->sched > 1 || s->coal > 1 || s->pf > 2) return 0;
     if (s->coal && s->warps * s->rows > 32u) return 0;
     if ((uint64_t)(s->rows - 1) * (s->k / 2u) + s->lane_bytes >= (1u << 23)) return 0; /* 24-bit signed LDG immediate */
     return 1;
@@ -286,6 +286,7 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
     const uint32_t lg_shift = LB == 8 ? 1u : 0u;                /* lane -> group within the step */
     const BlackwellIROpcode ldw = LB == 16 ? BW_IR_LDG_E_128 : BW_IR_LDG_E_64;
     omega_bw_ir_init(prog);
+    if (spec->pf == 2 && omega_bw_ir_set_gpr_limit(prog, 200u) != 0) return -1; /* x' twice: past the default 128 */
     Em em; memset(&em, 0, sizeof em); em.p = prog;
     Em *e = &em;
 
@@ -334,12 +335,12 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
         uc = V(e); rgx = V(e); um1 = V(e); negU = V(e); negn = V(e); okw = V(e); tq = V(e); slb = V(e); stog = V(e);
         so = V(e); sa = V(e); wl1 = V(e); val = V(e); row = V(e); skip = V(e);
     }
-    const int pf = spec->pf != 0;
+    const int pf = (int)spec->pf; /* 0 classic; 1 weights + scales of step s + 1 in flight; 2 also its x' */
     int wqB[8], swB[8], xqB[8], two = NOREG, rgn2 = NOREG;
     for (int q = 0; q < 8; q++) wqB[q] = swB[q] = xqB[q] = NOREG;
     if (pf) { /* set B, and the clamp registers the classic coal-off kernel does not need */
         for (uint32_t r = 0; r < R; r++) { wqB[r] = LB == 16 ? V128(e) : V64(e); swB[r] = V(e); }
-        for (uint32_t q = 0; q < XQ; q++) xqB[q] = V128(e);
+        if (pf == 2) for (uint32_t q = 0; q < XQ; q++) xqB[q] = V128(e);
         two = V(e); rgn2 = V(e);
         if (!coal) { rgx = V(e); um1 = V(e); negU = V(e); okw = V(e); tq = V(e); }
     }
@@ -362,20 +363,23 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
 #define W4_CLAMP(src) do { imadi(e, tq, src, 0, 1, negU); shr(e, okw, tq, 0, 31); imadi(e, tq, one, 0, 1, tq); \
                            imadr(e, rgx, okw, tq, um1); /* src < RG ? src : RG - 1 */ } while (0)
 #define W4_PTRS() do { imadw(e, pw, rgx, R * ROWB, wbase); imadw(e, pw, wlane, 1, pw); \
-                       imadw(e, ps, rgx, R * ROWS_S, sbase); imadw(e, ps, slane, 1, ps); imadw(e, pxc, one, 0, xlane); } while (0)
-    /* one K step's loads into set (WQ, SW, XQ) on scoreboard SB, then the load pointers move to the next step */
-#define W4_LOAD(WQ, SW, XQ_, SB) do { \
-        for (uint32_t r = 0; r < R; r++) imadw(e, psr[r], one, r * ROWS_S, ps); \
-        e->pf_sb = (SB); int first_ = 1; \
-        for (uint32_t q = 0; q < XQ; q++) { ldg_pf(e, BW_IR_LDG_E_128, XQ_[q], pxc, q * 16u, udesc, first_); first_ = 0; } \
-        for (uint32_t r = 0; r < R; r++) ldg_pf(e, ldw, WQ[r], pw, r * ROWB, udesc, 0); \
-        for (uint32_t r = 0; r < R; r++) ldg_pf(e, BW_IR_LDG_E, SW[r], psr[r], 0, udesc, 0); \
-        imadw(e, pw, one, 32u * LB, pw); imadw(e, pxc, one, 32u * WPL * 4u, pxc); imadw(e, ps, one, spec->mutant == 2 ? 0u : GPS, ps); \
+                       imadw(e, ps, rgx, R * ROWS_S, sbase); imadw(e, ps, slane, 1, ps); if (pf != 1) imadw(e, pxc, one, 0, xlane); } while (0)
+    /* one batch: x' of a step into XQ_ on scoreboard SBX (LX), weights + scales of a step into (WQ, SW) on SBW (LW); then the
+     * pointers of what was loaded move to the next step */
+#define W4_LOAD(LX, XQ_, SBX, LW, WQ, SW, SBW) do { \
+        if (LW) for (uint32_t r = 0; r < R; r++) imadw(e, psr[r], one, r * ROWS_S, ps); \
+        int first_ = 1; \
+        if (LX) { e->pf_sb = (SBX); for (uint32_t q = 0; q < XQ; q++) { ldg_pf(e, BW_IR_LDG_E_128, XQ_[q], pxc, q * 16u, udesc, first_); first_ = 0; } } \
+        if (LW) { e->pf_sb = (SBW); \
+            for (uint32_t r = 0; r < R; r++) { ldg_pf(e, ldw, WQ[r], pw, r * ROWB, udesc, first_); first_ = 0; } \
+            for (uint32_t r = 0; r < R; r++) ldg_pf(e, BW_IR_LDG_E, SW[r], psr[r], 0, udesc, 0); } \
+        if (LW) { imadw(e, pw, one, 32u * LB, pw); imadw(e, ps, one, spec->mutant == 2 ? 0u : GPS, ps); } \
+        if (LX) imadw(e, pxc, one, 32u * WPL * 4u, pxc); \
     } while (0)
     if (pf) { /* step 0 of this warp's first row group (clamped, so a warp without rows still reads in range) */
         if (!coal) { imadi(e, um1, one, 0, 0xffffffffu, rgn); imadi(e, negU, rgn, 0, 0xffffffffu, NOREG); }
         movi(e, two, 2);
-        W4_CLAMP(rg); W4_PTRS(); W4_LOAD(wq, sw, xq, SB_PF_A);
+        W4_CLAMP(rg); W4_PTRS(); W4_LOAD(pf == 2, xq, SB_PF_A, 1, wq, sw, SB_PF_A);
     }
 
     /* ---- row-group loop ---- */
@@ -389,6 +393,7 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
     }
     for (uint32_t r = 0; r < R; r++) movrz(e, acc[r]);
     movi(e, cnt, KS);
+    if (pf == 1) imadw(e, pxc, one, 0, xlane);              /* pf 1: x' is read for the step being decoded */
 
     /* ---- K loop: one step per iteration, every load of the step issued before any use ---- */
     const int L_k = here(e);
@@ -400,7 +405,8 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
         imadi(e, rgn2, stride, 0, 1, rg);
         W4_CLAMP(rgn2); W4_PTRS();
         patch_bra(e, bra_norm, here(e));
-        W4_LOAD(wqB, swB, xqB, SB_PF_B);                      /* step s + 1 flies while step s decodes */
+        if (pf == 2) W4_LOAD(1, xqB, SB_PF_B, 1, wqB, swB, SB_PF_B);   /* step s + 1 flies while step s decodes */
+        else W4_LOAD(1, xq, SB_PF_A, 1, wqB, swB, SB_PF_B);             /* x' of step s (an L1/L2 hit), weights of s + 1 */
         if (spec->mutant != 7) wait_sb(e, SB_PF_A);
     } else {
         /* scale addresses first: a fixed-latency op waits on every pending load (emit), so none may sit inside the batch */
@@ -424,7 +430,7 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
         wait_sb(e, SB_PF_B);
         for (uint32_t r = 0; r < R; r++) for (uint32_t c = 0; c < LB / 4u; c++) movr(e, wq[r], c, wqB[r], c);
         for (uint32_t r = 0; r < R; r++) movr(e, sw[r], 0, swB[r], 0);
-        for (uint32_t q = 0; q < XQ; q++) for (uint32_t c = 0; c < 4u; c++) movr(e, xq[q], c, xqB[q], c);
+        if (pf == 2) for (uint32_t q = 0; q < XQ; q++) for (uint32_t c = 0; c < 4u; c++) movr(e, xq[q], c, xqB[q], c);
     } else {
         imadw(e, pw, one, 32u * LB, pw);
         imadw(e, pxc, one, 32u * WPL * 4u, pxc);
