@@ -77,14 +77,12 @@ enum { SUBJ_EXTERNAL = 100, ISSUER = 3, SUBJ_PLAN = 71 };
 #define REC_VERSION  1u
 #define SESSION_1    1u
 #define SESSION_2    2u
-#define MAX_RUNS     16u
+#define MAX_RUNS     64u   /* one lowered graph per solve: the horizon mode runs up to 40 objectives per arm */
 
 /* ---- counters (every call the pilot makes through the plan and view paths) ---- */
 typedef struct {
     uint64_t lookups, hits, misses, arrange, snapshots, plan_views, admits, refusals, bad;
 } Cnt;
-static Cnt C;
-static uint64_t g_cog_cpu, g_rebuild_cpu;  /* thread CPU in cognition (view, goal, lookup, search) and theta rebuild */
 static int g_checks, g_fail;
 #define CHECK(cond, ...) do { g_checks++; if (!(cond)) { g_fail++; C.bad++;                  \
         fprintf(stderr, "  BAD %s:%d ", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__);    \
@@ -122,13 +120,89 @@ typedef struct {
     uint32_t n_rs;
 } Ent;
 
-static Ent E;
-static PlCache g_cache;
-static CxStore g_cx;
-static AgSkillTable g_skills;
-static const char *g_out = ".";
-static const char *g_jpath;
-static char g_mode[32];
+#define N_ROLES (N_UNITS + PL_ENV_COUNT + 2u)
+#define MAX_ROWS 128u
+#define MAX_ARMS 4u
+
+typedef struct { uint8_t id[32]; uint64_t wg, cg, rec; } ThetaRow;
+
+typedef struct {
+    VisorWorldView v;
+    uint64_t support[N_UNITS];
+    uint64_t records;
+    uint8_t last_digest[32];
+} Screen;
+
+typedef struct {
+    char name[40];
+    uint64_t cpu, pcpu, wall, jbytes, records, cog, order;
+    uint32_t objects_live, reactions_active;   /* World footprint after a repeated objective */
+    Cnt c;
+    long rss_kib;
+} Row;
+
+/* ---- one arm = one entity with its own World, journal, plan cache and counters ----
+ * The horizon mode (evidence/ENTITY-276/h40/FREEZE.md) keeps several arms alive in one
+ * process and switches A between them; every other mode uses arm 0 only. The names below
+ * (E, C, g_cache, g_cx, ...) always mean the current arm's copy. */
+typedef struct {
+    Ent e;
+    PlCache cache;
+    CxStore cx;
+    AgSkillTable skills;
+    Cnt c;
+    uint64_t cog_cpu, rebuild_cpu;  /* thread CPU in cognition (view, goal, lookup, search) and theta rebuild */
+    ThetaRow theta_rec[PL_MAX_TEMPLATES];  /* newest candidate record per semantic id */
+    uint32_t n_theta_rec;
+    uint64_t view_last_id;
+    uint8_t view_last_digest[32], lineage[32];
+    Screen screen;
+    uint32_t rebuilt, rebuild_refused, promotions_seen;
+    Row rows[MAX_ROWS];
+    uint32_t n_rows;
+    uint32_t after_hits, after_arrange, after_ok, wrong;
+    int restore_refused;
+    uint64_t n_at_open;
+    uint8_t final_ed[32];   /* entity digest taken before the World shuts down */
+    const char *jpath, *out;
+    char mode[48], obuf[512], jbuf[600];
+    int cold;               /* template records ignored at restart (cold and forget arms) */
+    int lazy, lazy_pending; /* theta rebuilt by the first lookup, not at boot */
+    int forget;             /* never stores a template: every objective searches */
+    int horizon;            /* horizon-mode checks on the search count */
+    int release;            /* release each finished run (release_run) */
+} Arm;
+
+static Arm g_arm[MAX_ARMS];
+static Arm *A = &g_arm[0];
+#define E                  (A->e)
+#define C                  (A->c)
+#define g_cache            (A->cache)
+#define g_cx               (A->cx)
+#define g_skills           (A->skills)
+#define g_cog_cpu          (A->cog_cpu)
+#define g_rebuild_cpu      (A->rebuild_cpu)
+#define g_theta_rec        (A->theta_rec)
+#define g_n_theta_rec      (A->n_theta_rec)
+#define g_view_last_id     (A->view_last_id)
+#define g_view_last_digest (A->view_last_digest)
+#define g_lineage          (A->lineage)
+#define g_screen           (A->screen)
+#define g_rebuilt          (A->rebuilt)
+#define g_rebuild_refused  (A->rebuild_refused)
+#define g_promotions_seen  (A->promotions_seen)
+#define g_rows             (A->rows)
+#define g_n_rows           (A->n_rows)
+#define g_after_hits       (A->after_hits)
+#define g_after_arrange    (A->after_arrange)
+#define g_after_ok         (A->after_ok)
+#define g_wrong            (A->wrong)
+#define g_restore_refused  (A->restore_refused)
+#define g_n_at_open        (A->n_at_open)
+#define g_final_ed         (A->final_ed)
+#define g_jpath            (A->jpath)
+#define g_out              (A->out)
+#define g_mode             (A->mode)
 
 static RxCapRef mint(uint32_t subject, uint64_t resource, uint32_t rights) {
     AienosCapRef office;
@@ -228,7 +302,6 @@ static void shutdown_entity(void) {
 }
 
 /* Role objects whose committed values make up the entity state, in a fixed order. */
-#define N_ROLES (N_UNITS + PL_ENV_COUNT + 2u)
 #define N_ROLES_W (N_ROLES * 10u)
 #define OBS_KIND 0x2760u              /* writer kind (below CX_K_BASE): entity state observation */
 #define OBS_TAG  0x276A0003ull
@@ -317,8 +390,6 @@ static void entity_digest_journal(CxStore *s, uint8_t out[32], uint32_t *missing
 
 /* ---- the view R(s, h) ---- */
 
-static uint64_t g_view_last_id;
-static uint8_t g_view_last_digest[32], g_lineage[32];
 
 /* Value-only history formatter over cx_recall (stand-in for the missing VisorCortexView).
  * Outcome: for each unit, the label of what it rests on, from the newest committed record. */
@@ -350,15 +421,6 @@ static int history_format(CxStore *s, char *out, size_t n, uint64_t support[N_UN
     return (int)(len + (size_t)w);
 }
 
-typedef struct {
-    VisorWorldView v;
-    uint64_t support[N_UNITS];
-    uint64_t records;
-    uint8_t last_digest[32];
-} Screen;
-
-static Screen g_screen;
-
 /* One projection: visor snapshot + history, written to <out>/screen-<tag>.{txt,json}. */
 static int project(const char *tag, Screen *sc) {
     C.snapshots++;
@@ -382,9 +444,6 @@ static int project(const char *tag, Screen *sc) {
 
 /* ---- theta persisted through the attached Cortex writer ---- */
 
-typedef struct { uint8_t id[32]; uint64_t wg, cg, rec; } ThetaRow;
-static ThetaRow g_theta_rec[PL_MAX_TEMPLATES];  /* newest candidate record per semantic id */
-static uint32_t g_n_theta_rec;
 
 static ThetaRow *theta_row(const uint8_t id[32], int add) {
     for (uint32_t i = 0; i < g_n_theta_rec; i++)
@@ -457,7 +516,6 @@ static uint32_t theta_check(const char *where) {
 
 /* Rebuild theta from the replayed journal: newest verifying candidate per semantic id,
  * accepted only when rx_plan_identify reproduces the recorded id. */
-static uint32_t g_rebuilt, g_rebuild_refused, g_promotions_seen;
 
 static void theta_rebuild(CxStore *s) {
     static PlanTemplate t;
@@ -511,8 +569,33 @@ typedef struct {
 
 static void plan_view(PlView *v) { C.plan_views++; rx_plan_view(&E.w, v); }
 
+/* --release (horizon mode): a finished run's lowered reactions, cells and run token leave
+ * the World through rx_world_remove_reaction and rx_world_retire. rx_plan_execute keeps
+ * them, and a World holds RX_MAX_OBJECTS objects, so without this one session runs at most
+ * six objectives (35 objects and 34 reactions stay per objective). Returns failures. */
+static uint32_t release_run(PlRunStore *rs) {
+    const AgLowered *L = &rs->L;
+    uint32_t bad = 0;
+    if (!L->w || !L->g) return 0;
+    for (uint32_t i = 0; i < L->g->n_nodes; i++) {
+        bad += rx_world_remove_reaction(&E.w, L->reaction[i]) != RX_OK;
+        bad += rx_world_retire(&E.w, L->cell[i]) != RX_OK;
+    }
+    for (uint32_t i = 0; i < L->n_ask; i++) bad += rx_world_remove_reaction(&E.w, L->ask_reaction[i]) != RX_OK;
+    bad += rx_world_retire(&E.w, L->run) != RX_OK;
+    return bad;
+}
+
 static PlanTemplate *decide(const PlaGoal *g, RxObjRef *slots, PlCost *cost, Out *o) {
     PlanTemplate *cand[PL_MAX_TEMPLATES];
+    if (A->lazy_pending) {
+        /* Lazy arm: theta is rebuilt from the journal by the first lookup that needs it,
+         * inside the planning CPU of that objective. */
+        uint64_t b0 = cpu_ns();
+        theta_rebuild(&g_cx);
+        g_rebuild_cpu = cpu_ns() - b0;
+        A->lazy_pending = 0;
+    }
     C.lookups++;
     uint32_t n = rx_plan_cache_retrieve(&g_cache, (uint32_t)g->kind, g->shape, cand, PL_MAX_TEMPLATES, cost);
     RxObjRef s[PL_MAX_SLOTS];
@@ -594,7 +677,7 @@ static int solve(Out *o, int probe_only) {
         o->t = use;
         if (before == PL_STATUS_CANDIDATE && use->status == PL_STATUS_VERIFIED)
             if (theta_promote(use, ex.realization_id) != 0) return -5;
-    } else if (ex.success && o->goal) {
+    } else if (ex.success && o->goal && !A->forget) {
         plan_view(&g_v2);
         uint64_t wg = g_v2.o[E.env.obj[PL_ENV_WORLDGEN].id].field[0];
         uint64_t cg = g_v2.o[E.env.obj[PL_ENV_COGNITION].id].field[0];
@@ -603,6 +686,11 @@ static int solve(Out *o, int probe_only) {
     }
     if (o->t) rx_plan_publish_index(&E.w, E.ext_index, E.index, &g_cache, o->t);
     rx_world_wait_quiescent(&E.w, 30000);
+    if (A->release) {
+        uint32_t rb = release_run(rs);
+        CHECK(rb == 0, "release: %u reactions or objects not released", rb);
+        rx_world_wait_quiescent(&E.w, 30000);
+    }
     if (observe(o->decision_crumb) != 0) return -7;
     return 0;
 }
@@ -639,16 +727,9 @@ static int admit(uint32_t k) {
 
 /* ---- per-step accounting ---- */
 
-typedef struct {
-    char name[40];
-    uint64_t cpu, pcpu, wall, jbytes, records, cog;
-    Cnt c;
-    long rss_kib;
-} Row;
-static Row g_rows[32];
-static uint32_t g_n_rows;
 static uint64_t r_cpu, r_pcpu, r_wall, r_jb, r_rec, r_cog;
 static Cnt r_c;
+static uint64_t g_order;   /* step order in the process, across arms */
 
 static uint64_t journal_size(void) {
     struct stat st;
@@ -665,9 +746,12 @@ static void step_begin(void) {
 }
 static Row *step_end(const char *name) {
     uint64_t c1 = cpu_ns(), p1 = pcpu_ns(), w1 = wall_ns();
-    Row *r = &g_rows[g_n_rows++];
+    static Row spare;
+    Row *r = g_n_rows < MAX_ROWS ? &g_rows[g_n_rows++] : &spare;
+    CHECK(r != &spare, "step table full at %s", name);
     memset(r, 0, sizeof *r);
     snprintf(r->name, sizeof r->name, "%s", name);
+    r->order = ++g_order;
     r->cpu = c1 - r_cpu;
     r->pcpu = p1 - r_pcpu;
     r->wall = w1 - r_wall;
@@ -758,10 +842,7 @@ typedef struct {
     int idle_run;
 } Idle;
 static Idle g_idle;
-static uint32_t g_after_hits, g_after_arrange, g_after_ok, g_wrong;
-static int g_cog_refused, g_probe_accepted, g_restore_refused, g_admit_refused_ok;
-static uint64_t g_n_at_open;
-static uint8_t g_final_ed[32];   /* entity digest taken before the World shuts down */
+static int g_cog_refused, g_probe_accepted, g_admit_refused_ok;
 static char g_expect_path[512];
 
 static void write_outputs(void) {
@@ -775,17 +856,18 @@ static void write_outputs(void) {
         fprintf(f, "# load1_start=%.2f memavail_kib_start=%ld load1_end=%.2f memavail_kib_end=%ld\n",
                 g_load0, g_mem0, l1, m1);
         fprintf(f, "step,cpu_ns,proc_cpu_ns,cog_cpu_ns,wall_ns,journal_bytes,records,lookups,hits,misses,arrange_calls,"
-                   "snapshot_calls,plan_views,admits,refusals,bad_rows,peak_rss_kib\n");
+                   "snapshot_calls,plan_views,admits,refusals,bad_rows,peak_rss_kib,order,objects_live,reactions_active\n");
         for (uint32_t i = 0; i < g_n_rows; i++) {
             Row *r = &g_rows[i];
-            fprintf(f, "%s,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%ld\n", r->name,
+            fprintf(f, "%s,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%ld,%llu,%u,%u\n", r->name,
                     (unsigned long long)r->cpu, (unsigned long long)r->pcpu, (unsigned long long)r->cog, (unsigned long long)r->wall,
                     (unsigned long long)r->jbytes, (unsigned long long)r->records,
                     (unsigned long long)r->c.lookups, (unsigned long long)r->c.hits,
                     (unsigned long long)r->c.misses, (unsigned long long)r->c.arrange,
                     (unsigned long long)r->c.snapshots, (unsigned long long)r->c.plan_views,
                     (unsigned long long)r->c.admits, (unsigned long long)r->c.refusals,
-                    (unsigned long long)r->c.bad, r->rss_kib);
+                    (unsigned long long)r->c.bad, r->rss_kib, (unsigned long long)r->order,
+                    r->objects_live, r->reactions_active);
         }
         fclose(f);
     }
@@ -1007,9 +1089,10 @@ static int run_pilot(int shadow, int viewwrite, uint32_t idlepoll) {
     return 0;
 }
 
-/* Process 2: restart on the same journal; steps 5 and repeated objectives. cold = ignore
+/* Process 2, steps 5a and 5b: replay the journal, rebuild theta (unless cold or lazy), boot,
+ * restore, check identity against process 1. cold = ignore
  * the template records (the no-retained-knowledge control). */
-static int run_restart(int cold) {
+static int restart_open(int cold) {
     step_begin();
     int orc = cx_open(&g_cx, g_jpath, RX_CORTEX_SUBJECTS, CX_OPEN_SYNC);
     if (orc != CX_OK) {
@@ -1033,7 +1116,8 @@ static int run_restart(int cold) {
     static int restore_ok[N_ROLES];
     if (!g_restore_refused) {
         uint64_t b0 = cpu_ns();
-        if (!cold) theta_rebuild(&g_cx);
+        if (!cold && !A->lazy) theta_rebuild(&g_cx);
+        A->lazy_pending = A->lazy;
         g_rebuild_cpu = cpu_ns() - b0;
         entity_digest_journal(&g_cx, ej, &missing);
         for (uint32_t r = 0; r < N_ROLES; r++) restore_ok[r] = journal_fields(&g_cx, role(r), restore_f[r]);
@@ -1088,41 +1172,67 @@ static int run_restart(int cold) {
         CHECK(rx_world_read(&E.w, E.env.obj[PL_ENV_COGNITION], &cg) == RX_OK && cg.field[0] == COG_GEN + 1,
               "the correction survived the restart");
     }
-    if (!cold && !g_restore_refused)
+    if (!cold && !A->lazy && !g_restore_refused)
         CHECK(g_rebuilt >= 1 && g_rebuild_refused == 0 && theta_check("restart") == 0,
               "retained knowledge rebuilt from the journal (%u)", g_rebuilt);
     step_end("5b_restore_identity");
+    return 0;
+}
 
-    /* Repeat steps 1 to 3 for N_AFTER objectives. */
-    for (uint32_t i = 0; i < N_AFTER; i++) {
-        char tag[48];
-        uint32_t k = 2 + i;
-        step_begin();
-        CHECK(admit(k) == 0, "objective %u admitted", k);
-        snprintf(tag, sizeof tag, "5_obj%u_attached", k);
-        view_attach(tag);
-        uint64_t snaps = C.snapshots;
-        Out o;
-        int rc = solve(&o, 0);
-        CHECK(C.snapshots == snaps, "no projection while detached (objective %u)", k);
-        int ok = rc == 0 && o.success && o.goal;
-        g_after_ok += ok;
-        g_wrong += rc == 0 && !o.goal;
-        if (o.path == 2) g_after_hits++;
-        snprintf(tag, sizeof tag, "5_obj%u_reattached", k);
-        view_reattach(tag, 1);
-        snprintf(tag, sizeof tag, "5_obj%u", k);
-        step_end(tag);
-    }
+/* Steps 1 to 3 of the pilot for one repeated objective k after the restart. */
+static void restart_objective(uint32_t k) {
+    char tag[48];
+    step_begin();
+    CHECK(admit(k) == 0, "objective %u admitted", k);
+    snprintf(tag, sizeof tag, "5_obj%u_attached", k);
+    view_attach(tag);
+    uint64_t snaps = C.snapshots;
+    Out o;
+    int rc = solve(&o, 0);
+    CHECK(C.snapshots == snaps, "no projection while detached (objective %u)", k);
+    int ok = rc == 0 && o.success && o.goal;
+    g_after_ok += ok;
+    g_wrong += rc == 0 && !o.goal;
+    if (o.path == 2) g_after_hits++;
+    snprintf(tag, sizeof tag, "5_obj%u_reattached", k);
+    view_reattach(tag, 1);
+    snprintf(tag, sizeof tag, "5_obj%u", k);
+    Row *r = step_end(tag);
+    RxFootprint fp;
+    rx_world_footprint(&E.w, &fp);
+    r->objects_live = fp.objects_live;
+    r->reactions_active = fp.reactions_active;
+}
+
+/* After n repeated objectives: outcome checks, then the World shuts down. */
+static void restart_finish(int cold, uint32_t n) {
     entity_digest_world(g_final_ed);
     g_after_arrange = (uint32_t)C.arrange;
-    CHECK(g_after_ok == N_AFTER && g_wrong == 0, "every repeated objective committed correctly");
+    CHECK(g_after_ok == n && g_wrong == 0, "every repeated objective committed correctly");
     if (!cold && !g_restore_refused)
-        CHECK(g_after_hits == N_AFTER && g_after_arrange == 0, "retained knowledge used: %u hits, %u searches",
+        CHECK(g_after_hits == n && g_after_arrange == 0, "retained knowledge used: %u hits, %u searches",
+              g_after_hits, g_after_arrange);
+    if (A->lazy && !g_restore_refused)
+        CHECK(!A->lazy_pending && g_rebuilt >= 1 && g_rebuild_refused == 0 && theta_check("lazy") == 0,
+              "lazy arm: retained knowledge rebuilt by the first lookup (%u)", g_rebuilt);
+    if (A->horizon && cold && !A->forget && !g_restore_refused)
+        CHECK(g_after_arrange == 1 && g_after_hits == n - 1, "cold arm learns once in its session: %u hits, %u searches",
+              g_after_hits, g_after_arrange);
+    if (A->forget)
+        CHECK(g_after_arrange == n && g_after_hits == 0 && g_cache.n == 0, "forget arm keeps nothing: %u hits, %u searches",
               g_after_hits, g_after_arrange);
     step_begin();
     shutdown_entity();
     step_end("close");
+}
+
+/* Process 2: restart on the same journal; steps 5 and repeated objectives. cold = ignore
+ * the template records (the no-retained-knowledge control). */
+static int run_restart(int cold) {
+    int rc = restart_open(cold);
+    if (rc) return rc;
+    for (uint32_t i = 0; i < N_AFTER; i++) restart_objective(2 + i);
+    restart_finish(cold, N_AFTER);
     return 0;
 }
 
@@ -1154,18 +1264,112 @@ static int tamper_file(void) {
     return ok ? 0 : -1;
 }
 
+/* ---- horizon mode (evidence/ENTITY-276/h40/FREEZE.md) ----
+ * Several arms restart from copies of one pilot journal inside this process, each with its
+ * own World, journal and plan cache: warm (theta rebuilt at boot), cold (template records
+ * ignored, may learn in its own session, the earlier control), lazy (theta rebuilt by the
+ * first lookup) and forget (never stores a template). Then H repeated objectives per arm. */
+
+static int copy_file(const char *from, const char *to) {
+    FILE *a = fopen(from, "rb"), *b = a ? fopen(to, "wb") : NULL;
+    static char buf[1u << 16];
+    size_t n;
+    int ok = a && b;
+    while (ok && (n = fread(buf, 1, sizeof buf, a)) > 0) ok = fwrite(buf, 1, n, b) == n;
+    if (a) fclose(a);
+    if (b && fclose(b) != 0) ok = 0;
+    return ok ? 0 : -1;
+}
+
+/* Arm at position j of objective i: a balanced (Williams) order, so for every pair of arms
+ * each goes first equally often over n objectives (2n for odd n). Row 0 is 0, 1, n-1, 2, n-2, ... */
+static uint32_t arm_at(uint32_t n, uint32_t i, uint32_t j) {
+    if (n % 2 && (i / n) % 2) j = n - 1 - j;
+    uint32_t f = j == 0 ? 0 : j % 2 ? (j + 1) / 2 : n - j / 2;
+    return (f + i) % n;
+}
+
+static int run_horizon(uint32_t h, int interleave, int lazy, int forget, int release, const char *base,
+                       const char *out) {
+    static const char *names[MAX_ARMS];
+    uint32_t n = 0;
+    names[n++] = "warm";
+    names[n++] = "cold";
+    if (lazy) names[n++] = "lazy";
+    if (forget) names[n++] = "forget";
+    for (uint32_t a = 0; a < n; a++) {
+        A = &g_arm[a];
+        snprintf(A->obuf, sizeof A->obuf, "%s/%s", out, names[a]);
+        mkdir(A->obuf, 0755);
+        snprintf(A->jbuf, sizeof A->jbuf, "%s/journal.cx", A->obuf);
+        if (copy_file(base, A->jbuf) != 0) { fprintf(stderr, "copy %s failed\n", base); return 2; }
+        A->out = A->obuf;
+        A->jpath = A->jbuf;
+        snprintf(A->mode, sizeof A->mode, "horizon-%s", names[a]);
+        A->cold = !strcmp(names[a], "cold") || !strcmp(names[a], "forget");
+        A->lazy = !strcmp(names[a], "lazy");
+        A->forget = !strcmp(names[a], "forget");
+        A->horizon = 1;
+        A->release = release;
+    }
+    for (uint32_t a = 0; a < n; a++) {
+        A = &g_arm[a];
+        int rc = restart_open(A->cold);
+        if (rc) { fprintf(stderr, "%s: restart failed (%d)\n", A->mode, rc); return rc; }
+    }
+    if (interleave)
+        for (uint32_t i = 0; i < h; i++)
+            for (uint32_t j = 0; j < n; j++) { A = &g_arm[arm_at(n, i, j)]; restart_objective(2 + i); }
+    else
+        for (uint32_t a = 0; a < n; a++) {
+            A = &g_arm[a];
+            for (uint32_t i = 0; i < h; i++) restart_objective(2 + i);
+        }
+    for (uint32_t a = 0; a < n; a++) { A = &g_arm[a]; restart_finish(A->cold, h); }
+    int bad = 0;
+    for (uint32_t a = 0; a < n; a++) {
+        A = &g_arm[a];
+        write_outputs();
+        printf("entity276 %s H %u: bad_rows %llu records %llu searches %u hits %u rebuild_cpu_ns %llu\n", g_mode, h,
+               (unsigned long long)C.bad, (unsigned long long)g_cx.n, g_after_arrange, g_after_hits,
+               (unsigned long long)g_rebuild_cpu);
+        bad |= C.bad != 0;
+        cx_close(&g_cx);
+    }
+    printf("entity276 horizon H %u arms %u interleave %d release %d: checks %d failed %d\n", h, n, interleave, release,
+           g_checks, g_fail);
+    return bad || g_fail ? 1 : 0;
+}
+
 int main(int argc, char **argv) {
     if (argc < 3) {
         fprintf(stderr, "usage: entity276 pilot|restart|restart-cold|control-idle|tamper-file JOURNAL "
                         "[EXPECT_IDENTITY_JSON]\n"
                         "       entity276 mutant SHADOW|VIEWWRITE|IDLEPOLL JOURNAL\n"
+                        "       entity276 horizon H PILOT_JOURNAL EXPECT_IDENTITY_JSON [--interleave] "
+                        "[--lazy-rebuild] [--forget] [--release]\n"
                         "env PILOT_OUT = output directory\n");
         return 2;
     }
-    if (getenv("PILOT_OUT")) g_out = getenv("PILOT_OUT");
+    g_out = getenv("PILOT_OUT") ? getenv("PILOT_OUT") : ".";
     meminfo(&g_load0, &g_mem0);
     const char *mode = argv[1];
     int rc = 0;
+    if (!strcmp(mode, "horizon")) {
+        if (argc < 5) return 2;
+        uint32_t h = (uint32_t)strtoul(argv[2], NULL, 10);
+        if (h < 1 || h + 3 > MAX_ROWS || h > MAX_RUNS) return 2;
+        int il = 0, lz = 0, fg = 0, rl = 0;
+        for (int i = 5; i < argc; i++) {
+            if (!strcmp(argv[i], "--interleave")) il = 1;
+            else if (!strcmp(argv[i], "--lazy-rebuild")) lz = 1;
+            else if (!strcmp(argv[i], "--forget")) fg = 1;
+            else if (!strcmp(argv[i], "--release")) rl = 1;
+            else return 2;
+        }
+        snprintf(g_expect_path, sizeof g_expect_path, "%s", argv[4]);
+        return run_horizon(h, il, lz, fg, rl, argv[3], g_out);
+    }
     if (!strcmp(mode, "mutant")) {
         if (argc < 4) return 2;
         snprintf(g_mode, sizeof g_mode, "mutant-%s", argv[2]);
