@@ -75,17 +75,24 @@ gates_pass() { grep -E 'TOTAL GATES: [0-9]+ \| PASSED: [0-9]+ \| FAILED: 0' "$1"
 # Anything else is the failure it was. A passing run gets the receipt check it always had.
 BUSY=0
 speed() {
-  local target="$1" file="$2" word="$3" rc=0 r
+  local target="$1" file="$2" word="$3" rc=0 r f bad=1
   make "$target" || rc=$?
   if [ "$rc" -eq 0 ]; then
     receipt "$file" '"failures": 0,' '"candidate_bound": true,' "\"$word\": \"PASS\""
     return
   fi
-  r="$(find build/qual-runs -name "$file" -type f -newer "$STEP_MARK" | head -n 1)"
-  if [ -n "$r" ] && grep -q '"failures": 0,' "$r" && grep -q '"candidate_bound": true,' "$r" &&
-     grep -q "\"$word\": \"NOT_RUN\"" "$r"; then
+  # Every receipt of that name written during this step must say so; any other one keeps the failure.
+  r="$(find build/qual-runs -name "$file" -type f -newer "$STEP_MARK")"
+  if [ -n "$r" ]; then
+    bad=0
+    while IFS= read -r f; do
+      grep -q '"failures": 0,' "$f" && grep -q '"candidate_bound": true,' "$f" &&
+        grep -q "\"$word\": \"NOT_RUN\"" "$f" || bad=1
+    done <<< "$r"
+  fi
+  if [ "$bad" = 0 ]; then
     echo "run.sh: $target: machine too busy to time (cpu_busy); not judged, the rest of the step runs" >&2
-    sha256sum "$r"
+    printf '%s\n' "$r" | xargs sha256sum
     BUSY=1
     return 0
   fi
