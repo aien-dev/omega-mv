@@ -52,7 +52,7 @@ SRCS += src/omega_blackwell_codegen_pattn.c src/omega_gpu_prefill_attn_api.c
 # OWN-30B T3b (2026-10-13): device-resident prefill (omega_gpu_prefill.h), new files only
 SRCS += src/omega_blackwell_codegen_pf.c src/omega_gpu_prefill.c src/omega_blackwell_codegen_tc2.c src/omega_gpu_pfgemm.c
 # OWN-30B L1 GEMM (W-L1G, 2026-10-14): native FP8 QMMA, new files only
-SRCS += src/omega_blackwell_codegen_qmma.c src/omega_blackwell_codegen_qg.c
+SRCS += src/omega_blackwell_codegen_qmma.c src/omega_blackwell_codegen_qg.c src/omega_blackwell_codegen_omma.c
 # OWN-30B W-L1G-D (2026-10-14): router logits + MoE combine for the whole-prompt prefill, new files only
 SRCS += src/omega_blackwell_codegen_pfhost.c src/omega_gpu_pfhost.c
 # Ternary engine T0 (2026-10-15): KT1, the W2A8 ternary GEMV (omega_gpu_tern_api.h), new files only
@@ -2516,6 +2516,9 @@ test-gpu-bf16-gemv: $(GPU_BF16_TEST)
 GPU_TERN_TEST = $(OUT_DIR)/gpu_tern_test
 $(GPU_TERN_TEST): tests/gpu_tern_test.c tests/bw_warp_sim_k.h src/omega_gpu_tern_api.h src/omega_blackwell_codegen_tern.h $(OMA_RZ_SRCS) $(OMA_RZ_HDRS) $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off $(OMA_RZ_ARCH) -Itests -o $@ tests/gpu_tern_test.c $(OMA_RZ_SRCS) $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+GPU_TERN_LAYER_TEST = $(OUT_DIR)/gpu_tern_layer_test
+$(GPU_TERN_LAYER_TEST): tests/gpu_tern_layer_test.c src/omega_gpu_tern_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_tern_layer_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-tern: $(GPU_TERN_TEST)
 	$(GPU_TERN_TEST) --host-only
 	$(GPU_TERN_TEST) --sim
@@ -2570,6 +2573,9 @@ $(GPU_PFGEMM_TEST): tests/gpu_pfgemm_test.c tests/bw_hmma_model.h tests/bw_warp_
 GPU_QMMA_PROBE_TEST = $(OUT_DIR)/gpu_qmma_probe_test
 $(GPU_QMMA_PROBE_TEST): tests/gpu_qmma_probe_test.c tests/bw_qmma_model.h src/omega_blackwell_codegen_qmma.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_qmma_probe_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+GPU_OMMA_PEAK_TEST = $(OUT_DIR)/gpu_omma_peak_test
+$(GPU_OMMA_PEAK_TEST): tests/gpu_omma_peak_test.c src/omega_blackwell_codegen_omma.h src/omega_blackwell_codegen_qmma.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_omma_peak_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 GPU_QGEMM_TEST = $(OUT_DIR)/gpu_qgemm_test
 $(GPU_QGEMM_TEST): tests/gpu_qgemm_test.c tests/bw_qmma_model.h tests/bw_warp_sim_tc.h src/omega_gpu_prefill.h src/omega_blackwell_codegen_qg.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_qgemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
