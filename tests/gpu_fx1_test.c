@@ -233,7 +233,12 @@ static int chip_run(const char *path, int max_tensors, int reps) {
     omega_gpu_fp8_set_variant(1);
     omega_gpu_fp8_set_shape(16, 1, 8);      /* the live graph's shape for every Qwen3.8-27B projection (k % 512 == 0) */
     omega_gpu_fp8_set_weight_cache(1);
-    omega_gpu_fx1_set_shape(1, 8, 0);
+    {   /* shape sweep for the timing: FX1_ROWS (1|2 rows interleaved per warp) and FX1_WARPS; default 1 row, 8 warps */
+        const char *er = getenv("FX1_ROWS"), *ew = getenv("FX1_WARPS");
+        uint32_t rows = er ? (uint32_t)atoi(er) : 1u, warps = ew ? (uint32_t)atoi(ew) : 8u;
+        omega_gpu_fx1_set_shape(rows, warps, 0);
+        printf("fx1 shape rows %u warps %u\n", rows, warps);
+    }
     printf("tensor\tn\tk\traw_bytes\tfx1_bytes\tbits_per_weight\traw_us\tfx1_us\tfx1_over_raw\tidentical\n");
     uint64_t sum_raw_b = 0, sum_fx_b = 0, sum_raw_ns = 0, sum_fx_ns = 0;
     uint32_t seed = 12345;
@@ -244,6 +249,10 @@ static int chip_run(const char *path, int max_tensors, int reps) {
         CHECK(omega_fx1_decode_check(&h, t->w, NULL) == 0, "%s host round trip", t->name);
         OmegaGpuFp8Tensor *rt = NULL; OmegaGpuFx1Tensor *ft = NULL;
         int r1 = omega_gpu_fp8_tensor_upload(1, t->n, t->k, t->w, t->s, &rt), r2 = omega_gpu_fx1_tensor_upload(&h, t->s, &ft);
+        if (r1 == OMEGA_GPU_FP8_TOO_LARGE && r2 == 0) { /* the raw GEMV refuses k past OMEGA_FP8_MAX_K: nothing to compare against, say so */
+            printf("SKIP %s: raw path refuses k=%u (TOO_LARGE), fx1 upload ok\n", t->name, t->k);
+            omega_gpu_fx1_tensor_free(ft); omega_fx1_host_free(&h); continue;
+        }
         CHECK(r1 == 0 && r2 == 0, "%s upload raw %d fx1 %d (%s)", t->name, r1, r2, omega_gpu_fp8_last_error());
         if (r1 || r2) { omega_gpu_fp8_tensor_free(rt); omega_gpu_fx1_tensor_free(ft); omega_fx1_host_free(&h); continue; }
         float *x = malloc((size_t)t->k * 4), *yr = malloc((size_t)t->n * 4), *yf = malloc((size_t)t->n * 4);
