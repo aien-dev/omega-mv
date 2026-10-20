@@ -1,7 +1,3 @@
-cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -o build/omegese/omegese tools/omegese/omegese.c
-cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -o build/omegese/omegese_asan tools/omegese/omegese.c
-cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -DOMEGESE_CANARY=1 -o build/omegese/omegese_canary1 tools/omegese/omegese.c
-cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -DOMEGESE_CANARY=2 -o build/omegese/omegese_canary2 tools/omegese/omegese.c
 bash tools/omegese/test_omegese.sh /home/drakestapleton/workspace/omega-emit-structs/build/omegese/omegese /home/drakestapleton/workspace/omega-emit-structs/build/omega_emit/omega_emit /home/drakestapleton/workspace/omega-emit-structs/build/checker2/checker2
 dev: 10/10 omegese -> omega_emit -> checker2 ACCEPT
 nested: 6/6 rewritten dev programs and 5/5 trial-2 model answers ACCEPT; trial-2 dev07 refused for its extra value

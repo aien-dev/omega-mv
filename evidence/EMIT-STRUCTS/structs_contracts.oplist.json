@@ -1,0 +1,85 @@
+{"structs": [
+  {"name": "Win", "fields": [{"name": "lo", "type": "u16"}, {"name": "hi", "type": "u16"}]}
+ ],
+ "functions": [
+  {"name": "width", "params": ["mut:Win"], "ret": "u16", "requires": "w . hi >= w . lo", "locals": ["u16", "u16", "bool", "u16", "u16", "u16", "u16", "u16", "u16"],
+   "blocks": [
+    [
+     {"op": "fload", "dst": 1, "a": 0, "field": "hi"},
+     {"op": "fload", "dst": 2, "a": 0, "field": "lo"},
+     {"op": "ge", "dst": 3, "a": 1, "b": 2},
+     {"op": "cbr", "cond": 3, "then": 1, "else": 2}
+    ],
+    [
+     {"op": "fload", "dst": 4, "a": 0, "field": "lo"},
+     {"op": "const", "dst": 5, "value": 0},
+     {"op": "add", "dst": 6, "a": 4, "b": 5},
+     {"op": "fstore", "a": 0, "field": "lo", "value": 6},
+     {"op": "fload", "dst": 7, "a": 0, "field": "hi"},
+     {"op": "fload", "dst": 8, "a": 0, "field": "lo"},
+     {"op": "sub", "dst": 9, "a": 7, "b": 8},
+     {"op": "ret", "a": 9}
+    ],
+    [
+     {"op": "trap", "code": 9},
+     {"op": "br", "to": 1}
+    ]
+   ]},
+  {"name": "clampv", "params": ["shared:Win", "u16"], "ret": "u16", "ensures": "result >= w . lo", "locals": ["u16", "bool", "u16", "bool", "u16", "bool"],
+   "blocks": [
+    [
+     {"op": "fload", "dst": 2, "a": 0, "field": "lo"},
+     {"op": "lt", "dst": 3, "a": 1, "b": 2},
+     {"op": "cbr", "cond": 3, "then": 1, "else": 2}
+    ],
+    [
+     {"op": "fload", "dst": 4, "a": 0, "field": "lo"},
+     {"op": "ge", "dst": 5, "a": 1, "b": 4},
+     {"op": "cbr", "cond": 5, "then": 3, "else": 4}
+    ],
+    [
+     {"op": "fload", "dst": 6, "a": 0, "field": "lo"},
+     {"op": "ge", "dst": 7, "a": 1, "b": 6},
+     {"op": "cbr", "cond": 7, "then": 5, "else": 6}
+    ],
+    [
+     {"op": "ret", "a": 1}
+    ],
+    [
+     {"op": "trap", "code": 10},
+     {"op": "br", "to": 3}
+    ],
+    [
+     {"op": "ret", "a": 1}
+    ],
+    [
+     {"op": "trap", "code": 10},
+     {"op": "br", "to": 5}
+    ]
+   ]},
+  {"name": "run_req", "params": ["u16", "u16"], "ret": "u16", "locals": ["u64", "own:Win", "u16"],
+   "blocks": [
+    [
+     {"op": "const", "dst": 2, "value": 0},
+     {"op": "alloc", "dst": 3, "init": 2},
+     {"op": "fstore", "a": 3, "field": "lo", "value": 0},
+     {"op": "fstore", "a": 3, "field": "hi", "value": 1},
+     {"op": "call", "dst": 4, "func": "width", "args": [3]},
+     {"op": "release", "arr": 3},
+     {"op": "ret", "a": 4}
+    ]
+   ]},
+  {"name": "run_ens", "params": ["u16", "u16"], "ret": "u16", "locals": ["u16", "u64", "own:Win", "u16"],
+   "blocks": [
+    [
+     {"op": "const", "dst": 2, "value": 100},
+     {"op": "const", "dst": 3, "value": 0},
+     {"op": "alloc", "dst": 4, "init": 3},
+     {"op": "fstore", "a": 4, "field": "lo", "value": 0},
+     {"op": "fstore", "a": 4, "field": "hi", "value": 2},
+     {"op": "call", "dst": 5, "func": "clampv", "args": [4, 1]},
+     {"op": "release", "arr": 4},
+     {"op": "ret", "a": 5}
+    ]
+   ]}
+]}

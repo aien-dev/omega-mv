@@ -39,7 +39,7 @@ FAIL SCHEMA.md struct example
 REFUSED schema: top level: unknown key "structs"
 ok   a unit without structs keeps IR version byte 1
 FAIL struct all-ops unit: REFUSED schema: top level: unknown key "structs"
-grep: /tmp/omega-emit-test.GYLBoOAn/sall.lift.json: No such file or directory
+grep: /tmp/omega-emit-test.2TIDd8Zh/sall.lift.json: No such file or directory
 FAIL lift of struct unit does not show the table
 FAIL st_unknown_struct: expected 'schema: function f: register r0: type "own:R" names no struct in "structs"', got: REFUSED schema: top level: unknown key "structs"
 FAIL st_unknown_field: expected 'step: function f block 0 op 0 (fload): struct P has no field "z"', got: REFUSED schema: top level: unknown key "structs"
@@ -80,13 +80,13 @@ ok     mutant caught: shared array bound into mut: at a step
 ok     mutant caught: struct: fstore through shared: accepted at a step
 ok     mutant caught: struct: index on a scalar field accepted
 ok     mutant caught: struct: missing index on an array field accepted
-FAIL mutant ftype: sed changed nothing
+ok     mutant caught: struct: field value type unchecked
 ok     mutant caught: struct: alloc init written with a non-zero value accepted
 ok     mutant caught: struct: alloc init from a parameter accepted
-omega_emit: cannot read /tmp/omega-emit-test.GYLBoOAn/sall.oscir
+omega_emit: cannot read /tmp/omega-emit-test.2TIDd8Zh/sall.oscir
 FAIL struct lift control
-omega_emit: cannot read /tmp/omega-emit-test.GYLBoOAn/sall.oscir
+omega_emit: cannot read /tmp/omega-emit-test.2TIDd8Zh/sall.oscir
 ok     mutant caught: struct: lift drops array field lengths
 ok     mutant caught: borrow fixture: array mov refused
 
-test-omega-emit: FAIL (28)
+test-omega-emit: FAIL (27)

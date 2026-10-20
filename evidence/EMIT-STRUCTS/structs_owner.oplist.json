@@ -1,0 +1,107 @@
+{"structs": [
+  {"name": "Acc", "fields": [{"name": "sum", "type": "i64"}, {"name": "hits", "type": "u32", "len": 3}]}
+ ],
+ "functions": [
+  {"name": "total", "params": ["shared:Acc"], "ret": "i64", "locals": ["i64", "i64", "u32", "i64", "i64", "i64", "u32", "i64", "i64", "i64", "u32", "i64", "i64"],
+   "blocks": [
+    [
+     {"op": "fload", "dst": 1, "a": 0, "field": "sum"},
+     {"op": "const", "dst": 2, "value": 0},
+     {"op": "fload", "dst": 3, "a": 0, "field": "hits", "index": 2},
+     {"op": "cast", "dst": 4, "a": 3},
+     {"op": "add", "dst": 5, "a": 1, "b": 4},
+     {"op": "const", "dst": 6, "value": 1},
+     {"op": "fload", "dst": 7, "a": 0, "field": "hits", "index": 6},
+     {"op": "cast", "dst": 8, "a": 7},
+     {"op": "add", "dst": 9, "a": 5, "b": 8},
+     {"op": "const", "dst": 10, "value": 2},
+     {"op": "fload", "dst": 11, "a": 0, "field": "hits", "index": 10},
+     {"op": "cast", "dst": 12, "a": 11},
+     {"op": "add", "dst": 13, "a": 9, "b": 12},
+     {"op": "ret", "a": 13}
+    ]
+   ]},
+  {"name": "add", "params": ["mut:Acc", "i64", "u8"], "ret": "void", "locals": ["i64", "i64", "u32", "u32", "u32"],
+   "blocks": [
+    [
+     {"op": "fload", "dst": 3, "a": 0, "field": "sum"},
+     {"op": "add", "dst": 4, "a": 3, "b": 1},
+     {"op": "fstore", "a": 0, "field": "sum", "value": 4},
+     {"op": "fload", "dst": 5, "a": 0, "field": "hits", "index": 2},
+     {"op": "const", "dst": 6, "value": 1},
+     {"op": "add", "dst": 7, "a": 5, "b": 6},
+     {"op": "fstore", "a": 0, "field": "hits", "value": 7, "index": 2},
+     {"op": "ret"}
+    ]
+   ]},
+  {"name": "consume", "params": ["own:Acc"], "ret": "i64", "locals": ["i64", "i64", "i64"],
+   "blocks": [
+    [
+     {"op": "call", "dst": 1, "func": "total", "args": [0]},
+     {"op": "const", "dst": 2, "value": 2},
+     {"op": "mul", "dst": 3, "a": 1, "b": 2},
+     {"op": "release", "arr": 0},
+     {"op": "ret", "a": 3}
+    ]
+   ]},
+  {"name": "moves", "params": ["i32"], "ret": "i64", "locals": ["i64", "u32", "u64", "own:Acc", "u64", "own:Acc", "i64", "u32", "own:Acc", "i64", "i64", "i64"],
+   "blocks": [
+    [
+     {"op": "cast", "dst": 1, "a": 0},
+     {"op": "const", "dst": 2, "value": 0},
+     {"op": "const", "dst": 3, "value": 0},
+     {"op": "alloc", "dst": 4, "init": 3},
+     {"op": "fstore", "a": 4, "field": "sum", "value": 1},
+     {"op": "const", "dst": 5, "value": 0},
+     {"op": "fstore", "a": 4, "field": "hits", "value": 2, "index": 5},
+     {"op": "const", "dst": 5, "value": 1},
+     {"op": "fstore", "a": 4, "field": "hits", "value": 2, "index": 5},
+     {"op": "const", "dst": 5, "value": 2},
+     {"op": "fstore", "a": 4, "field": "hits", "value": 2, "index": 5},
+     {"op": "mov", "dst": 6, "a": 4},
+     {"op": "const", "dst": 7, "value": 2},
+     {"op": "const", "dst": 8, "value": 5},
+     {"op": "fstore", "a": 6, "field": "hits", "value": 8, "index": 7},
+     {"op": "mov", "dst": 9, "a": 6},
+     {"op": "call", "dst": 10, "func": "consume", "args": [9]},
+     {"op": "const", "dst": 11, "value": 1},
+     {"op": "add", "dst": 12, "a": 10, "b": 11},
+     {"op": "ret", "a": 12}
+    ]
+   ]},
+  {"name": "borrow_calls", "params": ["i16", "u8"], "ret": "i64", "locals": ["u32", "i64", "u64", "own:Acc", "u64", "i64", "mut:Acc", "i64", "u8", "i64", "i64", "i64", "shared:Acc", "i64", "i64", "i64", "u32", "i64", "i64"],
+   "blocks": [
+    [
+     {"op": "const", "dst": 2, "value": 1},
+     {"op": "const", "dst": 3, "value": 0},
+     {"op": "const", "dst": 4, "value": 0},
+     {"op": "alloc", "dst": 5, "init": 4},
+     {"op": "const", "dst": 6, "value": 0},
+     {"op": "fstore", "a": 5, "field": "hits", "value": 2, "index": 6},
+     {"op": "const", "dst": 6, "value": 1},
+     {"op": "fstore", "a": 5, "field": "hits", "value": 2, "index": 6},
+     {"op": "const", "dst": 6, "value": 2},
+     {"op": "fstore", "a": 5, "field": "hits", "value": 2, "index": 6},
+     {"op": "fstore", "a": 5, "field": "sum", "value": 3},
+     {"op": "cast", "dst": 7, "a": 0},
+     {"op": "call", "func": "add", "args": [5, 7, 1]},
+     {"op": "mov", "dst": 8, "a": 5},
+     {"op": "const", "dst": 9, "value": 1},
+     {"op": "const", "dst": 10, "value": 0},
+     {"op": "call", "func": "add", "args": [8, 9, 10]},
+     {"op": "fload", "dst": 11, "a": 8, "field": "sum"},
+     {"op": "const", "dst": 12, "value": 2},
+     {"op": "mul", "dst": 13, "a": 11, "b": 12},
+     {"op": "fstore", "a": 8, "field": "sum", "value": 13},
+     {"op": "mov", "dst": 14, "a": 5},
+     {"op": "call", "dst": 15, "func": "total", "args": [14]},
+     {"op": "mov", "dst": 16, "a": 15},
+     {"op": "const", "dst": 17, "value": 0},
+     {"op": "fload", "dst": 18, "a": 14, "field": "hits", "index": 17},
+     {"op": "cast", "dst": 19, "a": 18},
+     {"op": "add", "dst": 20, "a": 16, "b": 19},
+     {"op": "release", "arr": 5},
+     {"op": "ret", "a": 20}
+    ]
+   ]}
+]}
