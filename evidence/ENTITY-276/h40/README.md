@@ -122,7 +122,7 @@ and h6r give the same G5 verdict.
 - The earlier mutants (SHADOW, VIEWWRITE, IDLEPOLL, SHADOW restart, TAMPER) went red in the
   run of record with the same bad rows as before: 1, 2, 1, 1, 7 (run-of-record/r0/run-verdict.txt).
 - The horizon-mode checks were given their own mutants after the run of record (commit
-  below; the hooks are inert without the ENTITY276_HMUTANT variable, and the run-of-record
+  dc204484; the hooks are inert without the ENTITY276_HMUTANT variable, and the run-of-record
   binary did not contain them). Dev build, H 3 with all arms and --release
   (dev-after-record/hmutants-verdict.txt): clean run exit 0, 0 bad rows; FORGETSTORE (forget
   arm stores a template) red, 1 bad row; LAZYSKIP (lazy arm never rebuilds) red, 2; COLDKEEP
