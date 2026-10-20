@@ -1,0 +1,11 @@
+sim NORM    : ok (0 + 0 elements out of tolerance, worst 1.47e-07)
+sim ACT     : ok (0 + 0 elements out of tolerance, worst 2.80e-07)
+sim COMBINE : ok (0 + 0 elements out of tolerance, worst 1.58e-05)
+sim INJECT  : ok (0 + 0 elements out of tolerance, worst 3.52e-06)
+sim mutant 1 on NORM    : caught (10239 + 0 elements out of tolerance, worst 9.97e-01)
+sim mutant 2 on ACT     : caught (320 + 0 elements out of tolerance, worst 4.62e+00)
+sim mutant 3 on COMBINE : caught (2560 + 0 elements out of tolerance, worst 2.34e+03)
+sim mutant 4 on COMBINE : caught (0 + 4 elements out of tolerance, worst 4.55e-01)
+sim mutant 5 on INJECT  : caught (7680 + 0 elements out of tolerance, worst 7.49e+01)
+sim mutant 6 on NORM    : caught (10240 + 0 elements out of tolerance, worst 1.95e-04)
+gpu_fnhc_test: 10 checks, 0 failed: PASS
