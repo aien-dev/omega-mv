@@ -35,6 +35,22 @@ Drake's rule: the compiler needs only the LLM plus calculations and semantics.
 - Founding check: which OSC-0 rules are enforced by a gate today and which are only written down (L114).
 - Driver floor: keep / replace / already ours, per call (L101).
 
+## The handover point (Drake, 2026-10-19)
+
+The seed chain grows upward (rungs 0 to 4) while the C-built compiler grows to OSC-4 (floats, L135). They meet
+at one point: the day the seed-born compiler can compile the OSC-4 compiler's own source. The gate at that point:
+
+1. The C-built OSC-4 compiler and the seed-born compiler compile the same fixed corpus (every .osc and .omegese
+   test, the decode kernels' listings, Atlas) to byte-identical IR and machine words.
+2. The seed-born compiler compiles its own source; that result compiles the source again; the two are byte-identical.
+3. Both builds of the corpus are checked by two independent compilers (the archived C one and the seed-born one)
+   and agree bit for bit (the trusting-trust check).
+
+Then the handover: everything above OSC-4 is rebuilt from the seed-born compiler; the C-built compiler leaves
+the build and is archived, pinned, as the oracle. Nothing C-built remains in the running system except the floor
+(rung F). Rung 4 is defined by this: "the fuller Omega" is exactly the subset needed to compile OSC-4's source,
+nothing more.
+
 ## The chain, explicitly
 
 What blockchain is good for, kept; what it wastes, left out. Kept: a hash chain (each record carries the fingerprint of the one before, so a rewritten past breaks every later link), multi-party agreement (no single machine is final), and standing earned by useful work (judging PRs). Left out: coins, tokens, proof-of-work puzzles, global consensus protocols. The registry of nodes is a file Drake merges. The receipts shelf git history is the public ledger; the seed chain is the same shape for the compiler itself.
