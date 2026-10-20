@@ -176,6 +176,7 @@ typedef struct { int kind; int depth; int els, join, has_else; int head, exit; i
 static Func funcs[MAX_FUNCS];
 static int nfuncs;
 static Buf out;
+static Buf sjs; /* the "structs" list of the op list */
 static int in_fn; /* a function is open */
 static Ty regs[MAX_REGS];
 static int nregs, nparams;
@@ -606,7 +607,7 @@ static int parse_type(Ty *t) {
         TRY(fill_word(GW[T_U32]));
     }
     int s = scalar_word(lw[lp]);
-    if (s >= 0) { *t = (Ty){R_NONE, s, 0}; lp++; return 0; }
+    if (s >= 0) { *t = (Ty){R_NONE, s, 0, 0}; lp++; return 0; }
     int r = ref_word(lw[lp]);
     if (r < 0) return fail("'%s' is not a type (%s ..., own/edit/view <type> <length>, or own/edit/view <struct>)", lw[lp], GW[T_U32]);
     if (lp + 1 < ln && find_struct(lw[lp + 1]) >= 0) { *t = (Ty){r, 0, 0, find_struct(lw[lp + 1]) + 1}; lp += 2; return 0; }
@@ -618,7 +619,7 @@ static int parse_type(Ty *t) {
     int neg;
     uint64_t len;
     if (!parse_lit(lw[lp + 2], &neg, &len) || neg || len < 1 || len > 64) return fail("array length '%s' must be 1..64", lw[lp + 2]);
-    *t = (Ty){r, s, (int)len};
+    *t = (Ty){r, s, (int)len, 0};
     lp += 3;
     return 0;
 }
@@ -1112,7 +1113,7 @@ static int value(const Want *want, int dst, Val *v) {
     v->arity = 1;
     int s = scalar_word(t);
     if (s >= 0) { /* <type> <number>: a typed number;  <type> <value>: a conversion */
-        Ty ty = {R_NONE, s, 0};
+        Ty ty = {R_NONE, s, 0, 0};
         Want w = {s == T_BOOL ? 1u : S_INT, A_NONE, {0}, L_TYPED, ty, 0};
         Val a;
         TRY(slot(&w, -2, &a, v->head, 0, 1));
@@ -1164,22 +1165,22 @@ static int value(const Want *want, int dst, Val *v) {
             Val i = {0};
             if (fd->len) {
                 v->arity = 3;
-                Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0};
+                Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0, 0}, 0};
                 TRY(slot(&iw, -2, &i, v->head, 2, 3));
                 if (!is_int(i.t)) return fail("index '%s' is not a whole number", span(i.a, i.b));
             }
-            v->t = (Ty){R_NONE, fd->s, 0};
+            v->t = (Ty){R_NONE, fd->s, 0, 0};
             TRY(to_dst(&dst, v->t));
             if (fd->len) TRY(op("\"op\": \"fload\", \"dst\": %d, \"a\": %d, \"field\": \"%s\", \"index\": %d", dst, a, fd->name, i.reg));
             else TRY(op("\"op\": \"fload\", \"dst\": %d, \"a\": %d, \"field\": \"%s\"", dst, a, fd->name));
             TRY(own_use(a));
             goto done;
         }
-        Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0};
+        Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0, 0}, 0};
         Val i;
         TRY(slot(&iw, -2, &i, v->head, 1, 2));
         if (!is_int(i.t)) return fail("index '%s' is not a whole number", span(i.a, i.b));
-        v->t = (Ty){R_NONE, ta.s, 0};
+        v->t = (Ty){R_NONE, ta.s, 0, 0};
         TRY(to_dst(&dst, v->t));
         TRY(op("\"op\": \"load\", \"dst\": %d, \"arr\": %d, \"index\": %d", dst, a, i.reg));
         TRY(own_use(a));
@@ -1192,19 +1193,19 @@ static int value(const Want *want, int dst, Val *v) {
         if (lp < ln && find_struct(lw[lp]) >= 0) { /* new <struct> <value per field>: a struct literal */
             int st = find_struct(lw[lp++]) + 1;
             const Struct *S = &structs[st - 1];
-            Ty u64 = {R_NONE, T_U64, 0};
+            Ty u64 = {R_NONE, T_U64, 0, 0};
             int vals[MAX_FIELDS];
 #ifdef OMEGESE_STRUCT_A /* the spelling not chosen (OMEGESE.md section 3): new <struct>, every field zero */
             v->arity = 1;
             for (int k = 0; k < S->nf; k++) {
-                vals[k] = new_reg((Ty){R_NONE, S->f[k].s, 0});
+                vals[k] = new_reg((Ty){R_NONE, S->f[k].s, 0, 0});
                 TRY(vals[k]);
                 TRY(op("\"op\": \"const\", \"dst\": %d, \"value\": %s", vals[k], S->f[k].s == T_BOOL ? "false" : "0"));
             }
 #else
             v->arity = 1 + S->nf;
             for (int k = 0; k < S->nf; k++) {
-                Want fw = want_type((Ty){R_NONE, S->f[k].s, 0});
+                Want fw = want_type((Ty){R_NONE, S->f[k].s, 0, 0});
                 Val fv;
                 TRY(slot(&fw, -2, &fv, v->head, k + 1, 1 + S->nf));
                 if (!teq(fv.t, fw.lt)) return fail("field %s of %s holds %s; '%s' is %s", S->f[k].name, S->name, tname(fw.lt), span(fv.a, fv.b), tname(fv.t));
@@ -1237,7 +1238,7 @@ static int value(const Want *want, int dst, Val *v) {
             TRY(fill_word(GW[want->arr == A_EXACT ? want->p.s : T_U32]));
         }
         if (scalar_word(lw[lp]) < 0) return fail("'%s' is not an element type", lw[lp]);
-        Ty et = {R_NONE, scalar_word(lw[lp++]), 0};
+        Ty et = {R_NONE, scalar_word(lw[lp++]), 0, 0};
         if (lp >= ln) {
             if (!g_fill) return fail("new has 1 value after it; it takes 3");
             char lb[8];
@@ -1252,7 +1253,7 @@ static int value(const Want *want, int dst, Val *v) {
         Val init;
         TRY(slot(&iw, -2, &init, v->head, 2, 3));
         if (!teq(init.t, et)) return fail("starting value '%s' is %s, not %s", span(init.a, init.b), tname(init.t), tname(et));
-        v->t = (Ty){R_OWN, et.s, (int)len};
+        v->t = (Ty){R_OWN, et.s, (int)len, 0};
         TRY(to_dst(&dst, v->t));
         TRY(op("\"op\": \"alloc\", \"dst\": %d, \"init\": %d", dst, init.reg));
         TRY(own_birth(dst));
@@ -1287,7 +1288,7 @@ static int value(const Want *want, int dst, Val *v) {
         if (!teq(a.t, b.t))
             return fail("%s needs two values of one type: '%s' is %s, '%s' is %s", OPW[o], span(a.a, a.b), tname(a.t), span(b.a, b.b), tname(b.t));
         if (is_arith(o) && a.t.s == T_BOOL) return fail("%s needs whole numbers, not bool", OPW[o]);
-        v->t = is_cmp(o) ? (Ty){R_NONE, T_BOOL, 0} : a.t;
+        v->t = is_cmp(o) ? (Ty){R_NONE, T_BOOL, 0, 0} : a.t;
     }
     TRY(to_dst(&dst, v->t));
     TRY(op("\"op\": \"%s\", \"dst\": %d, \"a\": %d, \"b\": %d", IROP[o], dst, a.reg, b.reg));
@@ -1309,7 +1310,7 @@ static int alone(const char *w) {
 }
 /* a condition: any value giving bool */
 static int cond(Val *c, const char *what) {
-    Want b = want_type((Ty){R_NONE, T_BOOL, 0});
+    Want b = want_type((Ty){R_NONE, T_BOOL, 0, 0});
     int r = value(&b, -2, c);
     if (r == MISSING) return fail("%s needs a condition", what);
     TRY(r);
@@ -1437,14 +1438,14 @@ static int fn_line(void) {
  *     every pass, any other value is computed once, before the loop.
  */
 static int guarded_loop(int is_for, int s, const Val *count, const char *forname) {
-    Ty u64 = {R_NONE, T_U64, 0};
+    Ty u64 = {R_NONE, T_U64, 0, 0};
     int zero = lit_reg("0", u64), one = lit_reg("1", u64);
     TRY(zero);
     TRY(one);
     int ctr = -1, cnt = new_reg(u64);
     TRY(cnt);
     if (is_for) {
-        Ty t = {R_NONE, s, 0};
+        Ty t = {R_NONE, s, 0, 0};
         int z = lit_reg("0", t);
         TRY(z);
         TRY(lit_reg("1", t));
@@ -1465,7 +1466,7 @@ static int guarded_loop(int is_for, int s, const Val *count, const char *forname
     int c;
     const char *bound = "1000000";
     if (is_for) {
-        c = new_reg((Ty){R_NONE, T_BOOL, 0});
+        c = new_reg((Ty){R_NONE, T_BOOL, 0, 0});
         TRY(c);
         TRY(op("\"op\": \"lt\", \"dst\": %d, \"a\": %d, \"b\": %d", c, ctr, count->reg));
     } else { /* the condition is computed in the head: again before every pass */
@@ -1489,7 +1490,7 @@ static int guarded_loop(int is_for, int s, const Val *count, const char *forname
     TRY(lim);
     TRY(op("\"op\": \"cbr\", \"cond\": %d, \"then\": @%d@, \"else\": @%d@", c, g, ex));
     start_block(g);
-    int ge = new_reg((Ty){R_NONE, T_BOOL, 0});
+    int ge = new_reg((Ty){R_NONE, T_BOOL, 0, 0});
     TRY(ge);
     TRY(op("\"op\": \"ge\", \"dst\": %d, \"a\": %d, \"b\": %d", ge, cnt, lim));
     TRY(op("\"op\": \"cbr\", \"cond\": %d, \"then\": @%d@, \"else\": @%d@", ge, tb, body));
@@ -1536,7 +1537,7 @@ static int for_line(void) {
     int s = scalar_word(lw[lp]);
     if (s < 0 || s == T_BOOL) return fail("'%s' is not a whole-number type", lw[lp]);
     lp++;
-    Ty t = {R_NONE, s, 0};
+    Ty t = {R_NONE, s, 0, 0};
     if (cur < 0) return fail("this line can never run: the path already ended (ret, trap or break)");
     int ki = count_number();
     if (ki >= 0) { /* for <name> <type> <count number>: name = 0, 1, ... count-1 (brackets change nothing) */
@@ -1561,7 +1562,7 @@ static int for_line(void) {
         TRY(br(h));
         TRY(own_loop_open());
         start_block(h);
-        int c = new_reg((Ty){R_NONE, T_BOOL, 0});
+        int c = new_reg((Ty){R_NONE, T_BOOL, 0, 0});
         TRY(c);
         TRY(op("\"op\": \"lt\", \"dst\": %d, \"a\": %d, \"b\": %d", c, ctr, k));
         TRY(op("\"op\": \"cbr\", \"cond\": %d, \"then\": @%d@, \"else\": @%d@", c, body, ex));
@@ -1588,7 +1589,6 @@ static int for_line(void) {
 }
 
 /* struct <name> (<field> <type> [<length>])... end: one line, before the first fn */
-static Buf sjs; /* the "structs" list of the op list */
 static int struct_line(void) {
     if (in_fn || nfuncs > 0) return fail("struct declarations come before the first fn");
     lp = 1;
@@ -1803,7 +1803,7 @@ static int stmt(void) {
             TRY(field_word(0, ta.st, S_ALL, &fi));
             const Field *fd = &S->f[fi];
             int ar = fd->len ? 4 : 3;
-            Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0}, vw = want_type((Ty){R_NONE, fd->s, 0});
+            Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0, 0}, 0}, vw = want_type((Ty){R_NONE, fd->s, 0, 0});
             Val i = {0}, v;
             if (fd->len) {
                 TRY(slot(&iw, -2, &i, 0, 2, ar));
@@ -1817,7 +1817,7 @@ static int stmt(void) {
             else TRY(op("\"op\": \"fstore\", \"a\": %d, \"field\": \"%s\", \"value\": %d", a, fd->name, v.reg));
             return own_use(a);
         }
-        Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0}, vw = want_type((Ty){R_NONE, ta.s, 0});
+        Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0, 0}, 0}, vw = want_type((Ty){R_NONE, ta.s, 0, 0});
         Val i, v;
         TRY(slot(&iw, -2, &i, 0, 1, 3));
         if (!is_int(i.t)) return fail("index '%s' is not a whole number", span(i.a, i.b));
