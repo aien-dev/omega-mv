@@ -69,9 +69,24 @@ ctrl "wrong field position (S2R register at bit 9)" 's/^= s2r.2        0x0000000
 if [ -x "$NVD" ]; then
   say "nvdisasm: $("$NVD" --version | grep -o 'release [0-9.]*, V[0-9.]*')  (reference reader only)"
   awk '/^  /{ split($0, f, " "); n++; key = key (key == "" ? "" : "+") f[1]; if (n % 4 == 3) { print key; key = "" } if (n % 4 == 0) key = "" }' "$O/edges.s2" > $B/edges.keys
-  "$NVD" -b SM121 "$O/edges.a.bin" 2> $B/nvd.err | grep -E '^ +/\*[0-9a-f]{4,}\*/' | sed 's|^ */\*[0-9a-f]*\*/ *||; s/ *;.*//' > $B/edges.sass || true
-  paste $B/edges.keys $B/edges.sass > $B/edges.pairs
-  say "nvdisasm read $(wc -l < $B/edges.sass) of $(wc -l < $B/edges.keys) edge instructions"
+  # nvdisasm prints nothing for a file holding any word it refuses, so the refused instructions (it names each by
+  # address) are taken out and it reads the rest; repeated until it refuses none. Refusals are counted by kind.
+  od -An -v -tx1 -w16 "$O/edges.a.bin" | tr -d ' ' | awk '{ print NR - 1 "\t" $0 }' > $B/edges.hex
+  paste $B/edges.keys $B/edges.hex | awk -F'\t' '{ print $2 "\t" $1 "\t" $3 }' > $B/nvd.in   # index, key, hex
+  : > $B/nvd.refused
+  for round in 1 2 3 4 5; do
+    cut -f3 $B/nvd.in | xxd -r -p > $B/nvd.bin
+    "$NVD" -b SM121 $B/nvd.bin > $B/nvd.out 2> $B/nvd.err || true
+    grep -q 'at address' $B/nvd.err || break
+    sed -n 's/.* at address 0x\([0-9a-f]*\).*/\1/p' $B/nvd.err | while read -r a; do echo $(( 0x$a / 16 )); done | sort -n -u > $B/nvd.bad
+    sed 's/ at address.*//' $B/nvd.err >> $B/nvd.refused
+    awk -F'\t' 'NR == FNR { bad[$1]; next } !((FNR - 1) in bad)' $B/nvd.bad $B/nvd.in > $B/nvd.next && mv $B/nvd.next $B/nvd.in
+  done
+  grep -q 'at address' $B/nvd.err && bad "nvdisasm still refuses words after 5 rounds"
+  grep -E '^ +/\*[0-9a-f]{4,}\*/' $B/nvd.out | sed 's|^ */\*[0-9a-f]*\*/ *||; s/ *;.*//' > $B/edges.sass
+  cut -f2 $B/nvd.in | paste - $B/edges.sass > $B/edges.pairs
+  sort $B/nvd.refused | uniq -c | sort -rn > "$E/nvdisasm-refused.txt"
+  say "nvdisasm read $(wc -l < $B/edges.sass) of $(wc -l < $B/edges.keys) edge instructions; refused $(wc -l < $B/nvd.refused) ($E/nvdisasm-refused.txt)"
   # the disassembler's opcode (first token after an optional @P guard) for each key, every distinct pairing kept
   awk -F'\t' '{ s = $2; sub(/^@!?P[T0-9] +/, "", s); split(s, t, " "); print $1 "\t" t[1] }' $B/edges.pairs | sort -u > "$E/forms-nvdisasm.tsv"
   : > "$E/name-differences.tsv"

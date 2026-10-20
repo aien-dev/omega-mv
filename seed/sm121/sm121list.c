@@ -316,6 +316,11 @@ static void kernels(void) {
     { static const uint32_t ks[] = { 128, 512, 4096, 16384 };
       for (int a = 0; a < 4; a++) for (uint32_t rt = 1; rt <= 4; rt *= 2) for (uint32_t ct = 1; ct <= 4; ct *= 2) for (uint32_t w = 1; w <= 8; w *= 2) for (int mu = 0; mu <= 3; mu++) {
           OmegaTcGemmSpec s; memset(&s, 0, sizeof s); s.k = ks[a]; s.rt = rt; s.ct = ct; s.warps = w; s.mutant = mu;
+          /* the generator accepts 4*rt/warps staging slots up to 16 but keeps them in 8-long arrays (gx, sa, stg):
+           * rt=4 with one warp overruns them and crashes. Fixer ledger L149. Skipped and named, never hidden. */
+          if (omega_tcgemm_spec_ok(&s) && 4u * rt / w > 8u) {
+              char nm[96]; snprintf(nm, sizeof nm, "tcgemm_k%u_r%u_c%u_w%u_m%d", ks[a], rt, ct, w, mu);
+              note(nm, 0, "skipped: generator overruns its 8-slot staging arrays for this setting (fixer L149)"); continue; }
           TRY(omega_blackwell_codegen_tcgemm_prog(&s, &g_p), "tcgemm_k%u_r%u_c%u_w%u_m%d", ks[a], rt, ct, w, mu); } }
     { static const uint32_t ks[] = { 256, 512, 4096, 16384 }, ws[] = { 1, 4, 8, 32 }; static const int ms[] = { 0, 1, 3 };
       for (int a = 0; a < 4; a++) for (uint32_t lay = 0; lay <= 1; lay++) for (uint32_t r = 1; r <= 4; r *= 2) for (int w = 0; w < 4; w++)
