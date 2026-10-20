@@ -72,13 +72,15 @@ if [ -x "$NVD" ]; then
   # nvdisasm prints nothing for a file holding any word it refuses, so the refused instructions (it names each by
   # address) are taken out and it reads the rest; repeated until it refuses none. Refusals are counted by kind.
   od -An -v -tx1 -w16 "$O/edges.a.bin" | tr -d ' ' | awk '{ print NR - 1 "\t" $0 }' > $B/edges.hex
-  paste $B/edges.keys $B/edges.hex | awk -F'\t' '{ print $2 "\t" $1 "\t" $3 }' > $B/nvd.in   # index, key, hex
-  : > $B/nvd.refused
+  awk '/^  /{ n++; if (n % 4 == 0) { split($0, f, " "); print (f[1] == "ctl" ? f[2] : "default") } }' "$O/edges.s2" > $B/edges.ctl
+  paste $B/edges.keys $B/edges.hex $B/edges.ctl | awk -F'\t' '{ print $2 "\t" $1 "\t" $3 "\t" $4 }' > $B/nvd.in   # index, key, hex, schedule word
+  : > $B/nvd.refused; : > $B/nvd.refused.ctl
   for round in 1 2 3 4 5; do
     cut -f3 $B/nvd.in | xxd -r -p > $B/nvd.bin
     "$NVD" -b SM121 $B/nvd.bin > $B/nvd.out 2> $B/nvd.err || true
     grep -q 'at address' $B/nvd.err || break
     sed -n 's/.* at address 0x\([0-9a-f]*\).*/\1/p' $B/nvd.err | while read -r a; do echo $(( 0x$a / 16 )); done | sort -n -u > $B/nvd.bad
+    awk -F'\t' 'NR == FNR { bad[$1]; next } (FNR - 1) in bad { print $4 "\t" $2 }' $B/nvd.bad $B/nvd.in >> $B/nvd.refused.ctl
     sed 's/ at address.*//' $B/nvd.err >> $B/nvd.refused
     awk -F'\t' 'NR == FNR { bad[$1]; next } !((FNR - 1) in bad)' $B/nvd.bad $B/nvd.in > $B/nvd.next && mv $B/nvd.next $B/nvd.in
   done
@@ -86,7 +88,10 @@ if [ -x "$NVD" ]; then
   grep -E '^ +/\*[0-9a-f]{4,}\*/' $B/nvd.out | sed 's|^ */\*[0-9a-f]*\*/ *||; s/ *;.*//' > $B/edges.sass
   cut -f2 $B/nvd.in | paste - $B/edges.sass > $B/edges.pairs
   sort $B/nvd.refused | uniq -c | sort -rn > "$E/nvdisasm-refused.txt"
-  say "nvdisasm read $(wc -l < $B/edges.sass) of $(wc -l < $B/edges.keys) edge instructions; refused $(wc -l < $B/nvd.refused) ($E/nvdisasm-refused.txt)"
+  cut -f1 $B/nvd.refused.ctl | sed "s/^/schedule word /" | sort | uniq -c | sort -rn > "$E/nvdisasm-refused-schedule.txt"
+  awk -F'\t' '$1 != "0xffffffff" { print $2 }' $B/nvd.refused.ctl | sort | uniq -c | sort -rn > "$E/nvdisasm-refused-forms.txt"
+  say "nvdisasm refusals by schedule word: $(awk '{ printf "%s%s x%s", s, $4, $1; s = ", " }' "$E/nvdisasm-refused-schedule.txt")"
+  say "nvdisasm read $(wc -l < $B/edges.sass) of $(wc -l < $B/edges.keys) edge instructions; refused $(wc -l < $B/nvd.refused.ctl) ($E/nvdisasm-refused.txt; with an ordinary schedule word, by form: $E/nvdisasm-refused-forms.txt)"
   # the disassembler's opcode (first token after an optional @P guard) for each key, every distinct pairing kept
   awk -F'\t' '{ s = $2; sub(/^@!?P[T0-9] +/, "", s); split(s, t, " "); print $1 "\t" t[1] }' $B/edges.pairs | sort -u > "$E/forms-nvdisasm.tsv"
   : > "$E/name-differences.tsv"
