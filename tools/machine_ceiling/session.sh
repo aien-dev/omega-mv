@@ -41,6 +41,8 @@ host)
 	rcpt nvme-read-30s "$B/mc/mc_disk" read "$SCR/mc.bin" 16 1024 30
 	;;
 gpu)
+	# CPU memory again while this window holds the GB10 lock (no 27B server traffic in memory at the same time)
+	for set in 5 0 $X925 $A725 $ALL; do run cpu-bw-gb10held gb10 "$B/mc/mc_cpu" bw "$set" 67108864 read 5; done
 	run gpu-ceiling gb10 "$B/gpu_ceiling_test"
 	run gpu-tc-peak gb10 "$B/gpu_tc_peak_test"
 	run gpu-qmma gb10 "$B/gpu_qmma_probe_test"
