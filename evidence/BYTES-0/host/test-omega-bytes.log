@@ -1,0 +1,185 @@
+REFUSED tools/omega_bytes/kernels/a64_refused.words:3: word 0x91000400 is not named by src/aarch64_decoder.c
+a64 tools/omega_bytes/kernels/a64_refused.words: REFUSED
+REFUSED tools/omega_bytes/kernels/gb10_refused.words:2: opcode 0x123 (word 0x000fea00038000000000000000007123) is not emitted by the in-repo sm_121 encoder for any BlackwellIROpcode
+gb10 tools/omega_bytes/kernels/gb10_refused.words: REFUSED
+REFUSED tools/omega_bytes/kernels/a64_refused.words:3: word 0x91000400 is not named by src/aarch64_decoder.c
+    0  0xd2800069  MOVZ
+    1  0x9b097c00  MUL
+    2  0xd2800049  MOVZ
+    3  0xcb090000  SUB
+    4  0xd65f03c0  RET
+  set  0 a=0x0000000000000000 hand=0xfffffffffffffffe C=0xfffffffffffffffe ok
+  set  1 a=0x0000000000000001 hand=0x0000000000000001 C=0x0000000000000001 ok
+  set  2 a=0x0000000000000002 hand=0x0000000000000004 C=0x0000000000000004 ok
+  set  3 a=0x0000000000000003 hand=0x0000000000000007 C=0x0000000000000007 ok
+  set  4 a=0xffffffffffffffff hand=0xfffffffffffffffb C=0xfffffffffffffffb ok
+  set  5 a=0x5555555555555555 hand=0xfffffffffffffffd C=0xfffffffffffffffd ok
+  set  6 a=0x8000000000000000 hand=0x7ffffffffffffffe C=0x7ffffffffffffffe ok
+  set  7 a=0x000000003b9aca07 hand=0x00000000b2d05e13 C=0x00000000b2d05e13 ok
+  set  8 a=0xdc1b77ae0bf34dad hand=0x9452670a23d9e905 C=0x9452670a23d9e905 ok
+  set  9 a=0x64f0eeb9026e6076 hand=0x2ed2cc2b074b2160 C=0x2ed2cc2b074b2160 ok
+  set 10 a=0x7b07ce91e5906136 hand=0x71176bb5b0b123a0 C=0x71176bb5b0b123a0 ok
+  set 11 a=0x305f050c368dcc74 hand=0x911d0f24a3a9655a C=0x911d0f24a3a9655a ok
+  set 12 a=0x2ceb16e0a1c54aec hand=0x86c144a1e54fe0c2 C=0x86c144a1e54fe0c2 ok
+  set 13 a=0x97101dce4e7bfb79 hand=0xc530596aeb73f269 C=0xc530596aeb73f269 ok
+  set 14 a=0x9ad2e144d6e8f2cf hand=0xd078a3ce84bad86b C=0xd078a3ce84bad86b ok
+  set 15 a=0xd9aa792e1af470ea hand=0x8cff6b8a50dd52bc C=0x8cff6b8a50dd52bc ok
+{"target":"a64","gate":"mul3sub2","file":"tools/omega_bytes/kernels/a64_mul3sub2.words","sha256":"d858b2952e265df2f2690712f60318aa8afcf3336179fd503fb968a04c60aa53","sets":16,"pass":16,"verdict":"PASS"}
+    0  0xd2800803  MOVZ
+    1  0xb8404404  LDR
+    2  0xb8404425  LDR
+    3  0x0b050084  ADD
+    4  0xb8004444  STR
+    5  0xf1000463  SUBS
+    6  0x54ffff61  B.cond
+    7  0xd65f03c0  RET
+  set  0 out[0]=0x00000000 out[63]=0x0000003f guard=intact ok
+  set  1 out[0]=0x0e61ae23 out[63]=0x719a8271 guard=intact ok
+  set  2 out[0]=0x0617b2e2 out[63]=0xf7a55a14 guard=intact ok
+  set  3 out[0]=0xa79b1542 out[63]=0xb4d2ec33 guard=intact ok
+  set  4 out[0]=0x9e2e1c09 out[63]=0x72e42646 guard=intact ok
+  set  5 out[0]=0xaa79a687 out[63]=0x34d22e94 guard=intact ok
+  set  6 out[0]=0xcfc5f173 out[63]=0xea00c6aa guard=intact ok
+  set  7 out[0]=0xbd343bd8 out[63]=0xdd2dad00 guard=intact ok
+  set  8 out[0]=0x588c8c87 out[63]=0x5fa7583a guard=intact ok
+  set  9 out[0]=0x59a7b02a out[63]=0xf1480b09 guard=intact ok
+  set 10 out[0]=0x0a672a4b out[63]=0x72a19480 guard=intact ok
+  set 11 out[0]=0xe9df464b out[63]=0xdf03be17 guard=intact ok
+  set 12 out[0]=0x22d6db34 out[63]=0x2c12eee9 guard=intact ok
+  set 13 out[0]=0xb2a1901e out[63]=0x25f0cf83 guard=intact ok
+  set 14 out[0]=0x56ece5bc out[63]=0xb2be33ac guard=intact ok
+  set 15 out[0]=0xff0f1473 out[63]=0xf11b4b5d guard=intact ok
+{"target":"a64","gate":"vadd64","file":"tools/omega_bytes/kernels/a64_vadd64.words","sha256":"6877deb9aca3a7d05e35cdcf02c351a8ca29298655e6c894ba9fdbc065682558","sets":16,"pass":16,"verdict":"PASS"}
+    0  0000000000007919 000e220000002100  op=0x919 S2R            stall=1 wb=0 rb=7 wait=0x00
+    1  0000000000037919 000e220000002500  op=0x919 S2R            stall=1 wb=0 rb=7 wait=0x00
+    2  00007300ff0577ac 000e620008000800  op=0x7ac LDCU           stall=1 wb=1 rb=7 wait=0x00
+    3  0000004003037824 001fca00078e0200  op=0x824 IMAD           stall=5 wb=7 rb=7 wait=0x01
+    4  0000000503007c0c 002fda000bf06070  op=0xc0c ISETP.GE       stall=13 wb=7 rb=7 wait=0x02
+    5  000000000000094d 000fea0003800000  op=0x94d EXIT           stall=5 wb=7 rb=7 wait=0x00
+    6  0000e000ff047b82 000e220000000a00  op=0xb82 LDC            stall=1 wb=0 rb=7 wait=0x00
+    7  0000e200ff067b82 000e620000000a00  op=0xb82 LDC            stall=1 wb=1 rb=7 wait=0x00
+    8  0000e400ff087b82 000ea20000000a00  op=0xb82 LDC            stall=1 wb=2 rb=7 wait=0x00
+    9  00006b00ff0477ac 000ee20008000a00  op=0x7ac LDCU           stall=1 wb=3 rb=7 wait=0x00
+   10  0000000403047825 001fc400078e0004  op=0x825 IMAD.WIDE.U32  stall=2 wb=7 rb=7 wait=0x01
+   11  0000000403067825 002fc800078e0006  op=0x825 IMAD.WIDE.U32  stall=4 wb=7 rb=7 wait=0x02
+   12  0000000404007981 008f24000c1e1900  op=0x981 LDG.E          stall=2 wb=4 rb=7 wait=0x08
+   13  0000000406027981 000f22000c1e1900  op=0x981 LDG.E          stall=1 wb=4 rb=7 wait=0x00
+   14  0000000403087825 004fc200078e0008  op=0x825 IMAD.WIDE.U32  stall=1 wb=7 rb=7 wait=0x04
+   15  0000000200007210 010fca0007ffe0ff  op=0x210 IADD3          stall=5 wb=7 rb=7 wait=0x10
+   16  0000000008007986 000fe2000c101904  op=0x986 STG.E          stall=1 wb=7 rb=7 wait=0x00
+   17  000000000000794d 000fea0003800000  op=0x94d EXIT           stall=5 wb=7 rb=7 wait=0x00
+   18  fffffffc00fc7947 000fc0000383ffff  op=0x947 BRA            stall=0 wb=7 rb=7 wait=0x00
+   19  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   20  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   21  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   22  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   23  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   24  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   25  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   26  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   27  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   28  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   29  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   30  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   31  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+gb10 tools/omega_bytes/kernels/gb10_vadd_hand.words: every word named
+    0  0000000000007919 000e220000002100  op=0x919 S2R            stall=1 wb=0 rb=7 wait=0x00
+    1  0000000000037919 000e220000002500  op=0x919 S2R            stall=1 wb=0 rb=7 wait=0x00
+    2  00007300ff0577ac 000e620008000800  op=0x7ac LDCU           stall=1 wb=1 rb=7 wait=0x00
+    3  0000004003037824 001fca00078e0200  op=0x824 IMAD           stall=5 wb=7 rb=7 wait=0x01
+    4  0000000503007c0c 002fda000bf06070  op=0xc0c ISETP.GE       stall=13 wb=7 rb=7 wait=0x02
+    5  000000000000094d 000fea0003800000  op=0x94d EXIT           stall=5 wb=7 rb=7 wait=0x00
+    6  0000e000ff047b82 000e220000000a00  op=0xb82 LDC            stall=1 wb=0 rb=7 wait=0x00
+    7  0000e200ff067b82 000e620000000a00  op=0xb82 LDC            stall=1 wb=1 rb=7 wait=0x00
+    8  0000e400ff087b82 000ea20000000a00  op=0xb82 LDC            stall=1 wb=2 rb=7 wait=0x00
+    9  00006b00ff0477ac 000ee20008000a00  op=0x7ac LDCU           stall=1 wb=3 rb=7 wait=0x00
+   10  0000000403047825 001fc400078e0004  op=0x825 IMAD.WIDE.U32  stall=2 wb=7 rb=7 wait=0x01
+   11  0000000403067825 002fc800078e0006  op=0x825 IMAD.WIDE.U32  stall=4 wb=7 rb=7 wait=0x02
+   12  0000000404007981 008f24000c1e1900  op=0x981 LDG.E          stall=2 wb=4 rb=7 wait=0x08
+   13  0000000406027981 000f22000c1e1900  op=0x981 LDG.E          stall=1 wb=4 rb=7 wait=0x00
+   14  0000000403087825 004fc200078e0008  op=0x825 IMAD.WIDE.U32  stall=1 wb=7 rb=7 wait=0x04
+   15  0000000200007210 010fca0007ffe0ff  op=0x210 IADD3          stall=5 wb=7 rb=7 wait=0x10
+   16  0000000208007986 000fe2000c101904  op=0x986 STG.E          stall=1 wb=7 rb=7 wait=0x00
+   17  000000000000794d 000fea0003800000  op=0x94d EXIT           stall=5 wb=7 rb=7 wait=0x00
+   18  fffffffc00fc7947 000fc0000383ffff  op=0x947 BRA            stall=0 wb=7 rb=7 wait=0x00
+   19  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   20  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   21  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   22  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   23  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   24  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   25  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   26  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   27  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   28  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   29  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   30  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   31  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+gb10 tools/omega_bytes/kernels/gb10_vadd_mutant.words: every word named
+    0  000000000000794d 000fea0003800000  op=0x94d EXIT           stall=5 wb=7 rb=7 wait=0x00
+    1  fffffffc00fc7947 000fc0000383ffff  op=0x947 BRA            stall=0 wb=7 rb=7 wait=0x00
+    2  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+    3  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+    4  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+    5  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+    6  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+    7  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+    8  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+    9  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   10  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   11  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   12  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   13  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   14  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   15  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   16  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   17  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   18  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   19  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   20  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   21  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   22  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   23  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   24  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   25  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   26  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   27  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   28  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   29  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   30  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   31  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+gb10 tools/omega_bytes/kernels/gb10_empty.words: every word named
+    0  0000df00ff017b82 000fe20000000800  op=0xb82 LDC            stall=1 wb=7 rb=7 wait=0x00
+    1  0000000000097919 000e220000002500  op=0x919 S2R            stall=1 wb=0 rb=7 wait=0x00
+    2  00006c00ff0477ac 000e220008000800  op=0x7ac LDCU           stall=1 wb=0 rb=7 wait=0x00
+    3  0000000000007919 000e220000002100  op=0x919 S2R            stall=1 wb=0 rb=7 wait=0x00
+    4  00007300ff0577ac 000e620008000800  op=0x7ac LDCU           stall=1 wb=1 rb=7 wait=0x00
+    5  0000000409097c24 001fca000f8e0200  op=0xc24 IMAD           stall=5 wb=7 rb=7 wait=0x01
+    6  0000000509007c0c 002fda000bf06070  op=0xc0c ISETP.GE       stall=13 wb=7 rb=7 wait=0x02
+    7  000000000000094d 000fea0003800000  op=0x94d EXIT           stall=5 wb=7 rb=7 wait=0x00
+    8  0000e000ff027b82 000e220000000a00  op=0xb82 LDC            stall=1 wb=0 rb=7 wait=0x00
+    9  00006b00ff0477ac 000e6e0008000a00  op=0x7ac LDCU           stall=7 wb=1 rb=7 wait=0x00
+   10  0000e200ff047b82 000eb00000000a00  op=0xb82 LDC            stall=8 wb=2 rb=7 wait=0x00
+   11  0000e400ff067b82 000ee20000000a00  op=0xb82 LDC            stall=1 wb=3 rb=7 wait=0x00
+   12  0000000409027825 001fcc00078e0002  op=0x825 IMAD.WIDE.U32  stall=6 wb=7 rb=7 wait=0x01
+   13  0000000402027981 002f22000c1e1900  op=0x981 LDG.E          stall=1 wb=4 rb=7 wait=0x02
+   14  0000000409047825 004fcc00078e0004  op=0x825 IMAD.WIDE.U32  stall=6 wb=7 rb=7 wait=0x04
+   15  0000000404057981 000f22000c1e1900  op=0x981 LDG.E          stall=1 wb=4 rb=7 wait=0x00
+   16  0000000409067825 008fe200078e0006  op=0x825 IMAD.WIDE.U32  stall=1 wb=7 rb=7 wait=0x08
+   17  0000000502097210 010fca0007ffe0ff  op=0x210 IADD3          stall=5 wb=7 rb=7 wait=0x10
+   18  0000000906007986 000fe2000c101904  op=0x986 STG.E          stall=1 wb=7 rb=7 wait=0x00
+   19  000000000000794d 000fea0003800000  op=0x94d EXIT           stall=5 wb=7 rb=7 wait=0x00
+   20  fffffffc00fc7947 000fc0000383ffff  op=0x947 BRA            stall=0 wb=7 rb=7 wait=0x00
+   21  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   22  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   23  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   24  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   25  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   26  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   27  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   28  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   29  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   30  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+   31  0000000000007918 000fc00000000000  op=0x918 NOP            stall=0 wb=7 rb=7 wait=0x00
+gb10 tools/omega_bytes/kernels/gb10_vadd_encoder.words: every word named
+test-omega-bytes: PASS (host)
