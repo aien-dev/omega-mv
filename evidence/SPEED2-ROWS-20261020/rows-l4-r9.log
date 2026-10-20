@@ -1,0 +1,37 @@
+rows mode: 4 layers (2 GDN, 2 attention, mask 0xa), R 9, fp8 head 1
+ok: fp8 head: sampled rows max diff 1.05e-06 vs host dequantised (max 7.25)
+ok: R1 rows(9) at pos 0: every row's token and x equal the one-row reference
+ok: R2 commit(5 of 9) then one-row tokens: equal the reference (GDN restore + replay)
+ok: R3 rows(9) from the committed position 5: equal the reference
+ok: keep all 9 rows: R1 R2 R3
+ok: keep 1 of 9: R2 R3
+ok: negative control 5 (commit without the GDN restore) caught
+ok: negative control 6 (commit replays one row too few) caught
+ok: negative control 7 (every row attends at slot pos0) caught
+timing (chip, median of 10): rows(9) 20.347 ms vs 9 one-row tokens 159.461 ms
+gpu_q38_graph_test: 9 checks, 0 failed: PASS
+{
+ "name": "speed2-rows-l4-r9",
+ "cmd": "nice -n 10 flock /tmp/aien-gb10.lock /home/drakestapleton/workspace/targets/speed2/pinned/gpu_q38_graph_test-4b20a9c5 --reps 10 --layers 4 --mask 0xA --rows 9 --fp8-head",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-19T22:03:58.849469",
+ "seconds": 45.091,
+ "samples": 21,
+ "wall_W_mean": 284.7619048,
+ "wall_J": 12840.18705,
+ "idle_W_before": 248.5714286,
+ "incremental_J": 1631.863238,
+ "gpu_W_mean": 12.38047619,
+ "gpu_util_mean": 13.52380952,
+ "load1_start": "54.68",
+ "load1_end": "56.93",
+ "mem_avail_kB_start": "52479556",
+ "mem_avail_kB_end": "48732020",
+ "lock_holders_max": 6,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T025433Z-3c3b7d",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-speed2-rows-l4-r9.json
