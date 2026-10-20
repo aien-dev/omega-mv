@@ -128,6 +128,6 @@ msg)
       print o
     }' ;;
 vocab)
-  awk '{ print $3 }' "$MAP" ;;
+  awk '$1 == "w" || $1 == "n" { print $3 }' "$MAP" ;;
 *) die "usage: nowords.sh render|encode|decode|msg|vocab <arm> ..." ;;
 esac

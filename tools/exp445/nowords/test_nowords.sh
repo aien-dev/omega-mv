@@ -60,7 +60,7 @@ ctl() { printf '```\n%s\n```\n' "$(cat "$3")" > "$T/content"; reader "$X" "$EMIT
 ctl "symbols power_mod" symbols "$T/sym"; ctl "numbers power_mod" numbers "$T/num"
 ret_s="$(awk '$2 == "ret" { print $3 }' "$HERE/symbols.map")"
 sed "0,/^$ret_s /s//ret /" "$T/sym" > "$T/sym.en"; neg "an English word in the symbols spelling" symbols "$T/sym.en" "'ret' is not a word of this form"
-sed '0,/#40/s//40/' "$T/num" > "$T/num.bare"; neg "an unmarked number in the numbers spelling" numbers "$T/num.bare" "'40' is not a word (1 to 48) or a name"
+sed '0,/#0/s//0/' "$T/num" > "$T/num.bare"; neg "an unmarked number in the numbers spelling" numbers "$T/num.bare" "'0' is not a word (1 to 48) or a name"
 sed '0,/ = /s// ⨁ /' "$T/sym" > "$T/sym.unk"; neg "an unknown symbol" symbols "$T/sym.unk" "'⨁' is not a word or a name of this form"
 sed '0,/^\(.*\) = /s//_s3 = /' "$T/num" > "$T/num.res"; neg "a reserved internal name" numbers "$T/num.res" "'_s3' is not a name of this form"
 # a written-but-unread name: the message must name the arm's spelling (99), not the internal name _s2

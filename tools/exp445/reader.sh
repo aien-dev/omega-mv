@@ -23,7 +23,7 @@ reader() {
                 line="$("$EMIT" emit "$o.omegese.json" "$o.candidate.oscir" 2>&1)"; then
                line="$("$X" check oscir "$o.candidate.oscir" "$req" || true)"
              else rm -f "$o.candidate.oscir"; fi
-             line="$(printf '%s\n' "$line" | head -n 1 | "$NW" msg "$arm")" ;;
+             case "$line" in "REFUSED reader:"*) ;; *) line="$(printf '%s\n' "$line" | head -n 1 | "$NW" msg "$arm")" ;; esac ;;
     *) line="REFUSED checker: unknown arm $arm" ;;
   esac
   [ -n "$line" ] || line="REFUSED checker: no result"
