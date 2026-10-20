@@ -1,0 +1,44 @@
+section,config,jobs,jobs_per_s,bad_jobs,check_fail,unwritten_words,gpu_p50_us,note
+note,engine vecadd65 one job at a time,600,1040.4,0,0,0,,omega_gpu_execute persistent
+roll,vecadd65 depth 1,3000,146321.9,0,0,0,6.1,
+roll,vecadd65 depth 4,3000,264431.4,0,0,0,14.6,
+roll,vecadd65 depth 16,3000,264269.3,0,0,0,59.6,
+roll,vecadd65 depth 64,3000,266614.2,0,0,0,236.1,
+melody,vecadd alone depth 16,400,171914.0,0,0,0,81.2,
+melody,vecadd no-store program control,16,,16,16,65536,,
+melody,ex2 alone depth 16,400,86761.8,0,0,0,170.9,
+melody,ex2 math mutant control,16,,16,0,0,,
+melody,swiglu alone depth 16,400,36644.6,0,0,0,170.4,
+melody,swiglu math mutant control,16,,16,0,0,,
+melody,rmsnorm alone depth 16,400,46032.4,0,0,0,319.6,
+melody,rmsnorm math mutant control,16,,16,0,0,,
+melody,rope alone depth 16,400,183477.7,0,0,0,81.9,
+melody,rope math mutant control,16,,16,0,0,,
+melody,matmul alone depth 16,400,207150.6,0,0,0,75.1,
+melody,matmul math mutant control,16,,16,0,0,,
+melody,mixed 6 kernels depth 16,1200,103227.7,0,0,0,145.7,vecadd ex2 swiglu rmsnorm rope matmul round robin
+melody,ex2 session API one call per job,200,3695.1,0,,,,omega_gpu_ex2_f32
+melody,swiglu session API one call per job,200,8836.7,0,,,,omega_gpu_swiglu_f32
+melody,rmsnorm session API one call per job,200,7843.1,0,,,,omega_gpu_rmsnorm_f32
+melody,rope session API one call per job,200,9148.1,0,,,,omega_gpu_rope_f32
+chord,vecadd65 K=1 per submission depth 4,4096,257827.6,0,0,0,14.6,ORDER_NONE
+chord,vecadd65 K=4 per submission depth 4,4096,817231.9,0,0,0,18.7,ORDER_NONE
+chord,vecadd65 K=16 per submission depth 4,4096,1704477.8,0,0,0,34.7,ORDER_NONE
+chord,vecadd65 K=64 per submission depth 4,4096,2266350.4,0,0,0,102.3,ORDER_NONE
+chord,swiglu8192 x16 SERIAL,3200,90316.0,0,0,0,522.0,WFI between grids
+chord,swiglu8192 x16 NONE,3200,84919.0,0,0,0,543.8,grids may overlap
+chord,vecadd65 voices=1 depth 16 each,3000,263068.3,0,0,0,59.9,channels round robin
+chord,vecadd65 voices=2 depth 16 each,3000,167134.2,0,0,0,192.8,channels round robin
+chord,vecadd65 voices=4 depth 16 each,3000,107910.9,0,0,0,559.5,channels round robin
+harmony,random DAG SERIAL,6,44.02 graphs/s,0 wrong words,0,0,18675.7,64 nodes x 256K u32 adds
+harmony,random DAG WAVE,6,43.46 graphs/s,0 wrong words,0,0,18720.2,64 nodes x 256K u32 adds
+harmony,random DAG SEM,6,41.96 graphs/s,0 wrong words,0,0,20116.1,64 nodes x 256K u32 adds
+harmony,random DAG SEM with ordering removed (control),6,37.11 graphs/s,0 wrong words,0,0,29703.9,informational: wrong words mean the order is load-bearing
+harmony,chain 64 SERIAL,6,34.91 graphs/s,0 wrong words,0,0,25101.4,64 nodes x 256K u32 adds
+harmony,chain 64 WAVE,6,29.79 graphs/s,0 wrong words,0,0,28945.2,64 nodes x 256K u32 adds
+harmony,chain 64 SEM,6,30.18 graphs/s,0 wrong words,0,0,29408.7,64 nodes x 256K u32 adds
+harmony,chain 64 SEM with ordering removed (control),6,37.00 graphs/s,0 wrong words,0,0,22129.2,informational: wrong words mean the order is load-bearing
+harmony,fan-in tree SERIAL,6,39.63 graphs/s,0 wrong words,0,0,20658.0,64 nodes x 256K u32 adds
+harmony,fan-in tree WAVE,6,37.47 graphs/s,0 wrong words,0,0,22253.3,64 nodes x 256K u32 adds
+harmony,fan-in tree SEM,6,38.42 graphs/s,0 wrong words,0,0,21676.9,64 nodes x 256K u32 adds
+harmony,fan-in tree SEM with ordering removed (control),6,35.83 graphs/s,0 wrong words,0,0,22952.3,informational: wrong words mean the order is load-bearing
