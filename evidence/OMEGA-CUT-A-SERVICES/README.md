@@ -84,3 +84,20 @@ engine, elementwise and encoding gates, the R16 link map and the R12, R13, R14 s
 - Disassembly of all 82 objects equal to the after run (`final/objdump.sha256`).
 - Object files byte for byte, clean builds of main a8ffd2b9 and 4427e2f1 (`final/object-bytes-cmp.txt`):
   80 identical; `omega_gpu_elementwise_api.o` and `omega_gpu_fmt.o` differ, as intended.
+
+## Second review and final receipts on 52331f76 (`final2.sh`, `final2/`)
+
+Codex's second pass (`review-2-codex.txt`) marked the first review's points resolved or documented
+and raised two: the long pin line was written in three pieces (could interleave with other stderr
+writers; now built on the heap and written once) and "glibc-exact" overstated the parser (it
+returns what glibc returns; errno is not set, and nothing reads it; wording fixed). The seat test
+gained `life_badpin` (a 20-digit value, atoi saturation) and `life_badpin_long` (700 digits).
+
+- `gates.sh final2`: 23 of 24 exit 0; `test-gpu-attention` exit 2 with the same 16 failures as main.
+- Seat: 43 checks, 0 failed. The old seat (rebuilt with the same test) and the new one, 20 runs
+  each, all exit 0; all 20 pairs byte-identical on stdout and stderr, including the 733-byte
+  "could not pin" line (`final2/seat-fake-old.err`, `final2/seat-fake-new.err`).
+- Contract test: hosted 150 checks, freestanding objects 67, 0 failed.
+- Freestanding link: `final2/freestanding-link.txt`.
+- Object files byte for byte vs main a8ffd2b9: 80 of 82 identical; the elementwise API and the
+  formatter differ, as intended (`final2/object-bytes-cmp.txt`).

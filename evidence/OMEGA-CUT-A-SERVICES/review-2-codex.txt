@@ -1,0 +1,17 @@
+
+codex
+Read-only review; no edits, builds, or tests run.
+
+- **DOCUMENTED — scope:** numeric launchers and resident driver handles remain deferred to cut E; the dependency-map interpretation is recorded in `docs/numeric/OMEGA_PLATFORM_SERVICES.md:81`. This clarifies scope rather than implementing opaque handles there.
+- **DOCUMENTED — resource limits:** the hosted task/lock limits remain explicit exceptions to equivalence (`src/omega_platform_services.h:41`).
+- **RESOLVED — failed join:** failure preserves the handle (`src/omega_platform_services_hosted.c:139`).
+- **RESOLVED — allocator ownership:** the world now allocates its returned image using its own allocator (`src/runtime/rx_coherent.c:928`).
+- **RESOLVED — diagnostic truncation:** long pin values are emitted completely (`src/runtime/rx_resident_gpu.c:934`), subject to the new defect below.
+- **OPEN — atoi equivalence:** saturation is corrected, but overflow still does not set `errno=ERANGE` (`src/runtime/rx_resident_gpu.c:915`). The comparison checks return values only (`evidence/OMEGA-CUT-A-SERVICES/after2/atoi-check.c:30`); “glibc-exact” remains overstated.
+- **DOCUMENTED — ignored waits:** interrupted hosted waits are explicitly permitted (`src/omega_platform_services.h:34`).
+- **RESOLVED — validation:** the contract receipt passes (`evidence/OMEGA-CUT-A-SERVICES/final/summary.txt:19`); whole-object comparisons supplement disassembly (`evidence/OMEGA-CUT-A-SERVICES/final/object-bytes-cmp.txt:59`). GPU tokens remain explicitly untested (`evidence/OMEGA-CUT-A-SERVICES/README.md:50`).
+- **RESOLVED — gate overcount:** corrected (`evidence/OMEGA-CUT-A-SERVICES/README.md:25`).
+
+**New defect:** long diagnostics now use three separately locked `fputs` calls, allowing concurrent stderr writers to interleave inside a formerly single `fprintf` message (`src/runtime/rx_resident_gpu.c:937`; `src/omega_platform_services_hosted.c:175`).
+
+VERDICT NOT READY

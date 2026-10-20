@@ -1,0 +1,18 @@
+
+codex
+**Verdict: not ready to mark L202 done.** Read-only review; no builds or tests executed.
+
+1. **Scope is partially fulfilled.** The services contract, hosted implementation, stub and shared encoders exist. The freestanding closure includes session/engine and adds elementwise/services (`mk/omega-gpu-engine.mk:124`). However, numeric launchers explicitly retain `NvrmMem` and malloc (`docs/numeric/OMEGA_PLATFORM_SERVICES.md:63`). `SeatBuf` separates CPU/GPU addresses but embeds `NvrmMem` directly in the resident implementation (`src/runtime/rx_resident_gpu.c:705`), rather than hiding it behind an opaque typed handle. **Blocker against the original brief unless scope is explicitly revised.**
+
+2. **Hosted equivalence has exceptions the seat evidence misses:**
+   - **New resource limit:** task creation refuses after 64 outstanding handles (`src/omega_platform_services_hosted.c:22,114`). Existing pthread creation had no such application limit.
+   - **Error-path bug:** join invalidates the handle even when `pthread_join` fails (`src/omega_platform_services_hosted.c:138`). Retain it on failure.
+   - Diagnostics now truncate at 511 bytes (`src/omega_platform_services.c:190`); a long invalid `RX_SEAT_LEASE_CPU` changes stderr.
+   - The replacement atoi parser wraps; it does not reproduce glibc’s overflow/errno behavior for extreme strings (`src/runtime/rx_resident_gpu.c:906`).
+   - **Allocator ownership blocker for installed backends:** `seat_return_image` allocates through services (`src/runtime/rx_resident_gpu.c:84`), but world teardown/rebinding uses libc free (`src/runtime/rx_coherent.c:249,933`).
+   
+   Default pthread attributes, ordinary getenv semantics and world-lock ordering appear preserved. Required wait failures are nevertheless ignored (`src/runtime/rx_resident_gpu.c:738`), contradicting the documented refusal policy.
+
+3. **Evidence supports narrower claims.** I verified all 20 seat stdout/stderr pairs match and only elementwise/formatter disassemblies differ. Disassembly identity alone does not establish byte-identical objects, relocations or golden tokens. GPU checks are correctly marked NOT_RUN. Latest supplied contract receipt still says exit 2 (`~/handoffs/L202/after2/summary.txt:1`); the uncommitted HIDDEN_SERVICE correction is logically sound but lacks a passing receipt. **Validation blocker.**
+
+4. **Nits:** README line 25 overcounts passing gates; the services document correctly reports 16 passing plus attention failing. Narrow “exact libc call”/unqualified equivalence claims and document the limits above.

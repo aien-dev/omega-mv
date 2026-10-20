@@ -1,0 +1,145 @@
+[*] case open_refused
+open_refused begin -1 seat_null 1
+open_refused events 2 overflow 0
+open_refused ev 0 OPEN
+open_refused ev 1 CLOSE a=0 b=0
+open_refused calls open 1 channel 0 alloc 0 uncached 0 free 0 close 1 submit 0 chan_rebuild 0 chan_destroy 0
+open_refused alloc sizes
+open_refused live 0 live_at_close 0 double_free 0 pb_parse_error 0
+[*] case life_unpinned
+life_unpinned begin 0 seat 1
+life_unpinned budget 20000
+life_unpinned lease moving 1
+life_unpinned lease threads named 1
+life_unpinned pb words 483 headers 20012061 20012092 200120a8 2001255d 2001255e 2001255f 20012557 20012558 20012559 20022062 20022060 2001206c 60e0206d 20022062 20022060 2001206c 6009206d 206220c6 20022062 20022060 2001206c 6001206d 206220c6 20050017
+life_unpinned kill 0 lease_word 0xffffffff
+life_unpinned relaunch 0
+life_unpinned finish 0 marker_ok 1 sem_ok 1 marker 0x44444444
+life_unpinned events 21 overflow 0
+life_unpinned ev 0 OPEN
+life_unpinned ev 1 CHANNEL
+life_unpinned ev 2 ALLOC a=1048576 b=0
+life_unpinned ev 3 ALLOC a=20480 b=0
+life_unpinned ev 4 ALLOC a=4096 b=0
+life_unpinned ev 5 ALLOC a=65536 b=0
+life_unpinned ev 6 ALLOC a=4096 b=0
+life_unpinned ev 7 ALLOC a=65536 b=0
+life_unpinned ev 8 SUBMIT a=483 b=0
+life_unpinned ev 9 PB_CBANK
+life_unpinned ev 10 PB_QMD
+life_unpinned ev 11 PB_SEM_INIT
+life_unpinned ev 12 PB_QMD
+life_unpinned ev 13 PB_RELEASE payload=0x44444444 flags=0x100001
+life_unpinned ev 14 SUBMIT a=483 b=0
+life_unpinned ev 15 PB_CBANK
+life_unpinned ev 16 PB_QMD
+life_unpinned ev 17 PB_SEM_INIT
+life_unpinned ev 18 PB_QMD
+life_unpinned ev 19 PB_RELEASE payload=0x44444444 flags=0x100001
+life_unpinned ev 20 CLOSE a=6 b=0
+life_unpinned calls open 1 channel 1 alloc 6 uncached 2 free 0 close 1 submit 2 chan_rebuild 1 chan_destroy 1
+life_unpinned alloc sizes 1048576 20480 4096 65536 4096 65536
+life_unpinned live 0 live_at_close 6 double_free 0 pb_parse_error 0
+[*] case life_pinned
+life_pinned begin 0 seat 1
+life_pinned budget 20000
+life_pinned lease moving 1
+life_pinned lease threads named 1
+life_pinned pb words 483 headers 20012061 20012092 200120a8 2001255d 2001255e 2001255f 20012557 20012558 20012559 20022062 20022060 2001206c 60e0206d 20022062 20022060 2001206c 6009206d 206220c6 20022062 20022060 2001206c 6001206d 206220c6 20050017
+life_pinned kill 0 lease_word 0xffffffff
+life_pinned relaunch 0
+life_pinned finish 0 marker_ok 1 sem_ok 1 marker 0x44444444
+life_pinned events 21 overflow 0
+life_pinned ev 0 OPEN
+life_pinned ev 1 CHANNEL
+life_pinned ev 2 ALLOC a=1048576 b=0
+life_pinned ev 3 ALLOC a=20480 b=0
+life_pinned ev 4 ALLOC a=4096 b=0
+life_pinned ev 5 ALLOC a=65536 b=0
+life_pinned ev 6 ALLOC a=4096 b=0
+life_pinned ev 7 ALLOC a=65536 b=0
+life_pinned ev 8 SUBMIT a=483 b=0
+life_pinned ev 9 PB_CBANK
+life_pinned ev 10 PB_QMD
+life_pinned ev 11 PB_SEM_INIT
+life_pinned ev 12 PB_QMD
+life_pinned ev 13 PB_RELEASE payload=0x44444444 flags=0x100001
+life_pinned ev 14 SUBMIT a=483 b=0
+life_pinned ev 15 PB_CBANK
+life_pinned ev 16 PB_QMD
+life_pinned ev 17 PB_SEM_INIT
+life_pinned ev 18 PB_QMD
+life_pinned ev 19 PB_RELEASE payload=0x44444444 flags=0x100001
+life_pinned ev 20 CLOSE a=6 b=0
+life_pinned calls open 1 channel 1 alloc 6 uncached 2 free 0 close 1 submit 2 chan_rebuild 2 chan_destroy 2
+life_pinned alloc sizes 1048576 20480 4096 65536 4096 65536
+life_pinned live 0 live_at_close 6 double_free 0 pb_parse_error 0
+[*] case life_badpin
+life_badpin begin 0 seat 1
+life_badpin budget 20000
+life_badpin lease moving 1
+life_badpin lease threads named 1
+life_badpin pb words 483 headers 20012061 20012092 200120a8 2001255d 2001255e 2001255f 20012557 20012558 20012559 20022062 20022060 2001206c 60e0206d 20022062 20022060 2001206c 6009206d 206220c6 20022062 20022060 2001206c 6001206d 206220c6 20050017
+life_badpin kill 0 lease_word 0xffffffff
+life_badpin relaunch 0
+life_badpin finish 0 marker_ok 1 sem_ok 1 marker 0x44444444
+life_badpin events 21 overflow 0
+life_badpin ev 0 OPEN
+life_badpin ev 1 CHANNEL
+life_badpin ev 2 ALLOC a=1048576 b=0
+life_badpin ev 3 ALLOC a=20480 b=0
+life_badpin ev 4 ALLOC a=4096 b=0
+life_badpin ev 5 ALLOC a=65536 b=0
+life_badpin ev 6 ALLOC a=4096 b=0
+life_badpin ev 7 ALLOC a=65536 b=0
+life_badpin ev 8 SUBMIT a=483 b=0
+life_badpin ev 9 PB_CBANK
+life_badpin ev 10 PB_QMD
+life_badpin ev 11 PB_SEM_INIT
+life_badpin ev 12 PB_QMD
+life_badpin ev 13 PB_RELEASE payload=0x44444444 flags=0x100001
+life_badpin ev 14 SUBMIT a=483 b=0
+life_badpin ev 15 PB_CBANK
+life_badpin ev 16 PB_QMD
+life_badpin ev 17 PB_SEM_INIT
+life_badpin ev 18 PB_QMD
+life_badpin ev 19 PB_RELEASE payload=0x44444444 flags=0x100001
+life_badpin ev 20 CLOSE a=6 b=0
+life_badpin calls open 1 channel 1 alloc 6 uncached 2 free 0 close 1 submit 2 chan_rebuild 3 chan_destroy 3
+life_badpin alloc sizes 1048576 20480 4096 65536 4096 65536
+life_badpin live 0 live_at_close 6 double_free 0 pb_parse_error 0
+[*] case life_badpin_long
+life_badpin_long begin 0 seat 1
+life_badpin_long budget 20000
+life_badpin_long lease moving 1
+life_badpin_long lease threads named 1
+life_badpin_long pb words 483 headers 20012061 20012092 200120a8 2001255d 2001255e 2001255f 20012557 20012558 20012559 20022062 20022060 2001206c 60e0206d 20022062 20022060 2001206c 6009206d 206220c6 20022062 20022060 2001206c 6001206d 206220c6 20050017
+life_badpin_long kill 0 lease_word 0xffffffff
+life_badpin_long relaunch 0
+life_badpin_long finish 0 marker_ok 1 sem_ok 1 marker 0x44444444
+life_badpin_long events 21 overflow 0
+life_badpin_long ev 0 OPEN
+life_badpin_long ev 1 CHANNEL
+life_badpin_long ev 2 ALLOC a=1048576 b=0
+life_badpin_long ev 3 ALLOC a=20480 b=0
+life_badpin_long ev 4 ALLOC a=4096 b=0
+life_badpin_long ev 5 ALLOC a=65536 b=0
+life_badpin_long ev 6 ALLOC a=4096 b=0
+life_badpin_long ev 7 ALLOC a=65536 b=0
+life_badpin_long ev 8 SUBMIT a=483 b=0
+life_badpin_long ev 9 PB_CBANK
+life_badpin_long ev 10 PB_QMD
+life_badpin_long ev 11 PB_SEM_INIT
+life_badpin_long ev 12 PB_QMD
+life_badpin_long ev 13 PB_RELEASE payload=0x44444444 flags=0x100001
+life_badpin_long ev 14 SUBMIT a=483 b=0
+life_badpin_long ev 15 PB_CBANK
+life_badpin_long ev 16 PB_QMD
+life_badpin_long ev 17 PB_SEM_INIT
+life_badpin_long ev 18 PB_QMD
+life_badpin_long ev 19 PB_RELEASE payload=0x44444444 flags=0x100001
+life_badpin_long ev 20 CLOSE a=6 b=0
+life_badpin_long calls open 1 channel 1 alloc 6 uncached 2 free 0 close 1 submit 2 chan_rebuild 4 chan_destroy 4
+life_badpin_long alloc sizes 1048576 20480 4096 65536 4096 65536
+life_badpin_long live 0 live_at_close 6 double_free 0 pb_parse_error 0
+rx_resident_gpu_fake_test: 43 checks, 0 failed
