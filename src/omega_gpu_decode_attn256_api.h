@@ -95,6 +95,10 @@ int omega_gpu_decode_attn256_cache_read8(OmegaGpuDecodeAttn256Cache *c, uint32_t
 float omega_dattn256_kv8_quant_row(const float *x, uint8_t *q);
 /* f32 -> e4m3 round to nearest even, saturating at +-448 (F2FP.SATFINITE.E4M3; no NaN input expected) */
 uint8_t omega_dattn256_e4m3_rne_sat(float x);
+/* BENCHMARK ONLY (SPEED-7): positions 0..count-1 of every layer get deterministic pseudo-random rows (bf16 below 1, or kv8
+ * bytes below 2 with scale 2^-8), so a decode step at position count reads a full-size cache without a prompt read.
+ * The values mean nothing: use it for speed, never for quality. */
+int omega_gpu_decode_attn256_cache_bench_fill(OmegaGpuDecodeAttn256Cache *c, uint32_t count, uint32_t seed);
 /* Read-only view of a layer of the cache for the prefill attention: device addresses only. */
 typedef struct {
     uint32_t layers, max_pos, rotary_dim;

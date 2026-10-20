@@ -183,6 +183,29 @@ int omega_gpu_decode_attn256_cache_read8(OmegaGpuDecodeAttn256Cache *c, uint32_t
     omega_gpu_session_unlock();
     return rc;
 }
+int omega_gpu_decode_attn256_cache_bench_fill(OmegaGpuDecodeAttn256Cache *c, uint32_t count, uint32_t seed) {
+    if (!c || count == 0 || count > c->max_pos) return OMEGA_GPU_DATTN_BAD_ARGS;
+    omega_gpu_session_lock();
+    int rc = OMEGA_GPU_DATTN_OK;
+    for (uint32_t L = 0; L < c->layers && rc == OMEGA_GPU_DATTN_OK; L++) {
+        uint32_t s = seed ^ (L * 0x9e3779b9u) ^ 0x2545f491u;
+        for (int plane = 0; plane < 2; plane++) for (uint32_t g = 0; g < KVH; g++) {
+            uint8_t *row = c->kv8 ? row8_ptr(c, L, g, 0, plane) : (uint8_t *)row_ptr(c, L, g, 0, plane);
+            const size_t n = (size_t)count * c->rb;
+            for (size_t i = 0; i < n; i += 4) {
+                s ^= s << 13; s ^= s >> 17; s ^= s << 5;
+                uint32_t w = s;
+                if (c->kv8) w &= 0xbebebebeu;            /* e4m3 bytes with exponent field <= 7: below 2, never a NaN code */
+                else w &= 0xbf7fbf7fu;                   /* two bf16 with exponent field <= 126: below 1, finite */
+                memcpy(row + i, &w, 4);
+            }
+            if (c->kv8) { float *sp = scale_ptr(c, L, g, 0, plane); for (uint32_t p = 0; p < count; p++) sp[p] = 1.0f / 256.0f; }
+        }
+        if (omega_gpu_session_sync_to_gpu(&c->kv[L]) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
+    }
+    omega_gpu_session_unlock();
+    return rc;
+}
 int omega_gpu_decode_attn256_cache_write(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, uint32_t count, const uint16_t *k, const uint16_t *v) {
     if (!c || c->kv8 || layer >= c->layers || kv_head >= KVH || pos >= c->max_pos || count == 0 || count > c->max_pos - pos || !k || !v) return OMEGA_GPU_DATTN_BAD_ARGS;
     omega_gpu_session_lock();
