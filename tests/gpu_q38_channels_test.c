@@ -7,7 +7,8 @@
  *             shared by four graphs, each graph with its own GDN states and attention cache:
  *               S_A, S_B  serial: token of A, then token of B, each its own submission on queue 0 (today's path)
  *               P_A, P_B  pair:   one token of A on queue 0 and one of B on queue 1, both in flight at once
- *             --steps T (64) decode steps; the input of step t of stream k is drawn from a seed of (k, t, the token
+ *             --steps T (64) decode steps; then --block B (64) steps serial only and B steps pair only, each
+ *             between two wall-clock stamps (the energy windows, J per token from the sensor log); the input of step t of stream k is drawn from a seed of (k, t, the token
  *             stream k produced at step t - 1), so a wrong token changes everything after it.
  *             Gates: G2  every step's token of P_A == S_A and P_B == S_B, and after the last step x and logits bit for
  *                        bit (memcmp); negative control: A and B differ (the comparison can fail);
@@ -24,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define H OMEGA_GPU_Q38_HIDDEN
 #define I OMEGA_GPU_Q38_INTER
@@ -132,19 +134,21 @@ static void step_input(uint32_t k, uint32_t t, uint32_t prev, float *x) {
 }
 
 static uint64_t now_ns(void) { return omega_gpu_session_now_ns(); }
+static double wall_s(void) { struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); return (double)ts.tv_sec + ts.tv_nsec / 1e9; }
 
 int main(int argc, char **argv) {
-    uint32_t layers = 64, steps = 64;
+    uint32_t layers = 64, steps = 64, block = 64;
     uint64_t mask = 0x8888888888888888ull;
     int refusal = 0;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--layers") && i + 1 < argc) layers = (uint32_t)strtoul(argv[++i], NULL, 0);
         else if (!strcmp(argv[i], "--steps") && i + 1 < argc) steps = (uint32_t)strtoul(argv[++i], NULL, 0);
+        else if (!strcmp(argv[i], "--block") && i + 1 < argc) block = (uint32_t)strtoul(argv[++i], NULL, 0);
         else if (!strcmp(argv[i], "--mask") && i + 1 < argc) mask = strtoull(argv[++i], NULL, 0);
         else if (!strcmp(argv[i], "--refusal")) refusal = 1;
         else { printf("usage: %s [--layers N] [--steps T] [--mask M] [--refusal]\n", argv[0]); return 2; }
     }
-    if (layers == 0 || layers > OMEGA_GPU_Q38_MAX_LAYERS || steps == 0 || steps > MAX_STEPS || steps > MAX_POS) { printf("bad --layers / --steps\n"); return 2; }
+    if (layers == 0 || layers > OMEGA_GPU_Q38_MAX_LAYERS || steps == 0 || steps + block > MAX_STEPS || steps + block > MAX_POS) { printf("bad --layers / --steps\n"); return 2; }
     if (layers < 64) mask &= (1ull << layers) - 1u;
     const char *env = getenv("AIEN_OMEGA_GPU_CHANNELS");
     printf("gpu_q38_channels_test: layers %u mask 0x%" PRIx64 " steps %u AIEN_OMEGA_GPU_CHANNELS=%s%s\n", layers, mask, steps, env ? env : "(unset)", refusal ? " (refusal)" : "");
@@ -193,6 +197,36 @@ int main(int argc, char **argv) {
     CHECK(ok, "%u steps ran on both paths", steps);
     if (!ok) { printf("FAIL: %d checks, %d failed\n", g_checks, g_failed); return 1; }
 
+    /* G3 energy: a block of serial-only steps, then a block of pair-only steps, each between two wall-clock stamps, so
+     * the energy of each mode is read from the sensor log for its window (receipt J / token). Same inputs rule. */
+    double win[2][2] = { { 0, 0 }, { 0, 0 } };
+    for (int mode = 0; mode < 2 && ok && block; mode++) {
+        win[mode][0] = wall_s();
+        for (uint32_t t = steps; t < steps + block && ok; t++) {
+            if (mode == 0) {
+                for (uint32_t k = 0; k < 2 && ok; k++) {
+                    step_input(k, t, prev_s[k], x[k]);
+                    if (omega_gpu_q38_graph_token(k ? sB : sA, x[k], t, &tok_s[k][t], NULL) != 0) { printf("FAIL: serial block step %u: %s\n", t, omega_gpu_session_last_error()); ok = 0; }
+                    else prev_s[k] = tok_s[k][t];
+                }
+            } else {
+                step_input(0, t, prev_p[0], x[0]); step_input(1, t, prev_p[1], x[1]);
+                if (omega_gpu_q38_graph_token_pair(pA, x[0], t, pB, x[1], t, &tok_p[0][t], &tok_p[1][t], NULL, NULL) != 0) { printf("FAIL: pair block step %u: %s\n", t, omega_gpu_session_last_error()); ok = 0; }
+                else { prev_p[0] = tok_p[0][t]; prev_p[1] = tok_p[1][t]; }
+            }
+        }
+        win[mode][1] = wall_s();
+    }
+    if (block) {
+        CHECK(ok, "energy blocks: %u serial steps then %u pair steps ran", block, block);
+        for (int mode = 0; mode < 2; mode++)
+            printf("timing: window %s %.3f %.3f epoch s, %.3f s, %u tokens, %.3f tok/s aggregate\n", mode ? "pair" : "serial", win[mode][0], win[mode][1],
+                   win[mode][1] - win[mode][0], 2 * block, 2.0 * block / (win[mode][1] - win[mode][0]));
+        if (!ok) { printf("FAIL: %d checks, %d failed\n", g_checks, g_failed); return 1; }
+    }
+    const uint32_t ilv = steps; /* interleaved steps (the medians) */
+    steps += block;            /* G2 below covers the blocks too */
+
     /* G2: bit for bit */
     int first_bad[2] = { -1, -1 };
     for (int k = 0; k < 2; k++) for (uint32_t t = 0; t < steps; t++) if (tok_s[k][t] != tok_p[k][t]) { first_bad[k] = (int)t; break; }
@@ -213,16 +247,16 @@ int main(int argc, char **argv) {
     printf("streams A and B share the token at %u of %u steps\n", same, steps);
 
     /* G3: timing (step 0 includes first-use costs; it is reported, not in the medians) */
-    const uint32_t nt = steps > 1 ? steps - 1 : 1;
+    const uint32_t nt = ilv > 1 ? ilv - 1 : 1;
     static uint64_t a[MAX_STEPS], b[MAX_STEPS];
     uint64_t sum_s = 0, sum_p = 0;
-    for (uint32_t t = 0; t < nt; t++) { a[t] = t_ser[t + (steps > 1)]; b[t] = t_par[t + (steps > 1)]; sum_s += a[t]; sum_p += b[t]; }
+    for (uint32_t t = 0; t < nt; t++) { a[t] = t_ser[t + (ilv > 1)]; b[t] = t_par[t + (ilv > 1)]; sum_s += a[t]; sum_p += b[t]; }
     const uint64_t ms = median_u64(a, nt), mp = median_u64(b, nt);
     printf("timing: step 0 serial %.3f ms pair %.3f ms (first use, not in the medians)\n", (double)t_ser[0] / 1e6, (double)t_par[0] / 1e6);
     printf("timing: serial (2 tokens, queue 0 one after the other) median %.3f ms per step, mean %.3f ms, %.3f tok/s aggregate\n", (double)ms / 1e6, (double)sum_s / nt / 1e6, 2e9 / (double)ms);
     printf("timing: pair   (2 tokens, queue 0 + queue 1 in flight) median %.3f ms per step, mean %.3f ms, %.3f tok/s aggregate\n", (double)mp / 1e6, (double)sum_p / nt / 1e6, 2e9 / (double)mp);
     printf("timing: pair / serial step time %.4f (below 1 = the two channels overlapped)\n", (double)mp / (double)ms);
-    printf("timing: tokens %u (2 streams x %u steps per path)\n", 2 * steps, steps);
+    printf("timing: interleaved tokens %u (2 streams x %u steps per path), energy blocks %u steps per mode\n", 2 * ilv, ilv, block);
     printf("%s: %d checks, %d failed\n", g_failed ? "FAIL" : "PASS", g_checks, g_failed);
     return g_failed ? 1 : 0;
 }
