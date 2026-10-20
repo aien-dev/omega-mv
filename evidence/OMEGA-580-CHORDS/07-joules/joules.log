@@ -1,0 +1,84 @@
+# joules queued 2026-10-19T22:28:53-05:00 head=4e641da8
+# lock acquired 2026-10-19T22:30:35-05:00 loadavg=62.09 65.53 60.67 MemAvailable_kB=50485120
+joules,note,54393,906.5,0
+{
+ "name": "omega580-note-20261019T2228",
+ "cmd": "./build/gpu_roll_test --joules 60 --what note",
+ "exit": 0,
+ "git_head": "4e641da8",
+ "start": "2026-10-19T22:30:55.953296",
+ "seconds": 60.040,
+ "samples": 28,
+ "wall_W_mean": 260.3571429,
+ "wall_J": 15631.93056,
+ "idle_W_before": 300.0,
+ "incremental_J": -2380.170496,
+ "gpu_W_mean": 14.49321429,
+ "gpu_util_mean": 2.75,
+ "load1_start": "67.59",
+ "load1_end": "67.64",
+ "mem_avail_kB_start": "47916244",
+ "mem_avail_kB_end": "44926188",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": null,
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-omega580-note-20261019T2228.json
+# note exit=0 2026-10-19T22:31:59-05:00
+joules,roll depth16,14943283,249249.8,0,0,0
+{
+ "name": "omega580-roll-20261019T2228",
+ "cmd": "./build/gpu_roll_test --joules 60 --what roll",
+ "exit": 0,
+ "git_head": "4e641da8",
+ "start": "2026-10-19T22:32:19.071465",
+ "seconds": 60.224,
+ "samples": 29,
+ "wall_W_mean": 275.862069,
+ "wall_J": 16613.63187,
+ "idle_W_before": 260.0,
+ "incremental_J": 955.2838327,
+ "gpu_W_mean": 21.97310345,
+ "gpu_util_mean": 68.79310345,
+ "load1_start": "59.18",
+ "load1_end": "52.22",
+ "mem_avail_kB_start": "40645632",
+ "mem_avail_kB_end": "58871484",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": null,
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-omega580-roll-20261019T2228.json
+# roll exit=0 2026-10-19T22:33:22-05:00
+joules,chord K64 depth4,125850240,2099228.2,0,0,0
+{
+ "name": "omega580-chord-20261019T2228",
+ "cmd": "./build/gpu_roll_test --joules 60 --what chord",
+ "exit": 0,
+ "git_head": "4e641da8",
+ "start": "2026-10-19T22:33:42.393483",
+ "seconds": 60.077,
+ "samples": 28,
+ "wall_W_mean": 265.0,
+ "wall_J": 15920.29194,
+ "idle_W_before": 277.0,
+ "incremental_J": -720.9188805,
+ "gpu_W_mean": 23.24857143,
+ "gpu_util_mean": 82.89285714,
+ "load1_start": "55.04",
+ "load1_end": "49.53",
+ "mem_avail_kB_start": "55571844",
+ "mem_avail_kB_end": "57837968",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": null,
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-omega580-chord-20261019T2228.json
+# chord exit=0 2026-10-19T22:34:45-05:00
+# done 2026-10-19T22:34:45-05:00
