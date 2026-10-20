@@ -2604,3 +2604,9 @@ $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h sr
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# aien-train L279 (2026-10-20): on-chip training probe, LMS on one linear layer, resident vs streamed weights
+# (tests/gpu_train_probe_test.c; --host-only in the warp simulator, chip under the GB10 lock).
+GPU_TRAIN_PROBE_TEST = $(OUT_DIR)/gpu_train_probe_test
+$(GPU_TRAIN_PROBE_TEST): tests/gpu_train_probe_test.c src/omega_blackwell_codegen_train.c src/omega_blackwell_codegen_train.h src/omega_bw_em.h tests/bw_warp_sim_tc.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_train_probe_test.c src/omega_blackwell_codegen_train.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
