@@ -7,8 +7,16 @@ Founding: docs/adr/OMEGA-SYSTEMS-CORE-0000.md stands as written. It is not re-li
 (decision 3) means a completion ticket used exactly once; it never meant one job at a time.
 
 ## The one sentence
-Omega exists to run this LLM on our own engine. Everything is born from one seed, measured in fraction of the
-hardware ceiling and bits of TURING Yield per joule, and every outside tool is a reference check that leaves.
+Omega exists to run this LLM on our own engine at the limit of the machine: every byte path and every arithmetic
+unit of the GB10 busy at once, all streams, all the time. Everything is born from one seed; every outside tool is a
+reference check that leaves.
+
+## The machine limit (Drake, 2026-10-19)
+The score is never "tokens for one stream". It is how much of the machine's walls a workload uses at full load:
+bytes per second on every data path (on-chip storage, cache, memory, CPU-GPU link, disk, network) and operations per
+second on every arithmetic unit, and joules per byte moved. One stream at a time reads every weight byte to make one
+token and leaves the arithmetic idle; that is a choice of workload, not a property of the box. The full map, each
+wall spec vs measured with a receipt, is docs/MACHINE_CEILING.md (L151). Competitors are reference rows (decision 25).
 
 ## The line (bottom to top)
 
@@ -22,7 +30,7 @@ hardware ceiling and bits of TURING Yield per joule, and every outside tool is a
 | 6 | GPU words from the same chain, run on the chip through our libcuda-free launcher | bit-identical to today's codegen; one kernel runs | L106, L098 |
 | L | Omegese: the AI's assembly language | structs (L093, L094, L095); the mask in the engine so a malformed program cannot be written (L112); contracts in the same mask so a wrong program is refused (next, after L094) | L093-L095, L112 |
 | R | the LLM runtime, written in Omega: decode loop, sampling, mask, tokenizer, server door | each stage replaced with a byte-identical or receipt-equal gate against today's build; the lineage inventory sets the order (L107) and the chain map names the host-side C per token (L097) | L097, L107, L085, L089, L090 |
-| M | the measure | fraction of the physical ceiling (QWEN38-SPEED gate, L068, now with J/token); bits of T per wall joule (TY-7, L109); one measurement window at a time with calibration and baseline (L113) | L068, L109, L113 |
+| M | the measure | fraction of the machine's walls in use at full load: bytes/s per data path and ops/s per arithmetic unit, plus joules per byte (L151 map); TURING Yield bits per wall joule at full load (TY-7, L109); baselines as reference rows (L150); one measurement window at a time (L113) | L151, L109, L150, L113 |
 | F | the floor we stand on and do not replace | the open kernel module's 8 calls, the signed GPU firmware, CPU microcode: named and sized (L101) | L101 |
 | C | one chain of receipts: every bundle names the previous bundle digest for its repo and the node signs over both; verify-chain refuses a rewritten history; two registered nodes agreeing on the exact head = merge-grade, with a spot re-check by ours; every seed rung carries the digest of the rung that built it | verify-chain in aien-test, bundle v2 (old bundles still verify), rewritten-history test fails; two receipts on one real head | L119, L120, L122 |
 | B | the box: a broker owns the chip, the quiet state and one queue; waiting happens in the queue, never inside a lock; measurements one at a time in windows; builds cached by source hash; chosen by replayed wait times | replay numbers published; installed or not by the numbers | L113, L118 |
