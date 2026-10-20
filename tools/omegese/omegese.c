@@ -801,7 +801,7 @@ static void gen_scalar(int s, const char *base, Buf *b) {
             if (s != T_BOOL) while (k < S->nf && S->f[k].s == T_BOOL) k++;
             if (k == S->nf) { needb = 1; continue; }
             char rd[2 * NAME_MAX_LEN + 16];
-            snprintf(rd, sizeof rd, "get %s %s%s", nm, S->f[k].name, S->f[k].len ? " 0" : "");
+            snprintf(rd, sizeof rd, "get %.*s %.*s%s", NAME_MAX_LEN, nm, NAME_MAX_LEN, S->f[k].name, S->f[k].len ? " 0" : "");
             int fs = S->f[k].s;
             if (s == T_BOOL) { if (fs == T_BOOL) bput(&tl, "%s\n", rd); else bput(&tl, "eq %s 0\n", rd); }
             else if (fs == s) bput(&tl, "%s\n", rd);
