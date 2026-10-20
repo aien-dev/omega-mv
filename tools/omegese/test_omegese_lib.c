@@ -88,5 +88,9 @@ int main(int argc, char **argv) {
     }
     printf("%s omegese_lib: %zu queries (%zu complete) over %d files, 2 passes (in order, shuffled), %zu mismatches\n",
            bad ? "FAIL" : "PASS", asked, completes, nf, bad);
+    for (int i = 0; i < nf; i++) free(src[i]);
+    free(src);
+    free(len);
+    free(q);
     return bad ? 1 : 0;
 }
