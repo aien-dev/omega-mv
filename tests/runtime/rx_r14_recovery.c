@@ -71,6 +71,8 @@ typedef struct {
     int crash_step;             /* R9 crash point (F, first process) */
     int seat;                   /* start the resident GB10 seat (silicon build only) */
     const char *gen_dir;        /* reuse an R9 store (F restart); else a new one */
+    int goal_after_research;    /* adapt(): the goal arrives only after the body's own
+                                   research of the new cores has selected (A semantic) */
 } Opts;
 
 typedef struct {
@@ -887,9 +889,13 @@ static uint64_t crumbs_of(Rig *r, uint32_t reaction, RxCrumbKind kind, int reaso
  * R13's episode: production confirms the incumbent on the A725 cores, the
  * body moves to the X925 cores, a human goal arrives, and the organism adapts
  * by itself (plan, search, GPU experiment, belief, selection, R9 promotion).
- * Production runs on its own thread from the goal on and keeps running. */
+ * Production runs on its own thread from the move on and keeps running. The
+ * body also researches the new core class on its own, with no goal yet
+ * (AIEN's core-class hypothesis): with goal_after_research the goal is
+ * published only after that research has selected, so a selection older
+ * than the goal must still be proposed and promoted. */
 typedef struct {
-    uint64_t goal_crumb, served_at_goal, served_at_promotion, gen_before, gen_after;
+    uint64_t goal_crumb, served_at_start, served_at_promotion, gen_before, gen_after;
     uint64_t promotion_crumb;
     int promoted;
 } Episode;
@@ -910,8 +916,25 @@ static int adapt(Rig *r, Episode *ep) {
     uint64_t lineage = 0;
     rx_gen_active(r->gen, &ep->gen_before, &lineage);
     if (start_producer(r) != 0) return -6;
+    ep->served_at_start = served(r);
+    uint64_t sel_before = field(r, r->omega.o.selection, 0);
+    uint64_t declined_before = __atomic_load_n(&r->living.refusals, __ATOMIC_ACQUIRE);
     if (move_threads(&x) <= 0 || publish_placement(r, CLASS_X925) != 0) return -7;
-    ep->served_at_goal = served(r);
+    if (r->opt.goal_after_research) {
+        /* The body researches the new core class by itself, selects, and
+         * generation.prepare declines that selection for want of a goal. The
+         * goal is published only after that decline has been recorded. */
+        limit = now_ns() + 60000000000ull;
+        while (now_ns() < limit &&
+               (field(r, r->omega.o.selection, 0) <= sel_before ||
+                __atomic_load_n(&r->living.refusals, __ATOMIC_ACQUIRE) <= declined_before)) {
+            if (atomic_load(&r->producer_error)) return -9;
+            pause_us(200);
+        }
+        if (field(r, r->omega.o.selection, 0) <= sel_before ||
+            __atomic_load_n(&r->living.refusals, __ATOMIC_ACQUIRE) <= declined_before)
+            return -12;
+    }
     if (publish_goal(r, target) != 0) return -8;
     ep->goal_crumb = rx_world_explain(&r->w, r->aien.o.goal, 0);
     limit = now_ns() + 90000000000ull;
@@ -1104,6 +1127,9 @@ static int scenario_a_case(int defect, uint32_t want, const char *label, Result 
     if (!r) return -1;
     Opts o = opts();
     o.defect = defect;
+    /* The semantic case lets the body research the new cores on its own and
+     * publishes the goal after that selection; the others publish it at once. */
+    o.goal_after_research = defect == RX_OMEGA_DEFECT_SKIP_REMAINDER;
     int rc = start(r, &o);
     CHECK(rc == 0, "A %s: setup failed at stage %d", label, g_stage);
     Episode ep;
@@ -1165,14 +1191,14 @@ static int scenario_a_case(int defect, uint32_t want, const char *label, Result 
     }
     pthread_mutex_unlock(&r->omega.mu);
     CHECK(lies == 0, "A %s: %u verified store entries do not match their bytes", label, lies);
-    uint64_t during = ep.served_at_promotion - ep.served_at_goal;
+    uint64_t during = ep.served_at_promotion - ep.served_at_start;
     CHECK(during > 0, "A %s: production stopped while the candidate was refused", label);
     Result sub;
     memset(&sub, 0, sizeof sub);
     finish(r, &sub, 100);
     if (first) {
         *res = sub;
-        res->prod_before = ep.served_at_goal;
+        res->prod_before = ep.served_at_start;
         res->prod_during = during;
         res->gen_before = ep.gen_before;
         res->fault_observed = 1;

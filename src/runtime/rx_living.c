@@ -643,16 +643,24 @@ int rx_living_register(RxLiving *l, const RxLivingCaps *caps,
     if ((rc = rx_world_add_reaction_keyed(w, l->keys, &d, &l->r_evidence)) != RX_OK) return rc;
 
     base(&d, "generation.prepare", RX_FACULTY_OMEGA, RX_LIVING_PREPARE_SUBJ, fn_candidate, l);
-    d.n_triggers = 1;
+    /* Wakes on the selection, and on the goal and plan the proposal must be
+     * authored by. The body researches a new core class on its own, before
+     * any goal exists (aien.plan, core-class hypothesis), so a selection can
+     * land before the goal; prepare then declines for want of an author, and
+     * that decline must not be final: the goal (or a new plan) arriving runs
+     * the same check again on the same selection. With the goal and plan as
+     * plain reads, nothing woke prepare again and the organism never adapted
+     * (OMEGA-R14-HOST under judge load, 2026-10-20). */
+    d.n_triggers = 3;
     d.triggers[0] = (RxDep){l->omega->o.selection, RX_ALL_FIELDS};
-    d.n_reads = 7;
+    d.triggers[1] = (RxDep){l->aien->o.goal, RX_FIELD(0)};
+    d.triggers[2] = (RxDep){l->aien->o.plan, RX_FIELD(0)};
+    d.n_reads = 5;
     d.reads[0] = (RxDep){l->aien->o.experiment_belief, RX_ALL_FIELDS};
     d.reads[1] = (RxDep){l->o.evidence, RX_ALL_FIELDS};
     d.reads[2] = (RxDep){l->o.candidate, RX_ALL_FIELDS};
-    d.reads[3] = (RxDep){l->aien->o.goal, RX_ALL_FIELDS};
-    d.reads[4] = (RxDep){l->aien->o.plan, RX_ALL_FIELDS};
-    d.reads[5] = (RxDep){l->omega->o.search, RX_ALL_FIELDS};
-    d.reads[6] = (RxDep){l->o.output, RX_ALL_FIELDS};
+    d.reads[3] = (RxDep){l->omega->o.search, RX_ALL_FIELDS};
+    d.reads[4] = (RxDep){l->o.output, RX_ALL_FIELDS};
     d.n_writes = 1;
     d.writes[0] = (RxDep){l->o.candidate, RX_ALL_FIELDS};
     d.n_caps = 8;
