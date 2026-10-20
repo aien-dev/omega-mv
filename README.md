@@ -17,6 +17,8 @@ Research-grade and pre-alpha. Plainly:
 - **Numerics (E1):** closed 2026-10-02 on the GB10 chip campaign (Gate 5 26/26 with 47 parity lines, reductions SUM/MAX/MIN/MEAN, nine transcendental ops over all 2^32 inputs each, 148 load/store kernels), consolidated receipt `evidence/E1-CLOSURE/e7851c69d34ac777a9436af16d0bdd5d69264c8528c62d562b600f5d89153061.json`; exclusions (natural-base EXP/LOG have no GB10 kernel) are listed in [E1_GAP_TABLE](docs/numeric/E1_GAP_TABLE.md).
 - **Hardware:** results on the DGX Spark GB10 are tied to the exact commit in each receipt. Host and emulator passes are never reported as hardware qualification.
 
+- **The engine (L312, 2026-10-20):** the model-serving loop as separate engines (NVMe, RAM, pistons, heads) on one static schedule with the ignition gap measured per beat: [docs/speed/ENGINE.md](docs/speed/ENGINE.md), receipts in `evidence/engine/`. Host-side (CPU + NVMe) numbers on the 30B are real measurements; the chip piston (`gpu_engine_piston_test`) has passed only its host simulator so far, and its GB10 run is queued.
+
 The live status is owned by [aien-architecture](https://github.com/aien-spark/aien-architecture): [CURRENT_EXECUTION_PLAN.md](https://github.com/aien-spark/aien-architecture/blob/main/CURRENT_EXECUTION_PLAN.md) and [doctrine/ROADMAP.md](https://github.com/aien-spark/aien-architecture/blob/main/doctrine/ROADMAP.md). This file does not restate numbers that drift. Historical milestone receipts (for example Milestone 4, `OMEGA_SEMANTICS`, 12 of 12 gates) stay in `evidence/` unchanged as history.
 
 ## Core ideas

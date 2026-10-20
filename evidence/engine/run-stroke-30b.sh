@@ -8,6 +8,7 @@ MANIFEST=${MANIFEST:-$HOME/.cache/aien/engine-30b-manifest.json}
 BIN=${BIN:-$HOME/workspace/targets/sc-engine/release/engine}
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-$HERE/30b-stroke-$(date -u +%Y%m%dT%H%MZ)}
+RUN=${RUN:-}   # e.g. quiet-measure: holds the quiet lock exclusive per measured cell only
 GEN=${GEN:-2}
 POS=${POS:-8}
 mkdir -p "$OUT/traces"
@@ -26,7 +27,7 @@ $BIN plan union "$MODEL" "$OUT/plan-union.json" --buffers 2 $(echo $LIST | tr ',
 $BIN schedule "$OUT/plan-union.json" "$MANIFEST" $POS "$OUT/schedule-union.json" 2>&1 | tee -a "$OUT/run.log" || exit 1
 for N in 1 2 4 8 16 32; do
   Q=$(quiet_wait)
-  $BIN stroke "$OUT/schedule-union.json" "$MANIFEST" "$MODEL" "$OUT/stroke-n$N" --n $N --traces "$LIST" --positions $POS --workers 8 > "$OUT/stroke-n$N.log" 2>&1; rc=$?
+  $RUN $BIN stroke "$OUT/schedule-union.json" "$MANIFEST" "$MODEL" "$OUT/stroke-n$N" --n $N --traces "$LIST" --positions $POS --workers 8 > "$OUT/stroke-n$N.log" 2>&1; rc=$?
   log "stroke N=$N ($Q) rc $rc: $(jq -c '{beats,misfires,gap:.gap_us.median,fill:.fill_us.median,fire:.fire_us.median,beat:.beat_us.median,bytes:.bytes_per_beat.median,union:.union_experts_per_beat.mean,tps:.tokens_per_s_total,gate:.gate.identical_tokens_every_head}' $OUT/stroke-n$N/summary.json 2>/dev/null) $(tail -1 $OUT/stroke-n$N.log | cut -c1-160)"
 done
 log "done"

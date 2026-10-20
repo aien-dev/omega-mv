@@ -1,0 +1,2 @@
+22:35:55Z model /home/drakestapleton/models/qwen3-30b-a3b-instruct-2507-fp8 bin /home/drakestapleton/workspace/targets/sc-engine/release/engine out /home/drakestapleton/workspace/omega-engine/evidence/engine/30b-engines-20261020T2235Z fire_us 2000 period_us 10000 load 81.73 76.99 60.16
+schedule: 1920 beats, 384 parts, 2 buffers x 8 slots x 4719168 bytes; check PASS: complete true acyclic true no_collision true edges_exact true (fuel 1920 residual 1880 token 39 release 1918 free_part

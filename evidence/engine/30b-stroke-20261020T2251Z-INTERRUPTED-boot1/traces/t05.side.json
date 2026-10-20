@@ -1,0 +1,13 @@
+{
+  "cache": "CacheStats { lookups: 9600, hits: 3874, misses: 5726, fill_bytes: 27021955968, fill_s: 20.66172147700003, prefetched: 0 }",
+  "generated": [
+    73594,
+    46216
+  ],
+  "generated_text": "```bash",
+  "host_ms_per_token": 1864.547208,
+  "positions": 25,
+  "prompt": "Write a bash one-liner that counts lines in all .md files.",
+  "prompt_tokens": 23,
+  "ring_slots": 512
+}
