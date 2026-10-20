@@ -96,10 +96,28 @@ gated against its own trace; `union.json` = measured expert union per beat vs th
 count, not a gate (the loop's gate is host loop == host trace). First run FAILED on a wrong model name (fixed); rerun
 PENDING.
 
+### 7. Head swap mid-run (H4)
+`30b-swap-*/run.log` and `lead*/summary.json` (`evidence/engine/run-swap-30b.sh`): head A (8 experts x 48 layers)
+sits in host RAM before the run; from token 12 of 24 every beat fires on head B, a disjoint head of the same size.
+A loader starts bringing head B into RAM `lead` tokens before the swap (lead -1 = never: every B part comes from the
+disk when its beat needs it). The receipt per lead: the steady ms per token before the swap, the extra ms on the first
+token after it, the total extra the user sees, the hit rate (parts served from RAM instead of the disk) after the swap,
+and the first token after the swap served entirely from RAM. RESULTS PENDING.
+
+### 8. The chip piston (power engine on the GB10)
+`chip-piston-*/` (`evidence/engine/run-chip-piston.sh`, binary `build/l312/gpu_engine_piston_test` from
+`src/omega_blackwell_codegen_piston.c`): a resident launch on the GPU fires one beat each time the host's fill flag for
+that beat lands (thread 0 of every block spins on the flag through the system-coherent load path), reads the beat's
+slot, stamps the chip clock at pickup and at done, and writes the done flag the host reads. Mode `pre`: all fuel in
+place before the run (power engine alone: chip beat time, tokens per beat with no movement). Mode `live`: a host
+thread copies each beat's image into its slot while the chip fires on the other (both engines: the on-chip ignition
+gap = chip spin time per beat). Slot sizes are one MoE layer's 8 routed experts on the 35B (26.7 MB) and the 30B
+(37.7 MB). Host simulator (`--host-only`): PASS, 5 beats, 2 slots, 0 wrong bytes; negative control (a stale slot)
+caught 64 of 64 times. GB10 RUN QUEUED (measurement window ticket l312-piston).
+
 ## What is not done, said plainly
-* The chip piston (resident kernel on the GPU, cylinders in omega session memory, fire-done flag read by the host) is
-  designed (see the handoff) and not built; the GPU lock queue (L131 window, L274, a training job) has not freed.
-  Every chip number waits on `quiet-measure flock /tmp/aien-gb10.lock`.
+* The chip piston is built and proven in its host simulator (section 8); its GB10 run waits in the measurement-window
+  line behind L306, L274 and L131. Every chip number comes from inside that window (chip lock held for it).
 * The fast-memory engine (L2 / shared memory staging) and the math engine exist only on the chip; the engine-count
   series on the host stops at 2 and continues there.
 * The thesis gate (planned loop vs today's path, identical tokens, at least as fast at every context) needs the chip
