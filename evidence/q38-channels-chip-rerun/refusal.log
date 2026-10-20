@@ -1,0 +1,6 @@
+gpu_q38_channels_test: layers 4 mask 0x8 steps 2 AIEN_OMEGA_GPU_CHANNELS=(unset) (refusal)
+model: 4 layers (3 GDN, 1 attention), vocab 248320, built in 5.6 s
+ok: pair refused without AIEN_OMEGA_GPU_CHANNELS: rc -4, stage "queue_open (extra queue): REFUSED_LIMIT"
+ok: the refusal did not latch the session
+ok: the serial path still decodes (rc 0, token 71441)
+PASS: 3 checks, 0 failed

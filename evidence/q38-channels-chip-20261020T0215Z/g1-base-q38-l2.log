@@ -1,0 +1,40 @@
+model: 2 layers (1 GDN, 1 attention, mask 0x2), vocab 248320
+ok: token 0: graph 119117 == baseline 119117
+ok: token 0: logits max diff 0.000327 <= 1e-04 * 9.13
+ok: token 0: x max diff 0.000126 <= 1e-04 * 2.44
+ok: token 0: 23 launches in 1 submit
+ok: token 1: graph 147744 == baseline 147744
+ok: token 1: logits max diff 6.68e-06 <= 1e-04 * 9.65
+ok: token 1: x max diff 2.03e-06 <= 1e-04 * 2.05
+ok: token 1: 23 launches in 1 submit
+ok: token 2: graph 60455 == baseline 60455
+ok: token 2: logits max diff 7.99e-06 <= 1e-04 * 9.83
+ok: token 2: x max diff 3.16e-06 <= 1e-04 * 2.55
+ok: token 2: 23 launches in 1 submit
+ok: flush_each == one list, bit for bit, all 3 tokens
+ok: read_buf x, gu, act, gu[0..100): rc 0 0 0 0
+ok: read_buf x == read x, bit for bit
+ok: read_buf of 100 values == the first 100 of the whole row
+ok: read_buf act == silu(gu) * up * 2^64 from read_buf gu: worst 7.18e+12 of 6.88e+19
+ok: mutant 1 (swiglu up half -1) caught
+ok: mutant 2 (gather index +1) caught
+ok: mutant 3 (gate dropped) caught
+ok: mutant 4 (post-norm weight dropped) caught
+timing: 3 reps, median chip 15055.7 us, median total 15072.1 us per token (2 layers)
+ok: timeline 0: 23 stamped launches
+timeline norm       1 launches       9.8 us (min 9.8 max 9.8)
+timeline mix        2 launches     712.2 us (min 712.2 max 712.2)    157286400 weight B  220.9 GB/s
+timeline ab         1 launches       0.4 us (min 0.4 max 0.4)       983040 weight B 2363.1 GB/s
+timeline gdn        1 launches      23.9 us (min 23.9 max 23.9)
+timeline gather     1 launches       3.9 us (min 3.9 max 3.9)
+timeline attn       1 launches      55.3 us (min 55.3 max 55.3)
+timeline gate       1 launches       2.9 us (min 2.9 max 2.9)
+timeline o_proj     2 launches     314.5 us (min 314.5 max 314.5)     62914560 weight B  200.0 GB/s
+timeline res        4 launches      53.2 us (min 53.2 max 53.2)
+timeline gate_up    2 launches    1550.0 us (min 1550.0 max 1550.0)    356515840 weight B  230.0 GB/s
+timeline swiglu     2 launches       6.8 us (min 6.8 max 6.8)
+timeline down       2 launches     902.1 us (min 902.1 max 902.1)    178257920 weight B  197.6 GB/s
+timeline lm_head    1 launches   11365.3 us (min 11365.3 max 11365.3)   2542796800 weight B  223.7 GB/s
+timeline argmax     2 launches      16.6 us (min 16.6 max 16.6)
+timeline span 15017.0 us (median of 1, min 15017.0 max 15017.0)
+gpu_q38_graph_test: 22 checks, 0 failed: PASS

@@ -1,0 +1,5 @@
+dgraph prefetch 0 (red 0)
+fp8 knobs: variant 1 barrier 0 (wfi+inval_all) cta_budget 0 shape 0/0/0 cached 0
+fp8 upload: m16_native_create_channel: RM_ALLOC class 0xcec0 status 0x51
+FAIL: synthetic model build
+chip: 1 checks, 1 failed: FAIL

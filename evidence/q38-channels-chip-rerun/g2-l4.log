@@ -1,0 +1,20 @@
+gpu_q38_channels_test: layers 4 mask 0x8 steps 16 AIEN_OMEGA_GPU_CHANNELS=2
+model: 4 layers (3 GDN, 1 attention), vocab 248320, built in 5.6 s
+ok: 16 steps ran on both paths
+ok: energy blocks: 16 serial steps then 16 pair steps ran
+timing: window serial 1792465023.058 1792465023.693 epoch s, 0.635 s, 32 tokens, 50.388 tok/s aggregate
+timing: window pair 1792465023.693 1792465024.327 epoch s, 0.634 s, 32 tokens, 50.479 tok/s aggregate
+ok: G2 stream A: pair tokens == serial tokens at all 32 steps (first differing step -1)
+ok: G2 stream B: pair tokens == serial tokens at all 32 steps (first differing step -1)
+ok: G2 stream A: last x bit for bit
+ok: G2 stream A: last logits bit for bit
+ok: G2 stream B: last x bit for bit
+ok: G2 stream B: last logits bit for bit
+ok: negative control: streams A and B logits differ (the comparison can fail)
+streams A and B share the token at 0 of 32 steps
+timing: step 0 serial 44.099 ms pair 40.210 ms (first use, not in the medians)
+timing: serial (2 tokens, queue 0 one after the other) median 40.311 ms per step, mean 40.226 ms, 49.614 tok/s aggregate
+timing: pair   (2 tokens, queue 0 + queue 1 in flight) median 40.608 ms per step, mean 40.419 ms, 49.251 tok/s aggregate
+timing: pair / serial step time 1.0074 (below 1 = the two channels overlapped)
+timing: interleaved tokens 32 (2 streams x 16 steps per path), energy blocks 16 steps per mode
+PASS: 9 checks, 0 failed

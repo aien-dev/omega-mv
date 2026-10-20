@@ -1,0 +1,12 @@
+g1-base-q38-l4 rc=0 gpu_q38_graph_test: 22 checks, 0 failed: PASS
+g1-new-q38-l4 rc=0 gpu_q38_graph_test: 22 checks, 0 failed: PASS
+g1-base-q38-l2 rc=0 gpu_q38_graph_test: 22 checks, 0 failed: PASS
+g1-new-q38-l2 rc=0 gpu_q38_graph_test: 22 checks, 0 failed: PASS
+g1-base-cmdlist rc=0 chip: 31 checks, 0 failed: PASS
+g1-new-cmdlist rc=0 chip: 31 checks, 0 failed: PASS
+g1-base-dgraph rc=0 chip: 13 checks, 0 failed: PASS
+g1-new-dgraph rc=0 chip: 13 checks, 0 failed: PASS
+refusal rc=0 PASS: 3 checks, 0 failed
+g2-l4 rc=1 FAIL: 1 checks, 1 failed
+g1-ch2-q38-l4 rc=0 gpu_q38_graph_test: 22 checks, 0 failed: PASS
+done

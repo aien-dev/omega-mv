@@ -1,0 +1,1 @@
+run 3: all PASS. G1: base (0010f7d3 on physics 6d7cf0d4) and new outputs identical after dropping timing lines (only diff: 30B "model built in 1.8 s" vs "1.9 s"). G2 (4 layers, 32 steps): pair == serial bit for bit, negative control passes. Small timing: pair/serial 1.0074.

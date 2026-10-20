@@ -1,0 +1,5 @@
+gpu_q38_channels_test: layers 4 mask 0x8 steps 16 AIEN_OMEGA_GPU_CHANNELS=2
+model: 4 layers (3 GDN, 1 attention), vocab 248320, built in 4.5 s
+FAIL: pair step 0: queue_open (extra queue): REFUSED_LIMIT
+FAIL: 16 steps ran on both paths
+FAIL: 1 checks, 1 failed
