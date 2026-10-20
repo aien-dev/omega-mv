@@ -79,6 +79,12 @@
 #define OMEGA_DATTN256_ARG_OUT_SCALE 0x3dcu /* f32 multiplier on the output */
 #define OMEGA_DATTN256_ARG_QK_SCALE 0x3e0u /* f32 (1/sqrt(256)) * log2(e) */
 #define OMEGA_DATTN256_ARGS_WORDS 25u
+/* kv8 only (OmegaDecodeAttn256Spec.kv8 = 1): the per-row scale planes, f32 [kv_head][max_pos] each, head stride
+ * kv_stride / 64 bytes (kv_stride = max_pos * 256 in kv8) */
+#define OMEGA_DATTN256_ARG_KS 0x3e8u       /* f32 K row scales */
+#define OMEGA_DATTN256_ARG_VS 0x3f0u       /* f32 V row scales */
+#define OMEGA_DATTN256_ARGS_WORDS_KV8 30u
+#define OMEGA_DATTN256_ROW_BYTES_KV8 256u  /* one e4m3 K or V row */
 
 /* shared memory map (bytes) */
 #define OMEGA_DATTN256_SM_Q 0u             /* q'[6][256] f32: 6144 (warps 6, 7 stage k and v at 6144.. 8191: inside SM_S, unused then) */
@@ -98,10 +104,22 @@ typedef struct {
                       * cache rows as the decode step does (same instruction sequence, so the same bits), writes q' as bf16
                       * to ARG_OUT in the attend kernel's A-fragment layout (OMEGA_PATTN256_QF_*), and exits. Mutants 1
                       * and 3 apply; ARG_PART, ARG_CNT, ARG_PER_SPLIT, ARG_SPLITS and ARG_OUT_SCALE are not read. */
+    uint32_t kv8;    /* 1: 8-bit cache (SPEED-7, ledger L131). Rows are 256 e4m3 bytes plus one f32 power-of-two scale per row
+                      * (ARG_KS, ARG_VS planes); the row's value is e4m3 * scale. The new row is quantised with the rule
+                      * of the FP8 activation quantiser (omega_blackwell_codegen_qg.h): amax = max(max |x|, 2^-100),
+                      * E = biased exponent of amax, c = (mantissa bits + 0x1fffff) >> 23, scale = 2^(E - 135 + c),
+                      * byte = e4m3_rne_satfinite(x * 2^(135 - E - c)) (F2FP.SATFINITE.E4M3, OMEGA_QMMA_MARK_F2E4: the
+                      * launcher runs omega_qmma_patch_code). Reads decode a byte to f32 bits ((b & 0x7F) << 20) |
+                      * ((b & 0x80) << 24) = e4m3(b) * 2^-120 (omega_blackwell_codegen_moe.c), and the row factor
+                      * scale * 2^120 multiplies the score (K) or the softmax weight p (V; l keeps the unscaled p).
+                      * Scales are powers of two, so every product with them is exact: a row means the same number to
+                      * this kernel (f32) as to a bf16 reader. Mutants (kv8 only): 6 the K row scale is ignored;
+                      * 7 the V row scale is ignored; 8 the scale uses c = 0 (amax with a mantissa above 1.75 saturates);
+                      * 9 the two bytes of each written pair are swapped. */
 } OmegaDecodeAttn256Spec;
 
 /* Builds the IR program (register-allocated) into *prog. 0 ok, -1 refused (depth 0 or > 4, mutant outside 0..5,
- * or the program outgrew BW_MAX_IR_INSNS / BW_MAX_VREGS). */
+ * 6..9 without kv8, or the program outgrew BW_MAX_IR_INSNS / BW_MAX_VREGS). */
 int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *spec, BlackwellIRProgram *prog);
 /* Instruction and peak-register counts of the program (host, no device). */
 int omega_decode_attn256_prog_stats(const OmegaDecodeAttn256Spec *spec, uint32_t *insns, uint32_t *gprs);

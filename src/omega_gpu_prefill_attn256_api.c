@@ -155,6 +155,7 @@ static int core(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos0, ui
     const int host = qkv != NULL;
     OmegaGpuDecodeAttn256CacheView v;
     if (!c || m == 0 || m > OMEGA_GPU_PATTN256_MAX_M || omega_gpu_decode_attn256_cache_view(c, layer, &v) != OMEGA_GPU_DATTN_OK ||
+        v.kv8 /* the attend kernel reads bf16 rows only (SPEED-7, L131: 8-bit prompt reading not built) */ ||
         pos0 > v.max_pos || m > v.max_pos - pos0 || (host ? !out : (!qkv_va || !out_va || (qkv_va & 15u) || (out_va & 15u)))) return OMEGA_GPU_DATTN_BAD_ARGS;
     if (!rec) omega_gpu_session_lock();
 #define UNLOCK() do { if (!rec) omega_gpu_session_unlock(); } while (0)

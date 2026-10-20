@@ -64,6 +64,12 @@ typedef struct {
 } OmegaGpuDecodeAttn256Info;
 
 int omega_gpu_decode_attn256_cache_alloc(uint32_t layers, uint32_t max_pos, double rope_theta, uint32_t rotary_dim, OmegaGpuDecodeAttn256Cache **out);
+/* kv8 = 1: the 8-bit cache of SPEED-7 (ledger L131): per layer K and V planes of e4m3 rows (256 bytes) plus f32 [4][max_pos]
+ * power-of-two row scales; the row means e4m3 * scale (rule: OmegaDecodeAttn256Spec.kv8). 520 bytes per position per KV head
+ * instead of 1024. The decode kernel reads and appends this format; cache_write / cache_read refuse it (use the *8 forms). */
+int omega_gpu_decode_attn256_cache_alloc_kv(uint32_t layers, uint32_t max_pos, double rope_theta, uint32_t rotary_dim, uint32_t kv8,
+                                            OmegaGpuDecodeAttn256Cache **out);
+uint32_t omega_gpu_decode_attn256_cache_kv8(const OmegaGpuDecodeAttn256Cache *c);
 void omega_gpu_decode_attn256_cache_free(OmegaGpuDecodeAttn256Cache *c);
 int omega_gpu_decode_attn256_set_norms(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, const float *q_norm, const float *k_norm);
 int omega_gpu_decode_attn256(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos, const float *qkv, float eps,
@@ -80,6 +86,15 @@ int omega_gpu_decode_attn256_cache_write(OmegaGpuDecodeAttn256Cache *c, uint32_t
                                          const uint16_t *k_bf16, const uint16_t *v_bf16); /* count rows from pos, one sync */
 int omega_gpu_decode_attn256_cache_read(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos,
                                         uint16_t *k_bf16, uint16_t *v_bf16);
+/* kv8 test helpers: count rows of e4m3 bytes (256 each, K rows permuted) and their f32 scales, one sync */
+int omega_gpu_decode_attn256_cache_write8(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, uint32_t count,
+                                          const uint8_t *k8, const float *ks, const uint8_t *v8, const float *vs);
+int omega_gpu_decode_attn256_cache_read8(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos,
+                                         uint8_t *k8, float *ks, uint8_t *v8, float *vs);
+/* Host form of the kernel's row quantiser (bit-exact for the same f32 inputs): q[256] e4m3, returns the row scale. */
+float omega_dattn256_kv8_quant_row(const float *x, uint8_t *q);
+/* f32 -> e4m3 round to nearest even, saturating at +-448 (F2FP.SATFINITE.E4M3; no NaN input expected) */
+uint8_t omega_dattn256_e4m3_rne_sat(float x);
 /* Read-only view of a layer of the cache for the prefill attention: device addresses only. */
 typedef struct {
     uint32_t layers, max_pos, rotary_dim;
@@ -88,6 +103,8 @@ typedef struct {
     uint64_t rope_va;           /* f32 [max_pos][cos 128 | sin 128] */
     uint64_t q_norm_va, k_norm_va; /* f32 [256] each for `layer` */
     uint64_t part_va, cnt_va;   /* the cross-split partials and counters (prefill may reuse them) */
+    uint32_t kv8, row_bytes;    /* kv8: e4m3 rows (row_bytes 256) and the f32 row scale planes below; else bf16 rows (512) */
+    uint64_t ks_va, vs_va;      /* kv8: K and V scale planes of `layer`, f32 [kv_head][max_pos] (0 for bf16) */
 } OmegaGpuDecodeAttn256CacheView;
 int omega_gpu_decode_attn256_cache_view(const OmegaGpuDecodeAttn256Cache *c, uint32_t layer, OmegaGpuDecodeAttn256CacheView *out);
 
