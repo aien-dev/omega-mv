@@ -1,0 +1,18 @@
+# Plan review by Codex gpt-6-astra (2026-10-20 ~21:35Z), answer only. Fable advisor was rate-limited.
+
+**Biggest missing control per hypothesis**
+
+- **H1:** Four texts cannot establish domain-stable heads. Split by independent prompts/documents, not token halves; match lengths and separate prefill from decode. Compare against a domain-agnostic popular-expert set of equal size. Verify top-k from the actual 35B configuration.
+- **H2:** A DRAM copy measures copying, not necessarily useful placement. Include direct GPU access to the existing allocation as the no-copy baseline. Count double buffers, trunk, KV cache, metadata and uncovered experts. Measure readiness for GPU consumption, including synchronization.
+- **H3:** A 90/99%-coverage head misses routes; exact routing requires a measured fallback. Compare today’s path, planned placement without prefetch, and placement with prefetch using identical route traces. Include misses and bandwidth contention in beat-time tails. Trace-driven scheduling is an oracle upper bound unless future routes are genuinely available.
+- **H4:** Offline hit rate and detection delay do not establish user-visible swap latency. Replay switches online; include wrong predictions, wasted bytes, fallback stalls and an explicit-tag baseline.
+- **H5:** Held-out NLL alone omits task success and the requested speed measurement. Compare against equal-sized random/global-popularity heads; evaluate code/math correctness and tok/s.
+
+**GB10 physics**
+
+CPU and GPU share LPDDR5X: “host RAM → GPU-resident DRAM” need not cross into a faster physical memory tier. Copying can add traffic to the same shared pool. Distinguish allocation/access policy from actual cache residency. L2 residency is not guaranteed by fitting; SMEM/register staging consumes execution resources. A prebuilt launch chain still has dispatch costs.
+
+**Cheapest discriminating measurements**
+
+- **H2:** For one representative head, compare GPU consumption directly from its existing allocation versus copy-then-consume; separately measure cold NVMe-to-consumable latency.
+- **H3:** Replay a short captured route trace through a few layers, prefetch off/on, including misses. Record compute/copy overlap, bytes, beat-time distribution and exact-output agreement.

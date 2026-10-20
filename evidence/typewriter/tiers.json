@@ -1,0 +1,10 @@
+{
+  "note": "Measured tier table for the placement plan. Rates are reused from omega doc/machine-ceiling@3c8ce239 docs/MACHINE_CEILING.md (L151, measured 2026-10-20 on this Spark), not re-measured here. Sizes: SMEM = 48 SMs (6,144 cores / 128, MACHINE_CEILING line 87) x 99 KB usable per block after #560/L293 (today our launcher caps 16 KB) = 4,866,048 B (calc:d0ed8a94); L2 24 MB (MACHINE_CEILING, ServeTheHome); DRAM = free -b total on this box; NVMe = lsblk size of nvme0n1. On GB10 the GPU region and host RAM are ONE LPDDR5X pool: they differ by mapping and pinning, not by place.",
+  "tiers": [
+    {"name": "smem", "bytes": 4866048, "read_gb_s": 14380.0, "source": "MACHINE_CEILING raw/gpu-ceiling.txt LDS.128, 16 KB per block, 1536 blocks"},
+    {"name": "l2", "bytes": 25165824, "read_gb_s": 5110.8, "source": "MACHINE_CEILING raw/gpu-ceiling: every block reading the same 1 MB; little reuse across launches"},
+    {"name": "dram_gpu", "bytes": 130660892672, "read_gb_s": 245.1, "source": "MACHINE_CEILING best GPU stream 245.1 GB/s (228.0 sustained 30 s)"},
+    {"name": "dram_cpu", "bytes": 130660892672, "read_gb_s": 71.3, "source": "MACHINE_CEILING 20 CPU cores, 30-round average (calc:c249a25f); same physical pool as dram_gpu"},
+    {"name": "nvme", "bytes": 4096805658624, "read_gb_s": 10.616, "source": "MACHINE_CEILING NVMe read 10.616 GB/s, 16 threads"}
+  ]
+}

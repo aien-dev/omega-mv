@@ -1,0 +1,212 @@
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:An evaluation record consists of an input location and its outcome. Let $X$ denote the input locations of the evaluation set and $D$ the outcomes at those locations. The input locations are supplied to both models: they are the questions, not the answers. Let $W$ denote the hidden generating program that produced the outcomes; $W$ is never part of the declared background. For a candidate model $M$, a fixed baseline $B$, the evaluation outcomes $D$, the declared shared background $G$ (here: the input list $X$ and the scoring conventions), and the frozen measurement profile $P$, define:
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\[
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\]
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:Here, $L$ denotes description length in bits under a specified encoding.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:One accounting rule governs everything a decoder may use: anything available to the decoder beyond $X$ is part of the model and is charged in its description length. If a model decodes with the help of a retained training history, that history is written into the model and charged in $L(M)$. No information reaches the decoder uncharged, for either model, in any claim below.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:I propose a family of learning problems, indexed by a size parameter $n$, with the following properties:
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Compact explanation.} Each hidden world has a generating program with description length $O(n)$.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Efficient execution.} Given that program, outcomes can be predicted in time polynomial in $n$.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Large explanatory gain.} The evaluation size is fixed exactly: $m(n) = n^2$ outcome bits, at fresh input locations that are pairwise distinct and were never queried during discovery, drawn after discovery closes. On that evaluation set, the generating program earns $\Omega(n^2)$ Turings relative to the uniform baseline, a gain density bounded away from zero.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Persistent discovery barrier.} For every probabilistic polynomial-time learner, the probability of producing a model that earns at least a fixed fraction of the available gain tends to zero as $n$ grows. The probability is taken over the random draw of the hidden world, the observations, the evaluation inputs and outcomes, and the learner's randomness.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Prefix-free codes.} All description lengths are lengths under a prefix-free binary code: no codeword is a prefix of another. By the Kraft-McMillan theorem, a set of lengths is realizable by a uniquely decodable code exactly when the corresponding Kraft sum satisfies $\sum_i 2^{-\ell_i} \le 1$ \cite{coverthomas2006, shannon1948}. Unique decodability is what makes a length an honest count of information.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Lossless decoding.} Decoding the submitted encoding, given the input locations $X$ and the charged model, must reproduce the evaluation outcomes exactly. A short output that does not decode to the actual outcomes is not compression; it is an error.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{One code, fixed in advance.} The encoding scheme, and therefore the meaning of $L$, is part of the frozen profile. It cannot be chosen after seeing the evaluation data.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{World sampling.} A declared, efficiently samplable distribution over generating programs of the family at size $n$. The hidden world is one draw from this distribution.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Discovery interaction.} During discovery the learner may adaptively query input locations of its choice and receive the true outcomes, up to a declared query budget, in the style of query learning \cite{angluin1988, valiant1984}, and may also receive observations drawn from the input distribution, up to a declared observation budget. Both budgets are polynomial in $n$ and are part of the problem specification.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Evaluation draw.} After the freeze, $m(n) = n^2$ fresh, pairwise distinct input locations are drawn, their outcomes computed by the hidden generating program, and the frozen model is scored exactly once under the accounting rules.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Success and failure.} The available gain is the frozen evaluation score of the generating program itself. A learner succeeds if its score is at least the declared fraction (proposed: 10\%) of the available gain. Claims A and B assert that, over the draws in steps 1, 2, and 5 and the learner's own randomness, the success probability of every probabilistic polynomial-time learner tends to zero as $n$ grows.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{World sampling.} Draw a key $k$ uniformly at random from $\{0,1\}^n$. The generating program is the pseudorandom function $F_k$ of Goldreich, Goldwasser, and Micali \cite{ggm1986}, built from a pseudorandom generator, which exists if one-way functions exist. The program consists of the key plus a fixed evaluator: description length $O(n)$, evaluation in time polynomial in $n$.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Input space and distribution.} Inputs are $n$-bit strings, $x \in \{0,1\}^n$, so the domain has $2^n$ locations, large enough that exhaustion and collision are not strategies. The input distribution is uniform, which is efficiently samplable.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Discovery interaction.} The learner makes adaptively chosen input queries and receives $F_k(x)$ for each, up to a query budget of $q(n) = n^3$. Let $Q$ be the set of all inputs whose outcomes were revealed during discovery, by query or by observation. Then $|Q| \le n^3$, negligible against $2^n$.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Evaluation draw.} Draw $m(n) = n^2$ evaluation inputs uniformly without replacement from $\{0,1\}^n \setminus Q$. The evaluation inputs are therefore pairwise distinct and disjoint from everything the learner has seen. Distinctness is load-bearing: a repeated input would let any model earn from repetition itself, and an input repeated from discovery would let a charged transcript answer it, so compressible repetition could appear even though the function resists discovery. Outcomes are the bits $F_k(x)$, one per input, for $n^2$ outcome bits in total.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Baseline.} The baseline is uniform on the evaluation outcomes: each bit is assigned probability one half. The uniform predictor needs no parameters, so $L(B)$ is a fixed constant, and $L(D \mid B, X) = m$ for every $D$.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Available gain.} The key-holding program predicts every evaluation bit. Under the frozen code its score is the baseline cost of $n^2$ near-random bits, minus its $O(n)$ description and a small conditional cost: $T(P_k;B,D,G,P) = n^2 - n + O(1)$, hence at least $n^2/2$ Turings for all large $n$, an $\Omega(n^2)$ gain with density approaching $1$, bounded away from zero.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Barrier: proof of Claim A.} Suppose, for contradiction, that some probabilistic polynomial-time learner $A$ violates Condition 4: for some constant $c > 0$ and infinitely many $n$, $A$ earns at least one tenth of the available gain with probability at least $c$, the probability taken over the key draw, the discovery interaction, the evaluation draw, and $A$'s randomness. For large $n$ the available gain is at least $n^2/2$, so success implies a Turing score of at least $n^2/20$. The argument works for any fixed positive fraction, and for any polynomial discovery budget, not only $n^3$.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\textbf{Counting lemma.} Fix the discovery transcript, the resulting frozen model $M$, and the evaluation input list $X$. Assume the baseline $B$ is uniform on the evaluation outcomes, so that $L(D \mid B, X) = m$ for every $D$. If the $m$ evaluation outcome bits are independent uniform bits conditional on those fixed objects, then for any threshold $s$,
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\[
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\]
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\emph{Proof of lemma.} By the uniform-baseline hypothesis, scoring at least $s$ requires $L(D \mid M, X) \le L(B) + m - L(M) - s$. Call that bound $r$; if $r < 0$ the event is impossible. The residual code is prefix-free, so by the Kraft inequality it contains at most $2^r$ codewords of length at most $r$, and each codeword decodes to at most one outcome string $D$. Of the $2^m$ equally likely outcome strings, at most $2^r$ can reach the threshold, so the probability is at most $2^{r-m} = 2^{L(B) - L(M) - s} \le 2^{L(B) - s}$. The bound holds even for a randomized encoder: it counts decodable short residuals, not encoder behavior. Averaging over transcripts, models, and input lists preserves it. \hfill$\square$
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:Now construct a probabilistic polynomial-time distinguisher $D$ with oracle access to $O : \{0,1\}^n \to \{0,1\}$:
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item Simulate discovery: run $A$, answering its adaptive queries with $O$; let $Q$ be the set of all revealed inputs.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item Let $M$ be the frozen model $A$ outputs.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item Simulate the evaluation draw with a bounded sampler: repeatedly draw uniform inputs, accepting only points outside $Q$ not already accepted, until $n^2$ inputs are accepted or $2n^2$ attempts are made; on failure, output $0$. Query $O$ for the accepted inputs' outcome bits and compute $M$'s Turing score under the frozen profile and baseline. Output $1$ if the score is at least $n^2/20$, else $0$.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:$D$ runs in polynomial time: $A$ does, it makes polynomially many oracle queries, and scoring a valid model is polynomial by the efficient-coding rule. An invalid model scores nothing. The bounded sampler keeps $D$ strictly polynomial rather than relying on unbounded rejection sampling. Its failure probability is at most $4^{n^2} a^{n^2}$ with $a = (|Q| + 2n^2)/2^n$: failure needs at least $n^2$ rejected attempts among $2n^2$, each attempt rejects with conditional probability at most $a$, and a union bound over the choices of the rejected positions gives the bound. The exact count is the binomial coefficient $\binom{2n^2}{n^2}$, and $4^{n^2}$ is a valid but loose upper bound for it; the looseness is harmless, since only negligibility is needed. Since $|Q|$ is polynomial, $a$ is far below $1/4$ for large $n$ and the failure probability is negligible; failure only lowers acceptance.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:If $O = F_k$ for a uniform key $k$, the simulation reproduces the Claim A world, and $D$'s evaluation draw has the game's distribution whenever the sampler completes, so $D$ outputs $1$ with probability at least $c - \mathrm{negl}(n)$ on the infinite subsequence.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:If $O = R$ is a truly random function, the outcome bits at the fresh accepted points are independent uniform bits even after conditioning on the adaptive discovery transcript and the accepted input list, so the counting lemma bounds $D$'s acceptance probability by $2^{L(B) - n^2/20}$. The baseline length $L(B)$ is a constant, so this is negligible in $n$.
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:The distinguishing advantage is therefore at least $c - \mathrm{negl}(n)$, bounded away from zero on the infinite subsequence. This contradicts the pseudorandomness of the Goldreich-Goldwasser-Micali family \cite{ggm1986}, which holds if one-way functions exist. Hence no such learner $A$ exists: every probabilistic polynomial-time learner's success probability tends to zero. That is Condition 4, and Claim A is proved. \hfill$\square$
+/tmp/l180-site-dist/research/turing-discovery-gap-conjecture/paper.tex:\item \textbf{Apparatus and implementation identity.} The AIEN stochastic-law apparatus in its EXP-002 ``Stochastic Law Discovery'' configuration: candidates compete to explain sealed held-out trajectories from a freshly generated stochastic law \cite{stapleton2026a, stapleton2026b}. Measurement profile: turing-profile v1.0 (draft; any change is a new version). Coder: the profile's reference coder, theoretical description length under declared predictive distributions. Quantizer $Q$: the scored quantity is the one-step increment $\Delta_t = x_t - x_{t-1}$, not the absolute position: absolute positions of a diffusion wander without bound, so a fixed position grid piles mass into its edge bins. Increments are quantized into 256 uniform bins over $[-5, 5]$; out-of-range increments are clipped to the edge bins. The generator family declares its maximum per-step diffusion coefficient in the preregistration manifest, and a run is valid only if the clipped fraction is reported and stays at or below 5.0\% of sealed observations. If more than 5.0\% of sealed observations fall outside $[-5,5]$ before quantization and are therefore clipped, the affected preregistered condition is invalid for the primary claim; if CEXP-1 has only one primary condition, that invalidates the run. The failed run is preserved and reported, not deleted and rescored. Clipping is measured on actual out-of-range values before quantization, not on edge-bin occupancy: raw pre-quantization values are retained so the gate uses the true clipped fraction, with edge-bin occupancy reported as a diagnostic. Baseline: uniform over quantization bins, 8 bits per scored increment. Model cost convention: 32 bits per fitted real parameter, 8 bits per small integer hyperparameter selected on context data.
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:    \textbf{Computing Machinery and Understanding}\\[0.5em]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:-\sum_{t=1}^{n}
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\boxed{\frac{T}{J}},
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:On 2026-09-29 the first profile-bound idealized Turing result was recorded under measurement profile V0 (\href{https://github.com/aien-dev/omega/pull/85}{omega pull request~85}, merged the same day). The candidate was a table conditioning on the tried operation plus the last four outcomes of Omega search traces; the baseline was a table conditioning only on the last outcome. On sealed held-out seeds 8, 9, and 10, about 5.8~million search events never seen during model selection, the candidate reduced total held-out description length by \textbf{2,559,679.825 bits}, scoring \textbf{+2,559,679.825~$T_{\mathrm{ideal}}$} under profile V0, about \textbf{0.44~$T_{\mathrm{ideal}}$ per held-out observation} of specific Turing gain. The preregistered bar of 234,602~bits was cleared, with each held-out seed passing on its own. The scoring tool refuses to score the held-out seeds a second time, and a refit check refits both models from the training files and reproduces the receipt exactly. The complexity charge penalizes stored information that does not earn its cost on held-out observations. Under Lemma~2's assumptions, pure memorization cannot outperform the cheaper baseline. All scoring arithmetic uses fixed-point integer micro-bits, with worst-case rounding under 6~bits over the whole held-out set.
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\frac{T}{E_{\mathrm{eval}}}
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\frac{T}
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding-emergence/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:-\sum_{t=1}^{n}
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\item \(L(D\mid M,G) = -\sum_{t=1}^{n} \log_2 p_M(x_t\mid x_{<t},G)\) is the idealized predictive codelength of \(D\) under \(M\) given \(G\) (Lemma~1).
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\boxed{Y_{\rm eval} = \frac{\mathcal{T}(M;B,D,G,P)}{E_{\rm eval}}}
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\boxed{Y_{\rm discovery} = \frac{\mathcal{T}(M;B,D,G,P)}{E_{\rm search}+E_{\rm train}+E_{\rm synthesis}+E_{\rm verify}+E_{\rm eval}}}.
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\draw[arr] (0,0) -- (8,0) node[below, font=\small] {$J$: measured joules for the run};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[rotate=90, font=\small] at (-0.75,2.75) {$\mathcal{T}$: bits of verified held-out explanatory gain};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[font=\small] at (0.95,2.15) {$Y$ larger};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[font=\small] at (3.05,2.3) {$Y$ smaller};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[font=\small, align=left] at (7.2,5.2) {Same $\mathcal{T}$, different $E$:\\yield is the slope\\from the origin};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\caption{Conceptual illustration of the distinction between Turing gain $\mathcal{T}$ and Turing yield $Y=\mathcal{T}/E$ (Definition~4). Two runs can produce the same net held-out explanatory gain while consuming different measured energy; the yield discriminates between them, which is the environmental hypothesis H5. Conceptual illustration, not empirical data.}
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\textbf{Assumption A2 (Computable predictive distribution).} The candidate \(M\) must expose its predictive distribution \(p_M\) as a computable function. Where an actual entropy-coded bitstream is not produced, the idealized codelength \(L(D\mid M,G)=-\sum_t \log_2 p_M(x_t\mid x_{<t},G)\) is used, and the profile must record which method was applied (\texttt{codelength\_method}). The profile declares a reference entropy coder, arithmetic coding~\cite{witten1987} or asymmetric numeral systems~\cite{duda2009}, with bits-back coders~\cite{hinton1993,townsend2019} for latent-variable models; ``bits'' in a Turing measurement means bits under the declared coder. Idealized log-loss is realizable to within small bounded amortizable overhead by such coders, and H1 tests the bridge.
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:For a predictive distribution \(p_M\) over a finite alphabet and a sequence \(D\) of length \(n\), there exists a code whose length for \(D\) is less than \(-\sum_{t=1}^{n}\log_2 p_M(x_t\mid x_{<t}) + 2\) bits, subject to the declared termination and message-length convention.
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\textit{Proof sketch.} Let \(P_M(D)=\prod_{t=1}^{n}p_M(x_t\mid x_{<t})\) be the probability the model assigns to the complete sequence. Arithmetic coding assigns the whole sequence an interval of width \(P_M(D)\) within \([0,1)\). A binary point identifying that interval requires fewer than \(-\log_2 P_M(D)+2 = -\sum_{t=1}^{n}\log_2 p_M(x_t\mid x_{<t})+2\) bits, under the profile's declared termination and message-length convention (standard Shannon source-coding argument~\cite{shannon1948}; cf.\ textbook treatments of arithmetic coding). \qed
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[box] (p1) {Preregister the measurement profile: dataset, split, baseline $B$,\\encoding convention, energy instrumentation, attribution rule};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[box, below=0.45cm of p1] (p2) {Seal the held-out set $D$: cryptographic hash for identity,\\auditable blinding for non-access};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[box, below=0.45cm of p2] (p3) {Construct the candidate $M$ with no access to $D$;\\declare all shared background};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[box, below=0.45cm of p3] (p4) {Evaluate: $DL(B,D\mid G)=L(B\mid G)+L(D\mid B,G)$\\against $DL(M,D\mid G)=L(M\mid G)+L(D\mid M,G)$};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[box, fill=gray!10, below=0.45cm of p4] (p5) {Publish the receipt: $\mathcal{T}=DL(B,D\mid G)-DL(M,D\mid G)$\\with uncertainty envelope and all artifacts};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\textbf{Legg, S. and Hutter, M. (2007).} \textit{Universal Intelligence: A Definition of Machine Intelligence}. Minds and Machines, 17(4), 391--444. The canonical formal measure \(Y(\pi)=\sum_{\mu} 2^{-K(\mu)} V^{\pi}_{\mu}\): reinforcement-learning and environment-based, with uncomputable Kolmogorov terms, no held-out data discipline, no named unit, and no energy accounting.
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:On 2026-09-29 the first profile-bound idealized Turing result was recorded under measurement profile V0 (\href{https://github.com/aien-dev/omega/pull/85}{omega pull request~85}, merged the same day). Candidate C (a table conditioning on the tried operation plus the last four outcomes) scored a specific Turing gain of about \textbf{0.44~T\(_{\rm ideal}\) per held-out observation}: a total of \textbf{+2,559,679.825~T\(_{\rm ideal}\)} over \(n = 5{,}834{,}845\) sealed held-out search events, relative to baseline B (a table conditioning only on the last outcome). The held-out events came from three seeds (8, 9, 10) never seen during model selection (seed~7 only); the pre-registered bar of 234,602~bits was cleared, with each held-out seed passing on its own. This run, TY-1+TY-2, is a completed pre-EXP instrument result with a fixed model class. It is not EXP-001: the EXP-001 preregistered runs are pending, and the H1 prediction-compression bridge (Section~5.3) remains open. The scoring tool declines to score the held-out seeds a second time: a useful procedural discipline, not proof of blinding. A separate refit check refits both models from the training files and reproduces the receipt exactly, which establishes replayability; non-access to the held-out seeds before the freeze rests on the seed discipline recorded in the profile (seeds 8--10 never seen during model selection; only seed~7 was used), not on the tool's refusal. The complexity charge penalizes stored information that does not earn its cost on held-out observations. Under Lemma~2's assumptions, pure memorization cannot outperform the cheaper baseline. Candidate~C is itself a table-based predictor; its positive held-out gain is consistent with legitimate generalization under the complexity charge, which Lemma~2 does not forbid, subject to the limits stated below: this is an internally replayed result, and independent blinding was not established. All scoring arithmetic uses fixed-point integer micro-bits: 1~bit~=~1{,}000{,}000 micro-bits (\texttt{src/turing/ty\_math.c}). Probabilities are quantized to 16~bits; each symbol's code length \(-\log_2(q/65536)\) is computed with integer fixed-point arithmetic and rounded to the nearest micro-bit. Reported Turing values may therefore carry up to six decimal places: the receipt's exact \texttt{t\_microbits} = 2{,}559{,}679{,}824{,}815 micro-bits (2{,}559{,}679.824815~T\(_{\rm ideal}\)), displayed as +2{,}559{,}679.825~T\(_{\rm ideal}\) rounded to three decimals, not a floating-point approximation. Worst-case rounding is under 6~bits over the whole held-out set. The 6-bit figure is an arithmetic rounding bound on the scoring computation, not a statistical confidence interval; statistical uncertainty for \(\mathcal{T}\) is required future work. The reported baseline is a weak one (a last-outcome table); the profile's \texttt{baseline\_sensitivity} field requires the gain to be reported under two to three reasonable alternative baselines, which is pending (Table~2). Attribution is likewise pending: the candidate changes operation conditioning and history length simultaneously, so the gain cannot yet be attributed to either. Required ablations are an operation-only baseline, an operation-plus-last-outcome baseline, and a longer-history-without-operation baseline; no ablation numbers are reported here (Table~2). Limits stated plainly: $\mathcal{T}$ here is a theoretical code length. No entropy coder was built that produces the smaller file, so this is not yet a \(\mathcal{T}_{\rm real}\) measurement; energy was not measured in this run, so no Turing yield (T/J) is reported. Joining R15 energy measurements to Turing-gain receipts is the next step (Definition~4).
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[box] (s1) at (0,0) {Score once: compute $\mathcal{T}$\\from the sealed receipts};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\node[box] (s3) at (7.4,-2.2) {Refit check refits $B$ and $M$\\from the training files};
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\[
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\]
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\item[v1.8] Figures added (Sections~3, 5, and 7): the Turing measurement pipeline, the distinction between Turing gain $\mathcal{T}$ and Turing yield, and the verification-by-refit loop. Substantive revision from technical review: the $\mathcal{T}_{\rm ideal}$/$\mathcal{T}_{\rm real}$ split (the Section~7 result restated as the first profile-bound idealized Turing result); the declared shared background $G$ made explicit in the notation, $\mathcal{T}(M;B,D,G,P)=[L(B\mid G)+L(D\mid B,G)]-[L(M\mid G)+L(D\mid M,G)]$; the measurement-profile fields extended (sequence ordering, reset/warm-start rules, episode boundaries, initial context, candidate-selection count, test-query history); falsification reframed as two tiers, measurement validity (F1--F4) and scientific falsification.
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\item[v1.9] Review-driven revision: TY-1+TY-2 restated as the completed pre-EXP instrument result with EXP-001 pending and H1 open; the specific gain ($\sim$0.44~T\(_{\rm ideal}\) per observation) made the headline; the Hutter Prize added to Related Work; the anti-memorization claim narrowed to Lemma~2's scope; the T/tesla notation footnote added; LaTeX production fixes.
+/tmp/l180-site-dist/research/computing-machinery-and-understanding/paper.tex:\item[v1.14] Figure repair: Figure~1 (Turing gain vs.\ Turing yield) redrawn --- the y-axis label no longer collides with the axis, and the ``$Y$ larger'' / ``$Y$ smaller'' labels now sit adjacent to their respective slope lines instead of floating ambiguously.
