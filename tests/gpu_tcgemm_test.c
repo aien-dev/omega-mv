@@ -122,6 +122,23 @@ static int host_only(void) {
                rc, rc == 0 ? prog.count : 0, peak, decl, omega_tcgemm_shared_bytes(&shapes[i]), omega_tcgemm_span(&shapes[i]), ok ? "ok" : "REFUSED");
         if (i < 2 && !ok) fail++;
     }
+    /* L149: the staging arrays in the generator hold 8 slots; every spec the checker accepts must fit them (NJ = 4 * rt / warps) and build */
+    {
+        static const uint32_t rts[] = { 1, 2, 3, 4, 8 }, cts[] = { 1, 2, 3, 4 }, wps[] = { 1, 2, 3, 4, 8 };
+        int swept = 0, accepted = 0, nj_bad = 0, build_bad = 0, over_budget = 0;
+        for (size_t a = 0; a < sizeof rts / 4; a++) for (size_t b = 0; b < sizeof cts / 4; b++) for (size_t c = 0; c < sizeof wps / 4; c++) {
+            OmegaTcGemmSpec sp = { 128, rts[a], cts[b], wps[c], 0 };
+            swept++;
+            if (!omega_tcgemm_spec_ok(&sp)) { if (omega_blackwell_codegen_tcgemm_prog(&sp, &prog) == 0) { printf("refused spec built: rt %u ct %u warps %u\n", sp.rt, sp.ct, sp.warps); build_bad++; } continue; }
+            accepted++;
+            if (4u * sp.rt / sp.warps > 8u) { printf("accepted spec overflows the 8 staging slots: rt %u ct %u warps %u\n", sp.rt, sp.ct, sp.warps); nj_bad++; continue; }
+            if (omega_blackwell_codegen_tcgemm_prog(&sp, &prog) != 0) over_budget++; /* a clean refusal (register budget) is fine; a crash is not */
+        }
+        OmegaTcGemmSpec rep = { 128, 4, 1, 1, 0 };
+        int rep_ok = !omega_tcgemm_spec_ok(&rep) && omega_blackwell_codegen_tcgemm_prog(&rep, &prog) == -1;
+        printf("staging-slot bound (L149): %d specs swept, %d accepted, %d overflow, %d refused cleanly over the register budget, %d wrongly built, k128/rt4/ct1/warps1 refused: %s\n", swept, accepted, nj_bad, over_budget, build_bad, rep_ok ? "yes" : "NO");
+        if (nj_bad || build_bad || !rep_ok) fail++;
+    }
     /* emulation vs double oracle (x as stored bf16, true e4m3 and bf16 scale): relative to the sum of |terms| */
     Prob p; prob_make(&p, 3, 256, 512, 40, 17, 0);
     float *y = malloc((size_t)p.M * p.n * 4); emulate(&p, y);

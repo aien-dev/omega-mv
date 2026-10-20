@@ -46,6 +46,7 @@ int omega_tcgemm_spec_ok(const OmegaTcGemmSpec *s) {
     if (s->rt * s->ct < 4u) return 0; /* >= 4 independent HMMAs between dependent ones (8 cycles each, nvcc's 29-cycle rule) */
     if (s->warps != 1 && s->warps != 2 && s->warps != 4 && s->warps != 8) return 0;
     if ((16u * s->rt * 8u) % (32u * s->warps)) return 0; /* whole LDG.128 staging slots per thread */
+    if (16u * s->rt * 8u / (32u * s->warps) > 8u) return 0; /* NJ staging slots per thread: gx[8], sa[8], stg[8] hold 8, and NJ = 16 (rt 4, warps 1) needs 112 registers of staging alone */
     if (s->mutant < 0 || s->mutant > 4 || (s->mutant == 3 && s->rt < 2)) return 0;
     return 1;
 }

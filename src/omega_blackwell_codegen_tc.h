@@ -52,7 +52,7 @@ typedef struct {
     uint32_t k;     /* multiple of 128, 128 .. 16384 */
     uint32_t rt;    /* row tiles (16 rows) per CTA: 1, 2 or 4 */
     uint32_t ct;    /* column tiles (8 weight rows) per warp: 1, 2 or 4; rt * ct >= 4 */
-    uint32_t warps; /* 1, 2, 4 or 8; (16 * rt * 8) % (32 * warps) == 0 */
+    uint32_t warps; /* 1, 2, 4 or 8; (16 * rt * 8) % (32 * warps) == 0 and 4 * rt / warps <= 8 */
     int mutant;
 } OmegaTcGemmSpec;
 #define OMEGA_TCGEMM_ARG_TILES 0x380u
