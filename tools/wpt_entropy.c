@@ -35,7 +35,7 @@ typedef struct {
     int kind;                 /* 1 = F8_E4M3, 2 = BF16 */
     const uint8_t *p;
     uint64_t n;               /* elements */
-    double h0, blk;           /* bits per weight */
+    double h0, blk, huff, esc2, esc3; /* bits per weight */
     uint64_t zeros;           /* exact zero values (+0 and -0) */
 } Tensor;
 
@@ -51,6 +51,38 @@ static double entropy(const uint64_t *hist, int k, uint64_t n) {
 }
 
 static int width_of(int range) { int w = 0; while ((1 << w) < range + 1) w++; return w; }
+
+static int cmp_u64_desc(const void *a, const void *b) {
+    uint64_t x = *(const uint64_t *)a, y = *(const uint64_t *)b;
+    return (x < y) - (x > y);
+}
+
+/* Exponent-only codes (sign and mantissa stay raw, `raw` bits): exact Huffman over the per-tensor exponent histogram
+ * (`k` symbols), and "top-3 / top-7 + escape": a 2- or 3-bit index into the tensor's most frequent exponents, the last
+ * index value meaning "the exponent follows raw" (`ebits` more bits). */
+static void exp_codes(Tensor *t, const uint64_t *eh, int k, int raw, int ebits) {
+    uint64_t w[256], s[256];
+    int n = 0;
+    uint64_t tot = 0;
+    for (int i = 0; i < k; i++) { s[i] = eh[i]; tot += eh[i]; if (eh[i]) w[n++] = eh[i]; }
+    uint64_t cost = 0; /* Huffman: sum of merged weights = total code length */
+    while (n > 1) {
+        int a = 0, b = 1;
+        if (w[b] < w[a]) { a = 1; b = 0; }
+        for (int i = 2; i < n; i++) {
+            if (w[i] < w[a]) { b = a; a = i; } else if (w[i] < w[b]) b = i;
+        }
+        uint64_t m = w[a] + w[b];
+        cost += m;
+        w[a] = m;
+        w[b] = w[--n];
+    }
+    t->huff = raw + (double)cost / (double)tot;
+    qsort(s, (size_t)k, sizeof(uint64_t), cmp_u64_desc);
+    uint64_t top3 = s[0] + s[1] + s[2], top7 = top3 + s[3] + s[4] + s[5] + s[6];
+    t->esc2 = raw + 2 + ebits * (double)(tot - top3) / (double)tot;
+    t->esc3 = raw + 3 + ebits * (double)(tot - top7) / (double)tot;
+}
 
 static void do_tensor(Tensor *t) {
     static const int hdr = 4 + 3; /* e_min + width; the bf16 code below spends 8 + 4 */
@@ -72,6 +104,9 @@ static void do_tensor(Tensor *t) {
         t->h0 = entropy(hist, 256, t->n);
         t->blk = (double)bits / (double)t->n;
         t->zeros = z;
+        uint64_t eh[16] = {0};
+        for (int v = 0; v < 256; v++) eh[(v >> 3) & 15] += hist[v];
+        exp_codes(t, eh, 16, 4, 4);
     } else {
         uint64_t hist[256] = {0}, bits = 0, z = 0;
         const uint16_t *q = (const uint16_t *)t->p;
@@ -91,6 +126,7 @@ static void do_tensor(Tensor *t) {
         t->h0 = 8.0 + entropy(hist, 256, t->n);
         t->blk = (double)bits / (double)t->n;
         t->zeros = z;
+        exp_codes(t, hist, 256, 8, 8);
     }
 }
 
@@ -166,21 +202,26 @@ int main(int argc, char **argv) {
     if (nth > 64) nth = 64;
     for (int i = 0; i < nth; i++) pthread_create(&th[i], NULL, worker, NULL);
     for (int i = 0; i < nth; i++) pthread_join(th[i], NULL);
-    double w[3] = {0}, h0b[3] = {0}, blkb[3] = {0};
+    double w[3] = {0}, h0b[3] = {0}, blkb[3] = {0}, hfb[3] = {0}, e2b[3] = {0}, e3b[3] = {0};
     uint64_t zr[3] = {0};
-    printf("kind\tweights\th0_bits\tblk_bits\tzeros\tname\n");
+    printf("kind\tweights\th0_bits\tblk_bits\tzeros\tname\thuff_bits\tesc2_bits\tesc3_bits\n");
     for (int i = 0; i < NT; i++) {
         Tensor *t = &T[i];
-        printf("%s\t%llu\t%.4f\t%.4f\t%llu\t%s\n", t->kind == 1 ? "fp8" : "bf16", (unsigned long long)t->n, t->h0,
-               t->blk, (unsigned long long)t->zeros, t->name);
-        w[t->kind] += (double)t->n;
-        h0b[t->kind] += t->h0 * (double)t->n;
-        blkb[t->kind] += t->blk * (double)t->n;
+        printf("%s\t%llu\t%.4f\t%.4f\t%llu\t%s\t%.4f\t%.4f\t%.4f\n", t->kind == 1 ? "fp8" : "bf16", (unsigned long long)t->n,
+               t->h0, t->blk, (unsigned long long)t->zeros, t->name, t->huff, t->esc2, t->esc3);
+        double n = (double)t->n;
+        w[t->kind] += n;
+        h0b[t->kind] += t->h0 * n;
+        blkb[t->kind] += t->blk * n;
+        hfb[t->kind] += t->huff * n;
+        e2b[t->kind] += t->esc2 * n;
+        e3b[t->kind] += t->esc3 * n;
         zr[t->kind] += t->zeros;
     }
     for (int k = 1; k <= 2; k++)
         if (w[k] > 0)
-            printf("TOTAL %s weights %.0f stored_bits %d h0_bits %.4f blk_bits %.4f zeros %llu\n", k == 1 ? "fp8" : "bf16",
-                   w[k], k == 1 ? 8 : 16, h0b[k] / w[k], blkb[k] / w[k], (unsigned long long)zr[k]);
+            printf("TOTAL %s weights %.0f stored_bits %d h0_bits %.4f blk_bits %.4f huff_bits %.4f esc2_bits %.4f esc3_bits %.4f "
+                   "zeros %llu\n", k == 1 ? "fp8" : "bf16", w[k], k == 1 ? 8 : 16, h0b[k] / w[k], blkb[k] / w[k], hfb[k] / w[k],
+                   e2b[k] / w[k], e3b[k] / w[k], (unsigned long long)zr[k]);
     return 0;
 }
