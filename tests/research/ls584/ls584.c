@@ -959,6 +959,14 @@ int main(int argc, char **argv) {
      * == its standalone run) must go red. */
     int leak_from = -1, leak_to = -1;
     if (g_mutant == MUT_M4) for (uint32_t j = 0; j < nl; j++) { if (!strcmp(names[j], "B")) leak_from = (int)j; if (!strcmp(names[j], "A2")) leak_to = (int)j; }
+    /* AMENDMENTS A5: process warm-up. With several lanes, a throwaway A-type lane solves the
+     * first scored objective once before the stream (search, synthesis, verification,
+     * native execution), so first-call costs land on no lane. Its row is discarded and it
+     * shares no state with the lanes. */
+    if (nl > 1) {
+        static Lane warm; memset(&warm, 0, sizeof warm); Row wr;
+        L = &warm; run_objective(&warm.a, &stream[LS_NPREFACE], &wr);
+    }
     uint64_t wall0 = now_ns();
     uint32_t ord[LS_MAX_LANES];
     for (uint32_t i = 0; i < stream_n; i++) {

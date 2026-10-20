@@ -76,3 +76,14 @@ for R in 3 6; do for s in $HELD; do
     n3=$(calc "net3_B_R${R}_$s" "$e3"); n6=$(calc "net6_B_R${R}_$s" "$e6")
     echo "R=$R s=$s C=$C p=$p Delta=$De r=$r net(3)=$n3 ($(cid net3_B_R${R}_$s)) net(6)=$n6 ($(cid net6_B_R${R}_$s))"
 done; done
+echo "== carry-over diagnostic (A5): per-objective A - A2 cpu_ns by Williams row (seq - 1) mod 4, pooled over the 5 streams"
+echo "   predecessor types (s = search lane A/A2, t = table lane B/C0): row0 A:s A2:s, row1 A:t A2:t, row2 A:s A2:t, row3 A:t A2:t"
+for R in 1 3 6; do
+    printf 'R=%s' "$R"
+    for row in 0 1 2 3; do
+        m=$(for s in $HELD; do cut -d, -f1,2,16 "$D/R$R-$s/A/rows.csv" > /tmp/ls584a.$$; cut -d, -f16 "$D/R$R-$s/A2/rows.csv" > /tmp/ls584b.$$; paste -d, /tmp/ls584a.$$ /tmp/ls584b.$$ | awk -F, -v w=$row 'NR>1 && $2>0 && ($1-1)%4==w { print $3 - $4 }'; done | sort -n | awk '{v[NR]=$1} END{print v[int((NR+1)/2)] " (n=" NR ")"}')
+        printf ' | row%s median %s' "$row" "$m"
+    done
+    echo
+done
+rm -f /tmp/ls584a.$$ /tmp/ls584b.$$

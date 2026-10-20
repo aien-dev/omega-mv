@@ -102,3 +102,30 @@ Disclosure: the harness-check runs on 0x5871 (R = 1, 3, 6; their stream totals w
 printed, at load 60, unlocked) ran before this entry was committed. The prediction formula
 and every input above come from the 0x5851..0x5853 evidence of 2026-10-19 and were not
 changed after those check runs.
+
+## A5 (2026-10-20, after a read-only design review, before any r2 run of record)
+Reason: a review of A4 (Claude Fable, read-only) found that (a) the first scored objective
+always gives lane A the first turn (Williams row 0), so one-time process costs (first
+synthesis, first verifier call, first code page) land on A and on n(s), in B's favour;
+(b) `r2-check.sh rowdiff` printed 0 when both rows.csv files were missing, and the check
+phase had no pass/fail gate; (c) the "chance 1/32" sentence in A4 describes a sign test,
+while the frozen rule (d > |A - A2| on every stream) is stricter than a sign test.
+No r2 run of record had started (the run was still waiting for load under 15; it was stopped).
+What changes:
+1. With several lanes, a throwaway A-type lane solves the first scored objective once
+   before the stream; its row is discarded and it shares no state with the lanes.
+2. rowdiff refuses (prints MISSING, exits 1) when either rows.csv is missing or empty;
+   every check line now says pass or fail; the checks phase ends with "checks: pass N
+   fail M" and exits non-zero on any failure; the record phase refuses to start unless the
+   checks passed and the binary matches the build of record.
+3. Wording: under no effect the chance that d > |A - A2| on 5 of 5 streams is at most the
+   sign-test chance 1/32 (it is smaller, because each stream must also clear its own
+   same-code difference). The rule has power only for an effect well above the noise.
+   n(s) is one same-code difference per stream, not a noise distribution; the README
+   reports it as such.
+4. Carry-over, measured rather than assumed: counted across objective boundaries, A and
+   B each follow a search lane (A or A2) on 2 of the 4 Williams rows, A2 on 1 of 4, C0 on
+   3 of 4. The A versus B comparison is therefore balanced in predecessor type; A versus
+   A2 differs only on row 2 (A after A2, A2 after C0). aggregate-r2.sh reports the
+   per-objective median of A - A2 by row as a diagnostic (not part of the verdict).
+The verdict rule, the seeds and the predictions Q1 to Q6 of A4 are unchanged.

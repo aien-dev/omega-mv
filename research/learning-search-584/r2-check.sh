@@ -10,6 +10,7 @@ set -u
 dec() { cut -d, -f1-15,19,21- "$1"; }
 case ${1:-} in
 rowdiff)
+    for f in "$2/rows.csv" "$3/rows.csv"; do [ -s "$f" ] && [ "$(wc -l < "$f")" -gt 1 ] || { echo "MISSING:$f"; exit 1; }; done
     a=$(mktemp); b=$(mktemp); dec "$2/rows.csv" > "$a"; dec "$3/rows.csv" > "$b"
     n=$(diff "$a" "$b" | grep -c '^>'); la=$(wc -l < "$a"); lb=$(wc -l < "$b")
     [ "$la" = "$lb" ] || n=$((n + 1))

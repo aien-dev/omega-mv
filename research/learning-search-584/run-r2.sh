@@ -36,7 +36,16 @@ build)
     ;;
 checks)
     D=$EV/checks; mkdir -p "$D"; out=$D/checks.txt; : > "$out"
-    chk() { echo "$1: $2 (want $3)" | tee -a "$out"; }
+    # chk LABEL GOT WANT: WANT is 0 (GOT must be exactly 0) or ">0" (every number in GOT
+    # must be > 0); anything else, including a MISSING file, is a failed check.
+    chk() {
+        ok=fail
+        case $3 in
+        0) [ "$2" = 0 ] && ok=pass ;;
+        *) nums=$(echo "$2" | grep -o "[0-9][0-9]*$\|=[0-9][0-9]*" | tr -d =); [ -n "$nums" ] && ok=pass; for v in $nums; do [ "$v" -gt 0 ] || ok=fail; done ;;
+        esac
+        echo "$ok $1: $2 (want $3)" | tee -a "$out"
+    }
     for s in $CAL; do
         for R in $HORIZONS; do
             one "$D/i-$s-R$R" --arms $LANES --seed $s --reuse $R
@@ -58,8 +67,13 @@ checks)
     # the sealed harness (base binary, research/learning-search-584@b557e9e7) on 0x5851: same decisions
     for a in A B C0 C1; do one "$D/sealed-harness-identity-$a-5851" --arm $a --seed 5851; chk "identity new vs 2026-10-19 calib evidence $a s=5851" "$($CK rowdiff $D/sealed-harness-identity-$a-5851 evidence/LEARNING-SEARCH-584/calib/$a-5851)" 0; done
     rm -f "$D"/*/cortex.journal "$D"/*/*/cortex.journal
+    np=$(grep -c "^pass " "$out"); nf=$(grep -vc "^pass " "$out")
+    echo "checks: pass $np fail $nf" | tee -a "$out"
+    [ "$nf" = 0 ] || exit 1
     ;;
 record)
+    tail -1 "$EV/checks/checks.txt" 2>/dev/null | grep -q "^checks: pass [0-9]* fail 0$" || { echo "record refused: checks have not all passed"; exit 3; }
+    [ "$(sha256sum < "$BIN")" = "$(cut -d" " -f1 "$EV/binary.sha256")  -" ] || { echo "record refused: binary differs from the build of record"; exit 3; }
     D=$EV/record; mkdir -p "$D"
     w0=$(date +%s); polls=0
     while :; do
