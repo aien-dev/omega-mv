@@ -211,6 +211,25 @@ static int fn_explain(RxCtx *c) {
         else if (state == RX_AIEN_PRED_FAILED) put(c, f->o.hypothesis, 7, RX_AIEN_HYP_UNSUPPORTED);
         return 0;
     }
+    /* An open drift hypothesis is tested by relearning the same record where
+     * it runs (relearns, aien.observe). When the body moved to another core
+     * class before that relearn, the relearned prediction is about the new
+     * class and "nothing changed" is no longer the question: the record was
+     * made on another core class. Left open, the drift hypothesis would wait
+     * for a same-class prediction that cannot come, and the body would never
+     * research the class it runs on now (OMEGA-R14-HOST, 2026-10-20). */
+    if (h->field[7] == RX_AIEN_HYP_OPEN && h->field[1] == RX_AIEN_HYP_DRIFT &&
+        pseq == h->field[2] + 1 && p->field[4] != h->field[4]) {
+        put(c, f->o.hypothesis, 0, h->field[0] + 1);
+        put(c, f->o.hypothesis, 1, RX_AIEN_HYP_CORE_CLASS);
+        put(c, f->o.hypothesis, 2, pseq);
+        put(c, f->o.hypothesis, 3, h->field[4]);
+        put(c, f->o.hypothesis, 4, p->field[4]);
+        put(c, f->o.hypothesis, 5, h->field[5]);
+        put(c, f->o.hypothesis, 6, h->field[6]);
+        put(c, f->o.hypothesis, 7, RX_AIEN_HYP_OPEN);
+        return 0;
+    }
     if (state != RX_AIEN_PRED_FAILED || h->field[2] == pseq) return 0;
     uint64_t now = pl->field[1], then = p->field[4];
     put(c, f->o.hypothesis, 0, h->field[0] + 1);
@@ -500,7 +519,7 @@ int rx_aien_register(RxAienFaculty *f, const RxAienCaps *caps) {
     if ((rc = rx_world_add_reaction_keyed(w, f->keys, &b.d, &f->r_assess)) != RX_OK) return rc;
 
     begin(&b, "aien.plan", RX_PRIO_LEARNING, fn_plan, f, caps);
-    trig(&b, f->o.hypothesis, RX_FIELD(7));
+    trig(&b, f->o.hypothesis, RX_FIELD(0) | RX_FIELD(7));   /* a new hypothesis, or a state */
     trig(&b, f->o.assessment, RX_FIELD(4) | RX_FIELD(0));
     rd(&b, f->o.memory);
     trig(&b, f->o.prediction, RX_FIELD(0) | RX_FIELD(6));   /* a relearned drift prediction */

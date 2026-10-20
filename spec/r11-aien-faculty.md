@@ -34,7 +34,7 @@ Code: `src/runtime/rx_aien.{c,h}`, plus `omega.reconsider` in
 | `aien.predict` | `belief` interval count | `prediction` |
 | `aien.explain` | `prediction` sequence or state | `hypothesis` |
 | `aien.assess` | `goal` (human), `prediction` state | `assessment` |
-| `aien.plan` | `hypothesis` state, `assessment` | `plan`, `memory`, `hypothesis` state |
+| `aien.plan` | `hypothesis` sequence or state, `assessment` | `plan`, `memory`, `hypothesis` state |
 | `omega.reconsider` | `plan`, Omega `selection` | Omega `search` (new epoch) |
 
 What AIEN reasons about: Omega's selection is a claim that a realization
@@ -50,7 +50,11 @@ costs so much. AIEN checks that claim against what production pays.
 - **Hypothesis.** For a failed prediction, AIEN looks at what else it
   observed. If the core class changed since the prediction, the hypothesis is
   `CORE_CLASS`. Otherwise it is `DRIFT`. A placement change on its own is not
-  evidence and produces nothing.
+  evidence and produces nothing. An open `DRIFT` hypothesis is tested by
+  relearning the same record where it runs; if the body moved to another core
+  class before that relearn, the relearned prediction turns it into a
+  `CORE_CLASS` hypothesis about the class the body runs on now, so the drift
+  question cannot wait forever for a same-class prediction.
 - **Plan.** One experiment per condition (core class, regime): re-search the
   regime where the work runs now. `memory` records the conditions AIEN has had
   explored. A hypothesis about an explored condition becomes `EXHAUSTED`, with

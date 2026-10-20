@@ -461,6 +461,54 @@ static void t_drift_burst_refuted(void) {
 /* R13 under load: baseline intervals 16361, 26203, 8370, 7708 ns averaged to
  * 14660 ns, a cost no interval paid. A baseline interval that disagrees with
  * the ones before it by more than the tolerance starts the baseline again. */
+/* Seen in R14 under whole-machine load (OMEGA-R14-HOST, 2026-10-20): a burst
+ * failed the incumbent's prediction on the A725 cores (drift, open, to be
+ * relearned), then the body moved to the X925 cores before the relearn. The
+ * relearned prediction was about the new class, so the drift question was
+ * moot; left open it waited forever for a same-class prediction, and the body
+ * never researched the class it ran on, even with a goal it already met. */
+static void t_drift_moved(void) {
+    printf("[*] a drift hypothesis whose relearn lands on another core class becomes a core-class "
+           "hypothesis and a plan for that class\n");
+    Env e;
+    CHECK(envA_start(&e) == 0, "setup");
+    RxAienFaculty *a = &e.a;
+    uint64_t R = rx_aien_regime(REG_M, REG_N);
+    place(&e, P1);
+    window(&e, 5000, 0);          /* production runs before any record exists */
+    record(&e, 1, 0xAA);
+    confirm_at(&e, 5000, 0xAA);
+    windows(&e, 2, 9000, 0xAA);   /* a burst: drift, open, relearn pending */
+    CHECK(fld(&e, a->o.hypothesis, 0) == 1 && fld(&e, a->o.hypothesis, 1) == RX_AIEN_HYP_DRIFT &&
+          fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_OPEN, "drift hypothesis");
+    /* The body moves before the record is relearned. */
+    place(&e, P2);
+    CHECK(settle(&e) == RX_OK, "settle");
+    windows(&e, 2 + a->cfg.baseline_intervals + a->cfg.confirm_intervals, 4000, 0xAA);
+    CHECK(fld(&e, a->o.prediction, 0) == 2 && fld(&e, a->o.prediction, 4) == P2 &&
+          fld(&e, a->o.prediction, 6) == RX_AIEN_PRED_CONFIRMED && fld(&e, a->o.prediction, 5) == 4000,
+          "relearned on the new class: prediction %llu class %llx state %llu cost %llu",
+          (unsigned long long)fld(&e, a->o.prediction, 0), (unsigned long long)fld(&e, a->o.prediction, 4),
+          (unsigned long long)fld(&e, a->o.prediction, 6), (unsigned long long)fld(&e, a->o.prediction, 5));
+    CHECK(fld(&e, a->o.hypothesis, 0) == 2 && fld(&e, a->o.hypothesis, 1) == RX_AIEN_HYP_CORE_CLASS &&
+          fld(&e, a->o.hypothesis, 2) == 2 && fld(&e, a->o.hypothesis, 3) == P1 &&
+          fld(&e, a->o.hypothesis, 4) == P2,
+          "core-class hypothesis: seq %llu kind %llu prediction %llu then %llx now %llx",
+          (unsigned long long)fld(&e, a->o.hypothesis, 0), (unsigned long long)fld(&e, a->o.hypothesis, 1),
+          (unsigned long long)fld(&e, a->o.hypothesis, 2), (unsigned long long)fld(&e, a->o.hypothesis, 3),
+          (unsigned long long)fld(&e, a->o.hypothesis, 4));
+    CHECK(fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_TESTING, "hypothesis state %llu",
+          (unsigned long long)fld(&e, a->o.hypothesis, 7));
+    CHECK(fld(&e, a->o.plan, 0) == 1 && fld(&e, a->o.plan, 1) == RX_AIEN_ACT_RESEARCH &&
+          fld(&e, a->o.plan, 2) == R && fld(&e, a->o.plan, 3) == P2 && fld(&e, a->o.plan, 4) == 2 &&
+          fld(&e, a->o.plan, 5) == RX_AIEN_WHY_CORE_CLASS,
+          "plan for the class the body runs on: seq %llu class %llx why %llu",
+          (unsigned long long)fld(&e, a->o.plan, 0), (unsigned long long)fld(&e, a->o.plan, 3),
+          (unsigned long long)fld(&e, a->o.plan, 5));
+    CHECK(fld(&e, a->o.memory, 0) == 1 && fld(&e, a->o.memory, 1) == rx_aien_key(P2, R), "memory");
+    env_stop(&e);
+}
+
 static void t_baseline_must_agree(void) {
     printf("[*] a burst inside the baseline restarts it; the prediction is what production pays\n");
     Env e;
@@ -1119,6 +1167,7 @@ int main(void) {
     t_core_class();
     t_drift();
     t_drift_burst_refuted();
+    t_drift_moved();
     t_baseline_must_agree();
     t_settled_failure_relearns();
     t_goal();
