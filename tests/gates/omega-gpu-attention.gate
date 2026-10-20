@@ -1,0 +1,24 @@
+# tests/gates/omega-gpu-attention.gate
+# Mirrors hosted: host-suites-3.yml gpu-attention (omega#470) with physics-src at physics.lock: attention host tiers at head_dim 64 and 128 (refusals, codegen, register bound, nvdisasm listing, both warp simulators, sweep); 6 PASS lines, no FAIL; host only, no chip
+gate: OMEGA-GPU-ATTENTION
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/gpu_attention_test.c
+  - tests/bw_warp_sim.h
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["gpu-attention"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 20m
+exactness: EXACT
+cache_scope: machine
