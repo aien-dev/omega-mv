@@ -1,0 +1,34 @@
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/home/drakestapleton/workspace/physics-6d7cf0d4/m16 -I/home/drakestapleton/workspace/physics-6d7cf0d4/nvrm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_accelerator_world.c -o /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_accelerator_world.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/home/drakestapleton/workspace/physics-6d7cf0d4/m16 -I/home/drakestapleton/workspace/physics-6d7cf0d4/nvrm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_blackwell_submit.c -o /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_blackwell_submit.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/home/drakestapleton/workspace/physics-6d7cf0d4/m16 -I/home/drakestapleton/workspace/physics-6d7cf0d4/nvrm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_blackwell_engine.c -o /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_blackwell_engine.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/home/drakestapleton/workspace/physics-6d7cf0d4/m16 -I/home/drakestapleton/workspace/physics-6d7cf0d4/nvrm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_gpu_platform_linux.c -o /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_gpu_platform_linux.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/home/drakestapleton/workspace/physics-6d7cf0d4/m16 -I/home/drakestapleton/workspace/physics-6d7cf0d4/nvrm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/home/drakestapleton/workspace/physics-6d7cf0d4/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_evidence.c -o /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_evidence.o
+make: *** No rule to make target '/home/drakestapleton/workspace/physics-6d7cf0d4/m16/m16_native.c', needed by '/home/drakestapleton/workspace/targets/flashnext-omega/build/m16_native.o'.  Stop.
+make: *** Waiting for unfinished jobs....
+In file included from src/omega_accelerator_world.c:1:
+src/omega_accelerator_world.h:8:10: fatal error: m16_native.h: No such file or directory
+    8 | #include "m16_native.h"
+      |          ^~~~~~~~~~~~~~
+compilation terminated.
+make: *** [Makefile:116: /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_accelerator_world.o] Error 1
+In file included from src/omega_evidence.c:1:
+src/omega_evidence.h:26:10: fatal error: nvrm.h: No such file or directory
+   26 | #include "nvrm.h"
+      |          ^~~~~~~~
+compilation terminated.
+make: *** [Makefile:116: /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_evidence.o] Error 1
+src/omega_blackwell_engine.c:39:10: fatal error: m16_native.h: No such file or directory
+   39 | #include "m16_native.h"
+      |          ^~~~~~~~~~~~~~
+compilation terminated.
+src/omega_gpu_platform_linux.c:16:10: fatal error: m16_native.h: No such file or directory
+   16 | #include "m16_native.h"
+      |          ^~~~~~~~~~~~~~
+compilation terminated.
+make: *** [Makefile:116: /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_blackwell_engine.o] Error 1
+make: *** [Makefile:116: /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_gpu_platform_linux.o] Error 1
+src/omega_blackwell_submit.c:7:10: fatal error: m16_native.h: No such file or directory
+    7 | #include "m16_native.h"
+      |          ^~~~~~~~~~~~~~
+compilation terminated.
+make: *** [Makefile:116: /home/drakestapleton/workspace/targets/flashnext-omega/build/omega_blackwell_submit.o] Error 1
