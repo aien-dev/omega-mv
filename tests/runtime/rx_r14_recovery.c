@@ -895,7 +895,7 @@ static uint64_t crumbs_of(Rig *r, uint32_t reaction, RxCrumbKind kind, int reaso
  * published only after that research has selected, so a selection older
  * than the goal must still be proposed and promoted. */
 typedef struct {
-    uint64_t goal_crumb, served_at_start, served_at_promotion, gen_before, gen_after;
+    uint64_t goal_crumb, served_at_move, served_at_promotion, gen_before, gen_after;
     uint64_t promotion_crumb;
     int promoted;
 } Episode;
@@ -916,10 +916,12 @@ static int adapt(Rig *r, Episode *ep) {
     uint64_t lineage = 0;
     rx_gen_active(r->gen, &ep->gen_before, &lineage);
     if (start_producer(r) != 0) return -6;
-    ep->served_at_start = served(r);
     uint64_t sel_before = field(r, r->omega.o.selection, 0);
     uint64_t declined_before = __atomic_load_n(&r->living.refusals, __ATOMIC_ACQUIRE);
     if (move_threads(&x) <= 0 || publish_placement(r, CLASS_X925) != 0) return -7;
+    /* Production is counted from the move on, as before the goal was made
+     * late: every refusal (the late-goal decline included) comes after it. */
+    ep->served_at_move = served(r);
     if (r->opt.goal_after_research) {
         /* The body researches the new core class by itself, selects, and
          * generation.prepare declines that selection for want of a goal. The
@@ -1191,14 +1193,14 @@ static int scenario_a_case(int defect, uint32_t want, const char *label, Result 
     }
     pthread_mutex_unlock(&r->omega.mu);
     CHECK(lies == 0, "A %s: %u verified store entries do not match their bytes", label, lies);
-    uint64_t during = ep.served_at_promotion - ep.served_at_start;
+    uint64_t during = ep.served_at_promotion - ep.served_at_move;
     CHECK(during > 0, "A %s: production stopped while the candidate was refused", label);
     Result sub;
     memset(&sub, 0, sizeof sub);
     finish(r, &sub, 100);
     if (first) {
         *res = sub;
-        res->prod_before = ep.served_at_start;
+        res->prod_before = ep.served_at_move;
         res->prod_during = during;
         res->gen_before = ep.gen_before;
         res->fault_observed = 1;
