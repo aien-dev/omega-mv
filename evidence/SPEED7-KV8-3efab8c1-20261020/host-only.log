@@ -1,0 +1,22 @@
+perm rotary  64: bijection, pairs, rope-by-permutation max abs diff 8.31e-08 over 50 positions
+perm rotary 256: bijection, pairs, rope-by-permutation max abs diff 1.08e-07 over 50 positions
+perm rotary   2: bijection, pairs, rope-by-permutation max abs diff 7.09e-08 over 50 positions
+perm rotary 128: bijection, pairs, rope-by-permutation max abs diff 1.05e-07 over 50 positions
+perm rotary  32: bijection, pairs, rope-by-permutation max abs diff 1.05e-07 over 50 positions
+codegen depth 1: 873 instructions, 96 registers (declared 104, 256 threads -> 26624 of 65536)
+codegen depth 2: 881 instructions, 100 registers (declared 104, 256 threads -> 26624 of 65536)
+codegen depth 3: 889 instructions, 104 registers (declared 112, 256 threads -> 28672 of 65536)
+codegen depth 4: 897 instructions, 108 registers (declared 112, 256 threads -> 28672 of 65536)
+kv8 mode 1 codegen depth 1: 973 instructions, 108 registers (declared 112)
+kv8 mode 1 codegen depth 2: 981 instructions, 112 registers (declared 120)
+kv8 mode 1 codegen depth 3: 989 instructions, 116 registers (declared 120)
+kv8 mode 1 codegen depth 4: 997 instructions, 120 registers (declared 128)
+kv8 mode 2 codegen depth 1: 1017 instructions, 104 registers (declared 112)
+kv8 mode 2 codegen depth 2: 1025 instructions, 108 registers (declared 112)
+kv8 mode 2 codegen depth 3: 1033 instructions, 112 registers (declared 120)
+kv8 mode 2 codegen depth 4: 1041 instructions, 116 registers (declared 120)
+kv8 mode 3 codegen depth 1: 1024 instructions, 104 registers (declared 112)
+kv8 mode 3 codegen depth 2: 1032 instructions, 108 registers (declared 112)
+kv8 mode 3 codegen depth 3: 1040 instructions, 112 registers (declared 120)
+kv8 mode 3 codegen depth 4: 1048 instructions, 116 registers (declared 120)
+gpu_decode_attn256_test: 179 checks, 0 failed: PASS

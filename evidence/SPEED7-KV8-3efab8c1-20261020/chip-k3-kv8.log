@@ -1,0 +1,45 @@
+cache alloc (1 layer, 32768 positions, 65 MiB): rc=OK 877.3 ms ()
+chip context 1                rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=1x4 per_split=256 depth=4 kv_bytes=2080 fill=0.0ms chip_med=54.3us (0.0 GB/s) call_med=57.2us reps=20
+chip context 7                rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=1x4 per_split=256 depth=4 kv_bytes=14560 fill=0.0ms chip_med=57.9us (0.3 GB/s) call_med=60.6us reps=20
+chip context 256              rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=1x4 per_split=256 depth=4 kv_bytes=532480 fill=0.0ms chip_med=107.4us (5.0 GB/s) call_med=110.2us reps=20
+chip context 301 sharp q      rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=2x4 per_split=256 depth=4 kv_bytes=626080 fill=0.0ms chip_med=120.4us (5.2 GB/s) call_med=123.4us reps=20
+chip context 301 sharp q      mutant 1: caught (rc=OK bad=6967 worst=186.206)
+chip context 301 sharp q      mutant 2: caught (rc=OK bad=6036 worst=173.023)
+chip context 301 sharp q      mutant 3: caught (rc=CODEGEN_FAIL bad=0 worst=0.000)
+chip context 301 sharp q      mutant 4: caught (rc=OK bad=5714 worst=99.794)
+chip context 301 sharp q      mutant 5: caught (rc=OK bad=3051 worst=1263.623)
+chip context 301 sharp q      mutant 6: caught (rc=OK bad=6106 worst=371.315)
+chip context 301 sharp q      mutant 7: caught (rc=OK bad=6143 worst=56977.331)
+chip context 301 sharp q      mutant 8: caught (rc=OK bad=1000 worst=0.156)
+chip context 301 sharp q      mutant 9: caught (rc=OK bad=1421 worst=2.389)
+chip context 1024             rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=4x4 per_split=256 depth=4 kv_bytes=2129920 fill=0.1ms chip_med=124.9us (17.1 GB/s) call_med=127.6us reps=20
+chip context 4096             rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=16x4 per_split=256 depth=4 kv_bytes=8519680 fill=0.4ms chip_med=259.4us (32.8 GB/s) call_med=262.1us reps=20
+chip context 8192             rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=32x4 per_split=256 depth=4 kv_bytes=17039360 fill=0.7ms chip_med=486.1us (35.1 GB/s) call_med=488.8us reps=20
+chip context 32768            rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=128x4 per_split=256 depth=4 kv_bytes=68157440 fill=5.6ms chip_med=1542.5us (44.2 GB/s) call_med=1545.2us reps=20
+gpu_decode_attn256_test: 34 checks, 0 failed: PASS
+{
+ "name": "l131-k3-kv8",
+ "cmd": "env nice /home/drakestapleton/workspace/omega-speed7-fp8kv/build/gpu_decode_attn256_test --kv8 --out k.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-20T05:56:48.093601",
+ "seconds": 3.560,
+ "samples": 2,
+ "wall_W_mean": 300.0,
+ "wall_J": 1067.970514,
+ "idle_W_before": 292.8571429,
+ "incremental_J": 25.42786939,
+ "gpu_W_mean": 8.065,
+ "gpu_util_mean": 0.0,
+ "load1_start": "46.51",
+ "load1_end": "46.51",
+ "mem_avail_kB_start": "66191300",
+ "mem_avail_kB_end": "66848412",
+ "lock_holders_max": 2,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T105636Z-3b0e4b",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-20-l131-k3-kv8.json
+rc=0

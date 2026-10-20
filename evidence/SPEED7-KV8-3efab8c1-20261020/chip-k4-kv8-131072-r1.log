@@ -1,0 +1,29 @@
+cache alloc (1 layer, 131072 positions, 260 MiB): rc=OK 1562.8 ms ()
+chip context 131072           rc=OK        bad=0 worst=0.000 rows=ok (0 one-code k flips) grid=512x4 per_split=256 depth=4 kv_bytes=272629760 fill=301.8ms chip_med=6083.8us (44.8 GB/s) call_med=6089.7us reps=50
+gpu_decode_attn256_test: 4 checks, 0 failed: PASS
+{
+ "name": "l131-k4-kv8-131072-r1",
+ "cmd": "env nice /home/drakestapleton/workspace/omega-speed7-fp8kv/build/gpu_decode_attn256_test --kv8 --max-pos 131072 --reps 50 --only context 131072 --out k.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-20T07:18:49.643427",
+ "seconds": 33.056,
+ "samples": 15,
+ "wall_W_mean": 240.6666667,
+ "wall_J": 7955.525473,
+ "idle_W_before": 245.0,
+ "incremental_J": -143.2435335,
+ "gpu_W_mean": 6.927333333,
+ "gpu_util_mean": 0.0,
+ "load1_start": "78.46",
+ "load1_end": "75.34",
+ "mem_avail_kB_start": "64081712",
+ "mem_avail_kB_end": "60608916",
+ "lock_holders_max": 3,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T115619Z-26c3d7",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-20-l131-k4-kv8-131072-r1.json
+rc=0

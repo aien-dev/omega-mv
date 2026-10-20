@@ -1,0 +1,17 @@
+Tue Oct 20 12:16:08 PM UTC 2026
+env: 
+window: 20261020T115619Z-26c3d7
+ea09c550eeed1676bfc9d68ece7d213c23536f9497f977504ded8446acd36c70  /home/drakestapleton/workspace/omega-speed7-fp8kv/build/gpu_decode_attn256_test
+e54444bb5a365522347b54cd6256532301906228bcd699f275afb414a7ccf4f2  /home/drakestapleton/workspace/omega-speed7-fp8kv/lib-kv8/libomega_gpu.a
+3efab8c10bc83b29ec041770d95e56ab42863f65
+3fc1132eeb517cd4516819c756a9f6bcd736f4a0
+MemAvailable:   51404356 kB
+loadavg: 79.54 67.72 58.37 83/2887 582469
+%CPU     ELAPSED COMMAND
+ 880    01:28:31 qwen38_subbit.v
+ 232       02:19 prefill_e2e2-f4
+98.4  2-02:23:33 nvidia-modeset/kthread_q
+63.9       00:00 git
+44.4       00:00 rx_r13_cortex_e
+Tue Oct 20 12:16:25 PM UTC 2026
+MemAvailable:   51206292 kB
