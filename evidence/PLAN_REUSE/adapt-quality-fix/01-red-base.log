@@ -1,0 +1,48 @@
+# red run on base runtime a8ffd2b9 + new test; exit 1
+# load/mem start: 71.91 54.24 45.09 47/3082 3918412 mem_avail_kB=50871144
+# load/mem end: 71.91 54.24 45.09 43/3075 3922160 mem_avail_kB=50831056
+  FAIL tests/runtime/rx_plan_reuse.c:910 merge: plan run 12 moves, search finds 9
+  FAIL tests/runtime/rx_plan_reuse.c:911 merge: plan retained 12 moves, search finds 9
+  FAIL tests/runtime/rx_plan_reuse.c:910 merge again: plan run 12 moves, search finds 9
+  FAIL tests/runtime/rx_plan_reuse.c:911 merge again: plan retained 12 moves, search finds 9
+  FAIL tests/runtime/rx_plan_reuse.c:910 swapped reverse: plan run 10 moves, search finds 7
+  FAIL tests/runtime/rx_plan_reuse.c:911 swapped reverse: plan retained 10 moves, search finds 7
+  FAIL tests/runtime/rx_plan_reuse.c:910 swapped reverse again: plan run 10 moves, search finds 7
+  FAIL tests/runtime/rx_plan_reuse.c:911 swapped reverse again: plan retained 10 moves, search finds 7
+[*] placed on 10 Cortex-X925 cores: 5,6,7,8,9,15,16,17,18,19
+[*] repeated workload: reverse a tower, 40 instances
+    (instruction counter unavailable: perf_event_paranoid restricts it)
+    first use: median 62 cognitive ops, 75.1 us cpu, 0 instructions; e2e 3081.6 us
+    reuse:     median 53 cognitive ops, 5.0 us cpu, 0 instructions; e2e 2923.1 us
+    plan 6 moves, 34 graph nodes after optimisation, 12 evidence words; accepted 39, succeeded 39
+[*] repeated workload: merge two towers, 40 instances
+    (instruction counter unavailable: perf_event_paranoid restricts it)
+    first use: median 1806 cognitive ops, 140.3 us cpu, 0 instructions; e2e 4229.8 us
+    reuse:     median 68 cognitive ops, 5.3 us cpu, 0 instructions; e2e 3990.1 us
+    plan 9 moves, 39 graph nodes after optimisation, 15 evidence words; accepted 39, succeeded 39
+[*] identity
+[*] adversarial goals of stored shapes: every applicability axis
+    100 adversarial goals, 100 refused (100 on the expected axis), 100 refusals recorded as World decisions
+      shape                  10 refused of 10; blind replay reached the goal 0 of 0, violated 0
+      binding                10 refused of 10; blind replay reached the goal 0 of 10, violated 10
+      goal_constraints       10 refused of 10; blind replay reached the goal 10 of 10, violated 10
+      world_generation       10 refused of 10; blind replay reached the goal 10 of 10, violated 10
+      cognitive_generation   10 refused of 10; blind replay reached the goal 10 of 10, violated 10
+      environment            10 refused of 10; blind replay reached the goal 10 of 10, violated 10
+      required_state         20 refused of 20; blind replay reached the goal 10 of 20, violated 10
+      authority              10 refused of 10; blind replay reached the goal 0 of 10, violated 10
+      resources              10 refused of 10; blind replay reached the goal 0 of 10, violated 10
+[*] new World generation: refuse, re-derive, same semantic id, reuse again
+[*] adaptation: an outsider sits on the tower
+    adapted: 54 ops, 86.6 us cpu, 7 steps; full search: 69 ops, 85.7 us cpu, 7 steps; then reused 9 of 9
+[*] adaptation quality: a repaired plan is never longer than search
+    merge: path 3 (axis required_state), 12 moves; search from scratch 9 moves
+    merge again: path 2 (axis accepted), 12 moves; search from scratch 9 moves
+    swapped reverse: path 3 (axis required_state), 10 moves; search from scratch 7 moves
+    swapped reverse again: path 2 (axis accepted), 10 moves; search from scratch 7 moves
+checks 1326 failures 8
+receipt: build/qual-runs/20261020T115708Z-a8ffd2b912c8/PLAN_REUSE/rx_plan_reuse_receipt.4bdc81f4c355bfa31ad947fcba91e10934db848e203e0bc17d695148abf0c1ed.json
+OMEGA_PLAN_REUSE_PASS: FAIL (G1 FAIL, G2 PASS, G3 PASS, G4 PASS, G5 PASS, G6 PASS)
+  reverse_tower_6: ops 1.2x (G1 FAIL), cpu 15.0x (2.5x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.05x (G6 PASS)
+  merge_two_towers_3_3: ops 26.6x (G1 PASS), cpu 26.5x (10.7x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.06x (G6 PASS)
+task wording (at least one repeated workload): NOT MET

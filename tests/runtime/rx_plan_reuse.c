@@ -870,6 +870,50 @@ static void t_adapt(void) {
            R.adapt_cold_steps, R.adapt_then_reuse, N_ADV - 1);
 }
 
+/* Adaptation must not keep a plan longer than search finds for the same goal
+ * (E03 payback, research/e03-payback-246 @66e092ac: a merge goal retrieved
+ * the reverse template, was refused on required state, and was repaired into
+ * 12 moves where search finds 9; a swapped reverse into 10 where search finds
+ * 7). Its own cache holds one reverse template; each goal is solved cold in a
+ * mirror World (AIEN's search from scratch) and with adaptation on. The plan
+ * run, the plan stored, and the next same-shape reuse are each no longer than
+ * the cold plan. */
+static void t_adapt_quality(void) {
+    printf("[*] adaptation quality: a repaired plan is never longer than search\n");
+    static PlCache lc;
+    rx_plan_cache_init(&lc);
+    Trial t;
+    Spec rev = spec(SHAPE_REVERSE, 9500, PERT_NONE);
+    CHECK(env_build(g_b, &rev) == 0, "build");
+    solve(g_b, &lc, MODE_WARM, &t);
+    CHECK(t.path == PATH_FIRST && t.ex.success && lc.n == 1, "reverse template retained (path %d, %u)", t.path, lc.n);
+    env_stop(g_b);
+    const struct { uint32_t shape, seed; Pert p; const char *name; } cs[] = {
+        { SHAPE_MERGE, 9510, PERT_NONE, "merge" },
+        { SHAPE_MERGE, 9511, PERT_NONE, "merge again" },
+        { SHAPE_REVERSE, 9520, PERT_STATE_SWAP, "swapped reverse" },
+        { SHAPE_REVERSE, 9521, PERT_STATE_SWAP, "swapped reverse again" },
+    };
+    for (uint32_t i = 0; i < sizeof cs / sizeof cs[0]; i++) {
+        Spec sp = spec(cs[i].shape, cs[i].seed, cs[i].p);
+        Trial cold, warm;
+        CHECK(env_build(g_a, &sp) == 0, "build");
+        solve(g_a, NULL, MODE_COLD, &cold);
+        env_stop(g_a);
+        CHECK(env_build(g_b, &sp) == 0, "build");
+        solve(g_b, &lc, MODE_WARM_ADAPT, &warm);
+        int ok = warm.ex.success && goal_holds(g_b);
+        env_stop(g_b);
+        printf("    %s: path %d (axis %s), %u moves; search from scratch %u moves\n", cs[i].name, warm.path,
+               rx_plan_axis_name(warm.axis), warm.moves, cold.moves);
+        CHECK(cold.ex.success && ok, "%s solved (cold %d, warm %d)", cs[i].name, cold.ex.success, ok);
+        CHECK(warm.moves <= cold.moves, "%s: plan run %u moves, search finds %u", cs[i].name, warm.moves, cold.moves);
+        CHECK(!warm.t || warm.t->n_steps <= cold.moves, "%s: plan retained %u moves, search finds %u", cs[i].name,
+              warm.t ? warm.t->n_steps : 0, cold.moves);
+    }
+    rx_plan_cache_free(&lc);
+}
+
 static void t_identity(void) {
     printf("[*] identity\n");
     PlanTemplate *t = g_cache.t[0];
@@ -1327,6 +1371,7 @@ int main(int argc, char **argv) {
     dump_cache("after rederive");
     t_adapt();
     dump_cache("after adapt");
+    t_adapt_quality();
     if (!getenv("PLAN_REUSE_NO_ENERGY")) t_energy();
     printf("checks %d failures %d\n", g_checks, g_fail);
     write_receipt();
