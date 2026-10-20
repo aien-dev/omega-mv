@@ -21,3 +21,12 @@ Pi5 17.068: 8B W4 4.245 calc:edc54726 | 8B W2 7.472 calc:abea9c93 | 30B W2 17.87
 M2 100: 30B W4 61.19 calc:916c95a2 | 30B W2 104.7 calc:f2749b19 | 27B W4 7.326 calc:c8d9bb1d | 8B W4 24.87 calc:813bbba0 | 8B FP8 12.21 calc:fed4e51f
 5070 672: 8B FP8 82.05 calc:fa8a0aef | 8B W4 167.1 calc:7a98ea66 | 27B W2 89.38 calc:16cdff9c | 30B W2 703.8 calc:d1c1277d
 Laptop 51.2: 8B W4 12.73 calc:d2c3a087
+Misc:
+Pi engine 1B Q4_K_M 807.7 MB at 1.20 tok/s = 0.0568 of 17.068 GB/s  calc:8c5dfc2e
+RTT share of a verify pass: 3 ms / 131 ms (live FP8) 0.0229 calc:e8709247 ; 5 ms (p90) / 69.957 ms (W4) 0.0715 calc:5e61cc1d
+Expert cache slots at W4 (slot 4719168 x 4.25/8 B), budget = RAM - 1 GB OS - 0.672 GB shared W4 - 0.622 GB bf16 embed - 4096-word KV 0.403 GB - 0.3 GB scratch:
+  Pi 5 / laptop / M2 8 GB: 1995 slots of 6144 calc:1013332d ; Pi 5 16 GB: 5186 calc:c784597b
+  RTX 5070 12 GB card (no OS, no embed, 0.5 GB scratch): 4158 calc:b41147b7
+  1995 slots at FP8 slot size = 9.41474 GB (probe cache size for the Pi 8 GB case) calc:9e9f4602
+Wormhole: Spark MTP round (131+23+2 ms) / remote-draft pipelined round (131+3 ms) = 1.16 calc:3a38a3a9
+  tau 4.15 over (131 + 3 ms) = 31.0 tok/s calc:9e823deb ; over (69.957 + 5 ms) = 55.4 calc:f23368f6 ; over (69.957 + 50 ms) = 34.6 calc:2e0e0836

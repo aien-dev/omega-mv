@@ -1,0 +1,9 @@
+load_s 186.5 prompts 1 prompt_tokens [5] new 4 slot_bytes 4719168 threads 20
+mode ref positions_s 10.7 decode_tokens 4 decode_tok_s 0.7301 decode_ms 1369.7 decode_stall_ms 0.0
+mode res positions_s 7.4 decode_tokens 4 decode_tok_s 1.0106 decode_ms 989.6 decode_stall_ms 0.0
+mode stream:0:2 positions_s 11.3 decode_tokens 4 decode_tok_s 0.7052 decode_ms 1418.0 decode_stall_ms 322.5 slots 423 hit_rate 0.2992 misses 2153 reads 4308 disk_bytes 10177863680 decode_miss_per_tok 246.00 decode_disk_MB_per_tok 1162.9 sleep_s 0.0 mismatched_slots 0
+mode stream:400:2 positions_s 34.6 decode_tokens 4 decode_tok_s 0.2462 decode_ms 4061.6 decode_stall_ms 2942.6 slots 423 hit_rate 0.2992 misses 2153 reads 4308 disk_bytes 10177863680 decode_miss_per_tok 246.00 decode_disk_MB_per_tok 1162.9 sleep_s 22.2 mismatched_slots 0
+gate res vs ref: tokens identical logits_bit_identical true (4 decode steps) => PASS
+gate stream:0:2 vs ref: tokens identical logits_bit_identical true (4 decode steps) => PASS
+gate stream:400:2 vs ref: tokens identical logits_bit_identical true (4 decode steps) => PASS
+text 0: " Paris. The capital"
