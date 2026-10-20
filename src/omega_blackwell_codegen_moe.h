@@ -70,7 +70,8 @@ extern "C" {
 #define OMEGA_FP8_ARG_XSTRIDE 0x39cu
 #define OMEGA_FP8_ARG_YSTRIDE 0x3a0u
 #define OMEGA_FP8_ARG_STRIDE 0x3a4u
-#define OMEGA_FP8_ARGS_WORDS 10u
+#define OMEGA_FP8_ARG_EPI_SCALE 0x3a8u /* f32, the SWIGLU epilogue only (L137) */
+#define OMEGA_FP8_ARGS_WORDS 11u
 
 typedef struct {
     uint32_t k;          /* input columns: multiple of 128 and of 32 * lane_bytes, <= OMEGA_FP8_MAX_K */
@@ -84,7 +85,23 @@ typedef struct {
                           * flight per warp); x comes from shared memory (LDS.128). Needs KS % D == 0,
                           * rows * D * lane_bytes <= 128, k % (32 * warps) == 0 and k <= 512 * warps (staging rounds). */
     int mutant;          /* 0 production; 1, 2, 3 as above */
+    uint32_t epi;        /* epilogue (L137 launch fusion), 0 = store y. See OMEGA_FP8_EPI_*. */
+    uint32_t pair;       /* OMEGA_FP8_EPI_SWIGLU: rows between a gate row and its up row (n / 2); 0 otherwise */
 } OmegaFp8GemvSpec;
+
+/* Epilogues (L137, fewer launches per decode token). The per-row arithmetic (dot chain, block scale, warp reduction)
+ * is unchanged in every epilogue, so each row value is bit-identical to the plain kernel's; only what lane 0 does with
+ * it differs.
+ *   OMEGA_FP8_EPI_STORE   y[g][r] = acc (the plain kernel).
+ *   OMEGA_FP8_EPI_SWIGLU  rows = 2, pair = P: row group rg holds gate row rg and up row rg + P (RG = P); lane 0 stores
+ *                         act[g][rg] = silu(gate) * up * scale with the decode SWIGLU kernel's own instruction sequence
+ *                         (omega_blackwell_codegen_dec.c gen_swiglu: FMUL -log2e, MUFU.EX2, FADD 1, MUFU.RCP, FMUL g,
+ *                         FMUL up, FMUL scale). y_stride is then the act row stride (P floats). Replaces gate_up + SWIGLU.
+ *   OMEGA_FP8_EPI_RESADD  lane 0 stores y[g][r] = y[g][r] + acc (one FADD, the decode RES ADD kernel's): y is the
+ *                         residual x. Replaces o_proj + RES ADD. */
+#define OMEGA_FP8_EPI_STORE 0u
+#define OMEGA_FP8_EPI_SWIGLU 1u
+#define OMEGA_FP8_EPI_RESADD 2u
 
 /* 0 on success (prog solved and register-allocated), -1 on a refused spec or an allocator failure. */
 int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, BlackwellIRProgram *prog);

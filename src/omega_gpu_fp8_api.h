@@ -109,6 +109,14 @@ int omega_gpu_fp8_gemv_grouped_dev(const OmegaGpuFp8Tensor *t, uint32_t groups, 
 struct OmegaGpuCmdList;
 int omega_gpu_fp8_gemv_grouped_record(struct OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
                                       uint64_t x_va, uint32_t x_rows, uint64_t y_va);
+/* L137 fused records (record path only, variant 1): the plain record with the SWIGLU epilogue (gate_up tensor, n even
+ * multiple of 256: act[g][j] = silu(gate[g][j]) * up[g][j] * scale written to act_va, act row stride n / 2 floats; replaces
+ * gate_up + the decode SWIGLU kernel) or the RES ADD epilogue (y[g][r] += row value; replaces o_proj + RES ADD). Outputs
+ * are bit-identical to the two-launch path (omega_blackwell_codegen_moe.h OMEGA_FP8_EPI_*). */
+int omega_gpu_fp8_gemv_grouped_swiglu_record(struct OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
+                                             uint64_t x_va, uint64_t act_va, float scale);
+int omega_gpu_fp8_gemv_grouped_resadd_record(struct OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
+                                             uint64_t x_va, uint32_t x_rows, uint64_t y_va);
 /* Device addresses of one expert's weights and scales (for a directory the router copies from). */
 int omega_gpu_fp8_tensor_entry(const OmegaGpuFp8Tensor *t, uint32_t expert, uint64_t *w_va, uint64_t *s_va);
 

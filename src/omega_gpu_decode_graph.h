@@ -22,7 +22,8 @@
  *   final:         bf16 lm_head  logits = W_lm . hidden                         omega_gpu_bf16_gemv_record
  *                  ARGMAX x2     token = lowest index of max(logits)            (75 CTAs, then 1, for 151936)
  *
- *   Launches: 9 per layer + 4 (48 layers: 436). The glue kernels are omega_blackwell_codegen_dec.h (chip parity PASS).
+ *   Launches: 9 per layer + 4 (48 layers: 436); 8 or 7 per layer with launch fusion (omega_gpu_decode_graph_set_fuse, L137).
+ *   The glue kernels are omega_blackwell_codegen_dec.h (chip parity PASS).
  *   Numerics vs the host-glue path: identical operations except the RMSNorm (f32 FFMA sum of squares + MUFU.RSQ vs the
  *   host's f64 sum and 1/sqrt) and SwiGLU (MUFU EX2/RCP vs expf): logits close, not bit-identical; the argmax is the
  *   host's rule (lowest index on ties).
@@ -181,6 +182,16 @@ void omega_gpu_decode_graph_set_prefetch(int on);
 int omega_gpu_decode_graph_prefetch(void);
 /* TEST ONLY red for the prefetch run: the real o_proj is also marked independent (unordered after the attention): must FAIL. */
 void omega_gpu_decode_graph_test_set_prefetch_red(int on);
+/* Launch fusion (L137): bit mask, process-wide; env AIEN_OMEGA_DGRAPH_FUSE (decimal) when never set. Default 0 (off).
+ *   OMEGA_GPU_DGRAPH_FUSE_SWIGLU  gate_up GEMV writes act directly (SwiGLU in its epilogue): no SWIGLU launch
+ *   OMEGA_GPU_DGRAPH_FUSE_RESADD  o_proj GEMV adds into x directly (RES ADD in its epilogue): no RES ADD launch
+ * Each removes one launch per layer (48 layers: 436 -> 388 -> 340). Outputs are bit-identical to the unfused list (the
+ * per-row arithmetic and the glue instruction sequences are unchanged; tests/gpu_decode_graph_test.c --fuse gates it).
+ * Test mutants with fusion on: 4 = SWIGLU epilogue scale 1 instead of 2^64; 5 = o_proj adds into o instead of x. */
+#define OMEGA_GPU_DGRAPH_FUSE_SWIGLU 1
+#define OMEGA_GPU_DGRAPH_FUSE_RESADD 2
+void omega_gpu_decode_graph_set_fuse(int mask);
+int omega_gpu_decode_graph_fuse(void);
 
 #ifdef __cplusplus
 }

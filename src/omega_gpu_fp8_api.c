@@ -213,6 +213,10 @@ uint32_t omega_gpu_fp8_depth_for(const OmegaFp8GemvSpec *spec, uint32_t n, uint3
     return ks;
 }
 
+/* L137 fused epilogue of the next record call (lock held): set by the *_swiglu_record / *_resadd_record wrappers, consumed
+ * and cleared by gemv_core. */
+static uint32_t g_epi_next; static float g_epi_scale;
+
 static void spec_for(uint32_t k, uint32_t n, uint32_t groups, OmegaFp8GemvSpec *spec) {
     memset(spec, 0, sizeof *spec);
     spec->k = k;
@@ -228,6 +232,10 @@ static void spec_for(uint32_t k, uint32_t n, uint32_t groups, OmegaFp8GemvSpec *
         spec->depth = spec->k / (32u * spec->lane_bytes);
     } else spec->depth = omega_gpu_fp8_depth_for(spec, n, groups);
     spec->mutant = g.mutant;
+    if (g_epi_next) { /* the per-row arithmetic is the plain kernel's; only the row pairing and the store change */
+        spec->epi = g_epi_next;
+        if (spec->epi == OMEGA_FP8_EPI_SWIGLU) { spec->rows = 2u; spec->pair = n / 2u; }
+    }
 }
 
 int omega_gpu_fp8_prepare(uint32_t k) {
@@ -304,6 +312,8 @@ static int gemv_core(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t
     if (!dev_tab) for (uint32_t gi = 0; gi < groups; gi++) if (ids[gi] >= t->experts) return OMEGA_GPU_FP8_BAD_ARGS;
     const uint32_t n = t->n, k = t->k;
     OmegaFp8GemvSpec spec; spec_for(k, n, groups, &spec);
+    const uint32_t epi = g_epi_next; const float epi_scale = g_epi_scale; g_epi_next = 0;
+    if (epi && (!rec || variant_now() == 2 || (epi == OMEGA_FP8_EPI_SWIGLU && (n % 256u || x_rows != 1)))) { omega_gpu_session_set_error("fp8 fused epilogue: record path, variant 1, even n, one x row only"); return OMEGA_GPU_FP8_BAD_ARGS; }
     if (n % spec.rows) return OMEGA_GPU_FP8_CODEGEN_FAIL;
     const uint32_t RG = n / spec.rows;
     uint32_t grid_x = (RG + spec.warps - 1) / spec.warps;
@@ -348,7 +358,8 @@ static int gemv_core(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t
     args[0] = (uint32_t)tab_va; args[1] = (uint32_t)(tab_va >> 32);
     args[2] = (uint32_t)x_va; args[3] = (uint32_t)(x_va >> 32);
     args[4] = (uint32_t)y_va; args[5] = (uint32_t)(y_va >> 32);
-    args[6] = RG; args[7] = x_rows == 1 ? 0u : k * 4u; args[8] = n * 4u; args[9] = grid_x * spec.warps;
+    args[6] = RG; args[7] = x_rows == 1 ? 0u : k * 4u; args[8] = (epi == OMEGA_FP8_EPI_SWIGLU ? n / 2u : n) * 4u; args[9] = grid_x * spec.warps;
+    memcpy(&args[10], &epi_scale, 4); if (epi != OMEGA_FP8_EPI_SWIGLU) args[10] = 0;
     if (info) {
         info->experts = t->experts; info->n = n; info->k = k; info->groups = groups;
         info->lane_bytes = spec.lane_bytes; info->rows_per_warp = spec.rows; info->warps_per_cta = spec.warps; info->depth = spec.depth;
@@ -414,3 +425,20 @@ int omega_gpu_fp8_gemv_grouped_record(OmegaGpuCmdList *cl, const OmegaGpuFp8Tens
 /* ---- weight cache policy (OWN-30B L2 kernel-time cut) ---- */
 void omega_gpu_fp8_set_weight_cache(int on) { omega_gpu_session_lock(); g.weights_cached = on ? 1 : 0; g.weights_cached_set = 1; omega_gpu_session_unlock(); }
 int omega_gpu_fp8_weight_cache(void) { return g.weights_cached; }
+
+/* L137 fused records (fewer launches per decode token). Each is the plain record with a different epilogue; the row
+ * values are bit-identical to the plain kernel's (omega_blackwell_codegen_moe.h OMEGA_FP8_EPI_*). Caller holds the lock. */
+int omega_gpu_fp8_gemv_grouped_swiglu_record(OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
+                                             uint64_t x_va, uint64_t act_va, float scale) {
+    g_epi_next = OMEGA_FP8_EPI_SWIGLU; g_epi_scale = scale;
+    int rc = omega_gpu_fp8_gemv_grouped_record(cl, t, groups, tab_va, x_va, 1, act_va);
+    g_epi_next = 0; g_epi_scale = 0.0f;
+    return rc;
+}
+int omega_gpu_fp8_gemv_grouped_resadd_record(OmegaGpuCmdList *cl, const OmegaGpuFp8Tensor *t, uint32_t groups, uint64_t tab_va,
+                                             uint64_t x_va, uint32_t x_rows, uint64_t y_va) {
+    g_epi_next = OMEGA_FP8_EPI_RESADD; g_epi_scale = 0.0f;
+    int rc = omega_gpu_fp8_gemv_grouped_record(cl, t, groups, tab_va, x_va, x_rows, y_va);
+    g_epi_next = 0;
+    return rc;
+}

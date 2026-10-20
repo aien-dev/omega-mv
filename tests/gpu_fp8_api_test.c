@@ -292,6 +292,90 @@ static int sim_gemv(const OmegaFp8GemvSpec *spec, const Weights *W, uint32_t gro
     return err ? -1 : 0;
 }
 
+/* ---- L137 fused epilogues through the warp simulator (--sim-fused): the fused kernel's output must equal, bit for
+ * bit, the plain kernel's rows followed by the glue step done with the glue kernel's own operation order. ---- */
+static int sim_raw(const OmegaFp8GemvSpec *spec, const Weights *W, uint32_t groups, const uint32_t *ids, const float *x, float *yd,
+                   size_t y_words, uint32_t ystride, uint32_t RG, uint32_t scale_bits, char *msg, size_t msglen) {
+    static BlackwellIRProgram prog;
+    if (omega_blackwell_codegen_fp8_gemv_prog(spec, &prog) != 0) { snprintf(msg, msglen, "codegen refused"); return -1; }
+    const uint32_t n = W->n, k = W->k;
+    size_t sc = (size_t)W->experts * (n / 128) * (k / 128);
+    float *sf = aligned_alloc(16, ((sc * 4) + 15) & ~(size_t)15), *xf = aligned_alloc(16, ((size_t)k * 4 + 15) & ~(size_t)15);
+    uint64_t *tab = aligned_alloc(16, 16 * (size_t)groups);
+    if (!sf || !xf || !tab || omega_fp8_pack_scales(W->s, sc, sf, 0) != 0) { free(sf); free(xf); free(tab); snprintf(msg, msglen, "pack"); return -1; }
+    omega_fp8_pack_x_f32(x, k, xf);
+    for (uint32_t g = 0; g < groups; g++) { tab[2 * g] = (uintptr_t)(W->w + (size_t)ids[g] * n * k); tab[2 * g + 1] = (uintptr_t)(sf + (size_t)ids[g] * (n / 128) * (k / 128)); }
+    uint32_t grid_x = (RG + spec->warps - 1) / spec->warps; if (grid_x > 4) grid_x = 4;
+    WsSim s; memset(&s, 0, sizeof s);
+    s.p = &prog; s.threads = 32 * spec->warps; s.order = 0;
+    static uint8_t smem[OMEGA_FP8_MAX_K * 4]; s.smem = smem; s.smem_bytes = omega_fp8_gemv_shared_bytes(spec);
+    uint64_t ta = (uintptr_t)tab, xa = (uintptr_t)xf, ya = (uintptr_t)yd;
+    s.cbank[OMEGA_FP8_ARG_TAB / 4] = (uint32_t)ta; s.cbank[OMEGA_FP8_ARG_TAB / 4 + 1] = (uint32_t)(ta >> 32);
+    s.cbank[OMEGA_FP8_ARG_X / 4] = (uint32_t)xa; s.cbank[OMEGA_FP8_ARG_X / 4 + 1] = (uint32_t)(xa >> 32);
+    s.cbank[OMEGA_FP8_ARG_Y / 4] = (uint32_t)ya; s.cbank[OMEGA_FP8_ARG_Y / 4 + 1] = (uint32_t)(ya >> 32);
+    s.cbank[OMEGA_FP8_ARG_RG / 4] = RG; s.cbank[OMEGA_FP8_ARG_XSTRIDE / 4] = 0; s.cbank[OMEGA_FP8_ARG_YSTRIDE / 4] = ystride;
+    s.cbank[OMEGA_FP8_ARG_STRIDE / 4] = grid_x * spec->warps; s.cbank[OMEGA_FP8_ARG_EPI_SCALE / 4] = scale_bits;
+    s.nranges = 5;
+    s.ranges[0].lo = (uintptr_t)W->w; s.ranges[0].hi = (uintptr_t)W->w + (size_t)W->experts * n * k;
+    s.ranges[1].lo = (uintptr_t)sf; s.ranges[1].hi = (uintptr_t)sf + sc * 4;
+    s.ranges[2].lo = (uintptr_t)xf; s.ranges[2].hi = (uintptr_t)xf + (size_t)k * 4;
+    s.ranges[3].lo = (uintptr_t)yd; s.ranges[3].hi = (uintptr_t)yd + y_words * 4;
+    s.ranges[4].lo = (uintptr_t)tab; s.ranges[4].hi = (uintptr_t)tab + 16 * (size_t)groups;
+    int err = ws_run(&s, grid_x, groups);
+    if (err) snprintf(msg, msglen, "%s", s.msg);
+    free(sf); free(xf); free(tab);
+    return err ? -1 : 0;
+}
+static float u2f_(uint32_t u) { float f; memcpy(&f, &u, 4); return f; }
+static void sim_fused(void) {
+    char msg[160]; uint32_t st = 77;
+    /* SWIGLU: gate_up shape (n 1536 = gate 768 + up 768, k 2048), 2 of 4 experts */
+    {
+        Weights W; weights_make(&W, 4, 1536, 2048, 4242);
+        const uint32_t ids[2] = { 3, 1 }, G = 2, P = 768; float *x = malloc(2048 * 4), *y = aligned_alloc(16, G * 1536 * 4), *act = aligned_alloc(16, G * P * 4), *ref = malloc(G * P * 4);
+        for (unsigned i = 0; i < 2048; i++) x[i] = frand(&st, -1, 1);
+        OmegaFp8GemvSpec ps = { .k = 2048, .lane_bytes = 16, .rows = 1, .warps = 8 }, fs = ps;
+        fs.rows = 2; fs.epi = OMEGA_FP8_EPI_SWIGLU; fs.pair = P;
+        for (size_t i = 0; i < G * 1536; i++) y[i] = -999.0f;
+        int rc = sim_raw(&ps, &W, G, ids, x, y, G * 1536, 1536 * 4, 1536, 0, msg, sizeof msg);
+        CHECK(rc == 0, "sim fused: plain gate_up kernel ran (%s)", rc ? msg : "ok");
+        const float nl2e = u2f_(0xBFB8AA3Bu), one = 1.0f, scale = 18446744073709551616.0f;
+        for (uint32_t g = 0; g < G; g++) for (uint32_t j = 0; j < P; j++) { /* gen_swiglu's order: FMUL, EX2, FADD, RCP, FMUL g, FMUL up, FMUL scale */
+            float gv = y[g * 1536 + j], uv = y[g * 1536 + P + j], t = gv * nl2e; t = exp2f(t); t = t + one; t = 1.0f / t; t = gv * t; t = t * uv; t = t * scale;
+            ref[g * P + j] = t;
+        }
+        for (size_t i = 0; i < G * P; i++) act[i] = -999.0f;
+        uint32_t sb; memcpy(&sb, &scale, 4);
+        rc = sim_raw(&fs, &W, G, ids, x, act, G * P, P * 4, P, sb, msg, sizeof msg);
+        size_t un = 0; for (size_t i = 0; i < G * P; i++) if (act[i] == -999.0f) un++;
+        CHECK(rc == 0 && un == 0, "sim fused: SWIGLU epilogue kernel ran, every act word written (%s, %zu unwritten)", rc ? msg : "ok", un);
+        CHECK(rc == 0 && memcmp(act, ref, G * P * 4) == 0, "sim fused: SWIGLU epilogue BIT-IDENTICAL to plain gate_up + the SWIGLU sequence (%u x %u words)", G, P);
+        OmegaFp8GemvSpec bad = fs; bad.pair = 700; static BlackwellIRProgram bp; CHECK(omega_blackwell_codegen_fp8_gemv_prog(&bad, &bp) != 0, "sim fused: SWIGLU with pair 700 (not a 128 multiple) refused");
+        bad = fs; bad.pair = P; bad.rows = 1; CHECK(omega_blackwell_codegen_fp8_gemv_prog(&bad, &bp) != 0, "sim fused: SWIGLU with rows 1 refused");
+        free(x); free(y); free(act); free(ref); weights_free(&W);
+    }
+    /* RESADD: o_proj shape (n 2048, k 4096), one group: y = y0 + row */
+    {
+        Weights W; weights_make(&W, 1, 2048, 4096, 5151);
+        const uint32_t ids[1] = { 0 }; float *x = malloc(4096 * 4), *y = aligned_alloc(16, 2048 * 4), *y0 = malloc(2048 * 4), *ref = malloc(2048 * 4);
+        for (unsigned i = 0; i < 4096; i++) x[i] = frand(&st, -1, 1);
+        for (unsigned i = 0; i < 2048; i++) y0[i] = frand(&st, -4, 4);
+        OmegaFp8GemvSpec ps = { .k = 4096, .lane_bytes = 16, .rows = 1, .warps = 8 }, fs = ps; fs.epi = OMEGA_FP8_EPI_RESADD;
+        for (unsigned i = 0; i < 2048; i++) y[i] = -999.0f;
+        int rc = sim_raw(&ps, &W, 1, ids, x, y, 2048, 2048 * 4, 2048, 0, msg, sizeof msg);
+        CHECK(rc == 0, "sim fused: plain o_proj kernel ran (%s)", rc ? msg : "ok");
+        for (unsigned i = 0; i < 2048; i++) ref[i] = y0[i] + y[i]; /* RES ADD: fadd(x, x, o) */
+        memcpy(y, y0, 2048 * 4);
+        rc = sim_raw(&fs, &W, 1, ids, x, y, 2048, 2048 * 4, 2048, 0, msg, sizeof msg);
+        CHECK(rc == 0 && memcmp(y, ref, 2048 * 4) == 0, "sim fused: RESADD epilogue BIT-IDENTICAL to plain o_proj + RES ADD (2048 words; %s)", rc ? msg : "ok");
+        /* the same with 2 rows per warp (RESADD keeps any row count) */
+        fs.rows = 2; memcpy(y, y0, 2048 * 4);
+        rc = sim_raw(&fs, &W, 1, ids, x, y, 2048, 2048 * 4, 1024, 0, msg, sizeof msg);
+        CHECK(rc == 0 && memcmp(y, ref, 2048 * 4) == 0, "sim fused: RESADD epilogue, rows 2, bit-identical too (%s)", rc ? msg : "ok");
+        free(x); free(y); free(y0); free(ref); weights_free(&W);
+    }
+}
+
 typedef struct { uint32_t experts, n, k, groups, x_rows, lb, rows, warps; const char *name; } SimPoint;
 
 static void sim_battery(uint32_t cta_budget) {
@@ -567,6 +651,7 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
         else if (strcmp(argv[i], "--sim") == 0) sim = 1;
+        else if (strcmp(argv[i], "--sim-fused") == 0) sim = 2; /* L137: the fused epilogues only */
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--lane-bytes") == 0 && i + 1 < argc) lb = (uint32_t)atoi(argv[++i]);
@@ -584,7 +669,8 @@ int main(int argc, char **argv) {
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
     if (host) host_only();
-    if (sim) sim_battery(budget ? budget : 4);
+    if (sim == 2) sim_fused();
+    else if (sim) { sim_battery(budget ? budget : 4); sim_fused(); }
     if (!host && !sim) {
         if (lb || rows || warps) omega_gpu_fp8_set_shape(lb, rows, warps);
         if (budget) omega_gpu_fp8_set_cta_budget(budget);

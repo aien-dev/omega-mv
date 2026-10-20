@@ -46,6 +46,7 @@
 
 static int g_checks, g_failed;
 static int g_launch_tax; /* --launch-tax (L137) */
+static int g_fuse_masks[4], g_n_fuse; /* --fuse MASK (L137), repeatable */
 #define CHECK(c, ...) do { g_checks++; if (!(c)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } else { printf("ok: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 
 static uint32_t lcg(uint32_t *s) { *s = *s * 1664525u + 1013904223u; return *s; }
@@ -185,6 +186,13 @@ static int host_only(void) {
         uint32_t ins = 0, gpr = 0; int rc = omega_dec_prog_stats(&s, &ins, &gpr);
         CHECK(rc == 0 && ins > 0, "%s builds (%u instructions, peak %u registers)", sp[i].name, ins, gpr);
     }
+    { /* L137 fused GEMVs at the decode graph's launch shapes fit the register file (gate_up 8 experts: 32 warps; o_proj: 8) */
+        OmegaFp8GemvSpec sw = { .k = 2048, .lane_bytes = 16, .rows = 2, .warps = 32, .epi = OMEGA_FP8_EPI_SWIGLU, .pair = 768 };
+        OmegaFp8GemvSpec ra = { .k = 4096, .lane_bytes = 16, .rows = 1, .warps = 8, .epi = OMEGA_FP8_EPI_RESADD };
+        uint32_t d1 = 0, d2 = 0;
+        CHECK(omega_gpu_fp8_kernel_fits(&sw, &d1) == OMEGA_GPU_FP8_OK, "fused gate_up+SWIGLU kernel fits 32 warps (%u registers declared)", d1);
+        CHECK(omega_gpu_fp8_kernel_fits(&ra, &d2) == OMEGA_GPU_FP8_OK, "fused o_proj+RES ADD kernel fits 8 warps (%u registers declared)", d2);
+    }
     OmegaDecSpec bad; memset(&bad, 0, sizeof bad); bad.kind = OMEGA_DEC_RES; bad.mode = OMEGA_DEC_RES_ADD | OMEGA_DEC_RES_COMBINE;
     CHECK(omega_dec_prog_stats(&bad, NULL, NULL) != 0, "RES ADD|COMBINE refused by codegen");
     /* record entry points refuse a missing list or missing device addresses before touching the device */
@@ -295,6 +303,50 @@ static int launch_tax(OmegaGpuDecodeGraph *gr, const Model *m, uint32_t reps, ui
     }
     free(te); free(tt); free(t1); free(tn);
     return 0;
+}
+
+/* ---- L137 launch fusion gate (--fuse MASK): the fused list must be bit-identical to the unfused C (x, hidden, logits,
+ * token) in every rep, with 48 fewer launches per fused pair; the fused-path mutants (4: SWIGLU epilogue scale 1, 5: o_proj
+ * adds into o, not x) must break the identity. Timing: per-token medians of the fused list (chip and host). ---- */
+static int fuse_run(OmegaGpuDecodeGraph *gr, const Model *m, uint32_t reps, int mask, const Out *C0, uint32_t c_launches,
+                    uint64_t c_chip, uint64_t c_total, FILE *out) {
+    uint64_t *tf = calloc(reps, 8), *tt = calloc(reps, 8);
+    Out F; if (!tf || !tt || out_alloc(&F, m->vocab)) return 1;
+    OmegaGpuDecodeGraphStats st; memset(&st, 0, sizeof st);
+    omega_gpu_decode_graph_set_fuse(mask);
+    int ok = 1, same = 1; uint32_t lf = 0;
+    for (uint32_t r = 0; r < reps && ok; r++) {
+        if (run_graph(gr, m, &F, &st) != 0) { ok = 0; break; }
+        tf[r] = st.chip_ns; tt[r] = st.total_ns; lf = st.launches;
+        if (F.tok != C0->tok || memcmp(F.logits, C0->logits, (size_t)m->vocab * 4) || memcmp(F.x, C0->x, sizeof F.x) || memcmp(F.hidden, C0->hidden, sizeof F.hidden)) same = 0;
+    }
+    const uint32_t per = ((mask & OMEGA_GPU_DGRAPH_FUSE_SWIGLU) ? 1u : 0u) + ((mask & OMEGA_GPU_DGRAPH_FUSE_RESADD) ? 1u : 0u);
+    CHECK(ok, "fuse %d: fused list ran %u reps (%s)", mask, reps, ok ? "ok" : omega_gpu_session_last_error());
+    CHECK(ok && lf + per * m->layers == c_launches, "fuse %d: %u launches per token (unfused %u, %u fewer)", mask, lf, c_launches, c_launches - lf);
+    CHECK(ok && same, "fuse %d: fused list BIT-IDENTICAL to the unfused list (x, hidden, logits, token) in every rep", mask);
+    int caught[2] = { -1, -1 };
+    for (int mut = 4; mut <= 5 && ok; mut++) {
+        if ((mut == 4 && !(mask & OMEGA_GPU_DGRAPH_FUSE_SWIGLU)) || (mut == 5 && !(mask & OMEGA_GPU_DGRAPH_FUSE_RESADD))) continue;
+        omega_gpu_decode_graph_test_set_mutant(gr, mut);
+        Out M; out_alloc(&M, m->vocab);
+        int mrc = run_graph(gr, m, &M, &st);
+        caught[mut - 4] = mrc != 0 || M.tok != C0->tok || memcmp(M.logits, C0->logits, (size_t)m->vocab * 4) != 0;
+        CHECK(caught[mut - 4], "fuse %d: negative control mutant %d (%s) breaks the identity (rc %d, token %u vs %u)", mask, mut,
+              mut == 4 ? "SWIGLU epilogue scale 1" : "o_proj adds into o, not x", mrc, M.tok, C0->tok);
+        free(M.logits);
+    }
+    omega_gpu_decode_graph_test_set_mutant(gr, 0);
+    int prc = run_graph(gr, m, &F, &st);
+    CHECK(prc == 0 && F.tok == C0->tok && !memcmp(F.logits, C0->logits, (size_t)m->vocab * 4), "fuse %d: fused list after the mutants still bit-identical", mask);
+    omega_gpu_decode_graph_set_fuse(0);
+    if (!ok) return 1;
+    const uint64_t mf = median_u64(tf, reps), mt = median_u64(tt, reps);
+    printf("FUSE %d (median of %u): unfused %u launches chip %.1f us (host %.1f) | fused %u launches chip %.1f us (host %.1f) | chip saved %.1f us/token\n",
+           mask, reps, c_launches, c_chip / 1e3, c_total / 1e3, lf, mf / 1e3, mt / 1e3, ((double)c_chip - (double)mf) / 1e3);
+    if (out) fprintf(out, "\"fuse%d\":{\"launches\":%u,\"unfused_launches\":%u,\"chip_ns\":%" PRIu64 ",\"total_ns\":%" PRIu64 ",\"unfused_chip_ns\":%" PRIu64 ",\"unfused_total_ns\":%" PRIu64 ",\"bit_identical\":%d,\"mutant4_caught\":%d,\"mutant5_caught\":%d},",
+                     mask, lf, c_launches, mf, mt, c_chip, c_total, same, caught[0], caught[1]);
+    free(tf); free(tt); free(F.logits);
+    return same ? 0 : 1;
 }
 
 static int chip_run(uint32_t layers, uint32_t vocab, uint32_t reps, int red, int cached, const char *out_path) {
@@ -410,6 +462,7 @@ static int chip_run(uint32_t layers, uint32_t vocab, uint32_t reps, int red, int
         }
         uint64_t ma = median_u64(ta, reps), mc_ = median_u64(tc, reps), mb = median_u64(tb, reps), mcc = median_u64(cc, reps), mcb = median_u64(cb, reps), mr = median_u64(rcn, reps);
         if (g_launch_tax && launch_tax(gr, &m, reps, mcc, mc_, &C0, out) != 0) CHECK(0, "launch tax measured");
+        for (int fi = 0; fi < g_n_fuse; fi++) (void)fuse_run(gr, &m, reps, g_fuse_masks[fi], &C0, lc, mcc, mc_, out);
         printf("PER TOKEN (median of %u, %u layers): A host-glue %u launches %.1f us | C one list %u launches %.1f us (chip %.1f us, record %.1f us) | B per-launch submits %u launches %.1f us (chip sum %.1f us)\n",
                reps, layers, la, ma / 1e3, lc, mc_ / 1e3, mcc / 1e3, mr / 1e3, lb, mb / 1e3, mcb / 1e3);
         if (out) fprintf(out, "\"median_ns\":{\"A_total\":%" PRIu64 ",\"C_total\":%" PRIu64 ",\"C_chip\":%" PRIu64 ",\"C_record\":%" PRIu64 ",\"B_total\":%" PRIu64 ",\"B_chip\":%" PRIu64 "},\"B\":{\"launches\":%u,\"submits\":%u,\"identical\":%d},",
@@ -425,6 +478,7 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
         else if (strcmp(argv[i], "--red") == 0) red = 1;
+        else if (strcmp(argv[i], "--fuse") == 0 && i + 1 < argc && g_n_fuse < 4) g_fuse_masks[g_n_fuse++] = atoi(argv[++i]); /* L137: 1 swiglu, 2 resadd, 3 both */
         else if (strcmp(argv[i], "--launch-tax") == 0) g_launch_tax = 1; /* L137: real list vs empty-kernel list vs one empty launch */
         else if (strcmp(argv[i], "--cached-weights") == 0) cached = 1;
         else if (strcmp(argv[i], "--prefetch") == 0) prefetch = 1;          /* W-L2d: o_proj weight prefetch beside the attention */
@@ -437,7 +491,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--layers") == 0 && i + 1 < argc) layers = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--vocab") == 0 && i + 1 < argc) vocab = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out = argv[++i];
-        else { printf("usage: %s [--host-only] [--red] [--launch-tax] [--reps N] [--layers N] [--vocab V] [--out receipt.json]\n", argv[0]); return 2; }
+        else { printf("usage: %s [--host-only] [--red] [--launch-tax] [--fuse MASK]... [--reps N] [--layers N] [--vocab V] [--out receipt.json]\n", argv[0]); return 2; }
     }
     if (reps == 0) reps = 1;
     if (layers == 0 || layers > OMEGA_GPU_DGRAPH_MAX_LAYERS) layers = 2; /* 48 = the real model (L137); weights stay shared across layers */

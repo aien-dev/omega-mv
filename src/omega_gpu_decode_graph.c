@@ -208,6 +208,13 @@ int omega_gpu_decode_graph_prefetch(void) {
     return g_prefetch;
 }
 void omega_gpu_decode_graph_test_set_prefetch_red(int on) { g_prefetch_red = on ? 1 : 0; }
+/* launch fusion (L137): omega_gpu_decode_graph_set_fuse, else env AIEN_OMEGA_DGRAPH_FUSE. Read once. Default 0. */
+static int g_fuse = -1;
+void omega_gpu_decode_graph_set_fuse(int mask) { g_fuse = mask & (OMEGA_GPU_DGRAPH_FUSE_SWIGLU | OMEGA_GPU_DGRAPH_FUSE_RESADD); }
+int omega_gpu_decode_graph_fuse(void) {
+    if (g_fuse < 0) { const char *e = getenv("AIEN_OMEGA_DGRAPH_FUSE"); omega_gpu_decode_graph_set_fuse(e ? atoi(e) : 0); }
+    return g_fuse;
+}
 static OmegaGpuCmdListBarrier barrier_now(void) { return (OmegaGpuCmdListBarrier)omega_gpu_decode_graph_barrier(); }
 
 static OmegaGpuCmdListOpts list_opts(const OmegaGpuDecodeGraph *g) {
@@ -317,13 +324,20 @@ int omega_gpu_decode_graph_record_layer(OmegaGpuDecodeGraph *g, uint32_t l, uint
         if (prc == 0 && omega_gpu_cmdlist_mark_independent(g->cl) != 0) prc = -1;
         rc = after_op(g, OMEGA_GPU_DGRAPH_K_ATTN, prc);
     }
-    if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_O, omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].o, 1, tab + 16u, v.attn, 1, v.o));
+    const int fuse = omega_gpu_decode_graph_fuse();
+    if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_O, (fuse & OMEGA_GPU_DGRAPH_FUSE_RESADD)
+        ? omega_gpu_fp8_gemv_grouped_resadd_record(g->cl, g->layer[l].o, 1, tab + 16u, v.attn, 1, g->mutant == 5 ? v.o : v.x) /* x += o in the epilogue */
+        : omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].o, 1, tab + 16u, v.attn, 1, v.o));
     if (rc == OMEGA_GPU_DGRAPH_OK && g_prefetch_red && !g->flush_each && omega_gpu_cmdlist_mark_independent(g->cl) != 0) rc = OMEGA_GPU_DGRAPH_CHIP_FAIL; /* TEST ONLY red: o_proj itself unordered after the attention */
-    if (rc == OMEGA_GPU_DGRAPH_OK) rc = omega_gpu_decode_graph_record_res(g, OMEGA_DEC_RES_ADD, v.x, v.o, 0, 0, 0, eps, 1.0f);
+    if (rc == OMEGA_GPU_DGRAPH_OK && !(fuse & OMEGA_GPU_DGRAPH_FUSE_RESADD)) rc = omega_gpu_decode_graph_record_res(g, OMEGA_DEC_RES_ADD, v.x, v.o, 0, 0, 0, eps, 1.0f);
     OmegaGpuRouterDevOut r; memset(&r, 0, sizeof r);
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_ROUTER, omega_gpu_router_record(g->cl, g->cfg.router, l, v.x, eps, g->cfg.norm_topk, SCALE_2P64, &r));
-    if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_GATE_UP, omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].gu, OMEGA_GPU_DGRAPH_TOPK, r.tab_gu_va, r.xout_va, 1, v.gu));
-    if (rc == OMEGA_GPU_DGRAPH_OK) rc = omega_gpu_decode_graph_record_swiglu(g, v.gu, v.act, SCALE_2P64);
+    if (fuse & OMEGA_GPU_DGRAPH_FUSE_SWIGLU) { /* act = silu(gate) * up * 2^64 in the gate_up epilogue */
+        if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_GATE_UP, omega_gpu_fp8_gemv_grouped_swiglu_record(g->cl, g->layer[l].gu, OMEGA_GPU_DGRAPH_TOPK, r.tab_gu_va, r.xout_va, v.act, g->mutant == 4 ? 1.0f : SCALE_2P64));
+    } else {
+        if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_GATE_UP, omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].gu, OMEGA_GPU_DGRAPH_TOPK, r.tab_gu_va, r.xout_va, 1, v.gu));
+        if (rc == OMEGA_GPU_DGRAPH_OK) rc = omega_gpu_decode_graph_record_swiglu(g, v.gu, v.act, SCALE_2P64);
+    }
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_DGRAPH_K_DOWN, omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].dn, OMEGA_GPU_DGRAPH_TOPK, r.tab_dn_va, v.act, OMEGA_GPU_DGRAPH_TOPK, v.dn));
     if (rc == OMEGA_GPU_DGRAPH_OK) {
         const int last = l + 1 == g->cfg.layers;

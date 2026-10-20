@@ -94,6 +94,8 @@ static void bar_sync(Em *e) { emit(e, I0(BW_IR_BAR_SYNC), K_SYNC); }
 static void fadd(Em *e, int d, int a, int b) { BlackwellIRInsn i = I0(BW_IR_FADD); i.dst_vreg = d; i.src1_vreg = a; i.src2_vreg = b; emit(e, i, K_FIXED); }
 /* d = a * b[bsub] + c */
 static void ffma(Em *e, int d, int a, int b, unsigned bsub, int c) { BlackwellIRInsn i = I0(BW_IR_FFMA); i.dst_vreg = d; i.src1_vreg = a; i.src2_vreg = b; i.src2_subreg = (uint8_t)bsub; i.src3_vreg = c; emit(e, i, K_FIXED); }
+static void fmul(Em *e, int d, int a, int b) { BlackwellIRInsn i = I0(BW_IR_FMUL); i.dst_vreg = d; i.src1_vreg = a; i.src2_vreg = b; emit(e, i, K_FIXED); }
+static void mufu(Em *e, BlackwellIROpcode op, int d, int a) { BlackwellIRInsn i = I0(op); i.dst_vreg = d; i.src1_vreg = a; emit(e, i, K_VAR); }
 static void shfl_down(Em *e, int d, int a, uint32_t off) { BlackwellIRInsn i = I0(BW_IR_SHFL_DOWN); i.dst_vreg = d; i.src1_vreg = a; i.imm = off; emit(e, i, K_VAR); }
 static void isetp_ge_u32(Em *e, int a, int b) { BlackwellIRInsn i = I0(BW_IR_ISETP_GE_U32); i.src1_vreg = a; i.src2_vreg = b; emit(e, i, K_PRED); }
 static void bra_if_p0(Em *e, int target) { BlackwellIRInsn i = I0(BW_IR_BRA); i.predicate_p0 = true; i.imm = (uint32_t)(target - here(e)); emit(e, i, K_BRA); }
@@ -132,6 +134,10 @@ static int spec_ok(const OmegaFp8GemvSpec *s) {
     if (s->warps < 1 || s->warps > 32) return 0; /* threads_x = 32 * warps <= 1024 */
     if (s->k == 0 || s->k > OMEGA_FP8_MAX_K || s->k % OMEGA_FP8_BLOCK || s->k % (32u * s->lane_bytes)) return 0;
     if (s->mutant < 0 || s->mutant > 3) return 0;
+    if (s->epi > OMEGA_FP8_EPI_RESADD) return 0;
+    if (s->epi == OMEGA_FP8_EPI_SWIGLU) { /* gate row rg, up row rg + pair: both inside the 24-bit LDG immediate; the up row's scale block is pair / 128 blocks down */
+        if (s->rows != 2 || s->pair == 0 || s->pair % OMEGA_FP8_BLOCK || (uint64_t)s->pair * s->k + s->k >= (1u << 23)) return 0;
+    } else if (s->pair) return 0;
     if (s->depth) { /* deep kernel: staging rounds (32-bit words, one per thread per round) must be exact and few */
         uint32_t ks = s->k / (32u * s->lane_bytes);
         if (s->depth > 16 || ks % s->depth || s->rows * s->depth * s->lane_bytes > 128u) return 0; /* <= 128 weight bytes per lane per iteration: instruction and register budgets */
@@ -160,7 +166,11 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
     if (!spec_ok(spec) || !prog) return -1;
     const uint32_t K = spec->k, LB = spec->lane_bytes, R = spec->rows, W = spec->warps;
     const uint32_t KS = K / (32u * LB), BPS = 32u * LB / OMEGA_FP8_BLOCK, LPB = OMEGA_FP8_BLOCK / LB, KB = K / OMEGA_FP8_BLOCK;
-    const int log2lpb = log2u(LPB), log2rows_per_block = log2u(OMEGA_FP8_BLOCK / R);
+    /* SWIGLU epilogue: a row group is ONE row index (gate rg, up rg + pair), so it advances by one weight row and its
+     * second row sits pair rows down; every other epilogue keeps R consecutive rows. */
+    const int SW = spec->epi == OMEGA_FP8_EPI_SWIGLU, RA = spec->epi == OMEGA_FP8_EPI_RESADD;
+    const uint32_t RS = SW ? 1u : R, ROFF = SW ? spec->pair * K : K, YW = SW ? 1u : R;
+    const int log2lpb = log2u(LPB), log2rows_per_block = log2u(OMEGA_FP8_BLOCK / RS);
     const uint32_t WORDS = LB / 4u;
     const BlackwellIROpcode ldw = LB == 16 ? BW_IR_LDG_E_128 : BW_IR_LDG_E_64;
     if (log2lpb < 0 || log2rows_per_block < 0) return -1;
@@ -201,6 +211,9 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
     for (uint32_t r = 0; r < R; r++) { acc[r] = V(e); for (uint32_t s = 0; s < D; s++) wq[r][s] = LB == 16 ? V128(e) : V64(e); }
     for (uint32_t q = 0; q < WORDS; q++) xq[q] = V128(e);
     for (uint32_t s = 0; s < D; s++) { sc[s] = V(e); psd[s] = V64(e); }
+    int sc2[16], psd2[16], esc = -1; /* SWIGLU: the up row's scale words and addresses; the epilogue scale */
+    if (SW) { for (uint32_t s = 0; s < D; s++) { sc2[s] = V(e); psd2[s] = V64(e); } esc = V(e); }
+    if (SW && !e->err) ldc32(e, esc, OMEGA_FP8_ARG_EPI_SCALE);
     int dot = V(e), u = V(e), a = V(e), sg = V(e), f = V(e), t = V(e);
     if (e->err) return -1;
 
@@ -242,7 +255,7 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
     loop_begin(e);
     isetp_ge_u32(e, rg, rgn);
     const int bra_end = bra_if_p0_fwd(e);
-    imadw(e, pw, rg, R * K, wbase); imadw(e, pw, wlane, 1, pw);
+    imadw(e, pw, rg, RS * K, wbase); imadw(e, pw, wlane, 1, pw);
     shr(e, srg, rg, 0, (uint32_t)log2rows_per_block);
     imadw(e, ps, srg, KB * 4u, sbase); imadw(e, ps, slane, 1, ps);
     if (!deep) imadw(e, pxc, one, 0, xlane); else imadi(e, xl, xl0, 0, 1, NOREG);
@@ -256,8 +269,10 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
         int first = 1;
         if (!deep) { for (uint32_t q = 0; q < WORDS; q++) { ldg_wide(e, BW_IR_LDG_E_128, xq[q], pxc, q * 16u, udesc, first); first = 0; } }
         for (uint32_t s = 0; s < D; s++) imadw(e, psd[s], one, spec->mutant == 2 ? 0u : s * BPS * 4u, ps);
-        for (uint32_t s = 0; s < D; s++) for (uint32_t r = 0; r < R; r++) { ldg_wide(e, ldw, wq[r][s], pw, r * K + s * 32u * LB, udesc, first); first = 0; }
+        if (SW) for (uint32_t s = 0; s < D; s++) imadw(e, psd2[s], one, (spec->pair / OMEGA_FP8_BLOCK) * KB * 4u + (spec->mutant == 2 ? 0u : s * BPS * 4u), ps);
+        for (uint32_t s = 0; s < D; s++) for (uint32_t r = 0; r < R; r++) { ldg_wide(e, ldw, wq[r][s], pw, r * ROFF + s * 32u * LB, udesc, first); first = 0; }
         for (uint32_t s = 0; s < D; s++) ldg32(e, sc[s], psd[s], udesc, 0);
+        if (SW) for (uint32_t s = 0; s < D; s++) ldg32(e, sc2[s], psd2[s], udesc, 0);
     }
     for (uint32_t s = 0; s < D; s++) {
         if (deep) { int first = 1; for (uint32_t q = 0; q < WORDS; q++) { lds128(e, xq[q], xl, s * 128u * LB + q * 16u, first); first = 0; } }
@@ -269,7 +284,7 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
                     ffma(e, dot, f, xq[word], i, dot);
                 }
             if (spec->mutant == 1) fadd(e, acc[r], acc[r], dot);
-            else ffma(e, acc[r], dot, sc[s], 0, acc[r]);
+            else ffma(e, acc[r], dot, SW && r == 1 ? sc2[s] : sc[s], 0, acc[r]);
         }
     }
     imadw(e, pw, one, D * 32u * LB, pw);
@@ -284,11 +299,26 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
     /* ---- warp reduction, lane 0 stores ---- */
     for (uint32_t r = 0; r < R; r++)
         for (uint32_t o = 16; o >= 1; o /= 2) { shfl_down(e, t, acc[r], o); fadd(e, acc[r], acc[r], t); }
-    imadw(e, pyr, rg, R * 4u, yrow);
+    imadw(e, pyr, rg, YW * 4u, yrow);
     isetp_ge_u32(e, lane, one);
     const int at_bssy = bssy_fwd(e);
     const int bra_skip = bra_if_p0_fwd(e);
-    for (uint32_t r = 0; r < R; r++) { imadw(e, pya, one, r * 4u, pyr); stg(e, pya, 0, acc[r], udesc); } /* STG.E with immediate 0 only (the chip-proven form) */
+    if (SW) { /* the decode SWIGLU kernel's sequence, operand for operand (omega_blackwell_codegen_dec.c gen_swiglu) */
+        movi(e, t, 0xBFB8AA3Bu);                 /* -log2(e) */
+        fmul(e, u, acc[0], t);
+        mufu(e, BW_IR_MUFU_EX2, u, u);
+        movi(e, t, 0x3F800000u);                 /* 1.0f */
+        fadd(e, u, u, t);
+        mufu(e, BW_IR_MUFU_RCP, u, u);
+        fmul(e, u, acc[0], u);
+        fmul(e, u, u, acc[1]);
+        fmul(e, u, u, esc);
+        stg(e, pyr, 0, u, udesc);
+    } else for (uint32_t r = 0; r < R; r++) {
+        imadw(e, pya, one, r * 4u, pyr);
+        if (RA) { ldg32(e, a, pya, udesc, 1); fadd(e, acc[r], a, acc[r]); } /* x + o: the RES ADD kernel's FADD */
+        stg(e, pya, 0, acc[r], udesc); /* STG.E with immediate 0 only (the chip-proven form) */
+    }
     const int at_bsync = here(e);
     bsync(e);
     patch_bra(e, bra_skip, at_bsync);
