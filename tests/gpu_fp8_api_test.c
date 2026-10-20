@@ -322,7 +322,7 @@ static int sim_raw(const OmegaFp8GemvSpec *spec, const Weights *W, uint32_t grou
     s.ranges[3].lo = (uintptr_t)yd; s.ranges[3].hi = (uintptr_t)yd + y_words * 4;
     s.ranges[4].lo = (uintptr_t)tab; s.ranges[4].hi = (uintptr_t)tab + 16 * (size_t)groups;
     int err = ws_run(&s, grid_x, groups);
-    if (err) snprintf(msg, msglen, "%s", s.msg);
+    if (err) snprintf(msg, msglen, "%.150s", s.msg);
     free(sf); free(xf); free(tab);
     return err ? -1 : 0;
 }
