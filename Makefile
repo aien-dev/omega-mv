@@ -130,63 +130,63 @@ $(TARGET): $(OBJS) | check-physics-lock
 	$(CC) $(CFLAGS) -o $@.tmp.$$$$ $(OBJS) && mv -f $@.tmp.$$$$ $@
 
 test: $(TARGET)
-	./$(TARGET) --run-gates
-	./$(TARGET) --reference-demonstrate-arithmetic
-	./$(TARGET) --reference-demonstrate-physics
+	$(TARGET) --run-gates
+	$(TARGET) --reference-demonstrate-arithmetic
+	$(TARGET) --reference-demonstrate-physics
 
 test-m5: $(TARGET)
-	./$(TARGET) --run-m5-gates
-	./$(TARGET) --reference-demonstrate-realization
+	$(TARGET) --run-m5-gates
+	$(TARGET) --reference-demonstrate-realization
 
 test-m6: $(TARGET)
-	./$(TARGET) --run-m6-gates
-	./$(TARGET) --reference-demonstrate-self-host
+	$(TARGET) --run-m6-gates
+	$(TARGET) --reference-demonstrate-self-host
 
 test-m7: $(TARGET)
-	./$(TARGET) --run-m7-gates
-	./$(TARGET) --reference-demonstrate-verify
+	$(TARGET) --run-m7-gates
+	$(TARGET) --reference-demonstrate-verify
 
 test-m8: $(TARGET)
-	./$(TARGET) --run-m8-gates
-	./$(TARGET) --reference-demonstrate-program
+	$(TARGET) --run-m8-gates
+	$(TARGET) --reference-demonstrate-program
 
 test-m9: $(TARGET)
-	./$(TARGET) --run-m9-gates
-	./$(TARGET) --reference-demonstrate-synthesis
+	$(TARGET) --run-m9-gates
+	$(TARGET) --reference-demonstrate-synthesis
 
 test-m10: $(TARGET)
-	./$(TARGET) --run-m10-gates
-	./$(TARGET) --reference-demonstrate-library
+	$(TARGET) --run-m10-gates
+	$(TARGET) --reference-demonstrate-library
 
 test-m11: $(TARGET)
-	./$(TARGET) --run-m11-gates
-	./$(TARGET) --reference-demonstrate-discovery
+	$(TARGET) --run-m11-gates
+	$(TARGET) --reference-demonstrate-discovery
 
 test-m12: $(TARGET)
-	./$(TARGET) --run-m12-gates
-	./$(TARGET) --legacy-oracle-living-matvec
+	$(TARGET) --run-m12-gates
+	$(TARGET) --legacy-oracle-living-matvec
 
 test-m13: $(TARGET)
-	./$(TARGET) --run-m13-gates
-	./$(TARGET) --reference-demonstrate-machine
+	$(TARGET) --run-m13-gates
+	$(TARGET) --reference-demonstrate-machine
 
 test-m14: $(TARGET)
-	./$(TARGET) --run-m14-gates
-	./$(TARGET) --reference-demonstrate-realization-synthesis
+	$(TARGET) --run-m14-gates
+	$(TARGET) --reference-demonstrate-realization-synthesis
 
 test-m15: $(TARGET)
-	./$(TARGET) --run-m15-gates
-	./$(TARGET) --reference-demonstrate-accelerator
+	$(TARGET) --run-m15-gates
+	$(TARGET) --reference-demonstrate-accelerator
 
 test-m17: $(TARGET)
-	./$(TARGET) --run-m17-gates
-	./$(TARGET) --reference-demonstrate-blackwell-vector
+	$(TARGET) --run-m17-gates
+	$(TARGET) --reference-demonstrate-blackwell-vector
 
 clean:
 	rm -rf $(OUT_DIR)
 
 test-m19: $(TARGET)
-	./$(TARGET) --run-m19-gates
+	$(TARGET) --run-m19-gates
 
 # Host-only tests of the M19R qualifier (tools/m19r_qualify.sh) and its
 # canonical-JSON helper (tools/json_canon.c). No GPU.
@@ -338,7 +338,7 @@ $(RX_TEST): $(RX_SRCS) src/runtime/rx_caproot.h src/runtime/rx_world.h \
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_SRCS)
 
 test-r3: $(RX_TEST)
-	./$(RX_TEST)
+	$(RX_TEST)
 
 # HD-09 resource contract v0, first enforcement cut: a declared deadline is
 # enforced before publishing (late reaction cancelled, nothing published,
@@ -353,7 +353,7 @@ $(RX_DEADLINE_TEST): $(RX_DEADLINE_SRCS) src/runtime/rx_caproot.h src/runtime/rx
 
 .PHONY: test-rx-deadline-cancel
 test-rx-deadline-cancel: $(RX_DEADLINE_TEST)
-	./$(RX_DEADLINE_TEST)
+	$(RX_DEADLINE_TEST)
 
 # I11: a dependent popped while a writer of its inputs is still computing is
 # held so the writer's wake merges into it (one commit per stimulus, as with
@@ -373,8 +373,8 @@ $(RX_I11_MUTANT): $(RX_I11_SRCS) src/runtime/rx_caproot.h src/runtime/rx_world.h
 	$(CC) $(CFLAGS) -DRX_WORLD_MUTATE_NO_UPSTREAM_HOLD -pthread -o $@ $(RX_I11_SRCS)
 
 test-i11-wake-merge: $(RX_I11_TEST) $(RX_I11_MUTANT)
-	./$(RX_I11_TEST)
-	@if ./$(RX_I11_MUTANT); then \
+	$(RX_I11_TEST)
+	@if $(RX_I11_MUTANT); then \
 	  echo "MUTANT SURVIVED (no upstream hold, test still passed)"; exit 1; \
 	else echo "test-i11-wake-merge: PASS (mutant killed)"; fi
 
@@ -390,7 +390,7 @@ $(RX_SEM_TEST): $(RX_SEM_SRCS) src/runtime/rx_semantic.h src/runtime/rx_caproot.
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_SEM_SRCS)
 
 test-sem-incremental: $(RX_SEM_TEST)
-	./$(RX_SEM_TEST)
+	$(RX_SEM_TEST)
 
 # R7: native AIENOS authority versus the Linux oracle, then the world view.
 # The authority source is the FULL commit in aienos.lock, proven by
@@ -453,7 +453,7 @@ $(EFFECT_CAP64_TEST): tests/effect/test_effect_cap64.c $(EFFECT_CAP64_OBJS) \
 
 .PHONY: test-effect-cap64
 test-effect-cap64: $(EFFECT_CAP64_TEST)
-	./$(EFFECT_CAP64_TEST)
+	$(EFFECT_CAP64_TEST)
 
 # OMEGA_AIENOS_CAP_ABI: src/runtime/aienos_cap.h, the copy the runtime compiles
 # against, must match the pinned header $(EFFECT_CAP64_CAP_INC)/aienos_capability.h
@@ -469,7 +469,7 @@ $(RX_R7_TEST): $(RX_R7_SRCS) src/runtime/rx_caproot.h src/runtime/rx_world.h \
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R7_SRCS) $(AIENOS_CAP_LIB) -lm
 
 test-r7: $(RX_R7_TEST)
-	./$(RX_R7_TEST)
+	$(RX_R7_TEST)
 
 # aienos#266/#272 at aienos.lock: the R16 operator control capability (the epoch
 # right on RX_WORLD_RES_CONTROL) is refused by every authority operation, the office
@@ -485,7 +485,7 @@ $(RX_OP_AUTH_MISUSE_TEST): $(RX_OP_AUTH_MISUSE_SRCS) src/runtime/rx_caproot.h sr
 
 .PHONY: test-r16-operator-authority-misuse
 test-r16-operator-authority-misuse: $(RX_OP_AUTH_MISUSE_TEST)
-	./$(RX_OP_AUTH_MISUSE_TEST)
+	$(RX_OP_AUTH_MISUSE_TEST)
 
 # R9: generation barrier. The candidate is prepared beside the live world.
 # A stop after each persistence step must recover one whole generation.
@@ -499,7 +499,7 @@ $(RX_R9_TEST): $(RX_R9_SRCS) src/runtime/rx_generation.h src/runtime/rx_caproot.
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R9_SRCS) $(AIENOS_CAP_LIB) -lm
 
 test-r9: $(RX_R9_TEST)
-	./$(RX_R9_TEST)
+	$(RX_R9_TEST)
 
 # R12 host rules against the native AIENOS authority. The graphics processor is
 # not started. A pass here does not claim the resident-seat gate.
@@ -513,7 +513,7 @@ $(RX_R12_TEST): $(RX_R12_SRCS) src/runtime/rx_caproot.h src/runtime/rx_world.h \
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R12_SRCS) $(AIENOS_CAP_LIB) -lm
 
 test-r12: $(RX_R12_TEST)
-	./$(RX_R12_TEST)
+	$(RX_R12_TEST)
 
 # R16 G6 operator emergency stop (spec/r16-operator-emergency-stop.md). Host only,
 # real capability root: authority refusals, in-flight and racing stops, the
@@ -531,7 +531,7 @@ $(RX_EMERGENCY_TEST): $(RX_EMERGENCY_SRCS) src/runtime/rx_caproot.h src/runtime/
 
 .PHONY: test-rx-emergency
 test-rx-emergency: $(RX_EMERGENCY_TEST)
-	./$(RX_EMERGENCY_TEST)
+	$(RX_EMERGENCY_TEST)
 	CC="$(CC)" bash tests/runtime/rx_emergency_mutants.sh
 
 # R10: Omega as a resident realization faculty. Omega's native AArch64 matvec
@@ -550,7 +550,7 @@ $(RX_R10_TEST): $(RX_R10_SRCS) src/runtime/rx_omega.h src/runtime/rx_caproot.h \
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R10_SRCS) $(AIENOS_CAP_LIB) -lm
 
 test-r10: $(RX_R10_TEST)
-	./$(RX_R10_TEST)
+	$(RX_R10_TEST)
 
 # R8: AEGIS resident authority. Capability slots in the world; AEGIS decides,
 # only root.install mints, through the native AIENOS authority.
@@ -564,7 +564,7 @@ $(RX_R8_TEST): $(RX_R8_SRCS) src/runtime/rx_aegis.h src/runtime/rx_caproot.h \
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R8_SRCS) $(AIENOS_CAP_LIB) -lm
 
 test-r8: $(RX_R8_TEST)
-	./$(RX_R8_TEST)
+	$(RX_R8_TEST)
 
 # R11: AIEN as a resident cognitive faculty. Part A drives AIEN alone on any
 # host; part B is the living run with Omega, on hosts that have both Cortex-X925
@@ -590,12 +590,12 @@ $(RX_R11_TEST): $(RX_R11_SRCS) $(RX_AIEN_OBJ) src/runtime/rx_omega.h src/runtime
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R11_SRCS) $(RX_AIEN_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-r11: $(RX_R11_TEST)
-	./$(RX_R11_TEST)
+	$(RX_R11_TEST)
 
 # R11 living run allowed inside its own quietlock hold, refused under any other.
 .PHONY: test-r11-own-hold
 test-r11-own-hold: $(RX_R11_TEST)
-	sh tests/runtime/r11_own_hold_test.sh ./$(RX_R11_TEST)
+	sh tests/runtime/r11_own_hold_test.sh $(RX_R11_TEST)
 
 # OMEGA_STATE_PROJECTION: cognition gets a compiled state projection from
 # Cortex, not everything Cortex knows. Part B drives the real R11 AIEN faculty
@@ -623,7 +623,7 @@ $(RX_SP_TEST): $(RX_SP_SRCS) $(RX_SP_OBJS) $(RX_AIEN_OBJ) tests/runtime/rx_sp_wo
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_SP_SRCS) $(RX_SP_OBJS) $(RX_AIEN_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-state-projection: $(RX_SP_TEST)
-	./$(RX_SP_TEST)
+	$(RX_SP_TEST)
 
 # M20 Cortex canonicalization: canonical Cortex contract, journal, single
 # writer, typed recall, and World execution recorded through rx_cortex_record.
@@ -653,8 +653,8 @@ $(RX_CXJ_TEST): tests/runtime/rx_cortex_journal.c $(RX_CX_FS_OBJ) src/sha256.c s
 	$(CC) $(CFLAGS) -o $@ tests/runtime/rx_cortex_journal.c $(RX_CX_FS_OBJ) src/sha256.c
 
 test-cortex: $(RX_CX_TEST) $(RX_CXJ_TEST)
-	./$(RX_CX_TEST)
-	./$(RX_CXJ_TEST)
+	$(RX_CX_TEST)
+	$(RX_CXJ_TEST)
 
 # Physical graphics seat against the native AIENOS authority. Not part of
 # GitHub checks. A pass on this machine is the only run that may set
@@ -674,7 +674,7 @@ $(RX_R12_SILICON): $(RX_R12_SILICON_SRCS) src/runtime/rx_world.h \
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R12_SILICON_SRCS) $(AIENOS_CAP_LIB) -ldl -lm
 
 test-r12-silicon: $(RX_R12_SILICON)
-	./$(RX_R12_SILICON)
+	$(RX_R12_SILICON)
 
 # COMPOSITION-2 in the living system (WP-A): the composition modules are part
 # of the canonical living build, so every R13/R14/R15/R16 binary links them.
@@ -753,16 +753,16 @@ $(RX_R13_TEST_SILICON): $(RX_R13_TEST_SRCS) $(RX_R13_SILICON_EXTRA) src/runtime/
 		$(RX_R13_SILICON_EXTRA) $(AIENOS_CAP_LIB) -ldl -lm
 
 test-r13-host: $(RX_R13_HOST)
-	./$(RX_R13_HOST)
+	$(RX_R13_HOST)
 
 test-r13-silicon: $(RX_R13_SILICON)
-	./$(RX_R13_SILICON)
+	$(RX_R13_SILICON)
 
 test-r13-testbuild-host: $(RX_R13_TEST_HOST)
-	./$(RX_R13_TEST_HOST)
+	$(RX_R13_TEST_HOST)
 
 test-r13-testbuild-silicon: $(RX_R13_TEST_SILICON)
-	./$(RX_R13_TEST_SILICON)
+	$(RX_R13_TEST_SILICON)
 
 # OMEGA_BRANCH_STATE_REUSE: J-Space branches sharing one semantic prefix,
 # shared-state realization versus independent recomputation, FORGE placement.
@@ -774,7 +774,7 @@ $(RX_BRANCH_REUSE_TEST): $(RX_BRANCH_REUSE_SRCS) src/runtime/rx_jspace.h | $(OUT
 	$(CC) $(CFLAGS) -o $@ $(RX_BRANCH_REUSE_SRCS) -lm
 
 test-branch-reuse: $(RX_BRANCH_REUSE_TEST)
-	./$(RX_BRANCH_REUSE_TEST)
+	$(RX_BRANCH_REUSE_TEST)
 
 # M20 production J-Space mechanics: slab/extent reclamation, generation-safe
 # references, limits, concurrency, durable reopen/crash/torn metadata, World
@@ -788,7 +788,7 @@ $(RX_JSPACE_PROD_TEST): $(RX_JSPACE_PROD_SRCS) src/runtime/rx_jspace.h src/runti
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_JSPACE_PROD_SRCS) -lm
 
 test-jspace-prod: $(RX_JSPACE_PROD_TEST)
-	./$(RX_JSPACE_PROD_TEST)
+	$(RX_JSPACE_PROD_TEST)
 
 # R14: the R13 organism attacked while alive. Host uses the R12 processor
 # stand-in and cannot claim the gate; silicon runs D and E on the GB10 seat.
@@ -812,10 +812,10 @@ $(RX_R14_SILICON): $(RX_R14_SRCS) src/runtime/rx_resident_gpu.c \
 		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB) -ldl -lm
 
 test-r14-host: $(RX_R14_HOST)
-	./$(RX_R14_HOST)
+	$(RX_R14_HOST)
 
 test-r14-silicon: $(RX_R14_SILICON)
-	./$(RX_R14_SILICON)
+	$(RX_R14_SILICON)
 
 # R15: instrumentation checks (host). Every counter the R15 harness reduces
 # is checked against a case whose true value is known in advance.
@@ -829,7 +829,7 @@ $(RX_R15_INSTR): $(RX_R15_INSTR_SRCS) src/runtime/rx_world.h src/runtime/rx_gene
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R15_INSTR_SRCS)
 
 test-r15-instr: $(RX_R15_INSTR)
-	./$(RX_R15_INSTR)
+	$(RX_R15_INSTR)
 
 # R15: SEQ semantic parity gate (spec §16 C1 item 9). The R13 body is built
 # by tests/runtime/rx_r15_rig.c for RES-1 and for the sequential reference.
@@ -854,7 +854,7 @@ $(RX_R15_PARITY_SILICON): $(RX_R15_RIG_SRCS) tests/runtime/rx_r15_parity.c $(RX_
 		tests/runtime/rx_r15_parity.c $(RX_R15_GPU_SRCS) $(AIENOS_CAP_LIB) -ldl -lm
 
 test-r15-parity-host: $(RX_R15_PARITY_HOST)
-	./$(RX_R15_PARITY_HOST)
+	$(RX_R15_PARITY_HOST)
 
 # R15 G7: production keeps its worker through a generation promotion; the R9
 # store's physical work runs on the store's durable executor (host seat).
@@ -864,7 +864,7 @@ $(RX_R15_G7_HOST): $(RX_R15_RIG_SRCS) tests/runtime/rx_r15_g7.c $(RX_R15_RIG_HDR
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R15_RIG_SRCS) tests/runtime/rx_r15_g7.c \
 		$(AIENOS_CAP_LIB) -lm
 test-r15-g7-host: $(RX_R15_G7_HOST)
-	./$(RX_R15_G7_HOST)
+	$(RX_R15_G7_HOST)
 
 # R15 C2 sensor validation: bounded GB10 load through the resident seat.
 R15_GPU_LOAD = $(OUT_DIR)/r15_gpu_load
@@ -880,7 +880,7 @@ $(R15_GPU_LOAD): $(R15_GPU_LOAD_SRCS) $(RX_R15_GPU_SRCS) src/runtime/rx_world.h 
 r15-gpu-load: $(R15_GPU_LOAD)
 
 test-r15-parity-silicon: $(RX_R15_PARITY_SILICON)
-	./$(RX_R15_PARITY_SILICON)
+	$(RX_R15_PARITY_SILICON)
 
 # R15 harness (spec §4, §5, §12). Four binaries from the same sources and
 # flags: production and the RES-1-NODIGEST measurement build (§3), host
@@ -1024,7 +1024,7 @@ $(RX_R16_NEGATIVE): $(RX_R15_RIG_SRCS) tests/runtime/rx_r16_negative.c $(RX_R15_
 
 .PHONY: test-r16-negative test-r16-negative-mutants
 test-r16-negative: $(RX_R16_NEGATIVE)
-	./$(RX_R16_NEGATIVE)
+	$(RX_R16_NEGATIVE)
 
 # "Removing any one guard turns the test red": rebuilds the G4 test against
 # scratch copies with one guard removed at a time; each must FAIL. Minutes.
@@ -1037,7 +1037,7 @@ test-r16-negative-mutants: $(RX_R16_NEGATIVE)
 # point documented (docs/r16-production-entry-point.md). Host only, seconds.
 .PHONY: test-r16-surface
 test-r16-surface: $(TARGET)
-	sh tests/r16_surface/run.sh ./$(TARGET)
+	sh tests/r16_surface/run.sh $(TARGET)
 
 
 # OMEGA_ACTION_GRAPH_IR: goals compile to typed action graphs that run as
@@ -1062,7 +1062,7 @@ $(RX_GRAPH_TEST): $(RX_GRAPH_SRCS) $(RX_GRAPH_OBJ) src/runtime/rx_caproot.h \
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_GRAPH_SRCS) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-action-graph: $(RX_GRAPH_TEST)
-	./$(RX_GRAPH_TEST)
+	$(RX_GRAPH_TEST)
 
 # OMEGA_CAPABILITY_QUERY: AIEN states a CapabilityNeed; Omega compiles it into
 # probes of the capability sources and returns a bounded list of candidates
@@ -1089,7 +1089,7 @@ $(RX_CAPQ_TEST): $(RX_CAPQ_SRCS) $(RX_CAPQ_OBJ) $(RX_GRAPH_OBJ) src/runtime/rx_c
 		$(AIENOS_CAP_LIB) -lm
 
 test-capability-query: $(RX_CAPQ_TEST)
-	./$(RX_CAPQ_TEST)
+	$(RX_CAPQ_TEST)
 
 # M20 canonical Capability Graph and Skill Router: rx_capq promoted (keys,
 # update/withdraw, canonical machine identity, wire form) plus rx_skillroute.
@@ -1115,7 +1115,7 @@ $(RX_CAPGRAPH_TEST): $(RX_CAPGRAPH_SRCS) $(RX_SKILLROUTE_OBJ) $(RX_CAPQ_OBJ) $(R
 		$(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-capability-graph: $(RX_CAPGRAPH_TEST)
-	./$(RX_CAPGRAPH_TEST)
+	$(RX_CAPGRAPH_TEST)
 
 # COMPOSITION-2 WP-D: Skill Router end to end (requirement -> graph -> Skill
 # -> bound action-graph node -> World run) and each failure mode failing
@@ -1135,7 +1135,7 @@ test-skillroute-compose: $(RX_SRCOMPOSE_TEST)
 	@if nm -u $(RX_SKILLROUTE_OBJ) | grep -E 'aienos_cap_|rx_caproot_mint|rx_caproot_revoke' ; then \
 		echo "rx_skillroute.o references an authority admin operation"; exit 1; fi
 	@echo "SKILLROUTE_NO_MINT_PASS"
-	./$(RX_SRCOMPOSE_TEST)
+	$(RX_SRCOMPOSE_TEST)
 
 # OMEGA_PLAN_REUSE: plan IR and verified plan cache. rx_plan.o must not
 # reference any AIENOS admin operation (the cache checks authority, never
@@ -1165,7 +1165,7 @@ $(RX_PLAN_TEST): $(RX_PLAN_SRCS) $(RX_PLAN_OBJS) $(RX_GRAPH_OBJ) src/runtime/rx_
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_PLAN_SRCS) $(RX_PLAN_OBJS) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-plan-reuse: $(RX_PLAN_TEST)
-	./$(RX_PLAN_TEST)
+	$(RX_PLAN_TEST)
 
 # OMEGA_SEMANTIC_COMMUNICATION: branches and workers receive the semantic
 # projection their InformationNeed selects, then only deltas, not full state.
@@ -1189,7 +1189,7 @@ $(RX_SEMCOMM_TEST): $(RX_SEMCOMM_SRCS) $(RX_SEMCOMM_OBJ) src/runtime/rx_caproot.
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_SEMCOMM_SRCS) $(RX_SEMCOMM_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-semantic-comm: $(RX_SEMCOMM_TEST)
-	./$(RX_SEMCOMM_TEST)
+	$(RX_SEMCOMM_TEST)
 
 # OMEGA_COGNITIVE_ROUTING: each cognitive step goes to the cheapest
 # realization the evidence says meets it, escalating only on insufficient
@@ -1212,7 +1212,7 @@ $(RX_ROUTE_TEST): $(RX_ROUTE_SRCS) $(RX_ROUTE_OBJ) tests/runtime/rx_cog_engines.
 	$(CC) $(CFLAGS) -Itests -o $@ $(RX_ROUTE_SRCS) $(RX_ROUTE_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-cognitive-routing: $(RX_ROUTE_TEST)
-	./$(RX_ROUTE_TEST)
+	$(RX_ROUTE_TEST)
 
 # OMEGA_EMPIRICAL_OPTIMIZER: realization choice from a learned, calibrated cost
 # model. rx_costmodel.o is built alone first and must not reference the
@@ -1233,7 +1233,7 @@ $(RX_CM_UNIT): tests/runtime/rx_costmodel_unit.c $(RX_CM_OBJ) src/sha256.c | $(O
 	$(CC) $(CFLAGS) -o $@ tests/runtime/rx_costmodel_unit.c $(RX_CM_OBJ) src/sha256.c -lm
 
 test-costmodel: $(RX_CM_UNIT)
-	./$(RX_CM_UNIT)
+	$(RX_CM_UNIT)
 
 # AArch64 hosts: the gate. Real realizations, training, promotion through the
 # R9 barrier on the native authority, held-out workloads.
@@ -1249,7 +1249,7 @@ $(RX_EMP_TEST): $(RX_EMP_SRCS) $(RX_CM_OBJ) src/runtime/rx_generation.h src/runt
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_EMP_SRCS) $(RX_CM_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-empirical: $(RX_EMP_TEST)
-	./$(RX_EMP_TEST)
+	$(RX_EMP_TEST)
 
 # OMEGA_WORKFLOW_FUSION: repeated verified action-graph fragments become
 # MetaSkills; only a verified, measured, canaried, promoted (R9 barrier) and
@@ -1275,7 +1275,7 @@ $(RX_FUSION_TEST): $(RX_FUSION_SRCS) $(RX_FUSION_OBJ) $(RX_GRAPH_OBJ) src/runtim
 		$(AIENOS_CAP_LIB) -lm
 
 test-workflow-fusion: $(RX_FUSION_TEST)
-	./$(RX_FUSION_TEST)
+	$(RX_FUSION_TEST)
 
 # OMEGA_TYPED_RESULT_CONSTRAINTS: structured results of cognition are checked
 # against typed contracts; the publish gate is the only writer of what is
@@ -1303,7 +1303,7 @@ $(RX_TYPED_TEST): $(RX_TYPED_SRCS) $(RX_CONTRACT_OBJ) $(RX_GRAPH_OBJ) src/runtim
 
 .PHONY: test-typed-results
 test-typed-results: $(RX_TYPED_TEST)
-	./$(RX_TYPED_TEST) $(TYPED_RESULTS_N)
+	$(RX_TYPED_TEST) $(TYPED_RESULTS_N)
 
 # ---- ARGUS producer (feat/argus-producer, lanes H/H2 of ARGUS-0) ---------
 # The runtime feeds ARGUS (src/runtime/rx_argus.{c,h}, ABI v1.1: per-thread
@@ -1384,7 +1384,7 @@ $(RX_R13_CORTEX): $(RX_R13_CORTEX_SRCS) tests/runtime/rx_r13_living.c src/runtim
 		$(AIENOS_CAP_LIB) -lm
 
 test-r13-cortex-episode: $(RX_R13_CORTEX)
-	./$(RX_R13_CORTEX)
+	$(RX_R13_CORTEX)
 
 # ADAPTIVE-M4: bounded resource regulation (src/runtime/rx_regulate.c) on the
 # R11 host recipe. The regulator closes a loop on the World's admission budget
@@ -1398,7 +1398,7 @@ $(RX_REGULATE_TEST): $(RX_REGULATE_SRCS) src/runtime/rx_regulate.h src/runtime/r
 
 .PHONY: test-regulate
 test-regulate: $(RX_REGULATE_TEST)
-	./$(RX_REGULATE_TEST)
+	$(RX_REGULATE_TEST)
 
 $(RX_R13_SILICON): $(RX_R13_SRCS) $(RX_R13_SILICON_EXTRA) src/runtime/rx_living.h src/runtime/rx_argus.h \
 	$(RX_COMPOSE_LIVING_CHECKS) $(ARGUS_STAMP) $(AIENOS_CAP_LIB) | $(OUT_DIR)
@@ -1490,7 +1490,7 @@ test-argus-runtime: $(ARGUS_R7) $(ARGUS_R8) $(ARGUS_R9)
 	done
 
 bench-rx-argus: $(ARGUS_BENCH)
-	./$(ARGUS_BENCH)
+	$(ARGUS_BENCH)
 
 ARGUS_REPLAY = $(OUT_DIR)/argus_replay-$(ARGUS_SHORT)
 $(ARGUS_REPLAY): tools/argus_replay.c src/sha256.c $(ARGUS_STAMP) | $(OUT_DIR)
@@ -1520,10 +1520,10 @@ $(OMA_TEST_ASAN): tests/algebra/test_oma.c $(OMA_SRCS) $(OMA_HDRS)
 		-o $@ tests/algebra/test_oma.c $(OMA_SRCS) -lm
 
 test-algebra: $(OMA_TEST)
-	./$(OMA_TEST)
+	$(OMA_TEST)
 
 test-algebra-asan: $(OMA_TEST_ASAN)
-	./$(OMA_TEST_ASAN)
+	$(OMA_TEST_ASAN)
 
 # ---------------------------------------------------------------------------
 # OMEGA MIXED ALGEBRA MA-2 (spec/mixed-algebra-ma2.md): one exact operation
@@ -1576,8 +1576,8 @@ $(OMA_RZ_SELECT): tests/algebra/bench_select.c $(OMA_SEL_SRCS) $(OMA_SEL_HDRS) $
 	$(CC) $(OMA_RZ_CFLAGS) -o $@ tests/algebra/bench_select.c $(OMA_SEL_SRCS) $(OMA_RZ_SRCS) -lm
 
 test-realize: $(OMA_RZ_TEST) $(OMA_RZ_TEST_ASAN)
-	./$(OMA_RZ_TEST)
-	./$(OMA_RZ_TEST_ASAN)
+	$(OMA_RZ_TEST)
+	$(OMA_RZ_TEST_ASAN)
 
 # Fails if any committed evidence/MIXED_ALGEBRA file is modified or deleted
 # (staged or not). New, untracked files are allowed.
@@ -1595,11 +1595,11 @@ bench-mixed-algebra: $(OMA_RZ_BENCH) $(OMA_RZ_SELECT)
 	@mkdir -p $(MA2_RUN_DIR)
 	OMA_BENCH_COMMIT=$$(git rev-parse HEAD) OMA_BENCH_DIRTY=$$(git status --porcelain -- src tests Makefile | grep -c .) \
 		OMA_BENCH_BIN_SHA=$$(sha256sum $(OMA_RZ_BENCH) | cut -c1-64) \
-		./$(OMA_RZ_BENCH) $(MA2_RUN_DIR)/ma2_bench_run1.json
+		$(OMA_RZ_BENCH) $(MA2_RUN_DIR)/ma2_bench_run1.json
 	OMA_BENCH_COMMIT=$$(git rev-parse HEAD) OMA_BENCH_DIRTY=$$(git status --porcelain -- src tests Makefile | grep -c .) \
 		OMA_BENCH_BIN_SHA=$$(sha256sum $(OMA_RZ_BENCH) | cut -c1-64) \
-		./$(OMA_RZ_BENCH) $(MA2_RUN_DIR)/ma2_bench_run2.json
-	./$(OMA_RZ_SELECT) $(MA2_RUN_DIR)/ma2_select_receipt.json \
+		$(OMA_RZ_BENCH) $(MA2_RUN_DIR)/ma2_bench_run2.json
+	$(OMA_RZ_SELECT) $(MA2_RUN_DIR)/ma2_select_receipt.json \
 		$(MA2_RUN_DIR)/ma2_bench_run1.json $(MA2_RUN_DIR)/ma2_bench_run2.json
 	@$(MAKE) --no-print-directory check-mixed-algebra-evidence
 	@echo "bench-mixed-algebra: new receipts in $(MA2_RUN_DIR)"
@@ -1636,9 +1636,9 @@ $(PT_TEST_ASAN): tests/algebra/test_phase_twin.c $(PT_SRCS) $(PT_HDRS)
 		-o $@ tests/algebra/test_phase_twin.c $(PT_SRCS) -lm
 
 test-phase-twin: $(PT_TEST) $(PT_TEST_ASAN)
-	$(PT_ENV) ./$(PT_TEST) $(PT_OUT)/phase_twin_receipt.json
-	./$(PT_TEST) --quick $(PT_OUT)/phase_twin_quick_plain.json
-	./$(PT_TEST_ASAN) --quick $(PT_OUT)/phase_twin_quick_asan.json
+	$(PT_ENV) $(PT_TEST) $(PT_OUT)/phase_twin_receipt.json
+	$(PT_TEST) --quick $(PT_OUT)/phase_twin_quick_plain.json
+	$(PT_TEST_ASAN) --quick $(PT_OUT)/phase_twin_quick_asan.json
 	cmp $(PT_OUT)/phase_twin_quick_plain.json $(PT_OUT)/phase_twin_quick_asan.json
 	@echo "test-phase-twin: quick receipts byte-identical across plain and ASan/UBSan builds"
 	@ref=$$(ls evidence/MIXED_ALGEBRA/phase_twin_receipt.*.json 2>/dev/null | head -1); \
@@ -1689,15 +1689,15 @@ $(TURING_TOOL_ASAN): tools/turing_field.c $(TURING_SRCS) $(TURING_HDRS)
 	$(CC) $(OMA_RZ_CFLAGS) $(TURING_ASAN) -o $@ tools/turing_field.c $(TURING_SRCS) -lm
 
 turing-field: $(TURING_TOOL)
-	./$(TURING_TOOL)
+	$(TURING_TOOL)
 
 test-turing: $(TURING_TEST) $(TURING_TEST_ASAN) $(TURING_TOOL) $(TURING_TOOL_ASAN)
-	./$(TURING_TEST)
-	./$(TURING_TEST_ASAN)
-	./$(TURING_TOOL) --spec-ids > $(OUT_DIR)/tests-turing/spec_ids_plain.txt
-	./$(TURING_TOOL_ASAN) --spec-ids > $(OUT_DIR)/tests-turing/spec_ids_asan.txt
+	$(TURING_TEST)
+	$(TURING_TEST_ASAN)
+	$(TURING_TOOL) --spec-ids > $(OUT_DIR)/tests-turing/spec_ids_plain.txt
+	$(TURING_TOOL_ASAN) --spec-ids > $(OUT_DIR)/tests-turing/spec_ids_asan.txt
 	cmp $(OUT_DIR)/tests-turing/spec_ids_plain.txt $(OUT_DIR)/tests-turing/spec_ids_asan.txt
-	./$(TURING_TOOL_ASAN) > $(OUT_DIR)/tests-turing/turing_field_asan.txt
+	$(TURING_TOOL_ASAN) > $(OUT_DIR)/tests-turing/turing_field_asan.txt
 	@echo "test-turing: spec ids identical across plain and ASan builds; turing-field runs clean under ASan/UBSan"
 
 # ---------------------------------------------------------------------------
@@ -1732,11 +1732,11 @@ $(DV1_GATE_BIN_ASAN): tests/algebra/ma_digital_v1_gate.c $(TURING_SRCS) $(TURING
 	$(CC) $(OMA_RZ_CFLAGS) $(TURING_ASAN) -o $@ tests/algebra/ma_digital_v1_gate.c $(TURING_SRCS) -lm
 
 test-ma-digital-bottom: $(DV1_BOTTOM) $(DV1_BOTTOM_ASAN)
-	./$(DV1_BOTTOM)
-	./$(DV1_BOTTOM_ASAN)
+	$(DV1_BOTTOM)
+	$(DV1_BOTTOM_ASAN)
 
 gate-mixed-algebra-digital-v1: $(DV1_GATE_BIN) $(DV1_GATE_BIN_ASAN) $(DV1_BOTTOM) $(DV1_BOTTOM_ASAN)
-	DV1_GATE=./$(DV1_GATE_BIN) DV1_GATE_ASAN=./$(DV1_GATE_BIN_ASAN) MAKE="$(MAKE)" \
+	DV1_GATE=$(DV1_GATE_BIN) DV1_GATE_ASAN=$(DV1_GATE_BIN_ASAN) MAKE="$(MAKE)" \
 		sh tests/algebra/ma_digital_v1_gate.sh
 
 # Content check (post-run addenda 2026-09-29): every digital_v1 wrapper
@@ -1758,7 +1758,7 @@ $(PATH1_TEST_BIN): src/path/rx_path.c src/path/rx_path.h src/sha256.c src/sha256
 
 test-path: $(PATH1_TEST_BIN)
 	sh tests/path/check_path_boundary.sh
-	./$(PATH1_TEST_BIN)
+	$(PATH1_TEST_BIN)
 	CC="$(CC)" sh tests/path/mutate.sh
 
 # COMPOSITION-2: one World, one causal path (rx_compose). test-composition
@@ -1803,14 +1803,14 @@ $(RX_COMPOSE_ATTACH_ASAN): $(RX_COMPOSE_DEPS) tests/runtime/rx_compose_attach_te
 		-pthread -o $@ $(RX_COMPOSE_SRCS) tests/runtime/rx_compose_attach_test.c $(RX_COMPOSE_LINK)
 
 test-composition: $(RX_COMPOSE_TEST) $(RX_COMPOSE_ATTACH_TEST)
-	./$(RX_COMPOSE_TEST)
-	./$(RX_COMPOSE_ATTACH_TEST)
+	$(RX_COMPOSE_TEST)
+	$(RX_COMPOSE_ATTACH_TEST)
 
 test-composition-attach-asan: $(RX_COMPOSE_ATTACH_ASAN)
-	./$(RX_COMPOSE_ATTACH_ASAN)
+	$(RX_COMPOSE_ATTACH_ASAN)
 
 test-composition-gate: $(RX_COMPOSE_GATE)
-	./$(RX_COMPOSE_GATE) "$$(git rev-parse HEAD)" $(OUT_DIR)/composition_gate_receipt.json
+	$(RX_COMPOSE_GATE) "$$(git rev-parse HEAD)" $(OUT_DIR)/composition_gate_receipt.json
 
 composition-gate-bin: $(RX_COMPOSE_GATE)
 
@@ -1829,7 +1829,7 @@ $(RX_C4_REQUAL): $(RX_COMPOSE_DEPS) tests/runtime/rx_c4_requal.c | $(OUT_DIR)
 		$(RX_COMPOSE_LINK)
 
 test-c4-requal: $(RX_C4_REQUAL)
-	./$(RX_C4_REQUAL) $(OUT_DIR)/c4_requal_receipt.json
+	$(RX_C4_REQUAL) $(OUT_DIR)/c4_requal_receipt.json
 
 c4-requal-bin: $(RX_C4_REQUAL)
 
@@ -1854,7 +1854,7 @@ $(RX_COMPOSE_GATE_GPU): $(RX_COMPOSE_DEPS) $(RX_COMPOSE_GPU_SRCS) tests/runtime/
 		$(RX_COMPOSE_GPU_SRCS) tests/runtime/rx_composition_gate.c $(RX_COMPOSE_LINK) -ldl
 
 test-composition-gate-gpu: $(RX_COMPOSE_GATE_GPU)
-	./$(RX_COMPOSE_GATE_GPU) "$$(git rev-parse HEAD)" $(OUT_DIR)/composition_gate_gpu_receipt.json
+	$(RX_COMPOSE_GATE_GPU) "$$(git rev-parse HEAD)" $(OUT_DIR)/composition_gate_gpu_receipt.json
 
 composition-gate-gpu-bin: $(RX_COMPOSE_GATE_GPU)
 
@@ -2396,8 +2396,8 @@ libomega_gpu: $(OUT_DIR)/libomega_gpu.a
 $(GPU_API_TEST): tests/gpu_matmul_api_test.c src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-matmul-api: $(GPU_API_TEST) $(GPU_R4_RECEIPT)
-	./$(GPU_API_TEST) --host-only
-	./$(GPU_R4_RECEIPT) --host-only
+	$(GPU_API_TEST) --host-only
+	$(GPU_R4_RECEIPT) --host-only
 
 # omega #473 R4: the sealed CTA-budget receipt (full-output comparison at the training shapes,
 # every budget, repeats, I42 stale-output check, negative controls). Host-only self-test above; the
@@ -2414,7 +2414,7 @@ GPU_EW_TEST = $(OUT_DIR)/gpu_elementwise_test
 $(GPU_EW_TEST): tests/gpu_elementwise_test.c src/omega_gpu_elementwise_api.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_elementwise_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-elementwise: $(GPU_EW_TEST)
-	./$(GPU_EW_TEST) --host-only
+	$(GPU_EW_TEST) --host-only
 
 # omega #308: structured warp reconvergence (BSSY/BSYNC regions). test-gpu-reconv is
 # host-only (encoder goldens, region bookkeeping, refusals, nvdisasm listing, every probe
@@ -2425,7 +2425,7 @@ GPU_RECONV_TEST = $(OUT_DIR)/gpu_reconv_test
 $(GPU_RECONV_TEST): tests/gpu_reconv_test.c tests/bw_warp_sim.h src/omega_gpu_elementwise_api.h src/omega_bw_reconv.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_reconv_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-reconv: $(GPU_RECONV_TEST)
-	./$(GPU_RECONV_TEST) --host-only
+	$(GPU_RECONV_TEST) --host-only
 
 # FB-1 cut 5: native gqa_attention (f32 KV) and paged_attention (bf16 KV, + batch).
 # head_dim 128 (Qwen3-4B): the same battery with --hd 128 through both host simulators; GB10 parity PASS 126/0
@@ -2439,12 +2439,12 @@ GPU_ATTN_TEST = $(OUT_DIR)/gpu_attention_test
 $(GPU_ATTN_TEST): tests/gpu_attention_test.c tests/bw_warp_sim.h src/omega_gpu_attention_api.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_attention_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-attention: $(GPU_ATTN_TEST)
-	./$(GPU_ATTN_TEST) --host-only
-	./$(GPU_ATTN_TEST) --sim
-	./$(GPU_ATTN_TEST) --sweep --sim --out $(OUT_DIR)/gpu_attention_sweep_sim.json
-	./$(GPU_ATTN_TEST) --hd 128 --host-only
-	./$(GPU_ATTN_TEST) --hd 128 --sim
-	./$(GPU_ATTN_TEST) --hd 128 --divergent --sim
+	$(GPU_ATTN_TEST) --host-only
+	$(GPU_ATTN_TEST) --sim
+	$(GPU_ATTN_TEST) --sweep --sim --out $(OUT_DIR)/gpu_attention_sweep_sim.json
+	$(GPU_ATTN_TEST) --hd 128 --host-only
+	$(GPU_ATTN_TEST) --hd 128 --sim
+	$(GPU_ATTN_TEST) --hd 128 --divergent --sim
 
 # FB-1 cut 4b: fresh-process device-open probe (flake investigation, tools/probe_gpu_open.sh)
 $(OUT_DIR)/gpu_session_probe: tests/gpu_session_probe.c src/omega_gpu_session.h $(OUT_DIR)/libomega_gpu.a
@@ -2458,7 +2458,7 @@ $(GPU_MOE_TEST): tests/gpu_moe_window_test.c src/omega_gpu_moe_api.h src/omega_g
 	$(CC) $(CFLAGS) -o $@ tests/gpu_moe_window_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 .PHONY: test-gpu-moe-window
 test-gpu-moe-window: $(GPU_MOE_TEST)
-	./$(GPU_MOE_TEST) --host-only
+	$(GPU_MOE_TEST) --host-only
 
 # OWN-30B Cut 6 / Cut 5 (2026-10-13): FP8 e4m3 block-scaled GEMV (omega_gpu_fp8_api.h). test-gpu-fp8 is host-only
 # (exhaustive conversion, pack refusals, codegen budgets, nvdisasm listing) then the warp-simulator battery
@@ -2469,8 +2469,8 @@ GPU_FP8_TEST = $(OUT_DIR)/gpu_fp8_api_test
 $(GPU_FP8_TEST): tests/gpu_fp8_api_test.c tests/bw_warp_sim.h src/omega_gpu_fp8_api.h src/omega_blackwell_codegen_moe.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_fp8_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-fp8: $(GPU_FP8_TEST)
-	./$(GPU_FP8_TEST) --host-only
-	./$(GPU_FP8_TEST) --sim
+	$(GPU_FP8_TEST) --host-only
+	$(GPU_FP8_TEST) --sim
 
 # omega #457 (2026-10-15): host rewrite of a GPU-cached buffer must be visible to the next launch. Chip only; the gate
 # is tools/run_gpu_l2_stale_chip.sh.
@@ -2495,8 +2495,8 @@ GPU_ROUTER_TEST = $(OUT_DIR)/gpu_router_test
 $(GPU_ROUTER_TEST): tests/gpu_router_test.c tests/bw_warp_sim_k.h src/omega_gpu_router_api.h src/omega_blackwell_codegen_router.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_router_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-router: $(GPU_ROUTER_TEST)
-	./$(GPU_ROUTER_TEST) --host-only
-	./$(GPU_ROUTER_TEST) --sim
+	$(GPU_ROUTER_TEST) --host-only
+	$(GPU_ROUTER_TEST) --sim
 
 # OWN-30B (2026-10-13): bf16 streaming GEMV, the lm_head (omega_gpu_bf16_gemv_api.h). test-gpu-bf16-gemv is host-only
 # (emulation, budgets) plus the warp simulator (bit-identical to the host f32 emulation, mutants 1-3 caught); the chip
@@ -2583,8 +2583,8 @@ GPU_CMDLIST_TEST = $(OUT_DIR)/gpu_cmdlist_test
 $(GPU_CMDLIST_TEST): tests/gpu_cmdlist_test.c tests/bw_warp_sim_k.h src/omega_gpu_cmdlist.h src/omega_blackwell_codegen_dec.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_cmdlist_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-cmdlist: $(GPU_CMDLIST_TEST)
-	./$(GPU_CMDLIST_TEST) --host-only
-	./$(GPU_CMDLIST_TEST) --sim
+	$(GPU_CMDLIST_TEST) --host-only
+	$(GPU_CMDLIST_TEST) --sim
 
 # OWN-30B W-L2a (2026-10-13): one decode token as one command list (omega_gpu_decode_graph). test-gpu-decode-graph is
 # host-only; the chip gate is tools/run_gpu_decode_graph_chip.sh under the GB10 lock.
@@ -2593,7 +2593,7 @@ GPU_DECODE_GRAPH_TEST = $(OUT_DIR)/gpu_decode_graph_test
 $(GPU_DECODE_GRAPH_TEST): tests/gpu_decode_graph_test.c src/omega_gpu_decode_graph.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST)
-	./$(GPU_DECODE_GRAPH_TEST) --host-only
+	$(GPU_DECODE_GRAPH_TEST) --host-only
 
 # OWN-30B W-L2c (2026-10-14): per-launch fixed cost inside a command list (tests/gpu_launch_cost_test.c, chip only, GB10 lock).
 GPU_LAUNCH_COST_TEST = $(OUT_DIR)/gpu_launch_cost_test
