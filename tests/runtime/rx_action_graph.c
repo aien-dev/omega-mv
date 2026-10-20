@@ -833,8 +833,9 @@ static void t_parallel(void) {
            tried[0], workers[1], kept[1], tried[1],
            delay_known ? "run-queue delay from schedstat" : "schedstat missing: every repetition counts");
     if (kept[0] < reps || kept[1] < reps) {
-        CHECK(0, "machine too busy to time the parallel graph: %u and %u of %u undisturbed "
-                 "repetitions in %u attempts", kept[0], kept[1], reps, attempts);
+        fprintf(stderr, "  machine too busy to time the parallel graph: %u and %u of %u undisturbed "
+                        "repetitions in %u attempts\n", kept[0], kept[1], reps, attempts);
+        rx_busy_refuse("parallel graph timing (speedup, beats the sequential sum)");
         return;
     }
     for (uint32_t k = 0; k < 2; k++)
@@ -1239,6 +1240,11 @@ static void binary_digest(char out[65]) {
     for (int i = 0; i < 32; i++) sprintf(out + i * 2, "%02x", d[i]);
 }
 
+static int judged_pass(void) {
+    return g_fail == 0 && R.bypass == 0 && R.evidence_missing == 0 && R.ancestry_mismatch == 0 &&
+           R.det_mismatch == 0 && R.aegis_mints_during_compile == 0;
+}
+
 static void write_receipt(void) {
     char path[512];
     if (omega_evidence_path("ACTION_GRAPH/rx_action_graph_receipt.json", path, sizeof path) != 0) return;
@@ -1256,8 +1262,6 @@ static void write_receipt(void) {
     struct utsname u;
     memset(&u, 0, sizeof u);
     uname(&u);
-    int pass = g_fail == 0 && R.bypass == 0 && R.evidence_missing == 0 && R.ancestry_mismatch == 0 &&
-               R.det_mismatch == 0 && R.aegis_mints_during_compile == 0;
     fprintf(fp,
             "{\n"
             "  \"schema\": \"OMEGA_ACTION_GRAPH_IR_V1\",\n"
@@ -1306,7 +1310,7 @@ static void write_receipt(void) {
             (unsigned long long)R.opt_crumbs_before, (unsigned long long)R.opt_crumbs_after,
             (unsigned long long)R.opt_ns_before, (unsigned long long)R.opt_ns_after, R.bypass,
             R.authority_blocked_crumbs, R.aegis_mints_during_compile, R.aegis_mints_after_approval,
-            pass ? "PASS" : "FAIL");
+            rx_busy_verdict(judged_pass()));
     fclose(fp);
     printf("receipt: %s\n", path);
 }
@@ -1335,5 +1339,5 @@ int main(void) {
            R.evidence_checked, R.evidence_missing, R.bypass);
     printf("checks %d failures %d\n", g_checks, g_fail);
     write_receipt();
-    return g_fail ? 1 : 0;
+    return rx_busy_exit(g_fail, judged_pass());
 }

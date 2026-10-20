@@ -14,8 +14,8 @@
  * Nothing is loosened: the work, the statistic and the threshold are the
  * ones the check always had. A real slowdown is in every repetition,
  * undisturbed ones included, so it still fails. When too few repetitions are
- * undisturbed within the attempt budget the check fails and says why; a
- * busy machine never turns into a pass. Where schedstat is missing every
+ * undisturbed within the attempt budget the check is refused and says why
+ * (rx_busy_refuse below: NOT_RUN cpu_busy, never a pass). Where schedstat is missing every
  * repetition counts (the old behaviour) and the output says so.
  */
 #ifndef RX_QUIET_REPS_H
@@ -62,6 +62,46 @@ static inline int64_t rx_run_delay_ns(void) {
 static inline int rx_quiet_rep(int64_t delay_ns, uint64_t wall_ns) {
     if (delay_ns < 0) return 1;
     return (uint64_t)delay_ns <= RX_QUIET_FLOOR_NS + wall_ns * RX_QUIET_PERMILLE / 1000ull;
+}
+
+/* A check that found the machine too busy to time is a refusal, not a
+ * failure: nothing was measured, so nothing is judged, and the checks that
+ * need that measurement are not judged either. The program then ends with
+ * the local judge's "could not run" contract (aien-test SELF_NOT_RUN_EXIT):
+ * stdout line `AIEN-OBS not_run_reason "cpu_busy"` and exit 77, a retryable
+ * NOT_RUN, never a pass. Any real failure anywhere in the run wins: the exit
+ * is then 1, whatever was refused. */
+#define RX_NOT_RUN_EXIT 77
+
+static inline unsigned *rx_busy_refusals(void) {
+    static unsigned n;
+    return &n;
+}
+
+/* Record one refusal; `what` names the measurement that was not taken. */
+static inline void rx_busy_refuse(const char *what) {
+    (*rx_busy_refusals())++;
+    fprintf(stderr, "  NOT RUN %s (cpu_busy): checks that need this measurement are not judged\n", what);
+}
+
+/* The program's exit status from its failure count and `pass`, everything
+ * else its receipt judges: a refusal never covers a check judged false. */
+static inline int rx_busy_exit(int failures, int pass) {
+    if (failures) return 1;
+    if (*rx_busy_refusals()) {
+        if (!pass) return 1;
+        printf("AIEN-OBS not_run_reason \"cpu_busy\"\n");
+        fflush(stdout);
+        return RX_NOT_RUN_EXIT;
+    }
+    return 0;
+}
+
+/* A receipt's gate word: FAIL when `pass` (everything judged) is false,
+ * NOT_RUN when a measurement was refused, else PASS. */
+static inline const char *rx_busy_verdict(int pass) {
+    if (!pass) return "FAIL";
+    return *rx_busy_refusals() ? "NOT_RUN" : "PASS";
 }
 
 #endif
