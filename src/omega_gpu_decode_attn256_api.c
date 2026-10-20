@@ -246,7 +246,10 @@ static int kernel_for(const OmegaDecodeAttn256Spec *spec, Slot **out, bool *hit)
     if (omega_gpu_session_alloc_code(need, &code) != 0) { omega_gpu_host_free(prog); return OMEGA_GPU_DATTN_CHIP_FAIL; }
     OmegaBlackwellKernel kernel;
     cg = omega_blackwell_kernel_encode_into(prog, code.cpu, need, &kernel);
-    if (cg == 0 && spec->kv8 && omega_qmma_patch_code(prog, code.cpu, need) <= 0) cg = -1; /* the F2FP.E4M3 placeholders */
+    if (cg == 0 && spec->kv8) { /* the F2FP.E4M3 placeholders: every 8-bit program has some, except mutant 3 (writes no row) */
+        const int np = omega_qmma_patch_code(prog, code.cpu, need);
+        if (np < 0 || (np == 0 && spec->mutant != 3)) cg = -1;
+    }
     omega_gpu_host_free(prog);
     if (cg != 0 || !kernel.code || kernel.code_size != need) { omega_gpu_session_free(&code); omega_gpu_session_set_error("decode attn256 encode"); return OMEGA_GPU_DATTN_CODEGEN_FAIL; }
     if (omega_gpu_session_sync_to_gpu(&code) != 0) { omega_gpu_session_free(&code); return OMEGA_GPU_DATTN_CHIP_FAIL; }
