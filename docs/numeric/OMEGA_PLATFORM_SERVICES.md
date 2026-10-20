@@ -11,7 +11,7 @@ branch), NOT_RUN (needs the GPU or the native system), PLANNED.
 |---|---|---|
 | Platform services contract | `src/omega_platform_services.h` | One table of host services (ABI 1.0): CLOCK, WAIT, YIELD, LOCK, TASK, NAME, PIN, HEAP, CONFIG, DIAG. Typed lock and task handles (index + generation). |
 | Contract check, stub, install | `src/omega_platform_services.c` | `omega_psvc_check`, the refusing stub, `omega_psvc_install`, the convenience calls, `omega_psvc_diagf`. Freestanding; in the closure. |
-| Hosted table | `src/omega_platform_services_hosted.c` | Each entry is the exact libc call it replaces (table below). Hosted only, never in the closure. |
+| Hosted table | `src/omega_platform_services_hosted.c` | Each entry calls the libc function it replaces (table below; the limits it adds are listed under it). Hosted only, never in the closure. |
 | Shared encoding | `src/omega_gpu_encoding.h` | `omega_gpu_mthd` (physics `nvrm_mthd`) and `omega_gpu_gp_entry` (physics `nvrm_gp_entry`), pure inline. |
 | Formatter with `va_list` | `src/omega_gpu_fmt.c` | `omega_gpu_vfmt`; `omega_gpu_fmt` now calls it. |
 
@@ -26,9 +26,27 @@ branch), NOT_RUN (needs the GPU or the native system), PLANNED.
 | TASK | yes | `pthread_create(NULL attrs)`, `pthread_join(NULL)`, 64 slots | seat: launch thread, lease thread |
 | NAME | no | `pthread_setname_np(pthread_self(), name)` | seat: "rx-seat-lease" |
 | PIN | no | `pthread_setaffinity_np` over `CPU_ZERO` + `CPU_SET((int)cpu)` | seat: `RX_SEAT_LEASE_CPU` |
-| HEAP | yes | `malloc`, `calloc`, `free` | seat: code, seat, job, returned image |
+| HEAP | yes | `malloc`, `calloc`, `free` | seat: code, seat, job (the returned image is the world's, below) |
 | CONFIG | no | `getenv` (unset gives `NOT_SET`, empty gives `OK` with "") | seat: `RX_SEAT_LEASE_CPU` |
 | DIAG | no | `fputs(text, stderr)` | seat: every former `fprintf(stderr, ...)` line, formatted by `omega_gpu_fmt` |
+
+Where the hosted table is not a bare libc call (from the L202 done-review, each one checked):
+
+- TASK and LOCK use fixed tables of 64 live handles each; past that the call refuses with
+  `REFUSED_LIMIT` (pthread had no such limit). The seat holds 2 tasks per seat and no lock.
+  A failed `pthread_join` keeps the handle valid; a successful one retires it (stale after).
+- DIAG through `omega_psvc_diagf` writes lines of at most 511 bytes (truncated; `fprintf` was
+  unbounded). `omega_psvc_diag` writes any length verbatim, and the seat's one line that carries
+  user text (`RX_SEAT_LEASE_CPU` in "could not pin") uses it when the value is long.
+- CONFIG parsing in the seat: `atoi` became `parse_int_like_atoi`, glibc's `(int)strtol(p, NULL,
+  10)` exactly, saturation included (20000026 strings compared with glibc `atoi`, 0 differ;
+  `evidence/OMEGA-CUT-A-SERVICES/after2/atoi-check.*`).
+- WAIT: `usleep` interrupted by a signal returns `REFUSED_HOST`. The seat's waits are bounded
+  polling loops that recheck their condition, so they treat it as a short wait, as their
+  `usleep` calls did; the header states this as the one soft result of a required service.
+- HEAP: the copy of the world image the seat hands back when the chip lets go is allocated by
+  the world (`rx_world_own_coherent`, `malloc`), because the world frees it with `free`. A
+  services heap that is not libc can be installed without the two allocators crossing.
 
 Refusal policy (in the header): a refused required service fails the operation that asked;
 a refused optional service means "go on without it". The seat checks the required set before
@@ -46,7 +64,7 @@ libc calls on purpose: it is on the token path and this cut leaves its object co
 ## 2. Callers moved
 
 - `src/runtime/rx_resident_gpu.c` (the resident seat): no `pthread_*`, `usleep`, `getenv`,
-  `atoi`, `malloc`/`calloc`/`free`, `fprintf` or `snprintf` left. Its buffers are `SeatBuf`
+  `atoi`, `malloc`/`calloc`/`free`, `fprintf` or `snprintf` left (the world image copy is allocated by the world itself, `rx_world_own_coherent`). Its buffers are `SeatBuf`
   (an `OmegaCpuView` and an `OmegaGpuVa` as distinct values, the driver's `NvrmMem` inside, seen
   only by the driver calls). Its method headers use `omega_gpu_mthd`. Its device calls
   (`m16_native_*`, `nvrm_*`) remain: the seat moves onto `OmegaGpuPlatform` in cut E.
@@ -63,7 +81,10 @@ libc calls on purpose: it is on the token path and this cut leaves its object co
 - The numeric launchers (`src/omega_numeric_*_gb10.c`, `src/omega_numeric_native.h`) keep
   `NvrmMem` and their CPU-path `malloc`. No host harness drives their device path (the
   `test-*-host` targets build them CPU-only), so a rewrite here could not be measured; they move
-  in cut E behind a fake-driver test like the seat's.
+  in cut E behind a fake-driver test like the seat's. The dependency map assigns "hide `NvrmMem`"
+  in cut A to the persistent session (map section 6, row S2, done on main as `OmegaGpuMem`) and
+  the numeric launchers (S3) and the resident runtime (S4) to cut E; the seat's `SeatBuf` here
+  goes ahead of that plan, with `NvrmMem` kept only at its driver calls.
 - `src/omega_blackwell_engine.c`, `src/omega_blackwell_submit.c`, `src/omega_accelerator_world.c`,
   `src/omega_world_gates.c`: the Linux reference and host tooling (boundary doc section 3).
 - `omega_gpu_gp_entry` has no Omega caller: the only GPFIFO writer is physics `nvrm_enqueue`. The

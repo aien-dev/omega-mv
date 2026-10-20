@@ -78,14 +78,8 @@ struct RxGpuSeat {
  * exit must not take canonical identity with it. */
 static int seat_return_image(RxGpuSeat *s) {
     if (!s->image_bound) return 0;
-    RxWorld *w = s->world;
-    uint64_t bytes = w->coherent_bytes;
-    void *own = omega_psvc_alloc((size_t)bytes);
-    if (!own) return -1;
-    if (rx_world_bind_coherent(w, own, bytes, 0) != RX_OK) {
-        omega_psvc_free(own);
-        return -1;
-    }
+    /* The world allocates the copy, so the world's free releases it. */
+    if (rx_world_own_coherent(s->world) != RX_OK) return -1;
     s->image_bound = 0;
     return 0;
 }
@@ -903,15 +897,24 @@ static int wait_heartbeat(RxGpuSeat *s) {
 
 static uint32_t current_seat_gen(RxWorld *w) { return rx_world_seat_generation(w); }
 
-/* atoi, which this file used on RX_SEAT_LEASE_CPU: optional leading white space and sign, then decimal digits up
- * to the first non-digit; no digits gives 0. Overflow is undefined for atoi; here it wraps. */
+/* atoi as glibc does it, which this file used on RX_SEAT_LEASE_CPU: (int)strtol(p, NULL, 10). Optional leading
+ * white space and sign, then decimal digits up to the first non-digit; no digits gives 0; out of range saturates
+ * at the 64-bit long limits, and the cast to int keeps the low 32 bits. */
 static int parse_int_like_atoi(const char *p) {
     while (*p == ' ' || (*p >= '\t' && *p <= '\r')) p++;
     int neg = *p == '-';
     if (*p == '-' || *p == '+') p++;
-    unsigned v = 0;
-    while (*p >= '0' && *p <= '9') v = v * 10u + (unsigned)(*p++ - '0');
-    return (int)(neg ? 0u - v : v); /* gcc: unsigned to int keeps the bits */
+    const uint64_t lim = neg ? (uint64_t)1 << 63 : ((uint64_t)1 << 63) - 1u;
+    uint64_t v = 0;
+    int over = 0;
+    for (; *p >= '0' && *p <= '9'; p++) {
+        uint64_t d = (uint64_t)(*p - '0');
+        if (over || v > (lim - d) / 10u) over = 1;
+        else v = v * 10u + d;
+    }
+    if (over) v = lim;
+    uint64_t bits = neg ? 0u - v : v; /* the two's complement long */
+    return (int)(uint32_t)bits;      /* gcc: unsigned to int keeps the bits */
 }
 
 static volatile uint32_t *hb_word_at(RxGpuSeat *s, uint32_t off) {
@@ -927,8 +930,15 @@ static void *lease_main(void *arg) {
     (void)omega_psvc_task_name_self("rx-seat-lease");
     const char *pin = NULL;
     if (omega_psvc_config("RX_SEAT_LEASE_CPU", &pin) == OMEGA_PSVC_OK && pin && *pin) {
-        if (omega_psvc_task_pin_self((uint32_t)parse_int_like_atoi(pin)) != OMEGA_PSVC_OK)
-            omega_psvc_diagf("seat lease: could not pin to cpu %s\n", pin);
+        if (omega_psvc_task_pin_self((uint32_t)parse_int_like_atoi(pin)) != OMEGA_PSVC_OK) {
+            if (strlen(pin) < OMEGA_PSVC_DIAG_LINE - 64u) {
+                omega_psvc_diagf("seat lease: could not pin to cpu %s\n", pin);
+            } else { /* the value is the user's: print all of it, as fprintf did */
+                omega_psvc_diag("seat lease: could not pin to cpu ");
+                omega_psvc_diag(pin);
+                omega_psvc_diag("\n");
+            }
+        }
     }
     uint32_t v = 0;
     while (s->lease_run) {

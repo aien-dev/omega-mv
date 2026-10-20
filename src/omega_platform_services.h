@@ -31,11 +31,20 @@
  * Refusal policy, which a caller must follow:
  *   - CLOCK, WAIT, LOCK, TASK and HEAP are REQUIRED. A refusal there is fatal to the operation that asked: the
  *     caller fails that operation, it never carries on without the service.
+ *   - WAIT is the one required service with a soft result: OMEGA_PSVC_REFUSED_HOST from wait_us means the sleep
+ *     ended early (the hosted table: usleep interrupted by a signal). A bounded polling loop that rechecks its
+ *     condition may treat it as a short wait, as the resident seat does (and as its usleep calls did).
+ *     REFUSED_UNSUPPORTED cannot reach such a loop: the caller checks the required set before it starts.
  *   - YIELD, NAME, PIN, CONFIG and DIAG are OPTIONAL. A refusal there means "go on without it": no yield, an
  *     unnamed or unpinned task, the key treated as not set, the text dropped. It never fails the operation.
  *   - CONFIG distinguishes a key that is not set (OMEGA_PSVC_NOT_SET) from a key set to the empty string
  *     (OMEGA_PSVC_OK with *value == ""), exactly as getenv returns NULL versus "".
  * Nothing in this table falls back to another service: a missing function is a refusal, never an emulation.
+ * Hosted limits (stated, not hidden): 64 live locks and 64 live tasks at once (REFUSED_LIMIT past that; a task
+ * slot frees when it is joined), and diagnostics lines of at most OMEGA_PSVC_DIAG_LINE - 1 bytes (longer text is
+ * truncated, where fprintf was unbounded; omega_psvc_diag writes any length). The resident seat holds at most 2
+ * tasks per seat, and its one line that carries user text (the pin value) falls back to omega_psvc_diag when
+ * long; a caller that needs more tasks or locks must say so before this table grows.
  *
  * Pure C, no libc header, builds in the freestanding link target.
  */
@@ -152,5 +161,7 @@ int omega_psvc_config(const char *key, const char **value);
  * write it through DIAG. Conversions as omega_gpu_fmt. */
 #define OMEGA_PSVC_DIAG_LINE 512u
 int omega_psvc_diagf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+/* Write text as it is, any length (no formatting, no line limit). */
+int omega_psvc_diag(const char *text);
 
 #endif /* OMEGA_PLATFORM_SERVICES_H */

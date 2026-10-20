@@ -967,6 +967,9 @@ int  rx_resident_take_result(RxWorld *w, OmegaSharedWorldDesc *out);
 /* Point the one image at caller memory of the same size. borrowed means the
  * world will not free it. */
 int  rx_world_bind_coherent(RxWorld *w, void *mem, uint64_t bytes, int borrowed);
+/* Copy the image into memory the world allocates and owns (the world frees
+ * it). The resident seat calls this when the chip lets go of the image. */
+int  rx_world_own_coherent(RxWorld *w);
 
 uint64_t rx_world_off_c2g(void);
 uint64_t rx_world_off_g2c(void);

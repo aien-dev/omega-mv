@@ -925,6 +925,15 @@ int rx_resident_shutdown(RxWorld *w) {
     return rc;
 }
 
+int rx_world_own_coherent(RxWorld *w) {
+    if (!w) return RX_ERR_ARG;
+    void *own = malloc((size_t)w->coherent_bytes);
+    if (!own) return RX_ERR_FULL;
+    int rc = rx_world_bind_coherent(w, own, w->coherent_bytes, 0);
+    if (rc != RX_OK) free(own);
+    return rc;
+}
+
 int rx_world_bind_coherent(RxWorld *w, void *mem, uint64_t bytes, int borrowed) {
     if (!w || !mem || !w->coherent || bytes != w->coherent_bytes) return RX_ERR_ARG;
     pthread_mutex_lock(&w->mu);

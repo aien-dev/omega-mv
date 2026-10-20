@@ -136,11 +136,12 @@ static int h_task_join(void *c, OmegaPsvcTask t) {
     pthread_mutex_unlock(&g_h.mu);
     if (!ok) return OMEGA_PSVC_REFUSED_STALE;
     int rc = pthread_join(th, NULL); /* outside the table mutex: the task may start or join others */
+    if (rc != 0) return OMEGA_PSVC_REFUSED_HOST; /* not joined: the handle stays valid */
     pthread_mutex_lock(&g_h.mu);
     g_h.task_live[t.index] = 0;
     g_h.task_gen[t.index] = next_gen(t.generation);
     pthread_mutex_unlock(&g_h.mu);
-    return rc == 0 ? OMEGA_PSVC_OK : OMEGA_PSVC_REFUSED_HOST;
+    return OMEGA_PSVC_OK;
 }
 
 static int h_name(void *c, const char *name) {

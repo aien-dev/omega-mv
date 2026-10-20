@@ -183,6 +183,12 @@ int omega_psvc_config(const char *key, const char **value) {
     return HAS(s, OMEGA_PSVC_CONFIG) ? s->config_get(s->ctx, key, value) : OMEGA_PSVC_REFUSED_UNSUPPORTED;
 }
 
+int omega_psvc_diag(const char *text) {
+    const OmegaPlatformServices *s = omega_psvc();
+    if (!text) return OMEGA_PSVC_REFUSED_ARGS;
+    if (!HAS(s, OMEGA_PSVC_DIAG)) return OMEGA_PSVC_REFUSED_UNSUPPORTED;
+    return s->diag_write(s->ctx, text);
+}
 int omega_psvc_diagf(const char *fmt, ...) {
     const OmegaPlatformServices *s = omega_psvc();
     if (!fmt) return OMEGA_PSVC_REFUSED_ARGS;

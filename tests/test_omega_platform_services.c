@@ -96,7 +96,10 @@ static void case_check(void) {
     const OmegaPlatformServices *before = omega_psvc();
     CHECK(omega_psvc_install(&b) == OMEGA_PSVC_REFUSED_MISSING_REQUIRED, "install of a table without TASK");
     CHECK(omega_psvc() == before, "a refused install changed the table");
-    CHECK(omega_psvc_install(omega_psvc_stub()) == OMEGA_PSVC_REFUSED_MISSING_REQUIRED, "the stub cannot be installed");
+    /* The stub keeps its refusing functions present (so a direct call never goes through NULL) but claims no
+     * service, so the check refuses it as hidden before it reaches the required set. */
+    CHECK(omega_psvc_install(omega_psvc_stub()) == OMEGA_PSVC_REFUSED_HIDDEN_SERVICE, "the stub cannot be installed");
+    CHECK(omega_psvc() == before, "a refused stub install changed the table");
     for (int r = 0; r < OMEGA_PSVC_RESULT_COUNT; r++) CHECK(strcmp(omega_psvc_result_name(r), "UNKNOWN") != 0, "name %d", r);
     CHECK(strcmp(omega_psvc_result_name(999), "UNKNOWN") == 0, "unknown name");
 }
@@ -141,6 +144,7 @@ static void case_convenience_refuse(void) { /* the installed table is the stub *
     omega_psvc_free(NULL);
     CHECK(omega_psvc_config("PATH", &v) == OMEGA_PSVC_REFUSED_UNSUPPORTED && v == NULL, "config");
     CHECK(omega_psvc_diagf("x %d\n", 1) == OMEGA_PSVC_REFUSED_UNSUPPORTED, "diag");
+    CHECK(omega_psvc_diag("x\n") == OMEGA_PSVC_REFUSED_UNSUPPORTED, "diag verbatim");
 }
 #endif
 
@@ -185,6 +189,11 @@ static void case_installed(void) {
     g_diag_n = 0; g_diag[0] = 0;
     omega_psvc_diagf("%s", big);
     CHECK(g_diag_n == OMEGA_PSVC_DIAG_LINE - 1, "truncation length %zu", g_diag_n);
+    /* omega_psvc_diag writes any length, verbatim (the seat's long pin value) */
+    g_diag_n = 0; g_diag[0] = 0;
+    CHECK(omega_psvc_diag(big) == OMEGA_PSVC_OK && g_diag_n == sizeof big - 1 && strcmp(g_diag, big) == 0,
+          "verbatim length %zu", g_diag_n);
+    CHECK(omega_psvc_diag(NULL) == OMEGA_PSVC_REFUSED_ARGS, "verbatim NULL");
     CHECK(omega_psvc_install(NULL) == OMEGA_PSVC_OK, "install NULL");
 }
 
