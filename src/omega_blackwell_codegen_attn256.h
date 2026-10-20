@@ -79,12 +79,20 @@
 #define OMEGA_DATTN256_ARG_OUT_SCALE 0x3dcu /* f32 multiplier on the output */
 #define OMEGA_DATTN256_ARG_QK_SCALE 0x3e0u /* f32 (1/sqrt(256)) * log2(e) */
 #define OMEGA_DATTN256_ARGS_WORDS 25u
-/* kv8 only (OmegaDecodeAttn256Spec.kv8 = 1): the per-row scale planes, f32 [kv_head][max_pos] each, head stride
- * kv_stride / 64 bytes (kv_stride = max_pos * 256 in kv8) */
+/* kv8 != 0 (OmegaDecodeAttn256Spec.kv8): the per-row scale planes, f32 [kv_head][max_pos] each, head stride
+ * kv_stride / 64 bytes. With kv8 != 0, kv_stride = max_pos * 256 (one 8-bit plane's head stride); a bf16 side of a
+ * mixed cache (kv8 2 or 3) uses twice it. */
 #define OMEGA_DATTN256_ARG_KS 0x3e8u       /* f32 K row scales */
 #define OMEGA_DATTN256_ARG_VS 0x3f0u       /* f32 V row scales */
 #define OMEGA_DATTN256_ARGS_WORDS_KV8 30u
 #define OMEGA_DATTN256_ROW_BYTES_KV8 256u  /* one e4m3 K or V row */
+/* OmegaDecodeAttn256Spec.kv8: which side of the cache is 8-bit */
+#define OMEGA_DATTN256_KV8_NONE 0u         /* K and V bf16 */
+#define OMEGA_DATTN256_KV8_BOTH 1u         /* K and V 8-bit */
+#define OMEGA_DATTN256_KV8_V 2u            /* V 8-bit, K bf16 */
+#define OMEGA_DATTN256_KV8_K 3u            /* K 8-bit, V bf16 */
+#define OMEGA_DATTN256_KV8_K8(m) ((m) == OMEGA_DATTN256_KV8_BOTH || (m) == OMEGA_DATTN256_KV8_K)
+#define OMEGA_DATTN256_KV8_V8(m) ((m) == OMEGA_DATTN256_KV8_BOTH || (m) == OMEGA_DATTN256_KV8_V)
 
 /* shared memory map (bytes) */
 #define OMEGA_DATTN256_SM_Q 0u             /* q'[6][256] f32: 6144 (warps 6, 7 stage k and v at 6144.. 8191: inside SM_S, unused then) */
@@ -104,7 +112,8 @@ typedef struct {
                       * cache rows as the decode step does (same instruction sequence, so the same bits), writes q' as bf16
                       * to ARG_OUT in the attend kernel's A-fragment layout (OMEGA_PATTN256_QF_*), and exits. Mutants 1
                       * and 3 apply; ARG_PART, ARG_CNT, ARG_PER_SPLIT, ARG_SPLITS and ARG_OUT_SCALE are not read. */
-    uint32_t kv8;    /* 1: 8-bit cache (SPEED-7, ledger L131). Rows are 256 e4m3 bytes plus one f32 power-of-two scale per row
+    uint32_t kv8;    /* OMEGA_DATTN256_KV8_*: 8-bit rows for K and V (1), V only (2) or K only (3) (SPEED-7, ledger
+                      * L131; the split exists because 8-bit K failed the drift gate). 8-bit rows are 256 e4m3 bytes plus one f32 power-of-two scale per row
                       * (ARG_KS, ARG_VS planes); the row's value is e4m3 * scale. The new row is quantised with the rule
                       * of the FP8 activation quantiser (omega_blackwell_codegen_qg.h): amax = max(max |x|, 2^-100),
                       * E = biased exponent of amax, c = (mantissa bits + 0x1fffff) >> 23, scale = 2^(E - 135 + c),
@@ -113,13 +122,13 @@ typedef struct {
                       * ((b & 0x80) << 24) = e4m3(b) * 2^-120 (omega_blackwell_codegen_moe.c), and the row factor
                       * scale * 2^120 multiplies the score (K) or the softmax weight p (V; l keeps the unscaled p).
                       * Scales are powers of two, so every product with them is exact: a row means the same number to
-                      * this kernel (f32) as to a bf16 reader. Mutants (kv8 only): 6 the K row scale is ignored;
-                      * 7 the V row scale is ignored; 8 the scale uses c = 0 (amax with a mantissa above 1.75 saturates);
+                      * this kernel (f32) as to a bf16 reader. Mutants (kv8 only): 6 the K row scale is ignored (K
+                      * 8-bit); 7 the V row scale is ignored (V 8-bit); 8 the scale uses c = 0 (amax with a mantissa above 1.75 saturates);
                       * 9 the two bytes of each written pair are swapped. */
 } OmegaDecodeAttn256Spec;
 
 /* Builds the IR program (register-allocated) into *prog. 0 ok, -1 refused (depth 0 or > 4, mutant outside 0..5,
- * 6..9 without kv8, or the program outgrew BW_MAX_IR_INSNS / BW_MAX_VREGS). */
+ * 6..9 without kv8, 6 without 8-bit K, 7 without 8-bit V, kv8 above 3, or the program outgrew BW_MAX_IR_INSNS / BW_MAX_VREGS). */
 int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *spec, BlackwellIRProgram *prog);
 /* Instruction and peak-register counts of the program (host, no device). */
 int omega_decode_attn256_prog_stats(const OmegaDecodeAttn256Spec *spec, uint32_t *insns, uint32_t *gprs);

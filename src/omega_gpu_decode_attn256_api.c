@@ -21,13 +21,15 @@
 #define OUTW OMEGA_DATTN256_OUT_WORDS
 
 struct OmegaGpuDecodeAttn256Cache {
-    uint32_t layers, max_pos, max_splits, rotary_dim, kv8, rb;  /* kv8: e4m3 rows + scale planes; rb bytes per row */
+    uint32_t layers, max_pos, max_splits, rotary_dim, kv8; /* kv8: OMEGA_DATTN256_KV8_*, which planes hold e4m3 rows */
+    uint32_t rb[2];                           /* bytes per row of the K (0) and V (1) plane: 512 bf16, 256 e4m3 */
     double theta;
-    uint64_t plane_bytes;                     /* one K or V plane of a layer: 4 * max_pos * rb + slack */
-    uint64_t scale_bytes;                     /* kv8: one K or V scale plane, 4 * max_pos * 4 (0 for bf16) */
-    OmegaGpuMem kv[OMEGA_GPU_DATTN256_MAX_LAYERS]; /* [K plane | V plane | K scales | V scales (kv8)] per layer */
+    uint64_t plane_bytes[2];                  /* the K and V plane of a layer: 4 * max_pos * rb + slack */
+    uint64_t scale_bytes;                     /* kv8 != 0: one K or V scale plane, 4 * max_pos * 4 (0 for bf16) */
+    OmegaGpuMem kv[OMEGA_GPU_DATTN256_MAX_LAYERS]; /* [K plane | V plane | K scales | V scales (kv8 != 0)] per layer */
     OmegaGpuMem rope, norms, part, cnt, qkv, out;
 };
+static uint64_t kv_total(const OmegaGpuDecodeAttn256Cache *c) { return c->plane_bytes[0] + c->plane_bytes[1] + 2 * c->scale_bytes; }
 
 typedef struct {
     bool valid;
@@ -75,18 +77,19 @@ int omega_gpu_decode_attn256_cache_alloc_kv(uint32_t layers, uint32_t max_pos, d
     if (!out) return OMEGA_GPU_DATTN_BAD_ARGS;
     *out = NULL;
     if (layers == 0 || layers > OMEGA_GPU_DATTN256_MAX_LAYERS || max_pos == 0 || max_pos > OMEGA_GPU_DATTN256_MAX_POS || max_pos % OMEGA_DATTN256_CHUNK ||
-        !(rope_theta > 0) || rotary_dim < 2 || rotary_dim > HD || rotary_dim % 2 || kv8 > 1) return OMEGA_GPU_DATTN_BAD_ARGS;
+        !(rope_theta > 0) || rotary_dim < 2 || rotary_dim > HD || rotary_dim % 2 || kv8 > OMEGA_DATTN256_KV8_K) return OMEGA_GPU_DATTN_BAD_ARGS;
     OmegaGpuDecodeAttn256Cache *c = omega_gpu_host_calloc(1, sizeof *c);
     if (!c) return OMEGA_GPU_DATTN_CHIP_FAIL;
     c->layers = layers; c->max_pos = max_pos; c->theta = rope_theta; c->rotary_dim = rotary_dim;
     c->max_splits = max_pos / OMEGA_DATTN256_CHUNK;
-    c->kv8 = kv8; c->rb = kv8 ? OMEGA_DATTN256_ROW_BYTES_KV8 : RB;
-    c->plane_bytes = (uint64_t)KVH * max_pos * c->rb + OMEGA_DATTN256_PLANE_SLACK;
+    c->kv8 = kv8;
+    c->rb[0] = OMEGA_DATTN256_KV8_K8(kv8) ? OMEGA_DATTN256_ROW_BYTES_KV8 : RB; c->rb[1] = OMEGA_DATTN256_KV8_V8(kv8) ? OMEGA_DATTN256_ROW_BYTES_KV8 : RB;
+    for (int p = 0; p < 2; p++) c->plane_bytes[p] = (uint64_t)KVH * max_pos * c->rb[p] + OMEGA_DATTN256_PLANE_SLACK;
     c->scale_bytes = kv8 ? (uint64_t)KVH * max_pos * 4u : 0u;
     int rc = OMEGA_GPU_DATTN_OK;
     omega_gpu_session_lock();
     if (!dev_open_locked()) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
-    for (uint32_t L = 0; L < layers && rc == OMEGA_GPU_DATTN_OK; L++) if (omega_gpu_session_alloc((size_t)(2 * c->plane_bytes + 2 * c->scale_bytes), &c->kv[L]) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
+    for (uint32_t L = 0; L < layers && rc == OMEGA_GPU_DATTN_OK; L++) if (omega_gpu_session_alloc((size_t)kv_total(c), &c->kv[L]) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
     if (rc == OMEGA_GPU_DATTN_OK && (omega_gpu_session_alloc((size_t)max_pos * OMEGA_DATTN256_ROPE_ROW_BYTES, &c->rope) != 0 ||
                                      omega_gpu_session_alloc((size_t)layers * 2 * HD * 4, &c->norms) != 0 ||
                                      omega_gpu_session_alloc((size_t)KVH * c->max_splits * OMEGA_DATTN256_PARTIAL_WORDS * 4, &c->part) != 0 ||
@@ -98,7 +101,7 @@ int omega_gpu_decode_attn256_cache_alloc_kv(uint32_t layers, uint32_t max_pos, d
         for (uint32_t p = 0; p < max_pos; p++) omega_dattn256_rope_row(p, rope_theta, rotary_dim, r + (size_t)p * 256);
         memset(c->cnt.cpu, 0, 64);
         memset(c->norms.cpu, 0, (size_t)layers * 2 * HD * 4);
-        for (uint32_t L = 0; L < layers; L++) memset(c->kv[L].cpu, 0, (size_t)(2 * c->plane_bytes + 2 * c->scale_bytes));
+        for (uint32_t L = 0; L < layers; L++) memset(c->kv[L].cpu, 0, (size_t)kv_total(c));
         if (omega_gpu_session_sync_to_gpu(&c->rope) != 0 || omega_gpu_session_sync_to_gpu(&c->cnt) != 0 || omega_gpu_session_sync_to_gpu(&c->norms) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
         for (uint32_t L = 0; L < layers && rc == OMEGA_GPU_DATTN_OK; L++) if (omega_gpu_session_sync_to_gpu(&c->kv[L]) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
     }
@@ -126,7 +129,7 @@ int omega_gpu_decode_attn256_set_norms(OmegaGpuDecodeAttn256Cache *c, uint32_t l
     return rc;
 }
 static uint16_t *row_ptr(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, int plane) {
-    return (uint16_t *)((uint8_t *)c->kv[layer].cpu + (plane ? c->plane_bytes : 0) + ((size_t)kv_head * c->max_pos + pos) * RB);
+    return (uint16_t *)((uint8_t *)c->kv[layer].cpu + (plane ? c->plane_bytes[0] : 0) + ((size_t)kv_head * c->max_pos + pos) * c->rb[plane]);
 }
 /* ---- kv8 rows ---- */
 uint32_t omega_gpu_decode_attn256_cache_kv8(const OmegaGpuDecodeAttn256Cache *c) { return c ? c->kv8 : 0u; }
@@ -154,34 +157,44 @@ float omega_dattn256_kv8_quant_row(const float *x, uint8_t *q) {
     for (unsigned i = 0; i < HD; i++) q[i] = omega_dattn256_e4m3_rne_sat(x[i] * inv);
     return scale;
 }
-static uint8_t *row8_ptr(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, int plane) {
-    return (uint8_t *)c->kv[layer].cpu + (plane ? c->plane_bytes : 0) + ((size_t)kv_head * c->max_pos + pos) * c->rb;
-}
 static float *scale_ptr(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, int plane) {
-    return (float *)((uint8_t *)c->kv[layer].cpu + 2 * c->plane_bytes + (plane ? c->scale_bytes : 0)) + (size_t)kv_head * c->max_pos + pos;
+    return (float *)((uint8_t *)c->kv[layer].cpu + c->plane_bytes[0] + c->plane_bytes[1] + (plane ? c->scale_bytes : 0)) + (size_t)kv_head * c->max_pos + pos;
 }
-int omega_gpu_decode_attn256_cache_write8(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, uint32_t count,
-                                          const uint8_t *k8, const float *ks, const uint8_t *v8, const float *vs) {
-    if (!c || !c->kv8 || layer >= c->layers || kv_head >= KVH || pos >= c->max_pos || count == 0 || count > c->max_pos - pos || !k8 || !ks || !v8 || !vs)
-        return OMEGA_GPU_DATTN_BAD_ARGS;
+static int plane8(const OmegaGpuDecodeAttn256Cache *c, int plane) { return plane ? OMEGA_DATTN256_KV8_V8(c->kv8) : OMEGA_DATTN256_KV8_K8(c->kv8); }
+int omega_gpu_decode_attn256_cache_write_rows(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, uint32_t count, int plane,
+                                              const void *rows, const float *scales) {
+    if (!c || layer >= c->layers || kv_head >= KVH || pos >= c->max_pos || count == 0 || count > c->max_pos - pos || (plane != 0 && plane != 1) || !rows ||
+        (plane8(c, plane) && !scales)) return OMEGA_GPU_DATTN_BAD_ARGS;
     omega_gpu_session_lock();
-    memcpy(row8_ptr(c, layer, kv_head, pos, 0), k8, (size_t)count * HD); memcpy(row8_ptr(c, layer, kv_head, pos, 1), v8, (size_t)count * HD);
-    memcpy(scale_ptr(c, layer, kv_head, pos, 0), ks, (size_t)count * 4); memcpy(scale_ptr(c, layer, kv_head, pos, 1), vs, (size_t)count * 4);
+    memcpy(row_ptr(c, layer, kv_head, pos, plane), rows, (size_t)count * c->rb[plane]);
+    if (plane8(c, plane)) memcpy(scale_ptr(c, layer, kv_head, pos, plane), scales, (size_t)count * 4);
     int rc = omega_gpu_session_sync_to_gpu(&c->kv[layer]) == 0 ? OMEGA_GPU_DATTN_OK : OMEGA_GPU_DATTN_CHIP_FAIL;
     omega_gpu_session_unlock();
     return rc;
 }
-int omega_gpu_decode_attn256_cache_read8(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos,
-                                         uint8_t *k8, float *ks, uint8_t *v8, float *vs) {
-    if (!c || !c->kv8 || layer >= c->layers || kv_head >= KVH || pos >= c->max_pos || !k8 || !ks || !v8 || !vs) return OMEGA_GPU_DATTN_BAD_ARGS;
+int omega_gpu_decode_attn256_cache_read_rows(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, int plane, void *row, float *scale) {
+    if (!c || layer >= c->layers || kv_head >= KVH || pos >= c->max_pos || (plane != 0 && plane != 1) || !row || (plane8(c, plane) && !scale))
+        return OMEGA_GPU_DATTN_BAD_ARGS;
     omega_gpu_session_lock();
     int rc = omega_gpu_session_sync_to_cpu(&c->kv[layer]) == 0 ? OMEGA_GPU_DATTN_OK : OMEGA_GPU_DATTN_CHIP_FAIL;
     if (rc == OMEGA_GPU_DATTN_OK) {
-        memcpy(k8, row8_ptr(c, layer, kv_head, pos, 0), HD); memcpy(v8, row8_ptr(c, layer, kv_head, pos, 1), HD);
-        *ks = *scale_ptr(c, layer, kv_head, pos, 0); *vs = *scale_ptr(c, layer, kv_head, pos, 1);
+        memcpy(row, row_ptr(c, layer, kv_head, pos, plane), c->rb[plane]);
+        if (plane8(c, plane)) *scale = *scale_ptr(c, layer, kv_head, pos, plane);
     }
     omega_gpu_session_unlock();
     return rc;
+}
+int omega_gpu_decode_attn256_cache_write8(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, uint32_t count,
+                                          const uint8_t *k8, const float *ks, const uint8_t *v8, const float *vs) {
+    if (!c || c->kv8 != OMEGA_DATTN256_KV8_BOTH || !k8 || !ks || !v8 || !vs) return OMEGA_GPU_DATTN_BAD_ARGS;
+    int rc = omega_gpu_decode_attn256_cache_write_rows(c, layer, kv_head, pos, count, 0, k8, ks);
+    return rc == OMEGA_GPU_DATTN_OK ? omega_gpu_decode_attn256_cache_write_rows(c, layer, kv_head, pos, count, 1, v8, vs) : rc;
+}
+int omega_gpu_decode_attn256_cache_read8(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos,
+                                         uint8_t *k8, float *ks, uint8_t *v8, float *vs) {
+    if (!c || c->kv8 != OMEGA_DATTN256_KV8_BOTH || !k8 || !ks || !v8 || !vs) return OMEGA_GPU_DATTN_BAD_ARGS;
+    int rc = omega_gpu_decode_attn256_cache_read_rows(c, layer, kv_head, pos, 0, k8, ks);
+    return rc == OMEGA_GPU_DATTN_OK ? omega_gpu_decode_attn256_cache_read_rows(c, layer, kv_head, pos, 1, v8, vs) : rc;
 }
 int omega_gpu_decode_attn256_cache_bench_fill(OmegaGpuDecodeAttn256Cache *c, uint32_t count, uint32_t seed) {
     if (!c || count == 0 || count > c->max_pos) return OMEGA_GPU_DATTN_BAD_ARGS;
@@ -190,16 +203,16 @@ int omega_gpu_decode_attn256_cache_bench_fill(OmegaGpuDecodeAttn256Cache *c, uin
     for (uint32_t L = 0; L < c->layers && rc == OMEGA_GPU_DATTN_OK; L++) {
         uint32_t s = seed ^ (L * 0x9e3779b9u) ^ 0x2545f491u;
         for (int plane = 0; plane < 2; plane++) for (uint32_t g = 0; g < KVH; g++) {
-            uint8_t *row = c->kv8 ? row8_ptr(c, L, g, 0, plane) : (uint8_t *)row_ptr(c, L, g, 0, plane);
-            const size_t n = (size_t)count * c->rb;
+            uint8_t *row = (uint8_t *)row_ptr(c, L, g, 0, plane);
+            const size_t n = (size_t)count * c->rb[plane];
             for (size_t i = 0; i < n; i += 4) {
                 s ^= s << 13; s ^= s >> 17; s ^= s << 5;
                 uint32_t w = s;
-                if (c->kv8) w &= 0xbebebebeu;            /* e4m3 bytes with exponent field <= 7: below 2, never a NaN code */
+                if (plane8(c, plane)) w &= 0xbebebebeu;  /* e4m3 bytes with exponent field <= 7: below 2, never a NaN code */
                 else w &= 0xbf7fbf7fu;                   /* two bf16 with exponent field <= 126: below 1, finite */
                 memcpy(row + i, &w, 4);
             }
-            if (c->kv8) { float *sp = scale_ptr(c, L, g, 0, plane); for (uint32_t p = 0; p < count; p++) sp[p] = 1.0f / 256.0f; }
+            if (plane8(c, plane)) { float *sp = scale_ptr(c, L, g, 0, plane); for (uint32_t p = 0; p < count; p++) sp[p] = 1.0f / 256.0f; }
         }
         if (omega_gpu_session_sync_to_gpu(&c->kv[L]) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
     }
@@ -207,20 +220,14 @@ int omega_gpu_decode_attn256_cache_bench_fill(OmegaGpuDecodeAttn256Cache *c, uin
     return rc;
 }
 int omega_gpu_decode_attn256_cache_write(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, uint32_t count, const uint16_t *k, const uint16_t *v) {
-    if (!c || c->kv8 || layer >= c->layers || kv_head >= KVH || pos >= c->max_pos || count == 0 || count > c->max_pos - pos || !k || !v) return OMEGA_GPU_DATTN_BAD_ARGS;
-    omega_gpu_session_lock();
-    memcpy(row_ptr(c, layer, kv_head, pos, 0), k, (size_t)count * RB); memcpy(row_ptr(c, layer, kv_head, pos, 1), v, (size_t)count * RB);
-    int rc = omega_gpu_session_sync_to_gpu(&c->kv[layer]) == 0 ? OMEGA_GPU_DATTN_OK : OMEGA_GPU_DATTN_CHIP_FAIL;
-    omega_gpu_session_unlock();
-    return rc;
+    if (!c || c->kv8 || !k || !v) return OMEGA_GPU_DATTN_BAD_ARGS;
+    int rc = omega_gpu_decode_attn256_cache_write_rows(c, layer, kv_head, pos, count, 0, k, NULL);
+    return rc == OMEGA_GPU_DATTN_OK ? omega_gpu_decode_attn256_cache_write_rows(c, layer, kv_head, pos, count, 1, v, NULL) : rc;
 }
 int omega_gpu_decode_attn256_cache_read(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, uint16_t *k, uint16_t *v) {
-    if (!c || c->kv8 || layer >= c->layers || kv_head >= KVH || pos >= c->max_pos || !k || !v) return OMEGA_GPU_DATTN_BAD_ARGS;
-    omega_gpu_session_lock();
-    int rc = omega_gpu_session_sync_to_cpu(&c->kv[layer]) == 0 ? OMEGA_GPU_DATTN_OK : OMEGA_GPU_DATTN_CHIP_FAIL;
-    if (rc == OMEGA_GPU_DATTN_OK) { memcpy(k, row_ptr(c, layer, kv_head, pos, 0), RB); memcpy(v, row_ptr(c, layer, kv_head, pos, 1), RB); }
-    omega_gpu_session_unlock();
-    return rc;
+    if (!c || c->kv8 || !k || !v) return OMEGA_GPU_DATTN_BAD_ARGS;
+    int rc = omega_gpu_decode_attn256_cache_read_rows(c, layer, kv_head, pos, 0, k, NULL);
+    return rc == OMEGA_GPU_DATTN_OK ? omega_gpu_decode_attn256_cache_read_rows(c, layer, kv_head, pos, 1, v, NULL) : rc;
 }
 
 /* ---- kernel ---- */
@@ -282,19 +289,19 @@ static int dattn_core(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t po
     }
 
     uint32_t args[OMEGA_DATTN256_ARGS_WORDS_KV8]; memset(args, 0, sizeof args);
-    const uint64_t kc = c->kv[layer].va, vc = kc + c->plane_bytes, nm = c->norms.va + (uint64_t)layer * 2 * HD * 4;
+    const uint64_t kc = c->kv[layer].va, vc = kc + c->plane_bytes[0], nm = c->norms.va + (uint64_t)layer * 2 * HD * 4;
     const uint64_t qkv_va = rec ? dev_qkv : c->qkv.va, out_va = rec ? dev_out : c->out.va;
     float fe = eps, fo = out_scale, fq = (float)(0.0625 * 1.4426950408889634); /* log2(e) / sqrt(256) */
     uint32_t ue, uo, uq; memcpy(&ue, &fe, 4); memcpy(&uo, &fo, 4); memcpy(&uq, &fq, 4);
 #define A64(i, v) do { args[i] = (uint32_t)(v); args[(i) + 1] = (uint32_t)((v) >> 32); } while (0)
     A64(0, qkv_va); A64(2, kc); A64(4, vc); A64(6, c->rope.va); A64(8, nm); A64(10, nm + HD * 4); A64(12, out_va); A64(14, c->part.va); A64(16, c->cnt.va);
 #undef A64
-    args[18] = pos; args[19] = per; args[20] = splits; args[21] = (uint32_t)(c->max_pos * c->rb); args[22] = ue; args[23] = uo; args[24] = uq;
-    if (c->kv8) { const uint64_t ksv = kc + 2 * c->plane_bytes, vsv = ksv + c->scale_bytes; args[26] = (uint32_t)ksv; args[27] = (uint32_t)(ksv >> 32); args[28] = (uint32_t)vsv; args[29] = (uint32_t)(vsv >> 32); }
+    args[18] = pos; args[19] = per; args[20] = splits; args[21] = (uint32_t)(c->max_pos * (c->kv8 ? OMEGA_DATTN256_ROW_BYTES_KV8 : RB)); /* the kernel doubles it for a bf16 side of a mixed cache */ args[22] = ue; args[23] = uo; args[24] = uq;
+    if (c->kv8) { const uint64_t ksv = kc + c->plane_bytes[0] + c->plane_bytes[1], vsv = ksv + c->scale_bytes; args[26] = (uint32_t)ksv; args[27] = (uint32_t)(ksv >> 32); args[28] = (uint32_t)vsv; args[29] = (uint32_t)(vsv >> 32); }
     if (info) {
         info->layer = layer; info->pos = pos; info->splits = splits; info->per_split = per; info->depth = spec.depth;
         info->grid_x = splits; info->grid_y = KVH; info->threads = OMEGA_DATTN256_CHUNK;
-        info->kv_bytes = 2ull * KVH * (pos + 1ull) * (c->rb + (c->kv8 ? 4u : 0u));
+        info->kv_bytes = (uint64_t)KVH * (pos + 1ull) * (c->rb[0] + c->rb[1] + (plane8(c, 0) ? 4u : 0u) + (plane8(c, 1) ? 4u : 0u));
         info->kernel_cache_hit = hit;
     }
     if (rc == OMEGA_GPU_DATTN_OK) {
@@ -327,9 +334,9 @@ static int dattn_core(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t po
 int omega_gpu_decode_attn256_cache_view(const OmegaGpuDecodeAttn256Cache *c, uint32_t layer, OmegaGpuDecodeAttn256CacheView *v) {
     if (!c || !v || layer >= c->layers) return OMEGA_GPU_DATTN_BAD_ARGS;
     v->layers = c->layers; v->max_pos = c->max_pos; v->rotary_dim = c->rotary_dim; v->theta = c->theta;
-    v->k_va = c->kv[layer].va; v->v_va = c->kv[layer].va + c->plane_bytes;
-    v->kv8 = c->kv8; v->row_bytes = c->rb;
-    v->ks_va = c->kv8 ? c->kv[layer].va + 2 * c->plane_bytes : 0; v->vs_va = c->kv8 ? v->ks_va + c->scale_bytes : 0;
+    v->k_va = c->kv[layer].va; v->v_va = c->kv[layer].va + c->plane_bytes[0];
+    v->kv8 = c->kv8; v->row_bytes = c->rb[0];
+    v->ks_va = c->kv8 ? c->kv[layer].va + c->plane_bytes[0] + c->plane_bytes[1] : 0; v->vs_va = c->kv8 ? v->ks_va + c->scale_bytes : 0;
     v->rope_va = c->rope.va;
     v->q_norm_va = c->norms.va + (uint64_t)layer * 2 * HD * 4; v->k_norm_va = v->q_norm_va + HD * 4;
     v->part_va = c->part.va; v->cnt_va = c->cnt.va;

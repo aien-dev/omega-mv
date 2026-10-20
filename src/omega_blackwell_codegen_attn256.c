@@ -184,13 +184,16 @@ static void rms_scale(Em *e, int qa, int qb, int sq, int ts, int rs, int addr, i
 
 int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *spec, BlackwellIRProgram *prog) {
     if (!spec || !prog || spec->depth < 1 || spec->depth > OMEGA_DATTN256_MAX_DEPTH || spec->mutant < 0 || spec->mutant > 9 || spec->prep > 1 ||
-        spec->kv8 > 1 || (spec->mutant > 5 && !spec->kv8)) return -1;
+        spec->kv8 > OMEGA_DATTN256_KV8_K || (spec->mutant > 5 && !spec->kv8) ||
+        (spec->mutant == 6 && !OMEGA_DATTN256_KV8_K8(spec->kv8)) || (spec->mutant == 7 && !OMEGA_DATTN256_KV8_V8(spec->kv8))) return -1;
     omega_bw_ir_init(prog);
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
     const uint32_t D = spec->depth;
     const int MUT = spec->mutant;
-    const int KV8 = spec->kv8 != 0;
-    const uint32_t RBX = KV8 ? OMEGA_DATTN256_ROW_BYTES_KV8 : RB; /* bytes per cache row */
+    const int KV8 = spec->kv8 != 0;                   /* any 8-bit side: scale planes, the row scale rule, kv_stride in 8-bit rows */
+    const int K8 = OMEGA_DATTN256_KV8_K8(spec->kv8), V8 = OMEGA_DATTN256_KV8_V8(spec->kv8);
+    const int MIX = KV8 && !(K8 && V8);               /* one side bf16: its head stride is 2 * kv_stride */
+    const uint32_t RBK = K8 ? OMEGA_DATTN256_ROW_BYTES_KV8 : RB, RBV = V8 ? OMEGA_DATTN256_ROW_BYTES_KV8 : RB; /* bytes per row */
 
     /* ---- arguments and identities ---- */
     int udesc = UV64(e);
@@ -229,6 +232,9 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     imadi(e, R(negendm1), R(endm1), 0xffffffffu, NOREG);
     imadi(e, R(splitsm1), R(one), 0xffffffffu, splits);
     imadr(e, cyk, cy, kvs, NOREG);                   /* byte offset of this KV head's plane */
+    int cy2 = cyk;                                    /* the bf16 side's head offset in a mixed cache */
+    if (MIX) { cy2 = V(e); if (e->err) return -1; imadi(e, R(cy2), R(cyk), 2u, NOREG); }
+    const int cykK = K8 ? cyk : cy2, cykV = V8 ? cyk : cy2;
 
     /* ---- prologue: one norm + rope block for all 8 warps. Warp h < 6 builds q'[h] (head cy*6+h, q_norm, * qk_scale);
      *      warp 6 builds k_new (k[cy], k_norm = q_norm + 1024 bytes, scale 1); warp 7 runs the block on v[cy] (the result is
@@ -346,6 +352,11 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
         iadd(e, kE, kE, t2);                          /* min(E + c, cap) */
         movi(e, ts, 0xfc000000u); imadi(e, R(ksb), R(kE), 1u << 23, ts);   /* scale bits (E + c - 8) << 23 */
         movi(e, ts, 0x83000000u); imadi(e, R(kib), R(kE), 0xff800000u, ts); /* inv bits (262 - E - c) << 23 */
+        if (!K8) {                                    /* K bf16 (kv8 2): warp 6 keeps its k unscaled for the bf16 writer */
+            movi(e, t2, 6u); imadi(e, R(t2), R(warp), 0xffffffffu, t2); /* 6 - warp: zero for warp 6 only */
+            isetp_ge_u32(e, t2, one);
+            { Region r = region_skip_if_p0(e); movi(e, kib, 0x3f800000u); region_end(e, r); }
+        }
         for (unsigned q = 0; q < 4; q++) { fmul(e, S(qa, q), S(qa, q), R(kib)); fmul(e, S(qb, q), S(qb, q), R(kib)); }
     }
 
@@ -358,9 +369,14 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
         imadi(e, R(t2), R(one), 1u, t2);
         if (spec->prep) imadi(e, R(key), R(f), 0xffffffffu, one);
         else imadi(e, R(key), R(f), 0xffffffffu, t2);
+        if (MIX) {                                    /* only the 8-bit side's warp: + 1 for warp 6 (V only) or warp 7 (K only) */
+            andi(e, R(h0), R(warp), 1u);
+            if (!K8) imadi(e, R(h0), R(h0), 0xffffffffu, one);
+            iadd(e, key, key, h0);
+        }
         isetp_ge_u32(e, key, one);
         int b1 = bra_if_p0_fwd(e);
-        imadi(e, R(t1), R(pos), RBX, cyk); imadi(e, R(t1), R(lane), 8u, t1);
+        imadi(e, R(t1), R(pos), OMEGA_DATTN256_ROW_BYTES_KV8, cyk); imadi(e, R(t1), R(lane), 8u, t1);
         shr(e, h0, cyk, 6); imadi(e, R(h0), R(pos), 4u, h0);   /* scale index bytes: (cy * max_pos + pos) * 4 */
         imadw(e, sa64, t1, 1u, pkc); imadw(e, ss64, h0, 1u, pks);
         movi(e, t2, 7u); imadi(e, R(t2), R(warp), 0xffffffffu, t2);
@@ -378,17 +394,22 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
         { Region r = region_skip_if_p0(e); stg(e, BW_IR_STG_E, ss64, R(ksb), udesc); region_end(e, r); }
         patch_bra(e, b1, here(e));
     }
-    if (MUT != 3 && !KV8) {
+    if (MUT != 3 && (!KV8 || MIX)) {
         int sa64 = V64(e), sb64 = V64(e), key = V(e), h0 = V(e), h1 = V(e), tb = V(e);
         /* key = (splits - 1 - cx) + 1 - f: zero only for warps 6, 7 of the last split */
         imadi(e, R(t2), R(cx), 0xffffffffu, splitsm1);
         imadi(e, R(t2), R(one), 1u, t2);
         if (spec->prep) imadi(e, R(key), R(f), 0xffffffffu, one);   /* prep: every CTA owns its token: key = 1 - f */
         else imadi(e, R(key), R(f), 0xffffffffu, t2);
+        if (MIX) {                                    /* only the bf16 side's warp: + 1 for warp 7 (V only) or warp 6 (K only) */
+            andi(e, R(h0), R(warp), 1u);
+            if (K8) imadi(e, R(h0), R(h0), 0xffffffffu, one);
+            iadd(e, key, key, h0);
+        }
         isetp_ge_u32(e, key, one);
         int b1 = bra_if_p0_fwd(e);
         /* cache row address of position pos for this lane: 8 bf16 = 16 bytes per lane; K plane, V plane for warp 7 */
-        imadi(e, R(t1), R(pos), RB, cyk); imadi(e, R(t1), R(lane), 16u, t1);
+        imadi(e, R(t1), R(pos), RB, cy2); imadi(e, R(t1), R(lane), 16u, t1);
         imadw(e, sa64, t1, 1u, pkc);
         movi(e, t2, 7u); imadi(e, R(t2), R(warp), 0xffffffffu, t2); /* 7 - warp: zero for warp 7 */
         isetp_ge_u32(e, t2, one);
@@ -418,7 +439,7 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     for (unsigned h = 0; h < H; h++) { acc[h] = V128(e); m[h] = V(e); l[h] = V(e); sc[h] = V(e); dl[h] = V(e); }
     for (unsigned q = 0; q < 8; q++) wd[q] = V(e);
     int kq[OMEGA_DATTN256_MAX_DEPTH], vq[OMEGA_DATTN256_MAX_DEPTH];
-    for (uint32_t d = 0; d < D; d++) { kq[d] = V128(e); vq[d] = KV8 ? V(e) : V64(e); }
+    for (uint32_t d = 0; d < D; d++) { kq[d] = V128(e); vq[d] = V8 ? V(e) : V64(e); }
     int qa4 = V128(e), qb4 = V128(e);
     int cb = V(e), tpos = V(e), over = V(e), krow = V64(e), kpf = V64(e), qoff = V(e), j = V(e), sa = V(e), smS = V(e);
     int n = V(e), vrow = V64(e), vpf = V64(e), pa = V(e), i = V(e), dsum = V(e), hoff = V(e), wp = V(e), negwp = V(e), ccnt = V(e);
@@ -428,9 +449,9 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     shr(e, wp, warp, 1);                              /* warp pair index 0..3 */
     imadi(e, R(negwp), R(wp), 0xffffffffu, NOREG);
     andi(e, R(hoff), R(warp), 1u);
-    imadi(e, R(hoff), R(hoff), RBX / 2u, NOREG);      /* byte offset of this warp's dim half in the row */
-    imadi(e, R(hoff), R(lane), KV8 ? 4u : 8u, hoff); /* + 4 values = 8 bytes (bf16) or 4 bytes (e4m3) per lane */
-    if (MUT == 2) imadi(e, R(hoff), R(one), RBX, hoff);
+    imadi(e, R(hoff), R(hoff), RBV / 2u, NOREG);      /* byte offset of this warp's dim half in the row */
+    imadi(e, R(hoff), R(lane), V8 ? 4u : 8u, hoff); /* + 4 values = 8 bytes (bf16) or 4 bytes (e4m3) per lane */
+    if (MUT == 2) imadi(e, R(hoff), R(one), RBV, hoff);
     movi(e, ccnt, 32u);                               /* 32 steps of 8 dims (bf16: one 16-byte quad; kv8: half of one) */
     mov(e, R(cb), R(base));
     /* kv8: the score row's scale address, its value, the 2^120 constant, the V row scale pointer and value, scratch */
@@ -449,8 +470,8 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     imadi(e, R(t1), R(tpos), 1u, negendm1);           /* tpos - endm1 */
     imadr(e, t1, over, t1, NOREG);
     imadi(e, R(t1), R(t1), 0xffffffffu, tpos);        /* clamped position */
-    if (KV8) { shr(e, t2, cyk, 6); imadi(e, R(t2), R(t1), 4u, t2); imadw(e, ks64, t2, 1u, pks); imadw(e, vs64, t2, 1u, pvs); } /* its K and V row scales */
-    imadi(e, R(t1), R(t1), RBX, cyk);
+    if (KV8) { shr(e, t2, cyk, 6); imadi(e, R(t2), R(t1), 4u, t2); if (K8) imadw(e, ks64, t2, 1u, pks); if (V8) imadw(e, vs64, t2, 1u, pvs); } /* its K and V row scales */
+    imadi(e, R(t1), R(t1), RBK, cykK);
     imadw(e, krow, t1, 1u, pkc);
     for (unsigned h = 0; h < H; h++) movrz(e, R(sc[h]));
     for (uint32_t d = 0; d < D; d++) ldg_wide(e, BW_IR_LDG_E_128, kq[d], krow, d * 16u, udesc, d == 0);
@@ -460,7 +481,7 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     loop_begin(e);
     isetp_ge_u32(e, j, ccnt);
     const int bra_qend = bra_if_p0_fwd(e);
-    if (!KV8) {
+    if (!K8) {
         for (unsigned w = 0; w < 4; w++) { imadi(e, R(wd[2 * w]), S(kq[0], w), 65536u, NOREG); andi(e, R(wd[2 * w + 1]), S(kq[0], w), 0xffff0000u); }
         for (unsigned h = 0; h < H; h++) {
             lds128(e, qa4, qoff, h * 1024u, 1); lds128(e, qb4, qoff, h * 1024u + 16u, 0);
@@ -476,7 +497,7 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
         }
     }
     int bra_adv = -1, bra_join = -1;
-    if (KV8) {                                        /* even iteration: words 2, 3 move down, no load; odd: advance the stream */
+    if (K8) {                                        /* even iteration: words 2, 3 move down, no load; odd: advance the stream */
         andi(e, R(t2), R(j), 1u);
         isetp_ge_u32(e, t2, one);
         bra_adv = bra_if_p0_fwd(e);
@@ -487,13 +508,13 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     for (uint32_t d = 0; d + 1 < D; d++) for (unsigned w = 0; w < 4; w++) mov(e, S(kq[d], w), S(kq[d + 1], w));
     ldg_wide(e, BW_IR_LDG_E_128, kq[D - 1], kpf, 0, udesc, 1);
     imadw(e, kpf, one, 16u, kpf);
-    if (KV8) patch_bra(e, bra_join, here(e));
+    if (K8) patch_bra(e, bra_join, here(e));
     imadi(e, R(qoff), R(one), 32u, qoff);
     imadi(e, R(j), R(one), 1u, j);
     bra(e, L_q);
     loop_end(e);
     patch_bra(e, bra_qend, here(e));
-    if (KV8) {                                        /* score = (q' . row) * scale * 2^120 */
+    if (K8) {                                        /* score = (q' . row) * scale * 2^120 */
         ldg32(e, BW_IR_LDG_E, kscl, ks64, udesc, 1);
         if (MUT == 6) movi(e, kscl, 0x3f800000u);
         fmul(e, R(kscl), R(kscl), R(c120));
@@ -501,7 +522,7 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     }
     imadi(e, R(sa), R(tid), 32u, smS);
     for (unsigned h = 0; h < H; h++) { imadi(e, R(t1), R(one), h * 4u, sa); sts32(e, t1, R(sc[h])); }
-    if (KV8) { ldg32(e, BW_IR_LDG_E, vscl, vs64, udesc, 1); imadi(e, R(t1), R(one), H * 4u, sa); sts32(e, t1, R(vscl)); } /* s[t][6] = V row scale of position t */
+    if (V8) { ldg32(e, BW_IR_LDG_E, vscl, vs64, udesc, 1); imadi(e, R(t1), R(one), H * 4u, sa); sts32(e, t1, R(vscl)); } /* s[t][6] = V row scale of position t */
     bar_sync(e);
     /* V pass: this warp's positions cb + wp + 4 i, i < n = max(0, ceil((min(end, cb + 256) - cb - wp) / 4)) */
     imadi(e, R(t1), R(one), OMEGA_DATTN256_CHUNK, cb);  /* cb + 256 */
@@ -516,28 +537,28 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     imadr(e, t2, over, n, NOREG);
     imadi(e, R(n), R(t2), 0xffffffffu, n);
     imadi(e, R(t1), R(cb), 1u, wp);
-    imadi(e, R(t1), R(t1), RBX, hoff);
-    imadi(e, R(t1), R(t1), 1u, cyk);
+    imadi(e, R(t1), R(t1), RBV, hoff);
+    imadi(e, R(t1), R(t1), 1u, cykV);
     imadw(e, vrow, t1, 1u, pvc);
     for (uint32_t d = 0; d < D; d++) {
-        if (KV8) { imadw(e, vpf, one, d * 4u * RBX, vrow); ldg32(e, BW_IR_LDG_E, vq[d], vpf, udesc, 1); } /* LDG.E has no offset field */
+        if (V8) { imadw(e, vpf, one, d * 4u * RBV, vrow); ldg32(e, BW_IR_LDG_E, vq[d], vpf, udesc, 1); } /* LDG.E has no offset field */
         else ldg_wide(e, BW_IR_LDG_E_64, vq[d], vrow, d * 4u * RB, udesc, d == 0);
     }
-    imadw(e, vpf, one, D * 4u * RBX, vrow);
+    imadw(e, vpf, one, D * 4u * RBV, vrow);
     imadi(e, R(pa), R(wp), 32u, smS);
     movrz(e, R(i));
     const int L_v = here(e);
     loop_begin(e);
     isetp_ge_u32(e, i, n);
     const int bra_vend = bra_if_p0_fwd(e);
-    if (KV8) {                                        /* the position's 4 bytes and its V row factor scale * 2^120 */
+    if (V8) {                                        /* the position's 4 bytes and its V row factor scale * 2^120 */
         for (unsigned b = 0; b < 4; b++) e4m3_f32(e, wd[b], R(vq[0]), b, tsg);
     } else {
         imadi(e, R(wd[0]), S(vq[0], 0), 65536u, NOREG); andi(e, R(wd[1]), S(vq[0], 0), 0xffff0000u);
         imadi(e, R(wd[2]), S(vq[0], 1), 65536u, NOREG); andi(e, R(wd[3]), S(vq[0], 1), 0xffff0000u);
     }
     lds128(e, qa4, pa, 0, 1); lds128(e, qb4, pa, 16, 0);
-    if (KV8) { if (MUT == 7) movi(e, vscl, 0x3f800000u); else mov(e, R(vscl), S(qb4, 2)); fmul(e, R(vscl), R(vscl), R(c120)); } /* s[t][6]: the V row scale */
+    if (V8) { if (MUT == 7) movi(e, vscl, 0x3f800000u); else mov(e, R(vscl), S(qb4, 2)); fmul(e, R(vscl), R(vscl), R(c120)); } /* s[t][6]: the V row scale */
 #define SH(h) ((h) < 4 ? S(qa4, (h)) : S(qb4, (h) - 4))
     for (unsigned h = 0; h < H; h++) { fmaxx(e, R(mn), R(m[h]), SH(h)); fsub(e, R(dl[h]), R(m[h]), R(mn)); mov(e, R(m[h]), R(mn)); } /* dl <= 0; exactly +0 when the max stayed */
     fadd(e, R(dsum), R(dl[0]), R(dl[1]));
@@ -549,20 +570,20 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     patch_bra(e, bra_nores, here(e));
     for (unsigned h = 0; h < H; h++) { fsub(e, R(dl[h]), SH(h), R(m[h])); mufu(e, BW_IR_MUFU_EX2, R(dl[h]), R(dl[h])); }
 #undef SH
-    if (KV8) for (unsigned h = 0; h < H; h++) {       /* acc += (p * factor) * byte value; l += p */
+    if (V8) for (unsigned h = 0; h < H; h++) {       /* acc += (p * factor) * byte value; l += p */
         fmul(e, R(pv), R(dl[h]), R(vscl));
         for (unsigned q = 0; q < 4; q++) ffma(e, S(acc[h], q), R(pv), R(wd[q]), S(acc[h], q));
         fadd(e, R(l[h]), R(l[h]), R(dl[h]));
     }
     else for (unsigned h = 0; h < H; h++) { for (unsigned q = 0; q < 4; q++) ffma(e, S(acc[h], q), R(dl[h]), R(wd[q]), S(acc[h], q)); fadd(e, R(l[h]), R(l[h]), R(dl[h])); }
-    if (KV8) {
+    if (V8) {
         for (uint32_t d = 0; d + 1 < D; d++) mov(e, R(vq[d]), R(vq[d + 1]));
         ldg32(e, BW_IR_LDG_E, vq[D - 1], vpf, udesc, 1);
     } else {
         for (uint32_t d = 0; d + 1 < D; d++) for (unsigned w = 0; w < 2; w++) mov(e, S(vq[d], w), S(vq[d + 1], w));
         ldg_wide(e, BW_IR_LDG_E_64, vq[D - 1], vpf, 0, udesc, 1);
     }
-    imadw(e, vpf, one, 4u * RBX, vpf);
+    imadw(e, vpf, one, 4u * RBV, vpf);
     imadi(e, R(pa), R(one), 4u * 32u, pa);
     imadi(e, R(i), R(one), 1u, i);
     bra(e, L_v);

@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "omega_blackwell_matmul.h"
 
-#define BW_MAX_IR_INSNS         1024 /* cut K: the four-head hd 128 attention kernel is ~700 instructions */
+#define BW_MAX_IR_INSNS         2048 /* cut K: the four-head hd 128 attention kernel is ~700 instructions; SPEED-7 (L131): the mixed bf16 / 8-bit decode attention 256 is ~1040 */
 #define BW_MAX_VREGS            256
 #define BW_MAX_UVREGS           32
 #define BW_PHYS_GPR_START       2    /* Reserve R0, R1 */
