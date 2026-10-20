@@ -59,9 +59,10 @@ Fable was at its usage limit, so the done-review ran on Codex. Its findings and 
 - Fixed: a failed `pthread_join` no longer retires the task handle.
 - Fixed: the image copy the seat hands back is allocated by the world (`rx_world_own_coherent`),
   which frees it; before, an installed non-libc heap would have crossed allocators.
-- Fixed: the seat's `atoi` replacement is now glibc-exact, saturation included
+- Fixed: the seat's `atoi` replacement returns what glibc returns, saturation included (errno not set;
+  nothing reads it)
   (`after2/atoi-check.*`: 20000026 strings, 0 differ).
-- Fixed: the one seat line carrying user text (the pin value) writes it whole through the new
+- Fixed: the one seat line carrying user text (the pin value) writes it whole, in one write, through the new
   `omega_psvc_diag` when it is too long for a 511-byte line.
 - Documented (header and contract doc): 64 live tasks and locks in the hosted table; the
   511-byte `diagf` line; an interrupted wait is a short wait for bounded polling loops.

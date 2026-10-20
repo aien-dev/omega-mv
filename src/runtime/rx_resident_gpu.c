@@ -897,7 +897,8 @@ static int wait_heartbeat(RxGpuSeat *s) {
 
 static uint32_t current_seat_gen(RxWorld *w) { return rx_world_seat_generation(w); }
 
-/* atoi as glibc does it, which this file used on RX_SEAT_LEASE_CPU: (int)strtol(p, NULL, 10). Optional leading
+/* Returns what glibc atoi returns ((int)strtol(p, NULL, 10)); this file used atoi on RX_SEAT_LEASE_CPU. errno is
+ * left alone (strtol sets ERANGE on overflow; nothing here reads errno). Optional leading
  * white space and sign, then decimal digits up to the first non-digit; no digits gives 0; out of range saturates
  * at the 64-bit long limits, and the cast to int keeps the low 32 bits. */
 static int parse_int_like_atoi(const char *p) {
@@ -933,10 +934,18 @@ static void *lease_main(void *arg) {
         if (omega_psvc_task_pin_self((uint32_t)parse_int_like_atoi(pin)) != OMEGA_PSVC_OK) {
             if (strlen(pin) < OMEGA_PSVC_DIAG_LINE - 64u) {
                 omega_psvc_diagf("seat lease: could not pin to cpu %s\n", pin);
-            } else { /* the value is the user's: print all of it, as fprintf did */
-                omega_psvc_diag("seat lease: could not pin to cpu ");
-                omega_psvc_diag(pin);
-                omega_psvc_diag("\n");
+            } else { /* the value is the user's: print all of it in one write, as fprintf did */
+                static const char head[] = "seat lease: could not pin to cpu ";
+                size_t n = strlen(pin);
+                char *line = omega_psvc_alloc(sizeof head + n + 1u);
+                if (line) {
+                    memcpy(line, head, sizeof head - 1u);
+                    memcpy(line + sizeof head - 1u, pin, n);
+                    line[sizeof head - 1u + n] = '\n';
+                    line[sizeof head + n] = 0;
+                    omega_psvc_diag(line);
+                    omega_psvc_free(line);
+                }
             }
         }
     }

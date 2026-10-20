@@ -37,9 +37,10 @@ Where the hosted table is not a bare libc call (from the L202 done-review, each 
   A failed `pthread_join` keeps the handle valid; a successful one retires it (stale after).
 - DIAG through `omega_psvc_diagf` writes lines of at most 511 bytes (truncated; `fprintf` was
   unbounded). `omega_psvc_diag` writes any length verbatim, and the seat's one line that carries
-  user text (`RX_SEAT_LEASE_CPU` in "could not pin") uses it when the value is long.
-- CONFIG parsing in the seat: `atoi` became `parse_int_like_atoi`, glibc's `(int)strtol(p, NULL,
-  10)` exactly, saturation included (20000026 strings compared with glibc `atoi`, 0 differ;
+  user text (`RX_SEAT_LEASE_CPU` in "could not pin") builds the whole line on the heap and writes it
+  once with it when the value is long (one write, as `fprintf` was).
+- CONFIG parsing in the seat: `atoi` became `parse_int_like_atoi`, which returns what glibc's `(int)strtol(p, NULL,
+  10)` returns, saturation included, but leaves errno alone (nothing reads it) (20000026 strings compared with glibc `atoi`, 0 differ;
   `evidence/OMEGA-CUT-A-SERVICES/after2/atoi-check.*`).
 - WAIT: `usleep` interrupted by a signal returns `REFUSED_HOST`. The seat's waits are bounded
   polling loops that recheck their condition, so they treat it as a short wait, as their

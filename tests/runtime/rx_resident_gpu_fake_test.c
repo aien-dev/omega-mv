@@ -273,6 +273,11 @@ int main(void) {
     case_open_refused();
     case_life("life_unpinned", NULL);
     case_life("life_pinned", "0");
+    /* a pin that cannot be applied: atoi saturates to -1; the seat says so on stderr, the long value whole */
+    case_life("life_badpin", "99999999999999999999");
+    static char longpin[701];
+    memset(longpin, '9', sizeof longpin - 1);
+    case_life("life_badpin_long", longpin);
     printf("rx_resident_gpu_fake_test: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }
