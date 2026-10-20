@@ -62,6 +62,18 @@ int main(void) {
                 snprintf(n, sizeof n, "router.w%u.d%u.m%d", warps[w], d, m); omega_bw_ir_init(prog);
                 emit(n, omega_blackwell_codegen_router_prog(&s, prog));
             }
+    /* the decode glue kernels (RES / SWIGLU / ARGMAX / GATHER / GATE / AXPY) at the widths the 30B and 27B graphs use */
+    const uint32_t widths[3] = {0, 5120, 17408}, strides[3] = {0, 256, 65536};
+    for (int k = 1; k <= 6; k++)
+        for (uint32_t mode = 0; mode <= 15; mode++)
+            for (int m = 0; m <= 2; m++)
+                for (int wi = 0; wi < 3; wi++)
+                    for (int si = 0; si < 3; si++) {
+                        if ((k != OMEGA_DEC_RES && k != OMEGA_DEC_ARGMAX && mode) || (k != OMEGA_DEC_AXPY && k != OMEGA_DEC_GATHER && si)) continue;
+                        OmegaDecSpec s = {.kind = (OmegaDecKind)k, .mode = mode, .stride = strides[si], .mutant = m, .width = widths[wi]};
+                        snprintf(n, sizeof n, "dec.k%d.mode%u.m%d.w%u.s%u", k, mode, m, widths[wi], strides[si]); omega_bw_ir_init(prog);
+                        emit(n, omega_blackwell_codegen_dec_prog(&s, prog));
+                    }
 #ifdef Q36_NEW_SHAPES
     printf("# new\n");
     Q36_NEW_SHAPES
