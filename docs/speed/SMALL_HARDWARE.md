@@ -20,7 +20,7 @@ counts only if the words come out identical to the reference; anything that chan
 - **It does not fit in a Pi's memory** (16.7 GB at 4 bits, calc:6139121f), so the experts must come from the disk while
   it runs. That is what the probe in section 5 measures: the 30B with its experts pulled from disk through a
   speed-limited reader, words checked bit for bit against the model running fully in memory.
-- **Probe result:** see section 5 (PENDING until the measurement window).
+- **Probe result so far:** streamed experts give bit-identical words (smoke run). With the memory an 8 GB Pi can spare, 92 percent of expert lookups hit the cache, so the 30B streamed from a Pi NVMe drive has a ceiling of 3.76 words/s (calc:e35fa8b7), about the 4.25 of an 8B held fully in memory (calc:edc54726). Timed stand-in run: section 5.
 - **Biggest levers, ranked** (section 6): 4-bit weights (half the bytes, not word-identical: about 1 word in 8 differs
   from 8-bit on code), the expert cache with prefetch (identical words), the laptop-drafts / Spark-checks Wormhole
   (identical to the Spark's words, needs the network), 8-bit KV cache (small risk), distillation (different model,
@@ -109,9 +109,84 @@ part of it can still be fast: its experts per word are 0.96 GB at W4, but most o
 
 ## 5. The probe: the 30B with its experts streamed from disk at a capped speed (STAND-IN, not a Pi number)
 
-PENDING (measurement window).
+**What was built** (`research/small-hw/moe_stream/`, reusing our 30B CPU reference from aien-sovereign-core main
+1e6ae85c, no second engine): the same forward pass, run three ways on the same prompts in one process:
+`ref` = the unmodified reference (`forward_token`); `stream:CAP:CACHE` = the experts are not taken from memory but
+read from the checkpoint file on disk with O_DIRECT (no operating-system file cache) through a reader paced to CAP
+MB/s, into a fixed set of expert slots (least recently used is evicted). Every expert that lands is compared byte for
+byte with the resident copy, and every word's full logits vector (151,936 numbers) is hashed and compared with `ref`.
+
+**Cache size, derived not picked** (calc receipts in section 3's file): on a Pi 5 8 GB at W4 the room left for experts
+after 1 GB of system, the shared 4-bit weights (0.67 GB), the bf16 embedding table (0.62 GB), a 4,096-word KV cache
+(0.40 GB) and 0.3 GB scratch is 1,995 expert slots of 6,144 (calc:1013332d). Pi 5 16 GB: 5,186 (calc:c784597b).
+RTX 5070 card: 4,158 (calc:b41147b7). The probe streams the shipped FP8 experts, so the Pi 8 GB case is run as 1,995
+FP8 slots (9.41 GB, calc:9e9f4602): same number of experts held, twice the bytes per miss of W4.
+
+**Hit rates** (OBSERVED, exact counting over a recorded routing trace: 2 prompts, 307 positions, 256 written words,
+`evidence/SMALL-HW-L273/trace128/sim128.txt`; hit rates do not depend on machine load):
+
+| Expert slots | Target it stands for | Hit rate while writing (LRU) | Misses per word | Best possible (Belady) |
+|---|---|---|---|---|
+| 384 (one word's worth) | | 0.367 | 243 | 0.664 |
+| 1,000 | | 0.735 | 102 | 0.878 |
+| 1,995 | Pi 5 8 GB, 8 GB laptop, M2 Air 8 GB | **0.920** | **30.6** | 0.968 |
+| 4,158 | RTX 5070 card | 0.980 | 7.6 | 0.983 |
+| 5,186 | Pi 5 16 GB | 0.983 | 6.7 | 0.983 (= first-touch floor of this short trace: 4,891 of 6,144 experts were touched at least once) |
+
+Limits: one short trace on two prompts (code and story); a long conversation or a topic change will move the working
+set. The first-touch floor shrinks as a conversation gets longer. UNKNOWN: hit rate over thousands of words.
+
+**Predicted ceilings for the 30B at W4 with its experts streamed** (INFERRED; time per word = active bytes / RAM speed
++ miss bytes / disk speed, no prefetch overlap; 30.6 misses per word = 76.7 MB at W4, calc:3ac7c2af):
+
+| Target | Disk | Ceiling tok/s | With full prefetch overlap (L271) | Compare: 8B W4 fully in memory |
+|---|---|---|---|---|
+| Pi 5 8 GB | NVMe Gen 2, 0.45 GB/s | 3.76 (calc:e35fa8b7) | 5.87 (disk-bound, calc:b7a5646f) | 4.25 (calc:edc54726) |
+| Pi 5 8 GB | NVMe Gen 3, 0.9 GB/s | 5.52 (calc:4478ab4f) | up to 10.4 (RAM-bound, calc:847a8763) | 4.25 |
+| Pi 5 8 GB | SD card, 96 MB/s | 1.12 (calc:f376425a) | | 4.25 |
+| Pi 5 16 GB | NVMe Gen 2 | 7.51 (calc:83bcf6b4) | | |
+| 8 GB laptop | NVMe 3 GB/s (assumed) | 17.4 (calc:bf5d8976) | | 12.7 (calc:d2c3a087) |
+| M2 Air 8 GB | 256 GB SSD 1.45 GB/s | 14.4 (calc:dc4b9364) | | 24.9 (calc:813bbba0) |
+| RTX 5070 | misses from PC RAM over PCIe x16 | 366 (calc:cf9a625d; PC RAM size UNKNOWN) | | 167 (calc:7a98ea66) |
+
+Plain reading: on an 8 GB Pi with an NVMe drive, the 30B mixture-of-experts model, streamed with a cache, has about the
+same speed ceiling as an 8B model held fully in memory, and it is the far larger model (30.5 B
+parameters against 8.2 B; a quality comparison on our own texts has no receipt yet). On an SD card it drops to 1.12 against
+3.76. These are ceilings; our Pi engine today reaches 5.7 percent of its memory ceiling (calc:8c5dfc2e).
+
+**Measured on the Spark** (STAND-IN for the disk only: the Spark's CPU computes, its NVMe is capped to Pi-class
+speeds; the compute time is the Spark's, not a Pi's):
+
+PENDING (timed run waits for the measurement window; smoke run with 4 words already passed the identity gate, `evidence/SMALL-HW-L273/smoke`).
 
 
+
+## 6. Levers, ranked for small hardware
+
+Ranked by how much "smart model per small box" each one buys, identical-output levers first. Bytes and multiplies
+are per word; joules per word on small targets: UNKNOWN for all (no wall-power receipt), bytes are the proxy.
+
+| # | Lever | Bytes per word | Multiplies per word | Words identical? | Evidence | Status / owner |
+|---|---|---|---|---|---|---|
+| 1 | **30B MoE with an expert cache streamed from disk** (Heartbeat ring slots) | shared 0.67 GB + misses only (W4); misses measured in section 5 | 3.04 G, unchanged | **yes**, measured bit for bit (section 5) | this probe; L080 ring crate (sc `aien-heartbeat`, `aien-wormhole/cache.rs`) | L190 puts the ring on the chip path; this doc measures the small-box case |
+| 2 | **Prefetch the next word's experts** while the current word computes | same bytes, hidden behind compute: word time becomes max(compute, disk) instead of compute + disk | +1 small predictor per layer | yes (the prediction only moves reads earlier) | section 5 gives both terms per target | L271 (unassigned) |
+| 3 | **Draft k words locally, check them in one pass of the streamed 30B** | one pass reads each needed expert once for all k words, so disk misses per word fall by about the words accepted per pass (if the k words share experts: UNKNOWN until measured) | k x 3.04 G per pass, same per accepted word | yes | MTP/DFlash acceptance on the 27B (L123 G/H); none for the 30B on a small box | not started; "yes if" a small resident drafter's acceptance on the 30B is measured |
+| 4 | **W4 weights** | half of FP8 (27B 26.89 -> 13.65 GB; 30B 3.37 -> 1.63 GB) | unchanged | **no**: same next word as FP8 about 88 percent on code; passes the frozen W4 fit gate (L125, pooled 0.938) | L125, L134 | L125 READY; the W4 model is its own reference once chosen |
+| 5 | **Laptop drafts, Spark checks over the network** (section 7) | 0 big-model bytes on the laptop | the Spark's | **yes**, identical to the Spark | link measured 3 ms median | needs a reachable Spark; L190/L270 own the pair and cascade |
+| 6 | **Lossless weight coding** (store weights in their entropy, decode exactly) | below the stored bits if the entropy is lower; decoding cost on the small CPU is the price | + decode work | yes | L274 `tools/wpt_entropy.c` (no result yet) | L274 owns it; "yes if" its entropy count shows a gap worth the decode time |
+| 7 | **8-bit KV cache** | 30B: 98,304 -> 49,152 B per earlier word (calc:ffee0b48); at 4k context 0.40 -> 0.20 GB per word read | unchanged | no (small drift) | L131 (stopped) | worth it only at long context: at 4k words the KV read is 0.40 GB against 1.63 GB of W4 weights |
+| 8 | **W2 / 3-bit weights** | 30B W2 0.95 GB (calc:050401c8); 27B W2 7.52 GB (calc:14904590) | unchanged | no; 3.15-bit calibrated trellis is on par with MXFP4 on six texts (L134); below 3 bits no receipt | L134 | "yes if" a 2-bit code passes the same frozen fit gate as W4; the method (rotation + trellis + activation scaling) exists on sc sub4bit/drift-study |
+| 9 | **Faster CPU path on the Pi** | unchanged | unchanged | yes (same model, same math order if kept) | our Pi engine: 1B at 1.20 tok/s = 5.7 percent of the Pi's 17.07 GB/s ceiling (calc:8c5dfc2e) | software gap, not physics: the Pi is compute- or code-bound today, not memory-bound; profiling it is the next step on the aienos side |
+| 10 | **Distillation** (train a small model to imitate the big one) | the small model's bytes | the small model's | **no: a different model**, labelled | none | only for a box with no network and no room for the 30B; never counted as a speedup of the big model |
+
+Ruled out, with the physical limit and what would have to be true:
+
+- **27B dense at FP8 or W4 on any 8 GB box**: the model is 26.89 / 13.65 GB and every word reads all of it. Streaming
+  it from a 0.45 GB/s Pi disk costs 30 s per word at W4 (13.65 GB / 0.45 GB/s, INFERRED). Yes if the box has 16 GB+
+  and W2 quality holds (2.27 tok/s ceiling on a 16 GB Pi, calc:029d27ac), or via lever 5.
+- **Keeping the 30B on the RTX 5070 entirely in its 12 GB**: W4 is 16.7 GB. Yes at W2 (9.2 GB, 704 tok/s ceiling,
+  calc:d1c1277d, quality UNKNOWN), or with 4158 W4 expert slots on the card (calc:b41147b7) and misses over PCIe from
+  PC RAM (63 GB/s at x16, lane count unconfirmed; PC RAM size UNKNOWN).
 
 ## 7. Cross-machine Wormhole: the laptop drafts, the Spark checks
 
@@ -154,29 +229,3 @@ laptop can reach the Spark. Offline, the laptop gets only what fits locally (sec
 acceptance of at least 1 + round trip / check time (1.023 at FP8 on the LAN) pays against the Spark alone; beating the
 Spark's own MTP drafter needs acceptance within 16 percent of MTP's.
 
-## 6. Levers, ranked for small hardware
-
-Ranked by how much "smart model per small box" each one buys, identical-output levers first. Bytes and multiplies
-are per word; joules per word on small targets: UNKNOWN for all (no wall-power receipt), bytes are the proxy.
-
-| # | Lever | Bytes per word | Multiplies per word | Words identical? | Evidence | Status / owner |
-|---|---|---|---|---|---|---|
-| 1 | **30B MoE with an expert cache streamed from disk** (Heartbeat ring slots) | shared 0.67 GB + misses only (W4); misses measured in section 5 | 3.04 G, unchanged | **yes**, measured bit for bit (section 5) | this probe; L080 ring crate (sc `aien-heartbeat`, `aien-wormhole/cache.rs`) | L190 puts the ring on the chip path; this doc measures the small-box case |
-| 2 | **Prefetch the next word's experts** while the current word computes | same bytes, hidden behind compute: word time becomes max(compute, disk) instead of compute + disk | +1 small predictor per layer | yes (the prediction only moves reads earlier) | section 5 gives both terms per target | L271 (unassigned) |
-| 3 | **Draft k words locally, check them in one pass of the streamed 30B** | one pass reads each needed expert once for all k words, so disk misses per word fall by about the words accepted per pass (if the k words share experts: UNKNOWN until measured) | k x 3.04 G per pass, same per accepted word | yes | MTP/DFlash acceptance on the 27B (L123 G/H); none for the 30B on a small box | not started; "yes if" a small resident drafter's acceptance on the 30B is measured |
-| 4 | **W4 weights** | half of FP8 (27B 26.89 -> 13.65 GB; 30B 3.37 -> 1.63 GB) | unchanged | **no**: same next word as FP8 about 88 percent on code; passes the frozen W4 fit gate (L125, pooled 0.938) | L125, L134 | L125 READY; the W4 model is its own reference once chosen |
-| 5 | **Laptop drafts, Spark checks over the network** (section 7) | 0 big-model bytes on the laptop | the Spark's | **yes**, identical to the Spark | link measured 3 ms median | needs a reachable Spark; L190/L270 own the pair and cascade |
-| 6 | **Lossless weight coding** (store weights in their entropy, decode exactly) | below the stored bits if the entropy is lower; decoding cost on the small CPU is the price | + decode work | yes | L274 `tools/wpt_entropy.c` (no result yet) | L274 owns it; "yes if" its entropy count shows a gap worth the decode time |
-| 7 | **8-bit KV cache** | 30B: 98,304 -> 49,152 B per earlier word (calc:ffee0b48); at 4k context 0.40 -> 0.20 GB per word read | unchanged | no (small drift) | L131 (stopped) | worth it only at long context: at 4k words the KV read is 0.40 GB against 1.63 GB of W4 weights |
-| 8 | **W2 / 3-bit weights** | 30B W2 0.95 GB (calc:050401c8); 27B W2 7.52 GB (calc:14904590) | unchanged | no; 3.15-bit calibrated trellis is on par with MXFP4 on six texts (L134); below 3 bits no receipt | L134 | "yes if" a 2-bit code passes the same frozen fit gate as W4; the method (rotation + trellis + activation scaling) exists on sc sub4bit/drift-study |
-| 9 | **Faster CPU path on the Pi** | unchanged | unchanged | yes (same model, same math order if kept) | our Pi engine: 1B at 1.20 tok/s = 5.7 percent of the Pi's 17.07 GB/s ceiling (calc:8c5dfc2e) | software gap, not physics: the Pi is compute- or code-bound today, not memory-bound; profiling it is the next step on the aienos side |
-| 10 | **Distillation** (train a small model to imitate the big one) | the small model's bytes | the small model's | **no: a different model**, labelled | none | only for a box with no network and no room for the 30B; never counted as a speedup of the big model |
-
-Ruled out, with the physical limit and what would have to be true:
-
-- **27B dense at FP8 or W4 on any 8 GB box**: the model is 26.89 / 13.65 GB and every word reads all of it. Streaming
-  it from a 0.45 GB/s Pi disk costs 30 s per word at W4 (13.65 GB / 0.45 GB/s, INFERRED). Yes if the box has 16 GB+
-  and W2 quality holds (2.27 tok/s ceiling on a 16 GB Pi, calc:029d27ac), or via lever 5.
-- **Keeping the 30B on the RTX 5070 entirely in its 12 GB**: W4 is 16.7 GB. Yes at W2 (9.2 GB, 704 tok/s ceiling,
-  calc:d1c1277d, quality UNKNOWN), or with 4158 W4 expert slots on the card (calc:b41147b7) and misses over PCIe from
-  PC RAM (63 GB/s at x16, lane count unconfirmed; PC RAM size UNKNOWN).

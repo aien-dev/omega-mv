@@ -30,3 +30,11 @@ Expert cache slots at W4 (slot 4719168 x 4.25/8 B), budget = RAM - 1 GB OS - 0.6
   1995 slots at FP8 slot size = 9.41474 GB (probe cache size for the Pi 8 GB case) calc:9e9f4602
 Wormhole: Spark MTP round (131+23+2 ms) / remote-draft pipelined round (131+3 ms) = 1.16 calc:3a38a3a9
   tau 4.15 over (131 + 3 ms) = 31.0 tok/s calc:9e823deb ; over (69.957 + 5 ms) = 55.4 calc:f23368f6 ; over (69.957 + 50 ms) = 34.6 calc:2e0e0836
+30B W4 streamed, predicted ceilings from the trace's decode hit rates (W4 slot 2,507,058 B; time = active bytes / RAM speed + miss bytes / disk speed, no prefetch overlap):
+  miss bytes per word at 1995 slots: 30.6 misses = 76.72 MB calc:3ac7c2af
+  Pi 5 8 GB, NVMe Gen2 0.45 GB/s: 3.76 tok/s calc:e35fa8b7 (disk alone 5.87 calc:b7a5646f; RAM alone 10.4 calc:847a8763 -> with full prefetch overlap 5.87)
+  Pi 5 8 GB, NVMe Gen3 0.9 GB/s: 5.52 calc:4478ab4f ; SD 0.096 GB/s: 1.12 calc:f376425a
+  Pi 5 16 GB (5186 slots, 6.7 misses), Gen2: 7.51 calc:83bcf6b4
+  8 GB laptop 51.2 GB/s + NVMe 3 GB/s: 17.4 calc:bf5d8976
+  M2 Air 8 GB 100 GB/s + 1.45 GB/s SSD: 14.4 calc:dc4b9364
+  RTX 5070 (4158 slots on card, 7.6 misses over PCIe x16 63 GB/s): 366 calc:cf9a625d
