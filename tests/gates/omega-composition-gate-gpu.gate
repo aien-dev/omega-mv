@@ -14,6 +14,9 @@ inputs:
   - aienos.lock
   - argus.lock
   - tests/gates/
+prepare:
+  exec: tests/gates/run.sh
+  args: ["prepare:chip:test-composition-gate-gpu"]
 run:
   exec: tests/gates/run.sh
   args: ["chip:test-composition-gate-gpu"]

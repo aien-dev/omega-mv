@@ -21,8 +21,9 @@ step="${1:?usage: tests/gates/run.sh <step>}"
 # object on the link line). OUT_DIR is read by the Makefile (?=) and by every make it spawns.
 # The pins stay at build/pins, shared read-only under their own lock. The directory name keeps
 # only [A-Za-z0-9_.-] from the step word: "spark:test-r13-host" would put a colon in a make
-# target ("multiple target patterns").
-export OUT_DIR="build/step-$(printf '%s' "$step" | tr -c 'A-Za-z0-9_.-' '-')"
+# target ("multiple target patterns"). prepare:<step> builds in the directory of <step>, the step
+# it prepares.
+export OUT_DIR="build/step-$(printf '%s' "${step#prepare:}" | tr -c 'A-Za-z0-9_.-' '-')"
 mkdir -p "$OUT_DIR"
 obs() { printf 'AIEN-OBS %s %s\n' "$1" "$2"; }
 
@@ -52,6 +53,17 @@ pin() {
 physics_pin() { pin physics-src physics "$(lock physics.lock)"; export PHYSICS_DIR="$PINS/physics-src"; }
 aienos_pin()  { pin aienos-src aienos "$(lock aienos.lock)"; export AIENOS_R7_DIR="$PINS/aienos-src"; export AIENOS_COMMIT="$(lock aienos.lock)"; }
 argus_pin()   { pin aienos-argus aienos "$(lock argus.lock)"; export ARGUS_REPO="$PINS/aienos-argus"; }
+# The chip gates (rx-host.yml chip-only-declared) build against physics at a fixed commit.
+chip_pins()   { pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf; export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"; aienos_pin; argus_pin; }
+# prepare_target <make target>: build the target's prerequisites and run nothing else. make -pq
+# prints the rule database without running a recipe; the target's own line lists its expanded
+# prerequisites (order-only ones after "|" dropped).
+prepare_target() {
+  local t="$1" deps
+  deps="$(make -pq "$t" 2>/dev/null | awk -v t="$t" 'index($0, t ":") == 1 { sub("^[^:]*: *", ""); sub(" *[|].*", ""); print; exit }' || true)"
+  echo "run.sh: prepare $t: ${deps:-nothing to build}"
+  if [ -n "$deps" ]; then make $deps; fi
+}
 export OMEGA_CANDIDATE_COMMIT="$(git rev-parse HEAD)"
 
 # receipt <file name or glob> <grep pattern>...: the hosted "Show ... receipt" steps.
@@ -224,11 +236,14 @@ case "$step" in
     make test-c4-requal
     ;;
   # rx-host.yml chip-only-declared and spark-only targets (SKIP on GitHub, never a pass there)
+  # prepare:<step> (manifest `prepare:`): build what <step> runs, without running it, so the Spark
+  # judge compiles BEFORE it takes /tmp/aien-gb10.lock and holds the chip only for the run (L154:
+  # three chip gates held it 84 minutes, mostly compiling). Same pins and OUT_DIR as <step>.
+  prepare:chip:*) chip_pins; prepare_target "${step#prepare:chip:}" ;;
+  prepare:m5|prepare:m17|prepare:m19) physics_pin; prepare_target "test-${step#prepare:}" ;;
   chip:*|spark:*)
     t="${step#*:}"
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
-    aienos_pin; argus_pin
+    chip_pins
     make "$t"
     ;;
   # turing-yield.yml

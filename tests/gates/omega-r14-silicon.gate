@@ -14,6 +14,9 @@ inputs:
   - aienos.lock
   - argus.lock
   - tests/gates/
+prepare:
+  exec: tests/gates/run.sh
+  args: ["prepare:chip:test-r14-silicon"]
 run:
   exec: tests/gates/run.sh
   args: ["chip:test-r14-silicon"]

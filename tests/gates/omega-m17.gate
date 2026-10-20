@@ -12,6 +12,9 @@ inputs:
   - tests/
   - physics.lock
   - tests/gates/
+prepare:
+  exec: tests/gates/run.sh
+  args: ["prepare:m17"]
 run:
   exec: tests/gates/run.sh
   args: ["m17"]
