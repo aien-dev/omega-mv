@@ -57,12 +57,32 @@ argus_pin()   { pin aienos-argus aienos "$(lock argus.lock)"; export ARGUS_REPO=
 chip_pins()   { pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf; export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"; aienos_pin; argus_pin; }
 # prepare_target <make target>: build the target's prerequisites and run nothing else. make -pq
 # prints the rule database without running a recipe; the target's own line lists its expanded
-# prerequisites (order-only ones after "|" dropped).
+# prerequisites (order-only ones after "|" dropped). On a clean tree it leaves a stamp naming the
+# commit, target and prerequisites, so chip_make need not rebuild them under the GPU lock.
 prepare_target() {
   local t="$1" deps
   deps="$(make -pq "$t" 2>/dev/null | awk -v t="$t" 'index($0, t ":") == 1 { sub("^[^:]*: *", ""); sub(" *[|].*", ""); print; exit }' || true)"
   echo "run.sh: prepare $t: ${deps:-nothing to build}"
+  rm -f "$OUT_DIR/.prepared"
   if [ -n "$deps" ]; then make $deps; fi
+  if [ -z "$(git status --porcelain)" ]; then
+    printf '%s %s %s
+' "$OMEGA_CANDIDATE_COMMIT" "$t" "$deps" > "$OUT_DIR/.prepared"
+  fi
+}
+# chip_make <make target>: make it. When prepare:<step> built its prerequisites for this commit
+# and the tree is still clean, they are not remade (make -o): a phony prerequisite such as
+# aienos-authority-capability would otherwise relink the program while the GPU lock is held.
+chip_make() {
+  local t="$1" c tt deps o=()
+  if [ -f "$OUT_DIR/.prepared" ] && [ -z "$(git status --porcelain)" ]; then
+    read -r c tt deps < "$OUT_DIR/.prepared"
+    if [ "$c" = "$OMEGA_CANDIDATE_COMMIT" ] && [ "$tt" = "$t" ]; then
+      for d in $deps; do o+=(-o "$d"); done
+      echo "run.sh: $t: prerequisites built by prepare, not remade"
+    fi
+  fi
+  make "${o[@]}" "$t"
 }
 export OMEGA_CANDIDATE_COMMIT="$(git rev-parse HEAD)"
 
@@ -240,11 +260,11 @@ case "$step" in
   # judge compiles BEFORE it takes /tmp/aien-gb10.lock and holds the chip only for the run (L154:
   # three chip gates held it 84 minutes, mostly compiling). Same pins and OUT_DIR as <step>.
   prepare:chip:*) chip_pins; prepare_target "${step#prepare:chip:}" ;;
-  prepare:m5|prepare:m17|prepare:m19) physics_pin; prepare_target "test-${step#prepare:}" ;;
+  prepare:m17) physics_pin; prepare_target test-m17 ;;
   chip:*|spark:*)
     t="${step#*:}"
     chip_pins
-    make "$t"
+    chip_make "$t"
     ;;
   # turing-yield.yml
   turing-yield)       make test-turing-yield test-turing-energy ;;
