@@ -1,0 +1,14 @@
+placeholder patch self-test: ok (SHFL.BFLY x2, SHFL.DOWN x1, F2FP.BF16.F32.PACK_AB x1 match the oracle bits)
+shape k 2048 rt 4 ct 2 warps 8: rc 0, 539 instructions, peak 124, declared 128, shared 16384, span 128: ok
+shape k 768 rt 4 ct 2 warps 8: rc 0, 539 instructions, peak 124, declared 128, shared 16384, span 128: ok
+shape k 4096 rt 4 ct 2 warps 8: rc 0, 539 instructions, peak 124, declared 128, shared 16384, span 128: ok
+shape k 2048 rt 4 ct 1 warps 8: rc 0, 392 instructions, peak 88, declared 96, shared 16384, span 64: ok
+shape k 2048 rt 2 ct 2 warps 4: rc 0, 411 instructions, peak 96, declared 104, shared 8192, span 64: ok
+shape k 2048 rt 4 ct 2 warps 4: rc -1, 0 instructions, peak 0, declared 8, shared 16384, span 64: REFUSED
+shape k 768 rt 4 ct 2 warps 4: rc -1, 0 instructions, peak 0, declared 8, shared 16384, span 64: REFUSED
+shape k 5120 rt 4 ct 2 warps 8: rc 0, 539 instructions, peak 124, declared 128, shared 16384, span 128: ok
+shape k 17408 rt 4 ct 2 warps 8: rc 0, 539 instructions, peak 124, declared 128, shared 16384, span 128: ok
+shape k 32768 rt 4 ct 2 warps 8: rc 0, 539 instructions, peak 124, declared 128, shared 16384, span 128: ok
+emulation vs double oracle: worst |err| / sum|terms| = 2.46e-07 (ok, bound 1e-6)
+host-only: PASS
+GPU_TCGEMM: PASS

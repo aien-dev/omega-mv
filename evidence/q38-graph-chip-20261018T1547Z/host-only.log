@@ -1,0 +1,5 @@
+ok: gather table: q, k permuted, v and gate in place (0 wrong)
+ok: gather table is a permutation of the 14336 mix values (0 repeats or out of range)
+ok: create refuses an empty config
+ok: create refuses NULL
+gpu_q38_graph_test (host-only): 4 checks, 0 failed: PASS

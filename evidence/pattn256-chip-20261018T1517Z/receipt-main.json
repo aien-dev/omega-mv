@@ -1,0 +1,5 @@
+{"test": "gpu_prefill_attn256", "rotary_dim": 64, "points": [
+  {"pos0": 0, "m": 2048, "max_pos": 4096, "reps": 9, "prep_ns": 1852009, "attend_ns": 9957251, "call_ns": 23691832, "attend_useful_flops": 51564773376, "attend_kv_bytes": 1082130432, "parity_bad": 0, "parity_worst_ratio": 0.1755},
+  {"pos0": 6144, "m": 2048, "max_pos": 8192, "reps": 9, "prep_ns": 1864521, "attend_ns": 38750500, "call_ns": 55148759, "attend_useful_flops": 360802418688, "attend_kv_bytes": 7524581376, "parity_bad": 0, "parity_worst_ratio": 0.0122},
+  {"pos0": 30720, "m": 2048, "max_pos": 32768, "reps": 9, "prep_ns": 1862633, "attend_ns": 148460851, "call_ns": 165340153, "attend_useful_flops": 1597752999936, "attend_kv_bytes": 33294385152, "parity_bad": 0, "parity_worst_ratio": 0.0073}
+], "checks": 93, "failed": 0}

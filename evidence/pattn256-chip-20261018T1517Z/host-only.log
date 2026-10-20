@@ -1,0 +1,3 @@
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+gpu_prefill_attn256_test: 18 checks, 0 failed: PASS

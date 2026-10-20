@@ -1,0 +1,4 @@
+cache alloc (1 layer, 131072 positions, 512 MiB): rc=OK 532.1 ms ()
+chip context 131072           rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=512x4 per_split=256 depth=4 kv_bytes=536870912 fill=42.4ms chip_med=8691.6us (61.8 GB/s) call_med=8704.7us reps=5
+gpu_decode_attn256_test: 4 checks, 0 failed: PASS
+max-pos 131072 exit 0 (informational)
