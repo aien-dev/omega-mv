@@ -1,0 +1,9 @@
+```
+fn clamp_add a uchar b uchar to uchar
+s = uint add uint a uint b
+if gt s 255
+ret uchar 255
+end
+ret uchar s
+end
+```

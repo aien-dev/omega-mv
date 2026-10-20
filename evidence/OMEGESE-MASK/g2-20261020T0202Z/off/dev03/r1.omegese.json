@@ -1,0 +1,11 @@
+{"functions": [
+  {"name": "popcount", "params": ["u64"], "ret": "u8", "locals": ["u8", "u8", "u32", "u32", "u32", "u32", "bool", "u64", "u64", "u64", "bool", "u8"],
+   "blocks": [
+    [{"op": "const", "dst": 1, "value": 0}, {"op": "const", "dst": 3, "value": 0}, {"op": "const", "dst": 4, "value": 64}, {"op": "const", "dst": 5, "value": 1}, {"op": "const", "dst": 9, "value": 1}, {"op": "const", "dst": 12, "value": 1}, {"op": "mov", "dst": 2, "a": 1}, {"op": "mov", "dst": 6, "a": 3}, {"op": "br", "to": 1}],
+    [{"op": "lt", "dst": 7, "a": 6, "b": 4}, {"op": "cbr", "cond": 7, "then": 2, "else": 5}],
+    [{"op": "shr", "dst": 8, "a": 0, "b": 6}, {"op": "and", "dst": 10, "a": 8, "b": 9}, {"op": "eq", "dst": 11, "a": 10, "b": 9}, {"op": "cbr", "cond": 11, "then": 3, "else": 4}],
+    [{"op": "add", "dst": 2, "a": 2, "b": 12}, {"op": "br", "to": 4}],
+    [{"op": "add", "dst": 6, "a": 6, "b": 5}, {"op": "br", "to": 1}],
+    [{"op": "ret", "a": 2}]
+   ]}
+]}

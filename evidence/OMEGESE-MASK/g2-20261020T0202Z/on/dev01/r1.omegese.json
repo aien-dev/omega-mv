@@ -1,0 +1,8 @@
+{"functions": [
+  {"name": "clamp_add", "params": ["u8", "u8"], "ret": "u8", "locals": ["u32", "u32", "u32", "u32", "u32", "bool", "u8", "u8"],
+   "blocks": [
+    [{"op": "const", "dst": 6, "value": 255}, {"op": "const", "dst": 8, "value": 255}, {"op": "cast", "dst": 2, "a": 0}, {"op": "cast", "dst": 3, "a": 1}, {"op": "add", "dst": 4, "a": 2, "b": 3}, {"op": "mov", "dst": 5, "a": 4}, {"op": "gt", "dst": 7, "a": 5, "b": 6}, {"op": "cbr", "cond": 7, "then": 1, "else": 2}],
+    [{"op": "ret", "a": 8}],
+    [{"op": "cast", "dst": 9, "a": 5}, {"op": "ret", "a": 9}]
+   ]}
+]}

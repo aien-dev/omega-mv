@@ -1,0 +1,6 @@
+{"functions": [
+  {"name": "checked_mul", "params": ["i16", "i16"], "ret": "i16", "locals": ["i16"],
+   "blocks": [
+    [{"op": "mul", "dst": 2, "a": 0, "b": 1}, {"op": "ret", "a": 2}]
+   ]}
+]}

@@ -1,0 +1,10 @@
+```
+fn isqrt x uint to uint
+r = uint 0
+g = uint 1
+while ne g r bound 100
+g = div add r mul r x 2
+end
+ret r
+end
+```

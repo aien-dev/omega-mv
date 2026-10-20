@@ -1,0 +1,35 @@
+dev01	446001	200	45	stop	OK	ACCEPT	3	1	43	643156	43882	44	0	0	49.480016464
+dev02	446002	200	38	stop	OK	ACCEPT	3	1	36	602187	84410	37	0	0	52.018099209
+dev03	446003	200	51	stop	OK	ACCEPT	3	1	49	825748	31056	50	0	0	71.077138838
+dev04	446004	200	43	stop	OK	ACCEPT	3	1	41	774832	65724	42	0	0	64.315087092
+dev05	446005	200	20	stop	OK	ACCEPT	3	1	18	217935	21986	19	0	0	94.579130017
+dev06	446006	200	32	stop	OK	ACCEPT	3	1	30	490949	42476	31	0	0	59.097022288
+dev07	446007	200	51	stop	OK	REJECT	3	1	49	681246	24037	50	0	0	159.355782776
+dev08	446008	200	74	stop	OK	REJECT	3	1	72	1066860	44753	73	0	0	48.714735724
+dev09	446009	200	50	stop	OK	ACCEPT	3	1	48	748372	37002	49	0	0	43.226303795
+dev10	446010	200	18	stop	OK	ACCEPT	3	1	16	204213	17760	17	0	0	38.207506556
+{
+ "name": "l112-g2-on",
+ "cmd": "quiet-measure bash tools/exp445/mask_trial.sh http://127.0.0.1:18191/v1 qwen3.8-27b-fp8 /home/drakestapleton/workspace/omega-omegese-mask/evidence/OMEGESE-MASK/g2-20261020T0202Z on",
+ "exit": 0,
+ "git_head": "1c5eb14f",
+ "start": "2026-10-19T21:42:37.890583",
+ "seconds": 697.403,
+ "samples": 315,
+ "wall_W_mean": 272.031746,
+ "wall_J": 189715.6561,
+ "idle_W_before": 262.0,
+ "incremental_J": 6996.166103,
+ "gpu_W_mean": 20.64961905,
+ "gpu_util_mean": 48.24444444,
+ "load1_start": "53.60",
+ "load1_end": "65.50",
+ "mem_avail_kB_start": "19042336",
+ "mem_avail_kB_end": "8618800",
+ "lock_holders_max": 3,
+ "nvrm_errors_delta": 32,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T021420Z-f6cde2",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-l112-g2-on.json

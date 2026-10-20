@@ -1,0 +1,63 @@
+ola.sh: DIRTY tree allowed for a selftest: the gate cannot pass
+ola.sh: run 20261020T024221Z-e27a33ee052d-4151642 tasks e27a33ee052d3aed58027d92ba14cac31f909b50dc562634224939cbe67fb346 sets 1
+pass A set references:
+  dev01                                    ACCEPT ok -
+  dev02                                    ACCEPT ok -
+  dev03                                    ACCEPT ok -
+  dev04                                    ACCEPT ok -
+  dev05                                    ACCEPT ok -
+  dev06                                    ACCEPT ok -
+  dev07                                    ACCEPT ok -
+  dev08                                    ACCEPT ok -
+  dev09                                    ACCEPT ok -
+  dev10                                    ACCEPT ok -
+pass A set mask-off:
+  dev01                                    ACCEPT ok -
+  dev02                                    ACCEPT ok -
+  dev03                                    ACCEPT ok -
+  dev04                                    ACCEPT ok -
+  dev05                                    ACCEPT ok -
+  dev06                                    ACCEPT ok -
+  dev07                                    REJECT wrong_result line_2
+  dev08                                    REJECT wrong_result line_8
+  dev09                                    ACCEPT ok -
+  dev10                                    ACCEPT ok -
+pass B set references:
+  dev01                                    ACCEPT ok -
+  dev02                                    ACCEPT ok -
+  dev03                                    ACCEPT ok -
+  dev04                                    ACCEPT ok -
+  dev05                                    ACCEPT ok -
+  dev06                                    ACCEPT ok -
+  dev07                                    ACCEPT ok -
+  dev08                                    ACCEPT ok -
+  dev09                                    ACCEPT ok -
+  dev10                                    ACCEPT ok -
+pass B set mask-off:
+  dev01                                    ACCEPT ok -
+  dev02                                    ACCEPT ok -
+  dev03                                    ACCEPT ok -
+  dev04                                    ACCEPT ok -
+  dev05                                    ACCEPT ok -
+  dev06                                    ACCEPT ok -
+  dev07                                    REJECT wrong_result line_2
+  dev08                                    REJECT wrong_result line_8
+  dev09                                    ACCEPT ok -
+  dev10                                    ACCEPT ok -
+isolation probes:
+  probe read_hidden_inputs     sandboxed=BLOCKED:errno=13                         control=ESCAPED:read                 PASS
+  probe read_expected          sandboxed=BLOCKED:errno=13                         control=ESCAPED:read                 PASS
+  probe read_labels            sandboxed=BLOCKED:errno=13                         control=ESCAPED:read                 PASS
+  probe read_corpus_tar        sandboxed=BLOCKED:errno=13                         control=ESCAPED:read                 PASS
+  probe read_key               sandboxed=BLOCKED:errno=13                         control=ESCAPED:read                 PASS
+  probe write_evidence         sandboxed=BLOCKED:errno=13                         control=ESCAPED:opened_for_write     PASS
+  probe write_scorer           sandboxed=BLOCKED:errno=13                         control=ESCAPED:opened_for_write     PASS
+  probe change_rules           sandboxed=BLOCKED:errno=13                         control=ESCAPED:opened_for_write     PASS
+  probe network                sandboxed=BLOCKED:seccomp_syscall=198              control=ESCAPED:connected            PASS
+  probe outlive_time           sandboxed=BLOCKED:time_limit                       control=ESCAPED:outlived             PASS
+  probe outlive_fork           sandboxed=BLOCKED:seccomp_syscall=220              control=ESCAPED:forked               PASS
+  probe exceed_memory          sandboxed=BLOCKED:errno=12                         control=ESCAPED:mapped               PASS
+  probe write_outside_scratch  sandboxed=BLOCKED:errno=13                         control=ESCAPED:created              PASS
+  probe replay_verdict         sandboxed=BLOCKED:stale_or_forged_transcript       control=ESCAPED:transcript_accepted  PASS
+  probe scratch_ok             sandboxed=ESCAPED:wrote_scratch                    control=ESCAPED:wrote_scratch        PASS
+ola.sh: evidence in evidence/OMEGESE-MASK/g2-20261020T0202Z/off/ola/runs/20261020T024221Z-e27a33ee052d-4151642

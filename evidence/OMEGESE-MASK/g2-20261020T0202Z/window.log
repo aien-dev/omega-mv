@@ -1,0 +1,12 @@
+2026-10-20T02:21:46Z window 20261020T021420Z-f6cde2 start; MemAvailable 64038576 kB
+pid 3129015, log /home/drakestapleton/.local/state/aien-l112/serve.log
+2026-10-20T02:23:32Z mask server up (pid 3129015)
+2026-10-20T02:23:48Z control :18191 http 200
+2026-10-20T02:25:09Z control :18091 http 200
+2026-10-20T02:25:09Z CONTROL SAME: mask-off :18191 == live :18091 (greedy)
+2026-10-20T02:25:09Z trial off start
+2026-10-20T02:42:37Z trial off rc 0 receipt /home/drakestapleton/yardsticks/receipts/2026-10-19-l112-g2-off.json
+2026-10-20T02:42:37Z trial on start
+2026-10-20T02:54:18Z trial on rc 0 receipt /home/drakestapleton/yardsticks/receipts/2026-10-19-l112-g2-on.json
+2026-10-20T02:54:18Z window done
+2026-10-20T02:54:25Z mask server pid 3129015 stopped
