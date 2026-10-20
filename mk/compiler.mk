@@ -161,6 +161,8 @@ test-compiler: $(OSC_DIR)/test_osc_model $(OSC_DIR)/test_osc_model_asan \
 	@grep "^arena fuzz: .* mismatches=0$$" $(OSC_DIR)/compiler_asan.out
 	@grep "^float fuzz: .* mismatches=0$$" $(OSC_DIR)/compiler.out
 	@grep "^float fuzz: .* mismatches=0$$" $(OSC_DIR)/compiler_asan.out
+	@grep "^float slice fuzz: .* mismatches=0$$" $(OSC_DIR)/compiler.out
+	@grep "^float slice fuzz: .* mismatches=0$$" $(OSC_DIR)/compiler_asan.out
 	@grep "^arena destruction order: " $(OSC_DIR)/compiler.out
 	@grep "^runtime model replay: .* rejected=0$$" $(OSC_DIR)/compiler.out
 	@grep "^runtime model replay: .* rejected=0$$" $(OSC_DIR)/compiler_asan.out
@@ -175,8 +177,8 @@ test-compiler: $(OSC_DIR)/test_osc_model $(OSC_DIR)/test_osc_model_asan \
 
 
 # OSC-3 item 1: the split. test-compiler-full is everything (the targets above,
-# full counts; receipts use it). test-compiler is kept as an alias of full so old
-# commands and scripts keep their meaning. test-compiler-quick (< 60 s single
+# full counts; receipts use it). test-compiler keeps its old meaning; full adds the
+# OSC-4 float slice gates G1 and G2 (docs/osc/OSC-4-FLOATS.md). test-compiler-quick (< 60 s single
 # core) is the every-change CI leg: same binaries, same golden and negative
 # programs, same determinism check, smaller sweeps and fuzz counts (stated in
 # each output). Quick is a smoke run, never receipt evidence.
@@ -184,7 +186,7 @@ OSC_QDIR = $(OSC_DIR)/quick
 OSC_QUICK_MODEL_SEQ ?= 100000
 OSC_QUICK_FUZZ ?= 120
 OSC_QUICK_ASAN_FUZZ ?= 120
-test-compiler-full: test-compiler
+test-compiler-full: test-compiler test-compiler-float-g1 test-compiler-float-g2
 
 test-compiler-quick: $(OSC_DIR)/test_osc_model $(OSC_DIR)/test_osc_backend $(OSC_DIR)/test_osc_backend_asan \
 		$(OSC_DIR)/test_osc_alloc $(OSC_DIR)/test_osc_alloc_asan \

@@ -2077,7 +2077,7 @@ static void float_slice_fuzz(unsigned n)
                "    if k == 0 { return (x as %s bits) as u64; }\n"
                "    if k == 1 { return (y as %s bits) as u64; }\n"
                "    if k == 2 { return m; }\n"
-               "    if k == 3 { return (x as i32) as u64; }\n"
+               "    if k == 3 { return (((x as i32) as i64) + 2147483648) as u64; }\n"
                "    if k == 4 { return (x as f64) as u64 bits; }\n"
                "    if k == 5 { return (((x as f8e4m3) as u8 bits) as u64) | ((((x as bf16) as u16 bits) as u64) << 8) |\n"
                "                       ((((x as f16) as u16 bits) as u64) << 24) | ((((x as f32) as u32 bits) as u64) << 32); }\n"

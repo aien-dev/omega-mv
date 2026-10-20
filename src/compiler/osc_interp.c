@@ -149,8 +149,39 @@ static uint64_t do_fminmax(bool dbl, bool is_max, uint64_t a, uint64_t b) {
     return is_max ? (lt ? b : a) : (lt ? a : b);
 }
 
+/* Arm ARM DDI0487 M.d J1.4 FPProcessNaNs / FPProcessNaNs3 on f32 (dbl false) or f64 bit patterns.
+ * C does not say which NaN operand an operation returns: the compiler may swap the
+ * operands of a commutative + or *, or the two multiplicands of fmaf, so the choice is
+ * spelled out: a signalling NaN first (quietened), else the first quiet NaN; for fma
+ * the addend c comes before a and b, and a quiet-NaN addend with inf * 0 gives the
+ * default NaN (FPMulAdd). */
+static uint64_t wqbit(bool dbl) { return dbl ? 0x0008000000000000ull : 0x00400000u; }
+static bool wnan(bool dbl, uint64_t x) { return dbl ? (x & 0x7fffffffffffffffull) > 0x7ff0000000000000ull : (x & 0x7fffffffu) > 0x7f800000u; }
+static bool wsnan(bool dbl, uint64_t x) { return wnan(dbl, x) && !(x & wqbit(dbl)); }
+static bool winf(bool dbl, uint64_t x) { return dbl ? (x & 0x7fffffffffffffffull) == 0x7ff0000000000000ull : (x & 0x7fffffffu) == 0x7f800000u; }
+static bool wzero(bool dbl, uint64_t x) { return dbl ? (x & 0x7fffffffffffffffull) == 0 : (x & 0x7fffffffu) == 0; }
+static bool nans2(bool dbl, uint64_t a, uint64_t b, uint64_t *r) {
+    if (!wnan(dbl, a) && !wnan(dbl, b)) return false;
+    if (wsnan(dbl, a)) *r = a | wqbit(dbl);
+    else if (wsnan(dbl, b)) *r = b | wqbit(dbl);
+    else *r = wnan(dbl, a) ? a : b;
+    return true;
+}
+static bool nans3(bool dbl, uint64_t a, uint64_t b, uint64_t c, uint64_t *r) {
+    if (!wnan(dbl, a) && !wnan(dbl, b) && !wnan(dbl, c)) return false;
+    if (wsnan(dbl, c)) *r = c | wqbit(dbl);
+    else if (wsnan(dbl, a)) *r = a | wqbit(dbl);
+    else if (wsnan(dbl, b)) *r = b | wqbit(dbl);
+    else *r = wnan(dbl, c) ? c : wnan(dbl, a) ? a : b;
+    if (wnan(dbl, c) && !wsnan(dbl, c) && ((winf(dbl, a) && wzero(dbl, b)) || (wzero(dbl, a) && winf(dbl, b))))
+        *r = dbl ? 0x7ff8000000000000ull : 0x7fc00000u;
+    return true;
+}
+
 static uint64_t do_fbin(Ctx *c, unsigned sub, bool dbl, uint64_t a, uint64_t b) {
     if (sub == OSC_FB_MIN || sub == OSC_FB_MAX) return do_fminmax(dbl, sub == OSC_FB_MAX, a, b);
+    uint64_t nr;
+    if (nans2(dbl, a, b, &nr)) return nr;
     if (dbl) {
         volatile double x = f64_of(a), y = f64_of(b), r;
         switch (sub) {
@@ -327,10 +358,13 @@ static uint64_t do_ftoi_any(OscScalar from, uint64_t a, OscScalar to) {
 
 /* a * b + c with one rounding (FMADD); bf16 / f8e4m3: f32 FMADD of the widened values, then narrow */
 static uint64_t do_fma_any(OscScalar t, uint64_t a, uint64_t b, uint64_t c) {
+    uint64_t nr;
+    if (t == OSC_T_F64 && nans3(true, a, b, c, &nr)) return nr;
     if (t == OSC_T_F64) { volatile double x = f64_of(a), y = f64_of(b), z = f64_of(c), r = fma(x, y, z); return bits_f64(r); }
     if (t == OSC_T_F16) return osc_fp_f16_fma(a, b, c);
     uint64_t wa = t == OSC_T_F32 ? a : osc_fp_widen32(t, a), wb = t == OSC_T_F32 ? b : osc_fp_widen32(t, b),
              wc = t == OSC_T_F32 ? c : osc_fp_widen32(t, c);
+    if (nans3(false, wa, wb, wc, &nr)) return t == OSC_T_F32 ? nr : narrow_f32(t, nr);
     volatile float x = f32_of(wa), y = f32_of(wb), z = f32_of(wc), r = fmaf(x, y, z);
     return t == OSC_T_F32 ? bits_f32(r) : narrow_f32(t, bits_f32(r));
 }

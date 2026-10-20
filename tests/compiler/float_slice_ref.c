@@ -7,7 +7,7 @@
  * input to the compiler. Shares no code with src/compiler/osc_fp.c:
  *   f16    C _Float16 (gcc: the half-precision instructions, FMADD H for fmaf16;
  *          sqrt through sqrtf, see ref_un)
- *   bf16   C __bf16; float -> __bf16 and double -> __bf16 are libgcc's software
+ *   bf16   widened by its definition (see widen); float -> __bf16 and double -> __bf16 are libgcc's software
  *          conversions (__truncsfbf2, __truncdfbf2), not BFCVT (no +bf16 here)
  *   f8e4m3 no C type: decoded from the OCP formula with ldexpf, encoded by a
  *          brute-force search over all 256 codes (nearest, ties to the even code,
@@ -24,7 +24,6 @@
 /* ---- bit-pattern views ---- */
 static _Float16 h_of(uint64_t x) { uint16_t w = (uint16_t)x; _Float16 h; memcpy(&h, &w, 2); return h; }
 static uint64_t b_h(_Float16 h) { uint16_t w; memcpy(&w, &h, 2); return w; }
-static __bf16 bf_of(uint64_t x) { uint16_t w = (uint16_t)x; __bf16 h; memcpy(&h, &w, 2); return h; }
 static uint64_t b_bf(__bf16 h) { uint16_t w; memcpy(&w, &h, 2); return w; }
 static float f_of(uint64_t x) { uint32_t w = (uint32_t)x; float f; memcpy(&f, &w, 4); return f; }
 static uint64_t b_f(float f) { uint32_t w; memcpy(&w, &f, 4); return w; }
@@ -69,12 +68,60 @@ static uint64_t e4_enc(double x)
     return (uint64_t)best | (neg ? 0x80u : 0u);
 }
 
+/* ---- NaN results, spelled out (DDI0487 M.d J1.4 FPProcessNaNs, FPProcessNaNs3, FPMulAdd,
+ * FPMinNum / FPMaxNum): C does not say which NaN operand comes out (gcc may swap the operands
+ * of + and * or the fma multiplicands), so the reference states the rule for f16, f32, f64
+ * (the storage formats compute in f32). 1 and the result in *r when a NaN decides it. */
+static unsigned nm_(int t) { return t == R_F16 ? 10 : t == R_F32 ? 23 : 52; }
+static uint64_t nmask(int t) { return t == R_F64 ? ~0ull >> 1 : (1ull << (t == R_F16 ? 15 : 31)) - 1; }
+static uint64_t ninf(int t) { return nmask(t) & ~((1ull << nm_(t)) - 1); }
+static int isnan_(int t, uint64_t x) { return (x & nmask(t)) > ninf(t); }
+static int issnan_(int t, uint64_t x) { return isnan_(t, x) && !(x >> (nm_(t) - 1) & 1); }
+static uint64_t quiet_(int t, uint64_t x) { return x | 1ull << (nm_(t) - 1); }
+static int nan2(int t, uint64_t a, uint64_t b, uint64_t *r)
+{
+    if (issnan_(t, a)) *r = quiet_(t, a);
+    else if (issnan_(t, b)) *r = quiet_(t, b);
+    else if (isnan_(t, a)) *r = a;
+    else if (isnan_(t, b)) *r = b;
+    else return 0;
+    return 1;
+}
+static int nan3(int t, uint64_t a, uint64_t b, uint64_t c, uint64_t *r)
+{
+    if (issnan_(t, c)) *r = quiet_(t, c);
+    else if (issnan_(t, a)) *r = quiet_(t, a);
+    else if (issnan_(t, b)) *r = quiet_(t, b);
+    else if (isnan_(t, c)) *r = c;
+    else if (isnan_(t, a)) *r = a;
+    else if (isnan_(t, b)) *r = b;
+    else return 0;
+    uint64_t ma = a & nmask(t), mb = b & nmask(t);
+    if (isnan_(t, c) && !issnan_(t, c) && ((ma == ninf(t) && mb == 0) || (ma == 0 && mb == ninf(t))))
+        *r = ninf(t) | 1ull << (nm_(t) - 1); /* default NaN */
+    return 1;
+}
+/* FMINNM / FMAXNM: one quiet NaN and one number give the number */
+static int nan_mm(int t, uint64_t a, uint64_t b, uint64_t *r)
+{
+    if (isnan_(t, a) && !issnan_(t, a) && !isnan_(t, b)) { *r = b; return 1; }
+    if (isnan_(t, b) && !issnan_(t, b) && !isnan_(t, a)) { *r = a; return 1; }
+    return nan2(t, a, b, r);
+}
+
 /* ---- values: a float type's bit pattern as a C number (for the storage formats, the f32 widening) ---- */
-static float widen(int t, uint64_t a) { return t == R_BF16 ? (float)bf_of(a) : e4_dec(a); }
+/* bf16 widens as the manual defines it, the 16 bits followed by 16 zeros (DDI0487 M.d J1.4.3.106
+ * BFMulAddH: "value1 = op1 :: Zeros{16}"), so a signalling NaN stays signalling; C's (float) on a
+ * __bf16 (libgcc __extendbfsf2) quietens it instead. Every non-NaN value is the same either way. */
+static float widen(int t, uint64_t a) { return t == R_BF16 ? f_of((a & 0xFFFF) << 16) : e4_dec(a); }
 static uint64_t narrow_f(int t, float x) { return t == R_BF16 ? b_bf((__bf16)x) : e4_enc((double)x); }
 
 uint64_t ref_bin(int t, int op, uint64_t a, uint64_t b)
 {
+    /* storage formats: the f32 operation of the exact widenings, then one rounding */
+    if (t == R_BF16 || t == R_F8) return narrow_f(t, f_of(ref_bin(R_F32, op, b_f(widen(t, a)), b_f(widen(t, b)))));
+    uint64_t nr;
+    if (op >= R_MIN ? nan_mm(t, a, b, &nr) : nan2(t, a, b, &nr)) return nr;
     switch (t) {
     case R_F16: {
         _Float16 x = h_of(a), y = h_of(b), r;
@@ -100,7 +147,7 @@ uint64_t ref_bin(int t, int op, uint64_t a, uint64_t b)
         }
         return b_f(r);
     }
-    case R_F64: {
+    default: { /* R_F64 */
         double x = d_of(a), y = d_of(b), r;
         switch (op) {
         case R_ADD: r = x + y; break;
@@ -112,28 +159,19 @@ uint64_t ref_bin(int t, int op, uint64_t a, uint64_t b)
         }
         return b_d(r);
     }
-    default: { /* storage formats: f32 operation of the widened values, then one rounding */
-        float x = widen(t, a), y = widen(t, b), r;
-        switch (op) {
-        case R_ADD: r = x + y; break;
-        case R_SUB: r = x - y; break;
-        case R_MUL: r = x * y; break;
-        case R_DIV: r = x / y; break;
-        case R_MIN: r = __builtin_fminf(x, y); break;
-        default: r = __builtin_fmaxf(x, y); break;
-        }
-        return narrow_f(t, r);
-    }
     }
 }
 
 uint64_t ref_fma(int t, uint64_t a, uint64_t b, uint64_t c)
 {
+    if (t == R_BF16 || t == R_F8)
+        return narrow_f(t, f_of(ref_fma(R_F32, b_f(widen(t, a)), b_f(widen(t, b)), b_f(widen(t, c)))));
+    uint64_t nr;
+    if (nan3(t, a, b, c, &nr)) return nr;
     switch (t) {
     case R_F16: return b_h(__builtin_fmaf16(h_of(a), h_of(b), h_of(c)));
     case R_F32: return b_f(fmaf(f_of(a), f_of(b), f_of(c)));
-    case R_F64: return b_d(fma(d_of(a), d_of(b), d_of(c)));
-    default: return narrow_f(t, fmaf(widen(t, a), widen(t, b), widen(t, c)));
+    default: return b_d(fma(d_of(a), d_of(b), d_of(c)));
     }
 }
 
