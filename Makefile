@@ -48,6 +48,7 @@ SRCS += src/omega_gpu_mem_cached.c
 SRCS += src/omega_gpu_decode_graph.c
 # sc #642 (2026-10-18): one Qwen3.8-27B decode token as one command list (GDN + hd256 attention layers, dense MLP)
 SRCS += src/omega_gpu_q38_graph.c
+SRCS += src/omega_gpu_q36_graph.c
 # OWN-30B (2026-10-13): bf16 streaming GEMV for the lm_head (omega_gpu_bf16_gemv_api.h), new files only
 SRCS += src/omega_blackwell_codegen_bf16.c src/omega_gpu_bf16_gemv_api.c
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM, each expert streamed once per pass (omega_gpu_fp8gemm_api.h), new files only
