@@ -532,6 +532,7 @@ fn cmd_run(args: &[String]) {
         enc.iter().map(|e| e.len()).collect::<Vec<_>>(),
         rayon::current_num_threads()
     ));
+    let mut slot_fail = false;
     let mut results: Vec<ModeResult> = Vec::new();
     for mode in &modes {
         let mut cache = None;
@@ -628,15 +629,23 @@ fn cmd_run(args: &[String]) {
             );
             if s.mismatched_slots != 0 {
                 line += " SLOT-MISMATCH";
+                slot_fail = true;
             }
         }
         log(line);
         results.push(res);
     }
     // Identity gate: every mode against the first one (ref).
+    // Identity gate: every streamed mode against ref. A run without ref (trace recording) has no gate and says so.
+    let mut fail = slot_fail;
+    if slot_fail {
+        log("gate slots: a streamed expert differed from the resident copy => FAIL".to_string());
+    }
+    if modes[0] != "ref" {
+        log(format!("gate: none (first mode is {}, not ref; trace or timing only)", modes[0]));
+    }
     let base = &results[0];
-    let mut fail = false;
-    for r in &results[1..] {
+    for r in results.iter().skip(1).filter(|_| modes[0] == "ref") {
         let tok_same = r.tokens == base.tokens;
         let logit_same = r.logit_sha == base.logit_sha;
         let n: usize = r.tokens.iter().map(|t| t.len()).sum();

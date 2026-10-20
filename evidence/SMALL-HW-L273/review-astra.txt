@@ -1,0 +1,15 @@
+1. **W4 predictions inherit unverified FP8 routing.** [SMALL_HARDWARE.md:160](docs/speed/SMALL_HARDWARE.md#L160) applies the FP8 trace’s 92% hit rate to W4 ceilings. Quantization can change routing and generated tokens. Label these conditional estimates requiring unchanged routing; the four-token FP8 smoke test does not establish W4 identity or cache behavior.
+
+2. **Identity failures can escape the gate.** [moe_stream.rs:629](research/small-hw/moe_stream/moe_stream.rs#L629) only prints `SLOT-MISMATCH`; it never sets failure status. At line 637, the baseline is simply the first mode, without requiring `ref`. A single-mode run exits successfully without checking identity, as trace128 does.
+
+3. **Cross-machine speedups assume an unsupported pipeline.** [SMALL_HARDWARE.md:238](docs/speed/SMALL_HARDWARE.md#L238) overlaps drafting the next block with verification before the accepted prefix and correction token are known. Rejections invalidate speculative continuation. Without a recovery protocol and its cost, the 1.16× improvement and acceptance thresholds are unsupported.
+
+4. **The lever table understates RAM traffic and speculative work.** [SMALL_HARDWARE.md:199](docs/speed/SMALL_HARDWARE.md#L199) counts “shared + misses only,” although cached experts still traverse RAM. Section 5 correctly includes all active weight bytes. Line 201 also claims unchanged multiplies per accepted token; rejected drafts and drafter computation increase that cost.
+
+5. **Whole-model sizes conflict, and grid residency is underspecified.** [SMALL_HARDWARE.md:67](docs/speed/SMALL_HARDWARE.md#L67) lists 8B FP8/W4/W2 as 8.8/4.4/2.6 GB; [calc-receipts.txt:41](research/small-hw/calc-receipts.txt#L41) gives 9.435/5.265/3.529 GB. [grid.sh:29](research/small-hw/grid.sh#L29) allocates all available room to active weights without explaining where the additional embedding storage lives.
+
+6. **Cache results need their warming conditions stated.** [moe_stream.rs:536](research/small-hw/moe_stream/moe_stream.rs#L536) correctly creates a cold cache per mode, but retains it across prompts. `cmd_sim` likewise warms through prefill and preceding prompts while reporting decode-only hits. These are not independently cold-prompt rates. “Best possible” Belady also optimizes the full access sequence, not specifically decode-only misses.
+
+7. **The dense-model rejection contradicts the grid.** [SMALL_HARDWARE.md:213](docs/speed/SMALL_HARDWARE.md#L213) charges all 13.65 GB to disk, claiming 30 seconds/token; the grid retains weights and streams 7.35 GB. “Unusable” at line 133 is an unsupported usability judgment.
+
+8. **Requested coverage and claim labels remain incomplete.** [SMALL_HARDWARE.md:45](docs/speed/SMALL_HARDWARE.md#L45) leaves USB unexplored; lines 124–127 omit non-W4 MoE streaming costs. Summary claims and “published”/“ASSUMED” rows lack the required epistemic tags. The arithmetic file mostly supplies results and IDs, not reproducible expressions and commands.

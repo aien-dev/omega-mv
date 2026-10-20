@@ -11,13 +11,13 @@ counts only if the words come out identical to the reference; anything that chan
 
 ## Summary for Drake
 
-- **The one law.** Writing a word means reading the part of the model that word uses. Speed ceiling = memory speed
+- **The one law** (physics, L123). Writing a word means reading the part of the model that word uses. Speed ceiling = memory speed
   divided by bytes read per word. Small machines have slow memory (a Pi 5 moves 17 GB/s, the Spark 273), so the only
   ways in are: read fewer bytes per word, keep the bytes that are needed close, and guess several words per read.
 - **The 30B mixture-of-experts model is the natural small-hardware "smart" model.** Each word uses only 8 of its 128
   experts per layer, so it reads 3.37 GB per word at 8 bits (calc:70c43eb6) against 26.89 GB for the 27B: eight times
   less. At 4 bits that is 1.63 GB per word (calc:d16a15a4).
-- **It does not fit in a Pi's memory** (16.7 GB at 4 bits, calc:6139121f), so the experts must come from the disk while
+- **It does not fit in a Pi's memory** (16.7 GB at 4 bits, calc:6139121f, INFERRED), so the experts must come from the disk while
   it runs. That is what the probe in section 5 measures: the 30B with its experts pulled from disk through a
   speed-limited reader, words checked bit for bit against the model running fully in memory.
 - **Probe result so far:** streamed experts give bit-identical words (smoke run). With the memory an 8 GB Pi can spare, 92 percent of expert lookups hit the cache, so the 30B streamed from a Pi NVMe drive has a ceiling of 3.76 words/s (calc:e35fa8b7), about the 4.25 of an 8B held fully in memory (calc:edc54726). Timed stand-in run: section 5.
@@ -43,8 +43,8 @@ counts only if the words come out identical to the reference; anything that chan
 | Target | Memory | Memory speed | Disk read | Source / tag |
 |---|---|---|---|---|
 | Raspberry Pi 5 | 8 GB or 16 GB LPDDR4X-4267, 32-bit bus | 17.07 GB/s spec (calc:59c2129b); measured UNKNOWN | SD card 96 MB/s (OBSERVED: our firmware read 807,694,368 B in 8.40 s, aienos `docs/native/PI5-6-INFER-RUNS.md`); NVMe on the PCIe 2.0 x1 port about 0.45-0.5 GB/s, 0.83-0.9 GB/s with the unofficial Gen 3 setting (web reports, raspberry.tips, kiwi-electronics); USB 3 SSD UNKNOWN (not looked up) | spec + one OBSERVED |
-| MacBook Air M2 | 8, 16 or 24 GB unified | 100 GB/s (Apple figure, Computerworld review) | 256 GB model about 1.45 GB/s, 512 GB and up about 2.8-2.9 GB/s (How-To Geek / Tom's Guide Blackmagic runs) | published |
-| PC: RTX 5070 | 12 GB GDDR7 on the card; host RAM UNKNOWN | 672 GB/s on the card (Guru3D review spec table); PCIe 5.0, lane count UNCONFIRMED (x16 in leaks, x8 in one listing): 63 GB/s at x16, 31.5 at x8 | PC disk 1.82 TB, type UNKNOWN (aienos `docs/PC_AIENOS_MAP`: photo-level facts only) | published + UNKNOWN |
+| MacBook Air M2 | 8, 16 or 24 GB unified | 100 GB/s (Apple figure, Computerworld review) | 256 GB model about 1.45 GB/s, 512 GB and up about 2.8-2.9 GB/s (How-To Geek / Tom's Guide Blackmagic runs) | published, not measured by us |
+| PC: RTX 5070 | 12 GB GDDR7 on the card; host RAM UNKNOWN | 672 GB/s on the card (Guru3D review spec table); PCIe 5.0, lane count UNCONFIRMED (x16 in leaks, x8 in one listing): 63 GB/s at x16, 31.5 at x8 | PC disk 1.82 TB, type UNKNOWN (aienos `docs/PC_AIENOS_MAP`: photo-level facts only) | published, not measured by us + UNKNOWN |
 | Generic 8 GB laptop | 8 GB DDR4-3200 dual channel (assumed) | 51.2 GB/s (2 x 64-bit x 3200 MT/s; single channel would be 25.6) | NVMe 2-7 GB/s class (assumed) | ASSUMED, no device |
 | DGX Spark (for reference) | 128 GB LPDDR5x unified | 273 GB/s spec, 218.6 measured whole-model stream | NVMe 0.64-1.95 GB/s model-free round trip | L123 audit section 2 |
 
@@ -59,14 +59,14 @@ calc:7d37adcf) matches its checkpoint files on disk (31,175,618,584 B), which ch
 | 27B dense | FP8 (+ bf16 head) | 26.89 GB | 26.89 GB | 25.6 G | L123 audit (`CEILING.md:34`) |
 | 27B dense | W4 (stored 4-bit, L125) | 13.65 GB | 13.65 GB | 25.6 G | L125 receipt |
 | 27B dense | W2 (2.25 b body, 4.25 b head) | 7.52 GB | 7.52 GB (calc:14904590) | 25.6 G | arithmetic; quality UNKNOWN |
-| 30B-A3B MoE | BF16 | about 61 GB | 6.08 GB (calc:5e2ab3b7) | 3.04 G | config arithmetic |
+| 30B-A3B MoE | BF16 | 61.06 GB (calc:d0ce8575) | 6.08 GB (calc:5e2ab3b7) | 3.04 G | config arithmetic |
 | 30B-A3B MoE | FP8 (as shipped, bf16 head) | 31.17 GB (calc:7d37adcf) | 3.37 GB (calc:70c43eb6), of which experts 1.81 GB (calc:dcadaaa2) | 3.04 G | config arithmetic |
 | 30B-A3B MoE | W4 | 16.70 GB (calc:6139121f) | 1.63 GB (calc:d16a15a4): shared 0.67 (calc:8d61da57) + experts 0.96 (calc:a392f781) | 3.04 G | arithmetic |
 | 30B-A3B MoE | W2 | 9.22 GB (calc:f2bf26d1) | 0.95 GB (calc:050401c8) | 3.04 G | arithmetic; quality UNKNOWN |
-| 8B dense | BF16 | 16.4 GB | 15.14 GB (calc:5057bee8) | 7.57 G | config arithmetic |
-| 8B dense | FP8 (+ bf16 head) | 8.8 GB | 8.19 GB (calc:4ad1228e) | 7.57 G | config arithmetic |
-| 8B dense | W4 | 4.4 GB | 4.02 GB (calc:74205d0a) | 7.57 G | arithmetic |
-| 8B dense | W2 | 2.6 GB | 2.28 GB (calc:1664020a) | 7.57 G | arithmetic; quality UNKNOWN |
+| 8B dense | BF16 | 16.38 GB (calc:def1ebb4) | 15.14 GB (calc:5057bee8) | 7.57 G | config arithmetic |
+| 8B dense | FP8 (+ bf16 head and embedding) | 9.44 GB (calc:abbf9fba) | 8.19 GB (calc:4ad1228e) | 7.57 G | config arithmetic |
+| 8B dense | W4 (bf16 embedding) | 5.27 GB (calc:fab18ffb) | 4.02 GB (calc:74205d0a) | 7.57 G | arithmetic |
+| 8B dense | W2 (bf16 embedding) | 3.53 GB (calc:d98579a9) | 2.28 GB (calc:1664020a) | 7.57 G | arithmetic; quality UNKNOWN |
 
 "Multiplies per word" is one multiply-add per active weight (attention over the context adds a little and grows with
 it). KV cache per earlier word: 30B 98,304 B (calc:ffee0b48), 27B 65,536 B (calc:174870b2, L123). Joules per word on the
@@ -86,7 +86,7 @@ Ceiling = memory speed / active bytes per word, only where the whole model fits 
 
 | Target | Model and format that fits in memory | Ceiling tok/s | Receipt |
 |---|---|---|---|
-| Pi 5 8 GB | 8B W4 (4.4 GB) | 4.25 | calc:edc54726 |
+| Pi 5 8 GB | 8B W4 (5.27 GB) | 4.25 | calc:edc54726 |
 | Pi 5 8 GB | 8B W2 | 7.47 (quality UNKNOWN) | calc:abea9c93 |
 | Pi 5 16 GB | 30B W2 (9.2 GB) | 17.9 (quality UNKNOWN) | calc:57b87edd |
 | Pi 5 16 GB | 27B W2 (7.5 GB) | 2.27 (quality UNKNOWN) | calc:029d27ac |
@@ -130,7 +130,7 @@ size UNKNOWN). MoE rows that do not fit use the expert cache (section 5); only W
 | 8B-W4 | fits: 4.25 (calc:18e9324c) | fits: 4.25 (calc:18e9324c) | fits: 24.9 (calc:16bbf797) | fits: 24.9 (calc:16bbf797) | fits: 167 (calc:6bb962fb) | fits: 12.7 (calc:71ebc911) |
 | 8B-W2 | fits: 7.47 (calc:66254642) | fits: 7.47 (calc:66254642) | fits: 43.8 (calc:cc0b6336) | fits: 43.8 (calc:cc0b6336) | fits: 294 (calc:6e80e2f1) | fits: 22.4 (calc:15bb89d2) |
 
-Reading the grid: a dense model that does not fit and has to come from a disk is unusable (0.01 to 1.8 words/s), because
+Reading the grid: a dense model that does not fit and has to come from a disk stays below 2 words/s (0.01 to 1.81 in the grid), because
 every word re-reads gigabytes from the disk. The RTX 5070 is different: its second tier is PC RAM over PCIe, so the 27B W4
 streams at a 16.5 words/s ceiling (if the PC has the RAM). The 30B MoE is the exception because only its chosen experts are read and most of them
 are already cached (section 5).
@@ -161,10 +161,14 @@ FP8 slots (9.41 GB, calc:9e9f4602): same number of experts held, twice the bytes
 | 4,158 | RTX 5070 card | 0.980 | 7.6 | 0.983 |
 | 5,186 | Pi 5 16 GB | 0.983 | 6.7 | 0.983 (= first-touch floor of this short trace: 4,891 of 6,144 experts were touched at least once) |
 
-Limits: one short trace on two prompts (code and story); a long conversation or a topic change will move the working
+Warming conditions: the cache starts empty once and stays warm across the prompt reading and across both prompts, in that
+order; hit rates are counted over the writing steps only. Belady is the best possible eviction for the whole access
+sequence (an upper bound, not tuned for writing steps alone). Limits: one short trace on two prompts (code and story); a long conversation or a topic change will move the working
 set. The first-touch floor shrinks as a conversation gets longer. UNKNOWN: hit rate over thousands of words.
 
-**Predicted ceilings for the 30B at W4 with its experts streamed** (INFERRED; time per word = active bytes / RAM speed
+**Predicted ceilings for the 30B at W4 with its experts streamed** (INFERRED, and conditional: the hit rates come from
+the FP8 model's routing; a W4 model may route some words differently and write different words, so these hold only if
+W4 routing stays close to FP8 routing, UNKNOWN until a W4 trace is recorded; time per word = active bytes / RAM speed
 + miss bytes / disk speed, no prefetch overlap; 30.6 misses per word = 76.7 MB at W4, calc:3ac7c2af):
 
 | Target | Disk | Ceiling tok/s | With full prefetch overlap (L271) | Compare: 8B W4 fully in memory |
@@ -176,6 +180,7 @@ set. The first-touch floor shrinks as a conversation gets longer. UNKNOWN: hit r
 | 8 GB laptop | NVMe 3 GB/s (assumed) | 17.4 (calc:bf5d8976) | | 12.7 (calc:d2c3a087) |
 | M2 Air 8 GB | 256 GB SSD 1.45 GB/s | 14.4 (calc:dc4b9364) | | 24.9 (calc:813bbba0) |
 | RTX 5070 | misses from PC RAM over PCIe x16 | 366 (calc:cf9a625d; PC RAM size UNKNOWN) | | 167 (calc:7a98ea66) |
+| Pi 5 8 GB, FP8 experts instead of W4 (873 slots, calc:19a7c474; hit 0.691, 118.7 misses per word) | NVMe Gen 2 | 0.693 (calc:cfef2ee7) | | |
 
 Plain reading: on an 8 GB Pi with an NVMe drive, the 30B mixture-of-experts model, streamed with a cache, has about the
 same speed ceiling as an 8B model held fully in memory, and it is the far larger model (30.5 B
@@ -196,9 +201,9 @@ are per word; joules per word on small targets: UNKNOWN for all (no wall-power r
 
 | # | Lever | Bytes per word | Multiplies per word | Words identical? | Evidence | Status / owner |
 |---|---|---|---|---|---|---|
-| 1 | **30B MoE with an expert cache streamed from disk** (Heartbeat ring slots) | shared 0.67 GB + misses only (W4); misses measured in section 5 | 3.04 G, unchanged | **yes**, measured bit for bit (section 5) | this probe; L080 ring crate (sc `aien-heartbeat`, `aien-wormhole/cache.rs`) | L190 puts the ring on the chip path; this doc measures the small-box case |
+| 1 | **30B MoE with an expert cache streamed from disk** (Heartbeat ring slots) | all active bytes through RAM (1.63 GB at W4), plus the misses again from disk (76.7 MB per word on a Pi 8 GB, section 5) | 3.04 G, unchanged | **yes**, measured bit for bit (section 5) | this probe; L080 ring crate (sc `aien-heartbeat`, `aien-wormhole/cache.rs`) | L190 puts the ring on the chip path; this doc measures the small-box case |
 | 2 | **Prefetch the next word's experts** while the current word computes | same bytes, hidden behind compute: word time becomes max(compute, disk) instead of compute + disk | +1 small predictor per layer | yes (the prediction only moves reads earlier) | section 5 gives both terms per target | L271 (unassigned) |
-| 3 | **Draft k words locally, check them in one pass of the streamed 30B** | one pass reads each needed expert once for all k words, so disk misses per word fall by about the words accepted per pass (if the k words share experts: UNKNOWN until measured) | k x 3.04 G per pass, same per accepted word | yes | MTP/DFlash acceptance on the 27B (L123 G/H); none for the 30B on a small box | not started; "yes if" a small resident drafter's acceptance on the 30B is measured |
+| 3 | **Draft k words locally, check them in one pass of the streamed 30B** | one pass reads each needed expert once for all k words, so disk misses per word fall by about the words accepted per pass (if the k words share experts: UNKNOWN until measured) | k x 3.04 G per pass plus the drafter's own work; rejected guesses are extra work | yes | MTP/DFlash acceptance on the 27B (L123 G/H); none for the 30B on a small box | not started; "yes if" a small resident drafter's acceptance on the 30B is measured |
 | 4 | **W4 weights** | half of FP8 (27B 26.89 -> 13.65 GB; 30B 3.37 -> 1.63 GB) | unchanged | **no**: same next word as FP8 about 88 percent on code; passes the frozen W4 fit gate (L125, pooled 0.938) | L125, L134 | L125 READY; the W4 model is its own reference once chosen |
 | 5 | **Laptop drafts, Spark checks over the network** (section 7) | 0 big-model bytes on the laptop | the Spark's | **yes**, identical to the Spark | link measured 3 ms median | needs a reachable Spark; L190/L270 own the pair and cascade |
 | 6 | **Lossless weight coding** (store weights in their entropy, decode exactly) | below the stored bits if the entropy is lower; decoding cost on the small CPU is the price | + decode work | yes | L274 `tools/wpt_entropy.c` (no result yet) | L274 owns it; "yes if" its entropy count shows a gap worth the decode time |
@@ -210,7 +215,7 @@ are per word; joules per word on small targets: UNKNOWN for all (no wall-power r
 Ruled out, with the physical limit and what would have to be true:
 
 - **27B dense at FP8 or W4 on any 8 GB box**: the model is 26.89 / 13.65 GB and every word reads all of it. Streaming
-  it from a 0.45 GB/s Pi disk costs 30 s per word at W4 (13.65 GB / 0.45 GB/s, INFERRED). Yes if the box has 16 GB+
+  it from a 0.45 GB/s Pi disk keeps 7.35 GB of it outside memory and re-reads that every word: 0.058 words/s at W4 (grid, calc:1582a08c). Yes if the box has 16 GB+
   and W2 quality holds (2.27 tok/s ceiling on a 16 GB Pi, calc:029d27ac), or via lever 5.
 - **Keeping the 30B on the RTX 5070 entirely in its 12 GB**: W4 is 16.7 GB. Yes at W2 (9.2 GB, 704 tok/s ceiling,
   calc:d1c1277d, quality UNKNOWN), or with 4158 W4 expert slots on the card (calc:b41147b7) and misses over PCIe from
@@ -235,13 +240,17 @@ UNKNOWN: a round trip on our own signed transport. It exists only inside AienOS 
 signed WireGuard round trip above is the stand-in. Message size per round is k word ids or k short strings (tens of
 bytes), so link speed does not matter; only the round trip does.
 
-**Latency budget per round (INFERRED).** Round time with drafting overlapped (the laptop drafts the next block while
-the Spark checks the current one) = max(k x laptop draft time per word, Spark check time) + round trip.
+**Latency budget per round (INFERRED).** Plain round: k x laptop draft time per word + round trip + Spark check time.
+Overlapped round (the laptop keeps drafting past its own guesses while the Spark checks): max(k x draft time, check
+time) + round trip, but only when every guess is accepted; on a rejection the extra drafts are thrown away and the laptop
+restarts from the Spark's corrected word, so that round costs the plain time. Real rounds sit between the two,
+weighted by how often a whole block is accepted (UNKNOWN until acceptance is measured).
 
 - Network share of a round: 3 ms of a 131 ms live FP8 check is 2.3 percent (calc:e8709247); 5 ms (p90) of the 70 ms
   W4 pass is 7.1 percent (calc:5e61cc1d). On the home LAN the network is not the limit.
 - Against the Spark's own on-chip drafter (MTP: 131 + 23 + 2 ms per round, moonshot E in L123): a remote drafter with
-  the same acceptance makes rounds 1.16 times shorter (calc:3a38a3a9), because drafting leaves the Spark's memory bus.
+  the same acceptance makes fully accepted overlapped rounds 1.16 times shorter (calc:3a38a3a9, an upper bound), because
+  drafting leaves the Spark's memory bus; plain rounds gain only if the laptop drafts k words faster than 23 ms.
 - Example at the MTP code acceptance (4.15 words per round, measured on the Spark, used here only as an illustration):
   31.0 tok/s at FP8 (calc:9e823deb), 55.4 at W4 (calc:f23368f6, assumes a 4-bit multi-row check at one-row cost, which
   has no receipt yet, L123 lever G). Over the internet with a 50 ms round trip: 34.6 at W4 (calc:2e0e0836).
@@ -255,5 +264,5 @@ the Spark checks the current one) = max(k x laptop draft time per word, Spark ch
 What it gives Drake: on the laptop, words identical to the Spark's 27B at the Spark's speed or better, as long as the
 laptop can reach the Spark. Offline, the laptop gets only what fits locally (sections 4 and 5). "Yes if": a measured
 acceptance of at least 1 + round trip / check time (1.023 at FP8 on the LAN) pays against the Spark alone; beating the
-Spark's own MTP drafter needs acceptance within 16 percent of MTP's.
+Spark's own MTP drafter needs acceptance within 16 percent of MTP's in fully accepted overlapped rounds (upper bound).
 
