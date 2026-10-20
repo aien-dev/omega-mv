@@ -59,6 +59,10 @@ struct OmegaGpuQ38Graph {
     uint32_t n_kind, tagged_in_list, n_stamp;
     uint8_t kind[OMEGA_GPU_CMDLIST_MAX_LAUNCHES];
     uint64_t stamp[OMEGA_GPU_CMDLIST_MAX_LAUNCHES + 1];
+    /* rows mode (speed2/specdecode, see the header): rbuf GPU-uncached (host writes x, reads x and tokens), rdbuf GPU-cached */
+    uint32_t max_rows, n_gdn, last_m;
+    OmegaGpuMem rbuf, rdbuf;
+    struct { size_t x, tok, logits, am_v, am_i, split, xq, kmix, kab, amix, agg, att, o, gu, act, hid, tvout, bytes; } rl;
 };
 
 static size_t al(size_t v) { return (v + 255u) & ~(size_t)255u; }
@@ -110,6 +114,8 @@ void omega_gpu_q38_graph_free(OmegaGpuQ38Graph *g) {
     for (unsigned i = 0; i < K_COUNT; i++) if (g->k[i].code.cpu) omega_gpu_session_free(&g->k[i].code);
     if (g->buf.cpu) omega_gpu_session_free(&g->buf);
     if (g->dbuf.cpu) omega_gpu_session_free(&g->dbuf);
+    if (g->rbuf.cpu) omega_gpu_session_free(&g->rbuf);
+    if (g->rdbuf.cpu) omega_gpu_session_free(&g->rdbuf);
     omega_gpu_session_unlock();
     omega_gpu_host_free(g);
 }
@@ -501,4 +507,223 @@ const char *omega_gpu_q38_graph_kind_name(uint8_t kind) {
     static const char *const names[OMEGA_GPU_Q38_K_COUNT] = { "norm", "mix", "ab", "gdn", "gather", "attn", "gate", "o_proj", "res",
                                                               "gate_up", "swiglu", "down", "lm_head", "argmax" };
     return kind < OMEGA_GPU_Q38_K_COUNT ? names[kind] : "?";
+}
+
+/* ---- rows mode (speed2/specdecode; see the header) ---- */
+
+static uint64_t rva(const OmegaGpuQ38Graph *g, size_t off) { return off < g->rl.split ? g->rbuf.va + off : g->rdbuf.va + (off - g->rl.split); }
+static void *rcpu(const OmegaGpuQ38Graph *g, size_t off) { return (uint8_t *)g->rbuf.cpu + off; } /* off < rl.split */
+#define LOGIT_ROW(g) ((size_t)(g)->am_ctas * OMEGA_DEC_ARGMAX_SPAN) /* padded floats per logits row */
+
+int omega_gpu_q38_graph_rows_reserve(OmegaGpuQ38Graph *g, uint32_t max_rows) {
+    if (!g || g->in_token || max_rows == 0 || max_rows > OMEGA_GPU_Q38_MAX_ROWS) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    if (g->max_rows) return max_rows <= g->max_rows ? OMEGA_GPU_DGRAPH_OK : OMEGA_GPU_DGRAPH_BAD_ARGS;
+    if (g->cfg.vocab % COPY_ROW) return fail(g, "q38 rows: vocab not a multiple of 256", OMEGA_GPU_DGRAPH_BAD_ARGS);
+    uint32_t n_gdn = 0;
+    for (uint32_t l = 0; l < g->cfg.layers; l++) n_gdn += !g->layer[l].attn;
+    const size_t R = max_rows;
+    size_t o = 0;
+#define REG(f, bytes) do { g->rl.f = o; o = al(o + (bytes)); } while (0)
+    REG(x, R * H * 4); REG(tok, R * 16); REG(logits, R * LOGIT_ROW(g) * 4); REG(am_v, R * OMEGA_DEC_ARGMAX_SPAN * 4); REG(am_i, R * OMEGA_DEC_ARGMAX_SPAN * 4);
+    g->rl.split = o;
+    REG(xq, R * H * 4); REG(kmix, (size_t)(n_gdn ? n_gdn : 1) * R * OMEGA_GPU_Q38_GDN_MIX * 4); REG(kab, (size_t)(n_gdn ? n_gdn : 1) * R * OMEGA_GPU_Q38_AB * 4);
+    REG(amix, R * OMEGA_GPU_Q38_ATT_MIX * 4); REG(agg, R * OMEGA_GPU_Q38_ATT_MIX * 4); REG(att, R * OMEGA_GPU_Q38_MIXER_OUT * 4);
+    REG(o, R * H * 4); REG(gu, R * 2 * I * 4); REG(act, R * I * 4); REG(hid, R * H * 4); REG(tvout, R * (size_t)g->cfg.vocab * 4);
+#undef REG
+    g->rl.bytes = o;
+    int rc = OMEGA_GPU_DGRAPH_OK;
+    if (n_gdn && omega_gpu_gdn_checkpoint_reserve(g->cfg.gdn) != 0) return fail(g, "q38 rows: gdn checkpoint reserve", OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    omega_gpu_session_lock();
+    if (!omega_gpu_session_open() || omega_gpu_session_alloc(g->rl.split, &g->rbuf) != 0 ||
+        omega_gpu_session_alloc_cached(g->rl.bytes - g->rl.split, &g->rdbuf) != 0) rc = OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    if (rc == OMEGA_GPU_DGRAPH_OK) {
+        memset(g->rbuf.cpu, 0, g->rl.split);
+        memset(g->rdbuf.cpu, 0, g->rl.bytes - g->rl.split);
+        for (size_t r = 0; r < R; r++) {
+            float *lg = (float *)rcpu(g, g->rl.logits) + r * LOGIT_ROW(g), *amv = (float *)rcpu(g, g->rl.am_v) + r * OMEGA_DEC_ARGMAX_SPAN;
+            for (size_t i = g->cfg.vocab; i < LOGIT_ROW(g); i++) lg[i] = NEG_PAD; /* the head copy writes [0, vocab) of each row only */
+            for (size_t i = 0; i < OMEGA_DEC_ARGMAX_SPAN; i++) amv[i] = NEG_PAD;
+        }
+        if (omega_gpu_session_sync_to_gpu(&g->rbuf) != 0 || omega_gpu_session_sync_to_gpu(&g->rdbuf) != 0) rc = OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    }
+    if (rc != OMEGA_GPU_DGRAPH_OK) {
+        if (g->rbuf.cpu) omega_gpu_session_free(&g->rbuf);
+        if (g->rdbuf.cpu) omega_gpu_session_free(&g->rdbuf);
+    } else { g->max_rows = max_rows; g->n_gdn = n_gdn; }
+    omega_gpu_session_unlock();
+    return rc;
+}
+
+/* submit what is recorded when the next step could pass the launch cap */
+static int rows_room(OmegaGpuQ38Graph *g, uint32_t need) {
+    if (g->flush_each || omega_gpu_cmdlist_count(g->cl) + need + 8u <= OMEGA_GPU_CMDLIST_MAX_LAUNCHES) return OMEGA_GPU_DGRAPH_OK;
+    return submit_now(g);
+}
+
+static int rows_copy(OmegaGpuQ38Graph *g, uint8_t kind, uint64_t from, uint64_t to, uint32_t floats) {
+    uint32_t w[OMEGA_DEC_GA_WORDS]; memset(w, 0, sizeof w);
+    put64(w, OMEGA_DEC_GA_IN, from); put64(w, OMEGA_DEC_GA_TAB, va_of(g, g->lo.idtab)); put64(w, OMEGA_DEC_GA_OUT, to);
+    const Kern *k = &g->k[K_COPY];
+    OmegaGpuLaunch L; memset(&L, 0, sizeof L);
+    L.code_va = k->code.va; L.gpr_count = k->gpr; L.threads_x = OMEGA_DEC_THREADS; L.threads_y = 1; L.grid_x = 1; L.grid_y = floats / COPY_ROW;
+    L.num_elements = (size_t)L.grid_y * COPY_ROW; L.args = w; L.n_args = OMEGA_DEC_GA_WORDS; L.timeout_ms = TIMEOUT_MS;
+    return after_op(g, kind, omega_gpu_cmdlist_add(g->cl, &L) < 0 ? -1 : 0);
+}
+
+static int rows_layer(OmegaGpuQ38Graph *g, uint32_t l, uint32_t m, uint32_t pos0) {
+    const size_t HB = H * 4u;
+    const uint64_t x = rva(g, g->rl.x), xq = rva(g, g->rl.xq), att = rva(g, g->rl.att), o = rva(g, g->rl.o);
+    const uint64_t gu = rva(g, g->rl.gu), act = rva(g, g->rl.act);
+    const uint64_t in_norm = va_of(g, g->lo.norms) + (uint64_t)l * 2 * H * 4u, post_norm = in_norm + H * 4u;
+    const uint32_t ki = g->layer[l].kind_index;
+    int rc = rows_room(g, 6u * m + 8u);
+    if (l == 0) for (uint32_t r = 0; r < m && rc == 0; r++) rc = rec_res(g, K_NORM, x + r * HB, 0, in_norm, xq + r * HB, SCALE_2P64);
+    if (!g->layer[l].attn) {
+        const uint64_t kmix = rva(g, g->rl.kmix) + (uint64_t)ki * g->max_rows * OMEGA_GPU_Q38_GDN_MIX * 4u;
+        const uint64_t kab = rva(g, g->rl.kab) + (uint64_t)ki * g->max_rows * OMEGA_GPU_Q38_AB * 4u;
+        for (uint32_t r = 0; r < m && rc == 0; r++)
+            rc = after_op(g, OMEGA_GPU_Q38_K_AB, omega_gpu_bf16_gemv_record(g->cl, g->layer[l].ab, xq + r * HB, kab + r * OMEGA_GPU_Q38_AB * 4u));
+        if (rc == 0) rc = after_op(g, OMEGA_GPU_Q38_K_MIX, omega_gpu_tv_record_x_locked(g->cl, g->layer[l].mix, m, OMEGA_GPU_TV_X_F32, xq, kmix));
+        for (uint32_t r = 0; r < m && rc == 0; r++) {
+            const uint64_t mr = kmix + (uint64_t)r * OMEGA_GPU_Q38_GDN_MIX * 4u;
+            uint64_t out = 0;
+            rc = after_op(g, OMEGA_GPU_Q38_K_GDN, omega_gpu_gdn_record(g->cl, g->cfg.gdn, ki, mr, mr + OMEGA_GPU_Q38_GDN_QKV * 4u, kab + r * OMEGA_GPU_Q38_AB * 4u,
+                                                                     g->cfg.eps_l2, g->cfg.eps, 1.0f, SCALE_2P64, &out));
+            if (rc == 0) rc = rows_copy(g, OMEGA_GPU_Q38_K_GDN, out, att + (uint64_t)r * OMEGA_GPU_Q38_MIXER_OUT * 4u, OMEGA_GPU_Q38_MIXER_OUT);
+        }
+    } else {
+        const uint64_t amix = rva(g, g->rl.amix), agg = rva(g, g->rl.agg);
+        if (rc == 0) rc = after_op(g, OMEGA_GPU_Q38_K_MIX, omega_gpu_tv_record_x_locked(g->cl, g->layer[l].mix, m, OMEGA_GPU_TV_X_F32, xq, amix));
+        uint32_t w[OMEGA_DEC_GA_WORDS]; memset(w, 0, sizeof w);
+        put64(w, OMEGA_DEC_GA_IN, amix); put64(w, OMEGA_DEC_GA_TAB, va_of(g, g->lo.gtab)); put64(w, OMEGA_DEC_GA_OUT, agg);
+        if (rc == 0) /* rows y of 14336 in, 14336 out (the kernel's stride and width) */
+            rc = add_glue(g, OMEGA_GPU_Q38_K_GATHER, K_GATHER, (OMEGA_GPU_Q38_ATT_MIX + OMEGA_DEC_THREADS - 1) / OMEGA_DEC_THREADS, m,
+                          (size_t)m * OMEGA_GPU_Q38_ATT_MIX, w, OMEGA_DEC_GA_WORDS);
+        for (uint32_t r = 0; r < m && rc == 0; r++) {
+            const uint64_t ar = agg + (uint64_t)r * OMEGA_GPU_Q38_ATT_MIX * 4u, tr = att + (uint64_t)r * OMEGA_GPU_Q38_MIXER_OUT * 4u;
+            rc = after_op(g, OMEGA_GPU_Q38_K_ATTN, omega_gpu_decode_attn256_record(g->cl, g->cfg.attn, ki, g->mutant == 7 ? pos0 : pos0 + r, ar, g->cfg.eps, SCALE_2P64, tr));
+            uint32_t w2[OMEGA_DEC_GT_WORDS]; memset(w2, 0, sizeof w2);
+            put64(w2, OMEGA_DEC_GT_A, tr); put64(w2, OMEGA_DEC_GT_G, ar + OMEGA_GPU_Q38_ATT_QKV * 4u); put64(w2, OMEGA_DEC_GT_OUT, tr);
+            w2[(OMEGA_DEC_GT_N - 0x380) / 4] = OMEGA_GPU_Q38_MIXER_OUT;
+            if (rc == 0) rc = add_glue(g, OMEGA_GPU_Q38_K_GATE, K_GATE, OMEGA_GPU_Q38_MIXER_OUT / OMEGA_DEC_THREADS, 1, OMEGA_GPU_Q38_MIXER_OUT, w2, OMEGA_DEC_GT_WORDS);
+        }
+    }
+    if (rc == 0) rc = after_op(g, OMEGA_GPU_Q38_K_O, omega_gpu_tv_record_x_locked(g->cl, g->layer[l].o, m, OMEGA_GPU_TV_X_F32, att, o));
+    for (uint32_t r = 0; r < m && rc == 0; r++) rc = rec_res(g, K_ADDNORM, x + r * HB, o + r * HB, post_norm, xq + r * HB, SCALE_2P64);
+    if (rc == 0) rc = after_op(g, OMEGA_GPU_Q38_K_GATE_UP, omega_gpu_tv_record_x_locked(g->cl, g->layer[l].gu, m, OMEGA_GPU_TV_X_F32, xq, gu));
+    for (uint32_t r = 0; r < m && rc == 0; r++) {
+        uint32_t w3[OMEGA_DEC_SW_WORDS]; memset(w3, 0, sizeof w3);
+        put64(w3, OMEGA_DEC_SW_GU, gu + (uint64_t)r * 2 * I * 4u); put64(w3, OMEGA_DEC_SW_ACT, act + (uint64_t)r * I * 4u); putf(w3, OMEGA_DEC_SW_SCALE, SCALE_2P64);
+        rc = add_glue(g, OMEGA_GPU_Q38_K_SWIGLU, K_SW, I / OMEGA_DEC_THREADS, 1, I, w3, OMEGA_DEC_SW_WORDS);
+    }
+    if (rc == 0) rc = after_op(g, OMEGA_GPU_Q38_K_DOWN, omega_gpu_tv_record_x_locked(g->cl, g->layer[l].dn, m, OMEGA_GPU_TV_X_F32, act, o));
+    const int last = l + 1 == g->cfg.layers;
+    const uint64_t nw = last ? va_of(g, g->lo.fnorm) : in_norm + 2 * H * 4u, to = last ? rva(g, g->rl.hid) : xq;
+    for (uint32_t r = 0; r < m && rc == 0; r++) rc = rec_res(g, K_ADDNORM, x + r * HB, o + r * HB, nw, to + r * HB, last && !g->head8 ? 1.0f : SCALE_2P64);
+    return rc;
+}
+
+static int rows_final(OmegaGpuQ38Graph *g, uint32_t m) {
+    const size_t HB = H * 4u, LR = LOGIT_ROW(g) * 4u;
+    const uint64_t hid = rva(g, g->rl.hid), logits = rva(g, g->rl.logits), tvout = rva(g, g->rl.tvout);
+    const uint64_t amv = rva(g, g->rl.am_v), ami = rva(g, g->rl.am_i), tok = rva(g, g->rl.tok);
+    int rc = rows_room(g, 4u * m + 2u);
+    if (rc == 0 && g->head8) {
+        rc = after_op(g, OMEGA_GPU_Q38_K_LM_HEAD, omega_gpu_tv_record_x_locked(g->cl, g->head8, m, OMEGA_GPU_TV_X_F32, hid, tvout));
+        for (uint32_t r = 0; r < m && rc == 0; r++)
+            rc = rows_copy(g, OMEGA_GPU_Q38_K_LM_HEAD, tvout + (uint64_t)r * g->cfg.vocab * 4u, logits + r * LR, g->cfg.vocab);
+    } else {
+        for (uint32_t r = 0; r < m && rc == 0; r++)
+            rc = after_op(g, OMEGA_GPU_Q38_K_LM_HEAD, omega_gpu_bf16_gemv_record(g->cl, g->cfg.lm_head, hid + r * HB, logits + r * LR));
+    }
+    for (uint32_t r = 0; r < m && rc == 0; r++) {
+        const uint64_t av = amv + (uint64_t)r * OMEGA_DEC_ARGMAX_SPAN * 4u, ai = ami + (uint64_t)r * OMEGA_DEC_ARGMAX_SPAN * 4u, tr = tok + r * 16u;
+        uint32_t a0[OMEGA_DEC_AM_WORDS], a1[OMEGA_DEC_AM_WORDS]; memset(a0, 0, sizeof a0); memset(a1, 0, sizeof a1);
+        put64(a0, OMEGA_DEC_AM_V, logits + r * LR); put64(a0, OMEGA_DEC_AM_I, 0); put64(a0, OMEGA_DEC_AM_OV, av); put64(a0, OMEGA_DEC_AM_OI, ai);
+        put64(a1, OMEGA_DEC_AM_V, av); put64(a1, OMEGA_DEC_AM_I, ai); put64(a1, OMEGA_DEC_AM_OV, tr + 4u); put64(a1, OMEGA_DEC_AM_OI, tr);
+        rc = add_glue(g, OMEGA_GPU_Q38_K_ARGMAX, K_AM0, g->am_ctas, 1, (size_t)g->am_ctas * OMEGA_DEC_ARGMAX_SPAN, a0, OMEGA_DEC_AM_WORDS);
+        if (rc == 0) rc = add_glue(g, OMEGA_GPU_Q38_K_ARGMAX, K_AM1, 1, 1, OMEGA_DEC_ARGMAX_SPAN, a1, OMEGA_DEC_AM_WORDS);
+    }
+    return rc;
+}
+
+/* begin / end bookkeeping shared by rows and commit (the token path's begin_token / end_token, without the one-row buffers) */
+static void rows_begin(OmegaGpuQ38Graph *g) {
+    g->t_begin = omega_gpu_session_now_ns();
+    g->in_token = 1; g->failed = 0;
+    memset(&g->acc, 0, sizeof g->acc);
+    g->n_kind = 0; g->tagged_in_list = 0; g->n_stamp = 0;
+    omega_gpu_cmdlist_reset(g->cl);
+}
+static int rows_end(OmegaGpuQ38Graph *g, int rc, OmegaGpuDecodeGraphStats *st) {
+    const uint64_t t_rec = omega_gpu_session_now_ns();
+    if (rc == 0 && !g->failed) rc = submit_now(g);
+    if (rc == 0 && g->cfg.attn && omega_gpu_decode_attn256_counters_check(g->cfg.attn) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    if (rc == 0 && omega_gpu_session_sync_to_cpu(&g->rbuf) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    omega_gpu_cmdlist_reset(g->cl);
+    g->in_token = 0;
+    const uint64_t t_end = omega_gpu_session_now_ns();
+    if (st) { *st = g->acc; st->record_ns = (g->flush_each ? t_end : t_rec) - g->t_begin; st->total_ns = t_end - g->t_begin; }
+    return rc;
+}
+
+int omega_gpu_q38_graph_rows(OmegaGpuQ38Graph *g, const float *x_embed, uint32_t m, uint32_t pos0, uint32_t *tokens, float *x_out,
+                             OmegaGpuDecodeGraphStats *st) {
+    if (!g || g->in_token || !x_embed || !tokens || m == 0 || m > g->max_rows) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    if (!g->final_set) return fail(g, "q38 rows: final norm not set", OMEGA_GPU_DGRAPH_BAD_ARGS);
+    for (uint32_t l = 0; l < g->cfg.layers; l++) if (!g->layer[l].set) return fail(g, "q38 rows: layer not set", OMEGA_GPU_DGRAPH_BAD_ARGS);
+    omega_gpu_session_lock();
+    rows_begin(g);
+    int rc = omega_gpu_session_open() ? OMEGA_GPU_DGRAPH_OK : fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    uint32_t *tk = rcpu(g, g->rl.tok);
+    for (uint32_t r = 0; r < m; r++) { tk[4 * r] = TOKEN_POISON; tk[4 * r + 1] = TOKEN_POISON; }
+    memcpy(rcpu(g, g->rl.x), x_embed, (size_t)m * H * 4u);
+    if (rc == 0 && omega_gpu_session_sync_to_gpu(&g->rbuf) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    /* the GDN state before the pass, for commit (a one-row pass is always kept whole) */
+    if (rc == 0 && m > 1 && g->n_gdn && omega_gpu_gdn_checkpoint_record(g->cl, g->cfg.gdn, 0) != 0) rc = fail(g, "q38 rows: gdn checkpoint", OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    if (rc == 0) tag(g, OMEGA_GPU_Q38_K_GDN);
+    for (uint32_t l = 0; l < g->cfg.layers && rc == 0; l++) rc = rows_layer(g, l, m, pos0);
+    if (rc == 0) rc = rows_final(g, m);
+    rc = rows_end(g, rc, st);
+    if (rc == 0) {
+        for (uint32_t r = 0; r < m && rc == 0; r++) {
+            const uint32_t t = tk[4 * r];
+            if (t == TOKEN_POISON || t >= g->cfg.vocab) {
+                char e[96]; omega_gpu_fmt(e, sizeof e, "q38 rows: row %u token %u not written or out of range", r, t);
+                rc = fail(g, e, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+            } else tokens[r] = t;
+        }
+        if (rc == 0 && x_out) memcpy(x_out, rcpu(g, g->rl.x), (size_t)m * H * 4u);
+    }
+    g->last_m = rc == 0 ? m : 0;
+    omega_gpu_session_unlock();
+    return rc;
+}
+
+int omega_gpu_q38_graph_rows_commit(OmegaGpuQ38Graph *g, uint32_t keep, OmegaGpuDecodeGraphStats *st) {
+    if (st) memset(st, 0, sizeof *st);
+    if (!g || g->in_token || keep == 0 || keep > g->last_m) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    const uint32_t m = g->last_m;
+    g->last_m = 0;
+    if (keep == m || !g->n_gdn) return OMEGA_GPU_DGRAPH_OK;
+    omega_gpu_session_lock();
+    rows_begin(g);
+    int rc = omega_gpu_session_open() ? OMEGA_GPU_DGRAPH_OK : fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    if (rc == 0 && g->mutant != 5 && omega_gpu_gdn_checkpoint_record(g->cl, g->cfg.gdn, 1) != 0) rc = fail(g, "q38 rows: gdn restore", OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    if (rc == 0) tag(g, OMEGA_GPU_Q38_K_GDN);
+    for (uint32_t l = 0; l < g->cfg.layers && rc == 0; l++) {
+        if (g->layer[l].attn) continue;
+        const uint32_t ki = g->layer[l].kind_index;
+        const uint64_t kmix = rva(g, g->rl.kmix) + (uint64_t)ki * g->max_rows * OMEGA_GPU_Q38_GDN_MIX * 4u;
+        const uint64_t kab = rva(g, g->rl.kab) + (uint64_t)ki * g->max_rows * OMEGA_GPU_Q38_AB * 4u;
+        rc = rows_room(g, keep);
+        for (uint32_t r = 0; r < (g->mutant == 6 ? keep - 1 : keep) && rc == 0; r++) {
+            const uint64_t mr = kmix + (uint64_t)r * OMEGA_GPU_Q38_GDN_MIX * 4u;
+            rc = after_op(g, OMEGA_GPU_Q38_K_GDN, omega_gpu_gdn_record(g->cl, g->cfg.gdn, ki, mr, mr + OMEGA_GPU_Q38_GDN_QKV * 4u, kab + r * OMEGA_GPU_Q38_AB * 4u,
+                                                                     g->cfg.eps_l2, g->cfg.eps, 1.0f, SCALE_2P64, NULL));
+        }
+    }
+    rc = rows_end(g, rc, st);
+    omega_gpu_session_unlock();
+    return rc;
 }

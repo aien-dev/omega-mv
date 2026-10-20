@@ -345,8 +345,99 @@ static int chip_run(uint32_t layers, uint64_t mask, uint32_t reps) {
     return g_failed ? 1 : 0;
 }
 
+
+/* ---- rows mode (speed2/specdecode, --rows R): omega_gpu_q38_graph_rows / rows_commit against one-row tokens ----
+ * Reference: the graph's own one-row tokens with set_tv(1) at positions 0 .. RT-1 (embeddings xs). Checks, bit for bit:
+ *   R1  rows(m = R, pos 0): every row's token and residual x equal the reference token at that position
+ *   R2  after a commit of keep < R rows, one-row tokens from position keep continue exactly as the reference (GDN restore +
+ *       replay; the dropped rows' K/V slots are rewritten)
+ *   R3  a second rows pass from the committed position (keep .. keep + R - 1) equals the reference rows there
+ * Negative controls (each must break R2 or R1): mutant 5 (no GDN restore), 6 (replays one row too few), 7 (every row attends
+ * at slot pos0). Then --reps timed passes: rows(R) vs R one-row tokens (median chip ms). */
+#define RT 24u
+static int rows_tokens(OmegaGpuQ38Graph *g, float (*xs)[H], uint32_t from, uint32_t n, Out *ref) {
+    OmegaGpuDecodeGraphStats st;
+    for (uint32_t t = from; t < from + n; t++) if (graph_token(g, NULL, xs[t], t, &ref[t], &st) != 0) return -1;
+    return 0;
+}
+static int rows_check(OmegaGpuQ38Graph *g, Model *m, float (*xs)[H], uint32_t R, uint32_t keep, const Out *ref, int quiet, int *r1, int *r2, int *r3) {
+    static uint32_t tok[OMEGA_GPU_Q38_MAX_ROWS]; static float xo[OMEGA_GPU_Q38_MAX_ROWS][H]; static Out one;
+    OmegaGpuDecodeGraphStats st;
+    if (state_reset(m) != 0) return -1;
+    if (omega_gpu_q38_graph_rows(g, xs[0], R, 0, tok, xo[0], &st) != 0) { printf("rows rc: %s\n", omega_gpu_session_last_error()); return -1; }
+    *r1 = 1;
+    for (uint32_t r = 0; r < R; r++) if (tok[r] != ref[r].token || memcmp(xo[r], ref[r].x, sizeof xo[r])) { *r1 = 0; if (!quiet) printf("  R1 row %u: token %u ref %u, x %s\n", r, tok[r], ref[r].token, memcmp(xo[r], ref[r].x, sizeof xo[r]) ? "differs" : "same"); }
+    if (omega_gpu_q38_graph_rows_commit(g, keep, &st) != 0) { printf("commit rc: %s\n", omega_gpu_session_last_error()); return -1; }
+    *r2 = 1;
+    for (uint32_t t = keep; t < keep + 2u; t++) {
+        if (graph_token(g, NULL, xs[t], t, &one, &st) != 0) return -1;
+        if (one.token != ref[t].token || memcmp(one.x, ref[t].x, sizeof one.x)) { *r2 = 0; if (!quiet) printf("  R2 pos %u: token %u ref %u\n", t, one.token, ref[t].token); }
+    }
+    /* R3: back to keep (the two one-row tokens above advanced GDN by 2: redo from a reset) */
+    if (state_reset(m) != 0) return -1;
+    if (omega_gpu_q38_graph_rows(g, xs[0], R, 0, tok, NULL, &st) != 0 || omega_gpu_q38_graph_rows_commit(g, keep, &st) != 0) return -1;
+    if (omega_gpu_q38_graph_rows(g, xs[keep], R, keep, tok, xo[0], &st) != 0) return -1;
+    *r3 = 1;
+    for (uint32_t r = 0; r < R; r++) if (tok[r] != ref[keep + r].token || memcmp(xo[r], ref[keep + r].x, sizeof xo[r])) *r3 = 0;
+    return omega_gpu_q38_graph_rows_commit(g, R, &st) != 0 ? -1 : 0;
+}
+static int rows_run(uint32_t layers, uint64_t mask, uint32_t R, uint32_t reps) {
+    omega_gpu_q38_graph_set_tv(1);
+    Model m;
+    const uint32_t vocab = 248320u;
+    if (R < 2 || 2 * R + 2 > RT) { printf("--rows 2..%u\n", (RT - 2) / 2); return 2; }
+    if (model_build(&m, layers, mask, vocab) != 0) { CHECK(0, "model build"); return 1; }
+    printf("rows mode: %u layers (%u GDN, %u attention, mask 0x%" PRIx64 "), R %u, fp8 head %d\n", layers, m.n_gdn, m.n_attn, mask, R, g_fp8_head);
+    static float xs[RT][H];
+    uint32_t s = 4242u;
+    for (uint32_t t = 0; t < RT; t++) for (uint32_t i = 0; i < H; i++) xs[t][i] = frand(&s, -1.0f, 1.0f);
+    static Out A, ref[RT];
+    if (baseline_token(&m, xs[0], 0, &A) != 0) { CHECK(0, "warm-up baseline"); return 1; } /* warms the non-tv kernels */
+    OmegaGpuQ38Graph *g = NULL;
+    if (graph_build(&m, &g) != 0) { CHECK(0, "graph build"); return 1; }
+    if (omega_gpu_q38_graph_rows_reserve(g, R) != 0) { CHECK(0, "rows reserve: %s", omega_gpu_session_last_error()); return 1; }
+    if (state_reset(&m) != 0 || rows_tokens(g, xs, 0, RT, ref) != 0) { CHECK(0, "reference tokens"); return 1; }
+    const uint32_t keep = R / 2 + 1;
+    int r1, r2, r3;
+    if (rows_check(g, &m, xs, R, keep, ref, 0, &r1, &r2, &r3) != 0) { CHECK(0, "rows run"); return 1; }
+    CHECK(r1, "R1 rows(%u) at pos 0: every row's token and x equal the one-row reference", R);
+    CHECK(r2, "R2 commit(%u of %u) then one-row tokens: equal the reference (GDN restore + replay)", keep, R);
+    CHECK(r3, "R3 rows(%u) from the committed position %u: equal the reference", R, keep);
+    if (rows_check(g, &m, xs, R, R, ref, 0, &r1, &r2, &r3) != 0) { CHECK(0, "rows run keep all"); return 1; }
+    CHECK(r1 && r2 && r3, "keep all %u rows: R1 R2 R3", R);
+    if (rows_check(g, &m, xs, R, 1, ref, 0, &r1, &r2, &r3) != 0) { CHECK(0, "rows run keep 1"); return 1; }
+    CHECK(r2 && r3, "keep 1 of %u: R2 R3", R);
+    const struct { int mutant; const char *what; } mu[] = { { 5, "commit without the GDN restore" }, { 6, "commit replays one row too few" },
+                                                           { 7, "every row attends at slot pos0" } };
+    for (unsigned i = 0; i < sizeof mu / sizeof mu[0]; i++) {
+        if (mu[i].mutant == 7 && !m.n_attn) continue;
+        if ((mu[i].mutant == 5 || mu[i].mutant == 6) && !m.n_gdn) continue;
+        omega_gpu_q38_graph_test_set_mutant(g, mu[i].mutant);
+        int rc = rows_check(g, &m, xs, R, keep, ref, 1, &r1, &r2, &r3);
+        omega_gpu_q38_graph_test_set_mutant(g, 0);
+        CHECK(rc != 0 || !(r1 && r2 && r3), "negative control %d (%s) caught", mu[i].mutant, mu[i].what);
+    }
+    /* timing: rows(R) vs R one-row tokens, from a reset each rep */
+    uint64_t *a = calloc(reps, 8), *b = calloc(reps, 8);
+    static uint32_t tok[OMEGA_GPU_Q38_MAX_ROWS];
+    OmegaGpuDecodeGraphStats st;
+    for (uint32_t i = 0; i < reps && a && b; i++) {
+        if (state_reset(&m) != 0 || omega_gpu_q38_graph_rows(g, xs[0], R, 0, tok, NULL, &st) != 0) break;
+        a[i] = st.chip_ns;
+        (void)omega_gpu_q38_graph_rows_commit(g, R, &st);
+        if (state_reset(&m) != 0) break;
+        uint64_t sum = 0;
+        for (uint32_t t = 0; t < R; t++) { static Out o; if (graph_token(g, NULL, xs[t], t, &o, &st) != 0) break; sum += st.chip_ns; }
+        b[i] = sum;
+    }
+    if (a && b) printf("timing (chip, median of %u): rows(%u) %.3f ms vs %u one-row tokens %.3f ms\n", reps, R, median_u64(a, reps) / 1e6, R, median_u64(b, reps) / 1e6);
+    free(a); free(b);
+    omega_gpu_q38_graph_free(g);
+    return g_failed ? 1 : 0;
+}
+
 int main(int argc, char **argv) {
-    int host = 0; uint32_t layers = 2, reps = 10; uint64_t mask = 0x2;
+    int host = 0; uint32_t layers = 2, reps = 10; uint64_t mask = 0x2; uint32_t rows = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
         else if (strcmp(argv[i], "--layers") == 0 && i + 1 < argc) layers = (uint32_t)atoi(argv[++i]);
@@ -354,6 +445,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--tl-reps") == 0 && i + 1 < argc) tl_reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--fp8-head") == 0) g_fp8_head = 1;
+        else if (strcmp(argv[i], "--rows") == 0 && i + 1 < argc) rows = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--tv") == 0) omega_gpu_q38_graph_set_tv(1); /* cascade: FP8 projections on the tensor-core GEMM */
         /* tuning knobs for sweeps (process-wide, before any kernel is built): FP8 GEMV lane_bytes,rows,warps / CTA budget,
          * bf16 GEMV (lm_head, a|b) rows,warps,depth / CTA budget */
@@ -364,7 +456,7 @@ int main(int argc, char **argv) {
         else { printf("usage: %s [--host-only] [--layers N (<= 8)] [--mask M] [--reps R] [--tl-reps T (<= 257)]\n", argv[0]); return 2; }
     }
     if (layers == 0 || layers > 8 || reps == 0 || tl_reps == 0 || tl_reps > 257) { printf("layers 1..8, reps >= 1, tl-reps 1..257\n"); return 2; }
-    int rc = host ? host_only() : chip_run(layers, mask, reps);
+    int rc = host ? host_only() : rows ? rows_run(layers, mask, rows, reps) : chip_run(layers, mask, reps);
     printf("gpu_q38_graph_test%s: %d checks, %d failed: %s\n", host ? " (host-only)" : "", g_checks, g_failed, rc ? "FAIL" : "PASS");
     return rc;
 }

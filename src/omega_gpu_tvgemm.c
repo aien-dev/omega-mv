@@ -7,7 +7,8 @@
 #include <stdlib.h>
 
 #define KIND_TV 0x60u
-#define TAB_CAP 1024u
+#define TAB_CAP 8192u /* speed2/specdecode: 1024 -> 8192 keys (a 64-layer model at several verify row counts: 257 tensors per row count) */
+#define TAB_HASH 16384u /* open-addressing index over keys: slot = key index + 1, 0 empty */
 #define RIDX_N 128u /* per tile-table key: rows 0 .. rows-1 then row 0 (the padding rows of a partial tile read row 0) */
 
 typedef struct { uint64_t w_va, s_va; uint32_t row0, cnt, pad[2]; } TileEntry;
@@ -20,12 +21,13 @@ static struct {
     bool hooked;
     OmegaGpuMem tab, ridx;
     TabKey keys[TAB_CAP];
+    uint32_t hidx[TAB_HASH];
     uint32_t nkeys, used, rused;
     OmegaGpuMem hx, hy; /* omega_gpu_tv_f32's device buffers */
 } g;
 
 static void on_close(void) { omega_gpu_session_free(&g.hx); omega_gpu_session_free(&g.hy); memset(&g.hx, 0, sizeof g.hx); memset(&g.hy, 0, sizeof g.hy);
-    omega_gpu_session_free(&g.tab); omega_gpu_session_free(&g.ridx); memset(&g.tab, 0, sizeof g.tab); memset(&g.ridx, 0, sizeof g.ridx); g.nkeys = g.used = g.rused = 0; }
+    omega_gpu_session_free(&g.tab); omega_gpu_session_free(&g.ridx); memset(&g.tab, 0, sizeof g.tab); memset(&g.ridx, 0, sizeof g.ridx); g.nkeys = g.used = g.rused = 0; memset(g.hidx, 0, sizeof g.hidx); }
 
 void omega_gpu_tv_set_shape(uint32_t rt, uint32_t ct, uint32_t w) { omega_gpu_session_lock(); g.rt = rt; g.ct = ct; g.warps = w; omega_gpu_session_unlock(); }
 void omega_gpu_tv_test_set_mutant(int m) { omega_gpu_session_lock(); g.mutant = m; omega_gpu_session_unlock(); }
@@ -73,10 +75,17 @@ static int prepare_locked(const OmegaGpuFp8Tensor *t, uint32_t rows, uint32_t xf
     uint64_t w_va = 0, s_va = 0; (void)omega_gpu_fp8_tensor_entry(t, 0, &w_va, &s_va);
     const uint32_t bm = 16u * spec->rt;
     TabKey *key = NULL;
-    for (uint32_t i = 0; i < g.nkeys && !key; i++) if (g.keys[i].w_va == w_va && g.keys[i].s_va == s_va && g.keys[i].rows == rows && g.keys[i].bm == bm) key = &g.keys[i];
+    uint32_t h = (uint32_t)((w_va >> 8) * 0x9e3779b97f4a7c15ull >> 40) ^ (rows * 0x85ebca6bu) ^ (bm * 0xc2b2ae35u);
+    for (;; h++) {
+        const uint32_t s = g.hidx[h & (TAB_HASH - 1u)];
+        if (!s) break;
+        TabKey *c = &g.keys[s - 1u];
+        if (c->w_va == w_va && c->s_va == s_va && c->rows == rows && c->bm == bm) { key = c; break; }
+    }
     if (!key) {
         const uint32_t nt = (rows + bm - 1u) / bm;
         if (g.nkeys >= TAB_CAP || g.used + nt > TAB_CAP) { omega_gpu_session_set_error("tv gemm: tile table full"); return OMEGA_GPU_PF_TOO_LARGE; }
+        g.hidx[h & (TAB_HASH - 1u)] = g.nkeys + 1u;
         key = &g.keys[g.nkeys++]; key->w_va = w_va; key->s_va = s_va; key->rows = rows; key->bm = bm; key->at = g.used; key->nt = nt; key->ri = g.nkeys - 1u;
         /* row index: every row any tile may read (row0 .. row0 + bm - 1 of every tile) is a real row of x: past `rows`, row 0 */
         uint32_t *ri = (uint32_t *)g.ridx.cpu + (size_t)key->ri * RIDX_N;

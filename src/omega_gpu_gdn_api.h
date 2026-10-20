@@ -71,6 +71,12 @@ int omega_gpu_gdn_step(OmegaGpuGdn *g, uint32_t layer, const float *qkv, const f
 struct OmegaGpuCmdList;
 int omega_gpu_gdn_record(struct OmegaGpuCmdList *cl, OmegaGpuGdn *g, uint32_t layer, uint64_t qkv_va, uint64_t z_va,
                          uint64_t ab_va, float eps_l2, float eps_norm, float in_scale, float out_scale, uint64_t *out_va);
+/* speed2/specdecode: one on-chip checkpoint of every layer's tail and state (speculative decode rollback).
+ *   reserve: allocates the checkpoint (same sizes and cache mode as the live tail and state), copies the live ones into it once
+ *            (which also warms the copy kernel, so the record call never compiles); call again: no-op.
+ *   record:  appends two copy launches to cl (caller holds the session lock): restore 0 = live -> checkpoint, 1 = checkpoint -> live. */
+int omega_gpu_gdn_checkpoint_reserve(OmegaGpuGdn *g);
+int omega_gpu_gdn_checkpoint_record(struct OmegaGpuCmdList *cl, OmegaGpuGdn *g, int restore);
 /* Test helper: the out row the last launch wrote to the launch buffer (after a record + submit, for example). */
 int omega_gpu_gdn_read_out(OmegaGpuGdn *g, float *out);
 const char *omega_gpu_gdn_last_error(void);

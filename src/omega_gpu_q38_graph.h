@@ -114,6 +114,26 @@ int omega_gpu_q38_graph_read_buf(OmegaGpuQ38Graph *g, int which, float *out, uin
 /* The gather table (u32 [14336]): agg[n] = mix[tab[n]] (host side; the graph uploads it at create). */
 void omega_q38_gather_table(uint32_t *tab);
 
+/* ---- rows mode (speed2/specdecode, ledger L126): m tokens of ONE sequence at positions pos0 .. pos0 + m - 1 in one pass ----
+ * The speculative verify pass: the last token and its drafts as m rows; every FP8 projection (and the FP8 lm_head when set) runs
+ * once over all m rows on the tensor-core verify GEMM (omega_gpu_tvgemm), so the weights are read once per pass, and row r gets
+ * the same bits as a one-row token of this graph with set_tv(1) over the same history (tvgemm rows are independent of the row
+ * count, cascade/tree-verify-gemm evidence). Per row: the norms, SwiGLU, the a|b GEMV, the GDN step (rows in order, so row r
+ * continues the state of row r - 1), attention at slot pos0 + r (it sees the rows before it, written earlier in the pass), the
+ * gate, the bf16 lm_head when no FP8 head is set, and the argmax. The list is submitted in parts under the launch cap.
+ *   rows_reserve(g, max_rows): sizes the row buffers (1..OMEGA_GPU_Q38_MAX_ROWS) and the GDN checkpoint (omega_gpu_gdn_checkpoint_
+ *        reserve); call once before the first pass. GDN layers keep every row's mix and a|b output (per layer) for commit.
+ *   rows(g, x_embed [m][5120], m, pos0, tokens [m], x_out [m][5120] or NULL, st): tokens[r] = greedy token after row r; x_out the
+ *        residual after the last layer (before the final norm), for an MTP head. With m > 1 the GDN state before the pass is saved.
+ *   rows_commit(g, keep, st): keep (1..m) of the last pass's rows are the sequence now. keep < m: the GDN state is restored and
+ *        rows 0 .. keep - 1 replayed on the chip from the kept inputs (same kernel, same inputs: the same state as the pass left
+ *        after row keep - 1). Attention K/V of the dropped rows stays in the cache past the sequence end; a later row at that slot
+ *        overwrites it before any row reads it. Must follow every rows() before the next rows() or token(). */
+#define OMEGA_GPU_Q38_MAX_ROWS 32u
+int omega_gpu_q38_graph_rows_reserve(OmegaGpuQ38Graph *g, uint32_t max_rows);
+int omega_gpu_q38_graph_rows(OmegaGpuQ38Graph *g, const float *x_embed, uint32_t m, uint32_t pos0, uint32_t *tokens, float *x_out,
+                             OmegaGpuDecodeGraphStats *st);
+int omega_gpu_q38_graph_rows_commit(OmegaGpuQ38Graph *g, uint32_t keep, OmegaGpuDecodeGraphStats *st);
 /* ---- timeline (measurement; as the decode graph) ---- */
 enum {
     OMEGA_GPU_Q38_K_NORM = 0, OMEGA_GPU_Q38_K_MIX, OMEGA_GPU_Q38_K_AB, OMEGA_GPU_Q38_K_GDN, OMEGA_GPU_Q38_K_GATHER, OMEGA_GPU_Q38_K_ATTN,
@@ -125,7 +145,8 @@ int omega_gpu_q38_graph_stamps(const OmegaGpuQ38Graph *g, uint64_t *stamps, uint
 const char *omega_gpu_q38_graph_kind_name(uint8_t kind);
 /* 1: submit after every launch (the comparison path). */
 void omega_gpu_q38_graph_set_flush_each(OmegaGpuQ38Graph *g, int on);
-/* TEST ONLY: 1 SWIGLU up half off by one, 2 GATHER index + 1, 3 GATE dropped, 4 post-norm without its weight. 0 none. */
+/* TEST ONLY: 1 SWIGLU up half off by one, 2 GATHER index + 1, 3 GATE dropped, 4 post-norm without its weight; rows mode:
+ * 5 commit skips the GDN restore, 6 commit replays one row too few, 7 every row attends at slot pos0. 0 none. */
 void omega_gpu_q38_graph_test_set_mutant(OmegaGpuQ38Graph *g, int mutant);
 
 #ifdef __cplusplus
