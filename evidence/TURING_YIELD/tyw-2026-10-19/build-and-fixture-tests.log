@@ -1,0 +1,15 @@
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -Isrc -o build/ty/test_ty_energy tests/turing/test_ty_energy.c src/turing/ty_energy.c src/omega_canonical.c src/sha256.c
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -Isrc -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/ty/test_ty_energy_asan tests/turing/test_ty_energy.c src/turing/ty_energy.c src/omega_canonical.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Itests/runtime -Itools -Wno-unused-function -o build/ty/ty_energy_reduce tools/ty_energy_reduce.c src/turing/ty_energy.c src/omega_canonical.c src/sha256.c -lm
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Itests/runtime -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -Itools -Wno-unused-function -o build/ty/ty_energy_reduce_asan tools/ty_energy_reduce.c src/turing/ty_energy.c src/omega_canonical.c src/sha256.c -lm
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -Isrc -o build/ty/ty_energy_fixture tests/turing/ty_energy_fixture.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Itests/runtime -march=armv8.6-a+dotprod+i8mm+sve -o build/ty/ty_workload tests/turing/ty_workload.c tests/runtime/r15_measure.c src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c src/algebra/realize_sparse.c src/algebra/realize_rns.c src/algebra/realize_dense.c -lpthread -ldl
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Itests/runtime -o build/ty/ty_energy_window tests/turing/ty_energy_window.c tests/runtime/r15_measure.c -lpthread -ldl
+./build/ty/test_ty_energy
+ty_energy: 54 checks, 0 failures
+./build/ty/test_ty_energy_asan
+ty_energy: 54 checks, 0 failures
+sh tests/turing/test_ty_energy_fixtures.sh ./build/ty/ty_energy_reduce build/ty/fixtures ./build/ty/ty_energy_fixture
+ty_energy fixtures: nine valid/refusal cases passed
+sh tests/turing/test_ty_energy_fixtures.sh ./build/ty/ty_energy_reduce_asan build/ty/fixtures_asan ./build/ty/ty_energy_fixture
+ty_energy fixtures: nine valid/refusal cases passed

@@ -1,0 +1,20 @@
+TYW (TY-4/TY-5 wall amendment). BOOTTIME - MONOTONIC now = 0.000 s (0 = no suspend; offsets valid)
+package energy: UNAVAILABLE (no aien_spbm hwmon). wall = UPS output, 10 W steps, ~2 s rows
+
+S6
+  round 0: E0 9000.0  EA 8892.9  EB 9000.0  EAB 8871.4 J (rows 14/14/14/14, load 23.0/22.5/21.8/23.1)  I -21.4 J  slowdown A 0.3871 B 0.3450
+  round 1: E0 6814.3  EA 8721.4  EB 8076.9  EAB 8769.2 J (rows 14/14/13/13, load 20.6/19.2/20.2/20.1)  I -1214.8 J  slowdown A -1.0319 B -1.3930
+  round 2: E0 8892.9  EA 8421.4  EB 8850.0  EAB 8353.8 J (rows 14/14/14/13, load 18.4/17.4/18.8/15.5)  I -24.7 J  slowdown A 0.0210 B 0.0793
+  mean I -420.3 J, sd 688.1 J, 95% t-interval [-2129.7, 1289.1] J (half-width 1709.4 J = 19.73% of mean E_AB 8664.8 J)
+  I distinguishable from zero: no
+  CHECK (a) wall form: FAIL (valid rounds 3 of 3; half-width <= 2% of E_AB: no)
+
+S2
+  round 0: E0 7671.4  EA 7842.9  EB 5700.0  EAB 7992.9 J (rows 14/14/14/14, load 8.4/12.8/9.6/10.4)  I 2121.4 J  slowdown A 0.5667 B 0.6674
+  round 1: E0 7800.0  EA 8314.3  EB 7971.4  EAB 8561.5 J (rows 14/14/14/13, load 10.5/12.0/10.1/14.2)  I 75.8 J  slowdown A 0.0728 B 0.1167
+  round 2: E0 8057.1  EA 8185.7  EB 8378.6  EAB 8400.0 J (rows 14/14/14/13, load 13.2/14.2/16.9/18.7)  I -107.1 J  slowdown A 0.6372 B 0.0921
+  mean I 696.7 J, sd 1237.2 J, 95% t-interval [-2377.0, 3770.4] J (half-width 3073.7 J = 36.95% of mean E_AB 8318.1 J)
+  I distinguishable from zero: no
+  CHECK (a) wall form: FAIL (valid rounds 3 of 3; half-width <= 2% of E_AB: no)
+
+CHECK (b): NOT RUN (amendment 2: waits for the package meter)
