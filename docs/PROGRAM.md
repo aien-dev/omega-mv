@@ -51,6 +51,26 @@ the build and is archived, pinned, as the oracle. Nothing C-built remains in the
 (rung F). Rung 4 is defined by this: "the fuller Omega" is exactly the subset needed to compile OSC-4's source,
 nothing more.
 
+## Decisions taken from the archives (B to C, read at the source; ~/handoffs/2026-10-19-b-to-c-archives.md)
+
+Every bandage C kept was a fix for a 1969-1973 constraint (8K to 24K of memory, a one-pass compiler, keeping old B
+code working) that Omega does not have. Decided 2026-10-19 by the historical and physical reason, each with its gate:
+
+| # | decision | why (their words, their cost) | gate |
+|---|---|---|---|
+| 16 | every buffer carries an explicit length; no terminator byte | the null terminator dodged an 8-bit count slot; Ritchie: code "must occasionally search for the end of a string" | no scan-to-end in checker2 or codegen; test refuses a length-less buffer |
+| 17 | arrays are values with shape; they never become pointers | decay was kept so old B code would run; Ritchie: "hard to compile into efficient code on vector machines" | IR has no array-to-pointer conversion; twin gate unchanged |
+| 18 | two live references may not overlap unless proven | aliasing is why "optimizers must be cautious"; C bolted on `restrict` later | checker2 proves disjointness or refuses; receipt records it |
+| 19 | no undefined behaviour anywhere in the spec | the C standard "did not attempt to specify formally the language semantics"; a receipt cannot sign a meaningless program | every spec sentence has a test or a trap; a grep for "undefined" in spec/ finds none |
+| 20 | width and signedness explicit in every type; no implicit conversions; no `char` | "does not survive transportation between machines"; width is the cost in a bandwidth-bound system | lowering refuses any implicit widen/narrow; byte is a width (u8), never a character |
+| 21 | no preprocessor, no textual inclusion; one program, one check | an "optional adjunct" with "incomplete integration"; missing argument types came from avoiding cross-file checking | the compiler reads one unit; imports resolve by digest (OSC-VC1), never by text |
+| 22 | grammar regular and left to right, one legal next word | inside-out declarations and `&` vs `==` are admitted mistakes; the masked writer needs unambiguous next words | `omegese next` returns one rule per prefix; no prefix has two parses |
+| 23 | bounds proved at check time, not run time | shapes for one workload on one machine are known before the kernel exists | no bounds check on the per-token GPU path; checker proof in the receipt |
+| 24 | allocation fixed at check time: no manual heap, no garbage collector | "C is hostile to automatic garbage collection"; manual freeing puts "the burden on the programmer" | pools sized at check time (decision 7); no allocation on the per-token path |
+
+Kept from their story: bootstrap early and watch the size delta; the acceptance test is a number against the best
+hand-written kernel; every feature justified by the one real environment (one model, one machine).
+
 ## The chain, explicitly
 
 What blockchain is good for, kept; what it wastes, left out. Kept: a hash chain (each record carries the fingerprint of the one before, so a rewritten past breaks every later link), multi-party agreement (no single machine is final), and standing earned by useful work (judging PRs). Left out: coins, tokens, proof-of-work puzzles, global consensus protocols. The registry of nodes is a file Drake merges. The receipts shelf git history is the public ledger; the seed chain is the same shape for the compiler itself.
