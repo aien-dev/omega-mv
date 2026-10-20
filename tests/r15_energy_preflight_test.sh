@@ -27,9 +27,21 @@ mk() { # case: a complete, valid-looking reader tree (static counters)
     i=1; for l in $EL; do echo "$l" > "$H/energy${i}_label"; echo 5000000000 > "$H/energy${i}_input"; echo 0 > "$H/energy${i}_overflow_raw"; i=$((i + 1)); done
     i=1; for l in $PL; do echo "$l" > "$H/power${i}_label"; echo 20000000 > "$H/power${i}_input"; i=$((i + 1)); done
 }
-# advance <case> <start-uJ>: package counter rises 0.5 J then 1 J in the background while the preflight samples
-put() { echo "$2" > "$1.tmp" && mv "$1.tmp" "$1"; } # atomic, so the preflight never reads a half-written file
-advance() { ( sleep 0.05; put "$W/$1/hwmon1/energy1_input" $(( $2 + 500000 )); sleep 0.1; put "$W/$1/hwmon1/energy1_input" $(( $2 + 1000000 )) ) & }
+# The preflight sleeps once between samples. A stand-in sleep (first on PATH for the cases that need it) moves the
+# fake counters instead of waiting, so the advance lands exactly between two samples whatever the machine load.
+# tick <case> <start-uJ> <fall|-> <exit> <text>: like check, but energy1 rises 0.5 J per sleep call; with fall, energy3 also drops 1000 uJ per call
+mkdir -p "$W/bin"
+cat > "$W/bin/sleep" <<'STUB'
+#!/bin/sh
+[ -n "$R15_TEST_TICK" ] || exit 0
+set -- $R15_TEST_TICK; d=$1; n=$(( $(cat "$d/ticks" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$d/ticks"
+put() { echo "$2" > "$1.tmp" && mv "$1.tmp" "$1"; }
+put "$d/hwmon1/energy1_input" $(( $2 + n * 500000 ))
+[ "$3" = fall ] && put "$d/hwmon1/energy3_input" $(( 5000000000 - n * 1000 ))
+exit 0
+STUB
+chmod +x "$W/bin/sleep"
+tick() { R15_TEST_TICK="$W/$1 $2 $3" PATH="$W/bin:$PATH" check "$1" "$4" "$5"; }
 mkdir -p "$W/absent/hwmon0"; echo acpitz > "$W/absent/hwmon0/name"; check absent 5 "reason=absent"
 mkdir -p "$W/empty"; check empty 5 "reason=absent"
 mk substitute; echo nvml > "$W/substitute/hwmon1/name"; check substitute 5 "reason=absent"
@@ -51,25 +63,17 @@ mk lowhead; echo 4294967000000000 > "$W/lowhead/hwmon1/energy3_input"; check low
 # whole-run headroom: 200 kJ left passes the old 300 s x 600 W (180 kJ) window check but is
 # less than the planned run (2400 s x 100 W = 240 kJ), so a wrap could land mid-run
 mk shortrun; echo 4094967295000 > "$W/shortrun/hwmon1/energy1_input"
-advance shortrun 4094967295000
-R15_ENERGY_PREFLIGHT_SLEEP=0.08 check shortrun 5 "planned run"; wait
+tick shortrun 4094967295000 - 5 "planned run"
 # wrapped / reset counter: uptime 200000 s but only 1 kJ on the counter (floor 10 W x 200000 s = 2 MJ)
 mk wrapped; echo 1000000000 > "$W/wrapped/hwmon1/energy1_input"; printf "200000.00 1.00\n" > "$W/wrapped-uptime"
-advance wrapped 1000000000
-R15_UPTIME_FILE="$W/wrapped-uptime" R15_ENERGY_PREFLIGHT_SLEEP=0.08 check wrapped 5 "wrapped or was reset"; wait
-mk nouptime; advance nouptime 5000000000; R15_UPTIME_FILE="$W/does-not-exist" R15_ENERGY_PREFLIGHT_SLEEP=0.08 check nouptime 5 "uptime"; wait
-# a decrease on any channel (not only package) invalidates the reader
-mk decr3; echo 5000000000 > "$W/decr3/hwmon1/energy1_input"
-( k=0; while [ $k -lt 60 ]; do put "$W/decr3/hwmon1/energy3_input" $((5000000000 - k * 1000)); k=$((k + 1)); sleep 0.01; done ) &  # steadily falling cpu_p counter
-advance decr3 5000000000
-R15_ENERGY_PREFLIGHT_SLEEP=0.08 check decr3 5 "energy3 counter went backwards"
-wait
+R15_UPTIME_FILE="$W/wrapped-uptime" tick wrapped 1000000000 - 5 "wrapped or was reset"
+mk nouptime; R15_UPTIME_FILE="$W/does-not-exist" tick nouptime 5000000000 - 5 "uptime"
+# a decrease on any channel (not only package) invalidates the reader: energy3 falls while energy1 rises
+mk decr3
+tick decr3 5000000000 fall 5 "energy3 counter went backwards"
 # valid: package counter advances between samples
 mk valid
-put "$W/valid/hwmon1/energy1_input" 5000100000
-advance valid 5000100000
-R15_ENERGY_PREFLIGHT_SLEEP=0.08 check valid 0 "energy preflight ok"
-wait
+tick valid 5000100000 - 0 "energy preflight ok"
 # blocked run: receipt refuses (exit 4), writes nothing
 R=$W/blocked; mkdir -p "$R"; printf 'BLOCKED_INSTRUMENT\nINSTRUMENT_UNAVAILABLE reason=absent\n' > "$R/instrument-unavailable.txt"
 out=$(tools/r15_receipt.sh "$R" "$W/receipt-out" 2>&1); rc=$?
