@@ -898,6 +898,11 @@ int rx_omega_register(RxOmegaFaculty *f, const RxOmegaCaps *caps) {
 
     begin(&b, "omega.select", RX_FACULTY_OMEGA, RX_OMEGA_SUBJ_OMEGA, RX_PRIO_LEARNING,
           fn_select, f, caps->omega);
+    /* Every epoch republishes the whole selection, even when the same
+     * realization wins again: the proposal checks that the identity words
+     * and the epoch were written by one commit, so unchanged words must
+     * still carry this epoch's author (OMEGA-R14-HOST, 2026-10-20). */
+    b.d.stamp_proposed = true;
     for (uint32_t k = 0; k < f->cfg.n_slots; k++) trig(&b, w, f->o.measure[k], RX_ALL_FIELDS);
     if (f->require_experiment_evidence) {
         b.d.triggers[b.d.n_triggers++] = (RxDep){ f->experiment_evidence, RX_FIELD(0) };
