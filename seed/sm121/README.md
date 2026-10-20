@@ -54,6 +54,43 @@ Results: `evidence/SEED-0/sm121/`.
 - The kernel sweep covers the settings ranges each generator documents; settings a generator refuses are
   skipped. Four small programs are built inside other files' private functions (attention, elementwise,
   command list, resident runtime) and are not reachable without changing those files; they use the same
-  encoder, so the edge-case check covers their instruction forms, but not those exact programs.
+  encoder, so the edge-case check covers their instruction forms, but not those exact programs. (The listing
+  tool can reach the elementwise ones when it is built together with the GPU library; this run did not.)
 
-RESULTS_PLACEHOLDER
+## Results (gate run 2026-10-20 02:28 UTC, `evidence/SEED-0/sm121/gate6.log`)
+
+- **Every program matches.** The C generators make 6,091 different GPU programs over the sweep (2,398,274
+  instructions, 2,419,440 counting the padding at the end of each program). `asm2` with `sm121.tbl` turned
+  every listing into exactly the C code's words, bit for bit. Zero differences between the table and the C code.
+- **Every instruction form at the edges matches**: 65,352 cases, bit for bit.
+- **The vector add**: the hand-written listing becomes 512 bytes identical to the launcher's vector add, and
+  the same twice in a row.
+- **The controls work**: a wrong register, a wrong offset, a register number too large, one wrong bit in the
+  table and a field moved by one bit are each caught.
+- **On the chip**: CHIP_RESULT
+
+### What the check found in our C code (not in the table)
+
+1. **A crash in the tensor-core matrix multiply generator.** It accepts "4 row tiles, 1 warp", then writes 16
+   entries into lists that hold 8 and overwrites memory. The 48 settings that do this are skipped here and
+   named in `notes-summary.tsv`; a fixer agent is repairing the generator (ledger L149).
+2. **Two labels swapped in the header.** The instruction listed as "uncached load" is really the evict-first
+   load, and the one listed as "evict-first store" is really the uncached store. The encoder's own comments
+   and NVIDIA's disassembler agree on what the bits mean, so programs behave as the encoder intends; only the
+   labels in `src/omega_blackwell_codegen.h` are wrong.
+3. **A compare that is unsigned where the name suggests signed.** The register-against-uniform form of
+   "greater or equal" compares as unsigned numbers. No program uses that form today, so nothing is affected yet.
+4. **Some numbers are taken raw, unchecked.** For shared-memory loads and stores the number is the size field
+   itself, and for the floating-point compare it is the whole condition word. The C code accepts any value,
+   including ones that are no real size or condition (the disassembler shows them as other sizes or refuses
+   them). Real programs only use valid values (32-bit and 128-bit shared-memory accesses).
+5. **Two instructions ignore a requested schedule.** For IADD3 and EXIT the C code always writes its own
+   scheduling bits, whatever the program asked for (`notes-summary.tsv`); the table does the same.
+
+### The disassembler check (reference only)
+
+NVIDIA's disassembler (`nvdisasm` 13.0, used only to read our bits back, never to make any) read 45,024 of the
+65,352 edge cases. It refused 20,328: 20,104 of them have the scheduling word set to all ones on purpose, and
+224 are the floating-point compare with a made-up condition word (item 4). Of 68 instruction forms, 59 got the
+same name from the disassembler as from our C code; the 9 others are the items above plus naming detail
+(for example `IMAD.MOV` is how the disassembler shows a multiply-add whose inputs make it a plain copy).
