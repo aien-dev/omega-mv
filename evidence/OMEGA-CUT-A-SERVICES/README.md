@@ -75,3 +75,11 @@ Fable was at its usage limit, so the done-review ran on Codex. Its findings and 
 Rerun after the fixes (`rerun3.sh`, `after3/summary.txt`): the contract, seat, freestanding,
 engine, elementwise and encoding gates, the R16 link map and the R12, R13, R14 silicon builds,
 10 of 10 exit 0. The freestanding link: 16 files, only memcpy memset strcmp strlen undefined.
+
+## Final receipts on the pushed commit 4427e2f1 (`final.sh`, `final/`)
+
+- `gates.sh final` with the four new targets: 23 of 24 exit 0; `test-gpu-attention` exit 2 with the
+  same 16 failures as main (`final/test-gpu-attention-fail-list.txt`).
+- Disassembly of all 82 objects equal to the after run (`final/objdump.sha256`).
+- Object files byte for byte, clean builds of main a8ffd2b9 and 4427e2f1 (`final/object-bytes-cmp.txt`):
+  80 identical; `omega_gpu_elementwise_api.o` and `omega_gpu_fmt.o` differ, as intended.
