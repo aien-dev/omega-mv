@@ -1,0 +1,7 @@
+  w4 gdn mix 16384x5120     lb 16 rows 2 warps 8 coal 1 sched 1 grid 342: median 306.1 us, 145.6 GB/s (0.533 of 273)
+  w4 attn mix 14336x5120    lb 16 rows 2 warps 8 coal 1 sched 1 grid 299: median 305.4 us, 127.7 GB/s (0.468 of 273)
+  w4 o_proj 5120x6144       lb 16 rows 2 warps 8 coal 1 sched 1 grid 160: median 204.1 us, 81.9 GB/s (0.300 of 273)
+  w4 gate_up 34816x5120     lb 16 rows 2 warps 8 coal 1 sched 1 grid 363: median 523.0 us, 181.1 GB/s (0.663 of 273)
+  w4 down 5120x17408        lb 16 rows 2 warps 8 coal 1 sched 1 grid 160: median 648.6 us, 73.0 GB/s (0.267 of 273)
+GPU_W4_API_TEST chip: 17 checks, 0 failed -> PASS
+rc=0
