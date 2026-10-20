@@ -123,4 +123,24 @@ part can never beat it. h is not concentrated enough (the top 256 of 5120 coordi
 
 ## 4. The top identity, built: FX1 lossless weights
 
-PENDING: codec round trip over all 24.33 G FP8 weights, exact bytes of the GPU layout, chip GEMV.
+FX1 stores every FP8 weight as a 4-bit plane (sign + 3 mantissa bits, fixed address) plus a canonical-Huffman code for the
+4-bit exponent, one stream per (row, lane). It is lossless: the GPU decodes back to the same bytes and runs the same FFMA
+order, so y is bit-identical to the raw FP8 GEMV.
+
+OBSERVED (`tools/wpt_fxcodec`, output `~/workspace/l274-work/fxcodec.tsv`):
+- Whole 27B checkpoint, 400 FP8 tensors: encode then decode round trip, 0 mismatches.
+- 24,326,963,200 weight bytes become 20,812,011,944 (nibbles 12,163,481,600; exponent streams 8,383,365,288;
+  offsets and tables 265,165,056) = 6.8441 bits per weight. Ratio 1.16889 (calc:bdf4c8b1), 3,514,951,256 bytes removed
+  (calc:085f8ac6) from the weights read per token if every weight were coded.
+
+OBSERVED (chip, `gpu_fx1_test --chip`, 27B layers-0 and layers-3, 9 reps, quiet-measure under the chip lock,
+`~/workspace/l274-work/runs/fx1-chip-20261020T215529Z.out`, shape rows 1, 8 warps):
+- Parity: output bit-identical to the raw FP8 GEMV on every tensor compared (13 tensors); both host mutants caught on the chip.
+- Time: DeltaNet/MLP shapes fx1 is 1.10x to 1.50x SLOWER than raw (in_proj_qkv 413 vs 311 us; mlp gate_proj 621 vs 526 us);
+  attention k/o/q/v projections 0.94x to 1.00x. Bytes read fall 12%, time rises: the kernel is decode-bound, not DRAM-bound.
+- INFERRED cause: about 12 integer operations per weight plus a serial chain per code (shift, shared-memory table lookup,
+  shift, advance) of tens of cycles, against about 4 for the raw path. Not yet isolated.
+- down_proj (k=17408): the raw GEMV refuses it (TOO_LARGE); FX1 uploaded fine; the test now prints SKIP for these.
+
+Verdict so far: the identity is exact and the bytes fall as counted, but this kernel does NOT turn removed bytes into
+speed. It is not landed as a speedup. Next: row interleave (2 rows per warp breaks the chain) and warp-count sweep.
