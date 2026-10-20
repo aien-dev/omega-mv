@@ -1,0 +1,83 @@
+variant,arm,column,n,min,median,max
+h10r,cold,planning_cpu_ns,5,138944,142272,145616
+h10r,cold,proc_cpu_cum_ns,5,88209344,88759120,91772480
+h10r,forget,planning_cpu_ns,5,788352,802304,816096
+h10r,forget,proc_cpu_cum_ns,5,85108784,88103648,88567504
+h10r,lazy,planning_cpu_ns,5,503664,509104,513808
+h10r,lazy,proc_cpu_cum_ns,5,86121520,88276704,88817504
+h10r,warm,planning_cpu_ns,5,524576,528576,550976
+h10r,warm,proc_cpu_cum_ns,5,87793152,88061392,89322128
+h3,cold,planning_cpu_ns,5,93216,96480,99328
+h3,cold,proc_cpu_cum_ns,5,20945168,21292864,23576912
+h3,forget,planning_cpu_ns,5,232432,242576,248544
+h3,forget,proc_cpu_cum_ns,5,20347648,20977856,22021936
+h3,lazy,planning_cpu_ns,5,463824,470960,475488
+h3,lazy,proc_cpu_cum_ns,5,21188976,21415312,22961184
+h3,warm,planning_cpu_ns,5,474592,480848,485776
+h3,warm,proc_cpu_cum_ns,5,20600656,21026320,24566672
+h40r,cold,planning_cpu_ns,5,326848,336704,339824
+h40r,cold,proc_cpu_cum_ns,5,619961504,625505248,633435184
+h40r,forget,planning_cpu_ns,5,3248608,3280560,3310464
+h40r,forget,proc_cpu_cum_ns,5,611559904,616330800,624675504
+h40r,lazy,planning_cpu_ns,5,689248,706336,712944
+h40r,lazy,proc_cpu_cum_ns,5,612865824,620339232,628128336
+h40r,warm,planning_cpu_ns,5,716048,736192,744928
+h40r,warm,proc_cpu_cum_ns,5,613317936,619331504,626847680
+h6,cold,planning_cpu_ns,5,113104,115536,120112
+h6,cold,proc_cpu_cum_ns,5,43919152,44423168,47673472
+h6,forget,planning_cpu_ns,5,487344,495600,512816
+h6,forget,proc_cpu_cum_ns,5,42550128,43773952,49534592
+h6,lazy,planning_cpu_ns,5,482304,492464,497104
+h6,lazy,proc_cpu_cum_ns,5,42936096,43857904,47269888
+h6r,cold,planning_cpu_ns,5,118256,118896,120672
+h6r,cold,proc_cpu_cum_ns,5,47963088,49391328,51288720
+h6r,forget,planning_cpu_ns,5,468336,476336,487408
+h6r,forget,proc_cpu_cum_ns,5,46918528,48455664,49485776
+h6r,lazy,planning_cpu_ns,5,483024,486832,490656
+h6r,lazy,proc_cpu_cum_ns,5,47703776,48556704,49326624
+h6r,warm,planning_cpu_ns,5,500384,502400,524656
+h6r,warm,proc_cpu_cum_ns,5,47786320,48869584,49534992
+h6,warm,planning_cpu_ns,5,498816,503152,538112
+h6,warm,proc_cpu_cum_ns,5,43623008,44571904,47243200
+
+comparison,variant,column,a_min,a_max,b_min,b_max,range_verdict,a_lower_in_runs
+lazy_vs_cold,h10r,planning_cpu_ns,503664,513808,138944,145616,a_higher(FAIL-shape),0 of 5
+lazy_vs_cold,h10r,proc_cpu_cum_ns,86121520,88817504,88209344,91772480,overlap(INCONCLUSIVE),4 of 5
+lazy_vs_cold,h3,planning_cpu_ns,463824,475488,93216,99328,a_higher(FAIL-shape),0 of 5
+lazy_vs_cold,h3,proc_cpu_cum_ns,21188976,22961184,20945168,23576912,overlap(INCONCLUSIVE),3 of 5
+lazy_vs_cold,h40r,planning_cpu_ns,689248,712944,326848,339824,a_higher(FAIL-shape),0 of 5
+lazy_vs_cold,h40r,proc_cpu_cum_ns,612865824,628128336,619961504,633435184,overlap(INCONCLUSIVE),5 of 5
+lazy_vs_cold,h6,planning_cpu_ns,482304,497104,113104,120112,a_higher(FAIL-shape),0 of 5
+lazy_vs_cold,h6,proc_cpu_cum_ns,42936096,47269888,43919152,47673472,overlap(INCONCLUSIVE),5 of 5
+lazy_vs_cold,h6r,planning_cpu_ns,483024,490656,118256,120672,a_higher(FAIL-shape),0 of 5
+lazy_vs_cold,h6r,proc_cpu_cum_ns,47703776,49326624,47963088,51288720,overlap(INCONCLUSIVE),3 of 5
+lazy_vs_warm,h10r,planning_cpu_ns,503664,513808,524576,550976,a_lower(PASS-shape),5 of 5
+lazy_vs_warm,h10r,proc_cpu_cum_ns,86121520,88817504,87793152,89322128,overlap(INCONCLUSIVE),3 of 5
+lazy_vs_warm,h3,planning_cpu_ns,463824,475488,474592,485776,overlap(INCONCLUSIVE),5 of 5
+lazy_vs_warm,h3,proc_cpu_cum_ns,21188976,22961184,20600656,24566672,overlap(INCONCLUSIVE),2 of 5
+lazy_vs_warm,h40r,planning_cpu_ns,689248,712944,716048,744928,a_lower(PASS-shape),5 of 5
+lazy_vs_warm,h40r,proc_cpu_cum_ns,612865824,628128336,613317936,626847680,overlap(INCONCLUSIVE),3 of 5
+lazy_vs_warm,h6,planning_cpu_ns,482304,497104,498816,538112,a_lower(PASS-shape),5 of 5
+lazy_vs_warm,h6,proc_cpu_cum_ns,42936096,47269888,43623008,47243200,overlap(INCONCLUSIVE),4 of 5
+lazy_vs_warm,h6r,planning_cpu_ns,483024,490656,500384,524656,a_lower(PASS-shape),5 of 5
+lazy_vs_warm,h6r,proc_cpu_cum_ns,47703776,49326624,47786320,49534992,overlap(INCONCLUSIVE),2 of 5
+warm_vs_cold,h10r,planning_cpu_ns,524576,550976,138944,145616,a_higher(FAIL-shape),0 of 5
+warm_vs_cold,h10r,proc_cpu_cum_ns,87793152,89322128,88209344,91772480,overlap(INCONCLUSIVE),5 of 5
+warm_vs_cold,h3,planning_cpu_ns,474592,485776,93216,99328,a_higher(FAIL-shape),0 of 5
+warm_vs_cold,h3,proc_cpu_cum_ns,20600656,24566672,20945168,23576912,overlap(INCONCLUSIVE),3 of 5
+warm_vs_cold,h40r,planning_cpu_ns,716048,744928,326848,339824,a_higher(FAIL-shape),0 of 5
+warm_vs_cold,h40r,proc_cpu_cum_ns,613317936,626847680,619961504,633435184,overlap(INCONCLUSIVE),5 of 5
+warm_vs_cold,h6,planning_cpu_ns,498816,538112,113104,120112,a_higher(FAIL-shape),0 of 5
+warm_vs_cold,h6,proc_cpu_cum_ns,43623008,47243200,43919152,47673472,overlap(INCONCLUSIVE),4 of 5
+warm_vs_cold,h6r,planning_cpu_ns,500384,524656,118256,120672,a_higher(FAIL-shape),0 of 5
+warm_vs_cold,h6r,proc_cpu_cum_ns,47786320,49534992,47963088,51288720,overlap(INCONCLUSIVE),4 of 5
+warm_vs_forget,h10r,planning_cpu_ns,524576,550976,788352,816096,a_lower(PASS-shape),5 of 5
+warm_vs_forget,h10r,proc_cpu_cum_ns,87793152,89322128,85108784,88567504,overlap(INCONCLUSIVE),2 of 5
+warm_vs_forget,h3,planning_cpu_ns,474592,485776,232432,248544,a_higher(FAIL-shape),0 of 5
+warm_vs_forget,h3,proc_cpu_cum_ns,20600656,24566672,20347648,22021936,overlap(INCONCLUSIVE),1 of 5
+warm_vs_forget,h40r,planning_cpu_ns,716048,744928,3248608,3310464,a_lower(PASS-shape),5 of 5
+warm_vs_forget,h40r,proc_cpu_cum_ns,613317936,626847680,611559904,624675504,overlap(INCONCLUSIVE),0 of 5
+warm_vs_forget,h6,planning_cpu_ns,498816,538112,487344,512816,overlap(INCONCLUSIVE),0 of 5
+warm_vs_forget,h6,proc_cpu_cum_ns,43623008,47243200,42550128,49534592,overlap(INCONCLUSIVE),1 of 5
+warm_vs_forget,h6r,planning_cpu_ns,500384,524656,468336,487408,a_higher(FAIL-shape),0 of 5
+warm_vs_forget,h6r,proc_cpu_cum_ns,47786320,49534992,46918528,49485776,overlap(INCONCLUSIVE),1 of 5

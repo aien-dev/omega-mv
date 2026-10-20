@@ -1,0 +1,5 @@
+entity276 horizon-warm H 40: bad_rows 0 records 4635 searches 0 hits 40 rebuild_cpu_ns 461424
+entity276 horizon-cold H 40: bad_rows 0 records 4636 searches 1 hits 39 rebuild_cpu_ns 336
+entity276 horizon-lazy H 40: bad_rows 0 records 4635 searches 0 hits 40 rebuild_cpu_ns 445088
+entity276 horizon-forget H 40: bad_rows 0 records 4593 searches 40 hits 0 rebuild_cpu_ns 320
+entity276 horizon H 40 arms 4 interleave 1 release 1: checks 3602 failed 0

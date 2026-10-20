@@ -1,0 +1,3 @@
+head 5180a697affe71394ea4639464efb64b52e03b9a build 5180a697affe71394ea4639464efb64b52e03b9a queued 2026-10-20T13:51:00Z load 133.15 126.17 117.53 memavail_kib 55430036
+~/.local/bin/quiet-measure flock /tmp/aien-gb10.lock ~/.local/bin/spark-receipt entity-276-h40 -- env ENTITY276_BIN=/home/drakestapleton/workspace/targets/omega-entity-276-h40/record/tests-research/entity276 PILOT_OUT=/home/drakestapleton/workspace/targets/omega-entity-276-h40/measure bash tests/research/entity276/measure-h40.sh
+exit 0 ended 2026-10-20T14:15:01Z load 93.92 94.98 105.76
