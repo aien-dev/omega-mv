@@ -1,0 +1,4 @@
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -DC2_SOURCES_SHA256='"1e32e08b3491652e9afb47367b252e09ce0d7c136ca8aef60acb93dcb23552f0"' -o build/checker2/checker2 src/checker2/checker2_main.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+bash tools/omega_emit/structs/gate_structs.sh /home/drakestapleton/workspace/omega-emit-structs/build/omega_emit/omega_emit /home/drakestapleton/workspace/omega-emit-structs/build/compiler/oscc /home/drakestapleton/workspace/omega-emit-structs/build/checker2/checker2 /home/drakestapleton/workspace/omega-emit-structs/evidence/EMIT-STRUCTS
+gate RT: 5/11; gate C2: 5/11 (table: /home/drakestapleton/workspace/omega-emit-structs/evidence/EMIT-STRUCTS/round-trip.md)
+make: *** [mk/omega-emit.mk:42: test-omega-emit-structs] Error 1

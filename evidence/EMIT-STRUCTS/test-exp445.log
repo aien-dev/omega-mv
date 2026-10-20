@@ -1,0 +1,167 @@
+cc -std=gnu11 -Wall -Wextra -Werror -O2 -o build/omega_emit/examples_expected tools/exp445/examples_expected.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/one_layer/ola tests/one_layer/acceptance/ola.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/one_layer/ola_runner tests/one_layer/acceptance/ola_runner.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/omega_program_ir.c src/omega_program.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_exec.c src/omega_verify.c src/omega_realize_synth.c src/omega_machine.c src/sha256.c
+bash tools/exp445/test_exp445.sh /home/drakestapleton/workspace/omega-emit-structs/build/omega_emit /home/drakestapleton/workspace/omega-emit-structs/build/compiler/oscc /home/drakestapleton/workspace/omega-emit-structs/build/omegese/omegese
+ok   extract: first fenced block, whole text without a fence, an unclosed block to the end
+ok   tohex -> hex round trip byte-identical
+ok   check: reference OK in both readers; compiler, signature, name and decoder refusals with reasons
+ok   wilson: 7/10 -> [0.3968, 0.8922], 0/60 and 60/60 bounds; k > n refused
+ok   mcnemar: 1/9 -> 0.021484 (symmetric), 3/12 -> 0.035156, 0/10 -> 0.001953, ties and 0/0 -> 1; bad arguments refused
+ok   examples: 14 in the many-shot list, 1 (the r2 example) in the one-shot list, every example dir listed exactly once
+ok   every example: requirement format, entry = its name (not a dev entry), >= 3 inputs (139 in all), expected = examples_expected
+ok     (negative controls: a changed expected line, an entry named like a dev task)
+ok   reader + x445 check: all 15 examples OK in both forms (30 of 30)
+ok     (negative control: an Omegese hash_step with one parameter is refused: REFUSED signature: hash_step takes (u32) -> u32; the task needs (u32, u8) -> u32)
+ok   harness: both forms of all 15 examples ACCEPT on their 139 inputs, so both forms give the expected (the same) outputs
+ok     (negative control: one changed constant in an Omegese and in an OSC example is REJECTED by the harness)
+ok   prompts: both arms carry the same task text (14 many-shot, 1 one-shot = clamp_sub), each with its own program form
+ok     (negative controls: one changed word is seen; the bytes arm and an unknown mode have no prompt)
+ok   word card: exactly the 48 fixed words of omegese, each once
+ok     (negative control: a card missing 'bound' is caught)
+ok   one-token gate: all 65 distinct words of the Omegese examples are one token each
+ok     (negative control: a1 and mulmod are two tokens each and would fail the gate)
+ok   no example entry name is a dev entry name (negative control: an extra clamp_add counts 1)
+ok   held-out hygiene: example entry names colliding with held-out entry names: 0
+ok   clamp_sub (the r2 one-shot example): the OSC, r2 bytes and SCHEMA forms are the same IR bytes
+ok   pack_dev refuses a wrong expected line and packs nothing (negative control)
+ok   refused: real PARAMS: run.sh config B (OWN-8B not requalified)
+ok   refused: real PARAMS: g0.sh config B
+ok   refused: real PARAMS: score.sh --configs B
+ok   refused: PARAMS with config A's server a placeholder: a held-out run
+ok     nothing written by the refused runs
+ok   PARAMS r3: arms omegese,text; prompt modes many,one (held-out: many); futility 30 of 60
+ok   config A server frozen: /home/drakestapleton/handoffs/pin-bin-f881710a/aien-serve-http, sha256 663b85a506ec9bdf..., the same as protocol 13.3
+ok     and the binary here has that sha256
+ok   weights.A/B.sha256 equal the protocol's frozen hash block (one changed digit is caught)
+ok   check_weights.sh: every listed file OK and the server's model list recorded
+ok     (negative control: a changed weight file FAILS the check)
+ok   refused: driver with a FAILED weight check
+ok   refused: driver with no weight check
+ok   refused: driver on a tasks dir with hidden files
+ok   refused: driver on a 60-task dir with 2400 hidden files
+ok   refused: driver on a config not named in PARAMS
+ok   refused: the bytes arm (dropped by r3)
+ok   refused: an unknown prompt mode
+ok   refused: a held-out run in the one-shot mode
+ok   the vendored sampling gate's sha256 equals PARAMS g0_gate_sha256
+ok     and is byte for byte aien-sovereign-core f881710a scripts/sampling-gate.sh
+ok   G0 PASS: the sampling gate passes (its gate d on dev01's 8 attempt seeds), the repeat of seed 1 identical, 9/9 sampled with their own seeds; T 0.7, top_p 0.8; all hashed
+ok   refused: g0.sh over an existing G0 record
+ok   G0 FAIL (exit 1): identical answers, p_repeat 0.5 (0.5^7 < 0.01): the seed looks ignored
+ok   G0 FAIL (exit 1): identical answers, p_repeat 0.51 (0.51^7 = 0.00897 < 0.01), boundary
+ok   G0 PASS (exit 0): identical answers, p_repeat 0.52 (0.52^7 = 0.0103 >= 0.01): a confident model; distinct 1/8 recorded, not gated
+ok   G0 ledger: the FAIL appended (config, server, identity, verdict, record dir, SHA256SUMS sha, PARAMS sha)
+ok   G0 ledger: a PASS appended too, with its record's SHA256SUMS sha
+ok   G0 ledger: one new file per verdict (evidence stays append-only); an entry with the same name is never overwritten (a FAIL cannot become a PASS)
+ok   refused (exit 3, nothing written): g0.sh in a new run dir after a G0 FAIL for the same config, server and settings
+ok   refused (exit 3, nothing written): g0.sh after a FAIL, PARAMS edited outside the configuration's identity
+ok   refused: run.sh on a run dir with a G0 PASS while the ledger holds a FAIL for that config
+ok     negative controls: that FAIL does not bar another server, another temperature or config B
+ok     EXP445_G0_LEDGER is honoured only with EXP445_PARAMS (tests); otherwise the real ledger
+ok   refused: run.sh on a G0 PASS record with no PASS line on the ledger
+ok   refused: run.sh when the ledger's PASS line names another record
+ok   refused: g0.sh with a tab in the server name (a ledger column)
+ok   G0 FAIL (exit 1): a server that ignores the seed (reports seed 0, the stage S mutant)
+ok   G0 FAIL (exit 1): a server that forces greedy decoding (reports mode greedy, the stage S mutant)
+ok   G0 FAIL (exit 1): the gate's own replays differ (gates a and c fail) while dev01's identical answers are confident (gate d passes)
+ok     (there gate b passes on distinct replies, gate c fails, gate d passes: G0 needs the whole gate)
+ok   refused: run.sh with a forged G0 (gate verdict, gate exit, derived and G0 lines edited, all hashes redone)
+ok   refused: g0.sh against an endpoint that does not answer
+ok     no G0 record written for a transport failure (the run dir can still be gated)
+ok   G0 FAIL (exit 1): 8 distinct answers, the sampling gate passes, but the repeat of seed 1 differs
+ok   refused: run.sh with no G0 record
+ok   refused: run.sh with a G0 FAIL (repeat differs)
+ok   refused: run.sh with a G0 FAIL whose verdict line was edited to PASS (re-hashed)
+ok   refused: run.sh with config A's G0 in a config B run
+ok   refused: run.sh with a G0 made on another server (re-hashed)
+ok   refused: run.sh with a G0 response edited (not re-hashed)
+ok   refused: run.sh with a G0 request at another temperature (re-hashed)
+ok   refused: run.sh with a G0 made by an edited sampling gate (re-hashed)
+ok   refused: g0.sh with an edited sampling gate script
+ok     nothing recorded by the refused G0
+ok   refused: driver on a run dir another driver holds (flock)
+ok     the refused driver wrote no log.tsv
+ok   6 generations (3 tasks x 2 arms) logged; meta.txt: revision r3, prompt mode many, order, server, the override recorded
+ok   order: task, then arm within attempt 1
+ok   text arm: accepted, repaired after a compiler refusal, HTTP 500 retried twice then no candidate
+ok   omegese arm: accepted, repaired after 'REFUSED omegese: line 2: this is int; absdiff returns long', an over-budget answer cut at max_tokens (no candidate)
+ok   run prompts: the many-shot prompts of both arms
+ok   every request: max_tokens 3072 (PARAMS), temperature 0.7, top_p 0.8; one seed per task and attempt across the arms
+ok   repair round: same message format in both arms
+ok   every raw request/response and the G0 record hashed in SHA256SUMS (verifies)
+ok   refused: resume with other settings
+ok   resume with the same settings sends no request again
+ok   config extras: B's in every B request, none in A's
+ok   --prompt-mode one: the one-shot prompts, recorded as prompt_mode=one (not an override)
+ok     mutant caught: no repair round
+rm: cannot remove '/tmp/exp445-test.LZ9doi7e/mut.ledger': Is a directory
+ok     mutant caught: budget not sent
+ok     mutant caught: G0 check skipped (that run.sh generates without G0; the real one refused above)
+ok   refused connection: 3 tries recorded (HTTP 000, curl exit 7, curl's own time > 0), row REQUEST FAILED with wall > 0 (a time of 0 is caught)
+ok   killed twice and resumed: 38 requests in all, the same as one uninterrupted run; 20 rows, no duplicate, same rows
+ok     mutant caught: resume requests a committed round again (14 requests)
+tools/exp445/test_exp445.sh: line 451: 359665 Killed                  EXP445_TEST_KILL=after-r1:a-text-1:dev02 "$1" --config A --tasks "$T/pub" --out "$2" > /dev/null 2>&1
+tools/exp445/test_exp445.sh: line 451: 362126 Killed                  EXP445_TEST_KILL=after-log:a-omegese-1:dev04 "$1" --config A --tasks "$T/pub" --out "$2" > /dev/null 2>&1
+ok     mutant caught: resume appends the row again
+ok   gate 13.6 boundaries: 8 vs 9 of 10 PASS, 8 vs 10 FAIL, 7 FAIL; 48 vs 54 of 60 PASS (exactly 10 points), 48 vs 55 FAIL, 47 FAIL
+ok   score.sh: success 3/10 omegese vs 2/10 text (round 1 alone 2/10 vs 1/10), Wilson, cost ratio, paired McNemar, gate 13.6 per config; TEST MODE
+ok   score.sh verdicts: the over-budget answer no_candidate, the Omegese gcd ACCEPT
+ok   score.sh --configs A: config A alone is scored, the gate is not evaluated
+ok   score.sh: a one-shot run scores against the one-shot prompts
+ok   RUN INVALID, no table: tampered candidate
+ok   RUN INVALID, no table: tampered response
+ok   RUN INVALID, no table: missing generation (re-hashed)
+ok   RUN INVALID, no table: edited token column (not re-hashed)
+ok   RUN INVALID, no table: edited token column (re-hashed: only the cross-check sees it)
+ok     mutant caught: score.sh without the log.tsv cross-check scores it
+ok   RUN INVALID, no table: non-integer token count in a response (re-hashed)
+ok     the token payload was never evaluated
+ok   RUN INVALID, no table: log candidate hash edited (re-hashed)
+ok   RUN INVALID, no table: override hidden by editing meta.txt (re-hashed)
+ok   RUN INVALID, no table: wrong seed (re-hashed)
+ok   RUN INVALID, no table: B request without its extra field (re-hashed)
+ok   RUN INVALID, no table: round 2 without a round-1 refusal (re-hashed)
+ok   RUN INVALID, no table: refused round 1 without its repair round (re-hashed)
+ok   RUN INVALID, no table: failed round with a try missing (re-hashed)
+ok   RUN INVALID, no table: a FAILED weight line (re-hashed)
+ok   RUN INVALID, no table: changed PARAMS
+ok   RUN INVALID, no table: override flag used
+ok   RUN INVALID, no table: same run twice
+ok   RUN INVALID, no table: config outside --configs
+ok     mutant caught: score.sh without the cands/ check scores it
+ok   RUN INVALID, no table: an r2 run (meta.txt without revision=r3, re-hashed)
+ok   RUN INVALID, no table: another generation order (re-hashed)
+ok   RUN INVALID, no table: a many-shot and a one-shot run scored together
+ok   RUN INVALID, no table: a one-shot run relabelled many (re-hashed)
+ok   RUN INVALID, no table: no G0 record (re-hashed)
+ok     mutant caught: score.sh without the G0 checks (PASS and run binding) scores it
+ok   RUN INVALID, no table: a G0 response edited (run re-hashed, G0 not)
+ok   RUN INVALID, no table: a G0 made with another PARAMS
+ok   RUN INVALID, no table: another G0 PASS swapped in after generation (re-hashed)
+ok     mutant caught: score.sh without the run's G0 record check scores it
+ok   RUN INVALID, no table: a G0 FAIL on the ledger for config A's server and settings
+ok     mutant caught: score.sh without the ledger FAIL check scores it
+ok   RUN INVALID, no table: the run's G0 PASS record has no PASS line on the ledger
+ok   refused: run.sh resuming a run whose G0 record was swapped
+ok   RUN INVALID, no table: a round 10 request in a generation (re-hashed)
+ok   score.sh: the killed-and-resumed run is valid (provenance OK, no duplicate)
+ok   held-out run: the driver stops after attempt 1 and asks for the interim score (8 generations, hashed)
+ok   score.sh --interim: attempt 1 scored, futility.txt: omegese 3/4 <= 3 -> decision=STOP, gate not evaluated
+ok   refused: run.sh --futility made from other attempt-1 rows
+ok   run.sh --futility (decision STOP): attempts 2 and later not run
+ok   final score of the stopped run: valid, the stop rule recorded in results.txt
+ok   RUN INVALID, no table: attempts run although the stop rule fired
+ok   RUN INVALID, no table: attempt 2 missing although the stop rule did not fire
+ok   refused: resume when the tools changed since the run's commit
+ok   decision CONTINUE: attempt 2 run; 16 generations in the order attempt, then task, then arm
+ok   final score of the continued run: valid, stop rule CONTINUE
+ok     distinct candidates per task reported (13.5): text 1.25 (h01 attempt 2 is another program), omegese 1.00 (the same program every attempt)
+ok   meta_resume: identical meta.txt resumes
+ok   meta_resume: a later commit that touches only evidence resumes (the G0 ledger commit)
+ok   meta_resume: changed tool files refused (negative control)
+ok   meta_resume: a dirty tree across commits refused
+ok   meta_resume: another setting refused even with the same tools
+ok   meta_resume: an unknown commit refused
+ok   meta_resume: a revision name (commit=HEAD) refused
+
+test-exp445: PASS

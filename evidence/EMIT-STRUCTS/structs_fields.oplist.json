@@ -1,0 +1,69 @@
+{"structs": [
+  {"name": "Pt", "fields": [{"name": "x", "type": "i32"}, {"name": "y", "type": "i32"}, {"name": "ok", "type": "bool"}]},
+  {"name": "Rec", "fields": [{"name": "tag", "type": "u8"}, {"name": "vals", "type": "i16", "len": 4}, {"name": "n", "type": "u64"}]}
+ ],
+ "functions": [
+  {"name": "fields_rw", "params": ["i32", "i32"], "ret": "i32", "locals": ["bool", "u64", "own:Pt", "i32", "i32", "i32", "bool", "i32", "i32", "i32", "i32"],
+   "blocks": [
+    [
+     {"op": "gt", "dst": 2, "a": 0, "b": 1},
+     {"op": "const", "dst": 3, "value": 0},
+     {"op": "alloc", "dst": 4, "init": 3},
+     {"op": "fstore", "a": 4, "field": "y", "value": 1},
+     {"op": "fstore", "a": 4, "field": "x", "value": 0},
+     {"op": "fstore", "a": 4, "field": "ok", "value": 2},
+     {"op": "fload", "dst": 5, "a": 4, "field": "x"},
+     {"op": "fload", "dst": 6, "a": 4, "field": "y"},
+     {"op": "sub", "dst": 7, "a": 5, "b": 6},
+     {"op": "fstore", "a": 4, "field": "x", "value": 7},
+     {"op": "fload", "dst": 8, "a": 4, "field": "ok"},
+     {"op": "cbr", "cond": 8, "then": 1, "else": 2}
+    ],
+    [
+     {"op": "const", "dst": 9, "value": 7},
+     {"op": "fstore", "a": 4, "field": "y", "value": 9},
+     {"op": "br", "to": 2}
+    ],
+    [
+     {"op": "fload", "dst": 10, "a": 4, "field": "x"},
+     {"op": "fload", "dst": 11, "a": 4, "field": "y"},
+     {"op": "add", "dst": 12, "a": 10, "b": 11},
+     {"op": "release", "arr": 4},
+     {"op": "ret", "a": 12}
+    ]
+   ]},
+  {"name": "pick_bits", "params": ["u8", "i16"], "ret": "i64", "locals": ["u64", "u64", "own:Rec", "u64", "i64", "i16", "i16", "u64", "u8", "u64", "u64", "i16", "i64", "u64", "i64", "i64"],
+   "blocks": [
+    [
+     {"op": "const", "dst": 2, "value": 3},
+     {"op": "const", "dst": 3, "value": 0},
+     {"op": "alloc", "dst": 4, "init": 3},
+     {"op": "fstore", "a": 4, "field": "tag", "value": 0},
+     {"op": "const", "dst": 5, "value": 0},
+     {"op": "fstore", "a": 4, "field": "vals", "value": 1, "index": 5},
+     {"op": "const", "dst": 5, "value": 1},
+     {"op": "fstore", "a": 4, "field": "vals", "value": 1, "index": 5},
+     {"op": "const", "dst": 5, "value": 2},
+     {"op": "fstore", "a": 4, "field": "vals", "value": 1, "index": 5},
+     {"op": "const", "dst": 5, "value": 3},
+     {"op": "fstore", "a": 4, "field": "vals", "value": 1, "index": 5},
+     {"op": "fstore", "a": 4, "field": "n", "value": 2},
+     {"op": "const", "dst": 6, "value": 1},
+     {"op": "const", "dst": 7, "value": 1},
+     {"op": "sub", "dst": 8, "a": 1, "b": 7},
+     {"op": "fstore", "a": 4, "field": "vals", "value": 8, "index": 6},
+     {"op": "fload", "dst": 9, "a": 4, "field": "n"},
+     {"op": "fload", "dst": 10, "a": 4, "field": "tag"},
+     {"op": "cast", "dst": 11, "a": 10},
+     {"op": "add", "dst": 12, "a": 9, "b": 11},
+     {"op": "fstore", "a": 4, "field": "n", "value": 12},
+     {"op": "fload", "dst": 13, "a": 4, "field": "vals", "index": 0},
+     {"op": "cast", "dst": 14, "a": 13},
+     {"op": "fload", "dst": 15, "a": 4, "field": "n"},
+     {"op": "cast", "dst": 16, "a": 15},
+     {"op": "add", "dst": 17, "a": 14, "b": 16},
+     {"op": "release", "arr": 4},
+     {"op": "ret", "a": 17}
+    ]
+   ]}
+]}
