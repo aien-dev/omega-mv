@@ -1,0 +1,23 @@
+30B active/token FP8 ckpt (attn fp8 + 8 experts fp8 + router bf16 + head bf16) 3.365404672 GB calc:70c43eb6
+30B active/token W4 4.25b (router bf16)   1.634361344 GB calc:d16a15a4
+30B active/token W2 2.25b body, 4.25b head 0.954884096 GB calc:050401c8
+30B active/token BF16                     6.083313664 GB calc:5e2ab3b7
+30B experts per token FP8                 1.811939328 GB calc:dcadaaa2
+30B whole model FP8 (sum of parts)        31.170363392 GB calc:7d37adcf (files on disk 31,175,618,584 B)
+27B BF16 per token                        51.2027968 GB calc:7877f940
+27B W2 (2.25b body, 4.25b head)            7.5182429 GB calc:14904590
+8B FP8 body + bf16 head                    8.190427136 GB calc:4ad1228e
+8B W4 4.25b                                4.02055168 GB calc:74205d0a
+8B W2 2.25b body, 4.25b head               2.284109824 GB calc:1664020a
+8B BF16                                    15.13619456 GB calc:5057bee8
+Pi 5 LPDDR4X-4267 x32 spec                 17.068 GB/s calc:59c2129b
+30B whole model W4 (experts+attn 4.25b, router+embed bf16, head 4.25b) 16.69558272 GB calc:6139121f
+30B whole model W2 (2.25b body)            9.221332992 GB calc:f2bf26d1
+30B non-expert per token W4 (attn+router+head) 0.671768576 GB calc:8d61da57
+30B expert bytes per token W4              0.962592768 GB calc:a392f781
+30B KV per token bf16 (48 x 2 x 4 x 128 x 2) 98304 B calc:ffee0b48
+Ceilings (bandwidth / active bytes per token):
+Pi5 17.068: 8B W4 4.245 calc:edc54726 | 8B W2 7.472 calc:abea9c93 | 30B W2 17.87 calc:57b87edd | 27B W2 2.27 calc:029d27ac | 30B W4 10.44 calc:8d130156
+M2 100: 30B W4 61.19 calc:916c95a2 | 30B W2 104.7 calc:f2749b19 | 27B W4 7.326 calc:c8d9bb1d | 8B W4 24.87 calc:813bbba0 | 8B FP8 12.21 calc:fed4e51f
+5070 672: 8B FP8 82.05 calc:fa8a0aef | 8B W4 167.1 calc:7a98ea66 | 27B W2 89.38 calc:16cdff9c | 30B W2 703.8 calc:d1c1277d
+Laptop 51.2: 8B W4 12.73 calc:d2c3a087
