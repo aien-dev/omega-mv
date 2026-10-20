@@ -1,0 +1,56 @@
+== R = 1
+s=5881 load1 99.08..99.96 A=772957664 A2=779989936 n=7032272 (calc:6c86d596) | B d=25493664 (calc:1b53898b) d-n=18461392 F1 ok F2 ok(225/240, wrong 7 vs A 7) F3 wrong-from-memory 0 | C0 d=43774912 (calc:c923dcdb) d-n=36742640 F1 ok F2 ok(227/240, wrong 5 vs A 7) F3 wrong-from-memory 0
+s=5882 load1 99.96..100.20 A=725883328 A2=730207328 n=4324000 (calc:6a880678) | B d=41630976 (calc:33efccc8) d-n=37306976 F1 ok F2 ok(222/240, wrong 4 vs A 4) F3 wrong-from-memory 0 | C0 d=37130080 (calc:cb6ca62b) d-n=32806080 F1 ok F2 ok(222/240, wrong 4 vs A 4) F3 wrong-from-memory 0
+s=5883 load1 100.20..100.20 A=733537104 A2=735011664 n=1474560 (calc:7cdccbef) | B d=53872208 (calc:a99bd006) d-n=52397648 F1 ok F2 ok(225/240, wrong 10 vs A 10) F3 wrong-from-memory 0 | C0 d=61995104 (calc:3ecafa99) d-n=60520544 F1 ok F2 ok(229/240, wrong 6 vs A 10) F3 wrong-from-memory 0
+s=5884 load1 100.20..99.38 A=744536368 A2=745945696 n=1409328 (calc:286443e8) | B d=28853344 (calc:fc642026) d-n=27444016 F1 ok F2 ok(226/240, wrong 8 vs A 9) F3 wrong-from-memory 1 | C0 d=38226176 (calc:51efb0b8) d-n=36816848 F1 ok F2 ok(226/240, wrong 8 vs A 9) F3 wrong-from-memory 0
+s=5885 load1 99.38..99.83 A=731090768 A2=732884576 n=1793808 (calc:307befdd) | B d=55516208 (calc:9ab72acd) d-n=53722400 F1 ok F2 ok(232/240, wrong 4 vs A 4) F3 wrong-from-memory 0 | C0 d=49440576 (calc:4c7b468f) d-n=47646768 F1 ok F2 ok(232/240, wrong 4 vs A 4) F3 wrong-from-memory 0
+  A cpu: min 725.9 / median 733.5 / max 773.0 ms
+  A2 cpu: min 730.2 / median 735.0 / max 780.0 ms
+  B cpu: min 675.6 / median 684.3 / max 747.5 ms
+  C0 cpu: min 671.5 / median 688.8 / max 729.2 ms
+  verdict B R=1: FAIL (d > n on 5 of 5, d < -n on 0 of 5, floors fail); d_B: min 25.5 / median 41.6 / max 55.5 ms
+  verdict C0 R=1: PASS (d > n on 5 of 5, d < -n on 0 of 5, floors ok); d_C0: min 37.1 / median 43.8 / max 62.0 ms
+== R = 3
+s=5881 load1 99.83..100.41 A=1202995152 A2=1207233376 n=4238224 (calc:b2152244) | B d=233036512 (calc:e13d4f64) d-n=228798288 F1 ok F2 ok(369/384, wrong 7 vs A 7) F3 wrong-from-memory 0 | C0 d=254954480 (calc:29aa6fcd) d-n=250716256 F1 ok F2 ok(369/384, wrong 7 vs A 7) F3 wrong-from-memory 0
+s=5882 load1 100.41..100.41 A=971597808 A2=972072416 n=474608 (calc:9db723d1) | B d=209097792 (calc:e2a071cb) d-n=208623184 F1 ok F2 ok(364/384, wrong 6 vs A 7) F3 wrong-from-memory 0 | C0 d=210784176 (calc:233ccccd) d-n=210309568 F1 ok F2 ok(364/384, wrong 6 vs A 7) F3 wrong-from-memory 0
+s=5883 load1 100.41..100.94 A=1217988192 A2=1223569408 n=5581216 (calc:f7c925a2) | B d=259894384 (calc:ef3f84b8) d-n=254313168 F1 ok F2 ok(369/384, wrong 10 vs A 11) F3 wrong-from-memory 0 | C0 d=272802560 (calc:ef893950) d-n=267221344 F1 ok F2 ok(373/384, wrong 6 vs A 11) F3 wrong-from-memory 0
+s=5884 load1 100.94..101.34 A=1251850848 A2=1260327120 n=8476272 (calc:656ec0d9) | B d=238964608 (calc:99e17ae9) d-n=230488336 F1 ok F2 ok(367/384, wrong 11 vs A 14) F3 wrong-from-memory 1 | C0 d=257757712 (calc:77379b1c) d-n=249281440 F1 ok F2 ok(367/384, wrong 11 vs A 14) F3 wrong-from-memory 0
+s=5885 load1 101.34..101.55 A=1169839920 A2=1164564816 n=5275104 (calc:7316d9b7) | B d=301815184 (calc:42cf1e3f) d-n=296540080 F1 ok F2 ok(376/384, wrong 4 vs A 5) F3 wrong-from-memory 0 | C0 d=296254944 (calc:fe4ef3c4) d-n=290979840 F1 ok F2 ok(377/384, wrong 3 vs A 5) F3 wrong-from-memory 0
+  A cpu: min 971.6 / median 1203.0 / max 1251.9 ms
+  A2 cpu: min 972.1 / median 1207.2 / max 1260.3 ms
+  B cpu: min 762.5 / median 958.1 / max 1012.9 ms
+  C0 cpu: min 760.8 / median 945.2 / max 994.1 ms
+  verdict B R=3: FAIL (d > n on 5 of 5, d < -n on 0 of 5, floors fail); d_B: min 209.1 / median 239.0 / max 301.8 ms
+  verdict C0 R=3: PASS (d > n on 5 of 5, d < -n on 0 of 5, floors ok); d_C0: min 210.8 / median 257.8 / max 296.3 ms
+== R = 6
+s=5881 load1 101.55..100.15 A=1813310064 A2=1820304448 n=6994384 (calc:619270f0) | B d=500357152 (calc:0fa1206c) d-n=493362768 F1 ok F2 ok(585/600, wrong 7 vs A 7) F3 wrong-from-memory 0 | C0 d=543945808 (calc:3cd440bb) d-n=536951424 F1 ok F2 ok(585/600, wrong 7 vs A 7) F3 wrong-from-memory 0
+s=5882 load1 100.15..99.42 A=1464532496 A2=1470693808 n=6161312 (calc:f6796f50) | B d=438944432 (calc:4dde81d7) d-n=432783120 F1 ok F2 ok(580/600, wrong 6 vs A 8) F3 wrong-from-memory 0 | C0 d=446024048 (calc:37d7a039) d-n=439862736 F1 ok F2 ok(580/600, wrong 6 vs A 8) F3 wrong-from-memory 0
+s=5883 load1 99.42..98.66 A=1446567696 A2=1451134816 n=4567120 (calc:94989ccc) | B d=444796848 (calc:286a3783) d-n=440229728 F1 ok F2 ok(584/600, wrong 11 vs A 14) F3 wrong-from-memory 0 | C0 d=474411792 (calc:dd71d9cc) d-n=469844672 F1 ok F2 ok(588/600, wrong 7 vs A 14) F3 wrong-from-memory 0
+s=5884 load1 98.66..98.13 A=1435904208 A2=1437902800 n=1998592 (calc:7848a7ca) | B d=406438688 (calc:fa279ffd) d-n=404440096 F1 ok F2 ok(581/600, wrong 13 vs A 17) F3 wrong-from-memory 1 | C0 d=435897744 (calc:6392c87f) d-n=433899152 F1 ok F2 ok(580/600, wrong 14 vs A 17) F3 wrong-from-memory 0
+s=5885 load1 98.13..97.24 A=1456985872 A2=1457595072 n=609200 (calc:f91d532b) | B d=529573296 (calc:812dacca) d-n=528964096 F1 ok F2 ok(592/600, wrong 4 vs A 6) F3 wrong-from-memory 0 | C0 d=525794464 (calc:d70e050e) d-n=525185264 F1 ok F2 ok(593/600, wrong 3 vs A 6) F3 wrong-from-memory 0
+  A cpu: min 1435.9 / median 1457.0 / max 1813.3 ms
+  A2 cpu: min 1437.9 / median 1457.6 / max 1820.3 ms
+  B cpu: min 927.4 / median 1025.6 / max 1313.0 ms
+  C0 cpu: min 931.2 / median 1000.0 / max 1269.4 ms
+  verdict B R=6: FAIL (d > n on 5 of 5, d < -n on 0 of 5, floors fail); d_B: min 406.4 / median 444.8 / max 529.6 ms
+  verdict C0 R=6: PASS (d > n on 5 of 5, d < -n on 0 of 5, floors ok); d_C0: min 435.9 / median 474.4 / max 543.9 ms
+== prediction scoring (A4: Q1 34,735,264..45,964,016; Q2 214,907,552..248,498,128; Q3 485,165,984..554,737,744 ns)
+R=1 d_B per stream: 25493664 41630976 53872208 28853344 55516208 ; inside range 1 of 5; median 41630976 inside: yes
+R=3 d_B per stream: 233036512 209097792 259894384 238964608 301815184 ; inside range 2 of 5; median 238964608 inside: yes
+R=6 d_B per stream: 500357152 438944432 444796848 406438688 529573296 ; inside range 2 of 5; median 444796848 inside: no
+== net(H) fit of the held-out B lanes (netfit.sh A B; Q4 net(3) 2,483,167..2,748,295, net(6) 6,185,395..6,917,412 ns)
+R=3 s=5881 C=1296088 p=0.5000 Delta=2887792 r=0.997492 net(3)=3024745.208694249344 (calc:c6ed5cc6) net(6)=7313149.9351153111131 (calc:6e52592c)
+R=3 s=5882 C=1207913 p=0.5139 Delta=2326288 r=0.996027 net(3)=2364295.1609116637937 (calc:dfad0121) net(6)=5894095.1077437563167 (calc:071bc089)
+R=3 s=5883 C=1475165 p=0.5370 Delta=2862032 r=0.998891 net(3)=3130457.1387086958891 (calc:e4ccb7e2) net(6)=7720773.3593816094964 (calc:3f588371)
+R=3 s=5884 C=1402021 p=0.5046 Delta=2876192 r=0.997285 net(3)=2940148.0934483921259 (calc:3febd3d6) net(6)=7247046.1540474835649 (calc:b6e01fc2)
+R=3 s=5885 C=1713223 p=0.5972 Delta=2699216 r=0.998958 net(3)=3117655.1119891490435 (calc:126e3abe) net(6)=7933447.6291153554933 (calc:a9370a1f)
+R=6 s=5881 C=1323555 p=0.5000 Delta=2754752 r=0.998481 net(3)=2802299.475671664736 (calc:e2be0108) net(6)=6909380.9775441897748 (calc:fb0d4964)
+R=6 s=5882 C=1173980 p=0.5139 Delta=2173072 r=0.997593 net(3)=2168187.5805879612982 (calc:830171db) net(6)=5486279.4125065067578 (calc:3da49609)
+R=6 s=5883 C=1158877 p=0.5394 Delta=2099456 r=0.999349 net(3)=2236251.5109878080869 (calc:6c7cedb4) net(6)=5624753.6516335341234 (calc:6e53be14)
+R=6 s=5884 C=1045408 p=0.5093 Delta=2067152 r=0.998419 net(3)=2108002.7395030997745 (calc:42b8588a) net(6)=5246480.4858345733814 (calc:d8b8d232)
+R=6 s=5885 C=1241888 p=0.5972 Delta=2052528 r=0.999369 net(3)=2433101.270770709322 (calc:30bfbf6c) net(6)=6101138.1756407560079 (calc:26fcf569)
+== carry-over diagnostic (A5): per-objective A - A2 cpu_ns by Williams row (seq - 1) mod 4, pooled over the 5 streams
+   predecessor types (s = search lane A/A2, t = table lane B/C0): row0 A:s A2:s, row1 A:t A2:t, row2 A:s A2:t, row3 A:t A2:t
+R=1 | row0 median -1440 (n=300) | row1 median -6816 (n=300) | row2 median -7872 (n=300) | row3 median 5328 (n=300)
+R=3 | row0 median 4144 (n=480) | row1 median -7824 (n=480) | row2 median -11312 (n=480) | row3 median -8528 (n=480)
+R=6 | row0 median -5280 (n=750) | row1 median -4080 (n=750) | row2 median -3296 (n=750) | row3 median -3136 (n=750)
