@@ -721,7 +721,7 @@ static const char *fresh_name(void) {
     static char b[24];
     for (int k = 0;; k++) {
         snprintf(b, sizeof b, "w%d", k);
-        int used = find_name(b) || find_func(b) >= 0;
+        int used = find_name(b) || find_func(b) >= 0 || find_struct(b) >= 0;
         for (int i = 0; i < ln && !used; i++) used = !strcmp(lw[i], b);
         if (!used) return b;
     }

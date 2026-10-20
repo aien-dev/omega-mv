@@ -1071,7 +1071,7 @@ v = get p x
 free p
 ret v
 end
-== line 3: new has 1 value after it; it takes 3
+== line 3: new has 2 values after it; it takes 3
 struct P x uint y uint end
 fn f a uint to uint
 p = new P a
@@ -1087,7 +1087,7 @@ v = get p x
 free p
 ret v
 end
-== line 4: get has 2 values after it; it takes 3
+== line 3: get has 2 values after it; it takes 3
 struct P v uint 4 end
 fn f p view P to uint
 x = get p v
@@ -1115,7 +1115,7 @@ v = get p x
 free p
 ret v
 end
-== line 3: a function returns a number or bool, not an array
+== line 2: a function returns a number or bool, not an array
 struct P x uint end
 fn f a uint to own P
 end
