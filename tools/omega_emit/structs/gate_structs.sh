@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# tools/omega_emit/structs/gate_structs.sh <omega_emit> <oscc> <checker2> <evidence dir>  (L093)
+# tools/omega_emit/structs/gate_structs.sh <omega_emit> <oscc> <oscir> <checker2> <evidence dir>  (L093)
 # Gate RT: for every positive .osc in tests/compiler that declares a struct, and the new programs in
 # this folder: oscc IR bytes == omega_emit emit (omega_emit lift (those bytes)), compared by sha256.
+# A is the ir_sha256 oscc prints. The bytes come from oscir (same front end, IR only), because oscc's
+# unit container refuses struct-reference parameters; a file whose oscir bytes do not hash to A FAILs.
 # Gate C2: checker2 gives the same first line (verdict and receipt digest) for both byte strings,
 # and that line is an ACCEPT.
 # Writes <evidence dir>/round-trip.md (every file, both digests, both checker2 lines). Exit 0 only if
 # every file passes both gates; a file lift refuses is a FAIL with lift's reason in the table.
 set -euo pipefail
-E="${1:?usage: gate_structs.sh <omega_emit> <oscc> <checker2> <evidence dir>}"
-OSCC="${2:?oscc}"; C2="${3:?checker2}"; OUT="${4:?evidence dir}"
+E="${1:?usage: gate_structs.sh <omega_emit> <oscc> <oscir> <checker2> <evidence dir>}"
+OSCC="${2:?oscc}"; OSCIR="${3:?oscir}"; C2="${4:?checker2}"; OUT="${5:?evidence dir}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../../.." && pwd)"
 cd "$ROOT"
@@ -32,10 +34,14 @@ n=0; n_rt=0; n_c2=0
 } > "$MD"
 for f in $FILES; do
   n=$((n + 1)); b="$(echo "$f" | tr / _)"
-  if ! "$OSCC" "$f" "$T/$b" > "$T/$b.oscc.out" 2>&1; then
+  if ! "$OSCC" "$f" > "$T/$b.oscc.out" 2>&1; then
     echo "| \`$f\` | - | oscc refused: $(head -1 "$T/$b.oscc.out" | tr '|' '/') | - | FAIL | - | - | FAIL |" >> "$MD"; continue
   fi
-  A="$(sha256sum < "$T/$b.ir" | cut -c1-64)"
+  A="$(sed -n 's/^ir_sha256=//p' "$T/$b.oscc.out")"
+  if ! "$OSCIR" "$f" "$T/$b.ir" > "$T/$b.oscir.out" 2>&1 || [ "$(sed -n 's/^ir_sha256=//p' "$T/$b.oscir.out")" != "$A" ] ||
+     [ "$(sha256sum < "$T/$b.ir" | cut -c1-64)" != "$A" ]; then
+    echo "| \`$f\` | - | \`$A\` | oscir bytes do not hash to oscc's digest: $(head -1 "$T/$b.oscir.out" | tr '|' '/') | FAIL | - | - | FAIL |" >> "$MD"; continue
+  fi
   V="$(od -An -tu1 -j7 -N1 "$T/$b.ir" | tr -d ' ')"
   c2a="$("$C2" check "$T/$b.ir" 2>&1 | head -1 || true)"
   if ! "$E" lift "$T/$b.ir" > "$T/$b.json" 2> "$T/$b.lift.err"; then

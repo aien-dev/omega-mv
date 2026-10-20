@@ -1,0 +1,110 @@
+{"structs": [
+  {"name": "P", "fields": [{"name": "x", "type": "u32"}, {"name": "y", "type": "u32"}]}
+ ],
+ "functions": [
+  {"name": "eata", "params": ["own:u32:2"], "ret": "u32", "locals": ["i64", "u32", "i64", "u32", "u32"],
+   "blocks": [
+    [
+     {"op": "const", "dst": 1, "value": 0},
+     {"op": "load", "dst": 2, "arr": 0, "index": 1},
+     {"op": "const", "dst": 3, "value": 1},
+     {"op": "load", "dst": 4, "arr": 0, "index": 3},
+     {"op": "add", "dst": 5, "a": 2, "b": 4},
+     {"op": "release", "arr": 0},
+     {"op": "ret", "a": 5}
+    ]
+   ]},
+  {"name": "order", "params": ["u32"], "ret": "u32", "locals": ["own:u32:2", "bool", "u32", "u64", "own:P", "bool", "u32", "own:u32:2", "u32", "u32", "u32", "bool", "u32", "own:P", "u32", "u32", "u32", "u32", "own:u32:2", "bool", "u32", "bool", "u32", "bool", "u32", "u32", "u32", "own:u32:2", "i64", "u32", "u32", "i64", "u32", "u32"],
+   "blocks": [
+    [
+     {"op": "alloc", "dst": 1, "init": 0},
+     {"op": "const", "dst": 2, "value": true},
+     {"op": "const", "dst": 3, "value": 2},
+     {"op": "const", "dst": 4, "value": 0},
+     {"op": "alloc", "dst": 5, "init": 4},
+     {"op": "fstore", "a": 5, "field": "x", "value": 0},
+     {"op": "fstore", "a": 5, "field": "y", "value": 3},
+     {"op": "const", "dst": 6, "value": true},
+     {"op": "const", "dst": 7, "value": 5},
+     {"op": "alloc", "dst": 8, "init": 7},
+     {"op": "const", "dst": 9, "value": 0},
+     {"op": "mov", "dst": 10, "a": 9},
+     {"op": "const", "dst": 11, "value": 0},
+     {"op": "gt", "dst": 12, "a": 0, "b": 11},
+     {"op": "cbr", "cond": 12, "then": 1, "else": 2}
+    ],
+    [
+     {"op": "const", "dst": 2, "value": false},
+     {"op": "call", "dst": 13, "func": "eata", "args": [1]},
+     {"op": "mov", "dst": 10, "a": 13},
+     {"op": "br", "to": 3}
+    ],
+    [
+     {"op": "mov", "dst": 14, "a": 5},
+     {"op": "const", "dst": 6, "value": false},
+     {"op": "fload", "dst": 15, "a": 14, "field": "x"},
+     {"op": "fload", "dst": 16, "a": 14, "field": "y"},
+     {"op": "add", "dst": 17, "a": 15, "b": 16},
+     {"op": "mov", "dst": 10, "a": 17},
+     {"op": "release", "arr": 14},
+     {"op": "br", "to": 3}
+    ],
+    [
+     {"op": "const", "dst": 18, "value": 7},
+     {"op": "alloc", "dst": 19, "init": 18},
+     {"op": "const", "dst": 20, "value": true},
+     {"op": "const", "dst": 21, "value": 1},
+     {"op": "gt", "dst": 22, "a": 0, "b": 21},
+     {"op": "cbr", "cond": 22, "then": 4, "else": 5}
+    ],
+    [
+     {"op": "const", "dst": 23, "value": 2},
+     {"op": "gt", "dst": 24, "a": 0, "b": 23},
+     {"op": "cbr", "cond": 24, "then": 6, "else": 7}
+    ],
+    [
+     {"op": "const", "dst": 27, "value": 1},
+     {"op": "alloc", "dst": 28, "init": 27},
+     {"op": "const", "dst": 29, "value": 0},
+     {"op": "load", "dst": 30, "arr": 8, "index": 29},
+     {"op": "add", "dst": 31, "a": 10, "b": 30},
+     {"op": "const", "dst": 32, "value": 0},
+     {"op": "load", "dst": 33, "arr": 28, "index": 32},
+     {"op": "add", "dst": 34, "a": 31, "b": 33},
+     {"op": "release", "arr": 28},
+     {"op": "cbr", "cond": 20, "then": 8, "else": 9}
+    ],
+    [
+     {"op": "const", "dst": 20, "value": false},
+     {"op": "call", "dst": 25, "func": "eata", "args": [19]},
+     {"op": "add", "dst": 26, "a": 10, "b": 25},
+     {"op": "mov", "dst": 10, "a": 26},
+     {"op": "br", "to": 7}
+    ],
+    [
+     {"op": "br", "to": 5}
+    ],
+    [
+     {"op": "release", "arr": 19},
+     {"op": "br", "to": 9}
+    ],
+    [
+     {"op": "release", "arr": 8},
+     {"op": "cbr", "cond": 6, "then": 10, "else": 11}
+    ],
+    [
+     {"op": "release", "arr": 5},
+     {"op": "br", "to": 11}
+    ],
+    [
+     {"op": "cbr", "cond": 2, "then": 12, "else": 13}
+    ],
+    [
+     {"op": "release", "arr": 1},
+     {"op": "br", "to": 13}
+    ],
+    [
+     {"op": "ret", "a": 34}
+    ]
+   ]}
+]}

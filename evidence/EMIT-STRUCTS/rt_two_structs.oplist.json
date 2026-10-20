@@ -1,0 +1,46 @@
+{"structs": [
+  {"name": "Pt", "fields": [{"name": "x", "type": "i32"}, {"name": "y", "type": "i32"}]},
+  {"name": "Box", "fields": [{"name": "lo", "type": "i64"}, {"name": "hi", "type": "i64"}, {"name": "tag", "type": "u8"}]}
+ ],
+ "functions": [
+  {"name": "span", "params": ["i32", "i32"], "ret": "i64", "locals": ["u64", "own:Pt", "own:Pt", "i32", "i64", "i32", "i64", "u8", "u64", "own:Box", "i64", "i64", "bool", "u8", "i64", "i64", "i64", "u8", "i64", "i64"],
+   "blocks": [
+    [
+     {"op": "const", "dst": 2, "value": 0},
+     {"op": "alloc", "dst": 3, "init": 2},
+     {"op": "fstore", "a": 3, "field": "x", "value": 0},
+     {"op": "fstore", "a": 3, "field": "y", "value": 1},
+     {"op": "mov", "dst": 4, "a": 3},
+     {"op": "fload", "dst": 5, "a": 4, "field": "x"},
+     {"op": "cast", "dst": 6, "a": 5},
+     {"op": "fload", "dst": 7, "a": 4, "field": "y"},
+     {"op": "cast", "dst": 8, "a": 7},
+     {"op": "const", "dst": 9, "value": 1},
+     {"op": "const", "dst": 10, "value": 0},
+     {"op": "alloc", "dst": 11, "init": 10},
+     {"op": "fstore", "a": 11, "field": "lo", "value": 6},
+     {"op": "fstore", "a": 11, "field": "hi", "value": 8},
+     {"op": "fstore", "a": 11, "field": "tag", "value": 9},
+     {"op": "fload", "dst": 12, "a": 11, "field": "lo"},
+     {"op": "fload", "dst": 13, "a": 11, "field": "hi"},
+     {"op": "gt", "dst": 14, "a": 12, "b": 13},
+     {"op": "cbr", "cond": 14, "then": 1, "else": 2}
+    ],
+    [
+     {"op": "const", "dst": 15, "value": 2},
+     {"op": "fstore", "a": 11, "field": "tag", "value": 15},
+     {"op": "br", "to": 2}
+    ],
+    [
+     {"op": "fload", "dst": 16, "a": 11, "field": "hi"},
+     {"op": "fload", "dst": 17, "a": 11, "field": "lo"},
+     {"op": "sub", "dst": 18, "a": 16, "b": 17},
+     {"op": "fload", "dst": 19, "a": 11, "field": "tag"},
+     {"op": "cast", "dst": 20, "a": 19},
+     {"op": "mul", "dst": 21, "a": 18, "b": 20},
+     {"op": "release", "arr": 11},
+     {"op": "release", "arr": 4},
+     {"op": "ret", "a": 21}
+    ]
+   ]}
+]}

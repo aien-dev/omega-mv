@@ -11,7 +11,10 @@ reason. `omega_emit lift` goes the other way: IR bytes back to an op list.
   struct can reach the same IR bytes on both roads. The struct gate checks every positive struct
   program in `tests/compiler` and the three in [structs/](structs/): IR from `oscc` must equal
   `emit(lift(IR))` byte for byte, and checker2 must accept both (results:
-  `evidence/EMIT-STRUCTS/round-trip.md`).
+  `evidence/EMIT-STRUCTS/round-trip.md`). `oscc` will not package a function that takes a struct
+  reference, so the gate takes the IR fingerprint `oscc` prints and gets the bytes from
+  [structs/oscir.c](structs/oscir.c), which uses the same compiler front end and writes only the
+  IR; those bytes must match the `oscc` fingerprint before anything else runs.
 - Units without structs keep IR version byte 1 and the same bytes as before.
 
 Tests (host only; nothing here runs on the GPU):

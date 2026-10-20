@@ -1,0 +1,64 @@
+{"structs": [
+  {"name": "Acc", "fields": [{"name": "total", "type": "u64"}, {"name": "hits", "type": "u8", "len": 3}]}
+ ],
+ "functions": [
+  {"name": "peek", "params": ["shared:Acc"], "ret": "u64", "locals": ["u64", "i64", "u8", "u64", "u64"],
+   "blocks": [
+    [
+     {"op": "fload", "dst": 1, "a": 0, "field": "total"},
+     {"op": "const", "dst": 2, "value": 0},
+     {"op": "fload", "dst": 3, "a": 0, "field": "hits", "index": 2},
+     {"op": "cast", "dst": 4, "a": 3},
+     {"op": "add", "dst": 5, "a": 1, "b": 4},
+     {"op": "ret", "a": 5}
+    ]
+   ]},
+  {"name": "bump", "params": ["mut:Acc", "u64"], "ret": "u64", "locals": ["u64", "u64", "i64", "i64", "u8", "u8", "u8", "u64"],
+   "blocks": [
+    [
+     {"op": "fload", "dst": 2, "a": 0, "field": "total"},
+     {"op": "add", "dst": 3, "a": 2, "b": 1},
+     {"op": "fstore", "a": 0, "field": "total", "value": 3},
+     {"op": "const", "dst": 4, "value": 0},
+     {"op": "const", "dst": 5, "value": 0},
+     {"op": "fload", "dst": 6, "a": 0, "field": "hits", "index": 5},
+     {"op": "const", "dst": 7, "value": 1},
+     {"op": "add", "dst": 8, "a": 6, "b": 7},
+     {"op": "fstore", "a": 0, "field": "hits", "value": 8, "index": 4},
+     {"op": "fload", "dst": 9, "a": 0, "field": "total"},
+     {"op": "ret", "a": 9}
+    ]
+   ]},
+  {"name": "take", "params": ["own:Acc"], "ret": "u64", "locals": ["u64"],
+   "blocks": [
+    [
+     {"op": "fload", "dst": 1, "a": 0, "field": "total"},
+     {"op": "release", "arr": 0},
+     {"op": "ret", "a": 1}
+    ]
+   ]},
+  {"name": "run", "params": ["u64"], "ret": "u64", "locals": ["u8", "u64", "own:Acc", "u64", "u64", "u64", "u64", "u64", "u64", "u64", "u64", "u64"],
+   "blocks": [
+    [
+     {"op": "const", "dst": 1, "value": 0},
+     {"op": "const", "dst": 2, "value": 0},
+     {"op": "alloc", "dst": 3, "init": 2},
+     {"op": "fstore", "a": 3, "field": "total", "value": 0},
+     {"op": "const", "dst": 4, "value": 0},
+     {"op": "fstore", "a": 3, "field": "hits", "value": 1, "index": 4},
+     {"op": "const", "dst": 4, "value": 1},
+     {"op": "fstore", "a": 3, "field": "hits", "value": 1, "index": 4},
+     {"op": "const", "dst": 4, "value": 2},
+     {"op": "fstore", "a": 3, "field": "hits", "value": 1, "index": 4},
+     {"op": "const", "dst": 5, "value": 5},
+     {"op": "call", "dst": 6, "func": "bump", "args": [3, 5]},
+     {"op": "mov", "dst": 7, "a": 6},
+     {"op": "call", "dst": 8, "func": "peek", "args": [3]},
+     {"op": "mov", "dst": 9, "a": 8},
+     {"op": "call", "dst": 10, "func": "take", "args": [3]},
+     {"op": "add", "dst": 11, "a": 10, "b": 7},
+     {"op": "add", "dst": 12, "a": 11, "b": 9},
+     {"op": "ret", "a": 12}
+    ]
+   ]}
+]}

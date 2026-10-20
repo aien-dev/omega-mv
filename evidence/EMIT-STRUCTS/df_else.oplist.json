@@ -1,0 +1,49 @@
+{"structs": [
+  {"name": "P", "fields": [{"name": "x", "type": "u32"}, {"name": "y", "type": "u32"}]}
+ ],
+ "functions": [
+  {"name": "f", "params": ["u32"], "ret": "u32", "locals": ["u32", "u32", "u32", "u64", "own:P", "bool", "u32", "u32", "u32", "bool", "u32", "u32", "own:P", "u32", "u32", "u32"],
+   "blocks": [
+    [
+     {"op": "const", "dst": 1, "value": 255},
+     {"op": "and", "dst": 2, "a": 0, "b": 1},
+     {"op": "const", "dst": 3, "value": 3},
+     {"op": "const", "dst": 4, "value": 0},
+     {"op": "alloc", "dst": 5, "init": 4},
+     {"op": "fstore", "a": 5, "field": "x", "value": 2},
+     {"op": "fstore", "a": 5, "field": "y", "value": 3},
+     {"op": "const", "dst": 6, "value": true},
+     {"op": "const", "dst": 7, "value": 1},
+     {"op": "mov", "dst": 8, "a": 7},
+     {"op": "const", "dst": 9, "value": 10},
+     {"op": "lt", "dst": 10, "a": 0, "b": 9},
+     {"op": "cbr", "cond": 10, "then": 1, "else": 2}
+    ],
+    [
+     {"op": "fload", "dst": 11, "a": 5, "field": "x"},
+     {"op": "add", "dst": 12, "a": 8, "b": 11},
+     {"op": "mov", "dst": 8, "a": 12},
+     {"op": "br", "to": 3}
+    ],
+    [
+     {"op": "mov", "dst": 13, "a": 5},
+     {"op": "const", "dst": 6, "value": false},
+     {"op": "fload", "dst": 14, "a": 13, "field": "y"},
+     {"op": "const", "dst": 15, "value": 2},
+     {"op": "mul", "dst": 16, "a": 14, "b": 15},
+     {"op": "mov", "dst": 8, "a": 16},
+     {"op": "release", "arr": 13},
+     {"op": "br", "to": 3}
+    ],
+    [
+     {"op": "cbr", "cond": 6, "then": 4, "else": 5}
+    ],
+    [
+     {"op": "release", "arr": 5},
+     {"op": "br", "to": 5}
+    ],
+    [
+     {"op": "ret", "a": 8}
+    ]
+   ]}
+]}
