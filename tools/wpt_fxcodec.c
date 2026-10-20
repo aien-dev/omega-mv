@@ -16,7 +16,9 @@
  *                  n * k / 2 bytes, fixed addressing (lane L, step s reads 8 bytes at row * k/2 + s * 256 + L * 8).
  *   exponent plane per (row, lane) one MSB-first bit stream of the canonical code of that lane's k / 32 exponents in
  *                  consumption order (step 0 bytes 0..15, step 1 ...), padded to a 32-bit word.
- *   offsets        per row: u32 word offset of the row's first stream + 32 u16 stream lengths in words (68 bytes).
+ *                  The row region interleaves the 32 lane streams word by word (word j of lane L at j * 32 + L), each
+ *                  padded to the row's longest stream LS: a warp reading its j-th words touches one 128-byte line.
+ *   offsets        per row: u32 word offset of the region + u16 LS + u16 spare (8 bytes).
  *   table          per tensor: 16 code lengths (length-limited to FX_LMAX = 8 bits, so the decoder is one 256-entry
  *                  lookup: peek 8 bits, read symbol and length, shift).
  * Requirements: k % 512 == 0 (every 27B projection: 5120, 6144, 17408).
@@ -122,6 +124,7 @@ static int fx_roundtrip(Job *j) {
     uint32_t *words = malloc(sizeof(uint32_t) * maxw * FX_LANES);
     uint8_t *nib = malloc(k / 2);
     uint8_t *back = malloc(k);
+    uint32_t *region = malloc(sizeof(uint32_t) * (maxw + 1) * FX_LANES);
     uint64_t expw = 0;
     int ok = 1;
     for (uint32_t r = 0; r < n && ok; r++) {
@@ -144,31 +147,41 @@ static int fx_roundtrip(Job *j) {
             expw += nw;
         }
         for (uint32_t i = 0; i < k; i += 2) nib[i / 2] = (uint8_t)(((row[i] >> 4) & 8) | (row[i] & 7)) | (uint8_t)((((row[i + 1] >> 4) & 8) | (row[i + 1] & 7)) << 4);
-        /* decode exactly as a lane would: bit buffer, peek FX_LMAX bits, lookup, shift */
+        /* The row's exponent region as the GPU stores it: LS = the longest lane stream of the row, word j of lane L at
+         * j * 32 + L (a warp reading "its j-th word" touches one 128-byte line). Shorter streams are zero-padded. */
+        uint32_t LS = 0;
+        for (uint32_t L = 0; L < FX_LANES; L++) if (wl[L] > LS) LS = wl[L];
+        expw += (uint64_t)LS * FX_LANES;
+        for (uint32_t jw = 0; jw < LS + 1; jw++)
+            for (uint32_t L = 0; L < FX_LANES; L++) region[jw * FX_LANES + L] = jw < wl[L] ? words[L * maxw + jw] : 0;
+        /* decode exactly as a lane of the kernel does: per group of 4 codes (at most 32 bits), word index i = p >> 5 and
+         * bit offset o = p & 31 of the bit position p; window = w[i] << o | w[i + 1] >> (32 - o); then per code: peek the
+         * top FX_LMAX bits, look up symbol and length, shift the window left by the length, p += length. */
         for (uint32_t L = 0; L < FX_LANES; L++) {
-            const uint32_t *in = words + L * maxw;
-            uint64_t buf = 0;
-            int have = 0;
-            uint32_t pos = 0;
+            uint32_t p = 0;
             for (uint32_t s = 0; s < steps; s++)
-                for (uint32_t b = 0; b < FX_LB; b++) {
-                    if (have < FX_LMAX) { uint64_t nx = pos < wl[L] ? in[pos] : 0; pos++; buf |= nx << (32 - have); have += 32; }
-                    uint32_t peek = (uint32_t)(buf >> (64 - FX_LMAX));
-                    int e = t.lut_sym[peek], l = t.lut_len[peek];
-                    buf <<= l; have -= l;
-                    uint32_t c = s * FX_LANES * FX_LB + L * FX_LB + b;
-                    uint8_t q = (uint8_t)((nib[c / 2] >> ((c & 1) * 4)) & 15);
-                    back[c] = (uint8_t)(((q & 8) << 4) | (e << 3) | (q & 7));
+                for (uint32_t g = 0; g < FX_LB; g += 4) {
+                    uint32_t i = p >> 5, o = p & 31;
+                    uint32_t w0 = region[i * FX_LANES + L], w1 = region[(i + 1) * FX_LANES + L];
+                    uint32_t win = (w0 << o) | (uint32_t)(((uint64_t)w1 << o) >> 32); /* the IMAD.HI form */
+                    for (uint32_t b = g; b < g + 4; b++) {
+                        uint32_t peek = win >> (32 - FX_LMAX);
+                        int e = t.lut_sym[peek], l = t.lut_len[peek];
+                        win <<= l; p += (uint32_t)l;
+                        uint32_t c = s * FX_LANES * FX_LB + L * FX_LB + b;
+                        uint8_t q = (uint8_t)((nib[c / 2] >> ((c & 1) * 4)) & 15);
+                        back[c] = (uint8_t)(((q & 8) << 4) | (e << 3) | (q & 7));
+                    }
                 }
         }
         if (memcmp(back, row, k) != 0) ok = 0;
     }
     j->nib = (uint64_t)n * k / 2;
-    j->expw = expw * 4;
-    j->offs = (uint64_t)n * (4 + 2 * FX_LANES) + 16;
+    j->expw = expw * 4 + FX_LANES * 4; /* + one word row of tail padding, so the last w[i + 1] load stays inside */
+    j->offs = (uint64_t)n * 8 + 16;    /* per row: u32 region word offset, u16 LS, u16 spare; table: 16 code lengths */
     j->bytes_in = (uint64_t)n * k;
     j->bytes_out = j->nib + j->expw + j->offs;
-    free(words); free(nib); free(back);
+    free(words); free(nib); free(back); free(region);
     return ok;
 }
 

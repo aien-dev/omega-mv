@@ -30,6 +30,8 @@ SRCS += src/omega_gpu_moe_api.c
 SRCS += src/omega_blackwell_codegen_moe.c src/omega_gpu_fp8_pack.c src/omega_gpu_fp8_api.c
 # OWN-30B W-L2c (2026-10-14): FP8 GEMV variant 2, row-pipelined (omega_blackwell_codegen_moe2.h), selectable, variant 1 untouched
 SRCS += src/omega_blackwell_codegen_moe2.c
+# L274 (2026-10-20): FX1 lossless FP8 weights, the GEMV that reads them (omega_gpu_fx1_api.h), new files only
+SRCS += src/omega_blackwell_codegen_fx1.c src/omega_gpu_fx1_api.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # OWN-30B (2026-10-13): libm-free host math (omega_gpu_hostmath.h) so libomega_gpu.a links without -lm
@@ -2471,6 +2473,17 @@ $(GPU_FP8_TEST): tests/gpu_fp8_api_test.c tests/bw_warp_sim.h src/omega_gpu_fp8_
 test-gpu-fp8: $(GPU_FP8_TEST)
 	./$(GPU_FP8_TEST) --host-only
 	./$(GPU_FP8_TEST) --sim
+
+# L274: FX1 lossless FP8 weights; host round trip and the kernel on the warp simulator, bit-identical to the raw kernel.
+# Chip: ./$(GPU_FX1_TEST) --chip <layers-*.safetensors> [max_tensors [reps]] under quiet-measure and the gb10 lock.
+GPU_FX1_TEST = $(OUT_DIR)/gpu_fx1_test
+$(GPU_FX1_TEST): tests/gpu_fx1_test.c tests/bw_warp_sim.h src/omega_gpu_fx1_api.h src/omega_blackwell_codegen_fx1.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_fx1_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+.PHONY: test-gpu-fx1
+test-gpu-fx1: $(GPU_FX1_TEST)
+	./$(GPU_FX1_TEST) --host-only
+	./$(GPU_FX1_TEST) --sim
 
 # omega #457 (2026-10-15): host rewrite of a GPU-cached buffer must be visible to the next launch. Chip only; the gate
 # is tools/run_gpu_l2_stale_chip.sh.
