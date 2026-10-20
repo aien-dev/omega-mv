@@ -10,10 +10,13 @@
  * needs another thread's weights and no cross-SM traffic exists.
  *
  * Per step a thread reads the sample's `in` inputs (the same for every thread) and its own target y*, both from
- * the data buffers, and nothing else. Mode `streamed` = 0: W is loaded once before the first step and stored once
- * after the last (resident). Mode `streamed` = 1: W is loaded at the top of every step and stored at the bottom
- * (the normal way). The arithmetic is the same instruction sequence in both modes, so the final weights and losses
- * must be bit-identical, and identical to a host fmaf() reference.
+ * the data buffers, and nothing else. `batch` = 0 (read once): W is loaded once before the first step and stored
+ * once after the last. `batch` = b > 0 (streamed): W is loaded, used for b consecutive samples, and stored again;
+ * b = 1 is the normal way at its most memory-hungry, larger b is a micro-batch of b samples per weight read.
+ * `ivall` = 1 invalidates the SM's L1 before every weight load (CCTL.IVALL), so a reload cannot be served from
+ * L1 and must come from L2 (cached buffer) or memory (uncached buffer). The arithmetic is the same instruction
+ * sequence in every mode, so final weights and losses must be bit-identical, and identical to a host fmaf()
+ * reference.
  *
  * Layouts (FP32): W chunk q (weights 4q..4q+3) of row g at W + (q * rows + g) * 16 (one LDG.128 per chunk, a warp
  * reads 512 contiguous bytes). X sample s at X + s * in * 4. Y target of row g for sample s at Y + (s * rows + g) * 4.
@@ -32,7 +35,8 @@ typedef struct {
     uint32_t steps;     /* SGD steps, >= 1 */
     uint32_t data_mask; /* samples in the data set minus one; samples is a power of two */
     uint32_t lr_bits;   /* FP32 bits of the learning rate (> 0) */
-    int streamed;       /* 0 resident, 1 load + store W every step */
+    uint32_t batch;     /* 0 read once (resident); b > 0: load + store W every b samples; steps % b == 0 */
+    int ivall;          /* streamed only: invalidate L1 before each weight load */
 } OmegaTrainProbeSpec;
 
 int omega_blackwell_codegen_train_lms_prog(const OmegaTrainProbeSpec *spec, BlackwellIRProgram *prog);
