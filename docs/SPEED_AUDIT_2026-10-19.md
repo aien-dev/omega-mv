@@ -21,12 +21,12 @@ Nothing was built or measured for this audit; it reads and cites.
   1. **Guess several words, check them in one read** (speculative decoding). Our own drafters already land 4.15 words
      per check on code (MTP head, 8 guesses) and 6.0 on code, 2.29 on story text (DFlash). Our new checking routine
      handles 32 guesses for about the price of 1 (0.99 to 1.04 ms against 0.97 ms). On paper that is 26.6 words/s at
-     8 bits (calc:cad55c6e), 42.6 at 4 bits (calc:16902929), and 68.7 on code with DFlash at 4 bits (calc:a497d66e).
+      8 bits with the live server pass (131 ms pass + 23 ms draft + 2 ms state, moonshot E; calc:cad55c6e; 28.0 with the 123 ms lab pass, calc:35fac6d8), 42.6 at 4 bits (calc:16902929), and 68.7 on code with DFlash at 4 bits (calc:a497d66e). The 4-bit figures assume a 4-bit checking routine as cheap as today's 8-bit one, which is not built yet.
      The answer stays word for word what the big model would have written alone.
-  2. **4 bits as the default.** Half the bytes per word: measured 1.67 times faster than 8 bits in the same session
-     (calc:cfc16fae). The cost is accuracy: about 1 word in 8 differs from the 8-bit model on code and technical text.
+  2. **4 bits as the default.** Half the bytes per word: measured 1.63 to 1.67 times faster than 8 bits in the same
+      sessions (calc:c542d1cb, calc:cfc16fae). The cost is accuracy: about 1 word in 8 differs from the 8-bit model on code and technical text.
   3. **Serve several people in the same read.** The same weight read can feed 32 conversations for about 7 percent
-     more time: about 30 times the total words per second on the weight part (calc:7acea7a9). Each single person goes
+     more time: about 30 times the total words per second on the weight part (calc:7acea7a9, ON PAPER from one measured matrix shape); counting each person's own DeltaNet state read (0.30 GB per word) the whole-word bound at 4 bits is 18.8 times (calc:dc2d7ff9). Each single person goes
      no faster.
 - **What not to expect.** No amount of compiler, language or kernel work makes one-word-at-a-time writing beat 10.15
   words/s on 8-bit weights or 20.0 on 4-bit. Above that, only two doors exist: fewer bytes per word, or more words per
@@ -67,9 +67,7 @@ Nothing was built or measured for this audit; it reads and cites.
 | CPU to GPU path | same physical memory; no copy needed, only cache rules (GPU-cached vs uncached pages) | spark-hardware-manual skill section 4 |
 | Launch path | driver-free: CPU writes the queue entry, then one 32-bit doorbell store; the driver is used only for setup | handoff 2026-10-19-chain-to-gpu.md (`nvrm.c:745`), physics doc/driver-floor `docs/numeric/DRIVER_FLOOR.md` |
 
-Note on the brief's figure "212 GB/s": it was not found in the repos and handoffs searched (sovereign-core alpha
-branches, omega, handoffs). This audit uses 273 GB/s (spec) as the ceiling and 218.6 GB/s as the best measured stream.
-
+Note on the brief's figure "212 GB/s": it is a measured single-kernel figure, the 622 MB word-scoring head of the 8B and 30B work streaming at 212 GB/s (handoffs own30b-K-report.md:72 and 2026-10-15-own8b-design.md:91), not a whole-model figure. This audit uses 273 GB/s (spec) as the ceiling, 218.6 GB/s as the best measured whole-model stream, and 212 GB/s as one more measured kernel point.
 ## 3. Where the 27B decode is today (cited, not re-measured)
 
 | Setup | ms per word | words/s | ceiling | fraction | Source |
@@ -102,6 +100,7 @@ Model shape (moonshot B section 2, from the model config): hidden 5120, MLP 1740
 | DeltaNet projections, 48 layers | 5.54 GB | about half | same |
 | Attention projections, 16 layers | 1.68 GB | about half | same |
 | Word-scoring head (lm_head) | 2.54 GB (bf16) | 0.675 GB at 4.25 bits (calc:2853b281) | same |
+| Small tensors (norms, gates, scales) | about 0.02 GB (the four rows above sum to 26.87 GB) | | config arithmetic |
 | **Weights total** | **26.89 GB** | **13.65 GB** | `CEILING.md:34`; moonshot B row 3 |
 | DeltaNet state, read and written | 0.30 GB; measured 29 us per layer = 1.39 ms per word (calc:a34b2b00) | same | moonshot B; decode-speed handoff |
 | KV cache, per earlier word | 65,536 bytes (calc:174870b2) | same | 16 x 4 x 256 x 2 x 2 bytes |
@@ -109,19 +108,19 @@ Model shape (moonshot B section 2, from the model config): hidden 5120, MLP 1740
 | Activations | kilobytes per layer; negligible against the weights | | hidden 5120 values per layer step |
 
 At 32k context the KV read is 15.7 percent of the 4-bit weights (calc:dacc0d54) and pulls the 4-bit ceiling from 20.0
-to 17.28 words/s (calc:b28b2816). At 8k it is 4 percent. At 128k it is two thirds of the 4-bit weights.
+to 17.28 words/s (calc:b28b2816). At 8k it is 4 percent. At 128k it is 63 percent of the 4-bit weights.
 
 ### 4.2 Time per word, 4-bit WW (the fastest measured setup)
 
 | Piece | Time | Source |
 |---|---|---|
-| Weight reading | about 67 ms of 71.68 ms GPU timeline | ab-fp8head-4bit handoff (calc:b9134d23) |
+| Weight reading | about 67 ms of a GPU timeline of about 72 to 73 ms | ab-fp8head-4bit handoff (calc:b9134d23) |
 | Other GPU work (norms, attention, DeltaNet, glue kernels, argmax) | about 5 ms, 6.91 percent of the word (calc:bdf910fd) | same |
 | Host side between GPU words (submit, wait, read token) | about 0.69 ms, 0.95 percent (calc:cba6f39d, calc:2fc24dbd) | difference of two measurements of the same setup (72.37 median vs 71.68 timeline), not a host profile |
 | If the 4-bit weight read ran at 273 GB/s | 54.82 ms, 18.24 words/s; 1.32 times today (calc:f8c2fc5f) | calc:b49da385, calc:b175589a |
 
-The 4-bit reading routine averages 209 GB/s (calc:832d43a7) against 239 GB/s for the 8-bit one (calc:106355c5).
-The parts add up: 67 + 5 + 0.7 = 72.7 ms against 72.37 measured, so nothing large is hidden.
+The 4-bit weight kernels average 209 GB/s over all weight steps (calc:832d43a7, counted with the 8-bit head byte total); the 8-bit gate/up kernel alone reaches 239 GB/s (calc:106355c5).
+The 67 and 5 ms come from one timeline (72.85 ms) and the 72.37 ms median from other rounds, so the host gap is within run-to-run noise: no direct host profile exists (SPEED-9). Weights are about 92 percent of the word either way, so nothing large is hidden.
 
 ### 4.3 Launches, channel, doorbell, host
 
@@ -152,14 +151,14 @@ Speculative rows are stated per accepted word, not per byte.
 
 | # | Lever | Arithmetic of the gain | Cost | What exists | Measurement that decides |
 |---|---|---|---|---|---|
-| A | Weight bits 8 -> 4 | bytes x0.51 (26.89 -> 13.65 GB); ceiling 10.15 -> 20.0; measured 1.67x (calc:cfc16fae) | 1 word in 8 differs on code/technical text; load 93-161 s from conversion at start; FP8 copy also kept (about 44 GB resident) | omega qwen38/w4-gemv, sc qwen38/w4-decode, tool qwen38_ab | SPEED-1 (L125) |
+| A | Weight bits 8 -> 4 | bytes x0.51 (26.89 -> 13.65 GB); ceiling 10.15 -> 20.0; measured 1.67x (calc:cfc16fae) | 1 word in 8 differs on code/technical text; 88.1 and 86.0 percent same pick on the C source text (ab-fp8head-4bit handoff, calc:d0d0741b, calc:767b387a); load 93 to 161 s from conversion at start (same handoff); FP8 copy also kept (about 44 GB resident) | omega qwen38/w4-gemv, sc qwen38/w4-decode, tool qwen38_ab | SPEED-1 (L125) |
 | B | Weight bits below 4 (3-bit trellis / codebook) | 9.85 GB per word, ceiling 27.7 (moonshot B row 6) | quality unknown on our texts; new decoder in our code generator; offline quantizer | nothing in our repos beyond the plan | SPEED-10 (L134), CPU drift study first |
-| C | Ternary weights (1.6 bits, oma_pack 5 trits per byte) | 26.89 GB x 1.6/8 -> ceiling 50.8 for a model this size (calc:51557f77); matmul becomes add and subtract | only for a model trained ternary; rounding the 27B to ternary afterwards has no receipt and is not expected to hold quality | src/algebra oma_trit, oma_pack, oma_quant (CPU reference only, no GPU kernel); bitnet-lab lane | oma_quant_rel_l2 + NLL on one 27B layer stack (CPU), before any kernel |
-| D | Head (lm_head) at 8 or 4 bits | saves 5.94 ms per word at 8 bits (calc:54c49f10) | 98.54 percent same pick, every flip a near tie (calc:c42edc26); fails the strict 0.9999 gate | in branch, off by default | folded into SPEED-1's 4-bit gate |
+| C | Ternary weights (1.6 bits, oma_pack 5 trits per byte) | 25.6 G parameters x 1.6 bits = 5.12 GB -> ceiling 53.3 for a model this size (calc:891f4d2b); matmul becomes add and subtract | only for a model trained ternary; rounding the 27B to ternary afterwards has no receipt and is not expected to hold quality | src/algebra oma_trit, oma_pack, oma_quant (CPU reference only, no GPU kernel); bitnet-lab lane; phase_twin and the mixed-algebra realizers (src/algebra) are analog and CPU research with no decode-path use | oma_quant_rel_l2 + NLL on one 27B layer stack (CPU), before any kernel |
+| D | Head (lm_head) at 8 or 4 bits | MEASURED: saves 5.94 ms per word at 8 bits in paired A/B rounds (124.25 vs 118.31 ms, calc:54c49f10) | 98.54 percent same pick, every flip a near tie (calc:c42edc26); fails the strict 0.9999 gate | in branch, off by default | folded into SPEED-1's 4-bit gate |
 | E | Faster 4-bit reading routine | 72.37 -> 54.82 ms at most, 1.32x (calc:f8c2fc5f) | engineering only, output unchanged | codegen_w4 in omega qwen38/w4-gemv; issue #560 for down staging | SPEED-3 (L127) |
-| F | Faster 8-bit kernels to 234 GB/s | 8.13 -> 8.69 ceiling at 234 (moonshot B row 15) | engineering only | decode-speed branch | only if 8 bits stays the default |
-| G | Speculative decoding, own MTP head, chain of 8 | tau 4.15 on code measured (cascade-mtp-chain handoff); ON PAPER 26.6 at 8 bits (calc:cad55c6e), 42.6 at 4 bits (calc:16902929) | output identical by construction; a drafter pass of about 23 ms is serial (moonshot E) | cascade/mtp-chain, cascade/tree-verify-gemm (32 rows ~ 1 row, bit identical to 1 row), sc-tvwire wiring | SPEED-2 (L126) |
-| H | Speculative decoding, DFlash block drafter | words per pass measured: code 6.0, prose 2.29 (ledger L019); ON PAPER at 4 bits: code 68.7 (calc:a497d66e), prose 26.2 (calc:065b7bde) | drafter memory; drafter weights origin is a decision already taken in L019 | cascade/dflash-drafter, omega 8e4058d6 | SPEED-4 (L128) |
+| F | Faster 8-bit kernels to 234 GB/s | ceiling at 234 GB/s is 8.70 words/s (moonshot B row 15) against 8.13 measured | engineering only | decode-speed branch | only if 8 bits stays the default |
+| G | Speculative decoding, own MTP head, chain of 8 | tau 4.15 on code measured (cascade-mtp-chain handoff); ON PAPER 26.6 at 8 bits (calc:cad55c6e), 42.6 at 4 bits (calc:16902929) (4-bit figure assumes a 4-bit multi-row check at one-row cost: no receipt) | output identical by construction; a drafter pass of about 23 ms is serial (moonshot E) | cascade/mtp-chain, cascade/tree-verify-gemm (32 rows ~ 1 row, bit identical to 1 row), sc-tvwire wiring | SPEED-2 (L126) |
+| H | Speculative decoding, DFlash block drafter | words per pass measured: code 6.0, prose 2.29 (ledger L019); ON PAPER at 4 bits: code 68.7 (calc:a497d66e), prose 26.2 (calc:065b7bde); the 4-bit figures assume a multi-row 4-bit check costs about one row, which has no receipt (the measured tree-verify kernel is 8-bit) | drafter memory; drafter weights origin is a decision already taken in L019 | cascade/dflash-drafter, omega 8e4058d6 | SPEED-4 (L128) |
 | I | Wormhole: Flash-Next drafts for the 27B | 29 of 30 words agree on code; k8 7.5 words per round (ledger L080) | Flash-Next has no GPU forward yet | sc wormhole/27b-flashnext | L080's timed race |
 | J | Several requests per weight read (batching) | 32 rows cost 1.07x one row on gate/up -> about 30x aggregate on the weight part (calc:7acea7a9); per person unchanged | each extra person adds their own KV and DeltaNet state reads | tree-verify GEMM; cascade-continuous-batching lane | SPEED-5 (L129) |
 | K | Fewer launches per word (fusion, one graph, persistent kernel) | at most the 5 ms non-weight work: 6.91 percent (calc:bdf910fd) | engineering; more complex kernels | the graph is already one command list per word | SPEED-8 (L132) |
@@ -174,7 +173,7 @@ Speculative rows are stated per accepted word, not per byte.
 | T | HTTP door | one streamed message per word; no receipt | | aien-serve-http | part of SPEED-9 |
 | U | Memory placement | moving scratch and DeltaNet state into GPU-cached memory was the biggest single 8-bit win (decode-speed handoff); x, residual and attention partials are still uncached (gain no receipt); W4-only mode frees about 25 GB | must follow the cache rules for anything the CPU also reads | AIEN_OMEGA_Q38_BUF_CACHED, GDN_STATE_CACHED | inside SPEED-8 and SPEED-1 |
 | V | DeltaNet state in bf16 | half of 1.39 ms per word at most, about 1 percent | drift study owed | none | low priority |
-| W | Bigger and faster model (Flash-Next, 6B active of 125B) | 4.82 GB per word, ceiling 56.6 (moonshot C, calc:0add470c) | a different model; GPU forward not built | flashnext/port (L020) | L020 chip runs |
+| W | Bigger and faster model (Flash-Next, 6B active of 125B) | 4.82 GB per word, ceiling 56.6 (moonshot C, calc:0add470c) | a different model; GPU forward not built | flashnext/port (L020), heartbeat-ring streams experts from memory (L080 wormhole), own30b-fp4 lane holds the 4-bit MoE groundwork | L020 chip runs |
 
 ## 6. Foundations and principles, judged by cost per word
 
@@ -197,6 +196,7 @@ host program is written in OSC (OSC-0 review decision 14).
 | Typed results and the Omegese mask (spec/typed-result-constraints, L112) | per word when the mask is on | no receipt; L112 G3 measures it. A 248,320-word allow list is 31 KB as a bit vector (calc:2c4f8408), small next to 13.65 GB | KEEP; lever O turns the mask into a speed gain |
 | Action graphs, plan reuse, branch-state reuse, cognitive routing (spec/action-graph-ir, branch-state-reuse, cognitive-routing) | the agent around the model | off the word loop; plan reuse measured 1.0 to 1.2x end to end on its own tasks (M1 block 3) | KEEP |
 | Accelerator world: device stays open (spec/accelerator-world) | GPU session | saves the 40.7 ms open/close per job measured in M1 block 2 on every word | KEEP; this is why the word loop pays no driver cost |
+| Generated machine code, no fixed tables (spec/blackwell-matmul, docs/numeric/OMEGA_GPU_ENGINE.md) | kernel build time, once per shape | none per word; kernels are cached and recorded into the command list | KEEP; it is what lets each matrix shape get its own tuned kernel (the big-k and even-split rules came from it) |
 | Turing yield profile (docs/turing) | measurement | off the word loop | KEEP |
 | One-window measurement, GPU lock, memory guard (L113, L118) | the test bench | not per word, but runs waited hours; three resident 27B copies block 56 GB runs | outside this audit's code; L118 owns it |
 
