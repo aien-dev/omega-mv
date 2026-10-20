@@ -67,7 +67,12 @@ Results: `evidence/SEED-0/sm121/`.
   the same twice in a row.
 - **The controls work**: a wrong register, a wrong offset, a register number too large, one wrong bit in the
   table and a field moved by one bit are each caught.
-- **On the chip**: CHIP_RESULT
+- **On the chip** (2026-10-20 03:02 UTC, `evidence/SEED-0/sm121/chip/`): the vector add `asm2` made ran on the
+  GB10 through the bytes tool and our own launcher, no CUDA library: 1,048,576 additions, 0 wrong. The
+  control (the same program with one word changed) got all 1,048,576 wrong and failed, as it must. The run
+  record says `dirty=3`: those are the bytes tool copied in from its own branch (ledger L098, not part of
+  this branch) and the chip folder being written; the program bytes are `seed/sm121/vecadd.bin` as committed
+  (fingerprint 39f3dfdf...). Receipt: `chip/receipt.json`.
 
 ### What the check found in our C code (not in the table)
 
