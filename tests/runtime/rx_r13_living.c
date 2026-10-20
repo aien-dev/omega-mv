@@ -3,7 +3,11 @@
      * one. Both are measured on this machine, as the CPU time the serving thread spent in the matvec
      * (rx_omega.c cost_ns). Wall-clock time counted a preemption or a busy neighbour as cost: on a
      * loaded host a slow interval failed AIEN's prediction before the goal, or tipped Omega's first
-     * selection, and the episode could not start. The checks are unchanged. */
+     * selection, and the episode could not start. The checks are unchanged.
+     * The production windows (AIEN, Omega, GPU experiment, promotion barrier) are held open until
+     * production commits (seat_watch, barrier_watch): under whole-machine load the host episode is
+     * shorter than a starved producer's wait for a CPU, and counting the commits that happened to
+     * land in it measured the scheduler (omega #598 c2dd2a0d: AIEN=0 Omega=0 GPU=0 at load 70). */
 /* R13: one world; after the goal, only production requests and observation. */
 #include "runtime/rx_living.h"
 #include "runtime/rx_resident_gpu.h"
@@ -101,6 +105,10 @@ typedef struct {
     /* POSITIVE: what production did while the promotion barrier was held
      * (barrier_watch, on the store executor). */
     uint64_t barrier_calls, barrier_commits, barrier_wait_ns;
+    /* Seat results the transport accepted into the world; POSITIVE: what
+     * production did while the transport held the experiment after the first
+     * one (seat_watch, on the acceptor thread). */
+    uint64_t accepted, seat_calls, seat_commits, seat_wait_ns;
 } Rig;
 static int g_stage;
 typedef struct {
@@ -768,6 +776,32 @@ static void barrier_watch(const char *dir, void *ctx) {
     r->barrier_wait_ns = now_ns() - t0;
 }
 
+/* The seat transport calls this once, after it accepted the first trial's
+ * result and before it moves the next claim, so the experiment (and with it
+ * AIEN's plan and Omega's search, which wait on its evidence) is held in
+ * flight until production has committed three more requests, at most 3 s of
+ * run time (an operator stop pauses the bound as it pauses production). On
+ * the host the whole episode from goal to candidate runs on the executor in
+ * less time than a starved producer waits for a CPU under whole-machine load,
+ * so whether a request landed in the AIEN, Omega or GPU window measured the
+ * scheduler, not the faculties. An episode that stops production while it
+ * runs cannot pass: nothing commits while it is held, the wait runs out, and
+ * the check finds fewer than three. It reads one counter, takes no lock. */
+static void seat_watch(Rig *r) {
+    const uint64_t *commits = &r->w.reactions[r->omega.r_serve].commits;
+    uint64_t c0 = __atomic_load_n(commits, __ATOMIC_RELAXED), t0 = run_clock(r);
+    int64_t waited = 0;
+    while (__atomic_load_n(commits, __ATOMIC_RELAXED) < c0 + 3 &&
+           !atomic_load(&r->acceptor_stop)) {
+        waited = (int64_t)(run_clock(r) - t0);   /* a stop in flight can read low */
+        if (waited >= 3000000000ll) break;
+        pause_us(50);
+    }
+    r->seat_calls++;
+    r->seat_commits = __atomic_load_n(commits, __ATOMIC_RELAXED) - c0;
+    r->seat_wait_ns = waited > 0 ? (uint64_t)waited : 0;
+}
+
 static int start_producer(Rig *r) {
     atomic_store(&r->producer_stop, 0);
     if (pthread_create(&r->producer, NULL, producer_main, r) != 0) return -1;
@@ -878,11 +912,13 @@ static uint64_t production_between(Rig *r, uint64_t lo, uint64_t hi) {
 static int progress(Rig *r) {
 #ifdef R13_SILICON
     int rc = rx_resident_accept(&r->w);
+    if (rc == RX_OK) r->accepted++;
     return rc == RX_ERR_NOT_FOUND || rc == RX_OK || rc == RX_ERR_HALTED ? 0 : rc;
 #else
     int rc = rx_resident_seat_step(&r->w);
     if (rc == 1) {
         rc = rx_resident_accept(&r->w);
+        if (rc == RX_OK) r->accepted++;
         return rc == RX_ERR_HALTED ? 0 : rc;
     }
     return rc < 0 && rc != RX_ERR_HALTED ? rc : 0;
@@ -894,6 +930,7 @@ static void *acceptor_main(void *arg) {
     while (!atomic_load(&r->acceptor_stop)) {
         int rc = progress(r);
         if (rc != 0) atomic_store(&r->acceptor_error, rc);
+        if (r->mode == POSITIVE && r->accepted == 1 && !r->seat_calls) seat_watch(r);
         pause_us(1000);
     }
     return NULL;
@@ -1318,7 +1355,12 @@ static int run(Rig *r, int mode) {
      * between the candidate and its promotion shows it is not a global stop.
      * In POSITIVE the barrier is held until production commits (barrier_watch),
      * so a live production always lands in this window; the watch must have run
-     * once, inside that barrier, and seen three commits while it was held. */
+     * once, inside that barrier, and seen three commits while it was held.
+     * The same for the AIEN, Omega and GPU windows: the seat transport holds
+     * the experiment after its first trial until production commits
+     * (seat_watch), and that hold lies inside all three (the input's field 2
+     * is written once, before the first claim; the evidence closes the last).
+     * The hold must have run once and seen three commits. */
     uint64_t during_promotion = production_between(r, candidate, promotion);
     printf("R13 costs: incumbent %llu ns, target %llu ns, selected %llu ps, reference on new "
            "cores %llu ps, AIEN now expects %llu ns, goal status %llu\n",
@@ -1329,19 +1371,19 @@ static int run(Rig *r, int mode) {
     if (final_status != RX_AIEN_GOAL_MET || final_expected > target ||
         field(r, r->aien.o.prediction, 1) != field(r, r->living.o.inforce, 0))
         FAIL("AIEN's belief does not show the goal met under the new generation");
-    int need_gpu_overlap = 0;
-#ifdef R13_SILICON
-    need_gpu_overlap = 1;   /* the processor stand-in runs the add instantly */
-#endif
-    if (mode == POSITIVE && (!during_aien || !during_omega ||
-                             (need_gpu_overlap && !during_gpu) || !before_promotion ||
-                             !during_promotion || r->barrier_calls != 1 ||
-                             r->barrier_commits < 3))
+    if (mode == POSITIVE && (!during_aien || !during_omega || !during_gpu ||
+                             !before_promotion || !during_promotion ||
+                             r->seat_calls != 1 || r->seat_commits < 3 ||
+                             r->barrier_calls != 1 || r->barrier_commits < 3))
         FAIL("production intervals: AIEN=%llu Omega=%llu GPU=%llu before promotion=%llu "
-             "during promotion=%llu (barrier watch: %llu calls, %llu commits in %llu us)",
+             "during promotion=%llu (seat hold: %llu calls, %llu commits in %llu us; "
+             "barrier watch: %llu calls, %llu commits in %llu us)",
              (unsigned long long)during_aien, (unsigned long long)during_omega,
              (unsigned long long)during_gpu, (unsigned long long)before_promotion,
-             (unsigned long long)during_promotion, (unsigned long long)r->barrier_calls,
+             (unsigned long long)during_promotion, (unsigned long long)r->seat_calls,
+             (unsigned long long)r->seat_commits,
+             (unsigned long long)(r->seat_wait_ns / 1000u),
+             (unsigned long long)r->barrier_calls,
              (unsigned long long)r->barrier_commits,
              (unsigned long long)(r->barrier_wait_ns / 1000u));
     const RxCrumb *gpu_c = rx_world_crumb(&r->w, gpu);
