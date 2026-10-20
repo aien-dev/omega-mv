@@ -58,3 +58,34 @@ Two independent 27B decode streams, 64 layers, 64 steps:
 Batching: two requests multiply against the SAME weight read (a matrix times two vectors instead of one). That halves
 the bytes per token for two requests, ceiling 2x aggregate, and needs a kernel change (GEMV to a thin GEMM), not a
 channel change. It is the next step for throughput regardless of what the channel receipt says.
+
+## Result (2026-10-20 03:09Z, evidence/q38-channels-g3-64x64, receipt ~/yardsticks/receipts/2026-10-19-l136-q38-channels-64x64.json)
+
+Run: 64 layers at the real shapes (48 GDN, 16 attention, bf16 head; random weights, 26.9 GB read per token), two
+streams, 64 interleaved steps per mode, then 64 serial-only and 64 pair-only steps as energy windows. Box load 54 to 64
+(other lanes' builds and two 27B servers resident), so absolute speed is below a quiet box.
+
+| | serial (one channel, A then B) | pair (two channels, both in flight) |
+|---|---|---|
+| median step (2 tokens) | 276.891 ms | 276.623 ms |
+| aggregate | 7.223 tok/s | 7.230 tok/s |
+| energy window | 17.786 s, 128 tokens | 17.983 s, 128 tokens |
+| GPU J/token (sensor GPU W x time) | 5.77 (calc:21e7fd79) | 5.63 (calc:f386ed96) |
+| wall J/token (UPS, whole rack) | 39.95 (calc:83e2aa95) | 42.15 (calc:37c409a8) |
+
+- pair / serial step time = 0.9990. The prediction (1.00 to 1.10, most likely ~1.0) held: **two channels do not
+  overlap the 27B decode on GB10.** Either the two channels of one group take turns, or each multiply already holds the
+  memory system; this run cannot tell which (unknowns 1 and 2 above stay open).
+- G2: both streams' 128 tokens and final x / logits identical bit for bit between serial and pair; negative control
+  (A and B differ) passes. G1 (one channel identical to the base build) passed in evidence/q38-channels-chip-rerun.
+- Decision 12 metric: tokens/s does not regress (0.999 step ratio); GPU J/token equal within noise. The wall figure
+  differs by one UPS step (280 W to 300 W at 1792465865, inside the serial window, 10 W resolution, whole rack
+  including other lanes), so it is not attributed to the channel.
+- Distance to the ceiling: 7.230 tok/s aggregate = 0.712 of 10.149 (calc:3355b30d) on this loaded box.
+- One driver out-of-memory message (22:09:55 CDT) fell in the window during weight upload; every allocation of this
+  test succeeded (each is checked), so its source process is not identified.
+
+Installed: the second channel stays opt-in (`AIEN_OMEGA_GPU_CHANNELS=2`, default one channel, today's path byte for
+byte). It costs nothing when off and gives the server a way to keep two requests in flight, but it is not a speed lever
+for this decode. The one-channel overlap (mark_independent) stays as it is. The next throughput lever is batching:
+one weight read for two requests.

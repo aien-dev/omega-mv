@@ -1,0 +1,3 @@
+Written 2026-10-20 03:00Z before the G3 run (also docs/numeric/GPU_CHANNELS.md):
+serial ~2 x 123 ms per step (~8.1 tok/s aggregate); pair 1.00x-1.10x of serial throughput, most likely ~1.0x.
+Small run already seen (4 layers, evidence/q38-channels-chip-rerun g2-l4): pair/serial step time 1.0074.

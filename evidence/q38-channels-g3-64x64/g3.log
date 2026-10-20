@@ -1,0 +1,46 @@
+mem ok 2026-10-20T02:58:41Z MemAvailable:   53628088 kB
+gpu_q38_channels_test: layers 64 mask 0x8888888888888888 steps 64 AIEN_OMEGA_GPU_CHANNELS=2
+model: 64 layers (48 GDN, 16 attention), vocab 248320, built in 34.7 s
+ok: 64 steps ran on both paths
+ok: energy blocks: 64 serial steps then 64 pair steps ran
+timing: window serial 1792465852.262 1792465870.048 epoch s, 17.786 s, 128 tokens, 7.197 tok/s aggregate
+timing: window pair 1792465870.048 1792465888.031 epoch s, 17.983 s, 128 tokens, 7.118 tok/s aggregate
+ok: G2 stream A: pair tokens == serial tokens at all 128 steps (first differing step -1)
+ok: G2 stream B: pair tokens == serial tokens at all 128 steps (first differing step -1)
+ok: G2 stream A: last x bit for bit
+ok: G2 stream A: last logits bit for bit
+ok: G2 stream B: last x bit for bit
+ok: G2 stream B: last logits bit for bit
+ok: negative control: streams A and B logits differ (the comparison can fail)
+streams A and B share the token at 0 of 128 steps
+timing: step 0 serial 278.439 ms pair 274.995 ms (first use, not in the medians)
+timing: serial (2 tokens, queue 0 one after the other) median 276.891 ms per step, mean 277.029 ms, 7.223 tok/s aggregate
+timing: pair   (2 tokens, queue 0 + queue 1 in flight) median 276.623 ms per step, mean 276.611 ms, 7.230 tok/s aggregate
+timing: pair / serial step time 0.9990 (below 1 = the two channels overlapped)
+timing: interleaved tokens 128 (2 streams x 64 steps per path), energy blocks 64 steps per mode
+PASS: 9 checks, 0 failed
+{
+ "name": "l136-q38-channels-64x64",
+ "cmd": "env AIEN_OMEGA_GPU_CHANNELS=2 build/gpu_q38_channels_test --layers 64 --steps 64 --block 64",
+ "exit": 0,
+ "git_head": "1975063c",
+ "start": "2026-10-19T22:09:42.138901",
+ "seconds": 106.704,
+ "samples": 46,
+ "wall_W_mean": 266.5217391,
+ "wall_J": 28438.84053,
+ "idle_W_before": 244.2857143,
+ "incremental_J": 2372.664859,
+ "gpu_W_mean": 29.77673913,
+ "gpu_util_mean": 62.82608696,
+ "load1_start": "54.32",
+ "load1_end": "64.11",
+ "mem_avail_kB_start": "49661644",
+ "mem_avail_kB_end": "21116964",
+ "lock_holders_max": 6,
+ "nvrm_errors_delta": 1,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": null,
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-l136-q38-channels-64x64.json
