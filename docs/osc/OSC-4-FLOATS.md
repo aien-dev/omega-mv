@@ -155,7 +155,33 @@ without floats keeps its old version and its old bytes (gate G4).
 | G3 | every existing compiler suite unchanged | `make test-compiler` |
 | G4 | float units are version 6; units without floats encode to the same bytes as before | section 9 receipt |
 
-Receipts: `evidence/osc4-floats/` (filled in when the gates are run).
+Results on the Spark, 2026-10-20 (receipt
+`evidence/OSC-4/receipts/osc4-floats-e12e2647fd89aaec3397c16fd2e0fd5631147a7df98921337889a1214cac9915.json`
+at commit b680e09f, from `make osc4-floats-receipt`; box load average 60 at the start, 44 at the end,
+from other jobs on the machine, which does not affect bit-exact results):
+
+- **G1 PASS.** 161 operation cases, 10,000 operand triples each: 1,610,000 runs on native
+  code and 1,610,000 on the interpreter, every one bit-exact against the C reference; every
+  one of the 6,128 emitted words (630 of them float instructions) decodes and re-encodes to
+  itself. The sanitizer build repeats it at 1,000 triples per case. Strict section: 28 runs
+  trap FLOAT as expected, 50 propagate as expected.
+- **G2 PASS.** 7 kernels, 512 runs each (8 seeds, 64 values of k), 3,584 runs on each side,
+  bit-identical to C. The two f32 dot products end in different last bits (0xc3aeef41 with a
+  multiply then an add, 0xc3aeef40 with `fma`): fma only appears where the source says so.
+- **G3 PASS.** `make test-compiler` unchanged apart from the additions: 54 golden programs
+  (53 before, plus `progs/fs_slice.osc`), 166 refusal programs (159 before, plus 7 `neg/fs_*`);
+  Slice A's own float fuzz gives the same counts as before the slice
+  (`units=250 runs=9000 x_finite=1087 x_inf=137 x_nan=276 mismatches=0`); the new slice fuzz:
+  `units=250 runs=10500 mismatches=0`, plain and sanitizer builds.
+- **G4 PASS.** Against the main line: 47 programs without the new types have identical IR and
+  identical machine code; 7 float programs are new, 6 written as IR files are version 6 (one
+  passes references between functions and is not written as a file by design). Against
+  Slice A: all 53 earlier programs identical, the new one version 6. A negative control
+  (one constant changed on the "old" side) makes G4 fail.
+- GNU `as` check of 30 float words: PASS; with one golden word altered it fails.
+
+What these results do not say: nothing here is a speed measurement, and nothing ran on
+the GPU. The CPU results are from the Spark's Arm cores only.
 
 ## 10. Not in this slice
 
