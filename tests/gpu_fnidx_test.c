@@ -201,6 +201,8 @@ static void sim_battery(void) {
 
 /* ---- chip ---- */
 static int chip_run(uint32_t reps, const char *out_path) {
+    /* the QSA API opens the device lazily; this test allocates session buffers directly, so open it first */
+    if (!omega_gpu_session_open()) { CHECK(0, "chip: device open failed: %s", omega_gpu_session_last_error()); return 1; }
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
     char msg[300];
     if (out) fprintf(out, "{\"test\":\"OMEGA_GPU_FNIDX\",\"reps\":%u,\"points\":[", reps);

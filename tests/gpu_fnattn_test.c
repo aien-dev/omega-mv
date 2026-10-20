@@ -388,7 +388,10 @@ static int chip_run(const char *out_path, uint32_t reps) {
                          first ? "" : ",", pts[i].name, c.pos, c.count, omega_gpu_decode_attn_rc_name(rc), bad, worst, rows, same, info.grid_x, info.grid_y, info.per_split, info.depth, info.kv_bytes, fill_ms, med_el, gbs, med_cl, done);
         first = 0;
         free(el); free(cl);
-        if (ok && c.pos == 4098) {
+        /* mutants run at the 4099-token point and at the 7-token dense point: at 2051 visible tokens the new token's
+         * weight is ~1/2051, so a skipped K/V write (mutant 3) moves the output by less than the bf16 tolerance
+         * (chip run 2026-10-20: MISSED, worst 0.916 of tol). At 7 tokens the same mutant is far above tolerance. */
+        if (ok && (c.pos == 4098 || c.pos == 6)) {
             for (int m = 1; m <= 7; m++) {
                 omega_gpu_fnattn_test_set_mutant(m);
                 (void)fill_history(cache, &c, kcp); /* mutant 3 must not inherit the row the honest kernel wrote */
