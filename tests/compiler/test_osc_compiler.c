@@ -34,6 +34,7 @@
 #include "osc_cg.h"
 #include "osc_front.h"
 #include "osc_interp.h"
+#include "osc_fp.h"
 #include "osc_native.h"
 #include "osc_rt.h"
 #include "model/osc_model.h"
@@ -1951,6 +1952,190 @@ static void float_fuzz(unsigned n)
     CHECK(ff_nan > 0 && ff_inf > 0 && ff_finite > 0, "float fuzz never produced a NaN, an inf and a finite result");
 }
 
+
+/* ------------------------------------------------------------ OSC-4 float slice: fuzz */
+/* The float_fuzz dual run above, for the slice (docs/osc/OSC-4-FLOATS.md): random
+ * expression trees at f16, bf16, f8e4m3, f32 and f64 over the four operators,
+ * unary minus, sqrt / abs / min / max, fma, conversions through every other float
+ * type (f64 -> narrow included: FCVTXN + RNE on the chip), through integers (at most
+ * 32 bits into bf16 / f8e4m3) and bit casts. The entry returns one of seven views
+ * selected by k; every one is compared bit for bit between the interpreter
+ * (osc_fp.c exact rounding) and native code (H forms, BFCVT, the f8e4m3 sequences). */
+static unsigned long fs_units, fs_runs, fs_mismatch, fs_nan, fs_inf, fs_finite;
+static const char *const FS_T[] = {"f16", "bf16", "f8e4m3", "f32", "f64"};
+static const char *const FS_U[] = {"u16", "u16", "u8", "u32", "u64"};
+static const OscScalar FS_S[] = {OSC_T_F16, OSC_T_BF16, OSC_T_F8E4M3, OSC_T_F32, OSC_T_F64};
+
+static uint64_t gen_arg_slice(OscScalar t, uint64_t r)
+{
+    static const uint64_t p16[] = {0, 0x8000, 0x3C00, 0xBC00, 0x7C00, 0xFC00, 0x7E00, 0x7C01, 0x7E12, 0xFE00,
+                                   0x0001, 0x03FF, 0x7BFF, 0x3800, 0x6400, 0x5BFF, 0x0400, 0x3555, 0xC500};
+    static const uint64_t pb[] = {0, 0x8000, 0x3F80, 0xBF80, 0x7F80, 0xFF80, 0x7FC0, 0x7F81, 0x7FC5, 0xFFC0,
+                                  0x0001, 0x007F, 0x7F7F, 0x3F00, 0x4B80, 0x4F00, 0xCF00, 0x0080, 0x3DCD};
+    static const uint64_t p8[] = {0, 0x80, 0x38, 0xB8, 0x7F, 0xFF, 0x7E, 0xFE, 0x01, 0x07, 0x08, 0x30, 0x77, 0x40,
+                                  0x5A, 0x81, 0x6F, 0x3F, 0x46};
+    if (t == OSC_T_F32 || t == OSC_T_F64) return gen_arg_float(t, r);
+    const uint64_t *p = t == OSC_T_F16 ? p16 : t == OSC_T_BF16 ? pb : p8;
+    switch (r % 4) {
+    case 0: case 1: return p[(r >> 8) % 19];
+    case 2: { /* k/8 for k in -400..400, rounded to t (in range for every format) */
+        double v = (double)((int64_t)((r >> 8) % 801) - 400) / 8.0;
+        uint64_t u; memcpy(&u, &v, 8);
+        return osc_fp_from_f64(t, u);
+    }
+    default: return canon(t, sm());
+    }
+}
+
+static void fs_expr(char *dst, size_t cap, int depth, int ti, int typed)
+{
+    uint64_t r = sm();
+    const char *T = FS_T[ti];
+    if (depth <= 0 || r % 7 == 0) {
+        static const char *lits[] = {"0.0", "1.0", "0.5", "2.0", "-0.0", "0.25", "3.0", "-2.5", "0.125", "1.5"};
+        switch ((r >> 8) % 6) {
+        case 0: cf_cat(dst, cap, "a"); return;
+        case 1: cf_cat(dst, cap, "b"); return;
+        case 2: cf_cat(dst, cap, "c"); return;
+        case 3: cf_cat(dst, cap, "%s", typed ? "b" : lits[(r >> 16) % 10]); return;
+        case 4: cf_cat(dst, cap, "(%s)", typed ? "c" : lits[(r >> 16) % 10]); return;
+        default: cf_cat(dst, cap, "-a"); return;
+        }
+    }
+    static const char *ops[] = {"+", "-", "*", "/"};
+    switch ((r >> 8) % 16) {
+    case 0: case 1: case 2: case 3: case 4:
+        cf_cat(dst, cap, "(");
+        fs_expr(dst, cap, depth - 1, ti, typed);
+        cf_cat(dst, cap, " %s ", ops[(r >> 16) % 4]);
+        fs_expr(dst, cap, depth - 1, ti, 0);
+        cf_cat(dst, cap, ")");
+        return;
+    case 5: case 6: /* fma: the first operand fixes the type */
+        cf_cat(dst, cap, "fma(");
+        fs_expr(dst, cap, depth - 1, ti, typed);
+        cf_cat(dst, cap, ", ");
+        fs_expr(dst, cap, depth - 1, ti, 0);
+        cf_cat(dst, cap, ", ");
+        fs_expr(dst, cap, depth - 1, ti, 0);
+        cf_cat(dst, cap, ")");
+        return;
+    case 7: cf_cat(dst, cap, "sqrt("); fs_expr(dst, cap, depth - 1, ti, typed); cf_cat(dst, cap, ")"); return;
+    case 8: cf_cat(dst, cap, "abs("); fs_expr(dst, cap, depth - 1, ti, typed); cf_cat(dst, cap, ")"); return;
+    case 9:
+        cf_cat(dst, cap, (r >> 16) & 1 ? "min(" : "max(");
+        fs_expr(dst, cap, depth - 1, ti, typed);
+        cf_cat(dst, cap, ", ");
+        fs_expr(dst, cap, depth - 1, ti, 0);
+        cf_cat(dst, cap, ")");
+        return;
+    case 10: cf_cat(dst, cap, "-("); fs_expr(dst, cap, depth - 1, ti, typed); cf_cat(dst, cap, ")"); return;
+    case 11: case 12: { /* from another float type (any pair; f64 sources exercise FCVTXN) */
+        int oi = (int)((r >> 16) % 5);
+        cf_cat(dst, cap, "((");
+        fs_expr(dst, cap, depth - 1, oi, 1);
+        cf_cat(dst, cap, ") as %s)", T);
+        return;
+    }
+    case 13: { /* through an integer type and back; into bf16 / f8e4m3 at most 32 bits */
+        static const char *ints[] = {"i32", "u32", "i8", "u16", "i16", "i64", "u64"};
+        int ni = (ti == 1 || ti == 2) ? 5 : 7;
+        cf_cat(dst, cap, "((");
+        fs_expr(dst, cap, depth - 1, ti, 1);
+        cf_cat(dst, cap, ") as %s) as %s", ints[(r >> 16) % (unsigned)ni], T);
+        return;
+    }
+    default: /* bit cast round trip (payload preserving) */
+        cf_cat(dst, cap, "((");
+        fs_expr(dst, cap, depth - 1, ti, 1);
+        cf_cat(dst, cap, ") as %s bits) as %s bits", FS_U[ti], T);
+        return;
+    }
+}
+
+static void float_slice_fuzz(unsigned n)
+{
+    static char src[32768], ex[8192], ey[8192];
+    sm_state = 0x05C4F1E7Aull;
+    for (unsigned u = 0; u < n; u++) {
+        int ti = (int)(u % 5);
+        const char *T = FS_T[ti], *U = FS_U[ti];
+        ex[0] = ey[0] = src[0] = 0;
+        fs_expr(ex, sizeof ex, 2 + (int)(sm() % 2), ti, 0);
+        fs_expr(ey, sizeof ey, 2 + (int)(sm() % 2), ti, 0);
+        cf_cat(src, sizeof src,
+               "fn entry(a: %s, b: %s, c: %s, k: u32) -> u64 {\n"
+               "    let x: %s = %s;\n"
+               "    let y: %s = %s;\n"
+               "    let mut m: u64 = 0;\n"
+               "    if x == y { m = m | 1; }\n"
+               "    if x != y { m = m | 2; }\n"
+               "    if x < y { m = m | 4; }\n"
+               "    if x <= y { m = m | 8; }\n"
+               "    if x > y { m = m | 16; }\n"
+               "    if x >= y { m = m | 32; }\n"
+               "    if k == 0 { return (x as %s bits) as u64; }\n"
+               "    if k == 1 { return (y as %s bits) as u64; }\n"
+               "    if k == 2 { return m; }\n"
+               "    if k == 3 { return (x as i32) as u64; }\n"
+               "    if k == 4 { return (x as f64) as u64 bits; }\n"
+               "    if k == 5 { return (((x as f8e4m3) as u8 bits) as u64) | ((((x as bf16) as u16 bits) as u64) << 8) |\n"
+               "                       ((((x as f16) as u16 bits) as u64) << 24) | ((((x as f32) as u32 bits) as u64) << 32); }\n"
+               "    return ((fma(x, y, x) as %s bits) as u64) ^ (((x as u16) as u64) << 48);\n"
+               "}\n",
+               T, T, T, T, ex, T, ey, U, U, U);
+        fs_units++;
+        OscDiag d;
+        int rc = osc_compile(src, strlen(src), U1, &d, NULL);
+        CHECK(rc == 0, "float slice fuzz unit %u refused %s line %u object=%s: %s\n%s", u, osc_diag_kind_name(d.kind),
+              d.line, d.object, d.message, src);
+        if (rc) continue;
+        OscCode c;
+        char err[160];
+        memset(&c, 0, sizeof c);
+        int cg = osc_cg_compile(U1, &c, err, sizeof err);
+        CHECK(cg == 0, "float slice fuzz unit %u codegen refused: %s", u, err);
+        if (cg) continue;
+        OscNative nm2;
+        int mr = osc_native_map(&nm2, c.code, c.len);
+        CHECK(mr == 0, "float slice fuzz unit %u native map failed (%d)", u, mr);
+        if (mr) { osc_cg_free(&c); continue; }
+        int fi = U1->nfuncs - 1;
+        void *entry = osc_native_at(&nm2, c.entry[fi]);
+        OscScalar ft = FS_S[ti];
+        for (unsigned it = 0; it < 42; it++) {
+            uint64_t args[OSC_MAX_PARAMS] = {0}, ri = 0, rn = 0;
+            args[0] = gen_arg_slice(ft, sm());
+            args[1] = gen_arg_slice(ft, sm());
+            args[2] = gen_arg_slice(ft, sm());
+            args[3] = it % 7;
+            osc_rt_reset(RI);
+            osc_rt_reset(RN);
+            int t1 = osc_interp_run_prevalidated(U1, fi, args, 4, RI, &ri);
+            int t2 = osc_rt_call_native(RN, entry, args, 4, &rn);
+            fs_runs++;
+            diff_runs++;
+            int same = t1 == t2 && t1 >= 0 && (t1 != 0 || ri == rn) && osc_rt_same_outcome(RI, RN);
+            CHECK(same, "float slice fuzz unit %u args %#llx %#llx %#llx k=%llu: interp trap %d ret %#llx vs native trap %d "
+                  "ret %#llx\n%s", u, (unsigned long long)args[0], (unsigned long long)args[1],
+                  (unsigned long long)args[2], (unsigned long long)args[3], t1, (unsigned long long)ri, t2,
+                  (unsigned long long)rn, src);
+            if (!same) { fs_mismatch++; break; }
+            CHECK(t1 == 0, "float slice fuzz unit %u trapped (%d): floats never trap outside strict\n%s", u, t1, src);
+            if (t1 == 0 && args[3] == 0) {
+                if (osc_fp_is_nan(ft, ri)) fs_nan++;
+                else if (osc_fp_is_inf(ft, ri)) fs_inf++;
+                else fs_finite++;
+            }
+        }
+        osc_native_unmap(&nm2);
+        osc_cg_free(&c);
+    }
+    printf("float slice fuzz: units=%lu runs=%lu x_finite=%lu x_inf=%lu x_nan=%lu mismatches=%lu\n", fs_units, fs_runs,
+           fs_finite, fs_inf, fs_nan, fs_mismatch);
+    CHECK(fs_nan > 0 && fs_inf > 0 && fs_finite > 0, "float slice fuzz never produced a NaN, an inf and a finite result");
+}
+
 static unsigned long slice_ok, slice_runs, slice_expect, slice_fuzz_runs, slice_neg_overlap;
 
 static void slice_free(SliceCase *s)
@@ -2324,6 +2509,11 @@ int main(int argc, char **argv)
         const char *ffu = getenv("OSC_FLOAT_FUZZ_UNITS");
         unsigned nf = ffu ? (unsigned)strtoul(ffu, NULL, 10) : 0;
         float_fuzz(nf ? nf : (fuzz / 4 ? fuzz / 4 : 30));
+    }
+    {   /* OSC_FLOAT_SLICE_FUZZ_UNITS=N: the float slice dual run at N units (receipt evidence) */
+        const char *fsu = getenv("OSC_FLOAT_SLICE_FUZZ_UNITS");
+        unsigned ns = fsu ? (unsigned)strtoul(fsu, NULL, 10) : 0;
+        float_slice_fuzz(ns ? ns : (fuzz / 4 ? fuzz / 4 : 30));
     }
     {
         char sdir[512];

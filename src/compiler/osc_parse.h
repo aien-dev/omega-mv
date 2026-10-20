@@ -85,9 +85,10 @@ typedef enum {
     ON_HSTORE,      /* checker rewrite of ON_STORE on a pool: tok = pool; a = handle;
                      * b = value; sym = pool symbol, sym2 = handle symbol */
     /* OSC-4 Slice A floats (docs/osc/OSC-4-DESIGN.md 1.2), appended */
-    ON_FLOAT,       /* tok = FLOAT literal token (spelling); ival = suffix 0 none / 1 f32 / 2 f64;
+    ON_FLOAT,       /* tok = FLOAT literal token (spelling); ival = suffix 0 none / 1 f32 / 2 f64 / 3 f16 / 4 bf16 / 5 f8e4m3;
                      * checker: cval = IEEE bits (is_const = 1) */
-    ON_INTRIN       /* op = OT_SQRT / OT_ABS / OT_MIN / OT_MAX; a, b (b = -1 for the unary two) */
+    ON_INTRIN       /* op = OT_SQRT / OT_ABS / OT_MIN / OT_MAX / OT_FMA (float slice); a, b, c
+                     * (b = -1 for the unary two; c only for fma(a, b, c) = a * b + c, one rounding) */
 } OscNodeKind;
 
 typedef struct {
@@ -105,6 +106,8 @@ typedef struct {
     uint8_t dflag;      /* OSC-3 item 3, checker: an owner declaration (ON_LET_ALLOC,
                          * ON_LET_MOVE, own parameter) whose owner may be moved on
                          * only some paths; the lowerer gives it a drop flag */
+    uint8_t fstrict;    /* ON_FN: declared `strict fn` (OSC-4 float slice): every float result is
+                         * checked and NaN or inf traps FLOAT (docs/osc/OSC-4-FLOATS.md) */
     /* checker annotations */
     uint8_t is_const;   /* expression folded to cval (already canonical for ty) */
     uint64_t cval;

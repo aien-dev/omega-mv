@@ -36,8 +36,11 @@ typedef enum {
     /* external byte slices (docs/osc/OSC-EXT-BYTES-DESIGN.md): parameter types, appended */
     OT_BYTES, OT_CELLS,
     /* OSC-4 Slice A floats (docs/osc/OSC-4-DESIGN.md 1.2), appended: types, intrinsics, `bits`,
-     * and the FLOAT literal token (ival = suffix: 0 none, 1 f32, 2 f64; spelling via off/len) */
+     * and the FLOAT literal token (ival = suffix: 0 none, 1 f32, 2 f64, 3 f16, 4 bf16, 5 f8e4m3; spelling via off/len) */
     OT_F32, OT_F64, OT_SQRT, OT_ABS, OT_MIN, OT_MAX, OT_BITS, OT_FLOAT,
+    /* OSC-4 float slice (docs/osc/OSC-4-FLOATS.md), appended: the narrow float types, the fma
+     * intrinsic and the `strict` function marker; FLOAT suffix codes 3 f16, 4 bf16, 5 f8e4m3 */
+    OT_F16, OT_BF16, OT_F8E4M3, OT_FMA, OT_STRICT,
     OT__COUNT
 } OscTokKind;
 
@@ -45,7 +48,7 @@ typedef struct {
     uint16_t kind;      /* OscTokKind */
     uint32_t line, col; /* 1-based */
     uint32_t off, len;  /* spelling in the source */
-    uint64_t ival;      /* OT_INT value; OT_FLOAT: suffix code 0/1/2 (value is parsed by the checker) */
+    uint64_t ival;      /* OT_INT value; OT_FLOAT: suffix code 0..5 (value is parsed by the checker) */
 } OscToken;
 
 /* Tokenise src[0..len). 0 ok (toks ends with OT_EOF), -1 with *d filled:

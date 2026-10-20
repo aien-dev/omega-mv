@@ -83,6 +83,17 @@ static OscInsn *emit(L *l, uint8_t op, uint32_t line)
     return x;
 }
 
+/* OSC-4 float slice: in a `strict fn`, every float result of an operation (FBIN, FUN, FMA,
+ * FCVT, ITOF, FBITS to a float) is followed by FCHK, which traps FLOAT on NaN or inf.
+ * Values that only pass through (parameters, loads, moves) are not checked until an
+ * operation uses them. Elsewhere inf and NaN are values (Slice A, decision 6 note). */
+static void fchk(L *l, int r, uint32_t line)
+{
+    if (!NODE(l->fnode)->fstrict || !osc_scalar_is_float(l->f->vtype[r].s)) return;
+    OscInsn *x = emit(l, OSC_I_FCHK, line);
+    x->a = (int16_t)r;
+}
+
 static void br(L *l, int target, uint32_t line)
 {
     if (l->cur < 0) return;
@@ -284,6 +295,7 @@ static int expr(L *l, int i)
         x->sub = sub;
         x->dst = (int16_t)r;
         x->a = (int16_t)a;
+        if (op != OSC_I_MOV) fchk(l, r, n->line);
         return r;
     }
     case ON_UN: {
@@ -294,6 +306,7 @@ static int expr(L *l, int i)
             x->sub = OSC_FU_NEG;
             x->dst = (int16_t)r;
             x->a = (int16_t)a;
+            fchk(l, r, n->line);
             return r;
         }
         OscInsn *x = emit(l, OSC_I_UN, n->line);
@@ -302,15 +315,27 @@ static int expr(L *l, int i)
         x->a = (int16_t)a;
         return r;
     }
-    case ON_INTRIN: { /* OSC-4: sqrt / abs -> FUN, min / max -> FBIN */
+    case ON_INTRIN: { /* OSC-4: sqrt / abs -> FUN, min / max -> FBIN, fma -> FMA (float slice) */
         int a = expr(l, n->a);
         int b = n->b >= 0 ? expr(l, n->b) : -1;
+        if (n->op == OT_FMA) {
+            int cv = expr(l, n->c);
+            int r = newvs(l, n->ty.s, n->line);
+            OscInsn *x = emit(l, OSC_I_FMA, n->line);
+            x->dst = (int16_t)r;
+            x->a = (int16_t)a;
+            x->b = (int16_t)b;
+            x->c = (int16_t)cv;
+            fchk(l, r, n->line);
+            return r;
+        }
         int r = newvs(l, n->ty.s, n->line);
         OscInsn *x = emit(l, n->b >= 0 ? OSC_I_FBIN : OSC_I_FUN, n->line);
         x->sub = (uint8_t)(n->op == OT_SQRT ? OSC_FU_SQRT : n->op == OT_ABS ? OSC_FU_ABS : n->op == OT_MIN ? OSC_FB_MIN : OSC_FB_MAX);
         x->dst = (int16_t)r;
         x->a = (int16_t)a;
         x->b = (int16_t)b;
+        fchk(l, r, n->line);
         return r;
     }
     case ON_BIN: {
@@ -343,6 +368,7 @@ static int expr(L *l, int i)
         x->dst = (int16_t)r;
         x->a = (int16_t)a;
         x->b = (int16_t)b;
+        if (fl && !cc) fchk(l, r, n->line);
         return r;
     }
     default:

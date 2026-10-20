@@ -6,7 +6,10 @@
  */
 #include "osc_alloc.h"
 #include "osc_check.h"
+#include "osc_fp.h"
 
+#include <fenv.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -599,7 +602,7 @@ static int has_float(C *c, int i)
     case ON_FLOAT: return 1;
     case ON_UN: return has_float(c, n->a);
     case ON_BIN: return has_float(c, n->a) || has_float(c, n->b);
-    case ON_INTRIN: return has_float(c, n->a) || (n->b >= 0 && has_float(c, n->b));
+    case ON_INTRIN: return has_float(c, n->a) || (n->b >= 0 && has_float(c, n->b)) || (n->c >= 0 && has_float(c, n->c));
     default: return 0;
     }
 }
@@ -616,7 +619,7 @@ static int ctxfree(C *c, int i)
         if (is_shift(n->op)) return ctxfree(c, n->a);
         if (is_arith(n->op)) return ctxfree(c, n->a) && ctxfree(c, n->b);
         return 0;
-    case ON_INTRIN: return ctxfree(c, n->a) && (n->b < 0 || ctxfree(c, n->b));
+    case ON_INTRIN: return ctxfree(c, n->a) && (n->b < 0 || ctxfree(c, n->b)) && (n->c < 0 || ctxfree(c, n->c));
     default: return 0;
     }
 }
@@ -750,6 +753,59 @@ static int fold(C *c, int i, OscScalar t, i128 *out)
     return 0;
 }
 
+/* OSC-4 float literal suffix code (osc_lex.h) -> type; 0 (no suffix) takes the context type t */
+static OscScalar lit_type(uint64_t sfx, OscScalar t)
+{
+    switch (sfx) {
+    case 1: return OSC_T_F32;
+    case 2: return OSC_T_F64;
+    case 3: return OSC_T_F16;
+    case 4: return OSC_T_BF16;
+    case 5: return OSC_T_F8E4M3;
+    default: return t;
+    }
+}
+static size_t lit_suffix_len(uint64_t sfx) { return sfx == 0 ? 0 : sfx <= 3 ? 3 : sfx == 4 ? 4 : 6; }
+
+/* OSC-4 float slice: a literal at f16 / bf16 / f8e4m3, rounded once from the decimal
+ * spelling. strtod is run rounding down and rounding up (glibc honours the current
+ * rounding mode), giving the two doubles around the exact decimal; both are rounded to
+ * t (osc_fp_from_f64, RNE). Rounding is monotone, so equal results are the correctly
+ * rounded value. Different results mean the decimal lies within one f64 step of a
+ * rounding midpoint of t: refused (FLOAT_CONST_RANGE), never guessed. A literal that
+ * rounds past the largest finite value is refused too (f8e4m3: above 464, the midpoint
+ * between 448 and the missing 480). */
+static int narrow_lit(C *c, OscNode *n, OscScalar t, const char *buf, uint64_t *out)
+{
+    int saved = fegetround();
+    fesetround(FE_DOWNWARD);
+    volatile double lo = strtod(buf, NULL);
+    fesetround(FE_UPWARD);
+    volatile double hi = strtod(buf, NULL);
+    fesetround(saved);
+    uint64_t blo, bhi;
+    double dlo = lo, dhi = hi;
+    memcpy(&blo, &dlo, 8);
+    memcpy(&bhi, &dhi, 8);
+    uint64_t rlo = osc_fp_from_f64(t, blo), rhi = osc_fp_from_f64(t, bhi);
+    bool over = t == OSC_T_F8E4M3 ? (fabs(dlo) > 464.0 || fabs(dhi) > 464.0)
+                                  : (osc_fp_is_inf(t, rlo) || osc_fp_is_inf(t, rhi));
+    if (over) {
+        osc_diag_set(c->d, OSC_DIAG_FLOAT_CONST_RANGE, n->line, n->col, c->sobj, 0, NULL,
+                     "literal out of range", "float literal '%s' does not round to a finite %s", buf, tname(t));
+        return -1;
+    }
+    if (rlo != rhi) {
+        osc_diag_set(c->d, OSC_DIAG_FLOAT_CONST_RANGE, n->line, n->col, c->sobj, 0, NULL,
+                     "literal at a rounding midpoint",
+                     "float literal '%s' lies within one f64 step of a %s rounding midpoint; write the value "
+                     "with more or fewer digits", buf, tname(t));
+        return -1;
+    }
+    *out = rlo;
+    return 0;
+}
+
 /* OSC-4 Slice A: fold a float constant (a literal or its negation) at float
  * type t; *bits is the IEEE pattern (f32 in the low 32 bits, upper 32 zero).
  * f32 spellings go through strtof and f64 through strtod (design 1.3 item 12,
@@ -767,7 +823,7 @@ static int ffold(C *c, int i, OscScalar t, uint64_t *bits)
     uint64_t v;
     switch (n->kind) {
     case ON_FLOAT: {
-        OscScalar lit = n->ival == 1 ? OSC_T_F32 : n->ival == 2 ? OSC_T_F64 : t;
+        OscScalar lit = lit_type(n->ival, t);
         if (lit != t) {
             snprintf(msg, sizeof msg, "%s literal where %s is required", tname(lit), tname(t));
             return tmismatch(c, n, tname(lit), msg);
@@ -782,8 +838,11 @@ static int ffold(C *c, int i, OscScalar t, uint64_t *bits)
         }
         osc_tok_text(c->ast->src, tk, buf, sizeof buf);
         size_t len = strlen(buf);
-        if (n->ival && len > 3) buf[len - 3] = 0; /* drop the f32 / f64 suffix */
-        if (t == OSC_T_F32) {
+        size_t sl = lit_suffix_len(n->ival);
+        if (sl && len > sl) buf[len - sl] = 0; /* drop the suffix */
+        if (osc_scalar_is_float(t) && t != OSC_T_F32 && t != OSC_T_F64) {
+            if (narrow_lit(c, n, t, buf, &v)) return -1;
+        } else if (t == OSC_T_F32) {
             float f = strtof(buf, NULL);
             uint32_t w;
             memcpy(&w, &f, 4);
@@ -811,7 +870,7 @@ static int ffold(C *c, int i, OscScalar t, uint64_t *bits)
             return -1;
         }
         if (ffold(c, n->a, t, &v)) return -1;
-        v ^= t == OSC_T_F32 ? 0x80000000ull : 0x8000000000000000ull;
+        v ^= 1ULL << (osc_scalar_width(t) - 1); /* the sign bit of t */
         break;
     case ON_INT:
         snprintf(msg, sizeof msg, "integer literal where %s is required (write it with a '.')", tname(t));
@@ -1335,13 +1394,20 @@ static int chk(C *c, int i, OscScalar want)
     case ON_INT: { i128 v; if (fold(c, i, want, &v)) return -1; return (int)want; } /* unreachable: constexpr */
     case ON_FLOAT: { /* OSC-4: reached only without context, so the literal carries a suffix */
         uint64_t bits;
-        t = n->ival == 2 ? OSC_T_F64 : OSC_T_F32;
+        t = lit_type(n->ival, OSC_T_F32);
         if (ffold(c, i, t, &bits)) return -1;
         break;
     }
-    case ON_INTRIN: { /* OSC-4: sqrt(x) abs(x) min(a, b) max(a, b) on one float type */
+    case ON_INTRIN: { /* OSC-4: sqrt(x) abs(x) min(a, b) max(a, b), fma(a, b, c) on one float type */
         OscScalar T;
-        if (n->b < 0) {
+        if (n->c >= 0) { /* fma: the first operand that carries a type sets it, else the context */
+            int ops[3] = {n->a, n->b, n->c}, k0 = -1;
+            for (int k = 0; k < 3 && k0 < 0; k++) if (!ctxfree(c, ops[k])) k0 = k;
+            int r = chk(c, ops[k0 < 0 ? 0 : k0], k0 < 0 ? want : 0);
+            if (r < 0) return -1;
+            T = (OscScalar)r;
+            for (int k = 0; k < 3; k++) if (k != (k0 < 0 ? 0 : k0) && chk(c, ops[k], T) < 0) return -1;
+        } else if (n->b < 0) {
             int r = chk(c, n->a, ctxfree(c, n->a) ? want : 0);
             if (r < 0) return -1;
             T = (OscScalar)r;
@@ -1357,7 +1423,7 @@ static int chk(C *c, int i, OscScalar want)
             if (chk(c, n->b, T) < 0) return -1;
         }
         if (!osc_scalar_is_float(T)) {
-            snprintf(msg, sizeof msg, "'%s' takes one float type (f32 or f64), not %s", osc_tok_kind_name(n->op), tname(T));
+            snprintf(msg, sizeof msg, "'%s' takes one float type (f32, f64, f16, bf16 or f8e4m3), not %s", osc_tok_kind_name(n->op), tname(T));
             return tmismatch(c, n, tname(T), msg);
         }
         t = T;
@@ -1509,7 +1575,7 @@ static int chk(C *c, int i, OscScalar want)
             if (!ok) {
                 osc_diag_set(c->d, OSC_DIAG_FLOAT_BITS_WIDTH, n->line, n->col, c->sobj, 0, tname(from), "bit cast shape",
                              "'%s as %s bits' is not a bit cast: 'bits' needs one float side and one integer side of the "
-                             "same width (f32 with u32/i32, f64 with u64/i64)", tname(from), tname(to));
+                             "same width (f32 with u32/i32, f64 with u64/i64, f16 and bf16 with u16/i16, f8e4m3 with u8/i8)", tname(from), tname(to));
                 return -1;
             }
             t = to;
@@ -1518,6 +1584,13 @@ static int chk(C *c, int i, OscScalar want)
         if (osc_scalar_is_float(from) || osc_scalar_is_float(to)) { /* OSC-4: int <-> float, float <-> float */
             if (!(osc_scalar_is_float(from) || osc_scalar_is_int(from)) || !(osc_scalar_is_float(to) || osc_scalar_is_int(to))) {
                 snprintf(msg, sizeof msg, "'as' converts between integer and float types only (%s as %s)", tname(from), tname(to));
+                return tmismatch(c, n, tname(from), msg);
+            }
+            if (osc_scalar_is_storage_float(to) && osc_scalar_is_int(from) && osc_scalar_width(from) > 32) {
+                /* float slice: one rounding from 64 bits to bf16 / f8e4m3 needs a step the chip lacks; the
+                 * two roundings must be written out (decision 20: no hidden conversions) */
+                snprintf(msg, sizeof msg, "'%s as %s' would round twice; write '%s as f64 as %s' (or f32) to "
+                         "state both roundings", tname(from), tname(to), tname(from), tname(to));
                 return tmismatch(c, n, tname(from), msg);
             }
             t = to;

@@ -88,6 +88,7 @@ static int scalar_of(int k)
     case OT_U64: return OSC_T_U64; case OT_I8: return OSC_T_I8; case OT_I16: return OSC_T_I16;
     case OT_I32: return OSC_T_I32; case OT_I64: return OSC_T_I64; case OT_BOOL: return OSC_T_BOOL;
     case OT_F32: return OSC_T_F32; case OT_F64: return OSC_T_F64; /* OSC-4 Slice A */
+    case OT_F16: return OSC_T_F16; case OT_BF16: return OSC_T_BF16; case OT_F8E4M3: return OSC_T_F8E4M3; /* float slice */
     default: return 0;
     }
 }
@@ -506,7 +507,7 @@ static int parse_primary(P *p)
         N(n)->ival = t->ival;
         adv(p);
         return n;
-    case OT_SQRT: case OT_ABS: case OT_MIN: case OT_MAX: { /* OSC-4 intrinsics */
+    case OT_SQRT: case OT_ABS: case OT_MIN: case OT_MAX: case OT_FMA: { /* OSC-4 intrinsics */
         n = new_node(p, ON_INTRIN, t);
         if (n < 0) return -1;
         N(n)->op = t->kind;
@@ -516,11 +517,17 @@ static int parse_primary(P *p)
         int a = parse_expr(p);
         if (a < 0) return -1;
         N(n)->a = a;
-        if (t->kind == OT_MIN || t->kind == OT_MAX) {
+        if (t->kind == OT_MIN || t->kind == OT_MAX || t->kind == OT_FMA) {
             if (expect(p, OT_COMMA)) return -1;
             int b = parse_expr(p);
             if (b < 0) return -1;
             N(n)->b = b;
+        }
+        if (t->kind == OT_FMA) {
+            if (expect(p, OT_COMMA)) return -1;
+            int c = parse_expr(p);
+            if (c < 0) return -1;
+            N(n)->c = c;
         }
         leave(p);
         if (expect(p, OT_RPAREN)) return -1;
@@ -1086,6 +1093,8 @@ static int parse_clause(P *p, char *out, const OscToken *kw, int32_t *node)
 static int parse_fn(P *p)
 {
     OscAst *a = p->ast;
+    int strict = 0; /* `strict fn` (OSC-4 float slice) */
+    if (at(p, OT_STRICT)) { strict = 1; adv(p); }
     const OscToken *ft = cur(p);
     if (expect(p, OT_FN)) return -1;
     if (a->nfns >= OSC_MAX_FUNCS) {
@@ -1095,6 +1104,7 @@ static int parse_fn(P *p)
     }
     int f = new_node(p, ON_FN, ft);
     if (f < 0) return -1;
+    N(f)->fstrict = (uint8_t)strict;
     if (parse_name_tok(p, f)) return -1;
     N(f)->line = a->toks[N(f)->tok].line;
     N(f)->col = a->toks[N(f)->tok].col;

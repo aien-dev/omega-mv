@@ -17,6 +17,7 @@ static const struct { const char *w; int k; } keywords[] = {
     {"bytes", OT_BYTES}, {"cells", OT_CELLS},
     {"f32", OT_F32}, {"f64", OT_F64}, {"sqrt", OT_SQRT}, {"abs", OT_ABS}, {"min", OT_MIN}, {"max", OT_MAX},
     {"bits", OT_BITS},
+    {"f16", OT_F16}, {"bf16", OT_BF16}, {"f8e4m3", OT_F8E4M3}, {"fma", OT_FMA}, {"strict", OT_STRICT},
 };
 
 /* Reserved: destruction words (destruction has no surface syntax, III.8) and
@@ -37,6 +38,7 @@ static const char *const kind_names[OT__COUNT] = {
     "struct", ".", "arena", "pool", "handle", "import",
     "bytes", "cells",
     "f32", "f64", "sqrt", "abs", "min", "max", "bits", "FLOAT",
+    "f16", "bf16", "f8e4m3", "fma", "strict",
 };
 
 const char *osc_tok_kind_name(int kind)
@@ -146,7 +148,14 @@ int osc_lex(const char *src, size_t len, OscToken *toks, uint32_t cap, uint32_t 
                 uint64_t suffix = 0;
                 if (i + 3 <= len && src[i] == 'f' && src[i + 1] == '3' && src[i + 2] == '2') suffix = 1;
                 if (i + 3 <= len && src[i] == 'f' && src[i + 1] == '6' && src[i + 2] == '4') suffix = 2;
-                if (suffix) { ADV(); ADV(); ADV(); }
+                /* float slice suffixes: f16 (3), bf16 (4), f8e4m3 (5) */
+                static const char *const sfx[] = {"f16", "bf16", "f8e4m3"};
+                for (unsigned q = 0; q < 3 && !suffix; q++) {
+                    size_t sl = strlen(sfx[q]);
+                    if (i + sl <= len && memcmp(src + i, sfx[q], sl) == 0) suffix = 3 + q;
+                }
+                size_t slen = suffix == 0 ? 0 : suffix <= 2 ? 3 : strlen(sfx[suffix - 3]);
+                for (size_t q = 0; q < slen; q++) ADV();
                 t->len = (uint32_t)(i - s);
                 if (i < len && (is_alpha(src[i]) || is_digit(src[i]) || src[i] == '.')) {
                     char buf[64];
