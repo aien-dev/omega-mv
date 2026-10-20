@@ -1,0 +1,15 @@
+   0:	d2800001 	movz	x1, #0x0
+   4:	d2800002 	movz	x2, #0x0
+   8:	f101005f 	subs	xzr, x2, #0x40
+   c:	54000142 	b.cs	0x34  // b.hs, b.nlast
+  10:	d2800024 	movz	x4, #0x1
+  14:	8a040003 	and	x3, x0, x4
+  18:	f100047f 	subs	xzr, x3, #0x1
+  1c:	54000061 	b.ne	0x28  // b.any
+  20:	91000421 	add	x1, x1, #0x1
+  24:	d3401c21 	ubfm	x1, x1, #0, #7
+  28:	d341fc00 	ubfm	x0, x0, #1, #63
+  2c:	11000442 	add	w2, w2, #0x1
+  30:	17fffff6 	b	0x8
+  34:	aa0103e0 	orr	x0, xzr, x1
+  38:	d65f03c0 	ret

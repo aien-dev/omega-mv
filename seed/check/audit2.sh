@@ -9,7 +9,7 @@
 # line "AUDIT2 instructions=N data_bytes=D mismatch=M"; exit 1 when M > 0.
 set -eu
 s=$1; b=$2
-t=$(mktemp -d)
+t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 objdump -D -z -b binary -m aarch64 -M no-aliases "$b" | grep -E '^ +[0-9a-f]+:' |
   awk -F"\t" '{a=$1; sub(/^ +/,"",a); sub(/:$/,"",a); print a "\t" $2 "\t" $3 "\t" $4}' > "$t/od"
 awk -M -v od="$t/od" '
@@ -94,5 +94,4 @@ FNR == NR {
 END { printf("\nAUDIT2 instructions=%d data_bytes=%d mismatch=%d\n", ins, data, bad + 0); exit(bad > 0) }
 ' "$s" "$s"
 rc=$?
-rm -rf "$t"
 exit $rc

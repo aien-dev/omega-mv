@@ -1,0 +1,17 @@
+   0:	aa0003e2 	orr	x2, xzr, x0
+   4:	aa0103e3 	orr	x3, xzr, x1
+   8:	8b030044 	add	x4, x2, x3
+   c:	d3403c84 	ubfm	x4, x4, #0, #15
+  10:	f103fc9f 	subs	xzr, x4, #0xff
+  14:	54000069 	b.ls	0x20  // b.plast
+  18:	d2801fe0 	movz	x0, #0xff
+  1c:	d65f03c0 	ret
+  20:	d348fc85 	ubfm	x5, x4, #8, #63
+  24:	b50000c5 	cbnz	x5, 0x3c
+  28:	aa0403e0 	orr	x0, xzr, x4
+  2c:	d65f03c0 	ret
+  30:	aa0703e0 	orr	x0, xzr, x7
+  34:	f94008f0 	ldr	x16, [x7, #16]
+  38:	d61f0200 	br	x16
+  3c:	d28000a1 	movz	x1, #0x5
+  40:	17fffffc 	b	0x30
