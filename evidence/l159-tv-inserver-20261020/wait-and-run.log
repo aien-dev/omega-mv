@@ -1,0 +1,24 @@
+2026-10-20T06:11:13Z server build ok: d90e71eed06945269270c84a41c593cab79fd111685fe4aa83fcb63192c5686c  /home/drakesta
+2026-10-20T07:30:47Z window open 20261020T073002Z-19bfd7 (box load 35.52 41.96 50.34)
+2026-10-20T07:31:06Z run.sh rc 0
+spark-window: window 20261020T073105Z-0c7237 closed (closed while still waiting for its locks). It holds:
+  close.json
+2026-10-20T07:31:08Z window closed
+2026-10-20T07:59:29Z window open 20261020T075706Z-9e829a (load 38.63 38.93 39.58)
+2026-10-20T08:24:26Z run2.sh rc 0
+spark-window: window 20261020T075706Z-9e829a closed (closed). It holds:
+  close.json
+  open.json
+2026-10-20T08:24:30Z window 20261020T075706Z-9e829a closed
+2026-10-20T11:52:26Z window open 20261020T115142Z-3a66c3 (load 49.17 40.85 39.34)
+2026-10-20T11:56:15Z run3.sh rc 0
+spark-window: window 20261020T115142Z-3a66c3 closed (closed). It holds:
+  close.json
+  open.json
+2026-10-20T11:56:19Z window 20261020T115142Z-3a66c3 closed
+2026-10-20T12:11:05Z run4: build2 done, waiting for a window
+2026-10-20T12:22:34Z window open 20261020T122040Z-a514c0 (load 88.66 77.22 65.62)
+spark-window: window 20261020T122040Z-a514c0 closed (closed). It holds:
+  close.json
+  open.json
+2026-10-20T12:31:57Z window 20261020T122040Z-a514c0 closed (run4 rc=0)

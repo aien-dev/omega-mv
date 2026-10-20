@@ -1,0 +1,24 @@
+2026-10-20T12:22:34Z window 20261020T122040Z-a514c0 load 88.66 77.22 65.62 bins: 0c0537d149ff7f54 base ab9e31bfe7cdb95b
+2026-10-20T12:22:37Z test nice0 base q38gu load 88.66: q38gu N 1 (median of 64, min 908.0, max 1255.7, mean 946.3 us): chip 924.7 us; weights 192
+2026-10-20T12:22:39Z test nice0 base q38mix load 87.24: q38mix N 1 (median of 64, min 432.0, max 492.9, mean 439.3 us): chip 437.9 us; weights 191
+2026-10-20T12:22:40Z test nice0 base q38amix load 87.24: q38amix N 1 (median of 64, min 373.3, max 870.9, mean 399.7 us): chip 378.0 us; weights 19
+2026-10-20T12:22:40Z test nice0 base q38o load 87.24: q38o N 1 (median of 64, min 155.7, max 203.4, mean 160.9 us): chip 160.0 us; weights 196.6
+2026-10-20T12:22:42Z test nice0 base q38down load 87.24: q38down N 1 (median of 64, min 525.0, max 843.3, mean 555.6 us): chip 532.8 us; weights 16
+2026-10-20T12:22:46Z test nice0 fix2 q38gu load 86.26: q38gu N 1 (median of 64, min 914.1, max 1219.7, mean 966.1 us): chip 947.0 us; weights 188
+2026-10-20T12:22:47Z test nice0 fix2 q38mix load 86.26: q38mix N 1 (median of 64, min 427.6, max 3147.4, mean 491.3 us): chip 449.6 us; weights 18
+2026-10-20T12:22:49Z test nice0 fix2 q38amix load 83.68: q38amix N 1 (median of 64, min 375.2, max 3022.2, mean 427.4 us): chip 385.2 us; weights 1
+2026-10-20T12:22:50Z test nice0 fix2 q38o load 83.68: q38o N 1 (median of 64, min 158.9, max 3753.6, mean 286.6 us): chip 227.1 us; weights 138.
+2026-10-20T12:22:52Z test nice0 fix2 q38down load 83.68: q38down N 1 (median of 64, min 525.8, max 3648.9, mean 601.3 us): chip 533.6 us; weights 1
+2026-10-20T12:22:52Z server fix2 nice10 start load 83.68 76.70 65.64
+SRV nice10 fix2 aien-serve-http: qwen38-batch: spell over: 179 steps, 179 rows, 207.4 ms/step wall, chip gemm 32837 ms, gdn 543 ms, attn 276 ms, head 2109 ms, host 1107 ms, spell 37.6 s, gemm launches 30435 ms, a|b 214 ms, kernel Tree
+SRV nice10 fix2 aien-serve-http: qwen38-batch: spell over: 184 steps, 184 rows, 218.4 ms/step wall, chip gemm 35444 ms, gdn 604 ms, attn 299 ms, head 2341 ms, host 1208 ms, spell 40.7 s, gemm launches 32715 ms, a|b 233 ms, kernel Tree
+2026-10-20T12:25:29Z server fix2 nice10 end load 72.17 73.78 66.23
+2026-10-20T12:25:49Z server fix2 nice0 start load 70.49 73.31 66.24
+SRV nice0 fix2 aien-serve-http: qwen38-batch: spell over: 179 steps, 179 rows, 210.2 ms/step wall, chip gemm 33219 ms, gdn 549 ms, attn 280 ms, head 2215 ms, host 1092 ms, spell 38.1 s, gemm launches 30749 ms, a|b 220 ms, kernel Tree
+SRV nice0 fix2 aien-serve-http: qwen38-batch: spell over: 184 steps, 184 rows, 216.6 ms/step wall, chip gemm 34974 ms, gdn 591 ms, attn 290 ms, head 2369 ms, host 1308 ms, spell 40.4 s, gemm launches 32013 ms, a|b 273 ms, kernel Tree
+2026-10-20T12:28:18Z server fix2 nice0 end load 79.09 76.04 68.33
+2026-10-20T12:28:38Z server base nice10 start load 81.17 76.65 68.69
+SRV nice10 base aien-serve-http: qwen38-batch: spell over: 179 steps, 179 rows, 218.7 ms/step wall, chip gemm 34361 ms, gdn 641 ms, attn 385 ms, head 2166 ms, host 1284 ms, spell 39.7 s, gemm launches 31393 ms, a|b 258 ms, kernel Tree
+SRV nice10 base aien-serve-http: qwen38-batch: spell over: 184 steps, 184 rows, 260.3 ms/step wall, chip gemm 42495 ms, gdn 717 ms, attn 363 ms, head 2511 ms, host 1415 ms, spell 48.4 s, gemm launches 39427 ms, a|b 272 ms, kernel Tree
+2026-10-20T12:31:35Z server base nice10 end load 88.12 81.30 71.87
+2026-10-20T12:31:55Z done

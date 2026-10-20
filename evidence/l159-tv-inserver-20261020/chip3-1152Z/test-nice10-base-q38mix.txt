@@ -1,0 +1,11 @@
+tv q38mix: n 16384 k 5120 (weights 83.9 MB), rows 1, weight cache 1
+tv N 1: emulation check on 1 rows: 0 of 16384 differ (bit-identical)
+tv N 1: rt 1 ct 4 warps 4; 0 of 16384 outputs differ from the N=1 pass (same bits); 0 unwritten, 0 written beyond row N
+tv xf32 N 1: rt 1 ct 4 warps 4; ok, 0 of 16384 differ from the reference (same bits); chip median 468.4 us (64), weights 179.1 GB/s
+tv f32 call N 1: ok, 0 of 16384 differ from the device pass; whole call median 501.7 us (5 calls)
+TVGEMM q38mix N 1 (median of 64, min 446.3, max 616.2, mean 469.7 us): chip 464.9 us; weights 180.4 GB/s; 0.36 TFLOPS
+tv mutant 1 (N 1): caught (16384 of 16384 differ)
+tv mutant 2 (N 1): caught (16384 of 16384 differ)
+tv mutant 4 (N 1): caught (16384 of 16384 differ)
+tv: PASS
+GPU_TCGEMM: PASS

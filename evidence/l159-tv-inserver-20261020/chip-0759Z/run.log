@@ -1,0 +1,44 @@
+2026-10-20T07:59:29Z window 20261020T075706Z-9e829a load 38.63 38.93 39.58 mem 59 GiB
+2026-10-20T07:59:32Z test base q38gu r1 load 38.42: q38gu N 1 (median of 64, min 929.2, max 1155.4, mean 977.0 us): chip 953.2 us; weights 187
+2026-10-20T07:59:34Z test base q38mix r1 load 38.42: q38mix N 1 (median of 64, min 430.7, max 977.1, mean 452.8 us): chip 435.3 us; weights 192
+2026-10-20T07:59:35Z test base q38amix r1 load 38.42: q38amix N 1 (median of 64, min 369.4, max 544.5, mean 377.0 us): chip 373.1 us; weights 19
+2026-10-20T07:59:35Z test base q38o r1 load 37.67: q38o N 1 (median of 64, min 162.7, max 4043.5, mean 228.2 us): chip 166.2 us; weights 189.
+2026-10-20T07:59:37Z test base q38down r1 load 37.67: q38down N 1 (median of 64, min 528.3, max 1064.4, mean 556.9 us): chip 535.6 us; weights 1
+2026-10-20T07:59:39Z test fix q38gu r1 load 37.67: q38gu N 1 (median of 64, min 895.6, max 2283.4, mean 984.3 us): chip 917.7 us; weights 194
+2026-10-20T07:59:41Z test fix q38mix r1 load 36.97: q38mix N 1 (median of 64, min 425.6, max 3504.8, mean 519.7 us): chip 448.3 us; weights 18
+2026-10-20T07:59:43Z test fix q38amix r1 load 36.97: q38amix N 1 (median of 64, min 383.9, max 6081.2, mean 1278.9 us): chip 1084.2 us; weights
+2026-10-20T07:59:43Z test fix q38o r1 load 36.97: q38o N 1 (median of 64, min 157.4, max 3007.3, mean 256.9 us): chip 180.0 us; weights 174.
+2026-10-20T07:59:45Z test fix q38down r1 load 36.97: q38down N 1 (median of 64, min 531.2, max 1090.4, mean 568.2 us): chip 537.8 us; weights 1
+2026-10-20T07:59:48Z test base q38gu r2 load 36.58: q38gu N 1 (median of 64, min 901.9, max 1416.9, mean 942.9 us): chip 914.4 us; weights 194
+2026-10-20T07:59:50Z test base q38mix r2 load 36.58: q38mix N 1 (median of 64, min 429.4, max 473.1, mean 441.4 us): chip 438.5 us; weights 191
+2026-10-20T07:59:51Z test base q38amix r2 load 36.05: q38amix N 1 (median of 64, min 376.0, max 3072.4, mean 517.1 us): chip 382.6 us; weights 1
+2026-10-20T07:59:52Z test base q38o r2 load 36.05: q38o N 1 (median of 64, min 157.9, max 986.7, mean 177.7 us): chip 163.0 us; weights 192.9
+2026-10-20T07:59:53Z test base q38down r2 load 36.05: q38down N 1 (median of 64, min 517.7, max 931.9, mean 541.3 us): chip 528.0 us; weights 16
+2026-10-20T07:59:56Z test fix q38gu r2 load 36.12: q38gu N 1 (median of 64, min 895.4, max 2957.5, mean 973.5 us): chip 919.4 us; weights 193
+2026-10-20T07:59:58Z test fix q38mix r2 load 36.12: q38mix N 1 (median of 64, min 436.6, max 3783.8, mean 558.1 us): chip 450.3 us; weights 18
+2026-10-20T07:59:59Z test fix q38amix r2 load 36.12: q38amix N 1 (median of 64, min 383.6, max 1296.6, mean 533.2 us): chip 447.5 us; weights 1
+2026-10-20T07:59:59Z test fix q38o r2 load 36.12: q38o N 1 (median of 64, min 180.3, max 3577.2, mean 277.8 us): chip 186.4 us; weights 168.
+2026-10-20T08:00:00Z test fix q38down r2 load 35.31: q38down N 1 (median of 64, min 531.0, max 3251.6, mean 657.7 us): chip 552.0 us; weights 1
+2026-10-20T08:00:03Z test base q38gu r3 load 35.31: q38gu N 1 (median of 64, min 923.7, max 2169.1, mean 1009.9 us): chip 951.8 us; weights 18
+2026-10-20T08:00:04Z test base q38mix r3 load 35.31: q38mix N 1 (median of 64, min 461.7, max 2153.6, mean 560.6 us): chip 476.7 us; weights 17
+2026-10-20T08:00:06Z test base q38amix r3 load 34.81: q38amix N 1 (median of 64, min 396.0, max 1243.1, mean 452.2 us): chip 407.0 us; weights 1
+2026-10-20T08:00:06Z test base q38o r3 load 34.81: q38o N 1 (median of 64, min 162.3, max 917.6, mean 189.1 us): chip 166.0 us; weights 189.5
+2026-10-20T08:00:08Z test base q38down r3 load 34.81: q38down N 1 (median of 64, min 524.8, max 1545.0, mean 582.9 us): chip 539.4 us; weights 1
+2026-10-20T08:00:10Z test fix q38gu r3 load 34.42: q38gu N 1 (median of 64, min 987.9, max 3465.9, mean 1214.1 us): chip 1037.1 us; weights 1
+2026-10-20T08:00:12Z test fix q38mix r3 load 34.42: q38mix N 1 (median of 64, min 449.9, max 2641.6, mean 527.8 us): chip 473.9 us; weights 17
+2026-10-20T08:00:13Z test fix q38amix r3 load 34.42: q38amix N 1 (median of 64, min 380.1, max 2505.0, mean 472.0 us): chip 382.6 us; weights 1
+2026-10-20T08:00:14Z test fix q38o r3 load 34.42: q38o N 1 (median of 64, min 168.3, max 3319.2, mean 307.0 us): chip 181.1 us; weights 173.
+2026-10-20T08:00:16Z test fix q38down r3 load 34.47: q38down N 1 (median of 64, min 538.7, max 2642.5, mean 694.5 us): chip 547.8 us; weights 1
+2026-10-20T08:00:16Z server fix start load 34.47 37.75 39.15
+SRV fix aien-serve-http: qwen38-batch: spell over: 179 steps, 179 rows, 727.9 ms/step wall, chip gemm 121686 ms, gdn 1555 ms, attn 532 ms, head 2907 ms, host 3042 ms, spell 132.8 s, gemm launches 112711 ms, a|b 433 ms, kernel Tree
+SRV fix aien-serve-http: qwen38-batch: spell over: 184 steps, 184 rows, 827.4 ms/step wall, chip gemm 144277 ms, gdn 1500 ms, attn 440 ms, head 2935 ms, host 2657 ms, spell 154.7 s, gemm launches 134847 ms, a|b 346 ms, kernel Tree
+2026-10-20T08:07:33Z server fix end load 52.03 49.58 44.16
+2026-10-20T08:07:33Z server base start load 52.03 49.58 44.16
+SRV base aien-serve-http: qwen38-batch: spell over: 179 steps, 179 rows, 796.2 ms/step wall, chip gemm 134105 ms, gdn 1379 ms, attn 667 ms, head 2940 ms, host 2602 ms, spell 143.5 s, gemm launches 124984 ms, a|b 368 ms, kernel Tree
+SRV base aien-serve-http: qwen38-batch: spell over: 184 steps, 184 rows, 929.3 ms/step wall, chip gemm 161920 ms, gdn 1166 ms, attn 467 ms, head 3276 ms, host 3424 ms, spell 173.3 s, gemm launches 150486 ms, a|b 357 ms, kernel Tree
+2026-10-20T08:16:27Z server base end load 51.79 52.48 48.02
+2026-10-20T08:16:28Z server fix2 start load 51.79 52.48 48.02
+SRV fix2 aien-serve-http: qwen38-batch: spell over: 179 steps, 179 rows, 618.1 ms/step wall, chip gemm 102359 ms, gdn 1125 ms, attn 459 ms, head 3393 ms, host 2973 ms, spell 112.5 s, gemm launches 95522 ms, a|b 239 ms, kernel Tree
+SRV fix2 aien-serve-http: qwen38-batch: spell over: 184 steps, 184 rows, 830.9 ms/step wall, chip gemm 143063 ms, gdn 1317 ms, attn 599 ms, head 3679 ms, host 3522 ms, spell 155.2 s, gemm launches 135092 ms, a|b 457 ms, kernel Tree
+2026-10-20T08:24:26Z server fix2 end load 62.38 56.80 51.85
+2026-10-20T08:24:26Z done

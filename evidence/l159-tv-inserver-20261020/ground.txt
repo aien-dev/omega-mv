@@ -1,0 +1,9 @@
+ground check written 2026-10-20T08:30:35Z (investigation started 2026-10-20 ~05:30Z, chip windows 07:30Z, 07:59Z)
+omega fix worktree ~/workspace/fix-tv-inserver fix/tv-inserver 3208be4b (parent 22446aef cascade/tree-verify-gemm), clean, pushed origin/fix/tv-inserver
+omega server lib tree ~/workspace/fix-tv-inserver-srv detached a6922cfa = c79e2fe1 (speed5/handle-slots at brief time) + cherry-pick 3208be4b, clean
+omega baseline tree ~/workspace/fix-tv-inserver-base detached 22446aef, 1 uncommitted file (tests/gpu_tcgemm_test.c: prints mean; lib untouched)
+sovereign-core tree ~/workspace/fix-tv-inserver-sc detached 946f6fed (L129's binary commit), clean
+L129 since moved to omega speed5/handle-slots 66e84cf6a (c79e2fe1 + tile table in src/omega_gpu_tvgemm.c); my fix merges onto it: see merge-tree note in handoff
+driver nvidia-open 580.173.02, kernel 7.0.0-1019-nvidia, GB10
+box load during windows: 34-62 on 20 cores (qwen38_subbit.v2 13-14 cores nice 5 in the same systemd scope as the server; nvidia-modeset/kthread_q 98% of one core since boot)
+binaries: targets/l159/bin-fix (fixed lib via AIEN_OMEGA_GPU_LIB=lib-srv, build-bin.log), base ~/workspace/targets/speed5/bin-946f6fed-h4096 (L129's); both stripped, see bins.sha in chip-0759Z

@@ -1,0 +1,18 @@
+2026-10-20T11:52:26Z window 20261020T115142Z-3a66c3 load 49.17 40.85 39.34
+2026-10-20T11:52:33Z test nice10 base q38gu load 50.14: q38gu N 1 (median of 64, min 951.1, max 2502.9, mean 1087.4 us): chip 989.2 us; weights 18
+2026-10-20T11:52:36Z test nice10 base q38mix load 50.14: q38mix N 1 (median of 64, min 446.3, max 616.2, mean 469.7 us): chip 464.9 us; weights 180
+2026-10-20T11:52:39Z test nice10 base q38amix load 50.29: q38amix N 1 (median of 64, min 406.2, max 2533.1, mean 886.1 us): chip 458.0 us; weights 1
+2026-10-20T11:52:42Z test nice10 base q38o load 50.29: q38o N 1 (median of 64, min 159.2, max 2851.8, mean 235.9 us): chip 171.6 us; weights 183.
+2026-10-20T11:52:43Z test nice10 base q38down load 50.29: 
+2026-10-20T11:52:48Z test nice10 fix q38gu load 50.27: q38gu N 1 (median of 64, min 937.4, max 2227.3, mean 1021.6 us): chip 962.0 us; weights 18
+2026-10-20T11:52:50Z test nice10 fix q38mix load 51.45: q38mix N 1 (median of 64, min 449.3, max 4577.1, mean 1198.2 us): chip 529.1 us; weights 1
+2026-10-20T11:52:51Z test nice10 fix q38amix load 51.45: q38amix N 1 (median of 64, min 391.4, max 2500.8, mean 535.3 us): chip 431.5 us; weights 1
+2026-10-20T11:52:54Z test nice10 fix q38o load 51.57: q38o N 1 (median of 64, min 157.2, max 1700.2, mean 221.6 us): chip 179.7 us; weights 175.
+2026-10-20T11:52:55Z test nice10 fix q38down load 51.57: 
+2026-10-20T11:52:55Z server fix nice0 start load 51.57 42.21 39.84
+SRV nice0 fix aien-serve-http: qwen38-batch: spell over: 179 steps, 179 rows, 251.3 ms/step wall, chip gemm 40582 ms, gdn 655 ms, attn 331 ms, head 2146 ms, host 843 ms, spell 46.1 s, gemm launches 37604 ms, a|b 387 ms, kernel Tree
+SRV nice0 fix aien-serve-http: qwen38-batch: spell over: 184 steps, 184 rows, 283.3 ms/step wall, chip gemm 46753 ms, gdn 1090 ms, attn 450 ms, head 2376 ms, host 1102 ms, spell 52.8 s, gemm launches 43394 ms, a|b 295 ms, kernel Tree
+2026-10-20T11:56:09Z server fix nice0 end load 56.83 49.37 43.10
+2026-10-20T11:56:09Z server base nice0 start load 56.83 49.37 43.10
+2026-10-20T11:56:15Z server base nice0 end load 57.41 49.61 43.21
+2026-10-20T11:56:15Z done
