@@ -144,3 +144,28 @@ OBSERVED (chip, `gpu_fx1_test --chip`, 27B layers-0 and layers-3, 9 reps, quiet-
 
 Verdict so far: the identity is exact and the bytes fall as counted, but this kernel does NOT turn removed bytes into
 speed. It is not landed as a speedup. Next: row interleave (2 rows per warp breaks the chain) and warp-count sweep.
+
+### 4.1 Row and warp sweep (2026-10-20 22:50Z, after the first run)
+
+OBSERVED (`gpu_fx1_test --chip layers-0.safetensors 4 9`, 9 reps, window 20261020T225031Z-cc82eb, quiet and chip locks
+held, `~/workspace/l274-work/runs/fx1-sweep-20261020T222756Z.out`, script `fx1sweep.sh`, exit 0, 10 checks 0 failed in
+every configuration, outputs bit-identical, both chip mutants caught). Three DeltaNet tensors (qkv, z, out), 115,343,360
+raw bytes, 101,853,568 FX1 bytes (11.7 percent fewer, calc:1da6c5d6):
+
+| rows per warp | warps | raw us | FX1 us | FX1 / raw |
+|---|---|---|---|---|
+| 1 | 8 | 715.9 | 720.6 | 1.007 |
+| 1 | 4 | 756.1 | 761.2 | 1.007 |
+| 2 | 8 | 715.2 | 1034.2 | 1.446 |
+| 2 | 4 | 730.2 | 1131.4 | 1.549 |
+| 1 | 16 | 730.7 | 1119.7 | 1.532 |
+| 2 | 16 | 743.1 | 1153.1 | 1.552 |
+
+Rate: raw 161.1 GB/s (calc:65acc526), FX1 141.4 GB/s of its smaller stream (calc:4546e6ef). The 22:35Z run (quiet only,
+no other chip user) read 1.10x to 1.50x; this sweep, run alone in a window, reads 1.007x at rows 1 / warps 4 or 8.
+The earlier gap was therefore partly contention. Interleaving two rows per warp is worse (1.45x to 1.55x), refuting the
+"break the serial chain" guess; INFERRED: the second row's decode state raises register use and cuts resident warps.
+
+Verdict: FX1 is exact, removes 11.7 percent of the bytes, and ties raw on time at its best shape. It is a byte
+reduction that does not yet become a speedup, because neither kernel reaches the 207 to 237 GB/s DRAM ceiling at these
+sizes. It is NOT landed as a speed gain; it stays on this branch as a proven-exact building block.
