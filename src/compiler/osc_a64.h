@@ -62,9 +62,9 @@ typedef enum {
     OSC_A64_LDRB_REG,
     /* OSC-4 Slice A scalar floating point (docs/osc/OSC-4-DESIGN.md 1.6; goldens in
      * tests/compiler/aarch64_fp_golden.h). A V operand is numbered 0..31 and never
-     * takes XZR / SP. imm2 is the type: 0 = S (f32), 1 = D (f64); the GP <-> V moves
+     * takes XZR / SP. imm2 is the type: 0 = S (f32), 1 = D (f64), 3 = H (f16); the GP <-> V moves
      * and the f32 <-> f64 converts have one fixed form and require imm2 = 0.
-     * No fused multiply-add, no FMIN/FMAX (non-NM), no FCMPE, no FCMP #0.0. */
+     * FMADD only (OSC-4 float slice); no FMIN/FMAX (non-NM), no FCMPE, no FCMP #0.0. */
     OSC_A64_FMOV_RR,                               /* vd = vn */
     OSC_A64_FMOV_XD, OSC_A64_FMOV_DX,              /* dd = xn (rd V, rn X/ZR) ; xd = dn (rd X/ZR, rn V) */
     OSC_A64_FMOV_WS, OSC_A64_FMOV_SW,              /* sd = wn ; wd = sn (zero-extends into Xd) */
@@ -76,6 +76,17 @@ typedef enum {
     OSC_A64_FCVTZS_X, OSC_A64_FCVTZU_X,            /* xd = vn (rd X/ZR, rn V): truncate, saturate, NaN -> 0 */
     OSC_A64_LDR_F_UOFF, OSC_A64_STR_F_UOFF,        /* rd = Vt, rn = base (SP kind), imm = byte offset, multiple of 4 (S) / 8 (D) */
     OSC_A64_LDR_F_REG, OSC_A64_STR_F_REG,          /* rd = Vt, rn = base (SP kind), rm = index (ZR kind), LSL #2 (S) / #3 (D) */
+    /* OSC-4 float slice (docs/osc/OSC-4-FLOATS.md; Arm ARM DDI0487 M.d section C7.2). imm2 type 3 = H (f16,
+     * FEAT_FP16) is accepted by FADD..FMINNM, FSQRT, FNEG, FABS, FCMP, FMOV_RR, SCVTF/UCVTF/FCVTZS/FCVTZU and
+     * FMADD; the loads and stores stay S / D only. The forms below have one fixed width each (imm2 = 0). */
+    OSC_A64_FCVT_HS, OSC_A64_FCVT_HD,              /* hd = sn ; hd = dn (C7.2.73 FCVT, RNE) */
+    OSC_A64_FCVT_SH, OSC_A64_FCVT_DH,              /* sd = hn ; dd = hn (exact) */
+    OSC_A64_BFCVT,                                 /* hd = bf16(sn) (C7.2.14 BFCVT, FEAT_BF16, RNE) */
+    OSC_A64_FCVTXN,                                /* sd = dn rounded to odd (C7.2.102 FCVTXN scalar) */
+    OSC_A64_FMOV_WH, OSC_A64_FMOV_HW,              /* hd = wn ; wd = hn zero-extended (C7.2.157 FMOV general) */
+    OSC_A64_FCVTNS_WS,                             /* wd = sn to nearest, ties even (C7.2.91 FCVTNS scalar) */
+    OSC_A64_FMADD,                                 /* vd = va + vn*vm, one rounding (C7.2.120 FMADD); only where
+                                                    * the source wrote fma(); no FMSUB / FNMADD / FNMSUB */
     OSC_A64_NOPS
 } OscA64Op;
 
@@ -121,11 +132,14 @@ OscA64Insn osc_a64_bcond(OscA64Cond c, int64_t off);
 OscA64Insn osc_a64_cb(OscA64Op op, int rt, int64_t off);
 OscA64Insn osc_a64_breg(OscA64Op op, int rn);
 OscA64Insn osc_a64_brk(int64_t imm16);
-/* OSC-4 floats: dbl = 0 for S (f32), 1 for D (f64); anything else is refused by the encoder */
+/* OSC-4 floats: dbl (the type) = 0 for S (f32), 1 for D (f64), 3 for H (f16) where the op has an H form;
+ * anything else is refused by the encoder */
 OscA64Insn osc_a64_f3(OscA64Op op, int vd, int vn, int vm, int dbl);
 OscA64Insn osc_a64_f2(OscA64Op op, int rd, int rn, int dbl);
 OscA64Insn osc_a64_fcmp(int vn, int vm, int dbl);
 OscA64Insn osc_a64_fmem(OscA64Op op, int vt, int rn, int64_t off, int dbl);
 OscA64Insn osc_a64_fmem_reg(OscA64Op op, int vt, int rn, int rm, int dbl);
+/* rd = ra + rn*rm (FMADD); type 0 = S, 1 = D, 3 = H */
+OscA64Insn osc_a64_f4(OscA64Op op, int vd, int vn, int vm, int va, int type);
 
 #endif /* OSC_A64_H */

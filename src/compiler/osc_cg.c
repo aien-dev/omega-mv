@@ -318,26 +318,127 @@ static void gen_cast(Cg *g, const OscFunc *f, const OscInsn *in) {
     st(g, 9, in->dst);
 }
 
-/* ---- OSC-4 Slice A floats (docs/osc/OSC-4-DESIGN.md 1.6) -----------------
- * Scratch V registers d16..d20 mirror x9..x13. An f64 fills its 8-byte slot; an
- * f32 sits in the low 4 bytes with the upper 4 always zero: it is loaded with
- * LDR S from the slot and stored through FMOV Wd, Sn (zero-extends) + STR X,
- * so the slot never carries a dirty upper half. */
-static bool is_dbl(const OscFunc *f, int v) { return f->vtype[v].s == OSC_T_F64; }
+/* ---- OSC-4 floats (docs/osc/OSC-4-DESIGN.md 1.6, docs/osc/OSC-4-FLOATS.md) ----
+ * Scratch V registers d16..d20 mirror x9..x13. Every float lives in its 8-byte
+ * slot as a bit pattern with the unused upper bits zero: f64 fills the slot, f32
+ * the low 4 bytes (LDR S; stored through FMOV Wd, Sn + STR X), f16 / bf16 the low
+ * 2 bytes, f8e4m3 the low byte (loaded through x9, stored through x9).
+ * Each value is computed in its compute register format ("ct", the FP type field):
+ * S for f32, D for f64, H for f16, and S for the storage formats bf16 and f8e4m3,
+ * which fload widens exactly to f32 and fstore rounds back once (RNE).
+ * fload / fstore use x9..x13 and d19, d20 as scratch; operands sit in d16..d18. */
+enum { CT_S = 0, CT_D = 1, CT_H = 3 };
+static int ctype(OscScalar s) { return s == OSC_T_F64 ? CT_D : s == OSC_T_F16 ? CT_H : CT_S; }
+static OscScalar vt(const OscFunc *f, int v) { return f->vtype[v].s; }
 
 static void fld(Cg *g, int vr, int v, bool dbl) { E(g, osc_a64_fmem(OSC_A64_LDR_F_UOFF, vr, SP, slot(v), dbl)); }
-static void fst(Cg *g, int vr, int v, bool dbl) {
-    if (dbl) { E(g, osc_a64_fmem(OSC_A64_STR_F_UOFF, vr, SP, slot(v), 1)); return; }
+
+/* forward branch over a short in-line sequence: emit placeholder, land later */
+static size_t skip_if(Cg *g) { size_t at = here(g); put(g, 0); return at; }
+static void skip_land(Cg *g, size_t at, OscA64Cond c) { patch(g, at, osc_a64_bcond(c, 0), here(g)); }
+static void jump_land(Cg *g, size_t at) { patch(g, at, osc_a64_br(OSC_A64_B, 0), here(g)); }
+static void ubfm(Cg *g, int rd, int rn, int immr, int imms) { E(g, osc_a64_bfm(OSC_A64_UBFM, rd, rn, immr, imms)); }
+static void orr_lsl(Cg *g, int rd, int rn, int rm, int sh) { E(g, osc_a64_r3s(OSC_A64_ORR_REG, rd, rn, rm, OSC_A64_LSL, sh)); }
+
+/* f8e4m3 code in x9 -> exact f32 in s<vr>. Normal and subnormal codes go through f16:
+ * S.EEEE.MMM placed as f16 bits S.0EEEE.MMM0000000 is the same value times 2^-8
+ * (exact, subnormals included), so FCVT S, H then FMUL by 256.0 is exact. NaN
+ * (S.1111.111) becomes sign | 0x7FC00000. Uses x10..x13 and s20. */
+static void e4m3_widen(Cg *g, int vr) {
+    ubfm(g, 10, 9, 0, 6);                                      /* em = code & 0x7F */
+    cmp_ri(g, 10, 0x7F);
+    size_t at_nan = skip_if(g);
+    ubfm(g, 11, 9, 7, 7);                                      /* sign */
+    ubfm(g, 12, 10, 57, 56);                                   /* em << 7 */
+    orr_lsl(g, 12, 12, 11, 15);
+    E(g, osc_a64_f2(OSC_A64_FMOV_WH, vr, 12, 0));
+    E(g, osc_a64_f2(OSC_A64_FCVT_SH, vr, vr, 0));
+    mat(g, 13, 0x43800000u);                                   /* 256.0f */
+    E(g, osc_a64_f2(OSC_A64_FMOV_WS, 20, 13, 0));
+    E(g, osc_a64_f3(OSC_A64_FMUL, vr, vr, 20, CT_S));
+    size_t at_done = skip_if(g);
+    skip_land(g, at_nan, OSC_A64_EQ);
+    ubfm(g, 11, 9, 7, 7);
+    mat(g, 12, 0x7FC00000u);
+    orr_lsl(g, 12, 12, 11, 31);
+    E(g, osc_a64_f2(OSC_A64_FMOV_WS, vr, 12, 0));
+    jump_land(g, at_done);
+}
+
+/* f32 in s<vr> -> f8e4m3 code in x9, round to nearest even, overflow and inf saturate
+ * to 448 (S.1111.110), NaN -> S.1111.111. a = |bits|: NaN above 0x7F800000; a >= 448.0f
+ * saturates; a >= 2^-6 (smallest normal) rebiases (exponent - 120) and rounds the 20 low
+ * bits away with the add-half-plus-lsb trick; below 2^-6 the code is the subnormal step
+ * count |x| * 512 rounded by FCVTNS (ties even), 0..8, where 8 is the smallest normal.
+ * Uses x10..x12 and s19, s20. */
+static void e4m3_narrow(Cg *g, int vr) {
     E(g, osc_a64_f2(OSC_A64_FMOV_SW, 9, vr, 0));
+    ubfm(g, 10, 9, 31, 31);                                    /* sign */
+    ubfm(g, 11, 9, 0, 30);                                     /* a = bits & 0x7FFFFFFF */
+    mat(g, 12, 0x7F800000u);
+    cmp_rr(g, 11, 12);
+    size_t at_nan = skip_if(g);
+    mat(g, 12, 0x43E00000u);                                   /* 448.0f */
+    cmp_rr(g, 11, 12);
+    size_t at_sat = skip_if(g);
+    mat(g, 12, 0x3C800000u);                                   /* 2^-6 */
+    cmp_rr(g, 11, 12);
+    size_t at_sub = skip_if(g);
+    mat(g, 12, 0x3C000000u);                                   /* 120 << 23 */
+    E(g, osc_a64_r3s(OSC_A64_SUB_REG, 11, 11, 12, OSC_A64_LSL, 0));
+    ubfm(g, 12, 11, 20, 20);                                   /* lsb that stays */
+    E(g, osc_a64_r3s(OSC_A64_ADD_REG, 11, 11, 12, OSC_A64_LSL, 0));
+    mat(g, 12, 0x7FFFFu);
+    E(g, osc_a64_r3s(OSC_A64_ADD_REG, 11, 11, 12, OSC_A64_LSL, 0));
+    ubfm(g, 11, 11, 20, 63);                                   /* >> 20 */
+    size_t at_d1 = skip_if(g);
+    skip_land(g, at_sub, OSC_A64_LO);
+    E(g, osc_a64_f2(OSC_A64_FABS, 19, vr, CT_S));
+    mat(g, 12, 0x44000000u);                                   /* 512.0f */
+    E(g, osc_a64_f2(OSC_A64_FMOV_WS, 20, 12, 0));
+    E(g, osc_a64_f3(OSC_A64_FMUL, 19, 19, 20, CT_S));
+    E(g, osc_a64_f2(OSC_A64_FCVTNS_WS, 11, 19, 0));
+    size_t at_d2 = skip_if(g);
+    skip_land(g, at_nan, OSC_A64_HI);
+    E(g, osc_a64_mov16(OSC_A64_MOVZ, 11, 0x7F, 0));
+    size_t at_d3 = skip_if(g);
+    skip_land(g, at_sat, OSC_A64_HS);
+    E(g, osc_a64_mov16(OSC_A64_MOVZ, 11, 0x7E, 0));
+    jump_land(g, at_d1);
+    jump_land(g, at_d2);
+    jump_land(g, at_d3);
+    orr_lsl(g, 9, 11, 10, 7);
+}
+
+/* vreg v of float type t -> V register vr in its compute format */
+static void fload(Cg *g, int vr, OscScalar t, int v) {
+    switch (t) {
+    case OSC_T_F64: fld(g, vr, v, true); return;
+    case OSC_T_F32: fld(g, vr, v, false); return;
+    case OSC_T_F16: ld(g, 9, v); E(g, osc_a64_f2(OSC_A64_FMOV_WH, vr, 9, 0)); return;
+    case OSC_T_BF16: /* bf16 -> f32 is the 16 bits shifted up: exact, signalling NaN kept */
+        ld(g, 9, v); ubfm(g, 9, 9, 48, 47); E(g, osc_a64_f2(OSC_A64_FMOV_WS, vr, 9, 0)); return;
+    case OSC_T_F8E4M3: ld(g, 9, v); e4m3_widen(g, vr); return;
+    default: cg_fail(g, "fload: not a float type"); return;
+    }
+}
+
+/* V register vr (compute format of t) -> vreg v, upper bits of the slot zero */
+static void fstore(Cg *g, int vr, OscScalar t, int v) {
+    switch (t) {
+    case OSC_T_F64: E(g, osc_a64_fmem(OSC_A64_STR_F_UOFF, vr, SP, slot(v), 1)); return;
+    case OSC_T_F32: E(g, osc_a64_f2(OSC_A64_FMOV_SW, 9, vr, 0)); break;
+    case OSC_T_F16: E(g, osc_a64_f2(OSC_A64_FMOV_HW, 9, vr, 0)); break;
+    case OSC_T_BF16: /* BFCVT: RNE, FPCR at the process default (FZ 0, DN 0, AH 0) */
+        E(g, osc_a64_f2(OSC_A64_BFCVT, vr, vr, 0)); E(g, osc_a64_f2(OSC_A64_FMOV_HW, 9, vr, 0)); break;
+    case OSC_T_F8E4M3: e4m3_narrow(g, vr); break;
+    default: cg_fail(g, "fstore: not a float type"); return;
+    }
     st(g, 9, v);
 }
 
-/* forward conditional branch over a short in-line sequence: emit placeholder, land later */
-static size_t skip_if(Cg *g) { size_t at = here(g); put(g, 0); return at; }
-static void skip_land(Cg *g, size_t at, OscA64Cond c) { patch(g, at, osc_a64_bcond(c, 0), here(g)); }
-
 static void gen_fbin(Cg *g, const OscFunc *f, const OscInsn *in) {
-    bool dbl = is_dbl(f, in->a);
+    OscScalar t = vt(f, in->a);
     OscA64Op op;
     switch (in->sub) {
     case OSC_FB_ADD: op = OSC_A64_FADD; break;
@@ -348,14 +449,34 @@ static void gen_fbin(Cg *g, const OscFunc *f, const OscInsn *in) {
     case OSC_FB_MAX: op = OSC_A64_FMAXNM; break;
     default: cg_fail(g, "bad FBIN sub-op"); return;
     }
-    fld(g, 16, in->a, dbl);
-    fld(g, 17, in->b, dbl);
-    E(g, osc_a64_f3(op, 16, 16, 17, dbl));
-    fst(g, 16, in->dst, dbl);
+    fload(g, 16, t, in->a);
+    fload(g, 17, t, in->b);
+    E(g, osc_a64_f3(op, 16, 16, 17, ctype(t)));
+    fstore(g, 16, t, in->dst);
+}
+
+/* FMA: FMADD d, n = a, m = b, a = c (Arm ARM C7.2.120: Rd = Ra + Rn * Rm, one rounding) */
+static void gen_fma(Cg *g, const OscFunc *f, const OscInsn *in) {
+    OscScalar t = vt(f, in->dst);
+    fload(g, 16, t, in->a);
+    fload(g, 17, t, in->b);
+    fload(g, 18, t, in->c);
+    E(g, osc_a64_f4(OSC_A64_FMADD, 16, 16, 17, 18, ctype(t)));
+    fstore(g, 16, t, in->dst);
 }
 
 static void gen_fun(Cg *g, const OscFunc *f, const OscInsn *in) {
-    bool dbl = is_dbl(f, in->a);
+    OscScalar t = vt(f, in->a);
+    if (osc_scalar_is_storage_float(t) && in->sub != OSC_FU_SQRT) {
+        /* NEG / ABS on a storage format are sign-bit operations on the pattern (no rounding, NaN kept) */
+        uint64_t sgn = 1ULL << (osc_scalar_width(t) - 1);
+        ld(g, 9, in->a);
+        if (in->sub == OSC_FU_NEG) { mat(g, 10, sgn); E(g, osc_a64_r3s(OSC_A64_EOR_REG, 9, 9, 10, OSC_A64_LSL, 0)); }
+        else if (in->sub == OSC_FU_ABS) { mat(g, 10, sgn - 1); E(g, osc_a64_r3s(OSC_A64_AND_REG, 9, 9, 10, OSC_A64_LSL, 0)); }
+        else { cg_fail(g, "bad FUN sub-op"); return; }
+        st(g, 9, in->dst);
+        return;
+    }
     OscA64Op op;
     switch (in->sub) {
     case OSC_FU_NEG: op = OSC_A64_FNEG; break;
@@ -363,14 +484,15 @@ static void gen_fun(Cg *g, const OscFunc *f, const OscInsn *in) {
     case OSC_FU_SQRT: op = OSC_A64_FSQRT; break;
     default: cg_fail(g, "bad FUN sub-op"); return;
     }
-    fld(g, 16, in->a, dbl);
-    E(g, osc_a64_f2(op, 16, 16, dbl));
-    fst(g, 16, in->dst, dbl);
+    fload(g, 16, t, in->a);
+    E(g, osc_a64_f2(op, 16, 16, ctype(t)));
+    fstore(g, 16, t, in->dst);
 }
 
-/* FCMP then CSET: LT -> MI, LE -> LS, GT, GE, EQ, NE read false on an unordered compare (NZCV 0011) */
+/* FCMP then CSET: LT -> MI, LE -> LS, GT, GE, EQ, NE read false on an unordered compare (NZCV 0011).
+ * bf16 / f8e4m3 compare their exact f32 widenings, which orders them exactly as the narrow values. */
 static void gen_fcmp(Cg *g, const OscFunc *f, const OscInsn *in) {
-    bool dbl = is_dbl(f, in->a);
+    OscScalar t = vt(f, in->a);
     OscA64Cond c;
     switch (in->sub) {
     case OSC_C_EQ: c = OSC_A64_EQ; break;
@@ -381,37 +503,62 @@ static void gen_fcmp(Cg *g, const OscFunc *f, const OscInsn *in) {
     case OSC_C_GE: c = OSC_A64_GE; break;
     default: cg_fail(g, "bad FCMP sub-op"); return;
     }
-    fld(g, 16, in->a, dbl);
-    fld(g, 17, in->b, dbl);
-    E(g, osc_a64_fcmp(16, 17, dbl));
+    fload(g, 16, t, in->a);
+    fload(g, 17, t, in->b);
+    E(g, osc_a64_fcmp(16, 17, ctype(t)));
     E(g, osc_a64_csinc(11, ZR, ZR, (OscA64Cond)(c ^ 1))); /* cset x11, c */
     st(g, 11, in->dst);
 }
 
+/* any float -> any other float, one rounding. The source is first in its compute
+ * format (H, S or D; bf16 / f8e4m3 already widened exactly to S). A narrow storage
+ * destination is reached from S: from D through FCVTXN (round to odd, which makes the
+ * following RNE narrowing a single correct rounding, Arm ARM C7.2.102), from H through
+ * the exact FCVT S, H. */
 static void gen_fcvt(Cg *g, const OscFunc *f, const OscInsn *in) {
-    bool to_dbl = is_dbl(f, in->dst);
-    fld(g, 16, in->a, !to_dbl);
-    E(g, osc_a64_f2(to_dbl ? OSC_A64_FCVT_DS : OSC_A64_FCVT_SD, 16, 16, 0));
-    fst(g, 16, in->dst, to_dbl);
+    OscScalar from = vt(f, in->a), to = vt(f, in->dst);
+    int cf = ctype(from);
+    fload(g, 16, from, in->a);
+    switch (to) {
+    case OSC_T_F64: E(g, osc_a64_f2(cf == CT_H ? OSC_A64_FCVT_DH : OSC_A64_FCVT_DS, 16, 16, 0)); break;
+    case OSC_T_F32:
+        if (cf == CT_D) E(g, osc_a64_f2(OSC_A64_FCVT_SD, 16, 16, 0));
+        else if (cf == CT_H) E(g, osc_a64_f2(OSC_A64_FCVT_SH, 16, 16, 0));
+        break; /* from bf16 / f8e4m3: the widening was the conversion */
+    case OSC_T_F16: E(g, osc_a64_f2(cf == CT_D ? OSC_A64_FCVT_HD : OSC_A64_FCVT_HS, 16, 16, 0)); break;
+    case OSC_T_BF16: case OSC_T_F8E4M3:
+        if (cf == CT_D) E(g, osc_a64_f2(OSC_A64_FCVTXN, 16, 16, 0));
+        else if (cf == CT_H) E(g, osc_a64_f2(OSC_A64_FCVT_SH, 16, 16, 0));
+        break;
+    default: cg_fail(g, "bad FCVT destination"); return;
+    }
+    fstore(g, 16, to, in->dst);
 }
 
-/* the integer slot is already canonical (sign- or zero-extended to 64 bits), so the X-form convert is exact */
+/* the integer slot is already canonical (sign- or zero-extended to 64 bits), so the X-form convert is exact
+ * up to its one rounding. bf16 / f8e4m3 take at most 32-bit integers (validator): SCVTF D is exact for them,
+ * then FCVTXN + the RNE narrowing round once. */
 static void gen_itof(Cg *g, const OscFunc *f, const OscInsn *in) {
-    bool dbl = is_dbl(f, in->dst);
+    OscScalar to = vt(f, in->dst);
+    OscA64Op op = in->sub == OSC_FI_SIGNED ? OSC_A64_SCVTF_X : OSC_A64_UCVTF_X;
     ld(g, 9, in->a);
-    E(g, osc_a64_f2(in->sub == OSC_FI_SIGNED ? OSC_A64_SCVTF_X : OSC_A64_UCVTF_X, 16, 9, dbl));
-    fst(g, 16, in->dst, dbl);
+    if (osc_scalar_is_storage_float(to)) {
+        E(g, osc_a64_f2(op, 16, 9, CT_D));
+        E(g, osc_a64_f2(OSC_A64_FCVTXN, 16, 16, 0));
+    } else {
+        E(g, osc_a64_f2(op, 16, 9, ctype(to)));
+    }
+    fstore(g, 16, to, in->dst);
 }
 
 /* FCVTZS / FCVTZU to X saturate at 64 bits and give 0 for NaN; a narrower
  * destination is clamped to its own range afterwards (compare + skip + move). */
 static void gen_ftoi(Cg *g, const OscFunc *f, const OscInsn *in) {
-    bool dbl = is_dbl(f, in->a);
-    OscScalar to = f->vtype[in->dst].s;
+    OscScalar from = vt(f, in->a), to = vt(f, in->dst);
     unsigned wt = osc_scalar_width(to);
     bool s = osc_scalar_signed(to);
-    fld(g, 16, in->a, dbl);
-    E(g, osc_a64_f2(s ? OSC_A64_FCVTZS_X : OSC_A64_FCVTZU_X, 9, 16, dbl));
+    fload(g, 16, from, in->a);
+    E(g, osc_a64_f2(s ? OSC_A64_FCVTZS_X : OSC_A64_FCVTZU_X, 9, 16, ctype(from)));
     if (wt < 64) {
         if (s) {
             mat(g, 10, (uint64_t)((1LL << (wt - 1)) - 1));
@@ -435,14 +582,28 @@ static void gen_ftoi(Cg *g, const OscFunc *f, const OscInsn *in) {
     st(g, 9, in->dst);
 }
 
-/* bit cast: the cell already holds the pattern; only the 32-bit forms need the
- * destination's canonical upper half (sign-extended for i32, zero for u32 / f32) */
+/* bit cast: the cell already holds the pattern; only the destination's canonical
+ * upper bits change (sign-extended for a narrow signed integer, zero otherwise) */
 static void gen_fbits(Cg *g, const OscFunc *f, const OscInsn *in) {
-    OscScalar to = f->vtype[in->dst].s;
+    OscScalar to = vt(f, in->dst);
+    unsigned w = osc_scalar_width(to);
     ld(g, 9, in->a);
-    if (to == OSC_T_I32) E(g, osc_a64_bfm(OSC_A64_SBFM, 9, 9, 0, 31));
-    else if (osc_scalar_width(to) == 32) zext(g, 9, 32);
+    if (osc_scalar_signed(to) && w < 64) E(g, osc_a64_bfm(OSC_A64_SBFM, 9, 9, 0, (int)w - 1));
+    else zext(g, 9, w);
     st(g, 9, in->dst);
+}
+
+/* strict: trap FLOAT unless |a| < inf, which reads false for inf and for NaN (unordered: N = 0) */
+static void gen_fchk(Cg *g, const OscFunc *f, const OscInsn *in) {
+    OscScalar t = vt(f, in->a);
+    int ct = ctype(t);
+    fload(g, 16, t, in->a);
+    E(g, osc_a64_f2(OSC_A64_FABS, 16, 16, ct));
+    if (ct == CT_D) { mat(g, 9, 0x7FF0000000000000ull); E(g, osc_a64_f2(OSC_A64_FMOV_XD, 17, 9, 0)); }
+    else if (ct == CT_H) { mat(g, 9, 0x7C00u); E(g, osc_a64_f2(OSC_A64_FMOV_WH, 17, 9, 0)); }
+    else { mat(g, 9, 0x7F800000u); E(g, osc_a64_f2(OSC_A64_FMOV_WS, 17, 9, 0)); }
+    E(g, osc_a64_fcmp(16, 17, ct));
+    trap_if(g, OSC_A64_PL, OSC_TRAP_FLOAT);
 }
 
 static void epilogue(Cg *g) {
@@ -497,6 +658,8 @@ static void gen_func(Cg *g, const OscUnit *u, int fi) {
             case OSC_I_ITOF: gen_itof(g, f, in); break;
             case OSC_I_FTOI: gen_ftoi(g, f, in); break;
             case OSC_I_FBITS: gen_fbits(g, f, in); break;
+            case OSC_I_FMA: gen_fma(g, f, in); break;
+            case OSC_I_FCHK: gen_fchk(g, f, in); break;
             case OSC_I_ALLOC:
                 load_rt(g, 0);
                 mat(g, 1, T[in->dst].len);

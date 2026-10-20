@@ -7,6 +7,7 @@
  * the differential test compares two different derivations of section 5.
  */
 #include "osc_interp.h"
+#include "osc_fp.h"
 
 #include <math.h>
 #include <string.h>
@@ -245,6 +246,95 @@ static uint64_t do_ftoi(bool dbl, uint64_t a, OscScalar to) {
     return v;
 }
 
+/* ---- OSC-4 float slice: f16, bf16, f8e4m3 (docs/osc/OSC-4-FLOATS.md) -------
+ * f16 is computed in half precision with one rounding (osc_fp.c, exact integer
+ * rounding; NaN propagation spelled out). bf16 and f8e4m3 are storage formats:
+ * widen exactly to f32 (osc_fp_widen32), run the Slice A f32 operation above,
+ * round once back (osc_fp_from_f64). NEG and ABS are sign-bit operations in
+ * every format. Every routine works on bit patterns; none calls C's narrow
+ * conversions. */
+static bool wide(OscScalar s) { return s == OSC_T_F32 || s == OSC_T_F64; }
+static uint64_t fsignbit(OscScalar s) { return 1ULL << (osc_scalar_width(s) - 1); }
+static uint64_t narrow_f32(OscScalar to, uint64_t f32bits) {
+    volatile float x = f32_of(f32bits);
+    volatile double d = (double)x; /* exact, NaN as FCVT D, S */
+    return osc_fp_from_f64(to, bits_f64(d));
+}
+static double fval(OscScalar s, uint64_t a) { return f64_of(osc_fp_to_f64(s, a)); }
+
+/* FMINNM / FMAXNM on f16, the rule of do_fminmax above with the f16 quiet bit */
+static uint64_t f16_minmax(bool is_max, uint64_t a, uint64_t b) {
+    bool an = osc_fp_is_nan(OSC_T_F16, a), bn = osc_fp_is_nan(OSC_T_F16, b);
+    if (an || bn) {
+        if (an && !(a & 0x200)) return a | 0x200;
+        if (bn && !(b & 0x200)) return b | 0x200;
+        if (an && bn) return a;
+        return an ? b : a;
+    }
+    double x = fval(OSC_T_F16, a), y = fval(OSC_T_F16, b);
+    if (x == y) { bool neg_a = (a >> 15) & 1; return is_max ? (neg_a ? b : a) : (neg_a ? a : b); }
+    return is_max ? (x < y ? b : a) : (x < y ? a : b);
+}
+
+static uint64_t do_fbin_any(Ctx *c, unsigned sub, OscScalar t, uint64_t a, uint64_t b) {
+    if (wide(t)) return do_fbin(c, sub, t == OSC_T_F64, a, b);
+    if (t == OSC_T_F16) {
+        if (sub == OSC_FB_MIN || sub == OSC_FB_MAX) return f16_minmax(sub == OSC_FB_MAX, a, b);
+        if (sub < OSC_FB_ADD || sub > OSC_FB_DIV) { trap(c, OSC_TRAP_RUNTIME); return 0; }
+        return osc_fp_f16_bin(sub, a, b);
+    }
+    return narrow_f32(t, do_fbin(c, sub, false, osc_fp_widen32(t, a), osc_fp_widen32(t, b)));
+}
+
+static uint64_t do_fun_any(Ctx *c, unsigned sub, OscScalar t, uint64_t a) {
+    if (wide(t)) return do_fun(c, sub, t == OSC_T_F64, a);
+    switch (sub) {
+    case OSC_FU_NEG: return a ^ fsignbit(t);
+    case OSC_FU_ABS: return a & ~fsignbit(t);
+    case OSC_FU_SQRT:
+        if (t == OSC_T_F16) return osc_fp_f16_sqrt(a);
+        return narrow_f32(t, do_fun(c, OSC_FU_SQRT, false, osc_fp_widen32(t, a)));
+    default: trap(c, OSC_TRAP_RUNTIME); return 0;
+    }
+}
+
+static uint64_t do_fcmp_any(unsigned cc, OscScalar t, uint64_t a, uint64_t b) {
+    if (wide(t)) return do_fcmp(cc, t == OSC_T_F64, a, b);
+    return do_fcmp(cc, true, osc_fp_to_f64(t, a), osc_fp_to_f64(t, b)); /* exact widening; NaN unordered */
+}
+
+/* one rounding from any float format to any other (FCVT; f64 -> narrow is FCVTXN + RNE on the chip) */
+static uint64_t do_fcvt_any(OscScalar to, OscScalar from, uint64_t a) {
+    if (wide(to) && wide(from)) return do_fcvt(to == OSC_T_F64, a);
+    if (to == OSC_T_F32 && osc_scalar_is_storage_float(from)) return osc_fp_widen32(from, a); /* exact */
+    uint64_t d = osc_fp_to_f64(from, a);
+    if (to == OSC_T_F64) return d;
+    if (to == OSC_T_F32) return do_fcvt(false, d);
+    return osc_fp_from_f64(to, d);
+}
+
+static uint64_t do_itof_any(unsigned sub, OscScalar to, uint64_t a) {
+    if (wide(to)) return do_itof(sub, to == OSC_T_F64, a);
+    bool neg = sub == OSC_FI_SIGNED && (int64_t)a < 0;
+    unsigned __int128 mag = neg ? (unsigned __int128)(0 - a) : a; /* 0 - a: |INT64_MIN| without overflow */
+    return osc_fp_round(to, neg, mag, 0);
+}
+
+static uint64_t do_ftoi_any(OscScalar from, uint64_t a, OscScalar to) {
+    if (wide(from)) return do_ftoi(from == OSC_T_F64, a, to);
+    return do_ftoi(true, osc_fp_to_f64(from, a), to); /* exact widening; NaN stays NaN -> 0 */
+}
+
+/* a * b + c with one rounding (FMADD); bf16 / f8e4m3: f32 FMADD of the widened values, then narrow */
+static uint64_t do_fma_any(OscScalar t, uint64_t a, uint64_t b, uint64_t c) {
+    if (t == OSC_T_F64) { volatile double x = f64_of(a), y = f64_of(b), z = f64_of(c), r = fma(x, y, z); return bits_f64(r); }
+    if (t == OSC_T_F16) return osc_fp_f16_fma(a, b, c);
+    uint64_t wa = t == OSC_T_F32 ? a : osc_fp_widen32(t, a), wb = t == OSC_T_F32 ? b : osc_fp_widen32(t, b),
+             wc = t == OSC_T_F32 ? c : osc_fp_widen32(t, c);
+    volatile float x = f32_of(wa), y = f32_of(wb), z = f32_of(wc), r = fmaf(x, y, z);
+    return t == OSC_T_F32 ? bits_f32(r) : narrow_f32(t, bits_f32(r));
+}
+
 /* element pointer with the bounds rule of section 5 */
 static uint64_t *elem(Ctx *c, const OscType *rt_, uint64_t base, OscScalar ti, uint64_t idx) {
     if (osc_scalar_signed(ti) && (int64_t)idx < 0) trap(c, OSC_TRAP_BOUNDS);
@@ -306,12 +396,16 @@ static uint64_t run_func(Ctx *c, int fi, const uint64_t *args) {
             case OSC_I_CMP: v[in->dst] = do_cmp(in->sub, T[in->a].s, v[in->a], v[in->b]); break;
             case OSC_I_CAST: v[in->dst] = do_cast(c, T[in->dst].s, T[in->a].s, v[in->a]); break;
             /* OSC-4 Slice A */
-            case OSC_I_FBIN: v[in->dst] = do_fbin(c, in->sub, T[in->a].s == OSC_T_F64, v[in->a], v[in->b]); break;
-            case OSC_I_FUN: v[in->dst] = do_fun(c, in->sub, T[in->a].s == OSC_T_F64, v[in->a]); break;
-            case OSC_I_FCMP: v[in->dst] = do_fcmp(in->sub, T[in->a].s == OSC_T_F64, v[in->a], v[in->b]); break;
-            case OSC_I_FCVT: v[in->dst] = do_fcvt(T[in->dst].s == OSC_T_F64, v[in->a]); break;
-            case OSC_I_ITOF: v[in->dst] = do_itof(in->sub, T[in->dst].s == OSC_T_F64, v[in->a]); break;
-            case OSC_I_FTOI: v[in->dst] = do_ftoi(T[in->a].s == OSC_T_F64, v[in->a], T[in->dst].s); break;
+            case OSC_I_FBIN: v[in->dst] = do_fbin_any(c, in->sub, T[in->a].s, v[in->a], v[in->b]); break;
+            case OSC_I_FUN: v[in->dst] = do_fun_any(c, in->sub, T[in->a].s, v[in->a]); break;
+            case OSC_I_FCMP: v[in->dst] = do_fcmp_any(in->sub, T[in->a].s, v[in->a], v[in->b]); break;
+            case OSC_I_FCVT: v[in->dst] = do_fcvt_any(T[in->dst].s, T[in->a].s, v[in->a]); break;
+            case OSC_I_ITOF: v[in->dst] = do_itof_any(in->sub, T[in->dst].s, v[in->a]); break;
+            case OSC_I_FTOI: v[in->dst] = do_ftoi_any(T[in->a].s, v[in->a], T[in->dst].s); break;
+            case OSC_I_FMA: v[in->dst] = do_fma_any(T[in->dst].s, v[in->a], v[in->b], v[in->c]); break;
+            case OSC_I_FCHK:
+                if (osc_fp_is_nan(T[in->a].s, v[in->a]) || osc_fp_is_inf(T[in->a].s, v[in->a])) trap(c, OSC_TRAP_FLOAT);
+                break;
             case OSC_I_FBITS: v[in->dst] = canon(T[in->dst].s, v[in->a]); break;
             case OSC_I_ALLOC: v[in->dst] = osc_rt_alloc(c->rt, T[in->dst].len, v[in->a]); break;
             case OSC_I_RELEASE: osc_rt_release(c->rt, v[in->a], T[in->a].len); break;

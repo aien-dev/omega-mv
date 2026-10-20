@@ -54,7 +54,14 @@ typedef enum {
     /* appended for OSC-4 Slice A (docs/osc/OSC-4-DESIGN.md section 1): IEEE-754 binary32 /
      * binary64 held as bit patterns; f32 occupies the low 32 bits, upper 32 zero */
     OSC_T_F32,
-    OSC_T_F64
+    OSC_T_F64,
+    /* appended for the OSC-4 float slice (docs/osc/OSC-4-FLOATS.md): IEEE binary16, bfloat16 and OCP
+     * FP8 E4M3 (bias 7, no infinity, NaN = S.1111.111, max 448), held as bit patterns in the low 16 / 16 / 8
+     * bits with the rest zero. f16 is computed in half precision; bf16 and f8e4m3 are storage formats:
+     * every operation widens exactly to f32, does the f32 operation and rounds once back (RNE). */
+    OSC_T_F16,
+    OSC_T_BF16,
+    OSC_T_F8E4M3
 } OscScalar;
 
 typedef enum {
@@ -137,7 +144,12 @@ typedef enum {
     OSC_I_ITOF,      /* dst(float) = a ; a an integer; sub 1 signed, 2 unsigned (RNE)  */
     OSC_I_FTOI,      /* dst(int) = a ; a a float; sub 1 signed, 2 unsigned: truncate   */
                      /*   toward zero, saturate to dst width, NaN -> 0 (FCVTZS/FCVTZU) */
-    OSC_I_FBITS      /* dst = same bits as a ; float <-> integer of the same width     */
+    OSC_I_FBITS,     /* dst = same bits as a ; float <-> integer of the same width     */
+    /* appended for the OSC-4 float slice (docs/osc/OSC-4-FLOATS.md) */
+    OSC_I_FMA,       /* dst = a * b + c ; one float type; one rounding (FMADD) for f16 / */
+                     /*   f32 / f64; bf16 / f8e4m3: f32 FMADD of the widened values,   */
+                     /*   then one RNE narrowing. Emitted only for a source fma().     */
+    OSC_I_FCHK       /* `strict` functions: a (float) NaN or +-inf -> TRAP_FLOAT        */
 } OscOp;
 
 /* OSC-4 float binary / unary sub-operations */
@@ -191,12 +203,14 @@ typedef enum {
     /* appended for OSC-3 item 2 versioned handles */
     OSC_TRAP_STALE = 12,     /* a handle whose generation no longer matches its slot */
     OSC_TRAP_POOL_FULL = 13, /* pool alloc with every slot live                       */
-    OSC_TRAP_RETIRED = 14    /* pool alloc with no free slot and at least one slot   */
+    OSC_TRAP_RETIRED = 14,   /* pool alloc with no free slot and at least one slot   */
                              /*   retired at the maximum generation (never wrapped)  */
+    /* appended for the OSC-4 float slice: only `strict` functions trap on floats */
+    OSC_TRAP_FLOAT = 15      /* a float result in a `strict` function was NaN or inf */
 } OscTrap;
 
 /* Highest trap code; arrays indexed by trap code have OSC_TRAP_MAX + 1 entries. */
-#define OSC_TRAP_MAX OSC_TRAP_RETIRED
+#define OSC_TRAP_MAX OSC_TRAP_FLOAT
 #define OSC_POOL_SLOTS 16    /* OSC-3 item 2: slots per pool */
 
 typedef struct {
@@ -277,7 +291,7 @@ int osc_ir_digest(const OscUnit *u, uint8_t out[32]);
  * if the magic is wrong or the version is unknown (never reinterpreted).
  * Version 5 = the unit uses external byte slices; units without slices keep
  * versions 1..4 and their bytes. */
-#define OSC_IR_VERSION_MAX 6 /* 6: OSC-4 Slice A floats */
+#define OSC_IR_VERSION_MAX 6 /* 6: OSC-4 floats (Slice A f32/f64 and the float slice f16/bf16/f8e4m3, FMA, FCHK) */
 int osc_ir_encoding_version(const uint8_t *buf, size_t len);
 
 /* Strict decoder (omega#444; format and refusal classes: spec/one-layer-format.md).
@@ -328,7 +342,9 @@ int osc_ir_slice_args_ok(const OscFunc *f, const uint64_t *args, unsigned nargs)
 unsigned osc_scalar_width(OscScalar s);
 bool osc_scalar_signed(OscScalar s);
 bool osc_scalar_is_int(OscScalar s);
-bool osc_scalar_is_float(OscScalar s); /* OSC-4: F32 or F64 */
+bool osc_scalar_is_float(OscScalar s); /* OSC-4: F32, F64, F16, BF16 or F8E4M3 */
+/* OSC-4 float slice: BF16 or F8E4M3, the storage formats computed in f32 */
+bool osc_scalar_is_storage_float(OscScalar s);
 const char *osc_scalar_name(OscScalar s);
 
 #endif /* OSC_IR_H */

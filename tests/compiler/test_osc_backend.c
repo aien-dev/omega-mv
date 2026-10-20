@@ -1075,7 +1075,7 @@ static void test_fp_encoder(void) {
     enc_refuse(osc_a64_f2(OSC_A64_FMOV_DX, SP, 1, 0), "fmov sp,d1");
     enc_refuse(osc_a64_f2(OSC_A64_FMOV_SW, 0, 32, 0), "fmov w0,v32");
     enc_refuse(osc_a64_f2(OSC_A64_FCVT_SD, 0, 1, D), "fcvt s0,d1 with type flag");
-    enc_refuse(osc_a64_f2(OSC_A64_FSQRT, 0, 1, 3), "fsqrt type 3");
+    enc_refuse(osc_a64_f2(OSC_A64_FSQRT, 0, 1, 2), "fsqrt type 2"); /* type 3 (H) is valid since the float slice */
     enc_refuse(osc_a64_f2(OSC_A64_SCVTF_X, 0, SP, D), "scvtf d0,sp");
     enc_refuse(osc_a64_f2(OSC_A64_FCVTZS_X, SP, 1, D), "fcvtzs sp,d1");
     { OscA64Insn i = osc_a64_fcmp(0, 1, D); i.rd = 1; enc_refuse(i, "fcmp with rd set"); }
@@ -1094,8 +1094,10 @@ static void test_fp_encoder(void) {
     enc_refuse(osc_a64_fmem_reg(OSC_A64_LDR_F_REG, 0, 1, SP, D), "ldr d0 reg index=SP");
     enc_refuse(osc_a64_fmem_reg(OSC_A64_LDR_F_REG, 0, 1, 2, 2), "ldr reg type 2");
     { OscA64Insn i = osc_a64_fmem_reg(OSC_A64_LDR_F_REG, 0, 1, 2, D); i.imm = 8; enc_refuse(i, "ldr reg with imm set"); }
-    /* no fused multiply-add is encodable (design 1.3 item 2): decoder refuses FMADD/FMSUB/FNMADD/FNMSUB words */
-    check(osc_a64_decode(0x1F420020u, NULL) != 0, "decoder accepted fmadd d0,d1,d2,d0");
+    /* only FMADD is encodable (float slice: fma() in the source); FMSUB/FNMADD/FNMSUB words are refused.
+     * Slice A refused 0x1F420020 (fmadd d0,d1,d2,d0) here; the float slice makes it the FMADD golden. */
+    check(osc_a64_decode(0x1F420020u, NULL) == 0, "decoder refused fmadd d0,d1,d2,d0");
+    check(osc_a64_decode(0x1F628020u, NULL) != 0, "decoder accepted fnmsub d0,d1,d2,d0");
     check(osc_a64_decode(0x1F428020u, NULL) != 0, "decoder accepted fmsub d0,d1,d2,d0");
     check(osc_a64_decode(0x1F620020u, NULL) != 0, "decoder accepted fnmadd d0,d1,d2,d0");
     check(osc_a64_decode(0x1E625820u, NULL) != 0, "decoder accepted fmin d0,d1,d2 (non-NM)");
@@ -1103,6 +1105,73 @@ static void test_fp_encoder(void) {
     check(osc_a64_decode(0x1E612010u, NULL) != 0, "decoder accepted fcmpe d0,d1 (E bit)");
     check(osc_a64_decode(0x1E602008u, NULL) != 0, "decoder accepted fcmp d0,#0.0");
     printf("fp encoder: goldens=%lu header_samples=%u mutant_words=%lu\n", n_fp_goldens, nsamples, n_fp_mutants);
+}
+
+
+/* ---- (d3) OSC-4 float slice: f16 / bf16 / fp8 support forms -----------------
+ * Every word below was assembled by GNU as 2.42 (-march=armv8.2-a+fp16+bf16) on
+ * the Spark and disassembled with objdump; tests/compiler/fp_slice_golden.sh
+ * re-assembles tests/compiler/fp_slice_golden.s and checks each word is in this
+ * table (GNU as is the reference oracle only, never an input to the compiler).
+ * Manual sections (Arm ARM DDI0487 M.d): C7.2.52.. typed ops, Half-precision
+ * variant ftype 11 (FEAT_FP16); C7.2.73 FCVT; C7.2.14 BFCVT (FEAT_BF16);
+ * C7.2.102 FCVTXN (scalar, round to odd); C7.2.157 FMOV (general) H forms;
+ * C7.2.91 FCVTNS (scalar); C7.2.120 FMADD. */
+static unsigned long n_fp_slice_goldens;
+static void fps_expect(OscA64Insn i, uint32_t word, const char *what) {
+    enc_expect(i, word, what);
+    fp_mutants(i, word);
+    n_fp_slice_goldens++;
+}
+static void test_fp_slice_encoder(void) {
+    const int ZR = OSC_A64_XZR, S = 0, D = 1, H = 3;
+    fps_expect(osc_a64_f3(OSC_A64_FADD, 0, 1, 2, H), 0x1EE22820u, "fadd h0,h1,h2");
+    fps_expect(osc_a64_f3(OSC_A64_FSUB, 0, 1, 2, H), 0x1EE23820u, "fsub h0,h1,h2");
+    fps_expect(osc_a64_f3(OSC_A64_FMUL, 0, 1, 2, H), 0x1EE20820u, "fmul h0,h1,h2");
+    fps_expect(osc_a64_f3(OSC_A64_FDIV, 0, 1, 2, H), 0x1EE21820u, "fdiv h0,h1,h2");
+    fps_expect(osc_a64_f3(OSC_A64_FMAXNM, 0, 1, 2, H), 0x1EE26820u, "fmaxnm h0,h1,h2");
+    fps_expect(osc_a64_f3(OSC_A64_FMINNM, 0, 1, 2, H), 0x1EE27820u, "fminnm h0,h1,h2");
+    fps_expect(osc_a64_f2(OSC_A64_FSQRT, 0, 1, H), 0x1EE1C020u, "fsqrt h0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_FNEG, 0, 1, H), 0x1EE14020u, "fneg h0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_FABS, 0, 1, H), 0x1EE0C020u, "fabs h0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_FMOV_RR, 0, 1, H), 0x1EE04020u, "fmov h0,h1");
+    fps_expect(osc_a64_fcmp(0, 1, H), 0x1EE12000u, "fcmp h0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_SCVTF_X, 0, 1, H), 0x9EE20020u, "scvtf h0,x1");
+    fps_expect(osc_a64_f2(OSC_A64_UCVTF_X, 0, 1, H), 0x9EE30020u, "ucvtf h0,x1");
+    fps_expect(osc_a64_f2(OSC_A64_FCVTZS_X, 0, 1, H), 0x9EF80020u, "fcvtzs x0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_FCVTZU_X, 0, 1, H), 0x9EF90020u, "fcvtzu x0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_FMOV_WH, 0, 1, 0), 0x1EE70020u, "fmov h0,w1");
+    fps_expect(osc_a64_f2(OSC_A64_FMOV_HW, 0, 1, 0), 0x1EE60020u, "fmov w0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_FCVT_HS, 0, 1, 0), 0x1E23C020u, "fcvt h0,s1");
+    fps_expect(osc_a64_f2(OSC_A64_FCVT_HD, 0, 1, 0), 0x1E63C020u, "fcvt h0,d1");
+    fps_expect(osc_a64_f2(OSC_A64_FCVT_SH, 0, 1, 0), 0x1EE24020u, "fcvt s0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_FCVT_DH, 0, 1, 0), 0x1EE2C020u, "fcvt d0,h1");
+    fps_expect(osc_a64_f2(OSC_A64_BFCVT, 0, 1, 0), 0x1E634020u, "bfcvt h0,s1");
+    fps_expect(osc_a64_f2(OSC_A64_BFCVT, 31, 30, 0), 0x1E6343DFu, "bfcvt h31,s30");
+    fps_expect(osc_a64_f2(OSC_A64_FCVTXN, 0, 1, 0), 0x7E616820u, "fcvtxn s0,d1");
+    fps_expect(osc_a64_f2(OSC_A64_FCVTXN, 31, 30, 0), 0x7E616BDFu, "fcvtxn s31,d30");
+    fps_expect(osc_a64_f2(OSC_A64_FCVTNS_WS, 0, 1, 0), 0x1E200020u, "fcvtns w0,s1");
+    fps_expect(osc_a64_f4(OSC_A64_FMADD, 0, 1, 2, 3, S), 0x1F020C20u, "fmadd s0,s1,s2,s3");
+    fps_expect(osc_a64_f4(OSC_A64_FMADD, 0, 1, 2, 3, D), 0x1F420C20u, "fmadd d0,d1,d2,d3");
+    fps_expect(osc_a64_f4(OSC_A64_FMADD, 0, 1, 2, 3, H), 0x1FC20C20u, "fmadd h0,h1,h2,h3");
+    fps_expect(osc_a64_f4(OSC_A64_FMADD, 31, 30, 29, 28, D), 0x1F5D73DFu, "fmadd d31,d30,d29,d28");
+    check(n_fp_slice_goldens == 30, "expected 30 float-slice goldens, ran %lu", n_fp_slice_goldens);
+    /* refusals: fixed forms take no type, type 2 is unallocated, kinds are checked */
+    enc_refuse(osc_a64_f2(OSC_A64_BFCVT, 0, 1, 1), "bfcvt with type flag");
+    enc_refuse(osc_a64_f2(OSC_A64_FCVTXN, 0, 1, 3), "fcvtxn with type flag");
+    enc_refuse(osc_a64_f2(OSC_A64_FMOV_WH, 0, OSC_A64_SP, 0), "fmov h0,sp");
+    enc_refuse(osc_a64_f2(OSC_A64_FMOV_HW, OSC_A64_SP, 1, 0), "fmov sp,h1");
+    enc_refuse(osc_a64_f2(OSC_A64_FCVTNS_WS, 0, ZR, 0), "fcvtns w0,xzr-as-V");
+    enc_refuse(osc_a64_f4(OSC_A64_FMADD, 0, 1, 2, 3, 2), "fmadd type 2");
+    enc_refuse(osc_a64_f4(OSC_A64_FMADD, 0, 1, 2, 32, D), "fmadd va=32");
+    enc_refuse(osc_a64_f4(OSC_A64_FMADD, 0, 1, 2, ZR, D), "fmadd va=XZR");
+    enc_refuse(osc_a64_f3(OSC_A64_FADD, 0, 1, 2, 2), "fadd type 2");
+    { OscA64Insn i = osc_a64_f4(OSC_A64_FMADD, 0, 1, 2, 3, D); i.imm = 1; enc_refuse(i, "fmadd with imm set"); }
+    /* ftype 10 words of typed ops never decode (mirror of the type-2 refusal) */
+    check(osc_a64_decode(0x1EA22820u, NULL) != 0, "decoder accepted fadd with ftype 10");
+    check(osc_a64_decode(0x1F820C20u, NULL) != 0, "decoder accepted fmadd with ftype 10");
+    check(osc_a64_decode(0x1F028C20u, NULL) != 0, "decoder accepted fmsub s0,s1,s2,s3");
+    printf("fp slice encoder: goldens=%lu (f16/bf16/fp8 forms + FMADD)\n", n_fp_slice_goldens);
 }
 
 static void test_validator(void) {
@@ -1304,6 +1373,7 @@ int main(void) {
 
     test_encoder();
     test_fp_encoder();
+    test_fp_slice_encoder();
     test_validator();
     sm_state = 0x05C1B4C4ULL;
     gen_ops();
