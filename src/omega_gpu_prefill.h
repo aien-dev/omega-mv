@@ -49,9 +49,14 @@ typedef int (*OmegaPfGen)(const OmegaPfKey *key, void *prog);    /* builds the B
 typedef struct { uint64_t code_va; uint32_t gpr_declared, gpr_peak; } OmegaPfKernel;
 /* lock held, device open: the resident kernel for key (generated, encoded, patched and uploaded on first use) */
 int omega_gpu_pf_kernel_locked(const OmegaPfKey *key, OmegaPfGen gen, OmegaPfKernel *out);
-/* lock held: one launch, chip time added to the module stats (and to *ns when given) */
+/* lock held: one launch, chip time added to the module stats (and to *ns when given). omega_gpu_pf_launch_locked spins on the
+ * marker for PF_SPIN_US (prefill: back-to-back launches). _spin takes the window: 0 = the process-wide setting, by default the
+ * platform sleep-poll, which a launch that waits on the host between launches should use (L159: a spinning thread is descheduled
+ * under box load and its wait is counted as chip time). */
 int omega_gpu_pf_launch_locked(const OmegaPfKernel *k, uint32_t threads, uint32_t grid_x, uint32_t grid_y, uint32_t shared_bytes,
                                const uint32_t *args, uint32_t n_args, uint64_t *ns);
+int omega_gpu_pf_launch_locked_spin(const OmegaPfKernel *k, uint32_t threads, uint32_t grid_x, uint32_t grid_y, uint32_t shared_bytes,
+                                    const uint32_t *args, uint32_t n_args, uint32_t spin_us, uint64_t *ns);
 int omega_gpu_pf_open_locked(void); /* opens the device, registers the hook: OMEGA_GPU_PF_OK or CHIP_FAIL */
 /* lock held: the same launch appended to a command list (omega_gpu_cmdlist.h) instead of submitted (sc #642: a whole Qwen3.8
  * prefill chunk is one list). Prefill kernels are never evicted, so a recorded launch's code stays valid until the submit. */

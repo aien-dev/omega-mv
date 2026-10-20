@@ -8,8 +8,8 @@
  * own device ownership (cut B); nothing in the session may depend on anything this file does beyond the
  * contract in src/omega_gpu_platform.h.
  *
- * What it provides: TIME, WAIT, LOCK, DMA, SYNC, COMPLETION (polling: m16_native_wait_marker, a 50 us
- * sleep-poll), DEVICE, QUEUE, CLOCK_NS, HOST_MEM. Not MMIO (the RM driver owns the registers) and not IRQ
+ * What it provides: TIME, WAIT, LOCK, DMA, SYNC, COMPLETION (polling: a 20 us nanosleep poll with 1 us timer
+ * slack, the m16_native_wait_marker >= compare; L159), DEVICE, QUEUE, CLOCK_NS, HOST_MEM. Not MMIO (the RM driver owns the registers) and not IRQ
  * (polling is never claimed as interrupt support). One device (ordinal 0), one queue (the m16 channel,
  * GPFIFO entries carrying the method words copied into the BUF_QUEUE ring), every buffer GPU-uncached
  * (nvrm_alloc_gpu_uncached; a GPU_CACHED request is refused with REFUSED_CACHE_POLICY because nothing here
