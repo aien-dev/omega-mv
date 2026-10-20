@@ -19,7 +19,9 @@
  * keeps paying that, and notices when the prediction fails. It explains the
  * failure from what else it observed (a change of core class, or nothing),
  * and publishes one experiment per untried condition. It does not re-plan a
- * condition it has already had explored.
+ * condition it has already had explored. A human goal pending for the
+ * condition an experiment is made for is the reason the plan records, whether
+ * the goal or a hypothesis reached the plan first.
  *
  * The inputs are object references only. This file includes no Omega header
  * and calls no Omega function; the build checks that rx_aien.o has no

@@ -341,7 +341,21 @@ static int fn_plan(RxCtx *c) {
         }
         uint64_t why = h->field[1] == RX_AIEN_HYP_CORE_CLASS ? RX_AIEN_WHY_CORE_CLASS
                                                              : RX_AIEN_WHY_DRIFT;
-        publish_plan(c, f, pn, regime, cls, h->field[0], why, 0);
+        uint64_t gseq = 0;
+        /* A human goal is pending for this very condition: assessed, not met,
+         * and without a plan of its own, because the assessment could not
+         * price it (the prediction had failed, or was being relearned, when
+         * the goal was assessed). One experiment answers both; the goal is
+         * the reason, as it is when the goal branch above plans. The
+         * hypothesis stays linked (field 4) and is tested by the result.
+         * (R13 under load: the body moved to X925 and the human stated the
+         * goal in the same moment; the plan said "core class", goal 0.) */
+        if (a->field[0] != 0 && a->field[4] != RX_AIEN_GOAL_MET && pn->field[6] != a->field[0] &&
+            rx_aien_key(a->field[5], a->field[1]) == key) {
+            why = RX_AIEN_WHY_GOAL;
+            gseq = a->field[0];
+        }
+        publish_plan(c, f, pn, regime, cls, h->field[0], why, gseq);
         remember(c, f, m, key);
         put(c, f->o.hypothesis, 7, RX_AIEN_HYP_TESTING);
         return 0;

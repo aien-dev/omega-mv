@@ -1241,8 +1241,43 @@ static int run(Rig *r, int mode) {
     }
 
     /* POSITIVE and FAILED_VERIFICATION: the full episode. */
-    if (!promoted) FAIL("no promotion: result %d, prepare refusal %d", r->promoter.result,
-                        r->living.last_refusal);
+    if (!promoted) {
+        RxReaction *cx = &r->w.reactions[r->living.r_candidate];
+        RxGenJobResult jr;
+        memset(&jr, 0, sizeof jr);
+        int js = rx_gen_job_state(r->living.store, RX_GEN_JOB_PROPOSE, &jr);
+        fprintf(stderr, "R13 diag (mode %d): candidate reaction %s deferred %d resume_pending %d "
+                "activations %llu commits %llu quarantined %d parked %d; propose job state %d "
+                "rc %d key %llu id %llu; durable %d proposed_epoch %llu candidate_id %llu refusals %llu\n",
+                mode, rx_state_name(cx->state), (int)cx->deferred, (int)cx->resume_pending,
+                U(cx->activations), U(cx->commits), (int)cx->quarantined, (int)cx->parked, js,
+                jr.rc, U(jr.key), U(jr.id), rx_gen_exec_running(r->living.store),
+                U(r->living.proposed_epoch), U(r->living.candidate_id), U(r->living.refusals));
+        fprintf(stderr, "R13 diag (mode %d): selection id %llx cost %llu ref %llu regime %llx;", mode,
+                U(field(r, r->omega.o.selection, 1)), U(field(r, r->omega.o.selection, 5)),
+                U(field(r, r->omega.o.selection, 7)), U(field(r, r->omega.o.selection, 6)));
+        for (uint32_t k = 0; k < r->omega.cfg.n_slots; k++)
+            fprintf(stderr, " measure[%u] epoch %llu state %llu cand %llu ref %llu;", k,
+                    U(field(r, r->omega.o.measure[k], 0)), U(field(r, r->omega.o.measure[k], 1)),
+                    U(field(r, r->omega.o.measure[k], 2)), U(field(r, r->omega.o.measure[k], 3)));
+        fprintf(stderr, " plan crumb %llu why %llu goal %llu class %llx; goal crumb %llu; placement crumb %llu; "
+                "search crumb %llu; hypothesis kind %llu state %llu\n",
+                U(rx_world_explain(&r->w, r->aien.o.plan, 0)), U(field(r, r->aien.o.plan, 5)),
+                U(field(r, r->aien.o.plan, 6)), U(field(r, r->aien.o.plan, 3)), U(goal_crumb),
+                U(rx_world_explain(&r->w, r->aien.o.placement, 0)),
+                U(rx_world_explain(&r->w, r->omega.o.search, 0)),
+                U(field(r, r->aien.o.hypothesis, 1)), U(field(r, r->aien.o.hypothesis, 7)));
+        FAIL("no promotion: result %d, prepare refusal %d; selection epoch %llu (crumb %llu), "
+             "experiment belief epoch %llu state %llu (crumb %llu), evidence epoch %llu ok %llu "
+             "trials %llu, search epoch %llu plan %llu, candidate epoch %llu",
+             r->promoter.result, r->living.last_refusal, U(field(r, r->omega.o.selection, 0)),
+             U(rx_world_explain(&r->w, r->omega.o.selection, 0)),
+             U(field(r, r->aien.o.experiment_belief, 0)), U(field(r, r->aien.o.experiment_belief, 2)),
+             U(rx_world_explain(&r->w, r->aien.o.experiment_belief, 0)),
+             U(field(r, r->living.o.evidence, 0)), U(field(r, r->living.o.evidence, 3)),
+             U(field(r, r->living.o.evidence, 4)), U(field(r, r->omega.o.search, 0)),
+             U(field(r, r->omega.o.search, 6)), U(field(r, r->living.o.candidate, 1)));
+    }
     uint64_t plan = rx_world_explain(&r->w, r->aien.o.plan, 0);
     uint64_t search = rx_world_explain(&r->w, r->omega.o.search, 0);
     uint64_t gpu_input = rx_world_explain(&r->w, r->living.o.input, 2);
@@ -1254,7 +1289,21 @@ static int run(Rig *r, int mode) {
     uint64_t promotion = rx_world_explain(&r->w, r->living.o.promotion, 0);
     uint64_t inforce = rx_world_explain(&r->w, r->living.o.inforce, 0);
     if (field(r, r->aien.o.plan, 5) != RX_AIEN_WHY_GOAL || field(r, r->aien.o.plan, 6) != 1 ||
-        field(r, r->aien.o.assessment, 0) != 1) FAIL("plan was not for the goal");
+        field(r, r->aien.o.assessment, 0) != 1)
+        FAIL("plan was not for the goal%s: plan why %llu hypothesis %llu goal %llu class %llx; "
+             "hypothesis kind %llu state %llu on prediction %llu; prediction %llu state %llu "
+             "class %llx expected %llu; assessment goal %llu status %llu expected %llu class %llx",
+             field(r, r->aien.o.plan, 5) == RX_AIEN_WHY_DRIFT ?
+                 " (AIEN asked for drift research before the goal: a real slowdown, or the move "
+                 "heard before the placement; the goal was met by that research)" : "",
+             U(field(r, r->aien.o.plan, 5)), U(field(r, r->aien.o.plan, 4)),
+             U(field(r, r->aien.o.plan, 6)), U(field(r, r->aien.o.plan, 3)),
+             U(field(r, r->aien.o.hypothesis, 1)), U(field(r, r->aien.o.hypothesis, 7)),
+             U(field(r, r->aien.o.hypothesis, 2)), U(field(r, r->aien.o.prediction, 0)),
+             U(field(r, r->aien.o.prediction, 6)), U(field(r, r->aien.o.prediction, 4)),
+             U(field(r, r->aien.o.prediction, 5)), U(field(r, r->aien.o.assessment, 0)),
+             U(field(r, r->aien.o.assessment, 4)), U(field(r, r->aien.o.assessment, 3)),
+             U(field(r, r->aien.o.assessment, 5)));
     uint64_t nodes[] = {goal_crumb, plan, search, gpu_input, gpu, evidence, belief,
                         selection, candidate};
     for (uint32_t i = 0; i < sizeof nodes / sizeof nodes[0]; i++)

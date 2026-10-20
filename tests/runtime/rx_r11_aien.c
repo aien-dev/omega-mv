@@ -509,6 +509,64 @@ static void t_drift_moved(void) {
     env_stop(&e);
 }
 
+static void t_goal_during_move(void) {
+    printf("[*] a goal stated while a failed prediction is relearned, then a move: the plan "
+           "AIEN makes for the core-class hypothesis is for the goal\n");
+    Env e;
+    CHECK(envA_start(&e) == 0, "setup");
+    RxAienFaculty *a = &e.a;
+    uint64_t R = rx_aien_regime(REG_M, REG_N);
+    place(&e, P1);
+    window(&e, 5000, 0);          /* production runs before any record exists */
+    record(&e, 1, 0xAA);
+    confirm_at(&e, 5000, 0xAA);
+    windows(&e, 2, 9000, 0xAA);   /* a burst: drift, open, relearn pending */
+    CHECK(fld(&e, a->o.hypothesis, 1) == RX_AIEN_HYP_DRIFT &&
+          fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_OPEN, "drift hypothesis");
+    /* The human states the goal while AIEN cannot price the regime: the
+     * assessment is unknown with nothing expected, so the goal branch alone
+     * cannot plan. */
+    set_goal(&e, R, 3000);
+    CHECK(settle(&e) == RX_OK, "settle");
+    CHECK(fld(&e, a->o.assessment, 0) == 1 && fld(&e, a->o.assessment, 4) == RX_AIEN_GOAL_UNKNOWN &&
+          fld(&e, a->o.assessment, 3) == 0 && fld(&e, a->o.plan, 0) == 0,
+          "goal on a failed prediction: status %llu expected %llu plan %llu",
+          (unsigned long long)fld(&e, a->o.assessment, 4), (unsigned long long)fld(&e, a->o.assessment, 3),
+          (unsigned long long)fld(&e, a->o.plan, 0));
+    /* The body moves before the record is relearned (as in R13: placement and
+     * goal published, then the threads move). */
+    place(&e, P2);
+    CHECK(settle(&e) == RX_OK, "settle");
+    windows(&e, 2 + a->cfg.baseline_intervals + a->cfg.confirm_intervals, 4000, 0xAA);
+    CHECK(fld(&e, a->o.hypothesis, 0) == 2 && fld(&e, a->o.hypothesis, 1) == RX_AIEN_HYP_CORE_CLASS &&
+          fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_TESTING,
+          "core-class hypothesis: seq %llu kind %llu state %llu",
+          (unsigned long long)fld(&e, a->o.hypothesis, 0), (unsigned long long)fld(&e, a->o.hypothesis, 1),
+          (unsigned long long)fld(&e, a->o.hypothesis, 7));
+    CHECK(fld(&e, a->o.plan, 0) == 1 && fld(&e, a->o.plan, 1) == RX_AIEN_ACT_RESEARCH &&
+          fld(&e, a->o.plan, 2) == R && fld(&e, a->o.plan, 3) == P2 && fld(&e, a->o.plan, 4) == 2 &&
+          fld(&e, a->o.plan, 5) == RX_AIEN_WHY_GOAL && fld(&e, a->o.plan, 6) == 1,
+          "one plan, for the goal and linked to the hypothesis: seq %llu class %llx why %llu "
+          "hypothesis %llu goal %llu",
+          (unsigned long long)fld(&e, a->o.plan, 0), (unsigned long long)fld(&e, a->o.plan, 3),
+          (unsigned long long)fld(&e, a->o.plan, 5), (unsigned long long)fld(&e, a->o.plan, 4),
+          (unsigned long long)fld(&e, a->o.plan, 6));
+    CHECK(fld(&e, a->o.memory, 0) == 1 && fld(&e, a->o.memory, 1) == rx_aien_key(P2, R), "memory");
+    uint64_t plan_crumb = rx_world_explain(&e.w, a->o.plan, 0);
+    uint64_t goal_crumb = rx_world_explain(&e.w, a->o.goal, 0);
+    CHECK(caused_by(&e, plan_crumb, goal_crumb), "the goal is not a cause of the plan");
+    /* The experiment answers both: the goal is met and the hypothesis tested. */
+    record(&e, 2, 0xBB);
+    confirm_at(&e, 2500, 0xBB);
+    CHECK(fld(&e, a->o.assessment, 4) == RX_AIEN_GOAL_MET && fld(&e, a->o.assessment, 3) == 2500,
+          "after the experiment: status %llu expected %llu",
+          (unsigned long long)fld(&e, a->o.assessment, 4), (unsigned long long)fld(&e, a->o.assessment, 3));
+    CHECK(fld(&e, a->o.hypothesis, 7) == RX_AIEN_HYP_SUPPORTED, "hypothesis state %llu",
+          (unsigned long long)fld(&e, a->o.hypothesis, 7));
+    CHECK(fld(&e, a->o.plan, 0) == 1, "a second plan");
+    env_stop(&e);
+}
+
 static void t_baseline_must_agree(void) {
     printf("[*] a burst inside the baseline restarts it; the prediction is what production pays\n");
     Env e;
@@ -1168,6 +1226,7 @@ int main(void) {
     t_drift();
     t_drift_burst_refuted();
     t_drift_moved();
+    t_goal_during_move();
     t_baseline_must_agree();
     t_settled_failure_relearns();
     t_goal();
