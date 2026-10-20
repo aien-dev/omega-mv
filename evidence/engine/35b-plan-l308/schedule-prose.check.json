@@ -1,0 +1,29 @@
+{
+  "acyclic": true,
+  "beats": 160,
+  "bytes_per_beat_max": 528546816,
+  "bytes_per_beat_min": 151013376,
+  "bytes_total": 40723273728,
+  "complete": true,
+  "edges": {
+    "free_parts": 12784,
+    "fuel": 160,
+    "release": 158,
+    "residual": 156,
+    "token": 3,
+    "violations": []
+  },
+  "edges_exact": true,
+  "edges_expected": {
+    "free_parts": 12784,
+    "fuel": 160,
+    "release": 158,
+    "residual": 156,
+    "token": 3,
+    "violations": []
+  },
+  "fills": 160,
+  "no_collision": true,
+  "parts": 3236,
+  "problems": []
+}
