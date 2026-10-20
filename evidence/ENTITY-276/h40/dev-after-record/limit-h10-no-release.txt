@@ -1,0 +1,41 @@
+# dev build of 8f169c92+worktree (mutant hooks), after the run of record; horizon 10 without --release; columns step, objects_live, reactions_active
+## warm
+5a_replay_rebuild,0,0
+5b_restore_identity,0,0
+5_obj2,55,34
+5_obj3,90,68
+5_obj4,125,102
+5_obj5,160,136
+5_obj6,195,170
+5_obj7,230,204
+5_obj8,256,204
+5_obj9,256,204
+5_obj10,256,204
+5_obj11,256,204
+close,0,0
+## cold
+5a_replay_rebuild,0,0
+5b_restore_identity,0,0
+5_obj2,55,34
+5_obj3,90,68
+5_obj4,125,102
+5_obj5,160,136
+5_obj6,195,170
+5_obj7,230,204
+5_obj8,256,204
+5_obj9,256,204
+5_obj10,256,204
+5_obj11,256,204
+close,0,0
+## output
+  BAD tests/research/entity276/entity276.c:819 5_obj8_reattached: committed goal holds
+  BAD tests/research/entity276/entity276.c:819 5_obj10_reattached: committed goal holds
+  BAD tests/research/entity276/entity276.c:819 5_obj8_reattached: committed goal holds
+  BAD tests/research/entity276/entity276.c:819 5_obj10_reattached: committed goal holds
+  BAD tests/research/entity276/entity276.c:1224 every repeated objective committed correctly
+  BAD tests/research/entity276/entity276.c:1226 retained knowledge used: 7 hits, 3 searches
+  BAD tests/research/entity276/entity276.c:1224 every repeated objective committed correctly
+  BAD tests/research/entity276/entity276.c:1232 cold arm learns once in its session: 6 hits, 4 searches
+entity276 horizon-warm H 10: bad_rows 4 records 728 searches 3 hits 7 rebuild_cpu_ns 734128
+entity276 horizon-cold H 10: bad_rows 4 records 729 searches 4 hits 6 rebuild_cpu_ns 1552
+entity276 horizon H 10 arms 2 interleave 0 release 0: checks 461 failed 8

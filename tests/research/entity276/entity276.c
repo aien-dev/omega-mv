@@ -179,7 +179,11 @@ typedef struct {
     int forget;             /* never stores a template: every objective searches */
     int horizon;            /* horizon-mode checks on the search count */
     int release;            /* release each finished run (release_run) */
+    int hmutant;            /* horizon-mode mutant (ENTITY276_HMUTANT), 0 = none */
 } Arm;
+
+/* Horizon-mode mutants (env ENTITY276_HMUTANT): each must turn its arm's check red. */
+enum { HM_NONE, HM_FORGETSTORE, HM_LAZYSKIP, HM_COLDKEEP, HM_DOUBLERELEASE };
 
 static Arm g_arm[MAX_ARMS];
 static Arm *A = &g_arm[0];
@@ -685,7 +689,7 @@ static int solve(Out *o, int probe_only) {
         o->t = use;
         if (before == PL_STATUS_CANDIDATE && use->status == PL_STATUS_VERIFIED)
             if (theta_promote(use, ex.realization_id) != 0) return -5;
-    } else if (ex.success && o->goal && !A->forget) {
+    } else if (ex.success && o->goal && (!A->forget || A->hmutant == HM_FORGETSTORE)) {
         plan_view(&g_v2);
         uint64_t wg = g_v2.o[E.env.obj[PL_ENV_WORLDGEN].id].field[0];
         uint64_t cg = g_v2.o[E.env.obj[PL_ENV_COGNITION].id].field[0];
@@ -696,6 +700,7 @@ static int solve(Out *o, int probe_only) {
     rx_world_wait_quiescent(&E.w, 30000);
     if (A->release) {
         uint32_t rb = release_run(rs);
+        if (A->hmutant == HM_DOUBLERELEASE) rb += release_run(rs);
         CHECK(rb == 0, "release: %u reactions or objects not released", rb);
         rx_world_wait_quiescent(&E.w, 30000);
     }
@@ -1300,6 +1305,10 @@ static uint32_t arm_at(uint32_t n, uint32_t i, uint32_t j) {
 static int run_horizon(uint32_t h, int interleave, int lazy, int forget, int release, const char *base,
                        const char *out) {
     static const char *names[MAX_ARMS];
+    const char *hm = getenv("ENTITY276_HMUTANT");
+    int hmutant = !hm ? HM_NONE : !strcmp(hm, "FORGETSTORE") ? HM_FORGETSTORE : !strcmp(hm, "LAZYSKIP") ? HM_LAZYSKIP
+                : !strcmp(hm, "COLDKEEP") ? HM_COLDKEEP : !strcmp(hm, "DOUBLERELEASE") ? HM_DOUBLERELEASE : -1;
+    if (hmutant < 0) return 2;
     uint32_t n = 0;
     names[n++] = "warm";
     names[n++] = "cold";
@@ -1319,10 +1328,13 @@ static int run_horizon(uint32_t h, int interleave, int lazy, int forget, int rel
         A->forget = !strcmp(names[a], "forget");
         A->horizon = 1;
         A->release = release;
+        A->hmutant = hmutant;
     }
     for (uint32_t a = 0; a < n; a++) {
         A = &g_arm[a];
         int rc = restart_open(A->cold);
+        if (A->hmutant == HM_LAZYSKIP && A->lazy) A->lazy_pending = 0;
+        if (A->hmutant == HM_COLDKEEP && A->cold && !A->forget) theta_rebuild(&g_cx);
         if (rc) { fprintf(stderr, "%s: restart failed (%d)\n", A->mode, rc); return rc; }
     }
     if (interleave)

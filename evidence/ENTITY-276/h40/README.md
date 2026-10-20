@@ -116,6 +116,22 @@ and h6r give the same G5 verdict.
 | lazy vs warm | equal within the rebuild's spread | lazy lower from h6 on by 10,688 (calc:2a477e9d), 15,568 (calc:a4632c6b), 19,472 (calc:c70c9aeb) and 29,856 ns (calc:92c3eb72) |
 | warm vs forget, process CPU at H 40 | inside the spread | inside the spread by the range rule; forget lower in 5 of 5 paired runs |
 
+
+## Checks that must fail (mutants)
+
+- The earlier mutants (SHADOW, VIEWWRITE, IDLEPOLL, SHADOW restart, TAMPER) went red in the
+  run of record with the same bad rows as before: 1, 2, 1, 1, 7 (run-of-record/r0/run-verdict.txt).
+- The horizon-mode checks were given their own mutants after the run of record (commit
+  below; the hooks are inert without the ENTITY276_HMUTANT variable, and the run-of-record
+  binary did not contain them). Dev build, H 3 with all arms and --release
+  (dev-after-record/hmutants-verdict.txt): clean run exit 0, 0 bad rows; FORGETSTORE (forget
+  arm stores a template) red, 1 bad row; LAZYSKIP (lazy arm never rebuilds) red, 2; COLDKEEP
+  (cold arm rebuilds theta) red, 1; DOUBLERELEASE (each run released twice) red, 3. Not
+  of record, unreceipted.
+- The World limit itself: horizon 10 without --release exits 1; objects_live climbs 55, 90,
+  125, 160, 195, 230 and sticks at 256 from the seventh objective
+  (dev-after-record/limit-h10-no-release.txt).
+
 ## MISSING PREREQUISITES
 
 - F. (found here) No release of a finished plan run in the runtime: rx_plan_execute leaves
@@ -143,5 +159,6 @@ Williams order over four arms; H 3 uses three of the four rows. One pilot journa
   per arm and every comparison), the receipt, r0/run-verdict.txt (run.sh and mutants), and
   r1..r5/<variant>/horizon.out plus per arm the step CSV (with the order and footprint
   columns), summary and identity JSON. Screens and journals are not committed.
-- Harness: tests/research/entity276/entity276.c (mode `horizon`), measure-h40.sh,
+- dev-after-record/: hmutants-verdict.txt, limit-h10-no-release.txt (not of record).
+- Harness: tests/research/entity276/entity276.c (mode `horizon`), measure-h40.sh, hmutants.sh,
   wait-load.sh, aggregate-h40.sh.

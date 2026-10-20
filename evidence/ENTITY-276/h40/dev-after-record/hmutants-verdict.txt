@@ -1,0 +1,6 @@
+OK   clean exit 0, bad rows 0
+OK   FORGETSTORE red: exit 1, forget bad rows 1
+OK   LAZYSKIP red: exit 1, lazy bad rows 2
+OK   COLDKEEP red: exit 1, cold bad rows 1
+OK   DOUBLERELEASE red: exit 1, warm bad rows 3
+RESULT fails=0
