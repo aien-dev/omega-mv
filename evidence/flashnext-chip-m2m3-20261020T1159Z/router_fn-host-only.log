@@ -1,0 +1,9 @@
+  codegen warps 8 depth 1: 856 insns, 68 GPRs
+  codegen warps 8 depth 2: 856 insns, 68 GPRs
+  codegen warps 8 depth 5: 856 insns, 68 GPRs
+  codegen warps 8 depth 10: 856 insns, 68 GPRs
+  codegen warps 16 depth 1: 816 insns, 68 GPRs
+  codegen warps 16 depth 2: 816 insns, 68 GPRs
+  codegen warps 16 depth 5: 816 insns, 68 GPRs
+  codegen warps 16 depth 10: 816 insns, 68 GPRs
+GPU_ROUTER_FN_TEST host : 10 checks, 0 failed -> PASS

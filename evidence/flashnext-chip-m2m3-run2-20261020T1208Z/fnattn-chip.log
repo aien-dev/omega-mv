@@ -1,0 +1,31 @@
+cache alloc (1 layer, 32768 positions, 64 MiB): rc=OK 159.2 ms ()
+chip context 1                                    rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=1 grid=1x4 kv_bytes=2048 fill=0.0ms chip_med=60.3us (0.0 GB/s) call_med=63.1us reps=20
+chip dense context 7                              rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=7 grid=1x4 kv_bytes=14336 fill=0.0ms chip_med=64.0us (0.2 GB/s) call_med=66.7us reps=20
+chip dense context 7                              mutant 1: caught (rc=OK bad=5606 worst=49.718)
+chip dense context 7                              mutant 2: caught (rc=OK bad=6062 worst=288.036)
+chip dense context 7                              mutant 3: caught (rc=OK bad=5900 worst=207.288)
+FAIL: chip mutant 4 NOT caught
+chip dense context 7                              mutant 4: MISSED (rc=OK bad=0 worst=0.000)
+chip dense context 7                              mutant 5: caught (rc=OK bad=3064 worst=1497.984)
+FAIL: chip mutant 6 NOT caught
+chip dense context 7                              mutant 6: MISSED (rc=OK bad=0 worst=0.000)
+FAIL: chip mutant 7 NOT caught
+chip dense context 7                              mutant 7: MISSED (rc=OK bad=0 worst=0.000)
+chip dense context 256                            rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=256 grid=1x4 kv_bytes=524288 fill=0.0ms chip_med=106.4us (4.9 GB/s) call_med=109.2us reps=20
+chip dense context 301 sharp q                    rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=301 grid=2x4 kv_bytes=616448 fill=0.0ms chip_med=125.2us (4.9 GB/s) call_med=128.2us reps=20
+chip dense context 1024                           rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=1024 grid=4x4 kv_bytes=2097152 fill=0.1ms chip_med=151.9us (13.8 GB/s) call_med=155.1us reps=20
+chip dense context 2051                           rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=2051 grid=9x4 kv_bytes=4200448 fill=0.2ms chip_med=197.6us (21.3 GB/s) call_med=201.0us reps=20
+chip sparse context 4096 (512 blocks)             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=2048 grid=8x4 kv_bytes=4194304 fill=0.3ms chip_med=179.2us (23.4 GB/s) call_med=182.8us reps=20
+chip sparse context 4099 (512 blocks + 3 tail)    rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=2051 grid=9x4 kv_bytes=4200448 fill=0.3ms chip_med=192.8us (21.8 GB/s) call_med=196.4us reps=20
+chip sparse context 4099 (512 blocks + 3 tail)    mutant 1: caught (rc=OK bad=3028 worst=6.711)
+chip sparse context 4099 (512 blocks + 3 tail)    mutant 2: caught (rc=OK bad=5026 worst=21.694)
+FAIL: chip mutant 3 NOT caught
+chip sparse context 4099 (512 blocks + 3 tail)    mutant 3: MISSED (rc=OK bad=0 worst=0.916)
+chip sparse context 4099 (512 blocks + 3 tail)    mutant 4: caught (rc=OK bad=2140 worst=4.359)
+chip sparse context 4099 (512 blocks + 3 tail)    mutant 5: caught (rc=OK bad=2711 worst=24.198)
+chip sparse context 4099 (512 blocks + 3 tail)    mutant 6: caught (rc=OK bad=5123 worst=22.101)
+chip sparse context 4099 (512 blocks + 3 tail)    mutant 7: caught (rc=OK bad=5288 worst=27.610)
+chip sparse context 4100, new token hidden        rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=1600 grid=7x4 kv_bytes=3276800 fill=0.3ms chip_med=177.6us (18.4 GB/s) call_med=181.0us reps=20
+chip sparse context 8192                          rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=2048 grid=8x4 kv_bytes=4194304 fill=0.6ms chip_med=182.2us (23.0 GB/s) call_med=185.8us reps=20
+chip sparse context 32768                         rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) count=2048 grid=8x4 kv_bytes=4194304 fill=2.5ms chip_med=186.1us (22.5 GB/s) call_med=189.6us reps=20
+gpu_fnattn_test: 48 checks, 4 failed: FAIL

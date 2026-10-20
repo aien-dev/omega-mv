@@ -145,6 +145,8 @@ static void sim_battery(void) {
 }
 
 static int chip_run(uint32_t reps, const char *out_path) {
+    /* the phase API opens the device lazily; this test allocates session buffers directly, so open it first */
+    if (!omega_gpu_session_open()) { CHECK(0, "chip: device open failed: %s", omega_gpu_session_last_error()); return 1; }
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
     static In in; char msg[300];
     static const char *names[4] = { "NORM", "ACT", "COMBINE", "INJECT" };

@@ -1,0 +1,15 @@
+  nv4 gate_up 11 x 1280x2560   rows 2 warps 8 sched 1 grid 27 x 11: median 0.0 us, inf GB/s (inf of 273)
+FAIL: chip down 11 x 2560x640: rc -4 (process latched) worst inf bad 1
+FAIL: chip down 11 x 2560x640 mutant 1 caught (rc -1, 0 bad rows)
+FAIL: chip down 11 x 2560x640 mutant 3 caught (rc -1, 0 bad rows)
+FAIL: chip down 11 x 2560x640 mutant 4 caught (rc -1, 0 bad rows)
+FAIL: chip down 11 x 2560x640 mutant 5 caught (rc -1, 0 bad rows)
+FAIL: chip down 11 x 2560x640 mutant 6 caught (rc -1, 0 bad rows)
+FAIL: chip down 11 x 2560x640 mutant 7 caught (rc -1, 0 bad rows)
+  nv4 down 11 x 2560x640       rows 0 warps 0 sched 0 grid 0 x 11: median 0.0 us, nan GB/s (nan of 273)
+FAIL: chip gate_up 1 x 1280x2560: rc -4 (process latched) worst inf bad 1
+  nv4 gate_up 1 x 1280x2560    rows 0 warps 0 sched 0 grid 0 x 1: median 0.0 us, nan GB/s (nan of 273)
+FAIL: chip down 1 x 2560x640: rc -4 (process latched) worst inf bad 1
+  nv4 down 1 x 2560x640        rows 0 warps 0 sched 0 grid 0 x 1: median 0.0 us, nan GB/s (nan of 273)
+FAIL: fixture: real-tensor launches rc -4 (process latched)
+GPU_NV4_API_TEST chip: 21 checks, 10 failed -> FAIL

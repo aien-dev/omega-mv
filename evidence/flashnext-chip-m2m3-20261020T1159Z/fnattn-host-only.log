@@ -1,0 +1,5 @@
+codegen depth 1: 898 instructions, 100 registers (declared 104, 256 threads -> 26624 of 65536)
+codegen depth 2: 911 instructions, 104 registers (declared 112, 256 threads -> 28672 of 65536)
+codegen depth 3: 924 instructions, 108 registers (declared 112, 256 threads -> 28672 of 65536)
+codegen depth 4: 937 instructions, 112 registers (declared 120, 256 threads -> 30720 of 65536)
+gpu_fnattn_test: 54 checks, 0 failed: PASS
