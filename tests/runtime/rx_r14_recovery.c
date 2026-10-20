@@ -970,18 +970,22 @@ typedef struct {
     unsigned gap_us;
     int live;
     atomic_int error;
+    atomic_uint idle;           /* turns sat out because pause was set */
 } Driver;
 
 static void *driver_main(void *arg) {
     Driver *d = arg;
     Rig *r = d->r;
     while (!atomic_load(&d->stop)) {
-        if (!atomic_load(&d->pause))
+        if (atomic_load(&d->pause)) {
+            atomic_fetch_add(&d->idle, 1);
+        } else {
             for (uint32_t k = 0; k < r->opt.lanes; k++) {
                 if (d->quota && r->lane_sent[k] >= d->quota) continue;
                 if (lane_done(r, k) != r->lane_sent[k]) continue;
                 if (lane_submit(r, k) != 0) atomic_store(&d->error, 1);
             }
+        }
         pause_us((int)d->gap_us);
     }
     return NULL;
@@ -994,6 +998,22 @@ static int driver_start(Driver *d, Rig *r, uint64_t quota, unsigned gap_us) {
     d->gap_us = gap_us;
     if (pthread_create(&d->t, NULL, driver_main, d) != 0) return -1;
     d->live = 1;
+    return 0;
+}
+
+/* Park the driver: returns once it has seen the pause from the top of its
+ * loop, so a turn that was already inside the submit loop when the pause was
+ * set has finished. Only after that is lanes_sent a count the caller can
+ * wait for; sampling it earlier lets late submits reach the seat unseen.
+ * -1 if the driver never parked within ms. */
+static int driver_pause(Driver *d, int ms) {
+    atomic_store(&d->pause, 1);
+    unsigned idle0 = atomic_load(&d->idle);
+    uint64_t t = now_ns();
+    while (atomic_load(&d->idle) == idle0) {
+        if (now_ns() - t > (uint64_t)ms * 1000000ull) return -1;
+        pause_us(200);
+    }
     return 0;
 }
 
@@ -2006,8 +2026,7 @@ static void scenario_e(void) {
     Driver dv;
     CHECK(driver_start(&dv, r, 0, 300) == 0, "E: driver");
     CHECK(wait_lanes(r, 3 * LANES, 30000) == 0, "E: lanes never produced");
-    atomic_store(&dv.pause, 1);
-    pause_us(2000);
+    CHECK(driver_pause(&dv, 30000) == 0, "E: the driver did not park");
     CHECK(wait_lanes(r, lanes_sent(r), 30000) == 0, "E: lanes did not go idle");
     res->prod_before = served(r);
     uint32_t seat_gen0 = r->w.seat_generation;
@@ -2047,8 +2066,8 @@ static void scenario_e(void) {
         else pause_us(500);
     }
 #endif
-    CHECK(claimed && held, "E: the seat did not hold the lane claim (claimed %d held %d)", claimed,
-          held);
+    CHECK(claimed && held, "E: the seat did not hold the lane claim (claimed %d held %d, lanes in flight %llu)",
+          claimed, held, U(lanes_sent(r) - lanes_done(r)));
     uint64_t mem_held = r->w.used_memory;
     OmegaSharedWorldRing *c2g = (OmegaSharedWorldRing *)(r->w.coherent + rx_world_off_c2g());
     OmegaSharedWorldDesc old = c2g->slots[seq & c2g->mask];
