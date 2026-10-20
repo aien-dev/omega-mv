@@ -1,0 +1,52 @@
+dgraph prefetch 0 (red 0)
+fp8 knobs: variant 1 barrier 0 (wfi+inval_all) cta_budget 0 shape 0/0/0 cached 0
+model built in 1.4 s (layers 48, vocab 151936, pos 300)
+ok: A (baseline, host glue) 20 reps ran
+ok: A deterministic over 20 reps (token 56694)
+A: token 56694 logit 5.965864, runner-up 52723 logit 5.448427 (gap 0.517)
+ok: C (one list per token) 20 reps ran: 436 launches in 1 submission(s)
+ok: C deterministic over 20 reps (token 56694)
+A vs C: token 56694 vs 56694, logits max |d| 0.000727 (scale 6.43, rel 0.000113, tol 1e-04), x max rel 0.000121, hidden max rel 0.000122
+ok: argmax token identical: A 56694, C 56694
+FAIL: logits A vs C within 1e-04 of max|logit| (max |d| 0.000727, scale 6.43)
+ok: B (one launch per submission) 20 reps ran: 436 launches in 436 submissions
+ok: B bit-identical to C (x, hidden, logits, token) in every rep
+ok: negative control: SWIGLU mutant fails the comparison (token 88786 vs 56694, max |d| 5.33 = 0.829 of scale)
+ok: negative control: COMBINE mutant fails the comparison (token 88786 vs 56694, max |d| 2.09 = 0.325 of scale)
+ok: C after the mutants bit-identical to the first C
+ok: timeline: rc 0, 436 stamps for 436 launches, monotonic 1, span 27927.5 us <= chip 28003.3 us, token and logits unchanged
+TIMELINE (48 layers, pos 300): norm x1 13.8 us qkv x48 3812.6 us attn x48 3564.1 us o_proj x48 2968.4 us res_add x48 225.7 us router x48 1233.0 us gate_up x48 7912.1 us swiglu x48 159.5 us down x48 4527.0 us combine_norm x48 485.1 us lm_head x1 3009.1 us argmax x2 17.2 us
+ok: timeline off: token rc 0, stamps accessor refuses (-1)
+ok: launch tax (b): empty-kernel list ran 20 reps, 436 launches in 1 submission(s), every semaphore DONE
+ok: launch tax (c): one empty launch alone and 436 tiny empty launches in one list, 20 reps each, semaphores DONE
+ok: launch tax: real list after the empty runs bit-identical to the first C (token 56694)
+LAUNCH TAX (median of 20, 436 launches): (a) real chip 28047.1 us (host total 28158.5) | (b) empty list chip 826.2 us (host total 878.4) | (c) one empty launch 107.6 us | (c') 436 tiny empty launches 826.9 us | share (b)/(a) 0.0295 | per extra launch (b-c)/(n-1) 1.65 us
+EMPTY TIMELINE (stamped run): norm x1 2.0 us qkv x48 101.7 us attn x48 97.2 us o_proj x48 101.3 us res_add x48 96.6 us router x48 96.6 us gate_up x48 97.2 us swiglu x48 97.3 us down x48 97.6 us combine_norm x48 96.5 us lm_head x1 2.1 us argmax x2 4.2 us
+PER TOKEN (median of 20, 48 layers): A host-glue 289 launches 47128.0 us | C one list 436 launches 28158.5 us (chip 28047.1 us, record 95.3 us) | B per-launch submits 436 launches 56285.8 us (chip sum 56019.0 us)
+chip: 16 checks, 1 failed: FAIL
+{
+ "name": "l137-launch-tax",
+ "cmd": "nice -n 0 build/gpu_decode_graph_test --layers 48 --launch-tax --reps 20 --out evidence/LAUNCHES/launch-tax-48l/receipt.json",
+ "exit": 1,
+ "git_head": "cf3712cf",
+ "start": "2026-10-19T21:58:57.621138",
+ "seconds": 4.487,
+ "samples": 2,
+ "wall_W_mean": 280.0,
+ "wall_J": 1256.349983,
+ "idle_W_before": 280.0,
+ "incremental_J": 0.0,
+ "gpu_W_mean": 19.88,
+ "gpu_util_mean": 19.0,
+ "load1_start": "63.50",
+ "load1_end": "63.50",
+ "mem_avail_kB_start": "51351620",
+ "mem_avail_kB_end": "51337900",
+ "lock_holders_max": 7,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": null,
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-l137-launch-tax.json
+RC=1

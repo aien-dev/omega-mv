@@ -1,0 +1,66 @@
+dgraph prefetch 0 (red 0)
+fp8 knobs: variant 1 barrier 0 (wfi+inval_all) cta_budget 0 shape 0/0/0 cached 0
+model built in 1.8 s (layers 48, vocab 151936, pos 300)
+ok: A (baseline, host glue) 20 reps ran
+ok: A deterministic over 20 reps (token 56694)
+A: token 56694 logit 5.965864, runner-up 52723 logit 5.448427 (gap 0.517)
+ok: C (one list per token) 20 reps ran: 436 launches in 1 submission(s)
+ok: C deterministic over 20 reps (token 56694)
+A vs C: token 56694 vs 56694, logits max |d| 0.000727 (scale 6.43, rel 0.000113, tol 1e-04), x max rel 0.000121, hidden max rel 0.000122
+ok: argmax token identical: A 56694, C 56694
+FAIL: logits A vs C within 1e-04 of max|logit| (max |d| 0.000727, scale 6.43)
+ok: B (one launch per submission) 20 reps ran: 436 launches in 436 submissions
+ok: B bit-identical to C (x, hidden, logits, token) in every rep
+ok: negative control: SWIGLU mutant fails the comparison (token 88786 vs 56694, max |d| 5.33 = 0.829 of scale)
+ok: negative control: COMBINE mutant fails the comparison (token 88786 vs 56694, max |d| 2.09 = 0.325 of scale)
+ok: C after the mutants bit-identical to the first C
+ok: timeline: rc 0, 436 stamps for 436 launches, monotonic 1, span 31245.1 us <= chip 31288.9 us, token and logits unchanged
+TIMELINE (48 layers, pos 300): norm x1 14.0 us qkv x48 4097.3 us attn x48 4493.2 us o_proj x48 3391.9 us res_add x48 264.9 us router x48 1341.0 us gate_up x48 8336.8 us swiglu x48 376.6 us down x48 4978.4 us combine_norm x48 787.6 us lm_head x1 3145.8 us argmax x2 17.7 us
+ok: timeline off: token rc 0, stamps accessor refuses (-1)
+ok: fuse 1: fused list ran 20 reps (ok)
+ok: fuse 1: 388 launches per token (unfused 436, 48 fewer)
+ok: fuse 1: fused list BIT-IDENTICAL to the unfused list (x, hidden, logits, token) in every rep
+ok: fuse 1: negative control mutant 4 (SWIGLU epilogue scale 1) breaks the identity (rc 0, token 55918 vs 56694)
+ok: fuse 1: fused list after the mutants still bit-identical
+FUSE 1 (median of 20): unfused 436 launches chip 27511.1 us (host 27618.1) | fused 388 launches chip 27363.0 us (host 27467.6) | chip saved 148.1 us/token
+ok: fuse 2: fused list ran 20 reps (ok)
+ok: fuse 2: 388 launches per token (unfused 436, 48 fewer)
+ok: fuse 2: fused list BIT-IDENTICAL to the unfused list (x, hidden, logits, token) in every rep
+ok: fuse 2: negative control mutant 5 (o_proj adds into o, not x) breaks the identity (rc 0, token 91152 vs 56694)
+ok: fuse 2: fused list after the mutants still bit-identical
+FUSE 2 (median of 20): unfused 436 launches chip 27511.1 us (host 27618.1) | fused 388 launches chip 27234.1 us (host 27335.3) | chip saved 277.0 us/token
+ok: fuse 3: fused list ran 20 reps (ok)
+ok: fuse 3: 340 launches per token (unfused 436, 96 fewer)
+ok: fuse 3: fused list BIT-IDENTICAL to the unfused list (x, hidden, logits, token) in every rep
+ok: fuse 3: negative control mutant 4 (SWIGLU epilogue scale 1) breaks the identity (rc 0, token 55918 vs 56694)
+ok: fuse 3: negative control mutant 5 (o_proj adds into o, not x) breaks the identity (rc 0, token 91152 vs 56694)
+ok: fuse 3: fused list after the mutants still bit-identical
+FUSE 3 (median of 20): unfused 436 launches chip 27511.1 us (host 27618.1) | fused 340 launches chip 26900.5 us (host 26981.7) | chip saved 610.6 us/token
+PER TOKEN (median of 20, 48 layers): A host-glue 289 launches 47336.5 us | C one list 436 launches 27618.1 us (chip 27511.1 us, record 98.6 us) | B per-launch submits 436 launches 59879.1 us (chip sum 59543.0 us)
+chip: 29 checks, 1 failed: FAIL
+{
+ "name": "l137-fuse-after",
+ "cmd": "nice -n 0 build/gpu_decode_graph_test --layers 48 --fuse 1 --fuse 2 --fuse 3 --reps 20 --out evidence/LAUNCHES/fuse-48l/receipt.json",
+ "exit": 1,
+ "git_head": "cf3712cf",
+ "start": "2026-10-19T21:59:05.147377",
+ "seconds": 6.608,
+ "samples": 3,
+ "wall_W_mean": 276.6666667,
+ "wall_J": 1828.103913,
+ "idle_W_before": 281.4285714,
+ "incremental_J": -31.46478335,
+ "gpu_W_mean": 19.11666667,
+ "gpu_util_mean": 38.33333333,
+ "load1_start": "62.98",
+ "load1_end": "61.78",
+ "mem_avail_kB_start": "52107084",
+ "mem_avail_kB_end": "50404476",
+ "lock_holders_max": 5,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": null,
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-l137-fuse-after.json
+RC=1
