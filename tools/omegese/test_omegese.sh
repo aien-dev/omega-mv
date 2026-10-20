@@ -371,12 +371,13 @@ got="$(nxs 'struct P x uint end\nfn g p view P to void\n')"; case "$got" in *"wo
 got="$(nxs 'struct P x uint ')"; case "$got" in *"number 1 63|"*"word end|"*) ;; *) bad "next inside a struct line: '$got'" ;; esac
 echo "structs: $ns/6 twin programs ACCEPT; next after get/put <struct> offers exactly its fields, after new the struct names"
 
-# 2. refusals: "== <expected reason substring>", the bad program, "-- control", the fixed program
+# 2. refusals: "== <expected reason substring>", the bad program, "-- control", the fixed program; the struct cases are in tests/one_layer/omegese/structs/refusals.txt
 r=0
 awk -v d="$T" '
+  FILENAME != "-" && /^#/ { next }
   /^== / { k++; sub(/^== /, ""); print > (d "/r" k ".want"); f = d "/r" k ".bad"; next }
   /^-- control$/ { f = d "/r" k ".ok"; next }
-  { print > f }' <<'EOF'
+  { print > f }' - "$ROOT/tests/one_layer/omegese/structs/refusals.txt" <<'EOF'
 == needs two values of one type
 fn f a uint b ulong to uint
 x = add a b
@@ -974,155 +975,6 @@ a = new uint 4 n
 n = sub n 1
 end
 free a
-end
-== line 4: P has no field 'z'
-struct P x uint end
-fn f a uint to uint
-p = new P a
-v = get p z
-free p
-ret v
-end
--- control
-struct P x uint end
-fn f a uint to uint
-p = new P a
-v = get p x
-free p
-ret v
-end
-== line 7: 'q' is own Q; total takes view P there
-struct P x uint end
-struct Q x uint end
-fn total p view P to uint
-ret get p x
-end
-fn f a uint to uint
-q = new Q a
-t = total q
-free q
-ret t
-end
--- control
-struct P x uint end
-struct Q x uint end
-fn total p view P to uint
-ret get p x
-end
-fn f a uint to uint
-q = new P a
-t = total q
-free q
-ret t
-end
-== line 3: 'p' is view only; put needs an own or edit struct
-struct P x uint end
-fn f p view P a uint to void
-put p x a
-end
--- control
-struct P x uint end
-fn f p edit P a uint to void
-put p x a
-end
-== line 1: struct P needs end after its fields
-struct P x uint y uint
-fn f p view P to uint
-ret get p y
-end
--- control
-struct P x uint y uint end
-fn f p view P to uint
-ret get p y
-end
-== line 1: field x is declared twice in P
-struct P x uint x ulong end
-fn f p view P to uint
-ret get p x
-end
--- control
-struct P x uint y ulong end
-fn f p view P to uint
-ret get p x
-end
-== line 2: struct declarations come before the first fn
-fn f a uint to uint
-struct P x uint end
-ret a
-end
--- control
-struct P x uint end
-fn f a uint to uint
-ret a
-end
-== line 3: field x of P holds uint; 'b' is bool
-struct P x uint end
-fn f a uint b bool to uint
-p = new P b
-v = get p x
-free p
-ret v
-end
--- control
-struct P x uint end
-fn f a uint b bool to uint
-p = new P a
-v = get p x
-free p
-ret v
-end
-== line 3: new has 2 values after it; it takes 3
-struct P x uint y uint end
-fn f a uint to uint
-p = new P a
-v = get p x
-free p
-ret v
-end
--- control
-struct P x uint y uint end
-fn f a uint to uint
-p = new P a a
-v = get p x
-free p
-ret v
-end
-== line 3: get has 2 values after it; it takes 3
-struct P v uint 4 end
-fn f p view P to uint
-x = get p v
-ret x
-end
--- control
-struct P v uint 4 end
-fn f p view P to uint
-x = get p v 3
-ret x
-end
-== line 5: 'p' holds no array here
-struct P x uint end
-fn f a uint to uint
-p = new P a
-free p
-v = get p x
-ret v
-end
--- control
-struct P x uint end
-fn f a uint to uint
-p = new P a
-v = get p x
-free p
-ret v
-end
-== line 2: a function returns a number or bool, not an array
-struct P x uint end
-fn f a uint to own P
-end
--- control
-struct P x uint end
-fn f a uint to uint
-ret a
 end
 EOF
 for want in "$T"/r*.want; do
