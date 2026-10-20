@@ -1,0 +1,2 @@
+  router 513 x 2560 bf16, top-10 of 512 + shared, warps 16 depth 5: median 104.7 us (25.1 GB/s of the router weights)
+GPU_ROUTER_FN_TEST chip: 11 checks, 0 failed -> PASS

@@ -1,0 +1,5 @@
+FAIL: phase NORM: buffers (alloc without open device)
+FAIL: phase ACT: buffers (alloc without open device)
+FAIL: phase COMBINE: buffers (alloc without open device)
+FAIL: phase INJECT: buffers (alloc without open device)
+gpu_fnhc_test: 4 checks, 4 failed: FAIL
