@@ -566,8 +566,8 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
             if (!is_int(&T[in->b])) return STEP(AT "index r%d is %s, not an integer", ATV, in->b, tn(&T[in->b]));
         } else if (jget(o, "index")) return STEP(AT "field %s.%s is a scalar %s: leave out \"index\"", ATV, S->name, F->name, k_scal[F->s]); /* EMIT:field-index */
         int v = ld ? in->dst : in->c;
-        if (!is_scalar(&T[v]) || T[v].s != F->s)
-            return STEP(AT "%s r%d is %s; field %s.%s is %s", ATV, ld ? "dst" : "value", v, tn(&T[v]), S->name, F->name, k_scal[F->s]); /* EMIT:field-type */
+        if (!is_scalar(&T[v]) || T[v].s != F->s) /* EMIT:field-type */
+            return STEP(AT "%s r%d is %s; field %s.%s is %s", ATV, ld ? "dst" : "value", v, tn(&T[v]), S->name, F->name, k_scal[F->s]);
         break;
     }
     case OSC_I_LOAD:
