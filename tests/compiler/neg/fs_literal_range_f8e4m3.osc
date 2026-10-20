@@ -1,0 +1,6 @@
+// expect: FLOAT_CONST_RANGE object=y line=4
+// float slice: f8e4m3 holds at most 448; a literal over 464 would only saturate.
+fn f() -> u64 {
+    let y: f8e4m3 = 500.0;
+    return (y as u8 bits) as u64;
+}

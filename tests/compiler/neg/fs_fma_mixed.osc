@@ -1,0 +1,6 @@
+// expect: TYPE_MISMATCH object=y line=4
+// float slice: fma takes three operands of one float type.
+fn f(a: f16, b: f16, c: f32) -> u64 {
+    let y: f16 = fma(a, b, c);
+    return (y as u16 bits) as u64;
+}

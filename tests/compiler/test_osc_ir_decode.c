@@ -39,8 +39,9 @@
 /* spec/one-layer-format.md section 3 states these numbers; a renumbering must fail here. */
 _Static_assert(OSC_I_CONST == 1 && OSC_I_CALL == 11 && OSC_I_RET == 15 && OSC_I_FLOAD == 16 && OSC_I_AOPEN == 18 &&
                OSC_I_POPEN == 21 && OSC_I_HSTORE == 27 && OSC_I_SSTORE == 29 && OSC_I_FBIN == 30 &&
-               OSC_I_FBITS == 36, "opcode numbers in the spec");
-_Static_assert(OSC_T_BOOL == 1 && OSC_T_U64 == 5 && OSC_T_I64 == 9 && OSC_T_REF == 10 && OSC_T_CELLS == 12 && OSC_T_F32 == 13 && OSC_T_F64 == 14,
+               OSC_I_FBITS == 36 && OSC_I_FMA == 37 && OSC_I_FCHK == 38, "opcode numbers in the spec");
+_Static_assert(OSC_T_BOOL == 1 && OSC_T_U64 == 5 && OSC_T_I64 == 9 && OSC_T_REF == 10 && OSC_T_CELLS == 12 && OSC_T_F32 == 13 && OSC_T_F64 == 14 &&
+               OSC_T_F16 == 15 && OSC_T_BF16 == 16 && OSC_T_F8E4M3 == 17,
                "scalar tags in the spec");
 _Static_assert(OSC_REF_OWN == 1 && OSC_REF_MUT == 3, "ref kinds in the spec");
 
@@ -447,10 +448,10 @@ static void test_classes(void) {
     EXPECT(m.b, m.n, OSC_IR_REFUSE_TRAILING, "one trailing byte");
     k = knobs_default(); k.op0 = 0; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode 0");
-    k.op0 = OSC_I_FBITS + 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode past FBITS");
-    k = knobs_default(); k.ret_tag = OSC_T_F64 + 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "scalar tag 15");
+    k.op0 = OSC_I_FCHK + 1; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode past FCHK");
+    k = knobs_default(); k.ret_tag = OSC_T_F8E4M3 + 1; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "scalar tag 18");
     k = knobs_default(); k.dst = 0x8000; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "register 0x8000");
     k = knobs_default(); k.name_len = 3; k.name = "f\0g"; build(&m, &k);

@@ -503,7 +503,7 @@ static int rt_replay_run(const OscRt *rt, const char *ctx)
 /* ------------------------------------------------------------ golden */
 static OscUnit *U1, *U2;
 static unsigned long expect_total;
-static const char *trap_names[OSC_TRAP_MAX + 1] = {"none", "OVERFLOW", "DIV0", "BOUNDS", "LOOP_BOUND", "CAST", "OOM", "SHIFT", "RUNTIME", "REQUIRES", "ENSURES", "ARENA_FULL", "STALE", "POOL_FULL", "RETIRED"};
+static const char *trap_names[OSC_TRAP_MAX + 1] = {"none", "OVERFLOW", "DIV0", "BOUNDS", "LOOP_BOUND", "CAST", "OOM", "SHIFT", "RUNTIME", "REQUIRES", "ENSURES", "ARENA_FULL", "STALE", "POOL_FULL", "RETIRED", "FLOAT"};
 
 static uint64_t parse_val(const char *s)
 {

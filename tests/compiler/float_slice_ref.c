@@ -5,7 +5,8 @@
  *   -O0 -ffp-contract=off -march=armv8.2-a+fp16
  * (mk/compiler.mk). gcc's output is a reference oracle only; nothing here is an
  * input to the compiler. Shares no code with src/compiler/osc_fp.c:
- *   f16    C _Float16 (gcc: the half-precision instructions, FMADD H for fmaf16)
+ *   f16    C _Float16 (gcc: the half-precision instructions, FMADD H for fmaf16;
+ *          sqrt through sqrtf, see ref_un)
  *   bf16   C __bf16; float -> __bf16 and double -> __bf16 are libgcc's software
  *          conversions (__truncsfbf2, __truncdfbf2), not BFCVT (no +bf16 here)
  *   f8e4m3 no C type: decoded from the OCP formula with ldexpf, encoded by a
@@ -143,7 +144,8 @@ uint64_t ref_un(int t, int op, uint64_t a)
         return op == R_NEG ? a ^ sg : a & ~sg;
     }
     switch (t) {
-    case R_F16: return b_h(__builtin_sqrtf16(h_of(a)));
+    case R_F16: return b_h((_Float16)sqrtf((float)h_of(a))); /* glibc has no sqrtf16; one f32 rounding then
+                                                                  one f16 rounding is correct (24 >= 2*11 + 2) */
     case R_F32: return b_f(sqrtf(f_of(a)));
     case R_F64: return b_d(sqrt(d_of(a)));
     default: return narrow_f(t, sqrtf(widen(t, a)));

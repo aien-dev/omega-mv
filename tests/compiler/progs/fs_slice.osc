@@ -1,0 +1,37 @@
+// entry: h_add h_div h_fma bf_mul e4_add e4_fma d_to_e4 d_to_bf lit_h lit_bf lit_e4 strict_add i_to_e4
+// OSC-4 float slice (docs/osc/OSC-4-FLOATS.md): f16 in half precision, bf16 and f8e4m3
+// widened to f32, computed, rounded once (RNE); f8e4m3 saturates at 448; strict
+// functions trap FLOAT on a NaN or infinite result. Values: tests/compiler/float_slice_ref.c.
+// d_to_bf: 1 + 2^-8 + 2^-40 is just above a bf16 midpoint; through f32 with RNE it would
+// land on the midpoint and round down (0x3f80): FCVTXN (round to odd) keeps it above.
+// expect-run: h_add 0x3c00 0x4000 -> 0x4200
+// expect-run: h_add 0x7bff 0x7bff -> 0x7c00
+// expect-run: h_div 0x3c00 0x4200 -> 0x3555
+// expect-run: h_fma 0x3c01 0x3c01 0xbc02 -> 0x10
+// expect-run: bf_mul 0x3fc0 0x4040 -> 0x4090
+// expect-run: bf_mul 0x7f81 0x3f80 -> 0x7fc1
+// expect-run: e4_add 0x38 0x38 -> 0x40
+// expect-run: e4_add 0x7e 0x7e -> 0x7e
+// expect-run: e4_fma 0x3a 0x3b 0x31 -> 0x41
+// expect-run: d_to_e4 0x3fb999999999999a -> 0x1d
+// expect-run: d_to_bf 0x3ff0100000001000 -> 0x3f81
+// expect-run: lit_h -> 0x2e66
+// expect-run: lit_bf -> 0xc049
+// expect-run: lit_e4 -> 0x7e
+// expect-run: strict_add 0x3c00 0x3c00 -> 0x4000
+// expect-run: strict_add 0x7bff 0x7bff -> trap=FLOAT
+// expect-run: strict_add 0x7e00 0x3c00 -> trap=FLOAT
+// expect-run: i_to_e4 -3 -> 0xc4
+fn h_add(a: f16, b: f16) -> u64 { return ((a + b) as u16 bits) as u64; }
+fn h_div(a: f16, b: f16) -> u64 { return ((a / b) as u16 bits) as u64; }
+fn h_fma(a: f16, b: f16, c: f16) -> u64 { return (fma(a, b, c) as u16 bits) as u64; }
+fn bf_mul(a: bf16, b: bf16) -> u64 { return ((a * b) as u16 bits) as u64; }
+fn e4_add(a: f8e4m3, b: f8e4m3) -> u64 { return ((a + b) as u8 bits) as u64; }
+fn e4_fma(a: f8e4m3, b: f8e4m3, c: f8e4m3) -> u64 { return (fma(a, b, c) as u8 bits) as u64; }
+fn d_to_e4(x: f64) -> u64 { return ((x as f8e4m3) as u8 bits) as u64; }
+fn d_to_bf(x: f64) -> u64 { return ((x as bf16) as u16 bits) as u64; }
+fn lit_h() -> u64 { let y: f16 = 0.1; return (y as u16 bits) as u64; }
+fn lit_bf() -> u64 { let y: bf16 = -3.14159; return (y as u16 bits) as u64; }
+fn lit_e4() -> u64 { let y: f8e4m3 = 450.0; return (y as u8 bits) as u64; }
+strict fn strict_add(a: f16, b: f16) -> u64 { return ((a + b) as u16 bits) as u64; }
+fn i_to_e4(x: i32) -> u64 { return ((x as f8e4m3) as u8 bits) as u64; }

@@ -76,7 +76,8 @@ Nothing may follow the last function record.
 ### 3.4 Type
 
 One byte scalar tag: 0 void, 1 bool, 2 u8, 3 u16, 4 u32, 5 u64, 6 i8, 7 i16, 8 i32, 9 i64,
-10 ref, 11 bytes, 12 cells, 13 f32, 14 f64 (version 6, OSC-4 Slice A). Tags above 14 are refused.
+10 ref, 11 bytes, 12 cells, 13 f32, 14 f64 (version 6, OSC-4 Slice A), 15 f16, 16 bf16, 17 f8e4m3
+(version 6, OSC-4 float slice, docs/osc/OSC-4-FLOATS.md). Tags above 17 are refused.
 For every tag except 10 that byte is the
 whole type (the decoded `ref`, `elem`, `len`, `sid` are 0). Tag 10 (ref) continues:
 
@@ -134,13 +135,16 @@ field: 0x0000..0x7FFF, or 0xFFFF for "none" (-1); 0x8000..0xFFFE are refused (RA
 | 34 | ITOF | 1 sub (1 signed, 2 unsigned: the source), r dst, r a |
 | 35 | FTOI | 1 sub (1 signed, 2 unsigned: the destination), r dst, r a |
 | 36 | FBITS | r dst, r a |
+| 37 | FMA | r dst, r a, r b, r c (dst = a * b + c, one rounding) |
+| 38 | FCHK | r a (strict functions: trap 15 if a is NaN or infinite) |
 
-Opcode 0 and opcodes above 36 are refused (RANGE): their length is unknown. Opcodes 30..36 are the
-OSC-4 Slice A float instructions (docs/osc/OSC-4-DESIGN.md 1.5); a CONST whose register is f32 or f64
-carries the IEEE bit pattern in `imm` (f32: low 32 bits, upper 32 zero). The numbers are pinned
+Opcode 0 and opcodes above 38 are refused (RANGE): their length is unknown. Opcodes 30..36 are the
+OSC-4 Slice A float instructions (docs/osc/OSC-4-DESIGN.md 1.5), 37 and 38 the float slice ones
+(docs/osc/OSC-4-FLOATS.md); a CONST whose register is a float carries the bit pattern in `imm`
+(the low 8, 16 or 32 bits for f8e4m3, f16 / bf16, f32; the rest zero). The numbers are pinned
 by `_Static_assert`s in the test. The meaning of every field and every value range that
 `osc_ir_validate` enforces (types agree, registers in range, blocks partition the instructions,
-calls only to earlier functions, trap codes 1..14, and the rest) is in `osc_ir.h` and
+calls only to earlier functions, trap codes 1..15, and the rest) is in `osc_ir.h` and
 docs/osc/OSC-1-DESIGN.md.
 
 ### 3.6 Fields the format does not carry
@@ -154,7 +158,8 @@ each decoded unit with the unit the compiler produced on every carried field.
 ## 4. Versions and historical readers
 
 The version byte is a function of the content (`unit_version`, `src/compiler/osc_ir.c`): 6 if any
-register, return, struct field or pool element is f32 or f64 or any opcode 30..36 occurs, else 5 if any
+register, return, struct field or pool element is a float (f32, f64, f16, bf16, f8e4m3), any opcode
+30..38 occurs or a TRAP carries code 15 (FLOAT), else 5 if any
 register is a byte slice (bytes/cells), else 4 if any pool instruction (POPEN..HSTORE) occurs,
 else 3 if any arena instruction (AOPEN, AALLOC, ADESTROY) occurs, else 2 if the unit has structs,
 else 1. Versions 2..6 share one layout (struct table present, possibly empty); version 1 has no
@@ -194,7 +199,7 @@ run in the order listed. `osc_ir_refusal_name` gives the names.
 | -4 | TRUNCATED | input ends inside a field | empty input; last byte missing; magic only |
 | -5 | OVERSIZED | input over `OSC_IR_ENCODED_MAX`, or a count or length over section 5 | 64-byte name; 481 registers; 256-byte requires text; 2,620,252-byte input |
 | -6 | TRAILING | bytes after the last function | one extra byte |
-| -7 | RANGE | unknown opcode, scalar tag or ref kind; a register/block/callee field 0x8000..0xFFFE | opcodes 0 and 37; tag 15; register 0x8000 |
+| -7 | RANGE | unknown opcode, scalar tag or ref kind; a register/block/callee field 0x8000..0xFFFE | opcodes 0 and 39; tag 18; register 0x8000 |
 | -8 | TEXT | a NUL byte inside a name or contract text (it would read back shorter: ambiguous) | name "f\0g" |
 | -9 | INVALID | well-formed, but `osc_ir_validate` refuses the unit | u8 constant 256; register out of range |
 | -10 | VERSION_MISMATCH | version byte differs from the one the content requires (section 4) | version 2, 5 or 6 for a plain unit |

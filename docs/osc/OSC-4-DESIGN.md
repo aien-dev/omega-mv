@@ -230,6 +230,8 @@ V registers are never part of the OSC-internal ABI. Host callers pass float
 bits in `const uint64_t *args` (src/compiler/osc_rt.h:148) and oscc OUT lines
 print them as hex bits with a new entry kind 13 (f32) and 14 (f64) after the
 existing 1..9, 11, 12 (src/compiler/oscc_main.c:62-63).
+The float slice (docs/osc/OSC-4-FLOATS.md) adds kinds 15 (f16), 16 (bf16) and 17 (f8e4m3), same convention:
+the bit pattern in the low bits of the X register, upper bits zero.
 `canon` for F32 (src/compiler/osc_interp.c:23) is "low 32 bits, upper 32 zero, NaN payload untouched";
 F64 keeps all 64 bits, so the argument check at osc_interp.c:221 refuses only dirty upper halves.
 

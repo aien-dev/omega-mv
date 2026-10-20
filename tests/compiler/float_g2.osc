@@ -1,0 +1,125 @@
+// OSC-4 float slice, gate G2 (docs/osc/OSC-4-FLOATS.md): a 64-element dot product
+// at every slice float type, one with fma, and a 64-element softmax in f32 with an
+// exp written here. tests/compiler/float_g2_ref.c holds the same algorithms in C
+// (compiled -O0 -ffp-contract=off); tests/compiler/test_osc_float_g2.c runs both and
+// compares every result bit for bit. Every entry is (seed, k) -> bits.
+// Constants that are not short binary fractions are written as their bit patterns.
+
+// 64 values in [-8, 8): a 64-bit LCG, the top 24 bits, scaled by 2^-20 (exact)
+fn fill(x: &mut [f32; 64], seed: u64) {
+    let mut s: u64 = seed;
+    for i in 0 .. 64 {
+        s = s * 6364136223846793005 + 1442695040888963407;
+        x[i] = (((s >> 40) as i64) - 8388608) as f32 * 0.00000095367431640625;
+    }
+}
+
+fn dot_f32(seed: u64, k: u64) -> u64 {
+    let a: own [f32; 64] = alloc(0.0);
+    let b: own [f32; 64] = alloc(0.0);
+    fill(&mut a, seed);
+    fill(&mut b, seed + k + 1);
+    let mut s: f32 = 0.0;
+    for i in 0 .. 64 { s = s + a[i] * b[i]; }
+    return (s as u32 bits) as u64;
+}
+
+fn dot_fma_f32(seed: u64, k: u64) -> u64 {
+    let a: own [f32; 64] = alloc(0.0);
+    let b: own [f32; 64] = alloc(0.0);
+    fill(&mut a, seed);
+    fill(&mut b, seed + k + 1);
+    let mut s: f32 = 0.0;
+    for i in 0 .. 64 { s = fma(a[i], b[i], s); }
+    return (s as u32 bits) as u64;
+}
+
+fn dot_f64(seed: u64, k: u64) -> u64 {
+    let a: own [f32; 64] = alloc(0.0);
+    let b: own [f32; 64] = alloc(0.0);
+    fill(&mut a, seed);
+    fill(&mut b, seed + k + 1);
+    let x: own [f64; 64] = alloc(0.0);
+    let y: own [f64; 64] = alloc(0.0);
+    for i in 0 .. 64 { x[i] = a[i] as f64 / 3.0; y[i] = b[i] as f64; }
+    let mut s: f64 = 0.0;
+    for i in 0 .. 64 { s = s + x[i] * y[i]; }
+    return s as u64 bits;
+}
+
+fn dot_f16(seed: u64, k: u64) -> u64 {
+    let a: own [f32; 64] = alloc(0.0);
+    let b: own [f32; 64] = alloc(0.0);
+    fill(&mut a, seed);
+    fill(&mut b, seed + k + 1);
+    let x: own [f16; 64] = alloc(0.0);
+    let y: own [f16; 64] = alloc(0.0);
+    for i in 0 .. 64 { x[i] = a[i] as f16; y[i] = b[i] as f16; }
+    let mut s: f16 = 0.0;
+    for i in 0 .. 64 { s = s + x[i] * y[i]; }
+    return (s as u16 bits) as u64;
+}
+
+fn dot_bf16(seed: u64, k: u64) -> u64 {
+    let a: own [f32; 64] = alloc(0.0);
+    let b: own [f32; 64] = alloc(0.0);
+    fill(&mut a, seed);
+    fill(&mut b, seed + k + 1);
+    let x: own [bf16; 64] = alloc(0.0);
+    let y: own [bf16; 64] = alloc(0.0);
+    for i in 0 .. 64 { x[i] = a[i] as bf16; y[i] = b[i] as bf16; }
+    let mut s: bf16 = 0.0;
+    for i in 0 .. 64 { s = s + x[i] * y[i]; }
+    return (s as u16 bits) as u64;
+}
+
+// f8e4m3 holds at most 448: the inputs are scaled to [-2, 2) first
+fn dot_f8e4m3(seed: u64, k: u64) -> u64 {
+    let a: own [f32; 64] = alloc(0.0);
+    let b: own [f32; 64] = alloc(0.0);
+    fill(&mut a, seed);
+    fill(&mut b, seed + k + 1);
+    let x: own [f8e4m3; 64] = alloc(0.0);
+    let y: own [f8e4m3; 64] = alloc(0.0);
+    for i in 0 .. 64 { x[i] = (a[i] * 0.25) as f8e4m3; y[i] = (b[i] * 0.25) as f8e4m3; }
+    let mut s: f8e4m3 = 0.0;
+    for i in 0 .. 64 { s = s + x[i] * y[i]; }
+    return (s as u8 bits) as u64;
+}
+
+// e^x for x in [-16, 0]: x = n ln2 + r (Cody-Waite, two-part ln2), a degree-6
+// Taylor polynomial for e^r by Horner, times 2^n built from its bits
+fn exp_f32(x: f32) -> f32 {
+    let log2e: u32 = 0x3FB8AA3B;
+    let ln2lo: u32 = 0x35BFBE8E;
+    let c2: u32 = 0x3F000000;
+    let c3: u32 = 0x3E2AAAAB;
+    let c4: u32 = 0x3D2AAAAB;
+    let c5: u32 = 0x3C088889;
+    let c6: u32 = 0x3AB60B61;
+    let t: f32 = x * (log2e as f32 bits);
+    let n: i32 = (t - 0.5) as i32;
+    let nf: f32 = n as f32;
+    let r: f32 = (x - nf * 0.693145751953125) - nf * (ln2lo as f32 bits);
+    let mut p: f32 = c6 as f32 bits;
+    p = p * r + (c5 as f32 bits);
+    p = p * r + (c4 as f32 bits);
+    p = p * r + (c3 as f32 bits);
+    p = p * r + (c2 as f32 bits);
+    p = p * r + 1.0;
+    p = p * r + 1.0;
+    let sc: u32 = ((n + 127) as u32) << 23;
+    return p * (sc as f32 bits);
+}
+
+fn softmax_f32(seed: u64, k: u64) -> u64 {
+    let x: own [f32; 64] = alloc(0.0);
+    fill(&mut x, seed);
+    let mut m: f32 = x[0];
+    for i in 1 .. 64 { m = max(m, x[i]); }
+    let e: own [f32; 64] = alloc(0.0);
+    let mut s: f32 = 0.0;
+    for i in 0 .. 64 { e[i] = exp_f32(x[i] - m); s = s + e[i]; }
+    for i in 0 .. 64 { e[i] = e[i] / s; }
+    return (e[k] as u32 bits) as u64;
+}

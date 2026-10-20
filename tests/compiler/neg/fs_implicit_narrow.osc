@@ -1,0 +1,6 @@
+// expect: TYPE_MISMATCH object=y line=4
+// float slice: no implicit narrowing; an f32 is not an f16 without 'as f16'.
+fn f(x: f32) -> u64 {
+    let y: f16 = x;
+    return (y as u16 bits) as u64;
+}

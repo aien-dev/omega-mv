@@ -1,0 +1,6 @@
+// expect: TYPE_MISMATCH object=z line=4
+// float slice: no implicit widening; f16 + bf16 is refused, write a conversion.
+fn f(x: f16, y: bf16) -> u64 {
+    let z: f16 = x + y;
+    return (z as u16 bits) as u64;
+}

@@ -1,0 +1,7 @@
+// expect: FLOAT_CONST_RANGE object=y line=5
+// float slice: this decimal sits a hair above the f16 midpoint 1 + 2^-11, closer than one
+// f64 step; one rounding cannot be proven from the f64 neighbours, so it is refused.
+fn f() -> u64 {
+    let y: f16 = 1.00048828125000000000001;
+    return (y as u16 bits) as u64;
+}

@@ -17,7 +17,7 @@
 # osc2-receipt        ITEM=contracts|structs|arenas|encoder (default contracts): receipt under evidence/OSC-2/receipts (clean tree only)
 ifndef COMPILER_MK
 COMPILER_MK := 1
-.PHONY: test-compiler test-compiler-full test-compiler-quick oscc compiler-receipt osc0b-model-receipt osc2-receipt osc3-receipt
+.PHONY: test-compiler test-compiler-full test-compiler-quick oscc compiler-receipt osc0b-model-receipt osc2-receipt osc3-receipt test-compiler-float-g1 test-compiler-float-g2
 OSC_DIR = $(OUT_DIR)/compiler
 OSC_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -fno-fast-math -fno-math-errno -Isrc -Isrc/compiler -Isrc/compiler/model
 OSC_LDLIBS = -lm
@@ -254,3 +254,36 @@ osc2-receipt:
 osc3-receipt:
 	sh tests/compiler/osc3_receipt.sh $(ITEM)
 endif
+
+# OSC-4 float slice gate G1 (docs/osc/OSC-4-FLOATS.md): every operation at every slice float
+# type on OSC_FLOAT_G1_N random operand triples (native and interpreter) against the C
+# reference float_slice_ref.c, which is compiled on its own with the reference flags.
+OSC_FLOAT_G1_N ?= 10000
+OSC_REF_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -O0 -ffp-contract=off -fno-fast-math -march=armv8.2-a+fp16
+$(OSC_DIR)/float_slice_ref.o: tests/compiler/float_slice_ref.c tests/compiler/float_slice_ref.h
+	@mkdir -p $(OSC_DIR)
+	$(CC) $(OSC_REF_CFLAGS) -c -o $@ tests/compiler/float_slice_ref.c
+
+$(OSC_DIR)/test_osc_float_g1: tests/compiler/test_osc_float_g1.c $(OSC_DIR)/float_slice_ref.o $(OSC_LIB) $(OSC_HDRS)
+	@mkdir -p $(OSC_DIR)
+	$(CC) $(OSC_CFLAGS) -Itests/compiler -o $@ tests/compiler/test_osc_float_g1.c $(OSC_DIR)/float_slice_ref.o $(OSC_LIB) $(OSC_LDLIBS)
+
+test-compiler-float-g1: $(OSC_DIR)/test_osc_float_g1
+	$(abspath $(OSC_DIR)/test_osc_float_g1) $(OSC_FLOAT_G1_N) > $(OSC_DIR)/float_g1.out
+	@tail -3 $(OSC_DIR)/float_g1.out; grep -q '^OSC4_FLOAT_G1_PASS$$' $(OSC_DIR)/float_g1.out
+	@echo "test-compiler-float-g1: PASS"
+
+# Gate G2: the 64-element kernels of tests/compiler/float_g2.osc against the same C at the reference flags.
+$(OSC_DIR)/float_g2_ref.o: tests/compiler/float_g2_ref.c tests/compiler/float_g2_ref.h tests/compiler/float_slice_ref.h
+	@mkdir -p $(OSC_DIR)
+	$(CC) $(OSC_REF_CFLAGS) -c -o $@ tests/compiler/float_g2_ref.c
+
+$(OSC_DIR)/test_osc_float_g2: tests/compiler/test_osc_float_g2.c $(OSC_DIR)/float_g2_ref.o $(OSC_DIR)/float_slice_ref.o $(OSC_LIB) $(OSC_HDRS)
+	@mkdir -p $(OSC_DIR)
+	$(CC) $(OSC_CFLAGS) -Itests/compiler -o $@ tests/compiler/test_osc_float_g2.c $(OSC_DIR)/float_g2_ref.o \
+		$(OSC_DIR)/float_slice_ref.o $(OSC_LIB) $(OSC_LDLIBS)
+
+test-compiler-float-g2: $(OSC_DIR)/test_osc_float_g2
+	$(abspath $(OSC_DIR)/test_osc_float_g2) tests/compiler/float_g2.osc > $(OSC_DIR)/float_g2.out
+	@cat $(OSC_DIR)/float_g2.out; grep -q '^OSC4_FLOAT_G2_PASS$$' $(OSC_DIR)/float_g2.out
+	@echo "test-compiler-float-g2: PASS"

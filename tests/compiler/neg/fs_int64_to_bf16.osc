@@ -1,0 +1,6 @@
+// expect: TYPE_MISMATCH object=y line=4
+// float slice: a 64-bit integer into bf16 would round twice; write 'x as f64 as bf16'.
+fn f(x: i64) -> u64 {
+    let y: bf16 = x as bf16;
+    return (y as u16 bits) as u64;
+}
