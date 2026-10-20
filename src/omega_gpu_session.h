@@ -102,9 +102,15 @@ typedef struct {
     uint64_t timeout_ms;         /* marker poll; past it the completion is uncertain and the process latches */
     uint32_t shared_bytes;       /* shared memory per CTA; 0 = the QMD default (1024) */
     uint32_t spin_us;            /* poll the marker without sleeping for up to this long, then the platform's
-                                    poll_word (Linux reference: 50 us sleep-poll) until timeout_ms; 0 = poll_word only */
+                                    poll_word (Linux reference: 50 us sleep-poll) until timeout_ms; 0 = the process-wide window (omega_gpu_session_set_spin_us),
+                                    OMEGA_GPU_SESSION_SPIN_POLL_ONLY = poll_word only */
 } OmegaGpuLaunch;
 #define OMEGA_GPU_SESSION_MAX_SPIN_US 1000000u
+/* A launch that must not inherit the process-wide spin window passes this: one immediate re-read of the marker
+ * (1 us), then the platform poll_word until timeout_ms. The tree-verify GEMM uses it: 256 short launches per decode
+ * step with host work between them, and the AIEN server sets a 2000 us process window; a spin there is counted as
+ * chip time whenever the host thread is descheduled (L159: the decode thread spun through every GEMM at 0). */
+#define OMEGA_GPU_SESSION_SPIN_POLL_ONLY 1u
 #define OMEGA_GPU_SESSION_MAX_ARGS 32u
 /* poll_word is called in slices of at most this many ms so a cancel request is seen within one slice */
 #define OMEGA_GPU_SESSION_POLL_SLICE_MS 1u

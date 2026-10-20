@@ -33,7 +33,7 @@ static int case_ok;
 
 /* ---- the fake platform ---- */
 #define NB OMEGA_GPU_HANDLE_SLOTS
-enum { MODE_COMPLETE = 0, MODE_HANG = 1 };
+enum { MODE_COMPLETE = 0, MODE_HANG = 1, MODE_COMPLETE_ON_POLL = 2 /* the marker latches on the first poll_word, never inside a spin window */ };
 static struct {
     OmegaGpuHandleTable t;
     void *mem[NB];
@@ -50,6 +50,7 @@ static struct {
     unsigned cached_requests; /* buffers asked GPU-cached (must stay 0) */
     unsigned allocs_unlocked; /* allocations without the session lock (must stay 0) */
     int fail_open;
+    uint32_t last_n;          /* words of the last submit; MODE_COMPLETE_ON_POLL completes them at the first poll_word */
 } fk;
 
 static uint64_t f_now_ns(void *c) { (void)c; fk.ns += 1000u; return fk.ns; }
@@ -120,6 +121,7 @@ static int f_sync(void *c, OmegaGpuBufferHandle h, uint64_t off, uint64_t len) {
     fk.syncs++;
     return 0;
 }
+static void complete_ring(const uint32_t *w, uint32_t n);
 static int f_poll(void *c, OmegaGpuBufferHandle h, uint64_t off, uint32_t want, uint64_t ms, uint32_t *seen) {
     (void)c;
     if (!buf_live(h)) return OMEGA_GPU_PLAT_REFUSED_STALE_HANDLE;
@@ -127,6 +129,7 @@ static int f_poll(void *c, OmegaGpuBufferHandle h, uint64_t off, uint32_t want, 
     fk.polls++;
     if (fk.cancel_on_poll) { fk.cancel_on_poll = 0; omega_gpu_session_cancel(); }
     volatile uint32_t *w = (volatile uint32_t *)((uint8_t *)fk.mem[h.index] + off);
+    if (fk.mode == MODE_COMPLETE_ON_POLL && fk.last_n) { complete_ring((const uint32_t *)fk.mem[fk.ring.index], fk.last_n); fk.last_n = 0; }
     *seen = *w;
     if ((int32_t)(*w - want) >= 0) return 0;
     fk.ns += ms * 1000000u;
@@ -158,14 +161,8 @@ static void *va_to_cpu(uint64_t va) {
     }
     return NULL;
 }
-static int f_submit(void *c, OmegaGpuQueueHandle q, const uint32_t *w, uint32_t n) {
-    (void)c;
-    int rc = omega_gpu_handles_check(&fk.t, q.index, q.generation, OMEGA_GPU_HANDLE_QUEUE);
-    if (rc) return rc;
-    if ((uint64_t)n * 4u > fk.desc[fk.ring.index].bytes) return OMEGA_GPU_PLAT_REFUSED_BAD_LENGTH;
-    memcpy(fk.mem[fk.ring.index], w, (size_t)n * 4u);
-    fk.submits++;
-    if (fk.mode != MODE_COMPLETE) return 0;
+/* the GPU ran the pushbuffer: every release lands and the intermediate semaphore says DONE */
+static void complete_ring(const uint32_t *w, uint32_t n) {
     for (uint32_t i = 0; i + 5 < n; i++) {
         if (w[i] == ((2u << 28) | (5u << 16) | (0u << 13) | (0x005cu >> 2))) { /* release: va lo, va hi, payload */
             uint64_t va = (uint64_t)w[i + 1] | ((uint64_t)w[i + 2] << 32);
@@ -178,6 +175,16 @@ static int f_submit(void *c, OmegaGpuQueueHandle q, const uint32_t *w, uint32_t 
             if (s) *s = OMEGA_BW_SEMAPHORE_INTERMEDIATE_DONE;
         }
     }
+}
+static int f_submit(void *c, OmegaGpuQueueHandle q, const uint32_t *w, uint32_t n) {
+    (void)c;
+    int rc = omega_gpu_handles_check(&fk.t, q.index, q.generation, OMEGA_GPU_HANDLE_QUEUE);
+    if (rc) return rc;
+    if ((uint64_t)n * 4u > fk.desc[fk.ring.index].bytes) return OMEGA_GPU_PLAT_REFUSED_BAD_LENGTH;
+    memcpy(fk.mem[fk.ring.index], w, (size_t)n * 4u);
+    fk.submits++;
+    fk.last_n = n;
+    if (fk.mode == MODE_COMPLETE) complete_ring(w, n);
     return 0;
 }
 static int f_retire(void *c, OmegaGpuQueueHandle q) { (void)c; (void)q; fk.retires++; return 0; }
@@ -483,6 +490,34 @@ static void c_fmt_matches_snprintf(void) {
     EXPECT(s[0] == '\0');
 }
 
+/* L159: a launch whose spin_us is 0 inherits the process-wide window (the AIEN server sets 2000 us); a launch that must
+ * sleep-poll between host work passes OMEGA_GPU_SESSION_SPIN_POLL_ONLY. The fake clock ticks 1 us per read, so the inherited
+ * window costs ~2000 reads per marker before the first poll_word; POLL_ONLY polls after one read. */
+static void c_poll_only_ignores_process_spin(void) {
+    fk_reset();
+    EXPECT(install() == 0);
+    omega_gpu_session_lock();
+    OmegaGpuSession *s = omega_gpu_session_open();
+    EXPECT(s != NULL);
+    if (!s) { omega_gpu_session_unlock(); return; }
+    fk.mode = MODE_COMPLETE_ON_POLL;
+    EXPECT(omega_gpu_session_set_spin_us(2000) == 0);
+    OmegaGpuLaunch L = launch_desc(100);
+    uint64_t el = 0; uint32_t mk = 0;
+    EXPECT(omega_gpu_session_launch(&L, &el, &mk) == 0);
+    printf("  inherited window: polls %u elapsed_ns %llu\n", fk.polls, (unsigned long long)el);
+    EXPECT(fk.polls == 1 && el >= 2000u * 1000u);   /* inherited: a 2000 us spin, then one poll completes both markers */
+    fk.polls = 0; el = 0;
+    *(volatile uint32_t *)s->marker.cpu = 0; *(volatile uint32_t *)((uint8_t *)s->marker.cpu + 0x10) = 0;
+    L.spin_us = OMEGA_GPU_SESSION_SPIN_POLL_ONLY;
+    EXPECT(omega_gpu_session_launch(&L, &el, &mk) == 0);
+    printf("  poll-only window: polls %u elapsed_ns %llu\n", fk.polls, (unsigned long long)el);
+    EXPECT(fk.polls == 1 && el < 100u * 1000u);      /* explicit: one read, then poll_word, no spin */
+    EXPECT(omega_gpu_session_set_spin_us(0) == 0);
+    omega_gpu_session_unlock();
+    omega_gpu_session_close();
+}
+
 typedef struct { const char *id; void (*fn)(void); } Case;
 static const Case CASES[] = {
     {"INSTALL_REFUSALS_ABI_1_1", c_install_refusals},
@@ -497,6 +532,7 @@ static const Case CASES[] = {
     {"SERVING_RESERVATION_REFUSES_WITHOUT_ALLOC", c_reservation_refusal},
     {"MATMUL_CODE_BUFFER_ENCODED_IN_PLACE", c_matmul_code_buffer},
     {"WAIT_REFUSES_WITHOUT_CLOCK", c_wait_needs_clock},
+    {"POLL_ONLY_IGNORES_PROCESS_SPIN", c_poll_only_ignores_process_spin},
     {"FMT_BOUNDED_MATCHES_SNPRINTF", c_fmt_matches_snprintf},
 };
 

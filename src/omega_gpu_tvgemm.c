@@ -106,10 +106,11 @@ int omega_gpu_tv_gemm_x(const OmegaGpuFp8Tensor *t, uint32_t rows, uint32_t xfor
     omega_gpu_session_lock();
     OmegaPfKernel k; OmegaTcGemmSpec spec; uint32_t gx = 0, gy = 0, args[OMEGA_TCGEMM_ARGS_WORDS];
     int rc = prepare_locked(t, rows, xform, x_va, y_va, &k, &spec, &gx, &gy, args);
-    /* spin window 0: the platform sleep-poll, not PF_SPIN_US. The batch door calls this 256 times per step with host work between
+    /* spin window POLL_ONLY: the platform sleep-poll, not PF_SPIN_US and not the process-wide window (0 inherits it; the AIEN
+       server sets 2000 us, and L159 window 3 saw the decode thread spin through every GEMM with 0 here). The batch door calls this 256 times per step with host work between
        calls; a 200 ms busy spin is descheduled under box load and the run-queue wait was counted as chip time (L159: 260-503 ms
        per step measured vs ~150 ms of kernels; decode thread 67% of its time waiting for a CPU). */
-    if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_pf_launch_locked_spin(&k, 32u * spec.warps, gx, gy, omega_tcgemm_shared_bytes(&spec), args, OMEGA_TCGEMM_ARGS_WORDS, 0u, chip_ns);
+    if (rc == OMEGA_GPU_PF_OK) rc = omega_gpu_pf_launch_locked_spin(&k, 32u * spec.warps, gx, gy, omega_tcgemm_shared_bytes(&spec), args, OMEGA_TCGEMM_ARGS_WORDS, OMEGA_GPU_SESSION_SPIN_POLL_ONLY, chip_ns);
     omega_gpu_session_unlock();
     return rc;
 }
