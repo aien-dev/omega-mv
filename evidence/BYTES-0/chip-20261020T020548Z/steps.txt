@@ -1,0 +1,9 @@
+gate_hand exit=1 want=0 UNEXPECTED
+control_mutant exit=1 want=1 ok
+control_empty exit=1 want=0 UNEXPECTED
+gate_encoder exit=1 want=0 UNEXPECTED
+time_hand exit=1 want=0 UNEXPECTED
+time_encoder exit=1 want=0 UNEXPECTED
+time_empty exit=0 want=0 ok
+time_cpu_c exit=0 want=0 ok
+session FAIL

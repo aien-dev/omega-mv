@@ -497,9 +497,10 @@ static int run_gb10(const char *path, int argc, char **argv) {
             for (uint32_t i = 0; i < n; i++) mism += out[i] != want[i];
         int ok = want_unchanged ? (erc == OMEGA_GPU_ENGINE_OUTPUT_UNCHANGED && res.output_unchanged_words[0] == n)
                                 : (erc == OMEGA_GPU_ENGINE_OK && mism == 0);
-        fprintf(stderr, "  rep %u: engine=%s step=%s mismatches=%zu launch_to_done_ns=%llu %s\n", r,
-                omega_gpu_engine_failure_name(res.failure), omega_gpu_engine_step_name(res.failed_step), mism,
-                (unsigned long long)ns[r], ok ? "ok" : "FAIL");
+        fprintf(stderr, "  rep %u: engine=%s step=%s drv_rc=%d errno=%d drv_text=\"%s\" mismatches=%zu "
+                "launch_to_done_ns=%llu %s\n", r,
+                omega_gpu_engine_failure_name(res.failure), omega_gpu_engine_step_name(res.failed_step), res.drv_rc,
+                res.err_no, res.drv_text, mism, (unsigned long long)ns[r], ok ? "ok" : "FAIL");
         if (ok) ok_reps++;
         else if (!first_fail) {
             first_fail = res.failure ? res.failure : -1;
