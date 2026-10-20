@@ -21,9 +21,14 @@ state() {
 run() { name=$1; shift; echo "## $(date -u +%FT%T.%NZ) $*" >> "$R/$name.txt"; "$@" >> "$R/$name.txt" 2>&1; echo "## rc=$?" >> "$R/$name.txt"; }
 rcpt() { name=$1; shift; spark-receipt "l151-$name" --idle 20 -- "$@" > "$R/$name.txt" 2>&1; echo "## rc=$?" >> "$R/$name.txt"; }
 # the same with the GB10 lock taken first, so lock waiting is not inside the energy window
-rcptg() { name=$1; shift; flock /tmp/aien-gb10.lock spark-receipt "l151-$name" --idle 20 -- "$@" > "$R/$name.txt" 2>&1; echo "## rc=$?" >> "$R/$name.txt"; }
-gb10() { flock /tmp/aien-gb10.lock "$@"; }
+rcptg() { name=$1; shift; gb10 spark-receipt "l151-$name" --idle 20 -- "$@" > "$R/$name.txt" 2>&1; echo "## rc=$?" >> "$R/$name.txt"; }
+# a window opened with the chip lock (spark-window default since L154) sets AIEN_GB10_LOCK_HELD=1: never re-take it
+gb10() { if [ "${AIEN_GB10_LOCK_HELD:-}" = 1 ]; then "$@"; else flock /tmp/aien-gb10.lock "$@"; fi; }
 
+# host + chip lock held by the window (spark-window default since L154): run the chip phases first in this same window
+if [ "$PHASE" = host ] && [ "${AIEN_GB10_LOCK_HELD:-}" = 1 ] && [ ! -f "$EV/gpu.done" ]; then
+	sh "$0" gpu "$EV" && sh "$0" concurrent "$EV" && touch "$EV/gpu.done"
+fi
 state "$PHASE start"
 case $PHASE in
 host)
@@ -42,6 +47,7 @@ host)
 	;;
 gpu)
 	# CPU memory again while this window holds the GB10 lock (no 27B server traffic in memory at the same time)
+	[ "${AIEN_GB10_LOCK_HELD:-}" = 1 ] || \
 	for set in 5 0 $X925 $A725 $ALL; do run cpu-bw-gb10held gb10 "$B/mc/mc_cpu" bw "$set" 67108864 read 5; done
 	run gpu-ceiling gb10 "$B/gpu_ceiling_test"
 	run gpu-tc-peak gb10 "$B/gpu_tc_peak_test"
