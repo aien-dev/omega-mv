@@ -1965,6 +1965,7 @@ static unsigned long fs_units, fs_runs, fs_mismatch, fs_nan, fs_inf, fs_finite;
 static const char *const FS_T[] = {"f16", "bf16", "f8e4m3", "f32", "f64"};
 static const char *const FS_U[] = {"u16", "u16", "u8", "u32", "u64"};
 static const OscScalar FS_S[] = {OSC_T_F16, OSC_T_BF16, OSC_T_F8E4M3, OSC_T_F32, OSC_T_F64};
+static int fs_ti; /* the float type of the unit being generated */
 
 static uint64_t gen_arg_slice(OscScalar t, uint64_t r)
 {
@@ -1993,13 +1994,17 @@ static void fs_expr(char *dst, size_t cap, int depth, int ti, int typed)
     const char *T = FS_T[ti];
     if (depth <= 0 || r % 7 == 0) {
         static const char *lits[] = {"0.0", "1.0", "0.5", "2.0", "-0.0", "0.25", "3.0", "-2.5", "0.125", "1.5"};
+        /* a, b, c have the unit's type fs_ti; inside a conversion from another type they are converted first */
+        const char *nm[] = {"a", "b", "c"};
+        char v[24];
+        unsigned pick = (unsigned)((r >> 24) % 3);
+        if (ti == fs_ti) snprintf(v, sizeof v, "%s", nm[pick]);
+        else snprintf(v, sizeof v, "(%s as %s)", nm[pick], T);
         switch ((r >> 8) % 6) {
-        case 0: cf_cat(dst, cap, "a"); return;
-        case 1: cf_cat(dst, cap, "b"); return;
-        case 2: cf_cat(dst, cap, "c"); return;
-        case 3: cf_cat(dst, cap, "%s", typed ? "b" : lits[(r >> 16) % 10]); return;
-        case 4: cf_cat(dst, cap, "(%s)", typed ? "c" : lits[(r >> 16) % 10]); return;
-        default: cf_cat(dst, cap, "-a"); return;
+        case 0: case 1: case 2: cf_cat(dst, cap, "%s", v); return;
+        case 3: cf_cat(dst, cap, "%s", typed ? v : lits[(r >> 16) % 10]); return;
+        case 4: cf_cat(dst, cap, "(%s)", typed ? v : lits[(r >> 16) % 10]); return;
+        default: cf_cat(dst, cap, "-%s", v); return;
         }
     }
     static const char *ops[] = {"+", "-", "*", "/"};
@@ -2059,6 +2064,7 @@ static void float_slice_fuzz(unsigned n)
     sm_state = 0x05C4F1E7Aull;
     for (unsigned u = 0; u < n; u++) {
         int ti = (int)(u % 5);
+        fs_ti = ti;
         const char *T = FS_T[ti], *U = FS_U[ti];
         ex[0] = ey[0] = src[0] = 0;
         fs_expr(ex, sizeof ex, 2 + (int)(sm() % 2), ti, 0);

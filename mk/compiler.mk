@@ -17,7 +17,7 @@
 # osc2-receipt        ITEM=contracts|structs|arenas|encoder (default contracts): receipt under evidence/OSC-2/receipts (clean tree only)
 ifndef COMPILER_MK
 COMPILER_MK := 1
-.PHONY: test-compiler test-compiler-full test-compiler-quick oscc compiler-receipt osc0b-model-receipt osc2-receipt osc3-receipt test-compiler-float-g1 test-compiler-float-g2
+.PHONY: test-compiler test-compiler-full test-compiler-quick oscc compiler-receipt osc0b-model-receipt osc2-receipt osc3-receipt test-compiler-float-g1 test-compiler-float-g2 osc4-floats-receipt
 OSC_DIR = $(OUT_DIR)/compiler
 OSC_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -fno-fast-math -fno-math-errno -Isrc -Isrc/compiler -Isrc/compiler/model
 OSC_LDLIBS = -lm
@@ -270,9 +270,15 @@ $(OSC_DIR)/test_osc_float_g1: tests/compiler/test_osc_float_g1.c $(OSC_DIR)/floa
 	@mkdir -p $(OSC_DIR)
 	$(CC) $(OSC_CFLAGS) -Itests/compiler -o $@ tests/compiler/test_osc_float_g1.c $(OSC_DIR)/float_slice_ref.o $(OSC_LIB) $(OSC_LDLIBS)
 
-test-compiler-float-g1: $(OSC_DIR)/test_osc_float_g1
+$(OSC_DIR)/test_osc_float_g1_asan: tests/compiler/test_osc_float_g1.c $(OSC_DIR)/float_slice_ref.o $(OSC_LIB) $(OSC_HDRS)
+	@mkdir -p $(OSC_DIR)
+	$(CC) $(OSC_CFLAGS) $(OSC_ASAN) -Itests/compiler -o $@ tests/compiler/test_osc_float_g1.c $(OSC_DIR)/float_slice_ref.o $(OSC_LIB) $(OSC_LDLIBS)
+
+test-compiler-float-g1: $(OSC_DIR)/test_osc_float_g1 $(OSC_DIR)/test_osc_float_g1_asan
 	$(abspath $(OSC_DIR)/test_osc_float_g1) $(OSC_FLOAT_G1_N) > $(OSC_DIR)/float_g1.out
 	@tail -3 $(OSC_DIR)/float_g1.out; grep -q '^OSC4_FLOAT_G1_PASS$$' $(OSC_DIR)/float_g1.out
+	$(abspath $(OSC_DIR)/test_osc_float_g1_asan) 1000 > $(OSC_DIR)/float_g1_asan.out
+	@tail -1 $(OSC_DIR)/float_g1_asan.out; grep -q '^OSC4_FLOAT_G1_PASS$$' $(OSC_DIR)/float_g1_asan.out
 	@echo "test-compiler-float-g1: PASS"
 
 # Gate G2: the 64-element kernels of tests/compiler/float_g2.osc against the same C at the reference flags.
@@ -289,3 +295,7 @@ test-compiler-float-g2: $(OSC_DIR)/test_osc_float_g2
 	$(abspath $(OSC_DIR)/test_osc_float_g2) tests/compiler/float_g2.osc > $(OSC_DIR)/float_g2.out
 	@cat $(OSC_DIR)/float_g2.out; grep -q '^OSC4_FLOAT_G2_PASS$$' $(OSC_DIR)/float_g2.out
 	@echo "test-compiler-float-g2: PASS"
+
+# The float slice receipt: G1..G4 from a clean tree into evidence/OSC-4/receipts/.
+osc4-floats-receipt:
+	sh tests/compiler/osc4_floats_receipt.sh

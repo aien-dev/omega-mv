@@ -204,7 +204,7 @@ uint64_t osc_fp_f16_fma(uint64_t a, uint64_t b, uint64_t c) {
         return f16_of_double(r);
     }
     i128 p = f16_k(a) * f16_k(b);         /* exact, scale 2^-48 */
-    i128 s = p + (f16_k(c) << 24);        /* exact, scale 2^-48 */
+    i128 s = p + f16_k(c) * ((i128)1 << 24); /* exact, scale 2^-48 (a multiply: c may be negative) */
     if (s == 0) {
         /* exact zero: same-signed terms keep their sign, otherwise +0 (round to nearest) */
         bool ps = ((a ^ b) & 0x8000) != 0, cs = (c & 0x8000) != 0;

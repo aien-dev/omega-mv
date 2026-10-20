@@ -79,7 +79,14 @@ write `x + (y as f16)`.
 - NaN results follow the Arm manual (J1.4 FPProcessNaNs, FPProcessNaNs3,
   FPConvertNaN): a signalling NaN operand wins and is quietened, else the first quiet
   NaN; for fma the addend `c` is looked at first. Narrowing a NaN keeps its sign and
-  the top fraction bits.
+  the top fraction bits. The interpreter and the C reference spell this choice out
+  instead of leaving it to C: C does not say which of two NaN operands comes out, and
+  gcc may swap the operands of `+`, `*` or of fma's multiplication (gate G1 caught the
+  interpreter doing exactly that for fma).
+- bf16 widens to f32 as the manual defines it, its 16 bits followed by 16 zeros
+  (J1.4.3.106 BFMulAddH: `value1 = op1 :: Zeros{16}`), so a signalling bf16 NaN is
+  still signalling in f32 and the operation then quietens it. C's own `(float)` of a
+  `__bf16` (libgcc) quietens it already in the conversion; the slice does not follow C there.
 - f16, bf16, f32, f64: overflow rounds to infinity.
 - f8e4m3 has no infinity. Its NaN is S.1111.111 (one per sign). Anything above 448
   and infinity *saturate* to plus or minus 448; any NaN becomes S.1111.111. Widening
@@ -163,7 +170,11 @@ Receipts: `evidence/osc4-floats/` (filled in when the gates are run).
   `strict fn` (brief L135).
 - The float encoder forms live in the OSC encoder `src/compiler/osc_a64.c`, the one
   the compiler uses, not the legacy `aarch64_encoder.c`.
-- Two Slice A test expectations changed on purpose, because they asserted that the
+- Three existing test expectations changed on purpose. Two asserted that the
   half-precision forms were refused: "fsqrt type 3 refused" is now "fsqrt type 2
   refused" (type 3 is half precision, now valid), and the FMADD word that the decoder
-  used to refuse now decodes (FNMSUB is checked as refused instead).
+  used to refuse now decodes (FNMSUB is checked as refused instead). The third:
+  `tests/compiler/neg/st_capacity_fields.osc` named its 17th struct field `f16`, which is
+  now a type name; the field is renamed `g16` and the test still checks the same
+  17-field capacity refusal.
+- `test-compiler-full` is no longer only an alias of `test-compiler`: it adds G1 and G2.
