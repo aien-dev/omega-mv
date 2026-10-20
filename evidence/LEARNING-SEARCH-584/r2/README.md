@@ -17,7 +17,8 @@ not run and their evidence was not touched.
   0x5881..0x5885), all inside one hold of both locks.
 - load and memory: the run waited for 1-minute load under 15, polling every 60 s; after
   the 90-minute cap (12:22:26Z to 13:52:28Z, 90 polls) load1 was 141.6 and the run went
-  ahead as the brief requires. Batch start load1 99.08, MemAvailable 59,426,152 kB; end
+  ahead as the brief requires. It then waited 23 minutes in the quiet-measure and gb10 lock
+  queue (13:52:28Z to 14:15:34Z), during which load1 fell to 99.1. Batch start load1 99.08, MemAvailable 59,426,152 kB; end
   load1 97.24, 68,927,160 kB (`record/batch.txt`, `record/wait.txt`, per run
   `record/R*/load.txt`, and the header of `totals.csv`). The load target was NOT met.
 - instrument: thread CPU time (CLOCK_THREAD_CPUTIME_ID) per objective inside each lane's
@@ -50,7 +51,10 @@ lengths 240, 384, 600 objectives).
 - Disabled learning: C0 nolearn decision-identical to A at every seed and R (checks), and
   on every held-out stream (`controls/nolearn.txt`, 15 of 15 at 0).
 - Horizon: every key's reuse opportunities at R = 3 and 6 are exactly R times those at R = 1
-  (0 bad keys); blocks 1, 3, 4, 6, 7 are the same objectives for every R.
+  (0 bad keys); the preface and blocks 1, 3, 4, 6, 7 are the same objectives (block, kind,
+  key) at R = 3 and 6 as at R = 1 on all 3 calibration and 5 held-out seeds
+  (`checks/blocks-same.txt`, 16 of 16 at 0; recorded after the run of record, from the
+  stream generator only, no timing).
 - Mutants, each watched red: M1 code-byte flip 238 bad rows (382 per lane interleaved);
   M2 lying table entry 55 (B) and 53 (C1); M3 journal tamper 1; M4 lane leak (A2 runs on
   B's state) 384 rows differ from A; M5 horizon generator draws fresh keys: 51 to 61 bad keys.
@@ -67,15 +71,16 @@ lengths 240, 384, 600 objectives).
 
 The per-stream values, with an aien-calc receipt for each, are in `summary.txt`. On every
 stream at every R, both B and C0 beat A by more than that stream's A vs A2 difference.
-Interleaving brought the same-code difference down to 0.049% (calc:ba333b80) to 0.91%
-(calc:2df97ec6) of A's stream total, even at load 100. In the sealed run, separate
+Interleaving brought the same-code difference down to 0.042% (calc:46ad5bba, R = 6
+seed 0x5885) to 0.91% (calc:2df97ec6, R = 1 seed 0x5881) of A's stream total; receipts in
+`calc/noise_pct_*`, even at load 100. In the sealed run, separate
 processes of the same code differed by 43%. Each n(s) is a
 single same-code difference per stream, not a noise distribution. The protection against
 chance is the 5-of-5 requirement.
 
 Carry-over diagnostic (A5, not part of the verdict): the per-objective median of A - A2
-by Latin-square row is between -11.3 and +5.3 microseconds at every R, against a typical
-objective cost of about 2.5 ms. Which lane ran just before has no visible effect at this
+by Latin-square row is between -11.3 and +5.3 microseconds at every R, against A's mean cost per objective
+of 2.39 ms (calc:36b1d97b, R = 6 seed 0x5884) to 3.26 ms (calc:7654df7a, R = 3 seed 0x5884). Which lane ran just before has no visible effect at this
 resolution. claim_strength: measured.
 
 ## Quality floors
@@ -119,14 +124,14 @@ passed on this suite, and it carries no general-transfer claim.
   net(6) 5.89 to 7.93 (0 of 5); R = 6 fits give net(3) 2.11 to 2.80 (0 of 5) and net(6)
   5.25 to 6.91 (1 of 5). FAIL: the ranges were too narrow (three calibration seeds, no
   spread term). Break-even: net(1) lies between -0.10 and +0.15 ms on every fit, so H*
-  is 1 on 5 fits and 2 on 5 (`ls584 neth` via netfit.sh); net(2) is +1.06 to +1.60 ms.
+  is 1 on 5 fits and 2 on 5 (`netfit-B.txt`, `ls584 neth` via netfit.sh); net(2) is +1.06 to +1.60 ms.
   The first applicable use still saves about nothing (it re-realizes), as in the sealed run.
 - Q5, d_B > n on 5 of 5 at R = 3 and 6: held on cost, 5 of 5 at both. The "B PASS" it
   implied did not happen, because of F3.
 - Q6, B and C0 meet F1 and F2 everywhere: PASS.
 
 ## Limits and UNVERIFIED
-- The load target (under 15) was not met. The run went ahead at load 97 to 101 after the
+- The load target (under 15) was not met. The run went ahead at load1 97.2 to 101.6 (`totals.csv`) after the
   90-minute cap. Interleaving makes the comparison fair inside each process, but the
   absolute milliseconds would be different on a quiet machine.
 - UNVERIFIED: that the Latin square removes all order effects; the carry-over diagnostic
