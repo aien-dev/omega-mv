@@ -73,10 +73,80 @@ it came from.
     label because asm2's output buffer is 8 MiB; it is tested at its limits with the number written in,
     and through labels up to 1,048,575 words.
 
+## Rung 3: om3, a translator for Omegese (done)
+
+- `rung3/om3.s`: a translator from Omegese (the small program language the model writes, see
+  `docs/one_layer/OMEGESE.md`) to machine words. It is 1,486 instructions written in asm2's language and
+  built by asm2 (7,092 bytes, `rung3/om3.bin`). `rung3/table3.s2` adds 5 instruction lines to asm2's
+  table, each naming its manual section.
+- What it reads: one Omegese function. What it writes: that function's machine words, ready to be called
+  the same way the existing C compiler's output is called (same rules for inputs, result and errors).
+- The subset grew to what the 10 public practice tasks actually use: all nine number types, if/else,
+  while with a limit, for, return, and add, subtract, multiply, divide, remainder, and/or/xor, shifts,
+  comparisons, negate, not, and type conversions, each with the same error stops ("traps") as the C path:
+  overflow of a signed number, division by zero, a loop that runs past its limit, a conversion that does
+  not fit, a shift that is too far. It refuses, with its own error number, what the tasks do not use
+  (signed division, calls, arrays, more than one function).
+- How it builds code: every name gets its own register for as long as it exists. The C path keeps every
+  value in memory and loads and stores it around each step (that is its documented design, OSC-1 design
+  section 7, "no register allocation"), so a difference in word counts below measures that choice.
+- Checks (`rung3/gate3.sh`, results in `evidence/SEED-0/rung3/`):
+  - asm2 builds om3 twice to the same bytes; objdump (the referee) reads every one of the 1,486
+    instructions back to the name, registers, numbers and jump targets written in `om3.s`:
+    0 disagreements (`rung3/om3.audit`); five planted mistakes in the text are each caught;
+  - the 10 public practice tasks, 80 test inputs in all, 9 of them ending in an error stop: the functions
+    om3 makes give exactly the same result as the C path (`omegese emit`, `omega_emit`, the C back end),
+    down to the raw 64-bit register, and the same as each task's expected answers. The same runner
+    (`check/runner.c`, a referee) calls both;
+  - every word om3 made is a real instruction; om3 refuses 14 broken or out-of-subset programs, each
+    with its own error number.
+- Words of machine code per task (counts only, no timing; `evidence/SEED-0/rung3/words.tsv`):
+
+  | task | C path | seed chain |
+  |---|---:|---:|
+  | dev01 clamp_add | 58 | 17 |
+  | dev02 absdiff | 48 | 16 |
+  | dev03 popcount | 80 | 15 |
+  | dev04 gcd | 71 | 20 |
+  | dev05 checked_mul | 23 | 9 |
+  | dev06 safe_div | 21 | 8 |
+  | dev07 isqrt | 95 | 29 |
+  | dev08 collatz_steps | 111 | 28 |
+  | dev09 bitrev8 | 73 | 14 |
+  | dev10 to_i8 | 20 | 8 |
+  | total | 600 | 164 |
+
+  Said plainly: the seed chain uses fewer words on every task, 164 against 600 in total (27%). Most of
+  the gap is the C path's chosen design (every value goes to memory and back, see above), not a defect
+  carried down from older tools.
+
+## Rung 5: Atlas reborn (done)
+
+- `atlas/atlas.s2`: the Atlas boot image (the first program the emulated machine runs, which checks the
+  next stage's fingerprint before handing over), written line for line from `~/workspace/atlas/atlas.s`
+  and its SHA-256 code in asm2's language. The way the old linker placed the pieces (code at 0, messages,
+  fingerprint, constants, the SHA-256 code from byte 384, its table at byte 1224) is written out by hand
+  in the same file. `atlas/table5.s2` adds 28 instruction lines, each naming its manual section.
+- Built by asm2, with no GNU assembler and no linker: `atlas/atlas.bin`, 1,480 bytes.
+- Checks (`atlas/gate5.sh`, results in `evidence/SEED-0/rung5/`):
+  - asm2 builds it twice to the same bytes, and it is byte for byte the audited Atlas image
+    (sha256 f7802501...a5): no difference, so the manual had nothing to settle;
+  - objdump (the referee) reads all 263 instructions back to what `atlas.s2` says: 0 disagreements;
+    five planted mistakes are caught;
+  - the existing Atlas M1 tests (`run_m1_gates.sh`, not edited) pass on a scratch copy of the Atlas folder
+    holding the asm2-made image: the SHA-256 known answers, the static audits, and in QEMU the boot
+    (AWAKEN, VERIFY, HANDOFF) and the refusal of every corrupted next stage. `~/workspace/atlas` was
+    only read.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
   decoder and encoder and GNU objdump to compare; they never write a byte of any rung.
+- `check/audit2.sh` (GNU objdump) and `check/runner.c` (built with the C compiler) are reference checks
+  for rungs 3 and 5 in the same way: one reads every instruction back, the other calls the functions
+  both paths made and compares the answers. Neither writes a byte of any rung.
+- `evidence/SEED-0/rung3-worksheet.sh` and `rung5-worksheet.sh` are the arithmetic behind the keyword
+  table of om3 and the message bytes and constants of Atlas, kept so anyone can redo the sums.
 - `evidence/SEED-0/rung0-worksheet.sh` is the arithmetic I did while writing the words: each manual field
   layout with the numbers put in. It is kept so anyone can redo the sums. It caught one typing slip of
   mine (word 26) before the first run.
