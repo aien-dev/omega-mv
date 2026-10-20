@@ -17,7 +17,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <limits.h>
-#include "omega_physics_dir.h"
+#include "omega_clean_clone.h"
 
 static int m19_gate_count = 0;
 static int m19_gate_passed = 0;
@@ -1776,38 +1776,10 @@ static bool test_m19_gate16_clean_clone(void) {
         memcpy(m19_candidate_commit, src_sha, sizeof(m19_candidate_commit));
         return true;
     }
-    if (omega_evidence_tree_dirty()) {
-        return false;
-    }
-    char clone_template[] = "/tmp/omega_clean_m19_XXXXXX";
-    char *clone = mkdtemp(clone_template);
-    if (!clone) return false;
-    char checkout[512];
-    int cl = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
-    if (cl < 0 || (size_t)cl >= sizeof(checkout)) return false;
-
-    /* Resolve the PHYSICS_DIR this process runs with (omega_physics_dir.h), as an
-     * absolute path, so the nested build (running from a different cwd)
-     * finds the same pinned physics checkout instead of silently falling
-     * back to the Makefile's default. */
-    char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
-    if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
-        fprintf(stderr, "%s\n", physics_err);
-        return false;
-    }
-
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "git clone --quiet --no-hardlinks . %s && cd %s && git checkout --quiet %s && "
-                       "make clean >/dev/null 2>&1 && make -j PHYSICS_DIR=%s >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m19-gates >%s/qualification.log 2>&1",
-                       checkout, checkout, src_sha, physics_dir_resolved, clone);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    if (system(command) != 0) return false;
-
-    /* The built checkout must be exactly the named candidate revision. */
+    /* Clone this exact revision into a fresh /tmp directory, build it from
+     * scratch and rerun the M19 suite there (omega_clean_clone.h). */
     char clone_sha[41] = {0};
-    if (!m19_git_head(checkout, clone_sha)) return false;
+    if (!omega_clean_clone_run("m19", "--run-m19-gates", clone_sha)) return false;
     if (strcmp(clone_sha, src_sha) != 0) return false;
 
     memcpy(m19_candidate_commit, src_sha, sizeof(m19_candidate_commit));
@@ -1866,7 +1838,8 @@ static bool test_m19_gate18_receipt(void) {
     }
     uint8_t digest[32];
     char hex[65];
-    return compute_file_sha256("build/omegatool", digest, hex);
+    /* The binary actually running (OUT_DIR may put it outside build/). */
+    return compute_file_sha256("/proc/self/exe", digest, hex);
 }
 
 int run_m19_gates(void) {
