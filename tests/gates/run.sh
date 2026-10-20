@@ -110,6 +110,13 @@ case "$step" in
     ! grep -q '^FAIL' build/transc.log
     obs mutants_killed 10
     ;;
+  gpu-tern)           # pr-smoke.yml smoke job, KT1 ternary GEMV step: physics-src at physics.lock; host battery
+                      # and warp simulator, no chip
+    physics_pin; set -o pipefail; mkdir -p build
+    make test-gpu-tern | tee build/tern.log
+    test "$(grep -cE '^gpu_tern_test: [0-9]+ checks, 0 failed: PASS$' build/tern.log)" -eq 2
+    ! grep -q '^FAIL' build/tern.log
+    ;;
   # host-suites.yml
   searchtrace)        make $NOPHYS test-searchtrace ;;
   estimation)         for t in test-estimation test-est-tools test-estimation-v3 test-est3c-tools; do make $NOPHYS $t; done ;;
