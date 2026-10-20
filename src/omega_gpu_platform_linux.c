@@ -7,7 +7,7 @@
  *   queue_open   = ctx.pb_mem = the ring buffer             (m16_native_enqueue_methods copies methods there)
  *   queue_submit = m16_native_submit_methods
  *   queue_retire = nvrm_retire(&rm, rm.put)                 (after both markers landed)
- *   poll_word    = m16_native_wait_marker (>= serial compare, 50 us sleep-poll)
+ *   poll_word    = fine_wait_marker_ge (the m16_native_wait_marker >= serial compare; 20 us nanosleep poll, 1 us timer slack, L159)
  *   sync_*       = dsb sy                                   (the barrier the session issued itself)
  *   device_close = m16_native_close (nvrm_close)
  */
@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/prctl.h>
 #include <time.h>
 
 #define LINUX_REF_BUFFERS (OMEGA_GPU_HANDLE_SLOTS - 2u) /* one slot each for the device and the queue */
@@ -260,6 +261,29 @@ static int ref_sync(void *ctx, OmegaGpuBufferHandle b, uint64_t off, uint64_t le
 static int ref_sync_to_gpu(void *ctx, OmegaGpuBufferHandle b, uint64_t off, uint64_t len) { return ref_sync(ctx, b, off, len, "sync_cpu_to_gpu", 1); }
 static int ref_sync_to_cpu(void *ctx, OmegaGpuBufferHandle b, uint64_t off, uint64_t len) { return ref_sync(ctx, b, off, len, "sync_gpu_to_cpu", 0); }
 
+/* Marker wait by a fine sleep-poll (L159, 2026-10-20). The m16 reference loop (usleep(50) + yield) costs about 102 us per launch
+ * because the default 50 us timer slack rounds every sleep up (omega#328). A busy spin instead (the tree-verify GEMM used
+ * PF_SPIN_US, 200 ms) keeps the CPU and is descheduled under box load: in the Qwen3.8 batch door the launching thread waited on
+ * the run queue 67% of its time (4539 preemptions in 10 s at load 44-58) and its measured chip time per step grew 1.7-3.5x while
+ * the kernels themselves did not slow down. A short nanosleep with 1 us slack keeps the thread asleep most of the time (it keeps
+ * its scheduling lag, so a wake-up is served promptly) and sees a completion within about one sleep. CPU-only repro, 256 x 1 ms
+ * waits at load 52-60 (~/workspace/investigations/2026-10-20-tv-inserver): sleep20 275-338 ms wall vs spin 277-345 at nice 0;
+ * 274-461 vs 270-965 at nice 10; cpu 10-18 ms vs 246. The timer slack is set once per calling thread. */
+#define POLL_SLEEP_NS 20000L
+#define POLL_SLACK_NS 1000UL
+static int fine_wait_marker_ge(volatile uint32_t *w, uint32_t target, uint64_t timeout_ms) {
+    static __thread int slack_set;
+    if (!slack_set) { (void)prctl(PR_SET_TIMERSLACK, POLL_SLACK_NS, 0, 0, 0); slack_set = 1; }
+    uint64_t duration, end;
+    if (__builtin_mul_overflow(timeout_ms, 1000000ull, &duration) || __builtin_add_overflow(ref_now_ns(NULL), duration, &end)) end = UINT64_MAX;
+    while (ref_now_ns(NULL) < end) {
+        if ((int32_t)(*w - target) >= 0) return 0;
+        struct timespec t = { 0, POLL_SLEEP_NS };
+        (void)nanosleep(&t, NULL);
+    }
+    return (int32_t)(*w - target) >= 0 ? 0 : -1;
+}
+
 static int ref_poll_word(void *ctx, OmegaGpuBufferHandle b, uint64_t off, uint32_t expected, uint64_t timeout_ms, uint32_t *observed) {
     LinuxRef *r = ctx;
     ref_lock(r);
@@ -270,7 +294,7 @@ static int ref_poll_word(void *ctx, OmegaGpuBufferHandle b, uint64_t off, uint32
     if (rc != OMEGA_GPU_PLAT_OK) { rc = refuse(r, rc, "poll_word"); ref_unlock(r); return rc; }
     volatile uint32_t *w = (volatile uint32_t *)((uint8_t *)r->mem[b.index].cpu + off);
     ref_unlock(r); /* never hold the table lock while polling */
-    rc = m16_native_wait_marker(w, expected, timeout_ms) == 0 ? OMEGA_GPU_PLAT_OK : OMEGA_GPU_POLL_TIMED_OUT;
+    rc = fine_wait_marker_ge(w, expected, timeout_ms) == 0 ? OMEGA_GPU_PLAT_OK : OMEGA_GPU_POLL_TIMED_OUT;
     if (observed) *observed = *w;
     return rc;
 }

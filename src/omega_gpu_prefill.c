@@ -106,12 +106,16 @@ int omega_gpu_pf_kernel_locked(const OmegaPfKey *key, OmegaPfGen gen, OmegaPfKer
 
 int omega_gpu_pf_launch_locked(const OmegaPfKernel *k, uint32_t threads, uint32_t grid_x, uint32_t grid_y, uint32_t shared_bytes,
                                const uint32_t *args, uint32_t n_args, uint64_t *ns) {
+    return omega_gpu_pf_launch_locked_spin(k, threads, grid_x, grid_y, shared_bytes, args, n_args, PF_SPIN_US, ns);
+}
+int omega_gpu_pf_launch_locked_spin(const OmegaPfKernel *k, uint32_t threads, uint32_t grid_x, uint32_t grid_y, uint32_t shared_bytes,
+                                    const uint32_t *args, uint32_t n_args, uint32_t spin_us, uint64_t *ns) {
     if (!k || !threads || !grid_x || !grid_y) return OMEGA_GPU_PF_BAD_ARGS;
     if ((uint64_t)threads * k->gpr_declared > 65536u) { omega_gpu_session_set_error("prefill launch: registers x threads exceed the file"); return OMEGA_GPU_PF_TOO_LARGE; }
     if (!omega_bw_gpr_declared_ok(k->gpr_declared, k->gpr_peak)) { omega_gpu_session_set_error("declared registers below peak + 2: refusing to launch"); return OMEGA_GPU_PF_CHIP_FAIL; }
     OmegaGpuLaunch L = { .code_va = k->code_va, .gpr_count = k->gpr_declared, .threads_x = threads, .threads_y = 1, .grid_x = grid_x, .grid_y = grid_y,
                          .num_elements = (size_t)threads * grid_x * grid_y, .args = args, .n_args = n_args, .timeout_ms = PF_TIMEOUT_MS,
-                         .shared_bytes = shared_bytes, .spin_us = PF_SPIN_US };
+                         .shared_bytes = shared_bytes, .spin_us = spin_us };
     uint64_t t = 0;
     if (omega_gpu_session_launch(&L, &t, NULL) != 0) return OMEGA_GPU_PF_CHIP_FAIL;
     g.chip_ns += t; g.launches++;

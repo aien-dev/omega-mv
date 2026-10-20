@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -145,6 +146,7 @@ static void c_open_failure_text(void) {
     omega_gpu_session_close();
 }
 
+static uint64_t real_ms(void) { struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts); return (uint64_t)ts.tv_sec * 1000u + (uint64_t)ts.tv_nsec / 1000000u; }
 static void c_marker_never_latches(void) {
     fake_reset();
     fk.kernel_mode = FK_KERNEL_SKIP;
@@ -152,9 +154,14 @@ static void c_marker_never_latches(void) {
     omega_gpu_session_lock();
     EXPECT(omega_gpu_session_open() != NULL);
     OmegaGpuLaunch L = launch_desc(5);
+    const uint64_t t0 = real_ms();
     EXPECT(omega_gpu_session_launch(&L, NULL, NULL) == -1);
+    const uint64_t launch_ms = real_ms() - t0;
     EXPECT(omega_gpu_session_is_blocked());
-    EXPECT(fk.wait_calls == 5 && fk.clock_ms == 5); /* five 1 ms poll slices, then uncertain */
+    /* five 1 ms poll slices on the real clock, then uncertain. The Linux reference polls the word with its own fine sleep-poll
+       (fine_wait_marker_ge, L159), so the fake m16_native_wait_marker is no longer on the path: 0 calls, and the launch took at
+       least the 5 ms timeout. */
+    EXPECT(fk.wait_calls == 0 && launch_ms >= 5 && launch_ms < 5000);
     EXPECT(g_retires == 0);
     omega_gpu_session_unlock();
     omega_gpu_session_close();
