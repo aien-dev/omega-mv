@@ -30,16 +30,17 @@ static const struct { const char *name; int v; uint32_t data, scale; float per; 
     { "NVFP4 OMMA.SF.16864 UE4M3 4X (16/sc)", OMMA_V_NV,   0x22222222u, 0x40404040u, 256.0f, 16384.0 },
 };
 
-static int peak(void) {
-    static const struct { uint32_t stall, chains, threads, ctas; } pts[] = {
-        { 8, 16, 128, 192 }, { 2, 16, 256, 384 }, { 4, 8, 256, 384 }, { 1, 16, 256, 384 },
-    };
-    const uint32_t iters = 4096; int fail = 0;
+static int peak(int tiny) {
+    typedef struct { uint32_t stall, chains, threads, ctas; } Pt;
+    static const Pt full[] = { { 8, 16, 128, 192 }, { 2, 16, 256, 384 }, { 4, 8, 256, 384 }, { 1, 16, 256, 384 } };
+    static const Pt small[] = { { 8, 1, 32, 1 }, { 8, 16, 32, 1 }, { 8, 16, 128, 4 } }; /* --tiny: find a hang with a short launch */
+    const Pt *pts = tiny ? small : full; const size_t npts = tiny ? sizeof small / sizeof small[0] : sizeof full / sizeof full[0];
+    const uint32_t iters = tiny ? 16 : 4096; int fail = 0;
     double best[sizeof VAR / sizeof VAR[0]] = { 0 };
     omega_gpu_session_lock();
     if (!omega_gpu_session_open()) { printf("open failed: %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); return 1; }
     for (size_t vi = 0; vi < sizeof VAR / sizeof VAR[0]; vi++)
-    for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
+    for (size_t i = 0; i < npts; i++) {
         static BlackwellIRProgram p; OmegaGpuMem code = { 0 }, out = { 0 }; int sv = -1;
         if (omega_blackwell_codegen_omma_peak_prog(VAR[vi].v, VAR[vi].data, VAR[vi].scale, iters, pts[i].chains, pts[i].stall, pts[i].threads, &p, &sv) != 0) { printf("codegen refused\n"); fail++; continue; }
         size_t per_t = 16u * pts[i].chains + 16u, ob = (size_t)pts[i].ctas * pts[i].threads * per_t;
@@ -77,7 +78,7 @@ int main(int argc, char **argv) {
     char msg[256]; int fail = 0;
     if (omega_omma_patch_selftest(msg, sizeof msg) != 0) { printf("OMMA selftest FAIL: %s\n", msg); fail++; } else printf("OMMA selftest: %s\n", msg);
     if (omega_qmma_patch_selftest(msg, sizeof msg) != 0) { printf("QMMA selftest FAIL: %s\n", msg); fail++; } else printf("QMMA selftest: %s\n", msg);
-    if (!host && !fail) fail += peak();
+    if (!host && !fail) fail += peak(argc > 1 && !strcmp(argv[1], "--tiny"));
     printf("GPU_OMMA_PEAK: %s\n", fail ? "FAIL" : "PASS");
     return fail ? 1 : 0;
 }
