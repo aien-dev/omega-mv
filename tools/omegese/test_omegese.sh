@@ -362,13 +362,13 @@ for f in "$ROOT"/tests/one_layer/omegese/structs/t*.omegese; do accept "$f" "str
 [ "$ns" -eq 6 ] || bad "struct twins accepted $ns/6"
 SP='struct P x uint ok bool v ulong 2 end\nstruct Q y uint end\nfn g a uint to uint\np = new P a true ulong 7\n'
 nxs() { nxm "$1" | LC_ALL=C sort | tr '\n' '|'; }
-got="$(nxs "${SP}w = get p ")"; [ "$got" = "word ok|word v|word x|" ] || bad "next after get <struct>: got '$got'"
-got="$(nxs "${SP}put p ")"; [ "$got" = "word ok|word v|word x|" ] || bad "next after put <struct>: got '$got'"
-got="$(nxs "${SP}put p v ")"; case "$got" in *"word x"*|*"word ok"*) bad "next after put <struct> <array field>: a field offered: '$got'" ;; *number*) ;; *) bad "next after put <struct> <array field>: no index: '$got'" ;; esac
-got="$(nxs "${SP}free p\np = new ")"; [ "$got" = "word P|" ] || bad "next after new for an own P: got '$got'"
+got="$(nxs "${SP}w = get p ")"; [ "$got" = "space|word ok|word v|word x|" ] || bad "next after get <struct>: got '$got'"
+got="$(nxs "${SP}put p ")"; [ "$got" = "space|word ok|word v|word x|" ] || bad "next after put <struct>: got '$got'"
+got="$(nxs "${SP}put p v ")"; case "$got" in *"|word x|"*|*"|word ok|"*) bad "next after put <struct> <array field>: a field offered: '$got'" ;; *number*) ;; *) bad "next after put <struct> <array field>: no index: '$got'" ;; esac
+got="$(nxs "${SP}free p\np = new ")"; [ "$got" = "space|word P|" ] || bad "next after new for an own P: got '$got'"
 got="$(nxs "${SP}w = new ")"; case "$got" in *"word P|word Q|"*) ;; *) bad "next after new for a new name: struct names missing: '$got'" ;; esac
 got="$(nxs 'struct P x uint end\nfn g p view P to void\n')"; case "$got" in *"word put|"*) bad "next: put offered with only a view struct: '$got'" ;; esac
-got="$(nxs 'struct P x uint ')"; case "$got" in *"number 1 63|"*"word end|"*) ;; *) bad "next inside a struct line: '$got'" ;; esac
+got="$(nxs 'struct P x uint ')"; case "$got" in "newname P x|number 1 64|space|word end|") ;; *) bad "next inside a struct line: '$got'" ;; esac
 echo "structs: $ns/6 twin programs ACCEPT; next after get/put <struct> offers exactly its fields, after new the struct names"
 
 # 2. refusals: "== <expected reason substring>", the bad program, "-- control", the fixed program; the struct cases are in tests/one_layer/omegese/structs/refusals.txt

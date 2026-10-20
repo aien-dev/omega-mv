@@ -92,7 +92,7 @@ nr=0; for e in "${EXS[@]}"; do for arm in omegese text; do
   if [ "$(cat "$T/rd/$e.$arm.check")" = OK ]; then nr=$((nr + 1)); mkdir -p "$T/exc/$arm/$e"; for f in "$T/rd/$e.$arm".candidate.*; do cp "$f" "$T/exc/$arm/$e/candidate.${f##*.}"; done
   else echo "     $e $arm: $(cat "$T/rd/$e.$arm.check")"; fi
 done; done
-[ "$nr" = 30 ] && ok "reader + x445 check: all 15 examples OK in both forms (30 of 30)" || bad "reader: $nr of 30 example forms OK"
+[ "$nr" = 32 ] && ok "reader + x445 check: all 16 examples OK in both forms (32 of 32)" || bad "reader: $nr of 32 example forms OK"
 printf '```\nfn hash_step h uint to uint\nret h\nend\n```\n' > "$T/rd/sig.content"
 reader "$X" "$EMIT" omegese "$T/rd/sig.content" "$T/rd/sig" "$EXD/hash_step/requirement"
 grep -q '^REFUSED signature' "$T/rd/sig.check" && ok "  (negative control: an Omegese hash_step with one parameter is refused: $(cat "$T/rd/sig.check"))" || bad "reader control: $(cat "$T/rd/sig.check")"
@@ -111,8 +111,8 @@ grep -q '10' "$EXD/count_digits/program.osc" && sed '0,/10/s//16/' "$EXD/count_d
 not cmp -s "$T/exc/mutant/count_digits/candidate.osc" "$EXD/count_digits/program.osc" || bad "mutant: sed changed nothing in count_digits"
 if OLA experiment "$T/expk/tasks.tar" "$T/expk/TASKS.sha256" "$T/exc" > /dev/null 2> "$T/exh.err"; then
   ev="$(sed -n 's/^ola.sh: evidence in //p' "$T/exh.err" | tail -1)"; case "$ev" in /*) ;; *) ev="$ROOT/$ev" ;; esac
-  grep -q '^set=omegese accepted=15/15 ' "$ev/score.txt" && grep -q '^set=text accepted=15/15 ' "$ev/score.txt" && grep -q '^references_accepted=15/15' "$ev/score.txt" &&
-    ok "harness: both forms of all 15 examples ACCEPT on their $nin inputs, so both forms give the expected (the same) outputs" || { bad "harness on the examples"; grep '^set=\|^references' "$ev/score.txt"; }
+  grep -q '^set=omegese accepted=16/16 ' "$ev/score.txt" && grep -q '^set=text accepted=16/16 ' "$ev/score.txt" && grep -q '^references_accepted=16/16' "$ev/score.txt" &&
+    ok "harness: both forms of all 16 examples ACCEPT on their $nin inputs, so both forms give the expected (the same) outputs" || { bad "harness on the examples"; grep '^set=\|^references' "$ev/score.txt"; }
   [ "$(awk '$1 == "hash_step" || $1 == "count_digits" { print $2 }' "$ev/sets/mutant/verdicts.txt" | sort -u)" = REJECT ] &&
   ! awk '$1 == "hash_step" || $1 == "count_digits"' "$ev/sets/mutant/verdicts.txt" | grep -q no_candidate &&
     ok "  (negative control: one changed constant in an Omegese and in an OSC example is REJECTED by the harness)" || bad "harness mutant set: $(cat "$ev/sets/mutant/verdicts.txt" | head -3)"
@@ -123,7 +123,7 @@ for mode in many one; do for arm in omegese text; do system_prompt "$HERE/arms" 
 cmp -s <(tasktext < "$T/p.omegese.many") <(tasktext < "$T/p.text.many") && cmp -s <(tasktext < "$T/p.omegese.one") <(tasktext < "$T/p.text.one") &&
 [ "$(grep -cE '^Example [0-9]+\.$' "$T/p.omegese.many")" = 15 ] && [ "$(grep -cE '^Example [0-9]+\.$' "$T/p.text.one")" = 1 ] &&
 grep -qx 'entry clamp_sub' "$T/p.text.one" && not grep -qx 'entry clamp_sub' "$T/p.text.many" &&
-[ "$(grep -c '^```$' "$T/p.omegese.many")" = 28 ] && grep -qF "$(cat "$EXD/dot3/program.omegese")" "$T/p.omegese.many" && grep -qF "$(cat "$EXD/dot3/program.osc")" "$T/p.text.many" &&
+[ "$(grep -c '^```$' "$T/p.omegese.many")" = 30 ] && grep -qF "$(cat "$EXD/dot3/program.omegese")" "$T/p.omegese.many" && grep -qF "$(cat "$EXD/dot3/program.osc")" "$T/p.text.many" &&
   ok "prompts: both arms carry the same task text (15 many-shot, 1 one-shot = clamp_sub), each with its own program form" || bad "prompt task text differs between arms"
 not cmp -s <(tasktext < "$T/p.omegese.many") <(tasktext < "$T/p.text.many" | sed '0,/signed/s//unsigned/') &&
   not system_prompt "$HERE/arms" bytes many 2> /dev/null > /dev/null && not system_prompt "$HERE/arms" omegese few 2> /dev/null > /dev/null &&

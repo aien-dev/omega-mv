@@ -16,7 +16,7 @@ v = get p x
 free p
 ret v
 end
-== line 7: 'q' is own Q; total takes view P there
+== line 8: 'q' is own Q; total takes view P there
 struct P x uint end
 struct Q x uint end
 fn total p view P to uint
