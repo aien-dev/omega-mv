@@ -26,6 +26,7 @@
 #include "sha256.h"
 
 #include <dirent.h>
+#include <limits.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdio.h>
@@ -752,10 +753,15 @@ static int quiet_flag_is_mine(const char *flag) {
 enum { QUIET_FLAG_NONE, QUIET_FLAG_OWN, QUIET_FLAG_OTHER };
 static int quiet_flag_state(void) {
     const char *home = getenv("HOME");
-    char flag[512];
-    snprintf(flag, sizeof flag, "%s/workspace/.spark-quiet", home ? home : "");
-    if (access(flag, F_OK) != 0) return QUIET_FLAG_NONE;
-    return quiet_flag_is_mine(flag) ? QUIET_FLAG_OWN : QUIET_FLAG_OTHER;
+    char flag[512], real_flag[PATH_MAX], real_home[PATH_MAX];
+    if (!home || !home[0]) return QUIET_FLAG_NONE;
+    snprintf(flag, sizeof flag, "%s/workspace/.spark-quiet", home);
+    /* The flag must resolve to a file inside $HOME (symlinks and ".." are
+     * resolved first). A flag that is missing or lies outside home is no flag. */
+    if (!realpath(flag, real_flag) || !realpath(home, real_home)) return QUIET_FLAG_NONE;
+    size_t hn = strlen(real_home);
+    if (strncmp(real_flag, real_home, hn) != 0 || real_flag[hn] != '/') return QUIET_FLAG_NONE;
+    return quiet_flag_is_mine(real_flag) ? QUIET_FLAG_OWN : QUIET_FLAG_OTHER;
 }
 
 /* The 1-minute load average above which the living run is not started.
