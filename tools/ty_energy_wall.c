@@ -79,7 +79,7 @@ static void window(const char *dir, const char *name, long long ep_ns, double up
 	int c = !strcmp(cfg, "S6") ? 0 : !strcmp(cfg, "S2") ? 1 : -1;
 	int k = -1;
 	for (int i = 0; i < 4; i++) if (!strcmp(cond, COND[i])) k = i;
-	int r = (int)num(b, "round");
+	int r = (int)num(b, "round") + 1; /* the plan numbers rounds from 0; stored 1-based */
 	if (c < 0 || k < 0 || r < 1 || r > MAXR) { free(b); return; }
 	Win *w = &W[c][r][k];
 	double go = num(b, "go_ns"), planned = num(b, "planned_ns");
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 			Win *w = W[c][r];
 			if (!w[0].nrow && !w[1].nrow && !w[2].nrow && !w[3].nrow) continue;
 			int ok = w[0].ok && w[1].ok && w[2].ok && w[3].ok;
-			printf("  round %d: E0 %.1f  EA %.1f  EB %.1f  EAB %.1f J (rows %d/%d/%d/%d, load %.1f/%.1f/%.1f/%.1f)", r, w[0].e, w[1].e,
+			printf("  round %d: E0 %.1f  EA %.1f  EB %.1f  EAB %.1f J (rows %d/%d/%d/%d, load %.1f/%.1f/%.1f/%.1f)", r - 1, w[0].e, w[1].e,
 			       w[2].e, w[3].e, w[0].nrow, w[1].nrow, w[2].nrow, w[3].nrow, w[0].load, w[1].load, w[2].load, w[3].load);
 			if (!ok) { printf("  REFUSED\n"); continue; }
 			double i_r = w[3].e - w[1].e - w[2].e + w[0].e;

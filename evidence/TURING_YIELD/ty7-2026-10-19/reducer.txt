@@ -1,0 +1,40 @@
+TY-7 reducer (protocol docs/turing/TURING_YIELD_TY7_PROTOCOL.md)
+K = 248321 symbols (vocab 248320 + end), L(M) = 243220274608 bits (whole dir 247120452368 bits)
+
+round 1: replies 8 tokens 1518 symbols 1525 (end symbols 7) request attempts 8
+  L(D|uniform) 27330.816  L(D|B) 19629.726  L(D|B_warm) 15490.194  L(D|M) 2277.326 bits
+  per symbol: uniform 17.9218  B 12.8720  B_warm 10.1575  M 1.4933 bits
+  G = 17352.400 bits (11.3786 /symbol); T_V0 (full L(M)) = -243220257255.600 bits
+  request time 204.101 s (readable), 7.438 tok/s; mean GPU W 41.94 (context)
+  E_gross 56850.5 J (37.45 J/token); P_base nan W from 0 engine-idle IDLE rows; E_incr UNRESOLVED nan J (nan J/token)
+  G/E_gross 0.30523 bit/J  G/E_incr nan bit/J  T_V0/E_gross -4.2782e+06 bit/J
+  box start: load1 17.01 MemAvail 72064956 kB locks 1 util 95 | end: load1 17.46 MemAvail 71002060 kB locks 1 util 94
+
+round 2: replies 8 tokens 1264 symbols 1272 (end symbols 8) request attempts 8
+  L(D|uniform) 22796.589  L(D|B) 16838.210  L(D|B_warm) 13000.335  L(D|M) 1963.815 bits
+  per symbol: uniform 17.9218  B 13.2376  B_warm 10.2204  M 1.5439 bits
+  G = 14874.394 bits (11.6937 /symbol); T_V0 (full L(M)) = -243220259733.606 bits
+  request time 165.798 s (readable), 7.624 tok/s; mean GPU W 42.51 (context)
+  E_gross 49145.5 J (38.88 J/token); P_base nan W from 0 engine-idle IDLE rows; E_incr UNRESOLVED nan J (nan J/token)
+  G/E_gross 0.30266 bit/J  G/E_incr nan bit/J  T_V0/E_gross -4.9490e+06 bit/J
+  box start: load1 15.32 MemAvail 70989404 kB locks 1 util 95 | end: load1 16.49 MemAvail 70296084 kB locks 1 util 94
+
+round 3: replies 8 tokens 1358 symbols 1365 (end symbols 7) request attempts 8
+  L(D|uniform) 24463.321  L(D|B) 17715.701  L(D|B_warm) 13722.803  L(D|M) 2005.419 bits
+  per symbol: uniform 17.9218  B 12.9785  B_warm 10.0533  M 1.4692 bits
+  G = 15710.282 bits (11.5094 /symbol); T_V0 (full L(M)) = -243220258897.718 bits
+  request time 184.834 s (readable), 7.347 tok/s; mean GPU W 41.83 (context)
+  E_gross 55387.9 J (40.79 J/token); P_base nan W from 0 engine-idle IDLE rows; E_incr UNRESOLVED nan J (nan J/token)
+  G/E_gross 0.28364 bit/J  G/E_incr nan bit/J  T_V0/E_gross -4.3912e+06 bit/J
+  box start: load1 19.61 MemAvail 70957576 kB locks 1 util 96 | end: load1 20.29 MemAvail 70277776 kB locks 1 util 96
+
+pooled: symbols 4162 tokens 4140 request s 554.733
+  L(D|uniform) 74590.726 L(D|B) 54183.637 L(D|B_warm) 42213.332 L(D|M) 6246.560 bits
+  G 47937.077 bits (11.5178 /symbol), sd_G 1260.673 bits, eps 0.0125 bits
+  T_V0 pooled (L(M) once) -243220226670.923 bits; margin 3 sqrt(3) sd_G = 6550.647 bits
+  N* = L(M) / (G per symbol) = 2.1117e+10 symbols
+  E_gross 161384.0 J (38.982 J/token)  E_incr nan J UNRESOLVED (nan J/token)
+  G/E_gross 0.29704 bit/J  G/E_incr nan bit/J  T_V0/E_gross -1.5071e+06 bit/J
+
+VERDICT TY-7 V0: FAIL (pooled T_V0 - eps > margin: no; every round T_V0 > 0: no)
+VERDICT G-rule (not V0): PASS (G > 3 sd_G each round: yes; G/symbol within 10%: yes; G/E_gross within 20%: yes; readable: yes)
