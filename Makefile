@@ -2600,6 +2600,12 @@ GPU_LAUNCH_COST_TEST = $(OUT_DIR)/gpu_launch_cost_test
 $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_launch_cost_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 
+# L312 engine (2026-10-20): the chip piston, alone (--mode pre) and fed by a host fill engine while it runs (--mode live).
+# --host-only is the simulator proof with a negative control; the chip run goes under quiet-measure + the gb10 lock.
+GPU_ENGINE_PISTON_TEST = $(OUT_DIR)/gpu_engine_piston_test
+$(GPU_ENGINE_PISTON_TEST): tests/gpu_engine_piston_test.c tests/bw_warp_sim_tc.h src/omega_blackwell_codegen_piston.c src/omega_blackwell_codegen_piston.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_engine_piston_test.c src/omega_blackwell_codegen_piston.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
 # OWN-30B W-L2d (2026-10-14): L2 reuse of FP8 GEMV weights between two launches of one list (tests/gpu_l2_reuse_test.c, chip only, GB10 lock).
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
