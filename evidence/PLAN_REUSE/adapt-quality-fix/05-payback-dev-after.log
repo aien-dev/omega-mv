@@ -1,0 +1,17 @@
+# payback dev, after the fix, exit 1
+# command: cd ~/workspace/targets/omega-rxplan-adapt/payback-after && PAYBACK_OUT=out-dev nice -n 10 ./build/rx_plan_payback_test dev
+# load/mem start: 61.26 64.52 54.25 mem_avail_kB=63802152
+# load/mem end: 61.26 64.52 54.25 mem_avail_kB=63791888
+  FAIL tests/runtime/rx_plan_payback.c:1204 P+ dev sign positive (net -60582 ns)
+[*] placed on 10 Cortex-X925 cores
+[*] stream S1_reverse: 12 tasks, seeds 200.., cache fresh
+    restart before task 6: 1 records serialised, 1 reloaded, 0 refused
+[*] stream S1_merge_P+: 12 tasks, seeds 200.., cache fresh
+[*] stream dev_P0_no_payoff: 6 tasks, seeds 250.., cache fresh
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 3 refused, 0 stored
+checks 290 failures 1 bad_rows 1
+dev: S1_reverse p 1.000 Delta -7808 ns [-59448, 208668] C 118416 ns; S1_merge p 1.000 Delta 44801 ns [-367338, 185315] C 99344 ns; P0 m 61232 ns [-13553, 82752]
+dev: net S1_reverse 2991509 ns, S1_merge -60582 ns (P+ sign NEGATIVE), P0 -1203447 ns (sign negative); reconciliation OK; stale refused/rederived/revalidated; corrupt 3/3 refused
+receipt: /home/drakestapleton/workspace/targets/omega-rxplan-adapt/payback-after/out-dev/dev-receipt.json

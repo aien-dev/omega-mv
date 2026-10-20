@@ -1,0 +1,29 @@
+# payback heldout, after the fix, exit 0
+# command: cd ~/workspace/targets/omega-rxplan-adapt/payback-after && PAYBACK_OUT=out-heldout nice -n 10 ./build/rx_plan_payback_test heldout
+# load/mem start: 61.26 64.52 54.25 mem_avail_kB=63789636
+# load/mem end: 61.80 64.58 54.33 mem_avail_kB=62817788
+[*] placed on 10 Cortex-X925 cores
+[*] stream S1_reverse: 40 tasks, seeds 300.., cache fresh
+    S1_reverse: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 0; net -3155007 ns (cpu -212624 ns, be -1), break-even -1, floors ok, neg transfer 0
+[*] stream S1_merge_P+: 40 tasks, seeds 300.., cache fresh
+    S1_merge_P+: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 0; net 5182560 ns (cpu 1415856 ns, be 5), break-even 2, floors ok, neg transfer 0
+[*] stream S2_warmup_dev_seeds: 24 tasks, seeds 200.., cache fresh
+    S2_warmup_dev_seeds: hits 22 misses 2 acq 2 adapt 0 refusals 12 restarts 0; net 723338 ns (cpu 257120 ns, be 12), break-even 2, floors ok, neg transfer 0
+[*] stream S2_heldout_bindings_compositions: 40 tasks, seeds 400.., cache kept
+    S2_heldout_bindings_compositions: hits 39 misses 1 acq 1 adapt 0 refusals 13 restarts 0; net 257080809 ns (cpu 529520 ns, be 2), break-even 17, floors ok, neg transfer 0
+[*] stream S3_interference: 40 tasks, seeds 500.., cache fresh
+    S3_interference: hits 35 misses 5 acq 5 adapt 1 refusals 48 restarts 0; net -4342115 ns (cpu -144960 ns, be -1), break-even 2, floors ok, neg transfer 0
+[*] stream S4_changed_preconditions: 40 tasks, seeds 600.., cache fresh
+    S4_changed_preconditions: hits 37 misses 3 acq 3 adapt 1 refusals 30 restarts 0; net -7656315 ns (cpu -397600 ns, be -1), break-even -1, floors ok, neg transfer 0
+[*] stream S5_stale_generations: 40 tasks, seeds 700.., cache fresh
+    S5_stale_generations: hits 30 misses 10 acq 10 adapt 0 refusals 9 restarts 0; net -7231776 ns (cpu -981232 ns, be -1), break-even 3, floors ok, neg transfer 0
+[*] stream S6_restart: 40 tasks, seeds 800.., cache fresh
+    restart before task 20: 1 records serialised, 1 reloaded, 0 refused
+    S6_restart: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 1; net -293562 ns (cpu -351280 ns, be -1), break-even 2, floors ok, neg transfer 0
+[*] stream P0_no_payoff: 40 tasks, seeds 900.., cache fresh
+    P0_no_payoff: hits 0 misses 40 acq 40 adapt 0 refusals 39 restarts 0; net -223483 ns (cpu -2834144 ns, be -1), break-even 20, floors ok, neg transfer 0
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 3 refused, 0 stored
+checks 3060 failures 0 bad_rows 0
+receipt: /home/drakestapleton/workspace/targets/omega-rxplan-adapt/payback-after/out-heldout/heldout-receipt.json

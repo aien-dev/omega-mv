@@ -1,0 +1,81 @@
+# payback heldout, before the fix, exit 1
+# command: cd ~/workspace/targets/omega-rxplan-adapt/payback-before && PAYBACK_OUT=out-heldout nice -n 10 ./build/rx_plan_payback_test heldout
+# load/mem start: 61.26 64.52 54.25 mem_avail_kB=63932504
+# load/mem end: 61.26 64.52 54.25 mem_avail_kB=63768528
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 1, path 3)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 3, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 5, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 7, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 9, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 11, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 13, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 15, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 17, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 19, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 21, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 23, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 1, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 4, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 7, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 10, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 13, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 16, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 19, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 22, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 25, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 28, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 31, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 34, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 37, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S3_interference task 1, path 3)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S3_interference task 3, path 3)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S3_interference task 6, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S3_interference task 8, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S3_interference task 11, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S3_interference task 13, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S3_interference task 16, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S3_interference task 18, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S3_interference task 21, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S3_interference task 23, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S3_interference task 26, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S3_interference task 28, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S3_interference task 31, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S3_interference task 33, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 9 vs 12 (S3_interference task 36, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S3_interference task 38, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 1, path 3)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 5, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 9, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 13, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 17, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 21, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 25, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 29, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 33, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:703 F2 plan length 7 vs 10 (S4_changed_preconditions task 37, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:1302 P0 sign negative (net 1195845 ns)
+[*] placed on 10 Cortex-X925 cores
+[*] stream S1_reverse: 40 tasks, seeds 300.., cache fresh
+    S1_reverse: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 0; net -19797666 ns (cpu -90544 ns, be -1), break-even 6, floors ok, neg transfer 0
+[*] stream S1_merge_P+: 40 tasks, seeds 300.., cache fresh
+    S1_merge_P+: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 0; net 48656450 ns (cpu 1758528 ns, be 4), break-even 2, floors ok, neg transfer 0
+[*] stream S2_warmup_dev_seeds: 24 tasks, seeds 200.., cache fresh
+    S2_warmup_dev_seeds: hits 22 misses 2 acq 2 adapt 1 refusals 12 restarts 0; net 8287130 ns (cpu 386224 ns, be 10), break-even 3, floors VIOLATED, neg transfer 11
+[*] stream S2_heldout_bindings_compositions: 40 tasks, seeds 400.., cache kept
+    S2_heldout_bindings_compositions: hits 39 misses 1 acq 1 adapt 0 refusals 13 restarts 0; net -5176007 ns (cpu 508816 ns, be 2), break-even -1, floors VIOLATED, neg transfer 13
+[*] stream S3_interference: 40 tasks, seeds 500.., cache fresh
+    S3_interference: hits 35 misses 5 acq 5 adapt 3 refusals 48 restarts 0; net -23090267 ns (cpu -213456 ns, be -1), break-even -1, floors VIOLATED, neg transfer 14
+[*] stream S4_changed_preconditions: 40 tasks, seeds 600.., cache fresh
+    S4_changed_preconditions: hits 37 misses 3 acq 3 adapt 2 refusals 30 restarts 0; net -19820269 ns (cpu -337280 ns, be -1), break-even -1, floors VIOLATED, neg transfer 9
+[*] stream S5_stale_generations: 40 tasks, seeds 700.., cache fresh
+    S5_stale_generations: hits 30 misses 10 acq 10 adapt 0 refusals 9 restarts 0; net 8466607 ns (cpu -721024 ns, be -1), break-even 2, floors ok, neg transfer 0
+[*] stream S6_restart: 40 tasks, seeds 800.., cache fresh
+    restart before task 20: 1 records serialised, 1 reloaded, 0 refused
+    S6_restart: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 1; net 7215458 ns (cpu -459360 ns, be -1), break-even 2, floors ok, neg transfer 0
+[*] stream P0_no_payoff: 40 tasks, seeds 900.., cache fresh
+    P0_no_payoff: hits 0 misses 40 acq 40 adapt 0 refusals 39 restarts 0; net 1195845 ns (cpu -2739840 ns, be -1), break-even 2, floors ok, neg transfer 0
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 3 refused, 0 stored
+checks 3060 failures 52 bad_rows 1
+receipt: /home/drakestapleton/workspace/targets/omega-rxplan-adapt/payback-before/out-heldout/heldout-receipt.json
