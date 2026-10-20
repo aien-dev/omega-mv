@@ -26,6 +26,7 @@ sha256sum "$OUT"/gpu_nv4_api_test "$OUT"/gpu_router_fn_test "$OUT"/gpu_fnattn_te
 run() { # name, then the test's chip arguments
   local name="$1"; shift
   local T="$OUT/gpu_${name}_test"
+  [ "$name" = nv4 ] && T="$OUT/gpu_nv4_api_test"   # the nv4 test binary is named *_api_test (Makefile GPU_NV4_TEST)
   $T --host-only 2>&1 | tee "$EVID/$name-host-only.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
   $T --sim 2>&1 | tee "$EVID/$name-sim.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
   $T --chip "$@" 2>&1 | tee "$EVID/$name-chip.log"; [ "${PIPESTATUS[0]}" = 0 ] || fail=1
