@@ -71,6 +71,8 @@ typedef struct {
     int crash_step;             /* R9 crash point (F, first process) */
     int seat;                   /* start the resident GB10 seat (silicon build only) */
     const char *gen_dir;        /* reuse an R9 store (F restart); else a new one */
+    int goal_after_research;    /* adapt(): the goal arrives only after the body's own
+                                   research of the new cores has selected (A semantic) */
 } Opts;
 
 typedef struct {
@@ -887,9 +889,13 @@ static uint64_t crumbs_of(Rig *r, uint32_t reaction, RxCrumbKind kind, int reaso
  * R13's episode: production confirms the incumbent on the A725 cores, the
  * body moves to the X925 cores, a human goal arrives, and the organism adapts
  * by itself (plan, search, GPU experiment, belief, selection, R9 promotion).
- * Production runs on its own thread from the goal on and keeps running. */
+ * Production runs on its own thread from the move on and keeps running. The
+ * body also researches the new core class on its own, with no goal yet
+ * (AIEN's core-class hypothesis): with goal_after_research the goal is
+ * published only after that research has selected, so a selection older
+ * than the goal must still be proposed and promoted. */
 typedef struct {
-    uint64_t goal_crumb, served_at_goal, served_at_promotion, gen_before, gen_after;
+    uint64_t goal_crumb, served_at_move, served_at_promotion, gen_before, gen_after;
     uint64_t promotion_crumb;
     int promoted;
 } Episode;
@@ -910,8 +916,27 @@ static int adapt(Rig *r, Episode *ep) {
     uint64_t lineage = 0;
     rx_gen_active(r->gen, &ep->gen_before, &lineage);
     if (start_producer(r) != 0) return -6;
+    uint64_t sel_before = field(r, r->omega.o.selection, 0);
+    uint64_t declined_before = __atomic_load_n(&r->living.refusals, __ATOMIC_ACQUIRE);
     if (move_threads(&x) <= 0 || publish_placement(r, CLASS_X925) != 0) return -7;
-    ep->served_at_goal = served(r);
+    /* Production is counted from the move on, as before the goal was made
+     * late: every refusal (the late-goal decline included) comes after it. */
+    ep->served_at_move = served(r);
+    if (r->opt.goal_after_research) {
+        /* The body researches the new core class by itself, selects, and
+         * generation.prepare declines that selection for want of a goal. The
+         * goal is published only after that decline has been recorded. */
+        limit = now_ns() + 60000000000ull;
+        while (now_ns() < limit &&
+               (field(r, r->omega.o.selection, 0) <= sel_before ||
+                __atomic_load_n(&r->living.refusals, __ATOMIC_ACQUIRE) <= declined_before)) {
+            if (atomic_load(&r->producer_error)) return -9;
+            pause_us(200);
+        }
+        if (field(r, r->omega.o.selection, 0) <= sel_before ||
+            __atomic_load_n(&r->living.refusals, __ATOMIC_ACQUIRE) <= declined_before)
+            return -12;
+    }
     if (publish_goal(r, target) != 0) return -8;
     ep->goal_crumb = rx_world_explain(&r->w, r->aien.o.goal, 0);
     limit = now_ns() + 90000000000ull;
@@ -945,18 +970,22 @@ typedef struct {
     unsigned gap_us;
     int live;
     atomic_int error;
+    atomic_uint idle;           /* turns sat out because pause was set */
 } Driver;
 
 static void *driver_main(void *arg) {
     Driver *d = arg;
     Rig *r = d->r;
     while (!atomic_load(&d->stop)) {
-        if (!atomic_load(&d->pause))
+        if (atomic_load(&d->pause)) {
+            atomic_fetch_add(&d->idle, 1);
+        } else {
             for (uint32_t k = 0; k < r->opt.lanes; k++) {
                 if (d->quota && r->lane_sent[k] >= d->quota) continue;
                 if (lane_done(r, k) != r->lane_sent[k]) continue;
                 if (lane_submit(r, k) != 0) atomic_store(&d->error, 1);
             }
+        }
         pause_us((int)d->gap_us);
     }
     return NULL;
@@ -969,6 +998,22 @@ static int driver_start(Driver *d, Rig *r, uint64_t quota, unsigned gap_us) {
     d->gap_us = gap_us;
     if (pthread_create(&d->t, NULL, driver_main, d) != 0) return -1;
     d->live = 1;
+    return 0;
+}
+
+/* Park the driver: returns once it has seen the pause from the top of its
+ * loop, so a turn that was already inside the submit loop when the pause was
+ * set has finished. Only after that is lanes_sent a count the caller can
+ * wait for; sampling it earlier lets late submits reach the seat unseen.
+ * -1 if the driver never parked within ms. */
+static int driver_pause(Driver *d, int ms) {
+    atomic_store(&d->pause, 1);
+    unsigned idle0 = atomic_load(&d->idle);
+    uint64_t t = now_ns();
+    while (atomic_load(&d->idle) == idle0) {
+        if (now_ns() - t > (uint64_t)ms * 1000000ull) return -1;
+        pause_us(200);
+    }
     return 0;
 }
 
@@ -1104,6 +1149,9 @@ static int scenario_a_case(int defect, uint32_t want, const char *label, Result 
     if (!r) return -1;
     Opts o = opts();
     o.defect = defect;
+    /* The semantic case lets the body research the new cores on its own and
+     * publishes the goal after that selection; the others publish it at once. */
+    o.goal_after_research = defect == RX_OMEGA_DEFECT_SKIP_REMAINDER;
     int rc = start(r, &o);
     CHECK(rc == 0, "A %s: setup failed at stage %d", label, g_stage);
     Episode ep;
@@ -1165,14 +1213,14 @@ static int scenario_a_case(int defect, uint32_t want, const char *label, Result 
     }
     pthread_mutex_unlock(&r->omega.mu);
     CHECK(lies == 0, "A %s: %u verified store entries do not match their bytes", label, lies);
-    uint64_t during = ep.served_at_promotion - ep.served_at_goal;
+    uint64_t during = ep.served_at_promotion - ep.served_at_move;
     CHECK(during > 0, "A %s: production stopped while the candidate was refused", label);
     Result sub;
     memset(&sub, 0, sizeof sub);
     finish(r, &sub, 100);
     if (first) {
         *res = sub;
-        res->prod_before = ep.served_at_goal;
+        res->prod_before = ep.served_at_move;
         res->prod_during = during;
         res->gen_before = ep.gen_before;
         res->fault_observed = 1;
@@ -1978,8 +2026,7 @@ static void scenario_e(void) {
     Driver dv;
     CHECK(driver_start(&dv, r, 0, 300) == 0, "E: driver");
     CHECK(wait_lanes(r, 3 * LANES, 30000) == 0, "E: lanes never produced");
-    atomic_store(&dv.pause, 1);
-    pause_us(2000);
+    CHECK(driver_pause(&dv, 30000) == 0, "E: the driver did not park");
     CHECK(wait_lanes(r, lanes_sent(r), 30000) == 0, "E: lanes did not go idle");
     res->prod_before = served(r);
     uint32_t seat_gen0 = r->w.seat_generation;
@@ -2019,8 +2066,8 @@ static void scenario_e(void) {
         else pause_us(500);
     }
 #endif
-    CHECK(claimed && held, "E: the seat did not hold the lane claim (claimed %d held %d)", claimed,
-          held);
+    CHECK(claimed && held, "E: the seat did not hold the lane claim (claimed %d held %d, lanes in flight %llu)",
+          claimed, held, U(lanes_sent(r) - lanes_done(r)));
     uint64_t mem_held = r->w.used_memory;
     OmegaSharedWorldRing *c2g = (OmegaSharedWorldRing *)(r->w.coherent + rx_world_off_c2g());
     OmegaSharedWorldDesc old = c2g->slots[seq & c2g->mask];

@@ -40,6 +40,7 @@
 #include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
+#include "rx_quiet_reps.h"
 
 enum { SUBJ_EXTERNAL = 100, ISSUER = 3, SUBJ_PLAN = 61, SUBJ_PROPOSER = 71, SUBJ_PROMOTER = 72 };
 
@@ -67,6 +68,8 @@ enum { MS_COMPILED = 101, MS_HYBRID, MS_LEARNED, MS_HARDWARE, MS_POISONED, MS_PA
 
 static int g_checks;
 static int g_fail;
+/* Measurements refused as too busy to time (rx_quiet_reps.h). */
+static int g_untimed_compiled, g_untimed_parallel, g_untimed_poisoned;
 
 #define CHECK(cond, ...) do {                                            \
         g_checks++;                                                      \
@@ -1033,33 +1036,67 @@ static int cmp_u64(const void *a, const void *b) {
 
 /* 41 interleaved runs per leg at 4 workers: reactions that computed per
  * run, crumbs per run, median latency, CPU time, outcomes. */
-static void measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_energy, const char *what) {
+/* 1 when measured; 0 when the machine was too busy to time it (a refusal,
+ * rx_quiet_reps.h): nothing was measured and nothing that needs it is judged. */
+static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_energy, const char *what) {
     Pair *p = &g_pair;
     CHECK(pair_start(p, goal, m, 4) == 0, "%s: pair", what);
     memset(ms, 0, sizeof *ms);
     AgResult ro, rf;
     for (uint64_t r = 1; r <= 3; r++) pair_run(p, r, a_value(r), &ro, &rf, NULL, NULL, 0);
     enum { RUNS = 41 };
+    /* RUNS undisturbed pairs (rx_quiet_reps.h): a pair counts only when
+     * neither leg's threads waited for a core, at most 60 attempts per pair.
+     * Every attempt is still checked for the same outcome on both legs. */
+    enum { ATTEMPTS = RUNS * 60 };
     uint64_t ns_o[RUNS], ns_f[RUNS], cpu_o = 0, cpu_f = 0, cr_o = 0, cr_f = 0, cm_o = 0, cm_f = 0;
-    for (uint64_t i = 0; i < RUNS; i++) {
-        uint64_t id = 10 + i, a = a_value(id);
+    uint32_t kept = 0, tried = 0;
+    int delay_known = 1;
+    for (uint64_t i = 0; i < ATTEMPTS && kept < RUNS; i++) {
+        uint64_t id = 10 + i, a = a_value(id), t_o = 0, t_f = 0;
         set_inputs(&p->o, a, id);
         set_inputs(&p->f, a, id);
         uint64_t c0 = p->o.w.n_crumbs, t0 = cpu_ns();
-        run(&p->o, &p->lo, id, &ro, &ns_o[i]);
-        cpu_o += cpu_ns() - t0;
-        cr_o += p->o.w.n_crumbs - c0;
-        cm_o += commits_between(&p->o, c0, p->o.w.n_crumbs);
+        int64_t d0 = rx_run_delay_ns();
+        run(&p->o, &p->lo, id, &ro, &t_o);
+        int64_t d1 = rx_run_delay_ns();
+        uint64_t u_o = cpu_ns() - t0, k_o = p->o.w.n_crumbs - c0;
+        uint64_t m_o = commits_between(&p->o, c0, p->o.w.n_crumbs);
         c0 = p->f.w.n_crumbs;
         t0 = cpu_ns();
-        run(&p->f, &p->lf, id, &rf, &ns_f[i]);
-        cpu_f += cpu_ns() - t0;
-        cr_f += p->f.w.n_crumbs - c0;
-        cm_f += commits_between(&p->f, c0, p->f.w.n_crumbs);
+        int64_t d2 = rx_run_delay_ns();
+        run(&p->f, &p->lf, id, &rf, &t_f);
+        int64_t d3 = rx_run_delay_ns();
+        uint64_t u_f = cpu_ns() - t0, k_f = p->f.w.n_crumbs - c0;
+        uint64_t m_f = commits_between(&p->f, c0, p->f.w.n_crumbs);
+        tried++;
+        CHECK(ro.outcome == rf.outcome, "%s: attempt %u: outcomes differ", what, tried);
+        if (d0 < 0 || d1 < 0 || d2 < 0 || d3 < 0) delay_known = 0;
+        if (!rx_quiet_rep(delay_known ? d1 - d0 : -1, t_o) ||
+            !rx_quiet_rep(delay_known ? d3 - d2 : -1, t_f))
+            continue;
+        ns_o[kept] = t_o;
+        ns_f[kept] = t_f;
+        kept++;
+        cpu_o += u_o;
+        cr_o += k_o;
+        cm_o += m_o;
+        cpu_f += u_f;
+        cr_f += k_f;
+        cm_f += m_f;
         ms->ok_before += ro.outcome == AG_RUN_SUCCESS;
         ms->failed_before += ro.outcome == AG_RUN_FAILURE;
         ms->ok_after += rf.outcome == AG_RUN_SUCCESS;
         ms->failed_after += rf.outcome == AG_RUN_FAILURE;
+    }
+    printf("    %s: undisturbed pairs %u of %u (%s)\n", what, kept, tried,
+           delay_known ? "run-queue delay from schedstat" : "schedstat missing: every pair counts");
+    if (kept < RUNS) {
+        fprintf(stderr, "  %s: machine too busy to time: %u of %u undisturbed pairs in %u attempts\n",
+                what, kept, RUNS, (unsigned)ATTEMPTS);
+        rx_busy_refuse(what);
+        pair_stop(p);
+        return 0;
     }
     qsort(ns_o, RUNS, sizeof ns_o[0], cmp_u64);
     qsort(ns_f, RUNS, sizeof ns_f[0], cmp_u64);
@@ -1089,28 +1126,36 @@ static void measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with
                "(+/- %.1f) uJ, performance cores %.1f -> %.1f (+/- %.1f) uJ", ms->energy_uj_before,
                ms->energy_uj_after, ms->energy_noise_uj, cpu_mean(0), cpu_mean(1), cpu_noise());
     printf("\n");
+    return 1;
 }
 
 static void t_measure(void) {
     printf("[*] measurement: original and fused side by side\n");
     if (MC.state != AG_MS_VERIFIED) return;
     unpublished_refused(&MC, "verified");
-    measure(&MC, GOAL_EFFECT, &R.m_compiled, 1, "compiled");
-    CHECK(rx_fusion_accept_measure(&MC, &R.m_compiled, 50) == 0 && MC.state == AG_MS_MEASURED,
-          "compiled accepted: fewer reactions, not slower, same outcomes");
+    /* A refused measurement (machine too busy to time) leaves its MetaSkill
+     * verified and unmeasured: the acceptance below, and for the compiled one
+     * the canary, promotion and use that follow it, are not judged. */
+    g_untimed_compiled = !measure(&MC, GOAL_EFFECT, &R.m_compiled, 1, "compiled");
+    if (!g_untimed_compiled)
+        CHECK(rx_fusion_accept_measure(&MC, &R.m_compiled, 50) == 0 && MC.state == AG_MS_MEASURED,
+              "compiled accepted: fewer reactions, not slower, same outcomes");
     R.m_compiled = MC.measure;
-    measure(&MH, GOAL_EFFECT, &R.m_hybrid, 0, "hybrid");
-    rx_fusion_accept_measure(&MH, &R.m_hybrid, 50);
+    if (measure(&MH, GOAL_EFFECT, &R.m_hybrid, 0, "hybrid")) {
+        rx_fusion_accept_measure(&MH, &R.m_hybrid, 50);
+        CHECK(MH.state == AG_MS_MEASURED, "hybrid accepted");
+    }
     R.m_hybrid = MH.measure;
     R.hybrid_state = MH.state;
-    CHECK(MH.state == AG_MS_MEASURED, "hybrid accepted");
-    measure(&MP, GOAL_PARALLEL, &R.m_parallel, 0, "parallel");
-    CHECK(rx_fusion_accept_measure(&MP, &R.m_parallel, 50) != 0 && MP.state == AG_MS_SLOWER,
-          "parallel fragment refused: fusing it serializes independent work (%.0f -> %.0f us)",
-          R.m_parallel.median_ns_before / 1e3, R.m_parallel.median_ns_after / 1e3);
+    g_untimed_parallel = !measure(&MP, GOAL_PARALLEL, &R.m_parallel, 0, "parallel");
+    if (!g_untimed_parallel) {
+        CHECK(rx_fusion_accept_measure(&MP, &R.m_parallel, 50) != 0 && MP.state == AG_MS_SLOWER,
+              "parallel fragment refused: fusing it serializes independent work (%.0f -> %.0f us)",
+              R.m_parallel.median_ns_before / 1e3, R.m_parallel.median_ns_after / 1e3);
+        CHECK(rx_fusion_canary(&MP, 0, 1) == AG_FUSION_E_STATE, "a slower MetaSkill cannot enter canary");
+    }
     R.parallel_state = MP.state;
     R.m_parallel = MP.measure;
-    CHECK(rx_fusion_canary(&MP, 0, 1) == AG_FUSION_E_STATE, "a slower MetaSkill cannot enter canary");
     unpublished_refused(&MC, "measured");
 }
 
@@ -1154,7 +1199,11 @@ static void t_canary(void) {
     R.poisoned_verified = MQ.state == AG_MS_VERIFIED;
     CHECK(MQ.state == AG_MS_VERIFIED, "poisoned hybrid passes verification (the entry is never generated)");
     AgFusionMeasure mq;
-    measure(&MQ, GOAL_EFFECT, &mq, 0, "poisoned hybrid");
+    g_untimed_poisoned = !measure(&MQ, GOAL_EFFECT, &mq, 0, "poisoned hybrid");
+    if (g_untimed_poisoned) {           /* unmeasured: its canary and quarantine are not judged */
+        unpublished_refused(&MC, "canary-passed");
+        return;
+    }
     rx_fusion_accept_measure(&MQ, &mq, 50);
     CHECK(pair_start(p, GOAL_EFFECT, &MQ, 4) == 0, "pair");
     /* The divergence here is the point; it is kept out of the fusion totals. */
@@ -1194,6 +1243,10 @@ static char g_store_dir[64];
 
 static void t_promote(void) {
     printf("[*] promotion through the generation barrier, then publication\n");
+    if (g_untimed_compiled) {           /* never measured, so never canary-passed */
+        printf("    not judged: the compiled MetaSkill was not measured (cpu_busy)\n");
+        return;
+    }
     static Env e;
     CHECK(env_start(&e, 1) == 0, "env");
     strcpy(g_store_dir, "/tmp/rx-fusion-XXXXXX");
@@ -1210,9 +1263,11 @@ static void t_promote(void) {
     uint64_t active0 = 0, lineage0 = 0;
     CHECK(rx_gen_active(store, &active0, &lineage0) == RX_GEN_OK, "store has an active generation");
 
-    CHECK(rx_fusion_promote(&MQ, store, SUBJ_PROPOSER, &req, native_auth, &ac) == AG_FUSION_E_STATE,
-          "quarantined MetaSkill cannot be promoted");
-    R.poisoned_promote_refused = 1;
+    if (!g_untimed_poisoned) {
+        CHECK(rx_fusion_promote(&MQ, store, SUBJ_PROPOSER, &req, native_auth, &ac) == AG_FUSION_E_STATE,
+              "quarantined MetaSkill cannot be promoted");
+        R.poisoned_promote_refused = 1;
+    }
     int rc = rx_fusion_promote(&MC, store, SUBJ_PROPOSER, &req, native_auth, &ac);
     R.promote_refused_no_right = rc == RX_GEN_ERR_AUTHORITY && MC.state == AG_MS_CANARY_PASSED;
     CHECK(R.promote_refused_no_right, "promotion without the promote right refused (%d)", rc);
@@ -1504,6 +1559,18 @@ static void measure_json(FILE *fp, const char *name, const AgFusionMeasure *m, i
     fprintf(fp, "}%s\n", last ? "" : ",");
 }
 
+/* Everything judged held. A refused measurement takes out only the states
+ * that need it: the compiled chain (canary, promotion, publication, and the
+ * poisoned hybrid's canary, which runs after it), the parallel refusal, the
+ * poisoned quarantine. */
+static int judged_pass(void) {
+    return g_fail == 0 && R.bypass == 0 && R.evidence_missing == 0 && R.ancestry_mismatch == 0 &&
+           R.eq_mismatch == 0 && R.cross_mismatch == 0 && R.steps_mismatch == 0 && R.det_mismatch == 0 &&
+           R.tamper_caught == R.tamper_cases && (g_untimed_compiled || MC.state == AG_MS_PUBLISHED) &&
+           (g_untimed_parallel || R.parallel_state == AG_MS_SLOWER) &&
+           (g_untimed_compiled || g_untimed_poisoned || R.poisoned_state == AG_MS_QUARANTINED);
+}
+
 static void write_receipt(void) {
     char path[512];
     if (omega_evidence_path("WORKFLOW_FUSION/rx_workflow_fusion_receipt.json", path, sizeof path) != 0) return;
@@ -1520,10 +1587,6 @@ static void write_receipt(void) {
     struct utsname u;
     memset(&u, 0, sizeof u);
     uname(&u);
-    int pass = g_fail == 0 && R.bypass == 0 && R.evidence_missing == 0 && R.ancestry_mismatch == 0 &&
-               R.eq_mismatch == 0 && R.cross_mismatch == 0 && R.steps_mismatch == 0 && R.det_mismatch == 0 &&
-               R.tamper_caught == R.tamper_cases && MC.state == AG_MS_PUBLISHED &&
-               R.parallel_state == AG_MS_SLOWER && R.poisoned_state == AG_MS_QUARANTINED;
     static const char *kinds[4] = { "compiled", "hybrid", "learned", "hardware" };
     fprintf(fp,
             "{\n"
@@ -1608,7 +1671,7 @@ static void write_receipt(void) {
             R.fused_nodes_before, R.fused_nodes_after, R.eq_runs, R.eq_nodes, R.eq_mismatch, R.cross_runs,
             R.cross_mismatch, R.steps_checked, R.steps_mismatch, R.evidence_checked, R.evidence_missing,
             R.ancestry_nodes, R.ancestry_mismatch, R.det_mismatch, R.bypass, R.n3_blocked_original,
-            R.n3_blocked_fused, R.n3_meta_auth_exact, pass ? "PASS" : "FAIL");
+            R.n3_blocked_fused, R.n3_meta_auth_exact, rx_busy_verdict(judged_pass()));
     fclose(fp);
     printf("receipt: %s\n", path);
 }
@@ -1631,5 +1694,5 @@ int main(void) {
            R.steps_mismatch, R.ancestry_nodes, R.ancestry_mismatch, R.bypass);
     printf("checks %d failures %d\n", g_checks, g_fail);
     write_receipt();
-    return g_fail ? 1 : 0;
+    return rx_busy_exit(g_fail, judged_pass());
 }

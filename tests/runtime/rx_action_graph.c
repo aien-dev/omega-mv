@@ -29,6 +29,7 @@
 #include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
+#include "rx_quiet_reps.h"
 
 enum { SUBJ_EXTERNAL = 100, ISSUER = 3, SUBJ_PLAN = 61, SUBJ_OTHER = 62 };
 
@@ -794,9 +795,12 @@ static void t_effects(void) {
 
 static void t_parallel(void) {
     printf("[*] parallel graph: critical path\n");
-    const uint32_t reps = 15;
+    /* 15 undisturbed repetitions per leg (rx_quiet_reps.h), at most 60 times
+     * as many attempts. */
+    const uint32_t reps = 15, attempts = 15 * 60;
     uint64_t times[2][32];
-    uint32_t workers[2] = { 1, 4 };
+    uint32_t workers[2] = { 1, 4 }, kept[2] = { 0, 0 }, tried[2] = { 0, 0 };
+    int delay_known = 1;
     AgReport rep;
     for (uint32_t k = 0; k < 2; k++) {
         Env e;
@@ -811,13 +815,28 @@ static void t_parallel(void) {
         CHECK(res.outcome == AG_RUN_SUCCESS &&
               res.value[node_of_kind(&g, AG_SKILL)] == 7 + 500 * 3 + 40 * 6 + 7 * 9 + 3 * 12,
               "combine = 7 + 3*500 + 6*40 + 9*7 + 12*3");
-        for (uint32_t i = 0; i < reps; i++) {
+        for (uint32_t i = 0; i < attempts && kept[k] < reps; i++) {
             reference(&e, &g, 2 + i);
-            int64_t ext = run(&e, &L, 2 + i, &res, &times[k][i]);
+            uint64_t ns = 0;
+            int64_t d0 = rx_run_delay_ns();
+            int64_t ext = run(&e, &L, 2 + i, &res, &ns);
+            int64_t d1 = rx_run_delay_ns();
             compare(&e, &g, &res, &g_ref, "parallel");
             if (i == 0) ancestry(&e, &L, ext, "parallel");
+            tried[k]++;
+            if (d0 < 0 || d1 < 0) delay_known = 0;
+            if (rx_quiet_rep(d0 < 0 || d1 < 0 ? -1 : d1 - d0, ns)) times[k][kept[k]++] = ns;
         }
         env_stop(&e);
+    }
+    printf("    undisturbed repetitions: 1 worker %u of %u, %u workers %u of %u (%s)\n", kept[0],
+           tried[0], workers[1], kept[1], tried[1],
+           delay_known ? "run-queue delay from schedstat" : "schedstat missing: every repetition counts");
+    if (kept[0] < reps || kept[1] < reps) {
+        fprintf(stderr, "  machine too busy to time the parallel graph: %u and %u of %u undisturbed "
+                        "repetitions in %u attempts\n", kept[0], kept[1], reps, attempts);
+        rx_busy_refuse("parallel graph timing (speedup, beats the sequential sum)");
+        return;
     }
     for (uint32_t k = 0; k < 2; k++)
         for (uint32_t i = 1; i < reps; i++)
@@ -1221,6 +1240,11 @@ static void binary_digest(char out[65]) {
     for (int i = 0; i < 32; i++) sprintf(out + i * 2, "%02x", d[i]);
 }
 
+static int judged_pass(void) {
+    return g_fail == 0 && R.bypass == 0 && R.evidence_missing == 0 && R.ancestry_mismatch == 0 &&
+           R.det_mismatch == 0 && R.aegis_mints_during_compile == 0;
+}
+
 static void write_receipt(void) {
     char path[512];
     if (omega_evidence_path("ACTION_GRAPH/rx_action_graph_receipt.json", path, sizeof path) != 0) return;
@@ -1238,8 +1262,6 @@ static void write_receipt(void) {
     struct utsname u;
     memset(&u, 0, sizeof u);
     uname(&u);
-    int pass = g_fail == 0 && R.bypass == 0 && R.evidence_missing == 0 && R.ancestry_mismatch == 0 &&
-               R.det_mismatch == 0 && R.aegis_mints_during_compile == 0;
     fprintf(fp,
             "{\n"
             "  \"schema\": \"OMEGA_ACTION_GRAPH_IR_V1\",\n"
@@ -1288,7 +1310,7 @@ static void write_receipt(void) {
             (unsigned long long)R.opt_crumbs_before, (unsigned long long)R.opt_crumbs_after,
             (unsigned long long)R.opt_ns_before, (unsigned long long)R.opt_ns_after, R.bypass,
             R.authority_blocked_crumbs, R.aegis_mints_during_compile, R.aegis_mints_after_approval,
-            pass ? "PASS" : "FAIL");
+            rx_busy_verdict(judged_pass()));
     fclose(fp);
     printf("receipt: %s\n", path);
 }
@@ -1317,5 +1339,5 @@ int main(void) {
            R.evidence_checked, R.evidence_missing, R.bypass);
     printf("checks %d failures %d\n", g_checks, g_fail);
     write_receipt();
-    return g_fail ? 1 : 0;
+    return rx_busy_exit(g_fail, judged_pass());
 }

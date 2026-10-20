@@ -90,7 +90,8 @@ enum { RX_AIEN_EXP_SUPPORTED = 1,   /* every replicate matched its expected valu
 #define RX_AIEN_MEMORY_SLOTS 7u
 
 typedef struct {
-    uint32_t baseline_intervals;     /* intervals averaged into the baseline */
+    uint32_t baseline_intervals;     /* intervals averaged into the baseline; they must
+                                        agree within tolerance_pct or it starts again */
     uint32_t tolerance_pct;          /* an interval outside +/- this is a miss */
     uint32_t misses_to_fail;         /* consecutive misses that fail a prediction */
     uint32_t confirm_intervals;      /* consecutive hits that confirm it */

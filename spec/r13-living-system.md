@@ -80,10 +80,13 @@ cost and is not the promoted realization. The receipt says so.
 
 ## Generation
 
-`generation.prepare` checks who wrote each input (selection by `omega.select`,
+`generation.prepare` wakes on the selection, the goal and the plan. It checks
+who wrote each input (selection by `omega.select`,
 belief by `aien.experiment`, evidence by the evidence reaction, GPU output by
 the seat, search by `omega.reconsider`, plan by `aien.plan`, goal from
-outside), re-derives the realization identity from the stored bytes, walks the
+outside); a selection that lands before the goal (the body researched a new
+core class on its own) is declined for want of an author and checked again
+when the goal arrives. It re-derives the realization identity from the stored bytes, walks the
 crumbs selection <- measure <- verdict <- synthesis and GPU output <- ... <-
 trial 0, and proposes a draft binding:
 
