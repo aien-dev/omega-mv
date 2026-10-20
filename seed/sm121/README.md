@@ -57,7 +57,7 @@ Results: `evidence/SEED-0/sm121/`.
   encoder, so the edge-case check covers their instruction forms, but not those exact programs. (The listing
   tool can reach the elementwise ones when it is built together with the GPU library; this run did not.)
 
-## Results (gate run 2026-10-20 02:28 UTC, `evidence/SEED-0/sm121/gate6.log`)
+## Results (gate run 2026-10-20 03:04 UTC, after merging seed/birth, `evidence/SEED-0/sm121/gate6.log`)
 
 - **Every program matches.** The C generators make 6,091 different GPU programs over the sweep (2,398,274
   instructions, 2,419,440 counting the padding at the end of each program). `asm2` with `sm121.tbl` turned
