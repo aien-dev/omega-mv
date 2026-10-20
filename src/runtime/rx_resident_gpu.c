@@ -9,14 +9,17 @@
 #include "omega_blackwell_qmd.h"
 #include "omega_blackwell_submit.h"
 #include "omega_gpu_code_alloc.h"
+#include "omega_gpu_encoding.h"
+#include "omega_gpu_fmt.h"
+#include "omega_gpu_platform.h"
+#include "omega_platform_services.h"
 #include "m16_native.h"
 
-#include <pthread.h>
-#include <sched.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+
+/* L202 (aienos#286 cut A): tasks, waits, heap, configuration and diagnostics go through the platform services
+ * (src/omega_platform_services.h); on the hosted build each is the libc call this file made before. The device
+ * calls (m16_native_*, nvrm_*) stay: the seat moves onto OmegaGpuPlatform in cut E. */
 
 /* Code capacity of a seat (the code buffer adds the 2 KB prefetch tail on top). */
 #define RX_GPU_CODE_CAP 0x4000u
@@ -50,7 +53,7 @@ typedef struct LaunchJob LaunchJob;
 
 struct RxGpuSeat {
     M16NativeContext ctx;
-    pthread_t thread;
+    OmegaPsvcTask thread;
     int thread_live;
     int opened;
     int killed;             /* channel destroyed under the running seat */
@@ -64,7 +67,7 @@ struct RxGpuSeat {
     volatile uint32_t *hb_watch;
     RxWorld *world;
     int image_bound;
-    pthread_t lease_thread;
+    OmegaPsvcTask lease_thread;
     int lease_live;
     volatile int lease_run;
     uint32_t budget;        /* seat passes in LEASE_WINDOW_MS, measured once */
@@ -77,10 +80,10 @@ static int seat_return_image(RxGpuSeat *s) {
     if (!s->image_bound) return 0;
     RxWorld *w = s->world;
     uint64_t bytes = w->coherent_bytes;
-    void *own = malloc((size_t)bytes);
+    void *own = omega_psvc_alloc((size_t)bytes);
     if (!own) return -1;
     if (rx_world_bind_coherent(w, own, bytes, 0) != RX_OK) {
-        free(own);
+        omega_psvc_free(own);
         return -1;
     }
     s->image_bound = 0;
@@ -635,7 +638,7 @@ static int build_program(BlackwellIRProgram *prog, uint32_t *gpr_out) {
         prog->regalloc.intervals[v].last_use = (int)prog->count - 1;
     }
     if (emit_overflow || omega_bw_regalloc_solve(prog) != 0) {
-        fprintf(stderr, "seat build overflow %d instructions %zu vregs %d\n",
+        omega_psvc_diagf("seat build overflow %d instructions %zu vregs %d\n",
                 emit_overflow, prog->count, prog->regalloc.num_vregs);
         return -1;
     }
@@ -693,8 +696,24 @@ static int first_is_lane_check(const uint8_t *code, size_t n) {
     int ok = OPC(w0[0]) == OPC_S2R &&
              (OPC(w0[1]) == OPC_ISETP_I || OPC(w0[1]) == OPC_ISETP_R) &&
              OPC(w0[2]) == OPC_BRA;
-    if (!ok) fprintf(stderr, "seat: the program does not open with the lane check\n");
+    if (!ok) omega_psvc_diagf("seat: the program does not open with the lane check\n");
     return ok;
+}
+
+/* One seat buffer. The CPU view and the GPU address are distinct values (aienos#286 cut A: a native backend
+ * cannot assume they are equal); the Linux driver's NvrmMem stays inside and only the driver calls see it. */
+typedef struct {
+    OmegaCpuView cpu;
+    OmegaGpuVa gpu;
+    NvrmMem drv;
+} SeatBuf;
+
+static int seat_buf_alloc(Nvrm *rm, uint64_t bytes, int gpu_uncached, SeatBuf *b) {
+    int rc = gpu_uncached ? nvrm_alloc_gpu_uncached(rm, bytes, &b->drv) : nvrm_alloc(rm, bytes, &b->drv);
+    if (rc != 0) return rc;
+    b->cpu = (OmegaCpuView){ b->drv.cpu, (size_t)b->drv.size };
+    b->gpu = (OmegaGpuVa){ b->drv.va };
+    return 0;
 }
 
 struct LaunchJob {
@@ -706,7 +725,7 @@ struct LaunchJob {
     int submit_rc;
     /* Launch memory, kept across a channel rebuild. */
     int have_mem;
-    NvrmMem code_mem, cbank_mem, qmd_mem, marker_mem, large_pb;
+    SeatBuf code_mem, cbank_mem, qmd_mem, marker_mem, large_pb;
 };
 
 /* The launch marker lands only when the seat leaves. A kill stops the wait. */
@@ -716,7 +735,7 @@ static int wait_marker_or_abort(RxGpuSeat *s, volatile uint32_t *marker, uint32_
         __asm__ volatile("dsb sy" ::: "memory");
         if (*marker == want) return 0;
         if (s->abort) return -1;
-        usleep(50);
+        omega_psvc_wait_us(50);
     }
     return *marker == want ? 0 : -1;
 }
@@ -726,43 +745,43 @@ static void *launch_main(void *arg) {
     RxGpuSeat *s = job->seat;
     M16NativeContext *ctx = &s->ctx;
     if (!job->have_mem) {
-        if (nvrm_alloc(&ctx->rm, omega_gpu_code_alloc_bytes(RX_GPU_CODE_CAP), &job->code_mem) != 0 || /* + 2 KB prefetch tail */
-            nvrm_alloc(&ctx->rm, 0x1000, &job->cbank_mem) != 0 ||
-            nvrm_alloc(&ctx->rm, 0x10000, &job->qmd_mem) != 0 ||
-            nvrm_alloc_gpu_uncached(&ctx->rm, 0x1000, &job->marker_mem) != 0 ||
-            nvrm_alloc(&ctx->rm, 0x10000, &job->large_pb) != 0) {
-            snprintf(s->err, sizeof s->err, "graphics memory was not allocated");
+        if (seat_buf_alloc(&ctx->rm, omega_gpu_code_alloc_bytes(RX_GPU_CODE_CAP), 0, &job->code_mem) != 0 || /* + 2 KB prefetch tail */
+            seat_buf_alloc(&ctx->rm, 0x1000, 0, &job->cbank_mem) != 0 ||
+            seat_buf_alloc(&ctx->rm, 0x10000, 0, &job->qmd_mem) != 0 ||
+            seat_buf_alloc(&ctx->rm, 0x1000, 1, &job->marker_mem) != 0 ||
+            seat_buf_alloc(&ctx->rm, 0x10000, 0, &job->large_pb) != 0) {
+            omega_gpu_fmt(s->err, sizeof s->err, "graphics memory was not allocated");
             job->submit_rc = -1;
             return NULL;
         }
         job->have_mem = 1;
     }
-    NvrmMem code_mem = job->code_mem, cbank_mem = job->cbank_mem, qmd_mem = job->qmd_mem;
-    NvrmMem marker_mem = job->marker_mem;
-    ctx->pb_mem = job->large_pb;
-    memcpy(code_mem.cpu, job->code, job->code_bytes);
+    SeatBuf code_mem = job->code_mem, cbank_mem = job->cbank_mem, qmd_mem = job->qmd_mem;
+    SeatBuf marker_mem = job->marker_mem;
+    ctx->pb_mem = job->large_pb.drv;
+    memcpy(code_mem.cpu.ptr, job->code, job->code_bytes);
 
     uint32_t cbank_data[OMEGA_BW_CBANK_DRIVER_WORDS];
-    omega_blackwell_build_cbank_driver(cbank_data, cbank_mem.va);
-    memcpy(cbank_mem.cpu, cbank_data, sizeof(cbank_data));
-    memcpy((uint8_t *)cbank_mem.cpu + 0x380, &job->args, sizeof(job->args));
+    omega_blackwell_build_cbank_driver(cbank_data, cbank_mem.gpu.va);
+    memcpy(cbank_mem.cpu.ptr, cbank_data, sizeof(cbank_data));
+    memcpy((uint8_t *)cbank_mem.cpu.ptr + 0x380, &job->args, sizeof(job->args));
 
-    uint64_t qmd0_va = qmd_mem.va;
-    uint64_t qmd1_va = qmd_mem.va + 0x1000;
+    uint64_t qmd0_va = qmd_mem.gpu.va;
+    uint64_t qmd1_va = qmd_mem.gpu.va + 0x1000;
     /* The semaphore the host reads after the marker lives on the GPU-uncached marker
      * page (nvos.h NVOS32_ATTR2_GPU_CACHEABLE_YES: "For system memory this will not be
      * coherent with direct CPU mappings"). On the cached QMD page the host could read a
      * stale word once the marker arrived promptly. Offset 0x20 keeps clear of the marker. */
-    uint64_t sem_va = marker_mem.va + 0x20;
-    uint64_t scratch_va = qmd_mem.va + 0x4000;
+    uint64_t sem_va = marker_mem.gpu.va + 0x20;
+    uint64_t scratch_va = qmd_mem.gpu.va + 0x4000;
     /* The chip keeps the top two registers of a thread's allocation for
      * itself. On GB10 a value placed in R46 of a 48-register launch read back
      * wrong. Ask for two more than the program uses, then round up. */
     uint32_t gpr = (job->gpr + 2u + 15u) & ~15u;
     if (gpr < 32u) gpr = 32u;
     OmegaBlackwellQmdConfig cfg = {
-        .code_va = code_mem.va,
-        .cbank_va = cbank_mem.va,
+        .code_va = code_mem.gpu.va,
+        .cbank_va = cbank_mem.gpu.va,
         .scratch_va = scratch_va,
         .sem_va = sem_va,
         .qmd0_va = qmd0_va,
@@ -776,14 +795,14 @@ static void *launch_main(void *arg) {
     omega_blackwell_build_qmd0(qmd0, qmd0_va, qmd1_va);
     omega_blackwell_build_qmd1(qmd1, &cfg);
     if (omega_blackwell_verify_qmd_invariants(qmd1) != 0) {
-        snprintf(s->err, sizeof s->err, "launch record was rejected");
+        omega_gpu_fmt(s->err, sizeof s->err, "launch record was rejected");
         job->submit_rc = -1;
         return NULL;
     }
-    memcpy(qmd_mem.cpu, qmd0, sizeof(qmd0));
-    memcpy((uint8_t *)qmd_mem.cpu + 0x1000, qmd1, sizeof(qmd1));
-    volatile uint32_t *hsem = (volatile uint32_t *)((uint8_t *)marker_mem.cpu + 0x20);
-    volatile uint32_t *hmarker = (volatile uint32_t *)marker_mem.cpu;
+    memcpy(qmd_mem.cpu.ptr, qmd0, sizeof(qmd0));
+    memcpy((uint8_t *)qmd_mem.cpu.ptr + 0x1000, qmd1, sizeof(qmd1));
+    volatile uint32_t *hsem = (volatile uint32_t *)((uint8_t *)marker_mem.cpu.ptr + 0x20);
+    volatile uint32_t *hmarker = (volatile uint32_t *)marker_mem.cpu.ptr;
     *hsem = 0;
     *hmarker = 0;
     __asm__ volatile("dsb sy" ::: "memory");
@@ -797,25 +816,25 @@ static void *launch_main(void *arg) {
     size_t n = 0;
     memcpy(&pb[n], setup, sizeof(setup));
     n += sizeof(setup) / 4;
-    pb[n++] = nvrm_mthd(1, 0x0188, 2);
-    pb[n++] = (uint32_t)(cbank_mem.va >> 32);
-    pb[n++] = (uint32_t)cbank_mem.va;
-    pb[n++] = nvrm_mthd(1, 0x0180, 2);
+    pb[n++] = omega_gpu_mthd(1, 0x0188, 2);
+    pb[n++] = (uint32_t)(cbank_mem.gpu.va >> 32);
+    pb[n++] = (uint32_t)cbank_mem.gpu.va;
+    pb[n++] = omega_gpu_mthd(1, 0x0180, 2);
     pb[n++] = 0x00000380;
     pb[n++] = 0x00000001;
-    pb[n++] = nvrm_mthd(1, 0x01b0, 1);
+    pb[n++] = omega_gpu_mthd(1, 0x01b0, 1);
     pb[n++] = 0x00000041;
     pb[n++] = (224u << 16) | (1u << 13) | (0x01b4u >> 2) | (6u << 28);
     memcpy(&pb[n], cbank_data, 224 * 4);
     n += 224;
     uint32_t arg_words = (uint32_t)((sizeof(SeatArgs) + 3u) / 4u);
-    pb[n++] = nvrm_mthd(1, 0x0188, 2);
-    pb[n++] = (uint32_t)((cbank_mem.va + 0x380) >> 32);
-    pb[n++] = (uint32_t)(cbank_mem.va + 0x380);
-    pb[n++] = nvrm_mthd(1, 0x0180, 2);
+    pb[n++] = omega_gpu_mthd(1, 0x0188, 2);
+    pb[n++] = (uint32_t)((cbank_mem.gpu.va + 0x380) >> 32);
+    pb[n++] = (uint32_t)(cbank_mem.gpu.va + 0x380);
+    pb[n++] = omega_gpu_mthd(1, 0x0180, 2);
     pb[n++] = arg_words * 4u;
     pb[n++] = 0x00000001;
-    pb[n++] = nvrm_mthd(1, 0x01b0, 1);
+    pb[n++] = omega_gpu_mthd(1, 0x01b0, 1);
     pb[n++] = 0x00000041;
     pb[n++] = (arg_words << 16) | (1u << 13) | (0x01b4u >> 2) | (6u << 28);
     memcpy(&pb[n], &job->args, sizeof(job->args));
@@ -825,13 +844,13 @@ static void *launch_main(void *arg) {
     pb[n++] = (uint32_t)(qmd0_va >> 8);
     memcpy(&pb[n], qmd0, 96 * 4);
     n += 96;
-    pb[n++] = nvrm_mthd(1, 0x0188, 2);
+    pb[n++] = omega_gpu_mthd(1, 0x0188, 2);
     pb[n++] = (uint32_t)(sem_va >> 32);
     pb[n++] = (uint32_t)sem_va;
-    pb[n++] = nvrm_mthd(1, 0x0180, 2);
+    pb[n++] = omega_gpu_mthd(1, 0x0180, 2);
     pb[n++] = 0x00000004;
     pb[n++] = 0x00000001;
-    pb[n++] = nvrm_mthd(1, 0x01b0, 1);
+    pb[n++] = omega_gpu_mthd(1, 0x01b0, 1);
     pb[n++] = 0x00000041;
     pb[n++] = (1u << 16) | (1u << 13) | (0x01b4u >> 2) | (6u << 28);
     pb[n++] = OMEGA_BW_SEMAPHORE_INTERMEDIATE_INIT;
@@ -840,20 +859,20 @@ static void *launch_main(void *arg) {
     pb[n++] = (uint32_t)(qmd1_va >> 8);
     memcpy(&pb[n], qmd1, 96 * 4);
     n += 96;
-    pb[n++] = nvrm_mthd(0, 0x005c, 5);
-    pb[n++] = (uint32_t)marker_mem.va;
-    pb[n++] = (uint32_t)(marker_mem.va >> 32);
+    pb[n++] = omega_gpu_mthd(0, 0x005c, 5);
+    pb[n++] = (uint32_t)marker_mem.gpu.va;
+    pb[n++] = (uint32_t)(marker_mem.gpu.va >> 32);
     pb[n++] = OMEGA_BW_MARKER_COMPLETION_PAYLOAD;
     pb[n++] = 0;
     pb[n++] = 0x1u | (1u << 20);
     if (n > 1024) {
-        snprintf(s->err, sizeof s->err, "launch stream does not fit");
+        omega_gpu_fmt(s->err, sizeof s->err, "launch stream does not fit");
         job->submit_rc = -1;
         return NULL;
     }
     job->submit_rc = m16_native_submit_methods(ctx, pb, n);
     if (job->submit_rc != 0) {
-        snprintf(s->err, sizeof s->err, "the graphics seat was not submitted");
+        omega_gpu_fmt(s->err, sizeof s->err, "the graphics seat was not submitted");
         return NULL;
     }
     int wait = wait_marker_or_abort(s, hmarker, OMEGA_BW_MARKER_COMPLETION_PAYLOAD, 60000);
@@ -862,7 +881,7 @@ static void *launch_main(void *arg) {
     s->sem_value = *hsem;
     s->sem_ok = s->sem_value == OMEGA_BW_SEMAPHORE_INTERMEDIATE_DONE;
     if (!s->marker_ok && !s->abort)
-        snprintf(s->err, sizeof s->err, "the graphics seat did not finish");
+        omega_gpu_fmt(s->err, sizeof s->err, "the graphics seat did not finish");
     return NULL;
 }
 
@@ -875,18 +894,24 @@ static int wait_heartbeat(RxGpuSeat *s) {
         __asm__ volatile("dsb sy" ::: "memory");
         if (*hb != 0) return 0;
         if (s->job->submit_rc != 0 && s->err[0]) break;
-        usleep(1000);
+        omega_psvc_wait_us(1000);
     }
-    if (!s->err[0]) snprintf(s->err, sizeof s->err, "the graphics seat did not show a heartbeat");
-    fprintf(stderr, "seat: %s\n", s->err);
+    if (!s->err[0]) omega_gpu_fmt(s->err, sizeof s->err, "the graphics seat did not show a heartbeat");
+    omega_psvc_diagf("seat: %s\n", s->err);
     return -1;
 }
 
-static uint32_t current_seat_gen(RxWorld *w) {
-    pthread_mutex_lock(&w->mu);
-    uint32_t g = w->seat_generation;
-    pthread_mutex_unlock(&w->mu);
-    return g;
+static uint32_t current_seat_gen(RxWorld *w) { return rx_world_seat_generation(w); }
+
+/* atoi, which this file used on RX_SEAT_LEASE_CPU: optional leading white space and sign, then decimal digits up
+ * to the first non-digit; no digits gives 0. Overflow is undefined for atoi; here it wraps. */
+static int parse_int_like_atoi(const char *p) {
+    while (*p == ' ' || (*p >= '\t' && *p <= '\r')) p++;
+    int neg = *p == '-';
+    if (*p == '-' || *p == '+') p++;
+    unsigned v = 0;
+    while (*p >= '0' && *p <= '9') v = v * 10u + (unsigned)(*p++ - '0');
+    return (int)(neg ? 0u - v : v); /* gcc: unsigned to int keeps the bits */
 }
 
 static volatile uint32_t *hb_word_at(RxGpuSeat *s, uint32_t off) {
@@ -898,21 +923,19 @@ static volatile uint32_t *hb_word_at(RxGpuSeat *s, uint32_t off) {
  * measured cores. */
 static void *lease_main(void *arg) {
     RxGpuSeat *s = arg;
-    pthread_setname_np(pthread_self(), "rx-seat-lease");
-    const char *pin = getenv("RX_SEAT_LEASE_CPU");
-    if (pin && *pin) {
-        cpu_set_t set;
-        CPU_ZERO(&set);
-        CPU_SET(atoi(pin), &set);
-        if (pthread_setaffinity_np(pthread_self(), sizeof set, &set) != 0)
-            fprintf(stderr, "seat lease: could not pin to cpu %s\n", pin);
+    /* NAME, CONFIG and PIN are optional services: a refusal leaves the task unnamed or unpinned, never stops it. */
+    (void)omega_psvc_task_name_self("rx-seat-lease");
+    const char *pin = NULL;
+    if (omega_psvc_config("RX_SEAT_LEASE_CPU", &pin) == OMEGA_PSVC_OK && pin && *pin) {
+        if (omega_psvc_task_pin_self((uint32_t)parse_int_like_atoi(pin)) != OMEGA_PSVC_OK)
+            omega_psvc_diagf("seat lease: could not pin to cpu %s\n", pin);
     }
     uint32_t v = 0;
     while (s->lease_run) {
         if (++v == 0 || v == RX_SEAT_LEASE_QUIT) v = 1;
         *hb_word_at(s, RX_SEAT_HB_LEASE) = v;
         __asm__ volatile("dsb sy" ::: "memory");
-        usleep(LEASE_TICK_US);
+        omega_psvc_wait_us(LEASE_TICK_US);
     }
     return NULL;
 }
@@ -924,7 +947,7 @@ static int lease_start(RxGpuSeat *s) {
     if (!s->budget) {
         __asm__ volatile("dsb sy" ::: "memory");
         uint32_t a = *hb_word_at(s, RX_SEAT_HB_LIVE);
-        usleep(LEASE_SAMPLE_MS * 1000u);
+        omega_psvc_wait_us(LEASE_SAMPLE_MS * 1000u);
         __asm__ volatile("dsb sy" ::: "memory");
         uint32_t b = *hb_word_at(s, RX_SEAT_HB_LIVE);
         uint64_t passes = a > b ? (uint64_t)(a - b) : 0;
@@ -932,13 +955,13 @@ static int lease_start(RxGpuSeat *s) {
         if (budget < LEASE_MIN_BUDGET) budget = LEASE_MIN_BUDGET;
         if (budget > GIVEUP) budget = GIVEUP;
         s->budget = (uint32_t)budget;
-        fprintf(stderr, "seat lease: %llu passes in %u ms, budget %u (%u ms window)\n",
+        omega_psvc_diagf("seat lease: %llu passes in %u ms, budget %u (%u ms window)\n",
                 (unsigned long long)passes, LEASE_SAMPLE_MS, s->budget, LEASE_WINDOW_MS);
     }
     *hb_word_at(s, RX_SEAT_HB_BUDGET) = s->budget;
     __asm__ volatile("dsb sy" ::: "memory");
     s->lease_run = 1;
-    if (pthread_create(&s->lease_thread, NULL, lease_main, s) != 0) {
+    if (omega_psvc_task_start(lease_main, s, &s->lease_thread) != OMEGA_PSVC_OK) {
         s->lease_run = 0;
         return -1;
     }
@@ -949,7 +972,7 @@ static int lease_start(RxGpuSeat *s) {
 static void lease_stop(RxGpuSeat *s, int quit) {
     if (s->lease_live) {
         s->lease_run = 0;
-        pthread_join(s->lease_thread, NULL);
+        omega_psvc_task_join(s->lease_thread);
         s->lease_live = 0;
     }
     if (quit && s->image_bound) {
@@ -966,23 +989,23 @@ int rx_gpu_seat_kill(RxGpuSeat *s) {
      * countdown ends, so a kill is a quit followed by the teardown a fault
      * would cause. The image and launch memory stay allocated and mapped. */
     lease_stop(s, 1);
-    for (int i = 0; i < 2000 && !s->marker_ok; i++) usleep(1000);
-    if (!s->marker_ok) fprintf(stderr, "seat kill: the seat did not leave on quit\n");
+    for (int i = 0; i < 2000 && !s->marker_ok; i++) omega_psvc_wait_us(1000);
+    if (!s->marker_ok) omega_psvc_diagf("seat kill: the seat did not leave on quit\n");
     int rc = nvrm_channel_destroy(&s->ctx.rm);
     s->abort = 1;
     if (s->thread_live) {
-        pthread_join(s->thread, NULL);
+        omega_psvc_task_join(s->thread);
         s->thread_live = 0;
     }
     s->killed = 1;
-    if (rc != 0) snprintf(s->err, sizeof s->err, "the graphics channel was not destroyed");
+    if (rc != 0) omega_gpu_fmt(s->err, sizeof s->err, "the graphics channel was not destroyed");
     return rc == 0 ? 0 : -1;
 }
 
 int rx_gpu_seat_relaunch(RxGpuSeat *s) {
     if (!s || !s->killed || !s->image_bound || !s->job) return -1;
     if (nvrm_channel(&s->ctx.rm) != 0) {
-        snprintf(s->err, sizeof s->err, "the graphics channel was not rebuilt");
+        omega_gpu_fmt(s->err, sizeof s->err, "the graphics channel was not rebuilt");
         return -1;
     }
     s->killed = 0;
@@ -996,7 +1019,7 @@ int rx_gpu_seat_relaunch(RxGpuSeat *s) {
     s->job->args.seat_gen = current_seat_gen(s->world);
     memset(s->world->coherent + rx_world_off_heartbeat(), 0, 64);
     __asm__ volatile("dsb sy" ::: "memory");
-    if (pthread_create(&s->thread, NULL, launch_main, s->job) != 0) return -1;
+    if (omega_psvc_task_start(launch_main, s->job, &s->thread) != OMEGA_PSVC_OK) return -1;
     s->thread_live = 1;
     if (wait_heartbeat(s) != 0) return -1;
     return lease_start(s);
@@ -1006,82 +1029,85 @@ int rx_gpu_seat_begin(RxWorld *w, RxGpuSeat **out) {
     if (out) *out = NULL;
     if (!w || !w->coherent || !w->resident_enabled) return -1;
     if (!crc_matches_sealer()) return -1;
+    /* CLOCK, WAIT, LOCK, TASK and HEAP are required services: refuse before the device is touched when the
+     * installed table lacks one (the freestanding stub lacks all of them). */
+    if (omega_psvc_check(omega_psvc(), OMEGA_PSVC_REQUIRED) != OMEGA_PSVC_OK) return -1;
 
     BlackwellIRProgram prog;
     uint32_t gpr = 0;
     int insns = build_program(&prog, &gpr);
-    fprintf(stderr, "seat build insns %d gpr %u\n", insns, gpr);
+    omega_psvc_diagf("seat build insns %d gpr %u\n", insns, gpr);
     if (insns < 8 || insns > BW_MAX_IR_INSNS) {
-        fprintf(stderr, "seat: program was not built (%d)\n", insns);
+        omega_psvc_diagf("seat: program was not built (%d)\n", insns);
         return -1;
     }
     size_t padded = ((size_t)insns + 7u) & ~7u;
     if (padded < 32) padded = 32;
     size_t bytes = padded * 16u;
-    uint8_t *code = calloc(1, bytes);
+    uint8_t *code = omega_psvc_calloc(1, bytes);
     if (!code) return -1;
     size_t emitted = 0;
     if (omega_bw_encode_program(&prog, code, bytes, &emitted) != 0) {
-        free(code);
+        omega_psvc_free(code);
         return -1;
     }
     if (emitted > RX_GPU_CODE_CAP) { /* the seat's code buffer holds RX_GPU_CODE_CAP bytes; refuse rather than overrun it */
-        fprintf(stderr, "seat: program is %zu bytes, the code buffer holds %u\n", emitted, (unsigned)RX_GPU_CODE_CAP);
-        free(code);
+        omega_psvc_diagf("seat: program is %zu bytes, the code buffer holds %u\n", emitted, (unsigned)RX_GPU_CODE_CAP);
+        omega_psvc_free(code);
         return -1;
     }
     seat_scoreboard(code, emitted);
     if (!first_is_lane_check(code, emitted)) {
-        free(code);
+        omega_psvc_free(code);
         return -1;
     }
 
-    RxGpuSeat *s = calloc(1, sizeof(*s));
-    if (!s) { free(code); return -1; }
+    RxGpuSeat *s = omega_psvc_calloc(1, sizeof(*s));
+    if (!s) { omega_psvc_free(code); return -1; }
     if (m16_native_open(&s->ctx) != 0 || m16_native_create_channel(&s->ctx) != 0) {
-        snprintf(s->err, sizeof s->err, "the graphics device did not open");
+        omega_gpu_fmt(s->err, sizeof s->err, "the graphics device did not open");
         m16_native_close(&s->ctx);
-        free(code);
-        free(s);
+        omega_psvc_free(code);
+        omega_psvc_free(s);
         return -1;
     }
     s->opened = 1;
     s->world = w;
-    NvrmMem image;
+    SeatBuf image;
     memset(&image, 0, sizeof(image));
     uint64_t bytes_img = w->coherent_bytes;
     uint64_t alloc = (bytes_img + 0xfffu) & ~0xfffu;
     if (alloc < 0x100000) alloc = 0x100000;
-    if (nvrm_alloc_gpu_uncached(&s->ctx.rm, alloc, &image) != 0) {
-        snprintf(s->err, sizeof s->err, "the shared image was not allocated");
+    if (seat_buf_alloc(&s->ctx.rm, alloc, 1, &image) != 0) {
+        omega_gpu_fmt(s->err, sizeof s->err, "the shared image was not allocated");
         m16_native_close(&s->ctx);
-        free(code);
-        free(s);
+        omega_psvc_free(code);
+        omega_psvc_free(s);
         return -1;
     }
-    if (rx_world_bind_coherent(w, image.cpu, bytes_img, 1) != RX_OK) {
-        snprintf(s->err, sizeof s->err, "the world image was not bound");
+    if (rx_world_bind_coherent(w, image.cpu.ptr, bytes_img, 1) != RX_OK) {
+        omega_gpu_fmt(s->err, sizeof s->err, "the world image was not bound");
         m16_native_close(&s->ctx);
-        free(code);
-        free(s);
+        omega_psvc_free(code);
+        omega_psvc_free(s);
         return -1;
     }
     s->image_bound = 1;
     memset(w->coherent + rx_world_off_heartbeat(), 0, 64);
 
-    LaunchJob *job = calloc(1, sizeof(*job));
+    LaunchJob *job = omega_psvc_calloc(1, sizeof(*job));
     if (!job) {
         seat_return_image(s);
         m16_native_close(&s->ctx);
-        free(code);
-        free(s);
+        omega_psvc_free(code);
+        omega_psvc_free(s);
         return -1;
     }
     job->seat = s;
     job->code = code;
     job->code_bytes = emitted;
     job->gpr = gpr;
-    job->args.region = image.va;
+    job->args.region = image.gpu.va;
     job->args.seat_gen = current_seat_gen(w);
     job->args.epoch = w->world_epoch;
     job->args.off_c2g = (uint32_t)rx_world_off_c2g();
@@ -1089,19 +1115,19 @@ int rx_gpu_seat_begin(RxWorld *w, RxGpuSeat **out) {
     job->args.off_hb = (uint32_t)rx_world_off_heartbeat();
     job->args.off_tbl = (uint32_t)rx_world_off_object_table();
     job->args.giveup = GIVEUP;
-    if (pthread_create(&s->thread, NULL, launch_main, job) != 0) {
-        free(job);
-        free(code);
+    if (omega_psvc_task_start(launch_main, job, &s->thread) != OMEGA_PSVC_OK) {
+        omega_psvc_free(job);
+        omega_psvc_free(code);
         seat_return_image(s);
         m16_native_close(&s->ctx);
-        free(s);
+        omega_psvc_free(s);
         return -1;
     }
     s->job = job;
     s->thread_live = 1;
     if (out) *out = s;
     if (wait_heartbeat(s) != 0) return -1;
-    fprintf(stderr, "seat heartbeat %u instructions %d gpr %u\n", *s->hb_watch, insns, gpr);
+    omega_psvc_diagf("seat heartbeat %u instructions %d gpr %u\n", *s->hb_watch, insns, gpr);
     return lease_start(s);
 }
 
@@ -1113,7 +1139,7 @@ int rx_gpu_seat_finish_ex(RxGpuSeat *seat, RxGpuSeatLeave *leave) {
      * bounds how long a seat that missed it keeps running. */
     lease_stop(seat, 0);
     if (seat->thread_live) {
-        pthread_join(seat->thread, NULL);
+        omega_psvc_task_join(seat->thread);
         seat->thread_live = 0;
     }
     if (leave) {
@@ -1125,13 +1151,13 @@ int rx_gpu_seat_finish_ex(RxGpuSeat *seat, RxGpuSeatLeave *leave) {
     /* A killed seat never reaches its marker; leaving is then only the image
      * going back to the world and the device closing. */
     int ok = seat->killed || (seat->marker_ok && seat->sem_ok);
-    if (!ok && seat->err[0]) fprintf(stderr, "seat finish: %s\n", seat->err);
+    if (!ok && seat->err[0]) omega_psvc_diagf("seat finish: %s\n", seat->err);
     if (seat_return_image(seat) != 0) ok = 0;
     if (seat->opened) m16_native_close(&seat->ctx);
     if (seat->job) {
-        free(seat->job->code);
-        free(seat->job);
+        omega_psvc_free(seat->job->code);
+        omega_psvc_free(seat->job);
     }
-    free(seat);
+    omega_psvc_free(seat);
     return ok ? 0 : -1;
 }

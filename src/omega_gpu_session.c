@@ -14,6 +14,7 @@
 #include "omega_gpu_session.h"
 #include "omega_gpu_code_alloc.h"
 #include "omega_gpu_fmt.h"
+#include "omega_gpu_encoding.h" /* omega_gpu_mthd: the push-buffer method header (physics nvrm_mthd) */
 #include "omega_blackwell_qmd.h"
 #include "omega_blackwell_submit.h" /* launch constants only (macros); the vector executor itself stays Linux-private */
 #include <string.h>
@@ -25,10 +26,6 @@
 
 #define PAGE 0x1000ull
 
-/* Push-buffer method header (the nvrm_mthd encoding, physics nvrm.h): increasing, count words, subchannel. */
-static inline uint32_t bw_mthd(uint32_t subc, uint32_t mthd, uint32_t count) {
-    return (2u << 28) | (count << 16) | (subc << 13) | (mthd >> 2);
-}
 
 /* Same words as src/omega_blackwell_submit.c SETUP_WORDS (compute class setup). */
 static const uint32_t SETUP_WORDS[18] = {
@@ -474,16 +471,16 @@ int omega_gpu_session_launch(const OmegaGpuLaunch *L, uint64_t *elapsed_ns, uint
     /* Invalidate the SM instruction, constant and data caches before this launch
      * (cut 1b finding: a reused code address served stale instructions; clcec0.h
      * NVCEC0_INVALIDATE_SHADER_CACHES 0x021c, bits INSTRUCTION 0, DATA 4, CONSTANT 12). */
-    pb[n++] = bw_mthd(1, OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES, 1); pb[n++] = OMEGA_BW_INVALIDATE_SHADER_CACHES_ALL;
+    pb[n++] = omega_gpu_mthd(1, OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES, 1); pb[n++] = OMEGA_BW_INVALIDATE_SHADER_CACHES_ALL;
     /* constant bank 0: driver words, then our arguments at 0x380 (inline upload) */
-    pb[n++] = bw_mthd(1, 0x0188, 2); pb[n++] = (uint32_t)(g_s.cbank.va >> 32); pb[n++] = (uint32_t)g_s.cbank.va;
-    pb[n++] = bw_mthd(1, 0x0180, 2); pb[n++] = 0x00000380; pb[n++] = 0x00000001;
-    pb[n++] = bw_mthd(1, 0x01b0, 1); pb[n++] = 0x00000041;
+    pb[n++] = omega_gpu_mthd(1, 0x0188, 2); pb[n++] = (uint32_t)(g_s.cbank.va >> 32); pb[n++] = (uint32_t)g_s.cbank.va;
+    pb[n++] = omega_gpu_mthd(1, 0x0180, 2); pb[n++] = 0x00000380; pb[n++] = 0x00000001;
+    pb[n++] = omega_gpu_mthd(1, 0x01b0, 1); pb[n++] = 0x00000041;
     pb[n++] = (224u << 16) | (1u << 13) | (0x01b4 >> 2) | (6u << 28);
     memcpy(&pb[n], cbank_data, 224 * 4); n += 224;
-    pb[n++] = bw_mthd(1, 0x0188, 2); pb[n++] = (uint32_t)((g_s.cbank.va + 0x380) >> 32); pb[n++] = (uint32_t)(g_s.cbank.va + 0x380);
-    pb[n++] = bw_mthd(1, 0x0180, 2); pb[n++] = L->n_args * 4u; pb[n++] = 0x00000001;
-    pb[n++] = bw_mthd(1, 0x01b0, 1); pb[n++] = 0x00000041;
+    pb[n++] = omega_gpu_mthd(1, 0x0188, 2); pb[n++] = (uint32_t)((g_s.cbank.va + 0x380) >> 32); pb[n++] = (uint32_t)(g_s.cbank.va + 0x380);
+    pb[n++] = omega_gpu_mthd(1, 0x0180, 2); pb[n++] = L->n_args * 4u; pb[n++] = 0x00000001;
+    pb[n++] = omega_gpu_mthd(1, 0x01b0, 1); pb[n++] = 0x00000041;
     pb[n++] = (L->n_args << 16) | (1u << 13) | (0x01b4 >> 2) | (6u << 28);
     memcpy(&pb[n], L->args, (size_t)L->n_args * 4u); n += L->n_args;
     /* QMD0 (null grid, dependence 2) */
@@ -491,9 +488,9 @@ int omega_gpu_session_launch(const OmegaGpuLaunch *L, uint64_t *elapsed_ns, uint
     pb[n++] = (1u << 30) | (uint32_t)((qmd0_va >> 40) & 0x1ff); pb[n++] = (uint32_t)(qmd0_va >> 8);
     memcpy(&pb[n], qmd0_words, 96 * 4); n += 96;
     /* intermediate semaphore init */
-    pb[n++] = bw_mthd(1, 0x0188, 2); pb[n++] = (uint32_t)(sem_va >> 32); pb[n++] = (uint32_t)sem_va;
-    pb[n++] = bw_mthd(1, 0x0180, 2); pb[n++] = 0x00000004; pb[n++] = 0x00000001;
-    pb[n++] = bw_mthd(1, 0x01b0, 1); pb[n++] = 0x00000041;
+    pb[n++] = omega_gpu_mthd(1, 0x0188, 2); pb[n++] = (uint32_t)(sem_va >> 32); pb[n++] = (uint32_t)sem_va;
+    pb[n++] = omega_gpu_mthd(1, 0x0180, 2); pb[n++] = 0x00000004; pb[n++] = 0x00000001;
+    pb[n++] = omega_gpu_mthd(1, 0x01b0, 1); pb[n++] = 0x00000041;
     pb[n++] = (1u << 16) | (1u << 13) | (0x01b4 >> 2) | (6u << 28);
     pb[n++] = OMEGA_BW_SEMAPHORE_INTERMEDIATE_INIT;
     /* QMD1 (the kernel) */
@@ -501,12 +498,12 @@ int omega_gpu_session_launch(const OmegaGpuLaunch *L, uint64_t *elapsed_ns, uint
     pb[n++] = (1u << 30) | (uint32_t)((qmd1_va >> 40) & 0x1ff); pb[n++] = (uint32_t)(qmd1_va >> 8);
     memcpy(&pb[n], qmd1_words, 96 * 4); n += 96;
     /* first marker */
-    pb[n++] = bw_mthd(0, 0x005c, 5);
+    pb[n++] = omega_gpu_mthd(0, 0x005c, 5);
     pb[n++] = (uint32_t)g_s.marker.va; pb[n++] = (uint32_t)(g_s.marker.va >> 32);
     pb[n++] = OMEGA_BW_MARKER_COMPLETION_PAYLOAD; pb[n++] = 0; pb[n++] = 0x1 | (1u << 20);
     /* C3 tail: L2_FLUSH_DIRTY, then the second release on the uncached marker page */
-    pb[n++] = bw_mthd(0, 0x0028, 4); pb[n++] = 0; pb[n++] = 0; pb[n++] = 0; pb[n++] = (0x10u << 27);
-    pb[n++] = bw_mthd(0, 0x005c, 5);
+    pb[n++] = omega_gpu_mthd(0, 0x0028, 4); pb[n++] = 0; pb[n++] = 0; pb[n++] = 0; pb[n++] = (0x10u << 27);
+    pb[n++] = omega_gpu_mthd(0, 0x005c, 5);
     pb[n++] = (uint32_t)(g_s.marker.va + 0x10); pb[n++] = (uint32_t)((g_s.marker.va + 0x10) >> 32);
     pb[n++] = OMEGA_BW_MARKER2_PAYLOAD; pb[n++] = 0; pb[n++] = 0x1 | (1u << 20);
 

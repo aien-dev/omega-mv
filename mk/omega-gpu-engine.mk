@@ -115,15 +115,18 @@ GPU_FS_CFLAGS = -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin
 	-U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc
 # P07 cut C (session part): the persistent session, the matmul and attention APIs, the serving reservation and the
 # bounded wait join the link. Their machine comes from an installed OmegaGpuPlatform; the Linux reference
-# (src/omega_gpu_platform_linux.c) is deliberately NOT in this list. Still outside it: the elementwise API, the
-# numeric launchers, the vector executor, the resident runtime (docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md).
+# (src/omega_gpu_platform_linux.c) is deliberately NOT in this list. L202 (cut A) adds the elementwise API and the
+# process-wide platform services (src/omega_platform_services.c: contract check, the refusing stub, no default
+# table); its hosted table (src/omega_platform_services_hosted.c) is NOT in this list. Still outside it: the
+# numeric launchers, the vector executor, the resident runtime: they still call m16_native_* and nvrm_* for the
+# device (docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md).
 GPU_FS_SRCS = src/omega_gpu_engine.c src/omega_gpu_platform.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
 	src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/sha256.c \
 	src/omega_gpu_session.c src/omega_gpu_fmt.c src/omega_gpu_matmul_api.c src/omega_gpu_attention_api.c \
-	src/omega_gpu_serving.c src/omega_gpu_wait.c
+	src/omega_gpu_serving.c src/omega_gpu_wait.c src/omega_gpu_elementwise_api.c src/omega_platform_services.c
 GPU_FS_HDRS = src/omega_gpu_engine.h src/omega_gpu_platform.h src/omega_blackwell_codegen.h src/omega_blackwell_matmul.h \
 	src/omega_gpu_session.h src/omega_gpu_fmt.h src/omega_gpu_matmul_api.h src/omega_gpu_attention_api.h \
-	src/omega_gpu_serving.h src/omega_gpu_wait.h
+	src/omega_gpu_serving.h src/omega_gpu_wait.h src/omega_gpu_elementwise_api.h src/omega_platform_services.h src/omega_gpu_encoding.h
 GPU_FS_OBJS = $(patsubst src/%.c,$(GPU_FS_DIR)/%.o,$(GPU_FS_SRCS))
 GPU_FS_LINK = $(GPU_FS_DIR)/omega_gpu_freestanding.o
 GPU_FS_ALLOWED = memcpy|memmove|memset|memcmp|strlen|strcmp

@@ -10,6 +10,7 @@
 #include "omega_blackwell_codegen.h"
 #include "omega_blackwell_qmd.h"
 #include "omega_blackwell_submit.h"
+#include "omega_gpu_encoding.h" /* omega_gpu_mthd: the push-buffer method header (physics nvrm_mthd) */
 #include <string.h>
 
 #define PAGE 0x1000ull
@@ -25,9 +26,6 @@
 #define MTHD_SEND_SIGNALING_PCAS2_B 0x02c0u /* clcec0.h, PCAS_ACTION 3:0 */
 #define PCAS_ACTION_INVALIDATE_COPY_SCHEDULE 3u
 
-static inline uint32_t bw_mthd(uint32_t subc, uint32_t mthd, uint32_t count) {
-    return (2u << 28) | (count << 16) | (subc << 13) | (mthd >> 2);
-}
 /* Same words as omega_gpu_session.c / omega_blackwell_submit.c SETUP_WORDS (compute class setup). */
 static const uint32_t SETUP_WORDS[18] = {
     0x20012061, 0x0000cec0, 0x20012092, 0x00000001, 0x200120a8, 0x0000000f, 0x2001255d, 0x00000003,
@@ -196,11 +194,11 @@ static void force_latch(OmegaGpuCmdList *cl, const char *why) {
 }
 
 static size_t emit_tail(uint32_t *pb, size_t n, uint64_t marker_va) {
-    pb[n++] = bw_mthd(0, 0x005c, 5);
+    pb[n++] = omega_gpu_mthd(0, 0x005c, 5);
     pb[n++] = (uint32_t)marker_va; pb[n++] = (uint32_t)(marker_va >> 32);
     pb[n++] = OMEGA_BW_MARKER_COMPLETION_PAYLOAD; pb[n++] = 0; pb[n++] = 0x1 | (1u << 20);
-    pb[n++] = bw_mthd(0, 0x0028, 4); pb[n++] = 0; pb[n++] = 0; pb[n++] = 0; pb[n++] = (0x10u << 27);
-    pb[n++] = bw_mthd(0, 0x005c, 5);
+    pb[n++] = omega_gpu_mthd(0, 0x0028, 4); pb[n++] = 0; pb[n++] = 0; pb[n++] = 0; pb[n++] = (0x10u << 27);
+    pb[n++] = omega_gpu_mthd(0, 0x005c, 5);
     pb[n++] = (uint32_t)(marker_va + 0x10); pb[n++] = (uint32_t)((marker_va + 0x10) >> 32);
     pb[n++] = OMEGA_BW_MARKER2_PAYLOAD; pb[n++] = 0; pb[n++] = 0x1 | (1u << 20);
     return n;
@@ -217,7 +215,7 @@ static size_t emit_tail(uint32_t *pb, size_t n, uint64_t marker_va) {
 #define INVALIDATE_FLUSH_DATA (1u << 2)
 static size_t emit_stamp(uint32_t *pb, size_t n, uint64_t stamps_va, uint32_t slot) {
     const uint64_t va = stamps_va + (uint64_t)slot * 16u;
-    pb[n++] = bw_mthd(1, MTHD_REPORT_SEMAPHORE_PAYLOAD_LOWER, 5);
+    pb[n++] = omega_gpu_mthd(1, MTHD_REPORT_SEMAPHORE_PAYLOAD_LOWER, 5);
     pb[n++] = slot; pb[n++] = 0; pb[n++] = (uint32_t)va; pb[n++] = (uint32_t)(va >> 32); pb[n++] = 0;
     return n;
 }
@@ -286,11 +284,11 @@ int omega_gpu_cmdlist_submit(OmegaGpuCmdList *cl, const OmegaGpuCmdListOpts *opt
             const OmegaGpuCmdListBarrier b = i == done ? OMEGA_GPU_CMDLIST_BARRIER_WFI : indep ? OMEGA_GPU_CMDLIST_BARRIER_NONE : o.barrier;
             if (indep && o.stamps) n = emit_stamp(pb, n, cl->stamps.va, i); /* no WFI: slot i is the front-end time, launch i - 1 may still run */
             if (b != OMEGA_GPU_CMDLIST_BARRIER_NONE) {
-                if (b != OMEGA_GPU_CMDLIST_BARRIER_FLUSH_DATA) { pb[n++] = bw_mthd(1, MTHD_WAIT_FOR_IDLE, 1); pb[n++] = 0; }
-                else { pb[n++] = bw_mthd(1, OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES, 1); pb[n++] = INVALIDATE_DATA | INVALIDATE_FLUSH_DATA; } /* implicit WFI (NVK) */
+                if (b != OMEGA_GPU_CMDLIST_BARRIER_FLUSH_DATA) { pb[n++] = omega_gpu_mthd(1, MTHD_WAIT_FOR_IDLE, 1); pb[n++] = 0; }
+                else { pb[n++] = omega_gpu_mthd(1, OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES, 1); pb[n++] = INVALIDATE_DATA | INVALIDATE_FLUSH_DATA; } /* implicit WFI (NVK) */
                 if (o.stamps) n = emit_stamp(pb, n, cl->stamps.va, i); /* slot i: launch i - 1 done (slot `done`: submit start) */
-                if (b == OMEGA_GPU_CMDLIST_BARRIER_WFI) { pb[n++] = bw_mthd(1, OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES, 1); pb[n++] = OMEGA_BW_INVALIDATE_SHADER_CACHES_ALL; }
-                else if (b == OMEGA_GPU_CMDLIST_BARRIER_WFI_DATA) { pb[n++] = bw_mthd(1, OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES, 1); pb[n++] = INVALIDATE_DATA; }
+                if (b == OMEGA_GPU_CMDLIST_BARRIER_WFI) { pb[n++] = omega_gpu_mthd(1, OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES, 1); pb[n++] = OMEGA_BW_INVALIDATE_SHADER_CACHES_ALL; }
+                else if (b == OMEGA_GPU_CMDLIST_BARRIER_WFI_DATA) { pb[n++] = omega_gpu_mthd(1, OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES, 1); pb[n++] = INVALIDATE_DATA; }
             }
             const uint64_t q1_va = cl->qmds.va + (uint64_t)i * OMEGA_GPU_CMDLIST_QMD_BYTES;
             if (o.mode == OMEGA_GPU_CMDLIST_INLINE) {
@@ -304,12 +302,12 @@ int omega_gpu_cmdlist_submit(OmegaGpuCmdList *cl, const OmegaGpuCmdListOpts *opt
                 /* standalone grid: no dependent QMD (NVK builds Blackwell QMDs without one, nak/qmd.rs Qmd5_0) */
                 uint32_t *q1 = (uint32_t *)((uint8_t *)cl->qmds.cpu + (size_t)i * OMEGA_GPU_CMDLIST_QMD_BYTES);
                 q1[10] = 0; q1[12] = 0;
-                pb[n++] = bw_mthd(1, MTHD_SEND_PCAS_A, 1); pb[n++] = (uint32_t)(q1_va >> 8);
-                pb[n++] = bw_mthd(1, MTHD_SEND_SIGNALING_PCAS2_B, 1); pb[n++] = PCAS_ACTION_INVALIDATE_COPY_SCHEDULE;
+                pb[n++] = omega_gpu_mthd(1, MTHD_SEND_PCAS_A, 1); pb[n++] = (uint32_t)(q1_va >> 8);
+                pb[n++] = omega_gpu_mthd(1, MTHD_SEND_SIGNALING_PCAS2_B, 1); pb[n++] = PCAS_ACTION_INVALIDATE_COPY_SCHEDULE;
             }
         }
         if (o.stamps) {
-            pb[n++] = bw_mthd(1, MTHD_WAIT_FOR_IDLE, 1); pb[n++] = 0;
+            pb[n++] = omega_gpu_mthd(1, MTHD_WAIT_FOR_IDLE, 1); pb[n++] = 0;
             n = emit_stamp(pb, n, cl->stamps.va, end); /* slot end: the last launch done */
         }
         n = emit_tail(pb, n, marker_va);

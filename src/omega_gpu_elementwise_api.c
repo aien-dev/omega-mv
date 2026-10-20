@@ -24,10 +24,11 @@
 #include "omega_blackwell_submit.h"
 #include "omega_gpu_session.h"
 #include "sha256.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "omega_gpu_fmt.h"
+#ifdef OMEGA_EW_DEBUG
+#include <stdio.h> /* the debug trace only; never in the freestanding build */
+#endif
 #include <string.h>
-#include <time.h>
 
 /* ------------------------------------------------------------------ codegen */
 
@@ -799,7 +800,7 @@ static void schedule_fixed_pairs(BlackwellIRProgram *p) {
 }
 
 static int build_kernel(OmegaGpuEwOp op, int mutant, OmegaBlackwellKernel *kernel, BlackwellIRProgram *prog_out, int test_path) {
-    BlackwellIRProgram *prog = calloc(1, sizeof *prog);
+    BlackwellIRProgram *prog = omega_gpu_host_calloc(1, sizeof *prog);
     if (!prog) return OMEGA_GPU_EW_CODEGEN_FAIL;
     omega_bw_ir_init(prog);
     Em e; memset(&e, 0, sizeof e); e.p = prog; e.test_path = test_path;
@@ -843,7 +844,7 @@ static int build_kernel(OmegaGpuEwOp op, int mutant, OmegaBlackwellKernel *kerne
     if (e.err == 0 && ra_rc == 0 && loop_rc == 0 && prog->regalloc.peak_gpr_usage <= EW_GPR_BUDGET) {
         size_t max_bytes = (size_t)BW_MAX_IR_INSNS * 16;
         memset(kernel, 0, sizeof *kernel);
-        kernel->code = malloc(max_bytes);
+        kernel->code = omega_gpu_host_alloc(max_bytes);
         size_t emitted = 0;
         if (kernel->code && omega_bw_encode_program(prog, kernel->code, max_bytes, &emitted) == 0) {
             kernel->code_size = emitted;
@@ -857,10 +858,10 @@ static int build_kernel(OmegaGpuEwOp op, int mutant, OmegaBlackwellKernel *kerne
 #ifdef OMEGA_EW_DEBUG
             fprintf(stderr, "ew codegen op=%d: encode failed (an instruction form the encoder refuses)\n", (int)op);
 #endif
-            free(kernel->code); kernel->code = NULL;
+            omega_gpu_host_free(kernel->code); kernel->code = NULL;
         }
     }
-    free(prog);
+    omega_gpu_host_free(prog);
     return rc;
 }
 
@@ -879,7 +880,7 @@ static bool g_hooked;
 
 static void cache_clear_locked(void) {
     for (size_t i = 0; i < sizeof g_cache / sizeof g_cache[0]; i++)
-        if (g_cache[i].used) { free(g_cache[i].kernel.code); omega_gpu_session_free(&g_cache[i].code); memset(&g_cache[i], 0, sizeof g_cache[i]); }
+        if (g_cache[i].used) { omega_gpu_host_free(g_cache[i].kernel.code); omega_gpu_session_free(&g_cache[i].code); memset(&g_cache[i], 0, sizeof g_cache[i]); }
 }
 
 void omega_gpu_elementwise_cache_clear(void) {
@@ -921,7 +922,7 @@ static int kernel_for(OmegaGpuEwOp op, bool upload, Slot **out, bool *hit) {
         size_t slot = 0;
         for (size_t i = 0; i < sizeof g_cache / sizeof g_cache[0]; i++) if (!g_cache[i].used) { slot = i; break; }
         s = &g_cache[slot];
-        if (s->used) { free(s->kernel.code); omega_gpu_session_free(&s->code); } /* full: evict slot 0 */
+        if (s->used) { omega_gpu_host_free(s->kernel.code); omega_gpu_session_free(&s->code); } /* full: evict slot 0 */
         memset(s, 0, sizeof *s);
         s->used = 1; s->op = (int)op; s->mutant = mutant; s->kernel = k;
         *hit = false;
@@ -957,10 +958,7 @@ const char *omega_gpu_elementwise_last_error(void) { return omega_gpu_session_la
 #define EW_POISON 0xffbadbadu /* a NaN pattern no kernel here produces on purpose */
 #define EW_WAIT_MS 600000ull /* like main's load/store launchers; a 5 s wait failed under contention (omega#198) */
 
-static uint64_t now_ns(void) {
-    struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t);
-    return (uint64_t)t.tv_sec * 1000000000ULL + (uint64_t)t.tv_nsec;
-}
+static uint64_t now_ns(void) { return omega_gpu_session_now_ns(); } /* the platform clock (CLOCK_NS) */
 
 /* Caller holds the lock. Opens the shared device on first use. */
 static int dev_open_locked(void) {
@@ -1019,7 +1017,7 @@ static void info_begin(OmegaGpuEwInfo *info, const OmegaBlackwellKernel *k, bool
     info->kernel_cache_hit = hit;
     info->gpr_count = k->gpr_count;
     info->insn_count = (uint32_t)k->insn_count;
-    snprintf(info->target_chip, sizeof info->target_chip, "NVIDIA DGX Spark (Grace Blackwell GB10)");
+    omega_gpu_fmt(info->target_chip, sizeof info->target_chip, "NVIDIA DGX Spark (Grace Blackwell GB10)");
     info->sm_architecture = 121;
 }
 static uint32_t f2u(float f) { uint32_t u; memcpy(&u, &f, 4); return u; }

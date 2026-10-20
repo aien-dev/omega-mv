@@ -915,6 +915,9 @@ void rx_world_seal_descriptor(OmegaSharedWorldDesc *desc);
  * of a second object. The notice names both objects. It does not carry code. */
 int  rx_world_enable_resident(RxWorld *w);
 
+/* The current seat generation, read under the world lock (the resident seat stamps its claims with it). */
+uint32_t rx_world_seat_generation(RxWorld *w);
+
 /* Stand-in for the graphics seat, on the same image. One call consumes
  * notices until it has handled one claim, a shutdown, or the ring is empty.
  * Returns 1 if it wrote a result notice, 0 if there was nothing to do,

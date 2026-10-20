@@ -23,12 +23,10 @@ static void put_d(Sink *s, long long v) {
     else put_u(s, (unsigned long long)v, 10);
 }
 
-int omega_gpu_fmt(char *out, size_t cap, const char *fmt, ...) {
+int omega_gpu_vfmt(char *out, size_t cap, const char *fmt, va_list ap) {
     Sink s = { out, cap, 0 };
-    va_list ap;
     if (!out || cap == 0) return 0;
     if (!fmt) fmt = "";
-    va_start(ap, fmt);
     for (const char *p = fmt; *p; p++) {
         if (*p != '%') { put(&s, *p); continue; }
         const char *start = p++;
@@ -59,7 +57,14 @@ int omega_gpu_fmt(char *out, size_t cap, const char *fmt, ...) {
             break;
         }
     }
-    va_end(ap);
     s.out[s.n] = '\0';
     return (int)s.n;
+}
+
+int omega_gpu_fmt(char *out, size_t cap, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int n = omega_gpu_vfmt(out, cap, fmt, ap);
+    va_end(ap);
+    return n;
 }

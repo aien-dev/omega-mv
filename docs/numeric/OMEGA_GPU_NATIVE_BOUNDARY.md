@@ -87,6 +87,22 @@ Claimed (host evidence, `make test-gpu-engine-freestanding`):
     test line numbers, matmul-api host-only 171/0, attention host-only 107/0
     and simulator 219/0, engine 50/0, platform 7/0.
 
+- Cut A services (L202, `docs/numeric/OMEGA_PLATFORM_SERVICES.md`): a
+  process-wide host services table (`src/omega_platform_services.h`, ABI 1.0:
+  clock, wait, yield, lock, task, name, pin, heap, config, diagnostics) with a
+  hosted table that calls exactly the libc functions it replaces and a
+  refusing freestanding stub; the shared push-buffer encoding header
+  `src/omega_gpu_encoding.h` (`omega_gpu_mthd`, `omega_gpu_gp_entry`, swept
+  equal to the physics originals). The session and command list drop their
+  private `bw_mthd` copies (their object code is unchanged). The elementwise
+  API moves onto the session's host services and the resident seat
+  (`src/runtime/rx_resident_gpu.c`) onto the services table, with typed
+  `SeatBuf` buffers (CPU view and GPU VA as distinct values). The
+  freestanding closure grows from 14 to 16 files
+  (`src/omega_gpu_elementwise_api.c`, `src/omega_platform_services.c`); the
+  partial link still leaves only `memcpy`, `memset`, `strcmp` and `strlen`
+  undefined. Evidence: `evidence/OMEGA-CUT-A-SERVICES/`.
+
 Not claimed:
 
 - No whole-project independence from Linux. Section 3 lists every file that
@@ -99,8 +115,8 @@ Not claimed:
 - No native GPU backend yet. Cut C's session part moves the dependency onto
   `OmegaGpuPlatform`; the only platform that drives a real GB10 today is the
   Linux reference. Native GB10 execution through any of this is NOT_RUN.
-- The elementwise API, the numeric launchers, the vector executor and the
-  resident runtime still depend on Linux (section 3).
+- The numeric launchers, the vector executor and the resident seat's
+  device calls still depend on Linux (section 3).
 - No production use of the test-only hooks. `omega_gpu_engine_test_set_clock`
   remains test-only; the production time service is
   `omega_gpu_engine_set_clock`, which the native platform calls once at init.
@@ -160,15 +176,18 @@ development-host measurement or gating and is not part of the native product
 | `src/omega_gpu_attention_api.c` | 0 | 0 | none (stdio only under `OMEGA_ATTN_DEBUG`) | C | DONE (session part): same as matmul API |
 | `src/omega_gpu_session.c` | 0 | 0 | none in the freestanding build (pthread only for the hosted default install) | C | DONE (session part): every device call through `OmegaGpuPlatform` ABI 1.1; header names `OmegaGpuMem`, not `NvrmMem` |
 | `src/omega_gpu_fmt.c` | 0 | 0 | none (stdarg) | C | new: bounded formatter for session and API text |
+| `src/omega_platform_services.c` | 0 | 0 | none | A (L202) | DONE: new, services contract check, refusing stub, install; in the freestanding closure |
+| `src/omega_platform_services_hosted.c` | 0 | 0 | pthread, sched, stdio, stdlib, time, unistd | reference only | new: hosted services table, each entry the exact libc call it replaces; never in the freestanding closure |
+| `src/omega_gpu_encoding.h` | 0 | 0 | none | A (L202) | DONE: new, shared `omega_gpu_mthd` / `omega_gpu_gp_entry`, swept equal to physics |
 | `src/omega_gpu_platform_linux.c` | 13 | 15 | pthread, stdio, stdlib, time | reference only | new: the Linux RM/UVM implementation of `OmegaGpuPlatform`, hosted only, never in the freestanding closure; its own test |
-| `src/omega_gpu_elementwise_api.c` | 0 | 0 | stdio, stdlib, time | C (later part) | uses `OmegaGpuMem` from the session; still hosted |
+| `src/omega_gpu_elementwise_api.c` | 0 | 0 | none (stdio only under `OMEGA_EW_DEBUG`) | C | DONE (L202): host memory, clock and text from the session; in the freestanding closure |
 | `src/omega_blackwell_engine.c` | 19 | 13 | errno, stdio, time | stays Linux-private | the Linux backend of `OmegaGpuBackend`; a sibling native backend over `OmegaGpuPlatform` arrives in B/C |
 | `src/omega_numeric_gb10.c` | 21 | 2 | stdio, stdlib, errno, time | C/D | numeric launchers follow the engine Phase B order |
 | `src/omega_numeric_divsqrt_gb10.c` | 20 | 2 | stdio, stdlib, errno, time | C/D | same |
 | `src/omega_numeric_reduce_gb10.c` | 17 | 2 | stdio, stdlib, errno, time | C/D | same |
 | `src/omega_numeric_ldst_gb10.c` | 16 | 2 | stdio, stdlib | C/D | same |
 | `src/omega_blackwell_submit.c` | 41 | 34 | stdio, stdlib, time, unistd | D | vector executor; sha256-pinned by the M17/M18 gates, re-sealed on chip |
-| `src/runtime/rx_resident_gpu.c` | 18 | 9 | pthread, stdio, stdlib, unistd | D | resident runtime seat |
+| `src/runtime/rx_resident_gpu.c` | 5 | 11 | none (string.h only) | D | resident runtime seat. L202: threads, waits, heap, config, names, pins and diagnostics through `OmegaPlatformServices`; typed `SeatBuf` buffers; the device calls (`m16_native_*`, `nvrm_alloc*`, `nvrm_channel*`) remain for cut D |
 | `src/omega_world_gates.c` | 60 | 2 | stdio, stdlib, time, unistd | host tooling | gates and measurement, stays on Linux |
 | `src/omega_accelerator_world.c` | 38 | 9 | stdio, stdlib, time, unistd, sys/mman | host tooling | stays on Linux |
 | `src/omega_blackwell_gates.c` | 0 | 1 | stdio, stdlib, time | host tooling | stays on Linux |
@@ -254,7 +273,7 @@ an RM method table.
   freestanding target. The kernels each API builds for itself
   (`omega_gpu_attention_api.c`, `omega_gpu_elementwise_api.c`) still malloc
   their code and move with the session in cut C (the attention API moved in
-  cut C session part; the elementwise API has not).
+  cut C session part; the elementwise API moved in L202).
 - B (needs an attended window, native v1 gate order N1 then N4): AIENOS-side
   discovery and bounded device ownership through the platform services; a
   discovery-only run makes zero configuration writes; SMMU/DMA resolved;
@@ -266,8 +285,8 @@ an RM method table.
   are in the freestanding closure; the Linux driver path is the separate
   reference `src/omega_gpu_platform_linux.c`.
 - C, remaining: a native implementation of `OmegaGpuPlatform` and a native
-  backend of `OmegaGpuBackend` (both need cut B device ownership first); the
-  elementwise API (`omega_gpu_elementwise_api.c`) joins the closure.
+  backend of `OmegaGpuBackend` (both need cut B device ownership first). The
+  elementwise API joined the closure in L202.
 - D: vector executor (sha256 pin re-sealed on chip), numeric launchers,
   resident runtime.
 

@@ -733,6 +733,13 @@ static int post_on(RxWorld *w, OmegaSharedWorldRing *ring, OmegaSharedWorldDesc 
     return RX_OK;
 }
 
+uint32_t rx_world_seat_generation(RxWorld *w) {
+    pthread_mutex_lock(&w->mu);
+    uint32_t g = w->seat_generation;
+    pthread_mutex_unlock(&w->mu);
+    return g;
+}
+
 int rx_world_enable_resident(RxWorld *w) {
     if (!w) return RX_ERR_ARG;
     pthread_mutex_lock(&w->mu);

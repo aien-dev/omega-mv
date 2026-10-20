@@ -5,6 +5,9 @@
  * the number of characters written (without the NUL). */
 #ifndef OMEGA_GPU_FMT_H
 #define OMEGA_GPU_FMT_H
+#include <stdarg.h>
 #include <stddef.h>
 int omega_gpu_fmt(char *out, size_t cap, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+/* The same with a va_list (L202: the platform services diagnostics line). */
+int omega_gpu_vfmt(char *out, size_t cap, const char *fmt, va_list ap) __attribute__((format(printf, 3, 0)));
 #endif

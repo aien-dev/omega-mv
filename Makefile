@@ -661,7 +661,7 @@ test-cortex: $(RX_CX_TEST) $(RX_CXJ_TEST)
 # silicon_observed.
 RX_R12_SILICON_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c \
 	src/runtime/rx_coherent.c src/runtime/rx_native_bind.c \
-	src/runtime/rx_resident_gpu.c src/sha256.c src/omega_evidence.c \
+	src/runtime/rx_resident_gpu.c $(PSVC_HOSTED_SRCS) src/sha256.c src/omega_evidence.c \
 	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
 	src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
 	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
@@ -675,6 +675,22 @@ $(RX_R12_SILICON): $(RX_R12_SILICON_SRCS) src/runtime/rx_world.h \
 
 test-r12-silicon: $(RX_R12_SILICON)
 	./$(RX_R12_SILICON)
+
+# L202 cut A: the resident seat over the simulated driver (tests/fake_m16_native.c), no GPU.
+# stdout is the deterministic driver trace; compare it between two builds of the seat.
+RX_SEAT_FAKE_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c \
+	src/runtime/rx_coherent.c src/runtime/rx_native_bind.c \
+	src/runtime/rx_resident_gpu.c $(PSVC_HOSTED_SRCS) src/sha256.c src/omega_evidence.c \
+	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
+	src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
+	tests/fake_m16_native.c tests/runtime/rx_resident_gpu_fake_test.c
+RX_SEAT_FAKE = $(OUT_DIR)/rx_resident_gpu_fake_test
+$(RX_SEAT_FAKE): $(RX_SEAT_FAKE_SRCS) tests/fake_m16_native.h src/runtime/rx_world.h \
+	src/runtime/rx_resident_gpu.h src/runtime/aienos_cap.h $(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itests -pthread -o $@ $(RX_SEAT_FAKE_SRCS) $(AIENOS_CAP_LIB) -ldl -lm
+.PHONY: test-rx-seat-fake
+test-rx-seat-fake: $(RX_SEAT_FAKE)
+	./$(RX_SEAT_FAKE)
 
 # COMPOSITION-2 in the living system (WP-A): the composition modules are part
 # of the canonical living build, so every R13/R14/R15/R16 binary links them.
@@ -731,7 +747,7 @@ RX_R13_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c \
 # RX_ERR_AUTHORITY (sovereign-core abi-qualify, 2026-10-12).
 -include $(RXC_LIB_OBJS:.o=.d)
 RX_R13_TEST_SRCS = $(RX_R13_SRCS) $(RX_FABRIC_TEST_SRCS)
-RX_R13_SILICON_EXTRA = src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
+RX_R13_SILICON_EXTRA = src/runtime/rx_resident_gpu.c $(PSVC_HOSTED_SRCS) src/omega_blackwell_codegen.c \
 	src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
 	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c
 # Production program (rules after the ARGUS block below: they link ARGUS).
@@ -800,13 +816,13 @@ RX_R14_SILICON = $(OUT_DIR)/rx_r14_recovery_silicon
 $(RX_R14_HOST): $(RX_R14_SRCS) src/runtime/rx_living.h $(RX_COMPOSE_LIVING_CHECKS) $(AIENOS_CAP_LIB) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R14_SRCS) $(AIENOS_CAP_LIB) -lm
 
-$(RX_R14_SILICON): $(RX_R14_SRCS) src/runtime/rx_resident_gpu.c \
+$(RX_R14_SILICON): $(RX_R14_SRCS) src/runtime/rx_resident_gpu.c $(PSVC_HOSTED_SRCS) \
 	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
 	src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
 	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
 	$(AIENOS_CAP_LIB) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -DR14_SILICON -pthread -o $@ $(RX_R14_SRCS) \
-		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
+		src/runtime/rx_resident_gpu.c $(PSVC_HOSTED_SRCS) src/omega_blackwell_codegen.c \
 		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
 		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
 		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB) -ldl -lm
@@ -837,7 +853,7 @@ RX_R15_RIG_SRCS = $(filter-out tests/runtime/rx_r13_living.c src/runtime/rx_oper
 	src/runtime/rx_seq_reference.c tests/runtime/rx_r15_rig.c
 RX_R15_RIG_HDRS = src/runtime/rx_living.h src/runtime/rx_seq_reference.h \
 	src/runtime/rx_world.h tests/runtime/rx_r15_rig.h
-RX_R15_GPU_SRCS = src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
+RX_R15_GPU_SRCS = src/runtime/rx_resident_gpu.c $(PSVC_HOSTED_SRCS) src/omega_blackwell_codegen.c \
 	src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
 	src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c
 RX_R15_PARITY_HOST = $(OUT_DIR)/rx_r15_parity_host
@@ -990,7 +1006,7 @@ test-r16-authpath: $(RX_R13_HOST) $(RX_R14_HOST)
 test-r16-authpath-silicon: $(RX_R13_SILICON) $(RX_R14_SILICON)
 	sh tools/r16_authpath.sh silicon $(RX_R13_SILICON) $(RX_R14_SILICON) \
 		$(OUT_DIR)/r16/authpath/silicon-$(R16_STAMP) $(RX_R13_SRCS) $(RX_PROD_ARGUS_SRCS) \
-		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
+		src/runtime/rx_resident_gpu.c $(PSVC_HOSTED_SRCS) src/omega_blackwell_codegen.c \
 		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
 		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
 		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB)
@@ -1008,7 +1024,7 @@ test-r16-authpath-linkmap: $(RX_R13_HOST) $(RX_R14_HOST)
 test-r16-authpath-linkmap-silicon: $(RX_R13_SILICON) $(RX_R14_SILICON)
 	R16_G3_STATIC_ONLY=1 sh tools/r16_authpath.sh silicon $(RX_R13_SILICON) $(RX_R14_SILICON) \
 		$(OUT_DIR)/r16/authpath/linkmap-silicon-$(R16_STAMP) $(RX_R13_SRCS) $(RX_PROD_ARGUS_SRCS) \
-		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
+		src/runtime/rx_resident_gpu.c $(PSVC_HOSTED_SRCS) src/omega_blackwell_codegen.c \
 		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
 		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
 		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB)

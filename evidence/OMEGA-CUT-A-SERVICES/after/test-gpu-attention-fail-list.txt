@@ -1,0 +1,17 @@
+FAIL: paged_bf16 kernel generated (rc OK, 624 insns, 84 gprs)
+FAIL: paged_bf16 mutant NO_MAX generated (rc OK, 84 gprs)
+FAIL: paged_bf16 mutant KV_HEAD generated (rc OK, 84 gprs)
+FAIL: paged_bf16 mutant SLOT generated (rc OK, 84 gprs)
+FAIL: paged_bf16 mutant NO_RESCALE generated (rc OK, 84 gprs)
+FAIL: paged_bf16 mutant Q_ROW generated (rc OK, 84 gprs)
+FAIL: paged_bf16 mutant OUT_ROW generated (rc OK, 84 gprs)
+FAIL: paged_bf16 nvdisasm listing decodes and shows the expected instructions
+FAIL: gqa_f32 kernel generated (rc OK, 512 insns, 72 gprs)
+FAIL: gqa_f32 mutant NO_MAX generated (rc OK, 72 gprs)
+FAIL: gqa_f32 mutant KV_HEAD generated (rc OK, 72 gprs)
+FAIL: gqa_f32 mutant SLOT generated (rc OK, 72 gprs)
+FAIL: gqa_f32 mutant NO_RESCALE generated (rc OK, 72 gprs)
+FAIL: gqa_f32 mutant Q_ROW generated (rc OK, 72 gprs)
+FAIL: gqa_f32 mutant OUT_ROW generated (rc OK, 72 gprs)
+FAIL: gqa_f32 nvdisasm listing decodes and shows the expected instructions
+FAIL: 107 checks, 16 failed

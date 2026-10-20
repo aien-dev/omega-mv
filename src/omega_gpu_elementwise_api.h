@@ -145,7 +145,8 @@ int omega_gpu_reconv_probe_u32(OmegaGpuEwOp op, uint32_t n, const uint32_t *a, c
  * from the argument words, so one kernel per op serves every shape; dims and eps
  * are accepted for forward compatibility and ignored today (may be NULL / 0).
  * Lets tests disassemble the bytes offline (nvdisasm) and check the register
- * budget. Caller frees kernel->code. */
+ * budget. Caller frees kernel->code with omega_gpu_host_free (free() on the hosted build: the hosted
+ * session heap is malloc). */
 int omega_gpu_elementwise_codegen(OmegaGpuEwOp op, const uint32_t *dims, float eps,
                                   OmegaBlackwellKernel *kernel);
 
@@ -154,7 +155,7 @@ int omega_gpu_elementwise_codegen(OmegaGpuEwOp op, const uint32_t *dims, float e
  * only kernels that open a region, the host simulator must catch both) and, when prog is
  * not NULL, a copy of the allocated IR program (a BlackwellIRProgram, post register
  * allocation) for a host IR simulator. Does not touch the device or the kernel cache.
- * Caller frees kernel->code. */
+ * Caller frees kernel->code with omega_gpu_host_free (free() on the hosted build). */
 int omega_gpu_elementwise_codegen_ir(OmegaGpuEwOp op, int mutant, void *prog,
                                      OmegaBlackwellKernel *kernel);
 
