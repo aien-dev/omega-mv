@@ -341,6 +341,28 @@ static void kernels(void) {
         TRY(omega_blackwell_codegen_router_prog(&s, &g_p), "router_w%u_d%u_m%d", w, d, mu); }
 }
 
+#ifdef SM121_WITH_GPU_API
+/* elementwise kernels: built inside omega_gpu_elementwise_api.c; omega_gpu_elementwise_codegen_ir hands out the
+ * program and the kernel bytes the API itself made (the oracle here is the API's own code buffer) */
+#include "../../src/omega_gpu_elementwise_api.h"
+static void ew_kernels(void) {
+    for (int op = OMEGA_GPU_EW_EX2; op <= OMEGA_GPU_EW_RC_REFUSE_JOIN_ONLY; op++)
+        for (int mu = 0; mu <= 3; mu++) {
+            OmegaBlackwellKernel kern; memset(&kern, 0, sizeof kern);
+            omega_bw_ir_init(&g_p);
+            if (omega_gpu_elementwise_codegen_ir((OmegaGpuEwOp)op, mu, &g_p, &kern) != 0 || !kern.code) { g_refused++; continue; }
+            char nm[64]; snprintf(nm, sizeof nm, "ew_op%d_m%d", op, mu);
+            size_t len = 0;
+            if (omega_bw_encode_program(&g_p, g_code, sizeof g_code, &len) != 0 || len != kern.code_size || memcmp(g_code, kern.code, len) != 0)
+                note(nm, 0, "elementwise API bytes differ from encoding its own program again (listing check skipped)");
+            else dump(nm, &g_p);
+            omega_blackwell_kernel_free(&kern);
+        }
+}
+#else
+static void ew_kernels(void) { fprintf(g_notes, "-\t0\telementwise kernels not in this build (needs -DSM121_WITH_GPU_API + libomega_gpu.a)\n"); }
+#endif
+
 /* ---- edges: every form, registers and numbers at the edges of their fields; words from omega_blackwell_encode_one ---- */
 static FILE *g_es2, *g_ebin;
 static unsigned long g_edges;
@@ -426,6 +448,7 @@ int main(int argc, char **argv) {
         if (!g_tsv) { perror(path); return 2; }
         fprintf(g_tsv, "kernel\tinstructions\tcode_bytes\ttc_patched\tqmma_patched\n");
         kernels();
+        ew_kernels();
         { uint8_t va[OMEGA_BW_VECADD_CODE_SIZE]; size_t vl = 0;   /* the chip-proven vector add, the rung-6 chip kernel */
           snprintf(path, sizeof path, "%s/vecadd.c.bin", g_dir); FILE *vf = fopen(path, "wb");
           if (!vf || omega_blackwell_encode_vecadd(va, sizeof va, &vl) != 0 || fwrite(va, 1, vl, vf) != vl) { perror(path); return 2; }
