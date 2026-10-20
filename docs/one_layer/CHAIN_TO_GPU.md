@@ -21,6 +21,11 @@ own instruction words (16 bytes each, sm_121). The origin is Omegese text (`docs
    `nvrm/nvrm.c:745`). No call into NVIDIA's driver happens per launch. The driver (NVIDIA's open
    kernel module 580.173.02, reached by `ioctl`) is used to open the device, allocate and map
    memory, and create the channel (section 3).
+4. **Per generated token, the host work is small except sampling** (section 6, measured on the live 27B
+   server): 1.38 ms of a 132.85 ms token for greedy requests (0.0104 of wall), 28.18 ms of 166.06 ms for
+   sampled ones (0.1697), because sampling sorts the whole 248,320-word vocabulary twice. The host loop is
+   Rust; the C per token (record, doorbell, wait, read back) costs microseconds. Greedy tokens also copy
+   ~1 MB of scores back to find on the CPU a token the GPU already picked.
 
 So Drake's suspicion is half right. The words on the chip are ours, not a compiler's. But the thing
 that writes them is C, and the language that should write them (Omegese, then Omega IR) cannot yet
@@ -165,9 +170,68 @@ nothing; it applies to whatever learner later runs at the endpoint.
 
 ### 5.1 Bytes per stage, CPU path
 
-See `evidence/CHAIN-TO-GPU-0/bytes.md` (filled by `evidence/CHAIN-TO-GPU-0/measure.sh`).
+Measured by `evidence/CHAIN-TO-GPU-0/measure.sh` (output `evidence/CHAIN-TO-GPU-0/bytes.md`), the 10 public
+exp445 dev tasks, totals: Omegese text 1,028 B; JSON op list 6,572 B; OSC binary IR built from the Omegese
+1,640 B. The hand-written `reference.osc` of the same tasks: IR 1,851 B, AArch64 code 2,776 B. The JSON op list
+is the only stage that grows the program (6.4 times the Omegese text); it exists for the host tools, not for
+either chip, and is the first stage to collapse in section 4.
 
-## 6. Open questions (ledger lines)
+## 6. What the CPU does for every generated token today (the live 27B server)
+
+Drake's sharper question: which host code runs per generated token, and what it costs. Source: the server
+answering on the Spark now, `aien-serve-http --engine omega` (aien-sovereign-core `qwen38/serve-fast`
+`46134247`, linked to omega `qwen38/decode-speed` `0010f7d3`). **The host side of the token loop is Rust, not C;
+the C is the GPU driver layer of omega** (recording the command list, ringing, waiting, reading back).
+
+Measured outside the GPU wait, from the server's own per-request log over 128 requests
+(`evidence/CHAIN-TO-GPU-1/host-gap.md`, script `host-gap.sh`; "GPU wait" is the host clock from the doorbell
+to the completion marker, `omega_gpu_cmdlist.c` submit):
+
+| request kind | requests | tokens | GPU wait ms/token | wall ms/token | host outside the wait ms/token | share of wall |
+|---|---|---|---|---|---|---|
+| greedy (always the top token) | 108 | 46,580 | 131.47 | 132.85 | **1.38** | 0.0104 |
+| sampled (top_k 20, random draw) | 20 | 2,746 | 137.88 | 166.06 | **28.18** | **0.1697** (calc:6f84c8cb) |
+
+Inside the GPU wait, on the 4-layer chip test with stamps (omega `evidence/q38-decode-speed-chip-20261019T0142Z/
+default-l4.log`, 41 launches in 1 submit): the GPU's own timeline spans 19,799.3 us, the host-clock wait is
+19,826.7 us, so doorbell, front end, marker write and polling add **27.4 us** per submit (calc:48060859); recording
+the command list plus copy-in and read-back add **5.6 us** more (calc:cceed405). Not measured at 64 layers.
+
+Per-token steps, in the order they run (one line per step; "us" only where a receipt exists):
+
+| # | step | language, file | what it does | cost per token |
+|---|---|---|---|---|
+| H1 | sample | Rust, sc `aien-serve-http/src/sampling.rs` + `aien-inference-abi/src/transformer_backend.rs` | greedy: argmax over 248,320 logits. sampled: `top_k_mask` sorts all 248,320 indices and copies them, then the top_p step takes exp in f64 over all 248,320 and sorts all 248,320 again | greedy within the 1.38 ms; **sampled about 26.8 ms more** (28.18 - 1.38, the only difference between the two rows). Fixer **L148** started; open PR #646 removes only the first sort |
+| H2 | stop check | Rust, `qwen38_engine.rs` | is the token a stop id | within 1.38 ms |
+| H3 | text out | Rust, `server.rs` + `text.rs` | token to UTF-8 text piece (tokenizer decode), one channel send to the HTTP thread; the HTTP write itself runs on another thread, beside the next token | within 1.38 ms |
+| H4 | embedding | Rust, `aien-inference-abi/src/qwen38_omega.rs` `step` | 5,120 bf16 values to f32 on the CPU | within 1.38 ms |
+| H5 | copy-in + record | C, omega `src/omega_gpu_q38_graph.c` `begin_token`, `record_layer` x64, `record_final` | copy 20,480 B into mapped memory; write one QMD and argument bank per launch for the whole token | 5.6 us at 4 layers (with H8); 64 layers not measured |
+| H6 | submit | C, `src/omega_gpu_cmdlist.c` `omega_gpu_cmdlist_submit` | method words into the ring, queue entry, doorbell store (no driver call, section 3) | within the 27.4 us |
+| H7 | wait | C, same file `wait_word` + physics `m16/m16_native.c` | spin on the marker word up to 2,000 us, then poll with 50 us sleeps | within the 27.4 us (completion seen up to one poll late) |
+| H8 | read back | C, `omega_gpu_q38_graph_read` | sync, then copy all 248,320 logits (993,280 B, calc:246601272) into a new Rust vector | within the 1.38 ms |
+
+What is baggage here, said plainly:
+
+1. **The GPU already picks the greedy token.** The decode graph ends in an `argmax` launch and `end_token` reads
+   its answer, but `Qwen38Session::advance` throws it away (`self.model.step(token).and_then(|(_, stats)| ...`)
+   and reads the whole logit row back (H8) so the CPU can find the same argmax again (H1). For greedy requests
+   (108 of 128 here) H8 and H1 are redundant: about 1 MB copied and 248,320 values scanned per token to learn
+   one number the chip already wrote.
+2. **Sampling is the one large host cost**, 17% of a sampled token's wall time, and it is two full sorts of the
+   vocabulary where 20 values are needed. That belongs on the GPU (a top-k and draw kernel beside `argmax`,
+   reading the seed from the argument bank) or at least on 20 values in the engine loop (L148).
+3. **Mask:** no grammar mask runs per token in this server today (the Omegese mask is lane L112). When it lands it
+   joins H1 and should run where H1 runs.
+4. **Tokenizer:** encoding the prompt is once per request; per token only the text-piece decode (H3) runs.
+5. **Scheduling:** the chip lock and the session mutex are taken once per request, not per token.
+6. **C per token** is H5-H8: microseconds against a 132 ms token. The C there is not the cost; the copy of the
+   logits (H8) is, and it exists only to feed H1 on the CPU.
+
+Fraction of the ceiling: the greedy server runs at 132.85 ms/token wall, 0.742 of the 10.15 tok/s memory ceiling (calc:7f4fbf0c; ceiling from
+`~/handoffs/2026-10-19-site-all-machines.md`). The host share (0.0104 greedy, 0.1697 sampled) is the part of the
+gap to the ceiling that is CPU work rather than GPU time.
+
+## 7. Open questions (ledger lines)
 
 ```
 L097-Q1 cc-chain-to-gpu  Kernel form for Omegese: which words (thread index, block index, device view, f32/bf16, barrier, shared, mma) and their IR ops | done when: spec section in OMEGESE.md + IR opcodes listed
@@ -176,4 +240,7 @@ L097-Q3 cc-chain-to-gpu  Does checker2 apply to a GPU kernel (bounds per thread,
 L097-Q4 cc-chain-to-gpu  One lowering for both chips: can the IR feed osc_cg (AArch64) and a Blackwell lowering from the same proven bytes | done when: design note with the shared IR subset
 L097-Q5 cc-chain-to-gpu  Control word bits per instruction (stall, barriers, yield): documented source or chip-observed only | done when: each bit tagged DOCUMENTED / OBSERVED in the encoder
 L097-Q6 cc-chain-to-gpu  CPU back end fraction of ceiling: C6 keeps every value in memory; measure one dev task against the CPU's own ceiling | done when: quiet-measure receipt under evidence/
+L097-Q7 cc-chain-to-gpu  Greedy decode reads 993,280 B of logits per token to redo the GPU's argmax on the CPU (qwen38_omega/session.rs advance drops the graph's token) | done when: greedy requests use the graph's token and read logits only when sampling or logprobs are asked; host ms/token re-measured with host-gap.sh
+L097-Q8 cc-chain-to-gpu  Sampling on the GPU: top-k + seeded draw as a launch beside argmax, so sampled tokens also skip the logits read | done when: chip test gives the same tokens per seed as the CPU sampler; host ms/token re-measured
+L097-Q9 cc-chain-to-gpu  Command-list recording cost at 64 layers (only 4 layers measured: 5.6 us record+copy, 27.4 us doorbell+wait overhead) | done when: GraphStats record_ns/total_ns/chip_ns logged per request by the server or one quiet-measure receipt
 ```
