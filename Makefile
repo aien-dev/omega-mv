@@ -57,6 +57,8 @@ SRCS += src/omega_blackwell_codegen_qmma.c src/omega_blackwell_codegen_qg.c
 SRCS += src/omega_blackwell_codegen_pfhost.c src/omega_gpu_pfhost.c
 # Ternary engine T0 (2026-10-15): KT1, the W2A8 ternary GEMV (omega_gpu_tern_api.h), new files only
 SRCS += src/omega_blackwell_codegen_tern.c src/omega_gpu_tern_api.c
+# L272 (2026-10-20): GB10 ceiling microbenchmarks (omega_blackwell_codegen_ceil.h), new files only
+SRCS += src/omega_blackwell_codegen_ceil.c
 OBJS = $(patsubst %.c,$(OUT_DIR)/%.o,$(notdir $(SRCS)))
 DEPS = $(OBJS:.o=.d)
 -include $(DEPS)
@@ -2554,6 +2556,12 @@ $(GPU_TCGEMM_TEST): tests/gpu_tcgemm_test.c tests/bw_hmma_model.h tests/bw_warp_
 GPU_TC_PEAK_TEST = $(OUT_DIR)/gpu_tc_peak_test
 $(GPU_TC_PEAK_TEST): tests/gpu_tc_peak_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h src/omega_blackwell_codegen_tc.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tc_peak_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# L272 (2026-10-20): GB10 ceilings (DRAM/L2 stream, latency, residency, launch and grid-barrier cost). --host-only is the
+# simulator proof; the chip run is under quiet-measure flock /tmp/aien-gb10.lock (docs/speed/GB10_CEILINGS.md).
+GPU_CEILINGS_TEST = $(OUT_DIR)/gpu_ceilings_test
+$(GPU_CEILINGS_TEST): tests/gpu_ceilings_test.c tests/bw_warp_sim_tc.h src/omega_blackwell_codegen_ceil.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_ceilings_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 
 # OWN-30B L1 attention (2026-10-13): tensor-core causal prefill attention. --host-only and --sim are host proofs;
 # the chip gate is tools/run_gpu_prefill_attn_chip.sh.
