@@ -6,7 +6,7 @@
  *                                   chip parity at every Qwen3.8-27B shape, one-hot codes (subnormals 1 and 9),
  *                                   mutants red, then timing: weight GB/s against 273; --fp8 also times the FP8 kernel
  *                                   on the same shapes in the same process (same method, same session)
- *   --shape LB ROWS WARPS, --sched S, --coal C, --ctas N: kernel knobs for sweeps
+ *   --shape LB ROWS WARPS, --sched S, --coal C, --ctas N: kernel knobs for sweeps, --pf P: next step in flight (speed3)
  */
 #include "omega_gpu_w4_api.h"
 #include "omega_gpu_fp8_api.h"
@@ -14,6 +14,7 @@
 #include "omega_blackwell_codegen_moe.h"
 #include "omega_gpu_session.h"
 #include "bw_warp_sim.h"
+#include "bw_sb_lint.h"
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@
 #define TOL 1e-5 /* relative to the row's |w| . |x| bound */
 
 static int g_checks, g_failed;
+static int g_pf_cli = -1; /* --pf, restored after the pf identity check */
 #define CHECK(c, ...) do { g_checks++; if (!(c)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 
 static uint32_t lcg(uint32_t *s) { *s = *s * 1664525u + 1013904223u; return *s; }
@@ -144,6 +146,27 @@ static void host_only(void) {
                         if (rc == 0) printf("  codegen k %u lb %u rows %u sched %u coal %u: %u insns, %u GPRs%s\n", ks[i], lb, rows, sched, s.coal, insns, gprs, fits ? "" : " (too many registers at 16 warps)");
                         if (lb * rows <= 32u) CHECK(rc == 0, "codegen k %u lb %u rows %u sched %u coal %u builds", ks[i], lb, rows, sched, coal);
                     }
+    /* 5b. speed3 pf: every production shape that fits 1024 instructions builds with pf, and every program (pf 0 and 1,
+     * every shape above) passes the scoreboard check; mutant 7 (decode without waiting for its loads) must fail it */
+    for (size_t i = 0; i < 3; i++)
+        for (uint32_t lb = 8; lb <= 16; lb += 8)
+            for (uint32_t rows = 1; rows <= 4; rows *= 2)
+                for (uint32_t pf = 0; pf <= 1; pf++)
+                    for (uint32_t coal = 0; coal <= 1; coal++) {
+                        OmegaW4GemvSpec s = base_spec(ks[i], lb, rows, 8, 1, coal); s.pf = pf;
+                        static BlackwellIRProgram prog;
+                        const int rc = omega_blackwell_codegen_w4_gemv_prog(&s, &prog);
+                        char lm[200] = "codegen refused";
+                        const int lint = rc == 0 ? bw_sb_lint(&prog, lm, sizeof lm) : -3;
+                        if (rc == 0 && pf) printf("  pf codegen k %u lb %u rows %u coal %u: %zu insns, %u GPRs, lint %s\n", ks[i], lb, rows, s.coal, prog.count, prog.regalloc.peak_gpr_usage, lm);
+                        if (lb * rows <= 32u) CHECK(rc == 0 && lint == 0, "pf %u codegen + scoreboard check k %u lb %u rows %u coal %u: %s", pf, ks[i], lb, rows, coal, lm);
+                        if (rc == 0 && pf && rows == 2 && coal) {
+                            OmegaW4GemvSpec m = s; m.mutant = 7;
+                            const int mrc = omega_blackwell_codegen_w4_gemv_prog(&m, &prog);
+                            const int ml = mrc == 0 ? bw_sb_lint(&prog, lm, sizeof lm) : 0;
+                            CHECK(mrc == 0 && ml == -1, "pf mutant 7 caught by the scoreboard check k %u lb %u: %s", ks[i], lb, lm);
+                        }
+                    }
     /* 6. refusals */
     OmegaW4GemvSpec s = base_spec(5000, 16, 1, 1, 0, 0); CHECK(omega_w4_gemv_steps(&s) == 0, "k 5000 refused");
     s = base_spec(5120, 12, 1, 1, 0, 0); CHECK(omega_w4_gemv_steps(&s) == 0, "lane bytes 12 refused");
@@ -223,6 +246,12 @@ static void sim_battery(void) {
         int rc = sim_gemv(&s, &t, x, y, msg, sizeof msg);
         size_t bad = 0; double worst = rc == 0 ? parity(&t, x, y, &bad) : INFINITY;
         CHECK(rc == 0 && bad == 0, "sim n %u k %u lb %u rows %u warps %u sched %u coal %u: %s worst %.2e bad %zu", t.n, t.k, s.lane_bytes, s.rows, s.warps, s.sched, s.coal, rc ? msg : "ok", worst, bad);
+        if (rc == 0) { /* speed3 pf: the same arithmetic in the same order, so the outputs must be bit-identical */
+            float *y1 = malloc(t.n * 4); OmegaW4GemvSpec sp = s; sp.pf = 1;
+            const int prc = sim_gemv(&sp, &t, x, y1, msg, sizeof msg);
+            CHECK(prc == 0 && memcmp(y, y1, (size_t)t.n * 4) == 0, "sim pf 1 bit-identical to pf 0: n %u k %u lb %u rows %u warps %u coal %u: %s", t.n, t.k, s.lane_bytes, s.rows, s.warps, s.coal, prc ? msg : "ran");
+            free(y1);
+        }
         if (i == 6) /* mutants on one shape: each must change y past the tolerance (or fail to run) */
             for (int m = 1; m <= 6; m++) {
                 OmegaW4GemvSpec sm = s; sm.mutant = m;
@@ -230,6 +259,8 @@ static void sim_battery(void) {
                 int mrc = sim_gemv(&sm, &t, x, y, msg, sizeof msg);
                 size_t mb = 0; if (mrc == 0) parity(&t, x, y, &mb);
                 CHECK(mrc != 0 || mb > 0, "sim mutant %d caught (rc %d, %zu bad rows)", m, mrc, mb);
+                sm.pf = 1; mrc = sim_gemv(&sm, &t, x, y, msg, sizeof msg); mb = 0; if (mrc == 0) parity(&t, x, y, &mb);
+                CHECK(mrc != 0 || mb > 0, "sim pf mutant %d caught (rc %d, %zu bad rows)", m, mrc, mb);
             }
         free(x); free(y); t4_free(&t);
     }
@@ -274,6 +305,19 @@ static int chip_run(uint32_t reps, const char *out_path, int fp8) {
         if (rc == 0) rc = omega_gpu_w4_gemv_f32(dt, x, y, &info);
         size_t bad = 0; double worst = rc == 0 ? parity(&t, x, y, &bad) : INFINITY;
         CHECK(rc == 0 && bad == 0, "chip %s: rc %d (%s) worst %.2e bad %zu", p->name, rc, rc ? omega_gpu_w4_last_error() : "", worst, bad);
+        if (rc == 0) { /* speed3: pf 1 and pf 0 bit-identical on the chip; pf mutant 7 (no wait on the first set) red */
+            float *y0 = malloc(p->n * 4), *y1 = malloc(p->n * 4);
+            omega_gpu_w4_set_pf(0); int r0 = omega_gpu_w4_gemv_f32(dt, x, y0, NULL);
+            omega_gpu_w4_set_pf(1); int r1 = omega_gpu_w4_gemv_f32(dt, x, y1, NULL);
+            CHECK(r0 == 0 && r1 == 0 && memcmp(y0, y1, (size_t)p->n * 4) == 0, "chip %s: pf 1 bit-identical to pf 0 (rc %d %d)", p->name, r0, r1);
+            if (i == 0) {
+                omega_gpu_w4_test_set_mutant(7); int mrc = omega_gpu_w4_gemv_f32(dt, x, y1, NULL); omega_gpu_w4_test_set_mutant(0);
+                size_t mb = 0; if (mrc == 0) parity(&t, x, y1, &mb);
+                CHECK(mrc != 0 || mb > 0, "chip pf mutant 7 caught (rc %d, %zu bad rows)", mrc, mb);
+            }
+            omega_gpu_w4_set_pf(g_pf_cli);
+            free(y0); free(y1);
+        }
         if (i == 0) /* mutants on the chip: each must be red */
             for (int m = 1; m <= 6; m++) {
                 if (m == 3 || m == 6) continue; /* 3: one group per launch here; 6 is a slot race the chip need not show: the simulator's warp orders catch both */
@@ -321,6 +365,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--sched") && i + 1 < argc) omega_gpu_w4_set_sched(atoi(argv[++i]));
         else if (!strcmp(argv[i], "--coal") && i + 1 < argc) omega_gpu_w4_set_coal(atoi(argv[++i]));
         else if (!strcmp(argv[i], "--ctas") && i + 1 < argc) omega_gpu_w4_set_cta_budget((uint32_t)atoi(argv[++i]));
+        else if (!strcmp(argv[i], "--pf") && i + 1 < argc) { g_pf_cli = atoi(argv[++i]); omega_gpu_w4_set_pf(g_pf_cli); }
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
     if (!host && !sim && !chip) host = 1;

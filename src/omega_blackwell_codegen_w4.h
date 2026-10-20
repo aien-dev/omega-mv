@@ -54,7 +54,9 @@ typedef struct {
     uint32_t warps;      /* 1 .. 32 */
     uint32_t coal;       /* 0: lane 0 stores its rows; 1: coalesced output through shared slots (the FP8 kernel's variant A) */
     uint32_t sched;      /* 0: every fixed-latency op stalls 6; 1: pipelined nibble decode + dependency-driven stalls */
-    int mutant;          /* 0 production; 1..6 as above */
+    uint32_t pf;         /* 0: a warp issues one K step's loads, waits, decodes; 1: step s + 1 (or the next row group's step 0) is in
+                          * flight while step s decodes: two register sets, loads of the two sets on scoreboards 3 and 4 */
+    int mutant;          /* 0 production; 1..6 as above; 7 (pf only): the decode does not wait for its loads */
 } OmegaW4GemvSpec;
 
 /* 0 on success (prog solved and register-allocated), -1 on a refused spec or an allocator failure. */

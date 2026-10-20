@@ -21,10 +21,12 @@
 #define SB_GPR 0u
 #define SB_RD 1u
 #define SB_UGPR 2u
+#define SB_PF_A 3u /* pf: register set A (scoreboard 0 stays with S2R, LDC, SHFL, LDS) */
+#define SB_PF_B 4u
 #define NOREG (-1)
 #define MAX_LOOPS 4
 
-enum { K_FIXED, K_PRED, K_VAR, K_VAR_MORE, K_UVAR, K_STORE, K_SYNC, K_EXIT, K_BRA, K_BSSY, K_BSYNC };
+enum { K_FIXED, K_PRED, K_VAR, K_VAR_MORE, K_VAR_PF, K_VAR_PF_MORE, K_UVAR, K_STORE, K_SYNC, K_EXIT, K_BRA, K_BSSY, K_BSYNC };
 
 typedef struct {
     BlackwellIRProgram *p;
@@ -32,6 +34,7 @@ typedef struct {
     int err;
     int open_start[MAX_LOOPS];
     int depth;
+    uint32_t pf_sb; /* K_VAR_PF*: the write barrier of the register set being loaded (SB_PF_A or SB_PF_B) */
 } Em;
 
 static void emit(Em *e, BlackwellIRInsn in, int kind) {
@@ -46,6 +49,10 @@ static void emit(Em *e, BlackwellIRInsn in, int kind) {
     case K_VAR:   in.control = CW(4, SB_GPR, SB_RD, wait) | CW_YIELD; e->pending = (1u << SB_GPR) | (1u << SB_RD); break;
     /* a further load of the same group: waits on nothing, joins the counting scoreboard */
     case K_VAR_MORE: in.control = CW(4, SB_GPR, SB_RD, (e->pending & (1u << SB_RD))) | CW_YIELD; e->pending |= (1u << SB_GPR) | (1u << SB_RD); break;
+    /* pf loads: write barrier = the set's own scoreboard, which is NOT added to pending: the decode of the other set must
+     * not wait on these. wait_sb() adds it right before the first use. The read barrier works as for K_VAR. */
+    case K_VAR_PF:      in.control = CW(4, e->pf_sb, SB_RD, wait) | CW_YIELD; e->pending = 1u << SB_RD; break;
+    case K_VAR_PF_MORE: in.control = CW(4, e->pf_sb, SB_RD, (e->pending & (1u << SB_RD))) | CW_YIELD; e->pending |= 1u << SB_RD; break;
     case K_UVAR:  in.control = CW(4, SB_UGPR, SB_NONE, wait) | CW_YIELD; e->pending = 1u << SB_UGPR; break;
     case K_STORE: in.control = CW(4, SB_NONE, SB_RD, wait) | CW_YIELD; e->pending = 1u << SB_RD; break;
     case K_SYNC:  in.control = CW(6, SB_NONE, SB_NONE, wait); e->pending = 0; break; /* BAR.SYNC after the STS: the attention kernel's chip-proven pattern */
@@ -88,6 +95,17 @@ static void ldg_wide(Em *e, BlackwellIROpcode op, int d, int addr64, uint32_t im
     BlackwellIRInsn i = I0(op); i.dst_vreg = d; i.src1_vreg = addr64; i.imm = imm; i.ureg = udesc; emit(e, i, first ? K_VAR : K_VAR_MORE);
 }
 static void ldg32(Em *e, int d, int addr64, int udesc, int first) { BlackwellIRInsn i = I0(BW_IR_LDG_E); i.dst_vreg = d; i.src1_vreg = addr64; i.ureg = udesc; emit(e, i, first ? K_VAR : K_VAR_MORE); }
+/* pf loads of one register set (e->pf_sb) */
+static void ldg_pf(Em *e, BlackwellIROpcode op, int d, int addr64, uint32_t imm, int udesc, int first) {
+    BlackwellIRInsn i = I0(op); i.dst_vreg = d; i.src1_vreg = addr64; i.imm = imm; i.ureg = udesc; emit(e, i, first ? K_VAR_PF : K_VAR_PF_MORE);
+}
+/* the next instruction waits for every load of the set on scoreboard sb */
+static void wait_sb(Em *e, uint32_t sb) { e->pending |= 1u << sb; }
+/* d[dsub] = a[asub] (IMAD a * 1 + RZ: an exact 32-bit copy, so f32 bit patterns pass unchanged) */
+static void movr(Em *e, int d, unsigned dsub, int a, unsigned asub) {
+    BlackwellIRInsn i = I0(BW_IR_IMAD); i.dst_vreg = d; i.dst_subreg = (uint8_t)dsub; i.src1_vreg = a; i.src1_subreg = (uint8_t)asub; i.imm = 1; i.src3_vreg = NOREG;
+    emit(e, i, K_FIXED);
+}
 static void stg(Em *e, int addr64, uint32_t imm, int val, int udesc) { BlackwellIRInsn i = I0(BW_IR_STG_E); i.src1_vreg = addr64; i.src2_vreg = val; i.imm = imm; i.ureg = udesc; emit(e, i, K_STORE); }
 static void lds32(Em *e, int d, int addr) { BlackwellIRInsn i = I0(BW_IR_LDS32); i.dst_vreg = d; i.src1_vreg = addr; emit(e, i, K_VAR); }
 static void sts32(Em *e, int addr, int val) { BlackwellIRInsn i = I0(BW_IR_STS32); i.src1_vreg = addr; i.src2_vreg = val; emit(e, i, K_STORE); }
@@ -212,8 +230,8 @@ static int spec_ok(const OmegaW4GemvSpec *s) {
     if (s->rows != 1 && s->rows != 2 && s->rows != 4 && s->rows != 8) return 0;
     if (s->warps < 1 || s->warps > 32) return 0;
     if (s->k == 0 || s->k > OMEGA_W4_MAX_K || s->k % (64u * s->lane_bytes)) return 0;
-    if (s->mutant < 0 || s->mutant > 6 || (s->mutant == 6 && !s->coal)) return 0;
-    if (s->sched > 1 || s->coal > 1) return 0;
+    if (s->mutant < 0 || s->mutant > 7 || (s->mutant == 6 && !s->coal) || (s->mutant == 7 && !s->pf)) return 0;
+    if (s->sched > 1 || s->coal > 1 || s->pf > 1) return 0;
     if (s->coal && s->warps * s->rows > 32u) return 0;
     if ((uint64_t)(s->rows - 1) * (s->k / 2u) + s->lane_bytes >= (1u << 23)) return 0; /* 24-bit signed LDG immediate */
     return 1;
@@ -316,6 +334,15 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
         uc = V(e); rgx = V(e); um1 = V(e); negU = V(e); negn = V(e); okw = V(e); tq = V(e); slb = V(e); stog = V(e);
         so = V(e); sa = V(e); wl1 = V(e); val = V(e); row = V(e); skip = V(e);
     }
+    const int pf = spec->pf != 0;
+    int wqB[8], swB[8], xqB[8], two = NOREG, rgn2 = NOREG;
+    for (int q = 0; q < 8; q++) wqB[q] = swB[q] = xqB[q] = NOREG;
+    if (pf) { /* set B, and the clamp registers the classic coal-off kernel does not need */
+        for (uint32_t r = 0; r < R; r++) { wqB[r] = LB == 16 ? V128(e) : V64(e); swB[r] = V(e); }
+        for (uint32_t q = 0; q < XQ; q++) xqB[q] = V128(e);
+        two = V(e); rgn2 = V(e);
+        if (!coal) { rgx = V(e); um1 = V(e); negU = V(e); okw = V(e); tq = V(e); }
+    }
     if (e->err) return -1;
 
     if (coal) { /* the FP8 kernel's variant A (omega_blackwell_codegen_moe.c), slot sets at shared 0 and W R 4 */
@@ -331,27 +358,51 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
         imadi(e, uc, cx, 0, W, NOREG);
     }
 
+    /* ---- pf: helpers over the registers above (macros: they read the locals) ---- */
+#define W4_CLAMP(src) do { imadi(e, tq, src, 0, 1, negU); shr(e, okw, tq, 0, 31); imadi(e, tq, one, 0, 1, tq); \
+                           imadr(e, rgx, okw, tq, um1); /* src < RG ? src : RG - 1 */ } while (0)
+#define W4_PTRS() do { imadw(e, pw, rgx, R * ROWB, wbase); imadw(e, pw, wlane, 1, pw); \
+                       imadw(e, ps, rgx, R * ROWS_S, sbase); imadw(e, ps, slane, 1, ps); imadw(e, pxc, one, 0, xlane); } while (0)
+    /* one K step's loads into set (WQ, SW, XQ) on scoreboard SB, then the load pointers move to the next step */
+#define W4_LOAD(WQ, SW, XQ_, SB) do { \
+        for (uint32_t r = 0; r < R; r++) imadw(e, psr[r], one, r * ROWS_S, ps); \
+        e->pf_sb = (SB); int first_ = 1; \
+        for (uint32_t q = 0; q < XQ; q++) { ldg_pf(e, BW_IR_LDG_E_128, XQ_[q], pxc, q * 16u, udesc, first_); first_ = 0; } \
+        for (uint32_t r = 0; r < R; r++) ldg_pf(e, ldw, WQ[r], pw, r * ROWB, udesc, 0); \
+        for (uint32_t r = 0; r < R; r++) ldg_pf(e, BW_IR_LDG_E, SW[r], psr[r], 0, udesc, 0); \
+        imadw(e, pw, one, 32u * LB, pw); imadw(e, pxc, one, 32u * WPL * 4u, pxc); imadw(e, ps, one, spec->mutant == 2 ? 0u : GPS, ps); \
+    } while (0)
+    if (pf) { /* step 0 of this warp's first row group (clamped, so a warp without rows still reads in range) */
+        if (!coal) { imadi(e, um1, one, 0, 0xffffffffu, rgn); imadi(e, negU, rgn, 0, 0xffffffffu, NOREG); }
+        movi(e, two, 2);
+        W4_CLAMP(rg); W4_PTRS(); W4_LOAD(wq, sw, xq, SB_PF_A);
+    }
+
     /* ---- row-group loop ---- */
     const int L_rg = here(e);
     loop_begin(e);
     isetp_ge_u32(e, coal ? uc : rg, rgn);
     const int bra_end = bra_if_p0_fwd(e);
-    if (coal) {
-        imadi(e, tq, rg, 0, 1, negU);
-        shr(e, okw, tq, 0, 31);
-        imadi(e, tq, one, 0, 1, tq);
-        imadr(e, rgx, okw, tq, um1);                          /* rg < RG ? rg : RG - 1 */
+    if (!pf) {
+        if (coal) W4_CLAMP(rg);
+        W4_PTRS();
     }
-    imadw(e, pw, rgx, R * ROWB, wbase); imadw(e, pw, wlane, 1, pw);
-    imadw(e, ps, rgx, R * ROWS_S, sbase); imadw(e, ps, slane, 1, ps);
-    imadw(e, pxc, one, 0, xlane);
     for (uint32_t r = 0; r < R; r++) movrz(e, acc[r]);
     movi(e, cnt, KS);
 
     /* ---- K loop: one step per iteration, every load of the step issued before any use ---- */
     const int L_k = here(e);
     loop_begin(e);
-    {
+    if (pf) {
+        /* set A holds step s. Last step of the row group: the pointers move to the next row group's step 0 first. */
+        isetp_ge_u32(e, cnt, two);
+        const int bra_norm = bra_if_p0_fwd(e);
+        imadi(e, rgn2, stride, 0, 1, rg);
+        W4_CLAMP(rgn2); W4_PTRS();
+        patch_bra(e, bra_norm, here(e));
+        W4_LOAD(wqB, swB, xqB, SB_PF_B);                      /* step s + 1 flies while step s decodes */
+        if (spec->mutant != 7) wait_sb(e, SB_PF_A);
+    } else {
         /* scale addresses first: a fixed-latency op waits on every pending load (emit), so none may sit inside the batch */
         for (uint32_t r = 0; r < R; r++) imadw(e, psr[r], one, r * ROWS_S, ps);
         int first = 1;
@@ -369,13 +420,23 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
         imadi(e, sp, t, 0, 1u << 23, cbias);                  /* S' bits (E + 62) << 23 */
         ffma(e, acc[r], dot, sp, 0, acc[r]);
     }
-    imadw(e, pw, one, 32u * LB, pw);
-    imadw(e, pxc, one, 32u * WPL * 4u, pxc);
-    imadw(e, ps, one, spec->mutant == 2 ? 0u : GPS, ps);
+    if (pf) { /* set B becomes set A: exact 32-bit copies once B has landed */
+        wait_sb(e, SB_PF_B);
+        for (uint32_t r = 0; r < R; r++) for (uint32_t c = 0; c < LB / 4u; c++) movr(e, wq[r], c, wqB[r], c);
+        for (uint32_t r = 0; r < R; r++) movr(e, sw[r], 0, swB[r], 0);
+        for (uint32_t q = 0; q < XQ; q++) for (uint32_t c = 0; c < 4u; c++) movr(e, xq[q], c, xqB[q], c);
+    } else {
+        imadw(e, pw, one, 32u * LB, pw);
+        imadw(e, pxc, one, 32u * WPL * 4u, pxc);
+        imadw(e, ps, one, spec->mutant == 2 ? 0u : GPS, ps);
+    }
     imadi(e, cnt, one, 0, 0xffffffffu, cnt);
     isetp_ge_u32(e, cnt, one);
     bra_if_p0(e, L_k);
     loop_end(e);
+#undef W4_CLAMP
+#undef W4_PTRS
+#undef W4_LOAD
 
     /* ---- warp reduction, store (the FP8 kernel's epilogue) ---- */
     for (uint32_t r = 0; r < R; r++)
@@ -421,6 +482,7 @@ int omega_blackwell_codegen_w4_gemv_prog(const OmegaW4GemvSpec *spec, BlackwellI
     loop_end(e);
     const int L_end = here(e);
     patch_bra(e, bra_end, L_end);
+    if (pf) { wait_sb(e, SB_PF_A); wait_sb(e, SB_PF_B); } /* no load of either set still landing at EXIT */
     tail(e);
     if (e->err) return -1;
     if (omega_bw_regalloc_solve(prog) != 0) return -1;

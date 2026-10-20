@@ -34,11 +34,11 @@ static struct {
     OmegaGpuScratch x_buf, y_buf;
     OmegaGpuMem tab;
     uint32_t cta_budget, lane_bytes, rows, warps;
-    int sched, coal, mutant;
+    int sched, coal, pf, mutant;
     bool hooked;
     Slot cache[CACHE_SLOTS];
     unsigned next;
-} g = { .sched = -1, .coal = -1 };
+} g = { .sched = -1, .coal = -1, .pf = -1 };
 static int g_rec;
 
 const char *omega_gpu_w4_last_error(void) { return omega_gpu_session_last_error(); }
@@ -67,6 +67,7 @@ void omega_gpu_w4_set_shape(uint32_t lb, uint32_t rows, uint32_t warps) {
 void omega_gpu_w4_set_cta_budget(uint32_t ctas) { omega_gpu_session_lock(); g.cta_budget = ctas; cache_clear_locked(); omega_gpu_session_unlock(); }
 void omega_gpu_w4_set_sched(int sched) { omega_gpu_session_lock(); g.sched = sched; cache_clear_locked(); omega_gpu_session_unlock(); }
 void omega_gpu_w4_set_coal(int coal) { omega_gpu_session_lock(); g.coal = coal; cache_clear_locked(); omega_gpu_session_unlock(); }
+void omega_gpu_w4_set_pf(int pf) { omega_gpu_session_lock(); g.pf = pf; cache_clear_locked(); omega_gpu_session_unlock(); }
 void omega_gpu_w4_test_set_mutant(int m) { omega_gpu_session_lock(); g.mutant = m; cache_clear_locked(); omega_gpu_session_unlock(); }
 
 /* Automatic shape: 16-byte lanes (one whole MX group per lane step), 2 rows and 8 warps (measured below; the FP8 big-k shape has 16,
@@ -83,6 +84,7 @@ void omega_gpu_w4_spec_for(uint32_t k, uint32_t n, OmegaW4GemvSpec *spec) {
     spec->warps = g.warps ? g.warps : 8u;
     spec->sched = g.sched >= 0 ? (uint32_t)g.sched : 1u;
     spec->coal = (g.coal >= 0 ? g.coal : 1) && spec->warps * spec->rows <= 32u;
+    spec->pf = g.pf >= 0 ? (uint32_t)g.pf : 0u;
     spec->mutant = g.mutant;
 }
 
