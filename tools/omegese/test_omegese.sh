@@ -3,7 +3,7 @@
 #  0. with OMEGESE_SANITIZED=1 (an ASan and UBSan build): canary negative controls, then every sanitizer
 #     exit fails the run;
 #  1. every public dev program (tests/one_layer/omegese/dev) -> omegese emit -> omega_emit emit -> checker2
-#     ACCEPT; 1a nested and trial-2 programs; 1b coverage programs; 1c omegese next on fixed prefixes;
+#     ACCEPT; 1a nested and trial-2 programs; 1b coverage programs; 1c omegese next on fixed prefixes; 1d the 96-word line limit;
 #  2. refusals: each bad program is refused by omegese with its expected reason, and a control (the
 #     same program with the defect fixed) is accepted;
 #  3. loop guard negative control: the dev04 op list with the hidden loop counter increment removed
@@ -353,6 +353,41 @@ nxk=$((nxk + 1)); got="$(nxm 'fn f ab uint b uint to uint\nfor abc uint 3\na')"
 nxk=$((nxk + 1)); got="$(printf 'fn f a uint v view uint 4 to uint\nx = view v\nif gt a 2\ny = add a 1\nret ' > "$T/p"; "$G" complete "$T/p")"
 [ "$got" = "$(printf ' y\nend\nx = x\nret 0\nend')" ] || bad "complete inside an if: got '$got'"
 echo "next: $nxk prefixes give the expected words"
+
+# 1d. the 96-word line limit (L156): q.omegese is a line of 58 words whose shortest finish is 38 more
+#     words, 96 in all. After a separator, next must not refuse, every word it lists must not be refused
+#     either, and the tail complete writes (it begins with that separator) must be accepted by emit.
+MW="$ROOT/tests/one_layer/omegese/maxwords"
+nmw=0
+for sep in ' ' $'\t'; do
+  { cat "$MW/q.omegese"; printf '%s' "$sep"; } > "$T/mw.omegese"
+  if ! items="$("$G" next --machine "$T/mw.omegese")"; then bad "line limit: next refuses q.omegese plus a separator: $items"; continue; fi
+  echo "$items" | grep -qx space || bad "line limit: next after q.omegese plus a separator does not list space"
+  while read -r kind w; do
+    [ "$kind" = word ] || continue
+    { cat "$T/mw.omegese"; printf '%s' "$w"; } > "$T/mw2.omegese"
+    "$G" next --machine "$T/mw2.omegese" > "$T/mw2.out" || bad "line limit: next lists '$w' but refuses the prefix with it: $(head -1 "$T/mw2.out")"
+    nmw=$((nmw + 1))
+  done <<< "$items"
+done
+# the same on every byte prefix of w521.omegese (a random walk that reaches the limit; its prefix at byte
+# 700 was the first one refused) from byte 580 on: next must not refuse, and the words it lists at a word
+# boundary must not be refused after them
+wl="$(wc -c < "$MW/w521.omegese")"
+for ((i = 580; i <= wl; i++)); do
+  head -c "$i" "$MW/w521.omegese" > "$T/mw.omegese"
+  if ! items="$("$G" next --machine "$T/mw.omegese")"; then bad "line limit: next refuses the first $i bytes of w521.omegese: $items"; continue; fi
+  [[ "$(tail -c1 "$T/mw.omegese")" =~ [[:space:]] ]] || continue
+  while read -r kind w; do
+    [ "$kind" = word ] || continue
+    { cat "$T/mw.omegese"; printf '%s' "$w"; } > "$T/mw2.omegese"
+    "$G" next --machine "$T/mw2.omegese" > "$T/mw2.out" || bad "line limit: next lists '$w' after $i bytes of w521.omegese but refuses the prefix with it: $(head -1 "$T/mw2.out")"
+    nmw=$((nmw + 1))
+  done <<< "$items"
+done
+{ cat "$MW/q.omegese"; "$G" complete "$MW/q.omegese"; } > "$T/mwfull.omegese"
+"$G" emit "$T/mwfull.omegese" "$T/mwfull.json" > "$T/mwfull.out" || bad "line limit: q.omegese plus complete's tail is refused: $(head -1 "$T/mwfull.out")"
+echo "line limit: next after a 58-word line and at the last bytes of a walk is not refused, $nmw listed words are not refused, complete's 96-word tail emits"
 
 # 2. refusals: "== <expected reason substring>", the bad program, "-- control", the fixed program
 r=0

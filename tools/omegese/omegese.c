@@ -784,6 +784,19 @@ static void gen_scalar(int s, const char *base, Buf *b) {
     join_terms(b, s == T_BOOL ? "and" : "add", &tl, n, base);
     free(tl.p);
 }
+/* the words of a value of scalar type s for the slot w (see gen_value), counted */
+static size_t scalar_words(const Want *w, int s) {
+    Buf t = {0};
+    char base[32];
+    memset(g_taken, 0, sizeof g_taken);
+    if (w->lt.s == s) snprintf(base, sizeof base, "0");
+    else snprintf(base, sizeof base, "%s 0", GW[s]);
+    gen_scalar(s, base, &t);
+    size_t n = t.p && *t.p;
+    for (const char *c = t.p; c && *c; c++) n += *c == ' ';
+    free(t.p);
+    return n;
+}
 /* the words of one value for the slot w */
 static int gen_value(const Want *w) {
     memset(g_taken, 0, sizeof g_taken);
@@ -809,6 +822,19 @@ static int gen_value(const Want *w) {
         else if (m >> T_U32 & 1) s = T_U32;
         else for (int k = 1; k < T_NSCALAR && s < 0; k++) if (m >> k & 1) s = k;
         if (s < 0) s = T_BOOL;
+        /* a slot that takes several whole-number types (the value under a conversion, an index): the type that
+         * needs the fewest words, since each name or call of another type costs a conversion word; a witness
+         * one word too long is refused at the 96-word line limit while a shorter one fits */
+        if (s != T_BOOL && w->lit == L_TYPED && (m & (m - 1))) {
+            size_t best = scalar_words(w, s);
+            for (int k = 1, c = s; k < T_NSCALAR; k++) {
+                size_t n;
+                if (k == c || !(m >> k & 1) || (n = scalar_words(w, k)) >= best) continue;
+                best = n;
+                s = k;
+            }
+            memset(g_taken, 0, sizeof g_taken);
+        }
         const char *lit = s == T_BOOL ? "true" : "0";
         char base[32];
         if (w->lit == L_TYPED && w->lt.s == s) snprintf(base, sizeof base, "%s", lit);
