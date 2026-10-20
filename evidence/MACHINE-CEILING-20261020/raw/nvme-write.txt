@@ -1,0 +1,28 @@
+MC_DISK op=write file=/home/drakestapleton/yardsticks/mc-scratch/mc.bin threads=8 block_KB=1024 start=1792469132.958 end=1792469135.958 GB=34.36 GBps=11.452 bad=0
+MC_DISK: PASS
+{
+ "name": "l151-nvme-write",
+ "cmd": "/home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_disk write /home/drakestapleton/yardsticks/mc-scratch/mc.bin 32 8 1024",
+ "exit": 0,
+ "git_head": "7bc16cd6",
+ "start": "2026-10-19T23:05:32.955857",
+ "seconds": 3.004,
+ "samples": 2,
+ "wall_W_mean": 240.0,
+ "wall_J": 720.9044266,
+ "idle_W_before": 240.0,
+ "incremental_J": 0.0,
+ "gpu_W_mean": 6.915,
+ "gpu_util_mean": 0.0,
+ "load1_start": "52.66",
+ "load1_end": "50.85",
+ "mem_avail_kB_start": "55500940",
+ "mem_avail_kB_end": "56250068",
+ "lock_holders_max": 3,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T030919Z-9d9d5a",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-l151-nvme-write.json
+## rc=0

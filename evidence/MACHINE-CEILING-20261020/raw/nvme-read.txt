@@ -1,0 +1,12 @@
+## 2026-10-20T04:05:39.000386456Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_disk read /home/drakestapleton/yardsticks/mc-scratch/mc.bin 4 1024
+MC_DISK op=read file=/home/drakestapleton/yardsticks/mc-scratch/mc.bin threads=4 block_KB=1024 start=1792469139.001 end=1792469142.442 GB=34.36 GBps=9.986 bad=0
+MC_DISK: PASS
+## rc=0
+## 2026-10-20T04:05:42.445361654Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_disk read /home/drakestapleton/yardsticks/mc-scratch/mc.bin 8 1024
+MC_DISK op=read file=/home/drakestapleton/yardsticks/mc-scratch/mc.bin threads=8 block_KB=1024 start=1792469142.449 end=1792469145.688 GB=34.36 GBps=10.609 bad=0
+MC_DISK: PASS
+## rc=0
+## 2026-10-20T04:05:45.694781848Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_disk read /home/drakestapleton/yardsticks/mc-scratch/mc.bin 16 1024
+MC_DISK op=read file=/home/drakestapleton/yardsticks/mc-scratch/mc.bin threads=16 block_KB=1024 start=1792469145.697 end=1792469148.934 GB=34.36 GBps=10.616 bad=0
+MC_DISK: PASS
+## rc=0

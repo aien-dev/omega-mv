@@ -1,0 +1,100 @@
+## 2026-10-20T04:02:23.575961268Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5 f32 2
+MC_CPU ops op=f32 cpus=5 threads=1 secs=2.000 Gops=153.23 per_thread_Gops=153.23 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:25.581384840Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5 f16 2
+MC_CPU ops op=f16 cpus=5 threads=1 secs=2.000 Gops=275.83 per_thread_Gops=275.83 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:27.585183449Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5 i8dot 2
+MC_CPU ops op=i8dot cpus=5 threads=1 secs=2.000 Gops=499.62 per_thread_Gops=499.62 sink=2.18251e+10
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:29.586735317Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5 i8mm 2
+MC_CPU ops op=i8mm cpus=5 threads=1 secs=2.000 Gops=1000.09 per_thread_Gops=1000.09 sink=-7.67558e+09
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:31.588206675Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5 bf16mm 2
+MC_CPU ops op=bf16mm cpus=5 threads=1 secs=2.000 Gops=371.41 per_thread_Gops=371.41 sink=66.0156
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:39.476481471Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0 f32 2
+MC_CPU ops op=f32 cpus=0 threads=1 secs=2.000 Gops=43.98 per_thread_Gops=43.98 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:41.478799789Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0 f16 2
+MC_CPU ops op=f16 cpus=0 threads=1 secs=2.000 Gops=88.03 per_thread_Gops=88.03 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:43.482730500Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0 i8dot 2
+MC_CPU ops op=i8dot cpus=0 threads=1 secs=2.000 Gops=177.31 per_thread_Gops=177.31 sink=-7.21001e+09
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:45.495845841Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0 i8mm 2
+MC_CPU ops op=i8mm cpus=0 threads=1 secs=2.000 Gops=348.39 per_thread_Gops=348.39 sink=-1.59803e+10
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:47.520777759Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0 bf16mm 2
+MC_CPU ops op=bf16mm cpus=0 threads=1 secs=2.000 Gops=177.80 per_thread_Gops=177.80 sink=66.0156
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:07.741788668Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5-9,15-19 f32 2
+MC_CPU ops op=f32 cpus=5-9,15-19 threads=10 secs=2.002 Gops=853.71 per_thread_Gops=85.37 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:09.957103400Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5-9,15-19 f16 2
+MC_CPU ops op=f16 cpus=5-9,15-19 threads=10 secs=2.003 Gops=1757.80 per_thread_Gops=175.78 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:11.975808760Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5-9,15-19 i8dot 2
+MC_CPU ops op=i8dot cpus=5-9,15-19 threads=10 secs=2.002 Gops=3326.64 per_thread_Gops=332.66 sink=1.45962e+09
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:13.984581406Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5-9,15-19 i8mm 2
+MC_CPU ops op=i8mm cpus=5-9,15-19 threads=10 secs=2.008 Gops=6175.70 per_thread_Gops=617.57 sink=6.54941e+09
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:16.000306226Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 5-9,15-19 bf16mm 2
+MC_CPU ops op=bf16mm cpus=5-9,15-19 threads=10 secs=2.004 Gops=2312.10 per_thread_Gops=231.21 sink=66.0156
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:35.843333484Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-4,10-14 f32 2
+MC_CPU ops op=f32 cpus=0-4,10-14 threads=10 secs=2.022 Gops=270.08 per_thread_Gops=27.01 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:37.945129396Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-4,10-14 f16 2
+MC_CPU ops op=f16 cpus=0-4,10-14 threads=10 secs=2.005 Gops=634.57 per_thread_Gops=63.46 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:39.958379512Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-4,10-14 i8dot 2
+MC_CPU ops op=i8dot cpus=0-4,10-14 threads=10 secs=2.004 Gops=1258.31 per_thread_Gops=125.83 sink=-1.77671e+10
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:41.976673665Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-4,10-14 i8mm 2
+MC_CPU ops op=i8mm cpus=0-4,10-14 threads=10 secs=2.156 Gops=2068.46 per_thread_Gops=206.85 sink=-3.68679e+09
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:44.141486851Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-4,10-14 bf16mm 2
+MC_CPU ops op=bf16mm cpus=0-4,10-14 threads=10 secs=2.178 Gops=824.57 per_thread_Gops=82.46 sink=66.0156
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:04:29.530643231Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-19 f32 2
+MC_CPU ops op=f32 cpus=0-19 threads=20 secs=2.139 Gops=603.42 per_thread_Gops=30.17 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:04:31.684376599Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-19 f16 2
+MC_CPU ops op=f16 cpus=0-19 threads=20 secs=2.198 Gops=1466.64 per_thread_Gops=73.33 sink=69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:04:33.948655968Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-19 i8dot 2
+MC_CPU ops op=i8dot cpus=0-19 threads=20 secs=2.135 Gops=2481.30 per_thread_Gops=124.06 sink=1.6751e+10
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:04:36.106691486Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-19 i8mm 2
+MC_CPU ops op=i8mm cpus=0-19 threads=20 secs=2.277 Gops=4833.69 per_thread_Gops=241.68 sink=-1.5068e+10
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:04:38.393835067Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu ops 0-19 bf16mm 2
+MC_CPU ops op=bf16mm cpus=0-19 threads=20 secs=2.061 Gops=1955.02 per_thread_Gops=97.75 sink=66.0156
+MC_CPU: PASS
+## rc=0

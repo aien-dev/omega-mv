@@ -1,0 +1,33 @@
+MC_CPU start=1792468871.000
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=0 secs=4.5182 GBps=21.98 t_end=1792468876.342
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=1 secs=3.6678 GBps=27.08 t_end=1792468880.015
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=2 secs=4.8051 GBps=20.67 t_end=1792468884.882
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=3 secs=4.4808 GBps=22.17 t_end=1792468889.722
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=4 secs=4.1402 GBps=23.99 t_end=1792468893.901
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=5 secs=4.3092 GBps=23.05 t_end=1792468898.286
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=6 secs=3.3080 GBps=30.02 t_end=1792468901.600
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=7 secs=1.1938 GBps=83.20 t_end=1792468902.873
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=8 secs=1.4014 GBps=70.87 t_end=1792468904.299
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=9 secs=1.3279 GBps=74.80 t_end=1792468905.645
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=10 secs=1.3875 GBps=71.58 t_end=1792468907.087
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=11 secs=1.3573 GBps=73.18 t_end=1792468908.612
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=12 secs=1.4666 GBps=67.72 t_end=1792468910.159
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=13 secs=1.3889 GBps=71.51 t_end=1792468911.584
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=14 secs=1.3368 GBps=74.30 t_end=1792468913.080
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=15 secs=1.4566 GBps=68.19 t_end=1792468914.565
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=16 secs=1.3413 GBps=74.05 t_end=1792468916.017
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=17 secs=1.4216 GBps=69.87 t_end=1792468917.456
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=18 secs=1.4160 GBps=70.14 t_end=1792468918.900
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=19 secs=1.4062 GBps=70.63 t_end=1792468920.328
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=20 secs=1.3105 GBps=75.79 t_end=1792468921.752
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=21 secs=1.5767 GBps=62.99 t_end=1792468923.384
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=22 secs=1.5181 GBps=65.42 t_end=1792468924.954
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=23 secs=1.4270 GBps=69.60 t_end=1792468926.384
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=24 secs=1.3693 GBps=72.53 t_end=1792468927.831
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=25 secs=1.4951 GBps=66.43 t_end=1792468929.346
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=26 secs=1.3855 GBps=71.69 t_end=1792468930.735
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=27 secs=1.4850 GBps=66.88 t_end=1792468932.382
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=28 secs=1.2492 GBps=79.51 t_end=1792468933.692
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=29 secs=1.1636 GBps=85.36 t_end=1792468934.897
+MC_CPU bw best op=read cpus=0-19 threads=20 bytes_per_thread=67108864 GBps=85.36
+MC_CPU: PASS

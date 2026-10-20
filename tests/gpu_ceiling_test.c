@@ -85,12 +85,11 @@ static int stream_read(double secs, int cached) {
     for (uint32_t c = 0; c < grid; c++) for (uint32_t t = 0; t < T; t++) { uint32_t a = 0; const uint32_t *r = sw + (size_t)c * region / 4;
         for (uint32_t it = 0; it < iters; it++) for (uint32_t q = 0; q < 8; q++) for (uint32_t s = 0; s < 4; s++) a ^= r[((size_t)it * T * 128u + (size_t)q * T * 16u + t * 16u) / 4 + s];
         want[(size_t)c * T + t] = a; }
-    omega_gpu_session_lock();
-    if (!omega_gpu_session_open()) { printf("open failed: %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); return 1; }
+    if (!omega_gpu_session_open()) { printf("open failed: %s\n", omega_gpu_session_last_error()); return 1; }
     if (upload(&p, &k) || omega_gpu_session_alloc(ob, &out) != 0 || (cached ? omega_gpu_pf_alloc_dev(sb, &src) : omega_gpu_session_alloc(sb, &src)) != 0) {
-        printf("alloc failed: %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); return 1; }
-    if (cached) { if (omega_gpu_pf_upload(&src, 0, sw, sb) != 0) { printf("upload failed\n"); omega_gpu_session_unlock(); return 1; } }
-    else { memcpy(src.cpu, sw, sb); if (omega_gpu_session_sync_to_gpu(&src) != 0) { omega_gpu_session_unlock(); return 1; } }
+        printf("alloc failed: %s\n", omega_gpu_session_last_error()); return 1; }
+    if (cached) { if (omega_gpu_pf_upload(&src, 0, sw, sb) != 0) { printf("upload failed\n"); return 1; } }
+    else { memcpy(src.cpu, sw, sb); if (omega_gpu_session_sync_to_gpu(&src) != 0) return 1; }
     {   const char *sa = getenv("MC_START_AT"); /* concurrent legs start together */
         if (sa) { struct timespec r; clock_gettime(CLOCK_REALTIME, &r); double d = atof(sa) - (r.tv_sec + r.tv_nsec * 1e-9);
                   if (d > 0) { struct timespec w = { (time_t)d, (long)((d - (time_t)d) * 1e9) }; nanosleep(&w, NULL); } } }
@@ -112,18 +111,20 @@ static int stream_read(double secs, int cached) {
            (long)t0.tv_sec, t0.tv_nsec, (long)t1.tv_sec, t1.tv_nsec, (unsigned long long)n, moved / 1e9, moved / wall / 1e9, kern_ns > 0 ? moved / kern_ns : 0, bad);
     if (bad) fail++;
     omega_gpu_session_free(&k.code); omega_gpu_session_free(&out); if (cached) omega_gpu_pf_free(&src); else omega_gpu_session_free(&src);
-    omega_gpu_session_close(); omega_gpu_session_unlock(); free(sw); free(want);
+    omega_gpu_session_close(); free(sw); free(want);
     printf("GPU_CEILING: %s\n", fail ? "FAIL" : "PASS");
     return fail ? 1 : 0;
 }
 
 int main(int argc, char **argv) {
+    setvbuf(stdout, NULL, _IOLBF, 0); /* line-buffered: a stopped run still leaves every finished point in the log */
     if (argc > 2 && !strcmp(argv[1], "--stream-read")) return stream_read(atof(argv[2]), argc > 3 && !strcmp(argv[3], "cached"));
     int fail = host_only();
     if (argc > 1 && !strcmp(argv[1], "--host-only")) { printf("GPU_CEILING: %s\n", fail ? "FAIL" : "PASS"); return fail ? 1 : 0; }
     if (fail) { printf("GPU_CEILING: FAIL\n"); return 1; }
-    omega_gpu_session_lock();
-    if (!omega_gpu_session_open()) { printf("open failed: %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); return 1; }
+    /* no omega_gpu_session_lock here: omega_gpu_pf_* and omega_gpu_session_close take the (non-recursive) session lock
+     * themselves; holding it around them deadlocks this single-threaded test (found on the chip 2026-10-20) */
+    if (!omega_gpu_session_open()) { printf("open failed: %s\n", omega_gpu_session_last_error()); return 1; }
     static BlackwellIRProgram p;
     /* ---- FFMA ---- */
     static const struct { uint32_t chains, stall, threads, ctas; } fp[] = {
@@ -152,7 +153,7 @@ int main(int argc, char **argv) {
     }
     printf("CEIL best ffma TFLOPS=%.2f\n", best_ffma);
     /* ---- LDS.128 ---- */
-    static const struct { uint32_t threads, ctas; } lp[] = { { 256, 48 }, { 256, 96 }, { 256, 144 }, { 512, 48 }, { 512, 96 }, { 128, 288 }, { 256, 384 } };
+    static const struct { uint32_t threads, ctas; } lp[] = { { 128, 96 }, { 128, 192 }, { 128, 384 }, { 128, 768 }, { 64, 768 }, { 128, 1536 } }; /* 128 threads x 128 B = 16 KB, the launcher cap (OMEGA_BW_QMD_MAX_SHARED_BYTES) */
     double best_lds = 0; const uint32_t lit = 4096;
     for (size_t i = 0; i < sizeof lp / sizeof lp[0]; i++) {
         Kern k; OmegaGpuMem out = { 0 }; size_t ob = (size_t)lp[i].ctas * lp[i].threads * 4u;
@@ -202,7 +203,6 @@ int main(int argc, char **argv) {
     }
     printf("CEIL best stg gpu_uncached GBps=%.1f gpu_cached GBps=%.1f\n", best_stg[0], best_stg[1]);
     omega_gpu_session_close();
-    omega_gpu_session_unlock();
     printf("GPU_CEILING: %s\n", fail ? "FAIL" : "PASS");
     return fail ? 1 : 0;
 }

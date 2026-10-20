@@ -1,0 +1,102 @@
+# gpu start 2026-10-20T03:46:25.436010924Z
+51.06 51.48 54.36 49/3072 3747990
+MemAvailable:   60637284 kB
+0 %, 8.61 W, 721 MHz, [N/A]
+holds exclusive pid 3712409 (s) (set by a finished flock; the open window 20261020T030919Z-9d9d5a holder 1970658 keeps it); queued exclusive pid 1527223 (24668s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; 
+%CPU     PID     ELAPSED COMMAND
+ 574 1770066       39:33 qwen38_subbit.r
+ 174  977379       49:59 g1_mask-647dece
+ 143 3612965       02:47 wormhole_run
+ 100 3748154       00:00 ps
+98.1    1660  1-17:53:49 nvidia-modeset/kthread_q
+97.5 3747647       00:00 git
+96.4 3747413       00:00 cc1
+64.0 3746554       00:01 rustc
+54.2 3743949       00:05 rustc
+53.8 3743469       00:06 rustc
+51.9 3743078       00:07 rustc
+# gpu end 2026-10-20T04:00:35.525428946Z
+37.68 40.86 46.51 41/2965 475709
+MemAvailable:   51180616 kB
+0 %, 7.43 W, 208 MHz, [N/A]
+holds exclusive pid 3712409 (s) (set by a finished flock; the open window 20261020T030919Z-9d9d5a holder 1970658 keeps it); queued exclusive pid 1527223 (25518s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25518s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25518s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; 
+%CPU     PID     ELAPSED COMMAND
+ 998 3817968       13:09 qwen38_subbit.r
+ 183  977379    01:04:09 g1_mask-647dece
+ 148 3971657       10:39 wormhole_run
+98.1    1660  1-18:08:00 nvidia-modeset/kthread_q
+96.8  475650       00:00 git
+88.9  462011       00:09 prefill_e2e2-f4
+35.7  475961       00:00 gh
+12.1  475480       00:00 ssh
+ 5.9  434297       00:34 bash
+ 5.7  434332       00:34 bash
+ 5.2 1527223    07:05:18 aien-serve-http
+# concurrent start 2026-10-20T04:00:35.878503963Z
+37.68 40.86 46.51 40/2967 476233
+MemAvailable:   51192172 kB
+0 %, 7.47 W, 208 MHz, [N/A]
+holds exclusive pid 3712409 (s) (set by a finished flock; the open window 20261020T030919Z-9d9d5a holder 1970658 keeps it); queued exclusive pid 1527223 (25519s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25519s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25519s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; 
+%CPU     PID     ELAPSED COMMAND
+ 998 3817968       13:09 qwen38_subbit.r
+ 183  977379    01:04:09 g1_mask-647dece
+ 148 3971657       10:40 wormhole_run
+98.1    1660  1-18:08:00 nvidia-modeset/kthread_q
+94.3  475650       00:00 git
+89.3  462011       00:09 prefill_e2e2-f4
+ 9.4  475961       00:00 gh
+ 5.9  434297       00:34 bash
+ 5.7  434332       00:34 bash
+ 5.2 1527223    07:05:19 aien-serve-http
+ 3.8  475979       00:00 git-remote-http
+# concurrent end 2026-10-20T04:02:18.036670731Z
+57.36 46.46 47.89 44/2935 571977
+MemAvailable:   43960516 kB
+0 %, 7.29 W, 208 MHz, [N/A]
+holds exclusive pid 3712409 (s) (set by a finished flock; the open window 20261020T030919Z-9d9d5a holder 1970658 keeps it); queued exclusive pid 1527223 (25621s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25621s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25621s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25621s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; 
+%CPU     PID     ELAPSED COMMAND
+ 971 3817968       14:51 qwen38_subbit.r
+ 260  462011       01:51 prefill_e2e2-f4
+ 126  516452       01:16 wormhole_run
+ 100  572360       00:00 ps
+98.1    1660  1-18:09:42 nvidia-modeset/kthread_q
+97.8  547372       00:31 test_brw_tps
+ 5.2 1527223    07:07:01 aien-serve-http
+ 2.5 2673418    01:48:10 claude
+ 2.2 2673465    01:48:10 claude
+ 2.0 2673519    01:48:10 claude
+ 2.0  781490    02:58:48 claude
+# host start 2026-10-20T04:02:18.423209706Z
+57.36 46.46 47.89 47/2946 572402
+MemAvailable:   43916176 kB
+0 %, 7.29 W, 208 MHz, [N/A]
+holds exclusive pid 3712409 (s) (set by a finished flock; the open window 20261020T030919Z-9d9d5a holder 1970658 keeps it); queued exclusive pid 1527223 (25621s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25621s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25621s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25621s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; 
+%CPU     PID     ELAPSED COMMAND
+ 971 3817968       14:52 qwen38_subbit.r
+ 260  462011       01:51 prefill_e2e2-f4
+ 126  516452       01:16 wormhole_run
+98.1    1660  1-18:09:43 nvidia-modeset/kthread_q
+97.8  547372       00:31 test_brw_tps
+ 5.2 1527223    07:07:01 aien-serve-http
+ 2.5 2673418    01:48:11 claude
+ 2.2 2673465    01:48:11 claude
+ 2.0 2673519    01:48:11 claude
+ 2.0  781490    02:58:49 claude
+ 1.9     170  1-18:09:51 kswapd0
+# host end 2026-10-20T04:06:22.000658015Z
+59.28 50.78 49.15 44/3200 799674
+MemAvailable:   49622264 kB
+0 %, 6.82 W, 208 MHz, [N/A]
+holds exclusive pid 3712409 (s) (set by a finished flock; the open window 20261020T030919Z-9d9d5a holder 1970658 keeps it); queued exclusive pid 1527223 (25865s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25865s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25865s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 1527223 (25865s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; queued exclusive pid 692027 (103s) /home/drakestapleton/workspace/pipeline/target-sc/release/aien-test worker --once omega 4adbb6a60ad46f87351302; 
+%CPU     PID     ELAPSED COMMAND
+ 934 3817968       18:55 qwen38_subbit.r
+ 200  800047       00:00 ps
+ 121  516452       05:20 wormhole_run
+98.2    1660  1-18:13:46 nvidia-modeset/kthread_q
+92.3  799895       00:00 cc1
+84.6  797616       00:02 ld
+68.7  797719       00:02 ld
+55.1  797815       00:02 ld
+37.1  794144       00:07 rustc
+36.9  797254       00:03 ld
+33.2  792316       00:09 rustc

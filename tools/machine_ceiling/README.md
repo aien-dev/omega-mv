@@ -16,3 +16,5 @@ Build: `cc -O2 -march=armv9-a+sve2+i8mm+bf16+fp16 -D_GNU_SOURCE -o build/mc/mc_c
 `build/gpu_ceiling_test --host-only` runs the GPU kernels in the warp simulator (no chip). Chip runs need the GB10 lock.
 
 Shown on real hardware: everything above runs on the DGX Spark itself; the GPU kernels were first checked in the simulator.
+
+Results (2026-10-20 window): `docs/MACHINE_CEILING.md`; raw output and checksums in `evidence/MACHINE-CEILING-20261020/`.

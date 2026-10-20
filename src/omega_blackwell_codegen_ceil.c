@@ -7,17 +7,17 @@ int omega_blackwell_codegen_ffma_peak_prog(uint32_t iters, uint32_t chains, uint
         threads == 0 || threads % 32 || threads > 1024) return -1;
     omega_bw_ir_init(prog);
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
-    int udesc = UV64(e), py = V64(e), tid = V(e), cta = V(e), one = V(e), cnt = V(e), fone = V(e), acc[32];
+    int udesc = UV64(e), py = V64(e), tid = V(e), cta = V(e), one = V(e), cnt = V(e), fone = V(e), fadd1 = V(e), acc[32];
     for (uint32_t c = 0; c < chains; c++) acc[c] = V(e);
     if (e->err) return -1;
     ldcu64(e, udesc, 0x358); ldc64(e, py, 0x380); s2r(e, tid, BW_SR_TID_X); s2r(e, cta, BW_SR_CTAID_X);
-    movi(e, one, 1); movi(e, fone, 0x3f800000u);
+    movi(e, one, 1); movi(e, fone, 0x3f800000u); movi(e, fadd1, 0x3f800000u); /* b and c in two registers: one register read twice per FFMA can cost a register-bank cycle */
     for (uint32_t c = 0; c < chains; c++) movrz(e, acc[c]);
     movi(e, cnt, iters);
     const int L = here(e);
     loop_begin(e);
     for (uint32_t c = 0; c < chains; c++) {
-        BlackwellIRInsn i = I0(BW_IR_FFMA); i.dst_vreg = acc[c]; i.src1_vreg = acc[c]; i.src2_vreg = fone; i.src3_vreg = fone;
+        BlackwellIRInsn i = I0(BW_IR_FFMA); i.dst_vreg = acc[c]; i.src1_vreg = acc[c]; i.src2_vreg = fone; i.src3_vreg = fadd1;
         i.control = CW(stall, SB_NONE, SB_NONE, e->pending); e->pending = 0;
         if (omega_bw_ir_append(e->p, &i) < 0) e->err = -1;
     }

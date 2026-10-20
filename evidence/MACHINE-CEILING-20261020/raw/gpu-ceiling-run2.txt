@@ -1,0 +1,27 @@
+## 2026-10-20T04:06:50.187840051Z build/gpu_ceiling_test (fixed: no session lock around pf calls), window 20261020T030919Z-9d9d5a
+sim ffma: ran, 17 registers, 0 wrong
+sim lds: ran, 44 registers, 0 wrong
+sim stg: ran, 7 registers, 0 wrong
+CEIL ffma chains=8 stall=1 threads=128 ctas=192 regs=24 median_us=1945.2 TFLOPS=13.25 reg_TBps_inferred=106.0 wrong=0
+CEIL ffma chains=8 stall=2 threads=128 ctas=192 regs=24 median_us=1948.6 TFLOPS=13.22 reg_TBps_inferred=105.8 wrong=0
+CEIL ffma chains=16 stall=1 threads=128 ctas=192 regs=32 median_us=3174.2 TFLOPS=16.24 reg_TBps_inferred=129.9 wrong=0
+CEIL ffma chains=16 stall=1 threads=256 ctas=192 regs=32 median_us=5877.7 TFLOPS=17.54 reg_TBps_inferred=140.3 wrong=0
+CEIL ffma chains=8 stall=1 threads=256 ctas=384 regs=24 median_us=6340.9 TFLOPS=16.26 reg_TBps_inferred=130.1 wrong=0
+CEIL ffma chains=16 stall=1 threads=512 ctas=96 regs=32 median_us=5895.5 TFLOPS=17.48 reg_TBps_inferred=139.9 wrong=0
+CEIL ffma chains=16 stall=1 threads=1024 ctas=48 regs=32 median_us=5826.5 TFLOPS=17.69 reg_TBps_inferred=141.5 wrong=0
+CEIL ffma chains=32 stall=1 threads=256 ctas=192 regs=48 median_us=11852.5 TFLOPS=17.39 reg_TBps_inferred=139.1 wrong=0
+CEIL ffma chains=4 stall=1 threads=256 ctas=384 regs=16 median_us=4399.1 TFLOPS=11.72 reg_TBps_inferred=93.7 wrong=0
+CEIL best ffma TFLOPS=17.69
+launch failed: qmd build (shared_bytes)
+CEIL best lds TBps=0.000
+CEIL stg gpu_uncached threads=256 ctas=192 MB=805 median_us=4805.1 GBps=167.6 wrong=0
+CEIL stg gpu_uncached threads=512 ctas=96 MB=805 median_us=4721.5 GBps=170.6 wrong=0
+CEIL stg gpu_uncached threads=1024 ctas=96 MB=805 median_us=4838.1 GBps=166.5 wrong=0
+CEIL stg gpu_uncached threads=256 ctas=384 MB=805 median_us=4821.9 GBps=167.0 wrong=0
+CEIL stg gpu_cached threads=256 ctas=192 MB=805 median_us=4674.5 GBps=172.3 wrong=0
+CEIL stg gpu_cached threads=512 ctas=96 MB=805 median_us=4742.9 GBps=169.8 wrong=0
+CEIL stg gpu_cached threads=1024 ctas=96 MB=805 median_us=4886.8 GBps=164.8 wrong=0
+CEIL stg gpu_cached threads=256 ctas=384 MB=805 median_us=4810.4 GBps=167.4 wrong=0
+CEIL best stg gpu_uncached GBps=170.6 gpu_cached GBps=172.3
+GPU_CEILING: FAIL
+## rc=1

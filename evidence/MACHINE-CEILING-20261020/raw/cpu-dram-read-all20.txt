@@ -1,0 +1,59 @@
+MC_CPU start=1792469080.827
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=0 secs=2.1665 GBps=45.84 t_end=1792469083.224
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=1 secs=1.6590 GBps=59.87 t_end=1792469086.557
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=2 secs=1.1778 GBps=84.33 t_end=1792469088.008
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=3 secs=1.2435 GBps=79.87 t_end=1792469089.655
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=4 secs=1.1687 GBps=84.98 t_end=1792469092.354
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=5 secs=1.3014 GBps=76.32 t_end=1792469093.797
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=6 secs=1.3307 GBps=74.64 t_end=1792469095.650
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=7 secs=1.4387 GBps=69.03 t_end=1792469097.451
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=8 secs=1.1995 GBps=82.80 t_end=1792469098.678
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=9 secs=1.2701 GBps=78.20 t_end=1792469099.953
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=10 secs=1.1731 GBps=84.67 t_end=1792469101.130
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=11 secs=1.2587 GBps=78.91 t_end=1792469102.391
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=12 secs=1.2669 GBps=78.39 t_end=1792469103.899
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=13 secs=1.3394 GBps=74.15 t_end=1792469105.342
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=14 secs=1.9162 GBps=51.83 t_end=1792469107.544
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=15 secs=1.4365 GBps=69.14 t_end=1792469109.030
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=16 secs=1.3287 GBps=74.75 t_end=1792469110.462
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=17 secs=1.2655 GBps=78.49 t_end=1792469111.751
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=18 secs=1.2958 GBps=76.65 t_end=1792469113.128
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=19 secs=1.3627 GBps=72.89 t_end=1792469114.504
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=20 secs=1.5377 GBps=64.59 t_end=1792469116.074
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=21 secs=1.1848 GBps=83.83 t_end=1792469117.351
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=22 secs=1.5429 GBps=64.38 t_end=1792469118.909
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=23 secs=1.2997 GBps=76.42 t_end=1792469120.529
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=24 secs=1.5405 GBps=64.47 t_end=1792469122.079
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=25 secs=1.8880 GBps=52.61 t_end=1792469123.978
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=26 secs=1.1559 GBps=85.93 t_end=1792469125.137
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=27 secs=1.3185 GBps=75.33 t_end=1792469126.593
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=28 secs=1.2591 GBps=78.88 t_end=1792469127.877
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=29 secs=1.4775 GBps=67.22 t_end=1792469129.781
+MC_CPU bw best op=read cpus=0-19 threads=20 bytes_per_thread=67108864 GBps=85.93
+MC_CPU: PASS
+{
+ "name": "l151-cpu-dram-read-all20",
+ "cmd": "/home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-19 67108864 read 30",
+ "exit": 0,
+ "git_head": "7bc16cd6",
+ "start": "2026-10-19T23:04:40.514077",
+ "seconds": 49.370,
+ "samples": 22,
+ "wall_W_mean": 240.0,
+ "wall_J": 11848.80684,
+ "idle_W_before": 247.1428571,
+ "incremental_J": -352.6430607,
+ "gpu_W_mean": 6.875909091,
+ "gpu_util_mean": 0.0,
+ "load1_start": "54.73",
+ "load1_end": "52.66",
+ "mem_avail_kB_start": "53722428",
+ "mem_avail_kB_end": "55012016",
+ "lock_holders_max": 3,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T030919Z-9d9d5a",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-l151-cpu-dram-read-all20.json
+## rc=0

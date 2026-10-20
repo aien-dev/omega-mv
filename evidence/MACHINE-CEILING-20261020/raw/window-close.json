@@ -1,0 +1,7 @@
+{"window_id": "20261020T030919Z-9d9d5a", "closed_by": "spark-window close", "reason": "closed", "held_s": 1336, "state": {"utc": "2026-10-20T04:08:40Z", "loadavg": "42.34 46.21 47.63 58/3114 981918", "mem_avail_kB": 52613684, "gpu_util_pct": "0", "gpu_W": "6.96",
+ "gb10_lock_holders": "holds exclusive pid 692027 (241s) /home/drakestapleton/workspace/pipeline/target-sc/release/aien-test worker --once omega 4adbb6a60ad46f87351302; queued exclusive pid 1527223 (26003s) ./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a --port 18091; ",
+ "quiet_lock_holders": "",
+ "quiet_waiters": "",
+ "gpu_apps": "1527223, 34716 MiB, ./aien-serve-http;",
+ "sensors_row": "1792469319,2026-10-19T23:08:39-05:00,240,6.95,0,42.34,52554176,3,461", "sensors_row_age_s": 1}
+}

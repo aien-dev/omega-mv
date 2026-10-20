@@ -1,0 +1,10 @@
+## 2026-10-20T03:59:24.541126077Z gb10 /home/drakestapleton/workspace/omega-machine-ceiling/build/gpu_pf_mem_test
+sim copy: ran, peak 12 registers, 0 wrong, 0 written past the end
+round trip 1 (96 MB, cached device buffer): rc OK, 0 wrong words
+round trip 2 (rewritten by the GPU over cached lines): rc OK, 0 wrong words
+bw uncached distinct: rc OK, median 1697.6 us, 237.2 GB/s, 0 wrong
+bw uncached same-1MB: rc OK, median 310.3 us, 324.4 GB/s, 0 wrong
+bw cached   distinct: rc OK, median 1655.2 us, 243.3 GB/s, 0 wrong
+bw cached   same-1MB: rc OK, median 19.7 us, 5110.8 GB/s, 0 wrong
+GPU_PF_MEM: PASS
+## rc=0

@@ -1,0 +1,28 @@
+CEIL stream_read gpu_cached start=1792468767.623899495 end=1792468797.629985477 launches=4248 GB=6841.9 wall_GBps=228.0 kernel_GBps=229.2 wrong=0
+GPU_CEILING: PASS
+{
+ "name": "l151-gpu-stream-cached-30s",
+ "cmd": "/home/drakestapleton/workspace/omega-machine-ceiling/build/gpu_ceiling_test --stream-read 30 cached",
+ "exit": 0,
+ "git_head": "7bc16cd6",
+ "start": "2026-10-19T22:59:26.661895",
+ "seconds": 31.154,
+ "samples": 14,
+ "wall_W_mean": 285.7142857,
+ "wall_J": 8901.124069,
+ "idle_W_before": 250.0,
+ "incremental_J": 1112.640509,
+ "gpu_W_mean": 30.34071429,
+ "gpu_util_mean": 93.57142857,
+ "load1_start": "44.76",
+ "load1_end": "41.92",
+ "mem_avail_kB_start": "52133736",
+ "mem_avail_kB_end": "52230332",
+ "lock_holders_max": 2,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T030919Z-9d9d5a",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-l151-gpu-stream-cached-30s.json
+## rc=0

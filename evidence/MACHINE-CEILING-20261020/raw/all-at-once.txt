@@ -1,0 +1,26 @@
+{
+ "name": "l151-all-at-once",
+ "cmd": "sh -c \n\t\texport MC_START_AT=$(( $(date +%s) + 25 ))\n\t\t\"/home/drakestapleton/workspace/omega-machine-ceiling/build/gpu_ceiling_test\" --stream-read 30 cached > \"/home/drakestapleton/workspace/omega-machine-ceiling/evidence/MACHINE-CEILING-20261020/raw/cc-gpu.txt\" 2>&1 &\n\t\t\"/home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu\" bw 0-19 67108864 read 30 > \"/home/drakestapleton/workspace/omega-machine-ceiling/evidence/MACHINE-CEILING-20261020/raw/cc-cpu.txt\" 2>&1 &\n\t\t\"/home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_disk\" read \"/home/drakestapleton/yardsticks/mc-scratch/mc.bin\" 16 1024 30 > \"/home/drakestapleton/workspace/omega-machine-ceiling/evidence/MACHINE-CEILING-20261020/raw/cc-nvme.txt\" 2>&1 &\n\t\twait",
+ "exit": 0,
+ "git_head": "7bc16cd6",
+ "start": "2026-10-19T23:00:46.744686",
+ "seconds": 88.247,
+ "samples": 40,
+ "wall_W_mean": 263.0,
+ "wall_J": 23208.94921,
+ "idle_W_before": 271.0,
+ "incremental_J": -705.9756413,
+ "gpu_W_mean": 11.39725,
+ "gpu_util_mean": 27.875,
+ "load1_start": "38.81",
+ "load1_end": "56.18",
+ "mem_avail_kB_start": "48532780",
+ "mem_avail_kB_end": "42605124",
+ "lock_holders_max": 2,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T030919Z-9d9d5a",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-19-l151-all-at-once.json
+## rc=0

@@ -1,0 +1,32 @@
+## 2026-10-20T04:07:42.309961678Z build/gpu_ceiling_test run3 (FFMA b/c in two registers, LDS at the 16 KB launcher cap), window 20261020T030919Z-9d9d5a
+sim ffma: ran, 18 registers, 0 wrong
+sim lds: ran, 44 registers, 0 wrong
+sim stg: ran, 7 registers, 0 wrong
+CEIL ffma chains=8 stall=1 threads=128 ctas=192 regs=24 median_us=1999.6 TFLOPS=12.89 reg_TBps_inferred=103.1 wrong=0
+CEIL ffma chains=8 stall=2 threads=128 ctas=192 regs=24 median_us=2019.7 TFLOPS=12.76 reg_TBps_inferred=102.1 wrong=0
+CEIL ffma chains=16 stall=1 threads=128 ctas=192 regs=32 median_us=3519.0 TFLOPS=14.65 reg_TBps_inferred=117.2 wrong=0
+CEIL ffma chains=16 stall=1 threads=256 ctas=192 regs=32 median_us=6154.1 TFLOPS=16.75 reg_TBps_inferred=134.0 wrong=0
+CEIL ffma chains=8 stall=1 threads=256 ctas=384 regs=24 median_us=7740.0 TFLOPS=13.32 reg_TBps_inferred=106.5 wrong=0
+CEIL ffma chains=16 stall=1 threads=512 ctas=96 regs=32 median_us=6861.1 TFLOPS=15.02 reg_TBps_inferred=120.2 wrong=0
+CEIL ffma chains=16 stall=1 threads=1024 ctas=48 regs=32 median_us=6702.6 TFLOPS=15.38 reg_TBps_inferred=123.0 wrong=0
+CEIL ffma chains=32 stall=1 threads=256 ctas=192 regs=48 median_us=12790.6 TFLOPS=16.12 reg_TBps_inferred=128.9 wrong=0
+CEIL ffma chains=4 stall=1 threads=256 ctas=384 regs=16 median_us=4752.6 TFLOPS=10.84 reg_TBps_inferred=86.8 wrong=0
+CEIL best ffma TFLOPS=16.75
+CEIL lds threads=128 ctas=96 shared_B=16384 regs=48 median_us=531.5 TBps=12.121 wrong=0
+CEIL lds threads=128 ctas=192 shared_B=16384 regs=48 median_us=1042.8 TBps=12.356 wrong=0
+CEIL lds threads=128 ctas=384 shared_B=16384 regs=48 median_us=2065.0 TBps=12.479 wrong=0
+CEIL lds threads=128 ctas=768 shared_B=16384 regs=48 median_us=3993.6 TBps=12.905 wrong=0
+CEIL lds threads=64 ctas=768 shared_B=8192 regs=48 median_us=2100.0 TBps=12.272 wrong=0
+CEIL lds threads=128 ctas=1536 shared_B=16384 regs=48 median_us=7167.3 TBps=14.382 wrong=0
+CEIL best lds TBps=14.382
+CEIL stg gpu_uncached threads=256 ctas=192 MB=805 median_us=4743.5 GBps=169.8 wrong=0
+CEIL stg gpu_uncached threads=512 ctas=96 MB=805 median_us=4637.8 GBps=173.6 wrong=0
+CEIL stg gpu_uncached threads=1024 ctas=96 MB=805 median_us=4726.2 GBps=170.4 wrong=0
+CEIL stg gpu_uncached threads=256 ctas=384 MB=805 median_us=4627.9 GBps=174.0 wrong=0
+CEIL stg gpu_cached threads=256 ctas=192 MB=805 median_us=4599.1 GBps=175.1 wrong=0
+CEIL stg gpu_cached threads=512 ctas=96 MB=805 median_us=4603.7 GBps=174.9 wrong=0
+CEIL stg gpu_cached threads=1024 ctas=96 MB=805 median_us=4622.4 GBps=174.2 wrong=0
+CEIL stg gpu_cached threads=256 ctas=384 MB=805 median_us=4618.0 GBps=174.4 wrong=0
+CEIL best stg gpu_uncached GBps=174.0 gpu_cached GBps=175.1
+GPU_CEILING: PASS
+## rc=0

@@ -1,0 +1,300 @@
+## 2026-10-20T04:02:18.825496371Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5 32768 read 5
+MC_CPU start=1792468938.827
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=32768 round=0 secs=0.0235 GBps=212.39 t_end=1792468938.852
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=32768 round=1 secs=0.0256 GBps=195.11 t_end=1792468938.881
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=32768 round=2 secs=0.0254 GBps=196.70 t_end=1792468938.907
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=32768 round=3 secs=0.0235 GBps=213.01 t_end=1792468938.934
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=32768 round=4 secs=0.0236 GBps=211.98 t_end=1792468938.959
+MC_CPU bw best op=read cpus=5 threads=1 bytes_per_thread=32768 GBps=213.01
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:18.961462221Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5 262144 read 5
+MC_CPU start=1792468938.966
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=262144 round=0 secs=0.0391 GBps=127.71 t_end=1792468939.007
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=262144 round=1 secs=0.0605 GBps=82.58 t_end=1792468939.069
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=262144 round=2 secs=0.0370 GBps=135.22 t_end=1792468939.112
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=262144 round=3 secs=0.0390 GBps=128.31 t_end=1792468939.155
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=262144 round=4 secs=0.0372 GBps=134.44 t_end=1792468939.195
+MC_CPU bw best op=read cpus=5 threads=1 bytes_per_thread=262144 GBps=135.22
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:19.198292288Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5 2097152 read 5
+MC_CPU start=1792468939.202
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=2097152 round=0 secs=0.0443 GBps=112.92 t_end=1792468939.248
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=2097152 round=1 secs=0.0447 GBps=111.86 t_end=1792468939.295
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=2097152 round=2 secs=0.0443 GBps=112.81 t_end=1792468939.340
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=2097152 round=3 secs=0.0445 GBps=112.36 t_end=1792468939.386
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=2097152 round=4 secs=0.0435 GBps=114.90 t_end=1792468939.434
+MC_CPU bw best op=read cpus=5 threads=1 bytes_per_thread=2097152 GBps=114.90
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:19.442461247Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5 1073741824 read 5
+MC_CPU start=1792468939.695
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=1073741824 round=0 secs=0.1797 GBps=23.90 t_end=1792468939.921
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=1073741824 round=1 secs=0.1474 GBps=29.14 t_end=1792468940.070
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=1073741824 round=2 secs=0.1460 GBps=29.42 t_end=1792468940.216
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=1073741824 round=3 secs=0.1552 GBps=27.68 t_end=1792468940.372
+MC_CPU bw op=read cpus=5 threads=1 bytes_per_thread=1073741824 round=4 secs=0.1593 GBps=26.95 t_end=1792468940.532
+MC_CPU bw best op=read cpus=5 threads=1 bytes_per_thread=1073741824 GBps=29.42
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:20.593548842Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5 1073741824 write 5
+MC_CPU start=1792468940.843
+MC_CPU bw op=write cpus=5 threads=1 bytes_per_thread=1073741824 round=0 secs=0.1612 GBps=26.64 t_end=1792468941.007
+MC_CPU bw op=write cpus=5 threads=1 bytes_per_thread=1073741824 round=1 secs=0.1718 GBps=25.00 t_end=1792468941.182
+MC_CPU bw op=write cpus=5 threads=1 bytes_per_thread=1073741824 round=2 secs=0.1395 GBps=30.78 t_end=1792468941.323
+MC_CPU bw op=write cpus=5 threads=1 bytes_per_thread=1073741824 round=3 secs=0.1437 GBps=29.89 t_end=1792468941.469
+MC_CPU bw op=write cpus=5 threads=1 bytes_per_thread=1073741824 round=4 secs=0.1627 GBps=26.40 t_end=1792468941.635
+MC_CPU bw best op=write cpus=5 threads=1 bytes_per_thread=1073741824 GBps=30.78
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:21.695618537Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5 1073741824 copy 5
+MC_CPU start=1792468942.162
+MC_CPU bw op=copy cpus=5 threads=1 bytes_per_thread=1073741824 round=0 secs=0.2982 GBps=28.80 t_end=1792468942.574
+MC_CPU bw op=copy cpus=5 threads=1 bytes_per_thread=1073741824 round=1 secs=0.2167 GBps=39.63 t_end=1792468942.792
+MC_CPU bw op=copy cpus=5 threads=1 bytes_per_thread=1073741824 round=2 secs=0.2126 GBps=40.41 t_end=1792468943.007
+MC_CPU bw op=copy cpus=5 threads=1 bytes_per_thread=1073741824 round=3 secs=0.2013 GBps=42.68 t_end=1792468943.210
+MC_CPU bw op=copy cpus=5 threads=1 bytes_per_thread=1073741824 round=4 secs=0.2254 GBps=38.12 t_end=1792468943.437
+MC_CPU bw best op=copy cpus=5 threads=1 bytes_per_thread=1073741824 GBps=42.68
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:33.590927674Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0 32768 read 5
+MC_CPU start=1792468953.593
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=32768 round=0 secs=0.0609 GBps=82.10 t_end=1792468953.656
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=32768 round=1 secs=0.0608 GBps=82.18 t_end=1792468953.719
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=32768 round=2 secs=0.0608 GBps=82.27 t_end=1792468953.783
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=32768 round=3 secs=0.0582 GBps=85.84 t_end=1792468953.843
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=32768 round=4 secs=0.0586 GBps=85.32 t_end=1792468953.905
+MC_CPU bw best op=read cpus=0 threads=1 bytes_per_thread=32768 GBps=85.84
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:33.906474298Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0 262144 read 5
+MC_CPU start=1792468953.908
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=262144 round=0 secs=0.0892 GBps=56.07 t_end=1792468954.000
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=262144 round=1 secs=0.0945 GBps=52.91 t_end=1792468954.096
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=262144 round=2 secs=0.0940 GBps=53.20 t_end=1792468954.191
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=262144 round=3 secs=0.0882 GBps=56.71 t_end=1792468954.282
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=262144 round=4 secs=0.0877 GBps=56.98 t_end=1792468954.371
+MC_CPU bw best op=read cpus=0 threads=1 bytes_per_thread=262144 GBps=56.98
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:34.372600194Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0 2097152 read 5
+MC_CPU start=1792468954.376
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=2097152 round=0 secs=0.1605 GBps=31.15 t_end=1792468954.537
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=2097152 round=1 secs=0.0966 GBps=51.77 t_end=1792468954.635
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=2097152 round=2 secs=0.1011 GBps=49.45 t_end=1792468954.740
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=2097152 round=3 secs=0.0956 GBps=52.32 t_end=1792468954.838
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=2097152 round=4 secs=0.0989 GBps=50.56 t_end=1792468954.940
+MC_CPU bw best op=read cpus=0 threads=1 bytes_per_thread=2097152 GBps=52.32
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:34.945685655Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0 1073741824 read 5
+MC_CPU start=1792468955.207
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=1073741824 round=0 secs=0.2826 GBps=15.20 t_end=1792468955.541
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=1073741824 round=1 secs=0.1866 GBps=23.02 t_end=1792468955.729
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=1073741824 round=2 secs=0.1844 GBps=23.29 t_end=1792468955.915
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=1073741824 round=3 secs=0.2164 GBps=19.85 t_end=1792468956.132
+MC_CPU bw op=read cpus=0 threads=1 bytes_per_thread=1073741824 round=4 secs=0.1529 GBps=28.08 t_end=1792468956.287
+MC_CPU bw best op=read cpus=0 threads=1 bytes_per_thread=1073741824 GBps=28.08
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:36.358535464Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0 1073741824 write 5
+MC_CPU start=1792468956.607
+MC_CPU bw op=write cpus=0 threads=1 bytes_per_thread=1073741824 round=0 secs=0.1139 GBps=37.72 t_end=1792468956.723
+MC_CPU bw op=write cpus=0 threads=1 bytes_per_thread=1073741824 round=1 secs=0.1923 GBps=22.33 t_end=1792468956.918
+MC_CPU bw op=write cpus=0 threads=1 bytes_per_thread=1073741824 round=2 secs=0.2184 GBps=19.67 t_end=1792468957.138
+MC_CPU bw op=write cpus=0 threads=1 bytes_per_thread=1073741824 round=3 secs=0.1974 GBps=21.76 t_end=1792468957.337
+MC_CPU bw op=write cpus=0 threads=1 bytes_per_thread=1073741824 round=4 secs=0.1932 GBps=22.23 t_end=1792468957.532
+MC_CPU bw best op=write cpus=0 threads=1 bytes_per_thread=1073741824 GBps=37.72
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:37.632567836Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0 1073741824 copy 5
+MC_CPU start=1792468958.068
+MC_CPU bw op=copy cpus=0 threads=1 bytes_per_thread=1073741824 round=0 secs=0.2306 GBps=37.25 t_end=1792468958.374
+MC_CPU bw op=copy cpus=0 threads=1 bytes_per_thread=1073741824 round=1 secs=0.2332 GBps=36.83 t_end=1792468958.612
+MC_CPU bw op=copy cpus=0 threads=1 bytes_per_thread=1073741824 round=2 secs=0.2446 GBps=35.13 t_end=1792468958.867
+MC_CPU bw op=copy cpus=0 threads=1 bytes_per_thread=1073741824 round=3 secs=0.2541 GBps=33.81 t_end=1792468959.122
+MC_CPU bw op=copy cpus=0 threads=1 bytes_per_thread=1073741824 round=4 secs=0.2098 GBps=40.94 t_end=1792468959.332
+MC_CPU bw best op=copy cpus=0 threads=1 bytes_per_thread=1073741824 GBps=40.94
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:49.525420800Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5-9,15-19 32768 read 5
+MC_CPU start=1792468969.529
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=32768 round=0 secs=0.2489 GBps=200.92 t_end=1792468969.781
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=32768 round=1 secs=0.1601 GBps=312.21 t_end=1792468969.994
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=32768 round=2 secs=0.0930 GBps=537.87 t_end=1792468970.090
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=32768 round=3 secs=0.1448 GBps=345.22 t_end=1792468970.238
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=32768 round=4 secs=0.1116 GBps=448.05 t_end=1792468970.559
+MC_CPU bw best op=read cpus=5-9,15-19 threads=10 bytes_per_thread=32768 GBps=537.87
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:50.561269819Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5-9,15-19 262144 read 5
+MC_CPU start=1792468970.567
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=262144 round=0 secs=0.2350 GBps=212.73 t_end=1792468970.806
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=262144 round=1 secs=0.1413 GBps=353.93 t_end=1792468970.998
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=262144 round=2 secs=0.1557 GBps=321.16 t_end=1792468971.156
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=262144 round=3 secs=0.2603 GBps=192.10 t_end=1792468971.429
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=262144 round=4 secs=0.0850 GBps=587.98 t_end=1792468971.519
+MC_CPU bw best op=read cpus=5-9,15-19 threads=10 bytes_per_thread=262144 GBps=587.98
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:51.521226014Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5-9,15-19 2097152 read 5
+MC_CPU start=1792468971.528
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=2097152 round=0 secs=0.2174 GBps=230.01 t_end=1792468971.808
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=2097152 round=1 secs=0.2428 GBps=205.90 t_end=1792468972.072
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=2097152 round=2 secs=0.1720 GBps=290.76 t_end=1792468972.251
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=2097152 round=3 secs=0.2723 GBps=183.63 t_end=1792468972.548
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=2097152 round=4 secs=0.1220 GBps=409.64 t_end=1792468972.705
+MC_CPU bw best op=read cpus=5-9,15-19 threads=10 bytes_per_thread=2097152 GBps=409.64
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:52.712302650Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5-9,15-19 107374182 read 5
+MC_CPU start=1792468972.956
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=0 secs=0.8243 GBps=59.92 t_end=1792468973.829
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=1 secs=0.7754 GBps=63.70 t_end=1792468974.608
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=2 secs=0.7052 GBps=70.04 t_end=1792468975.321
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=3 secs=0.7030 GBps=70.26 t_end=1792468976.035
+MC_CPU bw op=read cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=4 secs=0.6665 GBps=74.11 t_end=1792468976.707
+MC_CPU bw best op=read cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 GBps=74.11
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:02:56.769478254Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5-9,15-19 107374182 write 5
+MC_CPU start=1792468977.030
+MC_CPU bw op=write cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=0 secs=0.7834 GBps=63.05 t_end=1792468977.828
+MC_CPU bw op=write cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=1 secs=0.7597 GBps=65.01 t_end=1792468978.590
+MC_CPU bw op=write cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=2 secs=0.8345 GBps=59.18 t_end=1792468979.427
+MC_CPU bw op=write cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=3 secs=0.8544 GBps=57.81 t_end=1792468980.283
+MC_CPU bw op=write cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=4 secs=0.7741 GBps=63.80 t_end=1792468981.060
+MC_CPU bw best op=write cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 GBps=65.01
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:01.121399502Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 5-9,15-19 107374182 copy 5
+MC_CPU start=1792468981.692
+MC_CPU bw op=copy cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=0 secs=1.1535 GBps=85.64 t_end=1792468982.927
+MC_CPU bw op=copy cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=1 secs=0.9800 GBps=100.80 t_end=1792468983.937
+MC_CPU bw op=copy cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=2 secs=1.6917 GBps=58.39 t_end=1792468985.633
+MC_CPU bw op=copy cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=3 secs=1.0270 GBps=96.18 t_end=1792468986.663
+MC_CPU bw op=copy cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 round=4 secs=0.9453 GBps=104.50 t_end=1792468987.617
+MC_CPU bw best op=copy cpus=5-9,15-19 threads=10 bytes_per_thread=107374080 GBps=104.50
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:18.024303466Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-4,10-14 32768 read 5
+MC_CPU start=1792468998.030
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=32768 round=0 secs=0.1390 GBps=359.69 t_end=1792468998.231
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=32768 round=1 secs=0.4748 GBps=105.30 t_end=1792468998.708
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=32768 round=2 secs=0.2667 GBps=187.48 t_end=1792468999.221
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=32768 round=3 secs=0.4096 GBps=122.07 t_end=1792468999.677
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=32768 round=4 secs=0.2429 GBps=205.84 t_end=1792468999.924
+MC_CPU bw best op=read cpus=0-4,10-14 threads=10 bytes_per_thread=32768 GBps=359.69
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:19.927565251Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-4,10-14 262144 read 5
+MC_CPU start=1792468999.936
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=262144 round=0 secs=0.2907 GBps=171.98 t_end=1792469000.237
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=262144 round=1 secs=0.2234 GBps=223.78 t_end=1792469000.463
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=262144 round=2 secs=0.1278 GBps=391.33 t_end=1792469000.593
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=262144 round=3 secs=0.1395 GBps=358.29 t_end=1792469000.736
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=262144 round=4 secs=0.2093 GBps=238.94 t_end=1792469000.948
+MC_CPU bw best op=read cpus=0-4,10-14 threads=10 bytes_per_thread=262144 GBps=391.33
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:20.949333492Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-4,10-14 2097152 read 5
+MC_CPU start=1792469000.955
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=2097152 round=0 secs=0.3231 GBps=154.72 t_end=1792469001.305
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=2097152 round=1 secs=0.3922 GBps=127.49 t_end=1792469001.721
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=2097152 round=2 secs=0.3847 GBps=129.96 t_end=1792469002.129
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=2097152 round=3 secs=0.4105 GBps=121.79 t_end=1792469002.683
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=2097152 round=4 secs=0.3356 GBps=148.96 t_end=1792469003.023
+MC_CPU bw best op=read cpus=0-4,10-14 threads=10 bytes_per_thread=2097152 GBps=154.72
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:23.032795145Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-4,10-14 107374182 read 5
+MC_CPU start=1792469003.357
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=0 secs=0.6196 GBps=79.71 t_end=1792469004.033
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=1 secs=0.6528 GBps=75.67 t_end=1792469004.745
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=2 secs=0.6146 GBps=80.36 t_end=1792469005.362
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=3 secs=0.6251 GBps=79.02 t_end=1792469005.991
+MC_CPU bw op=read cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=4 secs=0.6813 GBps=72.50 t_end=1792469006.686
+MC_CPU bw best op=read cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 GBps=80.36
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:26.808252729Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-4,10-14 107374182 write 5
+MC_CPU start=1792469007.134
+MC_CPU bw op=write cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=0 secs=0.5509 GBps=89.65 t_end=1792469007.726
+MC_CPU bw op=write cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=1 secs=0.5172 GBps=95.50 t_end=1792469008.254
+MC_CPU bw op=write cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=2 secs=0.5089 GBps=97.05 t_end=1792469008.767
+MC_CPU bw op=write cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=3 secs=0.4250 GBps=116.22 t_end=1792469009.193
+MC_CPU bw op=write cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=4 secs=0.4951 GBps=99.75 t_end=1792469009.715
+MC_CPU bw best op=write cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 GBps=116.22
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:29.838697972Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-4,10-14 107374182 copy 5
+MC_CPU start=1792469010.396
+MC_CPU bw op=copy cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=0 secs=0.9465 GBps=104.37 t_end=1792469011.451
+MC_CPU bw op=copy cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=1 secs=1.0135 GBps=97.47 t_end=1792469012.497
+MC_CPU bw op=copy cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=2 secs=0.9933 GBps=99.45 t_end=1792469013.599
+MC_CPU bw op=copy cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=3 secs=0.9935 GBps=99.43 t_end=1792469014.599
+MC_CPU bw op=copy cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 round=4 secs=1.0125 GBps=97.57 t_end=1792469015.612
+MC_CPU bw best op=copy cpus=0-4,10-14 threads=10 bytes_per_thread=107374080 GBps=104.37
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:46.326386466Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-19 32768 read 5
+MC_CPU start=1792469026.327
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=32768 round=0 secs=0.4402 GBps=227.15 t_end=1792469027.134
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=32768 round=1 secs=0.8535 GBps=117.16 t_end=1792469028.042
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=32768 round=2 secs=0.1565 GBps=638.85 t_end=1792469028.270
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=32768 round=3 secs=0.3800 GBps=263.18 t_end=1792469028.940
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=32768 round=4 secs=0.3560 GBps=280.88 t_end=1792469029.376
+MC_CPU bw best op=read cpus=0-19 threads=20 bytes_per_thread=32768 GBps=638.85
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:49.413629138Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-19 262144 read 5
+MC_CPU start=1792469029.417
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=262144 round=0 secs=0.2139 GBps=467.53 t_end=1792469029.781
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=262144 round=1 secs=0.6874 GBps=145.48 t_end=1792469030.476
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=262144 round=2 secs=0.4902 GBps=203.99 t_end=1792469031.187
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=262144 round=3 secs=1.7078 GBps=58.55 t_end=1792469032.920
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=262144 round=4 secs=0.5380 GBps=185.87 t_end=1792469033.554
+MC_CPU bw best op=read cpus=0-19 threads=20 bytes_per_thread=262144 GBps=467.53
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:53.557628535Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-19 2097152 read 5
+MC_CPU start=1792469033.570
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=2097152 round=0 secs=0.5384 GBps=185.71 t_end=1792469034.356
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=2097152 round=1 secs=0.9630 GBps=103.83 t_end=1792469035.546
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=2097152 round=2 secs=0.6746 GBps=148.21 t_end=1792469036.838
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=2097152 round=3 secs=0.3952 GBps=253.01 t_end=1792469037.483
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=2097152 round=4 secs=0.6798 GBps=147.08 t_end=1792469038.270
+MC_CPU bw best op=read cpus=0-19 threads=20 bytes_per_thread=2097152 GBps=253.01
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:03:58.296372132Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-19 67108864 read 5
+MC_CPU start=1792469038.672
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=0 secs=1.1354 GBps=87.48 t_end=1792469039.883
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=1 secs=1.2860 GBps=77.23 t_end=1792469041.478
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=2 secs=1.2079 GBps=82.23 t_end=1792469043.023
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=3 secs=3.7629 GBps=26.39 t_end=1792469046.820
+MC_CPU bw op=read cpus=0-19 threads=20 bytes_per_thread=67108864 round=4 secs=1.2338 GBps=80.50 t_end=1792469048.082
+MC_CPU bw best op=read cpus=0-19 threads=20 bytes_per_thread=67108864 GBps=87.48
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:04:08.217127096Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-19 67108864 write 5
+MC_CPU start=1792469048.625
+MC_CPU bw op=write cpus=0-19 threads=20 bytes_per_thread=67108864 round=0 secs=1.1979 GBps=82.91 t_end=1792469050.227
+MC_CPU bw op=write cpus=0-19 threads=20 bytes_per_thread=67108864 round=1 secs=1.2907 GBps=76.95 t_end=1792469053.361
+MC_CPU bw op=write cpus=0-19 threads=20 bytes_per_thread=67108864 round=2 secs=1.1893 GBps=83.51 t_end=1792469054.827
+MC_CPU bw op=write cpus=0-19 threads=20 bytes_per_thread=67108864 round=3 secs=1.1655 GBps=85.22 t_end=1792469056.070
+MC_CPU bw op=write cpus=0-19 threads=20 bytes_per_thread=67108864 round=4 secs=1.1829 GBps=83.97 t_end=1792469057.256
+MC_CPU bw best op=write cpus=0-19 threads=20 bytes_per_thread=67108864 GBps=85.22
+MC_CPU: PASS
+## rc=0
+## 2026-10-20T04:04:17.369622508Z /home/drakestapleton/workspace/omega-machine-ceiling/build/mc/mc_cpu bw 0-19 67108864 copy 5
+MC_CPU start=1792469057.974
+MC_CPU bw op=copy cpus=0-19 threads=20 bytes_per_thread=67108864 round=0 secs=1.8733 GBps=106.04 t_end=1792469059.950
+MC_CPU bw op=copy cpus=0-19 threads=20 bytes_per_thread=67108864 round=1 secs=2.6896 GBps=73.86 t_end=1792469062.704
+MC_CPU bw op=copy cpus=0-19 threads=20 bytes_per_thread=67108864 round=2 secs=1.8823 GBps=105.53 t_end=1792469064.788
+MC_CPU bw op=copy cpus=0-19 threads=20 bytes_per_thread=67108864 round=3 secs=2.5978 GBps=76.47 t_end=1792469067.442
+MC_CPU bw op=copy cpus=0-19 threads=20 bytes_per_thread=67108864 round=4 secs=1.8080 GBps=109.87 t_end=1792469069.278
+MC_CPU bw best op=copy cpus=0-19 threads=20 bytes_per_thread=67108864 GBps=109.87
+MC_CPU: PASS
+## rc=0
