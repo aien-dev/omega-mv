@@ -10,6 +10,7 @@
 set -eu
 hex=$1 bin=$2 chk=$3
 t=$(mktemp -d /tmp/seed-audit.XXXXXX)
+trap 'rm -f "$t"/w "$t"/wl "$t"/b "$t"/d "$t"/o; rmdir "$t" 2>/dev/null' EXIT
 # 1. words + comments in file order. In a hex1-language file, ":c" names the next word and "word@c"
 #    leaves the distance field (bits 5..23) for hex1 to fill: the comment names the operand "@c", which is
 #    replaced by the distance hex1 must have put there, and only the other bits are compared to the file.
@@ -72,5 +73,5 @@ END { printf "\nAUDIT words=%d code=%d data=%d decoder_mismatch=%d objdump_misma
 rc=$?
 nw=$(wc -l < "$t/w"); nb=$(wc -l < "$t/b")
 [ "$nw" = "$nb" ] || { echo "AUDIT FAIL: $nw words written, $nb words in the binary"; rc=1; }
-rm -f "$t"/w "$t"/wl "$t"/b "$t"/d "$t"/o; rmdir "$t"
+# (the temporary folder goes on exit, see trap)
 exit $rc
