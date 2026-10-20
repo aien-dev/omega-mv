@@ -431,7 +431,7 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
     imadi(e, R(hoff), R(hoff), RBX / 2u, NOREG);      /* byte offset of this warp's dim half in the row */
     imadi(e, R(hoff), R(lane), KV8 ? 4u : 8u, hoff); /* + 4 values = 8 bytes (bf16) or 4 bytes (e4m3) per lane */
     if (MUT == 2) imadi(e, R(hoff), R(one), RBX, hoff);
-    movi(e, ccnt, KV8 ? 16u : 32u);                   /* 16-byte quads per row */
+    movi(e, ccnt, 32u);                               /* 32 steps of 8 dims (bf16: one 16-byte quad; kv8: half of one) */
     mov(e, R(cb), R(base));
     /* kv8: the score row's scale address, its value, the 2^120 constant, the V row scale pointer and value, scratch */
     int ks64 = NOREG, kscl = NOREG, c120 = NOREG, vs64 = NOREG, vscl = NOREG, tsg = NOREG, pv = NOREG;
@@ -467,18 +467,28 @@ int omega_blackwell_codegen_decode_attn256_prog(const OmegaDecodeAttn256Spec *sp
             for (unsigned q = 0; q < 4; q++) ffma(e, R(sc[h]), R(wd[q]), S(qa4, q), R(sc[h]));
             for (unsigned q = 0; q < 4; q++) ffma(e, R(sc[h]), R(wd[4 + q]), S(qb4, q), R(sc[h]));
         }
-    } else for (unsigned hf = 0; hf < 2; hf++) {        /* kv8: a quad is 16 dims, taken as two halves of 8 */
-        for (unsigned b = 0; b < 8; b++) e4m3_f32(e, wd[b], S(kq[0], 2u * hf + b / 4u), b % 4u, tsg);
+    } else {                                          /* kv8: 8 dims (words 0, 1 of the quad) per iteration, 32 iterations */
+        for (unsigned b = 0; b < 8; b++) e4m3_f32(e, wd[b], S(kq[0], b / 4u), b % 4u, tsg);
         for (unsigned h = 0; h < H; h++) {
-            lds128(e, qa4, qoff, h * 1024u + hf * 32u, 1); lds128(e, qb4, qoff, h * 1024u + hf * 32u + 16u, 0);
+            lds128(e, qa4, qoff, h * 1024u, 1); lds128(e, qb4, qoff, h * 1024u + 16u, 0);
             for (unsigned q = 0; q < 4; q++) ffma(e, R(sc[h]), R(wd[q]), S(qa4, q), R(sc[h]));
             for (unsigned q = 0; q < 4; q++) ffma(e, R(sc[h]), R(wd[4 + q]), S(qb4, q), R(sc[h]));
         }
     }
+    int bra_adv = -1, bra_join = -1;
+    if (KV8) {                                        /* even iteration: words 2, 3 move down, no load; odd: advance the stream */
+        andi(e, R(t2), R(j), 1u);
+        isetp_ge_u32(e, t2, one);
+        bra_adv = bra_if_p0_fwd(e);
+        mov(e, S(kq[0], 0), S(kq[0], 2)); mov(e, S(kq[0], 1), S(kq[0], 3));
+        bra_join = here(e); { BlackwellIRInsn bj = I0(BW_IR_BRA); bj.imm = 1; emit(e, bj, K_BRA); }
+        patch_bra(e, bra_adv, here(e));
+    }
     for (uint32_t d = 0; d + 1 < D; d++) for (unsigned w = 0; w < 4; w++) mov(e, S(kq[d], w), S(kq[d + 1], w));
     ldg_wide(e, BW_IR_LDG_E_128, kq[D - 1], kpf, 0, udesc, 1);
     imadw(e, kpf, one, 16u, kpf);
-    imadi(e, R(qoff), R(one), KV8 ? 64u : 32u, qoff);
+    if (KV8) patch_bra(e, bra_join, here(e));
+    imadi(e, R(qoff), R(one), 32u, qoff);
     imadi(e, R(j), R(one), 1u, j);
     bra(e, L_q);
     loop_end(e);

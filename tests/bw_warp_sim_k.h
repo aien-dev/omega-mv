@@ -43,7 +43,10 @@
 
 #include "omega_blackwell_codegen.h"
 #include "omega_blackwell_codegen_qmma.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function" /* only the e4m3 helpers are used here */
 #include "bw_qmma_model.h"
+#pragma GCC diagnostic pop
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>

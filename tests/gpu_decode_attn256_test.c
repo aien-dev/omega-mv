@@ -45,13 +45,39 @@ static const float EPS = 1e-6f;
 #define QEND (QH * HD)                /* 6144: k block starts here */
 #define KEND (QEND + KVH * HD)        /* 7168: v block starts here */
 
-/* one layer's random state in MODEL order: qkv, history rows (bf16) for 4 KV heads, zero-centred norm weights w */
+/* one layer's random state in MODEL order: qkv, history rows (bf16) for 4 KV heads, zero-centred norm weights w.
+ * --kv8 (SPEED-7, ledger L131): every history row is also held as e4m3 bytes + a power-of-two scale (k8/ks, v8/vs, model
+ * order), K rows spread over 2^-2 .. 2^2 and V rows over 0.5 .. 1 so the scales differ row to row, and kc/vc are
+ * overwritten with the dequantised values (e4m3 * 2^k is exact in bf16), so the reference below needs no kv8 branch for
+ * the history. */
+static int g_kv8;
+static float e4m3_val(uint8_t b) { return qm_e4m3(b); }
 typedef struct {
     uint32_t max_pos, pos, rotary;
     float qkv[QW], qn[HD], kn[HD];
     uint16_t *kc, *vc;   /* [4][max_pos][256] model order (history 0..pos-1 filled; the rest zero) */
+    uint8_t *k8, *v8;    /* kv8: [4][max_pos][256] model order */
+    float *ks, *vs;      /* kv8: [4][max_pos] row scales */
     float vmax;
 } Case;
+static void case_kv8(Case *c, uint32_t seed) {
+    uint32_t s = seed ^ 0x5eedu;
+    const size_t rows = (size_t)KVH * c->max_pos;
+    c->k8 = calloc(rows * HD, 1); c->v8 = calloc(rows * HD, 1); c->ks = calloc(rows, 4); c->vs = calloc(rows, 4);
+    float x[HD];
+    for (unsigned g = 0; g < KVH; g++) for (uint32_t t = 0; t < c->pos; t++) {
+        const size_t r = (size_t)g * c->max_pos + t, o = r * HD;
+        const float kf = ldexpf(1.0f, (int)(lcg(&s) >> 16) % 5 - 2), vf = frand(&s, 0.5f, 1.0f);
+        for (unsigned i = 0; i < HD; i++) x[i] = omega_dattn_bf16_f32(c->kc[o + i]) * kf;
+        c->ks[r] = omega_dattn256_kv8_quant_row(x, c->k8 + o);
+        for (unsigned i = 0; i < HD; i++) x[i] = omega_dattn_bf16_f32(c->vc[o + i]) * vf;
+        c->vs[r] = omega_dattn256_kv8_quant_row(x, c->v8 + o);
+        for (unsigned i = 0; i < HD; i++) {
+            c->kc[o + i] = omega_dattn_bf16_rne(e4m3_val(c->k8[o + i]) * c->ks[r]);
+            c->vc[o + i] = omega_dattn_bf16_rne(e4m3_val(c->v8[o + i]) * c->vs[r]);
+        }
+    }
+}
 static void case_make(Case *c, uint32_t max_pos, uint32_t pos, uint32_t rotary, uint32_t seed, float qscale) {
     uint32_t s = seed;
     c->max_pos = max_pos; c->pos = pos; c->rotary = rotary;
@@ -64,8 +90,10 @@ static void case_make(Case *c, uint32_t max_pos, uint32_t pos, uint32_t rotary, 
         size_t o = ((size_t)g * max_pos + t) * HD + i;
         c->kc[o] = omega_dattn_bf16_rne(frand(&s, -1.0f, 1.0f)); c->vc[o] = omega_dattn_bf16_rne(frand(&s, -1.0f, 1.0f));
     }
+    c->k8 = c->v8 = NULL; c->ks = c->vs = NULL;
+    if (g_kv8) case_kv8(c, seed);
 }
-static void case_free(Case *c) { free(c->kc); free(c->vc); }
+static void case_free(Case *c) { free(c->kc); free(c->vc); free(c->k8); free(c->v8); free(c->ks); free(c->vs); }
 /* what the kernel sees: q and k heads permuted, v as is; norms 1 + w permuted; K history rows permuted */
 static void case_kernel_inputs(const Case *c, float *qkv_k, float *qn_k, float *kn_k) {
     for (unsigned h = 0; h < QH + KVH; h++) omega_dattn256_perm_vec(c->qkv + h * HD, qkv_k + h * HD, c->rotary);
@@ -82,6 +110,10 @@ static uint16_t *case_kc_perm(const Case *c) {
     for (size_t r = 0; r < rows; r++) omega_dattn256_perm_vec_bf16(c->kc + r * HD, p + r * HD, c->rotary);
     return p;
 }
+
+/* kv8: the reference's quantised new rows (model order), written by reference() for rows8_ok */
+static uint8_t g_rk8[KVH * HD], g_rv8[KVH * HD];
+static float g_rks[KVH], g_rvs[KVH];
 
 /* ---- double-precision oracle (test-owned: libm) in MODEL order ---- */
 static void norm_rope(double *x, const float *w, float eps, uint32_t rotary, uint32_t pos, double theta, int rope) {
@@ -106,7 +138,16 @@ static void reference(const float *qkv, const uint16_t *kc, const uint16_t *vc, 
         double k[HD];
         for (unsigned i = 0; i < HD; i++) k[i] = qkv[QEND + gk * HD + i];
         norm_rope(k, k_w, eps, rotary, pos, theta, 1);
-        for (unsigned i = 0; i < HD; i++) { k_new[gk * HD + i] = omega_dattn_bf16_rne((float)k[i]); v_new[gk * HD + i] = omega_dattn_bf16_rne(qkv[KEND + gk * HD + i]); }
+        if (g_kv8) {                                   /* the rows the kv8 kernel appends: quantised from f32, dequantised exactly */
+            float kf[HD];
+            for (unsigned i = 0; i < HD; i++) kf[i] = (float)k[i];
+            g_rks[gk] = omega_dattn256_kv8_quant_row(kf, g_rk8 + gk * HD);
+            g_rvs[gk] = omega_dattn256_kv8_quant_row(qkv + KEND + gk * HD, g_rv8 + gk * HD);
+            for (unsigned i = 0; i < HD; i++) {
+                k_new[gk * HD + i] = omega_dattn_bf16_rne(e4m3_val(g_rk8[gk * HD + i]) * g_rks[gk]);
+                v_new[gk * HD + i] = omega_dattn_bf16_rne(e4m3_val(g_rv8[gk * HD + i]) * g_rvs[gk]);
+            }
+        } else for (unsigned i = 0; i < HD; i++) { k_new[gk * HD + i] = omega_dattn_bf16_rne((float)k[i]); v_new[gk * HD + i] = omega_dattn_bf16_rne(qkv[KEND + gk * HD + i]); }
     }
     double *p = calloc((size_t)pos + 1, sizeof(double));
     for (unsigned h = 0; h < QH; h++) {
@@ -152,6 +193,41 @@ static int rows_ok(const uint16_t *k_chip, const uint16_t *v_chip, const uint16_
     if (kflips > 32) { snprintf(why, n, "%u one-ulp k flips", kflips); return 0; }
     snprintf(why, n, "ok (%u one-ulp k flips)", kflips);
     return 1;
+}
+
+/* kv8 appended rows (chip: K bytes in kernel slot order, V in model order) against the reference's (g_rk8 ...): V bytes
+ * and scale exact (the kernel quantises the same f32 v); K scale equal and bytes within one code on at most 32 elements
+ * (chip f32 k vs the host's double-rounded k), or K scales exactly 2x apart (amax on the 1.75 boundary) with every
+ * dequantised value within one coarse step */
+static int rows8_ok(const uint8_t *k8, const float *ks, const uint8_t *v8, const float *vs, uint32_t rotary, char *why, size_t n) {
+    unsigned kflips = 0;
+    for (unsigned g = 0; g < KVH; g++) {
+        if (vs[g] != g_rvs[g]) { snprintf(why, n, "v scale head %u chip %g ref %g", g, (double)vs[g], (double)g_rvs[g]); return 0; }
+        const int two = ks[g] == 2.0f * g_rks[g] || g_rks[g] == 2.0f * ks[g];
+        if (ks[g] != g_rks[g] && !two) { snprintf(why, n, "k scale head %u chip %g ref %g", g, (double)ks[g], (double)g_rks[g]); return 0; }
+        for (unsigned i = 0; i < HD; i++) {
+            unsigned ci = g * HD + i, ri = g * HD + omega_dattn256_perm_slot(i, rotary);
+            if (v8[ci] != g_rv8[ci]) { snprintf(why, n, "v[%u] chip %02x ref %02x", ci, v8[ci], g_rv8[ci]); return 0; }
+            if (two) {
+                double a = (double)e4m3_val(k8[ci]) * ks[g], b = (double)e4m3_val(g_rk8[ri]) * g_rks[g], step = fabs(b) / 8.0 + 2.0 * fmax(ks[g], g_rks[g]) / 512.0;
+                if (fabs(a - b) > step) { snprintf(why, n, "k slot %u (2x scales) chip %g ref %g", ci, a, b); return 0; }
+            } else if (k8[ci] != g_rk8[ri]) {
+                int d = (int)(k8[ci] & 0x7f) - (int)(g_rk8[ri] & 0x7f);
+                if ((k8[ci] ^ g_rk8[ri]) & 0x80 || d < -1 || d > 1) { snprintf(why, n, "k slot %u (model dim %u) chip %02x ref %02x", ci, ri, k8[ci], g_rk8[ri]); return 0; }
+                kflips++;
+            }
+        }
+    }
+    if (kflips > 32) { snprintf(why, n, "%u one-code k flips", kflips); return 0; }
+    snprintf(why, n, "ok (%u one-code k flips)", kflips);
+    return 1;
+}
+/* K history bytes in kernel slot order */
+static uint8_t *case_k8_perm(const Case *c) {
+    size_t rows = (size_t)KVH * c->max_pos;
+    uint8_t *p = calloc(rows * HD, 1);
+    for (size_t r = 0; r < rows; r++) for (unsigned i = 0; i < HD; i++) p[r * HD + i] = c->k8[r * HD + omega_dattn256_perm_slot(i, c->rotary)];
+    return p;
 }
 
 /* ------------------------------------------------------------- host only */
@@ -212,15 +288,48 @@ static void host_only(void) {
       free(ref); case_free(&c); }
     /* codegen budget */
     for (uint32_t d = 1; d <= 4; d++) for (int m = 0; m <= 5; m++) {
-        OmegaDecodeAttn256Spec s = { d, m, 0 }; uint32_t n = 0, gp = 0;
+        OmegaDecodeAttn256Spec s = { d, m, 0, 0 }; uint32_t n = 0, gp = 0;
         int rc = omega_decode_attn256_prog_stats(&s, &n, &gp);
         CHECK(rc == 0 && n <= 1024 && gp <= 126, "codegen depth %u mutant %d: rc %d insns %u gprs %u", d, m, rc, n, gp);
         if (rc == 0 && m == 0) printf("codegen depth %u: %u instructions, %u registers (declared %u, 256 threads -> %u of 65536)\n", d, n, gp, omega_bw_gpr_declared(gp), 256 * omega_bw_gpr_declared(gp));
     }
-    { OmegaDecodeAttn256Spec s = { 0, 0, 0 }; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 0 refused");
+    { OmegaDecodeAttn256Spec s = { 0, 0, 0, 0 }; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 0 refused");
       s.depth = 5; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 5 refused");
       s.depth = 1; s.mutant = 6; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "mutant 6 refused"); }
+    /* kv8 (SPEED-7): codegen budget, refusals, the host quantiser against the simulator's e4m3 model and the rule */
+    for (uint32_t d = 1; d <= 4; d++) for (int m = 0; m <= 9; m++) {
+        OmegaDecodeAttn256Spec s = { d, m, 0, 1 }; uint32_t n = 0, gp = 0;
+        int rc = omega_decode_attn256_prog_stats(&s, &n, &gp);
+        CHECK(rc == 0 && gp <= 126, "kv8 codegen depth %u mutant %d: rc %d insns %u gprs %u", d, m, rc, n, gp);
+        if (rc == 0 && m == 0) printf("kv8 codegen depth %u: %u instructions, %u registers (declared %u)\n", d, n, gp, omega_bw_gpr_declared(gp));
+    }
+    { OmegaDecodeAttn256Spec s = { 1, 0, 0, 2 }; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "kv8 = 2 refused");
+      s.kv8 = 1; s.prep = 1; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) == 0, "kv8 prep program builds"); }
+    { size_t bad = 0; uint32_t st = 99;
+      for (uint32_t b = 0; b < 65536u; b++) { uint32_t u = b << 16; float f; memcpy(&f, &u, 4); if (isnan(f)) continue; if (omega_dattn256_e4m3_rne_sat(f) != qm_e4m3_rne_sat(f)) bad++; }
+      for (uint32_t i = 0; i < 2000000u; i++) { uint32_t u = lcg(&st); u = (u & 0x80000000u) | ((u & 0x7fffffffu) % 0x44000000u); float f; memcpy(&f, &u, 4); if (omega_dattn256_e4m3_rne_sat(f) != qm_e4m3_rne_sat(f)) bad++; }
+      CHECK(bad == 0, "kv8 host e4m3 rounding equals the simulator model on every bf16 pattern and 2M random floats (%zu differ)", bad); }
+    { uint32_t st = 7; float x[HD]; uint8_t q[HD]; size_t bad = 0;
+      for (unsigned r = 0; r < 2000; r++) {
+          const float mag = ldexpf(1.0f, (int)(lcg(&st) % 35) - 20); /* amax < 2^15: below the scale cap (448 * 2^7) */
+          double amax = 0; for (unsigned i = 0; i < HD; i++) { x[i] = frand(&st, -1.0f, 1.0f) * mag; amax = fmax(amax, fabs((double)x[i])); }
+          const float sc = omega_dattn256_kv8_quant_row(x, q);
+          int e; (void)frexp(sc, &e);
+          const int pow2 = sc == ldexpf(1.0f, e - 1);
+          const int smallest = amax / sc <= 448.0 && amax / (sc / 2.0) > 448.0;
+          int close = 1; for (unsigned i = 0; i < HD; i++) { double dq = (double)e4m3_val(q[i]) * sc, err = fabs(dq - x[i]); if (err > fabs((double)x[i]) / 16.0 + sc / 1024.0 + 1e-30) close = 0; }
+          if (!pow2 || !smallest || !close) bad++;
+      }
+      CHECK(bad == 0, "kv8 quant_row: scale a power of two, the smallest with amax / scale <= 448, every value within half a step (%zu rows bad)", bad);
+      for (unsigned i = 0; i < HD; i++) x[i] = 0.0f;
+      float sc = omega_dattn256_kv8_quant_row(x, q); int z = 1; for (unsigned i = 0; i < HD; i++) z &= q[i] == 0;
+      CHECK(z && sc == ldexpf(1.0f, -108), "kv8 quant_row: zero row -> zero bytes, scale 2^-108 (the 2^-100 floor)");
+      for (unsigned i = 0; i < HD; i++) x[i] = i == 3 ? -1.0e6f : 1.0f;
+      sc = omega_dattn256_kv8_quant_row(x, q);
+      CHECK(sc == 128.0f && q[3] == 0xfe, "kv8 quant_row: amax above 448 * 2^7 saturates at the scale cap (scale %g, byte %02x)", (double)sc, q[3]); }
     CHECK(omega_gpu_decode_attn256_cache_alloc(0, 256, THETA, 64, NULL) == OMEGA_GPU_DATTN_BAD_ARGS, "NULL out refused");
+    { OmegaGpuDecodeAttn256Cache *c = (OmegaGpuDecodeAttn256Cache *)1;
+      CHECK(omega_gpu_decode_attn256_cache_alloc_kv(1, 256, THETA, 64, 2, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "kv8 = 2 cache refused"); }
     { OmegaGpuDecodeAttn256Cache *c = (OmegaGpuDecodeAttn256Cache *)1;
       CHECK(omega_gpu_decode_attn256_cache_alloc(1, 100, THETA, 64, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "max_pos not a multiple of 256 refused before any device work");
       c = (OmegaGpuDecodeAttn256Cache *)1;
@@ -237,13 +346,16 @@ static void host_only(void) {
 static uint64_t g_sim_issues;
 static int sim_point(uint32_t max_pos, uint32_t pos, uint32_t rotary, uint32_t depth, int mutant, uint32_t per_split, float qscale, uint32_t seed, char *msg, size_t n, double *worst, size_t *bad, char *rows, size_t rn) {
     static BlackwellIRProgram prog;
-    OmegaDecodeAttn256Spec spec = { depth, mutant, 0 };
+    OmegaDecodeAttn256Spec spec = { depth, mutant, 0, (uint32_t)g_kv8 };
     if (omega_blackwell_codegen_decode_attn256_prog(&spec, &prog) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
     Case c; case_make(&c, max_pos, pos, rotary, seed, qscale);
     uint16_t *kcp = case_kc_perm(&c);
-    const uint32_t splits = (pos + per_split) / per_split;
-    size_t plane = (size_t)KVH * max_pos * OMEGA_DATTN256_ROW_BYTES + OMEGA_DATTN256_PLANE_SLACK, hist = (size_t)KVH * max_pos * OMEGA_DATTN256_ROW_BYTES;
-    uint8_t *kv = aligned_alloc(16, 2 * plane); memset(kv, 0, 2 * plane);
+    uint8_t *k8p = g_kv8 ? case_k8_perm(&c) : NULL;
+    const uint32_t splits = (pos + per_split) / per_split, rb = g_kv8 ? OMEGA_DATTN256_ROW_BYTES_KV8 : OMEGA_DATTN256_ROW_BYTES;
+    size_t plane = (size_t)KVH * max_pos * rb + OMEGA_DATTN256_PLANE_SLACK, hist = (size_t)KVH * max_pos * rb, sbytes = g_kv8 ? (size_t)KVH * max_pos * 4 : 0;
+    const size_t kvb = 2 * plane + 2 * sbytes;
+    uint8_t *kv = aligned_alloc(16, kvb); memset(kv, 0, kvb);
+    float *ksp = (float *)(kv + 2 * plane), *vsp = (float *)(kv + 2 * plane + sbytes);
     float *rope = aligned_alloc(16, (size_t)max_pos * OMEGA_DATTN256_ROPE_ROW_BYTES); for (uint32_t p = 0; p < max_pos; p++) omega_dattn256_rope_row(p, THETA, rotary, rope + (size_t)p * 256);
     float *norms = aligned_alloc(16, 2048);
     float *qkv = aligned_alloc(16, sizeof c.qkv);
@@ -257,15 +369,17 @@ static int sim_point(uint32_t max_pos, uint32_t pos, uint32_t rotary, uint32_t d
         s.p = &prog; s.threads = 256; s.order = order;
         static uint8_t smem[OMEGA_DATTN256_SHARED_BYTES]; s.smem = smem; s.smem_bytes = OMEGA_DATTN256_SHARED_BYTES;
         memset(cnt, 0, 16); for (unsigned i = 0; i < OW; i++) out[i] = -999.0f;
-        memcpy(kv, kcp, hist); memcpy(kv + plane, c.vc, hist); /* fresh history (the kernel appends) */
+        if (g_kv8) { memcpy(kv, k8p, hist); memcpy(kv + plane, c.v8, hist); memcpy(ksp, c.ks, sbytes); memcpy(vsp, c.vs, sbytes); }
+        else { memcpy(kv, kcp, hist); memcpy(kv + plane, c.vc, hist); } /* fresh history (the kernel appends) */
+        if (g_kv8) { uint64_t a = (uintptr_t)ksp, b = (uintptr_t)vsp; s.cbank[OMEGA_DATTN256_ARG_KS / 4] = (uint32_t)a; s.cbank[OMEGA_DATTN256_ARG_KS / 4 + 1] = (uint32_t)(a >> 32); s.cbank[OMEGA_DATTN256_ARG_VS / 4] = (uint32_t)b; s.cbank[OMEGA_DATTN256_ARG_VS / 4 + 1] = (uint32_t)(b >> 32); }
         uint64_t A[9] = { (uintptr_t)qkv, (uintptr_t)kv, (uintptr_t)(kv + plane), (uintptr_t)rope, (uintptr_t)norms, (uintptr_t)(norms + HD), (uintptr_t)out, (uintptr_t)part, (uintptr_t)cnt };
         for (unsigned i = 0; i < 9; i++) { s.cbank[(0x380 + 8 * i) / 4] = (uint32_t)A[i]; s.cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(A[i] >> 32); }
         float fe = EPS, fo = 1.0f, fq = (float)((1.0 / 16.0) * 1.4426950408889634);
         memcpy(&s.cbank[OMEGA_DATTN256_ARG_EPS / 4], &fe, 4); memcpy(&s.cbank[OMEGA_DATTN256_ARG_OUT_SCALE / 4], &fo, 4); memcpy(&s.cbank[OMEGA_DATTN256_ARG_QK_SCALE / 4], &fq, 4);
-        s.cbank[OMEGA_DATTN256_ARG_POS / 4] = pos; s.cbank[OMEGA_DATTN256_ARG_PER_SPLIT / 4] = per_split; s.cbank[OMEGA_DATTN256_ARG_SPLITS / 4] = splits; s.cbank[OMEGA_DATTN256_ARG_KV_STRIDE / 4] = max_pos * OMEGA_DATTN256_ROW_BYTES;
+        s.cbank[OMEGA_DATTN256_ARG_POS / 4] = pos; s.cbank[OMEGA_DATTN256_ARG_PER_SPLIT / 4] = per_split; s.cbank[OMEGA_DATTN256_ARG_SPLITS / 4] = splits; s.cbank[OMEGA_DATTN256_ARG_KV_STRIDE / 4] = max_pos * rb;
         s.nranges = 7;
         s.ranges[0].lo = (uintptr_t)qkv; s.ranges[0].hi = (uintptr_t)qkv + sizeof c.qkv;
-        s.ranges[1].lo = (uintptr_t)kv; s.ranges[1].hi = (uintptr_t)kv + 2 * plane;
+        s.ranges[1].lo = (uintptr_t)kv; s.ranges[1].hi = (uintptr_t)kv + kvb;
         s.ranges[2].lo = (uintptr_t)rope; s.ranges[2].hi = (uintptr_t)rope + (size_t)max_pos * OMEGA_DATTN256_ROPE_ROW_BYTES;
         s.ranges[3].lo = (uintptr_t)norms; s.ranges[3].hi = (uintptr_t)norms + 2048;
         s.ranges[4].lo = (uintptr_t)out; s.ranges[4].hi = (uintptr_t)out + OW * 4;
@@ -283,12 +397,18 @@ static int sim_point(uint32_t max_pos, uint32_t pos, uint32_t rotary, uint32_t d
     if (!err) {
         uint16_t kn[KVH * HD], vn[KVH * HD];
         *bad = parity(&c, out, 1.0f, worst, kn, vn);
-        uint16_t kchip[KVH * HD], vchip[KVH * HD];
-        for (unsigned g = 0; g < KVH; g++) { memcpy(kchip + g * HD, kv + ((size_t)g * max_pos + pos) * OMEGA_DATTN256_ROW_BYTES, OMEGA_DATTN256_ROW_BYTES); memcpy(vchip + g * HD, kv + plane + ((size_t)g * max_pos + pos) * OMEGA_DATTN256_ROW_BYTES, OMEGA_DATTN256_ROW_BYTES); }
-        if (!rows_ok(kchip, vchip, kn, vn, rotary, rows, rn)) *bad += 1000;
+        if (g_kv8) {
+            uint8_t k8c[KVH * HD], v8c[KVH * HD]; float ksc[KVH], vsc[KVH];
+            for (unsigned g = 0; g < KVH; g++) { const size_t r = (size_t)g * max_pos + pos; memcpy(k8c + g * HD, kv + r * rb, HD); memcpy(v8c + g * HD, kv + plane + r * rb, HD); ksc[g] = ksp[r]; vsc[g] = vsp[r]; }
+            if (!rows8_ok(k8c, ksc, v8c, vsc, rotary, rows, rn)) *bad += 1000;
+        } else {
+            uint16_t kchip[KVH * HD], vchip[KVH * HD];
+            for (unsigned g = 0; g < KVH; g++) { memcpy(kchip + g * HD, kv + ((size_t)g * max_pos + pos) * OMEGA_DATTN256_ROW_BYTES, OMEGA_DATTN256_ROW_BYTES); memcpy(vchip + g * HD, kv + plane + ((size_t)g * max_pos + pos) * OMEGA_DATTN256_ROW_BYTES, OMEGA_DATTN256_ROW_BYTES); }
+            if (!rows_ok(kchip, vchip, kn, vn, rotary, rows, rn)) *bad += 1000;
+        }
         snprintf(msg, n, "bad=%zu worst=%.3f rows: %s", *bad, *worst, rows);
     }
-    free(kv); free(rope); free(norms); free(qkv); free(out); free(copy); free(part); free(cnt); free(kcp); case_free(&c);
+    free(kv); free(rope); free(norms); free(qkv); free(out); free(copy); free(part); free(cnt); free(kcp); free(k8p); case_free(&c);
     return err;
 }
 static void sim_battery(void) {
@@ -309,7 +429,7 @@ static void sim_battery(void) {
         CHECK(err == 0 && bad == 0, "sim %s depth %u: %s", pts[i].name, pts[i].depth, msg);
         printf("sim %-50s depth %u: %s %s\n", pts[i].name, pts[i].depth, err ? "ERROR" : bad ? "MISMATCH" : "ok", msg);
     }
-    for (int m = 1; m <= 5; m++) {
+    for (int m = 1; m <= (g_kv8 ? 9 : 5); m++) {
         int err = sim_point(512, 300, 64, 2, m, 256, 1.0f, 200, msg, sizeof msg, &worst, &bad, rows, sizeof rows);
         int caught = err != 0 || bad > 0;
         CHECK(caught, "sim mutant %d NOT caught (%s)", m, msg);
@@ -327,8 +447,16 @@ static void evict_host_caches(void) {
     memset(buf, ++pass, sz);
     volatile uint64_t sum = 0; for (size_t i = 0; i < sz; i += 64) sum += buf[i];
 }
-static int fill_history(OmegaGpuDecodeAttn256Cache *cache, const Case *c, const uint16_t *kcp) {
+static int fill_history(OmegaGpuDecodeAttn256Cache *cache, const Case *c, const uint16_t *kcp, const uint8_t *k8p) {
     if (c->pos == 0) return OMEGA_GPU_DATTN_OK;
+    if (g_kv8) {
+        for (unsigned g = 0; g < KVH; g++) {
+            const size_t r = (size_t)g * c->max_pos;
+            int rc = omega_gpu_decode_attn256_cache_write8(cache, 0, g, 0, c->pos, k8p + r * HD, c->ks + r, c->v8 + r * HD, c->vs + r);
+            if (rc != OMEGA_GPU_DATTN_OK) return rc;
+        }
+        return OMEGA_GPU_DATTN_OK;
+    }
     for (unsigned g = 0; g < KVH; g++) {
         int rc = omega_gpu_decode_attn256_cache_write(cache, 0, g, 0, c->pos, kcp + (size_t)g * c->max_pos * HD, c->vc + (size_t)g * c->max_pos * HD);
         if (rc != OMEGA_GPU_DATTN_OK) return rc;
@@ -338,12 +466,12 @@ static int fill_history(OmegaGpuDecodeAttn256Cache *cache, const Case *c, const 
 static int chip_run(const char *out_path, uint32_t reps) {
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
     if (out_path && !out) { printf("cannot write %s\n", out_path); return 1; }
-    if (out) fprintf(out, "{\"receipt\":\"OMEGA_GPU_DECODE_ATTN256_V1\",\"reps\":%u,\"evict\":%d,\"max_pos\":%u,\"rotary_dim\":64,\"points\":[", reps, g_evict, g_maxp);
+    if (out) fprintf(out, "{\"receipt\":\"OMEGA_GPU_DECODE_ATTN256_V1\",\"kv8\":%d,\"reps\":%u,\"evict\":%d,\"max_pos\":%u,\"rotary_dim\":64,\"points\":[", g_kv8, reps, g_evict, g_maxp);
     const uint32_t MAXP = g_maxp;
     OmegaGpuDecodeAttn256Cache *cache = NULL;
     double t0 = now_ms();
-    int rc = omega_gpu_decode_attn256_cache_alloc(1, MAXP, THETA, 64, &cache);
-    printf("cache alloc (1 layer, %u positions, %.0f MiB): rc=%s %.1f ms (%s)\n", MAXP, (double)MAXP * 2 * KVH * 512 / 1048576.0, omega_gpu_decode_attn_rc_name(rc), now_ms() - t0, rc ? omega_gpu_decode_attn_last_error() : "");
+    int rc = omega_gpu_decode_attn256_cache_alloc_kv(1, MAXP, THETA, 64, (uint32_t)g_kv8, &cache);
+    printf("cache alloc (1 layer, %u positions, %.0f MiB): rc=%s %.1f ms (%s)\n", MAXP, (double)MAXP * 2 * KVH * (g_kv8 ? 260 : 512) / 1048576.0, omega_gpu_decode_attn_rc_name(rc), now_ms() - t0, rc ? omega_gpu_decode_attn_last_error() : "");
     CHECK(rc == OMEGA_GPU_DATTN_OK, "cache alloc");
     if (rc != OMEGA_GPU_DATTN_OK) { if (out) fprintf(out, "],\"verdict\":\"OMEGA_GPU_DECODE_ATTN256_FAIL\"}\n"); return 1; }
     struct { uint32_t pos; float qscale; const char *name; } pts[] = {
@@ -357,11 +485,12 @@ static int chip_run(const char *out_path, uint32_t reps) {
         if (g_only && !strstr(pts[i].name, g_only)) continue;
         Case c; case_make(&c, MAXP, pts[i].pos, 64, 500 + (uint32_t)i, pts[i].qscale);
         uint16_t *kcp = case_kc_perm(&c);
+        uint8_t *k8p = g_kv8 ? case_k8_perm(&c) : NULL;
         float *qkv_k = malloc(QW * 4), qn_k[HD], kn_k[HD];
         case_kernel_inputs(&c, qkv_k, qn_k, kn_k);
         CHECK(omega_gpu_decode_attn256_set_norms(cache, 0, qn_k, kn_k) == OMEGA_GPU_DATTN_OK, "set norms");
         t0 = now_ms();
-        rc = fill_history(cache, &c, kcp);
+        rc = fill_history(cache, &c, kcp, k8p);
         double fill_ms = now_ms() - t0;
         float *y = malloc(OW * 4), *y2 = malloc(OW * 4);
         OmegaGpuDecodeAttn256Info info; memset(&info, 0, sizeof info);
@@ -369,8 +498,14 @@ static int chip_run(const char *out_path, uint32_t reps) {
         size_t bad = 0; double worst = 1e9; uint16_t kn[KVH * HD], vn[KVH * HD], kchip[KVH * HD], vchip[KVH * HD]; char rows[160] = "n/a";
         if (rc == OMEGA_GPU_DATTN_OK) {
             bad = parity(&c, y, 1.0f, &worst, kn, vn);
-            for (unsigned g = 0; g < KVH; g++) if (omega_gpu_decode_attn256_cache_read(cache, 0, g, c.pos, kchip + g * HD, vchip + g * HD) != OMEGA_GPU_DATTN_OK) bad += 1000;
-            if (!rows_ok(kchip, vchip, kn, vn, 64, rows, sizeof rows)) bad += 1000;
+            if (g_kv8) {
+                uint8_t k8c[KVH * HD], v8c[KVH * HD]; float ksc[KVH], vsc[KVH];
+                for (unsigned g = 0; g < KVH; g++) if (omega_gpu_decode_attn256_cache_read8(cache, 0, g, c.pos, k8c + g * HD, ksc + g, v8c + g * HD, vsc + g) != OMEGA_GPU_DATTN_OK) bad += 1000;
+                if (!rows8_ok(k8c, ksc, v8c, vsc, 64, rows, sizeof rows)) bad += 1000;
+            } else {
+                for (unsigned g = 0; g < KVH; g++) if (omega_gpu_decode_attn256_cache_read(cache, 0, g, c.pos, kchip + g * HD, vchip + g * HD) != OMEGA_GPU_DATTN_OK) bad += 1000;
+                if (!rows_ok(kchip, vchip, kn, vn, 64, rows, sizeof rows)) bad += 1000;
+            }
         }
         int ok = rc == OMEGA_GPU_DATTN_OK && bad == 0;
         int same = 0; OmegaGpuDecodeAttn256Info i2; memset(&i2, 0, sizeof i2);
@@ -396,14 +531,22 @@ static int chip_run(const char *out_path, uint32_t reps) {
         first = 0;
         free(el); free(cl);
         if (ok && c.pos == 300) {
-            for (int m = 1; m <= 5; m++) {
+            for (int m = 1; m <= (g_kv8 ? 9 : 5); m++) {
                 omega_gpu_decode_attn256_test_set_mutant(m);
-                (void)fill_history(cache, &c, kcp); /* mutant 3 must not inherit the row the honest kernel wrote */
-                uint16_t zk[HD] = { 0 }, zv[HD] = { 0 };
-                for (unsigned g = 0; g < KVH; g++) (void)omega_gpu_decode_attn256_cache_write(cache, 0, g, c.pos, 1, zk, zv);
+                (void)fill_history(cache, &c, kcp, k8p); /* mutant 3 must not inherit the row the honest kernel wrote */
+                uint16_t zk[HD] = { 0 }, zv[HD] = { 0 }; uint8_t z8[HD] = { 0 }; float z1 = 0.0f;
+                for (unsigned g = 0; g < KVH; g++) {
+                    if (g_kv8) (void)omega_gpu_decode_attn256_cache_write8(cache, 0, g, c.pos, 1, z8, &z1, z8, &z1);
+                    else (void)omega_gpu_decode_attn256_cache_write(cache, 0, g, c.pos, 1, zk, zv);
+                }
                 int r = omega_gpu_decode_attn256(cache, 0, c.pos, qkv_k, EPS, 1.0f, y2, NULL);
                 size_t mb = 0; double mw = 0; uint16_t k2[KVH * HD], v2[KVH * HD];
                 if (r == OMEGA_GPU_DATTN_OK) { mb = parity(&c, y2, 1.0f, &mw, k2, v2); }
+                if (r == OMEGA_GPU_DATTN_OK && g_kv8) { /* mutants 8, 9 change only the appended row: check it too */
+                    uint8_t k8c[KVH * HD], v8c[KVH * HD]; float ksc[KVH], vsc[KVH]; char why[160];
+                    for (unsigned g = 0; g < KVH; g++) (void)omega_gpu_decode_attn256_cache_read8(cache, 0, g, c.pos, k8c + g * HD, ksc + g, v8c + g * HD, vsc + g);
+                    if (!rows8_ok(k8c, ksc, v8c, vsc, 64, why, sizeof why)) mb += 1000;
+                }
                 int caught = r != OMEGA_GPU_DATTN_OK || mb > 0;
                 if (m == 4 && info.grid_x == 1) { printf("chip %-24s mutant 4: inert (1 split, the combine is not exercised)\n", pts[i].name); omega_gpu_decode_attn256_test_set_mutant(0); continue; }
                 CHECK(caught, "chip mutant %d NOT caught", m);
@@ -412,7 +555,7 @@ static int chip_run(const char *out_path, uint32_t reps) {
                 omega_gpu_decode_attn256_test_set_mutant(0);
             }
         }
-        free(y); free(y2); free(qkv_k); free(kcp); case_free(&c);
+        free(y); free(y2); free(qkv_k); free(kcp); free(k8p); case_free(&c);
         if (omega_gpu_session_is_blocked()) { printf("session latched: stopping\n"); break; }
     }
     omega_gpu_decode_attn256_cache_free(cache);
@@ -440,6 +583,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--per-split") == 0 && i + 1 < argc) per = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--spin-us") == 0 && i + 1 < argc) spin = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--no-evict") == 0) g_evict = 0;
+        else if (strcmp(argv[i], "--kv8") == 0) g_kv8 = 1;
         else if (strcmp(argv[i], "--sim-pos") == 0 && i + 1 < argc) sim_pos = atoi(argv[++i]);
         else if (strcmp(argv[i], "--sim-max") == 0 && i + 1 < argc) sim_max = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--only") == 0 && i + 1 < argc) g_only = argv[++i];
