@@ -50,8 +50,9 @@ typedef struct { uint64_t code_va; uint32_t gpr_declared, gpr_peak; } OmegaPfKer
 /* lock held, device open: the resident kernel for key (generated, encoded, patched and uploaded on first use) */
 int omega_gpu_pf_kernel_locked(const OmegaPfKey *key, OmegaPfGen gen, OmegaPfKernel *out);
 /* lock held: one launch, chip time added to the module stats (and to *ns when given). omega_gpu_pf_launch_locked spins on the
- * marker for PF_SPIN_US (prefill: back-to-back launches). _spin takes the window: 0 = the process-wide setting, by default the
- * platform sleep-poll, which a launch that waits on the host between launches should use (L159: a spinning thread is descheduled
+ * marker for PF_SPIN_US (prefill: back-to-back launches). _spin takes the window: 0 = the process-wide window
+ * (omega_gpu_session_set_spin_us; the AIEN server sets 2000 us, so 0 spins there), OMEGA_GPU_SESSION_SPIN_POLL_ONLY = the
+ * platform sleep-poll whatever the process window, which a launch that waits on the host between launches must use (L159: a spinning thread is descheduled
  * under box load and its wait is counted as chip time). */
 int omega_gpu_pf_launch_locked(const OmegaPfKernel *k, uint32_t threads, uint32_t grid_x, uint32_t grid_y, uint32_t shared_bytes,
                                const uint32_t *args, uint32_t n_args, uint64_t *ns);
