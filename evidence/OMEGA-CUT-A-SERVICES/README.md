@@ -98,6 +98,7 @@ gained `life_badpin` (a 20-digit value, atoi saturation) and `life_badpin_long` 
   each, all exit 0; all 20 pairs byte-identical on stdout and stderr, including the 733-byte
   "could not pin" line (`final2/seat-fake-old.err`, `final2/seat-fake-new.err`).
 - Contract test: hosted 150 checks, freestanding objects 67, 0 failed.
-- Freestanding link: `final2/freestanding-link.txt`.
+- Freestanding link: no closure source changed after `after3/freestanding-link.txt` (16 files, only memcpy
+  memset strcmp strlen undefined), so make did not relink it in this run.
 - Object files byte for byte vs main a8ffd2b9: 80 of 82 identical; the elementwise API and the
   formatter differ, as intended (`final2/object-bytes-cmp.txt`).
