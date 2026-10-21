@@ -1,0 +1,22 @@
+cpu_piston_state: main core 14, tokens 64, 2 MiB state per layer, inputs+outputs 40 KB per step
+STATE workers=1 cpus=19 layers=1 variant=ref steps=62 step_med_us=188.96 step_p10_us=132.30 step_p90_us=276.40 token_med_us=189.0 state_gbs=22.2 wrong_out=0 wrong_state=0 load1=30.9
+STATE workers=1 cpus=19 layers=1 variant=fused steps=62 step_med_us=181.66 step_p10_us=153.30 step_p90_us=244.98 token_med_us=181.7 state_gbs=23.1 wrong_out=0 wrong_state=0 load1=30.9
+STATE workers=1 cpus=19 layers=30 variant=ref steps=1860 step_med_us=691.44 step_p10_us=219.02 step_p90_us=1085.55 token_med_us=20743.2 state_gbs=6.1 wrong_out=0 wrong_state=0 load1=30.6
+STATE workers=1 cpus=19 layers=30 variant=fused steps=1860 step_med_us=870.67 step_p10_us=230.40 step_p90_us=1567.22 token_med_us=26120.2 state_gbs=4.8 wrong_out=0 wrong_state=0 load1=30.6
+STATE workers=2 cpus=18,19 layers=1 variant=ref steps=62 step_med_us=87.07 step_p10_us=61.38 step_p90_us=1629.54 token_med_us=87.1 state_gbs=48.2 wrong_out=0 wrong_state=0 load1=30.6
+STATE workers=2 cpus=18,19 layers=1 variant=fused steps=62 step_med_us=89.28 step_p10_us=73.12 step_p90_us=108.32 token_med_us=89.3 state_gbs=47.0 wrong_out=0 wrong_state=0 load1=30.6
+STATE workers=2 cpus=18,19 layers=30 variant=ref steps=1860 step_med_us=352.24 step_p10_us=114.32 step_p90_us=516.10 token_med_us=10567.2 state_gbs=11.9 wrong_out=0 wrong_state=0 load1=30.6
+STATE workers=2 cpus=18,19 layers=30 variant=fused steps=1860 step_med_us=551.34 step_p10_us=152.16 step_p90_us=837.25 token_med_us=16540.3 state_gbs=7.6 wrong_out=0 wrong_state=0 load1=29.6
+STATE workers=4 cpus=16,17,18,19 layers=1 variant=ref steps=62 step_med_us=51.36 step_p10_us=34.64 step_p90_us=64.99 token_med_us=51.4 state_gbs=81.7 wrong_out=0 wrong_state=0 load1=29.6
+STATE workers=4 cpus=16,17,18,19 layers=1 variant=fused steps=62 step_med_us=46.54 step_p10_us=41.62 step_p90_us=65.14 token_med_us=46.5 state_gbs=90.1 wrong_out=0 wrong_state=0 load1=29.6
+STATE workers=4 cpus=16,17,18,19 layers=30 variant=ref steps=1860 step_med_us=208.51 step_p10_us=72.16 step_p90_us=318.83 token_med_us=6255.4 state_gbs=20.1 wrong_out=0 wrong_state=0 load1=29.6
+STATE workers=4 cpus=16,17,18,19 layers=30 variant=fused steps=1860 step_med_us=295.97 step_p10_us=82.00 step_p90_us=481.25 token_med_us=8879.0 state_gbs=14.2 wrong_out=0 wrong_state=0 load1=30.9
+STATE workers=8 cpus=6,7,8,9,16,17,18,19 layers=1 variant=ref steps=62 step_med_us=47.90 step_p10_us=23.76 step_p90_us=286906.83 token_med_us=47.9 state_gbs=87.6 wrong_out=0 wrong_state=0 load1=31.6
+STATE workers=8 cpus=6,7,8,9,16,17,18,19 layers=1 variant=fused steps=62 step_med_us=41973.84 step_p10_us=30.43 step_p90_us=461955.02 token_med_us=41973.8 state_gbs=0.1 wrong_out=0 wrong_state=0 load1=32.4
+STATE workers=8 cpus=6,7,8,9,16,17,18,19 layers=30 variant=ref steps=1860 step_med_us=979.87 step_p10_us=63.15 step_p90_us=241670.64 token_med_us=29396.2 state_gbs=4.3 wrong_out=0 wrong_state=0 load1=45.5
+STATE workers=8 cpus=6,7,8,9,16,17,18,19 layers=30 variant=fused steps=1860 step_med_us=225.02 step_p10_us=61.07 step_p90_us=1374.80 token_med_us=6750.7 state_gbs=18.6 wrong_out=0 wrong_state=0 load1=44.5
+workers 10 do not divide 32 heads: skipped
+workers 10 do not divide 32 heads: skipped
+workers 10 do not divide 32 heads: skipped
+workers 10 do not divide 32 heads: skipped
+CPU_PISTON_STATE: PASS
