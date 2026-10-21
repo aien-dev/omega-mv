@@ -11,7 +11,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-$HERE/35b-stroke-$(date -u +%Y%m%dT%H%MZ)}
 RUN=${RUN:-}   # e.g. quiet-measure, or taskset -c 5-9,15-19
 GEN=${GEN:-2}
-POS=${POS:-8}
+POS=${POS:-12}   # the first 3 positions of every prompt are the chat template (identical routes); 12 leaves 9 that differ
 NS=${NS:-"1 2 4 8 16 32"}
 EXPERT_BYTES=${EXPERT_BYTES:-3146112}   # one 35B routed expert (gate+up+down fp8 + scales), from the manifest
 mkdir -p "$OUT/traces"
