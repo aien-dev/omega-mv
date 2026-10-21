@@ -300,9 +300,17 @@ int omega_gpu_decode_attn256_multi_prepare(OmegaGpuDecodeAttn256Cache *c) {
     if (!c || (c->sh.vy & (c->sh.vy - 1u))) return OMEGA_GPU_DATTN_BAD_ARGS;
     omega_gpu_session_lock();
     int rc = dev_open_locked() ? OMEGA_GPU_DATTN_OK : OMEGA_GPU_DATTN_CHIP_FAIL;
-    if (rc == OMEGA_GPU_DATTN_OK && !g.mpart.cpu) {
+    if (rc == OMEGA_GPU_DATTN_OK && !(g.mpart.cpu && g.mcnt.cpu)) {   /* both or neither: a half-made pair is rolled back */
+        if (g.mpart.cpu) omega_gpu_session_free(&g.mpart);
+        if (g.mcnt.cpu) omega_gpu_session_free(&g.mcnt);
+        memset(&g.mpart, 0, sizeof g.mpart); memset(&g.mcnt, 0, sizeof g.mcnt);
         if (omega_gpu_session_alloc((size_t)MULTI_PART_BYTES, &g.mpart) != 0 || omega_gpu_session_alloc((size_t)MULTI_MAX_TOKENS * 16u * 4u, &g.mcnt) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
         else { memset(g.mcnt.cpu, 0, (size_t)MULTI_MAX_TOKENS * 16u * 4u); if (omega_gpu_session_sync_to_gpu(&g.mcnt) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL; }
+        if (rc != OMEGA_GPU_DATTN_OK) {
+            if (g.mpart.cpu) omega_gpu_session_free(&g.mpart);
+            if (g.mcnt.cpu) omega_gpu_session_free(&g.mcnt);
+            memset(&g.mpart, 0, sizeof g.mpart); memset(&g.mcnt, 0, sizeof g.mcnt);
+        }
     }
     for (uint32_t prep = 0; prep < 2 && rc == OMEGA_GPU_DATTN_OK; prep++) {
         OmegaDecodeAttn256Spec spec; multi_spec(c, prep, &spec);
@@ -316,7 +324,7 @@ int omega_gpu_decode_attn256_multi_prepare(OmegaGpuDecodeAttn256Cache *c) {
 int omega_gpu_decode_attn256_multi_record(OmegaGpuCmdList *cl, OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos0, uint32_t tokens,
                                           uint64_t qkv_va, uint32_t xstride, float eps, float out_scale, uint64_t out_va, uint32_t ostride) {
     if (!cl || !c || layer >= c->layers || tokens == 0 || pos0 >= c->max_pos || tokens > c->max_pos - pos0 || !qkv_va || !out_va ||
-        xstride < c->sh.qkv_words * 4u || xstride % 16u || qkv_va % 16u || ostride < c->sh.out_words * 4u || ostride % 4u || !g.mpart.cpu) return OMEGA_GPU_DATTN_BAD_ARGS;
+        xstride < c->sh.qkv_words * 4u || xstride % 16u || qkv_va % 16u || ostride < c->sh.out_words * 4u || ostride % 4u || !g.mpart.cpu || !g.mcnt.cpu) return OMEGA_GPU_DATTN_BAD_ARGS;
     if ((g.per_split && g.per_split != OMEGA_DATTN256_CHUNK) || (c->sh.vy & (c->sh.vy - 1u))) return OMEGA_GPU_DATTN_BAD_ARGS;
     Slot *sp = NULL, *sa = NULL; bool hit = false;
     OmegaDecodeAttn256Spec spec;
@@ -357,4 +365,19 @@ int omega_gpu_decode_attn256_multi_record(OmegaGpuCmdList *cl, OmegaGpuDecodeAtt
     }
 #undef A64
     return OMEGA_GPU_DATTN_OK;
+}
+
+/* every multi-token counter back at zero (the last CTA of each token and row resets its own): call after a submit */
+int omega_gpu_decode_attn256_multi_counters_check(void) {
+    omega_gpu_session_lock();
+    int rc = OMEGA_GPU_DATTN_OK;
+    if (!g.mcnt.cpu) rc = OMEGA_GPU_DATTN_BAD_ARGS;
+    else if (omega_gpu_session_sync_to_cpu(&g.mcnt) != 0) rc = OMEGA_GPU_DATTN_CHIP_FAIL;
+    else {
+        const uint32_t *cn = g.mcnt.cpu; uint32_t any = 0;
+        for (uint32_t i = 0; i < MULTI_MAX_TOKENS * 16u; i++) any |= cn[i];
+        if (any) { omega_gpu_session_set_error("decode attn256 multi: a split counter did not return to zero"); rc = OMEGA_GPU_DATTN_CHIP_FAIL; }
+    }
+    omega_gpu_session_unlock();
+    return rc;
 }

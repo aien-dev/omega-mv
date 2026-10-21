@@ -90,6 +90,7 @@ int omega_gpu_decode_attn256_multi_prepare(OmegaGpuDecodeAttn256Cache *c);
 int omega_gpu_decode_attn256_multi_record(struct OmegaGpuCmdList *cl, OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t pos0, uint32_t tokens,
                                           uint64_t qkv_va, uint32_t xstride, float eps, float out_scale, uint64_t out_va, uint32_t ostride);
 void omega_gpu_decode_attn256_test_set_multi_mutant(int mutant);
+int omega_gpu_decode_attn256_multi_counters_check(void); /* after a submit: every multi-token counter back at zero */
 int omega_gpu_decode_attn256_cache_write(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos, uint32_t count,
                                          const uint16_t *k_bf16, const uint16_t *v_bf16); /* count rows from pos, one sync */
 int omega_gpu_decode_attn256_cache_read(OmegaGpuDecodeAttn256Cache *c, uint32_t layer, uint32_t kv_head, uint32_t pos,

@@ -2,7 +2,7 @@
  * gpu_dattn256_multi_test (chip): the multi-token decode attention (L369, omega_gpu_decode_attn256_multi_record) must be
  * T decode steps (omega_gpu_decode_attn256 at positions pos0 .. pos0 + T - 1) bit for bit: every output row and every
  * K/V row it appends. Qwen3.6-35B-A3B shape (16 q heads, 2 KV heads, 4 q heads per CTA row, rotary 64), two caches with
- * the same random history, qkv rows 36864 bytes apart as the 35B graph lays them out (the attention row is the first
+ * the same random history (every multi counter checked back at zero after each run), qkv rows 36864 bytes apart as the 35B graph lays them out (the attention row is the first
  * 20480 bytes of the q|k|v mix row). Cases cross split boundaries, start mid-context and reach 8k (several attend groups).
  * Controls that must differ: the prep launch dropped (test mutant 1) and a wrong row stride.
  * Verdict line last: "gpu_dattn256_multi_test: N checks, F failed: PASS|FAIL".
@@ -67,7 +67,7 @@ static int run_multi(OmegaGpuDecodeAttn256Cache *c, uint32_t pos0, uint32_t T, c
     omega_gpu_session_unlock();
     omega_gpu_cmdlist_free(cl);
     if (!ok) return -1;
-    return omega_gpu_decode_attn256_counters_check(c) == 0 ? 0 : -1;
+    return omega_gpu_decode_attn256_counters_check(c) == 0 && omega_gpu_decode_attn256_multi_counters_check() == 0 ? 0 : -1;
 }
 
 static int one_case(uint32_t pos0, uint32_t T, int control) {
@@ -109,7 +109,7 @@ static int one_case(uint32_t pos0, uint32_t T, int control) {
 }
 
 int main(void) {
-    static const uint32_t cases[][2] = { { 0, 1 }, { 0, 7 }, { 5, 128 }, { 250, 10 }, { 1000, 37 }, { 2040, 128 }, { 6000, 128 }, { 8191, 1 } };
+    static const uint32_t cases[][2] = { { 0, 1 }, { 0, 2 }, { 255, 2 }, { 511, 2 }, { 0, 7 }, { 5, 128 }, { 250, 10 }, { 1000, 37 }, { 2040, 128 }, { 6000, 128 }, { 8191, 1 } };
     for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++) one_case(cases[i][0], cases[i][1], 0);
     one_case(300, 16, 1);
     one_case(300, 16, 2);
