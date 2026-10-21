@@ -113,8 +113,24 @@ Reading (host side; the box was shared with other agents' runs, so single cells 
   (7.0 vs 13.9 ms) at the same payload rate; the engine-count and coupling conclusions are the same on both models.
 
 ### D. Head swap mid-run on the 35B (H4)
-`35b-swap-*/` (`run-swap-35b.sh`, `table-swap.sh`): head A = L308's measured prose head resident in host RAM, head B =
-the measured code head from token 12 of 24, loader lead -1 / 0 / 1 / 2 / 4 tokens. RESULTS PENDING.
+`35b-swap-20261021T0029Z/` (`run-swap-35b.sh`, `table-swap.sh`): head A = L308's measured prose head resident in host
+RAM, head B = the measured code head from token 12 of 24, loader lead -1 / 0 / 1 / 2 / 4 tokens; stand-in fire 2 ms per
+beat, so the steady time per token is the RAM copy of a 12 GB head on the host. All five cells PASS closed (rc 0).
+
+| loader lead (tokens before the swap) | steady ms/token before | first token after swap: extra | total extra the user sees | hit rate before | hit rate after | first all-RAM token after swap | head B load | B load start vs swap |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 1808.26 ms | 1651.12 ms | 8793.33 ms | 1 | 0.963 | 13 | 3238.02 ms | 2.01 ms |
+| -1 | 1717.05 ms | 1194.05 ms | 14846.34 ms | 1 | 0.356 | never | -1 ms | 0 ms |
+| 1 | 1852.41 ms | 580.42 ms | 7400.16 ms | 1 | 1 | 12 | 3251.32 ms | -2167.07 ms |
+| 2 | 1249.89 ms | 289.09 ms | 4322.58 ms | 1 | 1 | 12 | 2203.98 ms | -2750.86 ms |
+| 4 | 1675.29 ms | 360.61 ms | 7858.69 ms | 1 | 1 | 12 | 3063.37 ms | -6537.57 ms |
+
+Reading: with no loader (lead -1) the swap costs 14.8 s in total and the RAM hit rate never recovers (0.36: head B
+keeps coming from the disk). Loading head B takes 2.2 to 3.3 s, 1.79 steady tokens (calc:f290a1e6); a lead of 2 tokens
+covers it: the first token after the swap costs 0.29 s extra, every token after it is served from RAM, and the total
+the user sees is 4.3 s. Lead 0 (start loading at the swap) still costs 1.65 s on the first token and 8.8 s in total;
+lead 4 is worse than 2 (7.9 s total) because the loader competes with the steady path's reads for two tokens longer.
+The rule the receipt gives: start the next head's loader about two tokens before its first beat, not earlier.
 
 ### E. One base, many heads, one stroke on the 35B (H6)
 `35b-stroke-*/` (`run-stroke-35b.sh`): 32 prompts traced through the exact 35B forward one token at a time

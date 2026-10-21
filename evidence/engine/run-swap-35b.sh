@@ -31,6 +31,6 @@ for L in -1 0 1 2 4; do
   D="$OUT/lead$L"
   Q="$(quiet_wait) $(l306_wait)"
   $RUN $BIN swap "$PLAN_A" "$PLAN_B" "$MANIFEST" "$D" --tokens $TOKENS --swap-at $SWAP_AT --lead $L --fire-us $FIRE_US --workers 8 > "$D.log" 2>&1; rc=$?
-  log "lead $L ($Q) rc $rc: $(jq -c '{steady_ms:.steady_token_ms_before_swap, first_extra_ms:.first_token_after_swap_extra_ms, total_extra_ms:.user_visible_extra_ms_total, hit_before:.hit_rate_before_swap, hit_after:.hit_rate_after_swap, first_all_hit_token:.first_all_hit_token_after_swap, b_load_ms:.head_b_load_ms, b_start_vs_swap_ms:.head_b_load_start_vs_swap_ms, gap:.gap_us.median, beat:.beat_us.median}' $D/summary.json 2>/dev/null) $(tail -1 $D.log | cut -c1-160)"
+  log "lead $L ($Q bin $(sha256sum "$BIN" | cut -c1-16)) rc $rc: $(jq -c '{steady_ms:.steady_token_ms_before_swap, first_extra_ms:.first_token_after_swap_extra_ms, total_extra_ms:.user_visible_extra_ms_total, hit_before:.hit_rate_before_swap, hit_after:.hit_rate_after_swap, first_all_hit_token:.first_all_hit_token_after_swap, b_load_ms:.head_b_load_ms, b_start_vs_swap_ms:.head_b_load_start_vs_swap_ms, gap:.gap_us.median, beat:.beat_us.median}' $D/summary.json 2>/dev/null) $(tail -1 $D.log | cut -c1-160)"
 done
 log "done"
