@@ -22,7 +22,7 @@ for B in 2 3; do
     D="$OUT/b$B-e$E-$C"
     Q=$(quiet_wait)
     $RUN $BIN move "$OUT/schedule-b$B.json" "$MANIFEST" "$D" --workers 8 --fire-us $FIRE_US --engines $E --coupling $C --period-us $PERIOD_US > "$D.log" 2>&1; rc=$?
-    log "buffers $B engines $E $C ($Q) rc $rc: $(jq -c '{beats,late_beats,gap:.gap_us.median,gap_p90:.gap_us.p90,idle:.idle_us.median,fill:.fill_us.median,beat:.beat_us.median,spread:.beat_us.spread,gbps:.payload_gbps_during_fill,nvme:.stages.nvme_us.median,ram:.stages.ram_us.median,handoff:.stages.handoff_wait_us.median}' $D/summary.json 2>/dev/null) $(tail -1 $D.log | cut -c1-120)"
+    log "buffers $B engines $E $C ($Q bin $(sha256sum "$BIN" | cut -c1-16)) rc $rc: $(jq -c '{beats,late_beats,gap:.gap_us.median,gap_p90:.gap_us.p90,idle:.idle_us.median,fill:.fill_us.median,beat:.beat_us.median,spread:.beat_us.spread,gbps:.payload_gbps_during_fill,nvme:.stages.nvme_us.median,ram:.stages.ram_us.median,handoff:.stages.handoff_wait_us.median}' $D/summary.json 2>/dev/null) $(tail -1 $D.log | cut -c1-120)"
   done; done
 done
 log "done"

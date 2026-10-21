@@ -31,6 +31,6 @@ $BIN schedule "$OUT/plan-union.json" "$MANIFEST" $POS "$OUT/schedule-union.json"
 for N in $NS; do
   Q=$(quiet_wait)
   $RUN $BIN stroke35 "$OUT/schedule-union.json" "$MANIFEST" "$MODEL" "$OUT/stroke-n$N" --n $N --traces "$LIST" --positions $POS --workers 8 > "$OUT/stroke-n$N.log" 2>&1; rc=$?
-  log "stroke N=$N ($Q) rc $rc: $(jq -c '{beats,misfires,gap:.gap_us.median,fill:.fill_us.median,fire:.fire_us.median,beat:.beat_us.median,bytes:.bytes_per_beat.median,union:.union_experts_per_beat.mean,attn_us:.attn_us.median,moe_us:.moe_us.median,tok_s:.tokens_per_s_total,gate:.gate.identical_tokens_every_head,eager:.gate.eager_expert_reads_at_open}' "$OUT/stroke-n$N/summary.json" 2>/dev/null || tail -1 "$OUT/stroke-n$N.log")"
+  log "stroke N=$N ($Q bin $(sha256sum "$BIN" | cut -c1-16)) rc $rc: $(jq -c '{beats,misfires,gap:.gap_us.median,fill:.fill_us.median,fire:.fire_us.median,beat:.beat_us.median,bytes:.bytes_per_beat.median,union:.union_experts_per_beat.mean,attn_us:.attn_us.median,moe_us:.moe_us.median,tok_s:.tokens_per_s_total,gate:.gate.identical_tokens_every_head,eager:.gate.eager_expert_reads_at_open}' "$OUT/stroke-n$N/summary.json" 2>/dev/null || tail -1 "$OUT/stroke-n$N.log")"
 done
 log "done"
