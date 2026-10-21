@@ -39,7 +39,7 @@ typedef struct {
 enum {
 	E_BWR, E_BWR_BEST, E_BWW, E_PENALTY, E_CPU_DRAM, E_CAP_LO, E_CAP_HI, E_CPU_L2BW, E_CPU_L3BW, E_STEP_WORK,
 	E_STEP_CORES, E_X_C2C, E_X_MEM, E_PREFETCH, E_ROAD2, E_GPU_L2, E_LAUNCH, E_NVME, E_GBE_BW, E_GBE_RTT,
-	E_MAC_BW, E_MAC_CAP, E_MAC_RTT, E_MAC_LINK, E_ROUTER_STEP, E_CPU_DRAM_SHARED, E_COUNT
+	E_MAC_BW, E_MAC_CAP, E_MAC_RTT, E_MAC_LINK, E_ROUTER_STEP, E_CPU_DRAM_SHARED, E_L2_HOLD, E_COUNT
 };
 
 static Edge edge[E_COUNT] = {
@@ -85,6 +85,8 @@ static Edge edge[E_COUNT] = {
 		"INFERRED: 1 MB at 253 GB/s L3 (MACHINE_CEILING.md:70); UNKNOWN until measured"},
 	[E_CPU_DRAM_SHARED] = {"DRAM pipe, 20 CPU cores reading while the GPU streams", 22.7e9, "B/s",
 		"docs/MACHINE_CEILING.md:63,106 raw/cc-cpu.txt (calc:e7991b26)"},
+	[E_L2_HOLD] = {"GPU L2 that can be pinned to hold state across words", 0.0, "B",
+		"UNKNOWN: L2 is 24 MB (MACHINE_CEILING.md:64) but whether lines stay pinned while 3.5 GB streams through is unmeasured; experiment: hold 2-22 MB, stream 1.5 GB, re-read, count DRAM bytes"},
 };
 
 /* ---- the model: parts with bytes and reuse per word (from the safetensors headers) ---- */
@@ -160,7 +162,9 @@ static const char *fam_name[FAM_COUNT] = {"straight line", "three pistons", "fig
 typedef struct {
 	int fam;
 	int N, G;         /* conversations, staggered groups */
-	int m;            /* linear layers per conversation whose state lives in CPU caches */
+	int m;            /* linear layers per conversation whose state lives in CPU caches, the CPU runs the step (figure eight) */
+	int m2;           /* linear layers per conversation whose state is pinned in GPU L2 (no crossing) */
+	int m3;           /* linear layers per conversation whose state lives in CPU caches, the GPU reads it over the second road */
 	int router_cpu;   /* router held and run on the CPU (40 more crossings) */
 	double head_cpu;  /* share of the lm_head the CPU computes from DRAM */
 	double road2;     /* static bytes per stroke moved onto the second road */
@@ -181,7 +185,7 @@ typedef struct {
 	const Format *fm;
 	double ctx;     /* context length in words, for the KV read */
 	double cap;     /* CPU cache bytes for held state */
-	double x_c2c, x_mem, prefetch, road2_bw, cores, step_work, router_step, bwr, bww;
+	double x_c2c, x_mem, prefetch, l2_hold, road2_bw, cores, step_work, router_step, bwr, bww;
 	double gbe_rtt;
 	int coord;      /* coordinator's first-pass assumptions: one rate 237 GB/s, no CPU step time, 3.537 GB weights */
 } Env;
@@ -215,7 +219,7 @@ static void stroke_bytes(const Env *e, const Shape *s, double n, int a, int b, i
 	if (s->router_cpu) r -= (lin + full) * md->router / md->layers;
 	r -= s->road2;
 	if (with_head) r += head_bytes(e) * (1 - s->head_cpu);
-	double held = lin - (s->m < lin ? s->m : lin); /* linear layers whose state stays in DRAM */
+	double held = lin - (s->m + s->m2 + s->m3); /* linear layers whose state stays in DRAM */
 	if (held < 0) held = 0;
 	double st = n * (held * state_layer(e) + lin * conv_layer(e));
 	double kv = n * full / md->full_layers * md->kv_per_tok;
@@ -245,8 +249,12 @@ static Result eval(const Env *e, const Shape *s)
 	double rd, wr;
 
 	/* capacity of the CPU caches: held state for every conversation + router + second-road bytes */
-	double held = s->N * s->m * (state_layer(e) + conv_layer(e)) + (s->router_cpu ? md->router : 0) + s->road2;
+	double sl = state_layer(e) + conv_layer(e);
+	double held = s->N * (s->m + s->m3) * sl + (s->router_cpu ? md->router : 0) + s->road2;
 	if (held > e->cap) R.feasible = 0;
+	if (s->N * s->m2 * sl > e->l2_hold) R.feasible = 0;
+	if (s->m + s->m2 + s->m3 > md->lin_layers) R.feasible = 0;
+	if (s->m3 > 0 && e->road2_bw <= 0) R.feasible = 0;
 	if (s->road2 > 0 && e->road2_bw <= 0) R.feasible = 0;
 
 	if (s->fam == FAM_TWO_SPARK || s->fam == FAM_TWO_MAC) {
@@ -296,7 +304,8 @@ static Result eval(const Env *e, const Shape *s)
 	double head_late = cpu_dram / edge[E_CPU_DRAM_SHARED].value;
 	R.chain = fmax(R.P, head_late) + stalls;
 	R.cpu = e->coord ? 0 : s->N * (s->m * e->step_work / e->cores + (s->router_cpu ? md->layers * e->router_step : 0));
-	R.road = s->road2 > 0 ? s->G * s->road2 / e->road2_bw : 0;
+	/* state over the second road is the last word's state: read ahead, written behind, so only its rate counts */
+	R.road = e->road2_bw > 0 ? s->G * (s->road2 + 2 * n * s->m3 * sl) / e->road2_bw : 0;
 	/* T is the largest of these lines; each is linear in m, which is what makes m_points exact */
 	R.line[0] = s->G * R.P, R.line[1] = R.P + stalls, R.line[2] = head_late + stalls, R.line[3] = R.cpu, R.line[4] = R.road;
 	R.T = 0;
@@ -333,7 +342,7 @@ static void fam_bounds(int fam, int *m_max, int *router, int *head, int *road, i
 static double road2_amount(const Env *e, const Shape *s)
 {
 	/* fill whatever CPU cache the held state and router leave free with static trunk bytes */
-	double used = s->N * s->m * (state_layer(e) + conv_layer(e)) + (s->router_cpu ? e->md->router : 0);
+	double used = s->N * (s->m + s->m3) * (state_layer(e) + conv_layer(e)) + (s->router_cpu ? e->md->router : 0);
 	return e->road2_bw > 0 && e->cap > used ? e->cap - used : 0;
 }
 
@@ -345,7 +354,9 @@ static int m_points(const Env *e, Shape s, int m_max, int rd2, int *out)
 	if (m_max == 0) return k;
 	out[k++] = m_max;
 	double per = s.N * (state_layer(e) + conv_layer(e));
-	double room = e->cap - (s.router_cpu ? e->md->router : 0);
+	double room = e->cap - (s.router_cpu ? e->md->router : 0) - s.N * s.m3 * (state_layer(e) + conv_layer(e));
+	if (m_max > e->md->lin_layers - s.m2 - s.m3) m_max = e->md->lin_layers - s.m2 - s.m3;
+	out[1] = m_max;
 	int cap_m = per > 0 ? (int)floor(room / per) : m_max;
 	if (cap_m >= 0 && cap_m < m_max) out[k++] = cap_m;
 	/* every line of T is linear in m: read slope and intercept at m = 0 and 1, add both integers around each crossing */
@@ -375,13 +386,18 @@ static Best solve_family(const Env *e, int fam, int N, int brute, int plant_bug)
 			for (s.split = 1; s.split < e->md->layers; s.split++) consider(e, &s, &b);
 			continue;
 		}
+		double sl = state_layer(e) + conv_layer(e);
+		int m2_max = fam == FAM_FREE ? (int)fmin(30, floor(e->l2_hold / (N * sl))) : 0;
+		int m3_max = fam == FAM_FREE && e->road2_bw > 0 ? (int)fmin(30, floor(e->cap / (N * sl))) : 0;
+		for (s.m2 = 0; s.m2 <= m2_max; s.m2++)
+		for (s.m3 = 0; s.m3 <= m3_max && s.m2 + s.m3 <= 30; s.m3++)
 		for (s.router_cpu = 0; s.router_cpu <= router; s.router_cpu++)
 			for (int h = 0; h <= head; h++)
 				for (int rd2 = 0; rd2 <= road; rd2++) {
 					s.head_cpu = head_cpu_opts[h];
 					int pts[2 * N_LINES * N_LINES + 3], np = 0;
 					if (brute)
-						for (int m = 0; m <= m_max; m++) pts[np++] = m;
+						for (int m = 0; m <= m_max - s.m2 - s.m3; m++) pts[np++] = m;
 					else {
 						np = m_points(e, s, m_max, rd2, pts);
 						if (plant_bug && np > 2) np = 2; /* the wrong solver: ends only, misses the crossings */
@@ -402,6 +418,7 @@ static void env_default(Env *e, const Model *md, const Format *fm)
 	memset(e, 0, sizeof *e);
 	e->md = md, e->fm = fm, e->ctx = 4096, e->cap = edge[E_CAP_HI].value;
 	e->x_c2c = edge[E_X_C2C].value, e->x_mem = edge[E_X_MEM].value, e->prefetch = edge[E_PREFETCH].value;
+	e->l2_hold = edge[E_L2_HOLD].value;
 	e->road2_bw = edge[E_ROAD2].value, e->cores = edge[E_STEP_CORES].value, e->step_work = edge[E_STEP_WORK].value;
 	e->router_step = edge[E_ROUTER_STEP].value, e->bwr = edge[E_BWR].value, e->bww = edge[E_BWW].value;
 	e->gbe_rtt = edge[E_GBE_RTT].value;
@@ -409,7 +426,7 @@ static void env_default(Env *e, const Model *md, const Format *fm)
 
 static void shape_text(const Shape *s, char *buf, size_t len)
 {
-	snprintf(buf, len, "G=%d m=%d router_cpu=%d head_cpu=%.1f road2=%.0fMB split=%d", s->G, s->m, s->router_cpu, s->head_cpu,
+	snprintf(buf, len, "G=%d m=%d m2=%d m3=%d router_cpu=%d head_cpu=%.1f road2=%.0fMB split=%d", s->G, s->m, s->m2, s->m3, s->router_cpu, s->head_cpu,
 		s->road2 / MB, s->split);
 }
 
@@ -507,18 +524,19 @@ static int selftest(const Model *md)
 	/* 2. exactness: the line-crossing solver equals brute force on every family, format, N and a grid of unknowns */
 	int cases = 0, agree = 0, caught = 0;
 	double xs[] = {0, 2e-6, 10e-6, 30e-6}, pf[] = {0, 8e6, 24e6}, r2[] = {0, 100e9}, caps[] = {49e6, 73e6, 400e6};
-	double works[] = {0, 118e-6, 30e-6};
+	double works[] = {0, 118e-6, 30e-6}, l2s[] = {0, 24e6};
 	for (int f = 0; f < N_FORMATS; f++)
 		for (int a = 0; a < 4; a++)
 			for (int p = 0; p < 3; p++)
 				for (int q = 0; q < 2; q++)
 					for (int c = 0; c < 3; c++)
 						for (int w = 0; w < 3; w++)
+						for (int l2 = 0; l2 < 2; l2++)
 							for (int i = 0; i < N_NS; i++)
 								for (int fam = 0; fam < FAM_COUNT; fam++) {
 									Env t = e;
 									t.fm = &formats[f], t.x_c2c = xs[a], t.prefetch = pf[p], t.road2_bw = r2[q];
-									t.cap = caps[c], t.step_work = works[w];
+									t.cap = caps[c], t.step_work = works[w], t.l2_hold = l2s[l2];
 									Best s = solve_family(&t, fam, Ns[i], 0, 0), b = solve_family(&t, fam, Ns[i], 1, 0);
 									Best bad = solve_family(&t, fam, Ns[i], 0, 1);
 									cases++;
@@ -553,8 +571,8 @@ static void config(const Env *e, int N)
 			e->fm->name, N, b->r.wps, b->r.bound);
 		printf("[%s]\nshape = %s\nformat = %s\nconversations = %d\ngroups = %d\nper_group = %d\n", k ? "runner_up" : "winner",
 			fam_name[b->s.fam], e->fm->name, N, b->s.G, N / b->s.G);
-		printf("state_on_cpu_layers = %d\nrouter_on_cpu = %d\nhead_cpu_share = %.2f\nroad2_bytes = %.0f\nsplit_layer = %d\n",
-			b->s.m, b->s.router_cpu, b->s.head_cpu, b->s.road2, b->s.split);
+		printf("state_on_cpu_layers = %d\nstate_in_gpu_l2_layers = %d\nstate_over_road2_layers = %d\nrouter_on_cpu = %d\nhead_cpu_share = %.2f\nroad2_bytes = %.0f\nsplit_layer = %d\n",
+			b->s.m, b->s.m2, b->s.m3, b->s.router_cpu, b->s.head_cpu, b->s.road2, b->s.split);
 		printf("cylinder = %s\npredicted_ms_per_round = %.4f\npredicted_words_per_s = %.3f\n\n",
 			b->s.m ? (b->s.cyl_in_dram ? "dram" : "c2c") : "none", b->r.T * 1e3, b->r.wps);
 	}
@@ -576,6 +594,7 @@ int main(int argc, char **argv)
 		if (sscanf(argv[i], "%31[^=]=%lf", k, &v) != 2) continue;
 		if (!strcmp(k, "x_us")) e.x_c2c = v * US;
 		else if (!strcmp(k, "prefetch_mb")) e.prefetch = v * MB;
+		else if (!strcmp(k, "l2_hold_mb")) e.l2_hold = v * MB;
 		else if (!strcmp(k, "road2_gbs")) e.road2_bw = v * GB;
 		else if (!strcmp(k, "cap_mb")) e.cap = v * MB;
 		else if (!strcmp(k, "step_us")) e.step_work = v * US;
