@@ -249,6 +249,29 @@ calc:c0c4e703; an eight-head launch costs 53.3 us, 1.48x a one-head launch, calc
 50% of the beat (calc:afd565f2) at 93% of the ceiling; next the dense GEMMs' CTA budget (mix + o_proj, 8.9 ms, about half the
 ceiling), then GDN and attention over heads (12.5 ms).
 
+**Levers 3 to 6, built and kernel-proven, the 35B gates queued (omega `motor/serve` 169c7d36, e29c78e1, ce6e4cf9, 6f2f54cb;
+receipts `evidence/motor-chip-20261021/lever3-*` to `lever6-*`, README section "Levers 3 to 6"):** (3) the dense FP8 GEMM's CTA
+budget was not the lever: a sweep from 48 to 768 CTAs left mix, o_proj and qkv at M = 8 flat (`lever3-dense-sweep.log`); the cost
+is the x' staging inside every K step (load, store to shared, barrier, compute, its latency in the open once per step), so the
+kernel now loads the next step's x' words one step ahead on their own scoreboard, as the weights already did; every shape stays
+bit-identical to the per-row GEMV with the chip mutants caught, and the micro-test at M = 8 (uncached x', not the motor's case)
+took o_proj from 268.2 to 203.6 us (1.317x, calc:46892b86) and left mix where it was (1.008x, calc:0f2b8a9e); the motor's cached
+x' (its mix ran at 145 GB/s, calc:17749ad0) makes the stroke timeline the only real test. (4) The GDN step of every head in one
+launch: the heads form reads each conversation's seven pointers from a 64-byte table entry, the plain program byte-identical;
+three objects stepped in one launch equal three plain steps bit for bit on the chip (out, tail, state), the control caught;
+240 GDN launches a stroke (7.237 ms) become 30 (calc:77958a07). (5) The attention of every head in one launch: block row y picks
+its conversation from a 128-byte table entry, columns beyond its split count exit early; three caches at contexts 7, 301 and 701
+in one launch equal their plain steps bit for bit (out rows, appended K/V rows, counters); 80 attention launches (5.301 ms,
+launch-bound at grids of 4 CTAs) become 10. (6) The lm_head once for all 8 heads: 8 x rows staged in 64 KiB of shared memory
+(calc:a7b0f127), above the 32 KiB every launch descriptor had declared since the FP8 deep kernel, so word 36 of the descriptor
+is now written per launch (the size and the SM shared-memory configuration, bit-for-bit the old word up to 32 KiB); above 4 rows
+the kernel reads the x rows of a step one at a time and extracts the eight weight halves once per step, so 16 warps fit the
+register file (45056 of 65536, calc:aee35d19). The first 64 KiB launch on this driver ran bit-identical over 4096 x 8 rows with
+the 32 KiB form as the control and the mutant caught; the stroke's two lm_head reads (9.619 ms, 2 x 1.017 GB, calc:dcd10213,
+211 GB/s, calc:16b0dcfc) become one, 3.73 ms at the ceiling (calc:fd6ed6d3). The 35B gates of all four (red before green, real
+equal to alone, ladder, stamps) wait on the memory wall: 18091 serves 58.5 GB and every extra 35B load runs under `q36-extra`
+one at a time; the timelines go here as they land.
+
 ### F. The motor on the chip (power engine = L306's 35B kernels, served first)
 Drake, 2026-10-21 01:15Z: the motor IS the 35B server, and serving comes first. The power engine on the chip is
 therefore L306's 35B kernels (`aien-sovereign-core` branch `q36/serve`, continued on `motor/serve`; omega GPU lib
