@@ -80,6 +80,36 @@ static int sim_xbound(uint32_t n, int mutant, uint32_t seed, float hscale, size_
     return err;
 }
 
+/* XBOUND mode 1 (SCALE) on n values: out == in * 2^64 bit for bit, values past n untouched */
+static int sim_xscale(uint32_t n, uint32_t seed, size_t *bad, char *msg, size_t msgn) {
+    static BlackwellIRProgram prog;
+    OmegaDecSpec spec; memset(&spec, 0, sizeof spec);
+    spec.kind = OMEGA_DEC_XBOUND; spec.mode = 1;
+    if (omega_blackwell_codegen_dec_prog(&spec, &prog) != 0) { snprintf(msg, msgn, "codegen refused"); return -1; }
+    const uint32_t ctas = (n + 255u) / 256u, cap = ctas * 256u + 8u;
+    float *in = aligned_alloc(16, cap * 4), *out = aligned_alloc(16, cap * 4);
+    uint32_t st = seed;
+    for (uint32_t i = 0; i < cap; i++) { in[i] = frand(&st, -3.0f, 3.0f) * (i % 5 == 0 ? 1e-20f : 1.0f); out[i] = -999.0f; }
+    in[0] = 0.0f; in[1] = -0.0f; in[2] = 1e30f;
+    WsSim w; memset(&w, 0, sizeof w);
+    w.p = &prog; w.threads = OMEGA_DEC_THREADS; w.order = (int)(seed & 1u);
+    put64(w.cbank, OMEGA_DEC_XB_S, in); put64(w.cbank, OMEGA_DEC_XB_LO, out); w.cbank[OMEGA_DEC_XB_N / 4] = n;
+    w.nranges = 2;
+    w.ranges[0].lo = (uintptr_t)in; w.ranges[0].hi = (uintptr_t)(in + cap);
+    w.ranges[1].lo = (uintptr_t)out; w.ranges[1].hi = (uintptr_t)(out + cap);
+    int err = ws_run(&w, ctas, 1);
+    if (err) snprintf(msg, msgn, "%s (pc %d)", w.msg, w.err_pc);
+    else {
+        size_t b = 0;
+        for (uint32_t i = 0; i < n; i++) { const float want = in[i] * 0x1p64f; b += memcmp(&out[i], &want, 4) != 0; }
+        for (uint32_t i = n; i < cap; i++) b += out[i] != -999.0f;
+        *bad = b;
+        snprintf(msg, msgn, "%u values: %zu differ from h * 2^64 or written past count", n, b);
+    }
+    free(in); free(out);
+    return err;
+}
+
 static void sim_battery(void) {
     static const struct { uint32_t n, seed; float hscale; } pts[] = { { 700, 3, 1.0f }, { 256, 4, 1e-3f }, { 1000, 5, 30.0f }, { 37, 6, 1.0f } };
     for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
@@ -95,6 +125,13 @@ static void sim_battery(void) {
     OmegaDecSpec m2; memset(&m2, 0, sizeof m2); m2.kind = OMEGA_DEC_XBOUND; m2.mutant = 2;
     static BlackwellIRProgram p2;
     CHECK(omega_blackwell_codegen_dec_prog(&m2, &p2) != 0, "XBOUND refuses mutant 2");
+    for (uint32_t n2 = 2048; n2 >= 37; n2 = n2 == 2048 ? 37 : 0) {
+        size_t xb = 1; int xe = sim_xscale(n2, 7, &xb, msg, sizeof msg);
+        CHECK(!xe && xb == 0, "sim XBOUND SCALE n %u: %s", n2, msg);
+        printf("sim XBOUND SCALE n %u: %s %s\n", n2, xe ? "ERROR" : xb ? "MISMATCH" : "ok", msg);
+    }
+    m2.mutant = 1; m2.mode = 1;
+    CHECK(omega_blackwell_codegen_dec_prog(&m2, &p2) != 0, "XBOUND SCALE refuses a mutant");
 }
 
 /* ------------------------------------------------------------- chip */
