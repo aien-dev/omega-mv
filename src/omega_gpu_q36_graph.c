@@ -11,6 +11,7 @@
 #include "omega_gpu_session.h"
 #include "omega_gpu_fmt.h"
 #include "omega_gpu_mem_cached.h"
+#include "omega_gpu_w4_api.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,7 +46,9 @@ struct OmegaGpuQ36Graph {
     OmegaGpuMem buf, dbuf;               /* the host-visible regions; the chip-only regions (see Layout) */
     Kern k[K_COUNT];
     OmegaGpuCmdList *cl;
-    struct { const OmegaGpuFp8Tensor *mix, *o, *gu, *dn; const OmegaGpuBf16Tensor *ab; uint32_t kind_index; int attn, set; } layer[OMEGA_GPU_Q36_MAX_LAYERS];
+    struct { const OmegaGpuFp8Tensor *mix, *o, *gu, *dn; const OmegaGpuBf16Tensor *ab;
+             const OmegaGpuW4Tensor *mix4, *o4, *gu4, *dn4; /* set_layer_w4 (l355): MXFP4 in place of the FP8 tensor */
+             uint32_t kind_index; int attn, set; } layer[OMEGA_GPU_Q36_MAX_LAYERS];
     int final_set;
     const OmegaGpuFp8Tensor *head8;      /* set_lm_head_fp8: FP8 lm_head (hidden is then written x 2^64, read() undoes it) */
     /* token state */
@@ -194,14 +197,16 @@ int omega_gpu_q36_graph_set_layer(OmegaGpuQ36Graph *g, uint32_t layer, const Ome
                                   const float *in_norm) {
     if (!g || layer >= g->cfg.layers || !in_norm || g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     const int attn = g->layer[layer].attn;
-    if (!shape_is(mix, attn ? OMEGA_GPU_Q36_ATT_MIX : OMEGA_GPU_Q36_GDN_MIX, H) || !shape_is(o, H, OMEGA_GPU_Q36_MIXER_OUT) ||
-        !shape_e(gate_up, N_EXPERTS, 2 * EI, H) || !shape_e(down, N_EXPERTS, H, EI)) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    /* l355: mix + o both NULL (a W4 trunk must follow, set_layer_w4) or both given; gate_up + down likewise for W4 experts */
+    const int trunk8 = mix || o, experts8 = gate_up || down;
+    if ((trunk8 && (!shape_is(mix, attn ? OMEGA_GPU_Q36_ATT_MIX : OMEGA_GPU_Q36_GDN_MIX, H) || !shape_is(o, H, OMEGA_GPU_Q36_MIXER_OUT))) ||
+        (experts8 && (!shape_e(gate_up, N_EXPERTS, 2 * EI, H) || !shape_e(down, N_EXPERTS, H, EI)))) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     if (attn ? ab != NULL : ab == NULL) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     if (!attn) { uint32_t n = 0, k = 0; omega_gpu_bf16_tensor_shape(ab, &n, &k); if (n != OMEGA_GPU_Q36_AB || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS; }
     uint64_t t[8] = { 0 }; /* mix, o; the experts' group tables come from the router */
-    if (omega_gpu_fp8_tensor_entry(mix, 0, &t[0], &t[1]) != 0 || omega_gpu_fp8_tensor_entry(o, 0, &t[2], &t[3]) != 0) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    if (trunk8 && (omega_gpu_fp8_tensor_entry(mix, 0, &t[0], &t[1]) != 0 || omega_gpu_fp8_tensor_entry(o, 0, &t[2], &t[3]) != 0)) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     omega_gpu_session_lock();
-    memcpy((uint8_t *)cpu_of(g, g->lo.tabs) + (size_t)layer * 64u, t, sizeof t);
+    memcpy((uint8_t *)cpu_of(g, g->lo.tabs) + (size_t)layer * 64u, t, 32u); /* bytes 32..63: the W4 mix and o entries */
     memcpy((float *)cpu_of(g, g->lo.norms) + (size_t)layer * H, in_norm, H * 4u);
     int rc = omega_gpu_session_sync_to_gpu(&g->buf) == 0 ? OMEGA_GPU_DGRAPH_OK : OMEGA_GPU_DGRAPH_CHIP_FAIL;
     omega_gpu_session_unlock();
@@ -212,6 +217,38 @@ int omega_gpu_q36_graph_set_layer(OmegaGpuQ36Graph *g, uint32_t layer, const Ome
     return rc;
 }
 
+
+/* l355: MXFP4 tensors in place of FP8 ones (omega_gpu_w4_api.h). mix4 [mix rows][2048], o4 [2048][4096] (each NULL = keep the
+ * FP8 one); gu4 a slab of 257 blocks of [1024][2048], dn4 a slab of 257 blocks of [2048][512] (both or neither). The experts'
+ * entries go into the router's directory for this layer, so call this AFTER omega_gpu_router_set_directory_fp8. Warms the
+ * W4 kernels for every shape it records. */
+int omega_gpu_q36_graph_set_layer_w4(OmegaGpuQ36Graph *g, uint32_t layer, const OmegaGpuW4Tensor *mix4, const OmegaGpuW4Tensor *o4,
+                                     const OmegaGpuW4Tensor *gu4, const OmegaGpuW4Tensor *dn4) {
+    if (!g || layer >= g->cfg.layers || g->in_token || (!gu4 != !dn4)) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    const uint32_t mixn = g->layer[layer].attn ? OMEGA_GPU_Q36_ATT_MIX : OMEGA_GPU_Q36_GDN_MIX;
+    uint32_t n = 0, k = 0;
+    if (mix4) { omega_gpu_w4_tensor_shape(mix4, &n, &k); if (n != mixn || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS; }
+    if (o4) { omega_gpu_w4_tensor_shape(o4, &n, &k); if (n != H || k != OMEGA_GPU_Q36_MIXER_OUT) return OMEGA_GPU_DGRAPH_BAD_ARGS; }
+    if (gu4) {
+        omega_gpu_w4_tensor_shape(gu4, &n, &k); if (n != N_EXPERTS * 2u * EI || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+        omega_gpu_w4_tensor_shape(dn4, &n, &k); if (n != N_EXPERTS * H || k != EI) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+        uint64_t gu[N_EXPERTS * 2u], dn[N_EXPERTS * 2u];
+        for (uint32_t e = 0; e < N_EXPERTS; e++)
+            if (omega_gpu_w4_tensor_block_entry(gu4, 2u * EI, e, &gu[2u * e], &gu[2u * e + 1u]) != 0 ||
+                omega_gpu_w4_tensor_block_entry(dn4, H, e, &dn[2u * e], &dn[2u * e + 1u]) != 0) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+        if (omega_gpu_router_set_directory(g->cfg.router, layer, gu, dn) != 0) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
+        if (omega_gpu_w4_prepare(H, 2u * EI) != 0 || omega_gpu_w4_prepare(EI, H) != 0) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    }
+    uint64_t t[4] = { 0 };
+    if ((mix4 && omega_gpu_w4_tensor_entry(mix4, &t[0], &t[1]) != 0) || (o4 && omega_gpu_w4_tensor_entry(o4, &t[2], &t[3]) != 0)) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    if ((mix4 && omega_gpu_w4_prepare(H, mixn) != 0) || (o4 && omega_gpu_w4_prepare(OMEGA_GPU_Q36_MIXER_OUT, H) != 0)) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    omega_gpu_session_lock();
+    memcpy((uint8_t *)cpu_of(g, g->lo.tabs) + (size_t)layer * 64u + 32u, t, sizeof t);
+    int rc = omega_gpu_session_sync_to_gpu(&g->buf) == 0 ? OMEGA_GPU_DGRAPH_OK : OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    if (rc == OMEGA_GPU_DGRAPH_OK) { g->layer[layer].mix4 = mix4; g->layer[layer].o4 = o4; g->layer[layer].gu4 = gu4; g->layer[layer].dn4 = dn4; }
+    return rc;
+}
 int omega_gpu_q36_graph_set_final_norm(OmegaGpuQ36Graph *g, const float *final_norm) {
     if (!g || !final_norm || g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     omega_gpu_session_lock();
@@ -331,6 +368,8 @@ int omega_gpu_q36_graph_record_layer(OmegaGpuQ36Graph *g, uint32_t l, uint32_t p
     if (g->failed) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
     if (l >= g->cfg.layers || !g->layer[l].set || g->hidden_ready || (l + 1 == g->cfg.layers && !g->final_set))
         return fail(g, "q36 graph: layer not set, out of order, or final norm missing", OMEGA_GPU_DGRAPH_BAD_ARGS);
+    if ((!g->layer[l].mix && !g->layer[l].mix4) || (!g->layer[l].o && !g->layer[l].o4) || (!g->layer[l].gu && !g->layer[l].gu4))
+        return fail(g, "q36 graph: a layer has neither the FP8 nor the W4 tensor (set_layer_w4 missing)", OMEGA_GPU_DGRAPH_BAD_ARGS);
     const uint64_t x = va_of(g, g->lo.x), xq = va_of(g, g->lo.xq), mix = va_of(g, g->lo.mix), agg = va_of(g, g->lo.agg);
     const uint64_t att = va_of(g, g->lo.att), o = va_of(g, g->lo.o), gu = va_of(g, g->lo.gu), act = va_of(g, g->lo.act), dn = va_of(g, g->lo.dn);
     const uint64_t in_norm = va_of(g, g->lo.norms) + (uint64_t)l * H * 4u, tab = va_of(g, g->lo.tabs) + (uint64_t)l * 64u;
@@ -343,7 +382,8 @@ int omega_gpu_q36_graph_record_layer(OmegaGpuQ36Graph *g, uint32_t l, uint32_t p
     const int overlap = !g->layer[l].attn && q36_overlap_ab();
     if (overlap && rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_Q36_K_AB, omega_gpu_bf16_gemv_record(g->cl, g->layer[l].ab, xq, va_of(g, g->lo.ab)));
     if (rc == OMEGA_GPU_DGRAPH_OK) {
-        int mrc = omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].mix, 1, tab, xq, 1, mix);
+        int mrc = g->layer[l].mix4 ? omega_gpu_w4_gemv_record(g->cl, g->layer[l].mix4, tab + 32u, xq, mix)
+                                   : omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].mix, 1, tab, xq, 1, mix);
         if (mrc == 0 && overlap && !g->flush_each && omega_gpu_cmdlist_mark_independent(g->cl) != 0) mrc = -1;
         rc = after_op(g, OMEGA_GPU_Q36_K_MIX, mrc);
     }
@@ -369,20 +409,25 @@ int omega_gpu_q36_graph_record_layer(OmegaGpuQ36Graph *g, uint32_t l, uint32_t p
             rc = add_glue(g, OMEGA_GPU_Q36_K_GATE, g->mutant == 3 ? K_GATE_M1 : K_GATE, OMEGA_GPU_Q36_MIXER_OUT / OMEGA_DEC_THREADS, 1,
                           OMEGA_GPU_Q36_MIXER_OUT, w2, OMEGA_DEC_GT_WORDS);
     }
-    if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_fp8(g, OMEGA_GPU_Q36_K_O, g->layer[l].o, tab + 16u, mixer_out, o);
+    if (rc == OMEGA_GPU_DGRAPH_OK) rc = g->layer[l].o4 ? after_op(g, OMEGA_GPU_Q36_K_O, omega_gpu_w4_gemv_record(g->cl, g->layer[l].o4, tab + 48u, mixer_out, o))
+                                                       : rec_fp8(g, OMEGA_GPU_Q36_K_O, g->layer[l].o, tab + 16u, mixer_out, o);
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_res_w(g, K_ADD, x, o, 0, 0, 0, 1.0f);
     /* the sparse block: router (post-attention norm, top-8 + the shared slot), 9 expert groups, COMBINE|NORM */
     OmegaGpuRouterDevOut r; memset(&r, 0, sizeof r);
     if (rc == OMEGA_GPU_DGRAPH_OK)
         rc = after_op(g, OMEGA_GPU_Q36_K_ROUTER, omega_gpu_router_record(g->cl, g->cfg.router, l, x, g->cfg.eps, 1, SCALE_2P64, &r));
     if (rc == OMEGA_GPU_DGRAPH_OK)
-        rc = after_op(g, OMEGA_GPU_Q36_K_GATE_UP, omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].gu, NG, r.tab_gu_va, r.xout_va, 1, gu));
+        rc = after_op(g, OMEGA_GPU_Q36_K_GATE_UP, g->layer[l].gu4
+                     ? omega_gpu_w4_gemv_grouped_record(g->cl, 2u * EI, H, NG, r.tab_gu_va, r.xout_va, 0u, gu)
+                     : omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].gu, NG, r.tab_gu_va, r.xout_va, 1, gu));
     uint32_t w3[OMEGA_DEC_SW_WORDS]; memset(w3, 0, sizeof w3);
     put64(w3, OMEGA_DEC_SW_GU, gu); put64(w3, OMEGA_DEC_SW_ACT, act); putf(w3, OMEGA_DEC_SW_SCALE, SCALE_2P64);
     if (rc == OMEGA_GPU_DGRAPH_OK)
         rc = add_glue(g, OMEGA_GPU_Q36_K_SWIGLU, g->mutant == 1 ? K_SW_M1 : K_SW, EI / OMEGA_DEC_THREADS, NG, (size_t)NG * EI, w3, OMEGA_DEC_SW_WORDS);
     if (rc == OMEGA_GPU_DGRAPH_OK)
-        rc = after_op(g, OMEGA_GPU_Q36_K_DOWN, omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].dn, NG, r.tab_dn_va, act, NG, dn));
+        rc = after_op(g, OMEGA_GPU_Q36_K_DOWN, g->layer[l].dn4
+                     ? omega_gpu_w4_gemv_grouped_record(g->cl, H, EI, NG, r.tab_dn_va, act, EI * 4u, dn)
+                     : omega_gpu_fp8_gemv_grouped_record(g->cl, g->layer[l].dn, NG, r.tab_dn_va, act, NG, dn));
     if (rc == OMEGA_GPU_DGRAPH_OK) {
         const int last = l + 1 == g->cfg.layers;
         const uint64_t nw = last ? va_of(g, g->lo.fnorm) : in_norm + H * 4u;

@@ -57,6 +57,16 @@ int omega_gpu_w4_tensor_entry(const OmegaGpuW4Tensor *t, uint64_t *w_va, uint64_
 int omega_gpu_w4_gemv_f32(const OmegaGpuW4Tensor *t, const float *x, float *y, OmegaGpuW4Info *info);
 int omega_gpu_w4_gemv_record(struct OmegaGpuCmdList *cl, const OmegaGpuW4Tensor *t, uint64_t tab_va, uint64_t x_va, uint64_t y_va);
 int omega_gpu_w4_prepare(uint32_t k, uint32_t n); /* build the kernel the automatic choice makes for (k, n) now */
+/* Grouped launches (l355, the Qwen3.6-35B-A3B experts): a slab is one tensor of `count` blocks of block_rows rows (upload n = count x
+ * block_rows); block i starts at weight byte i x block_rows x k / 2 and scale byte i x block_rows x k / 32 (the entry below).
+ * grouped_record: grid_x x groups CTAs, group g reads table entry g ({ w_va, s_va }, a router writes them), the x' row
+ * x_va + g x x_stride_bytes (0 = one shared row) and writes the n floats at y_va + g x n x 4. grouped_f32 is the host-driven
+ * test path (entry g = block ids[g], x_rows 1 or groups, y groups x n floats, at most 64 groups). */
+int omega_gpu_w4_tensor_block_entry(const OmegaGpuW4Tensor *t, uint32_t block_rows, uint32_t idx, uint64_t *w_va, uint64_t *s_va);
+int omega_gpu_w4_gemv_grouped_f32(const OmegaGpuW4Tensor *slab, uint32_t block_rows, const uint32_t *ids, uint32_t groups,
+                                  const float *x, uint32_t x_rows, float *y, OmegaGpuW4Info *info);
+int omega_gpu_w4_gemv_grouped_record(struct OmegaGpuCmdList *cl, uint32_t n, uint32_t k, uint32_t groups, uint64_t tab_va, uint64_t x_va,
+                                     uint32_t x_stride_bytes, uint64_t y_va);
 
 /* shape knobs (tests and sweeps): 0 = automatic. Each clears the kernel cache. */
 void omega_gpu_w4_set_shape(uint32_t lane_bytes, uint32_t rows, uint32_t warps);

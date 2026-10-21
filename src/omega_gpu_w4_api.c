@@ -186,32 +186,44 @@ int omega_gpu_w4_tensor_entry(const OmegaGpuW4Tensor *t, uint64_t *w_va, uint64_
 }
 
 /* grid: up to the CTA budget, split so every warp gets the same number of row groups, at least two */
-static uint32_t grid_for(const OmegaW4GemvSpec *spec, uint32_t n) {
+/* grouped launches (l355, the 35B experts): the budget is shared by the groups (grid_y), so each group gets budget / groups */
+static uint32_t grid_for(const OmegaW4GemvSpec *spec, uint32_t n, uint32_t groups) {
     const uint32_t forced = g.cta_budget ? g.cta_budget : env_ctas(); /* AIEN_OMEGA_W4_CTAS: whole-model sweeps */
-    const uint32_t RG = n / spec->rows, budget = forced ? forced : OMEGA_GPU_W4_CTAS;
+    uint32_t budget = forced ? forced : OMEGA_GPU_W4_CTAS;
+    if (groups > 1u) { budget /= groups; if (!budget) budget = 1u; }
+    const uint32_t RG = n / spec->rows;
     uint32_t grid_x = (RG + spec->warps - 1u) / spec->warps;
     if (!forced) { uint32_t waves = (grid_x + budget - 1u) / budget; if (waves < 2u) waves = 2u; grid_x = (grid_x + waves - 1u) / waves; }
     if (grid_x > budget) grid_x = budget;
     return grid_x ? grid_x : 1u;
 }
 
-static int gemv_core(const OmegaGpuW4Tensor *t, const float *x, float *y, OmegaGpuW4Info *info,
-                     OmegaGpuCmdList *rec, uint64_t dev_tab, uint64_t dev_x, uint64_t dev_y) {
+#define W4_MAX_GROUPS 64u /* the test path's table (the graph's tables come from the router, 9 groups) */
+
+/* One launch of grid_x x groups CTAs. Group g reads table entry g, the x' row x_va + g * x_stride (0: one shared row) and
+ * writes y_va + g * n * 4. Test path (rec NULL): t is a slab of blocks of block_rows rows, entry g = block ids[g]; x holds
+ * x_rows (1 or groups) rows of k floats, y gets groups x n floats. */
+static int gemv_core(const OmegaGpuW4Tensor *t, uint32_t n, uint32_t k, uint32_t groups, uint32_t block_rows, const uint32_t *ids,
+                     const float *x, uint32_t x_rows, float *y, OmegaGpuW4Info *info,
+                     OmegaGpuCmdList *rec, uint64_t dev_tab, uint64_t dev_x, uint32_t x_stride, uint64_t dev_y) {
     const uint64_t t0 = omega_gpu_session_now_ns();
     if (info) memset(info, 0, sizeof *info);
-    if (!t || !t->w.cpu || (rec && (!dev_tab || !dev_x || !dev_y)) || (!rec && (!x || !y))) return OMEGA_GPU_W4_BAD_ARGS;
-    const uint32_t n = t->n, k = t->k;
+    if (groups == 0 || groups > 65535u || n == 0 || k == 0 || (rec && (!dev_tab || !dev_x || !dev_y)) ||
+        (!rec && (!t || !t->w.cpu || !x || !y || !ids || groups > W4_MAX_GROUPS || (x_rows != 1u && x_rows != groups) ||
+                  block_rows == 0 || block_rows != n || t->k != k || t->n % block_rows)))
+        return OMEGA_GPU_W4_BAD_ARGS;
+    if (!rec) for (uint32_t i = 0; i < groups; i++) if (ids[i] >= t->n / block_rows) return OMEGA_GPU_W4_BAD_ARGS;
     OmegaW4GemvSpec spec; omega_gpu_w4_spec_for(k, n, &spec);
     if (n % spec.rows || k % (64u * spec.lane_bytes)) return OMEGA_GPU_W4_CODEGEN_FAIL;
-    const uint32_t RG = n / spec.rows, grid_x = grid_for(&spec, n);
+    const uint32_t RG = n / spec.rows, grid_x = grid_for(&spec, n, groups);
     if (!rec) omega_gpu_session_lock();
 #define UNLOCK() do { if (!rec) omega_gpu_session_unlock(); } while (0)
     int rc = OMEGA_GPU_W4_OK;
     if (!dev_open_locked()) { UNLOCK(); return OMEGA_GPU_W4_CHIP_FAIL; }
     if (!rec) {
-        if (!g.tab.cpu && omega_gpu_session_alloc(16u, &g.tab) != 0) { UNLOCK(); return OMEGA_GPU_W4_CHIP_FAIL; }
-        int src = omega_gpu_session_scratch(&g.x_buf, (size_t)k * 4u);
-        if (src == 0) src = omega_gpu_session_scratch(&g.y_buf, (size_t)n * 4u);
+        if (!g.tab.cpu && omega_gpu_session_alloc(W4_MAX_GROUPS * 16u, &g.tab) != 0) { UNLOCK(); return OMEGA_GPU_W4_CHIP_FAIL; }
+        int src = omega_gpu_session_scratch(&g.x_buf, (size_t)x_rows * k * 4u);
+        if (src == 0) src = omega_gpu_session_scratch(&g.y_buf, (size_t)groups * n * 4u);
         if (src != 0) { UNLOCK(); return src == OMEGA_GPU_SESSION_SCRATCH_RESERVED ? OMEGA_GPU_W4_TOO_LARGE : OMEGA_GPU_W4_CHIP_FAIL; }
     }
     Slot *ks = NULL; bool hit = false;
@@ -220,11 +232,17 @@ static int gemv_core(const OmegaGpuW4Tensor *t, const float *x, float *y, OmegaG
     g_rec = 0;
     if (rc != OMEGA_GPU_W4_OK) { UNLOCK(); return rc; }
     float *yd = NULL;
+    const size_t ny = (size_t)groups * n;
     if (!rec) {
-        uint64_t *tab = g.tab.cpu; tab[0] = t->w.va; tab[1] = t->w.va + t->s_off;
-        omega_fp8_pack_x_f32(x, k, g.x_buf.mem.cpu);
+        uint64_t *tab = g.tab.cpu;
+        for (uint32_t i = 0; i < groups; i++) {
+            tab[2u * i] = t->w.va + (uint64_t)ids[i] * block_rows * k / 2u;
+            tab[2u * i + 1u] = t->w.va + t->s_off + (uint64_t)ids[i] * block_rows * (k / OMEGA_W4_GROUP);
+        }
+        for (uint32_t r = 0; r < x_rows; r++) omega_fp8_pack_x_f32(x + (size_t)r * k, k, (float *)g.x_buf.mem.cpu + (size_t)r * k);
+        x_stride = x_rows > 1u ? k * 4u : 0u;
         yd = g.y_buf.mem.cpu;
-        for (uint32_t i = 0; i < n; i++) yd[i] = POISON_F32;
+        for (size_t i = 0; i < ny; i++) yd[i] = POISON_F32;
         if (omega_gpu_session_sync_to_gpu(&g.tab) != 0 || omega_gpu_session_sync_to_gpu(&g.x_buf.mem) != 0 || omega_gpu_session_sync_to_gpu(&g.y_buf.mem) != 0) rc = OMEGA_GPU_W4_CHIP_FAIL;
     }
     const uint64_t tab_va = rec ? dev_tab : g.tab.va, x_va = rec ? dev_x : g.x_buf.mem.va, y_va = rec ? dev_y : g.y_buf.mem.va;
@@ -232,16 +250,16 @@ static int gemv_core(const OmegaGpuW4Tensor *t, const float *x, float *y, OmegaG
     args[0] = (uint32_t)tab_va; args[1] = (uint32_t)(tab_va >> 32);
     args[2] = (uint32_t)x_va; args[3] = (uint32_t)(x_va >> 32);
     args[4] = (uint32_t)y_va; args[5] = (uint32_t)(y_va >> 32);
-    args[6] = RG; args[7] = 0u; args[8] = n * 4u; args[9] = grid_x * spec.warps;
+    args[6] = RG; args[7] = x_stride; args[8] = n * 4u; args[9] = grid_x * spec.warps;
     if (info) {
         info->n = n; info->k = k; info->lane_bytes = spec.lane_bytes; info->rows_per_warp = spec.rows; info->warps_per_cta = spec.warps;
         info->coal = spec.coal; info->sched = spec.sched; info->grid_x = grid_x; info->steps = omega_w4_gemv_steps(&spec);
-        info->weight_bytes = (uint64_t)n * k / 2u; info->scale_bytes = (uint64_t)n * k / OMEGA_W4_GROUP; info->kernel_cache_hit = hit;
+        info->weight_bytes = (uint64_t)groups * n * k / 2u; info->scale_bytes = (uint64_t)groups * n * k / OMEGA_W4_GROUP; info->kernel_cache_hit = hit;
     }
     if (rc == OMEGA_GPU_W4_OK) {
         OmegaGpuLaunch L = {
             .code_va = ks->code.va, .gpr_count = omega_bw_gpr_declared(ks->kernel.gpr_count),
-            .threads_x = 32u * spec.warps, .threads_y = 1, .grid_x = grid_x, .grid_y = 1,
+            .threads_x = 32u * spec.warps, .threads_y = 1, .grid_x = grid_x, .grid_y = groups,
             .num_elements = n, .args = args, .n_args = OMEGA_FP8_ARGS_WORDS, .timeout_ms = MARKER_TIMEOUT_MS,
             .shared_bytes = omega_w4_gemv_shared_bytes(&spec),
         };
@@ -251,9 +269,9 @@ static int gemv_core(const OmegaGpuW4Tensor *t, const float *x, float *y, OmegaG
     if (rc == OMEGA_GPU_W4_OK && !rec && omega_gpu_session_sync_to_cpu(&g.y_buf.mem) != 0) rc = OMEGA_GPU_W4_CHIP_FAIL;
     if (rc == OMEGA_GPU_W4_OK && !rec) {
         size_t unchanged = 0;
-        for (uint32_t i = 0; i < n; i++) if (yd[i] == POISON_F32) unchanged++;
+        for (size_t i = 0; i < ny; i++) if (yd[i] == POISON_F32) unchanged++;
         if (unchanged) { omega_gpu_session_set_error("w4: output poison survived"); rc = OMEGA_GPU_W4_CHIP_FAIL; }
-        else memcpy(y, yd, (size_t)n * sizeof *y);
+        else memcpy(y, yd, ny * sizeof *y);
     }
     UNLOCK();
     if (info) info->call_ns = omega_gpu_session_now_ns() - t0;
@@ -262,11 +280,29 @@ static int gemv_core(const OmegaGpuW4Tensor *t, const float *x, float *y, OmegaG
 #undef UNLOCK
 
 int omega_gpu_w4_gemv_f32(const OmegaGpuW4Tensor *t, const float *x, float *y, OmegaGpuW4Info *info) {
-    return gemv_core(t, x, y, info, NULL, 0, 0, 0);
+    static const uint32_t id0 = 0;
+    if (!t) return OMEGA_GPU_W4_BAD_ARGS;
+    return gemv_core(t, t->n, t->k, 1u, t->n, &id0, x, 1u, y, info, NULL, 0, 0, 0, 0);
 }
 int omega_gpu_w4_gemv_record(OmegaGpuCmdList *cl, const OmegaGpuW4Tensor *t, uint64_t tab_va, uint64_t x_va, uint64_t y_va) {
+    if (!cl || !t) return OMEGA_GPU_W4_BAD_ARGS;
+    return gemv_core(NULL, t->n, t->k, 1u, 0, NULL, NULL, 0, NULL, NULL, cl, tab_va, x_va, 0, y_va);
+}
+int omega_gpu_w4_gemv_grouped_f32(const OmegaGpuW4Tensor *slab, uint32_t block_rows, const uint32_t *ids, uint32_t groups,
+                                  const float *x, uint32_t x_rows, float *y, OmegaGpuW4Info *info) {
+    if (!slab) return OMEGA_GPU_W4_BAD_ARGS;
+    return gemv_core(slab, block_rows, slab->k, groups, block_rows, ids, x, x_rows, y, info, NULL, 0, 0, 0, 0);
+}
+int omega_gpu_w4_gemv_grouped_record(OmegaGpuCmdList *cl, uint32_t n, uint32_t k, uint32_t groups, uint64_t tab_va, uint64_t x_va,
+                                     uint32_t x_stride_bytes, uint64_t y_va) {
     if (!cl) return OMEGA_GPU_W4_BAD_ARGS;
-    return gemv_core(t, NULL, NULL, NULL, cl, tab_va, x_va, y_va);
+    return gemv_core(NULL, n, k, groups, 0, NULL, NULL, 0, NULL, NULL, cl, tab_va, x_va, x_stride_bytes, y_va);
+}
+int omega_gpu_w4_tensor_block_entry(const OmegaGpuW4Tensor *t, uint32_t block_rows, uint32_t idx, uint64_t *w_va, uint64_t *s_va) {
+    if (!t || !w_va || !s_va || block_rows == 0 || t->n % block_rows || idx >= t->n / block_rows) return OMEGA_GPU_W4_BAD_ARGS;
+    *w_va = t->w.va + (uint64_t)idx * block_rows * t->k / 2u;
+    *s_va = t->w.va + t->s_off + (uint64_t)idx * block_rows * (t->k / OMEGA_W4_GROUP);
+    return OMEGA_GPU_W4_OK;
 }
 int omega_gpu_w4_prepare(uint32_t k, uint32_t n) {
     OmegaW4GemvSpec spec; omega_gpu_w4_spec_for(k, n, &spec);

@@ -84,6 +84,12 @@ int omega_gpu_q36_graph_set_layer(OmegaGpuQ36Graph *g, uint32_t layer, const Ome
                                   const OmegaGpuFp8Tensor *o, const OmegaGpuFp8Tensor *gate_up, const OmegaGpuFp8Tensor *down,
                                   const float *in_norm);
 int omega_gpu_q36_graph_set_final_norm(OmegaGpuQ36Graph *g, const float *final_norm); /* f32 [2048] as (1 + w) */
+/* l355 W4 (MXFP4, omega_gpu_w4_api.h): set_layer may pass mix + o NULL and/or gate_up + down NULL, then this supplies them. mix4
+ * [mix rows][2048], o4 [2048][4096] (NULL = keep FP8); gu4 a slab of 257 blocks [1024][2048], dn4 257 blocks [2048][512] (both or
+ * neither; written into the router directory, so call after omega_gpu_router_set_directory_fp8). */
+struct OmegaGpuW4Tensor;
+int omega_gpu_q36_graph_set_layer_w4(OmegaGpuQ36Graph *g, uint32_t layer, const struct OmegaGpuW4Tensor *mix4, const struct OmegaGpuW4Tensor *o4,
+                                     const struct OmegaGpuW4Tensor *gu4, const struct OmegaGpuW4Tensor *dn4);
 /* Optional FP8 lm_head: as omega_gpu_q38_graph_set_lm_head_fp8 ([vocab][2048]). */
 int omega_gpu_q36_graph_set_lm_head_fp8(OmegaGpuQ36Graph *g, const OmegaGpuFp8Tensor *head);
 /* One whole token: x_embed (f32 [2048]) -> greedy token at position pos. */
