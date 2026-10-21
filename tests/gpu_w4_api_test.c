@@ -279,6 +279,54 @@ static const ChipPoint g_pts[] = {
 
 static double median_ns(uint64_t *v, uint32_t n) { qsort(v, n, sizeof *v, cmp_u64); return (double)v[n / 2]; }
 
+
+/* l355: grouped launches at the Qwen3.6-35B-A3B expert shapes (gate|up block [1024][2048] with one shared x row; down
+ * block [2048][512] with one x row per group), 9 groups over a slab of 20 blocks (a repeated id included); each group
+ * against the oracle on its own block; mutant 3 (group g reads entry g ^ 1) must be red. */
+static void chip_grouped(uint32_t reps, FILE *out) {
+    static const struct { const char *name; uint32_t n, k, x_rows; } S[] = { { "q36 experts gate|up", 1024u, 2048u, 1u }, { "q36 experts down", 2048u, 512u, 9u } };
+    static const uint32_t ids[9] = { 3, 17, 0, 19, 5, 5, 11, 2, 8 };
+    const uint32_t blocks = 20u, G = 9u;
+    for (unsigned s = 0; s < 2; s++) {
+        uint32_t seed = 4242u + s;
+        T4 slab; t4_make(&slab, blocks * S[s].n, S[s].k, seed);
+        OmegaGpuW4Tensor *dt = NULL;
+        int rc = omega_gpu_w4_tensor_upload(slab.n, slab.k, slab.w, slab.e, &dt);
+        float *x = malloc(sizeof(float) * S[s].x_rows * S[s].k), *y = malloc(sizeof(float) * G * S[s].n);
+        for (uint32_t i = 0; i < S[s].x_rows * S[s].k; i++) x[i] = frand(&seed, -1.0f, 1.0f);
+        OmegaGpuW4Info info; memset(&info, 0, sizeof info);
+        if (rc == 0) rc = omega_gpu_w4_gemv_grouped_f32(dt, S[s].n, ids, G, x, S[s].x_rows, y, &info);
+        size_t bad_all = 0; double worst_all = 0;
+        for (uint32_t g = 0; g < G && rc == 0; g++) {
+            T4 blk = { S[s].n, S[s].k, slab.w + (size_t)ids[g] * S[s].n * S[s].k / 2u, slab.e + (size_t)ids[g] * S[s].n * S[s].k / 32u };
+            size_t bad = 0; const double w = parity(&blk, x + (S[s].x_rows > 1 ? (size_t)g * S[s].k : 0), y + (size_t)g * S[s].n, &bad);
+            bad_all += bad; if (w > worst_all) worst_all = w;
+        }
+        CHECK(rc == 0 && bad_all == 0, "chip grouped %s (9 groups of 20 blocks, x rows %u): rc %d (%s) worst %.2e bad %zu", S[s].name, S[s].x_rows, rc,
+              rc ? omega_gpu_w4_last_error() : "", worst_all, bad_all);
+        if (rc == 0) {
+            omega_gpu_w4_test_set_mutant(3);
+            /* 8 groups (even): entry g ^ 1 stays inside the table (with 9 the last group would read a slot never written) */
+            const uint32_t GM = 8u;
+            int mrc = omega_gpu_w4_gemv_grouped_f32(dt, S[s].n, ids, GM, x, S[s].x_rows > 1 ? GM : 1u, y, NULL);
+            size_t mb = 0;
+            for (uint32_t g = 0; g < GM && mrc == 0; g++) {
+                T4 blk = { S[s].n, S[s].k, slab.w + (size_t)ids[g] * S[s].n * S[s].k / 2u, slab.e + (size_t)ids[g] * S[s].n * S[s].k / 32u };
+                size_t bad = 0; parity(&blk, x + (S[s].x_rows > 1 ? (size_t)g * S[s].k : 0), y + (size_t)g * S[s].n, &bad); mb += bad;
+            }
+            omega_gpu_w4_test_set_mutant(0);
+            CHECK(mrc != 0 || mb > 0, "chip grouped %s: mutant 3 (wrong table entry) caught (rc %d, %zu bad rows)", S[s].name, mrc, mb);
+            uint64_t *ns = calloc(reps, sizeof *ns);
+            for (uint32_t r = 0; r < reps && rc == 0; r++) { OmegaGpuW4Info in; rc = omega_gpu_w4_gemv_grouped_f32(dt, S[s].n, ids, G, x, S[s].x_rows, y, &in); ns[r] = in.elapsed_ns; }
+            const double med = rc == 0 ? median_ns(ns, reps) : 0, bytes = (double)G * S[s].n * S[s].k * (0.5 + 1.0 / 32.0);
+            printf("  w4 grouped %-20s 9 groups grid %u x 9: median %.1f us, %.1f GB/s (%.3f of 273)\n", S[s].name, info.grid_x, med / 1e3, bytes / med, bytes / med / 273.0);
+            if (out) fprintf(out, ",{\"name\":\"%s grouped 9\",\"n\":%u,\"k\":%u,\"grid\":%u,\"bad\":%zu,\"worst_rel\":%.3e,\"w4_median_ns\":%.0f,\"w4_bytes\":%.0f}",
+                             S[s].name, S[s].n, S[s].k, info.grid_x, bad_all, worst_all, med, bytes);
+            free(ns);
+        }
+        omega_gpu_w4_tensor_free(dt); free(x); free(y); t4_free(&slab);
+    }
+}
 static int chip_run(uint32_t reps, const char *out_path, int fp8) {
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
     if (out) fprintf(out, "{\"test\":\"OMEGA_GPU_W4_GEMV\",\"points\":[");
@@ -352,6 +400,7 @@ static int chip_run(uint32_t reps, const char *out_path, int fp8) {
         first = 0;
         free(ns); omega_gpu_w4_tensor_free(dt); free(x); free(y); t4_free(&t);
     }
+    chip_grouped(reps, out);
     if (out) { fprintf(out, "],\"checks\":%d,\"failed\":%d}\n", g_checks, g_failed); fclose(out); }
     return 0;
 }
