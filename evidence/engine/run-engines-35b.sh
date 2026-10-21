@@ -14,7 +14,7 @@ PERIOD_US=${PERIOD_US:-10000}
 mkdir -p "$OUT"
 log() { echo "$(date -u +%H:%M:%SZ) $*" | tee -a "$OUT/run.log"; }
 . "$HERE/quiet-wait.sh"
-log "model $MODEL bin $BIN out $OUT fire_us $FIRE_US period_us $PERIOD_US load $(cut -d' ' -f1-3 /proc/loadavg)"
+log "model $MODEL bin $BIN sha256 $(sha256sum "$BIN" | cut -c1-16) out $OUT fire_us $FIRE_US period_us $PERIOD_US load $(cut -d' ' -f1-3 /proc/loadavg)"
 for B in 2 3; do
   $BIN plan fixed "$MODEL" "$OUT/plan-b$B.json" --layers 40 --experts 8 --buffers $B > /dev/null 2>&1
   $BIN schedule "$OUT/plan-b$B.json" "$MANIFEST" 40 "$OUT/schedule-b$B.json" 2>&1 | tail -1 | cut -c1-200 | tee -a "$OUT/run.log"

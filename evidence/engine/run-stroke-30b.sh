@@ -14,7 +14,7 @@ POS=${POS:-8}
 mkdir -p "$OUT/traces"
 log() { echo "$(date -u +%H:%M:%SZ) $*" | tee -a "$OUT/run.log"; }
 . "$HERE/quiet-wait.sh"
-log "model $MODEL bin $BIN out $OUT load $(cut -d' ' -f1-3 /proc/loadavg) memavail_kb $(grep MemAvailable /proc/meminfo | awk '{print $2}')"
+log "model $MODEL bin $BIN sha256 $(sha256sum "$BIN" | cut -c1-16) out $OUT load $(cut -d' ' -f1-3 /proc/loadavg) memavail_kb $(grep MemAvailable /proc/meminfo | awk '{print $2}')"
 i=0; LIST=""
 while IFS= read -r prompt; do
   i=$((i+1)); f="$OUT/traces/t$(printf %02d $i).json"

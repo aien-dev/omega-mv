@@ -18,7 +18,7 @@ SWAP_AT=${SWAP_AT:-12}
 mkdir -p "$OUT"
 log() { echo "$(date -u +%H:%M:%SZ) $*" | tee -a "$OUT/run.log"; }
 . "$HERE/quiet-wait.sh"
-log "model $MODEL bin $BIN out $OUT fire_us $FIRE_US tokens $TOKENS swap_at $SWAP_AT load $(cut -d' ' -f1-3 /proc/loadavg)"
+log "model $MODEL bin $BIN sha256 $(sha256sum "$BIN" | cut -c1-16) out $OUT fire_us $FIRE_US tokens $TOKENS swap_at $SWAP_AT load $(cut -d' ' -f1-3 /proc/loadavg)"
 $BIN plan fixed "$MODEL" "$OUT/plan-a.json" --layers 48 --experts 8 --buffers 2 > /dev/null 2>&1 || { log "plan FAILED"; exit 1; }
 for L in -1 0 1 2 4; do
   D="$OUT/lead$L"
