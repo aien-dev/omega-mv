@@ -23,7 +23,7 @@ Numbers below are from `origin/main` a8ffd2b9 (14,258 files).
 | crypto | `aien-dev/aien-crypto` | SHA-256, BLAKE3, SHA-512 and Ed25519 in plain C, no heap, no clock. | 11 | nothing | AGPL-3.0 |
 | research shelf | `aien-dev/omega-research` | Papers, proposals and calibration runs that nothing builds. | 684 | nothing | AGPL-3.0 |
 | omega (stays) | `aien-spark/omega` | The language and its runtime: Omegese, OSC, the IR, checker2, the CPU backends, program/resolve/realize/verify, the Visor session contract, the resident runtime (rx_*), the numeric semantics. | 784 | crypto, evidence, physics, aienos | AGPL-3.0 |
-| CUDA++ | `aien-dev/CUDAplusplus` (L395) | The GPU half of the runtime: kernel builder, encoder, submit, sessions, GPU libraries. | 156 by this map | omega, crypto | MIT (the one exception) |
+| CUDA++ | `aien-dev/CUDAplusplus` (L395) | The GPU half of the runtime: kernel builder, encoder, submit, sessions, GPU libraries. | L395's map | a byte-identical copy of the shared base, no pin on omega | MIT (the one exception) |
 | host | `aien-dev/omega-host` | OSH, the Linux host adapter: capability enforcement behind the aien-architecture#158 ABI. | 132 | omega, crypto | AGPL-3.0 |
 | learn | `aien-dev/omega-learn` | Tensors (M20), autodiff (M21) and training (M22) written on Omega. | 25 | omega, CUDA++, crypto | AGPL-3.0 |
 | programs | `aien-dev/omega-programs` | The experiments and subsystems written on Omega that nothing else uses yet: turing, brownian, estimation, dual (+experiment), reservoir, physics0, crumbline, searchtrace, fabric, path, ans, polyglot, prime race. | 687 | omega, CUDA++, crypto | AGPL-3.0 |
@@ -80,7 +80,7 @@ The knot above is the only loop. Its upward links, and the cut for each:
 
 | Cut | Link that closes the loop | The interface that cuts it | Owner |
 |---|---|---|---|
-| C1 | CUDA++ uses omega (21) and omega's runtime/numeric use CUDA++ (`omega_numeric.c` includes the GPU encoder, 4; `tests/runtime/r15_gpu_load.c` and friends include `rx_resident_gpu.h`, 5) | `rx_resident_gpu.*`, `rx_compose_gpu_skill.h`, `rx_r12_silicon.c`, `omega_accelerator*`, `omega_world_gates.*`, `omega_vector.*`, `omega_numeric_*_gb10.*`, `tests/numeric_native/` and `mk/{numeric-lifecycle,numeric-slices,program-fp32}.mk` are GPU code and go with CUDA++; `omega_numeric.c` calls the encoder through a function table CUDA++ fills, so the language never includes a GPU header | L395 (file list sent by ledger note) |
+| C1 | CUDA++ uses omega (21) and omega's runtime/numeric use CUDA++ (`omega_numeric.c` includes the GPU encoder, 4; `tests/runtime/r15_gpu_load.c` and friends include `rx_resident_gpu.h`, 5) | L395's map decides (its handoff, plan v1): the Omega bridges stay in omega (`omega_blackwell_gates.c`, `omega_accelerator_world.*`, `omega_evidence.*`, `omega_physics_dir.h`); a shared base (`sha256`, `omega_types.h`, `omega_vector`, `omega_core`, `omega_canonical`) is carried byte-identical in both repos with a drift check, so CUDA++ never pins omega. Still to settle with L395: the GPU files under `src/runtime/` (`rx_resident_gpu.*` and its tests) and `omega_numeric_*_gb10.*`. `groups.tsv` files a few of these under cudapp only so the loop shows. | L395 |
 | C2 | `mk/rx_compose_lib.mk` includes `mk/allen.mk` and `mk/polyglot.mk` | the compose library names its two plug-ins by variables set by whoever assembles it; polyglot's half moves with polyglot | this lane, with the programs cut |
 | C3 | language uses `omega_numeric.h` (2), runtime uses `omega_matvec.h` (4), numeric uses the language (12) | split the number semantics header (stays) from the realizations (CPU and GPU), then numeric can leave as its own repo | this lane, after C1 |
 | C4 | `tests/algebra/ma_digital_v1_gate.c` includes `src/turing/select.h` (1) | that gate is a Turing gate; it moves with turing | this lane, with the programs cut |
@@ -110,7 +110,7 @@ pins the module by lock, with its full gate set green and identical outputs.
 |---|---|
 | omega -> evidence shelf | `evidence.lock` (one commit); receipts read by path at that commit |
 | omega -> crypto | `crypto.lock`; the C headers `sha256.h`, `omega_blake3.h`, `aienos_sig.h` and their object files |
-| CUDA++ -> omega | `omega.lock` in CUDA++; the language core headers (`omega_types.h`, `omega_core.h`, `omega_evidence.h`, `omega_physics_dir.h`) |
+| omega -> CUDA++ | `cudapp.lock` in omega (L395); the shared base is carried byte-identical in both repos with a drift check, so CUDA++ does not pin omega |
 | host -> omega | `omega.lock`; `rx_caproot.h` (the host capability root) and the language core headers |
 | learn -> omega, CUDA++ | `omega.lock`, `cudapp.lock`; `omega_numeric.h`, the GPU library headers |
 | programs -> omega, CUDA++ | `omega.lock`, `cudapp.lock`; the language core, runtime and numeric headers |
