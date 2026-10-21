@@ -56,4 +56,7 @@ void osc_gpu_free(OscGpuKernel *k);
  * same steps (multiply-high by the magic number, shifts, add). Tests compare it with n / d. */
 uint32_t osc_gpu_udiv_model(uint32_t n, uint32_t d);
 
+/* tests only: a nonzero value makes the build break one rule on purpose (see omega_osc_gpu.c) */
+extern int osc_gpu_mutant;
+
 #endif /* OMEGA_OSC_GPU_H */

@@ -34,6 +34,12 @@
 #define NTMP 6
 #define GPR_LIMIT 128u
 
+/* tests only (tests/osc_gpu/test_osc_gpu.c): each value breaks one rule on purpose, and the host tests must fail.
+ * 1 stores ignore the poison flag, 2 joins dropped (NOP for BSYNC), 3 no overflow trap on add, 4 live intervals
+ * not stretched over blocks, 5 every region on barrier 0, 6 shared memory not zeroed, 7 bounds-failed loads still
+ * run, 8 the division magic number off by one. */
+int osc_gpu_mutant;
+
 typedef struct { uint64_t w[NBW]; } Bset;
 typedef struct { uint64_t w[NVW]; } Vset;
 
@@ -280,7 +286,7 @@ static int regions(G *g) {
         int bar = 0;
         while (bar < BW_RECONV_MAX_BAR && (busy >> bar & 1u)) bar++;
         if (bar >= BW_RECONV_MAX_BAR) return fail(g, "more than %d reconvergence barriers needed at once", BW_RECONV_MAX_BAR);
-        g->reg[a].bar = bar;
+        g->reg[a].bar = osc_gpu_mutant == 5 ? 0 : bar;
         used_all |= 1u << bar;
     }
     g->k->regions = (uint32_t)g->nreg;
@@ -382,7 +388,7 @@ static void udiv_const(G *g, int q, int n, uint32_t d) {
     if ((d & (d - 1)) == 0) { Shr(g, q, n, ceil_log2(d)); return; }
     unsigned l; uint32_t m = gm_magic(d, &l);
     int tm = g->t[4], t = g->t[5];
-    Movi(g, tm, m, 0);
+    Movi(g, tm, osc_gpu_mutant == 8 ? m + 1 : m, 0);
     Imadhi(g, t, n, tm);               /* t = mulhi(m, n) */
     Imadi(g, tm, t, 0xffffffffu, n);   /* n - t */
     Shr(g, tm, tm, 1);
@@ -442,12 +448,12 @@ static int lower(G *g, const OscInsn *in) {
         if (in->op == OSC_I_GLOAD) {
             int d = R(g, in->dst);
             BlackwellIRInsn l = I0(BW_IR_LDG_E); l.dst_vreg = d; l.src1_vreg = g->a0; l.ureg = g->udesc;
-            E(g, l, K_VAR, -1);                /* @!P0 LDG */
+            E(g, l, K_VAR, osc_gpu_mutant == 7 ? 0 : -1); /* @!P0 LDG */
             Movi(g, d, 0, 1);                  /* @P0 d = 0 */
         } else {
             Ge(g, g->poison, g->one);          /* P0: this thread has trapped */
             BlackwellIRInsn s = I0(BW_IR_STG_E); s.src1_vreg = g->a0; s.src2_vreg = R(g, in->c); s.ureg = g->udesc;
-            E(g, s, K_STORE, -1);
+            E(g, s, K_STORE, osc_gpu_mutant == 1 ? 0 : -1);
         }
         return 0;
     }
@@ -467,7 +473,7 @@ static int lower(G *g, const OscInsn *in) {
         } else {
             Ge(g, g->poison, g->one);
             BlackwellIRInsn s = I0(BW_IR_STS32); s.src1_vreg = T[1]; s.src2_vreg = R(g, in->c);
-            E(g, s, K_STORE, -1);
+            E(g, s, K_STORE, osc_gpu_mutant == 1 ? 0 : -1);
         }
         return 0;
     }
@@ -568,7 +574,7 @@ static int lower(G *g, const OscInsn *in) {
         case OSC_B_OR: Lop(g, d, a, b, 0xfc); return 0;
         case OSC_B_XOR: Lop(g, d, a, b, 0x3c); return 0;
         case OSC_B_ADD:                         /* overflow when the sum is below a */
-            Iadd(g, T[0], a, b); Ge(g, T[0], a); Mov(g, d, T[0], 0); Trap(g, OSC_TRAP_OVERFLOW, -1, d); return 0;
+            Iadd(g, T[0], a, b); Ge(g, T[0], a); Mov(g, d, T[0], 0); if (osc_gpu_mutant != 3) Trap(g, OSC_TRAP_OVERFLOW, -1, d); return 0;
         case OSC_B_SUB:                         /* overflow when a < b */
             Imadi(g, T[0], b, 0xffffffffu, a); Ge(g, a, b); Mov(g, d, T[0], 0); Trap(g, OSC_TRAP_OVERFLOW, -1, d); return 0;
         case OSC_B_MUL:                         /* overflow when the high word is not 0 */
@@ -638,7 +644,7 @@ static int emit_block(G *g, int b) {
     for (int i = 0; i < nj; i++) {
         Region *r = &g->reg[js[i]];
         r->bsync_at = here(&g->e);
-        BlackwellIRInsn s = I0(BW_IR_BSYNC); s.bar_reg = (uint8_t)r->bar; E(g, s, K_BSYNC, 0);
+        BlackwellIRInsn s = I0(osc_gpu_mutant == 2 ? BW_IR_NOP : BW_IR_BSYNC); s.bar_reg = (uint8_t)r->bar; E(g, s, K_BSYNC, 0);
         int par = r->parent >= 0 && g->reg[r->parent].join == b ? r->parent : -1;
         bool next_is_par = i + 1 < nj && js[i + 1] == par;
         if (par >= 0 && !next_is_par) addfix(g, branch(g, 0), FX_BSYNC, par, 0);
@@ -729,7 +735,7 @@ static void prologue(G *g) {
     }
     ldc64(&g->e, g->st, OSC_GPU_ARG_BASE + g->k->status_off);
     Movi(g, g->one, 1, 0); Movi(g, g->zero, 0, 0); Movi(g, g->poison, 0, 0);
-    if (g->k->shared_bytes) {
+    if (g->k->shared_bytes && osc_gpu_mutant != 6) {
         /* every thread zeroes words thread, thread + threads, ...: a loop whose trip count differs per lane, in region B0 */
         int *T = g->t;
         s2r(&g->e, T[0], BW_SR_TID_X);
@@ -774,7 +780,7 @@ static int finish(G *g) {
     /* live intervals over the layout: an OSC register live into or out of a block spans the block's ends */
     OmegaRegAlloc *ra = &p->regalloc;
     int last = (int)p->count - 1;
-    for (int v = 0; v < f->nvregs; v++) {
+    for (int v = 0; v < f->nvregs && osc_gpu_mutant != 4; v++) {
         int bv = g->map[v];
         if (bv < 0) continue;
         OmegaLiveInterval *iv = &ra->intervals[bv];
