@@ -21,7 +21,7 @@ log "model $MODEL bin $BIN sha256 $(sha256sum "$BIN" | cut -c1-16) out $OUT load
 i=0; LIST=""
 while IFS= read -r prompt; do
   i=$((i+1)); f="$OUT/traces/t$(printf %02d $i).json"
-  [ -s "$f" ] || $BIN trace35 "$MODEL" "$f" --prompt "$prompt" --gen "$GEN" > "$f.log" 2>&1 || { log "trace $i FAILED: $(tail -1 $f.log)"; exit 1; }
+  [ -s "$f" ] || $BIN trace35 "$MODEL" "$f" --prompt "$prompt" --gen "$GEN" --positions "$POS" > "$f.log" 2>&1 || { log "trace $i FAILED: $(tail -1 $f.log)"; exit 1; }
   LIST="$LIST${LIST:+,}$f"
 done < "$HERE/prompts-32.txt"
 log "traces done: $i, positions per trace: $(for f in $OUT/traces/t*.json; do jq '.argmax|length' $f; done | sort -n | tr '\n' ' '), host ms/token: $(for f in $OUT/traces/t*.json; do jq '.host_ns_per_token/1e6|round' $f; done | sort -n | sed -n '1p;$p' | tr '\n' ' ')"
