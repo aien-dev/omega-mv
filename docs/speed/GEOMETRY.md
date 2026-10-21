@@ -125,6 +125,7 @@ and then crosses the pipe again, so it can only cost.
 | state pinned in GPU L2 (22 MB) | 20 layers on CPU + 10 in L2, 62.72 | +2.3% |
 | everything at its best together | 64.35 | +4.9% |
 | CPU caches only 49 MB | figure eight with 22 layers, 61.96 | +1.0% |
+| CPU caches only 25 MB (each core's own L2; L321's early E1 run on a busy box shows about 300 ns past 2 MB on one core, not a verdict) | figure eight with 11 layers, 61.65 | +0.5% |
 
 ## How we know the solver is right
 

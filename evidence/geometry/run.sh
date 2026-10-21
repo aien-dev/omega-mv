@@ -33,6 +33,7 @@ l2hold22 l2_hold_mb=22
 road2-100 road2_gbs=100
 road2-300 road2_gbs=300
 cap49 cap_mb=49
+cap25 cap_mb=25
 bw245 bwr_gbs=245.1
 ctx32k ctx=32768
 gbe10 gbe_rtt_us=10
