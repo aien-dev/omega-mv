@@ -31,6 +31,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "omega_gpu_platform.h" /* OmegaGpuShareToken (L383) */
 #include "omega_blackwell_codegen_bf16.h"
 
 #ifdef __cplusplus
@@ -61,6 +62,13 @@ typedef struct OmegaGpuBf16Tensor OmegaGpuBf16Tensor;
 
 int omega_gpu_bf16_tensor_upload(uint32_t n, uint32_t k, const uint16_t *w_bf16, OmegaGpuBf16Tensor **out);
 void omega_gpu_bf16_tensor_free(OmegaGpuBf16Tensor *t);
+/* Sharing across processes (L383): see omega_gpu_fp8_api.h. The import is a normal read-only resident tensor. */
+typedef struct {
+    uint32_t n, k;
+    OmegaGpuShareToken w;
+} OmegaGpuBf16Share;
+int omega_gpu_bf16_tensor_export(const OmegaGpuBf16Tensor *t, OmegaGpuBf16Share *out);
+int omega_gpu_bf16_tensor_import(const OmegaGpuBf16Share *s, OmegaGpuBf16Tensor **out);
 void omega_gpu_bf16_tensor_shape(const OmegaGpuBf16Tensor *t, uint32_t *n, uint32_t *k);
 int omega_gpu_bf16_gemv_f32(const OmegaGpuBf16Tensor *t, const float *x, float *y, OmegaGpuBf16Info *info);
 int omega_gpu_bf16_gemv_bf16(const OmegaGpuBf16Tensor *t, const uint16_t *x, float *y, OmegaGpuBf16Info *info);

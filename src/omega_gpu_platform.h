@@ -41,8 +41,9 @@
 #define OMEGA_GPU_PLATFORM_ABI_MAJOR 1u
 /* minor: additive change (a service bit or a caps field appended); negotiate refuses a provided minor older than the
  * required one. 1.1 (P07 cut C session part): DEVICE, QUEUE, CLOCK_NS, HOST_MEM; COMPLETION is poll_word.
- * 1.2 (omega #457/#459): caps.submit_prefix_words. */
-#define OMEGA_GPU_PLATFORM_ABI_MINOR 2u
+ * 1.2 (omega #457/#459): caps.submit_prefix_words.
+ * 1.3 (L383 shared weights): dma_export / dma_import, optional (NULL when the platform cannot share). */
+#define OMEGA_GPU_PLATFORM_ABI_MINOR 3u
 
 /* ---- typed handles ------------------------------------------------------ */
 
@@ -88,6 +89,19 @@ typedef struct {
     uint32_t align;      /* bytes, a power of two, 0 means the platform minimum */
     uint64_t bytes;      /* explicit length, never 0 */
 } OmegaGpuBufferDesc;
+
+/* One DATA buffer published for import by another process of the same user (ABI 1.3, L383). The owner fills it
+ * with dma_export; an importer hands it to dma_import and gets its own read-only mapping (CPU and GPU) of the
+ * same pages. Opaque beyond the platform that produced it; bytes is the buffer length. The pages live until every
+ * process holding a handle to them has freed it: the owner freeing or exiting first does not unmap an importer
+ * (physics nvrm share_test, 2026-10-21). */
+#define OMEGA_GPU_SHARE_GPU_CACHED 1u /* flags: the owner allocated it GPU-cached */
+typedef struct {
+    uint32_t hclient;  /* owner driver client */
+    uint32_t hmemory;  /* owner memory object */
+    uint32_t flags;    /* OMEGA_GPU_SHARE_* */
+    uint64_t bytes;
+} OmegaGpuShareToken;
 
 /* ---- services and capabilities ------------------------------------------ */
 
@@ -201,6 +215,15 @@ typedef struct {
     /* HOST_MEM: NULL on refusal; host_free(NULL) is a no-op. */
     void *(*host_alloc)(void *ctx, size_t bytes);
     void (*host_free)(void *ctx, void *p);
+    /* ---- ABI 1.3 ---- */
+    /* SHARE (optional: both NULL when the platform cannot share across processes). dma_export publishes a live DATA
+     * buffer of this process; dma_import maps a published buffer into this process as a new DATA buffer handle whose
+     * rights are GPU_READ plus CPU_READ when the owner allocated it GPU-uncached (a GPU-cached buffer keeps the
+     * dma_alloc rule: the CPU never reads it). The mapping is read-only on both sides: a CPU store faults, a GPU
+     * store is a page fault the driver reports. dma_free releases an imported handle like any other. */
+    int (*dma_export)(void *ctx, OmegaGpuBufferHandle buf, OmegaGpuShareToken *out);
+    int (*dma_import)(void *ctx, OmegaGpuDeviceHandle dev, const OmegaGpuShareToken *tok,
+                      OmegaGpuBufferHandle *out, OmegaCpuView *cpu, OmegaGpuVa *gpu);
 } OmegaGpuPlatform;
 
 /* ---- contract checks (pure, freestanding) -------------------------------- */

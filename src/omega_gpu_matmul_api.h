@@ -26,6 +26,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "omega_gpu_platform.h" /* OmegaGpuShareToken (L383) */
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,6 +99,13 @@ typedef struct OmegaGpuTensor OmegaGpuTensor;
 int omega_gpu_tensor_upload_bf16(uint32_t k, uint32_t n, const uint16_t *b, OmegaGpuTensor **out);
 int omega_gpu_tensor_upload_f32(uint32_t k, uint32_t n, const float *b, OmegaGpuTensor **out);
 void omega_gpu_tensor_free(OmegaGpuTensor *t);
+/* Sharing across processes (L383): see omega_gpu_fp8_api.h. kp/np are the padded shape the owner packed. */
+typedef struct {
+    uint32_t k, n, kp, np;
+    OmegaGpuShareToken mem;
+} OmegaGpuTensorShare;
+int omega_gpu_tensor_export(const OmegaGpuTensor *t, OmegaGpuTensorShare *out);
+int omega_gpu_tensor_import(const OmegaGpuTensorShare *s, OmegaGpuTensor **out);
 void omega_gpu_tensor_shape(const OmegaGpuTensor *t, uint32_t *k, uint32_t *n);
 
 /* Replace a resident tensor's values in place (a training step's new weights): b is k x n row-major and

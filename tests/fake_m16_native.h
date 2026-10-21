@@ -55,7 +55,9 @@ enum {
     FK_EV_PB_QMD,       /* a = QMD address, b = 1 if it is the kernel QMD */
     FK_EV_PB_RELEASE,   /* a = address, b = payload, c = flags word */
     FK_EV_PB_FLUSH,     /* a = operation word (last word of the packet) */
-    FK_EV_KERNEL        /* a = threads, b = element count */
+    FK_EV_KERNEL,       /* a = threads, b = element count */
+    FK_EV_EXPORT,       /* a = handle exported (L383) */
+    FK_EV_IMPORT        /* a = owner handle, b = new handle, c = read_only (L383) */
 };
 
 /* Which coherent word a wait looked at. */
@@ -87,6 +89,8 @@ typedef struct {
     int alloc_fail_nth;   /* 1-based nvrm_alloc call that misbehaves, 0 = none */
     int alloc_mode;       /* FK_ALLOC_* for that call */
     int free_fail_nth;    /* 1-based real nvrm_free call that fails, 0 = none */
+    int export_fail;      /* nvrm_export fails (L383) */
+    int import_fail;      /* nvrm_import fails (L383) */
     int marker_mode;      /* FK_SYNC_*: first marker release */
     int marker2_mode;     /* FK_SYNC_*: second marker release */
     int sem_mode;         /* FK_SYNC_*: kernel completion semaphore */
@@ -101,6 +105,9 @@ typedef struct {
     int alloc_calls;
     int uncached_calls;   /* allocations made through nvrm_alloc_gpu_uncached (also counted in alloc_calls) */
     int free_calls;       /* real frees only (a zeroed NvrmMem is not counted) */
+    int export_calls;     /* nvrm_export calls (L383) */
+    int import_calls;     /* nvrm_import calls (L383) */
+    int import_read_only; /* read_only argument of the last nvrm_import */
     int close_calls;
     int submit_calls;
     int wait_calls;

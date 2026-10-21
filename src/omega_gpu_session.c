@@ -276,6 +276,38 @@ void omega_gpu_session_free(OmegaGpuMem *m) {
     memset(m, 0, sizeof *m);
 }
 
+/* ---- sharing across processes (L383) ---- */
+
+int omega_gpu_session_export(const OmegaGpuMem *m, OmegaGpuShareToken *out) {
+    const OmegaGpuPlatform *p = LOAD(g_p);
+    if (out) memset(out, 0, sizeof *out);
+    if (!m || !m->cpu || !out) { omega_gpu_session_set_error("export: no buffer"); return -1; }
+    if (!g_open || LOAD(g_blocked) || !p) { omega_gpu_session_set_error("export without open device"); return -1; }
+    if (!p->dma_export) { omega_gpu_session_set_error("export: this platform does not share buffers across processes"); return -1; }
+    int rc = p->dma_export(p->ctx, m->handle, out);
+    if (rc != OMEGA_GPU_PLAT_OK) { fail_plat("dma_export", rc); memset(out, 0, sizeof *out); return -1; }
+    return 0;
+}
+
+int omega_gpu_session_import(const OmegaGpuShareToken *tok, OmegaGpuMem *out) {
+    const OmegaGpuPlatform *p = LOAD(g_p);
+    memset(out, 0, sizeof *out);
+    if (!tok || tok->bytes == 0u) { omega_gpu_session_set_error("import: empty token"); return -1; }
+    if (!g_open || LOAD(g_blocked) || !p) { omega_gpu_session_set_error("import without open device"); return -1; }
+    if (!p->dma_import) { omega_gpu_session_set_error("import: this platform does not share buffers across processes"); return -1; }
+    OmegaCpuView cpu; OmegaGpuVa va;
+    int rc = p->dma_import(p->ctx, g_s.dev, tok, &out->handle, &cpu, &va);
+    if (rc != OMEGA_GPU_PLAT_OK || !cpu.ptr || cpu.len < tok->bytes) {
+        if (rc == OMEGA_GPU_PLAT_OK) { (void)p->dma_free(p->ctx, out->handle); rc = OMEGA_GPU_PLAT_REFUSED_LIMIT; }
+        BUMP(g_stats.alloc_failures, 1u);
+        fail_plat("dma_import", rc);
+        memset(out, 0, sizeof *out);
+        return -1;
+    }
+    out->kind = OMEGA_GPU_HANDLE_BUF_DATA; out->cpu = cpu.ptr; out->va = va.va; out->size = cpu.len;
+    return 0; /* not counted in allocs / alloc_bytes: the pages are another process's upload */
+}
+
 static int sync_mem(const OmegaGpuMem *m, int to_gpu) {
     const OmegaGpuPlatform *p = LOAD(g_p);
     if (!m || !m->cpu) return 0;
