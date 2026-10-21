@@ -65,26 +65,66 @@ per layer, schedule proofs PASS: complete, acyclic, no collision, exactly the tr
 from L306's golden (the experts the exact host forward actually routed to on the gate prompt).
 
 ### B. The smallest full loop on the 35B host (identity gate)
-`35b-host-*/` (`run-host-35b.sh`): L306's exact 35B forward (`Qwen38Reference`, host oracle ppl 1.18) runs unchanged;
-the only change is where its expert weights come from: a tensor source that serves every routed expert from the ring
-the movement engines fill along the schedule, and refuses (misfire, fail closed) when a routed expert is not in the
-cylinder. Beats are drawn inside that source: the first expert read of each (token, layer) is the fire start. Gate:
-the 32 greedy tokens and the routes equal the golden's. The receipt also counts expert reads at open (must be 0:
-experts are lazy, so nothing but the schedule decides what is read). RESULTS PENDING (queued behind the engine-count run).
+`35b-host-20261021T0025Z/loop/` (`run-host-35b.sh`): L306's exact 35B forward (`Qwen38Reference`, host oracle ppl 1.18)
+runs unchanged; the only change is where its expert weights come from: a tensor source that serves every routed expert
+from the ring the movement engines fill along the schedule, and refuses (misfire, fail closed) when a routed expert is
+not in the cylinder. Beats are drawn inside that source: the first expert read of each (token, layer) is the fire
+start. The plan is the golden's own routes (prefill union plus 32 decode steps: 53 to 136 experts per layer, 3,011
+parts, 2 buffers x 136 slots); schedule proof PASS.
+
+**Identity gate PASS: 32 of 32 tokens equal L306's golden (gen-p1), routing identical at 32 of 32 steps; expert reads
+at open 0 (the experts are lazy: only the schedule decides what is read); 1,280 beats, 0 misfires, 0 late beats**
+(`gate.json`, `summary.json`). Timing: ignition gap median 22.9 us (p90 2.4 ms); fill median 147 ms for 220 MB
+(166 to 428 MB per beat, 1.19 GB/s payload under load 35); fire median 45.4 ms (the exact forward's own host
+arithmetic and trunk reads per layer); beat median 101 ms, spread 2.33; first step 9.8 s (the 5-token prefill), later
+steps 4.2 s median. Fuel-bound on the host, as the 30B loop was: the receipt is the mechanism (one static schedule,
+the exact forward fed from the cylinder, identical tokens), not the speed.
 
 ### C. Engine count and coupling on the 35B (movement engines alone)
-`35b-engines-*/run.log` (`run-engines-35b.sh`, `table-engines.sh`): the same twelve cells as the 30B history table
-(engines 1 vs 2, coupling brigade | clock | reservoir, buffers 2 | 3) on the 35B's 8-expert layer beat (25.2 MB).
-RESULTS PENDING (running; the three buffers-3 / engines-2 cells of this run still use the binary before the staging
-fix and are expected to fail closed again; they are re-run after it).
+`35b-engines-20261020T2349Z/` (`run-engines-35b.sh`, `table-engines.sh`, folder README for the binary note): the same
+twelve cells as the 30B history table on the 35B's 8-expert layer beat (25.2 MB), 1,600 beats each, host load 36 to 46
+at every start. **12 of 12 cells PASS closed (0 late beats, 0 misfires)**; the three buffers-3 / engines-2 cells that
+failed on the 30B before the staging-ring fix pass here with it.
+
+| buffers | engines | coupling | beats | late | beat (median) | spread | ignition gap | idle | fill | GB/s in fill | NVMe stage | RAM stage | hand-off wait | load at start |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2 | 1 | brigade | 1600 | 0 | 13.99 ms | 1.19 | 279 us (p90 667 us) | 11.79 ms | 13.68 ms | 1.29 | 13.68 ms | 0 ms | 0 us | 43.31 |
+| 2 | 1 | clock | 1600 | 0 | 10 ms | 0.32 | 2869 us (p90 4429 us) | 8 ms | 6.68 ms | 3.3 | 6.68 ms | 0 ms | 0 us | 42.21 |
+| 2 | 1 | reservoir | 1600 | 0 | 6.96 ms | 0.86 | 21 us (p90 200 us) | 4.81 ms | 6.86 ms | 3 | 6.86 ms | 0 ms | 0 us | 39.78 |
+| 2 | 2 | brigade | 1600 | 0 | 15.8 ms | 2.29 | 17 us (p90 1744 us) | 13.65 ms | 25.5 ms | 0.62 | 12.54 ms | 11.04 ms | 180 us | 39.61 |
+| 2 | 2 | clock | 1600 | 0 | 20.14 ms | 2.25 | 31 us (p90 1933 us) | 18.01 ms | 42.19 ms | 0.5 | 17.44 ms | 17.64 ms | 267 us | 41.19 |
+| 2 | 2 | reservoir | 1600 | 0 | 14.17 ms | 1.56 | 23 us (p90 248 us) | 12.03 ms | 24.18 ms | 0.75 | 12.29 ms | 11.78 ms | 16 us | 40.04 |
+| 3 | 1 | brigade | 1600 | 0 | 12.4 ms | 1 | 33 us (p90 469 us) | 10.16 ms | 12.28 ms | 1.65 | 12.28 ms | 0 ms | 0 us | 42.50 |
+| 3 | 1 | clock | 1600 | 0 | 10.65 ms | 0.84 | 24 us (p90 407 us) | 8.58 ms | 10.55 ms | 2 | 10.55 ms | 0 ms | 0 us | 44.42 |
+| 3 | 1 | reservoir | 1600 | 0 | 13.55 ms | 1.43 | 134 us (p90 586 us) | 11.37 ms | 13.27 ms | 1.1 | 13.27 ms | 0 ms | 0 us | 45.77 |
+| 3 | 2 | brigade | 1600 | 0 | 25.25 ms | 2.59 | 231 us (p90 7819 us) | 22.79 ms | 62.09 ms | 0.31 | 22.96 ms | 22.82 ms | 5167 us | 45.82 |
+| 3 | 2 | clock | 1600 | 0 | 30.01 ms | 2.43 | 160 us (p90 9574 us) | 26.81 ms | 75.23 ms | 0.25 | 26.51 ms | 26.91 ms | 7147 us | 42.82 |
+| 3 | 2 | reservoir | 1600 | 0 | 11.84 ms | 0.81 | 26 us (p90 2975 us) | 9.63 ms | 27.08 ms | 0.9 | 11.4 ms | 11.33 ms | 3185 us | 36.32 |
+
+Reading (host side; the box was shared with other agents' runs, so single cells move by a few ms between repeats):
+- One engine, reservoir coupling, is the fastest host cell on the 35B: beat 7.0 ms for 25.2 MB (3.0 GB/s payload),
+  ignition gap 21 us median, p90 200 us. Clock is as fast in fill (6.7 ms) but its 10 ms period holds the piston, so
+  the gap is the period minus the fill (2.9 ms): the clock coupling needs its period set from the measured fill.
+- Two engines cost the second stage again (RAM stage 11 to 27 ms, as long as the NVMe stage) and, with three buffers,
+  a hand-off wait of 3 to 7 ms: the fixed staging ring is deeper and the RAM engine falls behind the NVMe engine. The
+  second stage is only worth its copy when it is the chip's (section F); on the host it is a second verify and copy.
+- Three buffers gain nothing over two with one engine (12.4 / 10.7 / 13.6 ms vs 14.0 / 10.0 / 7.0 ms).
+- Against the 30B history table: the 35B beat is smaller (25.2 vs 33.3 MB) and the best cell is 1.99x faster per beat (calc:6c80453d)
+  (7.0 vs 13.9 ms) at the same payload rate; the engine-count and coupling conclusions are the same on both models.
 
 ### D. Head swap mid-run on the 35B (H4)
 `35b-swap-*/` (`run-swap-35b.sh`, `table-swap.sh`): head A = L308's measured prose head resident in host RAM, head B =
 the measured code head from token 12 of 24, loader lead -1 / 0 / 1 / 2 / 4 tokens. RESULTS PENDING.
 
 ### E. One base, many heads, one stroke on the 35B (H6)
-Needs the 35B forward factored per layer (as the 30B piston was) so N heads share one expert read per beat; the 30B
-stroke receipts below are the method. NOT RUN YET on the 35B.
+`35b-stroke-*/` (`run-stroke-35b.sh`): 32 prompts traced through the exact 35B forward one token at a time
+(`trace35 --prompt`), one union plan and schedule over the first 12 positions, strokes at N = 1, 2, 4, 8, 16, 32 heads.
+The forward is factored into its own pieces (embed, read layer, mix, MoE, finish: `forward` is composed of exactly
+these, 14 tests), and the stroke steps all N sequences one layer at a time, so every head reads its experts of layer
+l inside the same beat, the trunk of layer l is read once for all N, and the ring copies each expert out of the
+cylinder once per beat (repeats come from that copy). Gate: every head's token equals its own trace at every position.
+Smoke run (two traces, two positions, N = 1 and 2, not a receipt): gate PASS per head, expert reads at open 0,
+0 misfires. The 32-prompt run is queued behind the swap; RESULTS PENDING.
 
 ### F. The chip piston (power engine on the GB10)
 See section 8 below (slot size = the 35B layer, 26.7 MB; GB10 run queued in the measurement-window line).
