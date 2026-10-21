@@ -27,6 +27,15 @@ static LiveAlloc g_live[FK_LIVE_MAX];
 static uint32_t g_next_handle;
 static void *g_chan_pb; /* the channel's own 4 KiB pushbuffer, not counted in fk.live */
 
+/* 1 if another live entry holds the same pages (an L383 import or its owner) */
+static int ptr_shared(size_t self)
+{
+    size_t j;
+    for (j = 0; j < FK_LIVE_MAX; j++)
+        if (j != self && g_live[j].handle != 0 && g_live[j].ptr == g_live[self].ptr) return 1;
+    return 0;
+}
+
 /* ---- test-side helpers ---------------------------------------------------- */
 
 void fake_release_all(void)
@@ -34,7 +43,7 @@ void fake_release_all(void)
     size_t i;
     for (i = 0; i < FK_LIVE_MAX; i++) {
         if (g_live[i].handle != 0) {
-            free(g_live[i].ptr);
+            if (!ptr_shared(i)) free(g_live[i].ptr);
             g_live[i].handle = 0;
             g_live[i].ptr = NULL;
         }
@@ -121,7 +130,7 @@ static int live_release(uint32_t handle)
     size_t i;
     for (i = 0; i < FK_LIVE_MAX; i++) {
         if (g_live[i].handle == handle) {
-            free(g_live[i].ptr);
+            if (!ptr_shared(i)) free(g_live[i].ptr); /* L383: an import shares the pages */
             g_live[i].handle = 0;
             g_live[i].ptr = NULL;
             fk.live--;
@@ -390,6 +399,48 @@ int nvrm_free(Nvrm *rm, NvrmMem *m)
     }
     memset(m, 0, sizeof *m);
     errno = EBADF; /* a real free runs munmap and ioctl calls, which may change errno */
+    return 0;
+}
+
+/* ---- L383 shared memory: export a live allocation, import it as a second handle on the same pages ---- */
+#define FK_CLIENT 0xC1D00001u /* the one driver client this fake models */
+
+static LiveAlloc *live_find(uint32_t handle)
+{
+    size_t i;
+    for (i = 0; i < FK_LIVE_MAX; i++)
+        if (handle != 0 && g_live[i].handle == handle) return &g_live[i];
+    return NULL;
+}
+
+int nvrm_export(Nvrm *rm, const NvrmMem *m, NvrmShare *out)
+{
+    fk.export_calls++;
+    logev(FK_EV_EXPORT, m ? m->handle : 0, 0, 0);
+    if (!m || !out) return -1;
+    if (fk.export_fail) return inject(rm, -1);
+    if (!live_find(m->handle)) { errno = EINVAL; return -1; }
+    out->hclient = FK_CLIENT;
+    out->hmemory = m->handle;
+    out->size = m->size;
+    return 0;
+}
+
+/* Like the driver's DUP_OBJECT: the import holds its own reference, so the pages outlive the owner's free. */
+int nvrm_import(Nvrm *rm, const NvrmShare *s, int read_only, NvrmMem *out)
+{
+    fk.import_calls++;
+    fk.import_read_only = read_only;
+    if (!s || !out) return -1;
+    if (fk.import_fail) return inject(rm, -1);
+    LiveAlloc *a = live_find(s->hmemory);
+    if (s->hclient != FK_CLIENT || !a || s->size == 0 || s->size > a->size) return inject(rm, -1);
+    out->handle = ++g_next_handle;
+    out->size = s->size;
+    out->cpu = a->ptr;
+    out->va = (uint64_t)(uintptr_t)a->ptr;
+    logev(FK_EV_IMPORT, s->hmemory, out->handle, (uint64_t)read_only);
+    live_add(out->handle, a->ptr, s->size);
     return 0;
 }
 

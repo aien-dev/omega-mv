@@ -352,6 +352,40 @@ int omega_gpu_fp8_tensor_upload(uint32_t experts, uint32_t n, uint32_t k, const 
     return OMEGA_GPU_FP8_OK;
 }
 
+/* ---- sharing across processes (L383) ---- */
+
+int omega_gpu_fp8_tensor_export(const OmegaGpuFp8Tensor *t, OmegaGpuFp8Share *out) {
+    if (out) memset(out, 0, sizeof *out);
+    if (!t || !out || !t->w.cpu || !t->s.cpu) return OMEGA_GPU_FP8_BAD_ARGS;
+    int rc = OMEGA_GPU_FP8_OK;
+    omega_gpu_session_lock();
+    if (!dev_open_locked() || omega_gpu_session_export(&t->w, &out->w) != 0 || omega_gpu_session_export(&t->s, &out->s) != 0)
+        rc = OMEGA_GPU_FP8_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    if (rc != OMEGA_GPU_FP8_OK) { memset(out, 0, sizeof *out); return rc; }
+    out->experts = t->experts; out->n = t->n; out->k = t->k;
+    return OMEGA_GPU_FP8_OK;
+}
+
+int omega_gpu_fp8_tensor_import(const OmegaGpuFp8Share *s, OmegaGpuFp8Tensor **out) {
+    if (out) *out = NULL;
+    if (!s || !out || s->experts == 0 || s->n == 0 || s->k == 0 || s->n % OMEGA_FP8_BLOCK || s->k % OMEGA_FP8_BLOCK) return OMEGA_GPU_FP8_BAD_ARGS;
+    if (s->k > OMEGA_FP8_MAX_K) return OMEGA_GPU_FP8_TOO_LARGE;
+    const size_t wbytes = (size_t)s->experts * s->n * s->k, scount = (size_t)s->experts * (s->n / OMEGA_FP8_BLOCK) * (s->k / OMEGA_FP8_BLOCK);
+    if (s->w.bytes < wbytes || s->s.bytes < scount * 4u) { omega_gpu_session_set_error("fp8 import: token shorter than the shape"); return OMEGA_GPU_FP8_BAD_ARGS; }
+    OmegaGpuFp8Tensor *t = omega_gpu_host_calloc(1, sizeof *t);
+    if (!t) return OMEGA_GPU_FP8_BAD_ARGS;
+    t->experts = s->experts; t->n = s->n; t->k = s->k;
+    int rc = OMEGA_GPU_FP8_OK;
+    omega_gpu_session_lock();
+    if (!dev_open_locked() || omega_gpu_session_import(&s->w, &t->w) != 0 || omega_gpu_session_import(&s->s, &t->s) != 0) rc = OMEGA_GPU_FP8_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    /* the owner scanned the codes and packed the scales before its upload; this mapping is read-only and is never synced */
+    if (rc != OMEGA_GPU_FP8_OK) { omega_gpu_fp8_tensor_free(t); return rc; }
+    *out = t;
+    return OMEGA_GPU_FP8_OK;
+}
+
 void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t) {
     if (!t) return;
     omega_gpu_session_lock();

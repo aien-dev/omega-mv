@@ -235,6 +235,69 @@ static int ref_dma_free(void *ctx, OmegaGpuBufferHandle b) {
     return OMEGA_GPU_PLAT_OK;
 }
 
+/* ---- ABI 1.3: cross-process sharing (L383) -----------------------------------------------------------------------
+ * The driver mechanism (physics nvrm_export / nvrm_import, share_test 10/10 on the chip 2026-10-21): the owner attaches a
+ * same-user share policy to its memory object (NV_ESC_RM_SHARE, RS_ACCESS_DUP_OBJECT); the importer duplicates the object
+ * into its own client (NV_ESC_RM_DUP_OBJECT) and maps the duplicate read-only for the CPU (PROT_READ) and the GPU
+ * (NVOS46_FLAGS_ACCESS_READ_ONLY, UvmGpuMappingTypeReadOnly) at a VA of its own. The duplicate holds its own reference. */
+static int ref_dma_export(void *ctx, OmegaGpuBufferHandle b, OmegaGpuShareToken *out) {
+    LinuxRef *r = ctx;
+    if (!out) return OMEGA_GPU_PLAT_REFUSED_ARGS;
+    memset(out, 0, sizeof *out);
+    ref_lock(r);
+    uint32_t kind = 0;
+    int rc = buf_ok(r, b, &kind);
+    if (rc == OMEGA_GPU_PLAT_OK && kind != OMEGA_GPU_HANDLE_BUF_DATA) rc = OMEGA_GPU_PLAT_REFUSED_BAD_HANDLE; /* data only */
+    if (rc != OMEGA_GPU_PLAT_OK) { rc = refuse(r, rc, "dma_export"); ref_unlock(r); return rc; }
+    NvrmShare s;
+    if (nvrm_export(&r->m16.rm, &r->mem[b.index], &s) != 0) {
+        rc = refuse(r, OMEGA_GPU_PLAT_REFUSED_DEVICE, "nvrm_export");
+        ref_unlock(r);
+        return rc;
+    }
+    out->hclient = s.hclient; out->hmemory = s.hmemory; out->bytes = s.size;
+    out->flags = r->gpu_cached[b.index] ? OMEGA_GPU_SHARE_GPU_CACHED : 0u;
+    ref_unlock(r);
+    return OMEGA_GPU_PLAT_OK;
+}
+
+static int ref_dma_import(void *ctx, OmegaGpuDeviceHandle dev, const OmegaGpuShareToken *tok, OmegaGpuBufferHandle *out,
+                          OmegaCpuView *cpu, OmegaGpuVa *gpu) {
+    LinuxRef *r = ctx;
+    if (!tok || !out || !cpu || !gpu) return OMEGA_GPU_PLAT_REFUSED_ARGS;
+    memset(out, 0, sizeof *out); memset(cpu, 0, sizeof *cpu); memset(gpu, 0, sizeof *gpu);
+    const int cached = (tok->flags & OMEGA_GPU_SHARE_GPU_CACHED) != 0u;
+    /* a GPU-cached owner buffer keeps dma_alloc's rule: no CPU_READ right (the CPU could read a line the GPU still holds) */
+    const uint32_t rights = OMEGA_GPU_RIGHT_GPU_READ | (cached ? 0u : OMEGA_GPU_RIGHT_CPU_READ);
+    const OmegaGpuBufferDesc d = {.kind = OMEGA_GPU_HANDLE_BUF_DATA, .rights = rights,
+                                  .gpu_cache = cached ? OMEGA_GPU_CACHE_GPU_CACHED : OMEGA_GPU_CACHE_GPU_UNCACHED,
+                                  .align = 4096u, .bytes = tok->bytes};
+    ref_lock(r);
+    int rc = dev_ok(r, dev);
+    if (rc == OMEGA_GPU_PLAT_OK) rc = omega_gpu_platform_check_buffer(&d, &g_caps);
+    if (rc == OMEGA_GPU_PLAT_OK && (tok->flags & ~OMEGA_GPU_SHARE_GPU_CACHED)) rc = OMEGA_GPU_PLAT_REFUSED_ARGS;
+    if (rc != OMEGA_GPU_PLAT_OK) { rc = refuse(r, rc, "dma_import"); ref_unlock(r); return rc; }
+    uint32_t idx = 0, gen = 0;
+    rc = omega_gpu_handles_open(&r->t, OMEGA_GPU_HANDLE_BUF_DATA, tok->bytes, LINUX_REF_BUFFERS, g_caps.max_total_bytes, &idx, &gen);
+    if (rc != OMEGA_GPU_PLAT_OK) { rc = refuse(r, rc, "dma_import"); ref_unlock(r); return rc; }
+    const NvrmShare s = {.hclient = tok->hclient, .hmemory = tok->hmemory, .size = tok->bytes};
+    NvrmMem m;
+    if (nvrm_import(&r->m16.rm, &s, 1, &m) != 0) {
+        (void)omega_gpu_handles_close(&r->t, idx, gen, OMEGA_GPU_HANDLE_BUF_DATA); /* this slot never got memory */
+        rc = refuse(r, OMEGA_GPU_PLAT_REFUSED_DEVICE, "nvrm_import");
+        ref_unlock(r);
+        return rc;
+    }
+    r->mem[idx] = m;
+    r->rights[idx] = rights;
+    r->gpu_cached[idx] = (uint8_t)cached;
+    out->index = idx; out->generation = gen;
+    cpu->ptr = m.cpu; cpu->len = (size_t)m.size;
+    gpu->va = m.va;
+    ref_unlock(r);
+    return OMEGA_GPU_PLAT_OK;
+}
+
 static void barrier(void) {
 #if defined(__aarch64__)
     __asm__ volatile("dsb sy" ::: "memory");
@@ -375,6 +438,8 @@ static const OmegaGpuPlatform g_platform = {
     .time_now_ns = ref_now_ns,
     .host_alloc = ref_host_alloc,
     .host_free = ref_host_free,
+    .dma_export = ref_dma_export,
+    .dma_import = ref_dma_import,
 };
 
 const OmegaGpuPlatform *omega_gpu_platform_linux(OmegaGpuPlatformCaps *caps) {

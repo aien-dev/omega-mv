@@ -172,6 +172,15 @@ int omega_gpu_session_alloc_code(size_t code_size, OmegaGpuMem *out);
  * (OmegaGpuAllocStats.stale_refusals) and *m is zeroed. */
 void omega_gpu_session_free(OmegaGpuMem *m);
 
+/* Sharing across processes (L383, platform ABI 1.3). export publishes a live DATA buffer of this process as a token
+ * another process of the same user can import; import maps a published buffer into this process read-only (CPU and
+ * GPU) at a VA of its own, as an OmegaGpuMem the caller frees with omega_gpu_session_free like any other (the pages
+ * stay until every holder has freed them). Caller holds the lock, device open. Neither counts in OmegaGpuAllocStats
+ * allocs/alloc_bytes: the pages belong to the owner's upload. -1 with the stage named when the platform cannot share,
+ * the token is stale (its owner freed the buffer and nobody else held it) or the driver refuses. */
+int omega_gpu_session_export(const OmegaGpuMem *m, OmegaGpuShareToken *out);
+int omega_gpu_session_import(const OmegaGpuShareToken *tok, OmegaGpuMem *out);
+
 /* Explicit visibility of a whole buffer (platform SYNC): CPU writes before the device reads them, device writes
  * before the CPU reads them (Linux reference: dsb sy, the barrier the APIs issued themselves before cut C).
  * 0 also for a buffer with no CPU view (nothing to sync); -1 with the stage named when refused or no device. */

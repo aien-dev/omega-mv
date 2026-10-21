@@ -50,6 +50,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "omega_gpu_platform.h" /* OmegaGpuShareToken (L383) */
 #include "omega_blackwell_codegen_moe.h" /* OmegaFp8GemvSpec (depth query) */
 
 #ifdef __cplusplus
@@ -95,6 +96,16 @@ int omega_gpu_fp8_tensor_upload(uint32_t experts, uint32_t n, uint32_t k, const 
 int omega_gpu_fp8_quantize_bf16(uint32_t n, uint32_t k, const uint16_t *w_bf16, uint8_t *w8, uint16_t *scale_inv_bf16);
 uint8_t omega_gpu_fp8_e4m3_rne(float v); /* one value, the rounding the quantiser uses */
 void omega_gpu_fp8_tensor_free(OmegaGpuFp8Tensor *t);
+/* Sharing across processes (L383): export publishes a resident tensor as a share (its shape plus one token per buffer,
+ * omega_gpu_session_export); import maps a published tensor into this process read-only at a VA of its own, with no copy
+ * and no checkpoint read. The import is a normal OmegaGpuFp8Tensor (entry, gemv, graph wiring, free). BAD_ARGS when a
+ * token is shorter than the shape, CHIP_FAIL when the platform cannot share or the owner is gone and nobody held it. */
+typedef struct {
+    uint32_t experts, n, k;
+    OmegaGpuShareToken w, s;
+} OmegaGpuFp8Share;
+int omega_gpu_fp8_tensor_export(const OmegaGpuFp8Tensor *t, OmegaGpuFp8Share *out);
+int omega_gpu_fp8_tensor_import(const OmegaGpuFp8Share *s, OmegaGpuFp8Tensor **out);
 void omega_gpu_fp8_tensor_shape(const OmegaGpuFp8Tensor *t, uint32_t *experts, uint32_t *n, uint32_t *k);
 
 int omega_gpu_fp8_gemv_f32(const OmegaGpuFp8Tensor *t, uint32_t expert, const float *x, float *y, OmegaGpuFp8Info *info);

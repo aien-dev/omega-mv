@@ -434,6 +434,38 @@ int omega_gpu_tensor_update_f32(OmegaGpuTensor *t, uint32_t k, uint32_t n, const
     return b ? tensor_update(t, k, n, NULL, b) : OMEGA_GPU_MATMUL_BAD_ARGS;
 }
 
+/* ---- sharing across processes (L383) ---- */
+
+int omega_gpu_tensor_export(const OmegaGpuTensor *t, OmegaGpuTensorShare *out) {
+    if (out) memset(out, 0, sizeof *out);
+    if (!t || !out || !t->mem.cpu) return OMEGA_GPU_MATMUL_BAD_ARGS;
+    int rc = OMEGA_GPU_MATMUL_OK;
+    omega_gpu_session_lock();
+    if (!dev_open_locked() || omega_gpu_session_export(&t->mem, &out->mem) != 0) rc = OMEGA_GPU_MATMUL_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    if (rc != OMEGA_GPU_MATMUL_OK) { memset(out, 0, sizeof *out); return rc; }
+    out->k = t->k; out->n = t->n; out->kp = t->kp; out->np = t->np;
+    return OMEGA_GPU_MATMUL_OK;
+}
+
+int omega_gpu_tensor_import(const OmegaGpuTensorShare *s, OmegaGpuTensor **out) {
+    if (out) *out = NULL;
+    if (!s || !out || s->k == 0 || s->n == 0) return OMEGA_GPU_MATMUL_BAD_ARGS;
+    if (s->k > OMEGA_BW_MATMUL_MAX_K || s->n > OMEGA_BW_MATMUL_MAX_N) return OMEGA_GPU_MATMUL_TOO_LARGE;
+    if (s->kp != round_up(s->k, OMEGA_GPU_MATMUL_TILE_K) || s->np != round_up(s->n, OMEGA_GPU_MATMUL_TILE_N)) return OMEGA_GPU_MATMUL_BAD_ARGS;
+    if (s->mem.bytes < (size_t)s->kp * s->np * 2u) { omega_gpu_session_set_error("matmul import: token shorter than the shape"); return OMEGA_GPU_MATMUL_BAD_ARGS; }
+    OmegaGpuTensor *t = omega_gpu_host_calloc(1, sizeof *t);
+    if (!t) return OMEGA_GPU_MATMUL_BAD_ARGS;
+    t->k = s->k; t->n = s->n; t->kp = s->kp; t->np = s->np;
+    int rc = OMEGA_GPU_MATMUL_OK;
+    omega_gpu_session_lock();
+    if (!dev_open_locked() || omega_gpu_session_import(&s->mem, &t->mem) != 0) rc = OMEGA_GPU_MATMUL_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    if (rc != OMEGA_GPU_MATMUL_OK) { omega_gpu_tensor_free(t); return rc; }
+    *out = t;
+    return OMEGA_GPU_MATMUL_OK;
+}
+
 void omega_gpu_tensor_free(OmegaGpuTensor *t) {
     if (!t) return;
     omega_gpu_session_lock();

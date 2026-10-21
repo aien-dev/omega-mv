@@ -197,6 +197,38 @@ int omega_gpu_bf16_tensor_upload(uint32_t n, uint32_t k, const uint16_t *w, Omeg
     return OMEGA_GPU_BF16_OK;
 }
 
+/* ---- sharing across processes (L383) ---- */
+
+int omega_gpu_bf16_tensor_export(const OmegaGpuBf16Tensor *t, OmegaGpuBf16Share *out) {
+    if (out) memset(out, 0, sizeof *out);
+    if (!t || !out || !t->w.cpu) return OMEGA_GPU_BF16_BAD_ARGS;
+    int rc = OMEGA_GPU_BF16_OK;
+    omega_gpu_session_lock();
+    if (!dev_open_locked() || omega_gpu_session_export(&t->w, &out->w) != 0) rc = OMEGA_GPU_BF16_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    if (rc != OMEGA_GPU_BF16_OK) { memset(out, 0, sizeof *out); return rc; }
+    out->n = t->n; out->k = t->k;
+    return OMEGA_GPU_BF16_OK;
+}
+
+int omega_gpu_bf16_tensor_import(const OmegaGpuBf16Share *s, OmegaGpuBf16Tensor **out) {
+    if (out) *out = NULL;
+    if (!s || !out || s->n == 0 || s->k == 0 || s->k % 256u) return OMEGA_GPU_BF16_BAD_ARGS;
+    if (s->k > OMEGA_BF16_MAX_K) return OMEGA_GPU_BF16_TOO_LARGE;
+    const size_t count = (size_t)s->n * s->k;
+    if (s->w.bytes < count * 2u) { omega_gpu_session_set_error("bf16 import: token shorter than the shape"); return OMEGA_GPU_BF16_BAD_ARGS; }
+    OmegaGpuBf16Tensor *t = omega_gpu_host_calloc(1, sizeof *t);
+    if (!t) return OMEGA_GPU_BF16_BAD_ARGS;
+    t->n = s->n; t->k = s->k;
+    int rc = OMEGA_GPU_BF16_OK;
+    omega_gpu_session_lock();
+    if (!dev_open_locked() || omega_gpu_session_import(&s->w, &t->w) != 0) rc = OMEGA_GPU_BF16_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    if (rc != OMEGA_GPU_BF16_OK) { omega_gpu_bf16_tensor_free(t); return rc; }
+    *out = t;
+    return OMEGA_GPU_BF16_OK;
+}
+
 void omega_gpu_bf16_tensor_free(OmegaGpuBf16Tensor *t) {
     if (!t) return;
     omega_gpu_session_lock();

@@ -7,7 +7,8 @@
  * nvrm_alloc_gpu_uncached, one submit with the C3 tail, both marker waits, close); the reference refuses a GPU-cached
  * buffer, a poll of a buffer that is not HOST_POLLED, freeing the live queue ring, an oversize submit and every handle
  * of a closed device; the driver's own failure text survives an open failure; a marker that never lands latches the
- * session, which then frees nothing and closes nothing. Each case runs in its own child process.
+ * session, which then frees nothing and closes nothing. L383: a DATA buffer exports and imports read-only as a
+ * second handle on the same pages, with its refusals. Each case runs in its own child process.
  */
 #include "fake_m16_native.h"
 #include "nvrm.h"
@@ -51,7 +52,7 @@ static void c_caps(void) {
     EXPECT(!(caps.services & OMEGA_GPU_SVC_IRQ) && !(caps.services & OMEGA_GPU_SVC_MMIO));
     EXPECT(p->irq_wait == NULL && p->mmio_read32 == NULL && p->mmio_write32 == NULL);
     EXPECT(omega_gpu_platform_check_for(p, &caps, OMEGA_GPU_SVC_REQUIRED_SESSION) == OMEGA_GPU_PLAT_OK);
-    EXPECT(caps.abi_major == 1 && caps.abi_minor == 2);
+    EXPECT(caps.abi_major == 1 && caps.abi_minor == 3);
 }
 
 static void c_default_install(void) {
@@ -241,6 +242,66 @@ static void c_cmdlist_near_cap_with_l2_inval_pending(void) {
 }
 
 typedef struct { const char *id; void (*fn)(void); } Case;
+/* L383 shared weights: export a DATA buffer, import it as a read-only second handle on the same pages; the reference
+ * refuses a queue ring, a stale handle, unknown token flags and a driver refusal (slot released, nothing leaked); the
+ * owner may free first and the import still reads the bytes (the driver's dup holds its own reference). */
+static void c_share_export_import(void) {
+    fake_reset();
+    OmegaGpuPlatformCaps caps;
+    const OmegaGpuPlatform *p = omega_gpu_platform_linux(&caps);
+    EXPECT(p->dma_export != NULL && p->dma_import != NULL);
+    OmegaGpuDeviceHandle d;
+    EXPECT(p->device_open(p->ctx, 0, &d) == OMEGA_GPU_PLAT_OK);
+    OmegaGpuBufferDesc data = {.kind = OMEGA_GPU_HANDLE_BUF_DATA, .rights = OMEGA_GPU_RIGHT_CPU_READ | OMEGA_GPU_RIGHT_GPU_WRITE,
+                               .gpu_cache = OMEGA_GPU_CACHE_GPU_UNCACHED, .bytes = 8192};
+    OmegaGpuBufferHandle h; OmegaCpuView cpu; OmegaGpuVa va; OmegaGpuBusAddr bus;
+    EXPECT(p->dma_alloc(p->ctx, d, &data, &h, &cpu, &va, &bus) == OMEGA_GPU_PLAT_OK);
+    for (size_t i = 0; i < 8192; i++) ((unsigned char *)cpu.ptr)[i] = (unsigned char)(i * 7u + 3u);
+    OmegaGpuShareToken tok;
+    EXPECT(p->dma_export(p->ctx, h, &tok) == OMEGA_GPU_PLAT_OK);
+    EXPECT(tok.hclient != 0 && tok.hmemory != 0 && tok.bytes >= 8192 && tok.flags == 0 && fk.export_calls == 1);
+    /* a queue ring is not shared */
+    OmegaGpuBufferDesc ring = {.kind = OMEGA_GPU_HANDLE_BUF_QUEUE, .rights = OMEGA_GPU_RIGHT_CPU_WRITE | OMEGA_GPU_RIGHT_GPU_READ,
+                               .gpu_cache = OMEGA_GPU_CACHE_GPU_UNCACHED, .bytes = 4096};
+    OmegaGpuBufferHandle rh; OmegaGpuShareToken rt;
+    EXPECT(p->dma_alloc(p->ctx, d, &ring, &rh, &cpu, &va, &bus) == OMEGA_GPU_PLAT_OK);
+    EXPECT(p->dma_export(p->ctx, rh, &rt) == OMEGA_GPU_PLAT_REFUSED_BAD_HANDLE && fk.export_calls == 1);
+    /* import: read-only, same bytes, its own handle */
+    OmegaGpuBufferHandle ih; OmegaCpuView icpu; OmegaGpuVa iva;
+    const int live0 = fk.live;
+    EXPECT(p->dma_import(p->ctx, d, &tok, &ih, &icpu, &iva) == OMEGA_GPU_PLAT_OK);
+    EXPECT(fk.import_calls == 1 && fk.import_read_only == 1 && fk.live == live0 + 1);
+    EXPECT(icpu.ptr != NULL && icpu.len >= 8192 && iva.va != 0);
+    EXPECT(ih.index != h.index);
+    int same = 1;
+    for (size_t i = 0; i < 8192 && icpu.ptr; i++) same &= ((const unsigned char *)icpu.ptr)[i] == (unsigned char)(i * 7u + 3u);
+    EXPECT(same);
+    /* refusals: unknown flag bits (before the driver), a driver refusal (slot released, nothing live added) */
+    OmegaGpuShareToken bad = tok; bad.flags = 0x80u;
+    OmegaGpuBufferHandle xh; OmegaCpuView xcpu; OmegaGpuVa xva;
+    EXPECT(p->dma_import(p->ctx, d, &bad, &xh, &xcpu, &xva) == OMEGA_GPU_PLAT_REFUSED_ARGS && fk.import_calls == 1);
+    bad = tok; bad.hclient ^= 0x55u; /* another client's object: the driver refuses */
+    EXPECT(p->dma_import(p->ctx, d, &bad, &xh, &xcpu, &xva) == OMEGA_GPU_PLAT_REFUSED_DEVICE);
+    EXPECT(strstr(p->diag_text(p->ctx), "nvrm_import") != NULL && fk.live == live0 + 1);
+    for (unsigned i = 0; i < OMEGA_GPU_HANDLE_SLOTS + 4u; i++) { /* a refused import must give its slot back, else the table runs out */
+        fk.import_fail = 1;
+        if (p->dma_import(p->ctx, d, &tok, &xh, &xcpu, &xva) != OMEGA_GPU_PLAT_REFUSED_DEVICE) { EXPECT(0); break; }
+    }
+    fk.import_fail = 0;
+    EXPECT(p->dma_import(p->ctx, d, &tok, &xh, &xcpu, &xva) == OMEGA_GPU_PLAT_OK);
+    EXPECT(p->dma_free(p->ctx, xh) == OMEGA_GPU_PLAT_OK);
+    /* the owner frees first: the import keeps the pages */
+    EXPECT(p->dma_free(p->ctx, h) == OMEGA_GPU_PLAT_OK);
+    same = 1;
+    for (size_t i = 0; i < 8192 && icpu.ptr; i++) same &= ((const unsigned char *)icpu.ptr)[i] == (unsigned char)(i * 7u + 3u);
+    EXPECT(same);
+    EXPECT(p->dma_export(p->ctx, h, &rt) == OMEGA_GPU_PLAT_REFUSED_STALE_HANDLE); /* a freed handle is stale */
+    EXPECT(p->dma_free(p->ctx, ih) == OMEGA_GPU_PLAT_OK);
+    EXPECT(p->dma_free(p->ctx, rh) == OMEGA_GPU_PLAT_OK);
+    EXPECT(fk.live == 0 && fk.double_free == 0);
+    EXPECT(p->device_close(p->ctx, d) == OMEGA_GPU_PLAT_OK);
+}
+
 static const Case CASES[] = {
     {"LINUX_REF_CAPS_NO_MMIO_NO_IRQ", c_caps},
     {"HOSTED_DEFAULT_IS_LINUX_REFERENCE", c_default_install},
@@ -250,6 +311,7 @@ static const Case CASES[] = {
     {"MARKER_NEVER_LATCHES_AND_PARKS", c_marker_never_latches},
     {"L2_INVAL_PREFIX_ONCE_AFTER_CACHED_HOST_WRITE", c_l2_inval_prefix_once},
     {"CMDLIST_NEAR_CAP_SUBMITS_WITH_L2_INVAL_PENDING", c_cmdlist_near_cap_with_l2_inval_pending},
+    {"SHARE_EXPORT_IMPORT_READ_ONLY_OWNER_FREES_FIRST", c_share_export_import},
 };
 
 int main(void) {
