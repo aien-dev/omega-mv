@@ -2615,3 +2615,7 @@ $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omeg
 CPU_PISTON_SHARE_TEST = $(OUT_DIR)/cpu_piston_share_test
 $(CPU_PISTON_SHARE_TEST): tests/cpu_piston_share_test.c src/omega_gpu_prefill.h src/omega_blackwell_codegen_tc.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -O2 -Itests -o $@ tests/cpu_piston_share_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+# L321 E3a: the CPU state piston (35B DeltaNet recurrence held in CPU caches), bit-equal to the reference order
+CPU_PISTON_STATE_TEST = $(OUT_DIR)/cpu_piston_state_test
+$(CPU_PISTON_STATE_TEST): tests/cpu_piston_state_test.c
+	$(CC) -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O3 -mcpu=native -ffp-contract=off -o $@ tests/cpu_piston_state_test.c -lpthread -lm
