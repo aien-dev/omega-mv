@@ -12,6 +12,13 @@ inputs:
   - tests/train/
   - src/
   - tests/gates/
+  # Read by every make run (aien-audit-inputs, L335): the lock files and the
+  # docs/estimation protocol hashes the Makefile takes while it is read.
+  - aienos.lock
+  - argus.lock
+  - docs/estimation/
+  - mk/
+  - tools/quietlock/
 run:
   exec: tests/gates/run.sh
   args: ["train"]
@@ -21,3 +28,17 @@ expects:
 timeout: 10m
 exactness: EXACT
 cache_scope: machine
+# Directories make lists with $(wildcard) while the Makefile is read: their
+# names are in the key, not their bytes.
+listed:
+  - tests/language
+  - tests/physics0/planner
+  - tests/physics0/verify
+  - tests/visor
+# quietlock takes a flock on this empty file before any goal; it decides
+# whether make waits, never what a test computes.
+outside_inputs:
+  - ~/workspace/.spark-quiet.lock
+# L335: the trace shows the declared files are every file read, and the
+# commit is read only for labels in other goals' recipes.
+cache: inputs_complete
