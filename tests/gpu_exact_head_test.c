@@ -202,6 +202,9 @@ static void chip(const char *dir, const char *hidden_path, uint32_t limit, int m
     CHECK(omega_gpu_bf16_gemv_f32(tb, xw, yw, NULL) == 0 && omega_gpu_fp8_gemv_f32(t8, 0, xw, yw, NULL) == 0, "warm-up launches");
     free(xw); free(yw);
     XKern kb, ka0, ka1;
+    /* cmdlist_create takes the session lock itself: create the lists before holding it (it is not recursive) */
+    OmegaGpuCmdList *clF = NULL, *clT = NULL;
+    int cr = omega_gpu_cmdlist_create(16, &clF) | omega_gpu_cmdlist_create(16, &clT);
     omega_gpu_session_lock();
     int kr = xkern(&kb, OMEGA_DEC_XBOUND, 0, mutant) | xkern(&ka0, OMEGA_DEC_ARGMAX, 0, 0) | xkern(&ka1, OMEGA_DEC_ARGMAX, 1, 0);
     /* one buffer: h | h8 | s | coef | hi | lo (P) | y (P) | yf (P) | amv | ami | tau | tok | tokf | tab */
@@ -210,8 +213,6 @@ static void chip(const char *dir, const char *hidden_path, uint32_t limit, int m
                  o_tok = o_tau + 16, o_tokf = o_tok + 16, o_tab = o_tokf + 16, total = o_tab + 64;
     OmegaGpuMem buf; memset(&buf, 0, sizeof buf);
     int ar = omega_gpu_session_alloc(total, &buf);
-    OmegaGpuCmdList *clF = NULL, *clT = NULL;
-    int cr = omega_gpu_cmdlist_create(16, &clF) | omega_gpu_cmdlist_create(16, &clT);
     CHECK(kr == 0 && ar == 0 && cr == 0, "kernels, buffer (%zu bytes) and command lists", total);
     if (kr || ar || cr) { omega_gpu_session_unlock(); return; }
     uint8_t *B = buf.cpu; const uint64_t V = buf.va;
