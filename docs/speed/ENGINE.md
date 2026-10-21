@@ -175,6 +175,38 @@ Reading:
   5.33x (calc:7cb0d299); a 32-head stroke is 24.4 s for 32 tokens (calc:20f527b9). This is the shape the chip needs:
   one fill, many heads, and the math engine the only thing that grows with N.
 
+
+**v2, the ignition: one weight read per layer for all heads, green (omega `motor/serve` d1fca73c, sc `motor/serve`
+380e65e9 and the evidence commit after it; receipts `evidence/motor-chip-20261021/stroke8v2-*.json`,
+`stroke{1,2,4}v2-real.json`, `stroke8v2-vs-alone.txt`, README section "v2, the ignition"):** every layer is recorded
+once for all heads in the stroke. The dense mixer and o_proj GEMVs run as one FP8 segment-table GEMM at M = heads
+(bit-identical to the GEMV per row); the N routers write their picks into per-conversation launch buffers; a GROUP
+kernel on the chip sorts the N x 9 picks into expert segments with row maps (byte-identical to a host sort, three
+mutants caught in the simulator); one gate_up and one down grouped GEMM serve all heads. GDN, attention, router,
+combine and the final head stay per head. The same gate as v1, red before green: mutant 4 FAIL (and its chip tokens
+equal the v1 mutant run on all eight heads), swap-control FAIL, the real run PASS eight of eight with chip tokens equal
+to the v1 run and to every run alone, swap-feature PASS. The ladder, same command, binary and goldens back to back on
+the shared chip (not a speed receipt): 27.294, 41.221, 68.037, 127.753 ms per stroke at N = 1, 2, 4, 8, which is
+27.29, 20.61, 17.01, 15.97 ms per token (calc:4cbfde45, calc:62cb0468, calc:1750973d) and 36.6, 48.5, 58.8, 62.6 tok/s
+total (calc:9795d31a, calc:4776090d, calc:e9287378, calc:941ee66f); against v1, 1.19x at N = 2, 1.44x at N = 4, 1.52x at
+N = 8 (calc:3512da13, calc:0c8385cb, calc:cbb28558); alone, v2 costs 1.12x (calc:1262c85d), the extra permute and group
+launches. The beat is not linear any more but still close to it: 14.35 ms per extra head (calc:5397d25b) where the byte
+budget says 0.77 ms per row. Eight heads move about 11.5 GB of weights in 127.75 ms, 90 GB/s against the 273 GB/s
+ceiling (calc:48eb2528): the per-head launches (about 240 per head per stroke) carry the cost now, and the chip timeline
+per launch kind (`AIEN_STROKE_STAMPS=1`) is the next receipt, then fewer launches per head (batched GDN/attention over
+heads, a batched lm_head with a y-stride GEMM argument).
+
+**The timeline of one eight-head stroke (`AIEN_STROKE_STAMPS=1`, `stroke8v2-stamps.log` and `stroke8b-stamps.log`, table in the
+README):** v1 178.989 ms over 3312 launches, v2 120.056 ms over 1755. The dense mixer and o_proj fell from 52.554 to 9.255 ms
+(5.68x, calc:b05616ee: read once for all heads); the experts from 54.361 to 40.792 ms (72 reads a layer, 13.59 GB at 250 GB/s,
+calc:57a6878b, calc:7153d616, became the union of 55, 10.38 GB at 254.5 GB/s, calc:40ba16a5, calc:803d5a45: 93% of the 273 GB/s
+ceiling, nothing left there but the union itself). Unchanged and now the largest single item: the bf16 lm_head read once per head,
+8 launches, 38.8 ms, a third of the beat (1.017 GB a head, calc:82fb7315, 4.854 ms a head, calc:287e5639). Also unchanged: the
+router per head (12.0 ms, 37.6 us a launch, calc:0e8ebea6), GDN and attention per head (13.0 ms). The order of the levers: (1) one
+lm_head read for all heads (a y-stride argument in the GEMM; the FP8 head halves it again): 93.8 ms a stroke at today's other
+costs (calc:9c9d33dc), 85.3 tok/s (calc:a93a26c5); (2) one router read for all heads; (3) the dense GEMM at M = 8 runs at 131 to
+141 GB/s (calc:cdeb028d, calc:e9dc266c), half the ceiling, a CTA-budget sweep; (4) GDN and attention over heads. The floor at
+union 55: about 12 GB a beat, 45 ms, 178 tok/s for eight conversations.
 ### F. The motor on the chip (power engine = L306's 35B kernels, served first)
 Drake, 2026-10-21 01:15Z: the motor IS the 35B server, and serving comes first. The power engine on the chip is
 therefore L306's 35B kernels (`aien-sovereign-core` branch `q36/serve`, continued on `motor/serve`; omega GPU lib
@@ -260,7 +292,7 @@ DIFFERENT real prompts, from the host's recorded routes: 54.7 of 256 (min 33, ma
 N = 8 in the stroke table above came from one prompt family (correlated rows) and is the optimistic case. The byte budget
 for eight at once must count about 55 experts per layer per beat.
 
-**v2, the ignition (next, in this order):** (1) a record path for the segment-table FP8 GEMM (`omega_gpu_fp8gemm_api`,
+**v2, the ignition (the plan as written at 04:40Z; done at 05:17Z, see the green paragraph in section E):** (1) a record path for the segment-table FP8 GEMM (`omega_gpu_fp8gemm_api`,
 bit-identical to the GEMV per row), grid_y = the largest segment count, and a guard so an empty segment (cnt 0) is skipped
 (today its pass loop is do-while); (2) a chip-side "group" glue kernel that turns the N routers' picks of a layer into the
 segment table, the permuted x' rows and a row-to-head map, so the expert GEMM streams each distinct expert once for all the
