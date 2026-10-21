@@ -486,6 +486,8 @@ int omega_gpu_q36_graph_set_batch(OmegaGpuQ36Graph *g, int on) {
     if (g->heads > 1u && omega_gpu_router_prepare_rows(g->cfg.router, H * 4u, g->lo.lb_stride) != OMEGA_GPU_ROUTER_OK) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
     /* lever 4: the GDN step of every head in one launch (record_layer_heads; the heads kernel has its own cache slot) */
     if (omega_gpu_gdn_prepare_heads(g->cfg.gdn) != OMEGA_GPU_GDN_OK) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    /* lever 5: the attention of every head in one launch (record_layer_heads; its own cache slot) */
+    if (omega_gpu_decode_attn256_prepare_heads(g->cfg.attn) != OMEGA_GPU_DATTN_OK) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
     /* lever 1: the bf16 lm_head read once per group of up to OMEGA_BF16_MAX_XBATCH heads (record_final_heads) */
     if (!g->head8) {
         uint32_t n = 0, k = 0; omega_gpu_bf16_tensor_shape(g->cfg.lm_head, &n, &k);
@@ -570,9 +572,16 @@ int omega_gpu_q36_graph_record_layer_heads(OmegaGpuQ36Graph *g, uint32_t l, cons
         if (rc == OMEGA_GPU_DGRAPH_OK)
             rc = add_glue(g, OMEGA_GPU_Q36_K_GATHER, g->mutant == 2 ? K_GATHER_M1 : K_GATHER, (OMEGA_GPU_Q36_ATT_MIX + OMEGA_DEC_THREADS - 1) / OMEGA_DEC_THREADS, N,
                           (size_t)OMEGA_GPU_Q36_ATT_MIX * N, w, OMEGA_DEC_GA_WORDS);
+        /* lever 5: ONE attention launch for the N heads (each conversation's cache, position and rows from the table) */
+        OmegaGpuDecodeAttn256Head hs[OMEGA_GPU_Q36_MAX_HEADS];
+        for (uint32_t h = 0; h < N; h++) {
+            hs[h].c = g->attn_h[h]; hs[h].pos = pos[h];
+            hs[h].qkv_va = aggN + (uint64_t)h * OMEGA_GPU_Q36_ATT_MIX * 4u; hs[h].out_va = attN + h * MOS;
+        }
+        if (rc == OMEGA_GPU_DGRAPH_OK)
+            rc = after_op(g, OMEGA_GPU_Q36_K_ATTN, omega_gpu_decode_attn256_record_heads(g->cl, hs, N, ki, g->cfg.eps, SCALE_2P64));
         for (uint32_t h = 0; h < N && rc == OMEGA_GPU_DGRAPH_OK; h++) {
             const uint64_t agg_h = aggN + (uint64_t)h * OMEGA_GPU_Q36_ATT_MIX * 4u, att_h = attN + h * MOS;
-            rc = after_op(g, OMEGA_GPU_Q36_K_ATTN, omega_gpu_decode_attn256_record(g->cl, g->attn_h[h], ki, pos[h], agg_h, g->cfg.eps, SCALE_2P64, att_h));
             uint32_t w2[OMEGA_DEC_GT_WORDS]; memset(w2, 0, sizeof w2);
             put64(w2, OMEGA_DEC_GT_A, att_h); put64(w2, OMEGA_DEC_GT_G, agg_h + OMEGA_GPU_Q36_ATT_QKV * 4u); put64(w2, OMEGA_DEC_GT_OUT, att_h);
             w2[(OMEGA_DEC_GT_N - 0x380) / 4] = OMEGA_GPU_Q36_MIXER_OUT;

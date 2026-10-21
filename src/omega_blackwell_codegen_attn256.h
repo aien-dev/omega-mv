@@ -79,6 +79,27 @@
 #define OMEGA_DATTN256_ARG_OUT_SCALE 0x3dcu /* f32 multiplier on the output */
 #define OMEGA_DATTN256_ARG_QK_SCALE 0x3e0u /* f32 (1/sqrt(256)) * log2(e) */
 #define OMEGA_DATTN256_ARGS_WORDS 25u
+/* The heads form (L312 lever 5, 2026-10-21): ONE launch steps n <= OMEGA_DATTN256_MAX_HEADS conversations, grid (max splits,
+ * vy * n). CTA (cx, cy): conversation hd = cy / vy (vy must be a power of two: 4 for the 27B and the 35B), CTA row cy % vy; the
+ * conversation's pointers and scalars come from a 128-byte table entry at ARG_TAB + hd * 128 (LDG where the plain kernel does LDC);
+ * a CTA with cx >= its conversation's splits exits at the top (uniform: no barrier hazard). per_split, eps, qk_scale and
+ * out_scale stay in the constant bank (the same for every conversation). The plain program is byte-identical to the one
+ * before this form existed (tests/q36_codegen_hash.c). */
+#define OMEGA_DATTN256_ARG_TAB 0x3e8u      /* u64 the launch's table (heads form only) */
+#define OMEGA_DATTN256_HEADS_ARGS_WORDS 28u
+#define OMEGA_DATTN256_MAX_HEADS 8u
+#define OMEGA_DATTN256_TAB_ENTRY_BYTES 128u
+#define OMEGA_DATTN256_TAB_QKV 0u          /* u64 f32 qkv row of the conversation */
+#define OMEGA_DATTN256_TAB_KC 8u           /* u64 its K cache plane of the layer */
+#define OMEGA_DATTN256_TAB_VC 16u          /* u64 its V cache plane */
+#define OMEGA_DATTN256_TAB_ROPE 24u        /* u64 the RoPE table */
+#define OMEGA_DATTN256_TAB_QN 32u          /* u64 q_norm of the layer (k_norm 1024 bytes after it, as ARG_QN) */
+#define OMEGA_DATTN256_TAB_OUT 40u         /* u64 its out row */
+#define OMEGA_DATTN256_TAB_PART 48u        /* u64 its partials */
+#define OMEGA_DATTN256_TAB_CNT 56u         /* u64 its counters (zero before the launch) */
+#define OMEGA_DATTN256_TAB_POS 64u         /* u32 its position */
+#define OMEGA_DATTN256_TAB_SPLITS 68u      /* u32 its splits: CTAs cx >= splits exit */
+#define OMEGA_DATTN256_TAB_KV_STRIDE 72u   /* u32 bytes per KV head plane */
 
 /* shared memory map (bytes) */
 #define OMEGA_DATTN256_SM_Q 0u             /* q'[6][256] f32: 6144 (warps 6, 7 stage k and v at 6144.. 8191: inside SM_S, unused then) */
@@ -103,6 +124,8 @@ typedef struct {
                       * ("virtual head") owns q heads cy*q_per_cta .. +q_per_cta-1 and reads KV head cy / G, G = (q_heads / q_per_cta) /
                       * kv_heads (1 or 2; with 2 both CTA rows of a KV head write the same new K/V bits to the cache). q_per_cta <= 6
                       * (warps 6, 7 build k and v). Appended last. */
+    uint32_t heads;  /* 1: the heads form (OMEGA_DATTN256_ARG_TAB above; L312 lever 5): decode only, refused with prep. 0: the
+                      * plain decode kernel. Appended after the shape. */
 } OmegaDecodeAttn256Spec;
 
 /* The shape a spec selects: 0 ok, -1 unsupported. */
