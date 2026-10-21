@@ -6,6 +6,8 @@
  *   GROUP (L312 v2, the stroke): N heads x 9 slots of expert ids to the grouped-GEMM segment tables and row maps, byte
  *   for byte against a host sort (heads 1, 2, 3, 8; all heads alike); mutants 1 (no tie-break), 2 (cnt short), 3 (empties
  *   unwritten) caught.
+ *   COMBINE|NORM in the rows form (L356, one launch for N heads): bit-identical to the one-head program per head (1, 3,
+ *   8 heads); mutant 3 caught.
  * Host only (no device). Verdict line last: "q36_dec_sim_test: N checks, F failed: PASS|FAIL".
  */
 #include "omega_blackwell_codegen_dec.h"
@@ -64,6 +66,52 @@ static double combine_point(int mutant, uint32_t seed, float scale, char *msg, s
     }
     free(x); free(d); free(w); free(nw); free(y); free(xr); free(yr);
     return worst;
+}
+
+/* L356: COMBINE|NORM in the rows form (one launch for N heads) against the one-head program run on each head's slice:
+ * x and y must be bit-identical (the same arithmetic per row); the weights move by a 256-byte stride, the down outputs by
+ * 9 x 2048 floats per head. Returns the number of differing floats, or -1 on a simulator error. */
+static long rows_point(int mutant, uint32_t heads, uint32_t seed, char *msg, size_t n) {
+    static BlackwellIRProgram p1, pr;
+    const uint32_t WS = 256u; /* bytes between heads' weights (the router buffer stride is 256-aligned) */
+    OmegaDecSpec s1 = { .kind = OMEGA_DEC_RES, .mode = OMEGA_DEC_RES_COMBINE | OMEGA_DEC_RES_NORM, .groups = G };
+    OmegaDecSpec sr = { .kind = OMEGA_DEC_RES, .mode = OMEGA_DEC_RES_COMBINE | OMEGA_DEC_RES_NORM | OMEGA_DEC_RES_ROWS, .groups = G, .stride = WS, .mutant = mutant };
+    if (omega_blackwell_codegen_dec_prog(&s1, &p1) != 0 || omega_blackwell_codegen_dec_prog(&sr, &pr) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
+    const size_t NX = (size_t)heads * H, ND = (size_t)heads * G * H, NW = (size_t)heads * WS / 4u;
+    float *x0 = aligned_alloc(16, NX * 4), *x1 = aligned_alloc(16, NX * 4), *xr = aligned_alloc(16, NX * 4), *d = aligned_alloc(16, ND * 4);
+    float *w = aligned_alloc(16, NW * 4), *nw = aligned_alloc(16, H * 4), *y1 = aligned_alloc(16, NX * 4), *yr = aligned_alloc(16, NX * 4);
+    uint32_t s = seed;
+    for (size_t i = 0; i < NX; i++) { x0[i] = frand(&s, -2.0f, 2.0f); y1[i] = yr[i] = -999.0f; }
+    for (unsigned i = 0; i < H; i++) nw[i] = frand(&s, 0.8f, 1.2f);
+    for (size_t i = 0; i < ND; i++) d[i] = frand(&s, -1.0f, 1.0f);
+    for (size_t i = 0; i < NW; i++) w[i] = frand(&s, 0.05f, 0.4f);
+    memcpy(x1, x0, NX * 4); memcpy(xr, x0, NX * 4);
+    const float scale = 18446744073709551616.0f;
+    static uint8_t smem[OMEGA_DEC_SHARED_BYTES];
+    long bad = 0;
+    for (uint32_t h = 0; h <= heads && bad >= 0; h++) { /* h < heads: the one-head program on head h; h == heads: the rows program */
+        WsSim sim; memset(&sim, 0, sizeof sim);
+        const int rows = h == heads;
+        sim.p = rows ? &pr : &p1; sim.threads = 256; sim.smem = smem; sim.smem_bytes = OMEGA_DEC_SHARED_BYTES;
+        float *xx = rows ? xr : x1 + (size_t)h * H, *yy = rows ? yr : y1 + (size_t)h * H;
+        put64(&sim, OMEGA_DEC_RES_X, xx); put64(&sim, OMEGA_DEC_RES_A, rows ? d : d + (size_t)h * G * H);
+        put64(&sim, OMEGA_DEC_RES_W, rows ? w : w + (size_t)h * WS / 4u); put64(&sim, OMEGA_DEC_RES_NW, nw); put64(&sim, OMEGA_DEC_RES_Y, yy);
+        memcpy(&sim.cbank[OMEGA_DEC_RES_EPS / 4], &EPS, 4); memcpy(&sim.cbank[OMEGA_DEC_RES_SCALE / 4], &scale, 4);
+        sim.nranges = 5;
+        sim.ranges[0] = (WsRange){ (uintptr_t)xx, (uintptr_t)xx + (rows ? NX : H) * 4 };
+        sim.ranges[1] = (WsRange){ (uintptr_t)d, (uintptr_t)d + ND * 4 };
+        sim.ranges[2] = (WsRange){ (uintptr_t)w, (uintptr_t)w + NW * 4 };
+        sim.ranges[3] = (WsRange){ (uintptr_t)nw, (uintptr_t)nw + H * 4 };
+        sim.ranges[4] = (WsRange){ (uintptr_t)yy, (uintptr_t)yy + (rows ? NX : H) * 4 };
+        if (ws_run(&sim, 1, rows ? heads : 1) != 0) { snprintf(msg, n, "sim (%s): %.150s (pc %d)", rows ? "rows" : "one head", sim.msg, sim.err_pc); bad = -1; }
+    }
+    if (bad == 0) {
+        for (size_t i = 0; i < NX; i++) bad += memcmp(&x1[i], &xr[i], 4) != 0;
+        for (size_t i = 0; i < NX; i++) bad += memcmp(&y1[i], &yr[i], 4) != 0;
+        snprintf(msg, n, "%u heads: %ld of %zu x and y floats differ from the one-head program", heads, bad, 2 * NX);
+    }
+    free(x0); free(x1); free(xr); free(d); free(w); free(nw); free(y1); free(yr);
+    return bad;
 }
 
 static double swiglu_point(int mutant, uint32_t seed, char *msg, size_t n) {
@@ -193,6 +241,14 @@ int main(void) {
         CHECK(b != 0, "GROUP mutant %d must be caught: %s", m, msg);
         printf("GROUP mutant %d: %s (%s)\n", m, b != 0 ? "caught" : "NOT CAUGHT", msg);
     }
+    { OmegaDecSpec sp = { .kind = OMEGA_DEC_RES, .mode = OMEGA_DEC_RES_COMBINE | OMEGA_DEC_RES_NORM | OMEGA_DEC_RES_ROWS, .groups = G, .stride = 8 };
+      CHECK(omega_dec_prog_stats(&sp, NULL, NULL) != 0, "COMBINE rows with a weights stride not a multiple of 16 refused"); }
+    for (uint32_t hh = 1; hh <= 8; hh += hh < 3 ? 2 : 5) {
+        long b = rows_point(0, hh, 40 + hh, msg, sizeof msg);
+        CHECK(b == 0, "COMBINE|NORM rows: %s", msg);
+        printf("COMBINE|NORM rows (L356): %s\n", msg);
+    }
+    { long b = rows_point(3, 8, 49, msg, sizeof msg); CHECK(b > 0, "COMBINE rows mutant 3 must be caught: %s", msg); printf("COMBINE rows mutant 3: %s (%s)\n", b > 0 ? "caught" : "NOT CAUGHT", msg); }
     printf("q36_dec_sim_test: %d checks, %d failed: %s\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS");
     return g_failed ? 1 : 0;
 }
