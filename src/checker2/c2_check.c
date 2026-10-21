@@ -3,7 +3,11 @@
  * Written from docs/osc/OSC-{1,2,3}-DESIGN.md, OSC-EXT-BYTES-DESIGN.md and the osc_ir.h comments
  * only. Rules, in the order applied:
  *   unit tables  -> per-function types -> CFG shape -> per-instruction typing -> calls ->
- *   handle disciplines -> definite assignment -> loop bounds (termination) -> ownership flow.
+ *   GPU kernel rules -> handle disciplines -> definite assignment -> loop bounds (termination) ->
+ *   ownership flow.
+ * GPU kernels (version 6) are restated from docs/omegese/GPU.md sections 6-9: their types, the ops
+ * each function kind may hold, block-shared arrays, constant divisors, and the uniformity rule for
+ * SYNC and SHFL.
  * The ownership flow is a may-analysis that rejects only DEFINITE errors (a state that holds on
  * every path), so it cannot reject a correct program through imprecision; drop-flag guarded
  * releases (OSC-3 item 3) are therefore never refused by it. */
@@ -34,18 +38,22 @@ static int fail(C2Verdict *v, const char *rule, int func, int insn, const char *
 static int is_value(uint8_t s) { return s >= S_BOOL && s <= S_I64; }
 static int is_int(uint8_t s) { return s >= S_U8 && s <= S_I64; }
 static int is_signed(uint8_t s) { return s >= S_I8 && s <= S_I64; }
+static int is_num(uint8_t s) { return is_value(s) || s == S_F32; } /* a register value: bool, integer or f32 */
+static int is_kvalue(uint8_t s) { return s == S_U32 || s == S_F32; } /* GPU buffer and shared elements */
 static unsigned width(uint8_t s)
 {
     switch (s) {
     case S_BOOL: return 1;
     case S_U8: case S_I8: return 8;
     case S_U16: case S_I16: return 16;
-    case S_U32: case S_I32: return 32;
+    case S_U32: case S_I32: case S_F32: return 32;
     case S_U64: case S_I64: return 64;
     default: return 0;
     }
 }
-static int is_scalar_t(const C2Type *t) { return is_value(t->s); }
+static int is_scalar_t(const C2Type *t) { return is_num(t->s); }
+static int is_gbuf(const C2Type *t) { return t->s == S_GVIEW || t->s == S_GEDIT; }
+static int is_block(const C2Type *t) { return t->s == S_REF && t->kind == K_BLOCK; }
 static int is_ref(const C2Type *t) { return t->s == S_REF; }
 static int is_array_ref(const C2Type *t) { return t->s == S_REF && t->sid == 0; }
 static int is_struct_ref(const C2Type *t) { return t->s == S_REF && t->sid != 0; }
@@ -54,6 +62,7 @@ static int is_u64(const C2Type *t) { return t->s == S_U64; }
 static int same_type(const C2Type *a, const C2Type *b)
 {
     if (a->s != b->s) return 0;
+    if (is_gbuf(a)) return a->elem == b->elem;
     if (a->s != S_REF) return 1;
     return a->kind == b->kind && a->elem == b->elem && a->len == b->len && a->sid == b->sid;
 }
@@ -66,6 +75,7 @@ static int same_shape(const C2Type *a, const C2Type *b)
  * downgrade): own->own|shared|mut, mut->mut|shared, shared->shared. */
 static int bindable(uint8_t to, uint8_t from)
 {
+    if (to == K_BLOCK || from == K_BLOCK) return 0; /* a shared array is never moved or borrowed */
     if (from == K_OWN) return 1;
     if (from == K_MUT) return to == K_MUT || to == K_SHARED;
     if (from == K_SHARED) return to == K_SHARED;
@@ -114,7 +124,9 @@ static int check_structs(const C2Unit *u, C2Verdict *v)
 static int check_type(const C2Unit *u, const C2Type *t)
 {
     if (t->s >= S_LIMIT || t->s == S_VOID) return 0;
+    if (is_gbuf(t)) return is_kvalue(t->elem);
     if (t->s != S_REF) return 1;
+    if (t->kind == K_BLOCK) return is_kvalue(t->elem) && t->sid == 0 && t->len >= 1 && t->len <= C2_MAX_SHARED_LEN;
     if (t->kind < K_OWN || t->kind > K_MUT) return 0;
     if (t->elem == S_VOID) { /* struct reference */
         if (t->sid < 1 || t->sid > u->nstructs) return 0;
@@ -167,6 +179,11 @@ static int uses(const C2Insn *in, int16_t *o)
     case C2_FLOAD: o[n++] = in->a; if (in->b >= 0) o[n++] = in->b; break;
     case C2_FSTORE: o[n++] = in->a; if (in->b >= 0) o[n++] = in->b; o[n++] = in->c; break;
     case C2_CALL: for (int k = 0; k < in->nargs; k++) o[n++] = in->args[k]; break;
+    /* a buffer access also reads the buffer's length register (the next one) */
+    case C2_GLOAD: o[n++] = in->a; o[n++] = (int16_t)(in->a + 1); o[n++] = in->b; break;
+    case C2_GSTORE: o[n++] = in->a; o[n++] = (int16_t)(in->a + 1); o[n++] = in->b; o[n++] = in->c; break;
+    case C2_SHFL: o[n++] = in->a; o[n++] = in->b; break;
+    case C2_MAD: o[n++] = in->a; o[n++] = in->b; o[n++] = in->c; break;
     default: break;
     }
     return n;
@@ -177,7 +194,7 @@ static int defines(const C2Insn *in)
     switch (in->op) {
     case C2_CONST: case C2_MOV: case C2_BIN: case C2_UN: case C2_CMP: case C2_CAST: case C2_ALLOC: case C2_LOAD:
     case C2_FLOAD: case C2_AOPEN: case C2_AALLOC: case C2_POPEN: case C2_HALLOC: case C2_HGEN: case C2_HLOAD:
-    case C2_SLOAD:
+    case C2_SLOAD: case C2_GPU: case C2_SHARED: case C2_GLOAD: case C2_SHFL: case C2_MAD:
         return in->dst;
     case C2_CALL: return in->dst; /* -1 for a void call */
     default: return -1;
@@ -203,13 +220,17 @@ static int check_insn(Fx *x, uint32_t ii)
     if (in->op != C2_CALL && (in->op == C2_CONST || in->op == C2_MOV || in->op == C2_BIN || in->op == C2_UN ||
                               in->op == C2_CMP || in->op == C2_CAST || in->op == C2_ALLOC || in->op == C2_LOAD ||
                               in->op == C2_FLOAD || in->op == C2_AOPEN || in->op == C2_AALLOC || in->op == C2_POPEN ||
-                              in->op == C2_HALLOC || in->op == C2_HGEN || in->op == C2_HLOAD || in->op == C2_SLOAD) &&
+                              in->op == C2_HALLOC || in->op == C2_HGEN || in->op == C2_HLOAD || in->op == C2_SLOAD ||
+                              in->op == C2_GPU || in->op == C2_SHARED || in->op == C2_GLOAD || in->op == C2_SHFL ||
+                              in->op == C2_MAD) &&
         in->dst < 0)
         F("C2-OPERAND-RANGE", "missing destination");
     if (need_dst && (d < 0 || d >= nv)) F("C2-OPERAND-RANGE", "destination v%d out of range", d); /* GUARD:dst-range */
     if (d >= 0 && is_slice(T(x, d))) F("C2-SLICE-WRITE", "slice register v%d redefined", d);
     if (d >= 0 && d < f->nparams && d > 0 && is_slice(T(x, d - 1)))
         F("C2-SLICE-WRITE", "slice length register v%d redefined", d);
+    if (d >= 0 && is_gbuf(T(x, d))) F("C2-GPU-BUFFER", "buffer register v%d redefined", d); /* GUARD:gbuf-write */
+    if (d > 0 && d < f->nparams && is_gbuf(T(x, d - 1))) F("C2-GPU-BUFFER", "buffer length register v%d redefined", d); /* GUARD:gbuf-len-write */
 
     const C2Type *td = d >= 0 ? T(x, d) : NULL;
     const C2Type *ta = in->a >= 0 && in->a < nv ? T(x, in->a) : NULL;
@@ -231,7 +252,13 @@ static int check_insn(Fx *x, uint32_t ii)
         break;
     case C2_BIN:
         if (in->sub < B_ADD || in->sub >= B_LIMIT) F("C2-DECODE-SUBOP", "binary op %u", in->sub);
-        if (in->sub == B_SHL || in->sub == B_SHR) {
+        if (in->sub == B_MIN || in->sub == B_MAX) {
+            if (!is_kvalue(td->s) || !same_type(td, ta) || !same_type(td, tb)) F("C2-TYPE-BIN", "min/max need u32 or f32"); /* GUARD:bin-minmax */
+        } else if (td->s == S_F32 || ta->s == S_F32) {
+            /* f32: add, sub, mul only (GPU.md section 4: no float div/rem, no bit ops on floats) */
+            if (!(in->sub == B_ADD || in->sub == B_SUB || in->sub == B_MUL)) F("C2-TYPE-BIN", "f32 binary op %u", in->sub); /* GUARD:bin-f32-op */
+            if (!same_type(td, ta) || !same_type(td, tb)) F("C2-TYPE-BIN", "f32 operand types"); /* GUARD:bin-f32-type */
+        } else if (in->sub == B_SHL || in->sub == B_SHR) {
             if (!is_int(td->s) || !same_type(td, ta) || !is_int(tb->s)) F("C2-TYPE-BIN", "shift operand types"); /* GUARD:bin-shift */
         } else if (in->sub == B_AND || in->sub == B_OR || in->sub == B_XOR) {
             if (!is_scalar_t(td) || !same_type(td, ta) || !same_type(td, tb)) F("C2-TYPE-BIN", "bitwise operand types");
@@ -242,13 +269,22 @@ static int check_insn(Fx *x, uint32_t ii)
     case C2_UN:
         if (in->sub < U_NEG || in->sub >= U_LIMIT) F("C2-DECODE-SUBOP", "unary op %u", in->sub);
         if (!same_type(td, ta)) F("C2-TYPE-UN", "unary result type differs from operand");
-        if (in->sub == U_LNOT ? td->s != S_BOOL : !is_int(td->s)) F("C2-TYPE-UN", "unary operand type"); /* GUARD:un-type */
+        int unbad = in->sub == U_LNOT ? td->s != S_BOOL
+                    : in->sub == U_NEG ? !(is_int(td->s) || td->s == S_F32)
+                    : in->sub == U_BNOT ? !is_int(td->s)
+                    : td->s != S_F32; /* EXP, INV, RSQ, SQRT */
+        if (unbad) F("C2-TYPE-UN", "unary operand type"); /* GUARD:un-type */
         break;
     case C2_CMP:
         if (in->sub < CC_EQ || in->sub >= CC_LIMIT) F("C2-DECODE-SUBOP", "comparison %u", in->sub);
         if (td->s != S_BOOL || !is_scalar_t(ta) || !same_type(ta, tb)) F("C2-TYPE-CMP", "comparison operand types"); /* GUARD:cmp-type */
         break;
     case C2_CAST:
+        /* integers, or u32 <-> f32 (GPU.md section 4) */
+        if (td->s == S_F32 || ta->s == S_F32) {
+            if (!((td->s == S_F32 && ta->s == S_U32) || (td->s == S_U32 && ta->s == S_F32))) F("C2-TYPE-CAST", "f32 cast other than u32 <-> f32"); /* GUARD:cast-f32 */
+            break;
+        }
         if (!is_int(td->s) || !is_int(ta->s)) F("C2-TYPE-CAST", "cast between non-integers (bool casts are refused)"); /* GUARD:cast-type */
         break;
     case C2_ALLOC: case C2_AALLOC:
@@ -317,6 +353,7 @@ static int check_insn(Fx *x, uint32_t ii)
     case C2_CALL: {
         if (in->callee >= x->fi) F("C2-CALL-ORDER", "call to function %u from function %d (no recursion, no forward calls)", in->callee, x->fi); /* GUARD:call-order */
         const C2Func *g = &x->u->fn[in->callee];
+        if (f->kind != FN_HOST || g->kind != FN_HOST) F("C2-GPU-CALL", "call into or out of a kernel"); /* GUARD:gpu-call */
         if (in->nargs != g->nparams) F("C2-CALL-ARITY", "%u arguments for %u parameters", in->nargs, g->nparams); /* GUARD:call-arity */
         if (g->ret.s == S_VOID ? in->dst != -1 : (in->dst < 0 || in->dst >= nv || !same_type(T(x, in->dst), &g->ret)))
             F("C2-TYPE-CALL", "call result type"); /* GUARD:call-ret */
@@ -340,6 +377,30 @@ static int check_insn(Fx *x, uint32_t ii)
         }
         break;
     }
+    case C2_GPU:
+        if (in->sub < G_THREAD || in->sub >= G_LIMIT) F("C2-DECODE-SUBOP", "launch value %u", in->sub); /* GUARD:gpu-sub */
+        if (td->s != S_U32) F("C2-TYPE-GPU", "launch value into a non-u32 register"); /* GUARD:gpu-u32 */
+        break;
+    case C2_SHARED:
+        if (!is_block(td)) F("C2-TYPE-GPU", "shared array into a non-block register"); /* GUARD:shared-type */
+        break;
+    case C2_GLOAD: case C2_GSTORE:
+        if (!is_gbuf(ta)) F("C2-TYPE-GPU", "buffer access through a non-buffer register"); /* GUARD:gbuf-ptr */
+        if (T(x, (int16_t)(in->a + 1))->s != S_U32) F("C2-TYPE-GPU", "buffer v%d has no u32 length register", in->a);
+        if (tb->s != S_U32) F("C2-TYPE-GPU", "buffer index is not u32"); /* GUARD:gbuf-index */
+        if (in->op == C2_GLOAD ? td->s != ta->elem : tc->s != ta->elem) F("C2-TYPE-GPU", "buffer element type"); /* GUARD:gbuf-elem */
+        if (in->op == C2_GSTORE && ta->s != S_GEDIT) F("C2-GPU-STORE-VIEW", "store into a view buffer"); /* GUARD:gstore-view */
+        break;
+    case C2_SYNC:
+        break;
+    case C2_SHFL:
+        if (in->sub != SH_DOWN) F("C2-DECODE-SUBOP", "shuffle %u", in->sub);
+        if (!is_kvalue(ta->s) || !same_type(td, ta)) F("C2-TYPE-GPU", "shuffle value is not u32 or f32"); /* GUARD:shfl-type */
+        if (tb->s != S_U32) F("C2-TYPE-GPU", "shuffle distance is not u32");
+        break;
+    case C2_MAD:
+        if (td->s != S_F32 || ta->s != S_F32 || tb->s != S_F32 || tc->s != S_F32) F("C2-TYPE-GPU", "mad needs f32 operands"); /* GUARD:mad-type */
+        break;
     default: F("C2-DECODE-OPCODE", "opcode %u", in->op);
     }
     return 0;
@@ -513,7 +574,9 @@ static int check_defined(Fx *x)
             }
             in[b] = cur;
             for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count; i++) {
-                if (f->in[i].op == C2_TRAP) { ball(&cur); break; } /* a trap ends the path */
+                int stop = f->in[i].op == C2_TRAP; /* a host trap ends the path */
+                if (f->kind == FN_KERNEL) stop = 0; /* GUARD:kernel-trap-flows */
+                if (stop) { ball(&cur); break; }
                 int d = defines(&f->in[i]);
                 if (d >= 0) bset(&cur, (unsigned)d);
             }
@@ -524,7 +587,7 @@ static int check_defined(Fx *x)
         if (!x->reach[b]) continue;
         Bits cur = in[b];
         for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count; i++) {
-            if (f->in[i].op == C2_TRAP) break;
+            if (f->in[i].op == C2_TRAP && f->kind == FN_HOST) break; /* a kernel thread runs on (GPU.md section 7) */
             int16_t us[8];
             int nu = uses(&f->in[i], us);
             for (int k = 0; k < nu; k++) {
@@ -648,6 +711,157 @@ static int check_loops(Fx *x)
         }
         if (!loop_guarded(x, inloop, latch, nlatch)) /* GUARD:loop-bound */
             return fail(x->v, "C2-LOOP-UNBOUNDED", x->fi, (int)f->blk[h].first, "loop at block %d has no counter guard", h);
+    }
+    return 0;
+}
+
+/* ------------------------------------------------------------------ GPU kernels */
+
+/* Which ops each function kind may hold, block-shared arrays and constant divisors
+ * (GPU.md sections 8 and 9). */
+static int kernel_forbidden(uint8_t op)
+{
+    switch (op) {
+    case C2_ALLOC: case C2_RELEASE: case C2_AOPEN: case C2_AALLOC: case C2_ADESTROY: case C2_POPEN:
+    case C2_PCLOSE: case C2_HALLOC: case C2_HGEN: case C2_HFREE: case C2_HLOAD: case C2_HSTORE:
+    case C2_SLOAD: case C2_SSTORE: case C2_FLOAD: case C2_FSTORE: case C2_CALL:
+        return 1;
+    default: return 0;
+    }
+}
+
+static int kernel_ops(Fx *x)
+{
+    const C2Func *f = x->f;
+    int kern = f->kind == FN_KERNEL;
+    unsigned shared_bytes = 0;
+    int syncs = 0;
+    for (uint32_t i = 0; i < f->ninsns; i++) {
+        const C2Insn *in = &f->in[i];
+        int gpu_op = in->op >= C2_GPU && in->op <= C2_MAD;
+        int gpu_sub = (in->op == C2_BIN && (in->sub == B_MIN || in->sub == B_MAX)) ||
+                      (in->op == C2_UN && in->sub >= U_EXP);
+        if (!kern) {
+            if (gpu_op || gpu_sub) /* GUARD:host-gpu-op */
+                return fail(x->v, "C2-GPU-OP", x->fi, (int)i, "kernel instruction %u in a host function", in->op);
+            continue;
+        }
+        /* unreachable today: the kernel type rules already refuse every operand these ops need (untagged) */
+        if (kernel_forbidden(in->op))
+            return fail(x->v, "C2-GPU-OP", x->fi, (int)i, "op %u is not allowed in a kernel", in->op);
+        switch (in->op) {
+        case C2_SHARED:
+            if (x->blk_of[i] != 0) /* GUARD:shared-entry */
+                return fail(x->v, "C2-GPU-SHARED", x->fi, (int)i, "shared array outside the entry block");
+            if (x->ndefs[in->dst] != 1) /* GUARD:shared-once */
+                return fail(x->v, "C2-GPU-SHARED", x->fi, (int)i, "shared array v%d defined more than once", in->dst);
+            shared_bytes += 4u * f->vt[in->dst].len;
+            if (shared_bytes > C2_MAX_SHARED_BYTES) /* GUARD:shared-bytes */
+                return fail(x->v, "C2-GPU-SHARED", x->fi, (int)i, "shared arrays over %u bytes", C2_MAX_SHARED_BYTES);
+            break;
+        case C2_BIN:
+            if (in->sub == B_DIV || in->sub == B_REM) {
+                uint64_t k;
+                if (in->b < f->nparams || !single_const(x, in->b, &k) || k == 0) /* GUARD:gpu-div */
+                    return fail(x->v, "C2-GPU-DIV", x->fi, (int)i, "kernel div/rem needs a nonzero constant divisor");
+            }
+            break;
+        case C2_SHFL: {
+            uint64_t k;
+            if (!single_const(x, in->b, &k) || k < 1 || k >= C2_WARP) /* GUARD:shfl-const */
+                return fail(x->v, "C2-GPU-SHFL", x->fi, (int)i, "shuffle distance is not one constant 1..31");
+            break;
+        }
+        case C2_SYNC:
+            if (++syncs > C2_MAX_SYNCS) /* GUARD:sync-limit */
+                return fail(x->v, "C2-GPU-SYNC-LIMIT", x->fi, (int)i, "more than %d sync lines", C2_MAX_SYNCS);
+            break;
+        default: break;
+        }
+    }
+    return 0;
+}
+
+static int has_trap(const Fx *x, int b)
+{
+    const C2Block *bk = &x->f->blk[b];
+    for (uint32_t i = bk->first; i < bk->first + bk->count; i++)
+        if (x->f->in[i].op == C2_TRAP) return 1;
+    return 0;
+}
+
+/* C2-GPU-SYNC-DIVERGENT (GPU.md section 6). A register is varying when it is defined from `thread`,
+ * a global or shared load or a shuffle, from any varying operand, or anywhere in a divergent block.
+ * A CBR on a varying register makes divergent every block reachable from its successors before a
+ * block that post-dominates it; a path that ends in a TRAP ends the thread, so post-dominance is
+ * taken over non-trapping paths. SYNC and SHFL must not sit in a divergent block. The analysis
+ * only grows its sets, so it terminates. */
+static int kernel_uniform(Fx *x)
+{
+    const C2Func *f = x->f;
+    static Bits pdom[C2_MAX_BLOCKS];
+    static uint8_t trapb[C2_MAX_BLOCKS], divb[C2_MAX_BLOCKS], done[C2_MAX_BLOCKS], vary[C2_MAX_VREGS];
+    static int st[2 * C2_MAX_BLOCKS + 2]; /* each block is pushed by its predecessors once it turns divergent */
+    for (int b = 0; b < f->nblocks; b++) {
+        trapb[b] = (uint8_t)has_trap(x, b);
+        divb[b] = done[b] = 0;
+        ball(&pdom[b]);
+        if (!trapb[b] && f->in[f->blk[b].first + f->blk[b].count - 1].op == C2_RET) {
+            memset(&pdom[b], 0, sizeof pdom[b]);
+            bset(&pdom[b], (unsigned)b);
+        }
+    }
+    memset(vary, 0, sizeof vary);
+    int changed = 1;
+    while (changed) {
+        changed = 0;
+        for (int b = f->nblocks - 1; b >= 0; b--) {
+            if (trapb[b] || x->nsucc[b] == 0) continue; /* trap: vacuous; RET: fixed */
+            Bits n;
+            ball(&n);
+            for (int k = 0; k < x->nsucc[b]; k++) band(&n, &pdom[x->succ[b][k]]);
+            bset(&n, (unsigned)b);
+            if (!beq(&n, &pdom[b])) { pdom[b] = n; changed = 1; }
+        }
+    }
+    changed = 1;
+    while (changed) {
+        changed = 0;
+        for (int b = 0; b < f->nblocks; b++) {
+            if (!x->reach[b]) continue;
+            for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count; i++) {
+                const C2Insn *in = &f->in[i];
+                int d = defines(in);
+                if (d < 0 || vary[d]) continue;
+                int v = 0;
+                if (divb[b]) v = 1; /* GUARD:vary-divergent-def */
+                if ((in->op == C2_GPU && in->sub == G_THREAD) || in->op == C2_GLOAD || in->op == C2_SHFL || in->op == C2_LOAD) v = 1; /* GUARD:vary-source */
+                int16_t us[8];
+                int nu = uses(in, us);
+                for (int k = 0; k < nu && !v; k++) v = vary[us[k]]; /* GUARD:vary-operand */
+                if (v) { vary[d] = 1; changed = 1; }
+            }
+            const C2Insn *t = &f->in[f->blk[b].first + f->blk[b].count - 1];
+            if (t->op != C2_CBR || !vary[t->a] || done[b]) continue;
+            done[b] = 1;
+            changed = 1;
+            int sp = 0;
+            for (int k = 0; k < x->nsucc[b]; k++) st[sp++] = x->succ[b][k];
+            while (sp) {
+                int c = st[--sp];
+                if (divb[c]) continue;
+                if (c != b && btest(&pdom[b], (unsigned)c)) continue; /* GUARD:region-stop */
+                divb[c] = 1;
+                if (trapb[c]) continue;
+                for (int k = 0; k < x->nsucc[c]; k++) st[sp++] = x->succ[c][k];
+            }
+        }
+    }
+    for (int b = 0; b < f->nblocks; b++) {
+        if (!x->reach[b] || !divb[b]) continue;
+        for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count; i++)
+            if (f->in[i].op == C2_SYNC || f->in[i].op == C2_SHFL) /* GUARD:sync-divergent */
+                return fail(x->v, "C2-GPU-SYNC-DIVERGENT", x->fi, (int)i, "sync or down in block %d, which not every thread reaches", b);
     }
     return 0;
 }
@@ -857,13 +1071,29 @@ static int check_func(const C2Unit *u, int fi, C2Verdict *v)
     const C2Func *f = &u->fn[fi];
     for (int g = 0; g < fi; g++)
         if (strcmp(u->fn[g].name, f->name) == 0) return fail(v, "C2-FUNC-NAME", fi, -1, "function %s defined twice", f->name); /* GUARD:func-name */
-    if (f->nparams > C2_MAX_PARAMS || f->nparams > f->nvregs) /* GUARD:params */
+    int kern = f->kind == FN_KERNEL;
+    if (f->nparams > (kern ? C2_MAX_KPARAMS : C2_MAX_PARAMS) || f->nparams > f->nvregs) /* GUARD:params */
         return fail(v, "C2-FUNC-PARAMS", fi, -1, "%u parameters, %u registers", f->nparams, f->nvregs);
+    if (kern && (f->ret.s != S_VOID || f->req_len || f->ens_len)) /* GUARD:kernel-void */
+        return fail(v, "C2-GPU-KERNEL", fi, -1, "a kernel returns nothing and carries no requires/ensures");
+    if (kern && (f->threads < C2_MIN_THREADS || f->threads > C2_MAX_THREADS || f->threads % C2_WARP)) /* GUARD:kernel-threads */
+        return fail(v, "C2-GPU-KERNEL", fi, -1, "%u threads per block (32..1024, a multiple of 32)", f->threads);
     if (!(f->ret.s == S_VOID || is_value(f->ret.s))) /* GUARD:ret-scalar */
         return fail(v, "C2-FUNC-RETURN", fi, -1, "function returns a non-scalar");
     for (int r = 0; r < f->nvregs; r++) {
         const C2Type *t = &f->vt[r];
         if (!check_type(u, t)) return fail(v, "C2-TYPE-INVALID", fi, -1, "register v%d has an invalid type", r); /* GUARD:vreg-type */
+        int ktype = is_gbuf(t) || is_block(t) || t->s == S_F32;
+        if (kern ? !(ktype || t->s == S_BOOL || t->s == S_U32) : ktype) /* GUARD:gpu-type */
+            return fail(v, "C2-GPU-TYPE", fi, -1, "register v%d: type %u is not allowed in a %s", r, t->s, kern ? "kernel" : "host function");
+        if (is_block(t) && r < f->nparams) /* GUARD:block-param */
+            return fail(v, "C2-GPU-SHARED", fi, -1, "shared array v%d is a parameter", r);
+        if (is_gbuf(t)) {
+            if (r + 1 >= f->nparams || f->vt[r + 1].s != S_U32) /* GUARD:gbuf-param */
+                return fail(v, "C2-GPU-BUFFER", fi, -1, "buffer register v%d is not a parameter followed by its u32 length", r);
+            if (r > 0 && is_gbuf(&f->vt[r - 1]))
+                return fail(v, "C2-GPU-BUFFER", fi, -1, "buffer v%d sits in the length register of v%d", r, r - 1);
+        }
         if (is_slice(t)) {
             if (r + 1 >= f->nparams || f->vt[r + 1].s != S_U64) /* GUARD:slice-param */
                 return fail(v, "C2-SLICE-PARAM", fi, -1, "slice register v%d is not a parameter followed by its u64 length", r);
@@ -882,10 +1112,13 @@ static int check_func(const C2Unit *u, int fi, C2Verdict *v)
         if (check_insn(x, i)) goto out;
     link_cfg(x);
     count_defs(x);
+    if (kernel_ops(x)) goto out;
+    if (kern && kernel_uniform(x)) goto out;
     if (check_handles(x)) goto out;
     if (check_defined(x)) goto out;
     if (check_loops(x)) goto out;
     if (check_ownership(x)) goto out;
+    if (kern && kernel_races(x)) goto out;
     rc = 0;
 out:
     free(x->blk_of);

@@ -39,6 +39,9 @@
 #define OSC_CLAUSE_MAX   256     /* requires/ensures source text (recorded; enforced by the front end, OSC-2) */
 #define OSC_MAX_STRUCTS   16     /* OSC-2 structs (docs/osc/OSC-2-DESIGN.md section 2) */
 #define OSC_MAX_FIELDS    16     /* fields per struct */
+#define OSC_MAX_KPARAMS   16     /* parameters of a GPU kernel (never called, so not bound by x0..x5) */
+#define OSC_MAX_SHARED_LEN 12288 /* elements of one block-shared array */
+#define OSC_MAX_SHARED_BYTES 49152 /* block-shared bytes of one kernel (4 per element) */
 
 /* ---- types ------------------------------------------------------------ */
 typedef enum {
@@ -50,14 +53,23 @@ typedef enum {
     /* external byte slices (docs/osc/OSC-EXT-BYTES-DESIGN.md): the type of the POINTER
      * register of a slice parameter; its length is the next register (u64) */
     OSC_T_BYTES,                                   /* read-only borrowed bytes */
-    OSC_T_CELLS                                    /* caller-supplied writable u64 cells */
+    OSC_T_CELLS,                                   /* caller-supplied writable u64 cells */
+    /* GPU kernels (docs/omegese/GPU.md, encoding version 6); kernel functions only */
+    OSC_T_F32,                                     /* IEEE binary32 */
+    /* the POINTER register of a global buffer parameter: elements `elem` (U32 or F32);
+     * its length is the next register (u32) */
+    OSC_T_GVIEW,                                   /* read-only global buffer */
+    OSC_T_GEDIT                                    /* read-write global buffer */
 } OscScalar;
+#define OSC_T_LAST OSC_T_GEDIT
 
 typedef enum {
     OSC_REF_NONE = 0,
     OSC_REF_OWN,       /* unique owner of an allocation: own [T; N]   */
     OSC_REF_SHARED,    /* shared borrow:                &[T; N]       */
-    OSC_REF_MUT        /* mutable borrow:               &mut [T; N]   */
+    OSC_REF_MUT,       /* mutable borrow:               &mut [T; N]   */
+    OSC_REF_BLOCK      /* GPU kernels: a block-shared array, elem U32 or F32, */
+                       /*   len 1..OSC_MAX_SHARED_LEN, defined by OSC_I_SHARED */
 } OscRefKind;
 
 typedef struct {
@@ -123,8 +135,24 @@ typedef enum {
     OSC_I_SLOAD,     /* dst(u64) = a[b] ; a is a slice pointer vreg (BYTES: u8 zero-  */
                      /*   extended; CELLS: u64), its length is vreg a+1 (u64); b any   */
                      /*   integer type; unsigned b >= len: TRAP_BOUNDS (len 0 always)  */
-    OSC_I_SSTORE     /* a[b] = c(u64) ; same bounds rule; a is a CELLS pointer vreg   */
+    OSC_I_SSTORE,    /* a[b] = c(u64) ; same bounds rule; a is a CELLS pointer vreg   */
+    /* appended for GPU kernels (docs/omegese/GPU.md); kernel functions only */
+    OSC_I_GPU,       /* dst(u32) = launch value `sub` (OscGpuValue)                   */
+    OSC_I_SHARED,    /* dst(REF BLOCK) = the block-shared array, every element 0;     */
+                     /*   entry block only, each dst defined once                     */
+    OSC_I_GLOAD,     /* dst(elem) = a[b] ; a a GVIEW/GEDIT pointer vreg, its length   */
+                     /*   is vreg a+1 (u32); b u32; b >= len: TRAP_BOUNDS              */
+    OSC_I_GSTORE,    /* a[b] = c ; same bounds rule; a a GEDIT pointer vreg           */
+    OSC_I_SYNC,      /* every thread of the block waits here (uniform control only)   */
+    OSC_I_SHFL       /* dst = a of the lane b higher (sub OSC_SH_DOWN); a lane past   */
+                     /*   the warp's end gets its own a; b u32; uniform control only  */
 } OscOp;
+
+typedef enum {
+    OSC_G_THREAD = 1, OSC_G_THREADS, OSC_G_BLOCK, OSC_G_BLOCKS, OSC_G_BATCH, OSC_G_BATCHES
+} OscGpuValue;
+enum { OSC_SH_DOWN = 1 };
+enum { OSC_FN_HOST = 0, OSC_FN_KERNEL = 1 };   /* OscFunc.kind */
 
 typedef enum {
     OSC_B_ADD = 1, OSC_B_SUB, OSC_B_MUL,
@@ -132,13 +160,20 @@ typedef enum {
     OSC_B_REM,       /* b == 0 -> TRAP_DIV0; sign follows dividend (C semantics)         */
     OSC_B_AND, OSC_B_OR, OSC_B_XOR,
     OSC_B_SHL,       /* unsigned: wrap; signed: result not representable -> TRAP_OVERFLOW */
-    OSC_B_SHR        /* unsigned: logical; signed: arithmetic                           */
+    OSC_B_SHR,       /* unsigned: logical; signed: arithmetic                           */
+    /* GPU kernels: u32 or f32 (f32: a NaN operand gives the other operand) */
+    OSC_B_MIN, OSC_B_MAX
 } OscBinOp;
 
 typedef enum {
     OSC_U_NEG = 1,   /* signed only; MIN -> TRAP_OVERFLOW. unsigned: wrap (0 - a)  */
+                     /*   f32: flip the sign bit (exact)                            */
     OSC_U_BNOT,      /* bitwise not, then canonicalised to the type                 */
-    OSC_U_LNOT       /* bool only                                                   */
+    OSC_U_LNOT,      /* bool only                                                   */
+    /* GPU kernels, f32 only, approximate (docs/omegese/GPU.md section 5) */
+    OSC_U_EXP,       /* EX2(RN(a * 0x3FB8AA3B))                                     */
+    OSC_U_INV,       /* RCP(a)                                                      */
+    OSC_U_ROOT       /* RSQ(a)                                                      */
 } OscUnOp;
 
 typedef enum {
@@ -196,6 +231,7 @@ typedef struct {
 
 typedef struct {
     char name[OSC_NAME_MAX];
+    uint8_t kind;        /* OSC_FN_HOST, or OSC_FN_KERNEL (encoding version 6) */
     uint8_t nparams;     /* params are vregs 0..nparams-1 */
     OscType ret;         /* scalar or VOID; OSC-1 never returns a REF */
     OscType vtype[OSC_MAX_VREGS];
@@ -253,8 +289,10 @@ int osc_ir_digest(const OscUnit *u, uint8_t out[32]);
 /* Encoding format version (byte 7 of the magic) of an encoded unit: 1..5, or -1
  * if the magic is wrong or the version is unknown (never reinterpreted).
  * Version 5 = the unit uses external byte slices; units without slices keep
- * versions 1..4 and their bytes. */
-#define OSC_IR_VERSION_MAX 5
+ * versions 1..4 and their bytes. Version 6 = the unit has a GPU kernel
+ * (docs/omegese/GPU.md): each function carries a kind byte after its name;
+ * units without a kernel keep versions 1..5 and their bytes. */
+#define OSC_IR_VERSION_MAX 6
 int osc_ir_encoding_version(const uint8_t *buf, size_t len);
 
 /* Strict decoder (omega#444; format and refusal classes: spec/one-layer-format.md).
@@ -283,10 +321,10 @@ typedef enum {
 #define OSC_IR_REFUSAL_COUNT 11
 
 /* Upper bound on any canonical encoding (every count at its maximum, every
- * instruction at its widest, CALL with 6 args = 18 bytes). Longer input is OVERSIZED. */
+ * instruction at its widest, CALL with 6 args = 18 bytes; v6 adds a kind byte per function). Longer input is OVERSIZED. */
 #define OSC_IR_ENCODED_MAX                                                                   \
     (8u + 1u + OSC_MAX_STRUCTS * (1u + 63u + 1u + 2u + OSC_MAX_FIELDS * (1u + 63u + 1u + 2u + 2u)) + 2u + \
-     OSC_MAX_FUNCS * (1u + 63u + 1u + 6u + 2u + OSC_MAX_VREGS * 6u + 2u + OSC_MAX_BLOCKS * 8u + 4u +  \
+     OSC_MAX_FUNCS * (1u + 63u + 1u + 1u + 6u + 2u + OSC_MAX_VREGS * 6u + 2u + OSC_MAX_BLOCKS * 8u + 4u +  \
                       OSC_MAX_INSNS * 18u + 2u * (2u + (OSC_CLAUSE_MAX - 1u))))
 
 int osc_ir_decode(const uint8_t *buf, size_t len, OscUnit *out);
@@ -300,6 +338,8 @@ const char *osc_ir_refusal_name(int rc);
  * host calls this before osc_interp_run or osc_rt_call_native; the interpreter
  * entry does it itself. */
 int osc_ir_slice_args_ok(const OscFunc *f, const uint64_t *args, unsigned nargs);
+/* true if any function of u is a GPU kernel: host back ends (osc_cg, osc_interp) refuse such units. */
+bool osc_ir_has_kernel(const OscUnit *u);
 
 /* Width in bits of an integer scalar (8..64); 1 for bool; 0 otherwise. */
 unsigned osc_scalar_width(OscScalar s);

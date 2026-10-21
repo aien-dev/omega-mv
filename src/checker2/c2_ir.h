@@ -5,7 +5,8 @@
  * docs/osc/OSC-1-DESIGN.md, OSC-2-DESIGN.md, OSC-3-DESIGN.md, OSC-EXT-BYTES-DESIGN.md and the
  * comments of src/compiler/osc_ir.h. It includes no compiler header, links no compiler object and
  * never read osc_check.* or osc_ir_validate. Every constant below is restated here, not imported.
- * The rule list is in spec/one-layer-receipts.md section 9.
+ * The rule list is in spec/one-layer-receipts.md section 9. GPU kernels (encoding version 6) are
+ * restated from docs/omegese/GPU.md sections 6-9 and the version-6 byte layout stated there.
  *
  * Fails closed: anything not understood is a rejection with a stable rule name. */
 #ifndef C2_IR_H
@@ -27,21 +28,34 @@
 #define C2_MAX_FIELDS 16
 #define C2_POOL_SLOTS 16
 #define C2_TRAP_MAX 14
+#define C2_MAX_KPARAMS 32          /* GPU kernel parameter registers (GPU.md section 2) */
+#define C2_MIN_THREADS 32          /* threads per block of a kernel: 32..1024, a multiple of the warp */
+#define C2_MAX_THREADS 1024
+#define C2_WARP 32
+#define C2_MAX_SYNCS 63            /* sync lines per kernel (GPU.md section 8) */
+#define C2_MAX_NEST 16             /* nesting of varying regions (GPU.md section 6) */
+#define C2_MAX_SHARED_LEN 12288    /* elements of one block-shared array */
+#define C2_MAX_SHARED_BYTES 49152  /* block-shared bytes of one kernel, 4 per element */
 
 /* scalar codes on the wire */
 enum { S_VOID = 0, S_BOOL, S_U8, S_U16, S_U32, S_U64, S_I8, S_I16, S_I32, S_I64, S_REF, S_BYTES, S_CELLS,
+       S_F32, S_GVIEW, S_GEDIT, /* version 6: binary32; global buffer pointers (one elem byte follows) */
        S_LIMIT };
-enum { K_NONE = 0, K_OWN, K_SHARED, K_MUT };
+enum { K_NONE = 0, K_OWN, K_SHARED, K_MUT, K_BLOCK /* version 6: block-shared array */ };
+enum { FN_HOST = 0, FN_KERNEL = 1 }; /* function kind byte, version 6 */
 
 /* opcodes on the wire */
 enum {
     C2_CONST = 1, C2_MOV, C2_BIN, C2_UN, C2_CMP, C2_CAST, C2_ALLOC, C2_RELEASE, C2_LOAD, C2_STORE,
     C2_CALL, C2_TRAP, C2_BR, C2_CBR, C2_RET, C2_FLOAD, C2_FSTORE, C2_AOPEN, C2_AALLOC, C2_ADESTROY,
     C2_POPEN, C2_PCLOSE, C2_HALLOC, C2_HGEN, C2_HFREE, C2_HLOAD, C2_HSTORE, C2_SLOAD, C2_SSTORE,
+    C2_GPU, C2_SHARED, C2_GLOAD, C2_GSTORE, C2_SYNC, C2_SHFL, C2_MAD, /* version 6, kernels only */
     C2_OP_LIMIT
 };
-enum { B_ADD = 1, B_SUB, B_MUL, B_DIV, B_REM, B_AND, B_OR, B_XOR, B_SHL, B_SHR, B_LIMIT };
-enum { U_NEG = 1, U_BNOT, U_LNOT, U_LIMIT };
+enum { B_ADD = 1, B_SUB, B_MUL, B_DIV, B_REM, B_AND, B_OR, B_XOR, B_SHL, B_SHR, B_MIN, B_MAX, B_LIMIT };
+enum { U_NEG = 1, U_BNOT, U_LNOT, U_EXP, U_INV, U_RSQ, U_SQRT, U_LIMIT };
+enum { G_THREAD = 1, G_BLOCK, G_BLOCKS, G_BATCH, G_BATCHES, G_LIMIT }; /* C2_GPU sub */
+enum { SH_DOWN = 1 };                                                              /* C2_SHFL sub */
 enum { CC_EQ = 1, CC_NE, CC_LT, CC_LE, CC_GT, CC_GE, CC_LIMIT };
 
 typedef struct {
@@ -61,6 +75,8 @@ typedef struct { uint32_t first, count; } C2Block;
 
 typedef struct {
     char name[C2_NAME_MAX + 1];
+    uint8_t kind;     /* FN_HOST, FN_KERNEL; on the wire only from version 6 */
+    uint16_t threads; /* kernel: threads per block (u16 after the kind byte); host: 0 */
     uint8_t nparams;
     C2Type ret;
     uint16_t nvregs, nblocks;

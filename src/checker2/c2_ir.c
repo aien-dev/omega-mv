@@ -99,6 +99,7 @@ static int rdtype(Rd *r, C2Type *t)
 {
     memset(t, 0, sizeof *t);
     if (rd8(r, &t->s)) return -1;
+    if (t->s == S_GVIEW || t->s == S_GEDIT) return rd8(r, &t->elem) ? -1 : 0; /* version 6 buffer: elem */
     if (t->s == S_REF) {
         if (rd8(r, &t->kind) || rd8(r, &t->elem) || rd16(r, &t->len)) return -1;
         /* a struct reference has elem VOID and carries its struct index + 1 */
@@ -162,6 +163,13 @@ static int dec_insn(Rd *r, C2Insn *in, C2Verdict *v, int fi, int ii)
     }
     case C2_BR: bad = rd16(r, &in->t); break;
     case C2_CBR: bad = rdvr(r, &in->a) || rd16(r, &in->t) || rd16(r, &in->f); break;
+    case C2_GPU: bad = rd8(r, &in->sub) || rdvr(r, &in->dst); break;
+    case C2_SHARED: bad = rdvr(r, &in->dst); break;
+    case C2_GLOAD: bad = rdvr(r, &in->dst) || rdvr(r, &in->a) || rdvr(r, &in->b); break;
+    case C2_GSTORE: bad = rdvr(r, &in->a) || rdvr(r, &in->b) || rdvr(r, &in->c); break;
+    case C2_SYNC: break;
+    case C2_SHFL: bad = rd8(r, &in->sub) || rdvr(r, &in->dst) || rdvr(r, &in->a) || rdvr(r, &in->b); break;
+    case C2_MAD: bad = rdvr(r, &in->dst) || rdvr(r, &in->a) || rdvr(r, &in->b) || rdvr(r, &in->c); break;
     default: return fail(v, "C2-DECODE-OPCODE", fi, ii, "unknown opcode %u", in->op);
     }
     if (bad) TRUNC("instruction operands");
@@ -184,8 +192,16 @@ static int has_slice(const C2Unit *u)
     return 0;
 }
 
+static int has_kernel(const C2Unit *u)
+{
+    for (int fi = 0; fi < u->nfuncs; fi++)
+        if (u->fn[fi].kind != FN_HOST) return 1;
+    return 0;
+}
+
 static int canonical_version(const C2Unit *u)
 {
+    if (has_kernel(u)) return 6; /* GUARD:kernel-version */
     if (has_slice(u)) return 5;
     if (has_op(u, C2_POPEN, C2_HSTORE)) return 4;
     if (has_op(u, C2_AOPEN, C2_ADESTROY)) return 3;
@@ -228,7 +244,7 @@ int c2_decode(const uint8_t *buf, size_t len, C2Unit *u, C2Verdict *v)
     Rd rr = {buf, len, 0}, *r = &rr;
     if (!buf || len < 8 || memcmp(buf, MAGIC7, 7) != 0) return fail(v, "C2-DECODE-MAGIC", -1, -1, "bad magic");
     u->version = buf[7];
-    if (u->version < 1 || u->version > 5) /* GUARD:version-range */
+    if (u->version < 1 || u->version > 6) /* GUARD:version-range */
         return fail(v, "C2-DECODE-VERSION", -1, -1, "unknown version %u", u->version);
     r->i = 8;
     if (u->version >= 2) {
@@ -258,6 +274,11 @@ int c2_decode(const uint8_t *buf, size_t len, C2Unit *u, C2Verdict *v)
         int e = rdname(r, f->name);
         if (e == -1) TRUNC("function name");
         if (e) return fail(v, "C2-DECODE-NAME", fi, -1, "function name");
+        if (u->version >= 6) {
+            if (rd8(r, &f->kind)) TRUNC("function kind");
+            if (f->kind > FN_KERNEL) return fail(v, "C2-DECODE-KIND", fi, -1, "function kind %u", f->kind); /* GUARD:kind-range */
+            if (f->kind == FN_KERNEL && rd16(r, &f->threads)) TRUNC("thread count");
+        }
         if (rd8(r, &f->nparams)) TRUNC("nparams");
         if (rdtype(r, &f->ret)) TRUNC("return type");
         if (rd16(r, &f->nvregs)) TRUNC("nvregs");
@@ -317,6 +338,7 @@ static void wname(Wr *w, const char *s) { size_t n = strlen(s); w8(w, (unsigned)
 static void wtype(Wr *w, const C2Type *t)
 {
     w8(w, t->s);
+    if (t->s == S_GVIEW || t->s == S_GEDIT) w8(w, t->elem);
     if (t->s == S_REF) {
         w8(w, t->kind); w8(w, t->elem); w16(w, t->len);
         if (t->elem == S_VOID) w8(w, t->sid);
@@ -341,7 +363,10 @@ size_t c2_encode(const C2Unit *u, uint8_t *buf, size_t cap)
     w16(&w, u->nfuncs);
     for (int fi = 0; fi < u->nfuncs; fi++) {
         const C2Func *f = &u->fn[fi];
-        wname(&w, f->name); w8(&w, f->nparams); wtype(&w, &f->ret);
+        wname(&w, f->name);
+        if (u->version >= 6) w8(&w, f->kind);
+        if (u->version >= 6 && f->kind == FN_KERNEL) w16(&w, f->threads);
+        w8(&w, f->nparams); wtype(&w, &f->ret);
         w16(&w, f->nvregs);
         for (int k = 0; k < f->nvregs; k++) wtype(&w, &f->vt[k]);
         w16(&w, f->nblocks);
@@ -372,6 +397,13 @@ size_t c2_encode(const C2Unit *u, uint8_t *buf, size_t cap)
             case C2_TRAP: w8(&w, (unsigned)in->imm); break;
             case C2_BR: w16(&w, in->t); break;
             case C2_CBR: wvr(&w, in->a); w16(&w, in->t); w16(&w, in->f); break;
+            case C2_GPU: w8(&w, in->sub); wvr(&w, in->dst); break;
+            case C2_SHARED: wvr(&w, in->dst); break;
+            case C2_GLOAD: wvr(&w, in->dst); wvr(&w, in->a); wvr(&w, in->b); break;
+            case C2_GSTORE: wvr(&w, in->a); wvr(&w, in->b); wvr(&w, in->c); break;
+            case C2_SYNC: break;
+            case C2_SHFL: w8(&w, in->sub); wvr(&w, in->dst); wvr(&w, in->a); wvr(&w, in->b); break;
+            case C2_MAD: wvr(&w, in->dst); wvr(&w, in->a); wvr(&w, in->b); wvr(&w, in->c); break;
             default: break;
             }
         }
