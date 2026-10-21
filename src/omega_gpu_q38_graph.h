@@ -90,6 +90,15 @@ int omega_gpu_q38_graph_set_final_norm(OmegaGpuQ38Graph *g, const float *final_n
  * omega_gpu_q38_graph_read returns the unscaled hidden (exact power-of-two rescale). Logits are those of the quantised head:
  * callers own the drift study against the bf16 head. */
 int omega_gpu_q38_graph_set_lm_head_fp8(OmegaGpuQ38Graph *g, const OmegaGpuFp8Tensor *head);
+/* Optional MXFP4 projections (qwen38/w4-gemv, 2026-10-19): after set_layer, the decode reads these 4-bit tensors
+ * (omega_gpu_w4_api.h; same shapes as the FP8 ones, e.g. from omega_gpu_w4_from_fp8) instead of the layer's FP8 mix, o,
+ * gate_up and down. All four or none: a later set_layer goes back to FP8. The kernels are built here (session lock taken
+ * inside). The tensors stay owned by the caller and must outlive their use. Logits are those of the 4-bit weights. */
+struct OmegaGpuW4Tensor;
+int omega_gpu_q38_graph_set_layer_w4(OmegaGpuQ38Graph *g, uint32_t layer, const struct OmegaGpuW4Tensor *mix, const struct OmegaGpuW4Tensor *o,
+                                     const struct OmegaGpuW4Tensor *gate_up, const struct OmegaGpuW4Tensor *down);
+/* Optional MXFP4 lm_head [vocab][5120]: like set_lm_head_fp8 (hidden held x 2^64) and used ahead of an FP8 head; NULL drops it. */
+int omega_gpu_q38_graph_set_lm_head_w4(OmegaGpuQ38Graph *g, const struct OmegaGpuW4Tensor *head);
 /* GDN layers record the a|b GEMV first and the mix GEMV beside it (no barrier between the two; both only read xq), process-wide.
  * 1 (default) or 0 (mix then a|b, each behind a barrier); env AIEN_OMEGA_Q38_OVERLAP_AB when never set. Values are identical. */
 void omega_gpu_q38_graph_set_overlap_ab(int on);

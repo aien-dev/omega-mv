@@ -1,0 +1,41 @@
+    norm    1 launches    0.011 ms
+     mix   64 launches   13.525 ms
+      ab   48 launches    0.020 ms
+     gdn   48 launches    1.934 ms
+  gather   16 launches    0.067 ms
+    attn   16 launches    1.020 ms
+    gate   16 launches    0.046 ms
+  o_proj   64 launches    6.304 ms
+     res  128 launches    1.655 ms
+ gate_up   64 launches   27.665 ms
+  swiglu   64 launches    0.180 ms
+    down   64 launches   15.031 ms
+ lm_head    1 launches    3.191 ms
+  argmax    2 launches    0.018 ms
+    span   70.695 ms over 47 tokens
+{
+ "name": "l127-tl-S1",
+ "cmd": "nice -n 0 /home/drakestapleton/workspace/targets/speed3/sc-comb/release/qwen38_ab timeline /home/drakestapleton/models/qwen3.8-27b-fp8-017b9c7a /home/drakestapleton/workspace/ab-w4-work/seq/golden.json tl.json",
+ "exit": 0,
+ "git_head": null,
+ "start": "2026-10-20T05:30:16.233512",
+ "seconds": 14.901,
+ "samples": 7,
+ "wall_W_mean": 310.0,
+ "wall_J": 4619.182956,
+ "idle_W_before": 286.0,
+ "incremental_J": 357.6141644,
+ "gpu_W_mean": 17.86,
+ "gpu_util_mean": 14.42857143,
+ "load1_start": "31.76",
+ "load1_end": "32.62",
+ "mem_avail_kB_start": "61256252",
+ "mem_avail_kB_end": "50673620",
+ "lock_holders_max": 3,
+ "nvrm_errors_delta": 0,
+ "note": "wall W = UPS ups.load x 10 (CP1500PFCLCD, 1 percent steps, ~2 s); whole UPS output, not the Spark alone",
+ "window_id": "20261020T102817Z-3c60c3",
+ "calibration": null
+}
+receipt: /home/drakestapleton/yardsticks/receipts/2026-10-20-l127-tl-S1.json
+rc=0
