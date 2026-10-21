@@ -62,6 +62,12 @@ int main(void) {
                 snprintf(n, sizeof n, "router.w%u.d%u.m%d", warps[w], d, m); omega_bw_ir_init(prog);
                 emit(n, omega_blackwell_codegen_router_prog(&s, prog));
             }
+    for (int w = 0; w < 3; w++) /* the ROWS form (L312 lever 2) at the stroke's strides, plain and mutant 6 */
+        for (int m = 0; m <= 6; m += 6) {
+            OmegaRouterSpec s = {.warps = warps[w], .depth = 4, .mutant = m, .experts = 256, .shared = 1, .xstride = 8192, .lbstride = 16896};
+            snprintf(n, sizeof n, "router256s.rows.w%u.d4.m%d", warps[w], m); omega_bw_ir_init(prog);
+            emit(n, omega_blackwell_codegen_router_prog(&s, prog));
+        }
     /* the decode glue kernels (RES / SWIGLU / ARGMAX / GATHER / GATE / AXPY) at the widths the 30B and 27B graphs use */
     const uint32_t widths[3] = {0, 5120, 17408}, strides[3] = {0, 256, 65536};
     for (int k = 1; k <= 6; k++)
@@ -74,6 +80,13 @@ int main(void) {
                         snprintf(n, sizeof n, "dec.k%d.mode%u.m%d.w%u.s%u", k, mode, m, widths[wi], strides[si]); omega_bw_ir_init(prog);
                         emit(n, omega_blackwell_codegen_dec_prog(&s, prog));
                     }
+    /* GROUP (the stroke v2 sort of N heads x S picks into expert segments): S = 8 (0) and 9 (the 35B), mutants 0..3 */
+    for (uint32_t gr = 0; gr <= 9; gr += 9)
+        for (int m = 0; m <= 3; m++) {
+            OmegaDecSpec s = {.kind = OMEGA_DEC_GROUP, .groups = gr, .mutant = m};
+            snprintf(n, sizeof n, "dec.k7.g%u.m%d", gr, m); omega_bw_ir_init(prog);
+            emit(n, omega_blackwell_codegen_dec_prog(&s, prog));
+        }
 #ifdef Q36_NEW_SHAPES
     printf("# new\n");
     Q36_NEW_SHAPES

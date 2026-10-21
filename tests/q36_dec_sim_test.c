@@ -3,6 +3,9 @@
  *   RES COMBINE|NORM with 9 groups (8 routed experts + the shared expert in slot 8): x += sum_g w[g] * d[g], then
  *   y = RMSNorm(x) * nw * scale, against a double oracle; mutants 2 (expert 7 skipped) and 3 (shared slot skipped)
  *   must be caught. SWIGLU at width 512 over 9 groups (grid 2 x 9) against a double oracle; mutant 1 caught.
+ *   GROUP (L312 v2, the stroke): N heads x 9 slots of expert ids to the grouped-GEMM segment tables and row maps, byte
+ *   for byte against a host sort (heads 1, 2, 3, 8; all heads alike); mutants 1 (no tie-break), 2 (cnt short), 3 (empties
+ *   unwritten) caught.
  * Host only (no device). Verdict line last: "q36_dec_sim_test: N checks, F failed: PASS|FAIL".
  */
 #include "omega_blackwell_codegen_dec.h"
@@ -94,6 +97,67 @@ static double swiglu_point(int mutant, uint32_t seed, char *msg, size_t n) {
     return worst;
 }
 
+/* GROUP (L312 v2): N heads x 9 slots of expert ids -> the two segment tables and the two maps, byte for byte against a
+ * host sort. all_same: every head picks the same 8 experts (9 segments of cnt N: the heaviest overlap). */
+typedef struct { uint64_t w, s; uint32_t row0, cnt, pad[2]; } Seg;
+static uint64_t fake_w(uint32_t id) { return 0x100000ull + (uint64_t)id * 0x1000ull; }
+static uint64_t fake_s(uint32_t id) { return 0x900000ull + (uint64_t)id * 0x100ull; }
+static int group_point(int mutant, uint32_t heads, int all_same, uint32_t seed, char *msg, size_t n) {
+    static BlackwellIRProgram prog;
+    OmegaDecSpec sp = { .kind = OMEGA_DEC_GROUP, .mutant = mutant, .groups = G };
+    if (omega_blackwell_codegen_dec_prog(&sp, &prog) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
+    const uint32_t R = heads * G, STRIDE = 4096u, PAD = OMEGA_DEC_GR_PAD;
+    uint8_t *lb = aligned_alloc(16, (size_t)heads * STRIDE); memset(lb, 0, (size_t)heads * STRIDE);
+    Seg *sgu = aligned_alloc(16, (size_t)R * sizeof(Seg)), *sdn = aligned_alloc(16, (size_t)R * sizeof(Seg));
+    uint32_t *xm = aligned_alloc(16, (size_t)(R + PAD) * 4), *ym = aligned_alloc(16, (size_t)(R + PAD) * 4);
+    memset(sgu, 0xEE, (size_t)R * sizeof(Seg)); memset(sdn, 0xEE, (size_t)R * sizeof(Seg)); memset(xm, 0xEE, (size_t)(R + PAD) * 4); memset(ym, 0xEE, (size_t)(R + PAD) * 4);
+    uint32_t s = seed, ids[16 * G];
+    for (uint32_t h = 0; h < heads; h++) {
+        uint32_t *row = ids + h * G;
+        if (all_same && h) memcpy(row, ids, G * 4);
+        else {
+            for (uint32_t j = 0; j < 8; j++) { int dup; do { row[j] = lcg(&s) % 256u; dup = 0; for (uint32_t q = 0; q < j; q++) if (row[q] == row[j]) dup = 1; } while (dup); }
+            row[8] = 256u; /* the shared expert */
+        }
+        uint32_t *idp = (uint32_t *)(lb + (size_t)h * STRIDE); uint64_t *tg = (uint64_t *)(lb + (size_t)h * STRIDE + 1024), *td = (uint64_t *)(lb + (size_t)h * STRIDE + 2048);
+        for (uint32_t j = 0; j < G; j++) { idp[j] = row[j]; tg[2 * j] = fake_w(row[j]); tg[2 * j + 1] = fake_s(row[j]); td[2 * j] = fake_w(row[j]) + 7u; td[2 * j + 1] = fake_s(row[j]) + 3u; }
+    }
+    /* host reference */
+    Seg *egu = calloc(R, sizeof(Seg)), *edn = calloc(R, sizeof(Seg)); uint32_t *exm = calloc(R + PAD, 4), *eym = calloc(R + PAD, 4);
+    uint32_t rank[16 * G];
+    for (uint32_t t = 0; t < R; t++) { uint32_t p = 0; for (uint32_t q = 0; q < R; q++) if (ids[q] * 128u + q < ids[t] * 128u + t) p++; rank[t] = p; exm[p] = t / G; eym[p] = t; }
+    uint32_t D = 0;
+    for (uint32_t t = 0; t < R; t++) {
+        int first = 1; uint32_t cnt = 0, below = 0;
+        for (uint32_t q = 0; q < R; q++) { if (ids[q] == ids[t]) { cnt++; if (q < t) first = 0; } }
+        if (!first) continue;
+        for (uint32_t q = 0; q < R; q++) { int fq = 1; for (uint32_t z = 0; z < q; z++) if (ids[z] == ids[q]) fq = 0; if (fq && ids[q] < ids[t]) below++; }
+        egu[below] = (Seg){ fake_w(ids[t]), fake_s(ids[t]), rank[t], cnt, { 0, 0 } };
+        edn[below] = (Seg){ fake_w(ids[t]) + 7u, fake_s(ids[t]) + 3u, rank[t], cnt, { 0, 0 } };
+        D++;
+    }
+    WsSim sim; memset(&sim, 0, sizeof sim);
+    static uint8_t smem[OMEGA_DEC_GR_SHARED_BYTES];
+    sim.p = &prog; sim.threads = 256; sim.smem = smem; sim.smem_bytes = OMEGA_DEC_GR_SHARED_BYTES;
+    put64(&sim, OMEGA_DEC_GR_IDS, lb); put64(&sim, OMEGA_DEC_GR_TGU, lb + 1024); put64(&sim, OMEGA_DEC_GR_TDN, lb + 2048);
+    put64(&sim, OMEGA_DEC_GR_SGU, sgu); put64(&sim, OMEGA_DEC_GR_SDN, sdn); put64(&sim, OMEGA_DEC_GR_XMAP, xm); put64(&sim, OMEGA_DEC_GR_YMAP, ym);
+    sim.cbank[OMEGA_DEC_GR_STRIDE / 4] = STRIDE; sim.cbank[OMEGA_DEC_GR_HEADS / 4] = heads;
+    sim.nranges = 5;
+    sim.ranges[0] = (WsRange){ (uintptr_t)lb, (uintptr_t)lb + (size_t)heads * STRIDE };
+    sim.ranges[1] = (WsRange){ (uintptr_t)sgu, (uintptr_t)sgu + (size_t)R * sizeof(Seg) }; sim.ranges[2] = (WsRange){ (uintptr_t)sdn, (uintptr_t)sdn + (size_t)R * sizeof(Seg) };
+    sim.ranges[3] = (WsRange){ (uintptr_t)xm, (uintptr_t)xm + (size_t)(R + PAD) * 4 }; sim.ranges[4] = (WsRange){ (uintptr_t)ym, (uintptr_t)ym + (size_t)(R + PAD) * 4 };
+    int bad = -1;
+    if (ws_run(&sim, 1, 1) != 0) snprintf(msg, n, "sim: %.150s (pc %d)", sim.msg, sim.err_pc);
+    else {
+        int bg = memcmp(sgu, egu, (size_t)R * sizeof(Seg)) != 0, bd = memcmp(sdn, edn, (size_t)R * sizeof(Seg)) != 0;
+        int bx = memcmp(xm, exm, (size_t)(R + PAD) * 4) != 0, by = memcmp(ym, eym, (size_t)(R + PAD) * 4) != 0;
+        bad = bg + bd + bx + by;
+        snprintf(msg, n, "heads %u rows %u distinct %u: seg_gu %s, seg_dn %s, xmap %s, ymap %s", heads, R, D, bg ? "WRONG" : "ok", bd ? "WRONG" : "ok", bx ? "WRONG" : "ok", by ? "WRONG" : "ok");
+    }
+    free(lb); free(sgu); free(sdn); free(xm); free(ym); free(egu); free(edn); free(exm); free(eym);
+    return bad;
+}
+
 int main(void) {
     char msg[300];
     { OmegaDecSpec sp = { .kind = OMEGA_DEC_RES, .mode = OMEGA_DEC_RES_ADD | OMEGA_DEC_RES_NORM, .groups = 9 }; CHECK(omega_dec_prog_stats(&sp, NULL, NULL) != 0, "groups 9 without COMBINE refused"); }
@@ -116,6 +180,19 @@ int main(void) {
         printf("SWIGLU width 512 x 9 groups seed %u: %s\n", seed, msg);
     }
     { double w = swiglu_point(1, 13, msg, sizeof msg); CHECK(w > 1e-3, "SWIGLU mutant 1 must be caught: %s", msg); printf("SWIGLU mutant 1: %s (%s)\n", w > 1e-3 ? "caught" : "NOT CAUGHT", msg); }
+    { OmegaDecSpec sp = { .kind = OMEGA_DEC_GROUP, .groups = 17 }; CHECK(omega_dec_prog_stats(&sp, NULL, NULL) != 0, "GROUP 17 slots refused"); }
+    { OmegaDecSpec sp = { .kind = OMEGA_DEC_GROUP, .groups = G }; uint32_t ins = 0, gp = 0; CHECK(omega_dec_prog_stats(&sp, &ins, &gp) == 0, "GROUP codegen"); printf("GROUP 9 slots: %u instructions, %u registers\n", ins, gp); }
+    const struct { uint32_t heads; int same; uint32_t seed; } gpts[] = { { 8, 0, 21 }, { 8, 1, 22 }, { 1, 0, 23 }, { 3, 0, 24 }, { 8, 0, 25 }, { 2, 1, 26 } };
+    for (unsigned i = 0; i < sizeof gpts / sizeof gpts[0]; i++) {
+        int b = group_point(0, gpts[i].heads, gpts[i].same, gpts[i].seed, msg, sizeof msg);
+        CHECK(b == 0, "GROUP heads %u%s seed %u: %s", gpts[i].heads, gpts[i].same ? " all-same" : "", gpts[i].seed, msg);
+        printf("GROUP%s seed %u: %s\n", gpts[i].same ? " all-same" : "", gpts[i].seed, msg);
+    }
+    for (int m = 1; m <= 3; m++) {
+        int b = group_point(m, 8, 0, 27, msg, sizeof msg);
+        CHECK(b != 0, "GROUP mutant %d must be caught: %s", m, msg);
+        printf("GROUP mutant %d: %s (%s)\n", m, b != 0 ? "caught" : "NOT CAUGHT", msg);
+    }
     printf("q36_dec_sim_test: %d checks, %d failed: %s\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS");
     return g_failed ? 1 : 0;
 }
