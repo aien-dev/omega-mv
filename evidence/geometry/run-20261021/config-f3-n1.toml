@@ -1,0 +1,18 @@
+# winner for W4+bf16-state, N=1: 92.32 words/s total predicted (pipe bound)
+[winner]
+shape = straight line
+format = W4+bf16-state
+conversations = 1
+groups = 1
+per_group = 1
+state_on_cpu_layers = 0
+state_in_gpu_l2_layers = 0
+state_over_road2_layers = 0
+router_on_cpu = 0
+head_cpu_share = 0.00
+road2_bytes = 0
+split_layer = 0
+cylinder = none
+predicted_ms_per_round = 10.8315
+predicted_words_per_s = 92.324
+

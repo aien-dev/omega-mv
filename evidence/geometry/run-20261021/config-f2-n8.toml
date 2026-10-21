@@ -1,0 +1,36 @@
+# winner for W4, N=8: 239.20 words/s total predicted (chain (crossings) bound)
+[winner]
+shape = figure eight
+format = W4
+conversations = 8
+groups = 1
+per_group = 8
+state_on_cpu_layers = 4
+state_in_gpu_l2_layers = 0
+state_over_road2_layers = 0
+router_on_cpu = 0
+head_cpu_share = 0.00
+road2_bytes = 0
+split_layer = 0
+cylinder = c2c
+predicted_ms_per_round = 33.4453
+predicted_words_per_s = 239.196
+
+# runner-up for W4, N=8: 237.13 words/s total predicted (pipe bound)
+[runner_up]
+shape = straight line
+format = W4
+conversations = 8
+groups = 1
+per_group = 8
+state_on_cpu_layers = 0
+state_in_gpu_l2_layers = 0
+state_over_road2_layers = 0
+router_on_cpu = 0
+head_cpu_share = 0.00
+road2_bytes = 0
+split_layer = 0
+cylinder = none
+predicted_ms_per_round = 33.7373
+predicted_words_per_s = 237.126
+

@@ -1,0 +1,8 @@
+coord straight: 63.26 words/s (want 63.25)
+coord figure eight at 0 us: 65.45 words/s (want 65.45)
+coord figure eight at 2 us: 65.20 words/s (want 65.19)
+coord figure eight at 10 us: 64.19 words/s (want 64.19)
+coord break-even round trip: 17.7 us (want 17.7)
+exactness: 72576/72576 cases solve == brute force
+negative control: planted ends-only solver wrong in 15896 cases (must be > 0)
+SELFTEST PASS

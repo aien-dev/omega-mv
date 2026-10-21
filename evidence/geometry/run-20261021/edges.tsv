@@ -1,0 +1,28 @@
+edge	value	unit	receipt
+DRAM pipe, GPU reading, held 30 s	2.28e+11	B/s	omega doc/machine-ceiling docs/MACHINE_CEILING.md:57 raw/gpu-stream-cached-30s.txt
+DRAM pipe, GPU reading, best burst	2.451e+11	B/s	docs/MACHINE_CEILING.md:57 raw/gpu-tc-peak.txt
+DRAM pipe, GPU writing	1.751e+11	B/s	docs/MACHINE_CEILING.md:58 raw/gpu-ceiling.txt
+GPU bytes lost per byte the CPU or drive takes from DRAM	1.17	B/B	docs/MACHINE_CEILING.md:105-107: (228.0-189.1)/(22.7+10.545); CPU-only split UNKNOWN (L321 E2)
+DRAM pipe, 20 CPU cores reading	7.13e+10	B/s	docs/MACHINE_CEILING.md:59 raw/cpu-dram-read-all20.txt
+CPU caches that can hold state, low (L2 25 MB + L3 24 MB, lscpu)	4.9e+07	B	docs/MACHINE_CEILING.md:69-70 raw/cpu-env.txt; real usable size UNKNOWN until L321 E1
+CPU caches that can hold state, high (L2 25 + L3 32 + SLC 16 MB, NVIDIA HC2025 deck)	7.3e+07	B	~/handoffs/2026-10-21-cpu-piston.md:8-11 (~/docs/gb10 deck txt 193-195, 240-243); UNKNOWN until L321 E1
+CPU L2, all 20 cores	4.675e+11	B/s	docs/MACHINE_CEILING.md:69 raw/cpu-bw.txt
+CPU L3, all 20 cores	2.53e+11	B/s	docs/MACHINE_CEILING.md:70 raw/cpu-bw.txt
+CPU DeltaNet state step, one layer one conversation	0.000118	core-s	~/handoffs/2026-10-21-cpu-piston.md:48-49 smoke (2 cores 59 us/step at load 45, NOT evidence); L321 E3a measures
+CPU cores given to the state step (X925)	10	cores	lscpu 10 X925 + 10 A725 (docs/MACHINE_CEILING.md:61); perfect split over 32 value heads ASSUMED, L321 E3a
+crossing round trip GPU->CPU->GPU over NVLink-C2C, cache to cache	2e-06	s	UNKNOWN: asked of L321 (ledger note, 16-49 KB message round trip); sweep 0..20 us
+extra round trip when the cylinder sits in DRAM and the flag is polled (three pistons)	1e-06	s	UNKNOWN: L312 chip piston live mode (host fill flag -> chip pickup gap); ASSUMED 1 us over C2C
+weights the GPU can read ahead while a crossing is out (reservoir)	0	B	UNKNOWN: resident kernel reading next layer into L2/SMEM during the wait; L2 24 MB but reuse across launches 0.84-1.00 (MACHINE_CEILING.md:65)
+second road: GPU reading CPU-cache-held bytes over C2C beside the pipe	0	B/s	UNKNOWN: L321 E1b (paper: 600 GB/s bidirectional, The Register, MACHINE_CEILING.md:71)
+GPU L2 size	2.4e+07	B	docs/MACHINE_CEILING.md:64 (ServeTheHome)
+GPU dependent launch cost	2.45e-05	s	docs/MACHINE_CEILING.md:78 raw/gpu-launch-cost.txt (23-26 us); every shape pays it alike, left out of the ranking
+NVMe read into DRAM	1.054e+10	B/s	docs/MACHINE_CEILING.md:72 raw/nvme-read-30s.txt
+10 GbE to a second machine, per direction	1.25e+09	B/s	docs/MACHINE_CEILING.md:74 (paper; no 10 Gb/s partner exists, UNMEASURED); L258 measures
+10 GbE round trip, small message	3e-05	s	UNKNOWN: no partner machine (MACHINE_CEILING.md:74); L258 link receipt; sweep 10..100 us
+Drake's Mac M2 memory read	1e+11	B/s	SPEC, not measured (~/handoffs/briefs/L258-two-pipelines.md:15)
+Drake's Mac room for model bytes	5e+09	B	~/handoffs/briefs/L258-two-pipelines.md:15,24-25
+Mac round trip over Wi-Fi	0.00593	s	~/handoffs/briefs/L258-two-pipelines.md:16 (ping, avg of 5)
+Mac Wi-Fi bulk rate	5e+07	B/s	UNKNOWN: ASSUMED 50 MB/s; only 4 KB per hop crosses, so it barely matters
+CPU router step (2048x256 bf16 from CPU caches), one conversation	4e-06	s	INFERRED: 1 MB at 253 GB/s L3 (MACHINE_CEILING.md:70); UNKNOWN until measured
+DRAM pipe, 20 CPU cores reading while the GPU streams	2.27e+10	B/s	docs/MACHINE_CEILING.md:63,106 raw/cc-cpu.txt (calc:e7991b26)
+GPU L2 that can be pinned to hold state across words	0	B	UNKNOWN: L2 is 24 MB (MACHINE_CEILING.md:64) but whether lines stay pinned while 3.5 GB streams through is unmeasured; experiment: hold 2-22 MB, stream 1.5 GB, re-read, count DRAM bytes

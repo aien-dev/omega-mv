@@ -6,7 +6,8 @@ here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
 out="$here/${1:-run-$(date -u +%Y%m%dT%H%MZ)}"
 mkdir -p "$out"
-bin="$out/geometry"
+bin=$(mktemp /tmp/geometry-XXXXXX)
+trap 'rm -f "$bin"' EXIT
 gcc -std=c11 -O2 -Wall -Wextra -Werror -o "$bin" "$root/tools/geometry/geometry.c" -lm
 parts="$here/parts-35b.tsv"
 g() { "$bin" "$parts" "$@"; }

@@ -1,0 +1,14 @@
+part	bytes_on_disk	reuse	bytes_per_word_N1
+routed experts (8 of 256 per layer)	32216186880	per word, union over N	1006755840
+one routed expert	3146112	-	-
+linear attention (30 layers)	1016597760	per stroke	1016597760
+full attention (10 layers)	272673280	per stroke	272673280
+router (40 x 256x2048 bf16)	41943040	per stroke	41943040
+shared experts	126008320	per stroke	126008320
+norms	331776	per stroke	331776
+lm_head (bf16)	1017118720	per stroke	1017118720
+DeltaNet state f32 (per conversation, read+write)	62914560	per conversation per word	125829120
+conv state f32 (per conversation, read+write)	2949120	per conversation per word	5898240
+KV per word of context (per conversation)	20480	read per word x context	83886080
+figure-eight crossing per layer (out + back)	49408	per conversation per word x 30	1482240
+weights per word N=1	-	-	3481428736

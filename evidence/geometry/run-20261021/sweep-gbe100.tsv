@@ -1,0 +1,169 @@
+format	N	shape	words_per_s_total	words_per_s_each	ms_per_round	bound	config	vs_straight
+FP8	1	straight line	61.34	61.34	16.302	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8	1	three pistons	62.01	62.01	16.126	chain (crossings)	G=1 m=30 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.09%
+FP8	1	figure eight	62.18	62.18	16.081	chain (crossings)	G=1 m=30 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.38%
+FP8	1	two machines (2nd Spark, 10 GbE)	60.95	60.95	16.406	chain (link round trip)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=1	-0.63%
+FP8	1	two machines (Mac, Wi-Fi)	35.22	35.22	28.390	chain (link round trip)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-42.58%
+FP8	1	two machines, experts split	54.48	54.48	18.357	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-11.19%
+FP8	1	solver free	62.18	62.18	16.081	chain (crossings)	G=1 m=30 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.38%
+FP8	2	straight line	92.54	46.27	21.613	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8	2	three pistons	93.56	46.78	21.377	chain (crossings)	G=1 m=16 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.10%
+FP8	2	figure eight	93.70	46.85	21.345	chain (crossings)	G=1 m=16 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.26%
+FP8	2	two machines (2nd Spark, 10 GbE)	120.64	60.32	16.578	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=28	+30.37%
+FP8	2	two machines (Mac, Wi-Fi)	70.45	35.22	28.390	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-23.87%
+FP8	2	two machines, experts split	91.78	45.89	21.791	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-0.82%
+FP8	2	solver free	93.70	46.85	21.345	chain (crossings)	G=1 m=16 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.26%
+FP8	4	straight line	125.64	31.41	31.838	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8	4	three pistons	126.67	31.67	31.578	chain (crossings)	G=1 m=8 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.82%
+FP8	4	figure eight	126.77	31.69	31.554	chain (crossings)	G=1 m=8 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.90%
+FP8	4	two machines (2nd Spark, 10 GbE)	183.60	45.90	21.786	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=25	+46.14%
+FP8	4	two machines (Mac, Wi-Fi)	117.76	29.44	33.966	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-6.27%
+FP8	4	two machines, experts split	140.55	35.14	28.460	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+11.87%
+FP8	4	solver free	126.77	31.69	31.554	chain (crossings)	G=1 m=8 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.90%
+FP8	8	straight line	157.44	19.68	50.812	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8	8	three pistons	158.29	19.79	50.540	chain (crossings)	G=1 m=4 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.54%
+FP8	8	figure eight	158.35	19.79	50.520	chain (crossings)	G=1 m=4 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.58%
+FP8	8	two machines (2nd Spark, 10 GbE)	248.17	31.02	32.236	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=23	+57.62%
+FP8	8	two machines (Mac, Wi-Fi)	162.34	20.29	49.278	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=36	+3.11%
+FP8	8	two machines, experts split	194.83	24.35	41.062	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+23.74%
+FP8	8	solver free	158.35	19.79	50.520	chain (crossings)	G=1 m=4 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.58%
+FP8	16	straight line	191.25	11.95	83.661	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8	16	three pistons	191.89	11.99	83.383	chain (crossings)	G=1 m=2 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.33%
+FP8	16	figure eight	191.93	12.00	83.365	chain (crossings)	G=1 m=2 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.36%
+FP8	16	two machines (2nd Spark, 10 GbE)	314.11	19.63	50.938	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=22	+64.24%
+FP8	16	two machines (Mac, Wi-Fi)	191.77	11.99	83.431	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=36	+0.28%
+FP8	16	two machines, experts split	251.11	15.69	63.716	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+31.30%
+FP8	16	solver free	191.93	12.00	83.365	chain (crossings)	G=1 m=2 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.36%
+FP8	32	straight line	238.71	7.46	134.053	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8	32	three pistons	239.21	7.48	133.772	chain (crossings)	G=1 m=1 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.21%
+FP8	32	figure eight	239.24	7.48	133.755	chain (crossings)	G=1 m=1 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.22%
+FP8	32	two machines (2nd Spark, 10 GbE)	379.76	11.87	84.264	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=21	+59.09%
+FP8	32	two machines (Mac, Wi-Fi)	224.47	7.01	142.560	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=36	-5.97%
+FP8	32	two machines, experts split	315.67	9.86	101.371	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+32.24%
+FP8	32	solver free	239.24	7.48	133.755	chain (crossings)	G=1 m=1 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.22%
+FP8+bf16-state	1	straight line	62.62	62.62	15.970	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	1	three pistons	62.62	62.62	15.970	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	1	figure eight	62.62	62.62	15.970	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	1	two machines (2nd Spark, 10 GbE)	62.22	62.22	16.073	chain (link round trip)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=1	-0.64%
+FP8+bf16-state	1	two machines (Mac, Wi-Fi)	35.64	35.64	28.057	chain (link round trip)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-43.08%
+FP8+bf16-state	1	two machines, experts split	55.48	55.48	18.024	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-11.40%
+FP8+bf16-state	1	solver free	62.62	62.62	15.970	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	2	straight line	95.47	47.74	20.948	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	2	three pistons	95.47	47.74	20.948	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	2	figure eight	95.47	47.74	20.948	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	2	two machines (2nd Spark, 10 GbE)	124.13	62.06	16.112	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=28	+30.01%
+FP8+bf16-state	2	two machines (Mac, Wi-Fi)	71.28	35.64	28.057	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-25.34%
+FP8+bf16-state	2	two machines, experts split	94.67	47.34	21.126	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-0.84%
+FP8+bf16-state	2	solver free	95.47	47.74	20.948	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	4	straight line	131.11	32.78	30.508	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	4	three pistons	131.11	32.78	30.508	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	4	figure eight	131.11	32.78	30.508	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	4	two machines (2nd Spark, 10 GbE)	187.81	46.95	21.299	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=25	+43.24%
+FP8+bf16-state	4	two machines (Mac, Wi-Fi)	120.12	30.03	33.301	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-8.39%
+FP8+bf16-state	4	two machines, experts split	147.44	36.86	27.130	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+12.45%
+FP8+bf16-state	4	solver free	131.11	32.78	30.508	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	8	straight line	166.14	20.77	48.152	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	8	three pistons	166.14	20.77	48.152	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	8	figure eight	166.14	20.77	48.152	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	8	two machines (2nd Spark, 10 GbE)	256.64	32.08	31.172	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=23	+54.47%
+FP8+bf16-state	8	two machines (Mac, Wi-Fi)	170.63	21.33	46.884	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=36	+2.70%
+FP8+bf16-state	8	two machines, experts split	208.32	26.04	38.402	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+25.39%
+FP8+bf16-state	8	solver free	166.14	20.77	48.152	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	16	straight line	204.24	12.76	78.341	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	16	three pistons	204.24	12.76	78.341	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	16	figure eight	204.24	12.76	78.341	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	16	two machines (2nd Spark, 10 GbE)	330.44	20.65	48.420	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=22	+61.79%
+FP8+bf16-state	16	two machines (Mac, Wi-Fi)	203.45	12.72	78.643	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=36	-0.38%
+FP8+bf16-state	16	two machines, experts split	273.99	17.12	58.396	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+34.15%
+FP8+bf16-state	16	solver free	204.24	12.76	78.341	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	32	straight line	259.29	8.10	123.412	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	32	three pistons	259.29	8.10	123.412	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	32	figure eight	259.29	8.10	123.412	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+FP8+bf16-state	32	two machines (2nd Spark, 10 GbE)	403.54	12.61	79.299	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=21	+55.63%
+FP8+bf16-state	32	two machines (Mac, Wi-Fi)	240.63	7.52	132.983	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=36	-7.20%
+FP8+bf16-state	32	two machines, experts split	352.69	11.02	90.731	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+36.02%
+FP8+bf16-state	32	solver free	259.29	8.10	123.412	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4	1	straight line	89.57	89.57	11.164	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4	1	three pistons	91.01	91.01	10.988	chain (crossings)	G=1 m=30 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.60%
+W4	1	figure eight	91.38	91.38	10.943	chain (crossings)	G=1 m=30 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+2.02%
+W4	1	two machines (2nd Spark, 10 GbE)	88.75	88.75	11.267	chain (link round trip)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=1	-0.92%
+W4	1	two machines (Mac, Wi-Fi)	52.40	52.40	19.085	chain (link round trip)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-41.50%
+W4	1	two machines, experts split	70.50	70.50	14.184	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-21.29%
+W4	1	solver free	91.38	91.38	10.943	chain (crossings)	G=1 m=30 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+2.02%
+W4	2	straight line	136.96	68.48	14.603	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4	2	three pistons	139.21	69.60	14.367	chain (crossings)	G=1 m=16 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.64%
+W4	2	figure eight	139.52	69.76	14.335	chain (crossings)	G=1 m=16 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.87%
+W4	2	two machines (2nd Spark, 10 GbE)	175.23	87.62	11.413	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=22	+27.95%
+W4	2	two machines (Mac, Wi-Fi)	103.39	51.69	19.345	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-24.51%
+W4	2	two machines, experts split	119.89	59.94	16.683	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-12.47%
+W4	2	solver free	139.52	69.76	14.335	chain (crossings)	G=1 m=16 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.87%
+W4	4	straight line	188.17	47.04	21.258	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4	4	three pistons	190.50	47.62	20.998	chain (crossings)	G=1 m=8 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.24%
+W4	4	figure eight	190.72	47.68	20.974	chain (crossings)	G=1 m=8 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.35%
+W4	4	two machines (2nd Spark, 10 GbE)	271.93	67.98	14.709	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=22	+44.52%
+W4	4	two machines (Mac, Wi-Fi)	166.48	41.62	24.027	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=36	-11.53%
+W4	4	two machines, experts split	185.47	46.37	21.567	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-1.44%
+W4	4	solver free	190.72	47.68	20.974	chain (crossings)	G=1 m=8 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+1.35%
+W4	8	straight line	237.13	29.64	33.737	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4	8	three pistons	239.05	29.88	33.465	chain (crossings)	G=1 m=4 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.81%
+W4	8	figure eight	239.20	29.90	33.445	chain (crossings)	G=1 m=4 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.87%
+W4	8	two machines (2nd Spark, 10 GbE)	371.63	46.45	21.527	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=21	+56.72%
+W4	8	two machines (Mac, Wi-Fi)	238.96	29.87	33.479	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=33	+0.77%
+W4	8	two machines, experts split	258.72	32.34	30.922	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+9.11%
+W4	8	solver free	239.20	29.90	33.445	chain (crossings)	G=1 m=4 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.87%
+W4	16	straight line	286.59	17.91	55.829	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4	16	three pistons	288.02	18.00	55.551	chain (crossings)	G=1 m=2 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.50%
+W4	16	figure eight	288.12	18.01	55.533	chain (crossings)	G=1 m=2 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.53%
+W4	16	two machines (2nd Spark, 10 GbE)	469.72	29.36	34.063	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=21	+63.90%
+W4	16	two machines (Mac, Wi-Fi)	313.42	19.59	51.050	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=31	+9.36%
+W4	16	two machines, experts split	331.97	20.75	48.197	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+15.83%
+W4	16	solver free	288.12	18.01	55.533	chain (crossings)	G=1 m=2 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.53%
+W4	32	straight line	350.10	10.94	91.404	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4	32	three pistons	351.18	10.97	91.123	chain (crossings)	G=1 m=1 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.31%
+W4	32	figure eight	351.24	10.98	91.106	chain (crossings)	G=1 m=1 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.33%
+W4	32	two machines (2nd Spark, 10 GbE)	560.58	17.52	57.084	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=20	+60.12%
+W4	32	two machines (Mac, Wi-Fi)	379.68	11.86	84.282	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=31	+8.45%
+W4	32	two machines, experts split	407.94	12.75	78.443	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+16.52%
+W4	32	solver free	351.24	10.98	91.106	chain (crossings)	G=1 m=1 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.33%
+W4+bf16-state	1	straight line	92.32	92.32	10.831	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	1	three pistons	92.32	92.32	10.831	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	1	figure eight	92.32	92.32	10.831	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	1	two machines (2nd Spark, 10 GbE)	91.45	91.45	10.935	chain (link round trip)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=1	-0.94%
+W4+bf16-state	1	two machines (Mac, Wi-Fi)	53.33	53.33	18.753	chain (link round trip)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-42.24%
+W4+bf16-state	1	two machines, experts split	72.19	72.19	13.852	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-21.81%
+W4+bf16-state	1	solver free	92.32	92.32	10.831	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	2	straight line	143.49	71.75	13.938	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	2	three pistons	143.49	71.75	13.938	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	2	figure eight	143.49	71.75	13.938	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	2	two machines (2nd Spark, 10 GbE)	181.52	90.76	11.018	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=23	+26.50%
+W4+bf16-state	2	two machines (Mac, Wi-Fi)	106.65	53.33	18.753	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=39	-25.68%
+W4+bf16-state	2	two machines, experts split	124.86	62.43	16.018	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-12.98%
+W4+bf16-state	2	solver free	143.49	71.75	13.938	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	4	straight line	200.73	50.18	19.928	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	4	three pistons	200.73	50.18	19.928	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	4	figure eight	200.73	50.18	19.928	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	4	two machines (2nd Spark, 10 GbE)	284.81	71.20	14.044	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=22	+41.89%
+W4+bf16-state	4	two machines (Mac, Wi-Fi)	172.11	43.03	23.241	chain (link round trip)	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=36	-14.26%
+W4+bf16-state	4	two machines, experts split	197.66	49.41	20.237	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	-1.53%
+W4+bf16-state	4	solver free	200.73	50.18	19.928	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	8	straight line	257.42	32.18	31.077	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	8	three pistons	257.42	32.18	31.077	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	8	figure eight	257.42	32.18	31.077	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	8	two machines (2nd Spark, 10 GbE)	394.37	49.30	20.285	pipe B	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=21	+53.20%
+W4+bf16-state	8	two machines (Mac, Wi-Fi)	252.61	31.58	31.670	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=34	-1.87%
+W4+bf16-state	8	two machines, experts split	283.07	35.38	28.262	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+9.96%
+W4+bf16-state	8	solver free	257.42	32.18	31.077	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	16	straight line	316.78	19.80	50.509	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	16	three pistons	316.78	19.80	50.509	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	16	figure eight	316.78	19.80	50.509	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	16	two machines (2nd Spark, 10 GbE)	512.40	32.03	31.225	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=21	+61.76%
+W4+bf16-state	16	two machines (Mac, Wi-Fi)	335.32	20.96	47.716	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=32	+5.85%
+W4+bf16-state	16	two machines, experts split	373.16	23.32	42.877	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+17.80%
+W4+bf16-state	16	solver free	316.78	19.80	50.509	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	32	straight line	396.22	12.38	80.763	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	32	three pistons	396.22	12.38	80.763	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	32	figure eight	396.22	12.38	80.763	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%
+W4+bf16-state	32	two machines (2nd Spark, 10 GbE)	621.05	19.41	51.526	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=21	+56.74%
+W4+bf16-state	32	two machines (Mac, Wi-Fi)	422.33	13.20	75.770	pipe A	G=2 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=31	+6.59%
+W4+bf16-state	32	two machines, experts split	471.96	14.75	67.803	chain (link round trip per layer)	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+19.11%
+W4+bf16-state	32	solver free	396.22	12.38	80.763	pipe	G=1 m=0 m2=0 m3=0 router_cpu=0 head_cpu=0.0 road2=0MB split=0	+0.00%

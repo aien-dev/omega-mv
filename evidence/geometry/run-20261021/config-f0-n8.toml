@@ -1,0 +1,36 @@
+# winner for FP8, N=8: 158.35 words/s total predicted (chain (crossings) bound)
+[winner]
+shape = figure eight
+format = FP8
+conversations = 8
+groups = 1
+per_group = 8
+state_on_cpu_layers = 4
+state_in_gpu_l2_layers = 0
+state_over_road2_layers = 0
+router_on_cpu = 0
+head_cpu_share = 0.00
+road2_bytes = 0
+split_layer = 0
+cylinder = c2c
+predicted_ms_per_round = 50.5197
+predicted_words_per_s = 158.354
+
+# runner-up for FP8, N=8: 157.44 words/s total predicted (pipe bound)
+[runner_up]
+shape = straight line
+format = FP8
+conversations = 8
+groups = 1
+per_group = 8
+state_on_cpu_layers = 0
+state_in_gpu_l2_layers = 0
+state_over_road2_layers = 0
+router_on_cpu = 0
+head_cpu_share = 0.00
+road2_bytes = 0
+split_layer = 0
+cylinder = none
+predicted_ms_per_round = 50.8117
+predicted_words_per_s = 157.444
+
