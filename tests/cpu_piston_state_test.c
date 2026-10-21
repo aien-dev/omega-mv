@@ -54,11 +54,35 @@ static void head_fused(float *restrict s, const float *restrict kt, const float 
     for (int o = 0; o < VD; o++) { delta[o] = (vt[o] - kv[o]) * beta; out[o] = 0.0f; }
     for (int r = 0; r < KD; r++) { float *row = s + r * VD; const float kr = kt[r], qr = qt[r]; for (int o = 0; o < VD; o++) { row[o] += kr * delta[o]; out[o] += row[o] * qr; } }
 }
+/* the same operations per element in the same order, two passes, sums held in registers: columns in blocks of 32 (eight
+ * 4-lane registers) so kv and out never round-trip through memory inside the row loop; separate multiply and add (no FMA) */
+#include <arm_neon.h>
+static void head_blocked(float *restrict s, const float *restrict kt, const float *restrict qt, const float *restrict vt, float g, float beta, float *restrict out) {
+    const float decay = expf(g); float kv[VD], delta[VD];
+    const float32x4_t dv = vdupq_n_f32(decay);
+    for (int ob = 0; ob < VD; ob += 32) {
+        float32x4_t a[8]; for (int j = 0; j < 8; j++) a[j] = vdupq_n_f32(0.0f);
+        for (int r = 0; r < KD; r++) {
+            float *row = s + r * VD + ob; const float32x4_t kr = vdupq_n_f32(kt[r]);
+            for (int j = 0; j < 8; j++) { float32x4_t x = vmulq_f32(vld1q_f32(row + 4 * j), dv); vst1q_f32(row + 4 * j, x); a[j] = vaddq_f32(a[j], vmulq_f32(x, kr)); }
+        }
+        for (int j = 0; j < 8; j++) vst1q_f32(kv + ob + 4 * j, a[j]);
+    }
+    for (int o = 0; o < VD; o++) delta[o] = (vt[o] - kv[o]) * beta;
+    for (int ob = 0; ob < VD; ob += 32) {
+        float32x4_t a[8], d[8]; for (int j = 0; j < 8; j++) { a[j] = vdupq_n_f32(0.0f); d[j] = vld1q_f32(delta + ob + 4 * j); }
+        for (int r = 0; r < KD; r++) {
+            float *row = s + r * VD + ob; const float32x4_t kr = vdupq_n_f32(kt[r]), qr = vdupq_n_f32(qt[r]);
+            for (int j = 0; j < 8; j++) { float32x4_t x = vaddq_f32(vld1q_f32(row + 4 * j), vmulq_f32(kr, d[j])); vst1q_f32(row + 4 * j, x); a[j] = vaddq_f32(a[j], vmulq_f32(x, qr)); }
+        }
+        for (int j = 0; j < 8; j++) vst1q_f32(out + ob + 4 * j, a[j]);
+    }
+}
 static void head_step(int fused, int layer, int hv, float *s, const In *in, float *out) {
     const int hk = hv / (VH / KH);
     const float g = -expf(A_LOG[layer][hv]) * softplusf_(in->a[hv] + DT_BIAS[layer][hv]);
     const float beta = sigmoidf_(in->b[hv]);
-    (fused ? head_fused : head_ref)(s, in->k + hk * KD, in->q + hk * KD, in->v + hv * VD, g, beta, out);
+    (fused == 2 ? head_blocked : fused ? head_fused : head_ref)(s, in->k + hk * KD, in->q + hk * KD, in->v + hv * VD, g, beta, out);
 }
 
 /* ---- the piston: workers own heads of every layer ---- */
@@ -109,7 +133,7 @@ int main(int argc, char **argv) {
     float *ref_state = aligned_alloc(64, sizeof(float) * (size_t)MAXL * VH * HS); float ref_out[VH * VD];
     printf("cpu_piston_state: main core %d, tokens %d, 2 MiB state per layer, inputs+outputs 40 KB per step\n", main_cpu, tokens);
     const int Ls[2] = { 1, 30 };
-    for (int li = 0; li < nl; li++) for (int lx = 0; lx < 2; lx++) for (int fused = 0; fused < 2; fused++) {
+    for (int li = 0; li < nl; li++) for (int lx = 0; lx < 2; lx++) for (int fused = 0; fused < 3; fused++) {
         g_w = 0; for (const char *s = lists[li]; *s && g_w < MAXW;) { g_cpus[g_w++] = (int)strtol(s, (char **)&s, 10); if (*s == ',') s++; else break; }
         if (VH % g_w) { printf("workers %d do not divide %d heads: skipped\n", g_w, VH); continue; }
         g_L = Ls[lx]; g_fused = fused; atomic_store(&g_seq, 0); atomic_store(&g_done, 0);
@@ -138,7 +162,7 @@ int main(int argc, char **argv) {
         const int skip = 2 * g_L; qsort(t + skip, steps - skip, 8, cmp_u); const int n = steps - skip;
         double la = 0; FILE *f = fopen("/proc/loadavg", "r"); if (f) { if (fscanf(f, "%lf", &la) != 1) la = -1; fclose(f); }
         printf("STATE workers=%d cpus=%s layers=%d variant=%s steps=%d step_med_us=%.2f step_p10_us=%.2f step_p90_us=%.2f token_med_us=%.1f state_gbs=%.1f wrong_out=%zu wrong_state=%zu load1=%.1f\n",
-               g_w, lists[li], g_L, fused ? "fused" : "ref", n, t[skip + n / 2] / 1e3, t[skip + n / 10] / 1e3, t[skip + n * 9 / 10] / 1e3,
+               g_w, lists[li], g_L, fused == 2 ? "blocked" : fused ? "fused" : "ref", n, t[skip + n / 2] / 1e3, t[skip + n / 10] / 1e3, t[skip + n * 9 / 10] / 1e3,
                t[skip + n / 2] * g_L / 1e3, 2.0 * 2097152.0 / (double)t[skip + n / 2], wrong, swrong, la);
         fflush(stdout);
         if (wrong || swrong) fail++;
