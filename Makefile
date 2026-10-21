@@ -104,6 +104,27 @@ check-physics-lock:
 		fi; \
 	fi
 
+# L377: every object that includes a physics header or is built from a physics source depends on this
+# stamp. The stamp rule (run on every make, before those objects) first runs the lock check, so an
+# explicit target such as $(OUT_DIR)/nvrm.o is refused at a wrong PHYSICS_DIR just like `all`, and it
+# records "<PHYSICS_DIR> <its HEAD>"; the file is rewritten only when that line changes, so the objects
+# rebuild when PHYSICS_DIR or its commit changes and not otherwise (mtimes of the physics sources alone
+# cannot tell: a pinned nvrm.c can be older than an object built from another checkout).
+# tests/physics_lock_make_test.sh checks that PHYSICS_OBJS covers every object with a physics include.
+PHYSICS_STAMP = $(OUT_DIR)/physics.stamp
+PHYSICS_OBJS = $(addprefix $(OUT_DIR)/,m16_native.o nvrm.o omegatool.o omega_accelerator_world.o \
+	omega_blackwell_engine.o omega_blackwell_gates.o omega_blackwell_submit.o omega_evidence.o \
+	omega_gpu_platform_linux.o omega_numeric_divsqrt_gb10.o omega_numeric_gb10.o \
+	omega_numeric_ldst_gb10.o omega_numeric_reduce_gb10.o omega_world_gates.o)
+
+FORCE:
+
+$(PHYSICS_STAMP): FORCE check-physics-lock | $(OUT_DIR)
+	@cur="$(PHYSICS_DIR) $$(git -C $(PHYSICS_DIR) rev-parse HEAD 2>/dev/null || echo none)"; \
+	if [ ! -f $@ ] || [ "$$(cat $@)" != "$$cur" ]; then printf '%s\n' "$$cur" > $@; fi
+
+$(PHYSICS_OBJS): $(PHYSICS_STAMP)
+
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
