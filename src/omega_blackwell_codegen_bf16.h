@@ -25,10 +25,12 @@
  * Grid: grid_x CTAs, grid_y = 1. The kernel does not depend on n or the grid: one kernel per (k, rows, warps, depth,
  * mutant) serves every n. ROWS form (spec.ystride != 0, sc #642 prefill): grid_y token rows, row cy reads x + cy * k
  * floats and writes y + cy * ystride floats (the Qwen3.8-27B DeltaNet a|b projection of a prefill chunk).
- * XBATCH form (spec.xbatch 2..4, L312 stroke: the lm_head once for all heads): xbatch x rows (row m at x + m * k floats,
+ * XBATCH form (spec.xbatch 2..8, L312 stroke: the lm_head once for all heads): xbatch x rows (row m at x + m * k floats,
  * all staged in shared memory: k * 4 * xbatch bytes) share every weight read; each (weight row, x row) accumulates in the
  * SAME order as the one-row kernel, so every output row is bit-identical to the one-row GEMV of its own x; y row m
- * goes to y + m * ystride floats (ystride >= n, required). grid_y stays 1.
+ * goes to y + m * ystride floats (ystride >= n, required). grid_y stays 1. Above 4 x rows (lever 6: all 8 heads in one
+ * read, 64 KiB of shared memory at k 2048) the x rows of a step are read one at a time and the eight weight halves are
+ * extracted once per step, so 16 warps still fit the register file; the programs at 1..4 x rows are unchanged.
  *
  * mutant (tests only): 1 pairs the two halves of every word with the wrong x (low half takes the high half's x and
  * back), 2 never advances the x pointer (every step uses step 0's x: wrong whenever KS >= 2), 3 drops the last word
@@ -50,7 +52,7 @@ extern "C" {
 #define OMEGA_BF16_ARG_STRIDE 0x39cu
 #define OMEGA_BF16_ARGS_WORDS 8u
 #define OMEGA_BF16_STEP_BYTES 512u /* weight bytes per row per K step (32 lanes x 16) */
-#define OMEGA_BF16_MAX_XBATCH 4u    /* x rows per CTA in the XBATCH form (f32 rows staged in shared: 4 x 8 KiB at k 2048) */
+#define OMEGA_BF16_MAX_XBATCH 8u    /* x rows per CTA in the XBATCH form (f32 rows staged in shared: 8 x 8 KiB = 64 KiB at k 2048) */
 
 typedef struct {
     uint32_t k;      /* multiple of 256 (one step) and of 32 * warps (exact staging rounds), <= OMEGA_BF16_MAX_K */
