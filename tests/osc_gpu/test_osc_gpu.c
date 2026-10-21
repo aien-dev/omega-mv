@@ -10,7 +10,11 @@
  * chip run states its own tolerance). Also: the guard-predicate encoder words, the division sequence
  * against n / d, the trap path (status word, poison, no stores after a trap) and the refusals. */
 #include "omega_osc_gpu.h"
+#include "omega_osc_launch.h"
 #include "bw_warp_sim.h"
+#ifdef OSC_CHIP
+#include "omega_gpu_session.h"
+#endif
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
@@ -18,12 +22,35 @@
 #include <string.h>
 
 static int g_checks, g_failed, g_quiet;
+#ifdef OSC_CHIP
+static uint64_t g_chip_ns; static unsigned g_chip_runs;
+#endif
 #define CHECK(cond, ...) do { g_checks++; if (!(cond)) { g_failed++; if (!g_quiet) { printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } } } while (0)
 
 static uint32_t lcg(uint32_t *s) { *s = *s * 1664525u + 1013904223u; return *s; }
 static float frand(uint32_t *s) { return (float)((int32_t)(lcg(s) >> 8) - (1 << 23)) / (float)(1 << 21); } /* about -4..4 */
 static uint32_t fbits(float f) { uint32_t u; memcpy(&u, &f, 4); return u; }
 static float bitsf(uint32_t u) { float f; memcpy(&f, &u, 4); return f; }
+/* the float equality the references use: NaN results compare equal whatever their payload (GPU.md section 4) */
+static bool same_f(float x, float y) { return (x != x && y != y) || fbits(x) == fbits(y); }
+
+/* The MUFU tolerance, stated before any chip run (GPU.md section 5): on the chip, exp, inv, inv root
+ * and root are the fast function unit, which treats a denormal input as zero and is not correctly
+ * rounded. A result passes when it equals the reference bit for bit (NaN equal to NaN), or when the
+ * reference is finite and not zero and |got - want| <= 2^-20 |want|. On the host the simulator's
+ * EX2/RCP/RSQ are exact, so there the test stays bit for bit and mufu_in leaves the input alone. */
+#ifdef OSC_CHIP
+#define MUFU_REL 0x1p-20f
+static float mufu_in(float x) { return fpclassify(x) == FP_SUBNORMAL ? copysignf(0.0f, x) : x; }
+static bool near_mufu(float got, float want) {
+    if (same_f(got, want)) return true;
+    if (!isfinite(want) || want == 0.0f || !isfinite(got)) return false;
+    return fabsf(got - want) <= MUFU_REL * fabsf(want);
+}
+#else
+static float mufu_in(float x) { return x; }
+static bool near_mufu(float got, float want) { return same_f(got, want); }
+#endif
 
 static OscUnit g_unit;
 static const char *g_dir;
@@ -49,9 +76,13 @@ static int load_kernel(const char *name, OscGpuKernel *k) {
 }
 
 /* simulator set-up: argument words, status buffer, memory ranges */
-typedef struct { WsSim s; uint32_t status[OSC_GPU_STATUS_WORDS]; uint8_t smem[OSC_MAX_SHARED_BYTES]; } Run;
+typedef struct {
+    WsSim s; uint32_t status[OSC_GPU_STATUS_WORDS]; uint8_t smem[OSC_MAX_SHARED_BYTES];
+    const OscGpuKernel *k; void *host[OSC_MAX_KPARAMS]; uint32_t elems[OSC_MAX_KPARAMS]; /* for the chip run */
+} Run;
 static void run_init(Run *r, const OscGpuKernel *k, uint32_t blocks, uint32_t batches) {
     memset(r, 0, sizeof *r);
+    r->k = k;
     r->s.p = k->prog; r->s.threads = k->threads; r->s.smem = r->smem; r->s.smem_bytes = k->shared_bytes;
     uint64_t st = (uint64_t)(uintptr_t)r->status;
     uint32_t w = (OSC_GPU_ARG_BASE + k->status_off) / 4;
@@ -65,7 +96,56 @@ static void run_buf(Run *r, const OscGpuKernel *k, unsigned param, void *p, uint
     uint32_t w = (OSC_GPU_ARG_BASE + k->params[param].off) / 4;
     r->s.cbank[w] = (uint32_t)a; r->s.cbank[w + 1] = (uint32_t)(a >> 32); r->s.cbank[w + 2] = elems;
     r->s.ranges[r->s.nranges++] = (WsRange){ (uintptr_t)p, (uintptr_t)p + 4u * (uintptr_t)elems };
+    r->host[param] = p; r->elems[param] = elems;
 }
+#ifdef OSC_CHIP
+/* chip mode (OSC_CHIP, mk target test-osc-gpu-chip): the same tests, the same references, on the GB10.
+ * run_go copies every buffer into its own session allocation, launches through omega_kernel_launch
+ * (src/omega_osc_launch.c), and copies the edit buffers back. One chip run per case: the fragment
+ * orders are a simulator matter, so order 1 is skipped. */
+static OmegaGpuScratch g_dev[OSC_MAX_KPARAMS];
+static OmegaGpuMem g_code;
+static uint8_t g_code_sha[32];
+static int g_chip_dead;
+static int run_go(Run *r, int order, uint32_t gx, uint32_t gy, const char *what) {
+    if (order != 0) return 1;
+    const OscGpuKernel *k = r->k;
+    if (g_chip_dead) { CHECK(0, "%s: not run, an earlier chip failure", what); return 1; }
+    char err[320] = "";
+    if (!g_code.va || memcmp(g_code_sha, k->code_sha256, 32) != 0) {
+        if (g_code.va) omega_gpu_session_free(&g_code);
+        if (omega_kernel_load(k, &g_code) != OSC_LAUNCH_OK) { CHECK(0, "%s: code load: %s", what, omega_gpu_session_last_error()); g_chip_dead = 1; return 1; }
+        memcpy(g_code_sha, k->code_sha256, 32);
+    }
+    OscGpuArg a[OSC_MAX_KPARAMS];
+    memset(a, 0, sizeof a);
+    for (unsigned i = 0; i < k->nparams; i++) {
+        const OscGpuParam *p = &k->params[i];
+        a[i].kind = p->kind;
+        if (p->kind == OSC_GPU_P_VIEW || p->kind == OSC_GPU_P_EDIT) {
+            size_t bytes = 4u * (size_t)r->elems[i];
+            if (omega_gpu_session_scratch(&g_dev[i], bytes ? bytes : 4u) != 0) { CHECK(0, "%s: alloc: %s", what, omega_gpu_session_last_error()); g_chip_dead = 1; return 1; }
+            memcpy(g_dev[i].mem.cpu, r->host[i], bytes);
+            (void)omega_gpu_session_sync_to_gpu(&g_dev[i].mem);
+            a[i].mem = &g_dev[i].mem; a[i].byte_off = 0; a[i].len = r->elems[i];
+        } else {
+            a[i].word = r->s.cbank[(OSC_GPU_ARG_BASE + p->off) / 4];
+        }
+    }
+    OscGpuRun run;
+    int rc = omega_kernel_launch(k, &g_code, a, k->nparams, gx, gy, 2000, &run, err, sizeof err);
+    CHECK(rc == OSC_LAUNCH_OK, "%s: chip launch %d: %s", what, rc, err);
+    if (rc != OSC_LAUNCH_OK) { if (rc == OSC_LAUNCH_CHIP) g_chip_dead = 1; memset(r->status, 0, sizeof r->status); return 1; }
+    for (unsigned i = 0; i < k->nparams; i++)
+        if (k->params[i].kind == OSC_GPU_P_EDIT) {
+            (void)omega_gpu_session_sync_to_cpu(&g_dev[i].mem);
+            memcpy(r->host[i], g_dev[i].mem.cpu, 4u * (size_t)r->elems[i]);
+        }
+    memcpy(r->status, run.status, sizeof r->status);
+    g_chip_ns += run.elapsed_ns; g_chip_runs++;
+    return 0;
+}
+#else
 static int run_go(Run *r, int order, uint32_t gx, uint32_t gy, const char *what) {
     r->s.order = order;
     int e = ws_run(&r->s, gx, gy);
@@ -73,6 +153,7 @@ static int run_go(Run *r, int order, uint32_t gx, uint32_t gy, const char *what)
     if (e) memset(r->status, 0, sizeof r->status);
     return e;
 }
+#endif
 static int status_code(const Run *r) { for (unsigned i = 1; i < OSC_GPU_STATUS_WORDS; i++) if (r->status[i]) return (int)i; return 0; }
 
 /* ---------------------------------------------------------------- kernels */
@@ -122,8 +203,8 @@ static void test_gate(void) {
         int bad = 0;
         for (int i = 0; i < N; i++) {
             float m = -gg[i] * bitsf(0x3fb8aa3bu);          /* the FMUL before EX2: one rounding */
-            float want = a0[i] * (1.0f / (exp2f(m) + 1.0f)); /* simulator EX2 = exp2f, RCP = 1/x */
-            if (fbits(a[i]) != fbits(want)) bad++;
+            float want = a0[i] * (1.0f / (exp2f(mufu_in(m)) + 1.0f)); /* simulator EX2 = exp2f, RCP = 1/x */
+            if (!near_mufu(a[i], want)) bad++;
         }
         CHECK(bad == 0 && status_code(&r) == 0, "gate order %d: %d wrong words", order, bad);
     }
@@ -202,8 +283,6 @@ static void test_nest16(void) {
     osc_gpu_free(&k);
 }
 
-/* the float equality the references use: NaN results compare equal whatever their payload (GPU.md section 4) */
-static bool same_f(float x, float y) { return (x != x && y != y) || fbits(x) == fbits(y); }
 
 /* float inputs: random values, then the special ones (zeros, infinities, NaN, denormals, the u32 range edges) */
 static void float_inputs(float *v, int n, uint32_t seed) {
@@ -283,8 +362,9 @@ static float ref_f(int op, float fa, float fb, uint32_t xa) {
     case 3: return fminf(fa, fb); case 4: return fmaxf(fa, fb);
     case 5: return bitsf(fbits(fa) ^ 0x80000000u);
     case 6: return fmaf(fa, fb, fa);
-    case 7: { float m = fa * bitsf(0x3fb8aa3bu); return exp2f(m); }
-    case 8: return 1.0f / fa; case 9: return 1.0f / sqrtf(fa); case 10: return 1.0f / (1.0f / sqrtf(fa));
+    case 7: { float m = fa * bitsf(0x3fb8aa3bu); return exp2f(mufu_in(m)); }
+    case 8: return 1.0f / mufu_in(fa); case 9: return 1.0f / sqrtf(mufu_in(fa));
+    case 10: return 1.0f / mufu_in(1.0f / sqrtf(mufu_in(fa)));
     case 11: return (float)xa;
     case 12: return 0.0f;
     default: return 0.0f;
@@ -310,7 +390,7 @@ static void test_ops_f(void) {
             r.s.cbank[(OSC_GPU_ARG_BASE + k.params[4].off) / 4] = (uint32_t)op;
             if (run_go(&r, order, 1, 1, "ops_f")) continue;
             int bad = 0, first = -1;
-            for (int t = 0; t < N; t++) if (!same_f(of[t], ref_f(op, f[t], h[t], x[t]))) { bad++; if (first < 0) first = t; }
+            for (int t = 0; t < N; t++) if (!(op >= 7 && op <= 10 ? near_mufu(of[t], ref_f(op, f[t], h[t], x[t])) : same_f(of[t], ref_f(op, f[t], h[t], x[t])))) { bad++; if (first < 0) first = t; }
             CHECK(bad == 0 && status_code(&r) == 0, "ops_f op %d order %d: %d wrong (first t %d: got 0x%08x want 0x%08x), status %d", op, order, bad, first,
                   first >= 0 ? fbits(of[first]) : 0, first >= 0 ? fbits(ref_f(op, f[first], h[first], x[first])) : 0, status_code(&r));
         }
@@ -335,7 +415,9 @@ static void test_nest16j(void) {
             if (out[t] != want) bad++;
         }
         CHECK(bad == 0 && status_code(&r) == 0, "nest16j order %d: %d wrong counts", order, bad);
+#ifndef OSC_CHIP
         CHECK(r.s.peak_bars == 16, "nest16j order %d: %d barriers armed at once, want 16", order, r.s.peak_bars);
+#endif
     }
     osc_gpu_free(&k);
 }
@@ -354,7 +436,9 @@ static void test_vloop(void) {
         int bad = 0;
         for (int t = 0; t < 64; t++) { uint32_t n = x[t] % 8, want = 0; for (uint32_t i = 0; i < n; i++) want += 3 * i + 1; if (out[t] != want) bad++; }
         CHECK(bad == 0 && status_code(&r) == 0, "vloop order %d: %d wrong sums", order, bad);
+#ifndef OSC_CHIP
         CHECK(r.s.splits > 0, "vloop order %d: the loop never split the warp (not a varying loop)", order);
+#endif
     }
     osc_gpu_free(&k);
 }
@@ -398,6 +482,88 @@ static void test_division(void) {
     printf("  division by a number: %ld quotients checked\n", n);
 }
 
+
+/* ------------------------------------------------ the launcher's checks (omega_kernel_launch_words) */
+
+static int lw(const OscGpuKernel *k, const OmegaGpuMem *code, const OscGpuArg *a, unsigned n, uint32_t bx, uint32_t by,
+              uint32_t *w, char *err, size_t errn) {
+    return omega_kernel_launch_words(k, code, a, n, bx, by, 0x7000000000ull, w, err, errn);
+}
+
+static void test_launch_checks(void) {
+    OscGpuKernel k;
+    if (load_kernel("vadd", &k) != 0) return;
+    static uint8_t codebytes[1 << 16];
+    CHECK(k.code_size <= sizeof codebytes, "vadd code too large for the test");
+    memcpy(codebytes, k.code, k.code_size);
+    OmegaGpuMem code = { .kind = OMEGA_GPU_HANDLE_BUF_CODE, .cpu = codebytes, .va = 0x10000, .size = k.code_size };
+    OmegaGpuMem m1 = { .kind = OMEGA_GPU_HANDLE_BUF_DATA, .va = 0x100000, .size = 4096 };
+    OmegaGpuMem m2 = { .kind = OMEGA_GPU_HANDLE_BUF_DATA, .va = 0x200000, .size = 4096 };
+    OscGpuArg ok[3] = {
+        { .kind = OSC_GPU_P_VIEW, .mem = &m1, .byte_off = 0, .len = 256 },
+        { .kind = OSC_GPU_P_VIEW, .mem = &m1, .byte_off = 1024, .len = 256 },
+        { .kind = OSC_GPU_P_EDIT, .mem = &m2, .byte_off = 0, .len = 256 },
+    };
+    uint32_t w[OSC_GPU_MAX_ARG_WORDS];
+    char err[256] = "";
+    int rc = lw(&k, &code, ok, 3, 4, 1, w, err, sizeof err);
+    CHECK(rc == OSC_LAUNCH_OK, "vadd launch refused: %s", err);
+    if (rc == OSC_LAUNCH_OK) {
+        CHECK(w[k.params[0].off / 4] == 0x100000u && w[k.params[0].off / 4 + 1] == 0 && w[k.params[0].off / 4 + 2] == 256, "a words");
+        CHECK(w[k.params[1].off / 4] == 0x100400u && w[k.params[1].off / 4 + 2] == 256, "b words");
+        CHECK(w[k.params[2].off / 4] == 0x200000u && w[k.params[2].off / 4 + 2] == 256, "c words");
+        CHECK(w[k.status_off / 4] == 0 && w[k.status_off / 4 + 1] == 0x70u, "status address words");
+        CHECK(w[k.blocks_off / 4] == 4 && w[k.batches_off / 4] == 1, "grid words");
+    }
+    /* two views may share bytes */
+    OscGpuArg a[3];
+    memcpy(a, ok, sizeof a); a[1].byte_off = 512;
+    CHECK(lw(&k, &code, a, 3, 1, 1, w, err, sizeof err) == OSC_LAUNCH_OK, "overlapping views refused: %s", err);
+    /* each refusal */
+    struct { const char *what, *msg; } want[] = {
+        { "count", "arguments" }, { "kind", "kernel line says" }, { "edit overlap", "overlap" }, { "edit overlap touching", "overlap" },
+        { "past the end", "not inside" }, { "unaligned", "not inside" }, { "code buffer as data", "not a session data" },
+        { "receipt", "receipt" }, { "zero blocks", "zero" }, { "batches", "never reads batch" },
+    };
+    for (unsigned t = 0; t < sizeof want / sizeof want[0]; t++) {
+        memcpy(a, ok, sizeof a);
+        unsigned n = 3; uint32_t bx = 2, by = 1;
+        OmegaGpuMem bad = code;
+        switch (t) {
+        case 0: n = 2; break;
+        case 1: a[0].kind = OSC_GPU_P_U32; break;
+        case 2: a[2].mem = &m1; a[2].byte_off = 1020; break;     /* c starts on b's first word minus one word */
+        case 3: a[2].mem = &m1; a[2].byte_off = 2044; break;     /* c's first word is b's last word */
+        case 4: a[2].byte_off = 4096 - 1020; break;              /* 1024 bytes from 3076: 4 bytes past 4096 */
+        case 5: a[2].byte_off = 2; break;
+        case 6: a[0].mem = &code; break;
+        case 7: codebytes[k.code_size - 1] ^= 1; break;
+        case 8: bx = 0; break;
+        case 9: by = 2; break;
+        }
+        err[0] = 0;
+        rc = lw(&k, &bad, a, n, bx, by, w, err, sizeof err);
+        if (t == 7) codebytes[k.code_size - 1] ^= 1;
+        if (t == 9 && k.reads_batch) continue;
+        CHECK(rc == OSC_LAUNCH_REFUSED && strstr(err, want[t].msg), "launch with %s not refused (rc %d, %s)", want[t].what, rc, err);
+    }
+    /* one word short of the end is inside; the edit range ending where b starts is no overlap */
+    memcpy(a, ok, sizeof a); a[2].byte_off = 4096 - 1024;
+    CHECK(lw(&k, &code, a, 3, 1, 1, w, err, sizeof err) == OSC_LAUNCH_OK, "range ending at the allocation end refused: %s", err);
+    memcpy(a, ok, sizeof a); a[2].mem = &m1; a[2].byte_off = 2048;
+    CHECK(lw(&k, &code, a, 3, 1, 1, w, err, sizeof err) == OSC_LAUNCH_OK, "edit range after b refused: %s", err);
+    /* a kernel that never reads block: more than one block is refused */
+    OscGpuKernel nb = k; nb.reads_block = false;
+    CHECK(lw(&nb, &code, ok, 3, 2, 1, w, err, sizeof err) == OSC_LAUNCH_REFUSED && strstr(err, "never reads block"), "2 blocks of a kernel without block not refused (%s)", err);
+    CHECK(lw(&nb, &code, ok, 3, 1, 1, w, err, sizeof err) == OSC_LAUNCH_OK, "1 block refused: %s", err);
+    /* a bool is 0 or 1 */
+    OscGpuKernel bk = k; bk.params[0].kind = OSC_GPU_P_BOOL;
+    memcpy(a, ok, sizeof a); a[0] = (OscGpuArg){ .kind = OSC_GPU_P_BOOL, .word = 2 };
+    CHECK(lw(&bk, &code, a, 3, 1, 1, w, err, sizeof err) == OSC_LAUNCH_REFUSED && strstr(err, "bool"), "bool 2 not refused (%s)", err);
+    a[0].word = 1;
+    CHECK(lw(&bk, &code, a, 3, 1, 1, w, err, sizeof err) == OSC_LAUNCH_OK && w[bk.params[0].off / 4] == 1, "bool 1 refused: %s", err);
+    osc_gpu_free(&k);
+}
 static void test_refusals(void) {
     OscGpuKernel k;
     char err[256];
@@ -411,6 +577,31 @@ static void test_refusals(void) {
     CHECK(osc_gpu_build(&u, 0, &k, err, sizeof err) != 0 && strstr(err, "not a kernel"), "a host function is not refused (%s)", err);
 }
 
+#ifdef OSC_CHIP
+/* chip mode: the kernel tests only (the host-only pieces are proven by the host binary). OSC_GPU_MUTANT=n
+ * builds every kernel with mutant n, for the red run that shows the chip test can fail. */
+int main(int argc, char **argv) {
+    if (argc != 2) { fprintf(stderr, "usage: test_osc_gpu_chip <ir-dir>\n"); return 2; }
+    g_dir = argv[1];
+    const char *mu = getenv("OSC_GPU_MUTANT");
+    osc_gpu_mutant = mu ? atoi(mu) : 0;
+    omega_gpu_session_lock();
+    if (!omega_gpu_session_open()) {
+        printf("test_osc_gpu_chip: session open failed: %s\n", omega_gpu_session_last_error());
+        omega_gpu_session_unlock();
+        return 1;
+    }
+    printf("test_osc_gpu_chip: GB10, mutant %d, MUFU tolerance 2^-20 relative (stated in the source before the run)\n", osc_gpu_mutant);
+    kernels();
+    if (g_code.va) omega_gpu_session_free(&g_code);
+    for (unsigned i = 0; i < OSC_MAX_KPARAMS; i++) omega_gpu_session_scratch_free(&g_dev[i]);
+    omega_gpu_session_close();
+    omega_gpu_session_unlock();
+    printf("test_osc_gpu_chip: %u chip launches, %.3f ms on the chip in total\n", g_chip_runs, (double)g_chip_ns / 1e6);
+    printf("test_osc_gpu_chip: %d checks, %d failed\n", g_checks, g_failed);
+    return g_failed ? 1 : 0;
+}
+#else
 int main(int argc, char **argv) {
     if (argc != 2) { fprintf(stderr, "usage: test_osc_gpu <ir-dir>\n"); return 2; }
     g_dir = argv[1];
@@ -418,7 +609,9 @@ int main(int argc, char **argv) {
     test_division();
     kernels();
     test_refusals();
+    test_launch_checks();
     test_mutants();
     printf("test_osc_gpu: %d checks, %d failed\n", g_checks, g_failed);
     return g_failed ? 1 : 0;
 }
+#endif
