@@ -24,7 +24,7 @@ while IFS= read -r prompt; do
   [ -s "$f" ] || $BIN trace35 "$MODEL" "$f" --prompt "$prompt" --gen "$GEN" --positions "$POS" > "$f.log" 2>&1 || { log "trace $i FAILED: $(tail -1 $f.log)"; exit 1; }
   LIST="$LIST${LIST:+,}$f"
 done < "$HERE/prompts-32.txt"
-log "traces done: $i, positions per trace: $(for f in $OUT/traces/t*.json; do jq '.argmax|length' $f; done | sort -n | tr '\n' ' '), host ms/token: $(for f in $OUT/traces/t*.json; do jq '.host_ns_per_token/1e6|round' $f; done | sort -n | sed -n '1p;$p' | tr '\n' ' ')"
+log "traces done: $i, positions per trace: $(for f in $OUT/traces/t??.json; do jq '.argmax|length' $f; done | sort -n | tr '\n' ' '), host ms/token: $(for f in $OUT/traces/t??.json; do jq '.host_ns_per_token/1e6|round' $f; done | sort -n | sed -n '1p;$p' | tr '\n' ' ')"
 $BIN union "$OUT/union.json" --positions $POS --experts 256 --expert-bytes $EXPERT_BYTES $(echo $LIST | tr ',' ' ') > "$OUT/union.log" 2>&1 && log "union: $(jq -c '[.rows[] | {n, mean:.measured_union.mean, indep:.independent_draw_expectation}]' "$OUT/union.json")" || { log "union FAILED: $(tail -1 "$OUT/union.log")"; exit 1; }
 $BIN plan union "$MODEL" "$OUT/plan-union.json" --buffers 2 $(echo $LIST | tr ',' ' ') 2>&1 | tee -a "$OUT/run.log"
 $BIN schedule "$OUT/plan-union.json" "$MANIFEST" $POS "$OUT/schedule-union.json" 2>&1 | tee -a "$OUT/run.log" || exit 1

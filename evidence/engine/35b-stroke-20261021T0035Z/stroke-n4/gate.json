@@ -1,0 +1,38 @@
+{
+  "eager_expert_reads_at_open": 0,
+  "failure": null,
+  "heads": [
+    {
+      "head": 0,
+      "identical": true,
+      "of": 12,
+      "routes_identical_positions": 12,
+      "same": 12
+    },
+    {
+      "head": 1,
+      "identical": true,
+      "of": 12,
+      "routes_identical_positions": 12,
+      "same": 12
+    },
+    {
+      "head": 2,
+      "identical": true,
+      "of": 12,
+      "routes_identical_positions": 12,
+      "same": 12
+    },
+    {
+      "head": 3,
+      "identical": true,
+      "of": 12,
+      "routes_identical_positions": 12,
+      "same": 12
+    }
+  ],
+  "identical_tokens_every_head": true,
+  "misfires": 0,
+  "of": 12,
+  "strokes_done": 12
+}

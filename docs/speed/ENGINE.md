@@ -136,14 +136,44 @@ lead 4 is worse than 2 (7.9 s total) because the loader competes with the steady
 The rule the receipt gives: start the next head's loader about two tokens before its first beat, not earlier.
 
 ### E. One base, many heads, one stroke on the 35B (H6)
-`35b-stroke-*/` (`run-stroke-35b.sh`): 32 prompts traced through the exact 35B forward one token at a time
-(`trace35 --prompt`), one union plan and schedule over the first 12 positions, strokes at N = 1, 2, 4, 8, 16, 32 heads.
-The forward is factored into its own pieces (embed, read layer, mix, MoE, finish: `forward` is composed of exactly
-these, 14 tests), and the stroke steps all N sequences one layer at a time, so every head reads its experts of layer
-l inside the same beat, the trunk of layer l is read once for all N, and the ring copies each expert out of the
-cylinder once per beat (repeats come from that copy). Gate: every head's token equals its own trace at every position.
-Smoke run (two traces, two positions, N = 1 and 2, not a receipt): gate PASS per head, expert reads at open 0,
-0 misfires. The 32-prompt run is queued behind the swap; RESULTS PENDING.
+`35b-stroke-20261021T0035Z/` (`run-stroke-35b.sh`, one binary for every cell): 32 prompts traced through the exact
+35B forward one token at a time (`trace35 --prompt`, the first 12 positions; positions 0 to 2 are the chat template),
+one union plan and one schedule over all 32 traces (480 beats = 12 strokes x 40 layers, 2 buffers x 223 slots, check
+PASS), strokes at N = 1, 2, 4, 8, 16, 32 heads on that schedule. The forward is factored into its own pieces (embed,
+read layer, mix, MoE, finish: `forward` is composed of exactly these, 14 tests), and the stroke steps all N sequences
+one layer at a time, so every head reads its experts of layer l inside the same beat, the trunk of layer l is read
+once for all N, and each expert is copied out of the cylinder once per beat (repeats come from that copy). Gate:
+every head's token equals its own trace at every position, routes too; a missing expert is a misfire, fail closed.
+
+| N heads | beats | misfires | identical tokens every head | expert union per beat (mean) | bytes per beat (median) | fill | fire | beat | ignition gap | tokens/s total |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 480 | 0 | true | 8 | 544.3 MB | 114.33 ms | 74.94 ms | 114.5 ms | 0.03 ms | 0.21 |
+| 2 | 480 | 0 | true | 12.7 | 544.3 MB | 140 ms | 133.48 ms | 144.87 ms | 0.18 ms | 0.3 |
+| 4 | 480 | 0 | true | 19.8 | 544.3 MB | 149.18 ms | 201.33 ms | 201.42 ms | 49.66 ms | 0.48 |
+| 8 | 480 | 0 | true | 30.5 | 544.3 MB | 200.59 ms | 312.74 ms | 334.21 ms | 107.15 ms | 0.56 |
+| 16 | 480 | 0 | true | 44.8 | 544.3 MB | 226.27 ms | 528.41 ms | 540.15 ms | 277.92 ms | 0.67 |
+| 32 | 480 | 0 | true | 59.5 | 544.3 MB | 128.22 ms | 608.82 ms | 609.24 ms | 480.58 ms | 1.14 |
+
+Expert union per beat, measured vs independent draws (256 x (1 - (1 - 8/256)^N)): N=2 12.7 vs 15.8; N=4 19.8 vs
+30.5; N=8 30.5 vs 57.4; N=16 44.8 vs 102; N=32 59.5 vs 163.3.
+
+Reading:
+* Gate PASS in every cell: each head identical to the exact forward at all 12 positions (32 of 32 heads at N = 32),
+  0 misfires, 0 expert reads at open.
+* Sharing is real, and it is the point of H6: at N = 32 the heads need 59.5 experts per beat, 0.364 of what
+  independent draws would (calc:37e83101), so one expert copy serves 4.3 heads (calc:085b073c; 2.86 at N = 16
+  calc:e71c2375, 2.1 at N = 8 calc:13146300). Prompts on one base route to the same experts far more than chance.
+* Bytes per beat are flat by construction: one schedule (the 32-head plan, 544.3 MB per beat, 21.77 GB per stroke
+  calc:4fac99fb) serves every cell, so the fill is identical at N = 1 and N = 32 and the cells differ only in what the
+  piston does with it. The price is paid at N = 1: a 4.68 s token (calc:0517a33b) against the trace's 0.8 s, because
+  that cell fills 544 MB per beat where its own 8 experts would be 25.2 MB (1.007 GB per token, calc:4c541485). The
+  32-head union is 187.2 MB per beat (calc:0d274014); a per-N plan is the next experiment.
+* The host piston is the limit from N = 4 up: the ignition gap (fire start minus fill done) is 30 us at N = 1
+  (fuel-bound, beat = fill) and 480.6 ms at N = 32 (the fuel waits for the arithmetic). Fire grows 8.12x for 32x the
+  heads (calc:d414dff1): 74.9 ms per head-beat at N = 1, 19.0 ms at N = 32, 3.94x less per head (calc:bb80aae8),
+  because the trunk is read once per beat and each expert once. Total tokens per second rise from 0.21 to 1.14,
+  5.33x (calc:7cb0d299); a 32-head stroke is 24.4 s for 32 tokens (calc:20f527b9). This is the shape the chip needs:
+  one fill, many heads, and the math engine the only thing that grows with N.
 
 ### F. The chip piston (power engine on the GB10)
 See section 8 below (slot size = the 35B layer, 26.7 MB; GB10 run queued in the measurement-window line).
@@ -258,9 +288,9 @@ caught 64 of 64 times. GB10 RUN QUEUED (measurement window ticket l312-piston).
 * The thesis gate (planned loop vs today's path, identical tokens, at least as fast at every context) needs the chip
   piston; on the host the planned loop is slower than the resident path by physics (10.6 vs 245 GB/s tiers), and the
   doc says so instead of arguing.
-* On the 35B (the motor): the engine-count cells are running (section C); the host loop identity gate (B) and the
-  head swap (D) are queued behind them; the stroke (E) needs the 35B forward factored per layer; the three
-  buffers-3, engines-2 cells are re-run with the staging fix. No 30B cell runs again.
+* On the 35B (the motor): sections B, C, D and E have receipts (host loop identity gate, 12 engine-count cells with
+  the staging fix, head swap, strokes to 32 heads). The stroke's fill was the 32-head plan at every N; a per-N plan
+  would show the fill shrink with N and is listed below. No 30B cell runs again.
 
 ## Next discriminating experiments
 1. Movement engine at the NVMe ceiling: 3.0 to 3.4 GB/s measured against 10.6 GB/s possible. Variables, one per run:
@@ -271,3 +301,6 @@ caught 64 of 64 times. GB10 RUN QUEUED (measurement window ticket l312-piston).
    the chip's second stage (section F), where the copy is the chip's own and the check rides with it.
 4. The chip piston: the same schedule, cylinders in GPU-visible memory, a resident kernel; the receipt is the same
    timing diagram with fire times in microseconds instead of milliseconds, and the thesis gate against 18091.
+5. The stroke with a per-N plan: plan and schedule over the N traces the cell runs, not all 32, so the fill per
+   beat is the measured union (25.2 MB at N = 1, 187.2 MB at N = 32) and bytes per token fall with N instead of
+   staying flat. The receipt is the same table with the fill column moving and the gate still true in every cell.

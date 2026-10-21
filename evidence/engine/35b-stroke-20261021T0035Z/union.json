@@ -1,0 +1,107 @@
+{
+  "expert_bytes": 3146112.0,
+  "experts": 256,
+  "formula": "experts * (1 - (1 - top_k/experts)^N)",
+  "layers": 40,
+  "positions": 12,
+  "rows": [
+    {
+      "below_independent": false,
+      "bytes_per_stroke_routed_mean": 25168896.0,
+      "independent_draw_expectation": 8.0,
+      "measured_union": {
+        "max": 8.0,
+        "mean": 8.0,
+        "median": 8.0,
+        "min": 8.0,
+        "n": 480,
+        "p10": 8.0,
+        "p90": 8.0,
+        "spread": 0.0
+      },
+      "n": 1
+    },
+    {
+      "below_independent": true,
+      "bytes_per_stroke_routed_mean": 39811425.6,
+      "independent_draw_expectation": 15.75,
+      "measured_union": {
+        "max": 16.0,
+        "mean": 12.654166666666667,
+        "median": 14.0,
+        "min": 8.0,
+        "n": 480,
+        "p10": 8.0,
+        "p90": 16.0,
+        "spread": 0.5714285714285714
+      },
+      "n": 2
+    },
+    {
+      "below_independent": true,
+      "bytes_per_stroke_routed_mean": 62332344.0,
+      "independent_draw_expectation": 30.531005859375,
+      "measured_union": {
+        "max": 31.0,
+        "mean": 19.8125,
+        "median": 23.0,
+        "min": 8.0,
+        "n": 480,
+        "p10": 8.0,
+        "p90": 28.0,
+        "spread": 0.8695652173913043
+      },
+      "n": 4
+    },
+    {
+      "below_independent": true,
+      "bytes_per_stroke_routed_mean": 95838436.8,
+      "independent_draw_expectation": 57.42083078599535,
+      "measured_union": {
+        "max": 57.0,
+        "mean": 30.4625,
+        "median": 37.0,
+        "min": 8.0,
+        "n": 480,
+        "p10": 8.0,
+        "p90": 48.0,
+        "spread": 1.0810810810810811
+      },
+      "n": 8
+    },
+    {
+      "below_independent": true,
+      "bytes_per_stroke_routed_mean": 140827838.4,
+      "independent_draw_expectation": 101.96216232138948,
+      "measured_union": {
+        "max": 93.0,
+        "mean": 44.7625,
+        "median": 56.0,
+        "min": 8.0,
+        "n": 480,
+        "p10": 8.0,
+        "p90": 75.0,
+        "spread": 1.1964285714285714
+      },
+      "n": 16
+    },
+    {
+      "below_independent": true,
+      "bytes_per_stroke_routed_mean": 187154337.6,
+      "independent_draw_expectation": 163.31384595038298,
+      "measured_union": {
+        "max": 130.0,
+        "mean": 59.4875,
+        "median": 75.0,
+        "min": 8.0,
+        "n": 480,
+        "p10": 8.0,
+        "p90": 104.0,
+        "spread": 1.28
+      },
+      "n": 32
+    }
+  ],
+  "top_k": 8,
+  "traces": 32
+}
