@@ -310,8 +310,75 @@ static void rarms(Buf *x, Buf *y, size_t S) {
     }
 }
 
+/* ---- E2 phase (--phase): GPU and CPU streaming DRAM in one beat, the CPU start offset swept across the beat ----
+ * Every beat: the GPU streams PG bytes (g_rbig, 256 MB, larger than every cache) and W worker cores stream PC bytes in total
+ * (a fresh 64 MB window of a 1 GB ring, so it is cold). The CPU workers start at phi us after the GPU submit (phi < 0: before).
+ * BEAT lines (one per beat) are the timing diagram; PHASE lines the per-offset medians. Same bytes in every cell. */
+#define PG RBIG
+#define PC (64ull << 20)
+#define PRING (1024ull << 20)
+#define PW_MAX 16
+static uint8_t *g_pring; static int g_pw = 0, g_pcpu[PW_MAX];
+static atomic_int g_pbeat, g_pdone; static atomic_ullong g_pstart_at;
+static uint64_t g_pts[PW_MAX][2]; static size_t g_pwin;
+static void *phase_worker(void *arg) {
+    const int w = (int)(intptr_t)arg; cpu_set_t cs; CPU_ZERO(&cs); CPU_SET(g_pcpu[w], &cs); sched_setaffinity(0, sizeof cs, &cs);
+    int seen = 0;
+    for (;;) {
+        int b; while ((b = atomic_load(&g_pbeat)) == seen) usleep(20);
+        if (b < 0) return NULL;
+        seen = b; spin_until(atomic_load(&g_pstart_at));
+        const size_t slice = PC / (size_t)g_pw; const uint8_t *p = g_pring + g_pwin + (size_t)w * slice;
+        g_pts[w][0] = now_ns(); g_sink += seq_sum(p, slice); g_pts[w][1] = now_ns();
+        atomic_fetch_add(&g_pdone, 1);
+    }
+}
+static int cmp_u(const void *a, const void *b) { uint64_t x = *(const uint64_t *)a, y = *(const uint64_t *)b; return x < y ? -1 : x > y; }
+static void phase_run(int beats, FILE *tl) {
+    g_pring = alloc_host_huge(PRING);
+    if (!g_pring) { printf("phase: host memory refused\n"); g_fail++; return; }
+    pthread_t th[PW_MAX];
+    for (int w = 0; w < g_pw; w++) pthread_create(&th[w], NULL, phase_worker, (void *)(intptr_t)w);
+    /* cells: gpu-only, cpu-only, then CPU offsets from -1500 to +1500 us (serial both ways at the ends) */
+    const int NPHI = 17; int phis[17]; for (int i = 0; i < 15; i++) phis[i] = -1400 + 200 * i; phis[15] = -1000000; phis[16] = 1000000;
+    for (int cell_i = -2; cell_i < NPHI; cell_i++) {
+        const int gpu_on = cell_i != -1, cpu_on = cell_i != -2; const int phi = cell_i >= 0 ? phis[cell_i] : 0;
+        uint64_t beat[256], gch[256], cspan[256]; int n = beats > 256 ? 256 : beats;
+        for (int b = 0; b < n; b++) {
+            g_pwin = ((size_t)(b + 1) * PC) % PRING;
+            uint64_t T0 = now_ns() + 300000, cs0 = 0;
+            if (phi == -1000000) cs0 = T0; /* cpu first, gpu after the cpu is done (serial) */
+            else cs0 = (uint64_t)((int64_t)T0 + (int64_t)phi * 1000);
+            atomic_store(&g_pdone, 0);
+            if (cpu_on && phi != 1000000) { atomic_store(&g_pstart_at, cs0); atomic_fetch_add(&g_pbeat, 1); }
+            if (cpu_on && phi == -1000000) { while (atomic_load(&g_pdone) < g_pw) { } T0 = now_ns(); }
+            uint64_t gsub = 0, gret = 0, ns = 0;
+            if (gpu_on) { spin_until(T0); gsub = now_ns(); gpu_stream(&g_rbig, 0, PG, &ns); gret = now_ns(); }
+            if (cpu_on && phi == 1000000) { atomic_store(&g_pstart_at, now_ns()); atomic_fetch_add(&g_pbeat, 1); }
+            if (cpu_on) while (atomic_load(&g_pdone) < g_pw) { }
+            uint64_t cmin = ~0ull, cmax = 0;
+            if (cpu_on) for (int w = 0; w < g_pw; w++) { if (g_pts[w][0] < cmin) cmin = g_pts[w][0]; if (g_pts[w][1] > cmax) cmax = g_pts[w][1]; }
+            const uint64_t s0 = gpu_on && cpu_on ? (gsub < cmin ? gsub : cmin) : gpu_on ? gsub : cmin;
+            const uint64_t e0 = gpu_on && cpu_on ? (gret > cmax ? gret : cmax) : gpu_on ? gret : cmax;
+            beat[b] = e0 - s0; gch[b] = ns; cspan[b] = cpu_on ? cmax - cmin : 0;
+            if (tl) fprintf(tl, "BEAT phi=%d b=%d gpu_sub=%lld gpu_ret=%lld gpu_chip_ns=%llu cpu_start=%lld cpu_end=%lld beat_ns=%llu\n", cell_i == -2 ? 9999999 : cell_i == -1 ? -9999999 : phi, b,
+                            gpu_on ? (long long)(gsub - s0) : -1, gpu_on ? (long long)(gret - s0) : -1, (unsigned long long)ns,
+                            cpu_on ? (long long)(cmin - s0) : -1, cpu_on ? (long long)(cmax - s0) : -1, (unsigned long long)beat[b]);
+        }
+        qsort(beat, n, 8, cmp_u); qsort(gch, n, 8, cmp_u); qsort(cspan, n, 8, cmp_u);
+        const double bytes = (gpu_on ? (double)PG : 0) + (cpu_on ? (double)PC : 0);
+        double la = 0; FILE *f = fopen("/proc/loadavg", "r"); if (f) { if (fscanf(f, "%lf", &la) != 1) la = -1; fclose(f); }
+        printf("PHASE cell=%s phi_us=%d beats=%d beat_med_us=%.1f beat_p10_us=%.1f beat_p90_us=%.1f total_gbs=%.2f gpu_chip_med_us=%.1f gpu_gbs=%.2f cpu_span_med_us=%.1f cpu_gbs=%.2f workers=%d load1=%.1f\n",
+               cell_i == -2 ? "gpu-only" : cell_i == -1 ? "cpu-only" : phi == -1000000 ? "serial-cpu-first" : phi == 1000000 ? "serial-gpu-first" : "offset",
+               cell_i >= 0 && phi != 1000000 && phi != -1000000 ? phi : 0, n, beat[n / 2] / 1e3, beat[n / 10] / 1e3, beat[n * 9 / 10] / 1e3, bytes / beat[n / 2],
+               gch[n / 2] / 1e3, gpu_on && gch[n / 2] ? (double)PG / gch[n / 2] : 0, cspan[n / 2] / 1e3, cpu_on && cspan[n / 2] ? (double)PC / cspan[n / 2] : 0, g_pw, la);
+        fflush(stdout);
+    }
+    atomic_store(&g_pbeat, -1); for (int w = 0; w < g_pw; w++) pthread_join(th[w], NULL);
+}
+
 int main(int argc, char **argv) {
-    int chip = 1, cpu = 19; const char *nvme = NULL; size_t only = 0;
+    int chip = 1, cpu = 19; const char *nvme = NULL; size_t only = 0; int phase = 0; const char *tlpath = NULL; const char *pw = "5,6,7,8,9,15,16,17,18";
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--host-only")) chip = 0;
         else if (!strcmp(argv[i], "--cpu") && i + 1 < argc) cpu = atoi(argv[++i]);
@@ -319,7 +386,10 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--reps") && i + 1 < argc) { g_reps = atoi(argv[++i]); if (g_reps < 1) g_reps = 1; if (g_reps > MAXR) g_reps = MAXR; }
         else if (!strcmp(argv[i], "--nvme") && i + 1 < argc) nvme = argv[++i];
         else if (!strcmp(argv[i], "--size") && i + 1 < argc) only = (size_t)strtoull(argv[++i], NULL, 0);
-        else { fprintf(stderr, "usage: %s [--host-only] [--cpu N] [--bg-cpu N] [--reps R] [--nvme FILE] [--size BYTES]\n", argv[0]); return 2; }
+        else if (!strcmp(argv[i], "--phase") && i + 1 < argc) phase = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--timeline") && i + 1 < argc) tlpath = argv[++i];
+        else if (!strcmp(argv[i], "--workers") && i + 1 < argc) pw = argv[++i];
+        else { fprintf(stderr, "usage: %s [--host-only] [--cpu N] [--bg-cpu N] [--reps R] [--nvme FILE] [--size BYTES] [--phase BEATS --timeline FILE --workers 5,6,...]\n", argv[0]); return 2; }
     }
     cpu_set_t cs; CPU_ZERO(&cs); CPU_SET(cpu, &cs);
     if (sched_setaffinity(0, sizeof cs, &cs)) { printf("pin to cpu %d refused\n", cpu); return 1; }
@@ -347,6 +417,14 @@ int main(int argc, char **argv) {
         memset(g_evg.cpu, 7, EVICT_GPU); memset(g_rbig.cpu, 9, RBIG); omega_gpu_session_sync_to_gpu(&g_evg); omega_gpu_session_sync_to_gpu(&g_rbig);
         want = malloc(8u << 20); delta = malloc(8u << 20);
         if (pthread_create(&bg, NULL, bg_stream, NULL)) { printf("bg thread refused\n"); return 1; }
+    }
+    if (phase) {
+        if (!chip) { printf("phase needs the chip\n"); return 2; }
+        for (const char *s = pw; *s && g_pw < PW_MAX;) { g_pcpu[g_pw++] = (int)strtol(s, (char **)&s, 10); if (*s == ',') s++; else break; }
+        FILE *tl = tlpath ? fopen(tlpath, "w") : NULL;
+        phase_run(phase, tl);
+        if (tl) fclose(tl);
+        only = 1; /* no E1 sizes */
     }
     for (size_t si = 0; si < NS; si++) {
         const size_t S = SZ[si];
