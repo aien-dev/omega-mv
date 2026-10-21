@@ -1,0 +1,11 @@
+AIEN-OBS pin_physics_src_6d7cf0d "6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf"
+AIEN-OBS pin_aienos_src "b84c0a67590a934f3f3e001b12ec85ebc086a9eb"
+AIEN-OBS pin_aienos_argus "b375dcaa2887d53cda407d773c2e4e489a0b1365"
+aienos_lock_source: /home/drakestapleton/workspace/l336-sbx/omega/build/pins/aienos-src matches b84c0a67590a934f3f3e001b12ec85ebc086a9eb for native/capability
+sh tests/runtime/r11_own_hold_test.sh ./build/step-spark-test-r11-own-hold/rx_r11_aien_test
+[+] hold='': refused-by-flag
+[+] hold='q1-ab': refused-by-flag
+[+] hold='q1-abcd': refused-by-flag
+[+] hold='q1-abc': not-flag-held-back-by-load
+failures 0
+rc=0

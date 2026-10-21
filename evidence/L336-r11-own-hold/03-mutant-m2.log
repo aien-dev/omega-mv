@@ -1,0 +1,10 @@
+AIEN-OBS pin_physics_src_6d7cf0d "6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf"
+AIEN-OBS pin_aienos_src "b84c0a67590a934f3f3e001b12ec85ebc086a9eb"
+aienos_lock_source: /home/drakestapleton/workspace/l336-sbx/omega/build/pins/aienos-src matches b84c0a67590a934f3f3e001b
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/home/drakestapleton/workspace/l336-sbx/omega/bui
+[+] hold='': refused-by-flag
+[+] hold='q1-ab': refused-by-flag
+[+] hold='q1-abcd': refused-by-flag
+[-] hold='q1-abc': refused-by-flag
+failures 1
+gate rc=2
