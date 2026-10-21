@@ -1,0 +1,4 @@
+tests/compiler/test_osc_ir_decode.c:43:56: error: ‘OSC_REF_BLOCK’ undeclared here (not in a function); did you mean ‘OSC_REF_OWN’?
+tests/compiler/test_osc_ir_decode.c:43:16: error: expression in static assertion is not an integer
+tests/compiler/test_osc_ir_decode.c:44:16: error: ‘OSC_T_F32’ undeclared here (not in a function); did you mean ‘OSC_T_I32’?
+red exit 2

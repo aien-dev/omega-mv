@@ -24,9 +24,15 @@ unsigned osc_scalar_width(OscScalar s) {
 }
 bool osc_scalar_signed(OscScalar s) { return s >= OSC_T_I8 && s <= OSC_T_I64; }
 bool osc_scalar_is_int(OscScalar s) { return s >= OSC_T_U8 && s <= OSC_T_I64; }
+bool osc_ir_has_kernel(const OscUnit *u) {
+    for (int fi = 0; u && fi < u->nfuncs; fi++)
+        if (u->funcs[fi].kind != OSC_FN_HOST) return true;
+    return false;
+}
 const char *osc_scalar_name(OscScalar s) {
-    static const char *n[] = {"void", "bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "ref", "bytes", "cells"};
-    return ((unsigned)s <= OSC_T_CELLS) ? n[s] : "?";
+    static const char *n[] = {"void", "bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "ref", "bytes", "cells",
+                              "f32", "gview", "gedit"};
+    return ((unsigned)s <= OSC_T_LAST) ? n[s] : "?";
 }
 
 /* ---- validation ------------------------------------------------------- */
@@ -43,7 +49,7 @@ static int vfail(char *err, size_t n, const char *fmt, ...) {
 static bool is_value_scalar(OscScalar s) { return s >= OSC_T_BOOL && s <= OSC_T_I64; }
 
 static bool type_is_scalar(const OscType *t) {
-    return is_value_scalar(t->s) && t->ref == OSC_REF_NONE && t->elem == OSC_T_VOID && t->len == 0 && t->sid == 0;
+    return (is_value_scalar(t->s) || t->s == OSC_T_F32) && t->ref == OSC_REF_NONE && t->elem == OSC_T_VOID && t->len == 0 && t->sid == 0;
 }
 /* The unit whose struct table type_is_ref consults (set by osc_ir_validate;
  * validation is single-threaded per call). */
@@ -59,6 +65,18 @@ static bool type_is_slice(const OscType *t) {
     return (t->s == OSC_T_BYTES || t->s == OSC_T_CELLS) && t->ref == OSC_REF_NONE && t->elem == OSC_T_VOID &&
            t->len == 0 && t->sid == 0;
 }
+/* GPU kernels: pointer register of a global buffer parameter (length = next vreg, u32) */
+static bool gpu_elem(OscScalar e) { return e == OSC_T_U32 || e == OSC_T_F32; }
+static bool type_is_gbuf(const OscType *t) {
+    return (t->s == OSC_T_GVIEW || t->s == OSC_T_GEDIT) && t->ref == OSC_REF_NONE && gpu_elem(t->elem) && t->len == 0 &&
+           t->sid == 0;
+}
+/* GPU kernels: a block-shared array */
+static bool type_is_block(const OscType *t) {
+    return t->s == OSC_T_REF && t->ref == OSC_REF_BLOCK && gpu_elem(t->elem) && t->len >= 1 &&
+           t->len <= OSC_MAX_SHARED_LEN && t->sid == 0;
+}
+static bool type_is_s(const OscType *t, OscScalar s) { return type_is_scalar(t) && t->s == s; }
 static bool type_is_struct_ref(const OscType *t) { return type_is_ref(t) && t->sid != 0; }
 static bool type_is_array_ref(const OscType *t) { return type_is_ref(t) && t->sid == 0; }
 static bool type_eq(const OscType *a, const OscType *b) {
@@ -78,6 +96,7 @@ static bool ref_bindable(const OscType *dst, const OscType *src) {
 static bool canonical_for(OscScalar s, uint64_t v) {
     unsigned w = osc_scalar_width(s);
     if (s == OSC_T_BOOL) return v <= 1;
+    if (s == OSC_T_F32) return v <= 0xFFFFFFFFu;  /* any binary32 bit pattern */
     if (w == 64) return true;
     if (osc_scalar_signed(s)) {
         int64_t x = (int64_t)v, lo = -(1LL << (w - 1)), hi = (1LL << (w - 1)) - 1;
@@ -104,6 +123,9 @@ static int insn_uses(const OscInsn *in, int16_t *u) {
     case OSC_I_STORE: u[k++] = in->a; u[k++] = in->b; u[k++] = in->c; break;
     case OSC_I_SLOAD: u[k++] = in->a; u[k++] = in->a + 1; u[k++] = in->b; break;
     case OSC_I_SSTORE: u[k++] = in->a; u[k++] = in->a + 1; u[k++] = in->b; u[k++] = in->c; break;
+    case OSC_I_GLOAD: u[k++] = in->a; u[k++] = in->a + 1; u[k++] = in->b; break;
+    case OSC_I_GSTORE: u[k++] = in->a; u[k++] = in->a + 1; u[k++] = in->b; u[k++] = in->c; break;
+    case OSC_I_SHFL: u[k++] = in->a; u[k++] = in->b; break;
     case OSC_I_FLOAD: u[k++] = in->a; if (in->b >= 0) u[k++] = in->b; break;
     case OSC_I_FSTORE: u[k++] = in->a; if (in->b >= 0) u[k++] = in->b; u[k++] = in->c; break;
     case OSC_I_CALL: for (int i = 0; i < in->nargs && i < OSC_MAX_PARAMS; i++) u[k++] = in->args[i]; break;
@@ -118,6 +140,7 @@ static int insn_def(const OscInsn *in) {
     case OSC_I_CAST: case OSC_I_ALLOC: case OSC_I_LOAD: case OSC_I_FLOAD: case OSC_I_SLOAD: return in->dst;
     case OSC_I_AOPEN: case OSC_I_AALLOC: return in->dst;
     case OSC_I_POPEN: case OSC_I_HALLOC: case OSC_I_HGEN: case OSC_I_HLOAD: return in->dst;
+    case OSC_I_GPU: case OSC_I_SHARED: case OSC_I_GLOAD: case OSC_I_SHFL: return in->dst;
     case OSC_I_CALL: return in->dst;  /* may be -1 */
     default: return -1;
     }
@@ -146,10 +169,16 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
         break;
     case OSC_I_BIN: {
         NEED(VR(in->dst) && VR(in->a) && VR(in->b), "BIN bad vreg", fi, ii);
-        NEED(in->sub >= OSC_B_ADD && in->sub <= OSC_B_SHR, "BIN bad sub-op %u", fi, ii, in->sub);
+        NEED(in->sub >= OSC_B_ADD && in->sub <= OSC_B_MAX, "BIN bad sub-op %u", fi, ii, in->sub);
         const OscType *d = &T[in->dst], *a = &T[in->a], *b = &T[in->b];
         NEED(type_is_scalar(d) && type_eq(d, a), "BIN dst/a type mismatch", fi, ii);
-        if (in->sub == OSC_B_SHL || in->sub == OSC_B_SHR) {
+        if (a->s == OSC_T_F32) {
+            NEED(type_eq(a, b), "BIN operand type mismatch", fi, ii);
+            NEED(in->sub == OSC_B_ADD || in->sub == OSC_B_SUB || in->sub == OSC_B_MUL || in->sub == OSC_B_MIN ||
+                 in->sub == OSC_B_MAX, "f32 BIN sub-op %u not allowed", fi, ii, in->sub);
+        } else if (in->sub == OSC_B_MIN || in->sub == OSC_B_MAX) {
+            NEED(a->s == OSC_T_U32 && type_eq(a, b), "MIN/MAX need u32 or f32", fi, ii);
+        } else if (in->sub == OSC_B_SHL || in->sub == OSC_B_SHR) {
             NEED(osc_scalar_is_int(a->s), "shift of non-integer", fi, ii);
             NEED(type_is_scalar(b) && osc_scalar_is_int(b->s), "shift amount not integer", fi, ii);
         } else if (in->sub == OSC_B_AND || in->sub == OSC_B_OR || in->sub == OSC_B_XOR) {
@@ -164,7 +193,9 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
         const OscType *d = &T[in->dst], *a = &T[in->a];
         NEED(type_is_scalar(d) && type_eq(d, a), "UN type mismatch", fi, ii);
         if (in->sub == OSC_U_LNOT) NEED(a->s == OSC_T_BOOL, "LNOT needs bool", fi, ii);
-        else if (in->sub == OSC_U_NEG || in->sub == OSC_U_BNOT) NEED(osc_scalar_is_int(a->s), "NEG/BNOT need integer", fi, ii);
+        else if (in->sub == OSC_U_NEG) NEED(osc_scalar_is_int(a->s) || a->s == OSC_T_F32, "NEG needs a number", fi, ii);
+        else if (in->sub == OSC_U_BNOT) NEED(osc_scalar_is_int(a->s), "BNOT needs integer", fi, ii);
+        else if (in->sub >= OSC_U_EXP && in->sub <= OSC_U_ROOT) NEED(a->s == OSC_T_F32, "EXP/INV/ROOT need f32", fi, ii);
         else return vfail(err, n, "func %d insn %u: UN bad sub-op %u", fi, ii, in->sub);
         break;
     }
@@ -176,8 +207,12 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
         break;
     case OSC_I_CAST:
         NEED(VR(in->dst) && VR(in->a), "CAST bad vreg", fi, ii);
-        NEED(type_is_scalar(&T[in->dst]) && osc_scalar_is_int(T[in->dst].s) &&
-             type_is_scalar(&T[in->a]) && osc_scalar_is_int(T[in->a].s), "CAST needs integer types", fi, ii);
+        if (T[in->dst].s == OSC_T_F32 || T[in->a].s == OSC_T_F32)  /* GPU kernels: u32 <-> f32 only */
+            NEED((type_is_s(&T[in->dst], OSC_T_F32) && type_is_s(&T[in->a], OSC_T_U32)) ||
+                 (type_is_s(&T[in->dst], OSC_T_U32) && type_is_s(&T[in->a], OSC_T_F32)), "f32 CAST needs u32 <-> f32", fi, ii);
+        else
+            NEED(type_is_scalar(&T[in->dst]) && osc_scalar_is_int(T[in->dst].s) &&
+                 type_is_scalar(&T[in->a]) && osc_scalar_is_int(T[in->a].s), "CAST needs integer types", fi, ii);
         break;
     case OSC_I_ALLOC:
         NEED(VR(in->dst) && VR(in->a), "ALLOC bad vreg", fi, ii);
@@ -238,14 +273,14 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
     }
     case OSC_I_LOAD:
         NEED(VR(in->dst) && VR(in->a) && VR(in->b), "LOAD bad vreg", fi, ii);
-        NEED(type_is_array_ref(&T[in->a]), "LOAD base not an array ref", fi, ii);
+        NEED(type_is_array_ref(&T[in->a]) || type_is_block(&T[in->a]), "LOAD base not an array ref", fi, ii);
         NEED(type_is_scalar(&T[in->b]) && osc_scalar_is_int(T[in->b].s), "LOAD index not integer", fi, ii);
         NEED(type_is_scalar(&T[in->dst]) && T[in->dst].s == T[in->a].elem, "LOAD dst type != elem", fi, ii);
         break;
     case OSC_I_STORE:
         NEED(VR(in->a) && VR(in->b) && VR(in->c), "STORE bad vreg", fi, ii);
-        NEED(type_is_array_ref(&T[in->a]) && (T[in->a].ref == OSC_REF_OWN || T[in->a].ref == OSC_REF_MUT),
-             "STORE through a shared borrow or non-ref", fi, ii);
+        NEED((type_is_array_ref(&T[in->a]) && (T[in->a].ref == OSC_REF_OWN || T[in->a].ref == OSC_REF_MUT)) ||
+             type_is_block(&T[in->a]), "STORE through a shared borrow or non-ref", fi, ii);
         NEED(type_is_scalar(&T[in->b]) && osc_scalar_is_int(T[in->b].s), "STORE index not integer", fi, ii);
         NEED(type_is_scalar(&T[in->c]) && T[in->c].s == T[in->a].elem, "STORE value type != elem", fi, ii);
         break;
@@ -297,6 +332,35 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
         else NEED(VR(in->dst) && type_eq(&T[in->dst], &g->ret), "CALL dst type != callee return", fi, ii);
         break;
     }
+    case OSC_I_GPU:
+        NEED(VR(in->dst) && type_is_s(&T[in->dst], OSC_T_U32), "GPU dst not u32", fi, ii);
+        NEED(in->sub >= OSC_G_THREAD && in->sub <= OSC_G_BATCHES, "GPU bad value %u", fi, ii, in->sub);
+        break;
+    case OSC_I_SHARED:
+        NEED(VR(in->dst) && type_is_block(&T[in->dst]), "SHARED dst not a block array", fi, ii);
+        break;
+    case OSC_I_GLOAD:
+    case OSC_I_GSTORE: {
+        bool ld = in->op == OSC_I_GLOAD;
+        const char *nm = ld ? "GLOAD" : "GSTORE";
+        NEED(VR(in->a) && VR(in->b), "%s bad vreg", fi, ii, nm);
+        NEED(type_is_gbuf(&T[in->a]) && VR(in->a + 1) && type_is_s(&T[in->a + 1], OSC_T_U32),
+             "%s base not a global buffer", fi, ii, nm);
+        NEED(type_is_s(&T[in->b], OSC_T_U32), "%s index not u32", fi, ii, nm);
+        int v = ld ? in->dst : in->c;
+        NEED(VR(v) && type_is_s(&T[v], T[in->a].elem), "%s value type != elem", fi, ii, nm);
+        if (!ld) NEED(T[in->a].s == OSC_T_GEDIT, "GSTORE into a view buffer", fi, ii);
+        break;
+    }
+    case OSC_I_SYNC:
+        break;
+    case OSC_I_SHFL:
+        NEED(in->sub == OSC_SH_DOWN, "SHFL bad sub-op %u", fi, ii, in->sub);
+        NEED(VR(in->dst) && VR(in->a) && VR(in->b), "SHFL bad vreg", fi, ii);
+        NEED((type_is_s(&T[in->a], OSC_T_U32) || type_is_s(&T[in->a], OSC_T_F32)) && type_eq(&T[in->dst], &T[in->a]),
+             "SHFL value not u32/f32", fi, ii);
+        NEED(type_is_s(&T[in->b], OSC_T_U32), "SHFL distance not u32", fi, ii);
+        break;
     case OSC_I_TRAP:
         NEED(in->imm >= OSC_TRAP_OVERFLOW && in->imm <= OSC_TRAP_MAX, "TRAP bad code", fi, ii);
         break;
@@ -326,14 +390,30 @@ static int validate_func(const OscAlloc *a, const OscUnit *u, int fi, char *err,
     if (!str_ok(f->name, sizeof f->name)) return vfail(err, n, "func %d: name not terminated", fi);
     if (!str_ok(f->requires_text, sizeof f->requires_text) || !str_ok(f->ensures_text, sizeof f->ensures_text))
         return vfail(err, n, "func %d: contract text not terminated", fi);
-    if (f->nparams > OSC_MAX_PARAMS) return vfail(err, n, "func %d: %u params > %d", fi, f->nparams, OSC_MAX_PARAMS);
+    if (f->kind > OSC_FN_KERNEL) return vfail(err, n, "func %d: bad kind %u", fi, f->kind);
+    bool kern = f->kind == OSC_FN_KERNEL;
+    int maxp = kern ? OSC_MAX_KPARAMS : OSC_MAX_PARAMS;
+    if (f->nparams > maxp) return vfail(err, n, "func %d: %u params > %d", fi, f->nparams, maxp);
     if (f->nvregs > OSC_MAX_VREGS || f->nparams > f->nvregs) return vfail(err, n, "func %d: bad nvregs", fi);
     if (!(f->ret.s == OSC_T_VOID && f->ret.ref == OSC_REF_NONE && f->ret.elem == OSC_T_VOID && f->ret.len == 0 && f->ret.sid == 0) &&
         !type_is_scalar(&f->ret))
         return vfail(err, n, "func %d: return type must be void or scalar", fi);
     for (int v = 0; v < f->nvregs; v++)
-        if (!type_is_scalar(&f->vtype[v]) && !type_is_ref(&f->vtype[v]) && !type_is_slice(&f->vtype[v]))
+        if (!type_is_scalar(&f->vtype[v]) && !type_is_ref(&f->vtype[v]) && !type_is_slice(&f->vtype[v]) &&
+            !type_is_gbuf(&f->vtype[v]) && !type_is_block(&f->vtype[v]))
             return vfail(err, n, "func %d: vreg %d has invalid type", fi, v);
+    /* GPU kernels (docs/omegese/GPU.md): a kernel holds only bool, u32, f32, global buffers and block arrays;
+     * a host function holds none of the kernel types */
+    for (int v = 0; v < f->nvregs; v++) {
+        const OscType *t = &f->vtype[v];
+        bool ktype = type_is_gbuf(t) || type_is_block(t) || type_is_s(t, OSC_T_F32);
+        if (kern && !ktype && !type_is_s(t, OSC_T_BOOL) && !type_is_s(t, OSC_T_U32))
+            return vfail(err, n, "func %d: vreg %d: type %s not allowed in a kernel", fi, v, osc_scalar_name(t->s));
+        if (!kern && ktype) return vfail(err, n, "func %d: vreg %d: kernel type in a host function", fi, v);
+    }
+    if (!kern && f->ret.s == OSC_T_F32) return vfail(err, n, "func %d: f32 return from a host function", fi);
+    if (kern && (f->ret.s != OSC_T_VOID || f->requires_text[0] || f->ensures_text[0]))
+        return vfail(err, n, "func %d: a kernel returns nothing and has no contract", fi);
     /* a slice is a parameter pair: pointer register (BYTES/CELLS) then u64 length; no instruction defines either */
     uint8_t sl[OSC_MAX_VREGS];
     memset(sl, 0, sizeof sl);
@@ -344,6 +424,16 @@ static int validate_func(const OscAlloc *a, const OscUnit *u, int fi, char *err,
         sl[v] = sl[v + 1] = 1;
         v++;
     }
+    /* a global buffer is a parameter pair: pointer register (GVIEW/GEDIT) then u32 length */
+    for (int v = 0; v < f->nvregs; v++) {
+        if (!type_is_gbuf(&f->vtype[v])) continue;
+        if (v + 1 >= f->nparams || !type_is_s(&f->vtype[v + 1], OSC_T_U32))
+            return vfail(err, n, "func %d: buffer vreg %d is not a parameter pair with a u32 length", fi, v);
+        sl[v] = sl[v + 1] = 1;
+        v++;
+    }
+    for (int v = 0; v < f->nparams; v++)
+        if (type_is_block(&f->vtype[v])) return vfail(err, n, "func %d: block array %d as a parameter", fi, v);
     if (f->ninsns < 1 || f->ninsns > OSC_MAX_INSNS) return vfail(err, n, "func %d: bad ninsns", fi);
     if (f->nblocks < 1 || f->nblocks > OSC_MAX_BLOCKS) return vfail(err, n, "func %d: bad nblocks", fi);
 
@@ -371,6 +461,52 @@ static int validate_func(const OscAlloc *a, const OscUnit *u, int fi, char *err,
         int d = insn_def(&f->insns[i]);
         if (d >= 0 && d < f->nvregs && sl[d]) return vfail(err, n, "func %d insn %u: slice register redefined", fi, i);
     }
+    /* GPU kernels: which instructions each function kind may hold */
+    uint16_t ndef[OSC_MAX_VREGS];
+    memset(ndef, 0, sizeof ndef);
+    for (uint32_t i = 0; i < f->ninsns; i++) {
+        int d = insn_def(&f->insns[i]);
+        if (d >= 0 && d < f->nvregs) ndef[d]++;
+    }
+    unsigned shared_bytes = 0;
+    for (int b = 0; b < f->nblocks; b++)
+        for (uint32_t i = f->blocks[b].first; i < f->blocks[b].first + f->blocks[b].count; i++) {
+            const OscInsn *x = &f->insns[i];
+            bool gpu_op = x->op >= OSC_I_GPU && x->op <= OSC_I_SHFL;
+            bool gpu_sub = (x->op == OSC_I_BIN && (x->sub == OSC_B_MIN || x->sub == OSC_B_MAX)) ||
+                           (x->op == OSC_I_UN && x->sub >= OSC_U_EXP);
+            if (!kern) {
+                if (gpu_op || gpu_sub) return vfail(err, n, "func %d insn %u: kernel instruction in a host function", fi, i);
+                if (x->op == OSC_I_CALL && u->funcs[x->callee].kind != OSC_FN_HOST)
+                    return vfail(err, n, "func %d insn %u: call to a kernel", fi, i);
+                continue;
+            }
+            switch (x->op) {
+            case OSC_I_ALLOC: case OSC_I_RELEASE: case OSC_I_AOPEN: case OSC_I_AALLOC: case OSC_I_ADESTROY:
+            case OSC_I_POPEN: case OSC_I_PCLOSE: case OSC_I_HALLOC: case OSC_I_HGEN: case OSC_I_HFREE:
+            case OSC_I_HLOAD: case OSC_I_HSTORE: case OSC_I_SLOAD: case OSC_I_SSTORE: case OSC_I_FLOAD:
+            case OSC_I_FSTORE: case OSC_I_CALL:
+                return vfail(err, n, "func %d insn %u: op %u not allowed in a kernel", fi, i, x->op);
+            case OSC_I_SHARED:
+                if (b != 0) return vfail(err, n, "func %d insn %u: SHARED outside the entry block", fi, i);
+                if (ndef[x->dst] != 1) return vfail(err, n, "func %d insn %u: block array defined more than once", fi, i);
+                shared_bytes += 4u * f->vtype[x->dst].len;
+                if (shared_bytes > OSC_MAX_SHARED_BYTES)
+                    return vfail(err, n, "func %d insn %u: block arrays over %u bytes", fi, i, OSC_MAX_SHARED_BYTES);
+                break;
+            case OSC_I_BIN:
+                if (x->sub == OSC_B_DIV || x->sub == OSC_B_REM) {
+                    /* the divisor is one CONST, not 0 (the backend divides by a magic multiply) */
+                    const OscInsn *def = NULL;
+                    for (uint32_t j = 0; j < f->ninsns; j++)
+                        if (insn_def(&f->insns[j]) == x->b) def = &f->insns[j];
+                    if (x->b < f->nparams || ndef[x->b] != 1 || !def || def->op != OSC_I_CONST || def->imm == 0)
+                        return vfail(err, n, "func %d insn %u: kernel div/rem needs a nonzero constant divisor", fi, i);
+                }
+                break;
+            default: break;
+            }
+        }
 
     /* OSC-2 arenas: an arena handle vreg is defined by exactly one AOPEN (no
      * other definition, not a parameter) and is used only as the handle of
@@ -567,6 +703,7 @@ static void w64(W *w, uint64_t v) {
 static void wvr(W *w, int16_t v) { w16(w, (uint16_t)v); }  /* two's complement LE; -1 = 0xFFFF */
 static void wtype(W *w, const OscType *t) {
     w8(w, (uint8_t)t->s);
+    if (t->s == OSC_T_GVIEW || t->s == OSC_T_GEDIT) w8(w, (uint8_t)t->elem);
     if (t->s == OSC_T_REF) {
         w8(w, (uint8_t)t->ref); w8(w, (uint8_t)t->elem); w16(w, t->len);
         if (t->sid) w8(w, t->sid);  /* struct ref (elem VOID); array refs encode as OSC-1 */
@@ -610,6 +747,7 @@ static bool unit_has_slice(const OscUnit *u) {
  * 5 = external byte slices, 4 = pools (OSC-3 item 2), 3 = arenas, 2 = structs,
  * 1 = none of these. Versions 2..5 share one layout (struct table after the magic). */
 static uint8_t unit_version(const OscUnit *u) {
+    if (osc_ir_has_kernel(u)) return 6;
     if (unit_has_slice(u)) return 5;
     if (unit_has_pool(u)) return 4;
     if (unit_has_arena(u)) return 3;
@@ -646,6 +784,7 @@ static void encode_unit(const OscUnit *u, W *w) {
         size_t nl = strnlen(f->name, sizeof f->name);
         w8(w, nl);
         wbytes(w, f->name, nl);
+        if (magic[7] >= 6) w8(w, f->kind);
         w8(w, f->nparams);
         wtype(w, &f->ret);
         w16(w, f->nvregs);
@@ -685,6 +824,12 @@ static void encode_unit(const OscUnit *u, W *w) {
             case OSC_I_BR: w16(w, (uint16_t)in->blk_t); break;
             case OSC_I_CBR: wvr(w, in->a); w16(w, (uint16_t)in->blk_t); w16(w, (uint16_t)in->blk_f); break;
             case OSC_I_RET: wvr(w, in->a); break;
+            case OSC_I_GPU: w8(w, in->sub); wvr(w, in->dst); break;
+            case OSC_I_SHARED: wvr(w, in->dst); break;
+            case OSC_I_GLOAD: wvr(w, in->dst); wvr(w, in->a); wvr(w, in->b); break;
+            case OSC_I_GSTORE: wvr(w, in->a); wvr(w, in->b); wvr(w, in->c); break;
+            case OSC_I_SYNC: break;
+            case OSC_I_SHFL: w8(w, in->sub); wvr(w, in->dst); wvr(w, in->a); wvr(w, in->b); break;
             default: break; /* unreachable after validation */
             }
             /* `line` is debug information and deliberately not encoded: source
@@ -785,7 +930,7 @@ static int16_t rvr(R *r) {
 }
 static OscScalar rscalar(R *r) {
     uint64_t v = rle(r, 1);
-    if (!r->rc && v > OSC_T_CELLS) rfail(r, OSC_IR_REFUSE_RANGE);
+    if (!r->rc && v > OSC_T_LAST) rfail(r, OSC_IR_REFUSE_RANGE);
     return r->rc ? OSC_T_VOID : (OscScalar)v;
 }
 /* text of at most max bytes into dst (dst has room for max + 1); a NUL inside is ambiguous */
@@ -799,9 +944,10 @@ static void rtext(R *r, unsigned lenbytes, size_t max, char *dst) {
 }
 static void rtype(R *r, OscType *t) {
     t->s = rscalar(r);
+    if (!r->rc && (t->s == OSC_T_GVIEW || t->s == OSC_T_GEDIT)) { t->elem = rscalar(r); return; }
     if (r->rc || t->s != OSC_T_REF) return;
     uint64_t ref = rle(r, 1);
-    if (!r->rc && ref > OSC_REF_MUT) { rfail(r, OSC_IR_REFUSE_RANGE); return; }
+    if (!r->rc && ref > OSC_REF_BLOCK) { rfail(r, OSC_IR_REFUSE_RANGE); return; }
     t->ref = (OscRefKind)ref;
     t->elem = rscalar(r);
     t->len = (uint16_t)rle(r, 2);
@@ -841,12 +987,19 @@ static void decode_insn(R *r, OscInsn *in) {
     case OSC_I_BR: in->blk_t = rvr(r); break;
     case OSC_I_CBR: in->a = rvr(r); in->blk_t = rvr(r); in->blk_f = rvr(r); break;
     case OSC_I_RET: in->a = rvr(r); break;
+    case OSC_I_GPU: in->sub = (uint8_t)rle(r, 1); in->dst = rvr(r); break;
+    case OSC_I_SHARED: in->dst = rvr(r); break;
+    case OSC_I_GLOAD: in->dst = rvr(r); in->a = rvr(r); in->b = rvr(r); break;
+    case OSC_I_GSTORE: in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); break;
+    case OSC_I_SYNC: break;
+    case OSC_I_SHFL: in->sub = (uint8_t)rle(r, 1); in->dst = rvr(r); in->a = rvr(r); in->b = rvr(r); break;
     default: rfail(r, OSC_IR_REFUSE_RANGE); break;  /* unknown opcode: its size is unknown */
     }
 }
 
-static void decode_func(R *r, OscFunc *f) {
+static void decode_func(R *r, OscFunc *f, uint64_t version) {
     rtext(r, 1, OSC_NAME_MAX - 1, f->name);
+    if (version >= 6) f->kind = (uint8_t)rle(r, 1);
     f->nparams = (uint8_t)rle(r, 1);
     rtype(r, &f->ret);
     f->nvregs = (uint16_t)rcount(r, 2, OSC_MAX_VREGS);
@@ -889,7 +1042,7 @@ static int decode_unit(const uint8_t *buf, size_t len, OscUnit *u) {
         }
     }
     u->nfuncs = (uint16_t)rcount(&r, 2, OSC_MAX_FUNCS);
-    for (int fi = 0; fi < u->nfuncs && !r.rc; fi++) decode_func(&r, &u->funcs[fi]);
+    for (int fi = 0; fi < u->nfuncs && !r.rc; fi++) decode_func(&r, &u->funcs[fi], version);
     if (r.rc) return r.rc;
     if (r.pos != len && !MUTANT(1)) return OSC_IR_REFUSE_TRAILING;
     if (!MUTANT(4) && osc_ir_validate(u, NULL, 0) != 0) return OSC_IR_REFUSE_INVALID;

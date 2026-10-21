@@ -40,7 +40,8 @@
 _Static_assert(OSC_I_CONST == 1 && OSC_I_CALL == 11 && OSC_I_RET == 15 && OSC_I_FLOAD == 16 && OSC_I_AOPEN == 18 &&
                OSC_I_POPEN == 21 && OSC_I_HSTORE == 27 && OSC_I_SSTORE == 29, "opcode numbers in the spec");
 _Static_assert(OSC_T_BOOL == 1 && OSC_T_U64 == 5 && OSC_T_I64 == 9 && OSC_T_REF == 10 && OSC_T_CELLS == 12, "scalar tags in the spec");
-_Static_assert(OSC_REF_OWN == 1 && OSC_REF_MUT == 3, "ref kinds in the spec");
+_Static_assert(OSC_REF_OWN == 1 && OSC_REF_MUT == 3 && OSC_REF_BLOCK == 4, "ref kinds in the spec");
+_Static_assert(OSC_T_F32 == 13 && OSC_T_GEDIT == 15 && OSC_I_GPU == 30 && OSC_I_SHFL == 35, "GPU kernel tags in the spec (version 6)");
 
 static int g_fail;
 static void fail(const char *fmt, ...) {
@@ -129,6 +130,97 @@ static void load_dir(const char *dir) {
     }
 }
 
+/* GPU kernel units (encoding version 6, docs/omegese/GPU.md), built here by hand: the OSC text
+ * front end has no kernel form. One uses every kernel instruction and type. */
+static OscInsn kin(uint8_t op, uint8_t sub, int dst, int a, int b, int c) {
+    OscInsn x;
+    memset(&x, 0, sizeof x);
+    x.op = op; x.sub = sub; x.dst = (int16_t)dst; x.a = (int16_t)a; x.b = (int16_t)b; x.c = (int16_t)c;
+    x.blk_t = x.blk_f = x.callee = -1;
+    return x;
+}
+static void add_kernel_unit(const char *name, int which) {
+    OscUnit *u = calloc(1, sizeof *u);
+    if (!u || g_ncorpus >= MAX_CORPUS) { free(u); fail("kernel unit %s: no room", name); return; }
+    OscFunc *f = &u->funcs[0];
+    u->nfuncs = 1;
+    snprintf(f->name, sizeof f->name, "%s", name);
+    f->kind = OSC_FN_KERNEL;
+    f->ret.s = OSC_T_VOID;
+    OscType *T = f->vtype;
+    OscInsn *I = f->insns;
+    uint32_t n = 0;
+#define SC(v, t) (T[v].s = (t))
+#define GB(v, t, e) (T[v].s = (t), T[v].elem = (e))
+    if (which == 0) {  /* vector add: c[i] = a[i] + b[i] for i < len c */
+        f->nparams = 6;
+        GB(0, OSC_T_GVIEW, OSC_T_F32); SC(1, OSC_T_U32); GB(2, OSC_T_GVIEW, OSC_T_F32); SC(3, OSC_T_U32);
+        GB(4, OSC_T_GEDIT, OSC_T_F32); SC(5, OSC_T_U32);
+        for (int v = 6; v <= 10; v++) SC(v, OSC_T_U32);
+        SC(11, OSC_T_BOOL); SC(12, OSC_T_F32); SC(13, OSC_T_F32); SC(14, OSC_T_F32);
+        f->nvregs = 15;
+        I[n++] = kin(OSC_I_GPU, OSC_G_BLOCK, 6, -1, -1, -1);
+        I[n++] = kin(OSC_I_GPU, OSC_G_THREADS, 7, -1, -1, -1);
+        I[n++] = kin(OSC_I_GPU, OSC_G_THREAD, 8, -1, -1, -1);
+        I[n++] = kin(OSC_I_BIN, OSC_B_MUL, 9, 6, 7, -1);
+        I[n++] = kin(OSC_I_BIN, OSC_B_ADD, 10, 9, 8, -1);
+        I[n++] = kin(OSC_I_CMP, OSC_C_LT, 11, 10, 5, -1);
+        I[n] = kin(OSC_I_CBR, 0, -1, 11, -1, -1); I[n].blk_t = 1; I[n].blk_f = 2; n++;
+        f->blocks[0] = (OscBlock){0, n};
+        I[n++] = kin(OSC_I_GLOAD, 0, 12, 0, 10, -1);
+        I[n++] = kin(OSC_I_GLOAD, 0, 13, 2, 10, -1);
+        I[n++] = kin(OSC_I_BIN, OSC_B_ADD, 14, 12, 13, -1);
+        I[n++] = kin(OSC_I_GSTORE, 0, -1, 4, 10, 14);
+        I[n] = kin(OSC_I_BR, 0, -1, -1, -1, -1); I[n].blk_t = 2; n++;
+        f->blocks[1] = (OscBlock){7, n - 7};
+        I[n++] = kin(OSC_I_RET, 0, -1, -1, -1, -1);
+        f->blocks[2] = (OscBlock){n - 1, 1};
+        f->nblocks = 3;
+    } else {  /* every other kernel instruction and type, one straight block */
+        f->nparams = 3;
+        GB(0, OSC_T_GEDIT, OSC_T_U32); SC(1, OSC_T_U32); SC(2, OSC_T_F32);
+        T[3].s = OSC_T_REF; T[3].ref = OSC_REF_BLOCK; T[3].elem = OSC_T_F32; T[3].len = 12288;
+        SC(4, OSC_T_U32); SC(5, OSC_T_F32); SC(6, OSC_T_U32); SC(7, OSC_T_U32); SC(8, OSC_T_F32); SC(9, OSC_T_F32);
+        SC(10, OSC_T_F32); SC(11, OSC_T_U32); SC(12, OSC_T_F32); SC(13, OSC_T_U32); SC(14, OSC_T_F32);
+        f->nvregs = 15;
+        I[n++] = kin(OSC_I_SHARED, 0, 3, -1, -1, -1);
+        I[n++] = kin(OSC_I_GPU, OSC_G_BATCHES, 4, -1, -1, -1);
+        I[n++] = kin(OSC_I_CAST, 0, 5, 4, -1, -1);
+        I[n] = kin(OSC_I_CONST, 0, 6, -1, -1, -1); I[n].imm = 3; n++;
+        I[n++] = kin(OSC_I_BIN, OSC_B_DIV, 7, 4, 6, -1);
+        I[n++] = kin(OSC_I_UN, OSC_U_EXP, 8, 2, -1, -1);
+        I[n++] = kin(OSC_I_BIN, OSC_B_MIN, 9, 8, 5, -1);
+        I[n++] = kin(OSC_I_SHFL, OSC_SH_DOWN, 10, 9, 7, -1);
+        I[n++] = kin(OSC_I_CAST, 0, 11, 10, -1, -1);
+        I[n++] = kin(OSC_I_STORE, 0, -1, 3, 7, 10);
+        I[n++] = kin(OSC_I_SYNC, 0, -1, -1, -1, -1);
+        I[n++] = kin(OSC_I_LOAD, 0, 12, 3, 7, -1);
+        I[n++] = kin(OSC_I_GLOAD, 0, 13, 0, 7, -1);
+        I[n++] = kin(OSC_I_BIN, OSC_B_MAX, 13, 13, 11, -1);
+        I[n++] = kin(OSC_I_UN, OSC_U_ROOT, 14, 12, -1, -1);
+        I[n++] = kin(OSC_I_UN, OSC_U_NEG, 14, 14, -1, -1);
+        I[n++] = kin(OSC_I_GSTORE, 0, -1, 0, 7, 13);
+        I[n++] = kin(OSC_I_RET, 0, -1, -1, -1, -1);
+        f->blocks[0] = (OscBlock){0, n};
+        f->nblocks = 1;
+    }
+#undef SC
+#undef GB
+    f->ninsns = n;
+    Entry *c = &g_corpus[g_ncorpus];
+    snprintf(c->name, sizeof c->name, "kernel:%s", name);
+    c->u = u;
+    c->enc = encode_alloc(u, &c->len);
+    if (!c->enc) {
+        char e[200];
+        osc_ir_validate(u, e, sizeof e);
+        fail("kernel unit %s does not encode: %s", name, e);
+        free(u);
+        return;
+    }
+    g_ncorpus++;
+}
+
 /* ---- field equality over every encoded field --------------------------- */
 static const char *type_diff(const OscType *a, const OscType *b) {
     if (a->s != b->s || a->ref != b->ref || a->elem != b->elem || a->len != b->len || a->sid != b->sid) return "type";
@@ -149,6 +241,7 @@ static const char *unit_diff(const OscUnit *x, const OscUnit *y, char *buf, size
     for (int fi = 0; fi < x->nfuncs; fi++) {
         const OscFunc *a = &x->funcs[fi], *b = &y->funcs[fi];
         if (strcmp(a->name, b->name)) { snprintf(buf, n, "func %d name", fi); return buf; }
+        if (a->kind != b->kind) { snprintf(buf, n, "func %d kind", fi); return buf; }
         if (a->nparams != b->nparams || a->nvregs != b->nvregs || a->nblocks != b->nblocks || a->ninsns != b->ninsns) { snprintf(buf, n, "func %d counts", fi); return buf; }
         if (type_diff(&a->ret, &b->ret)) { snprintf(buf, n, "func %d ret", fi); return buf; }
         for (int v = 0; v < a->nvregs; v++) if (type_diff(&a->vtype[v], &b->vtype[v])) { snprintf(buf, n, "func %d vreg %d type", fi, v); return buf; }
@@ -184,6 +277,7 @@ static void copy_unit(OscUnit *d, const OscUnit *s) {
         OscFunc *a = &d->funcs[fi];
         const OscFunc *b = &s->funcs[fi];
         memcpy(a->name, b->name, sizeof a->name);
+        a->kind = b->kind;
         a->nparams = b->nparams;
         a->ret = b->ret;
         a->nvregs = b->nvregs;
@@ -227,8 +321,8 @@ static void test_corpus(void) {
         if (v >= 1 && v <= OSC_IR_VERSION_MAX) seen[v]++;
         if (round_trip(c->u, c->name) == 0) ok++;
     }
-    printf("corpus: units=%d round_trip_ok=%d compile_refused=%d versions v1=%d v2=%d v3=%d v4=%d v5=%d\n", g_ncorpus, ok,
-           g_compile_refused, seen[1], seen[2], seen[3], seen[4], seen[5]);
+    printf("corpus: units=%d round_trip_ok=%d compile_refused=%d versions v1=%d v2=%d v3=%d v4=%d v5=%d v6=%d\n", g_ncorpus, ok,
+           g_compile_refused, seen[1], seen[2], seen[3], seen[4], seen[5], seen[6]);
     CHECK(g_ncorpus >= 40, "corpus too small: %d units", g_ncorpus);
     CHECK(ok == g_ncorpus, "corpus round trip: %d of %d", ok, g_ncorpus);
     for (int v = 1; v <= OSC_IR_VERSION_MAX; v++) CHECK(seen[v] > 0, "corpus has no version %d unit", v);
@@ -370,9 +464,10 @@ typedef struct {
     unsigned dst;          /* CONST dst field (u16) */
     uint64_t imm;
     unsigned req_len;      /* requires text length field */
+    int kind;              /* function kind byte (version 6), -1 = not written */
 } Knobs;
 static Knobs knobs_default(void) {
-    Knobs k = {1, 0, 1, "f", 1, OSC_T_U8, OSC_I_CONST, 0, 7, 0};
+    Knobs k = {1, 0, 1, "f", 1, OSC_T_U8, OSC_I_CONST, 0, 7, 0, -1};
     return k;
 }
 static void build(Buf *b, const Knobs *k) {
@@ -383,6 +478,7 @@ static void build(Buf *b, const Knobs *k) {
     if (k->struct_table) p8(b, 0);
     p16(b, 1);                       /* nfuncs */
     p8(b, k->name_len); pbytes(b, k->name, k->name_len);
+    if (k->kind >= 0) p8(b, (unsigned)k->kind);
     p8(b, 0);                        /* nparams */
     p8(b, k->ret_tag);               /* ret type (scalar: tag only) */
     p16(b, k->nvregs);
@@ -425,7 +521,7 @@ static void test_classes(void) {
     k = knobs_default(); k.version = 0; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_UNKNOWN_VERSION, "version 0");
     k.version = OSC_IR_VERSION_MAX + 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_UNKNOWN_VERSION, "version 6");
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_UNKNOWN_VERSION, "version 7");
     EXPECT(b.b, b.n - 1, OSC_IR_REFUSE_TRUNCATED, "last byte missing");
     EXPECT(b.b, 7, OSC_IR_REFUSE_TRUNCATED, "magic without version");
     k = knobs_default(); k.name_len = 64; k.name = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl"; build(&m, &k);
@@ -445,10 +541,12 @@ static void test_classes(void) {
     EXPECT(m.b, m.n, OSC_IR_REFUSE_TRAILING, "one trailing byte");
     k = knobs_default(); k.op0 = 0; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode 0");
-    k.op0 = OSC_I_SSTORE + 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode past SSTORE");
-    k = knobs_default(); k.ret_tag = OSC_T_CELLS + 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "scalar tag 13");
+    k.op0 = OSC_I_SHFL + 1; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode past SHFL");
+    k = knobs_default(); k.ret_tag = OSC_T_LAST + 1; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "scalar tag 16");
+    k = knobs_default(); k.ret_tag = OSC_T_F32; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_INVALID, "f32 in a host function");
     k = knobs_default(); k.dst = 0x8000; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "register 0x8000");
     k = knobs_default(); k.name_len = 3; k.name = "f\0g"; build(&m, &k);
@@ -461,6 +559,10 @@ static void test_classes(void) {
     EXPECT(m.b, m.n, OSC_IR_REFUSE_VERSION_MISMATCH, "version 2 with no structs");
     k.version = 5; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_VERSION_MISMATCH, "version 5 with no slices");
+    k.version = 6; k.kind = 0; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_VERSION_MISMATCH, "version 6 with no kernel");
+    k.kind = 1; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_INVALID, "version 6 kernel that returns u8");
 #undef EXPECT
     int classes = 0;
     for (int c = 1; c <= OSC_IR_REFUSAL_COUNT; c++) classes += refused[c];
@@ -589,6 +691,8 @@ int main(int argc, char **argv) {
     load_dir("tests/compiler/slices");
     load_dir("src/osh");
     load_dir("tests/physics0/osc");
+    add_kernel_unit("vadd", 0);
+    add_kernel_unit("kall", 1);
     if (g_ncorpus == 0) { printf("FAIL: no corpus (run from the repository root)\n"); return 1; }
     printf("OSC_IR_ENCODED_MAX=%u bytes; mode=%s\n", (unsigned)OSC_IR_ENCODED_MAX, quick ? "quick (smoke counts, not gate evidence)" : mode);
     test_corpus();

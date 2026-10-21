@@ -229,29 +229,64 @@ static int jint(const J *j, int *neg, uint64_t *mag)
     return 0;
 }
 
+/* f32 constant: a JSON number (decimal, rounded to nearest even binary32; must be finite) or
+ * "0xHHHHHHHH" (the bit pattern). 0 ok. */
+static int f32_value(const J *j, uint64_t *bits)
+{
+    if (j->t == J_STR) {
+        const char *s = j->s;
+        if (strlen(s) != 10 || s[0] != '0' || s[1] != 'x') return -1;
+        uint64_t v = 0;
+        for (int i = 2; i < 10; i++) {
+            char h = s[i];
+            int d = (h >= '0' && h <= '9') ? h - '0' : (h >= 'a' && h <= 'f') ? h - 'a' + 10 : -1;
+            if (d < 0) return -1;
+            v = v * 16 + (uint64_t)d;
+        }
+        *bits = v;
+        return 0;
+    }
+    if (j->t != J_NUM) return -1;
+    char *end = NULL;
+    errno = 0;
+    float f = strtof(j->s, &end);
+    if (!end || *end || f != f || f - f != 0) return -1;  /* not a whole number text, NaN or infinite */
+    uint32_t b;
+    memcpy(&b, &f, 4);
+    *bits = b;
+    return 0;
+}
+
 /* ================================================================================ types */
 
 static const char *const k_scal[] = {"void", "bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64"};
-static const char *const k_refk[] = {"", "own", "shared", "mut"};
+static const char *const k_refk[] = {"", "own", "shared", "mut", "block"};
 
 static int scalar_from(const char *s)
 {
     for (int i = 1; i <= 9; i++) if (!strcmp(s, k_scal[i])) return i;
+    if (!strcmp(s, "f32")) return OSC_T_F32;
     return -1;
 }
+static const char *scal_name(OscScalar s) { return s == OSC_T_F32 ? "f32" : (s >= 1 && s <= 9) ? k_scal[s] : "?"; }
 
-/* "u32" | "own:u32:8" | "shared:u32:8" | "mut:u32:8" */
+/* "u32" | "f32" | "own:u32:8" | "shared:u32:8" | "mut:u32:8" | kernels: "gview:f32" | "gedit:u32" | "block:f32:256" */
 static int type_from(const char *s, OscType *t)
 {
     memset(t, 0, sizeof *t);
     int sc = scalar_from(s);
     if (sc > 0) { t->s = (OscScalar)sc; return 0; }
+    if (!strcmp(s, "gview:f32") || !strcmp(s, "gview:u32") || !strcmp(s, "gedit:f32") || !strcmp(s, "gedit:u32")) {
+        t->s = s[1] == 'v' ? OSC_T_GVIEW : OSC_T_GEDIT;
+        t->elem = s[6] == 'f' ? OSC_T_F32 : OSC_T_U32;
+        return 0;
+    }
     const char *c1 = strchr(s, ':');
     if (!c1) return -1;
     const char *c2 = strchr(c1 + 1, ':');
     if (!c2) return -1;
     int rk = 0;
-    for (int k = 1; k <= 3; k++) if ((size_t)(c1 - s) == strlen(k_refk[k]) && !strncmp(s, k_refk[k], (size_t)(c1 - s))) rk = k;
+    for (int k = 1; k <= 4; k++) if ((size_t)(c1 - s) == strlen(k_refk[k]) && !strncmp(s, k_refk[k], (size_t)(c1 - s))) rk = k;
     if (!rk) return -1;
     char el[8];
     size_t el_n = (size_t)(c2 - c1 - 1);
@@ -260,25 +295,32 @@ static int type_from(const char *s, OscType *t)
     int e = scalar_from(el);
     if (e < 0) return -1;
     const char *d = c2 + 1;
-    if (!*d || (d[0] == '0') || strlen(d) > 2) return -1;
+    unsigned maxlen = rk == OSC_REF_BLOCK ? OSC_MAX_SHARED_LEN : OSC_MAX_ARRAY_LEN;
+    if (!*d || (d[0] == '0') || strlen(d) > (rk == OSC_REF_BLOCK ? 5u : 2u)) return -1;
+    if (rk == OSC_REF_BLOCK ? (e != OSC_T_F32 && e != OSC_T_U32) : e == OSC_T_F32) return -1;
     unsigned len = 0;
     for (; *d; d++) { if (*d < '0' || *d > '9') return -1; len = len * 10 + (unsigned)(*d - '0'); }
-    if (len < 1 || len > OSC_MAX_ARRAY_LEN) return -1;
+    if (len < 1 || len > maxlen) return -1;
     t->s = OSC_T_REF; t->ref = (OscRefKind)rk; t->elem = (OscScalar)e; t->len = (uint16_t)len;
     return 0;
 }
 
 static void type_name(const OscType *t, char *o, size_t n)
 {
-    if (t->s == OSC_T_REF && t->sid == 0 && t->ref >= 1 && t->ref <= 3 && t->elem >= 1 && t->elem <= 9)
-        snprintf(o, n, "%s:%s:%u", k_refk[t->ref], k_scal[t->elem], t->len);
-    else if (t->s <= OSC_T_I64 && t->ref == 0 && t->len == 0 && t->sid == 0) snprintf(o, n, "%s", k_scal[t->s]);
+    if (t->s == OSC_T_REF && t->sid == 0 && t->ref >= 1 && t->ref <= 4 && ((t->elem >= 1 && t->elem <= 9) || t->elem == OSC_T_F32))
+        snprintf(o, n, "%s:%s:%u", k_refk[t->ref], scal_name(t->elem), t->len);
+    else if ((t->s == OSC_T_GVIEW || t->s == OSC_T_GEDIT) && (t->elem == OSC_T_F32 || t->elem == OSC_T_U32))
+        snprintf(o, n, "%s:%s", t->s == OSC_T_GVIEW ? "gview" : "gedit", scal_name(t->elem));
+    else if ((t->s <= OSC_T_I64 || t->s == OSC_T_F32) && t->ref == 0 && t->len == 0 && t->sid == 0) snprintf(o, n, "%s", scal_name(t->s));
     else snprintf(o, n, "?");
 }
 
 static int is_int(const OscType *t) { return t->s >= OSC_T_U8 && t->s <= OSC_T_I64 && t->ref == 0; }
-static int is_scalar(const OscType *t) { return t->s >= OSC_T_BOOL && t->s <= OSC_T_I64 && t->ref == 0; }
-static int is_arr(const OscType *t) { return t->s == OSC_T_REF && t->sid == 0; }
+static int is_scalar(const OscType *t) { return ((t->s >= OSC_T_BOOL && t->s <= OSC_T_I64) || t->s == OSC_T_F32) && t->ref == 0; }
+static int is_f32(const OscType *t) { return t->s == OSC_T_F32 && t->ref == 0; }
+static int is_arr(const OscType *t) { return t->s == OSC_T_REF && t->sid == 0 && t->ref != OSC_REF_BLOCK; }
+static int is_blk(const OscType *t) { return t->s == OSC_T_REF && t->sid == 0 && t->ref == OSC_REF_BLOCK; }
+static int is_gbuf(const OscType *t) { return t->s == OSC_T_GVIEW || t->s == OSC_T_GEDIT; }
 /* may array register `a` be bound to array slot `p` (mov dst or call parameter)? osc_ir.c ref_bindable */
 static int ref_ok(const OscType *p, const OscType *a)
 {
@@ -329,13 +371,30 @@ static const OpDef k_ops[] = {
     {"br", OSC_I_BR, 0, {"to"}, NULL},
     {"cbr", OSC_I_CBR, 0, {"cond", "then", "else"}, NULL},
     {"ret", OSC_I_RET, 0, {NULL}, "a"},
+    /* GPU kernels (docs/omegese/GPU.md) */
+    {"thread", OSC_I_GPU, OSC_G_THREAD, {"dst"}, NULL},
+    {"threads", OSC_I_GPU, OSC_G_THREADS, {"dst"}, NULL},
+    {"block", OSC_I_GPU, OSC_G_BLOCK, {"dst"}, NULL},
+    {"blocks", OSC_I_GPU, OSC_G_BLOCKS, {"dst"}, NULL},
+    {"batch", OSC_I_GPU, OSC_G_BATCH, {"dst"}, NULL},
+    {"batches", OSC_I_GPU, OSC_G_BATCHES, {"dst"}, NULL},
+    {"shared", OSC_I_SHARED, 0, {"dst"}, NULL},
+    {"gload", OSC_I_GLOAD, 0, {"dst", "buf", "index"}, NULL},
+    {"gstore", OSC_I_GSTORE, 0, {"buf", "index", "value"}, NULL},
+    {"sync", OSC_I_SYNC, 0, {NULL}, NULL},
+    {"down", OSC_I_SHFL, OSC_SH_DOWN, {"dst", "a", "b"}, NULL},
+    {"min", OSC_I_BIN, OSC_B_MIN, {"dst", "a", "b"}, NULL},
+    {"max", OSC_I_BIN, OSC_B_MAX, {"dst", "a", "b"}, NULL},
+    {"exp", OSC_I_UN, OSC_U_EXP, {"dst", "a"}, NULL},
+    {"inv", OSC_I_UN, OSC_U_INV, {"dst", "a"}, NULL},
+    {"root", OSC_I_UN, OSC_U_ROOT, {"dst", "a"}, NULL},
 };
 #define NOPS (sizeof k_ops / sizeof k_ops[0])
 
 static const OpDef *opdef_of(uint8_t op, uint8_t sub)
 {
     for (size_t i = 0; i < NOPS; i++)
-        if (k_ops[i].op == op && (k_ops[i].sub == sub || (op != OSC_I_BIN && op != OSC_I_UN && op != OSC_I_CMP))) return &k_ops[i];
+        if (k_ops[i].op == op && (k_ops[i].sub == sub || (op != OSC_I_BIN && op != OSC_I_UN && op != OSC_I_CMP && op != OSC_I_GPU))) return &k_ops[i];
     return NULL;
 }
 
@@ -424,6 +483,10 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
         if (!is_scalar(t)) return STEP(AT "dst r%d is %s; const needs a scalar register", ATV, in->dst, tn(t));
         const J *v = jget(o, "value");
         int neg; uint64_t m;
+        if (t->s == OSC_T_F32) { /* a decimal rounded to the nearest binary32, or "0x" + 8 hex digits (the bits) */
+            if (f32_value(v, &in->imm)) return STEP(AT "an f32 value is a decimal number or a string \"0x\" + 8 hex digits", ATV);
+            break;
+        }
         if (t->s == OSC_T_BOOL) {
             if (v->t == J_TRUE) in->imm = 1;
             else if (v->t == J_FALSE) in->imm = 0;
@@ -457,7 +520,13 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
         if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "a", &in->a) || reg_field(c, o, "b", &in->b)) return -1;
         const OscType *D = &T[in->dst], *A = &T[in->a], *B = &T[in->b];
         if (!is_scalar(D) || !teq(D, A)) return STEP(AT "dst r%d (%s) and a r%d (%s) must have the same scalar type", ATV, in->dst, tn(D), in->a, tn(A));
-        if (in->sub == OSC_B_SHL || in->sub == OSC_B_SHR) {
+        if (is_f32(A)) {
+            if (!teq(A, B)) return STEP(AT "a r%d (%s) and b r%d (%s) must have the same type", ATV, in->a, tn(A), in->b, tn(B));
+            if (in->sub != OSC_B_ADD && in->sub != OSC_B_SUB && in->sub != OSC_B_MUL && in->sub != OSC_B_MIN && in->sub != OSC_B_MAX)
+                return STEP(AT "f32 takes add, sub, mul, min and max only", ATV);
+        } else if (in->sub == OSC_B_MIN || in->sub == OSC_B_MAX) {
+            if (A->s != OSC_T_U32 || !teq(A, B)) return STEP(AT "min and max need two u32 or two f32 registers", ATV);
+        } else if (in->sub == OSC_B_SHL || in->sub == OSC_B_SHR) {
             if (!is_int(A) || !is_int(B)) return STEP(AT "shifts need integer registers (a is %s, b is %s)", ATV, tn(A), tn(B));
         } else if (in->sub == OSC_B_AND || in->sub == OSC_B_OR || in->sub == OSC_B_XOR) {
             if (!teq(A, B)) return STEP(AT "a r%d (%s) and b r%d (%s) must have the same type", ATV, in->a, tn(A), in->b, tn(B));
@@ -470,7 +539,9 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
         const OscType *D = &T[in->dst], *A = &T[in->a];
         if (!is_scalar(D) || !teq(D, A)) return STEP(AT "dst r%d (%s) and a r%d (%s) must have the same scalar type", ATV, in->dst, tn(D), in->a, tn(A));
         if (in->sub == OSC_U_LNOT && A->s != OSC_T_BOOL) return STEP(AT "not needs a bool register (r%d is %s)", ATV, in->a, tn(A));
-        if (in->sub != OSC_U_LNOT && !is_int(A)) return STEP(AT "%s needs an integer register (r%d is %s)", ATV, d->name, in->a, tn(A));
+        if (in->sub >= OSC_U_EXP) { if (!is_f32(A)) return STEP(AT "%s needs an f32 register (r%d is %s)", ATV, d->name, in->a, tn(A)); }
+        else if (in->sub == OSC_U_NEG && is_f32(A)) {}
+        else if (in->sub != OSC_U_LNOT && !is_int(A)) return STEP(AT "%s needs an integer register (r%d is %s)", ATV, d->name, in->a, tn(A));
         break;
     }
     case OSC_I_CMP: {
@@ -482,7 +553,10 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
     }
     case OSC_I_CAST:
         if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "a", &in->a)) return -1;
-        if (!is_int(&T[in->dst]) || !is_int(&T[in->a]))
+        if (is_f32(&T[in->dst]) || is_f32(&T[in->a])) {
+            if (!(is_f32(&T[in->dst]) && T[in->a].s == OSC_T_U32) && !(is_f32(&T[in->a]) && T[in->dst].s == OSC_T_U32))
+                return STEP(AT "an f32 cast converts u32 <-> f32 (dst is %s, a is %s)", ATV, tn(&T[in->dst]), tn(&T[in->a]));
+        } else if (!is_int(&T[in->dst]) || !is_int(&T[in->a]))
             return STEP(AT "cast converts between integer registers (dst is %s, a is %s)", ATV, tn(&T[in->dst]), tn(&T[in->a]));
         break;
     case OSC_I_ALLOC:
@@ -496,13 +570,14 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
         break;
     case OSC_I_LOAD:
         if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "arr", &in->a) || reg_field(c, o, "index", &in->b)) return -1;
-        if (!is_arr(&T[in->a])) return STEP(AT "arr r%d is %s, not an array", ATV, in->a, tn(&T[in->a]));
+        if (!is_arr(&T[in->a]) && !is_blk(&T[in->a])) return STEP(AT "arr r%d is %s, not an array", ATV, in->a, tn(&T[in->a]));
         if (!is_int(&T[in->b])) return STEP(AT "index r%d is %s, not an integer", ATV, in->b, tn(&T[in->b]));
         if (!is_scalar(&T[in->dst]) || T[in->dst].s != T[in->a].elem) return STEP(AT "dst r%d is %s; it must be the element type of r%d", ATV, in->dst, tn(&T[in->dst]), in->a);
         break;
     case OSC_I_STORE:
         if (reg_field(c, o, "arr", &in->a) || reg_field(c, o, "index", &in->b) || reg_field(c, o, "value", &in->c)) return -1;
-        if (!is_arr(&T[in->a]) || T[in->a].ref == OSC_REF_SHARED) return STEP(AT "arr r%d is %s; store needs an own: or mut: array", ATV, in->a, tn(&T[in->a]));
+        if ((!is_arr(&T[in->a]) || T[in->a].ref == OSC_REF_SHARED) && !is_blk(&T[in->a]))
+            return STEP(AT "arr r%d is %s; store needs an own:, mut: or block: array", ATV, in->a, tn(&T[in->a]));
         if (!is_int(&T[in->b])) return STEP(AT "index r%d is %s, not an integer", ATV, in->b, tn(&T[in->b]));
         if (!is_scalar(&T[in->c]) || T[in->c].s != T[in->a].elem) return STEP(AT "value r%d is %s; it must be the element type of r%d", ATV, in->c, tn(&T[in->c]), in->a);
         break;
@@ -534,6 +609,35 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
         }
         break;
     }
+    case OSC_I_GPU:
+        if (reg_field(c, o, "dst", &in->dst)) return -1;
+        if (T[in->dst].s != OSC_T_U32 || !is_scalar(&T[in->dst])) return STEP(AT "dst r%d is %s; %s writes a u32 register", ATV, in->dst, tn(&T[in->dst]), d->name);
+        break;
+    case OSC_I_SHARED:
+        if (reg_field(c, o, "dst", &in->dst)) return -1;
+        if (!is_blk(&T[in->dst])) return STEP(AT "dst r%d is %s; shared writes a block:<type>:<len> register", ATV, in->dst, tn(&T[in->dst]));
+        if (c->blk != 0) return STEP(AT "shared is allowed only in block 0", ATV);
+        break;
+    case OSC_I_GLOAD:
+    case OSC_I_GSTORE: {
+        int ld = d->op == OSC_I_GLOAD;
+        if (ld ? (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "buf", &in->a) || reg_field(c, o, "index", &in->b))
+               : (reg_field(c, o, "buf", &in->a) || reg_field(c, o, "index", &in->b) || reg_field(c, o, "value", &in->c))) return -1;
+        if (!is_gbuf(&T[in->a]) || (!ld && T[in->a].s != OSC_T_GEDIT))
+            return STEP(AT "buf r%d is %s; %s needs a %s buffer", ATV, in->a, tn(&T[in->a]), d->name, ld ? "gview: or gedit:" : "gedit:");
+        if (T[in->b].s != OSC_T_U32 || !is_scalar(&T[in->b])) return STEP(AT "index r%d is %s, not u32", ATV, in->b, tn(&T[in->b]));
+        int v = ld ? in->dst : in->c;
+        if (!is_scalar(&T[v]) || T[v].s != T[in->a].elem) return STEP(AT "r%d is %s; it must be the element type of r%d", ATV, v, tn(&T[v]), in->a);
+        break;
+    }
+    case OSC_I_SYNC:
+        break;
+    case OSC_I_SHFL:
+        if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "a", &in->a) || reg_field(c, o, "b", &in->b)) return -1;
+        if (!teq(&T[in->dst], &T[in->a]) || (T[in->a].s != OSC_T_U32 && T[in->a].s != OSC_T_F32) || !is_scalar(&T[in->a]))
+            return STEP(AT "down needs dst and a of the same type, u32 or f32", ATV);
+        if (T[in->b].s != OSC_T_U32 || !is_scalar(&T[in->b])) return STEP(AT "b r%d is %s, not u32", ATV, in->b, tn(&T[in->b]));
+        break;
     case OSC_I_TRAP: {
         int neg; uint64_t v;
         if (jint(jget(o, "code"), &neg, &v) || neg || v < 1 || v > OSC_TRAP_MAX) return STEP(AT "trap code must be 1..%d", ATV, OSC_TRAP_MAX);
@@ -587,6 +691,7 @@ static int build(const J *root)
     memset(&g_u, 0, sizeof g_u);
     static const char *const top[] = {"functions", NULL};
     static const char *const fk[] = {"name", "params", "ret", "locals", "blocks", NULL};
+    static const char *const fkk[] = {"name", "kind", "params", "ret", "locals", "blocks", NULL};
     if (root->t != J_OBJ) return fail("schema", "the top level must be an object {\"functions\": [...]}");
     if (only_keys(root, "top level", top)) return -1;
     const J *fs = jget(root, "functions");
@@ -598,13 +703,17 @@ static int build(const J *root)
         if (F->t != J_OBJ) return fail("schema", "%s must be an object", where);
         const J *nm = jget(F, "name");
         if (nm && nm->t == J_STR && name_ok(nm->s)) snprintf(where, sizeof where, "function %s", nm->s);
-        if (only_keys(F, where, fk)) return -1;
+        const J *kd = jget(F, "kind");
+        if (only_keys(F, where, kd ? fkk : fk)) return -1;
+        if (kd && (kd->t != J_STR || strcmp(kd->s, "kernel"))) return fail("schema", "%s: \"kind\" must be \"kernel\" (or left out for a host function)", where);
+        unsigned maxp = kd ? OSC_MAX_KPARAMS : OSC_MAX_PARAMS;
         if (nm->t != J_STR || !name_ok(nm->s)) return fail("schema", "%s: \"name\" must match [A-Za-z_][A-Za-z0-9_]{0,62}", where);
         if (find_func(nm->s, (unsigned)fi) >= 0) return fail("schema", "%s: a function with this name already exists", where);
         OscFunc *f = &g_u.funcs[fi];
         snprintf(f->name, sizeof f->name, "%s", nm->s);
         const J *ps = jget(F, "params"), *rt = jget(F, "ret"), *ls = jget(F, "locals"), *bs = jget(F, "blocks");
-        if (ps->t != J_ARR || ps->n > OSC_MAX_PARAMS) return fail("schema", "%s: \"params\" must be an array of 0..%d types", where, OSC_MAX_PARAMS);
+        if (ps->t != J_ARR || ps->n > maxp) return fail("schema", "%s: \"params\" must be an array of 0..%u types", where, maxp);
+        f->kind = kd ? OSC_FN_KERNEL : OSC_FN_HOST;
         if (ls->t != J_ARR) return fail("schema", "%s: \"locals\" must be an array of types", where);
         if (ps->n + ls->n > OSC_MAX_VREGS) return fail("schema", "%s: %zu registers (params + locals) > %d", where, ps->n + ls->n, OSC_MAX_VREGS);
         f->nparams = (uint8_t)ps->n;
@@ -612,7 +721,7 @@ static int build(const J *root)
         for (size_t r = 0; r < ps->n + ls->n; r++) {
             const J *t = r < ps->n ? ps->kid[r] : ls->kid[r - ps->n];
             if (t->t != J_STR || type_from(t->s, &f->vtype[r]))
-                return fail("schema", "%s: register r%zu: type must be bool, u8..u64, i8..i64, or own|shared|mut:<type>:<1..64>", where, r);
+                return fail("schema", "%s: register r%zu: type must be bool, u8..u64, i8..i64, f32, own|shared|mut:<type>:<1..64>, gview|gedit:<u32|f32> or block:<u32|f32>:<1..12288>", where, r);
         }
         if (rt->t != J_STR) return fail("schema", "%s: \"ret\" must be a type name or \"void\"", where);
         if (!strcmp(rt->s, "void")) f->ret.s = OSC_T_VOID;
@@ -727,7 +836,7 @@ static int cmd_lift(const char *in)
     for (unsigned fi = 0; fi < u.nfuncs; fi++) {
         const OscFunc *f = &u.funcs[fi];
         char t[32];
-        printf("  {\"name\": \"%s\", \"params\": [", f->name);
+        printf("  {\"name\": \"%s\", %s\"params\": [", f->name, f->kind == OSC_FN_KERNEL ? "\"kind\": \"kernel\", " : "");
         for (unsigned r = 0; r < f->nparams; r++) { type_name(&f->vtype[r], t, sizeof t); printf("%s\"%s\"", r ? ", " : "", t); }
         printf("], \"ret\": \"%s\", \"locals\": [", f->ret.s == OSC_T_VOID ? "void" : k_scal[f->ret.s]);
         for (unsigned r = f->nparams; r < f->nvregs; r++) { type_name(&f->vtype[r], t, sizeof t); printf("%s\"%s\"", r > f->nparams ? ", " : "", t); }
@@ -742,6 +851,7 @@ static int cmd_lift(const char *in)
                 case OSC_I_CONST: {
                     OscScalar s = f->vtype[x->dst].s;
                     if (s == OSC_T_BOOL) printf(", \"dst\": %d, \"value\": %s", x->dst, x->imm ? "true" : "false");
+                    else if (s == OSC_T_F32) printf(", \"dst\": %d, \"value\": \"0x%08x\"", x->dst, (unsigned)x->imm);
                     else if (osc_scalar_signed(s)) printf(", \"dst\": %d, \"value\": %" PRId64, x->dst, (int64_t)x->imm);
                     else printf(", \"dst\": %d, \"value\": %" PRIu64, x->dst, x->imm); /* EMIT:lift-const */
                     break;
@@ -762,6 +872,10 @@ static int cmd_lift(const char *in)
                 case OSC_I_BR: printf(", \"to\": %d", x->blk_t); break;
                 case OSC_I_CBR: printf(", \"cond\": %d, \"then\": %d, \"else\": %d", x->a, x->blk_t, x->blk_f); break;
                 case OSC_I_RET: if (x->a >= 0) printf(", \"a\": %d", x->a); break;
+                case OSC_I_GPU: case OSC_I_SHARED: printf(", \"dst\": %d", x->dst); break;
+                case OSC_I_GLOAD: printf(", \"dst\": %d, \"buf\": %d, \"index\": %d", x->dst, x->a, x->b); break;
+                case OSC_I_GSTORE: printf(", \"buf\": %d, \"index\": %d, \"value\": %d", x->a, x->b, x->c); break;
+                case OSC_I_SHFL: printf(", \"dst\": %d, \"a\": %d, \"b\": %d", x->dst, x->a, x->b); break;
                 }
                 printf("}%s\n", i + 1 < f->blocks[bi].first + f->blocks[bi].count ? "," : "");
             }
