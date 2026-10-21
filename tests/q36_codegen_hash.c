@@ -38,6 +38,8 @@ int main(void) {
         snprintf(n, sizeof n, "gdn.prep.m%d", m); omega_bw_ir_init(prog); emit(n, omega_blackwell_codegen_gdn_prep_prog(&s, prog));
         snprintf(n, sizeof n, "gdn.scan.m%d", m); omega_bw_ir_init(prog); emit(n, omega_blackwell_codegen_gdn_scan_prog(&s, prog));
         snprintf(n, sizeof n, "gdn.post.m%d", m); omega_bw_ir_init(prog); emit(n, omega_blackwell_codegen_gdn_post_prog(&s, prog));
+        OmegaGdnSpec sh = {.mutant = m, .heads = 1}; /* L312 lever 4: the heads form */
+        snprintf(n, sizeof n, "gdn.heads.m%d", m); omega_bw_ir_init(prog); emit(n, omega_blackwell_codegen_gdn_prog(&sh, prog));
     }
     for (int c = 1; c <= 2; c++) {
         OmegaGdnSpec s = {.copy = c};
@@ -50,6 +52,18 @@ int main(void) {
                 snprintf(n, sizeof n, "attn256.d%u.m%d.p%u", d, m, p); omega_bw_ir_init(prog);
                 emit(n, omega_blackwell_codegen_decode_attn256_prog(&s, prog));
             }
+    for (uint32_t d = 1; d <= 4; d++) /* L312 lever 5: the heads form (27B shape), and the 35B shape plain and heads */
+        for (int m = 0; m <= 5; m++) {
+            OmegaDecodeAttn256Spec s = {.depth = d, .mutant = m, .heads = 1};
+            snprintf(n, sizeof n, "attn256.d%u.m%d.heads", d, m); omega_bw_ir_init(prog);
+            emit(n, omega_blackwell_codegen_decode_attn256_prog(&s, prog));
+            OmegaDecodeAttn256Spec q = {.depth = d, .mutant = m, .q_heads = 16, .kv_heads = 2, .q_per_cta = 4};
+            snprintf(n, sizeof n, "attn256q36.d%u.m%d", d, m); omega_bw_ir_init(prog);
+            emit(n, omega_blackwell_codegen_decode_attn256_prog(&q, prog));
+            q.heads = 1;
+            snprintf(n, sizeof n, "attn256q36.d%u.m%d.heads", d, m); omega_bw_ir_init(prog);
+            emit(n, omega_blackwell_codegen_decode_attn256_prog(&q, prog));
+        }
     for (int m = 0; m <= 4; m++) {
         OmegaPrefillAttn256Spec s = {.mutant = m};
         snprintf(n, sizeof n, "pattn256.m%d", m); omega_bw_ir_init(prog); emit(n, omega_blackwell_codegen_prefill_attn256_prog(&s, prog));
@@ -75,7 +89,8 @@ int main(void) {
             for (int m = 0; m <= 2; m++)
                 for (int wi = 0; wi < 3; wi++)
                     for (int si = 0; si < 3; si++) {
-                        if ((k != OMEGA_DEC_RES && k != OMEGA_DEC_ARGMAX && mode) || (k != OMEGA_DEC_AXPY && k != OMEGA_DEC_GATHER && si)) continue;
+                        const int gr = k == OMEGA_DEC_GATE && mode == 1, cr = k == OMEGA_DEC_RES && (mode & 10u) == 10u; /* rows forms with a stride (L356, L312 lever 7) */
+                        if ((k != OMEGA_DEC_RES && k != OMEGA_DEC_ARGMAX && !gr && mode) || (k != OMEGA_DEC_AXPY && k != OMEGA_DEC_GATHER && !gr && !cr && si)) continue;
                         OmegaDecSpec s = {.kind = (OmegaDecKind)k, .mode = mode, .stride = strides[si], .mutant = m, .width = widths[wi]};
                         snprintf(n, sizeof n, "dec.k%d.mode%u.m%d.w%u.s%u", k, mode, m, widths[wi], strides[si]); omega_bw_ir_init(prog);
                         emit(n, omega_blackwell_codegen_dec_prog(&s, prog));
