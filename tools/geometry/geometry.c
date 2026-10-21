@@ -559,17 +559,28 @@ static void config(const Env *e, int N)
 	/* the winner and the runner-up across families for one format and N, as a schedule file */
 	Best all[FAM_COUNT];
 	int order[FAM_COUNT];
-	for (int f = 0; f < FAM_COUNT; f++) all[f] = solve_family(e, f, N, 0, 0), order[f] = f;
+	/* only shapes this machine can build today: no second Spark exists (MACHINE_CEILING.md:74-75) */
+	for (int f = 0; f < FAM_COUNT; f++) {
+		all[f] = solve_family(e, f, N, 0, 0), order[f] = f;
+		if (f == FAM_TWO_SPARK || f == FAM_EXPERT_SPLIT || f == FAM_TWO_MAC) all[f].r.T = 0; /* Mac: Drake's daily machine, no serving on it (L258 brief) */
+	}
 	for (int i = 0; i < FAM_COUNT; i++)
 		for (int j = i + 1; j < FAM_COUNT; j++) {
 			double ti = all[order[i]].r.T ? all[order[i]].r.T : 1e9, tj = all[order[j]].r.T ? all[order[j]].r.T : 1e9;
-			if (tj < ti) { int t = order[i]; order[i] = order[j]; order[j] = t; }
+			/* ties go to the simpler shape (lower family number): solver free equal to figure eight reports figure eight */
+			if (tj < ti - 1e-12) { int t = order[i]; order[i] = order[j]; order[j] = t; }
 		}
-	for (int k = 0; k < 2; k++) {
+	char first[160] = "";
+	for (int k = 0, shown = 0; k < FAM_COUNT && shown < 2; k++) {
 		const Best *b = &all[order[k]];
-		printf("# %s for %s, N=%d: %.2f words/s total predicted (%s bound)\n", k ? "runner-up" : "winner",
+		char cfg[160];
+		shape_text(&b->s, cfg, sizeof cfg);
+		if (b->r.T == 0 || !strcmp(cfg, first)) continue; /* the runner-up must be a different shape */
+		if (!shown) strcpy(first, cfg);
+		int is_runner = shown++;
+		printf("# %s for %s, N=%d: %.2f words/s total predicted (%s bound)\n", is_runner ? "runner-up" : "winner",
 			e->fm->name, N, b->r.wps, b->r.bound);
-		printf("[%s]\nshape = %s\nformat = %s\nconversations = %d\ngroups = %d\nper_group = %d\n", k ? "runner_up" : "winner",
+		printf("[%s]\nshape = %s\nformat = %s\nconversations = %d\ngroups = %d\nper_group = %d\n", is_runner ? "runner_up" : "winner",
 			fam_name[b->s.fam], e->fm->name, N, b->s.G, N / b->s.G);
 		printf("state_on_cpu_layers = %d\nstate_in_gpu_l2_layers = %d\nstate_over_road2_layers = %d\nrouter_on_cpu = %d\nhead_cpu_share = %.2f\nroad2_bytes = %.0f\nsplit_layer = %d\n",
 			b->s.m, b->s.m2, b->s.m3, b->s.router_cpu, b->s.head_cpu, b->s.road2, b->s.split);
