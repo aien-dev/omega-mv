@@ -13,6 +13,7 @@ while the 35B was brought up); no new 30B cell runs.
 | `run-engines-35b.sh` -> `35b-engines-<ts>/` | The same cells on the 35B's expert files (40 layers x 256 experts of 3.146 MB) | 35B |
 | `35b-plan-l308/` | Plans from L308's measured 90 percent heads (prose, code, math) and their schedule proofs (PASS) | 35B |
 | `run-host-35b.sh` -> `35b-host-<ts>/` | The smallest full loop on the 35B host: L306 golden -> trace, plan, schedule + proof, the exact 35B forward with experts from the ring (identity gate: tokens and routes equal the golden), movement alone | 35B |
+| (aien-sovereign-core `evidence/motor-chip-20261021/`) | The motor on the chip (2026-10-21): gate 1 identity on L306's 35B kernels (p1..p4, mutant 4 red, band written in advance) and gate 2 through the door on 18091 (greedy ids equal the golden, mutant server red); chip time per token on the plain path | 35B |
 | `run-swap-35b.sh` -> `35b-swap-<ts>/` | H4 head swap mid-run on the 35B: L308's prose head -> code head at token 12 of 24, loader lead -1/0/1/2/4 | 35B |
 | `run-stroke-35b.sh` -> `35b-stroke-<ts>/` | H6 on the 35B: 32 traces (exact forward, one token per step), union plan, strokes N = 1..32 layer by layer through the ring, one expert read per beat, identical tokens per head | 35B |
 | `run-swap-30b.sh` -> `30b-swap-<ts>/` | H4 head swap mid-run: head B replaces head A at token 12 of 24, loader lead -1/0/1/2/4 tokens: extra time the user sees, hit rate after the swap | 30B |

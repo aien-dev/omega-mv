@@ -175,8 +175,76 @@ Reading:
   5.33x (calc:7cb0d299); a 32-head stroke is 24.4 s for 32 tokens (calc:20f527b9). This is the shape the chip needs:
   one fill, many heads, and the math engine the only thing that grows with N.
 
-### F. The chip piston (power engine on the GB10)
-See section 8 below (slot size = the 35B layer, 26.7 MB; GB10 run queued in the measurement-window line).
+### F. The motor on the chip (power engine = L306's 35B kernels, served first)
+Drake, 2026-10-21 01:15Z: the motor IS the 35B server, and serving comes first. The power engine on the chip is
+therefore L306's 35B kernels (`aien-sovereign-core` branch `q36/serve`, continued on `motor/serve`; omega GPU lib
+sha 678df626, the same lib the pinned server binary `bin-1cf8fb09` was built with), gated for identity against the
+host goldens before anything else fires them. The order: (1) the identity gate on the chip; (2) the same build served
+on 18091 behind the OpenAI-style door with an HTTP gate; (3) only then the piston of section 8 fires those kernels on
+this schedule with cylinders filled by the movement engine, strokes of N conversations on the chip, head swap, levers.
+
+**Gate 1, the mathematics** (`qwen38_omega_full`, sc `motor/serve` 71ab16c6): teacher forcing over the golden's
+generated tokens (`evidence/q36-host-20261020/gen-p1..p4.json`, 32 tokens each), one 40-layer window so the whole
+35B is resident, the chip's argmax at every position against the golden's token. The rule: the words are identical,
+except at a position where the host reference's own top-2 logit margin is below a band written in advance (0.1 logit,
+`MARGIN_MIN`): a decision the reference itself made by less than that may land the other way under a different float
+order, so such flips are counted, reported and allowed. A flip at a wider margin is a wrong kernel and fails, and the
+chip's greedy choice must agree with the reference at every position (prompt included) outside the band. The band is
+never taken from the run under test: the first cut used the run's own max logit error as the band, and the mutant
+(max error 23.8) excused its own 22 flips and passed (01:58Z); the coordinator caught it and the rule was fixed
+(71ab16c6) before any receipt was summarized here. Routes: the device keeps one ids slot per router, so after a token's
+graph only the last layer's picks remain; the routes half of the gate rests on L306's router probe
+(`q36_router_check`, 6,520 rows identical, weights within 6e-7, `sc-q36/evidence/q36-chip-20261020/`). Controls:
+the shifted-by-one reference must be caught, the host reference must equal the golden, and the mutant
+(`AIEN_Q36_TEST_MUTANT=4`, the shared expert dropped from COMBINE) must fail the same rule.
+
+**Open precision item (parked with L306, recorded here, not gated):** the cosine floor. L306's chip receipts put the
+window's cosine(min) at 0.99953, 0.99487, 0.99953 and 0.99892 on p1 to p4 (`sc-q36/evidence/q36-chip-20261020/
+gate1-p*.json`); whether the gate should hold 0.9999 or accept 0.995 is unanswered. The tool prints and records
+whether 0.9999 held; the words rule above is the gate. On p4 the chip flipped position 11 (margin 0.0096, inside the
+written band): allowed. The correct runs' vocabulary-wide max logit error reaches 2.425 (p2) while the words stay
+identical: the error at the top two is far below the vocabulary max, which is why a vocabulary-wide error cannot serve
+as the band.
+
+**Gate 2, the door** (`~/handoffs/motor-scripts/gate2-http.sh`): one greedy chat completion through `/v1/chat/
+completions` (thinking off, 24 tokens, `aien_return_token_ids`), its 24 ids compared with `gen-chat-max-24.json`;
+run first against the mutant build on 18093 (must be red), then against 18091 (must be green).
+
+Status 02:10Z: **18091 serves the 35B** (`qwen3.6-35b-a3b-fp8`, pinned `~/.local/state/aien-q36/bin-5b726818`, sc
+`motor/serve` 5b726818: the 35B chat template was unknown to the tokenizer and L306's pinned binary died at start; the
+template is now pinned as `ChatTemplate::Qwen36` with a renderer checked against 48 jinja2 oracle cases and 5 refusals,
+and the golden prompt tokenizes to the reference's 24 ids). Gate 2: the mutant server on 18093 went red (ids differ),
+the real one on 18091 green at 01:58:28Z (24 ids identical to `gen-chat-max-24.json`); `ledger note L305/L306`
+written so Renda points at it. Gate 1 first pass (bin 8f86188a, receipts `gate1-p*.json`): p1..p3 32/32 words
+identical, p4 31/32 with the one flip at margin 0.0096, cosine(min) 0.99953 / 0.99487 / 0.99953 / 0.99892 (floor
+0.9999 not held, recorded); re-judged under the written band: p1..p3 strict, p4 allowed, mutant 4 FAIL (22 flips,
+smallest margin 0.214). Rerun with the fixed tool (bin 7c75dd62, `gate1b-*.json`), red before green: the mutant FAIL first (exit 1, 0 flips inside the band, 22 beyond, 02:04:30Z), then p1..p3 32/32 and p4 31/32 with its one flip inside the band, every run PASS by 02:08:54Z. Chip time
+per token on the plain path (one token per command list, shared chip, no window, `chip_ns` from the gate runs),
+medians: p1 21.864 ms = 45.74 tok/s (calc:131a3962, calc:593290c1), p2 22.989 ms = 43.50 tok/s (calc:d18b9629,
+calc:e9362744), p3 21.990 ms = 45.48 tok/s (calc:78354ed1), p4 22.601 ms = 44.25 tok/s (calc:dde6add0); the
+coordinator's read through the door at 02:04Z: 42.0 to 44.4 tok/s decode, 0.67 of the 63.25 tok/s ceiling at
+today's bytes. Receipts: `aien-sovereign-core` `evidence/motor-chip-20261021/` (README there).
+
+**Finding, the door and the chip lock:** `aien-serve-http` takes `/tmp/aien-gb10.lock` for the model load and around
+every generation (`omega_engine.rs`: waits 30 s, then answers HTTP 503 busy); it never holds the lock idle. While
+another agent's chip job holds the lock (a gate run, training, the judge), 18091 waits up to 30 s and then refuses.
+Serving Drake and Renda reliably needs either a chip reservation for the server or the other jobs yielding; callers
+retry on 503.
+
+**Next, step (3), the stroke on the chip (design, from `omega_gpu_q36_graph.c`):** today one token is one command list:
+`begin_token` (the embedding into the single `x` slot), `record_layer` x 40 (GDN layer 10 launches, attention layer 11;
+the AB bf16 GEMV and the MIX fp8 GEMV overlapped; ROUTER top-8 plus the shared slot; GATE_UP fp8 grouped over 9 groups;
+SWIGLU; DOWN; COMBINE|NORM), `record_final` (NORM, LM_HEAD, ARGMAX x 2), `end_token` (one submit, counters, the token
+read). The layout holds one `x`, `token`, `logits` and `hidden` slot, and the conversation state lives in objects the
+graph only points at (`cfg.gdn`, `cfg.attn`, `cfg.router`). Stroke v1 = N heads per command list: the layout gains N
+slots for `x`, `hidden`, `logits`, `token` and the per-layer scratch, `begin_stroke(x[N])` / `record_head(h, layer, pos)`
+/ `end_stroke(token[N])` record the same 40 layers N times with a per-head slot and a per-head state object (head swap =
+pointer swap, no copy), and one submit fires the stroke; the weights are read N times in v1 (the chip's cache keeps the
+expert rows warm between heads inside one stroke, measured not assumed), the state objects once each. Gate per head:
+the same words rule on p1..p4 interleaved (head h runs prompt h), negative control = mutant 4 or two heads with their
+state objects swapped (must be caught). v2 = the dense GEMVs batched at M=N through the prefill GEMM and its plan
+builder (today hardcoded to the 30B's 768/128 shapes; the 35B needs 2048/512), one weight read per stroke, which is the
+H6 number of section 7 measured on the chip. Timings only under `spark-window open --wait` (ticket `l312-piston`).
 
 ## History: the 30B stand-in (2026-10-20, before Drake retired it at 23:58Z)
 Everything in this section was measured on the 30B MoE (qwen3-30b-a3b) on the host side (CPU and NVMe) while the 35B
@@ -281,8 +349,9 @@ the 30B, the chip runs the 35B only. Host simulator (`--host-only`): PASS, 5 bea
 caught 64 of 64 times. GB10 RUN QUEUED (measurement window ticket l312-piston).
 
 ## What is not done, said plainly
-* The chip piston is built and proven in its host simulator (section 8); its GB10 run waits in the measurement-window
-  line behind L306, L274 and L131. Every chip number comes from inside that window (chip lock held for it).
+* The chip piston is built and proven in its host simulator (section 8). Under Drake's 01:15Z order its GB10 run
+  comes third: after the identity gate on L306's 35B kernels and after 18091 serves (section F). Every chip timing
+  comes from inside a measurement window (ticket l312-piston still in line); correctness runs take only the chip lock.
 * The fast-memory engine (L2 / shared memory staging) and the math engine exist only on the chip; the engine-count
   series on the host stops at 2 and continues there.
 * The thesis gate (planned loop vs today's path, identical tokens, at least as fast at every context) needs the chip
