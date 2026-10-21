@@ -74,6 +74,13 @@ int main(void) {
                         snprintf(n, sizeof n, "dec.k%d.mode%u.m%d.w%u.s%u", k, mode, m, widths[wi], strides[si]); omega_bw_ir_init(prog);
                         emit(n, omega_blackwell_codegen_dec_prog(&s, prog));
                     }
+    /* GROUP (the stroke v2 sort of N heads x S picks into expert segments): S = 8 (0) and 9 (the 35B), mutants 0..3 */
+    for (uint32_t gr = 0; gr <= 9; gr += 9)
+        for (int m = 0; m <= 3; m++) {
+            OmegaDecSpec s = {.kind = OMEGA_DEC_GROUP, .groups = gr, .mutant = m};
+            snprintf(n, sizeof n, "dec.k7.g%u.m%d", gr, m); omega_bw_ir_init(prog);
+            emit(n, omega_blackwell_codegen_dec_prog(&s, prog));
+        }
 #ifdef Q36_NEW_SHAPES
     printf("# new\n");
     Q36_NEW_SHAPES
