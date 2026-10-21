@@ -155,7 +155,7 @@ every head's token equals its own trace at every position, routes too; a missing
 | 32 | 480 | 0 | true | 59.5 | 544.3 MB | 128.22 ms | 608.82 ms | 609.24 ms | 480.58 ms | 1.14 |
 
 Expert union per beat, measured vs independent draws (256 x (1 - (1 - 8/256)^N)): N=2 12.7 vs 15.8; N=4 19.8 vs
-30.5; N=8 30.5 vs 57.4; N=16 44.8 vs 102; N=32 59.5 vs 163.3.
+30.5; N=8 30.5 vs 57.4; N=16 44.8 vs 102; N=32 59.5 vs 163.3. (Those traces are one prompt family, correlated rows: eight DIFFERENT real prompts give 54.7 at N=8, see the eight-conversation receipts below.)
 
 Reading:
 * Gate PASS in every cell: each head identical to the exact forward at all 12 positions (32 of 32 heads at N = 32),
@@ -241,6 +241,33 @@ tokens over 46 strokes = 43.06 tok/s across the heads (calc:9c07e26f), 23.22 ms 
 against 21.86 to 22.99 ms per single-head token on the same shared chip: a v1 stroke costs about four single tokens, as
 built. An observation next to the 18091 server, not a receipt; the window line was stuck during these runs. Weights are still read once per head
 per stroke (v1); v2 batches the dense GEMVs at M = 4 through the prefill GEMM.
+
+**Eight conversations per command list, done (omega `motor/serve` 52dd18a8: list cap 4096 launches, eight heads; sc
+`motor/serve` 4e0d36d2 and the evidence commits after it, receipts `evidence/motor-chip-20261021/stroke8b-*.json`,
+`stroke1-*.json`, `stroke{1,2,4}-real.json`, README there):** Drake's "eight at once". Four new goldens from the host
+reference (a Rust function, a prose paragraph, a hiking chat, a C code review) join the four fact/code/science/list
+prompts. Red before green: mutant 4 FAIL on every head, swap-control FAIL from step 18 on with the untouched heads
+unchanged; then the real run PASS on all eight and the head swap as a feature PASS, and every head's words equal the same
+conversation run alone on the chip, eight of eight. One prompt (the first prose paragraph) fails the written band rule at
+its 63rd position with the same words alone as in the stroke, 67 per-step lines identical: that is the one-token chip
+precision (cosine 0.9914 at one step, a 0.98-logit error at the flip), not the stroke; recorded, handed to the precision
+lane (L313), and a second prose prompt that passes alone took its place. The ladder, same command and binary back to back
+on the shared chip (not a speed receipt): 24.380, 49.096, 97.805, 194.143 ms per stroke at N = 1, 2, 4, 8, which is 24.3
+to 24.6 ms per token at every N (calc:eab1e7fb, calc:946a5354, calc:73a5fb9b, calc:dbf658ca) and 41 tok/s total whatever
+N is. v1 is linear, as built: each head reads the weights once per stroke. Expert union per layer per beat on the eight
+DIFFERENT real prompts, from the host's recorded routes: 54.7 of 256 (min 33, max 63) against 57.42 for independent draws
+(calc:aa517f3a); four chat prompts 29.7 against 30.53. Different conversations route almost independently; the 30.5 at
+N = 8 in the stroke table above came from one prompt family (correlated rows) and is the optimistic case. The byte budget
+for eight at once must count about 55 experts per layer per beat.
+
+**v2, the ignition (next, in this order):** (1) a record path for the segment-table FP8 GEMM (`omega_gpu_fp8gemm_api`,
+bit-identical to the GEMV per row), grid_y = the largest segment count, and a guard so an empty segment (cnt 0) is skipped
+(today its pass loop is do-while); (2) a chip-side "group" glue kernel that turns the N routers' picks of a layer into the
+segment table, the permuted x' rows and a row-to-head map, so the expert GEMM streams each distinct expert once for all the
+heads that chose it and the dense mix/o/lm_head rows once for all heads; (3) the stroke records layer-major with the batched
+pieces, GDN/attention stay per head; (4) gate: the same eight-conversation gate, every head equal to its run alone (the GEMM's
+bit-identity makes this exact), then the ladder under a `spark-window`. Expected from the bytes (the coordinator's model with
+union 55): about 11 GB per beat of eight against 8 x 2.6 GB today.
 
 **Finding, the door and the chip lock:** `aien-serve-http` takes `/tmp/aien-gb10.lock` for the model load and around
 every generation (`omega_engine.rs`: waits 30 s, then answers HTTP 503 busy); it never holds the lock idle. While
