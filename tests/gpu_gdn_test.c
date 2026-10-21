@@ -324,6 +324,79 @@ static void sim_battery(void) {
     printf("sim warp issues: %" PRIu64 "\n", g_sim_issues);
 }
 
+/* ---- L313 bf16 state on the simulator: the bf16 program equals the f32 program run from the widened state, with the
+ * stored state rounded to nearest even: outputs and tails bit-identical, every stored bf16 equal to bf16_rn of the f32
+ * program's stored state. Chained over steps (the f32 run restarts each step from the bf16 state). ---- */
+static uint16_t t_bf16_rn(float f) { uint32_t u; memcpy(&u, &f, 4); if ((u & 0x7fffffffu) > 0x7f800000u) return 0x7fc0u; return (uint16_t)((u + 0x7fffu + ((u >> 16) & 1u)) >> 16); }
+static float t_bf16_f(uint16_t b) { uint32_t u = (uint32_t)b << 16; float f; memcpy(&f, &u, 4); return f; }
+static int sim_one(const BlackwellIRProgram *prog, uint8_t **buf, const size_t *sz, float in_scale, float out_scale, char *msg, size_t n) {
+    WsSim s; memset(&s, 0, sizeof s);
+    s.p = prog; s.threads = OMEGA_GDN_THREADS; s.order = 0;
+    static uint8_t smem[OMEGA_GDN_SHARED_BYTES]; s.smem = smem; s.smem_bytes = OMEGA_GDN_SHARED_BYTES;
+    for (int i = 0; i < SB_N; i++) {
+        const uint64_t a = (uintptr_t)buf[i];
+        s.cbank[(0x380 + 8 * i) / 4] = (uint32_t)a; s.cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(a >> 32);
+        s.ranges[i].lo = (uintptr_t)buf[i]; s.ranges[i].hi = (uintptr_t)buf[i] + sz[i];
+    }
+    s.nranges = SB_N;
+    memcpy(&s.cbank[OMEGA_GDN_ARG_EPS_L2 / 4], &EPS_L2, 4); memcpy(&s.cbank[OMEGA_GDN_ARG_EPS_NORM / 4], &EPS_N, 4);
+    memcpy(&s.cbank[OMEGA_GDN_ARG_IN_SCALE / 4], &in_scale, 4); memcpy(&s.cbank[OMEGA_GDN_ARG_OUT_SCALE / 4], &out_scale, 4);
+    int err = ws_run(&s, RT, OMEGA_GDN_GRID_Y);
+    if (err) snprintf(msg, n, "%s (pc %d)", s.msg, s.err_pc);
+    g_sim_issues += s.warp_issues;
+    return err;
+}
+static void sim_bf16_battery(void) {
+    static BlackwellIRProgram p32, p16;
+    OmegaGdnSpec s32 = { .ratio = GDN_TEST_RATIO }, s16 = { .ratio = GDN_TEST_RATIO, .state_bf16 = 1 };
+    OmegaGdnShape sh16;
+    CHECK(omega_gdn_shape(&s16, &sh16) == 0 && sh16.state_bytes == T_STATE_BYTES / 2u, "bf16 shape: half the state bytes");
+    CHECK(omega_blackwell_codegen_gdn_prog(&s32, &p32) == 0 && omega_blackwell_codegen_gdn_prog(&s16, &p16) == 0, "bf16 codegen");
+    uint32_t f2fp = 0;
+    for (size_t i = 0; i < p16.count; i++) if (p16.insns[i].op == BW_IR_FMNMX_MAX && p16.insns[i].imm == OMEGA_TC_MARK_F2FP) f2fp++;
+    CHECK(f2fp == 32u && omega_gdn_bfly_count(&p16) == omega_gdn_bfly_count(&p32) + 32u, "bf16: 32 F2FP placeholders counted (%u)", f2fp);
+    Layer L; layer_make(&L, 21);
+    size_t sz[SB_N] = { CD * 4u, VD * 4u, VH * 8u, T_PAR_BYTES, T_TAIL_BYTES, T_STATE_BYTES, VD * 4u };
+    size_t sz16[SB_N]; memcpy(sz16, sz, sizeof sz); sz16[SB_STATE] = T_STATE_BYTES / 2u;
+    uint8_t *a[SB_N], *b[SB_N];
+    for (int i = 0; i < SB_N; i++) { a[i] = aligned_alloc(256, (sz[i] + 255) & ~(size_t)255); b[i] = aligned_alloc(256, (sz[i] + 255) & ~(size_t)255); }
+    omega_gdn_pack_params_r(GDN_TEST_RATIO, L.conv_w, L.a_log, L.dtb, L.nw, b[SB_PAR]);
+    omega_gdn_pack_tail_r(GDN_TEST_RATIO, L.tail0, (float *)b[SB_TAIL]);
+    uint16_t *st16 = (uint16_t *)b[SB_STATE];
+    for (size_t i = 0; i < NS; i++) st16[i] = t_bf16_rn(L.state0[i]);
+    memcpy(a[SB_PAR], b[SB_PAR], T_PAR_BYTES);
+    int err = 0; uint32_t bad_out = 0, bad_tail = 0, bad_state = 0, rounded = 0;
+    char msg[300] = "";
+    for (uint32_t st = 0; st < 3 && !err; st++) {
+        Inp in; inp_make(&in, 1000 + st, 1.0f);
+        for (int k = 0; k < 2; k++) {
+            uint8_t **x = k ? b : a;
+            memcpy(x[SB_QKV], in.qkv, sz[SB_QKV]); memcpy(x[SB_Z], in.z, sz[SB_Z]); memcpy(x[SB_AB], in.ab, sz[SB_AB]);
+        }
+        memcpy(a[SB_TAIL], b[SB_TAIL], T_TAIL_BYTES);
+        for (size_t i = 0; i < NS; i++) ((float *)a[SB_STATE])[i] = t_bf16_f(st16[i]);
+        err = sim_one(&p32, a, sz, 1.0f, 1.0f, msg, sizeof msg);
+        if (!err) err = sim_one(&p16, b, sz16, 1.0f, 1.0f, msg, sizeof msg);
+        if (!err) {
+            for (size_t i = 0; i < VD; i++) bad_out += memcmp(&((float *)a[SB_OUT])[i], &((float *)b[SB_OUT])[i], 4) != 0;
+            bad_tail += memcmp(a[SB_TAIL], b[SB_TAIL], T_TAIL_BYTES) != 0;
+            for (size_t i = 0; i < NS; i++) {
+                const float f = ((float *)a[SB_STATE])[i];
+                bad_state += st16[i] != t_bf16_rn(f);
+                rounded += t_bf16_f(st16[i]) != f;
+            }
+        }
+        inp_free(&in);
+    }
+    printf("sim bf16 state: 3 steps, outputs differing %u, tails differing %u, stored states != bf16_rn(f32) %u, rounded %u of %u%s%s\n",
+           bad_out, bad_tail, bad_state, rounded, 3u * NS, err ? " ERROR " : "", msg);
+    CHECK(err == 0, "sim bf16 ran (%s)", msg);
+    CHECK(bad_out == 0 && bad_tail == 0 && bad_state == 0, "sim bf16 == f32 program + round to nearest even on store");
+    CHECK(rounded > NS, "sim bf16 really rounds (%u of %u values changed)", rounded, 3u * NS);
+    for (int i = 0; i < SB_N; i++) { free(a[i]); free(b[i]); }
+    layer_free(&L);
+}
+
 /* ---- prefill on the simulator (omega#543): prep, scan, post over T tokens against T oracle steps ---- */
 typedef struct { uint32_t off; void *p; size_t bytes; } SimBuf;
 typedef struct { uint32_t off; uint32_t word; } SimWord;
@@ -409,6 +482,51 @@ static int sim_prefill(int mutant, uint32_t T, float in_scale, float out_scale, 
     free(tail0); free(state0); free(y); free(tref);
     dstate_free(&d); layer_free(&L);
     return err;
+}
+/* L313: the bf16 prefill scan equals the f32 scan run from the widened state, its final state rounded to nearest even
+ * (the scan holds S in registers for the whole prompt: one widen on load, one round on store). */
+static void sim_prefill_bf16(uint32_t T) {
+    static BlackwellIRProgram pp, p32, p16;
+    OmegaGdnSpec s32 = { .ratio = GDN_TEST_RATIO }, s16 = { .ratio = GDN_TEST_RATIO, .state_bf16 = 1 };
+    CHECK(omega_blackwell_codegen_gdn_prep_prog(&s32, &pp) == 0 && omega_blackwell_codegen_gdn_scan_prog(&s32, &p32) == 0 &&
+          omega_blackwell_codegen_gdn_scan_prog(&s16, &p16) == 0, "bf16 prefill codegen");
+    Layer L; layer_make(&L, 21);
+    const uint32_t T8 = (T + OMEGA_GDN_SCAN_CHUNK - 1u) / OMEGA_GDN_SCAN_CHUNK * OMEGA_GDN_SCAN_CHUNK;
+    const size_t s_qkv = (size_t)T * CD * 4u, s_ab = (size_t)T * VH * 8u, s_rec = (size_t)T8 * VH * OMEGA_GDN_REC_BYTES, s_o = (size_t)T * VD * 4u;
+    float *qkv = aligned_alloc(256, s_qkv), *ab = aligned_alloc(256, s_ab);
+    uint8_t *par = aligned_alloc(256, T_PAR_BYTES), *tail = aligned_alloc(256, T_TAIL_BYTES), *tail2 = aligned_alloc(256, T_TAIL_BYTES);
+    uint8_t *rec = aligned_alloc(256, s_rec), *s32b = aligned_alloc(256, T_STATE_BYTES), *s16b = aligned_alloc(256, T_STATE_BYTES / 2u);
+    float *o32 = aligned_alloc(256, s_o), *o16 = aligned_alloc(256, s_o);
+    for (uint32_t t = 0; t < T; t++) {
+        Inp in; inp_make(&in, 1000 + t, 1.0f);
+        memcpy(qkv + (size_t)t * CD, in.qkv, CD * 4u); memcpy(ab + (size_t)t * VH * 2u, in.ab, VH * 8u);
+        inp_free(&in);
+    }
+    omega_gdn_pack_params_r(GDN_TEST_RATIO, L.conv_w, L.a_log, L.dtb, L.nw, par);
+    omega_gdn_pack_tail_r(GDN_TEST_RATIO, L.tail0, (float *)tail);
+    memcpy(tail2, tail, T_TAIL_BYTES);
+    uint16_t *st16 = (uint16_t *)s16b; float *st32 = (float *)s32b;
+    for (size_t i = 0; i < NS; i++) { st16[i] = t_bf16_rn(L.state0[i]); st32[i] = t_bf16_f(st16[i]); }
+    memset(rec, 0xcd, s_rec);
+    char m2[200] = ""; int err = 0;
+    const SimBuf bp[] = { { OMEGA_GDN_PREP_ARG_QKV, qkv, s_qkv }, { OMEGA_GDN_PREP_ARG_AB, ab, s_ab }, { OMEGA_GDN_PREP_ARG_PAR, par, T_PAR_BYTES },
+                          { OMEGA_GDN_PREP_ARG_TAIL, tail, T_TAIL_BYTES }, { OMEGA_GDN_PREP_ARG_REC, rec, s_rec } };
+    const SimWord wp[] = { { OMEGA_GDN_PREP_ARG_T, T }, { OMEGA_GDN_PREP_ARG_EPS_L2, fw(EPS_L2) }, { OMEGA_GDN_PREP_ARG_IN_SCALE, fw(1.0f) } };
+    const SimWord wsc[] = { { OMEGA_GDN_SCAN_ARG_T, T }, { OMEGA_GDN_SCAN_ARG_IN_SCALE, fw(1.0f) } };
+    err = sim_launch(&pp, OMEGA_GDN_PREP_THREADS, (T + OMEGA_GDN_PREP_TOKENS - 1u) / OMEGA_GDN_PREP_TOKENS, KH, OMEGA_GDN_PREP_SHARED_BYTES, 0, bp, 5, wp, 3, m2, sizeof m2);
+    for (int k = 0; k < 2 && !err; k++) {
+        const SimBuf bs[] = { { OMEGA_GDN_SCAN_ARG_REC, rec, s_rec }, { OMEGA_GDN_SCAN_ARG_QKV, qkv, s_qkv }, { OMEGA_GDN_SCAN_ARG_TAIL, k ? tail2 : tail, T_TAIL_BYTES },
+                              { OMEGA_GDN_SCAN_ARG_STATE, k ? s16b : s32b, k ? T_STATE_BYTES / 2u : T_STATE_BYTES }, { OMEGA_GDN_SCAN_ARG_O, k ? o16 : o32, s_o } };
+        err = sim_launch(k ? &p16 : &p32, OMEGA_GDN_THREADS, RT, OMEGA_GDN_GRID_Y, OMEGA_GDN_SCAN_SHARED_BYTES, 0, bs, 5, wsc, 2, m2, sizeof m2);
+    }
+    uint32_t bad_state = 0;
+    for (size_t i = 0; i < NS && !err; i++) bad_state += st16[i] != t_bf16_rn(st32[i]);
+    const int same_o = !err && memcmp(o32, o16, s_o) == 0, same_tail = !err && memcmp(tail, tail2, T_TAIL_BYTES) == 0;
+    printf("sim prefill bf16 T %u: scan output %s, tail %s, final states != bf16_rn(f32) %u%s%s\n", T, same_o ? "identical" : "DIFFERS",
+           same_tail ? "identical" : "DIFFERS", bad_state, err ? " ERROR " : "", m2);
+    CHECK(err == 0 && same_o && same_tail && bad_state == 0, "sim prefill bf16 T %u == f32 scan + round on store", T);
+    free(qkv); free(ab); free(par); free(tail); free(tail2); free(rec); free(s32b); free(s16b); free(o32); free(o16);
+    layer_free(&L);
 }
 static void sim_prefill_battery(void) {
     struct { int mutant; uint32_t T; float in_scale, out_scale; const char *name; } pts[] = {
@@ -646,6 +764,69 @@ static void chip_prefill(OmegaGpuGdn *g, Layer *L, FILE *out, int *first, uint32
     }
 #undef PPOINT
 }
+/* ---- L313 bf16 state on the chip: a bf16 GDN (AIEN_OMEGA_GDN_STATE_BF16=1 at alloc) against an f32 GDN started from the
+ * same (bf16-representable) state, 4 decode steps then a 19-token prefill, re-synced after every call: outputs and tails
+ * bit-identical, the bf16 state equal to bf16_rn of the f32 state. Also times one decode step of each (per layer). ---- */
+static int chip_bf16(const char *out_path) {
+    OmegaGpuGdn *g16 = NULL, *g32 = NULL;
+    setenv("AIEN_OMEGA_GDN_STATE_BF16", "1", 1);
+    int rc = omega_gpu_gdn_alloc_ratio(1, GDN_TEST_RATIO, &g16);
+    unsetenv("AIEN_OMEGA_GDN_STATE_BF16");
+    if (rc == 0) rc = omega_gpu_gdn_alloc_ratio(1, GDN_TEST_RATIO, &g32);
+    CHECK(rc == 0, "bf16 + f32 gdn alloc (%s)", rc ? omega_gpu_gdn_last_error() : "");
+    if (rc) return 1;
+    Layer L; layer_make(&L, 41);
+    float *st = malloc((size_t)NS * 4), *s16 = malloc((size_t)NS * 4), *s32 = malloc((size_t)NS * 4);
+    float *t16 = malloc((size_t)NT * 4), *t32 = malloc((size_t)NT * 4);
+    for (size_t i = 0; i < NS; i++) st[i] = t_bf16_f(t_bf16_rn(L.state0[i]));
+    for (int k = 0; k < 2; k++) {
+        OmegaGpuGdn *g = k ? g32 : g16;
+        CHECK(omega_gpu_gdn_set_layer(g, 0, L.conv_w, L.a_log, L.dtb, L.nw) == 0 && omega_gpu_gdn_set_state(g, 0, L.tail0, st) == 0, "bf16 setup %d", k);
+    }
+    const uint32_t T = 19;
+    float *o16 = malloc((size_t)T * VD * 4), *o32 = malloc((size_t)T * VD * 4);
+    uint32_t bad_out = 0, bad_tail = 0, bad_state = 0, rounded = 0, calls = 0;
+    double us16 = 0, us32 = 0;
+    for (uint32_t c = 0; c < 5 && rc == 0; c++) {
+        const uint32_t n = c < 4 ? 1u : T;
+        PfIn p; pf_in_make(&p, n, 900 + 37 * c, 1.0f);
+        for (int k = 0; k < 2 && rc == 0; k++) {
+            OmegaGpuGdn *g = k ? g32 : g16;
+            const double t0 = now_ms();
+            rc = n == 1 ? omega_gpu_gdn_step(g, 0, p.qkv, p.z, p.ab, EPS_L2, EPS_N, 1.0f, 1.0f, k ? o32 : o16, NULL)
+                        : omega_gpu_gdn_prefill(g, 0, n, p.qkv, p.z, p.ab, EPS_L2, EPS_N, 1.0f, 1.0f, k ? o32 : o16, NULL);
+            if (n == 1 && c > 0) { if (k) us32 += (now_ms() - t0) * 1e3; else us16 += (now_ms() - t0) * 1e3; }
+        }
+        if (rc == 0) rc = omega_gpu_gdn_get_state(g16, 0, t16, s16);
+        if (rc == 0) rc = omega_gpu_gdn_get_state(g32, 0, t32, s32);
+        if (rc == 0) {
+            calls++;
+            for (size_t i = 0; i < (size_t)n * VD; i++) bad_out += memcmp(&o16[i], &o32[i], 4) != 0;
+            bad_tail += memcmp(t16, t32, (size_t)NT * 4) != 0;
+            for (size_t i = 0; i < NS; i++) { bad_state += t_bf16_rn(s32[i]) != t_bf16_rn(s16[i]) || t_bf16_f(t_bf16_rn(s16[i])) != s16[i]; rounded += s16[i] != s32[i]; }
+            rc = omega_gpu_gdn_set_state(g32, 0, t16, s16); /* re-sync: the f32 GDN continues from the bf16 state */
+        }
+        pf_in_free(&p);
+    }
+    printf("chip bf16 state: %u calls (4 decode steps, 1 prefill of %u), rc=%s, outputs differing %u, tails differing %u, "
+           "states != bf16_rn(f32) %u, rounded %u of %u; decode step wall us (host-timed, 3 steps) bf16 %.0f f32 %.0f %s\n",
+           calls, T, omega_gpu_gdn_rc_name(rc), bad_out, bad_tail, bad_state, rounded, calls * NS, us16, us32, rc ? omega_gpu_gdn_last_error() : "");
+    CHECK(rc == 0 && calls == 5, "chip bf16 ran");
+    CHECK(bad_out == 0 && bad_tail == 0 && bad_state == 0, "chip bf16 == f32 + round to nearest even on store");
+    CHECK(rounded > NS, "chip bf16 really rounds");
+    if (out_path) {
+        FILE *f = fopen(out_path, "w");
+        if (f) {
+            fprintf(f, "{\"receipt\":\"OMEGA_GPU_GDN_BF16_V1\",\"ratio\":%u,\"calls\":%u,\"prefill_tokens\":%u,\"outputs_differing\":%u,"
+                       "\"tails_differing\":%u,\"states_not_rn\":%u,\"rounded\":%u,\"values\":%u,\"verdict\":\"%s\"}\n",
+                    (unsigned)RT, calls, T, bad_out, bad_tail, bad_state, rounded, calls * NS, g_failed ? "FAIL" : "PASS");
+            fclose(f);
+        }
+    }
+    free(st); free(s16); free(s32); free(t16); free(t32); free(o16); free(o32);
+    layer_free(&L); omega_gpu_gdn_free(g16); omega_gpu_gdn_free(g32);
+    return g_failed ? 1 : 0;
+}
 static int chip_run(const char *out_path, uint32_t reps) {
     FILE *out = out_path ? fopen(out_path, "w") : NULL;
     if (out_path && !out) { printf("cannot write %s\n", out_path); return 1; }
@@ -792,20 +973,22 @@ static int chip_run(const char *out_path, uint32_t reps) {
 
 int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IOLBF, 0); /* a stuck chip run still leaves every finished line in its log */
+    int bf16 = 0;
     int host = 0, sim = 0; const char *out_path = NULL; uint32_t reps = 0, spin = 2000;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
         else if (strcmp(argv[i], "--sim") == 0) sim = 1;
+        else if (strcmp(argv[i], "--bf16") == 0) bf16 = 1;
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--spin-us") == 0 && i + 1 < argc) spin = (uint32_t)atoi(argv[++i]);
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
     if (host) host_only();
-    if (sim) { sim_battery(); sim_prefill_battery(); sim_copy_battery(); }
+    if (sim) { sim_battery(); sim_bf16_battery(); sim_prefill_battery(); sim_prefill_bf16(3); sim_prefill_bf16(37); sim_copy_battery(); }
     if (!host && !sim) {
         (void)omega_gpu_session_set_spin_us(spin);
-        chip_run(out_path, reps ? reps : 50);
+        if (bf16) chip_bf16(out_path); else chip_run(out_path, reps ? reps : 50);
         omega_gpu_session_close();
     }
     printf("gpu_gdn_test: %d checks, %d failed: %s\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS");
