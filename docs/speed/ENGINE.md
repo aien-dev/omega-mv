@@ -107,7 +107,10 @@ Reading (host side; the box was shared with other agents' runs, so single cells 
   the gap is the period minus the fill (2.9 ms): the clock coupling needs its period set from the measured fill.
 - Two engines cost the second stage again (RAM stage 11 to 27 ms, as long as the NVMe stage) and, with three buffers,
   a hand-off wait of 3 to 7 ms: the fixed staging ring is deeper and the RAM engine falls behind the NVMe engine. The
-  second stage is only worth its copy when it is the chip's (section F); on the host it is a second verify and copy.
+  receipts say what the RAM stage spends its time on: the digest sum per beat rises from 14.4 ms (one engine) to
+  73.2 ms (two engines, `stages.digest_us_sum`, reservoir cells), so the RAM stage's BLAKE3 verify is 0.625 of its
+  wall time (calc:ed063a94: 58.8 ms over 8 workers against 11.8 ms of stage). That verify is the ring's rule (nothing
+  unverified is ever leased) and stays; the second stage is only worth its copy when it is the chip's (section F).
 - Three buffers gain nothing over two with one engine (12.4 / 10.7 / 13.6 ms vs 14.0 / 10.0 / 7.0 ms).
 - Against the 30B history table: the 35B beat is smaller (25.2 vs 33.3 MB) and the best cell is 1.99x faster per beat (calc:6c80453d)
   (7.0 vs 13.9 ms) at the same payload rate; the engine-count and coupling conclusions are the same on both models.
@@ -263,8 +266,8 @@ caught 64 of 64 times. GB10 RUN QUEUED (measurement window ticket l312-piston).
 1. Movement engine at the NVMe ceiling: 3.0 to 3.4 GB/s measured against 10.6 GB/s possible. Variables, one per run:
    worker count (8 -> 16), one contiguous beat-ordered file instead of per-expert ranges in shards (fewer, larger
    reads), and a quiet box. The receipt is payload GB/s during fill vs the ceiling.
-3. The RAM stage re-verify: on the host the two-engine path doubled the fill (section 4 history) because the RAM engine
-   verifies the BLAKE3 digest again and copies the beat. One variable: verify once at the NVMe stage and let the RAM
-   stage copy only; the receipt is the RAM stage time vs the NVMe stage time at identical tokens.
+3. The RAM stage re-verify: answered from the receipts (section C): 0.625 of the RAM stage is the second BLAKE3 verify.
+   Dropping it would break the ring's rule, so the host two-engine path stays as it is; the variable worth a run is
+   the chip's second stage (section F), where the copy is the chip's own and the check rides with it.
 4. The chip piston: the same schedule, cylinders in GPU-visible memory, a resident kernel; the receipt is the same
    timing diagram with fire times in microseconds instead of milliseconds, and the thesis gate against 18091.
