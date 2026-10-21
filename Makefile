@@ -2610,3 +2610,8 @@ $(GPU_ENGINE_PISTON_TEST): tests/gpu_engine_piston_test.c tests/bw_warp_sim_tc.h
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# L321 E1/E1b: the shared point (CPU <-> GPU <-> NVMe through the system cache) and the second road (tests/cpu_piston_share_test.c)
+CPU_PISTON_SHARE_TEST = $(OUT_DIR)/cpu_piston_share_test
+$(CPU_PISTON_SHARE_TEST): tests/cpu_piston_share_test.c src/omega_gpu_prefill.h src/omega_blackwell_codegen_tc.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -O2 -Itests -o $@ tests/cpu_piston_share_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
