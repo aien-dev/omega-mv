@@ -25,7 +25,7 @@ else
   "$BIN" --cpu "$CPU" --bg-cpu "$BG" --reps 1 --size 0x400000 --nvme "$NVME" > "$OUT/smoke.log" 2>&1; rc=$?
   tail -1 "$OUT/smoke.log"
   # full sweep when the smoke run finished (PASS, or FAIL from a finding such as a wrong XOR); not after a crash or refusal
-  if grep -q "^CPU_PISTON_SHARE: " "$OUT/smoke.log" && ! grep -q "refused" "$OUT/smoke.log"; then echo "e1 start $(date -u +%TZ)" >> "$OUT/box.txt"; "$BIN" --cpu "$CPU" --bg-cpu "$BG" --reps "$REPS" --nvme "$NVME" > "$OUT/run.log" 2>&1; rc=$?; echo "e1 end $(date -u +%TZ) rc $rc" >> "$OUT/box.txt"; fi
+  if grep -q "^CPU_PISTON_SHARE: " "$OUT/smoke.log" && ! grep -q -E "chip alloc refused|gpu stream refused|host memory refused" "$OUT/smoke.log"; then echo "e1 start $(date -u +%TZ)" >> "$OUT/box.txt"; "$BIN" --cpu "$CPU" --bg-cpu "$BG" --reps "$REPS" --nvme "$NVME" > "$OUT/run.log" 2>&1; rc=$?; echo "e1 end $(date -u +%TZ) rc $rc" >> "$OUT/box.txt"; fi
   # E2 phase sweep: GPU 256 MB + CPU 64 MB (9 X925 workers) per beat, CPU start offset swept; BEAT lines = timing diagram.
   # Runs even when E1 failed a cell (a wrong XOR there is a finding, not a reason to skip E2); its own rc is kept apart.
   "$BIN" --cpu "$CPU" --phase "${BEATS:-200}" --timeline "$OUT/phase-timeline.txt" > "$OUT/phase.log" 2>&1; echo "phase rc $?" >> "$OUT/box.txt"
