@@ -63,3 +63,28 @@ These are not part of the CUDA claim. They are the rest of what Omega is for, an
 - **No NVIDIA software at all.** Our own GB10 driver replaces `nvidia.ko` and `nvidia-uvm.ko` (L332): Omega's golden tokens identical on our driver and on NVIDIA's, with per-word timing. The GSP firmware stays, as above.
 - **The runtime written in Omega.** The GPU runtime and libraries are C today. The language rule (aien-architecture ADR 0024) keeps C only where hardware, boot, ABI or measurement justifies it, so the runtime moves into Omega once C1 makes that possible.
 - **The CPU.** The OSC and Omegese backends emit AArch64 machine code today (`src/compiler/osc_a64.c`). The live server is still a gcc and Rust build linked against glibc; it moves to Omega-compiled code as the language grows.
+
+## 5. Performance: matching and then beating CUDA
+
+Same machine (one DGX Spark GB10), same kind of model (a ~30B mixture-of-experts with about 3B active per word). Our numbers are measured by us, with receipts. Everyone else's are published by others and labelled that way, with their source; none of them has been re-measured here yet (bar P0). Their models are close relatives of ours, not identical: Qwen3-30B-A3B has no DeltaNet state, Qwen3.6-35B-A3B does.
+
+| What | Omega today (Qwen3.6-35B-A3B, FP8) | Others on the same box (published by others) | Physical ceiling here |
+| --- | --- | --- | --- |
+| One conversation, words per second | 41.7 to 49.8 (20.1 to 24.0 ms per word; L314 `evidence serve-combined/README.md`, L354 door 20.1 ms) | FP8: vLLM about 28 to 30 on this 35B (Tessera, June 2026), 44 on Qwen3-Coder-30B FP8 (Hellohal2064 vLLM build); llama.cpp 44.3 at Q8_0. 4-bit: llama.cpp 89.3 (Q4_K_M, DandinPower llama.cpp_bench), vLLM 77 to 81 (AWQ/NVFP4), up to 97 to 120 with NVFP4 + MTP (Tessera) | FP8 58.5 to 67 at the measured 207 to 237 GB/s; 4-bit experts and head 82 to 94; plus 4-bit trunk about 142 (`~/handoffs/2026-10-20-q36-ceiling-numbers.md`, L310) |
+| Eight conversations at once, total words per second | 57.11 (N=8 stroke, sc `serve/q36-batch-v2` 9c62690a, calc:f67ae6c1) | vLLM 313 (Qwen3-30B-A3B, 8 concurrent, NVIDIA forum harness); 845 (Qwen3-Coder-30B AWQ, GPUwerk) | about 164 at 4k context with f32 state, more with bf16 state (ceiling notes) |
+| Reading the prompt (prefill), words per second | 196.8 at 8k, 250 at 2k, 275.5 at 256 (L369, window 20261021T215012Z, omega `serve/q36-prefill-v2` 60ba3051) | llama.cpp about 2,000 to 2,500; vLLM 5,705 at 8k (GPUwerk, AWQ) | roughly 30,000 from the FP8 tensor rate (about 7 GFLOP per word at 237.5 TFLOPS; arithmetic, not measured); prefill is compute-bound |
+| Extra kernel launch in a list | 24 to 31 us with wait-for-idle (`evidence/OWN30B-LAUNCH-COST-20261014T0120Z/`) | CUDA graphs: a few us per node (published) | 2.95 percent of a word today (efficiency review G1), so small now; it grows with batching |
+
+Where we stand: at FP8 with one conversation we are level with or ahead of the published CUDA numbers. We are behind on three things: prompt reading (7 to 30 times), many conversations at once (5 to 15 times), and 4-bit weights (not yet live). All three are work, not physics: the ceilings above are far from reached.
+
+### The performance bar
+
+Each row PASS needs our receipt and the other system measured by us on this Spark, same model, same prompts, same output length, in the same quiet window.
+
+| Bar | Done when |
+| --- | --- |
+| **P0. Measure them ourselves.** | llama.cpp and vLLM (their own current releases, built for sm_121) run Qwen3.6-35B-A3B at FP8 and at 4-bit on this Spark, one and eight conversations, 512 and 8k prompts, three runs each; table and logs pushed, labelled measured-by-us. Benchmark only: nothing of theirs enters the Omega path. |
+| **P1. One conversation.** | Omega's best format beats the best measured CUDA number at one conversation, with golden tokens identical to our host reference. Levers: 4-bit experts, head and trunk in our own format (L284, L355), exact two-pass head (L314), MTP and tree verify (L310, L013). |
+| **P2. Prompt reading.** | Omega prefill beats the best measured CUDA number at 512 and 8k. Levers: general tensor-core GEMM at a high fraction of the 237.5 TFLOPS rate (bar C3), flash-style prefill attention, chunked DeltaNet scan (L369, L017). |
+| **P3. Many conversations.** | Omega total words per second beats the best measured CUDA number at 8 and 32 conversations. Levers: grouped expert GEMM over the expert union, bf16 state (L313), continuous batching on the stroke (L312, L354). |
+| **P4. What CUDA stacks do not do.** | At least one measured win that comes from owning the whole path: one submission per word or a resident whole-model kernel (L272), zero-copy use of the shared memory, our own driver's launch path (L332). |
