@@ -100,7 +100,11 @@ typedef enum {
     BW_IR_LDG_E_128,    /* LDG.E.128 Rd..Rd+3, desc[URd][Ra.64+imm] */
     /* Batched attention loads (2026-10-12). Words matched against nvcc 13.0.88 -arch=sm_121
      * (omega_blackwell_verify_codegen_fixtures_fragmm). imm = unsigned byte offset < 2^23; dst an aligned quad. */
-    BW_IR_LDS128        /* LDS.128 Rd..Rd+3, [Ra+imm] */
+    BW_IR_LDS128,       /* LDS.128 Rd..Rd+3, [Ra+imm] */
+    /* Omegese kernels (L386, 2026-10-21), additive. The words are the E1 conversion words the numeric
+     * suite runs on the chip (src/omega_numeric.c E1_CVT: OMEGA_NOP_I2FP_U32, OMEGA_NOP_F2U). */
+    BW_IR_I2FP_U32,     /* I2FP.F32.U32 Rd, Ra: round to nearest even; fixed latency */
+    BW_IR_F2I_U32       /* F2I.U32.TRUNC.NTZ Rd, Ra: toward zero, saturating, NaN -> 0; variable latency */
 } BlackwellIROpcode;
 
 /* Barrier (reconvergence) registers: the sm_121 BSSY/BSYNC words carry a 4-bit barrier id
@@ -129,7 +133,8 @@ typedef struct {
                          * this instruction). 0 branches to itself. */
     uint32_t control;   /* Bundle control word */
     bool is_uniform;    /* True if targets/uses uniform registers */
-    bool predicate_p0;  /* True if predicated on P0 */
+    bool predicate_p0;  /* True if predicated on P0. Every opcode honours it: the guard field, bits 12..15
+                         * of the first word (7 = always, 0 = @P0, 8 = @!P0) */
     bool predicate_not; /* With predicate_p0, encode @!P0 */
     uint8_t dst_subreg; /* Subregister offset (0..3) within register bundle */
     uint8_t src1_subreg;
@@ -319,6 +324,10 @@ int omega_blackwell_verify_codegen_fixtures_fragmm(void);
 /* omega #308: golden words for BSSY / BSYNC (nvcc 13.0.88 sm_121 oracle), plus the
  * encoder's refusals (negative delta, barrier id > 15). 0 = pass. */
 int omega_blackwell_verify_codegen_fixtures_reconv(void);
+
+/* L386: the guard predicate on ordinary ops (@P0 / @!P0 MOV, STG, LDG, EXIT) and the I2FP_U32 / F2I_U32
+ * words; checked against the E1 chip words and the BRA guard field. 0 = pass. */
+int omega_blackwell_verify_codegen_fixtures_guard(void);
 
 /* omega #308: encodes one instruction with a given physical register map of
  * identity (vreg n -> Rn) so offline tools can disassemble single words. 0 = ok. */

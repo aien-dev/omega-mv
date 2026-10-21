@@ -666,7 +666,7 @@ static int encode_single_insn(const BlackwellIRInsn *insn, const OmegaRegAlloc *
             break;
 
         case BW_IR_EXIT:
-            w[0] = insn->predicate_p0 ? 0x0000094d : 0x0000794d;
+            w[0] = 0x0000794d; /* guard field set below */
             w[1] = 0x00000000;
             w[2] = 0x03800000;
             w[3] = 0x000fea00;
@@ -813,8 +813,32 @@ static int encode_single_insn(const BlackwellIRInsn *insn, const OmegaRegAlloc *
             break;
         }
 
+        case BW_IR_I2FP_U32:
+            /* I2FP.F32.U32 Rd, Ra: the E1 word (src/omega_numeric.c E1_CVT, OMEGA_NOP_I2FP_U32), fixed latency. */
+            w[0] = 0x7245U | ((uint32_t)(dst & 0xff) << 16);
+            w[1] = (uint32_t)(src1 & 0xff);
+            w[2] = 0x00201000;
+            w[3] = insn->control ? insn->control : 0x004fe200;
+            break;
+
+        case BW_IR_F2I_U32:
+            /* F2I.U32.TRUNC.NTZ Rd, Ra: the E1 word (E1_CVT, OMEGA_NOP_F2U), variable latency. */
+            w[0] = 0x7305U | ((uint32_t)(dst & 0xff) << 16);
+            w[1] = (uint32_t)(src1 & 0xff);
+            w[2] = 0x0020f000;
+            w[3] = insn->control ? insn->control : 0x004e2200;
+            break;
+
         default:
             return -1;
+    }
+    /* Guard predicate (L386): bits 12..15 of the first word, 7 = always, 0 = @P0, 8 = @!P0, the field
+     * BRA, BSSY, BSYNC and STG.STRONG.SYS set in their own cases. Every other form above leaves 7 there;
+     * one that does not is refused rather than guessed. */
+    if (insn->predicate_p0 && insn->op != BW_IR_BRA && insn->op != BW_IR_BSSY && insn->op != BW_IR_BSYNC &&
+        insn->op != BW_IR_STG_STRONG_SYS) {
+        if (((w[0] >> 12) & 0xfu) != 0x7u) return -1;
+        w[0] = (w[0] & ~0xf000u) | ((insn->predicate_not ? 0x8u : 0x0u) << 12);
     }
     return 0;
 }
@@ -960,6 +984,42 @@ int omega_blackwell_verify_codegen_fixtures_reconv(void) {
     if (omega_blackwell_encode_one(&bad, w) == 0) return -104;
     bad.bar_reg = 15;
     if (omega_blackwell_encode_one(&bad, w) != 0 || w[0] != (0x00007941U | (15U << 16))) return -105;
+    return 0;
+}
+
+/* L386: the guard predicate on ordinary ops and the two E1 conversion words. Expected words: the
+ * unguarded form (golden elsewhere in this file or in src/omega_numeric.c E1_CVT) with bits 12..15
+ * replaced by 0 (@P0) or 8 (@!P0), the field BRA already carries on the chip and the one Mesa NAK
+ * writes for every sm_70+ instruction (sm70_encode.rs set_pred). 0 = all good. */
+int omega_blackwell_verify_codegen_fixtures_guard(void) {
+    OmegaRegAlloc ra;
+    memset(&ra, 0, sizeof ra);
+    static const int phys[] = { 2, 4, 9 };
+    for (int i = 0; i < 3; i++) ra.vreg_to_phys[i] = phys[i];
+    ra.uvreg_to_phys[0] = 4;
+    enum { R2 = 0, R4, R9 };
+    static const struct {
+        BlackwellIROpcode op; int d, a, b, ureg; uint32_t imm; bool p, n; uint32_t w0, w1, w2; const char *text;
+    } fx[] = {
+        { BW_IR_MOV_IMM, R2, -1, -1, -1, 5, true, false, 0x00020802U, 0x00000005U, 0x00000f00U, "@P0 MOV R2, 0x5" },
+        { BW_IR_MOV_IMM, R2, -1, -1, -1, 5, true, true, 0x00028802U, 0x00000005U, 0x00000f00U, "@!P0 MOV R2, 0x5" },
+        { BW_IR_MOV_IMM, R2, -1, -1, -1, 5, false, false, 0x00027802U, 0x00000005U, 0x00000f00U, "MOV R2, 0x5" },
+        { BW_IR_STG_E, -1, R4, R9, 0, 4, true, false, 0x04000986U, 0x00000409U, 0x0c101904U, "@P0 STG.E desc[UR4][R4.64+0x4], R9" },
+        { BW_IR_LDG_E, R9, R2, -1, 0, 0, true, true, 0x02098981U, 0x00000004U, 0x0c1e1900U, "@!P0 LDG.E R9, desc[UR4][R2.64]" },
+        { BW_IR_EXIT, -1, -1, -1, -1, 0, true, false, 0x0000094dU, 0x00000000U, 0x03800000U, "@P0 EXIT" },
+        { BW_IR_EXIT, -1, -1, -1, -1, 0, true, true, 0x0000894dU, 0x00000000U, 0x03800000U, "@!P0 EXIT" },
+        { BW_IR_I2FP_U32, R9, R2, -1, -1, 0, false, false, 0x00097245U, 0x00000002U, 0x00201000U, "I2FP.F32.U32 R9, R2" },
+        { BW_IR_F2I_U32, R9, R2, -1, -1, 0, false, false, 0x00097305U, 0x00000002U, 0x0020f000U, "F2I.U32.TRUNC.NTZ R9, R2" },
+    };
+    for (int i = 0; i < (int)(sizeof fx / sizeof fx[0]); i++) {
+        BlackwellIRInsn in;
+        memset(&in, 0, sizeof in);
+        in.op = fx[i].op; in.dst_vreg = fx[i].d; in.src1_vreg = fx[i].a; in.src2_vreg = fx[i].b; in.src3_vreg = -1;
+        in.ureg = fx[i].ureg; in.imm = fx[i].imm; in.predicate_p0 = fx[i].p; in.predicate_not = fx[i].n;
+        uint32_t w[4];
+        if (encode_single_insn(&in, &ra, w) != 0) return -(2 * i + 1);
+        if (w[0] != fx[i].w0 || w[1] != fx[i].w1 || w[2] != fx[i].w2) return -(2 * i + 2);
+    }
     return 0;
 }
 

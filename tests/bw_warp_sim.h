@@ -149,7 +149,7 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
     case BW_IR_ISETP_GE_U32: l->p0 = a >= b; break;
     case BW_IR_LDG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; uint32_t x; memcpy(&x, (const void *)(uintptr_t)ad, 4); ws_wrs(l, in->dst_vreg, in->dst_subreg, x, p); break; }
     case BW_IR_LDG_E_U16: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 2, pc)) return; uint16_t x; memcpy(&x, (const void *)(uintptr_t)ad, 2); ws_wrs(l, in->dst_vreg, in->dst_subreg, x, p); break; }
-    case BW_IR_STG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; memcpy((void *)(uintptr_t)ad, &b, 4); break; }
+    case BW_IR_STG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p) + (uint64_t)(int64_t)(int32_t)in->imm; /* the signed byte offset the encoder writes */ if (!ws_mem_ok(s, ad, 4, pc)) return; memcpy((void *)(uintptr_t)ad, &b, 4); break; }
     case BW_IR_LDG_E_64: case BW_IR_LDG_E_128: { unsigned n = in->op == BW_IR_LDG_E_64 ? 8u : 16u; uint64_t ad = ws_rd64(l, in->src1_vreg, p) + (uint64_t)(int64_t)(int32_t)in->imm; if (!ws_mem_ok(s, ad, n, pc)) return; if (ad & (n - 1)) { ws_fail(s, WS_E_MEM, pc, "wide global load not naturally aligned"); return; } uint32_t x[4]; memcpy(x, (const void *)(uintptr_t)ad, n); for (unsigned i = 0; i < n / 4; i++) ws_wrs(l, in->dst_vreg, i, x[i], p); break; }
     case BW_IR_LDS128: { uint32_t ad = a + in->imm; if (ad & 15u) { ws_fail(s, WS_E_SMEM, pc, "LDS.128 address not 16-byte aligned"); return; } for (unsigned i = 0; i < 4; i++) { uint32_t *m = ws_smem(s, ad + 4u * i, pc); if (!m) return; ws_wrs(l, in->dst_vreg, i, *m, p); } break; }
     case BW_IR_LDS32: { uint32_t *m = ws_smem(s, a, pc); if (!m) return; ws_wrs(l, in->dst_vreg, in->dst_subreg, *m, p); break; }
@@ -163,6 +163,23 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
     case BW_IR_MUFU_EX2: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(exp2f(ws_u2f(a))), p); break;
     case BW_IR_MUFU_RCP: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(1.0f / ws_u2f(a)), p); break;
     case BW_IR_MUFU_RSQ: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(1.0f / sqrtf(ws_u2f(a))), p); break;
+    /* L386 (Omegese kernels): FSETP into P0 (w[2] bits 12..15 hold the compare code, which is also the
+     * truth mask over less 1, equal 2, greater 4, unordered 8), and the unsigned conversions. */
+    case BW_IR_FSETP: {
+        if (in->dst_vreg >= 0) { ws_fail(s, WS_E_OP, pc, "FSETP into a predicate other than P0"); return; }
+        unsigned code = ((in->imm ? in->imm : 0x03f06000u) >> 12) & 0xfu;
+        float fa = ws_u2f(a), fb = ws_u2f(b);
+        unsigned o = (fa != fa || fb != fb) ? 8u : fa < fb ? 1u : fa > fb ? 4u : 2u;
+        l->p0 = (code & o) != 0;
+        break;
+    }
+    case BW_IR_I2FP_U32: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u((float)a), p); break;
+    case BW_IR_F2I_U32: {
+        float fa = ws_u2f(a);
+        uint32_t r = (fa != fa || fa <= 0.0f) ? 0u : fa >= 4294967296.0f ? 0xffffffffu : (uint32_t)fa;
+        ws_wrs(l, in->dst_vreg, in->dst_subreg, r, p);
+        break;
+    }
     default: ws_fail(s, WS_E_OP, pc, "opcode not modelled"); return;
     }
 }
@@ -273,7 +290,8 @@ static int ws_run_warp(WsSim *s, WsWarp *w, uint32_t warp, uint32_t cx, uint32_t
             break;
         }
         default: {
-            for (int L = 0; L < WS_WARP; L++) if (mask >> L & 1) {
+            /* the guard predicate: a lane whose guard fails does nothing (L386) */
+            for (int L = 0; L < WS_WARP; L++) if (cond >> L & 1) {
                 ws_lane_exec(s, &w->lane[L], in, pc, warp * WS_WARP + (uint32_t)L, cx, cy);
                 if (s->err) return -1;
             }
