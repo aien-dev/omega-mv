@@ -20,6 +20,8 @@
  *           attention: the fused q|gate|k|v GEMV row to the attention kernel's permuted q|k|v plus the gate (sc #642;
  *           the permutation crosses the FP8 weights' 128-row scale blocks, so it cannot be folded into the weights).
  *   GATE    out[n] = a[n] * sigmoid(g[n]) for n < count, sigmoid(v) = RCP(1 + EX2(-v * log2 e)): the attention output gate.
+ *           mode 1 (rows, L312 lever 7): row r = ctaid.y; a and out at + r * count, g at + r * spec.stride floats: the gates
+ *           of N heads in one launch, each row exactly the one-row program.
  *   GROUP   (L312 v2, the stroke) one CTA turns the expert picks of N conversations into one grouped-GEMM segment table.
  *           Row t = h * S + j (head h, slot j; S = spec.groups slots per head, 9 for the 35B) carries expert id
  *           IDS[h * STRIDE + j * 4]. Rows are sorted by (id, t): sorted row p of row t is its rank. XMAP[p] = h (the x'
@@ -83,7 +85,7 @@ typedef enum { OMEGA_DEC_AXPY = 1, OMEGA_DEC_RES = 2, OMEGA_DEC_SWIGLU = 3, OMEG
 #define OMEGA_DEC_GA_TAB 0x388u     /* u32 [width] source index within an input row */
 #define OMEGA_DEC_GA_OUT 0x390u
 #define OMEGA_DEC_GA_WORDS 6u
-/* GATE args (out[n] = a[n] * sigmoid(g[n]), n < count; grid ceil(count / 256); out may be a) */
+/* GATE args (out[n] = a[n] * sigmoid(g[n]), n < count; grid ceil(count / 256) x rows in mode 1; out may be a) */
 #define OMEGA_DEC_GT_A 0x380u
 #define OMEGA_DEC_GT_G 0x388u
 #define OMEGA_DEC_GT_OUT 0x390u
@@ -116,7 +118,7 @@ typedef struct {
                            the routing weights row stride (bytes, a multiple of 16) */
     int mutant;         /* TEST ONLY. RES: 1 = norm without the weight; 2 = COMBINE skips expert 7.
                            SWIGLU: 1 = up half read at +767. ARGMAX: 1 = last equal index instead of first.
-                           GATHER: 1 = source index + 1. GATE: 1 = the gate dropped (out = a).
+                           GATHER: 1 = source index + 1. GATE: 1 = the gate dropped (out = a); 2 (mode 1) = every row reads row 0's gate.
                            GROUP: 1 = sort key without the row tie-break; 2 = segment cnt one short; 3 = the trailing
                            empty segments left unwritten. 0 none */
     uint32_t width;     /* RES: the row width (0 = OMEGA_DEC_HIDDEN; a multiple of 1024 up to 8192, COMBINE only at 2048).

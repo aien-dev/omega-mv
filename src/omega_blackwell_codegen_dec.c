@@ -68,6 +68,7 @@ static void movrz(Em *e, Op d) { BlackwellIRInsn i = I0(BW_IR_MOV_RZ); i.dst_vre
 static void imadi(Em *e, Op d, Op a, uint32_t imm, int c) { BlackwellIRInsn i = I0(BW_IR_IMAD); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = a.v; i.src1_subreg = (uint8_t)a.s; i.imm = imm; i.src3_vreg = c; emit(e, i, K_FIXED); }
 static void imadw(Em *e, int d64, int a, uint32_t imm, int c64) { BlackwellIRInsn i = I0(BW_IR_IMAD_WIDE); i.dst_vreg = d64; i.src1_vreg = a; i.imm = imm; i.src3_vreg = c64; emit(e, i, K_FIXED); }
 static void mov(Em *e, Op d, Op a) { imadi(e, d, a, 1u, NOREG); }
+static void imadr(Em *e, int d, int a, int b, int c) { BlackwellIRInsn i = I0(BW_IR_IMAD); i.dst_vreg = d; i.src1_vreg = a; i.src2_vreg = b; i.src3_vreg = c; emit(e, i, K_FIXED); }
 static void shr(Em *e, int d, int a, uint32_t imm) { BlackwellIRInsn i = I0(BW_IR_SHF_R); i.dst_vreg = d; i.src1_vreg = a; i.imm = imm; emit(e, i, K_FIXED); }
 static void andi(Em *e, Op d, Op a, uint32_t imm) { BlackwellIRInsn i = I0(BW_IR_LOP3_AND); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = a.v; i.src1_subreg = (uint8_t)a.s; i.imm = imm; emit(e, i, K_FIXED); }
 static void xorr(Em *e, Op d, Op a, Op b) { BlackwellIRInsn i = I0(BW_IR_LOP3_XOR); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = a.v; i.src1_subreg = (uint8_t)a.s; i.src2_vreg = b.v; i.src2_subreg = (uint8_t)b.s; emit(e, i, K_FIXED); }
@@ -409,6 +410,8 @@ static int gen_gather(Em *e, const OmegaDecSpec *sp) {
 }
 
 static int gen_gate(Em *e, const OmegaDecSpec *sp) {
+    const int rows = sp->mode == 1; /* L312 lever 7: row ctaid.y; a and out at + row * count, g at + row * spec.stride floats */
+    if (sp->mode > 1 || (rows && !sp->stride)) return -1;
     int udesc = UV64(e), pa = V64(e), pg = V64(e), pout = V64(e), lim = V(e), tid = V(e), cx = V(e), n = V(e);
     int aa = V64(e), ga = V64(e), oa = V64(e), av = V(e), gv = V(e), t = V(e), cst = V(e);
     if (e->err) return -1;
@@ -418,7 +421,15 @@ static int gen_gate(Em *e, const OmegaDecSpec *sp) {
     imadi(e, R(n), R(cx), OMEGA_DEC_THREADS, tid);
     isetp_ge_u32(e, n, lim);
     Region r = region_skip_if_p0(e);
-    imadw(e, aa, n, 4u, pa); imadw(e, ga, n, 4u, pg); imadw(e, oa, n, 4u, pout);
+    int an = n, gn = n; /* the element of a / out and of g: n, plus the row offset in the rows form */
+    if (rows) {
+        int cy = V(e); an = V(e); gn = sp->mutant == 2 ? n : V(e); /* mutant 2: every row reads row 0's gate (must be caught) */
+        if (e->err) return -1;
+        s2r(e, cy, BW_SR_CTAID_Y);
+        imadr(e, an, cy, lim, n);
+        if (sp->mutant != 2) imadi(e, R(gn), R(cy), sp->stride, n);
+    }
+    imadw(e, aa, an, 4u, pa); imadw(e, ga, gn, 4u, pg); imadw(e, oa, an, 4u, pout);
     ldg(e, BW_IR_LDG_E, av, aa, 0, udesc, 1);
     ldg(e, BW_IR_LDG_E, gv, ga, 0, udesc, 0);
     if (sp->mutant == 1) mov(e, R(t), R(av));
@@ -439,7 +450,6 @@ static int gen_gate(Em *e, const OmegaDecSpec *sp) {
 
 /* ---- GROUP: the stroke's segment table (L312 v2) ---- */
 static void lds32(Em *e, int d, int addr) { BlackwellIRInsn i = I0(BW_IR_LDS32); i.dst_vreg = d; i.src1_vreg = addr; emit(e, i, K_VAR); }
-static void imadr(Em *e, int d, int a, int b, int c) { BlackwellIRInsn i = I0(BW_IR_IMAD); i.dst_vreg = d; i.src1_vreg = a; i.src2_vreg = b; i.src3_vreg = c; emit(e, i, K_FIXED); }
 /* store v at base64 + off (tmp64 scratch; one = a register holding 1) */
 static void stg_at(Em *e, int tmp64, int one, int base64, uint32_t off, Op v, int udesc) { imadw(e, tmp64, one, off, base64); stg(e, tmp64, v, udesc); }
 /* d = 1 iff a < b (unsigned, both < 2^31): (a - b) >> 31 */
