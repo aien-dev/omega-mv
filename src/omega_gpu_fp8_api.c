@@ -11,6 +11,7 @@
 #include "omega_gpu_fmt.h"
 #include "omega_gpu_cmdlist.h"
 #include "omega_blackwell_qmd.h" /* OMEGA_BW_QMD_MAX_SHARED_BYTES: the deep kernel's x stage must fit the launch descriptor */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -382,6 +383,17 @@ int omega_gpu_fp8_tensor_import(const OmegaGpuFp8Share *s, OmegaGpuFp8Tensor **o
     omega_gpu_session_unlock();
     /* the owner scanned the codes and packed the scales before its upload; this mapping is read-only and is never synced */
     if (rc != OMEGA_GPU_FP8_OK) { omega_gpu_fp8_tensor_free(t); return rc; }
+    /* L383 negative control: AIEN_L383_TEST_WRITE_SHARED=1 writes one byte into the imported weights. The import maps
+     * them read-only, so the process must die with SIGSEGV here; if the write lands, say so loudly, undo it and abort. */
+    if (getenv("AIEN_L383_TEST_WRITE_SHARED") && t->w.cpu) {
+        fprintf(stderr, "L383 TEST MUTANT: writing one byte into a shared weight (a read-only mapping must kill this process)\n");
+        fflush(stderr);
+        volatile uint8_t *p = (volatile uint8_t *)t->w.cpu;
+        p[0] = (uint8_t)(p[0] ^ 0xffu);
+        p[0] = (uint8_t)(p[0] ^ 0xffu);
+        fprintf(stderr, "L383 TEST MUTANT: the write LANDED: the shared mapping is NOT read-only\n");
+        abort();
+    }
     *out = t;
     return OMEGA_GPU_FP8_OK;
 }
