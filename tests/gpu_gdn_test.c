@@ -766,8 +766,8 @@ static void chip_prefill(OmegaGpuGdn *g, Layer *L, FILE *out, int *first, uint32
 }
 /* ---- L313 bf16 state on the chip: a bf16 GDN (AIEN_OMEGA_GDN_STATE_BF16=1 at alloc) against an f32 GDN started from the
  * same (bf16-representable) state, 4 decode steps then a 19-token prefill, re-synced after every call: outputs and tails
- * bit-identical, the bf16 state equal to bf16_rn of the f32 state. Also times one decode step of each (per layer). ---- */
-static int chip_bf16(const char *out_path) {
+ * bit-identical, the bf16 state equal to bf16_rn of the f32 state. Then the chip time of one decode step of each, interleaved. ---- */
+static int chip_bf16(const char *out_path, uint32_t reps) {
     OmegaGpuGdn *g16 = NULL, *g32 = NULL;
     setenv("AIEN_OMEGA_GDN_STATE_BF16", "1", 1);
     int rc = omega_gpu_gdn_alloc_ratio(1, GDN_TEST_RATIO, &g16);
@@ -792,10 +792,8 @@ static int chip_bf16(const char *out_path) {
         PfIn p; pf_in_make(&p, n, 900 + 37 * c, 1.0f);
         for (int k = 0; k < 2 && rc == 0; k++) {
             OmegaGpuGdn *g = k ? g32 : g16;
-            const double t0 = now_ms();
             rc = n == 1 ? omega_gpu_gdn_step(g, 0, p.qkv, p.z, p.ab, EPS_L2, EPS_N, 1.0f, 1.0f, k ? o32 : o16, NULL)
                         : omega_gpu_gdn_prefill(g, 0, n, p.qkv, p.z, p.ab, EPS_L2, EPS_N, 1.0f, 1.0f, k ? o32 : o16, NULL);
-            if (n == 1 && c > 0) { if (k) us32 += (now_ms() - t0) * 1e3; else us16 += (now_ms() - t0) * 1e3; }
         }
         if (rc == 0) rc = omega_gpu_gdn_get_state(g16, 0, t16, s16);
         if (rc == 0) rc = omega_gpu_gdn_get_state(g32, 0, t32, s32);
@@ -808,8 +806,31 @@ static int chip_bf16(const char *out_path) {
         }
         pf_in_free(&p);
     }
+    /* chip time of one decode step, bf16 vs f32 state, interleaved (the live server shares the chip): medians of reps */
+    if (rc == 0) {
+        PfIn p; pf_in_make(&p, 1, 950, 1.0f);
+        uint64_t *k16 = malloc((size_t)reps * 8), *k32 = malloc((size_t)reps * 8), b16 = 0, b32 = 0;
+        uint32_t done = 0;
+        OmegaGpuGdnInfo i16, i32;
+        for (uint32_t r = 0; r < reps; r++) {
+            if (omega_gpu_gdn_step(g16, 0, p.qkv, p.z, p.ab, EPS_L2, EPS_N, 1.0f, 1.0f, o16, &i16) != 0) break;
+            if (omega_gpu_gdn_step(g32, 0, p.qkv, p.z, p.ab, EPS_L2, EPS_N, 1.0f, 1.0f, o32, &i32) != 0) break;
+            k16[done] = i16.elapsed_ns; k32[done] = i32.elapsed_ns; b16 = i16.state_bytes; b32 = i32.state_bytes; done++;
+        }
+        CHECK(done == reps, "bf16 timing reps ran (%u of %u)", done, reps);
+        CHECK(done == 0 || 2 * b16 == b32, "bf16 step moves half the state bytes (%" PRIu64 " vs %" PRIu64 ")", b16, b32);
+        if (done) {
+            qsort(k16, done, 8, cmp_u64); qsort(k32, done, 8, cmp_u64);
+            const double u16 = k16[done / 2] / 1e3, u32 = k32[done / 2] / 1e3;
+            printf("timing bf16 vs f32 state (medians of %u, interleaved): bf16 chip %.1f us (state read + write %.2f MB -> %.1f GB/s), "
+                   "f32 chip %.1f us (%.2f MB -> %.1f GB/s); 273 GB/s nominal; bf16 %u insns %u registers\n",
+                   done, u16, b16 / 1e6, b16 / (u16 * 1e3), u32, b32 / 1e6, b32 / (u32 * 1e3), i16.insns, i16.gprs);
+            us16 = u16; us32 = u32;
+        }
+        free(k16); free(k32); pf_in_free(&p);
+    }
     printf("chip bf16 state: %u calls (4 decode steps, 1 prefill of %u), rc=%s, outputs differing %u, tails differing %u, "
-           "states != bf16_rn(f32) %u, rounded %u of %u; decode step wall us (host-timed, 3 steps) bf16 %.0f f32 %.0f %s\n",
+           "states != bf16_rn(f32) %u, rounded %u of %u; decode step chip us (median) bf16 %.1f f32 %.1f %s\n",
            calls, T, omega_gpu_gdn_rc_name(rc), bad_out, bad_tail, bad_state, rounded, calls * NS, us16, us32, rc ? omega_gpu_gdn_last_error() : "");
     CHECK(rc == 0 && calls == 5, "chip bf16 ran");
     CHECK(bad_out == 0 && bad_tail == 0 && bad_state == 0, "chip bf16 == f32 + round to nearest even on store");
@@ -818,8 +839,8 @@ static int chip_bf16(const char *out_path) {
         FILE *f = fopen(out_path, "w");
         if (f) {
             fprintf(f, "{\"receipt\":\"OMEGA_GPU_GDN_BF16_V1\",\"ratio\":%u,\"calls\":%u,\"prefill_tokens\":%u,\"outputs_differing\":%u,"
-                       "\"tails_differing\":%u,\"states_not_rn\":%u,\"rounded\":%u,\"values\":%u,\"verdict\":\"%s\"}\n",
-                    (unsigned)RT, calls, T, bad_out, bad_tail, bad_state, rounded, calls * NS, g_failed ? "FAIL" : "PASS");
+                       "\"tails_differing\":%u,\"states_not_rn\":%u,\"rounded\":%u,\"values\":%u,\"chip_us_bf16\":%.3f,\"chip_us_f32\":%.3f,\"verdict\":\"%s\"}\n",
+                    (unsigned)RT, calls, T, bad_out, bad_tail, bad_state, rounded, calls * NS, us16, us32, g_failed ? "FAIL" : "PASS");
             fclose(f);
         }
     }
@@ -988,7 +1009,7 @@ int main(int argc, char **argv) {
     if (sim) { sim_battery(); sim_bf16_battery(); sim_prefill_battery(); sim_prefill_bf16(3); sim_prefill_bf16(37); sim_copy_battery(); }
     if (!host && !sim) {
         (void)omega_gpu_session_set_spin_us(spin);
-        if (bf16) chip_bf16(out_path); else chip_run(out_path, reps ? reps : 50);
+        if (bf16) chip_bf16(out_path, reps ? reps : 50); else chip_run(out_path, reps ? reps : 50);
         omega_gpu_session_close();
     }
     printf("gpu_gdn_test: %d checks, %d failed: %s\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS");
