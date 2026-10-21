@@ -225,6 +225,23 @@ calc:e9362744), p3 21.990 ms = 45.48 tok/s (calc:78354ed1), p4 22.601 ms = 44.25
 coordinator's read through the door at 02:04Z: 42.0 to 44.4 tok/s decode, 0.67 of the 63.25 tok/s ceiling at
 today's bytes. Receipts: `aien-sovereign-core` `evidence/motor-chip-20261021/` (README there).
 
+**Stroke v1 on the chip, done (sc `motor/serve` 5637a828 + 3dbbad4d over omega `motor/serve` a8036530, receipts
+`evidence/motor-chip-20261021/stroke-*.json`, README there):** `create_heads` lays out four slots of `x`, `hidden`, `logits`,
+`token` and `xq`; each head owns a DeltaNet state, an attention cache and a position; `stroke(tokens[4])` records every head's
+layer l before layer l + 1 and submits once; `swap_heads(a, b)` re-points two slots (no copy). The first run caught a real bug:
+the fused COMBINE|NORM carries the next layer's normalised input in one scratch slot across layers, so with heads interleaved
+every head read the last head's value (head 0 differed from the one-token path at every position under the same mutant);
+that slot is per head now, and head 0 under the mutant equals the one-token path 36/36. Gate, red before green: mutant 4 FAIL
+on every head; swap-control (states of slots 0 and 1 exchanged at step 18, feeds not) FAIL from step 18 on while the untouched
+heads stay identical (p3 32/32, p4 31/32 with its known in-band flip); the real run PASS (p1, p2, p3 32/32, p4 31/32 with that same in-band flip; every head equals its
+single-head run token for token, `gate1b-p<n>.json`); swap as a feature (feeds move with the states) PASS, p1 ends in slot 1
+and p2 in slot 0, all four still identical: a conversation follows its state and cache, not its slot. Chip time per stroke
+(shared chip, four tokens per stroke, a receipt only under `spark-window`): real run median 92.887 ms per stroke of four
+tokens over 46 strokes = 43.06 tok/s across the heads (calc:9c07e26f), 23.22 ms per token-equivalent (calc:3ae78e68),
+against 21.86 to 22.99 ms per single-head token on the same shared chip: a v1 stroke costs about four single tokens, as
+built. An observation next to the 18091 server, not a receipt; the window line was stuck during these runs. Weights are still read once per head
+per stroke (v1); v2 batches the dense GEMVs at M = 4 through the prefill GEMM.
+
 **Finding, the door and the chip lock:** `aien-serve-http` takes `/tmp/aien-gb10.lock` for the model load and around
 every generation (`omega_engine.rs`: waits 30 s, then answers HTTP 503 busy); it never holds the lock idle. While
 another agent's chip job holds the lock (a gate run, training, the judge), 18091 waits up to 30 s and then refuses.
