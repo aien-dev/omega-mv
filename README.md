@@ -49,6 +49,8 @@ The full omegatool build (`make`) links the `physics` repository at the commit i
 
 `src/` core and C compiler (`src/compiler/`), `src/runtime/` reaction runtime, `src/fabric/` host-only fabric interface, `src/physics0/` Physics Zero apparatus, `spec/` and `docs/` specifications, `tests/` gate suites, `evidence/` content-addressed receipts, `tools/` harnesses, `mk/` make fragments included by the `Makefile`. Also `bench/prime_race/` (Prime Drag Race implementation), `calibration/` (Turing calibration experiments, preregistration and blinding protocol), `research/` (experiments and prototypes) and `doctrine/` (the Milestone 4 doctrine).
 
+Omega is being split into one-job modules (ADR 0039: one thing per repo). The map, the dependency graph and the order of the cuts are in [docs/MODULES.md](docs/MODULES.md); `tools/modules/graph.sh` regenerates the graph.
+
 ## Contributing
 
 Open a pull request with the exact command you ran and its output. Receipts are content-addressed, name the exact commit and refuse a dirty tree. Do not edit existing evidence in place. External review is expected before merge. See [CONTRIBUTORS.md](CONTRIBUTORS.md). Contact: aien@aienos.com.

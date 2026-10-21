@@ -1,0 +1,82 @@
+# Module candidates for the omega split (L396, ADR 0039 one thing per repo).
+# One rule per line: <group><TAB><extended regex on the repo-relative path>.
+# First match wins, so specific rules go above general ones. Read by tools/modules/graph.sh.
+# Lines naming a subsystem with @ expand to ^(src|tests|tools|mk)/<name>([/_.-]|$).
+#
+# Shelves (no code): receipts, papers, calibration runs.
+evidence	^evidence/
+research	^research/
+calibration	^calibration/
+# CUDA++ (L395, MIT): the GPU toolchain, runtime and libraries. Fixed by L395; listed so edges show.
+cudapp	^src/omega_(gpu|blackwell|bw)_
+# GPU world/accelerator gates and the GB10 numeric kernels: GPU code filed beside the language today.
+cudapp	^src/omega_(accelerator|world_gates|vector)
+cudapp	^(src|tests)/runtime/(rx_resident_gpu|rx_compose_gpu|rx_r12_silicon)
+cudapp	^src/omega_numeric_[a-z_]*gb10
+cudapp	^tests/numeric_native/
+cudapp	^mk/(numeric-lifecycle|numeric-slices|program-fp32)\.mk$
+cudapp	^tests/bw_
+cudapp	^tools/run_gpu_
+cudapp	^mk/omega-gpu-
+# Crypto: hashes and signatures.
+crypto	^src/(sha256|omega_blake3)\.
+crypto	^src/searchtrace/sig/
+# The search-trace hook is the language's callback slot (omega_synthesis calls it); it stays with omega.
+omega	^src/searchtrace/st_hook\.h$
+crypto	^tests/(sha256|blake3)
+# Numeric: exact numbers, algebra, CPU vector/matvec realizations.
+numeric	^src/omega_numeric
+numeric	^src/algebra/
+numeric	^src/omega_matvec
+numeric	^tests/(algebra|numeric)
+numeric	^mk/numeric-
+numeric	^tools/(test|run)_numeric
+# Learning: tensors, autodiff, training.
+learn	^src/(tensor|autodiff|train)/
+learn	^tests/(tensor|autodiff|train)/
+learn	^mk/(tensor|autodiff|train)\.mk$
+learn	^tools/(tensor|autodiff|train)_
+# Host adapter (OSH capability enforcement, aien-architecture#158 ABI).
+host	^src/osh/
+host	^tests/osh/
+host	^mk/osh
+# Resident runtime (rx_*: AIEN faculties, capability roots, ARGUS/AEGIS bindings).
+runtime	^src/runtime/
+runtime	^tests/runtime/
+runtime	^mk/(rx_|proof\.mk|machine-identity\.mk)
+runtime	^tools/rx_
+# Subsystems.
+@turing
+turing	^tools/(turing|ty)_
+
+turing	^mk/turing_
+@visor
+visor	^mk/(00-)?visor
+@fabric
+@crumbline
+@path
+@dual_experiment
+@dual
+@estimation
+@reservoir
+@ans
+@polyglot
+@searchtrace
+@physics0
+@allen
+@brownian
+brownian	^mk/brownian_
+@prime_race
+# The language (stays in omega): Omegese, OSC, IR, checker2, compiler backends, program/resolve/realize/verify.
+omega	^src/(language|compiler|checker2)/
+omega	^tests/(compiler|checker2|language|resolve|realize|program|canonicalization|constraints|relations|identity|effect|malformed)/
+omega	^mk/(checker2|compiler|omegese|omega-emit|program-|proof|omegatool-path|machine-identity)
+omega	^tools/(omegese|omega_emit|exp445)/
+omega	^src/
+# Build glue, shared tests and tools that are not yet attributed to one module.
+build	^(Makefile|mk/|compile_flags\.txt|[a-z]+\.lock$)
+tests	^tests/
+tools	^tools/
+bench	^bench/
+docs	^(docs|doctrine|spec)/
+meta	.
