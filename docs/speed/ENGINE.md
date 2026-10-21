@@ -207,6 +207,27 @@ lm_head read for all heads (a y-stride argument in the GEMM; the FP8 head halves
 costs (calc:9c9d33dc), 85.3 tok/s (calc:a93a26c5); (2) one router read for all heads; (3) the dense GEMM at M = 8 runs at 131 to
 141 GB/s (calc:cdeb028d, calc:e9dc266c), half the ceiling, a CTA-budget sweep; (4) GDN and attention over heads. The floor at
 union 55: about 12 GB a beat, 45 ms, 178 tok/s for eight conversations.
+**Lever 1, the lm_head once per four heads, green (omega `motor/serve` 7049cf7a, lib a79dc6ea, bin 3583a8c5; receipts
+`evidence/motor-chip-20261021/stroke8l1-*.json`, `stroke{1,2,4}l1-real.json`, `stroke8l1-vs-alone.txt`, `stroke8l1-stamps.log`,
+README section "Lever 1"):** the bf16 GEMV gained the XBATCH form: up to four x rows (the heads' final hidden states, contiguous
+slots) staged in one CTA's shared memory (four times 8 KiB, the launch descriptor's 32 KiB limit), every weight read feeding all four
+accumulators, each (weight row, x row) adding up in the one-row order, so every logits row is bit-identical to its own one-head
+launch (the simulator: xb 2, 3, 4 bit-identical to the host emulation; a mutant where every row reads x row 0 is caught). In batch
+mode the stroke records the final head for all heads: one lm_head launch per group of up to four heads, then the argmax per head.
+The same gate, red before green: mutant 4 FAIL (its chip tokens equal the v2 mutant run), swap-control FAIL, the real run PASS
+eight of eight with chip tokens equal to the v2 run and to every run alone, swap-feature PASS. The ladder, same command and goldens
+back to back on the shared chip (not a speed receipt): 26.485, 34.440, 50.273, 95.608 ms per stroke at N = 1, 2, 4, 8, which is
+26.49, 17.22, 12.57, 11.95 ms per token (calc:e2851d72, calc:e67a8c20, calc:5ce9ea93) and 37.8, 58.1, 79.6, 83.7 tok/s total
+(calc:cfc8fbc7, calc:d90f79ea, calc:4d1cb3f6, calc:86f557ec); against v2, 1.20x at N = 2, 1.35x at N = 4, 1.34x at N = 8
+(calc:bf7130dd, calc:12a55e33, calc:b12ce492); against v1, 1.43x, 1.95x, 2.03x (calc:01375180, calc:2e542e42, calc:d54ef5c6).
+The beat lost 32.1 ms (calc:42b63b8b) where the timeline predicted 29.1; it is now 9.87 ms per extra head (calc:c82541a5, was
+14.35), and eight heads move their 11.5 GB of distinct weights at 120 GB/s (calc:90fc99cf) against the 273 GB/s ceiling. The
+timeline with lever 1 (`stroke8l1-stamps.log`): 92.057 ms over 1749 launches (28.0 ms less, calc:cea80142); the lm_head fell
+from 38.836 to 10.627 ms (3.65x, calc:b32d5ef1; a four-head launch costs 5.314 ms, 1.095x a one-head launch, calc:775e9ddc,
+calc:5b5453c7, 191 GB/s, calc:354ef873). The experts are now 44% of the beat (calc:8cf5ddac) at 93% of the ceiling; the router
+per head (11.5 ms, 320 launches) is the next lever: 86.1 ms a stroke, 92.9 tok/s, if one launch a layer costs what a glue launch
+costs (calc:2fece473, calc:a2081447); then the dense GEMM's CTA budget, then GDN and attention over heads.
+
 ### F. The motor on the chip (power engine = L306's 35B kernels, served first)
 Drake, 2026-10-21 01:15Z: the motor IS the 35B server, and serving comes first. The power engine on the chip is
 therefore L306's 35B kernels (`aien-sovereign-core` branch `q36/serve`, continued on `motor/serve`; omega GPU lib
