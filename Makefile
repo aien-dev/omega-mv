@@ -2535,6 +2535,10 @@ test-gpu-router: $(GPU_ROUTER_TEST)
 GPU_GDN_TEST = $(OUT_DIR)/gpu_gdn_test
 $(GPU_GDN_TEST): tests/gpu_gdn_test.c tests/bw_warp_sim_k.h src/omega_gpu_gdn_api.h src/omega_blackwell_codegen_gdn.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+# L369: the multi-token GDN decode == T decode steps bit for bit (--sim: simulator; default: the chip, under the GB10 lock)
+GPU_GDN_MULTI_TEST = $(OUT_DIR)/gpu_gdn_multi_test
+$(GPU_GDN_MULTI_TEST): tests/gpu_gdn_multi_test.c tests/bw_warp_sim_k.h src/omega_gpu_gdn_api.h src/omega_blackwell_codegen_gdn.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_multi_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-gdn: $(GPU_GDN_TEST)
 	./$(GPU_GDN_TEST) --host-only
 	./$(GPU_GDN_TEST) --sim
