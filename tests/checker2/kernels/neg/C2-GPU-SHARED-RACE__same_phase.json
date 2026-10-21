@@ -1,0 +1,8 @@
+{"functions": [
+  {"name": "same_phase", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["block:u32:64", "u32", "u32", "u32", "u32"],
+   "blocks": [
+    [{"op": "shared", "dst": 2}, {"op": "thread", "dst": 3}, {"op": "const", "dst": 4, "value": 1}, {"op": "add", "dst": 5, "a": 3, "b": 4}, {"op": "store", "arr": 2, "index": 3, "value": 3}, {"op": "load", "dst": 6, "arr": 2, "index": 5}, {"op": "ret"}]
+   ]}
+]}

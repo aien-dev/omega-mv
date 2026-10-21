@@ -1,0 +1,8 @@
+{"functions": [
+  {"name": "const_index", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32"],
+   "blocks": [
+    [{"op": "const", "dst": 2, "value": 0}, {"op": "thread", "dst": 3}, {"op": "gstore", "buf": 0, "index": 2, "value": 3}, {"op": "ret"}]
+   ]}
+]}

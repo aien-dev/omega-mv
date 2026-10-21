@@ -1,0 +1,10 @@
+{"functions": [
+  {"name": "gate", "kind": "kernel", "threads": 256,
+   "params": ["gedit:f32", "u32", "gview:f32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "u32", "u32", "u32", "bool", "f32", "f32", "f32", "f32", "f32", "f32", "f32", "f32"],
+   "blocks": [
+    [{"op": "block", "dst": 4}, {"op": "const", "dst": 5, "value": 256}, {"op": "thread", "dst": 6}, {"op": "mul", "dst": 7, "a": 4, "b": 5}, {"op": "add", "dst": 8, "a": 7, "b": 6}, {"op": "lt", "dst": 9, "a": 8, "b": 1}, {"op": "cbr", "cond": 9, "then": 1, "else": 2}],
+    [{"op": "gload", "dst": 10, "buf": 0, "index": 8}, {"op": "gload", "dst": 11, "buf": 2, "index": 8}, {"op": "neg", "dst": 12, "a": 11}, {"op": "exp", "dst": 13, "a": 12}, {"op": "const", "dst": 14, "value": "0x3f800000"}, {"op": "add", "dst": 15, "a": 13, "b": 14}, {"op": "inv", "dst": 16, "a": 15}, {"op": "mul", "dst": 17, "a": 10, "b": 16}, {"op": "gstore", "buf": 0, "index": 8, "value": 17}, {"op": "br", "to": 2}],
+    [{"op": "ret"}]
+   ]}
+]}

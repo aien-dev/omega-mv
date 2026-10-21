@@ -373,7 +373,6 @@ static const OpDef k_ops[] = {
     {"ret", OSC_I_RET, 0, {NULL}, "a"},
     /* GPU kernels (docs/omegese/GPU.md) */
     {"thread", OSC_I_GPU, OSC_G_THREAD, {"dst"}, NULL},
-    {"threads", OSC_I_GPU, OSC_G_THREADS, {"dst"}, NULL},
     {"block", OSC_I_GPU, OSC_G_BLOCK, {"dst"}, NULL},
     {"blocks", OSC_I_GPU, OSC_G_BLOCKS, {"dst"}, NULL},
     {"batch", OSC_I_GPU, OSC_G_BATCH, {"dst"}, NULL},
@@ -387,7 +386,9 @@ static const OpDef k_ops[] = {
     {"max", OSC_I_BIN, OSC_B_MAX, {"dst", "a", "b"}, NULL},
     {"exp", OSC_I_UN, OSC_U_EXP, {"dst", "a"}, NULL},
     {"inv", OSC_I_UN, OSC_U_INV, {"dst", "a"}, NULL},
-    {"root", OSC_I_UN, OSC_U_ROOT, {"dst", "a"}, NULL},
+    {"rsq", OSC_I_UN, OSC_U_RSQ, {"dst", "a"}, NULL},
+    {"sqrt", OSC_I_UN, OSC_U_SQRT, {"dst", "a"}, NULL},
+    {"mad", OSC_I_MAD, 0, {"dst", "a", "b", "c"}, NULL},
 };
 #define NOPS (sizeof k_ops / sizeof k_ops[0])
 
@@ -638,6 +639,13 @@ static int step(Ctx *c, const J *o, int last, OscInsn *in)
             return STEP(AT "down needs dst and a of the same type, u32 or f32", ATV);
         if (T[in->b].s != OSC_T_U32 || !is_scalar(&T[in->b])) return STEP(AT "b r%d is %s, not u32", ATV, in->b, tn(&T[in->b]));
         break;
+    case OSC_I_MAD:
+        if (reg_field(c, o, "dst", &in->dst) || reg_field(c, o, "a", &in->a) || reg_field(c, o, "b", &in->b) || reg_field(c, o, "c", &in->c)) return -1;
+        for (int k = 0; k < 4; k++) {
+            int r = k == 0 ? in->dst : k == 1 ? in->a : k == 2 ? in->b : in->c;
+            if (T[r].s != OSC_T_F32 || !is_scalar(&T[r])) return STEP(AT "mad needs f32 registers; r%d is %s", ATV, r, tn(&T[r]));
+        }
+        break;
     case OSC_I_TRAP: {
         int neg; uint64_t v;
         if (jint(jget(o, "code"), &neg, &v) || neg || v < 1 || v > OSC_TRAP_MAX) return STEP(AT "trap code must be 1..%d", ATV, OSC_TRAP_MAX);
@@ -691,7 +699,7 @@ static int build(const J *root)
     memset(&g_u, 0, sizeof g_u);
     static const char *const top[] = {"functions", NULL};
     static const char *const fk[] = {"name", "params", "ret", "locals", "blocks", NULL};
-    static const char *const fkk[] = {"name", "kind", "params", "ret", "locals", "blocks", NULL};
+    static const char *const fkk[] = {"name", "kind", "threads", "params", "ret", "locals", "blocks", NULL};
     if (root->t != J_OBJ) return fail("schema", "the top level must be an object {\"functions\": [...]}");
     if (only_keys(root, "top level", top)) return -1;
     const J *fs = jget(root, "functions");
@@ -714,6 +722,14 @@ static int build(const J *root)
         const J *ps = jget(F, "params"), *rt = jget(F, "ret"), *ls = jget(F, "locals"), *bs = jget(F, "blocks");
         if (ps->t != J_ARR || ps->n > maxp) return fail("schema", "%s: \"params\" must be an array of 0..%u types", where, maxp);
         f->kind = kd ? OSC_FN_KERNEL : OSC_FN_HOST;
+        if (kd) {
+            const J *tj = jget(F, "threads");
+            int tneg;
+            uint64_t tv;
+            if (!tj || jint(tj, &tneg, &tv) || tneg || tv < OSC_KERNEL_MIN_THREADS || tv > OSC_KERNEL_MAX_THREADS || tv % OSC_WARP)
+                return fail("schema", "%s: \"threads\" must be 32..1024, a multiple of 32", where);
+            f->threads = (uint16_t)tv;
+        }
         if (ls->t != J_ARR) return fail("schema", "%s: \"locals\" must be an array of types", where);
         if (ps->n + ls->n > OSC_MAX_VREGS) return fail("schema", "%s: %zu registers (params + locals) > %d", where, ps->n + ls->n, OSC_MAX_VREGS);
         f->nparams = (uint8_t)ps->n;
@@ -836,7 +852,9 @@ static int cmd_lift(const char *in)
     for (unsigned fi = 0; fi < u.nfuncs; fi++) {
         const OscFunc *f = &u.funcs[fi];
         char t[32];
-        printf("  {\"name\": \"%s\", %s\"params\": [", f->name, f->kind == OSC_FN_KERNEL ? "\"kind\": \"kernel\", " : "");
+        printf("  {\"name\": \"%s\", ", f->name);
+        if (f->kind == OSC_FN_KERNEL) printf("\"kind\": \"kernel\", \"threads\": %u, ", f->threads);
+        printf("\"params\": [");
         for (unsigned r = 0; r < f->nparams; r++) { type_name(&f->vtype[r], t, sizeof t); printf("%s\"%s\"", r ? ", " : "", t); }
         printf("], \"ret\": \"%s\", \"locals\": [", f->ret.s == OSC_T_VOID ? "void" : k_scal[f->ret.s]);
         for (unsigned r = f->nparams; r < f->nvregs; r++) { type_name(&f->vtype[r], t, sizeof t); printf("%s\"%s\"", r > f->nparams ? ", " : "", t); }
@@ -876,6 +894,7 @@ static int cmd_lift(const char *in)
                 case OSC_I_GLOAD: printf(", \"dst\": %d, \"buf\": %d, \"index\": %d", x->dst, x->a, x->b); break;
                 case OSC_I_GSTORE: printf(", \"buf\": %d, \"index\": %d, \"value\": %d", x->a, x->b, x->c); break;
                 case OSC_I_SHFL: printf(", \"dst\": %d, \"a\": %d, \"b\": %d", x->dst, x->a, x->b); break;
+                case OSC_I_MAD: printf(", \"dst\": %d, \"a\": %d, \"b\": %d, \"c\": %d", x->dst, x->a, x->b, x->c); break;
                 }
                 printf("}%s\n", i + 1 < f->blocks[bi].first + f->blocks[bi].count ? "," : "");
             }

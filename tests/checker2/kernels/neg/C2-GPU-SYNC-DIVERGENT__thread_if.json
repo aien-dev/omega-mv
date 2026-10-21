@@ -1,0 +1,10 @@
+{"functions": [
+  {"name": "thread_if", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "bool"],
+   "blocks": [
+    [{"op": "thread", "dst": 2}, {"op": "const", "dst": 3, "value": 16}, {"op": "lt", "dst": 4, "a": 2, "b": 3}, {"op": "cbr", "cond": 4, "then": 1, "else": 2}],
+    [{"op": "sync"}, {"op": "br", "to": 2}],
+    [{"op": "ret"}]
+   ]}
+]}

@@ -5,9 +5,13 @@
 #   oscc rejects  -> the unit never becomes bytes (front-end refusal); osc_emit_ir must agree
 # Disagreement fails. Gate (omega#446): at least 100 units accepted by both checkers.
 # The accepted IR files are left in <work>/ir for test_c2_ir.
-# Usage: sh tests/checker2/differential.sh <oscc> <osc_emit_ir> <checker2> <work-dir>
+# GPU kernels have no .osc form yet: with a fifth argument (omega_emit), every op list in
+# tests/checker2/kernels/*.json becomes a unit that checker2 must ACCEPT (it joins <work>/ir), and every
+# tests/checker2/kernels/neg/<RULE>__<name>.json one that the producer accepts and checker2 refuses
+# with RULE (written to <work>/ir/kneg for test_c2_ir).
+# Usage: sh tests/checker2/differential.sh <oscc> <osc_emit_ir> <checker2> <work-dir> [<omega_emit>]
 set -u
-OSCC=$1; EMIT=$2; C2=$3; WORK=$4
+OSCC=$1; EMIT=$2; C2=$3; WORK=$4; OME=${5:-}
 rm -rf "$WORK"
 mkdir -p "$WORK/ir" "$WORK/gen"
 sh tests/checker2/gen_valid.sh "$WORK/gen" 48 || { echo "differential: generator failed"; exit 1; }
@@ -44,6 +48,35 @@ done
 for f in tests/compiler/neg/*.osc; do
     [ -f "$f" ] && check_unit "$f" reject
 done
+
+kern=0; kneg=0
+if [ -n "$OME" ]; then
+    mkdir -p "$WORK/ir/kneg"
+    for f in tests/checker2/kernels/*.json; do
+        name=kernel_$(basename "$f" .json)
+        if ! "$OME" emit "$f" "$WORK/ir/$name.ir" >/dev/null 2>&1; then
+            echo "DISAGREE $f: omega_emit refuses a kernel checker2 should see"; bad=$((bad + 1)); continue
+        fi
+        c=$("$C2" check "$WORK/ir/$name.ir")
+        case "$c" in
+        checker2=ACCEPT*) kern=$((kern + 1)) ;;
+        *) echo "DISAGREE $f: $c"; bad=$((bad + 1)) ;;
+        esac
+    done
+    for f in tests/checker2/kernels/neg/*.json; do
+        b=$(basename "$f" .json); rule=${b%%__*}
+        if ! "$OME" emit "$f" "$WORK/ir/kneg/$b.ir" >/dev/null 2>&1; then
+            echo "DISAGREE $f: omega_emit refuses it, so checker2 never sees it"; bad=$((bad + 1)); continue
+        fi
+        c=$("$C2" check "$WORK/ir/kneg/$b.ir")
+        case "$c" in
+        "checker2=REJECT rule=$rule "*) kneg=$((kneg + 1)) ;;
+        *) echo "DISAGREE $f: $c (want rule $rule)"; bad=$((bad + 1)) ;;
+        esac
+    done
+    echo "differential: kernels accepted=$kern, kernel negatives refused by their rule=$kneg"
+    [ "$kern" -ge 5 ] && [ "$kneg" -ge 19 ] || { echo "differential: gate needs >= 5 kernels and >= 19 kernel negatives"; bad=$((bad + 1)); }
+fi
 
 # negative control: the comparison must be able to fail. A truncated copy of an accepted unit has
 # to be refused by checker2; otherwise this script could never report a disagreement.

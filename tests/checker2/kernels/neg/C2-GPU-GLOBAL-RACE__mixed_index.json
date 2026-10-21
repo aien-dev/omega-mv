@@ -1,0 +1,8 @@
+{"functions": [
+  {"name": "mixed_index", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "u32", "u32"],
+   "blocks": [
+    [{"op": "thread", "dst": 2}, {"op": "const", "dst": 3, "value": 1}, {"op": "add", "dst": 4, "a": 2, "b": 3}, {"op": "gload", "dst": 5, "buf": 0, "index": 2}, {"op": "gstore", "buf": 0, "index": 4, "value": 5}, {"op": "ret"}]
+   ]}
+]}

@@ -53,8 +53,8 @@ $(C2_DIR)/osc_emit_ir: tests/checker2/producer/osc_emit_ir.c $(C2_PRODUCER_LIB) 
 	@mkdir -p $(C2_DIR)
 	$(CC) $(C2_CFLAGS:-Isrc/checker2=-Isrc/compiler) -o $@ tests/checker2/producer/osc_emit_ir.c $(C2_PRODUCER_LIB)
 
-test-checker2-differential: $(OUT_DIR)/compiler/oscc $(C2_DIR)/osc_emit_ir $(C2_DIR)/checker2
-	sh tests/checker2/differential.sh $(OUT_DIR)/compiler/oscc $(C2_DIR)/osc_emit_ir $(C2_DIR)/checker2 $(C2_DIR)/differential
+test-checker2-differential: $(OUT_DIR)/compiler/oscc $(C2_DIR)/osc_emit_ir $(C2_DIR)/checker2 $(OUT_DIR)/omega_emit/omega_emit
+	sh tests/checker2/differential.sh $(OUT_DIR)/compiler/oscc $(C2_DIR)/osc_emit_ir $(C2_DIR)/checker2 $(C2_DIR)/differential $(OUT_DIR)/omega_emit/omega_emit
 
 $(C2_DIR)/test_c2_receipt: tests/checker2/test_c2_receipt.c $(C2_RECEIPT) $(C2_HDRS)
 	@mkdir -p $(C2_DIR)

@@ -153,6 +153,7 @@ static void add_kernel_unit(const char *name, int which) {
 #define SC(v, t) (T[v].s = (t))
 #define GB(v, t, e) (T[v].s = (t), T[v].elem = (e))
     if (which == 0) {  /* vector add: c[i] = a[i] + b[i] for i < len c */
+        f->threads = 256;
         f->nparams = 6;
         GB(0, OSC_T_GVIEW, OSC_T_F32); SC(1, OSC_T_U32); GB(2, OSC_T_GVIEW, OSC_T_F32); SC(3, OSC_T_U32);
         GB(4, OSC_T_GEDIT, OSC_T_F32); SC(5, OSC_T_U32);
@@ -160,7 +161,7 @@ static void add_kernel_unit(const char *name, int which) {
         SC(11, OSC_T_BOOL); SC(12, OSC_T_F32); SC(13, OSC_T_F32); SC(14, OSC_T_F32);
         f->nvregs = 15;
         I[n++] = kin(OSC_I_GPU, OSC_G_BLOCK, 6, -1, -1, -1);
-        I[n++] = kin(OSC_I_GPU, OSC_G_THREADS, 7, -1, -1, -1);
+        I[n] = kin(OSC_I_CONST, 0, 7, -1, -1, -1); I[n].imm = 256; n++;
         I[n++] = kin(OSC_I_GPU, OSC_G_THREAD, 8, -1, -1, -1);
         I[n++] = kin(OSC_I_BIN, OSC_B_MUL, 9, 6, 7, -1);
         I[n++] = kin(OSC_I_BIN, OSC_B_ADD, 10, 9, 8, -1);
@@ -177,12 +178,14 @@ static void add_kernel_unit(const char *name, int which) {
         f->blocks[2] = (OscBlock){n - 1, 1};
         f->nblocks = 3;
     } else {  /* every other kernel instruction and type, one straight block */
+        f->threads = 1024;
         f->nparams = 3;
         GB(0, OSC_T_GEDIT, OSC_T_U32); SC(1, OSC_T_U32); SC(2, OSC_T_F32);
         T[3].s = OSC_T_REF; T[3].ref = OSC_REF_BLOCK; T[3].elem = OSC_T_F32; T[3].len = 12288;
         SC(4, OSC_T_U32); SC(5, OSC_T_F32); SC(6, OSC_T_U32); SC(7, OSC_T_U32); SC(8, OSC_T_F32); SC(9, OSC_T_F32);
         SC(10, OSC_T_F32); SC(11, OSC_T_U32); SC(12, OSC_T_F32); SC(13, OSC_T_U32); SC(14, OSC_T_F32);
-        f->nvregs = 15;
+        SC(15, OSC_T_F32);
+        f->nvregs = 16;
         I[n++] = kin(OSC_I_SHARED, 0, 3, -1, -1, -1);
         I[n++] = kin(OSC_I_GPU, OSC_G_BATCHES, 4, -1, -1, -1);
         I[n++] = kin(OSC_I_CAST, 0, 5, 4, -1, -1);
@@ -190,15 +193,18 @@ static void add_kernel_unit(const char *name, int which) {
         I[n++] = kin(OSC_I_BIN, OSC_B_DIV, 7, 4, 6, -1);
         I[n++] = kin(OSC_I_UN, OSC_U_EXP, 8, 2, -1, -1);
         I[n++] = kin(OSC_I_BIN, OSC_B_MIN, 9, 8, 5, -1);
-        I[n++] = kin(OSC_I_SHFL, OSC_SH_DOWN, 10, 9, 7, -1);
+        I[n++] = kin(OSC_I_SHFL, OSC_SH_DOWN, 10, 9, 6, -1);
         I[n++] = kin(OSC_I_CAST, 0, 11, 10, -1, -1);
         I[n++] = kin(OSC_I_STORE, 0, -1, 3, 7, 10);
         I[n++] = kin(OSC_I_SYNC, 0, -1, -1, -1, -1);
         I[n++] = kin(OSC_I_LOAD, 0, 12, 3, 7, -1);
         I[n++] = kin(OSC_I_GLOAD, 0, 13, 0, 7, -1);
         I[n++] = kin(OSC_I_BIN, OSC_B_MAX, 13, 13, 11, -1);
-        I[n++] = kin(OSC_I_UN, OSC_U_ROOT, 14, 12, -1, -1);
-        I[n++] = kin(OSC_I_UN, OSC_U_NEG, 14, 14, -1, -1);
+        I[n++] = kin(OSC_I_UN, OSC_U_RSQ, 14, 12, -1, -1);
+        I[n++] = kin(OSC_I_UN, OSC_U_SQRT, 14, 14, -1, -1);
+        I[n++] = kin(OSC_I_UN, OSC_U_INV, 14, 14, -1, -1);
+        I[n++] = kin(OSC_I_MAD, 0, 15, 14, 12, 8);
+        I[n++] = kin(OSC_I_UN, OSC_U_NEG, 14, 15, -1, -1);
         I[n++] = kin(OSC_I_GSTORE, 0, -1, 0, 7, 13);
         I[n++] = kin(OSC_I_RET, 0, -1, -1, -1, -1);
         f->blocks[0] = (OscBlock){0, n};
@@ -242,6 +248,7 @@ static const char *unit_diff(const OscUnit *x, const OscUnit *y, char *buf, size
         const OscFunc *a = &x->funcs[fi], *b = &y->funcs[fi];
         if (strcmp(a->name, b->name)) { snprintf(buf, n, "func %d name", fi); return buf; }
         if (a->kind != b->kind) { snprintf(buf, n, "func %d kind", fi); return buf; }
+        if (a->threads != b->threads) { snprintf(buf, n, "func %d threads", fi); return buf; }
         if (a->nparams != b->nparams || a->nvregs != b->nvregs || a->nblocks != b->nblocks || a->ninsns != b->ninsns) { snprintf(buf, n, "func %d counts", fi); return buf; }
         if (type_diff(&a->ret, &b->ret)) { snprintf(buf, n, "func %d ret", fi); return buf; }
         for (int v = 0; v < a->nvregs; v++) if (type_diff(&a->vtype[v], &b->vtype[v])) { snprintf(buf, n, "func %d vreg %d type", fi, v); return buf; }
@@ -278,6 +285,7 @@ static void copy_unit(OscUnit *d, const OscUnit *s) {
         const OscFunc *b = &s->funcs[fi];
         memcpy(a->name, b->name, sizeof a->name);
         a->kind = b->kind;
+        a->threads = b->threads;
         a->nparams = b->nparams;
         a->ret = b->ret;
         a->nvregs = b->nvregs;
@@ -479,6 +487,7 @@ static void build(Buf *b, const Knobs *k) {
     p16(b, 1);                       /* nfuncs */
     p8(b, k->name_len); pbytes(b, k->name, k->name_len);
     if (k->kind >= 0) p8(b, (unsigned)k->kind);
+    if (k->kind == OSC_FN_KERNEL) p16(b, 256);
     p8(b, 0);                        /* nparams */
     p8(b, k->ret_tag);               /* ret type (scalar: tag only) */
     p16(b, k->nvregs);

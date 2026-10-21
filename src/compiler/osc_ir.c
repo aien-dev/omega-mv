@@ -126,6 +126,7 @@ static int insn_uses(const OscInsn *in, int16_t *u) {
     case OSC_I_GLOAD: u[k++] = in->a; u[k++] = in->a + 1; u[k++] = in->b; break;
     case OSC_I_GSTORE: u[k++] = in->a; u[k++] = in->a + 1; u[k++] = in->b; u[k++] = in->c; break;
     case OSC_I_SHFL: u[k++] = in->a; u[k++] = in->b; break;
+    case OSC_I_MAD: u[k++] = in->a; u[k++] = in->b; u[k++] = in->c; break;
     case OSC_I_FLOAD: u[k++] = in->a; if (in->b >= 0) u[k++] = in->b; break;
     case OSC_I_FSTORE: u[k++] = in->a; if (in->b >= 0) u[k++] = in->b; u[k++] = in->c; break;
     case OSC_I_CALL: for (int i = 0; i < in->nargs && i < OSC_MAX_PARAMS; i++) u[k++] = in->args[i]; break;
@@ -140,7 +141,7 @@ static int insn_def(const OscInsn *in) {
     case OSC_I_CAST: case OSC_I_ALLOC: case OSC_I_LOAD: case OSC_I_FLOAD: case OSC_I_SLOAD: return in->dst;
     case OSC_I_AOPEN: case OSC_I_AALLOC: return in->dst;
     case OSC_I_POPEN: case OSC_I_HALLOC: case OSC_I_HGEN: case OSC_I_HLOAD: return in->dst;
-    case OSC_I_GPU: case OSC_I_SHARED: case OSC_I_GLOAD: case OSC_I_SHFL: return in->dst;
+    case OSC_I_GPU: case OSC_I_SHARED: case OSC_I_GLOAD: case OSC_I_SHFL: case OSC_I_MAD: return in->dst;
     case OSC_I_CALL: return in->dst;  /* may be -1 */
     default: return -1;
     }
@@ -195,7 +196,7 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
         if (in->sub == OSC_U_LNOT) NEED(a->s == OSC_T_BOOL, "LNOT needs bool", fi, ii);
         else if (in->sub == OSC_U_NEG) NEED(osc_scalar_is_int(a->s) || a->s == OSC_T_F32, "NEG needs a number", fi, ii);
         else if (in->sub == OSC_U_BNOT) NEED(osc_scalar_is_int(a->s), "BNOT needs integer", fi, ii);
-        else if (in->sub >= OSC_U_EXP && in->sub <= OSC_U_ROOT) NEED(a->s == OSC_T_F32, "EXP/INV/ROOT need f32", fi, ii);
+        else if (in->sub >= OSC_U_EXP && in->sub <= OSC_U_SQRT) NEED(a->s == OSC_T_F32, "EXP/INV/RSQ/SQRT need f32", fi, ii);
         else return vfail(err, n, "func %d insn %u: UN bad sub-op %u", fi, ii, in->sub);
         break;
     }
@@ -361,6 +362,11 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
              "SHFL value not u32/f32", fi, ii);
         NEED(type_is_s(&T[in->b], OSC_T_U32), "SHFL distance not u32", fi, ii);
         break;
+    case OSC_I_MAD:
+        NEED(VR(in->dst) && VR(in->a) && VR(in->b) && VR(in->c), "MAD bad vreg", fi, ii);
+        NEED(type_is_s(&T[in->dst], OSC_T_F32) && type_is_s(&T[in->a], OSC_T_F32) && type_is_s(&T[in->b], OSC_T_F32) &&
+             type_is_s(&T[in->c], OSC_T_F32), "MAD needs f32", fi, ii);
+        break;
     case OSC_I_TRAP:
         NEED(in->imm >= OSC_TRAP_OVERFLOW && in->imm <= OSC_TRAP_MAX, "TRAP bad code", fi, ii);
         break;
@@ -392,6 +398,8 @@ static int validate_func(const OscAlloc *a, const OscUnit *u, int fi, char *err,
         return vfail(err, n, "func %d: contract text not terminated", fi);
     if (f->kind > OSC_FN_KERNEL) return vfail(err, n, "func %d: bad kind %u", fi, f->kind);
     bool kern = f->kind == OSC_FN_KERNEL;
+    if (kern ? f->threads < OSC_KERNEL_MIN_THREADS || f->threads > OSC_KERNEL_MAX_THREADS || f->threads % OSC_WARP : f->threads)
+        return vfail(err, n, "func %d: bad thread count %u", fi, f->threads);
     int maxp = kern ? OSC_MAX_KPARAMS : OSC_MAX_PARAMS;
     if (f->nparams > maxp) return vfail(err, n, "func %d: %u params > %d", fi, f->nparams, maxp);
     if (f->nvregs > OSC_MAX_VREGS || f->nparams > f->nvregs) return vfail(err, n, "func %d: bad nvregs", fi);
@@ -472,7 +480,7 @@ static int validate_func(const OscAlloc *a, const OscUnit *u, int fi, char *err,
     for (int b = 0; b < f->nblocks; b++)
         for (uint32_t i = f->blocks[b].first; i < f->blocks[b].first + f->blocks[b].count; i++) {
             const OscInsn *x = &f->insns[i];
-            bool gpu_op = x->op >= OSC_I_GPU && x->op <= OSC_I_SHFL;
+            bool gpu_op = x->op >= OSC_I_GPU && x->op <= OSC_I_MAD;
             bool gpu_sub = (x->op == OSC_I_BIN && (x->sub == OSC_B_MIN || x->sub == OSC_B_MAX)) ||
                            (x->op == OSC_I_UN && x->sub >= OSC_U_EXP);
             if (!kern) {
@@ -504,6 +512,15 @@ static int validate_func(const OscAlloc *a, const OscUnit *u, int fi, char *err,
                         return vfail(err, n, "func %d insn %u: kernel div/rem needs a nonzero constant divisor", fi, i);
                 }
                 break;
+            case OSC_I_SHFL: {
+                /* the distance is one CONST 1..31 (the hardware reads only its low 5 bits) */
+                const OscInsn *def = NULL;
+                for (uint32_t j = 0; j < f->ninsns; j++)
+                    if (insn_def(&f->insns[j]) == x->b) def = &f->insns[j];
+                if (x->b < f->nparams || ndef[x->b] != 1 || !def || def->op != OSC_I_CONST || def->imm < 1 || def->imm >= OSC_WARP)
+                    return vfail(err, n, "func %d insn %u: shuffle distance is not one constant 1..31", fi, i);
+                break;
+            }
             default: break;
             }
         }
@@ -785,6 +802,7 @@ static void encode_unit(const OscUnit *u, W *w) {
         w8(w, nl);
         wbytes(w, f->name, nl);
         if (magic[7] >= 6) w8(w, f->kind);
+        if (magic[7] >= 6 && f->kind == OSC_FN_KERNEL) w16(w, f->threads);
         w8(w, f->nparams);
         wtype(w, &f->ret);
         w16(w, f->nvregs);
@@ -830,6 +848,7 @@ static void encode_unit(const OscUnit *u, W *w) {
             case OSC_I_GSTORE: wvr(w, in->a); wvr(w, in->b); wvr(w, in->c); break;
             case OSC_I_SYNC: break;
             case OSC_I_SHFL: w8(w, in->sub); wvr(w, in->dst); wvr(w, in->a); wvr(w, in->b); break;
+            case OSC_I_MAD: wvr(w, in->dst); wvr(w, in->a); wvr(w, in->b); wvr(w, in->c); break;
             default: break; /* unreachable after validation */
             }
             /* `line` is debug information and deliberately not encoded: source
@@ -993,6 +1012,7 @@ static void decode_insn(R *r, OscInsn *in) {
     case OSC_I_GSTORE: in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); break;
     case OSC_I_SYNC: break;
     case OSC_I_SHFL: in->sub = (uint8_t)rle(r, 1); in->dst = rvr(r); in->a = rvr(r); in->b = rvr(r); break;
+    case OSC_I_MAD: in->dst = rvr(r); in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); break;
     default: rfail(r, OSC_IR_REFUSE_RANGE); break;  /* unknown opcode: its size is unknown */
     }
 }
@@ -1000,6 +1020,7 @@ static void decode_insn(R *r, OscInsn *in) {
 static void decode_func(R *r, OscFunc *f, uint64_t version) {
     rtext(r, 1, OSC_NAME_MAX - 1, f->name);
     if (version >= 6) f->kind = (uint8_t)rle(r, 1);
+    if (version >= 6 && f->kind == OSC_FN_KERNEL) f->threads = (uint16_t)rle(r, 2);
     f->nparams = (uint8_t)rle(r, 1);
     rtype(r, &f->ret);
     f->nvregs = (uint16_t)rcount(r, 2, OSC_MAX_VREGS);

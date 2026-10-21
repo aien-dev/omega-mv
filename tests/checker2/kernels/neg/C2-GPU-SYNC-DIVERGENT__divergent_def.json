@@ -1,0 +1,13 @@
+{"functions": [
+  {"name": "divergent_def", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "bool", "u32", "u32", "u32", "bool"],
+   "blocks": [
+    [{"op": "thread", "dst": 2}, {"op": "const", "dst": 3, "value": 16}, {"op": "const", "dst": 6, "value": 0}, {"op": "const", "dst": 7, "value": 1}, {"op": "lt", "dst": 4, "a": 2, "b": 3}, {"op": "cbr", "cond": 4, "then": 1, "else": 2}],
+    [{"op": "mov", "dst": 5, "a": 7}, {"op": "br", "to": 3}],
+    [{"op": "mov", "dst": 5, "a": 6}, {"op": "br", "to": 3}],
+    [{"op": "eq", "dst": 8, "a": 5, "b": 7}, {"op": "cbr", "cond": 8, "then": 4, "else": 5}],
+    [{"op": "sync"}, {"op": "br", "to": 5}],
+    [{"op": "ret"}]
+   ]}
+]}

@@ -129,8 +129,8 @@ sync                         wait until every thread of the block reaches this l
   divergent block is varying too.
 - A block is **divergent** when some threads of the block may run it and others not: every block
   between a branch on a varying condition and that branch's join, where the join is the nearest block
-  every path from the branch reaches. A `ret`, and a `trap` that ends the thread (section 7), go to
-  one virtual exit, so the code after a varying `ret` or `trap` is divergent until the kernel ends.
+  every path from the branch reaches. A `ret` (also the one inside a `trap N` line, section 7) goes
+  to one virtual exit, so the code after a varying `ret` is divergent until the kernel ends.
 - The IR assigns a register more than once, so varying values and divergent blocks are computed
   together and repeated until nothing changes.
 - `sync` and `down` are allowed only in blocks that are not divergent.
@@ -152,9 +152,15 @@ There are two kinds of trap:
   takes 0 as the result of the operation, and keeps running. From then on it stores nothing: every
   later `put` of that thread, global or shared, is skipped. It still reaches every `sync` and `down`
   the other threads reach, because control at those points never depends on its data.
-- **A `trap N` line, or a loop that passes its bound (trap 4).** The thread records the code and ends.
-  checker2 treats this like `ret`: when the branch to it is varying, the code after it is divergent,
+- **A loop that passes its bound (trap 4).** The thread records the code and leaves the loop. From
+  then on it stores nothing, as above.
+- **A `trap N` line.** The thread records the code and returns: `trap N` is a trap followed by `ret`.
+  checker2 treats it like `ret`: when the branch to it is varying, the code after it is divergent,
   so no `sync` or `down` can follow it.
+
+In the IR a kernel TRAP is an ordinary instruction: the thread records the code, stops storing and
+runs on to the end of its block. Only RET ends a thread. So for definite assignment the path through
+a TRAP continues (a host TRAP ends the path), and a register left unset on that path is refused.
 
 Why the code is the same on every run: a thread's own steps are fixed by its inputs, and the race
 rules (section 8) make every input fixed. The only case where the race rules can fail is when an
@@ -174,7 +180,8 @@ assignment. The leaves are:
 - `rem thread K` and `div thread K` with K a number (the low and high thread digits for K);
 - loop counters (the loop digits): a uint counter set from a number before the loop and increased
   by 1 as the last step of the loop's one back edge. A tree with a loop digit may be used only
-  inside that loop.
+  inside that loop. Omegese gives the hidden counters of a kernel's loops the type uint, so they
+  are loop digits.
 
 The inner nodes are `add`, `mul`, `div` and `rem`. Anything else makes the tree opaque, and an
 opaque tree proves nothing.

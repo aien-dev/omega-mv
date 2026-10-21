@@ -39,7 +39,10 @@
 #define OSC_CLAUSE_MAX   256     /* requires/ensures source text (recorded; enforced by the front end, OSC-2) */
 #define OSC_MAX_STRUCTS   16     /* OSC-2 structs (docs/osc/OSC-2-DESIGN.md section 2) */
 #define OSC_MAX_FIELDS    16     /* fields per struct */
-#define OSC_MAX_KPARAMS   16     /* parameters of a GPU kernel (never called, so not bound by x0..x5) */
+#define OSC_MAX_KPARAMS   32     /* parameter registers of a GPU kernel (never called, so not bound by x0..x5) */
+#define OSC_KERNEL_MIN_THREADS 32   /* threads per block of a kernel: 32..1024, a multiple of the warp */
+#define OSC_KERNEL_MAX_THREADS 1024
+#define OSC_WARP          32
 #define OSC_MAX_SHARED_LEN 12288 /* elements of one block-shared array */
 #define OSC_MAX_SHARED_BYTES 49152 /* block-shared bytes of one kernel (4 per element) */
 
@@ -144,12 +147,14 @@ typedef enum {
                      /*   is vreg a+1 (u32); b u32; b >= len: TRAP_BOUNDS              */
     OSC_I_GSTORE,    /* a[b] = c ; same bounds rule; a a GEDIT pointer vreg           */
     OSC_I_SYNC,      /* every thread of the block waits here (uniform control only)   */
-    OSC_I_SHFL       /* dst = a of the lane b higher (sub OSC_SH_DOWN); a lane past   */
-                     /*   the warp's end gets its own a; b u32; uniform control only  */
+    OSC_I_SHFL,      /* dst = a of the lane b higher (sub OSC_SH_DOWN); a lane past   */
+                     /*   the warp's end gets its own a; b a single-def u32 CONST     */
+                     /*   1..31; uniform control only                                 */
+    OSC_I_MAD        /* dst = a * b + c, f32, one rounding (FFMA)                     */
 } OscOp;
 
 typedef enum {
-    OSC_G_THREAD = 1, OSC_G_THREADS, OSC_G_BLOCK, OSC_G_BLOCKS, OSC_G_BATCH, OSC_G_BATCHES
+    OSC_G_THREAD = 1, OSC_G_BLOCK, OSC_G_BLOCKS, OSC_G_BATCH, OSC_G_BATCHES /* the thread count is OscFunc.threads */
 } OscGpuValue;
 enum { OSC_SH_DOWN = 1 };
 enum { OSC_FN_HOST = 0, OSC_FN_KERNEL = 1 };   /* OscFunc.kind */
@@ -173,7 +178,8 @@ typedef enum {
     /* GPU kernels, f32 only, approximate (docs/omegese/GPU.md section 5) */
     OSC_U_EXP,       /* EX2(RN(a * 0x3FB8AA3B))                                     */
     OSC_U_INV,       /* RCP(a)                                                      */
-    OSC_U_ROOT       /* RSQ(a)                                                      */
+    OSC_U_RSQ,       /* RSQ(a): 1 / sqrt(a)                                         */
+    OSC_U_SQRT       /* RCP(RSQ(a)): sqrt(a)                                        */
 } OscUnOp;
 
 typedef enum {
@@ -232,6 +238,7 @@ typedef struct {
 typedef struct {
     char name[OSC_NAME_MAX];
     uint8_t kind;        /* OSC_FN_HOST, or OSC_FN_KERNEL (encoding version 6) */
+    uint16_t threads;    /* kernel: threads per block (u16 after the kind byte); host: 0 */
     uint8_t nparams;     /* params are vregs 0..nparams-1 */
     OscType ret;         /* scalar or VOID; OSC-1 never returns a REF */
     OscType vtype[OSC_MAX_VREGS];
@@ -321,10 +328,10 @@ typedef enum {
 #define OSC_IR_REFUSAL_COUNT 11
 
 /* Upper bound on any canonical encoding (every count at its maximum, every
- * instruction at its widest, CALL with 6 args = 18 bytes; v6 adds a kind byte per function). Longer input is OVERSIZED. */
+ * instruction at its widest, CALL with 6 args = 18 bytes; v6 adds a kind byte per function and a u16 thread count per kernel). Longer input is OVERSIZED. */
 #define OSC_IR_ENCODED_MAX                                                                   \
     (8u + 1u + OSC_MAX_STRUCTS * (1u + 63u + 1u + 2u + OSC_MAX_FIELDS * (1u + 63u + 1u + 2u + 2u)) + 2u + \
-     OSC_MAX_FUNCS * (1u + 63u + 1u + 1u + 6u + 2u + OSC_MAX_VREGS * 6u + 2u + OSC_MAX_BLOCKS * 8u + 4u +  \
+     OSC_MAX_FUNCS * (1u + 63u + 1u + 1u + 2u + 6u + 2u + OSC_MAX_VREGS * 6u + 2u + OSC_MAX_BLOCKS * 8u + 4u +  \
                       OSC_MAX_INSNS * 18u + 2u * (2u + (OSC_CLAUSE_MAX - 1u))))
 
 int osc_ir_decode(const uint8_t *buf, size_t len, OscUnit *out);

@@ -1,0 +1,11 @@
+{"functions": [
+  {"name": "loop_digit_twice", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "u32", "u32", "u32", "bool", "u32", "u32", "u32", "u32", "u32", "u32"],
+   "blocks": [
+    [{"op": "thread", "dst": 2}, {"op": "const", "dst": 3, "value": 0}, {"op": "const", "dst": 4, "value": 1}, {"op": "const", "dst": 5, "value": 4}, {"op": "const", "dst": 8, "value": 32}, {"op": "const", "dst": 9, "value": 128}, {"op": "mov", "dst": 6, "a": 3}, {"op": "br", "to": 1}],
+    [{"op": "lt", "dst": 7, "a": 6, "b": 5}, {"op": "cbr", "cond": 7, "then": 2, "else": 3}],
+    [{"op": "mul", "dst": 10, "a": 6, "b": 8}, {"op": "add", "dst": 11, "a": 10, "b": 2}, {"op": "mul", "dst": 12, "a": 6, "b": 9}, {"op": "add", "dst": 13, "a": 12, "b": 11}, {"op": "gstore", "buf": 0, "index": 13, "value": 2}, {"op": "add", "dst": 6, "a": 6, "b": 4}, {"op": "br", "to": 1}],
+    [{"op": "ret"}]
+   ]}
+]}

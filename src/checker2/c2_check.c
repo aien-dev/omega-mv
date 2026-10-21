@@ -782,31 +782,25 @@ static int kernel_ops(Fx *x)
     return 0;
 }
 
-static int has_trap(const Fx *x, int b)
-{
-    const C2Block *bk = &x->f->blk[b];
-    for (uint32_t i = bk->first; i < bk->first + bk->count; i++)
-        if (x->f->in[i].op == C2_TRAP) return 1;
-    return 0;
-}
-
-/* C2-GPU-SYNC-DIVERGENT (GPU.md section 6). A register is varying when it is defined from `thread`,
- * a global or shared load or a shuffle, from any varying operand, or anywhere in a divergent block.
- * A CBR on a varying register makes divergent every block reachable from its successors before a
- * block that post-dominates it; a path that ends in a TRAP ends the thread, so post-dominance is
- * taken over non-trapping paths. SYNC and SHFL must not sit in a divergent block. The analysis
- * only grows its sets, so it terminates. */
+/* C2-GPU-SYNC-DIVERGENT and C2-GPU-NEST (GPU.md section 6). A register is varying when it is
+ * defined from `thread`, a global or shared load or a shuffle, from any varying operand, or anywhere
+ * in a divergent block. A CBR on a varying register makes divergent every block reachable from its
+ * successors before a block that post-dominates it (its region); a RET goes to one virtual exit, so
+ * a region holding a RET runs to the end of the kernel. A kernel TRAP does not end the thread
+ * (GPU.md section 7), so it is an ordinary instruction here. SYNC and SHFL must not sit in a
+ * divergent block, and no block may sit inside more than C2_MAX_NEST regions. The analysis only
+ * grows its sets, so it terminates. */
 static int kernel_uniform(Fx *x)
 {
     const C2Func *f = x->f;
-    static Bits pdom[C2_MAX_BLOCKS];
-    static uint8_t trapb[C2_MAX_BLOCKS], divb[C2_MAX_BLOCKS], done[C2_MAX_BLOCKS], vary[C2_MAX_VREGS];
-    static int st[2 * C2_MAX_BLOCKS + 2]; /* each block is pushed by its predecessors once it turns divergent */
+    static Bits pdom[C2_MAX_BLOCKS], region[C2_MAX_BLOCKS];
+    static uint8_t divb[C2_MAX_BLOCKS], done[C2_MAX_BLOCKS], vary[C2_MAX_VREGS];
+    static int st[2 * C2_MAX_BLOCKS + 2];
     for (int b = 0; b < f->nblocks; b++) {
-        trapb[b] = (uint8_t)has_trap(x, b);
         divb[b] = done[b] = 0;
+        memset(&region[b], 0, sizeof region[b]);
         ball(&pdom[b]);
-        if (!trapb[b] && f->in[f->blk[b].first + f->blk[b].count - 1].op == C2_RET) {
+        if (x->nsucc[b] == 0) { /* RET */
             memset(&pdom[b], 0, sizeof pdom[b]);
             bset(&pdom[b], (unsigned)b);
         }
@@ -816,7 +810,7 @@ static int kernel_uniform(Fx *x)
     while (changed) {
         changed = 0;
         for (int b = f->nblocks - 1; b >= 0; b--) {
-            if (trapb[b] || x->nsucc[b] == 0) continue; /* trap: vacuous; RET: fixed */
+            if (x->nsucc[b] == 0) continue;
             Bits n;
             ball(&n);
             for (int k = 0; k < x->nsucc[b]; k++) band(&n, &pdom[x->succ[b][k]]);
@@ -849,21 +843,460 @@ static int kernel_uniform(Fx *x)
             for (int k = 0; k < x->nsucc[b]; k++) st[sp++] = x->succ[b][k];
             while (sp) {
                 int c = st[--sp];
-                if (divb[c]) continue;
+                if (btest(&region[b], (unsigned)c)) continue;
                 if (c != b && btest(&pdom[b], (unsigned)c)) continue; /* GUARD:region-stop */
+                bset(&region[b], (unsigned)c);
                 divb[c] = 1;
-                if (trapb[c]) continue;
                 for (int k = 0; k < x->nsucc[c]; k++) st[sp++] = x->succ[c][k];
             }
         }
     }
     for (int b = 0; b < f->nblocks; b++) {
-        if (!x->reach[b] || !divb[b]) continue;
+        if (!x->reach[b]) continue;
+        int nest = 0;
+        for (int c = 0; c < f->nblocks; c++)
+            if (done[c] && btest(&region[c], (unsigned)b)) nest++;
+        if (done[b] && !btest(&region[b], (unsigned)b)) nest++; /* the branch opens one more level, unless it loops into its own region */
+        if (nest > C2_MAX_NEST) /* GUARD:nest */
+            return fail(x->v, "C2-GPU-NEST", x->fi, (int)f->blk[b].first, "block %d sits %d varying regions deep (at most %d)", b, nest, C2_MAX_NEST);
+        if (!divb[b]) continue;
         for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count; i++)
             if (f->in[i].op == C2_SYNC || f->in[i].op == C2_SHFL) /* GUARD:sync-divergent */
                 return fail(x->v, "C2-GPU-SYNC-DIVERGENT", x->fi, (int)i, "sync or down in block %d, which not every thread reaches", b);
     }
     return 0;
+}
+
+/* ------------------------------------------------------------------ races */
+
+/* C2-GPU-GLOBAL-RACE and C2-GPU-SHARED-RACE (GPU.md section 8). An index is read as a tree through
+ * registers with one definition. Leaves: numbers, uniform inputs (u32 parameters, `blocks`,
+ * `batches`), and digits: `thread`, `block`, `batch`, `rem thread K` (LO), `div thread K` (HI) and
+ * loop counters. Inner nodes: u32 add, mul, div, rem. Anything else is opaque and proves nothing.
+ * Nodes are hash-consed, so two accesses use "the same tree" when their node ids are equal. */
+enum { N_OPAQUE = 0, N_CONST, N_INV, N_THREAD, N_BLOCK, N_BATCH, N_LO, N_HI, N_LOOP, N_ADD, N_MUL, N_DIV, N_REM };
+#define RX_NODES 4096
+#define RX_FACTS 32
+#define RX_DIGITS 16
+typedef struct { uint8_t k; int a, b, h; uint64_t v; } Nd; /* LOOP: a counter, b guarded block or -1, h header, v bound */
+typedef struct { int n; int lt[RX_FACTS][2]; int nfix; int fix[RX_FACTS]; uint64_t fixv[RX_FACTS]; } Facts;
+typedef struct {
+    Fx *x;
+    unsigned T;
+    Nd nd[RX_NODES];
+    int nn;
+    int memo[C2_MAX_VREGS]; /* -1 not built, -2 being built, else a node */
+    int npred[C2_MAX_BLOCKS];
+    Bits loop[C2_MAX_BLOCKS]; /* natural loop of each header */
+} Rx;
+
+static int mk4(Rx *r, uint8_t k, int a, int b, int h, uint64_t v)
+{
+    for (int i = 1; i < r->nn; i++)
+        if (r->nd[i].k == k && r->nd[i].a == a && r->nd[i].b == b && r->nd[i].h == h && r->nd[i].v == v) return i;
+    if (r->nn >= RX_NODES) return 0;
+    r->nd[r->nn] = (Nd){ k, a, b, h, v };
+    return r->nn++;
+}
+
+static int mk(Rx *r, uint8_t k, int a, int b, uint64_t v) { return mk4(r, k, a, b, 0, v); }
+
+static int is_digit(uint8_t k) { return k >= N_THREAD && k <= N_LOOP; }
+static int thread_digit(uint8_t k) { return k == N_THREAD || k == N_LO || k == N_HI; }
+
+/* A loop counter: a u32 register with two definitions, a number before its loop and `add c c 1` as
+ * the last step of the loop's one latch, which jumps straight back to the header. */
+static int loop_digit(Rx *r, int c)
+{
+    const Fx *x = r->x;
+    const C2Func *f = x->f;
+    int init = -1, inc = -1;
+    uint64_t one;
+    for (uint32_t i = 0; i < f->ninsns; i++) {
+        if (defines(&f->in[i]) != c) continue;
+        const C2Insn *d = &f->in[i];
+        if (d->op == C2_BIN && d->sub == B_ADD && d->a == c && single_const(x, d->b, &one) && one == 1) inc = (int)i;
+        else if (d->op == C2_CONST || (d->op == C2_MOV && single_const(x, d->a, &one))) init = (int)i;
+    }
+    if (init < 0 || inc < 0) return 0;
+    int lb = x->blk_of[inc];
+    const C2Block *bk = &f->blk[lb];
+    const C2Insn *t = &f->in[bk->first + bk->count - 1];
+    if ((uint32_t)inc + 2 != bk->first + bk->count || t->op != C2_BR) return 0; /* GUARD:loop-digit-last */
+    int h = t->t, nlatch = 0;
+    if (!dominates(x, h, lb)) return 0;
+    for (int p = 0; p < f->nblocks; p++)
+        for (int k = 0; k < x->nsucc[p]; k++)
+            if (x->reach[p] && x->succ[p][k] == h && dominates(x, h, p)) nlatch++;
+    if (nlatch != 1 || btest(&r->loop[h], (unsigned)x->blk_of[init])) return 0; /* also implied by check_loops (untagged) */
+    /* the bound: a guard `lt c K` (or `ge c K`) in the loop whose exit side leaves it */
+    int gin = -1;
+    uint64_t K = 0;
+    for (int g = 0; g < f->nblocks && gin < 0; g++) {
+        if (!x->reach[g] || !btest(&r->loop[h], (unsigned)g)) continue;
+        const C2Insn *gt = &f->in[f->blk[g].first + f->blk[g].count - 1];
+        if (gt->op != C2_CBR || gt->t == gt->f) continue;
+        int ci = x->def_insn[gt->a];
+        if (ci < 0 || x->blk_of[ci] != g || f->in[ci].op != C2_CMP || f->in[ci].a != c || !single_const(x, f->in[ci].b, &K)) continue;
+        int in_t = btest(&r->loop[h], gt->t), in_f = btest(&r->loop[h], gt->f);
+        if (f->in[ci].sub == CC_LT && in_t && !in_f) gin = gt->t;
+        if (f->in[ci].sub == CC_GE && in_f && !in_t) gin = gt->f;
+    }
+    return mk4(r, N_LOOP, c, gin, h, gin < 0 ? 0 : K);
+}
+
+static int tree(Rx *r, int reg);
+
+static int combine(Rx *r, uint8_t sub, int A, int B)
+{
+    if (!A || !B) return 0;
+    const Nd *b = &r->nd[B];
+    switch (sub) {
+    case B_ADD: case B_MUL:
+        return mk(r, sub == B_ADD ? N_ADD : N_MUL, A < B ? A : B, A < B ? B : A, 0);
+    case B_DIV: case B_REM:
+        if (b->k != N_CONST || b->v == 0) return 0;
+        if (r->nd[A].k == N_THREAD) {
+            uint64_t K = b->v;
+            if (sub == B_DIV) return K == 1 ? A : K >= r->T ? mk(r, N_CONST, 0, 0, 0) : mk(r, N_HI, 0, 0, K);
+            return K == 1 ? mk(r, N_CONST, 0, 0, 0) : K >= r->T ? A : mk(r, N_LO, 0, 0, K);
+        }
+        return mk(r, sub == B_DIV ? N_DIV : N_REM, A, B, 0);
+    default: return 0;
+    }
+}
+
+static int build_tree(Rx *r, int reg)
+{
+    const Fx *x = r->x;
+    const C2Func *f = x->f;
+    if (f->vt[reg].s != S_U32) return 0;
+    if (reg < f->nparams) return x->ndefs[reg] == 1 ? mk(r, N_INV, reg, 0, 0) : 0;
+    if (x->ndefs[reg] == 2) return loop_digit(r, reg);
+    if (x->ndefs[reg] != 1 || x->def_insn[reg] < 0) return 0;
+    const C2Insn *d = &f->in[x->def_insn[reg]];
+    switch (d->op) {
+    case C2_CONST: return mk(r, N_CONST, 0, 0, d->imm);
+    case C2_MOV: return tree(r, d->a);
+    case C2_GPU:
+        switch (d->sub) {
+        case G_THREAD: return mk(r, N_THREAD, 0, 0, 0);
+        case G_BLOCK: return mk(r, N_BLOCK, 0, 0, 0);
+        case G_BATCH: return mk(r, N_BATCH, 0, 0, 0);
+        default: return mk(r, N_INV, -(int)d->sub, 0, 0); /* blocks, batches */
+        }
+    case C2_BIN: return combine(r, d->sub, tree(r, d->a), tree(r, d->b));
+    default: return 0;
+    }
+}
+
+static int tree(Rx *r, int reg)
+{
+    if (reg < 0 || reg >= r->x->f->nvregs || r->memo[reg] == -2) return 0;
+    if (r->memo[reg] >= 0) return r->memo[reg];
+    r->memo[reg] = -2;
+    int n = build_tree(r, reg);
+    r->memo[reg] = n;
+    return n;
+}
+
+/* The digits of a tree, or -1 when it holds an opaque node. */
+static int digits(const Rx *r, int n, int *ds, int *nd)
+{
+    const Nd *p = &r->nd[n];
+    if (p->k == N_OPAQUE) return -1;
+    if (is_digit(p->k)) {
+        for (int i = 0; i < *nd; i++)
+            if (ds[i] == n) return 0;
+        if (*nd >= RX_DIGITS) return -1;
+        ds[(*nd)++] = n;
+        return 0;
+    }
+    if (p->k >= N_ADD) return digits(r, p->a, ds, nd) || digits(r, p->b, ds, nd) ? -1 : 0;
+    return 0;
+}
+
+static int digit_free(const Rx *r, int n)
+{
+    int ds[RX_DIGITS], nd = 0;
+    return digits(r, n, ds, &nd) == 0 && nd == 0;
+}
+
+/* Two trees share no digit. `rem thread K` and `div thread K` with the same K are the only thread
+ * digits that are independent of each other. */
+static int disjoint(const Rx *r, int a, int b)
+{
+    int da[RX_DIGITS], db[RX_DIGITS], na = 0, nb = 0;
+    if (digits(r, a, da, &na) || digits(r, b, db, &nb)) return 0;
+    for (int i = 0; i < na; i++)
+        for (int j = 0; j < nb; j++) {
+            const Nd *p = &r->nd[da[i]], *q = &r->nd[db[j]];
+            if (da[i] == db[j]) return 0; /* GUARD:disjoint-same */
+            if (thread_digit(p->k) && thread_digit(q->k) &&
+                !(p->v == q->v && ((p->k == N_LO && q->k == N_HI) || (p->k == N_HI && q->k == N_LO)))) /* GUARD:disjoint-thread */
+                return 0;
+        }
+    return 1;
+}
+
+static uint64_t sat_add(uint64_t a, uint64_t b) { return a + b < a ? UINT64_MAX : a + b; }
+static uint64_t sat_mul(uint64_t a, uint64_t b) { return a && b > UINT64_MAX / a ? UINT64_MAX : a * b; }
+
+/* The largest value a tree can hold at block sb, or UINT64_MAX when unknown. */
+static uint64_t maxval(const Rx *r, int n, int sb)
+{
+    const Nd *p = &r->nd[n];
+    switch (p->k) {
+    case N_CONST: return p->v;
+    case N_THREAD: return r->T - 1;
+    case N_LO: return (p->v < r->T ? p->v : r->T) - 1;
+    case N_HI: return (r->T - 1) / p->v;
+    case N_LOOP: /* the counter is below K wherever the guard's loop side dominates */
+        if (p->b >= 0 && dominates(r->x, p->b, sb)) return p->v ? p->v - 1 : 0; /* GUARD:loop-bound */
+        return UINT64_MAX;
+    case N_ADD: return sat_add(maxval(r, p->a, sb), maxval(r, p->b, sb));
+    case N_MUL: return sat_mul(maxval(r, p->a, sb), maxval(r, p->b, sb));
+    case N_DIV: return maxval(r, p->a, sb) / r->nd[p->b].v;
+    case N_REM: { uint64_t m = maxval(r, p->a, sb), k = r->nd[p->b].v - 1; return m < k ? m : k; }
+    default: return UINT64_MAX;
+    }
+}
+
+static int less(const Rx *r, int y, int M, int sb, const Facts *fc)
+{
+    if (r->nd[M].k == N_CONST && maxval(r, y, sb) < r->nd[M].v) return 1;
+    for (int i = 0; i < fc->n; i++)
+        if (fc->lt[i][0] == y && fc->lt[i][1] == M) return 1; /* GUARD:fact-lt */
+    return 0;
+}
+
+/* Different digit values give different indexes. */
+static int injective(const Rx *r, int n, int sb, const Facts *fc)
+{
+    const Nd *p = &r->nd[n];
+    if (is_digit(p->k) || digit_free(r, n)) return 1;
+    if (p->k == N_MUL) {
+        if (r->nd[p->a].k == N_CONST && r->nd[p->a].v) return injective(r, p->b, sb, fc);
+        if (r->nd[p->b].k == N_CONST && r->nd[p->b].v) return injective(r, p->a, sb, fc);
+        return 0;
+    }
+    if (p->k != N_ADD) return 0;
+    for (int o = 0; o < 2; o++) {
+        int m = o ? p->b : p->a, y = o ? p->a : p->b;
+        if (digit_free(r, y)) return injective(r, m, sb, fc);
+        if (r->nd[m].k != N_MUL) continue;
+        for (int q = 0; q < 2; q++) {
+            int a = q ? r->nd[m].b : r->nd[m].a, M = q ? r->nd[m].a : r->nd[m].b;
+            if (!digit_free(r, M)) continue;
+            if (!less(r, y, M, sb, fc)) continue; /* GUARD:inj-less */
+            if (injective(r, a, sb, fc) && injective(r, y, sb, fc) && disjoint(r, a, y)) return 1;
+        }
+    }
+    return 0;
+}
+
+/* A loop digit means "this iteration" only inside its loop. */
+static int loops_hold(const Rx *r, int n, int sb)
+{
+    int ds[RX_DIGITS], nd = 0;
+    if (digits(r, n, ds, &nd)) return 0;
+    for (int i = 0; i < nd; i++) {
+        const Nd *p = &r->nd[ds[i]];
+        if (p->k == N_LOOP && !btest(&r->loop[p->h], (unsigned)sb)) return 0; /* GUARD:loop-digit-site */
+    }
+    return 1;
+}
+
+static void add_cond(Rx *r, int reg, int pol, int sb, Facts *fc, int depth)
+{
+    const Fx *x = r->x;
+    const C2Func *f = x->f;
+    if (depth > 32 || reg < 0 || x->ndefs[reg] != 1 || x->def_insn[reg] < 0) return;
+    const C2Insn *d = &f->in[x->def_insn[reg]];
+    if (d->op == C2_MOV) { add_cond(r, d->a, pol, sb, fc, depth + 1); return; }
+    if (d->op == C2_UN && d->sub == U_LNOT) { add_cond(r, d->a, !pol, sb, fc, depth + 1); return; }
+    if (d->op == C2_BIN && d->sub == (pol ? B_AND : B_OR)) {
+        add_cond(r, d->a, pol, sb, fc, depth + 1);
+        add_cond(r, d->b, pol, sb, fc, depth + 1);
+        return;
+    }
+    if (d->op != C2_CMP || f->vt[d->a].s != S_U32) return; /* trees are u32 only, so also implied (untagged) */
+    int A = tree(r, d->a), B = tree(r, d->b);
+    if (!A || !B) return;
+    /* a fact about a loop digit holds only when the compare runs in that loop's same iteration */
+    if (!loops_hold(r, A, x->blk_of[x->def_insn[reg]]) || !loops_hold(r, B, x->blk_of[x->def_insn[reg]])) return;
+    uint8_t cc = d->sub;
+    if (!pol) cc = cc == CC_GE ? CC_LT : cc == CC_LE ? CC_GT : cc == CC_NE ? CC_EQ : 0;
+    if ((cc == CC_LT || cc == CC_GT) && fc->n < RX_FACTS) {
+        fc->lt[fc->n][0] = cc == CC_LT ? A : B;
+        fc->lt[fc->n][1] = cc == CC_LT ? B : A;
+        fc->n++;
+    }
+    if (cc == CC_EQ && fc->nfix < RX_FACTS) {
+        if (r->nd[A].k == N_CONST) { int t = A; A = B; B = t; }
+        if (r->nd[B].k == N_CONST && is_digit(r->nd[A].k) && r->nd[A].k != N_LOOP) {
+            fc->fix[fc->nfix] = A;
+            fc->fixv[fc->nfix++] = r->nd[B].v;
+        }
+    }
+}
+
+/* Facts at block sb: the condition of every branch side that has the branch as its only
+ * predecessor and dominates sb. */
+static void facts_at(Rx *r, int sb, Facts *fc)
+{
+    const Fx *x = r->x;
+    const C2Func *f = x->f;
+    memset(fc, 0, sizeof *fc);
+    for (int g = 0; g < f->nblocks; g++) {
+        if (!x->reach[g]) continue;
+        const C2Insn *t = &f->in[f->blk[g].first + f->blk[g].count - 1];
+        if (t->op != C2_CBR || t->t == t->f) continue;
+        for (int side = 0; side < 2; side++) {
+            int s = side ? t->f : t->t;
+            if (r->npred[s] != 1) continue; /* GUARD:fact-single-pred */
+            if (!dominates(x, s, sb)) continue; /* GUARD:fact-dom */
+            add_cond(r, t->a, !side, sb, fc, 0);
+        }
+    }
+}
+
+/* digits(E) plus the digits both accesses fix to the same number cover `thread`, and `block` /
+ * `batch` when asked. */
+static int covers(const Rx *r, int E, const Facts *a, const Facts *b, int want_block, int want_batch)
+{
+    int ds[RX_DIGITS + 2 * RX_FACTS], nd = 0;
+    if (digits(r, E, ds, &nd)) return 0;
+    for (int i = 0; i < a->nfix; i++)
+        for (int j = 0; j < b->nfix; j++)
+            if (a->fix[i] == b->fix[j] && a->fixv[i] == b->fixv[j]) ds[nd++] = a->fix[i]; /* GUARD:cover-fixed */
+    int th = 0, bl = !want_block, ba = !want_batch;
+    for (int i = 0; i < nd; i++) {
+        const Nd *p = &r->nd[ds[i]];
+        if (p->k == N_THREAD) th = 1;
+        if (p->k == N_BLOCK) bl = 1;
+        if (p->k == N_BATCH) ba = 1;
+        if (p->k == N_LO)
+            for (int j = 0; j < nd; j++)
+                if (r->nd[ds[j]].k == N_HI && r->nd[ds[j]].v == p->v) th = 1; /* GUARD:cover-lohi */
+    }
+    return th && bl && ba;
+}
+
+typedef struct { uint32_t i; int ref, E, sb, store; uint64_t mask; Facts fc; } Acc;
+
+static int race_pair(Rx *r, const Acc *p, const Acc *q, const char *rule, int wb, int wa)
+{
+    const Fx *x = r->x;
+    if (!p->E || p->E != q->E) /* GUARD:race-same */
+        return fail(x->v, rule, x->fi, (int)q->i, "v%d is accessed at two different indexes (insns %u and %u)", p->ref, p->i, q->i);
+    if (!injective(r, q->E, q->sb, &q->fc)) /* GUARD:race-inj */
+        return fail(x->v, rule, x->fi, (int)q->i, "the index of v%d is not one-to-one", q->ref);
+    if (!loops_hold(r, q->E, q->sb)) /* GUARD:race-loop */
+        return fail(x->v, rule, x->fi, (int)q->i, "a loop counter is used as an index outside its loop");
+    if (!covers(r, q->E, &p->fc, &q->fc, wb, wa)) /* GUARD:race-cover */
+        return fail(x->v, rule, x->fi, (int)q->i, "two threads can reach the same element of v%d", q->ref);
+    return 0;
+}
+
+static int kernel_races(Fx *x)
+{
+    const C2Func *f = x->f;
+    Rx *r = calloc(1, sizeof *r);
+    Acc *acc = calloc(f->ninsns, sizeof *acc);
+    int rc = -1, na = 0;
+    if (!r || !acc) { fail(x->v, "C2-RESOURCE", x->fi, -1, "out of memory"); goto out; }
+    r->x = x;
+    r->T = f->threads;
+    r->nn = 1; /* node 0 is the opaque tree */
+    for (int i = 0; i < f->nvregs; i++) r->memo[i] = -1;
+    for (int p = 0; p < f->nblocks; p++)
+        for (int k = 0; k < x->nsucc[p]; k++)
+            if (x->reach[p]) r->npred[x->succ[p][k]]++;
+    for (int h = 0; h < f->nblocks; h++) { /* natural loops, as check_loops builds them */
+        int st[C2_MAX_BLOCKS], n = 0;
+        for (int p = 0; p < f->nblocks; p++)
+            for (int k = 0; k < x->nsucc[p]; k++)
+                if (x->reach[p] && x->succ[p][k] == h && dominates(x, h, p) && !btest(&r->loop[h], (unsigned)p)) {
+                    bset(&r->loop[h], (unsigned)p);
+                    st[n++] = p;
+                }
+        if (!n) continue;
+        bset(&r->loop[h], (unsigned)h);
+        while (n) {
+            int b = st[--n];
+            for (int p = 0; p < f->nblocks; p++) {
+                if (!x->reach[p] || btest(&r->loop[h], (unsigned)p)) continue;
+                for (int k = 0; k < x->nsucc[p]; k++)
+                    if (x->succ[p][k] == b) { bset(&r->loop[h], (unsigned)p); st[n++] = p; break; }
+            }
+        }
+    }
+    /* phases: bit 0 is the kernel start, bit k the k-th sync line */
+    static uint64_t pin[C2_MAX_BLOCKS], pout[C2_MAX_BLOCKS];
+    uint32_t syncno[C2_MAX_SYNCS + 1];
+    int nsync = 0;
+    for (uint32_t i = 0; i < f->ninsns; i++)
+        if (f->in[i].op == C2_SYNC && nsync < C2_MAX_SYNCS) syncno[++nsync] = i;
+    memset(pout, 0, sizeof pout);
+    for (int changed = 1; changed;) {
+        changed = 0;
+        for (int b = 0; b < f->nblocks; b++) {
+            if (!x->reach[b]) continue;
+            uint64_t m = b == 0 ? 1 : 0;
+            for (int p = 0; p < f->nblocks; p++)
+                for (int k = 0; k < x->nsucc[p]; k++)
+                    if (x->reach[p] && x->succ[p][k] == b) m |= pout[p];
+            pin[b] = m;
+            for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count; i++)
+                if (f->in[i].op == C2_SYNC)
+                    for (int s = 1; s <= nsync; s++)
+                        if (syncno[s] == i) m = 1ull << s; /* GUARD:phase-sync */
+            if (m != pout[b]) { pout[b] = m; changed = 1; }
+        }
+    }
+    int want_block = 0, want_batch = 0;
+    for (uint32_t i = 0; i < f->ninsns; i++) {
+        const C2Insn *in = &f->in[i];
+        if (in->op == C2_GPU && in->sub == G_BLOCK) want_block = 1;
+        if (in->op == C2_GPU && in->sub == G_BATCH) want_batch = 1;
+    }
+    for (int b = 0; b < f->nblocks; b++) {
+        if (!x->reach[b]) continue;
+        uint64_t m = pin[b];
+        for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count; i++) {
+            const C2Insn *in = &f->in[i];
+            if (in->op == C2_SYNC)
+                for (int s = 1; s <= nsync; s++)
+                    if (syncno[s] == i) m = 1ull << s;
+            if (in->op != C2_LOAD && in->op != C2_STORE && in->op != C2_GLOAD && in->op != C2_GSTORE) continue;
+            /* a shared array register is defined once and never copied (C2-GPU-SHARED, bindable), and a
+             * buffer register is a parameter never written, so the register names the array */
+            int ref = in->a;
+            Acc *a = &acc[na++];
+            a->i = i; a->ref = ref; a->sb = b; a->mask = m;
+            a->store = in->op == C2_STORE || in->op == C2_GSTORE;
+            a->E = tree(r, in->b);
+            facts_at(r, b, &a->fc);
+        }
+    }
+    for (int p = 0; p < na; p++)
+        for (int q = p; q < na; q++) {
+            const Acc *A = &acc[p], *B = &acc[q];
+            if (A->ref != B->ref || !(A->store || B->store)) continue;
+            int shared = f->in[A->i].op == C2_LOAD || f->in[A->i].op == C2_STORE;
+            if (shared) {
+                if (!(A->mask & B->mask)) continue; /* GUARD:phase-apart */
+                if (race_pair(r, A, B, "C2-GPU-SHARED-RACE", 0, 0) || race_pair(r, B, A, "C2-GPU-SHARED-RACE", 0, 0)) goto out;
+            } else if (race_pair(r, A, B, "C2-GPU-GLOBAL-RACE", want_block, want_batch) ||
+                       race_pair(r, B, A, "C2-GPU-GLOBAL-RACE", want_block, want_batch))
+                goto out;
+        }
+    rc = 0;
+out:
+    free(acc);
+    free(r);
+    return rc;
 }
 
 /* ------------------------------------------------------------------ ownership flow */

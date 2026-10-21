@@ -1,0 +1,12 @@
+{"functions": [
+  {"name": "fixed_mismatch", "kind": "kernel", "threads": 64,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "u32", "u32", "u32", "u32", "bool", "bool"],
+   "blocks": [
+    [{"op": "thread", "dst": 2}, {"op": "const", "dst": 3, "value": 32}, {"op": "rem", "dst": 4, "a": 2, "b": 3}, {"op": "div", "dst": 5, "a": 2, "b": 3}, {"op": "const", "dst": 6, "value": 0}, {"op": "const", "dst": 7, "value": 1}, {"op": "eq", "dst": 8, "a": 4, "b": 6}, {"op": "cbr", "cond": 8, "then": 1, "else": 2}],
+    [{"op": "gstore", "buf": 0, "index": 5, "value": 2}, {"op": "br", "to": 2}],
+    [{"op": "eq", "dst": 9, "a": 4, "b": 7}, {"op": "cbr", "cond": 9, "then": 3, "else": 4}],
+    [{"op": "gstore", "buf": 0, "index": 5, "value": 2}, {"op": "br", "to": 4}],
+    [{"op": "ret"}]
+   ]}
+]}

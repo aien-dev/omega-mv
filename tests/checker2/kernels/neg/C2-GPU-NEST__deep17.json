@@ -1,0 +1,26 @@
+{"functions": [
+  {"name": "deep17", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool", "bool"],
+   "blocks": [
+    [{"op": "thread", "dst": 2}, {"op": "const", "dst": 3, "value": 100}, {"op": "lt", "dst": 4, "a": 2, "b": 3}, {"op": "cbr", "cond": 4, "then": 1, "else": 18}],
+    [{"op": "lt", "dst": 5, "a": 2, "b": 3}, {"op": "cbr", "cond": 5, "then": 2, "else": 18}],
+    [{"op": "lt", "dst": 6, "a": 2, "b": 3}, {"op": "cbr", "cond": 6, "then": 3, "else": 18}],
+    [{"op": "lt", "dst": 7, "a": 2, "b": 3}, {"op": "cbr", "cond": 7, "then": 4, "else": 18}],
+    [{"op": "lt", "dst": 8, "a": 2, "b": 3}, {"op": "cbr", "cond": 8, "then": 5, "else": 18}],
+    [{"op": "lt", "dst": 9, "a": 2, "b": 3}, {"op": "cbr", "cond": 9, "then": 6, "else": 18}],
+    [{"op": "lt", "dst": 10, "a": 2, "b": 3}, {"op": "cbr", "cond": 10, "then": 7, "else": 18}],
+    [{"op": "lt", "dst": 11, "a": 2, "b": 3}, {"op": "cbr", "cond": 11, "then": 8, "else": 18}],
+    [{"op": "lt", "dst": 12, "a": 2, "b": 3}, {"op": "cbr", "cond": 12, "then": 9, "else": 18}],
+    [{"op": "lt", "dst": 13, "a": 2, "b": 3}, {"op": "cbr", "cond": 13, "then": 10, "else": 18}],
+    [{"op": "lt", "dst": 14, "a": 2, "b": 3}, {"op": "cbr", "cond": 14, "then": 11, "else": 18}],
+    [{"op": "lt", "dst": 15, "a": 2, "b": 3}, {"op": "cbr", "cond": 15, "then": 12, "else": 18}],
+    [{"op": "lt", "dst": 16, "a": 2, "b": 3}, {"op": "cbr", "cond": 16, "then": 13, "else": 18}],
+    [{"op": "lt", "dst": 17, "a": 2, "b": 3}, {"op": "cbr", "cond": 17, "then": 14, "else": 18}],
+    [{"op": "lt", "dst": 18, "a": 2, "b": 3}, {"op": "cbr", "cond": 18, "then": 15, "else": 18}],
+    [{"op": "lt", "dst": 19, "a": 2, "b": 3}, {"op": "cbr", "cond": 19, "then": 16, "else": 18}],
+    [{"op": "lt", "dst": 20, "a": 2, "b": 3}, {"op": "cbr", "cond": 20, "then": 17, "else": 18}],
+    [{"op": "ret"}],
+    [{"op": "ret"}]
+   ]}
+]}

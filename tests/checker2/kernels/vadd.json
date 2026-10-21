@@ -1,0 +1,10 @@
+{"functions": [
+  {"name": "vadd", "kind": "kernel", "threads": 256,
+   "params": ["gview:f32", "u32", "gview:f32", "u32", "gedit:f32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "u32", "u32", "u32", "bool", "f32", "f32", "f32"],
+   "blocks": [
+    [{"op": "block", "dst": 6}, {"op": "const", "dst": 7, "value": 256}, {"op": "thread", "dst": 8}, {"op": "mul", "dst": 9, "a": 6, "b": 7}, {"op": "add", "dst": 10, "a": 9, "b": 8}, {"op": "lt", "dst": 11, "a": 10, "b": 5}, {"op": "cbr", "cond": 11, "then": 1, "else": 2}],
+    [{"op": "gload", "dst": 12, "buf": 0, "index": 10}, {"op": "gload", "dst": 13, "buf": 2, "index": 10}, {"op": "add", "dst": 14, "a": 12, "b": 13}, {"op": "gstore", "buf": 4, "index": 10, "value": 14}, {"op": "br", "to": 2}],
+    [{"op": "ret"}]
+   ]}
+]}
