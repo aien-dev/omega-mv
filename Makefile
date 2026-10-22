@@ -4,6 +4,7 @@ PHYSICS_DIR ?= ../physics
 OUT_DIR ?= build
 # GPU implementation is an exact, prepared CUDApp dependency; no source fallback.
 CUDAPP_DIR ?= $(if $(wildcard ../CUDApp/src),../CUDApp,build/cudapp)
+override CUDAPP_DRIVER_DIR := $(CUDAPP_DIR)
 GPU_PROD_TARGET ?= build/omegatool
 CUDAPP_LINK := $(shell tools/cudapp-link.sh "$(CUDAPP_DIR)" >&2 || echo FAIL)
 ifneq ($(CUDAPP_LINK),)
@@ -13,11 +14,11 @@ endif
 PHYSICS_LOCK_CHECK ?= 1
 
 CFLAGS ?= -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc \
-	-I$(PHYSICS_DIR)/m16 -I$(PHYSICS_DIR)/nvrm \
-	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc \
-	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/kernel-open/common/inc \
-	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm \
-	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include
+	-I$(CUDAPP_DRIVER_DIR)/m16 -I$(CUDAPP_DRIVER_DIR)/nvrm \
+	-I$(CUDAPP_DRIVER_DIR)/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc \
+	-I$(CUDAPP_DRIVER_DIR)/third_party/nvidia-open-580.173.02/kernel-open/common/inc \
+	-I$(CUDAPP_DRIVER_DIR)/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm \
+	-I$(CUDAPP_DRIVER_DIR)/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include
 
 SRCS = src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c \
 	src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_exec.c \
@@ -27,7 +28,7 @@ SRCS = src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c 
 	src/omega_vector.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
 	src/omega_blackwell_realize.c src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_gates.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c src/omega_gpu_fmt.c src/omega_gpu_matmul_api.c src/omega_gpu_elementwise_api.c src/omega_gpu_attention_api.c src/omega_gpu_serving.c src/omega_world_gates.c src/omega_gpu_wait.c \
 	src/omega_evidence.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
+	$(CUDAPP_DRIVER_DIR)/m16/m16_native.c $(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c \
 	tools/omegatool.c
 # OWN-30B cut 2 (2026-10-13): column windows over a resident bf16 tensor for the MoE path. New file,
 # adds exports only (8B decode-speed lane collision rule: no existing GPU source moves).
@@ -124,10 +125,10 @@ $(OUT_DIR):
 $(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
+$(OUT_DIR)/m16_native.o: $(CUDAPP_DRIVER_DIR)/m16/m16_native.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c | $(OUT_DIR)
+$(OUT_DIR)/nvrm.o: $(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OUT_DIR)/crumbline/%.o: src/crumbline/%.c | $(OUT_DIR)
@@ -686,7 +687,7 @@ RX_R12_SILICON_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c \
 	src/runtime/rx_resident_gpu.c src/sha256.c src/omega_evidence.c \
 	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
 	src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
+	$(CUDAPP_DRIVER_DIR)/m16/m16_native.c $(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c \
 	tests/runtime/rx_r12_silicon.c
 RX_R12_SILICON = $(OUT_DIR)/rx_r12_silicon_test
 
@@ -755,7 +756,7 @@ RX_R13_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c \
 RX_R13_TEST_SRCS = $(RX_R13_SRCS) $(RX_FABRIC_TEST_SRCS)
 RX_R13_SILICON_EXTRA = src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
 	src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c
+	$(CUDAPP_DRIVER_DIR)/m16/m16_native.c $(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c
 # Production program (rules after the ARGUS block below: they link ARGUS).
 RX_R13_HOST = $(OUT_DIR)/rx_r13_living_host
 RX_R13_SILICON = $(OUT_DIR)/rx_r13_living_silicon
@@ -825,13 +826,13 @@ $(RX_R14_HOST): $(RX_R14_SRCS) src/runtime/rx_living.h $(RX_COMPOSE_LIVING_CHECK
 $(RX_R14_SILICON): $(RX_R14_SRCS) src/runtime/rx_resident_gpu.c \
 	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
 	src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
+	$(CUDAPP_DRIVER_DIR)/m16/m16_native.c $(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c \
 	$(AIENOS_CAP_LIB) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -DR14_SILICON -pthread -o $@ $(RX_R14_SRCS) \
 		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
 		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
-		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB) -ldl -lm
+		src/omega_blackwell_matmul.c $(CUDAPP_DRIVER_DIR)/m16/m16_native.c \
+		$(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB) -ldl -lm
 
 test-r14-host: $(RX_R14_HOST)
 	./$(RX_R14_HOST)
@@ -861,7 +862,7 @@ RX_R15_RIG_HDRS = src/runtime/rx_living.h src/runtime/rx_seq_reference.h \
 	src/runtime/rx_world.h tests/runtime/rx_r15_rig.h
 RX_R15_GPU_SRCS = src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
 	src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-	src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c
+	src/omega_blackwell_matmul.c $(CUDAPP_DRIVER_DIR)/m16/m16_native.c $(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c
 RX_R15_PARITY_HOST = $(OUT_DIR)/rx_r15_parity_host
 RX_R15_PARITY_SILICON = $(OUT_DIR)/rx_r15_parity_silicon
 
@@ -1014,8 +1015,8 @@ test-r16-authpath-silicon: $(RX_R13_SILICON) $(RX_R14_SILICON)
 		$(OUT_DIR)/r16/authpath/silicon-$(R16_STAMP) $(RX_R13_SRCS) $(RX_PROD_ARGUS_SRCS) \
 		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
 		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
-		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB)
+		src/omega_blackwell_matmul.c $(CUDAPP_DRIVER_DIR)/m16/m16_native.c \
+		$(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB)
 
 # R16-G3 checks 1-3 only (sources, link map, shared libraries, embedded names)
 # on the current living-system build, for CI runners. Nothing is executed, so
@@ -1032,8 +1033,8 @@ test-r16-authpath-linkmap-silicon: $(RX_R13_SILICON) $(RX_R14_SILICON)
 		$(OUT_DIR)/r16/authpath/linkmap-silicon-$(R16_STAMP) $(RX_R13_SRCS) $(RX_PROD_ARGUS_SRCS) \
 		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
 		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
-		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB)
+		src/omega_blackwell_matmul.c $(CUDAPP_DRIVER_DIR)/m16/m16_native.c \
+		$(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB)
 
 # R16-G4: legacy paths cannot bypass authority. The R13 body (R15 rig, RES-4,
 # host seat) is started; a legacy context tries six acts and each must be
@@ -1868,7 +1869,7 @@ RX_COMPOSE_GATE_GPU = $(OUT_DIR)/rx_composition_gate_gpu
 RX_COMPOSE_GPU_SRCS = src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_matmul.c \
 	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
 	src/omega_blackwell_realize.c src/omega_vector.c src/omega_validate.c src/omega_gpu_wait.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c
+	$(CUDAPP_DRIVER_DIR)/m16/m16_native.c $(CUDAPP_DRIVER_DIR)/nvrm/nvrm.c
 
 $(RX_COMPOSE_GATE_GPU): $(RX_COMPOSE_DEPS) $(RX_COMPOSE_GPU_SRCS) tests/runtime/rx_composition_gate.c \
 	tests/runtime/rx_compose_gpu_skill.h | check-physics-lock $(OUT_DIR)
