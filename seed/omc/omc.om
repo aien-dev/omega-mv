@@ -39,6 +39,13 @@ global fn_nmlen ulong 512
 global fn_off ulong 512
 global nf ulong 1
 global lastfn ulong 1
+global scanning ulong 1
+global ncalls ulong 1
+global callsite ulong 65536
+global callfrom ulong 65536
+global callto ulong 65536
+global settled uchar 512
+
 
 note ---- compiler state ----
 global npar ulong 1
@@ -905,8 +912,8 @@ end
 end
 
 note cset: CSET Xr, cond = CSINC Xr, XZR, XZR, opposite cond (C6.2.141)
-fn cset r ulong cond ulong to void
-emit or or 2594113504 r shl xor cond 1 12
+fn cset r ulong cc ulong to void
+emit or or 2594113504 r shl xor cc 1 12
 end
 
 note force: put a value (kind 1 register, 3 number, 4 flags) in register r; a bare number is error 11
@@ -1441,6 +1448,15 @@ end
 
 note ca_bl: BL to function f (index + 1), C6.2.43
 fn ca_bl f ulong to void
+n = get ncalls 0
+if ge n 65536
+fail 14
+end
+put callsite n get oc 0
+put callfrom n get curfn 0
+put callto n f
+put ncalls 0 add n 1
+
 emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
 end
 
@@ -2294,6 +2310,8 @@ fail 16
 end
 l = get tl 0
 s = get ts 0
+f = ulong 0
+if eq get scanning 0 1
 newname w l s
 f = get nf 0
 if ge f 512
@@ -2308,6 +2326,12 @@ put fn_ret f 0
 put fn_np f 0
 put fn_nmlen f l
 put fn_off f s
+else
+f = sub findfn w l s 1
+put curfn 0 add f 1
+put lastfn 0 add f 1
+put fn_addr f get oc 0
+end
 put nn 0 get nglob 0
 np = ulong 0
 go = true
@@ -2339,6 +2363,10 @@ np = add np 1
 end
 end
 fn_to f np
+if eq get scanning 0 1
+put curret 0 0
+put nn 0 0
+end
 end
 
 note s_ret: ret [value]: the value into X0, give back the local arrays' stack, RET. om4 S_RET.
@@ -2828,13 +2856,60 @@ end
 
 note s_eof: end of input: no open function (error 15), some function (16); function mode: no globals or
 note texts (9); one function: its bare words; more: the entry word, a B to the last function. om4 S_EOF.
+note Resolve every call after all addresses are known. In function mode remove leaves of the call
+note graph; any functions left after nf rounds form or reach a cycle (error 9).
+fn resolve to void
+n = get ncalls 0
+i = ulong 0
+while lt i n
+s = get callsite i
+f = sub get callto i 1
+wrword s or 2483027968 and shr sub get fn_addr f s 2 67108863
+i = add i 1
+end
+if eq get progmode 0 0
+pass = ulong 0
+while lt pass get nf 0
+f = ulong 0
+while lt f get nf 0
+if eq get settled f 0
+ok = true
+i = ulong 0
+while and ok lt i n
+if eq get callfrom i add f 1
+if eq get settled sub get callto i 1 0
+ok = false
+end
+end
+i = add i 1
+end
+if ok
+put settled f 1
+end
+end
+f = add f 1
+end
+pass = add pass 1
+end
+f = ulong 0
+while lt f get nf 0
+if eq get settled f 0
+fail 9
+end
+f = add f 1
+end
+end
+end
+
 fn s_eof to void
+
 if ne get curret 0 0
 fail 15
 end
 if eq get nf 0 0
 fail 16
 end
+resolve
 if ne get progmode 0 0
 eof_prog
 end
@@ -3060,7 +3135,42 @@ end
 end
 end
 
-note main: read all of stdin (8 MiB at most, error 14; a read error is 1), find the mode, then one
+note First collect signatures. Only fn headers are parsed here; other lines are read in the body pass.
+fn namescan to void
+put scanning 0 1
+put line 0 1
+go = true
+while go
+n = ulong 0
+while and go lt n 999999
+tok
+if eq get tk 0 3
+go = false
+else
+if ne get tk 0 0
+if and eq get tk 0 1 eq get tw 0 28262
+s_fn
+else
+skipnl
+end
+end
+end
+n = add n 1
+end
+end
+put scanning 0 0
+put cur 0 0
+put line 0 1
+put nn 0 0
+put curfn 0 0
+put curret 0 0
+put npar 0 0
+put nslot 0 0
+put held 0 0
+end
+
+note main: read all of stdin
+note (8 MiB at most, error 14; a read error is 1), find the mode, then one
 note statement per line from output byte 180 (om4 START .. STMT)
 fn main to int
 off = ulong 0
@@ -3085,6 +3195,7 @@ end
 end
 put inlen 0 off
 prescan
+namescan
 put oc 0 180
 put line 0 1
 done = false

@@ -405,9 +405,13 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 
 ### 9.2 Functions and calls
 
-- `fn` may appear many times. A call names a function written earlier, or, in program mode, the function
-  it is in (recursion). In function mode a function cannot call itself (error 9), so the stack a call
-  chain uses is bounded by the order of the functions. (s.5 fm5, s.6 fib, s.7)
+- `fn` may appear many times. A names pass reads every signature before any code is written, so a call
+  names any function in the unit, earlier or later. A name that is a function never becomes a new
+  scalar: a value-returning function used as a statement is error 7, including `name = value`.
+  (s.6 r5b_fwd, r5b_assign, r5b_fwd_fm)
+- In program mode a function may call itself, and two functions may call each other. In function mode
+  a call cycle, including a function calling itself, is error 9, so the stack a call chain uses is
+  bounded. (s.6 fib, r5b_mut, r5b_cycle, s.7)
 - `<function> <args>` as a value calls a function that returns a value; as a line it calls a void one.
   Using the one where the other is needed is error 7. (s.7)
 - `to void` makes a void function; `ret` with no value returns from it, and so does reaching its `end`.

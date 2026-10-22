@@ -67,7 +67,7 @@ save	126
 loadarg	71
 basearg	62
 restore	203
-ca_bl	47
+ca_bl	99
 elemaddr	326
 aa_word	57
 arrarg	404
@@ -95,7 +95,7 @@ s_assign	429
 s_name	114
 fn_p	342
 fn_to	187
-s_fn	488
+s_fn	553
 s_ret	130
 s_exit	95
 stel	56
@@ -115,10 +115,12 @@ s_end	238
 writeout	118
 elfhdr	173
 eof_prog	270
-s_eof	121
+resolve	205
+s_eof	128
 stmt	392
 skipbl	55
 skipln	50
 ps_at	119
 prescan	119
-main	197
+namescan	162
+main	208

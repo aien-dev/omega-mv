@@ -122,13 +122,15 @@ it came from.
 ## Rung 4: om4, the systems words a compiler needs (done)
 
 - `rung4/om4.s`: om3 grown, feature by feature, into a translator that can build a real program. It is
-  about 4,000 lines in asm2's language, built by asm2 (13,736 bytes, `rung4/om4.bin`); `rung4/table4.s2`
+  about 4,000 lines in asm2's language, built by asm2 (14,224 bytes, `rung4/om4.bin`); `rung4/table4.s2`
   adds 3 instruction lines for om4's own use, each naming its manual section; `rung4/mk4.sh` writes the
   file's own size into its header (asm2 cannot add up sizes).
 - What it adds, and why each one is needed (every new word is used by the Omega compiler of rung R5 or
   by the test programs):
-  - many functions, calls and recursion (a compiler is many small jobs; reading nested values is a
-    function that calls itself);
+  - many functions, and a names pass so a call may name any function in the unit, earlier or
+    later (a later function is a call, never a new scalar). Program mode may recurse mutually.
+    Function mode refuses a call cycle, including a function calling itself, as error 9;
+
   - whole programs: a source with `fn main` comes out as a complete Linux program, file header laid
     out by hand, no linker; it runs, reads its input, writes its output and exits;
   - fixed pools (`global`): memory for the source text, the tables and the output, sized when the
@@ -152,8 +154,8 @@ it came from.
     overflow, division by zero traps, a bad index traps, running out of stack traps; the spec has no
     "undefined" in it (the gate checks with a search);
   - no automatic conversions: mixing two types in one operation is refused.
-- Checks (`rung4/gate4.sh`, results in `evidence/SEED-0/rung4/`), 208 cases, all pass:
-  - asm2 rebuilds om4 to the same bytes; objdump (the referee) reads all 3,048 instructions back to
+- Checks (`rung4/gate4.sh`, results in `evidence/SEED-0/rung4/`), 217 cases, all pass:
+  - asm2 rebuilds om4 to the same bytes; objdump (the referee) reads all 3,170 instructions back to
     what `om4.s` says (0 disagreements); five planted mistakes in the text are each caught;
   - the 10 practice tasks: om4 makes exactly the same machine words as om3, and the same results as the
     C path (80 inputs) and the expected answers;
@@ -203,22 +205,30 @@ it came from.
 
 ## Rung R5: omc, the Omega compiler written in Omega (done)
 
+- Born from the seed, not from C: `make omega-from-seed` (or `sh seed/omega-from-seed.sh`) turns
+  the hand-written `seed0.hex` into seed0 with the one named outside step (`load0.sh`, POSIX printf),
+  then seed0 builds hex1, hex1 builds asm2, asm2 builds om4, om4 builds omc, and omc builds itself
+  twice. The two self-builds must be the same bytes. The compiler is left at `seed/out/omc`, with
+  its sha256 beside it. That file is the Omega compiler. Nothing in that path is C.
+
 - `omc/omc.om`: the compiler itself, written in Omegese, using only words om4 understands. It reads a
   program on its input and writes a ready-to-run Linux program (or, without `fn main`, bare machine
-  words) on its output, with the file header laid out by hand and no linker. 3,101 lines, 123 functions.
+  words) on its output, with the file header laid out by hand and no linker. 3,212 lines, 125 functions.
+  `omc/genkw.awk` once wrote the keyword chain into `omc.om`; the committed `omc.om` is the source,
+  and the seed path does not run awk.
 - It is meant to do exactly what om4 does, word for word: the same machine words, the same error
   numbers, on the same line. That is on purpose: om4 then becomes a strict referee for omc, because any
   difference at all is a mistake. It is checked on every input listed below, not on every possible one.
-- How it is built: om4 translates `omc.om` into a program (stage 1, 74,740 bytes). Stage 1 then
+- How it is built: om4 translates `omc.om` into a program (stage 1, 76,748 bytes). Stage 1 then
   translates `omc.om` again (stage 2), and stage 2 translates it a third time (stage 3).
 - The few places where the language shaped the design:
-  - a function may only call functions written above it, or itself. So reading a value (which
-    contains values, which contain values...) is one function that calls itself;
+  - a names pass reads every signature first, so a call may name a function written later.
+    Reading a value is still one function that calls itself, because a value contains values;
   - every working number is kept as a plain 64-bit value, because the language refuses mixed types;
   - every loop over the input is two loops inside each other. A single loop stops itself after a
     million passes, and om4 has no such limit on input size.
-- Checks (`omc/gate5.sh`, results in `evidence/SEED-0/omc/`), 167 cases, all pass:
-  - (a) self-rebuild: stages 1, 2 and 3 are the same file (sha256 10d75652...398e), so omc translates
+- Checks (`omc/gate5.sh`, results in `evidence/SEED-0/omc/`), 177 cases, all pass:
+  - (a) self-rebuild: stages 1, 2 and 3 are the same file (sha256 191b776e...98e9), so omc translates
     itself the same way om4 translates it;
   - (b) a second route: the C path (the older compiler written in C) cannot read `omc.om`. It lacks
     global pools, a function calling itself, arrays over 64 cells, text, `read`/`write`, `exit`, and a
@@ -226,8 +236,8 @@ it came from.
     these and requires the refusal to name that word, so it notices if the C path learns one. So, as the brief allows, the two parents
     are om4 and omc itself: both build the same omc. This is weaker than a truly independent route,
     because one author designed both;
-  - om4 and stage 2 agree on 143 inputs: every input gate4 gives om4, every Omegese file in the repo,
-    and `omc.om`. They agree on output, exit status, and the error number and line of all 53 refusals;
+  - om4 and stage 2 agree on 153 inputs: every input gate4 gives om4, every Omegese file in the repo,
+    and `omc.om`. They agree on output, exit status, and the error number and line of all 57 refusals;
   - what that list missed, found by an outside review: no program in it wrote out a text successfully,
     and error numbers 1, 2, 4, 11, 12, 13 and 14 never came up. Now a program writes a text with every
     escape and must give fixed bytes and a fixed exit value (204, worked out by hand, not taken from om4),
@@ -235,7 +245,7 @@ it came from.
     comes up somewhere, from both om4 and omc;
   - the next-word fuzz (decision 22, below): om4 and omc give the same answer on 4,860 cut or altered
     programs;
-  - (c) the whole of gate4 run with stage 2 in om4's place passes (108 checks): the 10 practice tasks
+  - (c) the whole of gate4 run with stage 2 in om4's place passes (116 checks): the 10 practice tasks
     and 9 programs give the C path's results and traps; the 4 whole programs match their gcc-built
     twins; its refusals give the same numbers. Table: `evidence/SEED-0/omc/corpus-words.tsv`;
   - (d) planted mistakes. A changed word that omc itself uses (`or` made into `and`) breaks the
@@ -246,7 +256,7 @@ it came from.
   - the output does not change with the run: same bytes under another environment and a second later.
 - Size and speed (`size.tsv`, `size-history.tsv`, `omc-words.tsv`, `compile-time.tsv` in `evidence/SEED-0/omc/`;
   `size-history.tsv` gets one row per self-rewrite, and the gate fails if the current omc has no row):
-  - omc is 18,641 machine words; the largest functions are the value reader (2,073 words) and local
+  - omc is 19,143 machine words; the largest functions are the value reader (2,073 words) and local
     arrays (695);
   - on the programs the C path can also translate, omc makes the same words as om4. The 10 practice
     tasks take 164 words (C path 600); the 9 others take 267 (C path 552). The one larger than the C

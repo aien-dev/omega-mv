@@ -5,13 +5,17 @@
 ; - function mode (no `fn main`): the functions' words only, entry = word 0, to be called under the OSC-1
 ;   native rules (docs/osc/OSC-1-DESIGN.md section 7): parameters in x0..x5, result in x0 in canonical
 ;   form, OscRt * in x7, a trap calls OscRt.trap (offset 16) with x0 = rt, x1 = code. With more than one
-;   function, word 0 is a B to the last one (calls go to earlier functions, so the entry is written last).
+;   function, word 0 is a B to the last one (the entry is still written last). A call may name any
+;   function in the unit, earlier or later.
 ; - program mode (a line `fn main`): a whole AArch64 Linux program (ELF file header laid out by hand, no
 ;   linker). Its start code sets the stack to a fixed 8 MiB pool, calls main, and exits with main's value;
 ;   a trap exits with status 100 + code.
 ;
-; What om4 adds to om3: many functions, calls (earlier functions, and a function calling itself in program
-; mode), void functions and ret without a value; signed div, rem and shl; for with a value as count;
+; What om4 adds to om3: many functions, calls to any function in the unit (a names pass collects every
+; signature first; a later function is a call, never a new scalar), mutual recursion in program mode,
+; a call cycle in function mode refused as error 9 (the same refusal a function calling itself already
+; had), assigning to a function name refused as error 10; void functions and ret without a value;
+; signed div, rem and shl; for with a value as count;
 ; true and false; local arrays (new, on the stack, only in a function's outermost block), array parameters
 ; (view / edit), global arrays (global, fixed pools in the program's memory image, no heap), text literals
 ; (text, read-only bytes with their length), get, put, len; read and write (Linux system calls on a
@@ -41,7 +45,10 @@
 ; 0x1830000, functions 0x1840000 (128 bytes: name 8, address 8, return type 4, parameter count 4, then per
 ; parameter 16 bytes: type 4, length 4, kind 4), state 0x1850000 (8-byte slots: 1 globals and texts in the
 ; name table, 2 functions, 4 stack bytes of local arrays, 5 the path has ended, 6 program mode, 7 global
-; pool bytes, 9 last function, 10 value nesting depth).
+; pool bytes, 9 last function, 10 value nesting depth, 11 a number written as 2^63 or more, 12 recorded
+; calls, 13 namescan phase: 0 not started, 1 collecting signatures, 2 emitting). Call records, 24 bytes
+; each (site, callee entry, caller entry), sit at 0x1860000, 65536 of them. Function-mode cycle marks,
+; one byte per function, sit at 0x19e0000. Both are past the file and zeroed with the rest of the mapping.
 ; Name kinds: 0 scalar, 1 local array, 2 view parameter, 3 edit parameter, 4 global array, 5 text.
 ; Errors: "om4: line N: error E" on stderr, exit E: 1 read, 2 write, 3 unknown name, 4 line ends too
 ; early, 5 extra words, 6 bad number, 7 type mismatch, 8 number out of range for its type, 9 not in the
@@ -77,9 +84,9 @@
   .w 0x00000000
   .w 0x00400000
   .w 0x00000000
-  .w 0x000035a8 ; p_filesz = the size of om4.bin, 13736 bytes (asm2 has no size arithmetic; gate4.sh checks it)
+  .w 0x00003790 ; p_filesz = the size of om4.bin, 14224 bytes (asm2 has no size arithmetic; gate4.sh checks it)
   .w 0x00000000
-  .w 0x01460000 ; p_memsz: up to 0x1860000
+  .w 0x015f0000 ; p_memsz: through call fixups and graph marks at 0x19e0000
   .w 0x00000000
   .w 0x00001000
   .w 0x00000000
@@ -632,6 +639,36 @@
   adr x29 POOLC
 ; ---- one statement per line ----
 :STMT
+  movz.x x9 0x185 1
+  ldr.x x10 x9 13
+  cbz.x x10 NS_INIT
+  cmp.x.i x10 1
+  b.eq NS_LINE
+  b BODY_LINE
+:NS_INIT
+  movz.x x10 1 0
+  str.x x10 x9 13
+:NS_LINE
+  bl TOK
+  cbz.x x0 NS_LINE
+  cmp.x.i x0 3
+  b.eq NS_DONE
+  cmp.x.i x0 1
+  b.ne S_NOTE
+  cmp.x.i x2 2
+  b.ne S_NOTE
+  movz.x x9 0x6e66 0
+  cmp.x x1 x9
+  b.eq S_FN
+  b S_NOTE
+:NS_DONE
+  movz.x x9 0x185 1
+  movz.x x10 2 0
+  str.x x10 x9 13
+  str.x xzr x9 3
+  movz.x x19 0x80 1
+  b PS_DONE
+:BODY_LINE
   mov.x x24 x28
   bl TOK
   cbz.x x0 STMT
@@ -720,9 +757,14 @@
   cbnz.x x0 E_SYNTAX
   mov.x x1 x12
   sub.x x3 x19 x2
+  movz.x x9 0x185 1
+  ldr.x x10 x9 13
+  cmp.x.i x10 2
+  b.eq FN_KNOWN
   bl NEWNAME
   movz.x x9 0x185 1
   ldr.x x10 x9 2
+
   cmp.x.i x10 512
   b.hs E_FULL
   add.x.i x11 x10 1
@@ -739,7 +781,17 @@
   movz.x x16 0x80 1
   sub.x x16 x3 x16
   str.w w16 x11 31
+  b FN_SCOPE
+:FN_KNOWN
+  bl FINDFN
+  cbz.x x0 E_SYNTAX
+  movz.x x9 0x185 1
+  str.x x0 x9 3
+  str.x x0 x9 9
+  str.x x20 x0 1
+:FN_SCOPE
   ldr.x x23 x9 1
+
   movz.x x13 0 0
 :FN_P
   bl TOK
@@ -842,6 +894,12 @@
   movz.x x25 0x181 1
   movz.x x26 0x182 1
   bl EOL
+  movz.x x9 0x185 1
+  ldr.x x10 x9 13
+  cmp.x.i x10 1
+  b.ne STMT
+  movz.x x27 0 0
+  movz.x x23 0 0
   b STMT
 ; ---- name [=] value, or name = new T N v (a local array) ----
 :S_ASSIGN
@@ -1659,6 +1717,7 @@
 ; ---- end of input: write the output ----
 :S_EOF
   cbnz.x x27 E_BLOCK
+  bl RESOLVE
   movz.x x9 0x185 1
   ldr.x x10 x9 2
   cbz.x x10 E_SYNTAX
@@ -3457,7 +3516,24 @@
   add.x.i x13 x13 1
   b CA3
 :CA4
+  movz.x x9 0x185 1
+  ldr.x x10 x9 12
+  movz.x x11 1 1
+  cmp.x x10 x11
+  b.hs E_FULL
+  movz.x x11 24 0
+  mul.x x11 x11 x10
+  movz.x x12 0x186 1
+  add.x x11 x11 x12
+  str.x x20 x11 0
+  ldr.x x12 sp 1
+  str.x x12 x11 1
+  ldr.x x12 x9 3
+  str.x x12 x11 2
+  add.x.i x10 x10 1
+  str.x x10 x9 12
   ldr.x x9 sp 1
+
   ldr.x x0 x9 1
   sub.x x2 x0 x20
   ubfm.x x2 x2 2 27
@@ -4060,3 +4136,80 @@
   bl FINDFN
   cbz.x x0 E_LONG
   b VT_FN2
+; Resolve recorded BL sites; function mode must have an acyclic call graph.
+; 65536 fixed records at 0x1860000: site, callee entry, caller entry. State slot 12 is count.
+:RESOLVE
+  movz.x x9 0x185 1
+  ldr.x x10 x9 12
+  movz.x x11 0x186 1
+  movz.x x12 0 0
+:RS_PATCH
+  cmp.x x12 x10
+  b.hs RS_GRAPH
+  ldr.x x0 x11 0
+  ldr.x x1 x11 1
+  ldr.x x1 x1 1
+  sub.x x1 x1 x0
+  ubfm.x x1 x1 2 27
+  movz.x x2 0x9400 1
+  orr.x x1 x1 x2
+  str.w w1 x0 0
+  add.x.i x11 x11 24
+  add.x.i x12 x12 1
+  b RS_PATCH
+:RS_GRAPH
+  ldr.x x0 x9 6
+  cbnz.x x0 RS_DONE
+  ldr.x x1 x9 2
+  movz.x x2 0 0
+  movz.x x3 0x19e 1
+  movz.x x4 0x184 1
+:RS_PASS
+  cmp.x x2 x1
+  b.hs RS_CHECK
+  movz.x x5 0 0
+:RS_FN
+  cmp.x x5 x1
+  b.hs RS_NEXT
+  ldrb.r w0 x3 x5
+  cbnz.x x0 RS_FNEXT
+  ubfm.x x6 x5 57 56
+  add.x x6 x6 x4
+  movz.x x7 0 0
+  movz.x x11 0x186 1
+:RS_EDGE
+  cmp.x x7 x10
+  b.hs RS_MARK
+  ldr.x x0 x11 2
+  cmp.x x0 x6
+  b.ne RS_ENEXT
+  ldr.x x0 x11 1
+  sub.x x0 x0 x4
+  ubfm.x x0 x0 7 63
+  ldrb.r w0 x3 x0
+  cbz.x x0 RS_FNEXT
+:RS_ENEXT
+  add.x.i x7 x7 1
+  add.x.i x11 x11 24
+  b RS_EDGE
+:RS_MARK
+  movz.x x0 1 0
+  add.x x6 x3 x5
+  strb w0 x6 0
+:RS_FNEXT
+  add.x.i x5 x5 1
+  b RS_FN
+:RS_NEXT
+  add.x.i x2 x2 1
+  b RS_PASS
+:RS_CHECK
+  movz.x x5 0 0
+:RS_CHECK1
+  cmp.x x5 x1
+  b.hs RS_DONE
+  ldrb.r w0 x3 x5
+  cbz.x x0 E_SUBSET
+  add.x.i x5 x5 1
+  b RS_CHECK1
+:RS_DONE
+  ret

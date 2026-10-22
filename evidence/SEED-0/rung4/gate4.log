@@ -1,14 +1,14 @@
-gate4 2026-10-22T04:02:39Z at 0a75aa3ca14ca4565394991739413d1b3ee4fcdb
+gate4 2026-10-22T11:15:55Z at 2bceb6ace3c379acff35e291cf7bdc4d2f4be3bc
 PASS om4.bin = a fresh asm2 build of om4.s, same bytes
-PASS p_filesz 13736 = file size 13736
-03fc75d96a570ba1a404dd89ae231f063fd10b4a9fec903a09d7fce2fb8aa429  seed/rung4/om4.bin
-AUDIT2 instructions=3048 data_bytes=1544 mismatch=0
+PASS p_filesz 14224 = file size 14224
+d0da40e45f1fcc45d9a39c9c52c9d745b545e076970729e51c12d76ef519efab  seed/rung4/om4.bin
+AUDIT2 instructions=3170 data_bytes=1544 mismatch=0
 PASS audit (objdump reference run)
-PASS audit control caught (s/^  movz.x x25 0x181 1$/  movz.x x26 0x181 1/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=2
-PASS audit control caught (s/^  b.hs BO_SDIV$/  b.hs BO_RET/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=1
-PASS audit control caught (s/^  ldr.x.r x12 sp x11$/  ldr.x.r x12 sp x10/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=1
-PASS audit control caught (s/^  ubfm.x x11 x11 1 63$/  ubfm.x x11 x11 2 63/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=1
-PASS audit control caught (s/^  movz.x x0 0x63ff 0$/  movz.x x0 0x63fe 0/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  movz.x x25 0x181 1$/  movz.x x26 0x181 1/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=2
+PASS audit control caught (s/^  b.hs BO_SDIV$/  b.hs BO_RET/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  ldr.x.r x12 sp x11$/  ldr.x.r x12 sp x10/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  ubfm.x x11 x11 1 63$/  ubfm.x x11 x11 2 63/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  movz.x x0 0x63ff 0$/  movz.x x0 0x63fe 0/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=1
 PASS dev01: 8 inputs (0 traps), om4 = C path (value and raw x0)
 PASS dev01: om4 words = om3 words
 PASS dev01: om4 = expected
@@ -127,8 +127,16 @@ PASS refusal exit 16: om4: line 1: error 16  [a statement outside a function]
 PASS refusal exit 6: om4: line 2: error 6  [bad number]
 PASS refusal exit 7: om4: line 5: error 7  [a void function used as a value]
 PASS refusal exit 7: om4: line 5: error 7  [a value function called as a statement]
+PASS r5b_fwd.om: exit 0
+PASS r5b_fwd runs: exit 7 (the later function)
+PASS r5b_mut.om: exit 0
+PASS r5b_mut runs: even 8 is 1, exit 0
+PASS r5b_cycle.om: exit 9 error 9
+PASS r5b_assign.om: exit 7 error 7
+PASS r5b_fwd_fm.om: exit 0
+PASS r5b_fwd_fm: BL lands on MOVZ X0, #7 at 0x1c
 PASS negative control: om4 with SDIV made UDIV changes fm1 results
 PASS spec addendum (OMEGESE.md section 9): grep -i undefined finds nothing
-PASS nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:121 4:1352 5:61 6:65 7:104 8:48 9:303 10:3 11:37 13:24 15:492 16:1989 17:36 18:4 21:4 23:2 
-cases run: 209
+PASS nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:107 4:1351 5:64 6:66 7:115 8:48 9:277 10:4 11:37 13:24 15:487 16:2020 17:36 18:3 21:4 23:2 
+cases run: 217
 GATE4 PASS

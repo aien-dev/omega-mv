@@ -142,6 +142,34 @@ t 6  'fn f a uint to uint\nret add a 12x\nend\n' 'bad number'
 t 7  'fn f to void\nret\nend\nfn g to uint\nx = f\nret 0\nend\n' 'a void function used as a value'
 t 7  'fn f to uint\nret 1\nend\nfn g to void\nf\nend\n' 'a value function called as a statement'
 
+# 6b. names pass (R5b). A later function is a call, never a new scalar. Program mode may
+#     recurse mutually. Function mode refuses a call cycle (error 9). Checked here, not against
+#     the C path: the C path still has the one-pass limit these cases exist to leave behind.
+r5b() { # file expect-exit expect-error-or-dash
+  cases=$((cases + 1))
+  set +e; $R/om4.bin < $X/$1 > $B/$1.bin 2> $B/$1.err; rc=$?; set -e
+  if [ "$rc" != "$2" ]; then bad "$1: exit $rc, wanted $2 ($(cat $B/$1.err))"; return; fi
+  if [ "$3" != "-" ] && ! grep -q "error $3" $B/$1.err; then bad "$1: stderr missing error $3: $(cat $B/$1.err)"; return; fi
+  if [ "$3" = "-" ]; then say "PASS $1: exit $rc"; else say "PASS $1: exit $rc error $3"; fi
+}
+r5b r5b_fwd.om 0 -
+chmod +x $B/r5b_fwd.om.bin; set +e; ./$B/r5b_fwd.om.bin >/dev/null; rc=$?; set -e
+[ "$rc" = 7 ] && say "PASS r5b_fwd runs: exit 7 (the later function)" || bad "r5b_fwd ran as $rc, wanted 7"
+r5b r5b_mut.om 0 -
+chmod +x $B/r5b_mut.om.bin; set +e; ./$B/r5b_mut.om.bin >/dev/null; rc=$?; set -e
+[ "$rc" = 0 ] && say "PASS r5b_mut runs: even 8 is 1, exit 0" || bad "r5b_mut ran as $rc, wanted 0"
+r5b r5b_cycle.om 9 9
+r5b r5b_assign.om 7 7
+r5b r5b_fwd_fm.om 0 -
+# the forward BL must land on late's MOVZ #7, not on a placeholder
+objdump -D -b binary -m aarch64 -M no-aliases $B/r5b_fwd_fm.om.bin > $B/r5b_fwd_fm.dis
+seven=$(awk '/movz/ && /#0x7/ { gsub(":", "", $1); print $1; exit }' $B/r5b_fwd_fm.dis)
+if grep bl $B/r5b_fwd_fm.dis | grep -q "0x$seven"; then
+  say "PASS r5b_fwd_fm: BL lands on MOVZ X0, #7 at 0x$seven"
+else bad "r5b_fwd_fm: forward call did not land (see $B/r5b_fwd_fm.dis)"; fi
+
+cases=$((cases + 3))
+
 # 8. negative control on the corpus: an om4 with one word changed (signed division made unsigned) must
 #    change a result
 sed 's/^  movz.x x0 0x0c00 0$/  movz.x x0 0x0800 0/' $R/om4.s > $B/mut.s

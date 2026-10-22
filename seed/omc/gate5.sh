@@ -68,7 +68,7 @@ chmod +x $B/cap.sh
 g4() { # compiler build-dir evidence-dir -> gate4 with the compiler in om4's place
   sed -e "s|^R=seed/rung4; B=build/seed/r4; E=evidence/SEED-0/rung4|R=seed/rung4; B=$2; E=$3|" \
       -e "s#\\\$R/om4\\.bin < #$1 < #g" -e "s#| \\\$R/om4\\.bin #| $1 #g" $R4/gate4.sh > $2.sh
-  [ "$(grep -c "$1" $2.sh)" = 4 ] || { bad "gate4 changed shape: the compiler is not in its 4 places"; return 1; }
+  [ "$(grep -c "$1" $2.sh)" = 5 ] || { bad "gate4 changed shape: the compiler is not in its 5 places"; return 1; }
   NF_N=0 sh $2.sh > $2.out 2>&1 && tail -1 $2.out | grep -q "^GATE4 PASS$" # section 10 (next fuzz of om4 alone) is run by gate4 itself
 }
 g4 $B/cap.sh $B/g4cap $B/g4cape || bad "gate4 (capturing) did not pass: $(grep FAIL $B/g4cap.out | head -3)"
