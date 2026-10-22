@@ -1,0 +1,47 @@
+// slice-entry: doorbell_token doorbell_off doorbell_bar
+// The work-submit doorbell on GB10, in Omega. NVIDIA's driver builds this token in
+// kfifoGenerateWorkSubmitTokenHal_GB100 (GB10B binds that HAL, not GB202) and the
+// program used to ask the driver for it. The bits, from dev_vm.h GB100: channel id
+// in bits 11:0, runlist id in bits 22:16, nothing else. Bit 22 left alone is what
+// makes runlist 64 differ from the GB202 form, which forces that bit off. A value
+// that does not fit the field is a refusal, not a truncated token.
+// Expected values from Wolfram: (3,42)->196650, (127,4095)->8327167, (64,0)->4194304.
+// The store is one write of the token at offset 144 (0x90) in the usermode page,
+// which is BAR0 offset 196752 (0x30090).
+// slice-run: doorbell_token bytes: 0 1 -> 1
+// slice-run: doorbell_token bytes: 1 0 -> 65536
+// slice-run: doorbell_token bytes: 3 42 -> 196650
+// slice-run: doorbell_token bytes: 0 4095 -> 4095
+// slice-run: doorbell_token bytes: 127 4095 -> 8327167
+// slice-run: doorbell_token bytes: 64 0 -> 4194304
+// slice-run: doorbell_token bytes: 0 4096 -> 18446744073709551615
+// slice-run: doorbell_token bytes: 128 0 -> 18446744073709551615
+// slice-run: doorbell_off bytes: -> 144
+// slice-run: doorbell_bar bytes: -> 196752
+
+fn doorbell_token(b: bytes, runlist: u64, channel: u64) -> u64 {
+    if b.len > 0 {
+        return 18446744073709551615;
+    }
+    if channel > 4095 {
+        return 18446744073709551615;
+    }
+    if runlist > 127 {
+        return 18446744073709551615;
+    }
+    return channel | (runlist << 16);
+}
+
+fn doorbell_off(b: bytes) -> u64 {
+    if b.len > 0 {
+        return 18446744073709551615;
+    }
+    return 144;
+}
+
+fn doorbell_bar(b: bytes) -> u64 {
+    if b.len > 0 {
+        return 18446744073709551615;
+    }
+    return 196752;
+}
