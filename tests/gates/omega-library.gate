@@ -1,0 +1,25 @@
+# tests/gates/omega-library.gate
+# The omega-core half of the former OMEGA-CRUMBLINE gate (host-suites-2.yml crumbline): OmegaLibrary, the
+# Verified Crumb store, resolver, genesis, program IR and VC bridge. test-crumbline moved with the
+# Crumbline learner to aien-dev/omega-programs (L396, ADR 0039); none of these targets links Crumbline.
+gate: OMEGA-LIBRARY
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - tests/
+  - docs/osc/VC-GENESIS-1.md
+  - src/
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["library"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 40m
+exactness: EXACT
+cache_scope: machine

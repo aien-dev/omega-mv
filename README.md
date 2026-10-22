@@ -47,7 +47,7 @@ The full omegatool build (`make`) links the `physics` repository at the commit i
 
 ## Repository layout
 
-`src/` core and C compiler (`src/compiler/`), `src/runtime/` reaction runtime, `src/fabric/` host-only fabric interface, `src/physics0/` Physics Zero apparatus, `spec/` and `docs/` specifications, `tests/` gate suites, `evidence/` content-addressed receipts, `tools/` harnesses, `mk/` make fragments included by the `Makefile`. Also `bench/prime_race/` (Prime Drag Race implementation), `calibration/` (Turing calibration experiments, preregistration and blinding protocol), `research/` (experiments and prototypes) and `doctrine/` (the Milestone 4 doctrine).
+`src/` core and C compiler (`src/compiler/`), `src/runtime/` reaction runtime, `src/fabric/` host-only fabric interface, `src/physics0/` Physics Zero apparatus, `spec/` and `docs/` specifications, `tests/` gate suites, `evidence/` content-addressed receipts, `tools/` harnesses, `mk/` make fragments included by the `Makefile`. Also `bench/prime_race/` (Prime Drag Race implementation), `calibration/` (Turing calibration experiments, preregistration and blinding protocol), `research/` (experiments and prototypes) and `doctrine/` (the Milestone 4 doctrine). The experiments and subsystems written on Omega (turing, brownian, estimation, dual, reservoir, physics0, crumbline, searchtrace, path, ans, polyglot, prime race, the Turing calibration and the atemporal AT0/AT1 experiments) moved with their history and gates to [aien-dev/omega-programs](https://github.com/aien-dev/omega-programs), which pins Omega by `omega.lock` (L396, ADR 0039).
 
 ## Contributing
 

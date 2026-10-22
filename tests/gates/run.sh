@@ -105,23 +105,15 @@ case "$step" in
     obs mutants_killed 10
     ;;
   # host-suites.yml
-  searchtrace)        make $NOPHYS test-searchtrace ;;
-  estimation)         for t in test-estimation test-est-tools test-estimation-v3 test-est3c-tools; do make $NOPHYS $t; done ;;
-  ans)                make $NOPHYS test-inertial-alignment ;;
   numeric-cpu)        for t in test-numeric-cpu test-numeric-qualify test-e1-combine test-chipwait-campaign test-gpu-wait test-gpu-wait-mutants test-gpu-code-alloc; do make $NOPHYS $t; done ;;
   train)              make $NOPHYS test-train ;;
   compiler)           make $NOPHYS test-compiler-quick; make $NOPHYS test-compiler-full ;;
   one-layer-acceptance) make $NOPHYS test-one-layer-acceptance ;;
-  physics0)           make $NOPHYS physics0-test ;;
   chip-tool-selftests) for t in test-m19r-qualify test-gate14-combine test-window-lane-guard test-unwritten-trap-host test-ldst-host; do make $NOPHYS $t; done ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
-  turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;
-  brownian)           make $NOPHYS test-brownian-tps; make $NOPHYS test-brownian-active ;;
-  polyglot)           make $NOPHYS test-polyglot-asm; make $NOPHYS test-polyglot-encoder ;;
   algebra)            make $NOPHYS test-algebra test-algebra-asan; make $NOPHYS test-realize; make $NOPHYS test-phase-twin; make $NOPHYS test-ma-digital-bottom ;;
-  path)               make $NOPHYS test-path ;;
-  crumbline)          make $NOPHYS test-crumbline test-library test-vcstore test-resolve test-vcstore-genesis test-resolve-genesis test-genesis test-genesis-real test-program-ir test-vc-bridge ;;
+  library)            make $NOPHYS test-library test-vcstore test-resolve test-vcstore-genesis test-resolve-genesis test-genesis test-genesis-real test-program-ir test-vc-bridge ;;
   runtime)
     physics_pin; aienos_pin
     # host-suites-2.yml sets only PHYSICS_DIR and AIENOS_R7_DIR, and only on the steps that list
@@ -232,7 +224,6 @@ case "$step" in
     make "$t"
     ;;
   # turing-yield.yml
-  turing-yield)       make test-turing-yield test-turing-energy ;;
   # evidence-immutable.yml: reviewed evidence is additions-only. Hosted compares the PR base
   # and head; locally the base is origin/main (or AIEN_BASE_REF).
   evidence-immutable)
