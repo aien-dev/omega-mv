@@ -1,0 +1,6 @@
+$ sh tests/osc_gpu/run.sh <dev omegese omega_emit checker2 test_osc_gpu> /tmp/l386b/rw <dev osc_gpu_build>   (2026-10-22T00:28:01Z, dev build of this branch)
+run.sh: 13 kernels emitted and accepted by checker2
+run.sh: 12 broken kernels refused with their expected reasons
+run.sh: 1 embedded kernels still build to the bytes they embed
+test_osc_gpu: 1308 checks, 0 failed
+exit 0

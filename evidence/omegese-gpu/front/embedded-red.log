@@ -1,0 +1,5 @@
+red control: EMBEDDED sha changed by one hex digit (dc6f17bd -> dc6f17be), same command
+run.sh: 13 kernels emitted and accepted by checker2
+run.sh: 12 broken kernels refused with their expected reasons
+FAIL: gate.omegese builds to code sha256 dc6f17bd96eb065703035fee02133df0c250183930b1db34b7fadf81be45ffb6, but omega branch omegese/gate-lever src/omega_q36_om_gate.h (the 35B decode gate, AIEN_OMEGA_Q36_OMEGESE_GATE=1) embeds dc6f17be96eb065703035fee02133df0c250183930b1db34b7fadf81be45ffb6
+exit 1

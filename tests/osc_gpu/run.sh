@@ -1,10 +1,11 @@
 #!/bin/sh
-# Usage: sh tests/osc_gpu/run.sh <omegese> <omega_emit> <checker2> <test_osc_gpu> <work-dir>
+# Usage: sh tests/osc_gpu/run.sh <omegese> <omega_emit> <checker2> <test_osc_gpu> <work-dir> [<osc_gpu_build>]
 # Every kernel the back end is tested on is first emitted to IR and accepted by checker2: the back end
 # never sees a kernel checker2 refuses. The kernels written in Omegese (tests/osc_gpu/omegese, C1 of
 # docs/OMEGA.md) go through omegese emit first and land as kernel_om_<name>.ir.
 set -u
 OMS=$1; OME=$2; C2=$3; TEST=$4; WORK=$5
+BUILD=${6:-}
 rm -rf "$WORK"; mkdir -p "$WORK"
 n=0
 for f in tests/osc_gpu/omegese/*.omegese; do
@@ -37,4 +38,17 @@ while read -r file stage reason; do
     r=$((r + 1))
 done < tests/osc_gpu/omegese/bad/EXPECT
 echo "run.sh: $r broken kernels refused with their expected reasons"
+# kernels whose bytes are embedded elsewhere (tests/osc_gpu/omegese/EMBEDDED: file, kernel, code sha256, where): the code built
+# from today's source must still be the bytes the embedding carries, or the embedding is stale
+if [ -n "$BUILD" ]; then
+    e=0
+    while read -r file kname sha where; do
+        ir=$WORK/kernel_om_$(basename "$file" .omegese).ir
+        "$BUILD" "$ir" "$kname" "$WORK/emb.bin" "$WORK/emb.h" EMB >/dev/null || { echo "FAIL: osc_gpu_build refuses $file"; exit 1; }
+        got=$(sed -n "s/^#define EMB_CODE_SHA256 \"\(.*\)\"/\1/p" "$WORK/emb.h")
+        [ "$got" = "$sha" ] || { echo "FAIL: $file builds to code sha256 $got, but $where embeds $sha"; exit 1; }
+        e=$((e + 1))
+    done < tests/osc_gpu/omegese/EMBEDDED
+    echo "run.sh: $e embedded kernels still build to the bytes they embed"
+fi
 "$TEST" "$WORK"
