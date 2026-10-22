@@ -1,0 +1,39 @@
+{
+  "ledger": "L520",
+  "reviewed_head": "85d8343fa04647b198e3ddda00ad8e448837f9ca",
+  "review_branch": "issues/m1-lifetime-review-20261022",
+  "repository": "aien-dev/omega-mv",
+  "overall": "HOLD",
+  "implementation_changes": false,
+  "author_evidence_modified": false,
+  "milestones": [
+    {"issue":576,"verdict":"HOLD","host_checks":1304,"host_failures":0,"host_exit":0,"strict_plan_gate":"FAIL","strict_G1":"FAIL","csv_original_six_refusals":"PASS","findings":["C1","C2","C3"],"binding":"independent rebuild binary matches author; exporter only validates self-reported pins"},
+    {"issue":574,"verdict":"HOST PARTIAL; calibrated timing HOLD","differential_rows":20,"host_exit":0,"argument_refusals":7,"fault_refusals":8,"source_defect_found":false,"stable_schedule_winner":"UNKNOWN","limits":"bounded fixed program corpus, shared machine, ordered aggregate timings; no exclusive measurement"},
+    {"issue":520,"verdict":"HOST PARTIAL; acceptance coverage HOLD","exhaustive_cases":27000,"original_host_exit":0,"original_overlap_mutant_killed":true,"original_exhaustion_refused":true,"no_reuse_mutant_author_suite_exit":0,"review_boundary_baseline_exit":0,"review_boundary_no_reuse_mutant_exit":1,"findings":["A1"],"production_allocator_defect_found":false}
+  ],
+  "findings": [
+    {"id":"C1","severity":"P2","file":"bench/m1/block3_receipt_csv.sh","lines":"7-21,29-37","title":"Invalid-first valid-last JSON stream bypasses refusal","repro":"probes/csv.sh OUTPUT_DIR; stream.json","observed":"exit0 and four data rows, including failing/unbound receipt","fix":"Require exactly one object; validate and export a single immutable parsed snapshot"},
+    {"id":"C2","severity":"P2","file":"bench/m1/block3_receipt_csv.sh","lines":"36","title":"Unchecked machine metadata can become spreadsheet formula","repro":"probes/csv.sh OUTPUT_DIR; formula.json","observed":"=1+1 emitted as quoted formula-capable CSV cell, exit0; spreadsheet execution NOT_RUN","fix":"Restrict machine identifier grammar or neutralize spreadsheet formula prefixes"},
+    {"id":"C3","severity":"P2","file":"bench/m1/block3_receipt_csv.sh","lines":"10,17-20","title":"Count type and finite integer timing checks missing","repro":"probes/csv.sh OUTPUT_DIR; checks-string.json, overflow.json, fractional.json","observed":"checks string, timing1e999 and timing0.5 accepted, exit0","fix":"Validate numeric type, integer and finite bounded producer-compatible range"},
+    {"id":"A1","severity":"P2","file":"tests/gpu_regalloc_lifetime_oracle.c","lines":"42-64","title":"Authored suite passes allocator with reuse disabled","repro":"probes/allocator.sh OUTPUT_DIR; probes/allocator-boundaries.c","observed":"same27000-case PASS on no-reuse mutant; reviewer disjoint127 probe distinguishes baseline0/mutant1","fix":"Add required reuse and exact capacity success/overflow controls plus immutable pre-solve intervals"}
+  ],
+  "remaining_gates": {
+    "plan_pre_registered_qualification":"FAIL",
+    "retained_bytes":"UNKNOWN",
+    "isolated_lookup_time":"UNKNOWN",
+    "wall_energy":"UNMEASURED",
+    "exclusive_quiet_timing":"NOT_RUN",
+    "stable_schedule_selection":"NOT_QUALIFIED",
+    "real_kernel_allocation_report":"NOT_RUN",
+    "allocator_candidate_policy":"NOT_RUN",
+    "golden_word_and_simulator_suites":"NOT_RUN",
+    "independent_chip_correctness_occupancy_latency":"NOT_RUN",
+    "current35B":"NOT_RUN"
+  },
+  "evidence_directory":"L520",
+  "report":"L520-review.md",
+  "snapshot_time":"2026-10-22T19:20:36Z",
+  "live_tracker_refresh":"NOT_RUN during guarded read interval; no bypass",
+  "no_pr_issue_writes_or_merges":true,
+  "extra_agents":0
+}
