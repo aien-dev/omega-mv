@@ -1,0 +1,5 @@
+note 2^64 - 1 read as a ulong: its top 5 bits are 31
+fn main to int
+x = ulong 18446744073709551615
+ret int shr x 59
+end

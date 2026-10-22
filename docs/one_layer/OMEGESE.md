@@ -430,8 +430,11 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 - A conversion `<type> v` traps 5 when the value is outside the new type. (s.6 t_conv)
 - There are no implicit conversions (decision 20): the two values of an op, a value and the name it is
   written to, an argument and its parameter, all have the same type, or the line is refused (error 7).
-  A bare number takes the type the place needs. `uchar` is an 8-bit unsigned number, never a character.
-  (s.7)
+  A bare number takes the type the place needs. `uchar` is an 8-bit unsigned number, never a character. (s.7)
+- A number is written in decimal, with a `-` in front when negative, in at most 20 digits; it must be a
+  value of the type it takes: -2^63 .. 2^63 - 1 for long, 0 .. 2^64 - 1 for ulong, and so on (error 8
+  outside; more than 20 digits, or a character that is not a digit, is error 6). (s.6 t_u63, t_u64max,
+  t_cmp_unsigned, t_conv_sign, t_write_wrap, s.7)
 - `true` and `false` are the bool numbers 1 and 0. (s.6 t_loop)
 
 ### 9.4 Arrays (decisions 16, 17, 18, 23, 24)

@@ -1,14 +1,14 @@
-gate4 2026-10-22T02:57:14Z at 9db60af805636459367634283b0b0149d1c7d784
+gate4 2026-10-22T03:20:30Z at 380b581948da793f208d6bb1a511d4dbb2cd52e4
 PASS om4.bin = a fresh asm2 build of om4.s, same bytes
-PASS p_filesz 13624 = file size 13624
-d472262bf6ee2e5746adb3c76c91ff895c0ec8e697c867c9a4cd51811c282279  seed/rung4/om4.bin
-AUDIT2 instructions=3020 data_bytes=1544 mismatch=0
+PASS p_filesz 13736 = file size 13736
+03fc75d96a570ba1a404dd89ae231f063fd10b4a9fec903a09d7fce2fb8aa429  seed/rung4/om4.bin
+AUDIT2 instructions=3048 data_bytes=1544 mismatch=0
 PASS audit (objdump reference run)
-PASS audit control caught (s/^  movz.x x25 0x181 1$/  movz.x x26 0x181 1/): AUDIT2 instructions=3020 data_bytes=1544 mismatch=2
-PASS audit control caught (s/^  b.hs BO_SDIV$/  b.hs BO_RET/): AUDIT2 instructions=3020 data_bytes=1544 mismatch=1
-PASS audit control caught (s/^  ldr.x.r x12 sp x11$/  ldr.x.r x12 sp x10/): AUDIT2 instructions=3020 data_bytes=1544 mismatch=1
-PASS audit control caught (s/^  ubfm.x x11 x11 1 63$/  ubfm.x x11 x11 2 63/): AUDIT2 instructions=3020 data_bytes=1544 mismatch=1
-PASS audit control caught (s/^  movz.x x0 0x63ff 0$/  movz.x x0 0x63fe 0/): AUDIT2 instructions=3020 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  movz.x x25 0x181 1$/  movz.x x26 0x181 1/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=2
+PASS audit control caught (s/^  b.hs BO_SDIV$/  b.hs BO_RET/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  ldr.x.r x12 sp x11$/  ldr.x.r x12 sp x10/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  ubfm.x x11 x11 1 63$/  ubfm.x x11 x11 2 63/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  movz.x x0 0x63ff 0$/  movz.x x0 0x63fe 0/): AUDIT2 instructions=3048 data_bytes=1544 mismatch=1
 PASS dev01: 8 inputs (0 traps), om4 = C path (value and raw x0)
 PASS dev01: om4 words = om3 words
 PASS dev01: om4 = expected
@@ -73,14 +73,19 @@ PASS sort 1000: checksum, sorted count, first, last = gcc twin (33342746882 0 20
 PASS echo: 50000 random bytes stdin -> stdout unchanged
 PASS byte copy: 50000 bytes reversed = gcc twin
 PASS t_bounds: exit 103
+PASS t_cmp_unsigned: exit 0
 PASS t_conv: exit 105
+PASS t_conv_sign: exit 105
 PASS t_div0: exit 102
 PASS t_exit: exit 42
 PASS t_loop: exit 104
 PASS t_ovf: exit 101
 PASS t_rw: exit 103
 PASS t_stack: exit 106
+PASS t_u63: exit 8
+PASS t_u64max: exit 31
 PASS t_void: exit 77
+PASS t_write_wrap: exit 103
 PASS refusal exit 3: om4: line 2: error 3  [unknown name]
 PASS refusal exit 7: om4: line 2: error 7  [20: no implicit widening]
 PASS refusal exit 7: om4: line 2: error 7  [20: no implicit narrowing]
@@ -104,6 +109,13 @@ PASS refusal exit 9: om4: line 2: error 9  [a self-call in function mode (stack 
 PASS refusal exit 9: om4: line 5: error 9  [a pool in function mode]
 PASS refusal exit 9: om4: line 3: error 9  [new inside a block]
 PASS refusal exit 9: om4: line 4: error 9  [main with parameters]
+PASS refusal exit 20: om4: line 6: error 20  [17: view A to an edit parameter (L412 probe view_pfx_to_edit)]
+PASS refusal exit 8: om4: line 2: error 8  [20: a negative number is not a ulong]
+PASS refusal exit 8: om4: line 2: error 8  [20: 2^63 is not a long]
+PASS refusal exit 8: om4: line 2: error 8  [20: 2^64 - 1 is not a byte (no wrap to -1)]
+PASS refusal exit 8: om4: line 2: error 8  [23: 2^64 is no whole number of any type]
+PASS refusal exit 6: om4: line 2: error 6  [a number of 21 digits]
+PASS refusal exit 23: om4: line 1: error 23  [24: a pool of 2^63 elements is over its limit]
 PASS refusal exit 9: om4: line 3: error 9  [24: free is not a word (no heap, nothing given back by hand)]
 PASS refusal exit 9: om4: line 5: error 9  [own is not in the subset]
 PASS refusal exit 10: om4: line 4: error 10  [a name equal to a function]
@@ -117,5 +129,5 @@ PASS refusal exit 7: om4: line 5: error 7  [a void function used as a value]
 PASS refusal exit 7: om4: line 5: error 7  [a value function called as a statement]
 PASS negative control: om4 with SDIV made UDIV changes fm1 results
 PASS spec addendum (OMEGESE.md section 9): grep -i undefined finds nothing
-cases run: 196
+cases run: 208
 GATE4 PASS
