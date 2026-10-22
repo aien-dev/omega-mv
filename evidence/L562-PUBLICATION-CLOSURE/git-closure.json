@@ -1,0 +1,229 @@
+{
+  "reviewed_head": "7177ad74cfb5215fa478c270f198af4e07cb33c5",
+  "before_git_manifest": [
+    {
+      "path": "evidence/L562-HOST-ENTRY/README.md",
+      "expected_sha256": "ff174449cc4bb99b87042bd7887ab7d76353967d2abf13e8facc27ea1f1d3701",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/binary-hashes.json",
+      "expected_sha256": "e77e9ed9c6836ff6dfe44d9d79465304a01f640fd4613007a60452424062e1ee",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-cloexec/build/osh-host/host.out.gz",
+      "expected_sha256": "4355f575955b2c4f0a8a19f1f44da501534e4a32c5ed3b3bc1b250f8caacd9af",
+      "present_in_git": false,
+      "hash_matches": false
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-cloexec/compile.log.gz",
+      "expected_sha256": "0dd81ad2eaf0ad3f1143b0c9c64807d6101d66a3c45aef09e5d3c848c7254359",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-cloexec/run.log.gz",
+      "expected_sha256": "68e457252ea06b87792e11a4580d76087d8872d1a34b14f515ddfed195bd7f22",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-quit-default/build/osh-host/host.out.gz",
+      "expected_sha256": "97cd3745989fc79d7d8e4a256440c74f3a366ebf090f5488e2f30ba978c04bfd",
+      "present_in_git": false,
+      "hash_matches": false
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-quit-default/compile.log.gz",
+      "expected_sha256": "7a8fa7001e6bcd5661a4111e21ed86c16eca4a63b10a1caa7b73d18c5bfbbb53",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-quit-default/run.log.gz",
+      "expected_sha256": "7fa9fc0a0ccee09b46b0d7e1cfa296b8732bb097be220f1242dc8ab1828b56e2",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls.json",
+      "expected_sha256": "ada2354f9b58d468142322f00ba810c9bc98a58259b0184b015a6761ffe5573d",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/green-host.out.gz",
+      "expected_sha256": "571516c1a5ef65a7293b2595dfdcbbcf1304b0c3365087782876e6aed0566f2d",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/green-host_asan.out.gz",
+      "expected_sha256": "571516c1a5ef65a7293b2595dfdcbbcf1304b0c3365087782876e6aed0566f2d",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/green-make.log.gz",
+      "expected_sha256": "efe0c8023cace6859abed83b9083cd045b43dfe8d0e2ae70705b5d69e5816a24",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/green.json",
+      "expected_sha256": "4fc32006ff64a950e8d22de77a89afba0f6d60dbc0d0abab30ea12f5d187f56e",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/lossless-raw-pins.json",
+      "expected_sha256": "d7b1ee019c28b5ef929ea8c8d4a86052e413303a51a20d0c4820cab2f1d073f1",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/red-host.out.gz",
+      "expected_sha256": "7b28d8e27c8baf267373f58d600377f80d097de72b3297702929d34267a70767",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/red-make.log.gz",
+      "expected_sha256": "c83b0708e1e2aa47830e9a86aa5d84b6eb793fb215de6490853efd174e7b0dfa",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/red.json",
+      "expected_sha256": "e931062672ce905020d8c99c4a3829f2b747c83f2cfac44751d4717635a80624",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/reproduce.py",
+      "expected_sha256": "248dc37b09ddc0ef0dcb789e972d773e671e2148e820392d497337d653e2dd23",
+      "present_in_git": true,
+      "hash_matches": true
+    }
+  ],
+  "corrected_staged_git_manifest": [
+    {
+      "path": "evidence/L562-HOST-ENTRY/README.md",
+      "expected_sha256": "ff174449cc4bb99b87042bd7887ab7d76353967d2abf13e8facc27ea1f1d3701",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/binary-hashes.json",
+      "expected_sha256": "e77e9ed9c6836ff6dfe44d9d79465304a01f640fd4613007a60452424062e1ee",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-cloexec/build/osh-host/host.out.gz",
+      "expected_sha256": "4355f575955b2c4f0a8a19f1f44da501534e4a32c5ed3b3bc1b250f8caacd9af",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-cloexec/compile.log.gz",
+      "expected_sha256": "0dd81ad2eaf0ad3f1143b0c9c64807d6101d66a3c45aef09e5d3c848c7254359",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-cloexec/run.log.gz",
+      "expected_sha256": "68e457252ea06b87792e11a4580d76087d8872d1a34b14f515ddfed195bd7f22",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-quit-default/build/osh-host/host.out.gz",
+      "expected_sha256": "97cd3745989fc79d7d8e4a256440c74f3a366ebf090f5488e2f30ba978c04bfd",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-quit-default/compile.log.gz",
+      "expected_sha256": "7a8fa7001e6bcd5661a4111e21ed86c16eca4a63b10a1caa7b73d18c5bfbbb53",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls/no-quit-default/run.log.gz",
+      "expected_sha256": "7fa9fc0a0ccee09b46b0d7e1cfa296b8732bb097be220f1242dc8ab1828b56e2",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/controls.json",
+      "expected_sha256": "ada2354f9b58d468142322f00ba810c9bc98a58259b0184b015a6761ffe5573d",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/green-host.out.gz",
+      "expected_sha256": "571516c1a5ef65a7293b2595dfdcbbcf1304b0c3365087782876e6aed0566f2d",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/green-host_asan.out.gz",
+      "expected_sha256": "571516c1a5ef65a7293b2595dfdcbbcf1304b0c3365087782876e6aed0566f2d",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/green-make.log.gz",
+      "expected_sha256": "efe0c8023cace6859abed83b9083cd045b43dfe8d0e2ae70705b5d69e5816a24",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/green.json",
+      "expected_sha256": "4fc32006ff64a950e8d22de77a89afba0f6d60dbc0d0abab30ea12f5d187f56e",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/lossless-raw-pins.json",
+      "expected_sha256": "d7b1ee019c28b5ef929ea8c8d4a86052e413303a51a20d0c4820cab2f1d073f1",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/red-host.out.gz",
+      "expected_sha256": "7b28d8e27c8baf267373f58d600377f80d097de72b3297702929d34267a70767",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/red-make.log.gz",
+      "expected_sha256": "c83b0708e1e2aa47830e9a86aa5d84b6eb793fb215de6490853efd174e7b0dfa",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/red.json",
+      "expected_sha256": "e931062672ce905020d8c99c4a3829f2b747c83f2cfac44751d4717635a80624",
+      "present_in_git": true,
+      "hash_matches": true
+    },
+    {
+      "path": "evidence/L562-HOST-ENTRY/reproduce.py",
+      "expected_sha256": "248dc37b09ddc0ef0dcb789e972d773e671e2148e820392d497337d653e2dd23",
+      "present_in_git": true,
+      "hash_matches": true
+    }
+  ],
+  "missing_exact_payloads_added": [
+    "evidence/L562-HOST-ENTRY/controls/no-cloexec/build/osh-host/host.out.gz",
+    "evidence/L562-HOST-ENTRY/controls/no-quit-default/build/osh-host/host.out.gz"
+  ],
+  "original_manifest_changed": false,
+  "gate_implementation_changed": false
+}
