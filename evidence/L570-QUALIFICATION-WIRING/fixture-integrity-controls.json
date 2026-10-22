@@ -1,0 +1,20 @@
+[
+  {
+    "case": "numeric-fixture",
+    "exit": 1,
+    "specific_refusal": "changed pinned count-first fixture",
+    "compiler_make_not_invoked": true,
+    "pass": true,
+    "stdout": "",
+    "stderr": "file:///home/drakestapleton/workspace/targets/L570-fixture-integrity/numeric-fixture/tests/osh/e2e/exit_numeric_priority_mutants.mjs:11\nif(createHash('sha256').update(old.stdout).digest('hex')!=='f4e449f2c14fbc6e07c23f294b4f6ce668521037f3dfb038b2f0de8d24dfc3bb')throw Error('changed pinned count-first fixture');\n                                                                                                                                    ^\n\nError: changed pinned count-first fixture\n    at file:///home/drakestapleton/workspace/targets/L570-fixture-integrity/numeric-fixture/tests/osh/e2e/exit_numeric_priority_mutants.mjs:11:133\n    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)\n    at async node:internal/modules/esm/loader:647:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v24.21.0\n"
+  },
+  {
+    "case": "entry-prefix",
+    "exit": 1,
+    "specific_refusal": "changed original host-test assertion prefix",
+    "compiler_make_not_invoked": true,
+    "pass": true,
+    "stdout": "",
+    "stderr": "Traceback (most recent call last):\n  File \"/home/drakestapleton/workspace/targets/L570-fixture-integrity/entry-prefix/tests/osh/host/test_entry_controls.py\", line 8, in <module>\n    assert hashlib.sha256(source.split('/* The suite owns its entry preconditions')[0].encode()).hexdigest()=='7b730bef2e452d68914bc5cb78fe700815b92985d0df367ccd38f31cc84c3547', 'changed original host-test assertion prefix'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: changed original host-test assertion prefix\n"
+  }
+]

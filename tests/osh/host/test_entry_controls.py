@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Compile entry-precondition faults; require exact old behavioral failures."""
-import pathlib,subprocess,signal,json,sys,re
+import pathlib,subprocess,signal,json,sys,re,hashlib
 repo=pathlib.Path(sys.argv[1]).resolve();out=pathlib.Path(sys.argv[2]).resolve();out.mkdir(parents=True,exist_ok=False)
 source=(repo/'tests/osh/host/test_osh_host.c').read_text();oldlog=pathlib.Path(sys.argv[3]).read_text()
 def failures(text):return [x.split(' -- ',1)[1].split(':',1)[0] for x in text.splitlines() if x.startswith('FAIL ') and ' -- ' in x]
 original=failures(oldlog);assert len(original)==5
-old=subprocess.check_output(['git','-C',str(repo),'show','3f9eee7178e0ba05ad847f81f4dd4d9e9f519c40:tests/osh/host/test_osh_host.c'],text=True)
-assert source.split('/* The suite owns its entry preconditions')[0]==old.split('int main(int argc, char **argv)')[0]
+assert hashlib.sha256(source.split('/* The suite owns its entry preconditions')[0].encode()).hexdigest()=='7b730bef2e452d68914bc5cb78fe700815b92985d0df367ccd38f31cc84c3547', 'changed original host-test assertion prefix'
+
 entries=[('no-quit-default','if (sigaction(SIGINT, &sa, NULL) || sigaction(SIGQUIT, &sa, NULL)) return -1;','if (sigaction(SIGINT, &sa, NULL)) return -1;',original[:1]),('no-cloexec','fcntl(fd, F_SETFD, flags | FD_CLOEXEC)','fcntl(fd, F_SETFD, flags)',original[1:])]
 rest=['src/osh/host/osh_req.c','src/osh/host/osh_vars.c','src/osh/host/osh_builtin.c','src/osh/host/osh_exec.c','src/osh/host/osh_journal.c','src/sha256.c'];reports=[]
 def setup():signal.signal(signal.SIGINT,signal.SIG_DFL);signal.signal(signal.SIGQUIT,signal.SIG_IGN)

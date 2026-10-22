@@ -1,0 +1,20 @@
+FAIL tests/osh/host/test_osh_host.c:1760: rc == 0 && rp.extra[0] == 1 -- children get default SIGINT/SIGQUIT when the shell did not have them ignored; child saw: INT dfl QUIT ign
+
+FAIL tests/osh/host/test_osh_host.c:1179: strcmp(o, "fdcount 0\n") == 0 -- last stage fd list: 'leak fd 8 -> /home/drakestapleton/workspace/targets/L562-red.omega-build.lock
+leak fd 9 -> /tmp/aien-quiet.lock
+fdcount 2
+'
+FAIL tests/osh/host/test_osh_host.c:1182: strcmp(o, "fdcount 0\n") == 0 -- stage 2 (with > redirect) fd list: 'leak fd 8 -> /home/drakestapleton/workspace/targets/L562-red.omega-build.lock
+leak fd 9 -> /tmp/aien-quiet.lock
+fdcount 2
+'
+FAIL tests/osh/host/test_osh_host.c:1185: strcmp(o, "fdcount 0\n") == 0 -- stage 3 fd list: 'leak fd 8 -> /home/drakestapleton/workspace/targets/L562-red.omega-build.lock
+leak fd 9 -> /tmp/aien-quiet.lock
+fdcount 2
+'
+FAIL tests/osh/host/test_osh_host.c:1196: strcmp(o, "fdcount 0\n") == 0 -- redirected single command fd list: 'leak fd 8 -> /home/drakestapleton/workspace/targets/L562-red.omega-build.lock
+leak fd 9 -> /tmp/aien-quiet.lock
+fdcount 2
+'
+checks passed 1559 failed 5
+OSH_HOST_FAIL

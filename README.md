@@ -20,3 +20,11 @@ produced when OSH lived inside it.
 | `omega.lock`, `tools/omega_tree.sh` | which Omega this builds against, and how that tree is made |
 
 Licence: AGPL-3.0, the same as Omega.
+
+## Follow-on qualification
+
+The retained OSC shell core and C Linux adapter are compatibility scaffolding, not the seeded Omega runtime. This candidate carries bounded reviewed host fixes; whole Bash/native AIENOS/hardware equivalence is not implied.
+
+`make test` preserves all original targets and includes the differential reader, signal ownership, atomic prompt/PTY and numeric/argument boundaries. `make qualify` additionally executes the compiled fault controls, preserving exact expected failure sets. `make test-plan` checks actual target coverage and refuses omissions, undefined targets and duplicates. Linux GNU make, a C compiler, Git, Bash, Node.js and Python3 are host test dependencies; no model/server is loaded. Use a private caller-owned output tree.
+
+Historical control functions and entry failures are included as pinned fixtures so a fresh module/consumer checkout does not depend on unrelated parent-branch Git objects. Fixture hashes and original references are in `evidence/L570-QUALIFICATION-WIRING/baseline-provenance.json`. Original assertions/corpora and fault verdicts are unchanged. This is source/runner preparation, NOT a passing module qualification receipt until the exact final candidate and its consumer replay actually finish.
