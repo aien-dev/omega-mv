@@ -1,0 +1,19 @@
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+L533 patterned visibility: 8 repeated full-range crossings, live bad-generation/oversized-range refusal and recovery: PASS; uncached fake only

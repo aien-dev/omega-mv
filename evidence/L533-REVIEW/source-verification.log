@@ -1,0 +1,5 @@
+PASS 37 published L519 source inputs match exact PR499
+RESTORED e41aecfe1eb9ea9ab15f30390e8525c95482e5045cfeadb65f9f59924ad4e145 src/osh/osh_expand.osc
+RESTORED bfd5fb454ee9b245517eee2122e7614401a58fc0dd99e232da5bcf8cc2c90f3d src/osh/osh_lex.osc
+RESTORED 1a61b123bdf8727a5f1edc3917ac51082cd4b8473436741724b253f68ec6ad94 src/osh/osh_parse.osc
+RESTORED 699ef4a13f8517abf15e2ee501088f337cfe04c4856c0fece25cfa3caa20b60b tests/physics0/osc/pd0_helpers.osc

@@ -1,0 +1,12 @@
+OSC_IR_ENCODED_MAX=2620251 bytes; mode=quick (smoke counts, not gate evidence)
+corpus: units=59 round_trip_ok=59 compile_refused=0 versions v1=32 v2=7 v3=6 v4=3 v5=11
+FAIL: counterexample last byte missing: got NONCANONICAL, want TRUNCATED
+FAIL: counterexample magic without version: got UNKNOWN_VERSION, want TRUNCATED
+refusal classes: 20/22 cases as expected; classes exhibited=10 of 11 (NONCANONICAL is the unreachable backstop)
+FAIL: counterexamples: 20 of 22
+negative controls: 5/5 planted defects caught by the test's own checks
+requirement identity: 514 single-character requires/ensures changes, each a new identity
+valid objects: distinct=1000 tries=1059 invalid_variants_skipped=4 (all round-trip byte-exact)
+malformed: cases=24272 refused=21164 admitted_as_other_canonical_unit=3108 (each re-encodes to its own bytes) ARG=0 MAGIC=307 UNKNOWN_VERSION=36 TRUNCATED=66 OVERSIZED=1381 TRAILING=184 RANGE=8934 TEXT=131 INVALID=9967 VERSION_MISMATCH=18 NONCANONICAL=140
+FAIL: NONCANONICAL backstop was reached: a structural check is missing
+OSC_IR_DECODE_FAIL 4

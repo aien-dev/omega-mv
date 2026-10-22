@@ -1,0 +1,67 @@
+{
+  "ledger": "L533",
+  "reviewed_head": "04aab149fdf3ead511c89f1312c793b2a2101f82",
+  "branch": "issues/four-milestone-review-20261022",
+  "reviewed_at": "2026-10-22T20:10:59.301Z",
+  "overall": "HOLD_FOR_INTEGRATION_AND_EXTERNAL_ACCEPTANCE",
+  "source_defects_demonstrated": [],
+  "evidence_findings": [
+    {
+      "id": "C1",
+      "severity": "P2",
+      "category": "evidence_input_closure",
+      "file": "evidence/L519-DECODE-450/README.md",
+      "line": 31,
+      "source_sha": "1e4cdbe91b444efe51af4e745f366e07d54de030",
+      "repro": "check-decoder-closure.sh on original restricted export exits1 while quick/full test silently passes55 units; restore two declared directories and59 units pass",
+      "impact": "Original full-coverage claim misses four real corpus programs and their derived tests",
+      "bounded_fix": "Include src/osh and tests/physics0/osc; require source/corpus manifest; carry L533 complete-corpus addendum without rewriting old evidence",
+      "remedy": "Reviewer complete-corpus full gate PASS; desk carries addendum, current integration remains unqualified"
+    }
+  ],
+  "milestones": [
+    {
+      "issue": 522,
+      "sha": "0f45d8b4d3793261a07ad832f1e5d7cb8a2d8bdf",
+      "disposition": "HOST_PARTIAL",
+      "independent_checks": "PASS",
+      "external": "Real verifier/receipts, correctness, held-outs, regret, overhead, model/native acceptance HOLD"
+    },
+    {
+      "issue": 519,
+      "sha": "db5bbbb9b77402bb9c489a57b498b51be4063204",
+      "disposition": "HOST_PARTIAL",
+      "independent_checks": "PASS",
+      "external": "Graph recovery PR588, native parity/visibility and timing HOLD"
+    },
+    {
+      "issue": 488,
+      "sha": "45a54135f12345ce2a8f40d33ade6e80abc1f779",
+      "disposition": "HOST_PARTIAL",
+      "independent_checks": "PASS for recipe-only claim",
+      "external": "Compiled object/driver/link qualification HOLD; header/concurrency owned by L532"
+    },
+    {
+      "issue": 450,
+      "sha": "08bb0c7f919094d4c66e10816b888dd2e1f1055a",
+      "disposition": "ORIGINAL_EVIDENCE_HOLD_CORRECTED_HOST_PASS",
+      "proposed_source": "1e4cdbe91b444efe51af4e745f366e07d54de030",
+      "complete_corpus": 59,
+      "plain_valid": 10000,
+      "plain_malformed": 202675,
+      "external": "Desk integration/current main/v6 not qualified"
+    }
+  ],
+  "limitations": [
+    "In-process verifier is trusted executable code; malicious contract violation admits synthetic observation",
+    "Session fake uses uncached mode, assumes failure publishes nothing; no native atomicity or graph proof",
+    "Recipe spy does not check correct compiler input or compiled artifact; wrong-input control survives",
+    "Round-trip byte oracle shares encoder; validity shares semantic validator; independent from parsing only"
+  ],
+  "agents_spawned": 0,
+  "author_source_edits": false,
+  "hardware_model_performance": "NOT_RUN",
+  "snapshot_time": "2026-10-22T19:20:36Z",
+  "guarded_live_reads": "repo/PR499 reads RC0 normally; no bypass",
+  "report": "L533-review.md"
+}

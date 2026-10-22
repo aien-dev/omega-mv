@@ -1,0 +1,62 @@
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -march=armv8.6-a+dotprod+i8mm+sve -Isrc -Itools -o build/L533/tests-turing/gpu_replay tests/turing/test_gpu_replay.c tools/turing_gpu_replay.c src/turing/field.c src/turing/field_select.c src/turing/field_select_v0_retired.c src/turing/history_selector.c src/turing/replay.c src/omega_canonical.c src/sha256.c src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c src/algebra/realize_sparse.c src/algebra/realize_rns.c src/algebra/realize_dense.c -lm
+build/L533/tests-turing/gpu_replay
+SYNTHETIC gpu admission/replay: 421 checks, 0 failed; real qualification NOT_RUN
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -march=armv8.6-a+dotprod+i8mm+sve -Isrc -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -Itools -o build/L533/tests-turing/gpu_replay_asan tests/turing/test_gpu_replay.c tools/turing_gpu_replay.c src/turing/field.c src/turing/field_select.c src/turing/field_select_v0_retired.c src/turing/history_selector.c src/turing/replay.c src/omega_canonical.c src/sha256.c src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c src/algebra/realize_sparse.c src/algebra/realize_rns.c src/algebra/realize_dense.c -lm
+build/L533/tests-turing/gpu_replay_asan
+SYNTHETIC gpu admission/replay: 421 checks, 0 failed; real qualification NOT_RUN
+make GPU_FS_DIR=build/L533/gpu-visibility-fs build/L533/gpu-visibility-fs/omega_gpu_freestanding.o
+make[1]: Entering directory '/home/drakestapleton/workspace/omega-four-milestone-review-20261022'
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_gpu_engine.o src/omega_gpu_engine.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_gpu_platform.o src/omega_gpu_platform.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_blackwell_encoder.o src/omega_blackwell_encoder.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_blackwell_codegen.o src/omega_blackwell_codegen.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_blackwell_matmul.o src/omega_blackwell_matmul.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_blackwell_qmd.o src/omega_blackwell_qmd.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_blackwell_realize.o src/omega_blackwell_realize.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/sha256.o src/sha256.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_gpu_session.o src/omega_gpu_session.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_gpu_fmt.o src/omega_gpu_fmt.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_gpu_matmul_api.o src/omega_gpu_matmul_api.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_gpu_attention_api.o src/omega_gpu_attention_api.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_gpu_serving.o src/omega_gpu_serving.c
+gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc -c -o build/L533/gpu-visibility-fs/omega_gpu_wait.o src/omega_gpu_wait.c
+gcc -r -nostdlib -o build/L533/gpu-visibility-fs/omega_gpu_freestanding.o build/L533/gpu-visibility-fs/omega_gpu_engine.o build/L533/gpu-visibility-fs/omega_gpu_platform.o build/L533/gpu-visibility-fs/omega_blackwell_encoder.o build/L533/gpu-visibility-fs/omega_blackwell_codegen.o build/L533/gpu-visibility-fs/omega_blackwell_matmul.o build/L533/gpu-visibility-fs/omega_blackwell_qmd.o build/L533/gpu-visibility-fs/omega_blackwell_realize.o build/L533/gpu-visibility-fs/sha256.o build/L533/gpu-visibility-fs/omega_gpu_session.o build/L533/gpu-visibility-fs/omega_gpu_fmt.o build/L533/gpu-visibility-fs/omega_gpu_matmul_api.o build/L533/gpu-visibility-fs/omega_gpu_attention_api.o build/L533/gpu-visibility-fs/omega_gpu_serving.o build/L533/gpu-visibility-fs/omega_gpu_wait.o
+freestanding GPU link (14 files): only memcpy memset strcmp strlen undefined
+make[1]: Leaving directory '/home/drakestapleton/workspace/omega-four-milestone-review-20261022'
+cc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_GPU_NO_POSIX -o build/L533/gpu_session_visibility_oracle tests/gpu_session_visibility_oracle.c build/L533/gpu-visibility-fs/omega_gpu_freestanding.o
+build/L533/gpu_session_visibility_oracle
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=13
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=13
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=6
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=13
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=13
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=6
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=13
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=13
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=6
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=16384 lock=1 result=0
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=16384 lock=1 result=0
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=16384 lock=1 result=13
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=16384 lock=1 result=0
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=16384 lock=1 result=13
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=16384 lock=1 result=0
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=16384 lock=1 result=6
+gpu session visibility: 4 sizes, 28 exact events, failures/recovery/stale/close: PASS; graph/native NOT_RUN
+sh tests/gpu_session_visibility_mutants.sh build/L533/gpu-visibility-mutants build/L533/gpu-visibility-fs
+killed: omitted
+killed: shortened
+killed: reversed
+killed: swallowed
+session visibility mutants: 4/4 compiled, failed assertions confirmed

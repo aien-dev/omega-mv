@@ -1,0 +1,2 @@
+LIMIT: contract-violating verifier can mutate private snapshot and still admit; callback is trusted executable code, no isolation promised
+L533 replay independent checks=102369 PASS; no real parser/runtime/hardware exercised

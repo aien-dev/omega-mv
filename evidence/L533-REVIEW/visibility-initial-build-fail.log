@@ -1,0 +1,14 @@
+In file included from evidence/L533-REVIEW/visibility_probe.c:3:
+evidence/L533-REVIEW/../../tests/gpu_session_visibility_oracle.c:3: error: "main" redefined [-Werror]
+    3 | #define main existing_session_suite_main
+      |
+evidence/L533-REVIEW/visibility_probe.c:2: note: this is the location of the previous definition
+    2 | #define main l519_visibility_main
+      |
+evidence/L533-REVIEW/visibility_probe.c:6:5: error: redefinition of ‘main’
+    6 | int main(void){
+      |     ^~~~
+evidence/L533-REVIEW/../../tests/gpu_session_visibility_oracle.c:64:5: note: previous definition of ‘main’ with type ‘int(void)’
+   64 | int main(void) {
+      |     ^~~~
+cc1: all warnings being treated as errors
