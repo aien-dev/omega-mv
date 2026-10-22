@@ -2,7 +2,7 @@
 
 **Omega is AIEN's language for all computing.** You write a program once. Omega's own tools check it and compile it straight to the machine code of the processor that runs it, GPU or CPU. No vendor compiler, toolkit or runtime library is involved anywhere.
 
-On the GPU, that makes Omega the replacement for CUDA. We call Omega's GPU stack **cudaplusplus**: everything CUDA gives you (sections 2 and 3), plus what CUDA does not give you, the motor (section 6). On the CPU, Omega replaces C and its toolchain. This file says how far each of those has got, and the checks that have to pass before we can claim each one. Status words: PASS (a receipt exists on the named commit), PARTIAL, MISSING. Ledger item L386 tracks the work; tracking issue omega-mv#593.
+On the GPU, that makes Omega the replacement for CUDA. We call Omega's GPU stack **CUDA++**: everything CUDA gives you (sections 2 and 3), plus what CUDA does not give you, the motor (section 6). On the CPU, Omega replaces C and its toolchain. This file says how far each of those has got, and the checks that have to pass before we can claim each one. Status words: PASS (a receipt exists on the named commit), PARTIAL, MISSING. Ledger item L386 tracks the work; tracking issue omega-mv#593.
 
 ## 1. The parts
 
@@ -89,9 +89,9 @@ Each row PASS needs our receipt and the other system measured by us on this Spar
 | **P3. Many conversations.** | Omega total words per second beats the best measured CUDA number at 8 and 32 conversations. Levers: grouped expert GEMM over the expert union, bf16 state (L313), continuous batching on the stroke (L312, L354). |
 | **P4. What CUDA stacks do not do.** | At least one measured win that comes from owning the whole path: one submission per word or a resident whole-model kernel (L272), zero-copy use of the shared memory, our own driver's launch path (L332). |
 
-## 6. cudaplusplus: the motor
+## 6. CUDA++: the motor
 
-CUDA gives you kernels, memory and streams. It leaves the hard part to you: how a whole model's bytes reach the math cores in time, and how many conversations share one read of the weights. Omega's answer is the motor. The motor is the "plus plus" in cudaplusplus.
+CUDA gives you kernels, memory and streams. It leaves the hard part to you: how a whole model's bytes reach the math cores in time, and how many conversations share one read of the weights. Omega's answer is the motor. The motor is the ++ in CUDA++.
 
 **What the motor is.** Separate engines in one body, each with one job and its own timing trace, coupled by one schedule:
 
