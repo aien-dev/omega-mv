@@ -1,0 +1,28 @@
+✖ recovery does not resurrect retained-out segment bytes and preserves known loss (57.307521ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 99.084393
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:100:1
+✖ recovery does not resurrect retained-out segment bytes and preserves known loss (57.307521ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-nhpWx7/tests/trace/archive.test.mjs:103:110)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

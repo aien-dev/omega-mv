@@ -1,0 +1,27 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.308169ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (56.401666ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (115.932826ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (33.476773ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (52.728505ms)
+✔ disabled writer no files; bounded burst durable per-class loss (65.073198ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (1.034343ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (40.908456ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (10.605929ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (15.521146ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (49.190833ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (51.068318ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (48.240202ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (53.762768ms)
+✔ existing hook corpus maps causal candidate/realization pairs without copying task text (34.49414ms)
+✔ ARGUS existing ABI keeps u64 stream/tick, original refs, sticky critical loss and refuses malformed (0.591349ms)
+✔ DUAL canonical recommendation remains advisory, uncalibrated and measured distinct (0.536675ms)
+✔ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.30461ms)
+✔ realization code size is a distinct typed metric, not memory footprint (13.15049ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 635.344831

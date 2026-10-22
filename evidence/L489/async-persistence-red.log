@@ -1,0 +1,59 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.326186ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (58.162547ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (89.323668ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (23.477033ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (47.43455ms)
+✔ disabled writer no files; bounded burst durable per-class loss (56.612584ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.578948ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (38.843032ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (12.670955ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (21.224937ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (60.320914ms)
+✖ permission denial refuses writes; failed async persistence reports exact accepted count (52.575195ms)
+✖ writer snapshots context and refuses cross-run/session mixing without throwing (61.86835ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 11
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 577.503391
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:93:1
+✖ permission denial refuses writes; failed async persistence reports exact accepted count (52.575195ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  undefined !== 1
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:95:157)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/trace/archive.test.mjs:97:1
+✖ writer snapshots context and refuses cross-run/session mixing without throwing (61.86835ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(status.errors.includes('writer context refused'))
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:98:255)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

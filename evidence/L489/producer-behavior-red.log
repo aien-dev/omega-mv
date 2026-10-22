@@ -1,0 +1,52 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.20601ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (62.511878ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (98.946392ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (22.892668ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (40.213167ms)
+✔ disabled writer no files; bounded burst durable per-class loss (57.076333ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.53714ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (36.163456ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (9.750809ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (15.451332ms)
+✖ producer errors stay bounded, and durable losses retain producer and event class (11.073363ms)
+
+Interrupted while running:
+
+⚠ tests/trace/archive.test.mjs (tests/trace/archive.test.mjs:1:1)
+✖ tests/trace/archive.test.mjs (21964.168991ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 10
+ℹ fail 1
+ℹ cancelled 1
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21970.193916
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:89:1
+✖ producer errors stay bounded, and durable losses retain producer and event class (11.073363ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(w.errors.length<=16)
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:91:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/trace/archive.test.mjs:1:1
+✖ tests/trace/archive.test.mjs (21964.168991ms)
+  'Promise resolution is still pending but the event loop has already resolved'

@@ -1,0 +1,5 @@
+OMEGA-SEARCHTRACE-TASKSET v1
+# SYNTHETIC L489 fixture, not an actual model trace.
+task synthetic_add3 depth=2 max_cost=10 max_candidates=100 dedup=1 pairs=0:3,1:4,7:10
+task synthetic_affine depth=2 max_cost=10 max_candidates=500 dedup=1 pairs=0:1,1:3,2:5,10:21
+end

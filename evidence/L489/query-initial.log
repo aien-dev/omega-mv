@@ -1,0 +1,13 @@
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (38.752993ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (20.546963ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (16.0731ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (20.828917ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (239.694277ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 379.030736

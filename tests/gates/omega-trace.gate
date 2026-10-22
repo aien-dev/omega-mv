@@ -1,0 +1,30 @@
+# Offline host-only Omega Trace correctness. No hardware or timing qualification.
+gate: OMEGA-TRACE
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/trace.mk
+  - mk/searchtrace.mk
+  - tools/trace/
+  - tests/trace/
+  - src/searchtrace/
+  - src/dual/
+  - src/sha256.c
+  - src/sha256.h
+  - argus.lock
+  - src/omega_synthesis.c
+  - src/omega_realize_synth.c
+  - docs/trace/
+  - evidence/L489/synthetic-searchtrace.txt
+run:
+  exec: tests/trace/run.sh
+  args: []
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 10m
+exactness: EXACT
+cache_scope: machine

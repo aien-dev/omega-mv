@@ -1,0 +1,19 @@
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (27.213032ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (31.861996ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (24.960869ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (31.124182ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (311.730198ms)
+✔ unknown run and mixed clock range cannot report conclusive success (27.809933ms)
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (56.917779ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (31.08631ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (30.206592ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (25.616635ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (16.338018ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 496.198011

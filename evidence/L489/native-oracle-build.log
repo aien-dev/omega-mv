@@ -1,0 +1,10 @@
+tests/trace/native-oracle.c: In function ‘main’:
+tests/trace/native-oracle.c:20:17: error: ‘RxDualDigest’ has no member named ‘bytes’
+   20 |  r.decision_site.bytes[31]=11;r.price_vector.bytes[31]=12;r.generation=1;r.n_candidates=1;r.candidates[0].bytes[31]=13;
+      |                 ^
+tests/trace/native-oracle.c:20:45: error: ‘RxDualDigest’ has no member named ‘bytes’
+   20 |  r.decision_site.bytes[31]=11;r.price_vector.bytes[31]=12;r.generation=1;r.n_candidates=1;r.candidates[0].bytes[31]=13;
+      |                                             ^
+tests/trace/native-oracle.c:20:106: error: ‘RxDualDigest’ has no member named ‘bytes’
+   20 |  r.decision_site.bytes[31]=11;r.price_vector.bytes[31]=12;r.generation=1;r.n_candidates=1;r.candidates[0].bytes[31]=13;
+      |                                                                                                          ^

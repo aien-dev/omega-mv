@@ -1,0 +1,35 @@
+✖ multi-producer collision ordering, exact links, typed totals and unavailable energy (24.494756ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.870461
+
+✖ failing tests:
+
+test at tests/trace/query.test.mjs:8:1
+✖ multi-producer collision ordering, exact links, typed totals and unavailable energy (24.494756ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'ecb61aeca9130014b6926fd67d50e660099f72eb85858d58d479605dfef0ddeb',
+      '1ec6f3bc2e472d979ebbe38ebb6470b2db31f1ec717cb2ef9a670d1699be923f',
+  -   'ecb61aeca9130014b6926fd67d50e660099f72eb85858d58d479605dfef0ddeb'
+    ]
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-LwlFOg/tests/trace/query.test.mjs:9:82)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'ecb61aeca9130014b6926fd67d50e660099f72eb85858d58d479605dfef0ddeb', '1ec6f3bc2e472d979ebbe38ebb6470b2db31f1ec717cb2ef9a670d1699be923f' ],
+    expected: [ '1ec6f3bc2e472d979ebbe38ebb6470b2db31f1ec717cb2ef9a670d1699be923f', 'ecb61aeca9130014b6926fd67d50e660099f72eb85858d58d479605dfef0ddeb' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,42 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.278281ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (52.317974ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (102.370812ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (26.846904ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (49.420546ms)
+✔ disabled writer no files; bounded burst durable per-class loss (81.437917ms)
+✖ independent frame oracle verifies exact bytes, endian, digest, and payload (2.93178ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (51.948787ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (11.605407ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (22.566906ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (53.752911ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (41.193577ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (49.859396ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (57.260407ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 645.372188
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:61:1
+✖ independent frame oracle verifies exact bytes, endian, digest, and payload (2.93178ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(scan(mutant).problems.length)
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-eSfnJ2/tests/trace/archive.test.mjs:66:106)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

@@ -1,0 +1,4 @@
+"schema","source_segments","query","integrity","evidence","name","unit","provenance","missing","count","total","mean","p50","p95"
+"omega.trace.table.v1","[""cdecb5de948383e5a817b7a15bf9cee9b13b95caf59e8dc82602576bc565ee3c""]","{""run"":""0000000000000000000000000000000000000000000000000000000000000001""}","PASS","NOT_VERIFIED","dropped","events","observed","0","1","7","7","7","7"
+"omega.trace.table.v1","[""cdecb5de948383e5a817b7a15bf9cee9b13b95caf59e8dc82602576bc565ee3c""]","{""run"":""0000000000000000000000000000000000000000000000000000000000000001""}","PASS","NOT_VERIFIED","duration","ns","observed","0","2","5","2.5","1","4"
+"omega.trace.table.v1","[""cdecb5de948383e5a817b7a15bf9cee9b13b95caf59e8dc82602576bc565ee3c""]","{""run"":""0000000000000000000000000000000000000000000000000000000000000001""}","PASS","NOT_VERIFIED","energy","J","unknown","1","","","","",""

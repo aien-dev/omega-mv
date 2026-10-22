@@ -1,0 +1,27 @@
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (42.315271ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (19.699305ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (23.659925ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (21.391173ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (20.716912ms)
+✖ step/status filters and retention cannot conceal known run loss counts (20.907698ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 205.046933
+
+✖ failing tests:
+
+test at tests/trace/sharing.test.mjs:29:1
+✖ step/status filters and retention cannot conceal known run loss counts (20.907698ms)
+  TypeError: Cannot read properties of undefined (reading 'metric')
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/sharing.test.mjs:30:197)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

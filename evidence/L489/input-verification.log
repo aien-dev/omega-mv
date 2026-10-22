@@ -1,0 +1,7 @@
+tests/trace/synthetic-taskset.txt: OK
+tests/trace/golden-contribution.json: OK
+evidence/L489/synthetic-searchtrace.txt: OK
+argus.lock: OK
+build/L489/native-oracle-src/argus_abi.h: OK
+build/L489/native-oracle-src/argus_event.c: OK
+build/L489/native-oracle-src/sha256.h: OK

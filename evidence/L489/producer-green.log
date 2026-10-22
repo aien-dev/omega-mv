@@ -1,0 +1,55 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.212697ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (51.466385ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (92.510196ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (21.842931ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (44.165819ms)
+✖ disabled writer no files; bounded burst durable per-class loss (7.239254ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.775222ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (38.937107ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (10.074763ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (14.996752ms)
+✖ producer errors stay bounded, and durable losses retain producer and event class (8.930147ms)
+
+Interrupted while running:
+
+⚠ tests/trace/archive.test.mjs (tests/trace/archive.test.mjs:1:1)
+✖ tests/trace/archive.test.mjs (25483.540036ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 9
+ℹ fail 2
+ℹ cancelled 1
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25486.529402
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:53:1
+✖ disabled writer no files; bounded burst durable per-class loss (7.239254ms)
+  Error: invalid metric value
+      at fail (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:9:37)
+      at checkMetric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:30:128)
+      at metric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:24:108)
+      at BoundedWriter.close (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/archive.mjs:101:325)
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:57:33)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at tests/trace/archive.test.mjs:89:1
+✖ producer errors stay bounded, and durable losses retain producer and event class (8.930147ms)
+  Error: invalid metric value
+      at fail (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:9:37)
+      at checkMetric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:30:128)
+      at metric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:24:108)
+      at BoundedWriter.close (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/archive.mjs:101:389)
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:91:23)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+
+test at tests/trace/archive.test.mjs:1:1
+✖ tests/trace/archive.test.mjs (25483.540036ms)
+  'Promise resolution is still pending but the event loop has already resolved'

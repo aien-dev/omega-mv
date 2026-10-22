@@ -1,0 +1,42 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.263145ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (52.686872ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (92.537656ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (24.720009ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (48.850238ms)
+✖ disabled writer no files; bounded burst durable per-class loss (880.958966ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.906102ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (36.52257ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (10.414423ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (19.862711ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (57.540665ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (52.975146ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (51.426287ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (62.542699ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1436.257369
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:53:1
+✖ disabled writer no files; bounded burst durable per-class loss (880.958966ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(accepted<=2)
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-ebqWyK/tests/trace/archive.test.mjs:57:25)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

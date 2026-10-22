@@ -1,0 +1,7 @@
+import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import {spawnSync} from 'node:child_process';import assert from 'node:assert/strict';import {argus,dual} from '../../tools/trace/observers.mjs';import {fixture,id} from './helpers.mjs';
+let assertions=0;const check=new Proxy(assert,{get(target,key){const value=target[key];return typeof value==='function'?(...args)=>{assertions++;return value(...args);}:value;}});
+const folder=fs.mkdtempSync(path.join(os.tmpdir(),'omega-trace-native-oracle-'));try{
+ const binary=path.resolve(process.env.OMEGA_TRACE_BUILD_DIR??'build/L489','native-oracle'),p=spawnSync(binary,[folder],{encoding:'utf8'});check.equal(p.status,0,p.stderr);process.stdout.write(p.stdout);
+ const a=argus(fs.readFileSync(path.join(folder,'argus.bin')),fixture()),d=dual(fs.readFileSync(path.join(folder,'dual.bin')),fixture());check.equal(a.length,1);check.equal(a[0].producer,3);check.equal(a[0].time.tick,'7');check.equal(a[0].contract.machine,id(3));check.ok(a[0].receipts.includes(id(8)));check.equal(d.length,1);check.equal(d[0].semantic,id(11));check.equal(d[0].metrics.find(m=>m.name==='predicted').value,-10);check.equal(d[0].metrics.find(m=>m.name==='measured').value,-8);check.equal(d[0].metrics.find(m=>m.name==='resource').value,0);check.equal(d[0].status,'uncalibrated');
+ console.log(JSON.stringify({schema:'omega.trace.native-oracle.v1',qualification:'SYNTHETIC_HOST_ONLY',records:2,assertions,authority:false,hardware:'NOT_RUN'}));
+}finally{fs.rmSync(folder,{recursive:true,force:true});}

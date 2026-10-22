@@ -1,0 +1,27 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.294762ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (82.70843ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (132.314735ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (25.167067ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (45.45736ms)
+✔ disabled writer no files; bounded burst durable per-class loss (53.486913ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (1.045224ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (39.174141ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (10.625158ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (17.907985ms)
+✔ existing hook corpus maps causal candidate/realization pairs without copying task text (39.569761ms)
+✔ ARGUS existing ABI keeps u64 stream/tick, original refs, sticky critical loss and refuses malformed (0.670677ms)
+✔ DUAL canonical recommendation remains advisory, uncalibrated and measured distinct (0.546837ms)
+✔ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.176337ms)
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (40.80465ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (30.908186ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (29.282589ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (34.199765ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (341.342972ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 529.074332

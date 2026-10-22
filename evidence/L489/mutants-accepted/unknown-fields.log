@@ -1,0 +1,42 @@
+✖ canonical bytes independent of key insertion; strict types/units/versions (1.29348ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (72.964603ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (136.695639ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (36.249508ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (61.363037ms)
+✔ disabled writer no files; bounded burst durable per-class loss (71.094462ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.944806ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (57.851269ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (15.11623ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (26.714484ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (58.680347ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (43.721382ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (58.310184ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (75.5539ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (546.479881ms)
+✔ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (73.977249ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1384.56628
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:9:1
+✖ canonical bytes independent of key insertion; strict types/units/versions (1.29348ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-0djGpr/tests/trace/archive.test.mjs:12:235)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }

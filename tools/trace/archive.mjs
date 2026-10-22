@@ -27,7 +27,13 @@ function indexRead(root){
   const v=JSON.parse(line);if(canonical(v)!==line||v.schema!=='omega.trace.index.v1')fail('index schema');
   if(!/^[0-9]{8}\.seg$/.test(v.name))fail('index name');next=Math.max(next,Number(v.name.slice(0,8))+1);
   if(v.op==='add'){keys(v,['schema','op','name','bytes','digest','records','created_ms']);integer(v.bytes,8,MAX_SEGMENT);integer(v.records,1);integer(v.created_ms);if(!isDigest(v.digest)||segments.has(v.name)||retention.some(r=>r.name===v.name))fail('duplicate/bad segment');segments.set(v.name,v);}
-  else if(v.op==='remove'){keys(v,['schema','op','name','reason','digest']);if(!['quota','age','purge'].includes(v.reason)||!segments.has(v.name)||segments.get(v.name).digest!==v.digest||pins.has(v.name))fail('invalid retention');retention.push(v);segments.delete(v.name);}
+  else if(v.op==='remove'){
+   keys(v,['schema','op','name','reason','digest','losses']);
+   if(!['quota','age','purge'].includes(v.reason)||!segments.has(v.name)||segments.get(v.name).digest!==v.digest||pins.has(v.name))fail('invalid retention');
+   if(!Array.isArray(v.losses)||v.losses.length>16384)fail('invalid retained loss disclosure');
+   for(const e of v.losses){validate(e);if(e.category!=='loss')fail('retention only preserves loss summaries');}
+   retention.push(v);segments.delete(v.name);
+  }
   else if(v.op==='pin'){keys(v,['schema','op','name','pinned']);if(typeof v.pinned!=='boolean'||!segments.has(v.name))fail('invalid pin');if(v.pinned)pins.add(v.name);else pins.delete(v.name);}
   else fail('index operation');
  }catch{problems.push('malformed index entry');break;}}
@@ -42,7 +48,7 @@ export function readArchive(rootPath){const root=new OwnedRoot(rootPath);try{
  }
  const retained=new Set(ix.retention.map(x=>x.name));
  for(const n of root.names())if(!['index.jsonl','.writer.lock','recovery.json'].includes(n)&&!ix.segments.has(n)&&!retained.has(n))problems.push(`${n}: orphan/unknown archive file`);
- if(root.names().includes('recovery.json')){try{const note=JSON.parse(root.read('recovery.json'));if(note.schema!=='omega.trace.recovery.v1'||note.source_integrity!=='PASS')problems.push('recovered source incomplete; loss extent unknown');}catch{problems.push('invalid recovery disclosure');}}
+ if(root.names().includes('recovery.json')){try{const note=JSON.parse(root.read('recovery.json'));if(note.schema!=='omega.trace.recovery.v1'||(note.source_integrity!=='PASS'||note.loss_extent!=='none_detected'))problems.push('recovered source incomplete; loss extent unknown');}catch{problems.push('invalid recovery disclosure');}}
  return {schema:'omega.trace.archive.v1',integrity:problems.length?'INCONCLUSIVE':'PASS',evidence:'NOT_VERIFIED',events,segments,retention:ix.retention,problems};
  }finally{root.close();}}
 export function defaultRoot(){return path.join(process.env.XDG_STATE_HOME??path.join(process.env.HOME,'.local/state'),'omega-trace');}
@@ -75,7 +81,9 @@ export class Archive {
    const age=this.clock()-s.created_ms;if(ix.pins.has(s.name)||(!purge&&total<=bytes&&age<=olderThanMs))continue;
    const b=this.root.read(s.name,MAX_SEGMENT);if(hash(b)!==s.digest||scan(b).problems.length)fail('refuse to delete incomplete segment');
    // Durable tombstone first: interruption leaves a known retained-out segment, never silent loss.
-   this.index({op:'remove',name:s.name,reason:purge?'purge':age>olderThanMs?'age':'quota',digest:s.digest});this.root.unlink(s.name);total-=s.bytes;removed.push(s.name);
+   this.index({op:'remove',name:s.name,reason:purge?'purge':age>olderThanMs?'age':'quota',digest:s.digest,
+    losses:scan(b).events.filter(e=>e.category==='loss')});
+   this.root.unlink(s.name);total-=s.bytes;removed.push(s.name);
   }return removed;
  }
  purge(){return this.retain({purge:true});}
@@ -84,22 +92,88 @@ export class Archive {
 export function recover(source,destination){
  if(path.resolve(source)===path.resolve(destination))fail('recovery requires new destination');
  if(fs.existsSync(destination))fail('recovery destination must be new');
- const r=readArchive(source),root=new OwnedRoot(source),events=[...r.events],seen=new Set(events.map(e=>e.event_id)),problems=[...r.problems],digests=[];
- try{for(const name of root.names().filter(n=>/^[0-9]{8}\.seg$/.test(n))){const b=root.read(name,MAX_SEGMENT),scanned=scan(b);digests.push(hash(b));problems.push(...scanned.problems.map(p=>name+': '+p));for(const e of scanned.events)if(!seen.has(e.event_id)){seen.add(e.event_id);events.push(e);}}}finally{root.close();}
+ const r=readArchive(source),root=new OwnedRoot(source),retired=new Set(r.retention.map(s=>s.name)),events=[...r.events,...r.retention.flatMap(s=>s.losses??[])],seen=new Set(events.map(e=>e.event_id)),problems=[...r.problems],digests=r.retention.map(s=>s.digest);
+ if(r.retention.length)problems.push('source retention: complete run coverage unavailable');
+ try{for(const name of root.names().filter(n=>/^[0-9]{8}\.seg$/.test(n)).filter(n=>!retired.has(n))){const b=root.read(name,MAX_SEGMENT),scanned=scan(b);digests.push(hash(b));problems.push(...scanned.problems.map(p=>name+': '+p));for(const e of scanned.events)if(!seen.has(e.event_id)){seen.add(e.event_id);events.push(e);}}}finally{root.close();}
  const a=new Archive(destination);try{a.append(events);const note={schema:'omega.trace.recovery.v1',source_integrity:r.integrity,recovered:events.length,loss_extent:problems.length?'unknown':'none_detected',problems,source_segments:digests};const fd=a.root.open('recovery.json',C.O_WRONLY|C.O_CREAT|C.O_EXCL);try{writeAll(fd,Buffer.from(canonical(note)));fs.fsyncSync(fd);}finally{fs.closeSync(fd);}fs.fsyncSync(a.root.fd);return {integrity:r.integrity,recovered:events.length,problems,source_segments:digests};}finally{a.close();}
 }
 export class BoundedWriter {
  constructor({root=defaultRoot(),enabled=false,capacity=256,segmentBytes=1024*1024}={}){
-  integer(capacity,1,65536);this.enabled=enabled;this.capacity=capacity;this.pending=0;this.drops=new Map();this.errors=[];this.closed=false;
-  if(enabled){this.worker=new Worker(new URL('./writer.mjs',import.meta.url),{workerData:{root,segmentBytes}});this.done=new Promise(resolve=>{this.worker.on('message',m=>{if(m.ack)this.pending--;if(m.error)this.errors.push(m.error);});this.worker.on('error',()=>this.errors.push('writer worker failed'));this.worker.on('exit',code=>{if(code)this.errors.push(`writer exit ${code}`);resolve();});});}
+  integer(capacity,1,65536);
+  this.enabled=enabled;
+  this.capacity=capacity;
+  this.pending=0;
+  this.submitted=0;
+  this.persisted=0;
+  this.drops=new Map();
+  this.errors=[];
+  this.errorCount=0;
+  this.closed=false;
+  if(enabled){
+   this.worker=new Worker(new URL('./writer.mjs',import.meta.url),{workerData:{root,segmentBytes}});
+   this.done=new Promise(resolve=>{
+    this.worker.on('message',m=>{
+     if(m.ack){this.pending--;if(m.persisted)this.persisted++;}
+     if(m.error)this.recordError(m.error);
+    });
+    this.worker.on('error',()=>this.recordError('writer worker failed'));
+    this.worker.on('exit',code=>{
+     this.exited=true;
+     if(code||!this.closed)this.recordError('writer exited before durable close');
+     resolve();
+    });
+   });
+  }
  }
- submit(e){if(!this.enabled||this.closed)return false;try{validate(e);}catch{this.errors.push('producer schema refused');return false;}
-  this.context??=e;if(this.pending>=this.capacity||this.errors.length){const k=e.source+':'+e.category;this.drops.set(k,(this.drops.get(k)??0)+1);return false;}
-  this.pending++;this.worker.postMessage({event:e});return true;
+ submit(e){
+  if(!this.enabled||this.closed)return false;
+  try{validate(e);}catch{this.recordError('producer schema refused');return false;}
+  if(this.context&&(e.run!==this.context.run||e.session!==this.context.session)){
+   this.recordError('writer context refused');
+   return false;
+  }
+  this.context??=structuredClone(e);
+  if(this.pending>=this.capacity||this.errors.length){
+   const requested=e.producer+':'+e.source+':'+e.category;
+   // Fixed attribution budget. The final reserved key explicitly reports excess attribution.
+   const k=this.drops.size<4096||this.drops.has(requested)?requested:'65535:trace:loss';
+   const count=this.drops.get(k);
+   if(count===null||count===Number.MAX_SAFE_INTEGER){this.drops.set(k,null);this.dropCountOverflow=true;}
+   else this.drops.set(k,(count??0)+1);
+   return false;
+  }
+  try{this.worker.postMessage({event:e});}
+  catch{this.recordError('writer enqueue failed');return false;}
+  this.pending++;
+  this.submitted++;
+  return true;
  }
- async close(){if(this.closed)return this.status();this.closed=true;if(this.worker){const losses=[];let seq=0;
-  for(const [k,n]of [...this.drops].sort()){const [source,category]=k.split(':');losses.push(event({...this.context,producer:65535,sequence:String(++seq),parent:null,source:'trace',category:'loss',status:'unknown',semantic:null,realization:null,step:null,metrics:[metric('dropped',n,'events','observed')],receipts:[],session:hash('loss:'+this.context.session+source+category)}));}
-  this.worker.postMessage({close:true,losses});await this.done;
- }return this.status();}
- status(){return {accepted_pending:this.pending,dropped:Object.fromEntries(this.drops),errors:[...this.errors],durable:this.closed&&!this.errors.length};}
+ async close(){
+  if(this.closing){await this.closing;return this.status();}
+  this.closed=true;
+  if(this.worker){
+   const losses=[];
+   let seq=0;
+   for(const [k,n]of [...this.drops].sort()){
+    const [producer,source,category]=k.split(':');
+    losses.push(event({...this.context,producer:Number(producer),sequence:String(++seq),parent:null,
+     source:'trace',category:'loss',status:'unknown',semantic:null,realization:null,step:null,
+     metrics:[metric('dropped',n,'events',n===null?'unknown':'observed',n===null?'not_recorded':null),
+      metric('lost_source',SOURCES.indexOf(source),'code','observed'),
+      metric('lost_category',CATEGORIES.indexOf(category),'code','observed')],
+     receipts:[],session:hash('loss:'+this.context.session+source+category)}));
+   }
+   if(!this.exited)this.worker.postMessage({close:true,losses});
+   this.closing=this.done;
+   await this.closing;
+  }
+  return this.status();
+ }
+ recordError(message){
+  this.errorCount++;
+  if(this.errors.length<16&&!this.errors.includes(message))this.errors.push(message);
+ }
+ status(){return {drop_count_overflow:!!this.dropCountOverflow,submitted:this.submitted,persisted:this.persisted,error_count:this.errorCount,
+  accepted_pending:this.pending,dropped:Object.fromEntries(this.drops),errors:[...this.errors],
+  durable:this.closed&&this.exited&&!this.errors.length&&this.persisted===this.submitted};}
 }

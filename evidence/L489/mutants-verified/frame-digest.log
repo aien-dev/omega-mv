@@ -1,0 +1,44 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (2.806723ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (61.143165ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (99.400255ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (25.530204ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (51.522075ms)
+✔ disabled writer no files; bounded burst durable per-class loss (75.603902ms)
+✖ independent frame oracle verifies exact bytes, endian, digest, and payload (5.161859ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (38.676133ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (11.035675ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (18.832639ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (60.005237ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (48.758473ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (64.136913ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (59.774339ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (646.920831ms)
+✔ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (54.957011ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1386.692866
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:61:1
+✖ independent frame oracle verifies exact bytes, endian, digest, and payload (5.161859ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(scan(mutant).problems.length)
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-VjK6aK/tests/trace/archive.test.mjs:66:106)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

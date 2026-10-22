@@ -1,0 +1,43 @@
+make: Nothing to be done for 'searchtrace'.
+verify PASS digest=1a78a91634dfe5fc310577baaacc3737d34b99c306a715d039fc47622082856a steps=139
+hookcheck PASS tasks=2
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.283498ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (85.650545ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (151.32232ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (24.056943ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (47.904093ms)
+✔ disabled writer no files; bounded burst durable per-class loss (58.345146ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (1.040151ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (40.230277ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (10.358828ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (17.085421ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (70.44517ms)
+✔ existing hook corpus maps causal candidate/realization pairs without copying task text (38.801691ms)
+✔ ARGUS existing ABI keeps u64 stream/tick, original refs, sticky critical loss and refuses malformed (0.653637ms)
+✔ DUAL canonical recommendation remains advisory, uncalibrated and measured distinct (0.619413ms)
+✔ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.185761ms)
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (53.070579ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (38.799979ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (34.787341ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (34.221562ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (283.917815ms)
+✔ unknown run and mixed clock range cannot report conclusive success (23.145304ms)
+✔ cross-session links within a run remain valid; cross-run parents are qualified (0.83711ms)
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (47.290345ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (37.372561ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (37.834228ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (36.42593ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (31.847913ms)
+✔ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (42.664327ms)
+✔ step/source/type/time selection and missing/loss/compare labels use typed observations (33.088514ms)
+✔ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (42.461142ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 551.117988
+network-denial positive control EPERM
+{"accepted":3,"checks":10,"dropped":{"1:train:step":47},"hardware":"NOT_RUN","imported_events":220,"listener":false,"loss_summaries":1,"network_policy":"seccomp_socket_operations_denied","performance":"NOT_RUN","preview_exact":true,"qualification":"SYNTHETIC_HOST_ONLY","schema":"omega.trace.offline-test.v1","source_unchanged":true}

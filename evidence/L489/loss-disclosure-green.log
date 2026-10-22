@@ -1,0 +1,27 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (2.673747ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (70.869021ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (167.691822ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (23.202465ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (44.462117ms)
+✔ disabled writer no files; bounded burst durable per-class loss (56.381128ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.606229ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (41.679602ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (11.776306ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (18.173662ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (59.315069ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (48.878532ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (61.772446ms)
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (34.053117ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (30.238707ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (34.491072ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (32.291232ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (30.568596ms)
+✔ step/status filters and retention cannot conceal known run loss counts (89.432382ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 666.538187

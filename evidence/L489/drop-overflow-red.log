@@ -1,0 +1,49 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (2.738418ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (58.183514ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (92.029712ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (22.064486ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (45.627925ms)
+✔ disabled writer no files; bounded burst durable per-class loss (76.232117ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.5489ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (38.575238ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (10.00858ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (16.793826ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (65.339706ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (47.870628ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (60.784348ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (54.590033ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (654.474545ms)
+✖ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (1.025783ms)
+
+Interrupted while running:
+
+⚠ tests/trace/archive.test.mjs (tests/trace/archive.test.mjs:1:1)
+✖ tests/trace/archive.test.mjs (29968.375083ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 1
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 29973.373901
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:108:1
+✖ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (1.025783ms)
+  Error: invalid integer
+      at fail (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:9:37)
+      at integer (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:22:104)
+      at checkMetric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:31:98)
+      at metric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:24:108)
+      at BoundedWriter.close (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/archive.mjs:159:15)
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:109:222)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+
+test at tests/trace/archive.test.mjs:1:1
+✖ tests/trace/archive.test.mjs (29968.375083ms)
+  'Promise resolution is still pending but the event loop has already resolved'

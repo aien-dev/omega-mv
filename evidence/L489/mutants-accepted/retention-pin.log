@@ -1,0 +1,47 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.299129ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (68.175706ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (132.511595ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (37.271051ms)
+✖ quota, age, pin and explicit purge preserve unrelated receipts (53.790377ms)
+✔ disabled writer no files; bounded burst durable per-class loss (73.804096ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.879542ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (59.577489ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (15.832426ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (25.498875ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (59.58136ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (46.515017ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (58.691802ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (78.37171ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (609.84749ms)
+✔ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (70.57881ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1434.321494
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:45:1
+✖ quota, age, pin and explicit purge preserve unrelated receipts (53.790377ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-XDJDet/tests/trace/archive.test.mjs:48:71)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

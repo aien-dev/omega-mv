@@ -1,0 +1,13 @@
+file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:9
+export function fail(message){throw new Error(message);}
+                                    ^
+
+Error: SearchTrace canonical verifier refused source or binary
+    at fail (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:9:37)
+    at verifiedCorpus (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/observers.mjs:14:9)
+    at searchtrace (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/observers.mjs:17:2)
+    at main (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/trace.mjs:19:46)
+    at file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/offline.mjs:14:32
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v24.21.0

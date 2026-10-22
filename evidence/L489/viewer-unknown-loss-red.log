@@ -1,0 +1,35 @@
+✔ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (37.81664ms)
+✔ step/source/type/time selection and missing/loss/compare labels use typed observations (19.424275ms)
+✔ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (20.846253ms)
+✖ unknown dropped count remains unknown in viewer, never zero (0.530212ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 116.709444
+
+✖ failing tests:
+
+test at tests/trace/viewer.test.mjs:20:1
+✖ unknown dropped count remains unknown in viewer, never zero (0.530212ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 'unknown'
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/viewer.test.mjs:21:113)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 'unknown',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

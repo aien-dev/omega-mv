@@ -1,0 +1,30 @@
+✖ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (25.624764ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 60.888073
+
+✖ failing tests:
+
+test at tests/trace/viewer.test.mjs:11:1
+✖ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (25.624764ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /no events|range/. Input:
+  
+  'Dropped events in selection: 0. Full run dropped disclosures: [{"category":"loss","metric":{"name":"dropped","provenance":"observed","reason":null,"unit":"events","value":3},"producer":1,"source":"train"}]. Retained-out segments: 0. Crash loss may be unknown.'
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-2NOMgC/tests/trace/viewer.test.mjs:17:90)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Dropped events in selection: 0. Full run dropped disclosures: [{"category":"loss","metric":{"name":"dropped","provenance":"observed","reason":null,"unit":"events","value":3},"producer":1,"source":"train"}]. Retained-out segments: 0. Crash loss may be unknown.',
+    expected: /no events|range/,
+    operator: 'match',
+    diff: 'simple'
+  }

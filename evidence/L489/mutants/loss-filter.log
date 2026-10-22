@@ -1,0 +1,28 @@
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (28.93535ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (16.408944ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (20.342203ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (20.933695ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (18.467182ms)
+✖ step/status filters and retention cannot conceal known run loss counts (21.25085ms)
+✔ unknown binary/metadata fields in an integrity-correct segment refuse local packaging (18.224428ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 196.704304
+
+✖ failing tests:
+
+test at tests/trace/sharing.test.mjs:29:1
+✖ step/status filters and retention cannot conceal known run loss counts (21.25085ms)
+  TypeError: Cannot read properties of undefined (reading 'metric')
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-gmfVFx/tests/trace/sharing.test.mjs:30:197)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

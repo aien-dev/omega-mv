@@ -4,7 +4,7 @@ export const VERSION='omega.trace.event.v1';
 export const MAX_RECORD=16384;
 export const SOURCES=['train','searchtrace','argus','dual','realization','hardware','trace'];
 export const CATEGORIES=['step','candidate','realization','authority','dual','hardware','loss'];
-const REGISTRY={duration:['ns'],cost:['rcycles'],loss:['ratio'],rate:['per_second'],gradient:['norm'],memory:['bytes'],energy:['nJ','J'],dropped:['events'],critical_loss:['events'],prune:['code'],verdict:['code'],predicted:['ns','bytes','J','rcycles'],uncertainty:['ns','bytes','J','rcycles'],measured:['ns','bytes','J','rcycles'],calibration:['code'],authority_kind:['code'],authority_status:['code'],generation:['count']};
+const REGISTRY={duration:['ns'],cost:['rcycles'],loss:['ratio'],rate:['per_second'],gradient:['norm'],memory:['bytes'],code_bytes:['bytes'],energy:['nJ','J'],dropped:['events'],critical_loss:['events'],prune:['code'],verdict:['code'],predicted:['ns','bytes','J','rcycles','ps','pJ','bytes_per_s','kv_blocks','ppm_occupancy','ns_verify','ns_synth','W','W_per_s','mC','mC_per_s','dimensionless','log2_ps'],uncertainty:['ns','bytes','J','rcycles','ps','pJ','bytes_per_s','kv_blocks','ppm_occupancy','ns_verify','ns_synth','W','W_per_s','mC','mC_per_s','dimensionless','log2_ps'],measured:['ns','bytes','J','rcycles','ps','pJ','bytes_per_s','kv_blocks','ppm_occupancy','ns_verify','ns_synth','W','W_per_s','mC','mC_per_s','dimensionless','log2_ps'],calibration:['code'],authority_kind:['code'],authority_status:['code'],generation:['count'],resource:['code'],actual:['code'],recommended:['code'],lost_source:['code'],lost_category:['code']};
 export const METRICS=Object.freeze(Object.keys(REGISTRY));
 export function fail(message){throw new Error(message);}
 export function keys(o,expected){if(!o||Object.getPrototypeOf(o)!==Object.prototype||Object.keys(o).sort().join(',')!==[...expected].sort().join(','))fail('unknown or missing fields');}
@@ -27,8 +27,10 @@ export function checkMetric(m){
  if(!Object.hasOwn(REGISTRY,m.name)||!REGISTRY[m.name].includes(m.unit))fail('invalid metric or unit');
  oneOf(m.provenance,['observed','estimated','unknown']);
  if(m.provenance==='unknown'){if(m.value!==null)fail('unknown measurement must be null');oneOf(m.reason,['not_recorded','uncalibrated','stale','invalid_clock','refused']);}
- else {if(typeof m.value!=='number'||!Number.isFinite(m.value)||m.value<0)fail('invalid metric value');if(m.reason!==null)fail('measured reason must be null');}
- if(['dropped','critical_loss','prune','verdict','calibration','authority_kind','authority_status','generation'].includes(m.name)&&m.value!==null)integer(m.value);
+ else {if(typeof m.value!=='number'||!Number.isFinite(m.value)||(m.value<0&&!['predicted','measured','loss'].includes(m.name)))fail('invalid metric value');if(m.reason!==null)fail('measured reason must be null');}
+ if((m.unit==='code'||['dropped','critical_loss','generation'].includes(m.name))&&m.value!==null)integer(m.value);
+ if(m.value!==null&&m.name==='lost_source')integer(m.value,0,SOURCES.length-1);
+ if(m.value!==null&&m.name==='lost_category')integer(m.value,0,CATEGORIES.length-1);
  return m;
 }
 export function event(input){const e={schema:VERSION,privacy:'local_numeric',capture:'explicit',...input};delete e.event_id;return validate({...e,event_id:digest(e)});}

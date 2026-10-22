@@ -9,7 +9,7 @@ import {id,fixture,temp} from './helpers.mjs';
 test('canonical bytes independent of key insertion; strict types/units/versions',()=>{
  const a=fixture(); assert.equal(canonical(a),canonical(JSON.parse(canonical(a))));
  assert.equal(digest(a),digest({...a}));
- for(const change of [{schema:'v2'},{extra:'secret'},{metrics:[{name:'energy',value:1,unit:'ns',provenance:'observed',reason:null}]},{sequence:'-1'},{privacy:'public'},{event_id:id(9)}]) assert.throws(()=>validate({...a,...change}));
+ for(const change of [{schema:'v2'},{extra:'secret'},{metrics:[{name:'energy',value:1,unit:'ns',provenance:'observed',reason:null}]},{sequence:'-1'},{privacy:'public'},{event_id:id(9)}]) {const {event_id,...p}={...a,...change};assert.throws(()=>validate({...p,event_id:change.event_id??digest(p)}));}
  assert.throws(()=>metric('duration',NaN,'ns','observed'));
 });
 test('sealed archive reopen, deterministic payloads, mode, no source mutation',t=>{
@@ -54,7 +54,7 @@ test('disabled writer no files; bounded burst durable per-class loss',async t=>{
  const root=path.join(temp(t),'a'),off=new BoundedWriter({root});assert.equal(off.submit(fixture()),false);await off.close();assert.equal(fs.existsSync(root),false);
  const w=new BoundedWriter({root,enabled:true,capacity:2});
  let accepted=0;for(let n=1;n<=100;n++)accepted+=Number(w.submit(fixture(n)));
- assert.ok(accepted<=2);await w.close();const r=readArchive(root);assert.equal(r.integrity,'PASS');
+ await w.close();assert.ok(accepted<=2);const r=readArchive(root);assert.equal(r.integrity,'PASS');
  assert.equal(r.events.filter(e=>e.category==='step').length,accepted);
  assert.equal(r.events.filter(e=>e.category==='loss').reduce((s,e)=>s+e.metrics.find(m=>m.name==='dropped').value,0),100-accepted);
 });
@@ -85,4 +85,26 @@ test('parent-component symlink, group-readable file, and hardlink refused',t=>{
  fs.symlinkSync(p,path.join(p,'parent-link'));assert.throws(()=>readArchive(path.join(p,'parent-link','a')));
  fs.chmodSync(path.join(root,'index.jsonl'),420);assert.throws(()=>readArchive(root));fs.chmodSync(path.join(root,'index.jsonl'),384);
  fs.linkSync(path.join(root,'index.jsonl'),path.join(p,'hard'));assert.throws(()=>readArchive(root));
+});
+test('producer errors stay bounded, and durable losses retain producer and event class',async t=>{
+ const root=path.join(temp(t),'a'),w=new BoundedWriter({root,enabled:true,capacity:1});w.submit(fixture());for(let n=0;n<100;n++){w.submit({...fixture(),privacy:'unclassified'});w.submit(fixture(n+2,{producer:n%2+1,source:'dual',category:'dual'}));}
+ const status=await w.close();assert.ok(w.errors.length<=16);assert.ok(status.errors.length);const r=readArchive(root),losses=r.events.filter(e=>e.category==='loss');assert.ok(losses.length>=2);assert.ok(losses.every(e=>e.metrics.some(m=>m.name==='lost_source')&&e.metrics.some(m=>m.name==='lost_category')));assert.deepEqual([...new Set(losses.map(e=>e.producer))].sort(),[1,2]);
+});
+test('permission denial refuses writes; failed async persistence reports exact accepted count',async t=>{
+ const p=temp(t),root=path.join(p,'a'),a=new Archive(root);a.append([fixture()]);a.close();fs.chmodSync(root,320);assert.throws(()=>new Archive(root),{code:'EACCES'});fs.chmodSync(root,448);
+ const w=new BoundedWriter({root:path.join(p,'missing-parent','archive'),enabled:true,capacity:2});w.submit(fixture(2));const status=await w.close();assert.equal(status.submitted,1);assert.equal(status.persisted,0);assert.equal(status.durable,false);assert.ok(status.errors.length);
+});
+test('writer snapshots context and refuses cross-run/session mixing without throwing',async t=>{
+ const root=path.join(temp(t),'a'),w=new BoundedWriter({root,enabled:true,capacity:1}),first=fixture();w.submit(first);first.status='refused';assert.equal(w.submit(fixture(2,{run:id(999)})),false);w.submit(fixture(3));const status=await w.close();assert.ok(status.errors.includes('writer context refused'));assert.equal(readArchive(root).events[0].status,'ok');
+});
+test('recovery does not resurrect retained-out segment bytes and preserves known loss',async t=>{
+ const {recover}=await import('../../tools/trace/archive.mjs'),p=temp(t),root=path.join(p,'a'),dest=path.join(p,'b'),a=new Archive(root);a.append([fixture(1),fixture(2,{category:'loss',metrics:[metric('dropped',7,'events','observed')]})]);const file=fs.readdirSync(root).find(n=>n.endsWith('.seg')),saved=fs.readFileSync(path.join(root,file));a.purge();a.append([fixture(3)]);a.close();
+ // Simulate interruption after durable retention tombstone but before deletion.
+ fs.writeFileSync(path.join(root,file),saved,{mode:384});recover(root,dest);const r=readArchive(dest);assert.equal(r.events.filter(e=>e.category==='step').length,1);assert.equal(r.events.find(e=>e.category==='loss').metrics[0].value,7);assert.equal(r.integrity,'INCONCLUSIVE');
+});
+test('attribution overflow stays within a fixed table and reports all refused events',async t=>{
+ const root=path.join(temp(t),'a'),w=new BoundedWriter({root,enabled:true,capacity:1});w.submit(fixture());for(let producer=0;producer<4100;producer++)w.submit(fixture(producer+2,{producer}));const status=await w.close();assert.equal(Object.keys(status.dropped).length,4097);assert.equal(status.dropped['65535:trace:loss'],4);assert.equal(readArchive(root).events.filter(e=>e.category==='loss').reduce((n,e)=>n+e.metrics.find(m=>m.name==='dropped').value,0),4100);assert.equal(status.durable,true);
+});
+test('drop-counter arithmetic overflow reports unknown rather than wrapping or throwing',async t=>{
+ const root=path.join(temp(t),'a'),w=new BoundedWriter({root,enabled:true,capacity:1});w.submit(fixture());w.drops.set('1:train:step',Number.MAX_SAFE_INTEGER);let status;try{assert.equal(w.submit(fixture(2)),false);status=await w.close();}finally{await w.worker.terminate();}assert.equal(status.drop_count_overflow,true);assert.equal(readArchive(root).events.find(e=>e.category==='loss').metrics.find(m=>m.name==='dropped').value,null);
 });

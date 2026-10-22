@@ -1,0 +1,39 @@
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (27.678605ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (16.346864ms)
+✖ comparison qualifies mismatched contracts; export carries source digests and query (15.439129ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (15.319112ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (251.754617ms)
+✔ unknown run and mixed clock range cannot report conclusive success (27.393419ms)
+✔ cross-session links within a run remain valid; cross-run parents are qualified (0.705525ms)
+✔ CLI refuses misleading arity/irrelevant filters and requires run for steps (4.090364ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 415.582921
+
+✖ failing tests:
+
+test at tests/trace/query.test.mjs:16:1
+✖ comparison qualifies mismatched contracts; export carries source digests and query (15.439129ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-RokZoV/tests/trace/query.test.mjs:17:76)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

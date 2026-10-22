@@ -1,0 +1,40 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (2.633314ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (64.541588ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (96.649646ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (23.609615ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (50.753111ms)
+✔ disabled writer no files; bounded burst durable per-class loss (78.169057ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.896662ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (39.832221ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (10.555687ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (15.687882ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (52.341394ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (50.637431ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (62.702504ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (54.263744ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (739.693629ms)
+✖ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (6.451996ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1411.107884
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:108:1
+✖ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (6.451996ms)
+  Error: invalid integer
+      at fail (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:9:37)
+      at integer (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:22:104)
+      at checkMetric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:31:98)
+      at metric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:24:108)
+      at BoundedWriter.close (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/archive.mjs:159:15)
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:109:231)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)

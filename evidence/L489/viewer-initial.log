@@ -1,0 +1,32 @@
+✖ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (45.000811ms)
+✔ step/source/type/time selection and missing/loss/compare labels use typed observations (24.08833ms)
+✔ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (24.972048ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 158.562761
+
+✖ failing tests:
+
+test at tests/trace/viewer.test.mjs:4:1
+✖ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (45.000811ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(!/<script[^>]+src=|https?:\/\/|<form|<iframe/i.test(a))
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/viewer.test.mjs:5:188)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

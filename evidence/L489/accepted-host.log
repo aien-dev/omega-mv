@@ -1,0 +1,56 @@
+make: Nothing to be done for 'searchtrace'.
+verify PASS digest=1a78a91634dfe5fc310577baaacc3737d34b99c306a715d039fc47622082856a steps=139
+hookcheck PASS tasks=2
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.457626ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (86.796615ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (153.495351ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (43.890871ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (47.782225ms)
+✔ disabled writer no files; bounded burst durable per-class loss (57.568467ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (1.101768ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (41.508839ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (11.581886ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (38.271041ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (60.672952ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (40.513472ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (64.619426ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (51.800668ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (727.810603ms)
+✔ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (42.877424ms)
+✔ existing hook corpus maps causal candidate/realization pairs without copying task text (38.909526ms)
+✔ ARGUS existing ABI keeps u64 stream/tick, original refs, sticky critical loss and refuses malformed (0.763909ms)
+✔ DUAL canonical recommendation remains advisory, uncalibrated and measured distinct (0.632436ms)
+✔ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.219617ms)
+✔ realization code size is a distinct typed metric, not memory footprint (13.639788ms)
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (40.062413ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (35.974162ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (38.272225ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (27.184982ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (295.577586ms)
+✔ unknown run and mixed clock range cannot report conclusive success (35.50883ms)
+✔ cross-session links within a run remain valid; cross-run parents are qualified (0.319778ms)
+✔ CLI refuses misleading arity/irrelevant filters and requires run for steps (2.379632ms)
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (64.366832ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (29.071315ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (34.642408ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (28.948034ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (25.092697ms)
+✔ step/status filters and retention cannot conceal known run loss counts (81.682421ms)
+✔ unknown binary/metadata fields in an integrity-correct segment refuse local packaging (30.842447ms)
+✔ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (57.05928ms)
+✔ step/source/type/time selection and missing/loss/compare labels use typed observations (35.150668ms)
+✔ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (42.519822ms)
+✔ unknown dropped count remains unknown in viewer, never zero (0.133504ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1533.562259
+native oracle PASS: ARGUS v1.1 and DUAL v1 existing encoders/decoders, 2 synthetic records
+{"schema":"omega.trace.native-oracle.v1","qualification":"SYNTHETIC_HOST_ONLY","records":2,"assertions":12,"authority":false,"hardware":"NOT_RUN"}
+network-denial positive control EPERM
+{"accepted":3,"checks":8,"dropped":{"1:train:step":47},"hardware":"NOT_RUN","imported_events":220,"listener":false,"loss_summaries":1,"network_policy":"seccomp_socket_operations_denied","performance":"NOT_RUN","preview_exact":true,"qualification":"SYNTHETIC_HOST_ONLY","schema":"omega.trace.offline-test.v1","source_unchanged":true}
+OMEGA-TRACE PASS (synthetic host correctness only; hardware and timings NOT_RUN)

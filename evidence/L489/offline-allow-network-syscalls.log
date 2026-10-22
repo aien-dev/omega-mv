@@ -1,0 +1,38 @@
+2131875 socketpair(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0, [29, 30]) = 0
+2131875 setsockopt(29, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(29, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 setsockopt(30, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(30, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 socketpair(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0, [31, 32]) = 0
+2131875 setsockopt(31, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(31, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 setsockopt(32, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(32, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=2131884, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+2131875 socketpair(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0, [27, 28]) = 0
+2131875 setsockopt(27, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(27, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 setsockopt(28, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(28, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 socketpair(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0, [29, 30]) = 0
+2131875 setsockopt(29, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(29, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 setsockopt(30, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(30, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 socketpair(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0, [31, 32]) = 0
+2131875 setsockopt(31, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(31, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 setsockopt(32, SOL_SOCKET, SO_RCVBUF, [65536], 4) = 0
+2131875 setsockopt(32, SOL_SOCKET, SO_SNDBUF, [65536], 4) = 0
+2131875 shutdown(27, SHUT_WR)           = 0
+2131929 getsockname(0, {sa_family=AF_UNIX}, [128 => 2]) = 0
+2131929 getsockopt(0, SOL_SOCKET, SO_TYPE, [1], [4]) = 0
+2131929 getsockname(1, {sa_family=AF_UNIX}, [128 => 2]) = 0
+2131929 getsockopt(1, SOL_SOCKET, SO_TYPE, [1], [4]) = 0
+2131929 getsockname(2, {sa_family=AF_UNIX}, [128 => 2]) = 0
+2131929 getsockopt(2, SOL_SOCKET, SO_TYPE, [1], [4]) = 0
+2131929 getsockname(1, {sa_family=AF_UNIX}, [128 => 2]) = 0
+2131929 getsockopt(1, SOL_SOCKET, SO_TYPE, [1], [4]) = 0
+2131929 getsockname(1, {sa_family=AF_UNIX}, [128 => 2]) = 0
+2131929 getsockopt(1, SOL_SOCKET, SO_TYPE, [1], [4]) = 0
+2131875 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=2131929, si_uid=1000, si_status=0, si_utime=4 /* 0.04 s */, si_stime=2 /* 0.02 s */} ---

@@ -1,0 +1,40 @@
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (48.723655ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (29.790908ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (24.811415ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (27.38577ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (266.241689ms)
+✔ unknown run and mixed clock range cannot report conclusive success (35.214403ms)
+✖ causal chains detect cycles and cross-session parent references (0.817782ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 489.178387
+
+✖ failing tests:
+
+test at tests/trace/query.test.mjs:35:1
+✖ causal chains detect cycles and cross-session parent references (0.817782ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'PASS'
+  - 'INCONCLUSIVE'
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/query.test.mjs:36:177)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASS',
+    expected: 'INCONCLUSIVE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,44 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.297289ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (45.215729ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (83.125777ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (25.514461ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (51.714013ms)
+✔ disabled writer no files; bounded burst durable per-class loss (55.93441ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.637844ms)
+✖ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (42.507263ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (9.580129ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (19.843078ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (59.519618ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (37.523373ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (47.052957ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (54.242526ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (661.613955ms)
+✔ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (55.739769ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1297.560184
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:68:1
+✖ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (42.507263ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-i1locL/tests/trace/archive.test.mjs:75:55)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,51 @@
+make: Nothing to be done for 'searchtrace'.
+verify PASS digest=1a78a91634dfe5fc310577baaacc3737d34b99c306a715d039fc47622082856a steps=139
+hookcheck PASS tasks=2
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.394745ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (90.204352ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (146.783927ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (37.717877ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (52.472555ms)
+✔ disabled writer no files; bounded burst durable per-class loss (68.975629ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.563908ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (35.747639ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (10.661754ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (21.478404ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (49.856105ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (50.216555ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (49.546567ms)
+✔ existing hook corpus maps causal candidate/realization pairs without copying task text (38.984973ms)
+✔ ARGUS existing ABI keeps u64 stream/tick, original refs, sticky critical loss and refuses malformed (0.693333ms)
+✔ DUAL canonical recommendation remains advisory, uncalibrated and measured distinct (0.574916ms)
+✔ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.194833ms)
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (41.995282ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (39.208063ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (36.054841ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (27.755888ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (304.936284ms)
+✔ unknown run and mixed clock range cannot report conclusive success (26.708777ms)
+✔ cross-session links within a run remain valid; cross-run parents are qualified (0.814886ms)
+✔ CLI refuses misleading arity/irrelevant filters and requires run for steps (4.633264ms)
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (61.365336ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (35.968873ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (35.843224ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (29.336026ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (28.500709ms)
+✔ step/status filters and retention cannot conceal known run loss counts (80.823711ms)
+✔ unknown binary/metadata fields in an integrity-correct segment refuse local packaging (28.189251ms)
+✔ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (48.477519ms)
+✔ step/source/type/time selection and missing/loss/compare labels use typed observations (35.790728ms)
+✔ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (30.382354ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 666.968802
+native oracle PASS: ARGUS v1.1 and DUAL v1 existing encoders/decoders, 2 synthetic records
+{"schema":"omega.trace.native-oracle.v1","qualification":"SYNTHETIC_HOST_ONLY","records":2,"assertions":12,"authority":false,"hardware":"NOT_RUN"}
+network-denial positive control EPERM
+{"accepted":3,"checks":8,"dropped":{"1:train:step":47},"hardware":"NOT_RUN","imported_events":220,"listener":false,"loss_summaries":1,"network_policy":"seccomp_socket_operations_denied","performance":"NOT_RUN","preview_exact":true,"qualification":"SYNTHETIC_HOST_ONLY","schema":"omega.trace.offline-test.v1","source_unchanged":true}
+OMEGA-TRACE PASS (synthetic host correctness only; hardware and timings NOT_RUN)

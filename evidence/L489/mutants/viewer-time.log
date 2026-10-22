@@ -1,0 +1,34 @@
+✔ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (39.948036ms)
+✔ step/source/type/time selection and missing/loss/compare labels use typed observations (23.548867ms)
+✖ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (22.260729ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 145.326796
+
+✖ failing tests:
+
+test at tests/trace/viewer.test.mjs:11:1
+✖ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (22.260729ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /no events|range/. Input:
+  
+  'Dropped events in selection: 0. Full run dropped disclosures: [{"category":"loss","metric":{"name":"dropped","provenance":"observed","reason":null,"unit":"events","value":3},"producer":1,"source":"train"}]. Retained-out segments: 0. Crash loss may be unknown.'
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-SgRy7P/tests/trace/viewer.test.mjs:17:90)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Dropped events in selection: 0. Full run dropped disclosures: [{"category":"loss","metric":{"name":"dropped","provenance":"observed","reason":null,"unit":"events","value":3},"producer":1,"source":"train"}]. Retained-out segments: 0. Crash loss may be unknown.',
+    expected: /no events|range/,
+    operator: 'match',
+    diff: 'simple'
+  }

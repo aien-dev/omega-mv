@@ -1,0 +1,27 @@
+✔ existing hook corpus maps causal candidate/realization pairs without copying task text (43.491509ms)
+✔ ARGUS existing ABI keeps u64 stream/tick, original refs, sticky critical loss and refuses malformed (0.651061ms)
+✔ DUAL canonical recommendation remains advisory, uncalibrated and measured distinct (0.599253ms)
+✖ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.133713ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 87.538032
+
+✖ failing tests:
+
+test at tests/trace/observers.test.mjs:23:1
+✖ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.133713ms)
+  Error: DUAL consequence refused
+      at fail (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:9:37)
+      at dual (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/observers.mjs:49:359)
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/observers.test.mjs:25:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

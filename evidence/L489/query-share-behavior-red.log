@@ -1,0 +1,62 @@
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (60.939299ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (32.596803ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (33.893485ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (39.362056ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (252.983061ms)
+✖ unknown run and mixed clock range cannot report conclusive success (35.071974ms)
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (75.423173ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (33.744283ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (32.910453ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (40.196015ms)
+✖ top-level disclosure metadata cannot carry unchecked private strings (29.761004ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 9
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 515.723159
+
+✖ failing tests:
+
+test at tests/trace/query.test.mjs:31:1
+✖ unknown run and mixed clock range cannot report conclusive success (35.071974ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'PASS'
+  - 'INCONCLUSIVE'
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/query.test.mjs:32:50)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASS',
+    expected: 'INCONCLUSIVE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/trace/sharing.test.mjs:26:1
+✖ top-level disclosure metadata cannot carry unchecked private strings (29.761004ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/sharing.test.mjs:27:28)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }

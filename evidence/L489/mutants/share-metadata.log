@@ -1,0 +1,35 @@
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (29.520186ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (17.666457ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (16.739234ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (21.127568ms)
+✖ top-level disclosure metadata cannot carry unchecked private strings (21.67234ms)
+✔ step/status filters and retention cannot conceal known run loss counts (59.558599ms)
+✔ unknown binary/metadata fields in an integrity-correct segment refuse local packaging (19.236579ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 230.145924
+
+✖ failing tests:
+
+test at tests/trace/sharing.test.mjs:26:1
+✖ top-level disclosure metadata cannot carry unchecked private strings (21.67234ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-k2uUBc/tests/trace/sharing.test.mjs:27:28)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }

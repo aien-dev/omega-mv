@@ -1,0 +1,47 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (1.332041ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (54.156866ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (104.854685ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (26.482933ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (49.690211ms)
+✔ disabled writer no files; bounded burst durable per-class loss (58.750929ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.60138ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (39.19926ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (9.674706ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (22.489882ms)
+✖ producer errors stay bounded, and durable losses retain producer and event class (67.448413ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (38.410582ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (49.269265ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (55.129177ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 620.895972
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:89:1
+✖ producer errors stay bounded, and durable losses retain producer and event class (67.448413ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   65535
+  -   1,
+  -   2
+    ]
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-QUzH2s/tests/trace/archive.test.mjs:91:317)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 65535 ],
+    expected: [ 1, 2 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
