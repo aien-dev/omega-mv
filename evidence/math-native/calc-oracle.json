@@ -1,0 +1,101 @@
+[
+  {
+    "expr": "1/3+1/6",
+    "receipt": "evidence/math-native/calc-receipts/01.json",
+    "calcReceiptId": "calc:0e7e76aab333fbdec6e4effcc80b4f9d4b1af9e7a1585421259462c908336627",
+    "expected": "1/2",
+    "got": "OK 1/2",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "(-7/9)*(27/14)",
+    "receipt": "evidence/math-native/calc-receipts/02.json",
+    "calcReceiptId": "calc:0162c8480b710cbaa147d859a988ddb6d4562e1452cd7c6bc5f4f6aab36df093",
+    "expected": "-3/2",
+    "got": "OK -3/2",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "(2^100+3)*(2^80+5)",
+    "receipt": "evidence/math-native/calc-receipts/03.json",
+    "calcReceiptId": "calc:de67289fa53de9029149074627526f93368f4122a68d363c3fad02cb6c50fe97",
+    "expected": "1532495540865888858358353365406937102224590493223747599",
+    "got": "OK 1532495540865888858358353365406937102224590493223747599",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "2^-126",
+    "receipt": "evidence/math-native/calc-receipts/04.json",
+    "calcReceiptId": "calc:6963159a1eb0fe6744c2e3f5fea3a596c2a294567ee6db8b56d7c2e3670c435e",
+    "expected": "1/85070591730234615865843651857942052864",
+    "got": "OK 1/85070591730234615865843651857942052864",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "9999+1",
+    "receipt": "evidence/math-native/calc-receipts/05.json",
+    "calcReceiptId": "calc:80c0e71ef2e9143c7ccb87c4b0529455d65794e7d21f57ff486fd924eaa2f3a8",
+    "expected": "10000",
+    "got": "OK 10000",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "10000-1",
+    "receipt": "evidence/math-native/calc-receipts/06.json",
+    "calcReceiptId": "calc:d271cd68efac016b725ca3c69053af59317a80a205c26d96dbf0dbd6fc13c37c",
+    "expected": "9999",
+    "got": "OK 9999",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "(2/3)^-2",
+    "receipt": "evidence/math-native/calc-receipts/07.json",
+    "calcReceiptId": "calc:9b794fc96402455eae2e98676648e77f1675a89975156b28c5272fe257ccf14b",
+    "expected": "9/4",
+    "got": "OK 9/4",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "2^3^2",
+    "receipt": "evidence/math-native/calc-receipts/08.json",
+    "calcReceiptId": "calc:145bc764454932a6170bb3235edd31fe3f94169607c6f2ed05d0427d23fd209b",
+    "expected": "512",
+    "got": "OK 512",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "-2^2",
+    "receipt": "evidence/math-native/calc-receipts/09.json",
+    "calcReceiptId": "calc:d466248e47e3e049595cc78b8c774d3cbe8b074df6a09e9bcf89b99cdae4cc0c",
+    "expected": "-4",
+    "got": "OK -4",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "18446744073709551615+1",
+    "receipt": "evidence/math-native/calc-receipts/10.json",
+    "calcReceiptId": "calc:86e0c6abb3208c6c3d8392b6052bc1ada20a1c15f8a370e5bfa348f5254c818a",
+    "expected": "18446744073709551616",
+    "got": "OK 18446744073709551616",
+    "status": 0,
+    "ok": true
+  },
+  {
+    "expr": "(999999999999999999999999999999/7)*(7/999999999999999999999999999999)",
+    "receipt": "evidence/math-native/calc-receipts/11.json",
+    "calcReceiptId": "calc:9344ab5116d913d4cffeb0bf3dfc13473a27fc1c7efd47892a82bd0b7b731880",
+    "expected": "1",
+    "got": "OK 1",
+    "status": 0,
+    "ok": true
+  }
+]

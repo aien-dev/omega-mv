@@ -1,42 +1,170 @@
 [
-["eval 1/3+1/6","OK 1/2"],
-["eval (-7/9)*(27/14)","OK -3/2"],
-["eval (2^100+3)*(2^80+5)","OK 1532495540865888858358353365406937102224590493223747599"],
-["expand (x+1)^5","OK 1+5*x+10*x^2+10*x^3+5*x^4+x^5"],
-["collect x+2*x-x","OK 2*x"],
-["diff 3*x^5-7*x^2+2","OK -14*x+15*x^4"],
-["integ 6*x^2-4*x+1","OK x-2*x^2+2*x^3"],
-["subst x^3-2*x+1 ; -2/3","OK 55/27"],
-["solve 3*x+7 ; 22","OK 5"],
-["gcd x^4-1 ; x^3-x","OK -1+x^2"],
-["linear 2;1;1;-1;5;1","OK 2;1"],
-["eval 0/-3","OK 0"],
-["eval 7/-9","OK -7/9"],
-["eval -2^2","OK -4"],
-["eval 2^3^2","OK 512"],
-["eval (2/3)^-2","OK 9/4"],
-["eval 18446744073709551615+1","OK 18446744073709551616"],
-["expand (x-1)*(x+1)","OK -1+x^2"],
-["diff 9","OK 0"],
-["integ 1","OK x"],
-["subst (x+1)^2 ; 2/3","OK 25/9"],
-["solve x ; x","REFUSED 7"],
-["solve x+1 ; x","REFUSED 8"],
-["linear 1;2;2;4;3;6","REFUSED 7"],
-["linear 1;2;2;4;3;7","REFUSED 8"],
-["eval 1/0","REFUSED 2"],
-["eval x/x","REFUSED 3"],
-["eval 0/x","REFUSED 3"],
-["eval sqrt(x^2)","REFUSED 3"],
-["eval sin(x)","REFUSED 3"],
-["eval 1+","REFUSED 1"],
-["eval (1+2","REFUSED 1"],
-["eval 2 3","REFUSED 1"],
-["eval y","REFUSED 3"],
-["eval x^17","REFUSED 4"],
-["eval 10^128","REFUSED 4"],
-["eval 0^0","REFUSED 2"],
-["eval x^-1","REFUSED 3"],
-["integ x^16","REFUSED 4"],
-["solve x^2 ; 1","REFUSED 3"]
+  [
+    "eval 1/3+1/6",
+    "OK 1/2"
+  ],
+  [
+    "eval (-7/9)*(27/14)",
+    "OK -3/2"
+  ],
+  [
+    "eval (2^100+3)*(2^80+5)",
+    "OK 1532495540865888858358353365406937102224590493223747599"
+  ],
+  [
+    "expand (x+1)^5",
+    "OK 1+5*x+10*x^2+10*x^3+5*x^4+x^5"
+  ],
+  [
+    "collect x+2*x-x",
+    "OK 2*x"
+  ],
+  [
+    "diff 3*x^5-7*x^2+2",
+    "OK -14*x+15*x^4"
+  ],
+  [
+    "integ 6*x^2-4*x+1",
+    "OK x-2*x^2+2*x^3"
+  ],
+  [
+    "subst x^3-2*x+1 ; -2/3",
+    "OK 55/27"
+  ],
+  [
+    "solve 3*x+7 ; 22",
+    "OK 5"
+  ],
+  [
+    "gcd x^4-1 ; x^3-x",
+    "OK -1+x^2"
+  ],
+  [
+    "linear 2;1;1;-1;5;1",
+    "OK 2;1"
+  ],
+  [
+    "eval 0/-3",
+    "OK 0"
+  ],
+  [
+    "eval 7/-9",
+    "OK -7/9"
+  ],
+  [
+    "eval -2^2",
+    "OK -4"
+  ],
+  [
+    "eval 2^3^2",
+    "OK 512"
+  ],
+  [
+    "eval (2/3)^-2",
+    "OK 9/4"
+  ],
+  [
+    "eval 18446744073709551615+1",
+    "OK 18446744073709551616"
+  ],
+  [
+    "expand (x-1)*(x+1)",
+    "OK -1+x^2"
+  ],
+  [
+    "diff 9",
+    "OK 0"
+  ],
+  [
+    "integ 1",
+    "OK x"
+  ],
+  [
+    "subst (x+1)^2 ; 2/3",
+    "OK 25/9"
+  ],
+  [
+    "solve x ; x",
+    "REFUSED 7"
+  ],
+  [
+    "solve x+1 ; x",
+    "REFUSED 8"
+  ],
+  [
+    "linear 1;2;2;4;3;6",
+    "REFUSED 7"
+  ],
+  [
+    "linear 1;2;2;4;3;7",
+    "REFUSED 8"
+  ],
+  [
+    "eval 1/0",
+    "REFUSED 2"
+  ],
+  [
+    "eval x/x",
+    "REFUSED 3"
+  ],
+  [
+    "eval 0/x",
+    "REFUSED 3"
+  ],
+  [
+    "eval sqrt(x^2)",
+    "REFUSED 3"
+  ],
+  [
+    "eval sin(x)",
+    "REFUSED 3"
+  ],
+  [
+    "eval 1+",
+    "REFUSED 1"
+  ],
+  [
+    "eval (1+2",
+    "REFUSED 1"
+  ],
+  [
+    "eval 2 3",
+    "REFUSED 1"
+  ],
+  [
+    "eval y",
+    "REFUSED 3"
+  ],
+  [
+    "eval x^17",
+    "REFUSED 4"
+  ],
+  [
+    "eval 10^128",
+    "REFUSED 4"
+  ],
+  [
+    "eval 0^0",
+    "REFUSED 2"
+  ],
+  [
+    "eval x^-1",
+    "REFUSED 3"
+  ],
+  [
+    "integ x^16",
+    "REFUSED 4"
+  ],
+  [
+    "solve x^2 ; 1",
+    "REFUSED 3"
+  ],
+  [
+    "eval 9999+1",
+    "OK 10000"
+  ],
+  [
+    "eval 10000-1",
+    "OK 9999"
+  ]
 ]

@@ -1,0 +1,13 @@
+PASS rung 0 gate (seed0 rebuilt from its text)
+PASS build: seed0 makes hex1.bin = committed (776 bytes)
+PASS self: hex1 rebuilds itself byte for byte
+PASS labelled copy = committed hex1.hex1 (25 labels, 50 branches by label)
+PASS labels: hex1 on the labelled copy gives hex1.bin
+PASS audit AUDIT words=194 code=164 data=30 decoder_mismatch=0 objdump_mismatch=0 byte_mismatch=0
+PASS control: seed0 refuses the labelled copy (exit 4)
+PASS control: label used but never named (exit 5)
+PASS control: label named twice (exit 6)
+PASS control: mark inside a word (exit 9)
+PASS control: '@' before any word (exit 10)
+PASS backward (-1) and forward (+2) references: d503201f 54ffffee b4000040 d503201f d65f03c0 
+GATE1 PASS

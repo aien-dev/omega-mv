@@ -1,0 +1,135 @@
+{
+  "schema": "omega-native-math-qualification-v1",
+  "ledger": "L494",
+  "parentReview": "L493 open",
+  "date": "2026-10-22T18:44:53.940Z",
+  "host": "Linux aarch64",
+  "baseCommit": "29b12760f4c962606411d6bf25032aedef063301",
+  "firstWorkingCommit": "8266d9c93070f5951e48ffa74b969998fed1ea22",
+  "branch": "feat/native-symbolic-math",
+  "publication": "git@github.com:aien-dev/omega-mv.git",
+  "sources": {
+    "seed/math/CONTRACT.md": "442c288c7879b2c9d6016e1bcede61a6b6149160aa469b44aca8fb14a421fa38",
+    "seed/math/bootstrap.sh": "4b525e41ee965c6bd3c273998b8de1400f6d2259633b9538bf61634f2b6ed75b",
+    "seed/math/build.sh": "2954b289fcecdc1a74437c24dfd4a91cbe5797a03c617ab49ae61eedfb1dea46",
+    "seed/math/calc-oracle.mjs": "cb169eaeb957fbe2cbd3dfd5a8181b243d6dcb594ab4b866d07f4e8a2a5c54cf",
+    "seed/math/cases.json": "336430d1267931daf83bb4455ee9881a1bacac064727b33683e1fe74e33c6e32",
+    "seed/math/checks.mjs": "4be27cffb8af912d8222389377828340cbf82fe7d627964ff4ebb6fcad8a113f",
+    "seed/math/cli.om": "145db7e5184efbc5076ce27e93ddc7822e3f509c793f04f2413e0fd29f3343d0",
+    "seed/math/core.om": "2317a0d2b52b5668ba962918b2bee3c6a2e82d9cc2082cfc831dae93f2d30e90",
+    "seed/math/gate.mjs": "8087f2999e1cad74ccf0df186160cc3fafe06914c2372f54c33c0c4aa7eac92c",
+    "seed/math/gate.sh": "3773aac3c81356b84060253ad1c80a41c69ecb6cb7325269d4132aae16bddc79",
+    "seed/math/legacy-gates.sh": "e567bd9e7d6ef00f4bb3b54d9c5dcb6bad7def5e11138dcbca4e7db946e4a2c7",
+    "seed/math/oracle.mjs": "62c6aee73751fee0b6a1d92c4d1695f3d224fc28203950650ffe50b62cc43785",
+    "seed/math/robustness.mjs": "d613c1a2a6b11ad8b4caa9f0946c9de28cb6ac967bfea859cf6f111d1f0a8d5c",
+    "seed/math/unit.om": "0de32e50c537b1f09ec2faa1c51b96ffc3e18a8e2ccaee63165cd858d8df3656"
+  },
+  "seedSource": {
+    "path": "seed/omc/omc.om",
+    "sha256": "8608fa11f6a2cf1c50db22d871eef16b00d5bc719bc1a222cc3e456984ac5ebf"
+  },
+  "seed": {
+    "path": "build/math-native/omc1",
+    "sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9"
+  },
+  "binary": {
+    "path": "build/math-native/omega-math",
+    "sha256": "4e4a218d2c8bf8582f0e4ff8062ec53622c20e77b9ee1a0632318020898d0d8c",
+    "bytes": 32120
+  },
+  "tools": {
+    "node": {
+      "path": "/usr/bin/node",
+      "sha256": "0f8949d1028f6d61506b2d5bc57e7e6fe893d7b1997509b7847294fc9c616584"
+    },
+    "sh": {
+      "path": "/usr/bin/sh",
+      "sha256": "c883d9c27228339580994a1d0ea960645368c7d1b960a712bd0c655860c2d0d7"
+    },
+    "readelf": {
+      "path": "/usr/bin/readelf",
+      "sha256": "6bca2bbd23b072db9e9a19ae0e65cf7b7c15c08a3c2cf01dd56453e1ac9340b1"
+    },
+    "objdump": {
+      "path": "/usr/bin/objdump",
+      "sha256": "f2e917a5d118ebf5679b24740e20d30338308e7f3f0630527c469de452d5a250"
+    },
+    "cc": {
+      "path": "/usr/bin/cc",
+      "sha256": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d"
+    },
+    "make": {
+      "path": "/usr/bin/make",
+      "sha256": "abbecc214fcadef6530d1cc137bde7ceb74cae3f6b992c7d10a8669a7314c7e0"
+    },
+    "strace": {
+      "path": "/usr/bin/strace",
+      "sha256": "33b3ea325915f1213dc477d80e0f0b2b09ffeff5e81d98b25a35320fbcbcaf42"
+    },
+    "aien-calc": {
+      "path": "/home/drakestapleton/.local/bin/aien-calc",
+      "sha256": "ec0bd9ab80f7a70dcde7e012b06a4eac4e5ecb9d558ffe52f911ebb2fb147cb2"
+    },
+    "quiet-build": {
+      "path": "/home/drakestapleton/.local/bin/quiet-build",
+      "sha256": "b8b40d2c1221d6067a49cebd288fcf0b8fb34c616562f58569385d81de62d8dc"
+    }
+  },
+  "versions": {
+    "node": "v24.21.0",
+    "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "aienCalc": "aien-calc 0.1.0"
+  },
+  "gates": {
+    "golden": {
+      "requested": 42,
+      "executed": 42,
+      "passed": 42
+    },
+    "independent": {
+      "requested": 1048,
+      "executed": 1048,
+      "passed": 1048,
+      "failed": 0,
+      "wolframRequested": 9,
+      "wolframExecuted": 9,
+      "reference": "Node v24.21.0 arbitrary precision BigInt",
+      "sourceHash": "62c6aee73751fee0b6a1d92c4d1695f3d224fc28203950650ffe50b62cc43785"
+    },
+    "moduleAndMutants": {
+      "moduleTests": 23,
+      "compiledValidMutants": 13,
+      "detectedMutants": 13,
+      "mutantCases": 546,
+      "streamTests": 6,
+      "deterministic": true
+    },
+    "robustness": {
+      "requested": 1200,
+      "executed": 1200,
+      "malformedRefused": 600,
+      "recoveryPassed": 600,
+      "inputSHA256": "6a8e14a454675a12bd9b08a873a6011b8c95eeebf5d91f093a4adf53ab0e7ecd"
+    },
+    "calculator": {
+      "requested": 11,
+      "executed": 11,
+      "passed": 11,
+      "scriptSHA256": "cb169eaeb957fbe2cbd3dfd5a8181b243d6dcb594ab4b866d07f4e8a2a5c54cf"
+    },
+    "mathWrapperExit": 0,
+    "nativeSuitesExit": 0,
+    "seedSuitesExit": 0
+  },
+  "syscalls": [
+    "execve",
+    "read",
+    "write",
+    "exit"
+  ],
+  "notes": [
+    "Native/seed exit codes were observed from their completed tool sessions.",
+    "Math output is exact within the documented bounded domain.",
+    "Test oracles and host scripts are not runtime dependencies."
+  ]
+}

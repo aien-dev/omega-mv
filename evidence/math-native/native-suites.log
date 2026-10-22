@@ -1,0 +1,140 @@
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -o build/omegese/omegese tools/omegese/omegese.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/omega_emit tools/omega_emit/omega_emit.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/x445 tools/exp445/x445.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c -lm
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/fake445 tools/exp445/fake445.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/typediff tools/omega_emit/typediff.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -DC2_SOURCES_SHA256='"1e32e08b3491652e9afb47367b252e09ce0d7c136ca8aef60acb93dcb23552f0"' -o build/checker2/checker2 src/checker2/checker2_main.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -o build/omegese/omegese_asan tools/omegese/omegese.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -DOMEGESE_CANARY=1 -o build/omegese/omegese_canary1 tools/omegese/omegese.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -DOMEGESE_CANARY=2 -o build/omegese/omegese_canary2 tools/omegese/omegese.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/test_osc_ir_decode tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/compiler/test_osc_ir_decode_asan tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=1 -o build/compiler/test_osc_ir_decode_mutant1 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=2 -o build/compiler/test_osc_ir_decode_mutant2 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=3 -o build/compiler/test_osc_ir_decode_mutant3 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=4 -o build/compiler/test_osc_ir_decode_mutant4 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=5 -o build/compiler/test_osc_ir_decode_mutant5 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=6 -o build/compiler/test_osc_ir_decode_mutant6 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=7 -o build/compiler/test_osc_ir_decode_mutant7 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=8 -o build/compiler/test_osc_ir_decode_mutant8 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_receipt tests/checker2/test_c2_receipt.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/checker2/test_c2_receipt_asan tests/checker2/test_c2_receipt.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_ir tests/checker2/test_c2_ir.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/checker2/test_c2_ir_asan tests/checker2/test_c2_ir.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/oscc src/compiler/oscc_main.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/checker2/osc_emit_ir tests/checker2/producer/osc_emit_ir.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -DC2_SOURCES_SHA256='"other-checker-build-for-tests"' -o build/checker2/checker2_other src/checker2/checker2_main.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/c2sat src/checker2/untrusted/c2sat.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_lrat tests/checker2/test_c2_lrat.c src/checker2/c2_lrat.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/checker2/test_c2_lrat_asan tests/checker2/test_c2_lrat.c src/checker2/c2_lrat.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_blast tests/checker2/test_c2_blast.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_blast_native tests/checker2/test_c2_blast_native.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
+sh tests/checker2/owner_receipt.sh build/checker2/checker2 tests/checker2/fixtures/owner-receipt build/checker2/owner-receipt
+owner_receipt: PASS owner-signed receipt VALID in production, 6 controls refused
+bash tools/omegese/test_omegese.sh /home/drakestapleton/workspace/omega-symbolic-native/build/omegese/omegese /home/drakestapleton/workspace/omega-symbolic-native/build/omega_emit/omega_emit /home/drakestapleton/workspace/omega-symbolic-native/build/checker2/checker2
+dev: 10/10 omegese -> omega_emit -> checker2 ACCEPT
+nested: 6/6 rewritten dev programs and 5/5 trial-2 model answers ACCEPT; trial-2 dev07 refused for its extra value
+review fixes: stacked conversions convert; brackets around a for count change nothing
+coverage: 8/8 accepted
+next: 69 prefixes give the expected words
+refusals: 46/46 refused with the expected reason, every control accepted
+loop guard: mutant without the counter increment REJECTED (C2-LOOP-UNBOUNDED)
+tokenizer gate: SKIPPED (set OMEGESE_TOKCOUNT and OMEGESE_TOKENIZER)
+decoder mutant 1 caught: FAIL: counterexample one trailing byte: got NONCANONICAL, want TRAILING
+decoder mutant 2 caught: FAIL: counterexample version 2 with no structs: got NONCANONICAL, want VERSION_MISMATCH
+decoder mutant 3 caught: FAIL: counterexample last byte missing: refused but output not zeroed
+decoder mutant 4 caught: FAIL: counterexample u8 constant 256: got OK, want INVALID
+next oracle: every word and the end of input legal at all 2636 word boundaries of 75 accepted programs
+decoder mutant 5 caught: FAIL: counterexample NUL inside a function name: got NONCANONICAL, want TEXT
+decoder mutant 6 caught: FAIL: counterexample register 0x8000: got INVALID, want RANGE
+decoder mutant 7 caught: FAIL: counterexample input longer than OSC_IR_ENCODED_MAX: got TRAILING, want OVERSIZED
+decoder mutant 8 caught: FAIL: counterexample last byte missing: got NONCANONICAL, want TRUNCATED
+test-osc-ir-decode-mutants: PASS (8 of 8 caught)
+sh tests/checker2/differential.sh build/compiler/oscc build/checker2/osc_emit_ir build/checker2/checker2 build/checker2/differential
+completeness: 150 single-word mutants (14 accepted by emit): emit accepts iff every word was legal (2895 word boundaries)
+differential: accepted by both=107 front-end refusals=138 (known-bad neg units=138) disagreements=0
+sh tests/checker2/blast_native.sh build/compiler/oscc build/checker2/test_c2_blast_native build/checker2/blast_native
+blast_native: 209 programs written, 0 refused by oscc
+soundness fuzz: 40/40 random walks (913 legal items picked) never met an empty set and closed into accepted programs
+checker2 residual: 0 of 80 completed walks that emit accepts are rejected later (omega_emit or checker2)
+truncation fuzz: 2799 byte prefixes through emit, next and next --machine, exit 0 or 1; at the 2698 prefixes of accepted programs, next allows the byte that follows and complete finishes into a program emit accepts
+test-omegese: PASS
+OMEGESE_SANITIZED=1 OMEGESE_CANARIES="/home/drakestapleton/workspace/omega-symbolic-native/build/omegese/omegese_canary1 /home/drakestapleton/workspace/omega-symbolic-native/build/omegese/omegese_canary2" \
+OMEGESE_WALKS=10 OMEGESE_MUTANTS=1 \
+bash tools/omegese/test_omegese.sh /home/drakestapleton/workspace/omega-symbolic-native/build/omegese/omegese_asan /home/drakestapleton/workspace/omega-symbolic-native/build/omega_emit/omega_emit /home/drakestapleton/workspace/omega-symbolic-native/build/checker2/checker2
+sanitizers: 2/2 canaries caught (read after free, signed overflow)
+dev: 10/10 omegese -> omega_emit -> checker2 ACCEPT
+nested: 6/6 rewritten dev programs and 5/5 trial-2 model answers ACCEPT; trial-2 dev07 refused for its extra value
+review fixes: stacked conversions convert; brackets around a for count change nothing
+coverage: 8/8 accepted
+next: 69 prefixes give the expected words
+refusals: 46/46 refused with the expected reason, every control accepted
+loop guard: mutant without the counter increment REJECTED (C2-LOOP-UNBOUNDED)
+tokenizer gate: SKIPPED (set OMEGESE_TOKCOUNT and OMEGESE_TOKENIZER)
+test_c2_blast_native: 180 operation programs and 29 gate programs agree with oscc's code on 4354666 vectors (1015348 native traps); 8 controls disagree as required; 0 failures
+blast_native: PASS
+/home/drakestapleton/workspace/omega-symbolic-native/build/compiler/test_osc_ir_decode full > build/compiler/ir_decode.out
+next oracle: every word and the end of input legal at all 2636 word boundaries of 75 accepted programs
+OSC_IR_DECODE_PASS
+corpus: units=59 round_trip_ok=59 compile_refused=0 versions v1=32 v2=7 v3=6 v4=3 v5=11
+refusal classes: 22/22 cases as expected; classes exhibited=10 of 11 (NONCANONICAL is the unreachable backstop)
+valid objects: distinct=10000 tries=11395 invalid_variants_skipped=13 (all round-trip byte-exact)
+malformed: cases=202675 refused=177013 admitted_as_other_canonical_unit=25662 (each re-encodes to its own bytes) ARG=0 MAGIC=2260 UNKNOWN_VERSION=272 TRUNCATED=
+ASAN_OPTIONS=detect_stack_use_after_return=0 /home/drakestapleton/workspace/omega-symbolic-native/build/compiler/test_osc_ir_decode_asan asan > build/compiler/ir_decode_asan.out
+completeness: 75 single-word mutants (11 accepted by emit): emit accepts iff every word was legal (1495 word boundaries)
+soundness fuzz: 10/10 random walks (222 legal items picked) never met an empty set and closed into accepted programs
+OSC_IR_DECODE_PASS
+test-osc-ir-decode: PASS (strict decoder, plain full + ASan/UBSan + mutants)
+./build/checker2/test_c2_lrat
+test_c2_lrat: 39 cases, 20000 corruptions, 0 failures
+./build/checker2/test_c2_lrat_asan
+test_c2_lrat: 39 cases, 20000 corruptions, 0 failures
+sh tests/checker2/lrat.sh build/checker2/osc_emit_ir build/checker2/checker2 build/checker2/c2sat build/checker2/lrat build/checker2/checker2_other
+lrat: n01_abs8_unguarded abs8 can trap (counterexample found, as expected)
+lrat: n02_add8 add8 can trap (counterexample found, as expected)
+lrat: n03_shl shl can trap (counterexample found, as expected)
+lrat: n04_count count can trap (counterexample found, as expected)
+lrat: n05_ensures avg_bad can trap (counterexample found, as expected)
+lrat: n06_square sq can trap (counterexample found, as expected)
+lrat: n07_cast narrow can trap (counterexample found, as expected)
+lrat: n08_mul_wide m can trap (counterexample found, as expected)
+lrat: n09_signed_shl sshl can trap (counterexample found, as expected)
+lrat: p01_abs8 abs8 VERIFIED vars=125 clauses=385 steps=31
+lrat: p02_avg_u8 avg VERIFIED vars=166 clauses=509 steps=65537
+lrat: p03_clamp clamp VERIFIED vars=247 clauses=769 steps=313
+lrat: p04_sat_add sat_add VERIFIED vars=259 clauses=826 steps=18211
+lrat: p05_sub8 sub8 VERIFIED vars=397 clauses=1285 steps=92811
+lrat: p06_popcount popcount VERIFIED vars=517 clauses=1526 steps=1
+lrat: p07_pop_swar pop8 VERIFIED vars=53 clauses=152 steps=67
+lrat: p08_sum10 sum10 VERIFIED vars=499 clauses=1663 steps=511
+lrat: p09_roundtrip rt VERIFIED vars=9 clauses=2 steps=1
+lrat: p10_square sq VERIFIED vars=810 clauses=2670 steps=243
+lrat: p11_shl shl VERIFIED vars=115 clauses=307 steps=1
+lrat: p12_max max8 VERIFIED vars=296 clauses=953 steps=109481
+lrat: p13_widen_add widen VERIFIED vars=100 clauses=281 steps=255
+lrat: p14_signed_shl sshl VERIFIED vars=145 clauses=464 steps=13
+lrat: p15_bool band VERIFIED vars=9 clauses=20 steps=3
+lrat: p16_count count VERIFIED vars=1676 clauses=5517 steps=189
+lrat: p17_negneg nn VERIFIED vars=157 clauses=500 steps=511
+lrat: p18_xor_swap xs VERIFIED vars=132 clauses=409 steps=131071
+lrat: p19_gray gray VERIFIED vars=112 clauses=368 steps=511
+lrat: p20_mul_wide m VERIFIED vars=491 clauses=1577 steps=99
+lrat: verified=20 expected-traps=9 controls-refused=56 failures=0
+lrat: PASS
+./build/checker2/test_c2_blast build/checker2/differential/ir build/checker2/lrat
+test_c2_blast: corpus 107 units: 60 scalar functions blasted, 53 scalar refused (calls, division, memory), 224 non-scalar refused
+test_c2_blast: 29 gate programs evaluated input by input (20 hold, 9 trap), 0 failures
+./build/checker2/test_c2_receipt tests/checker2/fixtures
+test_c2_receipt: 64 checks, 0 failed
+./build/checker2/test_c2_receipt_asan tests/checker2/fixtures
+test_c2_receipt: 64 checks, 0 failed
+./build/checker2/test_c2_ir build/checker2/differential/ir
+test_c2_ir: 107 units accepted and re-encoded identically, 7704 truncations refused, 10272 bit flips (8722 refused), 96 planted defects refused; 8401 checks, 0 failed
+./build/checker2/test_c2_ir_asan build/checker2/differential/ir
+test_c2_ir: 107 units accepted and re-encoded identically, 7704 truncations refused, 10272 bit flips (8722 refused), 96 planted defects refused; 8401 checks, 0 failed
+sh tests/checker2/mutants.sh "cc" "build/checker2/mutants" "build/checker2/differential/ir" "build/checker2/lrat"
+checker2 residual: 0 of 80 completed walks that emit accepts are rejected later (omega_emit or checker2)
+checker2 mutants: 104 of 104 killed
+truncation fuzz: 2799 byte prefixes through emit, next and next --machine, exit 0 or 1; at the 2698 prefixes of accepted programs, next allows the byte that follows and complete finishes into a program emit accepts
+sanitizers: no ASan or UBSan report in the whole run
+test-omegese: PASS

@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note TDD baseline: public request handler refuses until exact operations exist.
+global req uchar 4096
+global res uchar 8192
+global reslen ulong 1
+fn mathrun n ulong to ulong
+put reslen 0 0
+ret 3
+end

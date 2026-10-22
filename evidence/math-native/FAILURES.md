@@ -1,0 +1,11 @@
+# Observed failures and corrections
+
+- Initial compiled refusal baseline: 40 requests, 40 outputs, 7 matches. Every positive capability was RED. `red.log` and `red-build.log` preserve the actual results and executable/source hashes. The initial source was a stub and is described here, not falsely retained as the current implementation.
+- Core stage: 37/40, the three 2x2 system tests were RED; the dedicated linear implementation brought this to 40/40. See `core-first.log`.
+- Development compiler failures: expressions exceeded omc's register pool (error 12); splitting boolean comparisons fixed them. One extra `end` gave error 18 and was removed. These are build failures, not successful mutation detections. A shell sequence initially ran the previous executable after a failed build; that output was not used to claim GREEN. All current qualification scripts stop on build failure and validate ELF before executing.
+- First independent oracle run: 1047/1048. The supposed arena-exhaustion example was too small and correctly returned `8515+130*x`. The test was corrected to a larger input that actually exhausts the arena; the source arithmetic did not change for this failure. Original inputs/results remain in `oracle-first.log` and `.err`.
+- Long-stream regression: the old CLI produced 244 of 300 requested lines and exited with the compiler loop trap (104). `stream-red.log` preserves it. The CLI now has separately bounded per-line loops and an explicit session limit. The same 300-line case passes in `checks.json`.
+- Initial unit-harness errors: the reporting helper overwrote the shared output scratch before two checks inspected it. Capturing result length and byte before reporting fixed the tests. No math implementation change was needed.
+- The first carry mutant survived the initial 40 vectors (`mutant-survivor.log`). Added 9999+1 and 10000-1 boundary cases, increasing the frozen suite to 42. All 13 compiled, valid-ELF wrong-rule mutants now fail by value/refusal disagreement. Crashes, timeouts, compiler errors, missing lines, and invalid executables are explicitly rejected as mutation evidence.
+
+No unresolved math mismatch is claimed hidden by a test expectation change. Intermediate-capacity refusals remain an intentional documented limitation.

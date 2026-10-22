@@ -38,4 +38,6 @@
 {"input":"eval x^-1","want":"REFUSED 3","got":"REFUSED 3","ok":true}
 {"input":"integ x^16","want":"REFUSED 4","got":"REFUSED 4","ok":true}
 {"input":"solve x^2 ; 1","want":"REFUSED 3","got":"REFUSED 3","ok":true}
-{"requested":40,"executed":40,"passed":40}
+{"input":"eval 9999+1","want":"OK 10000","got":"OK 10000","ok":true}
+{"input":"eval 10000-1","want":"OK 9999","got":"OK 9999","ok":true}
+{"requested":42,"executed":42,"passed":42}
