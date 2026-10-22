@@ -1,0 +1,8 @@
+OSC_IR_ENCODED_MAX=2620251 bytes; mode=full
+corpus: units=55 round_trip_ok=55 compile_refused=0 versions v1=31 v2=7 v3=6 v4=3 v5=8
+refusal classes: 22/22 cases as expected; classes exhibited=10 of 11 (NONCANONICAL is the unreachable backstop)
+negative controls: 5/5 planted defects caught by the test's own checks
+requirement identity: 364 single-character requires/ensures changes, each a new identity
+valid objects: distinct=10000 tries=11363 invalid_variants_skipped=31 (all round-trip byte-exact)
+malformed: cases=173503 refused=153199 admitted_as_other_canonical_unit=20304 (each re-encodes to its own bytes) ARG=0 MAGIC=2223 UNKNOWN_VERSION=247 TRUNCATED=36540 OVERSIZED=12829 TRAILING=228 RANGE=45788 TEXT=971 INVALID=54348 VERSION_MISMATCH=25 NONCANONICAL=0
+OSC_IR_DECODE_PASS
