@@ -21,12 +21,12 @@ Numbers below are from `origin/main` a8ffd2b9 (14,258 files).
 |---|---|---|---|---|---|
 | evidence shelf | `aien-dev/omega-evidence` | The receipts: logs, measurements and verdicts every past gate wrote, kept append-only. | 11,078 (199 MB) | nothing | AGPL-3.0 |
 | crypto | `aien-dev/aien-crypto` | SHA-256, BLAKE3, SHA-512 and Ed25519 in plain C, no heap, no clock. | 11 | nothing | AGPL-3.0 |
-| research shelf | `aien-dev/omega-research` | Papers, proposals and calibration runs that nothing builds. | 684 | nothing | AGPL-3.0 |
+| research shelf | `aien-dev/omega-research` | Research that nothing builds or runs: `research/m15`, `research/r14-failure-modes`, `research/dirac-oracle`. | 155 | nothing | AGPL-3.0 |
 | omega (stays) | `aien-spark/omega` | The language and its runtime: Omegese, OSC, the IR, checker2, the CPU backends, program/resolve/realize/verify, the Visor session contract, the resident runtime (rx_*), the numeric semantics. | 784 | crypto, evidence, physics, aienos | AGPL-3.0 |
 | CUDA++ | `aien-dev/CUDAplusplus` (L395) | The GPU half of the runtime: kernel builder, encoder, submit, sessions, GPU libraries. | L395's map | a byte-identical copy of the shared base, no pin on omega | MIT (the one exception) |
 | host | `aien-dev/omega-host` | OSH, the Linux host adapter: capability enforcement behind the aien-architecture#158 ABI. | 132 | omega, crypto | AGPL-3.0 |
 | learn | `aien-dev/omega-learn` | Tensors (M20), autodiff (M21) and training (M22) written on Omega. | 25 | omega, CUDA++, crypto | AGPL-3.0 |
-| programs | `aien-dev/omega-programs` | The experiments and subsystems written on Omega that nothing else uses yet: turing, brownian, estimation, dual (+experiment), reservoir, physics0, crumbline, searchtrace, fabric, path, ans, polyglot, prime race. | 687 | omega, CUDA++, crypto | AGPL-3.0 |
+| programs | `aien-dev/omega-programs` | The experiments and subsystems written on Omega that nothing else uses yet: turing, brownian, estimation, dual (+experiment), reservoir, physics0, crumbline, searchtrace, fabric, path, ans, polyglot, prime race, plus the Turing calibration experiments (`calibration/`, 124 files) and the atemporal AT0/AT1 experiments (`research/atemporal`, 404 files), which their make fragments build. | 687 + 528 | omega, CUDA++, crypto | AGPL-3.0 |
 
 Rule from the brief for the last row: a subsystem gets its own repo once something outside Omega uses it.
 A search of aien-sovereign-core, aienos, aien-train and physics found no outside user of any of them
@@ -93,7 +93,7 @@ The knot above is the only loop. Its upward links, and the cut for each:
    `evidence.lock` pins the shelf commit so every old receipt stays addressable as shelf + commit + path.
 2. **Crypto**, with the dedupe: measure this copy against aienos `native/crypto` (L339 sped it up), keep the
    faster one, prove identical outputs on the RFC/FIPS vectors, and both repos pin the one module.
-3. **Research shelf**: `research/` and `calibration/` (nothing builds them).
+3. **Research shelf**: `research/m15`, `research/r14-failure-modes`, `research/dirac-oracle` (nothing builds them). `calibration/` is not a shelf: `mk/turing_exp001_*.mk` build its scripts and `tests/turing` read its experiments, so it moves with turing in the programs cut. `research/atemporal` (404 files) is built by `mk/at0.mk` and `mk/at1.mk`, so it moves with the programs too.
 4. **Host**, **learn**, **programs**: each pins omega (and CUDA++ where used) by lock and carries its own
    gates. Omega does not pin them back, or the two repos would pin each other. Whoever needs them together
    (aienos, aien-sovereign-core) pins both, as ADR 0039 says the assembling repo does.
