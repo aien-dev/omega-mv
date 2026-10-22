@@ -1,0 +1,68 @@
+{
+  "cases": 47,
+  "failures": 12,
+  "examples": [
+    {
+      "case": "equal-0",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "equal-1",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "equal-7",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "equal-4095",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "equal-4096",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "equal-4097",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "equal-8192",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "equal-16385",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "missing-fds",
+      "wanted": 2,
+      "actual": 1
+    },
+    {
+      "case": "fragmented-streams",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "capacity-67108864",
+      "wanted": 0,
+      "actual": 1
+    },
+    {
+      "case": "capacity-67108865",
+      "wanted": 3,
+      "actual": 1
+    }
+  ],
+  "source_sha256": "8ecaca597335a345123b9fe9e3d9b35f11ab200699cd25709dead83294bab585",
+  "binary_sha256": "290f2ac063b5de7690bfaa94861128254230e7c51b4a6b46509ca4ab0c13591b"
+}

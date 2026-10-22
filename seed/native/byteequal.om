@@ -1,0 +1,56 @@
+note Handwritten seeded Omega binary comparator: streams on fd 3 and fd 4.
+note Exit 0 equal, 1 different, 2 read error, 3 compared input exceeds 64 MiB.
+note Fixed 8192-byte data workspace; short reads are filled independently.
+fn fill fd int buf edit uchar 4096 to long
+used = ulong 0
+while lt used 4096
+n = read fd buf used sub ulong 4096 used
+if lt n 0
+ret long -1
+end
+if eq n 0
+ret long used
+end
+used = add used ulong n
+end
+ret long used
+end
+
+fn same a view uchar 4096 b view uchar 4096 n ulong to bool
+for i ulong n
+if ne get a i get b i
+ret false
+end
+end
+ret true
+end
+
+fn main to int
+a = new uchar 4096 0
+b = new uchar 4096 0
+total = ulong 0
+while true
+na = fill 3 a
+if lt na 0
+ret 2
+end
+nb = fill 4 b
+if lt nb 0
+ret 2
+end
+if ne na nb
+ret 1
+end
+if eq na 0
+ret 0
+end
+if gt ulong na sub ulong 67108864 total
+ret 3
+end
+if not same a b ulong na
+ret 1
+end
+total = add total ulong na
+end
+ret 2
+end

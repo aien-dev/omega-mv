@@ -10,7 +10,7 @@ ACTUAL=$(sha256sum "$CC")
 # A private build directory prevents overlapping checks from sharing output files.
 mkdir -p "$ROOT/build/manual-migration"
 D=$(mktemp -d "$ROOT/build/manual-migration/closure.XXXXXXXX")
-trap 'rm -f "$D/check" "$D/literal"; rmdir "$D"' EXIT HUP INT TERM
+trap 'rm -f "$D/check" "$D/literal" "$D/equal" "$D/stage1" "$D/stage2" "$D/stage3"; rmdir "$D"' EXIT HUP INT TERM
 "$CC" < seed/native/elfcheck.om > "$D/check"
 [ -s "$D/check" ] || exit 2
 chmod 700 "$D/check"
@@ -19,4 +19,19 @@ chmod 700 "$D/check"
 "$CC" < seed/native/literal.om > "$D/literal"
 [ -s "$D/literal" ] || exit 2
 "$D/check" < "$D/literal"
-printf '%s\n' 'PASS native ELF check: checker, compiler, literal' 'Scope: ELF shape/no dynamic segments; static source ancestry checked separately.'
+"$CC" < seed/native/byteequal.om > "$D/equal"
+[ -s "$D/equal" ] || exit 2
+"$D/check" < "$D/equal"
+chmod 700 "$D/equal"
+"$CC" < seed/omc/omc.om > "$D/stage1"
+"$D/check" < "$D/stage1"
+chmod 700 "$D/stage1"
+"$D/stage1" < seed/omc/omc.om > "$D/stage2"
+"$D/check" < "$D/stage2"
+chmod 700 "$D/stage2"
+"$D/stage2" < seed/omc/omc.om > "$D/stage3"
+"$D/check" < "$D/stage3"
+"$D/equal" 3< "$CC" 4< "$D/stage1"
+"$D/equal" 3< "$D/stage1" 4< "$D/stage2"
+"$D/equal" 3< "$D/stage2" 4< "$D/stage3"
+printf '%s\n' 'PASS native ELF check: checker, compiler, literal, comparator, stages 1/2/3' 'PASS Omega binary comparison: pinned compiler = stage1 = stage2 = stage3' 'Scope: native self-host comparison; seed ancestry and static dependencies remain separate.'

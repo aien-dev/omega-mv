@@ -1,0 +1,163 @@
+[
+  {
+    "mutant": "bytes",
+    "successfully_compiled": true,
+    "failures": 19,
+    "examples": [
+      {
+        "case": "different-1-0",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-7-0",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-7-3",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-7-6",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4095-0",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4095-2047",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4095-4094",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4096-0",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4096-2048",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4096-4095",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4097-0",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4097-2048",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-4097-4096",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-8192-0",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-8192-4096",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-8192-8191",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-16385-0",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-16385-8192",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "different-16385-16384",
+        "wanted": 1,
+        "actual": 0
+      }
+    ]
+  },
+  {
+    "mutant": "length",
+    "successfully_compiled": true,
+    "failures": 8,
+    "examples": [
+      {
+        "case": "longer-0",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "longer-1",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "longer-7",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "longer-4095",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "longer-4096",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "longer-4097",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "longer-8192",
+        "wanted": 1,
+        "actual": 0
+      },
+      {
+        "case": "longer-16385",
+        "wanted": 1,
+        "actual": 0
+      }
+    ]
+  },
+  {
+    "mutant": "capacity",
+    "successfully_compiled": true,
+    "failures": 1,
+    "examples": [
+      {
+        "case": "capacity-67108865",
+        "wanted": 3,
+        "actual": 0
+      }
+    ]
+  }
+]
