@@ -6,7 +6,7 @@ parses on Linux, each one checked against Omega's host capability root first and
 intent/outcome journal (the ABI in aien-architecture#158 and aien-protocols OSH_PLATFORM_ABI.md).
 
 It moved out of Omega with its history (ADR 0039: one thing per repo). It builds inside the exact Omega
-commit pinned in `omega.lock`: `make test` checks that commit out under `build/omega`, lays this repo's
+commit pinned in `omega.lock` (an Omega without these files, so nothing is borrowed from Omega's copy): `make test` checks that commit out under `build/omega`, lays this repo's
 files over it at the same paths, and runs every OSH test there, so the results are the ones Omega
 produced when OSH lived inside it.
 

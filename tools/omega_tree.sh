@@ -1,8 +1,9 @@
 #!/bin/sh
-# omega_tree.sh <dir>: make <dir> a checkout of Omega at the commit in omega.lock, with this repo's files
-# (src/osh, tests/osh, mk/osh*.mk) laid over it at the same paths, so Omega's own make fragments build
-# and test OSH exactly as they did inside Omega. The commit is looked for in $OMEGA_REPO, ../omega,
-# ../omega-mv, then fetched from the "# repo:" URL into build/pins/omega.
+# omega_tree.sh <dir>: make <dir> a checkout of Omega at the commit in omega.lock, with every file of this
+# repo (except its own README, LICENSE, AUDIT, Makefile, lock and this script) laid over it at the same
+# path, so Omega's Makefile and its late fragments (mk/late/*.mk) build and test OSH exactly as
+# they did inside Omega. The commit is looked for in $OMEGA_REPO, ../omega, ../omega-mv, then fetched from
+# the "# repo:" URL into build/pins/omega.
 set -eu
 here=$(cd "$(dirname "$0")/.." && pwd)
 dir=${1:?usage: omega_tree.sh <dir>}
@@ -25,7 +26,11 @@ if [ ! -d "$dir/.git" ] && [ ! -f "$dir/.git" ]; then
 fi
 git -C "$dir" -c advice.detachedHead=false checkout -q --force --detach "$sha"
 git -C "$dir" clean -q -fdx -e build/
-(cd "$here" && git ls-files src tests mk) | while read -r f; do
+(cd "$here" && git ls-files) | grep -v -x -E 'README\.md|LICENSE|AUDIT\.md|Makefile|omega\.lock|\.gitignore|tools/omega_tree\.sh' |
+while read -r f; do
     mkdir -p "$dir/$(dirname "$f")"; cp -p "$here/$f" "$dir/$f"
 done
+# Commit the overlay locally so the tree is clean: some programs refuse a dirty tree before writing a receipt.
+git -C "$dir" add -A
+git -C "$dir" -c user.name=omega_tree -c user.email=omega_tree@localhost commit -q --allow-empty -m "omega-host overlay"
 echo "omega_tree: $dir = omega $sha + omega-host $(cd "$here" && git rev-parse --short=12 HEAD 2>/dev/null || echo worktree)"
