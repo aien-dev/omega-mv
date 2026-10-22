@@ -1,0 +1,10 @@
+KILLED span-omission via T1 spans
+KILLED unclean-ignored via T2 stale
+KILLED startup-gap via T2 real killed child startup
+KILLED close-race via T2 reader racing
+KILLED failure-clears-marker via T2 failed background
+KILLED residual-ignored via T3 real purge cut
+KILLED recovery-fabricates-completeness via T2 stale
+KILLED adopt-failure-clears-marker via T2 adopted worker
+KILLED deletion-not-durable via T3 clean explicit purge
+{"schema":"omega.trace.review-mutants.v1","mutants":9,"killed":9,"survived":0,"qualification":"SYNTHETIC_HOST_ONLY"}

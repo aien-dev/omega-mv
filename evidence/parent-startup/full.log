@@ -1,0 +1,83 @@
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -o /home/drakestapleton/workspace/targets/L516-parent/build/searchtrace/searchtrace src/searchtrace/st_tool.c src/searchtrace/st_corpus.c src/searchtrace/st_holdout.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_realize_synth.c src/omega_machine.c src/omega_exec.c src/omega_verify.c src/omega_program.c src/omega_synthesis.c src/omega_library.c
+verify PASS digest=1a78a91634dfe5fc310577baaacc3737d34b99c306a715d039fc47622082856a steps=139
+hookcheck PASS tasks=2
+✔ canonical bytes independent of key insertion; strict types/units/versions (4.00354ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (119.722289ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (180.22463ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (52.080698ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (77.436191ms)
+✔ disabled writer no files; bounded burst durable per-class loss (97.978939ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.995785ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (59.466476ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (17.613376ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (26.952821ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (84.201357ms)
+✖ permission denial refuses writes; failed async persistence reports exact accepted count (66.442219ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (79.650883ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (73.652094ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (817.935798ms)
+✔ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (75.025593ms)
+✔ existing hook corpus maps causal candidate/realization pairs without copying task text (79.944039ms)
+✔ ARGUS existing ABI keeps u64 stream/tick, original refs, sticky critical loss and refuses malformed (1.464477ms)
+✔ DUAL canonical recommendation remains advisory, uncalibrated and measured distinct (1.530638ms)
+✔ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.867208ms)
+✔ realization code size is a distinct typed metric, not memory footprint (28.637364ms)
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (67.947578ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (45.435485ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (47.155228ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (43.722429ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (408.825028ms)
+✔ unknown run and mixed clock range cannot report conclusive success (31.571455ms)
+✔ cross-session links within a run remain valid; cross-run parents are qualified (0.724871ms)
+✔ CLI refuses misleading arity/irrelevant filters and requires run for steps (4.572666ms)
+✔ T1 spans disclose every mandatory metadata path alongside selected metrics (55.956205ms)
+✔ T2 stale and active writer locks refuse packaging without guessing loss counts (93.486081ms)
+✔ T2 real killed child startup has queued unacknowledged events and unknown loss (123.358273ms)
+✔ T2 real killed child queued has queued unacknowledged events and unknown loss (136.120277ms)
+✔ T2 clean child close removes session markers only after durable acknowledgement (139.634933ms)
+✔ T3 real purge cut after tombstone fsync diagnoses residual private bytes read-only (99.963485ms)
+✔ T3 clean explicit purge fsyncs deletion and leaves a conclusive empty archive (33.109245ms)
+✔ T2 reader racing clean shutdown retains opening writer uncertainty until next read (37.661686ms)
+✔ T2 failed background persistence preserves unclean session marker even on close (67.055634ms)
+✔ T2 adopted worker startup failure preserves reserved marker and unknown loss (96.994321ms)
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (80.716638ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (35.825957ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (38.699344ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (46.612712ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (36.478011ms)
+✔ step/status filters and retention cannot conceal known run loss counts (90.739465ms)
+✔ unknown binary/metadata fields in an integrity-correct segment refuse local packaging (37.532885ms)
+{"accepted":false,"status":{"drop_count_overflow":false,"submitted":0,"persisted":0,"error_count":1,"accepted_pending":0,"dropped":{"1:train:step":1},"errors":["archive reservation: EIO"],"durable":false},"archive":"PASS"}
+✔ parent: failed synchronous reservation refuses immediate enqueue (75.15118ms)
+✔ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (70.921829ms)
+✔ step/source/type/time selection and missing/loss/compare labels use typed observations (41.061173ms)
+✔ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (43.109784ms)
+✔ unknown dropped count remains unknown in viewer, never zero (0.317635ms)
+ℹ tests 51
+ℹ suites 0
+ℹ pass 50
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1912.122879
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:93:1
+✖ permission denial refuses writes; failed async persistence reports exact accepted count (66.442219ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-trace-parent-startup/tests/trace/archive.test.mjs:95:157)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

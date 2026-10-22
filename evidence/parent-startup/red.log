@@ -1,0 +1,31 @@
+{"accepted":true,"status":{"drop_count_overflow":false,"submitted":1,"persisted":0,"error_count":0,"accepted_pending":1,"dropped":{},"errors":[],"durable":false},"archive":"PASS"}
+✖ parent: failed synchronous reservation refuses immediate enqueue (62.405376ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 118.088529
+
+✖ failing tests:
+
+test at tests/trace/startup-refusal.test.mjs:8:1
+✖ parent: failed synchronous reservation refuses immediate enqueue (62.405376ms)
+  AssertionError [ERR_ASSERTION]: failed reservation must refuse before worker error delivery
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-trace-parent-startup/tests/trace/startup-refusal.test.mjs:19:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

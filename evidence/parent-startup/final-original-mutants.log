@@ -1,0 +1,18 @@
+KILLED unknown-version via canonical bytes
+KILLED unknown-fields via canonical bytes
+KILLED frame-digest via independent frame oracle
+KILLED recovery-orphan via unclean shutdown
+KILLED retention-pin via quota, age
+KILLED producer-capacity via disabled writer no files
+KILLED loss-attribution via producer errors stay bounded
+KILLED query-order via multi-producer collision
+KILLED compare-precision via comparison qualifies
+KILLED share-allowlist via canary prompts
+KILLED share-metadata via top-level disclosure
+KILLED loss-filter via step/status filters
+KILLED recover-retained-out via recovery does not resurrect
+KILLED code-size-qualification via realization code size
+KILLED bounded-errors via producer errors stay bounded
+KILLED false-persistence via permission denial refuses
+KILLED viewer-time via actual bundled client interactions
+{"schema":"omega.trace.mutants.v1","mutants":17,"killed":17,"survived":0,"qualification":"SYNTHETIC_HOST_ONLY"}

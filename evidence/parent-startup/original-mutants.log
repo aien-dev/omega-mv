@@ -1,0 +1,33 @@
+KILLED unknown-version via canonical bytes
+KILLED unknown-fields via canonical bytes
+KILLED frame-digest via independent frame oracle
+KILLED recovery-orphan via unclean shutdown
+KILLED retention-pin via quota, age
+KILLED producer-capacity via disabled writer no files
+KILLED loss-attribution via producer errors stay bounded
+KILLED query-order via multi-producer collision
+KILLED compare-precision via comparison qualifies
+KILLED share-allowlist via canary prompts
+KILLED share-metadata via top-level disclosure
+KILLED loss-filter via step/status filters
+KILLED recover-retained-out via recovery does not resurrect
+KILLED code-size-qualification via realization code size
+KILLED bounded-errors via producer errors stay bounded
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: false-persistence survived
+    at file:///home/drakestapleton/workspace/omega-trace-parent-startup/tests/trace/mutants.mjs:28:72
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 0,
+  operator: 'notStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.21.0

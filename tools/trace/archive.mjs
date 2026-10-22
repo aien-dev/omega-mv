@@ -131,7 +131,11 @@ export class BoundedWriter {
    // Session acquisition is synchronous startup I/O, never producer-submit I/O.
    // It closes the pre-worker-start crash gap; the worker removes it only on durable close.
    let writerSession=null,startupError=null;
-   try{writerSession=new Archive(root,{segmentBytes}).handoff();}catch(e){startupError=e.code??e.message;}
+   try{writerSession=new Archive(root,{segmentBytes}).handoff();}catch(e){
+    startupError=e.code??e.message;
+    // Refuse producer submissions synchronously, before worker error delivery.
+    this.recordError(`archive reservation: ${startupError}`);
+   }
    // A failed reservation must never fall back to accepting an unmarked session.
    this.worker=new Worker(new URL('./writer.mjs',import.meta.url),{workerData:{root,segmentBytes,writerSession,startupError}});
    this.done=new Promise(resolve=>{

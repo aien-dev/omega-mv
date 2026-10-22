@@ -1,0 +1,10 @@
+{"accepted":false,"status":{"drop_count_overflow":false,"submitted":0,"persisted":0,"error_count":1,"accepted_pending":0,"dropped":{"1:train:step":1},"errors":["archive reservation: EIO"],"durable":false},"archive":"PASS"}
+✔ parent: failed synchronous reservation refuses immediate enqueue (67.483655ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125.852507

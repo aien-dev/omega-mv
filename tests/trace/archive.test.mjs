@@ -90,9 +90,16 @@ test('producer errors stay bounded, and durable losses retain producer and event
  const root=path.join(temp(t),'a'),w=new BoundedWriter({root,enabled:true,capacity:1});w.submit(fixture());for(let n=0;n<100;n++){w.submit({...fixture(),privacy:'unclassified'});w.submit(fixture(n+2,{producer:n%2+1,source:'dual',category:'dual'}));}
  const status=await w.close();assert.ok(w.errors.length<=16);assert.ok(status.errors.length);const r=readArchive(root),losses=r.events.filter(e=>e.category==='loss');assert.ok(losses.length>=2);assert.ok(losses.every(e=>e.metrics.some(m=>m.name==='lost_source')&&e.metrics.some(m=>m.name==='lost_category')));assert.deepEqual([...new Set(losses.map(e=>e.producer))].sort(),[1,2]);
 });
-test('permission denial refuses writes; failed async persistence reports exact accepted count',async t=>{
+test('permission denial refuses writes; startup refusal and async persistence counts stay exact',async t=>{
  const p=temp(t),root=path.join(p,'a'),a=new Archive(root);a.append([fixture()]);a.close();fs.chmodSync(root,320);assert.throws(()=>new Archive(root),{code:'EACCES'});fs.chmodSync(root,448);
- const w=new BoundedWriter({root:path.join(p,'missing-parent','archive'),enabled:true,capacity:2});w.submit(fixture(2));const status=await w.close();assert.equal(status.submitted,1);assert.equal(status.persisted,0);assert.equal(status.durable,false);assert.ok(status.errors.length);
+ const w=new BoundedWriter({root:path.join(p,'missing-parent','archive'),enabled:true,capacity:2});assert.equal(w.submit(fixture(2)),false);assert.ok(w.status().errors.length);const status=await w.close();assert.equal(status.submitted,0);assert.equal(status.accepted_pending,0);assert.equal(status.persisted,0);assert.equal(status.durable,false);assert.ok(status.errors.length);
+ // Real asynchronous append failure after successful reservation: the next
+ // queued message must not falsely acknowledge persistence after writer loss.
+ const v=new BoundedWriter({root:path.join(p,'async'),enabled:true,capacity:2,segmentBytes:1024});
+ t.after(async()=>{await v.close();});
+ assert.equal(v.submit(fixture(3,{receipts:Array.from({length:16},(_,i)=>id(i+100))})),true);
+ assert.equal(v.submit(fixture(4)),true);
+ const failed=await v.close();assert.equal(failed.submitted,2);assert.equal(failed.persisted,0);assert.equal(failed.accepted_pending,0);assert.equal(failed.durable,false);assert.ok(failed.errors.length);
 });
 test('writer snapshots context and refuses cross-run/session mixing without throwing',async t=>{
  const root=path.join(temp(t),'a'),w=new BoundedWriter({root,enabled:true,capacity:1}),first=fixture();w.submit(first);first.status='refused';assert.equal(w.submit(fixture(2,{run:id(999)})),false);w.submit(fixture(3));const status=await w.close();assert.ok(status.errors.includes('writer context refused'));assert.equal(readArchive(root).events[0].status,'ok');
