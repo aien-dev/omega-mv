@@ -1,0 +1,23 @@
+{
+  "source": "d84142f73f0fd0e44d22893232fdf0ee2a46a4d4",
+  "probes": [
+    {
+      "case": "symlink",
+      "exit": 0,
+      "victim_preserved": false,
+      "before_sha256": "5e08e3db1e21f36f17e8ce814a2d10d2fc40b8cf1e3e503c179cac63c383ac8f",
+      "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "hardlink",
+      "exit": 0,
+      "victim_preserved": false,
+      "before_sha256": "5e08e3db1e21f36f17e8ce814a2d10d2fc40b8cf1e3e503c179cac63c383ac8f",
+      "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}
