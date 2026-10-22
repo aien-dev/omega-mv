@@ -1,0 +1,15 @@
+{
+  "args": [
+    "sh",
+    "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/truncate-regular.sh",
+    "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.rE4mPX/direct-directory/build",
+    "sh",
+    "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.rE4mPX/direct-directory/command.sh",
+    "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.rE4mPX/direct-directory/executed"
+  ],
+  "status": 2,
+  "signal": null,
+  "error": null,
+  "stdout": "",
+  "stderr": "unsafe build lock: /home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.rE4mPX/direct-directory/build.omega-build.lock\n"
+}

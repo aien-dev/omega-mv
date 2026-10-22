@@ -1,0 +1,33 @@
+{
+  "source": "c100a6eb145e47dc669f4f0422c60b968496025e",
+  "output": "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z",
+  "results": [
+    {
+      "label": "safety",
+      "exit": 0,
+      "command": [
+        "node",
+        "tests/build_lock_file_safety_controls.mjs",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety"
+      ]
+    },
+    {
+      "label": "concurrency",
+      "exit": 0,
+      "command": [
+        "node",
+        "tests/physics_build_concurrency_controls.mjs",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency"
+      ]
+    },
+    {
+      "label": "history",
+      "exit": 0,
+      "command": [
+        "node",
+        "tests/physics_header_identity_controls.mjs",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/history"
+      ]
+    }
+  ]
+}

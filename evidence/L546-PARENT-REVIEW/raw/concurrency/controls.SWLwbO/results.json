@@ -1,0 +1,144 @@
+{
+  "sources": {
+    "Makefile": "d4ffa96a1c87acf67c35d27d3012f256ae1d77dd2dcd36256445976134da5a7b",
+    "tools/with_build_lock.sh": "2473a9ef87d5c0b299b7c51c4eb31c1d7de952c64558249e40dd78696f3770eb",
+    "tests/physics_build_concurrency_controls.mjs": "29d149c84b6c8d980ad3d7b9d23983dc8e7e53b6cc14fed1473086b919893e2f",
+    "tests/physics_build_concurrency_test.mjs": "a8c252d9701606de63eeb663f7b1e16cdbf1ad1e2850d8a47c5790c47a96e73d",
+    "tests/physics_build_lifecycle_test.mjs": "06a0a5616891e78251d1513c45541b5f9bb6d4e0a1add613b731e116fc9626bb",
+    "tests/physics_header_identity_test.mjs": "c250c7fd42f74be74ef02e8b5206c816f2f63387d2f7652a45373f64b38226b7"
+  },
+  "results": [
+    {
+      "label": "serial",
+      "command": [
+        "/usr/bin/node",
+        "tests/physics_header_identity_test.mjs",
+        "Makefile",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO",
+        "serial"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "expected_failure": null,
+      "actual_failures": [],
+      "pass": true
+    },
+    {
+      "label": "concurrent",
+      "command": [
+        "/usr/bin/node",
+        "tests/physics_build_concurrency_test.mjs",
+        "Makefile",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO",
+        "concurrent"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "expected_failure": null,
+      "actual_failures": [],
+      "pass": true
+    },
+    {
+      "label": "same",
+      "command": [
+        "/usr/bin/node",
+        "tests/physics_build_concurrency_test.mjs",
+        "Makefile",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO",
+        "same"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "expected_failure": null,
+      "actual_failures": [],
+      "pass": true
+    },
+    {
+      "label": "refresh",
+      "command": [
+        "/usr/bin/node",
+        "tests/physics_build_concurrency_test.mjs",
+        "Makefile",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO",
+        "refresh"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "expected_failure": null,
+      "actual_failures": [],
+      "pass": true
+    },
+    {
+      "label": "real-lifecycle",
+      "command": [
+        "/usr/bin/node",
+        "tests/physics_build_lifecycle_test.mjs",
+        "Makefile",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO"
+      ],
+      "exit": 0,
+      "signal": null,
+      "error": null,
+      "expected_failure": null,
+      "actual_failures": [],
+      "pass": true
+    },
+    {
+      "label": "no-exclusion",
+      "command": [
+        "/usr/bin/node",
+        "tests/physics_header_identity_test.mjs",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO/no-exclusion.Makefile",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO",
+        "concurrent"
+      ],
+      "exit": 1,
+      "signal": null,
+      "error": null,
+      "expected_failure": "no_mismatched_output_accepted_as_current",
+      "actual_failures": [
+        "no_mismatched_output_accepted_as_current"
+      ],
+      "pass": true
+    },
+    {
+      "label": "early-release",
+      "command": [
+        "/usr/bin/node",
+        "tests/physics_header_identity_test.mjs",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO/early-release.Makefile",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO",
+        "concurrent"
+      ],
+      "exit": 1,
+      "signal": null,
+      "error": null,
+      "expected_failure": "no_mismatched_output_accepted_as_current",
+      "actual_failures": [
+        "no_mismatched_output_accepted_as_current"
+      ],
+      "pass": true
+    },
+    {
+      "label": "no-error-cleanup",
+      "command": [
+        "/usr/bin/node",
+        "tests/physics_build_lifecycle_test.mjs",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO/no-error-cleanup.Makefile",
+        "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO"
+      ],
+      "exit": 1,
+      "signal": null,
+      "error": null,
+      "expected_failure": "failed_partial_object_removed",
+      "actual_failures": [
+        "failed_partial_object_removed"
+      ],
+      "pass": true
+    }
+  ]
+}

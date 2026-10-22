@@ -1,0 +1,15 @@
+{
+  "args": [
+    "make",
+    "--no-print-directory",
+    "-f",
+    "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.rE4mPX/make-symlink/probe.mk",
+    "OUT_DIR=/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.rE4mPX/make-symlink/build",
+    "safety-marker"
+  ],
+  "status": 2,
+  "signal": null,
+  "error": null,
+  "stdout": "",
+  "stderr": "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.rE4mPX/make-symlink/probe.mk:4: warning: overriding recipe for target 'safety-marker'\n/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/Makefile:12: warning: ignoring old recipe for target 'safety-marker'\nunsafe build lock: /home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.rE4mPX/make-symlink/build.omega-build.lock\nmake: *** [/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/Makefile:10: omega-locked-build] Error 2\n"
+}

@@ -1,0 +1,7 @@
+{"root":"/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/history/matrix.XSzkMU/headers.R4LhsD","mode":"serial","makefile":"/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/history/matrix.XSzkMU/no-diff.Makefile","makefile_sha256":"cadf71a37a5a5513d2ce67ba193cdc979706a48986bdc0e199bba15a1e2a77cf"}
+{"verdict":"PASS","name":"initial_real_rule_header_consumer"}
+{"verdict":"PASS","name":"valid_cache_hit"}
+{"verdict":"PASS","name":"directory_switch_older_header"}
+{"verdict":"PASS","name":"revision_switch_unchanged_bytes"}
+{"verdict":"FAIL","name":"dirty_header_older_mtime"}
+FAIL dirty_header_older_mtime

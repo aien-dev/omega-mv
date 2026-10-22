@@ -1,0 +1,15 @@
+{
+  "args": [
+    "make",
+    "--no-print-directory",
+    "-f",
+    "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.BohA6c/make-alias/probe.mk",
+    "OUT_DIR=/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.BohA6c/make-alias/alias",
+    "safety-marker"
+  ],
+  "status": 0,
+  "signal": null,
+  "error": null,
+  "stdout": "",
+  "stderr": "/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/safety/safety-controls.R347AL/file-safety.BohA6c/make-alias/probe.mk:4: warning: overriding recipe for target 'safety-marker'\n/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/Makefile:12: warning: ignoring old recipe for target 'safety-marker'\n"
+}

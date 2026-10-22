@@ -1,0 +1,8 @@
+{"root":"/home/drakestapleton/workspace/targets/L546-parent-20261022T210316Z/concurrency/controls.SWLwbO/lifecycle.bMH2XQ","makefile_sha256":"23f5c5c4df7c255d8dc491ed4f93e2621098a19e986268ab3de14f42282d2b62"}
+{"name":"quiet_bootstrap","verdict":"PASS"}
+{"name":"real_header_object_a","verdict":"PASS"}
+{"name":"real_noop_cache_hit","verdict":"PASS"}
+{"name":"real_header_object_b_older_mtime","verdict":"PASS"}
+{"name":"compiler_failure_propagates","verdict":"PASS"}
+{"name":"failed_partial_object_removed","verdict":"FAIL"}
+FAIL failed_partial_object_removed
