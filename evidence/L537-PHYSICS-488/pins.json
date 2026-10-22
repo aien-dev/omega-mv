@@ -1,0 +1,59 @@
+{
+  "source": "ab070f60fcb9d31bf8d1caa6caeec435571cf5c0",
+  "sources": {
+    "Makefile": "d4ffa96a1c87acf67c35d27d3012f256ae1d77dd2dcd36256445976134da5a7b",
+    "tools/with_build_lock.sh": "3baac5125bf7919d520940a7172098403d9f0fc2e50296eeacbfd75b106cb033",
+    "tests/physics_build_concurrency_controls.mjs": "b796ae9d873aeaefcc155f91bad776431c446ebdfb7082877b8517004608c18c",
+    "tests/physics_build_concurrency_test.mjs": "a8c252d9701606de63eeb663f7b1e16cdbf1ad1e2850d8a47c5790c47a96e73d",
+    "tests/physics_build_lifecycle_test.mjs": "06a0a5616891e78251d1513c45541b5f9bb6d4e0a1add613b731e116fc9626bb",
+    "tests/physics_header_identity_test.mjs": "c250c7fd42f74be74ef02e8b5206c816f2f63387d2f7652a45373f64b38226b7",
+    "tests/physics_header_identity_controls.mjs": "ab12b75b0dcb1e41760034fd00d9c287a5090ea84df27fb5b43ce02b914feaf0",
+    "tests/physics_build_identity_test.sh": "6479c4e1d042a3ed7e85da82f1b169fe7845a97e9913cc388e32245ba5fc29de"
+  },
+  "artifacts": {
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/independent/m16_native.d": "db5784aea258d25558c4df7f35dcba2ccc5e7a0b4461eaa27fa0e87437ea65f4",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/independent/m16_native.o": "5836490475679b221bbb90253c8b33d1a8b4f27af66e7a02715d226192252784",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/independent/physics.stamp": "68cd402df5b0d0ac971a30a2380e67739901193cf000bb2439cb3781ab838eef",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/objects/m16_native.d": "e315e0368ad3025fd8a055e5ed376d4835052ea7c59c9672e701f66fa92db7c0",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/objects/m16_native.o": "5836490475679b221bbb90253c8b33d1a8b4f27af66e7a02715d226192252784",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/objects/physics.stamp": "68cd402df5b0d0ac971a30a2380e67739901193cf000bb2439cb3781ab838eef",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/probe": "1ce02985246dbd93c70316d5b68abfab64d3367a12198a01f9e856e65fd85fc6",
+    "build/L537/host/tests-language/test_language_v0": "ce1bea8ef9e2f845e78020bd2da6280b65a7e3f900cff81a9948249c71918876",
+    "build/test_omega_gpu_wait": "cdab541ceaf912805039b24cba642530b7a137992c174a2018a96babbf99f7bc"
+  },
+  "fixture_inputs": {
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/a/m16/m16_native.c": "583013f59d18db9ff18be45f660858f6d56c3a6f8bf5629fe8afb090ba901176",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/a/m16/m16_native.h": "7e392377a02fda28502cb0f669fc56c45e6c03e1461f34099fc65e396edffae2",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/a/nvrm/nvrm.c": "06f8c925a7857fc23935927e8b1eab01ce3f9c7bafc74092d878858d2cf0dd6b",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/b/m16/m16_native.c": "583013f59d18db9ff18be45f660858f6d56c3a6f8bf5629fe8afb090ba901176",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/b/m16/m16_native.h": "8f2313f52b57e7daad699e974dc4b81ad02cb9b5e129adcf7f275a8622dc4650",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/b/nvrm/nvrm.c": "06f8c925a7857fc23935927e8b1eab01ce3f9c7bafc74092d878858d2cf0dd6b",
+    "/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/acceptance/controls.u5WvgC/lifecycle.Pj5Qzt/main.c": "5d8520e1a5c5f258cfdaf1d6d95a8beb887edb69735ba9bcf344f6b0b009d46a"
+  },
+  "tools": {
+    "/usr/bin/cc": {
+      "resolved": "/usr/bin/aarch64-linux-gnu-gcc-13",
+      "sha256": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d"
+    },
+    "/usr/bin/make": {
+      "resolved": "/usr/bin/make",
+      "sha256": "abbecc214fcadef6530d1cc137bde7ceb74cae3f6b992c7d10a8669a7314c7e0"
+    },
+    "/usr/bin/node": {
+      "resolved": "/usr/bin/node",
+      "sha256": "0f8949d1028f6d61506b2d5bc57e7e6fe893d7b1997509b7847294fc9c616584"
+    },
+    "/usr/bin/flock": {
+      "resolved": "/usr/bin/flock",
+      "sha256": "b991f23fbc6a3928a86977d87a6c4fd14acc44cfe90ce7cb8f5dcab4d8a49fbf"
+    },
+    "/usr/bin/git": {
+      "resolved": "/usr/bin/git",
+      "sha256": "aa6540695d076182256dd6e96c8b302e4d56381e3000bbfd5c71bbdfe94a4942"
+    },
+    "/usr/bin/sh": {
+      "resolved": "/usr/bin/dash",
+      "sha256": "c883d9c27228339580994a1d0ea960645368c7d1b960a712bd0c655860c2d0d7"
+    }
+  }
+}

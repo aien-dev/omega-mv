@@ -1,0 +1,3 @@
+error: could not read HEAD of PHYSICS_DIR=/nonexistent (git -C /nonexistent rev-parse HEAD failed)
+make[1]: *** [Makefile:95: check-physics-lock] Error 1
+make: *** [Makefile:10: omega-locked-build] Error 2

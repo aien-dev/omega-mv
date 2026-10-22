@@ -1,0 +1,10 @@
+{
+  "base": "52dbe78bbcb81d776a2d7ce96b1976dba3527ebb",
+  "exact_original_preserved": true,
+  "exceptions": [
+    "outer output-lock dispatch",
+    ".DELETE_ON_ERROR",
+    "PR495 stamp rule",
+    "PR495 driver/header/binary stamp dependencies"
+  ]
+}

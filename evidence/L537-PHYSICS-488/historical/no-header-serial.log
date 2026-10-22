@@ -1,0 +1,5 @@
+{"root":"/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/historical/matrix.X889u9/headers.8mVhGL","mode":"serial","makefile":"/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/historical/matrix.X889u9/no-header.Makefile","makefile_sha256":"310f98f4f5686322a9ebb94ad0eb4e65ca1974a884f205a7013e98eb04e24f8c"}
+{"verdict":"PASS","name":"initial_real_rule_header_consumer"}
+{"verdict":"PASS","name":"valid_cache_hit"}
+{"verdict":"FAIL","name":"directory_switch_older_header"}
+FAIL directory_switch_older_header

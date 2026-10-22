@@ -1,0 +1,65 @@
+[
+  {
+    "label": "baseline-serial",
+    "exit": 1,
+    "expected_failure": "directory_switch_older_header",
+    "actual_failure": "directory_switch_older_header",
+    "pass": true
+  },
+  {
+    "label": "pr546-serial",
+    "exit": 1,
+    "expected_failure": "directory_switch_older_header",
+    "actual_failure": "directory_switch_older_header",
+    "pass": true
+  },
+  {
+    "label": "pr495-serial",
+    "exit": 0,
+    "expected_failure": null,
+    "actual_failure": null,
+    "pass": true
+  },
+  {
+    "label": "pr495-refresh",
+    "exit": 0,
+    "expected_failure": null,
+    "actual_failure": null,
+    "pass": true
+  },
+  {
+    "label": "pr495-concurrent",
+    "exit": 1,
+    "expected_failure": "no_mismatched_output_accepted_as_current",
+    "actual_failure": "no_mismatched_output_accepted_as_current",
+    "pass": true
+  },
+  {
+    "label": "no-header-serial",
+    "exit": 1,
+    "expected_failure": "directory_switch_older_header",
+    "actual_failure": "directory_switch_older_header",
+    "pass": true
+  },
+  {
+    "label": "no-diff-serial",
+    "exit": 1,
+    "expected_failure": "dirty_header_older_mtime",
+    "actual_failure": "dirty_header_older_mtime",
+    "pass": true
+  },
+  {
+    "label": "always-write-serial",
+    "exit": 1,
+    "expected_failure": "valid_cache_hit",
+    "actual_failure": "valid_cache_hit",
+    "pass": true
+  },
+  {
+    "label": "incomplete-stamp-refresh",
+    "exit": 1,
+    "expected_failure": "complete_unchanged_stamp",
+    "actual_failure": "complete_unchanged_stamp",
+    "pass": true
+  }
+]

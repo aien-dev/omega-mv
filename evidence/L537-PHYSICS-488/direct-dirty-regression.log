@@ -1,0 +1,12 @@
+FIXTURE_ROOT=/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/direct/run.BHYToQ
+MAKEFILE_SHA256=23f5c5c4df7c255d8dc491ed4f93e2621098a19e986268ab3de14f42282d2b62
+PASS initial_build: compile_recipes=2
+PASS unchanged_no_rebuild: compile_recipes=2
+PASS changed_directory_older_sources: compile_recipes=4
+PASS changed_revision_older_sources: compile_recipes=6
+PASS same_resolved_directory_no_rebuild: compile_recipes=6
+PASS dirty_content_older_timestamp: compile_recipes=8
+PASS unchanged_dirty_no_rebuild: compile_recipes=8
+PASS switch_back_rebuilds: compile_recipes=10
+PASS missing_path_no_compilation: compile_recipes=10
+PHYSICS_BUILD_IDENTITY_PASS (recipe invalidation only; driver/chip NOT_RUN)

@@ -1,0 +1,14 @@
+{"root":"/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/lifecycle/lifecycle.TkLiqS","makefile_sha256":"d4ffa96a1c87acf67c35d27d3012f256ae1d77dd2dcd36256445976134da5a7b"}
+{"name":"quiet_bootstrap","verdict":"PASS"}
+{"name":"real_header_object_a","verdict":"PASS"}
+{"name":"real_noop_cache_hit","verdict":"PASS"}
+{"name":"real_header_object_b_older_mtime","verdict":"PASS"}
+{"name":"compiler_failure_propagates","verdict":"PASS"}
+{"name":"failed_partial_object_removed","verdict":"PASS"}
+{"name":"compiler_error_recovery","verdict":"PASS"}
+{"name":"recipe_failure_releases_lock","verdict":"PASS"}
+{"name":"recipe_error_recovery","verdict":"PASS"}
+{"name":"nested_jobserver_two_recipes_overlap","verdict":"PASS"}
+{"name":"nested_make_jobserver_preserved","verdict":"PASS"}
+{"name":"killed_make_failure_reported","verdict":"PASS"}
+FAIL lifecycle deadline

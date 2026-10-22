@@ -1,0 +1,12 @@
+{"root":"/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/build/L537/exact-acceptance/controls.q52yeR/headers.xffh8k","mode":"refresh","makefile":"/home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022/Makefile","makefile_sha256":"d4ffa96a1c87acf67c35d27d3012f256ae1d77dd2dcd36256445976134da5a7b"}
+{"verdict":"PASS","name":"initial_real_rule_header_consumer"}
+{"verdict":"PASS","name":"valid_cache_hit"}
+{"verdict":"PASS","name":"refresh_candidate_private_before_rename"}
+{"verdict":"PASS","name":"actual_kernel_lock_waiter"}
+{"verdict":"PASS","name":"refresh_b_waits_before_publication"}
+{"verdict":"PASS","name":"overlapping_refresh_b_published"}
+{"verdict":"PASS","name":"complete_unchanged_stamp"}
+{"verdict":"PASS","name":"refresh_rebuilds_matching_output"}
+{"verdict":"PASS","name":"concurrent_refresh_preserves_cache"}
+{"verdict":"PASS","name":"no_temporary_stamp_debris"}
+PHYSICS_HEADER_IDENTITY_PASS (structural host only; driver/chip NOT_RUN)

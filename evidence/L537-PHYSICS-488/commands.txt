@@ -1,0 +1,36 @@
+Working directory: /home/drakestapleton/workspace/omega-physics-build-concurrency-fix-20261022
+Source: ab070f60fcb9d31bf8d1caa6caeec435571cf5c0 (host-regression/direct tests ran on identical Makefile/helper before commit).
+
+git show a1896dcf:Makefile > build/L537/sources/pr495.Makefile
+quiet-build node tests/physics_header_identity_test.mjs build/L537/sources/pr495.Makefile build/L537/red concurrent
+actual exit 1: exact no_mismatched_output_accepted_as_current. Expected RED, not candidate acceptance.
+
+quiet-build node tests/physics_build_concurrency_controls.mjs build/L537/acceptance
+actual exit 0; eight exact rows in acceptance-command.log and acceptance.<sha256>.json. Nested invocations, actual individual exits and expected assertion names recorded there.
+
+quiet-build node tests/physics_header_identity_controls.mjs build/L537/historical
+actual exit 0: nine historical exact expected verdicts, including PR495 concurrent FAIL (exit1).
+
+quiet-build sh tests/physics_build_identity_test.sh Makefile build/L537/direct dirty
+actual exit 0: direct driver serial/dirty/missing-path checks.
+
+quiet-build make --no-print-directory -j2 OUT_DIR=build/L537/host PHYSICS_DIR=/nonexistent test-gpu-wait test-language
+actual exit 0: gpu-wait130 checks/12required kills, language407/407.
+Existing gpu-wait rule uses build/test_omega_gpu_wait within this PRIVATE worktree regardless of OUT_DIR. Source and binary pins recorded. No source rule changed for this test.
+
+Development failures (not counted as acceptance):
+quiet-build node tests/physics_build_concurrency_test.mjs Makefile build/L537/green concurrent
+actual exit2; initial JS extraction halved Make recipe dollar quoting, making stamp constant; no A recompile reached barrier. Quoting corrected before source commit.
+quiet-build node tests/physics_build_lifecycle_test.mjs Makefile build/L537/lifecycle
+actual exit2; harness waited on child pipe close after killing make while orphan compiler intentionally retained pipe. Fixed test to observe make process exit, then release compiler before awaiting pipe close. Test child1370860 explicitly terminated after watchdog; no agent/session stopped.
+
+Static checks: git diff --check; sh -n tools/with_build_lock.sh; node --check tests/physics_build_lifecycle_test.mjs
+actual exit0.
+Publication: git push git@github.com:aien-dev/omega-mv.git HEAD:refs/heads/issues/physics-build-concurrency-fix-20261022
+actual exit0. git ls-remote exact ref matched ab070f60fcb9d31bf8d1caa6caeec435571cf5c0.
+
+Final checker strengthening (gate source5d819b58; production unchanged):
+quiet-build node tests/physics_build_concurrency_controls.mjs build/L537/exact-acceptance
+actual exit0, all8 cases, exact actual_failures arrays match each expected mutant failure.
+quiet-build make --no-print-directory OUT_DIR=build/L537/refusal PHYSICS_DIR=/nonexistent check-physics-lock
+actual exit2, expected missing Physics HEAD refusal. No bypass or override.
