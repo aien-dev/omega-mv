@@ -92,7 +92,8 @@ set +e; "$B/mut.bin" >/dev/null; run=$?; set -e
 printf 'PASS mut runs, exit 0\n'
 probe cycle r5b_cycle.om 9
 probe assign r5b_assign.om 7
-grep -q 'error 9' "$B/cycle.err" || bad "cycle: missing error 9"
-grep -q 'error 7' "$B/assign.err" || bad "assign: missing error 7"
+# Compare complete diagnostics: a substring also accepts wrong codes/lines.
+"$B/byteequal" 3< "$B/cycle.err" 4< seed/native/diagnostics/cycle.txt || bad "cycle: diagnostic differs"
+"$B/byteequal" 3< "$B/assign.err" 4< seed/native/diagnostics/assign.txt || bad "assign: diagnostic differs"
 
 printf 'RC=0\n'

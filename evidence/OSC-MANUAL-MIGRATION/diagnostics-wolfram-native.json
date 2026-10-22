@@ -1,0 +1,16 @@
+{
+  "fixtures": [
+    {
+      "fixture": "cycle",
+      "native_sha256": "aae1a67059d53296fbf48c842bfc979504399fa2211f8f4b1f652e1afd22e4d5",
+      "matches_wolfram": true
+    },
+    {
+      "fixture": "assign",
+      "native_sha256": "3c2192bb4faa2ffac55b3a8ebcf45cfa3597ed6432db3ebd3ee12aa81fc0a06f",
+      "matches_wolfram": true
+    }
+  ],
+  "negative_controls": 3,
+  "status": "PASS"
+}

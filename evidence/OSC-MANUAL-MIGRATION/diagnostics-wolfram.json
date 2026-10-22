@@ -1,0 +1,13 @@
+{
+  "oracle": "Wolfram Language SHA256 and byte equality",
+  "abcSHA256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+  "fixtures": [
+    {"text":"omc: line 7: error 9\n","bytes":[111,109,99,58,32,108,105,110,101,32,55,58,32,101,114,114,111,114,32,57,10],"sha256":"aae1a67059d53296fbf48c842bfc979504399fa2211f8f4b1f652e1afd22e4d5"},
+    {"text":"omc: line 2: error 7\n","bytes":[111,109,99,58,32,108,105,110,101,32,50,58,32,101,114,114,111,114,32,55,10],"sha256":"3c2192bb4faa2ffac55b3a8ebcf45cfa3597ed6432db3ebd3ee12aa81fc0a06f"}
+  ],
+  "negativeControls": [
+    {"actual":"omc: line 7: error 90\n","expected":"omc: line 7: error 9\n","legacySubstringAccepts":true,"exactBytesAccept":false},
+    {"actual":"omc: line 99: error 9\n","expected":"omc: line 7: error 9\n","legacySubstringAccepts":true,"exactBytesAccept":false},
+    {"actual":"omc: line 2: error 7\nunexpected trailing text\n","expected":"omc: line 2: error 7\n","legacySubstringAccepts":true,"exactBytesAccept":false}
+  ]
+}
