@@ -62,18 +62,7 @@ DEPS = $(OBJS:.o=.d)
 -include $(DEPS)
 TARGET = $(OUT_DIR)/omegatool
 
-# Crumbline learner: a separate executable linked ONLY from learner-side code
-# (visible reader, Omega program/realize/verify stack, synthesis vocabulary,
-# OmegaLibrary, Crumbline search). It links no physics, no gate suites and no
-# sealed-side code; the sealed side lives in the crumbs crate.
-CL_SRCS = src/crumbline/cl_common.c src/crumbline/cl_crumb.c src/crumbline/cl_program.c src/crumbline/cl_search.c
-LEARNER_CORE = sha256 omega_canonical omega_validate omega_core omega_codec aarch64_encoder aarch64_decoder \
-	omega_realize omega_realize_synth omega_machine omega_exec omega_verify omega_program omega_synthesis omega_library
-LEARNER_OBJS = $(addprefix $(OUT_DIR)/,$(addsuffix .o,$(LEARNER_CORE))) \
-	$(patsubst src/crumbline/%.c,$(OUT_DIR)/crumbline/%.o,$(CL_SRCS)) $(OUT_DIR)/crumbline_learner.o
-LEARNER = $(OUT_DIR)/crumbline-learner
-
-.PHONY: all clean check-physics-lock crumbline-learner test-crumbline test-m19 test test-m5 test-m6 test-m7 test-m8 test-m9 test-m10 test-m11 test-m12 test-m13 test-m14 test-m15 test-m17 test-r3 test-i11-wake-merge test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-branch-reuse test-jspace-prod test-plan-reuse test-cortex
+.PHONY: all clean check-physics-lock test-m19 test test-m5 test-m6 test-m7 test-m8 test-m9 test-m10 test-m11 test-m12 test-m13 test-m14 test-m15 test-m17 test-r3 test-i11-wake-merge test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-branch-reuse test-jspace-prod test-plan-reuse test-cortex
 
 all: check-physics-lock $(TARGET)
 
@@ -106,22 +95,6 @@ $(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
 
 $(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OUT_DIR)/crumbline/%.o: src/crumbline/%.c | $(OUT_DIR)
-	mkdir -p $(OUT_DIR)/crumbline
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OUT_DIR)/crumbline_learner.o: tools/crumbline_learner.c | $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-crumbline-learner: $(LEARNER)
-
-test-crumbline: $(LEARNER)
-	./tests/crumbline/run_conformance.sh $(LEARNER) tests/crumbline/vectors
-	./tests/crumbline/run_crb1_conformance.sh $(LEARNER) tests/crumbline/crb1 tests/crumbline/crb1_findings.txt
-
-$(LEARNER): $(LEARNER_OBJS)
-	$(CC) $(CFLAGS) -o $@.tmp.$$$$ $(LEARNER_OBJS) && mv -f $@.tmp.$$$$ $@
 
 $(OUT_DIR)/omegatool.o: tools/omegatool.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -1657,62 +1630,17 @@ phase-twin-receipt: test-phase-twin
 	echo "phase-twin-receipt: evidence/MIXED_ALGEBRA/phase_twin_receipt.$$h.json"
 
 # ---------------------------------------------------------------------------
-# TURING Wave 1 (docs/turing/TURING_W0_PROPOSAL.md): Field v1 records (K.7) +
-# control-arm selector, post hoc over evidence/MIXED_ALGEBRA receipts.
-# Reads src/algebra (registry) without modifying it; no runtime, no timed runs.
-# test-turing: plain + ASan/UBSan suites, then a rebuild check (spec ids from
-# two different builds must be byte-identical).
-.PHONY: test-turing turing-field
-TURING_SRCS = src/turing/field.c src/turing/field_select.c src/turing/field_select_v0_retired.c src/turing/history_selector.c \
-	src/turing/replay.c src/omega_canonical.c src/sha256.c $(OMA_RZ_SRCS)
-TURING_HDRS = src/turing/field.h src/turing/select.h src/omega_canonical.h src/omega_types.h src/sha256.h $(OMA_RZ_HDRS)
-TURING_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
-TURING_TEST = $(OUT_DIR)/tests-turing/test_turing
-TURING_TEST_ASAN = $(OUT_DIR)/tests-turing/test_turing_asan
-TURING_TOOL = $(OUT_DIR)/tests-turing/turing-field
-TURING_TOOL_ASAN = $(OUT_DIR)/tests-turing/turing-field_asan
-
-$(TURING_TEST): tests/turing/test_turing.c $(TURING_SRCS) $(TURING_HDRS)
-	@mkdir -p $(dir $@)
-	$(CC) $(OMA_RZ_CFLAGS) -o $@ tests/turing/test_turing.c $(TURING_SRCS) -lm
-
-$(TURING_TEST_ASAN): tests/turing/test_turing.c $(TURING_SRCS) $(TURING_HDRS)
-	@mkdir -p $(dir $@)
-	$(CC) $(OMA_RZ_CFLAGS) $(TURING_ASAN) -o $@ tests/turing/test_turing.c $(TURING_SRCS) -lm
-
-$(TURING_TOOL): tools/turing_field.c $(TURING_SRCS) $(TURING_HDRS)
-	@mkdir -p $(dir $@)
-	$(CC) $(OMA_RZ_CFLAGS) -o $@ tools/turing_field.c $(TURING_SRCS) -lm
-
-$(TURING_TOOL_ASAN): tools/turing_field.c $(TURING_SRCS) $(TURING_HDRS)
-	@mkdir -p $(dir $@)
-	$(CC) $(OMA_RZ_CFLAGS) $(TURING_ASAN) -o $@ tools/turing_field.c $(TURING_SRCS) -lm
-
-turing-field: $(TURING_TOOL)
-	./$(TURING_TOOL)
-
-test-turing: $(TURING_TEST) $(TURING_TEST_ASAN) $(TURING_TOOL) $(TURING_TOOL_ASAN)
-	./$(TURING_TEST)
-	./$(TURING_TEST_ASAN)
-	./$(TURING_TOOL) --spec-ids > $(OUT_DIR)/tests-turing/spec_ids_plain.txt
-	./$(TURING_TOOL_ASAN) --spec-ids > $(OUT_DIR)/tests-turing/spec_ids_asan.txt
-	cmp $(OUT_DIR)/tests-turing/spec_ids_plain.txt $(OUT_DIR)/tests-turing/spec_ids_asan.txt
-	./$(TURING_TOOL_ASAN) > $(OUT_DIR)/tests-turing/turing_field_asan.txt
-	@echo "test-turing: spec ids identical across plain and ASan builds; turing-field runs clean under ASan/UBSan"
-
-# ---------------------------------------------------------------------------
 # MIXED_ALGEBRA_DIGITAL_V1 closure gate (spec/mixed-algebra-digital-v1.md,
 # pre-registered). test-ma-digital-bottom: realization-layer ⊥ coverage
 # (plain + ASan/UBSan). gate-mixed-algebra-digital-v1: correctness leg, one
 # bench-mixed-algebra run under ~/workspace/.spark-quiet (or reuse with
 # MA_DV1_REUSE_RUN=<run id>), TURING Field v1 selection for the
 # pre-registered queries, separate-process digest reproduction, and a
-# digest-named wrapper receipt in evidence/MIXED_ALGEBRA/digital_v1/.
-.PHONY: test-ma-digital-bottom gate-mixed-algebra-digital-v1
+# digest-named wrapper receipt in evidence/MIXED_ALGEBRA/digital_v1/. The gate binary and
+# gate-mixed-algebra-digital-v1 are in omega-programs (mk/late/turing.mk).
+.PHONY: test-ma-digital-bottom
 DV1_BOTTOM = $(OUT_DIR)/tests-algebra/test_ma_digital_bottom
 DV1_BOTTOM_ASAN = $(OUT_DIR)/tests-algebra/test_ma_digital_bottom_asan
-DV1_GATE_BIN = $(OUT_DIR)/tests-algebra/ma_digital_v1_gate
-DV1_GATE_BIN_ASAN = $(OUT_DIR)/tests-algebra/ma_digital_v1_gate_asan
 
 $(DV1_BOTTOM): tests/algebra/test_ma_digital_bottom.c $(OMA_RZ_SRCS) $(OMA_RZ_HDRS) $(OMA_SRCS) $(OMA_HDRS)
 	@mkdir -p $(dir $@)
@@ -1723,21 +1651,9 @@ $(DV1_BOTTOM_ASAN): tests/algebra/test_ma_digital_bottom.c $(OMA_RZ_SRCS) $(OMA_
 	$(CC) $(OMA_RZ_CFLAGS) -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
 		-o $@ tests/algebra/test_ma_digital_bottom.c $(OMA_RZ_SRCS) $(OMA_SRCS) -lm
 
-$(DV1_GATE_BIN): tests/algebra/ma_digital_v1_gate.c $(TURING_SRCS) $(TURING_HDRS)
-	@mkdir -p $(dir $@)
-	$(CC) $(OMA_RZ_CFLAGS) -o $@ tests/algebra/ma_digital_v1_gate.c $(TURING_SRCS) -lm
-
-$(DV1_GATE_BIN_ASAN): tests/algebra/ma_digital_v1_gate.c $(TURING_SRCS) $(TURING_HDRS)
-	@mkdir -p $(dir $@)
-	$(CC) $(OMA_RZ_CFLAGS) $(TURING_ASAN) -o $@ tests/algebra/ma_digital_v1_gate.c $(TURING_SRCS) -lm
-
 test-ma-digital-bottom: $(DV1_BOTTOM) $(DV1_BOTTOM_ASAN)
 	./$(DV1_BOTTOM)
 	./$(DV1_BOTTOM_ASAN)
-
-gate-mixed-algebra-digital-v1: $(DV1_GATE_BIN) $(DV1_GATE_BIN_ASAN) $(DV1_BOTTOM) $(DV1_BOTTOM_ASAN)
-	DV1_GATE=./$(DV1_GATE_BIN) DV1_GATE_ASAN=./$(DV1_GATE_BIN_ASAN) MAKE="$(MAKE)" \
-		sh tests/algebra/ma_digital_v1_gate.sh
 
 # Content check (post-run addenda 2026-09-29): every digital_v1 wrapper
 # re-hashes to its file name and every receipt it cites re-hashes to the
@@ -1745,21 +1661,6 @@ gate-mixed-algebra-digital-v1: $(DV1_GATE_BIN) $(DV1_GATE_BIN_ASAN) $(DV1_BOTTOM
 .PHONY: check-mixed-algebra-digital-v1-evidence
 check-mixed-algebra-digital-v1-evidence:
 	sh tests/algebra/ma_digital_v1_check_evidence.sh
-
-# PATH-1 (spec/path-semantic-object.md section 15). BOOTSTRAP / REFERENCE oracle
-# and TEST HARNESS only; no runtime, physics or GPU links.
-PATH1_TEST_BIN := $(OUT_DIR)/tests-path/test_path_identity
-.PHONY: test-path
-$(PATH1_TEST_BIN): src/path/rx_path.c src/path/rx_path.h src/sha256.c src/sha256.h \
-		src/omega_types.h tests/path/test_path_identity.c
-	mkdir -p $(dir $@)
-	$(CC) -std=c11 -Wall -Wextra -Werror -O2 -Isrc -Isrc/path -o $@ \
-		src/path/rx_path.c src/sha256.c tests/path/test_path_identity.c
-
-test-path: $(PATH1_TEST_BIN)
-	sh tests/path/check_path_boundary.sh
-	./$(PATH1_TEST_BIN)
-	CC="$(CC)" sh tests/path/mutate.sh
 
 # COMPOSITION-2: one World, one causal path (rx_compose). test-composition
 # runs every fault point in process and as a crashed child, the OLD-or-NEW
@@ -2315,8 +2216,6 @@ test-vcstore-genesis: test-vcstore
 # prerequisite rules below make sure the new objects are built first.
 VC_BRIDGE_CORE = omega_program_ir omega_vc_bridge omega_resolve omega_receipt omega_blake3 omega_vcstore
 VC_BRIDGE_OBJS = $(addprefix $(OUT_DIR)/,$(addsuffix .o,$(VC_BRIDGE_CORE)))
-LEARNER_CORE += $(VC_BRIDGE_CORE)
-$(LEARNER): $(VC_BRIDGE_OBJS)
 SRCS += $(patsubst %,src/%.c,$(VC_BRIDGE_CORE))
 $(TARGET): $(VC_BRIDGE_OBJS)
 -include $(VC_BRIDGE_OBJS:.o=.d)
@@ -2604,3 +2503,8 @@ $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h sr
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# Late fragments (L396, ADR 0039): build rules of modules that live in their own repos and are laid over
+# this tree (omega-programs: mk/late/turing.mk, mk/late/path.mk, mk/late/crumbline.mk). They come last
+# because their prerequisites read variables defined above, where the rules sat before the move.
+-include mk/late/*.mk
