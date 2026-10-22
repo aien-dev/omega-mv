@@ -45,7 +45,7 @@ printf 'program\tinputs\ttraps\tc_path_words\tom4_words\n' > "$tab"
 cmpc() { # name entry inputs omegese -> compares om4 with the C path on the runner
   build/omegese/omegese emit $4 $B/$1.json > /dev/null
   build/omega_emit/omega_emit emit $B/$1.json $B/$1.oscir > /dev/null
-  $R/om4.bin < $4 > $B/$1.om4.bin
+  sed '/^free /d' $4 | $R/om4.bin > $B/$1.om4.bin # the C path's language needs free for its arrays; om4's has none
   $B/runner $B/$1.oscir "$2" $3 > $B/$1.c.out
   $B/runner $B/$1.oscir "$2" $3 $B/$1.om4.bin > $B/$1.s.out
   tail -n +2 $B/$1.c.out > $B/$1.c.res; tail -n +2 $B/$1.s.out > $B/$1.s.res
@@ -123,6 +123,7 @@ t 9  'fn f a uint to uint\nret f a\nend\n' 'a self-call in function mode (stack 
 t 9  'global g uint 4\nfn f a uint to uint\nret a\nend\n' 'a pool in function mode'
 t 9  'fn main to int\nif true\nx = new uint 4 0\nend\nret 0\nend\n' 'new inside a block'
 t 9  'fn main a int to int\nret a\nend\n' 'main with parameters'
+t 9  'fn main to int\nx = new uint 4 0\nfree x\nret 0\nend\n' '24: free is not a word (no heap, nothing given back by hand)'
 t 9  'fn f a int b int to int\nret 0\nend\nfn g to int\nx = own a\nret 0\nend\n' 'own is not in the subset'
 t 10 'fn f a uint to uint\nret a\nend\nfn g f uint to uint\nret f\nend\n' 'a name equal to a function'
 t 13 'fn f a uint to uint\nabcdefghi = a\nret a\nend\n' 'a variable over 8 characters'

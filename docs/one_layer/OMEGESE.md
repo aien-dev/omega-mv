@@ -447,7 +447,8 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   is error 22. Program mode only. (s.7)
 - `NAME = new T N v`: a local array of N elements, each v, on the stack, given back when the function
   returns. Only in a function's outermost block (error 9); at most 4 MiB of local arrays (error 23).
-  `free NAME` is accepted for it and does nothing else. (s.5 fm7, fm8, s.6 sort)
+  There is no `free`: nothing is given back by hand (decision 24), and the word is refused (error 9).
+  (s.5 fm7, fm8, s.6 sort, s.7)
 - A parameter `NAME view T N` or `NAME edit T N` takes an array of exactly that type and length (error 7
   otherwise). A view is read-only; `put`, `read` into it, or passing it as edit is error 20. A text is
   read-only in the same way. (s.7)

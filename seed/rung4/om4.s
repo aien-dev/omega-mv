@@ -14,7 +14,7 @@
 ; mode), void functions and ret without a value; signed div, rem and shl; for with a value as count;
 ; true and false; local arrays (new, on the stack, only in a function's outermost block), array parameters
 ; (view / edit), global arrays (global, fixed pools in the program's memory image, no heap), text literals
-; (text, read-only bytes with their length), get, put, len, free; read and write (Linux system calls on a
+; (text, read-only bytes with their length), get, put, len; read and write (Linux system calls on a
 ; checked part of an array) and exit; note lines. Every array carries its length; every index is checked
 ; (trap 3) unless it is a number, which is checked when om4 reads it.
 ; Semantics follow the C path's interpreter (src/compiler/osc_interp.c): unsigned ops wrap to the width,
@@ -77,7 +77,7 @@
   .w 0x00000000
   .w 0x00400000
   .w 0x00000000
-  .w 0x00003550 ; p_filesz = the size of om4.bin, 13648 bytes (asm2 has no size arithmetic; gate4.sh checks it)
+  .w 0x00003538 ; p_filesz = the size of om4.bin, 13624 bytes (asm2 has no size arithmetic; gate4.sh checks it)
   .w 0x00000000
   .w 0x01460000 ; p_memsz: up to 0x1860000
   .w 0x00000000
@@ -667,7 +667,7 @@
   cmp.x.i x0 80
   b.eq S_PUT
   cmp.x.i x0 81
-  b.eq S_FREE
+  b.eq E_SUBSET ; free: no heap and nothing to give back (decision 24), so not a word
   cmp.x.i x0 82
   b.eq S_EXIT
   cmp.x.i x0 77
@@ -1116,14 +1116,6 @@
   orr.x x0 x2 x1
   bl EMIT
   add.x.i sp sp 64
-  bl EOL
-  b STMT
-; ---- free A: a local array (its stack is given back at ret; no code) ----
-:S_FREE
-  bl ARRNAME
-  ldr.w w9 x0 5
-  cmp.x.i x9 1
-  b.ne E_TYPE
   bl EOL
   b STMT
 ; ---- global NAME T N: a fixed pool of N elements, zero at start, in the read/write part of the program
