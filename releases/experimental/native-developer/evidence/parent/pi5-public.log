@@ -1,0 +1,62 @@
+Root: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR
+Host: Linux aarch64
+Preview: https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+Payload: https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/omega-developer-linux-arm64-source.tar.gz
+/var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/install.sh: OK
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh
+Downloading pinned Omega developer source (Linux ARM64)...
+PASS source-only seed bootstrap and compiler fixpoint
+PASS native converter and math, shared source-born compiler
+Installed omega (om and omg aliases) in /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin (PATH unchanged)
+
+Omega is installed. Try:
+  "/var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/omega" help
+  "/var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/omega" run hello.om
+
+Your shell PATH is unchanged. Add /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin to PATH, or use the full command path above.
+Literal public pipeline statuses: curl=0 sh=0
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/omega check hello.om
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/omega build hello.om -o hello-omega
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/omega run hello.om
+PUBLIC-PREVIEW
+PASS omega check/build/native-execution/run
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/om check hello.om
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/om build hello.om -o hello-om
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/om run hello.om
+PUBLIC-PREVIEW
+PASS om check/build/native-execution/run
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/omg check hello.om
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/omg build hello.om -o hello-omg
+COMMAND: /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.local/bin/omg run hello.om
+PUBLIC-PREVIEW
+PASS omg check/build/native-execution/run
+COMMAND: omega uninstall
+Removed unchanged Omega commands; unrelated files and user data preserved.
+PASS uninstall all aliases and owned payload
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s -- --prefix /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/collision-omega
+Downloading pinned Omega developer source (Linux ARM64)...
+omega: installation collision; no files replaced
+Refusal pipeline statuses: curl=0 sh=73 expected=73
+PASS unrelated omega preserved
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s -- --prefix /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/collision-om
+Downloading pinned Omega developer source (Linux ARM64)...
+omega: installation collision; no files replaced
+Refusal pipeline statuses: curl=0 sh=73 expected=73
+PASS unrelated om preserved
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s -- --prefix /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/collision-omg
+Downloading pinned Omega developer source (Linux ARM64)...
+omega: installation collision; no files replaced
+Refusal pipeline statuses: curl=0 sh=73 expected=73
+PASS unrelated omg preserved
+Checksum negative-control URL: https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/SOURCE.json
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s -- --prefix /var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/hash-refusal
+Downloading pinned Omega developer source (Linux ARM64)...
+omega: download checksum mismatch; nothing installed
+Refusal pipeline statuses: curl=0 sh=65 expected=65
+PASS checksum mismatch refused before installation
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s -- --unknown
+omega: usage: install.sh [--prefix absolute-directory]
+Refusal pipeline statuses: curl=0 sh=64 expected=64
+/var/tmp/omega-public-parent-L614.UpBTRZnn/public-preview.ODjvcotR/home/.profile: OK
+PASS invalid arguments; unchanged profile; empty TMPDIR
+PASS PUBLIC PREVIEW: 3 alias project paths, uninstall, 3 collisions, hash refusal, argument refusal
