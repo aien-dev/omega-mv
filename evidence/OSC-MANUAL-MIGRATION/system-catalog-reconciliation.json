@@ -1,0 +1,122 @@
+{
+  "observed_utc": "2026-10-22T21:13:35.684308+00:00",
+  "scope": "read-only source-catalog reconciliation, not production retirement qualification",
+  "historical_manifest_sha256": "a91f03392bfa7751c44297dd6037559e9d7cf41c8ab3599b2c477ae094e0694d",
+  "historical_observed_utc": "2026-10-22T19:06:07.231842+00:00",
+  "coverage_complete": false,
+  "repositories": [
+    {
+      "name": "omega",
+      "path": "/home/drakestapleton/workspace/omega",
+      "historical_default": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+      "owner_record": "L418",
+      "current_head": "ce42e62f9632b495f494aa8e419a70f4a36c88c0",
+      "current_remote_main": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+      "default_ref_changed": false
+    },
+    {
+      "name": "aienux",
+      "path": "/home/drakestapleton/workspace/aienos_m3",
+      "historical_default": "18e276590424593647cd7c39c6d16c2f9f8d6027",
+      "owner_record": "L420",
+      "current_head": "22ab63a6e5743ab1247e4cd3287c4d5ec24724b1",
+      "current_remote_main": "18e276590424593647cd7c39c6d16c2f9f8d6027",
+      "default_ref_changed": false
+    },
+    {
+      "name": "CUDApp",
+      "path": "/home/drakestapleton/workspace/cudapp",
+      "historical_default": "232332422bfdc31c8918085b50f13c1e18ab702e",
+      "owner_record": "L419",
+      "current_head": "8f0b645dbc859f1b63868cec77880621aa70b42d",
+      "current_remote_main": "232332422bfdc31c8918085b50f13c1e18ab702e",
+      "default_ref_changed": false
+    },
+    {
+      "name": "physics",
+      "path": "/home/drakestapleton/workspace/physics",
+      "historical_default": "14273c5ce7d13fbc6e410c4fed9aa36837918177",
+      "owner_record": "L420",
+      "current_head": "e95e3ed2a86fe4bffe4d954fa94c27dfb5284280",
+      "current_remote_main": "14273c5ce7d13fbc6e410c4fed9aa36837918177",
+      "default_ref_changed": false
+    },
+    {
+      "name": "benchmarks",
+      "path": "/home/drakestapleton/workspace/benchmarks",
+      "historical_default": "08c81e6fd074e69fdfafe75ec7465207b85b7c25",
+      "owner_record": "L420",
+      "current_head": "96110721d408211b065096eceb0e3fe35f058ebf",
+      "current_remote_main": "08c81e6fd074e69fdfafe75ec7465207b85b7c25",
+      "default_ref_changed": false
+    },
+    {
+      "name": "atlas",
+      "path": "/home/drakestapleton/workspace/atlas",
+      "historical_default": "6b11395a7d0e56e4178b9074d0c003a0ce509281",
+      "owner_record": "L420",
+      "current_head": "0ec17d4b45c93e9d7577453995519997431e1b67",
+      "current_remote_main": null,
+      "default_ref_changed": false
+    },
+    {
+      "name": "interplane",
+      "path": "/home/drakestapleton/workspace/interplane",
+      "historical_default": "b669d06e21c9debb15073289d7c0b78b1b2d362c",
+      "owner_record": "L420",
+      "current_head": "2866d2b1cbe1215ac451a6c23e4815d49d3f0758",
+      "current_remote_main": "b669d06e21c9debb15073289d7c0b78b1b2d362c",
+      "default_ref_changed": false
+    },
+    {
+      "name": "sovereign-core",
+      "path": "/home/drakestapleton/workspace/aien-sovereign-core",
+      "historical_default": "754c07b118f41ad899607b60329bd851b1ccb13e",
+      "owner_record": "L495",
+      "current_head": "c83eb5b2f96b3d0a36fcb5092fcf0d66af5dd0d0",
+      "current_remote_main": "754c07b118f41ad899607b60329bd851b1ccb13e",
+      "default_ref_changed": false
+    },
+    {
+      "name": "protocols",
+      "path": "/home/drakestapleton/workspace/aien-protocols",
+      "historical_default": "4529f393546c87d5ae673e5d66d700c8e8c5db03",
+      "owner_record": "L495",
+      "current_head": "1554330b403a78c4998d4cdbb841fb5457eb09ba",
+      "current_remote_main": "4529f393546c87d5ae673e5d66d700c8e8c5db03",
+      "default_ref_changed": false
+    },
+    {
+      "name": "aegis-runtime",
+      "path": "/home/drakestapleton/workspace/aegis-runtime",
+      "historical_default": "f85dbe3910dd2c29faff74a3a96d657531ca1320",
+      "owner_record": "L495",
+      "current_head": "e8eed5aac8612c1b846284c09d58e798e382c11b",
+      "current_remote_main": "f85dbe3910dd2c29faff74a3a96d657531ca1320",
+      "default_ref_changed": false
+    },
+    {
+      "name": "spark-rsi",
+      "path": "/home/drakestapleton/workspace/spark-rsi",
+      "historical_default": "3d5dc2f178702b00263869ed24d52ea0235c16e1",
+      "owner_record": "L495",
+      "current_head": "1d564c2cc515f96668289fd1a6f8b22f8dbf23cc",
+      "current_remote_main": "3d5dc2f178702b00263869ed24d52ea0235c16e1",
+      "default_ref_changed": false
+    },
+    {
+      "name": "omega-bridge",
+      "path": "/home/drakestapleton/workspace/omega-bridge",
+      "historical_default": "614f4ba56487ad420f43980b12e48b66768d6d21",
+      "owner_record": "L483",
+      "current_head": "77376b1941a020dba441a14fce8eaadea692a5b7",
+      "current_remote_main": "614f4ba56487ad420f43980b12e48b66768d6d21",
+      "default_ref_changed": false
+    }
+  ],
+  "counts": {
+    "catalog_repositories": 12,
+    "changed_default_refs": 0,
+    "unresolved_default_refs": 1
+  }
+}
