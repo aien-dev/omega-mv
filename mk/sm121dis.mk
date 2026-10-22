@@ -1,7 +1,8 @@
 # C6 of docs/OMEGA.md: Omega's own sm_121 disassembler (src/omega_sm121_disasm.c, tools/sm121dis/).
 #   make test-sm121dis   collect every kernel the library builds (no GPU), compare our text with nvdisasm's, word by word;
 #                        then the red check: a decoder built with one deliberate fault must FAIL the same comparison.
-# Picked up by the `-include mk/*.mk` line of the Makefile.
+# Picked up by the `-include mk/*.mk` line of the Makefile. The test binaries are named as files, not through the
+# GPU_*_TEST variables: this file is read before the Makefile defines them.
 SM121DIS = $(OUT_DIR)/sm121dis
 SM121DIS_RED = $(OUT_DIR)/sm121dis_red
 SM121DIS_K = $(OUT_DIR)/sm121dis-kernels
@@ -13,10 +14,10 @@ $(SM121DIS_RED): tools/sm121dis/sm121dis.c src/omega_sm121_disasm.c src/omega_sm
 	@mkdir -p $(OUT_DIR)
 	$(CC) -std=gnu11 -Wall -Wextra -Werror -O2 -DSM121DIS_MUTANT=1 -Isrc -o $@ tools/sm121dis/sm121dis.c src/omega_sm121_disasm.c
 
-sm121dis-corpus-bins: $(GPU_API_TEST) $(GPU_EW_TEST) $(GPU_RECONV_TEST) $(GPU_ATTN_TEST) $(GPU_MOE_TEST) $(GPU_FP8_TEST) \
-	$(GPU_DATTN_TEST) $(GPU_ROUTER_TEST) $(GPU_BF16_TEST) $(GPU_TERN_TEST) $(GPU_FP8GEMM_TEST) $(GPU_TC_PROBE_TEST) \
-	$(GPU_TC_PEAK_TEST) $(GPU_PF_MEM_TEST) $(GPU_QMMA_PROBE_TEST) $(GPU_CMDLIST_TEST) $(GPU_DECODE_GRAPH_TEST) \
-	$(GPU_TCGEMM_TEST) $(GPU_PATTN_TEST) $(GPU_PFGEMM_TEST) $(GPU_QGEMM_TEST) $(GPU_PFHOST_TEST) $(GPU_GPR_BOUNDARY_TEST) \
+sm121dis-corpus-bins: $(addprefix $(OUT_DIR)/,gpu_matmul_api_test gpu_elementwise_test gpu_reconv_test gpu_attention_test \
+	gpu_moe_window_test gpu_fp8_api_test gpu_decode_attn_test gpu_router_test gpu_bf16_gemv_test gpu_tern_test gpu_fp8gemm_test \
+	gpu_tc_probe_test gpu_tc_peak_test gpu_pf_mem_test gpu_qmma_probe_test gpu_cmdlist_test gpu_decode_graph_test gpu_tcgemm_test \
+	gpu_prefill_attn_test gpu_pfgemm_test gpu_qgemm_test gpu_pfhost_test gpu_gpr_boundary_test) \
 	build/test_omega_divsqrt_gb10_cpu build/test_omega_ldst_gb10_cpu
 
 .PHONY: test-sm121dis sm121dis-corpus-bins

@@ -38,6 +38,9 @@ static const Field FIELDS[] = {
     {'h', 0, 53, 5}, {'m', 0, 40, 13},                                  /* SHFL lane distance, clamp */
     {'S', 1, 8, 8},                                                     /* special register */
     {'G', 1, 12, 3}, {'g', 1, 12, 4},                                   /* integer and float compare */
+    {'Z', 1, 9, 1}, {'z', 1, 9, 3},                                     /* ISETP signed flag; memory access size */
+    {'N', 1, 8, 1}, {'M', 0, 63, 1},                                    /* IADD3 negations: first, second source */
+    {'j', 0, 32, 32},                                                   /* ISETP immediate (printed signed) */
 };
 
 static const Field *field_of(char c) {
@@ -74,6 +77,7 @@ static const char *SR[256] = {
 };
 static const char *ICMP[8] = { "F", "LT", "EQ", "LE", "GT", "NE", "GE", "T" };
 static const char *FCMP[16] = { "F", "LT", "EQ", "LE", "GT", "NE", "GE", "NUM", "NAN", "LTU", "EQU", "LEU", "GTU", "NEU", "GEU", "T" };
+static const char *MSIZE[8] = { ".U8" , ".S8", ".U16", ".S16", "", ".64", ".128", ".U.128" };
 
 /* nvdisasm prints a float immediate the shortest way that reads back exactly, with INF and NAN by name */
 static void fimm(Out *w, uint32_t u) {
@@ -111,7 +115,7 @@ static void render(Out *w, const char *fmt, uint64_t lo, uint64_t hi, uint64_t p
         case 'f': fimm(w, (uint32_t)v); break;
         case 'K': put(w, "c[0x%x][0x%x]", (unsigned)bits(lo, 54, 5), (unsigned)bits(lo, 38, 16)); break;
         case 'U': put(w, "c[0x%x][0x%x]", (unsigned)bits(lo, 54, 5), (unsigned)bits(lo, 37, 17)); break;
-        case 'o': { int32_t off = (int32_t)((uint32_t)v << 8) >> 8; if (off) { put(w, off < 0 ? "-" : "+"); put(w, "0x%x", (unsigned)(off < 0 ? -off : off)); } break; }
+        case 'o': { int32_t off = (int32_t)((uint32_t)v << 8) >> 8; if (off) { put(w, "+"); hex_s(w, off); } /* nvdisasm writes a negative offset as +-0x4 */ break; }
         case 'Y': put(w, "0x%llx", (unsigned long long)(pc + 16 + (int64_t)(int32_t)(uint32_t)v)); break;
         case 'y': put(w, "B%u", (unsigned)v); break;
         case 'P': case 'Q': pred(w, v, 0); break;
@@ -120,6 +124,10 @@ static void render(Out *w, const char *fmt, uint64_t lo, uint64_t hi, uint64_t p
         case 'h': case 'm': put(w, "0x%x", (unsigned)v); break;
         case 'S': if (SR[v]) put(w, "%s", SR[v]); else put(w, "SR%u", (unsigned)v); break;
         case 'G': put(w, "%s", ICMP[v]); break;
+        case 'Z': if (!v) put(w, ".U32"); break;
+        case 'z': put(w, "%s", MSIZE[v]); break;
+        case 'N': case 'M': if (v) put(w, "-"); break;
+        case 'j': hex_s(w, (int32_t)(uint32_t)v); break; /* signed even in a .U32 compare, as nvdisasm prints it */
         case 'g': put(w, "%s", FCMP[v]); break;
         case 'T': {
             uint64_t units = bits(lo, 16, 8) | (bits(lo, 34, 30) << 8) | (bits(hi, 0, 18) << 38);
@@ -160,14 +168,19 @@ static const Row ROWS[] = {
     { 0x0000000000007c24ull, 0x0f8e0200ull, "IMAD %d, %a, %B, %c" },
     { 0x0000000000007825ull, 0x078e0000ull, "IMAD.WIDE.U32 %d, %a, %i, %c" },
     { 0x0000000000007227ull, 0x078e0000ull, "IMAD.HI.U32 %d, %a, %b, %c" },
-    { 0x0000000000007210ull, 0x07ffe000ull, "IADD3 %d, PT, PT, %a, %b, %c" },
+    { 0x0000000000007210ull, 0x07ffe000ull, "IADD3 %d, PT, PT, %N%a, %M%b, %c" },
+    { 0x0000000000007810ull, 0x07ffe000ull, "IADD3 %d, PT, PT, %N%a, %s, %c" },
     { 0x0000000000007212ull, 0x000e0000ull, "LOP3.LUT %d, %a, %b, %c, %l, %R" },
     { 0x0000000000007812ull, 0x000e0000ull, "LOP3.LUT %d, %a, %i, %c, %l, %R" },
     { 0x0000000000007819ull, 0x00011600ull, "SHF.R.U32.HI %d, %a, %i, %c" },
+    { 0x0000000000007219ull, 0x00011600ull, "SHF.R.U32.HI %d, %a, %b, %c" },
     { 0x0000000000007219ull, 0x00000600ull, "SHF.L.U32 %d, %a, %b, %c" },
-    { 0x000000000000720cull, 0x00000070ull, "ISETP.%G.U32.AND %P, %Q, %a, %b, %R" },
-    { 0x000000000000780cull, 0x00000270ull, "ISETP.%G.AND %P, %Q, %a, %s, %R" },
-    { 0x0000000000007c0cull, 0x08000070ull, "ISETP.%G.U32.AND %P, %Q, %a, %B, %R" },
+    { 0x0000000000007819ull, 0x00000600ull, "SHF.L.U32 %d, %a, %i, %c" },
+    { 0x000000000000720cull, 0x00000070ull, "ISETP.%G%Z.AND %P, %Q, %a, %b, %R" },
+    { 0x000000000000780cull, 0x00000070ull, "ISETP.%G%Z.AND %P, %Q, %a, %j, %R" },
+    { 0x0000000000007c0cull, 0x08000070ull, "ISETP.%G%Z.AND %P, %Q, %a, %B, %R" },
+    { 0x0000000000007207ull, 0x00000000ull, "SEL %d, %a, %b, %R" },
+    { 0x0000000000007807ull, 0x00000000ull, "SEL %d, %a, %i, %R" },
     /* float */
     { 0x0000000000007221ull, 0x00000000ull, "FADD %d, %a, %b" },
     { 0x8000000000007221ull, 0x00000000ull, "FADD %d, %a, -%b" },
@@ -176,13 +189,14 @@ static const Row ROWS[] = {
     { 0x0000000000007209ull, 0x00000000ull, "FMNMX %d, %a, %b, %R" },
     { 0x000000000000720bull, 0x00000000ull, "FSETP.%g.AND %P, %Q, %a, %b, %R" },
     { 0x0000000000007245ull, 0x00201000ull, "I2FP.F32.U32 %d, %b" },
+    { 0x0000000000007245ull, 0x00201400ull, "I2FP.F32.S32 %d, %b" },
     { 0x0000000000007305ull, 0x0020f000ull, "F2I.U32.TRUNC.NTZ %d, %b" },
     { 0x0000000000007308ull, 0x00000800ull, "MUFU.EX2 %d, %b" },
     { 0x0000000000007308ull, 0x00001000ull, "MUFU.RCP %d, %b" },
     { 0x0000000000007308ull, 0x00001400ull, "MUFU.RSQ %d, %b" },
     /* memory */
-    { 0x0000000000007981ull, 0x0c1e1900ull, "LDG.E %d, desc[%B][%a.64%o]" },
-    { 0x0000000000007986ull, 0x0c101900ull, "STG.E desc[%C][%a.64%o], %b" },
+    { 0x0000000000007981ull, 0x0c1e1100ull, "LDG.E%z %d, desc[%B][%a.64%o]" },
+    { 0x0000000000007986ull, 0x0c101100ull, "STG.E%z desc[%C][%a.64%o], %b" },
     { 0x0000000000007984ull, 0x08000800ull, "LDS %d, [%a+%B]" },
     { 0x0000000000007988ull, 0x08000800ull, "STS [%a+%C], %b" },
     { 0x0800000000007f89ull, 0x000e0000ull, "SHFL.DOWN PT, %d, %a, %h, %m" },
