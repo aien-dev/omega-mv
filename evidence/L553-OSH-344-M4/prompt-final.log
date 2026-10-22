@@ -1,0 +1,19 @@
+osh_gen: check OK (generated files match the layout list)
+osh_gen: check OK (generated files match the layout list)
+osh_gen: check OK (generated files match the layout list)
+osh: syntax error: SUBSHELL at byte 0
+osh: syntax error: SUBSHELL at byte 0
+osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh: syntax error: SUBSHELL at byte 0
+osh: syntax error: SUBSHELL at byte 0
+osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh: prompt signal setup: Input/output error
+osh$ PROMPT_SIGNAL_RESTORE: 252 passed, 2 failed
+make[1]: *** [mk/osh.mk:207: test-osh-prompt-signals] Error 1
+make: *** [Makefile:10: omega-locked-build] Error 2

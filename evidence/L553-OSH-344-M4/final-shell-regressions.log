@@ -1,0 +1,77 @@
+osh_gen: check OK (generated files match the layout list)
+osh_gen: check OK (generated files match the layout list)
+osh_gen: check OK (generated files match the layout list)
+e2e cases 104 (each run native and OSH_INTERP=1), checks 320, failures 0
+OSH_E2E_PASS
+test-osh-e2e: PASS
+osh-trace: PASS (20 scripts, native == interpreter == committed trace)
+diff observer: absent from the shipped osh, present in the runner
+OSH cross-adapter pipeline differential (omega#568)
+pins host:   adapter=linux-host aienos=lock:b84c0a67590a934f3f3e001b12ec85ebc086a9eb omega=03d3b917dbfdd34cf1f8ca5de410b0dee816d516-dirty
+             core=1512a052c93be7f263a02090f9dab5fd81409df8b0633b134bc3230e78871450
+             abi=aien-protocols-mv@fb5fca98e6676bb104888c73268e0f9a81e9c63e
+             cc=cc-13.3.0@a20520ee21543f24 harness=4cd520325a542d5dd0fdfb5d081a58a9cb38c11552194001c22e50f0e8e32d72
+             fixtures=fa17782b0260856d13c9de865715145147c7f25a33fd7b69a68e9a5d27eb7da3
+pins aienos: none supplied (no native result file)
+fixture                      scope    host-native host-interp aienos   reason
+f01_two_stage                portable PASS        PASS        NOT_RUN  no native result supplied
+f02_three_stage              portable PASS        PASS        NOT_RUN  no native result supplied
+f03_argv_boundary_text       portable PASS        PASS        NOT_RUN  no native result supplied
+f04_argv_boundary_direct     portable PASS        PASS        NOT_RUN  no native result supplied
+f05_direct_pipeline          portable PASS        PASS        NOT_RUN  no native result supplied
+f06_binary_bytes             portable PASS        PASS        NOT_RUN  no native result supplied
+f07_large_output             portable PASS        PASS        NOT_RUN  no native result supplied
+f08_short_reads_writes       portable PASS        PASS        NOT_RUN  no native result supplied
+f09_consumer_early_exit      portable PASS        PASS        NOT_RUN  no native result supplied
+f10_early_exit_middle        portable PASS        PASS        NOT_RUN  no native result supplied
+f11_zero_length_stream       portable PASS        PASS        NOT_RUN  no native result supplied
+f12_exit_statuses            portable PASS        PASS        NOT_RUN  no native result supplied
+f13_failed_producer          portable PASS        PASS        NOT_RUN  no native result supplied
+f14_and_or                   portable PASS        PASS        NOT_RUN  no native result supplied
+f15_redir_order_dup_first    portable PASS        PASS        NOT_RUN  no native result supplied
+f16_redir_order_file_first   portable PASS        PASS        NOT_RUN  no native result supplied
+f17_redir_in_pipeline        portable PASS        PASS        NOT_RUN  no native result supplied
+f18_failed_redirection       portable PASS        PASS        NOT_RUN  no native result supplied
+f19_not_found                portable PASS        PASS        NOT_RUN  no native result supplied
+f20_builtin_in_pipeline      portable PASS        PASS        NOT_RUN  no native result supplied
+f21_refuse_background        portable PASS        PASS        NOT_RUN  no native result supplied
+f22_refuse_later_list        portable PASS        PASS        NOT_RUN  no native result supplied
+f23_refuse_nul               portable PASS        PASS        NOT_RUN  no native result supplied
+f24_revoked_spawn            portable PASS        PASS        NOT_RUN  no native result supplied
+f25_cancel_interrupt         portable PASS        PASS        NOT_RUN  no native result supplied
+f26_partial_launch_2         portable PASS        PASS        NOT_RUN  no native result supplied
+f27_partial_launch_3         portable PASS        PASS        NOT_RUN  no native result supplied
+f28_launch_fail_first        portable PASS        PASS        NOT_RUN  no native result supplied
+f29_stopped_member           linux    PASS        PASS        NOT_RUN  platform-specific (linux)
+f30_no_descriptors           linux    PASS        PASS        NOT_RUN  platform-specific (linux)
+f31_no_processes             linux    PASS        PASS        NOT_RUN  platform-specific (linux)
+f32_file_size_limit          linux    PASS        PASS        NOT_RUN  platform-specific (linux)
+f33_bounded_memory           linux    PASS        PASS        NOT_RUN  platform-specific (linux)
+summary: host PASS 66 FAIL 0 NOT_RUN 0 (two runs per fixture) | aienos PASS 0 FAIL 0 NOT_RUN 33 (portable NOT_RUN 28)
+OSH_DIFF_PASS
+f33_bounded_memory           linux    NOT_RUN     NOT_RUN     NOT_RUN  RLIMIT_AS cannot apply under ASan
+summary: host PASS 64 FAIL 0 NOT_RUN 2 (two runs per fixture) | aienos PASS 0 FAIL 0 NOT_RUN 33 (portable NOT_RUN 28)
+OSH_DIFF_PASS
+mutant m00: as required (rc=0, OSH_DIFF_COMPARE_ONLY_PASS)
+mutant m01: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m02: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m03: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m04: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m05: as required (rc=0, OSH_DIFF_COMPARE_ONLY_PASS)
+mutant m05r: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m06: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m07: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m08: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m09: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m10: as required (rc=1, OSH_DIFF_COMPARE_ONLY_FAIL)
+mutant m11: as required (rc=0, OSH_DIFF_COMPARE_ONLY_PASS)
+mutant e00: as required (rc=0, OSH_DIFF_PASS)
+mutant e01: as required (rc=1, OSH_DIFF_FAIL)
+mutant e02: as required (rc=1, OSH_DIFF_FAIL)
+mutant e03: as required (rc=1, OSH_DIFF_FAIL)
+mutant e04: as required (rc=1, OSH_DIFF_FAIL)
+mutant e05: as required (rc=1, OSH_DIFF_FAIL)
+mutant c01: as required (rc=1, OSH_DIFF_FAIL)
+mutant c02: as required (rc=1, OSH_DIFF_FAIL)
+mutants: PASS (21 checks: every mutant red, every control green)
+test-osh-diff: PASS (host adapter: native + interpreter units, plain and ASan/UBSan, faults and limits, comparator mutants; aienos column NOT_RUN: no native result supplied)

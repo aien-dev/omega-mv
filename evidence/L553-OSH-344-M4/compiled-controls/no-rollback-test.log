@@ -1,0 +1,17 @@
+FAIL failure-action-boundary native=1 interactive=1 kind=0 payload=3 signal=2
+FAIL failure-action-boundary native=1 interactive=1 kind=0 payload=3 signal=3
+PROMPT_SIGNAL_RESTORE: 252 passed, 2 failed
+osh: syntax error: SUBSHELL at byte 0
+osh: syntax error: SUBSHELL at byte 0
+osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh: syntax error: SUBSHELL at byte 0
+osh: syntax error: SUBSHELL at byte 0
+osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh$ osh$ osh$ osh: syntax error: SUBSHELL at byte 0
+osh$ osh: prompt signal setup: Input/output error
+osh$ osh: prompt signal restore: Input/output error
