@@ -1,0 +1,101 @@
+[
+  {
+    "name": "exact-source-capacity",
+    "result": "PASS",
+    "exit": 0,
+    "source_bytes": 4096,
+    "operation_count": 5,
+    "upper_sha256": "22d5e0fb84df2214d2a1ff5d86322a5711dc38751f1e980042ec16a614244aa9"
+  },
+  {
+    "name": "comment-at-capacity",
+    "result": "PASS",
+    "exit": 0,
+    "source_bytes": 4096,
+    "operation_count": 5,
+    "upper_sha256": "13c2caba92304a978268822175eca6e94e9865a8d5c37a780d8120d253af998e"
+  },
+  {
+    "name": "operation-capacity",
+    "result": "PASS",
+    "exit": 0,
+    "source_bytes": 187,
+    "operation_count": 64,
+    "upper_sha256": "398b9146f9e1f04010265cd5deffd998ef751d009bcd0ff82b96b9c8e2008e99"
+  },
+  {
+    "name": "nesting-limit",
+    "result": "PASS",
+    "exit": 0,
+    "source_bytes": 99,
+    "operation_count": 4,
+    "upper_sha256": "7c474346ed98726498f72f6d3453773ece29c4631e2d0bf96c4f475981a0f93f"
+  },
+  {
+    "name": "over-source-capacity",
+    "result": "PASS",
+    "exit": 67,
+    "stderr": "C_IMPORT_LIMIT\n",
+    "stdout_bytes": 0
+  },
+  {
+    "name": "over-operation-capacity",
+    "result": "PASS",
+    "exit": 67,
+    "stderr": "C_IMPORT_LIMIT\n",
+    "stdout_bytes": 0
+  },
+  {
+    "name": "over-nesting-limit",
+    "result": "PASS",
+    "exit": 67,
+    "stderr": "C_IMPORT_LIMIT\n",
+    "stdout_bytes": 0
+  },
+  {
+    "name": "literal-overflow",
+    "result": "PASS",
+    "exit": 67,
+    "stderr": "C_IMPORT_LIMIT\n",
+    "stdout_bytes": 0
+  },
+  {
+    "name": "unknown-input",
+    "result": "PASS",
+    "exit": 70,
+    "stderr": "C_IMPORT_UNKNOWN_IDENTIFIER\n",
+    "stdout_bytes": 0
+  },
+  {
+    "name": "long-identifier",
+    "result": "PASS",
+    "exit": 71,
+    "stderr": "C_IMPORT_UNSUPPORTED_SIGNATURE\n",
+    "stdout_bytes": 0
+  },
+  {
+    "name": "closed-stdin",
+    "result": "PASS",
+    "exit": 77
+  },
+  {
+    "name": "public-command-identical-to-native",
+    "result": "PASS",
+    "exit": 0
+  },
+  {
+    "name": "public-command-arguments-refused",
+    "result": "PASS",
+    "exit": 64
+  },
+  {
+    "name": "public-source-identity-change-refused",
+    "result": "PASS",
+    "exit": 78
+  },
+  {
+    "name": "public-binary-identity-change-refused",
+    "result": "PASS",
+    "exit": 78
+  }
+]

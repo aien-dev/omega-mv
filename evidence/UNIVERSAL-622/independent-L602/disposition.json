@@ -1,0 +1,26 @@
+{
+  "schema": "omega.independent-source-review-disposition.v1",
+  "result": "PASS_BOUNDED_SOURCE_SCOPE",
+  "source_pins": {
+    "omega621": "cd2c41f3c697524629585b2a228e2f0ab5b99c45",
+    "c_import622": "50f75da28845f21b118bcf8e3499b96c35ddb587"
+  },
+  "review_artifact_sha256": {
+    "review-L602.md": "48efc75073aa1e501d3a694c19b28bb0378f99da87491744ae30e4038499965a",
+    "controls-L602.json": "caad8a85060ec84e827a7211b8cfe2f68b021988015156cef414292987dae873"
+  },
+  "reviewer_source_closure_matched": true,
+  "reviewer_native_artifact_matches_author": true,
+  "reviewer_local_git_metadata_not_upstream_commit": true,
+  "source_review_hold_cleared": true,
+  "full_issue_622_complete": false,
+  "signed_judge_complete": false,
+  "merge_approved": false,
+  "publication_owner": "Renda",
+  "remaining": [
+    "C export/roundtrip and broader corpus",
+    "other source widths/features",
+    "OSC lowering and checker-bound translation validation",
+    "exact-head Spark/hosted qualification and sole-owner PR publication"
+  ]
+}

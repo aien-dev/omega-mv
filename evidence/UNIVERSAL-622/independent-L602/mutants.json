@@ -1,0 +1,42 @@
+[
+  {
+    "name": "add-as-sub",
+    "compiled": true,
+    "native_semantic_mismatch_programs": 16,
+    "mismatched_rows": 362,
+    "binary_sha256": "29526a865f13944772ffd2b2c10f7385e3f5f50ccb4f17716364da205a418564",
+    "source_sha256": "28f3a6963cbc21f1bfa69905ae4cb9bad4123932a0501e1c6226dd1304f7a61c"
+  },
+  {
+    "name": "sub-as-add",
+    "compiled": true,
+    "native_semantic_mismatch_programs": 9,
+    "mismatched_rows": 200,
+    "binary_sha256": "86bc013ff3ca72075aa8f5b85ba29b4d15c4b512b035a959e95592ccf8572dd4",
+    "source_sha256": "498b2731beaedcd68027b4e9ac571f8f9e82c62bc7cb991f36d6f0de963a1040"
+  },
+  {
+    "name": "mul-as-add",
+    "compiled": true,
+    "native_semantic_mismatch_programs": 18,
+    "mismatched_rows": 429,
+    "binary_sha256": "9121f25a41473597c58b26973d57b0e7f167914412bf1a47e72e0206f3a39c67",
+    "source_sha256": "ffc0a9ebfce256a44e1301c09977e1f57ca642436c7a92af81960db9b1c98fe2"
+  },
+  {
+    "name": "literal-digit-offset",
+    "compiled": true,
+    "native_semantic_mismatch_programs": 15,
+    "mismatched_rows": 333,
+    "binary_sha256": "d9243c6b7cd517c0a7ef9a477a4d2fd77025186c27e466950ff05641fc7cd1e5",
+    "source_sha256": "11d9d14afabc81eee4a914625669dfb51c443a3866d3c74d95aca45f0f69a2aa"
+  },
+  {
+    "name": "parameter-slot-swap",
+    "compiled": true,
+    "native_semantic_mismatch_programs": 22,
+    "mismatched_rows": 520,
+    "binary_sha256": "b2732886fb227fc63c372326cc0b71cc9d282d083ed9ddac1be59863a867a69f",
+    "source_sha256": "27342c614b917ccee4a5bc418911f51bbe435af43a7bff040681817bc0eccf69"
+  }
+]
