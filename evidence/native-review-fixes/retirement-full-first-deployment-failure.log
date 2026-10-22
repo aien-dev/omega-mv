@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/drakestapleton/workspace/omega-native-review-fixes/tools/retirement/deploy.py", line 169, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/home/drakestapleton/workspace/omega-native-review-fixes/tools/retirement/deploy.py", line 129, in main
+    candidate=qualify()
+              ^^^^^^^^^
+  File "/home/drakestapleton/workspace/omega-native-review-fixes/tools/retirement/deploy.py", line 113, in qualify
+    if any(m['source_sha256']!=summary['source_sha256'] or m['seed_sha256']!=SEED_SHA for m in mutants):raise ValueError('mutant gate stale')
+                                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: mutant gate stale
