@@ -1,0 +1,5 @@
+AIEN-OBS crumb_tool_commit "d0f0b95d344b4c6628c3d868346932fd247ce168"
+STALE      src
+STALE      tests
+STALE      .
+crumb verify: FAIL: 3 of 157 crumbs stale; run: crumb compile

@@ -1,0 +1,19 @@
+quietlock: no state dir /var/lib/aien-run/workspace, so no quiet flag: clear
+Note: switching to '19eebe0e04811002f641c0f7b58c1b87ea9b5c42'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+make: *** [Makefile:191: test-m19] Error 1

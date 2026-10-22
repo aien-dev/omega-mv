@@ -1,0 +1,25 @@
+quietlock: no state dir /var/lib/aien-run/workspace, so no quiet flag: clear
+src/omega_gpu_platform_linux.c:42:28: error: 'NVRM_MAX_EXTRA_CHANNELS' undeclared here (not in a function)
+   42 |     OmegaGpuQueueHandle xq[NVRM_MAX_EXTRA_CHANNELS];
+      |                            ^~~~~~~~~~~~~~~~~~~~~~~
+src/omega_gpu_platform_linux.c: In function 'ref_device_open':
+src/omega_gpu_platform_linux.c:163:68: error: implicit declaration of function 'nvrm_channel_n'; did you mean 'nvrm_channel'? [-Werror=implicit-function-declaration]
+  163 |     if (r->nchan == 1u ? m16_native_create_channel(&r->m16) != 0 : nvrm_channel_n(&r->m16.rm, r->nchan - 1u) != 0) {
+      |                                                                    ^~~~~~~~~~~~~~
+      |                                                                    nvrm_channel
+src/omega_gpu_platform_linux.c: In function 'ref_queue_submit':
+src/omega_gpu_platform_linux.c:363:17: error: implicit declaration of function 'nvrm_chan_submit'; did you mean 'nvrm_submit'? [-Werror=implicit-function-declaration]
+  363 |             if (nvrm_chan_submit(&r->m16.rm, (uint32_t)slot + 1u, ring, 0, nwords + xpre) != 0) rc = OMEGA_GPU_PLAT_REFUSED_DEVICE;
+      |                 ^~~~~~~~~~~~~~~~
+      |                 nvrm_submit
+src/omega_gpu_platform_linux.c: In function 'ref_queue_retire':
+src/omega_gpu_platform_linux.c:399:20: error: implicit declaration of function 'nvrm_chan_retire'; did you mean 'nvrm_retire'? [-Werror=implicit-function-declaration]
+  399 |     if (slot >= 0) nvrm_chan_retire(&r->m16.rm, (uint32_t)slot + 1u, nvrm_chan_put(&r->m16.rm, (uint32_t)slot + 1u));
+      |                    ^~~~~~~~~~~~~~~~
+      |                    nvrm_retire
+src/omega_gpu_platform_linux.c:399:70: error: implicit declaration of function 'nvrm_chan_put'; did you mean 'nvrm_channel'? [-Werror=implicit-function-declaration]
+  399 |     if (slot >= 0) nvrm_chan_retire(&r->m16.rm, (uint32_t)slot + 1u, nvrm_chan_put(&r->m16.rm, (uint32_t)slot + 1u));
+      |                                                                      ^~~~~~~~~~~~~
+      |                                                                      nvrm_channel
+cc1: all warnings being treated as errors
+make: *** [Makefile:102: build/step-chip-test-m19/omega_gpu_platform_linux.o] Error 1

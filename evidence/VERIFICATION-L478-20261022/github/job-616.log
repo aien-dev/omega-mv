@@ -1,0 +1,689 @@
+﻿2026-10-22T09:55:18.2811730Z Current runner version: '2.338.0'
+2026-10-22T09:55:18.2831811Z ##[group]Runner Image Provisioner
+2026-10-22T09:55:18.2832452Z Hosted Compute Agent
+2026-10-22T09:55:18.2832861Z Version: 20261015.610
+2026-10-22T09:55:18.2833324Z Commit: 267fdb4e8bbec4ab5ea31367f3a00d5c480c7656
+2026-10-22T09:55:18.2833918Z Build Date: 2026-10-14T17:06:54Z
+2026-10-22T09:55:18.2834340Z Worker ID: {755691f3-2851-4558-be4f-b3c7f02ad4ab}
+2026-10-22T09:55:18.2834810Z Region: centralus
+2026-10-22T09:55:18.2835199Z Cloud: Azure
+2026-10-22T09:55:18.2835548Z ##[endgroup]
+2026-10-22T09:55:18.2836403Z ##[group]Operating System
+2026-10-22T09:55:18.2836789Z Ubuntu
+2026-10-22T09:55:18.2837158Z 24.04.5
+2026-10-22T09:55:18.2837542Z LTS
+2026-10-22T09:55:18.2837892Z ##[endgroup]
+2026-10-22T09:55:18.2838286Z ##[group]Runner Image
+2026-10-22T09:55:18.2838658Z Image: ubuntu-24.04
+2026-10-22T09:55:18.2839042Z Version: 20261018.339.1
+2026-10-22T09:55:18.2839889Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261018.339/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-22T09:55:18.2840846Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261018.339
+2026-10-22T09:55:18.2841432Z ##[endgroup]
+2026-10-22T09:55:18.2842206Z ##[group]GITHUB_TOKEN Permissions
+2026-10-22T09:55:18.2843445Z Contents: read
+2026-10-22T09:55:18.2844046Z Metadata: read
+2026-10-22T09:55:18.2844416Z ##[endgroup]
+2026-10-22T09:55:18.2845811Z Secret source: Actions
+2026-10-22T09:55:18.2846490Z Cache mode: write
+2026-10-22T09:55:18.2846932Z Prepare workflow directory
+2026-10-22T09:55:18.3178186Z Prepare all required actions
+2026-10-22T09:55:18.3221629Z Getting action download info
+2026-10-22T09:55:18.5465576Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-22T09:55:18.6257862Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:b725eda525362e7cf34af9a7243cac1e3f01a7ec)
+2026-10-22T09:55:18.8155018Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-10-22T09:55:19.0256700Z Complete job name: AIEN Verification
+2026-10-22T09:55:19.0870738Z ##[group]Run actions/checkout@v4
+2026-10-22T09:55:19.0871213Z with:
+2026-10-22T09:55:19.0871456Z   fetch-depth: 0
+2026-10-22T09:55:19.0871715Z   repository: aien-dev/omega-mv
+2026-10-22T09:55:19.0874021Z   token: ***
+2026-10-22T09:55:19.0874263Z   ssh-strict: true
+2026-10-22T09:55:19.0874508Z   ssh-user: git
+2026-10-22T09:55:19.0874761Z   persist-credentials: true
+2026-10-22T09:55:19.0875036Z   clean: true
+2026-10-22T09:55:19.0875291Z   sparse-checkout-cone-mode: true
+2026-10-22T09:55:19.0875587Z   fetch-tags: false
+2026-10-22T09:55:19.0875839Z   show-progress: true
+2026-10-22T09:55:19.0876090Z   lfs: false
+2026-10-22T09:55:19.0876322Z   submodules: false
+2026-10-22T09:55:19.0876577Z   set-safe-directory: true
+2026-10-22T09:55:19.0876862Z   allow-unsafe-pr-checkout: false
+2026-10-22T09:55:19.0877484Z env:
+2026-10-22T09:55:19.0877720Z   REPO_SLUG: aien-dev/omega
+2026-10-22T09:55:19.0878039Z   AIEN_TEST_PIN: c26f4d7ac3156088469b27462390f5b08ef4f436
+2026-10-22T09:55:19.0878554Z   RECEIPTS_RAW: https://raw.githubusercontent.com/aien-dev/aien-receipts/main
+2026-10-22T09:55:19.0878982Z ##[endgroup]
+2026-10-22T09:55:19.1579034Z Syncing repository: aien-dev/omega-mv
+2026-10-22T09:55:19.1580580Z ##[group]Getting Git version info
+2026-10-22T09:55:19.1581195Z Working directory is '/home/runner/work/omega-mv/omega-mv'
+2026-10-22T09:55:19.1582325Z [command]/usr/bin/git version
+2026-10-22T09:55:19.1636964Z git version 2.55.0
+2026-10-22T09:55:19.1649878Z ##[endgroup]
+2026-10-22T09:55:19.1660280Z Temporarily overriding HOME='/home/runner/work/_temp/378880ad-a04f-4632-9e6a-45748ee517ff' before making global git config changes
+2026-10-22T09:55:19.1661574Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T09:55:19.1663979Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/omega-mv/omega-mv
+2026-10-22T09:55:19.1716923Z Deleting the contents of '/home/runner/work/omega-mv/omega-mv'
+2026-10-22T09:55:19.1719800Z ##[group]Initializing the repository
+2026-10-22T09:55:19.1722566Z [command]/usr/bin/git init /home/runner/work/omega-mv/omega-mv
+2026-10-22T09:55:19.1816858Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-22T09:55:19.1817814Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-22T09:55:19.1818674Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-22T09:55:19.1819372Z hint: call:
+2026-10-22T09:55:19.1819729Z hint:
+2026-10-22T09:55:19.1820193Z hint: 	git config --global init.defaultBranch <name>
+2026-10-22T09:55:19.1820739Z hint:
+2026-10-22T09:55:19.1821274Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-22T09:55:19.1822150Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-22T09:55:19.1822840Z hint:
+2026-10-22T09:55:19.1823199Z hint: 	git branch -m <name>
+2026-10-22T09:55:19.1823777Z hint:
+2026-10-22T09:55:19.1824363Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-22T09:55:19.1825309Z Initialized empty Git repository in /home/runner/work/omega-mv/omega-mv/.git/
+2026-10-22T09:55:19.1828809Z [command]/usr/bin/git remote add origin https://github.com/aien-dev/omega-mv
+2026-10-22T09:55:19.1874334Z ##[endgroup]
+2026-10-22T09:55:19.1875030Z ##[group]Disabling automatic garbage collection
+2026-10-22T09:55:19.1877398Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-22T09:55:19.1906957Z ##[endgroup]
+2026-10-22T09:55:19.1907607Z ##[group]Setting up auth
+2026-10-22T09:55:19.1912400Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T09:55:19.1945875Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T09:55:19.2287525Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T09:55:19.2325778Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T09:55:19.2524302Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T09:55:19.2562080Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T09:55:19.2773793Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-22T09:55:19.2816954Z ##[endgroup]
+2026-10-22T09:55:19.2817657Z ##[group]Fetching the repository
+2026-10-22T09:55:19.2824297Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +d06deaba52520e204a4bea79b52d4bba2c913f50:refs/remotes/pull/616/merge
+2026-10-22T09:55:21.9122381Z From https://github.com/aien-dev/omega-mv
+2026-10-22T09:55:21.9135316Z  * [new branch]        agents/in-tree-guidance                  -> origin/agents/in-tree-guidance
+2026-10-22T09:55:21.9136506Z  * [new branch]        alpha/decode-speed-to-main               -> origin/alpha/decode-speed-to-main
+2026-10-22T09:55:21.9137653Z  * [new branch]        bench/prime-race-protocol                -> origin/bench/prime-race-protocol
+2026-10-22T09:55:21.9138734Z  * [new branch]        c3-h1-fence                              -> origin/c3-h1-fence
+2026-10-22T09:55:21.9139580Z  * [new branch]        c3/gemm                                  -> origin/c3/gemm
+2026-10-22T09:55:21.9140487Z  * [new branch]        c3/reduce-scan                           -> origin/c3/reduce-scan
+2026-10-22T09:55:21.9141568Z  * [new branch]        c4/streams                               -> origin/c4/streams
+2026-10-22T09:55:21.9142684Z  * [new branch]        c5/isolation                             -> origin/c5/isolation
+2026-10-22T09:55:21.9144450Z  * [new branch]        c6/disasm                                -> origin/c6/disasm
+2026-10-22T09:55:21.9145364Z  * [new branch]        cand2/cand1-harness-overlay              -> origin/cand2/cand1-harness-overlay
+2026-10-22T09:55:21.9146303Z  * [new branch]        cand3/r15-teardown-timing                -> origin/cand3/r15-teardown-timing
+2026-10-22T09:55:21.9147210Z  * [new branch]        cascade/batch-gemm-k32768                -> origin/cascade/batch-gemm-k32768
+2026-10-22T09:55:21.9148063Z  * [new branch]        cascade/dflash-drafter                   -> origin/cascade/dflash-drafter
+2026-10-22T09:55:21.9149085Z  * [new branch]        cascade/prefill-kernels                  -> origin/cascade/prefill-kernels
+2026-10-22T09:55:21.9150123Z  * [new branch]        cascade/tree-verify-gemm                 -> origin/cascade/tree-verify-gemm
+2026-10-22T09:55:21.9150863Z  * [new branch]        cascade/w4-gemv                          -> origin/cascade/w4-gemv
+2026-10-22T09:55:21.9151542Z  * [new branch]        crumb/advisory                           -> origin/crumb/advisory
+2026-10-22T09:55:21.9152348Z  * [new branch]        desk/block-omega-20261020T205436Z        -> origin/desk/block-omega-20261020T205436Z
+2026-10-22T09:55:21.9153254Z  * [new branch]        doc/465-checker2-ownership-limits        -> origin/doc/465-checker2-ownership-limits
+2026-10-22T09:55:21.9154448Z  * [new branch]        doc/chain-to-gpu                         -> origin/doc/chain-to-gpu
+2026-10-22T09:55:21.9155706Z  * [new branch]        doc/machine-ceiling                      -> origin/doc/machine-ceiling
+2026-10-22T09:55:21.9156801Z  * [new branch]        doc/osc0-review                          -> origin/doc/osc0-review
+2026-10-22T09:55:21.9157758Z  * [new branch]        doc/program                              -> origin/doc/program
+2026-10-22T09:55:21.9158674Z  * [new branch]        doc/speed-audit                          -> origin/doc/speed-audit
+2026-10-22T09:55:21.9159870Z  * [new branch]        docs/first-person                        -> origin/docs/first-person
+2026-10-22T09:55:21.9160907Z  * [new branch]        docs/readme-2026-10-19                   -> origin/docs/readme-2026-10-19
+2026-10-22T09:55:21.9162024Z  * [new branch]        docs/readme-refresh-2026-10-18           -> origin/docs/readme-refresh-2026-10-18
+2026-10-22T09:55:21.9163275Z  * [new branch]        docs/what-omega-is                       -> origin/docs/what-omega-is
+2026-10-22T09:55:21.9164615Z  * [new branch]        e1-gap-close                             -> origin/e1-gap-close
+2026-10-22T09:55:21.9165679Z  * [new branch]        e1-stall-probe                           -> origin/e1-stall-probe
+2026-10-22T09:55:21.9166806Z  * [new branch]        evidence/gate14-legs-62f5ba5             -> origin/evidence/gate14-legs-62f5ba5
+2026-10-22T09:55:21.9168036Z  * [new branch]        experiment/ternary-semantics             -> origin/experiment/ternary-semantics
+2026-10-22T09:55:21.9169237Z  * [new branch]        f505/verified-program                    -> origin/f505/verified-program
+2026-10-22T09:55:21.9169900Z  * [new branch]        feat/580-chords                          -> origin/feat/580-chords
+2026-10-22T09:55:21.9170517Z  * [new branch]        feat/attn-hd256                          -> origin/feat/attn-hd256
+2026-10-22T09:55:21.9171141Z  * [new branch]        feat/cpu-piston                          -> origin/feat/cpu-piston
+2026-10-22T09:55:21.9171806Z  * [new branch]        feat/dattn-maxpos-128k                   -> origin/feat/dattn-maxpos-128k
+2026-10-22T09:55:21.9172552Z  * [new branch]        feat/decode-onchip-megakernel            -> origin/feat/decode-onchip-megakernel
+2026-10-22T09:55:21.9173335Z  * [new branch]        feat/efficiency-golden-path              -> origin/feat/efficiency-golden-path
+2026-10-22T09:55:21.9174297Z  * [new branch]        feat/emit-structs                        -> origin/feat/emit-structs
+2026-10-22T09:55:21.9174960Z  * [new branch]        feat/fewer-launches                      -> origin/feat/fewer-launches
+2026-10-22T09:55:21.9175766Z  * [new branch]        feat/forge-v1-numeric                    -> origin/feat/forge-v1-numeric
+2026-10-22T09:55:21.9176421Z  * [new branch]        feat/fp8-k32768                          -> origin/feat/fp8-k32768
+2026-10-22T09:55:21.9177037Z  * [new branch]        feat/gdn-decode                          -> origin/feat/gdn-decode
+2026-10-22T09:55:21.9177660Z  * [new branch]        feat/gdn-prefill                         -> origin/feat/gdn-prefill
+2026-10-22T09:55:21.9178286Z  * [new branch]        feat/gpu-channels                        -> origin/feat/gpu-channels
+2026-10-22T09:55:21.9178944Z  * [new branch]        feat/math-before-compute                 -> origin/feat/math-before-compute
+2026-10-22T09:55:21.9179623Z  * [new branch]        feat/mixed-algebra-gpu                   -> origin/feat/mixed-algebra-gpu
+2026-10-22T09:55:21.9180281Z  * [new branch]        feat/motor-geometry                      -> origin/feat/motor-geometry
+2026-10-22T09:55:21.9180916Z  * [new branch]        feat/omega-bytes                         -> origin/feat/omega-bytes
+2026-10-22T09:55:21.9181635Z  * [new branch]        feat/omega-native-platform-services      -> origin/feat/omega-native-platform-services
+2026-10-22T09:55:21.9182382Z  * [new branch]        feat/omega-security-1                    -> origin/feat/omega-security-1
+2026-10-22T09:55:21.9183350Z  * [new branch]        feat/omega-security-2                    -> origin/feat/omega-security-2
+2026-10-22T09:55:21.9184500Z  * [new branch]        feat/omegese-mask-lib                    -> origin/feat/omegese-mask-lib
+2026-10-22T09:55:21.9185353Z  * [new branch]        feat/omegese-structs                     -> origin/feat/omegese-structs
+2026-10-22T09:55:21.9185981Z  * [new branch]        feat/osc4-floats                         -> origin/feat/osc4-floats
+2026-10-22T09:55:21.9186588Z  * [new branch]        feat/osh-diff-568                        -> origin/feat/osh-diff-568
+2026-10-22T09:55:21.9187368Z  * [new branch]        feat/pattn256                            -> origin/feat/pattn256
+2026-10-22T09:55:21.9187952Z  * [new branch]        feat/q38-graph                           -> origin/feat/q38-graph
+2026-10-22T09:55:21.9188586Z  * [new branch]        feat/rx-lane32-gens-red                  -> origin/feat/rx-lane32-gens-red
+2026-10-22T09:55:21.9189240Z  * [new branch]        feat/shared-weights                      -> origin/feat/shared-weights
+2026-10-22T09:55:21.9189909Z  * [new branch]        feat/shared-weights-ship                 -> origin/feat/shared-weights-ship
+2026-10-22T09:55:21.9190648Z  * [new branch]        feat/smart-models-small-hardware         -> origin/feat/smart-models-small-hardware
+2026-10-22T09:55:21.9191371Z  * [new branch]        feat/synapse-j1-codec                    -> origin/feat/synapse-j1-codec
+2026-10-22T09:55:21.9192050Z  * [new branch]        feat/turing-yield-ty45                   -> origin/feat/turing-yield-ty45
+2026-10-22T09:55:21.9192726Z  * [new branch]        feat/typewriter-engine                   -> origin/feat/typewriter-engine
+2026-10-22T09:55:21.9193410Z  * [new branch]        feat/typewriter-experts                  -> origin/feat/typewriter-experts
+2026-10-22T09:55:21.9194273Z  * [new branch]        fix/344-bash-verify-env-pin              -> origin/fix/344-bash-verify-env-pin
+2026-10-22T09:55:21.9195107Z  * [new branch]        fix/404-visor-scan-energy-verdict        -> origin/fix/404-visor-scan-energy-verdict
+2026-10-22T09:55:21.9195952Z  * [new branch]        fix/450-osc-ir-decode-hardening          -> origin/fix/450-osc-ir-decode-hardening
+2026-10-22T09:55:21.9196681Z  * [new branch]        fix/451-osc-ir-v6                        -> origin/fix/451-osc-ir-v6
+2026-10-22T09:55:21.9201030Z  * [new branch]        fix/456-own30b-review-followups          -> origin/fix/456-own30b-review-followups
+2026-10-22T09:55:21.9201864Z  * [new branch]        fix/470-attention-hd128-host             -> origin/fix/470-attention-hd128-host
+2026-10-22T09:55:21.9202807Z  * [new branch]        fix/471-fp8-libm-free                    -> origin/fix/471-fp8-libm-free
+2026-10-22T09:55:21.9203763Z  * [new branch]        fix/488-physics-stamp                    -> origin/fix/488-physics-stamp
+2026-10-22T09:55:21.9204608Z  * [new branch]        fix/488-rebuild-on-physics-dir           -> origin/fix/488-rebuild-on-physics-dir
+2026-10-22T09:55:21.9205463Z  * [new branch]        fix/492-imad-hi-rc-64bit                 -> origin/fix/492-imad-hi-rc-64bit
+2026-10-22T09:55:21.9206348Z  * [new branch]        fix/523-gate-pins-follow-physics-lock    -> origin/fix/523-gate-pins-follow-physics-lock
+2026-10-22T09:55:21.9207257Z  * [new branch]        fix/526-clean-clone-out-dir              -> origin/fix/526-clean-clone-out-dir
+2026-10-22T09:55:21.9208114Z  * [new branch]        fix/526-clean-clone-private-tmp          -> origin/fix/526-clean-clone-private-tmp
+2026-10-22T09:55:21.9208938Z  * [new branch]        fix/527-r13-gpu-reason                   -> origin/fix/527-r13-gpu-reason
+2026-10-22T09:55:21.9209818Z  * [new branch]        fix/action-graph-load                    -> origin/fix/action-graph-load
+2026-10-22T09:55:21.9210674Z  * [new branch]        fix/cmdlist-near-cap                     -> origin/fix/cmdlist-near-cap
+2026-10-22T09:55:21.9211581Z  * [new branch]        fix/cmdlist-test-init                    -> origin/fix/cmdlist-test-init
+2026-10-22T09:55:21.9212482Z  * [new branch]        fix/cortex-record-all-outputs            -> origin/fix/cortex-record-all-outputs
+2026-10-22T09:55:21.9213444Z  * [new branch]        fix/decode-speed-gpr-test                -> origin/fix/decode-speed-gpr-test
+2026-10-22T09:55:21.9214527Z  * [new branch]        fix/exec-native-code-cache               -> origin/fix/exec-native-code-cache
+2026-10-22T09:55:21.9215892Z  * [new branch]        fix/gate-reuse-inputs                    -> origin/fix/gate-reuse-inputs
+2026-10-22T09:55:21.9217201Z  * [new branch]        fix/gb10-gate-prepare                    -> origin/fix/gb10-gate-prepare
+2026-10-22T09:55:21.9218862Z  * [new branch]        fix/gpu-engine-persistent-device         -> origin/fix/gpu-engine-persistent-device
+2026-10-22T09:55:21.9220382Z  * [new branch]        fix/host-gate-flakes                     -> origin/fix/host-gate-flakes
+2026-10-22T09:55:21.9221677Z  * [new branch]        fix/m19-clean-clone                      -> origin/fix/m19-clean-clone
+2026-10-22T09:55:21.9222921Z  * [new branch]        fix/m19-clean-clone-logs                 -> origin/fix/m19-clean-clone-logs
+2026-10-22T09:55:21.9224473Z  * [new branch]        fix/m19-physics-pin-from-lock            -> origin/fix/m19-physics-pin-from-lock
+2026-10-22T09:55:21.9225860Z  * [new branch]        fix/makefile-abs-outdir                  -> origin/fix/makefile-abs-outdir
+2026-10-22T09:55:21.9227288Z  * [new branch]        fix/mufu-ftz-462                         -> origin/fix/mufu-ftz-462
+2026-10-22T09:55:21.9228630Z  * [new branch]        fix/omega-runtime-energy-selftest        -> origin/fix/omega-runtime-energy-selftest
+2026-10-22T09:55:21.9230149Z  * [new branch]        fix/omegese-maxwords-boundary            -> origin/fix/omegese-maxwords-boundary
+2026-10-22T09:55:21.9231539Z  * [new branch]        fix/physics-lock-make                    -> origin/fix/physics-lock-make
+2026-10-22T09:55:21.9233014Z  * [new branch]        fix/physics-lock-make-main               -> origin/fix/physics-lock-make-main
+2026-10-22T09:55:21.9234540Z  * [new branch]        fix/r11-hold-test-load-limit             -> origin/fix/r11-hold-test-load-limit
+2026-10-22T09:55:21.9235597Z  * [new branch]        fix/r11-own-hold-decision                -> origin/fix/r11-own-hold-decision
+2026-10-22T09:55:21.9236441Z  * [new branch]        fix/r11-own-hold-load                    -> origin/fix/r11-own-hold-load
+2026-10-22T09:55:21.9237317Z  * [new branch]        fix/r11-own-hold-wait-for-quiet          -> origin/fix/r11-own-hold-wait-for-quiet
+2026-10-22T09:55:21.9238171Z  * [new branch]        fix/r13-host-flake                       -> origin/fix/r13-host-flake
+2026-10-22T09:55:21.9239140Z  * [new branch]        fix/r13-incumbent-confirm                -> origin/fix/r13-incumbent-confirm
+2026-10-22T09:55:21.9240080Z  * [new branch]        fix/r13-intervals-under-load             -> origin/fix/r13-intervals-under-load
+2026-10-22T09:55:21.9241013Z  * [new branch]        fix/r13-plan-for-goal                    -> origin/fix/r13-plan-for-goal
+2026-10-22T09:55:21.9241908Z  * [new branch]        fix/r13-promotion-window                 -> origin/fix/r13-promotion-window
+2026-10-22T09:55:21.9242810Z  * [new branch]        fix/r14-e-seat-claim                     -> origin/fix/r14-e-seat-claim
+2026-10-22T09:55:21.9243887Z  * [new branch]        fix/r14-recovery-flake                   -> origin/fix/r14-recovery-flake
+2026-10-22T09:55:21.9244811Z  * [new branch]        fix/r15-parity-host-flake                -> origin/fix/r15-parity-host-flake
+2026-10-22T09:55:21.9245750Z  * [new branch]        fix/r15-preflight-flake                  -> origin/fix/r15-preflight-flake
+2026-10-22T09:55:21.9246615Z  * [new branch]        fix/r9-flip-hold                         -> origin/fix/r9-flip-hold
+2026-10-22T09:55:21.9247540Z  * [new branch]        fix/rx-plan-adaptation-quality           -> origin/fix/rx-plan-adaptation-quality
+2026-10-22T09:55:21.9248534Z  * [new branch]        fix/rx-speed-checks-honest               -> origin/fix/rx-speed-checks-honest
+2026-10-22T09:55:21.9249538Z  * [new branch]        fix/speed-check-cpu-busy-not-run         -> origin/fix/speed-check-cpu-busy-not-run
+2026-10-22T09:55:21.9250447Z  * [new branch]        fix/tcgemm-nj                            -> origin/fix/tcgemm-nj
+2026-10-22T09:55:21.9251230Z  * [new branch]        fix/tv-inserver                          -> origin/fix/tv-inserver
+2026-10-22T09:55:21.9252107Z  * [new branch]        fix/workflow-fusion-load                 -> origin/fix/workflow-fusion-load
+2026-10-22T09:55:21.9252975Z  * [new branch]        flashnext/port                           -> origin/flashnext/port
+2026-10-22T09:55:21.9254187Z  * [new branch]        fortran/1-equivalence-lifetime-slots     -> origin/fortran/1-equivalence-lifetime-slots
+2026-10-22T09:55:21.9255289Z  * [new branch]        fortran/2-frequency-timing-model         -> origin/fortran/2-frequency-timing-model
+2026-10-22T09:55:21.9256667Z  * [new branch]        fortran/3-two-front-arena                -> origin/fortran/3-two-front-arena
+2026-10-22T09:55:21.9257975Z  * [new branch]        fortran/5-fp8-refill                     -> origin/fortran/5-fp8-refill
+2026-10-22T09:55:21.9259325Z  * [new branch]        gates/restore-dropped-hosted-jobs        -> origin/gates/restore-dropped-hosted-jobs
+2026-10-22T09:55:21.9260645Z  * [new branch]        gen/abstract                             -> origin/gen/abstract
+2026-10-22T09:55:21.9261606Z  * [new branch]        gen/protocol                             -> origin/gen/protocol
+2026-10-22T09:55:21.9262562Z  * [new branch]        gen/retrieval                            -> origin/gen/retrieval
+2026-10-22T09:55:21.9263991Z  * [new branch]        gen/runner                               -> origin/gen/runner
+2026-10-22T09:55:21.9265364Z  * [new branch]        hardening/LD-replay                      -> origin/hardening/LD-replay
+2026-10-22T09:55:21.9266844Z  * [new branch]        het/fabric-work                          -> origin/het/fabric-work
+2026-10-22T09:55:21.9268478Z  * [new branch]        hive/CUT5-grouped-experts                -> origin/hive/CUT5-grouped-experts
+2026-10-22T09:55:21.9270197Z  * [new branch]        hive/DEPFLAGS-wip                        -> origin/hive/DEPFLAGS-wip
+2026-10-22T09:55:21.9271726Z  * [new branch]        hive/I11-combined                        -> origin/hive/I11-combined
+2026-10-22T09:55:21.9273174Z  * [new branch]        hive/LD-replay                           -> origin/hive/LD-replay
+2026-10-22T09:55:21.9274891Z  * [new branch]        hive/LT-DEEP7-A-rt-core                  -> origin/hive/LT-DEEP7-A-rt-core
+2026-10-22T09:55:21.9276878Z  * [new branch]        hive/VC1-GENESIS-FIX-PR                  -> origin/hive/VC1-GENESIS-FIX-PR
+2026-10-22T09:55:21.9278472Z  * [new branch]        hive/kv-incremental-admission            -> origin/hive/kv-incremental-admission
+2026-10-22T09:55:21.9279714Z  * [new branch]        hum/exact-head                           -> origin/hum/exact-head
+2026-10-22T09:55:21.9280910Z  * [new branch]        hum/exact-head-stroke                    -> origin/hum/exact-head-stroke
+2026-10-22T09:55:21.9282258Z  * [new branch]        hum/state-precision                      -> origin/hum/state-precision
+2026-10-22T09:55:21.9283657Z  * [new branch]        l355/w4-experts                          -> origin/l355/w4-experts
+2026-10-22T09:55:21.9285027Z  * [new branch]        levers/stroke-rows-combine               -> origin/levers/stroke-rows-combine
+2026-10-22T09:55:21.9286469Z  * [new branch]        m1/hardware-passport                     -> origin/m1/hardware-passport
+2026-10-22T09:55:21.9288077Z  * [new branch]        m20-shared-world                         -> origin/m20-shared-world
+2026-10-22T09:55:21.9289430Z  * [new branch]        main                                     -> origin/main
+2026-10-22T09:55:21.9290448Z  * [new branch]        modules/crypto                           -> origin/modules/crypto
+2026-10-22T09:55:21.9291693Z  * [new branch]        modules/evidence-shelf                   -> origin/modules/evidence-shelf
+2026-10-22T09:55:21.9292861Z  * [new branch]        modules/host                             -> origin/modules/host
+2026-10-22T09:55:21.9294058Z  * [new branch]        modules/learn                            -> origin/modules/learn
+2026-10-22T09:55:21.9295101Z  * [new branch]        modules/map                              -> origin/modules/map
+2026-10-22T09:55:21.9296186Z  * [new branch]        modules/programs                         -> origin/modules/programs
+2026-10-22T09:55:21.9297463Z  * [new branch]        modules/research-shelf                   -> origin/modules/research-shelf
+2026-10-22T09:55:21.9298743Z  * [new branch]        motor/levers-on-ship                     -> origin/motor/levers-on-ship
+2026-10-22T09:55:21.9300371Z  * [new branch]        motor/serve                              -> origin/motor/serve
+2026-10-22T09:55:21.9301968Z  * [new branch]        naming/aienux-aienos                     -> origin/naming/aienux-aienos
+2026-10-22T09:55:21.9304063Z  * [new branch]        next-phase/librx-compose-recover         -> origin/next-phase/librx-compose-recover
+2026-10-22T09:55:21.9306038Z  * [new branch]        numerics/own-fp4-omma                    -> origin/numerics/own-fp4-omma
+2026-10-22T09:55:21.9307517Z  * [new branch]        omega-518                                -> origin/omega-518
+2026-10-22T09:55:21.9308881Z  * [new branch]        omega-528                                -> origin/omega-528
+2026-10-22T09:55:21.9310213Z  * [new branch]        omega-554                                -> origin/omega-554
+2026-10-22T09:55:21.9311646Z  * [new branch]        omegese/gate-lever                       -> origin/omegese/gate-lever
+2026-10-22T09:55:21.9313141Z  * [new branch]        omegese/gpu                              -> origin/omegese/gpu
+2026-10-22T09:55:21.9314710Z  * [new branch]        omegese/gpu-front                        -> origin/omegese/gpu-front
+2026-10-22T09:55:21.9316232Z  * [new branch]        opencuda/consume                         -> origin/opencuda/consume
+2026-10-22T09:55:21.9317738Z  * [new branch]        osc/cubin-reader                         -> origin/osc/cubin-reader
+2026-10-22T09:55:21.9319110Z  * [new branch]        osc/osc-0                                -> origin/osc/osc-0
+2026-10-22T09:55:21.9320602Z  * [new branch]        osc/syscall                              -> origin/osc/syscall
+2026-10-22T09:55:21.9321525Z  * [new branch]        osc4/slice-a                             -> origin/osc4/slice-a
+2026-10-22T09:55:21.9322662Z  * [new branch]        perf233/p1-decode-graph-report           -> origin/perf233/p1-decode-graph-report
+2026-10-22T09:55:21.9324222Z  * [new branch]        pipeline/unmapped-ok-nested-readme       -> origin/pipeline/unmapped-ok-nested-readme
+2026-10-22T09:55:21.9325628Z  * [new branch]        prefill/roof-l403                        -> origin/prefill/roof-l403
+2026-10-22T09:55:21.9326560Z  * [new branch]        q36/serve                                -> origin/q36/serve
+2026-10-22T09:55:21.9327520Z  * [new branch]        qwen38/decode-speed                      -> origin/qwen38/decode-speed
+2026-10-22T09:55:21.9328526Z  * [new branch]        qwen38/fp8-kv                            -> origin/qwen38/fp8-kv
+2026-10-22T09:55:21.9329552Z  * [new branch]        qwen38/fp8gemm-k32768                    -> origin/qwen38/fp8gemm-k32768
+2026-10-22T09:55:21.9330979Z  * [new branch]        qwen38/physics-lock-order                -> origin/qwen38/physics-lock-order
+2026-10-22T09:55:21.9332502Z  * [new branch]        qwen38/prefill-graph                     -> origin/qwen38/prefill-graph
+2026-10-22T09:55:21.9333704Z  * [new branch]        qwen38/w4-gemv                           -> origin/qwen38/w4-gemv
+2026-10-22T09:55:21.9335075Z  * [new branch]        rescue/2026-09-29-omega-m19-evidence-integrity -> origin/rescue/2026-09-29-omega-m19-evidence-integrity
+2026-10-22T09:55:21.9336613Z  * [new branch]        rescue/2026-09-29-omega-no-python        -> origin/rescue/2026-09-29-omega-no-python
+2026-10-22T09:55:21.9337847Z  * [new branch]        rescue/2026-09-29-omega-r12              -> origin/rescue/2026-09-29-omega-r12
+2026-10-22T09:55:21.9339054Z  * [new branch]        rescue/2026-09-29-omega-rx-loop          -> origin/rescue/2026-09-29-omega-rx-loop
+2026-10-22T09:55:21.9340529Z  * [new branch]        rescue/2026-09-29-omega-security-0       -> origin/rescue/2026-09-29-omega-security-0
+2026-10-22T09:55:21.9341719Z  * [new branch]        research/cost-sim-583                    -> origin/research/cost-sim-583
+2026-10-22T09:55:21.9342827Z  * [new branch]        research/e03-payback-246                 -> origin/research/e03-payback-246
+2026-10-22T09:55:21.9344125Z  * [new branch]        research/entity-pilot-276                -> origin/research/entity-pilot-276
+2026-10-22T09:55:21.9345497Z  * [new branch]        research/entity-pilot-276-h40            -> origin/research/entity-pilot-276-h40
+2026-10-22T09:55:21.9346761Z  * [new branch]        research/learning-search-584             -> origin/research/learning-search-584
+2026-10-22T09:55:21.9348037Z  * [new branch]        research/learning-search-584-r2          -> origin/research/learning-search-584-r2
+2026-10-22T09:55:21.9349329Z  * [new branch]        research/literature-roof-l404            -> origin/research/literature-roof-l404
+2026-10-22T09:55:21.9350471Z  * [new branch]        research/no-words                        -> origin/research/no-words
+2026-10-22T09:55:21.9351494Z  * [new branch]        research/r15-hwchar                      -> origin/research/r15-hwchar
+2026-10-22T09:55:21.9352576Z  * [new branch]        research/rewrite-elim-249                -> origin/research/rewrite-elim-249
+2026-10-22T09:55:21.9353890Z  * [new branch]        research/turing-energy-rerun             -> origin/research/turing-energy-rerun
+2026-10-22T09:55:21.9354971Z  * [new branch]        ribbon/slots                             -> origin/ribbon/slots
+2026-10-22T09:55:21.9355988Z  * [new branch]        ribbon/slots-on-4799f9eb                 -> origin/ribbon/slots-on-4799f9eb
+2026-10-22T09:55:21.9356968Z  * [new branch]        rig/gb20x                                -> origin/rig/gb20x
+2026-10-22T09:55:21.9357824Z  * [new branch]        rig/speech                               -> origin/rig/speech
+2026-10-22T09:55:21.9358724Z  * [new branch]        runtime/r1-api                           -> origin/runtime/r1-api
+2026-10-22T09:55:21.9359683Z  * [new branch]        runtime/r2-hello                         -> origin/runtime/r2-hello
+2026-10-22T09:55:21.9360716Z  * [new branch]        runtime/r3-portability                   -> origin/runtime/r3-portability
+2026-10-22T09:55:21.9361831Z  * [new branch]        runtime/readme-public                    -> origin/runtime/readme-public
+2026-10-22T09:55:21.9363004Z  * [new branch]        runtime/roadmap                          -> origin/runtime/roadmap
+2026-10-22T09:55:21.9364097Z  * [new branch]        seed/birth                               -> origin/seed/birth
+2026-10-22T09:55:21.9364948Z  * [new branch]        seed/c2om                                -> origin/seed/c2om
+2026-10-22T09:55:21.9365891Z  * [new branch]        seed/omega-in-omega                      -> origin/seed/omega-in-omega
+2026-10-22T09:55:21.9366878Z  * [new branch]        seed/omega-ref                           -> origin/seed/omega-ref
+2026-10-22T09:55:21.9367785Z  * [new branch]        seed/rungs56                             -> origin/seed/rungs56
+2026-10-22T09:55:21.9368786Z  * [new branch]        serve/q36-batch-stroke                   -> origin/serve/q36-batch-stroke
+2026-10-22T09:55:21.9369855Z  * [new branch]        serve/q36-batch-v2                       -> origin/serve/q36-batch-v2
+2026-10-22T09:55:21.9370854Z  * [new branch]        serve/q36-handles                        -> origin/serve/q36-handles
+2026-10-22T09:55:21.9371856Z  * [new branch]        serve/q36-prefill                        -> origin/serve/q36-prefill
+2026-10-22T09:55:21.9372893Z  * [new branch]        serve/q36-prefill-all                    -> origin/serve/q36-prefill-all
+2026-10-22T09:55:21.9374070Z  * [new branch]        serve/q36-prefill-v2                     -> origin/serve/q36-prefill-v2
+2026-10-22T09:55:21.9375067Z  * [new branch]        ship/motor-l387                          -> origin/ship/motor-l387
+2026-10-22T09:55:21.9376100Z  * [new branch]        speed/m1-pack-fastpath                   -> origin/speed/m1-pack-fastpath
+2026-10-22T09:55:21.9377153Z  * [new branch]        speed1/w4-default                        -> origin/speed1/w4-default
+2026-10-22T09:55:21.9378147Z  * [new branch]        speed2/specdecode                        -> origin/speed2/specdecode
+2026-10-22T09:55:21.9379113Z  * [new branch]        speed3/w4-gemv                           -> origin/speed3/w4-gemv
+2026-10-22T09:55:21.9380241Z  * [new branch]        speed5/handle-slots                      -> origin/speed5/handle-slots
+2026-10-22T09:55:21.9381238Z  * [new branch]        study/languages                          -> origin/study/languages
+2026-10-22T09:55:21.9382268Z  * [new branch]        symbolic/rewrite-layer                   -> origin/symbolic/rewrite-layer
+2026-10-22T09:55:21.9383280Z  * [new branch]        tern/kt1-speed                           -> origin/tern/kt1-speed
+2026-10-22T09:55:21.9384372Z  * [new branch]        train/encoder-r5                         -> origin/train/encoder-r5
+2026-10-22T09:55:21.9385375Z  * [new branch]        train/onchip-probe                       -> origin/train/onchip-probe
+2026-10-22T09:55:21.9386378Z  * [new branch]        train/tgemm-cut1                         -> origin/train/tgemm-cut1
+2026-10-22T09:55:21.9387665Z  * [new branch]        wip/cascade-prefill-kernels-20261019-1816Z -> origin/wip/cascade-prefill-kernels-20261019-1816Z
+2026-10-22T09:55:21.9389261Z  * [new branch]        wip/cascade-prefill-kernels-20261019-1818Z -> origin/wip/cascade-prefill-kernels-20261019-1818Z
+2026-10-22T09:55:21.9390849Z  * [new branch]        wip/cascade-prefill-kernels-20261019-1848Z -> origin/wip/cascade-prefill-kernels-20261019-1848Z
+2026-10-22T09:55:21.9392426Z  * [new branch]        wip/cascade-prefill-kernels-20261019-1920Z -> origin/wip/cascade-prefill-kernels-20261019-1920Z
+2026-10-22T09:55:21.9394108Z  * [new branch]        wip/cascade-prefill-kernels-20261019-1952Z -> origin/wip/cascade-prefill-kernels-20261019-1952Z
+2026-10-22T09:55:21.9395664Z  * [new branch]        wip/cascade-prefill-kernels-20261019-2025Z -> origin/wip/cascade-prefill-kernels-20261019-2025Z
+2026-10-22T09:55:21.9397334Z  * [new branch]        wip/cascade-prefill-kernels-20261019-2057Z -> origin/wip/cascade-prefill-kernels-20261019-2057Z
+2026-10-22T09:55:21.9398878Z  * [new branch]        wip/cascade-prefill-kernels-20261019-2129Z -> origin/wip/cascade-prefill-kernels-20261019-2129Z
+2026-10-22T09:55:21.9400552Z  * [new branch]        wip/cascade-prefill-kernels-20261019-2201Z -> origin/wip/cascade-prefill-kernels-20261019-2201Z
+2026-10-22T09:55:21.9402065Z  * [new branch]        wip/cascade-prefill-kernels-20261019-2233Z -> origin/wip/cascade-prefill-kernels-20261019-2233Z
+2026-10-22T09:55:21.9403725Z  * [new branch]        wip/cascade-prefill-kernels-20261019-2305Z -> origin/wip/cascade-prefill-kernels-20261019-2305Z
+2026-10-22T09:55:21.9405320Z  * [new branch]        wip/cascade-prefill-kernels-20261019-2337Z -> origin/wip/cascade-prefill-kernels-20261019-2337Z
+2026-10-22T09:55:21.9406823Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0009Z -> origin/wip/cascade-prefill-kernels-20261020-0009Z
+2026-10-22T09:55:21.9408548Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0041Z -> origin/wip/cascade-prefill-kernels-20261020-0041Z
+2026-10-22T09:55:21.9410032Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0113Z -> origin/wip/cascade-prefill-kernels-20261020-0113Z
+2026-10-22T09:55:21.9411530Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0145Z -> origin/wip/cascade-prefill-kernels-20261020-0145Z
+2026-10-22T09:55:21.9413011Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0217Z -> origin/wip/cascade-prefill-kernels-20261020-0217Z
+2026-10-22T09:55:21.9414630Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0249Z -> origin/wip/cascade-prefill-kernels-20261020-0249Z
+2026-10-22T09:55:21.9416121Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0321Z -> origin/wip/cascade-prefill-kernels-20261020-0321Z
+2026-10-22T09:55:21.9417605Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0353Z -> origin/wip/cascade-prefill-kernels-20261020-0353Z
+2026-10-22T09:55:21.9419095Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0424Z -> origin/wip/cascade-prefill-kernels-20261020-0424Z
+2026-10-22T09:55:21.9420574Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0456Z -> origin/wip/cascade-prefill-kernels-20261020-0456Z
+2026-10-22T09:55:21.9422176Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0528Z -> origin/wip/cascade-prefill-kernels-20261020-0528Z
+2026-10-22T09:55:21.9423780Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0600Z -> origin/wip/cascade-prefill-kernels-20261020-0600Z
+2026-10-22T09:55:21.9425253Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0636Z -> origin/wip/cascade-prefill-kernels-20261020-0636Z
+2026-10-22T09:55:21.9426715Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0708Z -> origin/wip/cascade-prefill-kernels-20261020-0708Z
+2026-10-22T09:55:21.9428184Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0740Z -> origin/wip/cascade-prefill-kernels-20261020-0740Z
+2026-10-22T09:55:21.9429645Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0811Z -> origin/wip/cascade-prefill-kernels-20261020-0811Z
+2026-10-22T09:55:21.9431113Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0843Z -> origin/wip/cascade-prefill-kernels-20261020-0843Z
+2026-10-22T09:55:21.9432600Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0927Z -> origin/wip/cascade-prefill-kernels-20261020-0927Z
+2026-10-22T09:55:21.9434184Z  * [new branch]        wip/cascade-prefill-kernels-20261020-0959Z -> origin/wip/cascade-prefill-kernels-20261020-0959Z
+2026-10-22T09:55:21.9435642Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1037Z -> origin/wip/cascade-prefill-kernels-20261020-1037Z
+2026-10-22T09:55:21.9437091Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1109Z -> origin/wip/cascade-prefill-kernels-20261020-1109Z
+2026-10-22T09:55:21.9438544Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1141Z -> origin/wip/cascade-prefill-kernels-20261020-1141Z
+2026-10-22T09:55:21.9440012Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1213Z -> origin/wip/cascade-prefill-kernels-20261020-1213Z
+2026-10-22T09:55:21.9441458Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1245Z -> origin/wip/cascade-prefill-kernels-20261020-1245Z
+2026-10-22T09:55:21.9443010Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1317Z -> origin/wip/cascade-prefill-kernels-20261020-1317Z
+2026-10-22T09:55:21.9444669Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1349Z -> origin/wip/cascade-prefill-kernels-20261020-1349Z
+2026-10-22T09:55:21.9446103Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1421Z -> origin/wip/cascade-prefill-kernels-20261020-1421Z
+2026-10-22T09:55:21.9447543Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1453Z -> origin/wip/cascade-prefill-kernels-20261020-1453Z
+2026-10-22T09:55:21.9448982Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1525Z -> origin/wip/cascade-prefill-kernels-20261020-1525Z
+2026-10-22T09:55:21.9450410Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1557Z -> origin/wip/cascade-prefill-kernels-20261020-1557Z
+2026-10-22T09:55:21.9451846Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1629Z -> origin/wip/cascade-prefill-kernels-20261020-1629Z
+2026-10-22T09:55:21.9453281Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1700Z -> origin/wip/cascade-prefill-kernels-20261020-1700Z
+2026-10-22T09:55:21.9454803Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1731Z -> origin/wip/cascade-prefill-kernels-20261020-1731Z
+2026-10-22T09:55:21.9456240Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1802Z -> origin/wip/cascade-prefill-kernels-20261020-1802Z
+2026-10-22T09:55:21.9457665Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1833Z -> origin/wip/cascade-prefill-kernels-20261020-1833Z
+2026-10-22T09:55:21.9459094Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1904Z -> origin/wip/cascade-prefill-kernels-20261020-1904Z
+2026-10-22T09:55:21.9460517Z  * [new branch]        wip/cascade-prefill-kernels-20261020-1935Z -> origin/wip/cascade-prefill-kernels-20261020-1935Z
+2026-10-22T09:55:21.9461949Z  * [new branch]        wip/cascade-prefill-kernels-20261020-2006Z -> origin/wip/cascade-prefill-kernels-20261020-2006Z
+2026-10-22T09:55:21.9463539Z  * [new branch]        wip/cascade-prefill-kernels-20261020-2037Z -> origin/wip/cascade-prefill-kernels-20261020-2037Z
+2026-10-22T09:55:21.9464962Z  * [new branch]        wip/cascade-prefill-kernels-20261020-2108Z -> origin/wip/cascade-prefill-kernels-20261020-2108Z
+2026-10-22T09:55:21.9466381Z  * [new branch]        wip/cascade-prefill-kernels-20261020-2139Z -> origin/wip/cascade-prefill-kernels-20261020-2139Z
+2026-10-22T09:55:21.9467803Z  * [new branch]        wip/cascade-prefill-kernels-20261020-2210Z -> origin/wip/cascade-prefill-kernels-20261020-2210Z
+2026-10-22T09:55:21.9469222Z  * [new branch]        wip/cascade-prefill-kernels-20261020-2241Z -> origin/wip/cascade-prefill-kernels-20261020-2241Z
+2026-10-22T09:55:21.9470660Z  * [new branch]        wip/cascade-prefill-kernels-20261020-2343Z -> origin/wip/cascade-prefill-kernels-20261020-2343Z
+2026-10-22T09:55:21.9472079Z  * [new branch]        wip/cascade-prefill-kernels-20261021-0014Z -> origin/wip/cascade-prefill-kernels-20261021-0014Z
+2026-10-22T09:55:21.9473553Z  * [new branch]        wip/cascade-prefill-kernels-20261021-0045Z -> origin/wip/cascade-prefill-kernels-20261021-0045Z
+2026-10-22T09:55:21.9474964Z  * [new branch]        wip/cascade-prefill-kernels-20261021-0116Z -> origin/wip/cascade-prefill-kernels-20261021-0116Z
+2026-10-22T09:55:21.9476374Z  * [new branch]        wip/cascade-prefill-kernels-20261021-0147Z -> origin/wip/cascade-prefill-kernels-20261021-0147Z
+2026-10-22T09:55:21.9477674Z  * [new branch]        wip/feat-580-chords-20261019-1816Z       -> origin/wip/feat-580-chords-20261019-1816Z
+2026-10-22T09:55:21.9478873Z  * [new branch]        wip/feat-580-chords-20261019-1818Z       -> origin/wip/feat-580-chords-20261019-1818Z
+2026-10-22T09:55:21.9480037Z  * [new branch]        wip/feat-580-chords-20261019-1848Z       -> origin/wip/feat-580-chords-20261019-1848Z
+2026-10-22T09:55:21.9481208Z  * [new branch]        wip/feat-580-chords-20261019-1920Z       -> origin/wip/feat-580-chords-20261019-1920Z
+2026-10-22T09:55:21.9482469Z  * [new branch]        wip/feat-580-chords-20261019-1952Z       -> origin/wip/feat-580-chords-20261019-1952Z
+2026-10-22T09:55:21.9483713Z  * [new branch]        wip/feat-580-chords-20261019-2025Z       -> origin/wip/feat-580-chords-20261019-2025Z
+2026-10-22T09:55:21.9484879Z  * [new branch]        wip/feat-580-chords-20261019-2057Z       -> origin/wip/feat-580-chords-20261019-2057Z
+2026-10-22T09:55:21.9486064Z  * [new branch]        wip/flashnext-port-20261019-1816Z        -> origin/wip/flashnext-port-20261019-1816Z
+2026-10-22T09:55:21.9487252Z  * [new branch]        wip/flashnext-port-20261019-1818Z        -> origin/wip/flashnext-port-20261019-1818Z
+2026-10-22T09:55:21.9488428Z  * [new branch]        wip/flashnext-port-20261019-1848Z        -> origin/wip/flashnext-port-20261019-1848Z
+2026-10-22T09:55:21.9489610Z  * [new branch]        wip/flashnext-port-20261019-1920Z        -> origin/wip/flashnext-port-20261019-1920Z
+2026-10-22T09:55:21.9490802Z  * [new branch]        wip/flashnext-port-20261019-1952Z        -> origin/wip/flashnext-port-20261019-1952Z
+2026-10-22T09:55:21.9491978Z  * [new branch]        wip/flashnext-port-20261019-2025Z        -> origin/wip/flashnext-port-20261019-2025Z
+2026-10-22T09:55:21.9493162Z  * [new branch]        wip/flashnext-port-20261019-2057Z        -> origin/wip/flashnext-port-20261019-2057Z
+2026-10-22T09:55:21.9494411Z  * [new branch]        wip/flashnext-port-20261019-2129Z        -> origin/wip/flashnext-port-20261019-2129Z
+2026-10-22T09:55:21.9495585Z  * [new branch]        wip/flashnext-port-20261019-2201Z        -> origin/wip/flashnext-port-20261019-2201Z
+2026-10-22T09:55:21.9496762Z  * [new branch]        wip/flashnext-port-20261019-2233Z        -> origin/wip/flashnext-port-20261019-2233Z
+2026-10-22T09:55:21.9497945Z  * [new branch]        wip/flashnext-port-20261019-2305Z        -> origin/wip/flashnext-port-20261019-2305Z
+2026-10-22T09:55:21.9499128Z  * [new branch]        wip/flashnext-port-20261019-2337Z        -> origin/wip/flashnext-port-20261019-2337Z
+2026-10-22T09:55:21.9500428Z  * [new branch]        wip/flashnext-port-20261020-0009Z        -> origin/wip/flashnext-port-20261020-0009Z
+2026-10-22T09:55:21.9501629Z  * [new branch]        wip/flashnext-port-20261020-0041Z        -> origin/wip/flashnext-port-20261020-0041Z
+2026-10-22T09:55:21.9502813Z  * [new branch]        wip/flashnext-port-20261020-0113Z        -> origin/wip/flashnext-port-20261020-0113Z
+2026-10-22T09:55:21.9504062Z  * [new branch]        wip/flashnext-port-20261020-0145Z        -> origin/wip/flashnext-port-20261020-0145Z
+2026-10-22T09:55:21.9505273Z  * [new branch]        wip/flashnext-port-20261020-0217Z        -> origin/wip/flashnext-port-20261020-0217Z
+2026-10-22T09:55:21.9506502Z  * [new branch]        wip/flashnext-port-20261020-0249Z        -> origin/wip/flashnext-port-20261020-0249Z
+2026-10-22T09:55:21.9507658Z  * [new branch]        wip/flashnext-port-20261020-0321Z        -> origin/wip/flashnext-port-20261020-0321Z
+2026-10-22T09:55:21.9508829Z  * [new branch]        wip/flashnext-port-20261020-0353Z        -> origin/wip/flashnext-port-20261020-0353Z
+2026-10-22T09:55:21.9509994Z  * [new branch]        wip/flashnext-port-20261020-0424Z        -> origin/wip/flashnext-port-20261020-0424Z
+2026-10-22T09:55:21.9511150Z  * [new branch]        wip/flashnext-port-20261020-0456Z        -> origin/wip/flashnext-port-20261020-0456Z
+2026-10-22T09:55:21.9512305Z  * [new branch]        wip/flashnext-port-20261020-0528Z        -> origin/wip/flashnext-port-20261020-0528Z
+2026-10-22T09:55:21.9513566Z  * [new branch]        wip/flashnext-port-20261020-0600Z        -> origin/wip/flashnext-port-20261020-0600Z
+2026-10-22T09:55:21.9514753Z  * [new branch]        wip/flashnext-port-20261020-0636Z        -> origin/wip/flashnext-port-20261020-0636Z
+2026-10-22T09:55:21.9515916Z  * [new branch]        wip/flashnext-port-20261020-0708Z        -> origin/wip/flashnext-port-20261020-0708Z
+2026-10-22T09:55:21.9517083Z  * [new branch]        wip/flashnext-port-20261020-0740Z        -> origin/wip/flashnext-port-20261020-0740Z
+2026-10-22T09:55:21.9518350Z  * [new branch]        wip/flashnext-port-20261020-0811Z        -> origin/wip/flashnext-port-20261020-0811Z
+2026-10-22T09:55:21.9519500Z  * [new branch]        wip/flashnext-port-20261020-0843Z        -> origin/wip/flashnext-port-20261020-0843Z
+2026-10-22T09:55:21.9520650Z  * [new branch]        wip/flashnext-port-20261020-0927Z        -> origin/wip/flashnext-port-20261020-0927Z
+2026-10-22T09:55:21.9521808Z  * [new branch]        wip/flashnext-port-20261020-0959Z        -> origin/wip/flashnext-port-20261020-0959Z
+2026-10-22T09:55:21.9522966Z  * [new branch]        wip/flashnext-port-20261020-1037Z        -> origin/wip/flashnext-port-20261020-1037Z
+2026-10-22T09:55:21.9524207Z  * [new branch]        wip/flashnext-port-20261020-1109Z        -> origin/wip/flashnext-port-20261020-1109Z
+2026-10-22T09:55:21.9525363Z  * [new branch]        wip/flashnext-port-20261020-1141Z        -> origin/wip/flashnext-port-20261020-1141Z
+2026-10-22T09:55:21.9526537Z  * [new branch]        wip/flashnext-port-20261020-1213Z        -> origin/wip/flashnext-port-20261020-1213Z
+2026-10-22T09:55:21.9527686Z  * [new branch]        wip/flashnext-port-20261020-1245Z        -> origin/wip/flashnext-port-20261020-1245Z
+2026-10-22T09:55:21.9528830Z  * [new branch]        wip/flashnext-port-20261020-1317Z        -> origin/wip/flashnext-port-20261020-1317Z
+2026-10-22T09:55:21.9529994Z  * [new branch]        wip/flashnext-port-20261020-1349Z        -> origin/wip/flashnext-port-20261020-1349Z
+2026-10-22T09:55:21.9531141Z  * [new branch]        wip/flashnext-port-20261020-1421Z        -> origin/wip/flashnext-port-20261020-1421Z
+2026-10-22T09:55:21.9532277Z  * [new branch]        wip/flashnext-port-20261020-1453Z        -> origin/wip/flashnext-port-20261020-1453Z
+2026-10-22T09:55:21.9533425Z  * [new branch]        wip/flashnext-port-20261020-1525Z        -> origin/wip/flashnext-port-20261020-1525Z
+2026-10-22T09:55:21.9534633Z  * [new branch]        wip/flashnext-port-20261020-1544Z        -> origin/wip/flashnext-port-20261020-1544Z
+2026-10-22T09:55:21.9535963Z  * [new branch]        wip/flashnext-port-fnattn-20261019T1935Z -> origin/wip/flashnext-port-fnattn-20261019T1935Z
+2026-10-22T09:55:21.9537165Z  * [new branch]        wip/omegese-gpu-20261021-2256Z           -> origin/wip/omegese-gpu-20261021-2256Z
+2026-10-22T09:55:21.9538328Z  * [new branch]        wip/qwen38-decode-speed-20261019-1816Z   -> origin/wip/qwen38-decode-speed-20261019-1816Z
+2026-10-22T09:55:21.9539576Z  * [new branch]        wip/qwen38-decode-speed-20261019-1818Z   -> origin/wip/qwen38-decode-speed-20261019-1818Z
+2026-10-22T09:55:21.9540823Z  * [new branch]        wip/qwen38-decode-speed-20261019-1848Z   -> origin/wip/qwen38-decode-speed-20261019-1848Z
+2026-10-22T09:55:21.9542072Z  * [new branch]        wip/qwen38-decode-speed-20261019-1920Z   -> origin/wip/qwen38-decode-speed-20261019-1920Z
+2026-10-22T09:55:21.9543315Z  * [new branch]        wip/qwen38-decode-speed-20261019-1952Z   -> origin/wip/qwen38-decode-speed-20261019-1952Z
+2026-10-22T09:55:21.9544635Z  * [new branch]        wip/qwen38-decode-speed-20261019-2025Z   -> origin/wip/qwen38-decode-speed-20261019-2025Z
+2026-10-22T09:55:21.9545884Z  * [new branch]        wip/qwen38-decode-speed-20261019-2057Z   -> origin/wip/qwen38-decode-speed-20261019-2057Z
+2026-10-22T09:55:21.9547127Z  * [new branch]        wip/qwen38-decode-speed-20261019-2129Z   -> origin/wip/qwen38-decode-speed-20261019-2129Z
+2026-10-22T09:55:21.9548373Z  * [new branch]        wip/qwen38-decode-speed-20261019-2201Z   -> origin/wip/qwen38-decode-speed-20261019-2201Z
+2026-10-22T09:55:21.9549622Z  * [new branch]        wip/qwen38-decode-speed-20261019-2233Z   -> origin/wip/qwen38-decode-speed-20261019-2233Z
+2026-10-22T09:55:21.9550856Z  * [new branch]        wip/qwen38-decode-speed-20261019-2305Z   -> origin/wip/qwen38-decode-speed-20261019-2305Z
+2026-10-22T09:55:21.9552094Z  * [new branch]        wip/qwen38-decode-speed-20261019-2337Z   -> origin/wip/qwen38-decode-speed-20261019-2337Z
+2026-10-22T09:55:21.9553419Z  * [new branch]        wip/qwen38-decode-speed-20261020-0009Z   -> origin/wip/qwen38-decode-speed-20261020-0009Z
+2026-10-22T09:55:21.9554714Z  * [new branch]        wip/qwen38-decode-speed-20261020-0041Z   -> origin/wip/qwen38-decode-speed-20261020-0041Z
+2026-10-22T09:55:21.9555943Z  * [new branch]        wip/qwen38-decode-speed-20261020-0113Z   -> origin/wip/qwen38-decode-speed-20261020-0113Z
+2026-10-22T09:55:21.9557182Z  * [new branch]        wip/qwen38-decode-speed-20261020-0145Z   -> origin/wip/qwen38-decode-speed-20261020-0145Z
+2026-10-22T09:55:21.9558418Z  * [new branch]        wip/qwen38-decode-speed-20261020-0217Z   -> origin/wip/qwen38-decode-speed-20261020-0217Z
+2026-10-22T09:55:21.9559647Z  * [new branch]        wip/qwen38-decode-speed-20261020-0249Z   -> origin/wip/qwen38-decode-speed-20261020-0249Z
+2026-10-22T09:55:21.9560731Z  * [new tag]           backup/r15-spbm-docs-f714c08             -> backup/r15-spbm-docs-f714c08
+2026-10-22T09:55:21.9561734Z  * [new tag]           brw-act-dev-provenance-2026-10-09        -> brw-act-dev-provenance-2026-10-09
+2026-10-22T09:55:21.9562881Z  * [new tag]           brw-act-reanalysis-provenance-2026-10-09 -> brw-act-reanalysis-provenance-2026-10-09
+2026-10-22T09:55:21.9563912Z  * [new tag]           demo-l182-v1                             -> demo-l182-v1
+2026-10-22T09:55:21.9564670Z  * [new tag]           e1-chip-pass-fb36109                     -> e1-chip-pass-fb36109
+2026-10-22T09:55:21.9565484Z  * [new tag]           e1-host-pass-727dc03                     -> e1-host-pass-727dc03
+2026-10-22T09:55:21.9566297Z  * [new tag]           e1-host-pass-e2cc502                     -> e1-host-pass-e2cc502
+2026-10-22T09:55:21.9567137Z  * [new tag]           est-v5-d2-heldout-fail                   -> est-v5-d2-heldout-fail
+2026-10-22T09:55:21.9568024Z  * [new tag]           prime-race/measured-028f69c              -> prime-race/measured-028f69c
+2026-10-22T09:55:21.9568948Z  * [new tag]           prime-race/measured-0dc96dc              -> prime-race/measured-0dc96dc
+2026-10-22T09:55:21.9569987Z  * [new tag]           prime-race/measured-75c43c2              -> prime-race/measured-75c43c2
+2026-10-22T09:55:21.9570907Z  * [new tag]           prime-race/measured-888a011              -> prime-race/measured-888a011
+2026-10-22T09:55:21.9571837Z  * [new tag]           prime-race/measured-9dee7b1              -> prime-race/measured-9dee7b1
+2026-10-22T09:55:21.9572757Z  * [new tag]           prime-race/measured-c505e7f              -> prime-race/measured-c505e7f
+2026-10-22T09:55:21.9573746Z  * [new tag]           prime-race/measured-c7086da              -> prime-race/measured-c7086da
+2026-10-22T09:55:21.9574664Z  * [new tag]           prime-race/measured-d6632db              -> prime-race/measured-d6632db
+2026-10-22T09:55:21.9575584Z  * [new tag]           prime-race/measured-dea8b5c              -> prime-race/measured-dea8b5c
+2026-10-22T09:55:21.9576551Z  * [new tag]           r3-heartbeat-candidate-9dd9594           -> r3-heartbeat-candidate-9dd9594
+2026-10-22T09:55:21.9577460Z  * [new ref]           d06deaba52520e204a4bea79b52d4bba2c913f50 -> pull/616/merge
+2026-10-22T09:55:21.9579064Z ##[endgroup]
+2026-10-22T09:55:21.9579574Z ##[group]Determining the checkout info
+2026-10-22T09:55:21.9580156Z ##[endgroup]
+2026-10-22T09:55:21.9580477Z [command]/usr/bin/git sparse-checkout disable
+2026-10-22T09:55:21.9581649Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-22T09:55:21.9582896Z ##[group]Checking out the ref
+2026-10-22T09:55:21.9583533Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/616/merge
+2026-10-22T09:55:22.8018094Z Note: switching to 'refs/remotes/pull/616/merge'.
+2026-10-22T09:55:22.8019321Z 
+2026-10-22T09:55:22.8019813Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-22T09:55:22.8020834Z changes and commit them, and you can discard any commits you make in this
+2026-10-22T09:55:22.8021840Z state without impacting any branches by switching back to a branch.
+2026-10-22T09:55:22.8022669Z 
+2026-10-22T09:55:22.8023111Z If you want to create a new branch to retain commits you create, you may
+2026-10-22T09:55:22.8024300Z do so (now or later) by using -c with the switch command. Example:
+2026-10-22T09:55:22.8024822Z 
+2026-10-22T09:55:22.8025096Z   git switch -c <new-branch-name>
+2026-10-22T09:55:22.8025476Z 
+2026-10-22T09:55:22.8025766Z Or undo this operation with:
+2026-10-22T09:55:22.8026123Z 
+2026-10-22T09:55:22.8026370Z   git switch -
+2026-10-22T09:55:22.8026689Z 
+2026-10-22T09:55:22.8027216Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-22T09:55:22.8027813Z 
+2026-10-22T09:55:22.8028518Z HEAD is now at d06deaba Merge d7e15f18f5fb81555fe932fe3023c9f5f8ab8ba1 into a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a
+2026-10-22T09:55:22.8073203Z ##[endgroup]
+2026-10-22T09:55:22.8123097Z [command]/usr/bin/git log -1 --format=%H
+2026-10-22T09:55:22.8154685Z d06deaba52520e204a4bea79b52d4bba2c913f50
+2026-10-22T09:55:22.8398411Z ##[group]Run if [ "pull_request" = pull_request ]; then
+2026-10-22T09:55:22.8399485Z [36;1mif [ "pull_request" = pull_request ]; then[0m
+2026-10-22T09:55:22.8400428Z [36;1m  sha="d7e15f18f5fb81555fe932fe3023c9f5f8ab8ba1"[0m
+2026-10-22T09:55:22.8401264Z [36;1melse[0m
+2026-10-22T09:55:22.8401996Z [36;1m  sha="d06deaba52520e204a4bea79b52d4bba2c913f50"[0m
+2026-10-22T09:55:22.8402830Z [36;1mfi[0m
+2026-10-22T09:55:22.8403596Z [36;1mgit fetch -q origin main[0m
+2026-10-22T09:55:22.8404375Z [36;1mecho "sha=$sha" >> "$GITHUB_OUTPUT"[0m
+2026-10-22T09:55:22.8405346Z [36;1mecho "base=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"[0m
+2026-10-22T09:55:22.8406312Z [36;1mecho "commit under test: $sha"[0m
+2026-10-22T09:55:22.8407226Z [36;1mecho "base (trust anchors): $(git rev-parse origin/main)"[0m
+2026-10-22T09:55:22.8572377Z shell: /usr/bin/bash -e {0}
+2026-10-22T09:55:22.8573170Z env:
+2026-10-22T09:55:22.8573945Z   REPO_SLUG: aien-dev/omega
+2026-10-22T09:55:22.8574800Z   AIEN_TEST_PIN: c26f4d7ac3156088469b27462390f5b08ef4f436
+2026-10-22T09:55:22.8576007Z   RECEIPTS_RAW: https://raw.githubusercontent.com/aien-dev/aien-receipts/main
+2026-10-22T09:55:22.8577030Z ##[endgroup]
+2026-10-22T09:55:23.1511750Z commit under test: d7e15f18f5fb81555fe932fe3023c9f5f8ab8ba1
+2026-10-22T09:55:23.1523722Z base (trust anchors): a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a
+2026-10-22T09:55:23.1600667Z ##[group]Run mkdir -p "$RUNNER_TEMP/anchors"
+2026-10-22T09:55:23.1601460Z [36;1mmkdir -p "$RUNNER_TEMP/anchors"[0m
+2026-10-22T09:55:23.1602252Z [36;1mbase="a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a"[0m
+2026-10-22T09:55:23.1603351Z [36;1mif git show "$base:.aien/verify.pub" > "$RUNNER_TEMP/anchors/verify.pub" 2>/dev/null; then[0m
+2026-10-22T09:55:23.1604569Z [36;1m  echo "enrolled=true" >> "$GITHUB_OUTPUT"[0m
+2026-10-22T09:55:23.1605723Z [36;1m  git show "$base:.aien/always" > "$RUNNER_TEMP/anchors/always" 2>/dev/null || : > "$RUNNER_TEMP/anchors/always"[0m
+2026-10-22T09:55:23.1607347Z [36;1m  git show "$base:.aien/unmapped-ok" > "$RUNNER_TEMP/anchors/unmapped-ok" 2>/dev/null || : > "$RUNNER_TEMP/anchors/unmapped-ok"[0m
+2026-10-22T09:55:23.1608754Z [36;1m  echo "verify.pub (base): $(cat "$RUNNER_TEMP/anchors/verify.pub")"[0m
+2026-10-22T09:55:23.1609613Z [36;1melse[0m
+2026-10-22T09:55:23.1610230Z [36;1m  echo "enrolled=false" >> "$GITHUB_OUTPUT"[0m
+2026-10-22T09:55:23.1611289Z [36;1m  # PHASE3: an enrolled repository whose base ref lost its key cannot verify anything.[0m
+2026-10-22T09:55:23.1612624Z [36;1m  echo "::error::.aien/verify.pub is not on the base ref: no trusted key, nothing can be verified."[0m
+2026-10-22T09:55:23.1613784Z [36;1m  exit 1[0m
+2026-10-22T09:55:23.1614325Z [36;1mfi[0m
+2026-10-22T09:55:23.1615122Z [36;1m# Trust-surface changes are run by the operator by hand (A1): BLOCKED_OPERATOR.[0m
+2026-10-22T09:55:23.1616792Z [36;1mchanged=$(git diff --name-only "$base...d7e15f18f5fb81555fe932fe3023c9f5f8ab8ba1" -- .aien tests/gates .github/workflows .forgejo tools/aien-test || true)[0m
+2026-10-22T09:55:23.1618405Z [36;1mif [ -n "$changed" ]; then[0m
+2026-10-22T09:55:23.1619120Z [36;1m  echo "blocked=true" >> "$GITHUB_OUTPUT"[0m
+2026-10-22T09:55:23.1620372Z [36;1m  echo "::notice::BLOCKED_OPERATOR: this head changes the trust surface (the bundle must show an operator run):"; echo "$changed"[0m
+2026-10-22T09:55:23.1621951Z [36;1m  # PHASE3: enforced in the verify step: the verified bundle's signed plan must say blocked == null.[0m
+2026-10-22T09:55:23.1622980Z [36;1melse[0m
+2026-10-22T09:55:23.1623748Z [36;1m  echo "blocked=false" >> "$GITHUB_OUTPUT"[0m
+2026-10-22T09:55:23.1624463Z [36;1mfi[0m
+2026-10-22T09:55:23.1674112Z shell: /usr/bin/bash -e {0}
+2026-10-22T09:55:23.1674715Z env:
+2026-10-22T09:55:23.1675247Z   REPO_SLUG: aien-dev/omega
+2026-10-22T09:55:23.1675949Z   AIEN_TEST_PIN: c26f4d7ac3156088469b27462390f5b08ef4f436
+2026-10-22T09:55:23.1676955Z   RECEIPTS_RAW: https://raw.githubusercontent.com/aien-dev/aien-receipts/main
+2026-10-22T09:55:23.1677857Z ##[endgroup]
+2026-10-22T09:55:23.1817964Z verify.pub (base): 01368e0b02dc1113ae7425ad6ab00fdf5aa7dd97e0690745918a52f051d5cf68
+2026-10-22T09:55:23.1974985Z ##[group]Run actions/checkout@v4
+2026-10-22T09:55:23.1975620Z with:
+2026-10-22T09:55:23.1976188Z   repository: aien-spark/aien-architecture
+2026-10-22T09:55:23.1976909Z   ref: d0f0b95d344b4c6628c3d868346932fd247ce168
+2026-10-22T09:55:23.1977601Z   path: .crumb-tool-src
+2026-10-22T09:55:23.1981783Z   token: ***
+2026-10-22T09:55:23.1982313Z   ssh-strict: true
+2026-10-22T09:55:23.1982855Z   ssh-user: git
+2026-10-22T09:55:23.1983407Z   persist-credentials: true
+2026-10-22T09:55:23.1984141Z   clean: true
+2026-10-22T09:55:23.1984698Z   sparse-checkout-cone-mode: true
+2026-10-22T09:55:23.1985325Z   fetch-depth: 1
+2026-10-22T09:55:23.1985863Z   fetch-tags: false
+2026-10-22T09:55:23.1986404Z   show-progress: true
+2026-10-22T09:55:23.1986952Z   lfs: false
+2026-10-22T09:55:23.1987464Z   submodules: false
+2026-10-22T09:55:23.1988023Z   set-safe-directory: true
+2026-10-22T09:55:23.1988639Z   allow-unsafe-pr-checkout: false
+2026-10-22T09:55:23.1989271Z env:
+2026-10-22T09:55:23.1989811Z   REPO_SLUG: aien-dev/omega
+2026-10-22T09:55:23.1990484Z   AIEN_TEST_PIN: c26f4d7ac3156088469b27462390f5b08ef4f436
+2026-10-22T09:55:23.1991444Z   RECEIPTS_RAW: https://raw.githubusercontent.com/aien-dev/aien-receipts/main
+2026-10-22T09:55:23.1992306Z ##[endgroup]
+2026-10-22T09:55:23.2667021Z Syncing repository: aien-spark/aien-architecture
+2026-10-22T09:55:23.2669023Z ##[group]Getting Git version info
+2026-10-22T09:55:23.2670431Z Working directory is '/home/runner/work/omega-mv/omega-mv/.crumb-tool-src'
+2026-10-22T09:55:23.2686248Z [command]/usr/bin/git version
+2026-10-22T09:55:23.2721658Z git version 2.55.0
+2026-10-22T09:55:23.2734642Z ##[endgroup]
+2026-10-22T09:55:23.2743429Z Temporarily overriding HOME='/home/runner/work/_temp/cdda022d-47c9-494c-8aa9-772cc2454e52' before making global git config changes
+2026-10-22T09:55:23.2745869Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T09:55:23.2748132Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/omega-mv/omega-mv/.crumb-tool-src
+2026-10-22T09:55:23.2779972Z ##[group]Initializing the repository
+2026-10-22T09:55:23.2782520Z [command]/usr/bin/git init /home/runner/work/omega-mv/omega-mv/.crumb-tool-src
+2026-10-22T09:55:23.2822494Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-22T09:55:23.2824649Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-22T09:55:23.2826558Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-22T09:55:23.2828004Z hint: call:
+2026-10-22T09:55:23.2829069Z hint:
+2026-10-22T09:55:23.2830219Z hint: 	git config --global init.defaultBranch <name>
+2026-10-22T09:55:23.2831418Z hint:
+2026-10-22T09:55:23.2832630Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-22T09:55:23.2834465Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-22T09:55:23.2836339Z hint:
+2026-10-22T09:55:23.2837320Z hint: 	git branch -m <name>
+2026-10-22T09:55:23.2838341Z hint:
+2026-10-22T09:55:23.2839629Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-22T09:55:23.2841755Z Initialized empty Git repository in /home/runner/work/omega-mv/omega-mv/.crumb-tool-src/.git/
+2026-10-22T09:55:23.2845822Z [command]/usr/bin/git remote add origin https://github.com/aien-spark/aien-architecture
+2026-10-22T09:55:23.2863158Z ##[endgroup]
+2026-10-22T09:55:23.2864776Z ##[group]Disabling automatic garbage collection
+2026-10-22T09:55:23.2866058Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-22T09:55:23.2895946Z ##[endgroup]
+2026-10-22T09:55:23.2897256Z ##[group]Setting up auth
+2026-10-22T09:55:23.2900670Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T09:55:23.2930317Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T09:55:23.3192361Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T09:55:23.3233068Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T09:55:23.3449481Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T09:55:23.3490577Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T09:55:23.3701049Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-22T09:55:23.3746439Z ##[endgroup]
+2026-10-22T09:55:23.3746915Z ##[group]Fetching the repository
+2026-10-22T09:55:23.3753628Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin d0f0b95d344b4c6628c3d868346932fd247ce168
+2026-10-22T09:55:24.0070179Z From https://github.com/aien-spark/aien-architecture
+2026-10-22T09:55:24.0070639Z  * branch            d0f0b95d344b4c6628c3d868346932fd247ce168 -> FETCH_HEAD
+2026-10-22T09:55:24.0075089Z ##[endgroup]
+2026-10-22T09:55:24.0075593Z ##[group]Determining the checkout info
+2026-10-22T09:55:24.0077344Z ##[endgroup]
+2026-10-22T09:55:24.0082931Z [command]/usr/bin/git sparse-checkout disable
+2026-10-22T09:55:24.0128966Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-22T09:55:24.0164544Z ##[group]Checking out the ref
+2026-10-22T09:55:24.0167486Z [command]/usr/bin/git checkout --progress --force d0f0b95d344b4c6628c3d868346932fd247ce168
+2026-10-22T09:55:24.0357445Z Note: switching to 'd0f0b95d344b4c6628c3d868346932fd247ce168'.
+2026-10-22T09:55:24.0357810Z 
+2026-10-22T09:55:24.0358116Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-22T09:55:24.0358599Z changes and commit them, and you can discard any commits you make in this
+2026-10-22T09:55:24.0359021Z state without impacting any branches by switching back to a branch.
+2026-10-22T09:55:24.0359268Z 
+2026-10-22T09:55:24.0359434Z If you want to create a new branch to retain commits you create, you may
+2026-10-22T09:55:24.0359830Z do so (now or later) by using -c with the switch command. Example:
+2026-10-22T09:55:24.0360056Z 
+2026-10-22T09:55:24.0360156Z   git switch -c <new-branch-name>
+2026-10-22T09:55:24.0360313Z 
+2026-10-22T09:55:24.0360405Z Or undo this operation with:
+2026-10-22T09:55:24.0360550Z 
+2026-10-22T09:55:24.0360627Z   git switch -
+2026-10-22T09:55:24.0360738Z 
+2026-10-22T09:55:24.0360927Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-22T09:55:24.0361205Z 
+2026-10-22T09:55:24.0361447Z HEAD is now at d0f0b95 crumb: D10 .crumbignore subtrees excluded from compile/verify/status (#125)
+2026-10-22T09:55:24.0364090Z ##[endgroup]
+2026-10-22T09:55:24.0403820Z [command]/usr/bin/git log -1 --format=%H
+2026-10-22T09:55:24.0433664Z d0f0b95d344b4c6628c3d868346932fd247ce168
+2026-10-22T09:55:24.0548985Z ##[group]Run make -C .crumb-tool-src/tools/crumb crumb
+2026-10-22T09:55:24.0549228Z [36;1mmake -C .crumb-tool-src/tools/crumb crumb[0m
+2026-10-22T09:55:24.0549523Z [36;1mmkdir -p "$RUNNER_TEMP/bin" && cp .crumb-tool-src/tools/crumb/crumb "$RUNNER_TEMP/bin/crumb"[0m
+2026-10-22T09:55:24.0549795Z [36;1mrm -rf .crumb-tool-src[0m
+2026-10-22T09:55:24.0549967Z [36;1mecho "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"[0m
+2026-10-22T09:55:24.0596247Z shell: /usr/bin/bash -e {0}
+2026-10-22T09:55:24.0596484Z env:
+2026-10-22T09:55:24.0596674Z   REPO_SLUG: aien-dev/omega
+2026-10-22T09:55:24.0596934Z   AIEN_TEST_PIN: c26f4d7ac3156088469b27462390f5b08ef4f436
+2026-10-22T09:55:24.0597312Z   RECEIPTS_RAW: https://raw.githubusercontent.com/aien-dev/aien-receipts/main
+2026-10-22T09:55:24.0597711Z ##[endgroup]
+2026-10-22T09:55:24.0675825Z make: Entering directory '/home/runner/work/omega-mv/omega-mv/.crumb-tool-src/tools/crumb'
+2026-10-22T09:55:24.0676349Z cc -std=c11 -O2 -Wall -Wextra -Werror -o crumb crumb.c
+2026-10-22T09:55:25.2371568Z make: Leaving directory '/home/runner/work/omega-mv/omega-mv/.crumb-tool-src/tools/crumb'
+2026-10-22T09:55:25.2501284Z ##[group]Run crumb verify .
+2026-10-22T09:55:25.2501470Z [36;1mcrumb verify .[0m
+2026-10-22T09:55:25.2547214Z shell: /usr/bin/bash -e {0}
+2026-10-22T09:55:25.2547365Z env:
+2026-10-22T09:55:25.2547487Z   REPO_SLUG: aien-dev/omega
+2026-10-22T09:55:25.2547661Z   AIEN_TEST_PIN: c26f4d7ac3156088469b27462390f5b08ef4f436
+2026-10-22T09:55:25.2547939Z   RECEIPTS_RAW: https://raw.githubusercontent.com/aien-dev/aien-receipts/main
+2026-10-22T09:55:25.2548188Z ##[endgroup]
+2026-10-22T09:55:26.6842451Z STALE      src
+2026-10-22T09:55:26.6842718Z STALE      tests
+2026-10-22T09:55:26.6842898Z STALE      .
+2026-10-22T09:55:26.6843164Z crumb verify: FAIL: 3 of 157 crumbs stale; run: crumb compile
+2026-10-22T09:55:26.6866761Z ##[error]Process completed with exit code 1.
+2026-10-22T09:55:26.6993864Z Post job cleanup.
+2026-10-22T09:55:26.7669811Z Post job cleanup.
+2026-10-22T09:55:26.8267413Z [command]/usr/bin/git version
+2026-10-22T09:55:26.8302121Z git version 2.55.0
+2026-10-22T09:55:26.8326580Z Temporarily overriding HOME='/home/runner/work/_temp/f3ee58bb-a7ef-4e1f-a813-d2ef891a04ae' before making global git config changes
+2026-10-22T09:55:26.8327454Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-22T09:55:26.8329800Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/omega-mv/omega-mv
+2026-10-22T09:55:26.8364055Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-22T09:55:26.8405556Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-22T09:55:26.8639227Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-22T09:55:26.8684570Z http.https://github.com/.extraheader
+2026-10-22T09:55:26.8686443Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-22T09:55:26.8725174Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-22T09:55:26.8963290Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-22T09:55:26.9005043Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-22T09:55:26.9381320Z Cleaning up orphan processes
+2026-10-22T09:55:26.9591587Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

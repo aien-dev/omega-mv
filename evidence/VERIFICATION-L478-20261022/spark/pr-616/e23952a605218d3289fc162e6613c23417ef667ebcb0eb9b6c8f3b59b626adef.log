@@ -1,0 +1,18 @@
+quietlock: no state dir /var/lib/aien-run/workspace, so no quiet flag: clear
+aienos_lock_source: /var/lib/aien-run/wt/omega/d7e15f18f5fb81555fe932fe3023c9f5f8ab8ba1/omega/build/pins/aienos-src matches b84c0a67590a934f3f3e001b12ec85ebc086a9eb for native/capability
+seat build insns 363 gpr 50
+seat heartbeat 1 instructions 363 gpr 50
+seat lease: 33981 passes in 50 ms, budget 1359240 (2000 ms window)
+seat build insns 363 gpr 50
+seat heartbeat 1 instructions 363 gpr 50
+seat lease: 28824 passes in 50 ms, budget 1152960 (2000 ms window)
+seat build insns 363 gpr 50
+seat heartbeat 1 instructions 363 gpr 50
+seat lease: 30274 passes in 50 ms, budget 1210960 (2000 ms window)
+seat build insns 363 gpr 50
+seat heartbeat 1 instructions 363 gpr 50
+seat lease: 29519 passes in 50 ms, budget 1180760 (2000 ms window)
+R13 mode 3: AIEN never confirmed the incumbent cost
+R13 C revoked experiment FAILED: plan 0 search 1 GPU 0 evidence 0 belief 0 selection 1 candidate 0 promotion 0 in force 0 result 0 prepare refusal 0
+seat finish: the graphics seat did not finish
+make: *** [Makefile:767: test-r13-testbuild-silicon] Error 1

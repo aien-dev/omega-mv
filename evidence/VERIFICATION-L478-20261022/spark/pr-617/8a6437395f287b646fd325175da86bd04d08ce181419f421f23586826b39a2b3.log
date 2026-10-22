@@ -1,0 +1,3 @@
+quietlock: no state dir /var/lib/aien-run/workspace, so no quiet flag: clear
+aienos_lock_source: /var/lib/aien-run/wt/omega/f792cd1d35b0e9c191647518c3be651a8d86dc21/omega/build/pins/aienos-src matches b84c0a67590a934f3f3e001b12ec85ebc086a9eb for native/capability
+make: *** [Makefile:598: test-r11-own-hold] Error 1
