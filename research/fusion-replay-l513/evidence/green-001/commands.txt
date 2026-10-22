@@ -10,3 +10,7 @@ negative_control=one-ULP output corruption in a separate scratch copy; strict ex
 recorded_utc=2026-10-22T19:29:19Z
 branch=issues/fusion-replay-buildfix-20261022
 base=0e7dbb14f7877f9d861f173fbbde8c3e1db1d9e8
+harness_invocation=L513_PHYSICS_DIR=/home/drakestapleton/workspace/l182-pins/physics L513_EVIDENCE_DIR=/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L513/evidence/green-001 sh research/fusion-replay-l513/run.sh
+export_command=git -C /home/drakestapleton/workspace/omega-fusion-replay-buildfix-20261022 archive --format=tar b260b3a4873f56ef4e3f8ea850fef0c19fdca21c Makefile mk src tests physics.lock tools/quietlock | tar -xf - -C /tmp/omega-l513-green.wtlUCh/export
+diagnostic_patch=patch -d /tmp/omega-l513-green.wtlUCh/export -p0 < research/fusion-replay-l513/diagnostic-bounded-copy.patch
+archive_hash_command=git -C /home/drakestapleton/workspace/omega-fusion-replay-buildfix-20261022 archive --format=tar b260b3a4873f56ef4e3f8ea850fef0c19fdca21c Makefile mk src tests physics.lock tools/quietlock | sha256sum

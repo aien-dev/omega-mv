@@ -6,6 +6,7 @@ quiet-build timeout 120 make -C "$TMP/export" -j2 PHYSICS_DIR=/nonexistent PHYSI
 Actual exit: 2. The log records the missing quietlock source and m16_native.h.
 
 Original reduced replay, same strict diagnostic command as sealed L491 evidence:
-cc -std=gnu11 -D_GNU_SOURCE -O2 -Wall -Wextra -Werror -ffp-contract=off -ffunction-sections -fdata-sections -Wl,--gc-sections -I"$TMP/export" -I"$TMP/export/src" -I"$TMP/export/tests" -o "$TMP/fusion_replay" "$TMP/export/fusion_replay.c" "$TMP/export/src/omega_blackwell_codegen_moe.c" "$TMP/export/src/omega_blackwell_codegen.c" "$TMP/export/src/omega_blackwell_encoder.c" "$TMP/export/src/omega_gpu_fp8_pack.c" "$TMP/export/src/omega_blackwell_matmul.c" "$TMP/export/src/sha256.c" -lm
+quiet-build cc -std=gnu11 -D_GNU_SOURCE -O2 -Wall -Wextra -Werror -ffp-contract=off -ffunction-sections -fdata-sections -Wl,--gc-sections -I"$TMP/export" -I"$TMP/export/src" -I"$TMP/export/tests" -o "$TMP/fusion_replay" "$TMP/export/fusion_replay.c" "$TMP/export/src/omega_blackwell_codegen_moe.c" "$TMP/export/src/omega_blackwell_codegen.c" "$TMP/export/src/omega_blackwell_encoder.c" "$TMP/export/src/omega_gpu_fp8_pack.c" "$TMP/export/src/omega_blackwell_matmul.c" "$TMP/export/src/sha256.c" -lm
 The command was run under quiet-build. Actual exit: 1, original format-truncation warning under -Werror.
 The preserved work directory path is in the external L513 handoff evidence/red-workdir.txt.
+TMP=/tmp/omega-l513-red.4TBdgc
