@@ -1,0 +1,23 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: complete source git tree identity
++ actual - expected
+
++ 'a99e3c08e8cef53643774b7ea0fbfaac29f94ead'
+- '0000000000000000000000000000000000000000'
+
+    at file:///home/drakestapleton/workspace/omega-developer-public-L614/releases/experimental/native-developer/tests/verify-source.mjs:49:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'a99e3c08e8cef53643774b7ea0fbfaac29f94ead',
+  expected: '0000000000000000000000000000000000000000',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.21.0

@@ -1,0 +1,17 @@
+{
+  "schema": "omega-public-preview-readback/1",
+  "repository": "aien-dev/omega-mv",
+  "branch": "dev/public-distribution-L614",
+  "asset_commit": "fd4c12224773253c063f732c7d9e64a5395104e1",
+  "bootstrap_commit": "fec281df6829b9b4efa069c02037c69e4e4ff679",
+  "payload_sha256": "eaf37ff32d17166de403372069b52aeb98b9523ce154b8f065ae9e4c161c8480",
+  "bootstrap_sha256": "e4d6707b4023f8db9ffbd15fe603e8c67523603ba7d1c13640d6f75256cc1a36",
+  "payload_readback": "PASS unauthenticated raw HTTPS fetch, SHA256 and cmp",
+  "manifest_readback": "PASS unauthenticated raw HTTPS fetch and cmp",
+  "bootstrap_readback": "PASS unauthenticated raw HTTPS fetch and SHA256 before literal curl replay",
+  "spark_public_replay_exit": 0,
+  "pi5_public_replay": "NOT_RUN parent gate",
+  "site_release_main": "PENDING owner publication",
+  "existing_source_review": "NO FINDINGS L595 exact b60f90ac43d8ecb8b413e890c5efd6461d8de501",
+  "distribution_review": "PENDING parent independent fetch/review"
+}

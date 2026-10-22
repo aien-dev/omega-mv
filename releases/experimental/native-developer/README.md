@@ -37,6 +37,7 @@ Public consumers can use this complete archive without that private checkout:
 
 ```sh
 sha256sum -c SHA256SUMS
+node tests/verify-source.mjs # optional verification oracle, not an install dependency
 mkdir source-preview
 tar -xzf omega-developer-linux-arm64-source.tar.gz -C source-preview
 (cd source-preview/omega && sh tools/verify-sources.sh)
@@ -66,7 +67,11 @@ The original implementation passed its full native suite, 7 alias checks,
 Spark and Pi5. The independent source review is copied under `evidence/`.
 These are inherited results, not reruns on this public preview.
 
-The next commit adds the reviewed bootstrap with only its download URL changed
-to this asset commit's immutable public raw URL. Public readback and fresh
-Spark preview replay receipts follow separately. Parent verifies the final
-public candidate independently and replays it on Pi5 before product publication.
+The reviewed bootstrap is published with only its download URL changed to the
+immutable public asset commit. Public payload and manifest readback matched
+the staged bytes. The literal public curl route passed on Spark with isolated
+HOME/TMPDIR, all three aliases checking/building/running a native project,
+three command-collision refusals, wrong-hash refusal and uninstall. Complete
+commands, raw output and exit status are under `evidence/`. See `PREVIEW.md`
+for the immutable entry and parent replay instructions. Parent independent
+review/fetch and Pi5 public replay remain pending before product publication.

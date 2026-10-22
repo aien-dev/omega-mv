@@ -1,0 +1,294 @@
++ set -euo pipefail
++ umask 077
++ out=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests
++ case $out in
++ '[' -d /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests ']'
+++ mktemp -d /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.XXXXXXXX
++ root=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd
++ export HOME=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home TMPDIR=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp LC_ALL=C
++ HOME=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home
++ TMPDIR=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp
++ LC_ALL=C
++ mkdir /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/project
++ unset OMEGA_DOWNLOAD_URL
++ preview=https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
++ asset=https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/omega-developer-linux-arm64-source.tar.gz
+++ uname -sm
++ printf 'Root: %s\nHost: %s\nPreview: %s\nPayload: %s\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd 'Linux aarch64' https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/omega-developer-linux-arm64-source.tar.gz
+Root: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd
+Host: Linux aarch64
+Preview: https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+Payload: https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/omega-developer-linux-arm64-source.tar.gz
++ printf 'profile sentinel\n'
++ sha256sum /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.profile
++ curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh -o /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/install.sh
++ printf '%s  %s\n' e4d6707b4023f8db9ffbd15fe603e8c67523603ba7d1c13640d6f75256cc1a36 /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/install.sh
++ sha256sum -c -
+/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/install.sh: OK
++ printf 'COMMAND: curl -fsSL %s | sh\n' https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh
++ set +e
++ curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
++ sh
+Downloading pinned Omega developer source (Linux ARM64)...
+PASS source-only seed bootstrap and compiler fixpoint
+PASS native converter and math, shared source-born compiler
+Installed omega (om and omg aliases) in /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin (PATH unchanged)
+
+Omega is installed. Try:
+  "/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega" help
+  "/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega" run hello.om
+
+Your shell PATH is unchanged. Add /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin to PATH, or use the full command path above.
++ pipe_status=("${PIPESTATUS[@]}")
++ set -e
++ printf 'Literal public pipeline statuses: curl=%s sh=%s\n' 0 0
+Literal public pipeline statuses: curl=0 sh=0
++ '[' '0 0' = '0 0' ']'
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp -mindepth 1 -print -quit
++ '[' -z '' ']'
++ cat
++ printf 'PUBLIC-PREVIEW\n'
++ cd /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/project
++ for name in omega om omg
++ cmd=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega
+++ readlink -f /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega
+++ readlink -f /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega
++ '[' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/om = /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/om ']'
++ printf 'COMMAND: %s check hello.om\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega check hello.om
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega check hello.om
++ printf 'COMMAND: %s build hello.om -o hello-%s\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega omega
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega build hello.om -o hello-omega
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega build hello.om -o hello-omega
++ readelf -h hello-omega
++ grep -q 'Machine:.*AArch64' hello-omega.elf.txt
++ ./hello-omega
++ cmp expected.txt built-omega.txt
++ printf 'COMMAND: %s run hello.om\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega run hello.om
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega run hello.om
++ cmp expected.txt run-omega.txt
++ cat run-omega.txt
+PUBLIC-PREVIEW
++ printf 'PASS %s check/build/native-execution/run\n' omega
+PASS omega check/build/native-execution/run
++ for name in omega om omg
++ cmd=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om
+++ readlink -f /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om
+++ readlink -f /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega
++ '[' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/om = /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/om ']'
++ printf 'COMMAND: %s check hello.om\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om check hello.om
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om check hello.om
++ printf 'COMMAND: %s build hello.om -o hello-%s\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om om
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om build hello.om -o hello-om
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om build hello.om -o hello-om
++ readelf -h hello-om
++ grep -q 'Machine:.*AArch64' hello-om.elf.txt
++ ./hello-om
++ cmp expected.txt built-om.txt
++ printf 'COMMAND: %s run hello.om\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om run hello.om
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om run hello.om
++ cmp expected.txt run-om.txt
++ cat run-om.txt
+PUBLIC-PREVIEW
++ printf 'PASS %s check/build/native-execution/run\n' om
+PASS om check/build/native-execution/run
++ for name in omega om omg
++ cmd=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg
+++ readlink -f /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg
+++ readlink -f /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega
++ '[' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/om = /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/om ']'
++ printf 'COMMAND: %s check hello.om\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg check hello.om
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg check hello.om
++ printf 'COMMAND: %s build hello.om -o hello-%s\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg omg
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg build hello.om -o hello-omg
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg build hello.om -o hello-omg
++ readelf -h hello-omg
++ grep -q 'Machine:.*AArch64' hello-omg.elf.txt
++ ./hello-omg
++ cmp expected.txt built-omg.txt
++ printf 'COMMAND: %s run hello.om\n' /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg
+COMMAND: /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg run hello.om
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg run hello.om
++ cmp expected.txt run-omg.txt
++ cat run-omg.txt
+PUBLIC-PREVIEW
++ printf 'PASS %s check/build/native-execution/run\n' omg
+PASS omg check/build/native-execution/run
++ sha256sum /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/omc /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/bridge /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native/math hello-omega hello-om hello-omg
++ printf 'COMMAND: omega uninstall\n'
+COMMAND: omega uninstall
++ /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega uninstall
+Removed unchanged Omega commands; unrelated files and user data preserved.
++ for name in omega om omg
++ '[' '!' -e /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega ']'
++ '[' '!' -L /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omega ']'
++ for name in omega om omg
++ '[' '!' -e /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om ']'
++ '[' '!' -L /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/om ']'
++ for name in omega om omg
++ '[' '!' -e /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg ']'
++ '[' '!' -L /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/bin/omg ']'
++ '[' '!' -e /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.local/lib/omega-native ']'
++ printf 'PASS uninstall all aliases and owned payload\n'
+PASS uninstall all aliases and owned payload
++ for name in omega om omg
++ prefix=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega
++ mkdir -p /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega/bin
++ printf 'unrelated-%s\n' omega
++ cp /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega/bin/omega /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/sentinel-omega
++ expect_bootstrap 73 --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega
++ local expected=73
++ shift
++ printf 'COMMAND: curl -fsSL %s | sh -s --' https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s --+ printf ' %q' --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega
+ --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega+ printf '\n'
+
++ set +e
++ curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
++ sh -s -- --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega
+Downloading pinned Omega developer source (Linux ARM64)...
+omega: installation collision; no files replaced
++ statuses=('0' '73')
++ local statuses
++ set -e
++ printf 'Refusal pipeline statuses: curl=%s sh=%s expected=%s\n' 0 73 73
+Refusal pipeline statuses: curl=0 sh=73 expected=73
++ '[' 0 = 0 ']'
++ '[' 73 = 73 ']'
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp -mindepth 1 -print -quit
++ '[' -z '' ']'
++ cmp /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega/bin/omega /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/sentinel-omega
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega/bin -mindepth 1
+++ wc -l
++ '[' 1 -eq 1 ']'
++ '[' '!' -e /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omega/lib ']'
++ printf 'PASS unrelated %s preserved\n' omega
+PASS unrelated omega preserved
++ for name in omega om omg
++ prefix=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om
++ mkdir -p /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om/bin
++ printf 'unrelated-%s\n' om
++ cp /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om/bin/om /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/sentinel-om
++ expect_bootstrap 73 --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om
++ local expected=73
++ shift
++ printf 'COMMAND: curl -fsSL %s | sh -s --' https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s --+ printf ' %q' --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om
+ --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om+ printf '\n'
+
++ set +e
++ curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
++ sh -s -- --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om
+Downloading pinned Omega developer source (Linux ARM64)...
+omega: installation collision; no files replaced
++ statuses=('0' '73')
++ local statuses
++ set -e
++ printf 'Refusal pipeline statuses: curl=%s sh=%s expected=%s\n' 0 73 73
+Refusal pipeline statuses: curl=0 sh=73 expected=73
++ '[' 0 = 0 ']'
++ '[' 73 = 73 ']'
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp -mindepth 1 -print -quit
++ '[' -z '' ']'
++ cmp /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om/bin/om /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/sentinel-om
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om/bin -mindepth 1
+++ wc -l
++ '[' 1 -eq 1 ']'
++ '[' '!' -e /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-om/lib ']'
++ printf 'PASS unrelated %s preserved\n' om
+PASS unrelated om preserved
++ for name in omega om omg
++ prefix=/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg
++ mkdir -p /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg/bin
++ printf 'unrelated-%s\n' omg
++ cp /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg/bin/omg /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/sentinel-omg
++ expect_bootstrap 73 --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg
++ local expected=73
++ shift
++ printf 'COMMAND: curl -fsSL %s | sh -s --' https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s --+ printf ' %q' --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg
+ --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg+ printf '\n'
+
++ set +e
++ curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
++ sh -s -- --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg
+Downloading pinned Omega developer source (Linux ARM64)...
+omega: installation collision; no files replaced
++ statuses=('0' '73')
++ local statuses
++ set -e
++ printf 'Refusal pipeline statuses: curl=%s sh=%s expected=%s\n' 0 73 73
+Refusal pipeline statuses: curl=0 sh=73 expected=73
++ '[' 0 = 0 ']'
++ '[' 73 = 73 ']'
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp -mindepth 1 -print -quit
++ '[' -z '' ']'
++ cmp /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg/bin/omg /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/sentinel-omg
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg/bin -mindepth 1
+++ wc -l
++ '[' 1 -eq 1 ']'
++ '[' '!' -e /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/collision-omg/lib ']'
++ printf 'PASS unrelated %s preserved\n' omg
+PASS unrelated omg preserved
++ export OMEGA_DOWNLOAD_URL=https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/SOURCE.json
++ OMEGA_DOWNLOAD_URL=https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/SOURCE.json
++ printf 'Checksum negative-control URL: %s\n' https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/SOURCE.json
+Checksum negative-control URL: https://raw.githubusercontent.com/aien-dev/omega-mv/fd4c12224773253c063f732c7d9e64a5395104e1/releases/experimental/native-developer/SOURCE.json
++ expect_bootstrap 65 --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/hash-refusal
++ local expected=65
++ shift
++ printf 'COMMAND: curl -fsSL %s | sh -s --' https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s --+ printf ' %q' --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/hash-refusal
+ --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/hash-refusal+ printf '\n'
+
++ set +e
++ sh -s -- --prefix /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/hash-refusal
++ curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+Downloading pinned Omega developer source (Linux ARM64)...
+omega: download checksum mismatch; nothing installed
++ statuses=('0' '65')
++ local statuses
++ set -e
++ printf 'Refusal pipeline statuses: curl=%s sh=%s expected=%s\n' 0 65 65
+Refusal pipeline statuses: curl=0 sh=65 expected=65
++ '[' 0 = 0 ']'
++ '[' 65 = 65 ']'
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp -mindepth 1 -print -quit
++ '[' -z '' ']'
++ '[' '!' -e /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/hash-refusal ']'
++ printf 'PASS checksum mismatch refused before installation\n'
+PASS checksum mismatch refused before installation
++ unset OMEGA_DOWNLOAD_URL
++ expect_bootstrap 64 --unknown
++ local expected=64
++ shift
++ printf 'COMMAND: curl -fsSL %s | sh -s --' https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
+COMMAND: curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh | sh -s --+ printf ' %q' --unknown
+ --unknown+ printf '\n'
+
++ set +e
++ curl -fsSL https://raw.githubusercontent.com/aien-dev/omega-mv/fec281df6829b9b4efa069c02037c69e4e4ff679/releases/experimental/native-developer/install.sh
++ sh -s -- --unknown
+omega: usage: install.sh [--prefix absolute-directory]
++ statuses=('0' '64')
++ local statuses
++ set -e
++ printf 'Refusal pipeline statuses: curl=%s sh=%s expected=%s\n' 0 64 64
+Refusal pipeline statuses: curl=0 sh=64 expected=64
++ '[' 0 = 0 ']'
++ '[' 64 = 64 ']'
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp -mindepth 1 -print -quit
++ '[' -z '' ']'
++ sha256sum -c /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/profile.sha256
+/home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/home/.profile: OK
+++ find /home/drakestapleton/handoffs/omega-developer-gaps/L614/tests/public-preview.jw1E9RNd/tmp -mindepth 1 -print -quit
++ '[' -z '' ']'
++ printf 'PASS invalid arguments; unchanged profile; empty TMPDIR\n'
+PASS invalid arguments; unchanged profile; empty TMPDIR
++ printf 'PASS PUBLIC PREVIEW: 3 alias project paths, uninstall, 3 collisions, hash refusal, argument refusal\n'
+PASS PUBLIC PREVIEW: 3 alias project paths, uninstall, 3 collisions, hash refusal, argument refusal
