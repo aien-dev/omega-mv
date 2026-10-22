@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-22T18:10:52.514Z",
+  "source_repair_omega": "0437dd5df6f80e93ec40ba67d51289d049ebc634",
+  "source_repair_cudapp": "135c0103712fb3766875c33f210e21d2472ab6d0",
+  "omega_remote_readback": "0437dd5df6f80e93ec40ba67d51289d049ebc634\trefs/heads/repair/omega-verification-614-618-20261022",
+  "cudapp_remote_readback": "135c0103712fb3766875c33f210e21d2472ab6d0\trefs/heads/repair/omega-verification-614-618-20261022",
+  "source_diff_whitespace_omega": 0,
+  "source_diff_whitespace_cudapp": 0,
+  "raw_job_log_note": "Original timestamp-only lines contain trailing spaces. Full git diff --check reports those verbatim raw receipt bytes; source diffs are clean. Original evidence bytes are preserved, not normalized.",
+  "overall_readiness": "HOLD",
+  "ledger": "L478 remains open",
+  "desk_record": "~/handoffs/2026-10-18-pr-desk.md",
+  "restart_request": "~/handoffs/restart-requests.md"
+}
