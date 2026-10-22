@@ -1,0 +1,123 @@
+{
+  "cases": 23,
+  "failures": 0,
+  "results": [
+    {
+      "case": "bytes-0",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-1",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-2",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-7",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-63",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-64",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-255",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-256",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-4095",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-4096",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-4097",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-8191",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-8192",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-8193",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-16383",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-16384",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-16385",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-1000000",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "bytes-8388608",
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "over-capacity",
+      "pass": true,
+      "exit": 3
+    },
+    {
+      "case": "closed-input",
+      "pass": true,
+      "exit": 2
+    },
+    {
+      "case": "closed-output",
+      "pass": true,
+      "exit": 2
+    },
+    {
+      "case": "full-output",
+      "pass": true,
+      "exit": 2
+    }
+  ],
+  "source_sha256": "cc201fee107563e0796182c96e5dfb743d7d0590f828a1295d9caf76eea3ddab",
+  "binary_sha256": "3985b0d1e1a04795db07ede701ed055eeef66cb1e31a0c825f82c6e3bc44eea5"
+}

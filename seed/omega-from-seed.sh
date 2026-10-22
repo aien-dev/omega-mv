@@ -53,12 +53,12 @@ chmod +x "$B/stage2"
 chmod +x "$B/stage3"
 # The compiler now exists: build the native verification tools from Omega.
 # These establish self-consistency, not independent compiler trust/DDC.
-for tool in elfcheck byteequal sha256; do
+for tool in elfcheck byteequal sha256 streamcopy; do
   "$B/stage3" < "seed/native/$tool.om" > "$B/$tool"
   [ -s "$B/$tool" ] || bad "empty native $tool"
   chmod +x "$B/$tool"
 done
-for tool in elfcheck byteequal sha256 stage1 stage2 stage3; do
+for tool in elfcheck byteequal sha256 streamcopy stage1 stage2 stage3; do
   "$B/elfcheck" < "$B/$tool" || bad "invalid ELF: $tool"
 done
 "$B/byteequal" 3< "$B/stage2" 4< "$B/stage3" || bad "fixpoint: stage2 != stage3"
@@ -66,7 +66,8 @@ done
 s3=$("$B/sha256" < "$B/stage3") || bad "native compiler hash failed"
 [ "${#s3}" = 64 ] || bad "native compiler hash length"
 case "$s3" in *[!0-9a-f]*) bad "native compiler hash encoding" ;; esac
-cp "$B/stage3" seed/out/omc
+"$B/streamcopy" < "$B/stage3" > seed/out/omc || bad "native compiler copy failed"
+"$B/byteequal" 3< "$B/stage3" 4< seed/out/omc || bad "copied compiler differs"
 printf '%s  seed/out/omc\n' "$s3" > seed/out/omc.sha256
 chmod +x seed/out/omc
 printf 'PASS omc fixpoint %s\n' "$s3"

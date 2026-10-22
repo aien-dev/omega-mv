@@ -1,0 +1,17 @@
+[
+  {
+    "mutant": "capacity",
+    "compiled": true,
+    "failures": 1
+  },
+  {
+    "mutant": "read-error",
+    "compiled": true,
+    "failures": 1
+  },
+  {
+    "mutant": "write-error",
+    "compiled": true,
+    "failures": 2
+  }
+]
