@@ -1,0 +1,51 @@
+COMMAND ['cargo', 'test', '--offline', '-p', 'aien-abi-core', '--target-dir', 'target/L569-baseline']
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.151
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling syn v3.0.6
+   Compiling serde_derive v1.0.229
+   Compiling async-trait v0.1.92
+   Compiling aien-abi-core v0.1.0 (/home/drakestapleton/workspace/hermes-desk/universal-L569-aien-sovereign-core-mv/crates/aien-abi-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.28s
+     Running unittests src/lib.rs (target/L569-baseline/debug/deps/aien_abi_core-fcfb8e860a47b639)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/attention_geometry.rs (target/L569-baseline/debug/deps/attention_geometry-3a2ae99e95797401)
+
+running 10 tests
+test kv_pool_mismatch_is_named ... ok
+test multi_head_attention_is_ratio_one ... ok
+test non_divisible_heads_are_refused ... ok
+test non_power_of_two_ratio_is_accepted ... ok
+test overflow_is_refused_not_wrapped ... ok
+test model_config_with_bad_heads_is_refused ... ok
+test qwen3_coder_q_dim_differs_from_hidden_dim ... ok
+test serde_round_trip_rechecks ... ok
+test tinyllama_and_default_configs_build ... ok
+test zero_counts_are_refused ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/kv_seam_defaults.rs (target/L569-baseline/debug/deps/kv_seam_defaults-7775f6231f48a6fe)
+
+running 2 tests
+test computed_prefix_defaults_to_none ... ok
+test restore_sequence_defaults_to_err ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests aien_abi_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,204 @@
+[
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 625,
+    "url": "https://github.com/aien-dev/omega-mv/issues/625",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/compiler/osc_ir.h": "13c499878fc38b00a6b116986a837c922df6e4022651ba7ec9d0b16586a2d61c",
+      "src/compiler/osc_interp.c": "8116fbf2b1d754904aa239c326f6f4652842a66a554be3077530146f08f809db",
+      "src/omega_types.h": "e4373c0de1e9adc551aa46c781c5fa3491c39c021a0f2e1bc01c9e4791ffb459",
+      "spec/program-identity.md": "f5078c7e0c8e6c2c86be3b541f0b0de17b06d0cbf880c66ca39e2797d40ea51d"
+    },
+    "disposition": "IMPLEMENTED_REVIEW_PENDING",
+    "delta_or_dependency": "New observation/fidelity contract and independent arithmetic fixtures; no converter implementation.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 621,
+    "url": "https://github.com/aien-dev/omega-mv/issues/621",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/compiler/osc_ir.c": "ecfffd38a50450c4313972b16661eafa4ec9d472410f3d38ab262021519c5439",
+      "src/compiler/osc_front.c": "6fc0c0deb09cdd4ebe2cd1ac6ffac2d00861948524121b8c7e07e19a709052c3",
+      "src/compiler/osc_lower.c": "daea6ec87c6e1735cb4d0821c7434b5025d53412e30dfbdd2ed3db1013a1b7b3"
+    },
+    "disposition": "MISSING_IMPLEMENTATION",
+    "delta_or_dependency": "Existing lower typed IR/decoder retained; additional source-aware layer/provenance codec not implemented in this slice.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 622,
+    "url": "https://github.com/aien-dev/omega-mv/issues/622",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/compiler/osc_parse.c": "f9012bf8c1a11a0adfff2ca81dc019bf4d82dc71fe6a1215333cfadd9af75cd7",
+      "src/polyglot/omx_lang.h": "a7614394c3e5dbd76f2e9aecd812100a3985307074c27f79c7fba9c6c43b23d1"
+    },
+    "disposition": "MISSING_IMPLEMENTATION",
+    "delta_or_dependency": "Existing parser is OSC, registry is not C import; separate Omega Bridge exports have existing L483/L551 owners and are not a C importer.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 623,
+    "url": "https://github.com/aien-dev/omega-mv/issues/623",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/checker2/c2_ir.c": "e58caf7530c1c40c150b7be710fe1105c8f606e6f8ef7c8917f848397632a0cf",
+      "src/checker2/c2_check.c": "abe064a842652f17982c7f95e30d890c7e451a37d7851ad1e45a46ac96bce6f6",
+      "src/checker2/c2_lrat.c": "042a57447394097d0356769f594137b22215b7f7ea9f520fb446c0ef8dbe58cc",
+      "src/checker2/c2_receipt.c": "1028bc9c1ec243610ec7ab2a85705d3a0edd680484d575f2ed8d1b1079921015"
+    },
+    "disposition": "PARTIAL_EXISTING",
+    "delta_or_dependency": "Independent checker and signed receipts exist (#444/#446); source-aware per-lowering obligation binding remains unimplemented here; E05 #248 retained.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 626,
+    "url": "https://github.com/aien-dev/omega-mv/issues/626",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/compiler/osc_check.c": "9fba11c1344eaa3ddd9d32337dbbe1c1bf1fb366d1ac06f18546e37ecffcfdaa"
+    },
+    "disposition": "MISSING_IMPLEMENTATION",
+    "delta_or_dependency": "Ownership checks for OSC are not a Rust importer/exporter. Native rustc reference fixture is not adapter support.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 627,
+    "url": "https://github.com/aien-dev/omega-mv/issues/627",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/compiler/osc_interp.c": "8116fbf2b1d754904aa239c326f6f4652842a66a554be3077530146f08f809db",
+      "src/language/omega_parse.c": "2c727788d96cc2a469788a59e1878dbfafe753579307ceaa3fe1c5e459e8dae6"
+    },
+    "disposition": "MISSING_IMPLEMENTATION",
+    "delta_or_dependency": "CPython reference fixtures and separately owned Omega-to-Python exporter do not implement Python source import.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 628,
+    "url": "https://github.com/aien-dev/omega-mv/issues/628",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/compiler/osc_cg.c": "a73bde6ff6a4c0514b7b4f3f4548f5f84a4194286b5bedd2ca0e48b1c2e58f50",
+      "src/omega_gpu_platform.h": "2ccc7698eaf326d1c0b8e1bda7209ac02fc582317f79bca7408887e6f88e5473"
+    },
+    "disposition": "MISSING_IMPLEMENTATION",
+    "delta_or_dependency": "Existing AArch64 code and GPU ABI are not versioned universal target-profile binding.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 629,
+    "url": "https://github.com/aien-dev/omega-mv/issues/629",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/compiler/osc_cg.c": "a73bde6ff6a4c0514b7b4f3f4548f5f84a4194286b5bedd2ca0e48b1c2e58f50",
+      "src/compiler/osc_native.c": "61049c94bca4151fd39cc10c16d4a0aaa233510f94e45d420bd05a10673bdfa3"
+    },
+    "disposition": "NOT_RUN",
+    "delta_or_dependency": "Existing OSC native path AArch64 only; no x86 backend/qualification added. Hardware availability not established.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 630,
+    "url": "https://github.com/aien-dev/omega-mv/issues/630",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/compiler/osc_cg.c": "a73bde6ff6a4c0514b7b4f3f4548f5f84a4194286b5bedd2ca0e48b1c2e58f50",
+      "src/compiler/osc_native.c": "61049c94bca4151fd39cc10c16d4a0aaa233510f94e45d420bd05a10673bdfa3"
+    },
+    "disposition": "NOT_RUN",
+    "delta_or_dependency": "No RV64 OSC backend or QEMU qualification added. Existing GSP firmware work L554 not a CPU backend.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/CUDApp",
+    "issue": 35,
+    "url": "https://github.com/aien-dev/CUDApp/issues/35",
+    "audit_main_sha": "232332422bfdc31c8918085b50f13c1e18ab702e",
+    "inspected_inputs": {
+      "src/omega_gpu_platform.h": "0ad27f9ff412d5e6c20ec3af046b61838e73c0ddc4ab1e501314e519521d6327",
+      "src/omega_gpu_matmul_api.c": "c10b1057fb7a6d54fb1ccfe53c1ad9c11bceded050d6dc0040424acc4e00a35d",
+      "src/omega_gpu_attention_api.c": "6d6d6c31d0db4ff1e7582975f2d8e9a687346efa8f43bd45b09d4b4e6bac7fde"
+    },
+    "disposition": "PARTIAL_EXISTING",
+    "delta_or_dependency": "Existing direct GB10 submission/math infrastructure retained; no semantic tensor adapter/real-device comparison run in this slice; existing GPU owners retained.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/CUDApp",
+    "issue": 36,
+    "url": "https://github.com/aien-dev/CUDApp/issues/36",
+    "audit_main_sha": "232332422bfdc31c8918085b50f13c1e18ab702e",
+    "inspected_inputs": {
+      "src/omega_gpu_platform_linux.c": "0078187dfcfd0487c2709396405b995ca8b7fbd85a57bcd94a47ba1bdc6a343c",
+      "src/omega_blackwell_codegen.c": "b57d4daa8bf92fb49406e09d6c68305a3a19e2fea90ea42cf1f1a5c3c4c9bbf7"
+    },
+    "disposition": "NOT_RUN",
+    "delta_or_dependency": "Existing runtime portability work reused; no non-NVIDIA device qualified, API compatibility not device support.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/aien-sovereign-core-mv",
+    "issue": 706,
+    "url": "https://github.com/aien-dev/aien-sovereign-core-mv/issues/706",
+    "audit_main_sha": "754c07b118f41ad899607b60329bd851b1ccb13e",
+    "inspected_inputs": {
+      "crates/aien-inference-abi/src/backend.rs": "0d8146bc3e34d707055959177d2fb5589a09e954b6afcd63f55770ee15d55fb0",
+      "crates/aien-inference-abi/src/omega_backend.rs": "fb0414f46a88b2465c0e2e46a0882cee6ba899a695169073ac5119db2f344c59",
+      "crates/aien-abi-core/src/lib.rs": "d9734581b8e6df10567fcad9cf9b0b2b253e2ac9ffa9e17a5751f9c8f58416e3"
+    },
+    "disposition": "PARTIAL_EXISTING",
+    "delta_or_dependency": "Existing ABI/inference interfaces are not qualified typed cross-language component interoperability; no new component boundary implemented.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/aienux",
+    "issue": 444,
+    "url": "https://github.com/aien-dev/aienux/issues/444",
+    "audit_main_sha": "18e276590424593647cd7c39c6d16c2f9f8d6027",
+    "inspected_inputs": {
+      "crates/aienos-kernel/src/arch/mod.rs": "a2746a31a8c283fa012633a47d09054bf9b29dbd9ad697a215ec719380252e04",
+      "native/kernel/Makefile": "b986878cf83e4b0b90bacd7edfa9c5291c52c1de503a34e5ea06f029b2387ff5"
+    },
+    "disposition": "DEPENDENCY_BLOCKED",
+    "delta_or_dependency": "Wait #628/#630. Arch module exposes aarch64; GSP inspection/firmware RV64 is separate. No boot target run or staged.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 631,
+    "url": "https://github.com/aien-dev/omega-mv/issues/631",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "src/polyglot/omx_lang.h": "a7614394c3e5dbd76f2e9aecd812100a3985307074c27f79c7fba9c6c43b23d1",
+      "src/compiler/osc_ir.h": "13c499878fc38b00a6b116986a837c922df6e4022651ba7ec9d0b16586a2d61c"
+    },
+    "disposition": "MISSING_IMPLEMENTATION",
+    "delta_or_dependency": "Existing registry and separately owned bridge adapters are reuse inputs; public extensible SDK/two toy adapter acceptance remains unqualified.",
+    "programme_acceptance_met": false
+  },
+  {
+    "repository": "aien-dev/omega-mv",
+    "issue": 624,
+    "url": "https://github.com/aien-dev/omega-mv/issues/624",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "inspected_inputs": {
+      "tests/compiler/test_osc_ir_decode.c": "161028d4a6a384d01f504e43513de84ae7ec65745634697bdd47874aa64857f2",
+      "tests/checker2/differential.sh": "838edc2d5b2dcda68456a5b2f866677bd3a66f82ca88ac2f668ab536df3b6251",
+      "tests/checker2/lrat.sh": "4eb9da761547ef2284eafe3cba06b4ab8069893e139c359620f3ada80a71379b"
+    },
+    "disposition": "PARTIAL_EXISTING",
+    "delta_or_dependency": "This is audit/dependency inventory only, not supported cross-target conversion cells; existing conformance infrastructure retained; teaching #619 owner not duplicated.",
+    "programme_acceptance_met": false
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "repo": "aienux",
+  "source": "18e276590424593647cd7c39c6d16c2f9f8d6027",
+  "command": [
+    "make",
+    "-C",
+    "native/kernel",
+    "OUT=../../target/L569-baseline",
+    "gsp-fw-inspect-test"
+  ],
+  "rc": 0,
+  "log": "aienux.log"
+}

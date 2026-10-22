@@ -1,0 +1,37 @@
+COMMAND ['make', '-C', 'native/kernel', 'OUT=../../target/L569-baseline', 'gsp-fw-inspect-test']
+make: Entering directory '/home/drakestapleton/workspace/hermes-desk/universal-L569-aienux/native/kernel'
+cc -std=gnu11 -O2 -Wall -Wextra -Werror -I/home/drakestapleton/workspace/hermes-desk/universal-L569-aienux/native/argus -o ../../target/L569-baseline/host/ck_gsp_fw_inspect /home/drakestapleton/workspace/hermes-desk/universal-L569-aienux/native/kernel/tools/ck_gsp_fw_inspect.c /home/drakestapleton/workspace/hermes-desk/universal-L569-aienux/native/argus/sha256.c
+../../target/L569-baseline/host/ck_gsp_fw_inspect selftest
+PASS valid fixture accepted (version 580.173.02, build id 000102030405060708090a0b0c0d0e0f10111213)
+PASS family gb10x refused: missing section: no signature section for this chip family
+PASS every truncation 0..639 refused
+PASS bad ELF magic: ELF magic missing
+PASS 32-bit class: not ELF64 (EI_CLASS)
+PASS big-endian: not little-endian (EI_DATA)
+PASS e_type EXEC: e_type is not ET_REL (the pinned container is a relocatable object)
+PASS e_machine x86-64: e_machine is not RISC-V (243)
+PASS e_shentsize 40: e_shentsize is not 64
+PASS e_shnum 0: e_shnum is 0: no section header table
+PASS e_shstrndx == shnum: e_shstrndx out of range
+PASS section header table past end: section header table outside the file
+PASS string table not NUL-terminated: section string table not NUL-terminated
+PASS section name index past string table: section name index outside the string table
+PASS .fwimage size past end of file: section bounds: offset+size outside the file
+PASS .fwimage offset near UINT64_MAX (overflow): section bounds: offset+size outside the file
+PASS .fwimage empty: .fwimage empty
+PASS .fwversion without NUL: version string not NUL-terminated
+PASS .fwversion text differs from pin: version mismatch against the pinned driver version
+PASS .fwversion 64 bytes: version section size not in 1..63
+PASS signature section empty: signature section empty
+PASS signature section for another family only: missing section: no signature section for this chip family
+PASS build-id note wrong type: build-id note is not an NT_GNU_BUILD_ID note
+PASS build-id descriptor past section: build-id note descriptor size out of range
+PASS build-id note truncated: build-id note too short
+CK_GSP_FW_INSPECT_SELFTEST: PASS (22 mutations)
+fwversion 580.173.02
+build_id b96f53b91f7ff27613d8afe25762756a42a4dc1e
+signature_section .fwsignature_gb10y size=4096
+sha256_file 32cb7cf3e77f97e92f6e92135939ccb3ba382748144569c0dfccf3338d43d963
+RESULT OK
+CK_GSP_FW_INSPECT_PIN: PASS
+make: Leaving directory '/home/drakestapleton/workspace/hermes-desk/universal-L569-aienux/native/kernel'
