@@ -1,0 +1,18 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (3.259774ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (63.099247ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (99.323641ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (30.671416ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (54.222414ms)
+✔ disabled writer no files; bounded burst durable per-class loss (60.417015ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.991833ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (43.235593ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (14.502372ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (19.010525ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 446.366147

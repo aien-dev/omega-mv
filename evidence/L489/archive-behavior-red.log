@@ -1,0 +1,38 @@
+✔ canonical bytes independent of key insertion; strict types/units/versions (2.357654ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (60.909ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (99.811538ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (29.875446ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (42.75107ms)
+✔ disabled writer no files; bounded burst durable per-class loss (78.567212ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (0.808487ms)
+✖ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (36.857527ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (11.843198ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (18.890896ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 9
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 444.321819
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:68:1
+✖ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (36.857527ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:75:55)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

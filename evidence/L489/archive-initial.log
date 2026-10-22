@@ -1,0 +1,28 @@
+✖ canonical bytes independent of key insertion; strict types/units/versions (1.689088ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (50.161437ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (99.126494ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (30.516498ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (56.985598ms)
+✔ disabled writer no files; bounded burst durable per-class loss (79.180704ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 375.777315
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:16:1
+✖ canonical bytes independent of key insertion; strict types/units/versions (1.689088ms)
+  Error: invalid metric or unit
+      at fail (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:9:37)
+      at checkMetric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:27:73)
+      at metric (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tools/trace/schema.mjs:24:108)
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-issue-trace-20261022/tests/trace/archive.test.mjs:19:64)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
