@@ -1,4 +1,4 @@
-gate_ref 2026-10-22T03:06:34Z at 9db60af805636459367634283b0b0149d1c7d784, om4.bin 5eda35a91028f634
+gate_ref 2026-10-22T03:11:28Z at b4c09eb142ece7a931982aad220f6bf58f7d1563, om4.bin 5eda35a91028f634
 PASS dev01: 8 inputs, interpreter = om4 (0 traps)
 PASS dev02: 8 inputs, interpreter = om4 (0 traps)
 PASS dev03: 8 inputs, interpreter = om4 (0 traps)
@@ -37,7 +37,7 @@ PASS refusal 7 [20: no implicit narrowing]: omega_ref: line 2: error 7: the retu
 PASS refusal 16 [16: an array without its length]: omega_ref: line 1: error 16: array parameter 'a' without its length
 PASS refusal 16 [16: a pool without its length]: omega_ref: line 1: error 16: pool 'g' without its length
 PASS refusal 19 [18: one array twice in a call]: omega_ref: line 5: error 19: 'x' passed twice in one call
-PASS refusal 19 [18: a global passed]: omega_ref: line 6: error 19: a global or text 'g' is never passed
+PASS refusal 19 [18: a global passed]: omega_ref: line 6: error 19: a global pool 'g' is never passed
 PASS refusal 20 [17: write through a view]: omega_ref: line 2: error 20: put into a read-only array
 PASS refusal 20 [17: write into a text]: omega_ref: line 3: error 20: put into a read-only array
 PASS refusal 20 [17: read into a text]: omega_ref: line 3: error 20: read into a read-only array

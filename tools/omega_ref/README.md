@@ -48,7 +48,10 @@ Every case gate4 has, run both ways (`evidence/OMEGA-REF/gate_ref.log`):
 Result: 195 cases written, 195 run, all equal (GATE_REF PASS, RC=0). Negative control: a copy of the
 interpreter with signed division made unsigned is caught on fm1.
 
-## Where it has to guess (the rule book is silent)
+## Beyond gate4: probes of the rule book
 
-Listed in `tools/omega_ref/SPEC_GAPS.md`, each with the sentence we propose adding (decision 19: no
-meaning left open).
+`tools/omega_ref/probe_ref.sh` runs 125 more small programs through both, each with the answer the rule
+book gives (`evidence/OMEGA-REF/probe_ref.log`, PROBE_REF PASS, RC=0). They found two om4 slips (F1: the
+largest unsigned numbers, from 2^63 up, are refused; F2: one refusal has the wrong error number) and 24
+places where the rule book is silent. Each is in `tools/omega_ref/SPEC_GAPS.md` with the sentence we
+propose adding (decision 19: no meaning left open).

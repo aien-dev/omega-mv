@@ -399,7 +399,7 @@ static Node *parse_call(int fi, int want_void)
         else if (!strcmp(w, "own")) refuse(9, "own is not in the subset");
         if (as >= 0) { w = nextw(); if (!w) refuse(4, "an array name is missing"); }
         int ety, ro, kind; uint64_t len;
-        if (find_global(w) >= 0) refuse(19, "a global or text '%s' is never passed", w);
+        { int g = find_global(w); if (g >= 0 && !globals[g].is_text) refuse(19, "a global pool '%s' is never passed", w); } /* a text may go to a view (gap G6) */
         ARef r = parse_array_ref(w, &ety, &len, &ro, &kind);
         if (ety != f->pty[i] || len != f->plen[i]) refuse(7, "argument %d of %s: %s %" PRIu64 ", wants %s %" PRIu64, i + 1, f->name, TNAME[ety], len, TNAME[f->pty[i]], f->plen[i]);
         if (as == PK_EDIT && ro) refuse(20, "'%s' is read-only, passed as edit", w);
@@ -463,7 +463,8 @@ static Node *parse_value(int want)
         Node *a = parse_value(t);
         if (a->bare) { fix_bare(a, t); n = a; }       /* a typed number */
         else {
-            if (!tnum(a->ty) && a->ty != T_BOOL) refuse(7, "%s of %s", w, TNAME[a->ty]);
+            if (t == T_BOOL || a->ty == T_BOOL) refuse(9, "no conversion from or to bool (gap G2)");
+            if (!tnum(a->ty)) refuse(7, "%s of %s", w, TNAME[a->ty]);
             n = new_node(N_CONV); n->a = a; n->ty = t;  /* a conversion: trap 5 when outside */
         }
     } else if (!strcmp(w, "get")) {
@@ -472,7 +473,8 @@ static Node *parse_value(int want)
         n->arr = parse_array_ref(nextw(), &n->ty, &len, &ro, &kind);
         n->a = parse_value(T_NONE);
         if (n->a->bare) {
-            if (n->a->neg || n->a->num >= len) refuse(21, "index %s%" PRIu64 " outside an array of %" PRIu64, n->a->neg ? "-" : "", n->a->num, len);
+            if (n->a->neg) refuse(8, "a negative index number (gap G7)");
+            if (n->a->num >= len) refuse(21, "index %s%" PRIu64 " outside an array of %" PRIu64, n->a->neg ? "-" : "", n->a->num, len);
             fix_bare(n->a, T_U64);
         }
         if (!tnum(n->a->ty)) refuse(7, "an index of type %s", TNAME[n->a->ty]);
@@ -526,7 +528,7 @@ static Node *value_for(int want, const char *place)
     nest = 0;
     Node *n = parse_value(want);
     if (n->bare) {
-        if (want == T_NONE) refuse(7, "a bare number has no type here; write it typed (%s)", place); /* spec silent */
+        if (want == T_NONE) refuse(11, "a bare number has no type here; write it typed (%s)", place); /* gap G3 */
         fix_bare(n, want);
     }
     if (want != T_NONE && n->ty != want) refuse(7, "%s is %s, wants %s", place, TNAME[n->ty], TNAME[want]);
@@ -644,7 +646,6 @@ static void parse_statement(void)
             wi++;
             parse_number(cw, &neg, &mag);
             if (!fits(t, neg, mag)) refuse(8, "count %s outside %s", cw, TNAME[t]);
-            if (neg || mag > LOOP_MAX) refuse(8, "count %s outside 0..1000000", cw);
             s->count_kind = 0; s->n = mag;
         } else {
             Name *nm = find_name(cw);
@@ -659,6 +660,7 @@ static void parse_statement(void)
         return;
     }
     if (!strcmp(w, "break")) {
+        refuse(9, "break is not among om4's words (gap G1)");
         line_end();
         int inloop = 0;
         for (int i = nblocks - 1; i >= 0; i--) if (blocks[i].kind >= 3) inloop = 1;
@@ -680,6 +682,7 @@ static void parse_statement(void)
         return;
     }
     if (!strcmp(w, "trap")) {
+        refuse(9, "trap is not among om4's words (gap G1)");
         Stmt *s = new_stmt(S_TRAP);
         const char *c = nextw();
         if (!c) refuse(4, "trap needs a code");
@@ -709,7 +712,8 @@ static void parse_statement(void)
         nest = 0;
         s->v = parse_value(T_NONE);
         if (s->v->bare) {
-            if (s->v->neg || s->v->num >= len) refuse(21, "index outside an array of %" PRIu64, len);
+            if (s->v->neg) refuse(8, "a negative index number (gap G7)");
+            if (s->v->num >= len) refuse(21, "index outside an array of %" PRIu64, len);
             fix_bare(s->v, T_U64);
         }
         if (!tnum(s->v->ty)) refuse(7, "an index of type %s", TNAME[s->v->ty]);
@@ -844,7 +848,7 @@ static void parse_fn_header(void)
     if (!rw) refuse(4, "fn %s needs a return type", nmw);
     if (!strcmp(rw, "void")) f->ret = T_VOID;
     else if ((f->ret = type_word(rw)) == T_NONE) refuse(7, "'%s' is not a type", rw);
-    if (is_main && f->ret != T_VOID && !tnum(f->ret)) refuse(9, "main returns a whole number or void");
+    if (is_main && f->ret != T_VOID && f->ret != T_BOOL && !tnum(f->ret)) /* bool allowed: gap G4 */ refuse(9, "main returns a whole number or void");
     line_end();
     nfuncs++; /* visible from here on (recursion in program mode) */
     nblocks = 0;
@@ -904,7 +908,6 @@ static void parse_global(int is_text, const char *line, size_t n)
         if (!closed) refuse(22, "text '%s' has no end quote", nmw);
         /* the name must be the only word between text and the quote; nothing after the end quote */
         for (const char *r = p; r < e; r++) if (*r != ' ' && *r != '\t' && *r != '\r') refuse(5, "extra words after a text");
-        if (len == 0) refuse(16, "an empty text has no elements"); /* spec silent: decision 19 proposal */
         g->is_text = 1; g->ety = T_U8; g->len = len;
         g->arr.data = buf; g->arr.ety = T_U8; g->arr.len = len; g->arr.ro = 1;
     }
