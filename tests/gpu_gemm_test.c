@@ -313,6 +313,9 @@ static void chip_tier(int quick) {
             omega_gpu_gemm_test_set_cfg((OmegaGpuGemmType)t, NULL);
         }
     for (int t = 0; t < 2; t++) chip_one((OmegaGpuGemmType)t, 3, 65, 63, 100, A, B, C); /* right again after the red checks */
+    omega_gpu_session_close(); /* the kernels go with the device (close hook); the next call builds them on a new one */
+    printf("after the device closed and opened again:\n");
+    for (int t = 0; t < 2; t++) chip_one((OmegaGpuGemmType)t, 0, 70, 33, 129, A, B, C);
     free(A); free(B); free(C);
 }
 
