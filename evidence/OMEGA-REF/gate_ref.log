@@ -1,4 +1,4 @@
-gate_ref 2026-10-22T03:22:03Z at e6b27a2cb9a33f13fc00adf0e33f193e37d22e54, om4.bin 5eda35a91028f634
+gate_ref 2026-10-22T03:24:50Z at 772280fd814a90d1a45dde73ab5506f3bf58138a, om4.bin 03fc75d96a570ba1
 PASS dev01: 8 inputs, interpreter = om4 (0 traps)
 PASS dev02: 8 inputs, interpreter = om4 (0 traps)
 PASS dev03: 8 inputs, interpreter = om4 (0 traps)
@@ -23,14 +23,19 @@ PASS sort: exit 0, 23 output bytes, interpreter = om4 ELF
 PASS echo: exit 0, 50000 output bytes, interpreter = om4 ELF
 PASS bytecopy: exit 0, 50000 output bytes, interpreter = om4 ELF
 PASS t_bounds: exit 103, 0 output bytes, interpreter = om4 ELF
+PASS t_cmp_unsigned: exit 0, 0 output bytes, interpreter = om4 ELF
 PASS t_conv: exit 105, 0 output bytes, interpreter = om4 ELF
+PASS t_conv_sign: exit 105, 0 output bytes, interpreter = om4 ELF
 PASS t_div0: exit 102, 0 output bytes, interpreter = om4 ELF
 PASS t_exit: exit 42, 0 output bytes, interpreter = om4 ELF
 PASS t_loop: exit 104, 0 output bytes, interpreter = om4 ELF
 PASS t_ovf: exit 101, 0 output bytes, interpreter = om4 ELF
 PASS t_rw: exit 103, 0 output bytes, interpreter = om4 ELF
 PASS t_stack: exit 106, 0 output bytes, interpreter = om4 ELF
+PASS t_u63: exit 8, 0 output bytes, interpreter = om4 ELF
+PASS t_u64max: exit 31, 0 output bytes, interpreter = om4 ELF
 PASS t_void: exit 77, 0 output bytes, interpreter = om4 ELF
+PASS t_write_wrap: exit 103, 0 output bytes, interpreter = om4 ELF
 PASS refusal 3 [unknown name]: omega_ref: line 2: error 3: unknown name 'q'
 PASS refusal 7 [20: no implicit widening]: omega_ref: line 2: error 7: add of uint and ulong (no implicit conversions)
 PASS refusal 7 [20: no implicit narrowing]: omega_ref: line 2: error 7: the returned value is ulong, wants uint
@@ -54,6 +59,14 @@ PASS refusal 9 [a self-call in function mode (stack use bounded by the call orde
 PASS refusal 9 [a pool in function mode]: omega_ref: line 1: error 9: a pool or text only in program mode (no fn main)
 PASS refusal 9 [new inside a block]: omega_ref: line 3: error 9: new only in a function's outermost block
 PASS refusal 9 [main with parameters]: omega_ref: line 1: error 9: main has no parameters
+PASS refusal 20 [17: view A to an edit parameter (L412 probe view_pfx_to_edit)]: omega_ref: line 6: error 20: 'x' passed to an edit parameter is read-only
+PASS refusal 8 [20: a negative number is not a ulong]: omega_ref: line 2: error 8: number -1 outside ulong
+PASS refusal 8 [20: 2^63 is not a long]: omega_ref: line 2: error 8: number 9223372036854775808 outside long
+PASS refusal 8 [20: 2^64 - 1 is not a byte (no wrap to -1)]: omega_ref: line 2: error 8: number 18446744073709551615 outside byte
+PASS refusal 8 [23: 2^64 is no whole number of any type]: omega_ref: line 2: error 8: number '18446744073709551616' outside every type
+PASS refusal 6 [a number of 21 digits]: omega_ref: line 2: error 6: number '100000000000000000000' has more than 20 digits
+PASS refusal 23 [24: a pool of 2^63 elements is over its limit]: omega_ref: line 1: error 23: pool over 16777216 elements
+PASS refusal 9 [24: free is not a word (no heap, nothing given back by hand)]: omega_ref: line 3: error 9: there is no free: nothing is given back by hand (decision 24)
 PASS refusal 9 [own is not in the subset]: omega_ref: line 5: error 9: own is not in the subset
 PASS refusal 10 [a name equal to a function]: omega_ref: line 4: error 10: 'f' is already in use
 PASS refusal 13 [a variable over 8 characters]: omega_ref: line 2: error 13: name 'abcdefghi' too long
@@ -65,6 +78,6 @@ PASS refusal 6 [bad number]: omega_ref: line 2: error 6: bad number '12x'
 PASS refusal 7 [a void function used as a value]: omega_ref: line 5: error 7: void function 'f' used as a value
 PASS refusal 7 [a value function called as a statement]: omega_ref: line 5: error 7: value function 'f' called as a line
 PASS negative control: the interpreter with signed div made unsigned differs from om4 on fm1
-cases written: 195, cases run: 195
+cases written: 208, cases run: 208
 GATE_REF PASS
 RC=0

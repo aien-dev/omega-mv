@@ -17,7 +17,10 @@ sh tools/omega_ref/build.sh
 
 # the corpus: every accepted gate4 program, and omc.om when L408 has pushed it
 git fetch -q origin seed/omega-in-omega 2>/dev/null || true
-CORPUS="$(ls $X/*.om $X/*.omegese) $(ls tests/one_layer/omegese/dev/dev*.omegese)"
+# function-mode sources without their free lines, as gate4 feeds them to om4 (om4's language has no free)
+mkdir -p $B/src
+for s in $X/*.omegese tests/one_layer/omegese/dev/dev*.omegese; do sed '/^free /d' $s > $B/src/$(basename $s); done
+CORPUS="$(ls $X/*.om) $(ls $B/src/*.omegese)"
 if git cat-file -e origin/seed/omega-in-omega:seed/omc/omc.om 2>/dev/null; then
   git show origin/seed/omega-in-omega:seed/omc/omc.om > $B/omc.om
   say "omc.om from origin/seed/omega-in-omega@$(git rev-parse --short origin/seed/omega-in-omega)"

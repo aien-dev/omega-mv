@@ -8,7 +8,12 @@ Decision 19 says no meaning may be left open. Each gap below gets the sentence w
 OMEGESE.md section 9. Unless a line says otherwise the proposal is what om4 already does, and the
 interpreter does the same. Cases where om4 does something else are marked **om4 differs**.
 
-## om4 slips (the rule book decides; ledger fixer line, L408 told)
+## om4 slips (the rule book decides; ledger fixer line L413, L408 told). Both fixed by L408 at dedfd93c
+
+L408 fixed both on seed/omega-in-omega (dedfd93c: 20-digit numbers, ulong to 2^64 - 1, view A to an edit
+parameter is error 20), added gate4 cases t_u63, t_u64max, t_cmp_unsigned, t_conv_sign, t_write_wrap and
+wrote the number rule into 9.3. The probes now pass on om4 too; they stay in probe_ref.sh as regression
+cases.
 
 - **F1. ulong numbers from 2^63 up are refused.** Section 9.3 makes ulong a 64-bit number, so
   `ulong 9223372036854775808` (2^63) and `ulong 18446744073709551615` (2^64 - 1) are numbers of that
@@ -22,7 +27,7 @@ interpreter does the same. Cases where om4 does something else are marked **om4 
 
 ## Gaps (proposed sentences)
 
-- **G1. om4 has no `break` and no `trap` line.** Section 3 lists both; om4 refuses them with error 9
+- **G1. om4 has no `break` and no `trap` line.** Section 3 lists both; om4 refuses them with error 9 (and `free`, now written into 9.4 by L408)
   (`break_inner`, `break_while`, `after_break`, `trap_1`, `trap_14`, `trap_15`). Proposed: "om4 and omc
   read every word of section 3 except `break`, `trap` and `own`, which are error 9."
 - **G2. No conversion from or to bool.** `int b` with b bool, `bool x` with x uint: om4 error 9.
@@ -103,7 +108,7 @@ interpreter does the same. Cases where om4 does something else are marked **om4 
   functions written after them (`global_after`); a function after main is accepted (`fn_after_main`).
   Proposed: "A pool or text is visible to the functions written after it."
 
-## Found by the mutant check (`gate_next.sh`, 640 single-word mutants of the gate4 programs)
+## Found by the mutant check (`gate_next.sh`, 740 single-word mutants of the gate4 programs)
 
 - **G25. Which number a misplaced word gets.** The rule book names no number for a word in a place where
   it cannot go. om4 uses: 16 for a fixed word or number where a name, a type or a value belongs, a line
@@ -111,8 +116,9 @@ interpreter does the same. Cases where om4 does something else are marked **om4 
   where an array name belongs; 4 for `ret` with no value in a function that returns one; 10 for a
   parameter with the function's own name; 15 for `else` with no open `if`; 13 for a too-long name at
   the start of a line outside a function; and 9 for a pool or text with no `fn main`, decided at the end
-  of the input (a mistake earlier in the file is reported first). The interpreter now does the same: on
-  all 640 mutants om4 and the interpreter give the same verdict and the same refusal number. Proposed:
+  of the input (a mistake earlier in the file is reported first). Within a line om4 reports extra words (5) before
+  the type the place needs (7), except a bare number as a new name's whole value, which is 11 at once. The interpreter now does the same: on
+  all 740 mutants (gate_next.sh, om4 at ad1da6e5) om4 and the interpreter give the same verdict and the same refusal number. Proposed:
   write this list into section 9 as the table of refusal numbers, one line per number, with 16 named
   "a word where the grammar allows none" (decision 22: the grammar in `tools/omega_ref/s9.grammar`
   is exactly the list of places).

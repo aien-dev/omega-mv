@@ -246,6 +246,7 @@ static void parse_number(const char *w, int *neg, uint64_t *mag)
     if (*p == '-') { *neg = 1; p++; }
     if (!*p) refuse(6, "bad number '%s'", w);
     if (p[0] == '0' && p[1]) refuse(6, "bad number '%s' (leading zero)", w);
+    if (strlen(p) > 20) refuse(6, "number '%s' has more than 20 digits", w);
     uint64_t v = 0;
     for (; *p; p++) {
         if (*p < '0' || *p > '9') refuse(6, "bad number '%s'", w);
@@ -526,20 +527,30 @@ static Node *parse_value(int want)
 }
 
 /* a whole value for a place of type want (T_NONE: the value decides) */
-static Node *value_for(int want, const char *place)
+/* the type a place needs is checked at the end of the line, after its extra words (as om4 does, gap G25) */
+static struct { Node *n; int want; const char *place; } pend[4];
+static int npend;
+static void place_check(Node *n, int want, const char *place)
 {
-    nest = 0;
-    Node *n = parse_value(want);
     if (n->bare) {
         if (want == T_NONE) refuse(11, "a bare number has no type here; write it typed (%s)", place); /* gap G3 */
         fix_bare(n, want);
     }
     if (want != T_NONE && n->ty != want) refuse(7, "%s is %s, wants %s", place, TNAME[n->ty], TNAME[want]);
+}
+static Node *value_for(int want, const char *place)
+{
+    nest = 0;
+    Node *n = parse_value(want);
+    if (n->bare && want == T_NONE) refuse(11, "a bare number has no type here; write it typed (%s)", place); /* at once, as om4: G3, G25 */
+    pend[npend].n = n; pend[npend].want = want; pend[npend].place = place; npend++;
     return n;
 }
 static void line_end(void)
 {
     if (wi < nw) refuse(5, "extra words at the end of the line: '%s'", W[wi]);
+    for (int i = 0; i < npend; i++) place_check(pend[i].n, pend[i].want, pend[i].place);
+    npend = 0;
 }
 
 /* ---------- statements ---------- */
@@ -728,6 +739,7 @@ static void parse_statement(void)
         return;
     }
     if (!strcmp(w, "free")) {
+        refuse(9, "there is no free: nothing is given back by hand (decision 24)");
         const char *a = nextw();
         if (!a) refuse(4, "free needs an array");
         Name *nm = find_name(a);
@@ -752,6 +764,7 @@ static void parse_statement(void)
     /* <name> [=] <value> */
     if (find_global(w) >= 0) refuse(7, "'%s' is an array; write its elements with put", w); /* spec silent */
     if (!is_name(w) || is_reserved(w)) {
+        if (looks_number(w)) { int ng; uint64_t mg; parse_number(w, &ng, &mg); }
         refuse(16, "'%s' cannot start a line", w); /* gap G25 */
     }
     if (peekw() && !strcmp(peekw(), "=")) wi++;
@@ -791,8 +804,8 @@ static void parse_statement(void)
     } else {
         check_new_name(w, 0);
         s->v = value_for(T_NONE, "a new name's value");
-        if (s->v->ty == T_VOID) refuse(7, "a void call has no value");
         line_end();
+        if (s->v->ty == T_VOID) refuse(7, "a void call has no value");
         push_stmt(s);
         Name *a = add_name(w, K_SCALAR, s->v->ty, 0, 0);
         s->slot = a->slot;
@@ -950,6 +963,7 @@ static void parse_program(void)
             else if (!strcmp(w, "global")) parse_global(0, ls, n);
             else if (!strcmp(w, "text")) parse_global(1, ls, n);
             else if (!strcmp(w, "note")) continue;
+            else if (looks_number(w)) { int ng; uint64_t mg; parse_number(w, &ng, &mg); refuse(16, "a number outside a function"); }
             else if (is_name(w) && !is_reserved(w) && strlen(w) > 8) refuse(13, "name '%s' too long", w); /* om4 reads it as a name first: gap G25 */
             else refuse(16, "'%s' outside a function", w);
             continue;

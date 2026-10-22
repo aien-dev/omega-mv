@@ -1,4 +1,4 @@
-probe_ref 2026-10-22T03:22:07Z at e6b27a2cb9a33f13fc00adf0e33f193e37d22e54, om4.bin 5eda35a91028f634
+probe_ref 2026-10-22T03:24:59Z at 772280fd814a90d1a45dde73ab5506f3bf58138a, om4.bin 03fc75d96a570ba1
 PASS  add_u8_wrap: 0
 PASS  add_u16_wrap: 1
 PASS  sub_u32_wrap: 255
@@ -30,12 +30,12 @@ PASS  conv_ok: 128
 PASS  conv_hi: 105
 PASS  conv_neg: 105
 PASS  conv_typed: 105
-KNOWN conv_sign: want 105 = interpreter; om4 R8 (SPEC_GAPS.md)
+PASS  conv_sign: 105
 PASS  conv_bool: R9 (spec silent, G2)
 PASS  typed_range: R8
 PASS  typed_neg_u: R8
 PASS  cmp_signed: 1
-KNOWN cmp_unsigned: want 0 = interpreter; om4 R6 (SPEC_GAPS.md)
+PASS  cmp_unsigned: 0
 PASS  mixed: R7
 PASS  two_bare: R11
 PASS  bare_new: R11 (spec silent, G3)
@@ -82,9 +82,9 @@ PASS  new_fresh: 14
 PASS  view_len: 5
 PASS  edit_through: 9
 PASS  view_edit_pfx: 9
-KNOWN view_pfx_to_edit: want R20 = interpreter; om4 R7 (SPEC_GAPS.md)
+PASS  view_pfx_to_edit: R20
 PASS  text_pass: 0 (spec silent, G6)
-PASS  free_noop: 7
+PASS  free_noop: R9
 PASS  local_4mib: 0
 PASS  local_4mib_1: R23
 PASS  pool_max: 0
@@ -97,7 +97,7 @@ PASS  text_space: 0:61202062
 PASS  text_fnmode: R9
 PASS  stack_local: 106
 PASS  write_bad: 103
-KNOWN write_wrap: want 103 = interpreter; om4 R6 (SPEC_GAPS.md)
+PASS  write_wrap: 103
 PASS  write_n0: 0
 PASS  write_badfd: 247
 PASS  read_eof: 0
@@ -124,6 +124,5 @@ PASS  global_after: 0
 PASS  reach18: R18
 PASS  write_local: 0:00000000
 KNOWN regs17: want 0 (spec silent, G18) = interpreter; om4 R12 (SPEC_GAPS.md)
-probes: 125 written, 125 run (25 where the spec is silent; 8 known om4 differences)
+probes: 125 written, 125 run (25 where the spec is silent; 4 known om4 differences)
 PROBE_REF PASS
-RC=0

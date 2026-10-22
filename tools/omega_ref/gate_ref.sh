@@ -25,9 +25,10 @@ fmode() { # name entry inputs source  [interpreter]
   interp=${5:-$I}
   build/omegese/omegese emit $4 $B/$1.json > /dev/null
   build/omega_emit/omega_emit emit $B/$1.json $B/$1.oscir > /dev/null
-  $R/om4.bin < $4 > $B/$1.om4.bin
+  sed '/^free /d' $4 > $B/$1.src # as gate4: the C path needs free for its arrays; om4's language has none
+  $R/om4.bin < $B/$1.src > $B/$1.om4.bin
   $B/runner $B/$1.oscir "$2" $3 $B/$1.om4.bin | tail -n +2 > $B/$1.om4.res
-  $interp call $4 "$2" $3 > $B/$1.ref.res
+  $interp call $B/$1.src "$2" $3 > $B/$1.ref.res
   n=$(wc -l < $3)
   cmp -s $B/$1.om4.res $B/$1.ref.res
 }

@@ -1,12 +1,12 @@
-gate_next 2026-10-22T03:21:58Z at e6b27a2cb9a33f13fc00adf0e33f193e37d22e54, grammar 10984d8871a3b4c8
+gate_next 2026-10-22T03:24:56Z at 772280fd814a90d1a45dde73ab5506f3bf58138a, grammar 9342cef5fc7d3774
 omc.om from origin/seed/omega-in-omega@ad1da6e5
-PASS fuzz: fuzz: 33 files, 2904 word prefixes, 5511 cut words, every one with exactly one parse
+PASS fuzz: fuzz: 38 files, 3030 word prefixes, 6054 cut words, every one with exactly one parse
 PASS one parse up to the word the grammar refuses [unknown name]:  byte 30 'q': 0 parses
 PASS one parse, grammar takes it, refused later for a type or a rule [20: no implicit widening]
 PASS one parse, grammar takes it, refused later for a type or a rule [20: no implicit narrowing]
 PASS one parse up to the word the grammar refuses [16: an array without its length]:  byte 18 'to': 0 parses
 PASS one parse up to the word the grammar refuses [16: a pool without its length]:  byte 14 '
-PASS one parse, grammar takes it, refused later for a type or a rule [18: one array twice in a call]
+PASS one parse up to the word the grammar refuses [18: one array twice in a call]:  byte 81 'free': 0 parses
 PASS one parse up to the word the grammar refuses [18: a global passed]:  byte 80 'g': 0 parses
 PASS one parse, grammar takes it, refused later for a type or a rule [17: write through a view]
 PASS one parse, grammar takes it, refused later for a type or a rule [17: write into a text]
@@ -24,6 +24,14 @@ PASS one parse, grammar takes it, refused later for a type or a rule [a self-cal
 PASS one parse, grammar takes it, refused later for a type or a rule [a pool in function mode]
 PASS one parse, grammar takes it, refused later for a type or a rule [new inside a block]
 PASS one parse, grammar takes it, refused later for a type or a rule [main with parameters]
+PASS one parse, grammar takes it, refused later for a type or a rule [17: view A to an edit parameter (L412 probe view_pfx_to_edit)]
+PASS one parse, grammar takes it, refused later for a type or a rule [20: a negative number is not a ulong]
+PASS one parse, grammar takes it, refused later for a type or a rule [20: 2^63 is not a long]
+PASS one parse, grammar takes it, refused later for a type or a rule [20: 2^64 - 1 is not a byte (no wrap to -1)]
+PASS one parse, grammar takes it, refused later for a type or a rule [23: 2^64 is no whole number of any type]
+PASS one parse, grammar takes it, refused later for a type or a rule [a number of 21 digits]
+PASS one parse, grammar takes it, refused later for a type or a rule [24: a pool of 2^63 elements is over its limit]
+PASS one parse up to the word the grammar refuses [24: free is not a word (no heap, nothing given back by hand)]:  byte 32 'free': 0 parses
 PASS one parse up to the word the grammar refuses [own is not in the subset]:  byte 50 'own': 0 parses
 PASS one parse up to the word the grammar refuses [a name equal to a function]:  byte 35 'f': 0 parses
 PASS one parse, grammar takes it, refused later for a type or a rule [a variable over 8 characters]
@@ -34,12 +42,12 @@ PASS one parse up to the word the grammar refuses [a statement outside a functio
 PASS one parse up to the word the grammar refuses [bad number]:  byte 30 '12x': 0 parses
 PASS one parse up to the word the grammar refuses [a void function used as a value]:  byte 38 'f': 0 parses
 PASS one parse up to the word the grammar refuses [a value function called as a statement]:  byte 36 'f': 0 parses
-mutants: 640; the grammar takes 44, om4 32, the interpreter 32; 12 taken by the grammar and refused by om4 for a type or a rule
-mutants: om4 and the interpreter give the same verdict and refusal number on 640 of 640
-PASS probes: 92 of 125 accepted by the interpreter, every one parses with one parse
+mutants: 740; the grammar takes 52, om4 36, the interpreter 36; 16 taken by the grammar and refused by om4 for a type or a rule
+mutants: om4 and the interpreter give the same verdict and refusal number on 740 of 740
+PASS probes: 91 of 125 accepted by the interpreter, every one parses with one parse
 PASS negative control amb1: 13 programs caught with more than one parse
-PASS negative control amb2: 32 programs caught with more than one parse
-PASS negative control amb3: 31 programs caught with more than one parse
+PASS negative control amb2: 37 programs caught with more than one parse
+PASS negative control amb3: 35 programs caught with more than one parse
 PASS negative control miss (no exit rule): FAIL seed/rung4/tests/t_exit.om: at word 5 'exit' (byte 15): the next word is not legal
 GATE_NEXT PASS
 RC=0

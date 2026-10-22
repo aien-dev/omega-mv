@@ -33,7 +33,6 @@ stmt     -> NL
           | 'for' NEWNAME TYPE value !open !bind_loop NL body 'end' !close NL
           | 'ret' retp NL
           | 'put' anyarr value value NL
-          | 'free' ARR NL
           | 'exit' value NL
           | 'note' rest NL
           | FNVOID @args NL

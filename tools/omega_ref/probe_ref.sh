@@ -14,7 +14,7 @@ LOG=$E/probe_ref.log
 : > "$LOG"
 say() { printf '%s\n' "$*" | tee -a "$LOG"; }
 fail=0; n=0; silent=0; known=0
-KNOWN=" conv_sign cmp_unsigned write_wrap view_pfx_to_edit lead_zero minus_zero rw_ulong regs17 "
+KNOWN=" lead_zero minus_zero rw_ulong regs17 "
 say "probe_ref $(date -u +%FT%TZ) at $(git rev-parse HEAD), om4.bin $(sha256sum $R/om4.bin | cut -c1-16)"
 outcome() { # tool src -> "R<n>" or "<exit>:<sha of stdout>"
   if [ $1 = om4 ]; then
@@ -134,7 +134,7 @@ p edit_through 9      'fn s a edit int 2 to void\nput a 1 9\nend\nfn t a edit in
 p view_edit_pfx 9     'fn s a edit int 2 to void\nput a 1 9\nend\nfn main to int\nx = new int 2 0\ns edit x\nret get x 1\nend\n'
 p view_pfx_to_edit R20  'fn s a edit int 2 to void\nput a 1 9\nend\nfn main to int\nx = new int 2 0\ns view x\nret get x 1\nend\n'
 p text_pass G6:0         'text t "ab"\nfn s a view uchar 2 to uchar\nret get a 0\nend\nfn main to int\nr = s t\nret 0\nend\n'
-p free_noop 7         "${M}x = new int 2 7\nfree x\nret get x 0\nend\n"
+p free_noop R9        "${M}x = new int 2 7\nfree x\nret get x 0\nend\n"
 p local_4mib 0        "${M}x = new ulong 524288 0\nret 0\nend\n"
 p local_4mib_1 R23    "${M}x = new ulong 524288 0\ny = new uchar 1 0\nret 0\nend\n"
 p pool_max 0          'global g uchar 16777216\nfn main to int\nret 0\nend\n'
