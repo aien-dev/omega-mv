@@ -10,7 +10,7 @@ ACTUAL=$(sha256sum "$CC")
 # A private build directory prevents overlapping checks from sharing output files.
 mkdir -p "$ROOT/build/manual-migration"
 D=$(mktemp -d "$ROOT/build/manual-migration/closure.XXXXXXXX")
-trap 'rm -f "$D/check" "$D/literal" "$D/equal" "$D/stage1" "$D/stage2" "$D/stage3"; rmdir "$D"' EXIT HUP INT TERM
+trap 'rm -f "$D/check" "$D/literal" "$D/equal" "$D/hash" "$D/stage1" "$D/stage2" "$D/stage3"; rmdir "$D"' EXIT HUP INT TERM
 "$CC" < seed/native/elfcheck.om > "$D/check"
 [ -s "$D/check" ] || exit 2
 chmod 700 "$D/check"
@@ -34,4 +34,18 @@ chmod 700 "$D/stage2"
 "$D/equal" 3< "$CC" 4< "$D/stage1"
 "$D/equal" 3< "$D/stage1" 4< "$D/stage2"
 "$D/equal" 3< "$D/stage2" 4< "$D/stage3"
+"$CC" < seed/native/sha256.om > "$D/hash"
+[ -s "$D/hash" ] || exit 2
+"$D/check" < "$D/hash"
+chmod 700 "$D/hash"
+[ "$("$D/hash" < "$CC")" = "$EXPECTED" ] || { printf '%s\n' 'REFUSED: native hash mismatch' >&2; exit 2; }
+for name in check literal equal hash stage1 stage2 stage3; do
+  digest=$("$D/hash" < "$D/$name")
+  printf 'OMEGA_SHA256 %s %s\n' "$digest" "$name"
+done
+for name in elfcheck literal byteequal sha256; do
+  digest=$("$D/hash" < "seed/native/$name.om")
+  printf 'OMEGA_SHA256 %s seed/native/%s.om\n' "$digest" "$name"
+done
+printf '%s\n' 'PASS native hashing: compiler identity cross-check and source/artifact fingerprints'
 printf '%s\n' 'PASS native ELF check: checker, compiler, literal, comparator, stages 1/2/3' 'PASS Omega binary comparison: pinned compiler = stage1 = stage2 = stage3' 'Scope: native self-host comparison; seed ancestry and static dependencies remain separate.'

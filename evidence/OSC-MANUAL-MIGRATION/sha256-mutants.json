@@ -1,0 +1,17 @@
+[
+  {
+    "mutant": "padding",
+    "successfully_compiled": true,
+    "failures": 144
+  },
+  {
+    "mutant": "stream",
+    "successfully_compiled": true,
+    "failures": 142
+  },
+  {
+    "mutant": "capacity",
+    "successfully_compiled": true,
+    "failures": 1
+  }
+]

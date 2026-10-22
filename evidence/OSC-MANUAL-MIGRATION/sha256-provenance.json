@@ -1,0 +1,19 @@
+{
+  "source_commit": "12251e3403d42931ada27dc1c54b3b610954be5d",
+  "source_path": "seed/retirement/trn1/trn1.om",
+  "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+  "reused_sections": [
+    {
+      "start": "fn rotate",
+      "end_exclusive": "fn hash",
+      "sha256": "2c69156819bcd142975d88ff3f257e9ab224afd31a7b3983e9eed781eed16fe0"
+    },
+    {
+      "start": "fn constants",
+      "end_exclusive": "fn sayOk",
+      "sha256": "ded8f2fcbb55f4243c51bf80ef8271ce13e8356019fca5906f19f79f65e4c0e2"
+    }
+  ],
+  "adapter": "seed/native/sha256-main.om",
+  "method": "exact native-Omega source reuse plus handwritten adapter; no C/Rust translation"
+}

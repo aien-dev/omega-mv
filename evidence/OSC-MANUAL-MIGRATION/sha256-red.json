@@ -1,0 +1,113 @@
+{
+  "cases": 146,
+  "failures": 145,
+  "examples": [
+    {
+      "case": 0,
+      "length": 0,
+      "rc": 2,
+      "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actual": ""
+    },
+    {
+      "case": 1,
+      "length": 3,
+      "rc": 2,
+      "expected": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "actual": ""
+    },
+    {
+      "case": 2,
+      "length": 1000000,
+      "rc": 2,
+      "expected": "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
+      "actual": ""
+    },
+    {
+      "case": 3,
+      "length": 256,
+      "rc": 2,
+      "expected": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880",
+      "actual": ""
+    },
+    {
+      "case": 4,
+      "length": 0,
+      "rc": 2,
+      "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "actual": ""
+    },
+    {
+      "case": 5,
+      "length": 1,
+      "rc": 2,
+      "expected": "0a2c6ea0370d1d49c411a6e2396695fcd4eab03d96e9e7a8a3ec1ec312d9ab38",
+      "actual": ""
+    },
+    {
+      "case": 6,
+      "length": 2,
+      "rc": 2,
+      "expected": "364767d8a1f056729adec57343b88f0a980fdb9f5a0552b422167dc9b24418bc",
+      "actual": ""
+    },
+    {
+      "case": 7,
+      "length": 3,
+      "rc": 2,
+      "expected": "0c3a4d5f227d2ec0813dc904780bb2c863d9f46856802db9a4ebbce54975b66b",
+      "actual": ""
+    },
+    {
+      "case": 8,
+      "length": 4,
+      "rc": 2,
+      "expected": "25585429879c65454523fbd973f0c1e800a22481b0b89a4928b6933313680c1a",
+      "actual": ""
+    },
+    {
+      "case": 9,
+      "length": 5,
+      "rc": 2,
+      "expected": "3d1fd1af529d5a4772da1c84a01898361141a1326d3e41d0f98463fb58c09af0",
+      "actual": ""
+    },
+    {
+      "case": 10,
+      "length": 6,
+      "rc": 2,
+      "expected": "790242f2914db5092f7d5a9ee5ecee8ee8315fd176f662e9c3f753058a000886",
+      "actual": ""
+    },
+    {
+      "case": 11,
+      "length": 7,
+      "rc": 2,
+      "expected": "c0bf9b466006aedd6ba8cd6db266804211ea2883183a6ece85cfec9fbfe707d0",
+      "actual": ""
+    },
+    {
+      "case": 12,
+      "length": 8,
+      "rc": 2,
+      "expected": "4d97a656da5d1e6a5c654d7b5c717e36f61db9ec1e25e13994530860a329ef48",
+      "actual": ""
+    },
+    {
+      "case": 13,
+      "length": 9,
+      "rc": 2,
+      "expected": "28b5c0c2e04069c904c1aa0a75c0cf118a70312f1dfcd5196c7988dbd0bc19cf",
+      "actual": ""
+    },
+    {
+      "case": 14,
+      "length": 10,
+      "rc": 2,
+      "expected": "11fa9d5e668eab253972469dace018558d9e6f88dcdbb1d0864e8c3f65bb1757",
+      "actual": ""
+    }
+  ],
+  "source_sha256": "8340f34692931fc1059a4cc46ce4e2291e81cda368f9d36c18676c36de1e062a",
+  "binary_sha256": "1c7ed51fd000d274d1a1d3b4ef4b7dc3e58b54f2f4b6bc042da451a4e3232013"
+}
