@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
 #include <unistd.h>
 
 #include "osh_layout.h"
@@ -110,7 +111,7 @@ static int append(OshShell *sh, const uint8_t *p, size_t n)
 
 /* Interactive only: ^C at the prompt abandons the line being typed (bash prints a new prompt, $? = 130); the shell
  * itself ignores ^\ ^Z and background tty signals. osh_exec installs its own handling around each pipeline and puts
- * these back afterwards. The SIGINT handler has no SA_RESTART, so the blocked read() returns EINTR. */
+ * these back afterwards. Input waits use a masked flag check and pselect, so a signal handled before the wait is not lost. */
 static volatile sig_atomic_t g_prompt_int;
 
 static void on_prompt_int(int sig)
@@ -145,6 +146,44 @@ static int prompt_signals(struct sigaction old[5])
     return 0;
 }
 
+/* SIGINT is blocked across the flag check and byte read. pselect atomically
+ * restores the caller mask while waiting; even an already-handled interrupt
+ * must abandon the line without needing a second signal. Never unblock a
+ * signal the embedder deliberately blocked. Process-wide input is serialized
+ * by the same caller contract as the prompt signal actions. */
+static int prompt_byte(int fd, uint8_t *c)
+{
+    sigset_t block, old;
+    sigemptyset(&block);
+    sigaddset(&block, SIGINT);
+    if (sigprocmask(SIG_BLOCK, &block, &old) != 0) return -1;
+    int result;
+    for (;;) {
+        if (g_prompt_int) { g_prompt_int = 0; result = -2; break; }
+        if (fd < 0 || fd >= FD_SETSIZE) { errno = EINVAL; result = -1; break; }
+        fd_set ready;
+        FD_ZERO(&ready);
+        FD_SET(fd, &ready);
+        int rc = pselect(fd + 1, &ready, NULL, NULL, NULL, &old);
+        if (rc < 0) {
+            if (errno == EINTR) continue;
+            result = -1;
+            break;
+        }
+        if (g_prompt_int) continue;
+        ssize_t n = read(fd, c, 1);
+        if (n < 0 && errno == EINTR) continue;
+        result = n < 0 ? -1 : (int)n;
+        break;
+    }
+    int saved_errno = errno;
+    if (sigprocmask(SIG_SETMASK, &old, NULL) != 0) return -1;
+    errno = saved_errno;
+    /* A signal pending during the read is delivered by mask restoration. */
+    if (g_prompt_int) { g_prompt_int = 0; return -2; }
+    return result;
+}
+
 /* Append one line (with its newline) to the list buffer. A last line with no newline gets one, except
  * from a -c string, where it is appended as is so the core sees the true end of input: bash -c 'echo a\'
  * prints a\, but the same text as a script or on stdin prints a.
@@ -167,12 +206,13 @@ static int read_line(OshShell *sh, LineSrc *src)
     }
     for (;;) {
         uint8_t c;
-        ssize_t r = read(src->fd, &c, 1);
+        ssize_t r = sh->interactive ? prompt_byte(src->fd, &c) : read(src->fd, &c, 1);
+        if (r == -2) return -2;
         if (r < 0 && errno == EINTR) {
-            if (g_prompt_int) return -2;
             continue;
         }
-        if (r <= 0) {
+        if (r < 0) return -1;
+        if (r == 0) {
             if (got == 0) return 0;
             c = '\n';
             return append(sh, &c, 1) == 0 ? 1 : -1;
@@ -280,7 +320,6 @@ static int run_src_loop(OshShell *sh, LineSrc *src)
 {
     for (;;) {
         reset_list(sh);
-        g_prompt_int = 0;
         if (sh->interactive) { fputs("osh$ ", stderr); fflush(stderr); }
         uint64_t st = 0;
         int eof = 0, intr = 0;
@@ -325,6 +364,7 @@ static int run_src_loop(OshShell *sh, LineSrc *src)
 static int run_src(OshShell *sh, LineSrc *src)
 {
     struct sigaction old[5];
+    if (sh->interactive) g_prompt_int = 0;
     if (sh->interactive && prompt_signals(old) != 0) {
         perror("osh: prompt signal setup");
         sh->s.last_status = 70;

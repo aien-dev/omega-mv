@@ -47,7 +47,9 @@ void osh_shell_free(OshShell *sh);
  * actions and restore the caller's actions on return, including error returns.
  * Setup/restore failure returns 70. The embedder must serialize process-wide
  * signal-action changes; these entry points do not provide thread isolation.
- * The separate prompt-read interrupt race is not resolved by restoration.
+ * Interactive fd input atomically waits with the caller signal mask and
+ * discards the current list on SIGINT. SIGINT blocked by the caller remains
+ * blocked. Interactive fds must be below FD_SETSIZE; larger fds refuse with2.
  *
  * Run a -c string from memory: a last line with no newline is ended by end of input itself (bash -c
  * 'echo a\' prints a\). Returns the shell's exit status. */
