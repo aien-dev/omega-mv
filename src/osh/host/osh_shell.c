@@ -228,7 +228,8 @@ static void refusal(OshShell *sh, uint64_t code, int syntax)
 #endif
 }
 
-/* expand and run the parsed list. Returns 1 when the shell must stop (exit builtin, interrupted, fault). */
+/* Expand and run the parsed list. 1 stops the shell; 2 aborts this list
+ * (exit with too many arguments), which also stops a -c string. */
 static int run_list(OshShell *sh)
 {
     uint64_t *w = sh->w;
@@ -249,7 +250,7 @@ static int run_list(OshShell *sh)
             w[OSH_S_LAST_STATUS] = (uint64_t)(unsigned)sh->s.last_status;
             if (sh->s.exit_requested) return 1;
             if (res.killed_by_int) return 0;
-            if (sh->s.abort_list) { sh->s.abort_list = 0; return 0; }
+            if (sh->s.abort_list) { sh->s.abort_list = 0; return 2; }
             continue;
         }
         case ST_COMPLETE: return 0;
@@ -298,7 +299,9 @@ static int run_src(OshShell *sh, LineSrc *src)
             /* an empty list at end of input: nothing to run */
         } else if (st == 0) {
             sh->lists++;
-            if (run_list(sh)) return sh->s.exit_requested ? sh->s.exit_status : sh->s.last_status;
+            int stop = run_list(sh);
+            if (stop == 1 || (stop == 2 && src->exact_end))
+                return sh->s.exit_requested ? sh->s.exit_status : sh->s.last_status;
         } else {
             if (st >= 200 && st != OSH_CORE_FAULT) refusal(sh, st, 1);
             else { fprintf(stderr, "osh: syntax error: unexpected end of input\n"); sh->s.last_status = 2; }
