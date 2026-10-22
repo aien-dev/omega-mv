@@ -43,7 +43,13 @@ typedef struct {
 int osh_shell_init(OshShell *sh, char *const *envp, int native, int interactive, const char *arg0, char **pos, int npos);
 void osh_shell_free(OshShell *sh);
 
-/* Run a -c string from memory: a last line with no newline is ended by end of input itself (bash -c
+/* Interactive run entry points temporarily own SIGINT/QUIT/TSTP/TTIN/TTOU
+ * actions and restore the caller's actions on return, including error returns.
+ * Setup/restore failure returns 70. The embedder must serialize process-wide
+ * signal-action changes; these entry points do not provide thread isolation.
+ * The separate prompt-read interrupt race is not resolved by restoration.
+ *
+ * Run a -c string from memory: a last line with no newline is ended by end of input itself (bash -c
  * 'echo a\' prints a\). Returns the shell's exit status. */
 int osh_shell_run_string(OshShell *sh, const char *text, size_t len);
 /* Run a script file's text from memory: a last line with no newline gets one, as from a file or pipe. */

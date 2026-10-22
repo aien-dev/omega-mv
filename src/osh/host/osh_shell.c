@@ -119,18 +119,30 @@ static void on_prompt_int(int sig)
     g_prompt_int = 1;
 }
 
-static void prompt_signals(void)
+static const int prompt_sigs[] = {SIGINT, SIGQUIT, SIGTSTP, SIGTTIN, SIGTTOU};
+
+static int restore_prompt_signals(const struct sigaction old[5], int count)
+{
+    int failed = 0;
+    while (count-- > 0) if (sigaction(prompt_sigs[count], &old[count], NULL) != 0) failed = 1;
+    return failed ? -1 : 0;
+}
+
+static int prompt_signals(struct sigaction old[5])
 {
     struct sigaction sa;
     memset(&sa, 0, sizeof sa);
     sigemptyset(&sa.sa_mask);
-    sa.sa_handler = on_prompt_int;
-    sigaction(SIGINT, &sa, NULL);
-    sa.sa_handler = SIG_IGN;
-    sigaction(SIGQUIT, &sa, NULL);
-    sigaction(SIGTSTP, &sa, NULL);
-    sigaction(SIGTTIN, &sa, NULL);
-    sigaction(SIGTTOU, &sa, NULL);
+    for (int i = 0; i < 5; i++) {
+        sa.sa_handler = i == 0 ? on_prompt_int : SIG_IGN;
+        if (sigaction(prompt_sigs[i], &sa, &old[i]) != 0) {
+            int saved_errno = errno;
+            (void)restore_prompt_signals(old, i);
+            errno = saved_errno;
+            return -1;
+        }
+    }
+    return 0;
 }
 
 /* Append one line (with its newline) to the list buffer. A last line with no newline gets one, except
@@ -264,9 +276,8 @@ static int run_list(OshShell *sh)
     return 1;
 }
 
-static int run_src(OshShell *sh, LineSrc *src)
+static int run_src_loop(OshShell *sh, LineSrc *src)
 {
-    if (sh->interactive) prompt_signals();
     for (;;) {
         reset_list(sh);
         g_prompt_int = 0;
@@ -309,6 +320,23 @@ static int run_src(OshShell *sh, LineSrc *src)
         }
         if (eof) return sh->s.last_status;
     }
+}
+
+static int run_src(OshShell *sh, LineSrc *src)
+{
+    struct sigaction old[5];
+    if (sh->interactive && prompt_signals(old) != 0) {
+        perror("osh: prompt signal setup");
+        sh->s.last_status = 70;
+        return 70;
+    }
+    int rc = run_src_loop(sh, src);
+    if (sh->interactive && restore_prompt_signals(old, 5) != 0) {
+        perror("osh: prompt signal restore");
+        sh->s.last_status = 70;
+        return 70;
+    }
+    return rc;
 }
 
 int osh_shell_run_string(OshShell *sh, const char *text, size_t len)

@@ -191,4 +191,20 @@ test-osh-diff: osh-gen-check $(OSH_DIR)/osh $(OSH_DIR)/osh_diff $(OSH_DIR)/osh_d
 	$(abspath $(OSH_DIR)/osh_diff_asan) $(OSH_DIFF_PINS) $(OSH_DIFF_NATIVE_ARG) $(abspath $(OSH_DIR)/osh_toy) tests/osh/diff/fixtures.txt > $(OSH_DIR)/diff_asan.out; rc=$$?; tail -3 $(OSH_DIR)/diff_asan.out; test $$rc -eq 0 && tail -1 $(OSH_DIR)/diff_asan.out | grep -q '^OSH_DIFF_PASS$$' && grep -q '^summary: host PASS [0-9]* FAIL 0 NOT_RUN 2 ' $(OSH_DIR)/diff_asan.out && grep -q '^f33_bounded_memory .* NOT_RUN .*RLIMIT_AS cannot apply under ASan' $(OSH_DIR)/diff_asan.out
 	sh tests/osh/diff/mutants.sh $(abspath $(OSH_DIR)/osh_diff) $(abspath $(OSH_DIR)/osh_toy) tests/osh/diff/fixtures.txt $(abspath $(OSH_DIR))/diff-host.result $(abspath $(OSH_DIR))/diff-mutants
 	@echo "test-osh-diff: PASS (host adapter: native + interpreter units, plain and ASan/UBSan, faults and limits, comparator mutants; aienos column $(if $(OSH_DIFF_NATIVE),compared against $(OSH_DIFF_NATIVE),NOT_RUN: no native result supplied))"
+# Caller signal-action ownership when the interactive driver is embedded (#344).
+# Fault injection wraps sigaction only in this test executable.
+.PHONY: test-osh-prompt-signals
+OSH_PROMPT_SRCS = $(filter-out src/osh/host/osh_main.c,$(OSH_BIN_SRCS)) tests/osh/host/test_prompt_signal_restore.c
+OSH_PROMPT_FLAGS = $(OSH_XFLAGS) -DPROMPT_SIGNAL_TEST_FAULTS -Wl,--wrap=sigaction
+
+$(OSH_DIR)/test_prompt_signal_restore: $(OSH_PROMPT_SRCS) $(OSH_XHDRS) src/osh/host/osh_shell.h
+	$(CC) $(OSH_PROMPT_FLAGS) -O2 -o $@ $(OSH_PROMPT_SRCS)
+
+$(OSH_DIR)/test_prompt_signal_restore_asan: $(OSH_PROMPT_SRCS) $(OSH_XHDRS) src/osh/host/osh_shell.h
+	$(CC) $(OSH_PROMPT_FLAGS) $(OSC_ASAN) -o $@ $(OSH_PROMPT_SRCS)
+
+test-osh-prompt-signals: osh-gen-check $(OSH_DIR)/osh $(OSH_DIR)/test_prompt_signal_restore $(OSH_DIR)/test_prompt_signal_restore_asan
+	@if nm $(OSH_DIR)/osh | grep -q __wrap_sigaction; then echo "FAIL: shipped osh contains the signal fault wrapper"; exit 1; fi
+	$(abspath $(OSH_DIR)/test_prompt_signal_restore) > $(OSH_DIR)/prompt-signals.out; rc=$$?; tail -1 $(OSH_DIR)/prompt-signals.out; test $$rc -eq 0
+	$(abspath $(OSH_DIR)/test_prompt_signal_restore_asan) > $(OSH_DIR)/prompt-signals-asan.out; rc=$$?; tail -1 $(OSH_DIR)/prompt-signals-asan.out; test $$rc -eq 0
 endif
