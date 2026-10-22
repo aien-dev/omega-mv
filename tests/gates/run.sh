@@ -109,7 +109,6 @@ case "$step" in
   estimation)         for t in test-estimation test-est-tools test-estimation-v3 test-est3c-tools; do make $NOPHYS $t; done ;;
   ans)                make $NOPHYS test-inertial-alignment ;;
   numeric-cpu)        for t in test-numeric-cpu test-numeric-qualify test-e1-combine test-chipwait-campaign test-gpu-wait test-gpu-wait-mutants test-gpu-code-alloc; do make $NOPHYS $t; done ;;
-  train)              make $NOPHYS test-train ;;
   compiler)           make $NOPHYS test-compiler-quick; make $NOPHYS test-compiler-full ;;
   one-layer-acceptance) make $NOPHYS test-one-layer-acceptance ;;
   physics0)           make $NOPHYS physics0-test ;;
@@ -145,7 +144,6 @@ case "$step" in
     make test-argus-runtime test-machine-identity-argus
     ;;
   numeric2)           make $NOPHYS test-numeric-reduce-cpu test-divsqrt-host ;;
-  tensor)             make $NOPHYS test-tensor; make $NOPHYS test-tensor-store; make $NOPHYS test-m20-receipt; make $NOPHYS test-tensor-mutations ;;
   # host-suites-3.yml
   numeric-lifecycle)  make $NOPHYS test-numeric-lifecycle ;;
   numeric-transc-digest)
