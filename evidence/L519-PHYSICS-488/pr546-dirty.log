@@ -1,0 +1,8 @@
+FIXTURE_ROOT=/home/drakestapleton/workspace/omega-queue-next-522-20261022/build/L519/physics-488/pr546-dirty/run.rMQ0ti
+MAKEFILE_SHA256=85f154610350ed3cf24f1705a08da774985d89dd5c8d43a5bf3b61b8f29b1066
+PASS initial_build: compile_recipes=2
+PASS unchanged_no_rebuild: compile_recipes=2
+PASS changed_directory_older_sources: compile_recipes=4
+PASS changed_revision_older_sources: compile_recipes=6
+PASS same_resolved_directory_no_rebuild: compile_recipes=6
+FAIL dirty_content_older_timestamp: expected=8 actual=6

@@ -1,0 +1,10 @@
+FIXTURE_ROOT=/home/drakestapleton/workspace/omega-queue-next-522-20261022/build/L519/physics-488/green/run.7HBXph
+MAKEFILE_SHA256=85f154610350ed3cf24f1705a08da774985d89dd5c8d43a5bf3b61b8f29b1066
+PASS initial_build: compile_recipes=2
+PASS unchanged_no_rebuild: compile_recipes=2
+PASS changed_directory_older_sources: compile_recipes=4
+PASS changed_revision_older_sources: compile_recipes=6
+PASS same_resolved_directory_no_rebuild: compile_recipes=6
+PASS switch_back_rebuilds: compile_recipes=8
+PASS missing_path_no_compilation: compile_recipes=8
+PHYSICS_BUILD_IDENTITY_PASS (recipe invalidation only; driver/chip NOT_RUN)
