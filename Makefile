@@ -38,6 +38,8 @@ SRCS += src/omega_gpu_hostmath.c
 SRCS += src/omega_blackwell_codegen_router.c src/omega_gpu_router_api.c
 # OWN-30B W-L2 (2026-10-13): decode launch collapse, new files only: command list (N launches, one submit) + glue kernels
 SRCS += src/omega_gpu_cmdlist.c src/omega_blackwell_codegen_dec.c
+# C3 (docs/OMEGA.md): reductions and prefix sums of any length, bit-exact against the frozen-order host reference.
+SRCS += src/omega_gpu_scan.c src/omega_gpu_scan_ref.c
 SRCS += src/omega_gpu_mem_cached.c
 SRCS += src/omega_gpu_decode_graph.c
 # OWN-30B (2026-10-13): bf16 streaming GEMV for the lm_head (omega_gpu_bf16_gemv_api.h), new files only
@@ -2604,3 +2606,13 @@ $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h sr
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# C3 (docs/OMEGA.md): sum, max, min and prefix sum of any length 1..2^28, bit-exact against the frozen order.
+# test-gpu-scan: host refusals, codegen, references vs exact sums and vs the E1 reference, then the warp simulator
+# (both orders, mutants caught). The chip tier is "$(GPU_SCAN_TEST)" with no flag, under the GB10 lock.
+GPU_SCAN_TEST = $(OUT_DIR)/gpu_scan_test
+$(GPU_SCAN_TEST): tests/gpu_scan_test.c tests/bw_warp_sim.h src/omega_gpu_scan.h src/omega_numeric_reduce.c src/omega_numeric.c $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_scan_test.c src/omega_numeric_reduce.c src/omega_numeric.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+.PHONY: test-gpu-scan
+test-gpu-scan: $(GPU_SCAN_TEST)
+	./$(GPU_SCAN_TEST) --sim
