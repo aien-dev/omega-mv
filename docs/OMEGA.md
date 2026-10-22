@@ -26,12 +26,12 @@ On the GPU, that makes Omega the replacement for CUDA. We call Omega's GPU stack
 | CUDA C++ language | How you write a kernel | **The kernel builder (C calls).** Omegese and OSC do not compile to the GPU yet. | **MISSING** (bar C1) |
 | nvcc, NVVM, PTX, ptxas | Compile the kernel to machine code | Omega's own sm_121 encoder and register allocator | PASS: every kernel Omega runs is encoded by it |
 | libcuda (driver API) | Talk to the kernel driver | physics `nvrm` client, ioctls straight to the open kernel module | PASS (`evidence/m16-blackwell-native-path-requalification-receipt.json` in physics) |
-| libcudart (runtime API) | Device, memory, launch, streams | Omega GPU session, command lists, job engine | PARTIAL: one device, one process; no streams or events; a timeout ends GPU use for the process |
-| cuBLAS | Matrix multiply | Omega matmul, tensor-core GEMM, FP8 and BF16 APIs | PARTIAL: shaped for the models we run; no any-shape GEMM |
+| libcudart (runtime API) | Device, memory, launch, streams | Omega GPU session, command lists, job engine | PARTIAL: second queue, events and recovery after a timeout are built (bars C4, C5, branches); chip runs pending |
+| cuBLAS | Matrix multiply | Omega matmul, tensor-core GEMM, FP8 and BF16 APIs, any-shape GEMM (bar C3, branch) | PARTIAL: any-shape GEMM built, chip run pending |
 | cuDNN, FlashAttention | Attention and network layers | Omega decode and prefill attention | PARTIAL: model-shaped |
-| CUB, Thrust | Reductions, scans, sorts | Omega frozen-order reductions (`evidence/E1-CLOSURE/`) | PARTIAL: no general scan or sort |
+| CUB, Thrust | Reductions, scans, sorts | Omega frozen-order reductions (`evidence/E1-CLOSURE/`), general reductions and prefix sums up to 2^28 (bar C3, branch) | PARTIAL: scan built, chip run pending; no sort |
 | cuFFT, cuRAND | FFT, random numbers | none | MISSING |
-| cuobjdump, nvdisasm | Read machine code back | none: the tests still call NVIDIA's `nvdisasm` when it is installed | MISSING |
+| cuobjdump, nvdisasm | Read machine code back | Omega's own sm_121 disassembler (`build/sm121dis`); `nvdisasm` stays only as the reference it is checked against | PASS on a branch (bar C6) |
 | Nsight | Measure | Omega's own ceiling probes (115.14 TFLOPS tensor-core peak, 195.1 GB/s reads; `evidence/OWN30B-T3-TC-PEAK-BW-5faa0f70-20261013T2236Z/`) | PARTIAL: probes exist, no single tool |
 | CUDA samples, docs | Your first kernel | none yet (`runtime/r2-hello`, `runtime/r1-api` are unmerged branches) | MISSING |
 | `nvidia.ko`, `nvidia-uvm.ko` | Kernel driver | not Omega: AIEN's own GB10 driver, L332 | MISSING |
@@ -49,14 +49,14 @@ This one is not true yet: **"Omega replaces CUDA."** The language does not reach
 
 We say it when every row is PASS, each with a receipt pushed on the exact commit. No row is waived.
 
-| Bar | Done when |
-| --- | --- |
-| **C1. The language reaches the GPU.** | Kernels written in Omegese compile through the IR and checker2 to sm_121 machine code and run on the GB10: vector add, a tiled GEMM and one decode-attention kernel. Their output matches a host reference bit for bit (or within a tolerance stated before the run), checker2 accepts every one, and a deliberately broken kernel is refused. At least one kernel of the live 35B decode path is then replaced by its Omegese version with identical golden tokens. |
-| **C2. A stranger can run a kernel.** | From an empty folder, only the README commands build and run hello-GPU on the GB10, and the zero-CUDA gate (`aien-sovereign-core scripts/zero-cuda-gate.sh`) passes on the binary. The runtime API is written down and versioned (`docs/runtime/API.md`, manifest check with negative controls). |
-| **C3. General libraries.** | Any-shape GEMM in BF16 and FP8, both layouts, at least 200 shapes from 1 to 8192, every shape correct against a host reference, speed given as a fraction of the measured tensor-core ceiling. Reductions and prefix sums over lengths 1 to 2^28, bit-exact against the frozen-order host reference. |
-| **C4. Streams and events.** | Two independent queues of the same work finish in under 0.75 of the sum of their solo times; an event wait orders two dependent jobs, checked by data, on the chip. |
-| **C5. Sharing and recovery.** | Two processes on one GPU both get correct results, or the second gets a named refusal and the first is unharmed. A kernel that never ends is timed out and a correct launch then succeeds in the same process. |
-| **C6. No NVIDIA tool in the loop.** | Omega's own sm_121 disassembler agrees with `nvdisasm` on every library kernel in `src/`, and every check that called `nvdisasm` calls ours. |
+| Bar | Done when | Status (2026-10-22) |
+| --- | --- | --- |
+| **C1. The language reaches the GPU.** | Kernels written in Omegese compile through the IR and checker2 to sm_121 machine code and run on the GB10: vector add, a tiled GEMM and one decode-attention kernel. Their output matches a host reference bit for bit (or within a tolerance stated before the run), checker2 accepts every one, and a deliberately broken kernel is refused. At least one kernel of the live 35B decode path is then replaced by its Omegese version with identical golden tokens. | PARTIAL: the compile path is built and checked off the chip (omega `omegese/gpu`); the chip runs and the 35B swap on the merge train are waiting for chip time. |
+| **C2. A stranger can run a kernel.** | From an empty folder, only the README commands build and run hello-GPU on the GB10, and the zero-CUDA gate (`aien-sovereign-core scripts/zero-cuda-gate.sh`) passes on the binary. The runtime API is written down and versioned (`docs/runtime/API.md`, manifest check with negative controls). | PARTIAL: zero-CUDA gate and its self-test PASS (omega `runtime/r2-hello` 0f44b52b); the empty-folder run on the chip is waiting for chip time. |
+| **C3. General libraries.** | Any-shape GEMM in BF16 and FP8, both layouts, at least 200 shapes from 1 to 8192, every shape correct against a host reference, speed given as a fraction of the measured tensor-core ceiling. Reductions and prefix sums over lengths 1 to 2^28, bit-exact against the frozen-order host reference. | PARTIAL: any-shape GEMM (omega `c3/gemm` 73e5e33f) and reductions and prefix sums (omega `c3/reduce-scan` a42ea928) are bit-exact in the simulator against the chip's own arithmetic model; the 208-shape chip run and the 1 to 2^28 chip run are waiting for chip time. |
+| **C4. Streams and events.** | Two independent queues of the same work finish in under 0.75 of the sum of their solo times; an event wait orders two dependent jobs, checked by data, on the chip. | PARTIAL: second queue (from L136) and the event wait (omega `c4/streams` 54c12286), checked off the chip; the timing and the event on the chip are waiting for chip time. |
+| **C5. Sharing and recovery.** | Two processes on one GPU both get correct results, or the second gets a named refusal and the first is unharmed. A kernel that never ends is timed out and a correct launch then succeeds in the same process. | PARTIAL: recovery after a timeout without restarting the process (omega `c5/isolation` 560324e2), checked on a stand-in device with 9 of 9 planted faults caught; the chip run is waiting for chip time. |
+| **C6. No NVIDIA tool in the loop.** | Omega's own sm_121 disassembler agrees with `nvdisasm` on every library kernel in `src/`, and every check that called `nvdisasm` calls ours. | PASS on omega `c6/disasm` 19eebe0e (`evidence/C6-DISASM/`): all 331 library kernels agree word for word, the planted-fault checks fail as they must, every listing check now uses ours. Waiting to merge. |
 
 ## 4. The rest of "Omega replaces everything"
 
