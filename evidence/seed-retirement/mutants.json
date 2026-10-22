@@ -1,0 +1,30 @@
+[
+  {
+    "mutant": "sha-word",
+    "compile_rc": 0,
+    "comparison_rc": 1,
+    "executable_sha256": "c41165997ba40c10bf1a68dddf52b9752552b14d3cc20d941e234b4fe8fb132a",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "accept-count",
+    "compile_rc": 0,
+    "comparison_rc": 1,
+    "executable_sha256": "e5bbcd6b41c39387d287cefabc8ed2f7d3f166eda867ce640a09555417009639",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "version",
+    "compile_rc": 0,
+    "comparison_rc": 1,
+    "executable_sha256": "afd24e8bc38a65414ec9f295c60625254a22761e3d8683115b84a21aa29920fd",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "argus-continuity",
+    "compile_rc": 0,
+    "comparison_rc": 1,
+    "executable_sha256": "846e958208fb4c86ef9ad56519d0c835b7c64082872c3b2a7eec9055e3adc3a9",
+    "result": "KILLED"
+  }
+]

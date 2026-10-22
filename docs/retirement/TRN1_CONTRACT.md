@@ -33,7 +33,9 @@ processes. Sequence of framed requests, reusable in one process:
 - byte C, length+expected transcript, length+actual transcript: print compare_line + LF.
 - byte S, little-endian u16: print registry name or `unknown`, then LF.
 
-EOF at a request boundary exits 0. Unknown opcode, truncated framing or failed
+Transport capacity: at most 1,000,000 requests per process (seed loop bound);
+an additional request is a transport error. This is a limit of the new framed
+transport, not a restriction on the original verifier function. EOF at a request boundary exits 0. Unknown opcode, truncated framing or failed
 I/O prints `TRN1 transport error` on stderr and exits 2. Semantic refusals are
 results, so they do not end the stream. Bytes after END belong to the framed
 transcript and receive the original LENGTH refusal, never a new request.

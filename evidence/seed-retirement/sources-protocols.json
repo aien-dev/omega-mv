@@ -1,0 +1,257 @@
+{
+  "commit": "4529f393546c87d5ae673e5d66d700c8e8c5db03",
+  "ref": "origin/main",
+  "counts": {
+    "first_party_source/Rust": {
+      "files": 14,
+      "lines": 3646,
+      "bytes": 118807
+    },
+    "first_party_test/Rust": {
+      "files": 7,
+      "lines": 1573,
+      "bytes": 53033
+    },
+    "first_party_source/C": {
+      "files": 5,
+      "lines": 3010,
+      "bytes": 120569
+    }
+  },
+  "files": [
+    {
+      "path": "crates/aien-action-protocol/src/lib.rs",
+      "git_blob": "538edd4baed9724673019c790c88027068995df3",
+      "sha256": "158e39cf11b9c5d52d48fe9e456c78b8b463540f2f31ca96ae7cf1243a4faf9e",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 59,
+      "bytes": 1679
+    },
+    {
+      "path": "crates/aien-agent-state-abi/src/lib.rs",
+      "git_blob": "f22e446d7a5934b282b864e0925878c48eb66e23",
+      "sha256": "afcfc4b65d0e8c9ccefd7574ef63cbfedcfe515df7086e22d3586df5ae97c55f",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 212,
+      "bytes": 6417
+    },
+    {
+      "path": "crates/aien-agent-state-abi/tests/integration_tests.rs",
+      "git_blob": "ed1b418901f5c53956794aa589cb5f4045fa6da4",
+      "sha256": "d5f11122285f799da95bd17fce905eea60237bb2fa9820fbfeabdf4f398d0a09",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 169,
+      "bytes": 6112
+    },
+    {
+      "path": "crates/aien-evaluation-protocol/src/adaptive.rs",
+      "git_blob": "ff62d58a5f37a129b391d781eff20430a35ae362",
+      "sha256": "4251169724e4406f8252b0e1cea0a5f6d5271cc6610252417b3ebd4df43e606f",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 214,
+      "bytes": 7959
+    },
+    {
+      "path": "crates/aien-evaluation-protocol/src/lib.rs",
+      "git_blob": "516f3ef8eeb1c7871f2d79edd39f4ab8f05d5fd5",
+      "sha256": "cb04077010f7d26ff44efbff1e6e94e801eb4ba3c943a2afdb87e9c202a4d9d9",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 853,
+      "bytes": 29917
+    },
+    {
+      "path": "crates/aien-evaluation-protocol/tests/aei1_negative_matrix_tests.rs",
+      "git_blob": "fc9532c4058be641760eea62aae8e42b8dc9fd7e",
+      "sha256": "817277c088a1ada6403467c828d133f3d2a353a426bf166324495dff69efe72e",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 366,
+      "bytes": 11574
+    },
+    {
+      "path": "crates/aien-evaluation-protocol/tests/evaluator_protocol_tests.rs",
+      "git_blob": "0e3f5fc972a39a304a5df20715c1d3f6c026487c",
+      "sha256": "8d4ae1f181051e3f7fb818848469805a04dc7214596f9738416bf7aa937b8744",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 388,
+      "bytes": 13400
+    },
+    {
+      "path": "crates/aien-evaluation-protocol/tests/verify_binding_tests.rs",
+      "git_blob": "3143e47e194f68495c14ec422ff1e850152743e0",
+      "sha256": "04a4cabf64c7354c8af79b08d8430d8dd4807532fe4145b8fb5e904ad3a8801e",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 92,
+      "bytes": 3255
+    },
+    {
+      "path": "crates/aien-event-protocol/src/lib.rs",
+      "git_blob": "37c3281bf13c3342b72696ad4741efecef645f41",
+      "sha256": "43d4356e8bdd3cadafe8253e9db36216d4594a9ad844fe304f9a9be4d6dc4e4e",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 13,
+      "bytes": 413
+    },
+    {
+      "path": "crates/aien-inference-client/src/lib.rs",
+      "git_blob": "7297608f87ec555d37dd261f72b353726b7c7509",
+      "sha256": "53d0c53c4afed225797abe6ea7a91778430ea5b349ebfc9467b062be71f4463f",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 241,
+      "bytes": 7677
+    },
+    {
+      "path": "crates/aien-inference-client/tests/http_client_tests.rs",
+      "git_blob": "644ec3360ceace1b812bbdd4028f60374082b97c",
+      "sha256": "aab602ef42e95a74e6b5aef677ba7fbb9045a4ee2b65784693d47dd8c4ce500b",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 145,
+      "bytes": 4482
+    },
+    {
+      "path": "crates/aien-inference-protocol/src/lib.rs",
+      "git_blob": "ae0eff42a562c493a8187409d3dbbecde01cfece",
+      "sha256": "bb016bf80b163a73ef199573762c0b6f8be7406c75eeedd0c97738122b2a9841",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 183,
+      "bytes": 5485
+    },
+    {
+      "path": "crates/aien-pi-spark-task/src/lib.rs",
+      "git_blob": "e07e8610ac8db3dfe21a53d6b6404f50855cf29d",
+      "sha256": "b6c37d498be513150f36e8b9eac5d37f6ace8491a5970cfb609b2b0d32b22eb3",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 338,
+      "bytes": 11053
+    },
+    {
+      "path": "crates/aien-pi-spark-task/tests/vectors.rs",
+      "git_blob": "e134c6cfe7f7c111877da9a4a93fc0a50cb515b5",
+      "sha256": "b0deff325e633b547c0ab85880227261bfd35a435666e643f406231ebf636481",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 58,
+      "bytes": 2001
+    },
+    {
+      "path": "crates/aien-probe/src/backend.rs",
+      "git_blob": "f848905050e723bb8c9e9f273e126e5adf3b1f8f",
+      "sha256": "da0983557d856498d1a9bed4f53c1536496c2b8dfe6a285cbc66103e7b892653",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 304,
+      "bytes": 9971
+    },
+    {
+      "path": "crates/aien-probe/src/evaluator.rs",
+      "git_blob": "059a1ed31f72b8f715a886a52f6616b424b9632b",
+      "sha256": "f2890df071436cda3c2dff5694daff5149e1574e20224ffb1b40b4bdf0d9b05d",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 231,
+      "bytes": 8169
+    },
+    {
+      "path": "crates/aien-probe/src/lib.rs",
+      "git_blob": "7324bd3873e8e5df9e16e509b0b7e6f73a4edbdc",
+      "sha256": "a56f127772b2804b86380f3ea17f4c34feec014316e04d12311a7c88c33b7cc7",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 385,
+      "bytes": 11991
+    },
+    {
+      "path": "crates/aien-probe/src/math.rs",
+      "git_blob": "e09f7f04b3fb1ab64c7112032717ea6f16dcd9d8",
+      "sha256": "e7b7dc7ba0e7b3a6d7b26f38e428a40907fdfebf03a3d7d1b321bf2b6f1bfabe",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 127,
+      "bytes": 3751
+    },
+    {
+      "path": "crates/aien-probe/tests/probe_engine_tests.rs",
+      "git_blob": "4d83dcb2b00945c7efa053ac99d0338400aba170",
+      "sha256": "6dae05df05c30ba26c31881b94636dfe850d831b725b54fbbfa612f143aedb74",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 355,
+      "bytes": 12209
+    },
+    {
+      "path": "crates/aien-protocol-types/src/lib.rs",
+      "git_blob": "c6b9f896f0a03f83c4180f9105de7d0b55307c64",
+      "sha256": "6da2a49753c24cab36b4cc5c68f91be259e2608559ad4b54297537ff4a260a1a",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 220,
+      "bytes": 5366
+    },
+    {
+      "path": "crates/aien-provenance/src/lib.rs",
+      "git_blob": "9624906df5230ce5ee585682c214e4bdeeab7b4d",
+      "sha256": "6f0413f5596df639c9b0c90c8d0ab199935ba40ba5098cfcdc4d01db51be0050",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 266,
+      "bytes": 8959
+    },
+    {
+      "path": "specs/execution-transcript/tools/trn1_verify.c",
+      "git_blob": "4ca49ceb53865980608c77de068c2fd431e36904",
+      "sha256": "377398da52fa767c6a1dc35e1472d643b49b74bd07a71a3e5067599101bf6305",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 500,
+      "bytes": 23192
+    },
+    {
+      "path": "specs/osc-unit-artifact/tools/osc-launch-check.c",
+      "git_blob": "6bfeb95ecdad2afc3e06b69c0b9a0ffad7aac587",
+      "sha256": "e3d0d04a32531db61c6877ce5365614e577f2031928a5a2e8e6aaf324a13a4ea",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 56,
+      "bytes": 2265
+    },
+    {
+      "path": "specs/osh-platform/tools/osh_sv_ref.c",
+      "git_blob": "952b097ad1f987bd9669a85037644055c1d77e16",
+      "sha256": "86cb6c46d4f686a56f0d59cb6d4ac09d2e1ee748936643c983c3a76e6fabc2c2",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 1568,
+      "bytes": 56161
+    },
+    {
+      "path": "specs/pi-spark-task/tools/pst_verify.c",
+      "git_blob": "aefcbb33cd7de5381fe30a55be6d95257bf0f00b",
+      "sha256": "5e2475e4ea62ce4c6c35ab0d0d3982f41960843f260bf8f4192ee2646b3d5551",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 471,
+      "bytes": 21349
+    },
+    {
+      "path": "specs/verified-crumb/tools/vc1-check.c",
+      "git_blob": "7868a6400dc835f231f0de01080f29fb8717fec5",
+      "sha256": "be0a6cbe7c356a66930e2d99370de32e954cf05d87cb3b621edb7fd52d0024f1",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 415,
+      "bytes": 17602
+    }
+  ]
+}

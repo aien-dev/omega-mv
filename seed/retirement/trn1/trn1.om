@@ -1,0 +1,1049 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note L496 native port of complete aien-replay schema-1 verifier; provenance in docs/retirement/TRN1_CONTRACT.md.
+note Test-only Rust and C oracles never execute on this program's path.
+global Buf uchar 131128
+global In uchar 8192
+global Io ulong 2
+global Rem ulong 1
+global Out uchar 1024
+global Op ulong 1
+global H uint 8
+global Vv uint 8
+global W uint 64
+global K uint 64
+global Hb uchar 64
+global Hs ulong 2
+global Hash uchar 32
+global Prev uchar 32
+global Arg uchar 32
+global Meta uchar 128
+global Comp uchar 262144
+global Subs ulong 8192
+global Stat long 8
+text Err "TRN1 transport error\n"
+text Hex "0123456789abcdef"
+text Ok "ok records="
+text Run " run="
+text Final " final="
+text Refuse "refuse "
+text Event " event="
+text Expected "expected "
+text Actual "actual "
+text Digest "digest "
+text Sub " subsystem="
+text Match "MATCH through "
+text Diverge "DIVERGENCE event="
+text Exp " expected="
+text Act " actual="
+text S0 "transcript"
+text S1 "omega-world"
+text S2 "omega-cortex"
+text S3 "omega-jspace"
+text S4 "aienos-kernel"
+text S5 "aienos-argus"
+text S6 "aienos-store"
+text S7 "sovcore-runtime"
+text S8 "sovcore-scheduler"
+text S9 "sovcore-kv"
+text S10 "external"
+text Unknown "unknown"
+text CmpTag "AIEN_TRN1_CMP"
+text CrumbTag "AIEN_RX_CAUSAL_V1"
+
+global Rv ulong 8
+fn failio to void
+n = write 2 Err 0 len Err
+exit 2
+end
+
+fn flush to void
+i = ulong 0
+n = get Op 0
+while lt i n
+r = write 1 Out i sub n i
+if le r 0
+failio
+end
+i = add i ulong r
+end
+put Op 0 0
+end
+
+fn emit c uchar to void
+n = get Op 0
+put Out n c
+n = add n 1
+put Op 0 n
+if eq n 1024
+flush
+end
+end
+
+fn number x ulong to void
+if ge x 10
+number div x 10
+end
+emit uchar add rem x 10 48
+end
+
+fn hexbyte c uchar to void
+emit get Hex ulong shr c 4
+emit get Hex ulong and c 15
+end
+
+fn input to long
+p = get Io 0
+n = get Io 1
+if eq p n
+r = read 0 In 0 len In
+if lt r 0
+if eq r -4
+ret input
+end
+failio
+end
+if eq r 0
+ret -1
+end
+put Io 0 0
+put Io 1 ulong r
+p = 0
+end
+c = get In p
+put Io 0 add p 1
+ret long c
+end
+
+fn required to uchar
+c = input
+if lt c 0
+failio
+end
+ret uchar c
+end
+
+fn length to ulong
+x = ulong 0
+for i ulong 8
+c = required
+x = or x shl ulong c mul i 8
+end
+ret x
+end
+
+fn take off ulong count ulong to ulong
+n = get Rem 0
+if gt count n
+count = n
+end
+for i ulong count
+put Buf add off i required
+end
+put Rem 0 sub n count
+ret count
+end
+
+note Three bounded levels cover ceil(U64_MAX / 131128) chunks; no per-byte million-iteration trap.
+fn drain to void
+for outer ulong 1000000
+for middle ulong 1000000
+for inner ulong 1000000
+if eq get Rem 0 0
+ret
+end
+n = take 0 len Buf
+end
+end
+end
+end
+
+fn loadle off ulong count ulong to ulong
+x = ulong 0
+for i ulong count
+x = or x shl ulong get Buf add off i mul i 8
+end
+ret x
+end
+
+fn zero off ulong count ulong to bool
+for i ulong count
+if ne get Buf add off i 0
+ret false
+end
+end
+ret true
+end
+
+fn samehash off ulong to bool
+for i ulong 32
+if ne get Buf add off i get Hash i
+ret false
+end
+end
+ret true
+end
+
+fn rotate x uint n uint to uint
+ret or shr x n shl x sub 32 n
+end
+
+fn round i ulong to void
+e = get Vv 4
+a = get Vv 0
+s = xor xor rotate e 6 rotate e 11 rotate e 25
+c = xor and e get Vv 5 and not e get Vv 6
+t = add add get Vv 7 s add c add get K i get W i
+s = xor xor rotate a 2 rotate a 13 rotate a 22
+c = and a get Vv 1
+c = xor c and a get Vv 2
+c = xor c and get Vv 1 get Vv 2
+u = add s c
+put Vv 7 get Vv 6
+put Vv 6 get Vv 5
+put Vv 5 e
+put Vv 4 add get Vv 3 t
+put Vv 3 get Vv 2
+put Vv 2 get Vv 1
+put Vv 1 a
+put Vv 0 add t u
+end
+
+fn block to void
+for i ulong 16
+x = uint 0
+for j ulong 4
+x = or shl x 8 uint get Hb add mul i 4 j
+end
+put W i x
+end
+for j ulong 48
+i = add j 16
+x = get W sub i 15
+y = get W sub i 2
+s = xor xor rotate x 7 rotate x 18 shr x 3
+t = xor xor rotate y 17 rotate y 19 shr y 10
+put W i add add get W sub i 16 s add get W sub i 7 t
+end
+for i ulong 8
+put Vv i get H i
+end
+for i ulong 64
+round i
+end
+for i ulong 8
+put H i add get H i get Vv i
+end
+end
+
+fn hinit to void
+put H 0 1779033703
+put H 1 3144134277
+put H 2 1013904242
+put H 3 2773480762
+put H 4 1359893119
+put H 5 2600822924
+put H 6 528734635
+put H 7 1541459225
+put Hs 0 0
+put Hs 1 0
+end
+
+fn hbyte c uchar to void
+p = get Hs 0
+put Hb p c
+p = add p 1
+put Hs 1 add get Hs 1 1
+if eq p 64
+block
+p = 0
+end
+put Hs 0 p
+end
+
+fn update off ulong count ulong to void
+for i ulong count
+hbyte get Buf add off i
+end
+end
+
+fn finish to void
+bits = mul get Hs 1 8
+hbyte 128
+while ne get Hs 0 56
+hbyte 0
+end
+for i ulong 8
+hbyte uchar and shr bits mul sub 7 i 8 255
+end
+for i ulong 32
+x = get H div i 4
+put Hash i uchar and shr x uint mul sub 3 rem i 4 8 255
+end
+end
+
+fn hash off ulong count ulong to void
+hinit
+update off count
+finish
+end
+
+
+fn header side ulong to long
+n = take 0 48
+if lt n 4
+ret -3
+end
+if ne loadle 0 4 827216468
+ret -1
+end
+if lt n 6
+ret -3
+end
+if ne loadle 4 2 1
+ret -2
+end
+if lt n 48
+ret -3
+end
+if ne loadle 6 2 0
+ret -4
+end
+p = loadle 40 2
+if or eq p 0 gt p 10
+ret -5
+end
+if not zero 42 6
+ret -4
+end
+for i ulong 32
+put Meta add mul side 64 i get Buf add 8 i
+end
+hash 0 48
+for i ulong 32
+put Prev i get Hash i
+end
+ret 0
+end
+
+fn identlen t ulong to ulong
+if or eq t 1 eq t 7
+ret 32
+end
+if or or eq t 2 eq t 3 eq t 5
+ret 24
+end
+if or eq t 4 eq t 14
+ret 40
+end
+if or or eq t 6 eq t 10 eq t 13
+ret 48
+end
+if or eq t 8 eq t 9
+ret 56
+end
+if or eq t 12 eq t 65535
+ret 16
+end
+if eq t 16
+ret 200
+end
+ret 0
+end
+
+fn crumb ilen ulong to bool
+n = sub ilen 32
+o = ulong 36
+if lt n o
+ret false
+end
+id = loadle 88 8
+for i ulong 3
+if lt sub n o 4
+ret false
+end
+k = loadle add 88 o 4
+o = add o 4
+each = ulong 24
+if eq i 1
+each = 16
+end
+if or gt k 8 lt sub n o mul k each
+ret false
+end
+o = add o mul k each
+end
+if lt sub n o 8
+ret false
+end
+k = loadle add 92 o 4
+o = add o 8
+if gt k 65
+ret false
+end
+for i ulong k
+if lt sub n o 8
+ret false
+end
+p = loadle add 88 o 8
+o = add o 8
+if and ge p 1 lt p id
+if lt sub n o 32
+ret false
+end
+o = add o 32
+end
+end
+ret eq o n
+end
+
+fn shape to long
+t = get Rv 2
+s = get Rv 3
+n = get Rv 4
+a = get Rv 5
+want = identlen t
+if eq t 11
+if or lt n 48 gt n 4144
+ret -6
+end
+else
+if eq t 15
+if lt n 32
+ret -6
+end
+else
+if ne n want
+ret -6
+end
+end
+end
+if ne eq t 65535 eq s 0
+ret -6
+end
+if eq t 7
+op = get Buf 60
+if or lt op 1 gt op 6
+ret -6
+end
+end
+if eq t 13
+if ge loadle 64 8 get Rv 1
+ret -6
+end
+end
+if eq t 15
+if not crumb n
+ret -6
+end
+end
+if eq t 16
+if gt get Buf 184 1
+ret -6
+end
+end
+if and eq t 65535 ne a 0
+ret -6
+end
+ret 0
+end
+
+fn reserved to long
+t = get Rv 2
+o = ulong 0
+n = ulong 4
+if eq t 3
+o = 76
+end
+if or or eq t 6 eq t 11 or eq t 12 eq t 14
+o = 60
+end
+if eq t 7
+o = 61
+n = 3
+end
+if eq t 10
+o = 68
+end
+if eq t 16
+o = 185
+n = 7
+end
+if eq t 65535
+o = 64
+n = 8
+end
+if ne o 0
+if not zero o n
+ret -4
+end
+end
+ret 0
+end
+
+fn embedded to long
+t = get Rv 2
+n = get Rv 4
+if eq t 15
+hinit
+for i ulong len CrumbTag
+hbyte get CrumbTag i
+end
+update 88 sub n 32
+finish
+if not samehash 56
+ret -9
+end
+end
+if and eq t 11 gt n 48
+hash 104 sub n 48
+if not samehash 72
+ret -9
+end
+end
+if eq t 16
+if ne get Rv 7 0
+for i ulong 32
+if ne get Buf add 192 i get Arg i
+ret -9
+end
+end
+end
+if ne get Buf 184 0
+hinit
+update 192 32
+update 56 128
+finish
+else
+for i ulong 32
+put Hash i get Buf add 192 i
+end
+end
+if not samehash 224
+ret -9
+end
+for i ulong 32
+put Arg i get Buf add 224 i
+end
+put Rv 7 1
+end
+ret 0
+end
+
+fn record_digest to void
+hash 0 add 56 add get Rv 4 get Rv 5
+for j ulong 32
+put Prev j get Hash j
+end
+hinit
+for j ulong len CmpTag
+hbyte get CmpTag j
+end
+update 0 4
+update 16 8
+update 4 4
+update 56 get Rv 4
+finish
+o = add mul get Rv 0 4096 sub get Rv 1 1
+put Subs o get Rv 3
+for j ulong 32
+put Comp add mul o 32 j get Hash j
+end
+end
+
+fn record to long
+n = get Rem 0
+k = get Rv 1
+if eq n 0
+ret -10
+end
+if or lt n 56 gt k 4096
+ret -3
+end
+n = take 0 56
+t = loadle 0 2
+s = loadle 2 2
+i = loadle 4 4
+a = loadle 8 4
+put Rv 2 t
+put Rv 3 s
+put Rv 4 i
+put Rv 5 a
+if and ne t 65535 or lt t 1 gt t 16
+ret -5
+end
+if gt s 10
+ret -5
+end
+if ne loadle 12 4 0
+ret -4
+end
+if or gt i 65536 gt a 65536
+ret -3
+end
+if ne loadle 16 8 k
+ret -7
+end
+for j ulong 32
+if ne get Buf add 24 j get Prev j
+ret -8
+end
+end
+body = add i a
+if lt get Rem 0 body
+ret -3
+end
+n = take 56 body
+c = shape
+if ne c 0
+ret c
+end
+c = reserved
+if ne c 0
+ret c
+end
+c = embedded
+if ne c 0
+ret c
+end
+record_digest
+if eq t 65535
+if ne loadle 56 8 k
+ret -7
+end
+if ne get Rem 0 0
+put Rv 1 add k 1
+ret -3
+end
+ret 1
+end
+ret 0
+end
+
+fn verify side ulong to void
+put Rem 0 length
+put Rv 0 side
+put Rv 1 0
+put Rv 7 0
+c = header side
+if eq c 0
+put Rv 1 1
+while eq c 0
+c = record
+if eq c 0
+put Rv 1 add get Rv 1 1
+end
+end
+end
+base = mul side 4
+if eq c 1
+put Stat base 0
+put Stat add base 1 0
+put Stat add base 2 long get Rv 1
+for i ulong 32
+put Meta add add mul side 64 32 i get Prev i
+end
+else
+put Stat base c
+put Stat add base 1 long get Rv 1
+put Stat add base 2 0
+end
+drain
+end
+
+fn constants to void
+put K 0 1116352408
+put K 1 1899447441
+put K 2 3049323471
+put K 3 3921009573
+put K 4 961987163
+put K 5 1508970993
+put K 6 2453635748
+put K 7 2870763221
+put K 8 3624381080
+put K 9 310598401
+put K 10 607225278
+put K 11 1426881987
+put K 12 1925078388
+put K 13 2162078206
+put K 14 2614888103
+put K 15 3248222580
+put K 16 3835390401
+put K 17 4022224774
+put K 18 264347078
+put K 19 604807628
+put K 20 770255983
+put K 21 1249150122
+put K 22 1555081692
+put K 23 1996064986
+put K 24 2554220882
+put K 25 2821834349
+put K 26 2952996808
+put K 27 3210313671
+put K 28 3336571891
+put K 29 3584528711
+put K 30 113926993
+put K 31 338241895
+put K 32 666307205
+put K 33 773529912
+put K 34 1294757372
+put K 35 1396182291
+put K 36 1695183700
+put K 37 1986661051
+put K 38 2177026350
+put K 39 2456956037
+put K 40 2730485921
+put K 41 2820302411
+put K 42 3259730800
+put K 43 3345764771
+put K 44 3516065817
+put K 45 3600352804
+put K 46 4094571909
+put K 47 275423344
+put K 48 430227734
+put K 49 506948616
+put K 50 659060556
+put K 51 883997877
+put K 52 958139571
+put K 53 1322822218
+put K 54 1537002063
+put K 55 1747873779
+put K 56 1955562222
+put K 57 2024104815
+put K 58 2227730452
+put K 59 2361852424
+put K 60 2428436474
+put K 61 2756734187
+put K 62 3204031479
+put K 63 3329325298
+end
+
+fn sayOk to void
+for i ulong len Ok
+emit get Ok i
+end
+end
+
+fn sayRun to void
+for i ulong len Run
+emit get Run i
+end
+end
+
+fn sayFinal to void
+for i ulong len Final
+emit get Final i
+end
+end
+
+fn sayRefuse to void
+for i ulong len Refuse
+emit get Refuse i
+end
+end
+
+fn sayEvent to void
+for i ulong len Event
+emit get Event i
+end
+end
+
+fn sayExpected to void
+for i ulong len Expected
+emit get Expected i
+end
+end
+
+fn sayActual to void
+for i ulong len Actual
+emit get Actual i
+end
+end
+
+fn sayDigest to void
+for i ulong len Digest
+emit get Digest i
+end
+end
+
+fn saySub to void
+for i ulong len Sub
+emit get Sub i
+end
+end
+
+fn sayMatch to void
+for i ulong len Match
+emit get Match i
+end
+end
+
+fn sayDiverge to void
+for i ulong len Diverge
+emit get Diverge i
+end
+end
+
+fn sayExp to void
+for i ulong len Exp
+emit get Exp i
+end
+end
+
+fn sayAct to void
+for i ulong len Act
+emit get Act i
+end
+end
+
+fn sayUnknown to void
+for i ulong len Unknown
+emit get Unknown i
+end
+end
+
+fn sayS0 to void
+for i ulong len S0
+emit get S0 i
+end
+end
+
+fn sayS1 to void
+for i ulong len S1
+emit get S1 i
+end
+end
+
+fn sayS2 to void
+for i ulong len S2
+emit get S2 i
+end
+end
+
+fn sayS3 to void
+for i ulong len S3
+emit get S3 i
+end
+end
+
+fn sayS4 to void
+for i ulong len S4
+emit get S4 i
+end
+end
+
+fn sayS5 to void
+for i ulong len S5
+emit get S5 i
+end
+end
+
+fn sayS6 to void
+for i ulong len S6
+emit get S6 i
+end
+end
+
+fn sayS7 to void
+for i ulong len S7
+emit get S7 i
+end
+end
+
+fn sayS8 to void
+for i ulong len S8
+emit get S8 i
+end
+end
+
+fn sayS9 to void
+for i ulong len S9
+emit get S9 i
+end
+end
+
+fn sayS10 to void
+for i ulong len S10
+emit get S10 i
+end
+end
+
+fn subsystem s ulong to void
+if eq s 0
+sayS0
+else
+if eq s 1
+sayS1
+else
+if eq s 2
+sayS2
+else
+if eq s 3
+sayS3
+else
+if eq s 4
+sayS4
+else
+if eq s 5
+sayS5
+else
+if eq s 6
+sayS6
+else
+if eq s 7
+sayS7
+else
+if eq s 8
+sayS8
+else
+if eq s 9
+sayS9
+else
+if eq s 10
+sayS10
+else
+sayUnknown
+end
+end
+end
+end
+end
+end
+end
+end
+end
+end
+end
+end
+
+fn metahex off ulong to void
+for i ulong 32
+hexbyte get Meta add off i
+end
+end
+
+fn comphex off ulong to void
+for i ulong 32
+hexbyte get Comp add off i
+end
+end
+
+fn refusal side ulong to void
+base = mul side 4
+emit 45
+number ulong neg get Stat base
+sayEvent
+number ulong get Stat add base 1
+emit 10
+end
+
+fn verdict side ulong detail bool to void
+base = mul side 4
+if ne get Stat base 0
+sayRefuse
+refusal side
+ret
+end
+sayOk
+n = ulong get Stat add base 2
+number n
+sayRun
+metahex mul side 64
+sayFinal
+metahex add mul side 64 32
+emit 10
+if detail
+for i ulong n
+sayDigest
+at = add mul side 4096 i
+comphex mul at 32
+saySub
+number get Subs at
+emit 10
+end
+end
+end
+
+fn different at ulong to bool
+for j ulong 32
+x = get Comp add at j
+y = get Comp add add 131072 at j
+if ne x y
+ret true
+end
+end
+ret false
+end
+fn compare to void
+if ne get Stat 0 0
+sayRefuse
+sayExpected
+refusal 0
+ret
+end
+if ne get Stat 4 0
+sayRefuse
+sayActual
+refusal 1
+ret
+end
+n = ulong get Stat 2
+m = ulong get Stat 6
+if gt n m
+n = m
+end
+for i ulong n
+at = mul i 32
+diff = different at
+if diff
+sayDiverge
+number add i 1
+sayExp
+comphex at
+sayAct
+comphex add 131072 at
+saySub
+subsystem get Subs i
+emit 10
+ret
+end
+end
+sayMatch
+number n
+emit 10
+end
+
+fn main to int
+constants
+for request ulong 1000000
+op = input
+if eq op -1
+flush
+ret 0
+end
+if or eq op 86 eq op 68
+verify 0
+verdict 0 eq op 68
+else
+if eq op 67
+verify 0
+verify 1
+compare
+else
+if eq op 83
+a = required
+b = required
+subsystem add ulong a mul ulong b 256
+emit 10
+else
+failio
+end
+end
+end
+flush
+end
+if ne input -1
+failio
+end
+ret 0
+end
+

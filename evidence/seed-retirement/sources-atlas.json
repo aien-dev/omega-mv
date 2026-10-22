@@ -1,0 +1,40 @@
+{
+  "commit": "6b11395a7d0e56e4178b9074d0c003a0ce509281",
+  "ref": "origin/master",
+  "counts": {
+    "first_party_source/C": {
+      "files": 3,
+      "lines": 1299,
+      "bytes": 52608
+    }
+  },
+  "files": [
+    {
+      "path": "sha256_clean.c",
+      "git_blob": "aff2ab488a6aad724aec1b3acb85ef9fbd78b1ec",
+      "sha256": "35989415a49f8d3df6adf9bd761dc70f4d633034a797d6acda45cf2163d00d1e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 107,
+      "bytes": 3670
+    },
+    {
+      "path": "test_sha256_kat.c",
+      "git_blob": "29b278c4c6c6f6277c146c0453a0cdf90c68e90a",
+      "sha256": "de00288897960e396f76732c13c07fd35b79cf701eebf23c0136394858dd7421",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 81,
+      "bytes": 3047
+    },
+    {
+      "path": "tools/m1tool.c",
+      "git_blob": "fb0e237fc354e35219fba7f1b66e695fef1c12fa",
+      "sha256": "51de596700d0de6fa894ad486969ad8a976ae3faf7a135554d2d21a91e183d6d",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 1111,
+      "bytes": 45891
+    }
+  ]
+}
