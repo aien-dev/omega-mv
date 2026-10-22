@@ -1,0 +1,3 @@
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -march=armv8.6-a+dotprod+i8mm+sve -Isrc -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -Itools -o build/L519/tests-turing/gpu_replay_asan tests/turing/test_gpu_replay.c tools/turing_gpu_replay.c src/turing/field.c src/turing/field_select.c src/turing/field_select_v0_retired.c src/turing/history_selector.c src/turing/replay.c src/omega_canonical.c src/sha256.c src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c src/algebra/realize_sparse.c src/algebra/realize_rns.c src/algebra/realize_dense.c -lm
+build/L519/tests-turing/gpu_replay_asan
+SYNTHETIC gpu admission/replay: 421 checks, 0 failed; real qualification NOT_RUN
