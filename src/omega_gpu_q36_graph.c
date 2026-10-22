@@ -12,6 +12,9 @@
 #include "omega_gpu_fmt.h"
 #include "omega_gpu_mem_cached.h"
 #include "omega_gpu_fp8gemm_api.h"
+#include "omega_q36_om_gate.h"
+#include "sha256.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -39,7 +42,7 @@ typedef struct { OmegaGpuMem code; uint32_t gpr; } Kern;
  * reads goes to DRAM; cached, down 2100 -> 1735 us and mix 1596 -> 1458 us over 4 layers, runs/probe-buf). read_buf copies
  * a dbuf region into stage with a chip launch (K_COPY) before the host reads it. */
 typedef struct {
-    size_t x, ab, hidden, logits, am_v, am_i, token, norms, fnorm, tabs, gtab, idtab, stage, segd, ptab, split;
+    size_t x, ab, hidden, logits, am_v, am_i, token, norms, fnorm, tabs, gtab, idtab, stage, segd, ptab, omst, split;
     size_t xq, mix, agg, att, o, gu, act, dn;
     /* the batch (v2, L312): every conversation of a layer in one set of launches. N = heads laid out; R = N * NG expert rows */
     size_t xp, mixN, abN, aggN, attN, op, oN, rlb, sgu, sdn, xmap, ymap, xp2, guN, actN, actp, dnN, bytes;
@@ -52,6 +55,7 @@ struct OmegaGpuQ36Graph {
     Layout lo;
     OmegaGpuMem buf, dbuf;               /* the host-visible regions; the chip-only regions (see Layout) */
     Kern k[K_COUNT];
+    Kern om_gate;                        /* AIEN_OMEGA_Q36_OMEGESE_GATE=1: the decode gate from Omegese (L386); code.cpu NULL when off */
     OmegaGpuCmdList *cl;
     struct { const OmegaGpuFp8Tensor *mix, *o, *gu, *dn; const OmegaGpuBf16Tensor *ab; uint32_t kind_index; int attn, set; } layer[OMEGA_GPU_Q36_MAX_LAYERS];
     int final_set;
@@ -147,11 +151,36 @@ static int kern_build(Kern *k, const OmegaDecSpec *s) {
     return rc;
 }
 
+/* AIEN_OMEGA_Q36_OMEGESE_GATE=1 (read once, at load): the decode gate runs the Omegese kernel in omega_q36_om_gate.h instead of
+ * the hand-built OMEGA_DEC_GATE (L386, the C1 swap). Same math, so the tokens must not change; the merge train holds it to the
+ * golden tokens. Mutant 3 and the prefill row gate (K_GATE_R) keep the hand-built kernels. */
+static int g_om_gate = -1;
+static int q36_omegese_gate(void) {
+    if (g_om_gate < 0) { const char *e = getenv("AIEN_OMEGA_Q36_OMEGESE_GATE"); g_om_gate = (e && e[0] == '1' && e[1] == 0) ? 1 : 0; }
+    return g_om_gate;
+}
+
+/* The embedded bytes must be the bytes the build receipt names; a mismatch builds nothing. */
+static int om_gate_load(Kern *k) {
+    static const char hex[] = "0123456789abcdef";
+    uint8_t d[SHA256_DIGEST_SIZE]; char s[2 * SHA256_DIGEST_SIZE + 1];
+    sha256_hash(OMEGA_Q36_OM_GATE_code, OMEGA_Q36_OM_GATE_CODE_SIZE, d);
+    for (unsigned i = 0; i < SHA256_DIGEST_SIZE; i++) { s[2 * i] = hex[d[i] >> 4]; s[2 * i + 1] = hex[d[i] & 15u]; }
+    s[2 * SHA256_DIGEST_SIZE] = 0;
+    if (strcmp(s, OMEGA_Q36_OM_GATE_CODE_SHA256) != 0) return OMEGA_GPU_DGRAPH_CODEGEN_FAIL;
+    if (omega_gpu_session_alloc_code(OMEGA_Q36_OM_GATE_CODE_SIZE, &k->code) != 0) return OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    memcpy(k->code.cpu, OMEGA_Q36_OM_GATE_code, OMEGA_Q36_OM_GATE_CODE_SIZE);
+    if (omega_gpu_session_sync_to_gpu(&k->code) != 0) { omega_gpu_session_free(&k->code); memset(k, 0, sizeof *k); return OMEGA_GPU_DGRAPH_CHIP_FAIL; }
+    k->gpr = OMEGA_Q36_OM_GATE_GPR < 64u ? 64u : OMEGA_Q36_OM_GATE_GPR; /* as kern_build */
+    return OMEGA_GPU_DGRAPH_OK;
+}
+
 void omega_gpu_q36_graph_free(OmegaGpuQ36Graph *g) {
     if (!g) return;
     if (g->cl) omega_gpu_cmdlist_free(g->cl);
     omega_gpu_session_lock();
     for (unsigned i = 0; i < K_COUNT; i++) if (g->k[i].code.cpu) omega_gpu_session_free(&g->k[i].code);
+    if (g->om_gate.code.cpu) omega_gpu_session_free(&g->om_gate.code);
     if (g->buf.cpu) omega_gpu_session_free(&g->buf);
     if (g->dbuf.cpu) omega_gpu_session_free(&g->dbuf);
     if (g->pf.hb.cpu) omega_gpu_session_free(&g->pf.hb);
@@ -189,6 +218,7 @@ int omega_gpu_q36_graph_create_heads(const OmegaGpuQ36GraphConfig *cfg, uint32_t
     REG(token, (size_t)TOKEN_STRIDE * heads); REG(norms, (size_t)cfg->layers * H * 4); REG(fnorm, H * 4); REG(tabs, (size_t)cfg->layers * 4 * 16 + 16); /* + the FP8 lm_head entry */
     REG(gtab, OMEGA_GPU_Q36_ATT_MIX * 4); REG(idtab, COPY_ROW * 4); REG(stage, (size_t)NG * H * 4); /* the largest read_buf region (dn) */
     REG(segd, (size_t)cfg->layers * SEGD_ROWS * OMEGA_GEMM_SEG_BYTES); REG(ptab, (size_t)(H + OMEGA_GPU_Q36_MIXER_OUT + EI) * 4); /* batch: dense segment entries, the x' lane permutations */
+    REG(omst, OMEGA_Q36_OM_GATE_STATUS_WORDS * 4); /* the Omegese gate's trap words (word N = 1: some thread trapped with code N) */
     L->split = o;
     REG(xq, (size_t)H * 4 * heads); REG(mix, OMEGA_GPU_Q36_GDN_MIX * 4); REG(agg, OMEGA_GPU_Q36_ATT_MIX * 4);
     REG(att, OMEGA_GPU_Q36_MIXER_OUT * 4); REG(o, H * 4); REG(gu, (size_t)NG * 2 * EI * 4); REG(act, (size_t)NG * EI * 4); REG(dn, (size_t)NG * H * 4);
@@ -241,6 +271,10 @@ int omega_gpu_q36_graph_create_heads(const OmegaGpuQ36GraphConfig *cfg, uint32_t
     spec[K_PERM_XO].stride = L->lb_stride / 4u;
     spec[K_CN_R].stride = L->lb_stride; spec[K_CN_R_M3].stride = L->lb_stride; /* head h's routing weights: wts_va + h * lb_stride */
     for (unsigned i = 0; i < K_COUNT && rc == OMEGA_GPU_DGRAPH_OK; i++) rc = kern_build(&g->k[i], &spec[i]);
+    if (rc == OMEGA_GPU_DGRAPH_OK && q36_omegese_gate()) {
+        rc = om_gate_load(&g->om_gate);
+        fprintf(stderr, "q36 graph: omegese gate %s (code sha256 %.16s)\n", rc == OMEGA_GPU_DGRAPH_OK ? "on" : "REFUSED", OMEGA_Q36_OM_GATE_CODE_SHA256);
+    }
     if (rc == OMEGA_GPU_DGRAPH_OK) {
         memset(g->buf.cpu, 0, L->split);
         memset(g->dbuf.cpu, 0, L->bytes - L->split); /* fresh; every region is written by the chip before a launch reads it */
@@ -422,6 +456,31 @@ static int add_glue(OmegaGpuQ36Graph *g, uint8_t kind, int ki, uint32_t gx, uint
     return after_op(g, kind, omega_gpu_cmdlist_add(g->cl, &L) < 0 ? -1 : 0);
 }
 
+/* The decode gate of one conversation: att[n] *= sigmoid(agg[ATT_QKV + n]), n < MIXER_OUT, in place. The hand-built
+ * OMEGA_DEC_GATE, or with AIEN_OMEGA_Q36_OMEGESE_GATE=1 the Omegese kernel (its argument layout from omega_q36_om_gate.h:
+ * a buffer is an address and a u32 length, then the status address, blocks, batches). */
+static int rec_gate(OmegaGpuQ36Graph *g, uint64_t att, uint64_t agg) {
+    const uint64_t gv = agg + OMEGA_GPU_Q36_ATT_QKV * 4u;
+    if (!g->om_gate.code.cpu || g->mutant == 3) {
+        uint32_t w2[OMEGA_DEC_GT_WORDS]; memset(w2, 0, sizeof w2);
+        put64(w2, OMEGA_DEC_GT_A, att); put64(w2, OMEGA_DEC_GT_G, gv); put64(w2, OMEGA_DEC_GT_OUT, att);
+        w2[(OMEGA_DEC_GT_N - 0x380) / 4] = OMEGA_GPU_Q36_MIXER_OUT;
+        return add_glue(g, OMEGA_GPU_Q36_K_GATE, g->mutant == 3 ? K_GATE_M1 : K_GATE, OMEGA_GPU_Q36_MIXER_OUT / OMEGA_DEC_THREADS, 1,
+                        OMEGA_GPU_Q36_MIXER_OUT, w2, OMEGA_DEC_GT_WORDS);
+    }
+    uint32_t w[OMEGA_Q36_OM_GATE_ARG_WORDS]; memset(w, 0, sizeof w);
+    put64(w, 0x380u + OMEGA_Q36_OM_GATE_P0_OFF, att); w[(OMEGA_Q36_OM_GATE_P0_OFF + 8u) / 4] = OMEGA_GPU_Q36_MIXER_OUT;
+    put64(w, 0x380u + OMEGA_Q36_OM_GATE_P1_OFF, gv);  w[(OMEGA_Q36_OM_GATE_P1_OFF + 8u) / 4] = OMEGA_GPU_Q36_MIXER_OUT;
+    put64(w, 0x380u + OMEGA_Q36_OM_GATE_STATUS_OFF, va_of(g, g->lo.omst));
+    w[OMEGA_Q36_OM_GATE_BLOCKS_OFF / 4] = OMEGA_GPU_Q36_MIXER_OUT / OMEGA_Q36_OM_GATE_THREADS;
+    w[OMEGA_Q36_OM_GATE_BATCHES_OFF / 4] = 1;
+    OmegaGpuLaunch L; memset(&L, 0, sizeof L);
+    L.code_va = g->om_gate.code.va; L.gpr_count = g->om_gate.gpr; L.threads_x = OMEGA_Q36_OM_GATE_THREADS; L.threads_y = 1;
+    L.grid_x = OMEGA_GPU_Q36_MIXER_OUT / OMEGA_Q36_OM_GATE_THREADS; L.grid_y = 1; L.num_elements = OMEGA_GPU_Q36_MIXER_OUT;
+    L.args = w; L.n_args = OMEGA_Q36_OM_GATE_ARG_WORDS; L.timeout_ms = TIMEOUT_MS; L.shared_bytes = OMEGA_Q36_OM_GATE_SHARED_BYTES;
+    return after_op(g, OMEGA_GPU_Q36_K_GATE, omega_gpu_cmdlist_add(g->cl, &L) < 0 ? -1 : 0);
+}
+
 /* RES at width 2048: NORM (x -> y), ADD (x += a) or COMBINE|NORM (x += sum_g wts[g] * a[g]; y = norm(x)) */
 static int rec_res_w(OmegaGpuQ36Graph *g, int ki, uint64_t x, uint64_t a, uint64_t wts, uint64_t nw, uint64_t y, float scale) {
     uint32_t w[OMEGA_DEC_RES_WORDS]; memset(w, 0, sizeof w);
@@ -507,12 +566,7 @@ int omega_gpu_q36_graph_record_head_layer(OmegaGpuQ36Graph *g, uint32_t h, uint3
                           OMEGA_GPU_Q36_ATT_MIX, w, OMEGA_DEC_GA_WORDS);
         if (rc == OMEGA_GPU_DGRAPH_OK)
             rc = after_op(g, OMEGA_GPU_Q36_K_ATTN, omega_gpu_decode_attn256_record(g->cl, g->attn_h[h], ki, pos, agg, g->cfg.eps, SCALE_2P64, att));
-        uint32_t w2[OMEGA_DEC_GT_WORDS]; memset(w2, 0, sizeof w2);
-        put64(w2, OMEGA_DEC_GT_A, att); put64(w2, OMEGA_DEC_GT_G, agg + OMEGA_GPU_Q36_ATT_QKV * 4u); put64(w2, OMEGA_DEC_GT_OUT, att);
-        w2[(OMEGA_DEC_GT_N - 0x380) / 4] = OMEGA_GPU_Q36_MIXER_OUT;
-        if (rc == OMEGA_GPU_DGRAPH_OK)
-            rc = add_glue(g, OMEGA_GPU_Q36_K_GATE, g->mutant == 3 ? K_GATE_M1 : K_GATE, OMEGA_GPU_Q36_MIXER_OUT / OMEGA_DEC_THREADS, 1,
-                          OMEGA_GPU_Q36_MIXER_OUT, w2, OMEGA_DEC_GT_WORDS);
+        if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_gate(g, att, agg);
     }
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_fp8(g, OMEGA_GPU_Q36_K_O, g->layer[l].o, tab + 16u, mixer_out, o);
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_res_w(g, K_ADD, x, o, 0, 0, 0, 1.0f);
@@ -652,12 +706,7 @@ int omega_gpu_q36_graph_record_layer_heads(OmegaGpuQ36Graph *g, uint32_t l, cons
         for (uint32_t h = 0; h < N && rc == OMEGA_GPU_DGRAPH_OK; h++) {
             const uint64_t agg_h = aggN + (uint64_t)h * OMEGA_GPU_Q36_ATT_MIX * 4u, att_h = attN + h * MOS;
             rc = after_op(g, OMEGA_GPU_Q36_K_ATTN, omega_gpu_decode_attn256_record(g->cl, g->attn_h[h], ki, pos[h], agg_h, g->cfg.eps, SCALE_2P64, att_h));
-            uint32_t w2[OMEGA_DEC_GT_WORDS]; memset(w2, 0, sizeof w2);
-            put64(w2, OMEGA_DEC_GT_A, att_h); put64(w2, OMEGA_DEC_GT_G, agg_h + OMEGA_GPU_Q36_ATT_QKV * 4u); put64(w2, OMEGA_DEC_GT_OUT, att_h);
-            w2[(OMEGA_DEC_GT_N - 0x380) / 4] = OMEGA_GPU_Q36_MIXER_OUT;
-            if (rc == OMEGA_GPU_DGRAPH_OK)
-                rc = add_glue(g, OMEGA_GPU_Q36_K_GATE, g->mutant == 3 ? K_GATE_M1 : K_GATE, OMEGA_GPU_Q36_MIXER_OUT / OMEGA_DEC_THREADS, 1,
-                              OMEGA_GPU_Q36_MIXER_OUT, w2, OMEGA_DEC_GT_WORDS);
+            if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_gate(g, att_h, agg_h);
         }
         if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_perm(g, K_PERM_O, attN, pt4096, op, OMEGA_GPU_Q36_MIXER_OUT, N);
     }
@@ -766,6 +815,16 @@ static int record_final_heads(OmegaGpuQ36Graph *g) {
 
 int omega_gpu_q36_graph_end_token(OmegaGpuQ36Graph *g, uint32_t *token, OmegaGpuDecodeGraphStats *st) { return omega_gpu_q36_graph_end_stroke(g, token, st); }
 
+/* After the buf readback: a trap word the Omegese gate stored fails the run (they are zeroed at create and never cleared,
+ * so one trap fails every later readback too). */
+static int om_gate_check(OmegaGpuQ36Graph *g) {
+    if (!g->om_gate.code.cpu) return OMEGA_GPU_DGRAPH_OK;
+    const uint32_t *st = cpu_of(g, g->lo.omst);
+    for (uint32_t c = 0; c < OMEGA_Q36_OM_GATE_STATUS_WORDS; c++)
+        if (st[c]) { char e[80]; omega_gpu_fmt(e, sizeof e, "q36 graph: the Omegese gate trapped (code %u)", c); return fail(g, e, OMEGA_GPU_DGRAPH_CHIP_FAIL); }
+    return OMEGA_GPU_DGRAPH_OK;
+}
+
 int omega_gpu_q36_graph_end_stroke(OmegaGpuQ36Graph *g, uint32_t *tokens, OmegaGpuDecodeGraphStats *st) {
     if (!g || !g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     int rc = g->failed ? OMEGA_GPU_DGRAPH_CHIP_FAIL : OMEGA_GPU_DGRAPH_OK;
@@ -774,6 +833,7 @@ int omega_gpu_q36_graph_end_stroke(OmegaGpuQ36Graph *g, uint32_t *tokens, OmegaG
     for (uint32_t h = 0; h < g->stroke_heads && rc == OMEGA_GPU_DGRAPH_OK; h++)
         if (omega_gpu_decode_attn256_counters_check(g->attn_h[h]) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
     if (rc == OMEGA_GPU_DGRAPH_OK && omega_gpu_session_sync_to_cpu(&g->buf) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    if (rc == OMEGA_GPU_DGRAPH_OK) rc = om_gate_check(g);
     for (uint32_t h = 0; h < g->stroke_heads && rc == OMEGA_GPU_DGRAPH_OK; h++) {
         const uint32_t t = ((const uint32_t *)cpu_of(g, token_of(g, h)))[0];
         if (t == TOKEN_POISON || t >= g->cfg.vocab) {
@@ -1000,12 +1060,7 @@ static int pf_record_mixer(OmegaGpuQ36Graph *g, uint32_t head, uint32_t l, uint3
         for (uint32_t t = 0; t < n && rc == OMEGA_GPU_DGRAPH_OK && !gate_rows; t++) {
             const uint64_t agg_t = aggN + (uint64_t)t * OMEGA_GPU_Q36_ATT_MIX * 4u, att_t = attN + t * MOS;
             if (!attn_multi) rc = after_op(g, OMEGA_GPU_Q36_K_ATTN, omega_gpu_decode_attn256_record(g->cl, g->attn_h[head], ki, pos0 + t, agg_t, g->cfg.eps, SCALE_2P64, att_t));
-            uint32_t w2[OMEGA_DEC_GT_WORDS]; memset(w2, 0, sizeof w2);
-            put64(w2, OMEGA_DEC_GT_A, att_t); put64(w2, OMEGA_DEC_GT_G, agg_t + OMEGA_GPU_Q36_ATT_QKV * 4u); put64(w2, OMEGA_DEC_GT_OUT, att_t);
-            w2[(OMEGA_DEC_GT_N - 0x380) / 4] = OMEGA_GPU_Q36_MIXER_OUT;
-            if (rc == OMEGA_GPU_DGRAPH_OK)
-                rc = add_glue(g, OMEGA_GPU_Q36_K_GATE, g->mutant == 3 ? K_GATE_M1 : K_GATE, OMEGA_GPU_Q36_MIXER_OUT / OMEGA_DEC_THREADS, 1,
-                              OMEGA_GPU_Q36_MIXER_OUT, w2, OMEGA_DEC_GT_WORDS);
+            if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_gate(g, att_t, agg_t);
         }
         if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_perm(g, K_PERM_O, attN, pt4096, op, OMEGA_GPU_Q36_MIXER_OUT, n);
     }
@@ -1146,6 +1201,7 @@ int omega_gpu_q36_graph_prefill(OmegaGpuQ36Graph *g, uint32_t head, const float 
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = submit_now(g);
     if (rc == OMEGA_GPU_DGRAPH_OK && omega_gpu_decode_attn256_counters_check(g->attn_h[head]) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
     if (rc == OMEGA_GPU_DGRAPH_OK && omega_gpu_session_sync_to_cpu(&g->buf) != 0) rc = fail(g, NULL, OMEGA_GPU_DGRAPH_CHIP_FAIL);
+    if (rc == OMEGA_GPU_DGRAPH_OK) rc = om_gate_check(g);
     if (rc == OMEGA_GPU_DGRAPH_OK && want_token) {
         const uint32_t t = ((const uint32_t *)cpu_of(g, token_of(g, head)))[0];
         if (t == TOKEN_POISON || t >= g->cfg.vocab) rc = fail(g, "q36 prefill: token output not written or out of range", OMEGA_GPU_DGRAPH_CHIP_FAIL);
