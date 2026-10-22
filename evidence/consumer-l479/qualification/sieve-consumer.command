@@ -1,0 +1,1 @@
+timeout 180 quiet-build make -C /home/drakestapleton/handoffs/omega-614-618-20261022/L479/deps/Omega -j1 OUT_DIR=build/l479 CUDAPP_DIR=/home/drakestapleton/handoffs/omega-614-618-20261022/L479/deps/CUDApp-final PHYSICS_DIR=/home/drakestapleton/workspace/hermes-desk/physics-canonical-l457 prime-race-gb10-listing-test 

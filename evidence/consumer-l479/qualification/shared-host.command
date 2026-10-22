@@ -1,0 +1,1 @@
+timeout 2400 quiet-build make -C /home/drakestapleton/handoffs/omega-614-618-20261022/L479/deps/CUDApp -k -j1 --trace OUT_DIR=build/l479 test test-canonical-qual-host test-kernel-dump test-isolation-dump zero-cuda-gate 

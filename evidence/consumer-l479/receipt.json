@@ -1,0 +1,96 @@
+{
+  "ledger": "L479",
+  "status": "HOST_PASS_HOLD_ADMISSION",
+  "omega_tested_source": "991f1229eb45f1ebe9b2759d48635abb177f9139",
+  "cudapp_final_pin": "135c0103712fb3766875c33f210e21d2472ab6d0",
+  "canonical_ancestor": "349913f17c083996680c72b32f767b225005155d",
+  "original_prs": {
+    "614": "19eebe0e04811002f641c0f7b58c1b87ea9b5c42",
+    "615": "a7d6463b9df4485484e207f11fb7802d09aed627",
+    "616": "d7e15f18f5fb81555fe932fe3023c9f5f8ab8ba1",
+    "617": "f792cd1d35b0e9c191647518c3be651a8d86dc21",
+    "618": "67c70741c8cec5c33e28a099d7c83bbd4f3ab839"
+  },
+  "binding": {
+    "baseline_exit": 1,
+    "baseline_checks": 26,
+    "baseline_failed": 10,
+    "green_exit": 0,
+    "green_checks": 26,
+    "green_failed": 0,
+    "mutants": 5,
+    "killed": 5,
+    "mutation_exit": 0
+  },
+  "carry": {
+    "changed_path_rows": 242,
+    "original_extraction_deletions": 152,
+    "final_mapped_links": 198,
+    "all_mapped_destinations_checked": true
+  },
+  "shared_suite": {
+    "actual_source": "3414600ba598630b01c240cdd630b33545f8b0d9",
+    "runs": 1,
+    "exit": 0,
+    "host_targets": 35,
+    "canonical_feature_targets": 4,
+    "zero_cuda_exit": 0,
+    "engine_mutants": {
+      "total": 49,
+      "killed": 49
+    },
+    "backend_mutants": {
+      "total": 120,
+      "killed": 107,
+      "inherited_justified_redundant": 13,
+      "gaps": 0
+    },
+    "final_pin_full_suite_rerun": "NOT_RUN",
+    "final_pin_consumed_build_test_closure_diff_exit": 0,
+    "only_later_tool_delta": "tools/sm121dis/corpus.sh (not executed by shared suite)",
+    "changed_tool_refusal_cases": 3,
+    "changed_tool_refusals": [
+      1,
+      1,
+      1
+    ]
+  },
+  "fresh_consumer": {
+    "exit": 0,
+    "linker_checks": 26,
+    "scan_sim_checks": 139,
+    "kernel_capture_checks": 13,
+    "isolation_dump_checks": 6,
+    "sieve_listing_checks": 14,
+    "sieve_exit": 0,
+    "tracked_checkouts_clean": true
+  },
+  "archives": {
+    "consumer_sha256": "e9d5b4d2f411245e7f86e4903b172ede361775c2a5d8a8c74b01afcc75890a6e",
+    "producer_sha256": "e3f36d05b56ec3c3ac2e4d8da29ec0ce34676e159b6201b532fd8ff07a377fea",
+    "consumer_members": 91,
+    "producer_members": 68,
+    "common_members": 67,
+    "common_mismatches": 0,
+    "producer_only": "omega_gpu_chip.o (doctor utility)",
+    "consumer_only_count": 24
+  },
+  "gates": {
+    "crumb_verify": {
+      "exit": 1,
+      "stale": 8,
+      "total": 157
+    },
+    "official_CodeQL": "NOT_RUN",
+    "official_Spark_judge": "NOT_RUN",
+    "hardware_model_speed": "NOT_RUN"
+  },
+  "holds": [
+    "Required CRUMB-VERIFY metadata stale; no compile or gate waiver by this worker",
+    "L458 finding4 sovereign-core CUDApp bootstrap",
+    "L458 finding5 STABLE recovery contract",
+    "L345 R11 living-run and owner-verified R13 prerequisites",
+    "Renda exact-head admission; coordinator hardware/shared model train"
+  ],
+  "scope": "No live18091, driver, module, cron, coordinator ownership, PR write, merge, label, bypass key, judge trigger, GPU/model load or speed experiment"
+}

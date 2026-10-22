@@ -41,3 +41,31 @@ Reviewed baseline divergences in `carry-divergences.patch`:
 The original PRs and canonical owner remain unchanged. Source-level carry does
 not establish hardware behavior, model parity, timing, recovery qualification,
 or official desk admission.
+
+## Final integrated source
+
+Final tested Omega implementation is991f1229eb45f1ebe9b2759d48635abb177f9139,
+consuming CUDApp135c0103712fb3766875c33f210e21d2472ab6d0. The final matrix is
+in `final/`; the original baseline evidence is preserved in `baseline/`.
+L478 Omega source0437dd5d was cherry-picked; its evidence-only975aaebe seal
+was carried separately. The source map now has198 entries, including both new
+CUDApp regression targets. Canonical349913f1 remains an ancestor of135c010.
+The only compiled CUDApp file changed since canonical349913f1 is the kernel
+capture I/O in omega_blackwell_codegen.c. No arithmetic or GPU feature code
+was replaced by the consumer work.
+
+The shared suite ran exactly once at3414600b, retaining its exact source label:
+35 host targets plus four canonical qualification targets, then the zero-CUDA
+check. Final135c010 changes only corpus.sh and evidence relative to3414600b.
+The compiled source, build rules, driver, headers, runtime metadata, tests and
+all tools consumed by that shared suite compare identically; corpus.sh is not
+executed by it. The new corpus preflight was separately tested on three refused
+destinations. No second full-suite execution at135c010 is claimed.
+
+Fresh consumer checks did run at the final135c010 dependency pin: archive
+build, ten shared-base files, all26 linker regressions, scan139, capture13,
+isolation dump6 and sieve listing14. All returned0. The consumer archive has91
+members; the standalone archive has68. All67 common members are byte-identical.
+The producer-only omega_gpu_chip.o belongs to its doctor utility and remains
+in CUDApp; the24 additional consumer objects belong to Omega. Whole-archive
+identity between the two differently scoped libraries is not claimed.

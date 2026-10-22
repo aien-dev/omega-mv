@@ -1,0 +1,9 @@
+STALE      bench/prime_race
+STALE      docs/numeric
+STALE      docs
+STALE      mk
+STALE      src
+STALE      tests
+STALE      tools
+STALE      .
+crumb verify: FAIL: 8 of 157 crumbs stale; run: crumb compile

@@ -1,0 +1,27 @@
+00000000000017d0 T omega_gpu_session_recover
+0000000000001980 T omega_gpu_session_recoveries
+0000000000001804 T omega_gpu_cmdlist_submit_pair
+0000000000000990 T omega_gpu_cmdlist_wait_for
+omega_gpu_scan.o:
+0000000000000dc0 T omega_gpu_scan_codegen
+0000000000002370 T omega_gpu_scan_drive_prefix
+00000000000021f4 T omega_gpu_scan_drive_reduce
+0000000000002170 T omega_gpu_scan_grid
+00000000000021c0 T omega_gpu_scan_prefix_scratch_words
+0000000000002640 T omega_gpu_scan_rc_name
+00000000000021a0 T omega_gpu_scan_reduce_scratch_words
+00000000000025c0 T omega_gpu_scan_test_set_mutant
+omega_gpu_scan_ref.o:
+omega_gpu_gemm.o:
+0000000000003b40 T omega_gpu_gemm
+0000000000000c90 T omega_gpu_gemm_cfg_ok
+0000000000000d40 T omega_gpu_gemm_codegen
+0000000000000c60 T omega_gpu_gemm_default_cfg
+00000000000037c4 T omega_gpu_gemm_drive
+0000000000003650 T omega_gpu_gemm_plan
+0000000000003ac0 T omega_gpu_gemm_rc_name
+0000000000003960 T omega_gpu_gemm_test_set_cfg
+omega_sm121_disasm.o:
+0000000000000120 T omega_sm121_disasm
+0000000000000c70 T omega_sm121_listing
+0000000000000c10 T omega_sm121_padding_start
