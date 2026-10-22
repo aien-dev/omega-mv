@@ -419,5 +419,5 @@
     "universal_math_or_full_retirement_claim": false
   },
   "commands": "commands.txt",
-  "raw_snapshot_note": "Fresh math outputs in math-full/. retirement-full/ snapshots the verify working directory including inherited historical files; only outputs of verify.sh are current runs. Relative paths in the raw manifest refer to its original run location. Historical evidence roots were restored after collection."
+  "raw_snapshot_note": "Fresh math outputs in math-full/. retirement-full/ snapshots the verify working directory including inherited historical files; only outputs of verify.sh are current runs. Relative paths in the raw manifest refer to its original run location. Historical evidence roots were restored after collection. math-full/calc-receipts/capacity.json and limb_bound.json are inherited fixtures; the current calculator run uses the 11 numbered receipts."
 }

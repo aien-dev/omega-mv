@@ -56,8 +56,10 @@ original source. The correction preserves it and adds `mutant_source_sha256`,
 with compiler exit, bytes and ELF validation recorded separately. Failure logs
 remain under retirement-full-first*. No production or count gate was weakened.
 
-Only fresh math outputs were collected into math-full/, plus the unchanged
-parent-supplied Wolfram fixture. retirement-full/ snapshots the full verification
+Fresh math outputs were collected into math-full/, plus the unchanged
+parent-supplied Wolfram fixture. The copied calculator receipt directory also
+retains the two historical capacity/limb-bound fixtures; the newly executed
+calculator gate consists of the 11 numbered receipts. retirement-full/ snapshots the full verification
 working evidence directory and also includes inherited historical files; only
 outputs named by verify.sh are newly executed. Raw manifest paths describe the
 run location and are not rewritten. Reproduce using verify.sh in this checkout.
