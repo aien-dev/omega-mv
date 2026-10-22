@@ -1,0 +1,35 @@
+{
+  "source": "Wolfram Language evaluator, 2026-10-22. Each blob's SHA-256 prefix was checked against the local file before the numbers were used. The reader in tests/compiler/slices/cubin_params.osc is checked against these values; it did not produce them.",
+  "real_image": {
+    "file": "primes-race/oracle/ops.cubin",
+    "sha256": "271269535a32ef2b94d18a51e617e2e22e7c4deb7c93c44b776d6fd6c98f3e50",
+    "text_sections": [
+      {"index": 0, "name": ".text.k_hi2", "sh_info": 12, "regs": 14},
+      {"index": 1, "name": ".text.k_hi", "sh_info": 13, "regs": 12},
+      {"index": 2, "name": ".text.k_shl1", "sh_info": 14, "regs": 12},
+      {"index": 3, "name": ".text.k_shl", "sh_info": 15, "regs": 12},
+      {"index": 4, "name": ".text.k_or", "sh_info": 16, "regs": 16}
+    ],
+    "regcount_by_symbol": {"12": 14, "13": 12, "14": 12, "15": 12, "16": 16},
+    "every_kernel": {"param_base": 896, "param_size": 16, "params": [[0, 0, 8], [1, 8, 8]], "smem": 0, "cbank": 31},
+    "region_sha16": {
+      ".nv.info": "119e79cefe4e93e0",
+      ".nv.info.k_hi2": "d2512d8f2d6210bf",
+      ".text.k_hi2 header": "7605753b434dff03",
+      "shstrtab": "f24a2140a8f733e4"
+    }
+  },
+  "synthetic": {
+    "PGOOD": {"sha16": "9277784b24cd5259", "regs": 14, "base": 896, "size": 16, "params": [[1, 8, 8, 0, 31], [0, 0, 8, 0, 31]]},
+    "PZERO": {"regs": 8, "base": 896, "size": 0, "params": []},
+    "PNVAL": {"walk_consumed": true, "params": [[0, 0, 8, 0, 31]], "size": 8, "base": 896},
+    "PPAD": {"walk_consumed": true, "bytes": 40, "params": [[0, 0, 8]]},
+    "PPREFIX": {"regs_by_symbol": {"1": 10, "2": 20}, "k": {"len": 4, "size": 4}, "kX": {"len": 8, "size": 8}},
+    "PSMEM": {"smem": 1, "verdict": "refuse"},
+    "PBCANK": {"cbank": 0, "verdict": "refuse"},
+    "PGAP": {"ordinals": [2, 0], "verdict": "refuse"},
+    "PFIT": {"offset": 8, "len": 16, "block": 16, "verdict": "refuse"},
+    "PDISAGREE": {"block": 8, "size": 16, "verdict": "refuse"},
+    "PDUP": {"ordinal_0_twice": true, "verdict": "refuse"}
+  }
+}

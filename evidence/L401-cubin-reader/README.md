@@ -19,9 +19,9 @@ The reader is `tests/compiler/slices/cubin_elf.osc`. The file has 117 run lines,
 Offsets are checked by `fits(n, o, z)` = `o <= n && z <= n - o`, which never forms `o + z`. An image can
 set an offset near 2^64 so that `o + z` wraps to a small number, so the naive check would accept it.
 
-Scope: this parses and validates the image on the host. It does not read kernel parameters
-(`.nv.info`), symbols or relocations, does not launch anything on the GPU, and is not yet wired into
-the swap library.
+Scope: this parses and validates the image on the host, including where each kernel's parameters
+live (the next section). It does not read symbols or relocations, does not launch anything on the
+GPU, and is not yet wired into the swap library.
 
 ## Where the expected values come from
 
@@ -87,3 +87,43 @@ python3 evidence/L401-cubin-reader/gen_fixtures.py            # images (fixtures
 python3 evidence/L401-cubin-reader/build_osc.py real tests/compiler/slices/cubin_elf.osc
 make test-compiler
 ```
+
+## Kernel parameters
+
+`tests/compiler/slices/cubin_params.osc` reads the `.nv.info` records a launch needs. A record is a
+format byte, an attribute, and a payload whose length the format byte decides (2, 4, or 4 plus a
+u16 size padded up to a multiple of 4). An unknown format, a record that does not fit, or a section
+that does not end on a record boundary is a refusal. Nothing is guessed.
+
+| function | returns |
+|---|---|
+| `nv_regs` | register count: attribute 47 in the global `.nv.info`, for the symbol index in the `.text` section's `sh_info`. Not the top byte of `sh_info` (that byte is 0 on the real image) |
+| `nv_param_base` | byte offset of the parameter block in constant bank 0 (attribute 10, low 16 bits). 896 on sm_121 |
+| `nv_param_size` | size of that block (attribute 25). Must equal the high 16 bits of attribute 10 |
+| `nv_param_count`, `nv_param_off`, `nv_param_len` | one entry per attribute 23 record, in ordinal order. The size is bits 18..31 of the packed word. A parameter marked shared memory, or not in bank 31, or whose bytes do not fit in the block, refuses the kernel |
+| `nv_params` | writes regs, base, size, count, then each offset and length into a cells buffer |
+
+On the real sm_121 image Wolfram reads five kernels, symbol indexes 12 to 16, register counts
+14, 12, 12, 12 and 16, and two 8-byte parameters at offsets 0 and 8 for every kernel
+(`wolfram_params.json`). The kernels in `ops.cu` take two pointers each, which is what those
+8-byte parameters are.
+
+`gen_param_fixtures.py` writes the synthetic images and computes no answers. The cases that
+separate a correct reader from a plausible wrong one, each confirmed by Wolfram:
+
+| image | correct result | what a wrong reader does |
+|---|---|---|
+| PNVAL | one parameter, found after a 2-byte no-value record | skipping 4 bytes instead of 2 loses it (mutant: 6 lines fail) |
+| PPAD | one parameter, found after a 1-byte payload padded to 4 | a reader that does not pad loses it |
+| PPREFIX | `.text.k` has a 4-byte parameter, `.text.kX` an 8-byte one, and `.nv.info.kX` comes first | a prefix match hits both names and refuses (mutant: 8 lines fail) |
+| PSMEM, PBCANK, PGAP, PDUP, PFIT, PDISAGREE | refuse | shared memory, wrong bank, a missing ordinal, a repeated ordinal, a parameter past the block, a block size that disagrees |
+| PNOREGS, PTWOREGS | refuse the register count | no attribute 47, or two of them. The parameter records are still readable on their own |
+
+A stub that returns 7777777 fails all 97 run lines on the value. A reader that takes the register
+count from `sh_info >> 24` fails 30 lines, because that byte is 0. The run at fuzz 120, before the
+gate, printed `OSC1_COMPILER_PASS` with `slice-run keyed=279 ran=279`.
+
+`make test-compiler` at this commit: `RC=0`, `test-compiler: PASS` (log: `gate-params.log`).
+Both the plain and the ASan/UBSan legs print `OSC1_COMPILER_PASS golden=47 neg=138 diff_runs=141032`
+and `run lines: slice-run keyed=279 ran=279  expect-run keyed=143 ran=143`.
+
