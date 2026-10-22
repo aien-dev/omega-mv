@@ -1,8 +1,10 @@
 #!/bin/sh
 # omega-from-seed.sh -- birth the Omega compiler from seed-0 and stop.
-# The one outside step is load0.sh (POSIX printf), named in seed/README.md.
-# Everything after that is a seed program: seed0, hex1, asm2, om4, then omc
-# compiling itself. No C, gcc, as or ld writes a byte of this chain.
+# load0.sh uses POSIX printf to materialize the seed, named in seed/README.md.
+# Compiler-producing stages are seed0, hex1, asm2, om4, then self-hosted omc;
+# no C compiler, assembler or linker writes their executable bytes.
+# Shell/file utilities still orchestrate the birth; early comparisons use cmp.
+# Once omc exists, ELF checks, stage comparison and hashing use native Omega.
 # Run from the repo root:  sh seed/omega-from-seed.sh
 # Prints RC=0 when the birth and the names-pass probes agree.
 set -eu
@@ -49,11 +51,21 @@ chmod +x "$B/stage1"
 chmod +x "$B/stage2"
 "$B/stage2" < "$SRC" > "$B/stage3"
 chmod +x "$B/stage3"
-s1=$(sha256sum "$B/stage1" | cut -d' ' -f1)
-s2=$(sha256sum "$B/stage2" | cut -d' ' -f1)
-s3=$(sha256sum "$B/stage3" | cut -d' ' -f1)
-[ "$s2" = "$s3" ] || bad "fixpoint: stage2 $s2 != stage3 $s3"
-[ "$s1" = "$s2" ] || bad "parents differ: om4-built $s1 != omc-built $s2"
+# The compiler now exists: build the native verification tools from Omega.
+# These establish self-consistency, not independent compiler trust/DDC.
+for tool in elfcheck byteequal sha256; do
+  "$B/stage3" < "seed/native/$tool.om" > "$B/$tool"
+  [ -s "$B/$tool" ] || bad "empty native $tool"
+  chmod +x "$B/$tool"
+done
+for tool in elfcheck byteequal sha256 stage1 stage2 stage3; do
+  "$B/elfcheck" < "$B/$tool" || bad "invalid ELF: $tool"
+done
+"$B/byteequal" 3< "$B/stage2" 4< "$B/stage3" || bad "fixpoint: stage2 != stage3"
+"$B/byteequal" 3< "$B/stage1" 4< "$B/stage2" || bad "parents differ: om4-built != omc-built"
+s3=$("$B/sha256" < "$B/stage3") || bad "native compiler hash failed"
+[ "${#s3}" = 64 ] || bad "native compiler hash length"
+case "$s3" in *[!0-9a-f]*) bad "native compiler hash encoding" ;; esac
 cp "$B/stage3" seed/out/omc
 printf '%s  seed/out/omc\n' "$s3" > seed/out/omc.sha256
 chmod +x seed/out/omc

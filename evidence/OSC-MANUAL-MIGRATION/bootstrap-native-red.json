@@ -1,0 +1,66 @@
+{
+  "cases": 5,
+  "failures": 5,
+  "results": [
+    {
+      "case": "intact",
+      "pass": false,
+      "exit": 97,
+      "denied_tools_called": [
+        "sha256sum",
+        "cut"
+      ],
+      "compiler_sha256": "01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6",
+      "stdout": "PASS seed0 408 bytes, rebuilds itself\nPASS hex1 776 bytes, born from seed0\nPASS asm2 2464 bytes, born from hex1\nPASS om4 om4.bin 14224 bytes\n",
+      "stderr": ""
+    },
+    {
+      "case": "stage3-extra-byte",
+      "pass": false,
+      "exit": 97,
+      "denied_tools_called": [
+        "cut",
+        "sha256sum"
+      ],
+      "compiler_sha256": null,
+      "stdout": "PASS seed0 408 bytes, rebuilds itself\nPASS hex1 776 bytes, born from seed0\nPASS asm2 2464 bytes, born from hex1\nPASS om4 om4.bin 14224 bytes\n",
+      "stderr": ""
+    },
+    {
+      "case": "missing-hasher",
+      "pass": false,
+      "exit": 97,
+      "denied_tools_called": [
+        "sha256sum",
+        "cut"
+      ],
+      "compiler_sha256": null,
+      "stdout": "PASS seed0 408 bytes, rebuilds itself\nPASS hex1 776 bytes, born from seed0\nPASS asm2 2464 bytes, born from hex1\nPASS om4 om4.bin 14224 bytes\n",
+      "stderr": ""
+    },
+    {
+      "case": "invalid-comparator",
+      "pass": false,
+      "exit": 97,
+      "denied_tools_called": [
+        "sha256sum",
+        "cut"
+      ],
+      "compiler_sha256": null,
+      "stdout": "PASS seed0 408 bytes, rebuilds itself\nPASS hex1 776 bytes, born from seed0\nPASS asm2 2464 bytes, born from hex1\nPASS om4 om4.bin 14224 bytes\n",
+      "stderr": ""
+    },
+    {
+      "case": "empty-hash-output",
+      "pass": false,
+      "exit": 97,
+      "denied_tools_called": [
+        "sha256sum",
+        "cut"
+      ],
+      "compiler_sha256": null,
+      "stdout": "PASS seed0 408 bytes, rebuilds itself\nPASS hex1 776 bytes, born from seed0\nPASS asm2 2464 bytes, born from hex1\nPASS om4 om4.bin 14224 bytes\n",
+      "stderr": ""
+    }
+  ]
+}
