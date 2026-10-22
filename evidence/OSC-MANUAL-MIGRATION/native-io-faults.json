@@ -1,0 +1,59 @@
+{
+  "cases": 4,
+  "failures": 0,
+  "results": [
+    {
+      "case": "sha-post-progress-read-error",
+      "exit": 2,
+      "output_bytes": 0,
+      "status": "PASS"
+    },
+    {
+      "case": "copy-post-progress-read-error",
+      "exit": 2,
+      "output_bytes": 30,
+      "status": "PASS"
+    },
+    {
+      "case": "sha-output-enospc",
+      "exit": 2,
+      "status": "PASS"
+    },
+    {
+      "case": "copy-positive-partial-write-then-eagain",
+      "exit": 2,
+      "pipe_capacity": 4096,
+      "output_bytes": 4096,
+      "output_sha256": "c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193",
+      "status": "PASS"
+    }
+  ],
+  "compiled_mutants": [
+    {
+      "mutant": "sha-ignores-read-error",
+      "compiled": true,
+      "caught": true,
+      "exit": 0,
+      "output_bytes": 65
+    },
+    {
+      "mutant": "copy-ignores-read-error",
+      "compiled": true,
+      "caught": true,
+      "exit": 0,
+      "output_bytes": 30
+    },
+    {
+      "mutant": "copy-assumes-full-write",
+      "compiled": true,
+      "caught": true,
+      "exit": 0,
+      "output_bytes": 4096
+    }
+  ],
+  "source_sha256": {
+    "sha256": "0781cdcec18570a57afbe3be4a6717dd2d1fa4c887b49a3e4cb542b594f8a041",
+    "streamcopy": "cc201fee107563e0796182c96e5dfb743d7d0590f828a1295d9caf76eea3ddab"
+  },
+  "scope": "real Linux nonblocking pipe failures; not EINTR or recovery after transient errors"
+}
