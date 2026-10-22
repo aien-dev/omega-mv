@@ -140,3 +140,22 @@ and `mutants.sh`), `fixtures`, and `aienos=lock:<sha>` (the AIENOS commit `aieno
 Host and interpreter results only. No QEMU or hardware run exists: the AIENOS column is NOT_RUN. Revocation is checked at
 the spawn effect boundary only; revocation during a blocked native read or write needs the native stream service. The
 durable journal is not enabled in these runs (`test-osh-journal` covers it).
+
+## Result-reader boundary follow-up (L553)
+
+Each identity key occurs exactly once. Tokens lacking `=`, empty/oversized
+values and unknown keys make the entire supplied result invalid; repeated keys
+are invalid even when their values agree. Metadata records provenance and does
+not authenticate execution. Synthetic native-looking files are comparator tests
+only, never AIENOS qualification.
+
+Run `node tests/osh/diff/result_reader_controls.mjs RUNNER TOY FIXTURES FRESH_OUT pins`
+with built absolute paths (or relative paths from the repository root). The first
+leg executes all original host fixtures, then probes the actual reader through
+its CLI. An optional final host-result path runs comparator-only controls, used
+for sanitizer and mutation legs. Compile-time behavioral controls are in
+`result_reader_mutants.mjs`; build errors, signals and deadlines never count as kills.
+
+Imported vector strings are released on successful comparison and invalid-host
+refusal. The sanitizer comparator leg enables leak detection normally. It does
+not turn off a sanitizer or count a diagnostic as an expected refusal.

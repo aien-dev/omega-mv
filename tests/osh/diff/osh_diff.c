@@ -836,6 +836,11 @@ typedef struct {
     char *vec[MAXFX]; /* normalized fields per fixture index, NULL = no line */
 } ResultFile;
 
+static void free_results(ResultFile *r)
+{
+    for (int i = 0; i < MAXFX; i++) { free(r->vec[i]); r->vec[i] = NULL; }
+}
+
 static int pin_index(const char *k, size_t n)
 {
     for (int i = 0; i < NPIN; i++)
@@ -882,11 +887,17 @@ static void load_results(const char *path, ResultFile *r)
             if (pins) rf_invalid(r, "%s", "two pin lines");
             pins = 1;
             for (char *s = line + 12; *s;) {
-                size_t k = strcspn(s, "=");
-                char *val = s + k + 1;
-                size_t vl = strcspn(val, " ");
-                int pi = s[k] == '=' ? pin_index(s, k) : -1;
+                /* Bound the token before looking for a value. In particular,
+                 * a missing '=' must not read past the terminating NUL. */
+                size_t token_len = strcspn(s, " ");
+                char *eq = memchr(s, '=', token_len);
+                if (!eq) { rf_invalid(r, "%s", "pin token without ="); break; }
+                size_t k = (size_t)(eq - s);
+                char *val = eq + 1;
+                size_t vl = token_len - k - 1;
+                int pi = pin_index(s, k);
                 if (pi < 0) { rf_invalid(r, "unknown pin key in: %s", s); break; }
+                if (r->pin[pi][0]) { rf_invalid(r, "duplicate pin %s", PIN_KEYS[pi]); break; }
                 if (vl == 0 || vl >= sizeof r->pin[pi]) { rf_invalid(r, "empty or long pin value for %s", PIN_KEYS[pi]); break; }
                 snprintf(r->pin[pi], sizeof r->pin[pi], "%.*s", (int)vl, val);
                 s = val + vl;
@@ -993,11 +1004,17 @@ int main(int argc, char **argv)
     if (make_bindir(toy, bindir) != 0) { perror("toy bin directory"); return 1; }
 
     static Verdict hn[MAXFX], hi[MAXFX];
-    ResultFile hostf, nat;
-    memset(&nat, 0, sizeof nat);
+    ResultFile hostf = {0}, nat = {0};
     if (host_path) {
         load_results(host_path, &hostf);
-        if (!hostf.valid) { printf("host results %s invalid: %s\nOSH_DIFF_COMPARE_ONLY_FAIL\n", host_path, hostf.why); return 1; }
+        if (!hostf.valid) {
+            printf("host results %s invalid: %s\nOSH_DIFF_COMPARE_ONLY_FAIL\n", host_path, hostf.why);
+            free_results(&hostf);
+            rm_tree(bindir);
+            rmdir(root);
+            munmap(OBS, sizeof *OBS);
+            return 1;
+        }
         for (int i = 0; i < NFX; i++) {
             memset(&hn[i], 0, sizeof hn[i]);
             if (hostf.vec[i]) snprintf(hn[i].norm, sizeof hn[i].norm, "%s", hostf.vec[i]);
@@ -1084,7 +1101,7 @@ int main(int argc, char **argv)
 
     if (emit_path && !host_path) {
         FILE *e = fopen(emit_path, "w");
-        if (!e) { perror(emit_path); return 1; }
+        if (!e) { perror(emit_path); free_results(&hostf); free_results(&nat); munmap(OBS, sizeof *OBS); return 1; }
         fprintf(e, "OSHDIFF-RESULT 1\nOSHDIFF pin");
         for (int k = 0; k < NPIN; k++) fprintf(e, " %s=%s", PIN_KEYS[k], hpin[k]);
         fprintf(e, "\n");
@@ -1098,5 +1115,8 @@ int main(int argc, char **argv)
     if (require_native && portable_nr) printf("acceptance: %d portable fixtures have no native AIENOS result (NOT_RUN is never green)\n", portable_nr);
     if (host_path) printf("%s\n", bad ? "OSH_DIFF_COMPARE_ONLY_FAIL" : "OSH_DIFF_COMPARE_ONLY_PASS");
     else printf("%s\n", bad ? "OSH_DIFF_FAIL" : "OSH_DIFF_PASS");
+    free_results(&hostf);
+    free_results(&nat);
+    munmap(OBS, sizeof *OBS);
     return bad ? 1 : 0;
 }
