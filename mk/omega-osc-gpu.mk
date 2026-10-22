@@ -31,6 +31,11 @@ $(OSG_DIR)/test_osc_gpu_chip: tests/osc_gpu/test_osc_gpu.c $(OSG_SRCS) $(OSG_CHI
 test-osc-gpu: $(OSG_DIR)/test_osc_gpu $(OUT_DIR)/omegese/omegese $(OUT_DIR)/omega_emit/omega_emit $(OUT_DIR)/checker2/checker2
 	sh tests/osc_gpu/run.sh $(OUT_DIR)/omegese/omegese $(OUT_DIR)/omega_emit/omega_emit $(OUT_DIR)/checker2/checker2 $(OSG_DIR)/test_osc_gpu $(OSG_DIR)/ir
 
+# osc_gpu_build: one checked kernel to code + a C header that embeds it (tools/osc_gpu/osc_gpu_build.c)
+$(OSG_DIR)/osc_gpu_build: tools/osc_gpu/osc_gpu_build.c $(OSG_SRCS) $(OSG_OSC_LIB) $(OSG_HDRS)
+	@mkdir -p $(OSG_DIR)
+	$(CC) $(OSG_CFLAGS) -o $@ tools/osc_gpu/osc_gpu_build.c $(OSG_SRCS) $(OSG_OSC_LIB) -lm
+
 test-osc-gpu-chip: $(OSG_DIR)/test_osc_gpu_chip test-osc-gpu
 	$(OSG_DIR)/test_osc_gpu_chip $(OSG_DIR)/ir
 endif
