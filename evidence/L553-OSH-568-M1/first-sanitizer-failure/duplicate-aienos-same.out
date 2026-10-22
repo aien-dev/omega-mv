@@ -1,0 +1,21 @@
+
+=================================================================
+==2247192==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 7083 byte(s) in 33 object(s) allocated from:
+    #0 0xffaa23970a80 in strdup ../../../../src/libsanitizer/asan/asan_interceptors.cpp:578
+    #1 0xaf0888d943d0 in load_results tests/osh/diff/osh_diff.c:911
+    #2 0xaf0888d996f4 in main tests/osh/diff/osh_diff.c:1023
+    #3 0xffaa230884c0 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #4 0xffaa23088594 in __libc_start_main_impl ../csu/libc-start.c:360
+    #5 0xaf0888d8a56c in _start (/home/drakestapleton/workspace/omega-descending-next-uncovered-20261022/build/L553/pins-fixed/osh/osh_diff_asan+0x10a56c) (BuildId: 1809aa66f43684d8504e3d781173ea91f59fffa8)
+
+Direct leak of 7083 byte(s) in 33 object(s) allocated from:
+    #0 0xffaa23970a80 in strdup ../../../../src/libsanitizer/asan/asan_interceptors.cpp:578
+    #1 0xaf0888d943d0 in load_results tests/osh/diff/osh_diff.c:911
+    #2 0xaf0888d987f0 in main tests/osh/diff/osh_diff.c:1005
+    #3 0xffaa230884c0 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #4 0xffaa23088594 in __libc_start_main_impl ../csu/libc-start.c:360
+    #5 0xaf0888d8a56c in _start (/home/drakestapleton/workspace/omega-descending-next-uncovered-20261022/build/L553/pins-fixed/osh/osh_diff_asan+0x10a56c) (BuildId: 1809aa66f43684d8504e3d781173ea91f59fffa8)
+
+SUMMARY: AddressSanitizer: 14166 byte(s) leaked in 66 allocation(s).

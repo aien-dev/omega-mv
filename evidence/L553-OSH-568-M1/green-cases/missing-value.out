@@ -1,0 +1,43 @@
+OSH cross-adapter pipeline differential (omega#568) -- COMPARE ONLY, host results read from a file, not run
+pins host:   adapter=linux-host aienos=lock:unknown omega=unknown
+             core=1512a052c93be7f263a02090f9dab5fd81409df8b0633b134bc3230e78871450
+             abi=aien-protocols-mv@fb5fca98e6676bb104888c73268e0f9a81e9c63e
+             cc=unknown harness=unknown
+             fixtures=fa17782b0260856d13c9de865715145147c7f25a33fd7b69a68e9a5d27eb7da3
+pins aienos: INVALID result file /home/drakestapleton/workspace/omega-descending-next-uncovered-20261022/build/L553/pins-final-green/missing-value.result: empty or long pin value for cc
+fixture                      scope    host-native host-interp aienos   reason
+f01_two_stage                portable (file)      (file)      FAIL     native result file invalid
+f02_three_stage              portable (file)      (file)      FAIL     native result file invalid
+f03_argv_boundary_text       portable (file)      (file)      FAIL     native result file invalid
+f04_argv_boundary_direct     portable (file)      (file)      FAIL     native result file invalid
+f05_direct_pipeline          portable (file)      (file)      FAIL     native result file invalid
+f06_binary_bytes             portable (file)      (file)      FAIL     native result file invalid
+f07_large_output             portable (file)      (file)      FAIL     native result file invalid
+f08_short_reads_writes       portable (file)      (file)      FAIL     native result file invalid
+f09_consumer_early_exit      portable (file)      (file)      FAIL     native result file invalid
+f10_early_exit_middle        portable (file)      (file)      FAIL     native result file invalid
+f11_zero_length_stream       portable (file)      (file)      FAIL     native result file invalid
+f12_exit_statuses            portable (file)      (file)      FAIL     native result file invalid
+f13_failed_producer          portable (file)      (file)      FAIL     native result file invalid
+f14_and_or                   portable (file)      (file)      FAIL     native result file invalid
+f15_redir_order_dup_first    portable (file)      (file)      FAIL     native result file invalid
+f16_redir_order_file_first   portable (file)      (file)      FAIL     native result file invalid
+f17_redir_in_pipeline        portable (file)      (file)      FAIL     native result file invalid
+f18_failed_redirection       portable (file)      (file)      FAIL     native result file invalid
+f19_not_found                portable (file)      (file)      FAIL     native result file invalid
+f20_builtin_in_pipeline      portable (file)      (file)      FAIL     native result file invalid
+f21_refuse_background        portable (file)      (file)      FAIL     native result file invalid
+f22_refuse_later_list        portable (file)      (file)      FAIL     native result file invalid
+f23_refuse_nul               portable (file)      (file)      FAIL     native result file invalid
+f24_revoked_spawn            portable (file)      (file)      FAIL     native result file invalid
+f25_cancel_interrupt         portable (file)      (file)      FAIL     native result file invalid
+f26_partial_launch_2         portable (file)      (file)      FAIL     native result file invalid
+f27_partial_launch_3         portable (file)      (file)      FAIL     native result file invalid
+f28_launch_fail_first        portable (file)      (file)      FAIL     native result file invalid
+f29_stopped_member           linux    (file)      (file)      NOT_RUN  platform-specific (linux)
+f30_no_descriptors           linux    (file)      (file)      NOT_RUN  platform-specific (linux)
+f31_no_processes             linux    (file)      (file)      NOT_RUN  platform-specific (linux)
+f32_file_size_limit          linux    (file)      (file)      NOT_RUN  platform-specific (linux)
+f33_bounded_memory           linux    (file)      (file)      NOT_RUN  platform-specific (linux)
+summary: host PASS 0 FAIL 0 NOT_RUN 0 (two runs per fixture) | aienos PASS 0 FAIL 28 NOT_RUN 5 (portable NOT_RUN 0)
+OSH_DIFF_COMPARE_ONLY_FAIL
