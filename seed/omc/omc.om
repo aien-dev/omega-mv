@@ -1,0 +1,300 @@
+note omc: the Omega compiler written in Omega (the om4 subset). Reads Omegese on stdin, writes a runnable
+note AArch64 Linux program (or bare function words) on stdout. Built first by om4; its codegen matches om4
+note byte for byte, so om4(X) == omc(X) on every program (seed chain rung 5, ledger L408).
+note All compiler state lives in fixed global pools (decision 24: no heap). Every working value is a ulong
+note (raw 64 bits) so the language's checked conversions never fire on om4's untyped-register logic.
+
+note ---- input, output, token ----
+global inp uchar 8388607
+global inlen ulong 1
+global cur ulong 1
+global line ulong 1
+global tk ulong 1
+global tw ulong 1
+global tl ulong 1
+global ts ulong 1
+global tbig ulong 1
+global out uchar 8388608
+global oc ulong 1
+
+note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
+global nm_name ulong 1024
+global nm_reg uchar 1024
+global nm_type uchar 1024
+global nm_len ulong 1024
+global nm_kind uchar 1024
+global nm_addr ulong 1024
+global nn ulong 1
+
+note ---- function table (512): name, address (byte offset in out), return type, parameter count,
+note per-parameter type/length/kind (6 each), name length, name offset in the input ----
+global fn_name ulong 512
+global fn_addr ulong 512
+global fn_ret uchar 512
+global fn_np uchar 512
+global fn_pt uchar 3072
+global fn_pl ulong 3072
+global fn_pk uchar 3072
+global fn_nmlen ulong 512
+global fn_off ulong 512
+global nf ulong 1
+global lastfn ulong 1
+
+note ---- compiler state ----
+global npar ulong 1
+global held ulong 1
+global nslot ulong 1
+global curret ulong 1
+global progmode ulong 1
+global nglob ulong 1
+global stkbytes ulong 1
+global dead ulong 1
+global poolb ulong 1
+
+note ======== leaf helpers ========
+
+note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
+fn poolc i ulong to ulong
+if lt i 7
+ret i
+end
+if lt i 15
+ret add i 1
+end
+ret 17
+end
+
+fn emitb b uchar to void
+o = get oc 0
+put out o b
+put oc 0 add o 1
+end
+
+fn emit w ulong to void
+emitb uchar and w 255
+emitb uchar and shr w 8 255
+emitb uchar and shr w 16 255
+emitb uchar and shr w 24 255
+end
+
+note ---- error reporting ----
+global msg uchar 64
+global mc ulong 1
+
+fn mputb b uchar to void
+m = get mc 0
+put msg m b
+put mc 0 add m 1
+end
+
+fn mputn v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+j = i
+while gt j 0
+j = sub j 1
+mputb get d j
+end
+end
+
+note fail: write "omc: line N: error E" to stderr (fd 2) and exit with the code
+fn fail code ulong to void
+put mc 0 0
+mputb 111
+mputb 109
+mputb 99
+mputb 58
+mputb 32
+mputb 108
+mputb 105
+mputb 110
+mputb 101
+mputb 32
+mputn get line 0
+mputb 58
+mputb 32
+mputb 101
+mputb 114
+mputb 114
+mputb 111
+mputb 114
+mputb 32
+mputn code
+mputb 10
+w = write 2 msg 0 get mc 0
+exit int code
+end
+
+note tok_num: the word at [ts,cur) is [-]decimal, at most 20 digits, from -2^63 to 2^64 - 1 (error 6
+note bad number, 8 out of range). tw = its raw 64 bits (a negative one as two's complement); tbig = 1
+note when it is 2^63 or more (only a ulong holds it), else 0. As om4's TK_NUM.
+fn tok_num to void
+p = get ts 0
+e = get cur 0
+minus = false
+if eq get inp p 45
+minus = true
+p = add p 1
+end
+ndig = sub e p
+if eq ndig 0
+fail 6
+end
+if gt ndig 20
+fail 6
+end
+v = ulong 0
+lim = ulong 1844674407370955161
+i = p
+while lt i e
+d = sub ulong get inp i 48
+if gt d 9
+fail 6
+end
+if gt v lim
+fail 8
+end
+if and eq v lim gt d 5
+fail 8
+end
+v = add mul v 10 d
+i = add i 1
+end
+half = shl ulong 1 63
+put tbig 0 0
+if minus
+if gt v half
+fail 8
+end
+put tw 0 sub ulong 0 v
+else
+if ge v half
+put tbig 0 1
+end
+put tw 0 v
+end
+put tk 0 2
+end
+
+note tok_text: a text literal starting at the opening quote. tw = first byte offset, tl = source length
+note (escapes not yet decoded). Ends at an unescaped '"' on the same line, followed by a blank/end. Err 22.
+fn tok_text to void
+put cur 0 add get cur 0 1
+put tw 0 get cur 0
+go = true
+while go
+if ge get cur 0 get inlen 0
+fail 22
+end
+b = get inp get cur 0
+if eq b 10
+fail 22
+end
+if eq b 34
+go = false
+else
+put cur 0 add get cur 0 1
+if eq b 92
+if ge get cur 0 get inlen 0
+fail 22
+end
+if eq get inp get cur 0 10
+fail 22
+end
+put cur 0 add get cur 0 1
+end
+end
+end
+put tl 0 sub get cur 0 get tw 0
+put cur 0 add get cur 0 1
+put tk 0 4
+if lt get cur 0 get inlen 0
+if gt get inp get cur 0 32
+fail 22
+end
+end
+end
+
+note tok2: a word at cur with first byte c; packs 8 bytes into tw, sets tl and ts. A '"' is a text; a
+note first byte '-' or a digit is a number.
+fn tok2 c uchar to void
+if eq c 34
+tok_text
+ret
+end
+put ts 0 get cur 0
+w = ulong 0
+sh = ulong 0
+n = ulong 0
+go = true
+while go
+if ge get cur 0 get inlen 0
+go = false
+else
+b = get inp get cur 0
+if le b 32
+go = false
+else
+if lt n 8
+w = or w shl ulong b sh
+sh = add sh 8
+end
+n = add n 1
+put cur 0 add get cur 0 1
+end
+end
+end
+put tw 0 w
+put tl 0 n
+f = get inp get ts 0
+isnum = false
+if eq f 45
+isnum = true
+end
+if and ge f 48 le f 57
+isnum = true
+end
+if isnum
+tok_num
+else
+put tk 0 1
+end
+end
+
+note tok: next word, skipping blanks; newline is end of line (kind 0) and bumps the line number.
+fn tok to void
+while lt get cur 0 get inlen 0
+c = get inp get cur 0
+if eq c 32
+put cur 0 add get cur 0 1
+else
+if eq c 9
+put cur 0 add get cur 0 1
+else
+if eq c 13
+put cur 0 add get cur 0 1
+else
+if eq c 10
+put cur 0 add get cur 0 1
+put line 0 add get line 0 1
+put tk 0 0
+ret
+else
+tok2 c
+ret
+end
+end
+end
+end
+end
+put tk 0 3
+end
