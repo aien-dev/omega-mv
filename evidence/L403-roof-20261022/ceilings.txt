@@ -1,0 +1,56 @@
+## GDN layer MACs/token (qkv+z+a+b+out+router+sharedgate+9 experts)
+expr: 8192*2048+4096*2048+64*2048+2048*4096+256*2048+2048+9*(2*512*2048+2048*512)
+decimal 62523392 (exact)
+receipt calc:95075b44071fe34131894b1f943a042d1b0417ee9115c0a9b7ba0fd6c631e9c0
+## attention layer MACs/token (q+k+v+o+router+sharedgate+9 experts)
+expr: 8192*2048+2*512*2048+2048*4096+256*2048+2048+9*(2*512*2048+2048*512)
+decimal 56100864 (exact)
+receipt calc:1fde4f77decfb34a8c63a846189d0cd8b1963369e59ffef63dcb6c0da0aeb52d
+## linear MACs/token, 30 GDN + 10 attention layers
+expr: 30*62523392+10*56100864
+decimal 2436710400 (exact)
+receipt calc:74b3167ad764a03701f11afc3f5b9468cc66ae26bce753f946b31f75494c77eb
+## attention QK+PV MACs/token averaged over an 8192 prompt (10 layers x 16 heads x 256 dim x 2, causal mean context (L+1)/2)
+expr: 10*16*256*2*(8192+1)/2
+decimal 335585280 (exact)
+receipt calc:ce2fa027b9318c433d2d1b819bcf481f061a8993d12af3800e234a0dfcda9f7e
+## DeltaNet recurrent MACs/token (30 layers x 32 heads x 4 x 128x128)
+expr: 30*32*4*128*128
+decimal 62914560 (exact)
+receipt calc:4a6de2566cca58e1585445f041a40940670734e4028781845ac129d29de74615
+## FLOP/token at 8k = 2 x MACs
+expr: 2*(2436710400+335585280+62914560)
+decimal 5670420500 (rounded to 8 significant digits)
+receipt calc:2175fcce2935bd9e7dfc4dc955947ea2d653b4b8a078c7abb4cb764800f3c3e2
+## roof tok/s at FP8 QMMA 237.52 TFLOPS (L151 measured)
+expr: 237.52e12/5670420480
+decimal 41887.546 (rounded to 8 significant digits)
+receipt calc:c298b6fdce58a6ac9a998466668bcf67df1d35adab7ccd22b9f2582b4bde222b
+## target fraction: 15000 tok/s of the FP8 roof
+expr: 15000/(237.52e12/5670420480)
+decimal 0.35810166 (rounded to 8 significant digits)
+receipt calc:efc0ab9c0719a9d43b2d4b99721635234d69f7c9d7196b4bc8b102fd08e37f4e
+## roof tok/s at BF16 HMMA 118.81 TFLOPS
+expr: 118.81e12/5670420480
+decimal 20952.591 (rounded to 8 significant digits)
+receipt calc:44b8d63707bec5d32f26f484b418591ae63d084ebafaa9e2b7d1b57c0a362ee5
+## exact (FFMA, bit-identical to the decode GEMV) roof tok/s at the FFMA maker rate 31 TFLOPS
+expr: 31e12/5670420480
+decimal 5466.9667 (rounded to 8 significant digits)
+receipt calc:6a7108ae6bffb602ad6f59f97bed11b874d64888349a9772e0011af934e7a9e4
+## exact roof tok/s at FFMA measured 17.7 TFLOPS (L151)
+expr: 17.7e12/5670420480
+decimal 3121.4616 (rounded to 8 significant digits)
+receipt calc:779c057a7e4a482cdf2a8160b863833dbf174495f087404d1c832d229049d2b6
+## exact path minimum time to read 8192 tokens at 31 TFLOPS FFMA, s
+expr: 8192*5670420480/31e12
+decimal 1.4984543 (rounded to 8 significant digits)
+receipt calc:87960908247b5cb7cdaf510146c5b8d0e4982264e5b09d0b8080930341371f3b
+## FP8 path minimum time to read 8192 tokens at 237.52 TFLOPS, s
+expr: 8192*5670420480/237.52e12
+decimal 0.19557126 (rounded to 8 significant digits)
+receipt calc:5ed677da1d57c415ec81608bf55bbc81cb7efa791e2013c2ee6b4768971e7b0a
+## FLOP rate needed for first word under 1 s at 8192, TFLOPS
+expr: 8192*5670420480/1e12
+decimal 46.452085 (rounded to 8 significant digits)
+receipt calc:6abd4b1ab4c8a44845971974f26c8655485063e70dc3eb366dcbbf4fd62e48b0
