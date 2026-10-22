@@ -295,14 +295,16 @@ static int part_rounds(unsigned seed_base, const char *who, int ready_fd, int go
 static int reap(pid_t p) { int st = 0; if (p < 0 || waitpid(p, &st, 0) != p) return -1; return WIFEXITED(st) ? WEXITSTATUS(st) : 128 + (WIFSIGNALED(st) ? WTERMSIG(st) : 0); }
 static int pipe_or_die(int fd[2]) { if (pipe(fd) != 0) { printf("NOT_RUN: pipe\n"); exit(2); } return 0; }
 
-static void chip_tier(void) {
+static void chip_tier(int values_only) {
     char w[300];
     fflush(stdout);
+    if (!values_only) {
     pid_t h = fork();
     if (h == 0) _exit(part_hang(-1));
     int rc = reap(h);
     snprintf(w, sizeof w, "C5 hang: never-ending kernel timed out, recovered, correct launch in the same process (child exit %d)", rc);
     check(rc == 0, w);
+    }
 
     /* two processes, started together after both are set up, each running RUN_MS: their spans must overlap */
     int ready[2], go[2], span[2];
@@ -323,6 +325,11 @@ static void chip_tier(void) {
     check(ra == 0 && rb == 0 && overlap_ms >= (double)RUN_MS * 0.5, w);
     close(ready[0]); close(ready[1]); close(go[0]); close(go[1]); close(span[0]); close(span[1]);
 
+    if (values_only) {
+        puts("C5 recovery: NOT_RUN (values-only; hang needs a separate reservation)");
+        return;
+    }
+
     /* a hang beside a working process: process 1 starts when process 2's hang begins and runs until process 2 is done */
     int sig[2], rdy[2];
     pipe_or_die(sig); pipe_or_die(rdy);
@@ -341,12 +348,13 @@ int main(int argc, char **argv) {
     const char *tier = "chip";
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--host-only")) tier = "host";
+        else if (!strcmp(argv[i], "--values-only")) tier = "values";
         else if (!strcmp(argv[i], "--dump-hang") && i + 1 < argc) { tier = "host"; g_dump = argv[++i]; }
-        else { fprintf(stderr, "usage: %s [--host-only] [--dump-hang PATH]\n", argv[0]); return 2; }
+        else { fprintf(stderr, "usage: %s [--host-only | --values-only] [--dump-hang PATH]\n", argv[0]); return 2; }
     }
     setvbuf(stdout, NULL, _IOLBF, 0);
     if (!strcmp(tier, "host")) host_only();
-    else chip_tier();
+    else chip_tier(!strcmp(tier, "values"));
     if (g_failed) printf("C5 isolation %s: FAIL (%d of %d)\n", tier, g_failed, g_checks);
     else printf("C5 isolation %s: PASS (%d checks)\n", tier, g_checks);
     return g_failed ? 1 : 0;
