@@ -18,3 +18,8 @@ make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-program-realize
 ```
 
 The `OMEGA_PROGRAM_REALIZE_PASS`, `OMEGA_REALIZATION_DIFFERENTIAL_PASS` and `OMEGA_REALIZATION_TRIPLE_BIND_PASS` gates should pass with exit 0. [TEACHING-REPLAY.txt](TEACHING-REPLAY.txt) records what actually happened. The full source-to-semantic-ID-to-receipt chain requested in [issue 619](https://github.com/aien-dev/omega-mv/issues/619) is not a single implemented `main` path. This lesson therefore qualifies only the existing program fixture and names the missing integration explicitly. Chip work and any hardware receipts require their own pinned, independent check.
+
+
+### Parent fresh-checkout replay
+
+A separate coordination replay is retained in [the parent receipt](docs/parent-replay-2026-10-22.txt). Its scope and observed exit are explicit; source review and final desk qualification remain separate. A recorded absence or expected failing baseline is not a passing implementation.
