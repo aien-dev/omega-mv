@@ -355,6 +355,8 @@ static void chip_tier(unsigned max_log2) {
     omega_gpu_prefix_sum_reference(g_x, 1000, g_ref);
     size_t first;
     check(omega_gpu_prefix_sum(g_x, 1000, g_y, NULL) == 0 && diff(g_y, g_ref, 1000, &first) == 0, "the real kernels are right again after the red checks");
+    omega_gpu_session_close(); /* the kernels go with the device (close hook); the next call builds them on a new one */
+    check(omega_gpu_prefix_sum(g_x, 1000, g_y, NULL) == 0 && diff(g_y, g_ref, 1000, &first) == 0, "after the device closed and opened again the kernels are rebuilt and right");
     free(g_x); free(g_y); free(g_ref);
 }
 
