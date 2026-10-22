@@ -55,5 +55,29 @@ if (mode === 'pins') {
   compare('key-without-equals', synthetic.replace(/ cc=\S+/, ' cc broken=value'), 1, ['INVALID result file', 'pin token without =', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
   compare('unknown-key', synthetic.replace('OSHDIFF pin ', 'OSHDIFF pin other=value '), 1, ['INVALID result file', 'unknown pin key', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
 }
+if (mode === 'framing') {
+  for (const [name, bytes] of [
+    ['nul-header', synthetic.replace('OSHDIFF-RESULT 1\n', 'OSHDIFF-RESULT 1\0ignored\n')],
+    ['nul-pin', synthetic.replace(/(OSHDIFF pin[^\n]*)/, '$1\0ignored')],
+    ['nul-vector', synthetic.replace(/(OSHDIFF vec[^\n]*)/, '$1\0ignored')],
+    ['nul-end', synthetic.replace(/(OSHDIFF end[^\n]*)/, '$1\0ignored')],
+  ]) compare(name, bytes, 1, ['INVALID result file', 'NUL in OSHDIFF line', 'aienos PASS 0 FAIL 28', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
+  compare('overlong-protocol', synthetic.replace('OSHDIFF-RESULT 1\n', `OSHDIFF-RESULT 1${'\0'.repeat(16384)}\n`), 1, ['INVALID result file', 'OSHDIFF line too long', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
+  // Old fgets framing sees each 16383-byte chunk as a new physical line and
+  // accepts these protocol records hidden inside ordinary serial-noise lines.
+  const hidden = synthetic.split('\n').filter(Boolean).map(l => 'x'.repeat(16383) + l).join('\n') + '\n';
+  compare('chunk-injected-records', hidden, 1, ['INVALID result file', 'no "OSHDIFF-RESULT 1" header', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
+  compare('long-serial-noise', `${'x'.repeat(50000)}OSHDIFF-RESULT bogus\n${synthetic}`, 0, good);
+  compare('unterminated-final-line', synthetic.trimEnd(), 0, good);
+  compare('line-size-boundary', synthetic.replace('OSHDIFF-RESULT 1\n', `OSHDIFF-RESULT 1\n${'OSHDIFF '.padEnd(16383, 'x')}\n`), 1, ['unknown OSHDIFF line:', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
+  compare('line-size-overflow', `${'OSHDIFF '.padEnd(16384, 'x')}\n${synthetic}`, 1, ['OSHDIFF line too long', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
+  const directory = join(out, 'read-error-directory');
+  mkdirSync(directory);
+  check('read-error', run('read-error', ['--host-results', hostPath, '--native', directory, toy, fx]), 1,
+    ['INVALID result file', 'result file read error', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
+  for (const [name, count] of [['plus', '+33'], ['space', ' 33'], ['minus-zero', '-0'], ['empty', '']]) {
+    compare(`end-${name}`, synthetic.replace(/OSHDIFF end n=\d+/, `OSHDIFF end n=${count}`), 1, ['INVALID result file', 'invalid end line count', 'OSH_DIFF_COMPARE_ONLY_FAIL']);
+  }
+}
 console.log(`RESULT_READER_${mode.toUpperCase()}: ${passed} passed, ${failed} failed; synthetic native controls only`);
 process.exitCode = failed ? 1 : 0;

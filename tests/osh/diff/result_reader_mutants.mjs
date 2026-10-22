@@ -8,10 +8,24 @@ if (!referenceArg || !['pins', 'framing'].includes(mode)) throw Error('usage: no
 const reference = resolve(referenceArg);
 const root = mkdtempSync('/tmp/L553-reader-mutants-');
 const source = readFileSync('tests/osh/diff/osh_diff.c', 'utf8');
+const framingStart = source.indexOf('    for (;;) {\n        /* Read one physical serial line');
+const framingEnd = source.indexOf('        if (ended) { rf_invalid');
 const mutations = mode === 'pins' ? [
   ['duplicate', '                if (r->pin[pi][0]) { rf_invalid(r, "duplicate pin %s", PIN_KEYS[pi]); break; }', '', 16],
   ['token', 'char *eq = memchr(s, \'=\', token_len);', 'char *eq = strchr(s, \'=\');', 1],
-] : [];
+] : [
+  ['nul', '        if (has_nul) { rf_invalid(r, "%s", "NUL in OSHDIFF line"); continue; }',
+    '        (void)has_nul;', 4],
+  ['count', '            if (line[14] < \'0\' || line[14] > \'9\' || *e)',
+    '            if (*e)', 4],
+  ['read-error', '    if (ferror(f)) rf_invalid(r, "%s", "result file read error");', '', 1],
+  ['chunks', source.slice(framingStart, framingEnd),
+    `    while (fgets(line, sizeof line, f)) {
+        size_t n = strlen(line);
+        while (n && (line[n - 1] == '\\n' || line[n - 1] == '\\r')) line[--n] = 0;
+        if (strncmp(line, "OSHDIFF", 7) != 0) continue;
+`, 7],
+];
 function command(name, program, args) {
   const r = spawnSync(program, args, {encoding:'utf8', timeout:180000, maxBuffer:4 << 20});
   writeFileSync(join(root, `${name}.log`), (r.stdout ?? '') + (r.stderr ?? ''));
@@ -27,7 +41,14 @@ for (const [name, from, to, count] of mutations) {
   if (build.status !== 0) throw Error(`${name}: compile failure, never a kill`);
   const probe = command(`${name}-test`, process.execPath, ['tests/osh/diff/result_reader_controls.mjs', `${out}/osh/osh_diff`, `${out}/osh/osh_toy`, 'tests/osh/diff/fixtures.txt', join(root, `${name}-cases`), mode, reference]);
   const failures = probe.stdout.split('\n').filter(l=>l.startsWith('FAIL '));
-  const expected = name === 'duplicate' ? failures.every(l=>l.startsWith('FAIL duplicate-')) : failures.every(l=>l.startsWith('FAIL key-without-equals:'));
+  const expected = failures.every(l => {
+    if (name === 'duplicate') return l.startsWith('FAIL duplicate-');
+    if (name === 'token') return l.startsWith('FAIL key-without-equals:');
+    if (name === 'nul') return l.startsWith('FAIL nul-');
+    if (name === 'count') return l.startsWith('FAIL end-');
+    if (name === 'chunks') return /^FAIL (nul-|overlong-protocol:|chunk-injected-records:|line-size-overflow:)/.test(l);
+    return l.startsWith('FAIL read-error:');
+  });
   if (probe.status !== 1 || failures.length !== count || !expected || !probe.stdout.includes(`${count} failed; synthetic native controls only`)) throw Error(`${name}: wrong behavioral verdict: ${failures.join('; ')}`);
   console.log(`PASS ${name}: compiled, ${count} exact expected failing assertions`);
 }

@@ -159,3 +159,14 @@ for sanitizer and mutation legs. Compile-time behavioral controls are in
 Imported vector strings are released on successful comparison and invalid-host
 refusal. The sanitizer comparator leg enables leak detection normally. It does
 not turn off a sanitizer or count a diagnostic as an expected refusal.
+
+The result reader consumes complete physical serial lines with bounded memory.
+An `OSHDIFF` line may contain at most 16,383 bytes before LF, including an
+optional trailing CR; embedded NUL and longer protocol lines invalidate the
+entire result. Longer nonprotocol console lines are drained and ignored as one
+line. Their continuation bytes never become records. A final line without LF
+is accepted. The end count is nonempty unsigned decimal and matches the number
+of vector records. Read errors are invalid results.
+
+Use the `framing` mode of both boundary/control scripts for these cases. The
+exact-size boundary checks diagnostic class separately from byte comparison.
