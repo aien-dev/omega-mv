@@ -6,7 +6,7 @@ This is a bounded repair to the **experimental** R6 scalar IR emitter, not compl
 
 The starting IR implementation was inherited uncommitted work in the L408 worktree. Its source SHA-256 is `04fc0d5f6dcfba93bcd9adecaf63bbc7c883adb05d7e48a7401af3fb9d9b4ecd`; `inherited-ir.patch` preserves that input separately. `repair.patch` shows this repair alone. The original compiler source remains unchanged there; this repair has its own worktree and branch.
 
-Production compiler source: `seed/omc/omc.om`, SHA-256 `6ce0e53fbf7a99454cfbfe1e6790c6c0065f4e1d8538dd95fad9ad9b8b571f51`.
+Compiler source under test: `seed/omc/omc.om`, SHA-256 `6ce0e53fbf7a99454cfbfe1e6790c6c0065f4e1d8538dd95fad9ad9b8b571f51`.
 Compiler ELF: SHA-256 `d61d76156688320aa7f70327a34cc34901814bfbaa15e4659bc9cf13714fbf76`.
 
 The rebuilt ancestry is seed0 handwritten hex -> hex1 -> asm2 -> om4 -> Omega-written omc -> two self-builds. The outside initial conversion is the disclosed POSIX-shell `load0.sh`; shell/file/hash utilities and Linux remain host dependencies. No C compiler builds omc in that reconstruction. Fixed-point identity is self-consistency, not independent proof of compiler correctness.
@@ -59,7 +59,7 @@ The harness rejects failed compiler exits and empty/non-AArch64 ELF artifacts be
 - **Full Gate5 performance section 7: NOT_RUN.** Its exclusive quiet-lock admission was blocked by a long-lived fixture server (pid 986427) holding an inherited shared lock fd, plus an existing suite. Only this repair's never-started waiter was cancelled; no holder was killed. All Gate5 correctness assertions ran separately unchanged. No performance claim is made.
 - The inherited IR emitter still has known unsupported/incorrect cases outside this repair, including parenthesized values, nonliteral `for` counts, and multiple functions. This branch must not be presented as general IR-ready or merged as completion of R6.
 - Native ELF compilation, IR emission, reference backend execution and actual GPU execution are separate capabilities. No new GPU execution or C/Rust production retirement is claimed.
-- Independent read-only review is tracked as **L527** on exact source milestone `6849cae1`; no independent-review completion claim until its findings return.
+- Independent read-only review **L527** returned no important finding on exact source milestone `6849cae1`; see `review.md`. This is bounded source review, not a whole-IR approval or an additional executable-test run.
 
 ## Final qualification disposition
 
