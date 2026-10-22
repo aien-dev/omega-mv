@@ -4,3 +4,4 @@
 set -eu
 mkdir -p build/omega_ref
 quiet-build cc -O2 -g -std=gnu11 -Wall -Wextra -Werror -o build/omega_ref/omega_ref tools/omega_ref/omega_ref.c -lpthread
+quiet-build cc -O2 -g -std=gnu11 -Wall -Wextra -Werror -o build/omega_ref/omega_next tools/omega_ref/omega_next.c

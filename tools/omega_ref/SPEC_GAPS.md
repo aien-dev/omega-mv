@@ -102,3 +102,17 @@ interpreter does the same. Cases where om4 does something else are marked **om4 
 - **G24. Order of top-level lines.** `global` and `text` may come after functions and are seen by the
   functions written after them (`global_after`); a function after main is accepted (`fn_after_main`).
   Proposed: "A pool or text is visible to the functions written after it."
+
+## Found by the mutant check (`gate_next.sh`, 640 single-word mutants of the gate4 programs)
+
+- **G25. Which number a misplaced word gets.** The rule book names no number for a word in a place where
+  it cannot go. om4 uses: 16 for a fixed word or number where a name, a type or a value belongs, a line
+  starting with a word no line starts with, and a number where an array name belongs; 3 for a fixed word
+  where an array name belongs; 4 for `ret` with no value in a function that returns one; 10 for a
+  parameter with the function's own name; 15 for `else` with no open `if`; 13 for a too-long name at
+  the start of a line outside a function; and 9 for a pool or text with no `fn main`, decided at the end
+  of the input (a mistake earlier in the file is reported first). The interpreter now does the same: on
+  all 640 mutants om4 and the interpreter give the same verdict and the same refusal number. Proposed:
+  write this list into section 9 as the table of refusal numbers, one line per number, with 16 named
+  "a word where the grammar allows none" (decision 22: the grammar in `tools/omega_ref/s9.grammar`
+  is exactly the list of places).

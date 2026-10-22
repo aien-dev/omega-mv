@@ -176,6 +176,7 @@ static Global *globals;
 static int nglobals, capglobals;
 static uint64_t pool_bytes;
 static int program_mode;
+static int first_global_line; /* a pool or text in function mode is refused at the end (as om4 does) */
 
 /* ---------- lexing: lines and words ---------- */
 static char *src;
@@ -290,7 +291,7 @@ static Name *find_name(const char *w)
 }
 static void check_new_name(const char *w, int is_fn)
 {
-    if (!is_name(w) || is_reserved(w)) refuse(10, "'%s' cannot be a name", w); /* spec silent on the number */
+    if (!is_name(w) || is_reserved(w)) refuse(16, "'%s' cannot be a name", w); /* a word out of place: gap G25 */
     size_t n = strlen(w);
     if (is_fn ? n > 63 : n > 8) refuse(13, "name '%s' too long", w);
     if (find_func(w) >= 0 || find_global(w) >= 0 || find_name(w)) refuse(10, "'%s' is already in use", w);
@@ -345,6 +346,8 @@ static ARef parse_array_ref(const char *w, int *ety, uint64_t *len, int *ro, int
 {
     ARef r;
     if (!w) refuse(4, "an array name is missing");
+    if (!is_name(w)) refuse(16, "'%s' where an array name belongs", w); /* gap G25 */
+    if (is_reserved(w)) refuse(3, "'%s' is no array name", w);             /* gap G25 */
     Name *nm = find_name(w);
     if (nm && nm->kind != K_SCALAR) {
         r.kind = AK_LOCAL; r.idx = nm->slot;
@@ -501,7 +504,7 @@ static Node *parse_value(int want)
     } else if (!strcmp(w, "own")) {
         refuse(9, "own is not in the subset");
     } else if (!strcmp(w, "view") || !strcmp(w, "edit")) {
-        refuse(7, "%s only before a call argument", w);
+        refuse(16, "%s only before a call argument", w); /* gap G25 */
     } else {
         int fi = find_func(w);
         Name *nm = find_name(w);
@@ -515,7 +518,7 @@ static Node *parse_value(int want)
         } else if (is_name(w) && !is_reserved(w)) {
             refuse(3, "unknown name '%s'", w);
         } else {
-            refuse(6, "'%s' is not a value", w); /* spec silent on the number */
+            refuse(looks_number(w) ? 6 : 16, "'%s' is not a value", w); /* gap G25 */
         }
     }
     nest--;
@@ -581,6 +584,7 @@ static void parse_statement(void)
 {
     const char *w = nextw();
     Block *top = &blocks[nblocks - 1];
+    if (top->ended && strcmp(w, "end") && strcmp(w, "else")) refuse(17, "a line after ret or exit in the same block");
     if (!strcmp(w, "end")) {
         line_end();
         int ended = top->ended;
@@ -600,8 +604,8 @@ static void parse_statement(void)
         return;
     }
     if (!strcmp(w, "else")) {
+        if (top->kind != 1) refuse(15, "else without if"); /* gap G25 */
         line_end();
-        if (top->kind != 1) refuse(9, "else without if"); /* spec silent */
         int ended = top->ended;
         Stmt *ifs = top->owner;
         close_scope(depth);
@@ -637,7 +641,8 @@ static void parse_statement(void)
         const char *tw = nextw();
         if (!nmw || !tw) refuse(4, "for needs a name, a type and a count");
         int t = type_word(tw);
-        if (t == T_NONE || !tnum(t)) refuse(7, "for needs a whole-number type"); /* spec silent */
+        if (t == T_NONE) refuse(16, "for needs a type"); /* gap G25 */
+        if (!tnum(t)) refuse(7, "for needs a whole-number type");
         s->ty = t;
         const char *cw = peekw();
         if (!cw) refuse(4, "for needs a count");
@@ -673,7 +678,7 @@ static void parse_statement(void)
         if (curf->ret == T_VOID) {
             if (peekw()) refuse(7, "a void function returns no value");
         } else {
-            if (!peekw()) refuse(7, "ret needs a %s", TNAME[curf->ret]);
+            if (!peekw()) refuse(4, "ret needs a %s", TNAME[curf->ret]); /* gap G25 */
             s->v = value_for(curf->ret, "the returned value");
         }
         line_end();
@@ -747,8 +752,7 @@ static void parse_statement(void)
     /* <name> [=] <value> */
     if (find_global(w) >= 0) refuse(7, "'%s' is an array; write its elements with put", w); /* spec silent */
     if (!is_name(w) || is_reserved(w)) {
-        if (looks_number(w)) refuse(6, "a line cannot start with a number"); /* spec silent */
-        refuse(9, "'%s' cannot start a line", w);                       /* spec silent */
+        refuse(16, "'%s' cannot start a line", w); /* gap G25 */
     }
     if (peekw() && !strcmp(peekw(), "=")) wi++;
     if (!peekw()) refuse(4, "'%s' needs a value", w);
@@ -760,7 +764,8 @@ static void parse_statement(void)
         const char *tw = nextw(), *lw = nextw();
         if (!tw || !lw) refuse(4, "new needs a type, a length and a value");
         int t = type_word(tw);
-        if (t == T_NONE || !tnum(t)) refuse(7, "new needs a whole-number element type");
+        if (t == T_NONE) refuse(16, "new needs a type"); /* gap G25 */
+        if (!tnum(t)) refuse(7, "new needs a whole-number element type");
         int neg; uint64_t mag;
         if (!looks_number(lw)) refuse(16, "new needs its length written as a number");
         parse_number(lw, &neg, &mag);
@@ -816,9 +821,10 @@ static void parse_fn_header(void)
         const char *pw = nextw();
         if (!pw) refuse(4, "fn %s needs 'to' and a return type", nmw);
         if (!strcmp(pw, "to")) break;
-        if (is_main) refuse(9, "main has no parameters");
         if (f->np >= MAX_PARAMS) refuse(14, "too many parameters");
+        if (!strcmp(pw, nmw)) refuse(10, "parameter '%s' has the function's name", pw);
         check_new_name(pw, 0);
+        if (is_main) refuse(9, "main has no parameters");
         for (int j = 0; j < nnames; j++) if (!strcmp(names[j].name, pw)) refuse(10, "two parameters named '%s'", pw);
         const char *tw = nextw();
         if (!tw) refuse(4, "parameter '%s' needs a type", pw);
@@ -827,7 +833,8 @@ static void parse_fn_header(void)
             f->pkind[i] = tw[0] == 'v' ? PK_VIEW : PK_EDIT;
             const char *et = nextw(), *lw = peekw();
             int t = et ? type_word(et) : T_NONE;
-            if (t == T_NONE || !tnum(t)) refuse(7, "an array parameter needs a whole-number element type");
+            if (t == T_NONE) refuse(16, "an array parameter needs a type"); /* gap G25 */
+            if (!tnum(t)) refuse(7, "an array parameter needs a whole-number element type");
             if (!lw || !looks_number(lw)) refuse(16, "array parameter '%s' without its length", pw);
             wi++;
             int neg; uint64_t mag;
@@ -839,7 +846,7 @@ static void parse_fn_header(void)
             refuse(9, "own is not in the subset");
         } else {
             int t = type_word(tw);
-            if (t == T_NONE) refuse(7, "'%s' is not a type", tw); /* spec silent */
+            if (t == T_NONE) refuse(16, "'%s' is not a type", tw); /* gap G25 */
             f->pkind[i] = PK_SCALAR; f->pty[i] = t;
             add_name(pw, K_SCALAR, t, 0, 0);
         }
@@ -847,7 +854,7 @@ static void parse_fn_header(void)
     const char *rw = nextw();
     if (!rw) refuse(4, "fn %s needs a return type", nmw);
     if (!strcmp(rw, "void")) f->ret = T_VOID;
-    else if ((f->ret = type_word(rw)) == T_NONE) refuse(7, "'%s' is not a type", rw);
+    else if ((f->ret = type_word(rw)) == T_NONE) refuse(16, "'%s' is not a type", rw);
     if (is_main && f->ret != T_VOID && f->ret != T_BOOL && !tnum(f->ret)) /* bool allowed: gap G4 */ refuse(9, "main returns a whole number or void");
     line_end();
     nfuncs++; /* visible from here on (recursion in program mode) */
@@ -857,7 +864,7 @@ static void parse_fn_header(void)
 
 static void parse_global(int is_text, const char *line, size_t n)
 {
-    if (!program_mode) refuse(9, "%s only in program mode", is_text ? "text" : "global");
+    if (!nglobals) first_global_line = cur_line;
     const char *nmw = nextw();
     if (!nmw) refuse(4, "%s needs a name", is_text ? "text" : "global");
     check_new_name(nmw, 0);
@@ -872,7 +879,8 @@ static void parse_global(int is_text, const char *line, size_t n)
         const char *tw = nextw(), *lw = nextw();
         int t = tw ? type_word(tw) : T_NONE;
         if (!tw) refuse(4, "global needs a type and a length");
-        if (t == T_NONE || !tnum(t)) refuse(7, "a pool of whole numbers"); /* spec silent */
+        if (t == T_NONE) refuse(16, "a pool needs a type"); /* gap G25 */
+        if (!tnum(t)) refuse(7, "a pool of whole numbers");
         if (!lw || !looks_number(lw)) refuse(16, "pool '%s' without its length", nmw);
         int neg; uint64_t mag;
         parse_number(lw, &neg, &mag);
@@ -942,6 +950,7 @@ static void parse_program(void)
             else if (!strcmp(w, "global")) parse_global(0, ls, n);
             else if (!strcmp(w, "text")) parse_global(1, ls, n);
             else if (!strcmp(w, "note")) continue;
+            else if (is_name(w) && !is_reserved(w) && strlen(w) > 8) refuse(13, "name '%s' too long", w); /* om4 reads it as a name first: gap G25 */
             else refuse(16, "'%s' outside a function", w);
             continue;
         }
@@ -951,6 +960,7 @@ static void parse_program(void)
         if (curf->done) infn = 0;
     }
     if (infn) refuse(15, "function '%s' has no end", curf->name);
+    if (!program_mode && nglobals) { cur_line = first_global_line; refuse(9, "a pool or text only in program mode (no fn main)"); }
     if (nfuncs == 0) refuse(16, "no function"); /* spec silent */
 }
 

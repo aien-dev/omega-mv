@@ -48,10 +48,33 @@ Every case gate4 has, run both ways (`evidence/OMEGA-REF/gate_ref.log`):
 Result: 195 cases written, 195 run, all equal (GATE_REF PASS, RC=0). Negative control: a copy of the
 interpreter with signed division made unsigned is caught on fm1.
 
+## Decision 22: one way to read every partial program (`tools/omega_ref/gate_next.sh`)
+
+Decision 22 says the language must read left to right with one legal next word, so a writer (a person or
+a model whose choices are masked) can never be halfway into something that has two meanings.
+`tools/omega_ref/s9.grammar` writes the om4 language down as a grammar of about 40 short lines, and
+`omega_next` follows a program word by word with every rule that could apply, never choosing early. After
+each word it counts the ways the words so far can be read. The check (`evidence/OMEGA-REF/gate_next.log`,
+GATE_NEXT PASS, RC=0):
+
+- every word prefix (1,606) and every cut inside a word (2,044) of the 32 accepted gate4 programs: exactly
+  one reading, the real next word legal, a half-written word still finishable;
+- the 33 refused gate4 programs: one reading up to the word where the grammar stops;
+- 640 one-word mutants of those programs: whatever om4 or the interpreter accepts, the grammar accepts;
+  om4 and the interpreter give the same verdict and the same refusal number on all 640;
+- the 125 probe programs: every one the interpreter accepts reads one way;
+- negative controls: three grammar copies with one ambiguous rule each are caught with two readings, and
+  a copy missing the `exit` rule is caught on the program that uses it.
+
+`omega_next next s9.grammar prefix-file` prints the legal next words after any prefix, one per line, in
+the style of `omegese next --machine`. It knows words and names, not types, so it may allow a word that a
+type rule refuses later (12 of the 44 mutants it accepts). When L408 pushes `seed/omc/omc.om`, the same
+gate runs over every prefix of it.
+
 ## Beyond gate4: probes of the rule book
 
 `tools/omega_ref/probe_ref.sh` runs 125 more small programs through both, each with the answer the rule
 book gives (`evidence/OMEGA-REF/probe_ref.log`, PROBE_REF PASS, RC=0). They found two om4 slips (F1: the
-largest unsigned numbers, from 2^63 up, are refused; F2: one refusal has the wrong error number) and 24
+largest unsigned numbers, from 2^63 up, are refused; F2: one refusal has the wrong error number) and 25
 places where the rule book is silent. Each is in `tools/omega_ref/SPEC_GAPS.md` with the sentence we
 propose adding (decision 19: no meaning left open).

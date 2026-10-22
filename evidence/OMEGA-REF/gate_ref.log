@@ -1,4 +1,4 @@
-gate_ref 2026-10-22T03:11:28Z at b4c09eb142ece7a931982aad220f6bf58f7d1563, om4.bin 5eda35a91028f634
+gate_ref 2026-10-22T03:22:03Z at e6b27a2cb9a33f13fc00adf0e33f193e37d22e54, om4.bin 5eda35a91028f634
 PASS dev01: 8 inputs, interpreter = om4 (0 traps)
 PASS dev02: 8 inputs, interpreter = om4 (0 traps)
 PASS dev03: 8 inputs, interpreter = om4 (0 traps)
@@ -48,10 +48,10 @@ PASS refusal 22 [19: an escape with no meaning]: omega_ref: line 1: error 22: es
 PASS refusal 22 [a text with no end]: omega_ref: line 1: error 22: text 't' has no end quote
 PASS refusal 23 [24: a pool over its limit]: omega_ref: line 1: error 23: pool over 16777216 elements
 PASS refusal 23 [24: local arrays over 4 MiB]: omega_ref: line 2: error 23: local arrays over 4 MiB
-PASS refusal 17 [a line after ret]: omega_ref: line 3: error 17: a line after ret, exit or trap in the same block
+PASS refusal 17 [a line after ret]: omega_ref: line 3: error 17: a line after ret or exit in the same block
 PASS refusal 18 [a value function that can reach its end]: omega_ref: line 5: error 18: function 'f' returns a value and its end can be reached
 PASS refusal 9 [a self-call in function mode (stack use bounded by the call order)]: omega_ref: line 2: error 9: 'f' calls itself in function mode
-PASS refusal 9 [a pool in function mode]: omega_ref: line 1: error 9: global only in program mode
+PASS refusal 9 [a pool in function mode]: omega_ref: line 1: error 9: a pool or text only in program mode (no fn main)
 PASS refusal 9 [new inside a block]: omega_ref: line 3: error 9: new only in a function's outermost block
 PASS refusal 9 [main with parameters]: omega_ref: line 1: error 9: main has no parameters
 PASS refusal 9 [own is not in the subset]: omega_ref: line 5: error 9: own is not in the subset

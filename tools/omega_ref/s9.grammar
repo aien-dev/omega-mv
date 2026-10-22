@@ -1,0 +1,54 @@
+# s9.grammar -- the om4 language (OMEGESE.md sections 3 and 9, with the gaps of SPEC_GAPS.md as om4 reads
+# them) as a grammar over word classes, read left to right. Decision 22: after any prefix exactly one
+# rule applies, so a writer's mask always has one parse to extend (tools/omega_ref/omega_next.c checks it).
+#
+# Notation: `lhs -> alt | alt`; a line starting with `|` continues the rule above. 'w' is the fixed word w.
+# Word classes (decided per word from the names in scope, left to right):
+#   NUM a number (6.1 spelling, gap G5)  TYPE a type word  OP2 add..ge  OP1 neg not
+#   VAR a visible scalar name  ARR a visible local array, array parameter or text  POOL a visible pool
+#   (a pool is never an argument, decision 18; a text may be one, gap G6)
+#   FNV / FNVOID an earlier function (or the one being written) that returns a value / nothing
+#   NEWNAME any other name  STR the quoted bytes of a text line  REST the rest of a note line
+#   NL end of line  EOF end of input.  _ is the empty sequence.
+# @args stands for the arguments of the function just read: `value` per scalar parameter, `arrarg` per
+# array parameter. Words starting with ! are scope actions (they read no word):
+#   !fn !param_s !param_a !ret_val !ret_void !fnend: a function and its signature; !pool !text: a pool or a text;
+#   !open !close: a block; !bind_s !bind_a !bind_loop: the new name of this line becomes visible.
+
+program  -> NL program
+          | fn_def program
+          | 'global' NEWNAME TYPE NUM !pool NL program
+          | 'text' NEWNAME STR !text NL program
+          | 'note' rest NL program
+          | EOF
+rest     -> REST | _
+fn_def   -> 'fn' NEWNAME !fn params 'to' rettype NL !open body 'end' !close !fnend NL
+params   -> NEWNAME ptype params | _
+ptype    -> TYPE !param_s | 'view' TYPE NUM !param_a | 'edit' TYPE NUM !param_a
+rettype  -> TYPE !ret_val | 'void' !ret_void
+body     -> stmt body | _
+stmt     -> NL
+          | 'if' value NL !open body elsep 'end' !close NL
+          | 'while' value boundp NL !open body 'end' !close NL
+          | 'for' NEWNAME TYPE value !open !bind_loop NL body 'end' !close NL
+          | 'ret' retp NL
+          | 'put' anyarr value value NL
+          | 'free' ARR NL
+          | 'exit' value NL
+          | 'note' rest NL
+          | FNVOID @args NL
+          | VAR eqp value NL
+          | NEWNAME eqp newval NL
+elsep    -> 'else' !close !open NL body | _
+boundp   -> 'bound' NUM | _
+retp     -> value | _
+eqp      -> '=' | _
+newval   -> value !bind_s | 'new' TYPE NUM value !bind_a
+value    -> NUM | 'true' | 'false' | VAR
+          | OP2 value value | OP1 value | TYPE value
+          | 'get' anyarr value | 'len' anyarr
+          | 'read' value anyarr value value | 'write' value anyarr value value
+          | FNV @args
+          | '(' value ')'
+arrarg   -> ARR | 'view' ARR | 'edit' ARR
+anyarr   -> ARR | POOL
