@@ -91,6 +91,20 @@ Each row PASS needs our receipt and the other system measured by us on this Spar
 | **P3. Many conversations.** | Omega total words per second beats the best measured CUDA number at 8 and 32 conversations. Levers: grouped expert GEMM over the expert union, bf16 state (L313), continuous batching on the stroke (L312, L354). |
 | **P4. What CUDA stacks do not do.** | At least one measured win that comes from owning the whole path: one submission per word or a resident whole-model kernel (L272), zero-copy use of the shared memory, our own driver's launch path (L332). |
 
+### Targets: the roof, not parity (Drake 2026-10-22: "Get us level or ahead for everything. Push this for the roof as high as you can go.")
+
+Parity with the best CUDA number is the floor. The target for each row is a fraction of this machine's own physical ceiling, set high enough to clear every published CUDA number by a wide margin. The same-model CUDA numbers from P0 replace the published ones as soon as they exist; if a measured CUDA number is above a target here, the target moves above it.
+
+| Row | Best CUDA number known (published by others) | Our target | Owner |
+| --- | --- | --- | --- |
+| One conversation, 8-bit | about 44 words/s | 60 (0.9 of the 8-bit ceiling) | L356, L314 |
+| One conversation, best format | 97 to 120 (NVFP4 with MTP) | 150 or more: 4-bit experts, head and trunk in our own format (ceiling about 142) plus several words per pass (MTP, tree verify) | L355, L284 |
+| One request end to end, prompt included | n/a | within 10 percent of the decode figure for prompts up to 2k | L369, L375 |
+| 8 conversations at once | 313 to 845 | 0.8 of the per-N ceiling with bf16 state and 4-bit weights, and above the P0 figure for the same model | L354, L312, L313 |
+| 32 conversations at once | 1,679 (30B, AWQ) | above the P0 figure for the same model | L354, L312 |
+| Prompt reading, 8k | 5,705 | 15,000 (0.5 of the tensor-core ceiling) | L403 (GEMM and attention kernels), L369 (door) |
+| Time to first word, 8k prompt | 3.85 s (vLLM writeup, 7,234 tokens) | under 1 s | L403, L369, L375 |
+
 ## 6. CUDA++: the motor
 
 CUDA gives you kernels, memory and streams. It leaves the hard part to you: how a whole model's bytes reach the math cores in time, and how many conversations share one read of the weights. Omega's answer is the motor. The motor is the ++ in CUDA++.
