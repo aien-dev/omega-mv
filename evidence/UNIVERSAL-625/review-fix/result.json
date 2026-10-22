@@ -1,0 +1,10 @@
+{
+  "source_sha": "c1da86d68fb1d4af20c879a82f373a4556f7e957",
+  "command": "make OUT_DIR=build/replay test-universal-semantics",
+  "exit": 0,
+  "review_finding": "L572 stale PASS after failed attempt",
+  "regression_cases": 3,
+  "original_review_source": "d9ce93af22745635809ab474893e748334d10211",
+  "reviewed_contract_unchanged": true,
+  "status": "PASS"
+}

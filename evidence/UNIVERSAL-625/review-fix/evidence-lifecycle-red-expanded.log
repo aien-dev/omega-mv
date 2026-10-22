@@ -1,0 +1,33 @@
+FFF
+======================================================================
+FAIL: test_missing_compiler_invalidates_prior_pass (__main__.EvidenceLifecycle.test_missing_compiler_invalidates_prior_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 36, in test_missing_compiler_invalidates_prior_pass
+    self.attempt(False)
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 33, in attempt
+    self.assertFalse(receipt.exists(), 'failed attempt retained stale PASS receipt')
+AssertionError: True is not false : failed attempt retained stale PASS receipt
+
+======================================================================
+FAIL: test_probe_build_failure_invalidates_prior_pass (__main__.EvidenceLifecycle.test_probe_build_failure_invalidates_prior_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 51, in test_probe_build_failure_invalidates_prior_pass
+    self.assertFalse(receipt.exists(), 'failed probe build retained stale PASS receipt')
+AssertionError: True is not false : failed probe build retained stale PASS receipt
+
+======================================================================
+FAIL: test_stale_contract_invalidates_prior_pass (__main__.EvidenceLifecycle.test_stale_contract_invalidates_prior_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 54, in test_stale_contract_invalidates_prior_pass
+    self.attempt(True)
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 33, in attempt
+    self.assertFalse(receipt.exists(), 'failed attempt retained stale PASS receipt')
+AssertionError: True is not false : failed attempt retained stale PASS receipt
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.088s
+
+FAILED (failures=3)
