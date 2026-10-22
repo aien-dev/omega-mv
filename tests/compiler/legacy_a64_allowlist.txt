@@ -12,10 +12,8 @@ src/omega_program.c
 src/omega_realize.c
 src/omega_realize_synth.c
 src/omega_self_host.c
-src/polyglot/omx_encoder.c
 src/runtime/rx_omega.c
 tests/compiler/test_legacy_a64.c
-tests/polyglot/test_encoder.c
 tests/realize/test_program_realize.c
 tests/visor/test_visor_realization.c
 tools/omegatool.c

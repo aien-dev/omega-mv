@@ -110,7 +110,7 @@
       "children": [
         {
           "digest": "20af9c49443895cc11cae6b8cf07c454516c7d6b594f448a101f4969caf4502c",
-          "last_commit": "28911be7",
+          "last_commit": "cd97eb99",
           "name": "algebra",
           "purpose": "Directory tests/algebra. Purpose not yet described by a human."
         },
@@ -121,7 +121,7 @@
           "purpose": "Directory tests/canonicalization. Purpose not yet described by a human."
         },
         {
-          "digest": "179187070ab5e4644283f4eb42d557dae9db1267dedce7276e1d7c9c26cdd349",
+          "digest": "946c7712cf764c6c885cb3c7d17e57f93e250aff916a003bee8e88b0431ca28d",
           "last_commit": "576b5f1a",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
@@ -212,7 +212,7 @@
         },
         {
           "digest": "d8f5f44a3329bcb5fbac6a12997ce1e821c12abf19201c75ae8365b9e4a9371c",
-          "last_commit": "501d555c",
+          "last_commit": "cd97eb99",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -229,15 +229,15 @@
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:d4f0e65b248ef72bc53105afb095a386be9e68e77dca350bd6dfb83a342c4e15",
-      "compiled_at": "2026-10-22T01:03:53Z",
+      "children_root": "sha256:36e45b217dfba79921fe5f82faef00a478f5269ba81a1516407f3d14ef35bbf9",
+      "compiled_at": "2026-10-22T07:05:56Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:898adc848bc847c5c9c7fbe3366bba23c7d73cc5a6a2777b3b6308576ea588e3",
+      "digest": "sha256:3e0ef0f6527c2b256c539b0fc119bd61d1ea3d3ff224a779cf2f72818103577f",
       "evidence_files": 11,
       "evidence_root": "sha256:d5c1bceb4d57ef0eb42797c58801b5926509711614c3e38bb7105b6efa3942f2",
       "files": 860,
-      "generated_at_commit": "576b5f1a3d0f83f294afbffde2711ea52ffe0e93",
-      "source_tree": "sha256:b91b1909c7c308650ea50b100994278957776d95a9da4eecc1eadee4adf63b45"
+      "generated_at_commit": "cd97eb993670b4396b94a4081a5093298dcd78c2",
+      "source_tree": "sha256:c3b95e5ce681e88ca1e067d08de13af2578ba408bce75ad6c960f281ee4e82ba"
     },
     "owner_lane": "",
     "provenance": {
