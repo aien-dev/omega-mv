@@ -320,7 +320,7 @@ out:
     return res;
 }
 
-static void chip_tier(void) {
+static void chip_tier(int values_only) {
     char w[300];
     setenv("AIEN_OMEGA_GPU_CHANNELS", "2", 1);
     if (omega_gpu_cmdlist_create(1, &g_a) || omega_gpu_cmdlist_create(1, &g_b) || omega_gpu_cmdlist_create(2, &g_ab)) {
@@ -348,12 +348,14 @@ static void chip_tier(void) {
     if (add_spin(g_a, 0, B_OA, iters, 1.0f) || add_spin(g_b, 1, B_OB, iters, 2.0f) ||
         add_spin(g_ab, 2, B_OA, iters, 1.0f) || add_spin(g_ab, 3, B_OB, iters, 2.0f)) { check(0, "timing lists"); omega_gpu_session_unlock(); return; }
 
+    if (!values_only) {
     double r_def = 9, r_fbn = 9, r_ser = 0;
     int ok_def = overlap(iters, 0, &r_def) == 0, ok_fbn = overlap(iters, 1, &r_fbn) == 0, ok_ser = serial_control(iters, &r_ser) == 0;
     snprintf(w, sizeof w, "C4 overlap: two queues of the same work finish in under 0.75 of the solo sum (default %.3f, first_barrier_none %.3f)", r_def, r_fbn);
     check((ok_def && r_def < 0.75) || (ok_fbn && r_fbn < 0.75), w);
     snprintf(w, sizeof w, "red check: the same two spins in order on one queue do NOT pass the 0.75 bar (ratio %.3f)", r_ser);
     check(ok_ser && r_ser >= 0.75, w);
+    } else puts("C4 overlap: NOT_RUN (values-only; timing needs an exclusive window)");
     omega_gpu_session_unlock();
 
     /* the event: positive, then the control without the wait (both barrier modes) */
@@ -377,12 +379,13 @@ int main(int argc, char **argv) {
     const char *tier = "chip";
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--host-only")) tier = "host";
+        else if (!strcmp(argv[i], "--values-only")) tier = "values";
         else if (!strcmp(argv[i], "--sim")) tier = "sim";
-        else { fprintf(stderr, "usage: %s [--host-only | --sim]\n", argv[0]); return 2; }
+        else { fprintf(stderr, "usage: %s [--host-only | --sim | --values-only]\n", argv[0]); return 2; }
     }
     if (!strcmp(tier, "host")) host_only();
     else if (!strcmp(tier, "sim")) { host_only(); sim_tier(); }
-    else chip_tier();
+    else chip_tier(!strcmp(tier, "values"));
     if (g_failed) printf("C4 streams %s: FAIL (%d of %d)\n", tier, g_failed, g_checks);
     else printf("C4 streams %s: PASS (%d checks)\n", tier, g_checks);
     return g_failed ? 1 : 0;
