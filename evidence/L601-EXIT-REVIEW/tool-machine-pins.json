@@ -1,0 +1,22 @@
+{
+  "machine": "Linux spark-b87b 7.0.0-1019-nvidia #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2 aarch64 aarch64 aarch64 GNU/Linux\n",
+  "versions": {
+    "bash": "GNU bash, version 5.2.21(1)-release (aarch64-unknown-linux-gnu)\nCopyright (C) 2022 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n",
+    "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+    "node": "v24.21.0\n",
+    "make": "GNU Make 4.3\nBuilt for aarch64-unknown-linux-gnu\nCopyright (C) 1988-2020 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n"
+  },
+  "files": {
+    "/bin/bash": "af955ef55333c8fc9c5aa50df91ad1a629d9a79a9afa125cd5e9629585f78015",
+    "/usr/bin/gcc": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d",
+    "/usr/bin/ld": "1e4d3369b76845fa8e099b83513bf28f6f722e046f9b2cde1378c9e27f96d19c",
+    "/usr/bin/make": "abbecc214fcadef6530d1cc137bde7ceb74cae3f6b992c7d10a8669a7314c7e0",
+    "/usr/bin/node": "0f8949d1028f6d61506b2d5bc57e7e6fe893d7b1997509b7847294fc9c616584",
+    "/usr/bin/tar": "241a4105e9efc361cbb54aa314b7449540f85bd1d97637b4db2dae6191033dc5",
+    "/usr/bin/gzip": "1c1a57a660e7b675923730961f496e6429767e416913cb97258816a650d67eca",
+    "/usr/lib/aarch64-linux-gnu/libc.so.6": "0f1905dc27dbc6715875c70527bc8da846a10084c9c483e9d8ff76dce8d69d0e",
+    "/home/drakestapleton/.local/bin/quiet-build": "b8b40d2c1221d6067a49cebd288fcf0b8fb34c616562f58569385d81de62d8dc",
+    "/home/drakestapleton/workspace/crumb-tool-d0f0b95d/tools/crumb/crumb": "87c977b2a28bd7c2350f398fda94ffd469943e903f188103cea2aeb183871ea9"
+  },
+  "scope": "Linux aarch64 LP64 host correctness; no measurement or silicon qualification"
+}

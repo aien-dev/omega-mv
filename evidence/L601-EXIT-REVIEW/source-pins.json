@@ -1,0 +1,14 @@
+{
+  "sourceHead": "be37dccaf5e73da735256a6cdae96a9b4f7c19ef",
+  "base": "f2dbbb241cd9b3c0302d1bc3630d61f617d12c2c",
+  "files": {
+    "src/osh/host/osh_builtin.c": "bc2971974facfc64e191bb116e8ceb772bfdd185c244a36092d7e28b28791f02",
+    "src/osh/host/osh_exec.c": "5001ceba594da08874436d5f4622326118d7453cb180d96c8029d04204acd735",
+    "src/osh/host/osh_shell.c": "2112bea4ffa74486bb02bce61054a7a44da74016c5c3c35bce9c4036df8a60ca",
+    "src/osh/host/osh_host.h": "2e761ab2a8a8c0e3f5dac3c58d0113f58b515dc9dba526c99730c944d0be9000",
+    "tests/osh/e2e/exit_argument_completion.mjs": "1a071a1c12d2e17a672b170fb7e365527420b965554ee0c6ce9cb5f1df7f97c4",
+    "tests/osh/e2e/exit_argument_completion_mutants.mjs": "429ce1eaadf076634de83b1a7f0f252a5388581aa5191558dcb92915a6ea8276",
+    "tests/osh/e2e/exit_numeric_priority.mjs": "d62d7629f342f27d901e1095f86a550180b2717fde8caa91f3afb7217887a822",
+    "tests/osh/e2e/exit_numeric_priority_mutants.mjs": "9b055b98beaf037b17d7967ff87392c8b5a53ddaefba4f170ece562b651790fa"
+  }
+}

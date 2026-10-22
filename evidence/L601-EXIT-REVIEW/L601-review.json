@@ -1,0 +1,123 @@
+{
+  "ledger": "L601",
+  "recommendation": "HOLD",
+  "candidate": "be37dccaf5e73da735256a6cdae96a9b4f7c19ef",
+  "baseline": "f2dbbb241cd9b3c0302d1bc3630d61f617d12c2c",
+  "sourceCommits": [
+    "5583bea09cb38cb3cac48fa893f76998746f400b",
+    "47aaea70323016f59f1306aafebc1aa4a9311624"
+  ],
+  "findings": [
+    {
+      "id": "L601-F1",
+      "severity": "P2",
+      "file": "src/osh/host/osh_exec.c",
+      "line": 786,
+      "relatedFile": "src/osh/host/osh_shell.c",
+      "relatedLine": 265,
+      "title": "Count-error continuation overwrites nonzero prior status in script/stdin",
+      "introducedByReviewedDeltas": false,
+      "baselineAlsoAffected": true,
+      "reproduction": "printf \"\" | exit 37\nexit 7 9\nprintf \"%s\\n\" \"$?\"\n",
+      "expected": "Bash script/stdin prints37; diagnostic too many arguments",
+      "actual": "baseline and candidate script/stdin print1; diagnostic too many arguments",
+      "impact": "next-line $? and operandless exit observe1 instead of nonzero prior37 after count error; zero-prior and -c controls match",
+      "disposition": "HOLD requested combined lifecycle acceptance; parent must fix or explicitly disposition this preexisting finding"
+    }
+  ],
+  "independent": {
+    "cases": 68,
+    "plain": {
+      "comparisons": 1224,
+      "failures": 12
+    },
+    "sanitizer": {
+      "comparisons": 1224,
+      "failures": 12
+    },
+    "direct": [
+      {
+        "variant": "normal",
+        "leg": "plain",
+        "checks": 38,
+        "failures": 0,
+        "processExit": 0
+      },
+      {
+        "variant": "normal",
+        "leg": "sanitizer",
+        "checks": 38,
+        "failures": 0,
+        "processExit": 0
+      },
+      {
+        "variant": "mutant",
+        "leg": "plain",
+        "checks": 38,
+        "failures": 12,
+        "processExit": 0
+      },
+      {
+        "variant": "mutant",
+        "leg": "sanitizer",
+        "checks": 38,
+        "failures": 12,
+        "processExit": 0
+      }
+    ],
+    "authorReplay": [
+      {
+        "path": "/home/drakestapleton/workspace/omega-osh-exit-combined-review-20261022/targets/L601/replay-count-first-plain/results.json",
+        "rows": 168,
+        "failures": 60,
+        "assertionsRecomputed": true,
+        "replay": true,
+        "processStatus": 1
+      },
+      {
+        "path": "/home/drakestapleton/workspace/omega-osh-exit-combined-review-20261022/targets/L601/replay-repeat-delimiter-plain/results.json",
+        "rows": 522,
+        "failures": 12,
+        "assertionsRecomputed": true,
+        "replay": true,
+        "processStatus": 1
+      },
+      {
+        "path": "/home/drakestapleton/workspace/omega-osh-exit-combined-review-20261022/targets/L601/replay-count-first-sanitizer/results.json",
+        "rows": 168,
+        "failures": 60,
+        "assertionsRecomputed": true,
+        "replay": true,
+        "processStatus": 1
+      },
+      {
+        "path": "/home/drakestapleton/workspace/omega-osh-exit-combined-review-20261022/targets/L601/replay-repeat-delimiter-sanitizer/results.json",
+        "rows": 522,
+        "failures": 12,
+        "assertionsRecomputed": true,
+        "replay": true,
+        "processStatus": 1
+      }
+    ]
+  },
+  "inheritedQualification": {
+    "original522": {
+      "plain": "PASS522/522 vs baseline108fail",
+      "sanitizer": "PASS522/522 vs baseline108fail"
+    },
+    "numeric168": "PASS both builds; published evidence",
+    "originalMake": "inspected matching-source/ELF/tool qualification; NOT independently rerun",
+    "originalAsanLimits": "2 RLIMIT_AS NOT_RUN unchanged"
+  },
+  "limits": {
+    "help": "preexisting exit --help OPEN, outside contract",
+    "nativeAIENOS": "NOT_RUN",
+    "QEMU": "NOT_RUN",
+    "hardwareCurrent35BSharedTrain": "NOT_RUN",
+    "performanceEnergy": "UNMEASURED",
+    "universalBash": false,
+    "canonicalIntegration": "PENDING parent L487/L570",
+    "mergeApproval": false,
+    "parentDisposition": "PENDING; L601 stays OPEN"
+  }
+}

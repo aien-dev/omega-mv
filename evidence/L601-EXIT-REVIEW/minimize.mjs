@@ -1,0 +1,8 @@
+import{writeFileSync as write,mkdirSync as mkdir}from'node:fs';import{spawnSync as spawn}from'node:child_process';import{resolve,join}from'node:path';
+const out=resolve('targets/L601/minimized');mkdir(out,{mode:0o700});const env={PATH:'/usr/bin:/bin',LC_ALL:'C',TZ:'UTC',HOME:out,XDG_STATE_HOME:out};const rows=[];
+for(const [name,text]of [['prior-alone','printf "" | exit 37\nexit 7 9\nprintf "%s\\n" "$?"\n'],['zero-control','printf "" | exit 0\nexit 7 9\nprintf "%s\\n" "$?"\n'],['prior-operandless','printf "" | exit 37\nexit 7 9\nexit\n']])for(const mode of ['script','stdin']){
+ const p=join(out,name+'-'+mode+'.sh');write(p,text);const args=mode==='script'?[p]:[],input=mode==='stdin'?text:undefined;
+ function run(cmd,args,env){const r=spawn(cmd,args,{env,input,encoding:'utf8',timeout:20000});if(r.error||r.signal)throw Error('abnormal');return{command:[cmd,...args],status:r.status,signal:r.signal,stdout:r.stdout,stderr:r.stderr};}
+ const bash=run('/bin/bash',['--noprofile','--norc',...args],env);for(const version of ['baseline','candidate'])for(const core of ['native','interp']){
+ const binary='/home/drakestapleton/workspace/targets/'+(version==='baseline'?'L577/red':'L592/green')+'/osh/osh';const got=run(binary,['--journal',join(out,name+'-'+mode+'-'+version+'-'+core+'.journal'),...args],{...env,OSH_INTERP:core==='interp'?'1':'0'});rows.push({name,mode,version,core,text,bash,got,mismatch:bash.status!==got.status||bash.stdout!==got.stdout});
+ }}write('targets/L601/minimized-results.json',JSON.stringify({rows},null,2));console.log(JSON.stringify(rows.filter(x=>x.mode==='script'&&x.core==='native').map(x=>({name:x.name,version:x.version,bash:[x.bash.status,x.bash.stdout],got:[x.got.status,x.got.stdout],mismatch:x.mismatch})),null,2));
