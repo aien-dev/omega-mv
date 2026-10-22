@@ -22,7 +22,8 @@
 set -euo pipefail
 export GIT_NO_REPLACE_OBJECTS=1
 
-root=$(git rev-parse --show-toplevel)
+# Outside a git checkout (a test driving a private copy of the Makefile) the current directory is the root.
+root=$(git rev-parse --show-toplevel 2> /dev/null || pwd -P)
 cmd=${1:?usage: pin.sh ensure|verify|show|moved|repo <name> ...}
 name=${2:?usage: pin.sh $cmd <name>}
 lockf="$root/$name.lock"
