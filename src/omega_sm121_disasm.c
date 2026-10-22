@@ -193,6 +193,7 @@ static const Row ROWS[] = {
     { 0x0000000000007245ull, 0x00201400ull, "I2FP.F32.S32 %d, %b" },
     { 0x0000000000007305ull, 0x0020f000ull, "F2I.U32.TRUNC.NTZ %d, %b" },
     { 0x000000000000723eull, 0x0004807000ull, "F2FP.SATFINITE.E4M3.F32.PACK_AB_MERGE_C %d, %a, %b, %c" },
+    { 0x000000000000723eull, 0x00000010ffull, "F2FP.BF16.F32.PACK_AB %d, %a, %b" },
     /* tensor cores */
     { 0x000000000000723cull, 0x00041800ull, "HMMA.16816.F32.BF16 %d, %a, %b, %c" },
     { 0x000000000000727aull, 0x00002c00ull, "QMMA.16832.F32.E4M3.E4M3 %d, %a, %b, %c" },
@@ -207,6 +208,7 @@ static const Row ROWS[] = {
     { 0x0000000000007984ull, 0x00000000ull, "LDS%z %d, [%a%o]" },
     { 0x0000000000007992ull, 0x0000b000ull, "MEMBAR.ALL.SYS" },
     { 0x0800000000007f89ull, 0x000e0000ull, "SHFL.DOWN PT, %d, %a, %h, %m" },
+    { 0x0c00000000007f89ull, 0x000e0000ull, "SHFL.BFLY PT, %d, %a, %h, %m" },
     /* control */
     { 0x0000000000007918ull, 0x00000000ull, "NOP" },
     { 0x000000000000794dull, 0x03800000ull, "EXIT" },
@@ -260,4 +262,27 @@ int omega_sm121_disasm(uint64_t lo, uint64_t hi, uint64_t pc, char *out, size_t 
     w.at = 0;
     put(&w, "?? 0x%016llx%016llx", (unsigned long long)hi, (unsigned long long)lo);
     return w.ok ? -1 : -2;
+}
+
+static uint64_t word_half(const uint8_t *w) { uint64_t v = 0; for (int i = 7; i >= 0; i--) v = v << 8 | w[i]; return v; }
+
+size_t omega_sm121_padding_start(const uint8_t *code, size_t len) {
+    size_t end = 0;
+    for (size_t at = 0; code && at + 16 <= len; at += 16)
+        if ((word_half(code + at) & 0xfff) == 0x94d) end = at + 16; /* EXIT, any guard */
+    return end;
+}
+
+int omega_sm121_listing(const uint8_t *code, size_t len, FILE *out) {
+    if (!code || !out || len % 16) return -1;
+    size_t pad = omega_sm121_padding_start(code, len);
+    int unknown = 0;
+    for (size_t at = 0; at < len; at += 16) {
+        char t[256];
+        int rc = omega_sm121_disasm(word_half(code + at), word_half(code + at + 8), at, t, sizeof t);
+        if (rc == -2) return -1;
+        if (rc) unknown++;
+        fprintf(out, "        /*%04llx*/ %s%s;\n", (unsigned long long)at, t, pad && at >= pad ? "" : " ");
+    }
+    return unknown;
 }

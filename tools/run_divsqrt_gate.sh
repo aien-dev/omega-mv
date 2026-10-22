@@ -6,7 +6,7 @@
 # Order: refuse a dirty omega tree or a physics checkout that is dirty or not
 # at the physics.lock pin; refuse while ~/workspace/.spark-quiet exists, an
 # est_load process runs or /tmp/aien-gb10.lock is held; run the host tier and
-# the offline nvdisasm provenance check; raise the quiet flag; take the GPU
+# the offline provenance check (Omega's own disassembler); raise the quiet flag; take the GPU
 # lock; build the chip binary (no libm math, no CUDA symbols); run it to the
 # end (never killed, never timed out); write a content-addressed receipt
 # <evidence-dir>/<sha256>.json (mode 0444, created exclusively, outside the
@@ -14,7 +14,7 @@
 #
 # Run it detached so a closed terminal cannot cut the chip run:
 #   setsid nohup tools/run_divsqrt_gate.sh > /tmp/divsqrt-gate.out 2>&1 < /dev/null &
-# Shell + coreutils + git + jq + gcc + nvdisasm. No Python.
+# Shell + coreutils + git + jq + gcc. No Python.
 set -u
 HERE=$(cd -P "$(dirname "$0")/.." && pwd)
 PHYSICS=${PHYSICS_DIR:-$HOME/workspace/hive-worktrees/physics-gate14-e95e3ed}
@@ -45,7 +45,7 @@ make -s -C "$HERE" build/test_omega_divsqrt_gb10_cpu > "$RUN/host-build.log" 2>&
 tail -1 "$RUN/host.log"
 echo "== nvdisasm provenance"
 "$HERE/tools/divsqrt_nvdisasm_check.sh" > "$RUN/nvdisasm.log" 2>&1; NVD_RC=$?
-grep -E '^\[|^VERDICT|^nvdisasm' "$RUN/nvdisasm.log"
+grep -E '^\[|^VERDICT|^disassembler' "$RUN/nvdisasm.log"
 [ "$HOST_RC" = 0 ] && [ "$NVD_RC" = 0 ] || refuse "host tier ($HOST_RC) or nvdisasm check ($NVD_RC) failed; no chip run"
 KDIG=$("$HERE/build/test_omega_divsqrt_gb10_cpu" --digest)
 
@@ -96,7 +96,7 @@ BODY=$(jq -n --arg gate "E1-DIVSQRT" --arg omega "$OMEGA_COMMIT" --arg phys "$PH
     --argjson oclean true --argjson pclean true --argjson oafter "$OMEGA_CLEAN_AFTER" --argjson pafter "$PHYS_CLEAN_AFTER" \
     --argjson osame "$OMEGA_SAME_AFTER" --argjson psame "$PHYS_SAME_AFTER" \
     --arg bin "$BIN_SHA" --arg log "$LOG_SHA" --arg kd "$KDIG" --arg start "$START" --arg end "$END" \
-    --arg nvd "$(grep '^nvdisasm' "$RUN/nvdisasm.log")" --arg host "$(tail -1 "$RUN/host.log")" \
+    --arg nvd "$(grep '^disassembler' "$RUN/nvdisasm.log")" --arg host "$(tail -1 "$RUN/host.log")" \
     --argjson dchk "$(num DIV checked)" --argjson dedge "$(num DIV edge_and_corpus)" \
     --argjson dbad "$(num DIV mismatches)" --argjson dmath "$(num DIV mismatches_vs_omega_math)" --argjson dfill "$(num DIV unwritten)" \
     --arg dver "$(field DIV verdict)" --arg seed "$(field DIV seed)" \
