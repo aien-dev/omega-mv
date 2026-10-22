@@ -8,6 +8,10 @@ SILICON -> ATLAS -> PHYSICS/FORGE -> OMEGA -> AIEN        (full picture: aien-ar
 
 Omega was decided by Drake on 2026-09-29 to be both the reaction runtime and the compiler for Omega Systems Core ([decision record](docs/adr/OMEGA-SYSTEMS-CORE-0000.md), frozen). This retires the earlier "not a compiler" wording.
 
+## How I built it: a small result you can reproduce
+
+I follow the current program-realization fixture from semantic identity to AArch64 execution and a tamper refusal. [The worked lesson](TEACHING.md) also marks the still-unjoined OSC source compiler path; [the replay record](TEACHING-REPLAY.txt) gives the host result. A separate [seed-born walkthrough](docs/SEED_BIRTH.md) is reused from its pending branch.
+
 ## Current state
 
 Research-grade and pre-alpha. Plainly:
