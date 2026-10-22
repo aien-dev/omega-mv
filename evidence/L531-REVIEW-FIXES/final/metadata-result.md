@@ -1,0 +1,3 @@
+Pinned crumb tool d0f0b95d344b4c6628c3d868346932fd247ce168, selected by repository crumb.lock. `quiet-build crumb compile .`: exit0,157 crumbs/3 rewritten (root, mk, tests). `quiet-build crumb verify .`: exit0,157 current. Initial stale gate retained in allocator/crumb-before.log. No skill/CI gate edits or skips.
+
+Source/binary SHA manifests were rechecked with `sha256sum -c evidence/L531-REVIEW-FIXES/csv/source.sha256`, allocator/source.sha256 and allocator/binaries.sha256: all OK. `git diff --check`, shell syntax checks, empty production allocator diff and additions-only original evidence checks passed. Independent parent review remains pending. Source test changes are already tested/pushed at95fad276; this final commit adds only receipts/metadata.

@@ -1,0 +1,32 @@
+[*] placed on 10 Cortex-X925 cores: 5,6,7,8,9,15,16,17,18,19
+[*] repeated workload: reverse a tower, 40 instances
+    first use: median 62 cognitive ops, 70.8 us cpu, 795198 instructions; e2e 2975.7 us
+    reuse:     median 53 cognitive ops, 3.7 us cpu, 23253 instructions; e2e 2849.0 us
+    plan 6 moves, 34 graph nodes after optimisation, 12 evidence words; accepted 39, succeeded 39
+[*] repeated workload: merge two towers, 40 instances
+    first use: median 1806 cognitive ops, 127.4 us cpu, 1532488 instructions; e2e 3891.3 us
+    reuse:     median 68 cognitive ops, 3.6 us cpu, 24198 instructions; e2e 3685.6 us
+    plan 9 moves, 39 graph nodes after optimisation, 15 evidence words; accepted 39, succeeded 39
+[*] identity
+[*] adversarial goals of stored shapes: every applicability axis
+    100 adversarial goals, 100 refused (100 on the expected axis), 100 refusals recorded as World decisions
+      shape                  10 refused of 10; blind replay reached the goal 0 of 0, violated 0
+      binding                10 refused of 10; blind replay reached the goal 0 of 10, violated 10
+      goal_constraints       10 refused of 10; blind replay reached the goal 10 of 10, violated 10
+      world_generation       10 refused of 10; blind replay reached the goal 10 of 10, violated 10
+      cognitive_generation   10 refused of 10; blind replay reached the goal 10 of 10, violated 10
+      environment            10 refused of 10; blind replay reached the goal 10 of 10, violated 10
+      required_state         20 refused of 20; blind replay reached the goal 10 of 20, violated 10
+      authority              10 refused of 10; blind replay reached the goal 0 of 10, violated 10
+      resources              10 refused of 10; blind replay reached the goal 0 of 10, violated 10
+[*] new World generation: refuse, re-derive, same semantic id, reuse again
+[*] adaptation: an outsider sits on the tower
+    adapted: 54 ops, 78.9 us cpu, 7 steps; full search: 69 ops, 83.5 us cpu, 7 steps; then reused 9 of 9
+[*] energy per cognition (package telemetry; reported, not gated)
+    unavailable: no aien_spbm hwmon reader
+checks 1304 failures 0
+receipt: build/qual-runs/20261022T200837Z-95fad2765367/PLAN_REUSE/rx_plan_reuse_receipt.3ba80f056b9937f84112a96e700dd4a5a32e5afc4f5b605e04ba47bb1a8cb00f.json
+OMEGA_PLAN_REUSE_PASS: FAIL (G1 FAIL, G2 PASS, G3 PASS, G4 PASS, G5 PASS, G6 PASS)
+  reverse_tower_6: ops 1.2x (G1 FAIL), cpu 19.2x (2.4x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.04x (G6 PASS)
+  merge_two_towers_3_3: ops 26.6x (G1 PASS), cpu 35.7x (12.5x without the identity hash; G2 PASS), outcome/evidence G3 PASS, end to end 1.06x (G6 PASS)
+task wording (at least one repeated workload): MET
