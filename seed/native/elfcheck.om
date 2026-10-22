@@ -1,0 +1,155 @@
+note Native ELF64 little-endian AArch64 executable closure check.
+note Reads at most 8 MiB; status 0 static shape, 2 malformed, 3 dynamic, 4 capacity, 5 I/O.
+note Absence of dynamic segments does NOT prove absence of statically linked foreign code.
+global image uchar 8388609
+global extent ulong 1
+
+fn word off ulong count ulong to ulong
+v = ulong 0
+for i ulong count
+v = or v shl ulong get image add off i mul i 8
+end
+ret v
+end
+
+fn span off ulong size ulong to bool
+n = get extent 0
+if gt off n
+ret false
+end
+ret le size sub n off
+end
+
+fn header to bool
+if lt get extent 0 64
+ret false
+end
+if ne get image 0 uchar 127
+ret false
+end
+if ne get image 1 uchar 69
+ret false
+end
+if ne get image 2 uchar 76
+ret false
+end
+if ne get image 3 uchar 70
+ret false
+end
+if ne get image 4 uchar 2
+ret false
+end
+if ne get image 5 uchar 1
+ret false
+end
+if ne get image 6 uchar 1
+ret false
+end
+if ne word 16 2 2
+ret false
+end
+if ne word 18 2 183
+ret false
+end
+if ne word 20 4 1
+ret false
+end
+if ne word 52 2 64
+ret false
+end
+if ne word 54 2 56
+ret false
+end
+ret true
+end
+
+fn segment off ulong to bool
+fileoff = word add off 8 8
+vaddr = word add off 16 8
+filesz = word add off 32 8
+memsz = word add off 40 8
+if not span fileoff filesz
+ret false
+end
+if gt filesz memsz
+ret false
+end
+if gt memsz sub ulong 18446744073709551615 vaddr
+ret false
+end
+ret true
+end
+
+fn entryok off ulong to bool
+flags = word add off 4 4
+if eq and flags 1 0
+ret false
+end
+addr = word add off 16 8
+size = word add off 32 8
+entry = word 24 8
+if lt entry addr
+ret false
+end
+ret lt sub entry addr size
+end
+
+fn check to int
+if not header
+ret 2
+end
+phoff = word 32 8
+phnum = word 56 2
+if or eq phnum 0 eq phnum 65535
+ret 2
+end
+if lt phoff 64
+ret 2
+end
+if not span phoff mul phnum 56
+ret 2
+end
+loaded = false
+dynamic = false
+for idx ulong phnum
+off = add phoff mul idx 56
+kind = word off 4
+if or eq kind 2 eq kind 3
+dynamic = true
+end
+if eq kind 1
+if not segment off
+ret 2
+end
+if entryok off
+loaded = true
+end
+end
+end
+if not loaded
+ret 2
+end
+if dynamic
+ret 3
+end
+ret 0
+end
+
+fn main to int
+used = ulong 0
+while lt used len image
+n = read 0 image used sub len image used
+if lt n 0
+ret 5
+end
+if eq n 0
+put extent 0 used
+ret check
+end
+used = add used ulong n
+if gt used 8388608
+ret 4
+end
+end
+ret 4
+end

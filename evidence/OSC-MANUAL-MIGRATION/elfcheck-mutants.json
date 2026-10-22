@@ -1,0 +1,71 @@
+[
+  {
+    "mutant": "dynamic",
+    "successfully_compiled": true,
+    "failures": 2,
+    "examples": [
+      {
+        "case": "dynamic-2",
+        "expected": 3,
+        "actual": 0,
+        "stdout": ""
+      },
+      {
+        "case": "dynamic-3",
+        "expected": 3,
+        "actual": 0,
+        "stdout": ""
+      }
+    ]
+  },
+  {
+    "mutant": "segment",
+    "successfully_compiled": true,
+    "failures": 3,
+    "examples": [
+      {
+        "case": "filesz-past-eof",
+        "expected": 2,
+        "actual": 0,
+        "stdout": ""
+      },
+      {
+        "case": "filesz-over-mem",
+        "expected": 2,
+        "actual": 0,
+        "stdout": ""
+      },
+      {
+        "case": "offset-wrap",
+        "expected": 2,
+        "actual": 0,
+        "stdout": ""
+      }
+    ]
+  },
+  {
+    "mutant": "entry",
+    "successfully_compiled": true,
+    "failures": 3,
+    "examples": [
+      {
+        "case": "entry-outside",
+        "expected": 2,
+        "actual": 0,
+        "stdout": ""
+      },
+      {
+        "case": "nonexecutable-load",
+        "expected": 2,
+        "actual": 0,
+        "stdout": ""
+      },
+      {
+        "case": "entry-in-zero-fill",
+        "expected": 2,
+        "actual": 0,
+        "stdout": ""
+      }
+    ]
+  }
+]

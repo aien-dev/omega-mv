@@ -1,0 +1,45 @@
+{
+  "cases": 145,
+  "failures": 6,
+  "examples": [
+    {
+      "case": "minimal-static",
+      "expected": 0,
+      "actual": 2,
+      "stdout": ""
+    },
+    {
+      "case": "real-compiler",
+      "expected": 0,
+      "actual": 2,
+      "stdout": ""
+    },
+    {
+      "case": "self",
+      "expected": 0,
+      "actual": 2,
+      "stdout": ""
+    },
+    {
+      "case": "dynamic-2",
+      "expected": 3,
+      "actual": 2,
+      "stdout": ""
+    },
+    {
+      "case": "dynamic-3",
+      "expected": 3,
+      "actual": 2,
+      "stdout": ""
+    },
+    {
+      "case": "huge-input",
+      "expected": 4,
+      "actual": 2,
+      "stdout": ""
+    }
+  ],
+  "source_sha256": "3d6fcf2d437039c7630e430683c77c733e4f95fb62fb0b33657e25fb0a1fcc35",
+  "binary_sha256": "1c7ed51fd000d274d1a1d3b4ef4b7dc3e58b54f2f4b6bc042da451a4e3232013",
+  "scope": "ELF format and dynamic-segment rejection, not complete static dependency ancestry"
+}

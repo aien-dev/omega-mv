@@ -1,0 +1,27 @@
+{
+  "cases": 148,
+  "failures": 3,
+  "examples": [
+    {
+      "case": "entry-outside",
+      "expected": 2,
+      "actual": 0,
+      "stdout": ""
+    },
+    {
+      "case": "nonexecutable-load",
+      "expected": 2,
+      "actual": 0,
+      "stdout": ""
+    },
+    {
+      "case": "entry-in-zero-fill",
+      "expected": 2,
+      "actual": 0,
+      "stdout": ""
+    }
+  ],
+  "source_sha256": "a35fcf3adcc81fe48de3d078812ce1b209ccbfa56ce49fa4e5acedbf8ec58636",
+  "binary_sha256": "277cf625268b55285dce0fa7eb197ed470ff1544d90d8cf78373f4b8edebe927",
+  "scope": "ELF format and dynamic-segment rejection, not complete static dependency ancestry"
+}
