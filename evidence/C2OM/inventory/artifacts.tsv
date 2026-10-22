@@ -1,0 +1,241 @@
+aienux	native/kernel	263	65839	4	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	none found	stage_test.c -- host tests for the Lane 18 boot stages (devices,
+aienux	native/argus	31	13643	4	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-8 FR-10 FR-11 FR-12	none found	test_argus_hostile.c -- ARGUS-0 hostile review (lane G): negative tests.
+aienux	native/store	18	7182	4	HAND FR-1 FR-2 FR-3 FR-8 FR-10	none found	Sealed store tests (M5 envelopes + transaction records + torn_slot anchor),
+aienux	native/net	18	4991	4	HAND FR-1 FR-2 FR-3 FR-6 FR-8 FR-10	none found	M6-B secure control transport tests (hosted, TEST identities only).
+aienux	native/disk	13	3985	4	FR-1 FR-2 FR-3 FR-8 FR-10	none found	nvme_test.c -- hosted tests for disk_nvme.c against a software NVMe
+aienux	native/capability	6	3760	4	FR-1 FR-2 FR-3 FR-6 FR-10 FR-12	none found	contain_test.c -- AEGIS containment gate (ARGUS-1 lane G): positive path,
+aienux	native/boot	21	3692	4	HAND FR-2 FR-3 FR-8	none found	slot_loader.c -- SLOTLDR.EFI: the AIENOS signed A/B image slot loader
+aienux	native/m5	9	3219	4	FR-1 FR-2 FR-3 FR-8 FR-10	none found	native/m5 tests: key hierarchy, envelopes, corruption matrix,
+aienux	native/sig	7	1371	4	HAND FR-2 FR-3 FR-8	none found	Ed25519 (RFC 8032 Section 5.1), pure Ed25519 only.
+aienux	native/crypto	8	1327	4	HAND FR-2 FR-3 FR-8	none found	Known-answer and negative tests for native/crypto.
+aienux	crates/aienos-infer	2	84	4	FR-1 FR-2 FR-3 FR-4 FR-10	none found	Reference harness for aienos-infer golden tests (aienos#34 lane 2+3).
+atlas	tools/m1tool.c	1	1111	4	HAND FR-1 FR-2 FR-4 FR-10 FR-11 FR-12	none found	m1tool -- ATLAS M1 host qualification tool (no Python).
+atlas	.	2	188	4	FR-1	none found	General SHA-256 for any length with scratch buffer
+benchmarks	prime-drag-race/evidence	6	3084	4	HAND FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11 FR-12	none found	omega_gpu_elementwise_api.c: FB-1 cut 4 (2026-10-04). See the header.
+CUDApp	src/omega_gpu	53	12421	3	HAND FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-12	make test-gpu-attention, make test-gpu-bf16-gemv, make test-gpu-cmdlist, make test-gpu-code-alloc	SPDX-License-Identifier: MIT 
+CUDApp	src/omega_blackwell	44	11064	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-11 FR-12	none found	SPDX-License-Identifier: MIT 
+CUDApp	tests/gpu	29	10320	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	make test-gpu-attention, make test-gpu-bf16-gemv, make test-gpu-cmdlist, make test-gpu-code-alloc	SPDX-License-Identifier: MIT 
+CUDApp	tests/omega	10	4145	3	HAND FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11	none found	SPDX-License-Identifier: MIT 
+CUDApp	tests/bw	6	1547	3	FR-2 FR-3 FR-4 FR-10	none found	SPDX-License-Identifier: MIT 
+CUDApp	nvrm	4	1519	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-12	none found	SPDX-License-Identifier: MIT 
+CUDApp	m16	6	845	3	FR-1 FR-2 FR-3 FR-5 FR-6 FR-8 FR-10 FR-12	make test-m16-gpu-wait	SPDX-License-Identifier: MIT 
+CUDApp	tests/fake	2	627	3	FR-2 FR-3 FR-5 FR-8	none found	SPDX-License-Identifier: MIT 
+CUDApp	src/omega_core	2	525	3	FR-3	none found	Fields are part of the semantic identity: refuse what does not fit. 
+CUDApp	tests/m16	1	318	3	HAND FR-2 FR-3 FR-8	make test-m16-gpu-wait	SPDX-License-Identifier: MIT 
+CUDApp	src/omega_bw	3	249	3	FR-2 FR-3	none found	SPDX-License-Identifier: MIT 
+CUDApp	src/omega_canonical	2	230	3	FR-3	none found	version of the kind (0x02 effect, 0x01 otherwise), kind 
+CUDApp	src/omega_types	1	204	3	FR-2	none found	BOOTSTRAP REPRESENTATION - NOT PERMANENT SEMANTIC DEFINITION
+CUDApp	examples/hello_gpu	1	176	3	HAND FR-2 FR-3 FR-4	none found	SPDX-License-Identifier: MIT 
+CUDApp	src/sha256	2	169	3	FR-2 FR-3	none found	(no comment)
+CUDApp	src/omega_vector	2	135	3	FR-2 FR-3	none found	Canonical spec digest: SHA-256("OMEGA_VECADD_U32" // N // overflow) 
+CUDApp	src/omega_runtime	1	17	3		make test-runtime-api, make test-runtime-portability, make test-runtime-portability-check, make test-runtime-portability-controls	SPDX-License-Identifier: MIT 
+interplane	docs/external	17	215	4	HAND FR-2 FR-3 FR-4	none found	Host MODEL of ESP-IDF heap capability semantics. Written for this harness, contains no project code.
+interplane	adapters/aien	4	50	4	FR-3	none found	(no comment)
+omega	src/compiler	37	15134	1	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11 FR-12	make test-omega-emit, make test-checker2-differential, tests/compiler	oscc, the Omega compiler: lexer, parser, checker, IR, lowering, AArch64 code
+omega	src/checker2	17	5668	1	HAND FR-1 FR-2 FR-3 FR-5 FR-8 FR-10	make test-checker2	checker2, the independent checker: reads IR, proves it, writes signed receipts
+omega	tools/omegatool.c	1	4067	1	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-10	none found	omegatool, the command-line front door for Omega tasks
+omega	tools/omegese	1	2169	1	HAND FR-1 FR-2 FR-8 FR-10	make test-omegese	Omegese, the language for AI writers: reads a program, checks it, lowers it to the IR op list
+omega	tools/omega_emit	2	987	1	HAND FR-1 FR-2 FR-3 FR-10	make test-omega-emit	Builds the binary IR one checked step at a time; typediff compares types
+omega	src/searchtrace	14	3997	2	HAND FR-1 FR-2 FR-3 FR-8 FR-10	make test-searchtrace	st_holdout.c - G3 sealed-holdout commitment format, v1.
+omega	src/language	7	1861	2	HAND FR-1 FR-2 FR-3 FR-10	make test-language	test_language_v0.c -- Omega surface language V0 (lane 3) tests.
+omega	src/path	3	1404	2	HAND FR-2 FR-3	make test-omegatool-path, make test-path, make test-r16-authpath, make test-r16-authpath-linkmap	TEST HARNESS: PATH-1 native identity and construction
+omega	src/crumbline	8	1290	2	FR-2 FR-3 FR-12	make test-crumbline	h1 = a;
+omega	tools/r16_loop_inventory.c	1	1109	2	HAND FR-1 FR-2 FR-10 FR-11	none found	r16_loop_inventory: R16-G2 code-search gate (spec/r16-orchestrator-retirement.md).
+omega	src/omega_resolve	4	1002	2	HAND FR-1 FR-2 FR-3	make test-resolve, make test-resolve-genesis	omega_resolve.c -- see omega_resolve.h.
+omega	src/omega_vcstore	3	957	2	HAND FR-1 FR-2 FR-3	make test-vcstore, make test-vcstore-genesis	Every refusal guard sits on one line carrying a VC1S:<tag> marker. The mutation test
+omega	tools/quietlock	1	940	2	HAND FR-1 FR-2 FR-8 FR-10 FR-11 FR-12	none found	quietlock: the Spark quiet flag as a real lock (HD-13).
+omega	tools/omega.c	1	795	2	FR-1 FR-2 FR-3 FR-10	make test-omega-emit, make test-omegatool-path	omega -- Omega Visor V1 terminal console.
+omega	src/omega_receipt	2	765	2	HAND FR-2 FR-3	make test-checker2-owner-receipt, make test-m20-receipt, make test-r15-receipt	omega_receipt.c -- see omega_receipt.h.
+omega	tests/effect	1	688	2	HAND FR-2 FR-3	make test-effect-cap64	test_effect_cap64.c -- hostile tests for the 64-bit effect capability
+omega	tests/program	1	653	2	HAND FR-2 FR-3	make test-program-fp32, make test-program-id, make test-program-ir, make test-program-realize	test_program_id.c -- program identity v2 (spec/program-identity.md).
+omega	src/aarch64	5	592	2	FR-2 FR-3	none found	Legacy AArch64 instruction writer (OSC-2 item 4, docs/osc/OSC-2-DESIGN.md section 4).
+omega	src/omega_core	2	525	2	FR-3	make test-visor-core	Fields are part of the semantic identity: refuse what does not fit. 
+omega	src/omega_synthesis	2	520	2	HAND FR-2 FR-3	none found	Off by default. With no hook installed every emission point below is a single
+omega	src/omega_realize	4	508	2	FR-2 FR-3	make test-program-realize, make test-realize	Header is buffered; code bytes are streamed after it, so every byte up
+omega	research/atemporal/at0/integration	1	495	2	HAND FR-1 FR-2 FR-3 FR-10	none found	AT-0 Agent 5: result assembler and exact judge (runner side, C11, -lm not needed).
+omega	tools/allen.c	1	452	2	FR-1 FR-2 FR-3 FR-10	make test-allen	allen.c -- thin host tool for ALLEN subject state (ARCH-0035 PROPOSED).
+omega	src/omega_discovery	2	415	2	FR-2 FR-3	none found	Build base shared sub-expression A = (add1) o (mul2) = 2x + 1 
+omega	src/omega_machine	2	408	2	FR-2 FR-3	make test-machine-identity, make test-machine-identity-argus, make test-visor-machine	Canonical OMG0 wire header 
+omega	src/omega_verify	2	352	2	FR-2 FR-3	make test-physics0-verify, make test-turing-verify-indep, make test-visor-verify	Check that graph has at least one valid object 
+omega	src/omega_vc	2	343	2	HAND FR-2 FR-3	make test-vc-bridge, make test-vcstore, make test-vcstore-genesis	omega_vc_bridge.c -- see omega_vc_bridge.h. 
+omega	src/omega_library	2	324	2	FR-2 FR-3 FR-12	make test-library	Streaming digest over the whole library: no fixed buffer, so no entry can ever fall
+omega	tools/crumbline_learner.c	1	297	2	FR-1 FR-2 FR-3 FR-10	none found	crumbline_learner.c -- Omega as a Crumbline learner.
+omega	src/omega_codec	2	294	2	FR-3	none found	out_len = pos;
+omega	src/omega_evidence	2	277	2	FR-1 FR-2 FR-3 FR-11 FR-12	make test-r16-operator-mutants-evidence, make test-visor-evidence	p = '\0';
+omega	src/omega_validate	2	271	2	FR-3	none found	Check relation targets 
+omega	src/omega_canonical	2	230	2	FR-3	none found	version of the kind (0x02 effect, 0x01 otherwise), kind 
+omega	src/omega_types	1	204	2	FR-2	make test-dual-types, make test-est-types	BOOTSTRAP REPRESENTATION - NOT PERMANENT SEMANTIC DEFINITION
+omega	src/oscv	1	201	2	HAND FR-1 FR-3 FR-10	none found	oscv_main.c -- `oscv`: the VERIFIED OSC driver (VC1 stage 4, ADR 0029).
+omega	src/allen	2	174	2	FR-1 FR-2 FR-3	make test-allen	allen_bind.c -- see allen_bind.h. Pure functions over the subject object,
+omega	src/omega_blake3	2	171	2	FR-2 FR-3	none found	omega_blake3.c -- see omega_blake3.h. Follows the BLAKE3 reference construction:
+omega	src/sha256	2	169	2	FR-2 FR-3	none found	(no comment)
+omega	src/omega_vector	2	135	2	FR-2 FR-3	none found	Canonical spec digest: SHA-256("OMEGA_VECADD_U32" // N // overflow) 
+omega	tools/rx_operator.c	1	133	2	FR-1 FR-2 FR-10 FR-12	none found	rx_operator: the operator's client for a running production world
+omega	tools/own30b_decode_profile.c	1	132	2	FR-2 FR-3	none found	Link-only recorder for OWN-30B decode. No production launcher changes.
+omega	tools/physics0	1	122	2	FR-1 FR-10	make test-physics0-learner, make test-physics0-learner-v2, make test-physics0-planner, make test-physics0-verify	pd1_convert: turn a label-free TSV of retrospective machine runs into the
+omega	src/omega_physics	1	120	2	FR-1 FR-10 FR-11	make test-physics0-learner, make test-physics0-learner-v2, make test-physics0-planner, make test-physics0-verify	Run-time resolution of the physics checkout used by the omegatool gate runners
+omega	tests/omegatool_path	1	96	2	FR-1 FR-3 FR-11	make test-omegatool-path	Run-time physics resolution (src/omega_physics_dir.h): env wins, ../physics default,
+omega	src/forge	2	90	2	FR-2 FR-3	none found	(no comment)
+omega	research/dirac-oracle/src	1	85	2	FR-2	none found	DIRAC-0 independent oracle: exact Clifford relation check.
+omega	tests/vc	1	81	2	FR-2 FR-3	make test-vc-bridge, make test-vcstore, make test-vcstore-genesis	vc_fixture.h -- real Omega programs for Verified Crumb tests (VC1 stage 6).
+omega	src/omega_genesis	1	67	2		make test-genesis, make test-genesis-real, make test-resolve-genesis, make test-vcstore-genesis	VC-GENESIS-1: the Genesis Set of ADR 0029 Decision 8 (VC1 stage 6).
+omega	src/omega_unwritten	2	64	2	FR-2 FR-3	make test-unwritten-trap-host	(no comment)
+omega	tests/r16_inventory	4	48	2	FR-8 FR-10	make test-r16-inventory	R16 inventory fixture. while (1) { } in a comment is not a site. 
+omega	src/aegis	2	38	2	FR-3	none found	(no comment)
+omega	tests/numeric_native	2	14	2	FR-2 FR-3 FR-8	make test-numeric-lifecycle	(no comment)
+omega	src/runtime	127	80348	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	make test-action-graph, make test-aienos-cap-abi, make test-argus-runtime, make test-branch-reuse	rx_world.c -- resident reaction runtime, simple human reference. See rx_world.h.
+omega	tests/omega	30	16399	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	make test-omega-emit, make test-omegatool-path	M20 OMEGA_TENSOR CPU tests (docs/tensor/M20_OMEGA_TENSOR.md).
+omega	src/osh	32	13005	3	HAND FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11 FR-12	make test-osh-caps, make test-osh-e2e, make test-osh-expand, make test-osh-host	test_osh_host.c -- tests for the osh Linux host adapter execution service (aien-architecture#158).
+omega	src/omega_blackwell	46	12553	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	none found	native v1 P07 cut A.2 (aienos#286, docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md): with OMEGA_GPU_NO_POS
+omega	src/omega_gpu	53	12367	3	HAND FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-12	make test-composition-gate-gpu, make test-gpu-attention, make test-gpu-bf16-gemv, make test-gpu-cmdlist	omega_gpu_attention_api.c: FB-1 cut 5 (2026-10-04). See the header.
+omega	tests/gpu	30	10883	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	make test-composition-gate-gpu, make test-gpu-attention, make test-gpu-bf16-gemv, make test-gpu-cmdlist	gpu_attention_test: FB-1 cut 5 gate for omega_gpu_attention_api.
+omega	src/turing	47	10397	3	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-11 FR-12	make test-turing, make test-turing-cal-blinding, make test-turing-energy, make test-turing-exp001-a	TURING companion records for continuous-value evidence. See ty_qrecord.h. 
+omega	tools/estimation	17	8251	3	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-8 FR-10 FR-11 FR-12	make test-est4-tools, make test-est5-tools, make test-est5-window, make test-est6dev	ESTIMATION v6 pre-freeze development analysis (docs/estimation/protocols/est-v6.md section 9
+omega	src/visor	29	7826	3	HAND FR-1 FR-2 FR-3 FR-6 FR-11	make test-turing-yield, make test-visor, make test-visor-authority, make test-visor-console	visor_semantic.c -- Omega Visor V1, lane 1: read-only semantic inspection.
+omega	src/physics0	62	7683	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10 FR-11	make test-physics0-learner, make test-physics0-learner-v2, make test-physics0-planner, make test-physics0-verify	spec rev 6 (b): a step record carries an outcome (valid vars_after) when it is OK or EPISODE_END;
+omega	src/omega_numeric	17	6411	3	HAND FR-2 FR-3 FR-4 FR-5 FR-6 FR-8	make test-numeric-cpu, make test-numeric-e1-exhaustive, make test-numeric-lifecycle, make test-numeric-qualify	E1 row 7: correctly rounded FP32 DIV and SQRT realized on the GB10.
+omega	src/algebra	26	6379	3	HAND FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12	make test-algebra, make test-algebra-asan, make test-polyglot-asm, make test-turing-qrecord	Parity-oracle tests for the Omega mixed algebra (src/algebra/).
+omega	src/estimation	17	6170	3	HAND FR-2 FR-3 FR-4	make test-est5-tools, make test-estimation, make test-estimation-v3, make test-estimation-v4	ESTIMATION-2 protocol v3: hostile suite for est_pred (numerics, contract,
+omega	src/polyglot	14	4902	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	make test-polyglot, make test-polyglot-asm, make test-polyglot-encoder	POLYGLOT-0 benchmark harness (lane F). spec/polyglot-0.md sections 6-8.
+omega	tools/reservoir	8	3280	3	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-12	make test-reservoir	res_qualify bench-narma / bench-lorenz / perf: the Gate 2 benchmark and
+omega	src/dual	17	3007	3	FR-1 FR-2 FR-3 FR-4	make test-dual, make test-dual-3a, make test-dual-applicability, make test-dual-bind	DUAL-0a: typed records, registry, validation, canonical encoding and
+omega	src/tensor	8	2762	3	HAND FR-1 FR-2 FR-3 FR-4 FR-8	make test-tensor, make test-tensor-e1-reduce, make test-tensor-gb10-chip, make test-tensor-gb10-host	M20 OMEGA_TENSOR semantic layer (see omega_tensor.h). This file holds the
+omega	src/omega_world	2	2683	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11 FR-12	make test-visor-world	Measured (not asserted) fault-recovery observations from gate 12; each
+omega	src/reservoir	9	2625	3	FR-1 FR-2 FR-3 FR-4	make test-reservoir	omega#440 Gate 1 tests for src/reservoir. Expected values come from hand
+omega	research/atemporal/at1/model	8	2607	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	make test-costmodel, make test-model, make test-model-diff, make test-model-tsan	AT1_RESULT_V1 writer: splices the oracle's four reference families (charter reading c),
+omega	src/fabric	11	2595	3	HAND FR-2 FR-3 FR-6	make test-fabric, make test-fabric-living, make test-r12-silicon	fabric_test.c -- F5-0 exit gate (fabric.h) over the loopback transport.
+omega	tools/turing_cal.c	4	2361	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12	none found	turing-cal-eval: the EXP-001 / EXP-001R primary evaluator (Turing-profile-v1.0 / v1.1, chosen by env
+omega	research/atemporal/at0/evaluator/src	8	2083	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	Independent AT0_RESULT_V1 parser, exact re-derivation of the ten checks, and
+omega	tests/one_layer	5	1989	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11 FR-12	none found	ola.c -- trusted half of the one-layer stage-1 hostile acceptance harness (omega#443).
+omega	src/omega_accelerator	4	1892	3	FR-2 FR-3 FR-5 FR-6 FR-8	none found	Capability epochs are process unique; the local epoch remains available for
+omega	research/atemporal/at0/model	13	1790	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	make test-costmodel, make test-model, make test-model-diff, make test-model-tsan	AT0_CASE_V1 codec: parse, validate (rules 1..6 in contract order), compute
+omega	tests/bw	6	1541	3	FR-2 FR-3 FR-4 FR-10	none found	bw_hmma_model.h (OWN-30B T3, 2026-10-13): parametrised C model of one HMMA.16816.F32.BF16 dot produc
+omega	src/train	5	1511	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10 FR-11	make test-train	tg_store.c -- M22 transactional parameter-state substrate. See tg_store.h. 
+omega	tests/brownian	6	1455	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	make test-brownian-active, make test-brownian-tps	BRW-ACT-DEV0 runner (harness side: the world generator lives only here).
+omega	src/ans	4	1364	3	FR-2 FR-3 FR-4	make test-ans, make test-chip-run-transc-manifest, make test-numeric-transc, make test-numeric-transc-digest	ANS (Inertial Alignment v1) tests 1-10 of docs/ans/INERTIAL_ALIGNMENT_SPEC_V1.md.
+omega	tests/model	6	1348	3	FR-2 FR-3 FR-6 FR-10 FR-12	make test-costmodel, make test-model, make test-model-diff, make test-model-tsan	world_diff.c -- differential harness: the lifecycle model against the real
+omega	tools/r15_reduce.c	1	1332	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	r15_reduce.c -- the R15 reducer (spec/r15-performance-proof.md §10-§12).
+omega	src/omega_program	6	1263	3	FR-2 FR-3 FR-4	make test-program-fp32, make test-program-id, make test-program-ir, make test-program-realize	out_id = obj.id;
+omega	bench/prime_race/tests	3	1139	3	HAND FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11 FR-12	none found	Host tests for the native GB10 prime sieve (no device is opened).
+omega	research/atemporal/at1/model/tests	1	1059	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10 FR-11	none found	Tests of the AT-1 candidate engine (Agent 3). Portable C11 plus POSIX system() status macros.
+omega	src/dual_experiment	6	929	3	FR-2 FR-3 FR-4	none found	Deterministic discrete workload simulator for the DUAL applicability
+omega	tools/ty_energy_reduce.c	1	925	3	FR-1 FR-2 FR-3 FR-4 FR-10	none found	ty_energy_reduce: TY-4/TY-5 reducer (docs/turing/TURING_YIELD_ENERGY_PROTOCOL_V0.md).
+omega	tools/turing_verify_indep	6	918	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	indep-scorer: lane D independent scorer for EXP-001.
+omega	tools/brownian	4	886	3	FR-2 FR-3 FR-4	make test-brownian-active, make test-brownian-tps	TPS1 binariser. See brw_tps_adapter.h. Requires long double with a 113-bit
+omega	src/autodiff	2	756	3	FR-2 FR-3 FR-4	make test-autodiff, make test-autodiff-mutations	M21 OMEGA_AUTODIFF, CPU tier: reverse-mode tape over M20 tensor ops.
+omega	bench/prime_race	4	753	3	HAND FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12	none found	AIEN Prime Drag Race: native GB10 implementation (no CUDA).
+omega	src/omega_matvec	4	663	3	HAND FR-2 FR-3 FR-4 FR-5 FR-12	none found	Compute deterministic canonical SemanticId for MatVec operator 
+omega	tests/realize	2	656	3	HAND FR-3 FR-4	make test-program-realize, make test-realize	test_program_realize.c -- realization is driven by the actual Omega program
+omega	research/atemporal/at0/model/tests	1	650	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	Component tests for the AT-0 candidate engine.
+omega	tests/fake	2	625	3	FR-2 FR-3 FR-5 FR-8	none found	Simulated GB10 driver. See tests/fake_m16_native.h for what it models.
+omega	tools/exp445	3	589	3	FR-1 FR-2 FR-3 FR-4 FR-10	make test-exp445, make test-omega-emit	x445.c -- C helpers of the exp445 generation driver (omega#445, docs/one_layer/EXP445_PROTOCOL.md).
+omega	research/m15/spbm	6	577	3	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-8 FR-10 FR-12	none found	SPDX-License-Identifier: GPL-2.0-only
+omega	tools/json_canon.c	1	550	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	json_canon.c -- strict JSON check and Python-compatible canonical JSON.
+omega	tools/turing_yield.c	1	524	3	FR-1 FR-2 FR-3 FR-4 FR-10	none found	turing-yield: Turing Yield TY-2 driver (held-out predictive compression).
+omega	tests/numeric	2	513	3	FR-2 FR-3 FR-4 FR-8 FR-11	make test-numeric-cpu, make test-numeric-e1-exhaustive, make test-numeric-lifecycle, make test-numeric-qualify	Executes the production lifecycle wrappers against a simulated M16 driver.
+omega	src/omega_self	2	413	3	HAND FR-2 FR-3 FR-5	make test-r16-qualify-selftest	count == 8 -> G_S (f_add_sub)
+omega	calibration/scripts	1	341	3	FR-2 FR-3 FR-4 FR-10 FR-12	make test-turing-cal-blinding, make test-turing-verify-indep	EXP-001 power simulation (Turing-profile-v1.0, lane A). C only, CPU only.
+omega	src/omega_bw	3	246	3	FR-2 FR-3	none found	omega_bw_em.h: the IR emitter helpers shared by the OWN-30B tensor-core generators (T3/T3b; private,
+omega	tools/dual_experiment	1	238	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	DUAL applicability experiment runner. Runs the pre-registered campaign
+omega	tools/turing_field.c	1	210	3	HAND FR-2 FR-3 FR-4 FR-10	none found	turing-field: TURING Field V0 view over stored receipts (no timed runs).
+omega	src/omega_exec	2	182	3	HAND FR-1 FR-2 FR-3 FR-5 FR-11	none found	out_res = u.fn(a, b, c);
+omega	tests/bench	1	164	3	FR-2 FR-3 FR-4 FR-8 FR-10 FR-12	none found	bench_rx_argus.c -- ARGUS_PERFORMANCE_GATE micro-benchmark (CPU only, no GPU).
+omega	tools/argus_replay.c	1	106	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12	none found	argus_replay.c -- replay a raw ARGUS runtime stream (128-byte records, as
+omega	docs/osc/audit/baseline	1	90	3	FR-2 FR-6	none found	LD_PRELOAD allocation counting shim. Counts malloc/calloc/realloc/free (+memalign family),
+omega	research/m15/pmu	1	71	3	FR-2 FR-4 FR-5 FR-6 FR-8	none found	Probe: per-thread, inherited counters opened on both GB10 CPU PMUs.
+omega	research/atemporal/at1/evaluator/gates	4	61	3	FR-2 FR-4 FR-8 FR-12	none found	Positive control for gates/isolation.sh (AT-1 G2, charter mutant
+omega	research/atemporal/at0/evaluator/gates	3	24	3	FR-2 FR-4 FR-12	none found	Isolation gate positive control (Agent 5 finding, omega#358): a hardened-libc file read.
+omega@HEAD	src/compiler	33	12885	1	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11 FR-12	make test-compiler, make test-compiler-full, make test-compiler-quick	osc_check.c -- OSC-1 checker: names, types, literals, overflow-unsafe
+omega@HEAD	tools/omegatool.c	1	3970	1	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-10	none found	GATE 1: OMEGA_OBJECT_MODEL_PASS
+omega@HEAD	src/searchtrace	14	3997	2	HAND FR-1 FR-2 FR-3 FR-8 FR-10	make test-searchtrace	st_holdout.c - G3 sealed-holdout commitment format, v1.
+omega@HEAD	src/language	7	1861	2	HAND FR-1 FR-2 FR-3 FR-10	make test-language	test_language_v0.c -- Omega surface language V0 (lane 3) tests.
+omega@HEAD	src/path	3	1404	2	HAND FR-2 FR-3	make test-path, make test-r16-authpath, make test-r16-authpath-linkmap, make test-r16-authpath-linkmap-silicon	TEST HARNESS: PATH-1 native identity and construction
+omega@HEAD	src/crumbline	8	1290	2	FR-2 FR-3 FR-12	make test-crumbline	h1 = a;
+omega@HEAD	tools/r16_loop_inventory.c	1	1109	2	HAND FR-1 FR-2 FR-10 FR-11	none found	r16_loop_inventory: R16-G2 code-search gate (spec/r16-orchestrator-retirement.md).
+omega@HEAD	src/omega_resolve	4	1002	2	HAND FR-1 FR-2 FR-3	make test-resolve, make test-resolve-genesis	omega_resolve.c -- see omega_resolve.h.
+omega@HEAD	src/omega_vcstore	3	957	2	HAND FR-1 FR-2 FR-3	make test-vcstore, make test-vcstore-genesis	Every refusal guard sits on one line carrying a VC1S:<tag> marker. The mutation test
+omega@HEAD	tools/quietlock	1	940	2	HAND FR-1 FR-2 FR-8 FR-10 FR-11 FR-12	none found	quietlock: the Spark quiet flag as a real lock (HD-13).
+omega@HEAD	tools/omega.c	1	795	2	FR-1 FR-2 FR-3 FR-10	none found	omega -- Omega Visor V1 terminal console.
+omega@HEAD	src/omega_receipt	2	765	2	HAND FR-2 FR-3	make test-m20-receipt, make test-r15-receipt	omega_receipt.c -- see omega_receipt.h.
+omega@HEAD	tests/effect	1	688	2	HAND FR-2 FR-3	make test-effect-cap64, make test-sem-incremental	test_effect_cap64.c -- hostile tests for the 64-bit effect capability
+omega@HEAD	tests/program	1	653	2	HAND FR-2 FR-3	make test-program-fp32, make test-program-id, make test-program-ir, make test-program-realize	test_program_id.c -- program identity v2 (spec/program-identity.md).
+omega@HEAD	src/aarch64	5	592	2	FR-2 FR-3	none found	Legacy AArch64 instruction writer (OSC-2 item 4, docs/osc/OSC-2-DESIGN.md section 4).
+omega@HEAD	src/omega_core	2	521	2	FR-3	make test-visor-core	out = e;
+omega@HEAD	src/omega_synthesis	2	520	2	HAND FR-2 FR-3	none found	Off by default. With no hook installed every emission point below is a single
+omega@HEAD	src/omega_realize	4	506	2	FR-2 FR-3	make test-program-realize, make test-realize	Canonical OMG0 wire header 
+omega@HEAD	src/omega_discovery	2	415	2	FR-2 FR-3	none found	Build base shared sub-expression A = (add1) o (mul2) = 2x + 1 
+omega@HEAD	src/omega_machine	2	408	2	FR-2 FR-3	make test-machine-identity, make test-machine-identity-argus, make test-visor-machine	Canonical OMG0 wire header 
+omega@HEAD	src/omega_verify	2	352	2	FR-2 FR-3	make test-turing-verify-indep, make test-visor-verify	Check that graph has at least one valid object 
+omega@HEAD	src/omega_vc	2	343	2	HAND FR-2 FR-3	make test-vc-bridge, make test-vcstore, make test-vcstore-genesis	omega_vc_bridge.c -- see omega_vc_bridge.h. 
+omega@HEAD	src/omega_library	2	324	2	FR-2 FR-3 FR-12	make test-library	Streaming digest over the whole library: no fixed buffer, so no entry can ever fall
+omega@HEAD	tools/crumbline_learner.c	1	297	2	FR-1 FR-2 FR-3 FR-10	none found	crumbline_learner.c -- Omega as a Crumbline learner.
+omega@HEAD	src/omega_codec	2	294	2	FR-3	none found	out_len = pos;
+omega@HEAD	src/omega_evidence	2	277	2	FR-1 FR-2 FR-3 FR-11 FR-12	make test-visor-evidence	p = '\0';
+omega@HEAD	src/omega_validate	2	271	2	FR-3	none found	Check relation targets 
+omega@HEAD	src/omega_canonical	2	230	2	FR-3	none found	version of the kind (0x02 effect, 0x01 otherwise), kind 
+omega@HEAD	src/omega_types	1	204	2	FR-2	make test-est-types	BOOTSTRAP REPRESENTATION - NOT PERMANENT SEMANTIC DEFINITION
+omega@HEAD	src/oscv	1	201	2	HAND FR-1 FR-3 FR-10	none found	oscv_main.c -- `oscv`: the VERIFIED OSC driver (VC1 stage 4, ADR 0029).
+omega@HEAD	src/omega_blake3	2	171	2	FR-2 FR-3	none found	omega_blake3.c -- see omega_blake3.h. Follows the BLAKE3 reference construction:
+omega@HEAD	src/sha256	2	169	2	FR-2 FR-3	none found	(no comment)
+omega@HEAD	src/omega_vector	2	135	2	FR-2 FR-3	none found	Canonical spec digest: SHA-256("OMEGA_VECADD_U32" // N // overflow) 
+omega@HEAD	src/forge	2	90	2	FR-2 FR-3	none found	(no comment)
+omega@HEAD	research/dirac-oracle/src	1	85	2	FR-2	none found	DIRAC-0 independent oracle: exact Clifford relation check.
+omega@HEAD	tests/vc	1	81	2	FR-2 FR-3	make test-vc-bridge, make test-vcstore, make test-vcstore-genesis	vc_fixture.h -- real Omega programs for Verified Crumb tests (VC1 stage 6).
+omega@HEAD	src/omega_genesis	1	67	2		make test-genesis, make test-genesis-real, make test-resolve-genesis, make test-vcstore-genesis	VC-GENESIS-1: the Genesis Set of ADR 0029 Decision 8 (VC1 stage 6).
+omega@HEAD	src/omega_unwritten	2	64	2	FR-2 FR-3	make test-unwritten-trap-host	(no comment)
+omega@HEAD	tests/r16_inventory	4	48	2	FR-8 FR-10	make test-r16-inventory	R16 inventory fixture. while (1) { } in a comment is not a site. 
+omega@HEAD	src/aegis	2	38	2	FR-3	none found	(no comment)
+omega@HEAD	tests/numeric_native	2	14	2	FR-2 FR-3 FR-8	make test-numeric-lifecycle	(no comment)
+omega@HEAD	src/runtime	107	72972	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	make test-action-graph, make test-argus-runtime, make test-branch-reuse, make test-capability-graph	rx_heartbeat_test.c -- qualification suite for the first heartbeat of the
+omega@HEAD	tests/omega	24	14715	3	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-8 FR-10 FR-11 FR-12	none found	M20 OMEGA_TENSOR CPU tests (docs/tensor/M20_OMEGA_TENSOR.md).
+omega@HEAD	src/turing	44	9873	3	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-11 FR-12	make test-turing, make test-turing-cal-blinding, make test-turing-energy, make test-turing-exp001-a	TURING companion records for continuous-value evidence. See ty_qrecord.h. 
+omega@HEAD	src/visor	29	7826	3	HAND FR-1 FR-2 FR-3 FR-6 FR-11	make test-sem-incremental, make test-turing-yield, make test-visor, make test-visor-authority	visor_semantic.c -- Omega Visor V1, lane 1: read-only semantic inspection.
+omega@HEAD	src/omega_numeric	17	6407	3	HAND FR-2 FR-3 FR-4 FR-5 FR-6 FR-8	make test-numeric-cpu, make test-numeric-e1-exhaustive, make test-numeric-lifecycle, make test-numeric-qualify	E1 row 7: correctly rounded FP32 DIV and SQRT realized on the GB10.
+omega@HEAD	src/algebra	26	6379	3	HAND FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12	make test-algebra, make test-algebra-asan, make test-gpu-engine-gb10-compile, make test-polyglot-asm	Parity-oracle tests for the Omega mixed algebra (src/algebra/).
+omega@HEAD	src/estimation	17	6170	3	HAND FR-2 FR-3 FR-4	make test-estimation, make test-estimation-v3, make test-estimation-v4	ESTIMATION-2 protocol v3: hostile suite for est_pred (numerics, contract,
+omega@HEAD	tools/estimation	13	5685	3	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-8 FR-10 FR-11 FR-12	make test-est4-tools, make test-estimation, make test-estimation-v3, make test-estimation-v4	EST-3c protocol v3 shared tool code. See est3c_common.h for the documented
+omega@HEAD	src/omega_blackwell	16	5460	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	none found	Verify modulo 2^32 semantic oracle 
+omega@HEAD	src/polyglot	16	5268	3	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12	make test-polyglot, make test-polyglot-asm, make test-polyglot-encoder, make test-polyglot-mojo	POLYGLOT-0 benchmark harness (lane F). spec/polyglot-0.md sections 6-8.
+omega@HEAD	src/tensor	8	2762	3	HAND FR-1 FR-2 FR-3 FR-4 FR-8	make test-tensor, make test-tensor-e1-reduce, make test-tensor-gb10-chip, make test-tensor-gb10-host	M20 OMEGA_TENSOR semantic layer (see omega_tensor.h). This file holds the
+omega@HEAD	src/fabric	11	2595	3	HAND FR-2 FR-3 FR-6	make test-fabric, make test-fabric-living, make test-r12-silicon	fabric_test.c -- F5-0 exit gate (fabric.h) over the loopback transport.
+omega@HEAD	src/omega_world	2	2403	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11 FR-12	make test-visor-world	Measured (not asserted) fault-recovery observations from gate 12; each
+omega@HEAD	tools/turing_cal.c	4	2361	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12	none found	turing-cal-eval: the EXP-001 / EXP-001R primary evaluator (Turing-profile-v1.0 / v1.1, chosen by env
+omega@HEAD	src/omega_accelerator	4	1790	3	FR-2 FR-3 FR-5 FR-6 FR-8	none found	Capability epochs are process unique; the local epoch remains available for
+omega@HEAD	src/train	5	1511	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10 FR-11	make test-train	tg_store.c -- M22 transactional parameter-state substrate. See tg_store.h. 
+omega@HEAD	tests/model	6	1348	3	FR-2 FR-3 FR-6 FR-10 FR-12	make test-costmodel, make test-model, make test-model-diff, make test-model-tsan	world_diff.c -- differential harness: the lifecycle model against the real
+omega@HEAD	tools/r15_reduce.c	1	1289	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	r15_reduce.c -- the R15 reducer (spec/r15-performance-proof.md §10-§12).
+omega@HEAD	src/omega_program	6	1262	3	FR-2 FR-3 FR-4	make test-program-fp32, make test-program-id, make test-program-ir, make test-program-realize	out_id = obj.id;
+omega@HEAD	tools/ty_energy_reduce.c	1	925	3	FR-1 FR-2 FR-3 FR-4 FR-10	none found	ty_energy_reduce: TY-4/TY-5 reducer (docs/turing/TURING_YIELD_ENERGY_PROTOCOL_V0.md).
+omega@HEAD	tools/turing_verify_indep	6	918	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	indep-scorer: lane D independent scorer for EXP-001.
+omega@HEAD	src/autodiff	2	756	3	FR-2 FR-3 FR-4	make test-autodiff, make test-autodiff-mutations	M21 OMEGA_AUTODIFF, CPU tier: reverse-mode tape over M20 tensor ops.
+omega@HEAD	src/omega_gpu	2	686	3	FR-2 FR-3 FR-6 FR-12	make test-composition-gate-gpu, make test-gpu-engine, make test-gpu-engine-backend-compile, make test-gpu-engine-backend-mutants	Omega GPU Engine core (A3a). See src/omega_gpu_engine.h and
+omega@HEAD	src/omega_matvec	4	663	3	HAND FR-2 FR-3 FR-4 FR-5 FR-12	none found	Compute deterministic canonical SemanticId for MatVec operator 
+omega@HEAD	tests/realize	2	656	3	HAND FR-3 FR-4	make test-program-realize, make test-realize	test_program_realize.c -- realization is driven by the actual Omega program
+omega@HEAD	tests/fake	2	583	3	FR-2 FR-3 FR-5 FR-8	none found	Simulated GB10 driver. See tests/fake_m16_native.h for what it models.
+omega@HEAD	research/m15/spbm	6	577	3	HAND FR-1 FR-2 FR-3 FR-4 FR-6 FR-8 FR-10 FR-12	none found	SPDX-License-Identifier: GPL-2.0-only
+omega@HEAD	tools/json_canon.c	1	550	3	HAND FR-1 FR-2 FR-3 FR-4 FR-10	none found	json_canon.c -- strict JSON check and Python-compatible canonical JSON.
+omega@HEAD	tools/turing_yield.c	1	524	3	FR-1 FR-2 FR-3 FR-4 FR-10	none found	turing-yield: Turing Yield TY-2 driver (held-out predictive compression).
+omega@HEAD	tests/numeric	2	513	3	FR-2 FR-3 FR-4 FR-8 FR-11	make test-numeric-cpu, make test-numeric-e1-exhaustive, make test-numeric-lifecycle, make test-numeric-qualify	Executes the production lifecycle wrappers against a simulated M16 driver.
+omega@HEAD	tools/brownian	2	454	3	FR-2 FR-3 FR-4	make test-brownian-tps	TPS1 binariser. See brw_tps_adapter.h. Requires long double with a 113-bit
+omega@HEAD	src/omega_self	2	413	3	HAND FR-2 FR-3 FR-5	make test-r16-qualify-selftest	count == 8 -> G_S (f_add_sub)
+omega@HEAD	tests/brownian	1	376	3	FR-2 FR-3 FR-4	make test-brownian-tps	Tests for the TPS1 binariser. Streams come from xoshiro256** seeded through
+omega@HEAD	calibration/scripts	1	341	3	FR-2 FR-3 FR-4 FR-10 FR-12	make test-turing-cal-blinding, make test-turing-verify-indep	EXP-001 power simulation (Turing-profile-v1.0, lane A). C only, CPU only.
+omega@HEAD	tools/turing_field.c	1	210	3	HAND FR-2 FR-3 FR-4 FR-10	none found	turing-field: TURING Field V0 view over stored receipts (no timed runs).
+omega@HEAD	src/omega_exec	2	182	3	HAND FR-1 FR-2 FR-3 FR-5 FR-11	none found	out_res = u.fn(a, b, c);
+omega@HEAD	tests/bench	1	164	3	FR-2 FR-3 FR-4 FR-8 FR-10 FR-12	none found	bench_rx_argus.c -- ARGUS_PERFORMANCE_GATE micro-benchmark (CPU only, no GPU).
+omega@HEAD	tools/argus_replay.c	1	106	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12	none found	argus_replay.c -- replay a raw ARGUS runtime stream (128-byte records, as
+omega@HEAD	docs/osc/audit/baseline	1	90	3	FR-2 FR-6	none found	LD_PRELOAD allocation counting shim. Counts malloc/calloc/realloc/free (+memalign family),
+omega@HEAD	research/m15/pmu	1	71	3	FR-2 FR-4 FR-5 FR-6 FR-8	none found	Probe: per-thread, inherited counters opened on both GB10 CPU PMUs.
+physics	tests/forge	6	2531	4	FR-2 FR-3 FR-4 FR-5 FR-10 FR-11	none found	tests/test_forge_v2_kat.c -- FORGE SUBSTRATE V2 host-only known-answer test.
+physics	nvrm	4	1515	4	HAND FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-8 FR-12	none found	nvrm.c -- PHYSICS native accelerator substrate (NVRM client), used by M16 qualification,
+physics	forge/v2	3	1281	4	FR-2 FR-3	none found	forge/v2/forge_substrate_v2.c -- FORGE SUBSTRATE V2 reference serializer,
+physics	m15	4	1124	4	FR-1 FR-2 FR-3 FR-6	none found	Forward declaration from sha256_clean.c 
+physics	tools/m2tool.c	1	1120	4	HAND FR-1 FR-2 FR-10 FR-11	none found	m2tool -- PHYSICS M2 host qualification tool (no Python).
+physics	forge	5	1109	4	FR-1 FR-2 FR-3 FR-5 FR-8 FR-12	none found	Forward declaration of clean SHA-256 implementation 
+physics	forge/form	2	857	4	FR-2 FR-3	none found	forge/form/forge_form.c -- FORGE REALIZATION FORM V1 reference: canonical
+physics	m16	6	839	4	FR-1 FR-2 FR-3 FR-5 FR-6 FR-8 FR-10 FR-12	make test-m16-gpu-wait	m16_concurrent.c -- M16 concurrent multi-channel qualification test.
+physics	m15/tools	1	701	4	FR-1 FR-3 FR-10 FR-12	none found	GATE 1: PHYSICS_ACCEL_MEM_BOUNDS_PASS
+physics	forge/analog-sim	2	688	4	FR-2 FR-3	none found	forge/analog-sim/forge_analog_sim.c -- AR2 simulated analog provider.
+physics	tests/m16	1	317	4	HAND FR-2 FR-3 FR-8	make test-m16-gpu-wait	Host test for src/m16_gpu_wait.c: fake memory, fake clock, no GPU.
+physics	m3/tools	1	260	4	HAND FR-1 FR-2 FR-10	none found	m3tool -- PHYSICS M3 host tool (no Python). Host: aarch64 little-endian.
+physics	.	1	107	4		none found	General SHA-256 for any length with scratch buffer

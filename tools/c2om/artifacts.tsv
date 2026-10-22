@@ -1,0 +1,6 @@
+# repo	artifact	what it does (one line, plain)	checked by (overrides the found make targets)
+omega	tools/omegese	Omegese, the language for AI writers: reads a program, checks it, lowers it to the IR op list	make test-omegese
+omega	tools/omega_emit	Builds the binary IR one checked step at a time; typediff compares types	make test-omega-emit
+omega	src/compiler	oscc, the Omega compiler: lexer, parser, checker, IR, lowering, AArch64 code	make test-omega-emit, make test-checker2-differential, tests/compiler
+omega	src/checker2	checker2, the independent checker: reads IR, proves it, writes signed receipts	make test-checker2
+omega	tools/omegatool.c	omegatool, the command-line front door for Omega tasks	none found

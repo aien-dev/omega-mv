@@ -1,0 +1,2081 @@
+omega	bench/prime_race/cpu_base.c	112	bench/prime_race	3	FR-2 FR-3 FR-10
+omega	bench/prime_race/gb10_native.c	293	bench/prime_race	3	FR-2 FR-3 FR-8 FR-10
+omega	bench/prime_race/prime_race_impl.c	276	bench/prime_race	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	bench/prime_race/prime_race_impl.h	72	bench/prime_race	3	FR-2 FR-4 FR-10
+omega	bench/prime_race/tests/gb10_launch_cost.c	122	bench/prime_race/tests	3	FR-2 FR-3 FR-8 FR-10 FR-12
+omega	bench/prime_race/tests/gb10_sieve_host_test.c	785	bench/prime_race/tests	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 HAND
+omega	bench/prime_race/tests/prime_race_host_test.c	232	bench/prime_race/tests	3	FR-2 FR-3 HAND
+omega	calibration/scripts/power_simulation.c	341	calibration/scripts	3	FR-2 FR-3 FR-4 FR-10 FR-12
+omega	docs/osc/audit/baseline/shim.c	90	docs/osc/audit/baseline	3	FR-2 FR-6
+omega	research/atemporal/at0/evaluator/gates/clean_control.c	4	research/atemporal/at0/evaluator/gates	3	FR-4
+omega	research/atemporal/at0/evaluator/gates/fortified_read_mutant.c	11	research/atemporal/at0/evaluator/gates	3	
+omega	research/atemporal/at0/evaluator/gates/hidden_clock_mutant.c	9	research/atemporal/at0/evaluator/gates	3	FR-2 FR-4 FR-12
+omega	research/atemporal/at0/evaluator/src/at0e.h	242	research/atemporal/at0/evaluator/src	3	FR-2 FR-4 HAND
+omega	research/atemporal/at0/evaluator/src/at0e_big.c	255	research/atemporal/at0/evaluator/src	3	FR-3
+omega	research/atemporal/at0/evaluator/src/at0e_case.c	372	research/atemporal/at0/evaluator/src	3	FR-2 FR-3 HAND
+omega	research/atemporal/at0/evaluator/src/at0e_main.c	177	research/atemporal/at0/evaluator/src	3	FR-1 FR-3 FR-10
+omega	research/atemporal/at0/evaluator/src/at0e_result.c	513	research/atemporal/at0/evaluator/src	3	FR-2 FR-3 FR-4 HAND
+omega	research/atemporal/at0/evaluator/src/at0e_shadow.c	162	research/atemporal/at0/evaluator/src	3	FR-2 FR-3 FR-4
+omega	research/atemporal/at0/evaluator/src/at0e_synth.c	221	research/atemporal/at0/evaluator/src	3	FR-3 FR-4 HAND
+omega	research/atemporal/at0/evaluator/src/at0e_text.c	141	research/atemporal/at0/evaluator/src	3	FR-1 FR-3 HAND
+omega	research/atemporal/at0/integration/at0_assemble.c	495	research/atemporal/at0/integration	2	FR-1 FR-2 FR-3 FR-10 HAND
+omega	research/atemporal/at0/model/at0_case.c	513	research/atemporal/at0/model	3	FR-2 FR-3 HAND
+omega	research/atemporal/at0/model/at0_conditional.c	43	research/atemporal/at0/model	3	FR-3 FR-4
+omega	research/atemporal/at0/model/at0_constraint.c	136	research/atemporal/at0/model	3	FR-3 FR-4
+omega	research/atemporal/at0/model/at0_engine.c	78	research/atemporal/at0/model	3	FR-3 FR-4
+omega	research/atemporal/at0/model/at0_exact.c	371	research/atemporal/at0/model	3	FR-2 FR-3 FR-4
+omega	research/atemporal/at0/model/at0_hamiltonian.c	64	research/atemporal/at0/model	3	FR-3 FR-4
+omega	research/atemporal/at0/model/at0_io.c	36	research/atemporal/at0/model	3	FR-1 FR-3
+omega	research/atemporal/at0/model/at0_main.c	30	research/atemporal/at0/model	3	FR-1 FR-3 FR-10
+omega	research/atemporal/at0/model/at0_model.h	256	research/atemporal/at0/model	3	FR-2 FR-4
+omega	research/atemporal/at0/model/at0_observable.c	37	research/atemporal/at0/model	3	FR-3 FR-4
+omega	research/atemporal/at0/model/at0_output.c	76	research/atemporal/at0/model	3	FR-2 FR-3 FR-4
+omega	research/atemporal/at0/model/at0_povm.c	74	research/atemporal/at0/model	3	FR-3 FR-4
+omega	research/atemporal/at0/model/at0_state.c	76	research/atemporal/at0/model	3	FR-3 FR-4
+omega	research/atemporal/at0/model/tests/test_model.c	650	research/atemporal/at0/model/tests	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	research/atemporal/at1/evaluator/gates/clean_control.c	4	research/atemporal/at1/evaluator/gates	3	FR-4
+omega	research/atemporal/at1/evaluator/gates/counter_mutant.c	18	research/atemporal/at1/evaluator/gates	3	FR-4 FR-8
+omega	research/atemporal/at1/evaluator/gates/hidden_clock_mutant.c	9	research/atemporal/at1/evaluator/gates	3	FR-2 FR-4 FR-12
+omega	research/atemporal/at1/evaluator/gates/raw_syscall_mutant.c	30	research/atemporal/at1/evaluator/gates	3	FR-2 FR-4 FR-8
+omega	research/atemporal/at1/model/at1_bn.c	447	research/atemporal/at1/model	3	FR-3 FR-4
+omega	research/atemporal/at1/model/at1_case.c	552	research/atemporal/at1/model	3	FR-2 FR-3 HAND
+omega	research/atemporal/at1/model/at1_exact.c	291	research/atemporal/at1/model	3	FR-2 FR-3 FR-4
+omega	research/atemporal/at1/model/at1_io.c	42	research/atemporal/at1/model	3	FR-1 FR-3
+omega	research/atemporal/at1/model/at1_main.c	104	research/atemporal/at1/model	3	FR-1 FR-3 FR-10
+omega	research/atemporal/at1/model/at1_model.h	237	research/atemporal/at1/model	3	FR-2 FR-4
+omega	research/atemporal/at1/model/at1_numeric.c	261	research/atemporal/at1/model	3	FR-2 FR-3 FR-4
+omega	research/atemporal/at1/model/at1_result.c	673	research/atemporal/at1/model	3	FR-2 FR-3 FR-4
+omega	research/atemporal/at1/model/tests/test_model.c	1059	research/atemporal/at1/model/tests	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 HAND
+omega	research/dirac-oracle/src/oracle_clifford.c	85	research/dirac-oracle/src	2	FR-2
+omega	research/m15/pmu/pmu_probe.c	71	research/m15/pmu	3	FR-2 FR-4 FR-5 FR-6 FR-8
+omega	research/m15/spbm/aien_spbm_readonly.c	237	research/m15/spbm	3	FR-2 FR-3 HAND
+omega	research/m15/spbm/contract.h	50	research/m15/spbm	3	FR-2
+omega	research/m15/spbm/contract_test.c	27	research/m15/spbm	3	FR-3
+omega	research/m15/spbm/load.c	73	research/m15/spbm	3	FR-1 FR-2 FR-4 FR-6 FR-8 FR-10 FR-12
+omega	research/m15/spbm/reduce.c	74	research/m15/spbm	3	FR-1 FR-2 FR-4 FR-10
+omega	research/m15/spbm/sample.c	116	research/m15/spbm	3	FR-1 FR-2 FR-10 FR-12
+omega	src/aarch64_decoder.c	230	src/aarch64	2	FR-3
+omega	src/aarch64_decoder.h	45	src/aarch64	2	FR-2 FR-3
+omega	src/aarch64_encoder.c	233	src/aarch64	2	FR-3
+omega	src/aarch64_encoder.h	33	src/aarch64	2	FR-3
+omega	src/aarch64_target.h	51	src/aarch64	2	FR-2
+omega	src/aegis_verification.c	21	src/aegis	2	FR-3
+omega	src/aegis_verification.h	17	src/aegis	2	FR-3
+omega	src/algebra/oma_pack.c	123	src/algebra	3	FR-3
+omega	src/algebra/oma_pack.h	36	src/algebra	3	FR-3
+omega	src/algebra/oma_quant.c	55	src/algebra	3	FR-3 FR-4
+omega	src/algebra/oma_quant.h	32	src/algebra	3	FR-3 FR-4
+omega	src/algebra/oma_select.c	278	src/algebra	3	FR-1 FR-3 FR-4
+omega	src/algebra/oma_select.h	121	src/algebra	3	FR-2 FR-4
+omega	src/algebra/oma_trit.c	256	src/algebra	3	FR-3
+omega	src/algebra/oma_trit.h	98	src/algebra	3	FR-2
+omega	src/algebra/oma_z3.c	125	src/algebra	3	FR-3
+omega	src/algebra/oma_z3.h	36	src/algebra	3	FR-2 FR-3
+omega	src/algebra/phase_twin.c	458	src/algebra	3	FR-2 FR-3 FR-4
+omega	src/algebra/phase_twin.h	157	src/algebra	3	FR-2 FR-4
+omega	src/algebra/realize_binary.c	318	src/algebra	3	FR-3
+omega	src/algebra/realize_bitplane.c	389	src/algebra	3	FR-3
+omega	src/algebra/realize_common.c	82	src/algebra	3	FR-3
+omega	src/algebra/realize_common.h	82	src/algebra	3	FR-2
+omega	src/algebra/realize_dense.c	97	src/algebra	3	FR-3
+omega	src/algebra/realize_rns.c	106	src/algebra	3	FR-3
+omega	src/algebra/realize_sparse.c	77	src/algebra	3	FR-3
+omega	src/allen/allen_bind.c	105	src/allen	2	FR-1 FR-2 FR-3
+omega	src/allen/allen_bind.h	69	src/allen	2	FR-2 FR-3
+omega	src/ans/ans.c	321	src/ans	3	FR-3 FR-4
+omega	src/ans/ans.h	246	src/ans	3	FR-2 FR-3 FR-4
+omega	src/ans/ans_encode.c	342	src/ans	3	FR-2 FR-3 FR-4
+omega	src/autodiff/omega_autodiff.c	582	src/autodiff	3	FR-3 FR-4
+omega	src/autodiff/omega_autodiff.h	174	src/autodiff	3	FR-2 FR-3 FR-4
+omega	src/checker2/c2_blast.c	423	src/checker2	1	FR-2 FR-3 HAND
+omega	src/checker2/c2_blast.h	44	src/checker2	1	FR-2 FR-3
+omega	src/checker2/c2_check.c	903	src/checker2	1	FR-2 FR-3 HAND
+omega	src/checker2/c2_ir.c	393	src/checker2	1	FR-2 FR-3 HAND
+omega	src/checker2/c2_ir.h	119	src/checker2	1	FR-2
+omega	src/checker2/c2_lrat.c	282	src/checker2	1	FR-2 FR-3 HAND
+omega	src/checker2/c2_lrat.h	49	src/checker2	1	FR-2
+omega	src/checker2/c2_receipt.c	292	src/checker2	1	FR-3
+omega	src/checker2/c2_receipt.h	145	src/checker2	1	FR-2
+omega	src/checker2/checker2_main.c	517	src/checker2	1	FR-1 FR-3 FR-10
+omega	src/checker2/untrusted/c2sat.c	215	src/checker2	1	FR-1 FR-2 FR-10
+omega	src/compiler/model/osc_model.c	415	src/compiler	1	FR-3
+omega	src/compiler/model/osc_model.h	213	src/compiler	1	FR-2
+omega	src/compiler/model/osc_model_gen.c	778	src/compiler	1	FR-2 FR-3
+omega	src/compiler/model/osc_model_gen.h	39	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_a64.c	334	src/compiler	1	FR-2 FR-3 HAND
+omega	src/compiler/osc_a64.h	109	src/compiler	1	FR-2
+omega	src/compiler/osc_alloc.c	106	src/compiler	1	FR-3
+omega	src/compiler/osc_alloc.h	55	src/compiler	1	FR-2
+omega	src/compiler/osc_cg.c	599	src/compiler	1	FR-2 FR-3 HAND
+omega	src/compiler/osc_cg.h	40	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_check.c	2355	src/compiler	1	FR-2 FR-3 HAND
+omega	src/compiler/osc_check.h	64	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_diag.c	60	src/compiler	1	FR-3 HAND
+omega	src/compiler/osc_diag.h	78	src/compiler	1	FR-2 HAND
+omega	src/compiler/osc_front.c	93	src/compiler	1	FR-3 HAND
+omega	src/compiler/osc_front.h	44	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_interp.c	243	src/compiler	1	FR-2 FR-3 HAND
+omega	src/compiler/osc_interp.h	32	src/compiler	1	FR-3
+omega	src/compiler/osc_ir.c	929	src/compiler	1	FR-2 FR-3 HAND
+omega	src/compiler/osc_ir.h	310	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_lex.c	200	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_lex.h	59	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_lower.c	730	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_lower.h	21	src/compiler	1	FR-3
+omega	src/compiler/osc_native.c	53	src/compiler	1	FR-3 FR-5
+omega	src/compiler/osc_native.h	32	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_parse.c	1179	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_parse.h	155	src/compiler	1	FR-2 FR-3
+omega	src/compiler/osc_rt.c	336	src/compiler	1	FR-2 FR-3 HAND
+omega	src/compiler/osc_rt.h	189	src/compiler	1	FR-2 FR-3 HAND
+omega	src/compiler/oscc_main.c	164	src/compiler	1	FR-1 FR-3 FR-10
+omega	src/crumbline/cl_common.c	135	src/crumbline	2	FR-3
+omega	src/crumbline/cl_common.h	81	src/crumbline	2	FR-2
+omega	src/crumbline/cl_crumb.c	146	src/crumbline	2	FR-3
+omega	src/crumbline/cl_crumb.h	53	src/crumbline	2	FR-2 FR-3
+omega	src/crumbline/cl_program.c	276	src/crumbline	2	FR-3
+omega	src/crumbline/cl_program.h	122	src/crumbline	2	FR-2 FR-3
+omega	src/crumbline/cl_search.c	377	src/crumbline	2	FR-2 FR-3 FR-12
+omega	src/crumbline/cl_search.h	100	src/crumbline	2	FR-2 FR-3
+omega	src/dual/rx_dual.c	645	src/dual	3	FR-2 FR-3 FR-4
+omega	src/dual/rx_dual.h	304	src/dual	3	FR-2 FR-4
+omega	src/dual/rx_dual_bind.c	168	src/dual	3	FR-3 FR-4
+omega	src/dual/rx_dual_bind.h	81	src/dual	3	FR-2 FR-3 FR-4
+omega	src/dual/rx_dual_replay.c	257	src/dual	3	FR-3 FR-4
+omega	src/dual/rx_dual_replay.h	117	src/dual	3	FR-2 FR-3 FR-4
+omega	src/dual/rx_dual_update.c	123	src/dual	3	FR-3 FR-4
+omega	src/dual/rx_dual_update.h	46	src/dual	3	FR-3 FR-4
+omega	src/dual_experiment/applic.h	129	src/dual_experiment	3	FR-2 FR-3 FR-4
+omega	src/dual_experiment/applic_metrics.c	211	src/dual_experiment	3	FR-3 FR-4
+omega	src/dual_experiment/applic_params.h	86	src/dual_experiment	3	
+omega	src/dual_experiment/applic_predict.c	94	src/dual_experiment	3	FR-3 FR-4
+omega	src/dual_experiment/applic_sim.c	231	src/dual_experiment	3	FR-3 FR-4
+omega	src/estimation/est_kf.c	363	src/estimation	3	FR-3 FR-4
+omega	src/estimation/est_kf.h	48	src/estimation	3	FR-3 FR-4
+omega	src/estimation/est_mix.c	180	src/estimation	3	FR-2 FR-3 FR-4
+omega	src/estimation/est_mix.h	48	src/estimation	3	FR-2 FR-3 FR-4
+omega	src/estimation/est_pred.c	750	src/estimation	3	FR-2 FR-3 FR-4
+omega	src/estimation/est_pred.h	253	src/estimation	3	FR-2 FR-3 FR-4
+omega	src/estimation/est_types.c	600	src/estimation	3	FR-2 FR-3 FR-4
+omega	src/estimation/est_types.h	217	src/estimation	3	FR-2 FR-4
+omega	src/estimation/est_v4.c	338	src/estimation	3	FR-3 FR-4
+omega	src/estimation/est_v4.h	107	src/estimation	3	FR-2 FR-3 FR-4
+omega	src/fabric/fab_dispatch.c	113	src/fabric	3	FR-3 FR-6 HAND
+omega	src/fabric/fab_dispatch.h	95	src/fabric	3	FR-2 FR-3 FR-6
+omega	src/fabric/fab_hmac.c	47	src/fabric	3	FR-3
+omega	src/fabric/fab_hmac.h	29	src/fabric	3	
+omega	src/fabric/fab_loopback.c	127	src/fabric	3	FR-3
+omega	src/fabric/fab_loopback.h	76	src/fabric	3	FR-2 FR-3
+omega	src/fabric/fabric.c	526	src/fabric	3	FR-3
+omega	src/fabric/fabric.h	308	src/fabric	3	FR-2 FR-3
+omega	src/forge_realization.c	42	src/forge	2	FR-3
+omega	src/forge_realization.h	48	src/forge	2	FR-2 FR-3
+omega	src/language/omega_lex.c	197	src/language	2	FR-3
+omega	src/language/omega_lex.h	52	src/language	2	FR-2
+omega	src/language/omega_lower.c	491	src/language	2	FR-2 FR-3
+omega	src/language/omega_lower.h	67	src/language	2	FR-2 FR-3
+omega	src/language/omega_parse.c	429	src/language	2	FR-2 FR-3
+omega	src/language/omega_parse.h	96	src/language	2	FR-2 FR-3
+omega	src/omega_accelerator.c	143	src/omega_accelerator	3	FR-3
+omega	src/omega_accelerator.h	136	src/omega_accelerator	3	FR-2 FR-3
+omega	src/omega_accelerator_world.c	1322	src/omega_accelerator	3	FR-3 FR-5 FR-6 FR-8
+omega	src/omega_accelerator_world.h	291	src/omega_accelerator	3	FR-2 FR-3 FR-8
+omega	src/omega_blackwell_codegen.c	2539	src/omega_blackwell	3	FR-2 FR-3 FR-4 HAND
+omega	src/omega_blackwell_codegen.h	333	src/omega_blackwell	3	FR-2 FR-3 FR-4
+omega	src/omega_blackwell_codegen_attn.c	549	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_attn.h	90	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_bf16.c	262	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_bf16.h	67	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_dec.c	368	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_dec.h	82	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_gemm.c	343	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_gemm.h	68	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_moe.c	328	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_moe.h	107	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_moe2.c	342	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_moe2.h	57	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_codegen_pattn.c	558	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_pattn.h	83	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_pf.c	22	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_codegen_pf.h	22	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_codegen_pfhost.c	145	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_codegen_pfhost.h	48	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_qg.c	270	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_codegen_qg.h	68	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_qmma.c	137	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_codegen_qmma.h	49	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_codegen_router.c	405	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_router.h	83	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_tc.c	341	src/omega_blackwell	3	FR-3 FR-4
+omega	src/omega_blackwell_codegen_tc.h	103	src/omega_blackwell	3	FR-2 FR-3 FR-4
+omega	src/omega_blackwell_codegen_tc2.c	229	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_codegen_tc2.h	57	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_tern.c	420	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_codegen_tern.h	108	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_encoder.c	110	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_encoder.h	27	src/omega_blackwell	3	FR-2
+omega	src/omega_blackwell_engine.c	663	src/omega_blackwell	3	FR-2 FR-3 FR-5 FR-6 FR-8 FR-12
+omega	src/omega_blackwell_engine.h	55	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_gates.c	1517	src/omega_blackwell	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega	src/omega_blackwell_gates.h	16	src/omega_blackwell	3	
+omega	src/omega_blackwell_matmul.c	189	src/omega_blackwell	3	FR-3 FR-4
+omega	src/omega_blackwell_matmul.h	82	src/omega_blackwell	3	FR-2 FR-4 HAND
+omega	src/omega_blackwell_qmd.c	237	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_qmd.h	68	src/omega_blackwell	3	FR-2
+omega	src/omega_blackwell_realize.c	52	src/omega_blackwell	3	FR-3
+omega	src/omega_blackwell_realize.h	35	src/omega_blackwell	3	FR-2 FR-3
+omega	src/omega_blackwell_submit.c	724	src/omega_blackwell	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-11 FR-12
+omega	src/omega_blackwell_submit.h	95	src/omega_blackwell	3	FR-2 FR-3 FR-4
+omega	src/omega_blake3.c	154	src/omega_blake3	2	FR-2 FR-3
+omega	src/omega_blake3.h	17	src/omega_blake3	2	
+omega	src/omega_bw_em.h	145	src/omega_bw	3	FR-2 FR-3
+omega	src/omega_bw_em_q.h	18	src/omega_bw	3	FR-3
+omega	src/omega_bw_reconv.h	83	src/omega_bw	3	FR-2 FR-3
+omega	src/omega_canonical.c	209	src/omega_canonical	2	FR-3
+omega	src/omega_canonical.h	21	src/omega_canonical	2	FR-3
+omega	src/omega_codec.c	280	src/omega_codec	2	FR-3
+omega	src/omega_codec.h	14	src/omega_codec	2	FR-3
+omega	src/omega_core.c	458	src/omega_core	2	FR-3
+omega	src/omega_core.h	67	src/omega_core	2	FR-3
+omega	src/omega_discovery.c	343	src/omega_discovery	2	FR-3
+omega	src/omega_discovery.h	72	src/omega_discovery	2	FR-2 FR-3
+omega	src/omega_evidence.c	164	src/omega_evidence	2	FR-1 FR-2 FR-3 FR-11 FR-12
+omega	src/omega_evidence.h	113	src/omega_evidence	2	FR-2 FR-3
+omega	src/omega_exec.c	167	src/omega_exec	3	FR-1 FR-2 FR-3 FR-5 FR-11 HAND
+omega	src/omega_exec.h	15	src/omega_exec	3	FR-3
+omega	src/omega_genesis.h	67	src/omega_genesis	2	
+omega	src/omega_gpu_attention_api.c	1436	src/omega_gpu	3	FR-2 FR-3 FR-4 HAND
+omega	src/omega_gpu_attention_api.h	290	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_bf16_gemv_api.c	275	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_bf16_gemv_api.h	92	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_cmdlist.c	369	src/omega_gpu	3	FR-2 FR-3 FR-6 FR-8
+omega	src/omega_gpu_cmdlist.h	111	src/omega_gpu	3	FR-2 FR-3
+omega	src/omega_gpu_code_alloc.h	36	src/omega_gpu	3	
+omega	src/omega_gpu_decode_attn_api.c	279	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_decode_attn_api.h	108	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_decode_graph.c	412	src/omega_gpu	3	FR-2 FR-3 FR-4 FR-10
+omega	src/omega_gpu_decode_graph.h	188	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_elementwise_api.c	1139	src/omega_gpu	3	FR-2 FR-3 FR-4 FR-8 FR-12
+omega	src/omega_gpu_elementwise_api.h	183	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_engine.c	464	src/omega_gpu	3	FR-2 FR-3 FR-6 FR-12
+omega	src/omega_gpu_engine.h	258	src/omega_gpu	3	FR-2
+omega	src/omega_gpu_fmt.c	65	src/omega_gpu	3	FR-2 FR-3 HAND
+omega	src/omega_gpu_fmt.h	10	src/omega_gpu	3	HAND
+omega	src/omega_gpu_fp8_api.c	416	src/omega_gpu	3	FR-2 FR-3 FR-4 FR-10
+omega	src/omega_gpu_fp8_api.h	182	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_fp8_pack.c	74	src/omega_gpu	3	FR-3 FR-4
+omega	src/omega_gpu_fp8gemm_api.c	256	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_fp8gemm_api.h	87	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_hostmath.c	82	src/omega_gpu	3	FR-3 FR-4
+omega	src/omega_gpu_hostmath.h	20	src/omega_gpu	3	FR-4
+omega	src/omega_gpu_matmul_api.c	640	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_matmul_api.h	222	src/omega_gpu	3	FR-2 FR-4
+omega	src/omega_gpu_mem_cached.c	24	src/omega_gpu	3	FR-3
+omega	src/omega_gpu_mem_cached.h	22	src/omega_gpu	3	FR-3
+omega	src/omega_gpu_moe_api.c	424	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_moe_api.h	116	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_pfgemm.c	200	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_pfhost.c	59	src/omega_gpu	3	FR-3 FR-4
+omega	src/omega_gpu_pfhost.h	37	src/omega_gpu	3	FR-3 FR-4
+omega	src/omega_gpu_platform.c	192	src/omega_gpu	3	FR-3
+omega	src/omega_gpu_platform.h	249	src/omega_gpu	3	FR-2
+omega	src/omega_gpu_platform_linux.c	383	src/omega_gpu	3	FR-2 FR-3 FR-5 FR-6 FR-8 FR-12 HAND
+omega	src/omega_gpu_platform_linux.h	40	src/omega_gpu	3	FR-3
+omega	src/omega_gpu_prefill.c	168	src/omega_gpu	3	FR-2 FR-3
+omega	src/omega_gpu_prefill.h	101	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_prefill_attn_api.c	395	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_prefill_attn_api.h	78	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_router_api.c	276	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_router_api.h	89	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_serving.c	25	src/omega_gpu	3	FR-3
+omega	src/omega_gpu_serving.h	48	src/omega_gpu	3	FR-2
+omega	src/omega_gpu_session.c	543	src/omega_gpu	3	FR-3 FR-6 FR-8
+omega	src/omega_gpu_session.h	256	src/omega_gpu	3	FR-2 FR-3
+omega	src/omega_gpu_tcgemm_api.c	188	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_tcgemm_api.h	52	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_tern_api.c	348	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_tern_api.h	105	src/omega_gpu	3	FR-2 FR-3 FR-4
+omega	src/omega_gpu_wait.c	155	src/omega_gpu	3	FR-2 FR-3 FR-6 FR-8 FR-12
+omega	src/omega_gpu_wait.h	100	src/omega_gpu	3	FR-2 FR-8
+omega	src/omega_library.c	229	src/omega_library	2	FR-3 FR-12
+omega	src/omega_library.h	95	src/omega_library	2	FR-2 FR-3
+omega	src/omega_machine.c	300	src/omega_machine	2	FR-3
+omega	src/omega_machine.h	108	src/omega_machine	2	FR-2 FR-3
+omega	src/omega_matvec.c	443	src/omega_matvec	3	FR-2 FR-3 FR-4 FR-5 FR-12 HAND
+omega	src/omega_matvec.h	91	src/omega_matvec	3	FR-2 FR-3 FR-4
+omega	src/omega_matvec_quad.c	104	src/omega_matvec	3	FR-3
+omega	src/omega_matvec_quad.h	25	src/omega_matvec	3	FR-3
+omega	src/omega_numeric.c	1576	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-8 HAND
+omega	src/omega_numeric.h	424	src/omega_numeric	3	FR-2 FR-4 HAND
+omega	src/omega_numeric_divsqrt_gb10.c	1638	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-5 FR-8 HAND
+omega	src/omega_numeric_divsqrt_gb10.h	148	src/omega_numeric	3	FR-2
+omega	src/omega_numeric_gb10.c	317	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-5 FR-8
+omega	src/omega_numeric_ldst_gb10.c	374	src/omega_numeric	3	FR-3 FR-5 FR-8 HAND
+omega	src/omega_numeric_ldst_gb10.h	78	src/omega_numeric	3	FR-2
+omega	src/omega_numeric_lifecycle.h	31	src/omega_numeric	3	FR-6
+omega	src/omega_numeric_native.h	45	src/omega_numeric	3	FR-3 FR-8
+omega	src/omega_numeric_provenance.c	230	src/omega_numeric	3	FR-3 HAND
+omega	src/omega_numeric_provenance.h	47	src/omega_numeric	3	FR-2
+omega	src/omega_numeric_reduce.c	202	src/omega_numeric	3	FR-3 FR-4 FR-8
+omega	src/omega_numeric_reduce.h	116	src/omega_numeric	3	FR-2 FR-3 FR-4
+omega	src/omega_numeric_reduce_gb10.c	565	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-5 FR-8 HAND
+omega	src/omega_numeric_transc.c	517	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-8
+omega	src/omega_numeric_transc.h	55	src/omega_numeric	3	FR-4
+omega	src/omega_numeric_transc_tables.h	48	src/omega_numeric	3	FR-4
+omega	src/omega_physics_dir.h	120	src/omega_physics	2	FR-1 FR-10 FR-11
+omega	src/omega_program.c	793	src/omega_program	3	FR-3
+omega	src/omega_program.h	175	src/omega_program	3	FR-2 FR-3
+omega	src/omega_program_fp32.c	109	src/omega_program	3	FR-3 FR-4
+omega	src/omega_program_fp32.h	38	src/omega_program	3	FR-3
+omega	src/omega_program_ir.c	108	src/omega_program	3	FR-2 FR-3
+omega	src/omega_program_ir.h	40	src/omega_program	3	FR-3
+omega	src/omega_realize.c	120	src/omega_realize	2	FR-3
+omega	src/omega_realize.h	29	src/omega_realize	2	FR-2 FR-3
+omega	src/omega_realize_synth.c	286	src/omega_realize	2	FR-3
+omega	src/omega_realize_synth.h	73	src/omega_realize	2	FR-2 FR-3
+omega	src/omega_receipt.c	695	src/omega_receipt	2	FR-2 FR-3 HAND
+omega	src/omega_receipt.h	70	src/omega_receipt	2	FR-2
+omega	src/omega_resolve.c	751	src/omega_resolve	2	FR-1 FR-2 FR-3 HAND
+omega	src/omega_resolve.h	201	src/omega_resolve	2	FR-2 FR-3
+omega	src/omega_resolve_osc.c	27	src/omega_resolve	2	FR-3
+omega	src/omega_resolve_osc.h	23	src/omega_resolve	2	FR-2 FR-3
+omega	src/omega_self_host.c	378	src/omega_self	3	FR-2 FR-3 FR-5 HAND
+omega	src/omega_self_host.h	35	src/omega_self	3	FR-3
+omega	src/omega_synthesis.c	440	src/omega_synthesis	2	FR-3 HAND
+omega	src/omega_synthesis.h	80	src/omega_synthesis	2	FR-2 FR-3
+omega	src/omega_types.h	204	src/omega_types	2	FR-2
+omega	src/omega_unwritten_trap.c	30	src/omega_unwritten	2	FR-3
+omega	src/omega_unwritten_trap.h	34	src/omega_unwritten	2	FR-2
+omega	src/omega_validate.c	262	src/omega_validate	2	FR-3
+omega	src/omega_validate.h	9	src/omega_validate	2	FR-3
+omega	src/omega_vc_bridge.c	275	src/omega_vc	2	FR-2 FR-3 HAND
+omega	src/omega_vc_bridge.h	68	src/omega_vc	2	FR-2 FR-3
+omega	src/omega_vcstore.c	707	src/omega_vcstore	2	FR-1 FR-2 FR-3 HAND
+omega	src/omega_vcstore.h	208	src/omega_vcstore	2	FR-2
+omega	src/omega_vcstore_priv.h	42	src/omega_vcstore	2	FR-3
+omega	src/omega_vector.c	97	src/omega_vector	2	FR-3
+omega	src/omega_vector.h	38	src/omega_vector	2	FR-2 FR-3
+omega	src/omega_verify.c	299	src/omega_verify	2	FR-3
+omega	src/omega_verify.h	53	src/omega_verify	2	FR-2 FR-3
+omega	src/omega_world_gates.c	2664	src/omega_world	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11 FR-12 HAND
+omega	src/omega_world_gates.h	19	src/omega_world	3	
+omega	src/oscv_main.c	201	src/oscv	2	FR-1 FR-3 FR-10 HAND
+omega	src/osh/host/osh_builtin.c	688	src/osh	3	FR-2 FR-3 FR-4 FR-10 HAND
+omega	src/osh/host/osh_caps.c	213	src/osh	3	FR-2 FR-3 FR-11
+omega	src/osh/host/osh_caps.h	60	src/osh	3	FR-2 FR-3
+omega	src/osh/host/osh_codes.c	20	src/osh	3	FR-3
+omega	src/osh/host/osh_core.c	74	src/osh	3	FR-3
+omega	src/osh/host/osh_core.h	43	src/osh	3	FR-2 FR-3
+omega	src/osh/host/osh_exec.c	858	src/osh	3	FR-1 FR-2 FR-3 FR-8 FR-10 FR-11
+omega	src/osh/host/osh_host.h	209	src/osh	3	FR-2 FR-10
+omega	src/osh/host/osh_journal.c	626	src/osh	3	FR-1 FR-2 FR-3 FR-10
+omega	src/osh/host/osh_journal.h	93	src/osh	3	FR-2 FR-3
+omega	src/osh/host/osh_main.c	189	src/osh	3	FR-1 FR-2 FR-3 FR-10
+omega	src/osh/host/osh_priv.h	16	src/osh	3	FR-3 HAND
+omega	src/osh/host/osh_req.c	172	src/osh	3	FR-3 FR-10
+omega	src/osh/host/osh_shell.c	320	src/osh	3	FR-2 FR-3 FR-8
+omega	src/osh/host/osh_shell.h	43	src/osh	3	FR-2 FR-3
+omega	src/osh/host/osh_vars.c	211	src/osh	3	FR-2 FR-3
+omega	src/osh/osh_expand_ref.c	414	src/osh	3	FR-2 FR-3
+omega	src/osh/osh_expand_ref.h	67	src/osh	3	FR-2 FR-3
+omega	src/osh/osh_layout.h	98	src/osh	3	
+omega	src/osh/osh_lex_ref.c	427	src/osh	3	FR-2 FR-3
+omega	src/osh/osh_lex_ref.h	32	src/osh	3	FR-2
+omega	src/osh/osh_parse_ref.c	193	src/osh	3	FR-2 FR-3
+omega	src/osh/osh_parse_ref.h	29	src/osh	3	FR-2 FR-3
+omega	src/path/rx_path.c	583	src/path	2	FR-2 FR-3
+omega	src/path/rx_path.h	201	src/path	2	FR-2 FR-3
+omega	src/physics0/controls/pd0_controls.c	67	src/physics0	3	FR-3 FR-4
+omega	src/physics0/controls/pd0_controls.h	19	src/physics0	3	FR-2 FR-3
+omega	src/physics0/controls/pd0_receipt.c	23	src/physics0	3	FR-1 FR-3
+omega	src/physics0/controls/pd0_receipt.h	11	src/physics0	3	
+omega	src/physics0/ladder/pd0_codes.c	20	src/physics0	3	FR-3
+omega	src/physics0/ladder/pd0_codes.h	37	src/physics0	3	
+omega	src/physics0/ladder/pd0_fmt.c	351	src/physics0	3	FR-2 FR-3
+omega	src/physics0/ladder/pd0_fmt.h	143	src/physics0	3	FR-2
+omega	src/physics0/ladder/pd0_ladder.c	514	src/physics0	3	FR-2 FR-3 FR-4
+omega	src/physics0/ladder/pd0_ladder.h	56	src/physics0	3	FR-2 FR-3 FR-4
+omega	src/physics0/ladder/pd0_rng.h	29	src/physics0	3	FR-2
+omega	src/physics0/learner/pd0_learner.c	284	src/physics0	3	FR-2 FR-3 FR-4
+omega	src/physics0/learner/pd0_learner.h	70	src/physics0	3	FR-2 FR-3 FR-4
+omega	src/physics0/learner/pd0_learner_main.c	25	src/physics0	3	FR-1 FR-3 FR-10
+omega	src/physics0/learner_v2/pd0_learner.c	392	src/physics0	3	FR-2 FR-3 FR-4
+omega	src/physics0/learner_v2/pd0_learner.h	115	src/physics0	3	FR-2 FR-3 FR-4
+omega	src/physics0/pd0_chan.c	53	src/physics0	3	FR-3
+omega	src/physics0/pd0_gen.c	244	src/physics0	3	FR-3
+omega	src/physics0/pd0_gen.h	62	src/physics0	3	FR-2 FR-3
+omega	src/physics0/pd0_guard.c	17	src/physics0	3	FR-3
+omega	src/physics0/pd0_guard.h	24	src/physics0	3	FR-3
+omega	src/physics0/pd0_relation.c	381	src/physics0	3	FR-3 FR-4 HAND
+omega	src/physics0/pd0_relation.h	110	src/physics0	3	FR-2 FR-3 FR-4
+omega	src/physics0/pd0_rng.c	36	src/physics0	3	FR-3
+omega	src/physics0/pd0_rng.h	42	src/physics0	3	FR-2
+omega	src/physics0/pd0_wire.c	133	src/physics0	3	FR-3
+omega	src/physics0/pd0_wire.h	81	src/physics0	3	FR-2
+omega	src/physics0/pd0_world.c	225	src/physics0	3	FR-3
+omega	src/physics0/pd0_world.h	66	src/physics0	3	FR-2 FR-3
+omega	src/physics0/pd0_world_main.c	17	src/physics0	3	FR-3 FR-10
+omega	src/physics0/planner/pd0_planner.c	268	src/physics0	3	FR-2 FR-3
+omega	src/physics0/planner/pd0_planner.h	95	src/physics0	3	FR-2 FR-3
+omega	src/physics0/regime/pd0_regime.c	20	src/physics0	3	FR-3 FR-4
+omega	src/physics0/regime/pd0_regime.h	16	src/physics0	3	FR-3
+omega	src/physics0/score/pd0_score.c	118	src/physics0	3	FR-2 FR-3 FR-4
+omega	src/physics0/score/pd0_score.h	34	src/physics0	3	FR-2 FR-3
+omega	src/polyglot/omx_asm.c	99	src/polyglot	3	FR-3
+omega	src/polyglot/omx_bench.c	338	src/polyglot	3	FR-1 FR-2 FR-3 FR-4 FR-12
+omega	src/polyglot/omx_bench.h	67	src/polyglot	3	FR-2 FR-4
+omega	src/polyglot/omx_encoder.c	814	src/polyglot	3	FR-2 FR-3 FR-4 FR-5 FR-6 FR-12 HAND
+omega	src/polyglot/omx_encoder.h	51	src/polyglot	3	FR-2 FR-4
+omega	src/polyglot/omx_encoder_ext.c	259	src/polyglot	3	FR-3
+omega	src/polyglot/omx_encoder_ext.h	94	src/polyglot	3	
+omega	src/polyglot/omx_lang.c	120	src/polyglot	3	FR-3 FR-8
+omega	src/polyglot/omx_lang.h	60	src/polyglot	3	FR-2 FR-3 FR-4
+omega	src/reservoir/omega_reservoir.c	640	src/reservoir	3	FR-3 FR-4
+omega	src/reservoir/omega_reservoir.h	368	src/reservoir	3	FR-2 FR-4
+omega	src/reservoir/omega_reservoir_readout.c	122	src/reservoir	3	FR-3 FR-4
+omega	src/reservoir/omega_reservoir_readout.h	63	src/reservoir	3	FR-2 FR-3 FR-4
+omega	src/runtime/aien_machine_id.c	91	src/runtime	3	FR-1 FR-3
+omega	src/runtime/aien_machine_id.h	255	src/runtime	3	FR-2 FR-3
+omega	src/runtime/aienos_cap.h	96	src/runtime	3	FR-2
+omega	src/runtime/omega_shared_world_abi.h	299	src/runtime	3	FR-2 FR-8
+omega	src/runtime/rx_aegis.c	345	src/runtime	3	FR-2 FR-3 FR-6
+omega	src/runtime/rx_aegis.h	164	src/runtime	3	FR-2 FR-3 FR-6
+omega	src/runtime/rx_aien.c	484	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_aien.h	174	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_argus.c	975	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-12
+omega	src/runtime/rx_argus.h	207	src/runtime	3	FR-2 FR-3 FR-6
+omega	src/runtime/rx_caller.h	86	src/runtime	3	FR-2 FR-8
+omega	src/runtime/rx_capq.c	837	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_capq.h	417	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_caproot.c	662	src/runtime	3	FR-2 FR-3 FR-5 FR-6 FR-11 FR-12 HAND
+omega	src/runtime/rx_caproot.h	234	src/runtime	3	FR-2 FR-6
+omega	src/runtime/rx_coherent.c	931	src/runtime	3	FR-2 FR-3 FR-6 FR-8 HAND
+omega	src/runtime/rx_compose.c	1302	src/runtime	3	FR-2 FR-3 FR-6 FR-8 FR-12 HAND
+omega	src/runtime/rx_compose.h	346	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_contract.c	1309	src/runtime	3	FR-2 FR-3 FR-6 FR-12
+omega	src/runtime/rx_contract.h	350	src/runtime	3	FR-2 FR-3 FR-6 FR-8
+omega	src/runtime/rx_cortex.c	622	src/runtime	3	FR-1 FR-2 FR-3
+omega	src/runtime/rx_cortex.h	376	src/runtime	3	FR-2
+omega	src/runtime/rx_cortex_record.c	386	src/runtime	3	FR-2 FR-3 FR-6
+omega	src/runtime/rx_cortex_record.h	102	src/runtime	3	FR-3
+omega	src/runtime/rx_costmodel.c	512	src/runtime	3	FR-2 FR-3 FR-4
+omega	src/runtime/rx_costmodel.h	192	src/runtime	3	FR-2 FR-4
+omega	src/runtime/rx_fusion.c	1122	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_fusion.h	319	src/runtime	3	FR-2 FR-3 FR-4
+omega	src/runtime/rx_generation.c	1555	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-12 HAND
+omega	src/runtime/rx_generation.h	268	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_graph.c	1946	src/runtime	3	FR-2 FR-3 FR-8 FR-12
+omega	src/runtime/rx_graph.h	510	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_jspace.c	1962	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-12 HAND
+omega	src/runtime/rx_jspace.h	513	src/runtime	3	FR-2 FR-4 FR-6
+omega	src/runtime/rx_living.c	847	src/runtime	3	FR-2 FR-3 FR-8 FR-12
+omega	src/runtime/rx_living.h	238	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_native_bind.c	55	src/runtime	3	FR-3
+omega	src/runtime/rx_omega.c	973	src/runtime	3	FR-2 FR-3 FR-5 FR-6 FR-11 FR-12 HAND
+omega	src/runtime/rx_omega.h	227	src/runtime	3	FR-2 FR-3 FR-6
+omega	src/runtime/rx_operator.c	549	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-12 HAND
+omega	src/runtime/rx_operator.h	68	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_plan.c	556	src/runtime	3	FR-2 FR-3 FR-6 FR-12
+omega	src/runtime/rx_plan.h	296	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_plan_arrange.c	657	src/runtime	3	FR-2 FR-3 HAND
+omega	src/runtime/rx_plan_arrange.h	112	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_projection.c	746	src/runtime	3	FR-2 FR-3 FR-12
+omega	src/runtime/rx_projection.h	287	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_regulate.c	158	src/runtime	3	FR-3
+omega	src/runtime/rx_regulate.h	110	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_resident_gpu.c	1137	src/runtime	3	FR-2 FR-3 FR-5 FR-6 FR-8 FR-10
+omega	src/runtime/rx_resident_gpu.h	40	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_route.c	789	src/runtime	3	FR-2 FR-3 FR-4 FR-12 HAND
+omega	src/runtime/rx_route.h	217	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_semantic.c	946	src/runtime	3	FR-2 FR-3 FR-6 FR-12 HAND
+omega	src/runtime/rx_semantic.h	356	src/runtime	3	FR-2 FR-3 FR-6
+omega	src/runtime/rx_semcomm.c	634	src/runtime	3	FR-2 FR-3 FR-6
+omega	src/runtime/rx_semcomm.h	255	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_seq_reference.c	112	src/runtime	3	FR-2 FR-3 FR-6 FR-12
+omega	src/runtime/rx_seq_reference.h	59	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_skillroute.c	250	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_skillroute.h	153	src/runtime	3	FR-2 FR-3
+omega	src/runtime/rx_world.c	2872	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-6 FR-8 FR-12 HAND
+omega	src/runtime/rx_world.h	984	src/runtime	3	FR-2 FR-3 FR-6
+omega	src/runtime/rxc_host_abi.c	690	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 HAND
+omega	src/runtime/rxc_host_abi.h	291	src/runtime	3	FR-2
+omega	src/searchtrace/sig/aienos_sig.h	54	src/searchtrace	2	FR-2
+omega	src/searchtrace/sig/ct.c	21	src/searchtrace	2	FR-3 FR-8
+omega	src/searchtrace/sig/ed25519.c	575	src/searchtrace	2	FR-2 FR-3
+omega	src/searchtrace/sig/sha512.c	143	src/searchtrace	2	FR-3
+omega	src/searchtrace/sig/sig_internal.h	27	src/searchtrace	2	FR-8
+omega	src/searchtrace/st_corpus.c	601	src/searchtrace	2	FR-2 FR-3 HAND
+omega	src/searchtrace/st_corpus.h	59	src/searchtrace	2	FR-2
+omega	src/searchtrace/st_holdout.c	1039	src/searchtrace	2	FR-1 FR-2 FR-3 FR-8 FR-10
+omega	src/searchtrace/st_holdout.h	110	src/searchtrace	2	FR-2 FR-10
+omega	src/searchtrace/st_hook.h	83	src/searchtrace	2	FR-2 HAND
+omega	src/searchtrace/st_tool.c	149	src/searchtrace	2	FR-1 FR-3 FR-10 HAND
+omega	src/sha256.c	148	src/sha256	2	FR-3
+omega	src/sha256.h	21	src/sha256	2	FR-2
+omega	src/tensor/omega_tensor.c	1231	src/tensor	3	FR-2 FR-3 FR-4
+omega	src/tensor/omega_tensor.h	439	src/tensor	3	FR-2 FR-3 FR-4
+omega	src/tensor/omega_tensor_cpu.c	95	src/tensor	3	FR-3 FR-4 FR-8
+omega	src/tensor/omega_tensor_gb10.c	194	src/tensor	3	FR-2 FR-3 FR-4 HAND
+omega	src/tensor/omega_tensor_reduce_seam.c	29	src/tensor	3	FR-3 FR-4
+omega	src/tensor/omega_tensor_reduce_seam.h	33	src/tensor	3	FR-3 FR-4
+omega	src/tensor/omega_tensor_store.c	634	src/tensor	3	FR-1 FR-2 FR-3 HAND
+omega	src/tensor/omega_tensor_store.h	107	src/tensor	3	FR-2 FR-3
+omega	src/train/tg_sgd.c	44	src/train	3	FR-3 FR-4
+omega	src/train/tg_sgd.h	23	src/train	3	FR-3 FR-4
+omega	src/train/tg_store.c	730	src/train	3	FR-1 FR-2 FR-3 HAND
+omega	src/train/tg_store.h	180	src/train	3	FR-2
+omega	src/turing/field.c	650	src/turing	3	FR-1 FR-2 FR-3 FR-4 HAND
+omega	src/turing/field.h	203	src/turing	3	FR-2
+omega	src/turing/field_select.c	201	src/turing	3	FR-3 FR-4
+omega	src/turing/field_select_v0_retired.c	230	src/turing	3	FR-3 FR-4
+omega	src/turing/history_selector.c	142	src/turing	3	FR-3 FR-4
+omega	src/turing/replay.c	187	src/turing	3	FR-3 FR-4 HAND
+omega	src/turing/select.h	134	src/turing	3	FR-2 FR-3 FR-4
+omega	src/turing/tc_produce.c	146	src/turing	3	FR-1 FR-2 FR-3 HAND
+omega	src/turing/tc_produce.h	30	src/turing	3	FR-3
+omega	src/turing/tc_pstream.c	440	src/turing	3	FR-1 FR-3 HAND
+omega	src/turing/tc_pstream.h	140	src/turing	3	FR-2
+omega	src/turing/tc_range.c	194	src/turing	3	FR-2 FR-3 HAND
+omega	src/turing/tc_range.h	40	src/turing	3	FR-2 FR-3
+omega	src/turing/tc_rans.c	147	src/turing	3	FR-3 HAND
+omega	src/turing/tc_rans.h	33	src/turing	3	FR-3
+omega	src/turing/tc_tool.c	288	src/turing	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	src/turing/ty_ctr1.c	161	src/turing	3	FR-1 FR-2 FR-3 HAND
+omega	src/turing/ty_ctr1.h	80	src/turing	3	FR-2
+omega	src/turing/ty_energy.c	335	src/turing	3	FR-2 FR-3
+omega	src/turing/ty_energy.h	154	src/turing	3	FR-2 FR-3
+omega	src/turing/ty_math.c	184	src/turing	3	FR-3 FR-4
+omega	src/turing/ty_math.h	91	src/turing	3	FR-2 FR-4
+omega	src/turing/ty_model.c	462	src/turing	3	FR-2 FR-3 HAND
+omega	src/turing/ty_model.h	75	src/turing	3	FR-2 FR-3
+omega	src/turing/ty_prd.c	160	src/turing	3	FR-1 FR-3 FR-4
+omega	src/turing/ty_prd.h	20	src/turing	3	FR-2 FR-3
+omega	src/turing/ty_prd2.c	305	src/turing	3	FR-3 FR-4
+omega	src/turing/ty_prd2.h	39	src/turing	3	FR-2 FR-3 FR-4
+omega	src/turing/ty_profile.c	52	src/turing	3	FR-3
+omega	src/turing/ty_qcont.c	143	src/turing	3	FR-3 FR-4
+omega	src/turing/ty_qcont.h	58	src/turing	3	FR-2 FR-4
+omega	src/turing/ty_qrecord.c	698	src/turing	3	FR-1 FR-2 FR-3 HAND
+omega	src/turing/ty_qrecord.h	183	src/turing	3	FR-2 FR-3
+omega	src/turing/ty_record.c	449	src/turing	3	FR-1 FR-2 FR-3 HAND
+omega	src/turing/ty_record.h	121	src/turing	3	FR-2 FR-3
+omega	src/visor/rx/visor_world_rx.c	98	src/visor	3	FR-2 FR-3 FR-6
+omega	src/visor/visor.c	154	src/visor	3	FR-3
+omega	src/visor/visor.h	114	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_console.c	495	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_console.h	135	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_effect_request.c	248	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_effect_request.h	79	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_evidence.c	627	src/visor	3	FR-1 FR-2 FR-3 HAND
+omega	src/visor/visor_evidence.h	88	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_machine.c	301	src/visor	3	FR-1 FR-2 FR-3 HAND
+omega	src/visor/visor_machine.h	97	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_parse_command.c	179	src/visor	3	FR-2 FR-3 HAND
+omega	src/visor/visor_parse_command.h	81	src/visor	3	FR-2
+omega	src/visor/visor_realization.c	730	src/visor	3	FR-2 FR-3 HAND
+omega	src/visor/visor_realization.h	104	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_semantic.c	912	src/visor	3	FR-2 FR-3 HAND
+omega	src/visor/visor_semantic.h	186	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_verify.c	509	src/visor	3	FR-2 FR-3 HAND
+omega	src/visor/visor_verify.h	80	src/visor	3	FR-2 FR-3
+omega	src/visor/visor_world.c	123	src/visor	3	FR-2 FR-3 HAND
+omega	src/visor/visor_world.h	95	src/visor	3	FR-2
+omega	tests/algebra/bench_mixed_algebra.c	611	src/algebra	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12
+omega	tests/algebra/bench_select.c	190	src/algebra	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/algebra/ma_digital_v1_gate.c	502	src/algebra	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/algebra/test_ma_digital_bottom.c	266	src/algebra	3	FR-3 HAND
+omega	tests/algebra/test_oma.c	941	src/algebra	3	FR-3 FR-4 HAND
+omega	tests/algebra/test_phase_twin.c	609	src/algebra	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/algebra/test_realize.c	334	src/algebra	3	FR-3 FR-4 HAND
+omega	tests/ans/test_ans.c	455	src/ans	3	FR-2 FR-3 FR-4
+omega	tests/bench_rx_argus.c	164	tests/bench	3	FR-2 FR-3 FR-4 FR-8 FR-10 FR-12
+omega	tests/brownian/brw_act_reanalyse.c	71	tests/brownian	3	FR-1 FR-3 FR-4 FR-10
+omega	tests/brownian/brw_act_report.h	32	tests/brownian	3	FR-4
+omega	tests/brownian/brw_active_dev0.c	581	tests/brownian	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/brownian/test_brw_act_report.c	43	tests/brownian	3	FR-3 FR-4
+omega	tests/brownian/test_brw_active.c	352	tests/brownian	3	FR-3 FR-4
+omega	tests/brownian/test_brw_tps.c	376	tests/brownian	3	FR-2 FR-3 FR-4
+omega	tests/bw_hmma_model.h	57	tests/bw	3	FR-2 FR-4
+omega	tests/bw_qmma_model.h	66	tests/bw	3	FR-2 FR-4
+omega	tests/bw_warp_sim.h	318	tests/bw	3	FR-2 FR-3 FR-4
+omega	tests/bw_warp_sim_k.h	329	tests/bw	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/bw_warp_sim_pa.h	370	tests/bw	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/bw_warp_sim_tc.h	401	tests/bw	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/checker2/producer/osc_emit_ir.c	43	src/checker2	1	FR-1 FR-3 FR-10
+omega	tests/checker2/test_c2_blast.c	224	src/checker2	1	FR-1 FR-2 FR-3 FR-10
+omega	tests/checker2/test_c2_blast_native.c	468	src/checker2	1	FR-1 FR-2 FR-3 FR-5 FR-8 FR-10 HAND
+omega	tests/checker2/test_c2_ir.c	1016	src/checker2	1	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/checker2/test_c2_lrat.c	124	src/checker2	1	FR-3
+omega	tests/checker2/test_c2_receipt.c	411	src/checker2	1	FR-1 FR-3 FR-10 HAND
+omega	tests/compiler/test_legacy_a64.c	535	src/compiler	1	FR-2 FR-3 FR-5 FR-10 FR-11 HAND
+omega	tests/compiler/test_osc_alloc.c	365	src/compiler	1	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/compiler/test_osc_backend.c	1060	src/compiler	1	FR-2 FR-3 FR-4 FR-12 HAND
+omega	tests/compiler/test_osc_compiler.c	2241	src/compiler	1	FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-12 HAND
+omega	tests/compiler/test_osc_ir_decode.c	606	src/compiler	1	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/compiler/test_osc_model.c	313	src/compiler	1	FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/dual/dual_fixtures.h	60	src/dual	3	FR-3 FR-4
+omega	tests/dual/dual_ref.c	17	src/dual	3	FR-3 FR-4
+omega	tests/dual/dual_ref.h	16	src/dual	3	FR-4
+omega	tests/dual/dual_traces.c	76	src/dual	3	FR-3 FR-4
+omega	tests/dual/dual_traces.h	16	src/dual	3	FR-3 FR-4
+omega	tests/dual/test_dual_bind.c	141	src/dual	3	FR-3
+omega	tests/dual/test_dual_replay.c	306	src/dual	3	FR-1 FR-3 FR-4
+omega	tests/dual/test_dual_types.c	427	src/dual	3	FR-3 FR-4
+omega	tests/dual/test_dual_update.c	207	src/dual	3	FR-3 FR-4
+omega	tests/dual_experiment/test_applic.c	178	src/dual_experiment	3	FR-3 FR-4
+omega	tests/effect/test_effect_cap64.c	688	tests/effect	2	FR-2 FR-3 HAND
+omega	tests/estimation/est_ref_info.c	241	src/estimation	3	FR-2 FR-3 FR-4
+omega	tests/estimation/est_ref_info.h	35	src/estimation	3	FR-2 FR-3 FR-4
+omega	tests/estimation/test_est_kf.c	740	src/estimation	3	FR-2 FR-3 FR-4
+omega	tests/estimation/test_est_pred.c	851	src/estimation	3	FR-2 FR-3 FR-4
+omega	tests/estimation/test_est_ref.c	446	src/estimation	3	FR-2 FR-3 FR-4 HAND
+omega	tests/estimation/test_est_types.c	590	src/estimation	3	FR-2 FR-3 FR-4 HAND
+omega	tests/estimation/test_est_v4.c	363	src/estimation	3	FR-3 FR-4
+omega	tests/fabric/fab_living_phase.h	527	src/fabric	3	FR-2 FR-3 HAND
+omega	tests/fabric/fabric_living_test.c	80	src/fabric	3	FR-2 FR-3
+omega	tests/fabric/fabric_test.c	667	src/fabric	3	FR-2 FR-3 HAND
+omega	tests/fake_m16_native.c	458	tests/fake	3	FR-2 FR-3 FR-5 FR-8
+omega	tests/fake_m16_native.h	167	tests/fake	3	FR-2
+omega	tests/gpu_attention_test.c	1182	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega	tests/gpu_bf16_gemv_test.c	279	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+omega	tests/gpu_cmdlist_test.c	464	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/gpu_decode_attn_test.c	456	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+omega	tests/gpu_decode_graph_test.c	355	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/gpu_elementwise_test.c	387	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega	tests/gpu_fp8_api_test.c	598	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11 FR-12 HAND
+omega	tests/gpu_fp8gemm_test.c	345	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+omega	tests/gpu_gpr_boundary_test.c	85	tests/gpu	3	FR-2 FR-3 HAND
+omega	tests/gpu_l2_reuse_test.c	120	tests/gpu	3	FR-1 FR-3 FR-4 FR-10 HAND
+omega	tests/gpu_l2_stale_test.c	106	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/gpu_launch_cost_test.c	154	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/gpu_lmhead_fp8_study.c	118	tests/gpu	3	FR-1 FR-3 FR-4 FR-10
+omega	tests/gpu_matmul_api_test.c	692	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/gpu_matmul_r4_receipt.c	377	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 HAND
+omega	tests/gpu_moe_window_test.c	283	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/gpu_pf_mem_test.c	106	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/gpu_pfgemm_test.c	327	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/gpu_pfhost_test.c	278	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/gpu_prefill_attn_test.c	654	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/gpu_qgemm_test.c	438	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/gpu_qmma_probe_test.c	287	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/gpu_reconv_test.c	472	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 HAND
+omega	tests/gpu_router_test.c	360	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+omega	tests/gpu_serving_alloc_count_test.c	672	tests/gpu	3	FR-2 FR-3 FR-4 FR-5 FR-10 HAND
+omega	tests/gpu_session_probe.c	56	tests/gpu	3	FR-2 FR-3 FR-4 FR-10 FR-12
+omega	tests/gpu_tc_peak_test.c	99	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/gpu_tc_probe_test.c	200	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/gpu_tcgemm_test.c	323	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/gpu_tern_test.c	610	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/language/test_language_v0.c	529	src/language	2	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/model/model_check.c	75	tests/model	3	FR-3
+omega	tests/model/world_diff.c	746	tests/model	3	FR-2 FR-3 FR-6 FR-10 FR-12
+omega	tests/model/world_explore.c	112	tests/model	3	FR-2 FR-3
+omega	tests/model/world_explore.h	19	tests/model	3	FR-2 FR-3
+omega	tests/model/world_model.c	300	tests/model	3	FR-3
+omega	tests/model/world_model.h	96	tests/model	3	FR-2
+omega	tests/numeric_native/m16_native.h	9	tests/numeric_native	2	FR-2 FR-8
+omega	tests/numeric_native/other_launcher.c	5	tests/numeric_native	2	FR-3
+omega	tests/numeric_oracle.h	416	tests/numeric	3	FR-2 FR-4
+omega	tests/omegatool_path/physics_dir_test.c	96	tests/omegatool_path	2	FR-1 FR-3 FR-11
+omega	tests/one_layer/acceptance/ola.c	1370	tests/one_layer	3	FR-1 FR-2 FR-3 FR-10 FR-11 HAND
+omega	tests/one_layer/acceptance/ola_runner.c	490	tests/one_layer	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11 FR-12
+omega	tests/one_layer/acceptance/sample/mkopir.c	46	tests/one_layer	3	FR-1 FR-3 FR-10
+omega	tests/one_layer/acceptance/sample/mkoscir.c	31	tests/one_layer	3	FR-1 FR-3 FR-10
+omega	tests/one_layer/exp445/gen_expected.c	52	tests/one_layer	3	FR-10
+omega	tests/osh/e2e/argprint.c	43	src/osh	3	FR-10
+omega	tests/osh/e2e/test_osh_e2e.c	389	src/osh	3	FR-1 FR-2 FR-10 FR-11 HAND
+omega	tests/osh/host/test_osh_caps.c	418	src/osh	3	FR-1 FR-2 FR-3 FR-10 FR-11
+omega	tests/osh/host/test_osh_host.c	2298	src/osh	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega	tests/osh/host/test_osh_journal.c	1198	src/osh	3	FR-1 FR-2 FR-3 FR-10 FR-11 HAND
+omega	tests/osh/osh_trace.c	327	src/osh	3	FR-1 FR-3 FR-10
+omega	tests/osh/test_osh_expand.c	1281	src/osh	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/osh/test_osh_lex.c	974	src/osh	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/osh/test_osh_parse.c	982	src/osh	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/path/test_path_identity.c	620	src/path	2	FR-2 FR-3 HAND
+omega	tests/physics0/learner/pd0_harness.c	305	src/physics0	3	FR-1 FR-2 FR-3 FR-10 FR-11
+omega	tests/physics0/learner/pd0_truth_main.c	37	src/physics0	3	FR-3 FR-10
+omega	tests/physics0/learner/test_pd0_learner.c	78	src/physics0	3	FR-3 FR-4
+omega	tests/physics0/learner/test_pd0_protocol_v2.c	78	src/physics0	3	FR-3
+omega	tests/physics0/learner_v2/pd0_dev2.c	318	src/physics0	3	FR-2 FR-3 FR-4 FR-10
+omega	tests/physics0/learner_v2/pd0_dev_world.c	11	src/physics0	3	FR-2 FR-3
+omega	tests/physics0/learner_v2/pd0_dev_world.h	13	src/physics0	3	FR-2
+omega	tests/physics0/learner_v2/test_pd0_learner2.c	96	src/physics0	3	FR-3 FR-4
+omega	tests/physics0/pd0_calib.c	138	src/physics0	3	FR-3 FR-4 HAND
+omega	tests/physics0/pd0_calib.h	44	src/physics0	3	FR-2 FR-3 FR-4
+omega	tests/physics0/pd0_oracle.c	247	src/physics0	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/physics0/pd0_sparse.c	122	src/physics0	3	FR-2 FR-3 FR-4
+omega	tests/physics0/pd0_sparse.h	20	src/physics0	3	FR-3
+omega	tests/physics0/pd1/pd1_run.c	314	src/physics0	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/physics0/planner/pd0_plan_eff.c	199	src/physics0	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/physics0/planner/pd0_plan_eff2.c	265	src/physics0	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/physics0/planner/pd0p_bridge.c	61	src/physics0	3	FR-2 FR-3
+omega	tests/physics0/planner/pd0p_bridge.h	42	src/physics0	3	FR-2
+omega	tests/physics0/planner/test_pd0_planner.c	144	src/physics0	3	FR-3
+omega	tests/physics0/test_pd0_osc.c	148	src/physics0	3	FR-1 FR-3 FR-10 HAND
+omega	tests/physics0/test_pd0_world.c	419	src/physics0	3	FR-3 FR-4 FR-11 HAND
+omega	tests/physics0/verify/bundle.h	105	src/physics0	3	FR-2 FR-3 FR-4 HAND
+omega	tests/physics0/verify/test_pd0_fmt.c	57	src/physics0	3	FR-1 FR-3
+omega	tests/physics0/verify/test_pd0_ladder.c	76	src/physics0	3	FR-3
+omega	tests/physics0/verify/test_pd0_score.c	74	src/physics0	3	FR-3 FR-4
+omega	tests/physics0/verify/truth.h	74	src/physics0	3	FR-2 FR-3
+omega	tests/polyglot/bench_polyglot.c	1061	src/polyglot	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11 FR-12
+omega	tests/polyglot/polyglot_explain.c	521	src/polyglot	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/polyglot/test_asm.c	315	src/polyglot	3	FR-2 FR-3 FR-4 FR-5 HAND
+omega	tests/polyglot/test_encoder.c	601	src/polyglot	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-10 HAND
+omega	tests/polyglot/verify_polyglot.c	502	src/polyglot	3	FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 HAND
+omega	tests/program/test_program_id.c	653	tests/program	2	FR-2 FR-3 HAND
+omega	tests/r16_inventory/fixture/omega/src/legacy_oracle_demo.c	7	tests/r16_inventory	2	
+omega	tests/r16_inventory/fixture/omega/src/world.c	27	tests/r16_inventory	2	
+omega	tests/r16_inventory/fixture/omega/tools/tool.c	6	tests/r16_inventory	2	FR-10
+omega	tests/r16_inventory/fixture/physics/nvrm.c	8	tests/r16_inventory	2	FR-8
+omega	tests/realize/test_program_fp32.c	130	tests/realize	3	FR-3 FR-4
+omega	tests/realize/test_program_realize.c	526	tests/realize	3	FR-3 HAND
+omega	tests/reservoir/res_fixtures.h	132	src/reservoir	3	
+omega	tests/reservoir/res_oracle64.c	173	src/reservoir	3	FR-2 FR-3 FR-4
+omega	tests/reservoir/res_oracle64.h	33	src/reservoir	3	FR-2 FR-3 FR-4
+omega	tests/reservoir/test_res_mat.c	204	src/reservoir	3	FR-1 FR-3 FR-4
+omega	tests/reservoir/test_reservoir.c	890	src/reservoir	3	FR-2 FR-3 FR-4
+omega	tests/runtime/aien_machine_id_test.c	202	src/runtime	3	FR-1 FR-3 FR-10
+omega	tests/runtime/aienos_cap_abi_test.c	106	src/runtime	3	FR-2 FR-3 FR-4
+omega	tests/runtime/cx_config_freestanding.h	13	src/runtime	3	
+omega	tests/runtime/r15_gpu_load.c	133	src/runtime	3	FR-2 FR-3 FR-4 FR-10 FR-12
+omega	tests/runtime/r15_measure.c	393	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-6 FR-12
+omega	tests/runtime/r15_measure.h	118	src/runtime	3	FR-2 FR-6 FR-8
+omega	tests/runtime/r15_seat_diag.h	57	src/runtime	3	FR-2
+omega	tests/runtime/r15_seat_diag_test.c	61	src/runtime	3	FR-3
+omega	tests/runtime/r15_stage_clock.h	52	src/runtime	3	FR-2 FR-12
+omega	tests/runtime/rx_action_graph.c	1321	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/runtime/rx_branch_reuse.c	843	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_c4_requal.c	928	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_capability_graph.c	547	src/runtime	3	FR-3 HAND
+omega	tests/runtime/rx_capability_query.c	1252	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/runtime/rx_cog_engines.c	503	src/runtime	3	FR-2 FR-3 FR-4
+omega	tests/runtime/rx_cog_engines.h	69	src/runtime	3	FR-2 FR-3 FR-4
+omega	tests/runtime/rx_cognitive_routing.c	1072	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_compose_attach_test.c	649	src/runtime	3	FR-2 FR-3 FR-6 HAND
+omega	tests/runtime/rx_compose_fixture.h	194	src/runtime	3	FR-2 FR-3
+omega	tests/runtime/rx_compose_gpu_skill.h	103	src/runtime	3	FR-2 FR-3
+omega	tests/runtime/rx_compose_test.c	659	src/runtime	3	FR-1 FR-2 FR-3 FR-11 HAND
+omega	tests/runtime/rx_composition_gate.c	333	src/runtime	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/runtime/rx_cortex_canon.c	394	src/runtime	3	FR-1 FR-2 FR-3 FR-11 HAND
+omega	tests/runtime/rx_cortex_journal.c	204	src/runtime	3	FR-2 FR-3 HAND
+omega	tests/runtime/rx_costmodel_unit.c	436	src/runtime	3	FR-3 FR-4 HAND
+omega	tests/runtime/rx_deadline_cancel.c	325	src/runtime	3	FR-2 FR-3 FR-6 FR-12 HAND
+omega	tests/runtime/rx_dual_jspace_tap.c	672	src/runtime	3	FR-2 FR-3 FR-4 HAND
+omega	tests/runtime/rx_dual_jspace_tap_bench.c	177	src/runtime	3	FR-2 FR-3 FR-4 FR-12
+omega	tests/runtime/rx_emergency.c	798	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-11
+omega	tests/runtime/rx_empirical_optimizer.c	1605	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_heartbeat_test.c	2652	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_i11_wake_merge.c	264	src/runtime	3	FR-2 FR-3 FR-6 FR-12 HAND
+omega	tests/runtime/rx_jspace_prod.c	927	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-11 HAND
+omega	tests/runtime/rx_operator_authority_misuse.c	138	src/runtime	3	FR-3
+omega	tests/runtime/rx_plan_reuse.c	1335	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-10 FR-12 HAND
+omega	tests/runtime/rx_r10_omega.c	673	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_r11_aien.c	1032	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/runtime/rx_r12_resident.c	813	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-10 HAND
+omega	tests/runtime/rx_r12_silicon.c	1035	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-12 HAND
+omega	tests/runtime/rx_r13_cortex_episode.c	324	src/runtime	3	FR-1 FR-2 FR-3 HAND
+omega	tests/runtime/rx_r13_living.c	2213	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-12 HAND
+omega	tests/runtime/rx_r14_recovery.c	2645	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_r15_g7.c	323	src/runtime	3	FR-2 FR-3 FR-4 FR-6 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_r15_instr.c	385	src/runtime	3	FR-2 FR-3 FR-6 FR-11 HAND
+omega	tests/runtime/rx_r15_parity.c	224	src/runtime	3	FR-2 FR-3 FR-10
+omega	tests/runtime/rx_r15_perf.c	1400	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-8 FR-10
+omega	tests/runtime/rx_r15_rig.c	886	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_r15_rig.h	164	src/runtime	3	FR-2 FR-3 FR-6
+omega	tests/runtime/rx_r16_negative.c	1467	src/runtime	3	FR-2 FR-3 FR-6 HAND
+omega	tests/runtime/rx_r7_native.c	702	src/runtime	3	FR-1 FR-2 FR-3 FR-10 FR-11
+omega	tests/runtime/rx_r8_aegis.c	710	src/runtime	3	FR-1 FR-2 FR-3 FR-8 FR-10 FR-11 FR-12 HAND
+omega	tests/runtime/rx_r9_barrier.c	880	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-11 HAND
+omega	tests/runtime/rx_regulate_test.c	417	src/runtime	3	FR-2 FR-3 HAND
+omega	tests/runtime/rx_sem_incremental.c	1514	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/runtime/rx_semantic_comm.c	1226	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-12 HAND
+omega	tests/runtime/rx_skillroute_compose_test.c	497	src/runtime	3	FR-2 FR-3 HAND
+omega	tests/runtime/rx_sp_workloads.c	900	src/runtime	3	FR-2 FR-3 HAND
+omega	tests/runtime/rx_sp_workloads.h	67	src/runtime	3	FR-2 FR-3
+omega	tests/runtime/rx_state_projection.c	1002	src/runtime	3	FR-1 FR-2 FR-3 FR-10 FR-12 HAND
+omega	tests/runtime/rx_typed_results.c	1548	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-12 HAND
+omega	tests/runtime/rx_workflow_fusion.c	1635	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/runtime/rxc_host_abi_test.c	518	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-10 FR-11 HAND
+omega	tests/searchtrace/test_st_corpus.c	181	src/searchtrace	2	FR-3
+omega	tests/searchtrace/test_st_holdout.c	381	src/searchtrace	2	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/searchtrace/test_st_holdout_sig.c	574	src/searchtrace	2	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/test_numeric_lifecycle.c	97	tests/numeric	3	FR-3 FR-8 FR-11
+omega	tests/test_omega_autodiff.c	1030	tests/omega	3	FR-2 FR-3 FR-4 HAND
+omega	tests/test_omega_blackwell_engine.c	995	tests/omega	3	FR-2 FR-3
+omega	tests/test_omega_c3_ab_gb10.c	290	tests/omega	3	FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega	tests/test_omega_codegen_freestanding.c	214	tests/omega	3	FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/test_omega_divsqrt_gb10.c	450	tests/omega	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10
+omega	tests/test_omega_genesis.c	102	tests/omega	3	FR-1 FR-3
+omega	tests/test_omega_genesis_set.c	212	tests/omega	3	FR-2 FR-3
+omega	tests/test_omega_gpu_code_alloc.c	31	tests/omega	3	FR-3 HAND
+omega	tests/test_omega_gpu_engine.c	1155	tests/omega	3	FR-2 FR-3
+omega	tests/test_omega_gpu_engine_compile.c	166	tests/omega	3	FR-3
+omega	tests/test_omega_gpu_engine_gb10.c	168	tests/omega	3	FR-3 FR-10
+omega	tests/test_omega_gpu_platform.c	317	tests/omega	3	FR-3
+omega	tests/test_omega_gpu_platform_linux.c	269	tests/omega	3	FR-2 FR-3 FR-5 FR-11
+omega	tests/test_omega_gpu_session_platform.c	517	tests/omega	3	FR-2 FR-3 FR-4 FR-8 FR-11
+omega	tests/test_omega_gpu_wait.c	303	tests/omega	3	FR-2 FR-3 FR-8 HAND
+omega	tests/test_omega_ldst_gb10.c	284	tests/omega	3	FR-1 FR-2 FR-3 FR-10
+omega	tests/test_omega_library.c	163	tests/omega	3	FR-2 FR-3 FR-10
+omega	tests/test_omega_numeric.c	1447	tests/omega	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11
+omega	tests/test_omega_numeric_transc_gb10.c	258	tests/omega	3	FR-2 FR-3 FR-4 FR-6 FR-10
+omega	tests/test_omega_program_ir.c	126	tests/omega	3	FR-3 HAND
+omega	tests/test_omega_reduce.c	751	tests/omega	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tests/test_omega_resolve.c	1752	tests/omega	3	FR-1 FR-2 FR-3 FR-10 FR-11 HAND
+omega	tests/test_omega_tensor.c	1986	tests/omega	3	FR-2 FR-3 FR-4 HAND
+omega	tests/test_omega_tensor_gb10.c	711	tests/omega	3	FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/test_omega_tensor_store.c	620	tests/omega	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 HAND
+omega	tests/test_omega_transc.c	744	tests/omega	3	FR-2 FR-3 FR-4 FR-6 FR-8 FR-10 HAND
+omega	tests/test_omega_unwritten_trap.c	77	tests/omega	3	FR-3
+omega	tests/test_omega_unwritten_trap_gb10.c	187	tests/omega	3	FR-2 FR-3 FR-10 FR-11 FR-12 HAND
+omega	tests/test_omega_vc_bridge.c	123	tests/omega	3	FR-2 FR-3
+omega	tests/test_omega_vcstore.c	951	tests/omega	3	FR-1 FR-2 FR-3 FR-10
+omega	tests/train/test_train.c	534	src/train	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 HAND
+omega	tests/turing/qcont_kat_gen.c	65	src/turing	3	FR-2 FR-4
+omega	tests/turing/test_tc.c	572	src/turing	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/turing/test_tc_produce.c	116	src/turing	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tests/turing/test_turing.c	473	src/turing	3	FR-1 FR-3 HAND
+omega	tests/turing/test_ty_energy.c	118	src/turing	3	FR-3
+omega	tests/turing/test_ty_math.c	622	src/turing	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tests/turing/test_ty_prd2.c	180	src/turing	3	FR-3 FR-4
+omega	tests/turing/test_ty_qcont.c	302	src/turing	3	FR-3 FR-4
+omega	tests/turing/test_ty_qrecord.c	407	src/turing	3	FR-1 FR-2 FR-3 FR-10 FR-11
+omega	tests/turing/ty_energy_fixture.c	31	src/turing	3	FR-10
+omega	tests/turing/ty_energy_window.c	348	src/turing	3	FR-1 FR-2 FR-3 FR-6 FR-10 FR-11
+omega	tests/turing/ty_workload.c	188	src/turing	3	FR-2 FR-3 FR-6 FR-10
+omega	tests/vc_fixture.h	81	tests/vc	2	FR-2 FR-3
+omega	tests/visor/test_visor_authority.c	678	src/visor	3	FR-2 FR-3 FR-11 HAND
+omega	tests/visor/test_visor_console.c	707	src/visor	3	FR-1 FR-2 FR-3
+omega	tests/visor/test_visor_evidence.c	129	src/visor	3	FR-3
+omega	tests/visor/test_visor_machine.c	99	src/visor	3	FR-3
+omega	tests/visor/test_visor_realization.c	194	src/visor	3	FR-3
+omega	tests/visor/test_visor_semantic.c	237	src/visor	3	FR-3
+omega	tests/visor/test_visor_verify.c	177	src/visor	3	FR-2 FR-3
+omega	tests/visor/test_visor_world.c	170	src/visor	3	FR-2 FR-3
+omega	tools/allen.c	452	tools/allen.c	2	FR-1 FR-2 FR-3 FR-10
+omega	tools/argus_replay.c	106	tools/argus_replay.c	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12
+omega	tools/brownian/brw_active.c	352	tools/brownian	3	FR-3 FR-4
+omega	tools/brownian/brw_active.h	80	tools/brownian	3	FR-2 FR-3 FR-4
+omega	tools/brownian/brw_tps_adapter.c	352	tools/brownian	3	FR-2 FR-3 FR-4
+omega	tools/brownian/brw_tps_adapter.h	102	tools/brownian	3	FR-2 FR-3 FR-4
+omega	tools/crumbline_learner.c	297	tools/crumbline_learner.c	2	FR-1 FR-2 FR-3 FR-10
+omega	tools/dual_experiment/applic_run.c	238	tools/dual_experiment	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/estimation/est3c_common.c	1049	tools/estimation	3	FR-1 FR-3 FR-4 FR-11 HAND
+omega	tools/estimation/est3c_common.h	249	tools/estimation	3	FR-2 FR-3 FR-4
+omega	tools/estimation/est3c_eval.c	364	tools/estimation	3	FR-1 FR-2 FR-3 FR-10
+omega	tools/estimation/est3c_fit.c	255	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tools/estimation/est3c_forensics.c	311	tools/estimation	3	FR-1 FR-2 FR-4
+omega	tools/estimation/est4.c	715	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/estimation/est5.c	762	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/estimation/est6dev.c	1105	tools/estimation	3	FR-2 FR-3 FR-4 FR-10
+omega	tools/estimation/est6opchar.c	365	tools/estimation	3	FR-2 FR-4 FR-10
+omega	tools/estimation/est_eval.c	734	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tools/estimation/est_fit.c	106	tools/estimation	3	FR-3 FR-4 FR-10
+omega	tools/estimation/est_load.c	140	tools/estimation	3	FR-1 FR-2 FR-6 FR-8 FR-10 FR-12
+omega	tools/estimation/est_replay.c	591	tools/estimation	3	FR-1 FR-3 FR-4 FR-10
+omega	tools/estimation/est_replay.h	169	tools/estimation	3	FR-2 FR-3 FR-4
+omega	tools/estimation/test_est3c_tools.c	349	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/estimation/test_est_json.c	255	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/estimation/test_est_tools.c	732	tools/estimation	3	FR-1 FR-3 FR-4 FR-10 FR-11
+omega	tools/exp445/examples_expected.c	115	tools/exp445	3	FR-10
+omega	tools/exp445/fake445.c	219	tools/exp445	3	FR-1 FR-2 FR-4 FR-10
+omega	tools/exp445/x445.c	255	tools/exp445	3	FR-1 FR-3 FR-4 FR-10
+omega	tools/json_canon.c	550	tools/json_canon.c	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/omega.c	795	tools/omega.c	2	FR-1 FR-2 FR-3 FR-10
+omega	tools/omega_emit/omega_emit.c	782	tools/omega_emit	1	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tools/omega_emit/typediff.c	205	tools/omega_emit	1	FR-1 FR-2 FR-3 FR-10
+omega	tools/omegatool.c	4067	tools/omegatool.c	1	FR-1 FR-2 FR-3 FR-4 FR-5 FR-10 HAND
+omega	tools/omegese/omegese.c	2169	tools/omegese	1	FR-1 FR-2 FR-8 FR-10 HAND
+omega	tools/own30b_decode_profile.c	132	tools/own30b_decode_profile.c	2	FR-2 FR-3
+omega	tools/physics0/pd1-convert/pd1_convert.c	122	tools/physics0	2	FR-1 FR-10
+omega	tools/quietlock/quietlock.c	940	tools/quietlock	2	FR-1 FR-2 FR-8 FR-10 FR-11 FR-12 HAND
+omega	tools/r15_reduce.c	1332	tools/r15_reduce.c	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/r16_loop_inventory.c	1109	tools/r16_loop_inventory.c	2	FR-1 FR-2 FR-10 FR-11 HAND
+omega	tools/reservoir/res_bench.c	945	tools/reservoir	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-12
+omega	tools/reservoir/res_common.c	556	tools/reservoir	3	FR-1 FR-2 FR-3 FR-4 FR-12 HAND
+omega	tools/reservoir/res_common.h	124	tools/reservoir	3	FR-2 FR-3 FR-4
+omega	tools/reservoir/res_inflate.c	313	tools/reservoir	3	FR-2 FR-3
+omega	tools/reservoir/res_inflate.h	41	tools/reservoir	3	FR-2
+omega	tools/reservoir/res_mat.c	363	tools/reservoir	3	FR-1 FR-2 FR-3 FR-4
+omega	tools/reservoir/res_mat.h	85	tools/reservoir	3	FR-2 FR-4
+omega	tools/reservoir/res_qualify.c	853	tools/reservoir	3	FR-2 FR-3 FR-4 FR-10
+omega	tools/rx_operator.c	133	tools/rx_operator.c	2	FR-1 FR-2 FR-10 FR-12
+omega	tools/turing_cal_candidates.c	295	tools/turing_cal.c	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tools/turing_cal_dev.h	95	tools/turing_cal.c	3	FR-1 FR-2 FR-3
+omega	tools/turing_cal_eval.c	1760	tools/turing_cal.c	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega	tools/turing_cal_overlap.c	211	tools/turing_cal.c	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tools/turing_field.c	210	tools/turing_field.c	3	FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/turing_verify_indep/src/core.c	275	tools/turing_verify_indep	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega	tools/turing_verify_indep/src/core.h	70	tools/turing_verify_indep	3	FR-2
+omega	tools/turing_verify_indep/src/main.c	406	tools/turing_verify_indep	3	FR-1 FR-2 FR-3 FR-10
+omega	tools/turing_verify_indep/src/selftest.c	90	tools/turing_verify_indep	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega	tools/turing_verify_indep/src/sha256.c	65	tools/turing_verify_indep	3	FR-1 FR-3
+omega	tools/turing_verify_indep/src/sha256.h	12	tools/turing_verify_indep	3	FR-2
+omega	tools/turing_yield.c	524	tools/turing_yield.c	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega	tools/ty_energy_reduce.c	925	tools/ty_energy_reduce.c	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	calibration/scripts/power_simulation.c	341	calibration/scripts	3	FR-2 FR-3 FR-4 FR-10 FR-12
+omega@HEAD	docs/osc/audit/baseline/shim.c	90	docs/osc/audit/baseline	3	FR-2 FR-6
+omega@HEAD	research/dirac-oracle/src/oracle_clifford.c	85	research/dirac-oracle/src	2	FR-2
+omega@HEAD	research/m15/pmu/pmu_probe.c	71	research/m15/pmu	3	FR-2 FR-4 FR-5 FR-6 FR-8
+omega@HEAD	research/m15/spbm/aien_spbm_readonly.c	237	research/m15/spbm	3	FR-2 FR-3 HAND
+omega@HEAD	research/m15/spbm/contract.h	50	research/m15/spbm	3	FR-2
+omega@HEAD	research/m15/spbm/contract_test.c	27	research/m15/spbm	3	FR-3
+omega@HEAD	research/m15/spbm/load.c	73	research/m15/spbm	3	FR-1 FR-2 FR-4 FR-6 FR-8 FR-10 FR-12
+omega@HEAD	research/m15/spbm/reduce.c	74	research/m15/spbm	3	FR-1 FR-2 FR-4 FR-10
+omega@HEAD	research/m15/spbm/sample.c	116	research/m15/spbm	3	FR-1 FR-2 FR-10 FR-12
+omega@HEAD	src/aarch64_decoder.c	230	src/aarch64	2	FR-3
+omega@HEAD	src/aarch64_decoder.h	45	src/aarch64	2	FR-2 FR-3
+omega@HEAD	src/aarch64_encoder.c	233	src/aarch64	2	FR-3
+omega@HEAD	src/aarch64_encoder.h	33	src/aarch64	2	FR-3
+omega@HEAD	src/aarch64_target.h	51	src/aarch64	2	FR-2
+omega@HEAD	src/aegis_verification.c	21	src/aegis	2	FR-3
+omega@HEAD	src/aegis_verification.h	17	src/aegis	2	FR-3
+omega@HEAD	src/algebra/oma_pack.c	123	src/algebra	3	FR-3
+omega@HEAD	src/algebra/oma_pack.h	36	src/algebra	3	FR-3
+omega@HEAD	src/algebra/oma_quant.c	55	src/algebra	3	FR-3 FR-4
+omega@HEAD	src/algebra/oma_quant.h	32	src/algebra	3	FR-3 FR-4
+omega@HEAD	src/algebra/oma_select.c	278	src/algebra	3	FR-1 FR-3 FR-4
+omega@HEAD	src/algebra/oma_select.h	121	src/algebra	3	FR-2 FR-4
+omega@HEAD	src/algebra/oma_trit.c	256	src/algebra	3	FR-3
+omega@HEAD	src/algebra/oma_trit.h	98	src/algebra	3	FR-2
+omega@HEAD	src/algebra/oma_z3.c	125	src/algebra	3	FR-3
+omega@HEAD	src/algebra/oma_z3.h	36	src/algebra	3	FR-2 FR-3
+omega@HEAD	src/algebra/phase_twin.c	458	src/algebra	3	FR-2 FR-3 FR-4
+omega@HEAD	src/algebra/phase_twin.h	157	src/algebra	3	FR-2 FR-4
+omega@HEAD	src/algebra/realize_binary.c	318	src/algebra	3	FR-3
+omega@HEAD	src/algebra/realize_bitplane.c	389	src/algebra	3	FR-3
+omega@HEAD	src/algebra/realize_common.c	82	src/algebra	3	FR-3
+omega@HEAD	src/algebra/realize_common.h	82	src/algebra	3	FR-2
+omega@HEAD	src/algebra/realize_dense.c	97	src/algebra	3	FR-3
+omega@HEAD	src/algebra/realize_rns.c	106	src/algebra	3	FR-3
+omega@HEAD	src/algebra/realize_sparse.c	77	src/algebra	3	FR-3
+omega@HEAD	src/autodiff/omega_autodiff.c	582	src/autodiff	3	FR-3 FR-4
+omega@HEAD	src/autodiff/omega_autodiff.h	174	src/autodiff	3	FR-2 FR-3 FR-4
+omega@HEAD	src/compiler/model/osc_model.c	415	src/compiler	1	FR-3
+omega@HEAD	src/compiler/model/osc_model.h	213	src/compiler	1	FR-2
+omega@HEAD	src/compiler/model/osc_model_gen.c	778	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/model/osc_model_gen.h	39	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_a64.c	333	src/compiler	1	FR-2 FR-3 HAND
+omega@HEAD	src/compiler/osc_a64.h	107	src/compiler	1	FR-2
+omega@HEAD	src/compiler/osc_cg.c	556	src/compiler	1	FR-2 FR-3 HAND
+omega@HEAD	src/compiler/osc_cg.h	32	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_check.c	2254	src/compiler	1	FR-2 FR-3 HAND
+omega@HEAD	src/compiler/osc_check.h	61	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_diag.c	59	src/compiler	1	FR-3 HAND
+omega@HEAD	src/compiler/osc_diag.h	72	src/compiler	1	FR-2 HAND
+omega@HEAD	src/compiler/osc_front.c	75	src/compiler	1	FR-3 HAND
+omega@HEAD	src/compiler/osc_front.h	33	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_interp.c	226	src/compiler	1	FR-2 FR-3 HAND
+omega@HEAD	src/compiler/osc_interp.h	32	src/compiler	1	FR-3
+omega@HEAD	src/compiler/osc_ir.c	650	src/compiler	1	FR-2 FR-3 HAND
+omega@HEAD	src/compiler/osc_ir.h	245	src/compiler	1	FR-2
+omega@HEAD	src/compiler/osc_lex.c	198	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_lex.h	57	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_lower.c	711	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_lower.h	19	src/compiler	1	FR-3
+omega@HEAD	src/compiler/osc_native.c	42	src/compiler	1	FR-3 FR-5
+omega@HEAD	src/compiler/osc_native.h	25	src/compiler	1	FR-2
+omega@HEAD	src/compiler/osc_parse.c	1157	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_parse.h	155	src/compiler	1	FR-2 FR-3
+omega@HEAD	src/compiler/osc_rt.c	336	src/compiler	1	FR-2 FR-3 HAND
+omega@HEAD	src/compiler/osc_rt.h	189	src/compiler	1	FR-2 FR-3 HAND
+omega@HEAD	src/compiler/oscc_main.c	76	src/compiler	1	FR-1 FR-3 FR-10
+omega@HEAD	src/crumbline/cl_common.c	135	src/crumbline	2	FR-3
+omega@HEAD	src/crumbline/cl_common.h	81	src/crumbline	2	FR-2
+omega@HEAD	src/crumbline/cl_crumb.c	146	src/crumbline	2	FR-3
+omega@HEAD	src/crumbline/cl_crumb.h	53	src/crumbline	2	FR-2 FR-3
+omega@HEAD	src/crumbline/cl_program.c	276	src/crumbline	2	FR-3
+omega@HEAD	src/crumbline/cl_program.h	122	src/crumbline	2	FR-2 FR-3
+omega@HEAD	src/crumbline/cl_search.c	377	src/crumbline	2	FR-2 FR-3 FR-12
+omega@HEAD	src/crumbline/cl_search.h	100	src/crumbline	2	FR-2 FR-3
+omega@HEAD	src/estimation/est_kf.c	363	src/estimation	3	FR-3 FR-4
+omega@HEAD	src/estimation/est_kf.h	48	src/estimation	3	FR-3 FR-4
+omega@HEAD	src/estimation/est_mix.c	180	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	src/estimation/est_mix.h	48	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	src/estimation/est_pred.c	750	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	src/estimation/est_pred.h	253	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	src/estimation/est_types.c	600	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	src/estimation/est_types.h	217	src/estimation	3	FR-2 FR-4
+omega@HEAD	src/estimation/est_v4.c	338	src/estimation	3	FR-3 FR-4
+omega@HEAD	src/estimation/est_v4.h	107	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	src/fabric/fab_dispatch.c	113	src/fabric	3	FR-3 FR-6 HAND
+omega@HEAD	src/fabric/fab_dispatch.h	95	src/fabric	3	FR-2 FR-3 FR-6
+omega@HEAD	src/fabric/fab_hmac.c	47	src/fabric	3	FR-3
+omega@HEAD	src/fabric/fab_hmac.h	29	src/fabric	3	
+omega@HEAD	src/fabric/fab_loopback.c	127	src/fabric	3	FR-3
+omega@HEAD	src/fabric/fab_loopback.h	76	src/fabric	3	FR-2 FR-3
+omega@HEAD	src/fabric/fabric.c	526	src/fabric	3	FR-3
+omega@HEAD	src/fabric/fabric.h	308	src/fabric	3	FR-2 FR-3
+omega@HEAD	src/forge_realization.c	42	src/forge	2	FR-3
+omega@HEAD	src/forge_realization.h	48	src/forge	2	FR-2 FR-3
+omega@HEAD	src/language/omega_lex.c	197	src/language	2	FR-3
+omega@HEAD	src/language/omega_lex.h	52	src/language	2	FR-2
+omega@HEAD	src/language/omega_lower.c	491	src/language	2	FR-2 FR-3
+omega@HEAD	src/language/omega_lower.h	67	src/language	2	FR-2 FR-3
+omega@HEAD	src/language/omega_parse.c	429	src/language	2	FR-2 FR-3
+omega@HEAD	src/language/omega_parse.h	96	src/language	2	FR-2 FR-3
+omega@HEAD	src/omega_accelerator.c	143	src/omega_accelerator	3	FR-3
+omega@HEAD	src/omega_accelerator.h	136	src/omega_accelerator	3	FR-2 FR-3
+omega@HEAD	src/omega_accelerator_world.c	1224	src/omega_accelerator	3	FR-3 FR-5 FR-6 FR-8
+omega@HEAD	src/omega_accelerator_world.h	287	src/omega_accelerator	3	FR-2 FR-3 FR-8
+omega@HEAD	src/omega_blackwell_codegen.c	1519	src/omega_blackwell	3	FR-3
+omega@HEAD	src/omega_blackwell_codegen.h	173	src/omega_blackwell	3	FR-2 FR-3
+omega@HEAD	src/omega_blackwell_encoder.c	109	src/omega_blackwell	3	FR-3
+omega@HEAD	src/omega_blackwell_encoder.h	27	src/omega_blackwell	3	FR-2
+omega@HEAD	src/omega_blackwell_engine.c	663	src/omega_blackwell	3	FR-2 FR-3 FR-5 FR-6 FR-8 FR-12
+omega@HEAD	src/omega_blackwell_engine.h	55	src/omega_blackwell	3	FR-2 FR-3
+omega@HEAD	src/omega_blackwell_gates.c	1531	src/omega_blackwell	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega@HEAD	src/omega_blackwell_gates.h	16	src/omega_blackwell	3	
+omega@HEAD	src/omega_blackwell_matmul.c	176	src/omega_blackwell	3	FR-3 FR-4
+omega@HEAD	src/omega_blackwell_matmul.h	72	src/omega_blackwell	3	FR-2 FR-4
+omega@HEAD	src/omega_blackwell_qmd.c	234	src/omega_blackwell	3	FR-3
+omega@HEAD	src/omega_blackwell_qmd.h	63	src/omega_blackwell	3	FR-2
+omega@HEAD	src/omega_blackwell_realize.c	52	src/omega_blackwell	3	FR-3
+omega@HEAD	src/omega_blackwell_realize.h	35	src/omega_blackwell	3	FR-2 FR-3
+omega@HEAD	src/omega_blackwell_submit.c	651	src/omega_blackwell	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-11 FR-12
+omega@HEAD	src/omega_blackwell_submit.h	84	src/omega_blackwell	3	FR-2 FR-3 FR-4
+omega@HEAD	src/omega_blake3.c	154	src/omega_blake3	2	FR-2 FR-3
+omega@HEAD	src/omega_blake3.h	17	src/omega_blake3	2	
+omega@HEAD	src/omega_canonical.c	209	src/omega_canonical	2	FR-3
+omega@HEAD	src/omega_canonical.h	21	src/omega_canonical	2	FR-3
+omega@HEAD	src/omega_codec.c	280	src/omega_codec	2	FR-3
+omega@HEAD	src/omega_codec.h	14	src/omega_codec	2	FR-3
+omega@HEAD	src/omega_core.c	454	src/omega_core	2	FR-3
+omega@HEAD	src/omega_core.h	67	src/omega_core	2	FR-3
+omega@HEAD	src/omega_discovery.c	343	src/omega_discovery	2	FR-3
+omega@HEAD	src/omega_discovery.h	72	src/omega_discovery	2	FR-2 FR-3
+omega@HEAD	src/omega_evidence.c	164	src/omega_evidence	2	FR-1 FR-2 FR-3 FR-11 FR-12
+omega@HEAD	src/omega_evidence.h	113	src/omega_evidence	2	FR-2 FR-3
+omega@HEAD	src/omega_exec.c	167	src/omega_exec	3	FR-1 FR-2 FR-3 FR-5 FR-11 HAND
+omega@HEAD	src/omega_exec.h	15	src/omega_exec	3	FR-3
+omega@HEAD	src/omega_genesis.h	67	src/omega_genesis	2	
+omega@HEAD	src/omega_gpu_engine.c	436	src/omega_gpu	3	FR-2 FR-3 FR-6 FR-12
+omega@HEAD	src/omega_gpu_engine.h	250	src/omega_gpu	3	FR-2
+omega@HEAD	src/omega_library.c	229	src/omega_library	2	FR-3 FR-12
+omega@HEAD	src/omega_library.h	95	src/omega_library	2	FR-2 FR-3
+omega@HEAD	src/omega_machine.c	300	src/omega_machine	2	FR-3
+omega@HEAD	src/omega_machine.h	108	src/omega_machine	2	FR-2 FR-3
+omega@HEAD	src/omega_matvec.c	443	src/omega_matvec	3	FR-2 FR-3 FR-4 FR-5 FR-12 HAND
+omega@HEAD	src/omega_matvec.h	91	src/omega_matvec	3	FR-2 FR-3 FR-4
+omega@HEAD	src/omega_matvec_quad.c	104	src/omega_matvec	3	FR-3
+omega@HEAD	src/omega_matvec_quad.h	25	src/omega_matvec	3	FR-3
+omega@HEAD	src/omega_numeric.c	1576	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-8 HAND
+omega@HEAD	src/omega_numeric.h	424	src/omega_numeric	3	FR-2 FR-4 HAND
+omega@HEAD	src/omega_numeric_divsqrt_gb10.c	1637	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-5 FR-8 HAND
+omega@HEAD	src/omega_numeric_divsqrt_gb10.h	148	src/omega_numeric	3	FR-2
+omega@HEAD	src/omega_numeric_gb10.c	316	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-5 FR-8
+omega@HEAD	src/omega_numeric_ldst_gb10.c	373	src/omega_numeric	3	FR-3 FR-5 FR-8 HAND
+omega@HEAD	src/omega_numeric_ldst_gb10.h	78	src/omega_numeric	3	FR-2
+omega@HEAD	src/omega_numeric_lifecycle.h	31	src/omega_numeric	3	FR-6
+omega@HEAD	src/omega_numeric_native.h	45	src/omega_numeric	3	FR-3 FR-8
+omega@HEAD	src/omega_numeric_provenance.c	230	src/omega_numeric	3	FR-3 HAND
+omega@HEAD	src/omega_numeric_provenance.h	47	src/omega_numeric	3	FR-2
+omega@HEAD	src/omega_numeric_reduce.c	202	src/omega_numeric	3	FR-3 FR-4 FR-8
+omega@HEAD	src/omega_numeric_reduce.h	116	src/omega_numeric	3	FR-2 FR-3 FR-4
+omega@HEAD	src/omega_numeric_reduce_gb10.c	564	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-5 FR-8 HAND
+omega@HEAD	src/omega_numeric_transc.c	517	src/omega_numeric	3	FR-2 FR-3 FR-4 FR-8
+omega@HEAD	src/omega_numeric_transc.h	55	src/omega_numeric	3	FR-4
+omega@HEAD	src/omega_numeric_transc_tables.h	48	src/omega_numeric	3	FR-4
+omega@HEAD	src/omega_program.c	792	src/omega_program	3	FR-3
+omega@HEAD	src/omega_program.h	175	src/omega_program	3	FR-2 FR-3
+omega@HEAD	src/omega_program_fp32.c	109	src/omega_program	3	FR-3 FR-4
+omega@HEAD	src/omega_program_fp32.h	38	src/omega_program	3	FR-3
+omega@HEAD	src/omega_program_ir.c	108	src/omega_program	3	FR-2 FR-3
+omega@HEAD	src/omega_program_ir.h	40	src/omega_program	3	FR-3
+omega@HEAD	src/omega_realize.c	120	src/omega_realize	2	FR-3
+omega@HEAD	src/omega_realize.h	29	src/omega_realize	2	FR-2 FR-3
+omega@HEAD	src/omega_realize_synth.c	284	src/omega_realize	2	FR-3
+omega@HEAD	src/omega_realize_synth.h	73	src/omega_realize	2	FR-2 FR-3
+omega@HEAD	src/omega_receipt.c	695	src/omega_receipt	2	FR-2 FR-3 HAND
+omega@HEAD	src/omega_receipt.h	70	src/omega_receipt	2	FR-2
+omega@HEAD	src/omega_resolve.c	751	src/omega_resolve	2	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/omega_resolve.h	201	src/omega_resolve	2	FR-2 FR-3
+omega@HEAD	src/omega_resolve_osc.c	27	src/omega_resolve	2	FR-3
+omega@HEAD	src/omega_resolve_osc.h	23	src/omega_resolve	2	FR-2 FR-3
+omega@HEAD	src/omega_self_host.c	378	src/omega_self	3	FR-2 FR-3 FR-5 HAND
+omega@HEAD	src/omega_self_host.h	35	src/omega_self	3	FR-3
+omega@HEAD	src/omega_synthesis.c	440	src/omega_synthesis	2	FR-3 HAND
+omega@HEAD	src/omega_synthesis.h	80	src/omega_synthesis	2	FR-2 FR-3
+omega@HEAD	src/omega_types.h	204	src/omega_types	2	FR-2
+omega@HEAD	src/omega_unwritten_trap.c	30	src/omega_unwritten	2	FR-3
+omega@HEAD	src/omega_unwritten_trap.h	34	src/omega_unwritten	2	FR-2
+omega@HEAD	src/omega_validate.c	262	src/omega_validate	2	FR-3
+omega@HEAD	src/omega_validate.h	9	src/omega_validate	2	FR-3
+omega@HEAD	src/omega_vc_bridge.c	275	src/omega_vc	2	FR-2 FR-3 HAND
+omega@HEAD	src/omega_vc_bridge.h	68	src/omega_vc	2	FR-2 FR-3
+omega@HEAD	src/omega_vcstore.c	707	src/omega_vcstore	2	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/omega_vcstore.h	208	src/omega_vcstore	2	FR-2
+omega@HEAD	src/omega_vcstore_priv.h	42	src/omega_vcstore	2	FR-3
+omega@HEAD	src/omega_vector.c	97	src/omega_vector	2	FR-3
+omega@HEAD	src/omega_vector.h	38	src/omega_vector	2	FR-2 FR-3
+omega@HEAD	src/omega_verify.c	299	src/omega_verify	2	FR-3
+omega@HEAD	src/omega_verify.h	53	src/omega_verify	2	FR-2 FR-3
+omega@HEAD	src/omega_world_gates.c	2384	src/omega_world	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 FR-11 FR-12
+omega@HEAD	src/omega_world_gates.h	19	src/omega_world	3	
+omega@HEAD	src/oscv_main.c	201	src/oscv	2	FR-1 FR-3 FR-10 HAND
+omega@HEAD	src/path/rx_path.c	583	src/path	2	FR-2 FR-3
+omega@HEAD	src/path/rx_path.h	201	src/path	2	FR-2 FR-3
+omega@HEAD	src/polyglot/omx_asm.c	99	src/polyglot	3	FR-3
+omega@HEAD	src/polyglot/omx_bench.c	338	src/polyglot	3	FR-1 FR-2 FR-3 FR-4 FR-12
+omega@HEAD	src/polyglot/omx_bench.h	67	src/polyglot	3	FR-2 FR-4
+omega@HEAD	src/polyglot/omx_encoder.c	814	src/polyglot	3	FR-2 FR-3 FR-4 FR-5 FR-6 FR-12 HAND
+omega@HEAD	src/polyglot/omx_encoder.h	51	src/polyglot	3	FR-2 FR-4
+omega@HEAD	src/polyglot/omx_encoder_ext.c	259	src/polyglot	3	FR-3
+omega@HEAD	src/polyglot/omx_encoder_ext.h	94	src/polyglot	3	
+omega@HEAD	src/polyglot/omx_lang.c	124	src/polyglot	3	FR-3 FR-8
+omega@HEAD	src/polyglot/omx_lang.h	62	src/polyglot	3	FR-2 FR-3 FR-4
+omega@HEAD	src/polyglot/omx_mojo.c	122	src/polyglot	3	FR-3
+omega@HEAD	src/runtime/aien_machine_id.c	91	src/runtime	3	FR-1 FR-3
+omega@HEAD	src/runtime/aien_machine_id.h	255	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/aienos_cap.h	96	src/runtime	3	FR-2
+omega@HEAD	src/runtime/omega_shared_world_abi.h	299	src/runtime	3	FR-2 FR-8
+omega@HEAD	src/runtime/rx_aegis.c	345	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	src/runtime/rx_aegis.h	164	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	src/runtime/rx_aien.c	475	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_aien.h	167	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_argus.c	975	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-12
+omega@HEAD	src/runtime/rx_argus.h	207	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	src/runtime/rx_caller.h	84	src/runtime	3	FR-2 FR-8
+omega@HEAD	src/runtime/rx_capq.c	837	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_capq.h	417	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_caproot.c	657	src/runtime	3	FR-2 FR-3 FR-5 FR-6 FR-11 FR-12 HAND
+omega@HEAD	src/runtime/rx_caproot.h	234	src/runtime	3	FR-2 FR-6
+omega@HEAD	src/runtime/rx_coherent.c	931	src/runtime	3	FR-2 FR-3 FR-6 FR-8 HAND
+omega@HEAD	src/runtime/rx_compose.c	1295	src/runtime	3	FR-2 FR-3 FR-6 FR-8 FR-12 HAND
+omega@HEAD	src/runtime/rx_compose.h	337	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_contract.c	1309	src/runtime	3	FR-2 FR-3 FR-6 FR-12
+omega@HEAD	src/runtime/rx_contract.h	350	src/runtime	3	FR-2 FR-3 FR-6 FR-8
+omega@HEAD	src/runtime/rx_cortex.c	533	src/runtime	3	FR-1 FR-2 FR-3
+omega@HEAD	src/runtime/rx_cortex.h	333	src/runtime	3	FR-2
+omega@HEAD	src/runtime/rx_cortex_record.c	355	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	src/runtime/rx_cortex_record.h	95	src/runtime	3	FR-3
+omega@HEAD	src/runtime/rx_costmodel.c	512	src/runtime	3	FR-2 FR-3 FR-4
+omega@HEAD	src/runtime/rx_costmodel.h	192	src/runtime	3	FR-2 FR-4
+omega@HEAD	src/runtime/rx_fusion.c	1122	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_fusion.h	319	src/runtime	3	FR-2 FR-3 FR-4
+omega@HEAD	src/runtime/rx_generation.c	1524	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-12 HAND
+omega@HEAD	src/runtime/rx_generation.h	262	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_graph.c	1946	src/runtime	3	FR-2 FR-3 FR-8 FR-12
+omega@HEAD	src/runtime/rx_graph.h	510	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_jspace.c	1809	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-12 HAND
+omega@HEAD	src/runtime/rx_jspace.h	426	src/runtime	3	FR-2 FR-4 FR-6
+omega@HEAD	src/runtime/rx_living.c	737	src/runtime	3	FR-2 FR-3 FR-8 FR-12
+omega@HEAD	src/runtime/rx_living.h	200	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_native_bind.c	55	src/runtime	3	FR-3
+omega@HEAD	src/runtime/rx_omega.c	973	src/runtime	3	FR-2 FR-3 FR-5 FR-6 FR-11 FR-12 HAND
+omega@HEAD	src/runtime/rx_omega.h	227	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	src/runtime/rx_plan.c	556	src/runtime	3	FR-2 FR-3 FR-6 FR-12
+omega@HEAD	src/runtime/rx_plan.h	296	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_plan_arrange.c	657	src/runtime	3	FR-2 FR-3 HAND
+omega@HEAD	src/runtime/rx_plan_arrange.h	112	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_projection.c	746	src/runtime	3	FR-2 FR-3 FR-12
+omega@HEAD	src/runtime/rx_projection.h	287	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_resident_gpu.c	1110	src/runtime	3	FR-2 FR-3 FR-5 FR-6 FR-8 FR-10
+omega@HEAD	src/runtime/rx_resident_gpu.h	36	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_route.c	789	src/runtime	3	FR-2 FR-3 FR-4 FR-12 HAND
+omega@HEAD	src/runtime/rx_route.h	217	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_semantic.c	946	src/runtime	3	FR-2 FR-3 FR-6 FR-12 HAND
+omega@HEAD	src/runtime/rx_semantic.h	356	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	src/runtime/rx_semcomm.c	634	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	src/runtime/rx_semcomm.h	255	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_seq_reference.c	112	src/runtime	3	FR-2 FR-3 FR-6 FR-12
+omega@HEAD	src/runtime/rx_seq_reference.h	59	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_skillroute.c	250	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_skillroute.h	153	src/runtime	3	FR-2 FR-3
+omega@HEAD	src/runtime/rx_world.c	2457	src/runtime	3	FR-2 FR-3 FR-5 FR-6 FR-8 FR-12 HAND
+omega@HEAD	src/runtime/rx_world.h	919	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	src/searchtrace/sig/aienos_sig.h	54	src/searchtrace	2	FR-2
+omega@HEAD	src/searchtrace/sig/ct.c	21	src/searchtrace	2	FR-3 FR-8
+omega@HEAD	src/searchtrace/sig/ed25519.c	575	src/searchtrace	2	FR-2 FR-3
+omega@HEAD	src/searchtrace/sig/sha512.c	143	src/searchtrace	2	FR-3
+omega@HEAD	src/searchtrace/sig/sig_internal.h	27	src/searchtrace	2	FR-8
+omega@HEAD	src/searchtrace/st_corpus.c	601	src/searchtrace	2	FR-2 FR-3 HAND
+omega@HEAD	src/searchtrace/st_corpus.h	59	src/searchtrace	2	FR-2
+omega@HEAD	src/searchtrace/st_holdout.c	1039	src/searchtrace	2	FR-1 FR-2 FR-3 FR-8 FR-10
+omega@HEAD	src/searchtrace/st_holdout.h	110	src/searchtrace	2	FR-2 FR-10
+omega@HEAD	src/searchtrace/st_hook.h	83	src/searchtrace	2	FR-2 HAND
+omega@HEAD	src/searchtrace/st_tool.c	149	src/searchtrace	2	FR-1 FR-3 FR-10 HAND
+omega@HEAD	src/sha256.c	148	src/sha256	2	FR-3
+omega@HEAD	src/sha256.h	21	src/sha256	2	FR-2
+omega@HEAD	src/tensor/omega_tensor.c	1231	src/tensor	3	FR-2 FR-3 FR-4
+omega@HEAD	src/tensor/omega_tensor.h	439	src/tensor	3	FR-2 FR-3 FR-4
+omega@HEAD	src/tensor/omega_tensor_cpu.c	95	src/tensor	3	FR-3 FR-4 FR-8
+omega@HEAD	src/tensor/omega_tensor_gb10.c	194	src/tensor	3	FR-2 FR-3 FR-4 HAND
+omega@HEAD	src/tensor/omega_tensor_reduce_seam.c	29	src/tensor	3	FR-3 FR-4
+omega@HEAD	src/tensor/omega_tensor_reduce_seam.h	33	src/tensor	3	FR-3 FR-4
+omega@HEAD	src/tensor/omega_tensor_store.c	634	src/tensor	3	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/tensor/omega_tensor_store.h	107	src/tensor	3	FR-2 FR-3
+omega@HEAD	src/train/tg_sgd.c	44	src/train	3	FR-3 FR-4
+omega@HEAD	src/train/tg_sgd.h	23	src/train	3	FR-3 FR-4
+omega@HEAD	src/train/tg_store.c	730	src/train	3	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/train/tg_store.h	180	src/train	3	FR-2
+omega@HEAD	src/turing/field.c	650	src/turing	3	FR-1 FR-2 FR-3 FR-4 HAND
+omega@HEAD	src/turing/field.h	203	src/turing	3	FR-2
+omega@HEAD	src/turing/field_select.c	201	src/turing	3	FR-3 FR-4
+omega@HEAD	src/turing/field_select_v0_retired.c	230	src/turing	3	FR-3 FR-4
+omega@HEAD	src/turing/history_selector.c	142	src/turing	3	FR-3 FR-4
+omega@HEAD	src/turing/replay.c	187	src/turing	3	FR-3 FR-4 HAND
+omega@HEAD	src/turing/select.h	134	src/turing	3	FR-2 FR-3 FR-4
+omega@HEAD	src/turing/tc_produce.c	146	src/turing	3	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/turing/tc_produce.h	30	src/turing	3	FR-3
+omega@HEAD	src/turing/tc_pstream.c	440	src/turing	3	FR-1 FR-3 HAND
+omega@HEAD	src/turing/tc_pstream.h	140	src/turing	3	FR-2
+omega@HEAD	src/turing/tc_range.c	194	src/turing	3	FR-2 FR-3 HAND
+omega@HEAD	src/turing/tc_range.h	40	src/turing	3	FR-2 FR-3
+omega@HEAD	src/turing/tc_rans.c	147	src/turing	3	FR-3 HAND
+omega@HEAD	src/turing/tc_rans.h	33	src/turing	3	FR-3
+omega@HEAD	src/turing/tc_tool.c	288	src/turing	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega@HEAD	src/turing/ty_ctr1.c	161	src/turing	3	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/turing/ty_ctr1.h	80	src/turing	3	FR-2
+omega@HEAD	src/turing/ty_energy.c	335	src/turing	3	FR-2 FR-3
+omega@HEAD	src/turing/ty_energy.h	154	src/turing	3	FR-2 FR-3
+omega@HEAD	src/turing/ty_math.c	184	src/turing	3	FR-3 FR-4
+omega@HEAD	src/turing/ty_math.h	91	src/turing	3	FR-2 FR-4
+omega@HEAD	src/turing/ty_model.c	462	src/turing	3	FR-2 FR-3 HAND
+omega@HEAD	src/turing/ty_model.h	75	src/turing	3	FR-2 FR-3
+omega@HEAD	src/turing/ty_prd.c	160	src/turing	3	FR-1 FR-3 FR-4
+omega@HEAD	src/turing/ty_prd.h	20	src/turing	3	FR-2 FR-3
+omega@HEAD	src/turing/ty_profile.c	52	src/turing	3	FR-3
+omega@HEAD	src/turing/ty_qcont.c	143	src/turing	3	FR-3 FR-4
+omega@HEAD	src/turing/ty_qcont.h	58	src/turing	3	FR-2 FR-4
+omega@HEAD	src/turing/ty_qrecord.c	698	src/turing	3	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/turing/ty_qrecord.h	183	src/turing	3	FR-2 FR-3
+omega@HEAD	src/turing/ty_record.c	449	src/turing	3	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/turing/ty_record.h	121	src/turing	3	FR-2 FR-3
+omega@HEAD	src/visor/rx/visor_world_rx.c	98	src/visor	3	FR-2 FR-3 FR-6
+omega@HEAD	src/visor/visor.c	154	src/visor	3	FR-3
+omega@HEAD	src/visor/visor.h	114	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_console.c	495	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_console.h	135	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_effect_request.c	248	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_effect_request.h	79	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_evidence.c	627	src/visor	3	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/visor/visor_evidence.h	88	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_machine.c	301	src/visor	3	FR-1 FR-2 FR-3 HAND
+omega@HEAD	src/visor/visor_machine.h	97	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_parse_command.c	179	src/visor	3	FR-2 FR-3 HAND
+omega@HEAD	src/visor/visor_parse_command.h	81	src/visor	3	FR-2
+omega@HEAD	src/visor/visor_realization.c	730	src/visor	3	FR-2 FR-3 HAND
+omega@HEAD	src/visor/visor_realization.h	104	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_semantic.c	912	src/visor	3	FR-2 FR-3 HAND
+omega@HEAD	src/visor/visor_semantic.h	186	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_verify.c	509	src/visor	3	FR-2 FR-3 HAND
+omega@HEAD	src/visor/visor_verify.h	80	src/visor	3	FR-2 FR-3
+omega@HEAD	src/visor/visor_world.c	123	src/visor	3	FR-2 FR-3 HAND
+omega@HEAD	src/visor/visor_world.h	95	src/visor	3	FR-2
+omega@HEAD	tests/algebra/bench_mixed_algebra.c	611	src/algebra	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12
+omega@HEAD	tests/algebra/bench_select.c	190	src/algebra	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tests/algebra/ma_digital_v1_gate.c	502	src/algebra	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tests/algebra/test_ma_digital_bottom.c	266	src/algebra	3	FR-3 HAND
+omega@HEAD	tests/algebra/test_oma.c	941	src/algebra	3	FR-3 FR-4 HAND
+omega@HEAD	tests/algebra/test_phase_twin.c	609	src/algebra	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tests/algebra/test_realize.c	334	src/algebra	3	FR-3 FR-4 HAND
+omega@HEAD	tests/bench_rx_argus.c	164	tests/bench	3	FR-2 FR-3 FR-4 FR-8 FR-10 FR-12
+omega@HEAD	tests/brownian/test_brw_tps.c	376	tests/brownian	3	FR-2 FR-3 FR-4
+omega@HEAD	tests/compiler/test_legacy_a64.c	535	src/compiler	1	FR-2 FR-3 FR-5 FR-10 FR-11 HAND
+omega@HEAD	tests/compiler/test_osc_backend.c	1007	src/compiler	1	FR-2 FR-3 FR-4 FR-12 HAND
+omega@HEAD	tests/compiler/test_osc_compiler.c	1885	src/compiler	1	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+omega@HEAD	tests/compiler/test_osc_model.c	313	src/compiler	1	FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega@HEAD	tests/effect/test_effect_cap64.c	688	tests/effect	2	FR-2 FR-3 HAND
+omega@HEAD	tests/estimation/est_ref_info.c	241	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	tests/estimation/est_ref_info.h	35	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	tests/estimation/test_est_kf.c	740	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	tests/estimation/test_est_pred.c	851	src/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	tests/estimation/test_est_ref.c	446	src/estimation	3	FR-2 FR-3 FR-4 HAND
+omega@HEAD	tests/estimation/test_est_types.c	590	src/estimation	3	FR-2 FR-3 FR-4 HAND
+omega@HEAD	tests/estimation/test_est_v4.c	363	src/estimation	3	FR-3 FR-4
+omega@HEAD	tests/fabric/fab_living_phase.h	527	src/fabric	3	FR-2 FR-3 HAND
+omega@HEAD	tests/fabric/fabric_living_test.c	80	src/fabric	3	FR-2 FR-3
+omega@HEAD	tests/fabric/fabric_test.c	667	src/fabric	3	FR-2 FR-3 HAND
+omega@HEAD	tests/fake_m16_native.c	427	tests/fake	3	FR-2 FR-3 FR-5 FR-8
+omega@HEAD	tests/fake_m16_native.h	156	tests/fake	3	FR-2
+omega@HEAD	tests/language/test_language_v0.c	529	src/language	2	FR-1 FR-2 FR-3 FR-10 HAND
+omega@HEAD	tests/model/model_check.c	75	tests/model	3	FR-3
+omega@HEAD	tests/model/world_diff.c	746	tests/model	3	FR-2 FR-3 FR-6 FR-10 FR-12
+omega@HEAD	tests/model/world_explore.c	112	tests/model	3	FR-2 FR-3
+omega@HEAD	tests/model/world_explore.h	19	tests/model	3	FR-2 FR-3
+omega@HEAD	tests/model/world_model.c	300	tests/model	3	FR-3
+omega@HEAD	tests/model/world_model.h	96	tests/model	3	FR-2
+omega@HEAD	tests/numeric_native/m16_native.h	9	tests/numeric_native	2	FR-2 FR-8
+omega@HEAD	tests/numeric_native/other_launcher.c	5	tests/numeric_native	2	FR-3
+omega@HEAD	tests/numeric_oracle.h	416	tests/numeric	3	FR-2 FR-4
+omega@HEAD	tests/path/test_path_identity.c	620	src/path	2	FR-2 FR-3 HAND
+omega@HEAD	tests/polyglot/bench_polyglot.c	1066	src/polyglot	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11 FR-12
+omega@HEAD	tests/polyglot/polyglot_explain.c	521	src/polyglot	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tests/polyglot/test_asm.c	315	src/polyglot	3	FR-2 FR-3 FR-4 FR-5 HAND
+omega@HEAD	tests/polyglot/test_encoder.c	601	src/polyglot	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-10 HAND
+omega@HEAD	tests/polyglot/test_mojo.c	233	src/polyglot	3	FR-3
+omega@HEAD	tests/polyglot/verify_polyglot.c	502	src/polyglot	3	FR-2 FR-3 FR-4 FR-5 FR-8 FR-10 HAND
+omega@HEAD	tests/program/test_program_id.c	653	tests/program	2	FR-2 FR-3 HAND
+omega@HEAD	tests/r16_inventory/fixture/omega/src/legacy_oracle_demo.c	7	tests/r16_inventory	2	
+omega@HEAD	tests/r16_inventory/fixture/omega/src/world.c	27	tests/r16_inventory	2	
+omega@HEAD	tests/r16_inventory/fixture/omega/tools/tool.c	6	tests/r16_inventory	2	FR-10
+omega@HEAD	tests/r16_inventory/fixture/physics/nvrm.c	8	tests/r16_inventory	2	FR-8
+omega@HEAD	tests/realize/test_program_fp32.c	130	tests/realize	3	FR-3 FR-4
+omega@HEAD	tests/realize/test_program_realize.c	526	tests/realize	3	FR-3 HAND
+omega@HEAD	tests/runtime/aien_machine_id_test.c	202	src/runtime	3	FR-1 FR-3 FR-10
+omega@HEAD	tests/runtime/r15_gpu_load.c	133	src/runtime	3	FR-2 FR-3 FR-4 FR-10 FR-12
+omega@HEAD	tests/runtime/r15_measure.c	393	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-6 FR-12
+omega@HEAD	tests/runtime/r15_measure.h	118	src/runtime	3	FR-2 FR-6 FR-8
+omega@HEAD	tests/runtime/rx_action_graph.c	1321	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_branch_reuse.c	843	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_c4_requal.c	928	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_capability_graph.c	547	src/runtime	3	FR-3 HAND
+omega@HEAD	tests/runtime/rx_capability_query.c	1252	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_cog_engines.c	503	src/runtime	3	FR-2 FR-3 FR-4
+omega@HEAD	tests/runtime/rx_cog_engines.h	69	src/runtime	3	FR-2 FR-3 FR-4
+omega@HEAD	tests/runtime/rx_cognitive_routing.c	1072	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_compose_attach_test.c	607	src/runtime	3	FR-2 FR-3 FR-6 HAND
+omega@HEAD	tests/runtime/rx_compose_fixture.h	194	src/runtime	3	FR-2 FR-3
+omega@HEAD	tests/runtime/rx_compose_gpu_skill.h	103	src/runtime	3	FR-2 FR-3
+omega@HEAD	tests/runtime/rx_compose_test.c	626	src/runtime	3	FR-1 FR-2 FR-3 FR-11 HAND
+omega@HEAD	tests/runtime/rx_composition_gate.c	333	src/runtime	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega@HEAD	tests/runtime/rx_cortex_canon.c	394	src/runtime	3	FR-1 FR-2 FR-3 FR-11 HAND
+omega@HEAD	tests/runtime/rx_costmodel_unit.c	436	src/runtime	3	FR-3 FR-4 HAND
+omega@HEAD	tests/runtime/rx_deadline_cancel.c	325	src/runtime	3	FR-2 FR-3 FR-6 FR-12 HAND
+omega@HEAD	tests/runtime/rx_empirical_optimizer.c	1605	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-6 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_heartbeat_test.c	2652	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_jspace_prod.c	909	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-11 HAND
+omega@HEAD	tests/runtime/rx_plan_reuse.c	1335	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r10_omega.c	673	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r11_aien.c	1013	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r12_resident.c	766	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-10 HAND
+omega@HEAD	tests/runtime/rx_r12_silicon.c	1035	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r13_living.c	1861	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r14_recovery.c	2645	src/runtime	3	FR-1 FR-2 FR-3 FR-5 FR-6 FR-8 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r15_g7.c	323	src/runtime	3	FR-2 FR-3 FR-4 FR-6 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r15_instr.c	385	src/runtime	3	FR-2 FR-3 FR-6 FR-11 HAND
+omega@HEAD	tests/runtime/rx_r15_parity.c	224	src/runtime	3	FR-2 FR-3 FR-10
+omega@HEAD	tests/runtime/rx_r15_perf.c	1382	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-8 FR-10
+omega@HEAD	tests/runtime/rx_r15_rig.c	871	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r15_rig.h	159	src/runtime	3	FR-2 FR-3 FR-6
+omega@HEAD	tests/runtime/rx_r16_negative.c	1467	src/runtime	3	FR-2 FR-3 FR-6 HAND
+omega@HEAD	tests/runtime/rx_r7_native.c	687	src/runtime	3	FR-1 FR-2 FR-3 FR-10 FR-11
+omega@HEAD	tests/runtime/rx_r8_aegis.c	710	src/runtime	3	FR-1 FR-2 FR-3 FR-8 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/runtime/rx_r9_barrier.c	880	src/runtime	3	FR-1 FR-2 FR-3 FR-6 FR-8 FR-10 FR-11 HAND
+omega@HEAD	tests/runtime/rx_sem_incremental.c	1514	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_semantic_comm.c	1226	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_skillroute_compose_test.c	497	src/runtime	3	FR-2 FR-3 HAND
+omega@HEAD	tests/runtime/rx_sp_workloads.c	900	src/runtime	3	FR-2 FR-3 HAND
+omega@HEAD	tests/runtime/rx_sp_workloads.h	67	src/runtime	3	FR-2 FR-3
+omega@HEAD	tests/runtime/rx_state_projection.c	1002	src/runtime	3	FR-1 FR-2 FR-3 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_typed_results.c	1548	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-12 HAND
+omega@HEAD	tests/runtime/rx_workflow_fusion.c	1635	src/runtime	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega@HEAD	tests/searchtrace/test_st_corpus.c	181	src/searchtrace	2	FR-3
+omega@HEAD	tests/searchtrace/test_st_holdout.c	381	src/searchtrace	2	FR-1 FR-2 FR-3 FR-10 HAND
+omega@HEAD	tests/searchtrace/test_st_holdout_sig.c	574	src/searchtrace	2	FR-1 FR-2 FR-3 FR-10 HAND
+omega@HEAD	tests/test_numeric_lifecycle.c	97	tests/numeric	3	FR-3 FR-8 FR-11
+omega@HEAD	tests/test_omega_autodiff.c	1030	tests/omega	3	FR-2 FR-3 FR-4 HAND
+omega@HEAD	tests/test_omega_blackwell_engine.c	995	tests/omega	3	FR-2 FR-3
+omega@HEAD	tests/test_omega_c3_ab_gb10.c	290	tests/omega	3	FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+omega@HEAD	tests/test_omega_divsqrt_gb10.c	450	tests/omega	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10
+omega@HEAD	tests/test_omega_genesis.c	102	tests/omega	3	FR-1 FR-3
+omega@HEAD	tests/test_omega_genesis_set.c	212	tests/omega	3	FR-2 FR-3
+omega@HEAD	tests/test_omega_gpu_engine.c	1122	tests/omega	3	FR-2 FR-3
+omega@HEAD	tests/test_omega_gpu_engine_compile.c	166	tests/omega	3	FR-3
+omega@HEAD	tests/test_omega_gpu_engine_gb10.c	168	tests/omega	3	FR-3 FR-10
+omega@HEAD	tests/test_omega_ldst_gb10.c	284	tests/omega	3	FR-1 FR-2 FR-3 FR-10
+omega@HEAD	tests/test_omega_library.c	163	tests/omega	3	FR-2 FR-3 FR-10
+omega@HEAD	tests/test_omega_numeric.c	1447	tests/omega	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11
+omega@HEAD	tests/test_omega_numeric_transc_gb10.c	258	tests/omega	3	FR-2 FR-3 FR-4 FR-6 FR-10
+omega@HEAD	tests/test_omega_program_ir.c	126	tests/omega	3	FR-3 HAND
+omega@HEAD	tests/test_omega_reduce.c	751	tests/omega	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tests/test_omega_resolve.c	1752	tests/omega	3	FR-1 FR-2 FR-3 FR-10 FR-11 HAND
+omega@HEAD	tests/test_omega_tensor.c	1986	tests/omega	3	FR-2 FR-3 FR-4 HAND
+omega@HEAD	tests/test_omega_tensor_gb10.c	711	tests/omega	3	FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tests/test_omega_tensor_store.c	620	tests/omega	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 HAND
+omega@HEAD	tests/test_omega_transc.c	744	tests/omega	3	FR-2 FR-3 FR-4 FR-6 FR-8 FR-10 HAND
+omega@HEAD	tests/test_omega_unwritten_trap.c	77	tests/omega	3	FR-3
+omega@HEAD	tests/test_omega_unwritten_trap_gb10.c	187	tests/omega	3	FR-2 FR-3 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tests/test_omega_vc_bridge.c	123	tests/omega	3	FR-2 FR-3
+omega@HEAD	tests/test_omega_vcstore.c	951	tests/omega	3	FR-1 FR-2 FR-3 FR-10
+omega@HEAD	tests/train/test_train.c	534	src/train	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 HAND
+omega@HEAD	tests/turing/qcont_kat_gen.c	65	src/turing	3	FR-2 FR-4
+omega@HEAD	tests/turing/test_tc.c	572	src/turing	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tests/turing/test_tc_produce.c	116	src/turing	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega@HEAD	tests/turing/test_turing.c	473	src/turing	3	FR-1 FR-3 HAND
+omega@HEAD	tests/turing/test_ty_energy.c	118	src/turing	3	FR-3
+omega@HEAD	tests/turing/test_ty_math.c	622	src/turing	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tests/turing/test_ty_qcont.c	302	src/turing	3	FR-3 FR-4
+omega@HEAD	tests/turing/test_ty_qrecord.c	407	src/turing	3	FR-1 FR-2 FR-3 FR-10 FR-11
+omega@HEAD	tests/turing/ty_energy_fixture.c	31	src/turing	3	FR-10
+omega@HEAD	tests/turing/ty_energy_window.c	348	src/turing	3	FR-1 FR-2 FR-3 FR-6 FR-10 FR-11
+omega@HEAD	tests/turing/ty_workload.c	188	src/turing	3	FR-2 FR-3 FR-6 FR-10
+omega@HEAD	tests/vc_fixture.h	81	tests/vc	2	FR-2 FR-3
+omega@HEAD	tests/visor/test_visor_authority.c	678	src/visor	3	FR-2 FR-3 FR-11 HAND
+omega@HEAD	tests/visor/test_visor_console.c	707	src/visor	3	FR-1 FR-2 FR-3
+omega@HEAD	tests/visor/test_visor_evidence.c	129	src/visor	3	FR-3
+omega@HEAD	tests/visor/test_visor_machine.c	99	src/visor	3	FR-3
+omega@HEAD	tests/visor/test_visor_realization.c	194	src/visor	3	FR-3
+omega@HEAD	tests/visor/test_visor_semantic.c	237	src/visor	3	FR-3
+omega@HEAD	tests/visor/test_visor_verify.c	177	src/visor	3	FR-2 FR-3
+omega@HEAD	tests/visor/test_visor_world.c	170	src/visor	3	FR-2 FR-3
+omega@HEAD	tools/argus_replay.c	106	tools/argus_replay.c	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12
+omega@HEAD	tools/brownian/brw_tps_adapter.c	352	tools/brownian	3	FR-2 FR-3 FR-4
+omega@HEAD	tools/brownian/brw_tps_adapter.h	102	tools/brownian	3	FR-2 FR-3 FR-4
+omega@HEAD	tools/crumbline_learner.c	297	tools/crumbline_learner.c	2	FR-1 FR-2 FR-3 FR-10
+omega@HEAD	tools/estimation/est3c_common.c	975	tools/estimation	3	FR-1 FR-3 FR-4 FR-11 HAND
+omega@HEAD	tools/estimation/est3c_common.h	237	tools/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	tools/estimation/est3c_eval.c	368	tools/estimation	3	FR-1 FR-2 FR-3 FR-10
+omega@HEAD	tools/estimation/est3c_fit.c	255	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tools/estimation/est3c_forensics.c	311	tools/estimation	3	FR-1 FR-2 FR-4
+omega@HEAD	tools/estimation/est4.c	725	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tools/estimation/est_eval.c	727	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tools/estimation/est_fit.c	106	tools/estimation	3	FR-3 FR-4 FR-10
+omega@HEAD	tools/estimation/est_load.c	140	tools/estimation	3	FR-1 FR-2 FR-6 FR-8 FR-10 FR-12
+omega@HEAD	tools/estimation/est_replay.c	591	tools/estimation	3	FR-1 FR-3 FR-4 FR-10
+omega@HEAD	tools/estimation/est_replay.h	169	tools/estimation	3	FR-2 FR-3 FR-4
+omega@HEAD	tools/estimation/test_est3c_tools.c	349	tools/estimation	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tools/estimation/test_est_tools.c	732	tools/estimation	3	FR-1 FR-3 FR-4 FR-10 FR-11
+omega@HEAD	tools/json_canon.c	550	tools/json_canon.c	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tools/omega.c	795	tools/omega.c	2	FR-1 FR-2 FR-3 FR-10
+omega@HEAD	tools/omegatool.c	3970	tools/omegatool.c	1	FR-1 FR-2 FR-3 FR-4 FR-5 FR-10 HAND
+omega@HEAD	tools/quietlock/quietlock.c	940	tools/quietlock	2	FR-1 FR-2 FR-8 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tools/r15_reduce.c	1289	tools/r15_reduce.c	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tools/r16_loop_inventory.c	1109	tools/r16_loop_inventory.c	2	FR-1 FR-2 FR-10 FR-11 HAND
+omega@HEAD	tools/turing_cal_candidates.c	295	tools/turing_cal.c	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tools/turing_cal_dev.h	95	tools/turing_cal.c	3	FR-1 FR-2 FR-3
+omega@HEAD	tools/turing_cal_eval.c	1760	tools/turing_cal.c	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+omega@HEAD	tools/turing_cal_overlap.c	211	tools/turing_cal.c	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega@HEAD	tools/turing_field.c	210	tools/turing_field.c	3	FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tools/turing_verify_indep/src/core.c	275	tools/turing_verify_indep	3	FR-1 FR-2 FR-3 FR-10 HAND
+omega@HEAD	tools/turing_verify_indep/src/core.h	70	tools/turing_verify_indep	3	FR-2
+omega@HEAD	tools/turing_verify_indep/src/main.c	406	tools/turing_verify_indep	3	FR-1 FR-2 FR-3 FR-10
+omega@HEAD	tools/turing_verify_indep/src/selftest.c	90	tools/turing_verify_indep	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+omega@HEAD	tools/turing_verify_indep/src/sha256.c	65	tools/turing_verify_indep	3	FR-1 FR-3
+omega@HEAD	tools/turing_verify_indep/src/sha256.h	12	tools/turing_verify_indep	3	FR-2
+omega@HEAD	tools/turing_yield.c	524	tools/turing_yield.c	3	FR-1 FR-2 FR-3 FR-4 FR-10
+omega@HEAD	tools/ty_energy_reduce.c	925	tools/ty_energy_reduce.c	3	FR-1 FR-2 FR-3 FR-4 FR-10
+aienux	crates/aienos-infer/tests/fixtures/gen/gen.c	19	crates/aienos-infer	4	FR-1 FR-4 FR-10
+aienux	crates/aienos-infer/tests/ref/llama_ref.c	65	crates/aienos-infer	4	FR-1 FR-2 FR-3 FR-4 FR-10
+aienux	native/argus/argus_abi.h	585	native/argus	4	FR-2
+aienux	native/argus/argus_contain.c	385	native/argus	4	FR-2 FR-3 HAND
+aienux	native/argus/argus_contain.h	34	native/argus	4	FR-2 FR-3
+aienux	native/argus/argus_core.c	1120	native/argus	4	FR-2 FR-3
+aienux	native/argus/argus_core.h	22	native/argus	4	FR-3
+aienux	native/argus/argus_detect.c	653	native/argus	4	FR-3
+aienux	native/argus/argus_detect.h	55	native/argus	4	FR-3
+aienux	native/argus/argus_event.c	357	native/argus	4	FR-3
+aienux	native/argus/argus_ring.c	235	native/argus	4	FR-2 FR-3 FR-6
+aienux	native/argus/bridge/argus_aegis_bridge.c	178	native/argus	4	FR-2 FR-3 FR-6
+aienux	native/argus/bridge/argus_aegis_bridge.h	34	native/argus	4	FR-2 FR-3
+aienux	native/argus/sha256.c	149	native/argus	4	FR-3
+aienux	native/argus/sha256.h	22	native/argus	4	FR-2
+aienux	native/argus/tests/bench_argus_contain.c	33	native/argus	4	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12
+aienux	native/argus/tests/bench_argus_ring.c	207	native/argus	4	FR-2 FR-3 FR-4 FR-6 FR-12
+aienux	native/argus/tests/fuzz_argus_event.c	252	native/argus	4	FR-3 FR-10
+aienux	native/argus/tests/stub_lanes_d.c	152	native/argus	4	FR-3
+aienux	native/argus/tests/stub_lanes_d.h	9	native/argus	4	FR-3
+aienux	native/argus/tests/stub_state.c	1302	native/argus	4	FR-2 FR-3
+aienux	native/argus/tests/stub_state.h	103	native/argus	4	FR-2 FR-3
+aienux	native/argus/tests/test_argus_contain.c	346	native/argus	4	FR-3
+aienux	native/argus/tests/test_argus_contain_hostile.c	216	native/argus	4	FR-2 FR-3
+aienux	native/argus/tests/test_argus_containment_e2e.c	82	native/argus	4	FR-3
+aienux	native/argus/tests/test_argus_core.c	1035	native/argus	4	FR-3
+aienux	native/argus/tests/test_argus_detect.c	1280	native/argus	4	FR-3 HAND
+aienux	native/argus/tests/test_argus_determinism.c	668	native/argus	4	FR-2 FR-3 FR-4 FR-12
+aienux	native/argus/tests/test_argus_event.c	875	native/argus	4	FR-1 FR-2 FR-3
+aienux	native/argus/tests/test_argus_hostile.c	1610	native/argus	4	FR-2 FR-3
+aienux	native/argus/tests/test_argus_integration.c	1211	native/argus	4	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 FR-11 FR-12 HAND
+aienux	native/argus/tests/test_argus_ring.c	396	native/argus	4	FR-2 FR-3 FR-6 FR-8 FR-10
+aienux	native/argus/tests/test_common_d.h	37	native/argus	4	FR-3
+aienux	native/boot/diag.h	19	native/boot	4	FR-3 HAND
+aienux	native/boot/diag_main.c	397	native/boot	4	FR-2 FR-3 FR-8 HAND
+aienux	native/boot/diag_x86.c	358	native/boot	4	FR-2 FR-3 FR-8
+aienux	native/boot/efi.h	257	native/boot	4	FR-2
+aienux	native/boot/efi_agentcmd.c	64	native/boot	4	FR-3 FR-8
+aienux	native/boot/efi_artifact.c	68	native/boot	4	FR-3 FR-8
+aienux	native/boot/efi_fact.c	62	native/boot	4	FR-2 FR-3 FR-8
+aienux	native/boot/efi_gop.c	84	native/boot	4	FR-2 FR-3
+aienux	native/boot/efi_klog.c	107	native/boot	4	FR-2 FR-3
+aienux	native/boot/efi_main.c	217	native/boot	4	FR-2 FR-3
+aienux	native/boot/efi_model.c	224	native/boot	4	FR-2 FR-3
+aienux	native/boot/efi_unlock.c	64	native/boot	4	FR-2 FR-3 FR-8
+aienux	native/boot/handoff.h	117	native/boot	4	FR-2
+aienux	native/boot/model_map.h	116	native/boot	4	FR-2
+aienux	native/boot/slot_control.c	23	native/boot	4	FR-2 FR-3
+aienux	native/boot/slot_control.h	18	native/boot	4	FR-2 FR-3
+aienux	native/boot/slot_format.h	284	native/boot	4	FR-2
+aienux	native/boot/slot_loader.c	522	native/boot	4	FR-2 FR-3 HAND
+aienux	native/boot/slot_select.c	480	native/boot	4	FR-2 FR-3
+aienux	native/boot/slot_update.c	148	native/boot	4	FR-2 FR-3
+aienux	native/boot/slot_update.h	63	native/boot	4	FR-2 FR-3
+aienux	native/capability/aienos_capability.c	718	native/capability	4	FR-1 FR-2 FR-3 FR-6 FR-12
+aienux	native/capability/aienos_capability.h	197	native/capability	4	FR-2
+aienux	native/capability/aienos_contain.c	827	native/capability	4	FR-2 FR-3 FR-6
+aienux	native/capability/aienos_contain.h	312	native/capability	4	FR-2 FR-3
+aienux	native/capability/tests/capability_test.c	847	native/capability	4	FR-2 FR-3 FR-6 FR-10
+aienux	native/capability/tests/contain_test.c	859	native/capability	4	FR-2 FR-3
+aienux	native/crypto/aes.c	177	native/crypto	4	FR-3
+aienux	native/crypto/aienos_crypto.h	121	native/crypto	4	FR-2 FR-3
+aienux	native/crypto/crypto_internal.h	14	native/crypto	4	FR-8
+aienux	native/crypto/ct.c	21	native/crypto	4	FR-3 FR-8
+aienux	native/crypto/gcm_siv.c	164	native/crypto	4	FR-3
+aienux	native/crypto/hmac.c	44	native/crypto	4	FR-3
+aienux	native/crypto/polyval.c	84	native/crypto	4	FR-3
+aienux	native/crypto/tests/crypto_test.c	702	native/crypto	4	FR-2 FR-3 HAND
+aienux	native/disk/disk.c	154	native/disk	4	FR-3
+aienux	native/disk/disk.h	91	native/disk	4	FR-2
+aienux	native/disk/disk_file.c	136	native/disk	4	FR-1 FR-2 FR-3
+aienux	native/disk/disk_file.h	33	native/disk	4	FR-2 FR-3
+aienux	native/disk/disk_nvme.c	537	native/disk	4	FR-3 FR-8
+aienux	native/disk/disk_nvme.h	194	native/disk	4	FR-2 FR-3
+aienux	native/disk/disk_sdhci.c	418	native/disk	4	FR-3
+aienux	native/disk/disk_sdhci.h	125	native/disk	4	FR-2 FR-3
+aienux	native/disk/qemu/payload.c	204	native/disk	4	FR-3 FR-8
+aienux	native/disk/qemu/sdhci_payload.c	199	native/disk	4	FR-3 FR-8
+aienux	native/disk/tests/disk_test.c	276	native/disk	4	FR-2 FR-3 FR-10
+aienux	native/disk/tests/nvme_test.c	1045	native/disk	4	FR-2 FR-3 FR-10
+aienux	native/disk/tests/sdhci_test.c	573	native/disk	4	FR-2 FR-3
+aienux	native/kernel/arch/arch.h	65	native/kernel	4	FR-2 FR-8
+aienux	native/kernel/arch/exception.c	102	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/arch/gic.c	190	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/arch/rndr.c	74	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/arch/timer.c	83	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/artifact/admission.c	168	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/artifact/ck_artifact.h	237	native/kernel	4	FR-2
+aienux	native/kernel/artifact/format.c	354	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/artifact/osc_launch.c	172	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/artifact/osc_launch.h	89	native/kernel	4	FR-2
+aienux	native/kernel/artifact/osc_receipt.c	207	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/artifact/osc_receipt.h	92	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/artifact/osc_receipt_anchor.h	23	native/kernel	4	
+aienux	native/kernel/artifact/osc_receipt_test_anchor.h	23	native/kernel	4	
+aienux	native/kernel/artifact/osc_unit.c	526	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/artifact/osc_unit.h	133	native/kernel	4	FR-2
+aienux	native/kernel/artifact/osc_unit_test_anchor.h	14	native/kernel	4	
+aienux	native/kernel/artifact/receipt.c	259	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/acpi.c	707	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/acpi.h	228	native/kernel	4	FR-2
+aienux	native/kernel/core/acpi_dev.c	376	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/acpi_dev.h	69	native/kernel	4	FR-2
+aienux	native/kernel/core/acpi_platform.c	93	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/agent_cmd.c	129	native/kernel	4	FR-2 FR-3 HAND
+aienux	native/kernel/core/agent_cmd.h	50	native/kernel	4	FR-2
+aienux	native/kernel/core/artifact_card.c	100	native/kernel	4	FR-2 FR-3 HAND
+aienux	native/kernel/core/artifact_card.h	57	native/kernel	4	FR-2
+aienux	native/kernel/core/artifact_card_stage.c	69	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/artifact_loader.c	1425	native/kernel	4	FR-2 FR-3 FR-8 HAND
+aienux	native/kernel/core/ck_internal.h	134	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/console.c	207	native/kernel	4	FR-2 FR-3 FR-8 HAND
+aienux	native/kernel/core/context.c	216	native/kernel	4	FR-3
+aienux	native/kernel/core/context.h	174	native/kernel	4	FR-2
+aienux	native/kernel/core/context_proposal.c	135	native/kernel	4	FR-3
+aienux	native/kernel/core/context_proposal.h	67	native/kernel	4	FR-2
+aienux	native/kernel/core/cpufeat.c	47	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/cpufeat.h	30	native/kernel	4	FR-2
+aienux	native/kernel/core/entropy.c	77	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/entropy.h	57	native/kernel	4	FR-2
+aienux	native/kernel/core/fact_req.c	77	native/kernel	4	FR-2 FR-3 HAND
+aienux	native/kernel/core/fact_req.h	58	native/kernel	4	FR-2
+aienux	native/kernel/core/fbcon.c	138	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/fbcon.h	55	native/kernel	4	FR-2 FR-8
+aienux	native/kernel/core/fmt.c	194	native/kernel	4	FR-2 FR-3 HAND
+aienux	native/kernel/core/fmt.h	18	native/kernel	4	FR-2 HAND
+aienux	native/kernel/core/font8x8.h	119	native/kernel	4	
+aienux	native/kernel/core/fpu.c	57	native/kernel	4	FR-3 FR-8
+aienux	native/kernel/core/handoff_check.c	138	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/handoff_check.h	23	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/infer.c	760	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/ipc.c	336	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/ipc.h	143	native/kernel	4	FR-2
+aienux	native/kernel/core/klog.c	47	native/kernel	4	FR-3
+aienux	native/kernel/core/klog.h	26	native/kernel	4	
+aienux	native/kernel/core/klog_boot.h	17	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/klog_slot.c	93	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/klog_slot.h	69	native/kernel	4	FR-2
+aienux	native/kernel/core/kmain.c	365	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/libc_min.c	57	native/kernel	4	
+aienux	native/kernel/core/lifecycle.c	973	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/lifecycle_fsm.c	319	native/kernel	4	FR-3
+aienux	native/kernel/core/lifecycle_fsm.h	125	native/kernel	4	FR-2
+aienux	native/kernel/core/line_rx.c	91	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/line_rx.h	62	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/m3.c	633	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/osc_admit.c	504	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/osc_admit.h	36	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/osc_task.c	367	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/osc_task.h	66	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/osh_fixtures.h	1212	native/kernel	4	FR-2
+aienux	native/kernel/core/osh_op.c	356	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/osh_op.h	123	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/osh_test.c	727	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/core/pi5.c	255	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/pi5_marker.c	141	native/kernel	4	FR-3
+aienux	native/kernel/core/pi5_marker.h	54	native/kernel	4	FR-3
+aienux	native/kernel/core/reply_obj.h	60	native/kernel	4	
+aienux	native/kernel/core/report.c	115	native/kernel	4	FR-3 FR-8 HAND
+aienux	native/kernel/core/sched.c	191	native/kernel	4	FR-2 FR-3 HAND
+aienux	native/kernel/core/sched.h	61	native/kernel	4	FR-2
+aienux	native/kernel/core/smmu.c	455	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/smmu.h	187	native/kernel	4	FR-2
+aienux	native/kernel/core/smmu_svc.c	455	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/core/smp.c	241	native/kernel	4	FR-2 FR-3 FR-6 FR-8
+aienux	native/kernel/core/uart_rx.h	161	native/kernel	4	FR-2 FR-8
+aienux	native/kernel/core/unlock_req.c	81	native/kernel	4	FR-2 FR-3 FR-8 HAND
+aienux	native/kernel/core/unlock_req.h	60	native/kernel	4	FR-2
+aienux	native/kernel/dev/devices.c	183	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/dev/devices.h	21	native/kernel	4	FR-3
+aienux	native/kernel/dev/disk_layout.h	21	native/kernel	4	
+aienux	native/kernel/dev/disk_part.c	275	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/dev/disk_part.h	106	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/dev/dma_window.c	197	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/dma_window.h	97	native/kernel	4	FR-2
+aienux	native/kernel/dev/mmio_window.c	199	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/mmio_window.h	126	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/net_bind.c	414	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/net_bind.h	58	native/kernel	4	FR-3
+aienux	native/kernel/dev/net_udp.c	123	native/kernel	4	FR-3
+aienux	native/kernel/dev/net_udp.h	54	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/dev/nvme_bind.c	327	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/nvme_bind.h	62	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/nvme_shutdown.c	87	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/dev/nvme_shutdown.h	62	native/kernel	4	FR-2
+aienux	native/kernel/dev/pci.c	677	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/pci.h	216	native/kernel	4	FR-2 FR-8
+aienux	native/kernel/dev/pi5_gem.c	1052	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/pi5_gem.h	288	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/pi5_net.c	914	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/pi5_net.h	270	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/dev/pi5_pcie.c	413	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/pi5_pcie.h	179	native/kernel	4	FR-2
+aienux	native/kernel/dev/pi5_rng.c	116	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/pi5_rng.h	72	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/dev/pi5_wdt.c	33	native/kernel	4	FR-3 FR-8
+aienux	native/kernel/dev/pi5_wdt.h	42	native/kernel	4	
+aienux	native/kernel/dev/tests/disk_part_test.c	355	native/kernel	4	FR-1 FR-2 FR-3
+aienux	native/kernel/dev/tests/pi5_agent_test.c	376	native/kernel	4	FR-1 FR-2 FR-3
+aienux	native/kernel/dev/tests/pi5_fact_test.c	240	native/kernel	4	FR-1 FR-2 FR-3
+aienux	native/kernel/dev/tests/pi5_store_test.c	215	native/kernel	4	FR-1 FR-3
+aienux	native/kernel/dev/tests/pi5_unlock_test.c	320	native/kernel	4	FR-1 FR-2 FR-3
+aienux	native/kernel/dev/usb_hid.c	279	native/kernel	4	FR-3 HAND
+aienux	native/kernel/dev/usb_hid.h	128	native/kernel	4	FR-2 HAND
+aienux	native/kernel/dev/usb_kbd.c	741	native/kernel	4	FR-2 FR-3 FR-8 HAND
+aienux	native/kernel/dev/usb_kbd.h	81	native/kernel	4	FR-8
+aienux	native/kernel/dev/virtio_net.c	38	native/kernel	4	FR-3
+aienux	native/kernel/dev/virtio_net.h	12	native/kernel	4	FR-3
+aienux	native/kernel/dev/xhci_acpi_fmt.h	32	native/kernel	4	
+aienux	native/kernel/dev/xhci_fence.c	426	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/dev/xhci_fence.h	90	native/kernel	4	FR-3
+aienux	native/kernel/include/ck.h	298	native/kernel	4	FR-2 FR-8 HAND
+aienux	native/kernel/mm/frames.c	151	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/mm/frames.h	48	native/kernel	4	FR-2
+aienux	native/kernel/mm/heap.c	113	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/mm/heap.h	24	native/kernel	4	FR-2
+aienux	native/kernel/mm/mmu.c	511	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/mm/pt.c	178	native/kernel	4	FR-2 FR-3 HAND
+aienux	native/kernel/mm/pt.h	55	native/kernel	4	FR-2
+aienux	native/kernel/svc/artifact_store.c	401	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/artifact_store.h	101	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/ck_compat.c	112	native/kernel	4	FR-2 FR-3 FR-6
+aienux	native/kernel/svc/ck_compat.h	8	native/kernel	4	
+aienux	native/kernel/svc/compat/pthread.h	29	native/kernel	4	FR-2 FR-6 FR-8
+aienux	native/kernel/svc/compat/stdio.h	16	native/kernel	4	FR-1 FR-2 HAND
+aienux	native/kernel/svc/compat/stdlib.h	11	native/kernel	4	
+aienux	native/kernel/svc/compat/string.h	12	native/kernel	4	
+aienux	native/kernel/svc/compat/time.h	12	native/kernel	4	FR-2 FR-12
+aienux	native/kernel/svc/continuity_boot.c	615	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/svc/continuity_boot.h	44	native/kernel	4	FR-3
+aienux	native/kernel/svc/continuity_codec.c	675	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_codec.h	174	native/kernel	4	FR-2
+aienux	native/kernel/svc/continuity_commit.c	390	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_commit.h	100	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_recovery.c	318	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_recovery.h	156	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_resolve.c	365	native/kernel	4	FR-2 FR-3 HAND
+aienux	native/kernel/svc/continuity_resolve.h	144	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_resolve_sealed.c	89	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_resolve_sealed.h	26	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_service.c	223	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_service.h	59	native/kernel	4	FR-3
+aienux	native/kernel/svc/continuity_subject.c	622	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_subject.h	167	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_subject_provision.c	154	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/continuity_subject_provision.h	53	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/cortex_config.h	14	native/kernel	4	
+aienux	native/kernel/svc/cortex_journal.c	192	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/cortex_journal.h	71	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/cortex_store.c	9	native/kernel	4	FR-3
+aienux	native/kernel/svc/pi5_agent.c	313	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/pi5_agent.h	53	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/pi5_fact.c	139	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/pi5_fact.h	32	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/security.c	305	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/svc/security.h	41	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/slot_service.c	318	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/svc/slot_service.h	38	native/kernel	4	
+aienux	native/kernel/svc/slot_service_pi5.c	30	native/kernel	4	FR-3
+aienux	native/kernel/svc/store_boot.c	1041	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/svc/store_boot.h	180	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/svc/store_crash.c	248	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/svc/store_crash.h	44	native/kernel	4	FR-3
+aienux	native/kernel/svc/tests/ck_host.c	264	native/kernel	4	FR-2 FR-3 FR-6 FR-8 FR-12 HAND
+aienux	native/kernel/svc/tests/ck_host.h	18	native/kernel	4	
+aienux	native/kernel/svc/tests/stage_test.c	2634	native/kernel	4	FR-1 FR-2 FR-3 FR-5 FR-8 FR-11 HAND
+aienux	native/kernel/tests/ck_test.h	28	native/kernel	4	
+aienux	native/kernel/tests/fixtures/osc_unit/launch/osc-launch-check.c	56	native/kernel	4	FR-10
+aienux	native/kernel/tests/fixtures/osh/osh_layout.h	98	native/kernel	4	
+aienux	native/kernel/tests/test_acpi.c	238	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_acpi_dev.c	399	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_agent_cmd.c	94	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_artifact.c	173	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_artifact_card.c	151	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_console_rx.c	259	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/tests/test_context.c	293	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_continuity_codec.c	866	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tests/test_continuity_commit.c	786	native/kernel	4	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+aienux	native/kernel/tests/test_continuity_geometry.c	339	native/kernel	4	FR-1 FR-2 FR-3 HAND
+aienux	native/kernel/tests/test_continuity_recovery.c	634	native/kernel	4	FR-1 FR-2 FR-3 HAND
+aienux	native/kernel/tests/test_continuity_resolve.c	881	native/kernel	4	FR-1 FR-2 FR-3 FR-10 HAND
+aienux	native/kernel/tests/test_continuity_subject.c	755	native/kernel	4	FR-2 FR-3 FR-10 HAND
+aienux	native/kernel/tests/test_continuity_subject_provision.c	479	native/kernel	4	FR-1 FR-2 FR-3 HAND
+aienux	native/kernel/tests/test_cpufeat.c	58	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_dma_window.c	241	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_entropy.c	167	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_fbcon.c	96	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_fmt.c	42	native/kernel	4	FR-3 FR-8 HAND
+aienux	native/kernel/tests/test_frames.c	81	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_handoff.c	270	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_heap.c	42	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_imac_report.c	113	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tests/test_ipc.c	195	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_klog.c	54	native/kernel	4	FR-3
+aienux	native/kernel/tests/test_klog_slot.c	83	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_lifecycle.c	222	native/kernel	4	FR-3
+aienux	native/kernel/tests/test_osc_admit.c	33	native/kernel	4	FR-3 HAND
+aienux	native/kernel/tests/test_osc_launch.c	351	native/kernel	4	FR-1 FR-2 FR-3 FR-11
+aienux	native/kernel/tests/test_osc_receipt.c	621	native/kernel	4	FR-1 FR-2 FR-3 HAND
+aienux	native/kernel/tests/test_osc_unit.c	297	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tests/test_osh_op.c	328	native/kernel	4	FR-2 FR-3 FR-10
+aienux	native/kernel/tests/test_pi5.c	18	native/kernel	4	FR-3
+aienux	native/kernel/tests/test_pi5_gem.c	745	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_pi5_marker.c	166	native/kernel	4	FR-1 FR-2 FR-3
+aienux	native/kernel/tests/test_pi5_net.c	699	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_pi5_pcie.c	352	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_pi5_rng.c	183	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_pt.c	172	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_sched.c	107	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_smmu.c	752	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tests/test_unlock_req.c	86	native/kernel	4	FR-2 FR-3
+aienux	native/kernel/tools/ck_acpi_scan.c	332	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tools/ck_artifact_tool.c	767	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tools/ck_cont_tool.c	413	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tools/ck_cortex_image.c	181	native/kernel	4	FR-3 FR-10
+aienux	native/kernel/tools/ck_fb_check.c	272	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tools/ck_gpt_image.c	240	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tools/ck_gsp_bindata_extract.c	1139	native/kernel	4	FR-1 FR-2 FR-3 FR-10 HAND
+aienux	native/kernel/tools/ck_gsp_boot_args_encode.c	810	native/kernel	4	FR-1 FR-2 FR-10 HAND
+aienux	native/kernel/tools/ck_gsp_cot_encode.c	617	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tools/ck_gsp_fw_inspect.c	365	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tools/ck_gsp_rpc_encode.c	594	native/kernel	4	FR-1 FR-2 FR-10
+aienux	native/kernel/tools/ck_imac_report_listen.c	178	native/kernel	4	FR-1 FR-2 FR-4 FR-10 FR-12
+aienux	native/kernel/tools/ck_manifest_sig.c	156	native/kernel	4	FR-1 FR-3 FR-10
+aienux	native/kernel/tools/ck_model_map.c	300	native/kernel	4	FR-1 FR-2 FR-3 FR-5 FR-10
+aienux	native/kernel/tools/ck_owner_gen.c	163	native/kernel	4	FR-1 FR-2 FR-10
+aienux	native/kernel/tools/ck_pi5_store_locate.c	35	native/kernel	4	FR-3 FR-10
+aienux	native/kernel/tools/ck_slot_tool.c	1795	native/kernel	4	FR-1 FR-2 FR-3 FR-10 HAND
+aienux	native/kernel/tools/ck_store_image.c	259	native/kernel	4	FR-1 FR-2 FR-3 FR-10
+aienux	native/kernel/tools/ck_udp_echo.c	108	native/kernel	4	FR-1 FR-2 FR-4 FR-10 FR-12
+aienux	native/kernel/tools/ck_uefi_vars.c	394	native/kernel	4	FR-1 FR-2 FR-10
+aienux	native/kernel/tools/gpt_write.c	156	native/kernel	4	FR-1 FR-3
+aienux	native/kernel/tools/gpt_write.h	49	native/kernel	4	FR-2
+aienux	native/kernel/tools/pi5_store_locate.c	71	native/kernel	4	FR-3
+aienux	native/kernel/tools/pi5_store_locate.h	29	native/kernel	4	FR-2
+aienux	native/kernel/x86/ahci_x86.c	319	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/x86/console_x86.c	126	native/kernel	4	FR-2 FR-3 FR-8 HAND
+aienux	native/kernel/x86/efi_x86.c	93	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/x86/kmain_x86.c	880	native/kernel	4	FR-2 FR-3 FR-6 FR-8 HAND
+aienux	native/kernel/x86/pci_x86.c	307	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/x86/report_x86.c	144	native/kernel	4	FR-3
+aienux	native/kernel/x86/report_x86.h	20	native/kernel	4	
+aienux	native/kernel/x86/tg3_x86.c	687	native/kernel	4	FR-2 FR-3 FR-8
+aienux	native/kernel/x86/x86.h	123	native/kernel	4	FR-2 FR-8
+aienux	native/m5/m5.h	372	native/m5	4	FR-2
+aienux	native/m5/m5_envelope.c	196	native/m5	4	FR-3
+aienux	native/m5/m5_internal.h	45	native/m5	4	FR-3
+aienux	native/m5/m5_keys.c	312	native/m5	4	FR-3
+aienux	native/m5/m5_owner_sig.c	192	native/m5	4	FR-3
+aienux	native/m5/m5_state.c	273	native/m5	4	FR-3
+aienux	native/m5/tests/m5_migsig_test.c	407	native/m5	4	FR-2 FR-3
+aienux	native/m5/tests/m5_test.c	1098	native/m5	4	FR-2 FR-3
+aienux	native/m5/tools/m5_migsig.c	324	native/m5	4	FR-1 FR-2 FR-3 FR-8 FR-10
+aienux	native/net/aienos_ctl.c	242	native/net	4	FR-3
+aienux	native/net/aienos_ctl.h	111	native/net	4	FR-2
+aienux	native/net/aienos_net.c	268	native/net	4	FR-3
+aienux	native/net/aienos_net.h	129	native/net	4	FR-2
+aienux	native/net/aienos_sec.c	575	native/net	4	FR-3
+aienux	native/net/aienos_sec.h	179	native/net	4	FR-2
+aienux	native/net/aienos_virtio_net.c	345	native/net	4	FR-3 FR-6 FR-8
+aienux	native/net/aienos_virtio_net.h	164	native/net	4	FR-2 FR-3
+aienux	native/net/aienos_virtio_pci.c	96	native/net	4	FR-3
+aienux	native/net/aienos_virtio_pci.h	42	native/net	4	FR-2
+aienux	native/net/tests/ctl_test.c	421	native/net	4	FR-2 FR-3
+aienux	native/net/tests/net_diff.c	200	native/net	4	FR-1 FR-3 FR-10
+aienux	native/net/tests/net_test.c	361	native/net	4	FR-3 FR-10
+aienux	native/net/tests/sec_test.c	940	native/net	4	FR-2 FR-3
+aienux	native/net/tests/vnet_test.c	600	native/net	4	FR-1 FR-2 FR-3 FR-6
+aienux	native/net/tests/x25519_test.c	130	native/net	4	FR-3 FR-10 HAND
+aienux	native/net/x25519.c	158	native/net	4	FR-2 FR-3 FR-8
+aienux	native/net/x25519.h	30	native/net	4	
+aienux	native/sig/aienos_sig.h	54	native/sig	4	FR-2
+aienux	native/sig/ct.c	21	native/sig	4	FR-3 FR-8
+aienux	native/sig/ed25519.c	575	native/sig	4	FR-2 FR-3
+aienux	native/sig/sha512.c	143	native/sig	4	FR-3
+aienux	native/sig/sig_internal.h	27	native/sig	4	FR-8
+aienux	native/sig/tests/rfc8032_vectors.h	34	native/sig	4	FR-2
+aienux	native/sig/tests/sig_test.c	517	native/sig	4	FR-2 FR-3 HAND
+aienux	native/store/store_disk.c	65	native/store	4	FR-3
+aienux	native/store/store_engine.c	614	native/store	4	FR-2 FR-3
+aienux	native/store/store_engine.h	166	native/store	4	FR-2 FR-3
+aienux	native/store/store_mem.c	40	native/store	4	
+aienux	native/store/store_sealed.c	673	native/store	4	FR-3
+aienux	native/store/store_sealed.h	187	native/store	4	FR-2 FR-3
+aienux	native/store/store_v1.c	749	native/store	4	FR-3 FR-8
+aienux	native/store/store_v1.h	196	native/store	4	FR-2 FR-3
+aienux	native/store/tests/store_engine_test.c	837	native/store	4	FR-3 FR-10
+aienux	native/store/tests/store_powercut_test.c	205	native/store	4	FR-3 FR-10
+aienux	native/store/tests/store_rig.h	77	native/store	4	FR-1 FR-2 FR-3
+aienux	native/store/tests/store_sealed_test.c	1103	native/store	4	FR-2 FR-3 FR-10
+aienux	native/store/tests/store_test_util.h	114	native/store	4	FR-2 FR-3 HAND
+aienux	native/store/tests/store_v1_test.c	846	native/store	4	FR-2 FR-3 FR-10
+aienux	native/store/tests/store_xcheck.c	174	native/store	4	FR-1 FR-3 FR-10 HAND
+aienux	native/store/tests/torn_slot_test.c	757	native/store	4	FR-2 FR-3 FR-10
+aienux	native/store/torn_slot.c	262	native/store	4	FR-3
+aienux	native/store/torn_slot.h	117	native/store	4	FR-2
+CUDApp	examples/hello_gpu/hello_gpu.c	176	examples/hello_gpu	3	FR-2 FR-3 FR-4 HAND
+CUDApp	m16/m16_concurrent.c	263	m16	3	FR-3 FR-5 FR-8
+CUDApp	m16/m16_gpu_wait.c	162	m16	3	FR-2 FR-3 FR-6 FR-8 FR-12
+CUDApp	m16/m16_gpu_wait.h	118	m16	3	FR-2 FR-8
+CUDApp	m16/m16_native.c	114	m16	3	FR-2 FR-3 FR-5 FR-8 FR-12
+CUDApp	m16/m16_native.h	55	m16	3	FR-2 FR-3 FR-8
+CUDApp	m16/m16_requalify.c	133	m16	3	FR-1 FR-3 FR-5 FR-8 FR-10
+CUDApp	nvrm/lifecycle_gates.c	390	nvrm	3	FR-2 FR-3 FR-4 FR-5 FR-8 FR-12
+CUDApp	nvrm/nvrm.c	908	nvrm	3	FR-1 FR-3 FR-5 FR-6 FR-8 HAND
+CUDApp	nvrm/nvrm.h	143	nvrm	3	FR-2 FR-5 FR-8
+CUDApp	nvrm/submission_visibility_gates.c	78	nvrm	3	FR-3 FR-5 FR-8 HAND
+CUDApp	src/omega_blackwell_codegen.c	2540	src/omega_blackwell	3	FR-2 FR-3 FR-4 HAND
+CUDApp	src/omega_blackwell_codegen.h	334	src/omega_blackwell	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_blackwell_codegen_attn.c	550	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_attn.h	91	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_bf16.c	263	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_bf16.h	68	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_dec.c	369	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_dec.h	83	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_gemm.c	344	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_gemm.h	69	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_moe.c	329	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_moe.h	108	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_moe2.c	343	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_moe2.h	58	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_codegen_pattn.c	559	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_pattn.h	84	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_pf.c	23	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_codegen_pf.h	23	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_codegen_pfhost.c	146	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_codegen_pfhost.h	49	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_qg.c	271	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_codegen_qg.h	69	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_qmma.c	138	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_codegen_qmma.h	50	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_codegen_router.c	406	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_router.h	84	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_tc.c	342	src/omega_blackwell	3	FR-3 FR-4
+CUDApp	src/omega_blackwell_codegen_tc.h	104	src/omega_blackwell	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_blackwell_codegen_tc2.c	230	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_codegen_tc2.h	58	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_tern.c	421	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_codegen_tern.h	109	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_encoder.c	111	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_encoder.h	28	src/omega_blackwell	3	FR-2
+CUDApp	src/omega_blackwell_engine.c	664	src/omega_blackwell	3	FR-2 FR-3 FR-5 FR-6 FR-8 FR-12
+CUDApp	src/omega_blackwell_engine.h	56	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_matmul.c	190	src/omega_blackwell	3	FR-3 FR-4
+CUDApp	src/omega_blackwell_matmul.h	83	src/omega_blackwell	3	FR-2 FR-4 HAND
+CUDApp	src/omega_blackwell_qmd.c	238	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_qmd.h	69	src/omega_blackwell	3	FR-2
+CUDApp	src/omega_blackwell_realize.c	53	src/omega_blackwell	3	FR-3
+CUDApp	src/omega_blackwell_realize.h	36	src/omega_blackwell	3	FR-2 FR-3
+CUDApp	src/omega_blackwell_submit.c	725	src/omega_blackwell	3	FR-1 FR-2 FR-3 FR-4 FR-5 FR-8 FR-11 FR-12
+CUDApp	src/omega_blackwell_submit.h	96	src/omega_blackwell	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_bw_em.h	146	src/omega_bw	3	FR-2 FR-3
+CUDApp	src/omega_bw_em_q.h	19	src/omega_bw	3	FR-3
+CUDApp	src/omega_bw_reconv.h	84	src/omega_bw	3	FR-2 FR-3
+CUDApp	src/omega_canonical.c	209	src/omega_canonical	3	FR-3
+CUDApp	src/omega_canonical.h	21	src/omega_canonical	3	FR-3
+CUDApp	src/omega_core.c	458	src/omega_core	3	FR-3
+CUDApp	src/omega_core.h	67	src/omega_core	3	FR-3
+CUDApp	src/omega_gpu_attention_api.c	1437	src/omega_gpu	3	FR-2 FR-3 FR-4 HAND
+CUDApp	src/omega_gpu_attention_api.h	291	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_bf16_gemv_api.c	276	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_bf16_gemv_api.h	93	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_cmdlist.c	370	src/omega_gpu	3	FR-2 FR-3 FR-6 FR-8
+CUDApp	src/omega_gpu_cmdlist.h	112	src/omega_gpu	3	FR-2 FR-3
+CUDApp	src/omega_gpu_code_alloc.h	37	src/omega_gpu	3	
+CUDApp	src/omega_gpu_decode_attn_api.c	280	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_decode_attn_api.h	109	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_decode_graph.c	413	src/omega_gpu	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	src/omega_gpu_decode_graph.h	189	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_elementwise_api.c	1140	src/omega_gpu	3	FR-2 FR-3 FR-4 FR-8 FR-12
+CUDApp	src/omega_gpu_elementwise_api.h	184	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_engine.c	465	src/omega_gpu	3	FR-2 FR-3 FR-6 FR-12
+CUDApp	src/omega_gpu_engine.h	259	src/omega_gpu	3	FR-2
+CUDApp	src/omega_gpu_fmt.c	66	src/omega_gpu	3	FR-2 FR-3 HAND
+CUDApp	src/omega_gpu_fmt.h	11	src/omega_gpu	3	HAND
+CUDApp	src/omega_gpu_fp8_api.c	417	src/omega_gpu	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	src/omega_gpu_fp8_api.h	183	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_fp8_pack.c	75	src/omega_gpu	3	FR-3 FR-4
+CUDApp	src/omega_gpu_fp8gemm_api.c	257	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_fp8gemm_api.h	88	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_hostmath.c	83	src/omega_gpu	3	FR-3 FR-4
+CUDApp	src/omega_gpu_hostmath.h	21	src/omega_gpu	3	FR-4
+CUDApp	src/omega_gpu_matmul_api.c	641	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_matmul_api.h	223	src/omega_gpu	3	FR-2 FR-4
+CUDApp	src/omega_gpu_mem_cached.c	25	src/omega_gpu	3	FR-3
+CUDApp	src/omega_gpu_mem_cached.h	23	src/omega_gpu	3	FR-3
+CUDApp	src/omega_gpu_moe_api.c	425	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_moe_api.h	117	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_pfgemm.c	201	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_pfhost.c	60	src/omega_gpu	3	FR-3 FR-4
+CUDApp	src/omega_gpu_pfhost.h	38	src/omega_gpu	3	FR-3 FR-4
+CUDApp	src/omega_gpu_platform.c	193	src/omega_gpu	3	FR-3
+CUDApp	src/omega_gpu_platform.h	250	src/omega_gpu	3	FR-2
+CUDApp	src/omega_gpu_platform_linux.c	384	src/omega_gpu	3	FR-2 FR-3 FR-5 FR-6 FR-8 FR-12 HAND
+CUDApp	src/omega_gpu_platform_linux.h	41	src/omega_gpu	3	FR-3
+CUDApp	src/omega_gpu_prefill.c	169	src/omega_gpu	3	FR-2 FR-3
+CUDApp	src/omega_gpu_prefill.h	102	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_prefill_attn_api.c	396	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_prefill_attn_api.h	79	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_router_api.c	277	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_router_api.h	90	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_serving.c	26	src/omega_gpu	3	FR-3
+CUDApp	src/omega_gpu_serving.h	49	src/omega_gpu	3	FR-2
+CUDApp	src/omega_gpu_session.c	544	src/omega_gpu	3	FR-3 FR-6 FR-8
+CUDApp	src/omega_gpu_session.h	258	src/omega_gpu	3	FR-2 FR-3
+CUDApp	src/omega_gpu_tcgemm_api.c	189	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_tcgemm_api.h	53	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_tern_api.c	349	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_tern_api.h	106	src/omega_gpu	3	FR-2 FR-3 FR-4
+CUDApp	src/omega_gpu_wait.c	156	src/omega_gpu	3	FR-2 FR-3 FR-6 FR-8 FR-12
+CUDApp	src/omega_gpu_wait.h	101	src/omega_gpu	3	FR-2 FR-8
+CUDApp	src/omega_runtime_api.h	17	src/omega_runtime	3	
+CUDApp	src/omega_types.h	204	src/omega_types	3	FR-2
+CUDApp	src/omega_vector.c	97	src/omega_vector	3	FR-3
+CUDApp	src/omega_vector.h	38	src/omega_vector	3	FR-2 FR-3
+CUDApp	src/sha256.c	148	src/sha256	3	FR-3
+CUDApp	src/sha256.h	21	src/sha256	3	FR-2
+CUDApp	tests/bw_hmma_model.h	58	tests/bw	3	FR-2 FR-4
+CUDApp	tests/bw_qmma_model.h	67	tests/bw	3	FR-2 FR-4
+CUDApp	tests/bw_warp_sim.h	319	tests/bw	3	FR-2 FR-3 FR-4
+CUDApp	tests/bw_warp_sim_k.h	330	tests/bw	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/bw_warp_sim_pa.h	371	tests/bw	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/bw_warp_sim_tc.h	402	tests/bw	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/fake_m16_native.c	459	tests/fake	3	FR-2 FR-3 FR-5 FR-8
+CUDApp	tests/fake_m16_native.h	168	tests/fake	3	FR-2
+CUDApp	tests/gpu_attention_test.c	1201	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+CUDApp	tests/gpu_bf16_gemv_test.c	280	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+CUDApp	tests/gpu_cmdlist_test.c	465	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+CUDApp	tests/gpu_decode_attn_test.c	457	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+CUDApp	tests/gpu_decode_graph_test.c	356	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+CUDApp	tests/gpu_elementwise_test.c	388	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+CUDApp	tests/gpu_fp8_api_test.c	599	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-11 FR-12 HAND
+CUDApp	tests/gpu_fp8gemm_test.c	346	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+CUDApp	tests/gpu_gpr_boundary_test.c	86	tests/gpu	3	FR-2 FR-3 HAND
+CUDApp	tests/gpu_l2_reuse_test.c	121	tests/gpu	3	FR-1 FR-3 FR-4 FR-10 HAND
+CUDApp	tests/gpu_l2_stale_test.c	107	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/gpu_launch_cost_test.c	155	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+CUDApp	tests/gpu_lmhead_fp8_study.c	119	tests/gpu	3	FR-1 FR-3 FR-4 FR-10
+CUDApp	tests/gpu_matmul_api_test.c	693	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+CUDApp	tests/gpu_matmul_r4_receipt.c	378	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-6 FR-10 HAND
+CUDApp	tests/gpu_moe_window_test.c	284	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-12 HAND
+CUDApp	tests/gpu_pf_mem_test.c	107	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/gpu_pfgemm_test.c	328	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/gpu_pfhost_test.c	279	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/gpu_prefill_attn_test.c	655	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+CUDApp	tests/gpu_qgemm_test.c	439	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/gpu_qmma_probe_test.c	288	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+CUDApp	tests/gpu_reconv_test.c	473	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 HAND
+CUDApp	tests/gpu_router_test.c	361	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-8 FR-10 FR-12 HAND
+CUDApp	tests/gpu_serving_alloc_count_test.c	673	tests/gpu	3	FR-2 FR-3 FR-4 FR-5 FR-10 HAND
+CUDApp	tests/gpu_session_probe.c	57	tests/gpu	3	FR-2 FR-3 FR-4 FR-10 FR-12
+CUDApp	tests/gpu_tc_peak_test.c	100	tests/gpu	3	FR-2 FR-3 FR-4 FR-10
+CUDApp	tests/gpu_tc_probe_test.c	201	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+CUDApp	tests/gpu_tcgemm_test.c	324	tests/gpu	3	FR-1 FR-2 FR-3 FR-4 FR-10 HAND
+CUDApp	tests/test_m16_gpu_wait.c	318	tests/m16	3	FR-2 FR-3 FR-8 HAND
+CUDApp	tests/test_omega_blackwell_engine.c	996	tests/omega	3	FR-2 FR-3
+CUDApp	tests/test_omega_codegen_freestanding.c	215	tests/omega	3	FR-2 FR-3 FR-4 FR-10 HAND
+CUDApp	tests/test_omega_gpu_code_alloc.c	32	tests/omega	3	FR-3 HAND
+CUDApp	tests/test_omega_gpu_engine.c	1156	tests/omega	3	FR-2 FR-3
+CUDApp	tests/test_omega_gpu_engine_compile.c	167	tests/omega	3	FR-3
+CUDApp	tests/test_omega_gpu_engine_gb10.c	169	tests/omega	3	FR-3 FR-10
+CUDApp	tests/test_omega_gpu_platform.c	318	tests/omega	3	FR-3
+CUDApp	tests/test_omega_gpu_platform_linux.c	270	tests/omega	3	FR-2 FR-3 FR-5 FR-11
+CUDApp	tests/test_omega_gpu_session_platform.c	518	tests/omega	3	FR-2 FR-3 FR-4 FR-8 FR-11
+CUDApp	tests/test_omega_gpu_wait.c	304	tests/omega	3	FR-2 FR-3 FR-8 HAND
+physics	forge/analog-sim/forge_analog_sim.c	518	forge/analog-sim	4	FR-3
+physics	forge/analog-sim/forge_analog_sim.h	170	forge/analog-sim	4	FR-2 FR-3
+physics	forge/forge_descriptor.c	517	forge	4	FR-1 FR-3 FR-5
+physics	forge/forge_descriptor.h	146	forge	4	FR-2
+physics	forge/forge_realize.c	320	forge	4	FR-2 FR-3 FR-5 FR-8 FR-12
+physics	forge/forge_realize.h	34	forge	4	FR-3
+physics	forge/forge_types.h	92	forge	4	FR-2 FR-3
+physics	forge/form/forge_form.c	622	forge/form	4	FR-2 FR-3
+physics	forge/form/forge_form.h	235	forge/form	4	FR-2 FR-3
+physics	forge/v2/forge_sha256.h	19	forge/v2	4	
+physics	forge/v2/forge_substrate_v2.c	791	forge/v2	4	FR-2 FR-3
+physics	forge/v2/forge_substrate_v2.h	471	forge/v2	4	FR-2
+physics	m15/physics_accel.c	457	m15	4	FR-3 FR-6
+physics	m15/physics_accel.h	255	m15	4	FR-2
+physics	m15/physics_accel_native.c	286	m15	4	FR-1 FR-3 FR-6
+physics	m15/physics_accel_native.h	126	m15	4	FR-2 FR-3
+physics	m15/tools/m15tool.c	701	m15/tools	4	FR-1 FR-3 FR-10 FR-12
+physics	m16/m16_concurrent.c	262	m16	4	FR-3 FR-5 FR-8
+physics	m16/m16_gpu_wait.c	161	m16	4	FR-2 FR-3 FR-6 FR-8 FR-12
+physics	m16/m16_gpu_wait.h	117	m16	4	FR-2 FR-8
+physics	m16/m16_native.c	113	m16	4	FR-2 FR-3 FR-5 FR-8 FR-12
+physics	m16/m16_native.h	54	m16	4	FR-2 FR-3 FR-8
+physics	m16/m16_requalify.c	132	m16	4	FR-1 FR-3 FR-5 FR-8 FR-10
+physics	m3/tools/m3tool.c	260	m3/tools	4	FR-1 FR-2 FR-10 HAND
+physics	nvrm/lifecycle_gates.c	389	nvrm	4	FR-2 FR-3 FR-4 FR-5 FR-8 FR-12
+physics	nvrm/nvrm.c	907	nvrm	4	FR-1 FR-3 FR-5 FR-6 FR-8 HAND
+physics	nvrm/nvrm.h	142	nvrm	4	FR-2 FR-5 FR-8
+physics	nvrm/submission_visibility_gates.c	77	nvrm	4	FR-3 FR-5 FR-8 HAND
+physics	sha256_clean.c	107	.	4	
+physics	tests/test_forge_aegis_host.c	150	tests/forge	4	FR-3
+physics	tests/test_forge_analog_sim.c	684	tests/forge	4	FR-2 FR-3 FR-10
+physics	tests/test_forge_form.c	602	tests/forge	4	FR-2 FR-3 FR-10
+physics	tests/test_forge_hwid.c	116	tests/forge	4	FR-3 FR-4
+physics	tests/test_forge_seam.c	183	tests/forge	4	FR-3 FR-5 FR-11
+physics	tests/test_forge_v2_kat.c	796	tests/forge	4	FR-2 FR-3 FR-10
+physics	tests/test_m16_gpu_wait.c	317	tests/m16	4	FR-2 FR-3 FR-8 HAND
+physics	tools/m2tool.c	1120	tools/m2tool.c	4	FR-1 FR-2 FR-10 FR-11 HAND
+benchmarks	prime-drag-race/evidence/2026-10-05-campaign/c5/eltwise/FB1-CUT4-c505e7f/gpu_elementwise_test.c	386	prime-drag-race/evidence	4	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+benchmarks	prime-drag-race/evidence/2026-10-05-campaign/c5/eltwise/FB1-CUT4-c505e7f/omega_gpu_elementwise_api.c	851	prime-drag-race/evidence	4	FR-2 FR-3 FR-4 FR-8 FR-12
+benchmarks	prime-drag-race/evidence/2026-10-05-campaign/c5/eltwise/FB1-CUT4-c505e7f/omega_gpu_elementwise_api.h	145	prime-drag-race/evidence	4	FR-2 FR-3 FR-4
+benchmarks	prime-drag-race/evidence/2026-10-05-campaign/postmerge-2041f24/eltwise/FB1-CUT4-2041f24/gpu_elementwise_test.c	386	prime-drag-race/evidence	4	FR-1 FR-2 FR-3 FR-4 FR-10 FR-11 FR-12 HAND
+benchmarks	prime-drag-race/evidence/2026-10-05-campaign/postmerge-2041f24/eltwise/FB1-CUT4-2041f24/omega_gpu_elementwise_api.c	1139	prime-drag-race/evidence	4	FR-2 FR-3 FR-4 FR-8 FR-12
+benchmarks	prime-drag-race/evidence/2026-10-05-campaign/postmerge-2041f24/eltwise/FB1-CUT4-2041f24/omega_gpu_elementwise_api.h	177	prime-drag-race/evidence	4	FR-2 FR-3 FR-4
+atlas	sha256_clean.c	107	.	4	
+atlas	test_sha256_kat.c	81	.	4	FR-1
+atlas	tools/m1tool.c	1111	tools/m1tool.c	4	FR-1 FR-2 FR-4 FR-10 FR-11 FR-12 HAND
+interplane	adapters/aien/fixtures/fix_the_test/solution/clamp.c	11	adapters/aien	4	FR-3
+interplane	adapters/aien/fixtures/fix_the_test/src/clamp.c	11	adapters/aien	4	FR-3
+interplane	adapters/aien/fixtures/fix_the_test/src/clamp.h	4	adapters/aien	4	
+interplane	adapters/aien/fixtures/fix_the_test/test/test_clamp.c	24	adapters/aien	4	FR-3
+interplane	docs/external/nightdriver/565/harness/stubs/esp_heap_caps.h	54	docs/external	4	FR-2
+interplane	docs/external/nightdriver/666/harness/stubs/legacy/globals.h	47	docs/external	4	FR-2 HAND
+interplane	docs/external/nightdriver/666/harness/stubs/legacy/ledbuffer.h	2	docs/external	4	FR-3
+interplane	docs/external/nightdriver/666/harness/stubs/legacy/nd_network.h	3	docs/external	4	FR-3
+interplane	docs/external/nightdriver/666/harness/stubs/legacy/soundanalyzer.h	4	docs/external	4	FR-2 FR-3
+interplane	docs/external/nightdriver/666/harness/stubs/legacy/systemcontainer.h	8	docs/external	4	FR-2 FR-3 FR-4
+interplane	docs/external/nightdriver/666/harness/stubs/legacy/uzlib/src/uzlib.h	8	docs/external	4	FR-2
+interplane	docs/external/nightdriver/666/harness/stubs/legacy/values.h	4	docs/external	4	FR-2 FR-3 FR-4
+interplane	docs/external/nightdriver/666/harness/stubs/modern/globals.h	37	docs/external	4	FR-2 HAND
+interplane	docs/external/nightdriver/666/harness/stubs/modern/itaskservice.h	18	docs/external	4	FR-2 FR-3
+interplane	docs/external/nightdriver/666/harness/stubs/modern/ledbuffer.h	2	docs/external	4	FR-3
+interplane	docs/external/nightdriver/666/harness/stubs/modern/nd_network.h	3	docs/external	4	FR-3
+interplane	docs/external/nightdriver/666/harness/stubs/modern/soundanalyzer.h	2	docs/external	4	FR-3
+interplane	docs/external/nightdriver/666/harness/stubs/modern/systemcontainer.h	6	docs/external	4	FR-2 FR-3 FR-4
+interplane	docs/external/nightdriver/666/harness/stubs/modern/taskmgr.h	5	docs/external	4	FR-3
+interplane	docs/external/nightdriver/666/harness/stubs/modern/uzlib/src/uzlib.h	8	docs/external	4	FR-2
+interplane	docs/external/nightdriver/666/harness/stubs/modern/values.h	4	docs/external	4	FR-2 FR-3 FR-4
