@@ -37,34 +37,42 @@
 #define MAX_BLOCKS 512
 #define MAX_FUNCS 32
 #define MAX_PARAMS 6
+#define MAX_KPARAMS 32 /* IR parameters of a kernel: a buffer is two (pointer, length) */
 #define MAX_NAMES 512
 #define MAX_FRAMES 64
 #define MAX_CONSTS 256
 #define NAME_MAX_LEN 63
 
 /* ---- types ---- */
-enum { T_BOOL, T_U8, T_U16, T_U32, T_U64, T_I8, T_I16, T_I32, T_I64, T_NSCALAR };
-enum { R_NONE, R_OWN, R_MUT, R_SHARED };
-static const char *const GW[T_NSCALAR] = {"bool", "uchar", "ushort", "uint", "ulong", "byte", "short", "int", "long"};
-static const char *const IRN[T_NSCALAR] = {"bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64"};
-static const int BITS[T_NSCALAR] = {1, 8, 16, 32, 64, 8, 16, 32, 64};
+/* T_F32 (float) exists only inside a kernel (docs/omegese/GPU.md); it sits past T_NSCALAR so every loop over
+ * the host types, and with it next and complete, never sees it */
+enum { T_BOOL, T_U8, T_U16, T_U32, T_U64, T_I8, T_I16, T_I32, T_I64, T_NSCALAR, T_F32 = T_NSCALAR, T_NALL };
+/* R_BLOCK: a kernel's shared array; R_GVIEW, R_GEDIT: a kernel's global buffers (len 0, the launcher passes it) */
+enum { R_NONE, R_OWN, R_MUT, R_SHARED, R_BLOCK, R_GVIEW, R_GEDIT };
+static const char *const GW[T_NALL] = {"bool", "uchar", "ushort", "uint", "ulong", "byte", "short", "int", "long", "float"};
+static const char *const IRN[T_NALL] = {"bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "f32"};
+static const int BITS[T_NALL] = {1, 8, 16, 32, 64, 8, 16, 32, 64, 32};
 static const char *const REFW[] = {"", "own", "edit", "view"};
 static const char *const REFIR[] = {"", "own", "mut", "shared"};
 /* sets of scalar types, one bit per type */
 #define S_ALL 0x1FFu
 #define S_INT 0x1FEu
 #define S_SIGNED 0x1E0u
+#define S_F32 (1u << T_F32)
 
 typedef struct { int ref; int s; int len; } Ty; /* ref R_NONE: scalar s; else array of s, len */
 
-static int is_int(Ty t) { return t.ref == R_NONE && t.s != T_BOOL; }
-static int is_signed(int s) { return s >= T_I8; }
+static int is_int(Ty t) { return t.ref == R_NONE && t.s != T_BOOL && t.s != T_F32; }
+static int is_signed(int s) { return s >= T_I8 && s <= T_I64; }
+static int is_buf(Ty t) { return t.ref == R_GVIEW || t.ref == R_GEDIT; }
 static int teq(Ty a, Ty b) { return a.ref == b.ref && a.s == b.s && a.len == b.len; }
 static const char *tname(Ty t) {
     static char buf[4][48];
     static int k;
     char *b = buf[k++ & 3];
     if (t.ref == R_NONE) snprintf(b, 48, "%s", GW[t.s]);
+    else if (is_buf(t)) snprintf(b, 48, "%s %s", t.ref == R_GVIEW ? "view" : "edit", GW[t.s]);
+    else if (t.ref == R_BLOCK) snprintf(b, 48, "shared %s %d", GW[t.s], t.len);
     else snprintf(b, 48, "%s %s %d", REFW[t.ref], GW[t.s], t.len);
     return b;
 }
@@ -73,6 +81,8 @@ static const char *tir(Ty t) {
     static int k;
     char *b = buf[k++ & 3];
     if (t.ref == R_NONE) snprintf(b, 48, "%s", IRN[t.s]);
+    else if (is_buf(t)) snprintf(b, 48, "%s:%s", t.ref == R_GVIEW ? "gview" : "gedit", IRN[t.s]);
+    else if (t.ref == R_BLOCK) snprintf(b, 48, "block:%s:%d", IRN[t.s], t.len);
     else snprintf(b, 48, "%s:%s:%d", REFIR[t.ref], IRN[t.s], t.len);
     return b;
 }
@@ -95,12 +105,19 @@ static int word_in(const char *w, const char *const *set, int n) {
     return -1;
 }
 /* a scalar type: the one-token Omegese word, or the IR name the task signature uses (u8 .. i64) */
-static int scalar_word(const char *w) { int s = word_in(w, GW, T_NSCALAR); return s >= 0 ? s : word_in(w, IRN, T_NSCALAR); }
+static int scalar_word(const char *w) { int s = word_in(w, GW, T_NALL); return s >= 0 ? s : word_in(w, IRN, T_NALL); }
 static int ref_word(const char *w) { int r = word_in(w, REFW + 1, 3); return r < 0 ? -1 : r + 1; }
 static int op_word(const char *w) { return word_in(w, OPW, OP_N); }
 static int reserved(const char *w) {
     return scalar_word(w) >= 0 || ref_word(w) >= 0 || op_word(w) >= 0 || word_in(w, KW, (int)NKW) >= 0;
 }
+/* the words of a kernel (docs/omegese/GPU.md sections 2, 3, 6): words only inside a kernel, where none of
+ * them may be a name; a host function keeps them as ordinary names */
+static const char *const KWK[] = {"kernel", "thread", "threads", "block", "blocks", "batch", "batches", "len", "down",
+                                  "min", "max", "mad", "exp", "inv", "root", "shared", "sync"};
+#define NKWK (sizeof KWK / sizeof KWK[0])
+static int g_kernel; /* the function being read is a kernel */
+static int g_oracle; /* next or complete: they cover host functions only (v1) */
 
 /* ---- refusal ---- */
 #define MISSING (-3) /* value: no value starts here (end of line, ')' or a keyword); the caller words it */
@@ -134,7 +151,7 @@ static void bput(Buf *b, const char *fmt, ...) {
 }
 
 /* ---- program state ---- */
-typedef struct { char name[NAME_MAX_LEN + 1]; int np; Ty p[MAX_PARAMS]; int has_ret; Ty ret; } Func;
+typedef struct { char name[NAME_MAX_LEN + 1]; int np; Ty p[MAX_KPARAMS]; int has_ret; Ty ret; int kernel, threads; } Func;
 typedef struct { char name[NAME_MAX_LEN + 1]; int reg; int depth; int fixed; int read; } Name; /* fixed: 1 loop counter, 2 parameter */
 typedef struct { Ty t; int neg; uint64_t mag; int reg; } Const;
 typedef struct { Buf ops; int nops; int order; int refd; } Block;
@@ -274,7 +291,7 @@ static int find_func(const char *w) {
 /* a function this line may call: an earlier one (the one being written is not callable) */
 static int find_callable(const char *w) {
     int g = find_func(w);
-    return g >= 0 && !(in_fn && g == nfuncs - 1) ? g : -1;
+    return g >= 0 && !(in_fn && g == nfuncs - 1) && !funcs[g].kernel && !g_kernel ? g : -1;
 }
 static int valid_ident(const char *w) {
     if (!(isalpha((unsigned char)w[0]) || w[0] == '_') || strlen(w) > NAME_MAX_LEN) return 0;
@@ -285,7 +302,7 @@ static int valid_ident(const char *w) {
 /* may w become a new name here */
 static int check_new_name(const char *w) {
     if (!valid_ident(w)) return fail("'%s' is not a name (a letter or _, then letters, digits or _)", w);
-    if (reserved(w)) return fail("'%s' is a word of the language, not a name", w);
+    if (reserved(w) || (g_kernel && word_in(w, KWK, (int)NKWK) >= 0)) return fail("'%s' is a word of the language, not a name", w);
     if (find_func(w) >= 0) return fail("'%s' is a function name", w);
     if (find_name(w)) return fail("'%s' is already a name here; pick a new name", w);
     return 0;
@@ -503,10 +520,36 @@ static int parse_lit(const char *w, int *neg, uint64_t *mag) {
     *mag = v;
     return 1;
 }
+/* a decimal with a point: optional -, digits without leading zeros, a point, one or more digits */
+static int is_dec(const char *w) {
+    const char *p = w + (*w == '-');
+    if (!isdigit((unsigned char)*p) || (p[0] == '0' && isdigit((unsigned char)p[1]))) return 0;
+    while (isdigit((unsigned char)*p)) p++;
+    if (*p++ != '.' || !isdigit((unsigned char)*p)) return 0;
+    while (isdigit((unsigned char)*p)) p++;
+    return !*p;
+}
 static int is_lit(const char *w) {
     int n;
     uint64_t m;
-    return !strcmp(w, "true") || !strcmp(w, "false") || parse_lit(w, &n, &m);
+    return !strcmp(w, "true") || !strcmp(w, "false") || parse_lit(w, &n, &m) || is_dec(w);
+}
+/* literal w as a float (GPU.md section 4): a decimal is rounded once, to nearest even, to binary32
+ * (strtof); a whole number must be exact in binary32. 0 and the bits, 2 not a number, 4 does not fit */
+static int f32_lit(const char *w, uint32_t *bits) {
+    float f;
+    int neg;
+    uint64_t mag;
+    if (parse_lit(w, &neg, &mag)) {
+        f = (float)mag;
+        if (!(f < 18446744073709551616.0f) || (uint64_t)f != mag) return 4;
+        if (neg) f = -f;
+    } else if (is_dec(w)) {
+        f = strtof(w, NULL);
+        if (f - f != 0.0f) return 4; /* past the largest float */
+    } else return 2;
+    memcpy(bits, &f, 4);
+    return 0;
 }
 /* literal w as scalar type s: 0 and its value, or why not (1 not a bool, 2 not a whole number,
  * 3 negative for an unsigned type, 4 does not fit) */
@@ -517,6 +560,12 @@ static int lit_conv(const char *w, int s, int *neg, uint64_t *mag) {
         if (strcmp(w, "true") && strcmp(w, "false")) return 1;
         *mag = !strcmp(w, "true");
         return 0;
+    }
+    if (s == T_F32) {
+        uint32_t bits = 0;
+        int r = f32_lit(w, &bits);
+        *mag = bits;
+        return r;
     }
     if (!parse_lit(w, neg, mag)) return 2;
     if (*neg && !is_signed(s) && *mag) return 3;
@@ -533,6 +582,7 @@ static unsigned lit_fits(const char *w, unsigned m) {
     uint64_t mag;
     for (int s = 0; s < T_NSCALAR; s++)
         if ((m >> s & 1) && !lit_conv(w, s, &neg, &mag)) r |= 1u << s;
+    if ((m & S_F32) && !lit_conv(w, T_F32, &neg, &mag)) r |= S_F32;
     return r;
 }
 /* the register holding literal w of type t (hoisted to the entry block, shared per value) */
@@ -542,9 +592,9 @@ static int lit_reg(const char *w, Ty t) {
     if (t.ref != R_NONE) return fail("'%s': a number cannot be an array", w);
     switch (lit_conv(w, t.s, &neg, &mag)) {
     case 1: return fail("'%s' is not a bool (true or false)", w);
-    case 2: return fail("'%s' is not a whole number for %s", w, GW[t.s]);
+    case 2: return fail(t.s == T_F32 ? "'%s' is not a number for %s" : "'%s' is not a whole number for %s", w, GW[t.s]);
     case 3: return fail("%s cannot be negative (%s)", GW[t.s], w);
-    case 4: return fail("%s does not fit %s", w, GW[t.s]);
+    case 4: return fail(t.s == T_F32 ? "%s is not exact in %s" : "%s does not fit %s", w, GW[t.s]);
     }
     for (int i = 0; i < nconsts; i++)
         if (teq(consts[i].t, t) && consts[i].neg == neg && consts[i].mag == mag) return consts[i].reg;
@@ -572,13 +622,14 @@ static int parse_type(Ty *t) {
         TRY(fill_word(GW[T_U32]));
     }
     int s = scalar_word(lw[lp]);
+    if (s == T_F32) return fail("float is a kernel type (docs/omegese/GPU.md); a host function has no float");
     if (s >= 0) { *t = (Ty){R_NONE, s, 0}; lp++; return 0; }
     int r = ref_word(lw[lp]);
     if (r < 0) return fail("'%s' is not a type (%s ..., or own/edit/view <type> <length>)", lw[lp], GW[T_U32]);
     if (lp + 2 >= ln && !g_fill) return fail("an array type is %s <element type> <length>", REFW[r]);
     if (lp + 1 >= ln) TRY(fill_word(GW[T_U32]));
     s = scalar_word(lw[lp + 1]);
-    if (s < 0) return fail("'%s' is not an element type", lw[lp + 1]);
+    if (s < 0 || s == T_F32) return fail("'%s' is not an element type", lw[lp + 1]);
     if (lp + 2 >= ln) TRY(fill_word("1"));
     int neg;
     uint64_t len;
@@ -932,6 +983,123 @@ static int call_args(const Func *f, int head, Buf *a, int *args) {
     return 0;
 }
 
+/* two values of one type out of set (min, max): a bare number takes the type of the other value */
+static int pair(int head, unsigned set, Val *a, Val *b) {
+    Want w1 = {set, A_NONE, {0}, L_OPEN, {0}, 0};
+    TRY(slot(&w1, -2, a, head, 0, 2));
+    if (!a->lit && (a->t.ref != R_NONE || !(set >> a->t.s & 1))) return fail("%s needs float or uint; '%s' is %s", lw[head], span(a->a, a->b), tname(a->t));
+    Want w2 = a->lit ? (Want){lit_fits(lw[a->word], set), A_NONE, {0}, L_NO, {0}, 0} : (Want){1u << a->t.s, A_NONE, {0}, L_TYPED, a->t, 0};
+    TRY(slot(&w2, -2, b, head, 1, 2));
+    if (a->lit && b->lit) return fail("%s %s %s: two numbers; give one of them a name first", lw[head], lw[a->word], lw[b->word]);
+    if (b->t.ref != R_NONE || !(set >> b->t.s & 1)) return fail("%s needs float or uint; '%s' is %s", lw[head], span(b->a, b->b), tname(b->t));
+    if (a->lit) {
+        int r = lit_reg(lw[a->word], b->t);
+        TRY(r);
+        a->reg = r;
+        a->t = b->t;
+    }
+    if (!teq(a->t, b->t)) return fail("%s needs two values of one type: '%s' is %s, '%s' is %s", lw[head], span(a->a, a->b), tname(a->t), span(b->a, b->b), tname(b->t));
+    return 0;
+}
+/* one float value, operand k of the word at head */
+static int float_slot(Val *x, int head, int k, int arity) {
+    Want w = want_type((Ty){R_NONE, T_F32, 0});
+    TRY(slot(&w, -2, x, head, k, arity));
+    if (!(x->t.ref == R_NONE && x->t.s == T_F32)) return fail("%s needs float; '%s' is %s", lw[head], span(x->a, x->b), tname(x->t));
+    return 0;
+}
+/* a kernel word as a value (docs/omegese/GPU.md sections 3 and 6); lw[lp] is the word */
+static int kernel_value(const Want *want, int dst, Val *v) {
+    const char *t = lw[lp];
+    Ty u32 = {R_NONE, T_U32, 0}, f32 = {R_NONE, T_F32, 0};
+    char nb[24];
+    v->head = lp++;
+    v->arity = 0;
+    if (!strcmp(t, "thread") || !strcmp(t, "block") || !strcmp(t, "blocks") || !strcmp(t, "batch") || !strcmp(t, "batches")) {
+        v->t = u32;
+        TRY(to_dst(&dst, u32));
+        TRY(op("\"op\": \"%s\", \"dst\": %d", t, dst));
+    } else if (!strcmp(t, "threads")) {
+        snprintf(nb, sizeof nb, "%d", funcs[nfuncs - 1].threads);
+        int r = lit_reg(nb, u32);
+        TRY(r);
+        return leaf(v, r, u32, dst);
+    } else if (!strcmp(t, "len")) {
+        v->arity = 1;
+        int a;
+        Ty ta;
+        Want any = {S_ALL | S_F32, A_ANY, {0}, L_NO, {0}, 0};
+        TRY(array_name(v->head, 1, AN_GET, 0, &any, &a, &ta));
+        if (is_buf(ta)) return leaf(v, a + 1, u32, dst); /* the hidden length follows the buffer */
+        snprintf(nb, sizeof nb, "%d", ta.len);
+        int r = lit_reg(nb, u32);
+        TRY(r);
+        return leaf(v, r, u32, dst);
+    } else if (!strcmp(t, "down")) {
+        v->arity = 2;
+        Want w = {S_F32 | 1u << T_U32, A_NONE, {0}, L_NO, {0}, 0};
+        Val a;
+        TRY(slot(&w, -2, &a, v->head, 0, 2));
+        if (a.lit) return fail("down %s: the type of this number is unknown; write uint %s or float %s", lw[a.word], lw[a.word], lw[a.word]);
+        if (a.t.ref != R_NONE || (a.t.s != T_U32 && a.t.s != T_F32)) return fail("down needs a uint or float value; '%s' is %s", span(a.a, a.b), tname(a.t));
+        if (lp >= ln || is_term(lw[lp])) return fail("down has 1 value after it; it takes 2");
+        int ng;
+        uint64_t n;
+        if (!parse_lit(lw[lp], &ng, &n) || ng || n < 1 || n > 31) return fail("down distance '%s' must be a number 1 to 31", lw[lp]);
+        int nr = lit_reg(lw[lp++], u32);
+        TRY(nr);
+        v->t = a.t;
+        TRY(to_dst(&dst, a.t));
+        TRY(op("\"op\": \"down\", \"dst\": %d, \"a\": %d, \"b\": %d", dst, a.reg, nr));
+    } else if (!strcmp(t, "min") || !strcmp(t, "max")) {
+        v->arity = 2;
+        Val a, b;
+        TRY(pair(v->head, S_F32 | 1u << T_U32, &a, &b));
+        v->t = a.t;
+        TRY(to_dst(&dst, a.t));
+        TRY(op("\"op\": \"%s\", \"dst\": %d, \"a\": %d, \"b\": %d", t, dst, a.reg, b.reg));
+    } else if (!strcmp(t, "mad")) {
+        v->arity = 3;
+        Val a, b, c;
+        TRY(float_slot(&a, v->head, 0, 3));
+        TRY(float_slot(&b, v->head, 1, 3));
+        TRY(float_slot(&c, v->head, 2, 3));
+        v->t = f32;
+        TRY(to_dst(&dst, f32));
+        TRY(op("\"op\": \"mad\", \"dst\": %d, \"a\": %d, \"b\": %d, \"c\": %d", dst, a.reg, b.reg, c.reg));
+    } else if (!strcmp(t, "exp") || !strcmp(t, "inv") || !strcmp(t, "root")) {
+        const char *irop = !strcmp(t, "exp") ? "exp" : !strcmp(t, "root") ? "sqrt" : "inv";
+        if (!strcmp(t, "inv") && lp < ln && !strcmp(lw[lp], "root")) { lp++; irop = "rsq"; } /* inv root x: one operation */
+        v->arity = 1;
+        Val a;
+        TRY(float_slot(&a, v->head, 0, 1));
+        v->t = f32;
+        TRY(to_dst(&dst, f32));
+        TRY(op("\"op\": \"%s\", \"dst\": %d, \"a\": %d", irop, dst, a.reg));
+    } else if (!strcmp(t, "shared")) { /* <name> = shared <float or uint> <length> */
+        if (!want->top || dst != -1) return fail("shared makes a shared array for a new name: write it on its own line (s = shared float 256)");
+        if (cur != 0 || nframes != 1) return fail("shared is allowed only in the first block of a kernel, before any if or loop");
+        if (lp + 2 > ln) return fail("shared <float or uint> <length 1 to 12288>");
+        int s = scalar_word(lw[lp]);
+        if (s != T_F32 && s != T_U32) return fail("a shared array holds float or uint, not '%s'", lw[lp]);
+        lp++;
+        int ng;
+        uint64_t n;
+        if (!parse_lit(lw[lp], &ng, &n) || ng || n < 1 || n > 12288) return fail("shared length '%s' must be 1 to 12288", lw[lp]);
+        lp++;
+        uint64_t bytes = 4u * n;
+        for (int r = 0; r < nregs; r++) if (regs[r].ref == R_BLOCK) bytes += 4u * (uint64_t)regs[r].len;
+        if (bytes > 49152) return fail("shared arrays need %" PRIu64 " bytes; a kernel has at most 49152", bytes);
+        v->arity = 2;
+        v->t = (Ty){R_BLOCK, s, (int)n};
+        TRY(to_dst(&dst, v->t));
+        TRY(op("\"op\": \"shared\", \"dst\": %d", dst));
+    } else return fail("'%s' is a line of its own or a kernel line, not a value", t);
+    v->reg = dst;
+    v->b = lp;
+    return 0;
+}
+
 /*
  * value: one value starting at word lp, lowered into the current block, innermost first and left to
  * right. dst >= 0: write it there (its type must match); dst == -1: a fresh register; dst == -2: a
@@ -990,7 +1158,12 @@ static int value(const Want *want, int dst, Val *v) {
         return leaf(v, nm->reg, regs[nm->reg], dst);
     }
     int g = find_callable(t);
-    if (g < 0 && find_func(t) >= 0) return fail("%s cannot call itself (calls go to earlier functions only)", t);
+    if (g < 0 && find_func(t) >= 0) {
+        if (funcs[find_func(t)].kernel) return fail("%s is a kernel; the launcher starts a kernel, nothing calls it", t);
+        if (g_kernel) return fail("a kernel calls no function (v1); '%s' is a function", t);
+        return fail("%s cannot call itself (calls go to earlier functions only)", t);
+    }
+    if (g_kernel && word_in(t, KWK, (int)NKWK) >= 0) return kernel_value(want, dst, v);
     v->head = lp++;
     if (g >= 0) { /* a call: one value per parameter */
         Func *f = &funcs[g];
@@ -1010,8 +1183,10 @@ static int value(const Want *want, int dst, Val *v) {
     v->arity = 1;
     int s = scalar_word(t);
     if (s >= 0) { /* <type> <number>: a typed number;  <type> <value>: a conversion */
+        if (g_kernel && s != T_BOOL && s != T_U32 && s != T_F32) return fail("a kernel uses bool, uint and float; not %s", GW[s]);
+        if (!g_kernel && s == T_F32) return fail("float is a kernel type (docs/omegese/GPU.md); a host function has no float");
         Ty ty = {R_NONE, s, 0};
-        Want w = {s == T_BOOL ? 1u : S_INT, A_NONE, {0}, L_TYPED, ty, 0};
+        Want w = {s == T_BOOL ? 1u : g_kernel ? S_INT | S_F32 : S_INT, A_NONE, {0}, L_TYPED, ty, 0};
         Val a;
         TRY(slot(&w, -2, &a, v->head, 0, 1));
         if (a.t.ref != R_NONE) return fail("'%s' is an array; only numbers convert", span(a.a, a.b));
@@ -1023,6 +1198,7 @@ static int value(const Want *want, int dst, Val *v) {
         goto done;
     }
     int rf = ref_word(t);
+    if (rf >= 0 && g_kernel) return fail("%s moves or borrows an array; a kernel has none to move (its buffers are parameters)", t);
     if (rf >= 0) { /* own|edit|view <array name>: move or borrow */
         int a;
         Ty ta;
@@ -1038,12 +1214,13 @@ static int value(const Want *want, int dst, Val *v) {
     int o = op_word(t);
     if (o < 0) return fail("'%s' is not a name in scope here, nor an op, a type or a function", t);
     if (o == OP_NEG || o == OP_NOT) {
-        Want w = {want->scal & (o == OP_NEG ? S_SIGNED : S_ALL), A_NONE, {0}, L_NO, {0}, 0};
+        Want w = {want->scal & (o == OP_NEG ? S_SIGNED | S_F32 : S_ALL), A_NONE, {0}, L_NO, {0}, 0};
         Val a;
         TRY(slot(&w, -2, &a, v->head, 0, 1));
         if (a.lit) return fail("%s %s: the type of this number is unknown; write <type> %s", OPW[o], lw[a.word], lw[a.word]);
         if (a.t.ref != R_NONE) return fail("%s needs a number or bool", OPW[o]);
-        if (o == OP_NEG && (a.t.s == T_BOOL || !is_signed(a.t.s))) return fail("neg needs a signed number; '%s' is %s", span(a.a, a.b), tname(a.t));
+        if (o == OP_NOT && a.t.s == T_F32) return fail("not needs a whole number or bool; '%s' is float", span(a.a, a.b));
+        if (o == OP_NEG && (a.t.s == T_BOOL || (!is_signed(a.t.s) && a.t.s != T_F32))) return fail("neg needs a signed number; '%s' is %s", span(a.a, a.b), tname(a.t));
         v->t = a.t;
         TRY(to_dst(&dst, a.t));
         TRY(op("\"op\": \"%s\", \"dst\": %d, \"a\": %d", o == OP_NEG ? "neg" : (a.t.s == T_BOOL ? "not" : "bnot"), dst, a.reg));
@@ -1060,18 +1237,20 @@ static int value(const Want *want, int dst, Val *v) {
         if (!is_int(i.t)) return fail("index '%s' is not a whole number", span(i.a, i.b));
         v->t = (Ty){R_NONE, ta.s, 0};
         TRY(to_dst(&dst, v->t));
-        TRY(op("\"op\": \"load\", \"dst\": %d, \"arr\": %d, \"index\": %d", dst, a, i.reg));
+        if (is_buf(ta)) TRY(op("\"op\": \"gload\", \"dst\": %d, \"buf\": %d, \"index\": %d", dst, a, i.reg));
+        else TRY(op("\"op\": \"load\", \"dst\": %d, \"arr\": %d, \"index\": %d", dst, a, i.reg));
         TRY(own_use(a));
         goto done;
     }
     if (o == OP_NEW) { /* new <type> <length> <init> */
+        if (g_kernel) return fail("new is refused in a kernel: shared arrays come from shared, global memory from the launcher");
         v->arity = 3;
         if (!want->top) return fail("new makes an array for a name: write it on its own line (x = new ...)");
         if (lp >= ln) {
             if (!g_fill) return fail("new has 0 values after it; it takes 3");
             TRY(fill_word(GW[want->arr == A_EXACT ? want->p.s : T_U32]));
         }
-        if (scalar_word(lw[lp]) < 0) return fail("'%s' is not an element type", lw[lp]);
+        if (scalar_word(lw[lp]) < 0 || scalar_word(lw[lp]) == T_F32) return fail("'%s' is not an element type", lw[lp]);
         Ty et = {R_NONE, scalar_word(lw[lp++]), 0};
         if (lp >= ln) {
             if (!g_fill) return fail("new has 1 value after it; it takes 3");
@@ -1095,7 +1274,8 @@ static int value(const Want *want, int dst, Val *v) {
     }
     /* binary ops: a bare number takes the type of the other value; two bare numbers are refused */
     v->arity = 2;
-    Want w1 = {is_cmp(o) ? S_ALL : want->scal & (is_arith(o) || is_shift(o) ? S_INT : S_ALL), A_NONE, {0}, L_OPEN, {0}, 0};
+    unsigned kf = g_kernel ? S_F32 : 0; /* float: add, sub, mul and the comparisons only */
+    Want w1 = {is_cmp(o) ? S_ALL | kf : want->scal & (o <= OP_MUL ? S_INT | kf : is_arith(o) || is_shift(o) ? S_INT : S_ALL), A_NONE, {0}, L_OPEN, {0}, 0};
     Val a, b;
     TRY(slot(&w1, -2, &a, v->head, 0, 2));
     if (!a.lit) {
@@ -1115,6 +1295,7 @@ static int value(const Want *want, int dst, Val *v) {
         a.reg = r;
         a.t = b.t;
     }
+    if ((a.t.s == T_F32 || b.t.s == T_F32) && !is_cmp(o) && o > OP_MUL) return fail("%s does not work on float (add, sub, mul, the comparisons, min, max, mad do)", OPW[o]);
     if (is_shift(o)) {
         if (!is_int(a.t) || !is_int(b.t)) return fail("shifts need whole numbers");
         v->t = a.t;
@@ -1167,7 +1348,9 @@ static void end_function(void) {
     Func *f = &funcs[nfuncs - 1];
     int map[MAX_BLOCKS], ord[MAX_BLOCKS];
     for (int i = 0; i < nblocks; i++) { map[i] = blocks[i].order; if (blocks[i].order >= 0) ord[blocks[i].order] = i; }
-    bput(&out, "%s\n  {\"name\": \"%s\", \"params\": [", nfuncs > 1 ? "," : "", f->name);
+    bput(&out, "%s\n  {\"name\": \"%s\", ", nfuncs > 1 ? "," : "", f->name);
+    if (f->kernel) bput(&out, "\"kind\": \"kernel\", \"threads\": %d, ", f->threads);
+    bput(&out, "\"params\": [");
     for (int i = 0; i < f->np; i++) bput(&out, "%s\"%s\"", i ? ", " : "", tir(f->p[i]));
     bput(&out, "], \"ret\": \"%s\", \"locals\": [", f->has_ret ? tir(f->ret) : "void");
     for (int i = nparams; i < nregs; i++) bput(&out, "%s\"%s\"", i > nparams ? ", " : "", tir(regs[i]));
@@ -1180,6 +1363,7 @@ static void end_function(void) {
             for (int c = 0; c < nconsts; c++) {
                 Const *q = &consts[c];
                 if (q->t.s == T_BOOL) bput(&out, "%s{\"op\": \"const\", \"dst\": %d, \"value\": %s}", first ? "" : ", ", q->reg, q->mag ? "true" : "false");
+                else if (q->t.s == T_F32) bput(&out, "%s{\"op\": \"const\", \"dst\": %d, \"value\": \"0x%08" PRIx32 "\"}", first ? "" : ", ", q->reg, (uint32_t)q->mag);
                 else bput(&out, "%s{\"op\": \"const\", \"dst\": %d, \"value\": %s%" PRIu64 "}", first ? "" : ", ", q->reg, q->neg ? "-" : "", q->mag);
                 first = 0;
             }
@@ -1256,6 +1440,70 @@ static int fn_line(void) {
     return 0;
 }
 
+/* kernel <name> <threads> (<param> <ptype>)*  (docs/omegese/GPU.md section 2). A buffer parameter is two IR
+ * parameters, the pointer and its hidden u32 length (read with len); the threads per block are a number,
+ * 32 to 1024, a multiple of 32. The kernel returns nothing and cannot be called. */
+static int kernel_line(void) {
+    if (g_oracle) return fail("next and complete cover host functions only; a kernel is written whole and given to emit");
+    if (in_fn) return fail("kernel inside a function: close the function with end first");
+    if (nfuncs >= MAX_FUNCS) return fail("more than %d functions", MAX_FUNCS);
+    if (ln < 3) return fail("kernel <name> <threads> <param> <type> ...");
+    if (!valid_ident(lw[1]) || reserved(lw[1]) || word_in(lw[1], KWK, (int)NKWK) >= 0) return fail("'%s' cannot be a kernel name", lw[1]);
+    if (find_func(lw[1]) >= 0) return fail("function '%s' is already defined", lw[1]);
+    int neg;
+    uint64_t th;
+    if (!parse_lit(lw[2], &neg, &th) || neg || th < 32 || th > 1024 || th % 32)
+        return fail("threads '%s' must be a number 32 to 1024, a multiple of 32", lw[2]);
+    Func *f = &funcs[nfuncs];
+    memset(f, 0, sizeof *f);
+    snprintf(f->name, sizeof f->name, "%s", lw[1]);
+    f->kernel = 1;
+    f->threads = (int)th;
+    nregs = nnames = nconsts = nblocks = norder = nframes = 0;
+    nown = 0;
+    nowq = 0;
+    g_loops = 0;
+    own_pk = -1;
+    depth = 0;
+    g_kernel = 1;
+    Frame *fr = push(F_FN);
+    if (!fr) return -1;
+    lp = 3;
+    while (lp < ln) {
+        const char *pn = lw[lp++];
+        if (lp >= ln) return fail("parameter '%s' has no type", pn);
+        Ty t;
+        int rf = !strcmp(lw[lp], "view") ? R_GVIEW : !strcmp(lw[lp], "edit") ? R_GEDIT : R_NONE;
+        if (!strcmp(lw[lp], "own")) return fail("own is refused in a kernel line: a kernel never owns global memory");
+        if (rf != R_NONE) lp++;
+        if (lp >= ln) return fail("parameter '%s': %s needs float or uint", pn, lw[lp - 1]);
+        int s = scalar_word(lw[lp]);
+        if (rf != R_NONE ? (s != T_F32 && s != T_U32) : (s != T_F32 && s != T_U32 && s != T_BOOL))
+            return fail("parameter '%s': '%s' is not a kernel type (view float, view uint, edit float, edit uint, float, uint, bool)", pn, lw[lp]);
+        lp++;
+        t = (Ty){rf, s, 0};
+        int irn = rf != R_NONE ? 2 : 1;
+        if (f->np + irn > MAX_KPARAMS) return fail("more than %d IR parameters (a buffer is two)", MAX_KPARAMS);
+        f->p[f->np++] = t;
+        int r = new_reg(t);
+        TRY(r);
+        if (find_name(pn)) return fail("parameter '%s' is named twice", pn);
+        TRY(bind(pn, r, 2));
+        if (rf != R_NONE) { /* the hidden length, register r + 1 */
+            Ty u = {R_NONE, T_U32, 0};
+            f->p[f->np++] = u;
+            TRY(new_reg(u));
+        }
+    }
+    nparams = nregs;
+    nfuncs++;
+    in_fn = 1;
+    int b = new_block();
+    TRY(b);
+    start_block(b);
+    return 0;
+}
+
 /*
  * Loops lower to the shape checker2 proves terminating (src/checker2/c2_check.c "loop bounds",
  * the same shape oscc emits for OSC `while ... bound N`): a counter written in the loop only by
@@ -1268,7 +1516,7 @@ static int fn_line(void) {
  *     every pass, any other value is computed once, before the loop.
  */
 static int guarded_loop(int is_for, int s, const Val *count, const char *forname) {
-    Ty u64 = {R_NONE, T_U64, 0};
+    Ty u64 = {R_NONE, g_kernel ? T_U32 : T_U64, 0}; /* a kernel's hidden counter is uint (GPU.md section 8: a loop digit) */
     int zero = lit_reg("0", u64), one = lit_reg("1", u64);
     TRY(zero);
     TRY(one);
@@ -1365,7 +1613,8 @@ static int for_line(void) {
         TRY(fill_word(GW[T_U32]));
     }
     int s = scalar_word(lw[lp]);
-    if (s < 0 || s == T_BOOL) return fail("'%s' is not a whole-number type", lw[lp]);
+    if (s < 0 || s == T_BOOL || s == T_F32) return fail("'%s' is not a whole-number type", lw[lp]);
+    if (g_kernel && s != T_U32) return fail("a kernel's loop counter is uint, not %s", GW[s]);
     lp++;
     Ty t = {R_NONE, s, 0};
     if (cur < 0) return fail("this line can never run: the path already ended (ret, trap or break)");
@@ -1419,6 +1668,7 @@ static int for_line(void) {
 
 static int stmt(void) {
     if (!strcmp(lw[0], "fn")) return fn_line();
+    if (!strcmp(lw[0], "kernel") && !in_fn) return kernel_line();
     if (!in_fn) return fail("'%s' outside a function (start one with fn)", lw[0]);
     Func *f = &funcs[nfuncs - 1];
     const char *w0 = lw[0];
@@ -1462,6 +1712,7 @@ static int stmt(void) {
             }
             if (!g_quiet) end_function();
             in_fn = 0;
+            g_kernel = 0;
             break;
         }
         nframes--;
@@ -1561,6 +1812,7 @@ static int stmt(void) {
         Want none = {0};
         TRY(array_name(0, 3, AN_PUT, 0, &none, &a, &ta));
         if (ta.ref == R_SHARED) return fail("'%s' is view only; put needs an own or edit array", lw[lp - 1]);
+        if (ta.ref == R_GVIEW) return fail("'%s' is a view buffer; put needs an edit buffer or a shared array", lw[lp - 1]);
         Want iw = {S_INT, A_NONE, {0}, L_TYPED, {R_NONE, T_U32, 0}, 0}, vw = want_type((Ty){R_NONE, ta.s, 0});
         Val i, v;
         TRY(slot(&iw, -2, &i, 0, 1, 3));
@@ -1569,10 +1821,16 @@ static int stmt(void) {
         if (!teq(v.t, vw.lt)) return fail("'%s' is %s; the array holds %s", span(v.a, v.b), tname(v.t), tname(vw.lt));
         Val whole = {.head = 0, .arity = 3};
         TRY(line_end(&whole));
+        if (is_buf(ta)) return op("\"op\": \"gstore\", \"buf\": %d, \"index\": %d, \"value\": %d", a, i.reg, v.reg);
         TRY(op("\"op\": \"store\", \"arr\": %d, \"index\": %d, \"value\": %d", a, i.reg, v.reg));
         return own_use(a);
     }
+    if (!strcmp(w0, "sync") && g_kernel) {
+        TRY(alone("sync"));
+        return op("\"op\": \"sync\"");
+    }
     if (!strcmp(w0, "free")) {
+        if (g_kernel) return fail("free is refused in a kernel: a kernel owns no array");
         int a;
         Ty ta;
         Want none = {0};
@@ -1583,7 +1841,11 @@ static int stmt(void) {
         TRY(op("\"op\": \"release\", \"arr\": %d", a));
         return own_release(a);
     }
-    if (find_func(w0) >= 0 && find_callable(w0) < 0) return fail("%s cannot call itself (calls go to earlier functions only)", w0);
+    if (find_func(w0) >= 0 && find_callable(w0) < 0) {
+        if (funcs[find_func(w0)].kernel) return fail("%s is a kernel; the launcher starts a kernel, nothing calls it", w0);
+        if (g_kernel) return fail("a kernel calls no function (v1); '%s' is a function", w0);
+        return fail("%s cannot call itself (calls go to earlier functions only)", w0);
+    }
     int g = find_callable(w0);
     if (g >= 0) { /* a call on its own line */
         Func *cf = &funcs[g];
@@ -1604,7 +1866,7 @@ static int stmt(void) {
         return fail("'%s' does not start a line (a name =, if, while, for, ret, put, free, trap, break, else, end, or a call)", w0);
     if (nm && nm->fixed == 1) return fail("'%s' is the loop counter; it cannot be assigned", w0);
     if (!nm && (find_func(w0) >= 0 || reserved(w0) || !valid_ident(w0))) return fail("'%s' cannot be a name", w0);
-    Want w = {S_ALL, A_ANY, {0}, L_NO, {0}, 1};
+    Want w = {g_kernel ? S_ALL | S_F32 : S_ALL, A_ANY, {0}, L_NO, {0}, 1};
     if (nm) { w = want_type(regs[nm->reg]); w.top = 1; }
     if (lp < ln && !strcmp(lw[lp], "=")) lp++;
     Val v;
@@ -1628,7 +1890,8 @@ static int split(char *s, char **w) {
         if (*p == '(' || *p == ')') { w[n++] = *p++ == '(' ? LPAR : RPAR; continue; }
         w[n++] = p;
         while (*p && *p != ' ' && *p != '\t' && *p != '\r' && *p != '(' && *p != ')') {
-            if (!(isalnum((unsigned char)*p) || *p == '_' || *p == '-' || *p == '=')) return fail("character '%c' is not part of Omegese", *p);
+            if (!(isalnum((unsigned char)*p) || *p == '_' || *p == '-' || *p == '=' || (*p == '.' && g_kernel))) /* a point: float numbers, kernels only */
+                return fail("character '%c' is not part of Omegese", *p);
             p++;
         }
         char c = *p;
@@ -2144,12 +2407,15 @@ int main(int argc, char **argv) {
         for (int i = 0; i < OP_N; i++) printf("%s\n", OPW[i]);
         for (int i = 0; i < T_NSCALAR; i++) printf("%s\n", GW[i]);
         for (int i = 1; i <= 3; i++) printf("%s\n", REFW[i]);
+        printf("%s\n", GW[T_F32]);
+        for (size_t i = 0; i < NKWK; i++) printf("%s\n", KWK[i]);
         return 0;
     }
     int machine = argc == 4 && !strcmp(argv[1], "next") && !strcmp(argv[2], "--machine");
     if ((argc == 3 && (!strcmp(argv[1], "next") || !strcmp(argv[1], "complete"))) || machine) {
         size_t len;
         char *src = slurp(argv[argc - 1], &len);
+        g_oracle = 1;
         int rc = oracle(src, machine ? M_MACHINE : !strcmp(argv[1], "next") ? M_HUMAN : M_COMPLETE);
         free(src);
         free(g_close.p);

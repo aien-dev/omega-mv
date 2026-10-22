@@ -2,6 +2,7 @@
 # Omegese kernel through the existing BlackwellIR builder. Picked up by `-include mk/*.mk`; not part
 # of `all` or `test`.
 #   make test-osc-gpu    host only: every accepted kernel of tests/checker2/kernels and tests/osc_gpu/kernels
+#                        and the Omegese-written ones of tests/osc_gpu/omegese (through omegese emit first)
 #                        through omega_emit, checker2 and the back end, then on the SIMT warp simulator
 #                        against host references (bit-exact), plus the back end's mutants (each must fail)
 #   make test-osc-gpu-chip   the same kernel tests on the GB10 through omega_kernel_launch (src/omega_osc_launch.c):
@@ -27,8 +28,8 @@ $(OSG_DIR)/test_osc_gpu_chip: tests/osc_gpu/test_osc_gpu.c $(OSG_SRCS) $(OSG_CHI
 	$(CC) $(OSG_CFLAGS) -DOSC_CHIP -Wno-unused-function -pthread $(GPU_ENGINE_PHYS_INC) -o $@ tests/osc_gpu/test_osc_gpu.c \
 		$(OSG_SRCS) $(OSG_CHIP_SRCS) $(OSG_OSC_LIB) -lm
 
-test-osc-gpu: $(OSG_DIR)/test_osc_gpu $(OUT_DIR)/omega_emit/omega_emit $(OUT_DIR)/checker2/checker2
-	sh tests/osc_gpu/run.sh $(OUT_DIR)/omega_emit/omega_emit $(OUT_DIR)/checker2/checker2 $(OSG_DIR)/test_osc_gpu $(OSG_DIR)/ir
+test-osc-gpu: $(OSG_DIR)/test_osc_gpu $(OUT_DIR)/omegese/omegese $(OUT_DIR)/omega_emit/omega_emit $(OUT_DIR)/checker2/checker2
+	sh tests/osc_gpu/run.sh $(OUT_DIR)/omegese/omegese $(OUT_DIR)/omega_emit/omega_emit $(OUT_DIR)/checker2/checker2 $(OSG_DIR)/test_osc_gpu $(OSG_DIR)/ir
 
 test-osc-gpu-chip: $(OSG_DIR)/test_osc_gpu_chip test-osc-gpu
 	$(OSG_DIR)/test_osc_gpu_chip $(OSG_DIR)/ir

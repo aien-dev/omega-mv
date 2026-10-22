@@ -1,0 +1,21 @@
+kernel gemm 256 a view float b view float c edit float
+ta = shared float 256
+tb = shared float 256
+ty = div thread 16
+tx = rem thread 16
+row = add mul batch 16 ty
+col = add mul block 16 tx
+acc = float 0
+for t uint 4
+put ta thread get a add mul row 64 add mul t 16 tx
+put tb thread get b add mul add mul t 16 ty 64 col
+sync
+for k uint 16
+acc = mad get ta add mul ty 16 k get tb add mul k 16 tx acc
+end
+sync
+end
+if lt col 64
+put c add mul row 64 col acc
+end
+end

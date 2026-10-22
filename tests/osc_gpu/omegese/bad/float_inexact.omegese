@@ -1,0 +1,4 @@
+kernel ex 64 c edit uint
+put c thread uint 16777217
+x = float 16777217
+end

@@ -1,0 +1,6 @@
+kernel race 256 a view float c edit float
+i = add mul block threads thread
+if lt i len c
+put c 0 get a i
+end
+end

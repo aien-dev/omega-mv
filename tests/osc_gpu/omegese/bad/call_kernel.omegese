@@ -1,0 +1,6 @@
+kernel k1 64 c edit float
+put c thread float 1
+end
+fn g to void
+k1 c
+end

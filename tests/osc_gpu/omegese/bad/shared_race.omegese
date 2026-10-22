@@ -1,0 +1,6 @@
+kernel sr 64 c edit float
+s = shared float 64
+put s 0 float 1
+sync
+put c thread get s thread
+end

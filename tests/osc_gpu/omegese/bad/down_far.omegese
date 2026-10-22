@@ -1,0 +1,4 @@
+kernel dn 64 c edit float
+x = down get c thread 32
+put c thread x
+end

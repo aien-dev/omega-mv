@@ -1,0 +1,12 @@
+global_race.omegese checker2 C2-GPU-GLOBAL-RACE
+sync_divergent.omegese checker2 C2-GPU-SYNC-DIVERGENT
+shared_race.omegese checker2 C2-GPU-SHARED-RACE
+put_view.omegese omegese is a view buffer; put needs an edit buffer
+host_float.omegese omegese float is a kernel type
+shared_late.omegese omegese shared is allowed only in the first block
+down_far.omegese omegese down distance '32' must be a number 1 to 31
+float_div.omegese omegese div does not work on float
+call_kernel.omegese omegese k1 is a kernel; the launcher starts a kernel
+threads_48.omegese omegese threads '48' must be a number 32 to 1024, a multiple of 32
+bad_number.omegese omegese '0.1.2' is not a number
+float_inexact.omegese omegese 16777217 is not exact in float

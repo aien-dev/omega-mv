@@ -1,0 +1,31 @@
+kernel attn 128 q view float k view float v view float o edit float n uint scale float
+part = shared float 4
+h = block
+d = thread
+qd = get q add mul h 128 d
+m = float -340000000000000000000000000000000000000.0
+l = float 0
+acc = float 0
+for t uint n
+base = add mul add mul h n t 128 d
+x = mul qd get k base
+x = add x down x 16
+x = add x down x 8
+x = add x down x 4
+x = add x down x 2
+x = add x down x 1
+if eq rem d 32 0
+put part div d 32 x
+end
+sync
+s = mul scale add add get part 0 get part 1 add get part 2 get part 3
+sync
+mn = max m s
+c = exp sub m mn
+p = exp sub s mn
+l = add mul l c p
+acc = add mul acc c mul p get v base
+m = mn
+end
+put o add mul h 128 d mul acc inv l
+end

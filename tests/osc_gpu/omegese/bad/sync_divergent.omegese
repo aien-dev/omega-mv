@@ -1,0 +1,5 @@
+kernel dsync 256 a edit float
+if lt thread 5
+sync
+end
+end

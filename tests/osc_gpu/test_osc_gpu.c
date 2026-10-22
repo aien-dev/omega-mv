@@ -54,10 +54,11 @@ static bool near_mufu(float got, float want) { return same_f(got, want); }
 
 static OscUnit g_unit;
 static const char *g_dir;
+static const char *g_pre = ""; /* "om_": the Omegese-written kernel of that name */
 
 static int load_kernel(const char *name, OscGpuKernel *k) {
     char path[512];
-    snprintf(path, sizeof path, "%s/kernel_%s.ir", g_dir, name);
+    snprintf(path, sizeof path, "%s/kernel_%s%s.ir", g_dir, g_pre, name);
     FILE *fp = fopen(path, "rb");
     if (!fp) { CHECK(0, "%s: cannot open %s", name, path); return -1; }
     static uint8_t buf[1 << 20];
@@ -70,7 +71,7 @@ static int load_kernel(const char *name, OscGpuKernel *k) {
     rc = osc_gpu_build(&g_unit, 0, k, err, sizeof err);
     CHECK(rc == 0, "%s: build refused: %s", name, err);
     if (rc) return -1;
-    if (!g_quiet) printf("  %-7s %3u instructions, %3u registers, %u threads, %u shared bytes, %u regions on %u barriers, %u argument words\n",
+    if (!g_quiet) printf("  %s%-7s %3u instructions, %3u registers, %u threads, %u shared bytes, %u regions on %u barriers, %u argument words\n", g_pre,
            name, k->insn_count, k->gpr_count, k->threads, k->shared_bytes, k->regions, k->region_bars, k->arg_words);
     return 0;
 }
@@ -443,8 +444,74 @@ static void test_vloop(void) {
     osc_gpu_free(&k);
 }
 
+
+/* decode attention (tests/osc_gpu/omegese/attn.omegese): one block per head, one thread per dimension,
+ * an online softmax over n keys. The reference repeats the kernel's float steps in its order: the
+ * per-warp down tree, the 4 warp sums through shared memory, then mn = max, c = exp(m - mn),
+ * p = exp(s - mn), l = l*c + p, acc = acc*c + p*v, out = acc * inv l. Host: bit for bit (the simulator's
+ * EX2 and RCP are exact). Chip (stated before any chip run): every output within 2^-16 times the
+ * largest |v| of the head, since the output is a weighted mean of the v rows and only the MUFU steps
+ * (exp, inv) differ from the reference. */
+static float exp_ref(float x) { return exp2f(mufu_in(x * bitsf(0x3fb8aa3bu))); }
+static void test_attn(void) {
+    OscGpuKernel k;
+    if (load_kernel("attn", &k)) return;
+    enum { H = 3, T = 37, D = 128 };
+    static float q[H * D], kk[H * T * D], vv[H * T * D], o[H * D], want[H * D];
+    uint32_t seed = 29;
+    for (int i = 0; i < H * D; i++) q[i] = frand(&seed);
+    for (int i = 0; i < H * T * D; i++) { kk[i] = frand(&seed); vv[i] = frand(&seed); }
+    const float scale = 0.0883883461356163f; /* 1/sqrt(128) */
+    float vmax = 0.0f;
+    for (int i = 0; i < H * T * D; i++) vmax = fmaxf(vmax, fabsf(vv[i]));
+    for (int h = 0; h < H; h++) {
+        float m = strtof("-340000000000000000000000000000000000000.0", NULL), l = 0.0f, acc[D] = {0};
+        for (int t = 0; t < T; t++) {
+            float x[D], part[D / 32];
+            for (int d = 0; d < D; d++) x[d] = q[h * D + d] * kk[(h * T + t) * D + d];
+            for (int dist = 16; dist >= 1; dist /= 2) {
+                float n[D];
+                for (int d = 0; d < D; d++) n[d] = x[d] + ((d % 32) + dist < 32 ? x[d + dist] : x[d]);
+                memcpy(x, n, sizeof x);
+            }
+            for (int w = 0; w < D / 32; w++) part[w] = x[w * 32];
+            float s = scale * ((part[0] + part[1]) + (part[2] + part[3]));
+            float mn = fmaxf(m, s), c = exp_ref(m - mn), p = exp_ref(s - mn);
+            l = l * c + p;
+            for (int d = 0; d < D; d++) acc[d] = acc[d] * c + p * vv[(h * T + t) * D + d];
+            m = mn;
+        }
+        for (int d = 0; d < D; d++) want[h * D + d] = acc[d] * (1.0f / mufu_in(l));
+    }
+    for (int order = 0; order < 2; order++) {
+        for (int i = 0; i < H * D; i++) o[i] = bitsf(0xdeadbeefu);
+        Run r; run_init(&r, &k, H, 1);
+        run_buf(&r, &k, 0, q, H * D); run_buf(&r, &k, 1, kk, H * T * D); run_buf(&r, &k, 2, vv, H * T * D); run_buf(&r, &k, 3, o, H * D);
+        r.s.cbank[(OSC_GPU_ARG_BASE + k.params[4].off) / 4] = T;
+        r.s.cbank[(OSC_GPU_ARG_BASE + k.params[5].off) / 4] = fbits(scale);
+        if (run_go(&r, order, H, 1, "attn")) continue;
+        int bad = 0, first = -1;
+        for (int i = 0; i < H * D; i++) {
+#ifdef OSC_CHIP
+            bool ok = fabsf(o[i] - want[i]) <= 0x1p-16f * vmax;
+#else
+            bool ok = fbits(o[i]) == fbits(want[i]);
+#endif
+            if (!ok) { bad++; if (first < 0) first = i; }
+        }
+        CHECK(bad == 0 && status_code(&r) == 0, "attn order %d: %d wrong (first %d: got %.9g want %.9g), status %d", order, bad, first,
+              first >= 0 ? o[first] : 0.0f, first >= 0 ? want[first] : 0.0f, status_code(&r));
+    }
+    osc_gpu_free(&k);
+}
+
 static void kernels(void) {
+    g_pre = "";
     test_vadd(); test_gate(); test_gemm(); test_reduce(); test_nest16(); test_ops_u(); test_ops_f(); test_nest16j(); test_vloop();
+    /* the C1 kernels written in Omegese (tests/osc_gpu/omegese, through omegese emit): the same tests and references */
+    g_pre = "om_";
+    test_vadd(); test_gate(); test_gemm(); test_attn();
+    g_pre = "";
 }
 
 /* each mutant of the back end breaks one rule; the kernel tests must catch every one */
