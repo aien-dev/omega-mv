@@ -1,0 +1,21 @@
+{
+  "status": "SOURCE_STAGE_NOT_QUALIFIED",
+  "canonical_repository": "aien-dev/omega-host",
+  "canonical_base": "e9fa95549cc72cb43f28a6fab146f697ec5a8bfa",
+  "omega_original": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+  "qualified_source_snapshot": "f49e6a91e8b973c3ca0277993a663321a646451e",
+  "prompt_source_review": "4f29d38c8b8e005950e27eb79e777a7ad90f4148",
+  "four_fix_source_review": "15a33b9c",
+  "publication_repair": "cf22be7e37321ddbd94e9210b86ee42e3050e0bd",
+  "selected_paths": 142,
+  "carried_paths": 20,
+  "three_way_merges": 0,
+  "conflicts": [],
+  "remaining": [
+    "L592 complete exit arguments and exact independent review",
+    "canonical module Make TESTS includes every new required gate",
+    "committed-source module and consumer-pin qualification",
+    "final independent combined review and acknowledged desk intake"
+  ],
+  "no_legacy_sources_readded_to_omega": true
+}

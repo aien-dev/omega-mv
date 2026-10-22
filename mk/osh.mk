@@ -7,9 +7,10 @@
 #   make test-osh-lex     check + lexer driver, plain and ASan/UBSan (exact-size buffers); OSH_FUZZ=N (default 100000), OSH_FUZZ_SEED=S
 #   make osh-bash-verify  prove tests/osh/vectors/bash_vectors.tsv against real bash 5.2 (needs bash, not part of test-osh-lex)
 #   make test-osh-parse   check + parser driver (lexer + parser units, reference tokenizer + parser), plain and ASan/UBSan
+#   make test-osh-diff    cross-adapter pipeline differential (host native + interpreter; aienos NOT_RUN without OSH_DIFF_NATIVE)
 ifndef OSH_MK
 OSH_MK := 1
-.PHONY: osh-gen osh-gen-check test-osh-lex test-osh-parse test-osh-expand osh test-osh-e2e osh-bash-verify
+.PHONY: osh-gen osh-gen-check test-osh-lex test-osh-parse test-osh-expand osh test-osh-e2e osh-bash-verify test-osh-diff
 OSH_DIR = $(OUT_DIR)/osh
 OSH_FUZZ ?= 100000
 OSH_GEN = src/osh/osh_gen.sh
@@ -152,4 +153,58 @@ osh-trace: osh-gen-check $(OSH_DIR)/osh_trace
 	  { tail -n 1 $(OSH_DIR)/$$b.native | grep -q '^event exit=' && grep -v '^event exit=' $(OSH_DIR)/$$b.native | grep -q .; } || { echo "osh-trace: empty or cut-off trace for $$f"; exit 1; }; \
 	  cmp $(OSH_DIR)/$$b.native tests/osh/trace/$$b.trace || { echo "osh-trace: $$f differs from the committed trace"; exit 1; }; \
 	  n=$$((n+1)); done; echo "osh-trace: PASS ($$n scripts, native == interpreter == committed trace)"
+
+# Cross-adapter pipeline differential (omega#568): tests/osh/diff/fixtures.txt through the real compiled shell core on the
+# Linux host adapter, native and interpreted, against the expectations, with injected faults and resource limits; plus the
+# aienos column, which is NOT_RUN unless a native result file is given (OSH_DIFF_NATIVE=FILE; a raw QEMU serial log is
+# fine). Plain and ASan/UBSan, the comparator mutants (tests/osh/diff/mutants.sh), and a check that the TEST-ONLY observer
+# is absent from the shipped osh. Format and toy operations: tests/osh/diff/README.md.
+#   make test-osh-diff [OSH_DIFF_NATIVE=FILE] [OSH_DIFF_REQUIRE_NATIVE=1]
+.PHONY: test-osh-diff
+OSH_DIFF_SRCS = tests/osh/diff/osh_diff.c $(OSH_DIR)/osh_units.c $(filter-out src/osh/host/osh_main.c,$(OSH_PROG_HOSTSRCS)) $(OSC_LIB) src/runtime/rx_caproot.c
+OSH_DIFF_HDRS = $(OSH_XHDRS) src/osh/host/osh_shell.h src/osh/host/osh_priv.h
+OSH_DIFF_FLAGS = $(OSH_XFLAGS) -DOSH_DIFF_TEST_HOOKS
+# identity pins (README "Pins"), recursive so they are only computed when the recipe runs
+OSH_DIFF_PIN_OMEGA = $(shell git rev-parse HEAD 2>/dev/null || echo unknown)$(shell test -n "$$(git status --porcelain -- src tests mk 2>/dev/null)" && echo -dirty)
+OSH_DIFF_PIN_CC = $(notdir $(CC))-$(shell $(CC) -dumpfullversion 2>/dev/null || $(CC) -dumpversion)@$(shell sha256sum "$$(command -v $(CC))" | cut -c1-16)
+OSH_DIFF_PIN_HARNESS = $(shell cat tests/osh/diff/osh_diff.c tests/osh/diff/osh_toy.c tests/osh/diff/mutants.sh | sha256sum | cut -c1-64)
+OSH_DIFF_PIN_AIENOS = $(shell head -1 aienos.lock 2>/dev/null || echo unknown)
+OSH_DIFF_PINS = --pin omega=$(OSH_DIFF_PIN_OMEGA) --pin cc=$(OSH_DIFF_PIN_CC) --pin harness=$(OSH_DIFF_PIN_HARNESS) --pin aienos=$(OSH_DIFF_PIN_AIENOS)
+OSH_DIFF_NATIVE_ARG = $(if $(OSH_DIFF_NATIVE),--native $(abspath $(OSH_DIFF_NATIVE))) $(if $(OSH_DIFF_REQUIRE_NATIVE),--require-native)
+
+$(OSH_DIR)/osh_diff: $(OSH_DIFF_SRCS) $(OSH_DIFF_HDRS)
+	$(CC) $(OSH_DIFF_FLAGS) -O2 -o $@ $(OSH_DIFF_SRCS)
+
+$(OSH_DIR)/osh_diff_asan: $(OSH_DIFF_SRCS) $(OSH_DIFF_HDRS)
+	$(CC) $(OSH_DIFF_FLAGS) $(OSC_ASAN) -o $@ $(OSH_DIFF_SRCS)
+
+$(OSH_DIR)/osh_toy: tests/osh/diff/osh_toy.c
+	@mkdir -p $(OSH_DIR)
+	$(CC) -std=gnu11 -Wall -Wextra -Werror -O2 -o $@ $<
+
+# The ASan/UBSan run must PASS with exactly two host NOT_RUN: fixture f33 (RLIMIT_AS cannot bind an ASan process), both runs.
+test-osh-diff: osh-gen-check $(OSH_DIR)/osh $(OSH_DIR)/osh_diff $(OSH_DIR)/osh_diff_asan $(OSH_DIR)/osh_toy
+	@if nm $(OSH_DIR)/osh | grep -q osh_diff_test_hooks_compiled; then echo "FAIL: shipped osh contains the TEST-ONLY diff observer"; exit 1; fi
+	@nm $(OSH_DIR)/osh_diff | grep -q osh_diff_test_hooks_compiled || { echo "FAIL: the diff runner lacks the observer"; exit 1; }
+	@echo "diff observer: absent from the shipped osh, present in the runner"
+	$(abspath $(OSH_DIR)/osh_diff) --strict-host $(OSH_DIFF_PINS) --emit $(abspath $(OSH_DIR))/diff-host.result $(OSH_DIFF_NATIVE_ARG) $(abspath $(OSH_DIR)/osh_toy) tests/osh/diff/fixtures.txt > $(OSH_DIR)/diff.out; rc=$$?; cat $(OSH_DIR)/diff.out; test $$rc -eq 0 && tail -1 $(OSH_DIR)/diff.out | grep -q '^OSH_DIFF_PASS$$'
+	$(abspath $(OSH_DIR)/osh_diff_asan) $(OSH_DIFF_PINS) $(OSH_DIFF_NATIVE_ARG) $(abspath $(OSH_DIR)/osh_toy) tests/osh/diff/fixtures.txt > $(OSH_DIR)/diff_asan.out; rc=$$?; tail -3 $(OSH_DIR)/diff_asan.out; test $$rc -eq 0 && tail -1 $(OSH_DIR)/diff_asan.out | grep -q '^OSH_DIFF_PASS$$' && grep -q '^summary: host PASS [0-9]* FAIL 0 NOT_RUN 2 ' $(OSH_DIR)/diff_asan.out && grep -q '^f33_bounded_memory .* NOT_RUN .*RLIMIT_AS cannot apply under ASan' $(OSH_DIR)/diff_asan.out
+	sh tests/osh/diff/mutants.sh $(abspath $(OSH_DIR)/osh_diff) $(abspath $(OSH_DIR)/osh_toy) tests/osh/diff/fixtures.txt $(abspath $(OSH_DIR))/diff-host.result $(abspath $(OSH_DIR))/diff-mutants
+	@echo "test-osh-diff: PASS (host adapter: native + interpreter units, plain and ASan/UBSan, faults and limits, comparator mutants; aienos column $(if $(OSH_DIFF_NATIVE),compared against $(OSH_DIFF_NATIVE),NOT_RUN: no native result supplied))"
+# Caller signal-action ownership when the interactive driver is embedded (#344).
+# Fault injection wraps sigaction only in this test executable.
+.PHONY: test-osh-prompt-signals
+OSH_PROMPT_SRCS = $(filter-out src/osh/host/osh_main.c,$(OSH_BIN_SRCS)) tests/osh/host/test_prompt_signal_restore.c
+OSH_PROMPT_FLAGS = $(OSH_XFLAGS) -DPROMPT_SIGNAL_TEST_FAULTS -Wl,--wrap=sigaction
+
+$(OSH_DIR)/test_prompt_signal_restore: $(OSH_PROMPT_SRCS) $(OSH_XHDRS) src/osh/host/osh_shell.h
+	$(CC) $(OSH_PROMPT_FLAGS) -O2 -o $@ $(OSH_PROMPT_SRCS)
+
+$(OSH_DIR)/test_prompt_signal_restore_asan: $(OSH_PROMPT_SRCS) $(OSH_XHDRS) src/osh/host/osh_shell.h
+	$(CC) $(OSH_PROMPT_FLAGS) $(OSC_ASAN) -o $@ $(OSH_PROMPT_SRCS)
+
+test-osh-prompt-signals: osh-gen-check $(OSH_DIR)/osh $(OSH_DIR)/test_prompt_signal_restore $(OSH_DIR)/test_prompt_signal_restore_asan
+	@if nm $(OSH_DIR)/osh | grep -q __wrap_sigaction; then echo "FAIL: shipped osh contains the signal fault wrapper"; exit 1; fi
+	$(abspath $(OSH_DIR)/test_prompt_signal_restore) > $(OSH_DIR)/prompt-signals.out; rc=$$?; tail -1 $(OSH_DIR)/prompt-signals.out; test $$rc -eq 0
+	$(abspath $(OSH_DIR)/test_prompt_signal_restore_asan) > $(OSH_DIR)/prompt-signals-asan.out; rc=$$?; tail -1 $(OSH_DIR)/prompt-signals-asan.out; test $$rc -eq 0
 endif
