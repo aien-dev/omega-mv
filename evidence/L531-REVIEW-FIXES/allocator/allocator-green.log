@@ -1,0 +1,7 @@
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I../physics/m16 -I../physics/nvrm -I../physics/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I../physics/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I../physics/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I../physics/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/gpu_regalloc_lifetime_oracle tests/gpu_regalloc_lifetime_oracle.c src/omega_blackwell_codegen.c
+./build/L531/gpu_regalloc_lifetime_oracle
+width=1 disjoint127 reused, exactly126 allocated, one-more refused
+width=2 disjoint64 reused, exactly63 allocated, one-more refused
+width=4 disjoint32 reused, exactly31 allocated, one-more refused
+oracle output/input controls killed=11
+regalloc lifetime oracle: PASS 27000 exhaustive cases, scalar/pair/quad reuse and capacity, mixed fragmentation, 11 controls killed

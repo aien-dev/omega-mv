@@ -5,3 +5,4 @@ $(OUT_DIR)/gpu_regalloc_lifetime_oracle: tests/gpu_regalloc_lifetime_oracle.c sr
 
 test-gpu-regalloc-lifetime: $(OUT_DIR)/gpu_regalloc_lifetime_oracle
 	./$(OUT_DIR)/gpu_regalloc_lifetime_oracle
+	bash tests/gpu_regalloc_lifetime_mutants.sh $(OUT_DIR)/regalloc-lifetime-mutants

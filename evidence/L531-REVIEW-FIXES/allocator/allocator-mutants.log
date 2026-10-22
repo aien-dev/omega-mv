@@ -1,0 +1,89 @@
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/no-reuse tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/no-reuse.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/no-reuse
++ rc=1
++ set +x
+PASS killed no-reuse exit=1: disjoint reuse failed width=1 count=127
+3328acd9a36b20a447ad17d9ee17829b951df11ca6a325c508fa5978e5089b0a  build/L531/allocator-mutants/no-reuse.c
+8a638e1db08f548bba9db0c5eb8ba041034570427e0def594bd506061336cae3  build/L531/allocator-mutants/no-reuse
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/no-reuse-pair tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/no-reuse-pair.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/no-reuse-pair
++ rc=1
++ set +x
+PASS killed no-reuse-pair exit=1: disjoint reuse failed width=2 count=64
+bb1fbb188962f554402e671fd8b417af56aa2003cff36199c8f8970065f1b07f  build/L531/allocator-mutants/no-reuse-pair.c
+6b7703e1d646ecc52abe86564e1b71ab180d377566a6874a49ffae79f5ad3561  build/L531/allocator-mutants/no-reuse-pair
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/no-reuse-quad tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/no-reuse-quad.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/no-reuse-quad
++ rc=1
++ set +x
+PASS killed no-reuse-quad exit=1: disjoint reuse failed width=4 count=32
+1e87fbb27bcfc858b4278c10ec321c1df71d1ce9b6738c54a971d67096622db6  build/L531/allocator-mutants/no-reuse-quad.c
+09ee5c86f96c90e7649211a46cb05a8d4a23eae1bc3cf2ba6c41195b5e342f02  build/L531/allocator-mutants/no-reuse-quad
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/premature-exhaustion tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/premature-exhaustion.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/premature-exhaustion
++ rc=1
++ set +x
+PASS killed premature-exhaustion exit=1: exact capacity refused width=1 capacity=126
+6ca2a454fc2a013578dbbbf3aae4851eae27583ca01b13946f1c754b7d7f0332  build/L531/allocator-mutants/premature-exhaustion.c
+0185e039c731cb5ab1a9b6f4a16e376ffb060cba00de0f0c7ec209049f2c1ce8  build/L531/allocator-mutants/premature-exhaustion
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/false-peak tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/false-peak.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/false-peak
++ rc=1
++ set +x
+PASS killed false-peak exit=1: allocation mismatch at case 0
+b85b12c95c95bf6bfad40bcbd726c45b6027414d881299eda1ab7dc997fbe175  build/L531/allocator-mutants/false-peak.c
+647f67a940ef00ba37e5efcf3c5c93bca163b0ff93a9915bf9708c8b7dfd7e14  build/L531/allocator-mutants/false-peak
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/misalignment tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/misalignment.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/misalignment
++ rc=1
++ set +x
+PASS killed misalignment exit=1: allocation mismatch at case 0
+7ad01c0a60c6576691d7f0eaf3e3524c79ebd61e9ee8a9b0f629b0b1bea66756  build/L531/allocator-mutants/misalignment.c
+eb166856c038dd750f3ee3342001113df15a5664cd50b8d0e6c3b9c72121221a  build/L531/allocator-mutants/misalignment
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/out-of-range tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/out-of-range.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/out-of-range
++ rc=1
++ set +x
+PASS killed out-of-range exit=1: allocation mismatch at case 0
+45a4526cb7aa885952a34cbaa372f09074cf8d88d75341eee21a23b9756d42f5  build/L531/allocator-mutants/out-of-range.c
+4b4f136dea5f8f0a2b1b032768ad71a0c46d6f9e03c2b452ea66a4b6277bf5d2  build/L531/allocator-mutants/out-of-range
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/first-def tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/first-def.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/first-def
++ rc=1
++ set +x
+PASS killed first-def exit=1: allocation mismatch at case 0
+c3d4f491f9829bce31602d1db926706be4b8294334ec243c4381dcf1e1d117c6  build/L531/allocator-mutants/first-def.c
+a81a729aa00a9e82de7f3f3965cbca2f10081da3c6f3e976f86ee6765ca1e842  build/L531/allocator-mutants/first-def
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/last-use tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/last-use.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/last-use
++ rc=1
++ set +x
+PASS killed last-use exit=1: allocation mismatch at case 0
+bcdf267f0c5218294b3bceb2a1eb4a4fc7d9f6c9758b606b257b766db0b00459  build/L531/allocator-mutants/last-use.c
+30bbf91c0ca68b6cede68b750e5c6c67fc00e9c581241665c215be9d3c9a1d5e  build/L531/allocator-mutants/last-use
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/width tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/width.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/width
++ rc=1
++ set +x
+PASS killed width exit=1: allocation mismatch at case 0
+c106ad0264a99ff4c0fa5e768f92d58b8e226c2efffc42d4437272c58ef96678  build/L531/allocator-mutants/width.c
+cf91d1f0961eaed8bff3837f80389049fff99ab214dcdbbe97b3553cd237c204  build/L531/allocator-mutants/width
++ cc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -ffunction-sections -fdata-sections -Wl,--gc-sections -o build/L531/allocator-mutants/input-count tests/gpu_regalloc_lifetime_oracle.c build/L531/allocator-mutants/input-count.c
++ rc=0
++ timeout 30 build/L531/allocator-mutants/input-count
++ rc=1
++ set +x
+PASS killed input-count exit=1: allocation mismatch at case 0
+5bb2d08f18301cfb027d87e902dabca085ec9c1df1af5f99a4b06ebf70c47b19  build/L531/allocator-mutants/input-count.c
+f446440e1ebd4c2e69240be67805f7b2e513020f80a47a9e92e266a7bb9f59f9  build/L531/allocator-mutants/input-count
+allocator compiled behavioral controls: PASS 11/11; no compile/timeout counted as kill

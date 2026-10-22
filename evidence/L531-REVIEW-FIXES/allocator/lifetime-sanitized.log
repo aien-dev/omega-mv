@@ -1,0 +1,5 @@
+width=1 disjoint127 reused, exactly126 allocated, one-more refused
+width=2 disjoint64 reused, exactly63 allocated, one-more refused
+width=4 disjoint32 reused, exactly31 allocated, one-more refused
+oracle output/input controls killed=11
+regalloc lifetime oracle: PASS 27000 exhaustive cases, scalar/pair/quad reuse and capacity, mixed fragmentation, 11 controls killed
