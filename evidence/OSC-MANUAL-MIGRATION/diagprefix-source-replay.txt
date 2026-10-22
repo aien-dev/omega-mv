@@ -1,0 +1,493 @@
+PASS seed0 408 bytes, rebuilds itself
+PASS hex1 776 bytes, born from seed0
+PASS asm2 2464 bytes, born from hex1
+PASS om4 om4.bin 14224 bytes
+PASS omc fixpoint 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6
+PASS fwd exit 0
+PASS fwd runs, exit 7
+PASS mut exit 0
+PASS mut runs, exit 0
+PASS cycle exit 9
+PASS assign exit 7
+RC=0
+PASS fixpoint 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6
+PASS om4 refuses struct (exit 16)
+PASS t1 exit 42
+PASS t1x exit 20
+PASS t1y exit 22
+PASS t2 exit 6
+PASS t3 exit 15
+PASS t4 exit 17
+PASS t5 exit 10
+PASS t6 exit 21
+PASS t7 exit 1
+PASS t7b exit 9
+PASS t8 exit 1
+PASS t9 exit 1
+PASS bad_field error 3
+PASS after_fn error 9
+PASS dup_struct error 10
+PASS put_view error 20
+PASS fields17 error 14
+PASS idx_hi error 21
+PASS still_free error 9
+PASS field_is_struct error 10
+PASS new_in_if error 9
+PASS no_end error 4
+PASS empty error 16
+PASS dup_field error 10
+PASS missing_val error 4
+PASS mut field-swap exit 22
+PASS gate6 26 cases
+RC=0
+{
+  "cases": 74,
+  "failures": 0,
+  "results": [
+    {
+      "case": 0,
+      "length": 0,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 1,
+      "length": 1,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 2,
+      "length": 2,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 3,
+      "length": 3,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 4,
+      "length": 4,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 5,
+      "length": 4,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 6,
+      "length": 21,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 7,
+      "length": 18,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 8,
+      "length": 18,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 9,
+      "length": 12,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 10,
+      "length": 13,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 11,
+      "length": 8,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 12,
+      "length": 11,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 13,
+      "length": 65536,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 14,
+      "length": 65536,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 15,
+      "length": 1,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 16,
+      "length": 5,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 17,
+      "length": 5,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 18,
+      "length": 10,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 19,
+      "length": 2,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 20,
+      "length": 6,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 21,
+      "length": 6,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 22,
+      "length": 11,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 23,
+      "length": 3,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 24,
+      "length": 7,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 25,
+      "length": 7,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 26,
+      "length": 12,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 27,
+      "length": 4,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 28,
+      "length": 8,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 29,
+      "length": 8,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 30,
+      "length": 13,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 31,
+      "length": 5,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 32,
+      "length": 9,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 33,
+      "length": 9,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 34,
+      "length": 14,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 35,
+      "length": 31,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 36,
+      "length": 35,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 37,
+      "length": 35,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 38,
+      "length": 40,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 39,
+      "length": 32,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 40,
+      "length": 36,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 41,
+      "length": 36,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 42,
+      "length": 41,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 43,
+      "length": 255,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 44,
+      "length": 259,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 45,
+      "length": 259,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 46,
+      "length": 264,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 47,
+      "length": 4095,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 48,
+      "length": 4099,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 49,
+      "length": 4099,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 50,
+      "length": 4104,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 51,
+      "length": 4096,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 52,
+      "length": 4100,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 53,
+      "length": 4100,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 54,
+      "length": 4105,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 55,
+      "length": 4097,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 56,
+      "length": 4101,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 57,
+      "length": 4101,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 58,
+      "length": 4106,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 59,
+      "length": 8191,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 60,
+      "length": 8195,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 61,
+      "length": 8195,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 62,
+      "length": 8200,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 63,
+      "length": 8192,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 64,
+      "length": 8196,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 65,
+      "length": 8196,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 66,
+      "length": 8201,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 67,
+      "length": 8193,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 68,
+      "length": 8197,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 69,
+      "length": 8197,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": 70,
+      "length": 8202,
+      "pass": true,
+      "exit": 0
+    },
+    {
+      "case": "capacity",
+      "pass": true,
+      "exit": 3
+    },
+    {
+      "case": "closed-input",
+      "pass": true,
+      "exit": 2
+    },
+    {
+      "case": "full-output",
+      "pass": true,
+      "exit": 2
+    }
+  ],
+  "source_sha256": "1cb022c927b5ea6843f709edab1f6fe4740b6dff4e81035d1b7cc1bb8887e239",
+  "binary_sha256": "f509e3299cbfa6dfea6f1d4df2dbd7b60973674c38fc869450edfa595f40a9a5"
+}
+{"matches_wolfram": true, "output_sha256": "da67f8f6b16c1e61270737ab718600bb42ef3900d4c37a4f312359d754e7cc67", "status": "PASS"}
+nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:107 4:1351 5:64 6:66 7:115 8:48 9:277 10:4 11:37 13:24 15:487 16:2020 17:36 18:3 21:4 23:2 
