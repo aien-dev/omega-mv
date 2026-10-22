@@ -1,0 +1,573 @@
+[
+  {
+    "kind": "module units",
+    "exe": "build/math-native/unit",
+    "sourceHash": "a65ac54d858e1a1a75654a09c4d2f1a5b41fca892f104daa1a84b104a972e3da",
+    "binaryHash": "66b40ad2888aae85c10f0a288dab5c11ab81ee4e66859b365dc26925611dae54",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 23,
+    "executed": 23,
+    "status": 0
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "carry",
+    "exe": "build/math-native/mutant-carry",
+    "sourceHash": "402939d90f7dd52b92a6160e6a353f94afb668a42cdd614507585f09e1691aba",
+    "binaryHash": "801b01601eee0d3f8ecb8fd38e6bdb535f04ed0fe8f4b46f6105f10fad57f394",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "eval 9999+1",
+        "want": "OK 10000",
+        "got": "OK 0"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "multiply",
+    "exe": "build/math-native/mutant-multiply",
+    "sourceHash": "45f6abf05261c06047379a514f3a55ad0e8185ab8896ee32bd4c3dd7f2e10836",
+    "binaryHash": "0f1595b85c5d27c6bfbec333740b6a3e32ba4b858797503b254fc2414f8c31a4",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "eval 1/3+1/6",
+        "want": "OK 1/2",
+        "got": "OK 4/3"
+      },
+      {
+        "input": "eval (-7/9)*(27/14)",
+        "want": "OK -3/2",
+        "got": "OK -8/5"
+      },
+      {
+        "input": "eval (2^100+3)*(2^80+5)",
+        "want": "OK 1532495540865888858358353365406937102224590493223747599",
+        "got": "OK 4"
+      },
+      {
+        "input": "expand (x+1)^5",
+        "want": "OK 1+5*x+10*x^2+10*x^3+5*x^4+x^5",
+        "got": "OK 1+5/2*x+3*x^2+3*x^3+5/2*x^4+x^5"
+      },
+      {
+        "input": "collect x+2*x-x",
+        "want": "OK 2*x",
+        "got": "OK x"
+      },
+      {
+        "input": "diff 3*x^5-7*x^2+2",
+        "want": "OK -14*x+15*x^4",
+        "got": "OK -3*x+7/2*x^4"
+      },
+      {
+        "input": "integ 6*x^2-4*x+1",
+        "want": "OK x-2*x^2+2*x^3",
+        "got": "OK x-3/2*x^2+8/5*x^3"
+      },
+      {
+        "input": "subst x^3-2*x+1 ; -2/3",
+        "want": "OK 55/27",
+        "got": "OK 13/8"
+      },
+      {
+        "input": "solve 3*x+7 ; 22",
+        "want": "OK 5",
+        "got": "OK 4"
+      },
+      {
+        "input": "linear 2;1;1;-1;5;1",
+        "want": "OK 2;1",
+        "got": "OK 3/4;1/4"
+      },
+      {
+        "input": "eval 7/-9",
+        "want": "OK -7/9",
+        "got": "OK -4/5"
+      },
+      {
+        "input": "eval -2^2",
+        "want": "OK -4",
+        "got": "OK -3/2"
+      },
+      {
+        "input": "eval 2^3^2",
+        "want": "OK 512",
+        "got": "OK 3/2"
+      },
+      {
+        "input": "eval (2/3)^-2",
+        "want": "OK 9/4",
+        "got": "OK 6/5"
+      },
+      {
+        "input": "eval 18446744073709551615+1",
+        "want": "OK 18446744073709551616",
+        "got": "REFUSED 4"
+      },
+      {
+        "input": "subst (x+1)^2 ; 2/3",
+        "want": "OK 25/9",
+        "got": "OK 9/4"
+      },
+      {
+        "input": "linear 1;2;2;4;3;6",
+        "want": "REFUSED 7",
+        "got": "OK 1;1"
+      },
+      {
+        "input": "linear 1;2;2;4;3;7",
+        "want": "REFUSED 8",
+        "got": "OK -1;0"
+      },
+      {
+        "input": "eval 10^128",
+        "want": "REFUSED 4",
+        "got": "OK 11/2"
+      },
+      {
+        "input": "eval 9999+1",
+        "want": "OK 10000",
+        "got": "REFUSED 4"
+      },
+      {
+        "input": "eval 10000-1",
+        "want": "OK 9999",
+        "got": "OK -1/20002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002000200020002"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "gcd",
+    "exe": "build/math-native/mutant-gcd",
+    "sourceHash": "ac6b74e6194312b39d0f7acfd553b717fc03ae1aace69caa9e6386d98768b089",
+    "binaryHash": "29dd727dd5051d1a6b3bca7cc794a516d76e681c25b0b9e5d0edc607e3deb211",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "eval 1/3+1/6",
+        "want": "OK 1/2",
+        "got": "OK 9/18"
+      },
+      {
+        "input": "eval (-7/9)*(27/14)",
+        "want": "OK -3/2",
+        "got": "OK -189/126"
+      },
+      {
+        "input": "integ 6*x^2-4*x+1",
+        "want": "OK x-2*x^2+2*x^3",
+        "got": "OK x-4/2*x^2+6/3*x^3"
+      },
+      {
+        "input": "solve 3*x+7 ; 22",
+        "want": "OK 5",
+        "got": "OK 15/3"
+      },
+      {
+        "input": "linear 2;1;1;-1;5;1",
+        "want": "OK 2;1",
+        "got": "OK 6/3;3/3"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "negative",
+    "exe": "build/math-native/mutant-negative",
+    "sourceHash": "a8eb5e6b5e72bba6627f01a73acd523b501c115a31655017ca5e73e8c93acc67",
+    "binaryHash": "869caeced1c30607de2badeaaa842059e99d988a3aed7adf21097e46877ff6dd",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "eval (-7/9)*(27/14)",
+        "want": "OK -3/2",
+        "got": "OK 3/2"
+      },
+      {
+        "input": "collect x+2*x-x",
+        "want": "OK 2*x",
+        "got": "OK 4*x"
+      },
+      {
+        "input": "diff 3*x^5-7*x^2+2",
+        "want": "OK -14*x+15*x^4",
+        "got": "OK 14*x+15*x^4"
+      },
+      {
+        "input": "integ 6*x^2-4*x+1",
+        "want": "OK x-2*x^2+2*x^3",
+        "got": "OK x+2*x^2+2*x^3"
+      },
+      {
+        "input": "subst x^3-2*x+1 ; -2/3",
+        "want": "OK 55/27",
+        "got": "OK 71/27"
+      },
+      {
+        "input": "solve 3*x+7 ; 22",
+        "want": "OK 5",
+        "got": "OK 29/3"
+      },
+      {
+        "input": "gcd x^4-1 ; x^3-x",
+        "want": "OK -1+x^2",
+        "got": "REFUSED 5"
+      },
+      {
+        "input": "linear 2;1;1;-1;5;1",
+        "want": "OK 2;1",
+        "got": "OK 2;7/3"
+      },
+      {
+        "input": "eval 7/-9",
+        "want": "OK -7/9",
+        "got": "OK 7/9"
+      },
+      {
+        "input": "eval -2^2",
+        "want": "OK -4",
+        "got": "OK 4"
+      },
+      {
+        "input": "eval (2/3)^-2",
+        "want": "OK 9/4",
+        "got": "OK 4/9"
+      },
+      {
+        "input": "expand (x-1)*(x+1)",
+        "want": "OK -1+x^2",
+        "got": "OK 1+2*x+x^2"
+      },
+      {
+        "input": "solve x ; x",
+        "want": "REFUSED 7",
+        "got": "OK 0"
+      },
+      {
+        "input": "solve x+1 ; x",
+        "want": "REFUSED 8",
+        "got": "OK 1/2"
+      },
+      {
+        "input": "linear 1;2;2;4;3;6",
+        "want": "REFUSED 7",
+        "got": "OK 3;3/2"
+      },
+      {
+        "input": "linear 1;2;2;4;3;7",
+        "want": "REFUSED 8",
+        "got": "OK 13/4;13/8"
+      },
+      {
+        "input": "eval x^-1",
+        "want": "REFUSED 3",
+        "got": "OK x"
+      },
+      {
+        "input": "eval 10000-1",
+        "want": "OK 9999",
+        "got": "OK 10001"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "sum",
+    "exe": "build/math-native/mutant-sum",
+    "sourceHash": "f7dc9b4c1ee160c2734a1354b752a4b9944c7c34777faac0041351108bc3fdfa",
+    "binaryHash": "112346c367fd33fcc2663230c3fe986a241ec528220c1d317f6ba3b5d9bb6b83",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "eval 1/3+1/6",
+        "want": "OK 1/2",
+        "got": "OK 1/3"
+      },
+      {
+        "input": "eval (2^100+3)*(2^80+5)",
+        "want": "OK 1532495540865888858358353365406937102224590493223747599",
+        "got": "OK 1532495540865888858358347027150309183618739122183602176"
+      },
+      {
+        "input": "expand (x+1)^5",
+        "want": "OK 1+5*x+10*x^2+10*x^3+5*x^4+x^5",
+        "got": "OK 1+x+x^2+x^3+x^4+x^5"
+      },
+      {
+        "input": "collect x+2*x-x",
+        "want": "OK 2*x",
+        "got": "OK 0"
+      },
+      {
+        "input": "subst x^3-2*x+1 ; -2/3",
+        "want": "OK 55/27",
+        "got": "OK 1"
+      },
+      {
+        "input": "linear 2;1;1;-1;5;1",
+        "want": "OK 2;1",
+        "got": "OK 5/2;3/2"
+      },
+      {
+        "input": "eval 18446744073709551615+1",
+        "want": "OK 18446744073709551616",
+        "got": "OK 18446744073709551615"
+      },
+      {
+        "input": "subst (x+1)^2 ; 2/3",
+        "want": "OK 25/9",
+        "got": "OK 1"
+      },
+      {
+        "input": "eval 9999+1",
+        "want": "OK 10000",
+        "got": "OK 9999"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "derivative",
+    "exe": "build/math-native/mutant-derivative",
+    "sourceHash": "1ad397504ff39ed7af7ff14f977abcec606615d35ce34aafb25396e0d29f460c",
+    "binaryHash": "d17114a9e238b848a3f4ac8ef21fcb6169627c4b6d0c03e625ea57b6bcfbb395",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "diff 3*x^5-7*x^2+2",
+        "want": "OK -14*x+15*x^4",
+        "got": "OK -7*x+3*x^4"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "antiderivative",
+    "exe": "build/math-native/mutant-antiderivative",
+    "sourceHash": "f4b48480c698b5804febc87d469dbfc333f357882c9f36ecbb307c04774137be",
+    "binaryHash": "43b406ed20f5a33e82c87c854f354892ef25c9b17ab2fbd0e39034645af94302",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "integ 6*x^2-4*x+1",
+        "want": "OK x-2*x^2+2*x^3",
+        "got": "OK x-4*x^2+6*x^3"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "substitution",
+    "exe": "build/math-native/mutant-substitution",
+    "sourceHash": "b914270ce99ab7ce390bcbc214fef90fdc617e7250e84ed5db82ca438c55c24c",
+    "binaryHash": "db41e8002be6fc56c4588fdc51a3751cf2770000460694a605212048212f747f",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "subst x^3-2*x+1 ; -2/3",
+        "want": "OK 55/27",
+        "got": "OK 0"
+      },
+      {
+        "input": "subst (x+1)^2 ; 2/3",
+        "want": "OK 25/9",
+        "got": "OK 4"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "solve",
+    "exe": "build/math-native/mutant-solve",
+    "sourceHash": "5617baeaedebd3f3d817573b0de4caef1eb4a309bb8821be7b57f6a047313f0a",
+    "binaryHash": "2bc8118d9f4ecb351e9274adb3dd18a28c143a38ebad99cfaa1163a83370fe15",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "solve 3*x+7 ; 22",
+        "want": "OK 5",
+        "got": "OK -5"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "cancel",
+    "exe": "build/math-native/mutant-cancel",
+    "sourceHash": "6066d54ddcea4a4cf271c73d7aac8f19b0dadf945a077a6d827db6511f1fa81f",
+    "binaryHash": "d91eabf8396fbacbe26a2b89e3d6bd7776e91512a844dd897a9e8b1d1e72bff6",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "eval x/x",
+        "want": "REFUSED 3",
+        "got": "OK 1"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "power_precedence",
+    "exe": "build/math-native/mutant-power_precedence",
+    "sourceHash": "c21d21f593b3b056b148bd996d2276526fa80b120d2bb8403286d45101b4c1c4",
+    "binaryHash": "f236c53a495c4a205e427f2480840a64576ff99a2d59a67ee68c69429718f81c",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "eval -2^2",
+        "want": "OK -4",
+        "got": "OK 4"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "linear",
+    "exe": "build/math-native/mutant-linear",
+    "sourceHash": "8476d2c812ab68974d4ee966c1e1302cafb43f48275d9b388de9bff63f3676ab",
+    "binaryHash": "e5eb8876ce7d8c4db259502c8002f709e41b3bb5390ddd34fb6e2dbbf527f3c5",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "linear 2;1;1;-1;5;1",
+        "want": "OK 2;1",
+        "got": "OK 2;2"
+      }
+    ]
+  },
+  {
+    "kind": "wrong-rule mutant",
+    "name": "poly_gcd",
+    "exe": "build/math-native/mutant-poly_gcd",
+    "sourceHash": "fcfca591667774146f39c98711dc9583c1435e409e41c2665bad228e00118251",
+    "binaryHash": "200055031f66f8d9d3bacec06df4c716a5214de3a13dbaa0c83d22c229c3b786",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "requested": 42,
+    "executed": 42,
+    "detectedBy": [
+      {
+        "input": "gcd x^4-1 ; x^3-x",
+        "want": "OK -1+x^2",
+        "got": "OK 1"
+      }
+    ]
+  },
+  {
+    "kind": "stream",
+    "name": "long stream",
+    "inputHash": "9a6d0c6a1db42c1fe875b6b136eb828c8bc65966e658a197eeacd470a63f87c2",
+    "inputBytes": 1228800,
+    "requested": 300,
+    "executed": 300,
+    "expectedStatus": 0,
+    "status": 0,
+    "ok": true
+  },
+  {
+    "kind": "stream",
+    "name": "recover",
+    "inputHash": "e02a032a2edcd2e1539ac174c457eef646efd2fb72a6642cf1d2453999791d93",
+    "inputBytes": 2700,
+    "requested": 300,
+    "executed": 300,
+    "expectedStatus": 0,
+    "status": 0,
+    "ok": true
+  },
+  {
+    "kind": "stream",
+    "name": "EOF",
+    "inputHash": "6364096a06873250a02fb3f345d12cedbb19f0dbbb0a28449736e654678c2f98",
+    "inputBytes": 8,
+    "requested": 1,
+    "executed": 1,
+    "expectedStatus": 0,
+    "status": 0,
+    "ok": true
+  },
+  {
+    "kind": "stream",
+    "name": "empty input",
+    "inputHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inputBytes": 0,
+    "requested": 0,
+    "executed": 0,
+    "expectedStatus": 0,
+    "status": 0,
+    "ok": true
+  },
+  {
+    "kind": "stream",
+    "name": "transport bound",
+    "inputHash": "1f8745f0d2d1387ec1af2211a3cf417b2e9e885e853472649c1d979d0e9370e3",
+    "inputBytes": 65536,
+    "requested": 1,
+    "executed": 1,
+    "expectedStatus": 1,
+    "status": 1,
+    "ok": true
+  },
+  {
+    "kind": "stream",
+    "name": "oversize recovery",
+    "inputHash": "757eca6781735d7834777a607d13a0f389744912ac016d6a5023f3dd0f6496cb",
+    "inputBytes": 5008,
+    "requested": 2,
+    "executed": 2,
+    "expectedStatus": 0,
+    "status": 0,
+    "ok": true
+  },
+  {
+    "kind": "determinism",
+    "exe": "build/math-native/rebuild",
+    "sourceHash": "fc129584584db429e9a27ddb33a7ae41c3cade969803fbd9a4ba177d1a9a4e1b",
+    "binaryHash": "aa7906f534ffb63575f5b59be15e3ed93a02fe56d103aa35298beed5a35d7ac6",
+    "compileStatus": 0,
+    "validAarch64Elf": true,
+    "status": 0,
+    "emptyEnvironment": true
+  }
+]

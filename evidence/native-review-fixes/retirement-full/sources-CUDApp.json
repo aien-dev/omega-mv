@@ -1,0 +1,2206 @@
+{
+  "commit": "232332422bfdc31c8918085b50f13c1e18ab702e",
+  "ref": "origin/main",
+  "counts": {
+    "historical_or_oracle/C": {
+      "files": 3,
+      "lines": 2095,
+      "bytes": 140533
+    },
+    "first_party_source/C": {
+      "files": 124,
+      "lines": 28075,
+      "bytes": 1523862
+    },
+    "first_party_test/C": {
+      "files": 48,
+      "lines": 17025,
+      "bytes": 1087065
+    },
+    "third_party/C": {
+      "files": 67,
+      "lines": 37334,
+      "bytes": 1594438
+    }
+  },
+  "files": [
+    {
+      "path": "evidence/FB1-CUT5-HD128-7dd92dc/FB1-CUT5-7dd92dc/gpu_attention_test.c",
+      "git_blob": "80ff4b01f54aec4ba1b3da58beb984f49feb68b6",
+      "sha256": "4f83db25193278a4eab50202656a69aa151ac416f6cd3c047063f256d34f0611",
+      "language": "C",
+      "category": "historical_or_oracle",
+      "lines": 972,
+      "bytes": 76442
+    },
+    {
+      "path": "evidence/FB1-CUT5-HD128-7dd92dc/FB1-CUT5-7dd92dc/omega_gpu_attention_api.c",
+      "git_blob": "f22f3e975e701d350dcddc37222f0dafb78a7472",
+      "sha256": "adb89be06da592d860aaab5a31fc2c7aed478fde9535c23eb3a0604b3b844c06",
+      "language": "C",
+      "category": "historical_or_oracle",
+      "lines": 909,
+      "bytes": 50781
+    },
+    {
+      "path": "evidence/FB1-CUT5-HD128-7dd92dc/FB1-CUT5-7dd92dc/omega_gpu_attention_api.h",
+      "git_blob": "0e8af5a28dfd1b7095fdf7cf8b4bbdce2c5f378b",
+      "sha256": "470d114d0488d74d8f149b8bdcd1568b33f4676db17001a77f19e44bef754cb1",
+      "language": "C",
+      "category": "historical_or_oracle",
+      "lines": 214,
+      "bytes": 13310
+    },
+    {
+      "path": "examples/hello_gpu/hello_gpu.c",
+      "git_blob": "6eb3b605fe2c8192f3b55c340d7e2b0563815735",
+      "sha256": "896c3b59ae77b65eb6668bf3d934dfe6ed62b852fcd1711d1d87aa30326e33f4",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 326,
+      "bytes": 20339
+    },
+    {
+      "path": "m16/m16_concurrent.c",
+      "git_blob": "adbcaf19adb0010459f116e438acbb685bdb67c7",
+      "sha256": "91029b3711f13ee24d59a9a2afc4a7fa61ebc8545d9b5f0c9abd91b5bd1a2648",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 263,
+      "bytes": 11729
+    },
+    {
+      "path": "m16/m16_gpu_wait.c",
+      "git_blob": "fc3082ee0acccab7d680aaf01ab53e26eb28b521",
+      "sha256": "f6fd698505051e3439af532e970d84fc4b175f7cda7f6be38b5e23573d331791",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 162,
+      "bytes": 5796
+    },
+    {
+      "path": "m16/m16_gpu_wait.h",
+      "git_blob": "4f27e3dd1046e46e75c14f4f0309aaf8f189a09d",
+      "sha256": "d7b1e7395d7b719d950dd08ab7b32c4f3ff9f71a6b814768b8f03bb994d1317f",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 118,
+      "bytes": 5853
+    },
+    {
+      "path": "m16/m16_native.c",
+      "git_blob": "659427f5d823ca3045e245a37b7b025f32ae85e2",
+      "sha256": "425a12c0ed77522e46aa8da80b7fcca359f8ca75d893fbe8073c92e02fea0796",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 114,
+      "bytes": 4032
+    },
+    {
+      "path": "m16/m16_native.h",
+      "git_blob": "5e0c5841eb4a5a4a8e876ad35758aae8f9237f5f",
+      "sha256": "4fc508dc346a978d542d1c33a25d165a74975a3feb59e0e4ff4042ee722ed21b",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 55,
+      "bytes": 2142
+    },
+    {
+      "path": "m16/m16_requalify.c",
+      "git_blob": "1bb77dab0322a1ef823096dd72a03f436aa6e346",
+      "sha256": "bf04e1700ce436151c55ffdf7f552f867cc9d67bc6e1fa202778144352600f33",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 133,
+      "bytes": 5309
+    },
+    {
+      "path": "nvrm/lifecycle_gates.c",
+      "git_blob": "24277a72316616cdcca4a81f42e33938e5cf0f44",
+      "sha256": "23b4eae78a7fcdb4ee51b58db6302c7bb83db5bf7830d1bb745c85b6d5850b34",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 390,
+      "bytes": 15143
+    },
+    {
+      "path": "nvrm/nvrm.c",
+      "git_blob": "1c892b85d1d0c65c6d68c92e3a81d92e658ce239",
+      "sha256": "8a0449123356a020f60f13fe274cf8be404f4c4cd2a98d0b3ed8a93476ffe566",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 908,
+      "bytes": 38189
+    },
+    {
+      "path": "nvrm/nvrm.h",
+      "git_blob": "5039271bec73feae0c044005b426f543e345c9f8",
+      "sha256": "93538ee3f668bd83d61e85b38b1f95368e498ef6505d79de71b2ace82fa9c342",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 143,
+      "bytes": 6404
+    },
+    {
+      "path": "nvrm/submission_visibility_gates.c",
+      "git_blob": "407b77d978fb67ac86c74dc4d68ade957823c034",
+      "sha256": "395a912f3d20f1c1270207770cc0b427c6c9c5e57651c063412f6ce8521529ce",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 78,
+      "bytes": 3174
+    },
+    {
+      "path": "src/omega_blackwell_codegen.c",
+      "git_blob": "93752683c640e7c632ecae488c0ebbc544a9b65e",
+      "sha256": "b57d4daa8bf92fb49406e09d6c68305a3a19e2fea90ea42cf1f1a5c3c4c9bbf7",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 2540,
+      "bytes": 144688
+    },
+    {
+      "path": "src/omega_blackwell_codegen.h",
+      "git_blob": "cde6a5faf7398352594674305d701ec49e08d928",
+      "sha256": "21e838d182b5e2300b3723cb42ba1175dbf57a09aa22e2dcb2cdf79d515b32f4",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 334,
+      "bytes": 20732
+    },
+    {
+      "path": "src/omega_blackwell_codegen_attn.c",
+      "git_blob": "4aa07727883b09d045f7929313d1fd689891c545",
+      "sha256": "e458289332374717053acbfeb6b8ba605f0f448a8496adf3538d4ba31cbcf242",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 550,
+      "bytes": 34323
+    },
+    {
+      "path": "src/omega_blackwell_codegen_attn.h",
+      "git_blob": "ed284bf5a53813b35a53ab12df1a869f040d3419",
+      "sha256": "1ec45948db206a26dc28089b66af43895ca1c13fc80a040654ee40a5e1264d0f",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 91,
+      "bytes": 6266
+    },
+    {
+      "path": "src/omega_blackwell_codegen_bf16.c",
+      "git_blob": "d6e52d1385244a9caf5919ff353a0ee1dfc04875",
+      "sha256": "e47cc902dc5cb79fc933ae1d607c6c359256ac685e0846bda40af2adc186dc47",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 263,
+      "bytes": 15908
+    },
+    {
+      "path": "src/omega_blackwell_codegen_bf16.h",
+      "git_blob": "0e18c04bebdd8c65cfad2026d305a9776155a438",
+      "sha256": "d933d2937bd337d49802b806e43e67ab518befdb96680340e186f2d0c2a2cec9",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 68,
+      "bytes": 3442
+    },
+    {
+      "path": "src/omega_blackwell_codegen_dec.c",
+      "git_blob": "033628a5e6bf9c10a16eee1c519dca699c502b6d",
+      "sha256": "fced5d5f18c5396b718c2f8ef4fb353e33904258a474628b4cfc9a39b8f2997a",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 369,
+      "bytes": 21084
+    },
+    {
+      "path": "src/omega_blackwell_codegen_dec.h",
+      "git_blob": "00d78ddb149cbe30198361396c62332687a1eb28",
+      "sha256": "8ebd10cc0bc0bd575ddef1817ad8e854edfdaec5ff8d9c1e338a8fb03dee5129",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 83,
+      "bytes": 4387
+    },
+    {
+      "path": "src/omega_blackwell_codegen_gemm.c",
+      "git_blob": "dc52d433b6ccc40c5e3be204b87b351e3c822a8e",
+      "sha256": "c5e1e1f53e4165dc5c18866204d88487fd86eb3b7951e06bc5177b5731abf137",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 344,
+      "bytes": 21585
+    },
+    {
+      "path": "src/omega_blackwell_codegen_gemm.h",
+      "git_blob": "17b21546e2f21ed062ebd8a0a1c6cc7b585f2489",
+      "sha256": "ed3f5ebd2e9471b07049ecb6cf0e69a18b15b26030274cca32a13b4425413f62",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 69,
+      "bytes": 3829
+    },
+    {
+      "path": "src/omega_blackwell_codegen_moe.c",
+      "git_blob": "c1438bd35b88536cdb9bec9ab4f3fc07746a22b7",
+      "sha256": "3c044c0ce098a698e0548efbcb8a6265755d006cec389bc923e172fb6eed4d80",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 329,
+      "bytes": 21280
+    },
+    {
+      "path": "src/omega_blackwell_codegen_moe.h",
+      "git_blob": "8f3a43012158aa7d3d5dfa21b9027f5725e49bec",
+      "sha256": "61c8806ccf1e9dc13fde510dfc516a2de10c8476efc36026ecf3004a7cee6973",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 108,
+      "bytes": 6424
+    },
+    {
+      "path": "src/omega_blackwell_codegen_moe2.c",
+      "git_blob": "6680913a07f5b9acbe7a8e60f1c7648a38b656d4",
+      "sha256": "eae8e148d470e03e89e0e998120b9c47228cd15f0c40a0859bb50694b8deba50",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 343,
+      "bytes": 21632
+    },
+    {
+      "path": "src/omega_blackwell_codegen_moe2.h",
+      "git_blob": "5cf7222a2927f7bbeade6f6994db640c3a9608bd",
+      "sha256": "0158bb068631396e6b13ee0e69c9799f909fc2ccb5138f4c336af6d98f3a08a7",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 58,
+      "bytes": 3539
+    },
+    {
+      "path": "src/omega_blackwell_codegen_pattn.c",
+      "git_blob": "24388f4d13a291afac68899aa60a18795117c69b",
+      "sha256": "a10a8ab4094d6664d06078b8ed8207572786c848794b55275dfe76087479e389",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 559,
+      "bytes": 36648
+    },
+    {
+      "path": "src/omega_blackwell_codegen_pattn.h",
+      "git_blob": "93b8754a87ca236fbc2524f29c348626081b437a",
+      "sha256": "97601161969f982a4cb71b80b8caadc8d0ab4eab0e6125c0344a3aa4970123a6",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 84,
+      "bytes": 6182
+    },
+    {
+      "path": "src/omega_blackwell_codegen_pf.c",
+      "git_blob": "b6f1084c6de810f8761f53d4d4a3046e992207a1",
+      "sha256": "eb78804d7ed3831c5392eff94f0914a446f1dcc16a5608e154aef56134e2a499",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 23,
+      "bytes": 1252
+    },
+    {
+      "path": "src/omega_blackwell_codegen_pf.h",
+      "git_blob": "18327f901482d28d94cc48eb7fe32b16a7300480",
+      "sha256": "4d12a6cf8612e03a3c5cd82371539f0f25afb04cfb89b524d1ed2f1bc3c5f347",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 23,
+      "bytes": 891
+    },
+    {
+      "path": "src/omega_blackwell_codegen_pfhost.c",
+      "git_blob": "a631f7e0cd25949d15e7e6d6933fcc54f31d6385",
+      "sha256": "aa4cdb5592adbbeb331f34eaf73a05caa3e6d0997b68fb05a26aca8cda730141",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 146,
+      "bytes": 8222
+    },
+    {
+      "path": "src/omega_blackwell_codegen_pfhost.h",
+      "git_blob": "b90ec0b4897cae450e5b45aa5cd787c7e10b9d47",
+      "sha256": "8c1306272d635eddf6d36aabb3d8df5b308b00a1d8471c7c4e84479d0fb07488",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 49,
+      "bytes": 2985
+    },
+    {
+      "path": "src/omega_blackwell_codegen_qg.c",
+      "git_blob": "0006d8b6ed2f812be88b2f73a7c05d811443d665",
+      "sha256": "a5df84be7e8a7c73fadd51f013d7167b12d9f780bc1e68dc9f1be270ea7a1b4b",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 271,
+      "bytes": 17854
+    },
+    {
+      "path": "src/omega_blackwell_codegen_qg.h",
+      "git_blob": "af08ad7f4cbed41635b5768b3dc48809c68f4ddb",
+      "sha256": "81e1c3aca427a10c40875fbdc252f20dd4404342dbac40d2bb9beebb6c4cdcdf",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 69,
+      "bytes": 4477
+    },
+    {
+      "path": "src/omega_blackwell_codegen_qmma.c",
+      "git_blob": "e69277a12983af482245a2533fc9aab7a77bb3d4",
+      "sha256": "c1a52e36807fbf22470f065e0469e8ad5a9abb662ec0ce2c4e3a2a60b88d888e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 138,
+      "bytes": 8449
+    },
+    {
+      "path": "src/omega_blackwell_codegen_qmma.h",
+      "git_blob": "897586920e344db12ac6e752326fa8479926ab47",
+      "sha256": "a71bd17b4a3e759e1a4fd23cbb58be883fe18185991c772d851b17bb4c3d9df7",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 50,
+      "bytes": 3286
+    },
+    {
+      "path": "src/omega_blackwell_codegen_router.c",
+      "git_blob": "e16d7320d03505aa54f51c0d84b5ef21aa9eb73d",
+      "sha256": "f031750a058a3ac63bb10beeac1f77e087e06fbcc9eed78b517d5a49a94623fb",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 406,
+      "bytes": 23633
+    },
+    {
+      "path": "src/omega_blackwell_codegen_router.h",
+      "git_blob": "54c296e9cb3217599605796b5f71b52f99371993",
+      "sha256": "c9de747c91416d319b4ac028c6a4a0b424275784eb1662b0858e20d0df38504e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 84,
+      "bytes": 5590
+    },
+    {
+      "path": "src/omega_blackwell_codegen_tc.c",
+      "git_blob": "86104d97ff2abf84812ebc54a9b058c342d244c6",
+      "sha256": "2c71bd879a0f4074a2d6e7f30591f5ee1126b05bc80be65628c8080a2949e996",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 342,
+      "bytes": 21285
+    },
+    {
+      "path": "src/omega_blackwell_codegen_tc.h",
+      "git_blob": "54ce17b4b392cf980847b662bc60a1ed05b99dd8",
+      "sha256": "8e012a976c6176438951ccc3fea128b26f3217cb6357d99d7a3b4b6f98d6c51f",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 104,
+      "bytes": 7381
+    },
+    {
+      "path": "src/omega_blackwell_codegen_tc2.c",
+      "git_blob": "878eb0dd5eb89bc33ff807753bdd5e506552acc7",
+      "sha256": "27bd3979229ec688c53b307b8a33bce2bff097bc90f10f3fb297f5183b9d7554",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 230,
+      "bytes": 13769
+    },
+    {
+      "path": "src/omega_blackwell_codegen_tc2.h",
+      "git_blob": "34f6f9a22dce289fc01149959ca19c84ab23fb54",
+      "sha256": "35e4b98d7597003d538de1002fb4d1641359631cd61ef4076bf95abcc0181d49",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 58,
+      "bytes": 3734
+    },
+    {
+      "path": "src/omega_blackwell_codegen_tern.c",
+      "git_blob": "7cd11ac4f189fab67162ab16971fadc6b105887e",
+      "sha256": "5bf98a072f56e0ea3570bdcc5011c6c1e97851517824eeac7487e155407db91e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 421,
+      "bytes": 25555
+    },
+    {
+      "path": "src/omega_blackwell_codegen_tern.h",
+      "git_blob": "895d85beedf02dac368481dfef642d07d62ceb2f",
+      "sha256": "3264d1c781e4cbfdfede7fc4d01d64a32f98681daf77f4a4b1230e0c50b56c03",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 109,
+      "bytes": 6625
+    },
+    {
+      "path": "src/omega_blackwell_encoder.c",
+      "git_blob": "a0003c209718578bf15cf9e66af2200dfeca0912",
+      "sha256": "5f5693a6ac86ce73be36a7695db30151bb82b34ae22c806e2927ae51482a705f",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 111,
+      "bytes": 5484
+    },
+    {
+      "path": "src/omega_blackwell_encoder.h",
+      "git_blob": "eaec79ad40435e7392c286cce158a33e06067c1d",
+      "sha256": "9912fce5f7441428f7ddacf152f2728503ddb12b3eac1ed89c7ad6737b9d0bee",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 28,
+      "bytes": 1076
+    },
+    {
+      "path": "src/omega_blackwell_engine.c",
+      "git_blob": "c5752b1b204b72dba78c49397bc9f4170d614019",
+      "sha256": "26f318b3201c374b0c0b623a0834173d02c02f6687fc91c9d35b5ee06c1f6776",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 664,
+      "bytes": 24554
+    },
+    {
+      "path": "src/omega_blackwell_engine.h",
+      "git_blob": "b037e81b0da964b86ca3010f7dea66e08ed182e1",
+      "sha256": "db8733e32fac680ba58f4bc56c33164b0f644683fb0b197572f8f2fbe744390d",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 56,
+      "bytes": 2885
+    },
+    {
+      "path": "src/omega_blackwell_matmul.c",
+      "git_blob": "863364cca7676a6aaf31ee20f97b3bc46ff7b189",
+      "sha256": "34e15bac999155f6c4a413ac12290125b14da15d21772bbcd767e368f1dca949",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 190,
+      "bytes": 6264
+    },
+    {
+      "path": "src/omega_blackwell_matmul.h",
+      "git_blob": "52ab1dd71fba803eb6c8064891f6058b40c522b1",
+      "sha256": "41a6b8eee68a68a22cecb4a9596b10c0cafab1cb602766e66547bdc7899add3f",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 83,
+      "bytes": 3535
+    },
+    {
+      "path": "src/omega_blackwell_qmd.c",
+      "git_blob": "c34ab77daea4ad4e9d48447049aa2c07d4707272",
+      "sha256": "19c9106073af854621ddd5f84af002dfa7be8e794c125f12446f0957a310c2aa",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 238,
+      "bytes": 10899
+    },
+    {
+      "path": "src/omega_blackwell_qmd.h",
+      "git_blob": "fd86e4756bd73d00154e09209a0c7b68a36398f5",
+      "sha256": "a0239282296b39d5b994220357789ad98f0e11e4a4bd23c33c747ce24100189e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 69,
+      "bytes": 2972
+    },
+    {
+      "path": "src/omega_blackwell_realize.c",
+      "git_blob": "7b642f1611a7bae7a8588257b298fbb118a74c06",
+      "sha256": "3718873eaa23d3ce3f0c3e9a183538f791b3fb1c194d0d273d7a002a8ea2fe09",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 53,
+      "bytes": 2153
+    },
+    {
+      "path": "src/omega_blackwell_realize.h",
+      "git_blob": "a970eb14fbe6491a79bf9182cd21b8e9d37188ec",
+      "sha256": "63cbca007ad9b58762e235ce16cee7625b04fe2978d3a089665a37526bf2ca54",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 36,
+      "bytes": 1209
+    },
+    {
+      "path": "src/omega_blackwell_submit.c",
+      "git_blob": "34d49ed995fcb95f041452c9320bf53580077f55",
+      "sha256": "19b254fab8a96476300de4a61f83642008d8a444f0ee8db64907890dcb9263ff",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 725,
+      "bytes": 31598
+    },
+    {
+      "path": "src/omega_blackwell_submit.h",
+      "git_blob": "6fe38bcd02c5aa6126608ed26c28f359f7213efd",
+      "sha256": "ee1c4cedd03af8b41af82de4d070e8d2d75d5bae6f6c589ff53bcac41734d772",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 96,
+      "bytes": 4478
+    },
+    {
+      "path": "src/omega_bw_em.h",
+      "git_blob": "a7b599913018f807f676315862b94fd76f05abb1",
+      "sha256": "0cddecd4bcea070bb6e3e0d47f55929dd02691d7f99eea9ce38b4b1c5d7a8fd9",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 146,
+      "bytes": 11322
+    },
+    {
+      "path": "src/omega_bw_em_q.h",
+      "git_blob": "a947d02f03374b09c351b989f75387f62c8501cf",
+      "sha256": "0361e0e4924a70198cd3d2e1d44f7b9e41eab36051faa9dc6c405a39b3d35872",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 19,
+      "bytes": 1371
+    },
+    {
+      "path": "src/omega_bw_reconv.h",
+      "git_blob": "1a97cdb69909796376dd2bd2c42d7b432b58c319",
+      "sha256": "195124f3463ae6e451d0f56fdb7b1319f761a44a46e0c27c547df489d4e2b5f8",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 84,
+      "bytes": 4277
+    },
+    {
+      "path": "src/omega_canonical.c",
+      "git_blob": "ac320e7cadcc8789581070e0130515d9a550f8ae",
+      "sha256": "e067ec886fcccbaed0dc4c1a5d2f2124d1fd27121b151dfc3f04ca7092d1571b",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 209,
+      "bytes": 7218
+    },
+    {
+      "path": "src/omega_canonical.h",
+      "git_blob": "a2524c052625d29b19089ae79c7f2f122e847c0a",
+      "sha256": "dba3a5ef8381e9bff73296fb8d2c2b429ffa1dd2bccb4117e74f28a7116b0acc",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 21,
+      "bytes": 1064
+    },
+    {
+      "path": "src/omega_core.c",
+      "git_blob": "0f4c00b4b0b1c7188a843e7775aa233633b8ac0e",
+      "sha256": "572ab9f08de0b1224465ce1ab73260d03a13aa83be5d46b6609bdb055015f56e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 458,
+      "bytes": 16294
+    },
+    {
+      "path": "src/omega_core.h",
+      "git_blob": "af8ba45085408e2ce964dc11f1102427b3fbe88a",
+      "sha256": "27e41829f04ba1f5d6503241ba66c3ac503f97ba49c4efe87331a1d263aa5412",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 67,
+      "bytes": 3873
+    },
+    {
+      "path": "src/omega_gpu_attention_api.c",
+      "git_blob": "8a95cb9055ad9f7a37811b74490e6b586539c0cf",
+      "sha256": "6d6d6c31d0db4ff1e7582975f2d8e9a687346efa8f43bd45b09d4b4e6bac7fde",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 1437,
+      "bytes": 87446
+    },
+    {
+      "path": "src/omega_gpu_attention_api.h",
+      "git_blob": "1c7182ccb734affd325332f28fdfe7f7d7d8d32a",
+      "sha256": "37d7aa652636fa0da452e9834613f620e01f4aca4944ed8b197984627c8bd527",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 291,
+      "bytes": 20393
+    },
+    {
+      "path": "src/omega_gpu_bf16_gemv_api.c",
+      "git_blob": "0ab73a5dd26d7f3120272cdd44b5176e17062bed",
+      "sha256": "84811a3cbf65fe6d933c5fae9376d80b6ee02ce802e47d5e96b485d6942b6983",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 276,
+      "bytes": 14094
+    },
+    {
+      "path": "src/omega_gpu_bf16_gemv_api.h",
+      "git_blob": "a9ef0517eefdd6b08b5ed1cd5f03cdfb3b93ed47",
+      "sha256": "904c1c1438caa45e28baf13eccc429ec78f6e5bd3166ce1ebdd728b929787470",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 93,
+      "bytes": 5119
+    },
+    {
+      "path": "src/omega_gpu_chip.c",
+      "git_blob": "5a0244d1eb96d55b3d386185d1d85b89f043cd94",
+      "sha256": "473ad60d882b6cdbdbd9c249494692a28ad0fb3c94827590b201c896e4ddd092",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 74,
+      "bytes": 3242
+    },
+    {
+      "path": "src/omega_gpu_chip.h",
+      "git_blob": "2e2affdddf5e09f10a6602854af9cfb8cc91256e",
+      "sha256": "8ec475e47e44cbceda47498b8f8036dcb9f34fde65cc3199e16859e71b2ce42e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 44,
+      "bytes": 2025
+    },
+    {
+      "path": "src/omega_gpu_cmdlist.c",
+      "git_blob": "decf8165d0170876fd3e26bf4584f38bb3fd7dcf",
+      "sha256": "4f54055bf935e2dc9cf94e72b532f709bdb732cc611da13be8c1b0a5f7dc5ee0",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 370,
+      "bytes": 21936
+    },
+    {
+      "path": "src/omega_gpu_cmdlist.h",
+      "git_blob": "1447e94015da302ce92ccb6421f3e735a3a9dc11",
+      "sha256": "243d90be7e8f216e9d6d4b81bce4e262bce092dcddfaa1be89f126c2cb490959",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 112,
+      "bytes": 7714
+    },
+    {
+      "path": "src/omega_gpu_code_alloc.h",
+      "git_blob": "d61de8f13fde1933677bbc5d297626c5abc620a7",
+      "sha256": "aa82fbc3f207bf0eb5b76f5134b01c0b7bad3eaea7df2a4330464311859670b9",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 37,
+      "bytes": 1870
+    },
+    {
+      "path": "src/omega_gpu_decode_attn_api.c",
+      "git_blob": "1050ea58ca568646fd08c3995aee674aba0c1b68",
+      "sha256": "0fceffd75a15b4929385117d5a87bf05fb9588d701b8046c6528edec756441ae",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 280,
+      "bytes": 17624
+    },
+    {
+      "path": "src/omega_gpu_decode_attn_api.h",
+      "git_blob": "478ee9e78a0cf7320d6910ac1c736ddf99efa98e",
+      "sha256": "b3d676cb66d823367c55fc6ab621b38aa236499411305600b19b338580b09dd5",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 109,
+      "bytes": 7450
+    },
+    {
+      "path": "src/omega_gpu_decode_graph.c",
+      "git_blob": "e23fd820eddc88785336bda2f10626ed8a67ab13",
+      "sha256": "d4cb451812e3f0d05531f47e58f609a79e535bbbd6f5bb76c9dcb9e65debe59e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 413,
+      "bytes": 26131
+    },
+    {
+      "path": "src/omega_gpu_decode_graph.h",
+      "git_blob": "7445c62d08a2eb72c12a009723690f48cae29a1b",
+      "sha256": "447a5148e01eec384f2a6a5894799df35e370aefd5bcd609d61f44e1abaffb9f",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 189,
+      "bytes": 13098
+    },
+    {
+      "path": "src/omega_gpu_elementwise_api.c",
+      "git_blob": "0bb1fe9dda5b421769e12839a36adc9bdefe2f86",
+      "sha256": "3a937512f5a67b52e7a38680e934c3b3989ab5aa6e996dd0ec8efa3e5b4c5ed3",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 1140,
+      "bytes": 60012
+    },
+    {
+      "path": "src/omega_gpu_elementwise_api.h",
+      "git_blob": "7b190884848a8d8c43681063ff526ff3f4e41380",
+      "sha256": "ba066bbd975f094dc2d257e07737e0b36b52c5c978c6e240218ca2d60ac00b53",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 184,
+      "bytes": 11083
+    },
+    {
+      "path": "src/omega_gpu_engine.c",
+      "git_blob": "42048f1fe21077fbb4b276031716a980d50315dd",
+      "sha256": "05d08c4d3736cba3019856f356edbfe21842635bf85689ad62f614de415b7acd",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 465,
+      "bytes": 18006
+    },
+    {
+      "path": "src/omega_gpu_engine.h",
+      "git_blob": "399e5638e1675004f5e15796003a97e8c710729e",
+      "sha256": "e955c727473efd9d333eeff9a16dd8eeee96ecf83c623702d7ec9a803ec984ef",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 259,
+      "bytes": 13135
+    },
+    {
+      "path": "src/omega_gpu_fmt.c",
+      "git_blob": "91e6e667ce1ea9ad6338cceda9f3a6badef96050",
+      "sha256": "a66839b45c66a03b2d8529b33c2037c79ab4569f1470cbd9d0db563c3771c01d",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 66,
+      "bytes": 2384
+    },
+    {
+      "path": "src/omega_gpu_fmt.h",
+      "git_blob": "8c391675f0313115e87357ff7e436f90c835e103",
+      "sha256": "74b12f346aa66afe72b31757863859eba83d28fbff7c36a919cc0a0890f9407d",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 11,
+      "bytes": 705
+    },
+    {
+      "path": "src/omega_gpu_fp8_api.c",
+      "git_blob": "c8f97d8e7e58ee4ba1b4d78966206563059fa992",
+      "sha256": "8040764cf4f9498cc9caf39cc8c58be5448368c985e3e3eb21ad02e5bc8f6527",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 417,
+      "bytes": 24659
+    },
+    {
+      "path": "src/omega_gpu_fp8_api.h",
+      "git_blob": "3ed7d13175cc26d9d60df382d9a0c3a5f3fe41b7",
+      "sha256": "fb6af8a62f86a0b974fa4eb0ba452e6fece51ce5240fb20cdc9020103138cfaa",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 183,
+      "bytes": 12753
+    },
+    {
+      "path": "src/omega_gpu_fp8_pack.c",
+      "git_blob": "6a22ef6475cd0beffd96bfa4610cb6df8bf80238",
+      "sha256": "97d7b035bb75fe4060332fb572000a5e99d275fa90efaf570022c29bc02f66bd",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 75,
+      "bytes": 3157
+    },
+    {
+      "path": "src/omega_gpu_fp8gemm_api.c",
+      "git_blob": "63a9ba6f6ba5864b5eec402fe860441c3405b0c4",
+      "sha256": "c570c00a2f345393fedc8290da8de65d7d9b5faafbb48ea56bc863a0692b16c4",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 257,
+      "bytes": 14581
+    },
+    {
+      "path": "src/omega_gpu_fp8gemm_api.h",
+      "git_blob": "7c43f941f1e7c731e35e2ca20443638f47bcdfdf",
+      "sha256": "1a9e4cbde7db76ebbc9988039868ba93c016960aeb3bd2297753c03889dd623d",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 88,
+      "bytes": 4897
+    },
+    {
+      "path": "src/omega_gpu_hostmath.c",
+      "git_blob": "011857562aed173298b6ab8922e9c83a20b94b80",
+      "sha256": "7bcabfeb40ec70bf5b617ac868c956883c12e6ef8d2dd6c90ad684c6f88b8c22",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 83,
+      "bytes": 3783
+    },
+    {
+      "path": "src/omega_gpu_hostmath.h",
+      "git_blob": "623b01b9bb2624502d2cb9e0dd232be86e5256a4",
+      "sha256": "509d71c56ed87e159d856888f5d3437b570fe6a08e6771040926372a70d35a39",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 21,
+      "bytes": 1284
+    },
+    {
+      "path": "src/omega_gpu_matmul_api.c",
+      "git_blob": "dc1de7394b11688b05ef739b9a16380497c275e2",
+      "sha256": "c10b1057fb7a6d54fb1ccfe53c1ad9c11bceded050d6dc0040424acc4e00a35d",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 641,
+      "bytes": 33217
+    },
+    {
+      "path": "src/omega_gpu_matmul_api.h",
+      "git_blob": "01dbb04ba2eba5084608a3536c35f0dacece3949",
+      "sha256": "35b29090d61d1aa81117290ea5d194e4eaa76cf5d60c923cafb4f24f76c7f44f",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 223,
+      "bytes": 13975
+    },
+    {
+      "path": "src/omega_gpu_mem_cached.c",
+      "git_blob": "bcf1c2111ae4e9c18fbda39936397729da7dc0a7",
+      "sha256": "1fb99ecc3fdb677d8a0496004a63824b81b664528831516cd3d3c9aee2881f02",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 25,
+      "bytes": 1443
+    },
+    {
+      "path": "src/omega_gpu_mem_cached.h",
+      "git_blob": "6dcde5b583898474e5c8fbb444b2238fce40a188",
+      "sha256": "b5bafcc8eac12842bd01ffb980cf45080369f07b6a497e188edf82db12038cad",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 23,
+      "bytes": 1271
+    },
+    {
+      "path": "src/omega_gpu_moe_api.c",
+      "git_blob": "1cc6615e4ca6891ab8108f3f2daa03d00a6800b6",
+      "sha256": "889d510d15ef1c03996729c2808032a722a6e0d99e766acb167200f040f5bec6",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 425,
+      "bytes": 21027
+    },
+    {
+      "path": "src/omega_gpu_moe_api.h",
+      "git_blob": "66fa4beaf106722598c2756ba889ac0ad00a9aaf",
+      "sha256": "ea75117a63d4d17ffddd342897f323adf5a84949fb05960ffdc76df12e0ae36e",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 117,
+      "bytes": 7746
+    },
+    {
+      "path": "src/omega_gpu_pfgemm.c",
+      "git_blob": "eee96bca66aabeba43c33e9cb3317261bb401fb8",
+      "sha256": "22d3dc1e35d05430f8ecbf128bb42fb8807bf3a91469d10e65e1b035b66b18b2",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 201,
+      "bytes": 11989
+    },
+    {
+      "path": "src/omega_gpu_pfhost.c",
+      "git_blob": "5d2d469cb682c4e7a3408a40ca2756ca155e504c",
+      "sha256": "cb6236fbaf1a3386cdfa65b0a0bc7fd431ed0ffbe096e816ea7b96ed4a3a5992",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 60,
+      "bytes": 3949
+    },
+    {
+      "path": "src/omega_gpu_pfhost.h",
+      "git_blob": "042ed67f610bafd4d13363877123320c335447eb",
+      "sha256": "cd16d707ada8deb22e6ca75f9e24e18aa8ecbcab297335395ee42a2322c38830",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 38,
+      "bytes": 2200
+    },
+    {
+      "path": "src/omega_gpu_platform.c",
+      "git_blob": "ae6e9e3944b7564dfd0408701d007b4159e65fa3",
+      "sha256": "08ce3e022184a78e9167ed76f412debfec530d656df4dccc9c746ce83e475318",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 193,
+      "bytes": 9303
+    },
+    {
+      "path": "src/omega_gpu_platform.h",
+      "git_blob": "a29018964a7576998c0e436fba2a96c0b30f06cc",
+      "sha256": "0ad27f9ff412d5e6c20ec3af046b61838e73c0ddc4ab1e501314e519521d6327",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 250,
+      "bytes": 15180
+    },
+    {
+      "path": "src/omega_gpu_platform_linux.c",
+      "git_blob": "8bfd26437212fbd16060581cfe99c7ff75f5558a",
+      "sha256": "0078187dfcfd0487c2709396405b995ca8b7fbd85a57bcd94a47ba1bdc6a343c",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 420,
+      "bytes": 21317
+    },
+    {
+      "path": "src/omega_gpu_platform_linux.h",
+      "git_blob": "7fe754565e4db0e27eac4f64128a6e2655c59997",
+      "sha256": "39749990718ddaa69836d20099e870543bb0f2ba430303fe7607d17c19dce529",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 41,
+      "bytes": 2246
+    },
+    {
+      "path": "src/omega_gpu_prefill.c",
+      "git_blob": "b38738c453eab9d5445716bd7127d02a2c77bb1b",
+      "sha256": "5ac99c86a3f841c84926254c719983391e00a747bdb01eb116c634b2d8b2e2ee",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 169,
+      "bytes": 9922
+    },
+    {
+      "path": "src/omega_gpu_prefill.h",
+      "git_blob": "c1fe22707b634d710f1c741ab00c83ad81eedced",
+      "sha256": "22bada0d9e74f8cb65a91cfabc288f92ae5e9317943e5826c5f22483504685fb",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 102,
+      "bytes": 7653
+    },
+    {
+      "path": "src/omega_gpu_prefill_attn_api.c",
+      "git_blob": "24f8b80a7d9875556d073b3ad953a5666146bd14",
+      "sha256": "d8d13a98be2c7c046322b0d38c8af4ff12e90df867fe4900459f051646dc8ef1",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 396,
+      "bytes": 23448
+    },
+    {
+      "path": "src/omega_gpu_prefill_attn_api.h",
+      "git_blob": "5d34d82a15b995822fd1114a42ec214a7e47ba79",
+      "sha256": "a4b2c245327e48f4cd9ccb247adeefdcf2cde75fd3b0dd564aec707415bb75a8",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 79,
+      "bytes": 6350
+    },
+    {
+      "path": "src/omega_gpu_router_api.c",
+      "git_blob": "808dd3b743b3e24db26908043bf4663316e38656",
+      "sha256": "bfb9fa0d86b86528dbe48e180ddcaf7c7f470c685a3043dba613c7037e5d239d",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 277,
+      "bytes": 15786
+    },
+    {
+      "path": "src/omega_gpu_router_api.h",
+      "git_blob": "2672319486496c85897d2bc235faf65c8e36600d",
+      "sha256": "be8f3dba7fc187214804971a42f0b9d24ce614313a9d8d8f4c3d9ebbd0d681c0",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 90,
+      "bytes": 6102
+    },
+    {
+      "path": "src/omega_gpu_serving.c",
+      "git_blob": "854e5aa9331bfc8318d2c88e2ba0d5824bfcef50",
+      "sha256": "3381f6b8fbcd99641804ac5482bbe713b67b9ecd0aea3a6de1974e5e08fb4747",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 26,
+      "bytes": 1296
+    },
+    {
+      "path": "src/omega_gpu_serving.h",
+      "git_blob": "144ddc862444c6bc28c2202e77d03dc0106378f4",
+      "sha256": "df2fb58f8cc0594da8e82c9933c5c44bcebe39a9177760abcf20a49426849a40",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 49,
+      "bytes": 3361
+    },
+    {
+      "path": "src/omega_gpu_session.c",
+      "git_blob": "fc712310336a712109e2d634ada9712285884411",
+      "sha256": "3f4a3717c2e9d447fdd1342c8aed9a0ea8fead6e791afca8e72ee5710dc0b012",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 559,
+      "bytes": 27011
+    },
+    {
+      "path": "src/omega_gpu_session.h",
+      "git_blob": "673f87a9b205e9a45d879b1c825445b1db3b95d4",
+      "sha256": "0324187d13c5ed4edb1801409f0d434928628ee2f1fb6a6bf8b579b02558e42c",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 258,
+      "bytes": 15396
+    },
+    {
+      "path": "src/omega_gpu_tcgemm_api.c",
+      "git_blob": "1273e5082c1de7bf9d8987efd7acc26f74baf727",
+      "sha256": "fd7fff800690293cab66dd4e4fc263ef3fb0e35480e58b3956f5f0538a798341",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 189,
+      "bytes": 11439
+    },
+    {
+      "path": "src/omega_gpu_tcgemm_api.h",
+      "git_blob": "8d9e0607c71cbe27d2b4c709bd189dc8fb75bd40",
+      "sha256": "d1466a25aaf1297da21b6cac1b44d77d8892b1fe2ce5dc72969ed0ca9b869496",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 53,
+      "bytes": 2895
+    },
+    {
+      "path": "src/omega_gpu_tern_api.c",
+      "git_blob": "c41c2f53cb49aa84cb3ef26f6e51c9a842a89c8e",
+      "sha256": "46a40e44a9a00b414beaa3d9a3842c089564cdcaaaf2b36bee462bc1b04771d1",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 349,
+      "bytes": 18675
+    },
+    {
+      "path": "src/omega_gpu_tern_api.h",
+      "git_blob": "e160ae7b50d7ca955ca834951cd27ad7c3114ce7",
+      "sha256": "d3850a0fced81eef8f294850684a80bca5d34493a222408da506842922ba60d8",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 106,
+      "bytes": 6300
+    },
+    {
+      "path": "src/omega_gpu_wait.c",
+      "git_blob": "31d518a4c4e7d951e00e20fd926958d33981797c",
+      "sha256": "b019e9588aa1fb6194a74b4af614dd446960d4ce2b698e4f64c9aae7f72f6c59",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 156,
+      "bytes": 5470
+    },
+    {
+      "path": "src/omega_gpu_wait.h",
+      "git_blob": "1af10f16e51cc3c661b0650d3052f83a8f3ada74",
+      "sha256": "86630cd828060d75e202b0ec74f9d23d83e91c20682f217d3e676acf991f4e6f",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 101,
+      "bytes": 4849
+    },
+    {
+      "path": "src/omega_runtime_api.h",
+      "git_blob": "c033c109c8451503a15f1341959056d342e01a15",
+      "sha256": "539b4f0999c46f4f33dc9b3dac375224f7328c925c9c621d4e8f2c19b54771d5",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 17,
+      "bytes": 963
+    },
+    {
+      "path": "src/omega_types.h",
+      "git_blob": "f123934e8dfc4914ce0e28444e39932810bd3ea3",
+      "sha256": "e4373c0de1e9adc551aa46c781c5fa3491c39c021a0f2e1bc01c9e4791ffb459",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 204,
+      "bytes": 5928
+    },
+    {
+      "path": "src/omega_vector.c",
+      "git_blob": "c85a806010707bb66fe2b943ef4872586e29fed8",
+      "sha256": "9e4f4622080494b1cf701f0d1c220979785c630cf8317ce44d68bdf58b5b47b5",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 97,
+      "bytes": 3587
+    },
+    {
+      "path": "src/omega_vector.h",
+      "git_blob": "2b6bc0db851a0dd9d7ec73af5b11eea6d06472ee",
+      "sha256": "7526e6849f33dcffc3c6420f0cdc2c86022a094117f57062d8f4f92886496698",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 38,
+      "bytes": 1456
+    },
+    {
+      "path": "src/sha256.c",
+      "git_blob": "640aafdbbf828e9d5ca5c48a1f352d5bffd45fcc",
+      "sha256": "84d418f4e2c663b74698fe94012040282bcfc2f263d2417adaa41a05bdbb86e4",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 148,
+      "bytes": 4574
+    },
+    {
+      "path": "src/sha256.h",
+      "git_blob": "9314c34c5595813e6117a1e794e0f06b0ad353e7",
+      "sha256": "f4ae8b01061a4fa352c1013d649ee4045e98aef83ff4d586d7b11801d8365660",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 21,
+      "bytes": 555
+    },
+    {
+      "path": "tests/bw_hmma_model.h",
+      "git_blob": "c94763e53acbfd1546a7f334b2452ff107999c37",
+      "sha256": "70d0031e335f14ebae53fe1a120c111ca2f75483921a59b122f8ea736562c005",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 58,
+      "bytes": 3384
+    },
+    {
+      "path": "tests/bw_qmma_model.h",
+      "git_blob": "01d3a1e61b7685fc919f1106ddb9d08b0cb6de6b",
+      "sha256": "f88b9a6671e965c92670fc335e172516440ead99568a21313242e157c524b51a",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 67,
+      "bytes": 3537
+    },
+    {
+      "path": "tests/bw_warp_sim.h",
+      "git_blob": "d337475b6e13624ac1c11dbf49504fba0d5a7e31",
+      "sha256": "e9b860a22f92b80f74f63462eacf00545fa624ba07a406fb319c3cdc661bd8a2",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 329,
+      "bytes": 21829
+    },
+    {
+      "path": "tests/bw_warp_sim_k.h",
+      "git_blob": "6b9c598e679945833403727c1e750d6b568549b1",
+      "sha256": "9a5940cb475cd4a7745e4c5dcb83eb322fc583ae77949418d57e8ec79dd918bf",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 330,
+      "bytes": 22450
+    },
+    {
+      "path": "tests/bw_warp_sim_pa.h",
+      "git_blob": "7e9525f5bfddfb44b97204f468634ba746919532",
+      "sha256": "14c493ab904b5630438aba7d760a0f09d49f34ac03879588bd199b900e721199",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 371,
+      "bytes": 25771
+    },
+    {
+      "path": "tests/bw_warp_sim_tc.h",
+      "git_blob": "aa84ff28b55353c1b9a403223b79fe2132236f8c",
+      "sha256": "000e594d97d217d76aa14472c445882915b823116c5d94cc0d16f506d0e4582a",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 402,
+      "bytes": 28833
+    },
+    {
+      "path": "tests/fake_m16_native.c",
+      "git_blob": "b1989e69c84a8dd76db934996b8053319c3c4dca",
+      "sha256": "5a0c1774b314ecd00ab64e97f1634d5dfad8f03194bbf8977d0252005a441c8a",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 459,
+      "bytes": 15760
+    },
+    {
+      "path": "tests/fake_m16_native.h",
+      "git_blob": "cab8cb4adcaebedd27fa40c4c394d8fe25a31381",
+      "sha256": "b4e65cd3c6a426aa68406cc35195cd208b17dbdfae000600db8a0e4b5d90e0da",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 168,
+      "bytes": 7708
+    },
+    {
+      "path": "tests/gpu_attention_test.c",
+      "git_blob": "7cf7dcdc394a769c457cf2ec8c87dc22461fc046",
+      "sha256": "466ae8f926a35376ae6be1b33291562db9300607bf31b21e07f2097805ea26a1",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 1201,
+      "bytes": 95831
+    },
+    {
+      "path": "tests/gpu_bf16_gemv_test.c",
+      "git_blob": "42498c48de7fd27c9393a2dacba7ab4daa62920e",
+      "sha256": "c3be14065728e018472d80f7851c49e803f2fa64af90842ebadacc262128ab59",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 280,
+      "bytes": 18905
+    },
+    {
+      "path": "tests/gpu_cmdlist_test.c",
+      "git_blob": "b6259dfcf3a638a0b990d37d7bc4e9be38653d0a",
+      "sha256": "a440178b7878e7a7ecf5d05f3c961599966d1cc596f1b58dc694c0a089d211b5",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 465,
+      "bytes": 36933
+    },
+    {
+      "path": "tests/gpu_decode_attn_test.c",
+      "git_blob": "6f830e338bd3c93b30f783afd75060ff2ead099f",
+      "sha256": "3002faef6c16c9e8f35861d05b7ffd756460ac5c385cd4dd53393ddc1a7fd8ca",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 457,
+      "bytes": 34487
+    },
+    {
+      "path": "tests/gpu_decode_graph_test.c",
+      "git_blob": "03b41f2ab3b2a54d84448603a3dd61aeb3077b52",
+      "sha256": "6c65f8ec864a72003069844393c4e4a637f6bcfac689e10995ea9a7e6da01389",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 356,
+      "bytes": 27515
+    },
+    {
+      "path": "tests/gpu_elementwise_test.c",
+      "git_blob": "ccba21fd5285762b197fae5375ec50ca6953b8c2",
+      "sha256": "47a124ca2c729c1138e474c9ed44401857ea47bc32911122bfc4a99abe0179be",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 388,
+      "bytes": 27209
+    },
+    {
+      "path": "tests/gpu_fp8_api_test.c",
+      "git_blob": "1a12c09bf8c7d537811ba8e2031d456ec147b70f",
+      "sha256": "80cebea9dd64697df49a953c8194e5adc37fe91be9ea02a39e071d754cdf04ec",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 599,
+      "bytes": 46560
+    },
+    {
+      "path": "tests/gpu_fp8gemm_test.c",
+      "git_blob": "bf5f9d74342e23026f3fdb1cf992c86c4930dbc6",
+      "sha256": "1b2477e72416d01b1ce13fe6b04a8ef7e35ab6d5371436d567459889db5b3d49",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 346,
+      "bytes": 27369
+    },
+    {
+      "path": "tests/gpu_gpr_boundary_test.c",
+      "git_blob": "8b721ce0db1408c2961830e28602576537b4f2f9",
+      "sha256": "b42420e565049aa1488dab372f7d241aeb1ef767a44b94bb2f23294d9331d350",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 86,
+      "bytes": 7310
+    },
+    {
+      "path": "tests/gpu_l2_reuse_test.c",
+      "git_blob": "4e53d6e29add32b1ed6a149a9355e50a156ce864",
+      "sha256": "f4378bd64d30824b4eb51ff974865756752696ec09a090b68076180d02fb7f0e",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 121,
+      "bytes": 9616
+    },
+    {
+      "path": "tests/gpu_l2_stale_test.c",
+      "git_blob": "b0c58cdbdd1c965bb947b725c19b0a5079cb216a",
+      "sha256": "302055f27feb17bc8453bab27173ed3f565ea052d0500e1e7da0758b8f6ada46",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 107,
+      "bytes": 6662
+    },
+    {
+      "path": "tests/gpu_launch_cost_test.c",
+      "git_blob": "a78039519b30a4b8e991a80da31c0566935cb86e",
+      "sha256": "2c53a37605ad2848197a4e9b2d2cf40aba6ac1f033d0cb6ebb9f2276cb480bf1",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 155,
+      "bytes": 11771
+    },
+    {
+      "path": "tests/gpu_lmhead_fp8_study.c",
+      "git_blob": "4543df7e7c1b7b5189e747b41cbfc624413fe53a",
+      "sha256": "561c8a4f07ce4c809c1b29a4e08daec41456bfdd6684f29cf88b9cbf8dc56670",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 119,
+      "bytes": 7719
+    },
+    {
+      "path": "tests/gpu_matmul_api_test.c",
+      "git_blob": "110f64e93d99aeb930afbe1496c29659c0b5d6df",
+      "sha256": "7e76b1d5fc310317c6f7413f10344b931e8ca9195844d392d6e520e2047ac194",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 693,
+      "bytes": 52908
+    },
+    {
+      "path": "tests/gpu_matmul_r4_receipt.c",
+      "git_blob": "6c5dcd5b2a2e65e818292093fd20c36227917a7d",
+      "sha256": "f8b9ed13e841b12f57818d39a6f5ab8e66ba418eba6869044948cb2e854ec3d3",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 378,
+      "bytes": 23982
+    },
+    {
+      "path": "tests/gpu_moe_window_test.c",
+      "git_blob": "28e38050db3aa473465380267b0215d93f25b591",
+      "sha256": "f4568f099e5ae20733db6edea34ca54699b016b8fdbbc514118d0d68db8b53f3",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 284,
+      "bytes": 22448
+    },
+    {
+      "path": "tests/gpu_pf_mem_test.c",
+      "git_blob": "398f4227680cc908ea87acad24ed9aa68e75b3f4",
+      "sha256": "3f6c89b2bf2e3b28c18c701767a5d898568c8561179fb563b7691aaebc318782",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 107,
+      "bytes": 7001
+    },
+    {
+      "path": "tests/gpu_pfgemm_test.c",
+      "git_blob": "8866a804a7dd7f35d08c129eec87de8fb2262ddd",
+      "sha256": "e413d1b4f48abf2969b28426d704c7e1e3762306691a9d17d61b9c54f2ffa46f",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 328,
+      "bytes": 23613
+    },
+    {
+      "path": "tests/gpu_pfhost_test.c",
+      "git_blob": "d4e0fa71c029ffd622ff3ad21f2d71cb1620d747",
+      "sha256": "2b2503906efbcf91373042a7a64ffd2550905d47b9b8da2d76a5877b1b8d4622",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 279,
+      "bytes": 16805
+    },
+    {
+      "path": "tests/gpu_prefill_attn_test.c",
+      "git_blob": "418d6ab6bd165d46a50d3904483d2db6c2e2eacc",
+      "sha256": "a54b52aa3d525751124b592e573d72a345515e03edca8d205657e1754f3ab9ba",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 655,
+      "bytes": 46843
+    },
+    {
+      "path": "tests/gpu_qgemm_test.c",
+      "git_blob": "7208da624720e30c6afdb18bb45a192f2266d51c",
+      "sha256": "c33361f31a9f2be856b3b550e1773debde9d47c90b8c71189a9ce36757933ac5",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 439,
+      "bytes": 29591
+    },
+    {
+      "path": "tests/gpu_qmma_probe_test.c",
+      "git_blob": "53ebc8f501f5c0ed388e85d9c7a2b81faa4376f7",
+      "sha256": "97311f229efb36d5fd311b0ab2db8bef2eca40a0c512c76353f8f0e5fb8f99ac",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 288,
+      "bytes": 21118
+    },
+    {
+      "path": "tests/gpu_reconv_test.c",
+      "git_blob": "12b0b3decd7f6b4e4ec46421d680b8025426f747",
+      "sha256": "cde9114fdd4cb7ccfba527a492ae96c6135151a8352ce311eaee11944a74c6e7",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 473,
+      "bytes": 32871
+    },
+    {
+      "path": "tests/gpu_router_test.c",
+      "git_blob": "591196fbbf685914ea44ef04d43e06b91b99a0dd",
+      "sha256": "e521ef23a58c1cc4fb4846c5894362ec8d28865b645550543a2d1cca2ab4ee38",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 361,
+      "bytes": 26035
+    },
+    {
+      "path": "tests/gpu_serving_alloc_count_test.c",
+      "git_blob": "ad1fa013f18faf32dc24de932bdf3ba1361f3f0c",
+      "sha256": "aacda627d05a255f619d419a09bd33e0f914b019bc6cf2282e0e9cd425ffa2d0",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 673,
+      "bytes": 41185
+    },
+    {
+      "path": "tests/gpu_session_probe.c",
+      "git_blob": "8c75cc5a71a1d8b25f0e4b7aa7d83410186a9bbd",
+      "sha256": "853da364dbd428bd6ae07bd8b686b6641bbe30b58ca47b922c4fc8236f5f899c",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 57,
+      "bytes": 3031
+    },
+    {
+      "path": "tests/gpu_tc_peak_test.c",
+      "git_blob": "eca14268c99781b8800de0a9384d5f59fd6d5af8",
+      "sha256": "f0d7b8255acaf056e00f8300c846a49765c7740cc679a3139d59bc5cefc9dc40",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 100,
+      "bytes": 8153
+    },
+    {
+      "path": "tests/gpu_tc_probe_test.c",
+      "git_blob": "565d76a1150ccb6de4812a2decbff7a3bb90a72d",
+      "sha256": "6986e49490e908abc87b4a5e33e9c6e104ac9b3d8be2dfe556d20ebe3598f336",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 201,
+      "bytes": 13974
+    },
+    {
+      "path": "tests/gpu_tcgemm_test.c",
+      "git_blob": "64716f2484e177b90a98cb655671555c5fb20ddc",
+      "sha256": "8224bff785f6e318f50d2fa806940714fa2f962accf31753f81e1cf3cc1d18e4",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 324,
+      "bytes": 21523
+    },
+    {
+      "path": "tests/test_m16_gpu_wait.c",
+      "git_blob": "7a76b19298317e49a14f44bd6e5b0c162d6770d3",
+      "sha256": "24df20c6bc568dc6f56a06bd2da5bb52d9ecaa238395d8655a43fbd246e3d027",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 318,
+      "bytes": 15170
+    },
+    {
+      "path": "tests/test_omega_blackwell_engine.c",
+      "git_blob": "536e139f8bd3abb6b007c2f7c43f8f7b1c598d1b",
+      "sha256": "98ab8d5026cf556247157aea5d63d357d4a4b90cc3cacad038504eed6accb93d",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 996,
+      "bytes": 44826
+    },
+    {
+      "path": "tests/test_omega_codegen_freestanding.c",
+      "git_blob": "b3b474f0a8c804c5d7ebea3b26f5338c54728450",
+      "sha256": "fe0c5ad3e6362d8f317997ed147cd259e98404f04a9d607918ab0eda916f15c5",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 215,
+      "bytes": 11644
+    },
+    {
+      "path": "tests/test_omega_gpu_code_alloc.c",
+      "git_blob": "707bc1cf3c7c827f06392b67d2ecbdce4e7aabb4",
+      "sha256": "c66be2d637f802dd87aa91282b0bac1eac62e566eb19957e5f5ff4c7698aae1e",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 32,
+      "bytes": 2114
+    },
+    {
+      "path": "tests/test_omega_gpu_engine.c",
+      "git_blob": "88dd46c3c5ab6212500d8a611bd3ae3dcebfadd9",
+      "sha256": "555f9df595bdd1cf51313d3b95cf534459606532c27c24432087f378b8045ffb",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 1156,
+      "bytes": 39972
+    },
+    {
+      "path": "tests/test_omega_gpu_engine_compile.c",
+      "git_blob": "902b1869f20ab56ea6852a05f095690c6753ee0c",
+      "sha256": "9948283fa6b08fce5accddd6d1eae5730a82ec0a314d4e53215b654c2ac4133e",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 167,
+      "bytes": 9432
+    },
+    {
+      "path": "tests/test_omega_gpu_engine_gb10.c",
+      "git_blob": "4376cc72a8afd00954409201e4460875ff4331b2",
+      "sha256": "5aa8938e872f23ba36290ab703a26e6d28daeeb7fcdae0b281ac2711d13c8fe1",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 169,
+      "bytes": 6432
+    },
+    {
+      "path": "tests/test_omega_gpu_platform.c",
+      "git_blob": "b7322748fc1a952035efad7543f60785521ff8ad",
+      "sha256": "96469ccad9214cdfa69462a3b6286c8e0a4a24393673166b385e1fc8c9dda397",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 318,
+      "bytes": 21056
+    },
+    {
+      "path": "tests/test_omega_gpu_platform_linux.c",
+      "git_blob": "5ee405c2f390dd23c60d6c28c3623a460854a67c",
+      "sha256": "78184887a74838505d68df604996f8deeb0ffad2e023e31d2402da7d7526e0ce",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 328,
+      "bytes": 18443
+    },
+    {
+      "path": "tests/test_omega_gpu_session_platform.c",
+      "git_blob": "ca06fa8674468636a4fb5bfd782ad918f3ea96a9",
+      "sha256": "c0ccc0ec094468af50d49e398b9e1677dcbe25de991432b2106b38e50de9df3f",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 518,
+      "bytes": 25485
+    },
+    {
+      "path": "tests/test_omega_gpu_wait.c",
+      "git_blob": "73074ec7fb431b8213e81cac98a582726adf7474",
+      "sha256": "b2cd813be1a764c4ff44b180a56fd0ebcc8b155effacabd2dcfc12d38e6b51aa",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 304,
+      "bytes": 14251
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/kernel-open/common/inc/nv-ioctl-numbers.h",
+      "git_blob": "d0efa6fd5b4029b8f098d4001242d35fa77c6ce7",
+      "sha256": "7f449a019521f2f858a2d485eed1ee0fa4a8ffc82c9aecd484be5d3f6821f87d",
+      "language": "C",
+      "category": "third_party",
+      "lines": 44,
+      "bytes": 2095
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/kernel-open/common/inc/nv-ioctl.h",
+      "git_blob": "3a8e88f8f7aea8f80b84c40cbf7191cc2805d7df",
+      "sha256": "65778345a796fce81827bbc63bd26fe80c60dbe970007009ae902f0a7f6e730f",
+      "language": "C",
+      "category": "third_party",
+      "lines": 156,
+      "bytes": 4790
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/kernel-open/common/inc/nvCpuUuid.h",
+      "git_blob": "0ab546b7c40b8a17fb77e8b74f1807fcb056bfd4",
+      "sha256": "a228c1ac5b26b9e4d7d1efa7dd69bf111bd0bbadddd65bb016e610e13871a234",
+      "language": "C",
+      "category": "third_party",
+      "lines": 44,
+      "bytes": 1644
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/kernel-open/common/inc/nv_uvm_user_types.h",
+      "git_blob": "a222857a938c9a3e9fa1fe937efcb869ca42e7f7",
+      "sha256": "2f83bf2cf6bd7d53ab5fdb08bd820658498e2e0fd50b2d3e51823e043449cfa8",
+      "language": "C",
+      "category": "third_party",
+      "lines": 166,
+      "bytes": 7353
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/kernel-open/common/inc/nvtypes.h",
+      "git_blob": "2965de5bd87bdff45c28e0a8a12008a9acb3b500",
+      "sha256": "e3901c0991b3a3dc77fffc2269fee84661bdda8a5bc43c0fe70a620af05edd5b",
+      "language": "C",
+      "category": "third_party",
+      "lines": 671,
+      "bytes": 26572
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm/uvm_ioctl.h",
+      "git_blob": "12076aea29b1739462f5db1ae85a467ad1e2b9c2",
+      "sha256": "937a3fe1c0b2f4d8cfc18443d41ad10ee85c4445f954cc5c67b460ded2dd4916",
+      "language": "C",
+      "category": "third_party",
+      "lines": 1157,
+      "bytes": 41415
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm/uvm_linux_ioctl.h",
+      "git_blob": "d3d5f070d34ae4541d20846762baf62dcf2068eb",
+      "sha256": "0ffb5cf3679fb5e150745e54b72fab861e319823e419f36376468a60862c2748",
+      "language": "C",
+      "category": "third_party",
+      "lines": 42,
+      "bytes": 1962
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm/uvm_types.h",
+      "git_blob": "312b8b5461621bfa7592d43c2bf5bb1e35a9aa63",
+      "sha256": "576803d1cf6b2933cc284dd2d5a47974649a1da27e1476d84d083c0f0f6355fa",
+      "language": "C",
+      "category": "third_party",
+      "lines": 1429,
+      "bytes": 59077
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/alloc/alloc_channel.h",
+      "git_blob": "465efcba221ca58a6bbcd05323eb2298a12939e5",
+      "sha256": "f0211fbc8bf3f80841f699bf4ccb776d32517308782dfb3c8e99c7652986b5ab",
+      "language": "C",
+      "category": "third_party",
+      "lines": 345,
+      "bytes": 14980
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/cc_drv.h",
+      "git_blob": "6d7a09a2e8cf46bf5c5b241e18084ba2d0c89213",
+      "sha256": "bacd6692eb1049c4df162109081a9039b4ffa38636b120224e9a8dcb17f1fbd8",
+      "language": "C",
+      "category": "third_party",
+      "lines": 101,
+      "bytes": 4787
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl0000.h",
+      "git_blob": "b56b157d79ff7c7ffb5246925633657a38e42a18",
+      "sha256": "2f8c158b1e0d55fb425497054539e9dcb24002ec5e4949dd56b9b2b8e17d0208",
+      "language": "C",
+      "category": "third_party",
+      "lines": 53,
+      "bytes": 2094
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl0000_notification.h",
+      "git_blob": "9c91de36f8b72e14f147aedf9dadfe8f11d44ca5",
+      "sha256": "e468580fb8b3ebeed6dd57fef2e4360e105cd9c9f5bf388f4d030c2da66e3f93",
+      "language": "C",
+      "category": "third_party",
+      "lines": 60,
+      "bytes": 2290
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl003e.h",
+      "git_blob": "d23e642fd422b90472106ba2c72c35bee9640b6b",
+      "sha256": "4870b6c5592fe481075143a0724d5767fb745ae5a04a15fc62fc2246dfba6c47",
+      "language": "C",
+      "category": "third_party",
+      "lines": 51,
+      "bytes": 2168
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl0040.h",
+      "git_blob": "103ec3a715e9851f8682bb2b8b229eebf47ca63b",
+      "sha256": "8e6fef4c77c91a352b862767d7292951fe44f5a4b2271fa5bbc7b03b3c7bd414",
+      "language": "C",
+      "category": "third_party",
+      "lines": 55,
+      "bytes": 2390
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl0070.h",
+      "git_blob": "95d173efd8b8246f5687a10b156ab0ea8060c7e3",
+      "sha256": "6617fb96ec110b5d3cad0ecff9f1aac20fa824eb3134b3fefe5615e35c1ea01f",
+      "language": "C",
+      "category": "third_party",
+      "lines": 73,
+      "bytes": 3279
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl0080.h",
+      "git_blob": "9e9aad27cc18d70768580908493f73df139050f7",
+      "sha256": "8829ae3793aaad80dc8e9b560882d4e900565de7ce7832c0ea0ceffe7fe12b08",
+      "language": "C",
+      "category": "third_party",
+      "lines": 64,
+      "bytes": 2325
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl0080_notification.h",
+      "git_blob": "a976d3fdda2ee3c00f63d8c68f83f72b47bc2664",
+      "sha256": "e271a4ec6165294992573334077261ab16976dbdf2881d55415590d2e9ee444e",
+      "language": "C",
+      "category": "third_party",
+      "lines": 45,
+      "bytes": 1733
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl2080.h",
+      "git_blob": "a85a662328004e35e1ab1d5eb0c11de7d7010845",
+      "sha256": "6f0c32970e6ba7e56dec28c44594b41570237bf74b1ea33ab5e8bcd139805351",
+      "language": "C",
+      "category": "third_party",
+      "lines": 46,
+      "bytes": 1746
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl2080_notification.h",
+      "git_blob": "dea1795124299b8b7252586f98d82c4625f031ad",
+      "sha256": "d3c3db5408a3aaa3c87ef6b2015b0a0243afa04caf53e38dcb70f46ea49be331",
+      "language": "C",
+      "category": "third_party",
+      "lines": 614,
+      "bytes": 35521
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl9010.h",
+      "git_blob": "ad901c789e2412830d35324b37358e68bcf64220",
+      "sha256": "f388882c995687540d7515e25f68613e3f8a67a35add99d761afd005656a49c7",
+      "language": "C",
+      "category": "third_party",
+      "lines": 45,
+      "bytes": 1971
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl9010_callback.h",
+      "git_blob": "1945b686b924b2b3e487b378decad40645ce3bed",
+      "sha256": "2571a29472ad80a60c60f2bcaedc8354179b45c6248c98792503349dae419ba8",
+      "language": "C",
+      "category": "third_party",
+      "lines": 27,
+      "bytes": 1308
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl9067.h",
+      "git_blob": "5355f18eeb720ebdf040f6a8caa3acf245af0a3b",
+      "sha256": "d2266b0ba4b84897c4c3d1b0f5047c72a9d5247c61c5bf0bfcbb7812e0b53654",
+      "language": "C",
+      "category": "third_party",
+      "lines": 39,
+      "bytes": 1472
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cl90f1.h",
+      "git_blob": "7523ef198b9517e29134e5f61352a5c73906ef22",
+      "sha256": "c1bd28c0a38f74b3e92c6a0b52b2e76bd6782ca6b112593dc69eda88913600b9",
+      "language": "C",
+      "category": "third_party",
+      "lines": 39,
+      "bytes": 1461
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/cla06c.h",
+      "git_blob": "0b4f5c98bed9fd2739d9aaf3583f988b8af4397d",
+      "sha256": "30846382b0e34e930ce16d4ea9f31245b561509171a7df1bf1c0560a7b101053",
+      "language": "C",
+      "category": "third_party",
+      "lines": 39,
+      "bytes": 1473
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/clc361.h",
+      "git_blob": "daa88416dae2611f26c42b0dfeee191f908d743b",
+      "sha256": "65c33030f555713c63d3e8aba43f09738c46823bab141a9a07145ca22dc9f06b",
+      "language": "C",
+      "category": "third_party",
+      "lines": 35,
+      "bytes": 1693
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/clc661.h",
+      "git_blob": "d9f8a484acb0eb5e982242c45f4d424ec38c64fc",
+      "sha256": "6e9ff50400d4175448ed7348524eb2634f8536680b594989b9b08757df590393",
+      "language": "C",
+      "category": "third_party",
+      "lines": 27,
+      "bytes": 1316
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/clc96f.h",
+      "git_blob": "14b8a5dd80c3710aeebbfe7a00b23e52d6c375e2",
+      "sha256": "d1c1c233b6f04206c66cebed0fd90b03491c5441925294eb823fb85482a349a6",
+      "language": "C",
+      "category": "third_party",
+      "lines": 113,
+      "bytes": 7896
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/class/clcec0.h",
+      "git_blob": "f73e705622a05775d0b7ed80748c9b8c58462426",
+      "sha256": "bbe3bcabc7f129972ed5ed635f58251b657d6e5616cac8cfc5bd817293da7d2e",
+      "language": "C",
+      "category": "third_party",
+      "lines": 30,
+      "bytes": 1318
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/cpuopsys.h",
+      "git_blob": "230c7b5214ca68c1b4e61531616d103c76d7522e",
+      "sha256": "92114293c250b87a0c78d1bbfe52c3c132eba1c03ceef110a0e8b0ba6a80aca1",
+      "language": "C",
+      "category": "third_party",
+      "lines": 422,
+      "bytes": 11619
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0000/ctrl0000base.h",
+      "git_blob": "6f49405ed504ee079340ee16fa4e15a637a70d3d",
+      "sha256": "971aeb17a78a9eda00a20555063e7e37355e1a4acf917ad377aea07385c287a0",
+      "language": "C",
+      "category": "third_party",
+      "lines": 68,
+      "bytes": 2619
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0000/ctrl0000gpu.h",
+      "git_blob": "939a310311669c79b440c4acb8c0acb05535c54b",
+      "sha256": "955d3f33157b516870bfa514bbcf613f705c990f0145a473a29e4cad97292b32",
+      "language": "C",
+      "category": "third_party",
+      "lines": 1159,
+      "bytes": 45485
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0000/ctrl0000system.h",
+      "git_blob": "8474929780525a0866129f98f032558ef622d9ba",
+      "sha256": "a0026d3c25deaf9d3be726d1b3487a30c2db0e751da6962ef72c42b00ae49295",
+      "language": "C",
+      "category": "third_party",
+      "lines": 3113,
+      "bytes": 151083
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0073/ctrl0073base.h",
+      "git_blob": "1f687aafcd9c5dc98653a2cf2f691a65dbdfc633",
+      "sha256": "246e8fd22a023ee9acc4dd4d74cc8232a295faa0fd7709d3bdd58c4a079073c0",
+      "language": "C",
+      "category": "third_party",
+      "lines": 61,
+      "bytes": 2354
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0073/ctrl0073system.h",
+      "git_blob": "54200f1e982529da58d55e51edbebdc0733d1522",
+      "sha256": "c2fec6df67b4b73be31cab4705d733a0df387556b10d809499dbce3335bed3b1",
+      "language": "C",
+      "category": "third_party",
+      "lines": 2402,
+      "bytes": 111826
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0080/ctrl0080base.h",
+      "git_blob": "7813addc5e4866ca22bbd72544ac12ad57595b0c",
+      "sha256": "81f7cbb2fe0abd9b311f6758c6f1c3ecd81fe6b2158e63764bc96f291db3b5b8",
+      "language": "C",
+      "category": "third_party",
+      "lines": 73,
+      "bytes": 3272
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0080/ctrl0080bsp.h",
+      "git_blob": "fb8e9a0c60cce0467c4474b15c82eb73bc3e48a0",
+      "sha256": "13ff5f77b9106fd76b2fda5091e77848035e0caa204b91cc29658690677ad738",
+      "language": "C",
+      "category": "third_party",
+      "lines": 112,
+      "bytes": 4211
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0080/ctrl0080gpu.h",
+      "git_blob": "9ab821b16dd3812c19bdb60435fe3e99eff2b8cf",
+      "sha256": "63501de37b90eac1f4b966c8f90e9e4cb3ac1696f7c479e9a33fe86ea4bd18fd",
+      "language": "C",
+      "category": "third_party",
+      "lines": 656,
+      "bytes": 25692
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0080/ctrl0080gr.h",
+      "git_blob": "ab431a340dcc449b8b5dbb4882ae4c5b6f820cae",
+      "sha256": "ac3680f808b9b41d1ae31e4e9a671aed0a5823ca986126fffddff59b7c17ef70",
+      "language": "C",
+      "category": "third_party",
+      "lines": 292,
+      "bytes": 14212
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl0080/ctrl0080msenc.h",
+      "git_blob": "82a48fd3695742a27fcab64770b39b0c1535a5d5",
+      "sha256": "95d056ec1e6b861358733f50ceff8b279b3c4d7325205b582c8a4e1200e8e103",
+      "language": "C",
+      "category": "third_party",
+      "lines": 90,
+      "bytes": 3531
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080base.h",
+      "git_blob": "758a73a741422fc6a5563dd95afbcd693bfe5fa4",
+      "sha256": "dd15423cb5b16716817836c978bf1ba20a51d0bd5b87edf4b427f1abab9b2222",
+      "language": "C",
+      "category": "third_party",
+      "lines": 114,
+      "bytes": 7011
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080fifo.h",
+      "git_blob": "2e2a8bdd442dd3050d7c6b6f8a53d2790f0efa9a",
+      "sha256": "65beb713f2dfe4edc5a4590f5ecd1e29ebd021522e2156d486feb5772787091c",
+      "language": "C",
+      "category": "third_party",
+      "lines": 1191,
+      "bytes": 46933
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080gpu.h",
+      "git_blob": "e80f92cbe85bd7beccbbf5ff96dc9663dd7a0fe8",
+      "sha256": "1e9963a06da571064476c173eb2bdc7ce790aefae19425d8787c17615a2ba9cf",
+      "language": "C",
+      "category": "third_party",
+      "lines": 4763,
+      "bytes": 190825
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080gr.h",
+      "git_blob": "558e41ccee7ee664eb1c9f6041f8cd209516f3b3",
+      "sha256": "634217ccd88d4063b6cd78e2a0a5ea1b963c76bb4e46fc79dd65c4b8fd6a2de3",
+      "language": "C",
+      "category": "third_party",
+      "lines": 2036,
+      "bytes": 94814
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080internal.h",
+      "git_blob": "49512c2a19f3fd61d0e1dab30be421834dd400f1",
+      "sha256": "2831eaadb14ff2d05416279173e47063cb3015323d73a67a5d8cfaf07c575d97",
+      "language": "C",
+      "category": "third_party",
+      "lines": 5422,
+      "bytes": 216306
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080mc.h",
+      "git_blob": "4bffa20f314b09efe8d9bc2ad7fbee1c5ec1bfa5",
+      "sha256": "2cfd3953311c5609cb2fa5999f8e257e60d63c5361677b90efd99c7ae366353b",
+      "language": "C",
+      "category": "third_party",
+      "lines": 361,
+      "bytes": 14603
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080nvlink_common.h",
+      "git_blob": "3c51f0e55ed6592e4b2f01c590d01b7b0eb2a77e",
+      "sha256": "3debeb3911988cbd1655fee51a385267894ea40b9fe14b1ea6b23ea7390b87bb",
+      "language": "C",
+      "category": "third_party",
+      "lines": 42,
+      "bytes": 1767
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl30f1.h",
+      "git_blob": "b29b9a22cbbc677f4d96fbde2d3b52ddcb965597",
+      "sha256": "57d1a49e1b984a7284cf6f961db5f5987cc81947ff35b81fa8942c6071c69949",
+      "language": "C",
+      "category": "third_party",
+      "lines": 1560,
+      "bytes": 67482
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl906f.h",
+      "git_blob": "2e9c9b906803a353e26d9d1a2996b5742e149217",
+      "sha256": "27a49ca95f4645df79c72384062e5453def1cfe0696772d06df9f176934ffe1b",
+      "language": "C",
+      "category": "third_party",
+      "lines": 222,
+      "bytes": 7811
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrl90f1.h",
+      "git_blob": "73555b5abd675651960368ac754245b30bed301a",
+      "sha256": "ed30642e8648456affe5923c9c6284d7c61964b56bab67ccb0d7f4dc595967a9",
+      "language": "C",
+      "category": "third_party",
+      "lines": 407,
+      "bytes": 13048
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrla06c.h",
+      "git_blob": "0dc6cc9423f41977ac45c99cdb329ee925bd3e56",
+      "sha256": "e3a92aa6db7774e5cbf1f672089532e5e3ce05d22dc54e330c8132889171a11f",
+      "language": "C",
+      "category": "third_party",
+      "lines": 438,
+      "bytes": 16536
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrla06f/ctrla06fbase.h",
+      "git_blob": "521132ed8f4962e927545c9993fac51e046874ae",
+      "sha256": "34da8c298fb57213ee604fa04b335f9b5baecc558c40295455cefc28aaa98796",
+      "language": "C",
+      "category": "third_party",
+      "lines": 59,
+      "bytes": 2089
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrla06f/ctrla06fgpfifo.h",
+      "git_blob": "65b82d51195825ea6e0dd99f53c37b376e5c9fd8",
+      "sha256": "0364c6aa445dec859c8889017e91351de66345d82f09e2dfcef9892b0ed3f63d",
+      "language": "C",
+      "category": "third_party",
+      "lines": 261,
+      "bytes": 9971
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrlc36f.h",
+      "git_blob": "c4dee8faad8d1d003dff1a1e6faa4f5dbb131da9",
+      "sha256": "43c9b91089a609e76f68965d6516bae20bcf7d41a2c7a9e7b744e9baa2462141",
+      "language": "C",
+      "category": "third_party",
+      "lines": 159,
+      "bytes": 6478
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/ctrl/ctrlxxxx.h",
+      "git_blob": "c51ea2b4c02731c0b44e6481cec88b00d81b12fc",
+      "sha256": "3c34cab9ddee358b3480a96795ec5068eae1c3f2328921a8d0a83d0d3f751db7",
+      "language": "C",
+      "category": "third_party",
+      "lines": 74,
+      "bytes": 2537
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/mmu_fmt_types.h",
+      "git_blob": "13bb88f123ed8bbfcb177895e860e31897f373b6",
+      "sha256": "31fa483495839465611e6dc45001196c3b01082dae7c78d0724910b90c2c3a77",
+      "language": "C",
+      "category": "third_party",
+      "lines": 151,
+      "bytes": 5421
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvcfg_sdk.h",
+      "git_blob": "4ce8d4b66739f3b2c4a1187de8169b436f3c75a1",
+      "sha256": "cb9b9ddf1d9d55527e182c1864fb45dcc7331e6de1498a71814cfc5bbe0c62c8",
+      "language": "C",
+      "category": "third_party",
+      "lines": 29,
+      "bytes": 1304
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvgputypes.h",
+      "git_blob": "d018414673fd5e181ca6b47d6936ff238d98b59a",
+      "sha256": "dcb4bf6a0eae9883ef36438dac4765a47a90555a01e887c380caf0690c7be08d",
+      "language": "C",
+      "category": "third_party",
+      "lines": 177,
+      "bytes": 7866
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvimpshared.h",
+      "git_blob": "7b821ff09c3cc8cc7791342ac003f20d20b6734c",
+      "sha256": "77a54cb2e5afa4d1d0d7ad579609bb00c63a90113216962f9db0c6b6eb957726",
+      "language": "C",
+      "category": "third_party",
+      "lines": 93,
+      "bytes": 3647
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvlimits.h",
+      "git_blob": "e7fad3f30c387c030ea02814d5694f6ac97fb7b4",
+      "sha256": "7c7bf27c5360464b459f6069d2e72f6070bb3fdd0862baccf6c7aa71da67c593",
+      "language": "C",
+      "category": "third_party",
+      "lines": 58,
+      "bytes": 1967
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvmisc.h",
+      "git_blob": "4407cdb2e4908b5522472ac84c70c9c55ae18c9b",
+      "sha256": "6e02e315b3c5e715fc615c30db031a98303b09bd1f07b693095ee6bad82d199f",
+      "language": "C",
+      "category": "third_party",
+      "lines": 1000,
+      "bytes": 42372
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvos.h",
+      "git_blob": "46ec3ccf97a813ea497700d1ec9ca993dd36adb4",
+      "sha256": "07f9f453afbf080750663abc9e04e2d3b55500887303ba03bd6855916d2405bd",
+      "language": "C",
+      "category": "third_party",
+      "lines": 3342,
+      "bytes": 158869
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvstatus.h",
+      "git_blob": "4f5284db2b1e6af1c2c0c85bc39dfc14daccc9fd",
+      "sha256": "e8267172a1f7a56420d612c6734b3554b9ff6a3d33fdda21b1371ff4ce4b8675",
+      "language": "C",
+      "category": "third_party",
+      "lines": 123,
+      "bytes": 4565
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvstatuscodes.h",
+      "git_blob": "4404349972cfd43b91722cb0c01bf3b4dab8bd68",
+      "sha256": "143fa91191a368e4fad0eae2a5ec533bcdbd41895184c46c7e2865ebfe6107a8",
+      "language": "C",
+      "category": "third_party",
+      "lines": 181,
+      "bytes": 16297
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/nvtypes.h",
+      "git_blob": "68fd32c208b14d42aeb6d4e863b49a3c7f9d9a15",
+      "sha256": "57bf6ee0fc9f604e7d6f224a3b861521526bb0b115e99a33e5704d881daca708",
+      "language": "C",
+      "category": "third_party",
+      "lines": 636,
+      "bytes": 25775
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc/rs_access.h",
+      "git_blob": "7020677422f7616d049dbae969b9730ab3962083",
+      "sha256": "ee3174aa565a08594f66c325b06d24bd8e798d933bf74ff12c803cf3614bb117",
+      "language": "C",
+      "category": "third_party",
+      "lines": 273,
+      "bytes": 9561
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include/nv-unix-nvos-params-wrappers.h",
+      "git_blob": "02b0156d5de4d08b4fb29acf33f8642c47748a2d",
+      "sha256": "d3ff263781baae28ade28d5fd7a9f69d2019e8f4ca7bfb5675fa280be77792e5",
+      "language": "C",
+      "category": "third_party",
+      "lines": 49,
+      "bytes": 1700
+    },
+    {
+      "path": "third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include/nv_escape.h",
+      "git_blob": "3310292cd7b9f3245cec59d0f9b0f6c37d44a53d",
+      "sha256": "12850ee7368dbfeba1e2392f9ff7fb44563d88ed12cbf478d0c0f61a03763570",
+      "language": "C",
+      "category": "third_party",
+      "lines": 55,
+      "bytes": 2850
+    },
+    {
+      "path": "tools/doctor/cudapp_doctor.c",
+      "git_blob": "5c9c1894c0797463e391778ed99463ddee30b967",
+      "sha256": "16bf96a087e7387ce036f9a72ac55851d451f3cd59c49952b614cdcdb67f81a2",
+      "language": "C",
+      "category": "first_party_source",
+      "lines": 202,
+      "bytes": 9829
+    }
+  ]
+}

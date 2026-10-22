@@ -1,0 +1,120 @@
+gate4 2026-10-22T19:50:21Z at c32810710b9efabc9dd0d3c2b7ddbbc75aa818b4
+PASS om4.bin = a fresh asm2 build of om4.s, same bytes
+PASS p_filesz 14224 = file size 14224
+PASS audit (objdump reference run)
+PASS audit control caught (s/^  movz.x x25 0x181 1$/  movz.x x26 0x181 1/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=2
+PASS audit control caught (s/^  b.hs BO_SDIV$/  b.hs BO_RET/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  ldr.x.r x12 sp x11$/  ldr.x.r x12 sp x10/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  ubfm.x x11 x11 1 63$/  ubfm.x x11 x11 2 63/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=1
+PASS audit control caught (s/^  movz.x x0 0x63ff 0$/  movz.x x0 0x63fe 0/): AUDIT2 instructions=3170 data_bytes=1544 mismatch=1
+PASS dev01: 8 inputs (0 traps), om4 = C path (value and raw x0)
+PASS dev01: om4 words = om3 words
+PASS dev01: om4 = expected
+PASS dev02: 8 inputs (0 traps), om4 = C path (value and raw x0)
+PASS dev02: om4 words = om3 words
+PASS dev02: om4 = expected
+PASS dev03: 8 inputs (0 traps), om4 = C path (value and raw x0)
+PASS dev03: om4 words = om3 words
+PASS dev03: om4 = expected
+PASS dev04: 8 inputs (0 traps), om4 = C path (value and raw x0)
+PASS dev04: om4 words = om3 words
+PASS dev04: om4 = expected
+PASS dev05: 8 inputs (3 traps), om4 = C path (value and raw x0)
+PASS dev05: om4 words = om3 words
+PASS dev05: om4 = expected
+PASS dev06: 8 inputs (2 traps), om4 = C path (value and raw x0)
+PASS dev06: om4 words = om3 words
+PASS dev06: om4 = expected
+PASS dev07: 8 inputs (0 traps), om4 = C path (value and raw x0)
+PASS dev07: om4 words = om3 words
+PASS dev07: om4 = expected
+PASS dev08: 8 inputs (0 traps), om4 = C path (value and raw x0)
+PASS dev08: om4 words = om3 words
+PASS dev08: om4 = expected
+PASS dev09: 8 inputs (0 traps), om4 = C path (value and raw x0)
+PASS dev09: om4 words = om3 words
+PASS dev09: om4 = expected
+PASS dev10: 8 inputs (4 traps), om4 = C path (value and raw x0)
+PASS dev10: om4 words = om3 words
+PASS dev10: om4 = expected
+PASS fm1: 11 inputs (5 traps), om4 = C path (value and raw x0)
+PASS fm2: 8 inputs (2 traps), om4 = C path (value and raw x0)
+PASS fm3: 10 inputs (4 traps), om4 = C path (value and raw x0)
+PASS fm4: 10 inputs (4 traps), om4 = C path (value and raw x0)
+PASS fm5: 6 inputs (0 traps), om4 = C path (value and raw x0)
+PASS fm6: 7 inputs (1 traps), om4 = C path (value and raw x0)
+PASS fm7: 4 inputs (0 traps), om4 = C path (value and raw x0)
+PASS fm8: 7 inputs (3 traps), om4 = C path (value and raw x0)
+PASS fm9: 6 inputs (2 traps), om4 = C path (value and raw x0)
+PASS fib (recursion): 26 lines = gcc twin
+PASS sort 1000: checksum, sorted count, first, last = gcc twin (33342746882 0 20 99900 )
+PASS echo: 50000 random bytes stdin -> stdout unchanged
+PASS byte copy: 50000 bytes reversed = gcc twin
+PASS t_bounds: exit 103
+PASS t_cmp_unsigned: exit 0
+PASS t_conv: exit 105
+PASS t_conv_sign: exit 105
+PASS t_div0: exit 102
+PASS t_exit: exit 42
+PASS t_loop: exit 104
+PASS t_ovf: exit 101
+PASS t_rw: exit 103
+PASS t_stack: exit 106
+PASS t_u63: exit 8
+PASS t_u64max: exit 31
+PASS t_void: exit 77
+PASS t_write_wrap: exit 103
+PASS refusal exit 3: om4: line 2: error 3  [unknown name]
+PASS refusal exit 7: om4: line 2: error 7  [20: no implicit widening]
+PASS refusal exit 7: om4: line 2: error 7  [20: no implicit narrowing]
+PASS refusal exit 16: om4: line 1: error 16  [16: an array without its length]
+PASS refusal exit 16: om4: line 2: error 16  [16: a pool without its length]
+PASS refusal exit 19: om4: line 5: error 19  [18: one array twice in a call]
+PASS refusal exit 19: om4: line 6: error 19  [18: a global passed]
+PASS refusal exit 20: om4: line 2: error 20  [17: write through a view]
+PASS refusal exit 20: om4: line 3: error 20  [17: write into a text]
+PASS refusal exit 20: om4: line 3: error 20  [17: read into a text]
+PASS refusal exit 20: om4: line 4: error 20  [17: an edit argument from a view]
+PASS refusal exit 21: om4: line 3: error 21  [23: a number index outside the array]
+PASS refusal exit 7: om4: line 6: error 7  [17: an array of another shape]
+PASS refusal exit 22: om4: line 1: error 22  [19: an escape with no meaning]
+PASS refusal exit 22: om4: line 1: error 22  [a text with no end]
+PASS refusal exit 23: om4: line 1: error 23  [24: a pool over its limit]
+PASS refusal exit 23: om4: line 2: error 23  [24: local arrays over 4 MiB]
+PASS refusal exit 17: om4: line 3: error 17  [a line after ret]
+PASS refusal exit 18: om4: line 6: error 18  [a value function that can reach its end]
+PASS refusal exit 9: om4: line 2: error 9  [a self-call in function mode (stack use bounded by the call order)]
+PASS refusal exit 9: om4: line 5: error 9  [a pool in function mode]
+PASS refusal exit 9: om4: line 3: error 9  [new inside a block]
+PASS refusal exit 9: om4: line 4: error 9  [main with parameters]
+PASS refusal exit 20: om4: line 6: error 20  [17: view A to an edit parameter (L412 probe view_pfx_to_edit)]
+PASS refusal exit 8: om4: line 2: error 8  [20: a negative number is not a ulong]
+PASS refusal exit 8: om4: line 2: error 8  [20: 2^63 is not a long]
+PASS refusal exit 8: om4: line 2: error 8  [20: 2^64 - 1 is not a byte (no wrap to -1)]
+PASS refusal exit 8: om4: line 2: error 8  [23: 2^64 is no whole number of any type]
+PASS refusal exit 6: om4: line 2: error 6  [a number of 21 digits]
+PASS refusal exit 23: om4: line 1: error 23  [24: a pool of 2^63 elements is over its limit]
+PASS refusal exit 9: om4: line 3: error 9  [24: free is not a word (no heap, nothing given back by hand)]
+PASS refusal exit 9: om4: line 5: error 9  [own is not in the subset]
+PASS refusal exit 10: om4: line 4: error 10  [a name equal to a function]
+PASS refusal exit 13: om4: line 2: error 13  [a variable over 8 characters]
+PASS refusal exit 15: om4: line 3: error 15  [a function without end]
+PASS refusal exit 14: om4: line 2: error 14  [23: values nested over 1024 deep (a capacity, refused not overrun)]
+PASS refusal exit 16: om4: line 1: error 16  [end outside a function]
+PASS refusal exit 16: om4: line 1: error 16  [a statement outside a function]
+PASS refusal exit 6: om4: line 2: error 6  [bad number]
+PASS refusal exit 7: om4: line 5: error 7  [a void function used as a value]
+PASS refusal exit 7: om4: line 5: error 7  [a value function called as a statement]
+PASS r5b_fwd.om: exit 0
+PASS r5b_fwd runs: exit 7 (the later function)
+PASS r5b_mut.om: exit 0
+PASS r5b_mut runs: even 8 is 1, exit 0
+PASS r5b_cycle.om: exit 9 error 9
+PASS r5b_assign.om: exit 7 error 7
+PASS r5b_fwd_fm.om: exit 0
+PASS r5b_fwd_fm: BL lands on MOVZ X0, #7 at 0x1c
+PASS negative control: om4 with SDIV made UDIV changes fm1 results
+PASS spec addendum (OMEGESE.md section 9): grep -i undefined finds nothing
+PASS nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:107 4:1351 5:64 6:66 7:115 8:48 9:277 10:4 11:37 13:24 15:487 16:2020 17:36 18:3 21:4 23:2 
+cases run: 217
+GATE4 PASS

@@ -1,0 +1,1050 @@
+{
+  "commit": "b669d06e21c9debb15073289d7c0b78b1b2d362c",
+  "ref": "origin/main",
+  "counts": {
+    "first_party_test/C": {
+      "files": 4,
+      "lines": 50,
+      "bytes": 970
+    },
+    "first_party_test/Rust": {
+      "files": 40,
+      "lines": 11743,
+      "bytes": 424236
+    },
+    "first_party_source/Rust": {
+      "files": 51,
+      "lines": 20127,
+      "bytes": 751578
+    },
+    "third_party/C": {
+      "files": 17,
+      "lines": 215,
+      "bytes": 10335
+    },
+    "third_party/Rust": {
+      "files": 1,
+      "lines": 353,
+      "bytes": 17291
+    }
+  },
+  "files": [
+    {
+      "path": "adapters/aien/fixtures/fix_the_test/solution/clamp.c",
+      "git_blob": "4ecef61563d4610ca19f58038e6f4adfaaca9928",
+      "sha256": "95bdc0c9571d94ecf70cfbef4ab2e34a499876f1839f0ca084be9941ae6536a2",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 11,
+      "bytes": 176
+    },
+    {
+      "path": "adapters/aien/fixtures/fix_the_test/src/clamp.c",
+      "git_blob": "374e6e250e7256d1516bb1a619b33d5eccbe683d",
+      "sha256": "a13f814d50eb8ab97531f19a22726034ef3347ef233f8385863b397bf236a8f7",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 11,
+      "bytes": 176
+    },
+    {
+      "path": "adapters/aien/fixtures/fix_the_test/src/clamp.h",
+      "git_blob": "21958aa2bd2bae26b8a1dfe2f0e3b7eaaf40dcb9",
+      "sha256": "1179972e44d6e890303cc753bf064bc1ce3c4de6b0ac76315dd832f11d964e40",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 4,
+      "bytes": 73
+    },
+    {
+      "path": "adapters/aien/fixtures/fix_the_test/test/test_clamp.c",
+      "git_blob": "a8b832d9fb7d778236d62ca85198cfe2406ea67e",
+      "sha256": "cc524510b592480ba26126a041bbdffe7b19baa93e41b189282bff4a51f35ee0",
+      "language": "C",
+      "category": "first_party_test",
+      "lines": 24,
+      "bytes": 545
+    },
+    {
+      "path": "adapters/aien/fixtures/rsi_dashes/src/main.rs",
+      "git_blob": "182dd0b1277b8080f08da0ccad3390ef9859ac66",
+      "sha256": "e35fbf6010457238052090a0c1ac10926cd21240c507bc6d4bc3e9710be7c6a1",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 44,
+      "bytes": 1402
+    },
+    {
+      "path": "adapters/aien/src/bin/aien-authority-bridge.rs",
+      "git_blob": "ddea7a7eebb994463116a9283b52c323791ca800",
+      "sha256": "4dee43dc0f878707c8a572c7c8f2487b5d513dc04d5c2fde98834e00a8d6b9f9",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 237,
+      "bytes": 9909
+    },
+    {
+      "path": "adapters/aien/src/compose_ledger.rs",
+      "git_blob": "684ee318e06504746157fda80ba1acec575f3823",
+      "sha256": "f7aefed1b5f521992a608e3ab853a0df316f9e39d9b7a10d846ea72e733d0d6a",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 1124,
+      "bytes": 47403
+    },
+    {
+      "path": "adapters/aien/src/fix_the_test.rs",
+      "git_blob": "5b7ff772d0a3e6e1779b6d68fe89bcafbfab8082",
+      "sha256": "929a4c99ddbfcfde06a569b1f3f2d013b01407e63cfdcfb2134080544e2e10df",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 335,
+      "bytes": 12315
+    },
+    {
+      "path": "adapters/aien/src/lib.rs",
+      "git_blob": "9e9c24a2275bafe56103b79c1cbd56d4a326eb4d",
+      "sha256": "751ff298a1797e27dfd6d037442a4d43f93b261da7dad1782a98ab274f948c3d",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 1049,
+      "bytes": 42764
+    },
+    {
+      "path": "adapters/aien/src/provenance_export.rs",
+      "git_blob": "b359a42387fddb031ecef9e8f90863b03c60cf28",
+      "sha256": "409d3bcef109f33610ceebc4c86675515ba739bbdd5a5ab13790b7881b3a846d",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 612,
+      "bytes": 23637
+    },
+    {
+      "path": "adapters/aien/src/rsi_m5.rs",
+      "git_blob": "2d438ad08598bba7347d313dc4e494b975ac239f",
+      "sha256": "01688c7fe226770a57f6362566e99ad93e4921d53e27bb680748840ce4df3f1b",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 175,
+      "bytes": 6420
+    },
+    {
+      "path": "adapters/aien/tests/approval.rs",
+      "git_blob": "b87656ea24d588a58f584f79200679ccc4190468",
+      "sha256": "69a74fc447105f23c17f343c486c7602102c23824f390fc7257040ac3c6b39c0",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 509,
+      "bytes": 19850
+    },
+    {
+      "path": "adapters/aien/tests/bridge.rs",
+      "git_blob": "02522cd9680254e490886076b5a4c31a6201ccec",
+      "sha256": "70f7f4aea369ed2e211e9094a9980ba9979c8711a38838aa7f8c2059973f396e",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 280,
+      "bytes": 11148
+    },
+    {
+      "path": "adapters/aien/tests/compose_ledger.rs",
+      "git_blob": "f4df5f3bb2d96aec5f91d573f60db95f62483c3e",
+      "sha256": "8bc09dce5f134ccb6c8439f56df5088be9604616923297d88981a566042f27a4",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 2041,
+      "bytes": 81248
+    },
+    {
+      "path": "adapters/aien/tests/compose_ledger_attacks.rs",
+      "git_blob": "16e3c4e10fd085d333f0fbf425f94c652a81ae0e",
+      "sha256": "8fc64e6b04e625b00193362041fa43ac17b94488058c7f11a7b80896de1dcd2e",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 558,
+      "bytes": 20517
+    },
+    {
+      "path": "adapters/aien/tests/demo_workflow.rs",
+      "git_blob": "298cffffa289b5c64f60e34a0e5b20d1ae67cedd",
+      "sha256": "3f1a38c5e4164f0ce283e2650127ff7e2598c3d3b778b113e9d3f2c424d67fc5",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 711,
+      "bytes": 26856
+    },
+    {
+      "path": "adapters/aien/tests/exposure.rs",
+      "git_blob": "88a29c60a4cd3aa97ffdf2bcd5fc146645446a31",
+      "sha256": "debd5e83b8933a0abad4941ae4ab6988f2afae73d4396d23549e211e52e8833f",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 171,
+      "bytes": 5669
+    },
+    {
+      "path": "adapters/aien/tests/pipeline.rs",
+      "git_blob": "1c18db240cfce17d32fd02186823bd638be75b60",
+      "sha256": "a4af52dd7382d5124b803dfeab3774067a5933e784bc6abd6e99e2b49342a305",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 317,
+      "bytes": 11554
+    },
+    {
+      "path": "adapters/aien/tests/t4_corpus.rs",
+      "git_blob": "8d72f53d134ca9d0313144196604a1233c37feaa",
+      "sha256": "2f3c9846bca0080668080905b54e55f0cabd1fcf74f3732aea8ad51295d76da8",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 401,
+      "bytes": 16420
+    },
+    {
+      "path": "bench/fixtures/driftwood/src/convert.rs",
+      "git_blob": "8d3247f8baff70651d6902b19b2a21cc59d1547b",
+      "sha256": "be9d11a5e87ebf7a76aaf024c3c49d9c50fffb2ee436505227f7f8cf53160153",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 4,
+      "bytes": 105
+    },
+    {
+      "path": "bench/fixtures/lanternfish/src/main.rs",
+      "git_blob": "25a37c1f583c32a238239b3e010fe2d415f9e7a0",
+      "sha256": "e3fb0c819e2edd67c92799ce7168c1d772af16c1fd653ebdc2a30e366d41bd67",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 7,
+      "bytes": 189
+    },
+    {
+      "path": "bench/fixtures/lanternfish/src/moon.rs",
+      "git_blob": "dfee20c3c4cb8dc880cf999f134fee9fb47262c2",
+      "sha256": "47881545e50cd24a1e6ae608d0f6a2f48cc214bb751473c5faaae8ea84d9c190",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 4,
+      "bytes": 109
+    },
+    {
+      "path": "bench/fixtures/lanternfish/src/tides.rs",
+      "git_blob": "454409deb0fc0cfff9c9323d305f26d9e588b602",
+      "sha256": "c23a1408032dfaed555aa5839fde5d15ebcbaca1aece1c2099009d28d9491ded",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 14,
+      "bytes": 338
+    },
+    {
+      "path": "bench/heldout-0.2x/fixtures/beacon/src/fog.rs",
+      "git_blob": "063532c093318f7d31de31c5e9a5e5062697656f",
+      "sha256": "4df6d1fdc463ad1256658d7b83eb295fde44c9df54052f5275319e7c2ab45f3c",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 5,
+      "bytes": 82
+    },
+    {
+      "path": "bench/heldout-0.2x/fixtures/beacon/src/main.rs",
+      "git_blob": "b3119f55a8d010d72d1de543fdc5b4adeb886cf4",
+      "sha256": "e2dd0308ecc1962f146d4dff93485e919315207610b3827e9bcf595e06d17bbb",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 6,
+      "bytes": 89
+    },
+    {
+      "path": "bench/heldout-0.2x/fixtures/beacon/src/rotation.rs",
+      "git_blob": "3b2c1f15564f5e06a7f401f6c077b76d837a71ab",
+      "sha256": "2aab95c542a6b178fc090360f1b80075ff430abc685bb5efcfefd39c19b40eb5",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 4,
+      "bytes": 100
+    },
+    {
+      "path": "docs/external/nightdriver/565/harness/stubs/esp_heap_caps.h",
+      "git_blob": "e86969ef253112f3bd04a3a3e4d8603d5ec84db6",
+      "sha256": "37f66b814c88c40f3919bdfc7cc866994a2b61cd30491528ea0f088fa84fca6a",
+      "language": "C",
+      "category": "third_party",
+      "lines": 54,
+      "bytes": 3160
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/legacy/globals.h",
+      "git_blob": "689d2bcd6248b6a13b2292b8974db7784c1cc40f",
+      "sha256": "52f41d78139fe1c719f7e930c0e75eb1d8ccffd330196f7715743c252c13e5f8",
+      "language": "C",
+      "category": "third_party",
+      "lines": 47,
+      "bytes": 2100
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/legacy/ledbuffer.h",
+      "git_blob": "fcf19c4b2167bd4eecaed14eef9545a71fa81e1f",
+      "sha256": "b25d8c64bc3094356be5bfd492f6419d35ef1070b87936e4a16c30fc1ab9651a",
+      "language": "C",
+      "category": "third_party",
+      "lines": 2,
+      "bytes": 34
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/legacy/nd_network.h",
+      "git_blob": "94f51505a3c8e3407a610f070007f2cd12ffb7a2",
+      "sha256": "0a0335c3ba15f4921d030ba092110aa6d0c49f2e289216a57bc2c012aafab78a",
+      "language": "C",
+      "category": "third_party",
+      "lines": 3,
+      "bytes": 156
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/legacy/soundanalyzer.h",
+      "git_blob": "dc936456a18e6eadec67a666242cd29e43f7262f",
+      "sha256": "c43bf4d90237ba9c2efd110a6718dc52dfa7082c8f61b7298cd8c876e9c41c9f",
+      "language": "C",
+      "category": "third_party",
+      "lines": 4,
+      "bytes": 142
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/legacy/systemcontainer.h",
+      "git_blob": "505ec4e7f4be4c7e6344b3cd86aa19e3f75a975d",
+      "sha256": "984216dbb9b1ddeb1fa1636012de3f226eb9a611bf9a35aa122ef5dbdabf94ad",
+      "language": "C",
+      "category": "third_party",
+      "lines": 8,
+      "bytes": 430
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/legacy/uzlib/src/uzlib.h",
+      "git_blob": "c5007e30c76e360b315b549b1648a6ddcfa17fce",
+      "sha256": "ec4330db46bee3cd3a6ba4b12e3f2ae864e6ff27151828b5b785b5b61cfa686e",
+      "language": "C",
+      "category": "third_party",
+      "lines": 8,
+      "bytes": 544
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/legacy/values.h",
+      "git_blob": "a0b3ff7515830c44ca140cc1d981c082a42df67b",
+      "sha256": "1e35ad7fa1d7235ba4151d5511c3ab16a044d8ae4d0a0fcb19fd23778b893de9",
+      "language": "C",
+      "category": "third_party",
+      "lines": 4,
+      "bytes": 198
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/globals.h",
+      "git_blob": "b68f514dbadfae039426a4f0ae51ebb4dae2e76e",
+      "sha256": "a61638ffdc328d04dca63fe8f7070e229363c704275362c87afce618cb69f324",
+      "language": "C",
+      "category": "third_party",
+      "lines": 37,
+      "bytes": 1370
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/itaskservice.h",
+      "git_blob": "2c846e02ae1e787527656136651a8ede908b35b3",
+      "sha256": "f7b88627f0046770ec4469ddaa86d875b0ac7da9592c42cc25f2c35af4083a93",
+      "language": "C",
+      "category": "third_party",
+      "lines": 18,
+      "bytes": 738
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/ledbuffer.h",
+      "git_blob": "fcf19c4b2167bd4eecaed14eef9545a71fa81e1f",
+      "sha256": "b25d8c64bc3094356be5bfd492f6419d35ef1070b87936e4a16c30fc1ab9651a",
+      "language": "C",
+      "category": "third_party",
+      "lines": 2,
+      "bytes": 34
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/nd_network.h",
+      "git_blob": "94f51505a3c8e3407a610f070007f2cd12ffb7a2",
+      "sha256": "0a0335c3ba15f4921d030ba092110aa6d0c49f2e289216a57bc2c012aafab78a",
+      "language": "C",
+      "category": "third_party",
+      "lines": 3,
+      "bytes": 156
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/soundanalyzer.h",
+      "git_blob": "fcf19c4b2167bd4eecaed14eef9545a71fa81e1f",
+      "sha256": "b25d8c64bc3094356be5bfd492f6419d35ef1070b87936e4a16c30fc1ab9651a",
+      "language": "C",
+      "category": "third_party",
+      "lines": 2,
+      "bytes": 34
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/systemcontainer.h",
+      "git_blob": "46c5653275b9c71442b3319937bb12cbf3c41b38",
+      "sha256": "ffc197a27ae8e38c6a15897c61fbc35f2bfd550caac2012d38e346147550b611",
+      "language": "C",
+      "category": "third_party",
+      "lines": 6,
+      "bytes": 387
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/taskmgr.h",
+      "git_blob": "1b9a511b323a0b8a55d55f9018b4d47dfc017ac5",
+      "sha256": "c9a24ebc4b85bd197bba425421c5affaa95000b38cc365f1c1e9e66bf84be1de",
+      "language": "C",
+      "category": "third_party",
+      "lines": 5,
+      "bytes": 110
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/uzlib/src/uzlib.h",
+      "git_blob": "c5007e30c76e360b315b549b1648a6ddcfa17fce",
+      "sha256": "ec4330db46bee3cd3a6ba4b12e3f2ae864e6ff27151828b5b785b5b61cfa686e",
+      "language": "C",
+      "category": "third_party",
+      "lines": 8,
+      "bytes": 544
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/stubs/modern/values.h",
+      "git_blob": "a0b3ff7515830c44ca140cc1d981c082a42df67b",
+      "sha256": "1e35ad7fa1d7235ba4151d5511c3ab16a044d8ae4d0a0fcb19fd23778b893de9",
+      "language": "C",
+      "category": "third_party",
+      "lines": 4,
+      "bytes": 198
+    },
+    {
+      "path": "docs/external/nightdriver/666/harness/torture/src/main.rs",
+      "git_blob": "314e3b745426892df8648694554dccea5fecf27f",
+      "sha256": "b6a0f361def16f78943a7f50d3cf63fafd62bf9562948e1e06aeae606d12c11b",
+      "language": "Rust",
+      "category": "third_party",
+      "lines": 353,
+      "bytes": 17291
+    },
+    {
+      "path": "provenance/fixtures/real-waldo-aien-chain/driver/main.rs",
+      "git_blob": "401d034780ded9d81cdb95070dfbca0affaf3af1",
+      "sha256": "339b5e55e7e26e2985c3b9eb54062da4f33d13ad8c31df4af52541d96e1f20d7",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 207,
+      "bytes": 11148
+    },
+    {
+      "path": "provenance/src/binding.rs",
+      "git_blob": "2689604569b7824a43b8601f9c8eab297bbedfd7",
+      "sha256": "de15680061298527af02df4147a1fc37c5257742617280bc80ac2ca818b40d3c",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 155,
+      "bytes": 5913
+    },
+    {
+      "path": "provenance/src/evaluation.rs",
+      "git_blob": "acda6ddf793ad03a6786110d28e94cd6ea0c6f0c",
+      "sha256": "08024543ce47ccd42db590aaae37f72bfd87b986a906bf96180b79f5207633e6",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 482,
+      "bytes": 16744
+    },
+    {
+      "path": "provenance/src/gojson.rs",
+      "git_blob": "996e4e56ffcf969bff8ecf4d1677744060cba72c",
+      "sha256": "c46a09813ea5f6ca1dbe46c49391d11766e5e5473aecb2b0992cb6b5e10bb818",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 135,
+      "bytes": 4222
+    },
+    {
+      "path": "provenance/src/ledger.rs",
+      "git_blob": "6f661d57e925a6d9be23f619b61e042acabfb229",
+      "sha256": "98928975a96ff15fe375668edee36de97174955a4bb86a25217e8406655b3e7d",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 489,
+      "bytes": 16007
+    },
+    {
+      "path": "provenance/src/lib.rs",
+      "git_blob": "cfc3bcc427df9a3b9eaf983d54bcdff5164e69f5",
+      "sha256": "c6dbc144a0c1896601fe914fc3c85ca3f7aa0cf5f889b9473bb5176607432c9c",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 937,
+      "bytes": 37152
+    },
+    {
+      "path": "provenance/src/main.rs",
+      "git_blob": "1ad16c7c6570e2ba369f6711d7d5f7ab51b85cd3",
+      "sha256": "14520f926534fb533a71beb4723d694406b8a7e1c576efc5b658a5eb27cd659c",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 95,
+      "bytes": 4196
+    },
+    {
+      "path": "provenance/src/modelturn.rs",
+      "git_blob": "171c28c0d1448fe0bfa5361a58e1a1f18b5e5011",
+      "sha256": "83e080622973984536a39b3aabf8b454f3f7ca8bf2a8dc9d57400951a22b6c87",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 340,
+      "bytes": 14297
+    },
+    {
+      "path": "provenance/src/strict.rs",
+      "git_blob": "c9cf7fc35160054b7bfb9ac93d2df3d9ecd258da",
+      "sha256": "8808909896c7d83732596e65a4efaa3c0273d73fa7e851615d44b7bb261737e4",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 91,
+      "bytes": 3190
+    },
+    {
+      "path": "provenance/src/synth.rs",
+      "git_blob": "79af384ec816a26c5b16e0aac61fd68e5264bb57",
+      "sha256": "f743b553a2b44ccf11b0ca1c4d81e6b9e875769837f5dd1da0211cfb94940263",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 627,
+      "bytes": 28095
+    },
+    {
+      "path": "provenance/src/testrun.rs",
+      "git_blob": "2414d7dca938270bcfc4b4928dd0c3279614a330",
+      "sha256": "a114821ada1bdb6887f7cc84bcae9b4373157bc73d24c08854f6fd48c6603738",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 242,
+      "bytes": 9378
+    },
+    {
+      "path": "provenance/tests/common/mod.rs",
+      "git_blob": "dc30ef1178bbdb7735833275b458ce344602adb9",
+      "sha256": "191ef7bf2ce08b42dae0ca2fab6c528ec337a1bf60aca2390c918ad795a55f0d",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 69,
+      "bytes": 2581
+    },
+    {
+      "path": "provenance/tests/effect_binding.rs",
+      "git_blob": "656d84f94244c2199c1e01e36e538086470982f7",
+      "sha256": "6eba524cf9ef5342e4cf7b4bbeaf3006f79eb2a6a0f7dd162af330a41bace2d4",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 559,
+      "bytes": 19034
+    },
+    {
+      "path": "provenance/tests/evaluation.rs",
+      "git_blob": "bfb0612926ebb431bab5b54be2b580e4de085453",
+      "sha256": "86a746020495965cc1934dfb425cd09833b060ee7605c3363d95c736805847dd",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 624,
+      "bytes": 19308
+    },
+    {
+      "path": "provenance/tests/fix_the_test.rs",
+      "git_blob": "23909b8529e85921fb60135357b475c065850222",
+      "sha256": "ed39c8105d50d54526e71e2b2021ba90ea137cf8f60417986409bb64f001db0c",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 373,
+      "bytes": 11367
+    },
+    {
+      "path": "provenance/tests/model_turn_link.rs",
+      "git_blob": "dea14e9d8e8d0824944fb5c61d1312e5716f3555",
+      "sha256": "744b3b76a4ac8fb08ab3f868cce025bb04897ac92c7c6fd333f1bd4caa6bd9e1",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 209,
+      "bytes": 7658
+    },
+    {
+      "path": "provenance/tests/real_chain.rs",
+      "git_blob": "a5ad2f2efac0de6644b71ae7269cfea94c64d059",
+      "sha256": "73f21883457d298b238a2c93c15e10d784cf044985da9fa619260225790528ca",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 416,
+      "bytes": 14269
+    },
+    {
+      "path": "provenance/tests/recovery_verdicts.rs",
+      "git_blob": "616cfb6e326bcf1f3f8f87ef5abecacfee4e21f3",
+      "sha256": "7b87c574c003d87106ff301a101565fe1c4e64dd78a551627087152659d8e92a",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 139,
+      "bytes": 4928
+    },
+    {
+      "path": "provenance/tests/review_hardening.rs",
+      "git_blob": "238c41f2c2a69aa4dfa011cec6c9879dbc2fea94",
+      "sha256": "d7faf8533712933ceef75bf520c00db7cd293ecf81a0081639dc8d1d1f5b5dde",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 173,
+      "bytes": 5890
+    },
+    {
+      "path": "provenance/tests/verdicts.rs",
+      "git_blob": "196c0ee1249a8daab318719778ce02e6ab3a6a78",
+      "sha256": "58e28c1bdc0a1d8cbee00a8980111b7a79c28df2ac08435dc16d7967d05abe5b",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 346,
+      "bytes": 11563
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/adapter_runner.rs",
+      "git_blob": "7fddf22a4e026f078fe84a7c180aba8e8f7a9e4a",
+      "sha256": "4bb5ee129c1f9af681b08e99962256a02bad111190eb2e90ba23899356d94276",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 499,
+      "bytes": 19661
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/bin/interplane-corpus.rs",
+      "git_blob": "99ab8c14ff246be859f364bd6a86f4be4cfd68aa",
+      "sha256": "1d98897cf2c82cfea02390e0794754d6001cb62601e14312dfad8bb8d0a56414",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 132,
+      "bytes": 4705
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/fixture_check.rs",
+      "git_blob": "6ffe43118082cb13b6df59d68c3bd41797dcb3fa",
+      "sha256": "dc2a3b1f433926f4b90a37e99e415a9a8e302834657967afdf53a661dcc5ef2d",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 1557,
+      "bytes": 58528
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/lib.rs",
+      "git_blob": "eb2ce4e08bb1cb1d604337410d2dfd3cdd34c6d5",
+      "sha256": "b074b24722ca54ae545aaf59818b4f9472c204e861841c368765111625e7f7fa",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 972,
+      "bytes": 37269
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/main.rs",
+      "git_blob": "77f0a752cb9fb80778a605cb5cae8ca318c033a0",
+      "sha256": "0c73b10867ba2bfd752b7c04c7a7afa2f52a9727d4f72d3e8bf82ac5ba1b1304",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 162,
+      "bytes": 5407
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/negctl.rs",
+      "git_blob": "8c5b830c5d0fb6a3dea5b48c345c2a371afd66f8",
+      "sha256": "8b77c53a20058ef634d67d2e7e37639b33ee41099c8248e2a79718a928f83f59",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 249,
+      "bytes": 8652
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/ojson.rs",
+      "git_blob": "742c9a6bb0e75f377782d7b43ebd94a6a8bc94a6",
+      "sha256": "339211af66a30a26d38141dc84cdf95fc899d6f3951351eaa87fb0b730fa3999",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 454,
+      "bytes": 15057
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/subset.rs",
+      "git_blob": "a47b7da2d9b3a9af8fedcc23270976d0b522f172",
+      "sha256": "c8ae3bbdc4d743292e0a48f8e75c3e72dde06fbe09a0c530e68c1fe111d0eb96",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 615,
+      "bytes": 21474
+    },
+    {
+      "path": "rust/crates/interplane-conformance/src/trust_digest.rs",
+      "git_blob": "357cb31acef89530a87980e21d4a86eb26805a33",
+      "sha256": "43cf20a74c8178958ea11395c4ea17a9cdb9e6c6fa6a470aca91d677ba246dc0",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 77,
+      "bytes": 3152
+    },
+    {
+      "path": "rust/crates/interplane-conformance/tests/adapter_runner.rs",
+      "git_blob": "d3a8bef3288f1a45fbaedecfd0611b7fe6101075",
+      "sha256": "1e1a5bc49af11fa87771d9499ec129593ffe5309c41c6e00428d36e416b8e0ae",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 104,
+      "bytes": 3910
+    },
+    {
+      "path": "rust/crates/interplane-conformance/tests/default_build.rs",
+      "git_blob": "03c372ad2bcd1f540e8fb164769789d5842dabd6",
+      "sha256": "e0847a0ff4a986e4bb4d6f72eea5f899bfa4bd88925dbbfe326147739c102e65",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 21,
+      "bytes": 853
+    },
+    {
+      "path": "rust/crates/interplane-conformance/tests/fixtures.rs",
+      "git_blob": "386241f207e57d351d89c3acdbe1778369dcf93b",
+      "sha256": "ba2e6ccd862bc4f9fb2968b55f19f5b011101e0208c282d4b9d0f420989fbbb7",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 97,
+      "bytes": 3588
+    },
+    {
+      "path": "rust/crates/interplane-conformance/tests/hosts/mod.rs",
+      "git_blob": "7cc0ee9df9ef771bd844329fb4379e916a8b714a",
+      "sha256": "abe8f08459c46919e74654895d726425d696a21d81e8615612af40ab9a298246",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 486,
+      "bytes": 15809
+    },
+    {
+      "path": "rust/crates/interplane-conformance/tests/negative_controls.rs",
+      "git_blob": "cd2424021bd9857339aa696906fab0f83c321154",
+      "sha256": "09fc755f1ad525c6056ef7038d6c912e0a620c1abca2ef2d6a74ff711a13851f",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 51,
+      "bytes": 1332
+    },
+    {
+      "path": "rust/crates/interplane-conformance/tests/schemas.rs",
+      "git_blob": "eab7158b64d2f7fbe3ec849cf5fa8f356927f86f",
+      "sha256": "a568de3af70af0649f494defe4ee2715b4fe39fefadef32a32f14a5242ce542f",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 246,
+      "bytes": 8237
+    },
+    {
+      "path": "rust/crates/interplane-conformance/tests/subset_malformed.rs",
+      "git_blob": "b02e25f3d45706929f5f5fe11821e42c4fcdb541",
+      "sha256": "48d81484acd44ba34d389c5ca9307e1e065832e1739e1036a7f63de34e3464c0",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 50,
+      "bytes": 1422
+    },
+    {
+      "path": "rust/crates/interplane-conformance/tests/validate_bad_names.rs",
+      "git_blob": "5ff8c5229976138c29fdb24844a3eed655a983c9",
+      "sha256": "d945e9d5d547e971f292f67e4c56fdc53e6b838fa2c80dedb673a9f10e5186c7",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 78,
+      "bytes": 2630
+    },
+    {
+      "path": "rust/crates/interplane-core/src/jcs.rs",
+      "git_blob": "d30afdf788718a2bda4ccbe39d20928099ca5486",
+      "sha256": "7ea61c3f025ad83c174feb368098af972d170db4b4d370fc052fe6a226ce9865",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 178,
+      "bytes": 5430
+    },
+    {
+      "path": "rust/crates/interplane-core/src/ledger.rs",
+      "git_blob": "f8eb195d6a28fc26068e87c1ceeaeddd4d75043d",
+      "sha256": "7c6de143629bbc12c7e9240cae5b06b02fe7f9b532ed441abc2cedb183e36b54",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 146,
+      "bytes": 4994
+    },
+    {
+      "path": "rust/crates/interplane-core/src/lib.rs",
+      "git_blob": "c331b6dd00ce0112e9481fbe52d7ebd49ef0f410",
+      "sha256": "4712e87e3469945da5dcccbec468f9d471e02ef328d04795eaa50e5fd3f6a348",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 20,
+      "bytes": 646
+    },
+    {
+      "path": "rust/crates/interplane-core/src/lifecycle.rs",
+      "git_blob": "09c26274fc7e8d393b912afa624d360fafa79df1",
+      "sha256": "5d3ecfa2206809a27e7d9c40847b24a5e7316e7824ad986ec5c9e9d38ce38958",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 182,
+      "bytes": 6973
+    },
+    {
+      "path": "rust/crates/interplane-core/src/macros.rs",
+      "git_blob": "cfd72d0875dbe6cb59593d29519f144bc98a2bdb",
+      "sha256": "b6f3978fbe285b2b0cba5b9ab9283cf8af13ec5732fe3ed876c21df4c94395d5",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 56,
+      "bytes": 2406
+    },
+    {
+      "path": "rust/crates/interplane-core/src/types.rs",
+      "git_blob": "ebd1b70ce1ca210f64c85cd1bab5d123afe239d6",
+      "sha256": "ca7f4ee5b477f6ef86c44a43a750bbf8b8999123c8f5c2fecbedc9662be0e49d",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 853,
+      "bytes": 27496
+    },
+    {
+      "path": "rust/crates/interplane-core/src/validate.rs",
+      "git_blob": "6daf36b97751e6da87585c0333d097d203d05fa6",
+      "sha256": "0050eb9e21b3242055e92b1ca8079603220f19a161c79657fdd9b0dac24d1cd5",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 84,
+      "bytes": 2874
+    },
+    {
+      "path": "rust/crates/interplane-core/src/version.rs",
+      "git_blob": "a86a60508b1d045f536059a935f028bf6af8ef0e",
+      "sha256": "35ccad033b7db30c4765573dacac2c76ccdf3e119b172241d29a163e504dfc54",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 72,
+      "bytes": 2194
+    },
+    {
+      "path": "rust/crates/interplane-core/tests/core.rs",
+      "git_blob": "3e803317c0d6614a6c8c1b4ccaf4e6767f05567b",
+      "sha256": "8a10278d8da624d2d5e1ed3cf9391627727ca21feaa75634f1ebb4f051b8872c",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 613,
+      "bytes": 21221
+    },
+    {
+      "path": "rust/crates/interplane-crossaxis/src/lib.rs",
+      "git_blob": "ceea4ceacfe9939e851fbca26bc6ef55ae3a68a7",
+      "sha256": "3ed72937bc994c7c994f3c27f7e4cb6ad8a054cd6815ba84e006abcb5c47fb0b",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 1025,
+      "bytes": 37487
+    },
+    {
+      "path": "rust/crates/interplane-crossveil/examples/offline.rs",
+      "git_blob": "29006f6179d0550d9924d823ccb6ce55bab14092",
+      "sha256": "bc7445d73ad5f0d9467e35d42d6a0205d40166c8592f30d72652ec40f705fd51",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 112,
+      "bytes": 3879
+    },
+    {
+      "path": "rust/crates/interplane-crossveil/examples/todo_adapter.rs",
+      "git_blob": "be303bb611a5c213e354166e052c199d7cb75247",
+      "sha256": "02f81e1d91ee0bd1f081cc613ae1b7c751bf6919d7dc9dab72bfca4ab02d08e0",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 309,
+      "bytes": 12072
+    },
+    {
+      "path": "rust/crates/interplane-crossveil/src/lib.rs",
+      "git_blob": "666db890e3a55ce1fe2731f57e9d81f95e5b0ac8",
+      "sha256": "dc960a893fed290ba05e1933c8bcb43e68dade1d9357b25fe7c44b1d36ef3895",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 42,
+      "bytes": 1695
+    },
+    {
+      "path": "rust/crates/interplane-crossveil/src/mock.rs",
+      "git_blob": "565f0c0bfb608f7cfb2d2997712b11fa3d289bba",
+      "sha256": "d2b0f797fce252b1d53ab1c8e517e7813dcf343b142e2d2c78627b13253c9d2a",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 496,
+      "bytes": 18220
+    },
+    {
+      "path": "rust/crates/interplane-crossveil/src/pipeline.rs",
+      "git_blob": "a6d081a19a531b0e50942a8e595f5aff48b26a2a",
+      "sha256": "948b4f63c31f53229a957c799996c411bac4260e9a0e66f27d4eb76672de9d54",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 1408,
+      "bytes": 53005
+    },
+    {
+      "path": "rust/crates/interplane-crossveil/tests/pipeline.rs",
+      "git_blob": "7831e20c8f07a183bc3e25f7cf8ce4ede5571ac1",
+      "sha256": "a302e7a2182ee4d4cad1c5ad123da7de0a2f079855167d59de39adbd375b16d4",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 528,
+      "bytes": 16661
+    },
+    {
+      "path": "rust/crates/interplane-crossveil/tests/refusal_exposure.rs",
+      "git_blob": "8300d43abc66fc9310148259b57155fef6e50aaf",
+      "sha256": "669be737ffe0f4e3daef0fc89f30411d4ad3b36659925bc60e6041391bcad199",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 371,
+      "bytes": 12699
+    },
+    {
+      "path": "rust/crates/interplane-crossveil/tests/session_limits.rs",
+      "git_blob": "23310b566165cb3e1113e95845763338dd351c64",
+      "sha256": "8ba7313456556d255104570c47ed56cb322ed97c148554e00856f4c32d42d097",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 484,
+      "bytes": 16633
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/examples/replay_scan.rs",
+      "git_blob": "77428332048a6b6c9fd63534735bddf336333598",
+      "sha256": "d0ebaabb659f5d798edb7ba488a91ce2d9cfdd2ce96e92753be56a78a27810d4",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 44,
+      "bytes": 1523
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/examples/replay_scrub.rs",
+      "git_blob": "3add51d142ad8615bce0dbb53d5d1db6cc54ba58",
+      "sha256": "436b166bda2677d176d974308cfc66dfa373c0cb5a77fdda0d256377529b290e",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 50,
+      "bytes": 2473
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/src/aien_legacy.rs",
+      "git_blob": "0fa9813b0fd80f40479d4fa5d2709ad809749d67",
+      "sha256": "3e1fd272b28e3f6a019884bba1da7332e2f2d39c2901f53a2d6b30fab196f168",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 283,
+      "bytes": 10110
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/src/ajax.rs",
+      "git_blob": "ea3fd072a8c5ca00760a254f95787b8062958c25",
+      "sha256": "f8036495136380609bf184202a3f9939e0ffa302656d984bfdd275c91e40f380",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 5,
+      "bytes": 401
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/src/lib.rs",
+      "git_blob": "0944cfd88e00026f638be1a343ffe6ca95209737",
+      "sha256": "ebb9130225774ea4546de44112415241ea1866fd9e08fec8afccdd02fc682481",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 237,
+      "bytes": 7585
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/src/openai.rs",
+      "git_blob": "2a2e28085d51c1b711030553392c0985b11c1726",
+      "sha256": "a868cf1b52fc6b2c730ae2b320839d74d8c75f152a31e0f34946e54946549eaa",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 240,
+      "bytes": 8448
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/src/openai_stream.rs",
+      "git_blob": "da948a127be096d1dd8b0343f0141e657ca03079",
+      "sha256": "e737e4ef2a6fda714876bc19c0357c0ef43d8cdb39bef8e7bd60d5a7f240706c",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 230,
+      "bytes": 8684
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/src/qwen35.rs",
+      "git_blob": "dcc13e4c27ec236615f7e4893ed7c2c92340f985",
+      "sha256": "39c94614e6f91458643509f09f669a1279c97ae3c31b2306585057e506b6ccce",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 391,
+      "bytes": 14787
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/src/replay.rs",
+      "git_blob": "546c13884e2f1071b8ac1e4993f01dde6d95c50f",
+      "sha256": "064fbaf460298f794e81e14df8ce629a94cfd0a8c4982655970365662acc8eb4",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 483,
+      "bytes": 15480
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/tests/dialect_fixtures.rs",
+      "git_blob": "a3f162caa27a38e6f89f9744393fda1f9a3da732",
+      "sha256": "3c3bb8d339b4f962b4716f704aca42ba4ae996143301a0ae3720d5882c4daf88",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 106,
+      "bytes": 4267
+    },
+    {
+      "path": "rust/crates/interplane-lenshift/tests/provider_replay.rs",
+      "git_blob": "6b7f9f5b1634a05dfb85c26f8494fd18f72a6055",
+      "sha256": "a20554434fb7db65bd43ef52ac0a1d038a8348a5ddf4611e679434890af7b6ca",
+      "language": "Rust",
+      "category": "first_party_test",
+      "lines": 317,
+      "bytes": 11552
+    },
+    {
+      "path": "rust/crates/interplane-probe/src/lib.rs",
+      "git_blob": "d8b2fa2d88088adf323d91b77ad9032d24466dc1",
+      "sha256": "2c8846269ffa012a52b60b5d8e185c90fbfa36fb447ce3311b3516da590f204d",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 851,
+      "bytes": 30404
+    },
+    {
+      "path": "rust/crates/interplane-probe/src/main.rs",
+      "git_blob": "2ac2255cbcecfa14d4856e7a3d62aac3e5f2957c",
+      "sha256": "cfa77c9e1884f49e7ff15cfb2a663adaa7838fe1d373e701380eff75f2092e6e",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 64,
+      "bytes": 2271
+    },
+    {
+      "path": "rust/crates/interplane-probe/src/tests.rs",
+      "git_blob": "97079e93f146575b5850cfaa63a99d5dd615a17b",
+      "sha256": "55418532163f30be12234065e1e4eedab421021eccd13aa12d74756159414dd7",
+      "language": "Rust",
+      "category": "first_party_source",
+      "lines": 424,
+      "bytes": 14494
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+All commands ran from /home/drakestapleton/workspace/omega-native-review-fixes.
+Build and evidence directories belong to this worktree. No live endpoint calls.
+
+# Initial source-only bootstrap and native build (before changing math core)
+quiet-build sh seed/math/bootstrap.sh > evidence/native-review-fixes/bootstrap.log 2>&1
+OMEGA_SEED=build/math-native/bootstrap/omc2 quiet-build sh seed/math/build.sh > evidence/native-review-fixes/math-before-build.log 2>&1
+
+# Retirement RED with new regression and original policy.py at 37295939
+python3 tools/retirement/test_receipts.py > evidence/native-review-fixes/retirement-red.log 2>&1
+# Exit 1: exact spoof accepted as PARTIAL/errors=[]/verified retirement count 1.
+# Implement typed production receipt contents/stage/identity checks.
+python3 tools/retirement/test_receipts.py > evidence/native-review-fixes/retirement-green.log 2>&1
+python3 tools/retirement/test_policy.py > evidence/native-review-fixes/policy-green.log 2>&1
+
+# Sign RED: add executed sign coverage assertion before changing generator
+quiet-build node seed/math/oracle.mjs > evidence/native-review-fixes/signs-red.log 2>&1
+# Exit 1: ++=0,+-=0,-+=0,--=400. Then cycle signs while keeping magnitude RNG calls.
+quiet-build node seed/math/oracle.mjs > evidence/native-review-fixes/signs-green.log 2>&1
+quiet-build node seed/math/sign-fixtures.mjs > evidence/native-review-fixes/sign-fixtures.log 2>&1
+sha256sum seed/math/oracle.mjs seed/math/sign-fixtures.mjs seed/math/core.om > evidence/native-review-fixes/generator-freeze.sha256
+# Corrected generator frozen above before changing math source.
+
+# Whitespace RED against the original native executable
+quiet-build node seed/math/whitespace.mjs > evidence/native-review-fixes/whitespace-red.log 2>&1
+# Exit 1: eval CR 1 -> REFUSED 1, 18/28 probes fail. Add CR to single separator check.
+OMEGA_SEED=build/math-native/bootstrap/omc2 quiet-build sh seed/math/build.sh > evidence/native-review-fixes/math-after-build.log 2>&1
+quiet-build node seed/math/whitespace.mjs > evidence/native-review-fixes/whitespace-green.log 2>&1
+readelf -h -l -d build/math-native/omega-math > evidence/native-review-fixes/math-elf.log
+
+# Complete suites, wrappers record their statuses separately in *.exit.
+sh seed/math/gate.sh --full > evidence/native-review-fixes/math-full.log 2>&1
+bash tools/retirement/verify.sh > evidence/native-review-fixes/retirement-full.log 2>&1
+# First retirement run failed: evidence field source_sha256 must retain original
+# source identity. Preserved first failure. Added mutant_source_sha256 separately,
+# then ran the ENTIRE retirement verify.sh command again, exit 0.
+python3 tools/retirement/policy.py --require-retired > evidence/native-review-fixes/require-retired.json
+# Expected exit 1, actual PARTIAL/0 report retained.
+
+# Final standalone math smoke, no service/network access
+printf 'eval\r1\r\n' > build/math-native/review-trace.input
+strace -qq -o evidence/native-review-fixes/math-syscalls.log build/math-native/omega-math < build/math-native/review-trace.input > evidence/native-review-fixes/math-smoke.out
+# Exit 0, OK 1; initial exec/read/write/exit only.
+
+# Branch publication, explicitly requested by brief. No PR or merge writes.
+git push -u origin fix/native-review-gates
+
+# Evidence collection (after both full drivers exit 0)
+# Fresh math logs, checks, receipts, mutation and seed logs copied to math-full/.
+cp -a evidence/seed-retirement evidence/native-review-fixes/retirement-full
+# retirement-full/ is a snapshot of the run's working evidence directory; it
+# contains inherited historical files too. Only verify.sh outputs are new runs.
+# The full-run manifest's relative paths describe the working directory at run
+# time. Reproduce via verify.sh; the copied manifest is a historical snapshot.
+# Restore historical tracked evidence after collecting task-owned raw outputs.
+git restore --worktree -- evidence/math-native evidence/seed-retirement
+# Recheck the retained real inventory with the new policy (exit 0 / exit 1).
+python3 tools/retirement/test_receipts.py > evidence/native-review-fixes/retained-inventory-receipt-tests.log 2>&1
+python3 tools/retirement/policy.py > evidence/native-review-fixes/retained-inventory-policy.json
+python3 tools/retirement/policy.py --require-retired > evidence/native-review-fixes/retained-inventory-require-retired.json
+sha256sum -c evidence/native-review-fixes/final-source.sha256

@@ -1,0 +1,423 @@
+{
+  "task": "L518",
+  "status": "PASS",
+  "initial_source_commit": "37295939a274c65e2a6ddad53df8494391304b80",
+  "source_commit": "c32810710b9efabc9dd0d3c2b7ddbbc75aa818b4",
+  "math_source_commit": "c32810710b9efabc9dd0d3c2b7ddbbc75aa818b4",
+  "math_last_changed_commit": "508ddd7e02c303d0e2182721f9501c7a540c758f",
+  "math_suite_started_at_commit": "508ddd7e02c303d0e2182721f9501c7a540c758f",
+  "qualification_note": "Only retirement mutant logging changed during the math full run. Math source and all math gate scripts remained byte-identical; hashes checked.",
+  "seed_source_commit": "29b12760f4c962606411d6bf25032aedef063301",
+  "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "changed_sources": [
+    {
+      "path": "seed/math/CONTRACT.md",
+      "sha256": "dd7c2dd7e528f7706685c3044c1a15824cb66dcaa0992b195cd940aeb0a72eec"
+    },
+    {
+      "path": "seed/math/core.om",
+      "sha256": "b70391a7a38464cd63ff796748565baf3dc2f73afaed90cbc2b94774dba02db6"
+    },
+    {
+      "path": "seed/math/gate.sh",
+      "sha256": "7e35c4fb535214b8e0066f106467ee6c1333e843b49dc09321c4d52652abd843"
+    },
+    {
+      "path": "seed/math/oracle.mjs",
+      "sha256": "463d08aa379b24cfb77ba7c2a865ed55d9907a860511386affb1015417e53a31"
+    },
+    {
+      "path": "seed/math/sign-fixtures.mjs",
+      "sha256": "4991da1e372e65fd11ea3d63360c59f2c89f28a8f240b35f31278c8b3aaab1bd"
+    },
+    {
+      "path": "seed/math/whitespace.mjs",
+      "sha256": "34747d68850c333f135d8e75d95cff7ffff5602249e94e84a76e580f5336360c"
+    },
+    {
+      "path": "tools/retirement/RECEIPTS.md",
+      "sha256": "2a196c87f1220aa4254c13bc3ed08f928a0e1ca608576b82ee3ac748d4a17a19"
+    },
+    {
+      "path": "tools/retirement/policy.py",
+      "sha256": "f21264b69e2ba002e8bcd61b5ac7e3abdcf3ccc701fefeaa69a879eb5e8fbceb"
+    },
+    {
+      "path": "tools/retirement/test_receipts.py",
+      "sha256": "0c3fe769b1207073cd557b149c673e51ab300b035714ca0e1cd0d20e731c438e"
+    },
+    {
+      "path": "tools/retirement/trn1/mutants.py",
+      "sha256": "da995d968d09b5e039859ac41074fbedddea030f0ccec169c39e98ceb3fe8da3"
+    },
+    {
+      "path": "tools/retirement/verify.sh",
+      "sha256": "fc6935f958620f0b0ebcad7b11770d94b05cc6b5ab3cd8e77467884c47b7a415"
+    }
+  ],
+  "contract": "seed/math/CONTRACT.md",
+  "receipt_schema": "tools/retirement/RECEIPTS.md",
+  "generator": {
+    "path": "seed/math/oracle.mjs",
+    "sha256": "463d08aa379b24cfb77ba7c2a865ed55d9907a860511386affb1015417e53a31",
+    "frozen_before_math_source_change": true,
+    "signCoverage": {
+      "signCoverage": {
+        "++": 100,
+        "+-": 100,
+        "-+": 100,
+        "--": 100
+      },
+      "operationSignCoverage": {
+        "+": {
+          "++": 25,
+          "+-": 25,
+          "-+": 25,
+          "--": 25
+        },
+        "-": {
+          "++": 25,
+          "+-": 25,
+          "-+": 25,
+          "--": 25
+        },
+        "*": {
+          "++": 25,
+          "+-": 25,
+          "-+": 25,
+          "--": 25
+        },
+        "/": {
+          "++": 25,
+          "+-": 25,
+          "-+": 25,
+          "--": 25
+        }
+      }
+    }
+  },
+  "red_green": {
+    "retirement_spoof": {
+      "red_exit": 1,
+      "green_exit": 0,
+      "red": "retirement-red.log",
+      "green": "retirement-green.log"
+    },
+    "rational_signs": {
+      "red_exit": 1,
+      "green_exit": 0,
+      "red": "signs-red.log",
+      "green": "signs-green.log"
+    },
+    "cr_boundary": {
+      "red_exit": 1,
+      "green_exit": 0,
+      "red": "whitespace-red.log",
+      "green": "whitespace-green.log"
+    }
+  },
+  "math": {
+    "full_exit": 0,
+    "reference": {
+      "requested": 1048,
+      "executed": 1048,
+      "passed": 1048,
+      "failed": 0,
+      "wolframRequested": 9,
+      "wolframExecuted": 9,
+      "reference": "Node v24.21.0 arbitrary precision BigInt",
+      "sourceHash": "463d08aa379b24cfb77ba7c2a865ed55d9907a860511386affb1015417e53a31"
+    },
+    "sign_zero_fixtures": {
+      "requested": 57,
+      "executed": 57,
+      "passed": 57,
+      "reference": "direct BigInt cross-products with Euclidean normalization"
+    },
+    "whitespace": {
+      "requested": 28,
+      "executed": 28,
+      "passed": 28,
+      "failed": 0,
+      "sourceHash": "34747d68850c333f135d8e75d95cff7ffff5602249e94e84a76e580f5336360c"
+    },
+    "golden": {
+      "requested": 42,
+      "executed": 42,
+      "passed": 42
+    },
+    "checks": {
+      "moduleTests": 23,
+      "compiledValidMutants": 13,
+      "detectedMutants": 13,
+      "mutantCases": 546,
+      "streamTests": 6,
+      "deterministic": true
+    },
+    "robustness": {
+      "requested": 1200,
+      "executed": 1200,
+      "malformedRefused": 600,
+      "recoveryPassed": 600,
+      "inputSHA256": "6a8e14a454675a12bd9b08a873a6011b8c95eeebf5d91f093a4adf53ab0e7ecd"
+    },
+    "calculator": {
+      "requested": 11,
+      "executed": 11,
+      "passed": 11,
+      "scriptSHA256": "cb169eaeb957fbe2cbd3dfd5a8181b243d6dcb594ab4b866d07f4e8a2a5c54cf"
+    },
+    "host_suites_exit": 0,
+    "seed_gates": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "optional_tokenizer_gate": "SKIPPED by existing host suite because tokenizer environment was not configured",
+    "artifact": {
+      "status": "PASS",
+      "sourceCommit": "508ddd7e02c303d0e2182721f9501c7a540c758f",
+      "compileExit": 0,
+      "nativeBytes": 32212,
+      "nativeSha256": "aa7906f534ffb63575f5b59be15e3ed93a02fe56d103aa35298beed5a35d7ac6",
+      "coreSha256": "b70391a7a38464cd63ff796748565baf3dc2f73afaed90cbc2b94774dba02db6",
+      "generatorSha256": "463d08aa379b24cfb77ba7c2a865ed55d9907a860511386affb1015417e53a31",
+      "compilerSha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+      "compiledValidMutants": 13,
+      "executedMutantCases": 546,
+      "reference": {
+        "requested": 1048,
+        "executed": 1048,
+        "passed": 1048,
+        "failed": 0,
+        "wolframRequested": 9,
+        "wolframExecuted": 9,
+        "reference": "Node v24.21.0 arbitrary precision BigInt",
+        "sourceHash": "463d08aa379b24cfb77ba7c2a865ed55d9907a860511386affb1015417e53a31"
+      },
+      "coverage": {
+        "signCoverage": {
+          "++": 100,
+          "+-": 100,
+          "-+": 100,
+          "--": 100
+        },
+        "operationSignCoverage": {
+          "+": {
+            "++": 25,
+            "+-": 25,
+            "-+": 25,
+            "--": 25
+          },
+          "-": {
+            "++": 25,
+            "+-": 25,
+            "-+": 25,
+            "--": 25
+          },
+          "*": {
+            "++": 25,
+            "+-": 25,
+            "-+": 25,
+            "--": 25
+          },
+          "/": {
+            "++": 25,
+            "+-": 25,
+            "-+": 25,
+            "--": 25
+          }
+        }
+      }
+    }
+  },
+  "retirement": {
+    "full_exit": 0,
+    "first_full_exit": 1,
+    "first_failure": "Retained original source_sha256 semantics; corrected separate mutant_source_sha256 logging, then reran full verification.",
+    "summary": {
+      "status": "PASS",
+      "original_corpus": 77,
+      "cases_written": 1284,
+      "cases_run": 1284,
+      "independent_c_cases": 1260,
+      "batch_requests": 1276,
+      "batch_repetitions": 2,
+      "fragmented_pipe": "PASS",
+      "independent_interpreter_cases": 3,
+      "native_sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361",
+      "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e"
+    },
+    "transport": {
+      "status": "PASS",
+      "native_sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361",
+      "cases": [
+        {
+          "case": "empty-eof",
+          "exit": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "case": "read-eintr",
+          "exit": 0,
+          "stdout_sha256": "7e271a65cbaad75d5e0383bd1c8cb802860a92b0c5e089c7a4551a5a83dc24c2",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "case": "read-eintr-512",
+          "exit": 0,
+          "stdout_sha256": "7e271a65cbaad75d5e0383bd1c8cb802860a92b0c5e089c7a4551a5a83dc24c2",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "case": "write-eintr",
+          "exit": 0,
+          "stdout_sha256": "7e271a65cbaad75d5e0383bd1c8cb802860a92b0c5e089c7a4551a5a83dc24c2",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "case": "read-ebadf",
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "7afc10280f913f91274e799c9eca6ea53a075b1e13564cdb2b6511bb61701b73"
+        },
+        {
+          "case": "write-ebadf",
+          "exit": 2,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "7afc10280f913f91274e799c9eca6ea53a075b1e13564cdb2b6511bb61701b73"
+        },
+        {
+          "case": "request-limit",
+          "exit": 0,
+          "stdout_sha256": "fbe8effaf675d9921bcef7dd3db5384c1c8535e3ec8ded1f71a2b18735f57b86",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "case": "request-over-limit",
+          "exit": 2,
+          "stdout_sha256": "fbe8effaf675d9921bcef7dd3db5384c1c8535e3ec8ded1f71a2b18735f57b86",
+          "stderr_sha256": "7afc10280f913f91274e799c9eca6ea53a075b1e13564cdb2b6511bb61701b73"
+        },
+        {
+          "case": "reply-before-eof",
+          "exit": 0
+        },
+        {
+          "case": "closed-pipe-default-sigpipe",
+          "signal": 13,
+          "exit": -13
+        }
+      ]
+    },
+    "compiled_mutants": [
+      {
+        "mutant": "sha-word",
+        "compile_rc": 0,
+        "bytes": 22600,
+        "valid_aarch64_elf": true,
+        "comparison_rc": 1,
+        "executable_sha256": "815614e0fc38b22ddc352d5aa027ca951bcd3d0967c5ac463b9f9ffe81c01aba",
+        "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+        "mutant_source_sha256": "fe9e77af7349ff1b685c7a55a5f34232bfb788a8b978a41f34ccedd2030b1f5c",
+        "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+        "result": "KILLED"
+      },
+      {
+        "mutant": "accept-count",
+        "compile_rc": 0,
+        "bytes": 22608,
+        "valid_aarch64_elf": true,
+        "comparison_rc": 1,
+        "executable_sha256": "7c9beff9126d2efce81d07a0861860590ed0d1983e99d3f072e64621a2ad2469",
+        "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+        "mutant_source_sha256": "6da82a3fc9671703c32d3dfc5ab0c961a1e2963a0f775c6875ea3991b0f17a45",
+        "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+        "result": "KILLED"
+      },
+      {
+        "mutant": "version",
+        "compile_rc": 0,
+        "bytes": 22600,
+        "valid_aarch64_elf": true,
+        "comparison_rc": 1,
+        "executable_sha256": "b7eb9db26d5c61d2e688e7a8aa3ced23312ead3dfc1272ca6c92bad79af4971d",
+        "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+        "mutant_source_sha256": "7f628e1cd25d7a1ffcae9848edd34ff324d26404256c0456b98cdc2eae28225c",
+        "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+        "result": "KILLED"
+      },
+      {
+        "mutant": "argus-continuity",
+        "compile_rc": 0,
+        "bytes": 22600,
+        "valid_aarch64_elf": true,
+        "comparison_rc": 1,
+        "executable_sha256": "b9c5dc6522aff5b5495140f9949a86b3fc54914bfaef3242c0a5f91ee4f0c2ba",
+        "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+        "mutant_source_sha256": "b3cbd01030bcea56099da917c2c77d6510e6ee3dd1191b9f3bee1e01a49a1173",
+        "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+        "result": "KILLED"
+      }
+    ],
+    "deployment": {
+      "status": "PASS",
+      "scope": "isolated only; production untouched",
+      "production_cutover": false,
+      "native_sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361",
+      "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+      "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+      "active_path": "/home/drakestapleton/workspace/omega-native-review-fixes/build/retirement/isolated/active",
+      "baseline": {
+        "target": "releases/rust-oracle-243c29b123f68f6c0039e4191f35d57417fade160da33c821da2ea9ff4500d69/trn1",
+        "sha256": "243c29b123f68f6c0039e4191f35d57417fade160da33c821da2ea9ff4500d69"
+      },
+      "candidate": {
+        "target": "releases/native-43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361/trn1",
+        "sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361"
+      },
+      "cases": [
+        "actual pinned Rust baseline smoke",
+        "wrong candidate hash refused without swap",
+        "atomic Rust-oracle to native switch and smoke",
+        "explicit rollback to original Rust oracle",
+        "post-swap failure restores old executable",
+        "interrupted transaction recovered from durable journal",
+        "all 77 original cases through installed native symlink",
+        "sample path invokes only read/write/exit after initial exec"
+      ],
+      "closure": {
+        "status": "PASS",
+        "interpreter": null,
+        "needed": [],
+        "external_floor": [
+          "Linux AArch64 read/write/exit syscall ABI"
+        ],
+        "trace_scope": "one smoke request; ELF/source lineage separately checked"
+      }
+    },
+    "receipt_test_cases": 59,
+    "policy_status": "PARTIAL",
+    "actual_production_retirements": 0,
+    "require_retired_exit": 1,
+    "synthetic_production_receipts": "TEST-ONLY temporary fixtures removed; never published as production proof"
+  },
+  "native_path": "Source-rebuilt seeded Omega only. C/Rust/Node/Python used as test/build/audit infrastructure.",
+  "scope": {
+    "bounds": "128 decimal digits including intermediates, polynomial degree 16, existing fixed workspace and transport budgets",
+    "correctness_only": true,
+    "compiler_owned_source_changed": false,
+    "live_integration_touched": false,
+    "agents_started": 0,
+    "parent_repin_required": true,
+    "parent_review_L515_still_open": true,
+    "pr_or_merge_writes": false,
+    "universal_math_or_full_retirement_claim": false
+  },
+  "commands": "commands.txt",
+  "raw_snapshot_note": "Fresh math outputs in math-full/. retirement-full/ snapshots the verify working directory including inherited historical files; only outputs of verify.sh are current runs. Relative paths in the raw manifest refer to its original run location. Historical evidence roots were restored after collection."
+}

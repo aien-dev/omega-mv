@@ -1,0 +1,46 @@
+{
+  "source": "WolframLanguageEvaluator actual kernel call, parent retrieved 2026-10-22",
+  "arithmetic": [
+    {
+      "expr": "1/3+1/6",
+      "result": "1/2"
+    },
+    {
+      "expr": "(-7/9)*(27/14)",
+      "result": "-3/2"
+    },
+    {
+      "expr": "(2^100+3)*(2^80+5)",
+      "result": "1532495540865888858358353365406937102224590493223747599"
+    }
+  ],
+  "polynomials": [
+    {
+      "expr": "Expand[(x+1)^5]",
+      "result": "1 + 5*x + 10*x^2 + 10*x^3 + 5*x^4 + x^5"
+    },
+    {
+      "expr": "D[3*x^5-7*x^2+2,x]",
+      "result": "-14*x + 15*x^4"
+    },
+    {
+      "expr": "Integrate[6*x^2-4*x+1,x]",
+      "result": "x - 2*x^2 + 2*x^3"
+    },
+    {
+      "expr": "PolynomialGCD[x^4-1,x^3-x]",
+      "result": "-1 + x^2"
+    }
+  ],
+  "linear": [
+    {
+      "expr": "Solve[3*x+7==22,x]",
+      "result": "x=5"
+    },
+    {
+      "expr": "LinearSolve[{{2,1},{1,-1}},{5,1}]",
+      "result": "{2,1}"
+    }
+  ],
+  "guard": "Wolfram Cancel[x/x] outputs1; do NOT emulate by dropping x!=0 domain restriction."
+}

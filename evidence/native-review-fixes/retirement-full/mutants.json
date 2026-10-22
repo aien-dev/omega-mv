@@ -1,0 +1,50 @@
+[
+  {
+    "mutant": "sha-word",
+    "compile_rc": 0,
+    "bytes": 22600,
+    "valid_aarch64_elf": true,
+    "comparison_rc": 1,
+    "executable_sha256": "815614e0fc38b22ddc352d5aa027ca951bcd3d0967c5ac463b9f9ffe81c01aba",
+    "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+    "mutant_source_sha256": "fe9e77af7349ff1b685c7a55a5f34232bfb788a8b978a41f34ccedd2030b1f5c",
+    "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "accept-count",
+    "compile_rc": 0,
+    "bytes": 22608,
+    "valid_aarch64_elf": true,
+    "comparison_rc": 1,
+    "executable_sha256": "7c9beff9126d2efce81d07a0861860590ed0d1983e99d3f072e64621a2ad2469",
+    "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+    "mutant_source_sha256": "6da82a3fc9671703c32d3dfc5ab0c961a1e2963a0f775c6875ea3991b0f17a45",
+    "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "version",
+    "compile_rc": 0,
+    "bytes": 22600,
+    "valid_aarch64_elf": true,
+    "comparison_rc": 1,
+    "executable_sha256": "b7eb9db26d5c61d2e688e7a8aa3ced23312ead3dfc1272ca6c92bad79af4971d",
+    "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+    "mutant_source_sha256": "7f628e1cd25d7a1ffcae9848edd34ff324d26404256c0456b98cdc2eae28225c",
+    "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "argus-continuity",
+    "compile_rc": 0,
+    "bytes": 22600,
+    "valid_aarch64_elf": true,
+    "comparison_rc": 1,
+    "executable_sha256": "b9c5dc6522aff5b5495140f9949a86b3fc54914bfaef3242c0a5f91ee4f0c2ba",
+    "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+    "mutant_source_sha256": "b3cbd01030bcea56099da917c2c77d6510e6ee3dd1191b9f3bee1e01a49a1173",
+    "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "result": "KILLED"
+  }
+]

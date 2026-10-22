@@ -1,0 +1,44 @@
+gate3 2026-10-22T19:50:18Z at c32810710b9efabc9dd0d3c2b7ddbbc75aa818b4
+PASS om3.bin built by asm2 twice, same bytes
+PASS p_filesz 7092 = file size 7092
+PASS audit (objdump reference run)
+PASS control caught (s/^  add.x x12 x12 x0$/  sub.x x12 x12 x0/): AUDIT2 instructions=1486 data_bytes=1148 mismatch=2
+PASS control caught (s/^  mov.x x21 x20$/  mov.x x21 x19/): AUDIT2 instructions=1486 data_bytes=1148 mismatch=1
+PASS control caught (s/^  b RD$/  b RDDONE/): AUDIT2 instructions=1486 data_bytes=1148 mismatch=1
+PASS control caught (s/^  ubfm.x x1 x1 54 53$/  ubfm.x x1 x1 54 52/): AUDIT2 instructions=1486 data_bytes=1148 mismatch=6
+PASS control caught (s/^  str.x x12 sp 0$/  str.x x12 sp 1/): AUDIT2 instructions=1486 data_bytes=1148 mismatch=1
+PASS dev01: 8 inputs, seed = C path (value and raw x0)
+PASS dev01: seed = expected
+PASS dev02: 8 inputs, seed = C path (value and raw x0)
+PASS dev02: seed = expected
+PASS dev03: 8 inputs, seed = C path (value and raw x0)
+PASS dev03: seed = expected
+PASS dev04: 8 inputs, seed = C path (value and raw x0)
+PASS dev04: seed = expected
+PASS dev05: 8 inputs, seed = C path (value and raw x0)
+PASS dev05: seed = expected
+PASS dev06: 8 inputs, seed = C path (value and raw x0)
+PASS dev06: seed = expected
+PASS dev07: 8 inputs, seed = C path (value and raw x0)
+PASS dev07: seed = expected
+PASS dev08: 8 inputs, seed = C path (value and raw x0)
+PASS dev08: seed = expected
+PASS dev09: 8 inputs, seed = C path (value and raw x0)
+PASS dev09: seed = expected
+PASS dev10: 8 inputs, seed = C path (value and raw x0)
+PASS dev10: seed = expected
+PASS control exit 3: om3: line 2: error 3
+PASS control exit 4: om3: line 3: error 4
+PASS control exit 5: om3: line 2: error 5
+PASS control exit 6: om3: line 2: error 6
+PASS control exit 7: om3: line 2: error 7
+PASS control exit 8: om3: line 2: error 8
+PASS control exit 9: om3: line 2: error 9
+PASS control exit 9: om3: line 1: error 9
+PASS control exit 10: om3: line 1: error 10
+PASS control exit 11: om3: line 2: error 11
+PASS control exit 13: om3: line 2: error 13
+PASS control exit 15: om3: line 3: error 15
+PASS control exit 9: om3: line 4: error 9
+PASS control exit 16: om3: line 1: error 16
+GATE3 PASS

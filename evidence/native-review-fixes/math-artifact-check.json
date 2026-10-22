@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "sourceCommit": "508ddd7e02c303d0e2182721f9501c7a540c758f",
+  "compileExit": 0,
+  "nativeBytes": 32212,
+  "nativeSha256": "aa7906f534ffb63575f5b59be15e3ed93a02fe56d103aa35298beed5a35d7ac6",
+  "coreSha256": "b70391a7a38464cd63ff796748565baf3dc2f73afaed90cbc2b94774dba02db6",
+  "generatorSha256": "463d08aa379b24cfb77ba7c2a865ed55d9907a860511386affb1015417e53a31",
+  "compilerSha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "compiledValidMutants": 13,
+  "executedMutantCases": 546,
+  "reference": {
+    "requested": 1048,
+    "executed": 1048,
+    "passed": 1048,
+    "failed": 0,
+    "wolframRequested": 9,
+    "wolframExecuted": 9,
+    "reference": "Node v24.21.0 arbitrary precision BigInt",
+    "sourceHash": "463d08aa379b24cfb77ba7c2a865ed55d9907a860511386affb1015417e53a31"
+  },
+  "coverage": {
+    "signCoverage": {
+      "++": 100,
+      "+-": 100,
+      "-+": 100,
+      "--": 100
+    },
+    "operationSignCoverage": {
+      "+": {
+        "++": 25,
+        "+-": 25,
+        "-+": 25,
+        "--": 25
+      },
+      "-": {
+        "++": 25,
+        "+-": 25,
+        "-+": 25,
+        "--": 25
+      },
+      "*": {
+        "++": 25,
+        "+-": 25,
+        "-+": 25,
+        "--": 25
+      },
+      "/": {
+        "++": 25,
+        "+-": 25,
+        "-+": 25,
+        "--": 25
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "status": "PASS",
+  "native_sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361",
+  "cases": [
+    {
+      "case": "empty-eof",
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "read-eintr",
+      "exit": 0,
+      "stdout_sha256": "7e271a65cbaad75d5e0383bd1c8cb802860a92b0c5e089c7a4551a5a83dc24c2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "read-eintr-512",
+      "exit": 0,
+      "stdout_sha256": "7e271a65cbaad75d5e0383bd1c8cb802860a92b0c5e089c7a4551a5a83dc24c2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "write-eintr",
+      "exit": 0,
+      "stdout_sha256": "7e271a65cbaad75d5e0383bd1c8cb802860a92b0c5e089c7a4551a5a83dc24c2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "read-ebadf",
+      "exit": 2,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "7afc10280f913f91274e799c9eca6ea53a075b1e13564cdb2b6511bb61701b73"
+    },
+    {
+      "case": "write-ebadf",
+      "exit": 2,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "7afc10280f913f91274e799c9eca6ea53a075b1e13564cdb2b6511bb61701b73"
+    },
+    {
+      "case": "request-limit",
+      "exit": 0,
+      "stdout_sha256": "fbe8effaf675d9921bcef7dd3db5384c1c8535e3ec8ded1f71a2b18735f57b86",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "case": "request-over-limit",
+      "exit": 2,
+      "stdout_sha256": "fbe8effaf675d9921bcef7dd3db5384c1c8535e3ec8ded1f71a2b18735f57b86",
+      "stderr_sha256": "7afc10280f913f91274e799c9eca6ea53a075b1e13564cdb2b6511bb61701b73"
+    },
+    {
+      "case": "reply-before-eof",
+      "exit": 0
+    },
+    {
+      "case": "closed-pipe-default-sigpipe",
+      "signal": 13,
+      "exit": -13
+    }
+  ]
+}
