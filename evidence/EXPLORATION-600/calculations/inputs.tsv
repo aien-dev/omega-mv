@@ -1,0 +1,6 @@
+name	expression	source
+journal_ceiling	(88*8+17*8)*29+32	AMENDMENTS A3; state64+context24 words; Cortex13 header+4 digest words;29 records+32-byte header
+C_total_net_H32	25*32*100-(2930+32*1205)	campaign/run-002/heldout/rows.csv filtered arm2,horizon32; sum spent2930; sum best1205;25 cases
+C_expensive_net_H32	32*100-(129+32*100)	campaign/run-002/heldout/rows.csv family7,arm2,horizon32 (all5 seeds)
+C_minus_D_total_net_H32	38510-27784	campaign/run-002/arithmetic.txt arm2 and arm3 total_net_H32
+trap_break_even_H2	2*(100-10)-129	campaign/run-002/heldout/rows.csv family5,arm2; first positive integer horizon2

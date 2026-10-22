@@ -1,0 +1,6 @@
+{
+  "sha": "48283b7830bd376dbdf387a3e7ae01474f54c2b7",
+  "rule": "PASS = N completed runs all status PASS; FAIL = any completed run not PASS; INCOMPLETE = fewer than N usable run dirs; INVALID = any run dir missing run.json/verdict.json/hashes.sha256 or failing sha256sum -c (checked first)",
+  "runs_required": 2,
+  "created_at": "2026-10-22T18:35:30Z"
+}

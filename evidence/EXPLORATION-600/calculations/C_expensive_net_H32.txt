@@ -1,0 +1,6 @@
+expr    (- (* 32 100) (+ 129 (* 32 100)))
+value   -129
+decimal -129 (exact)
+engine  aien-calc/1 grammar/1
+build   0.1.0+96dbb47f22a4 (not part of the receipt)
+receipt calc:a5d4267ab51a101439388b6ca53e5ba67d9e9e59128591f2c622a22fe12d7727
