@@ -60,7 +60,10 @@ fn flush to void
 i = ulong 0
 n = get Op 0
 while lt i n
+r = long -4
+while eq r -4
 r = write 1 Out i sub n i
+end
 if le r 0
 failio
 end
@@ -95,11 +98,11 @@ fn input to long
 p = get Io 0
 n = get Io 1
 if eq p n
+r = long -4
+while eq r -4
 r = read 0 In 0 len In
-if lt r 0
-if eq r -4
-ret input
 end
+if lt r 0
 failio
 end
 if eq r 0

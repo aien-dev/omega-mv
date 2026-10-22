@@ -35,8 +35,12 @@ processes. Sequence of framed requests, reusable in one process:
 
 Transport capacity: at most 1,000,000 requests per process (seed loop bound);
 an additional request is a transport error. This is a limit of the new framed
-transport, not a restriction on the original verifier function. EOF at a request boundary exits 0. Unknown opcode, truncated framing or failed
-I/O prints `TRN1 transport error` on stderr and exits 2. Semantic refusals are
+transport, not a restriction on the original verifier function. EOF at a request boundary exits 0. Unknown opcode, truncated framing or a reported
+read/write failure attempts to print `TRN1 transport error` on stderr and exits 2.
+Interrupted read/write calls are retried under the seed's loop bound. Linux signal
+dispositions are inherited: a closed output pipe with default SIGPIPE terminates
+by signal 13 before write returns an error. Signals are not caught by this
+transport; the original library has no process/signal interface. Semantic refusals are
 results, so they do not end the stream. Bytes after END belong to the framed
 transcript and receive the original LENGTH refusal, never a new request.
 Arguments are ignored. This framing is new; a test-only Rust adapter exposes

@@ -1,0 +1,5 @@
+execve("/home/drakestapleton/workspace/omega-retirement-integration/build/retirement/isolated/active", ["/home/drakestapleton/workspace/o"...], 0xfffff32fc3a8 /* 33 vars */) = 0
+read(0, "S\0\0", 8192)                  = 3
+write(1, "transcript\n", 11)            = 11
+read(0, "", 8192)                       = 0
+exit(0)                                 = ?

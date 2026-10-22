@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/home/drakestapleton/workspace/omega-retirement-integration/tools/retirement/trn1/transport.py", line 48, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/home/drakestapleton/workspace/omega-retirement-integration/tools/retirement/trn1/transport.py", line 28, in main
+    check('write-eintr',b'S\0\0',(0,b'transcript\n',b''),('-e','inject=write:error=EINTR:when=1'))
+  File "/home/drakestapleton/workspace/omega-retirement-integration/tools/retirement/trn1/transport.py", line 23, in check
+    assert (p.returncode,p.stdout,p.stderr)==want,(name,p.returncode,p.stdout[:120],p.stderr[:120])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('write-eintr', 2, b'', b'TRN1 transport error\n')

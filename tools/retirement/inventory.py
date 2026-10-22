@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tomllib
 
 ROOT=Path(__file__).resolve().parents[2]
 HOME=Path.home()
@@ -65,8 +66,10 @@ def source_inventory(repo,ref):
 
 def elf(path):
     raw=cmd('readelf','-h','-l','-d',path).decode()
+    comments=subprocess.run(['readelf','-p','.comment',str(path)],capture_output=True,text=True)
     return {'needed':re.findall(r'Shared library: \[([^]]+)\]',raw),
             'interpreter':re.findall(r'Requesting program interpreter: ([^]]+)',raw),
+            'compiler_comments':re.findall(r'\]\s+(.+)',comments.stdout),
             'aarch64':'AArch64' in raw,'sha256':digest(path),'bytes':path.stat().st_size}
 
 
@@ -153,16 +156,53 @@ def main():
                     blob=git(WS/'sc-motor-ship','show',a['source_commit']+':'+file)
                     a.setdefault('source_build_files',[]).append({'path':file,'sha256':hashlib.sha256(blob).hexdigest()})
                 except subprocess.CalledProcessError:pass
+        release=Path(path).parent
+        if name in ('spark-cockpit-rs','spark-mail') and (release/'source.commit').is_file() and (release/'SHA256SUMS').is_file():
+            recorded=(release/'source.commit').read_text().strip()
+            expected={line.split()[1]:line.split()[0] for line in (release/'SHA256SUMS').read_text().splitlines()}
+            assert expected[name]==obs['elf']['sha256'],'installed release checksum mismatch'
+            crate='spark-cockpit-rs' if name=='spark-cockpit-rs' else 'spark-mail-rs'
+            repo=WS/'aien-sovereign-core'
+            a.update(source_language='Rust',source_commit=text(repo,'rev-parse',recorded),birth_chain='release source.commit + Cargo manifests + embedded rustc version; reproducible release rebuild NOT_RUN')
+            a['release_records']=[{'path':str(release/f),'sha256':digest(release/f)} for f in ('source.commit','protocols.commit','SHA256SUMS')]
+            a['protocols_source_commit']=(release/'protocols.commit').read_text().strip()
+            a['source_build_files']=[]
+            for file in ['Cargo.lock','install.sh',f'crates/{crate}/Cargo.toml',f'crates/{crate}/src/main.rs']:
+                blob=git(repo,'show',recorded+':'+file)
+                a['source_build_files'].append({'path':file,'sha256':hashlib.sha256(blob).hexdigest()})
+            manifest=tomllib.loads(git(repo,'show',recorded+f':crates/{crate}/Cargo.toml').decode())
+            a['dependency_closure']['direct_cargo_dependencies']=manifest.get('dependencies',{})
+            a['dependency_closure']['static']='Full transitive/static closure NOT_PROVEN; direct Cargo edges recorded'
+            a['blockers']=['FR-1','FR-6','FR-13','FR-14','FR-16 native sockets/readiness','FR-17 signal disposition']
         artifacts.append(a)
     trn1={'id':'aien-replay-trn1-schema1','name':'TRN1 verifier utility','live_legacy':True,'scope':'library-source-on-main; not observed as installed standalone CLI','source_language':'Rust','source_commit':'754c07b118f41ad899607b60329bd851b1ccb13e','source_files':['crates/aien-replay/src/lib.rs'],'source_sha256':'8824370f30573dea68a011ec457e55470eb4d688483a1de0fec96ffcb5757aeb','birth_chain':'Cargo -> rustc -> sha2 Rust dependency -> host linker','dependency_closure':{'current':['Rust std','sha2','Cargo.lock transitive dependencies'],'replacement':['Linux read/write/exit syscall ABI'],'status':'native executable closure checked; original library callers not migrated'},'replacement_path':'seed/retirement/trn1/trn1.om','replacement_owner':'L496','gate':{s:'NOT_RUN' for s in stages},'cutover':'isolated executable only; ABI/consumer migration and main archiving remain pending','blockers':['FR-7 for ABI replacement','FR-1/FR-13 for file/argv callers','review of library utility selection versus requested existing CLI']}
     summary_path=OUT/'trn1-summary.json'
     if summary_path.exists():
         summary=json.loads(summary_path.read_text());trn1['gate']['executable_equivalence']=summary['status'];trn1['equivalence_evidence']='evidence/seed-retirement/trn1-summary.json'
+        trn1['gate_evidence']={'executable_equivalence':{'path':str(summary_path.relative_to(ROOT)),'sha256':digest(summary_path),'scope':'isolated'}}
     if (B/'trn1').exists():trn1['candidate']=elf(B/'trn1')
+    deployment_path=OUT/'deployment.json'
+    if deployment_path.exists():
+        deployment=json.loads(deployment_path.read_text())
+        assert deployment['status']=='PASS'
+        assert deployment['native_sha256']==trn1['candidate']['sha256']==summary['native_sha256']
+        assert deployment['source_sha256']==digest(ROOT/'seed/retirement/trn1/trn1.om')==summary['source_sha256']
+        trn1.update(replacement_language='Omega',replacement_birth='verified seed chain',replacement_source_sha256=deployment['source_sha256'],production_cutover=False)
+        trn1['seed_sha256']=deployment['seed_sha256']
+        trn1['isolated_path']=deployment['active_path']
+        for stage in ('isolated_candidate','dependency_closure','transactional_swap_rollback'):
+            trn1['gate'][stage]='PASS'
+            trn1['gate_evidence'][stage]={'path':str(deployment_path.relative_to(ROOT)),'sha256':digest(deployment_path),'scope':'isolated'}
+        trn1['dependency_closure']['status']='ISOLATED_NATIVE_VERIFIED'
     artifacts.append(trn1)
     artifacts += [
         {'id':'omega-bridge-target-compiler','live_legacy':False,'scope':'feature artifact; not a native replacement for emitted C/Python programs','source_language':['Omega','shell'],'source_commit':text(WS/'omega-bridge','rev-parse','77376b1'),'birth_chain':'seed-born Omega target translator; emitted C/Python still requires external compiler/runtime','dependency_closure':{'status':'NOT_A_NATIVE_MIGRATION'},'replacement_path':None,'replacement_owner':'L483','gate':{s:'NOT_RUN' for s in stages}},
         {'id':'omega-attachments','live_legacy':True,'scope':'feature artifact; installation not inferred','source_language':['Omega','C'],'source_commit':text(WS/'omega-bridge-attach','rev-parse','7916bcc'),'birth_chain':'seed-born attachment policy plus cc-built C host boundary','dependency_closure':{'current':['cli/omega.c','cli/host.c','cli/discover.c','cli/sandbox.c','libc','native Omega policy'],'status':'C_HOST_REMAINS'},'replacement_path':None,'replacement_owner':'L484','gate':{s:'NOT_RUN' for s in stages},'blockers':['FR-1','FR-13','FR-14']}]
+    for a in artifacts:
+        a['production_retired']=False
+        a['retirement_target']=a['id']!='omega-bridge-target-compiler'
+        if a.get('name')=='aien-calc':a['replacement_owner']='L494'
+        if a.get('name')=='atlas':a['replacement_owner']='L420; prior seeded lineage L105 requires exact installed build proof'
     org=json.loads((B/'org-repos.json').read_text()) if (B/'org-repos.json').exists() else []
     manifest={'schema':1,'observed_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'status':'PARTIAL','parent':'L495','task':'L496','c_migration_catalog_commit':cpin,'sources':sources,'source_snapshots':snapshots,'artifacts':artifacts,'counts':{'observed_installed_or_running_elf':len(observed),'observed_running_elf':sum(bool(x['pids']) for x in observed.values()),'legacy_artifact_rows':sum(x['live_legacy'] for x in artifacts),'verified_production_retirements':0},'coverage':{'catalog_repos':len(repos),'github_org_nonfork_repos':sum(not r['isFork'] for r in org),'complete':False,'limitations':['named first-party executable scan, not an exhaustive host software inventory','repo catalog reused from L418 plus relevant Rust repositories; other org repositories remain unqualified','unknown installed build provenance is a blocker, never assumed seeded','path-based source classification does not prove production linkage','source inventory is not a live-artifact count']},'external_floor':['Linux kernel and system shared libraries','system compiler/build tools used only for audit and oracles','third-party programs, drivers and firmware outside first-party migration scope'],'required_cutover_stages':stages}
     (OUT/'retirement-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')

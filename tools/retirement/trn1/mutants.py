@@ -16,6 +16,6 @@ for name,old,new in changes:
     r=subprocess.run([sys.executable,str(ROOT/'tools/retirement/trn1/check.py'),'--native',str(exe),'--quick'],capture_output=True)
     (E/(name+'-mutant.log')).write_bytes(r.stdout+r.stderr)
     assert r.returncode==1 and b'FAIL' in r.stderr,(name,'SURVIVED',r.stdout,r.stderr)
-    log.append({'mutant':name,'compile_rc':c.returncode,'comparison_rc':r.returncode,'executable_sha256':hashlib.sha256(exe.read_bytes()).hexdigest(),'result':'KILLED'})
+    log.append({'mutant':name,'compile_rc':c.returncode,'comparison_rc':r.returncode,'executable_sha256':hashlib.sha256(exe.read_bytes()).hexdigest(),'source_sha256':hashlib.sha256(src.encode()).hexdigest(),'seed_sha256':hashlib.sha256((B/'seed-src/seed/out/omc').read_bytes()).hexdigest(),'result':'KILLED'})
 (E/'mutants.json').write_text(json.dumps(log,indent=2)+'\n')
 print(f'MUTANTS PASS compiled={len(log)} killed={len(log)}')

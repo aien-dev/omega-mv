@@ -1,0 +1,106 @@
+{
+  "status": "PASS",
+  "cases": [
+    {
+      "case": "honest partial inventory",
+      "status": "PASS"
+    },
+    {
+      "case": "whole system claim with live legacy",
+      "status": "REJECTED",
+      "errors": [
+        "RETIRED claim with remaining blockers"
+      ]
+    },
+    {
+      "case": "invented retirement count",
+      "status": "REJECTED",
+      "errors": [
+        "count mismatch: verified_production_retirements"
+      ]
+    },
+    {
+      "case": "isolated candidate called retired",
+      "status": "REJECTED",
+      "errors": [
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: retired while legacy remains",
+        "aien-replay-trn1-schema1: production cutover unproved",
+        "aien-replay-trn1-schema1: production dependency closure unproved",
+        "aien-replay-trn1-schema1: cutover gates unfinished",
+        "count mismatch: verified_production_retirements"
+      ]
+    },
+    {
+      "case": "missing evidence",
+      "status": "REJECTED",
+      "errors": [
+        "aien-replay-trn1-schema1: evidence missing for executable_equivalence",
+        "aien-replay-trn1-schema1: evidence missing for isolated_candidate",
+        "aien-replay-trn1-schema1: evidence missing for dependency_closure",
+        "aien-replay-trn1-schema1: evidence missing for transactional_swap_rollback"
+      ]
+    },
+    {
+      "case": "changed evidence hash",
+      "status": "REJECTED",
+      "errors": [
+        "aien-replay-trn1-schema1: missing or changed evidence for executable_equivalence"
+      ]
+    },
+    {
+      "case": "changed stage list",
+      "status": "REJECTED",
+      "errors": [
+        "cutover stages missing or changed"
+      ]
+    },
+    {
+      "case": "empty artifact list",
+      "status": "REJECTED",
+      "errors": [
+        "artifact inventory empty",
+        "count mismatch: observed_installed_or_running_elf",
+        "count mismatch: observed_running_elf",
+        "count mismatch: legacy_artifact_rows"
+      ]
+    },
+    {
+      "case": "missing stage",
+      "status": "REJECTED",
+      "errors": [
+        "aien-replay-trn1-schema1: invalid gate api_abi_data"
+      ]
+    },
+    {
+      "case": "duplicate artifact id",
+      "status": "REJECTED",
+      "errors": [
+        "artifact ids missing or duplicated",
+        "count mismatch: observed_installed_or_running_elf",
+        "count mismatch: legacy_artifact_rows"
+      ]
+    },
+    {
+      "case": "passing isolated evidence substituted for production evidence",
+      "status": "REJECTED",
+      "errors": [
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: isolated evidence cannot retire production",
+        "aien-replay-trn1-schema1: production dependency closure unproved"
+      ]
+    },
+    {
+      "case": "require-retired fails closed on actual inventory",
+      "exit": 1
+    }
+  ]
+}

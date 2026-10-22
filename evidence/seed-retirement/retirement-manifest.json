@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "observed_utc": "2026-10-22T18:49:52.460182+00:00",
+  "observed_utc": "2026-10-22T19:06:07.231842+00:00",
   "status": "PARTIAL",
   "parent": "L495",
   "task": "L496",
@@ -493,12 +493,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "f56f6fe71bac2fe2928644a1ce67c098ec59b9dabdcdbdc16eb9d40b0829a346",
           "bytes": 163868792
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "aien-calc@ec0bd9ab80f7a70d",
@@ -519,7 +526,7 @@
         "os_floor": []
       },
       "replacement_path": null,
-      "replacement_owner": "L495",
+      "replacement_owner": "L494",
       "gate": {
         "executable_equivalence": "NOT_RUN",
         "api_abi_data": "NOT_RUN",
@@ -545,12 +552,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "ec0bd9ab80f7a70dcde7e012b06a4eac4e5ecb9d558ffe52f911ebb2fb147cb2",
           "bytes": 1971096
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "aien-cli@d22b31335eb650f1",
@@ -601,12 +615,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "d22b31335eb650f16a77b57a31dd07b6129a542a4a2703bd0e1579b4142ff12c",
           "bytes": 10629064
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "aien-mail@10a1d7ade41aea22",
@@ -653,12 +674,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "10a1d7ade41aea22452647085cb90f29b8bf9ba68db0efff9e4dd8d9021f9980",
           "bytes": 8991432
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "atlas@d485a7f68aae76fa",
@@ -677,7 +705,7 @@
         "os_floor": []
       },
       "replacement_path": null,
-      "replacement_owner": "L495",
+      "replacement_owner": "L420; prior seeded lineage L105 requires exact installed build proof",
       "gate": {
         "executable_equivalence": "NOT_RUN",
         "api_abi_data": "NOT_RUN",
@@ -701,12 +729,17 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
           "aarch64": true,
           "sha256": "d485a7f68aae76fad856ccc751ee6a19e75a74f118509466410c6d0d7b395cbd",
           "bytes": 79768
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "atlas-harvest@9309b887eb0f17df",
@@ -749,12 +782,17 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
           "aarch64": true,
           "sha256": "9309b887eb0f17df655ac5815dcb855930eefebf23f06bed444e13ea8f2c798d",
           "bytes": 156096
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "atlas-prime-agent@2e15c3f8912ca52b",
@@ -803,12 +841,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "2e15c3f8912ca52b090ce6f8d246ec02396aa1ff8b6b27da5456037e46b00cb8",
           "bytes": 4002928
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "atlas-resources@d201674b41b66d70",
@@ -851,12 +896,17 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
           "aarch64": true,
           "sha256": "d201674b41b66d7053c3ec8f1d05c26a1ef7c1047c5fef80b43a3fe124e5ec58",
           "bytes": 82760
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "atlas-vault@90626d69870d2df4",
@@ -910,6 +960,9 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
           "aarch64": true,
           "sha256": "90626d69870d2df4170af4baefe6d33eafcfa8e8c1bc810b5938b722503aca80",
           "bytes": 87416
@@ -925,7 +978,9 @@
           "/usr/lib/aarch64-linux-gnu/libstdc++.so.6.0.33"
         ]
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "cortex-encoder-rs@b8f2ce0181b484c9",
@@ -972,12 +1027,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "b8f2ce0181b484c997cf2f54437685df2a60e179891002e8d4e1d47d0be94955",
           "bytes": 8919192
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "cortex-rs@91ccba9403601ed4",
@@ -1031,6 +1093,11 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "91ccba9403601ed4d4b4c762dd489fd9b7de58d4b0017e44102005eb51398afe",
           "bytes": 9974712
@@ -1042,7 +1109,9 @@
           "/usr/lib/aarch64-linux-gnu/libm.so.6"
         ]
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "crumb.rfc0001@9eb167fdddd2df69",
@@ -1085,12 +1154,17 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
           "aarch64": true,
           "sha256": "9eb167fdddd2df69eb319d091a3c973d83b0957a03baa4e2b9da9e53497f2eb5",
           "bytes": 74856
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "mobhub@4d5085ff00054471",
@@ -1141,12 +1215,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "4d5085ff000544716ac1fc714b596dc3e21becfe0230a1a1b3eb051af156a7d2",
           "bytes": 10960048
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "openclaw@64f8906358839088",
@@ -1193,12 +1274,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "64f890635883908845113c2bea508bfb4b7763ffb315ea650457e32d67c3f669",
           "bytes": 10627544
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "rad-id-sync@8582c919fe0865e1",
@@ -1241,12 +1329,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "8582c919fe0865e169a68ec1c9515cfa8a75012e4210246e461f741840838699",
           "bytes": 729192
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-cockpit-rs@0ff689ab0bfa11e6",
@@ -1293,12 +1388,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "0ff689ab0bfa11e6812084d20a04602e40fa6f0f92198fc342ffdd6bf247527e",
           "bytes": 9982808
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-connector@8c760a8c600ae46c",
@@ -1341,12 +1443,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "8c760a8c600ae46c1f638c6e842aaf2e9f768595ad0c7b21a3d0ef81bb801976",
           "bytes": 897504
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-crumbs@bfed750854b30645",
@@ -1389,12 +1498,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "bfed750854b3064519bc8b8520bd34cdb00798a024c71cc75876fb5879496073",
           "bytes": 1466880
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-debugger@a0f76c314643b45c",
@@ -1445,12 +1561,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "a0f76c314643b45c337cb62ecf953cf9d8b330b7e9903c8b4656689bfc1c8fc3",
           "bytes": 11430240
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-discord-hub@8c602e2b7f462456",
@@ -1501,12 +1624,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "8c602e2b7f462456b14e02b9ed14a249c04bd0f3648278c60093b80830baff46",
           "bytes": 10846816
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-distill@380cd492cfc8a5ab",
@@ -1553,12 +1683,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "380cd492cfc8a5ab0a4d16e7b3706de5162d33dd658e93fbfb5a18b896712ce0",
           "bytes": 4068784
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-dream@f3a78846bfc4a17d",
@@ -1605,12 +1742,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "f3a78846bfc4a17d26de672972c1eb079e855fa23da1d638773e0dd4e27e6396",
           "bytes": 7874176
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-harness@9fe2941155ca0b7c",
@@ -1655,12 +1799,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "9fe2941155ca0b7cae6d26f64ba6b9ac9a66ace215e9a60af1275718c0eb1eae",
           "bytes": 8804760
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-inquisitor@6bbd4d6a1cd28a3c",
@@ -1703,12 +1854,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "6bbd4d6a1cd28a3c1027e5b9954c235381275327468dc0300d780845c333844d",
           "bytes": 3421800
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-mail@bd771ae8bce3adb9",
@@ -1753,12 +1911,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "bd771ae8bce3adb924bc83497383d1ee23dcb902908dc66afe15af0dc10ee1de",
           "bytes": 6377056
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-muse-bridge@51954ca3b1315562",
@@ -1805,12 +1970,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "51954ca3b1315562fddde6aaeec4ae2d7b09f185b7e60e84b70a1b9b58f469aa",
           "bytes": 3350216
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-rsi@9bc72dc1b6f5b5b3",
@@ -1857,12 +2029,19 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "9bc72dc1b6f5b5b3aa0f588779c193dabf8c795f5408d4e46a0d2273654890a8",
           "bytes": 4529464
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-supervisor@932271bcbfbebdda",
@@ -1913,23 +2092,30 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "932271bcbfbebdda659e5f5eaaa5dfaecc9a6c60a6d1829657251b97ceb2c75c",
           "bytes": 9492776
         }
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-cockpit-rs@4d2621bcfe141f81",
       "name": "spark-cockpit-rs",
       "live_legacy": true,
       "scope": "first_party_named_observed_artifact",
-      "source_language": "UNRESOLVED",
-      "source_commit": null,
-      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "source_language": "Rust",
+      "source_commit": "0df7c321c1502d00782ad8e986a8bb698ed99aa3",
+      "birth_chain": "release source.commit + Cargo manifests + embedded rustc version; reproducible release rebuild NOT_RUN",
       "dependency_closure": {
-        "static": "UNRESOLVED",
+        "static": "Full transitive/static closure NOT_PROVEN; direct Cargo edges recorded",
         "dynamic": [
           "libgcc_s.so.1",
           "libm.so.6",
@@ -1941,7 +2127,67 @@
           "/usr/lib/aarch64-linux-gnu/libc.so.6",
           "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
           "/usr/lib/aarch64-linux-gnu/libm.so.6"
-        ]
+        ],
+        "direct_cargo_dependencies": {
+          "async-stream": "0.3.6",
+          "axum": {
+            "version": "0.8.9",
+            "features": [
+              "ws"
+            ]
+          },
+          "chrono": "0.4.45",
+          "form_urlencoded": "1.2",
+          "futures-util": "0.3.34",
+          "regex": "1.13.1",
+          "reqwest": {
+            "version": "0.13.5",
+            "features": [
+              "json",
+              "stream"
+            ]
+          },
+          "serde": {
+            "version": "1.0.229",
+            "features": [
+              "derive"
+            ]
+          },
+          "serde_json": "1.0.151",
+          "spark-adapters": {
+            "path": "../spark-adapters"
+          },
+          "spark-hive": {
+            "path": "../spark-hive"
+          },
+          "portable-pty": "0.9.0",
+          "rusqlite": {
+            "version": "0.31.0",
+            "features": [
+              "bundled"
+            ]
+          },
+          "tokio": {
+            "version": "1.53.1",
+            "features": [
+              "full"
+            ]
+          },
+          "tower-http": {
+            "version": "0.7.1",
+            "features": [
+              "fs",
+              "cors"
+            ]
+          },
+          "toml": "0.8",
+          "uuid": {
+            "version": "1.8",
+            "features": [
+              "v4"
+            ]
+          }
+        }
       },
       "replacement_path": null,
       "replacement_owner": "L495",
@@ -1972,6 +2218,11 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "4d2621bcfe141f811b1fcf3b8c1a88f26794b6267ccf73cc3df4a48a62a87f25",
           "bytes": 10179416
@@ -1983,18 +2234,61 @@
           "/usr/lib/aarch64-linux-gnu/libm.so.6"
         ]
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "release_records": [
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/source.commit",
+          "sha256": "82ca47cae978c2e93b74ff302b13dd1fb5a1e2dc989e5e6a3b131da0d3dc71cc"
+        },
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/protocols.commit",
+          "sha256": "8ab12db069619253d3fc9924235a16d42fe7201ab171e55343a14fa75d16508c"
+        },
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/SHA256SUMS",
+          "sha256": "077f5c85b15d63e38cd268a9c058c54f2da994c9e63a8fb78eb674a34a09d7c6"
+        }
+      ],
+      "protocols_source_commit": "7ac6facb630ca7e9a6ab4125b292203fe2bb6687",
+      "source_build_files": [
+        {
+          "path": "Cargo.lock",
+          "sha256": "63bc4e2b39365a98f03d4955c73a9260916e259fea87f42c90ef7c74a51ac565"
+        },
+        {
+          "path": "install.sh",
+          "sha256": "2538ad8cf84099aff918a7bb88f3adc70f94d8a1547596e285fffa6cc86783b9"
+        },
+        {
+          "path": "crates/spark-cockpit-rs/Cargo.toml",
+          "sha256": "4d5f80ca4f6bf8ea70fc503839be32ffaa3d8e124f2417bbba50926f9b02b0c2"
+        },
+        {
+          "path": "crates/spark-cockpit-rs/src/main.rs",
+          "sha256": "d2293d5bc59f115f9b131953d13dea5066b9319519cfaf9eece3ff9b54e9052d"
+        }
+      ],
+      "blockers": [
+        "FR-1",
+        "FR-6",
+        "FR-13",
+        "FR-14",
+        "FR-16 native sockets/readiness",
+        "FR-17 signal disposition"
+      ],
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "spark-mail@50ad0ef77fe51996",
       "name": "spark-mail",
       "live_legacy": true,
       "scope": "first_party_named_observed_artifact",
-      "source_language": "UNRESOLVED",
-      "source_commit": null,
-      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "source_language": "Rust",
+      "source_commit": "0df7c321c1502d00782ad8e986a8bb698ed99aa3",
+      "birth_chain": "release source.commit + Cargo manifests + embedded rustc version; reproducible release rebuild NOT_RUN",
       "dependency_closure": {
-        "static": "UNRESOLVED",
+        "static": "Full transitive/static closure NOT_PROVEN; direct Cargo edges recorded",
         "dynamic": [
           "libssl.so.3",
           "libcrypto.so.3",
@@ -2010,7 +2304,86 @@
           "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
           "/usr/lib/aarch64-linux-gnu/libm.so.6",
           "/usr/lib/aarch64-linux-gnu/libssl.so.3"
-        ]
+        ],
+        "direct_cargo_dependencies": {
+          "tokio": {
+            "version": "1.53.1",
+            "features": [
+              "full"
+            ]
+          },
+          "serde": {
+            "version": "1.0.229",
+            "features": [
+              "derive"
+            ]
+          },
+          "serde_json": "1.0.151",
+          "chrono": {
+            "version": "0.4.45",
+            "features": [
+              "serde"
+            ]
+          },
+          "clap": {
+            "version": "4.5",
+            "features": [
+              "derive"
+            ]
+          },
+          "reqwest": {
+            "version": "0.13.5",
+            "default-features": false,
+            "features": [
+              "json",
+              "stream"
+            ]
+          },
+          "uuid": {
+            "version": "1.10",
+            "features": [
+              "v4",
+              "serde"
+            ]
+          },
+          "axum": {
+            "version": "0.8.9"
+          },
+          "tower-http": {
+            "version": "0.7.1",
+            "features": [
+              "cors"
+            ]
+          },
+          "tracing": "0.1",
+          "tracing-subscriber": {
+            "version": "0.3",
+            "features": [
+              "env-filter"
+            ]
+          },
+          "toml": "0.8",
+          "imap": "2.4",
+          "native-tls": "0.2",
+          "lettre": {
+            "version": "0.11",
+            "default-features": false,
+            "features": [
+              "builder",
+              "smtp-transport",
+              "native-tls",
+              "hostname",
+              "pool"
+            ]
+          },
+          "mailparse": "0.15",
+          "aien-probe": {
+            "path": "../../../aien-protocols/crates/aien-probe"
+          },
+          "cortex-rs": {
+            "path": "../cortex-rs"
+          }
+        }
       },
       "replacement_path": null,
       "replacement_owner": "L495",
@@ -2043,6 +2416,11 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "50ad0ef77fe519967ac9ad0eaad2dfdb7798579a517a30bf3b86ebe4df547e01",
           "bytes": 9205288
@@ -2056,7 +2434,50 @@
           "/usr/lib/aarch64-linux-gnu/libssl.so.3"
         ]
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "release_records": [
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/source.commit",
+          "sha256": "82ca47cae978c2e93b74ff302b13dd1fb5a1e2dc989e5e6a3b131da0d3dc71cc"
+        },
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/protocols.commit",
+          "sha256": "8ab12db069619253d3fc9924235a16d42fe7201ab171e55343a14fa75d16508c"
+        },
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/SHA256SUMS",
+          "sha256": "077f5c85b15d63e38cd268a9c058c54f2da994c9e63a8fb78eb674a34a09d7c6"
+        }
+      ],
+      "protocols_source_commit": "7ac6facb630ca7e9a6ab4125b292203fe2bb6687",
+      "source_build_files": [
+        {
+          "path": "Cargo.lock",
+          "sha256": "63bc4e2b39365a98f03d4955c73a9260916e259fea87f42c90ef7c74a51ac565"
+        },
+        {
+          "path": "install.sh",
+          "sha256": "2538ad8cf84099aff918a7bb88f3adc70f94d8a1547596e285fffa6cc86783b9"
+        },
+        {
+          "path": "crates/spark-mail-rs/Cargo.toml",
+          "sha256": "ff149f3279fdd55458d4cf3c60bfac0e22c47c7db31cc3e924a2bb723a3ef4a4"
+        },
+        {
+          "path": "crates/spark-mail-rs/src/main.rs",
+          "sha256": "1199cf5b04bc96ce42f5b2537df4dfa492f31942993cc14a7660b9a9dd0d9302"
+        }
+      ],
+      "blockers": [
+        "FR-1",
+        "FR-6",
+        "FR-13",
+        "FR-14",
+        "FR-16 native sockets/readiness",
+        "FR-17 signal disposition"
+      ],
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "aien-serve-http@19173f9ec3b609fe",
@@ -2113,6 +2534,11 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "19173f9ec3b609fe79af644f84741d8808b92ea8eb3ecec4bc945af6f22b3aeb",
           "bytes": 6032936
@@ -2158,7 +2584,9 @@
           "path": "native-artifacts.lock",
           "sha256": "453680bab40000d08666cea171cace02cb2933ce6bd5588bf16e5042b9a7c5b3"
         }
-      ]
+      ],
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "aien-test@25fc9d345fe816c2",
@@ -2207,6 +2635,11 @@
           "interpreter": [
             "/lib/ld-linux-aarch64.so.1"
           ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
           "aarch64": true,
           "sha256": "25fc9d345fe816c2580e990311fb6fbcd6c98ec63a14a108e4e7d78deb2269e1",
           "bytes": 1250032
@@ -2217,7 +2650,9 @@
           "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1"
         ]
       },
-      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance"
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "aien-replay-trn1-schema1",
@@ -2240,17 +2675,17 @@
         "replacement": [
           "Linux read/write/exit syscall ABI"
         ],
-        "status": "native executable closure checked; original library callers not migrated"
+        "status": "ISOLATED_NATIVE_VERIFIED"
       },
       "replacement_path": "seed/retirement/trn1/trn1.om",
       "replacement_owner": "L496",
       "gate": {
         "executable_equivalence": "PASS",
         "api_abi_data": "NOT_RUN",
-        "isolated_candidate": "NOT_RUN",
+        "isolated_candidate": "PASS",
         "coordinator_model_train": "NOT_RUN",
-        "dependency_closure": "NOT_RUN",
-        "transactional_swap_rollback": "NOT_RUN",
+        "dependency_closure": "PASS",
+        "transactional_swap_rollback": "PASS",
         "main_archive_smoke": "NOT_RUN"
       },
       "cutover": "isolated executable only; ABI/consumer migration and main archiving remain pending",
@@ -2260,13 +2695,44 @@
         "review of library utility selection versus requested existing CLI"
       ],
       "equivalence_evidence": "evidence/seed-retirement/trn1-summary.json",
+      "gate_evidence": {
+        "executable_equivalence": {
+          "path": "evidence/seed-retirement/trn1-summary.json",
+          "sha256": "ebc85a0088d6e9f772e6f6eb2430dfa889f675af0cc944a1ee698cce45b5e50a",
+          "scope": "isolated"
+        },
+        "isolated_candidate": {
+          "path": "evidence/seed-retirement/deployment.json",
+          "sha256": "c89e371403d22fc6f4f41e1d1a721a7bf472a5ef4343312d5a4ec1ceb526af2d",
+          "scope": "isolated"
+        },
+        "dependency_closure": {
+          "path": "evidence/seed-retirement/deployment.json",
+          "sha256": "c89e371403d22fc6f4f41e1d1a721a7bf472a5ef4343312d5a4ec1ceb526af2d",
+          "scope": "isolated"
+        },
+        "transactional_swap_rollback": {
+          "path": "evidence/seed-retirement/deployment.json",
+          "sha256": "c89e371403d22fc6f4f41e1d1a721a7bf472a5ef4343312d5a4ec1ceb526af2d",
+          "scope": "isolated"
+        }
+      },
       "candidate": {
         "needed": [],
         "interpreter": [],
+        "compiler_comments": [],
         "aarch64": true,
-        "sha256": "15e4313c7c66d7857a3cec530ef973f867656da7d961c9ead22f68d12a73cf86",
-        "bytes": 22552
-      }
+        "sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361",
+        "bytes": 22600
+      },
+      "replacement_language": "Omega",
+      "replacement_birth": "verified seed chain",
+      "replacement_source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+      "production_cutover": false,
+      "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+      "isolated_path": "/home/drakestapleton/workspace/omega-retirement-integration/build/retirement/isolated/active",
+      "production_retired": false,
+      "retirement_target": true
     },
     {
       "id": "omega-bridge-target-compiler",
@@ -2291,7 +2757,9 @@
         "dependency_closure": "NOT_RUN",
         "transactional_swap_rollback": "NOT_RUN",
         "main_archive_smoke": "NOT_RUN"
-      }
+      },
+      "production_retired": false,
+      "retirement_target": false
     },
     {
       "id": "omega-attachments",
@@ -2329,7 +2797,9 @@
         "FR-1",
         "FR-13",
         "FR-14"
-      ]
+      ],
+      "production_retired": false,
+      "retirement_target": true
     }
   ],
   "counts": {
