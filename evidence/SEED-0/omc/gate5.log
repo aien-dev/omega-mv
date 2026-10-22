@@ -1,4 +1,4 @@
-gate5 2026-10-22T04:03:07Z at 0a75aa3ca14ca4565394991739413d1b3ee4fcdb
+gate5 2026-10-22T07:03:00Z at f623467e21f9ea8a862a7c92965227fb67263e8e
 stage1 = om4(omc.om)    10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 stage2 = stage1(omc.om) 10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 stage3 = stage2(omc.om) 10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
@@ -62,30 +62,32 @@ PASS every error number 1..23 is reached, om4 = stage2 on each
 omc: 3101 lines, 123 functions, 74740 bytes = 176-byte header + 18641 words (evidence/SEED-0/omc/size.tsv)
 PASS size history: its last row is this omc (R5)
 omc words per function: evidence/SEED-0/omc/omc-words.tsv (123 functions, 18634 words in all, mean 151)
-compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: 2636 us
+compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: 2261 us
 program	omc_us	c_path_us
-fm1	508	6694
-fm2	499	6389
-fm3	648	6431
-fm4	511	5989
-fm5	550	5959
-fm6	466	5869
-fm7	508	6026
-fm8	498	6198
-fm9	584	6140
-dev01	524	6442
-dev02	560	6545
-dev03	643	6566
-dev04	490	6550
-dev05	408	6442
-dev06	523	6005
-dev07	529	6153
-dev08	494	6278
-dev09	560	6133
-dev10	497	5969
+fm1	593	6458
+fm2	674	6351
+fm3	442	5833
+fm4	445	6725
+fm5	926	6521
+fm6	1158	6133
+fm7	412	5959
+fm8	460	6602
+fm9	362	5733
+dev01	592	6192
+dev02	587	12281
+dev03	550	7049
+dev04	552	5909
+dev05	610	5840
+dev06	376	5989
+dev07	468	5777
+dev08	458	6009
+dev09	390	5893
+dev10	427	5667
 rewrite	built_by	source_lines	functions	bytes	words	sha256
 stage1	om4	3101	123	74740	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 stage2	stage1	3101	123	74740	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 stage3	stage2	3101	123	74740	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 cases run: 167
 GATE5 PASS
+
+RC=0

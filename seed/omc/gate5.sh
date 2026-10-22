@@ -59,7 +59,7 @@ cases=$((cases + 2))
 # 3. every input gate4 gives om4, plus every .om / .omegese file in the repo and omc.om: om4 and stage2
 #    give the same output bytes, exit status and error number (and line); gate4 is run with om4 wrapped
 #    so each input is kept (gate4's own results go to $B, not to evidence/)
-CODES=""; C=$B/corpus; rm -rf $C $B/g4cap $B/g4cape; mkdir -p $C
+CODES=""; C=$B/corpus; for d in "$C" "$B/g4cap" "$B/g4cape"; do if test -d "$d"; then find "$d" -depth -delete; fi; done; mkdir -p "$C"
 cat > $B/cap.sh << EOF
 #!/bin/sh
 n=\$(ls $C | wc -l); f=$C/\$(printf '%04d' \$n).in; cat > \$f; exec $R4/om4.bin < \$f
