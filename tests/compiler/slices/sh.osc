@@ -1,0 +1,300 @@
+// slice-entry: sh_nwords sh_word_len sh_word_byte sh_ncmds
+// A shell, in Omega. This is the word split bash does before it runs anything:
+// unquoted space, tab and newline separate words; single quotes are literal;
+// double quotes keep spaces; a backslash outside quotes keeps the next byte;
+// an unquoted # starts a comment; an unquoted | separates commands and is not
+// a word. An unclosed quote refuses. The exec itself is not here yet.
+// slice-run: sh_nwords bytes:6563686f2068656c6c6f -> 2
+// slice-run: sh_word_len bytes:6563686f2068656c6c6f 0 -> 4
+// slice-run: sh_word_len bytes:6563686f2068656c6c6f 1 -> 5
+// slice-run: sh_word_byte bytes:6563686f2068656c6c6f 1 0 -> 104
+// slice-run: sh_nwords bytes:6563686f202268656c6c6f20776f726c6422 -> 2
+// slice-run: sh_word_len bytes:6563686f202268656c6c6f20776f726c6422 1 -> 11
+// slice-run: sh_nwords bytes:6563686f202761206227 -> 2
+// slice-run: sh_word_len bytes:6563686f202761206227 1 -> 3
+// slice-run: sh_word_byte bytes:6563686f202761206227 1 1 -> 32
+// slice-run: sh_nwords bytes:6563686f2068656c6c6f202320636f6d6d656e74 -> 2
+// slice-run: sh_ncmds bytes:617c62 -> 2
+// slice-run: sh_nwords bytes:617c62 -> 2
+// slice-run: sh_ncmds bytes:6563686f202761206227 -> 1
+// slice-run: sh_nwords bytes:22 -> 18446744073709551615
+
+fn is_ws(c: u64) -> u64 {
+    if c == 32 || c == 9 || c == 10 {
+        return 1;
+    }
+    return 0;
+}
+
+fn skip_ws(line: bytes, i: u64) -> u64 {
+    let mut j: u64 = i;
+    while j < line.len && is_ws(line[j]) == 1 bound 4096 {
+        j = j + 1;
+    }
+    return j;
+}
+
+fn word_end(line: bytes, i: u64) -> u64 {
+    let mut j: u64 = i;
+    let mut quote: u64 = 0;
+    let mut open: u64 = 1;
+    while j < line.len && open == 1 bound 4096 {
+        let c: u64 = line[j];
+        if quote == 39 {
+            if c == 39 {
+                quote = 0;
+            }
+            j = j + 1;
+        } else {
+            if quote == 34 {
+                if c == 34 {
+                    quote = 0;
+                }
+                j = j + 1;
+            } else {
+                if c == 39 || c == 34 {
+                    quote = c;
+                    j = j + 1;
+                } else {
+                    if c == 92 {
+                        j = j + 1;
+                        if j < line.len {
+                            j = j + 1;
+                        }
+                    } else {
+                        if is_ws(c) == 1 || c == 124 {
+                            open = 0;
+                        } else {
+                            j = j + 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if quote != 0 {
+        return 18446744073709551615;
+    }
+    return j;
+}
+
+fn sh_nwords(line: bytes) -> u64 {
+    let mut i: u64 = 0;
+    let mut n: u64 = 0;
+    let mut bad: u64 = 0;
+    while i < line.len && bad == 0 bound 4096 {
+        i = skip_ws(line, i);
+        if i < line.len && line[i] != 35 {
+            let e: u64 = word_end(line, i);
+            if e == 18446744073709551615 {
+                bad = 1;
+            } else {
+                if line[i] == 124 {
+                    i = i + 1;
+                } else {
+                    n = n + 1;
+                    i = e;
+                }
+            }
+        } else {
+            i = line.len;
+        }
+    }
+    if bad == 1 {
+        return 18446744073709551615;
+    }
+    return n;
+}
+
+fn sh_word_len(line: bytes, index: u64) -> u64 {
+    let mut i: u64 = 0;
+    let mut n: u64 = 0;
+    let mut bad: u64 = 0;
+    let mut len: u64 = 18446744073709551615;
+    while i < line.len && bad == 0 && n <= index bound 4096 {
+        i = skip_ws(line, i);
+        if i < line.len && line[i] != 35 {
+            let start: u64 = i;
+            let e: u64 = word_end(line, i);
+            if e == 18446744073709551615 {
+                bad = 1;
+            } else {
+                if line[i] == 124 {
+                    i = i + 1;
+                } else {
+                    if n == index {
+                        let mut j: u64 = start;
+                        let mut quote: u64 = 0;
+                        let mut got: u64 = 0;
+                        while j < e bound 4096 {
+                            let c: u64 = line[j];
+                            if quote == 39 {
+                                if c == 39 {
+                                    quote = 0;
+                                } else {
+                                    got = got + 1;
+                                }
+                                j = j + 1;
+                            } else {
+                                if quote == 34 {
+                                    if c == 34 {
+                                        quote = 0;
+                                    } else {
+                                        got = got + 1;
+                                    }
+                                    j = j + 1;
+                                } else {
+                                    if c == 39 || c == 34 {
+                                        quote = c;
+                                        j = j + 1;
+                                    } else {
+                                        if c == 92 {
+                                            j = j + 1;
+                                            if j < e {
+                                                got = got + 1;
+                                                j = j + 1;
+                                            }
+                                        } else {
+                                            got = got + 1;
+                                            j = j + 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        len = got;
+                    }
+                    n = n + 1;
+                    i = e;
+                }
+            }
+        } else {
+            i = line.len;
+        }
+    }
+    if bad == 1 {
+        return 18446744073709551615;
+    }
+    return len;
+}
+
+fn sh_word_byte(line: bytes, index: u64, at: u64) -> u64 {
+    let mut i: u64 = 0;
+    let mut n: u64 = 0;
+    let mut bad: u64 = 0;
+    let mut out: u64 = 18446744073709551615;
+    while i < line.len && bad == 0 && n <= index bound 4096 {
+        i = skip_ws(line, i);
+        if i < line.len && line[i] != 35 {
+            let e: u64 = word_end(line, i);
+            if e == 18446744073709551615 {
+                bad = 1;
+            } else {
+                if line[i] != 124 && n == index {
+                    let mut j: u64 = i;
+                    let mut quote: u64 = 0;
+                    let mut got: u64 = 0;
+                    while j < e && got <= at bound 4096 {
+                        let c: u64 = line[j];
+                        if quote == 39 {
+                            if c == 39 {
+                                quote = 0;
+                            } else {
+                                if got == at {
+                                    out = c;
+                                }
+                                got = got + 1;
+                            }
+                            j = j + 1;
+                        } else {
+                            if quote == 34 {
+                                if c == 34 {
+                                    quote = 0;
+                                } else {
+                                    if got == at {
+                                        out = c;
+                                    }
+                                    got = got + 1;
+                                }
+                                j = j + 1;
+                            } else {
+                                if c == 39 || c == 34 {
+                                    quote = c;
+                                    j = j + 1;
+                                } else {
+                                    if c == 92 {
+                                        j = j + 1;
+                                        if j < e {
+                                            if got == at {
+                                                out = line[j];
+                                            }
+                                            got = got + 1;
+                                            j = j + 1;
+                                        }
+                                    } else {
+                                        if got == at {
+                                            out = c;
+                                        }
+                                        got = got + 1;
+                                        j = j + 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if line[i] == 124 {
+                    i = i + 1;
+                } else {
+                    i = e;
+                    n = n + 1;
+                }
+            }
+        } else {
+            i = line.len;
+        }
+    }
+    if bad == 1 {
+        return 18446744073709551615;
+    }
+    return out;
+}
+
+fn sh_ncmds(line: bytes) -> u64 {
+    let mut i: u64 = 0;
+    let mut n: u64 = 0;
+    let mut bad: u64 = 0;
+    let mut saw: u64 = 0;
+    while i < line.len && bad == 0 bound 4096 {
+        i = skip_ws(line, i);
+        if i < line.len && line[i] != 35 {
+            if line[i] == 124 {
+                if saw == 0 {
+                    bad = 1;
+                }
+                saw = 0;
+                i = i + 1;
+            } else {
+                let e: u64 = word_end(line, i);
+                if e == 18446744073709551615 {
+                    bad = 1;
+                } else {
+                    if saw == 0 {
+                        n = n + 1;
+                        saw = 1;
+                    }
+                    i = e;
+                }
+            }
+        } else {
+            i = line.len;
+        }
+    }
+    if bad == 1 {
+        return 18446744073709551615;
+    }
+    if n == 0 {
+        return 0;
+    }
+    return n;
+}

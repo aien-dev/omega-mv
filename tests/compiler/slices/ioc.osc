@@ -1,0 +1,29 @@
+// slice-entry: io_cmd nv_io_rw
+// Linux ioctl command word, in Omega. Same packing as asm-generic/ioctl.h:
+// number in bits 7:0, type in 15:8, size in 29:16, direction in 31:30.
+// NVIDIA's magic is 'F' (70). A read-write command is direction 3. A field
+// that does not fit refuses. Expected values from Wolfram.
+// slice-run: io_cmd bytes: 3 70 0 64 -> 3225437696
+// slice-run: io_cmd bytes: 3 70 200 16 -> 3222292168
+// slice-run: io_cmd bytes: 2 70 11 8 -> 2148025867
+// slice-run: io_cmd bytes: 4 70 0 0 -> 18446744073709551615
+// slice-run: io_cmd bytes: 3 70 256 0 -> 18446744073709551615
+// slice-run: io_cmd bytes: 3 70 0 16384 -> 18446744073709551615
+// slice-run: nv_io_rw bytes: 200 16 -> 3222292168
+
+fn io_cmd(b: bytes, dir: u64, type: u64, nr: u64, size: u64) -> u64 {
+    if b.len > 0 {
+        return 18446744073709551615;
+    }
+    if dir > 3 || type > 255 || nr > 255 || size > 16383 {
+        return 18446744073709551615;
+    }
+    return nr | (type << 8) | (size << 16) | (dir << 30);
+}
+
+fn nv_io_rw(b: bytes, nr: u64, size: u64) -> u64 {
+    if b.len > 0 {
+        return 18446744073709551615;
+    }
+    return io_cmd(b, 3, 70, nr, size);
+}
