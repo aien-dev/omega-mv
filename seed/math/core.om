@@ -756,7 +756,7 @@ v = add mul v 256 peek
 n = add n 1
 step
 end
-if not or eq peek 32 eq peek 9
+if not or eq peek 32 or eq peek 9 eq peek 13
 refuse 1
 end
 ret v

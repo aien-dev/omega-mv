@@ -55,3 +55,18 @@ Next milestones: wider or configurable bignum/rational capacity and improved add
 Transport limits: a process accepts at most 65536 requests, with at most 65536 bytes read for one line (including its newline). Inputs beyond the math input limit but within this transport limit yield REFUSED 4 and the next line can succeed. Reaching the transport byte bound yields REFUSED 4 then exit 1. Reaching the session request bound yields exit 3. I/O failures yield exit 2. EOF after a partial line evaluates that line; empty EOF yields no output. These explicit bounds avoid the seed compiler's implicit million-iteration trap. Math refusals on ordinary lines leave the CLI running with process exit zero at EOF; callers must inspect each result line.
 
 Reproduce the math qualification with `sh seed/math/gate.sh`; use `--full` to add the original host compiler/checker and seed rung suites. Test-only dependencies are Node (independent BigInt reference and orchestration), aien-calc (oracle), standard shell tools, and the existing legacy-suite toolchains. `bootstrap.sh` can build the compiler from source without the external qualified executable. The build first validates compiler status, nonempty AArch64 ELF, and the pinned hash, then executes it. Build outputs stay under build/math-native and are not committed.
+
+Command separators use the same whitespace set as expressions: space (ASCII 32),
+tab (9), and CR (13). LF terminates a transport request. `eval\r1` and CRLF requests
+therefore succeed; missing separators, vertical tab/form feed, and trailing tokens
+remain refused. `whitespace.mjs` exercises all command boundaries, EOF, exact
+input limits, CRLF, and recovery after malformed/domain/oversized requests.
+
+`oracle.mjs` keeps the 400 generated rational cases and frozen magnitude RNG
+consumption, with operand signs explicitly cycling `++`, `+-`, `-+`, `--`.
+Coverage is counted from executed request text: 100 cases per sign pair and 25
+per pair per arithmetic operation. Outputs must match independent BigInt direct
+cross-products and have positive denominators, reduced values, and canonical
+signs. `sign-fixtures.mjs` separately covers signed denominators, zero numerators,
+zero results, zero divisors, and undefined zero powers. The reference suite still
+executes all 1048 cases including nine supplied Wolfram fixtures.

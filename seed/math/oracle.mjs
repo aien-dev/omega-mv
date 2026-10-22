@@ -25,7 +25,10 @@ function rp(n){return Array.from({length:n},()=>rat(BigInt(rand(19)-9),BigInt(ra
 const cases=[];
 function test(input,want,kind){cases.push({input,want:want.startsWith('REFUSED')?want:'OK '+want,kind});}
 for(let i=0;i<100;i++){
- let a=rat(big(1+rand(50)),abs(big(1+rand(40)))),b=rat(big(1+rand(50)),abs(big(1+rand(40))));
+ // Keep magnitude RNG consumption frozen; select signs independently of its low bit.
+ // Cycle ++,+-,-+,-- over 100 operand pairs (400 executed operations).
+ const signs=[[1n,1n],[1n,-1n],[-1n,1n],[-1n,-1n]][i%4];
+ let a=rat(abs(big(1+rand(50)))*signs[0],abs(big(1+rand(40)))),b=rat(abs(big(1+rand(50)))*signs[1],abs(big(1+rand(40))));
  for(const [op,f] of [['+',add],['-',sub],['*',mul],['/',div]])test(`eval (${fmt(a)})${op}(${fmt(b)})`,fmt(f(a,b)),'BigInt rational');
 }
 for(let i=0;i<70;i++){
@@ -94,6 +97,20 @@ for(let start=0;start<cases.length;start+=100){
  batch.forEach((c,i)=>log.push({...c,got:out[i],ok:c.want===out[i]}));
 }
 for(const row of log)console.log(JSON.stringify(row));
+// Count signs from the inputs actually executed, not from RNG intent.
+const signCoverage=Object.fromEntries(['++','+-','-+','--'].map(k=>[k,0]));
+const operationSignCoverage=Object.fromEntries(['+','-','*','/'].map(op=>[op,{...signCoverage}]));
+for(const row of log.filter(c=>c.kind==='BigInt rational')){
+ const m=row.input.match(/^eval \((-?\d+)(?:\/(\d+))?\)([+*\/-])\((-?\d+)(?:\/(\d+))?\)$/);
+ if(!m)throw Error('unrecognized rational operand input '+row.input);
+ const pair=(BigInt(m[1])<0n?'-':'+')+(BigInt(m[4])<0n?'-':'+');
+ signCoverage[pair]++;operationSignCoverage[m[3]][pair]++;
+ if(!/^OK -?\d+(?:\/[1-9]\d*)?$/.test(row.got))throw Error('noncanonical rational output '+row.got);
+ const [n,d=1n]=row.got.slice(3).split('/').map(BigInt);
+ if(d<=0n||gcd(n,d)!==1n||fmt([n,d])!==row.got.slice(3))throw Error('unreduced rational output '+row.got);
+}
+console.log(JSON.stringify({signCoverage,operationSignCoverage}));
+if(Object.values(signCoverage).some(n=>n!==100)||Object.values(operationSignCoverage).some(c=>Object.values(c).some(n=>n!==25)))throw Error('executed rational sign coverage must be 100 per pair, 25 per operation');
 const failed=log.filter(c=>!c.ok);
 console.log(JSON.stringify({requested:cases.length,executed:log.length,passed:log.length-failed.length,failed:failed.length,wolframRequested:9,wolframExecuted:log.filter(c=>c.kind==='Wolfram actual output').length,reference:'Node '+process.version+' arbitrary precision BigInt',sourceHash:createHash('sha256').update(fs.readFileSync(import.meta.filename)).digest('hex')}));
 if(failed.length){console.error(failed.slice(0,10));process.exit(1);}
