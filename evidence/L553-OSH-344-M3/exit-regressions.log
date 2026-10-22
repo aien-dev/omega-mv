@@ -1,0 +1,16 @@
+osh_gen: check OK (generated files match the layout list)
+osh_gen: check OK (generated files match the layout list)
+osh_gen: check OK (generated files match the layout list)
+osh-trace: PASS (20 scripts, native == interpreter == committed trace)
+osh: osh: warning: shell level (1000) too high, resetting to 1
+leak fd 9 -> /tmp/aien-quiet.lock
+fdcount 2
+'
+checks passed 1559 failed 5
+OSH_HOST_FAIL
+make[1]: *** [mk/osh-host.mk:23: test-osh-host] Error 1
+make[1]: *** Waiting for unfinished jobs....
+e2e cases 104 (each run native and OSH_INTERP=1), checks 320, failures 0
+OSH_E2E_PASS
+test-osh-e2e: PASS
+make: *** [Makefile:10: omega-locked-build] Error 2
