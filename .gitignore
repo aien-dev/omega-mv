@@ -203,3 +203,6 @@ tests/test_omega_numeric
 /tools/sm121dis/oracle_pairs.sh
 /tools/sm121dis/sm121dis.c
 /src/omega_runtime_api.h
+/mk/kernel-dump.mk
+/tests/kernel_dump_test.c
+/tests/test_isolation_dump.sh

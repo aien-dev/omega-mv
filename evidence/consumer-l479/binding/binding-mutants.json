@@ -1,0 +1,9 @@
+{
+  "mutants": [
+    {"id": "MAKE_OVERRIDE", "file": "Makefile", "checks": "a caller cannot override the Make validation result", "status": "KILLED", "note": "1 failing case(s), first: make-override: expected refuse, exit 0"},
+    {"id": "INCLUDE_OVERLAY", "file": "tools/cudapp-link.sh", "checks": "untracked and ignored include overlays are refused", "status": "KILLED", "note": "3 failing case(s), first: untracked-header: expected refuse, exit 0"},
+    {"id": "PINNED_BYTES", "file": "tools/cudapp-link.sh", "checks": "index flags cannot hide modified source headers or Makefile", "status": "KILLED", "note": "4 failing case(s), first: assume-unchanged: expected refuse, exit 0"},
+    {"id": "DESTINATION_PARENT", "file": "tools/cudapp-link.sh", "checks": "a destination parent symlink cannot redirect writes", "status": "KILLED", "note": "1 failing case(s), first: destination-parent: expected refuse, exit 0"},
+    {"id": "DUPLICATE_MAP", "file": "tools/cudapp-link.sh", "checks": "every source mapping is unique", "status": "KILLED", "note": "1 failing case(s), first: duplicate-map: expected refuse, exit 0"}
+  ]
+}

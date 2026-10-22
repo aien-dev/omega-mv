@@ -1,0 +1,6 @@
+MAKE_OVERRIDE KILLED  a caller cannot override the Make validation result (1 failing case(s), first: make-override: expected refuse, exit 0)
+INCLUDE_OVERLAY KILLED  untracked and ignored include overlays are refused (3 failing case(s), first: untracked-header: expected refuse, exit 0)
+PINNED_BYTES KILLED  index flags cannot hide modified source headers or Makefile (4 failing case(s), first: assume-unchanged: expected refuse, exit 0)
+DESTINATION_PARENT KILLED  a destination parent symlink cannot redirect writes (1 failing case(s), first: destination-parent: expected refuse, exit 0)
+DUPLICATE_MAP KILLED  every source mapping is unique (1 failing case(s), first: duplicate-map: expected refuse, exit 0)
+mutants: 5 total, 5 killed, 0 survived as redundant, 0 survived as test gaps (receipt /home/drakestapleton/handoffs/omega-614-618-20261022/L479/binding-mutants.json)

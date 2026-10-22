@@ -1,0 +1,37 @@
+PASS valid (exit 0)
+PASS missing-checkout (exit 1)
+PASS wrong-pin (exit 1)
+PASS disabled-lock (exit 1)
+PASS dirty-source (exit 1)
+PASS dirty-buildfile (exit 1)
+PASS ignored-source (exit 1)
+PASS malformed-pin (exit 1)
+PASS shadow-copy (exit 1)
+PASS unmapped-gpu (exit 1)
+PASS unsafe-map (exit 1)
+PASS source-symlink (exit 1)
+FAIL untracked-header: expected refuse, exit 0
+cudapp-link: canonical 4750808ca7492c0caa0d895f8e6a4c6bda2adf45 (1 mapped files)
+FAIL ignored-header: expected refuse, exit 0
+cudapp-link: canonical ed1bdf707f72675f02898e31f5fc6fe76cbc5a84 (1 mapped files)
+FAIL external-header: expected refuse, exit 0
+cudapp-link: canonical 4750808ca7492c0caa0d895f8e6a4c6bda2adf45 (1 mapped files)
+FAIL assume-unchanged: expected refuse, exit 0
+cudapp-link: canonical 4750808ca7492c0caa0d895f8e6a4c6bda2adf45 (1 mapped files)
+FAIL skip-worktree: expected refuse, exit 0
+cudapp-link: canonical 542fea12c187b78722e9d327e60ed82c7466eed9 (1 mapped files)
+FAIL hidden-buildfile: expected refuse, exit 0
+cudapp-link: canonical 542fea12c187b78722e9d327e60ed82c7466eed9 (1 mapped files)
+PASS tracked-header (exit 1)
+FAIL hidden-header: expected refuse, exit 0
+cudapp-link: canonical 542fea12c187b78722e9d327e60ed82c7466eed9 (1 mapped files)
+FAIL destination-parent: expected refuse, exit 0
+cudapp-link: canonical 77981446b205d6668f650c992b55ecd593b7d180 (1 mapped files)
+PASS destination-dangling (exit 1)
+FAIL duplicate-map: expected refuse, exit 0
+cudapp-link: canonical 542fea12c187b78722e9d327e60ed82c7466eed9 (2 mapped files)
+FAIL make-override: expected refuse, exit 0
+cudapp-link: missing CUDApp checkout at /tmp/omega-cudapp-link.opxBhz/absent; prepare the pinned dependency explicitly
+PASS make-missing (exit 2)
+PASS make-valid (exit 0)
+CANONICAL LINK: 26 checks, 10 failed

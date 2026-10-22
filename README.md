@@ -38,6 +38,24 @@ Language rule: Rust is scaffolding, Omega is the destination, and C or assembly 
 
 Needs gcc and make on an AArch64 Linux host: CI runs the host suites on `ubuntu-24.04-arm`, and `test-realize` compiles with `-march=armv8.6-a+dotprod+i8mm+sve`. Host suites need no GPU and no physics checkout:
 
+Prepare a separate, clean [CUDApp](https://github.com/aien-dev/CUDApp)
+checkout at the full commit in `cudapp.lock` before invoking Make. If an existing
+CUDApp clone already contains that commit, create a detached worktree at a new
+path with `git -C /path/to/CUDApp worktree add --detach /new/prepared/CUDApp "$(cat cudapp.lock)"`.
+Set `CUDAPP_DIR` to that prepared path. This does not alter the existing clone's
+working files. Fetching missing commits is an explicit preparation step.
+
+```bash
+export CUDAPP_DIR=/new/prepared/CUDApp
+make check-cudapp-shared test-cudapp-link
+```
+
+Every Make invocation validates the full pin, tracked build-input bytes and
+include directories before linking the paths in `cudapp.files`. A missing or
+modified dependency stops the build. There is no automatic download, disabled
+pin check, or local GPU source fallback. Build outputs belong outside CUDApp's
+source and include directories.
+
 ```bash
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-compiler-quick   # compiler, quick suite
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-numeric-cpu      # E1 CPU numerics

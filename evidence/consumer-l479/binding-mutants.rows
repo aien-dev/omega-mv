@@ -1,0 +1,5 @@
+MAKE_OVERRIDE~Makefile~R:override CUDAPP_LINK :=@>@CUDAPP_LINK :=~a caller cannot override the Make validation result
+INCLUDE_OVERLAY~tools/cudapp-link.sh~R:[ -z "$extra" ] || fail "uncommitted build inputs: $extra"@>@: # overlay check removed~untracked and ignored include overlays are refused
+PINNED_BYTES~tools/cudapp-link.sh~R:cmp -s "$scratch/expected" "$scratch/actual" || fail 'build-input bytes differ from pinned blobs'@>@: # raw byte check removed~index flags cannot hide modified source headers or Makefile
+DESTINATION_PARENT~tools/cudapp-link.sh~R:[ ! -L "$root/$parent" ] || fail "symlink destination parent: $parent"@>@: # parent check removed~a destination parent symlink cannot redirect writes
+DUPLICATE_MAP~tools/cudapp-link.sh~R:grep -Fxq "$p" "$scratch/map" && fail "duplicate mapped path: $p"@>@: # duplicate check removed~every source mapping is unique

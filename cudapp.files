@@ -1,3 +1,4 @@
+mk/kernel-dump.mk
 mk/omega-gpu-code-alloc.mk
 mk/omega-gpu-engine.mk
 mk/omega-gpu-wait.mk
@@ -123,6 +124,7 @@ src/omega_gpu_tern_api.c
 src/omega_gpu_tern_api.h
 src/omega_gpu_wait.c
 src/omega_gpu_wait.h
+src/omega_runtime_api.h
 src/omega_sm121_disasm.c
 src/omega_sm121_disasm.h
 tests/bw_encode_control_test.c
@@ -175,6 +177,8 @@ tests/gpu_tc_peak_test.c
 tests/gpu_tc_probe_test.c
 tests/gpu_tcgemm_test.c
 tests/gpu_tern_test.c
+tests/kernel_dump_test.c
+tests/test_isolation_dump.sh
 tests/test_omega_blackwell_engine.c
 tests/test_omega_codegen_freestanding.c
 tests/test_omega_gpu_code_alloc.c
@@ -192,4 +196,3 @@ tools/sm121dis/check.sh
 tools/sm121dis/corpus.sh
 tools/sm121dis/oracle_pairs.sh
 tools/sm121dis/sm121dis.c
-src/omega_runtime_api.h
