@@ -18,4 +18,8 @@ The existing rung4 program named bytecopy reverses its input and ignores write e
 
 Short-write handling is implemented but no test forces a positive partial write; /dev/full and closed stdout exercise non-SIGPIPE failures. Post-progress input failures and EINTR remain unforced. Full-repository and independent-review results must be read separately, not inferred from these focused gates.
 
+## Repository-wide gate result
+
+`timeout 90 quiet-build make test` was attempted separately from the seed-native build. It stopped with RC=2 at `check-physics-lock`: the adjacent physics checkout is `e95e3ed2a86fe4bffe4d954fa94c27dfb5284280`, while this branch's lock requires `6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf`. The log is `copy-repository-test.txt`. The lock was not bypassed and the shared physics checkout was not changed. Legacy C compilation in that repository-wide attempt is historical test infrastructure, not part of the native copier's ancestry. Full-suite verification is therefore blocked, not PASS.
+
 The bootstrap's early cmp, shell/file utilities and loader remain on loan. This removes cp from one actual bootstrap caller, not from the system. No NVIDIA module, GPU or live service is changed.
