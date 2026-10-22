@@ -99,3 +99,9 @@ Existing TURING regression gate also executed: `quiet-build make OUT_DIR=build/L
 test-turing`. See existing-turing.log for exact result. This checks algebra Field
 and history controls on existing fixtures; those historical metrics are not new
 GPU performance observations.
+
+The complete existing TURING regression finished exit0: 85/0 plain, 85/0
+ASan/UBSan, plain/ASan specification IDs byte-identical, Field tool clean under
+sanitizers. `existing-turing-complete.log` is the complete raw result. The earlier
+`existing-turing.log` was captured while the command was still running; its
+committed bytes are preserved as a partial checkpoint, not a complete verdict.

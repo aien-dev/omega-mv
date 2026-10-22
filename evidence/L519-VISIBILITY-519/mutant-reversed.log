@@ -1,0 +1,97 @@
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 79: bytes_are(device_shadow,m.size,0x3c)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 83: bytes_are(m.cpu,m.size,0x6d)
+  expect failed at line 86: omega_gpu_session_sync_to_gpu(&m)!=0
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+  expect failed at line 53: (trace[index].result==0)==success
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 87: bytes_are(device_shadow,m.size,0x6d)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 90: bytes_are(device_shadow,m.size,0x11)
+  expect failed at line 92: omega_gpu_session_sync_to_cpu(&m)!=0
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+  expect failed at line 53: (trace[index].result==0)==success
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 93: bytes_are(m.cpu,m.size,0x11)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 96: bytes_are(m.cpu,m.size,0x22)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=6
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 79: bytes_are(device_shadow,m.size,0x3c)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 83: bytes_are(m.cpu,m.size,0x6d)
+  expect failed at line 86: omega_gpu_session_sync_to_gpu(&m)!=0
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+  expect failed at line 53: (trace[index].result==0)==success
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 87: bytes_are(device_shadow,m.size,0x6d)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 90: bytes_are(device_shadow,m.size,0x11)
+  expect failed at line 92: omega_gpu_session_sync_to_cpu(&m)!=0
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+  expect failed at line 53: (trace[index].result==0)==success
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 93: bytes_are(m.cpu,m.size,0x11)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=4096 lock=1 result=0
+  expect failed at line 96: bytes_are(m.cpu,m.size,0x22)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=4096 lock=1 result=6
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+  expect failed at line 79: bytes_are(device_shadow,m.size,0x3c)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+  expect failed at line 83: bytes_are(m.cpu,m.size,0x6d)
+  expect failed at line 86: omega_gpu_session_sync_to_gpu(&m)!=0
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+  expect failed at line 53: (trace[index].result==0)==success
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+  expect failed at line 87: bytes_are(device_shadow,m.size,0x6d)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=0
+  expect failed at line 90: bytes_are(device_shadow,m.size,0x11)
+  expect failed at line 92: omega_gpu_session_sync_to_cpu(&m)!=0
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+  expect failed at line 53: (trace[index].result==0)==success
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+  expect failed at line 93: bytes_are(m.cpu,m.size,0x11)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=8192 lock=1 result=0
+  expect failed at line 96: bytes_are(m.cpu,m.size,0x22)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=8192 lock=1 result=6
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=16384 lock=1 result=0
+  expect failed at line 79: bytes_are(device_shadow,m.size,0x3c)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=16384 lock=1 result=0
+  expect failed at line 83: bytes_are(m.cpu,m.size,0x6d)
+  expect failed at line 86: omega_gpu_session_sync_to_gpu(&m)!=0
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+  expect failed at line 53: (trace[index].result==0)==success
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=16384 lock=1 result=0
+  expect failed at line 87: bytes_are(device_shadow,m.size,0x6d)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=16384 lock=1 result=0
+  expect failed at line 90: bytes_are(device_shadow,m.size,0x11)
+  expect failed at line 92: omega_gpu_session_sync_to_cpu(&m)!=0
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+  expect failed at line 53: (trace[index].result==0)==success
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=16384 lock=1 result=0
+  expect failed at line 93: bytes_are(m.cpu,m.size,0x11)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=16384 lock=1 result=0
+  expect failed at line 96: bytes_are(m.cpu,m.size,0x22)
+  expect failed at line 49: trace[index].direction==direction && trace[index].lock_depth==1
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=16384 lock=1 result=6
+gpu session visibility: 4 sizes, 28 exact events, failures/recovery/stale/close: FAIL; graph/native NOT_RUN

@@ -1,0 +1,23 @@
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -march=armv8.6-a+dotprod+i8mm+sve -Isrc -o build/L519/tests-turing/test_turing tests/turing/test_turing.c src/turing/field.c src/turing/field_select.c src/turing/field_select_v0_retired.c src/turing/history_selector.c src/turing/replay.c src/omega_canonical.c src/sha256.c src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c src/algebra/realize_sparse.c src/algebra/realize_rns.c src/algebra/realize_dense.c -lm
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -march=armv8.6-a+dotprod+i8mm+sve -Isrc -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/L519/tests-turing/test_turing_asan tests/turing/test_turing.c src/turing/field.c src/turing/field_select.c src/turing/field_select_v0_retired.c src/turing/history_selector.c src/turing/replay.c src/omega_canonical.c src/sha256.c src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c src/algebra/realize_sparse.c src/algebra/realize_rns.c src/algebra/realize_dense.c -lm
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -march=armv8.6-a+dotprod+i8mm+sve -Isrc -o build/L519/tests-turing/turing-field tools/turing_field.c src/turing/field.c src/turing/field_select.c src/turing/field_select_v0_retired.c src/turing/history_selector.c src/turing/replay.c src/omega_canonical.c src/sha256.c src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c src/algebra/realize_sparse.c src/algebra/realize_rns.c src/algebra/realize_dense.c -lm
+cc -std=c11 -Wall -Wextra -Werror -pedantic -O2 -march=armv8.6-a+dotprod+i8mm+sve -Isrc -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/L519/tests-turing/turing-field_asan tools/turing_field.c src/turing/field.c src/turing/field_select.c src/turing/field_select_v0_retired.c src/turing/history_selector.c src/turing/replay.c src/omega_canonical.c src/sha256.c src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c src/algebra/realize_sparse.c src/algebra/realize_rns.c src/algebra/realize_dense.c -lm
+./build/L519/tests-turing/test_turing
+  regret RETIRED v0 S1-S4 x2 in-sample Field mean   3.58% max  25.51% | control mean   0.01% max   0.07% | same pick 5/8
+  regret S1-S4 x2 pack leave-one-out  Field mean   3.65% max  25.51% | control mean   0.01% max   0.07% | same pick 4/8
+  regret 72 cells in-sample           Field mean   2.15% max  25.81% | control mean   0.03% max   1.04% | same pick 39/72
+  regret 72 cells leave-one-out       Field mean   2.18% max  25.81% | control mean   0.03% max   1.04% | same pick 39/72
+  regret 72 cells cold online x10     Field mean   2.15% max  25.81% | control mean 104.50% max 9398.91%
+test-turing: 85 passed, 0 failed
+./build/L519/tests-turing/test_turing_asan
+  regret RETIRED v0 S1-S4 x2 in-sample Field mean   3.58% max  25.51% | control mean   0.01% max   0.07% | same pick 5/8
+  regret S1-S4 x2 pack leave-one-out  Field mean   3.65% max  25.51% | control mean   0.01% max   0.07% | same pick 4/8
+  regret 72 cells in-sample           Field mean   2.15% max  25.81% | control mean   0.03% max   1.04% | same pick 39/72
+  regret 72 cells leave-one-out       Field mean   2.18% max  25.81% | control mean   0.03% max   1.04% | same pick 39/72
+  regret 72 cells cold online x10     Field mean   2.15% max  25.81% | control mean 104.50% max 9398.91%
+test-turing: 85 passed, 0 failed
+./build/L519/tests-turing/turing-field --spec-ids > build/L519/tests-turing/spec_ids_plain.txt
+./build/L519/tests-turing/turing-field_asan --spec-ids > build/L519/tests-turing/spec_ids_asan.txt
+cmp build/L519/tests-turing/spec_ids_plain.txt build/L519/tests-turing/spec_ids_asan.txt
+./build/L519/tests-turing/turing-field_asan > build/L519/tests-turing/turing_field_asan.txt
+test-turing: spec ids identical across plain and ASan builds; turing-field runs clean under ASan/UBSan

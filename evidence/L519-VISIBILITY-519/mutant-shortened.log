@@ -1,0 +1,73 @@
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=4095 lock=1 result=0
+  expect failed at line 79: bytes_are(device_shadow,m.size,0x3c)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=4095 lock=1 result=0
+  expect failed at line 83: bytes_are(m.cpu,m.size,0x6d)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=4095 lock=1 result=13
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=4095 lock=1 result=0
+  expect failed at line 90: bytes_are(device_shadow,m.size,0x11)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=4095 lock=1 result=13
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=4095 lock=1 result=0
+  expect failed at line 96: bytes_are(m.cpu,m.size,0x22)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=4095 lock=1 result=6
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=4095 lock=1 result=0
+  expect failed at line 79: bytes_are(device_shadow,m.size,0x3c)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=4095 lock=1 result=0
+  expect failed at line 83: bytes_are(m.cpu,m.size,0x6d)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=4095 lock=1 result=13
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=4095 lock=1 result=0
+  expect failed at line 90: bytes_are(device_shadow,m.size,0x11)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=4095 lock=1 result=13
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=4095 lock=1 result=0
+  expect failed at line 96: bytes_are(m.cpu,m.size,0x22)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=4095 lock=1 result=6
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=8191 lock=1 result=0
+  expect failed at line 79: bytes_are(device_shadow,m.size,0x3c)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=8191 lock=1 result=0
+  expect failed at line 83: bytes_are(m.cpu,m.size,0x6d)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=8191 lock=1 result=13
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=8191 lock=1 result=0
+  expect failed at line 90: bytes_are(device_shadow,m.size,0x11)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=8191 lock=1 result=13
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=8191 lock=1 result=0
+  expect failed at line 96: bytes_are(m.cpu,m.size,0x22)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=8191 lock=1 result=6
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=0 direction=CPU_TO_GPU offset=0 bytes=16383 lock=1 result=0
+  expect failed at line 79: bytes_are(device_shadow,m.size,0x3c)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=1 direction=GPU_TO_CPU offset=0 bytes=16383 lock=1 result=0
+  expect failed at line 83: bytes_are(m.cpu,m.size,0x6d)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=2 direction=CPU_TO_GPU offset=0 bytes=16383 lock=1 result=13
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=3 direction=CPU_TO_GPU offset=0 bytes=16383 lock=1 result=0
+  expect failed at line 90: bytes_are(device_shadow,m.size,0x11)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=4 direction=GPU_TO_CPU offset=0 bytes=16383 lock=1 result=13
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=5 direction=GPU_TO_CPU offset=0 bytes=16383 lock=1 result=0
+  expect failed at line 96: bytes_are(m.cpu,m.size,0x22)
+  expect failed at line 52: trace[index].offset==0 && trace[index].bytes==expected.size
+TRACE seq=6 direction=CPU_TO_GPU offset=0 bytes=16383 lock=1 result=6
+gpu session visibility: 4 sizes, 28 exact events, failures/recovery/stale/close: FAIL; graph/native NOT_RUN

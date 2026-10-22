@@ -1,0 +1,6 @@
+sh tests/gpu_session_visibility_mutants.sh build/L519/gpu-visibility-mutants build/L519/gpu-visibility-fs
+killed: omitted
+killed: shortened
+killed: reversed
+killed: swallowed
+session visibility mutants: 4/4 compiled, failed assertions confirmed
