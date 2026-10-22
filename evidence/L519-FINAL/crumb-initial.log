@@ -1,0 +1,6 @@
+STALE      tests/turing
+STALE      mk
+STALE      tests
+STALE      tools
+STALE      .
+crumb verify: FAIL: 5 of 157 crumbs stale; run: crumb compile
