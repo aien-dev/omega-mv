@@ -1,0 +1,112 @@
+oev version=1
+machine id=spark soc=GB10 cores=20 mem_bytes=137438953472 prov=specified src=583-schema-datasheet
+build repo=omega-mv sha=a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a
+resource id=gpu kind=compute slots=1 prov=specified src=ordered-command-list
+resource id=unified_mem kind=capacity cap=137438953472 prov=specified src=583-schema-datasheet
+# All durations UNKNOWN. No calibration or traffic-to-DRAM conversion. Macro layers avoid OEV1 max256 operations.
+# Incomplete allocation coverage: weights/router/KV/session allocations UNKNOWN, not zero. No ranking permitted.
+op id=initial_norm kind=compute engine=gpu prov=unknown src=pinned-decode-source
+op id=layer00 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep initial_norm layer00
+op id=layer01 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer00 layer01
+op id=layer02 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer01 layer02
+op id=layer03 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer02 layer03
+op id=layer04 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer03 layer04
+op id=layer05 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer04 layer05
+op id=layer06 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer05 layer06
+op id=layer07 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer06 layer07
+op id=layer08 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer07 layer08
+op id=layer09 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer08 layer09
+op id=layer10 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer09 layer10
+op id=layer11 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer10 layer11
+op id=layer12 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer11 layer12
+op id=layer13 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer12 layer13
+op id=layer14 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer13 layer14
+op id=layer15 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer14 layer15
+op id=layer16 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer15 layer16
+op id=layer17 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer16 layer17
+op id=layer18 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer17 layer18
+op id=layer19 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer18 layer19
+op id=layer20 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer19 layer20
+op id=layer21 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer20 layer21
+op id=layer22 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer21 layer22
+op id=layer23 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer22 layer23
+op id=layer24 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer23 layer24
+op id=layer25 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer24 layer25
+op id=layer26 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer25 layer26
+op id=layer27 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer26 layer27
+op id=layer28 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer27 layer28
+op id=layer29 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer28 layer29
+op id=layer30 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer29 layer30
+op id=layer31 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer30 layer31
+op id=layer32 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer31 layer32
+op id=layer33 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer32 layer33
+op id=layer34 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer33 layer34
+op id=layer35 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer34 layer35
+op id=layer36 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer35 layer36
+op id=layer37 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer36 layer37
+op id=layer38 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer37 layer38
+op id=layer39 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer38 layer39
+op id=layer40 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer39 layer40
+op id=layer41 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer40 layer41
+op id=layer42 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer41 layer42
+op id=layer43 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer42 layer43
+op id=layer44 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer43 layer44
+op id=layer45 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer44 layer45
+op id=layer46 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer45 layer46
+op id=layer47 kind=compute engine=gpu prov=unknown src=operations.tsv:9-launches
+dep layer46 layer47
+op id=lm_head kind=compute engine=gpu prov=unknown src=pinned-decode-source
+dep layer47 lm_head
+op id=argmax0 kind=compute engine=gpu prov=unknown src=pinned-decode-source
+dep lm_head argmax0
+op id=argmax1 kind=compute engine=gpu prov=unknown src=pinned-decode-source
+dep argmax0 argmax1
+buffer id=decode_arena bytes=1267456 cap=unified_mem
+energy instrument=none

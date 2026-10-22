@@ -1,0 +1,75 @@
+{
+  "ledger": "L491",
+  "source_commit": "0daf1a44e3e8bf1c82dc2d0a39131021dd5f8c0a",
+  "branch": "issues/locality-602-606-20261022",
+  "base": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+  "seed_commit": "57f5f4258cebf3d5b2c22853cd062e351265c525",
+  "dagsim_commit": "3bd56731c5517e2a9c8f195955c71e73dc6f9269",
+  "suite_exit": 0,
+  "asan_exit": 0,
+  "red_exit": 1,
+  "checks": {
+    "omega": {
+      "pass": 763,
+      "fail": 0
+    },
+    "training": {
+      "pass": 483,
+      "fail": 0
+    },
+    "training_asan": {
+      "pass": 483,
+      "fail": 0
+    },
+    "behavioral_mutants": {
+      "killed": 10,
+      "survived": 0
+    },
+    "rng_mutant": {
+      "pass": 402,
+      "fail": 81,
+      "exit": 1
+    },
+    "red_scaffold": {
+      "pass": 86,
+      "fail": 274,
+      "exit": 1
+    },
+    "original_autodiff": {
+      "pass": 262,
+      "fail": 0,
+      "builds": [
+        "plain",
+        "ASan/UBSan"
+      ]
+    },
+    "original_train": {
+      "pass": 266,
+      "fail": 0,
+      "builds": [
+        "plain",
+        "ASan/UBSan"
+      ]
+    },
+    "schedule_sweep_requests": 80,
+    "arena_regions": 18,
+    "decode_launches": 436,
+    "oev_macro_ops": 52,
+    "unified_capacity_ledgers": 1
+  },
+  "issues": {
+    "602": "HOST_PARTIAL: source accounting, exact tiny bounds, OEV1 refusal; complete allocation reconciliation and baseline capture NOT_RUN",
+    "603": "HOST_PARTIAL: exact specialization identity; existing native fusion reused, fresh replay BUILD_FAIL",
+    "604": "HOST_PARTIAL: executable placement/recompute controls; native chip residency/crossover NOT_RUN",
+    "605": "HOST_PASS_SYNTHETIC: same recurrence/depth outputs; trained checkpoint/model quality NOT_RUN",
+    "606": "HOST_PASS_SUPPORTED_BLOCK: actual CPU APIs, gradient/update/RNG/checkpoint; GPU training/quality NOT_RUN"
+  },
+  "hardware": "NOT_RUN",
+  "real_model_quality": "NOT_RUN",
+  "performance": "NOT_RUN",
+  "energy": "UNMEASURED",
+  "heldout_selection_regret": "NOT_RUN",
+  "independent_review": "PENDING",
+  "live_changes": false,
+  "extra_agents": false
+}

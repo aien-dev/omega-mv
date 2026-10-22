@@ -1,0 +1,82 @@
+FAIL line 54: replay==rng
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: replay==rng
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: replay==rng
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: replay==rng
+FAIL line 54: replay==rng
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+FAIL line 54: !memcmp(mask,again,sizeof mask)
+FAIL line 54: replay==rng
+FAIL line 55: a==b
+FAIL line 55: !memcmp(g,r,sizeof g)
+L491 actual CPU autodiff/SGD/RNG/checkpoint: pass=402 fail=81

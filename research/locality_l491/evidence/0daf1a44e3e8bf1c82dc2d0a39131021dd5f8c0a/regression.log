@@ -1,0 +1,30 @@
+gcc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -Isrc -Isrc/tensor -Isrc/autodiff -DOMEGA_NUMERIC_CPU_ONLY -O2 -o research/locality_l491/out/regression/test_omega_autodiff tests/test_omega_autodiff.c src/autodiff/omega_autodiff.c src/tensor/omega_tensor.c src/tensor/omega_tensor_cpu.c src/tensor/omega_tensor_reduce_seam.c src/omega_numeric_reduce.c src/omega_numeric_transc.c \
+	src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c
+gcc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -Isrc -Isrc/tensor -Isrc/autodiff -DOMEGA_NUMERIC_CPU_ONLY -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
+	-o research/locality_l491/out/regression/test_omega_autodiff_asan tests/test_omega_autodiff.c src/autodiff/omega_autodiff.c src/tensor/omega_tensor.c src/tensor/omega_tensor_cpu.c src/tensor/omega_tensor_reduce_seam.c src/omega_numeric_reduce.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c
+train-purity: src/train depends only on libc, sha256 and itself
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -Isrc -o research/locality_l491/out/regression/train/test_train tests/train/test_train.c src/train/tg_store.c src/train/tg_sgd.c src/sha256.c -lm
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -Isrc -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o research/locality_l491/out/regression/train/test_train_asan tests/train/test_train.c src/train/tg_store.c src/train/tg_sgd.c src/sha256.c -lm
+./research/locality_l491/out/regression/train/test_train research/locality_l491/out/regression/train/scratch > research/locality_l491/out/regression/train/plain.log 2>&1; rc=$?; \
+	grep -vE '^crash |^cost |^sgd_' research/locality_l491/out/regression/train/plain.log; [ $rc -eq 0 ]
+./research/locality_l491/out/regression/test_omega_autodiff
+M21 OMEGA_AUTODIFF CPU tests: 262 pass, 0 fail
+M21 verdict: NOT QUALIFIED (CPU tier only; GB10 NOT_RUN)
+./research/locality_l491/out/regression/test_omega_autodiff_asan
+M21 OMEGA_AUTODIFF CPU tests: 262 pass, 0 fail
+M21 verdict: NOT QUALIFIED (CPU tier only; GB10 NOT_RUN)
+reader_race reads 51197 bad 0 backwards 0 last_gen 150
+replay_digest f161fad7bfe124ca0d03688d8b7226ee5ac4e1f0813ea889127bd2508f3b6e3d
+replay_dispatch_head ccd77c5c35a8a2fdc6778424c77b24c7b32f94aca11525fcbf47f79f9328bb1f
+replay_steps_reverified 25/25
+checks 266 failed 0
+M22_SUBSTRATE_TESTS_PASS
+./research/locality_l491/out/regression/train/test_train_asan research/locality_l491/out/regression/train/scratch-asan > research/locality_l491/out/regression/train/asan.log 2>&1; rc=$?; \
+	grep -vE '^crash |^cost |^sgd_' research/locality_l491/out/regression/train/asan.log; [ $rc -eq 0 ]
+reader_race reads 13635 bad 0 backwards 0 last_gen 150
+replay_digest f161fad7bfe124ca0d03688d8b7226ee5ac4e1f0813ea889127bd2508f3b6e3d
+replay_dispatch_head ccd77c5c35a8a2fdc6778424c77b24c7b32f94aca11525fcbf47f79f9328bb1f
+replay_steps_reverified 25/25
+checks 266 failed 0
+M22_SUBSTRATE_TESTS_PASS
+test-train: plain and ASan/UBSan PASS, replay digest equal across builds

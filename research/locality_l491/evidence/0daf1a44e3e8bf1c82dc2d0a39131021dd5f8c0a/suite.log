@@ -1,0 +1,17 @@
+L491 independent oracle: pass=763 fail=0; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+L491 sweep: 80 executed requests; all same-shape/depth arm states identical; logical counts only PASS
+baseline: 18 exact offsets+total match native source; 436 launches; 52 OEV1 macro ops; one capacity; deterministic; changed source refuses PASS
+OEV1: actual #583 parser/evaluator refuses unknown decode costs; no ranking PASS
+L491 actual CPU autodiff/SGD/RNG/checkpoint: pass=483 fail=0
+KILLED predecessor: L491 independent oracle: pass=762 fail=1; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED capacity: L491 independent oracle: pass=762 fail=1; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED stateful_recompute: L491 independent oracle: pass=762 fail=1; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED output_boundary: L491 independent oracle: pass=762 fail=1; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED traffic: L491 independent oracle: pass=758 fail=5; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED stale_identity: L491 independent oracle: pass=762 fail=1; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED missing_identity: L491 independent oracle: pass=762 fail=1; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED recurrence_value: L491 independent oracle: pass=683 fail=80; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED retained_capacity: L491 independent oracle: pass=699 fail=64; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+KILLED recurrence_traffic: L491 independent oracle: pass=739 fail=24; diamond lower(cap4)=24 lower(cap3)=40 cap2=REFUSED
+L491 mutants: 10 killed, 0 survived
+L491 host batch PASS; GPU/model-quality/performance/energy NOT_RUN

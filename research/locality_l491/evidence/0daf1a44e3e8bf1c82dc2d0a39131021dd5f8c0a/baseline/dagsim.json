@@ -1,0 +1,8 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "research/locality_l491/out/baseline/decode.oev",
+  "machine": "spark", "build_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+  "calibration": {"id": "", "taken_day": 0, "valid_days": 0, "load1": 0, "src": ""},
+  "asof_day": 20748,
+  "status": "REFUSED_UNKNOWN", "reason": "op initial_norm has prov=unknown (pinned-decode-source); unknown stays unknown",
+  "provenance": [], "synthetic": 0, "offline": true, "gpu_executed": false
+}
