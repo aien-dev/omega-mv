@@ -1,0 +1,14 @@
+{
+  "package": "qemu-user",
+  "version": "1:8.2.2+ds-0ubuntu1.18",
+  "architecture": "arm64",
+  "source": "qemu",
+  "archive_name": "qemu-user_1%3a8.2.2+ds-0ubuntu1.18_arm64.deb",
+  "archive_sha256": "0160e88bbcabb5fa400b6242ebc921302ad574e4d302c0123dabe4375438ae79",
+  "apt_index_sha256": "0160e88bbcabb5fa400b6242ebc921302ad574e4d302c0123dabe4375438ae79",
+  "apt_filename": "pool/universe/q/qemu/qemu-user_8.2.2+ds-0ubuntu1.18_arm64.deb",
+  "depends": "libc6 (>= 2.38), libglib2.0-0t64 (>= 2.62.0), zlib1g (>= 1:1.1.4)",
+  "archive_bytes": 11912872,
+  "system_installed": false,
+  "extraction_scope": "owned user directory, no binfmt or service registration"
+}

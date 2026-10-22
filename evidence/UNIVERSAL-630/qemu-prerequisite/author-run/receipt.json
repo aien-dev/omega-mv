@@ -1,0 +1,67 @@
+{
+  "schema": "omega.universal.rv64-emulator-preflight.v1",
+  "result": "PASS_TEST_TOOL_PREFLIGHT_ONLY",
+  "execution": "EMULATED",
+  "guest": "RV64I Linux userspace syscall smoke, not complete RV64GC qualification",
+  "qemu_version": "qemu-riscv64 version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)\nCopyright (c) 2003-2023 Fabrice Bellard and the QEMU Project developers\n",
+  "qemu_binary_sha256": "7f812b5afeb02f324c60c794114d683e9cda41c71fe94003f300ab77985059dd",
+  "host": {
+    "system": "Linux",
+    "node": "spark-b87b",
+    "release": "7.0.0-1019-nvidia",
+    "version": "#19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2",
+    "machine": "aarch64",
+    "processor": "aarch64"
+  },
+  "cases": [
+    {
+      "case": "exit42",
+      "command": [
+        "/home/drakestapleton/handoffs/universal-L586-toolchain/root/usr/bin/qemu-riscv64",
+        "-cpu",
+        "rv64",
+        "/home/drakestapleton/handoffs/universal-L586-toolchain/preflight-run/exit42.elf"
+      ],
+      "exit": 42,
+      "stdout_hex": "",
+      "stderr": "",
+      "image_sha256": "f6d412a2423bef6f9321480bee578a508913337ab92c4f67737ae9dc94cec50a",
+      "instruction_words_le": "1305a0029308d00573000000"
+    },
+    {
+      "case": "exit43",
+      "command": [
+        "/home/drakestapleton/handoffs/universal-L586-toolchain/root/usr/bin/qemu-riscv64",
+        "-cpu",
+        "rv64",
+        "/home/drakestapleton/handoffs/universal-L586-toolchain/preflight-run/exit43.elf"
+      ],
+      "exit": 43,
+      "stdout_hex": "",
+      "stderr": "",
+      "image_sha256": "e522817fcabff91ce40705b6727a190da0ab817bb100bb8ea1e376888c0948e3",
+      "instruction_words_le": "1305b0029308d00573000000"
+    },
+    {
+      "case": "wrong-isa",
+      "command": [
+        "/home/drakestapleton/handoffs/universal-L586-toolchain/root/usr/bin/qemu-riscv64",
+        "-cpu",
+        "rv64",
+        "/home/drakestapleton/handoffs/universal-L586-toolchain/preflight-run/wrong-isa.elf"
+      ],
+      "exit": 255,
+      "stdout_hex": "",
+      "stderr": "qemu-riscv64: /home/drakestapleton/handoffs/universal-L586-toolchain/preflight-run/wrong-isa.elf: Invalid ELF image for this architecture\n",
+      "image_sha256": "68371dbc4e729e2a4ff8ffece764dc6d496129999c36ca7e027924c3d8d6026d",
+      "instruction_words_le": "1305a0029308d00573000000"
+    }
+  ],
+  "ELF_EM_RISCV": 243,
+  "ELF_EM_AARCH64": 183,
+  "system_elf_header_sha256": "9f2df1ad48c311b675db6ee074ceda3efc8603ec08ce948d1d7fa8cae7faeff3",
+  "source_sha256": "9f064bf287bcadbfe2cf7396d1776a8f5d010d5f6a27e75a9fb032ed3ceff982",
+  "omega_backend_implemented": false,
+  "native_riscv_silicon": "NOT_RUN",
+  "system_boot": "NOT_RUN"
+}
