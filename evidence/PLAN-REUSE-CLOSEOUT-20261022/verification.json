@@ -1,0 +1,96 @@
+{
+  "audit": "PASS",
+  "fixed": "4c9fae6c2cbf1295d78841142d73e234b10e3cfe",
+  "base": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+  "campaign": "66e092ac50c8fea66960f38e1a704aa39cf07f69",
+  "results": {
+    "dev_before": {
+      "pairs": 30,
+      "f2_failures": 0,
+      "lengths": {},
+      "checks": 286,
+      "failures": 0,
+      "receipt_bad_rows": 0,
+      "final_console": {
+        "checks": 290,
+        "failures": 1,
+        "bad_rows": 1
+      },
+      "run_commit": "unknown",
+      "binary_sha256": "4849084542cac03cb7c34765ba7c7c515b92b885338fb6969640abc426ac16e4"
+    },
+    "dev_after": {
+      "pairs": 30,
+      "f2_failures": 0,
+      "lengths": {},
+      "checks": 286,
+      "failures": 0,
+      "receipt_bad_rows": 0,
+      "final_console": {
+        "checks": 290,
+        "failures": 1,
+        "bad_rows": 1
+      },
+      "run_commit": "unknown",
+      "binary_sha256": "8d305677a8e1191e89b33c12beb48dba4f67f7b216cf30de2950a5ad0624fbed"
+    },
+    "heldout_before": {
+      "pairs": 344,
+      "f2_failures": 51,
+      "lengths": {
+        "9 vs 12": 33,
+        "7 vs 10": 18
+      },
+      "checks": 3060,
+      "failures": 52,
+      "receipt_bad_rows": 1,
+      "final_console": {
+        "checks": 3060,
+        "failures": 52,
+        "bad_rows": 1
+      },
+      "run_commit": "unknown",
+      "binary_sha256": "4849084542cac03cb7c34765ba7c7c515b92b885338fb6969640abc426ac16e4"
+    },
+    "heldout_after": {
+      "pairs": 344,
+      "f2_failures": 0,
+      "lengths": {},
+      "checks": 3060,
+      "failures": 0,
+      "receipt_bad_rows": 0,
+      "final_console": {
+        "checks": 3060,
+        "failures": 0,
+        "bad_rows": 0
+      },
+      "run_commit": "unknown",
+      "binary_sha256": "8d305677a8e1191e89b33c12beb48dba4f67f7b216cf30de2950a5ad0624fbed"
+    }
+  },
+  "mutation_checks": "PASS: longer plan detected; missing arm rejected",
+  "implementation_unchanged": true,
+  "historical_overall_gate": "FAIL (preserved)",
+  "fresh_build_or_timing": "NOT_RUN: verified existing published solution per assignment",
+  "evidence_sha256": {
+    "evidence/PLAN_REUSE/adapt-quality-fix/00-precommit.md": "ac517cf5690d31715785508fd15298b50e8bfe36807bfd3136e1c8eb85b82dec",
+    "evidence/PLAN_REUSE/adapt-quality-fix/01-red-base.log": "ef1572bd6d73daefcc07cb886d40a83fce75784213b15bbcae15a32f68b0bb5d",
+    "evidence/PLAN_REUSE/adapt-quality-fix/02-green-test-plan-reuse.log": "412abcb963a16177270f1e8c01e5b65c2bba2e6bf11ad6351ad833e4fca96bf2",
+    "evidence/PLAN_REUSE/adapt-quality-fix/03-g2-ab-load.log": "f548c80c11943a1448a242e9c5926552214ba3cb3c48c817cb141fb4b5a4c156",
+    "evidence/PLAN_REUSE/adapt-quality-fix/04-make-test.log": "abde09f705b2b370773b5022c24d99addf38f2dc424f6b36f868a4a5d9635d16",
+    "evidence/PLAN_REUSE/adapt-quality-fix/05-payback-dev-after.log": "e482e6a9c0f4f940bf2e4437fdd6223e96a007d1f2606210d1e71de38544eb7c",
+    "evidence/PLAN_REUSE/adapt-quality-fix/05-payback-dev-before.log": "df9dfd8a17773dbacad7b88b30c776909b0174af812946bedeaf3f3d9175100a",
+    "evidence/PLAN_REUSE/adapt-quality-fix/05-payback-heldout-after.log": "cae7e2b245085c14e7267ef0350d5902daf01c3d4c8a646695cb55f2c053ec5c",
+    "evidence/PLAN_REUSE/adapt-quality-fix/05-payback-heldout-before.log": "b696a9fdfe1513d040838b0a7616ffa3a1562896a8ee92a418dc33ad9a2ac353",
+    "evidence/PLAN_REUSE/adapt-quality-fix/README.md": "94cd44de04db5a97e953c1bd16eb6500a55abd4c5c5280cd0884008955831a97",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-after-dev/dev-receipt.json": "2d15bf4c881c7564d784cbbfa8be57aebf976d4efbe4818bf74a15e461fac519",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-after-dev/dev-trace.csv": "591f6efa643190050b9b1f8aa7f7e8781e5c40917c8628a466e0f6e9455bfb81",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-after-heldout/heldout-receipt.json": "a3da65ac7cc909b0e0b3d8d0fa82dbd01140bae46059d3288b5fe2738a96696a",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-after-heldout/heldout-trace.csv": "03d1aa0fc9e6d16f923981dd2f6f20067932786c77766ffbe32495167bc79dbf",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-before-dev/dev-receipt.json": "3ffc735d4a9bfd0e65204b56930f674ed4009fa2862b9a27131f1b6be2a719f1",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-before-dev/dev-trace.csv": "d201deb48e4f3f42a23ed14be52cd68c4ebe2cc05f0da11ff9ecc2b105468f2d",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-before-heldout/heldout-receipt.json": "a0dc1d0c1295b3aa18cb011860aa7e2d7c16eb85163b082682690f2cb53d7181",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-before-heldout/heldout-trace.csv": "de6bc5c8fe4d3408753cee4ae4248b4d4affa0465a6635dcedacb9ef62c66b19",
+    "evidence/PLAN_REUSE/adapt-quality-fix/payback-harness-L168.patch": "60cd229de9a8cc76ab60b1ca249f0ddf62595993ad219746732971283475fdf8"
+  }
+}

@@ -1,0 +1,53 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /checks 286 failures 0 bad_rows 0/. Input:
+
+'# payback dev, before the fix, exit 1\n' +
+  '# command: cd ~/workspace/targets/omega-rxplan-adapt/payback-before && PAYBACK_OUT=out-dev nice -n 10 ./build/rx_plan_payback_test dev\n' +
+  '# load/mem start: 60.33 64.39 54.16 mem_avail_kB=62725552\n' +
+  '# load/mem end: 61.26 64.52 54.25 mem_avail_kB=63905016\n' +
+  '  FAIL tests/runtime/rx_plan_payback.c:1215 P+ dev sign positive (net -228007670 ns)\n' +
+  '[*] placed on 10 Cortex-X925 cores\n' +
+  '[*] stream S1_reverse: 12 tasks, seeds 200.., cache fresh\n' +
+  '    restart before task 6: 1 records serialised, 1 reloaded, 0 refused\n' +
+  '[*] stream S1_merge_P+: 12 tasks, seeds 200.., cache fresh\n' +
+  '[*] stream dev_P0_no_payoff: 6 tasks, seeds 250.., cache fresh\n' +
+  '[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated\n' +
+  '[*] control: corrupt serialised records are refused on reload\n' +
+  '    3 corrupt records: 3 refused, 0 stored\n' +
+  'checks 290 failures 1 bad_rows 1\n' +
+  'dev: S1_reverse p 1.000 Delta -47584 ns [-419378, 123082] C 108496 ns; S1_merge p 1.000 Delta -116241 ns [-754814, 136314] C 97344 ns; P0 m 134401 ns [-36561, 423266]\n' +
+  'dev: net S1_reverse 8210824 ns, S1_merge -228007670 ns (P+ sign NEGATIVE), P0 -447551 ns (sign negative); reconciliation OK; stale refused/rederived/revalidated; corrupt 3/3 refused\n' +
+  'receipt: /home/drakestapleton/workspace/targets/omega-rxplan-adapt/payback-before/out-dev/dev-receipt.json\n'
+
+    at file:///home/drakestapleton/workspace/omega-plan-reuse-closeout-20261022/evidence/PLAN-REUSE-CLOSEOUT-20261022/verify.mjs:82:12
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '# payback dev, before the fix, exit 1\n' +
+    '# command: cd ~/workspace/targets/omega-rxplan-adapt/payback-before && PAYBACK_OUT=out-dev nice -n 10 ./build/rx_plan_payback_test dev\n' +
+    '# load/mem start: 60.33 64.39 54.16 mem_avail_kB=62725552\n' +
+    '# load/mem end: 61.26 64.52 54.25 mem_avail_kB=63905016\n' +
+    '  FAIL tests/runtime/rx_plan_payback.c:1215 P+ dev sign positive (net -228007670 ns)\n' +
+    '[*] placed on 10 Cortex-X925 cores\n' +
+    '[*] stream S1_reverse: 12 tasks, seeds 200.., cache fresh\n' +
+    '    restart before task 6: 1 records serialised, 1 reloaded, 0 refused\n' +
+    '[*] stream S1_merge_P+: 12 tasks, seeds 200.., cache fresh\n' +
+    '[*] stream dev_P0_no_payoff: 6 tasks, seeds 250.., cache fresh\n' +
+    '[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated\n' +
+    '[*] control: corrupt serialised records are refused on reload\n' +
+    '    3 corrupt records: 3 refused, 0 stored\n' +
+    'checks 290 failures 1 bad_rows 1\n' +
+    'dev: S1_reverse p 1.000 Delta -47584 ns [-419378, 123082] C 108496 ns; S1_merge p 1.000 Delta -116241 ns [-754814, 136314] C 97344 ns; P0 m 134401 ns [-36561, 423266]\n' +
+    'dev: net S1_reverse 8210824 ns, S1_merge -228007670 ns (P+ sign NEGATIVE), P0 -447551 ns (sign negative); reconciliation OK; stale refused/rederived/revalidated; corrupt 3/3 refused\n' +
+    'receipt: /home/drakestapleton/workspace/targets/omega-rxplan-adapt/payback-before/out-dev/dev-receipt.json\n',
+  expected: /checks 286 failures 0 bad_rows 0/,
+  operator: 'match',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
