@@ -1,0 +1,48 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+text refusal "REFUSED "
+global one uchar 1
+fn reply n ulong to void
+s = mathrun n
+if eq s 0
+w = write 1 res 0 get reslen 0
+else
+w = write 1 refusal 0 len refusal
+put one 0 uchar add s 48
+w = write 1 one 0 1
+end
+put one 0 10
+w = write 1 one 0 1
+end
+fn main to int
+n = ulong 0
+full = false
+r = read 0 one 0 1
+while gt r 0
+c = get one 0
+if eq c 10
+if full
+put req 0 0
+reply 4096
+else
+reply n
+end
+n = 0
+full = false
+else
+if lt n 4096
+put req n c
+n = add n 1
+else
+full = true
+end
+end
+r = read 0 one 0 1
+end
+if lt r 0
+ret 1
+end
+if gt n 0
+reply n
+end
+ret 0
+end
