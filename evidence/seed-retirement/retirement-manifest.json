@@ -1,0 +1,2837 @@
+{
+  "schema": 1,
+  "observed_utc": "2026-10-22T19:06:07.231842+00:00",
+  "status": "PARTIAL",
+  "parent": "L495",
+  "task": "L496",
+  "c_migration_catalog_commit": "99910cdfe984d0bbd64b38044e6b926320f4db57",
+  "sources": {
+    "omega": {
+      "repo_path": "/home/drakestapleton/workspace/omega",
+      "remote": "git@github.com:aien-spark/omega.git",
+      "owner": "L418",
+      "default": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+      "head": "ce42e62f9632b495f494aa8e419a70f4a36c88c0",
+      "branch": "hive/DEEP2-A3-gpu-engine-impl",
+      "working_status_sha256": "ccc3d18c5620d1ea98db818e37c07ec9cf83affb703e3f406244e9498cd48721",
+      "counts": {
+        "first_party_source/C": {
+          "files": 637,
+          "lines": 183270,
+          "bytes": 8349036
+        },
+        "first_party_test/C": {
+          "files": 278,
+          "lines": 126493,
+          "bytes": 6391435
+        },
+        "historical_or_oracle/C": {
+          "files": 90,
+          "lines": 46139,
+          "bytes": 2750284
+        },
+        "historical_or_oracle/Rust": {
+          "files": 2,
+          "lines": 1214,
+          "bytes": 63738
+        },
+        "first_party_source/Rust": {
+          "files": 40,
+          "lines": 12591,
+          "bytes": 515400
+        },
+        "first_party_test/Rust": {
+          "files": 3,
+          "lines": 28,
+          "bytes": 525
+        }
+      }
+    },
+    "aienux": {
+      "repo_path": "/home/drakestapleton/workspace/aienos_m3",
+      "remote": "https://github.com/aien-dev/aienux.git",
+      "owner": "L420",
+      "default": "18e276590424593647cd7c39c6d16c2f9f8d6027",
+      "head": "22ab63a6e5743ab1247e4cd3287c4d5ec24724b1",
+      "branch": "feat/phase2-binary-artifact-seed0b",
+      "working_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "first_party_source/Rust": {
+          "files": 183,
+          "lines": 65457,
+          "bytes": 2264093
+        },
+        "first_party_test/Rust": {
+          "files": 16,
+          "lines": 7308,
+          "bytes": 249135
+        },
+        "first_party_test/C": {
+          "files": 97,
+          "lines": 40546,
+          "bytes": 1819104
+        },
+        "first_party_source/C": {
+          "files": 299,
+          "lines": 68547,
+          "bytes": 2910622
+        },
+        "third_party/C": {
+          "files": 2,
+          "lines": 992,
+          "bytes": 39663
+        },
+        "third_party/Rust": {
+          "files": 1469,
+          "lines": 631038,
+          "bytes": 21877124
+        }
+      }
+    },
+    "CUDApp": {
+      "repo_path": "/home/drakestapleton/workspace/cudapp",
+      "remote": "git@github.com:aien-dev/CUDApp.git",
+      "owner": "L419",
+      "default": "232332422bfdc31c8918085b50f13c1e18ab702e",
+      "head": "8f0b645dbc859f1b63868cec77880621aa70b42d",
+      "branch": "main",
+      "working_status_sha256": "4a3a229c383248f9d7d7131387bd3ca151eaef00222feb7066b9987125f9d06e",
+      "counts": {
+        "historical_or_oracle/C": {
+          "files": 3,
+          "lines": 2095,
+          "bytes": 140533
+        },
+        "first_party_source/C": {
+          "files": 124,
+          "lines": 28075,
+          "bytes": 1523862
+        },
+        "first_party_test/C": {
+          "files": 48,
+          "lines": 17025,
+          "bytes": 1087065
+        },
+        "third_party/C": {
+          "files": 67,
+          "lines": 37334,
+          "bytes": 1594438
+        }
+      }
+    },
+    "physics": {
+      "repo_path": "/home/drakestapleton/workspace/physics",
+      "remote": "git@github.com:aien-spark/physics.git",
+      "owner": "L420",
+      "default": "14273c5ce7d13fbc6e410c4fed9aa36837918177",
+      "head": "e95e3ed2a86fe4bffe4d954fa94c27dfb5284280",
+      "branch": "",
+      "working_status_sha256": "3f72d07f1eddc0f9c6cff63ed7038be50a8c5db161156c8faa9a468aa4c78825",
+      "counts": {
+        "first_party_source/C": {
+          "files": 30,
+          "lines": 9601,
+          "bytes": 407057
+        },
+        "first_party_test/C": {
+          "files": 7,
+          "lines": 2848,
+          "bytes": 141200
+        },
+        "third_party/C": {
+          "files": 67,
+          "lines": 37334,
+          "bytes": 1594438
+        }
+      }
+    },
+    "benchmarks": {
+      "repo_path": "/home/drakestapleton/workspace/benchmarks",
+      "remote": "git@github.com:aien-dev/benchmarks.git",
+      "owner": "L420",
+      "default": "08c81e6fd074e69fdfafe75ec7465207b85b7c25",
+      "head": "96110721d408211b065096eceb0e3fe35f058ebf",
+      "branch": "main",
+      "working_status_sha256": "6a5d7275e0d9814d980b80cd6d5f411edf599fcd12bbdc7ecc21c67ceaaf7117",
+      "counts": {
+        "historical_or_oracle/C": {
+          "files": 6,
+          "lines": 3084,
+          "bytes": 176620
+        },
+        "first_party_source/Rust": {
+          "files": 28,
+          "lines": 8030,
+          "bytes": 286366
+        },
+        "first_party_test/Rust": {
+          "files": 3,
+          "lines": 510,
+          "bytes": 15636
+        }
+      }
+    },
+    "atlas": {
+      "repo_path": "/home/drakestapleton/workspace/atlas",
+      "remote": "git@github.com:aien-dev/atlas.git",
+      "owner": "L420",
+      "default": "6b11395a7d0e56e4178b9074d0c003a0ce509281",
+      "head": "0ec17d4b45c93e9d7577453995519997431e1b67",
+      "branch": "master",
+      "working_status_sha256": "820b88a82ed1738b01edf790e0fa41dbcbb0ef4d76ff857d834a57f84a8674b2",
+      "counts": {
+        "first_party_source/C": {
+          "files": 3,
+          "lines": 1299,
+          "bytes": 52608
+        }
+      }
+    },
+    "interplane": {
+      "repo_path": "/home/drakestapleton/workspace/interplane",
+      "remote": "git@github.com:aien-dev/interplane.git",
+      "owner": "L420",
+      "default": "b669d06e21c9debb15073289d7c0b78b1b2d362c",
+      "head": "2866d2b1cbe1215ac451a6c23e4815d49d3f0758",
+      "branch": "",
+      "working_status_sha256": "8027b23ac514dc83245fc00ba1484eb0fb47d5c36204e14fdcfd5661091061db",
+      "counts": {
+        "first_party_test/C": {
+          "files": 4,
+          "lines": 50,
+          "bytes": 970
+        },
+        "first_party_test/Rust": {
+          "files": 40,
+          "lines": 11743,
+          "bytes": 424236
+        },
+        "first_party_source/Rust": {
+          "files": 51,
+          "lines": 20127,
+          "bytes": 751578
+        },
+        "third_party/C": {
+          "files": 17,
+          "lines": 215,
+          "bytes": 10335
+        },
+        "third_party/Rust": {
+          "files": 1,
+          "lines": 353,
+          "bytes": 17291
+        }
+      }
+    },
+    "sovereign-core": {
+      "repo_path": "/home/drakestapleton/workspace/aien-sovereign-core",
+      "remote": "git@github.com:aien-spark/aien-sovereign-core.git",
+      "owner": "L495",
+      "default": "754c07b118f41ad899607b60329bd851b1ccb13e",
+      "head": "c83eb5b2f96b3d0a36fcb5092fcf0d66af5dd0d0",
+      "branch": "docs/readme-restructure",
+      "working_status_sha256": "84200f4556e42e50b3a8bd2496dd44332e8728ad40a25a4896a0dd6ddbb3f5d7",
+      "counts": {
+        "first_party_source/Rust": {
+          "files": 460,
+          "lines": 200437,
+          "bytes": 7296070
+        },
+        "first_party_test/Rust": {
+          "files": 235,
+          "lines": 88188,
+          "bytes": 3145793
+        },
+        "first_party_test/C": {
+          "files": 5,
+          "lines": 10,
+          "bytes": 175
+        }
+      }
+    },
+    "protocols": {
+      "repo_path": "/home/drakestapleton/workspace/aien-protocols",
+      "remote": "git@github.com:aien-dev/aien-protocols.git",
+      "owner": "L495",
+      "default": "4529f393546c87d5ae673e5d66d700c8e8c5db03",
+      "head": "1554330b403a78c4998d4cdbb841fb5457eb09ba",
+      "branch": "docs/protocol-versioning",
+      "working_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "first_party_source/Rust": {
+          "files": 14,
+          "lines": 3646,
+          "bytes": 118807
+        },
+        "first_party_test/Rust": {
+          "files": 7,
+          "lines": 1573,
+          "bytes": 53033
+        },
+        "first_party_source/C": {
+          "files": 5,
+          "lines": 3010,
+          "bytes": 120569
+        }
+      }
+    },
+    "aegis-runtime": {
+      "repo_path": "/home/drakestapleton/workspace/aegis-runtime",
+      "remote": "git@github.com:aien-dev/aegis-runtime.git",
+      "owner": "L495",
+      "default": "f85dbe3910dd2c29faff74a3a96d657531ca1320",
+      "head": "e8eed5aac8612c1b846284c09d58e798e382c11b",
+      "branch": "fix/rust-simd-oracle",
+      "working_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "first_party_source/Rust": {
+          "files": 49,
+          "lines": 9258,
+          "bytes": 320567
+        },
+        "first_party_test/Rust": {
+          "files": 11,
+          "lines": 4012,
+          "bytes": 132992
+        }
+      }
+    },
+    "spark-rsi": {
+      "repo_path": "/home/drakestapleton/workspace/spark-rsi",
+      "remote": "git@github.com:aien-dev/spark-rsi.git",
+      "owner": "L495",
+      "default": "3d5dc2f178702b00263869ed24d52ea0235c16e1",
+      "head": "1d564c2cc515f96668289fd1a6f8b22f8dbf23cc",
+      "branch": "feat/harness-safety-envelope",
+      "working_status_sha256": "54504196e99089ec33332901d6845a1468cc960ddec415914d2722f916fcb1d4",
+      "counts": {
+        "historical_or_oracle/C": {
+          "files": 1,
+          "lines": 153,
+          "bytes": 8914
+        },
+        "first_party_source/Rust": {
+          "files": 77,
+          "lines": 23140,
+          "bytes": 844550
+        },
+        "first_party_test/Rust": {
+          "files": 22,
+          "lines": 8347,
+          "bytes": 296080
+        }
+      }
+    },
+    "omega-bridge": {
+      "repo_path": "/home/drakestapleton/workspace/omega-bridge",
+      "remote": "https://github.com/aien-dev/omega-bridge.git",
+      "owner": "L483",
+      "default": "614f4ba56487ad420f43980b12e48b66768d6d21",
+      "head": "77376b1941a020dba441a14fce8eaadea692a5b7",
+      "branch": "feat/c-python-bridge",
+      "working_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {}
+    }
+  },
+  "source_snapshots": [
+    {
+      "repo": "omega",
+      "ref": "origin/main",
+      "commit": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a"
+    },
+    {
+      "repo": "aienux",
+      "ref": "refs/remotes/origin/main",
+      "commit": "18e276590424593647cd7c39c6d16c2f9f8d6027"
+    },
+    {
+      "repo": "CUDApp",
+      "ref": "origin/main",
+      "commit": "232332422bfdc31c8918085b50f13c1e18ab702e"
+    },
+    {
+      "repo": "physics",
+      "ref": "origin/main",
+      "commit": "14273c5ce7d13fbc6e410c4fed9aa36837918177"
+    },
+    {
+      "repo": "benchmarks",
+      "ref": "origin/main",
+      "commit": "08c81e6fd074e69fdfafe75ec7465207b85b7c25"
+    },
+    {
+      "repo": "atlas",
+      "ref": "origin/master",
+      "commit": "6b11395a7d0e56e4178b9074d0c003a0ce509281"
+    },
+    {
+      "repo": "interplane",
+      "ref": "origin/main",
+      "commit": "b669d06e21c9debb15073289d7c0b78b1b2d362c"
+    },
+    {
+      "repo": "sovereign-core",
+      "ref": "origin/main",
+      "commit": "754c07b118f41ad899607b60329bd851b1ccb13e"
+    },
+    {
+      "repo": "protocols",
+      "ref": "origin/main",
+      "commit": "4529f393546c87d5ae673e5d66d700c8e8c5db03"
+    },
+    {
+      "repo": "aegis-runtime",
+      "ref": "origin/main",
+      "commit": "f85dbe3910dd2c29faff74a3a96d657531ca1320"
+    },
+    {
+      "repo": "spark-rsi",
+      "ref": "origin/main",
+      "commit": "3d5dc2f178702b00263869ed24d52ea0235c16e1"
+    },
+    {
+      "repo": "omega-bridge",
+      "ref": "origin/main",
+      "commit": "614f4ba56487ad420f43980b12e48b66768d6d21"
+    },
+    {
+      "component": "seed",
+      "owner": "L408",
+      "repo_path": "/home/drakestapleton/workspace/omega-retirement-integration",
+      "source_commit": "29b12760f4c962606411d6bf25032aedef063301",
+      "main_contains": false
+    },
+    {
+      "component": "c-migration",
+      "owner": "L418",
+      "repo_path": "/home/drakestapleton/workspace/omega-retirement-integration",
+      "source_commit": "99910cdfe984d0bbd64b38044e6b926320f4db57",
+      "main_contains": false
+    },
+    {
+      "component": "motor-rust",
+      "owner": "L387",
+      "repo_path": "/home/drakestapleton/workspace/sc-motor-ship",
+      "source_commit": "f0230a59eec985c3290ac78c0cc04322bacf9f0a",
+      "main_contains": false
+    },
+    {
+      "component": "motor-omega",
+      "owner": "L387",
+      "repo_path": "/home/drakestapleton/workspace/omega-motor-ship",
+      "source_commit": "6de999da86efc6edd9c2554a87ee31f7fa9215ac",
+      "main_contains": false
+    },
+    {
+      "component": "bridge",
+      "owner": "L483",
+      "repo_path": "/home/drakestapleton/workspace/omega-bridge",
+      "source_commit": "77376b1941a020dba441a14fce8eaadea692a5b7",
+      "main_contains": false
+    },
+    {
+      "component": "attachments",
+      "owner": "L484",
+      "repo_path": "/home/drakestapleton/workspace/omega-bridge-attach",
+      "source_commit": "7916bcc083ec3c306b23bda98dc4ea6a748e86de",
+      "main_contains": false
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "aien@f56f6fe71bac2fe2",
+      "name": "aien",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libcublas.so.13",
+          "libcudart.so.13",
+          "libstdc++.so.6",
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/aien"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libcublas.so.13",
+            "libcudart.so.13",
+            "libstdc++.so.6",
+            "libssl.so.3",
+            "libcrypto.so.3",
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "f56f6fe71bac2fe2928644a1ce67c098ec59b9dabdcdbdc16eb9d40b0829a346",
+          "bytes": 163868792
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "aien-calc@ec0bd9ab80f7a70d",
+      "name": "aien-calc",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L494",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/aien-calc"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "ec0bd9ab80f7a70dcde7e012b06a4eac4e5ecb9d558ffe52f911ebb2fb147cb2",
+          "bytes": 1971096
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "aien-cli@d22b31335eb650f1",
+      "name": "aien-cli",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/aien-cli"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libssl.so.3",
+            "libcrypto.so.3",
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "d22b31335eb650f16a77b57a31dd07b6129a542a4a2703bd0e1579b4142ff12c",
+          "bytes": 10629064
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "aien-mail@10a1d7ade41aea22",
+      "name": "aien-mail",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/aien-mail"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "10a1d7ade41aea22452647085cb90f29b8bf9ba68db0efff9e4dd8d9021f9980",
+          "bytes": 8991432
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "atlas@d485a7f68aae76fa",
+      "name": "atlas",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libKGENCompilerRTShared.so",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L420; prior seeded lineage L105 requires exact installed build proof",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/atlas"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libKGENCompilerRTShared.so",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
+          "aarch64": true,
+          "sha256": "d485a7f68aae76fad856ccc751ee6a19e75a74f118509466410c6d0d7b395cbd",
+          "bytes": 79768
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "atlas-harvest@9309b887eb0f17df",
+      "name": "atlas-harvest",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libKGENCompilerRTShared.so",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/atlas-harvest"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libKGENCompilerRTShared.so",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
+          "aarch64": true,
+          "sha256": "9309b887eb0f17df655ac5815dcb855930eefebf23f06bed444e13ea8f2c798d",
+          "bytes": 156096
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "atlas-prime-agent@2e15c3f8912ca52b",
+      "name": "atlas-prime-agent",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libssl.so.3",
+            "libcrypto.so.3",
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "2e15c3f8912ca52b090ce6f8d246ec02396aa1ff8b6b27da5456037e46b00cb8",
+          "bytes": 4002928
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "atlas-resources@d201674b41b66d70",
+      "name": "atlas-resources",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libKGENCompilerRTShared.so",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/atlas-resources"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libKGENCompilerRTShared.so",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
+          "aarch64": true,
+          "sha256": "d201674b41b66d7053c3ec8f1d05c26a1ef7c1047c5fef80b43a3fe124e5ec58",
+          "bytes": 82760
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "atlas-vault@90626d69870d2df4",
+      "name": "atlas-vault",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libKGENCompilerRTShared.so",
+          "libc.so.6"
+        ],
+        "os_floor": [
+          "/home/drakestapleton/.pixi/envs/mojo/lib/libAsyncRTRuntimeGlobals.so",
+          "/home/drakestapleton/.pixi/envs/mojo/lib/libKGENCompilerRTShared.so",
+          "/home/drakestapleton/.pixi/envs/mojo/lib/libMSupportGlobals.so",
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6",
+          "/usr/lib/aarch64-linux-gnu/libstdc++.so.6.0.33"
+        ]
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/atlas-vault"
+        ],
+        "pids": [
+          2729
+        ],
+        "observed": "running",
+        "elf": {
+          "needed": [
+            "libKGENCompilerRTShared.so",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
+          "aarch64": true,
+          "sha256": "90626d69870d2df4170af4baefe6d33eafcfa8e8c1bc810b5938b722503aca80",
+          "bytes": 87416
+        },
+        "mapped_shared_libraries": [
+          "/home/drakestapleton/.pixi/envs/mojo/lib/libAsyncRTRuntimeGlobals.so",
+          "/home/drakestapleton/.pixi/envs/mojo/lib/libKGENCompilerRTShared.so",
+          "/home/drakestapleton/.pixi/envs/mojo/lib/libMSupportGlobals.so",
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6",
+          "/usr/lib/aarch64-linux-gnu/libstdc++.so.6.0.33"
+        ]
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "cortex-encoder-rs@b8f2ce0181b484c9",
+      "name": "cortex-encoder-rs",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/cortex-encoder-rs"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "b8f2ce0181b484c997cf2f54437685df2a60e179891002e8d4e1d47d0be94955",
+          "bytes": 8919192
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "cortex-rs@91ccba9403601ed4",
+      "name": "cortex-rs",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6"
+        ]
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/cortex-rs"
+        ],
+        "pids": [
+          5250
+        ],
+        "observed": "running",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "91ccba9403601ed4d4b4c762dd489fd9b7de58d4b0017e44102005eb51398afe",
+          "bytes": 9974712
+        },
+        "mapped_shared_libraries": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6"
+        ]
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "crumb.rfc0001@9eb167fdddd2df69",
+      "name": "crumb.rfc0001",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/crumb.rfc0001"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+          ],
+          "aarch64": true,
+          "sha256": "9eb167fdddd2df69eb319d091a3c973d83b0957a03baa4e2b9da9e53497f2eb5",
+          "bytes": 74856
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "mobhub@4d5085ff00054471",
+      "name": "mobhub",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/mobhub"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libssl.so.3",
+            "libcrypto.so.3",
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "4d5085ff000544716ac1fc714b596dc3e21becfe0230a1a1b3eb051af156a7d2",
+          "bytes": 10960048
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "openclaw@64f8906358839088",
+      "name": "openclaw",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/openclaw"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "64f890635883908845113c2bea508bfb4b7763ffb315ea650457e32d67c3f669",
+          "bytes": 10627544
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "rad-id-sync@8582c919fe0865e1",
+      "name": "rad-id-sync",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/rad-id-sync"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "8582c919fe0865e169a68ec1c9515cfa8a75012e4210246e461f741840838699",
+          "bytes": 729192
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-cockpit-rs@0ff689ab0bfa11e6",
+      "name": "spark-cockpit-rs",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-cockpit-rs"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "0ff689ab0bfa11e6812084d20a04602e40fa6f0f92198fc342ffdd6bf247527e",
+          "bytes": 9982808
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-connector@8c760a8c600ae46c",
+      "name": "spark-connector",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-connector"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "8c760a8c600ae46c1f638c6e842aaf2e9f768595ad0c7b21a3d0ef81bb801976",
+          "bytes": 897504
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-crumbs@bfed750854b30645",
+      "name": "spark-crumbs",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-crumbs"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "bfed750854b3064519bc8b8520bd34cdb00798a024c71cc75876fb5879496073",
+          "bytes": 1466880
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-debugger@a0f76c314643b45c",
+      "name": "spark-debugger",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-debugger"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libssl.so.3",
+            "libcrypto.so.3",
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "a0f76c314643b45c337cb62ecf953cf9d8b330b7e9903c8b4656689bfc1c8fc3",
+          "bytes": 11430240
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-discord-hub@8c602e2b7f462456",
+      "name": "spark-discord-hub",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-discord-hub"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libssl.so.3",
+            "libcrypto.so.3",
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "8c602e2b7f462456b14e02b9ed14a249c04bd0f3648278c60093b80830baff46",
+          "bytes": 10846816
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-distill@380cd492cfc8a5ab",
+      "name": "spark-distill",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-distill"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "380cd492cfc8a5ab0a4d16e7b3706de5162d33dd658e93fbfb5a18b896712ce0",
+          "bytes": 4068784
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-dream@f3a78846bfc4a17d",
+      "name": "spark-dream",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-dream"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "f3a78846bfc4a17d26de672972c1eb079e855fa23da1d638773e0dd4e27e6396",
+          "bytes": 7874176
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-harness@9fe2941155ca0b7c",
+      "name": "spark-harness",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-harness"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "9fe2941155ca0b7cae6d26f64ba6b9ac9a66ace215e9a60af1275718c0eb1eae",
+          "bytes": 8804760
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-inquisitor@6bbd4d6a1cd28a3c",
+      "name": "spark-inquisitor",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-inquisitor"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "6bbd4d6a1cd28a3c1027e5b9954c235381275327468dc0300d780845c333844d",
+          "bytes": 3421800
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-mail@bd771ae8bce3adb9",
+      "name": "spark-mail",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-mail"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "bd771ae8bce3adb924bc83497383d1ee23dcb902908dc66afe15af0dc10ee1de",
+          "bytes": 6377056
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-muse-bridge@51954ca3b1315562",
+      "name": "spark-muse-bridge",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-muse-bridge"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "51954ca3b1315562fddde6aaeec4ae2d7b09f185b7e60e84b70a1b9b58f469aa",
+          "bytes": 3350216
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-rsi@9bc72dc1b6f5b5b3",
+      "name": "spark-rsi",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-rsi"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "9bc72dc1b6f5b5b3aa0f588779c193dabf8c795f5408d4e46a0d2273654890a8",
+          "bytes": 4529464
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-supervisor@932271bcbfbebdda",
+      "name": "spark-supervisor",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": []
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/bin/spark-supervisor"
+        ],
+        "pids": [],
+        "observed": "installed",
+        "elf": {
+          "needed": [
+            "libssl.so.3",
+            "libcrypto.so.3",
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "932271bcbfbebdda659e5f5eaaa5dfaecc9a6c60a6d1829657251b97ceb2c75c",
+          "bytes": 9492776
+        }
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-cockpit-rs@4d2621bcfe141f81",
+      "name": "spark-cockpit-rs",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "Rust",
+      "source_commit": "0df7c321c1502d00782ad8e986a8bb698ed99aa3",
+      "birth_chain": "release source.commit + Cargo manifests + embedded rustc version; reproducible release rebuild NOT_RUN",
+      "dependency_closure": {
+        "static": "Full transitive/static closure NOT_PROVEN; direct Cargo edges recorded",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6"
+        ],
+        "direct_cargo_dependencies": {
+          "async-stream": "0.3.6",
+          "axum": {
+            "version": "0.8.9",
+            "features": [
+              "ws"
+            ]
+          },
+          "chrono": "0.4.45",
+          "form_urlencoded": "1.2",
+          "futures-util": "0.3.34",
+          "regex": "1.13.1",
+          "reqwest": {
+            "version": "0.13.5",
+            "features": [
+              "json",
+              "stream"
+            ]
+          },
+          "serde": {
+            "version": "1.0.229",
+            "features": [
+              "derive"
+            ]
+          },
+          "serde_json": "1.0.151",
+          "spark-adapters": {
+            "path": "../spark-adapters"
+          },
+          "spark-hive": {
+            "path": "../spark-hive"
+          },
+          "portable-pty": "0.9.0",
+          "rusqlite": {
+            "version": "0.31.0",
+            "features": [
+              "bundled"
+            ]
+          },
+          "tokio": {
+            "version": "1.53.1",
+            "features": [
+              "full"
+            ]
+          },
+          "tower-http": {
+            "version": "0.7.1",
+            "features": [
+              "fs",
+              "cors"
+            ]
+          },
+          "toml": "0.8",
+          "uuid": {
+            "version": "1.8",
+            "features": [
+              "v4"
+            ]
+          }
+        }
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/spark-cockpit-rs"
+        ],
+        "pids": [
+          2734
+        ],
+        "observed": "running",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "4d2621bcfe141f811b1fcf3b8c1a88f26794b6267ccf73cc3df4a48a62a87f25",
+          "bytes": 10179416
+        },
+        "mapped_shared_libraries": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6"
+        ]
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "release_records": [
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/source.commit",
+          "sha256": "82ca47cae978c2e93b74ff302b13dd1fb5a1e2dc989e5e6a3b131da0d3dc71cc"
+        },
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/protocols.commit",
+          "sha256": "8ab12db069619253d3fc9924235a16d42fe7201ab171e55343a14fa75d16508c"
+        },
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/SHA256SUMS",
+          "sha256": "077f5c85b15d63e38cd268a9c058c54f2da994c9e63a8fb78eb674a34a09d7c6"
+        }
+      ],
+      "protocols_source_commit": "7ac6facb630ca7e9a6ab4125b292203fe2bb6687",
+      "source_build_files": [
+        {
+          "path": "Cargo.lock",
+          "sha256": "63bc4e2b39365a98f03d4955c73a9260916e259fea87f42c90ef7c74a51ac565"
+        },
+        {
+          "path": "install.sh",
+          "sha256": "2538ad8cf84099aff918a7bb88f3adc70f94d8a1547596e285fffa6cc86783b9"
+        },
+        {
+          "path": "crates/spark-cockpit-rs/Cargo.toml",
+          "sha256": "4d5f80ca4f6bf8ea70fc503839be32ffaa3d8e124f2417bbba50926f9b02b0c2"
+        },
+        {
+          "path": "crates/spark-cockpit-rs/src/main.rs",
+          "sha256": "d2293d5bc59f115f9b131953d13dea5066b9319519cfaf9eece3ff9b54e9052d"
+        }
+      ],
+      "blockers": [
+        "FR-1",
+        "FR-6",
+        "FR-13",
+        "FR-14",
+        "FR-16 native sockets/readiness",
+        "FR-17 signal disposition"
+      ],
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "spark-mail@50ad0ef77fe51996",
+      "name": "spark-mail",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "Rust",
+      "source_commit": "0df7c321c1502d00782ad8e986a8bb698ed99aa3",
+      "birth_chain": "release source.commit + Cargo manifests + embedded rustc version; reproducible release rebuild NOT_RUN",
+      "dependency_closure": {
+        "static": "Full transitive/static closure NOT_PROVEN; direct Cargo edges recorded",
+        "dynamic": [
+          "libssl.so.3",
+          "libcrypto.so.3",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libcrypto.so.3",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6",
+          "/usr/lib/aarch64-linux-gnu/libssl.so.3"
+        ],
+        "direct_cargo_dependencies": {
+          "tokio": {
+            "version": "1.53.1",
+            "features": [
+              "full"
+            ]
+          },
+          "serde": {
+            "version": "1.0.229",
+            "features": [
+              "derive"
+            ]
+          },
+          "serde_json": "1.0.151",
+          "chrono": {
+            "version": "0.4.45",
+            "features": [
+              "serde"
+            ]
+          },
+          "clap": {
+            "version": "4.5",
+            "features": [
+              "derive"
+            ]
+          },
+          "reqwest": {
+            "version": "0.13.5",
+            "default-features": false,
+            "features": [
+              "json",
+              "stream"
+            ]
+          },
+          "uuid": {
+            "version": "1.10",
+            "features": [
+              "v4",
+              "serde"
+            ]
+          },
+          "axum": {
+            "version": "0.8.9"
+          },
+          "tower-http": {
+            "version": "0.7.1",
+            "features": [
+              "cors"
+            ]
+          },
+          "tracing": "0.1",
+          "tracing-subscriber": {
+            "version": "0.3",
+            "features": [
+              "env-filter"
+            ]
+          },
+          "toml": "0.8",
+          "imap": "2.4",
+          "native-tls": "0.2",
+          "lettre": {
+            "version": "0.11",
+            "default-features": false,
+            "features": [
+              "builder",
+              "smtp-transport",
+              "native-tls",
+              "hostname",
+              "pool"
+            ]
+          },
+          "mailparse": "0.15",
+          "aien-probe": {
+            "path": "../../../aien-protocols/crates/aien-probe"
+          },
+          "cortex-rs": {
+            "path": "../cortex-rs"
+          }
+        }
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/spark-mail"
+        ],
+        "pids": [
+          2736
+        ],
+        "observed": "running",
+        "elf": {
+          "needed": [
+            "libssl.so.3",
+            "libcrypto.so.3",
+            "libgcc_s.so.1",
+            "libm.so.6",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "50ad0ef77fe519967ac9ad0eaad2dfdb7798579a517a30bf3b86ebe4df547e01",
+          "bytes": 9205288
+        },
+        "mapped_shared_libraries": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libcrypto.so.3",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6",
+          "/usr/lib/aarch64-linux-gnu/libssl.so.3"
+        ]
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "release_records": [
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/source.commit",
+          "sha256": "82ca47cae978c2e93b74ff302b13dd1fb5a1e2dc989e5e6a3b131da0d3dc71cc"
+        },
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/protocols.commit",
+          "sha256": "8ab12db069619253d3fc9924235a16d42fe7201ab171e55343a14fa75d16508c"
+        },
+        {
+          "path": "/home/drakestapleton/.local/lib/aien/releases/review-0df7c321c150/SHA256SUMS",
+          "sha256": "077f5c85b15d63e38cd268a9c058c54f2da994c9e63a8fb78eb674a34a09d7c6"
+        }
+      ],
+      "protocols_source_commit": "7ac6facb630ca7e9a6ab4125b292203fe2bb6687",
+      "source_build_files": [
+        {
+          "path": "Cargo.lock",
+          "sha256": "63bc4e2b39365a98f03d4955c73a9260916e259fea87f42c90ef7c74a51ac565"
+        },
+        {
+          "path": "install.sh",
+          "sha256": "2538ad8cf84099aff918a7bb88f3adc70f94d8a1547596e285fffa6cc86783b9"
+        },
+        {
+          "path": "crates/spark-mail-rs/Cargo.toml",
+          "sha256": "ff149f3279fdd55458d4cf3c60bfac0e22c47c7db31cc3e924a2bb723a3ef4a4"
+        },
+        {
+          "path": "crates/spark-mail-rs/src/main.rs",
+          "sha256": "1199cf5b04bc96ce42f5b2537df4dfa492f31942993cc14a7660b9a9dd0d9302"
+        }
+      ],
+      "blockers": [
+        "FR-1",
+        "FR-6",
+        "FR-13",
+        "FR-14",
+        "FR-16 native sockets/readiness",
+        "FR-17 signal disposition"
+      ],
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "aien-serve-http@19173f9ec3b609fe",
+      "name": "aien-serve-http",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": [
+        "Rust",
+        "C"
+      ],
+      "source_commit": "f0230a59eec985c3290ac78c0cc04322bacf9f0a",
+      "birth_chain": "Cargo/rustc links the C-built Omega archive; BUILD.txt records both source branches",
+      "dependency_closure": {
+        "static": "First-party Rust workspace + libomega_gpu.a (C); Cargo.lock and build.rs pin runtime and native-library edges; exact complete static closure NOT_PROVEN",
+        "dynamic": [
+          "libm.so.6",
+          "libgcc_s.so.1",
+          "libc.so.6",
+          "ld-linux-aarch64.so.1"
+        ],
+        "os_floor": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6"
+        ]
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495; compiler L408; C runtime L419; model train L384; deployment L387",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/.local/state/aien-q36/bin-19173f9e/aien-serve-http"
+        ],
+        "pids": [
+          3489680
+        ],
+        "observed": "running",
+        "elf": {
+          "needed": [
+            "libm.so.6",
+            "libgcc_s.so.1",
+            "libc.so.6",
+            "ld-linux-aarch64.so.1"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "19173f9ec3b609fe79af644f84741d8808b92ea8eb3ecec4bc945af6f22b3aeb",
+          "bytes": 6032936
+        },
+        "mapped_shared_libraries": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+          "/usr/lib/aarch64-linux-gnu/libm.so.6"
+        ]
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "omega_source_commit": "6de999da86efc6edd9c2554a87ee31f7fa9215ac",
+      "blockers": [
+        "FR-1",
+        "FR-4",
+        "FR-5",
+        "FR-6",
+        "FR-7",
+        "FR-13",
+        "FR-14",
+        "FR-15"
+      ],
+      "build_record_sha256": "80c9354bf98c2e02cf8b437b56747faa0a03dcce36d90b63b876285474f2caaf",
+      "source_build_files": [
+        {
+          "path": "Cargo.lock",
+          "sha256": "ef8f9b830c057137d1568d22dddac7c95172a88ac9e4f0e737e7fc75448b8942"
+        },
+        {
+          "path": "crates/aien-serve-http/Cargo.toml",
+          "sha256": "016badf28caf222c4c698227e8ed440e71dfe8dd4955cab6e8fe1e5e92f45baf"
+        },
+        {
+          "path": "crates/aien-omega-gpu/build.rs",
+          "sha256": "f6ed7a8c4a69e532707bffef983c49012cc7161f8a5bf0a269ed8b4db0e731f4"
+        },
+        {
+          "path": "omega.lock",
+          "sha256": "3b9f1062445358bfe4a6ebe44255a8b81fea5bc89e7f39c51ae465f1f500a638"
+        },
+        {
+          "path": "native-artifacts.lock",
+          "sha256": "453680bab40000d08666cea171cace02cb2933ce6bd5588bf16e5042b9a7c5b3"
+        }
+      ],
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "aien-test@25fc9d345fe816c2",
+      "name": "aien-test",
+      "live_legacy": true,
+      "scope": "first_party_named_observed_artifact",
+      "source_language": "UNRESOLVED",
+      "source_commit": null,
+      "birth_chain": "UNRESOLVED; installed ELF does not prove its build compiler",
+      "dependency_closure": {
+        "static": "UNRESOLVED",
+        "dynamic": [
+          "libgcc_s.so.1",
+          "libc.so.6"
+        ],
+        "os_floor": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1"
+        ]
+      },
+      "replacement_path": null,
+      "replacement_owner": "L495",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "observation": {
+        "paths": [
+          "/home/drakestapleton/workspace/pipeline/target-sc/release/aien-test"
+        ],
+        "pids": [
+          49865
+        ],
+        "observed": "running",
+        "elf": {
+          "needed": [
+            "libgcc_s.so.1",
+            "libc.so.6"
+          ],
+          "interpreter": [
+            "/lib/ld-linux-aarch64.so.1"
+          ],
+          "compiler_comments": [
+            "GCC: (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+            "rustc version 1.98.1 (48a229cea 2026-09-01)",
+            "clang version 22.1.0-rc2"
+          ],
+          "aarch64": true,
+          "sha256": "25fc9d345fe816c2580e990311fb6fbcd6c98ec63a14a108e4e7d78deb2269e1",
+          "bytes": 1250032
+        },
+        "mapped_shared_libraries": [
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+          "/usr/lib/aarch64-linux-gnu/libc.so.6",
+          "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1"
+        ]
+      },
+      "cutover": "BLOCKED; preserve current executable and require exact build/source provenance",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "aien-replay-trn1-schema1",
+      "name": "TRN1 verifier utility",
+      "live_legacy": true,
+      "scope": "library-source-on-main; not observed as installed standalone CLI",
+      "source_language": "Rust",
+      "source_commit": "754c07b118f41ad899607b60329bd851b1ccb13e",
+      "source_files": [
+        "crates/aien-replay/src/lib.rs"
+      ],
+      "source_sha256": "8824370f30573dea68a011ec457e55470eb4d688483a1de0fec96ffcb5757aeb",
+      "birth_chain": "Cargo -> rustc -> sha2 Rust dependency -> host linker",
+      "dependency_closure": {
+        "current": [
+          "Rust std",
+          "sha2",
+          "Cargo.lock transitive dependencies"
+        ],
+        "replacement": [
+          "Linux read/write/exit syscall ABI"
+        ],
+        "status": "ISOLATED_NATIVE_VERIFIED"
+      },
+      "replacement_path": "seed/retirement/trn1/trn1.om",
+      "replacement_owner": "L496",
+      "gate": {
+        "executable_equivalence": "PASS",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "PASS",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "PASS",
+        "transactional_swap_rollback": "PASS",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "cutover": "isolated executable only; ABI/consumer migration and main archiving remain pending",
+      "blockers": [
+        "FR-7 for ABI replacement",
+        "FR-1/FR-13 for file/argv callers",
+        "review of library utility selection versus requested existing CLI"
+      ],
+      "equivalence_evidence": "evidence/seed-retirement/trn1-summary.json",
+      "gate_evidence": {
+        "executable_equivalence": {
+          "path": "evidence/seed-retirement/trn1-summary.json",
+          "sha256": "ebc85a0088d6e9f772e6f6eb2430dfa889f675af0cc944a1ee698cce45b5e50a",
+          "scope": "isolated"
+        },
+        "isolated_candidate": {
+          "path": "evidence/seed-retirement/deployment.json",
+          "sha256": "c89e371403d22fc6f4f41e1d1a721a7bf472a5ef4343312d5a4ec1ceb526af2d",
+          "scope": "isolated"
+        },
+        "dependency_closure": {
+          "path": "evidence/seed-retirement/deployment.json",
+          "sha256": "c89e371403d22fc6f4f41e1d1a721a7bf472a5ef4343312d5a4ec1ceb526af2d",
+          "scope": "isolated"
+        },
+        "transactional_swap_rollback": {
+          "path": "evidence/seed-retirement/deployment.json",
+          "sha256": "c89e371403d22fc6f4f41e1d1a721a7bf472a5ef4343312d5a4ec1ceb526af2d",
+          "scope": "isolated"
+        }
+      },
+      "candidate": {
+        "needed": [],
+        "interpreter": [],
+        "compiler_comments": [],
+        "aarch64": true,
+        "sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361",
+        "bytes": 22600
+      },
+      "replacement_language": "Omega",
+      "replacement_birth": "verified seed chain",
+      "replacement_source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+      "production_cutover": false,
+      "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+      "isolated_path": "/home/drakestapleton/workspace/omega-retirement-integration/build/retirement/isolated/active",
+      "production_retired": false,
+      "retirement_target": true
+    },
+    {
+      "id": "omega-bridge-target-compiler",
+      "live_legacy": false,
+      "scope": "feature artifact; not a native replacement for emitted C/Python programs",
+      "source_language": [
+        "Omega",
+        "shell"
+      ],
+      "source_commit": "77376b1941a020dba441a14fce8eaadea692a5b7",
+      "birth_chain": "seed-born Omega target translator; emitted C/Python still requires external compiler/runtime",
+      "dependency_closure": {
+        "status": "NOT_A_NATIVE_MIGRATION"
+      },
+      "replacement_path": null,
+      "replacement_owner": "L483",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "production_retired": false,
+      "retirement_target": false
+    },
+    {
+      "id": "omega-attachments",
+      "live_legacy": true,
+      "scope": "feature artifact; installation not inferred",
+      "source_language": [
+        "Omega",
+        "C"
+      ],
+      "source_commit": "7916bcc083ec3c306b23bda98dc4ea6a748e86de",
+      "birth_chain": "seed-born attachment policy plus cc-built C host boundary",
+      "dependency_closure": {
+        "current": [
+          "cli/omega.c",
+          "cli/host.c",
+          "cli/discover.c",
+          "cli/sandbox.c",
+          "libc",
+          "native Omega policy"
+        ],
+        "status": "C_HOST_REMAINS"
+      },
+      "replacement_path": null,
+      "replacement_owner": "L484",
+      "gate": {
+        "executable_equivalence": "NOT_RUN",
+        "api_abi_data": "NOT_RUN",
+        "isolated_candidate": "NOT_RUN",
+        "coordinator_model_train": "NOT_RUN",
+        "dependency_closure": "NOT_RUN",
+        "transactional_swap_rollback": "NOT_RUN",
+        "main_archive_smoke": "NOT_RUN"
+      },
+      "blockers": [
+        "FR-1",
+        "FR-13",
+        "FR-14"
+      ],
+      "production_retired": false,
+      "retirement_target": true
+    }
+  ],
+  "counts": {
+    "observed_installed_or_running_elf": 32,
+    "observed_running_elf": 6,
+    "legacy_artifact_rows": 34,
+    "verified_production_retirements": 0
+  },
+  "coverage": {
+    "catalog_repos": 12,
+    "github_org_nonfork_repos": 55,
+    "complete": false,
+    "limitations": [
+      "named first-party executable scan, not an exhaustive host software inventory",
+      "repo catalog reused from L418 plus relevant Rust repositories; other org repositories remain unqualified",
+      "unknown installed build provenance is a blocker, never assumed seeded",
+      "path-based source classification does not prove production linkage",
+      "source inventory is not a live-artifact count"
+    ]
+  },
+  "external_floor": [
+    "Linux kernel and system shared libraries",
+    "system compiler/build tools used only for audit and oracles",
+    "third-party programs, drivers and firmware outside first-party migration scope"
+  ],
+  "required_cutover_stages": [
+    "executable_equivalence",
+    "api_abi_data",
+    "isolated_candidate",
+    "coordinator_model_train",
+    "dependency_closure",
+    "transactional_swap_rollback",
+    "main_archive_smoke"
+  ]
+}

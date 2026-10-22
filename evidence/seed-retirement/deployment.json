@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "scope": "isolated only; production untouched",
+  "production_cutover": false,
+  "native_sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361",
+  "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+  "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "active_path": "/home/drakestapleton/workspace/omega-retirement-integration/build/retirement/isolated/active",
+  "baseline": {
+    "target": "releases/rust-oracle-243c29b123f68f6c0039e4191f35d57417fade160da33c821da2ea9ff4500d69/trn1",
+    "sha256": "243c29b123f68f6c0039e4191f35d57417fade160da33c821da2ea9ff4500d69"
+  },
+  "candidate": {
+    "target": "releases/native-43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361/trn1",
+    "sha256": "43120ae863d7dfba065a4e57b1a018f5550214b7323e0c2f1ce53ab07cb6c361"
+  },
+  "cases": [
+    "actual pinned Rust baseline smoke",
+    "wrong candidate hash refused without swap",
+    "atomic Rust-oracle to native switch and smoke",
+    "explicit rollback to original Rust oracle",
+    "post-swap failure restores old executable",
+    "interrupted transaction recovered from durable journal",
+    "all 77 original cases through installed native symlink",
+    "sample path invokes only read/write/exit after initial exec"
+  ],
+  "closure": {
+    "status": "PASS",
+    "interpreter": null,
+    "needed": [],
+    "external_floor": [
+      "Linux AArch64 read/write/exit syscall ABI"
+    ],
+    "trace_scope": "one smoke request; ELF/source lineage separately checked"
+  }
+}

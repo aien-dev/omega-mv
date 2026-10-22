@@ -1,0 +1,38 @@
+[
+  {
+    "mutant": "sha-word",
+    "compile_rc": 0,
+    "comparison_rc": 1,
+    "executable_sha256": "815614e0fc38b22ddc352d5aa027ca951bcd3d0967c5ac463b9f9ffe81c01aba",
+    "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+    "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "accept-count",
+    "compile_rc": 0,
+    "comparison_rc": 1,
+    "executable_sha256": "7c9beff9126d2efce81d07a0861860590ed0d1983e99d3f072e64621a2ad2469",
+    "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+    "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "version",
+    "compile_rc": 0,
+    "comparison_rc": 1,
+    "executable_sha256": "b7eb9db26d5c61d2e688e7a8aa3ced23312ead3dfc1272ca6c92bad79af4971d",
+    "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+    "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "result": "KILLED"
+  },
+  {
+    "mutant": "argus-continuity",
+    "compile_rc": 0,
+    "comparison_rc": 1,
+    "executable_sha256": "b9c5dc6522aff5b5495140f9949a86b3fc54914bfaef3242c0a5f91ee4f0c2ba",
+    "source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+    "seed_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "result": "KILLED"
+  }
+]
