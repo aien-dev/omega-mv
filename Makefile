@@ -2617,7 +2617,7 @@ $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omeg
 # The shared base (CUDA++ tools/extract/shared.txt): files both repositories need. Omega owns them and
 # builds only its own copies; the pinned CUDA++ must hold byte-identical copies, or this fails.
 CUDAPP_SHARED = src/sha256.c src/sha256.h src/omega_types.h src/omega_vector.c src/omega_vector.h \
-	src/omega_core.c src/omega_core.h src/omega_canonical.c src/omega_canonical.h
+	src/omega_core.c src/omega_core.h src/omega_canonical.c src/omega_canonical.h tools/mutation_runner.sh
 .PHONY: check-cudapp-shared
 check-cudapp-shared:
 	@for f in $(CUDAPP_SHARED); do cmp -s "$$f" "$(CUDAPP_DIR)/$$f" || { echo "error: $$f differs from CUDAPP_DIR=$(CUDAPP_DIR)/$$f (shared base drift: change both, then move cudapp.lock)" >&2; exit 1; }; done
