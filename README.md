@@ -1,6 +1,6 @@
 # OMEGA
 
-**Omega is AIEN's language for all computing:** one program, checked and compiled by our own tools straight to the machine code of the GPU or CPU that runs it, with no vendor toolchain. On the GPU it is the replacement for CUDA. Today it runs AIEN's models on the GB10 with no CUDA software (no libcuda, no cuBLAS, no nvcc); the language itself does not reach the GPU yet. What is done, what is missing, and the checks that must pass before we say "Omega replaces CUDA": [docs/OMEGA.md](docs/OMEGA.md).
+**Omega is AIEN's language for all computing:** one program, checked and compiled by our own tools straight to the machine code of the GPU or CPU that runs it, with no vendor toolchain. On the GPU it is the replacement for CUDA: cudaplusplus, which is everything CUDA gives you plus the motor, Omega's engine for running a whole model (live on the Spark today). Today it runs AIEN's models on the GB10 with no CUDA software (no libcuda, no cuBLAS, no nvcc); the language itself does not reach the GPU yet. What is done, what is missing, and the checks that must pass before we say "Omega replaces CUDA": [docs/OMEGA.md](docs/OMEGA.md).
 
 Omega is also the reaction runtime and the compiler for Omega Systems Core. It is written in C today. It defines what computation means without committing that meaning to one machine representation: every program has a content-addressed semantic identity, and realizations (CPU, GB10 GPU) are derived from it and verified against it.
 
