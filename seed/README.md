@@ -175,9 +175,12 @@ it came from.
   om4 267. One is larger than the C path: the program with three calls (79 against 59), because each
   call saves and restores every register in use.
 - Limits, said plainly: variable names are at most 8 characters; a function may use at most 16
-  registers for its names and working values (om4 stops with error 12 beyond that); `omegese next` (the
-  C tool that lists the legal next words) does not know the new words yet, so its fuzz test does not
-  cover them yet (owed, see the handoff).
+  registers for its names and working values (om4 stops with error 12 beyond that). `omegese next` (the
+  C tool that lists the legal next words) does not know the new words, so the next-word check for them
+  is our own (decision 22, gate4 section 10, `check/nextfuzz.sh`): 20 random programs using every new
+  word are generated (`check/nextgen.awk`) and all accepted; then each is cut after every word and has
+  each word swapped for a wrong one, 4,860 inputs, and om4 answers every one with its result or an error
+  number, never a crash.
 
 
 ## Rung 5: Atlas reborn (done)
@@ -203,9 +206,9 @@ it came from.
 - `omc/omc.om`: the compiler itself, written in Omegese, using only words om4 understands. It reads a
   program on its input and writes a ready-to-run Linux program (or, without `fn main`, bare machine
   words) on its output, with the file header laid out by hand and no linker. 3,101 lines, 123 functions.
-- It does exactly what om4 does, word for word: the same machine words, the same error numbers, on the
-  same line. That is on purpose: om4 then becomes a strict referee for omc, because any difference at
-  all is a mistake.
+- It is meant to do exactly what om4 does, word for word: the same machine words, the same error
+  numbers, on the same line. That is on purpose: om4 then becomes a strict referee for omc, because any
+  difference at all is a mistake. It is checked on every input listed below, not on every possible one.
 - How it is built: om4 translates `omc.om` into a program (stage 1, 74,740 bytes). Stage 1 then
   translates `omc.om` again (stage 2), and stage 2 translates it a third time (stage 3).
 - The few places where the language shaped the design:
@@ -214,38 +217,45 @@ it came from.
   - every working number is kept as a plain 64-bit value, because the language refuses mixed types;
   - every loop over the input is two loops inside each other. A single loop stops itself after a
     million passes, and om4 has no such limit on input size.
-- Checks (`omc/gate5.sh`, results in `evidence/SEED-0/omc/`), 155 cases, all pass:
+- Checks (`omc/gate5.sh`, results in `evidence/SEED-0/omc/`), 167 cases, all pass:
   - (a) self-rebuild: stages 1, 2 and 3 are the same file (sha256 10d75652...398e), so omc translates
     itself the same way om4 translates it;
   - (b) a second route: the C path (the older compiler written in C) cannot read `omc.om`. It lacks
     global pools, a function calling itself, arrays over 64 cells, text, `read`/`write`, `exit`, and a
-    colon inside a note. Also it makes a file for a test runner, not a program. The gate checks each of
-    these, so it will notice if the C path ever learns them. So, as the brief allows, the two parents
+    colon inside a note. Also it makes a file for a test runner, not a program. The gate tries each of
+    these and requires the refusal to name that word, so it notices if the C path learns one. So, as the brief allows, the two parents
     are om4 and omc itself: both build the same omc. This is weaker than a truly independent route,
     because one author designed both;
   - om4 and stage 2 agree on 143 inputs: every input gate4 gives om4, every Omegese file in the repo,
     and `omc.om`. They agree on output, exit status, and the error number and line of all 53 refusals;
+  - what that list missed, found by an outside review: no program in it wrote out a text successfully,
+    and error numbers 1, 2, 4, 11, 12, 13 and 14 never came up. Now a program writes a text with every
+    escape and must give fixed bytes and a fixed exit value (204, worked out by hand, not taken from om4),
+    and each of those errors has its own case. The gate then checks that every error number from 1 to 23
+    comes up somewhere, from both om4 and omc;
+  - the next-word fuzz (decision 22, below): om4 and omc give the same answer on 4,860 cut or altered
+    programs;
   - (c) the whole of gate4 run with stage 2 in om4's place passes (108 checks): the 10 practice tasks
     and 9 programs give the C path's results and traps; the 4 whole programs match their gcc-built
-    twins; every refusal number matches. Table: `evidence/SEED-0/omc/corpus-words.tsv`;
+    twins; its refusals give the same numbers. Table: `evidence/SEED-0/omc/corpus-words.tsv`;
   - (d) planted mistakes. A changed word that omc itself uses (`or` made into `and`) breaks the
     self-rebuild and the comparison with om4. A changed word omc does not use (signed divide made
     unsigned) keeps the self-rebuild, which shows a self-rebuild alone proves too little, but the om4
     comparison catches it. The same wrong word put into both om4 and omc fools both of those checks,
     and only the C path catches it (fm1, fm2: -7 / 2). A broken program is refused with error 3;
   - the output does not change with the run: same bytes under another environment and a second later.
-- Size and speed (`size.tsv`, `omc-words.tsv`, `compile-time.tsv` in `evidence/SEED-0/omc/`):
+- Size and speed (`size.tsv`, `size-history.tsv`, `omc-words.tsv`, `compile-time.tsv` in `evidence/SEED-0/omc/`;
+  `size-history.tsv` gets one row per self-rewrite, and the gate fails if the current omc has no row):
   - omc is 18,641 machine words; the largest functions are the value reader (2,073 words) and local
     arrays (695);
   - on the programs the C path can also translate, omc makes the same words as om4. The 10 practice
     tasks take 164 words (C path 600); the 9 others take 267 (C path 552). The one larger than the C
     path is still fm5, the program with three calls (79 against 59);
-  - time to translate one practice task, measured over 200 runs, including starting the program:
-    omc 0.3 to 1.1 ms, the C path 6.2 to 12.1 ms (it runs two programs and writes a file in between).
-    omc translates itself in 2.9 ms. These are not compared against the machine's limit (not measured).
+  - time to translate one program (10 practice tasks and 9 others), 200 runs each, including starting it:
+    omc 0.4 to 0.6 ms, the C path 5.9 to 6.7 ms (it runs two programs and writes a file in between).
+    omc translates itself in 2.6 ms. These are not compared against the machine's limit (not measured).
 - Limits, said plainly: omc has om4's limits, because it copies om4 (names up to 8 characters, 16
-  registers per function, values nested up to 1,024 deep, 8 MiB of input). The `omegese next` fuzz test
-  for the new words is still owed.
+  registers per function, values nested up to 1,024 deep, 8 MiB of input).
 
 ## How the checks stay honest
 

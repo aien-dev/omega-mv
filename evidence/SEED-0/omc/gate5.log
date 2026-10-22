@@ -1,4 +1,4 @@
-gate5 2026-10-22T03:46:41Z at ac76a6b9df073a86af784cc1b210969c9023017c
+gate5 2026-10-22T04:03:07Z at 0a75aa3ca14ca4565394991739413d1b3ee4fcdb
 stage1 = om4(omc.om)    10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 stage2 = stage1(omc.om) 10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 stage3 = stage2(omc.om) 10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
@@ -8,13 +8,24 @@ C path on omc.om: REFUSED omegese: line 1: character ':' is not part of Omegese
   C path lacks a self-call: REFUSED omegese: line 5: f cannot call itself (calls go to earlier functions only)
   C path lacks arrays over 64 cells: REFUSED omegese: line 2: array length '100' must be 1..64
   C path lacks text literals: REFUSED omegese: line 1: character '"' is not part of Omegese
-  C path lacks read / write: REFUSED omegese: line 3: 'read' is not a name in scope here, nor an op, a type or a function
-  C path lacks exit: REFUSED omegese: line 3: f can reach its end without ret
+  C path lacks read: REFUSED omegese: line 3: 'read' is not a name in scope here, nor an op, a type or a function
+  C path lacks write: REFUSED omegese: line 3: 'write' is not a name in scope here, nor an op, a type or a function
+  C path lacks exit (it reads exit as a new name): REFUSED omegese: line 4: 'exit' is written but never read (a typo, or a value left unused)
   C path lacks a colon in a note: REFUSED omegese: line 1: character ':' is not part of Omegese
   (and it writes .oscir for a runner, not a program that reads stdin and writes stdout)
 PASS (b) om4 and omc build the same omc from omc.om (stage1 = stage2)
 PASS (b) the stage from each parent is bit-identical (om4-built -> stage2, omc-built -> stage3)
 PASS corpus: om4 = stage2 on 143 inputs (53 of them refused, same error number and line)
+PASS text program built by om4: writes its 9 bytes, exit 204
+PASS text program built by stage2: writes its 9 bytes, exit 204
+PASS text program: om4 and stage2 make the same bytes
+PASS error 1 from both: line 0: error 1
+PASS error 2 from both: line 4: error 2
+PASS error 4 from both: line 3: error 4
+PASS error 11 from both: line 2: error 11
+PASS error 12 from both: line 18: error 12
+PASS error 13 from both: line 2: error 13
+PASS error 14 from both: line 0: error 14
 PASS (c) gate4 with stage2 in om4's place: 108 checks, 0 FAIL
 (c) table: evidence/SEED-0/omc/corpus-words.tsv
 program	inputs	traps	c_path_words	omc_words
@@ -46,23 +57,35 @@ PASS (d) C keeps om4 = omc on fm2
 PASS (d) C caught only by the C path: FAIL: fm1 differs from the C path FAIL: fm2 differs from the C path 
 PASS (d) refusal: omc: line 2: error 3, exit 3
 PASS deterministic: same bytes under another environment and a second later
+PASS om4 = stage2 in the nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:121 4:1352 5:61 6:65 7:104 8:48 9:303 10:3 11:37 13:24 15:492 16:1989 17:36 18:4 21:4 23:2 
+PASS every error number 1..23 is reached, om4 = stage2 on each
 omc: 3101 lines, 123 functions, 74740 bytes = 176-byte header + 18641 words (evidence/SEED-0/omc/size.tsv)
+PASS size history: its last row is this omc (R5)
 omc words per function: evidence/SEED-0/omc/omc-words.tsv (123 functions, 18634 words in all, mean 151)
-compile time per program, microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: 2890 us
+compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: 2636 us
 program	omc_us	c_path_us
-dev01	1112	8719
-dev02	643	6522
-dev03	545	7356
-dev04	850	7036
-dev05	738	6502
-dev06	805	6897
-dev07	600	6749
-dev08	549	6156
-dev09	340	6498
-dev10	745	12100
+fm1	508	6694
+fm2	499	6389
+fm3	648	6431
+fm4	511	5989
+fm5	550	5959
+fm6	466	5869
+fm7	508	6026
+fm8	498	6198
+fm9	584	6140
+dev01	524	6442
+dev02	560	6545
+dev03	643	6566
+dev04	490	6550
+dev05	408	6442
+dev06	523	6005
+dev07	529	6153
+dev08	494	6278
+dev09	560	6133
+dev10	497	5969
 rewrite	built_by	source_lines	functions	bytes	words	sha256
 stage1	om4	3101	123	74740	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 stage2	stage1	3101	123	74740	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 stage3	stage2	3101	123	74740	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
-cases run: 155
+cases run: 167
 GATE5 PASS

@@ -153,6 +153,17 @@ if cmp -s $B/fm1.mut.out $B/fm1.s.out; then bad "mutant om4 (SDIV -> UDIV) not c
 
 # 9. the spec addendum (decision 19): no sentence says a meaning is left open
 if sed -n "/^## 9. Systems words/,\$p" docs/one_layer/OMEGESE.md | grep -qi undefined; then bad "the word undefined in the spec addendum"; else say "PASS spec addendum (OMEGESE.md section 9): grep -i undefined finds nothing"; fi
+
+# 10. decision 22, one legal next word: the next-word fuzz over the om4 words (seed/check/nextfuzz.sh).
+#     NF_N random programs from seed/check/nextgen.awk (all must be accepted), each cut after every word
+#     and changed in every word place: om4 answers each with exit 0 or its error number, never a crash.
+#     (omegese next, the C tool, does not know the om4 words, so this fuzz is native.)
+nf=${NF_N:-20}
+if [ "$nf" -gt 0 ]; then
+  if NFW=$B/nextfuzz sh seed/check/nextfuzz.sh $nf $R/om4.bin > $B/nextfuzz.out 2>&1; then say "PASS $(tail -1 $B/nextfuzz.out)"
+  else bad "next fuzz: $(grep -v '^nextfuzz:' $B/nextfuzz.out | head -3) $(tail -1 $B/nextfuzz.out)"; fi
+  cases=$((cases + 1))
+fi
 say "cases run: $cases"
 [ $fail = 0 ] && say "GATE4 PASS" || say "GATE4 FAIL"
 exit $fail
