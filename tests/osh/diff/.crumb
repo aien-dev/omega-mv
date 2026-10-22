@@ -1,1 +1,19 @@
-{"schema_version":"1.0.0","name":"osh-diff","purpose":"Existing cross-adapter shell differential runner and fixtures, plus strict result-reader boundary controls. Synthetic native-looking comparator inputs never qualify AIENOS execution."}
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-22T21:33:44Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:81c23ea38658f88f4ac9bb763ba22c95c7b2c95755eff3a9717ed758c0518c67",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 7,
+      "generated_at_commit": "86a403305f46077b4c81037f5cd0be2e4a07baeb",
+      "source_tree": "sha256:c0fdc9eb6b6b086aadf5ca8ee882f4c7915fca2db6225c09e1bc0c3651f26776"
+    }
+  },
+  "name": "osh-diff",
+  "purpose": "Existing cross-adapter shell differential runner and fixtures, plus strict result-reader boundary controls. Synthetic native-looking comparator inputs never qualify AIENOS execution.",
+  "schema_version": "1.0.0"
+}

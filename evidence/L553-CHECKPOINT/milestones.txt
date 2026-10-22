@@ -1,0 +1,11 @@
+70c3e6e4dabcd854d074f95aff266d78a9c99b52 evidence(osh): seal embedded signal ownership and fault recovery gates
+86a403305f46077b4c81037f5cd0be2e4a07baeb fix(osh): restore caller signal actions after interactive runs
+03d3b917dbfdd34cf1f8ca5de410b0dee816d516 evidence(osh): record bash exit agreement and exact regression limits
+3695dd594868d853d4ed6521ae8f6d30f2d4f09c fix(osh): stop command strings after invalid exit argument count
+8ca6ea9320aef57900e4d637d5548d7806886165 evidence(osh): seal physical-line framing refusals and fault controls
+056a94728f51ebc812013d06cde71321204503ba fix(osh): preserve physical result lines and refuse malformed framing
+ffbdc33135bf160b8cbde97ce34865d4f868f8c4 evidence(osh): seal result identity RED GREEN and sanitizer correction
+4e1e87b230de63c9fa36891320e0ffc396f036c7 fix(osh): refuse ambiguous result identities and release imported rows
+92d0a3f2a8b30167304ae7a3edea91e56f7a09bb test(osh): the diff harness starts each run with SIGINT and SIGQUIT at their defaults
+d2c1034b2e0aeb5a8386f845eb232a57f1bb632e test(osh): cross-adapter pipeline differential corpus and runner
+b5620936cdf8ef7fd58cf41c3f5dc839cdcd7c78 feat(osh): TEST-ONLY read-only observer in the shell driver loop

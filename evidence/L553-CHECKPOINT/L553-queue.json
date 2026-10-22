@@ -1,0 +1,1588 @@
+{
+  "ledger": "L553",
+  "recorded_utc": "2026-10-22T21:34:42.156Z",
+  "provenance": {
+    "issues": "issues-current.json historical19:20Z snapshot,84rows includes newer619",
+    "prs": "prs-current.json historical63records; references are candidates, never current closure proof",
+    "sha256": {
+      "issues-current.json": "f7cdb3402eed26f1c199aaa8e3d41136257a4df4d1941e2aaf19901014283b7d",
+      "prs-current.json": "bbf9504b9429b2095f5eee9eded7a3f7193ca71da3ad0926fe0b0851d459cbec"
+    },
+    "live_read": "guarded repo read and PR572 OPEN41c83a71; exact git remote maina8ffd2b9 and PR572 ref verified. Other PR states not freshly inferred.",
+    "ownership": "liveLEDGER/worktree heads/read-only app-server metadata; no sessions changed"
+  },
+  "base": "c100a6eb145e47dc669f4f0422c60b968496025e",
+  "global_dependencies": [
+    "L53163a92c55 carry into oldL511descendant remains pending",
+    "L396omega-host06299ff8/c7596804 routing; do not blindly re-add retired OSH to canonical Omega",
+    "Independent review of newL553 changes NOT_RUN",
+    "Original public Makehost targetFAIL5 retained; alternate direct cleanstdio/defaultsignals passes are separate"
+  ],
+  "next_eligible": {
+    "issue": 344,
+    "work": "Deterministic prompt-read SIGINT lost-wakeup/stale-flag boundary; reproduce exact source with a synchronization oracle before any change, after fresh ownership/module routing check.",
+    "limits": "Do not resume479 or parentcorrectness scope. Signal action restoration alone does not fix read race. If owner/module boundary blocks source changes, route exact reproduction toL396 and continue remaining owner-specific uncovered host boundary."
+  },
+  "issues": [
+    {
+      "number": 619,
+      "title": "docs: Teach Omega: one program from source to semantic identity, realization and result",
+      "url": "https://github.com/aien-dev/omega-mv/issues/619",
+      "dependencies": [],
+      "owner": "parent L487 / teaching programme",
+      "disposition": "OUTSIDE_ASSIGNED_83_ROW_ORDER",
+      "note": "Newer cached issue; teaching/reproduction page scope is not assumed to belong to L553. Route parent.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "3574628146cc1105860d3dc939f1879d1505b9854612ef8236725f8d81c4042c"
+    },
+    {
+      "number": 612,
+      "title": "[OMEGA-TRACE P2] Optional loopback-only trace timeline and training viewer",
+      "url": "https://github.com/aien-dev/omega-mv/issues/612",
+      "dependencies": [],
+      "owner": "L489/L516 + parent startup; desk L488",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse ed6ddfb4 +2dee6673 +a00ef9b5; independent parent-startup review L552 now completed, see latest handoff. Native callback/bridge, real training, privacy integration, browser/performance/cross-project gates remain owner-specific.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "2e50f2d2dade1d7d577276938914662b94a7d9785d8893f79d13db230a083e58"
+    },
+    {
+      "number": 611,
+      "title": "[OMEGA-TRACE P1] Prepare deterministic owner-selectable local sharing bundles with zero network I/O",
+      "url": "https://github.com/aien-dev/omega-mv/issues/611",
+      "dependencies": [],
+      "owner": "L489/L516 + parent startup; desk L488",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse ed6ddfb4 +2dee6673 +a00ef9b5; independent parent-startup review L552 now completed, see latest handoff. Native callback/bridge, real training, privacy integration, browser/performance/cross-project gates remain owner-specific.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "3948caf987243f637375fa41629f1b55a82e540c9e640b6d53a6495e85a612bb"
+    },
+    {
+      "number": 610,
+      "title": "[OMEGA-TRACE P1] Offline CLI to inspect, query, compare and export trace diagnostics",
+      "url": "https://github.com/aien-dev/omega-mv/issues/610",
+      "dependencies": [],
+      "owner": "L489/L516 + parent startup; desk L488",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse ed6ddfb4 +2dee6673 +a00ef9b5; independent parent-startup review L552 now completed, see latest handoff. Native callback/bridge, real training, privacy integration, browser/performance/cross-project gates remain owner-specific.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "21d32a312e9d9f86259927213146536bd654b98519d1ecbc2ddb62de7bc07016"
+    },
+    {
+      "number": 609,
+      "title": "[OMEGA-TRACE P0] Attach read-only ARGUS, SearchTrace, DUAL and realization observers",
+      "url": "https://github.com/aien-dev/omega-mv/issues/609",
+      "dependencies": [],
+      "owner": "L489/L516 + parent startup; desk L488",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse ed6ddfb4 +2dee6673 +a00ef9b5; independent parent-startup review L552 now completed, see latest handoff. Native callback/bridge, real training, privacy integration, browser/performance/cross-project gates remain owner-specific.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "57ec53aca5e8c16251ce3fac747d3263b3c907b1b760218fb65ea7953add0bce"
+    },
+    {
+      "number": 608,
+      "title": "[OMEGA-TRACE P0] Versioned local trace segments, bounded writer, recovery and retention",
+      "url": "https://github.com/aien-dev/omega-mv/issues/608",
+      "dependencies": [],
+      "owner": "L489/L516 + parent startup; desk L488",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse ed6ddfb4 +2dee6673 +a00ef9b5; independent parent-startup review L552 now completed, see latest handoff. Native callback/bridge, real training, privacy integration, browser/performance/cross-project gates remain owner-specific.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "d48a13e3ef56c3cb78a4b1151bbd2e073495f0e76741d26b50bbc2a97035f6ba"
+    },
+    {
+      "number": 607,
+      "title": "[OMEGA-TRACE] Coordinate local training observability and opt-in Open Humanity publication",
+      "url": "https://github.com/aien-dev/omega-mv/issues/607",
+      "dependencies": [],
+      "owner": "L489/L516 + parent startup; desk L488",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse ed6ddfb4 +2dee6673 +a00ef9b5; independent parent-startup review L552 now completed, see latest handoff. Native callback/bridge, real training, privacy integration, browser/performance/cross-project gates remain owner-specific.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "7327d9137bb2fc9cb80e9ea7890a66a565f2a84c9698a517a3b8decb6f6ee9be"
+    },
+    {
+      "number": 606,
+      "title": "Fine-tuning: TURING selects verified training schedules to reduce memory traffic and time to quality",
+      "url": "https://github.com/aien-dev/omega-mv/issues/606",
+      "dependencies": [],
+      "owner": "L491 / L513; canonical L457/shared train",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse0e7dbb14 and replay buildfix022f7d3d, source/receipts in L491/L513 handoffs. Historical native numeric FAIL and optional replay BUILD_FAIL retained. Current35B/model/hardware quality not qualified.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "1ca5a91b8260caa1624a1489b93af5867ef1ccaa1b0bdef76a0a4446b9621ce8"
+    },
+    {
+      "number": 605,
+      "title": "Research: test whether a compact recurrent block can trade weight traffic for additional reasoning steps",
+      "url": "https://github.com/aien-dev/omega-mv/issues/605",
+      "dependencies": [],
+      "owner": "L491 / L513; canonical L457/shared train",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse0e7dbb14 and replay buildfix022f7d3d, source/receipts in L491/L513 handoffs. Historical native numeric FAIL and optional replay BUILD_FAIL retained. Current35B/model/hardware quality not qualified.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "a58ed3a148bc5317eadcee5371ebe37826bd0f6cdccaa662960aefb612f32202"
+    },
+    {
+      "number": 604,
+      "title": "GB10 persistent tile experiment: retain useful data across bounded compute steps",
+      "url": "https://github.com/aien-dev/omega-mv/issues/604",
+      "dependencies": [],
+      "owner": "L491 / L513; canonical L457/shared train",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse0e7dbb14 and replay buildfix022f7d3d, source/receipts in L491/L513 handoffs. Historical native numeric FAIL and optional replay BUILD_FAIL retained. Current35B/model/hardware quality not qualified.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "1776d16a21d2b038223a2763d3f40b9bbfbe7b888c1fb2868ef1496c444fc45b"
+    },
+    {
+      "number": 603,
+      "title": "GB10 arithmetic fusion: keep one measured producer-consumer chain in registers or shared memory",
+      "url": "https://github.com/aien-dev/omega-mv/issues/603",
+      "dependencies": [],
+      "owner": "L491 / L513; canonical L457/shared train",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse0e7dbb14 and replay buildfix022f7d3d, source/receipts in L491/L513 handoffs. Historical native numeric FAIL and optional replay BUILD_FAIL retained. Current35B/model/hardware quality not qualified.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "1edabc58e0592584a383feb208aaa565996ecb3d2044b8941fe8a4accad588dd"
+    },
+    {
+      "number": 602,
+      "title": "GB10 locality baseline: account for memory traffic across a complete inference step",
+      "url": "https://github.com/aien-dev/omega-mv/issues/602",
+      "dependencies": [],
+      "owner": "L491 / L513; canonical L457/shared train",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse0e7dbb14 and replay buildfix022f7d3d, source/receipts in L491/L513 handoffs. Historical native numeric FAIL and optional replay BUILD_FAIL retained. Current35B/model/hardware quality not qualified.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "0ab7395b741cf4a347eff66321b982ff6cf58de02d1352a1d9aa44335b78a387"
+    },
+    {
+      "number": 601,
+      "title": "Omegese for the kernel: bytes, text, machine memory, system words, placement, units",
+      "url": "https://github.com/aien-dev/omega-mv/issues/601",
+      "dependencies": [],
+      "owner": "L184 / coordinator",
+      "disposition": "OWNED_EXISTING",
+      "note": "Omegese bytes/machine/kernel chain; no language changes here.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "0ce69f6fb18f11bcf740ed8a86427d1015e59058ce7cadee4b65a6322fb3a713"
+    },
+    {
+      "number": 600,
+      "title": "Bounded exploration across temporary regressions: preserve incumbent and test delayed payoff",
+      "url": "https://github.com/aien-dev/omega-mv/issues/600",
+      "dependencies": [],
+      "owner": "parent L487 / L523/L517; independent L541/L552",
+      "disposition": "OWNED_NEGATIVE_RESEARCH",
+      "note": "Original scientific FAIL/rejected default guard frozen. Reuse4960b1a0/b59631c5/dc24fcf2 plus parent protocol correction9869cbcb. L552 review completed separately. No duplicate implementation or promotion.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "4074155dc21101831fa5e05a87c17a3ec54d73c79a86d2af82041d8b5686ded6"
+    },
+    {
+      "number": 599,
+      "title": "The Omega Program: one line from the seed to the LLM (tracking)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/599",
+      "dependencies": [],
+      "owner": "L115 / desk",
+      "disposition": "OWNED_TRACKING",
+      "note": "Existing Omega Program/seed/systematic migration owner, no parent closure.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "4ec0f4f9990433ea8b5216ec1e14aea0caff1ef526aec90d4faa2f3d8836c4e6"
+    },
+    {
+      "number": 596,
+      "title": "Runtime R3: hardware abstraction note and portability table",
+      "url": "https://github.com/aien-dev/omega-mv/issues/596",
+      "dependencies": [
+        593
+      ],
+      "owner": "L386 / canonical motor",
+      "disposition": "OWNED_EXISTING",
+      "note": "Runtime API/portability/hello/CUDApp integration retain exact existing branches and owner. Canonical real hardware qualification not rerun.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "bbc94b2b076e63aa02a7b8b51135112afcd9077f37b7a0620a70252fd1a020fd"
+    },
+    {
+      "number": 595,
+      "title": "Runtime R2: hello GPU from a fresh checkout",
+      "url": "https://github.com/aien-dev/omega-mv/issues/595",
+      "dependencies": [
+        593
+      ],
+      "owner": "L386 / canonical motor",
+      "disposition": "OWNED_EXISTING",
+      "note": "Runtime API/portability/hello/CUDApp integration retain exact existing branches and owner. Canonical real hardware qualification not rerun.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "11fc403e5f5d93e37cb49034cbcbf842eaf0aa72c635c33f0e4cb0a6e5f9f9cf"
+    },
+    {
+      "number": 594,
+      "title": "Runtime R1: Omega Runtime API v0, written down, listed, versioned, checked",
+      "url": "https://github.com/aien-dev/omega-mv/issues/594",
+      "dependencies": [
+        593
+      ],
+      "owner": "L386 / canonical motor",
+      "disposition": "OWNED_EXISTING",
+      "note": "Runtime API/portability/hello/CUDApp integration retain exact existing branches and owner. Canonical real hardware qualification not rerun.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "6076c0e3e5612543b561050491278ff1a2abf08e987116ff701f010aaff0a425"
+    },
+    {
+      "number": 593,
+      "title": "Omega runtime: an open-source CUDA alternative (tracking)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/593",
+      "dependencies": [],
+      "owner": "L386 / canonical motor",
+      "disposition": "OWNED_EXISTING",
+      "note": "Runtime API/portability/hello/CUDApp integration retain exact existing branches and owner. Canonical real hardware qualification not rerun.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "78694711148e6d646bbc7dca5f60e78daff3a25c221bd81dd6a03767007d0649"
+    },
+    {
+      "number": 584,
+      "title": "Bounded learning-mechanism search: simulation screening, native pilot, retention and lifecycle payoff",
+      "url": "https://github.com/aien-dev/omega-mv/issues/584",
+      "dependencies": [
+        583
+      ],
+      "owner": "L048/desk; L167 follow-on",
+      "disposition": "OWNED_NEGATIVE_RESEARCH",
+      "note": "PR591 b557e9e7 and follow-on host experiment; preserve C0FAIL/BINCONCLUSIVE; no duplicate.",
+      "existing_candidates": [
+        {
+          "number": 591,
+          "head": "research/learning-search-584",
+          "sha": "b557e9e7efc39d3afd064e72cbc42cd44794632e"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "38ebf1bc52db1cc8f84a0776dd0a25f261339863e554d2adb19773cfb3c372bc"
+    },
+    {
+      "number": 583,
+      "title": "Offline resource-DAG cost simulation using existing cost model and measured Spark traces",
+      "url": "https://github.com/aien-dev/omega-mv/issues/583",
+      "dependencies": [],
+      "owner": "L047/desk",
+      "disposition": "OWNED_EXISTING",
+      "note": "PR5903bd56731 cost simulator; preserve held-out failed low-k hypothesis and unknown calibration.",
+      "existing_candidates": [
+        {
+          "number": 590,
+          "head": "research/cost-sim-583",
+          "sha": "3bd56731c5517e2a9c8f195955c71e73dc6f9269"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "0d0c4eb85efc8a1398dacb7258f3a5814962e27c9e4b645ebc5b46b6d7bb2d64"
+    },
+    {
+      "number": 580,
+      "title": "Engine plays every kernel, in rolls and chords: any codegen program, pipelined, concurrent, dependency-ordered",
+      "url": "https://github.com/aien-dev/omega-mv/issues/580",
+      "dependencies": [
+        575
+      ],
+      "owner": "existing feat/580-chords owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "b6fbc8f4 existing21host/r4chip40 receipt; clean timing/energy and canonical integration remain owner gates.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "ccfe96eaadaf0885a1b5a33edb5a0466c07ba9a8ac21ffd576328414b0eb0551"
+    },
+    {
+      "number": 578,
+      "title": "M1: Spark hardware passport, first measured coefficients for the hardware-first search",
+      "url": "https://github.com/aien-dev/omega-mv/issues/578",
+      "dependencies": [
+        574,
+        575,
+        576,
+        577
+      ],
+      "owner": "M1 hardware-passport / canonical shared measurement owner",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "Reusee0acdcb1 historical loaded-machine measurements and72e19a13 persistent-device work; 30GB/quiet paired/energy/submit isolation remain unrun here.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "900f5e0123fe4acd2b014185180a268d7a6ff5d0d0656efefa3b330519dc1cc7"
+    },
+    {
+      "number": 577,
+      "title": "M1 block 4: measured unified-memory bandwidth vs the 273 GB/s spec",
+      "url": "https://github.com/aien-dev/omega-mv/issues/577",
+      "dependencies": [
+        578
+      ],
+      "owner": "M1 hardware-passport / canonical shared measurement owner",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "Reusee0acdcb1 historical loaded-machine measurements and72e19a13 persistent-device work; 30GB/quiet paired/energy/submit isolation remain unrun here.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 2,
+      "body_sha256": "f110065fb2864d0d87b1b5d502b0ba3b3f04783b8eed111cb5a7a7addca08d9f"
+    },
+    {
+      "number": 576,
+      "title": "M1 block 3: re-time plan reuse (spec/plan-reuse.md) in seconds and joules, not operation counts",
+      "url": "https://github.com/aien-dev/omega-mv/issues/576",
+      "dependencies": [
+        578
+      ],
+      "owner": "L511 + L531 correction; desk",
+      "disposition": "EXISTING_HOST_PARTIAL_NEEDS_CARRY",
+      "note": "Reuse85d8343f-derived host evidence only with reviewed L53163a92c55 correction. This descendant lacks that carry. Plan G1FAIL, schedule timingINCONCLUSIVE and allocator hardwareNOT_RUN retained.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 2,
+      "body_sha256": "07135a15a291a3aaa059097a1a2a02d9fb6e31edfbcea89b4c4aae72298b0855"
+    },
+    {
+      "number": 575,
+      "title": "M1 block 2: GPU submit/complete round-trip latency and polling CPU cost",
+      "url": "https://github.com/aien-dev/omega-mv/issues/575",
+      "dependencies": [
+        578
+      ],
+      "owner": "M1 hardware-passport / canonical shared measurement owner",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "Reusee0acdcb1 historical loaded-machine measurements and72e19a13 persistent-device work; 30GB/quiet paired/energy/submit isolation remain unrun here.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 5,
+      "body_sha256": "b7f9cbafddd428576589136260c1b93067948dedc5d5b275fda568939714de41"
+    },
+    {
+      "number": 574,
+      "title": "M1 block 1: measure both realization schedules (PRELOAD vs SEQUENTIAL) on the Spark",
+      "url": "https://github.com/aien-dev/omega-mv/issues/574",
+      "dependencies": [
+        578
+      ],
+      "owner": "L511 + L531 correction; desk",
+      "disposition": "EXISTING_HOST_PARTIAL_NEEDS_CARRY",
+      "note": "Reuse85d8343f-derived host evidence only with reviewed L53163a92c55 correction. This descendant lacks that carry. Plan G1FAIL, schedule timingINCONCLUSIVE and allocator hardwareNOT_RUN retained.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 3,
+      "body_sha256": "0a57e37f11f3651295c187ee971710a233868118626f399f07db6d8fb1d3a59d"
+    },
+    {
+      "number": 571,
+      "title": "FORTRAN idea 3, two fronts in one arena: KV from one end, GDN state from the other",
+      "url": "https://github.com/aien-dev/omega-mv/issues/571",
+      "dependencies": [
+        569
+      ],
+      "owner": "existing FORTRAN branch owners",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reuse fortran/3-two-front-arena@e10f22ad, /2-frequency-timing-model@0426f2a0, /1-equivalence-lifetime-slots@2f273f76. Native model/storage integration and independent qualification remain owners.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "f51fdb3eb061b0986151c630b999ede77052486fc8d4b165d8c7a78109e1c697"
+    },
+    {
+      "number": 570,
+      "title": "FORTRAN idea 2, FREQUENCY: measured branch odds in the Omega timing model, Turing-scored",
+      "url": "https://github.com/aien-dev/omega-mv/issues/570",
+      "dependencies": [],
+      "owner": "existing FORTRAN branch owners",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reuse fortran/3-two-front-arena@e10f22ad, /2-frequency-timing-model@0426f2a0, /1-equivalence-lifetime-slots@2f273f76. Native model/storage integration and independent qualification remain owners.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "5a56284f1e5638b2198a15e74153ee24609830efd9c816d12130a7538679cb04"
+    },
+    {
+      "number": 569,
+      "title": "FORTRAN idea 1, EQUIVALENCE: lifetime-based buffer sharing in the Omega decode/prefill arenas",
+      "url": "https://github.com/aien-dev/omega-mv/issues/569",
+      "dependencies": [],
+      "owner": "existing FORTRAN branch owners",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reuse fortran/3-two-front-arena@e10f22ad, /2-frequency-timing-model@0426f2a0, /1-equivalence-lifetime-slots@2f273f76. Native model/storage integration and independent qualification remain owners.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "c3c789ab780996bfcbc71f259b2f1ec2e0f4894e4782e4c874041a6e6ee468df"
+    },
+    {
+      "number": 568,
+      "title": "[OSH][P1] Cross-adapter pipeline differential tests: Omega Linux vs AIENOS native",
+      "url": "https://github.com/aien-dev/omega-mv/issues/568",
+      "dependencies": [],
+      "owner": "PR572 owner + L553 boundary follow-on; L396 module routing",
+      "disposition": "TESTED_HOST_PARTIAL_REVIEW_PENDING",
+      "note": "Live guarded PR572 OPEN41c83a71 verified. Original3commits reused. L5534e1e87b2 identities/cleanup and056a9472 physical framing:23+22 and17+17 controls,6compiledmutants, original21controls. Synthetic imported native text never qualifies AIENOS. Native33NOT_RUN. OSH moved06299ff8 to omega-host c7596804: desk routes, no blind legacy restoration.",
+      "existing_candidates": [
+        {
+          "number": 572,
+          "head": "feat/osh-diff-568",
+          "sha": "41c83a71a49828c369ba82624aea43eabed11a66"
+        }
+      ],
+      "review": "L553_INDEPENDENT_REVIEW_NOT_RUN",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "12c14f9ec317d06f97b445943f5b16a5b9760486faf2142783f0246372a24b79"
+    },
+    {
+      "number": 563,
+      "title": "Hermes prior art 4: agent-written skills under an editorial policy, with a content-addressed skill ledger and rollback",
+      "url": "https://github.com/aien-dev/omega-mv/issues/563",
+      "dependencies": [],
+      "owner": "architecture267/269 editorial/Cortex writer owner",
+      "disposition": "ROUTE_CROSS_REPO_BOUNDARY",
+      "note": "L519 source audit: rx_skillroute discovery is not authority; canonical rx_cortex append/import boundary forbids competing writers. Existing host metadata reader is not mutation ledger. No Omega authority/service implementation.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "45d2961ebd9e4589dd10a332cb123523722df6a71158f9fc8a5a8789240b1b8f"
+    },
+    {
+      "number": 562,
+      "title": "Qwen3.8 stack follow-ups from desk review: recorded-list scratch safety, NaN checks, tighter tolerances",
+      "url": "https://github.com/aien-dev/omega-mv/issues/562",
+      "dependencies": [
+        541,
+        542,
+        543,
+        544,
+        545
+      ],
+      "owner": "existing Qwen feature/canonical integration owners",
+      "disposition": "BLOCKED_UNMERGED_SOURCE",
+      "note": "Named GDN/pattn256/q38 files absent from this base; feature sources PR547..553/559 and current canonical CUDApp streams owned. No duplicate implementation or hardware; follow-on safety gaps require owner-specific carry.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "a0429498a2768eea1eb7866464af63e5257643cc7081d533574f7c257e1a56bd"
+    },
+    {
+      "number": 560,
+      "title": "QMD: shared memory above 32 KiB needs per-size MIN/TARGET carve-out fields",
+      "url": "https://github.com/aien-dev/omega-mv/issues/560",
+      "dependencies": [],
+      "owner": "L293",
+      "disposition": "OWNED_EXISTING",
+      "note": "fix/qmd-smem-99k owner retains QMD carve-out chip qualification.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "6af3e7b3d21c4e4d6e784f1dbd445968c6636678b29a1b0ee9b4bb2ff813b47f"
+    },
+    {
+      "number": 558,
+      "title": "Qwen3.8-27B decode speed: FP8 GEMV and lm_head toward the bandwidth ceiling (one-list decode measured)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/558",
+      "dependencies": [
+        541
+      ],
+      "owner": "existing Qwen speed/prefill owners",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "qwen38/decode-speed0010f7d3 /feat/pattn2562ef40a15; current35B is a different qualification. No new timing or model load.",
+      "existing_candidates": [
+        {
+          "number": 559,
+          "head": "feat/q38-graph",
+          "sha": "b11bd1f632afab7f7ec5368f8a618b04179fed63"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "918b6d21d8fc40bd2ba640761221fc6edc8c3cb48e1f93ed736f435debfeb1c3"
+    },
+    {
+      "number": 557,
+      "title": "GDN decode and prefill speed against the bandwidth ceiling (Qwen3.8-27B)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/557",
+      "dependencies": [
+        542,
+        543
+      ],
+      "owner": "existing Qwen speed/prefill owners",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "qwen38/decode-speed0010f7d3 /feat/pattn2562ef40a15; current35B is a different qualification. No new timing or model load.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "961c75be16c45542eec8b31a97cbc0679c113d04e81b2da19bf641b7f1f71bf1"
+    },
+    {
+      "number": 556,
+      "title": "gpu_tern_test speed gates fail under host load",
+      "url": "https://github.com/aien-dev/omega-mv/issues/556",
+      "dependencies": [],
+      "owner": "existing GPU/gate/canonical owners",
+      "disposition": "ROUTE_EXISTING_TIMING_GATE",
+      "note": "Actual issue is ternary throughput under host load. Cached PR485 reference is unrelated GEN retrieval, not coverage; exclude refused479 scope. Quiet hardware measurement/gate policy remain owners, no threshold weakening.",
+      "existing_candidates": [
+        {
+          "number": 485,
+          "head": "gen/retrieval",
+          "sha": "44599ecb7f6956bc0247a04a772934c7aa2ebcc0"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "fcc29080ba45ad4d53881ffa86848ad98641e3ec8d18fd22cbc29efe90851415"
+    },
+    {
+      "number": 555,
+      "title": "Prefill attention hd256 speed: 591 ms per layer at 128k, bigger tiles",
+      "url": "https://github.com/aien-dev/omega-mv/issues/555",
+      "dependencies": [
+        545
+      ],
+      "owner": "existing Qwen speed/prefill owners",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "qwen38/decode-speed0010f7d3 /feat/pattn2562ef40a15; current35B is a different qualification. No new timing or model load.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "bef3b697fd743c9afdeb2c6b7877c39f3faec67ffa783186c5d5688c116af6bf"
+    },
+    {
+      "number": 554,
+      "title": "Static hazard checker over encoded kernel bytes (scoreboard RAW/WAR)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/554",
+      "dependencies": [],
+      "owner": "PR589 omega-554 author/desk; CUDApp/module owner",
+      "disposition": "OWNED_EXISTING_REVIEW_REQUIRED",
+      "note": "5023c8bf source and2026-10-19-omega-554.md contain byte checker+263hostchecks and historical pre553 RED. ClassesA/B/C source findings not chip-qualified; no duplicate checker or encoder edits.",
+      "existing_candidates": [
+        {
+          "number": 589,
+          "head": "omega-554",
+          "sha": "5023c8bf0aa33300a15d1f3e6080bc6078548b67"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "1364330b9de6a09e66d6c01cef3dc5c4a53f4fbece7b73c3c0e9544ab886683a"
+    },
+    {
+      "number": 545,
+      "title": "Prefill attention head_dim 256 (Qwen3.8-27B)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/545",
+      "dependencies": [],
+      "owner": "existing Qwen feature owners",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reuse exact PR553/550/549/548/547 and historical receipts; no fresh model/chip qualification or production carry claimed.",
+      "existing_candidates": [
+        {
+          "number": 553,
+          "head": "feat/pattn256",
+          "sha": "2ef40a1538c6cf85b39fc511da35cb85f13c5649"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "604e04fb8b1f2c3beee6ca18b1ff7b1b8b52a7ec4430e18e897d404f49d712d7"
+    },
+    {
+      "number": 544,
+      "title": "Decode attention head_dim 256 + output gate + partial RoPE (Qwen3.8-27B)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/544",
+      "dependencies": [],
+      "owner": "existing Qwen feature owners",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reuse exact PR553/550/549/548/547 and historical receipts; no fresh model/chip qualification or production carry claimed.",
+      "existing_candidates": [
+        {
+          "number": 550,
+          "head": "feat/attn-hd256",
+          "sha": "7bda76611e606b4d2b2f0336b2d2dda56dd950a0"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "23d80a90271b26d6cde3353f701fdaf9c9d5462e896d71297ec425bd748cf62c"
+    },
+    {
+      "number": 543,
+      "title": "Gated DeltaNet prefill kernel up to 128k tokens (Qwen3.8-27B)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/543",
+      "dependencies": [],
+      "owner": "existing Qwen feature owners",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reuse exact PR553/550/549/548/547 and historical receipts; no fresh model/chip qualification or production carry claimed.",
+      "existing_candidates": [
+        {
+          "number": 549,
+          "head": "feat/gdn-prefill",
+          "sha": "03d975f7e17e915fd3a52a21c0e7b9be7bc13192"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "a08204250ae4c23a8e276bd51ee6345f1502937663cc1a291cb4faa10db7d8ea"
+    },
+    {
+      "number": 542,
+      "title": "Gated DeltaNet decode step kernel (Qwen3.8-27B)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/542",
+      "dependencies": [],
+      "owner": "existing Qwen feature owners",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reuse exact PR553/550/549/548/547 and historical receipts; no fresh model/chip qualification or production carry claimed.",
+      "existing_candidates": [
+        {
+          "number": 548,
+          "head": "feat/gdn-decode",
+          "sha": "2ec8fc974d5a2b8766782e4dea787016bc62ac28"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 2,
+      "body_sha256": "382937ced96375838fea26b1199dd81f4c797ab491dd1c8c4ae2226efa2f3354"
+    },
+    {
+      "number": 541,
+      "title": "FP8 GEMV/GEMM at k = 17408 (Qwen3.8-27B down_proj)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/541",
+      "dependencies": [],
+      "owner": "existing Qwen feature owners",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reuse exact PR553/550/549/548/547 and historical receipts; no fresh model/chip qualification or production carry claimed.",
+      "existing_candidates": [
+        {
+          "number": 547,
+          "head": "feat/fp8-k32768",
+          "sha": "4d19cf74586a2b49af9500e22c74d5b7255bc484"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "bd33a5a10f248c158d661912576390984ada47dd2f4e775061f072ed50fd87a0"
+    },
+    {
+      "number": 537,
+      "title": "[LCD-EM P0 RESEARCH] Measure whether an unmodified iMac LCD exposes useful electrical state for physical computation",
+      "url": "https://github.com/aien-dev/omega-mv/issues/537",
+      "dependencies": [],
+      "owner": "iMac research owner",
+      "disposition": "OWNED_PHYSICAL_RESEARCH",
+      "note": "Independent instrumented electrical LCD question, no physical access/work in this host slice.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "9c901528c06f3a7600c900759b17baf924fa5b127122dda55b6d3d2c66a85e15"
+    },
+    {
+      "number": 536,
+      "title": "[FABRIC-PHYS P1] Connect real peer transport and verified remote task completion",
+      "url": "https://github.com/aien-dev/omega-mv/issues/536",
+      "dependencies": [
+        538,
+        613
+      ],
+      "owner": "PR538 Fabric/transport owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "c9846a44 production handoff codecs/shared route and205hostchecks; separate processes not physical network. Canonical protocol27/36 and real peer transport gates retain owners.",
+      "existing_candidates": [
+        {
+          "number": 538,
+          "head": "het/fabric-work",
+          "sha": "c9846a44ef350bdece0a2822decec793b59cbbbc"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "a7bf66945a568eb8aedcc43f68b9a29ee69d115096fcfa7df2c53fe647029c20"
+    },
+    {
+      "number": 535,
+      "title": "[CTX-128K] Extend native Omega decode/prefill attention beyond 65,536 positions and qualify 128K",
+      "url": "https://github.com/aien-dev/omega-mv/issues/535",
+      "dependencies": [],
+      "owner": "existing PR539 / native context owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "8a3b3bd7 existing128K source/chip receipt; no current checkpoint/context extrapolation claim.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "0f0006bc5ad5e3d18428a0e6f227831f15ec7583ef2a4a2315212825a3f0c50e"
+    },
+    {
+      "number": 534,
+      "title": "[RIBBON P3] Compare full-expert slots against FP8 tiled expert streaming",
+      "url": "https://github.com/aien-dev/omega-mv/issues/534",
+      "dependencies": [
+        533
+      ],
+      "owner": "Ribbon slot owner/PR561",
+      "disposition": "OWNED_EXISTING",
+      "note": "98d138ff and1549caae pinned-slot receipts; actual tiled/end-to-end/canonical comparison remains separate. No new executor/load.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "84465160242c987685549e4a4c22730f5ee1edb6dccb493c3228147c2da34a20"
+    },
+    {
+      "number": 533,
+      "title": "[RIBBON P1] Versioned replaceable FP8 expert slots with GPU completion fences",
+      "url": "https://github.com/aien-dev/omega-mv/issues/533",
+      "dependencies": [
+        561
+      ],
+      "owner": "Ribbon slot owner/PR561",
+      "disposition": "OWNED_EXISTING",
+      "note": "98d138ff and1549caae pinned-slot receipts; actual tiled/end-to-end/canonical comparison remains separate. No new executor/load.",
+      "existing_candidates": [
+        {
+          "number": 561,
+          "head": "ribbon/slots",
+          "sha": "98d138fff1b83cca1f9bc6d58ee2cfba05d91d80"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "4001f556f43a638e78a8a70156fb01acd85d34df9608c239131363147948c9ad"
+    },
+    {
+      "number": 528,
+      "title": "find what fragments host memory (38 GB unmovable pageblocks, 0 free 2 MiB blocks at times); read-only measurement, follow-up to #523",
+      "url": "https://github.com/aien-dev/omega-mv/issues/528",
+      "dependencies": [],
+      "owner": "PR582 memfrag/physics owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "49b75313 read-only sampler/scanner/tests and measured historical finding; proposed physics2MB allocation change is not chip qualification. No machine settings touched.",
+      "existing_candidates": [
+        {
+          "number": 582,
+          "head": "omega-528",
+          "sha": "49b753138cf1bb92e8b09171ab5c6fb6e2fa8479"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "b55c08e9a1e3ecc9bb6dc9b54cb3643de0de9dd0ca8f1526adb946f62366445f"
+    },
+    {
+      "number": 527,
+      "title": "R13-TESTBUILD-SILICON fails intermittently (\"AIEN never confirmed the incumbent cost\", GPU 0) and hides the GPU-side reason; mostly independent of #523",
+      "url": "https://github.com/aien-dev/omega-mv/issues/527",
+      "dependencies": [],
+      "owner": "existing LaneB/gate flake owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "PR567a53f5e45 diagnostics,5867d39579c CPU time,5988d591af9 consolidated follow-on. Source/receipt candidate, not present-day global green.",
+      "existing_candidates": [
+        {
+          "number": 586,
+          "head": "fix/r13-host-flake",
+          "sha": "7d39579c44600ce0af5d749efb548822975b3aa1"
+        },
+        {
+          "number": 581,
+          "head": "fix/r15-parity-host-flake",
+          "sha": "60c1b2fce22ef29ddcf2fa12099bedc25c0a9890"
+        },
+        {
+          "number": 573,
+          "head": "docs/readme-2026-10-19",
+          "sha": "2676fd67a64eedb3e899518a71d111f6b56a1d06"
+        },
+        {
+          "number": 567,
+          "head": "fix/527-r13-gpu-reason",
+          "sha": "a53f5e45ee05fbd12d3e860719f291a16e4adc9a"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "41af09bdc86a8a4742ed2c916aaf3992cb832bfbeafdc5e6d4145c799d51da85"
+    },
+    {
+      "number": 526,
+      "title": "M19 clean-clone step writes /tmp/clean_clone_m18.log and is refused under the Spark judge sandbox (Permission denied), so M19 fails before the chip",
+      "url": "https://github.com/aien-dev/omega-mv/issues/526",
+      "dependencies": [],
+      "owner": "existing LaneB/desk",
+      "disposition": "OWNED_EXISTING",
+      "note": "PR529e466b138 private temp,56568a3a614 OUT_DIR/running-binary hash,552681e03a3 diagnostics. Reuse; existing gates chip dependencies remain.",
+      "existing_candidates": [
+        {
+          "number": 573,
+          "head": "docs/readme-2026-10-19",
+          "sha": "2676fd67a64eedb3e899518a71d111f6b56a1d06"
+        },
+        {
+          "number": 565,
+          "head": "fix/526-clean-clone-out-dir",
+          "sha": "68a3a6145fc6ae1771adab88b8292af785a10bb1"
+        },
+        {
+          "number": 530,
+          "head": "fix/r11-own-hold-wait-for-quiet",
+          "sha": "a99d58d55ed83aa8293efa6a97c17b17809a04d3"
+        },
+        {
+          "number": 529,
+          "head": "fix/526-clean-clone-private-tmp",
+          "sha": "e466b138b57f6672afb26fc657fcdb28cc4c6293"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "21529be83260f781fa9a6cf36c63e5386698ea1ef65f76aacae22f149526703c"
+    },
+    {
+      "number": 524,
+      "title": "gates: the dependency graph maps nearly any src/ change onto ~56 of the 60 gates (because=src/visor/visor_evidence.c), so every code PR pulls in the chip gates and the 12-hour exhaustive run",
+      "url": "https://github.com/aien-dev/omega-mv/issues/524",
+      "dependencies": [],
+      "owner": "existing pipeline/manifest owner; parent routing",
+      "disposition": "ROUTE_GATE_GRAPH_DEPENDENCY",
+      "note": "Gate narrowing explicitly separate/after523. Broad graph inputs and operator policy belong pipeline owners; do not weaken gates in this worker.",
+      "existing_candidates": [
+        {
+          "number": 573,
+          "head": "docs/readme-2026-10-19",
+          "sha": "2676fd67a64eedb3e899518a71d111f6b56a1d06"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "efeddad06162b596fb18da409f04d509167533080159a974474ce4a053512c08"
+    },
+    {
+      "number": 523,
+      "title": "chip gates M19 and COMPOSITION-GATE-GPU red on every omega head since 2026-10-15; with the physics pin fixed, M19 dies at GPU channel create (RM_ALLOC class 0xcec0 status 0x51)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/523",
+      "dependencies": [],
+      "owner": "canonical physics/motor/shared hardware owner",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "Existing physics64 bounded channel retry/diagnostics, PR5795be22e57 and566b7ce36fb pin carries; fragmentation historical receipts separate from current live qualification. No sysctl/driver/model/service changes.",
+      "existing_candidates": [
+        {
+          "number": 579,
+          "head": "fix/m19-physics-pin-from-lock",
+          "sha": "5be22e571a9744b1f47a767bbdd92949e4150dc4"
+        },
+        {
+          "number": 573,
+          "head": "docs/readme-2026-10-19",
+          "sha": "2676fd67a64eedb3e899518a71d111f6b56a1d06"
+        },
+        {
+          "number": 567,
+          "head": "fix/527-r13-gpu-reason",
+          "sha": "a53f5e45ee05fbd12d3e860719f291a16e4adc9a"
+        },
+        {
+          "number": 566,
+          "head": "fix/523-gate-pins-follow-physics-lock",
+          "sha": "b7ce36fba92d931d505b50bab06e351c27a22af8"
+        },
+        {
+          "number": 531,
+          "head": "feat/synapse-j1-codec",
+          "sha": "11fe8b760109a8fca614f45ea918de3b2ec05349"
+        },
+        {
+          "number": 530,
+          "head": "fix/r11-own-hold-wait-for-quiet",
+          "sha": "a99d58d55ed83aa8293efa6a97c17b17809a04d3"
+        },
+        {
+          "number": 529,
+          "head": "fix/526-clean-clone-private-tmp",
+          "sha": "e466b138b57f6672afb26fc657fcdb28cc4c6293"
+        },
+        {
+          "number": 525,
+          "head": "fix/451-osc-ir-v6",
+          "sha": "046322120486aa7aed2ab7509f082520c9b170b2"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 5,
+      "body_sha256": "de329ac554b23cf23d6b076d232e8120e1edccb1904456ac6862d1f5a31cb563"
+    },
+    {
+      "number": 522,
+      "title": "[P2][Omega TURING] Compare native GPU realization choices using verified GB10 receipts",
+      "url": "https://github.com/aien-dev/omega-mv/issues/522",
+      "dependencies": [],
+      "owner": "L519 + independent L533/desk",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse0f45d8b4 replay anddb5bbbb9 session trace; trusted verifier envelope/real qualified receipts and actual graph/native visibility/timing remain open. L533 findings distinguish host partial from full acceptance.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "ef558b74f8716a91e13723085b6df204964ecfaae20522a3af8b9d7923c33de4"
+    },
+    {
+      "number": 521,
+      "title": "[P2][Omega PERF] Measure decode intermediate lifetimes and safe scratch reuse",
+      "url": "https://github.com/aien-dev/omega-mv/issues/521",
+      "dependencies": [
+        569
+      ],
+      "owner": "existing569 lifetime-slot owner",
+      "disposition": "OWNED_OVERLAP",
+      "note": "Requires command-list producer/consumer lifetimes and integration with fortran/1 branch; preserve native command order and no default promotion.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "df7c21efec04cbf1f3059075a8e73371d179e014a259feae5be5f3c2a11cf7b7"
+    },
+    {
+      "number": 520,
+      "title": "[P2][Omega PERF] Qualify register-lifetime and occupancy-aware allocation against linear scan",
+      "url": "https://github.com/aien-dev/omega-mv/issues/520",
+      "dependencies": [],
+      "owner": "L511 + L531 correction; desk",
+      "disposition": "EXISTING_HOST_PARTIAL_NEEDS_CARRY",
+      "note": "Reuse85d8343f-derived host evidence only with reviewed L53163a92c55 correction. This descendant lacks that carry. Plan G1FAIL, schedule timingINCONCLUSIVE and allocator hardwareNOT_RUN retained.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "875dca3ed51d6436f82060081aacbd3fb3c6df85ca31d279e0e9fbefa7f06efe"
+    },
+    {
+      "number": 519,
+      "title": "[P1][Omega PERF] Measure and qualify ranged CPU↔GPU visibility for decode scratch",
+      "url": "https://github.com/aien-dev/omega-mv/issues/519",
+      "dependencies": [
+        518
+      ],
+      "owner": "L519 + independent L533/desk",
+      "disposition": "EXISTING_HOST_PARTIAL",
+      "note": "Reuse0f45d8b4 replay anddb5bbbb9 session trace; trusted verifier envelope/real qualified receipts and actual graph/native visibility/timing remain open. L533 findings distinguish host partial from full acceptance.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "b32b6ed81a05b37a0a094e988ddaae7155251394bed2c6a589936121c709406e"
+    },
+    {
+      "number": 518,
+      "title": "[P1][Omega] Define safe abort/recovery for failed decode-graph begin_token",
+      "url": "https://github.com/aien-dev/omega-mv/issues/518",
+      "dependencies": [],
+      "owner": "PR588 owner/desk",
+      "disposition": "OWNED_EXISTING",
+      "note": "f5351117 lock/state recovery existing implementation; no duplicate graph changes, canonical old file absence is not proof of carry.",
+      "existing_candidates": [
+        {
+          "number": 588,
+          "head": "omega-518",
+          "sha": "f53511177def30e64f781320c9d9090906dd6642"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "065bc77081fb8fedc99dea55c94fe42411b67e78ee8214d6bac26bf5092cad29"
+    },
+    {
+      "number": 510,
+      "title": "QMMA kernel t-cap: remove it now that references model MUFU ftz (chip-gated, follow-up to #462)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/510",
+      "dependencies": [
+        462
+      ],
+      "owner": "existing462/QMMA chip owner",
+      "disposition": "OWNED_HARDWARE_GATE",
+      "note": "Explicit chip-required t-cap removal; no host-only substitute or per-issue load.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "22ce8725c6f2a95b09b1e962cb94ef34774f51711a725e329650650fb04f7640"
+    },
+    {
+      "number": 506,
+      "title": "[ALLEN research] Measure Turing yield, verified task throughput and energy across Pi/Spark decision and Omegese paths",
+      "url": "https://github.com/aien-dev/omega-mv/issues/506",
+      "dependencies": [],
+      "owner": "existing measurement/canonical model owners",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "Physical Pi/Spark/task/energy or real GPU performance work; Turing information yield is not tokens/s. No inferred qualification from historical OWN30B.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "99db29ea5dbf6dee3f5b8672078b08064131b21ab0da84dfeff113c24706827d"
+    },
+    {
+      "number": 505,
+      "title": "[ALLEN Pi/Spark F] Objective-bound Omegese → OSC → executable result with independent receipt",
+      "url": "https://github.com/aien-dev/omega-mv/issues/505",
+      "dependencies": [],
+      "owner": "existing PR517 / representation owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "9841d6aa objective-bound checked host execution/representation work; fresh model/Pi delivery separate. No source change here.",
+      "existing_candidates": [
+        {
+          "number": 517,
+          "head": "f505/verified-program",
+          "sha": "9841d6aafb8b514142c25268e6723b9534556d82"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 2,
+      "body_sha256": "d049cd41ca14002bf68e1d5c15250d1bb2e3f7f930f20f1f6529b36194d3a03e"
+    },
+    {
+      "number": 492,
+      "title": "IMAD.HI.U32 with a register Rc: chip reads Rc as a 64-bit pair, the simulators model 32 bits",
+      "url": "https://github.com/aien-dev/omega-mv/issues/492",
+      "dependencies": [],
+      "owner": "PR514/E3 simulators owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "49b93ebc existing fail-closed nonRZ IMAD.HI simulator proposal; actual chip semantics qualification retained by owner.",
+      "existing_candidates": [
+        {
+          "number": 514,
+          "head": "fix/492-imad-hi-rc-64bit",
+          "sha": "49b93ebca123c94be8a24f64c08cebacdd616faf"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "3f7c90a482202db3c5901fae2db320636a248d6623860ff5009d00845e91bcf6"
+    },
+    {
+      "number": 488,
+      "title": "build: driver objects (m16_native.o, nvrm.o) are not rebuilt when PHYSICS_DIR changes",
+      "url": "https://github.com/aien-dev/omega-mv/issues/488",
+      "dependencies": [],
+      "owner": "L532/L537/L546 + parent/desk",
+      "disposition": "EXISTING_REVIEWED_HOST_PARTIAL",
+      "note": "Reuse52dbe78b,ab070f60/5d819b58,c100a6eb and parent323a1db9 rerun18safety/3controls+8concurrency+9history. Original495 concurrency unsafe, correctedc100preferred. Do not edit helper/Makefile or relabel historyFAIL.",
+      "existing_candidates": [
+        {
+          "number": 546,
+          "head": "fix/488-rebuild-on-physics-dir",
+          "sha": "8a4f15a6abedd3c21c17bf2f7f033d94fbab57ea"
+        },
+        {
+          "number": 495,
+          "head": "fix/488-physics-stamp",
+          "sha": "a1896dcf68a899fe58ffbc32559fd4b3fa5bd4b3"
+        },
+        {
+          "number": 484,
+          "head": "train/encoder-r5",
+          "sha": "ce7fdce70e4785abbc5fe27966f8b888fac7470b"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "ed7d9f9af8b64b07d1bd625747987e5f541ec587f2574c155b0da012cab288ba"
+    },
+    {
+      "number": 480,
+      "title": "GEN-6: Run sealed compositional-generalization trial and publish a decision receipt",
+      "url": "https://github.com/aien-dev/omega-mv/issues/480",
+      "dependencies": [],
+      "owner": "existing GEN agents A/C/D/E + omega-c0",
+      "disposition": "OWNED_EXISTING_BOUNDARY",
+      "note": "Existing PR486/491/485/517 map multiple GEN rows. Do not duplicate existing authors or work that resumes refused479 task. No sealed/model/corpus changes.",
+      "existing_candidates": [
+        {
+          "number": 517,
+          "head": "f505/verified-program",
+          "sha": "9841d6aafb8b514142c25268e6723b9534556d82"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "42094d1f6f720e2fc058d105d234b6ce201ed53e7b2f5cd2830df542542e6670"
+    },
+    {
+      "number": 479,
+      "title": "GEN-4: Implement matched raw-example vs verified-abstraction retrieval arms",
+      "url": "https://github.com/aien-dev/omega-mv/issues/479",
+      "dependencies": [],
+      "owner": "existing GEN owner; explicit preserved refusal boundary",
+      "disposition": "EXCLUDED_DO_NOT_RESUME",
+      "note": "L532 provider refusal retained. No restart, retry, rephrasing, evaluation or implementation of refused validator scope.",
+      "existing_candidates": [
+        {
+          "number": 485,
+          "head": "gen/retrieval",
+          "sha": "44599ecb7f6956bc0247a04a772934c7aa2ebcc0"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "ee873412d6c00f72962320d919dbf8d9cacdb43c61fd94a1b92ee5849b2e44b8"
+    },
+    {
+      "number": 478,
+      "title": "GEN-3: Extract reusable Omegese procedures with checker-bound provenance",
+      "url": "https://github.com/aien-dev/omega-mv/issues/478",
+      "dependencies": [],
+      "owner": "existing GEN agents A/C/D/E + omega-c0",
+      "disposition": "OWNED_EXISTING_BOUNDARY",
+      "note": "Existing PR486/491/485/517 map multiple GEN rows. Do not duplicate existing authors or work that resumes refused479 task. No sealed/model/corpus changes.",
+      "existing_candidates": [
+        {
+          "number": 491,
+          "head": "gen/abstract",
+          "sha": "52af1aeeac528019123d88e0e2fd93c5ee274b9a"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "6558368ec229d1303801968d53a209fc32152272dd48427f31990cbcc708bdb4"
+    },
+    {
+      "number": 477,
+      "title": "GEN-2: Build a paired, replayable Omegese learning-condition runner",
+      "url": "https://github.com/aien-dev/omega-mv/issues/477",
+      "dependencies": [],
+      "owner": "existing GEN agents A/C/D/E + omega-c0",
+      "disposition": "OWNED_EXISTING_BOUNDARY",
+      "note": "Existing PR486/491/485/517 map multiple GEN rows. Do not duplicate existing authors or work that resumes refused479 task. No sealed/model/corpus changes.",
+      "existing_candidates": [
+        {
+          "number": 485,
+          "head": "gen/retrieval",
+          "sha": "44599ecb7f6956bc0247a04a772934c7aa2ebcc0"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "cfb78393dfdac08a56a14c3f037bb5e7987e131fd2b5187c27f2f16387342c68"
+    },
+    {
+      "number": 476,
+      "title": "GEN-1: Freeze a sealed task-family generalization protocol",
+      "url": "https://github.com/aien-dev/omega-mv/issues/476",
+      "dependencies": [],
+      "owner": "existing GEN agents A/C/D/E + omega-c0",
+      "disposition": "OWNED_EXISTING_BOUNDARY",
+      "note": "Existing PR486/491/485/517 map multiple GEN rows. Do not duplicate existing authors or work that resumes refused479 task. No sealed/model/corpus changes.",
+      "existing_candidates": [
+        {
+          "number": 486,
+          "head": "gen/protocol",
+          "sha": "5376d146fa26c2056a5dfa37126939e538bebcf2"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "c81785906546b6c20484f2f97138ab5506b0f52ca0a3f952ec69ea64de7eb700"
+    },
+    {
+      "number": 475,
+      "title": "GEN-0: Compositional generalization experiment (Omegese × Cortex × RSI)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/475",
+      "dependencies": [],
+      "owner": "existing GEN agents A/C/D/E + omega-c0",
+      "disposition": "OWNED_EXISTING_BOUNDARY",
+      "note": "Existing PR486/491/485/517 map multiple GEN rows. Do not duplicate existing authors or work that resumes refused479 task. No sealed/model/corpus changes.",
+      "existing_candidates": [
+        {
+          "number": 517,
+          "head": "f505/verified-program",
+          "sha": "9841d6aafb8b514142c25268e6723b9534556d82"
+        },
+        {
+          "number": 486,
+          "head": "gen/protocol",
+          "sha": "5376d146fa26c2056a5dfa37126939e538bebcf2"
+        },
+        {
+          "number": 485,
+          "head": "gen/retrieval",
+          "sha": "44599ecb7f6956bc0247a04a772934c7aa2ebcc0"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "6e94177579492216d48c83f8c48047a0706c0c0c945218d02c9476d6889477cb"
+    },
+    {
+      "number": 473,
+      "title": "Training matmul: sealed CTA-budget receipt (R4), in-place weight update (R3), 5% of tensor peak",
+      "url": "https://github.com/aien-dev/omega-mv/issues/473",
+      "dependencies": [],
+      "owner": "existing training/research-0c/native owner",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "Sealed full-output CTA budgets/repeats/I42 and in-place update require existing native/trainer owner; no default change or hardware request.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "6e43b01afb094abd5e7325bdfee6142d59b0a6ed87248d74ac73b2ac67349078"
+    },
+    {
+      "number": 471,
+      "title": "libomega_gpu.a references ldexpf (omega_gpu_fp8_pack.o) despite the libm-free note at Makefile:35",
+      "url": "https://github.com/aien-dev/omega-mv/issues/471",
+      "dependencies": [],
+      "owner": "PR494/496 + desk block620/module owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reusef1c4be2f libm-free host helper/link check and4e9cfbe7 attention host bounds/listing/CI;6207bc3f0b6 desk owns combined integration. No duplicate GPU edits.",
+      "existing_candidates": [
+        {
+          "number": 620,
+          "head": "desk/block-omega-20261022T190428Z",
+          "sha": "7bc3f0b6ff41a83e5ac932d72b5544aaae8a8b52"
+        },
+        {
+          "number": 494,
+          "head": "fix/471-fp8-libm-free",
+          "sha": "f1c4be2ffa5856f312ac030e72cb3a3a775dbddf"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "d9850705fa76d80843bad407ab7cfe8e5bd9fa2c4746daea53d214b574436284"
+    },
+    {
+      "number": 470,
+      "title": "gpu attention: hd-128 host-only test fails (GPR bound 64 vs 72/84; listing cut at 256) and the test is not in CI",
+      "url": "https://github.com/aien-dev/omega-mv/issues/470",
+      "dependencies": [],
+      "owner": "PR494/496 + desk block620/module owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "Reusef1c4be2f libm-free host helper/link check and4e9cfbe7 attention host bounds/listing/CI;6207bc3f0b6 desk owns combined integration. No duplicate GPU edits.",
+      "existing_candidates": [
+        {
+          "number": 620,
+          "head": "desk/block-omega-20261022T190428Z",
+          "sha": "7bc3f0b6ff41a83e5ac932d72b5544aaae8a8b52"
+        },
+        {
+          "number": 496,
+          "head": "fix/470-attention-hd128-host",
+          "sha": "4e9cfbe7aaa9947f5fdf4dbb527a43958fb9ce84"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "48b0e0971617e6e23b72c4d68c7ba40c7a2f82318aec7738a3d1dca1969c041a"
+    },
+    {
+      "number": 465,
+      "title": "checker2: one-path leaks and copied mutable borrows are accepted (definite-only ownership rules)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/465",
+      "dependencies": [],
+      "owner": "checker2 owner/PR500 +517/native compiler owner",
+      "disposition": "OWNED_EXISTING_LANGUAGE_BOUNDARY",
+      "note": "19ddf02c documents definite-only limits interim; no new ownership rule/front-end or language authority.",
+      "existing_candidates": [
+        {
+          "number": 517,
+          "head": "f505/verified-program",
+          "sha": "9841d6aafb8b514142c25268e6723b9534556d82"
+        },
+        {
+          "number": 500,
+          "head": "doc/465-checker2-ownership-limits",
+          "sha": "19ddf02ca88bf9a179db57601d54704883263482"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "1438aefd324feb0c7e314db74736b3ce617a4a0b5f19ff632151851997204afc"
+    },
+    {
+      "number": 462,
+      "title": "Simulators and attention reference model MUFU as IEEE; the chip flushes subnormal results",
+      "url": "https://github.com/aien-dev/omega-mv/issues/462",
+      "dependencies": [],
+      "owner": "PR509 simulator/reference owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "e6b9ab9f shared FTZ models; independent t-cap510 remains chip-required.",
+      "existing_candidates": [
+        {
+          "number": 509,
+          "head": "fix/mufu-ftz-462",
+          "sha": "e6b9ab9fab558d013a625eab0e3e17c0e49b7060"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "e33057737fafc31a1726161097facb3f018be77ad31980b2360a256376319d6c"
+    },
+    {
+      "number": 456,
+      "title": "OWN-30B engine: review follow-ups from #439",
+      "url": "https://github.com/aien-dev/omega-mv/issues/456",
+      "dependencies": [],
+      "owner": "PR502/desk/native owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "3671d1fb existing host follow-ups; no timestamp/graph/encoder reimplementation.",
+      "existing_candidates": [
+        {
+          "number": 502,
+          "head": "fix/456-own30b-review-followups",
+          "sha": "3671d1fbb570a08bed3d3854630575e1ee5c1073"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "6074b67ab31cd8450ad9fab1e42f0e2d2005fa85a58bc692656b0d1455ff3ef3"
+    },
+    {
+      "number": 453,
+      "title": "[GB10 PMU] Extend existing A725/X925 probe with verified branch and misprediction counters",
+      "url": "https://github.com/aien-dev/omega-mv/issues/453",
+      "dependencies": [],
+      "owner": "gb10-D existing issue claim",
+      "disposition": "OWNED_EXISTING",
+      "note": "feat/gb10-d-pmu-453 explicitly claimed in issue discussion; no probe/sysctl changes.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "a05382f2e0ad57f87e0f3b96e5089a6ff7d5dff436ddb8d626bfcf6f59fd12bb"
+    },
+    {
+      "number": 451,
+      "title": "OSC binary IR format v6: numeric identifiers, structured requires/ensures, domain tag",
+      "url": "https://github.com/aien-dev/omega-mv/issues/451",
+      "dependencies": [],
+      "owner": "existing omega repo issues owner/PR525",
+      "disposition": "OWNED_EXISTING_LANGUAGE_BOUNDARY",
+      "note": "04632212 v6 proposed source, explicit owner claim; no new compiler/format authority.",
+      "existing_candidates": [
+        {
+          "number": 525,
+          "head": "fix/451-osc-ir-v6",
+          "sha": "046322120486aa7aed2ab7509f082520c9b170b2"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 1,
+      "body_sha256": "38f9c00a978642425cee89b42218a208d1dc39ebdc2eb09d032dc94d6bbfb1bd"
+    },
+    {
+      "number": 450,
+      "title": "osc_ir_decode hardening follow-ups from the #449 review",
+      "url": "https://github.com/aien-dev/omega-mv/issues/450",
+      "dependencies": [],
+      "owner": "L519/L533 + parent closure/B1 corrections; L552 review",
+      "disposition": "OWNED_EXISTING_REVIEWED_HOST_PARTIAL",
+      "note": "HistoricalPR4991e4cdbe9 complete59+loader correction9d8807dd and B1fix676a0b80 retained; L552 reviewcompleted. Original55receipt remains partial; no currentv6 integration inferred.",
+      "existing_candidates": [
+        {
+          "number": 499,
+          "head": "fix/450-osc-ir-decode-hardening",
+          "sha": "1e4cdbe91b444efe51af4e745f366e07d54de030"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "c4d8f514b18ebb17785f5b1b9f48a3fb224904c8edf56ed873cd0ec21508b6f0"
+    },
+    {
+      "number": 445,
+      "title": "Machine-first representation experiment: text vs raw bytes vs constrained structured emission",
+      "url": "https://github.com/aien-dev/omega-mv/issues/445",
+      "dependencies": [],
+      "owner": "existing PR517 / representation owner",
+      "disposition": "OWNED_EXISTING",
+      "note": "9841d6aa objective-bound checked host execution/representation work; fresh model/Pi delivery separate. No source change here.",
+      "existing_candidates": [
+        {
+          "number": 517,
+          "head": "f505/verified-program",
+          "sha": "9841d6aafb8b514142c25268e6723b9534556d82"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "426d977a13edecece458beead220c0ee177545059ee384fdc1ca0c444f8be895"
+    },
+    {
+      "number": 404,
+      "title": "gates: OMEGA-VISOR 1024-file scan cap and OMEGA-RX-HOST-REFERENCE energy-meter verdict (local verification findings)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/404",
+      "dependencies": [],
+      "owner": "PR498/desk620",
+      "disposition": "OWNED_EXISTING",
+      "note": "aa563a7d evidence walker/energy verdict and6207bc3f0b6 existing host integration; exact source/receipt reuse, no energy/gate claims from title alone.",
+      "existing_candidates": [
+        {
+          "number": 620,
+          "head": "desk/block-omega-20261022T190428Z",
+          "sha": "7bc3f0b6ff41a83e5ac932d72b5544aaae8a8b52"
+        },
+        {
+          "number": 498,
+          "head": "fix/404-visor-scan-energy-verdict",
+          "sha": "aa563a7dcb22a4f51fe8ac80259eb2e800377fd8"
+        }
+      ],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 0,
+      "body_sha256": "a570451fd40d845889604194e0bbcb95f21296fa29fe76f389330f844fc97900"
+    },
+    {
+      "number": 344,
+      "title": "osh: follow-ups from the #340 bash-differential review (cd -P/CDPATH, printf widths, non-identifier env, ...)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/344",
+      "dependencies": [],
+      "owner": "L553 bounded host follow-ons; PR501/L396 routing",
+      "disposition": "TESTED_HOST_PARTIAL_WITH_EXPLICIT_GATE_FAIL",
+      "note": "Source3695dd59 command-string exit:36bash/native/interpreter checks+2controls. Prompt signal source86a40330:254plain254ASan checks,2controls95/2exactkills; all36exit regressions and original differential/e2e/trace gatesPASS. Original MakehostFAIL5 preserved; exact same binaries1564plain1564ASanPASS cleanstdio/defaultsignals; e2e320/trace20PASS. PR501 environment pin separate. Remaining prompt-readSIGINT race and other documented limits stayOPEN.",
+      "existing_candidates": [
+        {
+          "number": 501,
+          "head": "fix/344-bash-verify-env-pin",
+          "sha": "5c769ac51cc8da1a83056161ce27a7a814a49cec"
+        }
+      ],
+      "review": "L553_INDEPENDENT_REVIEW_NOT_RUN",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 5,
+      "body_sha256": "f086c778913d30a85a49144e8e9095a6a36f78f3677fbb3bdfa962007c173b00"
+    },
+    {
+      "number": 328,
+      "title": "GB10 BF16 decode speed (Qwen3-8B): m=1 matmul now ~207-218 GB/s of 273; next cuts from whole-task profiles (was: latency-bound ~28-45 GB/s)",
+      "url": "https://github.com/aien-dev/omega-mv/issues/328",
+      "dependencies": [],
+      "owner": "existing measurement/canonical model owners",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "Physical Pi/Spark/task/energy or real GPU performance work; Turing information yield is not tokens/s. No inferred qualification from historical OWN30B.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 3,
+      "body_sha256": "db3434ded4083f09dd9c16d1ff428d59deb1fb927fb17d1fbf309bf29e6e63a7"
+    },
+    {
+      "number": 327,
+      "title": "GB10 RM system-memory allocations fail with NV_ERR_NO_MEMORY on low MemFree despite reclaimable page cache",
+      "url": "https://github.com/aien-dev/omega-mv/issues/327",
+      "dependencies": [],
+      "owner": "canonical physics/motor/shared hardware owner",
+      "disposition": "OWNED_HARDWARE_GATES",
+      "note": "Existing physics64 bounded channel retry/diagnostics, PR5795be22e57 and566b7ce36fb pin carries; fragmentation historical receipts separate from current live qualification. No sysctl/driver/model/service changes.",
+      "existing_candidates": [],
+      "review": "OWNER_SPECIFIC_NO_NEW_REVIEW_CLAIM",
+      "hardware": "NOT_RUN_BY_L553",
+      "discussion_comment_count": 3,
+      "body_sha256": "1e67404bf9a9ce42058778d23347e75bf67bbb862cd864d0e00b97ae89e744e3"
+    }
+  ]
+}
