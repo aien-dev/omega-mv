@@ -41,7 +41,7 @@
 ; 0x1830000, functions 0x1840000 (128 bytes: name 8, address 8, return type 4, parameter count 4, then per
 ; parameter 16 bytes: type 4, length 4, kind 4), state 0x1850000 (8-byte slots: 1 globals and texts in the
 ; name table, 2 functions, 4 stack bytes of local arrays, 5 the path has ended, 6 program mode, 7 global
-; pool bytes, 9 last function).
+; pool bytes, 9 last function, 10 value nesting depth).
 ; Name kinds: 0 scalar, 1 local array, 2 view parameter, 3 edit parameter, 4 global array, 5 text.
 ; Errors: "om4: line N: error E" on stderr, exit E: 1 read, 2 write, 3 unknown name, 4 line ends too
 ; early, 5 extra words, 6 bad number, 7 type mismatch, 8 number out of range for its type, 9 not in the
@@ -77,7 +77,7 @@
   .w 0x00000000
   .w 0x00400000
   .w 0x00000000
-  .w 0x00003528 ; p_filesz = the size of om4.bin, 13608 bytes (asm2 has no size arithmetic; gate4.sh checks it)
+  .w 0x00003550 ; p_filesz = the size of om4.bin, 13648 bytes (asm2 has no size arithmetic; gate4.sh checks it)
   .w 0x00000000
   .w 0x01460000 ; p_memsz: up to 0x1860000
   .w 0x00000000
@@ -1782,6 +1782,12 @@
   str.x.pre x30 sp -128
   str.x x0 sp 1
   str.x x1 sp 2
+  movz.x x9 0x185 1 ; nesting depth (state slot 10): at most 1024 values inside one another, else error 14
+  ldr.x x10 x9 10
+  add.x.i x10 x10 1
+  str.x x10 x9 10
+  cmp.x.i x10 1024
+  b.hi E_FULL
   cbz.x x3 E_FEW
   cmp.x.i x3 3
   b.eq E_FEW
@@ -1919,6 +1925,10 @@
   add.x.i x2 sp 32
   bl BINOP
 :VT_RET
+  movz.x x9 0x185 1
+  ldr.x x10 x9 10
+  sub.x.i x10 x10 1
+  str.x x10 x9 10
   ldr.x.post x30 sp 128
   ret
 ; ( value )

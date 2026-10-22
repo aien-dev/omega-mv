@@ -122,7 +122,7 @@ it came from.
 ## Rung 4: om4, the systems words a compiler needs (done)
 
 - `rung4/om4.s`: om3 grown, feature by feature, into a translator that can build a real program. It is
-  about 4,000 lines in asm2's language, built by asm2 (13,608 bytes, `rung4/om4.bin`); `rung4/table4.s2`
+  about 4,000 lines in asm2's language, built by asm2 (13,648 bytes, `rung4/om4.bin`); `rung4/table4.s2`
   adds 3 instruction lines for om4's own use, each naming its manual section; `rung4/mk4.sh` writes the
   file's own size into its header (asm2 cannot add up sizes).
 - What it adds, and why each one is needed (every new word is used by the Omega compiler of rung R5 or
@@ -150,8 +150,8 @@ it came from.
     overflow, division by zero traps, a bad index traps, running out of stack traps; the spec has no
     "undefined" in it (the gate checks with a search);
   - no automatic conversions: mixing two types in one operation is refused.
-- Checks (`rung4/gate4.sh`, results in `evidence/SEED-0/rung4/`), 194 cases, all pass:
-  - asm2 rebuilds om4 to the same bytes; objdump (the referee) reads all 3,016 instructions back to
+- Checks (`rung4/gate4.sh`, results in `evidence/SEED-0/rung4/`), 195 cases, all pass:
+  - asm2 rebuilds om4 to the same bytes; objdump (the referee) reads all 3,026 instructions back to
     what `om4.s` says (0 disagreements); five planted mistakes in the text are each caught;
   - the 10 practice tasks: om4 makes exactly the same machine words as om3, and the same results as the
     C path (80 inputs) and the expected answers;
@@ -163,7 +163,8 @@ it came from.
     same output every time;
   - 9 programs that must stop with a given status: divide by zero, bad index, read past the end, loop
     limit, bad conversion, overflow, stack used up, `exit`, and a void call: each stops as written;
-  - 32 broken or forbidden programs are refused, each with its own error number;
+  - 33 broken or forbidden programs are refused, each with its own error number, among them a value
+    nested 1,025 deep (om4 used to crash on very deep nesting; it now stops at 1,024 with error 14);
   - a copy of om4 with one instruction word changed (signed divide made unsigned) gives different
     results, so the checks would notice such a slip.
 - Machine words per program, where the C path can express it (`evidence/SEED-0/rung4/words.tsv`):

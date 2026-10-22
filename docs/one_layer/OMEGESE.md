@@ -474,5 +474,5 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 ### 9.6 Capacities (decision 23)
 
 Input over a capacity is refused with error 14, never overrun: om4 reads at most 8 MiB - 1 bytes and
-writes at most 8 MiB, 1024 names in scope, 512 functions, 8192 trap sites per function, 512 nested
+writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 512 functions, 8192 trap sites per function, 512 nested
 blocks. A function that needs more than the 16 registers it hands out is error 12.
