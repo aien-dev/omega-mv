@@ -1,0 +1,106 @@
+{
+  "cases": 796,
+  "failures": 778,
+  "examples": [
+    {
+      "case": 1,
+      "input": "30",
+      "wanted_rc": 0,
+      "actual_rc": 2,
+      "wanted": "0000000000000000",
+      "actual": ""
+    },
+    {
+      "case": 2,
+      "input": "3030",
+      "wanted_rc": 0,
+      "actual_rc": 2,
+      "wanted": "0000000000000000",
+      "actual": ""
+    },
+    {
+      "case": 18,
+      "input": "3138343436373434303733373039353531363135",
+      "wanted_rc": 0,
+      "actual_rc": 2,
+      "wanted": "ffffffffffffffff",
+      "actual": ""
+    },
+    {
+      "case": 19,
+      "input": "3138343436373434303733373039353531363136",
+      "wanted_rc": 3,
+      "actual_rc": 2,
+      "wanted": "",
+      "actual": ""
+    },
+    {
+      "case": 20,
+      "input": "307866666666666666666666666666666666",
+      "wanted_rc": 0,
+      "actual_rc": 2,
+      "wanted": "ffffffffffffffff",
+      "actual": ""
+    },
+    {
+      "case": 21,
+      "input": "30783130303030303030303030303030303030",
+      "wanted_rc": 3,
+      "actual_rc": 2,
+      "wanted": "",
+      "actual": ""
+    },
+    {
+      "case": 22,
+      "input": "306231313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131",
+      "wanted_rc": 0,
+      "actual_rc": 2,
+      "wanted": "ffffffffffffffff",
+      "actual": ""
+    },
+    {
+      "case": 23,
+      "input": "30623130303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030",
+      "wanted_rc": 3,
+      "actual_rc": 2,
+      "wanted": "",
+      "actual": ""
+    },
+    {
+      "case": 24,
+      "input": "3030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030",
+      "wanted_rc": 0,
+      "actual_rc": 2,
+      "wanted": "0000000000000000",
+      "actual": ""
+    },
+    {
+      "case": 26,
+      "input": "3939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939393939",
+      "wanted_rc": 3,
+      "actual_rc": 2,
+      "wanted": "",
+      "actual": ""
+    },
+    {
+      "case": 28,
+      "input": "38373035383735353435353435333739303937",
+      "wanted_rc": 0,
+      "actual_rc": 2,
+      "wanted": "190dfed6ae7bd178",
+      "actual": ""
+    },
+    {
+      "case": 29,
+      "input": "307837386431376261656436666530643139",
+      "wanted_rc": 0,
+      "actual_rc": 2,
+      "wanted": "190dfed6ae7bd178",
+      "actual": ""
+    }
+  ],
+  "compiler_sha256": "01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6",
+  "source_sha256": "77fda30985bd8f79693e115ab6da86f27c7394bc96f1a07bccfaa5fdb2cc86b8",
+  "binary_sha256": "1c7ed51fd000d274d1a1d3b4ef4b7dc3e58b54f2f4b6bc042da451a4e3232013",
+  "scope": "isolated integer literal reader, NOT whole lexer/compiler or production retirement"
+}

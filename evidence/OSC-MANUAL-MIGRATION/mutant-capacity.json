@@ -1,0 +1,18 @@
+{
+  "cases": 796,
+  "failures": 1,
+  "examples": [
+    {
+      "case": 25,
+      "input": "3030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030",
+      "wanted_rc": 2,
+      "actual_rc": 0,
+      "wanted": "",
+      "actual": "0000000000000000"
+    }
+  ],
+  "compiler_sha256": "01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6",
+  "source_sha256": "8a752ca47b2b1b685dcb911fd904698027765bcd9597cf6adf914f8fcb8cef4c",
+  "binary_sha256": "5b8cd8f9571ab300eb2024992010748adbd6650f7a6d812dee4726386565beec",
+  "scope": "isolated integer literal reader, NOT whole lexer/compiler or production retirement"
+}

@@ -1,0 +1,105 @@
+note Handwritten seed-native integer literal reader. No C/generated intermediate.
+note Whole input is one unsigned literal: decimal, lowercase 0x hex, lowercase 0b binary.
+note Exit 2 malformed/capacity, 3 overflow, 4 input/output error; no output on refusal.
+note Fixed capacity 4096 bytes. This is a compiler primitive, not the old OSC frontend.
+global input uchar 4097
+global result ulong 1
+global output uchar 8
+
+fn digit c uchar to ulong
+if and ge c uchar 48 le c uchar 57
+ret sub ulong c 48
+end
+if and ge c uchar 65 le c uchar 70
+ret add sub ulong c 65 10
+end
+if and ge c uchar 97 le c uchar 102
+ret add sub ulong c 97 10
+end
+ret 99
+end
+
+fn parse n ulong to int
+base = ulong 10
+start = ulong 0
+if ge n 2
+if eq get input 0 uchar 48
+if eq get input 1 uchar 120
+base = ulong 16
+start = ulong 2
+end
+if eq get input 1 uchar 98
+base = ulong 2
+start = ulong 2
+end
+end
+end
+if eq n start
+ret 2
+end
+value = ulong 0
+over = false
+limit = div ulong 18446744073709551615 base
+last = rem ulong 18446744073709551615 base
+idx = start
+while lt idx n
+d = digit get input idx
+if ge d base
+ret 2
+end
+if or gt value limit and eq value limit gt d last
+over = true
+end
+if not over
+value = add mul value base d
+end
+idx = add idx 1
+end
+if over
+ret 3
+end
+put result 0 value
+ret 0
+end
+
+fn fill to long
+used = ulong 0
+while lt used len input
+n = read 0 input used sub len input used
+if lt n 0
+ret long -1
+end
+if eq n 0
+ret long used
+end
+used = add used ulong n
+end
+ret long used
+end
+
+fn main to int
+n = fill
+if lt n 0
+ret 4
+end
+if gt n long 4096
+ret 2
+end
+status = parse ulong n
+if ne status 0
+ret status
+end
+v = get result 0
+for i ulong 8
+put output i uchar and shr v mul i 8 255
+end
+sent = ulong 0
+while lt sent 8
+w = write 1 output sent sub ulong 8 sent
+if le w 0
+ret 4
+end
+sent = add sent ulong w
+end
+ret 0
+end
