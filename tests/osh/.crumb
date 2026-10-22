@@ -9,8 +9,8 @@
           "purpose": "Existing cross-adapter shell differential runner and fixtures, plus strict result-reader boundar"
         },
         {
-          "digest": "e4c9e95254b591911c7bd7c0d7be2835267684ed7068a342b4673c36a2e30cc4",
-          "last_commit": "5583bea0",
+          "digest": "ec1b7d6d9c52843738fdaf6196faadc4243ba81cc4d4d9847ec79d618011e958",
+          "last_commit": "47aaea70",
           "name": "e2e",
           "purpose": "end-to-end tests of the osh program: argprint helper plus a runner comparing native and OSH_INTE"
         },
@@ -27,15 +27,15 @@
           "purpose": "Core-only step traces of the osh shell units over fixture scripts (OSH-AIENOS-0 differential fix"
         }
       ],
-      "children_root": "sha256:befa20e65c424b61a9a79bd66aab04821a487f1383701b8154961628a716a95b",
-      "compiled_at": "2026-10-22T22:21:37Z",
+      "children_root": "sha256:81f8075a3df568528814589bd08cf8bc9ff32f1bf661b535c7f9a3a8d7b61948",
+      "compiled_at": "2026-10-22T22:56:09Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:34ead6b53877ae6c2cad33ed29e882df06539c02dd4301219960eddaf7d239d2",
+      "digest": "sha256:e85ebb3cdb3f276b92c0e382c02d3ea36be8ec0b12a9fdd316997b477abff956",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 107,
-      "generated_at_commit": "5583bea09cb38cb3cac48fa893f76998746f400b",
-      "source_tree": "sha256:dbae2775376dc3034a6bd3ac13daaace211c2010a5ef93a2d1c124af59f3df35"
+      "files": 109,
+      "generated_at_commit": "47aaea70323016f59f1306aafebc1aa4a9311624",
+      "source_tree": "sha256:db64e96dbb58b7615ad4fef60f56e003c0f220e75053f3707143bde81c822f6c"
     }
   },
   "name": "osh-tests",

@@ -1,0 +1,322 @@
+{
+  "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+  "entries": [
+    {
+      "purpose": "diff-check",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/diff-check.log"
+    },
+    {
+      "purpose": "evidence-immutable-source",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "env",
+        "AIEN_BASE_REF=ac6fe2c7",
+        "tests/gates/run.sh",
+        "evidence-immutable"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/evidence-immutable-source.log"
+    },
+    {
+      "purpose": "green-asan",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_argument_completion.mjs",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/green/osh/osh_numeric_priority_asan",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/raw/green-asan-cases"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/green-asan.log"
+    },
+    {
+      "purpose": "green-plain",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_argument_completion.mjs",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/green/osh/osh",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/raw/green-plain-cases"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/green-plain.log"
+    },
+    {
+      "purpose": "inherited-F1-and-baseline-final",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "node",
+        "targets/L592/verify-inherited.mjs"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/inherited-F1-and-baseline-final.log"
+    },
+    {
+      "purpose": "inherited-F1-and-baseline",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "node",
+        "targets/L592/verify-inherited.mjs"
+      ],
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/inherited-F1-and-baseline.log"
+    },
+    {
+      "purpose": "inherited-final",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "node",
+        "targets/L592/verify-inherited.mjs"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/inherited-final.log"
+    },
+    {
+      "purpose": "inherited-packet",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "node",
+        "evidence/L577-EXIT-NUMERIC-PRIORITY/verify_packet.mjs",
+        "HEAD"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/inherited-packet.log"
+    },
+    {
+      "purpose": "new-mutants",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_argument_completion_mutants.mjs",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/raw/new-mutants"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/new-mutants.log"
+    },
+    {
+      "purpose": "numeric-mutants",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_numeric_priority_mutants.mjs",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/raw/numeric-mutants"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/numeric-mutants.log"
+    },
+    {
+      "purpose": "numeric-original",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "make",
+        "-s",
+        "-j2",
+        "OUT_DIR=/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/green",
+        "test-osh-exit-numeric-priority"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/numeric-original.log"
+    },
+    {
+      "purpose": "option-observations",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "targets/L592/option-observations.mjs"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/option-observations.log"
+    },
+    {
+      "purpose": "original-exit-mutants",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_boundary_mutants.mjs"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/original-exit-mutants.log"
+    },
+    {
+      "purpose": "original-exit",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_boundary_controls.mjs",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/green/osh/osh",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/raw/original-exit-cases"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/original-exit.log"
+    },
+    {
+      "purpose": "original-gates",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "env",
+        "--default-signal=INT",
+        "--ignore-signal=QUIT",
+        "quiet-build",
+        "make",
+        "-s",
+        "-j2",
+        "OUT_DIR=/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/regression",
+        "test-osh-host",
+        "test-osh-prompt-signals",
+        "test-osh-e2e",
+        "osh-trace",
+        "test-osh-diff"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/original-gates.log"
+    },
+    {
+      "purpose": "original-prompt-mutants",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/host/prompt_signal_mutants.mjs"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/original-prompt-mutants.log"
+    },
+    {
+      "purpose": "source-push",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "git",
+        "push",
+        "https://github.com/aien-dev/omega-mv.git",
+        "HEAD:refs/heads/issues/osh-exit-argument-completion-20261022"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/source-push.log"
+    },
+    {
+      "purpose": "zero-env",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "tests/gates/run.sh",
+        "zero-disk-secrets"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/zero-env.log"
+    },
+    {
+      "purpose": "draft RED fixture contamination, not true failure count",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_argument_completion.mjs",
+        "/home/drakestapleton/workspace/targets/L577/green/osh/osh",
+        "targets/L592/raw/red-cases"
+      ],
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/red-test.log"
+    },
+    {
+      "purpose": "actual pre-edit plain RED",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_argument_completion.mjs",
+        "/home/drakestapleton/workspace/targets/L577/green/osh/osh",
+        "targets/L592/raw/red-final-cases"
+      ],
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/red-final-test.log"
+    },
+    {
+      "purpose": "actual pre-edit source sanitizer RED",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "node",
+        "tests/osh/e2e/exit_argument_completion.mjs",
+        "/home/drakestapleton/workspace/targets/L577/green/osh/osh_numeric_priority_asan",
+        "targets/L592/raw/red-asan-cases"
+      ],
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/red-asan-test.log"
+    },
+    {
+      "purpose": "affected fixed plain and sanitizer build",
+      "cwd": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022",
+      "command": [
+        "quiet-build",
+        "make",
+        "-s",
+        "-j2",
+        "OUT_DIR=/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/green",
+        "osh",
+        "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592/green/osh/osh_numeric_priority_asan"
+      ],
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "rawArchiveLog": "raw/green-build.log"
+    }
+  ],
+  "controlBuildCommands": "Actual Make argv, normal exit status, full compiler output and each test invocation/status are in raw/new-mutants/*-build.json and *-test.json and raw/numeric-mutants/*-build.json and *-test.json. Original controls retain original build/status/source/raw logs.",
+  "limitations": "Correctness only, no timings. Native AIENOS and current35B/model/hardware NOT_RUN. Independent review NOT_RUN. Separate preexisting --help gap OPEN."
+}

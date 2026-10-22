@@ -1,0 +1,5 @@
+{
+  "executionRoot": "/home/drakestapleton/workspace/omega-osh-exit-argument-completion-20261022/targets/L592",
+  "retainedRoot": "/home/drakestapleton/workspace/targets/L592",
+  "mapping": "After all execution and packet construction, own untracked output tree is moved intact to retainedRoot. Binary pins retain actual execution paths; replace executionRoot prefix with retainedRoot to locate retained local ELFs. Reused L577 ELFs and original /tmp control outputs keep their original paths. Published payloads and all nested raw members are in Git, not dependent on these build directories."
+}
