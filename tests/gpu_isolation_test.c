@@ -11,6 +11,7 @@
  *     two-hang   process 1 runs ROUNDS work launches while process 2 runs the hang part: process 1 all right (unharmed),
  *                process 2 recovers and is right too.
  * Kernels from Omega's IR (omega_bw_em.h), our own sm_121 encoder; no CUDA. */
+#include "omega_gpu_cmdlist.h"
 #include "omega_gpu_session.h"
 #include "bw_warp_sim.h" /* brings math.h, whose fadd() / ffma() would hide the emitter's */
 #define fadd em_fadd
@@ -20,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -182,17 +184,33 @@ static long work_once(unsigned seed, float tag, uint64_t *ns) {
     return bad;
 }
 
-static int part_hang(void) {
+/* Child processes talk to the parent and to each other over pipes (one byte per event, then raw timestamps). */
+static void say(int fd, char c) { if (fd >= 0 && write(fd, &c, 1) != 1) printf("[%d] pipe write failed\n", (int)getpid()); }
+static int hear(int fd) { char c = 0; return read(fd, &c, 1) == 1 ? c : -1; }
+static int heard_now(int fd) { /* non-blocking: 1 when a byte is waiting */
+    fd_set s; FD_ZERO(&s); FD_SET(fd, &s);
+    struct timeval tv = { 0, 0 };
+    return select(fd + 1, &s, NULL, NULL, &tv) == 1;
+}
+
+/* the hang part; sig_fd (or -1) gets 'H' right before the never-ending launch and 'D' when the part is over */
+static int part_hang(int sig_fd) {
     char w[300];
     omega_gpu_session_lock();
-    if (setup() != 0) { check(0, "hang part: device, buffer, work kernel"); printf("  %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); return 1; }
+    if (setup() != 0) { check(0, "hang part: device, buffer, work kernel"); printf("  %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); say(sig_fd, 'D'); return 1; }
     uint64_t ns0 = 0;
     long bad = work_once(11, 1.0f, &ns0);
     snprintf(w, sizeof w, "hang part: a work launch before the hang is right (%ld wrong, %.3f ms)", bad, ns0 / 1e6);
     check(bad == 0, w);
     check(upload(&g_hang, 1) == 0, "hang part: never-ending kernel uploaded");
+    OmegaGpuCmdList *old_list = NULL; /* made on the device the recovery throws away */
+    omega_gpu_session_unlock();
+    check(omega_gpu_cmdlist_create(2, &old_list) == 0, "hang part: a command list made before the hang");
+    omega_gpu_session_lock();
+    uint32_t dummy = 0; /* the kernel reads no argument; a launch needs at least one word */
     OmegaGpuLaunch H = { .code_va = g_hang.code.va, .gpr_count = g_hang.gpr, .threads_x = 32, .threads_y = 1, .grid_x = 1, .grid_y = 1,
-                         .num_elements = 32, .timeout_ms = HANG_MS };
+                         .num_elements = 32, .args = &dummy, .n_args = 1, .timeout_ms = HANG_MS };
+    say(sig_fd, 'H');
     const uint64_t t0 = now_ns();
     int rc = omega_gpu_session_launch(&H, NULL, NULL);
     const double waited = (now_ns() - t0) / 1e6;
@@ -206,66 +224,117 @@ static int part_hang(void) {
     const uint64_t r0 = now_ns();
     rc = omega_gpu_session_recover();
     const double rec_ms = (now_ns() - r0) / 1e6;
-    snprintf(w, sizeof w, "recover: the device closed (channel and grid destroyed) in %.1f ms (rc %d %s)", rec_ms, rc, rc ? omega_gpu_session_last_error() : "");
+    /* the driver's clean close of the RM client is what says the channel, and the grid on it, are gone: a teardown fault
+     * would keep the session latched (tests/test_omega_gpu_session_platform.c RECOVER_TEARDOWN_FAULT_STAYS_LATCHED) */
+    snprintf(w, sizeof w, "recover: the device closed with no driver teardown fault in %.1f ms (rc %d %s)", rec_ms, rc, rc ? omega_gpu_session_last_error() : "");
     check(rc == 0 && !omega_gpu_session_is_blocked() && omega_gpu_session_recoveries() == 1, w);
     memset(&g_buf, 0, sizeof g_buf); /* handles of the old device are gone */
     omega_gpu_session_lock();
-    if (setup() != 0) { check(0, "after recover: new device, buffer, work kernel"); printf("  %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); return 1; }
+    if (setup() != 0) { check(0, "after recover: new device, buffer, work kernel"); printf("  %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); say(sig_fd, 'D'); return 1; }
     uint64_t ns1 = 0, ns2 = 0;
     bad = work_once(13, 4.0f, &ns1);
     long bad2 = work_once(14, 5.0f, &ns2);
     snprintf(w, sizeof w, "after recover, same process: work launches right (%ld, %ld wrong; %.3f, %.3f ms vs %.3f ms before the hang), device opens %u",
              bad, bad2, ns1 / 1e6, ns2 / 1e6, ns0 / 1e6, omega_gpu_session_open_count());
     check(bad == 0 && bad2 == 0, w);
+    {
+        uint32_t a1 = 0;
+        OmegaGpuLaunch L = { .code_va = g_work.code.va, .gpr_count = g_work.gpr, .threads_x = 32, .threads_y = 1, .grid_x = 1, .grid_y = 1,
+                             .num_elements = 32, .args = &a1, .n_args = 1 };
+        int refused = old_list && omega_gpu_cmdlist_add(old_list, &L) == -1 && strstr(omega_gpu_session_last_error(), "before a session recovery") != NULL;
+        snprintf(w, sizeof w, "a command list from before the recovery is refused (%s)", omega_gpu_session_last_error());
+        check(refused, w);
+    }
     omega_gpu_session_unlock();
+    omega_gpu_cmdlist_free(old_list);
     omega_gpu_session_close();
+    say(sig_fd, 'D');
     return g_failed ? 1 : 0;
 }
 
-static int part_rounds(unsigned seed_base, const char *who) {
+typedef struct { uint64_t start, end; uint32_t launches, during; } Span;
+
+/* work launches with own inputs. ready_fd gets 'R' once set up; then it waits for one byte on go_fd. It runs for at
+ * least RUN_MS and ROUNDS launches; with a hang_fd it waits for 'H' first and keeps going until 'D', counting the
+ * launches made in between. Writes its Span to span_fd. */
+#define RUN_MS 3000ull
+static int part_rounds(unsigned seed_base, const char *who, int ready_fd, int go_fd, int hang_fd, int span_fd) {
     char w[300];
     omega_gpu_session_lock();
-    if (setup() != 0) { check(0, "rounds: device, buffer, work kernel"); printf("  %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); return 1; }
-    long wrong_total = 0; int failed = 0;
+    if (setup() != 0) { check(0, "rounds: device, buffer, work kernel"); printf("  %s\n", omega_gpu_session_last_error()); omega_gpu_session_unlock(); say(ready_fd, 'X'); return 1; }
+    say(ready_fd, 'R');
+    if (go_fd >= 0) (void)hear(go_fd);
+    if (hang_fd >= 0 && hear(hang_fd) != 'H') { check(0, "rounds: the hang process never started its hang"); omega_gpu_session_unlock(); return 1; }
+    Span sp = { now_ns(), 0, 0, 0 };
+    long wrong_total = 0; int failed = 0, hang_live = hang_fd >= 0;
     uint64_t ns, worst = 0;
-    for (int r = 0; r < ROUNDS; r++) {
-        long bad = work_once(seed_base + (unsigned)r, (float)(r % 7), &ns);
-        if (bad < 0) { failed++; printf("  [%d] round %d: %s\n", (int)getpid(), r, omega_gpu_session_last_error()); break; }
+    for (unsigned r = 0;; r++) {
+        if (hang_live && heard_now(hang_fd)) { (void)hear(hang_fd); hang_live = 0; }
+        if (!hang_live && r >= ROUNDS && now_ns() - sp.start >= RUN_MS * 1000000ull) break;
+        long bad = work_once(seed_base + r, (float)(r % 7), &ns);
+        if (bad < 0) { failed++; printf("  [%d] launch %u: %s\n", (int)getpid(), r, omega_gpu_session_last_error()); break; }
         wrong_total += bad;
+        sp.launches++;
+        if (hang_live) sp.during++;
         if (ns > worst) worst = ns;
     }
-    snprintf(w, sizeof w, "%s: %d work launches, own inputs: %ld wrong values, %d failed launches, slowest %.3f ms", who, ROUNDS, wrong_total, failed, worst / 1e6);
+    sp.end = now_ns();
+    snprintf(w, sizeof w, "%s: %u work launches over %.0f ms, own inputs: %ld wrong values, %d failed launches, slowest %.3f ms%s",
+             who, sp.launches, (sp.end - sp.start) / 1e6, wrong_total, failed, worst / 1e6, "");
     check(wrong_total == 0 && failed == 0, w);
+    if (hang_fd >= 0) {
+        snprintf(w, sizeof w, "%s: %u of its launches ran while the other process's kernel was hung or being torn down", who, sp.during);
+        check(sp.during > 0, w);
+    }
+    if (span_fd >= 0 && write(span_fd, &sp, sizeof sp) != (ssize_t)sizeof sp) printf("[%d] span write failed\n", (int)getpid());
     omega_gpu_session_unlock();
     omega_gpu_session_close();
     return g_failed ? 1 : 0;
 }
 
-static pid_t spawn(int (*fn)(unsigned, const char *), unsigned seed, const char *who) {
-    fflush(stdout);
-    pid_t p = fork();
-    if (p == 0) _exit(fn ? fn(seed, who) : part_hang());
-    return p;
-}
-static int part_hang_adapter(unsigned s, const char *w) { (void)s; (void)w; return part_hang(); }
 static int reap(pid_t p) { int st = 0; if (p < 0 || waitpid(p, &st, 0) != p) return -1; return WIFEXITED(st) ? WEXITSTATUS(st) : 128 + (WIFSIGNALED(st) ? WTERMSIG(st) : 0); }
+static int pipe_or_die(int fd[2]) { if (pipe(fd) != 0) { printf("NOT_RUN: pipe\n"); exit(2); } return 0; }
 
 static void chip_tier(void) {
-    char w[200];
-    int rc = reap(spawn(part_hang_adapter, 0, "hang"));
+    char w[300];
+    fflush(stdout);
+    pid_t h = fork();
+    if (h == 0) _exit(part_hang(-1));
+    int rc = reap(h);
     snprintf(w, sizeof w, "C5 hang: never-ending kernel timed out, recovered, correct launch in the same process (child exit %d)", rc);
     check(rc == 0, w);
 
-    pid_t a = spawn(part_rounds, 1000, "process 1"), b = spawn(part_rounds, 5000, "process 2");
+    /* two processes, started together after both are set up, each running RUN_MS: their spans must overlap */
+    int ready[2], go[2], span[2];
+    pipe_or_die(ready); pipe_or_die(go); pipe_or_die(span);
+    pid_t a = fork();
+    if (a == 0) _exit(part_rounds(1000, "process 1", ready[1], go[0], -1, span[1]));
+    pid_t b = fork();
+    if (b == 0) _exit(part_rounds(5000, "process 2", ready[1], go[0], -1, span[1]));
+    int r1 = hear(ready[0]), r2 = hear(ready[0]);
+    say(go[1], 'G'); say(go[1], 'G');
     int ra = reap(a), rb = reap(b);
-    snprintf(w, sizeof w, "C5 two processes on one GPU: both right (exits %d, %d)", ra, rb);
-    check(ra == 0 && rb == 0, w);
+    Span s1 = {0}, s2 = {0};
+    int got = read(span[0], &s1, sizeof s1) == (ssize_t)sizeof s1 && read(span[0], &s2, sizeof s2) == (ssize_t)sizeof s2;
+    const uint64_t lo = s1.start > s2.start ? s1.start : s2.start, hi = s1.end < s2.end ? s1.end : s2.end;
+    const double overlap_ms = got && hi > lo ? (hi - lo) / 1e6 : 0.0;
+    snprintf(w, sizeof w, "C5 two processes on one GPU: both right (ready %c %c, exits %d, %d), running side by side for %.0f ms",
+             r1 > 0 ? r1 : '?', r2 > 0 ? r2 : '?', ra, rb, overlap_ms);
+    check(ra == 0 && rb == 0 && overlap_ms >= (double)RUN_MS * 0.5, w);
+    close(ready[0]); close(ready[1]); close(go[0]); close(go[1]); close(span[0]); close(span[1]);
 
-    a = spawn(part_rounds, 9000, "process 1 beside a hang");
-    b = spawn(part_hang_adapter, 0, "hang");
+    /* a hang beside a working process: process 1 starts when process 2's hang begins and runs until process 2 is done */
+    int sig[2], rdy[2];
+    pipe_or_die(sig); pipe_or_die(rdy);
+    a = fork();
+    if (a == 0) { close(sig[1]); _exit(part_rounds(9000, "process 1 beside a hang", rdy[1], -1, sig[0], -1)); }
+    b = fork();
+    if (b == 0) { close(sig[0]); _exit(part_hang(sig[1])); }
+    close(sig[0]); close(sig[1]);
     ra = reap(a); rb = reap(b);
-    snprintf(w, sizeof w, "C5 a hang in process 2 leaves process 1 unharmed (exits %d, %d)", ra, rb);
+    snprintf(w, sizeof w, "C5 a hang in process 2 leaves process 1 unharmed, and process 2 recovers (exits %d, %d)", ra, rb);
     check(ra == 0 && rb == 0, w);
+    close(rdy[0]); close(rdy[1]);
 }
 
 int main(int argc, char **argv) {

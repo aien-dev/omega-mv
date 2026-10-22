@@ -1,4 +1,4 @@
-$ build/gpu_streams_test --sim   (2026-10-22T02:31Z)
+$ build/gpu_streams_test --sim   (on c5/isolation, 2026-10-22T02:52Z)
 ok: codegen + encode: spin kernel (512 bytes, 12 registers)
 ok: codegen + encode: spin kernel mutant 1 (512 bytes, 12 registers)
 ok: codegen + encode: copy kernel (512 bytes, 12 registers)
