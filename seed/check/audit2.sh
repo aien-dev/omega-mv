@@ -77,6 +77,7 @@ FNR == NR {
     if (sn[1] != 0 || name ~ /\.(pre|post)$/) ex[++ne] = sn[1] * ps }
   else if (name ~ /^mov[zkn]\./) { ex[++ne] = sn[1]; if (sn[2] != 0) ex[++ne] = sn[2] * 16 }
   else if (name == "ldr.w.r") ex[++ne] = 2
+  else if (name == "ldr.x.r" || name == "str.x.r") ex[++ne] = 3
   else if (name == "nop") ex[++ne] = 0
   else if (name == "wfe") ex[++ne] = 2
   else if (name == "and.x.bm") { if (sn[1] != 1) ok = 0

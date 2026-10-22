@@ -119,6 +119,62 @@ it came from.
   Said plainly: the seed chain uses fewer words on every task, 164 against 600 in total (27%). Most of
   the gap is the C path's chosen design (every value goes to memory and back, see above), not a defect
   carried down from older tools.
+## Rung 4: om4, the systems words a compiler needs (done)
+
+- `rung4/om4.s`: om3 grown, feature by feature, into a translator that can build a real program. It is
+  about 4,000 lines in asm2's language, built by asm2 (13,608 bytes, `rung4/om4.bin`); `rung4/table4.s2`
+  adds 3 instruction lines for om4's own use, each naming its manual section; `rung4/mk4.sh` writes the
+  file's own size into its header (asm2 cannot add up sizes).
+- What it adds, and why each one is needed (every new word is used by the Omega compiler of rung R5 or
+  by the test programs):
+  - many functions, calls and recursion (a compiler is many small jobs; reading nested values is a
+    function that calls itself);
+  - whole programs: a source with `fn main` comes out as a complete Linux program, file header laid
+    out by hand, no linker; it runs, reads its input, writes its output and exits;
+  - fixed pools (`global`): memory for the source text, the tables and the output, sized when the
+    program is translated. There is no heap at all, by Drake's rule 24;
+  - local arrays (`new`), array inputs to functions (`view` read-only, `edit` writable), `get`, `put`,
+    `len`; every array carries its length and every index is checked;
+  - `text`: a fixed piece of bytes (an error message, the keyword list), stored with its length;
+  - `read`, `write`, `exit`: the three Linux calls a compiler needs (stdin in, stdout out, a status);
+  - signed divide, remainder and shift, `true`/`false`, `for` with a computed count, `note` lines.
+  The exact meaning of every new word, and which check tests it, is in `docs/one_layer/OMEGESE.md`
+  section 9.
+- Rules from the B-to-C lessons (Drake, decisions 16-24), and how om4 keeps them:
+  - no terminator bytes: arrays and texts know their length (om4 itself no longer looks for an end
+    byte in its input); an array written without its length is refused;
+  - no pointers: you can only index an array, and the index is checked;
+  - no hidden sharing: the same array cannot be passed twice in one call, and a global pool is never
+    passed at all, so two names never point at the same memory;
+  - no undefined behaviour: unsigned numbers wrap, signed numbers stop with an error ("trap") when they
+    overflow, division by zero traps, a bad index traps, running out of stack traps; the spec has no
+    "undefined" in it (the gate checks with a search);
+  - no automatic conversions: mixing two types in one operation is refused.
+- Checks (`rung4/gate4.sh`, results in `evidence/SEED-0/rung4/`), 194 cases, all pass:
+  - asm2 rebuilds om4 to the same bytes; objdump (the referee) reads all 3,016 instructions back to
+    what `om4.s` says (0 disagreements); five planted mistakes in the text are each caught;
+  - the 10 practice tasks: om4 makes exactly the same machine words as om3, and the same results as the
+    C path (80 inputs) and the expected answers;
+  - 9 new programs in the old calling form that the C path can also express (signed divide and
+    remainder at their limits, signed shifts, calls, computed loop counts, local arrays, a bad index):
+    om4 and the C path give the same result or the same trap on all 69 inputs;
+  - 4 whole programs against twins written in C and built by gcc (gcc as the referee only): recursive
+    Fibonacci, sorting 1,000 numbers, echo of 50,000 random bytes, a byte copy that reverses its input:
+    same output every time;
+  - 9 programs that must stop with a given status: divide by zero, bad index, read past the end, loop
+    limit, bad conversion, overflow, stack used up, `exit`, and a void call: each stops as written;
+  - 32 broken or forbidden programs are refused, each with its own error number;
+  - a copy of om4 with one instruction word changed (signed divide made unsigned) gives different
+    results, so the checks would notice such a slip.
+- Machine words per program, where the C path can express it (`evidence/SEED-0/rung4/words.tsv`):
+  the 10 practice tasks are the same 164 words as om3 (C path 600). The 9 new programs: C path 552,
+  om4 267. One is larger than the C path: the program with three calls (79 against 59), because each
+  call saves and restores every register in use.
+- Limits, said plainly: variable names are at most 8 characters; a function may use at most 16
+  registers for its names and working values (om4 stops with error 12 beyond that); `omegese next` (the
+  C tool that lists the legal next words) does not know the new words yet, so its fuzz test does not
+  cover them yet (owed, see the handoff).
+
 
 ## Rung 5: Atlas reborn (done)
 

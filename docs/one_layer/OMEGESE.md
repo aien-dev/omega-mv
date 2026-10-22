@@ -385,3 +385,94 @@ Grammar-constrained decoding (Outlines, XGrammar, llguidance, SynCode), grammar-
 redesigned for fewer tokens (SimPy, 2024). Not found: a lexicon chosen so one terminal is one vocab
 token, with type-aware prefix checking feeding an independently checked, signed IR. "New" is
 UNVERIFIED.
+
+## 9. Systems words (seed chain om4 and omc, ledger L408)
+
+Added 2026-10-22 for the Omega compiler written in Omegese (`seed/omc/omc.om`) and the translator that
+first builds it (`seed/rung4/om4.s`). Every word below is used by omc or by the seed test corpus
+(`seed/rung4/tests`); the C path (`tools/omegese`) does not read these words yet. Each rule names the
+gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Decisions 16-24 are those of
+`docs/PROGRAM.md` (branch doc/program).
+
+### 9.1 Two kinds of output
+
+- A program with a line `fn main` is a whole Linux program (program mode); otherwise the output is the
+  functions' machine words under the OSC-1 native rules (function mode), entry = word 0. (gate 4 s.4-6)
+- `fn main` has no parameters and returns a whole-number type or void. The program's exit status is
+  main's value modulo 256 (Linux keeps the low 8 bits), 0 for a void main. (s.6 t_exit, s.7)
+- A trap in program mode ends the program with exit status 100 + the trap code; in function mode it
+  calls OscRt.trap as the C path does. (s.6 t_*, s.4-5)
+
+### 9.2 Functions and calls
+
+- `fn` may appear many times. A call names a function written earlier, or, in program mode, the function
+  it is in (recursion). In function mode a function cannot call itself (error 9), so the stack a call
+  chain uses is bounded by the order of the functions. (s.5 fm5, s.6 fib, s.7)
+- `<function> <args>` as a value calls a function that returns a value; as a line it calls a void one.
+  Using the one where the other is needed is error 7. (s.7)
+- `to void` makes a void function; `ret` with no value returns from it, and so does reaching its `end`.
+  A function with a return type whose `end` can be reached is error 18. (s.6 t_void, s.7)
+- Arguments are read left to right, each fully before the next. (s.5 fm5)
+- Function names may have up to 63 characters; other names up to 8 (error 13). (s.4 dev01, s.7)
+- In program mode the stack is a fixed 8 MiB pool; a call or a local array that would go below it traps
+  6 before it writes anything. (s.6 t_stack)
+
+### 9.3 Numbers (decision 19: one meaning per word and width)
+
+- Unsigned add, sub, mul, shl, neg, not wrap modulo 2^width (uchar 8, ushort 16, uint 32, ulong 64 bits).
+  (gate 3, s.4)
+- Signed add, sub, mul, neg, div and shl trap 1 when the exact result is outside the type (byte 8,
+  short 16, int 32, long 64 bits), including the minimum divided by -1. (s.5 fm1-fm4, fm9)
+- div and rem trap 2 when the divisor is 0. Signed div rounds toward zero; signed rem has the sign of
+  the dividend, and the minimum rem -1 is 0. (s.5 fm1, fm2, fm9)
+- A shift amount outside 0 .. width - 1 traps 7, for every type. shr of a signed value keeps the sign.
+  (s.5 fm3, fm4)
+- A conversion `<type> v` traps 5 when the value is outside the new type. (s.6 t_conv)
+- There are no implicit conversions (decision 20): the two values of an op, a value and the name it is
+  written to, an argument and its parameter, all have the same type, or the line is refused (error 7).
+  A bare number takes the type the place needs. `uchar` is an 8-bit unsigned number, never a character.
+  (s.7)
+- `true` and `false` are the bool numbers 1 and 0. (s.6 t_loop)
+
+### 9.4 Arrays (decisions 16, 17, 18, 23, 24)
+
+- Every array has a fixed element type (uchar .. long, never bool) and a fixed length written as a
+  number; the length travels with the array's name, never as a terminator byte. An array parameter or
+  a pool written without its length is refused (error 16). (s.7)
+- `global NAME T N`: a pool of N elements (1 .. 16777216), all 0 when the program starts, in the
+  program's own memory image (no heap, no allocation call); at most 1 GiB of pools, else error 23.
+  Program mode only (error 9). (s.6 echo, bytecopy, s.7)
+- `text NAME "bytes"`: a read-only array of uchar holding the bytes between the quotes, with its
+  length; `\n` is 10, `\t` is 9, `\\` is 92, `\"` is 34; any other escape, or a quote missing its end,
+  is error 22. Program mode only. (s.7)
+- `NAME = new T N v`: a local array of N elements, each v, on the stack, given back when the function
+  returns. Only in a function's outermost block (error 9); at most 4 MiB of local arrays (error 23).
+  `free NAME` is accepted for it and does nothing else. (s.5 fm7, fm8, s.6 sort)
+- A parameter `NAME view T N` or `NAME edit T N` takes an array of exactly that type and length (error 7
+  otherwise). A view is read-only; `put`, `read` into it, or passing it as edit is error 20. A text is
+  read-only in the same way. (s.7)
+- An argument is a local array or an array parameter, optionally after `view` or `edit`. A global is
+  never passed (error 19), and the arrays of one call are distinct names (error 19); so two live
+  references in one function are always distinct storage, and no write is ever seen through another
+  name. (s.7)
+- `get A i` reads element i; `put A i v` reads i, then v, then writes. `len A` is A's length as a ulong.
+  A number index must be inside A when om4 reads it (error 21); any other index is checked when it runs
+  and traps 3 when it is not below the length (a negative signed index traps too). There is no word that
+  turns an array into an address or adds to one. (s.5 fm8, s.6 t_bounds, s.7)
+
+### 9.5 System calls and lines
+
+- `read fd A off n` and `write fd A off n` (fd int, off and n ulong) move n bytes between the open file
+  fd and A's elements off .. off + n - 1 with the Linux read and write calls, and give a long: the bytes
+  moved, or minus the Linux error number. They trap 3 unless n <= len A and off <= len A - n, before the
+  call. `read` needs a writable array (error 20). A must be an array of uchar for the counts to be bytes.
+  (s.6 echo, bytecopy, t_rw)
+- `exit v` (v int) ends the program with status v modulo 256. Like `ret`, it ends the path: a line after
+  it in the same block is error 17. (s.6 t_exit, s.7)
+- `note ...` is a line the translator does not read beyond its first word. (s.6 sort, fib)
+
+### 9.6 Capacities (decision 23)
+
+Input over a capacity is refused with error 14, never overrun: om4 reads at most 8 MiB - 1 bytes and
+writes at most 8 MiB, 1024 names in scope, 512 functions, 8192 trap sites per function, 512 nested
+blocks. A function that needs more than the 16 registers it hands out is error 12.

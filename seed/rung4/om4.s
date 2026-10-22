@@ -1,7 +1,7 @@
 ; om4.s -- rung 4 of the Omega seed chain: om3 (seed/rung3/om3.s) grown into the systems subset a compiler
 ; needs, written in asm2's language and built by asm2:
 ;   cat seed/rung2/table.s2 seed/rung3/table3.s2 seed/rung4/om4.s | seed/rung2/asm2.bin > om4.bin
-; Use: om4.bin < program.omegese > out. Two kinds of output (seed/rung4/SYSTEMS.md has the words):
+; Use: om4.bin < program.omegese > out. Two kinds of output (docs/one_layer/OMEGESE.md section 9 has the words):
 ; - function mode (no `fn main`): the functions' words only, entry = word 0, to be called under the OSC-1
 ;   native rules (docs/osc/OSC-1-DESIGN.md section 7): parameters in x0..x5, result in x0 in canonical
 ;   form, OscRt * in x7, a trap calls OscRt.trap (offset 16) with x0 = rt, x1 = code. With more than one
@@ -1511,7 +1511,7 @@
   add.x.i sp sp 80
   b STMT
 ; SF_BR: B.HS (unsigned) or B.GE (signed) to the loop exit, C6.2.34 (distance filled at end); x0 = its place
-; (the loop's type in the caller's frame slot 3, read through x29-free addressing: the frame is at sp+16)
+; (the loop type is the caller frame slot 3, at sp + 40 once this routine has pushed 16 bytes)
 :SF_BR
   str.x.pre x30 sp -16
   mov.x x13 x20
