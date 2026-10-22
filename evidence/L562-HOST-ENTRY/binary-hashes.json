@@ -1,0 +1,13 @@
+{
+  "scope": "LINUX_HOST_TEST_ELF_NOT_OMEGA_BOOTSTRAP",
+  "binaries": {
+    "/home/drakestapleton/workspace/targets/L562-red/osh-host/test_osh_host": "e1e7a885b1ac28a179a1609f885bd1ebe0ecc3e9d5febe1cdebe00688b3236df",
+    "/home/drakestapleton/workspace/targets/L562-red/osh-host/test_osh_host_asan": "7704e714c81680cb1c1df2ac75870588845e661dee60e8a84641f957a995e45e",
+    "/home/drakestapleton/workspace/targets/L562-green/osh-host/test_osh_host": "fc2bb5156a046c713423d9b562a4f17a19b0551645689c12f04b2a77e5fceace",
+    "/home/drakestapleton/workspace/targets/L562-green/osh-host/test_osh_host_asan": "b1db331eef0d80476e41bb9a16fcd8a808a2b58604de772d925a781797b710f2",
+    "/home/drakestapleton/workspace/targets/L562-entry-controls/no-cloexec/build/osh-host/test_osh_host": "6606ba212359247d6977851b7a5909fea0830b87cb32501fec464a31e7111745",
+    "/home/drakestapleton/workspace/targets/L562-entry-controls/no-cloexec/build/osh-host/test_osh_host_asan": "281628c89a20ed6b6f479b535042ce2b150bcdb8c101cad2c742c12937e788da",
+    "/home/drakestapleton/workspace/targets/L562-entry-controls/no-quit-default/build/osh-host/test_osh_host": "86067ae89bbdc1e375d4268d732319d86c102b37729381fc384222a9498dcfed",
+    "/home/drakestapleton/workspace/targets/L562-entry-controls/no-quit-default/build/osh-host/test_osh_host_asan": "b0b41e12b1933ce6c3b94d1f8880864129c1f802ad56b5b9c198bce4badd6fb0"
+  }
+}

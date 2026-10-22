@@ -1,0 +1,68 @@
+[
+  {
+    "source": "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L562-red.log",
+    "packet": "evidence/L562-HOST-ENTRY/red-make.log.gz",
+    "original_sha256": "2af6e0eb78c70bca2516fa1dd8639e325bc5f5bac327cc3edbce671e0ad8c52d",
+    "original_bytes": 1300
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-red/osh-host/host.out",
+    "packet": "evidence/L562-HOST-ENTRY/red-host.out.gz",
+    "original_sha256": "acc2a3d8485b1b7ad970b88a7bd428f1ca1dc921764aad82e74a4fe4afdaae49",
+    "original_bytes": 1129
+  },
+  {
+    "source": "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L562-green.log",
+    "packet": "evidence/L562-HOST-ENTRY/green-make.log.gz",
+    "original_sha256": "f3d75faed2ebea2d06c0c1f519cb0282873fb434f48adc8b889e573badcf7cb8",
+    "original_bytes": 1695
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-green/osh-host/host.out",
+    "packet": "evidence/L562-HOST-ENTRY/green-host.out.gz",
+    "original_sha256": "44381b334792351ec075bd5c3bd91dfb1bd4d6bbee14ec93b35081601c109d5a",
+    "original_bytes": 42
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-green/osh-host/host_asan.out",
+    "packet": "evidence/L562-HOST-ENTRY/green-host_asan.out.gz",
+    "original_sha256": "44381b334792351ec075bd5c3bd91dfb1bd4d6bbee14ec93b35081601c109d5a",
+    "original_bytes": 42
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-entry-controls/no-cloexec/compile.log",
+    "packet": "evidence/L562-HOST-ENTRY/controls/no-cloexec/compile.log.gz",
+    "original_sha256": "10efcc2d97402345757c99ec536be5eaf67d714923d6c50ec3cc9184b68bbd5b",
+    "original_bytes": 847
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-entry-controls/no-cloexec/run.log",
+    "packet": "evidence/L562-HOST-ENTRY/controls/no-cloexec/run.log.gz",
+    "original_sha256": "46afd9bec696a06a65e7a4ac01ac9ae63aca95e77be1334002b608c202d0f36d",
+    "original_bytes": 713
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-entry-controls/no-quit-default/compile.log",
+    "packet": "evidence/L562-HOST-ENTRY/controls/no-quit-default/compile.log.gz",
+    "original_sha256": "a668dca896805081e8eb981d02a4b0c61824e7d1bb304e0e73da16129de9e43c",
+    "original_bytes": 867
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-entry-controls/no-quit-default/run.log",
+    "packet": "evidence/L562-HOST-ENTRY/controls/no-quit-default/run.log.gz",
+    "original_sha256": "4916e9f9f9d11b7cdcf4d9dd9bb8800bb328c9eb79ff8a550a98ca7a8a402c0a",
+    "original_bytes": 918
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-entry-controls/no-cloexec/build/osh-host/host.out",
+    "packet": "evidence/L562-HOST-ENTRY/controls/no-cloexec/build/osh-host/host.out.gz",
+    "original_sha256": "2a0b06b23b46b4c4754cd47bdac10ed427463428f028af3914a7634494285514",
+    "original_bytes": 1245
+  },
+  {
+    "source": "/home/drakestapleton/workspace/targets/L562-entry-controls/no-quit-default/build/osh-host/host.out",
+    "packet": "evidence/L562-HOST-ENTRY/controls/no-quit-default/build/osh-host/host.out.gz",
+    "original_sha256": "9de6c534524047e4bbe85fca6bf24e608a7f6d82579d29c2be9e3f8bb2888362",
+    "original_bytes": 273
+  }
+]

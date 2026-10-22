@@ -2257,9 +2257,40 @@ static void anchor_pgrp(void)
     exit(WEXITSTATUS(st));
 }
 
+/* The suite owns its entry preconditions, not the caller's build locks.
+ * Keep inherited descriptors open in this driver (so make/quiet exclusions live
+ * through its lifetime), but do not accidentally export them to helper execs.
+ * --helper must bypass this: tests deliberately exercise inherited signals/FDs.
+ */
+static int prepare_test_entry(void)
+{
+    struct sigaction sa;
+    memset(&sa, 0, sizeof sa);
+    sigemptyset(&sa.sa_mask);
+    sa.sa_handler = SIG_DFL;
+    if (sigaction(SIGINT, &sa, NULL) || sigaction(SIGQUIT, &sa, NULL)) return -1;
+    DIR *d = opendir("/proc/self/fd");
+    if (!d) return -1;
+    int err = 0;
+    for (;;) {
+        errno = 0;
+        struct dirent *e = readdir(d);
+        if (!e) { err = errno; break; }
+        if (e->d_name[0] == '.') continue;
+        int fd = atoi(e->d_name); /* kernel-provided decimal descriptor names */
+        if (fd <= 2 || fd == dirfd(d)) continue;
+        int flags = fcntl(fd, F_GETFD);
+        if (flags < 0 || fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) { err = errno; break; }
+    }
+    if (closedir(d) && !err) err = errno;
+    if (err) { errno = err; return -1; }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc > 2 && !strcmp(argv[1], "--helper")) return helper_main(argc, argv);
+    if (prepare_test_entry()) { perror("host test entry setup"); return 2; }
     anchor_pgrp();
     ssize_t n = readlink("/proc/self/exe", g_self, sizeof g_self - 1);
     if (n <= 0) { printf("cannot find own path\n"); return 2; }

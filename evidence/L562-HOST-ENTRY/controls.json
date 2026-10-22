@@ -1,0 +1,35 @@
+{
+  "original_test_assertion_prefix": "BYTE_IDENTICAL",
+  "results": [
+    {
+      "fault": "no-quit-default",
+      "compile_exit": 0,
+      "make_exit": 2,
+      "expected_assertions": [
+        "children get default SIGINT/SIGQUIT when the shell did not have them ignored; child saw"
+      ],
+      "actual_assertions": [
+        "children get default SIGINT/SIGQUIT when the shell did not have them ignored; child saw"
+      ],
+      "pass": true
+    },
+    {
+      "fault": "no-cloexec",
+      "compile_exit": 0,
+      "make_exit": 2,
+      "expected_assertions": [
+        "last stage fd list",
+        "stage 2 (with > redirect) fd list",
+        "stage 3 fd list",
+        "redirected single command fd list"
+      ],
+      "actual_assertions": [
+        "last stage fd list",
+        "stage 2 (with > redirect) fd list",
+        "stage 3 fd list",
+        "redirected single command fd list"
+      ],
+      "pass": true
+    }
+  ]
+}
