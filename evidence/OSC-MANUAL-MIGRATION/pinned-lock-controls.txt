@@ -1,0 +1,5 @@
+PINNED_RC=0
+error: PHYSICS_DIR=../physics is at commit e95e3ed2a86fe4bffe4d954fa94c27dfb5284280 but physics.lock pins 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf.
+       Checkout the pinned physics commit, or override with PHYSICS_LOCK_CHECK=0.
+make: *** [Makefile:81: check-physics-lock] Error 1
+MISMATCH_RC=2

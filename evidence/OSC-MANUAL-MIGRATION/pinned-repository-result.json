@@ -1,0 +1,20 @@
+{
+  "source_commit": "63e06754b1f0c3dbc0795bdcb4ecca6b00a9846e",
+  "physics_expected": "6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf",
+  "physics_actual": "6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf",
+  "physics_worktree_clean": true,
+  "shared_physics_head_unchanged": "e95e3ed2a86fe4bffe4d954fa94c27dfb5284280",
+  "lock_check_disabled": false,
+  "expected_m4_gates_from_source": 14,
+  "actual_gates": 14,
+  "passed": 14,
+  "failed": 0,
+  "reference_demonstrations": [
+    "arithmetic",
+    "physics"
+  ],
+  "exit": 0,
+  "binary_sha256": "0255c599602b06385284d02a35428032bbe23950309550abd8c694dda4cff154",
+  "log_sha256": "c3636730d4b089d037da1c0286c770b503470727a0b5a615963ff209df670472",
+  "scope": "default make test target; legacy reference build, not all repository targets or native retirement"
+}
