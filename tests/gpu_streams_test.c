@@ -293,6 +293,18 @@ static long event_run(uint32_t iters, int with_wait, int fbn) {
     OmegaGpuCmdListOpts o; memset(&o, 0, sizeof o);
     o.first_barrier_none = fbn;
     OmegaGpuCmdListStats s1, s2;
+    if (with_wait) { /* the refusals: a list with a wait never runs alone, nor waits on a second list */
+        OmegaGpuCmdList *c = NULL;
+        int alone = omega_gpu_cmdlist_submit(b, &o, &s2) == -1 && strstr(omega_gpu_session_last_error(), "only in a pair") != NULL;
+        omega_gpu_session_unlock();
+        int third = omega_gpu_cmdlist_create(1, &c) == 0;
+        omega_gpu_session_lock();
+        third = third && add_spin(c, 6, B_OA, 1, 0.0f) == 0 && omega_gpu_cmdlist_wait_for(b, c, 0) == -1;
+        omega_gpu_session_unlock();
+        omega_gpu_cmdlist_free(c);
+        omega_gpu_session_lock();
+        check(alone && third, "event refusals: a list with a wait is refused alone, and cannot wait on a second list");
+    }
     poison_all();
     int rc = omega_gpu_cmdlist_submit_pair(a, b, &o, &s1, &s2);
     if (rc) printf("  event: pair: %s\n", omega_gpu_session_last_error());

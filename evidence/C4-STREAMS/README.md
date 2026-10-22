@@ -24,3 +24,8 @@ Chip command (GB10 lock; timings need an exclusive window):
 `build/gpu_streams_test` (sets AIEN_OMEGA_GPU_CHANNELS=2 itself). PASS needs: pair / (solo A + solo B) < 0.75, the
 same two spins in one list on one queue >= 0.75 (red check), every Y right with the wait, and at least one Y wrong
 without it (negative control).
+
+Update 2026-10-22 (after an independent review): the C4 code continues on branch c5/isolation, which contains this branch.
+There a launch that waits always gets the full WAIT_FOR_IDLE + invalidate after the wait, a list with waits is refused by
+plain submit and runs only in submit_pair with the list it waits on, and the chip test checks both refusals. The chip
+receipt for C4 will be taken on c5/isolation; merge that branch, not this one alone.

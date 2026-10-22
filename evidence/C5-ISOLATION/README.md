@@ -19,11 +19,26 @@ What this branch adds (on c4/streams):
 Driver docs: the vendored NVIDIA headers document NVA06C_CTRL_CMD_PREEMPT ("This command preempts a channel group") but
 are silent on freeing a channel group whose grid never ends (RM source not vendored). The chip run is the proof.
 
+
+Review fixes (independent Opus review, 2026-10-22):
+- The never-ending launch now passes one argument word (a launch with none is refused before submit, so the hang part
+  would never have hung).
+- The two processes are started together after both are set up and each runs at least 3 s; their time spans must
+  overlap by at least half of that. Beside a hang, process 1 starts at process 2's "hang launched" signal and keeps
+  going until process 2 is done; it must have launches inside that stretch.
+- "Grid destroyed" is not claimed from timings: it rests on the driver's clean close (a teardown fault keeps the
+  session latched, case RECOVER_TEARDOWN_FAULT_STAYS_LATCHED).
+- A command list made before a recovery is refused (its buffers are gone); the chip test checks it.
+- A command-list-only latch (check launch completed) is recoverable: omega_gpu_session_note_module_latch, case
+  RECOVER_MODULE_LATCH, mutant recover-ignores-module-latch. Session tests 16/16, mutants 11/11.
+- C4 parts fixed here too (so merge c5/isolation, which contains c4/streams): a launch that waits always gets the full
+  WAIT_FOR_IDLE + invalidate; a list with waits runs only in submit_pair with the list it waits on.
+
 | file | what | result |
 | --- | --- | --- |
 | 01-host-only.log | codegen + encode of the work, mutant and never-ending kernels; simulator exact, mutant caught | PASS |
-| 02-session-platform.log | the session on a fake GPU, both recover cases included | PASS 15/15 |
-| 03-session-mutants.log | 10 broken copies of the session, each caught | 10/10 killed |
+| 02-session-platform.log | the session on a fake GPU, both recover cases included | PASS 16/16 |
+| 03-session-mutants.log | 11 broken copies of the session, each caught | 11/11 killed |
 | 05-platform-linux.log | the Linux platform on a simulated driver | PASS 8/8 |
 | 04-never-ending-kernel.sass.txt | our disassembler: `IADD3; BRA 0x20` (branch back for ever) | as designed |
 | (chip, pending slot) | hang + recover + right values; two processes right; hang beside a working process | NOT RUN |
