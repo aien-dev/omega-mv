@@ -1,9 +1,9 @@
 import pathlib,sys,subprocess,hashlib,json
 w=pathlib.Path(sys.argv[1]);cc=w/'seed/out/omc';expected={}
-for label,stem in [('check','elfcheck'),('literal','literal'),('equal','byteequal'),('hash','sha256')]:
+for label,stem in [('check','elfcheck'),('literal','literal'),('equal','byteequal'),('hash','sha256'),('copy','streamcopy')]:
  src=w/('seed/native/'+stem+'.om');p=subprocess.run([str(cc)],input=src.read_bytes(),capture_output=True);assert p.returncode==0,p.stderr
  expected[label]=hashlib.sha256(p.stdout).hexdigest();expected['seed/native/'+stem+'.om']=hashlib.sha256(src.read_bytes()).hexdigest()
-for label in ['stage1','stage2','stage3']:expected[label]=hashlib.sha256(cc.read_bytes()).hexdigest()
+for label in ['stage1','stage2','stage3','copied']:expected[label]=hashlib.sha256(cc.read_bytes()).hexdigest()
 p=subprocess.run(['sh',str(w/'tests/seed-migration/native-closure.sh')],capture_output=True,text=True,timeout=60)
 assert p.returncode==0,(p.stdout,p.stderr)
 observed={}

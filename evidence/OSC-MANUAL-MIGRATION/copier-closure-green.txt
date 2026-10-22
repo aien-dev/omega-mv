@@ -1,0 +1,19 @@
+OMEGA_SHA256 36870f4c2c81aa94d8558c53c7feec613d804d842e51617ab35c033fd63fd61a check
+OMEGA_SHA256 5e6ad0185dbd69b07850df44e1a23c130e2231f180fe3e39f37198e4c68565cc literal
+OMEGA_SHA256 bab73390752f43b37de94352b9c288f42d4720bac558feca17cff88ac715a0c7 equal
+OMEGA_SHA256 0c16db7b3c5f41076486c8ffcde8dcbb055019528e3aa5e6c4694fea8723b3a0 hash
+OMEGA_SHA256 3985b0d1e1a04795db07ede701ed055eeef66cb1e31a0c825f82c6e3bc44eea5 copy
+OMEGA_SHA256 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6 copied
+OMEGA_SHA256 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6 stage1
+OMEGA_SHA256 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6 stage2
+OMEGA_SHA256 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6 stage3
+OMEGA_SHA256 bc52e24377166825c87d74351a946bb4ad13d10141fb2f5956ac2103dc486dff seed/native/elfcheck.om
+OMEGA_SHA256 d7d1f91d582af400f690abedcabb86f663509978740774c7002bc9f06ac689b8 seed/native/literal.om
+OMEGA_SHA256 bac1ff87552daaea13a3a631c69136999a5b714a271730d4a74d03b204dee133 seed/native/byteequal.om
+OMEGA_SHA256 0781cdcec18570a57afbe3be4a6717dd2d1fa4c887b49a3e4cb542b594f8a041 seed/native/sha256.om
+OMEGA_SHA256 cc201fee107563e0796182c96e5dfb743d7d0590f828a1295d9caf76eea3ddab seed/native/streamcopy.om
+PASS native hashing: compiler identity cross-check and source/artifact fingerprints
+PASS native ELF check: checker, compiler, literal, comparator, hasher, copier, copied compiler, stages 1/2/3
+PASS Omega binary comparison: pinned compiler = stage1 = stage2 = stage3
+Scope: native self-host comparison; seed ancestry and static dependencies remain separate.
+{"fingerprints_checked": 14, "independent_hashlib_matches": true, "status": "PASS"}

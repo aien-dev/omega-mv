@@ -1,0 +1,27 @@
+{
+  "cases": 3,
+  "failures": 0,
+  "results": [
+    {
+      "case": "empty-copy",
+      "exit": 2,
+      "refused": true,
+      "compiled_stub": true,
+      "stderr": "REFUSED: copied compiler differs\n"
+    },
+    {
+      "case": "copy-error",
+      "exit": 2,
+      "refused": true,
+      "compiled_stub": true,
+      "stderr": ""
+    },
+    {
+      "case": "appended-byte",
+      "exit": 2,
+      "refused": true,
+      "compiled_stub": false,
+      "stderr": "REFUSED: copied compiler differs\n"
+    }
+  ]
+}

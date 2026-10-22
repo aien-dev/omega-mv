@@ -10,7 +10,7 @@ ACTUAL=$(sha256sum "$CC")
 # A private build directory prevents overlapping checks from sharing output files.
 mkdir -p "$ROOT/build/manual-migration"
 D=$(mktemp -d "$ROOT/build/manual-migration/closure.XXXXXXXX")
-trap 'rm -f "$D/check" "$D/literal" "$D/equal" "$D/hash" "$D/stage1" "$D/stage2" "$D/stage3"; rmdir "$D"' EXIT HUP INT TERM
+trap 'rm -f "$D/check" "$D/literal" "$D/equal" "$D/hash" "$D/copy" "$D/copied" "$D/stage1" "$D/stage2" "$D/stage3"; rmdir "$D"' EXIT HUP INT TERM
 "$CC" < seed/native/elfcheck.om > "$D/check"
 [ -s "$D/check" ] || exit 2
 chmod 700 "$D/check"
@@ -39,13 +39,20 @@ chmod 700 "$D/stage2"
 "$D/check" < "$D/hash"
 chmod 700 "$D/hash"
 [ "$("$D/hash" < "$CC")" = "$EXPECTED" ] || { printf '%s\n' 'REFUSED: native hash mismatch' >&2; exit 2; }
-for name in check literal equal hash stage1 stage2 stage3; do
+"$CC" < seed/native/streamcopy.om > "$D/copy"
+[ -s "$D/copy" ] || exit 2
+"$D/check" < "$D/copy"
+chmod 700 "$D/copy"
+"$D/copy" < "$D/stage3" > "$D/copied"
+"$D/equal" 3< "$D/stage3" 4< "$D/copied" || { printf '%s\n' 'REFUSED: copied compiler differs' >&2; exit 2; }
+"$D/check" < "$D/copied"
+for name in check literal equal hash copy copied stage1 stage2 stage3; do
   digest=$("$D/hash" < "$D/$name")
   printf 'OMEGA_SHA256 %s %s\n' "$digest" "$name"
 done
-for name in elfcheck literal byteequal sha256; do
+for name in elfcheck literal byteequal sha256 streamcopy; do
   digest=$("$D/hash" < "seed/native/$name.om")
   printf 'OMEGA_SHA256 %s seed/native/%s.om\n' "$digest" "$name"
 done
 printf '%s\n' 'PASS native hashing: compiler identity cross-check and source/artifact fingerprints'
-printf '%s\n' 'PASS native ELF check: checker, compiler, literal, comparator, stages 1/2/3' 'PASS Omega binary comparison: pinned compiler = stage1 = stage2 = stage3' 'Scope: native self-host comparison; seed ancestry and static dependencies remain separate.'
+printf '%s\n' 'PASS native ELF check: checker, compiler, literal, comparator, hasher, copier, copied compiler, stages 1/2/3' 'PASS Omega binary comparison: pinned compiler = stage1 = stage2 = stage3' 'Scope: native self-host comparison; seed ancestry and static dependencies remain separate.'
