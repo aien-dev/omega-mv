@@ -53,6 +53,8 @@ SRCS += src/omega_gpu_decode_graph.c
 # sc #642 (2026-10-18): one Qwen3.8-27B decode token as one command list (GDN + hd256 attention layers, dense MLP)
 SRCS += src/omega_gpu_q38_graph.c
 SRCS += src/omega_gpu_q36_graph.c
+# C6 (L386): Omega's own sm_121 disassembler; the listing checks in tests/ call it instead of nvdisasm
+SRCS += src/omega_sm121_disasm.c
 # OWN-30B (2026-10-13): bf16 streaming GEMV for the lm_head (omega_gpu_bf16_gemv_api.h), new files only
 SRCS += src/omega_blackwell_codegen_bf16.c src/omega_gpu_bf16_gemv_api.c
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM, each expert streamed once per pass (omega_gpu_fp8gemm_api.h), new files only
@@ -325,20 +327,19 @@ test-numeric-transc-full: build/test_omega_transc
 test-numeric-transc-digest: build/test_omega_transc
 	./build/test_omega_transc digest
 
-# Offline provenance of the GB10 MAX/MIN warp patch: nvdisasm -b SM121 must
-# decode every word to the text the patch table records. No device opened;
-# nvdisasm is a decoder only. Last line: "E1 Reduce nvdisasm: PASS".
+# Offline provenance of the GB10 MAX/MIN warp patch: Omega's own disassembler (sm121dis,
+# C6; it agrees with nvdisasm on every library kernel) must decode every word to the text the
+# patch table records. No device opened. Last line: "E1 Reduce nvdisasm: PASS" (name kept for receipts).
 .PHONY: test-numeric-reduce-nvdisasm
-REDUCE_NVDISASM ?= /usr/local/cuda/bin/nvdisasm
-test-numeric-reduce-nvdisasm: build/test_omega_reduce_cpu
-	@[ -x "$(REDUCE_NVDISASM)" ] || { echo "E1 Reduce nvdisasm: NOT_RUN ($(REDUCE_NVDISASM) missing)"; exit 2; }
+REDUCE_NVDISASM ?= build/sm121dis
+test-numeric-reduce-nvdisasm: build/test_omega_reduce_cpu build/sm121dis
 	@set -e; t=$$(mktemp -d); trap 'rm -rf "$$t"' EXIT; ./build/test_omega_reduce_cpu --dump "$$t"; \
 	for op in max min; do \
-	  "$(REDUCE_NVDISASM)" -b SM121 "$$t/$$op.bin" > "$$t/$$op.raw" || { echo "E1 Reduce nvdisasm: FAIL ($$op: nvdisasm error)"; exit 1; }; \
+	  "$(REDUCE_NVDISASM)" -b SM121 "$$t/$$op.bin" > "$$t/$$op.raw" || { echo "E1 Reduce nvdisasm: FAIL ($$op: disassembler error)"; exit 1; }; \
 	  sed -n 's|^[[:space:]]*/\*\([0-9a-f]\{4\}\)\*/[[:space:]]*\(.*;\).*$$|\1 \2|p' "$$t/$$op.raw" \
 	    | sed 's/[[:space:]]\{1,\}/ /g' > "$$t/$$op.got"; \
 	  diff -u "$$t/$$op.lst" "$$t/$$op.got" || { echo "E1 Reduce nvdisasm: FAIL ($$op)"; exit 1; }; echo "$$op: $$(wc -l < "$$t/$$op.lst") words decode to the recorded text"; \
-	done; echo "E1 Reduce nvdisasm: PASS ($$("$(REDUCE_NVDISASM)" --version | grep -o 'release [0-9.]*, V[0-9.]*'))"
+	done; echo "E1 Reduce nvdisasm: PASS ($$("$(REDUCE_NVDISASM)" --version))"
 
 # Resident reaction runtime heartbeat (ADR 0016, R3/R4 host reference).
 # CPU only; links no PHYSICS/NVRM code (omega_evidence.c needs only the header).

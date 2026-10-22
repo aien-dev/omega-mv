@@ -27,3 +27,11 @@ test-sm121dis: $(SM121DIS) $(SM121DIS_RED) sm121dis-corpus-bins
 	@if sh tools/sm121dis/check.sh $(SM121DIS_RED) $(SM121DIS_K) $(OUT_DIR)/sm121dis-red > $(OUT_DIR)/sm121dis-red.log 2>&1; then \
 		echo "RED CHECK BROKEN: the faulty decoder passed"; exit 1; \
 	else echo "red check: the faulty decoder FAILS the comparison, as it must ($$(grep -c '^\[FAIL\]' $(OUT_DIR)/sm121dis-red.log) kernels)"; fi
+
+# The provenance checks (tools/divsqrt_nvdisasm_check.sh, tools/ldst_nvdisasm_check.sh, test-numeric-reduce-nvdisasm)
+# call build/sm121dis by that name, whatever OUT_DIR is.
+ifneq ($(OUT_DIR),build)
+build/sm121dis: tools/sm121dis/sm121dis.c src/omega_sm121_disasm.c src/omega_sm121_disasm.h
+	@mkdir -p build
+	$(CC) -std=gnu11 -Wall -Wextra -Werror -O2 -Isrc -o $@ tools/sm121dis/sm121dis.c src/omega_sm121_disasm.c
+endif
