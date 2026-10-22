@@ -1,0 +1,13 @@
+block3 CSV contract: PASS (six malformed or unsafe receipts refused)
+fail exit=1
+unbound exit=1
+negative exit=1
+numeric-string exit=1
+overflow exit=0
+fractional exit=0
+checks-string exit=0
+formula exit=0
+missing-machine exit=0
+false-binding exit=0
+invalid-then-valid-stream exit=0 rows=5
+directory-output exit=0 files=2
