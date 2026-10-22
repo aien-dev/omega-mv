@@ -1,0 +1,12 @@
+gate_ddc 2026-10-22T03:57:25Z at 67b3df8efd920475183bb703f8df0aa369084f89; omc.om from origin/seed/omega-in-omega@0a75aa3ca14ca4565394991739413d1b3ee4fcdb
+om4.bin 03fc75d96a570ba1a404dd89ae231f063fd10b4a9fec903a09d7fce2fb8aa429  omc.om 1e5542bc68deeedd2974e8d56f7e62ed7c01598d335b62681dd5ff110086d14e
+stage 2 = stage1(omc.om): exit 0, 74740 bytes
+interpreter: omc.om run on omc.om: exit 0, 74740 bytes, 0 s
+sha256 stage2 10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
+sha256 interp 10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
+PASS DDC third parent: interp(omc.om, omc.om) = stage1(omc.om), byte for byte, same exit 0
+side check: stage3 = stage2 (exit 0)
+PASS negative control: the mutant interpreter (unsigned shl by 3 flips bit 0) differs from stage 2
+PASS negative control: one changed byte of stage 2 is caught
+GATE_DDC PASS
+RC=0
