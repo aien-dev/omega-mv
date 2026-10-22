@@ -1,0 +1,89 @@
+{
+  "cwd": "/home/drakestapleton/workspace/omega-osh-prompt-interrupt-20261022",
+  "source": "268d909141be0968bacbda3cb63147658a0b55f9",
+  "base": "3f9eee7178e0ba05ad847f81f4dd4d9e9f519c40",
+  "commands": [
+    {
+      "name": "frozen-L553-RED-build",
+      "source": "3f9eee7178e0ba05ad847f81f4dd4d9e9f519c40",
+      "command": "quiet-build make -s -j2 OUT_DIR=build/L563/frozen-old-red 'OSH_BIN_SRCS=$(OSH_DIR)/osh_units.c $(filter-out src/osh/host/osh_shell.c,$(OSH_PROG_HOSTSRCS)) build/L563/old-shell.c $(OSC_LIB) src/runtime/rx_caproot.c' build/L563/frozen-old-red/osh/test_prompt_interrupt",
+      "exit": 0
+    },
+    {
+      "name": "frozen-L553-RED-run",
+      "command": "quiet-build env PROMPT_LEGACY=1 build/L563/frozen-old-red/osh/test_prompt_interrupt",
+      "exit": 1,
+      "expected": "24 cases;16 failed;8 precise race failures plus8 separate error/boundary expectations; old read syscall63 plus wrong output after rescue"
+    },
+    {
+      "name": "frozen-M1-RED-build",
+      "source": "7569e8d2664ced00ec792ae25a0483e0cfe4f2e7",
+      "command": "quiet-build make -s -j2 OUT_DIR=build/L563/frozen-m1-red 'OSH_BIN_SRCS=$(OSH_DIR)/osh_units.c $(filter-out src/osh/host/osh_shell.c,$(OSH_PROG_HOSTSRCS)) build/L563/m1-shell.c $(OSC_LIB) src/runtime/rx_caproot.c' build/L563/frozen-m1-red/osh/test_prompt_interrupt",
+      "exit": 0
+    },
+    {
+      "name": "frozen-M1-RED-run",
+      "command": "quiet-build build/L563/frozen-m1-red/osh/test_prompt_interrupt",
+      "exit": 1,
+      "expected": "32 cases;4 failed;2 EAGAIN refusals;2 actualPTYflush lostwake/read63/rescuebyte lost"
+    },
+    {
+      "name": "final-focused",
+      "command": "quiet-build make -s -j2 OUT_DIR=build/L563/readiness-green test-osh-prompt-interrupt test-osh-prompt-pty",
+      "exit": 0,
+      "expected": "32plain32ASan +3actualPTY PASS"
+    },
+    {
+      "name": "final-original-public-Make",
+      "command": "quiet-build env --default-signal=INT bash -c 'trap \"\" QUIT; exec make -s -j2 OUT_DIR=build/L563/final-regression test-osh-host test-osh-prompt-interrupt test-osh-prompt-pty test-osh-prompt-signals test-osh-e2e osh-trace test-osh-diff'",
+      "exit": 0,
+      "fixture_original": "7177ad74cfb5215fa478c270f198af4e07cb33c5",
+      "fixture_carried": "1151a8a9",
+      "expected": "1564plain+1564ASan host;32+32interrupt;3PTY;254+254actions;104e2e320checks;20traces;66plain64ASan differential+2originalRLIMIT_AS NOT_RUN;21originalcontrols"
+    },
+    {
+      "name": "final-new-compiled-mutants",
+      "command": "quiet-build node tests/osh/host/prompt_interrupt_mutants.mjs build/L563/final-mutants",
+      "exit": 0,
+      "expected": "5compiled; exact8/2/2/4/2 bad-state assertions; knownread63/pselect72 plus rescuewrongstate; no watchdog/crash/compile-error kills"
+    },
+    {
+      "name": "final-original-action-mutants",
+      "command": "quiet-build node tests/osh/host/prompt_signal_mutants.mjs",
+      "exit": 0,
+      "expected": "2compiled;exact95/2 action assertions"
+    },
+    {
+      "name": "final-actual-bash-exit-comparisons",
+      "command": "quiet-build node tests/osh/e2e/exit_boundary_controls.mjs build/L563/final-regression/osh/osh build/L563/final-exit",
+      "exit": 0,
+      "expected": "36passed0failed actualbash/native/interpreter stdout+status"
+    },
+    {
+      "name": "final-original-exit-mutants",
+      "command": "quiet-build node tests/osh/e2e/exit_boundary_mutants.mjs",
+      "exit": 0,
+      "expected": "2compiled;exact4/8 stdout+status assertions"
+    },
+    {
+      "name": "inherited-L562-manifest",
+      "command": "sha256sum -c evidence/L562-HOST-ENTRY/SHA256SUMS",
+      "exit": 1,
+      "expected": "actualFAIL2missing blobs; ownerpacket untouched; parentdeliveryHOLD; separate from exactMake sourcePASS"
+    }
+  ],
+  "development_not_acceptance": [
+    "red-build.log: target include sorted before osh.mk, no rule; fixed filename, build failure not mutant kill",
+    "red-test2.log: rejected parent buffered stdio duplicated across fork; fixed pre-fork fflush; production untouched",
+    "green.log and asan-diagnostic.log: fortify __read_chk bypassed wrapper in one ASan case, barrier infrastructure failure; add test-only fortified wrapper, preserve checks",
+    "green2.log: first fortified-wrapper link omitted --wrap=__read_chk; build failure not kill",
+    "edit-script const-assignment/anchor exceptions were tooling failures, not test results; corrected before subsequent accepted builds",
+    "exit-final.log and exit-final/too-many-command-native.json: premature invocation before final binary existed, ENOENT correctly rejected as infrastructureNOT_RUN; post-build final-exit distinct valid run",
+    "readiness-red-run.log: initial actualterminalCtrlC schedule reproduced gap; readiness-red2 makes flush+signal synchronous; final frozen-M1-RED uses immutable finalharness",
+    "M1 passed all original gates but remained wrong after readiness; preserved intermediatefailure and superseded source, no relabeling"
+  ],
+  "independent_review": "NOT_RUN for L563; inherited L568 separate, packetHOLD",
+  "native_AIENOS_QEMU_hardware_current35B_shared_train": "NOT_RUN",
+  "energy": "UNMEASURED",
+  "measurement": "functional observations only; no performance estimates or claims"
+}

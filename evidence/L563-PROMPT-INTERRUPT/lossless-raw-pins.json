@@ -1,0 +1,2088 @@
+[
+  {
+    "source": "build/L563/asan-diagnostic-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/asan-diagnostic-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/asan-diagnostic.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/asan-diagnostic.log.gz",
+    "raw_bytes": 273,
+    "raw_sha256": "8375c7375e23742897c27e6b3d3552140be488280fd374662893d48ec120822a",
+    "gzip_sha256": "c637a5b763336021f9c087a9cc193fbc5315bd476ba099f317213a72d3c9e993"
+  },
+  {
+    "source": "build/L563/crumb-compile.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/crumb-compile.log.gz",
+    "raw_bytes": 202,
+    "raw_sha256": "29e3d34be0cf1f1b1577514670275b59911db5b5b310214cafecab4898bb0df4",
+    "gzip_sha256": "79721d6e4be4e2e632d1e24fc9299ab249a3a52bcdde34590eaeabaf2a97c806"
+  },
+  {
+    "source": "build/L563/exit-after-build.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/exit-after-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build.log.gz",
+    "raw_bytes": 2002,
+    "raw_sha256": "5137b71b76c240841ebbd5017bcea60ff392dcbf585f0fcaf39700af0cc74c7f",
+    "gzip_sha256": "6ffd5e2b73718b78466a5be332341ab49df9eb2412c9d29000b639e1fa62b0be"
+  },
+  {
+    "source": "build/L563/exit-final.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-final.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "gzip_sha256": "d381e5a9b7c1c71b5fb3fef202103bf4b6098ce288f148735de1ecf61d4e3b75"
+  },
+  {
+    "source": "build/L563/exit-final.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-final.log.gz",
+    "raw_bytes": 983,
+    "raw_sha256": "e716990db940a7d74cd1b33c6c8e6a0769f3a724b4b796f0f3272005ef979d70",
+    "gzip_sha256": "544f121455409d3e9130004a230191f1b0b91e4eb123b4369eb9fa89767bec2a"
+  },
+  {
+    "source": "build/L563/final-exit-mutants.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit-mutants.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/final-exit-mutants.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit-mutants.log.gz",
+    "raw_bytes": 207,
+    "raw_sha256": "37627281d79be0c0167a3e733b9533917da95ce330382397fe9ecf5712e17b0a",
+    "gzip_sha256": "5026b304da12d60f9b7f45a6e27e00db3ba5cf7f8e3fbee99f225c01a478a2e7"
+  },
+  {
+    "source": "build/L563/final-exit.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/final-exit.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit.log.gz",
+    "raw_bytes": 2002,
+    "raw_sha256": "5137b71b76c240841ebbd5017bcea60ff392dcbf585f0fcaf39700af0cc74c7f",
+    "gzip_sha256": "6ffd5e2b73718b78466a5be332341ab49df9eb2412c9d29000b639e1fa62b0be"
+  },
+  {
+    "source": "build/L563/final-mutants.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/final-mutants.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants.log.gz",
+    "raw_bytes": 438,
+    "raw_sha256": "e5a8fbbd03a5d5269aa0b63caf048315bd718900317d66bb34389d0cffd1b7da",
+    "gzip_sha256": "e444764dade6d61c4c1e72aea6beb3bd08f7e661f079d102c7064952ebf8ca09"
+  },
+  {
+    "source": "build/L563/final-regression.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/final-regression.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression.log.gz",
+    "raw_bytes": 7846,
+    "raw_sha256": "a1e4ebf12b09bd8ef30de9f4315fac87ec320201511856b156182689c8a4004c",
+    "gzip_sha256": "c04e54b414c4e79083d938000e503e33736cb916139e979392eb8f9b91c3ba21"
+  },
+  {
+    "source": "build/L563/final-restore-mutants.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-restore-mutants.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/final-restore-mutants.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-restore-mutants.log.gz",
+    "raw_bytes": 203,
+    "raw_sha256": "b73f4c861c5c7e79ae8a5653380df1948bd9b231b7f50c72ff9260ee9f019641",
+    "gzip_sha256": "8da7dfce9559ca7376e2dab0a890ccdbacfc143254dc401f0fb44f5b7444491b"
+  },
+  {
+    "source": "build/L563/final1.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final1.log.gz",
+    "raw_bytes": 1712,
+    "raw_sha256": "27123318a26a397a4064a6bed60fd3a3c2a9f7519a5b315a62eaa217137063ea",
+    "gzip_sha256": "f2ca997d801eded6448fdb85092dac5af0857c4816bcc736a617b666a28f7062"
+  },
+  {
+    "source": "build/L563/final2.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final2.log.gz",
+    "raw_bytes": 104,
+    "raw_sha256": "bb7bbfc127074f471f6511e141da061757c3643a89f244f59ceba93a783ea30e",
+    "gzip_sha256": "d60e6971c646fef50ab8ac368cf7f590ccb6bb5790d4d9d330907cca328bd68f"
+  },
+  {
+    "source": "build/L563/frozen-m1-red-build.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/frozen-m1-red-build.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/frozen-m1-red-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/frozen-m1-red-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/frozen-m1-red-run.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/frozen-m1-red-run.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "gzip_sha256": "d381e5a9b7c1c71b5fb3fef202103bf4b6098ce288f148735de1ecf61d4e3b75"
+  },
+  {
+    "source": "build/L563/frozen-m1-red-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/frozen-m1-red-run.log.gz",
+    "raw_bytes": 4403,
+    "raw_sha256": "b2f177613f7d4eeba729f8943d01e8708d7e27860c51fdcae35e82876aad04cc",
+    "gzip_sha256": "01cda7206bddff1fddb225c3a45308767e6ce0f94d42997ed0d1c2c7530bda9f"
+  },
+  {
+    "source": "build/L563/frozen-old-red-build.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/frozen-old-red-build.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/frozen-old-red-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/frozen-old-red-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/frozen-old-red-run.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/frozen-old-red-run.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "gzip_sha256": "d381e5a9b7c1c71b5fb3fef202103bf4b6098ce288f148735de1ecf61d4e3b75"
+  },
+  {
+    "source": "build/L563/frozen-old-red-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/frozen-old-red-run.log.gz",
+    "raw_bytes": 3512,
+    "raw_sha256": "e04723821fee87d0f30e61f4472c8507be28d4c888c95855630eac2963e75f97",
+    "gzip_sha256": "c8e869eda45682618d8799685af4470605ac88cc4961792d8d26160dce4f587a"
+  },
+  {
+    "source": "build/L563/green.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/green.log.gz",
+    "raw_bytes": 233,
+    "raw_sha256": "a4a250ff3b5e7ef138a7b6c0ceba4f3c2b63ddb9162d1ea40da73e4e9afe8669",
+    "gzip_sha256": "f30753a4ab103f53d08720963855b334b0c68d432bac987da5a0c8cfd2f48353"
+  },
+  {
+    "source": "build/L563/green2.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/green2.log.gz",
+    "raw_bytes": 758,
+    "raw_sha256": "83b3ae19f2c6650fe814d1199f05aa6c9bbd46d23acdecd455da0fcc0e01da1c",
+    "gzip_sha256": "d2fc3fb549d05087921c45a62e8afa66c5927cdfcb6a92ab43e2a77d9f9fabbb"
+  },
+  {
+    "source": "build/L563/green3.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/green3.log.gz",
+    "raw_bytes": 74,
+    "raw_sha256": "8cdc85a4b04845eee4d3279408a1fd40b0bdeaf173e0917da851f17eeafe1e74",
+    "gzip_sha256": "0de9d639598fd29f0b53284013f9764d52a1922af88fe08047dcc1d3797922f3"
+  },
+  {
+    "source": "build/L563/green4.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/green4.log.gz",
+    "raw_bytes": 74,
+    "raw_sha256": "8cdc85a4b04845eee4d3279408a1fd40b0bdeaf173e0917da851f17eeafe1e74",
+    "gzip_sha256": "0de9d639598fd29f0b53284013f9764d52a1922af88fe08047dcc1d3797922f3"
+  },
+  {
+    "source": "build/L563/green5.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/green5.log.gz",
+    "raw_bytes": 74,
+    "raw_sha256": "b6bc5f97b329b9d4e34cbf12a3d4aee82072e2c6f2b1966bfc1914ef41c71da3",
+    "gzip_sha256": "0a8ff391504e3c58f21047849ad623d6f65c30e08a3f54569da6e15cc91d2a89"
+  },
+  {
+    "source": "build/L563/inherited-L562-manifest.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/inherited-L562-manifest.log.gz",
+    "raw_bytes": 1265,
+    "raw_sha256": "ee32221139590f3cb7739a9d6531db9fc2dad45401bc38dc5afe4d285c985770",
+    "gzip_sha256": "5171c041d4dbc0364eac10160d7f42685b3c4de1a8555c104e748b8d55acfae7"
+  },
+  {
+    "source": "build/L563/issue344-live.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/issue344-live.json.gz",
+    "raw_bytes": 8221,
+    "raw_sha256": "42a286e52d6bcf12c5dfe265ed5078f3f7c7452bc98481d9f278978a0fe5a7a9",
+    "gzip_sha256": "51b2eb3f75a535f57f3414e37c263b09111861974c6f6a97f9e9573f469a1117"
+  },
+  {
+    "source": "build/L563/mutants.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants.log.gz",
+    "raw_bytes": 351,
+    "raw_sha256": "851569a29ca23a61426d823ef3d86ce504860f3a6927d5d7486fc640a4f54d72",
+    "gzip_sha256": "ba947e6b559330e0eb917fbb8911377238f3360575addecbaf0bf6eda78d790c"
+  },
+  {
+    "source": "build/L563/old-final-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/old-final-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/old-final-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/old-final-run.log.gz",
+    "raw_bytes": 3512,
+    "raw_sha256": "898e11ee9597c79d399272c007c569661eee7e6ee98fe765bfa3cc0f55f498e7",
+    "gzip_sha256": "e71cf91b9744bc619e92bc78c5e47d0e80a19c0eddc267c6a949fb1ee04c1d8f"
+  },
+  {
+    "source": "build/L563/readiness-green.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-green.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/readiness-green.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-green.log.gz",
+    "raw_bytes": 104,
+    "raw_sha256": "1fca1a9fba3d263a51415d6f48c7be40890eeb6d1c5a92a7036405f38e250065",
+    "gzip_sha256": "218c35dc8277c69a5218f24cb158e6c10d5ca2916c8e86aa132e5d3936d4608e"
+  },
+  {
+    "source": "build/L563/readiness-red-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-red-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/readiness-red-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-red-run.log.gz",
+    "raw_bytes": 4148,
+    "raw_sha256": "14fc165a3ed3a7a5160d4519685a775e7bf2a802ee1d485d0ca7e021151d9275",
+    "gzip_sha256": "27312d7b3534c387058cfb5690da712ffe935be95e6b344d6af3812214c6cf90"
+  },
+  {
+    "source": "build/L563/readiness-red2-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-red2-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/readiness-red2-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-red2-run.log.gz",
+    "raw_bytes": 4175,
+    "raw_sha256": "1b106f9b70c338e6fa86b131bd3d0ae402ba5df65b9a438ca992b2d1f753f7d7",
+    "gzip_sha256": "271b2c1220b30da7f454e07d40846c53f1076082d99761d968fcba13828ec112"
+  },
+  {
+    "source": "build/L563/red-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/red-build.log.gz",
+    "raw_bytes": 139,
+    "raw_sha256": "1ad355702e4801473948ed9be3cb0b36aea71ea4deffe629a7e291d9f3e7c3b8",
+    "gzip_sha256": "f93d7e4bf3ccf0863133ee473a344bf43a5ba8c9066a39bf6e6bff6fa8bb05c8"
+  },
+  {
+    "source": "build/L563/red-build2.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/red-build2.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/red-build3.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/red-build3.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/red-test.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/red-test.log.gz",
+    "raw_bytes": 107,
+    "raw_sha256": "d0955773b17e1fbac84a65d8fe7c75367b46b9f1cee6b5563a7ae08f2283b889",
+    "gzip_sha256": "8096405275c3b9a8e4f8299b43b503b93af3adc5e0a958fca76ead399871f317"
+  },
+  {
+    "source": "build/L563/red-test2.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/red-test2.log.gz",
+    "raw_bytes": 21506,
+    "raw_sha256": "18d46d7fec1c2ee36acbc111cf62f14f5d79fd65dda295e39dac162d88eaed43",
+    "gzip_sha256": "648128d0ca12e3c05043c28bffd509a832ed60c5e7b3c762e0395eebeae5b7d5"
+  },
+  {
+    "source": "build/L563/red-test3.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/red-test3.log.gz",
+    "raw_bytes": 1290,
+    "raw_sha256": "c93083dbf41984b180c5a4737e90997995cd4a635be99367082cc27579a61858",
+    "gzip_sha256": "6ebefc2b3f24e3987ac7dea1e1fd0fc7ca07ec1c345f22c1f4db5dcb48d81ed9"
+  },
+  {
+    "source": "build/L563/regression.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/regression.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression.log.gz",
+    "raw_bytes": 7846,
+    "raw_sha256": "118d3e3a080094b0582e1d3ae434b83278ca3afeead66200b1ac000870cc6c06",
+    "gzip_sha256": "990fc94da5390eb9f34bec8c922af6b38e17f4e2201243aea14162fb423afeb9"
+  },
+  {
+    "source": "build/L563/restore-mutants.exit",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-mutants.exit.gz",
+    "raw_bytes": 2,
+    "raw_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "gzip_sha256": "cabc3a30b39528db601f65ca3ced008dd775595c901102d08ac8ae8976b29bcf"
+  },
+  {
+    "source": "build/L563/restore-mutants.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-mutants.log.gz",
+    "raw_bytes": 203,
+    "raw_sha256": "718eaf159989b3d36ce9e07f6ceb5ff06617e13ef090e4641af58c464e0f5e80",
+    "gzip_sha256": "6fae806674ff4fbc0bb6f5a95b2f1e91115579654a52ca1e7ce1fa60f15c03bb"
+  },
+  {
+    "source": "build/L563/sessions.txt",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/sessions.txt.gz",
+    "raw_bytes": 163,
+    "raw_sha256": "ab3ec041b38c73ec9f310468545f61d0083d13be0a7fadd0ecc5ee33b33a341c",
+    "gzip_sha256": "602212cbecd82da2e303810d34b10fd397bf259785188e07c928e13984e064d7"
+  },
+  {
+    "source": "build/L563/shipped-hooks.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/shipped-hooks.log.gz",
+    "raw_bytes": 56,
+    "raw_sha256": "ebffc66ece36c6cf14bc0f613949c5629232f0ff14fc49261f78a72885e0ac73",
+    "gzip_sha256": "29b2f1e8d978b700788b9fd8c98aa24d062df9374633f2828f154906fd546808"
+  },
+  {
+    "source": "build/L563/final-mutants/blocking-after-readiness-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/blocking-after-readiness-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/final-mutants/blocking-after-readiness-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/blocking-after-readiness-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/final-mutants/blocking-after-readiness-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/blocking-after-readiness-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/final-mutants/blocking-after-readiness-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/blocking-after-readiness-run.log.gz",
+    "raw_bytes": 4331,
+    "raw_sha256": "489355ec8262a9ad98bf83fb502800aef62a6f14b10d1f5938c00517df767e5f",
+    "gzip_sha256": "c70148703d6493aa51fd8a364100fc4177ef0999011741c05e95801d384ea550"
+  },
+  {
+    "source": "build/L563/final-mutants/blocking-after-readiness.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/blocking-after-readiness.c.gz",
+    "raw_bytes": 14739,
+    "raw_sha256": "3b7b5f253087323cefd16cfa4520510fb9b91fb4e8f91d5b6031dbde6346fc30",
+    "gzip_sha256": "e45a421e47402870d61c86a0b317567ba2199ae1d5e515a451c94570e7e4d00f"
+  },
+  {
+    "source": "build/L563/final-mutants/commit-interrupted-newline-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/commit-interrupted-newline-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/final-mutants/commit-interrupted-newline-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/commit-interrupted-newline-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/final-mutants/commit-interrupted-newline-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/commit-interrupted-newline-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/final-mutants/commit-interrupted-newline-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/commit-interrupted-newline-run.log.gz",
+    "raw_bytes": 4145,
+    "raw_sha256": "f82fed19e94b28c8f496e63aaa9b2b02d404ed7662c08b7110759a000b33caa0",
+    "gzip_sha256": "e08d02c104a2fd62698dc66247a436e4af64cffd593742a2ce16b5d2ae8fdf0b"
+  },
+  {
+    "source": "build/L563/final-mutants/commit-interrupted-newline.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/commit-interrupted-newline.c.gz",
+    "raw_bytes": 14710,
+    "raw_sha256": "477e6a6c2b6e11506549328005bee8a49f5ab4dd7426bc76ceb683026fe70153",
+    "gzip_sha256": "c1d5ade27d5d46d4a6072a8e49758517213a6d7840939c6f6a29315a5db4d5a3"
+  },
+  {
+    "source": "build/L563/final-mutants/drop-handled-flag-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/drop-handled-flag-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/final-mutants/drop-handled-flag-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/drop-handled-flag-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/final-mutants/drop-handled-flag-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/drop-handled-flag-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/final-mutants/drop-handled-flag-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/drop-handled-flag-run.log.gz",
+    "raw_bytes": 4689,
+    "raw_sha256": "f2a79f72f13f1899bcd9de7eaa07619a97060fdb9d3ac575d81e6557104abe7f",
+    "gzip_sha256": "3f0ac3dd1e4afbd194263cb6f20ef6c78f9418ce96c1440fafe8bb3dfc1739ad"
+  },
+  {
+    "source": "build/L563/final-mutants/drop-handled-flag.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/drop-handled-flag.c.gz",
+    "raw_bytes": 14739,
+    "raw_sha256": "72642ce39c34e197265848022e22e74822144b81b78389e1c6a40695020e2827",
+    "gzip_sha256": "50d952950aeda02daa807e9eb7e8fe2a28602bdbb4d7fb52c403e40d957efeff"
+  },
+  {
+    "source": "build/L563/final-mutants/hide-select-error-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/hide-select-error-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/final-mutants/hide-select-error-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/hide-select-error-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/final-mutants/hide-select-error-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/hide-select-error-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/final-mutants/hide-select-error-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/hide-select-error-run.log.gz",
+    "raw_bytes": 3993,
+    "raw_sha256": "d1340be853df469fb1187815e661e6dcf8db52086f3dc431bf1cb04a572a9a4d",
+    "gzip_sha256": "222c1e92cb006522e29390eeeb8d2fb0432fce82f13337083a495c508f15c466"
+  },
+  {
+    "source": "build/L563/final-mutants/hide-select-error.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/hide-select-error.c.gz",
+    "raw_bytes": 14758,
+    "raw_sha256": "ac7855d50c462790e3d32dd1cd9ba87d1e222456d29024cf04947ea909b802db",
+    "gzip_sha256": "27f7d4fb98728eb05e156a5acd921c4f56d89c7936b8c8d9804d90f03ee17672"
+  },
+  {
+    "source": "build/L563/final-mutants/unmasked-wait-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/unmasked-wait-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/final-mutants/unmasked-wait-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/unmasked-wait-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/final-mutants/unmasked-wait-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/unmasked-wait-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/final-mutants/unmasked-wait-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/unmasked-wait-run.log.gz",
+    "raw_bytes": 4279,
+    "raw_sha256": "c15bcf8975b36abcf394ea4e9241bbd9a63d51c14284fb392667fe9700615f54",
+    "gzip_sha256": "4dcca76d2c81b957d7b9ada9194352fb5bb1bd749c65e0dbf75471f4f25757fe"
+  },
+  {
+    "source": "build/L563/final-mutants/unmasked-wait.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-mutants/unmasked-wait.c.gz",
+    "raw_bytes": 14760,
+    "raw_sha256": "e41934c78a74c8378478e3c1f042e1b86deb8f8b6f10dcc1843d74390270e5b9",
+    "gzip_sha256": "f13603aff784d9b52c5cb1f4d1fc6ff796d519db075b2d6db0ef87e5c5ca1677"
+  },
+  {
+    "source": "build/L563/mutants/commit-interrupted-newline-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/commit-interrupted-newline-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/mutants/commit-interrupted-newline-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/commit-interrupted-newline-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/mutants/commit-interrupted-newline-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/commit-interrupted-newline-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/mutants/commit-interrupted-newline-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/commit-interrupted-newline-run.log.gz",
+    "raw_bytes": 3431,
+    "raw_sha256": "cb72eadc0332fe9af5b0cc0dd006e431e06a7fadcbf6b1b5f0bc67f90a35ebb5",
+    "gzip_sha256": "1c1f30503cdc865af18c3d24c1d0f9cd2addeb3aa12cc2397d2dd26925ea39ed"
+  },
+  {
+    "source": "build/L563/mutants/commit-interrupted-newline.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/commit-interrupted-newline.c.gz",
+    "raw_bytes": 14059,
+    "raw_sha256": "d7c9cb02320d6a1337cc9affe0aa0f85fad71abeb232f485234fb65b537d6151",
+    "gzip_sha256": "1c41301047b02a68f3eab6d5a5fd4d79dd4e3228f69982402b259a8b4343fcc9"
+  },
+  {
+    "source": "build/L563/mutants/drop-handled-flag-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/drop-handled-flag-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/mutants/drop-handled-flag-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/drop-handled-flag-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/mutants/drop-handled-flag-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/drop-handled-flag-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/mutants/drop-handled-flag-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/drop-handled-flag-run.log.gz",
+    "raw_bytes": 3833,
+    "raw_sha256": "ad4bdfb87f3002bd531aee668b0aff15f1808378e51567573821f60c8d6f5e4f",
+    "gzip_sha256": "22e6117ad02f8362bd3460e7591ba78665508c543e251b8f2bed87bd85bf91f4"
+  },
+  {
+    "source": "build/L563/mutants/drop-handled-flag.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/drop-handled-flag.c.gz",
+    "raw_bytes": 14072,
+    "raw_sha256": "d53b84107c921aa291d45915f80c619349db68fc1734a19e369f5026e03a5455",
+    "gzip_sha256": "646f7b8a5367076acb70fdb952396805a8e718ba9e811e7320774fb5aa46d1da"
+  },
+  {
+    "source": "build/L563/mutants/hide-select-error-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/hide-select-error-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/mutants/hide-select-error-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/hide-select-error-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/mutants/hide-select-error-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/hide-select-error-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/mutants/hide-select-error-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/hide-select-error-run.log.gz",
+    "raw_bytes": 3279,
+    "raw_sha256": "abbcd26699dfb59534ba746ea0e10848699a030251148949afb967290448bfe6",
+    "gzip_sha256": "c5c43d063ebd2a80c61fb15618046a49b3f3d853af26aab9308643f921c8aa52"
+  },
+  {
+    "source": "build/L563/mutants/hide-select-error.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/hide-select-error.c.gz",
+    "raw_bytes": 14091,
+    "raw_sha256": "984d9212586bf40d1b92ef51b256a652e5ad26ba556d6c2866ad3ef0c208507b",
+    "gzip_sha256": "3fc2f285d1df6c11a4ec89e050884e714ee663cc045668d5f1e92dcd10b377d6"
+  },
+  {
+    "source": "build/L563/mutants/unmasked-wait-build.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/unmasked-wait-build.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "build/L563/mutants/unmasked-wait-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/unmasked-wait-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "build/L563/mutants/unmasked-wait-run.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/unmasked-wait-run.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "build/L563/mutants/unmasked-wait-run.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/unmasked-wait-run.log.gz",
+    "raw_bytes": 3565,
+    "raw_sha256": "c4b6a33259d20dd8d2f8adaa47b81c0bf9372a763888bb34bb882639a8d855e5",
+    "gzip_sha256": "300c854a283e2c7acbd914ba64cbab1407630216802863b9420787119b3a76ea"
+  },
+  {
+    "source": "build/L563/mutants/unmasked-wait.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/mutants/unmasked-wait.c.gz",
+    "raw_bytes": 14093,
+    "raw_sha256": "b4665d2fff3b04ca29d594068df13ba120a2b1e0d69021fa06198ad4d2959724",
+    "gzip_sha256": "3e0a2b920c768b382637c90cbd21b0db01d876d9e236d1b02c4a240820932485"
+  },
+  {
+    "source": "build/L563/regression/osh/diff.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression/osh/diff.out.gz",
+    "raw_bytes": 4008,
+    "raw_sha256": "b321be09dc308a98cfee95857d5fe057e4410551485c1d84a4fe7db998492ef1",
+    "gzip_sha256": "b3b49b1006cc431b0d62412a8194a50f2b61b5b3d5918f5b0771046f8b27127d"
+  },
+  {
+    "source": "build/L563/regression/osh/diff_asan.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression/osh/diff_asan.out.gz",
+    "raw_bytes": 4016,
+    "raw_sha256": "78922f2e111a739860e9ee2adbc7b0e15bdcfc01ac5bc8c14b90dee83367179f",
+    "gzip_sha256": "a4d9cb30ca4f0d622d686244552f3038d265a706cc5023bd3747a32726e0917c"
+  },
+  {
+    "source": "build/L563/regression/osh/e2e.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression/osh/e2e.out.gz",
+    "raw_bytes": 86,
+    "raw_sha256": "87cadd5738184d5477428df5f30e571576d7000a5cf3a970bd30666147469a1f",
+    "gzip_sha256": "8304a6f45248734745fa0b730d5ee52a7d0af84a6bb96548cf418528f36f0114"
+  },
+  {
+    "source": "build/L563/regression/osh/prompt-interrupt-asan.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression/osh/prompt-interrupt-asan.out.gz",
+    "raw_bytes": 3407,
+    "raw_sha256": "004abb52654af18e2cebf236626fb741ef7df449b9af6b88b88ec9fac0295b3b",
+    "gzip_sha256": "fb12ba931b4d7af7e597e7320249f8f48a08cba361352844eeb409d5ceeef624"
+  },
+  {
+    "source": "build/L563/regression/osh/prompt-interrupt.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression/osh/prompt-interrupt.out.gz",
+    "raw_bytes": 3407,
+    "raw_sha256": "004abb52654af18e2cebf236626fb741ef7df449b9af6b88b88ec9fac0295b3b",
+    "gzip_sha256": "fb12ba931b4d7af7e597e7320249f8f48a08cba361352844eeb409d5ceeef624"
+  },
+  {
+    "source": "build/L563/regression/osh/prompt-pty.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression/osh/prompt-pty.out.gz",
+    "raw_bytes": 693,
+    "raw_sha256": "835a391bc3a39d005551456e62c2b1dd134c1607a7d2fe7401cdc8104f19d850",
+    "gzip_sha256": "3a3a166994dfbdae4fd1251e794124f3745d086dadd43d30002510e65badbee3"
+  },
+  {
+    "source": "build/L563/regression/osh/prompt-signals-asan.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression/osh/prompt-signals-asan.out.gz",
+    "raw_bytes": 44,
+    "raw_sha256": "c2efe666b9481cbeef7805bbc364fcacdc6b5473f866208fc5d6dbf3c357d4dc",
+    "gzip_sha256": "50e7657f08e702a0c2921b6f44918463eabe6856f913d4f6bb6633f960a9bf8e"
+  },
+  {
+    "source": "build/L563/regression/osh/prompt-signals.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/regression/osh/prompt-signals.out.gz",
+    "raw_bytes": 44,
+    "raw_sha256": "c2efe666b9481cbeef7805bbc364fcacdc6b5473f866208fc5d6dbf3c357d4dc",
+    "gzip_sha256": "50e7657f08e702a0c2921b6f44918463eabe6856f913d4f6bb6633f960a9bf8e"
+  },
+  {
+    "source": "build/L563/final-regression/osh/diff.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression/osh/diff.out.gz",
+    "raw_bytes": 4008,
+    "raw_sha256": "63983a46aa2bc3cc88d3aa612e849e26526e5eabad847308fff9926435142547",
+    "gzip_sha256": "99fd6143d62f21b25177d3c1ba56ed54280bbdffb20ccd90a167e52d2ddc7ee9"
+  },
+  {
+    "source": "build/L563/final-regression/osh/diff_asan.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression/osh/diff_asan.out.gz",
+    "raw_bytes": 4016,
+    "raw_sha256": "d0216f6fc7315da6f70f96a12f4db072f0d50ed058e647840dd625edf47d9aea",
+    "gzip_sha256": "fd73481798192936645d3e6169c5cc55993d927cae9bf3ed0f94bef247369bb8"
+  },
+  {
+    "source": "build/L563/final-regression/osh/e2e.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression/osh/e2e.out.gz",
+    "raw_bytes": 86,
+    "raw_sha256": "87cadd5738184d5477428df5f30e571576d7000a5cf3a970bd30666147469a1f",
+    "gzip_sha256": "8304a6f45248734745fa0b730d5ee52a7d0af84a6bb96548cf418528f36f0114"
+  },
+  {
+    "source": "build/L563/final-regression/osh/prompt-interrupt-asan.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression/osh/prompt-interrupt-asan.out.gz",
+    "raw_bytes": 4121,
+    "raw_sha256": "2aa9a9b0195d7bf910f06a08def934bd42d8eddd28064c68e532ce1899b8f1f0",
+    "gzip_sha256": "ff555f69ba9511bd57bfe5aa6dad8adddd96a69fc87af91b26d25febe682e98c"
+  },
+  {
+    "source": "build/L563/final-regression/osh/prompt-interrupt.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression/osh/prompt-interrupt.out.gz",
+    "raw_bytes": 4121,
+    "raw_sha256": "2aa9a9b0195d7bf910f06a08def934bd42d8eddd28064c68e532ce1899b8f1f0",
+    "gzip_sha256": "ff555f69ba9511bd57bfe5aa6dad8adddd96a69fc87af91b26d25febe682e98c"
+  },
+  {
+    "source": "build/L563/final-regression/osh/prompt-pty.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression/osh/prompt-pty.out.gz",
+    "raw_bytes": 705,
+    "raw_sha256": "2b770ddaffcfe58096ab1a8648ce163b1dbee377a08d55a5fa136dd6aa62a93d",
+    "gzip_sha256": "9a20ff2b62cddb8c575f5f8abd944efdeaf4d75ffdae938d4dcaf8fba8b8fdbf"
+  },
+  {
+    "source": "build/L563/final-regression/osh/prompt-signals-asan.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression/osh/prompt-signals-asan.out.gz",
+    "raw_bytes": 44,
+    "raw_sha256": "c2efe666b9481cbeef7805bbc364fcacdc6b5473f866208fc5d6dbf3c357d4dc",
+    "gzip_sha256": "50e7657f08e702a0c2921b6f44918463eabe6856f913d4f6bb6633f960a9bf8e"
+  },
+  {
+    "source": "build/L563/final-regression/osh/prompt-signals.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-regression/osh/prompt-signals.out.gz",
+    "raw_bytes": 44,
+    "raw_sha256": "c2efe666b9481cbeef7805bbc364fcacdc6b5473f866208fc5d6dbf3c357d4dc",
+    "gzip_sha256": "50e7657f08e702a0c2921b6f44918463eabe6856f913d4f6bb6633f960a9bf8e"
+  },
+  {
+    "source": "build/L563/readiness-green/osh/prompt-interrupt-asan.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-green/osh/prompt-interrupt-asan.out.gz",
+    "raw_bytes": 4121,
+    "raw_sha256": "2aa9a9b0195d7bf910f06a08def934bd42d8eddd28064c68e532ce1899b8f1f0",
+    "gzip_sha256": "ff555f69ba9511bd57bfe5aa6dad8adddd96a69fc87af91b26d25febe682e98c"
+  },
+  {
+    "source": "build/L563/readiness-green/osh/prompt-interrupt.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-green/osh/prompt-interrupt.out.gz",
+    "raw_bytes": 4121,
+    "raw_sha256": "2aa9a9b0195d7bf910f06a08def934bd42d8eddd28064c68e532ce1899b8f1f0",
+    "gzip_sha256": "ff555f69ba9511bd57bfe5aa6dad8adddd96a69fc87af91b26d25febe682e98c"
+  },
+  {
+    "source": "build/L563/readiness-green/osh/prompt-pty.out",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/readiness-green/osh/prompt-pty.out.gz",
+    "raw_bytes": 703,
+    "raw_sha256": "483e1bcaf460858762f5d5794372af980846958cc936bb14fb51d5a00eab5cac",
+    "gzip_sha256": "a4dfe48ccdd8ff4abf63eec4adba1dc8e49c94969d37c44fdc03d2b83161727c"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-command-bash.json.gz",
+    "raw_bytes": 142,
+    "raw_sha256": "3becd34b5a36df5c544380df8876415b5b6f012b82c84c626e4e517d88d145de",
+    "gzip_sha256": "7237b3502d2af1e3bd170a001868957f9226bda87e891bcdc1483e8c31f717bd"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-command-interp.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-command-native.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-command.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "3b434c1ecd73340afe2df3b4bf9138de151415739b1ca2760704ee8fad76f79d",
+    "gzip_sha256": "9862025378bfbd752ecc65d484cdf7ea7156007923aa1f564acf8560c0fdfca6"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-script-bash.json.gz",
+    "raw_bytes": 252,
+    "raw_sha256": "802049678ae154c177287d80fb31ddb666436f7ebd90aedb52118a22eeb90d9f",
+    "gzip_sha256": "289f1422660952e28591dde31b86b668b66247e077f23dcd710faac060847b5d"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-script-interp.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-script-native.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-script.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "3b434c1ecd73340afe2df3b4bf9138de151415739b1ca2760704ee8fad76f79d",
+    "gzip_sha256": "9862025378bfbd752ecc65d484cdf7ea7156007923aa1f564acf8560c0fdfca6"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-stdin-bash.json.gz",
+    "raw_bytes": 142,
+    "raw_sha256": "3becd34b5a36df5c544380df8876415b5b6f012b82c84c626e4e517d88d145de",
+    "gzip_sha256": "7237b3502d2af1e3bd170a001868957f9226bda87e891bcdc1483e8c31f717bd"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-stdin-interp.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-stdin-native.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/exit-after-build/invalid-number-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/invalid-number-stdin.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "3b434c1ecd73340afe2df3b4bf9138de151415739b1ca2760704ee8fad76f79d",
+    "gzip_sha256": "9862025378bfbd752ecc65d484cdf7ea7156007923aa1f564acf8560c0fdfca6"
+  },
+  {
+    "source": "build/L563/exit-after-build/oracle-environment.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/oracle-environment.json.gz",
+    "raw_bytes": 525,
+    "raw_sha256": "52b43a4af9656ef52091553e3fb47fe3550bd939a24b96fc3d59177887b863d0",
+    "gzip_sha256": "d897e2df320d737cdffa4dcc90ee02b4da516575d612f4879ac93c6e564d46a2"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-command-bash.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-command-interp.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-command-native.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-command.sh.gz",
+    "raw_bytes": 33,
+    "raw_sha256": "41bb0227cdf3d0e5567f31e3439ddf07067c3d07d2ba9e903a0b7a1d139bb04c",
+    "gzip_sha256": "71b21be512c356e86d518176fcdb8730b326796acb3ff0a4bf99cc658f37c3c6"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-script-bash.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-script-interp.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-script-native.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-script.sh.gz",
+    "raw_bytes": 33,
+    "raw_sha256": "41bb0227cdf3d0e5567f31e3439ddf07067c3d07d2ba9e903a0b7a1d139bb04c",
+    "gzip_sha256": "71b21be512c356e86d518176fcdb8730b326796acb3ff0a4bf99cc658f37c3c6"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-stdin-bash.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-stdin-interp.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-stdin-native.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/exit-after-build/ordinary-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/ordinary-stdin.sh.gz",
+    "raw_bytes": 33,
+    "raw_sha256": "41bb0227cdf3d0e5567f31e3439ddf07067c3d07d2ba9e903a0b7a1d139bb04c",
+    "gzip_sha256": "71b21be512c356e86d518176fcdb8730b326796acb3ff0a4bf99cc658f37c3c6"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-command-bash.json.gz",
+    "raw_bytes": 138,
+    "raw_sha256": "5759a92ed9a8182bb9d16b594bddaed322c006b5764afe896cdd6e3896145110",
+    "gzip_sha256": "a7c2212a459cccc62efba43e235434f78637b1910b29bef85988b828d5b7dfe3"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-command-interp.json.gz",
+    "raw_bytes": 124,
+    "raw_sha256": "97d3bb397e0c10508c7276f90f9ffcceda767eee56d5f9485847e32ccd8f8987",
+    "gzip_sha256": "dc75691fd73a9b9d481bbc37c2715afac80370e590bb011eb0c53fe9f836372d"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-command-native.json.gz",
+    "raw_bytes": 124,
+    "raw_sha256": "97d3bb397e0c10508c7276f90f9ffcceda767eee56d5f9485847e32ccd8f8987",
+    "gzip_sha256": "dc75691fd73a9b9d481bbc37c2715afac80370e590bb011eb0c53fe9f836372d"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-command.sh.gz",
+    "raw_bytes": 60,
+    "raw_sha256": "888175b3791bc49570cf1de5545d09fdda312b437e99816b38e33a85452d9137",
+    "gzip_sha256": "95fddb380620d45d39b7d08c230c595d53e96cd53403230122eaa159a5b52db1"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-script-bash.json.gz",
+    "raw_bytes": 248,
+    "raw_sha256": "05e4f5aecabc745163244db6324ac484e744e31ddc4d8fbfc15ad8b624deb01e",
+    "gzip_sha256": "0c18051bdeccff405510739215fdd5394fa2959decd95126330df6a2d969b39e"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-script-interp.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "a1cebc0ed7a08cab48c57f9125545c550ac13d8c2a9d076ca2f5729997b02dd7",
+    "gzip_sha256": "bf334b8738be32fc6b0658ccc0efdee3d6245aec0790e020ab811918c5bcb1f4"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-script-native.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "a1cebc0ed7a08cab48c57f9125545c550ac13d8c2a9d076ca2f5729997b02dd7",
+    "gzip_sha256": "bf334b8738be32fc6b0658ccc0efdee3d6245aec0790e020ab811918c5bcb1f4"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-script.sh.gz",
+    "raw_bytes": 60,
+    "raw_sha256": "888175b3791bc49570cf1de5545d09fdda312b437e99816b38e33a85452d9137",
+    "gzip_sha256": "95fddb380620d45d39b7d08c230c595d53e96cd53403230122eaa159a5b52db1"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-stdin-bash.json.gz",
+    "raw_bytes": 144,
+    "raw_sha256": "69c8e49f506210bfc4caf6c3cd524e7bf13575031bdf2dfe9f6dadb84a650cc7",
+    "gzip_sha256": "13d0b6fee6f5f66b3a5d8dbd211890d31624e5642a684a2faaa4bffff6659f74"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-stdin-interp.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "a1cebc0ed7a08cab48c57f9125545c550ac13d8c2a9d076ca2f5729997b02dd7",
+    "gzip_sha256": "bf334b8738be32fc6b0658ccc0efdee3d6245aec0790e020ab811918c5bcb1f4"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-stdin-native.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "a1cebc0ed7a08cab48c57f9125545c550ac13d8c2a9d076ca2f5729997b02dd7",
+    "gzip_sha256": "bf334b8738be32fc6b0658ccc0efdee3d6245aec0790e020ab811918c5bcb1f4"
+  },
+  {
+    "source": "build/L563/exit-after-build/prefixed-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/prefixed-stdin.sh.gz",
+    "raw_bytes": 60,
+    "raw_sha256": "888175b3791bc49570cf1de5545d09fdda312b437e99816b38e33a85452d9137",
+    "gzip_sha256": "95fddb380620d45d39b7d08c230c595d53e96cd53403230122eaa159a5b52db1"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-command-bash.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "30036e79364bcffa9ff0c29e6c791746d86255f21790a31e08af6d0e47da3829",
+    "gzip_sha256": "017c531662347becae648eb750157fea2c10471919105bf2ef2d654108605002"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-command-interp.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-command-native.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-command.sh.gz",
+    "raw_bytes": 26,
+    "raw_sha256": "61eaf360c0ecc158a1a3d35b4b701106331e7bfa879e23fa4b5bb9891c977f51",
+    "gzip_sha256": "e3e0279f71fc97426d859ba55bf0b8843167ce72a6dff3872f85e494cd75d5ee"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-script-bash.json.gz",
+    "raw_bytes": 235,
+    "raw_sha256": "b8e230d5479a20a36743b6891b82eb7009678de71a90b4f778cabd81b390d3c7",
+    "gzip_sha256": "12abf5fab6acf10bbaf8eff8e27c969a2649a574504b079551bbd103735e5a6b"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-script-interp.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-script-native.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-script.sh.gz",
+    "raw_bytes": 26,
+    "raw_sha256": "61eaf360c0ecc158a1a3d35b4b701106331e7bfa879e23fa4b5bb9891c977f51",
+    "gzip_sha256": "e3e0279f71fc97426d859ba55bf0b8843167ce72a6dff3872f85e494cd75d5ee"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-stdin-bash.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "30036e79364bcffa9ff0c29e6c791746d86255f21790a31e08af6d0e47da3829",
+    "gzip_sha256": "017c531662347becae648eb750157fea2c10471919105bf2ef2d654108605002"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-stdin-interp.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-stdin-native.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/exit-after-build/same-line-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/same-line-stdin.sh.gz",
+    "raw_bytes": 26,
+    "raw_sha256": "61eaf360c0ecc158a1a3d35b4b701106331e7bfa879e23fa4b5bb9891c977f51",
+    "gzip_sha256": "e3e0279f71fc97426d859ba55bf0b8843167ce72a6dff3872f85e494cd75d5ee"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-command-bash.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "30036e79364bcffa9ff0c29e6c791746d86255f21790a31e08af6d0e47da3829",
+    "gzip_sha256": "017c531662347becae648eb750157fea2c10471919105bf2ef2d654108605002"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-command-interp.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-command-native.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-command.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "f71a7111263930be5db28d5f3b50222f9287db9b80d50c004f3de9de18df7856",
+    "gzip_sha256": "08fb3de25128f57dd99b265a4fe13dba4405946dae883dd4d03589e525080ac1"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-script-bash.json.gz",
+    "raw_bytes": 240,
+    "raw_sha256": "2fa93eb32dfc8f3b8102cd3a0c72742ee421724b1cacf7aa0c62ffa67b40842b",
+    "gzip_sha256": "f39d36ae4261c884803e4a90b3539961a68e81b054624b95706a4f78cd4ceac7"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-script-interp.json.gz",
+    "raw_bytes": 122,
+    "raw_sha256": "4b409d6220656fe304c7bde928253a1a31074e5dc8e99c4cca9885fdf0ac2206",
+    "gzip_sha256": "2575f0f44bd44736cfb6d5658ab4930d149c63d5078d4584a70dd1f79c7ba753"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-script-native.json.gz",
+    "raw_bytes": 122,
+    "raw_sha256": "4b409d6220656fe304c7bde928253a1a31074e5dc8e99c4cca9885fdf0ac2206",
+    "gzip_sha256": "2575f0f44bd44736cfb6d5658ab4930d149c63d5078d4584a70dd1f79c7ba753"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-script.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "f71a7111263930be5db28d5f3b50222f9287db9b80d50c004f3de9de18df7856",
+    "gzip_sha256": "08fb3de25128f57dd99b265a4fe13dba4405946dae883dd4d03589e525080ac1"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-stdin-bash.json.gz",
+    "raw_bytes": 136,
+    "raw_sha256": "bc014f17b49bbf166e8d2bc5989e285ccc695bda2d574e26d4b54005faf7ec0c",
+    "gzip_sha256": "2b1de9a8220b9b061f210ea7af6f3e143e1937f493f07ef5004829e352618edd"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-stdin-interp.json.gz",
+    "raw_bytes": 122,
+    "raw_sha256": "4b409d6220656fe304c7bde928253a1a31074e5dc8e99c4cca9885fdf0ac2206",
+    "gzip_sha256": "2575f0f44bd44736cfb6d5658ab4930d149c63d5078d4584a70dd1f79c7ba753"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-stdin-native.json.gz",
+    "raw_bytes": 122,
+    "raw_sha256": "4b409d6220656fe304c7bde928253a1a31074e5dc8e99c4cca9885fdf0ac2206",
+    "gzip_sha256": "2575f0f44bd44736cfb6d5658ab4930d149c63d5078d4584a70dd1f79c7ba753"
+  },
+  {
+    "source": "build/L563/exit-after-build/too-many-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/too-many-stdin.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "f71a7111263930be5db28d5f3b50222f9287db9b80d50c004f3de9de18df7856",
+    "gzip_sha256": "08fb3de25128f57dd99b265a4fe13dba4405946dae883dd4d03589e525080ac1"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-command-bash.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-command-interp.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-command-native.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-command.sh.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "c5c713b9d255e9967ea71b1649319fe3f4a12f42732e009d269fe44596e1a0d1",
+    "gzip_sha256": "7423cc3c7b84818da226f044ade5246a4230798d360891ae23b79a6097fc7882"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-script-bash.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-script-interp.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-script-native.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-script.sh.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "c5c713b9d255e9967ea71b1649319fe3f4a12f42732e009d269fe44596e1a0d1",
+    "gzip_sha256": "7423cc3c7b84818da226f044ade5246a4230798d360891ae23b79a6097fc7882"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-stdin-bash.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-stdin-interp.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-stdin-native.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/exit-after-build/valid-exit-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-after-build/valid-exit-stdin.sh.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "c5c713b9d255e9967ea71b1649319fe3f4a12f42732e009d269fe44596e1a0d1",
+    "gzip_sha256": "7423cc3c7b84818da226f044ade5246a4230798d360891ae23b79a6097fc7882"
+  },
+  {
+    "source": "build/L563/exit-final/too-many-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-final/too-many-command-bash.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "30036e79364bcffa9ff0c29e6c791746d86255f21790a31e08af6d0e47da3829",
+    "gzip_sha256": "017c531662347becae648eb750157fea2c10471919105bf2ef2d654108605002"
+  },
+  {
+    "source": "build/L563/exit-final/too-many-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-final/too-many-command-native.json.gz",
+    "raw_bytes": 167,
+    "raw_sha256": "8aade3cf460336f8e17cc93ea821df3b6c83efb582eac9a5b4b737ccdbcedfed",
+    "gzip_sha256": "2cd3bd2760e8e0e57871b47241759c52cb7436095b4b2fc7cc230b07089fd908"
+  },
+  {
+    "source": "build/L563/exit-final/too-many-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/exit-final/too-many-command.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "f71a7111263930be5db28d5f3b50222f9287db9b80d50c004f3de9de18df7856",
+    "gzip_sha256": "08fb3de25128f57dd99b265a4fe13dba4405946dae883dd4d03589e525080ac1"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-command-bash.json.gz",
+    "raw_bytes": 142,
+    "raw_sha256": "3becd34b5a36df5c544380df8876415b5b6f012b82c84c626e4e517d88d145de",
+    "gzip_sha256": "7237b3502d2af1e3bd170a001868957f9226bda87e891bcdc1483e8c31f717bd"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-command-interp.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-command-native.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-command.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "3b434c1ecd73340afe2df3b4bf9138de151415739b1ca2760704ee8fad76f79d",
+    "gzip_sha256": "9862025378bfbd752ecc65d484cdf7ea7156007923aa1f564acf8560c0fdfca6"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-script-bash.json.gz",
+    "raw_bytes": 246,
+    "raw_sha256": "63d236395a6fa013dc8a87af9599be4399a802b8bc65ffaba4547cca81f297df",
+    "gzip_sha256": "87a8cd8e9be3ba68e9eb5454b800c5cd39d9d2d6b300d9cb279d36f8a3c1ffde"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-script-interp.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-script-native.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-script.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "3b434c1ecd73340afe2df3b4bf9138de151415739b1ca2760704ee8fad76f79d",
+    "gzip_sha256": "9862025378bfbd752ecc65d484cdf7ea7156007923aa1f564acf8560c0fdfca6"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-stdin-bash.json.gz",
+    "raw_bytes": 142,
+    "raw_sha256": "3becd34b5a36df5c544380df8876415b5b6f012b82c84c626e4e517d88d145de",
+    "gzip_sha256": "7237b3502d2af1e3bd170a001868957f9226bda87e891bcdc1483e8c31f717bd"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-stdin-interp.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-stdin-native.json.gz",
+    "raw_bytes": 128,
+    "raw_sha256": "5916d5a27c262af9aa88c57cd67033bb27c754baa35cd72267ff830b59d69151",
+    "gzip_sha256": "8f1046c3517f026b63d37354ab29e715a35da18332d8cb6ebfcc753bb31db027"
+  },
+  {
+    "source": "build/L563/final-exit/invalid-number-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/invalid-number-stdin.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "3b434c1ecd73340afe2df3b4bf9138de151415739b1ca2760704ee8fad76f79d",
+    "gzip_sha256": "9862025378bfbd752ecc65d484cdf7ea7156007923aa1f564acf8560c0fdfca6"
+  },
+  {
+    "source": "build/L563/final-exit/oracle-environment.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/oracle-environment.json.gz",
+    "raw_bytes": 519,
+    "raw_sha256": "37569e23e06219dab7dfeb3c0e2752fc6814c58389e63ba3a6106a4980428d44",
+    "gzip_sha256": "b0957de58badb30ad10d0290e962dc65981854b47c3a361842d4ee1d985141b8"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-command-bash.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-command-interp.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-command-native.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-command.sh.gz",
+    "raw_bytes": 33,
+    "raw_sha256": "41bb0227cdf3d0e5567f31e3439ddf07067c3d07d2ba9e903a0b7a1d139bb04c",
+    "gzip_sha256": "71b21be512c356e86d518176fcdb8730b326796acb3ff0a4bf99cc658f37c3c6"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-script-bash.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-script-interp.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-script-native.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-script.sh.gz",
+    "raw_bytes": 33,
+    "raw_sha256": "41bb0227cdf3d0e5567f31e3439ddf07067c3d07d2ba9e903a0b7a1d139bb04c",
+    "gzip_sha256": "71b21be512c356e86d518176fcdb8730b326796acb3ff0a4bf99cc658f37c3c6"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-stdin-bash.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-stdin-interp.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-stdin-native.json.gz",
+    "raw_bytes": 99,
+    "raw_sha256": "5414512882ad726f12eb95adc2c6e8e1c02adaa11676530814be055c1ad538ef",
+    "gzip_sha256": "d566058f79bb34eea295c5ee6285598ff7843b33da7d61902b89f579fd9b3e27"
+  },
+  {
+    "source": "build/L563/final-exit/ordinary-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/ordinary-stdin.sh.gz",
+    "raw_bytes": 33,
+    "raw_sha256": "41bb0227cdf3d0e5567f31e3439ddf07067c3d07d2ba9e903a0b7a1d139bb04c",
+    "gzip_sha256": "71b21be512c356e86d518176fcdb8730b326796acb3ff0a4bf99cc658f37c3c6"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-command-bash.json.gz",
+    "raw_bytes": 138,
+    "raw_sha256": "5759a92ed9a8182bb9d16b594bddaed322c006b5764afe896cdd6e3896145110",
+    "gzip_sha256": "a7c2212a459cccc62efba43e235434f78637b1910b29bef85988b828d5b7dfe3"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-command-interp.json.gz",
+    "raw_bytes": 124,
+    "raw_sha256": "97d3bb397e0c10508c7276f90f9ffcceda767eee56d5f9485847e32ccd8f8987",
+    "gzip_sha256": "dc75691fd73a9b9d481bbc37c2715afac80370e590bb011eb0c53fe9f836372d"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-command-native.json.gz",
+    "raw_bytes": 124,
+    "raw_sha256": "97d3bb397e0c10508c7276f90f9ffcceda767eee56d5f9485847e32ccd8f8987",
+    "gzip_sha256": "dc75691fd73a9b9d481bbc37c2715afac80370e590bb011eb0c53fe9f836372d"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-command.sh.gz",
+    "raw_bytes": 60,
+    "raw_sha256": "888175b3791bc49570cf1de5545d09fdda312b437e99816b38e33a85452d9137",
+    "gzip_sha256": "95fddb380620d45d39b7d08c230c595d53e96cd53403230122eaa159a5b52db1"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-script-bash.json.gz",
+    "raw_bytes": 242,
+    "raw_sha256": "0addd18bbdb78db34eaeaf8c898ab1329f1c228cda1f5865cb094d460fca4268",
+    "gzip_sha256": "5421746a7df1e4e998b8cfdfcc9557135bc00f09d52068bcf09f551185b0e7b9"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-script-interp.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "a1cebc0ed7a08cab48c57f9125545c550ac13d8c2a9d076ca2f5729997b02dd7",
+    "gzip_sha256": "bf334b8738be32fc6b0658ccc0efdee3d6245aec0790e020ab811918c5bcb1f4"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-script-native.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "a1cebc0ed7a08cab48c57f9125545c550ac13d8c2a9d076ca2f5729997b02dd7",
+    "gzip_sha256": "bf334b8738be32fc6b0658ccc0efdee3d6245aec0790e020ab811918c5bcb1f4"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-script.sh.gz",
+    "raw_bytes": 60,
+    "raw_sha256": "888175b3791bc49570cf1de5545d09fdda312b437e99816b38e33a85452d9137",
+    "gzip_sha256": "95fddb380620d45d39b7d08c230c595d53e96cd53403230122eaa159a5b52db1"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-stdin-bash.json.gz",
+    "raw_bytes": 144,
+    "raw_sha256": "69c8e49f506210bfc4caf6c3cd524e7bf13575031bdf2dfe9f6dadb84a650cc7",
+    "gzip_sha256": "13d0b6fee6f5f66b3a5d8dbd211890d31624e5642a684a2faaa4bffff6659f74"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-stdin-interp.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "a1cebc0ed7a08cab48c57f9125545c550ac13d8c2a9d076ca2f5729997b02dd7",
+    "gzip_sha256": "bf334b8738be32fc6b0658ccc0efdee3d6245aec0790e020ab811918c5bcb1f4"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-stdin-native.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "a1cebc0ed7a08cab48c57f9125545c550ac13d8c2a9d076ca2f5729997b02dd7",
+    "gzip_sha256": "bf334b8738be32fc6b0658ccc0efdee3d6245aec0790e020ab811918c5bcb1f4"
+  },
+  {
+    "source": "build/L563/final-exit/prefixed-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/prefixed-stdin.sh.gz",
+    "raw_bytes": 60,
+    "raw_sha256": "888175b3791bc49570cf1de5545d09fdda312b437e99816b38e33a85452d9137",
+    "gzip_sha256": "95fddb380620d45d39b7d08c230c595d53e96cd53403230122eaa159a5b52db1"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-command-bash.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "30036e79364bcffa9ff0c29e6c791746d86255f21790a31e08af6d0e47da3829",
+    "gzip_sha256": "017c531662347becae648eb750157fea2c10471919105bf2ef2d654108605002"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-command-interp.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-command-native.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-command.sh.gz",
+    "raw_bytes": 26,
+    "raw_sha256": "61eaf360c0ecc158a1a3d35b4b701106331e7bfa879e23fa4b5bb9891c977f51",
+    "gzip_sha256": "e3e0279f71fc97426d859ba55bf0b8843167ce72a6dff3872f85e494cd75d5ee"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-script-bash.json.gz",
+    "raw_bytes": 229,
+    "raw_sha256": "df155e828f50ee0d71d28d0dfcbcafdf5ca2ca67db09960e4af59fada33679d8",
+    "gzip_sha256": "785d87872c84a5c2eccec5b5410a0bb82c191bd0633ab28bf82142d87bdfcdba"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-script-interp.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-script-native.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-script.sh.gz",
+    "raw_bytes": 26,
+    "raw_sha256": "61eaf360c0ecc158a1a3d35b4b701106331e7bfa879e23fa4b5bb9891c977f51",
+    "gzip_sha256": "e3e0279f71fc97426d859ba55bf0b8843167ce72a6dff3872f85e494cd75d5ee"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-stdin-bash.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "30036e79364bcffa9ff0c29e6c791746d86255f21790a31e08af6d0e47da3829",
+    "gzip_sha256": "017c531662347becae648eb750157fea2c10471919105bf2ef2d654108605002"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-stdin-interp.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-stdin-native.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/final-exit/same-line-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/same-line-stdin.sh.gz",
+    "raw_bytes": 26,
+    "raw_sha256": "61eaf360c0ecc158a1a3d35b4b701106331e7bfa879e23fa4b5bb9891c977f51",
+    "gzip_sha256": "e3e0279f71fc97426d859ba55bf0b8843167ce72a6dff3872f85e494cd75d5ee"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-command-bash.json.gz",
+    "raw_bytes": 130,
+    "raw_sha256": "30036e79364bcffa9ff0c29e6c791746d86255f21790a31e08af6d0e47da3829",
+    "gzip_sha256": "017c531662347becae648eb750157fea2c10471919105bf2ef2d654108605002"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-command-interp.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-command-native.json.gz",
+    "raw_bytes": 116,
+    "raw_sha256": "6cb054699d445c183be65d4b7e24621571ab31a56567b5a7e5ecdd344597ca14",
+    "gzip_sha256": "d140aa92780f6909e1d11b9b0b9ffd97cb7053da578661fbca75197774a43985"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-command.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "f71a7111263930be5db28d5f3b50222f9287db9b80d50c004f3de9de18df7856",
+    "gzip_sha256": "08fb3de25128f57dd99b265a4fe13dba4405946dae883dd4d03589e525080ac1"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-script-bash.json.gz",
+    "raw_bytes": 234,
+    "raw_sha256": "969e40a7e768509c1bf18905979621cdb017212822e0c89c6838c5aa7128d90d",
+    "gzip_sha256": "5fb55beb730081770fb43509498f212716be70376629975cd5b882068ad99dfc"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-script-interp.json.gz",
+    "raw_bytes": 122,
+    "raw_sha256": "4b409d6220656fe304c7bde928253a1a31074e5dc8e99c4cca9885fdf0ac2206",
+    "gzip_sha256": "2575f0f44bd44736cfb6d5658ab4930d149c63d5078d4584a70dd1f79c7ba753"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-script-native.json.gz",
+    "raw_bytes": 122,
+    "raw_sha256": "4b409d6220656fe304c7bde928253a1a31074e5dc8e99c4cca9885fdf0ac2206",
+    "gzip_sha256": "2575f0f44bd44736cfb6d5658ab4930d149c63d5078d4584a70dd1f79c7ba753"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-script.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "f71a7111263930be5db28d5f3b50222f9287db9b80d50c004f3de9de18df7856",
+    "gzip_sha256": "08fb3de25128f57dd99b265a4fe13dba4405946dae883dd4d03589e525080ac1"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-stdin-bash.json.gz",
+    "raw_bytes": 136,
+    "raw_sha256": "bc014f17b49bbf166e8d2bc5989e285ccc695bda2d574e26d4b54005faf7ec0c",
+    "gzip_sha256": "2b1de9a8220b9b061f210ea7af6f3e143e1937f493f07ef5004829e352618edd"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-stdin-interp.json.gz",
+    "raw_bytes": 122,
+    "raw_sha256": "4b409d6220656fe304c7bde928253a1a31074e5dc8e99c4cca9885fdf0ac2206",
+    "gzip_sha256": "2575f0f44bd44736cfb6d5658ab4930d149c63d5078d4584a70dd1f79c7ba753"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-stdin-native.json.gz",
+    "raw_bytes": 122,
+    "raw_sha256": "4b409d6220656fe304c7bde928253a1a31074e5dc8e99c4cca9885fdf0ac2206",
+    "gzip_sha256": "2575f0f44bd44736cfb6d5658ab4930d149c63d5078d4584a70dd1f79c7ba753"
+  },
+  {
+    "source": "build/L563/final-exit/too-many-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/too-many-stdin.sh.gz",
+    "raw_bytes": 42,
+    "raw_sha256": "f71a7111263930be5db28d5f3b50222f9287db9b80d50c004f3de9de18df7856",
+    "gzip_sha256": "08fb3de25128f57dd99b265a4fe13dba4405946dae883dd4d03589e525080ac1"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-command-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-command-bash.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-command-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-command-interp.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-command-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-command-native.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-command.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-command.sh.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "c5c713b9d255e9967ea71b1649319fe3f4a12f42732e009d269fe44596e1a0d1",
+    "gzip_sha256": "7423cc3c7b84818da226f044ade5246a4230798d360891ae23b79a6097fc7882"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-script-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-script-bash.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-script-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-script-interp.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-script-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-script-native.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-script.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-script.sh.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "c5c713b9d255e9967ea71b1649319fe3f4a12f42732e009d269fe44596e1a0d1",
+    "gzip_sha256": "7423cc3c7b84818da226f044ade5246a4230798d360891ae23b79a6097fc7882"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-stdin-bash.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-stdin-bash.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-stdin-interp.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-stdin-interp.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-stdin-native.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-stdin-native.json.gz",
+    "raw_bytes": 85,
+    "raw_sha256": "751c10f42f59bbbc82a5d36873e0d0e15c75f6c715c1d075323fc37a30088946",
+    "gzip_sha256": "fcfc6e25b9f89fa70a9b33a0e1cb354491527d9af7e1c87ab52e7b6f2a73fb0c"
+  },
+  {
+    "source": "build/L563/final-exit/valid-exit-stdin.sh",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/final-exit/valid-exit-stdin.sh.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "c5c713b9d255e9967ea71b1649319fe3f4a12f42732e009d269fe44596e1a0d1",
+    "gzip_sha256": "7423cc3c7b84818da226f044ade5246a4230798d360891ae23b79a6097fc7882"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-restore-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-restore-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-restore-build.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-restore-build.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-restore-test.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-restore-test.log.gz",
+    "raw_bytes": 8045,
+    "raw_sha256": "daaf5f22f41ad6b9f729fec1423dd19e7252fe46e96967ae6ac97417e8de33e2",
+    "gzip_sha256": "ba26d3291367c52735e0548477b36abf645ac8935d2ac8737bf6ce57f7b131d4"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-restore-test.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-restore-test.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-restore.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-restore.c.gz",
+    "raw_bytes": 14039,
+    "raw_sha256": "5a35367f62d4bea85ba83c376fb6cc45ae15b753ccb0b6de67a0e96893ed61f7",
+    "gzip_sha256": "be1d1cb75f2abbacaaa227dd64a7d9549a91c43a4a1a6eda59ec30734ccbce30"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-rollback-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-rollback-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-rollback-build.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-rollback-build.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-rollback-test.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-rollback-test.log.gz",
+    "raw_bytes": 873,
+    "raw_sha256": "b155dc05c90cf78eda5ba8bb29c00017288df32dda9d05707842b6a21579f481",
+    "gzip_sha256": "ae2ac2f96dd31f360a8093c34e070bc1d08fd24bc49bc321947153901dc16e25"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-rollback-test.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-rollback-test.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-vQWM42/no-rollback.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-vQWM42/no-rollback.c.gz",
+    "raw_bytes": 14063,
+    "raw_sha256": "f3add7cd5a97ff5f64ffbb341f22cae291ffe6ea3b6d3577a3b01a32d391c07f",
+    "gzip_sha256": "9aa4a5c9dccd1dc5b406d304f4a5f60343c7dfb4de8c652d75dbc393a9111356"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-restore-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-restore-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-restore-build.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-restore-build.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-restore-test.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-restore-test.log.gz",
+    "raw_bytes": 8045,
+    "raw_sha256": "daaf5f22f41ad6b9f729fec1423dd19e7252fe46e96967ae6ac97417e8de33e2",
+    "gzip_sha256": "ba26d3291367c52735e0548477b36abf645ac8935d2ac8737bf6ce57f7b131d4"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-restore-test.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-restore-test.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-restore.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-restore.c.gz",
+    "raw_bytes": 14706,
+    "raw_sha256": "3ef198df239f129f79e974d94bf96fb116f7aecf2c811a05d9d5bd5b3ee9a84e",
+    "gzip_sha256": "f7da87d7d7f8a020f9850c701950957a16e8f7c9c5fba835daf252c7d2c4620b"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-rollback-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-rollback-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-rollback-build.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-rollback-build.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-rollback-test.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-rollback-test.log.gz",
+    "raw_bytes": 873,
+    "raw_sha256": "b155dc05c90cf78eda5ba8bb29c00017288df32dda9d05707842b6a21579f481",
+    "gzip_sha256": "ae2ac2f96dd31f360a8093c34e070bc1d08fd24bc49bc321947153901dc16e25"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-rollback-test.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-rollback-test.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "/tmp/L553-prompt-mutants-AHkzSR/no-rollback.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-prompt-mutants-AHkzSR/no-rollback.c.gz",
+    "raw_bytes": 14730,
+    "raw_sha256": "57a2464a7fc3fa8d775122d29c2a73036ba1720b183c69b4900d269eaccea7a4",
+    "gzip_sha256": "d293cb2bd3f1fb42029c65d29c1cb11389be2c082a869466d3e4e45315367d03"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/continue-command-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/continue-command-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/continue-command-build.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/continue-command-build.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/continue-command-test.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/continue-command-test.log.gz",
+    "raw_bytes": 2026,
+    "raw_sha256": "59387164e880cd80023930b84fa1f2da5eaba9c75ccd2b86930c0fdf6684e6f9",
+    "gzip_sha256": "efc5a20ab2aa4a4b2c22e483c621407a7ce94bf2ca616993224bc9821a0fbe14"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/continue-command-test.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/continue-command-test.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/continue-command.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/continue-command.c.gz",
+    "raw_bytes": 14731,
+    "raw_sha256": "7c03d49e793b0d946e9467a02872f73c36817342b7357238288139420e91cae6",
+    "gzip_sha256": "9c28e91400bbfc07e6f4f00071c888922f9364766bd77dc3792eff08894d1485"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/stop-streams-build.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/stop-streams-build.log.gz",
+    "raw_bytes": 0,
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/stop-streams-build.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/stop-streams-build.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "21326876b4708d66addc168a68fa4919356a7eba7bc3becd93297b39423451ed",
+    "gzip_sha256": "7d918712fe56140c8ccd775609107a562520d9dbaa5a198ddf6cae6ddcbc0add"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/stop-streams-test.log",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/stop-streams-test.log.gz",
+    "raw_bytes": 1954,
+    "raw_sha256": "95fd9e1ec1d5391a1429eeb2d5871537fa60237ad46a8ec4642d3b58dc0f391f",
+    "gzip_sha256": "74a2099ea8382a5fca5cd5654039b0f2862c13dc61becf8ad9ab118b90db0573"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/stop-streams-test.status.json",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/stop-streams-test.status.json.gz",
+    "raw_bytes": 40,
+    "raw_sha256": "708eae6cc8f6002add20318bc7578926b2f0d7aeb0877e4ea67ff64ca0a23262",
+    "gzip_sha256": "a546fcac46bd1b4bf669461bab065115cd932f7553f3bf929a5b9db3171617d7"
+  },
+  {
+    "source": "/tmp/L553-exit-mutants-zVsU7b/stop-streams.c",
+    "packet": "evidence/L563-PROMPT-INTERRUPT/raw/restore-controls/L553-exit-mutants-zVsU7b/stop-streams.c.gz",
+    "raw_bytes": 14739,
+    "raw_sha256": "09a467f3f912760d9a194c915bf8d467602279da8f627e3e64b10841aef670ea",
+    "gzip_sha256": "381687e0a3269b7e8c96cad6f5a750c2a9730e8b5bbabcb20e9a58cd32dcf7e1"
+  }
+]
