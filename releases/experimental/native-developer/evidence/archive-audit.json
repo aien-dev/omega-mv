@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "archive_sha256": "eaf37ff32d17166de403372069b52aeb98b9523ce154b8f065ae9e4c161c8480",
+  "archive_bytes": 365832,
+  "source_commit": "70459b34b8c4840c48c2b15f2edc4b2a7c39ea75",
+  "source_tree": "a99e3c08e8cef53643774b7ea0fbfaac29f94ead",
+  "regular_files": 372,
+  "directories": 39,
+  "all_blobs_match": true,
+  "deterministic_archive_match": true,
+  "binary_files": 0,
+  "credential_pattern_findings": 0,
+  "sensitive_filename_findings": 0,
+  "license_sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+  "limits": "Pattern scan plus complete member classification; no universal secret-detection guarantee. Historical test logs and design docs retained as reviewed source closure; no private git history exported."
+}

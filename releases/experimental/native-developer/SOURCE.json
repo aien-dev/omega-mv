@@ -1,0 +1,31 @@
+{
+  "schema": "omega-native-developer-source/1",
+  "status": "experimental-public-branch-preview",
+  "platform": "Linux/aarch64",
+  "archive": "omega-developer-linux-arm64-source.tar.gz",
+  "sha256": "eaf37ff32d17166de403372069b52aeb98b9523ce154b8f065ae9e4c161c8480",
+  "bytes": 365832,
+  "source_commit": "70459b34b8c4840c48c2b15f2edc4b2a7c39ea75",
+  "source_tree": "a99e3c08e8cef53643774b7ea0fbfaac29f94ead",
+  "reviewed_functional_commit": "b60f90ac43d8ecb8b413e890c5efd6461d8de501",
+  "review_evidence_commit": "6d232d0788181dd0aa1748f5bfa77df6de3eb380",
+  "original_module": "aien-dev/omega-bridge (private source staging; public archive is self-contained)",
+  "public_home": "aien-dev/omega-mv",
+  "license": "GNU Affero General Public License version 3; complete LICENSE and provenance/OMEGA-LICENSE included",
+  "license_sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+  "archive_recipe": "git archive --format=tar --prefix=omega/ 70459b34b8c4840c48c2b15f2edc4b2a7c39ea75 | gzip -n",
+  "source_files": 372,
+  "native_seed": "29b12760f4c962606411d6bf25032aedef063301",
+  "native_math": "508ddd7e02c303d0e2182721f9501c7a540c758f",
+  "outward_converter": "77376b1941a020dba441a14fce8eaadea692a5b7",
+  "native_compiler_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "reviewed_bootstrap_sha256_before_url_change": "3e8d529be01eb1011bcd642aafd540955fa672307973b019d512b8862fa812e8",
+  "host_glue": "POSIX shell bootstrap, download, packaging, dispatcher and OS utilities; native computation is seeded Omega. Python/Node test oracles and outward examples are source-only test material.",
+  "limits": [
+    "Branch preview only; stable release, default branch and canonical site publication pending",
+    "No Windows, macOS, x86_64, GPU or runtime-attachment qualification",
+    "SHA256 integrity pin; no signed-release claim",
+    "Existing full native suite, alias 7/7, path 61/61 and local HTTP 5/5 on Spark and Pi5 are inherited evidence",
+    "Parent owns independent fetch and Pi5 public preview replay"
+  ]
+}
