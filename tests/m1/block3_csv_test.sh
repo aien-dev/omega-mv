@@ -3,7 +3,8 @@ set -eu
 script=bench/m1/block3_receipt_csv.sh
 fixture=$(mktemp)
 out=$(mktemp)
-trap 'rm -f "$fixture" "$out"' EXIT
+target=$(mktemp)
+trap 'rm -f "$fixture" "$out" "$target"' EXIT
 cat > "$fixture" <<'JSON'
 {
  "schema":"OMEGA_PLAN_REUSE_V1","candidate_commit":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -22,6 +23,6 @@ rg -q '"merge_two_towers_3_3",40,39,135000,5000,4100000,4700000' "$out"
 rg -q ',"UNKNOWN","UNKNOWN","UNMEASURED",' "$out"
 for mutation in '.candidate_bound=false' '.tree_dirty=true' '.failures=1' '.workloads.reverse_tower_6.reuse_succeeded=38' '.workloads.reverse_tower_6.first_use.median_end_to_end_ns=null' '.run_commit="different"'; do
   jq "$mutation" "$fixture" > "$out"
-  if $script "$out" /dev/null 2>/dev/null; then echo "accepted mutant $mutation" >&2; exit 1; fi
+  if $script "$out" "$target" 2>/dev/null; then echo "accepted mutant $mutation" >&2; exit 1; fi
 done
 printf '%s\n' 'block3 CSV contract: PASS (six malformed or unsafe receipts refused)'
