@@ -1,0 +1,162 @@
+note L523 seeded native bounded continuation guard. No search or promotion authority.
+global inp uchar 16384
+global q ulong 512
+global nq ulong 1
+global out uchar 32
+global ans ulong 4
+
+fn putnum v ulong to void
+put out 31 10
+p = ulong 31
+x = v
+while gt x 9
+p = sub p 1
+put out p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put out p uchar add x 48
+w = write 1 out p sub 32 p
+if ne w long sub 32 p
+exit 26
+end
+end
+
+fn parse to void
+n = ulong 0
+more = true
+while more
+if eq n 16384
+exit 20
+end
+k = read 0 inp n sub 16384 n
+if eq k 0
+more = false
+else
+if or lt k 0 gt k long sub 16384 n
+exit 20
+end
+n = add n ulong k
+end
+end
+v = ulong 0
+has = false
+for i ulong n
+c = ulong get inp i
+if and ge c 48 le c 57
+if gt v div sub 18446744073709551615 sub c 48 10
+exit 20
+end
+v = add mul v 10 sub c 48
+has = true
+else
+if and ne c 32 and ne c 10 and ne c 9 ne c 13
+if and ne c 11 ne c 12
+exit 20
+end
+end
+if has
+j = get nq 0
+if ge j 512
+exit 20
+end
+put q j v
+put nq 0 add j 1
+v = ulong 0
+has = false
+end
+end
+end
+if has
+j = get nq 0
+if ge j 512
+exit 20
+end
+put q j v
+put nq 0 add j 1
+end
+end
+
+fn pay to bool
+put ans 1 get q 4
+put ans 0 ulong 2
+if gt get q 4 get q 6
+ret false
+end
+if gt get q 9 sub get q 6 get q 4
+ret false
+end
+put ans 0 ulong 3
+if gt get q 4 get q 7
+ret false
+end
+if gt get q 9 sub get q 7 get q 4
+ret false
+end
+put ans 1 add get q 4 get q 9
+ret true
+end
+
+fn decide to ulong
+if not pay
+ret get ans 0
+end
+if eq get q 8 0
+ret ulong 4
+end
+if eq get q 2 0
+ret ulong 5
+end
+if gt get q 5 sub get q 6 get ans 1
+ret ulong 2
+end
+if false
+ret ulong 3
+end
+note Division implements next >= horizon * best without overflowing the product.
+if ge div get q 5 get q 3 get q 2
+ret ulong 6
+end
+ret ulong 1
+end
+
+fn breakev to void
+put ans 2 ulong 0
+put ans 3 ulong 0
+if gt get q 1 get q 2
+bx = div get ans 1 sub get q 1 get q 2
+if eq bx 18446744073709551615
+put ans 2 bx
+put ans 3 ulong 1
+else
+put ans 2 add bx 1
+end
+end
+end
+
+fn proto to bool
+ret and eq get q 0 1 and ne get q 3 0 ne get q 5 0
+end
+
+fn stateok to bool
+ret and le get q 2 get q 1 le get q 8 8
+end
+
+fn main to int
+parse
+if ne get nq 0 10
+exit 20
+end
+if not proto
+exit 20
+end
+if not stateok
+exit 20
+end
+put ans 0 decide
+breakev
+for i ulong 4
+putnum get ans i
+end
+ret 0
+end

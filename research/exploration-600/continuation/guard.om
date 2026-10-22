@@ -51,7 +51,9 @@ v = add mul v 10 sub c 48
 has = true
 else
 if and ne c 32 and ne c 10 and ne c 9 ne c 13
+if and ne c 11 ne c 12
 exit 20
+end
 end
 if has
 j = get nq 0

@@ -20,6 +20,7 @@ PY
 sha256sum "$SEED_OMC" "$L523_OUT/guard" > "$L523_OUT/binaries.sha256"
 sha256sum research/exploration-600/continuation/* > "$L523_OUT/sources.sha256"
 quiet-build timeout 60s python3 research/exploration-600/continuation/test_guard.py "$L523_OUT/guard" > "$L523_OUT/checks.json"
+quiet-build timeout 60s python3 research/exploration-600/continuation/test_protocol.py "$L523_OUT/guard" > "$L523_OUT/protocol.json"
 quiet-build timeout 120s python3 research/exploration-600/continuation/mutants.py "$L523_OUT/mutants" > "$L523_OUT/mutants-summary.json"
 quiet-build timeout 120s python3 research/exploration-600/continuation/replay.py "$L523_OUT/guard" "$L523_OUT/replay" > "$L523_OUT/replay-summary.json"
 EX600_OUT="$L523_OUT/regression-build" bash research/exploration-600/run.sh checks "$L523_OUT/regression" > "$L523_OUT/regression.log" 2>&1
