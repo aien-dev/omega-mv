@@ -1,0 +1,66 @@
+make: Nothing to be done for 'searchtrace'.
+verify PASS digest=1a78a91634dfe5fc310577baaacc3737d34b99c306a715d039fc47622082856a steps=139
+hookcheck PASS tasks=2
+✔ canonical bytes independent of key insertion; strict types/units/versions (2.785876ms)
+✔ sealed archive reopen, deterministic payloads, mode, no source mutation (91.65979ms)
+✔ truncation, corrupt length/version/index and orphan fail visibly; recover preserves original (179.458529ms)
+✔ symlinks, unsafe permissions, swaps and hardlinks refused (47.715924ms)
+✔ quota, age, pin and explicit purge preserve unrelated receipts (67.972917ms)
+✔ disabled writer no files; bounded burst durable per-class loss (83.568708ms)
+✔ independent frame oracle verifies exact bytes, endian, digest, and payload (1.10348ms)
+✔ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (56.500979ms)
+✔ write failure is explicit, no empty-success index; existing writer cannot be displaced (18.160706ms)
+✔ parent-component symlink, group-readable file, and hardlink refused (33.750113ms)
+✔ producer errors stay bounded, and durable losses retain producer and event class (87.266943ms)
+✔ permission denial refuses writes; failed async persistence reports exact accepted count (66.304601ms)
+✔ writer snapshots context and refuses cross-run/session mixing without throwing (80.078107ms)
+✔ recovery does not resurrect retained-out segment bytes and preserves known loss (70.138212ms)
+✔ attribution overflow stays within a fixed table and reports all refused events (774.564823ms)
+✔ drop-counter arithmetic overflow reports unknown rather than wrapping or throwing (72.791959ms)
+✔ existing hook corpus maps causal candidate/realization pairs without copying task text (46.855246ms)
+✔ ARGUS existing ABI keeps u64 stream/tick, original refs, sticky critical loss and refuses malformed (0.637876ms)
+✔ DUAL canonical recommendation remains advisory, uncalibrated and measured distinct (0.579092ms)
+✔ DUAL preserves valid signed predictions and zero resource IDs from native contract (0.411123ms)
+✔ realization code size is a distinct typed metric, not memory footprint (14.108933ms)
+✔ multi-producer collision ordering, exact links, typed totals and unavailable energy (51.566096ms)
+✔ all filters, inclusive time bounds, step selection and retained causal references (37.027064ms)
+✔ comparison qualifies mismatched contracts; export carries source digests and query (40.239951ms)
+✔ missing/corrupt archive reports inconclusive rather than successful empty result (37.932286ms)
+✔ CLI reads while tracing disabled; all commands return deterministic versioned results (378.354733ms)
+✔ unknown run and mixed clock range cannot report conclusive success (38.503538ms)
+✔ cross-session links within a run remain valid; cross-run parents are qualified (0.808694ms)
+✔ CLI refuses misleading arity/irrelevant filters and requires run for steps (4.813538ms)
+✔ T1 spans disclose every mandatory metadata path alongside selected metrics (50.823627ms)
+✔ T2 stale and active writer locks refuse packaging without guessing loss counts (84.052888ms)
+✔ T2 real killed child startup has queued unacknowledged events and unknown loss (116.366463ms)
+✔ T2 real killed child queued has queued unacknowledged events and unknown loss (121.439235ms)
+✔ T2 clean child close removes session markers only after durable acknowledgement (126.522839ms)
+✔ T3 real purge cut after tombstone fsync diagnoses residual private bytes read-only (107.227629ms)
+✔ T3 clean explicit purge fsyncs deletion and leaves a conclusive empty archive (33.769697ms)
+✔ T2 reader racing clean shutdown retains opening writer uncertainty until next read (36.168226ms)
+✔ T2 failed background persistence preserves unclean session marker even on close (63.024594ms)
+✔ T2 adopted worker startup failure preserves reserved marker and unknown loss (100.483901ms)
+✔ deterministic golden contribution, exact preview/package bytes, explicit allowlist and local-only consent (64.777087ms)
+✔ canary prompts credentials samples paths tensors never enter schema or standard bundles (37.943983ms)
+✔ unknown schema, unverified provenance, truncation, dangling parent and source mutation refuse packaging (40.087503ms)
+✔ CLI rejects symlink/traversal source and refuses writing source archive or existing output (39.715756ms)
+✔ top-level disclosure metadata cannot carry unchecked private strings (31.322288ms)
+✔ step/status filters and retention cannot conceal known run loss counts (93.585932ms)
+✔ unknown binary/metadata fields in an integrity-correct segment refuse local packaging (29.229809ms)
+✔ self-contained offline artifact, CSP, no listener/remote scripts, integrity/proof distinction (49.503217ms)
+✔ step/source/type/time selection and missing/loss/compare labels use typed observations (38.819077ms)
+✔ actual bundled client interactions: filters, step selection, time, comparison, reset; immutable data (39.198504ms)
+✔ unknown dropped count remains unknown in viewer, never zero (0.59234ms)
+ℹ tests 50
+ℹ suites 0
+ℹ pass 50
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1798.52378
+native oracle PASS: ARGUS v1.1 and DUAL v1 existing encoders/decoders, 2 synthetic records
+{"schema":"omega.trace.native-oracle.v1","qualification":"SYNTHETIC_HOST_ONLY","records":2,"assertions":12,"authority":false,"hardware":"NOT_RUN"}
+network-denial positive control EPERM
+{"accepted":3,"checks":8,"dropped":{"1:train:step":47},"hardware":"NOT_RUN","imported_events":220,"listener":false,"loss_summaries":1,"network_policy":"seccomp_socket_operations_denied","performance":"NOT_RUN","preview_exact":true,"qualification":"SYNTHETIC_HOST_ONLY","schema":"omega.trace.offline-test.v1","source_unchanged":true}
+OMEGA-TRACE PASS (synthetic host correctness only; hardware and timings NOT_RUN)
