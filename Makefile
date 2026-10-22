@@ -6,7 +6,7 @@ OUT_DIR ?= build
 CUDAPP_DIR ?= $(if $(wildcard ../CUDApp/src),../CUDApp,build/cudapp)
 override CUDAPP_DRIVER_DIR := $(CUDAPP_DIR)
 GPU_PROD_TARGET ?= build/omegatool
-CUDAPP_LINK := $(shell tools/cudapp-link.sh "$(CUDAPP_DIR)" >&2 || echo FAIL)
+override CUDAPP_LINK := $(shell tools/cudapp-link.sh "$(CUDAPP_DIR)" >&2 || echo FAIL)
 ifneq ($(CUDAPP_LINK),)
 $(error canonical CUDApp binding failed; see cudapp-link diagnostic)
 endif
@@ -2740,4 +2740,4 @@ CUDAPP_SHARED = src/sha256.c src/sha256.h src/omega_types.h src/omega_vector.c s
 check-cudapp-shared:
 	@for f in $(CUDAPP_SHARED); do cmp -s "$$f" "$(CUDAPP_DIR)/$$f" || { printf 'shared CUDApp source drift: %s\n' "$$f" >&2; exit 1; }; done
 test-cudapp-link:
-	python3 tests/test_cudapp_link.py
+	sh tests/test_cudapp_link.sh
