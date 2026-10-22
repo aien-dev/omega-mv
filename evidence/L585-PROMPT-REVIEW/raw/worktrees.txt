@@ -1,0 +1,31 @@
+
+worktree /home/drakestapleton/workspace/l396/omega-host-test
+HEAD 5dd4ea38c4aa686a2874b1df75ce09a82d4bf2cb
+detached
+
+--
+
+worktree /home/drakestapleton/workspace/omega-host
+HEAD 5dd4ea38c4aa686a2874b1df75ce09a82d4bf2cb
+branch refs/heads/modules/host
+
+--
+
+worktree /home/drakestapleton/workspace/omega-osh-exit-numeric-priority-20261022
+HEAD f2dbbb241cd9b3c0302d1bc3630d61f617d12c2c
+branch refs/heads/issues/osh-exit-numeric-priority-20261022
+
+worktree /home/drakestapleton/workspace/omega-osh-host-test-entry
+HEAD cf22be7e37321ddbd94e9210b86ee42e3050e0bd
+--
+
+worktree /home/drakestapleton/workspace/omega-osh-prompt-exact-review-20261022
+HEAD f49e6a91e8b973c3ca0277993a663321a646451e
+branch refs/heads/issues/osh-prompt-exact-review-20261022
+
+worktree /home/drakestapleton/workspace/omega-osh-prompt-interrupt-20261022
+HEAD f49e6a91e8b973c3ca0277993a663321a646451e
+branch refs/heads/issues/osh-prompt-interrupt-20261022
+
+worktree /home/drakestapleton/workspace/omega-own30b-a16
+HEAD e69811486fcd18212830b440b65df5dbf1aff666

@@ -1,0 +1,52 @@
+{
+  "ledger": "L585",
+  "candidate": "f49e6a91e8b973c3ca0277993a663321a646451e",
+  "sourceCommits": [
+    "7569e8d2664ced00ec792ae25a0483e0cfe4f2e7",
+    "268d909141be0968bacbda3cb63147658a0b55f9"
+  ],
+  "verdict": "ACCEPT_HOST_SCOPE",
+  "findings": [],
+  "scope": "Linux prompt SIGINT atomic wait/read and caller state only",
+  "independent": {
+    "actualCoreInterruptPlain": 32,
+    "actualCoreInterruptSanitizer": 32,
+    "actualPtyLegs": 3,
+    "actionAssertionsPlain": 254,
+    "actionAssertionsSanitizer": 254,
+    "ownHelperCases": 16,
+    "oldExpectedFailures": 16,
+    "m1ExpectedFailures": 4,
+    "replayedMutantFailures": [
+      2,
+      2,
+      8,
+      4,
+      2
+    ],
+    "freshOwnMutantFailures": [
+      8,
+      6
+    ],
+    "timeoutsOrCrashesCountedAsKills": 0
+  },
+  "candidateGitPacket": {
+    "manifest": 304,
+    "tracked": 305,
+    "inputPins": 253,
+    "lossless": 298,
+    "status": "PASS"
+  },
+  "wholeIntegration": "HOLD: L570 corrected parent publication and L577 qualification remain separately owned",
+  "notRun": [
+    "broad unchanged regression gates independently rerun",
+    "restore-syscall fault injection",
+    "native AIENOS",
+    "QEMU",
+    "hardware",
+    "current35B",
+    "module integration"
+  ],
+  "sourceEdits": false,
+  "extraAgents": 0
+}

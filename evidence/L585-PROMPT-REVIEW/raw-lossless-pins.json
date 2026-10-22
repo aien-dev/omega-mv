@@ -1,0 +1,184 @@
+[
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/candidate-verify.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/candidate-verify.log.gz",
+    "rawBytes": 143,
+    "rawSha256": "4ebc8c3fbc9cfce5ad476c751d0e7b1d34c0a6305785d0d38e712dce9960e7c2",
+    "gzipSha256": "a0380cf8b0ffb1fb59dda20aa9d32b31f8db890b454e9b7892a3fafd2acfbec0"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/crumb-initial.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/crumb-initial.log.gz",
+    "rawBytes": 53,
+    "rawSha256": "71dd50fabf4e5bb6b47ba10a97c89b89fbb4739c6bae9e23f5bc367d707e3752",
+    "gzipSha256": "355526b40e6b7fca9bf86867cdbd365e91fc88cb2ce2586c7108301dd91987eb"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/drop-postread-signal-build.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/drop-postread-signal-build.log.gz",
+    "rawBytes": 0,
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/drop-postread-signal-initial-expectation-mismatch.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/drop-postread-signal-initial-expectation-mismatch.log.gz",
+    "rawBytes": 1312,
+    "rawSha256": "8ee5a9352b18473a786d76ce5e603c65f35c8c3e04292e8bbd115667f473ae5b",
+    "gzipSha256": "9a8e81e90a3c11ab0222c979d125e6960f1648e78a46960c0b1baee1b0e3c8af"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/drop-postread-signal-run.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/drop-postread-signal-run.log.gz",
+    "rawBytes": 1312,
+    "rawSha256": "8ee5a9352b18473a786d76ce5e603c65f35c8c3e04292e8bbd115667f473ae5b",
+    "gzipSha256": "9a8e81e90a3c11ab0222c979d125e6960f1648e78a46960c0b1baee1b0e3c8af"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/probe-build.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/probe-build.log.gz",
+    "rawBytes": 0,
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/probe-m1-build.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/probe-m1-build.log.gz",
+    "rawBytes": 0,
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/probe-m1-initial-infrastructure-failure.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/probe-m1-initial-infrastructure-failure.log.gz",
+    "rawBytes": 2059,
+    "rawSha256": "6ffe3773d495751a7f5aa1cd691118080ebf54f7bf8e8fa7e7130e284c87d12e",
+    "gzipSha256": "e0fbf7cbef53044609260bb326ddd627b40735bd90a48d2018edee29c49c77d3"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/probe-m1-run.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/probe-m1-run.log.gz",
+    "rawBytes": 1320,
+    "rawSha256": "3743df369f85f3e60ad46232b84241d757548d395861fd2dae8495a601df0d76",
+    "gzipSha256": "376cb42ac6f75dfec0de9d9d4342dca9bb7d4b2d71f31c3ed5e515c1788b2037"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/probe-run.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/probe-run.log.gz",
+    "rawBytes": 1318,
+    "rawSha256": "0e11ac41f0acee1ba6e34dbe34f0ed1f30925ca0ed7ec7250bad3787bfc8ebf6",
+    "gzipSha256": "4d25c718cf7191079c935b40d44f14416b387b47698b715c7c4043f95c88e3d4"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/red-blocking-after-readiness.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/red-blocking-after-readiness.log.gz",
+    "rawBytes": 4331,
+    "rawSha256": "61ca786b0969d9fd4374505b1b3fa1ecfea33c509ac8dad19b13c62bd6a21e4b",
+    "gzipSha256": "ecbbabec2bf807a7747845941ccd171d64ca2a1d6372f299e3c5000b169904d0"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/red-commit-interrupted-newline.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/red-commit-interrupted-newline.log.gz",
+    "rawBytes": 4145,
+    "rawSha256": "f82fed19e94b28c8f496e63aaa9b2b02d404ed7662c08b7110759a000b33caa0",
+    "gzipSha256": "d440173a3bdd9ebc661d5dd40d18fefc29aa7731863e58b1425dcd09db1f04cc"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/red-drop-handled-flag.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/red-drop-handled-flag.log.gz",
+    "rawBytes": 4689,
+    "rawSha256": "6d02a8fd4f9c00a551d3c9423d6651c240d1c264e0cca4013f2d3f164ae56120",
+    "gzipSha256": "5100462553c3a1561cb68610bf2194570b443e7f4c8be6adcc20ada034f8842d"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/red-hide-select-error.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/red-hide-select-error.log.gz",
+    "rawBytes": 3993,
+    "rawSha256": "d1340be853df469fb1187815e661e6dcf8db52086f3dc431bf1cb04a572a9a4d",
+    "gzipSha256": "b6f68f369ac8171c3fa348403e052cffa58666af4ab8ae556a58d1a9152f9e08"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/red-m1.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/red-m1.log.gz",
+    "rawBytes": 4403,
+    "rawSha256": "5ac10f56a4c97041f1e0fc631894b887a99f79b109d7ddeaee8dc092d99af377",
+    "gzipSha256": "6e8c58803df85e82543a36b4b14e176280d36b298a09c949eca6c45e77ccb07d"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/red-old.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/red-old.log.gz",
+    "rawBytes": 3512,
+    "rawSha256": "d6f531ba14a554e8f3b49a5e77863f21ffc84db0768c965a9a2390a6f8841412",
+    "gzipSha256": "dfc1fa7b22c437d85f3d75526bf35e134cca2069ed41aa2138b0e3fca0059f58"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/red-unmasked-wait.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/red-unmasked-wait.log.gz",
+    "rawBytes": 4279,
+    "rawSha256": "cace86b931f9178c15fddbeaa78b439e6bc504174029fc8edc51e5640c24d2a5",
+    "gzipSha256": "788e2991d5d8791c84b01287569ab1a0851796b58898afe2266093ca93c34c90"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_interrupt.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_interrupt.log.gz",
+    "rawBytes": 4121,
+    "rawSha256": "2aa9a9b0195d7bf910f06a08def934bd42d8eddd28064c68e532ce1899b8f1f0",
+    "gzipSha256": "dbe5aae42f433b6b153e12ac769f4d5c118002cd89f396df5cc3201a57442e4d"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_interrupt_asan.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_interrupt_asan.log.gz",
+    "rawBytes": 4121,
+    "rawSha256": "2aa9a9b0195d7bf910f06a08def934bd42d8eddd28064c68e532ce1899b8f1f0",
+    "gzipSha256": "dbe5aae42f433b6b153e12ac769f4d5c118002cd89f396df5cc3201a57442e4d"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_pty.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_pty.log.gz",
+    "rawBytes": 677,
+    "rawSha256": "a505093a40a2a4d8501bbaef9115fe35d2fdec914df0dc5c4629ca9387cb21f8",
+    "gzipSha256": "9ef8e04ed811454a5f1c20d58cf54b428a36e1125acf2a023e1a67ae3a0c459a"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_signal_restore.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_signal_restore.log.gz",
+    "rawBytes": 717,
+    "rawSha256": "a7b955b4ba3394734cb18dca37e79696d844e244455b51d9e99113f2c807b485",
+    "gzipSha256": "e203a21e113c1c43870a4257940fcd88a9176a856c4a4aba8e011b13645044db"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_signal_restore_asan.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/replay-test_prompt_signal_restore_asan.log.gz",
+    "rawBytes": 717,
+    "rawSha256": "a7b955b4ba3394734cb18dca37e79696d844e244455b51d9e99113f2c807b485",
+    "gzipSha256": "e203a21e113c1c43870a4257940fcd88a9176a856c4a4aba8e011b13645044db"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/restore-overwrites-flags-build.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/restore-overwrites-flags-build.log.gz",
+    "rawBytes": 0,
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzipSha256": "59869db34853933b239f1e2219cf7d431da006aa919635478511fabbfc8849d2"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/restore-overwrites-flags-run.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/restore-overwrites-flags-run.log.gz",
+    "rawBytes": 1318,
+    "rawSha256": "7f0f597b39394918951ab3dae0790dc0557188e3d5a714d4379077fb0bccd5d9",
+    "gzipSha256": "6647499bc55c0eff4f23eb9434df00e4731c1731b80260751025b7d10dc7ac13"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/shipped-hooks.log",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/shipped-hooks.log.gz",
+    "rawBytes": 43,
+    "rawSha256": "73dbc39dc596ad0c1e3334acb6da5bed286c0f93442d8a1c33a338d2f1b11831",
+    "gzipSha256": "d502bc663bfd02098ec5600ac29678a6e88aa85295ad2337644a2feb3c370e76"
+  },
+  {
+    "raw": "evidence/L585-PROMPT-REVIEW/raw/source-deltas.patch",
+    "packet": "evidence/L585-PROMPT-REVIEW/raw/source-deltas.patch.gz",
+    "rawBytes": 20976,
+    "rawSha256": "842db2d82e489ddb740beaff134f386830bd854c2b03882505469dbad3f607f2",
+    "gzipSha256": "a9e3aa07665098e7444992f79cb8e354b8cfb8d1b41bea502df008b79889bcd5"
+  }
+]

@@ -1,0 +1,39 @@
+[
+  {
+    "name": "test_prompt_interrupt",
+    "args": [],
+    "status": 0,
+    "signal": null,
+    "error": null
+  },
+  {
+    "name": "test_prompt_interrupt_asan",
+    "args": [],
+    "status": 0,
+    "signal": null,
+    "error": null
+  },
+  {
+    "name": "test_prompt_pty",
+    "args": [
+      "/home/drakestapleton/workspace/omega-osh-prompt-exact-review-20261022/build/L585/bin/osh"
+    ],
+    "status": 0,
+    "signal": null,
+    "error": null
+  },
+  {
+    "name": "test_prompt_signal_restore",
+    "args": [],
+    "status": 0,
+    "signal": null,
+    "error": null
+  },
+  {
+    "name": "test_prompt_signal_restore_asan",
+    "args": [],
+    "status": 0,
+    "signal": null,
+    "error": null
+  }
+]

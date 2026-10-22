@@ -1,0 +1,19 @@
+{
+  "cwd": "/home/drakestapleton/workspace/omega-osh-prompt-exact-review-20261022",
+  "candidate": "f49e6a91e8b973c3ca0277993a663321a646451e",
+  "commands": [
+    {"command":"node evidence/L585-PROMPT-REVIEW/verify-candidate.mjs", "exit":0,"result":"304 Git manifest hashes,305 tracked files,253 input pins,298 lossless records"},
+    {"command":"node evidence/L585-PROMPT-REVIEW/replay.mjs", "exit":0,"result":"Hash-verified reused final binaries:32 plain+32ASan interrupt,3actualPTY,254plain+254ASan signal assertions"},
+    {"command":"node evidence/L585-PROMPT-REVIEW/replay-red.mjs", "exit":0,"result":"Hash-verified old/M1/five mutant artifacts; actual negative run exits1; exact behavioral checks, no crashes/deadlines counted"},
+    {"command":"bash evidence/L585-PROMPT-REVIEW/run-probes.sh", "exit":0,"result":"Freshly compiled independent exact-static-helper16PASS; M1 expected run1/8fail, of which2EAGAIN behavioral refusals+6missingNONBLOCK invariant failures"},
+    {"command":"node evidence/L585-PROMPT-REVIEW/helper-mutants.mjs", "exit":0,"result":"Two fresh successful builds, run1 each, exact8flag-loss/6postread-signal assertions"},
+    {"command":"nm build/L585/bin/osh; scan saved symbols for __wrap_,__real_,osh_diff_test_hooks_compiled,barrier", "exit":0,"result":"No shipped hooks/wrappers/barrier symbols"},
+    {"command":"git diff --exit-code f49e6a91 -- src tests mk Makefile; git diff --check", "exit":0,"result":"No implementation/test/build-rule edits"}
+  ],
+  "development_failures_not_kills": [
+    "Initial M1 helper build failed because review harness relied on final shell's fcntl.h include. Explicit harness include fixed it. Retained initial-infrastructure-failure log. No compiler options weakened.",
+    "Initial postread mutant checker predicted4 failures; actual6 includes pending SIGINT with simultaneously ready fd. pselect may choose readiness; restoration delivers SIGINT, so final postread check is essential there too. Retained initial-expectation-mismatch log. Corrected exact six case identities and wrong return checks before acceptance. No source fix."
+  ],
+  "not_rerun": ["Full unrelated host/e2e/trace/differential/exit gates: inspected immutable final author receipts only", "fcntl restore-failure and mask restore-failure injection", "native AIENOS/QEMU/hardware/current35B/module integration"],
+  "measurements":"Functional only; no performance or energy claims"
+}

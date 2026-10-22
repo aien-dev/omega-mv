@@ -1,0 +1,4 @@
+import cp from 'node:child_process';import crypto from 'node:crypto';
+const rev=process.argv[2]??'HEAD',root='evidence/L585-PROMPT-REVIEW/';const get=p=>cp.execFileSync('git',['show',`${rev}:${p}`]);let paths=[];
+for(const line of get(root+'SHA256SUMS').toString().trim().split('\n')){const m=line.match(/^([0-9a-f]{64})  (.*)$/);if(!m)throw Error(line);const p=m[2];if(!p.startsWith(root)||paths.includes(p))throw Error(p);const b=get(p);if(crypto.createHash('sha256').update(b).digest('hex')!==m[1])throw Error(p);paths.push(p);}
+const tracked=cp.execFileSync('git',['ls-tree','-r','--name-only',rev,root],{encoding:'utf8'}).trim().split('\n').sort();const expected=[...paths,root+'SHA256SUMS'].sort();if(JSON.stringify(expected)!==JSON.stringify(tracked))throw Error('packet membership mismatch');console.log(JSON.stringify({rev,manifest:paths.length,tracked:tracked.length,status:'PASS'}));

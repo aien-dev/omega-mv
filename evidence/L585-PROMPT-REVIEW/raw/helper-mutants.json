@@ -1,0 +1,16 @@
+[
+  {
+    "name": "restore-overwrites-flags",
+    "build": 0,
+    "run": 1,
+    "signal": null,
+    "exactFailures": 8
+  },
+  {
+    "name": "drop-postread-signal",
+    "build": 0,
+    "run": 1,
+    "signal": null,
+    "exactFailures": 6
+  }
+]

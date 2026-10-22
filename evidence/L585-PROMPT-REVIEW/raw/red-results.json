@@ -1,0 +1,72 @@
+[
+  {
+    "name": "old",
+    "sourcePath": "build/L563/frozen-old-red/osh/test_prompt_interrupt",
+    "sha256": "8d3a1e76999d31b819b63d0f851b5ba29c42cfc0ac4737b79e81818597e032a2",
+    "status": 1,
+    "signal": null,
+    "error": null,
+    "failures": 16,
+    "raceFailures": 8
+  },
+  {
+    "name": "m1",
+    "sourcePath": "build/L563/frozen-m1-red/osh/test_prompt_interrupt",
+    "sha256": "17d70e815c6285888ea9aaa57e353e361c5a6497a1400c02bd473880b693a75d",
+    "status": 1,
+    "signal": null,
+    "error": null,
+    "failures": 4,
+    "raceFailures": 2
+  },
+  {
+    "name": "blocking-after-readiness",
+    "sourcePath": "build/L563/final-mutants/blocking-after-readiness/osh/test_prompt_interrupt",
+    "sha256": "5a800448d2b896b80a8d04b4d7a517140d82d404e53d2a6c3ba457761d70482a",
+    "status": 1,
+    "signal": null,
+    "error": null,
+    "failures": 2,
+    "raceFailures": 2
+  },
+  {
+    "name": "commit-interrupted-newline",
+    "sourcePath": "build/L563/final-mutants/commit-interrupted-newline/osh/test_prompt_interrupt",
+    "sha256": "e3a7b5ffe6466971476fcec1f9eb7959e3ccbccae14baa2399830ea989a88e06",
+    "status": 1,
+    "signal": null,
+    "error": null,
+    "failures": 2,
+    "raceFailures": 2
+  },
+  {
+    "name": "drop-handled-flag",
+    "sourcePath": "build/L563/final-mutants/drop-handled-flag/osh/test_prompt_interrupt",
+    "sha256": "57592fa2c5479d3a62f0d446d313c48e937e973d411d004254f1658d0a0270d2",
+    "status": 1,
+    "signal": null,
+    "error": null,
+    "failures": 8,
+    "raceFailures": 8
+  },
+  {
+    "name": "hide-select-error",
+    "sourcePath": "build/L563/final-mutants/hide-select-error/osh/test_prompt_interrupt",
+    "sha256": "8e613a6a2086e8f5a09cd95558f3196418abfe436aa2b2f5817099441d9f4f71",
+    "status": 1,
+    "signal": null,
+    "error": null,
+    "failures": 4,
+    "raceFailures": 0
+  },
+  {
+    "name": "unmasked-wait",
+    "sourcePath": "build/L563/final-mutants/unmasked-wait/osh/test_prompt_interrupt",
+    "sha256": "82085203eae8f809460fc5689a6f58b27964c227784111adb272ecd691d6cb11",
+    "status": 1,
+    "signal": null,
+    "error": null,
+    "failures": 2,
+    "raceFailures": 2
+  }
+]

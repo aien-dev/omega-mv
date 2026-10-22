@@ -1,0 +1,96 @@
+[
+  {
+    "assignees": [],
+    "body": "## Purpose\nReuse Omega's existing shell implementation as the **behavioral reference** for supported native AIENOS pipeline forms, without assuming a Linux executable can run on AIENOS. Subordinate to [architecture OSH #158](https://github.com/aien-dev/aien-architecture-mv/issues/158); **NOT A MASTER PLAN**.\n\n## Existing code\n- [`src/osh/host/osh_exec.c`](https://github.com/aien-dev/omega-mv/blob/main/src/osh/host/osh_exec.c) implements `pipe2`, `fork`, `execve`, process-group and wait/cancel behavior for concurrent Linux-host pipelines, with journaled effects.\n- [`tests/osh/e2e/test_osh_e2e.c`](https://github.com/aien-dev/omega-mv/blob/main/tests/osh/e2e/test_osh_e2e.c) already tests two/three-stage pipelines, redirections, statuses, and intentional unsupported syntax in interpreter/native modes.\n- [`tests/osh/trace/`](https://github.com/aien-dev/omega-mv/tree/main/tests/osh/trace) and [OSH spec vectors](https://github.com/aien-dev/aien-protocols-mv/tree/main/specs/osh-platform/vectors) exist.\n- AIENOS's [`osh_op.c`](https://github.com/aien-dev/aienos-mv/blob/main/native/kernel/core/osh_op.c) currently refuses multi-command requests and is test-only.\n\n## Tasks\n- [ ] Extract implementation-agnostic stream/stage fixtures: direct argv boundary, binary bytes, large output, short reads/writes, producer shutdown, consumer early exit, exit statuses, SIGPIPE/BROKEN_PIPE, revocation, cancellation, redirection order, partial launch and cleanup.\n- [ ] Compare byte-exact request records, supported output/status and receipt categories for equivalent Omega-native toy operations on each adapter. Linux-only syscalls/process-group behavior are **platform-specific** and must not be conflated.\n- [ ] Add a runner producing side-by-side per-vector PASS/FAIL/NOT_RUN with pinned compiler, Omega, AIENOS, ABI and test harness SHAs; missing native execution should be NOT_RUN, never green.\n- [ ] Preserve bash-differential tests and existing [Omega #344](https://github.com/aien-dev/omega-mv/issues/344) follow-ups; do not broaden unsupported shell grammar merely to hide mismatches.\n- [ ] Include deterministic injected faults and memory/resource limits. Differential testing must use the **actual compiled Omega shell core**, not substitute a hand-written parser.\n\n## Acceptance\nA native 2-stage and 3-stage OSH fixture matches shared observable semantics and proves native execution separately, while any unsupported target reports explicit NOT_RUN. Spark judge produces evidence with immutable identity.\n\n**Depends:** [protocols #43](https://github.com/aien-dev/aien-protocols-mv/issues/43), [aienos #428](https://github.com/aien-dev/aienos-mv/issues/428), native task/OSH integration issues.",
+    "comments": [],
+    "labels": [],
+    "number": 568,
+    "title": "[OSH][P1] Cross-adapter pipeline differential tests: Omega Linux vs AIENOS native",
+    "url": "https://github.com/aien-dev/omega-mv/issues/568"
+  },
+  {
+    "assignees": [],
+    "body": "Follow-ups from the hostile bash-differential review of omega#340 (handoffs/osh-audit/L-review-340.md, GNU bash 5.2.21, about 1500 cases). The BUGs and the silent builtin gap were fixed in #340; these remain. Each is either a loud failure or narrower than bash. Rule: an unsupported form is refused by name before any effect; it never runs differently from bash.\n\n- [x] RISK-3 `cd -P`, `cd -L`, `cd --` fail with \"too many arguments\"; CDPATH is ignored, so with CDPATH set and a same-named directory elsewhere bash goes there and osh stays local. Refuse `cd` with a relative target when CDPATH is set and non-empty, or support it.\n- [x] RISK-4 printf: `%5s %-5s %5.2f %b %q` are a named runtime error (status 1, nothing printed by that printf) but the script continues. Consider refusing in the expander before the pipeline runs, or support widths.\n- [x] RISK-6 `export -n x` treats `-n` as a name (loud); `export -p` prints `export A='1'` where bash prints `declare -x A=\"1\"`.\n- [x] RISK-7 environment entries whose name is not an identifier (`A B=1`, `BASH_FUNC_f%%=...`) are silently dropped from children (osh_vars.c `osh_session_init`). bash passes them through. Keep them verbatim in the child environment.\n- [x] RISK-8 no \"Killed\"/\"Terminated\" message when a child dies of a signal (status 128+n matches).\n- [ ] RISK-9 a script with no shebang gives 126 Exec format error; bash runs it with sh. (kept as a documented design choice, osh_exec.c header: osh does not run such files through sh)\n- [ ] NITs (done: `cd \"\"`, `unset 1x`, `osh DIR` 126, OLDPWD+SHLVL exported; open: `_`, `pwd` after removed cwd, stderr wording): `cd \"\"` (bash: status 0); `unset 1x` (bash: 0); `osh DIR` 127 vs 126; OLDPWD/SHLVL/_ not exported; `pwd` after the cwd was removed through a symlink path; stderr wording.\n- [x] Names over 8 bytes (`readarray`) are not caught by the 239 UNSUPPORTED_BUILTIN classifier (it packs 8 bytes).\n\nRefs aien-dev/aien-architecture#158.\n\n",
+    "comments": [
+      {
+        "id": "IC_kwDOUsdqGM8AAAABaSzEug",
+        "author": {
+          "login": "aien-spark"
+        },
+        "authorAssociation": "MEMBER",
+        "body": "More from the independent review of the #340 fix commit 1a07c65 (verdict APPROVE; these are known limits, not fixed there):\n\n- [ ] `e=; $e export A=$y`: bash splits (export is not the literal first word), osh expands A=$y as an assignment because argv[0] comes from the second word. Unit and C reference agree with each other.\n- [ ] `-c 'exit 1 2; echo after<newline>echo next'`: bash drops the whole -c string (status 1); osh drops only the current list, so `echo next` runs. Script files and stdin match bash.\n- [ ] Prompt ^C race: a SIGINT that lands after the flag reset but before read() blocks (for example during lex_parse between continuation lines) is lost, and the stale flag can turn a later EINTR into a spurious interrupt. Tiny window; sigprocmask/pselect would close it.\n- [ ] `prompt_signals` installs process-wide handlers and never restores them: fine for the osh binary, would leak into an embedder calling `osh_shell_run_fd` with interactive set.\n- [x] `fc`, `compopt` added to the 239 list; `printf` with no format now returns 2 as bash does (in the next #340 push).\n",
+        "createdAt": "2026-10-08T12:08:06Z",
+        "includesCreatedEdit": false,
+        "isMinimized": false,
+        "minimizedReason": "",
+        "reactionGroups": [],
+        "url": "https://github.com/aien-dev/omega-mv/issues/344#issuecomment-6059508922",
+        "viewerDidAuthor": false
+      },
+      {
+        "id": "IC_kwDOUsdqGM8AAAABaTxihg",
+        "author": {
+          "login": "aien-spark"
+        },
+        "authorAssociation": "MEMBER",
+        "body": "- [ ] Pin the bash reference environment: `tests/osh/vectors/bash_verify.sh` checks the bash version (5.2.x) but sets no locale or environment (`LC_ALL`, `env -i`). The R1 acceptance record (aien-architecture#161, section 3 item 1) requires locale, environment and fixture set to be pinned and recorded with the receipt. Found by the fact-check of that record.",
+        "createdAt": "2026-10-08T13:06:09Z",
+        "includesCreatedEdit": false,
+        "isMinimized": false,
+        "minimizedReason": "",
+        "reactionGroups": [],
+        "url": "https://github.com/aien-dev/omega-mv/issues/344#issuecomment-6060532358",
+        "viewerDidAuthor": false
+      },
+      {
+        "id": "IC_kwDOUsdqGM8AAAABa0rJEA",
+        "author": {
+          "login": "aien-spark"
+        },
+        "authorAssociation": "MEMBER",
+        "body": "Merged in #386 (6a7a50e), each measured against bash 5.2.21 first:\n- RISK-3: `cd -L`, `cd -P` (PWD from getcwd), `cd --` accepted; unknown option is \"cd: -x: invalid option\" + usage, status 2; CDPATH still not searched, but while it is set a relative target not anchored with `./` or `../` is refused with a message instead of silently staying local.\n- NIT `cd \"\"`: no-op, status 0. NIT `unset 1x`: silent, status 0.\n- RISK-8: a member killed by a signal other than SIGINT or SIGPIPE prints `osh: <cmd>: Terminated (signal 15)` style line on stderr.\n\nNot changed: RISK-9 (no shebang) is a documented design choice in `osh_exec.c` (osh does not run such files through sh). RISK-7 next (separate PR). Still open after that: RISK-4 printf widths, RISK-6 `export -n`/`-p`, the 8-byte UNSUPPORTED_BUILTIN classifier, the bash reference-environment pin.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n",
+        "createdAt": "2026-10-10T07:16:23Z",
+        "includesCreatedEdit": false,
+        "isMinimized": false,
+        "minimizedReason": "",
+        "reactionGroups": [],
+        "url": "https://github.com/aien-dev/omega-mv/issues/344#issuecomment-6095030544",
+        "viewerDidAuthor": false
+      },
+      {
+        "id": "IC_kwDOUsdqGM8AAAABa09PMg",
+        "author": {
+          "login": "aien-spark"
+        },
+        "authorAssociation": "MEMBER",
+        "body": "Three more merged today, each measured against bash 5.2.21 first:\n- RISK-7 #387 (4049788): environment entries whose name is not an identifier (`A B=1`, `1X=2`, `BASH_FUNC_f%%=...`) reach children verbatim; never variables, never in `export -p`.\n- RISK-6 #389 (8bf4a8b): `export -p` prints `declare -x NAME=\"value\"` with bash's quoting (`$'...'` for control bytes); `export -n` unexports and keeps the variable; `-f` is \"not a function\"; unknown option status 2 with the usage line; `--` ends options.\n- RISK-4 #390 (d650a89): printf flags, width, precision, `*`, length modifiers, floats, `%X`, `%b` (full escape set, `\\c`), `%q` (bash quoting). Bad specifications use bash's wording. Still validates the whole format before printing (documented difference); osh-only limit: width or precision above 1000000 refused.\n\nStill open here: RISK-9 (documented design choice in osh_exec.c), the 8-byte classifier (Omega side, `osh_expand.osc.in` packs 8 bytes so `readarray`/`mapfile`-length names slip past 239), and the NITs `osh DIR` 127 vs 126, OLDPWD/SHLVL/_ not exported, `pwd` after the cwd was removed via a symlink path, stderr wording. Side finding: `test_osh_journal` `test_interrupt` fails 3/3 when run right after the caps suite and passes 3/3 alone (#388).\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n",
+        "createdAt": "2026-10-10T07:54:20Z",
+        "includesCreatedEdit": false,
+        "isMinimized": false,
+        "minimizedReason": "",
+        "reactionGroups": [],
+        "url": "https://github.com/aien-dev/omega-mv/issues/344#issuecomment-6095327026",
+        "viewerDidAuthor": false
+      },
+      {
+        "id": "IC_kwDOUsdqGM8AAAABa1V3zw",
+        "author": {
+          "login": "aien-spark"
+        },
+        "authorAssociation": "MEMBER",
+        "body": "Lane status 2026-10-10, all merged and ticked above: #386 (RISK-3, two NITs), #387 (RISK-7), #389 (RISK-6), #390 (RISK-4), #391 (test fix, #388), #392 (OLDPWD + SHLVL exported), #393 (readarray classifier), #394 (`osh DIR` / unreadable script 126 with the system's message).\n\nLeft open on purpose: RISK-9 (documented design choice), `_` not maintained (stated in osh_vars.c), `pwd` after the cwd was removed through a symlink path, stderr wording differences. Every change was measured against bash 5.2.21 on the Spark before coding, red before green, host suite now 1564 checks plain and ASan/UBSan.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n",
+        "createdAt": "2026-10-10T08:35:25Z",
+        "includesCreatedEdit": false,
+        "isMinimized": false,
+        "minimizedReason": "",
+        "reactionGroups": [],
+        "url": "https://github.com/aien-dev/omega-mv/issues/344#issuecomment-6095730639",
+        "viewerDidAuthor": false
+      }
+    ],
+    "labels": [],
+    "number": 344,
+    "title": "osh: follow-ups from the #340 bash-differential review (cd -P/CDPATH, printf widths, non-identifier env, ...)",
+    "url": "https://github.com/aien-dev/omega-mv/issues/344"
+  }
+]
