@@ -63,4 +63,8 @@ The harness rejects failed compiler exits and empty/non-AArch64 ELF artifacts be
 
 ## Final qualification disposition
 
-Pending final suite completion; see `qualification.log` for the job's own exit code.
+**Completed, `RC=0`.** `qualification.log` records successful seed replay, the new trap/refusal/mutation gates, inherited scalar and struct gates, Gate5 correctness, and the normal plus ASan/UBSan `make test-omegese` suite. The sanitizer run reports no ASan or UBSan finding and finishes its 2,799 byte-prefix probes. The default tokenizer check was skipped by that inherited script; a separate real-tokenizer check executed all 49 fixed words against both the original 30B and current 35B tokenizers, with no multi-token word (`tokenizer.json`).
+
+`lineage.sha256` binds the actual sources and reconstructed compiler. `elf-header.txt` identifies AArch64 ELF; `elf-dynamic.txt` reports no dynamic section. The original L408 compiler source still hashes to `04fc0d5f6dcfba93bcd9adecaf63bbc7c883adb05d7e48a7401af3fb9d9b4ecd`.
+
+The **bounded host trap repair is complete and independently reviewed**. The explicit full-Gate5 timing and general-R6 limitations above remain; this is a checkpoint for L408 integration, not whole-language or production-retirement acceptance.
