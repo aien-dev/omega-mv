@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include "omega_program.h"
@@ -35,7 +36,12 @@ static int compose2(OmegaProgram *out,OpCode o1,uint64_t i1,OpCode o2,uint64_t i
 typedef uint64_t(*Fn3)(uint64_t,uint64_t,uint64_t);
 
 int main(int argc,char**argv){
-    long NPATH=argc>1?atol(argv[1]):20000, NCODE=argc>2?atol(argv[2]):20000000;
+    if (argc > 3) { fprintf(stderr,"usage: block1_sched [path_calls] [code_calls]\n"); return 2; }
+    char *end = NULL;
+    long NPATH=20000, NCODE=20000000;
+    if (argc > 1) { errno=0; NPATH=strtol(argv[1],&end,10); if (errno || *end || NPATH <= 0 || NPATH > 100000000) return 2; }
+    if (argc > 2) { errno=0; NCODE=strtol(argv[2],&end,10); if (errno || *end || NCODE <= 0 || NCODE > 100000000) return 2; }
+    int failures=0;
     OmegaProgram P[24];const char*L[24];int n=0;
 #define ADD(label,rc) do{if((rc)==0){L[n++]=label;}else{fprintf(stderr,"build fail %s\n",label);return 2;}}while(0)
     ADD("x+1",omega_program_build_unary_op(&P[n],"f",OP_ADD,1));
@@ -53,22 +59,26 @@ int main(int argc,char**argv){
     size_t pg=(size_t)sysconf(_SC_PAGESIZE);
     for(int k=0;k<n;++k){
         RealizationSynthesisResult rs; int src=omega_synthesize_for_dgx_spark(&P[k],&rs);
-        const char*pick=src==0?(rs.schedule==OMEGA_SCHED_PRELOAD?"PRELOAD":"SEQUENTIAL"):"synth_refused";
+        if(src != 0){fprintf(stderr,"synthesis failed for %s\n",L[k]);return 1;}
+        const char*pick=rs.schedule==OMEGA_SCHED_PRELOAD?"PRELOAD":"SEQUENTIAL";
         for(int s=0;s<2;++s){
             RealizationObject r;memset(&r,0,sizeof r);
-            if(omega_program_emit_schedule(&P[k].body,P[k].contract.input_width,(OmegaRealizeSchedule)s,r.code_bytes,&r.code_len,sizeof r.code_bytes)){printf("%s,%s,0,emit_fail,,,,,%s\n",L[k],s?"PRELOAD":"SEQUENTIAL",pick);continue;}
+            if(omega_program_emit_schedule(&P[k].body,P[k].contract.input_width,(OmegaRealizeSchedule)s,r.code_bytes,&r.code_len,sizeof r.code_bytes)){printf("%s,%s,0,emit_fail,,,,,%s\n",L[k],s?"PRELOAD":"SEQUENTIAL",pick);failures++;continue;}
             uint64_t xs[OMEGA_REALIZE_DIFF_INPUTS],ys[OMEGA_REALIZE_DIFF_INPUTS];
             size_t ni=omega_realize_differential_inputs(&P[k],xs,OMEGA_REALIZE_DIFF_INPUTS);
+            if(!ni){fprintf(stderr,"no differential inputs for %s\n",L[k]);return 1;}
             int ok=omega_program_eval(&P[k],xs,ni,ys)==0;
             for(size_t i=0;ok&&i<ni;++i){uint64_t g=0;if(omega_exec_native_f3(&r,xs[i],0,0,&g)||g!=ys[i])ok=0;}
-            if(!ok){printf("%s,%s,%zu,FAIL,,,,,%s\n",L[k],s?"PRELOAD":"SEQUENTIAL",r.code_len,pick);continue;}
+            if(!ok){printf("%s,%s,%zu,FAIL,,,,,%s\n",L[k],s?"PRELOAD":"SEQUENTIAL",r.code_len,pick);failures++;continue;}
             /* path: as Omega executes */
             volatile uint64_t sink=0;uint64_t g;
-            for(int w=0;w<200;++w)omega_exec_native_f3(&r,xs[0],0,0,&g);
-            double t0=now();for(long i=0;i<NPATH;++i){omega_exec_native_f3(&r,xs[i%ni],0,0,&g);sink+=g;}double t1=now();
+            for(int w=0;w<200;++w)if(omega_exec_native_f3(&r,xs[0],0,0,&g))return 1;
+            double t0=now();for(long i=0;i<NPATH;++i){if(omega_exec_native_f3(&r,xs[i%ni],0,0,&g))return 1;sink+=g;}double t1=now();
             /* code: map once */
             size_t al=(r.code_len+pg-1)&~(pg-1);void*m=mmap(NULL,al,PROT_READ|PROT_WRITE,MAP_ANONYMOUS|MAP_PRIVATE,-1,0);
-            memcpy(m,r.code_bytes,r.code_len);__builtin___clear_cache((char*)m,(char*)m+r.code_len);mprotect(m,al,PROT_READ|PROT_EXEC);
+            if(m==MAP_FAILED){perror("mmap");return 2;}
+            memcpy(m,r.code_bytes,r.code_len);__builtin___clear_cache((char*)m,(char*)m+r.code_len);
+            if(mprotect(m,al,PROT_READ|PROT_EXEC)){perror("mprotect");munmap(m,al);return 2;}
             union{void*p;Fn3 f;}u;u.p=m;uint64_t acc=xs[0];
             for(long i=0;i<1000000;++i)acc=u.f(acc,0,0);
             double t2=now();for(long i=0;i<NCODE;++i)acc=u.f(acc,0,0);double t3=now();sink+=acc;munmap(m,al);
@@ -76,5 +86,5 @@ int main(int argc,char**argv){
             fflush(stdout);
         }
     }
-    return 0;
+    return failures ? 1 : 0;
 }
