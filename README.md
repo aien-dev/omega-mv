@@ -1,3 +1,7 @@
+<!-- github-native-navigation -->
+[Source](https://github.com/aien-dev/omega-mv) · [Walkthrough](TEACHING.md) · [Replay receipt](TEACHING-REPLAY.txt) · [Issues](https://github.com/aien-dev/omega-mv/issues) · [Actual tags](https://github.com/aien-dev/omega-mv/tags)
+<!-- /github-native-navigation -->
+
 # OMEGA
 
 Omega is the reaction runtime and the compiler for Omega Systems Core, written in C. It defines what computation means without committing that meaning to one machine representation: every program has a content-addressed semantic identity, and realizations (CPU, GB10 GPU) are derived from it and verified against it.
