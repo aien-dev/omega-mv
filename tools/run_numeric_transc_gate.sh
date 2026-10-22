@@ -7,7 +7,7 @@
 # Exit: 0 PASS; 1 anything else (FAIL, NOT_RUN, refused). Refusals print
 # "REFUSED: why" and "VERDICT NOT_RUN". Last stdout line: "VERDICT <word>".
 #
-# Thin wrapper: refusals, host tier (host build, host run and the offline nvdisasm
+# Thin wrapper: refusals, host tier (host build, host run and the offline disassembler
 # provenance check), quiet flag, GPU lock, chip build, never-killed run and the
 # content-addressed receipt <evidence-dir>/<sha256>.json plus blobs/<sha256>.log live
 # in tools/chip_run.sh, configured by tools/manifests/numeric_transc.chiprun. This
@@ -17,7 +17,7 @@
 #
 # Run it detached so a closed terminal cannot cut the chip run:
 #   setsid nohup tools/run_numeric_transc_gate.sh > /tmp/transc-gate.out 2>&1 < /dev/null &
-# Shell + coreutils + git + jq + gcc + nvdisasm. No Python.
+# Shell + coreutils + git + jq + gcc. No Python.
 set -u
 HERE=$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 PHYSICS=${PHYSICS_DIR:-$HOME/workspace/hive-worktrees/physics-gate14-e95e3ed}
