@@ -1,0 +1,16 @@
+eval-error exit=1
+wrong-result exit=1
+synth exit=1
+emit exit=1
+exec exit=1
+no-inputs exit=1
+mmap exit=1
+mprotect exit=1
+args=0 1 exit=2
+args=1 0 exit=2
+args=abc 1 exit=2
+args=1 1 extra exit=2
+args=999999999999999999999999999 1 exit=2
+args=1 100000001 exit=2
+args=-1 1 exit=2
+independent CSV rows PASS 20

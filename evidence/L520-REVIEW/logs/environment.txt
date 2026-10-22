@@ -1,0 +1,10 @@
+2026-10-22T19:40:12Z
+Linux spark-b87b 7.0.0-1019-nvidia #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2 aarch64 aarch64 aarch64 GNU/Linux
+cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+jq-1.7
+/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L520/block1.csv completion=2026-10-22 14:37:09.733368568 -0500
+4ea8608c2ba9195616477dee1771fc93015e560efce4a5b1493326a2a70488c3  bench/m1/block1_sched.c
+d99ff33fbde32d8582db86cb64ee8a5a31f8409480ba47eec5103de59857f5e9  bench/m1/block3_receipt_csv.sh
+392a564d170e0ac5b0cfd80e08f43d2c59fb8fc88107b31925c0f08c6d799cde  tests/gpu_regalloc_lifetime_oracle.c
+a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d  /usr/bin/cc
+acac57d327657903ac38106ba2de53969ca9622634a5a48c3efcaa06beaa8ab8  /usr/bin/jq
