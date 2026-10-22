@@ -126,8 +126,9 @@ field: 0x0000..0x7FFF, or 0xFFFF for "none" (-1); 0x8000..0xFFFE are refused (RA
 | 27 | HSTORE | r a, r b, r c, r args[0] |
 | 28 | SLOAD | r dst, r a, r b |
 | 29 | SSTORE | r a, r b, r c |
+| 30 | SYSCALL | r dst, n nargs, then nargs register words. Gated (OSC-4 slice D): the front end refuses it unless the gate is open. args[0] is the syscall number, 1..6 words total; each word is an integer or a slice pointer; dst is u64. |
 
-Opcode 0 and opcodes above 29 are refused (RANGE): their length is unknown. The numbers are pinned
+Opcode 0 and opcodes above 30 are refused (RANGE): their length is unknown. The numbers are pinned
 by `_Static_assert`s in the test. The meaning of every field and every value range that
 `osc_ir_validate` enforces (types agree, registers in range, blocks partition the instructions,
 calls only to earlier functions, trap codes 1..14, and the rest) is in `osc_ir.h` and

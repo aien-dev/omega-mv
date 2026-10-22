@@ -35,6 +35,7 @@ typedef enum {
     OT_IMPORT,
     /* external byte slices (docs/osc/OSC-EXT-BYTES-DESIGN.md): parameter types, appended */
     OT_BYTES, OT_CELLS,
+    OT_SYSCALL,
     OT__COUNT
 } OscTokKind;
 

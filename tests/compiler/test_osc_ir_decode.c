@@ -38,7 +38,7 @@
 
 /* spec/one-layer-format.md section 3 states these numbers; a renumbering must fail here. */
 _Static_assert(OSC_I_CONST == 1 && OSC_I_CALL == 11 && OSC_I_RET == 15 && OSC_I_FLOAD == 16 && OSC_I_AOPEN == 18 &&
-               OSC_I_POPEN == 21 && OSC_I_HSTORE == 27 && OSC_I_SSTORE == 29, "opcode numbers in the spec");
+               OSC_I_POPEN == 21 && OSC_I_HSTORE == 27 && OSC_I_SSTORE == 29 && OSC_I_SYSCALL == 30, "opcode numbers in the spec");
 _Static_assert(OSC_T_BOOL == 1 && OSC_T_U64 == 5 && OSC_T_I64 == 9 && OSC_T_REF == 10 && OSC_T_CELLS == 12, "scalar tags in the spec");
 _Static_assert(OSC_REF_OWN == 1 && OSC_REF_MUT == 3, "ref kinds in the spec");
 
@@ -445,8 +445,8 @@ static void test_classes(void) {
     EXPECT(m.b, m.n, OSC_IR_REFUSE_TRAILING, "one trailing byte");
     k = knobs_default(); k.op0 = 0; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode 0");
-    k.op0 = OSC_I_SSTORE + 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode past SSTORE");
+    k.op0 = OSC_I_SYSCALL + 1; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode past SYSCALL");
     k = knobs_default(); k.ret_tag = OSC_T_CELLS + 1; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "scalar tag 13");
     k = knobs_default(); k.dst = 0x8000; build(&m, &k);

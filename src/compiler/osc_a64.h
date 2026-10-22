@@ -60,6 +60,7 @@ typedef enum {
     OSC_A64_BRK,
     /* external byte slices: rd = Rt (zero-extended byte), rn = base (SP kind), rm = index (LDRB Wt, [Xn, Xm]) */
     OSC_A64_LDRB_REG,
+    OSC_A64_SVC,       /* SVC #0: the gated syscall (OSC-4 slice D), word 0xD4000001 */
     OSC_A64_NOPS
 } OscA64Op;
 

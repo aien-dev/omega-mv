@@ -9,6 +9,9 @@
 #include "osc_interp.h"
 
 #include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 typedef struct {
     const OscUnit *u;
@@ -195,6 +198,15 @@ static uint64_t run_func(Ctx *c, int fi, const uint64_t *args) {
                 for (int k = 0; k < in->nargs; k++) ca[k] = v[in->args[k]];
                 uint64_t r = run_func(c, in->callee, ca);
                 if (in->dst >= 0) v[in->dst] = r;
+                break;
+            }
+            case OSC_I_SYSCALL: {
+                uint64_t sa[6] = {0};
+                for (int k = 0; k < in->nargs; k++) sa[k] = v[in->args[k]];
+                errno = 0;
+                int64_t r = syscall((long)sa[0], (long)sa[1], (long)sa[2],
+                                    (long)sa[3], (long)sa[4], (long)sa[5]);
+                if (in->dst >= 0) v[in->dst] = (uint64_t)(r == -1 ? -(int64_t)errno : r);
                 break;
             }
             case OSC_I_TRAP: trap(c, (unsigned)in->imm); break;

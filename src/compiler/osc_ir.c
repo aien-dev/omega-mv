@@ -107,6 +107,7 @@ static int insn_uses(const OscInsn *in, int16_t *u) {
     case OSC_I_FLOAD: u[k++] = in->a; if (in->b >= 0) u[k++] = in->b; break;
     case OSC_I_FSTORE: u[k++] = in->a; if (in->b >= 0) u[k++] = in->b; u[k++] = in->c; break;
     case OSC_I_CALL: for (int i = 0; i < in->nargs && i < OSC_MAX_PARAMS; i++) u[k++] = in->args[i]; break;
+    case OSC_I_SYSCALL: for (int i = 0; i < in->nargs && i < OSC_MAX_PARAMS; i++) u[k++] = in->args[i]; break;
     case OSC_I_RET: if (in->a >= 0) u[k++] = in->a; break;
     default: break;
     }
@@ -119,6 +120,7 @@ static int insn_def(const OscInsn *in) {
     case OSC_I_AOPEN: case OSC_I_AALLOC: return in->dst;
     case OSC_I_POPEN: case OSC_I_HALLOC: case OSC_I_HGEN: case OSC_I_HLOAD: return in->dst;
     case OSC_I_CALL: return in->dst;  /* may be -1 */
+    case OSC_I_SYSCALL: return in->dst;
     default: return -1;
     }
 }
@@ -295,6 +297,16 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
         }
         if (g->ret.s == OSC_T_VOID) NEED(in->dst == -1, "CALL of void function with dst", fi, ii);
         else NEED(VR(in->dst) && type_eq(&T[in->dst], &g->ret), "CALL dst type != callee return", fi, ii);
+        break;
+    }
+    case OSC_I_SYSCALL: {
+        NEED(in->nargs >= 1 && in->nargs <= 6, "SYSCALL needs 1..6 words (number first)", fi, ii);
+        for (int k = 0; k < in->nargs; k++)
+            NEED(VR(in->args[k]) &&
+                 (osc_scalar_is_int(T[in->args[k]].s) || T[in->args[k]].s == OSC_T_BYTES ||
+                  T[in->args[k]].s == OSC_T_CELLS),
+                 "SYSCALL word %d not an integer or slice pointer", fi, ii, k);
+        NEED(VR(in->dst) && type_is_scalar(&T[in->dst]) && T[in->dst].s == OSC_T_U64, "SYSCALL dst not u64", fi, ii);
         break;
     }
     case OSC_I_TRAP:
@@ -681,6 +693,10 @@ static void encode_unit(const OscUnit *u, W *w) {
                 wvr(w, in->dst); w16(w, (uint16_t)in->callee); w8(w, in->nargs);
                 for (int k = 0; k < in->nargs; k++) wvr(w, in->args[k]);
                 break;
+            case OSC_I_SYSCALL:
+                wvr(w, in->dst); w8(w, in->nargs);
+                for (int k = 0; k < in->nargs; k++) wvr(w, in->args[k]);
+                break;
             case OSC_I_TRAP: w8(w, in->imm); break;
             case OSC_I_BR: w16(w, (uint16_t)in->blk_t); break;
             case OSC_I_CBR: wvr(w, in->a); w16(w, (uint16_t)in->blk_t); w16(w, (uint16_t)in->blk_f); break;
@@ -835,6 +851,10 @@ static void decode_insn(R *r, OscInsn *in) {
     case OSC_I_CALL:
         in->dst = rvr(r); in->callee = rvr(r);
         in->nargs = (uint8_t)rcount(r, 1, OSC_MAX_PARAMS);
+        for (int k = 0; k < in->nargs && !r->rc; k++) in->args[k] = rvr(r);
+        break;
+    case OSC_I_SYSCALL:
+        in->dst = rvr(r); in->nargs = (uint8_t)rcount(r, 1, OSC_MAX_PARAMS);
         for (int k = 0; k < in->nargs && !r->rc; k++) in->args[k] = rvr(r);
         break;
     case OSC_I_TRAP: in->imm = rle(r, 1); break;

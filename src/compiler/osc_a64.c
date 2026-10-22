@@ -12,7 +12,7 @@
 
 typedef enum {
     CLS_NONE = 0, CLS_RRR_SH, CLS_RI, CLS_R4, CLS_MULH, CLS_R3, CLS_BFM, CLS_CSINC,
-    CLS_MOV16, CLS_MEM, CLS_PAIR, CLS_B26, CLS_BCOND, CLS_CB, CLS_BREG, CLS_BRK
+    CLS_MOV16, CLS_MEM, CLS_PAIR, CLS_B26, CLS_BCOND, CLS_CB, CLS_BREG, CLS_BRK, CLS_SVC
 } Cls;
 
 /* operand kinds for rd / rn / rm / ra positions */
@@ -70,6 +70,7 @@ static const OpInfo OPS[OSC_A64_NOPS] = {
     [OSC_A64_RET]      = {"ret",   0xD65F0000u, CLS_BREG,   K_NONE, K_X, K_NONE, K_NONE},
     [OSC_A64_BRK]      = {"brk",   0xD4200000u, CLS_BRK,    K_NONE, K_NONE, K_NONE, K_NONE},
     [OSC_A64_LDRB_REG] = {"ldrb",  0x38606800u, CLS_R3,     K_ZR, K_SP, K_ZR, K_NONE},
+    [OSC_A64_SVC]      = {"svc",   0xD4000001u, CLS_SVC,    K_NONE, K_NONE, K_NONE, K_NONE},
 };
 
 /* variable-field mask per class (bits not fixed by the opcode) */
@@ -90,6 +91,7 @@ static uint32_t cls_varmask(int cls) {
     case CLS_CB:     return 0x00FFFFFFu;
     case CLS_BREG:   return 0x000003E0u;
     case CLS_BRK:    return 0x001FFFE0u;
+    case CLS_SVC:    return 0x00000000u;  /* every bit fixed */
     default:         return 0;
     }
 }
@@ -225,6 +227,12 @@ int osc_a64_encode(const OscA64Insn *in, uint32_t *word, char *err, size_t n) {
         if (imm < 0 || imm > 0xFFFF) return fail(err, n, "%s: imm16 %lld out of range", nm, (long long)imm);
         w |= (uint32_t)imm << 5;
         break;
+    case CLS_SVC:
+        /* canonical form only: SVC #0, every field zero. Anything else is refused
+         * so the constructive round-trip fuzz meets one canonical word. */
+        if (in->rd || in->rn || in->rm || in->ra || in->shift || in->cond || in->imm || in->imm2)
+            return fail(err, n, "%s: svc has no variable fields; zero them", nm);
+        break;
     default:
         return fail(err, n, "bad class");
     }
@@ -266,6 +274,7 @@ int osc_a64_decode(uint32_t w, OscA64Insn *out) {
         case CLS_BCOND: d.imm = sext((w >> 5) & 0x7FFFF, 19) * 4; d.cond = (uint8_t)(w & 15); break;
         case CLS_CB: d.imm = sext((w >> 5) & 0x7FFFF, 19) * 4; break;
         case CLS_BRK: d.imm = (w >> 5) & 0xFFFF; break;
+        case CLS_SVC: break;
         default: break;
         }
         uint32_t re;

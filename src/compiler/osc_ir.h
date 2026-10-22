@@ -123,7 +123,10 @@ typedef enum {
     OSC_I_SLOAD,     /* dst(u64) = a[b] ; a is a slice pointer vreg (BYTES: u8 zero-  */
                      /*   extended; CELLS: u64), its length is vreg a+1 (u64); b any   */
                      /*   integer type; unsigned b >= len: TRAP_BOUNDS (len 0 always)  */
-    OSC_I_SSTORE     /* a[b] = c(u64) ; same bounds rule; a is a CELLS pointer vreg   */
+    OSC_I_SSTORE,    /* a[b] = c(u64) ; same bounds rule; a is a CELLS pointer vreg   */
+    OSC_I_SYSCALL    /* gated (OSC-4 slice D): dst(u64) = syscall(words[0..nargs));
+                     * words[0] is the syscall number, 1..6 words total. Refused
+                     * unless the unit was parsed with the gate open. */
 } OscOp;
 
 typedef enum {

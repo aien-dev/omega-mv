@@ -1,0 +1,5 @@
+// expect: SYNTAX object=syscall line=4
+// the gate is shut in the OSC-1 suite; the refusal names it.
+fn f() -> u64 {
+    return syscall(172);
+}

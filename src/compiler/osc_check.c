@@ -1307,6 +1307,28 @@ static int chk(C *c, int i, OscScalar want)
         t = (OscScalar)r;
         break;
     }
+    case ON_SYSCALL: {
+        if (c->contract) return tmismatch(c, n, NULL, "syscall in a contract clause");
+        int cnt = 0;
+        for (int a = n->a; a >= 0; a = NODE(a)->next) {
+            if (chk(c, a, OSC_T_U64) < 0) return -1;
+            cnt++;
+        }
+        if (cnt < 1 || cnt > 6) return tmismatch(c, n, NULL, "syscall takes 1 to 6 words, number first");
+        t = OSC_T_U64;
+        break;
+    }
+    case ON_ADDR: {
+        if (c->contract) return tmismatch(c, n, NULL, "addr in a contract clause");
+        OscNode *an = NODE(n->a);
+        if (!an || an->kind != ON_NAME) return tmismatch(c, n, NULL, "addr takes one slice name");
+        int s = resolve(c, an);
+        if (s < 0) return -1;
+        an->sym = s;
+        if (c->sym[s].kind != SK_SLICE) return tmismatch(c, n, NULL, "addr takes a bytes or cells binding");
+        t = OSC_T_U64;
+        break;
+    }
     case ON_BORROW:
         return tmismatch(c, n, NULL, "a borrow is not a value here");
     case ON_UN: {

@@ -499,6 +499,15 @@ static void gen_func(Cg *g, const OscUnit *u, int fi) {
                 E(g, osc_a64_br(OSC_A64_BL, ((int64_t)g->entry_word[in->callee] - (int64_t)here(g)) * 4));
                 if (in->dst >= 0) st(g, 0, in->dst);
                 break;
+            case OSC_I_SYSCALL: /* gated: x8 = nr, x0..x4 = words, SVC #0. The raw SVC
+                                 * leaves -errno in x0, the same value the interpreter
+                                 * computes from glibc's -1/errno, so the dual run agrees. */
+                if (in->nargs < 1 || in->nargs > 6) { cg_fail(g, "SYSCALL needs 1..6 words"); return; }
+                ld(g, 8, in->args[0]);
+                for (int k = 1; k < in->nargs; k++) ld(g, k - 1, in->args[k]);
+                put(g, 0xD4000001u);
+                st(g, 0, in->dst);
+                break;
             case OSC_I_TRAP: trap_seq(g, (int)in->imm); break;
             case OSC_I_BR: fix(g, osc_a64_br(OSC_A64_B, 0), FIX_BLOCK, in->blk_t); break;
             case OSC_I_CBR:

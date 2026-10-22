@@ -83,7 +83,11 @@ typedef enum {
     ON_HLOAD,       /* checker rewrite of ON_INDEX on a pool: tok = pool; a = handle;
                      * sym = pool symbol, sym2 = handle symbol */
     ON_HSTORE       /* checker rewrite of ON_STORE on a pool: tok = pool; a = handle;
-                     * b = value; sym = pool symbol, sym2 = handle symbol */
+                     * b = value; sym = pool symbol, sym2 = handle symbol */,
+    ON_SYSCALL      /* gated (OSC-4 slice D): syscall(nr, a0..); args linked from a;
+                     * result u64. Refused unless osc_parse_allow_syscall(1). */,
+    ON_ADDR         /* gated: addr(NAME); a = ON_NAME of a bytes/cells binding;
+                     * checker: sym on the child; result u64 (the slice pointer) */
 } OscNodeKind;
 
 typedef struct {
@@ -148,6 +152,14 @@ typedef struct {
  * with *d filled (SYNTAX, UNSUPPORTED, CAPACITY, UNBOUNDED_LOOP for a while
  * without bound). */
 int osc_parse(OscAst *ast, OscDiag *d);
+
+/* OSC-4 slice D gate: allow the syscall(...) and addr(...) words in units
+ * parsed by this process. Off by default; refused as SYSCALL_GATED otherwise. */
+void osc_parse_allow_syscall(int allow);
+
+/* OSC-4 slice D gate: allow the syscall(...) and addr(...) words in units
+ * parsed by this process. Off by default; refused as SYSCALL_GATED otherwise. */
+void osc_parse_allow_syscall(int allow);
 
 /* Copy the spelling of node->tok. */
 void osc_node_name(const OscAst *ast, const OscNode *n, char *buf, size_t cap);

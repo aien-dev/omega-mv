@@ -139,6 +139,10 @@ static int parse_arr_body(P *p, OscType *ty, OscRefKind rk)
 
 static int parse_expr(P *p);
 
+/* OSC-4 slice D gate (default off). */
+static int g_allow_syscall;
+void osc_parse_allow_syscall(int allow) { g_allow_syscall = allow; }
+
 /* ---- OSC-2 structs (docs/osc/OSC-2-DESIGN.md section 2) ---------------- */
 static int tok_eq(P *p, const OscToken *t, const char *s)
 {
@@ -498,6 +502,30 @@ static int parse_primary(P *p)
         N(n)->ival = t->ival;
         adv(p);
         return n;
+    case OT_SYSCALL: {
+        if (!g_allow_syscall) {
+            osc_diag_set(p->d, OSC_DIAG_SYNTAX, t->line, t->col, "syscall", 0, NULL, "SYSCALL_GATED",
+                         "syscall needs --allow-syscall");
+            return -1;
+        }
+        n = new_node(p, ON_SYSCALL, t);
+        if (n < 0) return -1;
+        adv(p);
+        if (expect(p, OT_LPAREN)) return -1;
+        int last = -1;
+        if (!at(p, OT_RPAREN)) {
+            for (;;) {
+                int a = parse_expr(p);
+                if (a < 0) return -1;
+                if (last < 0) N(n)->a = a; else N(last)->next = a;
+                last = a;
+                if (at(p, OT_COMMA)) { adv(p); continue; }
+                break;
+            }
+        }
+        if (expect(p, OT_RPAREN)) return -1;
+        return n;
+    }
     case OT_TRUE: case OT_FALSE:
         n = new_node(p, ON_BOOL, t);
         if (n < 0) return -1;
@@ -505,6 +533,23 @@ static int parse_primary(P *p)
         adv(p);
         return n;
     case OT_NAME:
+        if (tok_eq(p, t, "addr") && peek_kind(p, 1) == OT_LPAREN) {
+            if (!g_allow_syscall) {
+                osc_diag_set(p->d, OSC_DIAG_SYNTAX, t->line, t->col, "addr", 0, NULL, "SYSCALL_GATED",
+                             "addr needs --allow-syscall");
+                return -1;
+            }
+            n = new_node(p, ON_ADDR, t);
+            if (n < 0) return -1;
+            adv(p); adv(p);
+            if (!at(p, OT_NAME)) return syntax(p, "a slice name");
+            int an = new_node(p, ON_NAME, cur(p));
+            if (an < 0) return -1;
+            N(n)->a = an;
+            adv(p);
+            if (expect(p, OT_RPAREN)) return -1;
+            return n;
+        }
         if (peek_kind(p, 1) == OT_LPAREN) return parse_call(p);
         if (peek_kind(p, 1) == OT_DOT && peek_kind(p, 2) == OT_ALLOC) { /* OSC-3 item 2: P.alloc(e) */
             n = new_node(p, ON_PALLOC, t);

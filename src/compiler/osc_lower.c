@@ -258,6 +258,18 @@ static int expr(L *l, int i)
         return r;
     }
     case ON_CALL: return call(l, i, 1);
+    case ON_SYSCALL: {
+        int sargs[6], na = 0;
+        for (int a = n->a; a >= 0 && na < 6; a = NODE(a)->next) sargs[na++] = expr(l, a);
+        int sr = newvs(l, OSC_T_U64, n->line);
+        OscInsn *sx = emit(l, OSC_I_SYSCALL, n->line);
+        sx->dst = (int16_t)sr;
+        sx->nargs = (uint8_t)na;
+        for (int k = 0; k < na; k++) sx->args[k] = (int16_t)sargs[k];
+        return sr;
+    }
+    case ON_ADDR:
+        return l->vreg[NODE(n->a)->sym];
     case ON_CAST: {
         int a = expr(l, n->a);
         int r = newvs(l, n->ty.s, n->line);
