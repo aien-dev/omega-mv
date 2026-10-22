@@ -1,0 +1,64 @@
+{
+  "tools": {
+    "cc": {
+      "path": "/usr/bin/cc",
+      "realpath": "/usr/bin/aarch64-linux-gnu-gcc-13",
+      "sha256": "a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d"
+    },
+    "make": {
+      "path": "/usr/bin/make",
+      "realpath": "/usr/bin/make",
+      "sha256": "abbecc214fcadef6530d1cc137bde7ceb74cae3f6b992c7d10a8669a7314c7e0"
+    },
+    "node": {
+      "path": "/usr/bin/node",
+      "realpath": "/usr/bin/node",
+      "sha256": "0f8949d1028f6d61506b2d5bc57e7e6fe893d7b1997509b7847294fc9c616584"
+    },
+    "env": {
+      "path": "/usr/bin/env",
+      "realpath": "/usr/bin/env",
+      "sha256": "d38fa7db8452a564868961fd5e9a0aa787095676b0fd6e497b766ac40ec65c8b"
+    },
+    "bash": {
+      "path": "/usr/bin/bash",
+      "realpath": "/usr/bin/bash",
+      "sha256": "af955ef55333c8fc9c5aa50df91ad1a629d9a79a9afa125cd5e9629585f78015"
+    },
+    "quiet-build": {
+      "path": "/home/drakestapleton/.local/bin/quiet-build",
+      "realpath": "/home/drakestapleton/.local/bin/quiet-build",
+      "sha256": "b8b40d2c1221d6067a49cebd288fcf0b8fb34c616562f58569385d81de62d8dc"
+    },
+    "git": {
+      "path": "/usr/bin/git",
+      "realpath": "/usr/bin/git",
+      "sha256": "aa6540695d076182256dd6e96c8b302e4d56381e3000bbfd5c71bbdfe94a4942"
+    },
+    "sha256sum": {
+      "path": "/usr/bin/sha256sum",
+      "realpath": "/usr/bin/sha256sum",
+      "sha256": "a077f232a92c082920430659ec57b49a388b3564c4f4f512698d9cbd6e7512a9"
+    },
+    "ld": {
+      "path": "/usr/bin/ld",
+      "realpath": "/usr/bin/aarch64-linux-gnu-ld.bfd",
+      "sha256": "1e4d3369b76845fa8e099b83513bf28f6f722e046f9b2cde1378c9e27f96d19c"
+    },
+    "nm": {
+      "path": "/usr/bin/nm",
+      "realpath": "/usr/bin/aarch64-linux-gnu-nm",
+      "sha256": "338d018c73ef394539da2566405a1f2f50a808e3c15ef72e9b48dd2f0b0d262f"
+    }
+  },
+  "uname": "Linux spark-b87b 7.0.0-1019-nvidia #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2 aarch64 aarch64 aarch64 GNU/Linux",
+  "os": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+  "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          64-bit\nByte Order:                              Little Endian\nCPU(s):                                  20\nOn-line CPU(s) list:                     0-19\nVendor ID:                               ARM\nModel name:                              Cortex-X925\nModel:                                   1\nThread(s) per core:                      1\nCore(s) per socket:                      10\nSocket(s):                               1\nStepping:                                r0p1\nFrequency boost:                         disabled\nCPU(s) scaling MHz:                      100%\nCPU max MHz:                             3900.0000\nCPU min MHz:                             1378.0000\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm dit uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svepmull svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16 dgh bti ecv afp wfxt\n",
+  "versions": {
+    "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "make": "GNU Make 4.3",
+    "node": "v24.21.0",
+    "bash": "GNU bash, version 5.2.21(1)-release (aarch64-unknown-linux-gnu)"
+  },
+  "measurement": "correctness only, no timing or energy qualification"
+}

@@ -1,0 +1,98 @@
+{
+  "ledger": "L568",
+  "candidate": "7177ad74cfb5215fa478c270f198af4e07cb33c5",
+  "combined_verdict": "HOLD",
+  "reason": "F1 missing committed L562 checksum members",
+  "source_verdict": "ACCEPT_HOST_SCOPE",
+  "deltas": [
+    {
+      "commit": "4e1e87b2",
+      "verdict": "ACCEPT_HOST_SCOPE"
+    },
+    {
+      "commit": "056a9472",
+      "verdict": "ACCEPT_HOST_SCOPE"
+    },
+    {
+      "commit": "3695dd59",
+      "verdict": "ACCEPT_HOST_SCOPE"
+    },
+    {
+      "commit": "86a40330",
+      "verdict": "ACCEPT_HOST_SCOPE"
+    },
+    {
+      "commit": "7177ad74",
+      "verdict": "HOLD",
+      "implementation": "ACCEPT_HOST_SCOPE",
+      "reason": "F1 public evidence incomplete"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "P2",
+      "blocking": true,
+      "file": "evidence/L562-HOST-ENTRY/SHA256SUMS",
+      "lines": [
+        3,
+        6
+      ],
+      "repro": "sha256sum -c evidence/L562-HOST-ENTRY/SHA256SUMS",
+      "exit": 1,
+      "summary": "Two manifest members absent from candidate Git tree; ignored build directories"
+    },
+    {
+      "id": "F2",
+      "severity": "P2",
+      "blocking": false,
+      "preexisting": true,
+      "file": "src/osh/host/osh_builtin.c",
+      "line": 657,
+      "repro": "exit bad 9 followed by newline printf",
+      "expected": "Bash exit2, no output for all input modes",
+      "actual": "candidate command exit1; script/stdin print tail and exit0; both cores",
+      "before_after": "Independent pre3695 build confirms same builtin defect; not introduced by deltas"
+    }
+  ],
+  "execution": {
+    "old_make_exit": 2,
+    "old_failures": 5,
+    "new_make_exit": 0,
+    "host_checks": [
+      1564,
+      1564
+    ],
+    "prompt_checks": [
+      254,
+      254
+    ],
+    "independent_signal_checks": [
+      4746,
+      4746
+    ],
+    "compiled_L553_mutants": 10,
+    "compiled_entry_mutants": 2,
+    "entry_mutant_sanitizer_execution": "NOT_RUN; both variants compiled, Make stops at plain failure",
+    "reader_independent_pass": 32,
+    "additional_exit_pass": 30,
+    "additional_exit_fail": 6,
+    "original_exit_pass": 36,
+    "diff_pass": [
+      66,
+      64
+    ],
+    "original_RLIMIT_AS_NOT_RUN": 2,
+    "native_AIENOS_NOT_RUN": 33,
+    "e2e_checks": 320,
+    "trace_scripts": 20
+  },
+  "limits": [
+    "L563 prompt-read race OPEN",
+    "L396 omega-host module carry required",
+    "L531 carry pending",
+    "native/QEMU/hardware/current35B/shared-train/whole-integration NOT_RUN",
+    "energy UNMEASURED",
+    "no author fixes, extra agents, remote issue/PR writes or merges"
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/argprint": {
+    "sha256": "6f8235c1b126f888d800822e2bba42dd67de18c5dba0d1ff71bc2cb19034082e",
+    "bytes": 70680
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/osh": {
+    "sha256": "6617b4be6cd63bd639bfd7a21767c205af3b47388a728d8de574cce37d8db0fa",
+    "bytes": 425248
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/osh_diff": {
+    "sha256": "08796d9f69797206e613e0b2f63591cebda9f7f786cebf4d7cd48dbe5876737b",
+    "bytes": 422648
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/osh_diff_asan": {
+    "sha256": "6f2e2fe966f3e10a803fd3da34ac103b7fae31b46e11ce26caeafd30105a350f",
+    "bytes": 4967656
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/osh_toy": {
+    "sha256": "5ef5dc0268d7f034a0c765d27ab816c50cc2c619ae9507c476a41518ff1c6691",
+    "bytes": 71064
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/osh_trace": {
+    "sha256": "f14ce00664bc83e58940a3205a0ec03805f23890646141b6dfa7ae2a4355a11f",
+    "bytes": 280720
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/test_osh_e2e": {
+    "sha256": "ccfe292dbfdcb4e70bcdda597f0f98cb4f2306094e832143f3a8f8775218baf7",
+    "bytes": 73200
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/test_prompt_signal_restore": {
+    "sha256": "1e8f6276528b83dd21333f6a4720690fef1bab540cc9985cd2e7750f13f129a3",
+    "bytes": 355048
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/osh/test_prompt_signal_restore_asan": {
+    "sha256": "a3866b955ca96cf9af8e05d3cbec2ff4b9c0efe183c41496936b988c8d6b0eb6",
+    "bytes": 4526848
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/core/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/entry-controls/no-cloexec/build/osh-host/test_osh_host": {
+    "sha256": "02429d211220ffdcd89ce38790513fdc236c88e5954b781f78976d84ef066b46",
+    "bytes": 214232
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/entry-controls/no-cloexec/build/osh-host/test_osh_host_asan": {
+    "sha256": "e8dcf293781e723333eb470e02eb7f66a67ef5b0067ceb0b2c122828d3844552",
+    "bytes": 2072768
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/entry-controls/no-cloexec/build/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/entry-controls/no-quit/build/osh-host/test_osh_host": {
+    "sha256": "417d8611cad287a0a9c9d1cb28292d21ca6150c35cb002611bea6f8958b912be",
+    "bytes": 214232
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/entry-controls/no-quit/build/osh-host/test_osh_host_asan": {
+    "sha256": "1fe0a669e768ce68c28779c6984fdfef5272eb20d8c31252d6c18554423297ba",
+    "bytes": 2072704
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/entry-controls/no-quit/build/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/entry-probe": {
+    "sha256": "b8db32eec0edbfef91cfc715fa0d941c5994786886dc094a0ed279fd76c34565",
+    "bytes": 214264
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/green/osh-host/test_osh_host": {
+    "sha256": "fc2bb5156a046c713423d9b562a4f17a19b0551645689c12f04b2a77e5fceace",
+    "bytes": 214240
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/green/osh-host/test_osh_host_asan": {
+    "sha256": "323f2b136740e9c42360d45db81e10e43f8ef354d38fa8dde906c6b0128c3c99",
+    "bytes": 2072624
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/green/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/pre-exit/osh/osh": {
+    "sha256": "81af064dfd42ebcb959aeb1e9c7d99373960dd9c041397d33d240be8c17bbbd9",
+    "bytes": 425152
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/pre-exit/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/red/osh-host/test_osh_host": {
+    "sha256": "8e1c229658a1ef74160a897e7f2ff19b685c07a321f86e695f50c4b000ddbda7",
+    "bytes": 214200
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/red/osh-host/test_osh_host_asan": {
+    "sha256": "4deeb6fd6ed518a217c928ede61b2fc932cf68fdb834375d22cb79a954f68978",
+    "bytes": 2070336
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/red/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/signal/osh/test_prompt_signal_restore": {
+    "sha256": "096d02d63ccdefee050c530cc65088b488e711d8f528480c5f6e5da88339c82f",
+    "bytes": 354848
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/signal/osh/test_prompt_signal_restore_asan": {
+    "sha256": "7945ccf4075e46b6315002746dd05a94116ef5006e3d39df31b8a47f9ddc701e",
+    "bytes": 4516416
+  },
+  "/home/drakestapleton/workspace/omega-osh-batch-corrective-review-20261022/build/L568/signal/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-exit-mutants-aGJLEJ/continue-command/osh/osh": {
+    "sha256": "55d30e89f93731402365872575c503bd12558af7b604cc3978033dc48fdb15ac",
+    "bytes": 425280
+  },
+  "/tmp/L553-exit-mutants-aGJLEJ/continue-command/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-exit-mutants-aGJLEJ/stop-streams/osh/osh": {
+    "sha256": "fe14ae51cb619cf672c431f4dc104613f22747c41266876047770d0dd90f78f3",
+    "bytes": 425280
+  },
+  "/tmp/L553-exit-mutants-aGJLEJ/stop-streams/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-reader-mutants-Evf50R/chunks/osh/osh_diff": {
+    "sha256": "ac915d1ae509e281f793a17712a3122fbc6a2d209a09ecfdec4e4c2f98ed7bb9",
+    "bytes": 422624
+  },
+  "/tmp/L553-reader-mutants-Evf50R/chunks/osh/osh_toy": {
+    "sha256": "5ef5dc0268d7f034a0c765d27ab816c50cc2c619ae9507c476a41518ff1c6691",
+    "bytes": 71064
+  },
+  "/tmp/L553-reader-mutants-Evf50R/chunks/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-reader-mutants-Evf50R/count/osh/osh_diff": {
+    "sha256": "693da7fb2d5fab2aaec27f362402665fcb3788ac4d606d2d4d8f08ff7cf10a59",
+    "bytes": 422640
+  },
+  "/tmp/L553-reader-mutants-Evf50R/count/osh/osh_toy": {
+    "sha256": "5ef5dc0268d7f034a0c765d27ab816c50cc2c619ae9507c476a41518ff1c6691",
+    "bytes": 71064
+  },
+  "/tmp/L553-reader-mutants-Evf50R/count/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-reader-mutants-Evf50R/nul/osh/osh_diff": {
+    "sha256": "b33a68900593a50f08a517cbab57664052246d8a89e359156abbc94481c57b0a",
+    "bytes": 422640
+  },
+  "/tmp/L553-reader-mutants-Evf50R/nul/osh/osh_toy": {
+    "sha256": "5ef5dc0268d7f034a0c765d27ab816c50cc2c619ae9507c476a41518ff1c6691",
+    "bytes": 71064
+  },
+  "/tmp/L553-reader-mutants-Evf50R/nul/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-reader-mutants-Evf50R/read-error/osh/osh_diff": {
+    "sha256": "3c565d69e6c4a7561ee7a262e78fd9c8aae1b6136afbe1a8479842fd24229257",
+    "bytes": 422608
+  },
+  "/tmp/L553-reader-mutants-Evf50R/read-error/osh/osh_toy": {
+    "sha256": "5ef5dc0268d7f034a0c765d27ab816c50cc2c619ae9507c476a41518ff1c6691",
+    "bytes": 71064
+  },
+  "/tmp/L553-reader-mutants-Evf50R/read-error/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-reader-mutants-GXH3i6/duplicate/osh/osh_diff": {
+    "sha256": "e7f0ff726df0ea67362ae5bc81cad76ed15535d8fd725024ab3a03d321bf2c79",
+    "bytes": 422672
+  },
+  "/tmp/L553-reader-mutants-GXH3i6/duplicate/osh/osh_toy": {
+    "sha256": "5ef5dc0268d7f034a0c765d27ab816c50cc2c619ae9507c476a41518ff1c6691",
+    "bytes": 71064
+  },
+  "/tmp/L553-reader-mutants-GXH3i6/duplicate/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-reader-mutants-GXH3i6/token/osh/osh_diff": {
+    "sha256": "2666e38124a66947d393c1772f083fa747ebeec7456f84ff665ae35f865cbe28",
+    "bytes": 422640
+  },
+  "/tmp/L553-reader-mutants-GXH3i6/token/osh/osh_toy": {
+    "sha256": "5ef5dc0268d7f034a0c765d27ab816c50cc2c619ae9507c476a41518ff1c6691",
+    "bytes": 71064
+  },
+  "/tmp/L553-reader-mutants-GXH3i6/token/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-prompt-mutants-C1HFin/no-restore/osh/osh": {
+    "sha256": "32c1db3d789201c95716ce69b53487e913f32ca402b26beba2474ae575ebba91",
+    "bytes": 355056
+  },
+  "/tmp/L553-prompt-mutants-C1HFin/no-restore/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  },
+  "/tmp/L553-prompt-mutants-C1HFin/no-rollback/osh/osh": {
+    "sha256": "65a274c637b244feeb195acdb96e779fc604cf899fdc36c35dd92966995d74f6",
+    "bytes": 355056
+  },
+  "/tmp/L553-prompt-mutants-C1HFin/no-rollback/quietlock": {
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314",
+    "bytes": 74272
+  }
+}

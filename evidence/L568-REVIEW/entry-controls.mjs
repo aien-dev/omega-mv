@@ -1,0 +1,13 @@
+import {spawnSync} from 'node:child_process';import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';import {resolve,join} from 'node:path';
+const root=resolve('build/L568/entry-controls');mkdirSync(root);const source=readFileSync('tests/osh/host/test_osh_host.c','utf8');const old=readFileSync('build/L568/old_test_osh_host.c','utf8');
+if(source.split('/* The suite owns its entry preconditions')[0]!==old.split('int main(int argc, char **argv)')[0])throw Error('assertion prefix changed');
+const rest='src/osh/host/osh_req.c src/osh/host/osh_vars.c src/osh/host/osh_builtin.c src/osh/host/osh_exec.c src/osh/host/osh_journal.c src/sha256.c';
+const results=[];
+for(const [name,from,to,expected] of [
+ ['no-quit','if (sigaction(SIGINT, &sa, NULL) || sigaction(SIGQUIT, &sa, NULL)) return -1;','if (sigaction(SIGINT, &sa, NULL)) return -1;',['children get default SIGINT/SIGQUIT when the shell did not have them ignored; child saw']],
+ ['no-cloexec','fcntl(fd, F_SETFD, flags | FD_CLOEXEC)','fcntl(fd, F_SETFD, flags)',['last stage fd list','stage 2 (with > redirect) fd list','stage 3 fd list','redirected single command fd list']],
+]){let dir=join(root,name);mkdirSync(dir);let path=join(dir,'test.c');if(source.split(from).length!==2)throw Error('anchor');writeFileSync(path,source.replace(from,to));let out=join(dir,'build');const args=['--default-signal=INT','--ignore-signal=QUIT','quiet-build','make','--no-print-directory','OUT_DIR='+out,'OSH_HOST_SRCS='+path+' '+rest];
+ function run(label,extra){let r=spawnSync('env',[...args,...extra],{encoding:'utf8',timeout:180000,maxBuffer:4<<20});writeFileSync(join(dir,label+'.log'),r.stdout+r.stderr);writeFileSync(join(dir,label+'.status.json'),JSON.stringify({status:r.status,signal:r.signal,error:r.error?.message})+'\n');if(r.signal||r.error)throw Error('infrastructure');return r;}
+ let build=run('compile',[join(out,'osh-host/test_osh_host'),join(out,'osh-host/test_osh_host_asan')]);if(build.status!==0)throw Error('compile is not kill');
+ let r=run('make',['test-osh-host']);let log=readFileSync(join(out,'osh-host/host.out'),'utf8');let failures=log.split('\n').filter(x=>x.startsWith('FAIL ')).map(x=>x.split(' -- ')[1].split(':')[0]);let ok=r.status===2&&JSON.stringify(failures)===JSON.stringify(expected)&&log.includes('OSH_HOST_FAIL');results.push({name,compile_exit:build.status,make_exit:r.status,expected,actual:failures,pass:ok});if(!ok)throw Error('behavioral verdict');console.log('PASS '+name+' compiled plain/ASan, exact '+failures.length+' assertion failures');
+}writeFileSync(join(root,'results.json'),JSON.stringify({assertion_prefix:'BYTE_IDENTICAL',results},null,2)+'\n');
