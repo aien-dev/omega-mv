@@ -93,7 +93,7 @@ if [[ $phase == checks ]]; then
         run "$d/finish-$cut.log" "$bin" resume "$policy" "$d/cut-$cut"
     done
     # A source change is refused before another trial or append.
-    cp "$policy" "$d/stale.osc"; printf '\n' >> "$d/stale.osc"
+    cp "$policy" "$d/stale.osc"; printf '// stale artifact probe\n' >> "$d/stale.osc"
     if run "$d/stale.log" "$bin" resume "$d/stale.osc" "$d/split"; then exit 1; fi
     [[ $(cat "$d/stale.log.exit") == 2 ]]
     grep -q 'REFUSED session binding/history' "$d/stale.log"

@@ -84,4 +84,4 @@ fn advance(s: &mut [u64; 64], cost: &[u64; 16]) -> u64 {
     else { if s[28] >= 14 || 7 + count(s[8]) > s[3] - s[4] { s[10] = 2; } }
     return s[10];
 }
-
+// stale artifact probe
