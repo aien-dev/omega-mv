@@ -31,6 +31,11 @@ cmp "$out/baseline/layout-expected.tsv" "$out/baseline/layout-actual.tsv"
 test "$(wc -l < "$out/baseline/operations.tsv")" = 437
 test "$(awk '$1=="op"{n++}END{print n}' "$out/baseline/decode.oev")" = 52
 test "$(awk '$1=="resource" && $3=="kind=capacity"{n++}END{print n}' "$out/baseline/decode.oev")" = 1
+# Independent direct sum from the declared dimensions, not a transaction count.
+expected=$((48*(5120*2048+2048*4096+8*1536*2048+8*2048*768)+151936*2048*2))
+actual=$(awk -F '\t' 'NR>1 {if($1=="lm_head")h=$6;else layer+=$6} END {printf "%.0f",48*layer+h}' "$out/baseline/weights.tsv")
+test "$actual" = "$expected"
+grep -q "unique_active_weight_payload_B=$expected " "$out/baseline/summary.txt"
 # Assert deterministic output and a named-source mismatch refusal.
 cp "$out/baseline/intermediates.tsv" "$out/baseline/intermediates.first"
 sh research/locality_l491/baseline.sh

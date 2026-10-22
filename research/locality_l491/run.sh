@@ -5,6 +5,7 @@ out=${L491_OUT:-research/locality_l491/out}
 case "$(uname -m)" in aarch64) ;; *) echo 'NOT_RUN: pinned native seed requires AArch64 Linux' >&2;exit 2;; esac
 sh research/locality_l491/build.sh
 "$out/oracle" "$out/locality"
+sh research/locality_l491/sweep.sh
 sh research/locality_l491/baseline.sh
 sh research/locality_l491/baseline_test.sh
 sh research/locality_l491/oev_test.sh
