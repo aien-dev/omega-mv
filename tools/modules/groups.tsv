@@ -52,7 +52,7 @@ turing	^tools/(turing|ty)_
 turing	^mk/turing_
 @visor
 visor	^mk/(00-)?visor
-@fabric
+runtime	^(src|tests|mk)/fabric([/_.-]|$)
 @crumbline
 @path
 @dual_experiment
@@ -63,7 +63,7 @@ visor	^mk/(00-)?visor
 @polyglot
 @searchtrace
 @physics0
-@allen
+runtime	^(src|tests|tools|mk)/allen([/_.-]|$)
 @brownian
 brownian	^mk/brownian_
 @prime_race

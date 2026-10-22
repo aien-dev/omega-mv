@@ -60,8 +60,14 @@ git grep -I -n --no-color -E '^[[:space:]]*#[[:space:]]*include[[:space:]]*"' \
     sed -E 's/^([^:]+):[0-9]+:[[:space:]]*#[[:space:]]*include[[:space:]]*"([^"]+)".*/\1\t\2\tinclude/' \
     > "$out/raw.tsv" || true
 pathre='(src|tests|tools|bench|mk|evidence|research|calibration|spec|docs|doctrine)/[A-Za-z0-9_.+/-]+'
-git grep -I -o --no-color -E "$pathre" -- ':!evidence' 2> /dev/null |
-    awk -F: '{ f = $1; sub(/^[^:]+:/, ""); print f "\t" $0 "\ttext" }' >> "$out/raw.tsv" || true
+# Comment lines in Makefile and mk/*.mk name paths without building them, so they are skipped there
+# (a build edge must be a real one); everywhere else every mention counts at its own kind.
+git grep -I -n --no-color -E "$pathre" -- ':!evidence' 2> /dev/null |
+    awk -v re="$pathre" '{
+        f = $0; sub(/:.*/, "", f); line = $0; sub(/^[^:]+:[0-9]+:/, "", line)
+        if ((f == "Makefile" || f ~ /^mk\//) && line ~ /^[ \t]*#/) next
+        while (match(line, re)) { print f "\t" substr(line, RSTART, RLENGTH) "\ttext"; line = substr(line, RSTART + RLENGTH) }
+    }' >> "$out/raw.tsv" || true
 
 # 3. Resolve references to tracked files (or directories, or physics) and keep cross-group ones.
 awk -F'\t' -v out="$out" '
