@@ -1,0 +1,32 @@
+[
+  {
+    "case": "ordinary",
+    "exit": 0,
+    "stderr": "",
+    "manifest_programs": 59
+  },
+  {
+    "case": "linked_ancestor:src",
+    "exit": 0,
+    "stderr": "",
+    "manifest_programs": 59
+  },
+  {
+    "case": "linked_ancestor:tests/compiler",
+    "exit": 0,
+    "stderr": "",
+    "manifest_programs": 59
+  },
+  {
+    "case": "linked_ancestor:tests/physics0",
+    "exit": 0,
+    "stderr": "",
+    "manifest_programs": 59
+  },
+  {
+    "case": "linked_direct_corpus_directory",
+    "exit": 1,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked corpus directory: src/osh\"}\n",
+    "manifest_programs": null
+  }
+]

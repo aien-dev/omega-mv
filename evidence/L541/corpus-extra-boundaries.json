@@ -1,0 +1,51 @@
+[
+  {
+    "case": "missing_loader",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked source: tests/compiler/test_osc_ir_decode.c\"}\n"
+  },
+  {
+    "case": "linked_loader",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked source: tests/compiler/test_osc_ir_decode.c\"}\n"
+  },
+  {
+    "case": "missing_directory",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked corpus directory: src/osh\"}\n"
+  },
+  {
+    "case": "linked_directory",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked corpus directory: src/osh\"}\n"
+  },
+  {
+    "case": "FIFO_program",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked source: tests/compiler/progs/contracts_basic.osc\"}\n"
+  },
+  {
+    "case": "directory_program",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked source: tests/compiler/progs/contracts_basic.osc\"}\n"
+  },
+  {
+    "case": "nested_program_not_loaded",
+    "expected": 0,
+    "actual": 0,
+    "pass": true,
+    "stderr": ""
+  }
+]

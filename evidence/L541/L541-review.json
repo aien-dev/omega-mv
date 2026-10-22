@@ -1,0 +1,112 @@
+{
+  "ledger": "L541",
+  "review_type": "independent_source_and_host_adversarial",
+  "author_edits": false,
+  "extra_agents": 0,
+  "artifacts": [
+    {
+      "id": "A",
+      "owner": "L523",
+      "branch": "fix/ex600-horizon-guard",
+      "head": "dc24fcf27bbc6c36ca6dfcac020452bb06004bae",
+      "base": "b59631c510ea4555535578ef04041f402e05eaa9",
+      "recommendation": "ACCEPT_HOST_SCOPE",
+      "scope": "bounded offline research, canonical space-separated requests shorter than16384bytes; negative economic evidence only",
+      "findings": [
+        {
+          "id": "A1",
+          "severity": "P3",
+          "file": "research/exploration-600/continuation/guard.om",
+          "line": 53,
+          "repro": "guard-adversarial.json vertical_tab/form_feed",
+          "expected": "ASCII whitespace separators accepted per contract",
+          "actual": "exit20/no output",
+          "impact": "valid-format refusal; canonical caller unaffected"
+        },
+        {
+          "id": "A2",
+          "severity": "P3",
+          "file": "research/exploration-600/continuation/guard.om",
+          "line": 29,
+          "repro": "guard-adversarial.json buffer_limit versus buffer_limit_minus1",
+          "expected": "contract declares accepted request size",
+          "actual": "undocumented16383byte maximum",
+          "impact": "oversized otherwise valid request refuses safely"
+        }
+      ],
+      "tests": {
+        "original_native": 423,
+        "additional_numeric": 1589,
+        "numeric_failures": 0,
+        "compiled_behavior_mutants_caught": 5,
+        "replay_rows": 600,
+        "replay_field_checks": 4800,
+        "original_checks": 2337,
+        "original_diagnostics": 40,
+        "original_six_fault_controls": "INSPECTED_NOT_RERUN"
+      },
+      "scientific_verdict": "FAIL_UNCHANGED",
+      "guard_promotion": "REJECTED",
+      "physical_energy": "UNMEASURED"
+    },
+    {
+      "id": "B",
+      "owner": "L538",
+      "branch": "fix/decoder-corpus-closure",
+      "head": "9d8807ddc306e204faa20ce2faeb48e215cdb5af",
+      "base": "c692cfd11365c3a7e72d602741d40815339dc6fb",
+      "historical_source_pin": "1e4cdbe91b444efe51af4e745f366e07d54de030",
+      "recommendation": "HOLD",
+      "scope": "hold linked-input refusal guarantee; fresh ordinary59unit historical evidence remains valid",
+      "findings": [
+        {
+          "id": "B1",
+          "severity": "P2",
+          "file": "tests/compiler/verify_decoder_corpus.py",
+          "line": 29,
+          "related_line": 37,
+          "repro": "python3 evidence/L541/check_link_boundary.py \"$PWD\" /absolute/fresh/output",
+          "expected": "linked ancestor verifier exit1",
+          "actual": "linked ancestor verifier exit0; repro test exit1",
+          "impact": "unchecked external subtree accepted despite stated linked-input refusal; exact byte hashes still enforced",
+          "concurrent_writer_required": false,
+          "changed_byte_acceptance": false,
+          "suggestion": "check symlink components within export before reading declared directories/loader/programs"
+        }
+      ],
+      "tests": {
+        "existing_preflight": 67,
+        "extra_boundary_controls": 7,
+        "link_boundary": "FAIL_UNRESOLVED",
+        "plain_units": 59,
+        "asan_units": 59,
+        "plain_roundtrips": 59,
+        "asan_roundtrips": 59,
+        "compile_refusals": 0,
+        "refusal_cases": 22,
+        "oracle_controls": 5,
+        "compiled_decoder_mutants_caught": 10,
+        "plain_valid": 10000,
+        "asan_valid": 2000,
+        "plain_malformed": 202675,
+        "asan_malformed": 202675,
+        "exported_source_files_pinned": 358,
+        "full_gate_exit": 0
+      }
+    }
+  ],
+  "integration": "NOT_RUN",
+  "hardware": "NOT_RUN",
+  "current35B": "NOT_RUN",
+  "fresh_heldout_science": "NOT_RUN",
+  "production_promotion": false,
+  "merge_approved": false,
+  "issue_closure": false,
+  "preserved_failures": [
+    "link-boundary-red.exit=1",
+    "original-checks.exit=2 wrong cwd",
+    "original-diagnostics.exit=2 wrong cwd"
+  ],
+  "evidence": "evidence/L541",
+  "commands": "evidence/L541/commands.md"
+}

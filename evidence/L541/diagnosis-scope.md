@@ -1,0 +1,5 @@
+L541 uses the diagnosing-bugs skill's isolated failing-loop approach for the review findings. The explicit review-only brief rules out source fixes, so fix/cleanup phases that require production edits are inapplicable here. The final failed link assertion is preserved for the author.
+
+The failing loop is check_link_boundary.py (test exit1 on exact L538); removing the ancestor link accepts the ordinary export, while changing the target bytes refuses. The competing explanations are separated directly by these controls: missing bytes are not the cause, hash mismatch is not required, and leaf-only is_symlink checks explain the static parent-link acceptance. No hypothesis about concurrent mutation, decoder semantics or live services is needed. The checks modify only fresh reviewer-owned fixtures.
+
+The other read voice skills are unslop and open-source-etiquette. Github-operations applies only to the explicitly requested push and remote ref verification; no PR/issue writes or merge steps are authorized.

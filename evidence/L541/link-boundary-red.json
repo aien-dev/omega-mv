@@ -1,0 +1,22 @@
+{
+  "pin": "1e4cdbe91b444efe51af4e745f366e07d54de030",
+  "ordinary": {
+    "exit": 0,
+    "stderr": "",
+    "programs": 59
+  },
+  "linked_ancestor": {
+    "exit": 0,
+    "stderr": "",
+    "programs": 59
+  },
+  "changed_link_target_negative_control": {
+    "exit": 1,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"changed pinned source: tests/compiler/progs/contracts_basic.osc\"}\n",
+    "programs": null
+  },
+  "expected_link_exit": 1,
+  "actual_link_exit": 0,
+  "boundary_pass": false,
+  "scope": "static link placement only; no concurrent writer and no wrong-byte acceptance"
+}
