@@ -38,13 +38,16 @@ jq -n --arg phase "$phase" --arg head "$(git rev-parse HEAD)" --arg host "$(host
     '{phase:$phase,head:$head,host:$host,at:$at,command:$command,scope:"HOST_ONLY_SYNTHETIC",hardware:"NOT_RUN",model:"NOT_RUN",joules:"UNMEASURED"}' > "$d/run.json"
 {
     git ls-files src/compiler src/sha256.c src/sha256.h src/runtime/rx_cortex.c src/runtime/rx_cortex.h
-    printf '%s\n' "$policy" research/exploration-600/{FREEZE.md,AMENDMENTS.md,build.sh,run.sh} tests/research/ex600/{driver.c,report.awk} tools/m19r_campaign.sh
+    printf '%s\n' "$policy" research/exploration-600/{FREEZE.md,AMENDMENTS.md,DIAGNOSTIC-SCHEMA.md,build.sh,run.sh} tests/research/ex600/{driver.c,report.awk,derive_diagnostics.awk} tools/m19r_campaign.sh
 } | sort -u | xargs sha256sum > "$d/sources.sha256"
 if [[ $phase == checks ]]; then
     run "$d/build.log" bash research/exploration-600/build.sh
     sha256sum "$bin" > "$d/binary.sha256"
     mkdir "$d/checks"
     run "$d/checks.log" "$bin" checks "$policy" "$d/checks"
+    mkdir "$d/diagnostics"
+    run "$d/diagnostics.log" "$bin" diagnostics "$policy" "$d/diagnostics"
+    grep -q '^checks=40 failures=0 ' "$d/diagnostics.log"
     # Each mutation changes behavior, compiles successfully, and must produce a
     # failed assertion. A compiler failure/refusal is not a detected mutant.
     mkdir "$d/mutants"

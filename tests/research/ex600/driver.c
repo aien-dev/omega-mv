@@ -231,6 +231,8 @@ static void checkpoint_tests(const char *dir) {
         fclose(f);ck(cx_open(&cx,p,1,CX_OPEN_SYNC)!=0,"corrupt/torn Cortex refused");
     }
 }
+static unsigned unexplored_better(const uint64_t s[NW],const uint64_t c[16]);
+static const char *stop_reason(uint64_t stop);
 static void tests(const char *dir) {
     write_landscapes(dir,0,2,1,3);
     uint64_t c[16],s[NW],a[NW];
@@ -265,13 +267,31 @@ static void tests(const char *dir) {
     memcpy(a,s,sizeof a);finish(s,c);call(s,c,step_fn,0,0,0,0);ck(s[5]>a[5],"repeat completion remains bounded");
     checkpoint_tests(dir);
 }
-static unsigned false_pruned(const uint64_t s[NW],const uint64_t c[16]) {
+static unsigned unexplored_better(const uint64_t s[NW],const uint64_t c[16]) {
     unsigned n=0;for(unsigned i=1;i<15;i++)if(reachable(i,c)&&!(s[9]&(1u<<i))&&c[i]<s[7])n++;return n;
+}
+static const char *stop_reason(uint64_t stop) {
+    switch(stop) {
+        case 1: return "frontier_empty";
+        case 2: return "budget_exhausted";
+        case 3: return "invalid_state";
+        default: return "active_or_unknown";
+    }
+}
+static void diagnostic_tests(void) {
+    uint64_t c[16],s[NW];
+    fixture(0,1,c);start(s,1,6001,20,8);finish(s,c);
+    ck(s[10]==2&&!strcmp(stop_reason(s[10]),"budget_exhausted"),"budget stop reason explicit");
+    ck(unexplored_better(s,c)>0,"budget stop retains beneficial unexplored frontier");
+    fixture(2,1,c);start(s,1,6001,160,8);finish(s,c);
+    ck(unexplored_better(s,c)==0,"no-beneficial-state diagnostic control");
+    fixture(0,1,c);start(s,2,1,160,1);finish(s,c);
+    ck(s[12]>0,"capacity abandonment remains separately observable");
 }
 static void campaign(const char *dir) {
     write_landscapes(dir,3,7,6001,6005);
     char p[4096];path(p,sizeof p,dir,"rows.csv");FILE *rows=fopen(p,"wx");if(!rows)fatal("rows exists");
-    fprintf(rows,"family,seed,arm,horizon,stop,trials,best_node,best_cost,optimum,regret,spent,search,checking,checkpoint,storage,peak_branches,checkpoint_bytes,abandoned,refused,false_pruned,lifecycle,net,break_even,journal_bytes\n");
+    fprintf(rows,"family,seed,arm,horizon,stop,stop_reason,trials,best_node,best_cost,optimum,regret,spent,search,checking,checkpoint,storage,peak_branches,checkpoint_bytes,abandoned,refused,unexplored_better,lifecycle,net,break_even,journal_bytes\n");
     path(p,sizeof p,dir,"trace.csv");FILE *trace=fopen(p,"wx");if(!trace)fatal("trace exists");
     fprintf(trace,"family,seed,arm,trial,node,valid,spent,best,best_node,frontier,abandoned,refused\n");
     int overall=1;
@@ -300,8 +320,8 @@ static void campaign(const char *dir) {
                 uint64_t H=horizons[h],life=s[4]+H*s[7],opt=optimum(c);
                 int64_t net=(int64_t)(H*100)-(int64_t)life;
                 uint64_t be=s[7]<100?s[4]/(100-s[7])+1:0;
-                fprintf(rows,"%u,%u,%u,%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%u,%"PRIu64",%"PRId64",%"PRIu64",%jd\n",
-                    f,seed,arm,H,s[10],s[5],s[6],s[7],opt,s[7]-opt,s[4],s[22],s[21],s[23],s[20],s[13],s[14],s[12],s[11],false_pruned(s,c),life,net,be,(intmax_t)st.st_size);
+                fprintf(rows,"%u,%u,%u,%"PRIu64",%"PRIu64",%s,%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%"PRIu64",%u,%"PRIu64",%"PRId64",%"PRIu64",%jd\n",
+                    f,seed,arm,H,s[10],stop_reason(s[10]),s[5],s[6],s[7],opt,s[7]-opt,s[4],s[22],s[21],s[23],s[20],s[13],s[14],s[12],s[11],unexplored_better(s,c),life,net,be,(intmax_t)st.st_size);
             }
         }
         uint64_t c_life=all[2][4]+32*all[2][7];
@@ -330,10 +350,11 @@ static void session(const char *dir,unsigned ticks) {
 }
 int main(int argc,char **argv) {
     struct timespec t0,t1,c0,c1;clock_gettime(CLOCK_MONOTONIC,&t0);clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&c0);
-    if(argc!=4|| (strcmp(argv[1],"checks")&&strcmp(argv[1],"heldout")&&strcmp(argv[1],"one")&&strcmp(argv[1],"resume")&&strcmp(argv[1],"repeat")))fatal("usage: ex600 checks|heldout|one|resume|repeat policy.osc DIR");
+    if(argc!=4|| (strcmp(argv[1],"checks")&&strcmp(argv[1],"diagnostics")&&strcmp(argv[1],"heldout")&&strcmp(argv[1],"one")&&strcmp(argv[1],"resume")&&strcmp(argv[1],"repeat")))fatal("usage: ex600 checks|diagnostics|heldout|one|resume|repeat policy.osc DIR");
     struct stat st;if(stat(argv[3],&st)||!S_ISDIR(st.st_mode))fatal("output directory");
     load(argv[2]);
     if(!strcmp(argv[1],"checks"))tests(argv[3]);
+    else if(!strcmp(argv[1],"diagnostics"))diagnostic_tests();
     else if(!strcmp(argv[1],"heldout"))campaign(argv[3]);
     else session(argv[3],!strcmp(argv[1],"one")?1:!strcmp(argv[1],"resume")?16:0);
     clock_gettime(CLOCK_MONOTONIC,&t1);clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&c1);

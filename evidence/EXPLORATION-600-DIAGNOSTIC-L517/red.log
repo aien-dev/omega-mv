@@ -1,0 +1,11 @@
+RED family=4 seed=6001 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=4 seed=6002 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=4 seed=6003 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=4 seed=6004 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=4 seed=6005 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=5 seed=6001 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=5 seed=6002 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=5 seed=6003 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=5 seed=6004 arm=B horizon=32 stop=2 old_false_pruned=1
+RED family=5 seed=6005 arm=B horizon=32 stop=2 old_false_pruned=1
+RED budget_cases_mislabeled=10 expected=0

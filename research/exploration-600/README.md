@@ -75,3 +75,13 @@ Independent parent review remains required. Review/reproduction checklist:
 4. Independently inspect all15-node reachability/optima and held-out raw traces.
 5. Distinguish host gate PASS, scientific hypothesis verdict and NOT_RUN hardware.
 6. Preserve584/r2/583 earlier negative findings and249's rewrite ownership.
+
+## Diagnostic interpretation (L517)
+
+Campaign row schema v2 reports `stop_reason` plus `unexplored_better`. The
+reachability count means beneficial fixture nodes remain unvisited; it does not
+show that the policy pruned them. Budget stop code2 maps to `budget_exhausted`.
+Capacity abandonment remains separately counted. See
+[`DIAGNOSTIC-SCHEMA.md`](DIAGNOSTIC-SCHEMA.md) for the exact mapping and for
+how the frozen L492 v1 rows are rendered into a separate v2 diagnostic table
+without changing or rerunning the sealed campaign.
