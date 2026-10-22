@@ -45,7 +45,7 @@ printf 'program\tinputs\ttraps\tc_path_words\tom4_words\n' > "$tab"
 cmpc() { # name entry inputs omegese -> compares om4 with the C path on the runner
   build/omegese/omegese emit $4 $B/$1.json > /dev/null
   build/omega_emit/omega_emit emit $B/$1.json $B/$1.oscir > /dev/null
-  $R/om4.bin < $4 > $B/$1.om4.bin
+  sed '/^free /d' $4 | $R/om4.bin > $B/$1.om4.bin # the C path's language needs free for its arrays; om4's has none
   $B/runner $B/$1.oscir "$2" $3 > $B/$1.c.out
   $B/runner $B/$1.oscir "$2" $3 $B/$1.om4.bin > $B/$1.s.out
   tail -n +2 $B/$1.c.out > $B/$1.c.res; tail -n +2 $B/$1.s.out > $B/$1.s.res
@@ -123,6 +123,14 @@ t 9  'fn f a uint to uint\nret f a\nend\n' 'a self-call in function mode (stack 
 t 9  'global g uint 4\nfn f a uint to uint\nret a\nend\n' 'a pool in function mode'
 t 9  'fn main to int\nif true\nx = new uint 4 0\nend\nret 0\nend\n' 'new inside a block'
 t 9  'fn main a int to int\nret a\nend\n' 'main with parameters'
+t 20 'fn s a edit int 2 to void\nput a 1 9\nend\nfn main to int\nx = new int 2 0\ns view x\nret get x 1\nend\n' '17: view A to an edit parameter (L412 probe view_pfx_to_edit)'
+t 8  'fn main to int\nx = ulong -1\nret 0\nend\n' '20: a negative number is not a ulong'
+t 8  'fn main to int\nx = long 9223372036854775808\nret 0\nend\n' '20: 2^63 is not a long'
+t 8  'fn main to int\nx = byte 18446744073709551615\nret 0\nend\n' '20: 2^64 - 1 is not a byte (no wrap to -1)'
+t 8  'fn main to int\nx = ulong 18446744073709551616\nret 0\nend\n' '23: 2^64 is no whole number of any type'
+t 6  'fn main to int\nx = ulong 100000000000000000000\nret 0\nend\n' 'a number of 21 digits'
+t 23 'global g uchar 9223372036854775808\nfn main to int\nret 0\nend\n' '24: a pool of 2^63 elements is over its limit'
+t 9  'fn main to int\nx = new uint 4 0\nfree x\nret 0\nend\n' '24: free is not a word (no heap, nothing given back by hand)'
 t 9  'fn f a int b int to int\nret 0\nend\nfn g to int\nx = own a\nret 0\nend\n' 'own is not in the subset'
 t 10 'fn f a uint to uint\nret a\nend\nfn g f uint to uint\nret f\nend\n' 'a name equal to a function'
 t 13 'fn f a uint to uint\nabcdefghi = a\nret a\nend\n' 'a variable over 8 characters'

@@ -14,7 +14,7 @@
 ; mode), void functions and ret without a value; signed div, rem and shl; for with a value as count;
 ; true and false; local arrays (new, on the stack, only in a function's outermost block), array parameters
 ; (view / edit), global arrays (global, fixed pools in the program's memory image, no heap), text literals
-; (text, read-only bytes with their length), get, put, len, free; read and write (Linux system calls on a
+; (text, read-only bytes with their length), get, put, len; read and write (Linux system calls on a
 ; checked part of an array) and exit; note lines. Every array carries its length; every index is checked
 ; (trap 3) unless it is a number, which is checked when om4 reads it.
 ; Semantics follow the C path's interpreter (src/compiler/osc_interp.c): unsigned ops wrap to the width,
@@ -77,7 +77,7 @@
   .w 0x00000000
   .w 0x00400000
   .w 0x00000000
-  .w 0x00003550 ; p_filesz = the size of om4.bin, 13648 bytes (asm2 has no size arithmetic; gate4.sh checks it)
+  .w 0x000035a8 ; p_filesz = the size of om4.bin, 13736 bytes (asm2 has no size arithmetic; gate4.sh checks it)
   .w 0x00000000
   .w 0x01460000 ; p_memsz: up to 0x1860000
   .w 0x00000000
@@ -667,7 +667,7 @@
   cmp.x.i x0 80
   b.eq S_PUT
   cmp.x.i x0 81
-  b.eq S_FREE
+  b.eq E_SUBSET ; free: no heap and nothing to give back (decision 24), so not a word
   cmp.x.i x0 82
   b.eq S_EXIT
   cmp.x.i x0 77
@@ -1118,14 +1118,6 @@
   add.x.i sp sp 64
   bl EOL
   b STMT
-; ---- free A: a local array (its stack is given back at ret; no code) ----
-:S_FREE
-  bl ARRNAME
-  ldr.w w9 x0 5
-  cmp.x.i x9 1
-  b.ne E_TYPE
-  bl EOL
-  b STMT
 ; ---- global NAME T N: a fixed pool of N elements, zero at start, in the read/write part of the program
 ; image after the 8 MiB stack pool (address 0x10800000 + pool bytes so far); at most 1 GiB of pools ----
 :S_GLOBAL
@@ -1371,6 +1363,8 @@
   cmp.x.i x0 2
   b.ne SF_VAL
   ldr.x x2 sp 3
+  movz.x x9 0x185 1
+  ldr.x x3 x9 11
   bl RANGE
   str.x x1 sp 4
 :SF_NUM
@@ -1796,10 +1790,12 @@
   cmp.x.i x3 2
   b.ne VT_W
   mov.x x1 x4
-  movz.x x2 0 0
+  movz.x x9 0x185 1 ; a bare number: x2 = 1 when written as 2^63 or more (RANGE needs it later)
+  ldr.x x2 x9 11
   movz.x x0 2 0
   ldr.x x9 sp 1
   cbz.x x9 VT_RET
+  mov.x x3 x2
   mov.x x2 x9
   bl RANGE
   movz.x x0 3 0
@@ -1896,6 +1892,7 @@
   b.eq E_BARE
   ldr.x x1 sp 5
   ldr.x x2 sp 9
+  ldr.x x3 sp 6
   bl RANGE
   str.x x2 sp 6
   movz.x x0 3 0
@@ -1905,6 +1902,7 @@
   b.ne VB4
   ldr.x x1 sp 8
   ldr.x x2 sp 6
+  ldr.x x3 sp 9
   bl RANGE
   str.x x2 sp 9
   movz.x x0 3 0
@@ -2053,6 +2051,8 @@
   cmp.x.i x0 2
   b.ne VTT1
   ldr.x x2 sp 10
+  movz.x x9 0x185 1 ; x3 = the number was written as 2^63 or more
+  ldr.x x3 x9 11
   bl RANGE
   movz.x x0 3 0
   b VT_RET
@@ -2682,12 +2682,14 @@
   bl TRAPC
   ldr.x.post x30 sp 16
   ret
-; RANGE: x1 number, x2 type: error 8 unless the number is a value of that type
+; RANGE: x1 number, x2 type, x3 1 when the number was written as 2^63 or more (TK_NUM, state slot 11):
+; error 8 unless the number is a value of that type
 :RANGE
   adr x9 TWID
   ldrb.r w9 x9 x2
   cmp.x.i x9 64
   b.eq RG_64
+  cbnz.x x3 E_RANGE
   movz.x x10 1 0
   lslv.x x10 x10 x9
   cmp.x.i x2 6
@@ -2704,10 +2706,14 @@
   ret
 :RG_64
   cmp.x.i x2 9
-  b.eq RG_OK
+  b.eq RG_L
+  cbnz.x x3 RG_OK
   cmp.x.i x1 0
   b.lt E_RANGE
 :RG_OK
+  ret
+:RG_L
+  cbnz.x x3 E_RANGE
   ret
 ; ======================================================================================================
 ; TOK: next word. x0 kind (0 end of line, 1 word, 2 number, 3 end of input), x1 packed word (first 8
@@ -2802,7 +2808,8 @@
   b.ls TK_NUM
   movz.x x0 1 0
   ret
-; a number: [-]decimal, at most 19 digits, inside the signed 64-bit range
+; a number: [-]decimal, at most 20 digits, a value of some whole-number type: -2^63 .. 2^64 - 1, error 8
+; outside. State slot 11 = 1 when it is 2^63 or more (only ulong holds such a number), else 0.
 :TK_NUM
   sub.x x5 x19 x2
   movz.x x6 0 0
@@ -2814,10 +2821,14 @@
 :TK_N1
   sub.x x0 x19 x5
   cbz.x x0 E_NUM
-  cmp.x.i x0 19
+  cmp.x.i x0 20
   b.hi E_NUM
   movz.x x1 0 0
   movz.x x7 10 0
+  movz.x x3 0x9999 0 ; x3 = 0x1999999999999999 = (2^64 - 1) / 10 rounded down: x1 * 10 + digit fits
+  movk.x x3 0x9999 1 ; unless x1 > x3, or x1 = x3 and digit > 5
+  movk.x x3 0x9999 2
+  movk.x x3 0x1999 3
 :TK_N2
   cmp.x x5 x19
   b.hs TK_N3
@@ -2825,15 +2836,26 @@
   sub.x.i x0 x0 48
   cmp.x.i x0 9
   b.hi E_NUM
+  cmp.x x1 x3
+  b.hi E_RANGE
+  b.lo TK_N2A
+  cmp.x.i x0 5
+  b.hi E_RANGE
+:TK_N2A
   mul.x x1 x1 x7
   add.x x1 x1 x0
   add.x.i x5 x5 1
   b TK_N2
 :TK_N3
   movz.x x7 0x8000 3
+  movz.x x4 0x185 1
+  str.x xzr x4 11
   cbnz.x x6 TK_NEG
   cmp.x x1 x7
-  b.hs E_RANGE
+  b.lo TK_N4
+  movz.x x3 1 0
+  str.x x3 x4 11
+:TK_N4
   movz.x x0 2 0
   ret
 :TK_NEG
@@ -3504,7 +3526,7 @@
   b.ne AA2
   ldr.x x12 sp 2
   cmp.x.i x12 57
-  b.eq E_TYPE
+  b.eq E_RDONLY ; view A to an edit parameter: passing a view as edit is error 20 (OMEGESE.md 9.4)
   cmp.x.i x9 1
   b.eq AA3
   cmp.x.i x9 3
@@ -3816,8 +3838,12 @@
   cmp.x.i x0 2
   b.lo E_SUBSET
   ret
-; ARRLEN: x1 an array length: 1 .. 16777216 (error 8 below, 23 above)
+; ARRLEN: x1 an array length: 1 .. 16777216 (error 8 below, 23 above; a number written as 2^63 or more,
+; state slot 11, is above)
 :ARRLEN
+  movz.x x9 0x185 1
+  ldr.x x9 x9 11
+  cbnz.x x9 E_TOOBIG
   cmp.x.i x1 1
   b.lt E_RANGE
   movz.x x9 0x100 1

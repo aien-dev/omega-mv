@@ -1,0 +1,6 @@
+note L412 probe write_wrap: an offset of 2^64 - 1 is outside the array (trap 3), it does not wrap
+global g uchar 4
+fn main to int
+w = write 1 g 18446744073709551615 2
+ret 0
+end

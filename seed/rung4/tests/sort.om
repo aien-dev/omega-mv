@@ -59,6 +59,5 @@ putnum s
 putnum sorted a
 putnum get a 0
 putnum get a 999
-free a
 ret 0
 end
