@@ -15,3 +15,4 @@ Every model below did real work. A model is listed only for work it did. The orc
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
 Update this table in the same commit as the work it credits.
+| Codex | L491: Omega locality schedule/identity/recurrence experiments, source-locked accounting and independent CPU autodiff/SGD/checkpoint qualification (host only) |
