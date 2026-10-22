@@ -1,0 +1,1 @@
+{"schema_version":"1.0.0","name":"macos-arm64","layer":"port","purpose":"L615 additive bounded seeded ELF to Mach-O ARM64 adapter. Production computation is handwritten Omega. Native Mac execution and independent review belong to parent L613. Never edit shared seed compiler or claim full issue634 qualification."}
