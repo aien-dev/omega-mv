@@ -158,6 +158,7 @@ static const Row ROWS[] = {
     /* moves, constants, special registers */
     { 0x0000000000007802ull, 0x00000f00ull, "MOV %d, %i" },
     { 0x00000000ff007202ull, 0x00000f00ull, "MOV %d, %b" },
+    { 0x0000000000007202ull, 0x00000f00ull, "MOV %d, %b" },
     { 0x0000000000007919ull, 0x00000000ull, "S2R %d, %S" },
     { 0x00000000ff007b82ull, 0x00000800ull, "LDC %d, %K" },
     { 0x00000000ff007b82ull, 0x00000a00ull, "LDC.64 %d, %K" },
@@ -191,6 +192,10 @@ static const Row ROWS[] = {
     { 0x0000000000007245ull, 0x00201000ull, "I2FP.F32.U32 %d, %b" },
     { 0x0000000000007245ull, 0x00201400ull, "I2FP.F32.S32 %d, %b" },
     { 0x0000000000007305ull, 0x0020f000ull, "F2I.U32.TRUNC.NTZ %d, %b" },
+    { 0x000000000000723eull, 0x0004807000ull, "F2FP.SATFINITE.E4M3.F32.PACK_AB_MERGE_C %d, %a, %b, %c" },
+    /* tensor cores */
+    { 0x000000000000723cull, 0x00041800ull, "HMMA.16816.F32.BF16 %d, %a, %b, %c" },
+    { 0x000000000000727aull, 0x00002c00ull, "QMMA.16832.F32.E4M3.E4M3 %d, %a, %b, %c" },
     { 0x0000000000007308ull, 0x00000800ull, "MUFU.EX2 %d, %b" },
     { 0x0000000000007308ull, 0x00001000ull, "MUFU.RCP %d, %b" },
     { 0x0000000000007308ull, 0x00001400ull, "MUFU.RSQ %d, %b" },
@@ -199,6 +204,8 @@ static const Row ROWS[] = {
     { 0x0000000000007986ull, 0x0c101100ull, "STG.E%z desc[%C][%a.64%o], %b" },
     { 0x0000000000007984ull, 0x08000800ull, "LDS %d, [%a+%B]" },
     { 0x0000000000007988ull, 0x08000800ull, "STS [%a+%C], %b" },
+    { 0x0000000000007984ull, 0x00000000ull, "LDS%z %d, [%a%o]" },
+    { 0x0000000000007992ull, 0x0000b000ull, "MEMBAR.ALL.SYS" },
     { 0x0800000000007f89ull, 0x000e0000ull, "SHFL.DOWN PT, %d, %a, %h, %m" },
     /* control */
     { 0x0000000000007918ull, 0x00000000ull, "NOP" },
@@ -209,13 +216,23 @@ static const Row ROWS[] = {
     { 0x0000000000007b1dull, 0x00010000ull, "BAR.SYNC.DEFER_BLOCKING 0x0" },
 };
 
-/* IMAD with an immediate: nvdisasm names the special cases */
+/* IMAD with an immediate: nvdisasm names the special cases. Returns 0 for another instruction, 1 when printed,
+ * -1 for a shift by a power of two whose name nvdisasm was never seen to print (so it is reported, not guessed). */
 static int imad_imm(Out *w, uint64_t lo, uint64_t hi) {
-    if ((lo & 0xfff) != 0x824 || (hi & HI_MASK & ~0xffull) != 0x078e0200ull || bits(lo, 0, 12) != 0x824) return 0;
+    if (bits(lo, 0, 12) != 0x824 || (hi & HI_MASK & ~0xffull) != 0x078e0200ull) return 0;
     uint32_t imm = (uint32_t)bits(lo, 32, 32);
     uint64_t c = bits(hi, 0, 8);
-    int pow2 = imm >= 2 && (imm & (imm - 1)) == 0;
-    put(w, "%s ", (c == 255 && pow2) ? "IMAD.SHL" : "IMAD");
+    const char *name = "IMAD";
+    if (imm == 0) name = "IMAD.MOV";                                  /* d = c */
+    else if (imm == 1) name = c == 255 ? "IMAD.MOV" : "IMAD.IADD";    /* d = a, d = a + c */
+    else if (c == 255 && (imm & (imm - 1)) == 0) {
+        /* a shift. Seen in the corpus: .SHL for 2^1..2^6, 2^9, 2^10, 2^12, 2^20; plain IMAD for 2^16 and 2^31 */
+        int n = __builtin_ctz(imm);
+        if (n == 16 || n == 31) name = "IMAD";
+        else if (n <= 6 || n == 9 || n == 10 || n == 12 || n == 20) name = "IMAD.SHL";
+        else return -1;
+    }
+    put(w, "%s ", name);
     reg(w, "R", bits(lo, 16, 8)); put(w, ", "); reg(w, "R", bits(lo, 24, 8)); put(w, ", ");
     hex_s(w, (int32_t)imm); put(w, ", "); reg(w, "R", c);
     return 1;
@@ -229,8 +246,9 @@ int omega_sm121_disasm(uint64_t lo, uint64_t hi, uint64_t pc, char *out, size_t 
     if (!(g == 7 && !gneg)) { put(&w, "@"); pred(&w, g, gneg); put(&w, " "); }
     const uint64_t lo_body = lo & ~mask(12, 4), hi_body = hi & HI_MASK;
     size_t start = w.at;
-    if (imad_imm(&w, lo_body, hi_body)) return w.ok ? 0 : -2;
-    for (size_t i = 0; i < sizeof ROWS / sizeof ROWS[0]; i++) {
+    int im = imad_imm(&w, lo_body, hi_body);
+    if (im > 0) return w.ok ? 0 : -2;
+    for (size_t i = 0; im == 0 && i < sizeof ROWS / sizeof ROWS[0]; i++) {
         const Row *r = &ROWS[i];
         if ((lo_body & 0xfff) != (r->lov & 0xfff)) continue;
         uint64_t lom, him; fields_mask(r->fmt, &lom, &him);
