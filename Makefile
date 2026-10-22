@@ -2,6 +2,15 @@ CC ?= gcc
 .DEFAULT_GOAL := all
 PHYSICS_DIR ?= ../physics
 OUT_DIR ?= build
+# CUDA++ (aien-dev/CUDAplusplus, MIT) holds the GPU toolchain, runtime and libraries since 2026-10-21.
+# They are linked in from CUDAPP_DIR at cudapp.lock before anything else is read (tools/cudapp-link.sh).
+# Default: a CUDA++ checkout next to omega if there is one, else build/cudapp (cloned at cudapp.lock on first use).
+CUDAPP_DIR ?= $(if $(wildcard ../CUDAplusplus/src),../CUDAplusplus,build/cudapp)
+GPU_PROD_TARGET ?= build/omegatool
+CUDAPP_LINK := $(shell tools/cudapp-link.sh "$(CUDAPP_DIR)" >&2 || echo FAIL)
+ifneq ($(CUDAPP_LINK),)
+$(error CUDA++ files could not be linked from CUDAPP_DIR=$(CUDAPP_DIR); see the cudapp-link message above)
+endif
 -include mk/*.mk
 PHYSICS_LOCK_CHECK ?= 1
 
@@ -75,7 +84,7 @@ LEARNER = $(OUT_DIR)/crumbline-learner
 
 .PHONY: all clean check-physics-lock crumbline-learner test-crumbline test-m19 test test-m5 test-m6 test-m7 test-m8 test-m9 test-m10 test-m11 test-m12 test-m13 test-m14 test-m15 test-m17 test-r3 test-i11-wake-merge test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-branch-reuse test-jspace-prod test-plan-reuse test-cortex
 
-all: check-physics-lock $(TARGET)
+all: check-physics-lock check-cudapp-shared $(TARGET)
 
 check-physics-lock:
 	@if [ "$(PHYSICS_LOCK_CHECK)" != "0" ]; then \
@@ -2604,3 +2613,11 @@ $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h sr
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# The shared base (CUDA++ tools/extract/shared.txt): files both repositories need. Omega owns them and
+# builds only its own copies; the pinned CUDA++ must hold byte-identical copies, or this fails.
+CUDAPP_SHARED = src/sha256.c src/sha256.h src/omega_types.h src/omega_vector.c src/omega_vector.h \
+	src/omega_core.c src/omega_core.h src/omega_canonical.c src/omega_canonical.h
+.PHONY: check-cudapp-shared
+check-cudapp-shared:
+	@for f in $(CUDAPP_SHARED); do cmp -s "$$f" "$(CUDAPP_DIR)/$$f" || { echo "error: $$f differs from CUDAPP_DIR=$(CUDAPP_DIR)/$$f (shared base drift: change both, then move cudapp.lock)" >&2; exit 1; }; done

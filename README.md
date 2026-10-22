@@ -27,6 +27,8 @@ The live status is owned by [aien-architecture](https://github.com/aien-spark/ai
 
 ## How this fits with the other repositories
 
+**CUDA++** ([aien-dev/CUDAplusplus](https://github.com/aien-dev/CUDAplusplus), MIT) is the GPU half of the Omega runtime: the sm_121 toolchain, the GPU runtime, the GPU libraries and the driver client, split out of this repository with their history on 2026-10-21 so anyone can use them. Omega builds them at the commit in `cudapp.lock`: `make` links each file listed in `cudapp.files` from a CUDA++ checkout (`../CUDAplusplus` if it exists, else `build/cudapp`, cloned on first use) by `tools/cudapp-link.sh`, so every rule and script here works unchanged. Change those files in CUDA++, then move `cudapp.lock`. Nine shared files (`CUDAPP_SHARED` in the Makefile) live in both repositories; `make check-cudapp-shared` fails if they differ.
+
 [aienos](https://github.com/aien-spark/aienos) is the kernel Omega is meant to run on. [physics](https://github.com/aien-spark/physics) provides FORGE machine realization and the GB10 native path (pinned in `physics.lock`). [aien-architecture](https://github.com/aien-spark/aien-architecture) owns status and sequencing. ARGUS-0/1 (a defensive plane) is implemented in aienos (`native/argus`, pinned by `argus.lock`); Omega only carries the opt-in `RX_ARGUS` hooks (`src/runtime/rx_argus.c`) and receipts in `evidence/ARGUS/`. Physics Zero exists here as a host benchmark apparatus and learner (`src/physics0/`, `tests/physics0/`, `mk/physics0-learner.mk`, `docs/physics0/`, receipts in `evidence/physics0/`), with its specifications in the physics repository. DIRAC-0 is a specification in aien-architecture plus an oracle source in `research/dirac-oracle/` that has never been built or run. The Evolution Arena is a plan only.
 
 ## Standing rules
@@ -35,7 +37,7 @@ Language rule: Rust is scaffolding, Omega is the destination, and C or assembly 
 
 ## Build and verify
 
-Needs gcc and make on an AArch64 Linux host: CI runs the host suites on `ubuntu-24.04-arm`, and `test-realize` compiles with `-march=armv8.6-a+dotprod+i8mm+sve`. Host suites need no GPU and no physics checkout:
+Needs gcc and make on an AArch64 Linux host: CI runs the host suites on `ubuntu-24.04-arm`, and `test-realize` compiles with `-march=armv8.6-a+dotprod+i8mm+sve`. Host suites need no GPU and no physics checkout (several compile CUDA++ files, which `make` links in first; see above):
 
 ```bash
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-compiler-quick   # compiler, quick suite
