@@ -674,8 +674,9 @@ int main(int argc, char **argv) {
     kernels();
     if (g_code.va) omega_gpu_session_free(&g_code);
     for (unsigned i = 0; i < OSC_MAX_KPARAMS; i++) omega_gpu_session_scratch_free(&g_dev[i]);
-    omega_gpu_session_close();
     omega_gpu_session_unlock();
+    /* close acquires the session lock itself. */
+    omega_gpu_session_close();
     printf("test_osc_gpu_chip: %u chip launches, %.3f ms on the chip in total\n", g_chip_runs, (double)g_chip_ns / 1e6);
     printf("test_osc_gpu_chip: %d checks, %d failed\n", g_checks, g_failed);
     return g_failed ? 1 : 0;
