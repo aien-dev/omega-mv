@@ -1,0 +1,32 @@
+✖ T2 stale and active writer locks refuse packaging without guessing loss counts (58.521862ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 128.224378
+
+✖ failing tests:
+
+test at tests/trace/review-fixes.test.mjs:38:1
+✖ T2 stale and active writer locks refuse packaging without guessing loss counts (58.521862ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'PASS'
+  - 'INCONCLUSIVE'
+  
+      at TestContext.<anonymous> (file:///tmp/L516-mutant-OOikjR/tests/trace/review-fixes.test.mjs:40:40)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASS',
+    expected: 'INCONCLUSIVE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

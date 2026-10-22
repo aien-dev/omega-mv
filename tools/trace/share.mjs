@@ -25,6 +25,10 @@ export function contribution(result,{fields,preset='summary'}={}){
  disclosures:{qualifications:full.qualifications,coverage:result.coverage,retained_out_segments:result.retention.length,dropped:full.dropped,loss_extent:'explicit_counts_only; crash_loss_unknown',privacy_surface:{numeric_fields:selected,receipts:selected.includes('receipts')?'selected_digest_references':'excluded',raw_content:'excluded',identities:'domain_hashed'}},
  summary:{events:summary.events,steps:summary.steps,metrics:summary.metrics,energy:summary.energy}};
  if(selected.includes('receipts'))payload.receipts=[...new Set(events.flatMap(e=>e.receipts))].sort();
+ if(preset==='spans'){
+  payload.disclosures.privacy_surface.mandatory_span_fields=['id','parent','run','session','producer','sequence','step','time.domain','time.tick','time.wall_ns','source','category','status','qualification','semantic','realization'].sort();
+  payload.disclosures.privacy_surface.span_metadata_notice='Mandatory span metadata reveals workload structure, producer numbers, sequence, training steps and logical/monotonic time; fields selects metrics and receipts only. Review exact preview bytes before separate consent.';
+ }
  if(preset==='spans')payload.spans=filtered.map(e=>({id:pseudonym('event',e.event_id),parent:e.parent===null?null:pseudonym('event',e.parent),run:pseudonym('run',e.run),session:pseudonym('session',e.session),producer:e.producer,sequence:e.sequence,step:e.step,time:{domain:e.time.domain,tick:e.time.tick,wall_ns:null},source:e.source,category:e.category,status:e.status,qualification:e.qualification,semantic:e.semantic===null?null:pseudonym('semantic',e.semantic),realization:e.realization===null?null:pseudonym('realization',e.realization),metrics:e.metrics}));
  const content_hash=digest(payload),bytes=canonical({...payload,content_hash})+'\n';return {bytes,digest:hash(bytes)};
 }

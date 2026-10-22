@@ -1,0 +1,28 @@
+✖ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (89.455555ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 136.103415
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:68:1
+✖ unclean shutdown and recovery into fresh archive preserve every complete orphan frame (89.455555ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-30ukCS/tests/trace/archive.test.mjs:75:55)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

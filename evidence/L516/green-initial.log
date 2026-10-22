@@ -1,0 +1,15 @@
+✔ T1 spans disclose every mandatory metadata path alongside selected metrics (39.447178ms)
+✔ T2 stale and active writer locks refuse packaging without guessing loss counts (70.264869ms)
+✔ T2 real killed child startup has queued unacknowledged events and unknown loss (90.571397ms)
+✔ T2 real killed child queued has queued unacknowledged events and unknown loss (114.913131ms)
+✔ T2 clean child close removes session markers only after durable acknowledgement (114.037063ms)
+✔ T3 real purge cut after tombstone fsync diagnoses residual private bytes read-only (101.908644ms)
+✔ T3 clean explicit purge fsyncs deletion and leaves a conclusive empty archive (43.60485ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 634.242228

@@ -1,0 +1,40 @@
+✔ T1 spans disclose every mandatory metadata path alongside selected metrics (38.080707ms)
+✔ T2 stale and active writer locks refuse packaging without guessing loss counts (73.429ms)
+✔ T2 real killed child startup has queued unacknowledged events and unknown loss (104.484516ms)
+✔ T2 real killed child queued has queued unacknowledged events and unknown loss (103.008524ms)
+✔ T2 clean child close removes session markers only after durable acknowledgement (115.148784ms)
+✔ T3 real purge cut after tombstone fsync diagnoses residual private bytes read-only (104.673045ms)
+✔ T3 clean explicit purge fsyncs deletion and leaves a conclusive empty archive (42.507116ms)
+✔ T2 reader racing clean shutdown retains opening writer uncertainty until next read (43.742915ms)
+✖ T2 failed background persistence preserves unclean session marker even on close (12.724455ms)
+
+Interrupted while running:
+
+⚠ tests/trace/review-fixes.test.mjs (tests/trace/review-fixes.test.mjs:1:1)
+✖ tests/trace/review-fixes.test.mjs (41857.673971ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 8
+ℹ fail 1
+ℹ cancelled 1
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41860.271938
+
+✖ failing tests:
+
+test at tests/trace/review-fixes.test.mjs:82:1
+✖ T2 failed background persistence preserves unclean session marker even on close (12.724455ms)
+  Error: invalid receipt references
+      at fail (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tools/trace/schema.mjs:9:37)
+      at validate (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tools/trace/schema.mjs:50:134)
+      at event (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tools/trace/schema.mjs:36:132)
+      at fixture (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tests/trace/helpers.mjs:6:46)
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tests/trace/review-fixes.test.mjs:87:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at tests/trace/review-fixes.test.mjs:1:1
+✖ tests/trace/review-fixes.test.mjs (41857.673971ms)
+  'Promise resolution is still pending but the event loop has already resolved'

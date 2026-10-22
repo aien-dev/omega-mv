@@ -1,0 +1,30 @@
+✖ T3 clean explicit purge fsyncs deletion and leaves a conclusive empty archive (63.813684ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120.705185
+
+✖ failing tests:
+
+test at tests/trace/review-fixes.test.mjs:74:1
+✖ T3 clean explicit purge fsyncs deletion and leaves a conclusive empty archive (63.813684ms)
+  AssertionError [ERR_ASSERTION]: explicit purge acknowledges directory fsync after unlink
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///tmp/L516-mutant-fUTay0/tests/trace/review-fixes.test.mjs:79:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

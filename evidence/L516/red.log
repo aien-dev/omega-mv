@@ -1,0 +1,141 @@
+✖ T1 spans disclose every mandatory metadata path alongside selected metrics (45.00572ms)
+✖ T2 stale and active writer locks refuse packaging without guessing loss counts (22.349723ms)
+✖ T2 real killed child startup has queued unacknowledged events and unknown loss (61.85423ms)
+✖ T2 real killed child queued has queued unacknowledged events and unknown loss (70.750743ms)
+✔ T2 clean child close removes session markers only after durable acknowledgement (112.293612ms)
+✖ T3 real purge cut after tombstone fsync diagnoses residual private bytes read-only (71.104456ms)
+✔ T3 clean explicit purge fsyncs deletion and leaves a conclusive empty archive (42.897725ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 2
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 474.845901
+
+✖ failing tests:
+
+test at tests/trace/review-fixes.test.mjs:23:1
+✖ T1 spans disclose every mandatory metadata path alongside selected metrics (45.00572ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - [
+  -   'category',
+  -   'id',
+  -   'parent',
+  -   'producer',
+  -   'qualification',
+  -   'realization',
+  -   'run',
+  -   'semantic',
+  -   'sequence',
+  -   'session',
+  -   'source',
+  -   'status',
+  -   'step',
+  -   'time.domain',
+  -   'time.tick',
+  -   'time.wall_ns'
+  - ]
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tests/trace/review-fixes.test.mjs:27:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: [
+      'category',      'id',
+      'parent',        'producer',
+      'qualification', 'realization',
+      'run',           'semantic',
+      'sequence',      'session',
+      'source',        'status',
+      'step',          'time.domain',
+      'time.tick',     'time.wall_ns'
+    ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/trace/review-fixes.test.mjs:34:1
+✖ T2 stale and active writer locks refuse packaging without guessing loss counts (22.349723ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'PASS'
+  - 'INCONCLUSIVE'
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tests/trace/review-fixes.test.mjs:36:40)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASS',
+    expected: 'INCONCLUSIVE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/trace/review-fixes.test.mjs:44:40
+✖ T2 real killed child startup has queued unacknowledged events and unknown loss (61.85423ms)
+  Error: ENOENT: no such file or directory, open '/proc/self/fd/31/a'
+      at Object.openSync (node:fs:621:18)
+      at new OwnedRoot (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tools/trace/paths.mjs:18:11)
+      at readArchive (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tools/trace/archive.mjs:42:50)
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tests/trace/review-fixes.test.mjs:48:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: '/proc/self/fd/31/a'
+  }
+
+test at tests/trace/review-fixes.test.mjs:44:40
+✖ T2 real killed child queued has queued unacknowledged events and unknown loss (70.750743ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /writer.*loss.*unknown/. Input:
+  
+  'missing index'
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tests/trace/review-fixes.test.mjs:49:98)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'missing index',
+    expected: /writer.*loss.*unknown/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/trace/review-fixes.test.mjs:60:1
+✖ T3 real purge cut after tombstone fsync diagnoses residual private bytes read-only (71.104456ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'PASS'
+  - 'INCONCLUSIVE'
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-trace-review-fixes-20261022/tests/trace/review-fixes.test.mjs:64:76)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASS',
+    expected: 'INCONCLUSIVE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

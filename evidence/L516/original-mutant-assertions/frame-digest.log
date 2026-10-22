@@ -1,0 +1,28 @@
+✖ independent frame oracle verifies exact bytes, endian, digest, and payload (4.006886ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42.298332
+
+✖ failing tests:
+
+test at tests/trace/archive.test.mjs:61:1
+✖ independent frame oracle verifies exact bytes, endian, digest, and payload (4.006886ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(scan(mutant).problems.length)
+  
+      at TestContext.<anonymous> (file:///tmp/omega-trace-mutant-FP545z/tests/trace/archive.test.mjs:66:106)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

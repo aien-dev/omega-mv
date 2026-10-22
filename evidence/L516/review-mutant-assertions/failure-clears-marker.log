@@ -1,0 +1,31 @@
+✖ T2 failed background persistence preserves unclean session marker even on close (92.190481ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 143.736208
+
+✖ failing tests:
+
+test at tests/trace/review-fixes.test.mjs:90:1
+✖ T2 failed background persistence preserves unclean session marker even on close (92.190481ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'PASS'
+  - 'INCONCLUSIVE'
+  
+      at TestContext.<anonymous> (file:///tmp/L516-mutant-mNDwDp/tests/trace/review-fixes.test.mjs:97:35)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASS',
+    expected: 'INCONCLUSIVE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

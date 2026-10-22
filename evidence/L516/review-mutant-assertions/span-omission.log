@@ -1,0 +1,58 @@
+✖ T1 spans disclose every mandatory metadata path alongside selected metrics (62.512028ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 133.09919
+
+✖ failing tests:
+
+test at tests/trace/review-fixes.test.mjs:24:1
+✖ T1 spans disclose every mandatory metadata path alongside selected metrics (62.512028ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'category',
+      'id',
+      'parent',
+  -   'producer',
+      'qualification',
+      'realization',
+      'run',
+      'semantic',
+      'sequence',
+  
+      at TestContext.<anonymous> (file:///tmp/L516-mutant-HSll8F/tests/trace/review-fixes.test.mjs:28:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [
+      'category',     'id',
+      'parent',       'qualification',
+      'realization',  'run',
+      'semantic',     'sequence',
+      'session',      'source',
+      'status',       'step',
+      'time.domain',  'time.tick',
+      'time.wall_ns'
+    ],
+    expected: [
+      'category',      'id',
+      'parent',        'producer',
+      'qualification', 'realization',
+      'run',           'semantic',
+      'sequence',      'session',
+      'source',        'status',
+      'step',          'time.domain',
+      'time.tick',     'time.wall_ns'
+    ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

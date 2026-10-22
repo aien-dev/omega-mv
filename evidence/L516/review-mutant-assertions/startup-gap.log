@@ -1,0 +1,26 @@
+✖ T2 real killed child startup has queued unacknowledged events and unknown loss (68.245884ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 126.100991
+
+✖ failing tests:
+
+test at tests/trace/review-fixes.test.mjs:48:40
+✖ T2 real killed child startup has queued unacknowledged events and unknown loss (68.245884ms)
+  AssertionError [ERR_ASSERTION]: durable session marker before accepting enqueue
+      at TestContext.<anonymous> (file:///tmp/L516-mutant-61jni4/tests/trace/review-fixes.test.mjs:52:9)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
