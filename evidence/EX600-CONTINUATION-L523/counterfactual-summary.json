@@ -1,0 +1,81 @@
+{
+  "scope": "known synthetic trace prefix replay; no fresh heldout or physical result",
+  "rows": 600,
+  "original_rows_sha256": "eae930c030069e3f35ee755a7132ffb843522b5f588d00748b31e1b67b2846a1",
+  "original_scientific_verdict": "FAIL_UNCHANGED",
+  "guard_cost": "declared synthetic1 per decision, not measured CPU cost",
+  "regimes": [
+    {
+      "arm": "C",
+      "horizon": 1,
+      "risk_cap": 32,
+      "cases": 25,
+      "positive_cases": 0,
+      "total_net_synthetic": -590,
+      "worst_net_synthetic": -30,
+      "total_decision_cost": 80,
+      "lost_discoveries_vs_source": 20
+    },
+    {
+      "arm": "C",
+      "horizon": 1,
+      "risk_cap": 160,
+      "cases": 25,
+      "positive_cases": 5,
+      "total_net_synthetic": -1410,
+      "worst_net_synthetic": -143,
+      "total_decision_cost": 270,
+      "lost_discoveries_vs_source": 0
+    },
+    {
+      "arm": "C",
+      "horizon": 8,
+      "risk_cap": 32,
+      "cases": 25,
+      "positive_cases": 0,
+      "total_net_synthetic": -590,
+      "worst_net_synthetic": -30,
+      "total_decision_cost": 80,
+      "lost_discoveries_vs_source": 20
+    },
+    {
+      "arm": "C",
+      "horizon": 8,
+      "risk_cap": 160,
+      "cases": 25,
+      "positive_cases": 20,
+      "total_net_synthetic": 7110,
+      "worst_net_synthetic": -143,
+      "total_decision_cost": 320,
+      "lost_discoveries_vs_source": 0
+    },
+    {
+      "arm": "C",
+      "horizon": 32,
+      "risk_cap": 32,
+      "cases": 25,
+      "positive_cases": 0,
+      "total_net_synthetic": -590,
+      "worst_net_synthetic": -30,
+      "total_decision_cost": 80,
+      "lost_discoveries_vs_source": 20
+    },
+    {
+      "arm": "C",
+      "horizon": 32,
+      "risk_cap": 160,
+      "cases": 25,
+      "positive_cases": 20,
+      "total_net_synthetic": 38190,
+      "worst_net_synthetic": -143,
+      "total_decision_cost": 320,
+      "lost_discoveries_vs_source": 0
+    }
+  ],
+  "warnings": [
+    "No guarantee of positive net or superiority to random",
+    "Caps can prevent useful delayed payoff; report lost discoveries",
+    "Decision overhead can reduce net even when all original trials fit",
+    "Historical trace truncation is not a full causal learning experiment"
+  ]
+}

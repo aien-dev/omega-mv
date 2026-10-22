@@ -1,0 +1,37 @@
+[
+  {
+    "mutant": "risk_cap",
+    "compile_exit": 0,
+    "test_exit": 1,
+    "behavioral_failures": 5,
+    "binary_sha256": "cdea5d31241926e7b5d87dabd6314c62d87fffd756abcfa9dad5f9d89420ec4b"
+  },
+  {
+    "mutant": "horizon",
+    "compile_exit": 0,
+    "test_exit": 1,
+    "behavioral_failures": 4,
+    "binary_sha256": "3fde3db24c16260ddace7106e9aab8915f57b1c3a9972bfca3b37b0347ad738e"
+  },
+  {
+    "mutant": "free_decision",
+    "compile_exit": 0,
+    "test_exit": 1,
+    "behavioral_failures": 94,
+    "binary_sha256": "ee18e1a237fde51560ec30a0141e83a8e11db3954d50c78bf7421ee57548934b"
+  },
+  {
+    "mutant": "empty_frontier",
+    "compile_exit": 0,
+    "test_exit": 1,
+    "behavioral_failures": 11,
+    "binary_sha256": "a6729ba31d39cb2545abb3b6b3db63601b40f847e045df7bba2056d5cc137e48"
+  },
+  {
+    "mutant": "break_even_overflow",
+    "compile_exit": 0,
+    "test_exit": 1,
+    "behavioral_failures": 10,
+    "binary_sha256": "d4a3529855f0b921b8bd95be5392a337a932d6ac27ea093b42039d1969d0831f"
+  }
+]
