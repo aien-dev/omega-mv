@@ -1,0 +1,107 @@
+make: Entering directory '/home/drakestapleton/workspace/targets/L547-decoder-full'
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/closure/compiler/test_osc_ir_decode tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/closure/compiler/test_osc_ir_decode_asan tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=1 -o build/closure/compiler/test_osc_ir_decode_mutant1 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=2 -o build/closure/compiler/test_osc_ir_decode_mutant2 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=3 -o build/closure/compiler/test_osc_ir_decode_mutant3 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=4 -o build/closure/compiler/test_osc_ir_decode_mutant4 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=5 -o build/closure/compiler/test_osc_ir_decode_mutant5 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=6 -o build/closure/compiler/test_osc_ir_decode_mutant6 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=7 -o build/closure/compiler/test_osc_ir_decode_mutant7 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=8 -o build/closure/compiler/test_osc_ir_decode_mutant8 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=9 -o build/closure/compiler/test_osc_ir_decode_mutant9 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=10 -o build/closure/compiler/test_osc_ir_decode_mutant10 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+decoder mutant 1 caught: FAIL: counterexample one trailing byte: got NONCANONICAL, want TRAILING
+decoder mutant 2 caught: FAIL: counterexample version 2 with no structs: got NONCANONICAL, want VERSION_MISMATCH
+decoder mutant 3 caught: FAIL: counterexample last byte missing: refused but output not zeroed
+decoder mutant 4 caught: FAIL: counterexample u8 constant 256: got OK, want INVALID
+decoder mutant 5 caught: FAIL: counterexample NUL inside a function name: got NONCANONICAL, want TEXT
+decoder mutant 6 caught: FAIL: counterexample register 0x8000: got INVALID, want RANGE
+decoder mutant 7 caught: FAIL: counterexample input longer than OSC_IR_ENCODED_MAX: got TRAILING, want OVERSIZED
+decoder mutant 8 caught: FAIL: counterexample last byte missing: got NONCANONICAL, want TRUNCATED
+decoder mutant 9 caught: FAIL: counterexample function name of 64 bytes: got INVALID, want OVERSIZED
+decoder mutant 10 caught: FAIL: counterexample opcode 0: got OVERSIZED, want RANGE
+test-osc-ir-decode-mutants: PASS (10 of 10 caught)
+/home/drakestapleton/workspace/targets/L547-decoder-full/build/closure/compiler/test_osc_ir_decode full > build/closure/compiler/ir_decode.out
+OSC_IR_DECODE_PASS
+corpus: units=59 round_trip_ok=59 compile_refused=0 versions v1=32 v2=7 v3=6 v4=3 v5=11
+refusal classes: 22/22 cases as expected; classes exhibited=10 of 11 (NONCANONICAL is the unreachable backstop)
+valid objects: distinct=10000 tries=11395 invalid_variants_skipped=13 (all round-trip byte-exact)
+malformed: cases=202675 refused=177013 admitted_as_other_canonical_unit=25662 (each re-encodes to its own bytes) ARG=0 MAGIC=2260 UNKNOWN_VERSION=272 TRUNCATED=
+ASAN_OPTIONS=detect_stack_use_after_return=0 /home/drakestapleton/workspace/targets/L547-decoder-full/build/closure/compiler/test_osc_ir_decode_asan asan > build/closure/compiler/ir_decode_asan.out
+OSC_IR_DECODE_PASS
+test-osc-ir-decode: PASS (strict decoder, plain full + ASan/UBSan + mutants)
+make: Leaving directory '/home/drakestapleton/workspace/targets/L547-decoder-full'

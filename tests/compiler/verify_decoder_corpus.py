@@ -9,6 +9,13 @@ def git(repo,*args):
     return subprocess.check_output(['git','-C',str(repo),*args],stderr=subprocess.PIPE)
 def blob(data):
     return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+def unlinked_path(export,name):
+    if export.is_symlink() or not export.is_dir(): raise ValueError('missing or linked export root')
+    current=export
+    for part in pathlib.PurePosixPath(name).parts:
+        current=current/part
+        if current.is_symlink(): raise ValueError('linked source component: '+str(current))
+    return current
 def verify(export,repo):
     source=git(repo,'show',PIN+':'+LOADER)
     names=re.findall(rb'\bload_dir\("([^"\n]+)"\);',source)
@@ -25,7 +32,7 @@ def verify(export,repo):
             if name.endswith('.osc'):
                 if mode not in ('100644','100755') or kind!='blob': raise ValueError('non-regular pinned corpus entry')
                 expected[d+'/'+name]=oid
-        directory=export/d
+        directory=unlinked_path(export,d)
         if directory.is_symlink() or not directory.is_dir(): raise ValueError('missing or linked corpus directory: '+d)
         actual={d+'/'+p.name for p in directory.iterdir() if p.name.endswith('.osc')}
         wanted={p for p in expected if p.startswith(d+'/')}
@@ -33,8 +40,8 @@ def verify(export,repo):
     expected[LOADER]=git(repo,'rev-parse',PIN+':'+LOADER).decode().strip()
     manifest=[]
     for name,oid in sorted(expected.items()):
-        f=export/name
-        if f.is_symlink() or not f.is_file(): raise ValueError('missing or linked source: '+name)
+        f=unlinked_path(export,name)
+        if f.is_symlink() or not f.is_file() or f.stat().st_nlink!=1: raise ValueError('missing or linked source: '+name)
         # The caller owns the immutable test export. No concurrent-writer protection claimed.
         data=f.read_bytes()
         if blob(data)!=oid: raise ValueError('changed pinned source: '+name)
@@ -42,7 +49,7 @@ def verify(export,repo):
     return {'schema':'omega.decoder.corpus-closure.v1','pin':PIN,'corpus_programs':len(expected)-1,'loader_verified':True,'directories':dirs,'files':manifest,'scope':'source/corpus materialization, not decoder correctness'}
 def main():
     if len(sys.argv)!=3: raise ValueError('usage: verify_decoder_corpus.py EXPORT_DIR SOURCE_REPO')
-    export=pathlib.Path(sys.argv[1]).resolve();repo=pathlib.Path(sys.argv[2]).resolve()
+    export=pathlib.Path(sys.argv[1]).absolute();repo=pathlib.Path(sys.argv[2]).resolve()
     print(json.dumps(verify(export,repo),sort_keys=True))
 if __name__=='__main__':
     try: main()
