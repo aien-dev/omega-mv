@@ -68,9 +68,9 @@ needs_of() { # file-with-text
   grep -qE '\b(ioctl|mmap|munmap)\s*\(|\bcu[A-Z][A-Za-z]+\s*\(|\bnvrm_' "$1" && n="$n FR-5"
   grep -qE 'pthread|_Atomic|stdatomic|__atomic_|__sync_' "$1" && n="$n FR-6"
   grep -qE '\b(asm|__asm__|volatile)\b' "$1" && n="$n FR-8"
-  grep -qE '\bargv\b|\bgetenv\s*\(' "$1" && n="$n FR-10"
-  grep -qE '\b(popen|system|fork|execv|execvp|execl|waitpid|posix_spawn)\s*\(' "$1" && n="$n FR-11"
-  grep -qE '\b(clock_gettime|gettimeofday|time)\s*\(' "$1" && n="$n FR-12"
+  grep -qE '\bargv\b|\bgetenv\s*\(' "$1" && n="$n FR-13"
+  grep -qE '\b(popen|system|fork|execv|execvp|execl|waitpid|posix_spawn)\s*\(' "$1" && n="$n FR-14"
+  grep -qE '\b(clock_gettime|gettimeofday|time)\s*\(' "$1" && n="$n FR-15"
   grep -qE '\bunion\b|va_list|\.\.\.\s*\)|setjmp|longjmp|\bgoto\b' "$1" && n="$n HAND"
   echo "${n# }"
 }

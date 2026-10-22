@@ -1,0 +1,8 @@
+case	C rc	omc rc	interp rc	stdout bytes	C = omc	omc = interp
+empty	0	0	0	0	yes	yes
+one	0	0	0	1	yes	yes
+hello	0	0	0	13	yes	yes
+rand50000	0	0	0	50000	yes	yes
+rand65535	0	0	0	65535	yes	yes
+rand65536	0	0	0	65536	yes	yes
+rand70000	0	0	0	65536	yes	yes

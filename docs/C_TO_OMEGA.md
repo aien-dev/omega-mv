@@ -21,8 +21,8 @@ C-built tools. The old C stays only as a reference to compare against.
   (FR-n) in `~/handoffs/omega-feature-requests.md`, owned by the language lane L408:
   FR-1 opening files, FR-2 records (structs) with exact byte layout, FR-3 programs split over several
   files, FR-4 decimals (floating point), FR-5 GPU and device calls, FR-6 threads, FR-7 libraries other
-  languages call, FR-8 kernel-level hardware words, FR-9 Intel/AMD (x86-64) output, FR-10 reading the
-  command line and environment, FR-11 starting other programs, FR-12 reading the clock.
+  languages call, FR-8 kernel-level hardware words, FR-9 Intel/AMD (x86-64) output, FR-10 to FR-12 the full basic language (break, no register limit, spec fixes), FR-13 reading the
+  command line and environment, FR-14 starting other programs, FR-15 reading the clock.
   HAND means the file uses something the translator refuses on purpose (for example C's anything-goes
   argument lists or overlapping memory types); those parts get rewritten by hand under the Omega rules.
 

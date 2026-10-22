@@ -1,0 +1,8 @@
+artifact     seed-bytecopy
+omc sha256   10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e (built from seed/rung0/seed0.hex by tools/c2om/seed-omc.sh; fixpoint checked)
+C oracle     e956c460195b2cce0b086a94fed721303013d727 = e956c460195b2cce0b086a94fed721303013d727 (seed/rung4/tests/bytecopy.c), gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+interpreter  tools/omega_ref at 3bc7d9faa589379280226d24f35886da0aca493a
+Omega        seed/rung4/tests/bytecopy.om sha256 d5bd24b9fa592ee6 -> 824 bytes in 2250 us
+cases        written 7, run 7, identical on C, omc and interpreter 7
+control      one-word mutant (s/^w = write 1 dst 0 n$/w = write 1 src 0 n/) compiles; cases that catch it: 5
+RESULT PASS

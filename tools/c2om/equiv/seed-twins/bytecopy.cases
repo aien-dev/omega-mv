@@ -1,0 +1,8 @@
+# stdin files under tools/c2om/equiv/inputs; the pool holds 65536 bytes (70000: both keep the first 65536)
+empty	tools/c2om/equiv/inputs/empty.bin	
+one	tools/c2om/equiv/inputs/one.bin	
+hello	tools/c2om/equiv/inputs/hello.txt	
+rand50000	tools/c2om/equiv/inputs/rand50000.bin	
+rand65535	tools/c2om/equiv/inputs/rand65535.bin	
+rand65536	tools/c2om/equiv/inputs/rand65536.bin	
+rand70000	tools/c2om/equiv/inputs/rand70000.bin	
