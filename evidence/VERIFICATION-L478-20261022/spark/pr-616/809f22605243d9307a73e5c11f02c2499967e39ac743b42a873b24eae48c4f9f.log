@@ -1,0 +1,7 @@
+quietlock: no state dir /var/lib/aien-run/workspace, so no quiet flag: clear
+GB10_VECTOR_FAIL failure=CHANNEL_CREATE step=CREATE_CHANNEL state=INITIAL drv_rc=-1 errno=0 text="RM_ALLOC class 0xcec0 status 0x51"
+GB10_VECTOR_FAIL failure=CHANNEL_CREATE step=CREATE_CHANNEL state=INITIAL drv_rc=-1 errno=0 text="RM_ALLOC class 0xcec0 status 0x51"
+GB10_VECTOR_FAIL failure=CHANNEL_CREATE step=CREATE_CHANNEL state=INITIAL drv_rc=-1 errno=0 text="RM_ALLOC class 0xcec0 status 0x51"
+GB10_VECTOR_FAIL failure=CHANNEL_CREATE step=CREATE_CHANNEL state=INITIAL drv_rc=-1 errno=0 text="RM_ALLOC class 0xcec0 status 0x51"
+GB10_VECTOR_FAIL failure=CHANNEL_CREATE step=CREATE_CHANNEL state=INITIAL drv_rc=-1 errno=0 text="RM_ALLOC class 0xcec0 status 0x51"
+make: *** [Makefile:184: test-m17] Error 1

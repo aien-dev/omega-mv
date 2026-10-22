@@ -1,0 +1,5 @@
+quietlock: no state dir /var/lib/aien-run/workspace, so no quiet flag: clear
+aienos_lock_source: /var/lib/aien-run/wt/omega/f792cd1d35b0e9c191647518c3be651a8d86dc21/omega/build/pins/aienos-src matches b84c0a67590a934f3f3e001b12ec85ebc086a9eb for native/capability
+error: PHYSICS_DIR=/var/lib/aien-run/wt/omega/f792cd1d35b0e9c191647518c3be651a8d86dc21/omega/build/pins/physics-src-6d7cf0d is at commit 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf but physics.lock pins 7476de7160c074dc259683176d277bfd5b3bffdf.
+       Checkout the pinned physics commit, or override with PHYSICS_LOCK_CHECK=0.
+make: *** [Makefile:81: check-physics-lock] Error 1

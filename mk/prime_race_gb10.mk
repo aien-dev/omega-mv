@@ -44,6 +44,11 @@ $(GB_BUILD)/gb10_sieve_host_test: $(GB_DIR)/tests/gb10_sieve_host_test.c $(GB_DI
 	$(CC) $(CFLAGS) -I$(GB_DIR) -Itests -o $@ $(GB_DIR)/tests/gb10_sieve_host_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 prime-race-gb10-host-test: $(GB_BUILD)/gb10_sieve_host_test
 	./$(GB_BUILD)/gb10_sieve_host_test
+.PHONY: prime-race-gb10-listing-test
+$(OUT_DIR)/gb10_sieve_listing_test: $(GB_DIR)/tests/gb10_sieve_listing_test.c $(GB_DIR)/tests/gb10_sieve_host_test.c $(GB_DIR)/prime_race_impl.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -I$(GB_DIR) -Itests -o $@ $(GB_DIR)/tests/gb10_sieve_listing_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+prime-race-gb10-listing-test: $(OUT_DIR)/gb10_sieve_listing_test
+	./$(OUT_DIR)/gb10_sieve_listing_test
 $(GB_BUILD)/gb10_launch_cost: $(GB_DIR)/tests/gb10_launch_cost.c src/omega_blackwell_codegen.h src/omega_gpu_elementwise_api.h src/omega_gpu_session.h $(OUT_DIR)/libomega_gpu.a
 	@mkdir -p $(GB_BUILD)
 	$(CC) $(CFLAGS) $(GB_OPT) -o $@ $(GB_DIR)/tests/gb10_launch_cost.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm

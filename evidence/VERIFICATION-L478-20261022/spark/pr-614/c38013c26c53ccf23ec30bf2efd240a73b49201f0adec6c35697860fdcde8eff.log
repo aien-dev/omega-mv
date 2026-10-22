@@ -1,0 +1,8 @@
+AIEN-OBS crumb_tool_commit "d0f0b95d344b4c6628c3d868346932fd247ce168"
+STALE      bench/prime_race
+STALE      mk
+STALE      src
+STALE      tests
+STALE      tools
+STALE      .
+crumb verify: FAIL: 6 of 157 crumbs stale; run: crumb compile
