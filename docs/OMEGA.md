@@ -2,7 +2,9 @@
 
 **Omega is AIEN's language for all computing.** You write a program once. Omega's own tools check it and compile it straight to the machine code of the processor that runs it, GPU or CPU. No vendor compiler, toolkit or runtime library is involved anywhere.
 
-On the GPU, that makes Omega the replacement for CUDA. We call Omega's GPU stack **CUDA++**: everything CUDA gives you (sections 2 and 3), plus what CUDA does not give you, the motor (section 6). On the CPU, Omega replaces C and its toolchain. This file says how far each of those has got, and the checks that have to pass before we can claim each one. Status words: PASS (a receipt exists on the named commit), PARTIAL, MISSING. Ledger item L386 tracks the work; tracking issue omega-mv#593.
+On the GPU, that makes Omega the replacement for CUDA. We call Omega's GPU stack **CUDA++**: everything CUDA gives you (sections 2 and 3), plus what CUDA does not give you, the motor (section 6). On the CPU, Omega replaces C and its toolchain.
+
+**What CUDA++ is for: less computation, out of the big data centers.** The goal is not a faster way to rent a data center. It is to need less of one: do the same work with fewer bytes moved, fewer operations and fewer joules per answer, so it runs on a machine a person owns (a DGX Spark, a PC with one graphics card, a laptop) instead of a building full of them. Every CUDA++ result is reported as work per answer (bytes, operations and energy per word, against the machine's own ceiling), not only as speed. This file says how far each of those has got, and the checks that have to pass before we can claim each one. Status words: PASS (a receipt exists on the named commit), PARTIAL, MISSING. Ledger item L386 tracks the work; tracking issue omega-mv#593.
 
 ## 1. The parts
 
