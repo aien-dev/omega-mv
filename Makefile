@@ -2,6 +2,13 @@ CC ?= gcc
 .DEFAULT_GOAL := all
 PHYSICS_DIR ?= ../physics
 OUT_DIR ?= build
+# GPU implementation is an exact, prepared CUDApp dependency; no source fallback.
+CUDAPP_DIR ?= $(if $(wildcard ../CUDApp/src),../CUDApp,build/cudapp)
+GPU_PROD_TARGET ?= build/omegatool
+CUDAPP_LINK := $(shell tools/cudapp-link.sh "$(CUDAPP_DIR)" >&2 || echo FAIL)
+ifneq ($(CUDAPP_LINK),)
+$(error canonical CUDApp binding failed; see cudapp-link diagnostic)
+endif
 -include mk/*.mk
 PHYSICS_LOCK_CHECK ?= 1
 
@@ -2405,7 +2412,7 @@ test-vc-bridge: tests/test_omega_vc_bridge.c src/omega_vc_bridge.c src/omega_vc_
 GPU_API_OBJS = $(filter-out $(OUT_DIR)/omegatool.o $(OUT_DIR)/omega_blackwell_gates.o $(OUT_DIR)/omega_world_gates.o,$(OBJS))
 GPU_API_TEST = $(OUT_DIR)/gpu_matmul_api_test
 GPU_R4_RECEIPT = $(OUT_DIR)/gpu_matmul_r4_receipt
-$(OUT_DIR)/libomega_gpu.a: $(GPU_API_OBJS) | check-physics-lock
+$(OUT_DIR)/libomega_gpu.a: $(GPU_API_OBJS) | check-physics-lock check-cudapp-shared
 	ar rcs $@ $(GPU_API_OBJS)
 libomega_gpu: $(OUT_DIR)/libomega_gpu.a
 $(GPU_API_TEST): tests/gpu_matmul_api_test.c src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
@@ -2724,3 +2731,12 @@ $(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_mod
 .PHONY: test-gpu-gemm
 test-gpu-gemm: $(GPU_GEMM_TEST)
 	./$(GPU_GEMM_TEST) --sim
+
+# Shared base is intentionally owned by Omega, with exact copies in CUDApp.
+CUDAPP_SHARED = src/sha256.c src/sha256.h src/omega_types.h src/omega_vector.c src/omega_vector.h \
+ src/omega_core.c src/omega_core.h src/omega_canonical.c src/omega_canonical.h tools/mutation_runner.sh
+.PHONY: check-cudapp-shared test-cudapp-link
+check-cudapp-shared:
+	@for f in $(CUDAPP_SHARED); do cmp -s "$$f" "$(CUDAPP_DIR)/$$f" || { printf 'shared CUDApp source drift: %s\n' "$$f" >&2; exit 1; }; done
+test-cudapp-link:
+	python3 tests/test_cudapp_link.py
