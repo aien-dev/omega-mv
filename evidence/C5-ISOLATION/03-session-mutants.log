@@ -1,0 +1,12 @@
+$ make test-gpu-session-mutants   (2026-10-22T02:37Z)
+mutant release-when-latched killed: 2 case(s) failed
+mutant ignore-cancel killed: 1 case(s) failed
+mutant no-latch-on-timeout killed: 3 case(s) failed
+mutant stale-not-counted killed: 1 case(s) failed
+mutant marker-not-polled killed: 7 case(s) failed
+mutant close-while-latched killed: 3 case(s) failed
+mutant recover-keeps-latch killed: 1 case(s) failed
+mutant recover-without-close killed: 1 case(s) failed
+mutant recover-when-not-latched killed: 1 case(s) failed
+test-gpu-session-mutants: 9 of 9 mutants killed
+exit 0

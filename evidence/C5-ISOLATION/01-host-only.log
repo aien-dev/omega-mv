@@ -1,0 +1,8 @@
+$ build/gpu_isolation_test --host-only   (2026-10-22T02:37Z)
+[2373312] ok: codegen + encode: work kernel (512 bytes)
+[2373312] ok: codegen + encode: work kernel mutant 1 (512 bytes)
+[2373312] ok: codegen + encode: never-ending kernel (512 bytes)
+[2373312] ok: simulator: work kernel exact on all 4096 elements
+[2373312] ok: simulator red check: work mutant caught (4096 wrong)
+C5 isolation host: PASS (5 checks)
+exit 0
