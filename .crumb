@@ -41,13 +41,19 @@
     "generated": {
       "children": [
         {
-          "digest": "fb7cc6e608fdbe68a9735a1313285782b9717ff12bde17343f8ce635de3644f6",
+          "digest": "9dd7474de3f8342f85466d4629e58ebe6a7e9be694f6f282803892d32f9c272f",
+          "last_commit": "5901baa5",
+          "name": "bench/prime_race",
+          "purpose": "AIEN Prime Drag Race implementation side: the shared protocol helper (command line, timed loop, "
+        },
+        {
+          "digest": "3f2f29e905246ceb0b8778e1392f090ac93c949f89a139da0bd77b520946f30c",
           "last_commit": "190ff891",
           "name": "calibration",
           "purpose": "Directory calibration. Purpose not yet described by a human."
         },
         {
-          "digest": "d2eb8967a939ebdb0b54e15fe5d849dd5af71c23b812941e4ba86ad2b0f21d39",
+          "digest": "49f12a6fe70d5309b3651b14122809ece58a18d80bc4188aa3f557a4354434c4",
           "last_commit": "4870b0a4",
           "name": "docs",
           "purpose": "Directory docs. Purpose not yet described by a human."
@@ -65,7 +71,7 @@
           "purpose": "Directory mk. Purpose not yet described by a human."
         },
         {
-          "digest": "eccc4aec1037ae222d6370836953732b031b8ed70de28967b7af7ca62c2abe0b",
+          "digest": "e1b329e45619370357f74f738cc24e6091c9139e9db8e95e324d12955acf3ffa",
           "last_commit": "5901baa5",
           "name": "research",
           "purpose": "Directory research. Purpose not yet described by a human."
@@ -83,7 +89,7 @@
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "d99b41f4999adc5ef643eb6c327a4d68cd8183c9621e799404d3dcc72b1a1b0e",
+          "digest": "3b14916eb476f7e7eec53066dd3218285d51d7c8e522249516563775b16edb09",
           "last_commit": "cb64fbcb",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
@@ -95,14 +101,14 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:a51883b03efe47c6dafe740141552cebbf2b8f3a53e00da7e04a968a450cbab9",
-      "compiled_at": "2026-10-19T21:55:10Z",
+      "children_root": "sha256:335376e2fc6ce76b172db81780a66669fed58fbb156e17fece28fc377a60b743",
+      "compiled_at": "2026-10-22T12:19:44Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:375ac8907c8808dc251ae9aed54a121ac1b528ae00b9df125efea421970ee4f1",
+      "digest": "sha256:f991c300a5503708e5e6142833d2d7c4ec5c6f7cae05e79f3a921bf2d6f4b5d3",
       "evidence_files": 11269,
       "evidence_root": "sha256:f690c832e2c11b622d9e8fb738577f2b29a2e94dd1d9b26fd2ef8b0e21441a74",
       "files": 14243,
-      "generated_at_commit": "cb64fbcb7f0f952e854cf8bdb655e0dbe336c495",
+      "generated_at_commit": "2048fc71fe96311e981410e23285149f5d8d0a11",
       "source_tree": "sha256:7eafb3541c8b42319f96feb85cc55a4f1b1828f53827a6d7b1ae98ac58a7084f"
     },
     "owner_lane": "",
