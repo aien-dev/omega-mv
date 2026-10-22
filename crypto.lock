@@ -1,10 +1,9 @@
-3f60ece855f7477a2c589356e6ed26f4c84cafd3
+dfb30254ae42986d026e274731bcc094b2865df0
 # aien-dev/aien-crypto: SHA-256, BLAKE3, SHA-512, Ed25519 (L396, ADR 0039). tools/modules/pin.sh ensure crypto
 # writes these files into their old omega paths (gitignored) from this exact commit and proves the bytes.
 # repo: git@github.com:aien-dev/aien-crypto.git
 # map: sha256.c src/sha256.c
 # map: sha256.h src/sha256.h
-# map: isa_arm64.h src/isa_arm64.h
 # map: omega_blake3.c src/omega_blake3.c
 # map: omega_blake3.h src/omega_blake3.h
 # map: sig/aienos_sig.h src/searchtrace/sig/aienos_sig.h
