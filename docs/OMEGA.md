@@ -2,7 +2,7 @@
 
 **Omega is AIEN's language for all computing.** You write a program once. Omega's own tools check it and compile it straight to the machine code of the processor that runs it, GPU or CPU. No vendor compiler, toolkit or runtime library is involved anywhere.
 
-On the GPU, that makes Omega the replacement for CUDA. On the CPU, it replaces C and its toolchain. This file says how far each of those has got, and the checks that have to pass before we can claim each one. Status words: PASS (a receipt exists on the named commit), PARTIAL, MISSING. Ledger item L386 tracks the work; tracking issue omega-mv#593.
+On the GPU, that makes Omega the replacement for CUDA. We call Omega's GPU stack **cudaplusplus**: everything CUDA gives you (sections 2 and 3), plus what CUDA does not give you, the motor (section 6). On the CPU, Omega replaces C and its toolchain. This file says how far each of those has got, and the checks that have to pass before we can claim each one. Status words: PASS (a receipt exists on the named commit), PARTIAL, MISSING. Ledger item L386 tracks the work; tracking issue omega-mv#593.
 
 ## 1. The parts
 
@@ -88,3 +88,44 @@ Each row PASS needs our receipt and the other system measured by us on this Spar
 | **P2. Prompt reading.** | Omega prefill beats the best measured CUDA number at 512 and 8k. Levers: general tensor-core GEMM at a high fraction of the 237.5 TFLOPS rate (bar C3), flash-style prefill attention, chunked DeltaNet scan (L369, L017). |
 | **P3. Many conversations.** | Omega total words per second beats the best measured CUDA number at 8 and 32 conversations. Levers: grouped expert GEMM over the expert union, bf16 state (L313), continuous batching on the stroke (L312, L354). |
 | **P4. What CUDA stacks do not do.** | At least one measured win that comes from owning the whole path: one submission per word or a resident whole-model kernel (L272), zero-copy use of the shared memory, our own driver's launch path (L332). |
+
+## 6. cudaplusplus: the motor
+
+CUDA gives you kernels, memory and streams. It leaves the hard part to you: how a whole model's bytes reach the math cores in time, and how many conversations share one read of the weights. Omega's answer is the motor. The motor is the "plus plus" in cudaplusplus.
+
+**What the motor is.** Separate engines in one body, each with one job and its own timing trace, coupled by one schedule:
+
+- **The schedule**: one static table, built once from the model's structure before anything runs. It names which weight part lands in which buffer at which beat. A host proof checks it is complete, acyclic and collision-free, and that it has exactly the true dependency edges (buffer full before fire, layer before layer, word before word, release before refill) and no others. Nothing is decided while running.
+- **The movement engines**: the NVMe engine reads a beat's weight parts from disk and checks each one's fingerprint on arrival; the RAM engine copies a checked part into the buffer and checks it again. A part that fails a check stops the run.
+- **The power engine**: Omega's own GPU kernels, firing on a buffer that is already full. A routed expert that is not in the buffer is a misfire, and the run fails closed.
+- **The stroke**: N conversations fire on one read of the weights. Each conversation must produce exactly the words it produces alone.
+
+Design, every part and every receipt: [docs/speed/ENGINE.md](https://github.com/aien-dev/omega/blob/edd951976a0a8b199e63a1b55149680cf77033d0/docs/speed/ENGINE.md) (omega `feat/typewriter-engine`). Engine code: [`crates/aien-engine`](https://github.com/aien-dev/aien-sovereign-core/tree/d311394098afc3e09526c46d8c492173ff2c4933/crates/aien-engine) (`schedule.rs`, `movement.rs`, `piston.rs`, `timing.rs`; aien-sovereign-core `feat/typewriter-engine`). The 35B kernels the stroke fires: omega [`motor/serve`](https://github.com/aien-dev/omega/tree/881f43977aa4f6ed8842057bee2e6128649ae05f).
+
+### Live now
+
+Port 18091 on the Spark serves Qwen3.6-35B-A3B on the motor's stroke (`AIEN_Q36_STROKE=1`, binary `bin-16b0e6f8`), with zero CUDA libraries loaded (section 2 receipt).
+
+| What | Measured | Receipt |
+| --- | --- | --- |
+| Total words per second, N conversations at once (32 mixed chat prompts, 128 words each, prompt reading included, chip exclusive and quiet, 2 runs) | N=1: 22.0 to 22.5. N=8: 57.1. N=16: 62.4. N=32: 65.7 to 66.4 | aien-sovereign-core [`evidence/q36-batch-20261021`](https://github.com/aien-dev/aien-sovereign-core/tree/9c62690a252ab1c0b75eb8933c550316b5c50d52/evidence/q36-batch-20261021) |
+| The stroke against the same conversations taken in turn | 1.80x at N=8, 1.98x at N=16, 1.88x at N=32; at N=1, 0.98x (inside the run-to-run spread) | same |
+| Chip time per word, one conversation | 21.9 to 23.0 ms (43.5 to 45.7 words per second), 0.67 of the 63.25 ceiling at today's bytes | aien-sovereign-core `evidence/motor-chip-20261021` (ENGINE.md section F) |
+| Same words as the exact host reference | Gate 1: 32 of 32 words on three prompts, 31 of 32 on the fourth with its one flip inside a band written before the run; the mutant (shared expert dropped) fails. Gate 2 through the HTTP door: 24 of 24 ids; the mutant server fails | same |
+| Movement engines alone, 35B layer beats | 12 of 12 configurations: 0 late beats, 0 misfires over 1,600 beats each; best beat 7.0 ms for 25.2 MB, median wait between fuel and fire 21 us | omega `evidence/engine/35b-engines-20261020T2349Z` (ENGINE.md section C) |
+| Whole 35B fed from the engines' buffers (host) | 32 of 32 words equal to the reference, 1,280 beats, 0 misfires | omega `evidence/engine/35b-host-20261021T0025Z` (ENGINE.md section B) |
+
+The one-conversation figure in section 5 (41.7 to 49.8) is chip time per word. Through the door with the prompt read word by word, a single request today gets about 22 words per second end to end. Faster prompt reading (below) is what closes that gap.
+
+### Ready, not yet live
+
+- **Prompt reading in chunks**: 275.5, 250.0 and 196.8 words per second at 256, 2k and 8k prompts against 49.7, 48.6 and 45.3 word by word (5.5x, 5.1x, 4.3x), output bit-identical at all three lengths. omega `serve/q36-prefill-v2` 60ba3051, aien-sovereign-core `serve/q36-prefill-v2` [`evidence/q36-prefill-20261021`](https://github.com/aien-dev/aien-sovereign-core/tree/f6f341efc654263ce8a2812bfaef04e297c00808/evidence/q36-prefill-20261021).
+- **Exact two-pass word scoring**: 21.8 against 24.0 ms per word, served words identical (L314).
+
+### Not done, said plainly
+
+- The chip piston (a resident kernel fed by the movement engines inside GPU-visible buffers) is built and proven in its host simulator but has not fired on the chip.
+- The thesis gate, the planned loop against today's path with identical words and at least the same speed at every context, needs that chip run.
+- The NVMe engine moves 3.0 to 3.4 GB/s against 10.6 GB/s possible.
+- None of the motor is on omega `main` yet. Every piece is a pushed branch with its receipts, waiting in the desk's merge queue.
+- The engine code is Rust today (scaffolding under ADR 0024); it moves into Omega with the rest of the runtime.
