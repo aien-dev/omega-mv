@@ -267,6 +267,23 @@ it came from.
 - Limits, said plainly: omc has om4's limits, because it copies om4 (names up to 8 characters, 16
   registers per function, values nested up to 1,024 deep, 8 MiB of input).
 
+## Rung R6, first piece: structs (done for the language; IR and GPU words still open)
+
+om4 does not learn structs. It remains the parent that rebuilds omc, and omc.om does not use the new
+words, so the two parents still build the same compiler. A struct program is a stack of 8-byte cells,
+given back when the function returns. There is no `free`.
+
+- `seed/omc/gate6.sh`, 26 cases, RC=0. The compiler built by om4 and the compiler built by itself are
+  the same file, sha256 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6 (93,184 bytes).
+  omc.om is 3,772 lines, 149 functions.
+- Twelve programs run and exit with the value worked out in Wolfram (`evidence/SEED-0/r6-structs/wolfram.txt`),
+  not copied from this compiler. Three of them (t7, t8, t9) would change that value if a field were
+  stored at the wrong width. A one-word field swap changes the exit from 20 to 22, so a gate that
+  ignored field names would fail.
+- Thirteen broken programs are refused with the stated error number. om4 itself refuses a struct
+  program (exit 16). `free` is still refused.
+- Not in this piece: the IR emitter, and a kernel on the chip. Those stay on L408.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
