@@ -1,0 +1,170 @@
+{
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants/count-first/osh/osh": {
+    "bytes": 425248,
+    "sha256": "54246c2348bf0b8e3a1ed6d579ae3538ad04e8a2cc949aba0e53b64f7718f3c9"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants/count-first/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants/invalid-extra-continues/osh/osh": {
+    "bytes": 425264,
+    "sha256": "1730e30efeeb918f042a04a7e03ab9fa4ad64081afaef11d790db21c1229de60"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants/invalid-extra-continues/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete/count-first-plain/osh/osh": {
+    "bytes": 425248,
+    "sha256": "54246c2348bf0b8e3a1ed6d579ae3538ad04e8a2cc949aba0e53b64f7718f3c9"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete/count-first-plain/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete/count-first-sanitizer/osh/osh_numeric_priority_asan": {
+    "bytes": 4535224,
+    "sha256": "5051d6f7afc4536803a50c405086b3053100cefa6ac5962f86e57391053bc54e"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete/count-first-sanitizer/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete/invalid-extra-continues-plain/osh/osh": {
+    "bytes": 425264,
+    "sha256": "1730e30efeeb918f042a04a7e03ab9fa4ad64081afaef11d790db21c1229de60"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete/invalid-extra-continues-plain/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete/invalid-extra-continues-sanitizer/osh/osh_numeric_priority_asan": {
+    "bytes": 4535464,
+    "sha256": "11ac57a89a59704e2b87c4a072ae0ac8d52533d8e8cd9e33145565c82e13bd11"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete/invalid-extra-continues-sanitizer/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-final/count-first-plain/osh/osh": {
+    "bytes": 425248,
+    "sha256": "54246c2348bf0b8e3a1ed6d579ae3538ad04e8a2cc949aba0e53b64f7718f3c9"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-final/count-first-plain/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-final/count-first-sanitizer/osh/osh_numeric_priority_asan": {
+    "bytes": 4535216,
+    "sha256": "cea049b4110ce10e83e9f0f67863893eeee62012bc63bd8a30aad148623312af"
+  },
+  "/home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-final/count-first-sanitizer/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/green/osh/osh": {
+    "bytes": 425248,
+    "sha256": "5e5ad4a8168b8e60df2461f897e4059bbc79f09b272c66c10c26b58d41409a0a"
+  },
+  "/home/drakestapleton/workspace/targets/L577/green/osh/osh_numeric_priority_asan": {
+    "bytes": 4535072,
+    "sha256": "1e2694f9af7344381c30e28df3d27c55a55be40f4cb8a2070683e6a82c1c318b"
+  },
+  "/home/drakestapleton/workspace/targets/L577/green/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/argprint": {
+    "bytes": 70680,
+    "sha256": "6f8235c1b126f888d800822e2bba42dd67de18c5dba0d1ff71bc2cb19034082e"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/osh": {
+    "bytes": 425248,
+    "sha256": "5e5ad4a8168b8e60df2461f897e4059bbc79f09b272c66c10c26b58d41409a0a"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/osh_diff": {
+    "bytes": 422648,
+    "sha256": "21323c1f1cfdad7b514f4df0aa5b1eee16c26b0ec9498a22931baec92fbae488"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/osh_diff_asan": {
+    "bytes": 4967680,
+    "sha256": "7a898d7c1fe3d48f0a33957344df280c972569fc44ba699a929f6733a957f5cd"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/osh_toy": {
+    "bytes": 71064,
+    "sha256": "5ef5dc0268d7f034a0c765d27ab816c50cc2c619ae9507c476a41518ff1c6691"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/osh_trace": {
+    "bytes": 280720,
+    "sha256": "f14ce00664bc83e58940a3205a0ec03805f23890646141b6dfa7ae2a4355a11f"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/test_osh_e2e": {
+    "bytes": 73200,
+    "sha256": "ccfe292dbfdcb4e70bcdda597f0f98cb4f2306094e832143f3a8f8775218baf7"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/test_prompt_signal_restore": {
+    "bytes": 355048,
+    "sha256": "d1ab3454a3c9ded221386d00477c5389076faeea9c742669224b806f2ccc7e2a"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh/test_prompt_signal_restore_asan": {
+    "bytes": 4526864,
+    "sha256": "2b5ee5253f4eeb823fbc10160fb5fbdd38747255a289d5d549f4cc493879934e"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh-host/test_osh_host": {
+    "bytes": 214240,
+    "sha256": "4d360ece6b36be33c96f0812b870b4df2eb760009de2caa736ffe0f03ef7c658"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/osh-host/test_osh_host_asan": {
+    "bytes": 2072696,
+    "sha256": "f5b01ad78a7c37f10548042d25b8e00c699358e3172a863f7796c1293d4f119a"
+  },
+  "/home/drakestapleton/workspace/targets/L577/regression/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/tmp/L553-exit-mutants-cxvoiX/continue-command/osh/osh": {
+    "bytes": 425280,
+    "sha256": "a7a47d45000597d8d07993b9629270dbf5601154faed9ccd6edf5089636f20b9"
+  },
+  "/tmp/L553-exit-mutants-cxvoiX/continue-command/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/tmp/L553-exit-mutants-cxvoiX/stop-streams/osh/osh": {
+    "bytes": 425256,
+    "sha256": "9f3e2dfb1ac57674d426d6f744b95bad22e4c3192dd5f98c05efa8937da9540f"
+  },
+  "/tmp/L553-exit-mutants-cxvoiX/stop-streams/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/tmp/L553-prompt-mutants-PLGaKb/no-restore/osh/osh": {
+    "bytes": 355056,
+    "sha256": "34067952c58b64ec5444df74c50068c2d57be1d49480dca05c5b4d44a18a1762"
+  },
+  "/tmp/L553-prompt-mutants-PLGaKb/no-restore/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/tmp/L553-prompt-mutants-PLGaKb/no-rollback/osh/osh": {
+    "bytes": 355056,
+    "sha256": "7fefc02db7284a0e46a484d31ae2e96d0b499895a67778b4c2a7041612cd637c"
+  },
+  "/tmp/L553-prompt-mutants-PLGaKb/no-rollback/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  },
+  "/home/drakestapleton/workspace/targets/L577/red/osh/osh": {
+    "bytes": 425248,
+    "sha256": "6617b4be6cd63bd639bfd7a21767c205af3b47388a728d8de574cce37d8db0fa"
+  },
+  "/home/drakestapleton/workspace/targets/L577/red/osh/osh_numeric_priority_asan": {
+    "bytes": 4535088,
+    "sha256": "ea7119c10aad3a14c5b8bfe19a5656f04fd83a774c5d2658303cb3eef5af3ac7"
+  },
+  "/home/drakestapleton/workspace/targets/L577/red/quietlock": {
+    "bytes": 74272,
+    "sha256": "7058e40d9849f85a1a396e8e6c3f5d1ead29719cdec87a2fa6286e9217c3a314"
+  }
+}

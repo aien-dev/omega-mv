@@ -1,0 +1,134 @@
+{
+  "cwd": "/home/drakestapleton/workspace/omega-osh-exit-numeric-priority-20261022",
+  "sourceHead": "5583bea09cb38cb3cac48fa893f76998746f400b",
+  "entries": [
+    {
+      "purpose": "baseline host build",
+      "command": "quiet-build make -s -j2 OUT_DIR=/home/drakestapleton/workspace/targets/L577/red osh",
+      "exit": 0,
+      "rawArchiveLog": "raw/red-build.log"
+    },
+    {
+      "purpose": "baseline actual Bash RED",
+      "command": "quiet-build node tests/osh/e2e/exit_numeric_priority.mjs /home/drakestapleton/workspace/targets/L577/red/osh/osh /home/drakestapleton/workspace/targets/L577/raw/red-cases",
+      "exit": 1,
+      "rawArchiveLog": "raw/red-test.log"
+    },
+    {
+      "purpose": "fixed host build",
+      "command": "quiet-build make -s -j2 OUT_DIR=/home/drakestapleton/workspace/targets/L577/green osh",
+      "exit": 0,
+      "rawArchiveLog": "raw/green-build.log"
+    },
+    {
+      "purpose": "fixed actual Bash GREEN",
+      "command": "quiet-build node tests/osh/e2e/exit_numeric_priority.mjs /home/drakestapleton/workspace/targets/L577/green/osh/osh /home/drakestapleton/workspace/targets/L577/raw/green-cases",
+      "exit": 0,
+      "rawArchiveLog": "raw/green-test.log"
+    },
+    {
+      "purpose": "initial include-order infrastructure failure",
+      "command": "quiet-build make -s -j2 OUT_DIR=/home/drakestapleton/workspace/targets/L577/green test-osh-exit-numeric-priority",
+      "exit": 2,
+      "rawArchiveLog": "raw/numeric-public-make.log"
+    },
+    {
+      "purpose": "fixed public numeric plain+ASan gate",
+      "command": "quiet-build make -s -j2 OUT_DIR=/home/drakestapleton/workspace/targets/L577/green test-osh-exit-numeric-priority",
+      "exit": 0,
+      "rawArchiveLog": "raw/numeric-public-make-final.log"
+    },
+    {
+      "purpose": "baseline sanitizer build",
+      "command": "quiet-build make -s -j2 OUT_DIR=/home/drakestapleton/workspace/targets/L577/red 'OSH_BIN_SRCS=$(OSH_DIR)/osh_units.c $(filter-out src/osh/host/osh_builtin.c src/osh/host/osh_codes.c,$(OSH_PROG_HOSTSRCS)) /home/drakestapleton/workspace/targets/L577/raw/baseline-builtin.c src/osh/host/osh_codes.c $(OSC_LIB) src/runtime/rx_caproot.c' /home/drakestapleton/workspace/targets/L577/red/osh/osh_numeric_priority_asan",
+      "exit": 0,
+      "rawArchiveLog": "raw/red-sanitizer-build.log"
+    },
+    {
+      "purpose": "baseline sanitizer actual Bash RED",
+      "command": "quiet-build node tests/osh/e2e/exit_numeric_priority.mjs /home/drakestapleton/workspace/targets/L577/red/osh/osh_numeric_priority_asan /home/drakestapleton/workspace/targets/L577/raw/red-sanitizer-cases",
+      "exit": 1,
+      "rawArchiveLog": "raw/red-sanitizer-test.log"
+    },
+    {
+      "purpose": "original affected Make gates",
+      "command": "env --default-signal=INT --ignore-signal=QUIT quiet-build make -s -j2 OUT_DIR=/home/drakestapleton/workspace/targets/L577/regression test-osh-host test-osh-prompt-signals test-osh-e2e osh-trace test-osh-diff",
+      "exit": 0,
+      "rawArchiveLog": "raw/original-gates.log"
+    },
+    {
+      "purpose": "original actual Bash36",
+      "command": "quiet-build node tests/osh/e2e/exit_boundary_controls.mjs /home/drakestapleton/workspace/targets/L577/regression/osh/osh /home/drakestapleton/workspace/targets/L577/raw/original-exit-cases",
+      "exit": 0,
+      "rawArchiveLog": "raw/original-exit.log"
+    },
+    {
+      "purpose": "original compiled exit controls",
+      "command": "quiet-build node tests/osh/e2e/exit_boundary_mutants.mjs",
+      "exit": 0,
+      "rawArchiveLog": "raw/original-exit-mutants.log"
+    },
+    {
+      "purpose": "original compiled caller-action controls",
+      "command": "quiet-build node tests/osh/host/prompt_signal_mutants.mjs",
+      "exit": 0,
+      "rawArchiveLog": "raw/original-prompt-mutants.log"
+    },
+    {
+      "purpose": "initial complete plain compiled numeric controls",
+      "command": "quiet-build node tests/osh/e2e/exit_numeric_priority_mutants.mjs /home/drakestapleton/workspace/targets/L577/raw/numeric-mutants",
+      "exit": 0,
+      "rawArchiveLog": "raw/numeric-mutants.log"
+    },
+    {
+      "purpose": "first expanded control attempt aggregate timeout NOT_A_KILL",
+      "command": "quiet-build node tests/osh/e2e/exit_numeric_priority_mutants.mjs /home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-final",
+      "exit": 1,
+      "rawArchiveLog": "raw/numeric-mutants-final.log"
+    },
+    {
+      "purpose": "complete plain+sanitizer compiled controls",
+      "command": "quiet-build node tests/osh/e2e/exit_numeric_priority_mutants.mjs /home/drakestapleton/workspace/targets/L577/raw/numeric-mutants-complete",
+      "exit": 0,
+      "rawArchiveLog": "raw/numeric-mutants-complete.log"
+    },
+    {
+      "purpose": "exact parentF2 fresh independent comparison",
+      "command": "quiet-build node /home/drakestapleton/workspace/targets/L577/raw/exact-parent-f2.mjs",
+      "exit": 0,
+      "rawArchiveLog": "raw/exact-parent-f2.log"
+    },
+    {
+      "purpose": "distinct unsupported/validation boundary observations",
+      "command": "quiet-build node /home/drakestapleton/workspace/targets/L577/raw/distinct-boundaries.mjs",
+      "exit": 0,
+      "rawArchiveLog": "raw/distinct-boundaries.log"
+    },
+    {
+      "purpose": "baseline/candidate validation limits",
+      "command": "quiet-build node /home/drakestapleton/workspace/targets/L577/raw/validation-scope.mjs",
+      "exit": 0,
+      "rawArchiveLog": "raw/validation-scope.log"
+    },
+    {
+      "purpose": "source evidence immutability",
+      "command": "AIEN_BASE_REF=f2dbbb24 tests/gates/run.sh evidence-immutable",
+      "exit": 0,
+      "rawArchiveLog": "raw/evidence-immutable-source.log"
+    },
+    {
+      "purpose": "plaintext environment gate",
+      "command": "tests/gates/run.sh zero-disk-secrets",
+      "exit": 0,
+      "rawArchiveLog": "raw/zero-env.log"
+    },
+    {
+      "purpose": "source milestone publication",
+      "command": "git push https://github.com/aien-dev/omega-mv.git HEAD:refs/heads/issues/osh-exit-numeric-priority-20261022",
+      "exit": 0,
+      "rawArchiveLog": "raw/source-push.log"
+    }
+  ],
+  "controlBuildCommands": "Each actual Make argv and compile status is in raw/numeric-mutants-complete/*-build.json; original control commands/status/sources are under original-exit-controls and original-prompt-controls.",
+  "limitations": "No timing measurements; correctness only. Original2RLIMIT_AS and native AIENOS NOT_RUN unchanged. Separate whitespace/options mismatches are OPEN; neither a green equivalence claim nor a deadline kill."
+}
