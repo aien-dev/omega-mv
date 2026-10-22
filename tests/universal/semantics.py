@@ -18,6 +18,11 @@ def run(args, data=None):
     return p.stdout
 
 def main():
+    # Invalidate transient evidence before every possible refusal. Published
+    # append-only evidence is copied elsewhere, never reused as this output.
+    out = Path(os.environ.get('UNIVERSAL_OUT', str(ROOT / 'build/universal-semantics'))).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    (out / 'receipt.json').unlink(missing_ok=True)
     contract = ROOT / 'spec/universal/semantics.md'
     profiles = ROOT / 'spec/universal/profiles.json'
     assert contract.is_file() and profiles.is_file(), 'MISSING_SEMANTIC_CONTRACT: #625 has no versioned observation/fidelity contract'
@@ -27,8 +32,6 @@ def main():
     assert manifest['fidelity'] == ['EXACT_SOURCE_REPLAY', 'PROVEN_EQUIVALENCE', 'PROVEN_REFINEMENT', 'BOUNDED_VALIDATION', 'DIFFERENTIAL_COMPATIBILITY', 'RUNTIME_INTEROPERABILITY', 'EXPLICIT_APPROXIMATION', 'UNSUPPORTED', 'UNKNOWN']
     assert manifest['non_success'] == ['FAIL', 'UNKNOWN', 'TIMEOUT', 'UNSUPPORTED', 'UB', 'MISSING_RUNTIME', 'NOT_RUN']
     assert manifest['adapters_implemented_by_this_change'] == []
-    out = Path(os.environ.get('UNIVERSAL_OUT', str(ROOT / 'build/universal-semantics'))).resolve()
-    out.mkdir(parents=True, exist_ok=True)
     fixtures = ROOT / 'tests/universal'
     cc = os.environ.get('CC', 'cc')
     rustc = os.environ.get('RUSTC', 'rustc')
@@ -68,7 +71,7 @@ def main():
         kills=sum(a!=b for a,b in zip(actual.splitlines(),expected.splitlines()))
         assert kills>0, f'MUTANT_SURVIVED:{name}'
         mutants.append({'name':name,'mismatched_rows':kills,'compiled':True})
-    tracked = [contract,profiles,Path(__file__).resolve()] + sorted(fixtures.glob('arithmetic.*')) + [fixtures/'osc_probe.c', ROOT/'mk/universal.mk']
+    tracked = [contract,profiles,Path(__file__).resolve()] + sorted(fixtures.glob('arithmetic.*')) + [fixtures/'osc_probe.c', fixtures/'test_evidence_lifecycle.py', ROOT/'mk/universal.mk']
     report={'schema':'omega.universal.semantics.conformance.v1','classification':'DIFFERENTIAL_COMPATIBILITY','result':'PASS','proof':False,'conversion_implemented':False,'source_commit':run(['git','-C',str(ROOT),'rev-parse','HEAD']).decode().strip(),'rows_per_oracle':len(pairs),'boundary_rows':len(pairs)-256,'random_rows':256,'random_seed':625,'bigint_counterexample_rows':differing,'observations':observations,'mutants':mutants,'versions':versions,'inputs':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in tracked},'artifacts':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in [out/'c-oracle',out/'rust-oracle',out/'osc-oracle']},'not_run':['x86_64','RV64GC_QEMU','GPU','checker2_translation_proof','language_import_export']}
     (out/'receipt.json').write_text(json.dumps(report,indent=2)+'\n')
     print(f'PASS rows_per_oracle={len(pairs)} bigint_counterexamples={differing} compiled_mutants={len(mutants)} evidence={out}/receipt.json')
