@@ -561,6 +561,10 @@ int osc_cg_compile_a(const OscAlloc *a, const OscUnit *u, OscCode *out, char *er
     out->a = a;
     if (!u) return -1;
     if (osc_ir_validate_a(a, u, err, n)) return -1;
+    if (osc_ir_has_kernel(u)) { /* GPU kernels go to src/omega_osc_gpu.c; this back end is AArch64 host code */
+        if (err && n) snprintf(err, n, "the unit has a GPU kernel; the host code generator takes host-only units");
+        return -1;
+    }
     Cg g;
     memset(&g, 0, sizeof g);
     g.a = a;

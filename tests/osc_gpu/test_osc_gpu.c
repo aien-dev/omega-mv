@@ -11,6 +11,8 @@
  * against n / d, the trap path (status word, poison, no stores after a trap) and the refusals. */
 #include "omega_osc_gpu.h"
 #include "omega_osc_launch.h"
+#include "compiler/osc_cg.h"
+#include "compiler/osc_interp.h"
 #include "bw_warp_sim.h"
 #ifdef OSC_CHIP
 #include "omega_gpu_session.h"
@@ -642,6 +644,16 @@ static void test_refusals(void) {
     u.funcs[0].kind = OSC_FN_HOST; u.funcs[0].nblocks = 1; u.funcs[0].ninsns = 1;
     u.funcs[0].insns[0].op = OSC_I_RET; u.funcs[0].insns[0].a = -1; u.funcs[0].blocks[0].count = 1;
     CHECK(osc_gpu_build(&u, 0, &k, err, sizeof err) != 0 && strstr(err, "not a kernel"), "a host function is not refused (%s)", err);
+    /* the host code generator and the interpreter refuse a unit with a kernel (they would read f32 as whole numbers) */
+    if (load_kernel("ops_f", &k) == 0) {
+        OscCode code;
+        err[0] = 0;
+        CHECK(osc_cg_compile(&g_unit, &code, err, sizeof err) != 0 && strstr(err, "GPU kernel"), "osc_cg compiled a kernel unit (%s)", err);
+        static OscRt rt;
+        uint64_t args[OSC_MAX_PARAMS] = {0}, ret = 0;
+        CHECK(osc_interp_run(&g_unit, 0, args, g_unit.funcs[0].nparams, &rt, &ret) != 0, "osc_interp ran a kernel unit");
+        osc_gpu_free(&k);
+    }
 }
 
 #ifdef OSC_CHIP

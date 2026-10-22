@@ -1,0 +1,16 @@
+$ bash tools/omegese/test_omegese.sh omegese omega_emit checker2   (omegese from this commit's tools/omegese/omegese.c)
+dev: 10/10 omegese -> omega_emit -> checker2 ACCEPT
+nested: 6/6 rewritten dev programs and 5/5 trial-2 model answers ACCEPT; trial-2 dev07 refused for its extra value
+review fixes: stacked conversions convert; brackets around a for count change nothing
+coverage: 8/8 accepted
+next: 69 prefixes give the expected words
+refusals: 46/46 refused with the expected reason, every control accepted
+loop guard: mutant without the counter increment REJECTED (C2-LOOP-UNBOUNDED)
+tokenizer gate: SKIPPED (set OMEGESE_TOKCOUNT and OMEGESE_TOKENIZER)
+next oracle: every word and the end of input legal at all 2636 word boundaries of 75 accepted programs
+completeness: 150 single-word mutants (17 accepted by emit): emit accepts iff every word was legal (2958 word boundaries)
+soundness fuzz: 40/40 random walks (852 legal items picked) never met an empty set and closed into accepted programs
+checker2 residual: 0 of 80 completed walks that emit accepts are rejected later (omega_emit or checker2)
+truncation fuzz: 2799 byte prefixes through emit, next and next --machine, exit 0 or 1; at the 2698 prefixes of accepted programs, next allows the byte that follows and complete finishes into a program emit accepts
+test-omegese: PASS
+exit 0

@@ -63,3 +63,32 @@ Example: `fn clamp_sub(a: u32, b: u32) -> u32`: a - b when a >= b, else 0.
 ```
 
 A loop is a block that branches back to an earlier block (`br` or `cbr` to a lower block number).
+
+## GPU kernels (IR encoding version 6, docs/omegese/GPU.md)
+
+A function with `"kind": "kernel"` and `"threads": N` (32..1024, a multiple of 32) runs once per GPU
+thread. It returns `"void"`, takes at most 32 params, and is never called. Its key order is `name`,
+`kind`, `threads`, `params`, `ret`, `locals`, `blocks`. Extra types, kernels only:
+
+- `f32` (IEEE binary32). A `const` of f32 takes a decimal number (rounded once to binary32) or a
+  string `"0x"` + 8 hex digits (the bits).
+- `gview:<elem>` / `gedit:<elem>` (elem `u32` or `f32`): a global buffer the kernel reads / reads and
+  writes. Each is a param followed by its `u32` length param.
+- `block:<elem>:<len>` (len 1..12288): a shared array, made by `shared`.
+
+| op | fields | meaning |
+|---|---|---|
+| `thread` `block` `blocks` `batch` `batches` | `dst` | dst (u32) = this thread's index in its block / the block index along x / blocks along x / the block index along y / blocks along y |
+| `shared` | `dst` | dst (a `block:` array) = a zeroed shared array; entry block only |
+| `gload` | `dst`, `buf`, `index` | dst = buf[index] (bounds against buf's length param, trap 3) |
+| `gstore` | `buf`, `index`, `value` | buf[index] = value (buf is `gedit:`) |
+| `sync` | none | every thread of the block waits here |
+| `down` | `dst`, `a`, `b` | dst = a from the lane b higher in the warp (b a `const` 1..31; a lane with none gets its own a) |
+| `min` `max` | `dst`, `a`, `b` | smaller / larger (u32 or f32) |
+| `exp` `inv` `rsq` `sqrt` | `dst`, `a` | f32 approximations: e^a, 1/a, 1/sqrt(a), sqrt(a) (GPU.md section 5) |
+| `mad` | `dst`, `a`, `b`, `c` | dst = a * b + c, f32, rounded once |
+
+In a kernel `add` `sub` `mul`, `neg` and the comparisons also take f32, `cast` converts between u32 and
+f32, `load` and `store` take `block:` arrays, and `trap` does not end the path (the thread records the
+code and stops storing; only `ret` ends it). `alloc`, `release`, `call` and the 64-bit and signed
+types are refused in a kernel (checker2, rules C2-GPU-TYPE and C2-GPU-CALL, GPU.md section 10).

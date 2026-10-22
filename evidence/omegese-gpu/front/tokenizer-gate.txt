@@ -1,0 +1,6 @@
+# tokenizer gate for the kernel words (L386, C1), 2026-10-22T00:08Z
+# omegese built from tools/omegese/omegese.c at 98b21bca
+$ tokcount /home/drakestapleton/models/qwen3-30b-a3b-instruct-2507-fp8/tokenizer.json words $(omegese words) bound | awk '$1 != 1'   (column 1: tokens of " word")
+words checked: 67, with more than one token: 0
+$ tokcount /home/drakestapleton/models/qwen3.6-35b-a3b-fp8-95a723d0/tokenizer.json words $(omegese words) bound | awk '$1 != 1'   (column 1: tokens of " word")
+words checked: 67, with more than one token: 0

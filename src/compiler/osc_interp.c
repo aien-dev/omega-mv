@@ -228,6 +228,7 @@ static int check_args(const OscUnit *u, int func, const uint64_t *args, unsigned
 int osc_interp_run_prevalidated(const OscUnit *u, int func, const uint64_t *args, unsigned nargs, OscRt *rt,
                                 uint64_t *ret) {
     if (!u || !ret || check_args(u, func, args, nargs, rt)) return -1;
+    if (osc_ir_has_kernel(u)) return -1; /* kernels run on the GPU (src/omega_osc_gpu.c); the interpreter is host only */
     Ctx c = {u, rt, 0};
     uint64_t a[OSC_MAX_PARAMS] = {0};
     for (unsigned i = 0; i < nargs; i++) a[i] = args[i];

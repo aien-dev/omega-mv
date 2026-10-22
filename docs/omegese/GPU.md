@@ -2,8 +2,9 @@
 
 Status: design v2 (2026-10-21, L386), after review 1 (section 14). Bar row C1 in `docs/OMEGA.md`.
 Tool: `tools/omegese/omegese.c`; IR: `src/compiler/osc_ir.h` (encoding version 6); checker:
-`src/checker2/`; backend: `src/compiler/osc_gpu.c` over the sm_121 kernel builder
-(`src/omega_blackwell_codegen.h`). No second encoder.
+`src/checker2/`; backend: `src/omega_osc_gpu.c` over the sm_121 kernel builder
+(`src/omega_blackwell_codegen.h`), launcher: `src/omega_osc_launch.c`. No second encoder.
+Tests: `make test-osc-gpu` (host simulator), `make test-osc-gpu-chip` (the GB10).
 
 ## 1. What this adds
 
@@ -38,6 +39,11 @@ Parameter types:
 A buffer has no length in the source. The launcher passes it, and reads it from its own table of
 allocations, never from the caller (section 11). `len a` reads it (type uint). Every `get`/`put` on a
 buffer checks the index against that length (trap 3).
+
+`omegese next` and `omegese complete` (the writing aids) cover host functions only in v1: a kernel is
+written whole and given to `omegese emit`. The kernel words (`kernel`, the words of section 3,
+`shared`, `sync`) are words only inside a kernel; a host function may still use them as names.
+Every fixed word, these included, is one Qwen3 token (`evidence/omegese-gpu/front/tokenizer-gate.txt`).
 
 `own` is refused in a kernel line: a kernel never owns global memory. A kernel has at most 32 IR
 parameter registers; a buffer uses two (pointer and length), a scalar one.
@@ -91,7 +97,8 @@ and `for`, are uint.
   refused (host rule).
 - Float numbers in the source: a bare integer in a float place is that integer, and must be exact
   in binary32 (else refused). A number with a point (`1.5`, `-1.442695`) is the decimal rounded once,
-  to nearest even, straight to binary32. The leading `-` is part of the number.
+  to nearest even, straight to binary32. The leading `-` is part of the number. A point may appear only
+inside a kernel (host functions have no float).
 
 ## 5. Approximate functions
 
@@ -266,17 +273,27 @@ Restated independently in `src/checker2/` (as for host code):
 
 ## 11. Backend and launcher
 
-`src/compiler/osc_gpu.c` reads a checked unit and builds one BlackwellIRProgram per kernel, then
-calls `omega_bw_regalloc_solve` and `omega_bw_encode_program`.
+`src/omega_osc_gpu.c` reads a checked unit and builds one BlackwellIRProgram per kernel, then
+calls `omega_bw_regalloc_solve` and `omega_bw_encode_program`. The host code generator
+(`osc_cg`) and the interpreter (`osc_interp`) refuse a unit that has a kernel.
 
 - Arguments live in constant bank 0 from 0x380: for each parameter in order, a buffer is a 64-bit
   address then a 32-bit length; a scalar is 32 bits. Then the hidden args: status address (64 bit),
   blocks, batches (32 bit each). 8-byte values are 8-byte aligned.
 - Each IR block becomes a run of builder instructions. Branches become BRA with a relative target,
   patched after layout. A bool is kept as 0/1 in a register; a CBR is a compare then @P0 BRA.
-- Reconvergence uses the existing region bookkeeping (`src/omega_bw_reconv.h`): every varying branch
-  gets BSSY before it and BSYNC at its join; a varying loop gets BSSY before its head and BSYNC at
-  its exit. Uniform branches need none.
+- Reconvergence. A branch on a varying value whose nearest join J is a block opens a region: its
+  members are the blocks reachable from the branch without passing J, and its head is the one block
+  every edge into the members enters (the branch block, or the loop head when the branch sits in a
+  loop that J is outside of). Each block is laid out as [joins][arms][body][branches]: one BSYNC per
+  region that joins at this block (innermost first), then one BSSY per region whose head it is
+  (outermost first). An edge lands on the first join of its target that it belongs to, else on the
+  first arm it is outside of, else on the body. A branch whose paths meet only at the virtual exit
+  opens no region (the lanes that return exit, the rest stay together); the kernel is refused if a
+  region head can be reached after such a branch. Regions that overlap without nesting are refused.
+  Uniform branches need none.
+- Barrier registers: two regions get different ones when one contains the other or both lie in a
+  common region; otherwise they share. At most 16 (rule C2-GPU-NEST keeps checked kernels inside).
 - Liveness is computed over the CFG (loops included) and passed to the builder's allocator as
   intervals over the final layout. A kernel that needs more than the allocator's registers is
   refused with a message; v1 does not spill.
@@ -286,11 +303,14 @@ calls `omega_bw_regalloc_solve` and `omega_bw_encode_program`.
 - A trap inside an operation is a compare, a store of 1 to the status word, and setting the thread's
   poison flag; every `put` is predicated on the flag being clear.
 
-`omega_kernel_launch` takes the receipt, the code, the buffers, the scalars and the grid. It:
+`omega_kernel_launch` (`src/omega_osc_launch.c`) takes the receipt, the code, the buffers, the scalars
+and the grid. Its checks live in `omega_kernel_launch_words` (`src/omega_osc_launch_args.c`, no device
+calls), so the host tests prove each refusal. It:
 
-- refuses a launch whose argument kinds or count differ from the kernel line;
-- takes each buffer's length from the session's allocation table, and refuses a buffer whose range
-  is not inside one known allocation;
+- refuses code whose SHA-256 differs from the receipt;
+- refuses a launch whose argument kinds or count differ from the kernel line, or a bool other than 0 or 1;
+- takes each buffer as a range (start, element count) inside one session allocation (`OmegaGpuMem`,
+  whose size the session recorded when it allocated it), and refuses a range past its end;
 - refuses overlaps that involve an `edit` buffer;
 - refuses more than one block along x (or y) when the kernel never reads `block` (or `batch`);
 - zeroes the status words, launches through `omega_gpu_session_launch` with a stated timeout, then

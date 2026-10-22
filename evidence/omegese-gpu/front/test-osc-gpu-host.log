@@ -1,0 +1,29 @@
+$ sh tests/osc_gpu/run.sh omegese omega_emit checker2 test_osc_gpu ir   (2026-10-22T00:09Z, tree 98b21bca + this commit's working tree; gcc 13, -O2 -ffp-contract=off)
+run.sh: 13 kernels emitted and accepted by checker2
+run.sh: 12 broken kernels refused with their expected reasons
+  division by a number: 5899975 quotients checked
+  vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  gate     72 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  gemm    248 instructions,  40 registers, 256 threads, 2048 shared bytes, 1 regions on 1 barriers, 16 argument words
+  reduce  192 instructions,  24 registers, 256 threads, 8224 shared bytes, 2 regions on 1 barriers, 12 argument words
+  nest16  112 instructions,  16 registers, 32 threads, 0 shared bytes, 0 regions on 0 barriers, 8 argument words
+  ops_u   624 instructions,  32 registers, 256 threads, 0 shared bytes, 16 regions on 1 barriers, 24 argument words
+  ops_f   208 instructions,  32 registers, 256 threads, 256 shared bytes, 0 regions on 0 barriers, 20 argument words
+  nest16j 288 instructions,  16 registers, 32 threads, 0 shared bytes, 16 regions on 16 barriers, 8 argument words
+  vloop    80 instructions,  24 registers, 64 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  om_vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  om_gate     72 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  om_gemm    256 instructions,  40 registers, 256 threads, 2048 shared bytes, 1 regions on 1 barriers, 16 argument words
+  om_attn    248 instructions,  48 registers, 128 threads, 16 shared bytes, 1 regions on 1 barriers, 22 argument words
+  ops_f   208 instructions,  32 registers, 256 threads, 256 shared bytes, 0 regions on 0 barriers, 20 argument words
+  vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  mutant 1 (stores ignore poison): caught by 16 checks
+  mutant 2 (joins dropped): caught by 52 checks
+  mutant 3 (no add overflow trap): caught by 5 checks
+  mutant 4 (intervals not stretched): caught by 10 checks
+  mutant 5 (every region on barrier 0): caught by 3 checks
+  mutant 6 (shared not zeroed): caught by 2 checks
+  mutant 7 (bounds-failed loads run): caught by 4 checks
+  mutant 8 (division magic off by one): caught by 4 checks
+test_osc_gpu: 1308 checks, 0 failed
+exit 0
