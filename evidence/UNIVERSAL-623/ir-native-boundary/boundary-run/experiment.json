@@ -1,0 +1,176 @@
+{
+  "schema": "omega.universal.checker-boundary.experiment.v1",
+  "result": "OBSERVED_IR_PROPERTY_PROOF_ONLY",
+  "source_commit": "69790fb4ad1e803ca79245430745b96129d1dcf4",
+  "existing_receipt_class": 2,
+  "proved_property": "checker2 bounded IR NO-TRAP",
+  "native_translation_relation": "UNKNOWN",
+  "executable_identity_binding": "TESTED_REFUSAL_ON_CHANGED_BYTES",
+  "original_and_newly_issued_mutated_code_receipts": "VALID_WITH_PUBLIC_TEST_KEY_AND_MATCHING_BYTES",
+  "production_test_key": "REFUSED",
+  "mutated_code_executed": false,
+  "scope": "This is an existing-system limitation demonstration, not a new checker, lowering validator, production receipt or vulnerability claim. Newly issued TEST receipts do not prove native code behavior.",
+  "commands": [
+    {
+      "argv": [
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/compiler/oscc",
+        "/home/drakestapleton/workspace/hermes-desk/universal-L579-checker-boundary/tests/checker2/lrat/p01_abs8.osc",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original"
+      ],
+      "exit": 0,
+      "stdout": "ir_sha256=def152468f1045e33b00c0b805297b31c84e88dbe253d2af37c34d29bc3fd45d\ncode_sha256=08f709bb37f09891f07997cce1d403d6b78e2bc05efffe67aeb241221d74b5d2\nfuncs=1\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/checker2",
+        "receipt",
+        "issue",
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.ir",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original.code",
+        "--target",
+        "universal-623-boundary",
+        "--epoch",
+        "5",
+        "--expiry",
+        "9",
+        "--out-dir",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original-receipts",
+        "--lrat",
+        "abs8=/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.lrat"
+      ],
+      "exit": 0,
+      "stdout": "requirements_sha256=bb7ad1a5931f9e411abb71125f55374c2cefe54e142d5f7390550a36d4e0fd58 proofs=1\nOMEGA-REQUIREMENTS-V1\nno-trap-except-requires abs8 proof_sha256=66eb458b7e2e637d5f903d9d32716db58ef4e08f25c78afd19a8b0112df4d23c\nreceipt=/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original-receipts/8b3183b158bb3a3e23b92bf81bc382bd3c1e6e132326262e8ca12d7b69fa16d4.rcpt\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/checker2",
+        "receipt",
+        "verify",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original-receipts/8b3183b158bb3a3e23b92bf81bc382bd3c1e6e132326262e8ca12d7b69fa16d4.rcpt",
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.ir",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original.code",
+        "--target",
+        "universal-623-boundary",
+        "--epoch",
+        "6",
+        "--allow-test-key",
+        "--lrat",
+        "abs8=/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.lrat"
+      ],
+      "exit": 0,
+      "stdout": "receipt=VALID\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/checker2",
+        "receipt",
+        "issue",
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.ir",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/mutated.code",
+        "--target",
+        "universal-623-boundary",
+        "--epoch",
+        "5",
+        "--expiry",
+        "9",
+        "--out-dir",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/mutated-receipts",
+        "--lrat",
+        "abs8=/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.lrat"
+      ],
+      "exit": 0,
+      "stdout": "requirements_sha256=bb7ad1a5931f9e411abb71125f55374c2cefe54e142d5f7390550a36d4e0fd58 proofs=1\nOMEGA-REQUIREMENTS-V1\nno-trap-except-requires abs8 proof_sha256=66eb458b7e2e637d5f903d9d32716db58ef4e08f25c78afd19a8b0112df4d23c\nreceipt=/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/mutated-receipts/899e56ca543469e48034865224b869eb267943faf457cfa62e2f03fd8dd2cd9c.rcpt\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/checker2",
+        "receipt",
+        "verify",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/mutated-receipts/899e56ca543469e48034865224b869eb267943faf457cfa62e2f03fd8dd2cd9c.rcpt",
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.ir",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/mutated.code",
+        "--target",
+        "universal-623-boundary",
+        "--epoch",
+        "6",
+        "--allow-test-key",
+        "--lrat",
+        "abs8=/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.lrat"
+      ],
+      "exit": 0,
+      "stdout": "receipt=VALID\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/checker2",
+        "receipt",
+        "verify",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original-receipts/8b3183b158bb3a3e23b92bf81bc382bd3c1e6e132326262e8ca12d7b69fa16d4.rcpt",
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.ir",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/mutated.code",
+        "--target",
+        "universal-623-boundary",
+        "--epoch",
+        "6",
+        "--allow-test-key",
+        "--lrat",
+        "abs8=/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.lrat"
+      ],
+      "exit": 1,
+      "stdout": "receipt=EXECUTABLE_MISMATCH\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/checker2",
+        "receipt",
+        "verify",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original-receipts/8b3183b158bb3a3e23b92bf81bc382bd3c1e6e132326262e8ca12d7b69fa16d4.rcpt",
+        "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.ir",
+        "/home/drakestapleton/handoffs/universal-L569/L579-boundary-run/original.code",
+        "--target",
+        "universal-623-boundary",
+        "--epoch",
+        "6",
+        "--lrat",
+        "abs8=/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.lrat"
+      ],
+      "exit": 1,
+      "stdout": "receipt=TEST_SIGNER_IN_PRODUCTION\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/drakestapleton/workspace/hermes-desk/universal-L579-checker-boundary",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "69790fb4ad1e803ca79245430745b96129d1dcf4\n",
+      "stderr": ""
+    }
+  ],
+  "inputs": {
+    "/home/drakestapleton/workspace/hermes-desk/universal-L579-checker-boundary/tests/checker2/lrat/p01_abs8.osc": "0784c4366b799fb8a14f0707d3fc9e9cfe6ac63025f8215026513a249ab1cc17",
+    "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.ir": "def152468f1045e33b00c0b805297b31c84e88dbe253d2af37c34d29bc3fd45d",
+    "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/lrat/p01_abs8.lrat": "66eb458b7e2e637d5f903d9d32716db58ef4e08f25c78afd19a8b0112df4d23c",
+    "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/checker2/checker2": "2075cbd64c7912963ca63d172a728ecb22cd87fd3b1f8080029a8af05788a85e",
+    "/home/drakestapleton/workspace/hermes-desk/universal-L569-corrected-replay/build/L579-proof/compiler/oscc": "1c34c793ba4f91eb9b877f9518ba213232531ee8a7750394eab816761f504a13",
+    "/home/drakestapleton/workspace/hermes-desk/universal-L579-checker-boundary/tests/universal/checker_boundary.py": "1e9b9a57ae2e2a43e3640723eaa2cae7fe5e65e3f1ebacc26507ed6f7046dd66"
+  },
+  "artifacts": {
+    "mutated.code": "a18ecd8deeb43c37a8dad6e8292bedd98a6596946b52a510cf76ad9a359a71e2",
+    "original.entries": "c58c2dd8477b9c0013a5ac025065f7e02c59947044344b2aa3c9bfeaba8b2651",
+    "original.ir": "def152468f1045e33b00c0b805297b31c84e88dbe253d2af37c34d29bc3fd45d",
+    "original.code": "08f709bb37f09891f07997cce1d403d6b78e2bc05efffe67aeb241221d74b5d2",
+    "mutated-receipts/899e56ca543469e48034865224b869eb267943faf457cfa62e2f03fd8dd2cd9c.rcpt": "899e56ca543469e48034865224b869eb267943faf457cfa62e2f03fd8dd2cd9c",
+    "original-receipts/8b3183b158bb3a3e23b92bf81bc382bd3c1e6e132326262e8ca12d7b69fa16d4.rcpt": "8b3183b158bb3a3e23b92bf81bc382bd3c1e6e132326262e8ca12d7b69fa16d4"
+  }
+}
