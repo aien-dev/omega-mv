@@ -654,16 +654,21 @@ static int bi_unset(OshSession *s, const OshCmd *c, const int io[3])
 static int bi_exit(OshSession *s, const OshCmd *c, const int io[3], int in_parent)
 {
     int st = s->last_status & 0xff;
-    if (c->nargv >= 2) {
+    int arg = 1;
+    if (arg < c->nargv && strcmp(c->argv[arg], "--") == 0) arg++;
+    if (arg < c->nargv) {
         char *end;
         errno = 0;
-        long v = strtol(c->argv[1], &end, 10);
-        if (end == c->argv[1] || *end || errno == ERANGE) {
-            osh_diag(io[2], "exit: %s: numeric argument required", c->argv[1]);
+        long v = strtol(c->argv[arg], &end, 10);
+        char *digits_end = end;
+        /* Bash accepts only shell blanks after the number, not all isspace. */
+        while (*end == ' ' || *end == '\t') end++;
+        if (digits_end == c->argv[arg] || *end || errno == ERANGE) {
+            osh_diag(io[2], "exit: %s: numeric argument required", c->argv[arg]);
             st = 2;
         } else {
             /* bash validates the first number before rejecting extra arguments. */
-            if (c->nargv > 2) {
+            if (c->nargv > arg + 1) {
                 osh_diag(io[2], "exit: too many arguments");
                 if (in_parent) s->abort_list = 1; /* no exit; stop only this list */
                 return 1;
