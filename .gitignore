@@ -6,3 +6,12 @@ build/qual-runs/
 /omega
 tests/test_omega_numeric
 .crumb.local
+
+# Pinned by crypto.lock, written by tools/modules/pin.sh ensure crypto (L396)
+/src/sha256.c
+/src/sha256.h
+/src/isa_arm64.h
+/src/omega_blake3.c
+/src/omega_blake3.h
+/src/searchtrace/sig/
+/tests/resolve/blake3_vectors.txt

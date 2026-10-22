@@ -13,6 +13,9 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+# Modules pinned by lock files (L396): write and prove the pinned aien-crypto files before any step,
+# including steps that compile with a plain gcc line instead of make.
+tools/modules/pin.sh ensure crypto
 step="${1:?usage: tests/gates/run.sh <step>}"
 
 # Every step builds in its own directory. The Spark judge (aien-test) runs a repository's host gates

@@ -8,6 +8,7 @@ owner: omega
 requires:
   - host
 inputs:
+  - crypto.lock
   - Makefile
   - mk/one-layer-acceptance.mk
   - tests/one_layer/

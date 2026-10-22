@@ -8,6 +8,7 @@ requires:
   - aarch64
   - bare_metal
 inputs:
+  - crypto.lock
   - Makefile
   - mk/
   - src/

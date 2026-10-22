@@ -2,6 +2,12 @@ CC ?= gcc
 .DEFAULT_GOAL := all
 PHYSICS_DIR ?= ../physics
 OUT_DIR ?= build
+# Modules pinned by lock files (L396, ADR 0039): crypto.lock puts the pinned aien-crypto files at their
+# old src/ paths before any make fragment reads them; tools/modules/pin.sh proves the bytes.
+PIN_CRYPTO := $(shell tools/modules/pin.sh ensure crypto >&2 && echo ok)
+ifneq ($(PIN_CRYPTO),ok)
+$(error crypto.lock: the pinned aien-crypto files could not be written or proven (tools/modules/pin.sh ensure crypto))
+endif
 -include mk/*.mk
 PHYSICS_LOCK_CHECK ?= 1
 

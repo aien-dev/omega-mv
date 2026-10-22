@@ -6,6 +6,7 @@ owner: omega
 requires:
   - gb10
 inputs:
+  - crypto.lock
   - Makefile
   - mk/
   - src/

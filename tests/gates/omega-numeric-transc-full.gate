@@ -8,6 +8,7 @@ requires:
   - host
   - operator
 inputs:
+  - crypto.lock
   - Makefile
   - mk/
   - tests/test_omega_transc.c

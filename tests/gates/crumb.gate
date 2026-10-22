@@ -9,6 +9,7 @@ owner: omega
 requires:
   - host
 inputs:
+  - crypto.lock
   - .crumb
   - crumb.lock
   - tests/gates/

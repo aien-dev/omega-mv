@@ -6,6 +6,7 @@ owner: omega
 requires:
   - host
 inputs:
+  - crypto.lock
   - Makefile
   - mk/
   - src/polyglot/
