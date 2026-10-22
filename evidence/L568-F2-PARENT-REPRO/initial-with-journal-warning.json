@@ -1,0 +1,66 @@
+{
+  "source": "7177ad74cfb5215fa478c270f198af4e07cb33c5",
+  "binary_sha256": "6617b4be6cd63bd639bfd7a21767c205af3b47388a728d8de574cce37d8db0fa",
+  "rows": [
+    {
+      "mode": "command",
+      "engine": "native",
+      "bash_exit": 2,
+      "bash_stdout": "",
+      "candidate_exit": 1,
+      "candidate_stdout": "",
+      "candidate_stderr": "osh: effect journal unavailable (state directory /home/drakestapleton/workspace/targets/L568-parent-F2 must be owned by you with mode 0700 (found mode 0775); refusing it, fix it with chmod 700): every command that starts a program or writes a file will be refused\nosh: exit: too many arguments\n",
+      "matches_bash": false
+    },
+    {
+      "mode": "command",
+      "engine": "interp",
+      "bash_exit": 2,
+      "bash_stdout": "",
+      "candidate_exit": 1,
+      "candidate_stdout": "",
+      "candidate_stderr": "osh: effect journal unavailable (state directory /home/drakestapleton/workspace/targets/L568-parent-F2 must be owned by you with mode 0700 (found mode 0775); refusing it, fix it with chmod 700): every command that starts a program or writes a file will be refused\nosh: exit: too many arguments\n",
+      "matches_bash": false
+    },
+    {
+      "mode": "script",
+      "engine": "native",
+      "bash_exit": 2,
+      "bash_stdout": "",
+      "candidate_exit": 0,
+      "candidate_stdout": "tail\n",
+      "candidate_stderr": "osh: effect journal unavailable (state directory /home/drakestapleton/workspace/targets/L568-parent-F2 must be owned by you with mode 0700 (found mode 0775); refusing it, fix it with chmod 700): every command that starts a program or writes a file will be refused\nosh: exit: too many arguments\n",
+      "matches_bash": false
+    },
+    {
+      "mode": "script",
+      "engine": "interp",
+      "bash_exit": 2,
+      "bash_stdout": "",
+      "candidate_exit": 0,
+      "candidate_stdout": "tail\n",
+      "candidate_stderr": "osh: effect journal unavailable (state directory /home/drakestapleton/workspace/targets/L568-parent-F2 must be owned by you with mode 0700 (found mode 0775); refusing it, fix it with chmod 700): every command that starts a program or writes a file will be refused\nosh: exit: too many arguments\n",
+      "matches_bash": false
+    },
+    {
+      "mode": "stdin",
+      "engine": "native",
+      "bash_exit": 2,
+      "bash_stdout": "",
+      "candidate_exit": 0,
+      "candidate_stdout": "tail\n",
+      "candidate_stderr": "osh: effect journal unavailable (state directory /home/drakestapleton/workspace/targets/L568-parent-F2 must be owned by you with mode 0700 (found mode 0775); refusing it, fix it with chmod 700): every command that starts a program or writes a file will be refused\nosh: exit: too many arguments\n",
+      "matches_bash": false
+    },
+    {
+      "mode": "stdin",
+      "engine": "interp",
+      "bash_exit": 2,
+      "bash_stdout": "",
+      "candidate_exit": 0,
+      "candidate_stdout": "tail\n",
+      "candidate_stderr": "osh: effect journal unavailable (state directory /home/drakestapleton/workspace/targets/L568-parent-F2 must be owned by you with mode 0700 (found mode 0775); refusing it, fix it with chmod 700): every command that starts a program or writes a file will be refused\nosh: exit: too many arguments\n",
+      "matches_bash": false
+    }
+  ]
+}
