@@ -146,6 +146,9 @@ case "$step" in
     ;;
   numeric2)           make $NOPHYS test-numeric-reduce-cpu test-divsqrt-host ;;
   tensor)             make $NOPHYS test-tensor; make $NOPHYS test-tensor-store; make $NOPHYS test-m20-receipt; make $NOPHYS test-tensor-mutations ;;
+  atomf32-probe-host) # host-suites-2.yml gpu-engine job, "f32 global atomic add probe in the warp simulator" step:
+                      # physics-src at physics.lock; host, no device (the chip run is by hand)
+    physics_pin; make test-atomf32-probe-host ;;
   # host-suites-3.yml
   numeric-lifecycle)  make $NOPHYS test-numeric-lifecycle ;;
   numeric-transc-digest)
