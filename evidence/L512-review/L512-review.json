@@ -1,0 +1,121 @@
+{
+  "ledger": "L512",
+  "date": "2026-10-22",
+  "branches": [
+    {
+      "branch": "trace",
+      "sha": "ed6ddfb485dd8401e770ad0750713fa007122670",
+      "issues": [
+        607,
+        608,
+        609,
+        610,
+        611,
+        612
+      ],
+      "disposition": "HOLD",
+      "finding_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "gates": [
+        "native callback NOT_RUN",
+        "hardware/training/browser/cross-project NOT_RUN"
+      ]
+    },
+    {
+      "branch": "locality",
+      "sha": "0e7dbb14f7877f9d861f173fbbde8c3e1db1d9e8",
+      "issues": [
+        602,
+        603,
+        604,
+        605,
+        606
+      ],
+      "disposition": "HOLD",
+      "finding_ids": [],
+      "coverage": "Historical source lock and host recurrence checked; no new bounded host finding",
+      "gates": [
+        "current model and chip NOT_RUN",
+        "fresh fusion replay BUILD_FAIL owned L513"
+      ]
+    },
+    {
+      "branch": "exploration",
+      "sha": "4960b1a07a5713c2eed9df53ad6c90103d1c4ea2",
+      "issues": [
+        600
+      ],
+      "disposition": "HOLD",
+      "finding_ids": [
+        "E1"
+      ],
+      "scientific_verdict": "FAIL",
+      "gates": [
+        "physical/model NOT_RUN",
+        "energy UNMEASURED"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "T1",
+      "severity": "HIGH",
+      "branch": "trace",
+      "file": "tools/trace/share.mjs",
+      "lines": [
+        18,
+        29
+      ],
+      "impact": "Spans disclose unselected event metadata while disclosure lists only selected metric fields",
+      "repro": "trace-adversarial.log",
+      "fix": "Explicit mandatory metadata disclosure or separate allowlist controls",
+      "sha": "ed6ddfb485dd8401e770ad0750713fa007122670"
+    },
+    {
+      "id": "T2",
+      "severity": "HIGH",
+      "branch": "trace",
+      "file": "tools/trace/archive.mjs",
+      "lines": [
+        42,
+        52
+      ],
+      "impact": "Stale writer lock produces PASS and permits package despite unknown crash loss",
+      "repro": "trace-adversarial.log",
+      "fix": "Inconclusive unclean session and recovery disclosure",
+      "sha": "ed6ddfb485dd8401e770ad0750713fa007122670"
+    },
+    {
+      "id": "T3",
+      "severity": "MEDIUM",
+      "branch": "trace",
+      "file": "tools/trace/archive.mjs",
+      "lines": [
+        49,
+        87
+      ],
+      "impact": "Tombstoned segment can remain on disk after interrupted purge without reported problem",
+      "repro": "trace-adversarial.log",
+      "fix": "Detect/finalize or report residual tombstoned segment",
+      "sha": "ed6ddfb485dd8401e770ad0750713fa007122670"
+    },
+    {
+      "id": "E1",
+      "severity": "MEDIUM",
+      "branch": "exploration",
+      "file": "tests/research/ex600/driver.c",
+      "lines": [
+        268,
+        305
+      ],
+      "impact": "Budget-exhausted unvisited better nodes counted as false pruning",
+      "repro": "exploration-independent.log",
+      "fix": "Separate policy pruning from budget-unexplored nodes",
+      "sha": "4960b1a07a5713c2eed9df53ad6c90103d1c4ea2"
+    }
+  ],
+  "evidence_root": "/home/drakestapleton/workspace/targets/L512-review"
+}
