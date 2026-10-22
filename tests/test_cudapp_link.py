@@ -25,7 +25,7 @@ def fixture(base):
     return omega,cudapp
 
 def main():
-    cases=['valid','missing-checkout','wrong-pin','disabled-lock','dirty-source','dirty-buildfile','shadow-copy','unmapped-gpu','unsafe-map','source-symlink']
+    cases=['valid','missing-checkout','wrong-pin','disabled-lock','dirty-source','dirty-buildfile','ignored-source','malformed-pin','shadow-copy','unmapped-gpu','unsafe-map','source-symlink']
     checks=0
     for case in cases:
         with tempfile.TemporaryDirectory(prefix='canonical-',dir=HOME) as temp:
@@ -37,6 +37,17 @@ def main():
             elif case=='disabled-lock': env['CUDAPP_LOCK_CHECK']='0'
             elif case=='dirty-source': (cudapp/'src/omega_gpu_fixture.c').write_text('int divergent;\n')
             elif case=='dirty-buildfile': (cudapp/'Makefile').write_text('all:\n\tfalse\n')
+            elif case=='malformed-pin':
+                pin=(omega/'cudapp.lock').read_text().strip()
+                (omega/'cudapp.lock').write_text(pin[:20]+' '+pin[20:]+'\n')
+            elif case=='ignored-source':
+                result=command('git','rm','--cached','src/omega_gpu_fixture.c',cwd=cudapp)
+                assert result.returncode==0,result.stderr
+                (cudapp/'.gitignore').write_text('/src/omega_gpu_fixture.c\n')
+                assert command('git','add','.gitignore',cwd=cudapp).returncode==0
+                result=command('git','-c','user.name=Test','-c','user.email=test@invalid','commit','-qm','ignored source',cwd=cudapp)
+                assert result.returncode==0,result.stderr
+                (omega/'cudapp.lock').write_text(command('git','rev-parse','HEAD',cwd=cudapp).stdout.strip()+'\n')
             elif case=='shadow-copy': (omega/'src/omega_gpu_fixture.c').write_text('int shadow;\n')
             elif case=='unmapped-gpu': (omega/'src/omega_gpu_hidden.c').write_text('int hidden;\n')
             elif case=='unsafe-map': (omega/'cudapp.files').write_text('../escape\n')

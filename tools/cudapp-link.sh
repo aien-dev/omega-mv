@@ -9,7 +9,7 @@ case $dir in /*) ;; *) dir=$root/$dir ;; esac
 fail() { printf 'cudapp-link: %s\n' "$*" >&2; exit 1; }
 [ "${CUDAPP_LOCK_CHECK:-1}" = 1 ] || fail 'CUDAPP_LOCK_CHECK must be 1 for canonical builds'
 [ -f "$root/cudapp.lock" ] && [ -f "$root/cudapp.files" ] || fail 'missing cudapp.lock or cudapp.files'
-want=$(tr -d '[:space:]' < "$root/cudapp.lock")
+want=$(cat "$root/cudapp.lock")
 [ "${#want}" = 40 ] || fail 'cudapp.lock must contain a full 40-hex commit'
 case $want in *[!0-9a-f]*) fail 'cudapp.lock must contain a lowercase hex commit';; esac
 [ -d "$dir/src" ] || fail "missing CUDApp checkout at $dir; prepare the pinned dependency explicitly"
@@ -24,6 +24,7 @@ while IFS= read -r p || [ -n "$p" ]; do
     case $p in ''|\#*) continue;; esac
     case $p in /*|../*|*/../*|*/..|./*|*/./*|*[!A-Za-z0-9_./-]*) fail "unsafe mapped path: $p";; esac
     [ -f "$dir/$p" ] && [ ! -L "$dir/$p" ] || fail "mapped source is missing or a symlink: $p"
+    git -C "$dir" ls-files --error-unmatch -- "$p" >/dev/null 2>&1 || fail "mapped source is not committed: $p"
     resolved=$(realpath "$dir/$p")
     case $resolved in "$dir"/*) ;; *) fail "mapped source escapes CUDApp: $p";; esac
     dirty=$(git -C "$dir" status --porcelain --untracked-files=all -- "$p")
