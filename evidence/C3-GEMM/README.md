@@ -12,7 +12,7 @@ separate check shows that model stays within one part in a million of the exact 
 | Log | What it checks | Result |
 |---|---|---|
 | 01-host-only | bad calls refused, tile shapes past the register budget refused; every kernel (both types, five tile shapes, each planted fault) through our code generator and encoder; the model against exact double-precision sums | PASS, 136 checks |
-| 02-sim | the real kernels in the warp simulator (tensor-core ops computed with the chip models): ten shapes over every edge, all four layouts, three tile shapes, both types, every output compared; three planted faults (a dropped k step, no zeros past the edges, swapped columns) each caught on all 4,095 outputs | PASS, 146 checks |
+| 02-sim | the real kernels in the warp simulator (tensor-core ops computed with the chip models): ten shapes over every edge, all four layouts, three tile shapes, both types, every output compared; three planted faults (a dropped k step, no zeros past the edges, swapped columns) each caught on all 4,095 outputs | PASS, 154 checks |
 | (next) chip | 208 shapes up to 8192, both types, all four layouts; speed against 115.36 TFLOPS (BF16) and 237.52 TFLOPS (FP8) | waiting for a chip window |
 
 Command: `make test-gpu-gemm` (host and simulator). The chip run is `build/gpu_gemm_test` with no flag, under the GB10 lock.
