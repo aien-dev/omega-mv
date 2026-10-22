@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+compile=0
+for argument in "$@"; do [ "$argument" != '-c' ] || compile=1; done
+# Makefile compiler discovery (for example -dumpmachine) is not a compile.
+[ "$compile" = 1 ] || exec cc "$@"
+source_file=; target_file=
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -c) shift; source_file=$1;;
+        -o) shift; target_file=$1;;
+    esac
+    shift
+done
+[ -n "$source_file" ] && [ -n "$target_file" ]
+printf '%s\n' "$(realpath "$source_file")" >> "$L519_COMPILE_LOG"
+printf 'SYNTHETIC recipe marker, not an object file\n%s\n' "$(realpath "$source_file")" > "$target_file"

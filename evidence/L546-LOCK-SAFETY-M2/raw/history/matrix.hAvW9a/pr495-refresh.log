@@ -1,0 +1,10 @@
+{"root":"/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/history/matrix.hAvW9a/headers.kM9eP1","mode":"refresh","makefile":"/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/history/matrix.hAvW9a/pr495.Makefile","makefile_sha256":"d53730d0eddb1da9d568a010db0bafd9f8d5eab3407ae15007bac66d14aa0af8"}
+{"verdict":"PASS","name":"initial_real_rule_header_consumer"}
+{"verdict":"PASS","name":"valid_cache_hit"}
+{"verdict":"PASS","name":"refresh_candidate_private_before_rename"}
+{"verdict":"PASS","name":"overlapping_refresh_b_published"}
+{"verdict":"PASS","name":"complete_unchanged_stamp"}
+{"verdict":"PASS","name":"refresh_rebuilds_matching_output"}
+{"verdict":"PASS","name":"concurrent_refresh_preserves_cache"}
+{"verdict":"PASS","name":"no_temporary_stamp_debris"}
+PHYSICS_HEADER_IDENTITY_PASS (structural host only; driver/chip NOT_RUN)

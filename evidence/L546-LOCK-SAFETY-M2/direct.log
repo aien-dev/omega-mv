@@ -1,0 +1,12 @@
+FIXTURE_ROOT=/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/direct/run.Bpf9PH
+MAKEFILE_SHA256=d4ffa96a1c87acf67c35d27d3012f256ae1d77dd2dcd36256445976134da5a7b
+PASS initial_build: compile_recipes=2
+PASS unchanged_no_rebuild: compile_recipes=2
+PASS changed_directory_older_sources: compile_recipes=4
+PASS changed_revision_older_sources: compile_recipes=6
+PASS same_resolved_directory_no_rebuild: compile_recipes=6
+PASS dirty_content_older_timestamp: compile_recipes=8
+PASS unchanged_dirty_no_rebuild: compile_recipes=8
+PASS switch_back_rebuilds: compile_recipes=10
+PASS missing_path_no_compilation: compile_recipes=10
+PHYSICS_BUILD_IDENTITY_PASS (recipe invalidation only; driver/chip NOT_RUN)

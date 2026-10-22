@@ -1,0 +1,15 @@
+{
+  "args": [
+    "sh",
+    "/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/production.sh",
+    "/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/file-safety.2WdKGo/direct-dangling/build",
+    "sh",
+    "/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/file-safety.2WdKGo/direct-dangling/command.sh",
+    "/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/file-safety.2WdKGo/direct-dangling/executed"
+  ],
+  "status": 2,
+  "signal": null,
+  "error": null,
+  "stdout": "",
+  "stderr": "unsafe build lock: /home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/file-safety.2WdKGo/direct-dangling/build.omega-build.lock\n"
+}

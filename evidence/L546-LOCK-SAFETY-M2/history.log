@@ -1,0 +1,13 @@
+{"name":"baseline","ref":"85d8343fa04647b198e3ddda00ad8e448837f9ca","sha256":"ba35e261f727ddc4358784d6d84c18eb32e814843fcceb0563ba2a8a34db98bb"}
+{"name":"pr546","ref":"8a4f15a6abedd3c21c17bf2f7f033d94fbab57ea","sha256":"85f154610350ed3cf24f1705a08da774985d89dd5c8d43a5bf3b61b8f29b1066"}
+{"name":"pr495","ref":"a1896dcf68a899fe58ffbc32559fd4b3fa5bd4b3","sha256":"d53730d0eddb1da9d568a010db0bafd9f8d5eab3407ae15007bac66d14aa0af8"}
+{"label":"baseline-serial","exit":1,"expected_failure":"directory_switch_older_header","actual_failure":"directory_switch_older_header","pass":true}
+{"label":"pr546-serial","exit":1,"expected_failure":"directory_switch_older_header","actual_failure":"directory_switch_older_header","pass":true}
+{"label":"pr495-serial","exit":0,"expected_failure":null,"actual_failure":null,"pass":true}
+{"label":"pr495-refresh","exit":0,"expected_failure":null,"actual_failure":null,"pass":true}
+{"label":"pr495-concurrent","exit":1,"expected_failure":"no_mismatched_output_accepted_as_current","actual_failure":"no_mismatched_output_accepted_as_current","pass":true}
+{"label":"no-header-serial","exit":1,"expected_failure":"directory_switch_older_header","actual_failure":"directory_switch_older_header","pass":true}
+{"label":"no-diff-serial","exit":1,"expected_failure":"dirty_header_older_mtime","actual_failure":"dirty_header_older_mtime","pass":true}
+{"label":"always-write-serial","exit":1,"expected_failure":"valid_cache_hit","actual_failure":"valid_cache_hit","pass":true}
+{"label":"incomplete-stamp-refresh","exit":1,"expected_failure":"complete_unchanged_stamp","actual_failure":"complete_unchanged_stamp","pass":true}
+{"output":"/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/history/matrix.hAvW9a","pass":true,"candidate_concurrency":"FAIL_REPRODUCED_NO_PRODUCTION_FIX","driver_chip":"NOT_RUN"}

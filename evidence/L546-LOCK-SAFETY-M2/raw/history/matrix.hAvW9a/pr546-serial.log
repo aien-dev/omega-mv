@@ -1,0 +1,5 @@
+{"root":"/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/history/matrix.hAvW9a/headers.whaiEk","mode":"serial","makefile":"/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/history/matrix.hAvW9a/pr546.Makefile","makefile_sha256":"85f154610350ed3cf24f1705a08da774985d89dd5c8d43a5bf3b61b8f29b1066"}
+{"verdict":"PASS","name":"initial_real_rule_header_consumer"}
+{"verdict":"PASS","name":"valid_cache_hit"}
+{"verdict":"FAIL","name":"directory_switch_older_header"}
+FAIL directory_switch_older_header

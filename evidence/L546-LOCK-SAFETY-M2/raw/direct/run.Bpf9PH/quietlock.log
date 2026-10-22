@@ -1,0 +1,2 @@
+mkdir -p /home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/direct/run.Bpf9PH/objects/
+cc -std=gnu11 -Wall -Wextra -Werror -O2 -D_GNU_SOURCE -o /home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/direct/run.Bpf9PH/objects/quietlock.tmp.$$ tools/quietlock/quietlock.c && mv -f /home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/direct/run.Bpf9PH/objects/quietlock.tmp.$$ /home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/direct/run.Bpf9PH/objects/quietlock
