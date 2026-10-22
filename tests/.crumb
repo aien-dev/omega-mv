@@ -133,8 +133,8 @@
           "purpose": "Directory tests/canonicalization. Purpose not yet described by a human."
         },
         {
-          "digest": "f041b7daf38c51e8db72834bb764cef7741637981223039d89731a30aa91e224",
-          "last_commit": "1edf41a5",
+          "digest": "179187070ab5e4644283f4eb42d557dae9db1267dedce7276e1d7c9c26cdd349",
+          "last_commit": "54affd3a",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
         },
@@ -197,12 +197,6 @@
           "last_commit": "40d1ea37",
           "name": "numeric_native",
           "purpose": "Simulated M16 driver for numeric resource-lifecycle tests. No device execution or numeric parity"
-        },
-        {
-          "digest": "f3085ce1facdcdb22bfedc85de659dd5e512aa7b59cd8103666c24a4456681c3",
-          "last_commit": "6d8d92ad",
-          "name": "osh",
-          "purpose": "osh lexer host driver, vendored aien-protocols PR#16 draft vectors (5ae5292)"
         },
         {
           "digest": "a4d320b3203650a28c43ea954957d8902d1cc25cbdc8aecd15628c01a92f68f8",
@@ -295,15 +289,15 @@
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:ddc3618190458bc5073e3bee67ffccc68a2ee9f065f2cb0d86545386a29fddf8",
-      "compiled_at": "2026-10-16T19:04:20Z",
+      "children_root": "sha256:2b5616a776cf30bc3629f5288a84dfe5c7f56577b2ed8f69cbca2eeb74ecee50",
+      "compiled_at": "2026-10-22T00:59:41Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:4eb9d4d76234448c0ed691f0aeb9c90d785f8a47b1b1291d728bbe3e1509dc10",
+      "digest": "sha256:ce63c69b9350f157e85a54b03b6a3471caa77b9773ce192286d0f1b26d20a566",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1270,
-      "generated_at_commit": "88e24bdd57b27817d030d0ad95f62c3f3eacf426",
-      "source_tree": "sha256:e6c4f0021d383ba2e59da0d85d06a0b98170f6d188289c891b5745200548e6fc"
+      "files": 1182,
+      "generated_at_commit": "54affd3a9febf813cc542de79fadd8a259274f0c",
+      "source_tree": "sha256:a4fc8fe7a67e3c93848d1dd6c381b2bd27f121d44378d014bdc558acadc709d6"
     },
     "owner_lane": "",
     "provenance": {
