@@ -90,6 +90,12 @@ case "$step" in
     grep -E 'TOTAL GATES: ([0-9]+) \| PASSED: \1 \| FAILED: 0' build/base.log
     ! grep -qE 'FAILED: [1-9]|\[FAIL\]|\(FAIL\)' build/base.log
     ;;
+  gpu-tgemm)          # pr-smoke.yml smoke job, "Training GEMM host proofs" step: physics-src at physics.lock;
+                      # budgets and warp simulator, no GPU
+    physics_pin; set -o pipefail; mkdir -p build
+    make test-gpu-tgemm | tee build/tgemm.log
+    test "$(grep -c '^GPU_TGEMM: PASS' build/tgemm.log)" = 2
+    ;;
   language)           # pr-smoke.yml and host-suites-3.yml (same command)
     set -o pipefail; mkdir -p build
     make $NOPHYS test-language | tee build/lang.log
