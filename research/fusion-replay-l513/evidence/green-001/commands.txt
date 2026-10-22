@@ -1,0 +1,12 @@
+source_commit=b260b3a4873f56ef4e3f8ea850fef0c19fdca21c
+source_tree=287f2ca8caa85f09374458b64758e3e40ab3fbf4
+physics_commit=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
+cc=/usr/bin/cc
+cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+replay_compile=/usr/bin/cc -std=gnu11 -D_GNU_SOURCE -O2 -Wall -Wextra -Werror -ffp-contract=off -ffunction-sections -fdata-sections -Wl,--gc-sections -I/tmp/omega-l513-green.wtlUCh/export -I/tmp/omega-l513-green.wtlUCh/export/src -I/tmp/omega-l513-green.wtlUCh/export/tests -o /tmp/omega-l513-green.wtlUCh/fusion_replay /tmp/omega-l513-green.wtlUCh/export/fusion_replay.c /tmp/omega-l513-green.wtlUCh/export/src/omega_blackwell_codegen_moe.c /tmp/omega-l513-green.wtlUCh/export/src/omega_blackwell_codegen.c /tmp/omega-l513-green.wtlUCh/export/src/omega_blackwell_encoder.c /tmp/omega-l513-green.wtlUCh/export/src/omega_gpu_fp8_pack.c /tmp/omega-l513-green.wtlUCh/export/src/omega_blackwell_matmul.c /tmp/omega-l513-green.wtlUCh/export/src/sha256.c -lm
+full_target=quiet-build timeout 300 make -C /tmp/omega-l513-green.wtlUCh/export -j2 PHYSICS_DIR=/home/drakestapleton/workspace/l182-pins/physics OUT_DIR=out test-gpu-fp8
+replay_run=quiet-build timeout 30 /tmp/omega-l513-green.wtlUCh/fusion_replay
+negative_control=one-ULP output corruption in a separate scratch copy; strict exact-output check must fail
+recorded_utc=2026-10-22T19:29:19Z
+branch=issues/fusion-replay-buildfix-20261022
+base=0e7dbb14f7877f9d861f173fbbde8c3e1db1d9e8

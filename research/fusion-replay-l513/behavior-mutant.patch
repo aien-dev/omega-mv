@@ -1,0 +1,10 @@
+--- tests/gpu_fp8_api_test.c
++++ tests/gpu_fp8_api_test.c
+@@ -346,6 +346,7 @@ static void sim_fused(void) {
+         for (size_t i = 0; i < G * P; i++) act[i] = -999.0f;
+         uint32_t sb; memcpy(&sb, &scale, 4);
+         rc = sim_raw(&fs, &W, G, ids, x, act, G * P, P * 4, P, sb, msg, sizeof msg);
++        if (rc == 0) act[0] = nextafterf(act[0], INFINITY); /* one ULP corruption control */
+         size_t un = 0; for (size_t i = 0; i < G * P; i++) if (act[i] == -999.0f) un++;
+         CHECK(rc == 0 && un == 0, "sim fused: SWIGLU epilogue kernel ran, every act word written (%s, %zu unwritten)", rc ? msg : "ok", un);
+         CHECK(rc == 0 && memcmp(act, ref, G * P * 4) == 0, "sim fused: SWIGLU epilogue BIT-IDENTICAL to plain gate_up + the SWIGLU sequence (%u x %u words)", G, P);

@@ -1,0 +1,2 @@
+FAIL: sim fused: SWIGLU epilogue BIT-IDENTICAL to plain gate_up + the SWIGLU sequence (2 x 768 words)
+L137 original fusion simulator: checks=8 failed=1

@@ -1,0 +1,108 @@
+make: Entering directory '/tmp/omega-l513-red.VvQ685/export'
+make: *** No rule to make target 'test-gpu-fp8'.  Stop.
+make: Leaving directory '/tmp/omega-l513-red.VvQ685/export'
+make: Entering directory '/tmp/omega-l513-red.4TBdgc/export'
+cc1: fatal error: tools/quietlock/quietlock.c: No such file or directory
+compilation terminated.
+quietlock: NOTICE the quietlock tool could not be built; no quiet flag exists, continuing
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'argus.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+head: cannot open 'aienos.lock' for reading: No such file or directory
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/sha256.c -o /tmp/omega-l513-red.4TBdgc/out/sha256.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_canonical.c -o /tmp/omega-l513-red.4TBdgc/out/omega_canonical.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_validate.c -o /tmp/omega-l513-red.4TBdgc/out/omega_validate.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_core.c -o /tmp/omega-l513-red.4TBdgc/out/omega_core.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_codec.c -o /tmp/omega-l513-red.4TBdgc/out/omega_codec.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/aarch64_encoder.c -o /tmp/omega-l513-red.4TBdgc/out/aarch64_encoder.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/aarch64_decoder.c -o /tmp/omega-l513-red.4TBdgc/out/aarch64_decoder.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_realize.c -o /tmp/omega-l513-red.4TBdgc/out/omega_realize.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_exec.c -o /tmp/omega-l513-red.4TBdgc/out/omega_exec.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_self_host.c -o /tmp/omega-l513-red.4TBdgc/out/omega_self_host.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_verify.c -o /tmp/omega-l513-red.4TBdgc/out/omega_verify.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_program.c -o /tmp/omega-l513-red.4TBdgc/out/omega_program.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_synthesis.c -o /tmp/omega-l513-red.4TBdgc/out/omega_synthesis.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_library.c -o /tmp/omega-l513-red.4TBdgc/out/omega_library.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_discovery.c -o /tmp/omega-l513-red.4TBdgc/out/omega_discovery.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_machine.c -o /tmp/omega-l513-red.4TBdgc/out/omega_machine.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_realize_synth.c -o /tmp/omega-l513-red.4TBdgc/out/omega_realize_synth.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_matvec.c -o /tmp/omega-l513-red.4TBdgc/out/omega_matvec.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_accelerator.c -o /tmp/omega-l513-red.4TBdgc/out/omega_accelerator.o
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I/nonexistent/m16 -I/nonexistent/nvrm -I/nonexistent/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I/nonexistent/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I/nonexistent/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c src/omega_accelerator_world.c -o /tmp/omega-l513-red.4TBdgc/out/omega_accelerator_world.o
+In file included from src/omega_accelerator_world.c:1:
+src/omega_accelerator_world.h:8:10: fatal error: m16_native.h: No such file or directory
+    8 | #include "m16_native.h"
+      |          ^~~~~~~~~~~~~~
+compilation terminated.
+make: *** [Makefile:102: /tmp/omega-l513-red.4TBdgc/out/omega_accelerator_world.o] Error 1
+make: *** Waiting for unfinished jobs....
+make: Leaving directory '/tmp/omega-l513-red.4TBdgc/export'

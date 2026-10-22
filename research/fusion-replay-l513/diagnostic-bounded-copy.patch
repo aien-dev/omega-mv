@@ -1,0 +1,20 @@
+--- tests/gpu_fp8_api_test.c
++++ tests/gpu_fp8_api_test.c
+@@ -322,6 +322,16 @@ static int sim_raw(const OmegaFp8GemvSpec *spec, const Weights *W, uint32_t groups, const uint32_t *ids, const float *x, float *yd,
+     s.ranges[4].lo = (uintptr_t)tab; s.ranges[4].hi = (uintptr_t)tab + 16 * (size_t)groups;
+     int err = ws_run(&s, grid_x, groups);
+-    if (err) snprintf(msg, msglen, "%s", s.msg);
++    if (err && msglen != 0) {
++        size_t copied = 0;
++        const size_t source_limit = sizeof s.msg - 1;
++        const size_t destination_limit = msglen - 1;
++        const size_t limit = source_limit < destination_limit ? source_limit : destination_limit;
++        while (copied < limit && s.msg[copied] != '\0') {
++            msg[copied] = s.msg[copied];
++            copied++;
++        }
++        msg[copied] = '\0';
++    }
+     free(sf); free(xf); free(tab);
+     return err ? -1 : 0;
+ }
