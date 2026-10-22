@@ -1,0 +1,6 @@
+ad31e10b6cc09f4c06354337d5c04b13b42a44ea
+# aien-dev/omega-evidence: the evidence shelf, every receipt omega held at a8ffd2b9 (L396, ADR 0039),
+# history kept. Receipts that omega's own code, build or gates still read stay in evidence/ here; the
+# rest moved and are listed with their bytes in evidence/SHELF/moved-*.tsv. An old receipt is addressed
+# as shelf commit + path; tools/modules/pin.sh show evidence <path> prints it.
+# repo: git@github.com:aien-dev/omega-evidence.git

@@ -238,7 +238,18 @@ case "$step" in
   evidence-immutable)
     base="${AIEN_BASE_REF:-origin/main}"
     obs base_ref "\"$(git rev-parse "$base")\""
-    changed="$(git diff --name-status --diff-filter=MDRT "$base...HEAD" -- evidence/)"
+    # The one allowed deletion is a move to the evidence shelf (evidence.lock, L396): recorded in
+    # evidence/SHELF/moved-*.tsv with the base bytes, and the pinned shelf commit holds those bytes.
+    changed="$(git diff --no-renames --name-status --diff-filter=MRT "$base...HEAD" -- evidence/)"
+    deleted="$(git diff --no-renames --name-only --diff-filter=D "$base...HEAD" -- evidence/)"
+    if [ -n "$deleted" ]; then
+      moved="$(tools/modules/evidence_moves.sh "$base" HEAD)" || changed="$changed${changed:+$'\n'}$(printf '%s\n' "$moved" | grep '^D')"
+      printf '%s\n' "$moved" | tail -1
+      if ! tools/modules/pin.sh moved evidence "$base" evidence; then
+        changed="$changed${changed:+$'\n'}D	evidence/ (deleted files not proven on the evidence shelf at evidence.lock)"
+      fi
+      obs evidence_moved_to_shelf "$(printf '%s\n' "$deleted" | grep -c .)"
+    fi
     if [ -n "$changed" ]; then
       echo "These existing evidence files would be changed:"; echo "$changed"
       echo "Add a new, content-addressed file instead of rewriting reviewed evidence."
