@@ -2586,6 +2586,16 @@ test-gpu-cmdlist: $(GPU_CMDLIST_TEST)
 	./$(GPU_CMDLIST_TEST) --host-only
 	./$(GPU_CMDLIST_TEST) --sim
 
+# C4 streams (docs/OMEGA.md row C4): two queues of the same half-chip work side by side, an event (cmdlist wait_for)
+# between them, both with red checks. test-gpu-streams is host + warp simulator; the chip tier is "$(GPU_STREAMS_TEST)"
+# with no flag, under the GB10 lock (timings need an exclusive window).
+.PHONY: test-gpu-streams
+GPU_STREAMS_TEST = $(OUT_DIR)/gpu_streams_test
+$(GPU_STREAMS_TEST): tests/gpu_streams_test.c tests/bw_warp_sim.h src/omega_gpu_cmdlist.h src/omega_bw_em.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_streams_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-streams: $(GPU_STREAMS_TEST)
+	./$(GPU_STREAMS_TEST) --sim
+
 # OWN-30B W-L2a (2026-10-13): one decode token as one command list (omega_gpu_decode_graph). test-gpu-decode-graph is
 # host-only; the chip gate is tools/run_gpu_decode_graph_chip.sh under the GB10 lock.
 .PHONY: test-gpu-decode-graph
