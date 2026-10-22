@@ -1,0 +1,17 @@
+#!/bin/sh
+# Transport only; all parsing, typing, hashing and decisions execute in native Omega.
+set -eu
+cd "$(dirname "$0")/../.."
+[ "$#" = 1 ] || { echo BAD_COMMAND >&2; exit 64; }
+case "$1" in
+encode) mode='\001';; decode) mode='\002';; identity) mode='\003';;
+provenance) mode='\004';; replay) mode='\005';; legality) mode='\006';;
+*) echo BAD_COMMAND >&2; exit 64;;
+esac
+build=${SA_BUILD:-build/L574}
+[ -x "$build/sa" ] || { echo 'MISSING_IMPLEMENTATION: run tools/source-aware/build' >&2; exit 69; }
+tmp=$(mktemp -d)
+trap 'rm -f "$tmp/out"; rmdir "$tmp"' EXIT HUP INT TERM
+# The native entry reads through EOF and checks the bounded input before output.
+{ printf "$mode"; cat; } | "$build/sa" > "$tmp/out" || exit "$?"
+cat "$tmp/out"
