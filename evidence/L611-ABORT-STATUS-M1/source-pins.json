@@ -1,0 +1,8 @@
+{
+  "src/osh/host/osh_shell.c": "fbede40b59377b6f1988ae4151b6792b31dfcb156c80eba02d1d681aafe63620",
+  "mk/zz_osh_abort_status.mk": "74725e17f70033cf9887fba8135cd8b9f10279f669435d3bd2bac8d3ffafc868",
+  "tests/osh/e2e/exit_abort_status.mjs": "495d5839f232ba5f46e77b54c2fffd256caab6e9e26c7b42d5332cda2af37c74",
+  "tests/osh/e2e/exit_independent_601.mjs": "751262ac1b15476c6fcf024f3db117c4d0c90611b66f3d323b6055f6885c3268",
+  "tests/osh/e2e/exit_abort_status_mutants.mjs": "76883de37a10c238d774e5d270016d1b17ccebd5baf12937749af966129050fb",
+  "tests/osh/host/exit_abort_pty.py": "eec7ec96d88feeaf2b3c614a7f3cea6e46aa24411febcac0d18d6caf372d3008"
+}

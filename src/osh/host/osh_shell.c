@@ -242,7 +242,7 @@ static void refusal(OshShell *sh, uint64_t code, int syntax)
 
 /* Expand and run the parsed list. 1 stops the shell; 2 aborts this list
  * (exit with too many arguments), which also stops a -c string. */
-static int run_list(OshShell *sh)
+static int run_list(OshShell *sh, int resume_lists)
 {
     uint64_t *w = sh->w;
     w[OSH_S_LAST_STATUS] = (uint64_t)(unsigned)sh->s.last_status;
@@ -254,7 +254,13 @@ static int run_list(OshShell *sh)
         case ST_PIPE: {
             uint64_t nc = w[OSH_REQUEST + 1];
             OshResult res;
+            int prior_status = sh->s.last_status;
             osh_exec_record(&sh->s, w + OSH_REQUEST, (size_t)(OSH_REQ_HDR_CELLS + nc * OSH_CMD_CELLS), w + OSH_OUT, (size_t)w[OSH_REQUEST + 4], &res);
+            /* A discarded resumable list keeps a nonzero prior status in Bash.
+             * The request/journal still reports its count error as status 1;
+             * an exact -c source also terminates with that error, not the prior. */
+            if (resume_lists && sh->s.abort_list && prior_status != 0)
+                sh->s.last_status = prior_status;
 #ifdef OSH_DIFF_TEST_HOOKS
             if (sh->diff.on_pipeline)
                 sh->diff.on_pipeline(sh->diff.ctx, w + OSH_REQUEST, (size_t)(OSH_REQ_HDR_CELLS + nc * OSH_CMD_CELLS), w + OSH_OUT, (size_t)w[OSH_REQUEST + 4], &res);
@@ -310,7 +316,7 @@ static int run_src_loop(OshShell *sh, LineSrc *src)
             /* an empty list at end of input: nothing to run */
         } else if (st == 0) {
             sh->lists++;
-            int stop = run_list(sh);
+            int stop = run_list(sh, !src->exact_end);
             if (stop == 1 || (stop == 2 && src->exact_end))
                 return sh->s.exit_requested ? sh->s.exit_status : sh->s.last_status;
         } else {
