@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://arxiv.org/html/2205.14135v2",
+      "title": "",
+      "accessed": "2026-10-21",
+      "quotes": [
+        {
+          "text": "We propose FlashAttention , an IO-aware exact attention algorithm that uses tiling to reduce the number of memory reads/writes between GPU high bandwidth memory (HBM) and GPU on-chip SRAM.",
+          "added": "2026-10-21"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "url": "https://arxiv.org/html/2412.06464v3",
+      "title": "",
+      "accessed": "2026-10-21",
+      "quotes": [
+        {
+          "text": "Substituting these back into Eq. 3 yields a hardware-efficient chunkwise algorithm for DeltaNet that leverages matmuls, enabling tensor core based GPU optimization:",
+          "added": "2026-10-21"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "url": "https://arxiv.org/html/2501.01005v2",
+      "title": "",
+      "accessed": "2026-10-21",
+      "quotes": [
+        {
+          "text": "By merging the query-head dimension with the row dimension in the threadblock mapping, a single shared-memory load of the KV-Cache suffices for all query heads in the group, leading to better memory reuse and improved throughput for GQA operations.",
+          "added": "2026-10-21"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "url": "https://arxiv.org/html/2403.08245v2",
+      "title": "",
+      "accessed": "2026-10-21",
+      "quotes": [
+        {
+          "text": "This implementation achieves this by avoiding both padding and making excessive copies of the input.",
+          "added": "2026-10-21"
+        }
+      ]
+    }
+  ]
+}
