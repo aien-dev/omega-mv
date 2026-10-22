@@ -102,6 +102,10 @@ unset OUT_DIR
 W=$SCR/omega; mkdir -p "$W"
 cp -r "$HERE/Makefile" "$HERE/mk" "$HERE/tools" "$W/"
 cp "$HERE/physics.lock" "$W/" 2>/dev/null || true
+# crypto.lock (L396): the copy materialises the pinned aien-crypto files from the repository that
+# holds them for this checkout.
+cp "$HERE/crypto.lock" "$W/"
+PIN_CRYPTO_REPO=$(cd "$HERE" && tools/modules/pin.sh repo crypto); export PIN_CRYPTO_REPO
 echo "$GOOD" > "$W/aienos.lock"
 M() { make -s -C "$W" AIENOS_LOCK_REPO="$LK" "$@" >"$SCR/make.log" 2>&1; echo $?; }
 check "make: default cache materialized and library built" '[ "$(M build/aienos-cap/$GOOD/libaienos_capability.a)" = 0 ] && [ -f "$W/build/aienos-cap/$GOOD/libaienos_capability.a" ] && [ ! -e "$W/build/aienos-authority/$GOOD/native/capability/out" ]'
