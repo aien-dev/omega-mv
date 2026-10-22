@@ -1,3 +1,4 @@
 rewrite	change	source_lines	functions	words	sha256
 R5	first omc, om4 subset only (calls go to earlier functions only, so the value reader is one self-recursive function)	3101	123	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 R5b	names pass: a call may name any function in the unit; mutual recursion in program mode; a call cycle in function mode is error 9; a function name used as a statement is error 7	3212	125	19143	191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+R6-IR-trap	experimental scalar IR + explicit trap lowering (L524); bounded R6 checkpoint	4551	185	29096	d61d76156688320aa7f70327a34cc34901814bfbaa15e4659bc9cf13714fbf76
