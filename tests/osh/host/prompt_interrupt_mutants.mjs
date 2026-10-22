@@ -6,10 +6,11 @@ import {resolve,join} from 'node:path';
 const root=resolve(process.argv[2]??'build/L563/mutants'); mkdirSync(root,{recursive:true});
 const source=readFileSync('src/osh/host/osh_shell.c','utf8');
 const cases=[
- ['drop-handled-flag','if (g_prompt_int) { g_prompt_int = 0; result = -2; break; }','if (g_prompt_int) { g_prompt_int = 0; }',[1,2,7],b=>b.includes('progress=0')&&b.includes('stdout=[0\nAGAIN\n]')&&b.includes('wait=[72 ')],
+ ['drop-handled-flag','if (g_prompt_int) { g_prompt_int = 0; result = -2; break; }','if (g_prompt_int) { g_prompt_int = 0; }',[1,2,7,14],b=>b.includes('progress=0')&&b.includes('stdout=[0\nAGAIN\n]')&&b.includes('wait=[72 ')],
  ['unmasked-wait','sigaddset(&block, SIGINT);','sigaddset(&block, SIGUSR2);',[7],b=>b.includes('progress=0')&&b.includes('stdout=[130\nAGAIN\n]')&&b.includes('wait=[72 ')],
- ['commit-interrupted-newline','if (g_prompt_int) { g_prompt_int = 0; return -2; }','if (0) return -2;',[8],b=>b.includes('progress=1')&&b.includes('stdout=[DISCARD130\nAGAIN\n]')],
+ ['commit-interrupted-newline','if (g_prompt_int && result != -1) { g_prompt_int = 0; return -2; }','if (0) return -2;',[8],b=>b.includes('progress=1')&&b.includes('stdout=[DISCARD130\nAGAIN\n]')],
  ['hide-select-error','            result = -1;\n            break;','            result = 0;\n            break;',[4,10],b=>b.includes('status=256')&&b.includes('stdout=[AGAIN\n]')],
+ ['blocking-after-readiness','int changed = !(flags & O_NONBLOCK);','int changed = 0;',[14],b=>b.includes('progress=0')&&b.includes('stdout=[AGAIN\n]')&&b.includes('wait=[63 ')&&b.includes('rintf: command not found')],
 ];
 for(const [name,from,to,windows,verify] of cases) {
  if(source.split(from).length!==2) throw Error(`${name}: anchor not unique`);
@@ -27,4 +28,4 @@ for(const [name,from,to,windows,verify] of cases) {
  if(r.error||r.signal||r.status!==1||JSON.stringify(actual)!==JSON.stringify(expected)||!blocks.every(verify)) throw Error(`${name}: wrong behavioral verdict, no kill`);
  console.log(`PASS ${name}: compiled; ${blocks.length} exact wrong-state assertions, windows ${windows}`);
 }
-console.log('PROMPT_INTERRUPT_MUTANTS: 4 killed');
+console.log('PROMPT_INTERRUPT_MUTANTS: 5 killed');

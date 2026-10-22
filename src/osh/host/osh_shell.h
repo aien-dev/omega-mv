@@ -49,7 +49,10 @@ void osh_shell_free(OshShell *sh);
  * signal-action changes; these entry points do not provide thread isolation.
  * Interactive fd input atomically waits with the caller signal mask and
  * discards the current list on SIGINT. SIGINT blocked by the caller remains
- * blocked. Interactive fds must be below FD_SETSIZE; larger fds refuse with2.
+ * blocked. The caller must serialize access to the input open-file description;
+ * its flags temporarily include O_NONBLOCK during each read and are restored
+ * before command execution. Interactive fds must be below FD_SETSIZE; larger
+ * fds refuse with status 2.
  *
  * Run a -c string from memory: a last line with no newline is ended by end of input itself (bash -c
  * 'echo a\' prints a\). Returns the shell's exit status. */

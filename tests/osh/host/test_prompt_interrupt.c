@@ -4,11 +4,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <pty.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
+#include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -24,6 +26,11 @@ static void barrier(void)
     fired=1;
     if(raise(SIGINT)||write(notify_fd,&c,1)!=1||__real_read(release_fd,&c,1)!=1) _exit(98);
 }
+static int before_read(int fd)
+{
+    if(fd==input_fd && scenario==13 && !fired) { fired=1; errno=EAGAIN; return 1; }
+    return 0;
+}
 int __wrap_fflush(FILE *f)
 {
     int rc=__real_fflush(f);
@@ -37,18 +44,28 @@ static ssize_t after_read(int fd,ssize_t rc)
 }
 ssize_t __wrap_read(int fd,void *p,size_t n)
 {
+    if(before_read(fd)) return -1;
     return after_read(fd,__real_read(fd,p,n));
 }
 ssize_t __real___read_chk(int,void *,size_t,size_t);
 ssize_t __wrap___read_chk(int fd,void *p,size_t n,size_t cap)
 {
+    if(before_read(fd)) return -1;
     return after_read(fd,__real___read_chk(fd,p,n,cap));
 }
 int __wrap_pselect(int n,fd_set *r,fd_set *w,fd_set *e,const struct timespec *t,const sigset_t *m)
 {
     if(scenario==7 && !fired) barrier();
     if(fault_select) { int x=fault_select; fault_select=0; errno=x; return -1; }
-    return __real_pselect(n,r,w,e,t,m);
+    int rc=__real_pselect(n,r,w,e,t,m);
+    if(scenario==14 && !fired && rc>0) {
+        char c='I'; fired=1;
+        if(write(notify_fd,&c,1)!=1) _exit(98);
+        ssize_t got;
+        do { got=__real_read(release_fd,&c,1); } while(got<0 && errno==EINTR);
+        if(got!=1) _exit(98);
+    }
+    return rc;
 }
 int __wrap_sigprocmask(int how,const sigset_t *set,sigset_t *old)
 {
@@ -72,11 +89,15 @@ static void noop(int s) { (void)s; }
 static int run_case(int native,int which,int blocked)
 {
     int in[2],out[2],err[2],note[2],ack[2];
-    if(pipe(in)||pipe(out)||pipe(err)||pipe(note)||pipe(ack)) die("pipe");
+    if(which==14) {
+        if(openpty(&in[1],&in[0],NULL,NULL,NULL)) die("openpty");
+    } else if(pipe(in)) die("pipe");
+    if(pipe(out)||pipe(err)||pipe(note)||pipe(ack)) die("pipe");
     fflush(NULL);
     pid_t pid=fork(); if(pid<0) die("fork");
     if(!pid) {
         close(in[1]); close(out[0]); close(err[0]); close(note[0]); close(ack[1]);
+        if(which==14 && (setsid()<0 || ioctl(in[0],TIOCSCTTY,0)<0)) _exit(98);
         if(dup2(out[1],1)<0||dup2(err[1],2)<0) _exit(98);
         close(out[1]); close(err[1]);
         struct sigaction sa={0},before,after; sa.sa_handler=noop; sigemptyset(&sa.sa_mask);
@@ -87,7 +108,7 @@ static int run_case(int native,int which,int blocked)
         input_fd=in[0]; notify_fd=note[1]; release_fd=ack[0]; scenario=which;
         if(which==4) { scenario=0; fault_select=EIO; }
         if(which==5) { scenario=0; fault_mask=1; }
-        if(which>=6 && which!=7 && which!=8) scenario=0;
+        if(which>=6 && which!=7 && which!=8 && which!=13 && which!=14) scenario=0;
         if(which==6) fault_select=EINTR;
         if(which==9 && raise(SIGINT)) _exit(98);
         if(which==10) close(input_fd);
@@ -96,6 +117,8 @@ static int run_case(int native,int which,int blocked)
             if(high<0) _exit(98);
             close(input_fd); input_fd=high;
         }
+        if(which==15 && fcntl(input_fd,F_SETFL,O_NONBLOCK)) _exit(98);
+        int before_flags=fcntl(input_fd,F_GETFL);
         char *env[]={"PATH=/usr/bin:/bin","LC_ALL=C",NULL};
         OshShell sh;
         if(osh_shell_init(&sh,env,native,1,"embed",NULL,0)) _exit(98);
@@ -104,6 +127,7 @@ static int run_case(int native,int which,int blocked)
         sigaction(SIGINT,NULL,&after);
         int expected_rc=(which==4||which==5||which==10||which==11)?2:which==12?0:7;
         int ok=rc==expected_rc && equal_mask(&mask,&after_mask) && before.sa_handler==after.sa_handler;
+        if(which!=10) ok=ok&&fcntl(input_fd,F_GETFL)==before_flags;
         if(which==9) { sigset_t pending; sigpending(&pending); ok=ok&&sigismember(&pending,SIGINT)==1; }
         if(expected_rc==7) ok=ok && (native?sh.core.calls_native>0:sh.core.calls_interp>0);
         osh_shell_free(&sh);
@@ -116,12 +140,14 @@ static int run_case(int native,int which,int blocked)
         ok=ok&&rc==9; osh_shell_free(&sh);
         fflush(stdout); _exit(ok?0:1);
     }
-    close(in[0]); close(out[1]); close(err[1]); close(note[1]); close(ack[0]);
+    if(which!=14) close(in[0]);
+    close(out[1]); close(err[1]); close(note[1]); close(ack[0]);
     if(which==2) put(in[1],"printf DISCARD |\n");
     if(which==3) put(in[1],"printf DISCARD");
     if(which==8) put(in[1],"printf DISCARD\n");
+    if(which==14) put(in[1],"X\n");
     int progress=1; char prefix[4096]="", wait_state[256]="";
-    if(which<=3 || which==7 || which==8) {
+    if(which<=3 || which==7 || which==8 || which==14) {
         struct pollfd p={note[0],POLLIN,0}; char c;
         if(poll(&p,1,10000)!=1||read(note[0],&c,1)!=1||c!='I') {
             close(in[1]); close(ack[1]); char diagnostic[8192];
@@ -129,6 +155,10 @@ static int run_case(int native,int which,int blocked)
             fprintf(stderr,"barrier case=%d backend=%d (not a behavioral verdict): %s",which,native,diagnostic);
             exit(99);
         }
+        /* Reproduce terminal flush plus SIGINT synchronously, while the child
+         * is held after readiness and still masks SIGINT. Actual terminal ^C
+         * is checked independently by the hook-free PTY oracle. */
+        if(which==14 && (tcflush(in[0],TCIFLUSH)||kill(pid,SIGINT))) die("terminal flush/signal");
         put(ack[1],"G");
         /* Require a fresh prompt before supplying any next input. Old code
          * gets rescue input only after recording the wait and wrong state. */
@@ -149,10 +179,12 @@ static int run_case(int native,int which,int blocked)
         }
         put(in[1],"printf '%s\\n' \"$?\"\nexit 7\n");
     } else if(which!=10&&which!=11&&which!=12) put(in[1],"exit 7\n");
-    close(in[1]); close(ack[1]); close(note[0]);
+    if(which!=14) close(in[1]);
+    close(ack[1]); close(note[0]);
     char output[4096],errors[4096]; drain(out[0],output,sizeof output); drain(err[0],errors,sizeof errors);
     close(out[0]); close(err[0]); int st; if(waitpid(pid,&st,0)!=pid) die("waitpid");
-    const char *expected=(which<=3||which==7||which==8)?"130\nAGAIN\n":"AGAIN\n";
+    if(which==14) { close(in[1]); close(in[0]); }
+    const char *expected=(which<=3||which==7||which==8||which==14)?"130\nAGAIN\n":"AGAIN\n";
     int ok=progress&&WIFEXITED(st)&&WEXITSTATUS(st)==0&&!strcmp(output,expected);
     printf("%s window=%d native=%d blocked=%d progress=%d status=%d stdout=[%s] before=[%s] prompts=[%s] wait=[%s]\n",ok?"PASS":"FAIL",which,native,blocked,progress,st,output,prefix,errors,wait_state);
     return !ok;
@@ -170,6 +202,9 @@ int main(void)
     for(int native=0;native<2;native++) { failed+=run_case(native,6,1); total++; }
     for(int native=0;native<2;native++) for(int which=9;which<=12;which++) {
         failed+=run_case(native,which,which==9); total++;
+    }
+    if(!getenv("PROMPT_LEGACY")) for(int native=0;native<2;native++) for(int which=13;which<=15;which++) {
+        failed+=run_case(native,which,0); total++;
     }
     printf("PROMPT_INTERRUPT: %u cases, %u failed\n",total,failed);
     return failed?1:0;

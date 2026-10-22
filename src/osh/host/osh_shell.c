@@ -2,6 +2,7 @@
 #include "osh_shell.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -171,8 +172,18 @@ static int prompt_byte(int fd, uint8_t *c)
             break;
         }
         if (g_prompt_int) continue;
+        /* A terminal SIGINT can flush input after readiness was reported,
+         * even while delivery is masked. That read must never block. Restore
+         * the caller's open-file flags before running any command. */
+        int flags = fcntl(fd, F_GETFL);
+        if (flags < 0) { result = -1; break; }
+        int changed = !(flags & O_NONBLOCK);
+        if (changed && fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) { result = -1; break; }
         ssize_t n = read(fd, c, 1);
-        if (n < 0 && errno == EINTR) continue;
+        int read_errno = errno;
+        if (changed && fcntl(fd, F_SETFL, flags) != 0) { result = -1; break; }
+        errno = read_errno;
+        if (n < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
         result = n < 0 ? -1 : (int)n;
         break;
     }
@@ -180,7 +191,7 @@ static int prompt_byte(int fd, uint8_t *c)
     if (sigprocmask(SIG_SETMASK, &old, NULL) != 0) return -1;
     errno = saved_errno;
     /* A signal pending during the read is delivered by mask restoration. */
-    if (g_prompt_int) { g_prompt_int = 0; return -2; }
+    if (g_prompt_int && result != -1) { g_prompt_int = 0; return -2; }
     return result;
 }
 

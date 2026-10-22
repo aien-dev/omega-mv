@@ -3,10 +3,10 @@ OSH_INTERRUPT_SRCS = $(filter-out src/osh/host/osh_main.c,$(OSH_BIN_SRCS)) tests
 OSH_INTERRUPT_FLAGS = $(OSH_XFLAGS) -Wl,--wrap=read -Wl,--wrap=__read_chk -Wl,--wrap=fflush -Wl,--wrap=pselect -Wl,--wrap=sigprocmask
 $(OSH_DIR)/test_prompt_interrupt: $(OSH_INTERRUPT_SRCS) $(OSH_XHDRS) src/osh/host/osh_shell.h
 	@mkdir -p $(OSH_DIR)
-	$(CC) $(OSH_INTERRUPT_FLAGS) -O2 -o $@ $(OSH_INTERRUPT_SRCS)
+	$(CC) $(OSH_INTERRUPT_FLAGS) -O2 -o $@ $(OSH_INTERRUPT_SRCS) -lutil
 $(OSH_DIR)/test_prompt_interrupt_asan: $(OSH_INTERRUPT_SRCS) $(OSH_XHDRS) src/osh/host/osh_shell.h
 	@mkdir -p $(OSH_DIR)
-	$(CC) $(OSH_INTERRUPT_FLAGS) $(OSC_ASAN) -o $@ $(OSH_INTERRUPT_SRCS)
+	$(CC) $(OSH_INTERRUPT_FLAGS) $(OSC_ASAN) -o $@ $(OSH_INTERRUPT_SRCS) -lutil
 .PHONY: test-osh-prompt-interrupt
 test-osh-prompt-interrupt: $(OSH_DIR)/test_prompt_interrupt $(OSH_DIR)/test_prompt_interrupt_asan
 	$(OSH_DIR)/test_prompt_interrupt > $(OSH_DIR)/prompt-interrupt.out; rc=$$?; tail -1 $(OSH_DIR)/prompt-interrupt.out; test $$rc -eq 0
