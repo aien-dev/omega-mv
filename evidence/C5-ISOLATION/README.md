@@ -9,8 +9,11 @@ What this branch adds (on c4/streams):
   close destroys this process's channels and the grid on them, then frees and unmaps every buffer), and only then lifts
   the latch and clears the parked list. The next open is a new device. `omega_gpu_session_recoveries()` counts them;
   a command list latched before the latest recovery no longer blocks.
-- Fake-platform case TIMEOUT_RECOVER_SAME_PROCESS and three new session mutants (recover keeps the latch, recover
-  without the close, recover when not latched): each one is caught.
+- The Linux platform close now reports a driver teardown fault (it used to drop it): recover then stays latched for good
+  (the old grid may still run; the process must exit) instead of claiming success.
+- Fake-platform cases TIMEOUT_RECOVER_SAME_PROCESS, RECOVER_TEARDOWN_FAULT_STAYS_LATCHED and four new session mutants
+  (recover keeps the latch, recover
+  without the close, recover when not latched, recover ignores a teardown fault): each one is caught.
 - `tests/gpu_isolation_test.c`: the chip test (hang + recover; two processes; a hang beside a working process).
 
 Driver docs: the vendored NVIDIA headers document NVA06C_CTRL_CMD_PREEMPT ("This command preempts a channel group") but
@@ -19,8 +22,9 @@ are silent on freeing a channel group whose grid never ends (RM source not vendo
 | file | what | result |
 | --- | --- | --- |
 | 01-host-only.log | codegen + encode of the work, mutant and never-ending kernels; simulator exact, mutant caught | PASS |
-| 02-session-platform.log | the session on a fake GPU, recover case included | PASS 14/14 |
-| 03-session-mutants.log | 9 broken copies of the session, each caught | 9/9 killed |
+| 02-session-platform.log | the session on a fake GPU, both recover cases included | PASS 15/15 |
+| 03-session-mutants.log | 10 broken copies of the session, each caught | 10/10 killed |
+| 05-platform-linux.log | the Linux platform on a simulated driver | PASS 8/8 |
 | 04-never-ending-kernel.sass.txt | our disassembler: `IADD3; BRA 0x20` (branch back for ever) | as designed |
 | (chip, pending slot) | hang + recover + right values; two processes right; hang beside a working process | NOT RUN |
 
