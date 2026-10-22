@@ -7,6 +7,15 @@
 set -eu
 N=$1; REF=$2; OTH=${3:-}; D=$(dirname "$0"); W=${NFW:-/tmp/nextfuzz.$$}; mkdir -p $W
 V="fn to end if else while bound for ret exit put get len read write new global text view edit true false note neg not add sub mul div rem and or xor shl shr eq ne lt le gt ge ( ) = bool uchar ushort uint ulong byte short int long void main 0 1 -1 255 18446744073709551615 9223372036854775808 x zz abcdefghij 123456789012345678901 1x \"s\" \"q\\\\x\""
+# Seed-native helpers are built by the same seeded reference compiler.
+for tool in elfcheck byteequal diagprefix; do
+  "$REF" < "$D/../native/$tool.om" > "$W/$tool"
+  [ -s "$W/$tool" ] || exit 2
+  chmod +x "$W/$tool"
+done
+for tool in elfcheck byteequal diagprefix; do
+  "$W/elfcheck" < "$W/$tool" || exit 2
+done
 acc=0; inputs=0; bad=0; codes=""
 one() { # file -> checks it
   inputs=$((inputs + 1))
@@ -15,8 +24,9 @@ one() { # file -> checks it
   codes="$codes $ra"
   if [ -n "$OTH" ]; then
     set +e; $OTH < $1 > $W/b 2> $W/be; rb=$?; set -e
-    sed -i 's/^om[4c]:/X:/' $W/ae $W/be
-    { [ $ra = $rb ] && cmp -s $W/a $W/b && cmp -s $W/ae $W/be; } || { bad=$((bad + 1)); echo "DIFFER: exit $ra / $rb on $(cp $1 $W/bad$bad.om; echo $W/bad$bad.om)"; }
+    "$W/diagprefix" < "$W/ae" > "$W/aen"
+    "$W/diagprefix" < "$W/be" > "$W/ben"
+    { [ $ra = $rb ] && "$W/byteequal" 3< "$W/a" 4< "$W/b" && "$W/byteequal" 3< "$W/aen" 4< "$W/ben"; } || { bad=$((bad + 1)); echo "DIFFER: exit $ra / $rb on $(cp $1 $W/bad$bad.om; echo $W/bad$bad.om)"; }
   fi
 }
 s=1

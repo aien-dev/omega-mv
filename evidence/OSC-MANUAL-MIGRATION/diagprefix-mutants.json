@@ -1,0 +1,17 @@
+[
+  {
+    "mutant": "line-start",
+    "compiled": true,
+    "failures": 4
+  },
+  {
+    "mutant": "replacement",
+    "compiled": true,
+    "failures": 50
+  },
+  {
+    "mutant": "read-error",
+    "compiled": true,
+    "failures": 1
+  }
+]
