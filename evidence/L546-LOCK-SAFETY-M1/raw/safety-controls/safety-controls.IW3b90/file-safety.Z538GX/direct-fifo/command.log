@@ -1,0 +1,15 @@
+{
+  "args": [
+    "sh",
+    "/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/truncate-regular.sh",
+    "/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/file-safety.Z538GX/direct-fifo/build",
+    "sh",
+    "/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/file-safety.Z538GX/direct-fifo/command.sh",
+    "/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/file-safety.Z538GX/direct-fifo/executed"
+  ],
+  "status": 2,
+  "signal": null,
+  "error": null,
+  "stdout": "",
+  "stderr": "unsafe build lock: /home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90/file-safety.Z538GX/direct-fifo/build.omega-build.lock\n"
+}

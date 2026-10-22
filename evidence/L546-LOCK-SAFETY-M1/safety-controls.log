@@ -1,0 +1,5 @@
+{"label":"production","exit":0,"signal":null,"error":null,"expected_failures":[],"actual_failures":[],"pass":true}
+{"label":"unsafe-open","exit":1,"signal":null,"error":null,"expected_failures":["direct-symlink","direct-hardlink"],"actual_failures":["direct-symlink","direct-hardlink"],"pass":true}
+{"label":"unchecked-append","exit":1,"signal":null,"error":null,"expected_failures":["direct-symlink","direct-hardlink"],"actual_failures":["direct-symlink","direct-hardlink"],"pass":true}
+{"label":"truncate-regular","exit":1,"signal":null,"error":null,"expected_failures":["direct-nonempty"],"actual_failures":["direct-nonempty"],"pass":true}
+{"out":"/home/drakestapleton/workspace/omega-build-lock-file-safety-20261022/build/L546/safety-controls/safety-controls.IW3b90","pass":true}

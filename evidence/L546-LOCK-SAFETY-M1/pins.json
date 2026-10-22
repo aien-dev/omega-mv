@@ -1,0 +1,15 @@
+{
+  "base": "d84142f73f0fd0e44d22893232fdf0ee2a46a4d4",
+  "parent_review": "8c6d5d0d9bdc9ee7f038e1fa22284abee1d68532",
+  "sources": {
+    "Makefile": "d4ffa96a1c87acf67c35d27d3012f256ae1d77dd2dcd36256445976134da5a7b",
+    "tools/with_build_lock.sh": "2473a9ef87d5c0b299b7c51c4eb31c1d7de952c64558249e40dd78696f3770eb",
+    "tests/build_lock_file_safety_controls.mjs": "fe211e463e95f31032ee2bba5ae93802a317f2b712880d9d0dd0b3eaf1172366",
+    "tests/build_lock_file_safety_test.mjs": "9f86ad320132d0a00db77e3797f30aec5efcc864339fde74d135cc1148495fb5",
+    "tests/physics_build_concurrency_controls.mjs": "29d149c84b6c8d980ad3d7b9d23983dc8e7e53b6cc14fed1473086b919893e2f",
+    "tests/physics_build_lifecycle_test.mjs": "06a0a5616891e78251d1513c45541b5f9bb6d4e0a1add613b731e116fc9626bb",
+    "tests/physics_build_concurrency_test.mjs": "a8c252d9701606de63eeb663f7b1e16cdbf1ad1e2850d8a47c5790c47a96e73d",
+    "tests/physics_header_identity_test.mjs": "c250c7fd42f74be74ef02e8b5206c816f2f63387d2f7652a45373f64b38226b7",
+    "tests/physics_header_identity_controls.mjs": "ab12b75b0dcb1e41760034fd00d9c287a5090ea84df27fb5b43ce02b914feaf0"
+  }
+}
