@@ -72,7 +72,7 @@ else bad "all-ops unit refused: $(cat "$T/allops.out")"; fi
 # corpus_rt <omega_emit>: lift with it, emit with the real one; every covered unit must come back byte-identical
 corpus_rt() {
   n_ok=0; n_ref=0; n_bad=0
-  for f in tests/compiler/progs/*.osc tests/compiler/slices/*.osc src/osh/*.osc tests/physics0/osc/*.osc; do
+  for f in tests/compiler/progs/*.osc tests/compiler/slices/*.osc tests/compiler/corpus/osh/*.osc tests/compiler/corpus/physics0/*.osc; do
     [ -f "$f" ] || continue
     b="c_$(echo "$f" | tr / _)"
     [ -f "$T/$b.ir" ] || "$OSCC" "$f" "$T/$b" > /dev/null 2>&1 || continue

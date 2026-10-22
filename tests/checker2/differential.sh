@@ -38,7 +38,7 @@ check_unit() { # <file.osc> <expect: any|reject>
     esac
 }
 
-for f in tests/compiler/progs/*.osc tests/compiler/slices/*.osc src/osh/*.osc tests/physics0/osc/*.osc "$WORK"/gen/*.osc; do
+for f in tests/compiler/progs/*.osc tests/compiler/slices/*.osc tests/compiler/corpus/osh/*.osc tests/compiler/corpus/physics0/*.osc "$WORK"/gen/*.osc; do
     [ -f "$f" ] && check_unit "$f" any
 done
 for f in tests/compiler/neg/*.osc; do
