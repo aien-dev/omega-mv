@@ -1,0 +1,49 @@
+diff --git a/tests/osh/diff/osh_diff.c b/tests/osh/diff/osh_diff.c
+index 2b72f440..f77793f4 100644
+--- a/tests/osh/diff/osh_diff.c
++++ b/tests/osh/diff/osh_diff.c
+@@ -872,10 +872,23 @@ static void load_results(const char *path, ResultFile *r)
+     if (!f) { rf_invalid(r, "cannot open %s", path); return; }
+     static char line[LINE];
+     int header = 0, pins = 0, ended = 0, nvec = 0;
+-    while (fgets(line, sizeof line, f)) {
+-        size_t n = strlen(line);
+-        while (n && (line[n - 1] == '\n' || line[n - 1] == '\r')) line[--n] = 0;
+-        if (strncmp(line, "OSHDIFF", 7) != 0) continue;
++    for (;;) {
++        /* Read one physical serial line, draining excess bytes without growing
++         * memory. A long console-noise line must not turn its continuation
++         * chunks into apparently independent protocol records. */
++        size_t n = 0;
++        int ch, too_long = 0, has_nul = 0;
++        while ((ch = fgetc(f)) != EOF && ch != '\n') {
++            if (ch == 0) has_nul = 1;
++            if (n + 1 < sizeof line) line[n++] = (char)ch;
++            else too_long = 1;
++        }
++        if (ch == EOF && n == 0 && !too_long) break;
++        line[n] = 0;
++        if (n < 7 || memcmp(line, "OSHDIFF", 7) != 0) continue;
++        if (too_long) { rf_invalid(r, "%s", "OSHDIFF line too long"); continue; }
++        if (has_nul) { rf_invalid(r, "%s", "NUL in OSHDIFF line"); continue; }
++        if (n && line[n - 1] == '\r') line[--n] = 0;
+         if (ended) { rf_invalid(r, "%s", "an OSHDIFF line after the end line"); continue; }
+         if (strcmp(line, "OSHDIFF-RESULT 1") == 0) {
+             if (header) rf_invalid(r, "%s", "two header lines");
+@@ -920,12 +933,15 @@ static void load_results(const char *path, ResultFile *r)
+         if (strncmp(line, "OSHDIFF end n=", 14) == 0) {
+             char *e;
+             long want = strtol(line + 14, &e, 10);
+-            if (*e || want != nvec) rf_invalid(r, "%s", "end line count does not match the vec lines");
++            if (line[14] < '0' || line[14] > '9' || *e)
++                rf_invalid(r, "%s", "invalid end line count");
++            else if (want != nvec) rf_invalid(r, "%s", "end line count does not match the vec lines");
+             ended = 1;
+             continue;
+         }
+         rf_invalid(r, "unknown OSHDIFF line: %s", line);
+     }
++    if (ferror(f)) rf_invalid(r, "%s", "result file read error");
+     fclose(f);
+     if (!header) rf_invalid(r, "%s", "no \"OSHDIFF-RESULT 1\" header");
+     if (!pins) rf_invalid(r, "%s", "no pin line");

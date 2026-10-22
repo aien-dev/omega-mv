@@ -1,0 +1,11 @@
+file:///home/drakestapleton/workspace/omega-descending-next-uncovered-20261022/tests/osh/diff/result_reader_mutants.mjs:43
+  if (probe.status !== 1 || failures.length !== count || !expected || !probe.stdout.includes(`${count} failed; synthetic native controls only`)) throw Error(`${name}: wrong behavioral verdict: ${failures.join('; ')}`);
+                                                                                                                                                       ^
+
+Error: nul: wrong behavioral verdict: FAIL nul-header: exit=0, expected=1; FAIL nul-pin: exit=0, expected=1; FAIL nul-vector: exit=0, expected=1; FAIL nul-end: exit=0, expected=1; FAIL line-size-boundary: exit=1, expected=1
+    at file:///home/drakestapleton/workspace/omega-descending-next-uncovered-20261022/tests/osh/diff/result_reader_mutants.mjs:43:152
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.21.0

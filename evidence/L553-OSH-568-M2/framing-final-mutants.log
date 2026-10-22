@@ -1,0 +1,5 @@
+PASS nul: compiled, 4 exact expected failing assertions
+PASS count: compiled, 4 exact expected failing assertions
+PASS read-error: compiled, 1 exact expected failing assertions
+PASS chunks: compiled, 7 exact expected failing assertions
+RESULT_READER_MUTANTS_FRAMING: 4 killed; artifacts /tmp/L553-reader-mutants-6pji6C
