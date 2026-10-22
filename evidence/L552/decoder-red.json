@@ -1,0 +1,93 @@
+[
+  {
+    "case": "ordinary",
+    "expected": 0,
+    "actual": 0,
+    "pass": true,
+    "stderr": ""
+  },
+  {
+    "case": "symlink:.",
+    "expected": 1,
+    "actual": 0,
+    "pass": false,
+    "stderr": ""
+  },
+  {
+    "case": "symlink:src",
+    "expected": 1,
+    "actual": 0,
+    "pass": false,
+    "stderr": ""
+  },
+  {
+    "case": "symlink:src/osh",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked corpus directory: src/osh\"}\n"
+  },
+  {
+    "case": "symlink:tests",
+    "expected": 1,
+    "actual": 0,
+    "pass": false,
+    "stderr": ""
+  },
+  {
+    "case": "symlink:tests/compiler",
+    "expected": 1,
+    "actual": 0,
+    "pass": false,
+    "stderr": ""
+  },
+  {
+    "case": "symlink:tests/compiler/progs",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked corpus directory: tests/compiler/progs\"}\n"
+  },
+  {
+    "case": "symlink:tests/compiler/slices",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked corpus directory: tests/compiler/slices\"}\n"
+  },
+  {
+    "case": "symlink:tests/physics0",
+    "expected": 1,
+    "actual": 0,
+    "pass": false,
+    "stderr": ""
+  },
+  {
+    "case": "symlink:tests/physics0/osc",
+    "expected": 1,
+    "actual": 1,
+    "pass": true,
+    "stderr": "{\"verdict\": \"REFUSED\", \"error\": \"missing or linked corpus directory: tests/physics0/osc\"}\n"
+  },
+  {
+    "case": "hardlink:tests/compiler/progs/contracts_basic.osc",
+    "expected": 1,
+    "actual": 0,
+    "pass": false,
+    "stderr": ""
+  },
+  {
+    "case": "hardlink:tests/compiler/test_osc_ir_decode.c",
+    "expected": 1,
+    "actual": 0,
+    "pass": false,
+    "stderr": ""
+  },
+  {
+    "case": "restored_ordinary",
+    "expected": 0,
+    "actual": 0,
+    "pass": true,
+    "stderr": ""
+  }
+]

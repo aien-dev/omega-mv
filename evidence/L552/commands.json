@@ -1,0 +1,87 @@
+[
+  {
+    "name": "decoder-red",
+    "argv": [
+      "/usr/bin/python3",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L552/decoder/tests/compiler/test_decoder_path_links.py",
+      "/home/drakestapleton/workspace/targets/L552-review/decoder-old-harness",
+      "/home/drakestapleton/workspace/targets/L552-review/decoder-red"
+    ],
+    "cwd": "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+    "exit": 1
+  },
+  {
+    "name": "decoder-green",
+    "argv": [
+      "/usr/bin/python3",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L552/decoder/tests/compiler/test_decoder_path_links.py",
+      "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+      "/home/drakestapleton/workspace/targets/L552-review/decoder-green"
+    ],
+    "cwd": "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+    "exit": 0
+  },
+  {
+    "name": "decoder-original67",
+    "argv": [
+      "/usr/bin/python3",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L552/decoder/tests/compiler/test_decoder_corpus_closure.py",
+      "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L552/decoder/tests/compiler/verify_decoder_corpus.py",
+      "/home/drakestapleton/workspace/targets/L552-review/decoder-original67"
+    ],
+    "cwd": "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+    "exit": 0
+  },
+  {
+    "name": "protocol-red",
+    "argv": [
+      "/usr/bin/python3",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L552/protocol/research/exploration-600/continuation/test_protocol.py",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L541-guard"
+    ],
+    "cwd": "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+    "exit": 1
+  },
+  {
+    "name": "protocol-green",
+    "argv": [
+      "/usr/bin/python3",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L552/protocol/research/exploration-600/continuation/test_protocol.py",
+      "/home/drakestapleton/workspace/targets/L552-review/guard"
+    ],
+    "cwd": "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+    "exit": 0
+  },
+  {
+    "name": "protocol-original423",
+    "argv": [
+      "/usr/bin/python3",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L552/protocol/research/exploration-600/continuation/test_guard.py",
+      "/home/drakestapleton/workspace/targets/L552-review/guard"
+    ],
+    "cwd": "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+    "exit": 0
+  },
+  {
+    "name": "protocol-extra",
+    "argv": [
+      "/usr/bin/python3",
+      "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022/evidence/L552/protocol_extra.py",
+      "/home/drakestapleton/workspace/targets/L552-review/guard"
+    ],
+    "cwd": "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+    "exit": 0
+  },
+  {
+    "name": "replay",
+    "argv": [
+      "/usr/bin/python3",
+      "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L552/protocol/research/exploration-600/continuation/replay.py",
+      "/home/drakestapleton/workspace/targets/L552-review/guard",
+      "/home/drakestapleton/workspace/targets/L552-review/replay"
+    ],
+    "cwd": "/home/drakestapleton/workspace/omega-parent-corrective-review-20261022",
+    "exit": 0
+  }
+]

@@ -1,0 +1,90 @@
+[
+  {
+    "case": "fsync-1",
+    "injected": true,
+    "immediate": {
+      "drop_count_overflow": false,
+      "submitted": 0,
+      "persisted": 0,
+      "error_count": 0,
+      "accepted_pending": 0,
+      "dropped": {},
+      "errors": [],
+      "durable": false
+    },
+    "accepted": [
+      true,
+      true
+    ],
+    "post": {
+      "drop_count_overflow": false,
+      "submitted": 2,
+      "persisted": 0,
+      "error_count": 0,
+      "accepted_pending": 2,
+      "dropped": {},
+      "errors": [],
+      "durable": false
+    },
+    "closed": {
+      "drop_count_overflow": false,
+      "submitted": 2,
+      "persisted": 0,
+      "error_count": 1,
+      "accepted_pending": 0,
+      "dropped": {},
+      "errors": [
+        "archive writer: EIO"
+      ],
+      "durable": false
+    },
+    "archiveBeforeClose": "PASS",
+    "archiveAfter": "PASS",
+    "events": 1,
+    "bytes_unchanged": true
+  },
+  {
+    "case": "fsync-2",
+    "injected": true,
+    "immediate": {
+      "drop_count_overflow": false,
+      "submitted": 0,
+      "persisted": 0,
+      "error_count": 0,
+      "accepted_pending": 0,
+      "dropped": {},
+      "errors": [],
+      "durable": false
+    },
+    "accepted": [
+      true,
+      true
+    ],
+    "post": {
+      "drop_count_overflow": false,
+      "submitted": 2,
+      "persisted": 0,
+      "error_count": 0,
+      "accepted_pending": 2,
+      "dropped": {},
+      "errors": [],
+      "durable": false
+    },
+    "closed": {
+      "drop_count_overflow": false,
+      "submitted": 2,
+      "persisted": 0,
+      "error_count": 1,
+      "accepted_pending": 0,
+      "dropped": {},
+      "errors": [
+        "archive writer: EIO"
+      ],
+      "durable": false
+    },
+    "archiveBeforeClose": "PASS",
+    "archiveAfter": "PASS",
+    "events": 1,
+    "bytes_unchanged": true
+  }
+]

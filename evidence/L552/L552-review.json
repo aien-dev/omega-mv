@@ -1,0 +1,159 @@
+{
+  "schema": "omega.L552.corrective-review.v1",
+  "reviewer": "L552",
+  "role": "INDEPENDENT_REVIEW_ONLY",
+  "new_findings": [],
+  "artifacts": [
+    {
+      "artifact": "decoder",
+      "base": "9d8807ddc306e204faa20ce2faeb48e215cdb5af",
+      "head": "676a0b80ef71fba1cf5360da2e6cb9186789dfb5",
+      "source_test_contract_changes": [
+        "tests/compiler/test_decoder_path_links.py",
+        "tests/compiler/verify_decoder_corpus.py"
+      ],
+      "old_evidence_modified_or_deleted": [],
+      "verdict": "ACCEPT_HOST_SCOPE",
+      "resolved": [
+        {
+          "id": "L541-B1",
+          "prior_severity": "P2",
+          "file": "tests/compiler/verify_decoder_corpus.py",
+          "lines": [
+            12,
+            13,
+            17,
+            35,
+            43,
+            44,
+            47,
+            52
+          ],
+          "status": "RESOLVED",
+          "repro": "run_checks.py: decoder-red old exit1/7 failed; corrected exit0/13 passed"
+        }
+      ],
+      "independently_run": {
+        "new_link_tests": 13,
+        "old_failing_cases": 7,
+        "original_wrong_byte_and_completeness": 67,
+        "extra_readonly_and_trust_boundary": 6
+      },
+      "scope": "Static trusted caller-owned export root and descendants, historical PR499 only"
+    },
+    {
+      "artifact": "protocol",
+      "base": "dc24fcf27bbc6c36ca6dfcac020452bb06004bae",
+      "head": "9869cbcb9eb7e2b39673a4208785606826385cd9",
+      "source_test_contract_changes": [
+        "research/exploration-600/continuation/CONTRACT.md",
+        "research/exploration-600/continuation/guard.om",
+        "research/exploration-600/continuation/run.sh",
+        "research/exploration-600/continuation/test_protocol.py"
+      ],
+      "old_evidence_modified_or_deleted": [],
+      "verdict": "ACCEPT_HOST_SCOPE",
+      "resolved": [
+        {
+          "id": "L541-A1",
+          "prior_severity": "P3",
+          "file": "research/exploration-600/continuation/guard.om",
+          "lines": [
+            53,
+            54,
+            55,
+            56,
+            57,
+            58
+          ],
+          "status": "RESOLVED",
+          "repro": "test_protocol.py on old native ELF exit1/3 failures; corrected exit0/16 passed"
+        },
+        {
+          "id": "L541-A2",
+          "prior_severity": "P3",
+          "file": "research/exploration-600/continuation/CONTRACT.md",
+          "lines": [
+            11
+          ],
+          "status": "RESOLVED",
+          "repro": "protocol_extra.py proves 16383 accepted /16384 refused20 no-output for six whitespace padding variants"
+        }
+      ],
+      "independently_run": {
+        "original_oracle": 423,
+        "protocol": 16,
+        "extra_protocol": 342,
+        "replay_rows_byte_identical": 600,
+        "reused_hash_verified_behavioral_mutants_caught": 5
+      },
+      "original_science": "FAIL_UNCHANGED",
+      "default_guard": "REJECTED",
+      "scope": "Native bounded offline protocol compatibility; synthetic known-prefix replay only"
+    },
+    {
+      "artifact": "trace",
+      "base": "2dee6673dc6df329ee4b4913069affd1ea307e29",
+      "head": "a00ef9b5089fd37876caece268e2be9601d20158",
+      "source_test_contract_changes": [
+        "tests/trace/archive.test.mjs",
+        "tests/trace/startup-refusal.test.mjs",
+        "tools/trace/archive.mjs"
+      ],
+      "old_evidence_modified_or_deleted": [],
+      "verdict": "ACCEPT_HOST_SCOPE",
+      "resolved": [
+        {
+          "id": "parent-startup-reservation",
+          "prior_severity": null,
+          "file": "tools/trace/archive.mjs",
+          "lines": [
+            134,
+            135,
+            136,
+            137,
+            163,
+            170
+          ],
+          "status": "RESOLVED",
+          "repro": "startup_probe.mjs old fixed-expectation exit1 ERR_ASSERTION; corrected exit0: two fsync failure sites each acceptfalse/submitted0/pending0; baseline bytes unchanged"
+        }
+      ],
+      "independently_run": {
+        "full_host_tests": 51,
+        "full_host_skips": 0,
+        "native_oracle_assertions": 12,
+        "offline_base_checks": 8,
+        "original_behavioral_mutants_caught": 17,
+        "followon_behavioral_mutants_caught": 9,
+        "denied_network_followon_checks": 14,
+        "network_trace_bytes": 0,
+        "startup_cases": 5
+      },
+      "scope": "Synchronous startup refusal and synthetic host archive/recovery regression"
+    }
+  ],
+  "desk_disposition": "REVIEW_ONLY",
+  "source_changes_by_reviewer": false,
+  "integration_or_issue_closure": false,
+  "gaps": {
+    "current35B_shared_train_hardware": "NOT_RUN",
+    "native_callback_OSC_ABI_integration": "NOT_RUN",
+    "real_training": "NOT_RUN",
+    "fresh_heldout_science": "NOT_RUN",
+    "whole_repository_acceptance": "NOT_RUN",
+    "physical_performance": "NOT_RUN",
+    "energy": "UNMEASURED"
+  },
+  "prior_evidence_inspected_not_rerun": [
+    "decoder_full_plain_ASan_59each_22refusals_5oracles_10compiledmutants",
+    "original600_2337checks_40diagnostics_6controls",
+    "native_mutant_compilation_success_provenance"
+  ],
+  "preserved_review_helper_failure": {
+    "log": "packet-verification-initial-failure.log",
+    "exit": 1,
+    "cause": "expected 10/10 instead of actual 10 of 10 caught",
+    "final_exit": 0
+  }
+}

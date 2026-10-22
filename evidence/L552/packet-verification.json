@@ -1,0 +1,75 @@
+{
+  "pins_and_deltas": [
+    {
+      "artifact": "decoder",
+      "base": "9d8807ddc306e204faa20ce2faeb48e215cdb5af",
+      "head": "676a0b80ef71fba1cf5360da2e6cb9186789dfb5",
+      "source_test_contract_changes": [
+        "tests/compiler/test_decoder_path_links.py",
+        "tests/compiler/verify_decoder_corpus.py"
+      ],
+      "old_evidence_modified_or_deleted": []
+    },
+    {
+      "artifact": "protocol",
+      "base": "dc24fcf27bbc6c36ca6dfcac020452bb06004bae",
+      "head": "9869cbcb9eb7e2b39673a4208785606826385cd9",
+      "source_test_contract_changes": [
+        "research/exploration-600/continuation/CONTRACT.md",
+        "research/exploration-600/continuation/guard.om",
+        "research/exploration-600/continuation/run.sh",
+        "research/exploration-600/continuation/test_protocol.py"
+      ],
+      "old_evidence_modified_or_deleted": []
+    },
+    {
+      "artifact": "trace",
+      "base": "2dee6673dc6df329ee4b4913069affd1ea307e29",
+      "head": "a00ef9b5089fd37876caece268e2be9601d20158",
+      "source_test_contract_changes": [
+        "tests/trace/archive.test.mjs",
+        "tests/trace/startup-refusal.test.mjs",
+        "tools/trace/archive.mjs"
+      ],
+      "old_evidence_modified_or_deleted": []
+    }
+  ],
+  "decoder_retained_gate_checked_not_rerun": true,
+  "native_mutants_reused_hash_verified": [
+    {
+      "name": "risk_cap",
+      "sha256": "0b54d8d103070938056b9929af67244641a853d20a37e210c4e9795ca533d2f3",
+      "prior_compile_exit": 0,
+      "independent_test_exit": 1,
+      "behavior_failures": 5
+    },
+    {
+      "name": "horizon",
+      "sha256": "edf3c144a1041adacdaeb79d56ef500ca85a1b5b452be993e7ebf56a3e26c9f7",
+      "prior_compile_exit": 0,
+      "independent_test_exit": 1,
+      "behavior_failures": 4
+    },
+    {
+      "name": "free_decision",
+      "sha256": "1ab58eae1b72f30d78b6b134bfdd8be83849180575f32a0bf1fae77cbcae11ce",
+      "prior_compile_exit": 0,
+      "independent_test_exit": 1,
+      "behavior_failures": 94
+    },
+    {
+      "name": "empty_frontier",
+      "sha256": "50d1c4e775e837f54f63a1a0bd4780340b21db895181c0f90a48ee6e60743eab",
+      "prior_compile_exit": 0,
+      "independent_test_exit": 1,
+      "behavior_failures": 11
+    },
+    {
+      "name": "break_even_overflow",
+      "sha256": "9488783fb6e528f7c055f48dd94038d8aa72f5d96c80c96268aebf09e2e28101",
+      "prior_compile_exit": 0,
+      "independent_test_exit": 1,
+      "behavior_failures": 10
+    }
+  ]
+}
