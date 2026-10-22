@@ -1,6 +1,27 @@
-# OMEGA
+# Omega
 
-Omega is the reaction runtime and the compiler for Omega Systems Core, written in C. It defines what computation means without committing that meaning to one machine representation: every program has a content-addressed semantic identity, and realizations (CPU, GB10 GPU) are derived from it and verified against it.
+I am building Omega as an independently bootstrapped language, with its compiler written in its own source language and built from an explicit machine-code seed. I want an inspectable foundation, rather than C or Rust hidden underneath a new language name.
+
+**The seeded compiler exists on a development branch. The legacy C implementation on `main` and Rust-built services have not yet been retired.** The two must not be confused.
+
+## How I made the seeded compiler
+
+[Read the step-by-step walkthrough: source, build ancestry, checks, limits and reproduction commands](docs/SEED_BIRTH.md). I directed this work with AI coding agents; the source and commit history record their assistance. I do not claim that I invented bootstrapping or personally typed every instruction.
+
+1. Write explicit AArch64 instruction words and an ELF header in [`seed0.hex`](https://github.com/aien-dev/omega-mv/blob/29b12760f4c962606411d6bf25032aedef063301/seed/rung0/seed0.hex).
+2. Use a small shell loader to write the first executable bytes. No C compiler, assembler or linker is invoked. The existing host shell and utilities remain dependencies.
+3. Run that 408-byte seed on its own source and require byte-identical output.
+4. Build `hex1` to add labels, then `asm2` to add instruction names.
+5. Build `om4` to translate the systems-language subset needed to implement a compiler. The earlier `om3` stage records how that subset grew.
+6. Compile the actual Omega-written `omc.om` source, then make that compiler compile itself twice. Require matching compiler bytes and run real programs and refusal tests.
+
+Pinned source: [`29b12760`](https://github.com/aien-dev/omega-mv/commit/29b12760f4c962606411d6bf25032aedef063301). [Fresh root replay and reproducible check](evidence/seed-birth-20261022/). The full walkthrough gives the compiler fingerprint and AArch64 Linux replay commands.
+
+This is a project-specific implementation using published Arm/ELF specifications and established compiler ideas, with those sources credited. The source, build chain and tests are the basis for judging what I made. A self-hosting fixed point is not by itself a proof of correctness or a claim of independence from every host tool. Optional C output is an outward compatibility bridge, not the foundation of the seeded language.
+
+## Legacy implementation still in this tree
+
+The older Omega implementation contains the reaction runtime and the compiler for Omega Systems Core, written in C. It defines computation without committing that meaning to one machine representation: every program has a content-addressed semantic identity, and realizations (CPU, GB10 GPU) are derived from it and checked against it. Its retirement is unfinished; the historical status and build instructions below describe that older implementation, not the seeded compiler.
 
 ```text
 SILICON -> ATLAS -> PHYSICS/FORGE -> OMEGA -> AIEN        (full picture: aien-architecture)
@@ -8,7 +29,9 @@ SILICON -> ATLAS -> PHYSICS/FORGE -> OMEGA -> AIEN        (full picture: aien-ar
 
 Omega was decided by Drake on 2026-09-29 to be both the reaction runtime and the compiler for Omega Systems Core ([decision record](docs/adr/OMEGA-SYSTEMS-CORE-0000.md), frozen). This retires the earlier "not a compiler" wording.
 
-## Current state
+## Historical legacy status
+
+The following status describes the C implementation retained on `main`. The seeded compiler's separately pinned walkthrough above is the current language-lineage record.
 
 Research-grade and pre-alpha. Plainly:
 
@@ -29,7 +52,13 @@ The live status is owned by [aien-architecture](https://github.com/aien-spark/ai
 
 [aienos](https://github.com/aien-spark/aienos) is the kernel Omega is meant to run on. [physics](https://github.com/aien-spark/physics) provides FORGE machine realization and the GB10 native path (pinned in `physics.lock`). [aien-architecture](https://github.com/aien-spark/aien-architecture) owns status and sequencing. ARGUS-0/1 (a defensive plane) is implemented in aienos (`native/argus`, pinned by `argus.lock`); Omega only carries the opt-in `RX_ARGUS` hooks (`src/runtime/rx_argus.c`) and receipts in `evidence/ARGUS/`. Physics Zero exists here as a host benchmark apparatus and learner (`src/physics0/`, `tests/physics0/`, `mk/physics0-learner.mk`, `docs/physics0/`, receipts in `evidence/physics0/`), with its specifications in the physics repository. DIRAC-0 is a specification in aien-architecture plus an oracle source in `research/dirac-oracle/` that has never been built or run. The Evolution Arena is a plan only.
 
-## Standing rules
+## Migration rule
+
+The destination is the seed-born Omega implementation. First-party C and Rust components are to be replaced by verified native Omega programs; neither is the permanent language foundation. The historical C path and Rust services remain until their replacements pass their gates. Published C outputs and foreign-language bindings are optional compatibility surfaces, not the seed compiler's birth path.
+
+### Historical legacy build rules
+
+The older ADR 0024 language rule below describes the implementation still being retired, not an exception allowing new permanent C/Rust foundations.
 
 Language rule: Rust is scaffolding, Omega is the destination, and C or assembly stay only where hardware, boot, ABI or measurement justifies them (aien-architecture ADR 0024, which supersedes the old "C is the target, no new Rust" rule). No Python anywhere (tools are C or shell). No CUDA toolkit or CUDA library dependence: the GB10 is driven natively. No systemd. Offline, in-house builds. Never overwrite failed experiments or old receipts. Verdict words: PASS, FAIL, NOT_RUN, BLOCKED_HARDWARE, BLOCKED_OPERATOR, MISSING_IMPLEMENTATION.
 
