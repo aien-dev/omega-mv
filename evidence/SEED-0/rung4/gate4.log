@@ -1,4 +1,4 @@
-gate4 2026-10-22T03:20:30Z at 380b581948da793f208d6bb1a511d4dbb2cd52e4
+gate4 2026-10-22T04:02:39Z at 0a75aa3ca14ca4565394991739413d1b3ee4fcdb
 PASS om4.bin = a fresh asm2 build of om4.s, same bytes
 PASS p_filesz 13736 = file size 13736
 03fc75d96a570ba1a404dd89ae231f063fd10b4a9fec903a09d7fce2fb8aa429  seed/rung4/om4.bin
@@ -129,5 +129,6 @@ PASS refusal exit 7: om4: line 5: error 7  [a void function used as a value]
 PASS refusal exit 7: om4: line 5: error 7  [a value function called as a statement]
 PASS negative control: om4 with SDIV made UDIV changes fm1 results
 PASS spec addendum (OMEGESE.md section 9): grep -i undefined finds nothing
-cases run: 208
+PASS nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:121 4:1352 5:61 6:65 7:104 8:48 9:303 10:3 11:37 13:24 15:492 16:1989 17:36 18:4 21:4 23:2 
+cases run: 209
 GATE4 PASS

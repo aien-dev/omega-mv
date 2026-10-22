@@ -38,18 +38,19 @@ S=$B/fix/stage2
 #    each one's output builds from omc.om must be the same bytes.
 build/omegese/omegese emit $R/omc.om $B/omc.json > $B/cpath.out 2>&1 || true
 say "C path on omc.om: $(head -1 $B/cpath.out)"
-probe() { # what text
-  printf '%b' "$2" > $B/probe.om
+probe() { # what must-name text: refused, and the refusal names what is missing
+  printf '%b' "$3" > $B/probe.om
   m=$(build/omegese/omegese emit $B/probe.om $B/probe.json 2>&1 | head -1)
-  case "$m" in REFUSED*) say "  C path lacks $1: $m";; *) bad "C path now accepts $1: rethink (b)";; esac
+  case "$m" in REFUSED*"$2"*) say "  C path lacks $1: $m";; *) bad "C path probe for $1 changed: $m (rethink (b))";; esac
 }
-probe "global pools" 'global g uchar 4\nfn f a ulong to ulong\nret a\nend\n'
-probe "a self-call" 'fn f a ulong to ulong\nif eq a 0\nret 0\nend\nret f sub a 1\nend\n'
-probe "arrays over 64 cells" 'fn f a ulong to ulong\nx = new uchar 100 0\nret a\nend\n'
-probe "text literals" 'text t "ab"\nfn f a ulong to ulong\nret a\nend\n'
-probe "read / write" 'fn f a ulong to ulong\nx = new uchar 4 0\nn = read 0 x 0 4\nret a\nend\n'
-probe "exit" 'fn f a ulong to ulong\nexit int 3\nend\n'
-probe "a colon in a note" 'note a: b\nfn f a ulong to ulong\nret a\nend\n'
+probe "global pools" "'global'" 'global g uchar 4\nfn f a ulong to ulong\nret a\nend\n'
+probe "a self-call" "cannot call itself" 'fn f a ulong to ulong\nif eq a 0\nret 0\nend\nret f sub a 1\nend\n'
+probe "arrays over 64 cells" "must be 1..64" 'fn f a ulong to ulong\nx = new uchar 100 0\nret a\nend\n'
+probe "text literals" "character '\"'" 'text t "ab"\nfn f a ulong to ulong\nret a\nend\n'
+probe "read" "'read' is not a name" 'fn f a ulong to ulong\nx = new uchar 4 0\nn = read int 0 x ulong 0 ulong 4\nret a\nend\n'
+probe "write" "'write' is not a name" 'fn f a ulong to ulong\nx = new uchar 4 0\nn = write int 1 x ulong 0 ulong 4\nret a\nend\n'
+probe "exit (it reads exit as a new name)" "'exit' is written but never read" 'fn f a ulong to ulong\nexit int 3\nret a\nend\n'
+probe "a colon in a note" "character ':'" 'note a: b\nfn f a ulong to ulong\nret a\nend\n'
 say "  (and it writes .oscir for a runner, not a program that reads stdin and writes stdout)"
 cmp -s $B/fix/stage1 $B/fix/stage2 && say "PASS (b) om4 and omc build the same omc from omc.om (stage1 = stage2)" || bad "(b) stage1 != stage2"
 cmp -s $B/fix/stage2 $B/fix/stage3 && say "PASS (b) the stage from each parent is bit-identical (om4-built -> stage2, omc-built -> stage3)" || bad "(b) stage2 != stage3"
@@ -58,7 +59,7 @@ cases=$((cases + 2))
 # 3. every input gate4 gives om4, plus every .om / .omegese file in the repo and omc.om: om4 and stage2
 #    give the same output bytes, exit status and error number (and line); gate4 is run with om4 wrapped
 #    so each input is kept (gate4's own results go to $B, not to evidence/)
-C=$B/corpus; rm -rf $C $B/g4cap $B/g4cape; mkdir -p $C
+CODES=""; C=$B/corpus; rm -rf $C $B/g4cap $B/g4cape; mkdir -p $C
 cat > $B/cap.sh << EOF
 #!/bin/sh
 n=\$(ls $C | wc -l); f=$C/\$(printf '%04d' \$n).in; cat > \$f; exec $R4/om4.bin < \$f
@@ -68,7 +69,7 @@ g4() { # compiler build-dir evidence-dir -> gate4 with the compiler in om4's pla
   sed -e "s|^R=seed/rung4; B=build/seed/r4; E=evidence/SEED-0/rung4|R=seed/rung4; B=$2; E=$3|" \
       -e "s#\\\$R/om4\\.bin < #$1 < #g" -e "s#| \\\$R/om4\\.bin #| $1 #g" $R4/gate4.sh > $2.sh
   [ "$(grep -c "$1" $2.sh)" = 4 ] || { bad "gate4 changed shape: the compiler is not in its 4 places"; return 1; }
-  sh $2.sh > $2.out 2>&1
+  NF_N=0 sh $2.sh > $2.out 2>&1 && tail -1 $2.out | grep -q "^GATE4 PASS$" # section 10 (next fuzz of om4 alone) is run by gate4 itself
 }
 g4 $B/cap.sh $B/g4cap $B/g4cape || bad "gate4 (capturing) did not pass: $(grep FAIL $B/g4cap.out | head -3)"
 for f in $(find $R4/tests tests/one_layer/omegese tools/exp445/arms/examples -name '*.om' -o -name '*.omegese' | sort) $R/omc.om; do
@@ -77,6 +78,7 @@ done
 same=0; n=0
 for f in $C/*.in; do n=$((n + 1))
   set +e; $R4/om4.bin < $f > $B/c.a 2> $B/c.ae; ra=$?; $S < $f > $B/c.b 2> $B/c.be; rb=$?; set -e
+  CODES="$CODES $ra"
   sed -i 's/^om4:/X:/' $B/c.ae; sed -i 's/^omc:/X:/' $B/c.be
   if [ $ra = $rb ] && cmp -s $B/c.a $B/c.b && cmp -s $B/c.ae $B/c.be; then same=$((same + 1))
   else bad "corpus $(basename $f): om4 exit $ra $(cat $B/c.ae), stage2 exit $rb $(cat $B/c.be)"; fi
@@ -85,11 +87,35 @@ refused=$(for f in $C/*.in; do $R4/om4.bin < $f > /dev/null 2>&1 || echo x; done
 [ $same = $n ] && say "PASS corpus: om4 = stage2 on $n inputs ($refused of them refused, same error number and line)"
 cases=$((cases + n))
 
+# 3b. what the corpus does not reach. A program that writes a text with every escape, checked against fixed
+#     bytes and a fixed exit value (97 + 9 + 98, worked by hand), not only against om4. One input for each
+#     error number the corpus and the fuzz do not reach: 1 (stdin is a folder), 2 (stdout is full), 4, 11,
+#     12, 13, 14 (input over 8 MiB); om4 and stage2 must both give it, with the same message
+for c in om4:$R4/om4.bin stage2:$S; do n=${c%%:*}; cc=${c#*:}
+  $cc < $R/tests/text.om > $B/text.$n; chmod +x $B/text.$n
+  set +e; ./$B/text.$n > $B/text.$n.out; rc=$?; set -e
+  [ $rc = $(cat $R/tests/text.want) ] && cmp -s $B/text.$n.out $R/tests/text.out && say "PASS text program built by $n: writes its 9 bytes, exit $rc" || bad "text program built by $n: exit $rc"
+done
+cmp -s $B/text.om4 $B/text.stage2 && say "PASS text program: om4 and stage2 make the same bytes" || bad "text program: om4 and stage2 differ"
+ecase() { # error input stdout
+  set +e; $R4/om4.bin < $2 > $3 2> $B/e.a; ra=$?; $S < $2 > $3 2> $B/e.b; rb=$?; set -e
+  sed -i 's/^om[4c]:/X:/' $B/e.a $B/e.b
+  [ $ra = $1 ] && [ $rb = $1 ] && cmp -s $B/e.a $B/e.b && say "PASS error $1 from both:$(sed 's/^X://' $B/e.a)" || bad "error $1: om4 exit $ra, stage2 exit $rb"
+  CODES="$CODES $ra"
+}
+printf 'fn f a uint to uint\nret a\nend\n' > $B/ok.om; ecase 1 / $B/e.out; ecase 2 $B/ok.om /dev/full
+printf 'fn f to uint\nret add\nend\n' > $B/e4.om; ecase 4 $B/e4.om $B/e.out
+printf 'fn f to uint\nret add 1 2\nend\n' > $B/e11.om; ecase 11 $B/e11.om $B/e.out
+{ echo 'fn f to uint'; for i in $(seq 1 17); do echo "v$i = uint $i"; done; echo 'ret 0'; echo 'end'; } > $B/e12.om; ecase 12 $B/e12.om $B/e.out
+printf 'fn f to uint\nabcdefghi = uint 1\nret 0\nend\n' > $B/e13.om; ecase 13 $B/e13.om $B/e.out
+yes 'note filler' | head -c 9000000 > $B/e14.om; ecase 14 $B/e14.om $B/e.out
+cases=$((cases + 10))
+
 # 4. (c) gate4 with stage2 in om4's place: the 10 dev tasks and 9 function-mode tests against the C path
 #    on the reference runner (raw x0, traps), the program-mode tests against gcc twins and their exits,
 #    every refusal number
-g4 $S $B/g4omc $B/g4omce || true
-if grep -q '^FAIL' $B/g4omc.out || ! grep -q '^PASS' $B/g4omc.out; then bad "(c) gate4 with stage2: $(grep FAIL $B/g4omc.out | head -3)"
+g4ok=1; g4 $S $B/g4omc $B/g4omce || g4ok=0
+if [ $g4ok = 0 ] || grep -q "^FAIL" $B/g4omc.out; then bad "(c) gate4 with stage2: $(grep FAIL $B/g4omc.out | head -3)"
 else say "PASS (c) gate4 with stage2 in om4's place: $(grep -c '^PASS' $B/g4omc.out) checks, 0 FAIL"; fi
 cp $B/g4omce/words.tsv $E/corpus-words.tsv
 sed 's/om4_words/omc_words/' $E/corpus-words.tsv > $B/t && mv $B/t $E/corpus-words.tsv
@@ -122,7 +148,8 @@ fix $B/mc $B/mc/omc.om $B/mc/om4.bin && cmp -s $B/mc/stage2 $B/mc/stage3 && say 
 sed '/^free /d' $R4/tests/fm2.omegese > $B/mc/fm2.om
 $B/mc/om4.bin < $B/mc/fm2.om > $B/mc/fm2.a; ./$B/mc/stage2 < $B/mc/fm2.om > $B/mc/fm2.b
 cmp -s $B/mc/fm2.a $B/mc/fm2.b && say "PASS (d) C keeps om4 = omc on fm2" || bad "(d) C: om4' != omc' on fm2"
-if g4 $B/mc/stage2 $B/g4mc $B/g4mce && ! grep -q '^FAIL' $B/g4mc.out; then bad "(d) C: the C path did not catch it"
+g4 $B/mc/stage2 $B/g4mc $B/g4mce || true
+if ! grep -q "^FAIL: fm2 differs from the C path$" $B/g4mc.out; then bad "(d) C: the C path comparison of fm2 did not catch it"
 else say "PASS (d) C caught only by the C path: $(grep '^FAIL' $B/g4mc.out | head -2 | tr '\n' ' ')"; fi
 #    D: a malformed program is refused with an error number
 printf 'fn f a uint to uint\nret add a q\nend\n' > $B/bad.om
@@ -136,6 +163,18 @@ env -i X=$(printf '%0999d' 0) $S < $R/omc.om > $B/det1; sleep 1; $S < $R/omc.om 
 cmp -s $B/det1 $B/det2 && cmp -s $B/det1 $S && say "PASS deterministic: same bytes under another environment and a second later" || bad "output depends on the run"
 cases=$((cases + 1))
 
+# 6b. decision 22 for omc: the next-word fuzz (seed/check/nextfuzz.sh) with om4 as the reference and
+#     stage2 as the other: every generated program, every cut and every changed word gives the same bytes,
+#     exit status and error number from both, and neither crashes
+if NFW=$B/nextfuzz sh seed/check/nextfuzz.sh 20 $R4/om4.bin $S > $B/nextfuzz.out 2>&1; then say "PASS om4 = stage2 in the $(tail -1 $B/nextfuzz.out)"
+else bad "next fuzz: $(grep -v '^nextfuzz:' $B/nextfuzz.out | head -3) $(tail -1 $B/nextfuzz.out)"; fi
+cases=$((cases + 1))
+#     every error number 1..23 is reached somewhere above (corpus, the cases of 3b, the fuzz), with om4 = stage2
+miss=""; all=" $CODES $(sed 's/:[0-9]*//g' $B/nextfuzz/codes 2>/dev/null) "
+for e in $(seq 1 23); do case "$all" in *" $e "*) ;; *) miss="$miss $e";; esac; done
+[ -z "$miss" ] && say "PASS every error number 1..23 is reached, om4 = stage2 on each" || bad "error numbers never reached:$miss"
+cases=$((cases + 1))
+
 # 7. sizes and speed. omc's size at this self-rewrite; words per function of omc (from compiling each prefix
 #    of omc.om with a 2-word main appended); compile time of stage2 against the C path on the dev tasks
 lines=$(wc -l < $R/omc.om); nfn=$(grep -c '^fn ' $R/omc.om); bytes=$(stat -c %s $S)
@@ -144,6 +183,8 @@ for st in 1 2 3; do by=om4; [ $st -gt 1 ] && by=stage$((st - 1))
   printf 'stage%s\t%s\t%s\t%s\t%s\t%s\t%s\n' $st $by $lines $nfn $(stat -c %s $B/fix/stage$st) $(( ($(stat -c %s $B/fix/stage$st) - 176) / 4 )) $(sha $B/fix/stage$st) >> $E/size.tsv
 done
 say "omc: $lines lines, $nfn functions, $bytes bytes = 176-byte header + $(( (bytes - 176) / 4 )) words (evidence/SEED-0/omc/size.tsv)"
+#     size-history.tsv is kept by hand, one row per self-rewrite; its last row must be this build
+tail -1 $E/size-history.tsv | grep -q "	$(sha $S)\$" && say "PASS size history: its last row is this omc ($(tail -1 $E/size-history.tsv | cut -f1))" || bad "size-history.tsv has no row for this omc: add one"
 printf 'fn main to int\nret 0\nend\n' > $B/m.om; printf 'fn zz to int\nret 0\nend\nfn main to int\nret 0\nend\n' > $B/zm.om
 dm=$(( ($(./$S < $B/zm.om | wc -c) - $(./$S < $B/m.om | wc -c)) / 4 ))
 awk '/^fn /{d=1; name=$2; next} d>0 && /^(if|while|for) /{d++} d>0 && /^end$/{d--; if(d==0) print NR, name}' $R/omc.om > $B/fnends
@@ -157,15 +198,15 @@ tw=$(awk 'NR>1{s+=$2} END{print s}' $E/omc-words.tsv)
 say "omc words per function: evidence/SEED-0/omc/omc-words.tsv ($nfn functions, $tw words in all, mean $((tw / nfn)))"
 ns() { date +%s%N; }
 N=200; printf 'program\tomc_us\tc_path_us\n' > $E/compile-time.tsv
-for d in dev01 dev02 dev03 dev04 dev05 dev06 dev07 dev08 dev09 dev10; do
-  sed '/^free /d' tests/one_layer/omegese/dev/$d.omegese > $B/t.om
+for d in $(ls tests/one_layer/omegese/dev/dev*.omegese $R4/tests/fm*.omegese); do p=$(basename $d .omegese)
+  sed '/^free /d' $d > $B/t.om
   t0=$(ns); i=0; while [ $i -lt $N ]; do $S < $B/t.om > /dev/null; i=$((i + 1)); done; t1=$(ns)
-  i=0; while [ $i -lt $N ]; do build/omegese/omegese emit tests/one_layer/omegese/dev/$d.omegese $B/t.json > /dev/null
+  i=0; while [ $i -lt $N ]; do build/omegese/omegese emit $d $B/t.json > /dev/null
     build/omega_emit/omega_emit emit $B/t.json $B/t.oscir > /dev/null; i=$((i + 1)); done; t2=$(ns)
-  printf '%s\t%s\t%s\n' $d $(( (t1 - t0) / N / 1000 )) $(( (t2 - t1) / N / 1000 )) >> $E/compile-time.tsv
+  printf '%s\t%s\t%s\n' $p $(( (t1 - t0) / N / 1000 )) $(( (t2 - t1) / N / 1000 )) >> $E/compile-time.tsv
 done
 N=20; t0=$(ns); i=0; while [ $i -lt $N ]; do $S < $R/omc.om > /dev/null; i=$((i + 1)); done; t1=$(ns)
-say "compile time per program, microseconds, $((200)) runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: $(( (t1 - t0) / N / 1000 )) us"
+say "compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: $(( (t1 - t0) / N / 1000 )) us"
 cat $E/compile-time.tsv $E/size.tsv >> "$E/gate5.log"
 
 cp $S $E/omc.elf; sha $S > $E/omc.sha256
