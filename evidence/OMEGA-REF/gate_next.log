@@ -1,6 +1,6 @@
-gate_next 2026-10-22T03:24:56Z at 772280fd814a90d1a45dde73ab5506f3bf58138a, grammar 9342cef5fc7d3774
-omc.om from origin/seed/omega-in-omega@ad1da6e5
-PASS fuzz: fuzz: 38 files, 3030 word prefixes, 6054 cut words, every one with exactly one parse
+gate_next 2026-10-22T03:57:42Z at 23847e9a613b0330ad756b9d4c1b018eb8250adc, grammar 9342cef5fc7d3774
+omc.om from origin/seed/omega-in-omega@0a75aa3c
+PASS fuzz: fuzz: 38 files, 15150 word prefixes, 35975 cut words, every one with exactly one parse
 PASS one parse up to the word the grammar refuses [unknown name]:  byte 30 'q': 0 parses
 PASS one parse, grammar takes it, refused later for a type or a rule [20: no implicit widening]
 PASS one parse, grammar takes it, refused later for a type or a rule [20: no implicit narrowing]

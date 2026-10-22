@@ -45,7 +45,7 @@ Every case gate4 has, run both ways (`evidence/OMEGA-REF/gate_ref.log`):
 - the 14 programs that must stop with a given status;
 - the 41 refused programs: the same refusal number.
 
-Result (against om4 at seed/omega-in-omega@ad1da6e5, after L408 fixed F1 and F2 and dropped `free`):
+Result (against om4 at seed/omega-in-omega@0a75aa3c, after L408 fixed F1 and F2 and dropped `free`):
 208 cases written, 208 run, all equal (GATE_REF PASS, RC=0). Negative control: a copy of the
 interpreter with signed division made unsigned is caught on fm1.
 
@@ -58,7 +58,8 @@ a model whose choices are masked) can never be halfway into something that has t
 each word it counts the ways the words so far can be read. The check (`evidence/OMEGA-REF/gate_next.log`,
 GATE_NEXT PASS, RC=0):
 
-- every word prefix (3,030) and every cut inside a word (6,054) of the 38 accepted gate4 programs: exactly
+- every word prefix (15,150) and every cut inside a word (35,975) of the 37 accepted gate4 programs and
+  of omc.om, the Omega compiler written in Omega (13,418 word prefixes on its own): exactly
   one reading, the real next word legal, a half-written word still finishable;
 - the 41 refused gate4 programs: one reading up to the word where the grammar stops;
 - 740 one-word mutants of those programs: whatever om4 or the interpreter accepts, the grammar accepts;
@@ -69,8 +70,22 @@ GATE_NEXT PASS, RC=0):
 
 `omega_next next s9.grammar prefix-file` prints the legal next words after any prefix, one per line, in
 the style of `omegese next --machine`. It knows words and names, not types, so it may allow a word that a
-type rule refuses later (16 of the 52 mutants it accepts). When L408 pushes `seed/omc/omc.om`, the same
-gate runs over every prefix of it.
+type rule refuses later (16 of the 52 mutants it accepts).
+
+## Diverse double-compiling: a third parent for omc (`tools/omega_ref/gate_ddc.sh`)
+
+L408 wrote the Omega compiler in Omega (`seed/omc/omc.om`). om4 builds it once (stage 1); stage 1 then
+compiles omc.om again (stage 2). Both steps share om4's way of making machine code, so a mistake in that
+design could copy itself into both and still look consistent. The interpreter shares none of it: it runs
+omc.om on its own source text by meaning alone.
+
+Result (`evidence/OMEGA-REF/gate_ddc.log`, `ddc.sha256`, omc.om at 0a75aa3c): the interpreter's output is
+byte for byte the same 74,740-byte program as stage 2, sha256 10d7565239ca6bd3...b01398e (the same
+fingerprint L408 reports for its stage 2 = stage 3 rebuild). GATE_DDC PASS, RC=0. Controls: an interpreter
+with one bit of unsigned shift changed gives a different program, and one changed byte of stage 2 is caught.
+
+In plain words: two completely different ways of reading the compiler (one turns it into machine code, one
+just follows the rules) agree on every one of the 74,740 bytes it produces when it compiles itself.
 
 ## Beyond gate4: probes of the rule book
 
