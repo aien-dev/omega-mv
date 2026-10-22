@@ -23,8 +23,9 @@ const results=[];
 for(const [label,args,failure] of cases){
  const r=spawnSync(process.execPath,args,{encoding:'utf8',timeout:65000});
  fs.writeFileSync(path.join(out,label+'.log'),r.stdout+r.stderr);
- const pass=failure?r.status===1&&r.stdout.includes(`"name":"${failure}"`)&&r.stdout.includes('"verdict":"FAIL"'):r.status===0;
- const row={label,command:[process.execPath,...args],exit:r.status,signal:r.signal,error:r.error?.message??null,expected_failure:failure??null,pass};results.push(row);console.log(JSON.stringify(row));
+ const failures=r.stdout.split('\n').flatMap(line=>{try{const row=JSON.parse(line);return row.verdict==='FAIL'?[row.name]:[];}catch{return [];}});
+ const pass=failure?r.status===1&&failures.length===1&&failures[0]===failure:r.status===0&&failures.length===0;
+ const row={label,command:[process.execPath,...args],exit:r.status,signal:r.signal,error:r.error?.message??null,expected_failure:failure??null,actual_failures:failures,pass};results.push(row);console.log(JSON.stringify(row));
  if(!pass)process.exitCode=1;
 }
 const sources=Object.fromEntries(['Makefile','tools/with_build_lock.sh','tests/physics_build_concurrency_controls.mjs','tests/physics_build_concurrency_test.mjs','tests/physics_build_lifecycle_test.mjs','tests/physics_header_identity_test.mjs'].map(p=>[p,hash(fs.readFileSync(p))]));
