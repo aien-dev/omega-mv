@@ -1,0 +1,19 @@
+{
+  "phase": "green",
+  "command": [
+    "quiet-build",
+    "make",
+    "--no-print-directory",
+    "OUT_DIR=/home/drakestapleton/workspace/targets/L562-green",
+    "test-osh-host"
+  ],
+  "entry_SIGINT": "DFL",
+  "entry_SIGQUIT": "IGN",
+  "exit": 0,
+  "log": "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L562-green.log",
+  "summary": [
+    "checks passed 1564 failed 0",
+    "checks passed 1564 failed 0",
+    "test-osh-host: PASS (execution service; plain and ASan/UBSan)"
+  ]
+}

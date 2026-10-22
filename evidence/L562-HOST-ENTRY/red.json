@@ -1,0 +1,18 @@
+{
+  "phase": "red",
+  "command": [
+    "quiet-build",
+    "make",
+    "--no-print-directory",
+    "OUT_DIR=/home/drakestapleton/workspace/targets/L562-red",
+    "test-osh-host"
+  ],
+  "entry_SIGINT": "DFL",
+  "entry_SIGQUIT": "IGN",
+  "exit": 2,
+  "log": "/home/drakestapleton/handoffs/omega-issue-sweep-20261022/L562-red.log",
+  "summary": [
+    "checks passed 1559 failed 5",
+    "OSH_HOST_FAIL"
+  ]
+}
