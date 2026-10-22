@@ -3,8 +3,8 @@
  * (osc_ir_decode, src/compiler/osc_ir.c) against the format in
  * spec/one-layer-format.md.
  *
- *   1. corpus      every .osc unit under tests/compiler/{progs,slices}, src/osh and
- *                  tests/physics0/osc that the front end compiles: encode -> decode
+ *   1. corpus      every .osc unit under tests/compiler/{progs,slices} and the frozen
+ *                  tests/compiler/corpus/{osh,physics0} that the front end compiles: encode -> decode
  *                  -> encode is byte-identical, the decoded unit equals the compiled
  *                  one in every encoded field, digests agree, all five versions seen.
  *   2. valid       unit-level variants of the corpus (constants, names, contract
@@ -587,8 +587,8 @@ int main(int argc, char **argv) {
     if (!g_dec || !g_tmp || !g_digs || !g_e1 || !g_e2) { printf("out of memory\n"); return 1; }
     load_dir("tests/compiler/progs");
     load_dir("tests/compiler/slices");
-    load_dir("src/osh");
-    load_dir("tests/physics0/osc");
+    load_dir("tests/compiler/corpus/osh");
+    load_dir("tests/compiler/corpus/physics0");
     if (g_ncorpus == 0) { printf("FAIL: no corpus (run from the repository root)\n"); return 1; }
     printf("OSC_IR_ENCODED_MAX=%u bytes; mode=%s\n", (unsigned)OSC_IR_ENCODED_MAX, quick ? "quick (smoke counts, not gate evidence)" : mode);
     test_corpus();
