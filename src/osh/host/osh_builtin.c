@@ -654,12 +654,7 @@ static int bi_unset(OshSession *s, const OshCmd *c, const int io[3])
 static int bi_exit(OshSession *s, const OshCmd *c, const int io[3], int in_parent)
 {
     int st = s->last_status & 0xff;
-    if (c->nargv > 2) {
-        osh_diag(io[2], "exit: too many arguments");
-        if (in_parent) s->abort_list = 1; /* bash: no exit, status 1, the rest of this list is not run */
-        return 1;
-    }
-    if (c->nargv == 2) {
+    if (c->nargv >= 2) {
         char *end;
         errno = 0;
         long v = strtol(c->argv[1], &end, 10);
@@ -667,6 +662,12 @@ static int bi_exit(OshSession *s, const OshCmd *c, const int io[3], int in_paren
             osh_diag(io[2], "exit: %s: numeric argument required", c->argv[1]);
             st = 2;
         } else {
+            /* bash validates the first number before rejecting extra arguments. */
+            if (c->nargv > 2) {
+                osh_diag(io[2], "exit: too many arguments");
+                if (in_parent) s->abort_list = 1; /* no exit; stop only this list */
+                return 1;
+            }
             st = (int)(v & 0xff);
         }
     }
