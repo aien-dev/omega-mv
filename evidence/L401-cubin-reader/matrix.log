@@ -1,0 +1,56 @@
+== 2026-10-22T01:47:08Z commit a8ffd2b9 fuzz=120
+mutants written
+built h_orig
+built h_new
+built h_mutcap
+built h_muthex
+-- A_orig_mutarch: harness=orig reader=mut_arch want=PASS-vacuous rc=0 secs=0 cubin_lines_in_log=0
+   external byte slices: programs=9/9 expect_runs=86 fuzz_runs=3480 diff_runs=3566 host_refusals=9
+   OSC1_COMPILER_PASS golden=47 neg=138 diff_runs=17096 checks=60406
+-- A2_orig_real: harness=orig reader=real want=PASS rc=0 secs=0 cubin_lines_in_log=0
+   external byte slices: programs=9/9 expect_runs=86 fuzz_runs=3480 diff_runs=3566 host_refusals=9
+   OSC1_COMPILER_PASS golden=47 neg=138 diff_runs=17096 checks=60406
+-- B_new_mutarch: harness=new reader=mut_arch want=FAIL rc=1 secs=1 cubin_lines_in_log=12
+   run-line grammar self-test: 49 cases
+   external byte slices: programs=8/9 expect_runs=182 fuzz_runs=3480 diff_runs=3662 host_refusals=9
+   run lines: slice-run keyed=182 ran=182  expect-run keyed=143 ran=143
+   OSC1_COMPILER_FAIL golden=47/47 neg=138/138 failed=12
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: arch_of bytes:7f454c460201014108000000000000000200be000100
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: arch_of bytes:7f454c460201014108000000000000000200be000100
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: arch_of bytes:7f454c460201014108000000000000000200be000100
+-- C_new_stub: harness=new reader=stub want=FAIL-all rc=1 secs=0 cubin_lines_in_log=40
+   run-line grammar self-test: 49 cases
+   external byte slices: programs=8/9 expect_runs=182 fuzz_runs=3480 diff_runs=3662 host_refusals=9
+   run lines: slice-run keyed=182 ran=182  expect-run keyed=143 ran=143
+   OSC1_COMPILER_FAIL golden=47/47 neg=138/138 failed=117
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: u16_at bytes:0102030405060708 6 -> 2055': got trap 0 ret 7
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: u16_at bytes:0102030405060708 7 -> trap=BOUNDS': got trap 
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: u16_at bytes:NULL 0 -> trap=BOUNDS': got trap 0 ret 777777
+-- D_new_real: harness=new reader=real want=PASS rc=0 secs=0 cubin_lines_in_log=0
+   run-line grammar self-test: 49 cases
+   external byte slices: programs=9/9 expect_runs=182 fuzz_runs=3480 diff_runs=3662 host_refusals=9
+   run lines: slice-run keyed=182 ran=182  expect-run keyed=143 ran=143
+   OSC1_COMPILER_PASS golden=47 neg=138 diff_runs=17096 checks=61048
+-- E_mutcap_real: harness=mutcap reader=real want=FAIL-skipped rc=1 secs=0 cubin_lines_in_log=1
+   run-line grammar self-test: 49 cases
+   external byte slices: programs=8/9 expect_runs=86 fuzz_runs=3480 diff_runs=3566 host_refusals=9
+   run lines: slice-run keyed=182 ran=86  expect-run keyed=143 ran=143
+   OSC1_COMPILER_FAIL golden=47/47 neg=138/138 failed=1
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_mutcap.c:2159: cubin_elf.osc: 117 slice-run lines, 21 handled: lines were skipped
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_mutcap.c:2159: cubin_elf.osc: 117 slice-run lines, 21 handled: lines were skipped
+-- F_muthex_real: harness=muthex reader=real want=FAIL-grammar rc=1 secs=0 cubin_lines_in_log=0
+   run-line grammar self-test: 49 cases
+   external byte slices: programs=9/9 expect_runs=182 fuzz_runs=3480 diff_runs=3662 host_refusals=9
+   run lines: slice-run keyed=182 ran=182  expect-run keyed=143 ran=143
+   OSC1_COMPILER_FAIL golden=47/47 neg=138/138 failed=2
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_muthex.c:2028: run-line grammar accepted bad argument 'bytes:zz'
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_muthex.c:2028: run-line grammar accepted bad argument 'bytes:0g'
+-- G_new_mutfits: harness=new reader=mut_fits want=FAIL-wrap rc=1 secs=1 cubin_lines_in_log=4
+   run-line grammar self-test: 49 cases
+   external byte slices: programs=8/9 expect_runs=182 fuzz_runs=3480 diff_runs=3662 host_refusals=9
+   run lines: slice-run keyed=182 ran=182  expect-run keyed=143 ran=143
+   OSC1_COMPILER_FAIL golden=47/47 neg=138/138 failed=4
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: layout_ok bytes:7f454c460201014108000000000000000200be0001
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: text_count bytes:7f454c460201014108000000000000000200be000
+   ! FAIL /home/drakestapleton/handoffs/l401-osc/src/h_new.c:2149: cubin_elf.osc: slice-run '// slice-run: hdr_ok bytes:7f454c460201014108000000000000000200be0001000
+== done 2026-10-22T01:47:25Z

@@ -1,0 +1,76 @@
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/test_osc_model tests/compiler/test_osc_model.c src/compiler/model/osc_model.c src/compiler/model/osc_model_gen.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/compiler/test_osc_model_asan tests/compiler/test_osc_model.c src/compiler/model/osc_model.c src/compiler/model/osc_model_gen.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/test_osc_backend tests/compiler/test_osc_backend.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/compiler/test_osc_backend_asan tests/compiler/test_osc_backend.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/test_osc_alloc tests/compiler/test_osc_alloc.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/compiler/test_osc_alloc_asan tests/compiler/test_osc_alloc.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/test_osc_compiler tests/compiler/test_osc_compiler.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c src/compiler/model/osc_model.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/compiler/test_osc_compiler_asan tests/compiler/test_osc_compiler.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c src/compiler/model/osc_model.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/oscc src/compiler/oscc_main.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/test_legacy_a64 tests/compiler/test_legacy_a64.c src/aarch64_encoder.c src/aarch64_decoder.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/compiler/test_legacy_a64_asan tests/compiler/test_legacy_a64.c src/aarch64_encoder.c src/aarch64_decoder.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/test_osc_ir_decode tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/compiler/test_osc_ir_decode_asan tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=1 -o build/compiler/test_osc_ir_decode_mutant1 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=2 -o build/compiler/test_osc_ir_decode_mutant2 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=3 -o build/compiler/test_osc_ir_decode_mutant3 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=4 -o build/compiler/test_osc_ir_decode_mutant4 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=5 -o build/compiler/test_osc_ir_decode_mutant5 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=6 -o build/compiler/test_osc_ir_decode_mutant6 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=7 -o build/compiler/test_osc_ir_decode_mutant7 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=8 -o build/compiler/test_osc_ir_decode_mutant8 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+decoder mutant 1 caught: FAIL: counterexample one trailing byte: got NONCANONICAL, want TRAILING
+decoder mutant 2 caught: FAIL: counterexample version 2 with no structs: got NONCANONICAL, want VERSION_MISMATCH
+decoder mutant 3 caught: FAIL: counterexample last byte missing: refused but output not zeroed
+decoder mutant 4 caught: FAIL: counterexample u8 constant 256: got OK, want INVALID
+decoder mutant 5 caught: FAIL: counterexample NUL inside a function name: got NONCANONICAL, want TEXT
+decoder mutant 6 caught: FAIL: counterexample register 0x8000: got INVALID, want RANGE
+decoder mutant 7 caught: FAIL: counterexample input longer than OSC_IR_ENCODED_MAX: got TRAILING, want OVERSIZED
+decoder mutant 8 caught: FAIL: counterexample last byte missing: got NONCANONICAL, want TRUNCATED
+test-osc-ir-decode-mutants: PASS (8 of 8 caught)
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_ir_decode full > build/compiler/ir_decode.out
+OSC_IR_DECODE_PASS
+corpus: units=60 round_trip_ok=60 compile_refused=0 versions v1=32 v2=7 v3=6 v4=3 v5=12
+refusal classes: 22/22 cases as expected; classes exhibited=10 of 11 (NONCANONICAL is the unreachable backstop)
+valid objects: distinct=10000 tries=11310 invalid_variants_skipped=29 (all round-trip byte-exact)
+malformed: cases=209707 refused=182773 admitted_as_other_canonical_unit=26934 (each re-encodes to its own bytes) ARG=0 MAGIC=2288 UNKNOWN_VERSION=272 TRUNCATED=
+ASAN_OPTIONS=detect_stack_use_after_return=0 /home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_ir_decode_asan asan > build/compiler/ir_decode_asan.out
+OSC_IR_DECODE_PASS
+test-osc-ir-decode: PASS (strict decoder, plain full + ASan/UBSan + mutants)
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_model > build/compiler/model.out
+OSC0B_MODEL_PASS
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_model_asan 05c0b5eed0010001 100000 > build/compiler/model_asan.out
+OSC0B_MODEL_SMOKE_PASS
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_backend > build/compiler/backend.out
+OSC1_BACKEND_PASS
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_backend_asan > build/compiler/backend_asan.out
+OSC1_BACKEND_PASS
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_alloc > build/compiler/alloc.out
+PASS 48 1406
+alloc sweep: programs=48 (golden files 47 + 1 generated) calls=1406 peak_max=3111392 emit_peak_max=198896 fail_points=1406 (front=926 emit=480) budget_pairs=48 validate_points=334 checks=8757 failed=0
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_alloc_asan > build/compiler/alloc_asan.out
+PASS 48 1406
+test-osc-alloc: PASS
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_compiler > build/compiler/compiler.out
+OSC1_COMPILER_PASS golden=47 neg=138 diff_runs=141032 checks=480732
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_osc_compiler_asan  > build/compiler/compiler_asan.out
+OSC1_COMPILER_PASS golden=47 neg=138 diff_runs=141032 checks=480732
+sh tests/compiler/determinism.sh /home/drakestapleton/workspace/omega-osc-cubin/build/compiler/oscc > build/compiler/determinism.out
+OSC1_DETERMINISM_PASS
+contract fuzz: units=200 compiled=174 static_refused=26 runs=11136 ok=882 requires=5435 ensures=4384 overflow=435 other_traps=0 mismatches=0
+struct fuzz: units=125 runs=6000 ok=3805 bounds=1087 requires=155 overflow=224 cast=729 mismatches=0
+struct fuzz: units=125 runs=6000 ok=3805 bounds=1087 requires=155 overflow=224 cast=729 mismatches=0
+arena fuzz: units=125 allocs=557 runs=6000 ok=2542 arena_full=2606 bounds=639 overflow=213 mismatches=0
+arena fuzz: units=125 allocs=557 runs=6000 ok=2542 arena_full=2606 bounds=639 overflow=213 mismatches=0
+arena destruction order: alloc 1, open 2, aalloc 3, open 4, aalloc 5, alloc 6, release 6, destroy 4, alloc 7, release 7, destroy 2, release 1 (interp == native)
+runtime model replay: runs=141180 events=780267 accepted=141180 rejected=0
+runtime model replay: runs=141180 events=780267 accepted=141180 rejected=0
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_legacy_a64 > build/compiler/legacy_a64.out
+OSC2_LEGACY_A64_PASS
+/home/drakestapleton/workspace/omega-osc-cubin/build/compiler/test_legacy_a64_asan quick > build/compiler/legacy_a64_asan.out
+OSC2_LEGACY_A64_PASS
+legacy a64 differential: emitters=25 mode=full words=71266833 decoded=71266817 mismatches=0
+sh tests/compiler/legacy_a64_callers.sh --selftest > build/compiler/legacy_callers.out
+OSC2_LEGACY_CALLERS_PASS callers=16 selftest=3/3
+test-compiler: PASS (OSC-1 slice + OSC-2 contracts + structs + arenas + legacy AArch64 writer; OSC-2 slice; not a general Omega compiler; no self-hosting.)
+RC=0

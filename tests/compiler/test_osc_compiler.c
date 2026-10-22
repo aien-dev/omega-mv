@@ -24,6 +24,7 @@
  * OSC-1 slice; not a general Omega compiler; no self-hosting.
  */
 #include <dirent.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -474,13 +475,105 @@ static int rt_replay_run(const OscRt *rt, const char *ctx)
 
 /* ------------------------------------------------------------ golden */
 static OscUnit *U1, *U2;
-static unsigned long expect_total;
+static unsigned long expect_total, expect_lines_keyed;
 static const char *trap_names[OSC_TRAP_MAX + 1] = {"none", "OVERFLOW", "DIV0", "BOUNDS", "LOOP_BOUND", "CAST", "OOM", "SHIFT", "RUNTIME", "REQUIRES", "ENSURES", "ARENA_FULL", "STALE", "POOL_FULL", "RETIRED"};
 
 static uint64_t parse_val(const char *s)
 {
     if (*s == '-') return (uint64_t)strtoll(s, NULL, 10);
     return strtoull(s, NULL, 10);
+}
+
+/* Strict forms for the hand-written run lines. A malformed token (trailing junk, a non-digit, a value out of
+ * range) is a broken test line: it must fail the run, not parse as some other number. */
+static int parse_val_strict(const char *s, uint64_t *out)
+{
+    if (!s) return -1;
+    const char *d = s + (*s == '-');
+    if (!*d) return -1;
+    for (const char *q = d; *q; q++)
+        if (*q < '0' || *q > '9') return -1;
+    char *end = NULL;
+    errno = 0;
+    if (*s == '-') {
+        long long v = strtoll(s, &end, 10);
+        if (errno || *end) return -1;
+        *out = (uint64_t)v;
+    } else {
+        unsigned long long v = strtoull(s, &end, 10);
+        if (errno || *end) return -1;
+        *out = v;
+    }
+    return 0;
+}
+
+/* `a,b,c` of strict decimals, possibly empty; 0 when well formed. Does not modify s. */
+static int strict_list_ok(const char *s)
+{
+    while (*s) {
+        const char *q = s + (*s == '-');
+        if (*q < '0' || *q > '9') return -1;
+        while (*q >= '0' && *q <= '9') q++;
+        if (*q == ',') {
+            if (!q[1]) return -1;
+            q++;
+        } else if (*q) {
+            return -1;
+        }
+        s = q;
+    }
+    return 0;
+}
+
+/* `-> VALUE` or `-> trap=NAME` with a known trap name; 0 when well formed */
+static int result_token_ok(const char *res)
+{
+    uint64_t v;
+    if (!res) return -1;
+    if (strncmp(res, "trap=", 5) == 0) {
+        for (int k = 1; k <= OSC_TRAP_MAX; k++)
+            if (strcmp(res + 5, trap_names[k]) == 0) return 0;
+        return -1;
+    }
+    return parse_val_strict(res, &v);
+}
+
+/* A line whose first word is a run key's stem must carry the exact key at column 0. Returns how many exact key
+ * lines the file has; the runner compares that with the lines it handled, so a line dropped by any filter
+ * (a length cap, a parse shortcut) fails the program instead of passing it by never running. */
+static unsigned long keyed_lines(const char *src, const char *key, unsigned long *malformed, const char **first_bad)
+{
+    size_t kl = strlen(key), stem = kl - 2; /* "// slice-run: " -> "// slice-run" */
+    unsigned long n = 0;
+    *malformed = 0;
+    *first_bad = NULL;
+    for (const char *p = src; p && *p;) {
+        const char *eol = strchr(p, '\n');
+        size_t l = eol ? (size_t)(eol - p) : strlen(p);
+        const char *q = p;
+        while (q < p + l && (*q == ' ' || *q == '\t')) q++;
+        if ((size_t)(p + l - q) >= stem && strncmp(q, key, stem) == 0) {
+            if (q == p && l > kl && strncmp(p, key, kl) == 0) {
+                n++;
+            } else {
+                if (!*malformed) *first_bad = p;
+                (*malformed)++;
+            }
+        }
+        p = eol ? eol + 1 : NULL;
+    }
+    return n;
+}
+
+/* count the exact key lines in src and fail on any line that carries the key's stem in another form */
+static unsigned long keyed_lines_checked(const char *name, const char *src, const char *key)
+{
+    unsigned long malformed = 0;
+    const char *fb = NULL;
+    unsigned long n = keyed_lines(src, key, &malformed, &fb);
+    CHECK(malformed == 0, "%s: %lu malformed run lines (want '%s' at column 0), first: '%.60s'", name, malformed, key,
+          fb ? fb : "");
+    return n;
 }
 
 /* `// expect-run: ENTRY ARG... -> VALUE` or `-> trap=NAME`: hand-computed
@@ -1783,7 +1876,7 @@ typedef struct {
     unsigned nargs;                /* source arguments */
 } SliceCase;
 
-static unsigned long slice_ok, slice_runs, slice_expect, slice_fuzz_runs, slice_neg_overlap;
+static unsigned long slice_ok, slice_runs, slice_expect, slice_fuzz_runs, slice_neg_overlap, slice_lines_keyed;
 
 static void slice_free(SliceCase *s)
 {
@@ -1836,19 +1929,34 @@ static int slice_parse_arg(SliceCase *s, char *t)
         s->kind[i] = cells ? 2 : 1;
         if (strcmp(v, "NULL") == 0) { s->is_null[i] = 1; s->n[i] = 0; return 0; }
         if (cells) {
+            /* `cells:N` (N zeroed cells) or `cells:N=v,...` with exactly N strict values */
             char *eq = strchr(v, '=');
-            s->n[i] = strtoull(v, NULL, 10);
-            s->bp[i] = calloc(s->n[i] ? s->n[i] : 1, 8);
+            uint64_t nn = 0;
+            if (eq) *eq = 0;
+            if (parse_val_strict(v, &nn) || nn > 4096) return -1;
+            if (eq && strict_list_ok(eq + 1)) return -1;
+            s->n[i] = nn;
+            s->bp[i] = calloc(nn ? nn : 1, 8);
+            if (!s->bp[i]) return -1;
             if (eq) {
                 uint64_t *w = (uint64_t *)s->bp[i];
                 char *save = NULL;
-                unsigned k = 0;
-                for (char *x = strtok_r(eq + 1, ",", &save); x && k < s->n[i]; x = strtok_r(NULL, ",", &save)) w[k++] = parse_val(x);
+                uint64_t k = 0;
+                for (char *x = strtok_r(eq + 1, ",", &save); x; x = strtok_r(NULL, ",", &save), k++)
+                    if (k >= nn || parse_val_strict(x, &w[k])) return -1;
+                if (k != nn) return -1;
             }
         } else {
+            /* `bytes:HEX`: an even number of hex digits; anything else is a broken line, not zero bytes */
             size_t hl = strlen(v);
+            if (hl % 2) return -1;
+            for (size_t k = 0; k < hl; k++) {
+                char c = v[k];
+                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) return -1;
+            }
             s->n[i] = hl / 2;
             s->bp[i] = malloc(s->n[i] ? s->n[i] : 1);
+            if (!s->bp[i]) return -1;
             for (size_t k = 0; k < s->n[i]; k++) {
                 char h[3] = {v[2 * k], v[2 * k + 1], 0};
                 s->bp[i][k] = (uint8_t)strtoul(h, NULL, 16);
@@ -1856,8 +1964,7 @@ static int slice_parse_arg(SliceCase *s, char *t)
         }
         return 0;
     }
-    s->sc[i] = parse_val(t);
-    return 0;
+    return parse_val_strict(t, &s->sc[i]);
 }
 
 /* run one case on both engines; returns 0 and fills the outcome, -1 on disagreement */
@@ -1891,6 +1998,64 @@ static int slice_run(const char *name, const char *what, int fi, const SliceCase
     return same ? 0 : -1;
 }
 
+/* The run-line grammar itself: each malformed token must be refused and each well-formed one accepted. If a
+ * check here is weakened (say the hex digit test is dropped), these cases fail before any program runs. */
+static unsigned long grammar_cases;
+static void run_line_selftest(void)
+{
+    static const char *good_args[] = {"bytes:0a", "bytes:", "bytes:NULL", "bytes:ABcd", "cells:2=1,2", "cells:3", "cells:0=",
+                                      "cells:NULL", "0", "18446744073709551615", "-9223372036854775808", "-1"};
+    static const char *bad_args[] = {"bytes:0", "bytes:zz", "bytes:0g", "12abc", "1x", "-", "+1", "18446744073709551616",
+                                     "-9223372036854775809", "cells:2=1", "cells:2=1,2,3", "cells:x", "cells:2=1,x",
+                                     "cells:2=1,,2", "cells:2=1,2,", "cells:5000"};
+    static const char *good_res[] = {"0", "-1", "18446744073709551615", "trap=BOUNDS", "trap=REQUIRES"};
+    static const char *bad_res[] = {"trap=NOPE", "trap=", "1x", "", "trap=none"};
+    static const char *good_list[] = {"", "1", "1,2,-3"};
+    static const char *bad_list[] = {"1,", ",1", "1,,2", "a", "1;2", "-"};
+    char buf[64];
+    for (size_t i = 0; i < sizeof good_args / sizeof *good_args; i++) {
+        SliceCase s;
+        memset(&s, 0, sizeof s);
+        snprintf(buf, sizeof buf, "%s", good_args[i]);
+        CHECK(slice_parse_arg(&s, buf) == 0, "run-line grammar refused good argument '%s'", good_args[i]);
+        slice_free(&s);
+        grammar_cases++;
+    }
+    for (size_t i = 0; i < sizeof bad_args / sizeof *bad_args; i++) {
+        SliceCase s;
+        memset(&s, 0, sizeof s);
+        snprintf(buf, sizeof buf, "%s", bad_args[i]);
+        CHECK(slice_parse_arg(&s, buf) != 0, "run-line grammar accepted bad argument '%s'", bad_args[i]);
+        slice_free(&s);
+        grammar_cases++;
+    }
+    for (size_t i = 0; i < sizeof good_res / sizeof *good_res; i++, grammar_cases++)
+        CHECK(result_token_ok(good_res[i]) == 0, "run-line grammar refused good result '%s'", good_res[i]);
+    for (size_t i = 0; i < sizeof bad_res / sizeof *bad_res; i++, grammar_cases++)
+        CHECK(result_token_ok(bad_res[i]) != 0, "run-line grammar accepted bad result '%s'", bad_res[i]);
+    CHECK(result_token_ok(NULL) != 0, "run-line grammar accepted a missing result");
+    for (size_t i = 0; i < sizeof good_list / sizeof *good_list; i++, grammar_cases++)
+        CHECK(strict_list_ok(good_list[i]) == 0, "run-line grammar refused good list '%s'", good_list[i]);
+    for (size_t i = 0; i < sizeof bad_list / sizeof *bad_list; i++, grammar_cases++)
+        CHECK(strict_list_ok(bad_list[i]) != 0, "run-line grammar accepted bad list '%s'", bad_list[i]);
+    /* a long line and an indented or unspaced key: counted or reported, never silently ignored */
+    static char longsrc[2400];
+    memset(longsrc, 0, sizeof longsrc);
+    strcpy(longsrc, "// slice-run: f bytes:");
+    size_t at = strlen(longsrc);
+    for (int i = 0; i < 1000; i++) longsrc[at++] = '0';
+    strcpy(longsrc + at, " -> 0\n// slice-run: g -> 1\n");
+    unsigned long mal = 0;
+    const char *fb = NULL;
+    unsigned long nk = keyed_lines(longsrc, "// slice-run: ", &mal, &fb);
+    CHECK(nk == 2 && mal == 0, "run-line grammar: long source gave %lu keyed lines (want 2), %lu malformed", nk, mal);
+    nk = keyed_lines("  // slice-run: f -> 1\n// slice-run:f -> 1\n// slice-run: g -> 1\n", "// slice-run: ", &mal, &fb);
+    CHECK(nk == 1 && mal == 2, "run-line grammar: indented and unspaced keys gave %lu keyed, %lu malformed (want 1, 2)", nk,
+          mal);
+    grammar_cases += 2;
+    printf("run-line grammar self-test: %lu cases\n", grammar_cases);
+}
+
 static void slice_prog(const char *dir, const char *name, unsigned fuzz)
 {
     char path[1024], ent[512];
@@ -1921,28 +2086,38 @@ static void slice_prog(const char *dir, const char *name, unsigned fuzz)
     OscNative nm;
     if (cg1 || osc_native_map(&nm, c1.code, c1.len)) { if (!cg1) osc_cg_free(&c1); free(src); CHECK(0, "%s: no native code", name); return; }
 
-    /* hand-written runs */
+    /* hand-written runs: every keyed line is run or reported, none dropped. A fixed 400-byte line buffer once
+     * skipped longer lines, so a long fixture (a real cubin image) passed by never running. */
     const char *key = "// slice-run: ";
     size_t kl = strlen(key);
+    unsigned long keyed = keyed_lines_checked(name, src, key), handled = 0;
     for (const char *p = src; p && *p;) {
         const char *eol = strchr(p, '\n');
         size_t l = eol ? (size_t)(eol - p) : strlen(p);
-        if (l > kl && strncmp(p, key, kl) == 0 && l - kl < 400) {
-            char line[512], *save = NULL, *t, *res = NULL, *cellsx = NULL;
+        if (l > kl && strncmp(p, key, kl) == 0) {
+            char *line = malloc(l - kl + 1), *save = NULL, *t, *res = NULL, *cellsx = NULL;
+            if (!line) { CHECK(0, "%s: out of memory copying a slice-run line", name); exit(1); }
             memcpy(line, p + kl, l - kl);
             line[l - kl] = 0;
+            handled++;
             char *en = strtok_r(line, " ", &save);
             SliceCase s;
             memset(&s, 0, sizeof s);
+            int bad = 0;
             while ((t = strtok_r(NULL, " ", &save))) {
                 if (strcmp(t, "->") == 0) { res = strtok_r(NULL, " ", &save); cellsx = strtok_r(NULL, " ", &save); break; }
-                if (s.nargs < OSC_MAX_PARAMS) slice_parse_arg(&s, t);
+                if (s.nargs >= OSC_MAX_PARAMS || slice_parse_arg(&s, t)) bad = 1;
             }
+            if (result_token_ok(res)) bad = 1;
+            if (cellsx && (strncmp(cellsx, "cells=", 6) != 0 || strict_list_ok(cellsx + 6))) bad = 1;
+            if (res && strtok_r(NULL, " ", &save)) bad = 1; /* nothing may follow the result */
             int fi = -1;
             for (int k = 0; en && k < U1->nfuncs; k++)
                 if (strcmp(U1->funcs[k].name, en) == 0) fi = k;
-            CHECK(fi >= 0 && res, "%s: bad slice-run line '%.*s'", name, (int)l, p);
-            if (fi >= 0 && res) {
+            int well = !bad && fi >= 0 && res;
+            CHECK(well, "%s: bad slice-run line '%.*s'", name, (int)(l < 200 ? l : 200), p);
+            if (!well) slice_free(&s);
+            if (well) {
                 int want_trap = 0, ti = 0;
                 uint64_t want = 0, ri = 0;
                 if (strncmp(res, "trap=", 5) == 0) {
@@ -1957,24 +2132,32 @@ static void slice_prog(const char *dir, const char *name, unsigned fuzz)
                     if (s.kind[i] == 2 && !s.is_null[i]) { out.bp[i] = malloc(s.n[i] ? s.n[i] * 8 : 1); }
                 int rr = slice_run(name, line, fi, &s, &nm, c1.entry[fi], &ti, &ri, &out);
                 int ok = rr == 0 && ti == want_trap && (want_trap || ri == want);
-                if (ok && cellsx && strncmp(cellsx, "cells=", 6) == 0) {
+                if (ok && cellsx) {
+                    int compared = 0;
                     for (unsigned i = 0; i < s.nargs; i++) {
                         if (s.kind[i] != 2 || s.is_null[i]) continue;
                         char *sv = NULL, *w = cellsx + 6;
                         unsigned k = 0;
                         for (char *x = strtok_r(w, ",", &sv); x; x = strtok_r(NULL, ",", &sv), k++)
                             ok = ok && k < s.n[i] && ((uint64_t *)out.bp[i])[k] == parse_val(x);
+                        ok = ok && k == s.n[i];
+                        compared = 1;
                         break;
                     }
+                    ok = ok && compared;
                 }
-                CHECK(ok, "%s: slice-run '%.*s': got trap %d ret %llu", name, (int)l, p, ti, (unsigned long long)ri);
+                CHECK(ok, "%s: slice-run '%.*s': got trap %d ret %llu", name, (int)(l < 200 ? l : 200), p, ti,
+                      (unsigned long long)ri);
                 for (unsigned i = 0; i < s.nargs; i++) if (s.kind[i] == 2 && !s.is_null[i]) free(out.bp[i]);
                 slice_free(&s);
                 slice_expect++;
             }
+            free(line);
         }
         p = eol ? eol + 1 : NULL;
     }
+    CHECK(handled == keyed, "%s: %lu slice-run lines, %lu handled: lines were skipped", name, keyed, handled);
+    slice_lines_keyed += keyed;
 
     /* fuzzed entries: random lengths 0..40 (0 = NULL), random contents, edge-biased scalar arguments */
     if (header(src, "slice-entry:", ent, sizeof ent) == 0) {
@@ -2128,6 +2311,7 @@ int main(int argc, char **argv)
     int np = list_osc(pdir, &pv), nn = list_osc(ndir, &nv);
     CHECK(np >= 20, "need >= 20 golden programs, found %d", np);
     CHECK(nn >= 30, "need >= 30 negative programs, found %d", nn);
+    run_line_selftest();
     printf("golden programs (%d), fuzz=%u per entry:\n", np, fuzz);
     for (int i = 0; i < np; i++) golden(pdir, pv[i], fuzz);
     for (int i = 0; i < nn; i++) negative(ndir, nv[i]);
@@ -2153,6 +2337,8 @@ int main(int argc, char **argv)
         slice_host_checks();
         printf("external byte slices: programs=%lu/%d expect_runs=%lu fuzz_runs=%lu diff_runs=%lu host_refusals=%lu\n", slice_ok, ns,
                slice_expect, slice_fuzz_runs, slice_runs, slice_neg_overlap);
+        printf("run lines: slice-run keyed=%lu ran=%lu  expect-run keyed=%lu ran=%lu\n", slice_lines_keyed, slice_expect,
+               expect_lines_keyed, expect_total);
         for (int i = 0; i < ns; i++) free(sv[i]);
         free(sv);
     }
@@ -2192,26 +2378,35 @@ static void expect_runs(const char *name, const char *src, const OscNative *nm, 
 {
     const char *key = "// expect-run: ";
     size_t kl = strlen(key);
+    unsigned long keyed = keyed_lines_checked(name, src, key), handled = 0;
     for (const char *p = src; p && *p;) {
         const char *eol = strchr(p, '\n');
         size_t l = eol ? (size_t)(eol - p) : strlen(p);
-        if (l > kl && strncmp(p, key, kl) == 0 && l - kl < 400) {
-            char line[512], *save = NULL;
+        if (l > kl && strncmp(p, key, kl) == 0) {
+            /* heap copy of the whole line: no length cap (a fixed buffer once skipped longer lines) */
+            char *line = malloc(l - kl + 1), *save = NULL;
+            if (!line) { CHECK(0, "%s: out of memory copying an expect-run line", name); exit(1); }
             memcpy(line, p + kl, l - kl);
             line[l - kl] = 0;
+            handled++;
             char *ent = strtok_r(line, " ", &save);
             uint64_t args[OSC_MAX_PARAMS + 1] = {0};
             unsigned na = 0;
+            int bad = 0;
             char *t, *res = NULL;
             while ((t = strtok_r(NULL, " ", &save))) {
                 if (strcmp(t, "->") == 0) { res = strtok_r(NULL, " ", &save); break; }
-                if (na <= OSC_MAX_PARAMS) args[na++] = parse_val(t);
+                if (na > OSC_MAX_PARAMS || parse_val_strict(t, &args[na])) bad = 1;
+                else na++;
             }
+            if (result_token_ok(res)) bad = 1;
+            if (res && strtok_r(NULL, " ", &save)) bad = 1; /* nothing may follow the result */
             int fi = -1;
             for (int k = 0; ent && k < U1->nfuncs; k++)
                 if (strcmp(U1->funcs[k].name, ent) == 0) fi = k;
-            CHECK(fi >= 0 && res && na == U1->funcs[fi].nparams, "%s: bad expect-run line '%.*s'", name, (int)l, p);
-            if (fi >= 0 && res && na == U1->funcs[fi].nparams) {
+            int well = !bad && fi >= 0 && res && na == U1->funcs[fi].nparams;
+            CHECK(well, "%s: bad expect-run line '%.*s'", name, (int)(l < 200 ? l : 200), p);
+            if (well) {
                 const OscFunc *f = &U1->funcs[fi];
                 for (unsigned k = 0; k < na; k++) args[k] = canon(f->vtype[k].s, args[k]);
                 int want_trap = 0;
@@ -2231,11 +2426,14 @@ static void expect_runs(const char *name, const char *src, const OscNative *nm, 
                 rt_replay_run(RN, name);
                 int ok = ti == want_trap && tn == want_trap && (want_trap || (ri == want && rn == want &&
                                                                               RI->live_count == 0 && RN->live_count == 0));
-                CHECK(ok, "%s: expect-run '%.*s': interp trap %d ret %llu, native trap %d ret %llu", name, (int)l, p,
-                      ti, (unsigned long long)ri, tn, (unsigned long long)rn);
+                CHECK(ok, "%s: expect-run '%.*s': interp trap %d ret %llu, native trap %d ret %llu", name,
+                      (int)(l < 200 ? l : 200), p, ti, (unsigned long long)ri, tn, (unsigned long long)rn);
                 expect_total++;
             }
+            free(line);
         }
         p = eol ? eol + 1 : NULL;
     }
+    CHECK(handled == keyed, "%s: %lu expect-run lines, %lu handled: lines were skipped", name, keyed, handled);
+    expect_lines_keyed += keyed;
 }

@@ -1,0 +1,155 @@
+// ELF64 CUDA image (cubin) reader, written in Omega (L401). The image is a caller byte slice: every b[i] is
+// checked against b.len, so a read past the end traps BOUNDS; hdr_ok, layout_ok and text_count also check every
+// offset before they read, so no input makes them trap. Offset checks never compute off + size (fits below),
+// because an image can set an offset near 2^64 so that the sum wraps to a small number.
+
+fn u16_at(b: bytes, o: u64) -> u64 {
+    return b[o] | (b[o + 1] << 8);
+}
+
+fn u32_at(b: bytes, o: u64) -> u64 {
+    return u16_at(b, o) | (u16_at(b, o + 2) << 16);
+}
+
+fn u64_at(b: bytes, o: u64) -> u64 {
+    return u32_at(b, o) | (u32_at(b, o + 4) << 32);
+}
+
+// 1 when z bytes from offset o lie inside n bytes, without forming o + z
+fn fits(n: u64, o: u64, z: u64) -> u64 {
+    if o > n {
+        return 0;
+    }
+    if z > n - o {
+        return 0;
+    }
+    return 1;
+}
+
+// ELF64, little endian, current version, CUDA machine (190), executable, CUDA ABI version 7 or 8,
+// 64-byte header and section entries, a section table inside the image, a string table index inside it
+fn hdr_ok(b: bytes) -> u64 {
+    if b.len < 64 {
+        return 0;
+    }
+    if b[0] != 127 || b[1] != 69 || b[2] != 76 || b[3] != 70 {
+        return 0;
+    }
+    if b[4] != 2 || b[5] != 1 || b[6] != 1 {
+        return 0;
+    }
+    if b[8] != 7 && b[8] != 8 {
+        return 0;
+    }
+    if u16_at(b, 16) != 2 || u16_at(b, 18) != 190 || u32_at(b, 20) != 1 {
+        return 0;
+    }
+    if u16_at(b, 52) != 64 || u16_at(b, 58) != 64 {
+        return 0;
+    }
+    let shn: u64 = u16_at(b, 60);
+    if shn == 0 {
+        return 0;
+    }
+    if u16_at(b, 62) >= shn {
+        return 0;
+    }
+    return fits(b.len, u64_at(b, 40), 64 * shn);
+}
+
+// the SM number: e_flags bits 8-15 under ABI version 8, bits 0-7 under version 7; all ones for a refused image
+fn arch_of(b: bytes) -> u64 {
+    if hdr_ok(b) == 0 {
+        return 18446744073709551615;
+    }
+    let f: u64 = u32_at(b, 48);
+    if b[8] == 8 {
+        return (f >> 8) & 255;
+    }
+    return f & 255;
+}
+
+// the section string table is type 3, non-empty and inside the image; every section name starts inside it;
+// every section with file bytes (any type but 8, NOBITS) lies inside the image and, when non-empty,
+// overlaps neither the ELF header nor the section table
+fn layout_ok(b: bytes) -> u64 {
+    if hdr_ok(b) == 0 {
+        return 0;
+    }
+    let n: u64 = b.len;
+    let shoff: u64 = u64_at(b, 40);
+    let shn: u64 = u16_at(b, 60);
+    let tend: u64 = shoff + 64 * shn;
+    let st: u64 = shoff + 64 * u16_at(b, 62);
+    if u32_at(b, st + 4) != 3 {
+        return 0;
+    }
+    let ss: u64 = u64_at(b, st + 32);
+    if ss == 0 {
+        return 0;
+    }
+    if fits(n, u64_at(b, st + 24), ss) == 0 {
+        return 0;
+    }
+    let mut i: u64 = 0;
+    while i < shn bound 65536 {
+        let e: u64 = shoff + 64 * i;
+        if u32_at(b, e) >= ss {
+            return 0;
+        }
+        if u32_at(b, e + 4) != 8 {
+            let off: u64 = u64_at(b, e + 24);
+            let sz: u64 = u64_at(b, e + 32);
+            if fits(n, off, sz) == 0 {
+                return 0;
+            }
+            if sz > 0 {
+                if off < 64 {
+                    return 0;
+                }
+                if off < tend && off + sz > shoff {
+                    return 0;
+                }
+            }
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+// 1 when the name at string-table offset no starts with ".text." inside the table
+fn is_text_name(b: bytes, so: u64, ss: u64, no: u64) -> u64 {
+    if no >= ss {
+        return 0;
+    }
+    if ss - no < 6 {
+        return 0;
+    }
+    let p: u64 = so + no;
+    if b[p] != 46 || b[p + 1] != 116 || b[p + 2] != 101 || b[p + 3] != 120 || b[p + 4] != 116 || b[p + 5] != 46 {
+        return 0;
+    }
+    return 1;
+}
+
+// kernels in the image: PROGBITS (type 1) sections named ".text.*"; all ones for a refused image
+fn text_count(b: bytes) -> u64 {
+    if layout_ok(b) == 0 {
+        return 18446744073709551615;
+    }
+    let shoff: u64 = u64_at(b, 40);
+    let shn: u64 = u16_at(b, 60);
+    let st: u64 = shoff + 64 * u16_at(b, 62);
+    let so: u64 = u64_at(b, st + 24);
+    let ss: u64 = u64_at(b, st + 32);
+    let mut c: u64 = 0;
+    let mut i: u64 = 1;
+    while i < shn bound 65536 {
+        let e: u64 = shoff + 64 * i;
+        if u32_at(b, e + 4) == 1 {
+            c = c + is_text_name(b, so, ss, u32_at(b, e));
+        }
+        i = i + 1;
+    }
+    return c;
+}
