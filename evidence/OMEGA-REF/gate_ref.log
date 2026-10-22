@@ -1,0 +1,70 @@
+gate_ref 2026-10-22T03:06:34Z at 9db60af805636459367634283b0b0149d1c7d784, om4.bin 5eda35a91028f634
+PASS dev01: 8 inputs, interpreter = om4 (0 traps)
+PASS dev02: 8 inputs, interpreter = om4 (0 traps)
+PASS dev03: 8 inputs, interpreter = om4 (0 traps)
+PASS dev04: 8 inputs, interpreter = om4 (0 traps)
+PASS dev05: 8 inputs, interpreter = om4 (3 traps)
+PASS dev06: 8 inputs, interpreter = om4 (2 traps)
+PASS dev07: 8 inputs, interpreter = om4 (0 traps)
+PASS dev08: 8 inputs, interpreter = om4 (0 traps)
+PASS dev09: 8 inputs, interpreter = om4 (0 traps)
+PASS dev10: 8 inputs, interpreter = om4 (4 traps)
+PASS fm1: 11 inputs, interpreter = om4 (5 traps)
+PASS fm2: 8 inputs, interpreter = om4 (2 traps)
+PASS fm3: 10 inputs, interpreter = om4 (4 traps)
+PASS fm4: 10 inputs, interpreter = om4 (4 traps)
+PASS fm5: 6 inputs, interpreter = om4 (0 traps)
+PASS fm6: 7 inputs, interpreter = om4 (1 traps)
+PASS fm7: 4 inputs, interpreter = om4 (0 traps)
+PASS fm8: 7 inputs, interpreter = om4 (3 traps)
+PASS fm9: 6 inputs, interpreter = om4 (2 traps)
+PASS fib: exit 0, 99 output bytes, interpreter = om4 ELF
+PASS sort: exit 0, 23 output bytes, interpreter = om4 ELF
+PASS echo: exit 0, 50000 output bytes, interpreter = om4 ELF
+PASS bytecopy: exit 0, 50000 output bytes, interpreter = om4 ELF
+PASS t_bounds: exit 103, 0 output bytes, interpreter = om4 ELF
+PASS t_conv: exit 105, 0 output bytes, interpreter = om4 ELF
+PASS t_div0: exit 102, 0 output bytes, interpreter = om4 ELF
+PASS t_exit: exit 42, 0 output bytes, interpreter = om4 ELF
+PASS t_loop: exit 104, 0 output bytes, interpreter = om4 ELF
+PASS t_ovf: exit 101, 0 output bytes, interpreter = om4 ELF
+PASS t_rw: exit 103, 0 output bytes, interpreter = om4 ELF
+PASS t_stack: exit 106, 0 output bytes, interpreter = om4 ELF
+PASS t_void: exit 77, 0 output bytes, interpreter = om4 ELF
+PASS refusal 3 [unknown name]: omega_ref: line 2: error 3: unknown name 'q'
+PASS refusal 7 [20: no implicit widening]: omega_ref: line 2: error 7: add of uint and ulong (no implicit conversions)
+PASS refusal 7 [20: no implicit narrowing]: omega_ref: line 2: error 7: the returned value is ulong, wants uint
+PASS refusal 16 [16: an array without its length]: omega_ref: line 1: error 16: array parameter 'a' without its length
+PASS refusal 16 [16: a pool without its length]: omega_ref: line 1: error 16: pool 'g' without its length
+PASS refusal 19 [18: one array twice in a call]: omega_ref: line 5: error 19: 'x' passed twice in one call
+PASS refusal 19 [18: a global passed]: omega_ref: line 6: error 19: a global or text 'g' is never passed
+PASS refusal 20 [17: write through a view]: omega_ref: line 2: error 20: put into a read-only array
+PASS refusal 20 [17: write into a text]: omega_ref: line 3: error 20: put into a read-only array
+PASS refusal 20 [17: read into a text]: omega_ref: line 3: error 20: read into a read-only array
+PASS refusal 20 [17: an edit argument from a view]: omega_ref: line 4: error 20: 'a' passed to an edit parameter is read-only
+PASS refusal 21 [23: a number index outside the array]: omega_ref: line 3: error 21: index 4 outside an array of 4
+PASS refusal 7 [17: an array of another shape]: omega_ref: line 6: error 7: argument 1 of s: uint 5, wants uint 4
+PASS refusal 22 [19: an escape with no meaning]: omega_ref: line 1: error 22: escape '\q' has no meaning
+PASS refusal 22 [a text with no end]: omega_ref: line 1: error 22: text 't' has no end quote
+PASS refusal 23 [24: a pool over its limit]: omega_ref: line 1: error 23: pool over 16777216 elements
+PASS refusal 23 [24: local arrays over 4 MiB]: omega_ref: line 2: error 23: local arrays over 4 MiB
+PASS refusal 17 [a line after ret]: omega_ref: line 3: error 17: a line after ret, exit or trap in the same block
+PASS refusal 18 [a value function that can reach its end]: omega_ref: line 5: error 18: function 'f' returns a value and its end can be reached
+PASS refusal 9 [a self-call in function mode (stack use bounded by the call order)]: omega_ref: line 2: error 9: 'f' calls itself in function mode
+PASS refusal 9 [a pool in function mode]: omega_ref: line 1: error 9: global only in program mode
+PASS refusal 9 [new inside a block]: omega_ref: line 3: error 9: new only in a function's outermost block
+PASS refusal 9 [main with parameters]: omega_ref: line 1: error 9: main has no parameters
+PASS refusal 9 [own is not in the subset]: omega_ref: line 5: error 9: own is not in the subset
+PASS refusal 10 [a name equal to a function]: omega_ref: line 4: error 10: 'f' is already in use
+PASS refusal 13 [a variable over 8 characters]: omega_ref: line 2: error 13: name 'abcdefghi' too long
+PASS refusal 15 [a function without end]: omega_ref: line 2: error 15: function 'f' has no end
+PASS refusal 14 [23: values nested over 1024 deep (a capacity, refused not overrun)]: omega_ref: line 2: error 14: values nested over 1024 deep
+PASS refusal 16 [end outside a function]: omega_ref: line 1: error 16: 'end' outside a function
+PASS refusal 16 [a statement outside a function]: omega_ref: line 1: error 16: 'ret' outside a function
+PASS refusal 6 [bad number]: omega_ref: line 2: error 6: bad number '12x'
+PASS refusal 7 [a void function used as a value]: omega_ref: line 5: error 7: void function 'f' used as a value
+PASS refusal 7 [a value function called as a statement]: omega_ref: line 5: error 7: value function 'f' called as a line
+PASS negative control: the interpreter with signed div made unsigned differs from om4 on fm1
+cases written: 195, cases run: 195
+GATE_REF PASS
+RC=0
