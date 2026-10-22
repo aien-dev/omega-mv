@@ -1,0 +1,57 @@
+{
+  "cases": 6,
+  "failures": 5,
+  "results": [
+    {
+      "case": "intact",
+      "pass": true,
+      "exit": 0,
+      "stderr": "",
+      "stdout": "PASS fixpoint 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6\nPASS om4 refuses struct (exit 16)\nPASS t1 exit 42\nPASS t1x exit 20\nPASS t1y exit 22\nPASS t2 exit 6\nPASS t3 exit 15\nPASS t4 exit 17\nPASS t5 exit 10\nPASS t6 exit 21\nPASS t7 exit 1\nPASS t7b exit 9\nPASS t8 exit 1\nPASS t9 exit 1\nPASS bad_field error 3\nPASS after_fn error 9\nPASS dup_struct error 10\nPASS put_view error 20\nPASS fields17 error 14\nPASS idx_hi error 21\nPASS still_free error 9\nPASS field_is_struct error 10\nPASS new_in_if error 9\nPASS no_end error 4\nPASS empty error 16\nPASS dup_field error 10\nPASS missing_val error 4\nPASS mut field-swap exit 22\nPASS gate6 26 cases\nRC=0\n",
+      "denied_tools": []
+    },
+    {
+      "case": "host-tools-blocked",
+      "pass": false,
+      "exit": 97,
+      "stderr": "",
+      "stdout": "",
+      "denied_tools": [
+        "sha256sum",
+        "cut"
+      ]
+    },
+    {
+      "case": "wrong-diagnostic",
+      "pass": false,
+      "exit": 0,
+      "stderr": "",
+      "stdout": "PASS fixpoint 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6\nPASS om4 refuses struct (exit 16)\nPASS t1 exit 42\nPASS t1x exit 20\nPASS t1y exit 22\nPASS t2 exit 6\nPASS t3 exit 15\nPASS t4 exit 17\nPASS t5 exit 10\nPASS t6 exit 21\nPASS t7 exit 1\nPASS t7b exit 9\nPASS t8 exit 1\nPASS t9 exit 1\nPASS bad_field error 3\nPASS after_fn error 9\nPASS dup_struct error 10\nPASS put_view error 20\nPASS fields17 error 14\nPASS idx_hi error 21\nPASS still_free error 9\nPASS field_is_struct error 10\nPASS new_in_if error 9\nPASS no_end error 4\nPASS empty error 16\nPASS dup_field error 10\nPASS missing_val error 4\nPASS mut field-swap exit 22\nPASS gate6 26 cases\nRC=0\n",
+      "denied_tools": []
+    },
+    {
+      "case": "missing-diagnostic",
+      "pass": false,
+      "exit": 0,
+      "stderr": "",
+      "stdout": "PASS fixpoint 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6\nPASS om4 refuses struct (exit 16)\nPASS t1 exit 42\nPASS t1x exit 20\nPASS t1y exit 22\nPASS t2 exit 6\nPASS t3 exit 15\nPASS t4 exit 17\nPASS t5 exit 10\nPASS t6 exit 21\nPASS t7 exit 1\nPASS t7b exit 9\nPASS t8 exit 1\nPASS t9 exit 1\nPASS bad_field error 3\nPASS after_fn error 9\nPASS dup_struct error 10\nPASS put_view error 20\nPASS fields17 error 14\nPASS idx_hi error 21\nPASS still_free error 9\nPASS field_is_struct error 10\nPASS new_in_if error 9\nPASS no_end error 4\nPASS empty error 16\nPASS dup_field error 10\nPASS missing_val error 4\nPASS mut field-swap exit 22\nPASS gate6 26 cases\nRC=0\n",
+      "denied_tools": []
+    },
+    {
+      "case": "mutant-not-swapped",
+      "pass": false,
+      "exit": 0,
+      "stderr": "",
+      "stdout": "PASS fixpoint 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6\nPASS om4 refuses struct (exit 16)\nPASS t1 exit 42\nPASS t1x exit 20\nPASS t1y exit 22\nPASS t2 exit 6\nPASS t3 exit 15\nPASS t4 exit 17\nPASS t5 exit 10\nPASS t6 exit 21\nPASS t7 exit 1\nPASS t7b exit 9\nPASS t8 exit 1\nPASS t9 exit 1\nPASS bad_field error 3\nPASS after_fn error 9\nPASS dup_struct error 10\nPASS put_view error 20\nPASS fields17 error 14\nPASS idx_hi error 21\nPASS still_free error 9\nPASS field_is_struct error 10\nPASS new_in_if error 9\nPASS no_end error 4\nPASS empty error 16\nPASS dup_field error 10\nPASS missing_val error 4\nPASS mut field-swap exit 22\nPASS gate6 26 cases\nRC=0\n",
+      "denied_tools": []
+    },
+    {
+      "case": "empty-executable",
+      "pass": false,
+      "exit": 1,
+      "stderr": "FAIL: t1: ran 0, wanted 42\n",
+      "stdout": "PASS fixpoint 01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6\nPASS om4 refuses struct (exit 16)\n",
+      "denied_tools": []
+    }
+  ]
+}

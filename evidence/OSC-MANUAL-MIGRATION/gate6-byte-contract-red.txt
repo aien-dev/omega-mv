@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/drakestapleton/workspace/omega-osc-manual-migration/tests/seed-migration/gate6-source-check.py", line 3, in <module>
+    for filename,key in [('t1x.om','originalSHA256'),('t1x-swap.om','mutantSHA256')]:assert hashlib.sha256((t/filename).read_bytes()).hexdigest()==oracle[key]
+                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+RC=1

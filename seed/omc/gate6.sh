@@ -19,14 +19,26 @@ chmod +x "$B/stage1"
 chmod +x "$B/stage2"
 "$B/stage2" < seed/omc/omc.om > "$B/stage3" 2>"$B/stage3.err" || bad "stage2 refused omc.om ($(cat "$B/stage3.err"))"
 chmod +x "$B/stage3"
-s1=$(sha256sum "$B/stage1" | cut -d' ' -f1)
-s2=$(sha256sum "$B/stage2" | cut -d' ' -f1)
-s3=$(sha256sum "$B/stage3" | cut -d' ' -f1)
-[ "$s1" = "$s2" ] || bad "parents differ: om4 $s1 != omc $s2"
-[ "$s2" = "$s3" ] || bad "fixpoint: stage2 $s2 != stage3 $s3"
+# Reuse seed-native verification tools; no host hash/comparison pipeline.
+for tool in elfcheck byteequal sha256 streamcopy; do
+  "$B/stage3" < "seed/native/$tool.om" > "$B/$tool"
+  [ -s "$B/$tool" ] || bad "empty native $tool"
+  chmod +x "$B/$tool"
+done
+for tool in elfcheck byteequal sha256 streamcopy stage1 stage2 stage3; do
+  "$B/elfcheck" < "$B/$tool" || bad "invalid ELF: $tool"
+done
+"$B/byteequal" 3< "$B/stage1" 4< "$B/stage2" || bad "parents differ"
+"$B/byteequal" 3< "$B/stage2" 4< "$B/stage3" || bad "fixpoint differs"
+s3=$("$B/sha256" < "$B/stage3") || bad "native hash failed"
+[ "${#s3}" = 64 ] || bad "native hash length"
+case "$s3" in *[!0-9a-f]*) bad "native hash encoding" ;; esac
 say "PASS fixpoint $s3"
 S=$B/stage3
-cp "$S" seed/out/omc
+mkdir -p seed/out
+"$B/streamcopy" < "$S" > seed/out/omc || bad "native copy failed"
+"$B/byteequal" 3< "$S" 4< seed/out/omc || bad "copied compiler differs"
+chmod +x seed/out/omc
 printf '%s  seed/out/omc\n' "$s3" > seed/out/omc.sha256
 
 # om4 must still refuse a struct program (it has no such word).
@@ -46,6 +58,7 @@ run_exit() { # name file expect
   crc=$?
   set -e
   [ "$crc" = 0 ] || bad "$1: compiler exit $crc ($(cat "$B/$1.err"))"
+  "$B/elfcheck" < "$B/$1.bin" || bad "$1: invalid ELF"
   chmod +x "$B/$1.bin"
   set +e
   "$B/$1.bin" >/dev/null
@@ -62,7 +75,7 @@ refuse() { # name file expect-error
   crc=$?
   set -e
   [ "$crc" = "$3" ] || bad "$1: compiler exit $crc, wanted $3 ($(cat "$B/$1.err"))"
-  grep -q "error $3" "$B/$1.err" || bad "$1: stderr missing error $3 ($(cat "$B/$1.err"))"
+  "$B/byteequal" 3< "$B/$1.err" 4< "$T/expected/$1.txt" || bad "$1: diagnostic differs"
   ok=$((ok+1))
   say "PASS $1 error $crc"
 }
@@ -96,12 +109,13 @@ refuse missing_val "$T/missing_val.om" 4
 
 # Field names are read. Swapping x for y must change the exit, or the gate checks nothing.
 n=$((n+1))
-sed 's/get p x/get p y/' "$T/t1x.om" > "$B/mut.om"
+"$B/streamcopy" < "$T/t1x-swap.om" > "$B/mut.om" || bad "mutation fixture copy failed"
 set +e
 "$S" < "$B/mut.om" > "$B/mut.bin" 2>"$B/mut.err"
 crc=$?
 set -e
 [ "$crc" = 0 ] || bad "mut: compiler exit $crc ($(cat "$B/mut.err"))"
+"$B/elfcheck" < "$B/mut.bin" || bad "mut: invalid ELF"
 chmod +x "$B/mut.bin"
 set +e
 "$B/mut.bin" >/dev/null

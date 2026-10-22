@@ -1,0 +1,80 @@
+[
+  {
+    "name": "bad_field",
+    "exit": 3,
+    "diagnostic": "omc: line 4: error 3\n",
+    "source_sha256": "a19f92a0af3ac7238cd7daad5da64d30018a2c305fd380caab99d482bd85a73c"
+  },
+  {
+    "name": "after_fn",
+    "exit": 9,
+    "diagnostic": "omc: line 4: error 9\n",
+    "source_sha256": "5c969447c48b55923d9c3ffb815ed033d270af89e8cbfbc3125f2315ce6be6f6"
+  },
+  {
+    "name": "dup_struct",
+    "exit": 10,
+    "diagnostic": "omc: line 2: error 10\n",
+    "source_sha256": "a01c28b62473796f94823e03c4f8082507c1d98552e87ec4463fd256788869fb"
+  },
+  {
+    "name": "put_view",
+    "exit": 20,
+    "diagnostic": "omc: line 3: error 20\n",
+    "source_sha256": "67c021c3a4f4c58449e6c0f9bfa3f554014da853c6ad574973b10e125790197c"
+  },
+  {
+    "name": "fields17",
+    "exit": 14,
+    "diagnostic": "omc: line 1: error 14\n",
+    "source_sha256": "100a3f7158c8b082bb2b325eb65146c7f7d24c3263b6277a10b25a3fa25b5e76"
+  },
+  {
+    "name": "idx_hi",
+    "exit": 21,
+    "diagnostic": "omc: line 4: error 21\n",
+    "source_sha256": "bbe8f47dcd869bbdd69c1bf5a73fb2741c6e29230f7678ca068c9524104c52e1"
+  },
+  {
+    "name": "still_free",
+    "exit": 9,
+    "diagnostic": "omc: line 4: error 9\n",
+    "source_sha256": "d9fa9e7eff138630081c4a5dd649347f2ad61a1910d3a14f71174b56f1213ef9"
+  },
+  {
+    "name": "field_is_struct",
+    "exit": 10,
+    "diagnostic": "omc: line 1: error 10\n",
+    "source_sha256": "a68d3114b31036f7394296f91cb2f7ca7bc96c3d38f1701f5815626f36b1955d"
+  },
+  {
+    "name": "new_in_if",
+    "exit": 9,
+    "diagnostic": "omc: line 4: error 9\n",
+    "source_sha256": "afb7e8a384a3df511e6c080befe32bcaa6532e5cf88319d7061a9526e8c6f642"
+  },
+  {
+    "name": "no_end",
+    "exit": 4,
+    "diagnostic": "omc: line 2: error 4\n",
+    "source_sha256": "b9da9ec1eb6d4710dad23b1cd76b4424a69775c629e22fe771766ba12805e6cc"
+  },
+  {
+    "name": "empty",
+    "exit": 16,
+    "diagnostic": "omc: line 1: error 16\n",
+    "source_sha256": "4cce201133535e070c32c1625759e502ab82622851fd61388bed06172392fb31"
+  },
+  {
+    "name": "dup_field",
+    "exit": 10,
+    "diagnostic": "omc: line 1: error 10\n",
+    "source_sha256": "ced0b92a5942d5a5eee2b34bc930e5015e569f98de385c6632eab0130b34f70b"
+  },
+  {
+    "name": "missing_val",
+    "exit": 4,
+    "diagnostic": "omc: line 4: error 4\n",
+    "source_sha256": "38174e5b4994c8f6f584a9bfbb6556d7b13f6ab41bb14118715fdd578fb63416"
+  }
+]
