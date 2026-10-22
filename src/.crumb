@@ -73,12 +73,6 @@
           "purpose": "ANS (Alignment Navigation System), Inertial Alignment v1: frozen reference atoms, drift filter o"
         },
         {
-          "digest": "5b110f4a6136ebd3d6703590962b7beed9f8cec034c2d12944b1590434e3c747",
-          "last_commit": "d48ab89e",
-          "name": "autodiff",
-          "purpose": "M21 OMEGA_AUTODIFF: reverse-mode tape over M20 tensor CPU ops, caller-owned nodes and scratch, p"
-        },
-        {
           "digest": "bdc017bf3baddb9034478651fb3f170f045ce8aa27187481d15ac5da7fbfd18c",
           "last_commit": "1edf41a5",
           "name": "compiler",
@@ -157,18 +151,6 @@
           "purpose": "Directory src/searchtrace. Purpose not yet described by a human."
         },
         {
-          "digest": "ae63793b7b13442e349e438229fccf6a859a5be55343cdd997e35f2966c1157c",
-          "last_commit": "f633e343",
-          "name": "tensor",
-          "purpose": "M20 OMEGA_TENSOR: immutable tensor semantic layer, views, generation-checked storage, CPU realiz"
-        },
-        {
-          "digest": "be7e624435df81eae403f51a381acf480e9fd2f2a04eb34e955547973645b95d",
-          "last_commit": "54826a37",
-          "name": "train",
-          "purpose": "Directory src/train. Purpose not yet described by a human."
-        },
-        {
           "digest": "78c180a66607ebaf93e6ef6a6a56a3059ebf97db394d76af50c0e3f25d2be639",
           "last_commit": "2564f57a",
           "name": "turing",
@@ -181,15 +163,15 @@
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:15012a017b26a269feb256b64875ece2912f5f82c57804baafa3777c4fcb80b9",
-      "compiled_at": "2026-10-16T07:33:43Z",
+      "children_root": "sha256:546ce85973959f60186fd5cbb342eb1b9b297c201f9d8ed160cb6558818902bc",
+      "compiled_at": "2026-10-22T00:59:45Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:dfa36de2ac8649f66f80587abea51a7f166285ee0b92e0e09774c98689055250",
+      "digest": "sha256:801a0ebb4004b2792e89356b6bbf42ce2dbd48e6cb62e16fc473f9c14e7b737b",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 537,
-      "generated_at_commit": "1d481ab853a14d3c11eff926ce1e25993085f76a",
-      "source_tree": "sha256:200c9243151691313acb5f86d3e9cb3058f1a1b92ece2a255b3340b691dfb894"
+      "files": 523,
+      "generated_at_commit": "5bbfee984d7c320f87d23dab49f0982ab7000222",
+      "source_tree": "sha256:6a439a747ddcdfec7bbf1835625ab0cab79f493abb8e2aef3f8bb84749ca9b2b"
     },
     "owner_lane": "",
     "provenance": {
