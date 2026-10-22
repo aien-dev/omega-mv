@@ -60,7 +60,7 @@ if [ "${1:-}" = preflight-parse ]; then preflight_ghz "${2:?perf csv}"; exit $?;
 # overflow_raw to be 0 and package energy to advance over three samples.
 # Counter headroom: spec §17 "A window is refused if any overflow flag is set,
 # any counter decreases, or headroom is below the window length at a 600 W
-# bound (sample.c)". The per-window refusal lives in research/m15/spbm/sample.c;
+# bound (sample.c)". The per-window refusal lives in m15/spbm/sample.c of aien-dev/omega-research (research.lock);
 # the R15 harness and reducer reject overflow flags and decreases (energy_ok).
 # This preflight adds the headroom check for R15_ENERGY_HEADROOM_SECONDS
 # (default 300 s, longer than any single measured process) at 600 W.
