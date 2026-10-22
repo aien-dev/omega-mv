@@ -1,0 +1,19 @@
+{
+  "compiler_repository": "https://github.com/aien-dev/omega-bridge",
+  "compiler_container_commit": "0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9",
+  "seed_import_commit": "29b12760f4c962606411d6bf25032aedef063301",
+  "compiler_source_path": "seed/omc/omc.om",
+  "compiler_source_sha256": "8608fa11f6a2cf1c50db22d871eef16b00d5bc719bc1a222cc3e456984ac5ebf",
+  "compiler_binary_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "compiler_qualification": "existing bootstrap.sh --offline, original source locks, stage1=stage2 fixpoint, static nonempty AArch64 ELF before execution",
+  "sha256_repository": "https://github.com/aien-dev/omega-mv",
+  "sha256_source_commit": "12251e3403d42931ada27dc1c54b3b610954be5d",
+  "sha256_source_path": "seed/retirement/trn1/trn1.om",
+  "sha256_source_sha256": "806bc183bc32725c93c1b53c29df5b984c71d161de1f35c96f0e9049b642364e",
+  "sha256_exact_sections": [
+    {"start": "fn rotate", "end_exclusive": "fn hash", "sha256": "2c69156819bcd142975d88ff3f257e9ab224afd31a7b3983e9eed781eed16fe0"},
+    {"start": "fn constants", "end_exclusive": "fn sayOk", "sha256": "ded8f2fcbb55f4243c51bf80ef8271ce13e8356019fca5906f19f79f65e4c0e2"}
+  ],
+  "sha256_reuse": "unchanged function bytes; caller bounded global declarations; no original main/transport imported",
+  "base625_dependency": "69790fb4ad1e803ca79245430745b96129d1dcf4"
+}

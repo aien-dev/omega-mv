@@ -1,0 +1,103 @@
+note Direct stdin interface. First byte command, then bounded complete request to EOF.
+global One uchar 1
+text D64 "BAD_COMMAND\n"
+text D65 "MALFORMED\n"
+text D66 "UNKNOWN_VERSION\n"
+text D67 "LIMIT\n"
+text D68 "PROFILE_MISMATCH\n"
+text D69 "UNKNOWN_OPERATION\n"
+text D70 "TYPE_MISMATCH\n"
+text D71 "EFFECT_ALIAS_MISMATCH\n"
+text D72 "OBLIGATION_MISMATCH\n"
+text D73 "PROVENANCE_MISSING\n"
+text D74 "PROVENANCE_MISMATCH\n"
+text D75 "SOURCE_SPAN\n"
+text D76 "SOURCE_ENCODING\n"
+text D77 "IO\n"
+text D78 "CONTRACT_MISMATCH\n"
+
+fn diagnose code ulong to void
+if eq code 64
+w = write 2 D64 0 len D64
+end
+if eq code 65
+w = write 2 D65 0 len D65
+end
+if eq code 66
+w = write 2 D66 0 len D66
+end
+if eq code 67
+w = write 2 D67 0 len D67
+end
+if eq code 68
+w = write 2 D68 0 len D68
+end
+if eq code 69
+w = write 2 D69 0 len D69
+end
+if eq code 70
+w = write 2 D70 0 len D70
+end
+if eq code 71
+w = write 2 D71 0 len D71
+end
+if eq code 72
+w = write 2 D72 0 len D72
+end
+if eq code 73
+w = write 2 D73 0 len D73
+end
+if eq code 74
+w = write 2 D74 0 len D74
+end
+if eq code 75
+w = write 2 D75 0 len D75
+end
+if eq code 76
+w = write 2 D76 0 len D76
+end
+if eq code 77
+w = write 2 D77 0 len D77
+end
+if eq code 78
+w = write 2 D78 0 len D78
+end
+end
+
+fn main to int
+constants
+r = read 0 One 0 1
+if ne r 1
+diagnose 64
+ret 64
+end
+mode = ulong get One 0
+n = ulong 0
+while lt n 8192
+r = read 0 Ib n sub ulong 8192 n
+if lt r 0
+diagnose 77
+ret 77
+end
+if eq r 0
+code = perform mode n
+if ne code 0
+diagnose code
+ret int code
+end
+sent = ulong 0
+while lt sent get El 0
+r = write 1 Eb sent sub get El 0 sent
+if le r 0
+diagnose 77
+ret 77
+end
+sent = add sent ulong r
+end
+ret 0
+end
+n = add n ulong r
+end
+diagnose 67
+ret 67
+end

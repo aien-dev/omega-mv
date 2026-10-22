@@ -169,3 +169,9 @@ PASS receipt. Compiled semantic mutants must compile and run before being counte
 byte corruptions test source/span/profile/version/effect/runtime/length refusals.
 Legacy fixture hashes are compared to pinned-base encodings through unchanged
 OSC and checker2. Receipts are unsigned development evidence only.
+
+The build defaults to build/L574. SA_BUILD may select a child of that scratch
+area; symlinks, hardlinked files and special files there refuse before writes.
+SA_SEED_REPO may point to another local clone containing the exact pinned bridge
+commit. Only committed archived sources are consumed. This is an explicit pinned
+source dependency, not an embedded or silently downloaded compiler binary.
