@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-22T02:55:27Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:b7f89e9169ab795693dbc2851db0f011242bd2643edd3301a65d1ea0c8cee7d6",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 4,
+      "generated_at_commit": "f5a82907a5933ca1e43bb2c431745884dd528c83",
+      "source_tree": "sha256:c7c9eb88f722819f624e9246360e76a65cb919a2a5b1d9c58f0eb56bb30e96af"
+    }
+  },
+  "layer": "docs",
+  "name": "research",
+  "purpose": "Outside studies for Omega: what other languages learned (LANGUAGES.md) and how every language calls Omega through the C ABI (COMPATIBILITY.md). Every outside claim cites a fetched source; sources.json beside each study.",
+  "schema_version": "1.0.0"
+}

@@ -99,6 +99,12 @@
           "purpose": "Directory docs/polyglot. Purpose not yet described by a human."
         },
         {
+          "digest": "b7f89e9169ab795693dbc2851db0f011242bd2643edd3301a65d1ea0c8cee7d6",
+          "last_commit": "f5a82907",
+          "name": "research",
+          "purpose": "Outside studies for Omega: what other languages learned (LANGUAGES.md) and how every language ca"
+        },
+        {
           "digest": "46d3e2d59a468271e044ccd2398eb32345df6436c15eb6d8c703953c838023a9",
           "last_commit": "dd67f6bd",
           "name": "reservoir",
@@ -123,15 +129,15 @@
           "purpose": "Directory docs/turing. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:ac7f7ea4b00d4620a993c6dd88a0267f2d49008d415162976e45fa4341e43407",
-      "compiled_at": "2026-10-16T09:04:56Z",
+      "children_root": "sha256:83f5111f3bdbd6fd259b45ae01eb8f479409e432023358d3fdfb21057601a470",
+      "compiled_at": "2026-10-22T02:55:27Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:d2eb8967a939ebdb0b54e15fe5d849dd5af71c23b812941e4ba86ad2b0f21d39",
+      "digest": "sha256:2a22b9d43a38174432bec5f7865fc6edc8bedbb0eaadd84000e069d5c5adf086",
       "evidence_files": 34,
       "evidence_root": "sha256:589d8b3706e6d7a202ab20b278dac5fc5bafc973f1c2a867b2668aa7210b65cc",
-      "files": 127,
-      "generated_at_commit": "9d368679f13ea58c46bf7580899aee92e39f5885",
-      "source_tree": "sha256:29d159b6950500f96de859834fd2c5a9e9ba037f9bc88fd97a8ed47a1688233b"
+      "files": 131,
+      "generated_at_commit": "f5a82907a5933ca1e43bb2c431745884dd528c83",
+      "source_tree": "sha256:4804dd8e8a9b7f9e7f07ec9dd43e436a114d18c848662a2b8f5bbb04d6ef974b"
     },
     "owner_lane": "",
     "provenance": {

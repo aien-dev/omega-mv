@@ -69,7 +69,7 @@ programs, bugs included [8]. Fortran 2003 added ISO_C_BINDING and BIND(C), a sta
 
 #### Lisp
 
-**Built for.** Symbolic computing (programs that manipulate expressions) at MIT, by John McCarthy.
+**Built for.** Programs that work on symbols and lists rather than numbers, by John McCarthy [unverified: this one-line framing; everything below is from his own history].
 
 **Right, and it lasted.** Garbage collection: McCarthy rejected reference counts because the IBM 704's word had too
 few spare bits, and chose a collector instead [10]. Programs as data: because a Lisp program is a list, the
@@ -102,7 +102,7 @@ habit. A mandate gets compilers built; it does not by itself make a language goo
 
 #### Algol 60
 
-**Built for.** A committee's single notation for publishing and running numerical algorithms. (Naur's and Perlis's
+**Built for.** One common, machine-independent language for algorithms, defined by an international committee [unverified: this framing]. (Naur's and Perlis's
 HOPL papers could not be fetched; the Revised Report itself, written by the designers, is used.)
 
 **Right, and it lasted.** The syntax was defined in a formal notation, later called BNF [24]; Wirth calls it the
@@ -167,35 +167,35 @@ checked, not baked into the type's identity. Pascal-P's imaginary machine is the
 **Built for.** Operations-research workers describing simulations of interacting parts [53]. Classes and subclasses
 came out of solving two concrete problems in describing simulated processes, not a plan for a new paradigm [54].
 
-**Right, and it lasted.** The class idea itself, copied by nearly every later language. Simula 67 survived because
-one large manufacturer committed to build compilers [55].
+**Right, and it lasted.** The class idea itself; C++ took its code organisation from Simula [55, 56]. Simula 67 survived because
+one large manufacturer committed to build compilers [57].
 
 **Wrong.** The authors list choices they regret, such as modelling virtual procedures on Algol parameters, which
-forced run-time checks of arguments [56]. Memory management was treated as risky: reference counting plus a last
-resort collector, later a heavy cost [57]. Stroustrup found Simula's run-time cost could not be fixed, and that
-shaped C++ [58].
+forced run-time checks of arguments [58]. Memory management was treated as risky: reference counting plus a last
+resort collector, later a heavy cost [59]. Stroustrup found Simula's run-time cost could not be fixed, and that
+shaped C++ [55].
 
 **For Omega.** Good ideas come from narrow real problems; Omega's narrow problem is one model on one machine.
 
 #### Smalltalk
 
-**Built for.** Alan Kay's picture of every object as a small computer receiving messages [59]. Kay says the big idea
-was messaging, not classes, and he regrets the word "objects" [60]; messaging was never finished at Xerox PARC [61].
+**Built for.** Alan Kay's picture of every object as a small computer receiving messages [60]. Kay says the big idea
+was messaging, not classes, and he regrets the word "objects" [61]; messaging was never finished at Xerox PARC [62].
 (The HOPL paper is read from a copy, because the ACM page refused the fetch.)
 
 **Right, and it lasted.** After the 1981 articles and 1983 books, others could rebuild the virtual machine and ship
-their own image of basic classes [62].
+their own image of basic classes [63].
 
 **Wrong, for talking to others.** The image is a self-contained world: Squeak wanted every part changed in Smalltalk
-alone [63, 64], and its FFI to outside libraries is an add-on outside that world [65]. Its own community calls
-plugins the safe route because users can call nothing beyond what the plugin provides [66].
+alone [64, 65], and its FFI to outside libraries is an add-on outside that world [66]. Its own community calls
+plugins the safe route because users can call nothing beyond what the plugin provides [67].
 
 **For Omega.** A closed, self-describing world is easy to check and hard to connect. Design the door first
 (COMPATIBILITY.md), and make it as narrow as a plugin: only what the interface description lists.
 
 #### C++
 
-**Built for.** Hardware-level work with Simula-style organisation [67]: use ordinary linkers, stay compatible with
+**Built for.** Hardware-level work with Simula-style organisation [56]: use ordinary linkers, stay compatible with
 C, leave no lower-level language below it except assembler [68].
 
 **Right, and it lasted.** Zero overhead enforced by measurement: a 3 percent slowdown against C was treated as
@@ -234,7 +234,7 @@ gates must run on the real machine, not only in simulation.
 
 #### ML and OCaml
 
-**Built for.** A language for writing proofs (Milner's LCF), then general programming.
+**Built for.** Robin Milner's work on machine-checked proofs, then general programming [unverified: this framing].
 
 **Right, and it lasted.** Milner's type checker trapped a large share of errors in the 1970s [95] while inferring
 types the programmer did not write [96]. Standard ML spread datatypes with pattern matching, inference and generics
@@ -251,7 +251,7 @@ specification itself, not in one compiler (decision 31).
 
 #### Haskell
 
-**Built for.** A shared lazy functional language for researchers. Once laziness was chosen, purity followed; the
+**Built for.** One common lazy functional language for a research community that had several [unverified: this framing]. Once laziness was chosen, purity followed; the
 authors call purity a big bet [106].
 
 **Right, and it lasted.** Purity forced the work on monads, its main payoff [107], which solved input and output,
@@ -418,39 +418,39 @@ door's rules in place (decision 27).
 that solves both shipping binaries for many platforms and versioning [204]. No pointers and a garbage collector, to
 remove the memory bugs of manual management [205, 206].
 
-**Right, and it lasted.** The bytecode and virtual machine model, and memory safety by default.
+**Right, and it lasted.** The bytecode and virtual machine model [204] and memory safety by default [205]; C# and Kotlin later built on the same kind of managed platform [207, 208].
 
 **Wrong or contested.** Checked exceptions: Gosling defends them as forcing a programmer to take a position on errors
-[207]; Hejlsberg (the C# designer, not on the Java team) argues they break callers whenever an API adds one [208] and
-get worked around with empty handlers at scale [209]. Generics were erased at compile time to stay compatible with
-existing compiled code [210]; Goetz calls it the pragmatic choice for 2004 [211]; the cost is that a program cannot ask
-a list what it holds [212]. Null came along from earlier languages; Tony Hoare calls his 1965 invention of the null
-reference his billion-dollar mistake [213].
+[209]; Hejlsberg (the C# designer, not on the Java team) argues they break callers whenever an API adds one [210] and
+get worked around with empty handlers at scale [211]. Generics were erased at compile time to stay compatible with
+existing compiled code [212]; Goetz calls it the pragmatic choice for 2004 [213]; the cost is that a program cannot ask
+a list what it holds [214]. Null came along from earlier languages; Tony Hoare calls his 1965 invention of the null
+reference his billion-dollar mistake [215].
 
-**How it talks.** The Java team calls JNI's machinery brittle [214]: three pieces built with different tools and kept
-in sync by hand [215], no mapping of Java objects to C structs [216], gaps third-party libraries grew to fill [217].
+**How it talks.** The Java team calls JNI's machinery brittle [216]: three pieces built with different tools and kept
+in sync by hand [217], no mapping of Java objects to C structs [218], gaps third-party libraries grew to fill [219].
 Its replacement, the Foreign Function and Memory API, gives every foreign memory region checked address bounds and a
-checked lifetime [218].
+checked lifetime [220].
 
 **For Omega.** No null (decision 28). Errors as values, not exceptions of any kind (decision 29). Foreign memory always
 carries its bounds (decision 16 at the door).
 
 #### JavaScript
 
-**Built for.** A small "glue" language beside Java in the Netscape browser, written in ten days [219], for part-time
-and non-professional programmers [220].
+**Built for.** A small "glue" language beside Java in the Netscape browser, written in ten days [221], for part-time
+and non-professional programmers [222].
 
-**Right, and it lasted.** Distribution: it shipped inside every browser. Node.js later took it to servers and tools,
-where many chose it by preference [221].
+**Right, and it lasted.** Distribution: it shipped with the browser as a de facto web standard [221]. Node.js later took it to servers and tools,
+where many chose it by preference [223].
 
-**Wrong, in the authors' words.** Automatic type conversions were added to lower the entry barrier [222] and became a
-significant source of confusion and bugs, especially in `==` [223]. Eich removed most of them in JavaScript 1.2, but it
-was judged too late for the standard because it would break pages [224]. "Don't break the Web" keeps mistakes in the
-language forever; standards can only add [225]; even a feature on Crockford's list of mistakes stays because developers
-use it [226].
+**Wrong, in the authors' words.** Automatic type conversions were added to lower the entry barrier [224] and became a
+significant source of confusion and bugs, especially in `==` [225]. Eich removed most of them in JavaScript 1.2, but it
+was judged too late for the standard because it would break pages [226]. "Don't break the Web" keeps mistakes in the
+language forever; standards can only add [227]; even a feature on Crockford's list of mistakes stays because developers
+use it [228].
 
 **How it talks.** Native add-ons had to be rebuilt for every major Node version until Node-API gave them a C interface
-independent of the JavaScript engine [227, 228]. Node 26.1.0 added a built-in, experimental FFI [229].
+independent of the JavaScript engine [229, 230]. Node 26.1.0 added a built-in, experimental FFI [231].
 
 **For Omega.** No implicit conversions (decision 20, already). Keep a way to remove mistakes: versioned units side by
 side, never "only add" (decision 27).
@@ -458,18 +458,18 @@ side, never "only add" (decision 27).
 #### PHP
 
 **Built for.** Rasmus Lerdorf's own web pages. He says he never meant to write a language (as reported from a 2012
-talk) [230].
+talk) [232].
 
 **Right, and it lasted.** Fit with the rest of the web: Lerdorf credits the ecosystem, such as Apache, over the
-language [231]; internet providers liked it because one copy served many accounts, which spread it through cheap
-hosting [232]; in his words, a pleasant language is useless without a way to host it and reach the back end [233].
+language [233]; internet providers liked it because one copy served many accounts, which spread it through cheap
+hosting [234]; in his words, a pleasant language is useless without a way to host it and reach the back end [235].
 
-**Wrong.** Lerdorf calls PHP an admittedly ugly solution that was never about design purity [234]; the official
-history says the early syntax was somewhat inconsistent [235]. PHP 6, a rewrite with Unicode throughout, was begun in
-2005 and dropped in 2010 [236]; the next release was named PHP 7 and was up to twice as fast as 5.6 [237].
+**Wrong.** Lerdorf calls PHP an admittedly ugly solution that was never about design purity [236]; the official
+history says the early syntax was somewhat inconsistent [237]. PHP 6, a rewrite with Unicode throughout, was begun in
+2005 and dropped in 2010 [238]; the next release was named PHP 7 and was up to twice as fast as 5.6 [239].
 
-**How it talks.** The FFI extension in PHP 7.4, modelled on LuaJIT and Python's CFFI, calls C from plain PHP [238],
-so binding a library no longer requires writing an extension against the engine's internals [239].
+**How it talks.** The FFI extension in PHP 7.4, modelled on LuaJIT and Python's CFFI, calls C from plain PHP [240],
+so binding a library no longer requires writing an extension against the engine's internals [241].
 
 **For Omega.** Being easy to deploy wins users: Omega's shared object needs no runtime and no install step
 (COMPATIBILITY.md). A rewrite that changes everything at once stalls (decision 27).
@@ -477,16 +477,16 @@ so binding a library no longer requires writing an extension against the engine'
 #### C#
 
 **Built for.** Microsoft's managed platform, with versioning as a design pillar: every feature was checked against how
-it behaves as code ages [240]. Design by a small team meeting in one room, by taste [241].
+it behaves as code ages [242]. Design by a small team meeting in one room, by taste [243].
 
 **Right, and it lasted.** Generics built into the runtime, so a list of integers really holds integers and type
-information survives to run time [242]. Value types (structs) give control over memory layout inside a collected
-language [243]; span types work on a region of memory without copying [244]. Calling native libraries is built into
-the runtime as platform invoke [245].
+information survives to run time [244]. Value types (structs) give control over memory layout inside a collected
+language [245]; span types work on a region of memory without copying [246]. Calling native libraries is built into
+the runtime as platform invoke [207].
 
-**Wrong, in the team's words.** Before C# 8 the language could not say where null was allowed [246]. Nullable
-reference types were added to find null bugs before run time, citing Hoare [247, 248], but they are a compile-time
-check only; null still exists underneath [249]. Unsafe code is allowed and documented as unverifiable [250].
+**Wrong, in the team's words.** Before C# 8 the language could not say where null was allowed [247]. Nullable
+reference types were added to find null bugs before run time, citing Hoare [248, 249], but they are a compile-time
+check only; null still exists underneath [250]. Unsafe code is allowed and documented as unverifiable [251].
 
 **For Omega.** If generics ever come, specialise them per type at check time (decision 39). Retrofitting safety leaves
 the old hole underneath; Omega starts without null (decision 28) and without an unsafe form (decision 41).
@@ -495,21 +495,21 @@ the old hole underneath; Omega starts without null (decision 28) and without an 
 
 #### Go
 
-**Built for.** Google's own software-engineering problems: slow builds and large codebases [251], described by its
-team as an engineering tool, not a breakthrough [252].
+**Built for.** Google's own software-engineering problems: slow builds and large codebases [252], described by its
+team as an engineering tool, not a breakthrough [253].
 
-**Right, and it lasted.** Package and import rules measured against C++ cut build work by a large factor [253]. Modules
-pick the highest minimum version anyone asked for, never a silently newer one [254]. The Go 1 promise: programs written
-for Go 1 keep compiling [255]. Early users came partly for concurrency [256].
+**Right, and it lasted.** Package and import rules measured against C++ cut build work by a large factor [254]. Modules
+pick the highest minimum version anyone asked for, never a silently newer one [255]. The Go 1 promise: programs written
+for Go 1 keep compiling [256]. Early users came partly for concurrency [257].
 
 **Wrong, in the team's words.** Generics were left out because they are hard to design well, and the team spent about
-a decade before finding a design [257, 258]; Russ Cox wrote the dilemma down in 2009 [259], and the 1.18 release notes
-admitted the new code had little production testing [260]. A nil pointer stored inside an interface makes the interface
-non-nil, which the FAQ calls confusing [261]. After years of proposals, the team stopped pursuing new syntax for error
-handling in 2025 [262].
+a decade before finding a design [258, 259]; Russ Cox wrote the dilemma down in 2009 [260], and the 1.18 release notes
+admitted the new code had little production testing [261]. A nil pointer stored inside an interface makes the interface
+non-nil, which the FAQ calls confusing [262]. After years of proposals, the team stopped pursuing new syntax for error
+handling in 2025 [263].
 
-**How it talks.** cgo, by importing a pseudo-package named "C" [263]. An independent engineer lists its costs: more
-complex and slower builds, cross-compiling off by default [264], and the loss of Go's script-free build [265]. The Go
+**How it talks.** cgo, by importing a pseudo-package named "C" [264]. An independent engineer lists its costs: more
+complex and slower builds, cross-compiling off by default [265], and the loss of Go's script-free build [266]. The Go
 team moved its own compiler from C to Go with a translator checked by identical output (COMPATIBILITY.md section 6).
 
 **For Omega.** Compatibility promises and exact dependency selection: yes (decisions 27, 36). Generics: wait for a
@@ -517,23 +517,23 @@ measured need (decision 39).
 
 #### Rust
 
-**Built for.** Memory safety without a garbage collector, through compile-time ownership rules [266].
+**Built for.** Memory safety without a garbage collector, through compile-time ownership rules [267].
 
 **Right, and it lasted.** Google reports Android's memory-safety share of vulnerabilities fell from 76 to 24 percent
-as new code moved to memory-safe languages, Rust among them [267], and Rust changes needed emergency rollback less than
-half as often as C++ changes [268]. Editions let the language make breaking syntax changes while crates of different
-editions still work together [269]; the editions proposal names splitting the ecosystem as the risk a 2.0 would run
-[270]. Cargo builds code and fetches dependencies in one tool [271].
+as new code moved to memory-safe languages, Rust among them [268], and Rust changes needed emergency rollback less than
+half as often as C++ changes [269]. Editions let the language make breaking syntax changes while crates of different
+editions still work together [270]; the editions proposal names splitting the ecosystem as the risk a 2.0 would run
+[271]. Cargo builds code and fetches dependencies in one tool [272].
 
-**Wrong, in its author's words.** Graydon Hoare says the Rust that shipped is far from the one he wanted [272]; he
-would have traded speed and power for simplicity [273]. Inlining and specialising code across crates is a big part of
-slow compiles and of the missing stable ABI [274]; slow compilation tops the project's own 2024 survey [275]. Error
-handling at 1.0 was what remained after earlier attempts were removed [276]. The compiler rejects some valid programs
-on purpose; `unsafe` is the escape hatch [277].
+**Wrong, in its author's words.** Graydon Hoare says the Rust that shipped is far from the one he wanted [273]; he
+would have traded speed and power for simplicity [274]. Inlining and specialising code across crates is a big part of
+slow compiles and of the missing stable ABI [275]; slow compilation tops the project's own 2024 survey [276]. Error
+handling at 1.0 was what remained after earlier attempts were removed [277]. The compiler rejects some valid programs
+on purpose; `unsafe` is the escape hatch [278].
 
-**How it talks.** `extern "C"` and `#[repr(C)]` [278]. The Rust calling convention has no stability promise [279];
-other languages meet Rust at the C ABI [280], and a richer cross-language ABI is still experimental [281]. Google
-chose to invest in interoperability over rewrites [282]; the Linux kernel wraps C through generated bindings [283].
+**How it talks.** `extern "C"` and `#[repr(C)]` [279]. The Rust calling convention has no stability promise [280];
+other languages meet Rust at the C ABI [281], and a richer cross-language ABI is still experimental [282]. Google
+chose to invest in interoperability over rewrites [283]; the Linux kernel wraps C through generated bindings [284].
 
 **For Omega.** Ownership without a collector: Omegese already has own, edit and view arrays checked by checker2.
 Editions over a 2.0 split (decision 27). Refuse what cannot be proven, without an unsafe escape (decisions 18, 41).
@@ -541,31 +541,31 @@ Editions over a 2.0 split (decision 27). Refuse what cannot be proven, without a
 #### Swift
 
 **Built for.** Memory safety and a modern language that still talks to Apple's Objective-C and C world; Lattner
-started it in 2010 [284, 285].
+started it in 2010 [285, 286].
 
 **Right, and it lasted.** Optionals: a value that might be missing has a different type, so the compiler forces the
-check [286]. C and C++ declarations are imported through the Clang compiler [287].
+check [287]. C and C++ declarations are imported through the Clang compiler [288].
 
-**Wrong or costly.** Apple's executives worried a new language would split the community [288]. Before ABI stability,
-a project and all its packages had to use one Swift version [289]. The stable ABI came with Swift 5 [290], declared on
-Apple platforms first [291], and library authors and app developers still needed the same compiler until module
-stability [292]. Library evolution mode costs speed, and switching it on later is itself a break [293]; freezing a
-type for speed exposes its layout forever [294].
+**Wrong or costly.** Apple's executives worried a new language would split the community [289]. Before ABI stability,
+a project and all its packages had to use one Swift version [290]. The stable ABI came with Swift 5 [291], declared on
+Apple platforms first [292], and library authors and app developers still needed the same compiler until module
+stability [293]. Library evolution mode costs speed, and switching it on later is itself a break [294]; freezing a
+type for speed exposes its layout forever [295].
 
 **For Omega.** No null (decision 28). A binary interface is a permanent promise; keep Omega's to the C ABI and a
 plain-text interface description (decision 26).
 
 #### Zig
 
-**Built for.** A replacement for C: no hidden control flow, no hidden allocations [295]. The language has no heap
-allocation of its own [296]; anything that allocates takes an allocator argument, so the standard library works on
-bare hardware [297].
+**Built for.** A replacement for C: no hidden control flow, no hidden allocations [296]. The language has no heap
+allocation of its own [297]; anything that allocates takes an allocator argument, so the standard library works on
+bare hardware [298].
 
-**Right.** Compile-time code in the same language instead of macros [298]; `zig cc`, a C compiler with
-cross-compiling built in, which gives C projects a reason to adopt the toolchain [299]. The C ABI is the stated way in
-and out [300].
+**Right.** Compile-time code in the same language instead of macros [299]; `zig cc`, a C compiler with
+cross-compiling built in, which gives C projects a reason to adopt the toolchain [300]. The C ABI is the stated way in
+and out [301].
 
-**Not yet.** Zig has not reached 1.0 [301]. No designer admission of a design mistake was found.
+**Not yet.** Zig has not reached 1.0 [302]. No designer admission of a design mistake was found.
 
 **For Omega.** Already studied for compile-time evaluation and incremental builds in
 docs/osc/ZIG-LESSONS-COMPTIME-INCREMENTAL.md (2026-10-13). Taken here: nothing hidden (decision 42); allocation
@@ -574,13 +574,13 @@ decided in the open (decision 24 goes further: at check time).
 #### Julia
 
 **Built for.** Ending the two-language problem, where users prototype in an easy language and experts rewrite in C or
-Fortran [302]: the launch post asked for one fast, interactive, open language [303]. Multiple dispatch picks a
-function's version from the types of all its arguments [304].
+Fortran [303]: the launch post asked for one fast, interactive, open language [304]. Multiple dispatch picks a
+function's version from the types of all its arguments [305].
 
-**Right.** Calling C and Fortran with no glue code [305]; arrays of plain numbers share C and Fortran layout [306].
+**Right.** Calling C and Fortran with no glue code [306]; arrays of plain numbers share C and Fortran layout [307].
 
-**Wrong.** Compiling on first use gave long first-call delays until Julia 1.9 cached native code [307]; the fix grew
-cache files and precompile time [308]. Arrays count from 1, like Fortran and Matlab [309].
+**Wrong.** Compiling on first use gave long first-call delays until Julia 1.9 cached native code [308]; the fix grew
+cache files and precompile time [309]. Arrays count from 1, like Fortran and Matlab [310].
 
 **For Omega.** Compile ahead of time, with the receipt signed before anything runs (decision 33). One language from
 the chip to the host is Omega's version of solving the two-language problem.
@@ -588,9 +588,9 @@ the chip to the host is Omega's version of solving the two-language problem.
 #### Kotlin
 
 **Built for.** JetBrains' own productivity inside a large Java codebase, with two hard limits: smooth interop with
-existing Java, and compiling no slower than Java [310].
+existing Java, and compiling no slower than Java [311].
 
-**Right.** Interop in both directions, which makes gradual migration possible [311]. Null in the type system [312].
+**Right.** Interop in both directions, which makes gradual migration possible [208]. Null in the type system [312].
 Google's 2019 "Kotlin-first" announcement for Android was its main adoption event [313].
 
 **How it talks.** Kotlin/Native reads C headers with cinterop [314], still labelled Beta [315].
@@ -701,26 +701,26 @@ proves it, with its file. "New" means nothing enforces it yet; the gate named is
 
 | # | lesson | languages that show it | evidence | Omega's decision, and why | gate |
 |---|---|---|---|---|---|
-| 26 | every language meets every other at the platform C ABI; language-specific binary interfaces have cost years | Haskell, Rust, C++, Swift, Zig, Mojo, Node, Lua, Java | Haskell standardised on C as the common base [116, 117]; Rust promises no stable ABI and meets others at C [279, 280]; a stable C++ ABI is hard [79]; Swift needed until version 5 [290, 289]; Node add-ons rebuilt each version until Node-API [227]; Lua 4.0's interface change stranded its birthplace [200]; JNI is brittle [214] | **Yes.** The C ABI is the only binary promise Omega makes to outside programs. omc writes ELF shared objects that follow it exactly; no Omega-specific binary interface is offered to other languages. Every major language already speaks it (COMPATIBILITY.md section 5) | New: COMPATIBILITY.md rungs C1 to C5 |
-| 27 | a language that cannot remove a mistake keeps it forever; a language that breaks everything at once splits its users | Python, Perl, PHP, JavaScript, C++, Lua, Rust, Go | Python's deliberate 3.0 break took until 2020 to finish [172, 174, 175]; Perl 6 took fifteen years and then a new name [141, 144]; PHP 6 abandoned [236]; JavaScript "don't break the Web" [224, 225]; C++ never removes anything [75]; Lua 4.0 [200]; Rust editions coexist [269, 270]; Go 1 programs keep compiling [255] | **Yes.** Every Omega unit names its language version; old versions stay readable and their receipts keep verifying; an incompatible change is a new version that runs beside the old one, as Rust's editions do. Removal is allowed in a new version, so mistakes do not have to live forever. No "Omega 2" that splits the code base | Already true in part: the IR decoder reads "every historical version 1..OSC_IR_VERSION_MAX" (src/compiler/osc_ir.h:266) and refuses unknown ones (C2-DECODE-VERSION, src/checker2/c2_ir.c:232). New: a gate that compiles one program under two language versions in one build and links them |
-| 28 | null references cause crashes; retrofitting a fix leaves the hole underneath | Java, C#, Kotlin, Swift, Go | Hoare's billion-dollar mistake [213]; C#'s nullable references are compile-time only [249]; Kotlin and Swift put absence in the type [312, 286]; Go's nil-interface trap [261] | **Yes, no null.** Omegese has no null word and no reference that can point at nothing; an array name always holds an array (own, edit, view) | Already true: the fixed grammar of `omegese next --machine` (docs/one_layer/OMEGESE.md 6.2) has no null word, checked by the next oracle in `make test-omegese` (mk/omegese.mk:33). New: one refusal test that a null-like word is refused |
-| 29 | exceptions that jump across functions cost clarity, and are fatal at a language border | Java, C++, Rust, Lua, Go, Zig, Erlang | checked exceptions contested [207, 208, 209]; C++ builds switch exceptions off [76]; a Rust panic across a C boundary aborts [392, 393]; Lua errors are long jumps [394]; Go stopped error-syntax proposals [262]; Zig has no hidden control flow [295]; Erlang lets a failing process stop and a supervisor recover [123] | **Yes, errors are values.** No exceptions. A trap ends the call with a code from 1 to 14; at the door it becomes the function's return value (COMPATIBILITY.md section 3.4). The cost Go paid (verbose error checks) is paid in tokens by an AI writer, and is measured by the token gate | Already true: trap codes checked (C2-TRAP-CODE, tests/checker2/test_c2_ir.c:833-834); code after a trap refused (`make test-omegese`). New: rung C3 |
+| 26 | every language meets every other at the platform C ABI; language-specific binary interfaces have cost years | Haskell, Rust, C++, Swift, Zig, Mojo, Node, Lua, Java | Haskell standardised on C as the common base [116, 117]; Rust promises no stable ABI and meets others at C [280, 281]; a stable C++ ABI is hard [79]; Swift needed until version 5 [291, 290]; Node add-ons rebuilt each version until Node-API [229]; Lua 4.0's interface change stranded its birthplace [200]; JNI is brittle [216] | **Yes.** The C ABI is the only binary promise Omega makes to outside programs. omc writes ELF shared objects that follow it exactly; no Omega-specific binary interface is offered to other languages. Every major language already speaks it (COMPATIBILITY.md section 5) | New: COMPATIBILITY.md rungs C1 to C5 |
+| 27 | a language that cannot remove a mistake keeps it forever; a language that breaks everything at once splits its users | Python, Perl, PHP, JavaScript, C++, Lua, Rust, Go | Python's deliberate 3.0 break took until 2020 to finish [172, 174, 175]; Perl 6 took fifteen years and then a new name [141, 144]; PHP 6 abandoned [238]; JavaScript "don't break the Web" [226, 227]; C++ never removes anything [75]; Lua 4.0 [200]; Rust editions coexist [270, 271]; Go 1 programs keep compiling [256] | **Yes.** Every Omega unit names its language version; old versions stay readable and their receipts keep verifying; an incompatible change is a new version that runs beside the old one, as Rust's editions do. Removal is allowed in a new version, so mistakes do not have to live forever. No "Omega 2" that splits the code base | Already true in part: the IR decoder reads "every historical version 1..OSC_IR_VERSION_MAX" (src/compiler/osc_ir.h:266) and refuses unknown ones (C2-DECODE-VERSION, src/checker2/c2_ir.c:232). New: a gate that compiles one program under two language versions in one build and links them |
+| 28 | null references cause crashes; retrofitting a fix leaves the hole underneath | Java, C#, Kotlin, Swift, Go | Hoare's billion-dollar mistake [215]; C#'s nullable references are compile-time only [250]; Kotlin and Swift put absence in the type [312, 287]; Go's nil-interface trap [262] | **Yes, no null.** Omegese has no null word and no reference that can point at nothing; an array name always holds an array (own, edit, view) | Already true: the fixed grammar of `omegese next --machine` (docs/one_layer/OMEGESE.md 6.2) has no null word, checked by the next oracle in `make test-omegese` (mk/omegese.mk:33). New: one refusal test that a null-like word is refused |
+| 29 | exceptions that jump across functions cost clarity, and are fatal at a language border | Java, C++, Rust, Lua, Go, Zig, Erlang | checked exceptions contested [209, 210, 211]; C++ builds switch exceptions off [76]; a Rust panic across a C boundary aborts [392, 393]; Lua errors are long jumps [394]; Go stopped error-syntax proposals [263]; Zig has no hidden control flow [296]; Erlang lets a failing process stop and a supervisor recover [123] | **Yes, errors are values.** No exceptions. A trap ends the call with a code from 1 to 14; at the door it becomes the function's return value (COMPATIBILITY.md section 3.4). The cost Go paid (verbose error checks) is paid in tokens by an AI writer, and is measured by the token gate | Already true: trap codes checked (C2-TRAP-CODE, tests/checker2/test_c2_ir.c:833-834); code after a trap refused (`make test-omegese`). New: rung C3 |
 | 30 | checks that can be switched off get switched off, and the bugs come back | Algol 60 (Hoare), Ada, C | Hoare's customers refused an off switch for bounds checks [28, 29]; Ariane 5's unprotected overflow [94]; C's `restrict` is an unchecked promise [395] | **Yes, no off switch.** No flag, mode or build option turns off a bounds check, an overflow trap or an overlap proof. A check leaves the compiled code only when the checker proves it can never fire (decision 23), and the receipt records the proof | Already true for the native path: every array access goes through `bounds_r` (src/compiler/osc_cg.c:182). New: a gate that greps omc's options for any flag that disables a check and finds none |
 | 31 | a foreign door left out of the language definition becomes one door per compiler | Standard ML, Haskell | the Standard ML definition said nothing about foreign code, so such programs do not move between compilers [101]; Haskell's early C tools were per compiler [116] | **Yes.** The C-ABI door, its rules and the interface description are part of the Omega specification, not a feature of omc | New: COMPATIBILITY.md rung C0 (the rules table in the spec) |
 | 32 | optional features and dialects mean nobody can rely on anything | Lisp, BASIC, OpenCL, Lua, Ada | Lisp's dialects [15]; BASIC's incompatible implementations [43, 44]; OpenCL 3.0 made everything after 1.2 optional [341, 342]; Lua's missing module policy [199]; Ada validated every compiler and refused subsets [85] | **Yes, one specification, no optional parts.** A back end that cannot do a feature refuses the program with a named error; it never accepts a dialect. checker2 is the one judge for every compiler, seed-born or C-built | Already true: checker2 refuses by named class and issues receipts (src/checker2); the handover gate in docs/PROGRAM.md requires two compilers to agree bit for bit |
-| 33 | handing source text to the machine's driver multiplies compilers and bugs; a small checked binary form travels | GLSL, SPIR-V, HLSL, CUDA, Java, Pascal, Julia | hundreds of driver bugs from shader text [346, 347, 349]; SPIR-V and DXIL as binary contracts [350, 351, 357]; PTX stable across generations [323]; Java bytecode [204]; Pascal-P [47]; Julia's compile-on-first-use delays [307] | **Yes, already true.** What reaches the machine is Omega's checked binary IR, compiled ahead of time and signed by a receipt before it runs. No source text and no compiler inside a driver or at run time | Already true: strict IR decoder with mutant tests (`make test-osc-ir-decode`, Makefile:112; refusal classes C2-DECODE-*) |
+| 33 | handing source text to the machine's driver multiplies compilers and bugs; a small checked binary form travels | GLSL, SPIR-V, HLSL, CUDA, Java, Pascal, Julia | hundreds of driver bugs from shader text [346, 347, 349]; SPIR-V and DXIL as binary contracts [350, 351, 357]; PTX stable across generations [323]; Java bytecode [204]; Pascal-P [47]; Julia's compile-on-first-use delays [308] | **Yes, already true.** What reaches the machine is Omega's checked binary IR, compiled ahead of time and signed by a receipt before it runs. No source text and no compiler inside a driver or at run time | Already true: strict IR decoder with mutant tests (`make test-osc-ir-decode`, Makefile:112; refusal classes C2-DECODE-*) |
 | 34 | per-thread GPU code is hard to write well; tile code moves the hard parts into the compiler | CUDA, Triton, Mojo, APL | NVIDIA added a tile mode where the thread index disappears [331, 332]; Triton's compiler handles coalescing, shared memory and tensor cores [364, 365]; Mojo is still per thread [386]; Iverson on whole-array notation [390] | **Yes.** Omegese GPU words (bar C1 of docs/OMEGA.md) are written per tile; omc owns thread indices, coalescing and shared memory. The costs Triton names stay visible: tiles of fixed shape [371], and scheduling across the chip, which Omega gives to the motor's static schedule | New: bar C1 kernels written with no thread-index word; checker proves tile bounds |
-| 35 | languages spread through their libraries and the array formats they share | CUDA, PHP, Python, NumPy, Triton | cuDNN and cuBLAS carried CUDA into AI [326, 327]; PHP won on its ecosystem [231, 233]; NumPy and the buffer protocol pulled science onto Python [160, 163]; DLPack passes arrays between frameworks [369] | **Yes.** Omega's libraries (GEMM, attention, reductions) are part of the deliverable, and arrays cross the door in DLPack's layout so every array library can hand them over (COMPATIBILITY.md section 3.3) | New: bar C3 of docs/OMEGA.md; rung C6 |
-| 36 | packaging that arrives late or loose costs a decade | Haskell, Lua, Python, Go, Rust | Haskell's package tools came fifteen years late [114]; Lua had no module policy [199]; Python needed PEP 517 to end one gatekeeper for every build system [171]; Go's minimum version selection [254]; Cargo builds and fetches in one tool [271] | **Yes.** One tool builds and fetches; a dependency is named by the digest of its checked unit (decision 21), so there is no version guessing at all | Already true in design: decision 21's gate, imports resolve by digest (OSC-VC1). New: the tool |
-| 37 | a global lock or shared mutable memory caps parallel speed; isolation scales | Python, Ruby, OCaml, Erlang, Go | Python's GIL blocks multi-core use, and removing it costs single-thread speed and binary compatibility [166, 167, 168]; Ruby gives each Ractor its own lock [184]; OCaml removed its global lock only in 2022 [105]; Erlang's share-nothing processes [120, 122]; Go drew users with concurrency [256] | **Yes.** No global lock. Parallel work shares no writable memory unless the checker proves the parts disjoint (decision 18 applied to threads); at the door each thread brings its own workspace (COMPATIBILITY.md section 4) | Already true for calls: C2-CALL-ALIAS (src/checker2/c2_check.c:338). New: rung C7 |
-| 38 | compile time is a design limit; features that multiply it are paid for daily | Go, Rust, Kotlin, Julia, C++ | Go's import rules cut build work [253]; Rust's cross-crate specialisation and slow compiles [274, 275]; Kotlin's "no slower than Java" rule [310]; Julia's latency [307, 308] | **Yes.** omc's compile time and output size are published for every rung (L408's acceptance numbers), and no feature whose compile cost grows faster than program size is added without a measured need | Already true for L408: the omc words-and-compile-time table its brief requires. New: the same table on every later rung |
-| 39 | generics are hard to add late and hard to add well | Go, Java, C#, C++ | Go waited about a decade [257, 259, 260]; Java erased types for compatibility [210, 212]; C# specialised them in the runtime [242]; C++ templates against stable binaries [80] | **No generics now.** If a measured need appears, they are specialised per type at check time (as C# does for value types), never erased, and never cross the door: exports are always concrete | New: the door refuses a non-concrete export (rung C1) |
-| 40 | being a superset of an older language buys users and costs freedom | C++, Mojo, Kotlin | C++'s C base: adoption [70, 71] and complexity [72, 73]; Mojo's Python-superset goal relaxed [381, 382]; Kotlin chose two-way interop over supersetting Java [310, 311] | **No superset.** Omega does not copy Python's or C's syntax or meaning. Compatibility comes through the door and through translators checked by identical output (COMPATIBILITY.md sections 5 and 6) | New: translator gates T1 to T4 |
-| 41 | an unsafe escape hatch becomes where the bugs live | Rust, C#, c2rust | Rust's `unsafe` exists because the checker is conservative [277]; C# unsafe code is unverifiable [250]; c2rust's output is unsafe on purpose [396] | **No unsafe form.** Omegese has no unchecked word. What the checker cannot prove is refused, and the AI writer rewrites it; code that truly needs the hardware without proof lives below the floor (rung F of docs/PROGRAM.md) or outside the door | Already true: every IR op is checked by checker2; there is no unchecked op class. New: a grep gate over the spec for an unsafe word |
-| 42 | hidden control flow and hidden allocation make code mean something other than it says | Zig, C++ | Zig: no hidden control flow or allocations [295, 296, 297]; C++ exceptions and RTTI switched off for cost [76] | **Yes.** No operator overloading, no hidden calls, no implicit allocation: every word in Omegese does what the specification table says and nothing else | Already true: the fixed word table (docs/one_layer/OMEGESE.md section 3) and the next oracle |
-| 43 | the first index and the array order are a border problem, not a style question | Fortran, Julia, Lua, C | Fortran is column-major and counts from 1 [397]; Julia counts from 1 [309]; Lua's 1 is defended [201] | **Zero-based, and explicit at the border.** Omegese counts from 0 (`for` runs 0 to count minus 1); arrays that cross the door carry their shape and order in the descriptor, so a Fortran or Julia caller cannot be misread | Already true inside (docs/one_layer/OMEGESE.md section 3). New: rung C6 includes a column-major Fortran caller |
+| 35 | languages spread through their libraries and the array formats they share | CUDA, PHP, Python, NumPy, Triton | cuDNN and cuBLAS carried CUDA into AI [326, 327]; PHP won on its ecosystem [233, 235]; NumPy and the buffer protocol pulled science onto Python [160, 163]; DLPack passes arrays between frameworks [369] | **Yes.** Omega's libraries (GEMM, attention, reductions) are part of the deliverable, and arrays cross the door in DLPack's layout so every array library can hand them over (COMPATIBILITY.md section 3.3) | New: bar C3 of docs/OMEGA.md; rung C6 |
+| 36 | packaging that arrives late or loose costs a decade | Haskell, Lua, Python, Go, Rust | Haskell's package tools came fifteen years late [114]; Lua had no module policy [199]; Python needed PEP 517 to end one gatekeeper for every build system [171]; Go's minimum version selection [255]; Cargo builds and fetches in one tool [272] | **Yes.** One tool builds and fetches; a dependency is named by the digest of its checked unit (decision 21), so there is no version guessing at all | Already true in design: decision 21's gate, imports resolve by digest (OSC-VC1). New: the tool |
+| 37 | a global lock or shared mutable memory caps parallel speed; isolation scales | Python, Ruby, OCaml, Erlang, Go | Python's GIL blocks multi-core use, and removing it costs single-thread speed and binary compatibility [166, 167, 168]; Ruby gives each Ractor its own lock [184]; OCaml removed its global lock only in 2022 [105]; Erlang's share-nothing processes [120, 122]; Go drew users with concurrency [257] | **Yes.** No global lock. Parallel work shares no writable memory unless the checker proves the parts disjoint (decision 18 applied to threads); at the door each thread brings its own workspace (COMPATIBILITY.md section 4) | Already true for calls: C2-CALL-ALIAS (src/checker2/c2_check.c:338). New: rung C7 |
+| 38 | compile time is a design limit; features that multiply it are paid for daily | Go, Rust, Kotlin, Julia, C++ | Go's import rules cut build work [254]; Rust's cross-crate specialisation and slow compiles [275, 276]; Kotlin's "no slower than Java" rule [311]; Julia's latency [308, 309] | **Yes.** omc's compile time and output size are published for every rung (L408's acceptance numbers), and no feature whose compile cost grows faster than program size is added without a measured need | Already true for L408: the omc words-and-compile-time table its brief requires. New: the same table on every later rung |
+| 39 | generics are hard to add late and hard to add well | Go, Java, C#, C++ | Go waited about a decade [258, 260, 261]; Java erased types for compatibility [212, 214]; C# specialised them in the runtime [244]; C++ templates against stable binaries [80] | **No generics now.** If a measured need appears, they are specialised per type at check time (as C# does for value types), never erased, and never cross the door: exports are always concrete | New: the door refuses a non-concrete export (rung C1) |
+| 40 | being a superset of an older language buys users and costs freedom | C++, Mojo, Kotlin | C++'s C base: adoption [70, 71] and complexity [72, 73]; Mojo's Python-superset goal relaxed [381, 382]; Kotlin chose two-way interop over supersetting Java [311, 208] | **No superset.** Omega does not copy Python's or C's syntax or meaning. Compatibility comes through the door and through translators checked by identical output (COMPATIBILITY.md sections 5 and 6) | New: translator gates T1 to T4 |
+| 41 | an unsafe escape hatch becomes where the bugs live | Rust, C#, c2rust | Rust's `unsafe` exists because the checker is conservative [278]; C# unsafe code is unverifiable [251]; c2rust's output is unsafe on purpose [396] | **No unsafe form.** Omegese has no unchecked word. What the checker cannot prove is refused, and the AI writer rewrites it; code that truly needs the hardware without proof lives below the floor (rung F of docs/PROGRAM.md) or outside the door | Already true: every IR op is checked by checker2; there is no unchecked op class. New: a grep gate over the spec for an unsafe word |
+| 42 | hidden control flow and hidden allocation make code mean something other than it says | Zig, C++ | Zig: no hidden control flow or allocations [296, 297, 298]; C++ exceptions and RTTI switched off for cost [76] | **Yes.** No operator overloading, no hidden calls, no implicit allocation: every word in Omegese does what the specification table says and nothing else | Already true: the fixed word table (docs/one_layer/OMEGESE.md section 3) and the next oracle |
+| 43 | the first index and the array order are a border problem, not a style question | Fortran, Julia, Lua, C | Fortran is column-major and counts from 1 [397]; Julia counts from 1 [310]; Lua's 1 is defended [201] | **Zero-based, and explicit at the border.** Omegese counts from 0 (`for` runs 0 to count minus 1); arrays that cross the door carry their shape and order in the descriptor, so a Fortran or Julia caller cannot be misread | Already true inside (docs/one_layer/OMEGESE.md section 3). New: rung C6 includes a column-major Fortran caller |
 | 44 | type inference with written signatures catches errors without burying code in types | ML, Haskell, Swift, Rust | Milner's checker trapped many errors while inferring types [95, 96]; inference spread to Rust and others [97, 98] | **Yes, already true.** Omegese infers value types bottom-up; only parameters, returns, conversions and new arrays name a type (Omegese rule 2) | Already true: `make test-omegese` (coverage programs and refusals) |
-| 45 | a language that needs no runtime can live inside any host | Lua, Zig, C | Lua is a library with no main and no global state [195, 193]; Zig's standard library runs on bare hardware [297] | **Yes.** Omega output needs no runtime library and no global state outside its declared workspace; it loads as a shared object into any program (COMPATIBILITY.md) | New: rung C1 checks the shared object has no library dependencies |
+| 45 | a language that needs no runtime can live inside any host | Lua, Zig, C | Lua is a library with no main and no global state [195, 193]; Zig's standard library runs on bare hardware [298] | **Yes.** Omega output needs no runtime library and no global state outside its declared workspace; it loads as a shared object into any program (COMPATIBILITY.md) | New: rung C1 checks the shared object has no library dependencies |
 
 ### Where a lesson pulls against decisions 16 to 24
 
@@ -728,10 +728,10 @@ proves it, with its file. "New" means nothing enforces it yet; the gate named is
   classes of memory bugs [10, 205]. Decision 24 stands. Collectors cost the most exactly at the border Omega must
   cross: Go forbids C from keeping a Go pointer [398], Julia callers must pin objects by hand [399], OCaml's C stubs
   need special macros [103], and OCaml carried a global collector lock until 2022 [105]. Python's C extensions must track reference ownership by hand, the usual source of bugs [169]. Rust shows memory
-  safety without a collector at scale [267]. Omega's workload is fixed and known before it runs, so allocation can be
+  safety without a collector at scale [268]. Omega's workload is fixed and known before it runs, so allocation can be
   decided at check time.
 - **Rust's conservative checker against decision 18.** Rust says its compiler rejects some valid programs and offers
-  `unsafe` as the way out [277]. Decision 18 stands, without the way out (decision 41). The writer is an AI that can
+  `unsafe` as the way out [278]. Decision 18 stands, without the way out (decision 41). The writer is an AI that can
   rewrite a refused program at once, and every refusal is counted (the translator gate T3 in COMPATIBILITY.md
   publishes the count). If refusals block real programs, the fix is a stronger proof in checker2, never an escape.
 - **Hoare's run-time checks against decision 23.** Hoare argues run-time checks matter most in production runs
@@ -742,7 +742,7 @@ proves it, with its file. "New" means nothing enforces it yet; the gate named is
   and loading extensions at run time [149, 152, 155]. Decision 21 (one unit, imports by digest, no textual inclusion) stands
   inside Omega. Python's reach is copied at the border instead: Omega is callable from Python through the C ABI, so
   Python stays the glue and Omega becomes one more thing it glues.
-- **Compile on first use (Julia) against receipts.** Julia gets speed by compiling at run time [307]. Omega cannot:
+- **Compile on first use (Julia) against receipts.** Julia gets speed by compiling at run time [308]. Omega cannot:
   a receipt signs checked code before it runs. Decision 33 keeps compilation ahead of time.
 
 ### Lessons Omega already follows, and the gate that proves each
@@ -881,31 +881,31 @@ Every source below was fetched on 2026-10-22 and its quoted sentence re-found in
 
 [54] https://www.cs.tufts.edu/~nr/cs257/archive/kristen-nygaard/hopl-simula.pdf, "The Development of the SIMULA Languages (HOPL I)", 1978 (published 1981). Quote: "our work to resolve these problems resulted in the class/subclass concepts which structured the rest of the new language."
 
-[55] https://www.cs.tufts.edu/~nr/cs257/archive/kristen-nygaard/hopl-simula.pdf, "The Development of the SIMULA Languages (HOPL I)", 1978 (published 1981). Quote: "It was crucial for the continuation of the whole SIMULA 67 effort to get at least one major manufacturer (in this case Control Data, see Section 3.5) to commit itself to implementations."
+[55] https://www.stroustrup.com/hopl2.pdf, "A History of C++: 1979-1991", 1993. Quote: "The overhead problems were fundamental to Simula and could not be remedied."
 
-[56] https://www.cs.tufts.edu/~nr/cs257/archive/kristen-nygaard/hopl-simula.pdf, "The Development of the SIMULA Languages (HOPL I)", 1978 (published 1981). Quote: "Unfortunately we chose to model the virtual specifications after the parameter specifications of ALGOL, which meant that the parameters of a virtual procedure had to be run time checked."
+[56] https://www.stroustrup.com/hopl20main-p5-p-bfc9cd4--final.pdf, "Thriving in a Crowded and Changing World: C++ 2006-2020", 2020-06. Quote: "I wanted a tool that combined the ability to deal directly and efficiently with hardware"
 
-[57] https://www.cs.tufts.edu/~nr/cs257/archive/kristen-nygaard/hopl-simula.pdf, "The Development of the SIMULA Languages (HOPL I)", 1978 (published 1981). Quote: "Automatic data retention was felt to be a fairly dangerous approach"
+[57] https://www.cs.tufts.edu/~nr/cs257/archive/kristen-nygaard/hopl-simula.pdf, "The Development of the SIMULA Languages (HOPL I)", 1978 (published 1981). Quote: "It was crucial for the continuation of the whole SIMULA 67 effort to get at least one major manufacturer (in this case Control Data, see Section 3.5) to commit itself to implementations."
 
-[58] https://www.stroustrup.com/hopl2.pdf, "A History of C++: 1979-1991", 1993. Quote: "The overhead problems were fundamental to Simula and could not be remedied."
+[58] https://www.cs.tufts.edu/~nr/cs257/archive/kristen-nygaard/hopl-simula.pdf, "The Development of the SIMULA Languages (HOPL I)", 1978 (published 1981). Quote: "Unfortunately we chose to model the virtual specifications after the parameter specifications of ALGOL, which meant that the parameters of a virtual procedure had to be run time checked."
 
-[59] http://worrydream.com/EarlyHistoryOfSmalltalk/, "The Early History of Smalltalk (Alan Kay, HOPL II, copy on worrydream.com)", 1993. Quote: "The mental image was one of separate computers sending requests to other computers that had to be accepted and understood by the receivers before anything could happen."
+[59] https://www.cs.tufts.edu/~nr/cs257/archive/kristen-nygaard/hopl-simula.pdf, "The Development of the SIMULA Languages (HOPL I)", 1978 (published 1981). Quote: "Automatic data retention was felt to be a fairly dangerous approach"
 
-[60] http://lists.squeakfoundation.org/pipermail/squeak-dev/1998-October/017019.html, "prototypes vs classes was: Re: Sun's HotSpot (Alan Kay, squeak-dev mailing list)", 1998-10. Quote: "Smalltalk is not only NOT its syntax or the class library, it is not even about classes."
+[60] http://worrydream.com/EarlyHistoryOfSmalltalk/, "The Early History of Smalltalk (Alan Kay, HOPL II, copy on worrydream.com)", 1993. Quote: "The mental image was one of separate computers sending requests to other computers that had to be accepted and understood by the receivers before anything could happen."
 
-[61] http://lists.squeakfoundation.org/pipermail/squeak-dev/1998-October/017019.html, "prototypes vs classes was: Re: Sun's HotSpot (Alan Kay, squeak-dev mailing list)", 1998-10. Quote: "that is what the kernal of Smalltalk/Squeak is all about (and it's something that was never quite completed in our Xerox PARC phase)."
+[61] http://lists.squeakfoundation.org/pipermail/squeak-dev/1998-October/017019.html, "prototypes vs classes was: Re: Sun's HotSpot (Alan Kay, squeak-dev mailing list)", 1998-10. Quote: "Smalltalk is not only NOT its syntax or the class library, it is not even about classes."
 
-[62] http://worrydream.com/EarlyHistoryOfSmalltalk/, "The Early History of Smalltalk (Alan Kay, HOPL II, copy on worrydream.com)", 1993. Quote: "Now programmers could easily implement the virtual machine without having to reinvent it, and, in several cases, groups were able to roll their own image of basic classes."
+[62] http://lists.squeakfoundation.org/pipermail/squeak-dev/1998-October/017019.html, "prototypes vs classes was: Re: Sun's HotSpot (Alan Kay, squeak-dev mailing list)", 1998-10. Quote: "that is what the kernal of Smalltalk/Squeak is all about (and it's something that was never quite completed in our Xerox PARC phase)."
 
-[63] https://ftp.gwdg.de/pub/languages/smalltalk/st.cs.uiuc.edu/Smalltalk/Squeak/docs/OOPSLA.Squeak.html, "Back to the Future: The Story of Squeak, A Practical Smalltalk Written in Itself", 1997. Quote: "It also runs bit-identical images across its wide portability base."
+[63] http://worrydream.com/EarlyHistoryOfSmalltalk/, "The Early History of Smalltalk (Alan Kay, HOPL II, copy on worrydream.com)", 1993. Quote: "Now programmers could easily implement the virtual machine without having to reinvent it, and, in several cases, groups were able to roll their own image of basic classes."
 
-[64] https://ftp.gwdg.de/pub/languages/smalltalk/st.cs.uiuc.edu/Smalltalk/Squeak/docs/OOPSLA.Squeak.html, "Back to the Future: The Story of Squeak, A Practical Smalltalk Written in Itself", 1997. Quote: "make changes immediately and without needing to see or deal with any language other than Smalltalk."
+[64] https://ftp.gwdg.de/pub/languages/smalltalk/st.cs.uiuc.edu/Smalltalk/Squeak/docs/OOPSLA.Squeak.html, "Back to the Future: The Story of Squeak, A Practical Smalltalk Written in Itself", 1997. Quote: "It also runs bit-identical images across its wide portability base."
 
-[65] https://lists.squeakfoundation.org/pipermail/squeak-dev/2010-May/150654.html, "[squeak-dev] FFI Documentation (community help draft)", 2010-05. Quote: "FFI, the Squeak Foreign Function Interface, is used to call functions located in shared libraries that are not part of the Squeak VM nor its plugins."
+[65] https://ftp.gwdg.de/pub/languages/smalltalk/st.cs.uiuc.edu/Smalltalk/Squeak/docs/OOPSLA.Squeak.html, "Back to the Future: The Story of Squeak, A Practical Smalltalk Written in Itself", 1997. Quote: "make changes immediately and without needing to see or deal with any language other than Smalltalk."
 
-[66] https://lists.squeakfoundation.org/pipermail/squeak-dev/2010-May/150654.html, "[squeak-dev] FFI Documentation (community help draft)", 2010-05. Quote: "users are limited to using the functionality you provide and can not call other external functions"
+[66] https://lists.squeakfoundation.org/pipermail/squeak-dev/2010-May/150654.html, "[squeak-dev] FFI Documentation (community help draft)", 2010-05. Quote: "FFI, the Squeak Foreign Function Interface, is used to call functions located in shared libraries that are not part of the Squeak VM nor its plugins."
 
-[67] https://www.stroustrup.com/hopl20main-p5-p-bfc9cd4--final.pdf, "Thriving in a Crowded and Changing World: C++ 2006-2020", 2020-06. Quote: "I wanted a tool that combined the ability to deal directly and efficiently with hardware"
+[67] https://lists.squeakfoundation.org/pipermail/squeak-dev/2010-May/150654.html, "[squeak-dev] FFI Documentation (community help draft)", 2010-05. Quote: "users are limited to using the functionality you provide and can not call other external functions"
 
 [68] https://www.stroustrup.com/hopl-almost-final.pdf, "Evolving a language in and for the real world: C++ 1991-2006", 2007. Quote: "Use traditional (dumb) linkers. No gratuitous incompatibilities with C. Leave no room for a lower-level language below C++ (except assembler)."
 
@@ -1185,215 +1185,215 @@ Every source below was fetched on 2026-10-22 and its quoted sentence re-found in
 
 [206] https://www.stroustrup.com/1995_Java_whitepaper.pdf, "The Java Language Environment: A White Paper (Gosling and McGilton, Sun Microsystems; copy hosted by Stroustrup)", 1995-10. Quote: "Automatic garbage collection is an integral part of Java and its run-time system."
 
-[207] https://www.artima.com/articles/failure-and-exceptions, "Failure and Exceptions: A Conversation with James Gosling, Part II", 2003-09-22. Quote: "In Java you can ignore exceptions, but you have to willfully do it."
+[207] https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke, "Platform Invoke (P/Invoke) (Microsoft Learn)", n.d. Quote: "P/Invoke is a technology that allows you to access structs, callbacks, and functions in unmanaged libraries from your managed code."
 
-[208] https://www.artima.com/articles/the-trouble-with-checked-exceptions, "The Trouble with Checked Exceptions: A Conversation with Anders Hejlsberg, Part II", 2003-08-18. Quote: "It is a breaking change for me to add D to the throws clause of that method, because existing caller of that method will almost certainly not handle that exception."
+[208] https://kotlinlang.org/docs/java-interop.html, "Java interoperability - Kotlin Documentation", n.d. Quote: "Existing Java code can be called from Kotlin in a natural way, and Kotlin code can be used from Java rather smoothly as well."
 
-[209] https://www.artima.com/articles/the-trouble-with-checked-exceptions, "The Trouble with Checked Exceptions: A Conversation with Anders Hejlsberg, Part II", 2003-08-18. Quote: "In the large, checked exceptions become such an irritation that people completely circumvent the feature."
+[209] https://www.artima.com/articles/failure-and-exceptions, "Failure and Exceptions: A Conversation with James Gosling, Part II", 2003-09-22. Quote: "In Java you can ignore exceptions, but you have to willfully do it."
 
-[210] https://openjdk.org/projects/valhalla/design-notes/in-defense-of-erasure, "Background: How We Got the Generics We Have (Brian Goetz)", 2020-06. Quote: "It must be possible to evolve an existing non-generic class to be generic in a binary-compatible and source-compatible manner."
+[210] https://www.artima.com/articles/the-trouble-with-checked-exceptions, "The Trouble with Checked Exceptions: A Conversation with Anders Hejlsberg, Part II", 2003-08-18. Quote: "It is a breaking change for me to add D to the throws clause of that method, because existing caller of that method will almost certainly not handle that exception."
 
-[211] https://openjdk.org/projects/valhalla/design-notes/in-defense-of-erasure, "Background: How We Got the Generics We Have (Brian Goetz)", 2020-06. Quote: "erasure was in fact the sensible and pragmatic choice for adding generics to Java in 2004"
+[211] https://www.artima.com/articles/the-trouble-with-checked-exceptions, "The Trouble with Checked Exceptions: A Conversation with Anders Hejlsberg, Part II", 2003-08-18. Quote: "In the large, checked exceptions become such an irritation that people completely circumvent the feature."
 
-[212] https://www.artima.com/articles/generics-in-c-java-and-c, "Generics in C#, Java, and C++: A Conversation with Anders Hejlsberg, Part VII", 2004-01-26. Quote: "When you apply reflection to a generic List in Java, you can't tell what the List is a List of."
+[212] https://openjdk.org/projects/valhalla/design-notes/in-defense-of-erasure, "Background: How We Got the Generics We Have (Brian Goetz)", 2020-06. Quote: "It must be possible to evolve an existing non-generic class to be generic in a binary-compatible and source-compatible manner."
 
-[213] https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare/, "Null References: The Billion Dollar Mistake (Tony Hoare, InfoQ presentation abstract)", 2009-08-25. Quote: "Tony Hoare introduced Null references in ALGOL W back in 1965"
+[213] https://openjdk.org/projects/valhalla/design-notes/in-defense-of-erasure, "Background: How We Got the Generics We Have (Brian Goetz)", 2020-06. Quote: "erasure was in fact the sensible and pragmatic choice for adding generics to Java in 2004"
 
-[214] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", n.d. (delivered in Java 22). Quote: "Replace the brittle machinery of native methods and the Java Native Interface (JNI) with a concise, readable, and pure-Java API."
+[214] https://www.artima.com/articles/generics-in-c-java-and-c, "Generics in C#, Java, and C++: A Conversation with Anders Hejlsberg, Part VII", 2004-01-26. Quote: "When you apply reflection to a generic List in Java, you can't tell what the List is a List of."
 
-[215] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", n.d. (delivered in Java 22). Quote: "JNI involves several tedious artifacts: a Java API (native methods), a C header file derived from the Java API, and a C implementation that calls the native library of interest."
+[215] https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare/, "Null References: The Billion Dollar Mistake (Tony Hoare, InfoQ presentation abstract)", 2009-08-25. Quote: "Tony Hoare introduced Null references in ALGOL W back in 1965"
 
-[216] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", n.d. (delivered in Java 22). Quote: "JNI does not reconcile the Java type system with the C type system."
+[216] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", n.d. (delivered in Java 22). Quote: "Replace the brittle machinery of native methods and the Java Native Interface (JNI) with a concise, readable, and pure-Java API."
 
-[217] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", n.d. (delivered in Java 22). Quote: "Over the years, numerous frameworks have emerged to fill the gaps left by JNI, including JNA, JNR and JavaCPP."
+[217] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", n.d. (delivered in Java 22). Quote: "JNI involves several tedious artifacts: a Java API (native methods), a C header file derived from the Java API, and a C implementation that calls the native library of interest."
 
-[218] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", 2024-10-07. Quote: "All memory segments provide spatial and temporal bounds which ensure that memory access operations are safe."
+[218] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", n.d. (delivered in Java 22). Quote: "JNI does not reconcile the Java type system with the C type system."
 
-[219] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "How a sidekick scripting language for Java, created at Netscape in a ten-day hack, ships first as a de facto Web standard"
+[219] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", n.d. (delivered in Java 22). Quote: "Over the years, numerous frameworks have emerged to fill the gaps left by JNI, including JNA, JNR and JavaCPP."
 
-[220] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "it was clear Java was not simple enough for the “glue” scripters."
+[220] https://openjdk.org/jeps/454, "JEP 454: Foreign Function & Memory API", 2024-10-07. Quote: "All memory segments provide spatial and temporal bounds which ensure that memory access operations are safe."
 
-[221] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "Node.js enabled Web programmers who had mastered JavaScript to transfer their skills to other kinds of applications and non-browser environments."
+[221] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "How a sidekick scripting language for Java, created at Netscape in a ten-day hack, ships first as a de facto Web standard"
 
-[222] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "Automatic coercions were intended to lower the entry barrier for the initial adoption of JavaScript as a simple scripting language."
+[222] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "it was clear Java was not simple enough for the “glue” scripters."
 
-[223] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "as JavaScript evolved into a general purpose language the coercions have proven to be a significant source of confusion and coding bugs."
+[223] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "Node.js enabled Web programmers who had mastered JavaScript to transfer their skills to other kinds of applications and non-browser environments."
 
-[224] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "Shon Katzenberger successfully argued that it was too late to make such a change given the large number of existing Web pages it would break."
+[224] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "Automatic coercions were intended to lower the entry barrier for the initial adoption of JavaScript as a simple scripting language."
 
-[225] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "The first constraint is sometimes expressed using the slogan “Don’t break the Web!”"
+[225] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "as JavaScript evolved into a general purpose language the coercions have proven to be a significant source of confusion and coding bugs."
 
-[226] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "while Crockford and many others disliked JavaScript’s Automatic Semicolon Insertions, many developers preferred to code without explicit semicolons."
+[226] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "Shon Katzenberger successfully argued that it was too late to make such a change given the large number of existing Web pages it would break."
 
-[227] https://nodejs.org/en/learn/modules/abi-stability, "ABI Stability (Node.js Learn)", n.d. Quote: "the application has to be recompiled, reinstalled, and redeployed whenever a new major version of Node.js is introduced into the production environment."
+[227] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "The first constraint is sometimes expressed using the slogan “Don’t break the Web!”"
 
-[228] https://nodejs.org/api/n-api.html, "Node-API (Node.js documentation)", n.d. Quote: "It is intended to insulate addons from changes in the underlying JavaScript engine and allow modules compiled for one major version to run on later major versions of Node.js without recompilation."
+[228] https://wirfs-brock.com/allen/jshopl.pdf, "JavaScript: The First 20 Years (Wirfs-Brock and Eich, HOPL IV)", 2020-06. Quote: "while Crockford and many others disliked JavaScript’s Automatic Semicolon Insertions, many developers preferred to code without explicit semicolons."
 
-[229] https://nodejs.org/api/ffi.md, "FFI (Node.js API documentation)", n.d. (added in v26.1.0). Quote: "The `node:ffi` module provides an experimental foreign function interface for loading dynamic libraries and calling native symbols from JavaScript."
+[229] https://nodejs.org/en/learn/modules/abi-stability, "ABI Stability (Node.js Learn)", n.d. Quote: "the application has to be recompiled, reinstalled, and redeployed whenever a new major version of Node.js is introduced into the production environment."
 
-[230] https://www.computerwoche.de/a/php-creator-extolls-language-s-modest-start,2518219, "PHP creator extolls language's modest start (Computerwoche, IDG news report)", 2012-07-19. Quote: "I had no intention of writing a language. I didn't have a clue how to write a language."
+[230] https://nodejs.org/api/n-api.html, "Node-API (Node.js documentation)", n.d. Quote: "It is intended to insulate addons from changes in the underlying JavaScript engine and allow modules compiled for one major version to run on later major versions of Node.js without recompilation."
 
-[231] https://www.computerwoche.de/a/php-creator-extolls-language-s-modest-start,2518219, "PHP creator extolls language's modest start (Computerwoche, IDG news report)", 2012-07-19. Quote: "The focus wasn't on the language itself, but on the ecosystem"
+[231] https://nodejs.org/api/ffi.md, "FFI (Node.js API documentation)", n.d. (added in v26.1.0). Quote: "The `node:ffi` module provides an experimental foreign function interface for loading dynamic libraries and calling native symbols from JavaScript."
 
-[232] https://www.computerwoche.de/a/php-creator-extolls-language-s-modest-start,2518219, "PHP creator extolls language's modest start (Computerwoche, IDG news report)", 2012-07-19. Quote: "ISPs (Internet Service Providers), in particular, found the technology useful because it worked very well in shared environments."
+[232] https://www.computerwoche.de/a/php-creator-extolls-language-s-modest-start,2518219, "PHP creator extolls language's modest start (Computerwoche, IDG news report)", 2012-07-19. Quote: "I had no intention of writing a language. I didn't have a clue how to write a language."
 
-[233] https://www.computerwoche.de/a/php-creator-extolls-language-s-modest-start,2518219, "PHP creator extolls language's modest start (Computerwoche, IDG news report)", 2012-07-19. Quote: "You can have the prettiest language in the world, but if it can't talk to the back end, and you have no way to host it, it is useless."
+[233] https://www.computerwoche.de/a/php-creator-extolls-language-s-modest-start,2518219, "PHP creator extolls language's modest start (Computerwoche, IDG news report)", 2012-07-19. Quote: "The focus wasn't on the language itself, but on the ecosystem"
 
-[234] https://blog.simonwillison.net/2003/Jun/24/philosophy/, "PHP philosophy, and bundling SQLite (Simon Willison, quoting Rasmus Lerdorf)", 2003-06-24. Quote: "PHP is not about purity in CS principles or architecture, it is about solving the ugly web problem with an admittedly ugly, but extremely functional and convenient solution."
+[234] https://www.computerwoche.de/a/php-creator-extolls-language-s-modest-start,2518219, "PHP creator extolls language's modest start (Computerwoche, IDG news report)", 2012-07-19. Quote: "ISPs (Internet Service Providers), in particular, found the technology useful because it worked very well in shared environments."
 
-[235] https://www.php.net/manual/en/history.php.php, "History of PHP (PHP manual)", n.d. Quote: "The syntax itself was similar to that of Perl, albeit much more limited, simple, and somewhat inconsistent."
+[235] https://www.computerwoche.de/a/php-creator-extolls-language-s-modest-start,2518219, "PHP creator extolls language's modest start (Computerwoche, IDG news report)", 2012-07-19. Quote: "You can have the prettiest language in the world, but if it can't talk to the back end, and you have no way to host it, it is useless."
 
-[236] https://wiki.php.net/rfc/php6, "PHP RFC: Name of Next Release of PHP", n.d. Quote: "there has been a previous attempt at a new major version, which was started in 2005 and abandoned in 2010 due to difficulties in the Unicode implementation."
+[236] https://blog.simonwillison.net/2003/Jun/24/philosophy/, "PHP philosophy, and bundling SQLite (Simon Willison, quoting Rasmus Lerdorf)", 2003-06-24. Quote: "PHP is not about purity in CS principles or architecture, it is about solving the ugly web problem with an admittedly ugly, but extremely functional and convenient solution."
 
-[237] https://www.php.net/releases/7_0_0.php, "PHP 7.0.0 Release Announcement", n.d. Quote: "Improved performance: PHP 7 is up to twice as fast as PHP 5.6"
+[237] https://www.php.net/manual/en/history.php.php, "History of PHP (PHP manual)", n.d. Quote: "The syntax itself was similar to that of Perl, albeit much more limited, simple, and somewhat inconsistent."
 
-[238] https://wiki.php.net/rfc/ffi, "PHP RFC: FFI - Foreign Function Interface", 2018-12-04. Quote: "It allows calling C functions and using C data types from pure scripting language and therefore develop “system code” more productively."
+[238] https://wiki.php.net/rfc/php6, "PHP RFC: Name of Next Release of PHP", n.d. Quote: "there has been a previous attempt at a new major version, which was started in 2005 and abandoned in 2010 due to difficulties in the Unicode implementation."
 
-[239] https://wiki.php.net/rfc/ffi, "PHP RFC: FFI - Foreign Function Interface", 2018-12-04. Quote: "in pure PHP, without having to have deep knowledge in the Zend extension API, and without having to learn a 3rd “intermediate” language."
+[239] https://www.php.net/releases/7_0_0.php, "PHP 7.0.0 Release Announcement", n.d. Quote: "Improved performance: PHP 7 is up to twice as fast as PHP 5.6"
 
-[240] https://www.artima.com/articles/versioning-virtual-and-override, "Versioning, Virtual, and Override: A Conversation with Anders Hejlsberg, Part IV", 2003-09-15. Quote: "versioning ended up being one of the pillars of our language design."
+[240] https://wiki.php.net/rfc/ffi, "PHP RFC: FFI - Foreign Function Interface", 2018-12-04. Quote: "It allows calling C functions and using C data types from pure scripting language and therefore develop “system code” more productively."
 
-[241] https://www.artima.com/articles/the-c-design-process, "The C# Design Process: A Conversation with Anders Hejlsberg, Part I", 2003-08-04. Quote: "good language design boils down to assembling a team of people who have good taste."
+[241] https://wiki.php.net/rfc/ffi, "PHP RFC: FFI - Foreign Function Interface", 2018-12-04. Quote: "in pure PHP, without having to have deep knowledge in the Zend extension API, and without having to learn a 3rd “intermediate” language."
 
-[242] https://www.artima.com/articles/generics-in-c-java-and-c, "Generics in C#, Java, and C++: A Conversation with Anders Hejlsberg, Part VII", 2004-01-26. Quote: "Typically with value types, you really do care that List<int> is int."
+[242] https://www.artima.com/articles/versioning-virtual-and-override, "Versioning, Virtual, and Override: A Conversation with Anders Hejlsberg, Part IV", 2003-09-15. Quote: "versioning ended up being one of the pillars of our language design."
 
-[243] https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/struct, "Structure types (Microsoft Learn)", n.d. Quote: "A structure type (or struct type) is a value type that can encapsulate data and related functionality."
+[243] https://www.artima.com/articles/the-c-design-process, "The C# Design Process: A Conversation with Anders Hejlsberg, Part I", 2003-08-04. Quote: "good language design boils down to assembling a team of people who have good taste."
 
-[244] https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/, "Memory and spans (Microsoft Learn)", n.d. Quote: "These types are designed to allow the creation of algorithms that avoid copying memory or allocating on the managed heap more than necessary."
+[244] https://www.artima.com/articles/generics-in-c-java-and-c, "Generics in C#, Java, and C++: A Conversation with Anders Hejlsberg, Part VII", 2004-01-26. Quote: "Typically with value types, you really do care that List<int> is int."
 
-[245] https://learn.microsoft.com/en-us/dotnet/standard/native-interop/pinvoke, "Platform Invoke (P/Invoke) (Microsoft Learn)", n.d. Quote: "P/Invoke is a technology that allows you to access structs, callbacks, and functions in unmanaged libraries from your managed code."
+[245] https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/struct, "Structure types (Microsoft Learn)", n.d. Quote: "A structure type (or struct type) is a value type that can encapsulate data and related functionality."
 
-[246] https://devblogs.microsoft.com/dotnet/nullable-reference-types-in-csharp/, "Introducing Nullable Reference Types in C# (.NET Blog, Mads Torgersen)", 2017-11-15. Quote: "Languages like C# don't let you express whether a null right here is a good idea or not."
+[246] https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/, "Memory and spans (Microsoft Learn)", n.d. Quote: "These types are designed to allow the creation of algorithms that avoid copying memory or allocating on the managed heap more than necessary."
 
-[247] https://devblogs.microsoft.com/dotnet/nullable-reference-types-in-csharp/, "Introducing Nullable Reference Types in C# (.NET Blog, Mads Torgersen)", 2017-11-15. Quote: "Today we released a prototype of a C# feature called “nullable reference types“, which is intended to help you find and fix most of your null-related bugs before they blow up at runtime."
+[247] https://devblogs.microsoft.com/dotnet/nullable-reference-types-in-csharp/, "Introducing Nullable Reference Types in C# (.NET Blog, Mads Torgersen)", 2017-11-15. Quote: "Languages like C# don't let you express whether a null right here is a good idea or not."
 
-[248] https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-version-history, "The history of C# (Microsoft Learn)", n.d. Quote: "Nullable reference types, while implemented in the compiler, is much more useful when libraries are annotated to provide semantic information regarding the null state of arguments and return values."
+[248] https://devblogs.microsoft.com/dotnet/nullable-reference-types-in-csharp/, "Introducing Nullable Reference Types in C# (.NET Blog, Mads Torgersen)", 2017-11-15. Quote: "Today we released a prototype of a C# feature called “nullable reference types“, which is intended to help you find and fix most of your null-related bugs before they blow up at runtime."
 
-[249] https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references, "Nullable reference types (Microsoft Learn)", n.d. Quote: "Nullable reference types are entirely a compile-time feature."
+[249] https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-version-history, "The history of C# (Microsoft Learn)", n.d. Quote: "Nullable reference types, while implemented in the compiler, is much more useful when libraries are annotated to provide semantic information regarding the null state of arguments and return values."
 
-[250] https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/unsafe-code, "Unsafe code, pointer types, and function pointers (Microsoft Learn)", n.d. Quote: "Unsafe code isn't necessarily dangerous; it's just code whose safety can't be verified by .NET tools."
+[250] https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references, "Nullable reference types (Microsoft Learn)", n.d. Quote: "Nullable reference types are entirely a compile-time feature."
 
-[251] https://go.dev/talks/2012/splash.article, "Go at Google: Language Design in the Service of Software Engineering", 2012-10-25. Quote: "Go is a programming language designed by Google to help solve Google's problems, and Google has big problems."
+[251] https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/unsafe-code, "Unsafe code, pointer types, and function pointers (Microsoft Learn)", n.d. Quote: "Unsafe code isn't necessarily dangerous; it's just code whose safety can't be verified by .NET tools."
 
-[252] https://go.dev/talks/2012/splash.article, "Go at Google: Language Design in the Service of Software Engineering", 2012-10-25. Quote: "a language that is not a breakthrough research language but is nonetheless an excellent tool for engineering large software projects"
+[252] https://go.dev/talks/2012/splash.article, "Go at Google: Language Design in the Service of Software Engineering", 2012-10-25. Quote: "Go is a programming language designed by Google to help solve Google's problems, and Google has big problems."
 
-[253] https://go.dev/talks/2012/splash.article, "Go at Google: Language Design in the Service of Software Engineering", 2012-10-25. Quote: "a factor of fifty less to do turns minutes into seconds, coffee breaks into interactive builds"
+[253] https://go.dev/talks/2012/splash.article, "Go at Google: Language Design in the Service of Software Engineering", 2012-10-25. Quote: "a language that is not a breakthrough research language but is nonetheless an excellent tool for engineering large software projects"
 
-[254] https://web.archive.org/web/2023/https://cacm.acm.org/magazines/2022/5/260357-the-go-programming-language-and-environment/fulltext, "The Go Programming Language and Environment (Communications of the ACM, May 2022; Internet Archive copy)", 2022-05. Quote: "When building a particular program, Go resolves competing required versions of a dependency module by selecting the maximum"
+[254] https://go.dev/talks/2012/splash.article, "Go at Google: Language Design in the Service of Software Engineering", 2012-10-25. Quote: "a factor of fifty less to do turns minutes into seconds, coffee breaks into interactive builds"
 
-[255] https://go.dev/doc/go1compat, "Go 1 and the Future of Go Programs", n.d. Quote: "It is intended that programs written to the Go 1 specification will continue to compile and run correctly, unchanged, over the lifetime of that specification."
+[255] https://web.archive.org/web/2023/https://cacm.acm.org/magazines/2022/5/260357-the-go-programming-language-and-environment/fulltext, "The Go Programming Language and Environment (Communications of the ACM, May 2022; Internet Archive copy)", 2022-05. Quote: "When building a particular program, Go resolves competing required versions of a dependency module by selecting the maximum"
 
-[256] https://web.archive.org/web/2023/https://cacm.acm.org/magazines/2022/5/260357-the-go-programming-language-and-environment/fulltext, "The Go Programming Language and Environment (Communications of the ACM, May 2022; Internet Archive copy, because the CACM site blocked direct fetch)", 2022-05. Quote: "native support for concurrency and parallelism helped take advantage of the multicore machines that were becoming mainstream at the time"
+[256] https://go.dev/doc/go1compat, "Go 1 and the Future of Go Programs", n.d. Quote: "It is intended that programs written to the Go 1 specification will continue to compile and run correctly, unchanged, over the lifetime of that specification."
 
-[257] https://web.archive.org/web/2023/https://cacm.acm.org/magazines/2022/5/260357-the-go-programming-language-and-environment/fulltext, "The Go Programming Language and Environment (Communications of the ACM, May 2022; Internet Archive copy)", 2022-05. Quote: "We left any form of generics out of the original language because we were keenly aware that it is very difficult to design well"
+[257] https://web.archive.org/web/2023/https://cacm.acm.org/magazines/2022/5/260357-the-go-programming-language-and-environment/fulltext, "The Go Programming Language and Environment (Communications of the ACM, May 2022; Internet Archive copy, because the CACM site blocked direct fetch)", 2022-05. Quote: "native support for concurrency and parallelism helped take advantage of the multicore machines that were becoming mainstream at the time"
 
-[258] https://go.dev/doc/faq, "Frequently Asked Questions (FAQ) - The Go Programming Language", n.d. Quote: "Generics are convenient but they come at a cost in complexity in the type system and run-time."
+[258] https://web.archive.org/web/2023/https://cacm.acm.org/magazines/2022/5/260357-the-go-programming-language-and-environment/fulltext, "The Go Programming Language and Environment (Communications of the ACM, May 2022; Internet Archive copy)", 2022-05. Quote: "We left any form of generics out of the original language because we were keenly aware that it is very difficult to design well"
 
-[259] https://research.swtch.com/generic, "The Generic Dilemma", 2009-12. Quote: "The generic dilemma is this: do you want slow programmers, slow compilers and bloated binaries, or slow execution times?"
+[259] https://go.dev/doc/faq, "Frequently Asked Questions (FAQ) - The Go Programming Language", n.d. Quote: "Generics are convenient but they come at a cost in complexity in the type system and run-time."
 
-[260] https://go.dev/doc/go1.18, "Go 1.18 Release Notes", 2022-03. Quote: "These new language changes required a large amount of new code that has not had significant testing in production settings."
+[260] https://research.swtch.com/generic, "The Generic Dilemma", 2009-12. Quote: "The generic dilemma is this: do you want slow programmers, slow compilers and bloated binaries, or slow execution times?"
 
-[261] https://go.dev/doc/faq, "Frequently Asked Questions (FAQ) - The Go Programming Language", n.d. Quote: "This situation can be confusing, and arises when a nil value is stored inside an interface value such as an error return"
+[261] https://go.dev/doc/go1.18, "Go 1.18 Release Notes", 2022-03. Quote: "These new language changes required a large amount of new code that has not had significant testing in production settings."
 
-[262] https://go.dev/blog/error-syntax, "[ On | No ] syntactic support for error handling", n.d. Quote: "For the foreseeable future, the Go team will stop pursuing syntactic language changes for error handling."
+[262] https://go.dev/doc/faq, "Frequently Asked Questions (FAQ) - The Go Programming Language", n.d. Quote: "This situation can be confusing, and arises when a nil value is stored inside an interface value such as an error return"
 
-[263] https://pkg.go.dev/cmd/cgo, "cgo command - cmd/cgo - Go Packages", n.d. Quote: "Cgo enables the creation of Go packages that call C code."
+[263] https://go.dev/blog/error-syntax, "[ On | No ] syntactic support for error handling", n.d. Quote: "For the foreseeable future, the Go team will stop pursuing syntactic language changes for error handling."
 
-[264] https://dave.cheney.net/2016/01/18/cgo-is-not-go, "cgo is not Go", 2016-01-18. Quote: "By default cgo is disabled when cross compiling."
+[264] https://pkg.go.dev/cmd/cgo, "cgo command - cmd/cgo - Go Packages", n.d. Quote: "Cgo enables the creation of Go packages that call C code."
 
-[265] https://dave.cheney.net/2016/01/18/cgo-is-not-go, "cgo is not Go", 2016-01-18. Quote: "the source of your program contains enough information for a tool to build the project"
+[265] https://dave.cheney.net/2016/01/18/cgo-is-not-go, "cgo is not Go", 2016-01-18. Quote: "By default cgo is disabled when cross compiling."
 
-[266] https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html, "What Is Ownership? - The Rust Programming Language", n.d. Quote: "Ownership is a set of rules that govern how a Rust program manages memory."
+[266] https://dave.cheney.net/2016/01/18/cgo-is-not-go, "cgo is not Go", 2016-01-18. Quote: "the source of your program contains enough information for a tool to build the project"
 
-[267] https://security.googleblog.com/2024/09/eliminating-memory-safety-vulnerabilities-Android.html, "Eliminating Memory Safety Vulnerabilities at the Source", 2024-09-25. Quote: "the percentage of memory safety vulnerabilities in Android dropped from 76% to 24% over 6 years as development shifted to memory safe languages"
+[267] https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html, "What Is Ownership? - The Rust Programming Language", n.d. Quote: "Ownership is a set of rules that govern how a Rust program manages memory."
 
-[268] https://security.googleblog.com/2024/09/eliminating-memory-safety-vulnerabilities-Android.html, "Eliminating Memory Safety Vulnerabilities at the Source", 2024-09-25. Quote: "The Android team has observed that the rollback rate of Rust changes is less than half that of C++."
+[268] https://security.googleblog.com/2024/09/eliminating-memory-safety-vulnerabilities-Android.html, "Eliminating Memory Safety Vulnerabilities at the Source", 2024-09-25. Quote: "the percentage of memory safety vulnerabilities in Android dropped from 76% to 24% over 6 years as development shifted to memory safe languages"
 
-[269] https://doc.rust-lang.org/edition-guide/editions/index.html, "What are editions? - The Rust Edition Guide", n.d. Quote: "crates in one edition must seamlessly interoperate with those compiled with other editions"
+[269] https://security.googleblog.com/2024/09/eliminating-memory-safety-vulnerabilities-Android.html, "Eliminating Memory Safety Vulnerabilities at the Source", 2024-09-25. Quote: "The Android team has observed that the rollback rate of Rust changes is less than half that of C++."
 
-[270] https://raw.githubusercontent.com/rust-lang/rfcs/master/text/2052-epochs.md, "RFC 2052: Epochs (later renamed editions)", 2017-06-26. Quote: "If we don't, we risk splitting the ecosystem, which is extremely dangerous."
+[270] https://doc.rust-lang.org/edition-guide/editions/index.html, "What are editions? - The Rust Edition Guide", n.d. Quote: "crates in one edition must seamlessly interoperate with those compiled with other editions"
 
-[271] https://doc.rust-lang.org/book/ch01-03-hello-cargo.html, "Hello, Cargo! - The Rust Programming Language", n.d. Quote: "Most Rustaceans use this tool to manage their Rust projects because Cargo handles a lot of tasks for you"
+[271] https://raw.githubusercontent.com/rust-lang/rfcs/master/text/2052-epochs.md, "RFC 2052: Epochs (later renamed editions)", 2017-06-26. Quote: "If we don't, we risk splitting the ecosystem, which is extremely dangerous."
 
-[272] https://web.archive.org/web/20231229212320/https://graydon2.dreamwidth.org/307291.html, "The Rust I Wanted Had No Future (Internet Archive copy; the live URL did not return the post to curl)", 2023-06-04. Quote: "the Rust We Got is many, many miles away from The Rust I Wanted"
+[272] https://doc.rust-lang.org/book/ch01-03-hello-cargo.html, "Hello, Cargo! - The Rust Programming Language", n.d. Quote: "Most Rustaceans use this tool to manage their Rust projects because Cargo handles a lot of tasks for you"
 
-[273] https://web.archive.org/web/20231229212320/https://graydon2.dreamwidth.org/307291.html, "The Rust I Wanted Had No Future (Internet Archive copy)", 2023-06-04. Quote: "I would have traded performance and expressivity away for simplicity"
+[273] https://web.archive.org/web/20231229212320/https://graydon2.dreamwidth.org/307291.html, "The Rust I Wanted Had No Future (Internet Archive copy; the live URL did not return the post to curl)", 2023-06-04. Quote: "the Rust We Got is many, many miles away from The Rust I Wanted"
 
-[274] https://web.archive.org/web/20231229212320/https://graydon2.dreamwidth.org/307291.html, "The Rust I Wanted Had No Future (Internet Archive copy)", 2023-06-04. Quote: "failure to do so is also a big part of Rust's terrible compile times and lack of a stable ABI"
+[274] https://web.archive.org/web/20231229212320/https://graydon2.dreamwidth.org/307291.html, "The Rust I Wanted Had No Future (Internet Archive copy)", 2023-06-04. Quote: "I would have traded performance and expressivity away for simplicity"
 
-[275] https://blog.rust-lang.org/2025/02/13/2024-State-Of-Rust-Survey-results/, "2024 State of Rust Survey Results", 2025-02-13. Quote: "Perhaps unsurprisingly, slow compilation was at the top of the list, as it seems to be a perennial concern of Rust users."
+[275] https://web.archive.org/web/20231229212320/https://graydon2.dreamwidth.org/307291.html, "The Rust I Wanted Had No Future (Internet Archive copy)", 2023-06-04. Quote: "failure to do so is also a big part of Rust's terrible compile times and lack of a stable ABI"
 
-[276] https://web.archive.org/web/20231229212320/https://graydon2.dreamwidth.org/307291.html, "The Rust I Wanted Had No Future (Internet Archive copy)", 2023-06-04. Quote: "The error-handling system that shipped in 1.0 was basically a void resulting from ripping out a couple previous attempts"
+[276] https://blog.rust-lang.org/2025/02/13/2024-State-Of-Rust-Survey-results/, "2024 State of Rust Survey Results", 2025-02-13. Quote: "Perhaps unsurprisingly, slow compilation was at the top of the list, as it seems to be a perennial concern of Rust users."
 
-[277] https://doc.rust-lang.org/book/ch20-01-unsafe-rust.html, "Unsafe Rust - The Rust Programming Language", n.d. Quote: "Unsafe Rust exists because, by nature, static analysis is conservative."
+[277] https://web.archive.org/web/20231229212320/https://graydon2.dreamwidth.org/307291.html, "The Rust I Wanted Had No Future (Internet Archive copy)", 2023-06-04. Quote: "The error-handling system that shipped in 1.0 was basically a void resulting from ripping out a couple previous attempts"
 
-[278] https://doc.rust-lang.org/nomicon/ffi.html, "Foreign Function Interface - The Rustonomicon", n.d. Quote: "Rust guarantees that the layout of a struct is compatible with the platform"
+[278] https://doc.rust-lang.org/book/ch20-01-unsafe-rust.html, "Unsafe Rust - The Rust Programming Language", n.d. Quote: "Unsafe Rust exists because, by nature, static analysis is conservative."
 
-[279] https://doc.rust-lang.org/stable/reference/items/external-blocks.html, "External blocks - The Rust Reference", n.d. Quote: "This is the default when a function is declared without using extern fn. The Rust ABI offers no stability guarantees."
+[279] https://doc.rust-lang.org/nomicon/ffi.html, "Foreign Function Interface - The Rustonomicon", n.d. Quote: "Rust guarantees that the layout of a struct is compatible with the platform"
 
-[280] https://github.com/rust-lang/compiler-team/issues/631, "Experimental feature gate for extern "crabi" ABI (major change proposal #631)", 2023-05-09. Quote: "often have to use the C ABI as a lowest-common-denominator for cross-language function calls"
+[280] https://doc.rust-lang.org/stable/reference/items/external-blocks.html, "External blocks - The Rust Reference", n.d. Quote: "This is the default when a function is declared without using extern fn. The Rust ABI offers no stability guarantees."
 
-[281] https://github.com/rust-lang/compiler-team/issues/631, "Experimental feature gate for extern "crabi" ABI (major change proposal #631)", 2023-05-09. Quote: "There will need to be a full RFC before this can be stabilized"
+[281] https://github.com/rust-lang/compiler-team/issues/631, "Experimental feature gate for extern "crabi" ABI (major change proposal #631)", 2023-05-09. Quote: "often have to use the C ABI as a lowest-common-denominator for cross-language function calls"
 
-[282] https://security.googleblog.com/2024/09/eliminating-memory-safety-vulnerabilities-Android.html, "Eliminating Memory Safety Vulnerabilities at the Source", 2024-09-25. Quote: "Android is focusing on making interoperability safe and convenient as a primary capability in our memory safety journey."
+[282] https://github.com/rust-lang/compiler-team/issues/631, "Experimental feature gate for extern "crabi" ABI (major change proposal #631)", 2023-05-09. Quote: "There will need to be a full RFC before this can be stabilized"
 
-[283] https://docs.kernel.org/rust/general-information.html, "General Information - The Linux Kernel documentation (Rust)", n.d. Quote: "Bindings are the declarations for Rust of those functions and types from the C side."
+[283] https://security.googleblog.com/2024/09/eliminating-memory-safety-vulnerabilities-Android.html, "Eliminating Memory Safety Vulnerabilities at the Source", 2024-09-25. Quote: "Android is focusing on making interoperability safe and convenient as a primary capability in our memory safety journey."
 
-[284] https://nondot.org/sabre/, "Chris Lattner's Homepage", n.d. Quote: "Swift popularized a wide range of academic ideas in a mainstream language"
+[284] https://docs.kernel.org/rust/general-information.html, "General Information - The Linux Kernel documentation (Rust)", n.d. Quote: "Bindings are the declarations for Rust of those functions and types from the C side."
 
-[285] https://www.hackingwithswift.com/interviews/chris-lattner-could-apple-have-improved-objective-c-instead-of-making-swift, "Could Apple have improved Objective-C instead of making Swift? (interview with Chris Lattner)", 2020-06-18. Quote: "ARC came to Objective-C as part of Swift driving it, because we needed safety and memory management"
+[285] https://nondot.org/sabre/, "Chris Lattner's Homepage", n.d. Quote: "Swift popularized a wide range of academic ideas in a mainstream language"
 
-[286] https://raw.githubusercontent.com/swiftlang/swift-book/main/TSPL.docc/LanguageGuide/TheBasics.md, "The Basics - The Swift Programming Language (source of the Swift book)", n.d. Quote: "Optionals ensure that code always checks whether a value is missing before using the value, and non-optional values are guaranteed to never be missing."
+[286] https://www.hackingwithswift.com/interviews/chris-lattner-could-apple-have-improved-objective-c-instead-of-making-swift, "Could Apple have improved Objective-C instead of making Swift? (interview with Chris Lattner)", 2020-06-18. Quote: "ARC came to Objective-C as part of Swift driving it, because we needed safety and memory management"
 
-[287] https://raw.githubusercontent.com/swiftlang/swift/main/docs/CppInteroperability/CppInteroperabilityManifesto.md, "C++ Interoperability Manifesto (Swift repository)", n.d. Quote: "Swift/C++ interoperability builds on top of the Swift/C interoperability, so it helps to be familiar with"
+[287] https://raw.githubusercontent.com/swiftlang/swift-book/main/TSPL.docc/LanguageGuide/TheBasics.md, "The Basics - The Swift Programming Language (source of the Swift book)", n.d. Quote: "Optionals ensure that code always checks whether a value is missing before using the value, and non-optional values are guaranteed to never be missing."
 
-[288] https://www.hackingwithswift.com/interviews/chris-lattner-could-apple-have-improved-objective-c-instead-of-making-swift, "Could Apple have improved Objective-C instead of making Swift? (interview with Chris Lattner, recorded 2020-06-18)", 2020-06-18. Quote: "one of the biggest aspects of push back on the whole Swift development among the executive team was, well, Swift is risky"
+[288] https://raw.githubusercontent.com/swiftlang/swift/main/docs/CppInteroperability/CppInteroperabilityManifesto.md, "C++ Interoperability Manifesto (Swift repository)", n.d. Quote: "Swift/C++ interoperability builds on top of the Swift/C interoperability, so it helps to be familiar with"
 
-[289] https://raw.githubusercontent.com/swiftlang/swift/main/docs/ABIStabilityManifesto.md, "Swift ABI Stability Manifesto", n.d. Quote: "Without source compatibility, projects face version-lock where all source code in a project and its packages must be written in the same version of Swift."
+[289] https://www.hackingwithswift.com/interviews/chris-lattner-could-apple-have-improved-objective-c-instead-of-making-swift, "Could Apple have improved Objective-C instead of making Swift? (interview with Chris Lattner, recorded 2020-06-18)", 2020-06-18. Quote: "one of the biggest aspects of push back on the whole Swift development among the executive team was, well, Swift is risky"
 
-[290] https://www.swift.org/blog/abi-stability-and-more/, "ABI Stability and More", 2019-02-07. Quote: "Swift 5 provides binary compatibility for apps: a guarantee that going forward, an app built with one version of the Swift compiler will be able to talk to a library built with another version."
+[290] https://raw.githubusercontent.com/swiftlang/swift/main/docs/ABIStabilityManifesto.md, "Swift ABI Stability Manifesto", n.d. Quote: "Without source compatibility, projects face version-lock where all source code in a project and its packages must be written in the same version of Swift."
 
-[291] https://www.swift.org/blog/abi-stability-and-more/, "ABI Stability and More", 2019-02-07. Quote: "ABI stability is implemented for each operating system that it compiles and runs on."
+[291] https://www.swift.org/blog/abi-stability-and-more/, "ABI Stability and More", 2019-02-07. Quote: "Swift 5 provides binary compatibility for apps: a guarantee that going forward, an app built with one version of the Swift compiler will be able to talk to a library built with another version."
 
-[292] https://www.swift.org/blog/abi-stability-and-more/, "ABI Stability and More", 2019-02-07. Quote: "That is, the app developer and the library author have to be using the same version of the compiler."
+[292] https://www.swift.org/blog/abi-stability-and-more/, "ABI Stability and More", 2019-02-07. Quote: "ABI stability is implemented for each operating system that it compiles and runs on."
 
-[293] https://www.swift.org/blog/library-evolution/, "Library Evolution in Swift", 2020-02-13. Quote: "enabling library evolution support for a framework is itself a binary-incompatible change"
+[293] https://www.swift.org/blog/abi-stability-and-more/, "ABI Stability and More", 2019-02-07. Quote: "That is, the app developer and the library author have to be using the same version of the compiler."
 
-[294] https://www.swift.org/blog/library-evolution/, "Library Evolution in Swift", 2020-02-13. Quote: "By restricting what kind of changes can be resilient in the future, some flexibility can be traded off for additional performance."
+[294] https://www.swift.org/blog/library-evolution/, "Library Evolution in Swift", 2020-02-13. Quote: "enabling library evolution support for a framework is itself a binary-incompatible change"
 
-[295] https://ziglang.org/learn/why_zig_rust_d_cpp/, "Why Zig When There is Already C++, D, and Rust?", n.d. Quote: "The purpose of this design decision is to improve readability."
+[295] https://www.swift.org/blog/library-evolution/, "Library Evolution in Swift", 2020-02-13. Quote: "By restricting what kind of changes can be resilient in the future, some flexibility can be traded off for additional performance."
 
-[296] https://ziglang.org/learn/why_zig_rust_d_cpp/, "Why Zig When There is Already C++, D, and Rust?", n.d. Quote: "The entire concept of the heap is managed by library and application code, not by the language."
+[296] https://ziglang.org/learn/why_zig_rust_d_cpp/, "Why Zig When There is Already C++, D, and Rust?", n.d. Quote: "The purpose of this design decision is to improve readability."
 
-[297] https://ziglang.org/learn/overview/, "Overview - Zig Programming Language", n.d. Quote: "Any functions that need to allocate memory accept an allocator parameter."
+[297] https://ziglang.org/learn/why_zig_rust_d_cpp/, "Why Zig When There is Already C++, D, and Rust?", n.d. Quote: "The entire concept of the heap is managed by library and application code, not by the language."
 
-[298] https://ziglang.org/, "Zig Programming Language (home page)", n.d. Quote: "A fresh approach to metaprogramming based on compile-time code execution and lazy evaluation."
+[298] https://ziglang.org/learn/overview/, "Overview - Zig Programming Language", n.d. Quote: "Any functions that need to allocate memory accept an allocator parameter."
 
-[299] https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html, "zig cc: a Powerful Drop-In Replacement for GCC/Clang", n.d. Quote: "What's new is that the zig cc sub-command is available, and it supports the same options as Clang, which, in turn, supports the same options as GCC."
+[299] https://ziglang.org/, "Zig Programming Language (home page)", n.d. Quote: "A fresh approach to metaprogramming based on compile-time code execution and lazy evaluation."
 
-[300] https://ziglang.org/learn/why_zig_rust_d_cpp/, "Why Zig When There is Already C++, D, and Rust?", n.d. Quote: "Zig is attempting to become the new portable language for libraries by simultaneously making it straightforward to conform to the C ABI for external functions"
+[300] https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html, "zig cc: a Powerful Drop-In Replacement for GCC/Clang", n.d. Quote: "What's new is that the zig cc sub-command is available, and it supports the same options as Clang, which, in turn, supports the same options as GCC."
 
-[301] https://ziglang.org/documentation/master/, "Documentation - The Zig Programming Language (master)", n.d. Quote: "This documentation section will be updated before 1.0.0 is released, with a conclusive statement about the status of"
+[301] https://ziglang.org/learn/why_zig_rust_d_cpp/, "Why Zig When There is Already C++, D, and Rust?", n.d. Quote: "Zig is attempting to become the new portable language for libraries by simultaneously making it straightforward to conform to the C ABI for external functions"
 
-[302] https://arxiv.org/pdf/1411.1607, "Julia: A fresh approach to numerical computing (Bezanson, Edelman, Karpinski, Shah)", 2015-07-07. Quote: "This is an essential part of the design philosophy of Julia: all basic functionality must be possible to implement in Julia"
+[302] https://ziglang.org/documentation/master/, "Documentation - The Zig Programming Language (master)", n.d. Quote: "This documentation section will be updated before 1.0.0 is released, with a conclusive statement about the status of"
 
-[303] https://julialang.org/blog/2012/02/why-we-created-julia/, "Why We Created Julia", 2012-02-14. Quote: "We want the speed of C with the dynamism of Ruby."
+[303] https://arxiv.org/pdf/1411.1607, "Julia: A fresh approach to numerical computing (Bezanson, Edelman, Karpinski, Shah)", 2015-07-07. Quote: "This is an essential part of the design philosophy of Julia: all basic functionality must be possible to implement in Julia"
 
-[304] https://arxiv.org/pdf/1411.1607, "Julia: A fresh approach to numerical computing", 2015-07-07. Quote: "Multiple dispatch, a technique from computer science, picks the right algorithm for the right circumstance."
+[304] https://julialang.org/blog/2012/02/why-we-created-julia/, "Why We Created Julia", 2012-02-14. Quote: "We want the speed of C with the dynamism of Ruby."
 
-[305] https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/, "Calling C and Fortran Code - The Julia Language", n.d. Quote: "To allow easy use of this existing code, Julia makes it simple and efficient to call C and Fortran functions."
+[305] https://arxiv.org/pdf/1411.1607, "Julia: A fresh approach to numerical computing", 2015-07-07. Quote: "Multiple dispatch, a technique from computer science, picks the right algorithm for the right circumstance."
 
-[306] https://arxiv.org/pdf/1411.1607, "Julia: A fresh approach to numerical computing", 2015-07-07. Quote: "one can take a pointer to the first array element and pass it to a C library function using ccall and it will just work"
+[306] https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/, "Calling C and Fortran Code - The Julia Language", n.d. Quote: "To allow easy use of this existing code, Julia makes it simple and efficient to call C and Fortran functions."
 
-[307] https://julialang.org/blog/2023/04/julia-1.9-highlights/, "Julia 1.9 Highlights", 2023-04. Quote: "the need to regenerate native code in each session meant that many packages still suffered from long TTFX latencies"
+[307] https://arxiv.org/pdf/1411.1607, "Julia: A fresh approach to numerical computing", 2015-07-07. Quote: "one can take a pointer to the first array element and pass it to a C library function using ccall and it will just work"
 
-[308] https://julialang.org/blog/2023/04/julia-1.9-highlights/, "Julia 1.9 Highlights", 2023-04. Quote: "resulting in a significant improvement in TTFX latency and paving the way for future enhancements across the ecosystem"
+[308] https://julialang.org/blog/2023/04/julia-1.9-highlights/, "Julia 1.9 Highlights", 2023-04. Quote: "the need to regenerate native code in each session meant that many packages still suffered from long TTFX latencies"
 
-[309] https://arxiv.org/pdf/1411.1607, "Julia: A fresh approach to numerical computing", 2015-07-07. Quote: "Indexing of arrays is performed with brackets, and is 1-based."
+[309] https://julialang.org/blog/2023/04/julia-1.9-highlights/, "Julia 1.9 Highlights", 2023-04. Quote: "resulting in a significant improvement in TTFX latency and paving the way for future enhancements across the ecosystem"
 
-[310] https://blog.jetbrains.com/kotlin/2011/08/why-jetbrains-needs-kotlin/, "Why JetBrains needs Kotlin (Dmitry Jemerov)", n.d. (URL path dated 2011/08). Quote: "we cannot accept compromises in terms of either Java interoperability"
+[310] https://arxiv.org/pdf/1411.1607, "Julia: A fresh approach to numerical computing", 2015-07-07. Quote: "Indexing of arrays is performed with brackets, and is 1-based."
 
-[311] https://kotlinlang.org/docs/java-interop.html, "Java interoperability - Kotlin Documentation", n.d. Quote: "Existing Java code can be called from Kotlin in a natural way, and Kotlin code can be used from Java rather smoothly as well."
+[311] https://blog.jetbrains.com/kotlin/2011/08/why-jetbrains-needs-kotlin/, "Why JetBrains needs Kotlin (Dmitry Jemerov)", n.d. (URL path dated 2011/08). Quote: "we cannot accept compromises in terms of either Java interoperability"
 
 [312] https://kotlinlang.org/docs/null-safety.html, "Null safety - Kotlin Documentation", n.d. Quote: "Null safety is a Kotlin feature designed to significantly reduce the risk of null references, also known as The Billion-Dollar Mistake."
 
