@@ -257,7 +257,7 @@ Dry-run tests of the driver and the validity check (fake local endpoint, no mode
   config A dev smoke of r1 used the old prompt and is not comparable; no held-out generation used it.
 - **r3** (2026-10-15, before any r3 generation): section 13.
 
-## 13. Revision r3 (2026-10-15): Omegese against text, staged, on our own engines
+## 13. Revision r3 (2026-10-15): Omegese against text, staged, on my own engines
 
 r3 is committed before any r3 generation. Where it differs from sections 1 to 11, r3 wins; anything
 r3 does not mention stays as written above. No held-out generation was scored under r1 or r2.
@@ -265,7 +265,7 @@ r3 does not mention stays as written above. No held-out generation was scored un
 ### 13.1 Why the revision
 
 - Drake's decisions of 2026-10-15: compare only the machine-first language against plain text; drop
-  the JSON op list (`structured`) and hex (`bytes`) arms; run every configuration on our own engines,
+  the JSON op list (`structured`) and hex (`bytes`) arms; run every configuration on my own engines,
   never on a third-party engine.
 - The 302 config B generations made on MAX under r2 (`~/workspace/exp445-aside-20261014/generations/heldout-b`,
   record `~/handoffs/exp445-b-resume.txt`) are kept as they are and are NOT evidence of r3. They are
@@ -295,7 +295,7 @@ r3 does not mention stays as written above. No held-out generation was scored un
   builders saw those 3 names (no prompt text, requirement or test) and replaced the examples. No other
   held-out information was seen.
 - One-shot prompts (the r2 single example) are used only in Stage 0 (13.4), on dev tasks.
-- Decode-time masking is OFF in r3. A masked arm needs its own revision once our engine applies the
+- Decode-time masking is OFF in r3. A masked arm needs its own revision once my engine applies the
   `omegese next` mask.
 
 ### 13.3 Configurations
@@ -303,7 +303,7 @@ r3 does not mention stays as written above. No held-out generation was scored un
 | | Config A | Config B |
 |---|---|---|
 | model | Qwen3-30B-A3B-Instruct-2507, FP8 (weights and hashes as section 9) | Qwen3-8B, bf16 (weights and hashes as section 9) |
-| server | Omega's own `aien-serve-http`, `--engine omega`, on :18091. Frozen in `tools/exp445/PARAMS` by the commit that opens Stage 0 (2026-10-15), for Stage 0 and Stage 1: `/home/drakestapleton/handoffs/pin-bin-f881710a/aien-serve-http`, sha256 `663b85a506ec9bdffd09094cb2271d95efb46eeedfbfe017d31c2fe520c4b911`, built from aien-sovereign-core f881710a (Stage S merged: every reply reports mode, seed and p_repeat), omega 4799f9eb, `libomega_gpu.a` 0629ad9c | our own dense 8B engine (OWN-8B); frozen by a later revision once its requalification passes. Until then config B cannot run. |
+| server | Omega's own `aien-serve-http`, `--engine omega`, on :18091. Frozen in `tools/exp445/PARAMS` by the commit that opens Stage 0 (2026-10-15), for Stage 0 and Stage 1: `/home/drakestapleton/handoffs/pin-bin-f881710a/aien-serve-http`, sha256 `663b85a506ec9bdffd09094cb2271d95efb46eeedfbfe017d31c2fe520c4b911`, built from aien-sovereign-core f881710a (Stage S merged: every reply reports mode, seed and p_repeat), omega 4799f9eb, `libomega_gpu.a` 0629ad9c | my own dense 8B engine (OWN-8B); frozen by a later revision once its requalification passes. Until then config B cannot run. |
 | request extra | none | frozen with the server |
 
 The experiment gate (13.6) is evaluated only when both configurations are scored. Config A alone

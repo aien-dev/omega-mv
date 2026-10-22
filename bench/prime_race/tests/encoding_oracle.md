@@ -21,7 +21,7 @@ extern "C" __global__ void k_hi2(unsigned *o, const unsigned *a) { unsigned x=a[
 
 Instructions used as golden words in `omega_blackwell_verify_codegen_fixtures_intops`
 (src/omega_blackwell_codegen.c). Low word, then high word; the high word's top 23 bits are
-the control word, which our scheduler writes and the fixtures do not compare.
+the control word, which the Omega scheduler writes and the fixtures do not compare.
 
 ```
 /*00b0*/ IMAD.HI.U32 R9, R9, R0, R6 ; /* 0x0000000009097227 */	 /* 0x008fca00078e0006 */

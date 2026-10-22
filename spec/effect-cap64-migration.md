@@ -19,7 +19,7 @@ generations are normally above 2^32. Omega's runtime view (`aienos_cap.h`,
 
 Omega's canonical effect object (`KIND_EFFECT`) was not. Its payload was the
 host C struct `EffectPayload` copied byte for byte (`memcpy`, 176 bytes on
-LP64: little-endian on the hosts we run, two bytes of tail padding), with
+LP64: little-endian on the hosts I run, two bytes of tail padding), with
 `uint32_t capability_generation`. `omega_build_effect` took a `uint32_t`, so a
 live generation was cut to its low 32 bits before it was hashed. The authority
 refused every such reference as `STALE_GEN`: fail closed, but an honest effect

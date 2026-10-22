@@ -334,7 +334,7 @@ program (1575 mutants) and 500 walks of up to 40 items (17386 items) found no fa
 
 ## 7. Phase 2
 
-1. Prompt-only trial on the dev tasks, no mask (done once, 2026-10-15): the 30B on our own engine, one
+1. Prompt-only trial on the dev tasks, no mask (done once, 2026-10-15): the 30B on my own engine, one
    attempt, harness run `20261015T105049Z-e27a33ee052d-1500714` (RUN VALID): Omegese 3/10, text 3/10,
    structured 0/10; completion tokens 1015 / 1346 / 12027. 8 of 10 first answers were refused only for
    writing the task signature's type names (`u8`, `u32`); those are now accepted.
@@ -342,7 +342,7 @@ program (1575 mutants) and 500 walks of up to 40 items (17386 items) found no fa
    failures wrote nested values (`n = add (mul (uint 3) n) 1`), which v0 refused. Values now nest (section 3): 5 of
    those 6 answers, kept verbatim in `tests/one_layer/omegese/trial2`, now pass checker2; the sixth
    (dev07) has one value too many and is still refused, with its place. Rerun owed.
-2. The mask inside our own engine: `omegese next` as a table on the GPU, one lookup per token;
+2. The mask inside my own engine: `omegese next` as a table on the GPU, one lookup per token;
    positions with one legal word need no model step.
 3. A pre-registered held-out comparison: exp445 revision r3 (`docs/one_layer/EXP445_PROTOCOL.md`
    section 13), Omegese against OSC text. The `omegese` arm's system prompt is

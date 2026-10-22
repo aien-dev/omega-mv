@@ -7,7 +7,7 @@ checks exactly these and nothing looser. Results are written to a
 digest-named wrapper receipt, never back into this file.
 
 Scope: the digital (CPU) leg of the mixed-algebra program. It closes the
-question "do we have several verified, exact, differently-built realizations
+question "do I have several verified, exact, differently-built realizations
 of one operation, measured, and a recorded, reproducible selection among them
 that can say why a realization was not chosen". It does not claim energy
 results and does not introduce any new realization.

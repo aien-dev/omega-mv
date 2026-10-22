@@ -122,7 +122,7 @@ files in section 3.
 | Channel / queue creation (GPFIFO, USERD) | `m16_native_create_channel`, `nvrm_channel` | native queue behind `OmegaGpuQueueHandle`, ring is a `BUF_QUEUE` buffer | B/C | NOT_RUN |
 | Submit token / doorbell | `m16_native_submit_methods`, `nvrm_enqueue`, `nvrm_ring` | `OmegaGpuPlatform.mmio_write32` on the doorbell region | C | NOT_RUN |
 | Completion (marker words, semaphores) | `m16_native_wait_marker*`, host polling | `OmegaGpuPlatform.poll_word` (polling, ABI 1.1) on a HOST_POLLED, GPU-uncached buffer | C | contract and session DONE (cut C), device NOT_RUN |
-| Interrupts | RM interrupt handling (not used by our launchers: they poll) | `OMEGA_GPU_SVC_IRQ` only when a real interrupt wait exists; polling never claims it | B | NOT_RUN |
+| Interrupts | RM interrupt handling (not used by Omega's launchers: they poll) | `OMEGA_GPU_SVC_IRQ` only when a real interrupt wait exists; polling never claims it | B | NOT_RUN |
 | Visibility / cache maintenance | L2 flush mem-op + uncached marker (C3 block) | `OmegaGpuPlatform.sync_*` plus the same mem-op sequence in the encoder | C | NOT_RUN |
 | Time, waiting, locking | `clock_gettime`, `usleep`, pthread | `OmegaGpuPlatform.time_now_ms`, `wait_ms`, `lock`/`unlock` | A (contract) | DONE |
 | Reset / recovery of a hung device | RM channel teardown, process exit | native quiesce path (P03 lifecycle), no `ck_reset`-style shortcut | P08 | NOT_RUN |

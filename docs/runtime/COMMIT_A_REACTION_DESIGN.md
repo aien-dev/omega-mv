@@ -128,7 +128,7 @@ Note (2026-10-02): the phrase "where FORGE would plug in if Option A is chosen" 
 
 ## 5. Decision for Drake (plain English) [CLOSED 2026-10-02: Option B chosen, see "Decision 2026-10-02" below]
 
-Where we are: the review found that the part of Omega that decides "this result is accepted and
+Where things stand: the review found that the part of Omega that decides "this result is accepted and
 remembered" works as one well-guarded sequence, but the piece called FORGE, which the design documents
 describe as the thing that makes work real, is not part of that sequence. It exists in two places and
 neither runs when a result is accepted.

@@ -10,7 +10,7 @@ R3 to R12. It does not change what any of them means.
 
 ## What is proved
 
-We gave the running body a goal. After that, the test only serves production
+I gave the running body a goal. After that, the test only serves production
 requests (on their own thread) and reads the world. Nobody called AIEN, Omega,
 AEGIS, the seat or R9.
 

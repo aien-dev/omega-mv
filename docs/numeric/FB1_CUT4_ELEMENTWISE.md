@@ -20,7 +20,7 @@ Code: `src/omega_gpu_elementwise_api.{h,c}`, `tests/gpu_elementwise_test.c`,
   mappings. Every buffer in the launcher is `nvrm_alloc_gpu_uncached`, as in the matmul path.
 - Scheduling rules come from the chip-learned checks in `src/omega_numeric.c`
   (`omega_numeric_check_patch`): scoreboard producers stall >= 2 and are waited on; fixed-latency
-  producers stall >= 5 (we use 6); ISETP stalls 13 before a predicated consumer (codegen default).
+  producers stall >= 5 (the codegen uses 6); ISETP stalls 13 before a predicated consumer (codegen default).
   The emitter serialises every dependency (slow, safe); speed is a later cut.
 
 ## Kernels (one per op; shape read from the four argument words c[0x0][0x398..0x3a4])

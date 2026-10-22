@@ -519,11 +519,11 @@ For the advisor:
 
 ## 9. Plain-language summary for Drake
 
-1. Our own compiler can only count with whole numbers today. Training needs decimals, so the first job is teaching it decimal math.
-2. We do decimal math the plain way, one step at a time, never the "fast combined" way, so the slow checker and the fast machine code always get the same answer bit for bit.
-3. The compiler's arrays hold at most 64 numbers today. The trainer needs hundreds of millions, so we add a way to hand it big memory blocks and check every access.
-4. We let Omega programs call the existing GPU routines written in C, using the standard calling rules every program on this chip follows.
-5. We let Omega talk to Linux directly for files, memory and the clock, with the nine call numbers copied from the system's own header.
+1. My own compiler can only count with whole numbers today. Training needs decimals, so the first job is teaching it decimal math.
+2. I do decimal math the plain way, one step at a time, never the "fast combined" way, so the slow checker and the fast machine code always get the same answer bit for bit.
+3. The compiler's arrays hold at most 64 numbers today. The trainer needs hundreds of millions, so I add a way to hand it big memory blocks and check every access.
+4. I let Omega programs call the existing GPU routines written in C, using the standard calling rules every program on this chip follows.
+5. I let Omega talk to Linux directly for files, memory and the clock, with the nine call numbers copied from the system's own header.
 6. Loops can run a trillion times instead of a million, and the checker still proves they end.
 7. Each piece ships as its own small change with failing tests written first and a random-program cross-check that must show zero disagreements.
 8. The first real proof is an Omega routine updating 124 million weights exactly like a reference C program, bit for bit.

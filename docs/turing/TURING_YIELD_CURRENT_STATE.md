@@ -242,7 +242,7 @@ The honest pairing:
 4. TY-2 data is produced by Rust (`crumbs` crate). Reading is C-only and possible. Regenerating is not C-only, and chain
    verification needs a new in-house C BLAKE3.
 5. No Python: omega main still has `tools/m19r_qualify.py` and `tools/test_m19r_qualify.py` (pre-existing violation,
-   not ours).
+   not mine).
 6. OSC-0B (#76, draft): Field digests are not semantic ids (`field.h:11-14`). T records must not mint Omega semantic
    ids. Contract digest stays PROVISIONAL (`field.h:16-17`).
 7. Confidence enum vs FORGE V2 `energy_source` {NOT_MEASURED, MEASURED, ESTIMATED}

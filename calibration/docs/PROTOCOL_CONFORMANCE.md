@@ -14,7 +14,7 @@ Drake's brief, which is more specific than the protocols in places.
 
 ## Requirements
 
-| # | Requirement (doc + line) | Our artifact | Status |
+| # | Requirement (doc + line) | My artifact | Status |
 |---|---|---|---|
 | 1 | Freeze order: protocol, families, power sim, n fixed, profile frozen, candidates hashed, sealed data, evaluation (CVP 123-149) | `preregistration/EXP-001.md` sections 2, 6, 11; `freeze_candidate.sh`; `generate_sealed_data.sh` (needs C_f on origin/main); `freeze_receipt.sh`; evaluator checks NOT_FROZEN, FREEZE_COMMIT, FREEZE_AFTER_RELEASE, SEED_DERIVATION | met with deviation D10 |
 | 2 | Profile field list, identity through failure policy (CVP 155-277) | `profiles/Turing-profile-v1.0.toml`; `check_profile.sh` section 5c requires every field name in CVP 155-277 | fixed now (56 missing names added) |
@@ -75,7 +75,7 @@ Drake's brief, which is more specific than the protocols in places.
 Each record: what differs, when found, whether any outcome was visible (none: no sealed data exists), impact,
 decision. All were found on 2026-09-29 while drafting, before any sealed data; decision for all: continue.
 
-| ID | Differs from | What we do and why | Impact |
+| ID | Differs from | What I do and why | Impact |
 |---|---|---|---|
 | D1 | LEP 56-161, 121-126, 435-599 (Rust crates, Python scripts, `turing` CLI) | C tools and shell scripts (house rule: C and shell only) | none on numbers; same checks |
 | D2 | LEP 56-161, CVP 1057-1081 (`turing-lab/` tree) | `calibration/` inside omega, bundle `experiments/EXP-001/` (brief names these paths) | layout only |

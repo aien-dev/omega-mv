@@ -81,7 +81,7 @@ The quick figures vary by a third between runs because the machine is shared. Th
 
 ## Decision for comptime
 
-### What we build first (named constants only)
+### What I build first (named constants only)
 
 Add integer constant items that are evaluated with the existing `fold` semantics and can appear wherever the parser today requires a literal: array length, loop bound, `for` range ends, arena bound, pool slot count, contract clauses and ordinary expressions.
 
@@ -91,7 +91,7 @@ Add integer constant items that are evaluated with the existing `fold` semantics
 - The identity rule is checkable: a program that uses a constant must produce the same `ir_sha256` and `code_sha256` as the same program with the value written as a literal.
 - The surface syntax is not decided here. `const` is reserved today (`osc_lex.c:26`); the implementing change may un-reserve it or pick another word (Open question 2).
 
-### What we do not build now (a compile-time function interpreter)
+### What I do not build now (a compile-time function interpreter)
 
 Running real functions at compile time through `osc_interp_run` is deferred, for three reasons found in the code:
 
@@ -104,7 +104,7 @@ Running real functions at compile time through `osc_interp_run` is deferred, for
 - Deterministic. The result is a function of the source bytes only. The evaluator receives no clock, environment, file, locale or machine argument.
 - Fuel. One unit per executed IR instruction, counted where the interpreter already counts (`osc_interp.c:161`), with the budget passed in by the caller. It is a parameter, not a global and not an environment variable. The existing 2^32 cap is far too large for compile time (two maximal nested loops already exceed it) and it reports `OSC_TRAP_RUNTIME`, which means a broken invariant, the wrong message for "too expensive".
 - Default budget: 1,000,000 instructions per unit, which is one maximal loop of one instruction (`osc_parse.c:11`). How long that takes is UNVERIFIED. The interpreter's instructions per second must be measured before the number is fixed (Acceptance tests, B5).
-- Refusal kind: a new `OSC_DIAG_COMPTIME_FUEL`, appended after `OSC_DIAG_SLICE_ALIAS` (`osc_diag.h:55`) with its name added to the table (`osc_diag.c:11`), so no existing value moves. It is not `CAPACITY`. `CAPACITY` means a fixed table or language limit was reached (`osc_lex.h:48-51`, `osc_parse.c:54-56, 125-126`, `osc_check.c:178-184`) and the remedy is to split the program. Out of fuel means a computation is too costly and the remedy is to simplify it. Negative tests identify a refusal by its kind name (`tests/compiler/neg/ar_capacity_static.osc:1`; `tests/compiler/test_osc_compiler.c:16, 686`), and the budget is a policy number we expect to tune while table sizes are structural. The kind is added in the same change as the first test that can trigger it, not earlier.
+- Refusal kind: a new `OSC_DIAG_COMPTIME_FUEL`, appended after `OSC_DIAG_SLICE_ALIAS` (`osc_diag.h:55`) with its name added to the table (`osc_diag.c:11`), so no existing value moves. It is not `CAPACITY`. `CAPACITY` means a fixed table or language limit was reached (`osc_lex.h:48-51`, `osc_parse.c:54-56, 125-126`, `osc_check.c:178-184`) and the remedy is to split the program. Out of fuel means a computation is too costly and the remedy is to simplify it. Negative tests identify a refusal by its kind name (`tests/compiler/neg/ar_capacity_static.osc:1`; `tests/compiler/test_osc_compiler.c:16, 686`), and the budget is a policy number I expect to tune while table sizes are structural. The kind is added in the same change as the first test that can trigger it, not earlier.
 - No fallback. Out of fuel is a refusal. The computation is never moved to run time silently and no switch turns the check off, the same stance as `omega_resolve.h:53-54`.
 - No effects. Only the scalar instructions `CONST MOV BIN UN CMP CAST CALL TRAP BR CBR RET` (`osc_ir.h:74-94`) are allowed. Anything that touches the run-time pool (`ALLOC`, `RELEASE`, `LOAD`, `STORE`, struct, arena, pool, handle and slice operations, `osc_ir.h:83-125`) is refused with the existing `UNSUPPORTED` kind. No I/O instruction exists, and none may be added for compile time.
 
@@ -165,9 +165,9 @@ Add a shadow log first, with no cache behind it. For each candidate step (realiz
 1. the share of wall time spent on steps whose key was already seen is above a threshold, and
 2. the absolute saving is above a second threshold that clearly exceeds the cost of hashing inputs and reading an entry.
 
-The thresholds are a policy call for Drake. Suggested starting values to argue with: 20 percent of step time and 60 seconds per day. Until that log exists the answer to "should we cache" is no.
+The thresholds are a policy call for Drake. Suggested starting values to argue with: 20 percent of step time and 60 seconds per day. Until that log exists the answer to "should I cache" is no.
 
-## What we will not do
+## What I will not do
 
 - No general `comptime` blocks, types as values or generics. OSC-1 excludes generics (`OSC-1-DESIGN.md:37-38`) and nothing here changes that.
 - No compile-time allocation, arenas, pools, handles or slices, and no I/O or capability of any kind at compile time.

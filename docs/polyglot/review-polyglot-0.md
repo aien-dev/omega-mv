@@ -109,7 +109,7 @@ harness flags mutant C on all 7 shapes. Fix: add the trampoline to `test_asm.c` 
 S1-S3 use one x (`nx = 1`), so every call in a sample has identical inputs and the checksum is the same whether or
 not the kernel ran. M4 (returns a cached y when plan, x pointer, m, n and the first 16 bytes of x match) passes the
 verifier (the verifier never calls run twice in a row with the same x) and would report near-zero latency on S1-S3.
-Our own lanes do not do this; the harness should still make it impossible. Fix: rotate at least 2 x vectors per
+My own lanes do not do this; the harness should still make it impossible. Fix: rotate at least 2 x vectors per
 workload (S4 already rotates 256), or flip one byte of x between calls and fold it into the expected checksum.
 
 ### G-S6. Explainer selects from smoke, N < 20, and leftover receipts of other runs

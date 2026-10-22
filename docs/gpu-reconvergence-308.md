@@ -3,7 +3,7 @@
 Branch feat/gpu-reconvergence-308, code at 0a1812f, receipts in evidence/gpu-reconv-308/.
 Evidence classes used below: PROVEN BY TEST (a test in this repo passes, command and receipt
 named), MEASURED (read off the real chip or the real nvcc), DERIVED FROM REFERENCE (taken from
-Mesa NAK source, not checked by us on the chip), INFERRED (reasoned from documentation, not
+Mesa NAK source, not checked by me on the chip), INFERRED (reasoned from documentation, not
 checked), UNKNOWN.
 
 ## 1. The failure mode
@@ -33,7 +33,7 @@ without error and returns 466 of 1000 words wrong.
 | BSSY.RECONVERGENT | w0 = 0x945 \| pred<<12 \| bar<<16; w1 = (delta_insns - 1) * 16; w2 = 0x03800200; control 0x000fe200 (stall 1, yield) | MEASURED (nvcc 13.0.88 -arch=sm_121, evidence/gpu-reconv-308/oracle/) |
 | BSYNC.RECONVERGENT | w0 = 0x941 \| pred<<12 \| bar<<16; w1 = 0; w2 = 0x03800200; control 0x000fea00 (stall 5, yield) | MEASURED (same oracle) |
 | Opcodes 0x945 / 0x941, barrier id in bits 16..19 | Mesa NAK sm70_encode.rs OpBSSy / OpBSync | DERIVED FROM REFERENCE |
-| RECONVERGENT bit (bit 73) | set by nvcc, omitted by NAK | MEASURED (nvcc) / DERIVED (NAK). We emit nvcc's form. |
+| RECONVERGENT bit (bit 73) | set by nvcc, omitted by NAK | MEASURED (nvcc) / DERIVED (NAK). The compiler emits nvcc's form. |
 | Branch target of BSSY | the instruction after the BSYNC; loop exits and breaks jump to the BSYNC itself (where nvcc sends them) | MEASURED (oracle k_break, k_loop, k_nested) |
 
 Golden fixtures for both words and refusals -101..-105 pass in `build/gpu_reconv_test`
@@ -47,7 +47,7 @@ region_join in src/omega_gpu_elementwise_api.c and src/omega_gpu_attention_api.c
 
 - begin allocates barrier register Bn with n = nesting depth, then emits BSSY. 16 barrier
   registers (B0..B15) are encodable; a 17th nested region is refused and the build fails.
-  Whether the chip really provides 16 is not documented to us; we ran 16 deep on the chip
+  Whether the chip really provides 16 is not documented to me; I ran 16 deep on the chip
   (rc_depth16, MEASURED, T1a) and no deeper.
 - exit records a forward branch that leaves the region; join patches it to the BSYNC and patches
   the BSSY target to the instruction after the BSYNC.
@@ -68,7 +68,7 @@ JOIN_MISMATCH, NONMEMBER, STUCK, NEVER_JOINED, plus range and resource errors.
 
 BAR.SYNC reached by a split warp is allowed and counted (`bar_split_arrivals`). Basis: the CUDA
 programming guide says the CTA barrier counts arriving threads since Volta. Class: INFERRED for
-sm_121, not verified by us as a rule. Supporting observation (MEASURED earlier, prime-race
+sm_121, not verified by me as a rule. Supporting observation (MEASURED earlier, prime-race
 receipts): the production C5 staged sieve has 128 split arrivals at 1e6 in the simulator and is
 chip-correct. Fragments stay split after the barrier (a barrier is not a reconvergence point), so a
 later SHFL without a BSYNC still fails with SHFL_SPLIT.
@@ -81,7 +81,7 @@ Warp issue counts are a model, not chip time (UNKNOWN how well they track the ch
 From NAK sm120: BSSY, BSYNC and BClear are Decoupled (variable latency, tracked by the
 scoreboard). DERIVED FROM REFERENCE. Omega does not enforce this: `schedule_fixed_pairs` ignores
 control ops, and the control words above (stall 1 / stall 5, both yield) are copied from nvcc.
-Chip correctness of the shapes we emit is MEASURED (T1, T2, T4); a different placement is not covered.
+Chip correctness of the shapes the compiler emits is MEASURED (T1, T2, T4); a different placement is not covered.
 
 ## 6. Evidence table
 

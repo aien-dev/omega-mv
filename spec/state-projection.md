@@ -4,7 +4,7 @@ Gate `OMEGA_STATE_PROJECTION_PASS`.
 
 ## Rule
 
-Cognition does not get "everything we know". A cognitive operation states
+Cognition does not get "everything the system knows". A cognitive operation states
 what it needs (`CognitiveNeed`). Omega turns that need into the smallest state
 that is enough for the operation (`StateProjection`), using typed queries to
 Cortex. Cortex never hands over its history.
