@@ -402,6 +402,10 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   main's value modulo 256 (Linux keeps the low 8 bits), 0 for a void main. (s.6 t_exit, s.7)
 - A trap in program mode ends the program with exit status 100 + the trap code; in function mode it
   calls OscRt.trap as the C path does. (s.6 t_*, s.4-5)
+- A conditional branch (B.cond, CBZ, CBNZ) carries a signed 19-bit word displacement. A block layout
+  that needs more than 2^18 - 1 words forward or 2^18 words back (1,048,572 or 1,048,576 bytes) is
+  refused with error 24 before any output is accepted; it is never silently truncated. Unconditional
+  B uses a 26-bit field, which the 8 MiB output capacity cannot exceed. (gate 669)
 
 ### 9.2 Functions and calls
 
@@ -483,7 +487,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 
 Input over a capacity is refused with error 14, never overrun: om4 reads at most 8 MiB - 1 bytes and
 writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 512 functions, 8192 trap sites per function, 512 nested
-blocks. A function that needs more than the 16 registers it hands out is error 12.
+blocks. A function that needs more than the 16 registers it hands out is error 12. A single
+conditional branch span is limited to 2^18 - 1 words forward or 2^18 words back (section 9.1); a
+larger span is error 24, even when the input and output pools still fit.
 
 ## 10. Native host extension (2026-10-23)
 

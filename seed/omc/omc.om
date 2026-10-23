@@ -927,13 +927,28 @@ put out add at 2 uchar and shr w 16 255
 put out add at 3 uchar and shr w 24 255
 end
 
+note disp19: the checked word distance for a B.cond / CBZ / CBNZ: the target must be word aligned and
+note at most 2^18 - 1 words forward or 2^18 words back, else error 24 before any artifact is accepted
+fn disp19 at ulong target ulong to ulong
+diff = sub target at
+if ne and diff 3 0
+fail 24
+end
+if and gt diff 1048572 lt diff 18446744073709550592
+fail 24
+end
+ret and shr diff 2 524287
+end
+
 note patch19: the word distance from a B.cond / CBZ / CBNZ at `at` to `target`, into bits 5..23
 fn patch19 at ulong target ulong to void
-d = and shr sub target at 2 524287
+d = disp19 at target
 wrword at or rdword at shl d 5
 end
 
-note patch26: the word distance from a B at `at` to `target`, into bits 0..25
+note patch26: the word distance from a B at `at` to `target`, into bits 0..25. No range check is needed:
+note the output pool is 8 MiB = 2^21 bytes, below the 2^25-word reach, and every position in it is a
+note word boundary, so the displacement is aligned and inside the signed 26-bit field by construction.
 fn patch26 at ulong target ulong to void
 d = and shr sub target at 2 67108863
 wrword at or rdword at d
@@ -2865,7 +2880,7 @@ end
 
 note blo: B.LO back to an earlier place (C6.2.34)
 fn blo at ulong to void
-d = and shr sub at get oc 0 2 524287
+d = disp19 get oc 0 at
 emit or 1409286147 shl d 5
 end
 

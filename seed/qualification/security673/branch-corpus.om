@@ -1,0 +1,83 @@
+note Synthetic source generator for issue669. Reads one mode byte and a 4-byte little-endian repetition
+note count on stdin, then writes one program. Mode0 if over the body, mode1 nested if, mode2 while over
+note the body, mode3 a trap followed by the body. Every program ends with a unique mov x1, 12345 marker
+note whose address is the expected branch target. Only synthetic source is produced.
+global arg uchar 5
+text pre0 "fn main to int\nx = ulong 0\ny = ulong 0\nif eq x 1\n"
+text pre1 "fn main to int\nx = ulong 0\ny = ulong 0\nif eq x 1\nif eq x 2\n"
+text pre2 "fn main to int\nx = ulong 0\ny = ulong 0\nwhile eq x 1\n"
+text pre3 "fn main to int\nx = ulong 1\ny = ulong 0\nz = div x 0\n"
+text stmt "x = add x 1\n"
+text post0 "end\ny = ulong 12345\nret int x\nend\n"
+text post1 "end\nend\ny = ulong 12345\nret int x\nend\n"
+text post2 "end\ny = ulong 12345\nret int x\nend\n"
+text post3 "y = ulong 12345\nret int x\nend\n"
+fn main to int
+pos = ulong 0
+while lt pos 5
+r = read 0 arg pos sub 5 pos
+if le r 0
+ret 90
+end
+pos = add pos ulong r
+end
+mode = ulong get arg 0
+n = ulong 0
+i = ulong 0
+while lt i 4
+b = ulong get arg add i 1
+n = or n shl b mul i 8
+i = add i 1
+end
+if eq mode 0
+r = write 1 pre0 0 len pre0
+if lt r 0
+ret 91
+end
+else
+if eq mode 1
+r = write 1 pre1 0 len pre1
+if lt r 0
+ret 91
+end
+else
+if eq mode 2
+r = write 1 pre2 0 len pre2
+if lt r 0
+ret 91
+end
+else
+r = write 1 pre3 0 len pre3
+if lt r 0
+ret 91
+end
+end
+end
+end
+i = ulong 0
+while lt i n
+r = write 1 stmt 0 len stmt
+if lt r 0
+ret 91
+end
+i = add i 1
+end
+r = long 0
+if eq mode 0
+r = write 1 post0 0 len post0
+else
+if eq mode 1
+r = write 1 post1 0 len post1
+else
+if eq mode 2
+r = write 1 post2 0 len post2
+else
+r = write 1 post3 0 len post3
+end
+end
+end
+if lt r 0
+ret 91
+end
+ret 0
+end

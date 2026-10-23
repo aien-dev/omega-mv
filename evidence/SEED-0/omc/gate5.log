@@ -1,7 +1,7 @@
-gate5 2026-10-22T11:18:56Z at 2bceb6ace3c379acff35e291cf7bdc4d2f4be3bc
-stage1 = om4(omc.om)    191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
-stage2 = stage1(omc.om) 191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
-stage3 = stage2(omc.om) 191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+gate5 2026-10-23T23:00:14Z at f0499f415571bdd7496b6de391096915e78f7556
+stage1 = om4(omc.om)    2c189f308c78e64e1b51ac86b139e8a662d5e622b764674f068b07e178fab0e9
+stage2 = stage1(omc.om) 2c189f308c78e64e1b51ac86b139e8a662d5e622b764674f068b07e178fab0e9
+stage3 = stage2(omc.om) 2c189f308c78e64e1b51ac86b139e8a662d5e622b764674f068b07e178fab0e9
 PASS (a) fixpoint: sha256(stage2) = sha256(stage3)
 C path on omc.om: REFUSED omegese: line 1: character ':' is not part of Omegese
   C path lacks global pools: REFUSED omegese: line 1: 'global' outside a function (start one with fn)
@@ -59,33 +59,33 @@ PASS (d) refusal: omc: line 2: error 3, exit 3
 PASS deterministic: same bytes under another environment and a second later
 PASS om4 = stage2 in the nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:107 4:1351 5:64 6:66 7:115 8:48 9:277 10:4 11:37 13:24 15:487 16:2020 17:36 18:3 21:4 23:2 
 PASS every error number 1..23 is reached, om4 = stage2 on each
-omc: 3212 lines, 125 functions, 76748 bytes = 176-byte header + 19143 words (evidence/SEED-0/omc/size.tsv)
-PASS size history: its last row is this omc (R5b)
-omc words per function: evidence/SEED-0/omc/omc-words.tsv (125 functions, 19136 words in all, mean 153)
-compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: 2206 us
+omc: 4001 lines, 148 functions, 109048 bytes = 176-byte header + 27218 words (evidence/SEED-0/omc/size.tsv)
+PASS size history: its last row is this omc (R5c)
+omc words per function: evidence/SEED-0/omc/omc-words.tsv (148 functions, 27211 words in all, mean 183)
+compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: 2092 us
 program	omc_us	c_path_us
-fm1	306	4709
-fm2	232	4693
-fm3	297	4978
-fm4	301	4886
-fm5	292	4141
-fm6	299	4371
-fm7	219	4632
-fm8	293	4588
-fm9	319	4887
-dev01	281	4602
-dev02	290	4594
-dev03	231	4667
-dev04	158	4807
-dev05	225	4286
-dev06	206	4904
-dev07	283	4796
-dev08	218	5025
-dev09	311	5108
-dev10	268	5070
+fm1	295	4610
+fm2	274	4636
+fm3	261	4591
+fm4	300	4531
+fm5	311	4814
+fm6	313	4606
+fm7	306	4578
+fm8	289	3953
+fm9	234	4784
+dev01	313	4070
+dev02	301	3684
+dev03	290	4748
+dev04	226	4627
+dev05	161	4005
+dev06	194	3949
+dev07	256	4351
+dev08	210	4961
+dev09	258	4357
+dev10	184	4593
 rewrite	built_by	source_lines	functions	bytes	words	sha256
-stage1	om4	3212	125	76748	19143	191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
-stage2	stage1	3212	125	76748	19143	191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
-stage3	stage2	3212	125	76748	19143	191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+stage1	om4	4001	148	109048	27218	2c189f308c78e64e1b51ac86b139e8a662d5e622b764674f068b07e178fab0e9
+stage2	stage1	4001	148	109048	27218	2c189f308c78e64e1b51ac86b139e8a662d5e622b764674f068b07e178fab0e9
+stage3	stage2	4001	148	109048	27218	2c189f308c78e64e1b51ac86b139e8a662d5e622b764674f068b07e178fab0e9
 cases run: 177
 GATE5 PASS

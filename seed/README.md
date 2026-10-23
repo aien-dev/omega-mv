@@ -213,13 +213,13 @@ it came from.
 
 - `omc/omc.om`: the compiler itself, written in Omegese, using only words om4 understands. It reads a
   program on its input and writes a ready-to-run Linux program (or, without `fn main`, bare machine
-  words) on its output, with the file header laid out by hand and no linker. 3,212 lines, 125 functions.
+  words) on its output, with the file header laid out by hand and no linker. 4,001 lines, 148 functions.
   `omc/genkw.awk` once wrote the keyword chain into `omc.om`; the committed `omc.om` is the source,
   and the seed path does not run awk.
 - It is meant to do exactly what om4 does, word for word: the same machine words, the same error
   numbers, on the same line. That is on purpose: om4 then becomes a strict referee for omc, because any
   difference at all is a mistake. It is checked on every input listed below, not on every possible one.
-- How it is built: om4 translates `omc.om` into a program (stage 1, 76,748 bytes). Stage 1 then
+- How it is built: om4 translates `omc.om` into a program (stage 1, 109,048 bytes). Stage 1 then
   translates `omc.om` again (stage 2), and stage 2 translates it a third time (stage 3).
 - The few places where the language shaped the design:
   - a names pass reads every signature first, so a call may name a function written later.
@@ -228,7 +228,7 @@ it came from.
   - every loop over the input is two loops inside each other. A single loop stops itself after a
     million passes, and om4 has no such limit on input size.
 - Checks (`omc/gate5.sh`, results in `evidence/SEED-0/omc/`), 177 cases, all pass:
-  - (a) self-rebuild: stages 1, 2 and 3 are the same file (sha256 191b776e...98e9), so omc translates
+  - (a) self-rebuild: stages 1, 2 and 3 are the same file (sha256 2c189f30...b0e9), so omc translates
     itself the same way om4 translates it;
   - (b) a second route: the C path (the older compiler written in C) cannot read `omc.om`. It lacks
     global pools, a function calling itself, arrays over 64 cells, text, `read`/`write`, `exit`, and a
@@ -253,11 +253,18 @@ it came from.
     unsigned) keeps the self-rebuild, which shows a self-rebuild alone proves too little, but the om4
     comparison catches it. The same wrong word put into both om4 and omc fools both of those checks,
     and only the C path catches it (fm1, fm2: -7 / 2). A broken program is refused with error 3;
-  - the output does not change with the run: same bytes under another environment and a second later.
+  - the output does not change with the run: same bytes under another environment and a second later;
+  - the branch-range gate (`seed/qualification/security673/gate669.sh`, results in
+    `evidence/SECURITY-673/`): a 300,000-statement `if` made the old compiler truncate a conditional
+    branch's 19-bit displacement and die at run time. The fixed compiler accepts the exact forward
+    maximum (262,143 words = 1,048,572 bytes), refuses one word beyond and a signed-wrap case with
+    error 24 and empty output, and an independent GNU objdump decode checks every accepted branch
+    target against a marker. Nested if, while exit and trap-site layouts are refused at the same
+    range. A one-word range-bound mutant escapes the compiler and is caught by that decoder. The
+    generator and fixtures are seeded `.om`.
 - Size and speed (`size.tsv`, `size-history.tsv`, `omc-words.tsv`, `compile-time.tsv` in `evidence/SEED-0/omc/`;
   `size-history.tsv` gets one row per self-rewrite, and the gate fails if the current omc has no row):
-  - omc is 19,143 machine words; the largest functions are the value reader (2,073 words) and local
-    arrays (695);
+  - omc is 27,218 machine words; the value reader alone is 19,140 words, then local arrays (695);
   - on the programs the C path can also translate, omc makes the same words as om4. The 10 practice
     tasks take 164 words (C path 600); the 9 others take 267 (C path 552). The one larger than the C
     path is still fm5, the program with three calls (79 against 59);
