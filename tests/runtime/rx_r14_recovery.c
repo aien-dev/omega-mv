@@ -351,7 +351,7 @@ static int start(Rig *r, const Opts *opt) {
     r->opt = *opt;
     g_stage = 1;
     if (aienos_cap_start(&r->admin, &r->view) != 0) return -1;
-    if (rx_world_init_native(&r->w, r->view, 4, 1u << 18) != RX_OK) return -1;
+    if (rx_world_init_native(&r->w, r->view, 4, RX_CRUMBS_LONG_EPISODE) != RX_OK) return -1;
     r->w.external_subject = EXTERNAL;
     if (opt->gen_dir) {
         snprintf(r->generation_dir, sizeof r->generation_dir, "%s", opt->gen_dir);
@@ -809,9 +809,25 @@ static void account(Rig *r, Accounting *a) {
 static uint8_t *g_seen;
 static uint64_t *g_stack;
 #define CRUMBS (1u << 18)
+/* The visited set and stack grow with the causal log. */
+static uint64_t g_seen_cap;
+static int seen_fit(uint64_t n) {
+    if (n + 1 <= g_seen_cap) return 0;
+    uint64_t cap = g_seen_cap ? g_seen_cap : 1024;
+    while (cap < n + 1) cap *= 2;
+    uint8_t *s = realloc(g_seen, (size_t)cap);
+    if (!s) return -1;
+    g_seen = s;
+    uint64_t *k = realloc(g_stack, sizeof(uint64_t) * (size_t)cap);
+    if (!k) return -1;
+    g_stack = k;
+    g_seen_cap = cap;
+    return 0;
+}
 static int ancestor(RxWorld *w, uint64_t node, uint64_t wanted) {
     if (!node || !wanted || wanted > node || node > w->n_crumbs) return 0;
     if (node == wanted) return 1;
+    if (seen_fit(w->n_crumbs) != 0) return 0;
     memset(g_seen, 0, (size_t)w->n_crumbs + 1);
     uint64_t sp = 0;
     g_stack[sp++] = node;
@@ -854,7 +870,46 @@ typedef struct {
     int promoted;
 } Episode;
 
+/* DIAG (failure-mode study, logging only). */
+static uint64_t g_diag_t0, g_diag_confirm_ns, g_diag_fail_seen, g_diag_promote_ns;
+static void diag_watch(Rig *r) {
+    uint64_t s = field(r, r->aien.o.prediction, 6);
+    if (s == RX_AIEN_PRED_CONFIRMED && !g_diag_confirm_ns) g_diag_confirm_ns = now_ns() - g_diag_t0;
+    if (s == RX_AIEN_PRED_FAILED) g_diag_fail_seen++;
+}
+static void diag_dump(Rig *r, int rc, uint64_t target) {
+    char b[1024]; size_t n = 0;
+#define DF(obj, i) (unsigned long long)field(r, r->obj, i)
+    n += snprintf(b + n, sizeof b - n, "DIAG adapt rc=%d ms=%llu confirm_ms=%llu promote_ms=%llu fail_seen=%llu target=%llu served=%llu crumbs=%llu",
+        rc, (unsigned long long)((now_ns() - g_diag_t0) / 1000000),
+        (unsigned long long)(g_diag_confirm_ns / 1000000), (unsigned long long)(g_diag_promote_ns / 1000000),
+        (unsigned long long)g_diag_fail_seen, (unsigned long long)target,
+        (unsigned long long)served(r), (unsigned long long)r->w.n_crumbs);
+    n += snprintf(b + n, sizeof b - n, " pred=[%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu]",
+        DF(aien.o.prediction,0),DF(aien.o.prediction,1),DF(aien.o.prediction,2),DF(aien.o.prediction,3),
+        DF(aien.o.prediction,4),DF(aien.o.prediction,5),DF(aien.o.prediction,6),DF(aien.o.prediction,7));
+    n += snprintf(b + n, sizeof b - n, " belief=[mean %llu seen %llu last %llu miss %llu]",
+        DF(aien.o.belief,4),DF(aien.o.belief,5),DF(aien.o.belief,6),DF(aien.o.belief,7));
+    n += snprintf(b + n, sizeof b - n, " hyp=[seq %llu kind %llu state %llu] plan=[seq %llu why %llu goal %llu]",
+        DF(aien.o.hypothesis,0),DF(aien.o.hypothesis,1),DF(aien.o.hypothesis,7),
+        DF(aien.o.plan,0),DF(aien.o.plan,5),DF(aien.o.plan,6));
+    n += snprintf(b + n, sizeof b - n, " assess=[expected %llu status %llu class %llu] sel=[epoch %llu ps %llu ref_ps %llu] inforce=[epoch %llu ps %llu]",
+        DF(aien.o.assessment,3),DF(aien.o.assessment,4),DF(aien.o.assessment,5),
+        DF(omega.o.selection,0),DF(omega.o.selection,5),DF(omega.o.selection,7),
+        DF(living.o.inforce,0),DF(living.o.inforce,5));
+#undef DF
+    printf("%s\n", b);
+    fflush(stdout);
+}
+static uint64_t g_diag_target;
+static int adapt_inner(Rig *r, Episode *ep);
 static int adapt(Rig *r, Episode *ep) {
+    g_diag_t0 = now_ns(); g_diag_confirm_ns = 0; g_diag_fail_seen = 0; g_diag_promote_ns = 0; g_diag_target = 0;
+    int rc = adapt_inner(r, ep);
+    diag_dump(r, rc, g_diag_target);
+    return rc;
+}
+static int adapt_inner(Rig *r, Episode *ep) {
     memset(ep, 0, sizeof *ep);
     cpu_set_t a, x;
     if (core_sets(&a, &x) != 0 || move_threads(&a) <= 0) return -1;
@@ -864,9 +919,11 @@ static int adapt(Rig *r, Episode *ep) {
     uint64_t limit = now_ns() + 60000000000ull;
     while ((field(r, r->omega.o.selection, 0) < 1 ||
             field(r, r->aien.o.prediction, 6) != RX_AIEN_PRED_CONFIRMED) && now_ns() < limit)
-        if (serve(r) != 0) return -4;
+        { diag_watch(r); if (serve(r) != 0) return -4; }
+    diag_watch(r);
     if (field(r, r->aien.o.prediction, 6) != RX_AIEN_PRED_CONFIRMED) return -5;
     uint64_t target = field(r, r->aien.o.prediction, 5) * TARGET_PCT / 100u;
+    g_diag_target = target;
     uint64_t lineage = 0;
     rx_gen_active(r->gen, &ep->gen_before, &lineage);
     if (start_producer(r) != 0) return -6;
@@ -879,6 +936,7 @@ static int adapt(Rig *r, Episode *ep) {
         if (atomic_load(&r->producer_error)) return -9;
         pause_us(200);
     }
+    g_diag_promote_ns = now_ns() - g_diag_t0;
     ep->served_at_promotion = served(r);
     ep->promoted = field(r, r->living.o.promotion, 0) != 0 && r->promoter.result == RX_GEN_OK;
     rx_gen_active(r->gen, &ep->gen_after, &lineage);
@@ -2577,9 +2635,7 @@ static int receipt(int tests_ok) {
 int main(int argc, char **argv) {
     signal(SIGPIPE, SIG_IGN);
     setvbuf(stdout, NULL, _IONBF, 0);
-    g_seen = malloc(CRUMBS + 1);
-    g_stack = malloc(sizeof(uint64_t) * (CRUMBS + 1));
-    if (!g_seen || !g_stack) return 1;
+    if (seen_fit(CRUMBS) != 0) return 1;
     const char *only = argc > 1 ? argv[1] : NULL;
     /* F first: its processes are forked before this one ever opens the GPU. */
     if (!only || strchr(only, 'F')) scenario_f();
