@@ -1,0 +1,44 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "89c1c159c3b165b4da0433cd0b89584f76fd43ca3a8d29bc3eb522e8f26b4465",
+          "last_commit": "712469d9",
+          "name": "evaluator",
+          "purpose": "Agent 4 independent adversarial evaluator for AT-0: independent AT0_CASE_V1 codec, exact-arithme"
+        },
+        {
+          "digest": "6e8b05f8e04b9609f9da655e458f5aa7e3a61760ecc94cf4d1a34fe4894c1b40",
+          "last_commit": "ff9210e0",
+          "name": "integration",
+          "purpose": "AT-0 Agent 5 integration runner, exact result assembler/judge, hygiene and isolation controls, a"
+        },
+        {
+          "digest": "412b7b17d778908a08547c6555d1bb684e26b8fcf16eae953cd4a23510028ba9",
+          "last_commit": "bff4a428",
+          "name": "model",
+          "purpose": "Agent 3 candidate relational quantum engine in portable C11: state, Hamiltonians, constraint ker"
+        },
+        {
+          "digest": "24340ae691dce9743ee4d3eedf80ae0d362dd707cac0b6bae6ebbb562dafcf39",
+          "last_commit": "026bad06",
+          "name": "oracle",
+          "purpose": "AT-0 reference oracle (Rust, standard library only, built by rustc directly; research cross-chec"
+        }
+      ],
+      "children_root": "sha256:b8f4b679edffdd5a70e217cf9f5de151009b4d8c1c0c4defb0eb564d60adb45a",
+      "compiled_at": "2026-10-10T00:57:37Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:b5ce051e4052120508499aeed3c249cbc4ef5c0e46b2386e8a8916c7bdb9f7f9",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 189,
+      "generated_at_commit": "ff9210e09293af5eee705084cc8888cd52bfd44c",
+      "source_tree": "sha256:eb5284f230763c0500674b8ea743884fbe30109420d03d52b6eeb2bc0d1648a5"
+    }
+  },
+  "name": "at0",
+  "purpose": "AT-0 V1: finite clock plus one qubit under the AT0_CASE_V1 / AT0_RESULT_V1 contracts",
+  "schema_version": "1.0.0"
+}

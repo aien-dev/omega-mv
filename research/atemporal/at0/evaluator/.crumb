@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-10T00:48:51Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:89c1c159c3b165b4da0433cd0b89584f76fd43ca3a8d29bc3eb522e8f26b4465",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 99,
+      "generated_at_commit": "1b099302031b3ac860efd536a5df2883235f62ce",
+      "source_tree": "sha256:881c0d3606b69fe4c824d820c170d154873b7148a8f7beab5973ccd31b4027ac"
+    }
+  },
+  "name": "evaluator",
+  "purpose": "Agent 4 independent adversarial evaluator for AT-0: independent AT0_CASE_V1 codec, exact-arithmetic AT0_RESULT_V2 checker, long-double shadow oracle, 25 planted-defect mutants, 59-case public corpus, hidden-set commitment, isolation gate, qualification harness (run.sh) and machine-readable results",
+  "schema_version": "1.0.0"
+}

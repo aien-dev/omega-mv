@@ -1,0 +1,50 @@
+{
+  "above": {
+    "name": "docs",
+    "path": ".."
+  },
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-15T11:15:35Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:ffe2e59267bcc6597fdadad5fc7c54e32bbc0f0e409dae9af3ddd3ba49a0d8ad",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 5,
+      "generated_at_commit": "61c09411331e992ebb9882a50412f938c6bb687f",
+      "source_tree": "sha256:1b54ccfb5104708b9d0d68537c2aaf8861ffc293921a9a8456008b469d991498"
+    },
+    "owner_lane": "",
+    "provenance": {
+      "entries": [
+        {
+          "author": "aien-dev",
+          "pr": 80,
+          "sha": "87938dc",
+          "source": "backfill-git",
+          "subject": "Merge pull request #80 from aien-dev/feat/polyglot-0",
+          "timestamp": "2026-09-29T14:16:52-05:00"
+        }
+      ],
+      "ledger_cap": 20,
+      "source": "backfill",
+      "total_commits": 1
+    },
+    "seed": {
+      "files": [
+        "OMEGA_LANGUAGE_EVIDENCE_LEDGER.md",
+        "OMEGA_POLYGLOT_CURRENT_STATE.md",
+        "POLYGLOT_AGENT_OWNERSHIP.md",
+        "evidence-rust-vs-c-capability.md",
+        "review-polyglot-0.md"
+      ],
+      "purpose_auto": "Directory docs/polyglot. Purpose not yet described by a human."
+    }
+  },
+  "layer": "docs/polyglot",
+  "name": "docs/polyglot",
+  "purpose": "Directory docs/polyglot. Purpose not yet described by a human.",
+  "schema_version": "1.0.0"
+}
