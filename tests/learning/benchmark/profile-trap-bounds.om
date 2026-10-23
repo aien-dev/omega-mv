@@ -1,0 +1,8 @@
+global B uchar 2
+fn fetch i ulong to uchar
+ret get B i
+end
+fn main to int
+x = fetch 2
+ret int x
+end

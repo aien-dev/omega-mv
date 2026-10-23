@@ -1,0 +1,26 @@
+note Public L776 oracle bytes followed by actual bytes, each exactly 128 bytes.
+note stdin is development fixture transport, not an authorized runtime receipt.
+global Extra uchar 1
+fn main to int
+pos = ulong 0
+while lt pos 128 bound 128
+n = read 0 LWant pos sub 128 pos
+if le n 0
+ret 40
+end
+pos = add pos ulong n
+end
+pos = 0
+while lt pos 128 bound 128
+n = read 0 LGot pos sub 128 pos
+if le n 0
+ret 41
+end
+pos = add pos ulong n
+end
+n = read 0 Extra 0 1
+if ne n 0
+ret 42
+end
+ret int lobserve 0 0 0 128 128
+end
