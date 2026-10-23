@@ -36,3 +36,10 @@ printf 'PASS native directory enumeration, file metadata and rename without over
 compile errors
 "$stage/errors"
 printf 'PASS native syscall errors and nested expression register preservation\n'
+compile location
+(cd "$stage"; ./location)
+test ! -e "$stage/regular-file"
+printf 'PASS native cwd and readlnk offsets, counts, truncation, errno and private path copy\n'
+compile sockopt
+(cd "$stage"; timeout 10 ./sockopt)
+printf 'PASS native socket options with independent bind behavior, readonly input and errno\n'

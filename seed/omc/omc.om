@@ -329,9 +329,30 @@ end
 put tk 0 3
 end
 
-note ======== keyword lookup (original om4 KWTAB plus hand-maintained native host words 100..131) ========
+note ======== keyword lookup (original om4 KWTAB plus hand-maintained native host words 100..134) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
+if eq w 6584163
+ret 132
+end
+packed = or ulong 114 shl ulong 101 8
+packed = or packed shl ulong 97 16
+packed = or packed shl ulong 100 24
+packed = or packed shl ulong 108 32
+packed = or packed shl ulong 110 40
+packed = or packed shl ulong 107 48
+if eq w packed
+ret 133
+end
+packed = or ulong 115 shl ulong 111 8
+packed = or packed shl ulong 99 16
+packed = or packed shl ulong 107 24
+packed = or packed shl ulong 111 32
+packed = or packed shl ulong 112 40
+packed = or packed shl ulong 116 48
+if eq w packed
+ret 134
+end
 if eq w 1819242338
 ret 1
 end
@@ -2450,12 +2471,76 @@ hsys 59
 hreturn dst x
 end
 
+fn hcwd dst ulong x ulong to void
+e = harray x 1
+save
+basearg 0 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 0 0 16
+loadarg 1 1 get fr add x 22
+hsys 17
+hreturn dst x
+end
+fn hreadlnk dst ulong x ulong to void
+e = harray x 0
+put fr add x 23 e
+put fr add x 24 get fr add x 21
+put fr add x 25 get fr add x 22
+e = harray x 1
+put fr add x 26 e
+put fr add x 27 get fr add x 21
+put fr add x 28 get fr add x 22
+put fr add x 20 get fr add x 23
+put fr add x 21 get fr add x 24
+put fr add x 22 get fr add x 25
+hpathcp x
+note readlnk refuses an empty path before the kernel call.
+emit 4043309247
+trapc 0 3
+basearg 2 get fr add x 26
+loadarg 16 1 get fr add x 27
+e3 2332033024 2 2 16
+loadarg 3 1 get fr add x 28
+hcopy
+hsys 78
+spadd 4096
+hreturn dst x
+end
+fn hsockopt dst ulong x ulong to void
+harg x 2 8
+harg x 3 8
+harg x 4 8
+e = harray x 0
+save
+hload x 2 0
+hload x 3 1
+hload x 4 2
+basearg 3 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 3 3 16
+loadarg 4 1 get fr add x 22
+hsys 208
+hreturn dst x
+end
+
 fn hostval c ulong dst ulong to void
 if eq get progmode 0 0
 fail 9
 end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0
+if eq c 132
+hcwd dst x
+ret
+end
+if eq c 133
+hreadlnk dst x
+ret
+end
+if eq c 134
+hsockopt dst x
+ret
+end
 if or eq c 109 eq c 130
 hclock c dst x
 ret
@@ -2619,7 +2704,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 131
+if and ge c 100 le c 134
 hostval c dst
 ret
 end
