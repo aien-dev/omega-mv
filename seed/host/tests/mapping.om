@@ -11,6 +11,27 @@ if not yes
 exit int 80
 end
 end
+note Keep five distinct caller values live across each native mapping operation.
+fn held h long a ulong b ulong c ulong d ulong e ulong to void
+expect eq mapwrite h 31 payload 0 len payload long len payload
+expect eq a 101
+expect eq b 202
+expect eq c 303
+expect eq d 404
+expect eq e 505
+expect eq mapread h 31 buf 1 len payload long len payload
+expect eq a 101
+expect eq b 202
+expect eq c 303
+expect eq d 404
+expect eq e 505
+expect eq mapdrop h 0
+expect eq a 101
+expect eq b 202
+expect eq c 303
+expect eq d 404
+expect eq e 505
+end
 fn fault kind int to int
 h = mapnew neg int 1 0 4096 3 34
 expect gt h 0
@@ -111,6 +132,8 @@ expect eq mapread ro 4099 buf 0 len payload long len payload
 expect eq mapdrop ro 0
 expect eq mapnew neg int 1 0 4096 1 2 neg long 9
 expect eq mapnew int fd 1 4096 1 2 neg long 22
+live = mapnew neg int 1 0 4096 3 34
+held live 101 202 303 404 505
 note A failed kernel mapping must not consume a slot.
 for i ulong 128
 h = mapnew neg int 1 0 4096 3 34
