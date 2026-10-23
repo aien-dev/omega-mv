@@ -51,6 +51,8 @@ SRCS += src/omega_gpu_tcgemm_api.c
 SRCS += src/omega_blackwell_codegen_pattn.c src/omega_gpu_prefill_attn_api.c
 # OWN-30B T3b (2026-10-13): device-resident prefill (omega_gpu_prefill.h), new files only
 SRCS += src/omega_blackwell_codegen_pf.c src/omega_gpu_prefill.c src/omega_blackwell_codegen_tc2.c src/omega_gpu_pfgemm.c
+# trainer lane E1 (2026-10-16): device-resident bf16 training GEMM (omega_gpu_tgemm_api.h), new files only
+SRCS += src/omega_blackwell_codegen_tgemm.c src/omega_gpu_tgemm_api.c
 # OWN-30B L1 GEMM (W-L1G, 2026-10-14): native FP8 QMMA, new files only
 SRCS += src/omega_blackwell_codegen_qmma.c src/omega_blackwell_codegen_qg.c
 # OWN-30B W-L1G-D (2026-10-14): router logits + MoE combine for the whole-prompt prefill, new files only
@@ -2472,6 +2474,32 @@ test-gpu-fp8: $(GPU_FP8_TEST)
 	./$(GPU_FP8_TEST) --host-only
 	./$(GPU_FP8_TEST) --sim
 
+# omega#471: libomega_gpu.a links without -lm (Makefile:35). Two halves, host-only:
+#  1. symbol check: no undefined symbol of the archive (one not defined by another member) may be a name that the
+#     toolchain's libm.so.6 exports. libm's own export table is the denylist, so nothing is hand-maintained; a missing
+#     libm.so.6 is a FAIL, never a silent pass. glibc also resolves some libm names from libc (ldexpf did), which is
+#     why a plain link without -lm cannot catch this.
+#  2. tests/gpu_libm_free_test.c (links -lm): the libm-free replacements are bit-identical to the libm calls they
+#     replaced over every relevant input (all exponents, all 256 e4m3 bytes, all 65536 bf16 codes, all 2^32 f32).
+.PHONY: test-gpu-libm-free
+GPU_LIBM_FREE_TEST = $(OUT_DIR)/gpu_libm_free_test
+$(GPU_LIBM_FREE_TEST): tests/gpu_libm_free_test.c src/omega_gpu_fp8_api.h src/omega_gpu_hostmath.h src/omega_blackwell_codegen_moe.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/gpu_libm_free_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-libm-free: $(OUT_DIR)/libomega_gpu.a $(GPU_LIBM_FREE_TEST)
+	@set -e; libm=$$($(CC) -print-file-name=libm.so.6); \
+	if [ ! -f "$$libm" ]; then echo "test-gpu-libm-free: FAIL (libm.so.6 not found: '$$libm')"; exit 1; fi; \
+	nm -D --defined-only "$$libm" | awk 'NF>=3{print $$NF}' | sed 's/@.*//' | sort -u > $(OUT_DIR)/libm.exports; \
+	nm $(OUT_DIR)/libomega_gpu.a | awk '$$1=="U"{print $$2}' | sort -u > $(OUT_DIR)/libomega_gpu.undef; \
+	nm --defined-only $(OUT_DIR)/libomega_gpu.a | awk 'NF==3{print $$3}' | sort -u > $(OUT_DIR)/libomega_gpu.def; \
+	test -s $(OUT_DIR)/libm.exports && test -s $(OUT_DIR)/libomega_gpu.undef && test -s $(OUT_DIR)/libomega_gpu.def; \
+	hits=$$(comm -23 $(OUT_DIR)/libomega_gpu.undef $(OUT_DIR)/libomega_gpu.def | comm -12 - $(OUT_DIR)/libm.exports); \
+	if [ -n "$$hits" ]; then \
+	  echo "test-gpu-libm-free: FAIL, libomega_gpu.a references libm:"; \
+	  for s in $$hits; do nm -A $(OUT_DIR)/libomega_gpu.a | grep -w "U $$s" | sed 's/^/  /'; done; exit 1; fi; \
+	echo "PASS libomega_gpu.a: 0 of $$(comm -23 $(OUT_DIR)/libomega_gpu.undef $(OUT_DIR)/libomega_gpu.def | wc -l) external symbols are libm exports ($$(wc -l < $(OUT_DIR)/libm.exports) names in $$libm)"
+	./$(GPU_LIBM_FREE_TEST)
+	@echo "test-gpu-libm-free: PASS"
+
 # omega #457 (2026-10-15): host rewrite of a GPU-cached buffer must be visible to the next launch. Chip only; the gate
 # is tools/run_gpu_l2_stale_chip.sh.
 GPU_L2_STALE_TEST = $(OUT_DIR)/gpu_l2_stale_test
@@ -2555,6 +2583,14 @@ GPU_TC_PEAK_TEST = $(OUT_DIR)/gpu_tc_peak_test
 $(GPU_TC_PEAK_TEST): tests/gpu_tc_peak_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h src/omega_blackwell_codegen_tc.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tc_peak_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 
+# Training R5 part 2 (2026-10-15): f32 global atomic add probe. --host-only is the simulator; the chip run is one short window.
+GPU_ATOMF32_PROBE_TEST = $(OUT_DIR)/gpu_atomf32_probe_test
+$(GPU_ATOMF32_PROBE_TEST): tests/gpu_atomf32_probe_test.c tests/bw_warp_sim_tc.h src/omega_bw_em.h src/omega_blackwell_codegen.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_atomf32_probe_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+.PHONY: test-atomf32-probe-host
+test-atomf32-probe-host: $(GPU_ATOMF32_PROBE_TEST)
+	$(GPU_ATOMF32_PROBE_TEST) --host-only
+
 # OWN-30B L1 attention (2026-10-13): tensor-core causal prefill attention. --host-only and --sim are host proofs;
 # the chip gate is tools/run_gpu_prefill_attn_chip.sh.
 GPU_PATTN_TEST = $(OUT_DIR)/gpu_prefill_attn_test
@@ -2567,6 +2603,12 @@ $(GPU_PF_MEM_TEST): tests/gpu_pf_mem_test.c tests/bw_warp_sim_tc.h src/omega_gpu
 GPU_PFGEMM_TEST = $(OUT_DIR)/gpu_pfgemm_test
 $(GPU_PFGEMM_TEST): tests/gpu_pfgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h src/omega_gpu_prefill.h src/omega_blackwell_codegen_tc2.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_pfgemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+# trainer lane E1 (2026-10-16): bf16 training GEMM. --host-only and --sim are host proofs; the chip gate is tools/run_gpu_tgemm_chip.sh
+GPU_TGEMM_TEST = $(OUT_DIR)/gpu_tgemm_test
+$(GPU_TGEMM_TEST): tests/gpu_tgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h src/omega_gpu_tgemm_api.h src/omega_blackwell_codegen_tgemm.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tgemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-tgemm: $(GPU_TGEMM_TEST)
+	$(GPU_TGEMM_TEST) --host-only && $(GPU_TGEMM_TEST) --sim
 GPU_QMMA_PROBE_TEST = $(OUT_DIR)/gpu_qmma_probe_test
 $(GPU_QMMA_PROBE_TEST): tests/gpu_qmma_probe_test.c tests/bw_qmma_model.h src/omega_blackwell_codegen_qmma.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_qmma_probe_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm

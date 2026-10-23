@@ -90,6 +90,12 @@ case "$step" in
     grep -E 'TOTAL GATES: ([0-9]+) \| PASSED: \1 \| FAILED: 0' build/base.log
     ! grep -qE 'FAILED: [1-9]|\[FAIL\]|\(FAIL\)' build/base.log
     ;;
+  gpu-tgemm)          # pr-smoke.yml smoke job, "Training GEMM host proofs" step: physics-src at physics.lock;
+                      # budgets and warp simulator, no GPU
+    physics_pin; set -o pipefail; mkdir -p build
+    make test-gpu-tgemm | tee build/tgemm.log
+    test "$(grep -c '^GPU_TGEMM: PASS' build/tgemm.log)" = 2
+    ;;
   language)           # pr-smoke.yml and host-suites-3.yml (same command)
     set -o pipefail; mkdir -p build
     make $NOPHYS test-language | tee build/lang.log
@@ -146,6 +152,9 @@ case "$step" in
     ;;
   numeric2)           make $NOPHYS test-numeric-reduce-cpu test-divsqrt-host ;;
   tensor)             make $NOPHYS test-tensor; make $NOPHYS test-tensor-store; make $NOPHYS test-m20-receipt; make $NOPHYS test-tensor-mutations ;;
+  atomf32-probe-host) # host-suites-2.yml gpu-engine job, "f32 global atomic add probe in the warp simulator" step:
+                      # physics-src at physics.lock; host, no device (the chip run is by hand)
+    physics_pin; make test-atomf32-probe-host ;;
   # host-suites-3.yml
   numeric-lifecycle)  make $NOPHYS test-numeric-lifecycle ;;
   numeric-transc-digest)
@@ -155,6 +164,12 @@ case "$step" in
     test "$n" -ge 1
     ;;
   numeric-transc-full) make $NOPHYS test-numeric-transc-full ;;
+  gpu-libm-free)      # host-suites-3.yml gpu-libm-free (omega#471): physics-src at physics.lock, lock check on
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-libm-free | tee build/libm.log
+    grep -q '^test-gpu-libm-free: PASS$' build/libm.log
+    ! grep -q '^FAIL' build/libm.log
+    ;;
   m6|m7|m8|m9|m10|m11|m12|m13|m14|m15|m17|m5|m19|m19r-qualify|gate14-combine)
     physics_pin; set -o pipefail; mkdir -p build
     make "test-$step" | tee "build/gate-$step.log"
