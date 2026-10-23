@@ -562,7 +562,8 @@ not search PATH or invoke a shell. Programs should explicitly request
 close-on-exec descriptors where needed. Forked children are independent
 processes and must be reaped; this extension does not add shared-memory threads.
 
-Clock results use signed nanoseconds and trap 1 on overflow. `argread` bounds
+Clock results require nonnegative seconds and a signed nanosecond total;
+values outside that range trap 1. `argread` bounds
 its internal string scan at 1 MiB; reaching that bound traps 3. Linux ARM64 is
 the only qualified host. OS flags, address layouts and metadata layouts are
 host-specific; portable library contracts remain separate work.
