@@ -1,0 +1,10 @@
+$ set -e; mkdir -p /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-red; cd /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-red; cat /home/drakestapleton/workspace/hermes-desk/ua-buffers-L717/omega/native/universal/buffers/buffers.om ../L717-rights-regression.om > rights.om; quiet-build ../shared/omc < rights.om > rights; test -s rights; chmod 500 rights; file rights; c=0; ./rights || c=$?; printf "RIGHTS_REPRO_RC=%s\n" "$c"; test "$c" = 1; cat /home/drakestapleton/workspace/hermes-desk/ua-buffers-L717/omega/native/universal/buffers/buffers.om /home/drakestapleton/workspace/hermes-desk/ua-buffers-L717/omega/native/universal/buffers/tests/test_globals.om ../L717-exit-wrap.om > wrap.om; quiet-build ../shared/omc < wrap.om > wrap; test -s wrap; chmod 500 wrap; file wrap; c=0; ./wrap || c=$?; printf "INJECTED_FAILURE_AT256_RC=%s (must become1)\n" "$c"; test "$c" = 0; sha256sum rights.om rights wrap.om wrap
+rights: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+FAIL cancellation changed read-only source or destination
+RIGHTS_REPRO_RC=1
+wrap: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+INJECTED_FAILURE_AT256_RC=0 (must become1)
+61fc47a2dc8a47e2c44aa64a406744d6a69831448bad2bf1d6db8cf18eaee8d6  rights.om
+12321ceeccbba774ba90ed46796a0fc0c643652221c4373774cae83d6fd7c459  rights
+3019844ed560f0fd7ac1cbe23a1b32c886992232425767b76493121ed734415e  wrap.om
+decfc125acdb32f65e18b4dda91ea8f56463547e6e1cc6e843395bb0304d7a99  wrap

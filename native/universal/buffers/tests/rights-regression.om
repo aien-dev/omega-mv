@@ -1,0 +1,47 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note A read-only source may be copied but may not be canceled.
+text bad "FAIL cancellation changed read-only source or destination\n"
+text good "PASS cancellation rights and transactional refusal\n"
+fn main to int
+s = ubnew 1 40 1 1
+d = ubnew 1 40 3 1
+for i ulong 40
+rc = ubstore d i 238
+if ne rc 0
+ret 2
+end
+end
+before = ubstat 1
+copies = ubstat 2
+rc = ubcsched s d 40 1
+ok = eq rc 2
+if ne get ubcflag sub rem s 256 1 0
+ok = false
+end
+if ne ubstat 1 before
+ok = false
+end
+if ne ubstat 2 copies
+ok = false
+end
+for i ulong 40
+if ne ubload d i 238
+ok = false
+end
+end
+if not ok
+w = write 1 bad 0 len bad
+ret 1
+end
+rc = ubcopy s d 40
+if ne rc 0
+ret 3
+end
+rc = ubfree s
+rc = ubfree d
+if ne ubstat 3 0
+ret 4
+end
+w = write 1 good 0 len good
+ret 0
+end

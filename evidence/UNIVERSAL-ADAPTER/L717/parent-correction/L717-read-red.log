@@ -1,0 +1,6 @@
+$ set -e; cd /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-red; cat /home/drakestapleton/workspace/hermes-desk/ua-buffers-L717/omega/native/universal/buffers/buffers.om ../L717-read-stub.om ../L717-read-regression.om > read.om; quiet-build ../shared/omc < read.om > read; test -s read; chmod 500 read; file read; c=0; ./read || c=$?; printf "EXPLICIT_READ_STUB_RC=%s\n" "$c"; test "$c" = 1; sha256sum read.om read
+read: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+FAIL explicit read status or unchanged output
+EXPLICIT_READ_STUB_RC=1
+57506fd30b0bda7c1e6d0857817ce61af744ccbd52e653e67d96106e81c3a748  read.om
+a3265ce8fd96e76cbb5081278d118ea209aa6bbaec757a8710c2cfd70df2ce34  read

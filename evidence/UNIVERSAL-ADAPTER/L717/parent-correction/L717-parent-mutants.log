@@ -1,0 +1,27 @@
+$ set -e; cd /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-green; for f in /home/drakestapleton/workspace/hermes-desk/ua-buffers-L717/evidence/UNIVERSAL-ADAPTER/L717/mutants/*.om; do n=$(basename "$f" .om); cat "$f" ../L717-test_globals.om ../L717-test_buffers.om > "$n.om"; quiet-build ../shared/omc < "$n.om" > "$n"; test -s "$n"; chmod 500 "$n"; file "$n"; c=0; ./$n || c=$?; printf "%s_RC=%s\n" "$n" "$c"; test "$c" = 1; done; cat ../L717-mutant-cancel-rights.om ../L717-rights-regression.om > rights-mutant.om; quiet-build ../shared/omc < rights-mutant.om > rights-mutant; test -s rights-mutant; chmod 500 rights-mutant; c=0; ./rights-mutant || c=$?; printf "CANCEL_RIGHTS_MUTANT=%s\n" "$c"; test "$c" = 1; cat ../L717-mutant-read-status.om ../L717-read-regression.om > read-mutant.om; quiet-build ../shared/omc < read-mutant.om > read-mutant; test -s read-mutant; chmod 500 read-mutant; c=0; ./read-mutant || c=$?; printf "READ_STATUS_MUTANT=%s\n" "$c"; test "$c" = 1; sha256sum *mutant* mutant-*
+mutant-no-cancel: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+mutant-no-cancel_RC=1
+mutant-no-generation: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+mutant-no-generation_RC=1
+mutant-no-rights: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+mutant-no-rights_RC=1
+FAIL cancellation changed read-only source or destination
+CANCEL_RIGHTS_MUTANT=1
+FAIL explicit read status or unchanged output
+READ_STATUS_MUTANT=1
+f02b952f0a42a304845030a7b8e15c3a84e7044b5b2bcd252f051c01732571d4  mutant-no-cancel
+af0af89980d016af72a7b9c61ed570d5ade553729dc84638433c638a1badcb4a  mutant-no-cancel.om
+95981dddbae006d0643ca0d3d23ab9ae02977e9b5d369c6514e024f4e6122df5  mutant-no-generation
+ed3965aef8ad13a719cb8e23eb00483e922afc6957fa5a3a43a05d808daa5133  mutant-no-generation.om
+8458e7faea2b94a233f85aafa28596795cf52d6cf4583fca6884b5805cc7d440  mutant-no-rights
+4c35aceb4722f15173f1102b5e70cb2deec8dd7f1ed660692dbc5048fa67851c  mutant-no-rights.om
+fe45d1c74ab70218baf95b8db49b14e8695cbb5819856498fe244745869c2dcf  read-mutant
+b66e229b0d65d8e9f3284cd316b5087c7ef465d08e9586e78993e67ff9ddcf26  read-mutant.om
+1dd708a028c983c1436910554d17fb752815197a1ee0f440dae7c0ff916cd094  rights-mutant
+aa7aaebed0549dcecb645e7d5e30e6c834b53a3ee552948a3d4ad0f9fbffd097  rights-mutant.om
+f02b952f0a42a304845030a7b8e15c3a84e7044b5b2bcd252f051c01732571d4  mutant-no-cancel
+af0af89980d016af72a7b9c61ed570d5ade553729dc84638433c638a1badcb4a  mutant-no-cancel.om
+95981dddbae006d0643ca0d3d23ab9ae02977e9b5d369c6514e024f4e6122df5  mutant-no-generation
+ed3965aef8ad13a719cb8e23eb00483e922afc6957fa5a3a43a05d808daa5133  mutant-no-generation.om
+8458e7faea2b94a233f85aafa28596795cf52d6cf4583fca6884b5805cc7d440  mutant-no-rights
+4c35aceb4722f15173f1102b5e70cb2deec8dd7f1ed660692dbc5048fa67851c  mutant-no-rights.om

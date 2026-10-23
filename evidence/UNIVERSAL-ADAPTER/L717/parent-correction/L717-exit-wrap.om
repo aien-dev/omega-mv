@@ -128,6 +128,8 @@ slot = get poolh i
 check ubfree slot 0
 end
 check ubstat 3 0
+put failures 0 1
+put failedat 0 256
 if ne get failures 0 0
 ret int get failedat 0
 end

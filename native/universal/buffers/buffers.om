@@ -12,6 +12,7 @@ global ubpeak ulong 1
 global ubbytes ulong 1
 global ubcopies ulong 1
 global uberror ulong 1
+global ubvalue uchar 1
 fn ubcheck h ulong to ulong
 put uberror 0 1
 if eq h 0
@@ -112,22 +113,31 @@ end
 put ubdata add mul i 256 o uchar v
 ret 0
 end
-fn ubload h ulong o ulong to ulong
+fn ubread h ulong o ulong to ulong
 i = ubcheck h
 if eq i 0
-ret 0
+ret get uberror 0
 end
 i = sub i 1
 if eq get ubcflag i 1
-ret 0
+ret 7
 end
 if eq and get ubrights i 1 0
-ret 0
+ret 2
 end
 if ge o get ublen i
+ret 3
+end
+put ubvalue 0 get ubdata add mul i 256 o
 ret 0
 end
-ret ulong get ubdata add mul i 256 o
+note Compatibility convenience only: interop callers must use ubread status.
+fn ubload h ulong o ulong to ulong
+rc = ubread h o
+if ne rc 0
+ret 0
+end
+ret ulong get ubvalue 0
 end
 fn ubcpr s ulong d ulong n ulong after ulong to ulong
 s = ubcheck s
@@ -150,6 +160,10 @@ if eq and get ubrights s 1 0
 ret 2
 end
 if eq and get ubrights d 2 0
+ret 2
+end
+note Scheduled cancellation mutates the source, so requires its WRITE right.
+if and gt after 0 eq and get ubrights s 2 0
 ret 2
 end
 if or gt n get ublen s gt n get ublen d
