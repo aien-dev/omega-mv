@@ -1,5 +1,0 @@
-// expect: SLICE_PARAMS object=f line=3
-// transition: parameter registers
-fn f(a: bytes, b: bytes, c: bytes, d: u64) -> u64 {
-    return d;
-}

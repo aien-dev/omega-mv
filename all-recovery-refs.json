@@ -1,0 +1,726 @@
+[
+  {
+    "sha": "a8714df3c37e608a5186bb7b82812e40fedd49d9",
+    "ref": "refs/orphan-candidates-20261023/08/backup/e1-gap-close-a8714df"
+  },
+  {
+    "sha": "44e12ec1fda6b08ce453610ce42963b6bef1a057",
+    "ref": "refs/orphan-candidates-20261023/08/c3-fix-acq"
+  },
+  {
+    "sha": "53275b557741ae46369e80e57593137b68a60c98",
+    "ref": "refs/orphan-candidates-20261023/08/c343-local"
+  },
+  {
+    "sha": "a8714df3c37e608a5186bb7b82812e40fedd49d9",
+    "ref": "refs/orphan-candidates-20261023/08/c3rdx-v1"
+  },
+  {
+    "sha": "ef9076d60a0e207faf7ee8d82088260fc44cad86",
+    "ref": "refs/orphan-candidates-20261023/08/cand3/r15-energy-residency"
+  },
+  {
+    "sha": "b48d1322b9a1cbc75768adfd30337b79b45bd460",
+    "ref": "refs/orphan-candidates-20261023/08/e1-gap-close"
+  },
+  {
+    "sha": "5765db211b17009223032d6b03ea4eb52e512e49",
+    "ref": "refs/orphan-candidates-20261023/08/e1-gap-close-2"
+  },
+  {
+    "sha": "c9c326bfa8631977edaf2c69c5e3c419525672ba",
+    "ref": "refs/orphan-candidates-20261023/08/fastload/fast-nan-scan"
+  },
+  {
+    "sha": "c759af8a58e534ab8b0fadcd80c7c21313b1121b",
+    "ref": "refs/orphan-candidates-20261023/08/feat/bf16-warps-any-k"
+  },
+  {
+    "sha": "25a0c5f1d2d677adbc6c2ba229ee2776d360dfc7",
+    "ref": "refs/orphan-candidates-20261023/08/feat/forge-v1-numeric"
+  },
+  {
+    "sha": "31b2fcdebb70c4f331c6df458dee504f4ae43d48",
+    "ref": "refs/orphan-candidates-20261023/08/feat/path-trajectory"
+  },
+  {
+    "sha": "1a853f98fbe9bd267cd134e8d1c2a9278f88f406",
+    "ref": "refs/orphan-candidates-20261023/08/fix/astra-world-command-visibility"
+  },
+  {
+    "sha": "cfadf764a394c2741015e4eb888ab2fc8525b3d9",
+    "ref": "refs/orphan-candidates-20261023/08/fix/mufu-ftz-462"
+  },
+  {
+    "sha": "21392eea539571ae666924a8513ea1d0c35caf57",
+    "ref": "refs/orphan-candidates-20261023/08/fix/omega-gpu-engine-first-cut"
+  },
+  {
+    "sha": "3ad83b482f7c15870f73928313698454d5ee83ba",
+    "ref": "refs/orphan-candidates-20261023/08/fix/visor-realization-program"
+  },
+  {
+    "sha": "6fa4d971ca4d6317a13ddd2211bbe7277b8f6966",
+    "ref": "refs/orphan-candidates-20261023/08/hive/CHIPWAIT-1"
+  },
+  {
+    "sha": "834b53578a71f60ffa571e3e6280576ea667d1bb",
+    "ref": "refs/orphan-candidates-20261023/08/hive/CHIPWAIT-1-mutants"
+  },
+  {
+    "sha": "1a853f98fbe9bd267cd134e8d1c2a9278f88f406",
+    "ref": "refs/orphan-candidates-20261023/08/hive/CHIPWAIT-1c"
+  },
+  {
+    "sha": "c80111b5018ac7b79ed073bdf90739a9c307ab0d",
+    "ref": "refs/orphan-candidates-20261023/08/hive/CHIPWAIT-2-omega"
+  },
+  {
+    "sha": "90891f939063fce0e4c5118c4830e83695ab359f",
+    "ref": "refs/orphan-candidates-20261023/08/hive/E1B-LDST-DEVERR"
+  },
+  {
+    "sha": "f4a49b4c0d2dacba442ba8aa4fdfa0ecff9edc1d",
+    "ref": "refs/orphan-candidates-20261023/08/lane22/osc1-prerebase-backup"
+  },
+  {
+    "sha": "01615e087645473bc09d2217289c48ee2254b1a4",
+    "ref": "refs/orphan-candidates-20261023/08/local/t2-transc"
+  },
+  {
+    "sha": "065d4a6219269b3bb92a36aa7052e35a5ece85b4",
+    "ref": "refs/orphan-candidates-20261023/08/lt/cw1-mut-rebased"
+  },
+  {
+    "sha": "29c90d2a397979452e2a47f9e0321a4f431030f5",
+    "ref": "refs/orphan-candidates-20261023/08/lt/cw1-rebased"
+  },
+  {
+    "sha": "1d0c7f940eb8ed479c9cb8a7dd83d82a9a255c38",
+    "ref": "refs/orphan-candidates-20261023/08/lt/cw1c-camp"
+  },
+  {
+    "sha": "dd16e45f952f9b1b460b003c0388053c6a76b23e",
+    "ref": "refs/orphan-candidates-20261023/08/lt/cw1c-diag"
+  },
+  {
+    "sha": "dfc424c70c6faebf8a81b4b93fe3f76ed0d210b8",
+    "ref": "refs/orphan-candidates-20261023/08/lt/cw2-rebased"
+  },
+  {
+    "sha": "e69811486fcd18212830b440b65df5dbf1aff666",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/a16"
+  },
+  {
+    "sha": "848a999baf208ffc8c14872803cd56da6fb829d4",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/a16b"
+  },
+  {
+    "sha": "d9b9b6a2564ee93f1b30b71b0427b7f9ae685024",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/decode-mega"
+  },
+  {
+    "sha": "f38652b93899fbb881e98b4586270fb4c65bb697",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/fp4"
+  },
+  {
+    "sha": "848a999baf208ffc8c14872803cd56da6fb829d4",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/rc2"
+  },
+  {
+    "sha": "4f3d45e7f370c22169865c97445c6cadbd241342",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/rc3"
+  },
+  {
+    "sha": "802a0101ebf13944afeb8be8e4c8f71be2348397",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/resident"
+  },
+  {
+    "sha": "063e6d12fac1bb49ac4d88bfb6f5ea3eff2939ff",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/spec-batch"
+  },
+  {
+    "sha": "b9ae009620e26acb897c5350f72449c9803086fa",
+    "ref": "refs/orphan-candidates-20261023/08/own30b/spec-exact"
+  },
+  {
+    "sha": "76da69486fb19686963f29b3e3edffd1312a58a6",
+    "ref": "refs/orphan-candidates-20261023/08/polyglot/asm"
+  },
+  {
+    "sha": "570d51263a7e04471981ac68c8cffdaf9be9ab8f",
+    "ref": "refs/orphan-candidates-20261023/08/polyglot/audit"
+  },
+  {
+    "sha": "4c62e4b73bbae4bf56ebc8ee412cc7fa6fdd57c2",
+    "ref": "refs/orphan-candidates-20261023/08/polyglot/encoder"
+  },
+  {
+    "sha": "8b0befeb13ebd4f3789417633e1f9932f6a5bf7f",
+    "ref": "refs/orphan-candidates-20261023/08/polyglot/harness"
+  },
+  {
+    "sha": "94a464e7fe3cecb8f855e3f496192b0ea38f5f53",
+    "ref": "refs/orphan-candidates-20261023/08/polyglot/mojo"
+  },
+  {
+    "sha": "def197d19de53b6564b1fb4bffc932d8a001f2a8",
+    "ref": "refs/orphan-candidates-20261023/08/polyglot/review"
+  },
+  {
+    "sha": "fa18e58a86a7402de785e07044f5f444a1dcca3c",
+    "ref": "refs/orphan-candidates-20261023/08/pr309"
+  },
+  {
+    "sha": "fa18e58a86a7402de785e07044f5f444a1dcca3c",
+    "ref": "refs/orphan-candidates-20261023/08/pr309b"
+  },
+  {
+    "sha": "2e175d60397f66e9fbd4820572190b1c71eb9d13",
+    "ref": "refs/orphan-candidates-20261023/08/seed/c2om"
+  },
+  {
+    "sha": "9a0d533daf81292b8a8e1f6e2d3f5e1945aab77d",
+    "ref": "refs/orphan-candidates-20261023/08/serve/q36-prefill-v2"
+  },
+  {
+    "sha": "06e550f460128d1aa63dca6e1aa30810fc13df59",
+    "ref": "refs/orphan-candidates-20261023/08/speed3/wm-combined"
+  },
+  {
+    "sha": "45133c2a7fdc45fc9447d604e0ad8b5285fd42d8",
+    "ref": "refs/orphan-candidates-20261023/10/fix/471-fp8-libm-free"
+  },
+  {
+    "sha": "9ba5b614e4a8548929c166292ed6d95382374d92",
+    "ref": "refs/orphan-candidates-20261023/10/fix/492-imad-hi-rc-64bit"
+  },
+  {
+    "sha": "cfadf764a394c2741015e4eb888ab2fc8525b3d9",
+    "ref": "refs/orphan-candidates-20261023/10/fix/mufu-ftz-462"
+  },
+  {
+    "sha": "fc39434a3f36643429439bfd753ff2c913a9dd06",
+    "ref": "refs/orphan-candidates-20261023/10/g1/glyph-old"
+  },
+  {
+    "sha": "856cc9772f5fbdddb1590f3572a271058cd7bba6",
+    "ref": "refs/orphan-candidates-20261023/10/gen/abstract"
+  },
+  {
+    "sha": "23c9c7e93040f6a71cd51e17f8b9c5ef8d475ad4",
+    "ref": "refs/orphan-candidates-20261023/10/gen/protocol"
+  },
+  {
+    "sha": "4a48b61325865b1edc2d021d621a51f0f515963d",
+    "ref": "refs/orphan-candidates-20261023/10/gen/retrieval"
+  },
+  {
+    "sha": "6cf6ea3826632d90bafd719db5b9c31f3a0231c3",
+    "ref": "refs/orphan-candidates-20261023/10/one-layer/glyph"
+  },
+  {
+    "sha": "213c7b7a899db43598d8cdeb620cf55067f47860",
+    "ref": "refs/orphan-candidates-20261023/10/tern/kt1-speed"
+  },
+  {
+    "sha": "7c165d86390c6e817d2c70e2b97959c51891a636",
+    "ref": "refs/orphan-candidates-20261023/10/train/encoder-r5"
+  },
+  {
+    "sha": "e9a0d05ac3d3a1efe0cefb132901f0e80f80dc77",
+    "ref": "refs/orphan-candidates-20261023/10/train/tgemm-cut1"
+  },
+  {
+    "sha": "b34345880a8610e96a0ccd36bda4479290c23341",
+    "ref": "refs/orphan-candidates-20261023/10/train/tgemm-cut2"
+  },
+  {
+    "sha": "950083197176978e94228d8a8abb12dbe5e8ea32",
+    "ref": "refs/orphan-candidates-20261023/11/fix/492-imad-hi-rc-64bit"
+  },
+  {
+    "sha": "c91dfc095235db058afedc52e0b7ca5df824606f",
+    "ref": "refs/orphan-candidates-20261023/22/prep-498"
+  },
+  {
+    "sha": "3ae95f3244265ba4039581dcfefc657343981d4f",
+    "ref": "refs/orphan-candidates-20261023/22/prep-509"
+  },
+  {
+    "sha": "7908e9883aff7410d43918a7089d061cc3928e59",
+    "ref": "refs/orphan-candidates-20261023/22/prep-513"
+  },
+  {
+    "sha": "f827829c4e5b03d85a078c6c3b45ac23a4ff7d92",
+    "ref": "refs/orphan-candidates-20261023/22/prep-514"
+  },
+  {
+    "sha": "c7086da992ff37e4cc955cbdc9c7f042e49d6f27",
+    "ref": "refs/orphan-candidates-20261023/27/bench/prime-race-gb10"
+  },
+  {
+    "sha": "9dee7b157ec769fae745f63b4022a1d17eb06adc",
+    "ref": "refs/orphan-candidates-20261023/27/bench/prime-race-opt"
+  },
+  {
+    "sha": "1cc9b6af85baf29ca2cb79c22133f1aa06eb2e0d",
+    "ref": "refs/orphan-candidates-20261023/27/feat/gpu-reconvergence-308"
+  },
+  {
+    "sha": "1a853f98fbe9bd267cd134e8d1c2a9278f88f406",
+    "ref": "refs/orphan-detached-20261023/08/10"
+  },
+  {
+    "sha": "9d115653f3996e727f963c363b3ffec4ad64e254",
+    "ref": "refs/orphan-detached-20261023/08/11"
+  },
+  {
+    "sha": "966c47cd3e3353341104a7eaa0d7ae2d78308558",
+    "ref": "refs/orphan-detached-20261023/08/12"
+  },
+  {
+    "sha": "5765db211b17009223032d6b03ea4eb52e512e49",
+    "ref": "refs/orphan-detached-20261023/08/13"
+  },
+  {
+    "sha": "db22a735eec57de1a8c7f4256f21aae2bcf8cb5b",
+    "ref": "refs/orphan-detached-20261023/08/32"
+  },
+  {
+    "sha": "807e8ccf8ac1c11ef0a0886400d88525a95b1588",
+    "ref": "refs/orphan-detached-20261023/08/5"
+  },
+  {
+    "sha": "4cfe7283642891b01f24f9455d562c33faa1e8ed",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w100"
+  },
+  {
+    "sha": "aee1f2b4665516c5ce55d7336c2539b1967a3878",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w101"
+  },
+  {
+    "sha": "4719c1da9f6ab6d45bd91d129d1ea9791327f876",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w102"
+  },
+  {
+    "sha": "8e41f6e3cccec77fdb43c719e21c0bff70286f5e",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w103"
+  },
+  {
+    "sha": "368dcb7a19fe240b681fe681809df27c7b50cffa",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w104"
+  },
+  {
+    "sha": "1a8cacbab79b00a00ffa8f90fe33f74317eb2ffc",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w105"
+  },
+  {
+    "sha": "a91ff6b10684f9e120c0e06ee353430f5da30069",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w106"
+  },
+  {
+    "sha": "54425bc4558a9f67fc1b3ed05be9a1b07ad35c53",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w107"
+  },
+  {
+    "sha": "56b72b0ae951134da99715970df62b11d48e7510",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w108"
+  },
+  {
+    "sha": "2818c92c023fbe4ad8234a920313232918baac08",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w110"
+  },
+  {
+    "sha": "114899e9256b71c958511348cbc380d2666df14f",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w111"
+  },
+  {
+    "sha": "4d728473fc9bf8b1c8f19fb598d93fe5d64e13ce",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w112"
+  },
+  {
+    "sha": "60491fdb5ae02f9a051894dac73280fa054ed50b",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w113"
+  },
+  {
+    "sha": "300c2a2fca8bc96fc2f94d1d82cc7198a9901131",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w114"
+  },
+  {
+    "sha": "9836beb0822b21290a69258d7775da3ed893bf39",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w115"
+  },
+  {
+    "sha": "13f82755b398e9a5f0d5a644e131c7fd980d237c",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w116"
+  },
+  {
+    "sha": "c11f352f4d53d4e190e5b5dced291736aff2fefb",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w117"
+  },
+  {
+    "sha": "c9387820e16bb9ffbcb5898c94dfd2de0d5cbc42",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w118"
+  },
+  {
+    "sha": "ed3e42b99b4cdeb9d9a1644113556c79ab8b45ed",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w119"
+  },
+  {
+    "sha": "d950afa6a8d05c90d8304743c7ab6a99e8531e91",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w120"
+  },
+  {
+    "sha": "83ef14c72c6e2435e563fbc8c3cc48bff37f6e7f",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w121"
+  },
+  {
+    "sha": "d8d6c6ea3bc36dd4ee3344be567d7cb8b05eae10",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w122"
+  },
+  {
+    "sha": "d01b50d88a55928aaad0d7c6acc03903e548aa56",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w123"
+  },
+  {
+    "sha": "ec2615047d436d81e5d9d2e8d35491b2eb2cc4c9",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w124"
+  },
+  {
+    "sha": "f1a293b084573c6cccd3b67bdf67f114eca77192",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w125"
+  },
+  {
+    "sha": "f1751d287aaa55c4704d24b0f15db96e9294c544",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w126"
+  },
+  {
+    "sha": "0ead5e93119c798ebf8f062568138e2317bbef49",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w127"
+  },
+  {
+    "sha": "cf4a44c99d5f1356e62517bdd05f7653b2d8ab4c",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w128"
+  },
+  {
+    "sha": "f515e93964d845f205ad92e7f62830bb7ca84d08",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w129"
+  },
+  {
+    "sha": "f746d07b730b4a9e606908a64c49f04c6a555a26",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w130"
+  },
+  {
+    "sha": "f5d71656b3fedd934f53aba1b2da439e2e8dcdd2",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w131"
+  },
+  {
+    "sha": "22b8c5e4f7d2e438dc29a6e653c9a1dff04b5936",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w132"
+  },
+  {
+    "sha": "4ab66ef1055812602f312b27856d8333c5f13c32",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w133"
+  },
+  {
+    "sha": "419f3c5cbd25385b4e801816a170058066346e86",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w134"
+  },
+  {
+    "sha": "8bbe990953df49dbdfe218266a1c7dee97b809f2",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w135"
+  },
+  {
+    "sha": "155bd61391af8a03b51b631f9ea285b52622706c",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w136"
+  },
+  {
+    "sha": "f753bd76311d4409d2b0fd04673ab5e3bc0267ae",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w137"
+  },
+  {
+    "sha": "744d6a0ac07d5a88e316e65bffcfb3ae807ebdd8",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w138"
+  },
+  {
+    "sha": "8192038e7aa863ef4557f8a18eae48e2f898a1c2",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w139"
+  },
+  {
+    "sha": "e8c46ac067e2e925b766f861187f490b8f479285",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w140"
+  },
+  {
+    "sha": "2b6d4280d263ef4c3d547dd4ca86053d1fd85084",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w141"
+  },
+  {
+    "sha": "74a7816c1a1323bdb1f4ee6ca10ce2d475fc9251",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w142"
+  },
+  {
+    "sha": "fadabcf4b3ca6ce89775da6bdf47a8c61cc068b6",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w143"
+  },
+  {
+    "sha": "6828e6919af77895f7de41ee84c3a2984ba8b643",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w144"
+  },
+  {
+    "sha": "2b165cda2aeb3cc6612759592a7aadebed9bd829",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w145"
+  },
+  {
+    "sha": "e0a24b604b0322d1f942ebada5407983d5b102bc",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w146"
+  },
+  {
+    "sha": "5f4c77ded29b47ff73f2e8500b4598a992527c14",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w147"
+  },
+  {
+    "sha": "df03dc1590ad2fb5b5f429932667a0df0d46740b",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w148"
+  },
+  {
+    "sha": "b59950bb86c384b1fd7d41c690a93205661fd17b",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w149"
+  },
+  {
+    "sha": "f06b654cf08269e32f56cf0519324d5ef3dcd940",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w150"
+  },
+  {
+    "sha": "11c82bf9e377d1adf436a606da17d205b2f125a2",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w151"
+  },
+  {
+    "sha": "1b977a19ac85680e7a623fb46f0bbb2987ffc9c8",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w152"
+  },
+  {
+    "sha": "12c36d8a888d2abf25a7d3d7b8718f1d3a54da28",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w153"
+  },
+  {
+    "sha": "11a33b4396cb9cc832dd1b7b299281728091b0c7",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w154"
+  },
+  {
+    "sha": "345a289426fddb85772a4e07058f85919f090015",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w155"
+  },
+  {
+    "sha": "e1917f3dd3972f1f9588b03ec5dc87d4cc0d8c95",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w156"
+  },
+  {
+    "sha": "9cd8a940aa74ab4bbf8fc8c2e2f1d8a478ff1395",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w157"
+  },
+  {
+    "sha": "8d5c7ba3416a43b2cc94d6c5e2a3caf0986d6e0b",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w158"
+  },
+  {
+    "sha": "2611f70bd7c70192047119f02056d6a2482e82a8",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w159"
+  },
+  {
+    "sha": "bd9d26b67727b8a2c65a514278837d13820fb987",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w160"
+  },
+  {
+    "sha": "cc41e1113a437f2295451478c2fe291684e43ffa",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w161"
+  },
+  {
+    "sha": "0a4916cdc1c24fb9505d67aab477a97bbd984a6e",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w162"
+  },
+  {
+    "sha": "f4d832d1752cbb5d083b2b558f98de9ec5ca19c3",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w163"
+  },
+  {
+    "sha": "b54c8c91e4b2059fe5dd1775706af1ddf4b50955",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w164"
+  },
+  {
+    "sha": "17d7010334038c2691efa27333deccea5a53c8dc",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w165"
+  },
+  {
+    "sha": "3c0a0c0ea699cc96edacc75e7449d8cfa9e68504",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w166"
+  },
+  {
+    "sha": "26e19c27e713b86c506ac7451c70da49d915d0b8",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w167"
+  },
+  {
+    "sha": "be2bad456f8970c3fe1fdfef0941afb47def9433",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w168"
+  },
+  {
+    "sha": "47d5895cfe8758f2226c09edcc537c6b8c88fceb",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w169"
+  },
+  {
+    "sha": "b7aec7699fea36f6e099e2351c116a7ee43a9051",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w170"
+  },
+  {
+    "sha": "9346fe14ccf7fd8b470280bf62c7a37ba8afb406",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w171"
+  },
+  {
+    "sha": "ed88d399af1faaada6944598b66911ba99aa35ca",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w172"
+  },
+  {
+    "sha": "09a0def496232bbdbe1a4d66926d549dc247acba",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w173"
+  },
+  {
+    "sha": "2645350eea7256632cee035fb8c4de3242fcf837",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w174"
+  },
+  {
+    "sha": "d4094fa74936de670a8e996b72fd1ca52f836649",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w175"
+  },
+  {
+    "sha": "60a0d7d2e1fb3fd5390cd7e15dbd90c6fb7498e5",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w176"
+  },
+  {
+    "sha": "c6fc156aa4dfb02a4884980a995f78db007853e2",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w177"
+  },
+  {
+    "sha": "56b6e38f715bc6d138d8e67958f1a17d80431eaa",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w178"
+  },
+  {
+    "sha": "23bbfe6584536424536e832cbf2d6901530f3ead",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w179"
+  },
+  {
+    "sha": "56b200f693b6459b1f8b3ce56cc66284e8c22107",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w180"
+  },
+  {
+    "sha": "070833501babdb88e5992db9429fb3221d11c4d1",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w181"
+  },
+  {
+    "sha": "0c12e52f0e562edaf62faeccfcc75ed6e03a2f81",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w182"
+  },
+  {
+    "sha": "15ea6360f3ed4fde15c0cdf15fa0f8782e4c7f79",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w183"
+  },
+  {
+    "sha": "6c144b4fae5efa0a6b45b4ac6c91794e4b91535e",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w184"
+  },
+  {
+    "sha": "4f1c90c9f7e419368804889dc6adb91591560ed9",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w185"
+  },
+  {
+    "sha": "a5eb93ea0ca5b09e717b4910b51a02a760e128d8",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w186"
+  },
+  {
+    "sha": "e404b9cf3901ab55c531796d35e65dcfe9769fe0",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w187"
+  },
+  {
+    "sha": "cff3c8a0aa4d5dcf0fbdf254fb823fe3b7bdc3fb",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w188"
+  },
+  {
+    "sha": "2bb4555608ec3fc87aa62d726935ce5affac6ff7",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w189"
+  },
+  {
+    "sha": "8d85c3682bb0991e4c3a384734313db3fe978f0c",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w190"
+  },
+  {
+    "sha": "19343794a7bbb852e912e736142421f4feef5aed",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w191"
+  },
+  {
+    "sha": "9058d321f026173ca17c3ea57eaf9ddd2e2b57a8",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w192"
+  },
+  {
+    "sha": "ac02b89ae1e61654c242bdaf066c6a5851e84eee",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w193"
+  },
+  {
+    "sha": "ceba40459c0acc789d2c2c3c4c715494bd4a99fd",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w194"
+  },
+  {
+    "sha": "9f3546f30bb4d3d44cd2f7f4b7db2315cba35dab",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w195"
+  },
+  {
+    "sha": "a25d30aa4b640697b1abd0ac91d45148e718ebcf",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w196"
+  },
+  {
+    "sha": "bb8b0d9ac369f299bf8f8bbcef7760303653d939",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w197"
+  },
+  {
+    "sha": "736851150dda5f33cd971baf40716480e1daf3f8",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w198"
+  },
+  {
+    "sha": "025a2876278255d57106acafc09324f7a8b72177",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w199"
+  },
+  {
+    "sha": "5bd8ef139136acca827f2e314fec0b850ff9185d",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w98"
+  },
+  {
+    "sha": "430f5ce3c5c547a756597b8286e8f929a7ff14e0",
+    "ref": "refs/orphan-imported-snapshots-20261023/08/w99"
+  },
+  {
+    "sha": "77d3b022eb77bc374abb9ac7a5d8502aff5d5126",
+    "ref": "refs/orphan-imported-snapshots-20261023/10/w200"
+  },
+  {
+    "sha": "ba78967bc1ca40d45a8a1ee9367ec30817f65d53",
+    "ref": "refs/orphan-imported-snapshots-20261023/10/w201"
+  },
+  {
+    "sha": "60afe8a87c04f59a3440a7ebfd25dcf1f0418eb0",
+    "ref": "refs/orphan-imported-snapshots-20261023/10/w202"
+  },
+  {
+    "sha": "2ff6659bf1dfb6334f8abeadbc1d3048fb5f3396",
+    "ref": "refs/orphan-imported-snapshots-20261023/10/w203"
+  },
+  {
+    "sha": "04afc625b3d418a9aed376c473bbcca0db597d63",
+    "ref": "refs/orphan-imported-snapshots-20261023/10/w204"
+  },
+  {
+    "sha": "ba92503aed121a80dbb65160a8f4cac2ef68a93d",
+    "ref": "refs/orphan-imported-snapshots-20261023/24/w208"
+  },
+  {
+    "sha": "7d7e50debd61fb0b3d123fa97b3e48b20cecdfbc",
+    "ref": "refs/orphan-imported-snapshots-20261023/25/w209"
+  }
+]

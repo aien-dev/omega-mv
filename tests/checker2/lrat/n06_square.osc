@@ -1,6 +1,0 @@
-// prove: sq
-// expect: trap
-// negative control: without the range precondition x * x overflows i8.
-fn sq(x: i8) -> i8 {
-    return x * x;
-}

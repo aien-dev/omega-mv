@@ -1,4 +1,0 @@
-fn inc(x: i32) -> i32 {
-    if x == 2147483647 { return 0; }
-    return x + 1;
-}

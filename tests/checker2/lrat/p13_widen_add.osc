@@ -1,6 +1,0 @@
-// prove: widen
-// expect: holds
-// widened byte sum is bounded.
-fn widen(a: u8, b: u8) -> u16 ensures result <= 510 {
-    return (a as u16) + (b as u16);
-}

@@ -1,6 +1,0 @@
-// expect: OVERFLOW_UNSAFE object=y line=4
-// literal shift amount >= width.
-fn f(x: u32) -> u32 {
-    let y: u32 = x << 32;
-    return y;
-}

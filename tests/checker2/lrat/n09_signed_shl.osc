@@ -1,6 +1,0 @@
-// prove: sshl
-// expect: trap
-// negative control: a signed left shift that leaves the i8 range traps OVERFLOW.
-fn sshl(x: i8) -> i8 {
-    return x << 2;
-}

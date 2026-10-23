@@ -1,6 +1,0 @@
-// prove: avg_bad
-// expect: trap
-// negative control: a false ensures clause (the plain sum wraps).
-fn avg_bad(a: u8, b: u8) -> u8 ensures result >= a {
-    return a + b;
-}

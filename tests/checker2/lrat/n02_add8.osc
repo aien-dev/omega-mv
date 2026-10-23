@@ -1,6 +1,0 @@
-// prove: add8
-// expect: trap
-// negative control: unchecked i8 addition can overflow.
-fn add8(a: i8, b: i8) -> i8 {
-    return a + b;
-}

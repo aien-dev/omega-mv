@@ -1,0 +1,337 @@
+[
+  {
+    "commit": "a8714df3c37e608a5186bb7b82812e40fedd49d9",
+    "branch": "backup/e1-gap-close-a8714df",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "44e12ec1fda6b08ce453610ce42963b6bef1a057",
+    "branch": "c3-fix-acq",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "53275b557741ae46369e80e57593137b68a60c98",
+    "branch": "c343-local",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "a8714df3c37e608a5186bb7b82812e40fedd49d9",
+    "branch": "c3rdx-v1",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "ef9076d60a0e207faf7ee8d82088260fc44cad86",
+    "branch": "cand3/r15-energy-residency",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "b48d1322b9a1cbc75768adfd30337b79b45bd460",
+    "branch": "e1-gap-close",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "5765db211b17009223032d6b03ea4eb52e512e49",
+    "branch": "e1-gap-close-2",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "c9c326bfa8631977edaf2c69c5e3c419525672ba",
+    "branch": "fastload/fast-nan-scan",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "c759af8a58e534ab8b0fadcd80c7c21313b1121b",
+    "branch": "feat/bf16-warps-any-k",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "25a0c5f1d2d677adbc6c2ba229ee2776d360dfc7",
+    "branch": "feat/forge-v1-numeric",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "31b2fcdebb70c4f331c6df458dee504f4ae43d48",
+    "branch": "feat/path-trajectory",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "1a853f98fbe9bd267cd134e8d1c2a9278f88f406",
+    "branch": "fix/astra-world-command-visibility",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "cfadf764a394c2741015e4eb888ab2fc8525b3d9",
+    "branch": "fix/mufu-ftz-462",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "21392eea539571ae666924a8513ea1d0c35caf57",
+    "branch": "fix/omega-gpu-engine-first-cut",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "3ad83b482f7c15870f73928313698454d5ee83ba",
+    "branch": "fix/visor-realization-program",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "6fa4d971ca4d6317a13ddd2211bbe7277b8f6966",
+    "branch": "hive/CHIPWAIT-1",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "834b53578a71f60ffa571e3e6280576ea667d1bb",
+    "branch": "hive/CHIPWAIT-1-mutants",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "1a853f98fbe9bd267cd134e8d1c2a9278f88f406",
+    "branch": "hive/CHIPWAIT-1c",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "c80111b5018ac7b79ed073bdf90739a9c307ab0d",
+    "branch": "hive/CHIPWAIT-2-omega",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "90891f939063fce0e4c5118c4830e83695ab359f",
+    "branch": "hive/E1B-LDST-DEVERR",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "f4a49b4c0d2dacba442ba8aa4fdfa0ecff9edc1d",
+    "branch": "lane22/osc1-prerebase-backup",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "01615e087645473bc09d2217289c48ee2254b1a4",
+    "branch": "local/t2-transc",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "065d4a6219269b3bb92a36aa7052e35a5ece85b4",
+    "branch": "lt/cw1-mut-rebased",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "29c90d2a397979452e2a47f9e0321a4f431030f5",
+    "branch": "lt/cw1-rebased",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "1d0c7f940eb8ed479c9cb8a7dd83d82a9a255c38",
+    "branch": "lt/cw1c-camp",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "dd16e45f952f9b1b460b003c0388053c6a76b23e",
+    "branch": "lt/cw1c-diag",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "dfc424c70c6faebf8a81b4b93fe3f76ed0d210b8",
+    "branch": "lt/cw2-rebased",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "e69811486fcd18212830b440b65df5dbf1aff666",
+    "branch": "own30b/a16",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "848a999baf208ffc8c14872803cd56da6fb829d4",
+    "branch": "own30b/a16b",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "d9b9b6a2564ee93f1b30b71b0427b7f9ae685024",
+    "branch": "own30b/decode-mega",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "f38652b93899fbb881e98b4586270fb4c65bb697",
+    "branch": "own30b/fp4",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "848a999baf208ffc8c14872803cd56da6fb829d4",
+    "branch": "own30b/rc2",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "4f3d45e7f370c22169865c97445c6cadbd241342",
+    "branch": "own30b/rc3",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "802a0101ebf13944afeb8be8e4c8f71be2348397",
+    "branch": "own30b/resident",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "063e6d12fac1bb49ac4d88bfb6f5ea3eff2939ff",
+    "branch": "own30b/spec-batch",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "b9ae009620e26acb897c5350f72449c9803086fa",
+    "branch": "own30b/spec-exact",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "76da69486fb19686963f29b3e3edffd1312a58a6",
+    "branch": "polyglot/asm",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "570d51263a7e04471981ac68c8cffdaf9be9ab8f",
+    "branch": "polyglot/audit",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "4c62e4b73bbae4bf56ebc8ee412cc7fa6fdd57c2",
+    "branch": "polyglot/encoder",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "8b0befeb13ebd4f3789417633e1f9932f6a5bf7f",
+    "branch": "polyglot/harness",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "94a464e7fe3cecb8f855e3f496192b0ea38f5f53",
+    "branch": "polyglot/mojo",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "def197d19de53b6564b1fb4bffc932d8a001f2a8",
+    "branch": "polyglot/review",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "fa18e58a86a7402de785e07044f5f444a1dcca3c",
+    "branch": "pr309",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "fa18e58a86a7402de785e07044f5f444a1dcca3c",
+    "branch": "pr309b",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "2e175d60397f66e9fbd4820572190b1c71eb9d13",
+    "branch": "seed/c2om",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "9a0d533daf81292b8a8e1f6e2d3f5e1945aab77d",
+    "branch": "serve/q36-prefill-v2",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "06e550f460128d1aa63dca6e1aa30810fc13df59",
+    "branch": "speed3/wm-combined",
+    "source_repository": "/home/drakestapleton/workspace/omega"
+  },
+  {
+    "commit": "45133c2a7fdc45fc9447d604e0ad8b5285fd42d8",
+    "branch": "fix/471-fp8-libm-free",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "9ba5b614e4a8548929c166292ed6d95382374d92",
+    "branch": "fix/492-imad-hi-rc-64bit",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "cfadf764a394c2741015e4eb888ab2fc8525b3d9",
+    "branch": "fix/mufu-ftz-462",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "fc39434a3f36643429439bfd753ff2c913a9dd06",
+    "branch": "g1/glyph-old",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "856cc9772f5fbdddb1590f3572a271058cd7bba6",
+    "branch": "gen/abstract",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "23c9c7e93040f6a71cd51e17f8b9c5ef8d475ad4",
+    "branch": "gen/protocol",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "4a48b61325865b1edc2d021d621a51f0f515963d",
+    "branch": "gen/retrieval",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "6cf6ea3826632d90bafd719db5b9c31f3a0231c3",
+    "branch": "one-layer/glyph",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "213c7b7a899db43598d8cdeb620cf55067f47860",
+    "branch": "tern/kt1-speed",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "7c165d86390c6e817d2c70e2b97959c51891a636",
+    "branch": "train/encoder-r5",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "e9a0d05ac3d3a1efe0cefb132901f0e80f80dc77",
+    "branch": "train/tgemm-cut1",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "b34345880a8610e96a0ccd36bda4479290c23341",
+    "branch": "train/tgemm-cut2",
+    "source_repository": "/home/drakestapleton/workspace/omega-457-fix"
+  },
+  {
+    "commit": "950083197176978e94228d8a8abb12dbe5e8ea32",
+    "branch": "fix/492-imad-hi-rc-64bit",
+    "source_repository": "/home/drakestapleton/workspace/omega-492"
+  },
+  {
+    "commit": "c91dfc095235db058afedc52e0b7ca5df824606f",
+    "branch": "prep-498",
+    "source_repository": "/home/drakestapleton/workspace/omega-lt-509"
+  },
+  {
+    "commit": "3ae95f3244265ba4039581dcfefc657343981d4f",
+    "branch": "prep-509",
+    "source_repository": "/home/drakestapleton/workspace/omega-lt-509"
+  },
+  {
+    "commit": "7908e9883aff7410d43918a7089d061cc3928e59",
+    "branch": "prep-513",
+    "source_repository": "/home/drakestapleton/workspace/omega-lt-509"
+  },
+  {
+    "commit": "f827829c4e5b03d85a078c6c3b45ac23a4ff7d92",
+    "branch": "prep-514",
+    "source_repository": "/home/drakestapleton/workspace/omega-lt-509"
+  },
+  {
+    "commit": "c7086da992ff37e4cc955cbdc9c7f042e49d6f27",
+    "branch": "bench/prime-race-gb10",
+    "source_repository": "/home/drakestapleton/workspace/omega-reconv"
+  },
+  {
+    "commit": "9dee7b157ec769fae745f63b4022a1d17eb06adc",
+    "branch": "bench/prime-race-opt",
+    "source_repository": "/home/drakestapleton/workspace/omega-reconv"
+  },
+  {
+    "commit": "1cc9b6af85baf29ca2cb79c22133f1aa06eb2e0d",
+    "branch": "feat/gpu-reconvergence-308",
+    "source_repository": "/home/drakestapleton/workspace/omega-reconv"
+  }
+]
