@@ -498,7 +498,7 @@ These operations do not form a sandbox: they operate with the process's
 existing permissions. They expose no pointer values and no arbitrary syscall.
 
 In signatures, `fd`, `flags`, `mode`, `pid`, `signal`, `events`, `domain`,
-`kind`, `protocol`, `backlog`, `target`, `options` and `whence` are `int`.
+`kind`, `protocol`, `backlog`, `target`, `options`, `level`, `option` and `whence` are `int`.
 Offsets, byte counts, capacities and argument indices are `ulong`. File offsets
 and time intervals are `long`. `A` is a `uchar` array. Every slice checks
 `n <= len A` and `off <= len A - n` before kernel access, otherwise trap 3
@@ -515,6 +515,8 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `unlink A off n` | Remove the named file. |
 | `makedir A off n mode` | Create a directory. |
 | `rmdir A off n` | Remove an empty directory. |
+| `cwd A off capacity` | Write the current directory into writable bytes. Return the kernel byte count including the trailing zero byte. A short buffer returns a negative error. |
+| `readlnk PATH off n OUT off capacity` | Read a symbolic link through a checked, nonempty path into writable output bytes. Return the byte count without a terminator. A result equal to capacity may be truncated. |
 | `getdnts fd A off n` | Write raw Linux `getdents64` records; return bytes written. |
 | `fstat fd A off n` | Write the 128-byte Linux ARM64 stat structure; requires capacity at least 128. |
 | `renames A off n flags` | Rename the two paths in a packed list using `renameat2`; flag 1 refuses replacement. |
@@ -527,6 +529,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `listen fd backlog` | Listen for connections. |
 | `accept fd flags` | Accept a connection with `accept4`; return descriptor, without peer-address output. |
 | `sockname fd A off n` | Write socket address bytes; return the full address length, which may exceed capacity when truncated. |
+| `sockopt fd level option A off n` | Set a socket option from a readonly byte slice. Option values and layouts follow the Linux ARM64 interface. |
 | `recv fd A off n flags` | Receive into a writable slice. |
 | `send fd A off n flags` | Send a slice with `MSG_NOSIGNAL` added, so a closed peer returns an error. |
 | `waitio fd events interval` | Poll one descriptor. Return readiness bits, zero on timeout, or negative errno. Interval is nanoseconds; negative means infinite. Events outside 0..65535 trap 3. |
@@ -546,6 +549,16 @@ Paths are at most 4095 bytes. Embedded zero bytes and longer paths trap 3
 before a kernel operation. The compiler privately copies and terminates paths
 at the Linux boundary; Omega array lengths remain explicit. Private stack
 space is checked against the existing stack floor before writing.
+
+`readlnk` additionally rejects an empty path with trap 3. Its path may be a
+readonly slice; its output must be writable. Both slices receive the ordinary
+array bounds and byte-type checks. The private path copy is complete before
+the kernel writes the output, so overlapping path and output slices are safe.
+`cwd` requires writable bytes. It preserves the kernel's count convention:
+the returned count includes its trailing zero byte. `readlnk` never appends a
+zero byte. These operations are Linux `getcwd` and `readlinkat(AT_FDCWD)`.
+`sockopt` is Linux `setsockopt`; it accepts readonly option bytes and does not
+provide pointer values or arbitrary system-call access.
 
 A packed list is a little-endian `u16` count followed by that many records,
 each a little-endian `u16` byte length and those bytes. There is no padding or

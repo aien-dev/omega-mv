@@ -1,0 +1,125 @@
+note cwd includes its trailing zero in the count; readlnk returns raw bytes without a terminator.
+global here uchar 4096
+global target uchar 4096
+text procwd "/proc/self/cwd"
+text padded "_/proc/self/cwd_"
+text procexe "/proc/self/exe"
+text suffix "/location"
+text absent "missing-link-target"
+text regular "regular-file"
+fn localcwd result edit uchar 4096 to long
+ret add long 7 cwd result 3 4000
+end
+fn locallnk path view uchar 16 result edit uchar 4096 to long
+ret add long 11 readlnk path 1 14 result 7 4000
+end
+fn main to int
+local = new uchar 4096 85
+pathcopy = new uchar 16 0
+n = sub localcwd local 7
+if or le n 1 gt n 4000
+ret 1
+end
+if or ne get local 2 85 ne get local add 3 ulong n 85
+ret 2
+end
+if or ne get local 3 47 ne get local add 2 ulong n 0
+ret 3
+end
+m = cwd here 0 ulong n
+if ne m n
+ret 4
+end
+for i ulong ulong n
+if ne get here i get local add 3 i
+ret 5
+end
+end
+if ne cwd here 0 sub ulong n 1 neg long 34
+ret 6
+end
+if ne cwd here 0 0 neg long 34
+ret 7
+end
+for i ulong len target
+put target i 85
+end
+m = readlnk procwd 0 len procwd target 5 4000
+if ne m sub n 1
+ret 8
+end
+for i ulong ulong m
+if ne get target add 5 i get local add 3 i
+ret 9
+end
+end
+if or ne get target 4 85 ne get target add 5 ulong m 85
+ret 10
+end
+m = readlnk procwd 0 len procwd target 0 1
+if or ne m 1 ne get target 0 47
+ret 11
+end
+if ne readlnk procwd 0 len procwd target 0 0 neg long 22
+ret 12
+end
+m = readlnk procexe 0 len procexe target 0 len target
+if ne m long add sub ulong n 1 len suffix
+ret 13
+end
+for i ulong sub ulong n 1
+if ne get target i get local add 3 i
+ret 14
+end
+end
+for i ulong len suffix
+if ne get target add sub ulong n 1 i get suffix i
+ret 15
+end
+end
+if ne readlnk absent 0 len absent target 0 len target neg long 2
+ret 16
+end
+fd = fopen regular 0 len regular 194 384
+if lt fd 0
+ret 17
+end
+r = fclose int fd
+if ne r 0
+ret 18
+end
+r = readlnk regular 0 len regular target 0 len target
+if ne r neg long 22
+ret 19
+end
+r = unlink regular 0 len regular
+if ne r 0
+ret 20
+end
+for i ulong len padded
+put pathcopy i get padded i
+end
+m = sub locallnk pathcopy local 11
+if ne m sub n 1
+ret 21
+end
+for i ulong ulong m
+if ne get local add 7 i get here i
+ret 22
+end
+end
+note The private path copy permits the output slice to overlap the input path safely.
+for i ulong len procwd
+put target i get procwd i
+end
+m = readlnk target 0 len procwd target 0 len target
+if ne m sub n 1
+ret 23
+end
+for i ulong ulong m
+if ne get target i get here i
+ret 24
+end
+end
+ret 0
+end

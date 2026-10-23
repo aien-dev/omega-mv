@@ -168,3 +168,175 @@ EOF
 test ! -e "$stage/must-not-exist"
 test ! -e "$stage/a"
 printf 'PASS %s bounds, packet, mutability, type and function-mode negative controls\n' "$count"
+runtime cwd-overflow <<'OM'
+global buf uchar 8
+fn main to int
+r = cwd buf 18446744073709551615 1
+ret 1
+end
+OM
+runtime cwd-capacity <<'OM'
+global buf uchar 8
+fn main to int
+r = cwd buf 1 8
+ret 1
+end
+OM
+runtime readlnk-empty <<'OM'
+text path "/proc/self/cwd"
+global buf uchar 8
+fn main to int
+r = readlnk path 0 0 buf 0 8
+ret 1
+end
+OM
+runtime readlnk-zero <<'OM'
+global path uchar 3
+global buf uchar 8
+fn main to int
+put path 0 97
+put path 2 98
+r = readlnk path 0 3 buf 0 8
+ret 1
+end
+OM
+runtime readlnk-length <<'OM'
+global path uchar 4096
+global buf uchar 8
+fn main to int
+for i ulong len path
+put path i 97
+end
+r = readlnk path 0 len path buf 0 8
+ret 1
+end
+OM
+runtime readlnk-path-bounds <<'OM'
+text path "/proc/self/cwd"
+global buf uchar 8
+fn main to int
+r = readlnk path 18446744073709551615 1 buf 0 8
+ret 1
+end
+OM
+runtime readlnk-output-bounds <<'OM'
+text path "/proc/self/cwd"
+global buf uchar 8
+fn main to int
+r = readlnk path 0 len path buf 1 8
+ret 1
+end
+OM
+runtime sockopt-bounds <<'OM'
+text buf "abcd"
+fn main to int
+r = sockopt neg int 1 1 2 buf 1 4
+ret 1
+end
+OM
+compile_error cwd-readonly 20 <<'OM'
+text buf "abcd"
+fn main to int
+r = cwd buf 0 4
+ret 0
+end
+OM
+compile_error cwd-view 20 <<'OM'
+fn probe buf view uchar 4 to long
+ret cwd buf 0 4
+end
+fn main to int
+ret 0
+end
+OM
+compile_error cwd-type 7 <<'OM'
+global buf uint 8
+fn main to int
+r = cwd buf 0 8
+ret 0
+end
+OM
+compile_error cwd-offset-type 7 <<'OM'
+global buf uchar 8
+fn main to int
+r = cwd buf int 0 8
+ret 0
+end
+OM
+compile_error readlnk-readonly 20 <<'OM'
+text path "/proc/self/cwd"
+text buf "abcd"
+fn main to int
+r = readlnk path 0 len path buf 0 4
+ret 0
+end
+OM
+compile_error readlnk-view 20 <<'OM'
+text path "/proc/self/cwd"
+fn probe buf view uchar 4 to long
+ret readlnk path 0 len path buf 0 4
+end
+fn main to int
+ret 0
+end
+OM
+compile_error readlnk-path-type 7 <<'OM'
+global path ulong 8
+global buf uchar 8
+fn main to int
+r = readlnk path 0 8 buf 0 8
+ret 0
+end
+OM
+compile_error readlnk-output-type 7 <<'OM'
+text path "/proc/self/cwd"
+global buf ulong 8
+fn main to int
+r = readlnk path 0 len path buf 0 8
+ret 0
+end
+OM
+compile_error sockopt-fd-type 7 <<'OM'
+text buf "abcd"
+fn main to int
+r = sockopt long 0 1 2 buf 0 4
+ret 0
+end
+OM
+compile_error sockopt-level-type 7 <<'OM'
+text buf "abcd"
+fn main to int
+r = sockopt 0 long 1 2 buf 0 4
+ret 0
+end
+OM
+compile_error sockopt-option-type 7 <<'OM'
+text buf "abcd"
+fn main to int
+r = sockopt 0 1 long 2 buf 0 4
+ret 0
+end
+OM
+compile_error sockopt-array-type 7 <<'OM'
+global buf uint 4
+fn main to int
+r = sockopt 0 1 2 buf 0 4
+ret 0
+end
+OM
+compile_error cwd-function-mode 9 <<'OM'
+fn probe buf edit uchar 4096 to long
+ret cwd buf 0 4096
+end
+OM
+compile_error readlnk-function-mode 9 <<'OM'
+fn probe path view uchar 4 buf edit uchar 8 to long
+ret readlnk path 0 4 buf 0 8
+end
+OM
+compile_error sockopt-function-mode 9 <<'OM'
+fn probe buf view uchar 4 to long
+ret sockopt 0 1 2 buf 0 4
+end
+OM
+printf 'PASS %s total host negative controls, including cwd, readlnk and sockopt\n' "$count"
