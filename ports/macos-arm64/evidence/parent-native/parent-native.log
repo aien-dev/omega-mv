@@ -1,0 +1,76 @@
+./CONTRACT.md: OK
+./REFERENCES.md: OK
+./REPLAY.md: OK
+./adapter-linux-arm64: OK
+./adapter.om: OK
+./bitwise.elf: OK
+./bitwise.macho: OK
+./bitwise.om: OK
+./branch.elf: OK
+./branch.macho: OK
+./branch.om: OK
+./call-unsupported.om: OK
+./compiler.sha256: OK
+./control-hello-address.elf: OK
+./control-hello-address.macho: OK
+./control-hello-address.om: OK
+./control-linux-exit.elf: OK
+./control-linux-exit.macho: OK
+./control-linux-exit.om: OK
+./control-unknown-accepted.elf: OK
+./control-unknown-accepted.macho: OK
+./control-unknown-accepted.om: OK
+./control-wrong-entry.elf: OK
+./control-wrong-entry.macho: OK
+./control-wrong-entry.om: OK
+./control-wrong-error.elf: OK
+./control-wrong-error.macho: OK
+./control-wrong-error.om: OK
+./divide.elf: OK
+./divide.macho: OK
+./divide.om: OK
+./divzero.elf: OK
+./divzero.macho: OK
+./divzero.om: OK
+./excess.elf: OK
+./excess.om: OK
+./gate-final.exit: OK
+./gate-final.log: OK
+./hello.elf: OK
+./hello.macho: OK
+./hello.om: OK
+./largest.elf: OK
+./largest.macho: OK
+./largest.om: OK
+./mac-replay.sh: OK
+./memory-unsupported.om: OK
+./overflow.elf: OK
+./overflow.macho: OK
+./overflow.om: OK
+./return42.elf: OK
+./return42.macho: OK
+./return42.om: OK
+./shift.elf: OK
+./shift.macho: OK
+./shift.om: OK
+./source-commit.txt: OK
+./spark-pins.txt: OK
+./spark-qualification.tar: OK
+./spark-summary.json: OK
+./stdin-unsupported.om: OK
+./sum.elf: OK
+./sum.macho: OK
+./sum.om: OK
+PASS native return42 exit 42
+PASS native sum exit 45
+PASS native branch exit 23
+PASS native overflow exit 101
+PASS native bitwise exit 58
+PASS native divide exit 25
+PASS native divzero exit 102
+PASS native shift exit 24
+PASS native hello exit 0
+PASS native largest exit 203
+PASS native hello closed stdout exit 74
+PASS native compiled hello-address control caught
+PASS 12 native behavior cases. Bounded L615 milestone only; issue634 OPEN; independent review pending.

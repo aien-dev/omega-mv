@@ -1,0 +1,25 @@
+{
+  "source_head": "f43e6755d95a9783040b5ec2147ae519e9b01a11",
+  "adapter_sha256": "b4c02c7dc2c14a420bf305cd3dbf2a4880da8c4e40c7ac8387d4a609935d56fb",
+  "native_gate_exit": 0,
+  "native_cases": 12,
+  "case_exits": {
+    "divzero.exit": 102,
+    "return42.exit": 42,
+    "hello.closed.exit": 74,
+    "branch.exit": 23,
+    "control-hello-address.exit": 0,
+    "overflow.exit": 101,
+    "shift.exit": 24,
+    "divide.exit": 25,
+    "sum.exit": 45,
+    "bitwise.exit": 58,
+    "largest.exit": 203,
+    "hello.exit": 0
+  },
+  "hello_stdout_hex": "68656c6c6f206f6d656761206d61630a",
+  "address_control_stdout_hex": "6f206f6d656761206d61630a010080d2",
+  "scope": "bounded L615 target milestone only; not platform installer/ABI/general compiler qualification",
+  "review": "pending",
+  "receipt_dir": "native-receipt.yvYtsk"
+}
