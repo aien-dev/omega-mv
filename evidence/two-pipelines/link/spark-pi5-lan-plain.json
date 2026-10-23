@@ -1,0 +1,1 @@
+{"label":"spark-pi5-1GbE-plain-tcp","result":"FAIL: connect 192.168.1.192:47258 timed out; the Pi firewall (ufw) admits new ports only on tailscale0 and LAN 22/53/80/5353; measured over the tailnet instead (spark-pi5-tailnet.json)"}
