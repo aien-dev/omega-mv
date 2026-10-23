@@ -1,7 +1,7 @@
 # tests/gates/omega-r11-own-hold.gate
 # Mirrors hosted: rx-host.yml chip-only-declared: test-r11-own-hold is declared SKIP on GitHub (spark-only: its q1-abc case starts the R11 living run, which needs both Spark core classes, X925 + A725, no GPU; omega #425)
 # requires: aarch64 + bare_metal because the living systems need both Spark CPU core classes on the real machine; a hosted or virtual AArch64 runner does not qualify.
-# Checks who owns the quiet flag (tests/runtime/r11_own_hold_test.sh): load-independent by design. The binary decides the flag before the load average, so a busy judge cannot fail the gate; the living-run timing part runs only on a quiet machine and the owner case line says whether it ran or was held back by load (L336).
+# Checks who owns the quiet flag (tests/runtime/r11_own_hold_test.sh): the non-owner cases must be refused by the flag, and the owner case must RUN the living run inside a spark-window measurement window (L345). A held-back or skipped owner fails; there is no load-independent pass.
 gate: OMEGA-R11-OWN-HOLD
 manifest_version: 2
 owner: omega
