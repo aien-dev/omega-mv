@@ -1,0 +1,6 @@
+fn f a u32 to u32
+if gt a 10
+trap 3
+end
+ret a
+end

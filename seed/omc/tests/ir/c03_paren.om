@@ -1,0 +1,3 @@
+fn f a i32 to i32
+ret neg (add a 1)
+end

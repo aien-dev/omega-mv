@@ -1,0 +1,6 @@
+fn f a u32 to u32
+if and (gt a 100) (lt a 200)
+ret 1
+end
+ret 0
+end

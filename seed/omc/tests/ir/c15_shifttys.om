@@ -1,0 +1,4 @@
+fn f a u64 s u8 to u64
+r = shl a s
+ret shr r u8 2
+end

@@ -1,0 +1,7 @@
+fn add1 a u32 to u32
+ret add a 1
+end
+fn f b u32 to u32
+c = add1 b
+ret mul c 2
+end

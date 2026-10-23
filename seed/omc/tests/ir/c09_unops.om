@@ -1,0 +1,4 @@
+fn f a u32 to u32
+b = bnot a
+ret neg (i32 b)
+end

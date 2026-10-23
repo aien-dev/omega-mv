@@ -1,0 +1,4 @@
+fn f a bool b bool to bool
+c = or a b
+ret and c (not a)
+end

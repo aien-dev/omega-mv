@@ -1,0 +1,7 @@
+fn f a u32 to u32
+s = u32 0
+for i u32 a
+s = add s i
+end
+ret s
+end

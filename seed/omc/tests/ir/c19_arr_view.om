@@ -1,0 +1,7 @@
+fn sum v view u32 to u32
+s = u32 0
+for i u32 len v
+s = add s get v i
+end
+ret s
+end

@@ -1,0 +1,24 @@
+PASS fixpoint c1803273dfdb0b69a2154e3afdebf253b49644414483426d99782b4c701b2bee  build/seed/ir/stage3
+OK bytes=133 functions=1
+PASS dev01 identical; checker2 ACCEPT
+OK bytes=120 functions=1
+PASS dev02 identical; checker2 ACCEPT
+OK bytes=243 functions=1
+PASS dev03 identical; checker2 ACCEPT
+OK bytes=205 functions=1
+PASS dev04 identical; checker2 ACCEPT
+OK bytes=58 functions=1
+PASS dev05 identical; checker2 ACCEPT
+OK bytes=55 functions=1
+PASS dev06 identical; checker2 ACCEPT
+OK bytes=244 functions=1
+PASS dev07 identical; checker2 ACCEPT
+OK bytes=331 functions=1
+PASS dev08 identical; checker2 ACCEPT
+OK bytes=203 functions=1
+PASS dev09 identical; checker2 ACCEPT
+OK bytes=48 functions=1
+PASS dev10 identical; checker2 ACCEPT
+PASS mul-to-add mutant differs
+SCALAR_IR_CHECKPOINT 10/10; structs/multifunction/refusal hardening still open
+RC=0

@@ -1,0 +1,6 @@
+fn f a u32 to u32
+v = new u32 4
+put v 0 a
+put v 1 add a 1
+ret add get v 0 get v 1
+end
