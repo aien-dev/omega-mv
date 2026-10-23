@@ -43,3 +43,11 @@ printf 'PASS native cwd and readlnk offsets, counts, truncation, errno and priva
 compile sockopt
 (cd "$stage"; timeout 10 ./sockopt)
 printf 'PASS native socket options with independent bind behavior, readonly input and errno\n'
+compile device
+"$stage/device"
+printf 'PASS native checked device ioctl composed with host files and pipes\n'
+compile mapping
+(cd "$stage"; ./mapping)
+test ! -e "$stage/mapped.bin"
+compile memcheck
+(cd "$stage"; ./memcheck "$root/seed/out/omc")

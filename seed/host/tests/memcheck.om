@@ -1,0 +1,137 @@
+note Native compiler refusal driver. argv[1] names the exact compiler under test.
+text infile "case.om"
+text outfile "case.elf"
+text errfile "case.err"
+text passed "PASS 16 device/mapping compiler refusals\n"
+text a "global b uint 4\nfn main to int\nr = devctl int 0 uint 21531 b 0 4\nret 0\nend\n"
+text b "global b uchar 4\nfn main to int\nq = uint 21531\nr = devctl int 0 q b 0 4\nret 0\nend\n"
+text c "global b uchar 4\nfn main to int\nr = devctl int 0 uint 1 b 0 4\nret 0\nend\n"
+text d "text b \"four\"\nfn main to int\nr = devctl int 0 uint 21531 b 0 4\nret 0\nend\n"
+text e "global b uchar 4\nfn main to int\nr = devctl long 0 uint 21531 b 0 4\nret 0\nend\n"
+text f "global b uchar 4\nfn main to int\nr = devctl int 0 ulong 21531 b 0 4\nret 0\nend\n"
+text g "fn main to int\nr = mapnew neg int 1 0 4096 7 34\nret 0\nend\n"
+text h "fn main to int\nr = mapnew neg int 1 0 4096 3 50\nret 0\nend\n"
+text j "fn main to int\nm = int 34\nr = mapnew neg int 1 0 4096 3 m\nret 0\nend\n"
+text k "fn main to int\na = int 3\nr = mapnew neg int 1 0 4096 a 34\nret 0\nend\n"
+text m "fn main to int\nr = mapdrop ulong 257\nret 0\nend\n"
+text n "text a \"four\"\nfn main to int\nr = mapread long 257 0 a 0 4\nret 0\nend\n"
+text p "global a uint 4\nfn main to int\nr = mapwrite long 257 0 a 0 4\nret 0\nend\n"
+text q "fn test to long\nret mapnew neg int 1 0 4096 3 34\nend\n"
+text s "global b uchar 4\nfn main to int\nr = devctl int 0 uint 3221243393 b 0 4\nret 0\nend\n"
+text t "fn main to int\nr = mapnew long 0 0 4096 1 2\nret 0\nend\n"
+global packet uchar 4096
+global status uchar 4
+global tmp uchar 1
+fn expect yes bool to void
+if not yes
+exit int 80
+end
+end
+fn source num int fd int to int
+r = long 0
+want = int 9
+if eq num 0
+r = write fd a 0 len a
+want = 7
+end
+if eq num 1
+r = write fd b 0 len b
+end
+if eq num 2
+r = write fd c 0 len c
+end
+if eq num 3
+r = write fd d 0 len d
+want = 20
+end
+if eq num 4
+r = write fd e 0 len e
+want = 7
+end
+if eq num 5
+r = write fd f 0 len f
+want = 7
+end
+if eq num 6
+r = write fd g 0 len g
+end
+if eq num 7
+r = write fd h 0 len h
+end
+if eq num 8
+r = write fd j 0 len j
+end
+if eq num 9
+r = write fd k 0 len k
+end
+if eq num 10
+r = write fd m 0 len m
+want = 7
+end
+if eq num 11
+r = write fd n 0 len n
+want = 20
+end
+if eq num 12
+r = write fd p 0 len p
+want = 7
+end
+if eq num 13
+r = write fd q 0 len q
+end
+if eq num 14
+r = write fd s 0 len s
+end
+if eq num 15
+r = write fd t 0 len t
+want = 7
+end
+expect gt r 0
+ret want
+end
+fn main to int
+expect eq argcnt 2
+size = argread 1 packet 4 4092
+expect and gt size 0 le size 4092
+put packet 0 1
+put packet 2 uchar and size 255
+put packet 3 uchar shr size 8
+for num int 16
+input = fopen infile 0 len infile 524482 384
+output = fopen outfile 0 len outfile 524482 384
+errors = fopen errfile 0 len errfile 524482 384
+expect ge input 0
+expect ge output 0
+expect ge errors 0
+want = source num int input
+expect eq fseek int input 0 0 0
+pid = fork
+expect ge pid 0
+if eq pid 0
+expect eq dupfd int input 0 0 0
+expect eq dupfd int output 1 0 1
+expect eq dupfd int errors 2 0 2
+r = execprog packet 0 add ulong size 4
+exit int 81
+end
+expect eq waitpid int pid status 0 4 0 pid
+if ne get status 0 0
+ret add num 1
+end
+if ne get status 1 uchar want
+ret add num 1
+end
+expect eq fseek int output 0 0 0
+expect eq read int output tmp 0 1 0
+expect eq fseek int errors 0 0 0
+expect eq read int errors tmp 0 1 1
+expect eq fclose int input 0
+expect eq fclose int output 0
+expect eq fclose int errors 0
+expect eq unlink infile 0 len infile 0
+expect eq unlink outfile 0 len outfile 0
+expect eq unlink errfile 0 len errfile 0
+end
+expect eq write 1 passed 0 len passed long len passed
+ret 0
+end

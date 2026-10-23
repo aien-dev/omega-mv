@@ -56,6 +56,7 @@ global curret ulong 1
 global progmode ulong 1
 global nglob ulong 1
 global hostargs ulong 1
+global maptab ulong 1
 global stkbytes ulong 1
 global dead ulong 1
 global poolb ulong 1
@@ -329,9 +330,47 @@ end
 put tk 0 3
 end
 
-note ======== keyword lookup (original om4 KWTAB plus hand-maintained native host words 100..134) ========
+note ======== keyword lookup (original om4 KWTAB plus hand-maintained native host words 100..139) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
+packed = or ulong 109 shl ulong 97 8
+packed = or packed shl ulong 112 16
+v = or packed shl ulong 110 24
+v = or v shl ulong 101 32
+v = or v shl ulong 119 40
+if eq w v
+ret 136
+end
+v = or packed shl ulong 100 24
+v = or v shl ulong 114 32
+v = or v shl ulong 111 40
+v = or v shl ulong 112 48
+if eq w v
+ret 137
+end
+v = or packed shl ulong 114 24
+v = or v shl ulong 101 32
+v = or v shl ulong 97 40
+v = or v shl ulong 100 48
+if eq w v
+ret 138
+end
+v = or packed shl ulong 119 24
+v = or v shl ulong 114 32
+v = or v shl ulong 105 40
+v = or v shl ulong 116 48
+v = or v shl ulong 101 56
+if eq w v
+ret 139
+end
+packed = or ulong 100 shl ulong 101 8
+packed = or packed shl ulong 118 16
+packed = or packed shl ulong 99 24
+packed = or packed shl ulong 116 32
+packed = or packed shl ulong 108 40
+if eq w packed
+ret 135
+end
 if eq w 6584163
 ret 132
 end
@@ -2523,12 +2562,258 @@ hsys 208
 hreturn dst x
 end
 
+note Same bounded ioctl contract as L605 src/device/omc.om at 0dee699.
+note Compose with native host words instead of maintaining a second compiler.
+note Only literal FIONREAD or encoded read/write NVRM F requests, exact writable bytes.
+fn hdevctl dst ulong x ulong to void
+harg x 4 8
+harg x 2 4
+if ne get fr add x 12 3
+fail 9
+end
+q = get fr add x 13
+n = ulong 4
+if ne q 21531
+if ne and q 3221290752 3221243392
+fail 9
+end
+n = and shr q 16 16383
+if eq n 0
+fail 9
+end
+end
+put fr add x 23 n
+e = harray x 1
+t = alloc
+matconst t get fr add x 23
+e3 3942645760 31 get fr add x 22 t
+trapc 1 3
+save
+hload x 4 0
+hload x 2 1
+basearg 2 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 2 2 16
+hsys 29
+hreturn dst x
+end
+
+note Bounded mapping table belongs to the emitted program, not the compiler process.
+note 128 slots of address, byte length, generation, access. No raw addresses escape.
+fn mtinit to void
+if eq get maptab 0 0
+p = get poolb 0
+if gt p 1073737728
+fail 23
+end
+put maptab 0 add 276824064 p
+put poolb 0 add p 4096
+end
+end
+note Instruction forms in seed/rung2/table.s2. ldr/str offsets count eight-byte cells.
+fn mload d ulong n ulong off ulong to void
+emit or or or 4181721088 d shl n 5 shl off 10
+end
+fn mstore d ulong n ulong off ulong to void
+emit or or or 4177526784 d shl n 5 shl off 10
+end
+fn mimmed op ulong d ulong n ulong k ulong to void
+emit or or or op d shl n 5 shl k 10
+end
+fn mbranch cc ulong to ulong
+p = get oc 0
+emit or 1409286144 cc
+ret p
+end
+note Validate a long handle in X10; produce entry X11, base X13, length X12.
+note The slot's generation defeats a stale handle after close and slot reuse.
+fn mcheck to void
+matconst 15 255
+e3 2315255808 11 10 15
+mimmed 4043309056 31 11 1
+trapc 3 3
+mimmed 4043309056 31 11 128
+trapc 8 3
+mimmed 3506438144 11 11 1
+matconst 15 32
+e3 2600500224 11 11 15
+matconst 15 get maptab 0
+e3 2332033024 11 11 15
+mload 14 11 2
+mimmed 4043309056 31 14 0
+trapc 0 3
+matconst 15 8
+e3 2596283392 10 10 15
+e3 3942645760 31 10 14
+trapc 1 3
+mload 13 11 0
+mimmed 4043309056 31 13 0
+trapc 0 3
+mload 12 11 1
+end
+
+note mapnew fd:int offset:ulong bytes:ulong access:int mode:int -> long handle/errno.
+note Access 1 or 3 and modes 1/2/33/34 must be literal. No fixed address or executable map.
+fn mnew dst ulong x ulong to void
+harg x 0 8
+harg x 1 5
+harg x 2 5
+harg x 3 8
+harg x 4 8
+if or ne get fr add x 14 3 ne get fr add x 16 3
+fail 9
+end
+acc = get fr add x 15
+mode = get fr add x 17
+if and ne acc 1 ne acc 3
+fail 9
+end
+if and and and ne mode 1 ne mode 2 ne mode 33 ne mode 34
+fail 9
+end
+save
+hload x 2 1
+mimmed 4043309056 31 1 0
+trapc 0 3
+matconst 15 68719476736
+e3 3942645760 31 1 15
+trapc 8 3
+hload x 0 4
+hload x 1 5
+if ge mode 32
+matconst 15 18446744073709551615
+e3 3942645760 31 4 15
+trapc 1 3
+mimmed 4043309056 31 5 0
+trapc 1 3
+end
+matconst 9 get maptab 0
+matconst 10 1
+head = get oc 0
+mload 11 9 0
+mimmed 4043309056 31 11 0
+used = mbranch 1
+mload 11 9 2
+matconst 15 36028797018963967
+e3 3942645760 31 11 15
+vacant = mbranch 3
+patch19 used get oc 0
+mimmed 2432696320 9 9 32
+mimmed 2432696320 10 10 1
+mimmed 4043309056 31 10 128
+again = mbranch 9
+patch19 again head
+matconst 0 18446744073709551592
+full = get oc 0
+emit 335544320
+patch19 vacant get oc 0
+matconst 0 0
+matconst 2 acc
+matconst 3 mode
+hsys 222
+mimmed 4043309056 31 0 0
+failed = mbranch 11
+mstore 0 9 0
+mstore 1 9 1
+mimmed 2432696320 11 11 1
+mstore 11 9 2
+matconst 15 acc
+mstore 15 9 3
+matconst 15 8
+e3 2596282368 0 11 15
+e3 2852126720 0 0 10
+patch19 failed get oc 0
+patch26 full get oc 0
+hreturn dst x
+end
+
+fn mdrop dst ulong x ulong to void
+harg x 0 9
+save
+hload x 0 10
+mcheck
+e3 2852126720 0 31 13
+e3 2852126720 1 31 12
+hsys 215
+mimmed 4043309056 31 0 0
+failed = mbranch 1
+mstore 31 11 0
+mstore 31 11 1
+mstore 31 11 3
+patch19 failed get oc 0
+hreturn dst x
+end
+
+note Copies traverse only checked live mapped spans and normal bounded byte arrays.
+note mapread writes A; mapwrite reads A. Both return the count, with no pointer decay.
+fn mcopy c ulong dst ulong x ulong to void
+harg x 4 9
+harg x 3 5
+wr = ulong 0
+if eq c 138
+wr = ulong 1
+end
+e = harray x wr
+save
+hload x 4 10
+mcheck
+hload x 3 0
+e3 3942645760 31 0 12
+trapc 8 3
+e3 3405774848 12 12 0
+loadarg 2 1 get fr add x 22
+e3 3942645760 31 2 12
+trapc 8 3
+e3 2332033024 0 13 0
+basearg 1 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 1 1 16
+if eq c 139
+mload 15 11 3
+mimmed 4043309056 31 15 3
+trapc 1 3
+e3 2852126720 15 31 0
+e3 2852126720 0 31 1
+e3 2852126720 1 31 15
+end
+e3 2852126720 4 31 2
+head = get oc 0
+mimmed 4043309056 31 2 0
+done = mbranch 0
+emit 960495619
+emit 956301347
+mimmed 2432696320 0 0 1
+mimmed 2432696320 1 1 1
+mimmed 3506438144 2 2 1
+back head
+patch19 done get oc 0
+e3 2852126720 0 31 4
+hreturn dst x
+end
+
 fn hostval c ulong dst ulong to void
 if eq get progmode 0 0
 fail 9
 end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0
+if ge c 136
+mtinit
+if eq c 136
+mnew dst x
+ret
+end
+if eq c 137
+mdrop dst x
+ret
+end
+mcopy c dst x
+ret
+end
+if eq c 135
+hdevctl dst x
+ret
+end
 if eq c 132
 hcwd dst x
 ret
@@ -2704,7 +2989,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 134
+if and ge c 100 le c 139
 hostval c dst
 ret
 end

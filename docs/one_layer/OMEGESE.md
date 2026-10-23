@@ -584,3 +584,9 @@ host-specific; portable library contracts remain separate work.
 Qualification is `sh seed/host/check.sh`; see `seed/host/README.md`. The seed
 loader and shell test coordinator do not implement these operations. No
 foreign-language compiler or runtime is on the new implementation path.
+
+The proposed device/memory extension adds checked `devctl`, `mapnew`,
+`mapdrop`, `mapread` and `mapwrite` to this same compiler. Its exact type,
+ownership, range and refusal contract is [seed/host/MAPPING.md](../../seed/host/MAPPING.md).
+It adds process-local mapped resources while the compiler's own storage remains
+fixed pools. GPU launch and model execution are separate, still-unqualified gates.
