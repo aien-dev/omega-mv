@@ -1,0 +1,54 @@
+note Compiler capability probes, not the independent task oracle.
+global Probe uchar 8
+
+fn compose x ulong to ulong
+ret add mul x 3 1
+end
+
+fn main to int
+if ne add ulong 18446744073709551615 1 0
+ret 1
+end
+if ne sub ulong 0 1 18446744073709551615
+ret 2
+end
+if ne mul ulong 9223372036854775808 2 0
+ret 3
+end
+if ne div ulong 17 5 3
+ret 4
+end
+if ne rem ulong 17 5 2
+ret 5
+end
+if ne compose 7 22
+ret 6
+end
+sum = ulong 0
+for i ulong 8
+sum = add sum i
+put Probe i uchar i
+end
+if ne sum 28
+ret 7
+end
+if ne get Probe 7 7
+ret 8
+end
+if ne shr shl ulong 1 63 63 1
+ret 9
+end
+x = ulong 0
+while lt x 4 limit 4
+x = add x 1
+end
+if ne x 4
+ret 10
+end
+text ok "PROFILE_PASS\n"
+w = write 1 ok 0 len ok
+if ne w long len ok
+ret 11
+end
+ret 0
+end

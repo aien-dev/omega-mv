@@ -1,0 +1,27 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "a74dae684b17f63150152c88115e10ffce0af7ae14f5a85618f0839bdfcbe50e",
+          "last_commit": "84d03c55",
+          "name": "benchmark",
+          "purpose": "L775 public task metadata, bounded observation and development cost accounting"
+        }
+      ],
+      "children_root": "sha256:92e37c6c13379b9798d3200d1951b762facb5de54e3cc111969a4be20d139ebe",
+      "compiled_at": "2026-10-23T20:57:05Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:716f910b4735166a8981ee717e5501dba5afc17a65260724d19f6a76e9abf6db",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 1,
+      "generated_at_commit": "84d03c5523f39ca1045d1c313c5f62597779462b",
+      "source_tree": "sha256:8fd2ebacc1faef1e96735055c12913dc0c86cae91490d33a1e6e377bc000fac7"
+    }
+  },
+  "layer": "src",
+  "name": "learning",
+  "purpose": "Bounded native learning consumers; compiler and independent judge ownership remain external",
+  "schema_version": "1.0.0"
+}

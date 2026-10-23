@@ -1,0 +1,27 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "b61bf61b2eeca1a4f7bd9dec071ed86eb848b59d91488145dc4754d047468322",
+          "last_commit": "84d03c55",
+          "name": "benchmark",
+          "purpose": "L775 seeded component, capability and observation tests; no sealed tasks"
+        }
+      ],
+      "children_root": "sha256:dd1e536551a5a5145817be050c43100f68f38890495a89d8709b3627e0d5440e",
+      "compiled_at": "2026-10-23T20:57:05Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:4657d573bf0e2649d2d5011a446705e11ad8ca20806fbaac090228e0ebe0ceee",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 11,
+      "generated_at_commit": "84d03c5523f39ca1045d1c313c5f62597779462b",
+      "source_tree": "sha256:99db20be71c00beaf02116d548f1509b017a2a419d57d5c002026e84454e254f"
+    }
+  },
+  "layer": "tests",
+  "name": "learning",
+  "purpose": "Native learning component and public fixture tests",
+  "schema_version": "1.0.0"
+}

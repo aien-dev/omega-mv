@@ -187,6 +187,12 @@
           "purpose": "Directory tests/language. Purpose not yet described by a human."
         },
         {
+          "digest": "4657d573bf0e2649d2d5011a446705e11ad8ca20806fbaac090228e0ebe0ceee",
+          "last_commit": "84d03c55",
+          "name": "learning",
+          "purpose": "Native learning component and public fixture tests"
+        },
+        {
           "digest": "e485aa0a00f0a588e22d55caa704db8581a5da1b53080b311086e6edd38f6044",
           "last_commit": "30bb116c",
           "name": "malformed",
@@ -295,15 +301,15 @@
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:ddc3618190458bc5073e3bee67ffccc68a2ee9f065f2cb0d86545386a29fddf8",
-      "compiled_at": "2026-10-16T19:04:20Z",
+      "children_root": "sha256:7bf0b35c103b6769504e58751aecd7ff7026eb366e5dc08737f9178df436a846",
+      "compiled_at": "2026-10-23T20:57:05Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:4eb9d4d76234448c0ed691f0aeb9c90d785f8a47b1b1291d728bbe3e1509dc10",
+      "digest": "sha256:d7b7b8b4008500cbf8b3d4d7edf6d915efcbae576b94fb86a9364043b89bca8c",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1270,
-      "generated_at_commit": "88e24bdd57b27817d030d0ad95f62c3f3eacf426",
-      "source_tree": "sha256:e6c4f0021d383ba2e59da0d85d06a0b98170f6d188289c891b5745200548e6fc"
+      "files": 1281,
+      "generated_at_commit": "84d03c5523f39ca1045d1c313c5f62597779462b",
+      "source_tree": "sha256:6810e6827f1cad95736b14799e3e1cea31b77c636b9a2be679fdc660fa60a5f5"
     },
     "owner_lane": "",
     "provenance": {

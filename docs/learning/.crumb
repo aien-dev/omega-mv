@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-23T20:57:05Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:f65f63f7154dc857b86cd0403862d53bd6b1a21874bbe3504f6c432f7a58fd61",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 1,
+      "generated_at_commit": "84d03c5523f39ca1045d1c313c5f62597779462b",
+      "source_tree": "sha256:ded205bc37450a7ff6ab561f8b19676dfd3ad7f9f06961cf6bf515b85d2b7564"
+    }
+  },
+  "layer": "docs",
+  "name": "learning",
+  "purpose": "Bounded learning contracts and qualification limits",
+  "schema_version": "1.0.0"
+}

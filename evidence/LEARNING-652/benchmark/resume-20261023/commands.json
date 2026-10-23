@@ -1,0 +1,20 @@
+{
+  "scope": "external development orchestration, not delivered runner logic",
+  "cwd": "/home/drakestapleton/workspace/omega-learning652-lead-L775",
+  "compiler": "build/L775/toolchain/build/bootstrap/omc",
+  "commands": [
+    "sha256sum build/L775/toolchain/build/bootstrap/omc build/L775/toolchain/seed/omc/omc.om",
+    "cat src/learning/benchmark/core.om tests/learning/benchmark/core-test.om > build/L775/core-test.om",
+    "quiet-build build/L775/toolchain/build/bootstrap/omc < build/L775/core-test.om > build/L775/core-test.elf",
+    "readelf -h build/L775/core-test.elf",
+    "chmod +x build/L775/core-test.elf",
+    "timeout 10 build/L775/core-test.elf",
+    "cat src/learning/benchmark/core.om tests/learning/benchmark/observe-pair.om > build/L775/observe-pair.om",
+    "quiet-build build/L775/toolchain/build/bootstrap/omc < build/L775/observe-pair.om > build/L775/observe-pair.elf",
+    "timeout 10 build/L775/observe-pair.elf < build/L775/good-pair.bin",
+    "timeout 10 build/L775/observe-pair.elf < build/L775/bad-pair.bin"
+  ],
+  "per_case": "Each standalone profile .om and immutable L776 source is fed to the same compiler, ELF checked then executed only after compiler success. Exact stdout, stderr, exit and cost files are named per case.",
+  "cost_wrapper": "/usr/bin/time -f 'elapsed_s=%e user_s=%U system_s=%S max_rss_kib=%M exit=%x' -o CASE.cost COMMAND",
+  "missing": "Original failed attempts were not all timed; native process/isolation/receipt and model baseline stages NOT_RUN. No invented lifecycle total."
+}

@@ -81,6 +81,12 @@
           "purpose": "Directory docs/estimation. Purpose not yet described by a human."
         },
         {
+          "digest": "f65f63f7154dc857b86cd0403862d53bd6b1a21874bbe3504f6c432f7a58fd61",
+          "last_commit": "84d03c55",
+          "name": "learning",
+          "purpose": "Bounded learning contracts and qualification limits"
+        },
+        {
           "digest": "82617b47b6fee43e883fa67d97ecf12e15b112dfce8c5729a8ff77c1ef48bcba",
           "last_commit": "95829f2a",
           "name": "numeric",
@@ -123,15 +129,15 @@
           "purpose": "Directory docs/turing. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:ac7f7ea4b00d4620a993c6dd88a0267f2d49008d415162976e45fa4341e43407",
-      "compiled_at": "2026-10-16T09:04:56Z",
+      "children_root": "sha256:0b3282895907d0eceffc5efa6af87f009df4f18e32609b4b1f8c7a68aa7fe47e",
+      "compiled_at": "2026-10-23T20:57:05Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:d2eb8967a939ebdb0b54e15fe5d849dd5af71c23b812941e4ba86ad2b0f21d39",
+      "digest": "sha256:9e0d93f2880ca210c7750ee4f0199fa83acb2f2d0be94aa012c946a23fb4eb59",
       "evidence_files": 34,
       "evidence_root": "sha256:589d8b3706e6d7a202ab20b278dac5fc5bafc973f1c2a867b2668aa7210b65cc",
-      "files": 127,
-      "generated_at_commit": "9d368679f13ea58c46bf7580899aee92e39f5885",
-      "source_tree": "sha256:29d159b6950500f96de859834fd2c5a9e9ba037f9bc88fd97a8ed47a1688233b"
+      "files": 128,
+      "generated_at_commit": "84d03c5523f39ca1045d1c313c5f62597779462b",
+      "source_tree": "sha256:920c0b933c5b3d503670937ade5a043ed7be0db2315ae0b43d788676a0980dbd"
     },
     "owner_lane": "",
     "provenance": {
