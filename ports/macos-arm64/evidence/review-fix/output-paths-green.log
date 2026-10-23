@@ -1,0 +1,14 @@
+✔ target refuses directory output without nesting artifacts (4.709373ms)
+✔ build refuses directory adapter destination without nesting artifacts (5.91353ms)
+✔ target refuses symlink-directory output without nesting artifacts (3.375216ms)
+✔ build refuses symlink-directory adapter destination without nesting artifacts (5.679847ms)
+✔ target still creates and replaces the requested regular file (16.438766ms)
+✔ build still replaces the requested adapter with identical seed-built bytes (22.081173ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 137.113853

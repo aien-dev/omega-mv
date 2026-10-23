@@ -1,0 +1,98 @@
+✖ target refuses directory output without nesting artifacts (8.628947ms)
+✖ build refuses directory adapter destination without nesting artifacts (25.293477ms)
+✖ target refuses symlink-directory output without nesting artifacts (7.981549ms)
+✖ build refuses symlink-directory adapter destination without nesting artifacts (25.775033ms)
+✔ target still creates and replaces the requested regular file (14.942529ms)
+✔ build still replaces the requested adapter with identical seed-built bytes (25.118803ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 2
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 202.338436
+
+✖ failing tests:
+
+test at ports/macos-arm64/tests/output-paths.mjs:30:3
+✖ target refuses directory output without nesting artifacts (8.628947ms)
+  AssertionError [ERR_ASSERTION]: directory output must fail rather than moving the artifact inside it
+  
+  0 !== 73
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-macos-parent-L615/ports/macos-arm64/tests/output-paths.mjs:34:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 73,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ports/macos-arm64/tests/output-paths.mjs:38:3
+✖ build refuses directory adapter destination without nesting artifacts (25.293477ms)
+  AssertionError [ERR_ASSERTION]: directory build destination must fail rather than report successful construction
+  
+  0 !== 73
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-macos-parent-L615/ports/macos-arm64/tests/output-paths.mjs:46:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 73,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ports/macos-arm64/tests/output-paths.mjs:30:3
+✖ target refuses symlink-directory output without nesting artifacts (7.981549ms)
+  AssertionError [ERR_ASSERTION]: directory output must fail rather than moving the artifact inside it
+  
+  0 !== 73
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-macos-parent-L615/ports/macos-arm64/tests/output-paths.mjs:34:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 73,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ports/macos-arm64/tests/output-paths.mjs:38:3
+✖ build refuses symlink-directory adapter destination without nesting artifacts (25.775033ms)
+  AssertionError [ERR_ASSERTION]: directory build destination must fail rather than report successful construction
+  
+  0 !== 73
+  
+      at TestContext.<anonymous> (file:///home/drakestapleton/workspace/omega-macos-parent-L615/ports/macos-arm64/tests/output-paths.mjs:46:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 73,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

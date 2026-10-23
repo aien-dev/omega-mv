@@ -1,0 +1,90 @@
+{
+  "matched": 17,
+  "rows": [
+    {
+      "file": "control-wrong-error.macho",
+      "sha256": "3098330f20bf7b3cbea0bbfbcdc1a54d0fe9bad7f54b28d6df3911fa9e32f9bb",
+      "expected": "3098330f20bf7b3cbea0bbfbcdc1a54d0fe9bad7f54b28d6df3911fa9e32f9bb"
+    },
+    {
+      "file": "return42.macho",
+      "sha256": "5ed81b247c443a6f8b572b3e00bd36f191c47e14e2d7aa2ed4a27f9423367f9e",
+      "expected": "5ed81b247c443a6f8b572b3e00bd36f191c47e14e2d7aa2ed4a27f9423367f9e"
+    },
+    {
+      "file": "overflow.macho",
+      "sha256": "dd4e5e9afc5ea4156ee5afd1ab51e7898050cc6696aedcc8115c07a37ec780e7",
+      "expected": "dd4e5e9afc5ea4156ee5afd1ab51e7898050cc6696aedcc8115c07a37ec780e7"
+    },
+    {
+      "file": "control-hello-address.macho",
+      "sha256": "c4fa2a85d41fd509346af93dea3800b32b1fab8a519a421eb2bf36cc56777135",
+      "expected": "c4fa2a85d41fd509346af93dea3800b32b1fab8a519a421eb2bf36cc56777135"
+    },
+    {
+      "file": "control-wrong-entry.macho",
+      "sha256": "a82a1d8f8317310e4d531723952c14e065eebd106591a3bd9ea65376bae223dd",
+      "expected": "a82a1d8f8317310e4d531723952c14e065eebd106591a3bd9ea65376bae223dd"
+    },
+    {
+      "file": "sum.macho",
+      "sha256": "e4a736cf9bdd5f49e394ab7306cb3cdba1b80e4616262ada614a27f490c86ce8",
+      "expected": "e4a736cf9bdd5f49e394ab7306cb3cdba1b80e4616262ada614a27f490c86ce8"
+    },
+    {
+      "file": "control-unknown-accepted.macho",
+      "sha256": "db389603c6d35fce45bb5ba1fd2fd37b40374d71f7ab49afad6a6e3021a33ade",
+      "expected": "db389603c6d35fce45bb5ba1fd2fd37b40374d71f7ab49afad6a6e3021a33ade"
+    },
+    {
+      "file": "shift.macho",
+      "sha256": "ce5a3e9e87374d93c945084d58d10b8e78f4f2a77e4bee82095f8d629da788b0",
+      "expected": "ce5a3e9e87374d93c945084d58d10b8e78f4f2a77e4bee82095f8d629da788b0"
+    },
+    {
+      "file": "hello.macho",
+      "sha256": "874529dd25701c4df2cd1bd94de419035ec5e702bffa221a22d2175acf81864b",
+      "expected": "874529dd25701c4df2cd1bd94de419035ec5e702bffa221a22d2175acf81864b"
+    },
+    {
+      "file": "divide.macho",
+      "sha256": "3fef540743e4c8a85de309a9c2285312d0cc937267ac6a038d85d84cc8170186",
+      "expected": "3fef540743e4c8a85de309a9c2285312d0cc937267ac6a038d85d84cc8170186"
+    },
+    {
+      "file": "bitwise.macho",
+      "sha256": "14f54dd8613e63a04c1d4fa9c818a160669338eb90ad57a0ea45674048e05948",
+      "expected": "14f54dd8613e63a04c1d4fa9c818a160669338eb90ad57a0ea45674048e05948"
+    },
+    {
+      "file": "divzero.macho",
+      "sha256": "2ca331d576b4a50e24882116fd96866cc6af0a3679a45fec26b0fcd99e8aed45",
+      "expected": "2ca331d576b4a50e24882116fd96866cc6af0a3679a45fec26b0fcd99e8aed45"
+    },
+    {
+      "file": "branch.macho",
+      "sha256": "0286c3c6ec995f0324e561efc02b4edfb307fe74fb012fe348af7bfc5a78e746",
+      "expected": "0286c3c6ec995f0324e561efc02b4edfb307fe74fb012fe348af7bfc5a78e746"
+    },
+    {
+      "file": "largest.macho",
+      "sha256": "1cc5de55962e6bbb460ee1ca430c6f3d5483604b8a685ceb91e86baae6aee9fa",
+      "expected": "1cc5de55962e6bbb460ee1ca430c6f3d5483604b8a685ceb91e86baae6aee9fa"
+    },
+    {
+      "file": "control-linux-exit.macho",
+      "sha256": "5b57fa29afde794e9ae6cef0ee36c96c33b2bbdc50eb941c596363ea327f7d31",
+      "expected": "5b57fa29afde794e9ae6cef0ee36c96c33b2bbdc50eb941c596363ea327f7d31"
+    },
+    {
+      "file": "adapter.om",
+      "sha256": "b4c02c7dc2c14a420bf305cd3dbf2a4880da8c4e40c7ac8387d4a609935d56fb",
+      "expected": "b4c02c7dc2c14a420bf305cd3dbf2a4880da8c4e40c7ac8387d4a609935d56fb"
+    },
+    {
+      "file": "adapter",
+      "sha256": "0885e00ff1405e05ed93790ad4c7452ea8cea87ac2d8d4dad44eac1679ffead1",
+      "expected": "0885e00ff1405e05ed93790ad4c7452ea8cea87ac2d8d4dad44eac1679ffead1"
+    }
+  ]
+}

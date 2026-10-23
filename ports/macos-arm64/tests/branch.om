@@ -1,0 +1,7 @@
+fn main to ulong
+x = ulong 7
+if eq x 7
+ret 23
+end
+ret 91
+end

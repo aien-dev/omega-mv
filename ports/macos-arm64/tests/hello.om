@@ -1,0 +1,8 @@
+text msg "hello omega mac\n"
+fn main to int
+n = write int 1 msg ulong 0 len msg
+if eq n long 16
+ret 0
+end
+ret 74
+end
