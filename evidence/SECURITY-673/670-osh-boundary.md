@@ -18,6 +18,18 @@ The trusted boundary is the OSH host process plus the separate `rx_caproot` proc
 launcher: `seed/omc/omc.om` exposes `fork`, `execprog`, `pipefds`, `dupfd`, `fclose` and file/socket words, and
 `docs/one_layer/OMEGESE.md` section 10 states they use the process's existing permissions.
 
+## Existing enforcement planes that #670 must reuse
+
+| Plane | Implementation | What it enforces | What it does not |
+|---|---|---|---|
+| Linux host (main) | `src/osh/host/`; `src/runtime/rx_caproot.c` | OSH gates its own spawn/redirection/chdir effects against capability grants and journals intent/outcome; **this slice closes all inherited descriptors above stderr before exec** | Child runs with full Linux-user authority; no rlimits, seccomp, Landlock, namespaces or cgroups; check and `execve` are two steps |
+| AIENOS/Aienux kernel (QEMU only) | `aienos-apple-silicon-platform` @ `121a9dfb`, `native/kernel/core/osc_task.c` `ck_osc_launch` | Receipt-first launch of an admitted OSC unit; W^X mappings; per-launch capability table; tick budget; 16-page code/stack caps; 1-page input; up to 32 caller-owned workspace pages; `OUTCOME_UNKNOWN` on fault | Only admitted OSC units, not arbitrary `.om` ELF; QEMU/TEST, not physical hardware; one call/slot |
+| Seeded `.om` host words (feature branch) | `seed/omc/omc.om`, `docs/one_layer/OMEGESE.md` section 10 | Array/type/range checks on arguments; no pointer or arbitrary-syscall escape | No launcher, no descriptor set, no capability check, no budgets; `execprog` preserves inherited descriptors and runs as the caller's uid |
+
+The Linux patch is therefore an extension of the existing host owner. The kernel launcher is the model for admitted
+units and should not be duplicated. The `.om` launcher remains a migration item for the #636/#649 owners, not a new
+authority service created here.
+
 ## Ambient-input inventory at the OSH boundary
 
 | Input | Current handling | Gap |
@@ -87,10 +99,13 @@ masked by the terminal that launched the test.
 1. Add an explicit child-descriptor assignment contract to the existing OSH owner: assigned fd, object identity,
    permitted operation, grant generation, lifetime and budget; refuse everything else. Test guessed/stale/reused
    handles and closed/reopened objects.
-2. Bind the check and dispatch at one fence (or a documented generation/fencing protocol) before `execve`; test
-   revocation before and after submission.
+2. Bind the check and dispatch at one fence (or a documented generation/fencing protocol) before `execve`. Reuse
+   `rx_capq`/`fab_dispatch` for provider selection and `rx_generation` plus `osh_journal` for durable operation
+   identity; test revocation before and after submission, including queued work.
 3. Add external resource budgets (rlimits/cgroup/seccomp/Landlock/namespaces as available) and fail closed when the
    host cannot provide them. Measure CPU, memory, fd and wall-time exhaustion with disposable payloads.
-4. Migrate the launcher/effect path to seeded `.om` under the #636/#649 owners; keep OSH as the trusted native edge
-   until the `.om` path is qualified. Do not create a parallel authority service.
-5. Independent review of the final source and a clean-checkout replay. Until then, #670 stays open.
+4. Reuse `ck_osc_launch` for admitted OSC units instead of adding a second kernel launcher; keep the Linux and
+   AIENOS profiles distinct. Migrate the Linux launcher/effect path to seeded `.om` under the #636/#649 owners;
+   until that path is qualified, OSH remains the trusted native edge. Do not create a parallel authority service.
+5. Independent review of the final source and a clean-checkout replay. The AIENOS launcher is QEMU-qualified only;
+   physical hardware remains NOT_RUN. Until these gates close, #670 stays open.
