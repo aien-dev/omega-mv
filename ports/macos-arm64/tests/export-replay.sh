@@ -3,7 +3,6 @@
 set -eu
 cd "$(dirname "$0")/.."
 export_dir=/home/drakestapleton/handoffs/omega-developer-gaps/L615/mac-replay/final
-source_dir=$(pwd)
 test -s build/qualification/summary.json
 mkdir -p "$export_dir"
 for name in return42 sum branch overflow bitwise divide divzero shift hello largest control-linux-exit control-wrong-entry control-wrong-error control-hello-address control-unknown-accepted; do
@@ -11,6 +10,8 @@ for name in return42 sum branch overflow bitwise divide divzero shift hello larg
     cp "build/qualification/$name.elf" "$export_dir/$name.elf"
 done
 cp adapter.om CONTRACT.md "$export_dir/"
+cp evidence/MAC-REPLAY.md "$export_dir/REPLAY.md"
+cp evidence/REFERENCES.md evidence/gate-final.log evidence/gate-final.exit "$export_dir/"
 cp build/adapter "$export_dir/adapter-linux-arm64"
 cp tests/*.om tests/mac-replay.sh "$export_dir/"
 cp build/qualification/control-*.om "$export_dir/"
@@ -22,7 +23,8 @@ printf '%s\n' '191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9 
 # not handwritten production. Preserve their exact bytes for parent source replay.
 node -e 'const fs=require("fs"); for(const [name,n] of [["largest",4043],["excess",4044]]) fs.writeFileSync(process.argv[1]+"/"+name+".om", "fn main to ulong\nx = ulong 0\n"+"x = add x ulong 1\n".repeat(n)+"ret x\nend\n")' "$export_dir"
 cp build/qualification/excess.elf "$export_dir/excess.elf"
+tar -cf "$export_dir/spark-qualification.tar" -C build qualification
 # Complete export manifest includes source, Linux compiler products, Mach-O,
 # controls, gate, contracts and metadata. Excludes itself and later Mac receipts.
-(cd "$export_dir" && find . -maxdepth 1 -type f ! -name SHA256SUMS ! -name REPLAY.md -print | LC_ALL=C sort | xargs sha256sum > SHA256SUMS)
+(cd "$export_dir" && find . -maxdepth 1 -type f ! -name SHA256SUMS -print | LC_ALL=C sort | xargs sha256sum > SHA256SUMS)
 printf 'Exported native Mac replay: %s\n' "$export_dir"
