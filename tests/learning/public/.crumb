@@ -1,0 +1,43 @@
+{
+  "below": [
+    {
+      "name": "negative",
+      "role": ""
+    }
+  ],
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "5118164c078ae4908bccfd0ad366d0c26ab1ee7fa6b1605c639028c161b2326f",
+          "last_commit": "",
+          "name": "negative",
+          "purpose": "Compiled negative public controls for the bounded learning fixture set; includes deliberate sema"
+        }
+      ],
+      "children_root": "sha256:5e8c53cf8a834f8310b94cdb66fbc1bbb0b9bffe07287513bedaadcef1fe88c8",
+      "compiled_at": "2026-10-23T20:50:47Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:cb93ad9391838628f2fa36803993e97d50e4e3fa1561f1a7961930ed8ca37495",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 11,
+      "generated_at_commit": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+      "source_tree": "sha256:4e6b327fa092568e4d456183181b4a7ab4fae0eb0a8350eedb087b98e8facc09"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "arithmetic.om",
+        "boundary-u64.om",
+        "composition.om",
+        "family-duplicates.om"
+      ],
+      "purpose_auto": "Repository root public. Purpose not yet described by a human."
+    }
+  },
+  "layer": "tests/learning/public",
+  "name": "public",
+  "purpose": "Independently authored public fixed-vector .om oracle fixtures and compiled wrong-boundary controls for Omega learning issue 653; development-only, no private evaluation material.",
+  "schema_version": "1.0.0"
+}

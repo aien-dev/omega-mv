@@ -1,0 +1,58 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note task-id=public-composition-clamp-v1
+note task-family-id=pure-composition-and-branch-v1
+note split=public-development
+note oracle-id=l776-handwritten-affine-clamp-v1
+note provenance=hand-authored-by-L776; no generator, model, or candidate output supplied expected values.
+note profile-proposal=seeded-omega-function-branch-v1; pending frozen #653 profile confirmation.
+note compiler-pin=omega-bridge/0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9; compiler-sha256=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9.
+note Public pure function-composition and branch vectors; no I/O, state, recursion, or external calls.
+note Oracle values are independently calculated from 3*x+2 and the closed interval clamp [2,20].
+note Provenance: L776 / action L776-653-public-oracle-01 / source head cd5897e3f92f72a015892c67b17f096e433b54f7.
+
+fn affine x ulong to ulong
+ret add mul x 3 2
+end
+
+fn clamp_low x ulong to ulong
+if lt x 2
+ret 2
+end
+ret x
+end
+
+fn clamp_closed x ulong to ulong
+if lt x 2
+ret 2
+end
+if gt x 20
+ret 20
+end
+ret x
+end
+
+fn composed x ulong to ulong
+ret clamp_closed affine x
+end
+
+fn main to int
+if ne affine 0 2
+ret 1
+end
+if ne affine 4 14
+ret 2
+end
+if ne clamp_low 1 2
+ret 3
+end
+if ne composed 0 2
+ret 4
+end
+if ne composed 6 20
+ret 5
+end
+if ne composed 7 20
+ret 6
+end
+ret 0
+end

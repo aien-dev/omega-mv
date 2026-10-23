@@ -1,0 +1,32 @@
+{
+  "above": {
+    "name": "public",
+    "path": ".."
+  },
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-23T20:50:47Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:5118164c078ae4908bccfd0ad366d0c26ab1ee7fa6b1605c639028c161b2326f",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 3,
+      "generated_at_commit": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+      "source_tree": "sha256:b6d4aff603341ab54ef1b5ab50c4dd60a7b0f9093644b9fe243067633be1eff7"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "saturating-add.om",
+        "u64-literal-overflow.om"
+      ],
+      "purpose_auto": "Directory negative. Purpose not yet described by a human."
+    }
+  },
+  "layer": "tests/learning/public/negative",
+  "name": "negative",
+  "purpose": "Compiled negative public controls for the bounded learning fixture set; includes deliberate semantic mismatch and out-of-range literal refusal.",
+  "schema_version": "1.0.0"
+}

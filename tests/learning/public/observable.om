@@ -1,0 +1,58 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Public L776 fixture emits sixteen unsigned values as little-endian u64.
+note Candidate computations below do not supply the independent oracle constants.
+note No input, model, generator or private evaluation material is used.
+global out uchar 128
+
+fn emit idx ulong value ulong to void
+for k ulong 8
+put out add mul idx 8 k uchar and shr value mul k 8 255
+end
+end
+
+fn affine x ulong to ulong
+ret add mul x 3 2
+end
+
+fn clamp x ulong to ulong
+if lt x 2
+ret 2
+end
+if gt x 20
+ret 20
+end
+ret x
+end
+
+fn sumleft a ulong b ulong to ulong
+ret add a b
+end
+
+fn sumright x ulong y ulong to ulong
+ret add x y
+end
+
+fn main to int
+top = ulong 18446744073709551615
+emit 0 add ulong 19 23
+emit 1 sub ulong 100 58
+emit 2 mul ulong 6 7
+emit 3 div ulong 126 3
+emit 4 add top 1
+emit 5 sub ulong 0 1
+emit 6 mul top 2
+emit 7 div top 3
+emit 8 affine 0
+emit 9 affine 4
+emit 10 clamp 1
+emit 11 clamp affine 0
+emit 12 clamp affine 6
+emit 13 clamp affine 7
+emit 14 sumleft 17 25
+emit 15 sumright 17 25
+n = write 1 out 0 128
+if ne n long 128
+ret 81
+end
+ret 0
+end

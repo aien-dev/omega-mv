@@ -1,0 +1,25 @@
+{
+  "schema": "L776-PUBLIC-ORACLE-1",
+  "owner": "L776",
+  "split": "public-development",
+  "license": "AGPL-3.0-or-later",
+  "origin": "independently hand-authored mathematical examples; no candidate-derived expectations",
+  "encoding": "sixteen little-endian unsigned 64-bit values in listed order",
+  "numeric_oracle_id": 776,
+  "values": ["42", "42", "42", "42", "0", "18446744073709551615", "18446744073709551614", "6148914691236517205", "2", "14", "2", "2", "20", "20", "42", "42"],
+  "expected_hex": "2a000000000000002a000000000000002a000000000000002a000000000000000000000000000000fffffffffffffffffeffffffffffffff555555555555555502000000000000000e0000000000000002000000000000000200000000000000140000000000000014000000000000002a000000000000002a00000000000000",
+  "families": [
+    {"id": "pure-u64-arithmetic-v1", "indices": [0,1,2,3]},
+    {"id": "pure-u64-boundary-v1", "indices": [4,5,6,7]},
+    {"id": "pure-composition-and-branch-v1", "indices": [8,9,10,11,12,13]},
+    {"id": "pure-u64-commutative-add-v1", "indices": [14,15], "duplicate_pair": true}
+  ],
+  "duplicate_boundary": "indices14/15 are deliberately same-family alpha-renamed examples; not independent samples or separate splits",
+  "limits": {"input_bytes": 0, "output_bytes": 128, "values": 16, "recursion": false},
+  "candidate": "observable.om",
+  "oracle": "oracle.om",
+  "compiled_fault": "negative/observable-saturating.om",
+  "compiled_fault_expected": {"compile_exit": 0, "run_exit": 0, "output_bytes": 128, "first_mismatch_offset": 32},
+  "refusal": "negative/u64-literal-overflow.om",
+  "status": "public fixture contract; #653 broader acceptance and #654 curriculum remain open"
+}

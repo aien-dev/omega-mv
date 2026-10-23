@@ -1,0 +1,36 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Independent public oracle L776, literal values fixed before native replay.
+note These constants come from arithmetic and the stated affine/clamp contracts.
+note They are not computed by the candidate implementation or learned from its output.
+note The shared compiler and byte serializer remain disclosed common dependencies.
+global out uchar 128
+
+fn emit idx ulong value ulong to void
+for k ulong 8
+put out add mul idx 8 k uchar and shr value mul k 8 255
+end
+end
+
+fn main to int
+emit 0 42
+emit 1 42
+emit 2 42
+emit 3 42
+emit 4 0
+emit 5 18446744073709551615
+emit 6 18446744073709551614
+emit 7 6148914691236517205
+emit 8 2
+emit 9 14
+emit 10 2
+emit 11 2
+emit 12 20
+emit 13 20
+emit 14 42
+emit 15 42
+n = write 1 out 0 128
+if ne n long 128
+ret 81
+end
+ret 0
+end

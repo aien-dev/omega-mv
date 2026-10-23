@@ -1,0 +1,47 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note task-id=public-u64-boundary-v1
+note task-family-id=pure-u64-boundary-v1
+note split=public-development
+note oracle-id=l776-handwritten-u64-boundaries-v1
+note provenance=hand-authored-by-L776; expected values computed from modulo-2^64 arithmetic, not candidate output.
+note profile-proposal=seeded-omega-ulong-arithmetic-v1; pending frozen #653 profile confirmation.
+note compiler-pin=omega-bridge/0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9; compiler-sha256=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9.
+note Independent expected values: max+1=0; 0-1=max; max*2=max-1; max/3=6148914691236517205.
+note These vectors do not define divide-by-zero behavior or signed overflow.
+note Provenance: L776 / action L776-653-public-oracle-01 / source head cd5897e3f92f72a015892c67b17f096e433b54f7.
+
+fn umax to ulong
+ret 18446744073709551615
+end
+
+fn plus_u64 a ulong b ulong to ulong
+ret add a b
+end
+
+fn minus_u64 a ulong b ulong to ulong
+ret sub a b
+end
+
+fn times_u64 a ulong b ulong to ulong
+ret mul a b
+end
+
+fn quotient_u64 a ulong b ulong to ulong
+ret div a b
+end
+
+fn main to int
+if ne plus_u64 umax 1 0
+ret 1
+end
+if ne minus_u64 0 1 umax
+ret 2
+end
+if ne times_u64 umax 2 18446744073709551614
+ret 3
+end
+if ne quotient_u64 umax 3 6148914691236517205
+ret 4
+end
+ret 0
+end
