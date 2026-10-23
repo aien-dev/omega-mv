@@ -1,0 +1,4 @@
+# NEGATIVE CONTROL: 0x91000400 is a real AArch64 word (ADD X0, X0, #1) that our decoder
+# cannot name. The tool must refuse it before anything runs.
+0x91000400   # ADD X0, X0, #1
+0xD65F03C0   # RET

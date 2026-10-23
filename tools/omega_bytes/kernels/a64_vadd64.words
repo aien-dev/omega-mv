@@ -1,0 +1,11 @@
+# a64: out[i] = a[i] + b[i] for 64 unsigned 32-bit elements.
+# X0 = a, X1 = b, X2 = out (addresses). X3 counts down from 64. X0 comes back as a + 256
+# (the walked pointer); the caller ignores it and checks out[].
+0xD2800803   # MOVZ X3, #64            64 elements to go
+0xB8404404   # loop: LDR W4, [X0], #4  W4 = *a, a += 4 bytes
+0xB8404425   # LDR  W5, [X1], #4       W5 = *b, b += 4 bytes
+0x0B050084   # ADD  W4, W4, W5         W4 = W4 + W5 (wraps at 2^32)
+0xB8004444   # STR  W4, [X2], #4       *out = W4, out += 4 bytes
+0xF1000463   # SUBS X3, X3, #1         one fewer to go, set flags
+0x54FFFF61   # B.NE loop               back 5 words while X3 != 0
+0xD65F03C0   # RET

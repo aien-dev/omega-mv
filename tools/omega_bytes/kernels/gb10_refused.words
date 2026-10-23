@@ -1,0 +1,3 @@
+# NEGATIVE CONTROL: opcode 0x123 is not produced by the in-repo sm_121 encoder. Must be refused.
+0x0000000000007123 0x000fea0003800000
+0x000000000000794d 0x000fea0003800000  # EXIT

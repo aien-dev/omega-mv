@@ -1,0 +1,42 @@
+# gb10 (sm_121): out[i] = a[i] + b[i], one element per thread, 64 threads per block.
+# Hand-written. One 128-bit instruction per line as two 64-bit halves, low half first
+# (the order cuobjdump/nvdisasm print). Low half: opcode in bits 0-11, predicate 12-15,
+# registers above. High half bits 105-125 are the schedule I chose by hand:
+#   stall = cycles before the next instruction issues, wb/rb = scoreboard this
+#   instruction signals when its result is written / its sources are read (7 = none),
+#   wait = mask of scoreboards to wait for before issuing.
+# Launcher contract (src/omega_blackwell_engine.c, VECTOR_1D): c[0x0][0x358] memory
+# descriptor, 0x380 a, 0x388 b, 0x390 out, 0x398 n.
+0x0000000000007919 0x000e220000002100  # S2R R0, SR_TID.X           stall1 wb0
+0x0000000000037919 0x000e220000002500  # S2R R3, SR_CTAID.X         stall1 wb0
+0x00007300ff0577ac 0x000e620008000800  # LDCU UR5, c[0x0][0x398] (n) stall1 wb1
+0x0000004003037824 0x001fca00078e0200  # IMAD R3, R3, 0x40, R0  i = block*64 + thread; wait sb0, stall5
+0x0000000503007c0c 0x002fda000bf06070  # ISETP.GE.U32.AND P0, PT, R3, UR5, PT; wait sb1, stall13
+0x000000000000094d 0x000fea0003800000  # @P0 EXIT                   threads past n stop
+0x0000e000ff047b82 0x000e220000000a00  # LDC.64 R4, c[0x0][0x380] (a)   wb0
+0x0000e200ff067b82 0x000e620000000a00  # LDC.64 R6, c[0x0][0x388] (b)   wb1
+0x0000e400ff087b82 0x000ea20000000a00  # LDC.64 R8, c[0x0][0x390] (out) wb2
+0x00006b00ff0477ac 0x000ee20008000a00  # LDCU.64 UR4, c[0x0][0x358] (descriptor) wb3
+0x0000000403047825 0x001fc400078e0004  # IMAD.WIDE.U32 R4, R3, 0x4, R4  &a[i]; wait sb0, stall2
+0x0000000403067825 0x002fc800078e0006  # IMAD.WIDE.U32 R6, R3, 0x4, R6  &b[i]; wait sb1, stall4
+0x0000000404007981 0x008f24000c1e1900  # LDG.E R0, desc[UR4][R4.64]  a[i]; wait sb3, wb4, stall2
+0x0000000406027981 0x000f22000c1e1900  # LDG.E R2, desc[UR4][R6.64]  b[i]; wb4
+0x0000000403087825 0x004fc200078e0008  # IMAD.WIDE.U32 R8, R3, 0x4, R8  &out[i]; wait sb2
+0x0000000200007210 0x010fca0007ffe0ff  # IADD3 R0, PT, PT, R0, R2, RZ   a+b; wait sb4, stall5
+0x0000000008007986 0x000fe2000c101904  # STG.E desc[UR4][R8.64], R0     out[i] = a+b
+0x000000000000794d 0x000fea0003800000  # EXIT
+0xfffffffc00fc7947 0x000fc0000383ffff  # BRA self (never reached; stops a runaway warp)
+# padding: the in-repo encoder pads every kernel to at least 32 instructions; kept the same
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
+0x0000000000007918 0x000fc00000000000  # NOP
