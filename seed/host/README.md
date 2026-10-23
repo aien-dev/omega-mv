@@ -1,0 +1,67 @@
+# Native host operations
+
+Drake authorized extending Omega before rewriting benchmarks-mv on 2026-10-23,
+with no outside implementation help. These operations are implemented in
+`seed/omc/omc.om`. That Omega compiler emits the machine instructions itself.
+The seed chain builds it and it rebuilds itself to identical bytes. No C/Rust
+implementation, translator, external model, foreign compiler, assembler or
+linker implements or builds these additions.
+
+The existing shell seed loader remains the first bootstrap step, as described
+in `seed/README.md`. Shell scripts coordinate builds and tests; they do not
+implement the host operations. Programs call the Linux ARM64 kernel directly,
+as the original `read`, `write` and `exit` already do. This is Linux-hosted
+operation, not a native AienOS qualification or a GPU qualification.
+
+The language contract is [OMEGESE section 10](../../docs/one_layer/OMEGESE.md).
+
+## Qualification
+
+From the repository root on Linux ARM64:
+
+```sh
+quiet-build sh seed/host/check.sh
+```
+
+On a machine without the Spark build coordinator, run the script directly.
+The script rebuilds the seed chain, proves compiler self-reproduction, runs
+native Omega fixtures, rejects malformed inputs, and compares the original
+fixture corpus against the original native parent. It does not run the older
+C-reference gate scripts.
+
+Verified on the Spark on 2026-10-23:
+
+- Native file create/read/write/seek/sync/chmod/close/unlink and errno checks.
+- Monotonic nanoseconds, realtime nanoseconds and a measured native sleep.
+- Argument copying, including empty arguments, spaces, UTF-8 bytes, and refusal
+  of short output buffers without modifying them.
+- Socket exchange between native Omega processes, including local sockets and
+  TCP loopback on a kernel-selected ephemeral port.
+- Poll timeouts, fork, accept, exec with exact arguments, exec failure, pipes,
+  descriptor duplication, process termination and child reaping.
+- Directory creation/enumeration/removal, file metadata and no-replace rename.
+- Eighteen negative controls for bounds, malformed packets, readonly arrays,
+  wrong types and use outside program mode.
+- Seventy original compiler fixtures produce identical machine code, refusal
+  status and diagnostics to the original native parent.
+
+Fixtures run in a unique temporary directory under `build/seed/host/`. The
+network test connects only to its own local server. Process tests reap their
+children. No service is installed or changed. `timeout` only bounds test
+processes; timed operations inside the tests use the emitted native code.
+
+## Source authority and limits
+
+Instruction forms come from the existing hand-audited instruction table in
+`seed/rung2/table.s2`, which identifies Arm manual sections. Linux interfaces
+were checked against the installed ARM64 headers: `asm/unistd.h`,
+`asm-generic/unistd.h`, `asm/fcntl.h`, `asm-generic/fcntl.h`,
+`asm-generic/stat.h`, `asm-generic/poll.h` and `linux/time.h`. The architecture
+header overrides generic constants: ARM64 `O_DIRECTORY` is 040000 octal.
+These are interface references, not imported implementation code.
+
+This extension supplies host facilities for the benchmark migration. It does
+not implement a JSON library, floating-point types, the full benchmark suite,
+or the sibling runtime's in-process interfaces. Existing numeric, array,
+register and loop capacities remain in force. The language has no exposed
+pointers or arbitrary-syscall escape hatch.

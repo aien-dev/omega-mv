@@ -484,3 +484,89 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 Input over a capacity is refused with error 14, never overrun: om4 reads at most 8 MiB - 1 bytes and
 writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 512 functions, 8192 trap sites per function, 512 nested
 blocks. A function that needs more than the 16 registers it hands out is error 12.
+
+## 10. Native host extension (2026-10-23)
+
+Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original
+om4 parent builds this extended compiler; the extended compiler reproduces
+itself byte for byte. The original subset retains its machine code. The new
+words are reserved and require program mode (error 9 in function mode).
+
+All results below have type `long`. Successful kernel results are nonnegative;
+failures return minus the Linux error number. Programs must check errors.
+These operations do not form a sandbox: they operate with the process's
+existing permissions. They expose no pointer values and no arbitrary syscall.
+
+In signatures, `fd`, `flags`, `mode`, `pid`, `signal`, `events`, `domain`,
+`kind`, `protocol`, `backlog`, `target`, `options` and `whence` are `int`.
+Offsets, byte counts, capacities and argument indices are `ulong`. File offsets
+and time intervals are `long`. `A` is a `uchar` array. Every slice checks
+`n <= len A` and `off <= len A - n` before kernel access, otherwise trap 3
+(program exit 103). Writable operations reject `view` and `text` (error 20).
+Non-byte arrays and mismatched scalar types are error 7.
+
+| Expression | Meaning |
+| --- | --- |
+| `fopen A off n flags mode` | Open a length-delimited path relative to the current directory. Return descriptor. |
+| `fclose fd` | Close descriptor. |
+| `fsync fd` | Sync file data and metadata. |
+| `fchmod fd mode` | Set permissions on an open descriptor. |
+| `fseek fd offset whence` | Seek and return the resulting signed file offset. |
+| `unlink A off n` | Remove the named file. |
+| `makedir A off n mode` | Create a directory. |
+| `rmdir A off n` | Remove an empty directory. |
+| `getdnts fd A off n` | Write raw Linux `getdents64` records; return bytes written. |
+| `fstat fd A off n` | Write the 128-byte Linux ARM64 stat structure; requires capacity at least 128. |
+| `renames A off n flags` | Rename the two paths in a packed list using `renameat2`; flag 1 refuses replacement. |
+| `monons` | Monotonic nanoseconds, suitable for elapsed-time measurement. |
+| `realns` | Realtime nanoseconds since the Unix epoch, suitable for timestamps. |
+| `sleepns interval` | Sleep for nonnegative nanoseconds. Negative intervals trap 3. Interruptions return the kernel error. |
+| `socknew domain kind protocol` | Create a socket. |
+| `bind fd A off n` | Bind the socket to the address bytes in the slice. |
+| `connect fd A off n` | Connect using the address bytes in the slice. |
+| `listen fd backlog` | Listen for connections. |
+| `accept fd flags` | Accept a connection with `accept4`; return descriptor, without peer-address output. |
+| `sockname fd A off n` | Write socket address bytes; return the full address length, which may exceed capacity when truncated. |
+| `recv fd A off n flags` | Receive into a writable slice. |
+| `send fd A off n flags` | Send a slice with `MSG_NOSIGNAL` added, so a closed peer returns an error. |
+| `waitio fd events interval` | Poll one descriptor. Return readiness bits, zero on timeout, or negative errno. Interval is nanoseconds; negative means infinite. Events outside 0..65535 trap 3. |
+| `fork` | Copy the current process: zero in the child, child PID in the parent, negative errno on failure. |
+| `getpid` | Return the current process ID. |
+| `killpid pid signal` | Send a signal; zero signal checks existence/permission. |
+| `waitpid pid A off n options` | Wait with `wait4`; write a four-byte status, return PID or zero for an unfinished nonblocking wait. Capacity at least four. |
+| `pipefds A off n flags` | Create a pipe with `pipe2`; write two little-endian 32-bit descriptors. Capacity at least eight. |
+| `dupfd fd target flags` | Duplicate onto a chosen descriptor using `dup3`. |
+| `execprog A off n` | Replace the process using a packed argument list. Only returns on failure. |
+| `argcnt` | Return argument count, including the executable name. |
+| `argread index A off capacity` | Copy argument bytes without a terminator; return byte length. An invalid index traps 3. Insufficient capacity returns -105 without changing the slice. |
+
+### Path and process boundaries
+
+Paths are at most 4095 bytes. Embedded zero bytes and longer paths trap 3
+before a kernel operation. The compiler privately copies and terminates paths
+at the Linux boundary; Omega array lengths remain explicit. Private stack
+space is checked against the existing stack floor before writing.
+
+A packed list is a little-endian `u16` count followed by that many records,
+each a little-endian `u16` byte length and those bytes. There is no padding or
+terminator in the public format. The whole packet is at most 4096 bytes and
+the count is 1..64. Embedded zero bytes, truncated records, extra trailing
+bytes and out-of-range counts trap 3. `execprog` uses the first record as both
+the executable path and argument zero; it must be nonempty. Other arguments
+may be empty. `renames` requires exactly two nonempty path records.
+
+The compiler constructs private, bounded pointer lists for the kernel. They
+are never exposed as language values. `execprog` supplies an empty environment,
+preserves the working directory and ordinary inherited descriptors, and does
+not search PATH or invoke a shell. Programs should explicitly request
+close-on-exec descriptors where needed. Forked children are independent
+processes and must be reaped; this extension does not add shared-memory threads.
+
+Clock results use signed nanoseconds and trap 1 on overflow. `argread` bounds
+its internal string scan at 1 MiB; reaching that bound traps 3. Linux ARM64 is
+the only qualified host. OS flags, address layouts and metadata layouts are
+host-specific; portable library contracts remain separate work.
+
+Qualification is `sh seed/host/check.sh`; see `seed/host/README.md`. The seed
+loader and shell test coordinator do not implement these operations. No
+foreign-language compiler or runtime is on the new implementation path.
