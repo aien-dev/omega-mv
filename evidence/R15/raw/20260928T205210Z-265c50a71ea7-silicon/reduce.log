@@ -1,0 +1,17 @@
+G1   FAIL RES-1 round 3: trial did not complete (exit 1)
+G2   FAIL 2 valid pairs (need >= 10)
+G3   PASS 
+G4   PASS 
+G5   PASS p50 10192 ns, p99 19472 ns, n 50000
+G6   PASS p50 32 ns, p99 49 ns per check (batch mean)
+G7   PASS 344 barriers, 0 failed, p99 99549573 ns
+G8   FAIL 1 valid pairs
+G9   FAIL 0 valid pairs
+G10  PASS RES-1 88.711, SEQ 110.223 per result
+G11  PASS 
+G12  PASS RES-4 1.192, SEQ 1160.547 per consequential stimulus
+G13  PASS 
+G14  PASS 
+G15  PASS 58 silicon processes (trials + L2); 48 silicon trials
+G16  PASS 
+all gates: FAIL
