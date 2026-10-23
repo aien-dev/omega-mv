@@ -1,0 +1,26 @@
+```json
+{
+  "functions": [
+    {
+      "name": "rotl64",
+      "params": ["u64", "u32"],
+      "ret": "u64",
+      "locals": ["u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 3, "value": 64},
+          {"op": "rem", "dst": 2, "a": 1, "b": 3},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "shl", "dst": 4, "a": 0, "b": 2},
+          {"op": "and", "dst": 5, "a": 0, "b": 3},
+          {"op": "shr", "dst": 6, "a": 0, "b": 2},
+          {"op": "or", "dst": 0, "a": 4, "b": 5},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}
+```

@@ -1,0 +1,27 @@
+```osc
+fn mod_inv(a: u32, m: u32) -> u32 {
+    if m < 2 {
+        return 0;
+    }
+    let mut x = 0;
+    let mut y = 1;
+    let mut a1 = a;
+    let mut m1 = m;
+    let mut q, r, t, new_t;
+    while m1 != 0 {
+        q = a1 / m1;
+        r = a1 % m1;
+        t = y;
+        new_t = x - q * y;
+        x = t;
+        y = new_t;
+        a1 = m1;
+        m1 = r;
+    }
+    if a1 == 1 {
+        return x;
+    } else {
+        return 0;
+    }
+}
+```

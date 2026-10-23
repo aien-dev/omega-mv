@@ -1,0 +1,38 @@
+{
+  "functions": [
+    {
+      "name": "bitrev32",
+      "params": ["u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "const", "dst": 1, "value": 4294967295},
+          {"op": "const", "dst": 2, "value": 16777215},
+          {"op": "const", "dst": 3, "value": 255},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "and", "dst": 0, "a": 0, "b": 1},
+          {"op": "shl", "dst": 0, "a": 0, "b": 2},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "and", "dst": 0, "a": 0, "b": 2},
+          {"op": "shl", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "and", "dst": 0, "a": 0, "b": 3},
+          {"op": "shl", "dst": 0, "a": 0, "b": 0},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "add", "dst": 0, "a": 0, "b": 0},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}

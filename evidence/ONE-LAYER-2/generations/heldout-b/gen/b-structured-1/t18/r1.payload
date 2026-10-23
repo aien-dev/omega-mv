@@ -1,0 +1,53 @@
+{
+  "functions": [
+    {
+      "name": "clz32",
+      "params": ["u32"],
+      "ret": "u8",
+      "locals": ["u32", "u32", "u32", "u32", "u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 32},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 0},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "shl", "dst": 2, "a": 1, "b": 0},
+          {"op": "eq", "dst": 3, "a": 2, "b": 4},
+          {"op": "cbr", "cond": 3, "then": 5, "else": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 1},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 2},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 4},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 8},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 16},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 32},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "sub", "dst": 5, "a": 0, "b": 1},
+          {"op": "ret", "a": 5}
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+```osc
+fn sign(x: i16) -> i8 {
+    if x > 0 {
+        return 1;
+    } else if x < 0 {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+```

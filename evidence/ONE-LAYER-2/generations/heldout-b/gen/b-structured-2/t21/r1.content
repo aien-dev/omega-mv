@@ -1,0 +1,43 @@
+```json
+{
+  "functions": [
+    {
+      "name": "count_true",
+      "params": ["bool", "bool", "bool", "bool", "bool", "bool"],
+      "ret": "u8",
+      "locals": ["u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "add", "dst": 1, "a": 0, "b": 0},
+          {"op": "cbr", "cond": 1, "then": 1, "else": 2},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "add", "dst": 1, "a": 1, "b": 0},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "add", "dst": 1, "a": 1, "b": 0},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "add", "dst": 1, "a": 1, "b": 0},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "add", "dst": 1, "a": 1, "b": 0},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "add", "dst": 1, "a": 1, "b": 0},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "ret", "a": 1}
+        ]
+      ]
+    }
+  ]
+}
+```

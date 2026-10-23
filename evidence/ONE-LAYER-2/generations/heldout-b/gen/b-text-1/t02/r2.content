@@ -1,0 +1,9 @@
+```osc
+fn mul_hi(a: u64, b: u64) -> u64 {
+    let mut result: u64 = 0;
+    let mut temp: u128 = a as u128;
+    temp = temp * (b as u128);
+    result = (temp >> 64) as u64;
+    return result;
+}
+```

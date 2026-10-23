@@ -1,0 +1,42 @@
+{
+  "functions": [
+    {
+      "name": "ndigits",
+      "params": ["i64"],
+      "ret": "u8",
+      "locals": ["u64", "u64", "u64"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "const", "dst": 2, "value": 10},
+          {"op": "eq", "dst": 3, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 3, "then": 3, "else": 4}
+        ],
+        [
+          {"op": "neg", "dst": 0, "a": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "cast", "dst": 0, "a": 0},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 0},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "shl", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}

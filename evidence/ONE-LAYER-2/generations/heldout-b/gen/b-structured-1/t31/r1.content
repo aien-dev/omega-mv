@@ -1,0 +1,21 @@
+```json
+{
+  "functions": [
+    {
+      "name": "neg8",
+      "params": ["i8"],
+      "ret": "i8",
+      "locals": [],
+      "blocks": [
+        [
+          {"op": "neg", "dst": 0, "a": 0},
+          {"op": "trap", "code": 1}
+        ],
+        [
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}
+```

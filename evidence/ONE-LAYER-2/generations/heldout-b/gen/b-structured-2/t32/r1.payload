@@ -1,0 +1,25 @@
+{
+  "functions": [
+    {
+      "name": "parity",
+      "params": ["u64"],
+      "ret": "bool",
+      "locals": [],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "load", "dst": 1, "arr": 0, "index": 0},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "shl", "dst": 1, "a": 1, "b": 1},
+          {"op": "cbr", "cond": 1, "then": 1, "else": 2},
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 1},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}

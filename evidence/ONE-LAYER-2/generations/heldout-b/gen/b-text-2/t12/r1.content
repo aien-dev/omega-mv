@@ -1,0 +1,14 @@
+```osc
+fn fib_mod(n: u64) -> u32 {
+    let mut a: u32 = 0;
+    let mut b: u32 = 1;
+    let mut i: u64 = 0;
+    while i < n {
+        let temp = a;
+        a = (a + b) % 1000000007;
+        b = temp;
+        i = i + 1;
+    }
+    return a;
+}
+```

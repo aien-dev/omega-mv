@@ -1,0 +1,9 @@
+```osc
+fn mulmod(a: u64, b: u64, m: u64) -> u64 {
+    if m == 0 {
+        trap 2;
+    }
+    let result: u64 = a * b;
+    return result % m;
+}
+```

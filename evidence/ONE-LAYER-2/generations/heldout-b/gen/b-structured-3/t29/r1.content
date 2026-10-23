@@ -1,0 +1,24 @@
+```json
+{
+  "functions": [
+    {
+      "name": "add_mixed",
+      "params": ["u8", "i8"],
+      "ret": "u8",
+      "locals": ["u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "add", "dst": 2, "a": 0, "b": 1},
+          {"op": "trap", "code": 1}
+        ],
+        [
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "add", "dst": 2, "a": 0, "b": 1},
+          {"op": "ret", "a": 2}
+        ]
+      ]
+    }
+  ]
+}
+```

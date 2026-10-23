@@ -1,0 +1,64 @@
+{
+  "functions": [
+    {
+      "name": "grade",
+      "params": ["u8"],
+      "ret": "u8",
+      "locals": ["u8", "u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 255},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 100},
+          {"op": "le", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 3, "else": 4}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 90},
+          {"op": "ge", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 5, "else": 6}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 4},
+          {"op": "ret", "a": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 89},
+          {"op": "le", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 7, "else": 8}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 3},
+          {"op": "ret", "a": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 79},
+          {"op": "le", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 9, "else": 10}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 2},
+          {"op": "ret", "a": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 69},
+          {"op": "le", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 11, "else": 12}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "ret", "a": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 0},
+          {"op": "ret", "a": 1}
+        ],
+        [
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}

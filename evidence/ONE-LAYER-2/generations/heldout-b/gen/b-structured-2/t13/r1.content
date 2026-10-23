@@ -1,0 +1,43 @@
+```json
+{
+  "functions": [
+    {
+      "name": "median3",
+      "params": ["u16", "u16", "u16"],
+      "ret": "u16",
+      "locals": ["u16", "u16", "u16"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 3, "value": 0},
+          {"op": "const", "dst": 4, "value": 0},
+          {"op": "const", "dst": 5, "value": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "load", "dst": 0, "arr": 0, "index": 3},
+          {"op": "load", "dst": 1, "arr": 0, "index": 4},
+          {"op": "load", "dst": 2, "arr": 0, "index": 5},
+          {"op": "cbr", "cond": 0, "then": 2, "else": 3},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "add", "dst": 3, "a": 0, "b": 1},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "add", "dst": 3, "a": 1, "b": 2},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "add", "dst": 3, "a": 0, "b": 2},
+          {"op": "ret", "a": 3}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 0},
+          {"op": "ret", "a": 3}
+        ]
+      ]
+    }
+  ]
+}
+```

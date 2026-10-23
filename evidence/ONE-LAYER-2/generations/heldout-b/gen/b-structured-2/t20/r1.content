@@ -1,0 +1,48 @@
+```json
+{
+  "functions": [
+    {
+      "name": "ndigits",
+      "params": ["i64"],
+      "ret": "u8",
+      "locals": ["u8", "i64", "i64"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "cbr", "cond": 0, "then": 1, "else": 2}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "ret", "a": 1}
+        ],
+        [
+          {"op": "not", "dst": 2, "a": 0},
+          {"op": "eq", "dst": 3, "a": 2, "b": 0},
+          {"op": "cbr", "cond": 3, "then": 4, "else": 5}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 0},
+          {"op": "ret", "a": 1}
+        ],
+        [
+          {"op": "neg", "dst": 2, "a": 0},
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "shl", "dst": 2, "a": 1, "b": 0},
+          {"op": "add", "dst": 1, "a": 1, "b": 1},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "trap", "code": 1}
+        ]
+      ]
+    }
+  ]
+}
+```

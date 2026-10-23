@@ -1,0 +1,15 @@
+fn binom(n: u8, k: u8) -> u64 {
+    if k > n {
+        return 0;
+    }
+    let mut result: u64 = 1;
+    let mut k = k;
+    let mut n = n;
+    if k > n / 2 {
+        k = n - k;
+    }
+    for i in 0..k {
+        result = result * (n - i) / (i + 1);
+    }
+    return result;
+}

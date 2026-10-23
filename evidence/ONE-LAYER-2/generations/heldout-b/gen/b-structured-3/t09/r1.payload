@@ -1,0 +1,57 @@
+{
+  "functions": [
+    {
+      "name": "is_prime",
+      "params": ["u32"],
+      "ret": "bool",
+      "locals": ["u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 1},
+          {"op": "cbr", "cond": 0, "then": 1, "else": 2},
+          {"op": "const", "dst": 1, "value": 2},
+          {"op": "cbr", "cond": 1, "then": 3, "else": 4},
+          {"op": "const", "dst": 2, "value": 1},
+          {"op": "ret", "a": 2}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 3},
+          {"op": "cbr", "cond": 1, "then": 5, "else": 6},
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "ret", "a": 2}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 2},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 3},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "load", "dst": 2, "arr": 0, "index": 1},
+          {"op": "add", "dst": 1, "a": 1, "b": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "load", "dst": 2, "arr": 0, "index": 1},
+          {"op": "eq", "dst": 1, "a": 2, "b": 0},
+          {"op": "cbr", "cond": 1, "then": 8, "else": 9}
+        ],
+        [
+          {"op": "const", "dst": 2, "value": 1},
+          {"op": "ret", "a": 2}
+        ],
+        [
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "ret", "a": 2}
+        ],
+        [
+          {"op": "load", "dst": 2, "arr": 0, "index": 1},
+          {"op": "sub", "dst": 1, "a": 1, "b": 2},
+          {"op": "br", "to": 7}
+        ]
+      ]
+    }
+  ]
+}

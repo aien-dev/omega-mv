@@ -1,0 +1,55 @@
+```json
+{
+  "functions": [
+    {
+      "name": "is_prime",
+      "params": ["u32"],
+      "ret": "bool",
+      "locals": ["u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 1},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 2},
+          {"op": "cbr", "cond": 1, "then": 1, "else": 2}
+        ],
+        [
+          {"op": "const", "dst": 2, "value": 2},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "sub", "dst": 1, "a": 1, "b": 0},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "add", "dst": 2, "a": 2, "b": 1},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "shl", "dst": 3, "a": 1, "b": 2},
+          {"op": "eq", "dst": 0, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 0, "then": 7, "else": 8}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 1},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}
+```

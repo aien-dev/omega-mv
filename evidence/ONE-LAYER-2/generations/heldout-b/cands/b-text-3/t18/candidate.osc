@@ -1,0 +1,12 @@
+fn clz32(x: u32) -> u8 {
+    let mut count: u8 = 0;
+    let mut val = x;
+    if val == 0 {
+        return 32;
+    }
+    while val != 0 {
+        val = val >> 1;
+        count += 1;
+    }
+    return count;
+}

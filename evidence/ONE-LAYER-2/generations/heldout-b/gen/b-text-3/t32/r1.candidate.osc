@@ -1,0 +1,11 @@
+fn parity(x: u64) -> bool {
+    let mut count: u64 = 0;
+    let mut val = x;
+    while val > 0 {
+        val = val >> 1;
+        if val & 1 == 1 {
+            count += 1;
+        }
+    }
+    return count % 2 == 1;
+}

@@ -1,0 +1,9 @@
+```osc
+fn odd3(a: bool, b: bool, c: bool) -> bool {
+    let mut count = 0;
+    if a { count = 1; }
+    if b { count = 2; }
+    if c { count = 3; }
+    return count % 2 == 1;
+}
+```

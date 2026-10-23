@@ -1,0 +1,66 @@
+```json
+{
+  "functions": [
+    {
+      "name": "grade",
+      "params": ["u8"],
+      "ret": "u8",
+      "locals": ["u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 255},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 100},
+          {"op": "ge", "dst": 1, "a": 0, "b": 0},
+          {"op": "cbr", "cond": 1, "then": 2, "else": 3}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 90},
+          {"op": "ge", "dst": 1, "a": 0, "b": 0},
+          {"op": "cbr", "cond": 1, "then": 4, "else": 5}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 80},
+          {"op": "ge", "dst": 1, "a": 0, "b": 0},
+          {"op": "cbr", "cond": 1, "then": 6, "else": 7}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 70},
+          {"op": "ge", "dst": 1, "a": 0, "b": 0},
+          {"op": "cbr", "cond": 1, "then": 8, "else": 9}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 60},
+          {"op": "ge", "dst": 1, "a": 0, "b": 0},
+          {"op": "cbr", "cond": 1, "then": 10, "else": 11}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 4},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 3},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 2},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 1},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}
+```

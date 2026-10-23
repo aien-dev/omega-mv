@@ -1,0 +1,28 @@
+```json
+{
+  "functions": [
+    {
+      "name": "closer",
+      "params": ["i16", "i16", "i16", "i16"],
+      "ret": "bool",
+      "locals": ["i16", "i16", "i16", "i16"],
+      "blocks": [
+        [
+          {"op": "mov", "dst": 4, "a": 0},
+          {"op": "mov", "dst": 5, "a": 1},
+          {"op": "mov", "dst": 6, "a": 2},
+          {"op": "mov", "dst": 7, "a": 3},
+          {"op": "mul", "dst": 2, "a": 4, "b": 4},
+          {"op": "mul", "dst": 3, "a": 5, "b": 5},
+          {"op": "add", "dst": 2, "a": 2, "b": 3},
+          {"op": "mul", "dst": 3, "a": 6, "b": 6},
+          {"op": "mul", "dst": 3, "a": 3, "b": 7},
+          {"op": "add", "dst": 3, "a": 3, "b": 3},
+          {"op": "lt", "dst": 0, "a": 2, "b": 3},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}
+```

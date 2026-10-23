@@ -1,0 +1,10 @@
+```osctext
+fn in_range(x: i32, lo: i32, hi: i32) -> bool {
+    if lo <= hi {
+        if x >= lo && x <= hi {
+            return 1;
+        }
+    }
+    return 0;
+}
+```

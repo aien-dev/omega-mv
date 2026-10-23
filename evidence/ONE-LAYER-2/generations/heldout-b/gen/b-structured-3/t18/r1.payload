@@ -1,0 +1,37 @@
+{
+  "functions": [
+    {
+      "name": "clz32",
+      "params": ["u32"],
+      "ret": "u8",
+      "locals": ["u32", "u8", "u8", "u8", "u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 32},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "const", "dst": 2, "value": 31},
+          {"op": "cbr", "cond": 0, "then": 3, "else": 4}
+        ],
+        [
+          {"op": "shr", "dst": 3, "a": 0, "b": 1},
+          {"op": "shr", "dst": 1, "a": 1, "b": 1},
+          {"op": "sub", "dst": 2, "a": 2, "b": 1},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 0},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "ret", "a": 2}
+        ],
+        [
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}

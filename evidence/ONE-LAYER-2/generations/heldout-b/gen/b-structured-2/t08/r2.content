@@ -1,0 +1,156 @@
+```json
+{
+  "functions": [
+    {
+      "name": "roman_len",
+      "params": ["u16"],
+      "ret": "u8",
+      "locals": ["u16", "u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1000},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 3, "else": 4}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 900},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 5, "else": 6}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 500},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 7, "else": 8}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 400},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 9, "else": 10}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 100},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 11, "else": 12}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 90},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 13, "else": 14}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 50},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 15, "else": 16}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 40},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 17, "else": 18}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 10},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 19, "else": 20}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 9},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 21, "else": 22}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 5},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 23, "else": 24}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 4},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 25, "else": 26}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 2, "then": 27, "else": 28}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}
+```

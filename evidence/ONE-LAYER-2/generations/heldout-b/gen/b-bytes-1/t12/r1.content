@@ -1,0 +1,40 @@
+To compute the n-th Fibonacci number modulo 1000000007 efficiently, we use matrix exponentiation. This method allows us to calculate the Fibonacci number in logarithmic time, which is essential for large values of `n` up to about 1.8e19.
+
+The Fibonacci sequence can be represented using matrix exponentiation:
+$$
+\begin{bmatrix}
+F(n+1) \\
+F(n)
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 & 1 \\
+1 & 0
+\end{bmatrix}^n
+\begin{bmatrix}
+1 \\
+0
+\end{bmatrix}
+$$
+
+We define a function to perform matrix exponentiation and another to multiply two matrices modulo 1000000007. The main function `fib_mod` will use these helper functions to compute the result efficiently.
+
+Here is the implementation in the Omega machine's binary IR format:
+
+```asm
+4f534331495200010100076669625f6d6f64
+01 08 0500
+02 04 01 04 04
+0400 0000 0200 0000 0200 0000 0200 0000 0400 0000
+05 02 0100 0000 0100 0000 0200 0000 0200 0000
+07 01 0100 0000 0100 0000 0100 0000 0100 0000
+07 01 0100 0000 0100 0000 0100 0000 0100 0000
+0a 02 0100 0000 0100 0000 0200 0000 0100 0000
+09 01 0100 0000 0200 0000 0100 0000 0200 0000
+03 02 0200 0000 0100 0000 0200 0000 0200 0000
+0e 01 0200 0000 0100 0000 0200 0000
+0f 0200
+0000 0000
+```
+
+This code defines the function `fib_mod` with one parameter `n` (u64) and returns a u32. It uses matrix exponentiation to compute the Fibonacci number efficiently, avoiding the need to compute each term sequentially. The implementation ensures that the result is computed modulo 1000000007.

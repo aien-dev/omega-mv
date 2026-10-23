@@ -1,0 +1,186 @@
+```json
+{
+  "functions": [
+    {
+      "name": "bitrev32",
+      "params": ["u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "const", "dst": 1, "value": 4294967295},
+          {"op": "const", "dst": 2, "value": 1},
+          {"op": "const", "dst": 3, "value": 2},
+          {"op": "const", "dst": 4, "value": 4},
+          {"op": "const", "dst": 5, "value": 8},
+          {"op": "const", "dst": 6, "value": 16},
+          {"op": "const", "dst": 7, "value": 32},
+          {"op": "const", "dst": 8, "value": 64},
+          {"op": "const", "dst": 9, "value": 128},
+          {"op": "const", "dst": 10, "value": 256},
+          {"op": "const", "dst": 11, "value": 512},
+          {"op": "const", "dst": 12, "value": 1024},
+          {"op": "const", "dst": 13, "value": 2048},
+          {"op": "const", "dst": 14, "value": 4096},
+          {"op": "const", "dst": 15, "value": 8192},
+          {"op": "const", "dst": 16, "value": 16384},
+          {"op": "const", "dst": 17, "value": 32768},
+          {"op": "const", "dst": 18, "value": 65536},
+          {"op": "const", "dst": 19, "value": 131072},
+          {"op": "const", "dst": 20, "value": 262144},
+          {"op": "const", "dst": 21, "value": 524288},
+          {"op": "const", "dst": 22, "value": 1048576},
+          {"op": "const", "dst": 23, "value": 2097152},
+          {"op": "const", "dst": 24, "value": 4194304},
+          {"op": "const", "dst": 25, "value": 8388608},
+          {"op": "const", "dst": 26, "value": 16777216},
+          {"op": "const", "dst": 27, "value": 33554432},
+          {"op": "const", "dst": 28, "value": 67108864},
+          {"op": "const", "dst": 29, "value": 134217728},
+          {"op": "const", "dst": 30, "value": 268435456},
+          {"op": "const", "dst": 31, "value": 536870912},
+          {"op": "const", "dst": 32, "value": 1073741824},
+          {"op": "const", "dst": 33, "value": 2147483648},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "and", "dst": 0, "a": 3, "b": 1},
+          {"op": "add", "dst": 1, "a": 1, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 32, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 33, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 34, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 35, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 36, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 37, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 38, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 39, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 40, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 41, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 42, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 43, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 44, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 45, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 46, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 47, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 48, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 49, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 50, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 51, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 52, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "shr", "dst": 0, "a": 53, "b": 1},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "shl", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "

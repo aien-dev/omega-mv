@@ -1,0 +1,20 @@
+To implement the `mul_hi` function, we need to compute the high 64 bits of the exact 128-bit product of two 64-bit unsigned integers `a` and `b`. This can be done using the `u128` type to store the full product and then extracting the high 64 bits using bitwise operations.
+
+The steps are as follows:
+1. Multiply the two 64-bit integers to get a 128-bit result.
+2. Extract the high 64 bits of the result using a bitwise right shift by 64 bits.
+
+Here's the implementation in the required format:
+
+```asm
+4f534331495200010100086d756c5f6869
+02 08 0800 02 08 01 08 01
+0300 00000000 02000000 02000000 02000000 04000000 02000000
+01 0400 0000000000000000 0400 0000000000000000
+01 0200 0000000000000000 0400 0000000000000000
+01 0200 0000000000000000 0400 0000000000000000
+0f 0400
+0000 0000
+```
+
+This code defines the `mul_hi` function with two `u64` parameters and a `u64` return type. It multiplies the two parameters, shifts the result right by 64 bits to get the high 64 bits, and returns the result.

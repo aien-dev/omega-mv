@@ -1,0 +1,53 @@
+```json
+{
+  "functions": [
+    {
+      "name": "powmod",
+      "params": ["u32", "u32", "u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "eq", "dst": 3, "a": 1, "b": 2},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 0},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "eq", "dst": 4, "a": 2, "b": 3},
+          {"op": "trap", "code": 2}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "ret", "a": 3}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 1},
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "cbr", "cond": 2, "then": 5, "else": 6},
+          {"op": "shl", "dst": 0, "a": 0, "b": 1},
+          {"op": "and", "dst": 1, "a": 1, "b": 2},
+          {"op": "add", "dst": 1, "a": 1, "b": 0},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}
+```

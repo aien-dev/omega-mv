@@ -1,0 +1,326 @@
+{
+  "functions": [
+    {
+      "name": "binom",
+      "params": ["u8", "u8"],
+      "ret": "u64",
+      "locals": ["u8", "u8", "u64", "u64", "u64"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "eq", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 0},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 1},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "const", "dst": 5, "value": 1},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 6, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 7, "value": 1},
+          {"op": "br", "to": 8}
+        ],
+        [
+          {"op": "const", "dst": 8, "value": 1},
+          {"op": "br", "to": 9}
+        ],
+        [
+          {"op": "const", "dst": 9, "value": 1},
+          {"op": "br", "to": 10}
+        ],
+        [
+          {"op": "const", "dst": 10, "value": 1},
+          {"op": "br", "to": 11}
+        ],
+        [
+          {"op": "const", "dst": 11, "value": 1},
+          {"op": "br", "to": 12}
+        ],
+        [
+          {"op": "const", "dst": 12, "value": 1},
+          {"op": "br", "to": 13}
+        ],
+        [
+          {"op": "const", "dst": 13, "value": 1},
+          {"op": "br", "to": 14}
+        ],
+        [
+          {"op": "const", "dst": 14, "value": 1},
+          {"op": "br", "to": 15}
+        ],
+        [
+          {"op": "const", "dst": 15, "value": 1},
+          {"op": "br", "to": 16}
+        ],
+        [
+          {"op": "const", "dst": 16, "value": 1},
+          {"op": "br", "to": 17}
+        ],
+        [
+          {"op": "const", "dst": 17, "value": 1},
+          {"op": "br", "to": 18}
+        ],
+        [
+          {"op": "const", "dst": 18, "value": 1},
+          {"op": "br", "to": 19}
+        ],
+        [
+          {"op": "const", "dst": 19, "value": 1},
+          {"op": "br", "to": 20}
+        ],
+        [
+          {"op": "const", "dst": 20, "value": 1},
+          {"op": "br", "to": 21}
+        ],
+        [
+          {"op": "const", "dst": 21, "value": 1},
+          {"op": "br", "to": 22}
+        ],
+        [
+          {"op": "const", "dst": 22, "value": 1},
+          {"op": "br", "to": 23}
+        ],
+        [
+          {"op": "const", "dst": 23, "value": 1},
+          {"op": "br", "to": 24}
+        ],
+        [
+          {"op": "const", "dst": 24, "value": 1},
+          {"op": "br", "to": 25}
+        ],
+        [
+          {"op": "const", "dst": 25, "value": 1},
+          {"op": "br", "to": 26}
+        ],
+        [
+          {"op": "const", "dst": 26, "value": 1},
+          {"op": "br", "to": 27}
+        ],
+        [
+          {"op": "const", "dst": 27, "value": 1},
+          {"op": "br", "to": 28}
+        ],
+        [
+          {"op": "const", "dst": 28, "value": 1},
+          {"op": "br", "to": 29}
+        ],
+        [
+          {"op": "const", "dst": 29, "value": 1},
+          {"op": "br", "to": 30}
+        ],
+        [
+          {"op": "const", "dst": 30, "value": 1},
+          {"op": "br", "to": 31}
+        ],
+        [
+          {"op": "const", "dst": 31, "value": 1},
+          {"op": "br", "to": 32}
+        ],
+        [
+          {"op": "const", "dst": 32, "value": 1},
+          {"op": "br", "to": 33}
+        ],
+        [
+          {"op": "const", "dst": 33, "value": 1},
+          {"op": "br", "to": 34}
+        ],
+        [
+          {"op": "const", "dst": 34, "value": 1},
+          {"op": "br", "to": 35}
+        ],
+        [
+          {"op": "const", "dst": 35, "value": 1},
+          {"op": "br", "to": 36}
+        ],
+        [
+          {"op": "const", "dst": 36, "value": 1},
+          {"op": "br", "to": 37}
+        ],
+        [
+          {"op": "const", "dst": 37, "value": 1},
+          {"op": "br", "to": 38}
+        ],
+        [
+          {"op": "const", "dst": 38, "value": 1},
+          {"op": "br", "to": 39}
+        ],
+        [
+          {"op": "const", "dst": 39, "value": 1},
+          {"op": "br", "to": 40}
+        ],
+        [
+          {"op": "const", "dst": 40, "value": 1},
+          {"op": "br", "to": 41}
+        ],
+        [
+          {"op": "const", "dst": 41, "value": 1},
+          {"op": "br", "to": 42}
+        ],
+        [
+          {"op": "const", "dst": 42, "value": 1},
+          {"op": "br", "to": 43}
+        ],
+        [
+          {"op": "const", "dst": 43, "value": 1},
+          {"op": "br", "to": 44}
+        ],
+        [
+          {"op": "const", "dst": 44, "value": 1},
+          {"op": "br", "to": 45}
+        ],
+        [
+          {"op": "const", "dst": 45, "value": 1},
+          {"op": "br", "to": 46}
+        ],
+        [
+          {"op": "const", "dst": 46, "value": 1},
+          {"op": "br", "to": 47}
+        ],
+        [
+          {"op": "const", "dst": 47, "value": 1},
+          {"op": "br", "to": 48}
+        ],
+        [
+          {"op": "const", "dst": 48, "value": 1},
+          {"op": "br", "to": 49}
+        ],
+        [
+          {"op": "const", "dst": 49, "value": 1},
+          {"op": "br", "to": 50}
+        ],
+        [
+          {"op": "const", "dst": 50, "value": 1},
+          {"op": "br", "to": 51}
+        ],
+        [
+          {"op": "const", "dst": 51, "value": 1},
+          {"op": "br", "to": 52}
+        ],
+        [
+          {"op": "const", "dst": 52, "value": 1},
+          {"op": "br", "to": 53}
+        ],
+        [
+          {"op": "const", "dst": 53, "value": 1},
+          {"op": "br", "to": 54}
+        ],
+        [
+          {"op": "const", "dst": 54, "value": 1},
+          {"op": "br", "to": 55}
+        ],
+        [
+          {"op": "const", "dst": 55, "value": 1},
+          {"op": "br", "to": 56}
+        ],
+        [
+          {"op": "const", "dst": 56, "value": 1},
+          {"op": "br", "to": 57}
+        ],
+        [
+          {"op": "const", "dst": 57, "value": 1},
+          {"op": "br", "to": 58}
+        ],
+        [
+          {"op": "const", "dst": 58, "value": 1},
+          {"op": "br", "to": 59}
+        ],
+        [
+          {"op": "const", "dst": 59, "value": 1},
+          {"op": "br", "to": 60}
+        ],
+        [
+          {"op": "const", "dst": 60, "value": 1},
+          {"op": "br", "to": 61}
+        ],
+        [
+          {"op": "const", "dst": 61, "value": 1},
+          {"op": "br", "to": 62}
+        ],
+        [
+          {"op": "const", "dst": 62, "value": 1},
+          {"op": "br", "to": 63}
+        ],
+        [
+          {"op": "const", "dst": 63, "value": 1},
+          {"op": "br", "to": 64}
+        ],
+        [
+          {"op": "const", "dst": 64, "value": 1},
+          {"op": "br", "to": 65}
+        ],
+        [
+          {"op": "const", "dst": 65, "value": 1},
+          {"op": "br", "to": 66}
+        ],
+        [
+          {"op": "const", "dst": 66, "value": 1},
+          {"op": "br", "to": 67}
+        ],
+        [
+          {"op": "const", "dst": 67, "value": 1},
+          {"op": "br", "to": 68}
+        ],
+        [
+          {"op": "const", "dst": 68, "value": 1},
+          {"op": "br", "to": 69}
+        ],
+        [
+          {"op": "const", "dst": 69, "value": 1},
+          {"op": "br", "to": 70}
+        ],
+        [
+          {"op": "const", "dst": 70, "value": 1},
+          {"op": "br", "to": 71}
+        ],
+        [
+          {"op": "const", "dst": 71, "value": 1},
+          {"op": "br", "to": 72}
+        ],
+        [
+          {"op": "const", "dst": 72, "value": 1},
+          {"op": "br", "to": 73}
+        ],
+        [
+          {"op": "const", "dst": 73, "value": 1},
+          {"op": "br", "to": 74}
+        ],
+        [
+          {"op": "const", "dst": 74, "value": 1},
+          {"op": "br", "to": 75}
+        ],
+        [
+          {"op": "const", "dst": 75, "value": 1},
+          {"op": "br", "to": 76}
+        ],
+        [
+          {"op": "const", "dst": 76, "value": 1},
+          {"op": "br", "to": 77}
+        ],
+        [
+          {"op": "const", "dst": 77, "value": 1},
+          {"op": "br", "to": 78}
+        ],
+        [
+          {"op": "const", "dst": 78, "value": 1},
+          {"op": "br", "to": 79}
+        ],
+        [
+          {"op": "const", "dst": 79, "value": 1},
+          {"op": "br", "to": 80}
+        ],
+        [
+          {"op": "const",

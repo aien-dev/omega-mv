@@ -1,0 +1,32 @@
+{
+  "functions": [
+    {
+      "name": "ctz16",
+      "params": ["u16"],
+      "ret": "u8",
+      "locals": ["u16", "u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 1, "value": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 2, "value": 1},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "and", "dst": 0, "a": 0, "b": 1},
+          {"op": "eq", "dst": 3, "a": 0, "b": 1},
+          {"op": "cbr", "cond": 3, "then": 0, "else": 1}
+        ],
+        [
+          {"op": "shl", "dst": 1, "a": 1, "b": 2},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "ret", "a": 1}
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+```osc
+fn mulmod(a: u64, b: u64, m: u64) -> u64 {
+    if m == 0 {
+        trap 2;
+    }
+    let mut result: u64 = 0;
+    let mut a_val: u64 = a;
+    let mut b_val: u64 = b;
+    let mut m_val: u64 = m;
+    while a_val > 0 {
+        if a_val & 1 == 1 {
+            result = (result + b_val) % m_val;
+        }
+        a_val = a_val >> 1;
+        b_val = (b_val * 2) % m_val;
+    }
+    result;
+}
+```

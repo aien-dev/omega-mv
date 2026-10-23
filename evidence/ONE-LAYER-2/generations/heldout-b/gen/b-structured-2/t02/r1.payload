@@ -1,0 +1,35 @@
+{
+  "functions": [
+    {
+      "name": "mul_hi",
+      "params": ["u64", "u64"],
+      "ret": "u64",
+      "locals": ["u64", "u64", "u64", "u64"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "const", "dst": 3, "value": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "mul", "dst": 2, "a": 0, "b": 1},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "shl", "dst": 3, "a": 2, "b": 0},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "shr", "dst": 2, "a": 2, "b": 0},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "add", "dst": 3, "a": 3, "b": 2},
+          {"op": "ret", "a": 3}
+        ]
+      ]
+    }
+  ]
+}

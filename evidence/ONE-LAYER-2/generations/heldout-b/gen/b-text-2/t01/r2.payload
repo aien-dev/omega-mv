@@ -1,0 +1,28 @@
+fn lis_lcg(seed: u32, n: u8) -> u8 {
+    if n == 0 {
+        return 0;
+    }
+    if n > 64 {
+        return 255;
+    }
+    let mut s: u32 = seed;
+    let mut v: own [u8; 64] = alloc(0);
+    for i in 0..n {
+        s = (s * 1103515245 + 12345) % 2147483648;
+        v[i] = (s / 65536) % 1000;
+    }
+    let mut length: u8 = 0;
+    let mut dp: own [u8; 64] = alloc(0);
+    for i in 0..n {
+        dp[i] = 1;
+        for j in 0..i {
+            if v[j] < v[i] {
+                dp[i] = dp[j] + 1;
+            }
+        }
+        if dp[i] > length {
+            length = dp[i];
+        }
+    }
+    return length;
+}

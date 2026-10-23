@@ -1,0 +1,16 @@
+```osc
+fn clamp(x: i64, lo: i64, hi: i64) -> i64 {
+    if lo > hi {
+        let temp: i64 = lo;
+        let lo: i64 = hi;
+        let hi: i64 = temp;
+    }
+    if x < lo {
+        return lo;
+    } else if x > hi {
+        return hi;
+    } else {
+        return x;
+    }
+}
+```

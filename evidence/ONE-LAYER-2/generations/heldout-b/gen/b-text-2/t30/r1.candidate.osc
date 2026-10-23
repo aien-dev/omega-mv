@@ -1,0 +1,9 @@
+fn sign(x: i16) -> i8 {
+    if x > 0 {
+        return 1i8;
+    } else if x < 0 {
+        return -1i8;
+    } else {
+        return 0i8;
+    }
+}

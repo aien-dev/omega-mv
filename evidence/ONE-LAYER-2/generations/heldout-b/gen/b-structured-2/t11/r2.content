@@ -1,0 +1,51 @@
+```json
+{
+  "functions": [
+    {
+      "name": "crc32",
+      "params": ["u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32", "u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 4294967295},
+          {"op": "const", "dst": 1, "value": 3988292384},
+          {"op": "const", "dst": 2, "value": 4294967295},
+          {"op": "const", "dst": 3, "value": 0},
+          {"op": "const", "dst": 4, "value": 255},
+          {"op": "const", "dst": 5, "value": 255},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 6, "value": 0},
+          {"op": "const", "dst": 7, "value": 0},
+          {"op": "const", "dst": 8, "value": 0},
+          {"op": "const", "dst": 9, "value": 0},
+          {"op": "shl", "dst": 6, "a": 0, "b": 8},
+          {"op": "shl", "dst": 7, "a": 0, "b": 8},
+          {"op": "shl", "dst": 8, "a": 0, "b": 8},
+          {"op": "shl", "dst": 9, "a": 0, "b": 8},
+          {"op": "xor", "dst": 6, "a": 6, "b": 0},
+          {"op": "xor", "dst": 7, "a": 7, "b": 0},
+          {"op": "xor", "dst": 8, "a": 8, "b": 0},
+          {"op": "xor", "dst": 9, "a": 9, "b": 0},
+          {"op": "xor", "dst": 3, "a": 3, "b": 6},
+          {"op": "shl", "dst": 3, "a": 3, "b": 8},
+          {"op": "xor", "dst": 3, "a": 3, "b": 7},
+          {"op": "shl", "dst": 3, "a": 3, "b": 8},
+          {"op": "xor", "dst": 3, "a": 3, "b": 8},
+          {"op": "shl", "dst": 3, "a": 3, "b": 8},
+          {"op": "xor", "dst": 3, "a": 3, "b": 9},
+          {"op": "shl", "dst": 3, "a": 3, "b": 8},
+          {"op": "xor", "dst": 3, "a": 3, "b": 1},
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "xor", "dst": 3, "a": 3, "b": 2},
+          {"op": "ret", "a": 3}
+        ]
+      ]
+    }
+  ]
+}
+```

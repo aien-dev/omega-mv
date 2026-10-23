@@ -1,0 +1,69 @@
+{
+  "functions": [
+    {
+      "name": "fib_mod",
+      "params": ["u64"],
+      "ret": "u32",
+      "locals": ["u64", "u64", "u64", "u64", "u64", "u64", "u64", "u64", "u64", "u64"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "const", "dst": 2, "value": 1000000007},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 2},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 0},
+          {"op": "const", "dst": 5, "value": 1},
+          {"op": "const", "dst": 6, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "add", "dst": 7, "a": 4, "b": 5},
+          {"op": "rem", "dst": 7, "a": 7, "b": 2},
+          {"op": "br", "to": 8}
+        ],
+        [
+          {"op": "add", "dst": 7, "a": 4, "b": 5},
+          {"op": "rem", "dst": 7, "a": 7, "b": 2},
+          {"op": "br", "to": 9}
+        ],
+        [
+          {"op": "add", "dst": 4, "a": 5, "b": 6},
+          {"op": "rem", "dst": 4, "a": 4, "b": 2},
+          {"op": "add", "dst": 5, "a": 6, "b": 7},
+          {"op": "rem", "dst": 5, "a": 5, "b": 2},
+          {"op": "br", "to": 8}
+        ],
+        [
+          {"op": "add", "dst": 4, "a": 5, "b": 6},
+          {"op": "rem", "dst": 4, "a": 4, "b": 2},
+          {"op": "add", "dst": 5, "a": 6, "b": 7},
+          {"op": "rem", "dst": 5, "a": 5, "b": 2},
+          {"op": "br", "to": 9}
+        ],
+        [
+          {"op": "add", "dst": 6, "a": 4, "b": 5},
+          {"op": "rem", "dst": 6, "a": 6, "b": 2},
+          {"op": "br", "to": 8}
+        ],
+        [
+          {"op": "add", "dst": 6, "a": 4, "b": 5},
+          {"op": "rem", "dst": 6, "a": 6, "b": 2},
+          {"op": "br", "to": 9}
+        ],
+        [
+          {"op": "br", "to": 0}
+        ],
+        [
+          {"op": "cast", "dst": 7, "a": 7},
+          {"op": "ret", "a": 7}
+        ]
+      ]
+    }
+  ]
+}

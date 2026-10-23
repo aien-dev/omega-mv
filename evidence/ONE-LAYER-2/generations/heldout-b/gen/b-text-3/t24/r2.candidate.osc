@@ -1,0 +1,9 @@
+fn bitrev32(x: u32) -> u32 {
+    let mut result: u32 = 0;
+    let mut x = x;
+    for i in 0..32 {
+        let bit = x >> i & 1;
+        result = result | (bit << (31 - i));
+    }
+    return result;
+}

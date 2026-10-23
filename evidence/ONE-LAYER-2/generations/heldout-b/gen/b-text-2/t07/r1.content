@@ -1,0 +1,11 @@
+```osc
+fn is_pow2(x: u64) -> bool {
+    if x == 0 {
+        return 0;
+    }
+    if x & (x - 1) == 0 {
+        return 1;
+    }
+    return 0;
+}
+```

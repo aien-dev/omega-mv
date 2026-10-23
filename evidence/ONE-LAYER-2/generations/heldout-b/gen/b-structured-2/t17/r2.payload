@@ -1,0 +1,47 @@
+{
+  "functions": [
+    {
+      "name": "mod_inv",
+      "params": ["u32", "u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32", "u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "const", "dst": 2, "value": 2},
+          {"op": "const", "dst": 3, "value": 3},
+          {"op": "const", "dst": 4, "value": 4},
+          {"op": "const", "dst": 5, "value": 5},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "eq", "dst": 6, "a": 1, "b": 2},
+          {"op": "cbr", "cond": 6, "then": 3, "else": 6}
+        ],
+        [
+          {"op": "eq", "dst": 6, "a": 2, "b": 3},
+          {"op": "cbr", "cond": 6, "then": 6, "else": 4}
+        ],
+        [
+          {"op": "mul", "dst": 0, "a": 1, "b": 2},
+          {"op": "rem", "dst": 1, "a": 0, "b": 3},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "mul", "dst": 0, "a": 1, "b": 2},
+          {"op": "rem", "dst": 1, "a": 0, "b": 3},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+fn mod_inv(a: u32, m: u32) -> u32 {
+    if m < 2 {
+        return 0;
+    }
+    let mut g = m;
+    let mut x = 0;
+    let mut y = 1;
+    let mut old_g = a;
+    let mut old_x = 1;
+    let mut old_y = 0;
+    while g != 0 {
+        let q = old_g / g;
+        let r = old_g % g;
+        let new_g = g;
+        let new_x = x - q * old_x;
+        let new_y = y - q * old_y;
+        old_g = new_g;
+        old_x = new_x;
+        old_y = new_y;
+        g = r;
+        x = old_x;
+        y = old_y;
+    }
+    if old_g != 1 {
+        return 0;
+    }
+    return old_x % m;
+}

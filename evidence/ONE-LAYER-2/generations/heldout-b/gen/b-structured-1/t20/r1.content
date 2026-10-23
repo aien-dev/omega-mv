@@ -1,0 +1,64 @@
+```json
+{
+  "functions": [
+    {
+      "name": "ndigits",
+      "params": ["i64"],
+      "ret": "u8",
+      "locals": ["u8", "u8", "u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "load", "dst": 2, "arr": 0, "index": 0},
+          {"op": "eq", "dst": 3, "a": 2, "b": 0},
+          {"op": "cbr", "cond": 3, "then": 4, "else": 5},
+          {"op": "const", "dst": 4, "value": 1},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 2},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 3},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 4},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 5},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 6},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 7},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 8},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 9},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "ret", "a": 4}
+        ]
+      ]
+    }
+  ]
+}
+```

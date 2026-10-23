@@ -1,0 +1,21 @@
+```osctext
+fn is_prime(n: u32) -> bool {
+    if n <= 1 {
+        return false;
+    }
+    if n == 2 {
+        return true;
+    }
+    if n % 2 == 0 {
+        return false;
+    }
+    let mut i: u32 = 3;
+    while i <= n.sqrt() {
+        if n % i == 0 {
+            return false;
+        }
+        i = i + 2;
+    }
+    return true;
+}
+```

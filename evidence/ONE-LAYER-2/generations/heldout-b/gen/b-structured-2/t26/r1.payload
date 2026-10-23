@@ -1,0 +1,28 @@
+{
+  "functions": [
+    {
+      "name": "div_ceil",
+      "params": ["u32", "u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "eq", "dst": 4, "a": 1, "b": 2},
+          {"op": "cbr", "cond": 4, "then": 1, "else": 2}
+        ],
+        [
+          {"op": "sub", "dst": 2, "a": 0, "b": 1},
+          {"op": "shl", "dst": 3, "a": 1, "b": 3},
+          {"op": "add", "dst": 2, "a": 2, "b": 3},
+          {"op": "ret", "a": 2}
+        ],
+        [
+          {"op": "trap", "code": 2},
+          {"op": "ret", "a": 2}
+        ]
+      ]
+    }
+  ]
+}

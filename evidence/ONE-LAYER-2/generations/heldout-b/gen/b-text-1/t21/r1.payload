@@ -1,0 +1,10 @@
+fn count_true(a: bool, b: bool, c: bool, d: bool, e: bool, f: bool) -> u8 {
+    let mut count: u8 = 0;
+    if a { count = 1; }
+    if b { count = count + 1; }
+    if c { count = count + 1; }
+    if d { count = count + 1; }
+    if e { count = count + 1; }
+    if f { count = count + 1; }
+    return count;
+}

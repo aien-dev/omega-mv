@@ -1,0 +1,10 @@
+fn div_ceil(a: u32, b: u32) -> u32 {
+    if b == 0 {
+        trap 2;
+    }
+    let remainder = a % b;
+    if remainder == 0 {
+        return a / b;
+    }
+    return (a / b) + 1;
+}

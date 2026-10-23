@@ -1,0 +1,24 @@
+{
+  "functions": [
+    {
+      "name": "count_true",
+      "params": ["bool", "bool", "bool", "bool", "bool", "bool"],
+      "ret": "u8",
+      "locals": ["u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "cast", "dst": 1, "a": 2},
+          {"op": "add", "dst": 1, "a": 1, "b": 3},
+          {"op": "cast", "dst": 2, "a": 4},
+          {"op": "add", "dst": 1, "a": 1, "b": 2},
+          {"op": "cast", "dst": 2, "a": 5},
+          {"op": "add", "dst": 1, "a": 1, "b": 2},
+          {"op": "cast", "dst": 2, "a": 6},
+          {"op": "add", "dst": 1, "a": 1, "b": 2},
+          {"op": "ret", "a": 1}
+        ]
+      ]
+    }
+  ]
+}

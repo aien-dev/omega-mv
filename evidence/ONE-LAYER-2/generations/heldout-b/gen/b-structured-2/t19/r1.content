@@ -1,0 +1,38 @@
+```json
+{
+  "functions": [
+    {
+      "name": "closer",
+      "params": ["i16", "i16", "i16", "y2"],
+      "ret": "bool",
+      "locals": ["u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 4, "value": 0},
+          {"op": "const", "dst": 5, "value": 0},
+          {"op": "const", "dst": 6, "value": 0},
+          {"op": "const", "dst": 7, "value": 0},
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "add", "dst": 1, "a": 2, "b": 3},
+          {"op": "mul", "dst": 4, "a": 0, "b": 0},
+          {"op": "mul", "dst": 5, "a": 1, "b": 1},
+          {"op": "add", "dst": 0, "a": 4, "b": 5},
+          {"op": "add", "dst": 1, "a": 6, "b": 7},
+          {"op": "mul", "dst": 4, "a": 6, "b": 6},
+          {"op": "mul", "dst": 5, "a": 7, "b": 7},
+          {"op": "add", "dst": 1, "a": 4, "b": 5},
+          {"op": "eq", "dst": 2, "a": 0, "b": 1},
+          {"op": "not", "dst": 2, "a": 2},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "trap", "code": 1}
+        ],
+        [
+          {"op": "ret", "a": 2}
+        ]
+      ]
+    }
+  ]
+}
+```

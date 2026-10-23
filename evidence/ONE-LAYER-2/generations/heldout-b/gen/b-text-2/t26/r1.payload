@@ -1,0 +1,11 @@
+fn div_ceil(a: u32, b: u32) -> u32 {
+    if b == 0 {
+        trap 2;
+    }
+    let q: u32 = a / b;
+    let r: u32 = a % b;
+    if r == 0 {
+        return q;
+    }
+    return q + 1;
+}

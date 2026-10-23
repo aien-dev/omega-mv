@@ -1,0 +1,18 @@
+```osctext
+fn roman_len(x: u16) -> u8 {
+    let mut result: u8 = 0;
+    let mut num = x;
+    let values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    let symbols = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
+    
+    for i in 0..13 {
+        let value = values[i];
+        let symbol = symbols[i];
+        let count = num / value;
+        result += count as u8;
+        num -= count as u16 * value;
+    }
+    
+    return result;
+}
+```

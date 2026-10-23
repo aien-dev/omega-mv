@@ -1,0 +1,14 @@
+```osc
+fn binom(n: u8, k: u8) -> u64 {
+    if k > n {
+        return 0;
+    }
+    let mut result: u64 = 1;
+    let mut i: u8 = 0;
+    while i < k bound 256 {
+        result = result * (n - i) / (i + 1);
+        i = i + 1;
+    }
+    return result;
+}
+```

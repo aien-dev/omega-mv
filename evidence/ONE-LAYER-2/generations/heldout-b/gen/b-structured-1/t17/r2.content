@@ -1,0 +1,251 @@
+```json
+{
+  "functions": [
+    {
+      "name": "mod_inv",
+      "params": ["u32", "u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32", "u32", "u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "const", "dst": 1, "value": 1},
+          {"op": "const", "dst": 2, "value": 2},
+          {"op": "const", "dst": 3, "value": 3},
+          {"op": "const", "dst": 4, "value": 4},
+          {"op": "const", "dst": 5, "value": 5},
+          {"op": "const", "dst": 6, "value": 6},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "eq", "dst": 2, "a": 1, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 3, "else": 4}
+        ],
+        [
+          {"op": "eq", "dst": 2, "a": 0, "b": 1},
+          {"op": "trap", "code": 7}
+        ],
+        [
+          {"op": "eq", "dst": 2, "a": 1, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 5, "else": 6}
+        ],
+        [
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 2, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 2, "value": 0},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 8, "else": 9}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 10, "else": 11}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 12, "else": 13}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 14, "else": 15}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 16, "else": 17}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 18, "else": 19}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 20, "else": 21}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 22, "else": 23}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 24, "else": 25}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 26, "else": 27}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 28, "else": 29}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 30, "else": 31}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 32, "else": 33}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 34, "else": 35}
+        ],
+        [
+          {"op": "trap", "code": 7},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 1},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "mul", "dst": 3, "a": 0, "b": 1},
+          {"op": "rem", "dst": 3, "a": 3, "b": 1},
+          {"op": "eq", "dst": 2, "a": 3, "b": 0},
+          {"op": "cbr", "cond": 2, "then": 36, "else": 37}
+        ],
+        [
+          {"op": "trap", "code": 

@@ -1,0 +1,29 @@
+{
+  "functions": [
+    {
+      "name": "mulmod",
+      "params": ["u64", "u64", "u64"],
+      "ret": "u64",
+      "locals": ["u64", "u64", "u64", "u64"],
+      "blocks": [
+        [
+          {"op": "eq", "dst": 3, "a": 2, "b": 2},
+          {"op": "trap", "code": 2}
+        ],
+        [
+          {"op": "mul", "dst": 4, "a": 0, "b": 1},
+          {"op": "const", "dst": 5, "value": 0},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "shl", "dst": 5, "a": 4, "b": 3},
+          {"op": "br", "to": 2}
+        ],
+        [
+          {"op": "rem", "dst": 5, "a": 5, "b": 2},
+          {"op": "ret", "a": 5}
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+```osc
+fn powmod(b: u32, e: u32, m: u32) -> u32 {
+    if m == 0 {
+        return 2; // Trap code 2 for division by zero
+    }
+    let mut result: u32 = 1;
+    let mut base = b;
+    let mut exponent = e;
+    while exponent > 0 {
+        if exponent & 1 == 1 {
+            result = (result * base) % m;
+        }
+        base = (base * base) % m;
+        exponent = exponent >> 1;
+    }
+    return result;
+}
+```

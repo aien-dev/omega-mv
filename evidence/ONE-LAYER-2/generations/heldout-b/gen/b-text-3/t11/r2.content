@@ -1,0 +1,28 @@
+```osctext
+fn crc32(x: u32) -> u32 {
+    let mut crc: u32 = 4294967295;
+    let mut data: u32 = x;
+    
+    // Process each byte of the 4-byte message
+    for _ in 0..4 {
+        let byte: u8 = (data & 0xFF) as u8;
+        data >>= 8;
+        
+        // Update CRC
+        for _ in 0..8 {
+            if (crc ^ byte) & 1 == 1 {
+                crc >>= 1;
+                crc ^= 3988292384;
+            } else {
+                crc >>= 1;
+            }
+            byte >>= 1;
+        }
+    }
+    
+    // Final XOR
+    crc ^= 4294967295;
+    
+    return crc;
+}
+```

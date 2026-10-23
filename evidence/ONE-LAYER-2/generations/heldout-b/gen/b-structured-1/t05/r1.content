@@ -1,0 +1,68 @@
+```json
+{
+  "functions": [
+    {
+      "name": "count_primes_below",
+      "params": ["u16"],
+      "ret": "u16",
+      "locals": ["u16", "u16", "u16", "u16", "u16", "u16", "u16", "u16", "u16", "u16"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "const", "dst": 1, "value": 2},
+          {"op": "const", "dst": 2, "value": 3},
+          {"op": "const", "dst": 3, "value": 5},
+          {"op": "const", "dst": 4, "value": 7},
+          {"op": "const", "dst": 5, "value": 11},
+          {"op": "const", "dst": 6, "value": 13},
+          {"op": "const", "dst": 7, "value": 17},
+          {"op": "const", "dst": 8, "value": 19},
+          {"op": "const", "dst": 9, "value": 23},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "cbr", "cond": 0, "then": 2, "else": 10},
+          {"op": "const", "dst": 10, "value": 65535},
+          {"op": "ret", "a": 10}
+        ],
+        [
+          {"op": "add", "dst": 10, "a": 0, "b": 1},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "load", "dst": 10, "arr": 0, "index": 1},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "const", "dst": 10, "value": 0},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "add", "dst": 10, "a": 10, "b": 1},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "load", "dst": 10, "arr": 0, "index": 10},
+          {"op": "br", "to": 7}
+        ],
+        [
+          {"op": "const", "dst": 10, "value": 1},
+          {"op": "br", "to": 8}
+        ],
+        [
+          {"op": "add", "dst": 10, "a": 10, "b": 1},
+          {"op": "br", "to": 9}
+        ],
+        [
+          {"op": "const", "dst": 10, "value": 0},
+          {"op": "br", "to": 10}
+        ],
+        [
+          {"op": "add", "dst": 0, "a": 0, "b": 1},
+          {"op": "br", "to": 1}
+        ]
+      ]
+    }
+  ]
+}
+```

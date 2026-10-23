@@ -1,0 +1,24 @@
+{
+  "functions": [
+    {
+      "name": "sign",
+      "params": ["i16"],
+      "ret": "i8",
+      "locals": ["bool"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 1, "value": 0},
+          {"op": "cbr", "cond": 1, "then": 1, "else": 2}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": 1},
+          {"op": "ret", "a": 0}
+        ],
+        [
+          {"op": "const", "dst": 0, "value": -1},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+fn add_mixed(a: u8, b: i8) -> u8 {
+    let sum: i16 = a as i16 + b;
+    if sum < 0 || sum > 255 {
+        trap 1;
+    }
+    return sum as u8;
+}

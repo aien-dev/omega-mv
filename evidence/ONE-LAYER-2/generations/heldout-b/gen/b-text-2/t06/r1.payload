@@ -1,0 +1,87 @@
+fn days_between(y1: u16, m1: u8, d1: u8, y2: u16, m2: u8, d2: u8) -> i32 {
+    let mut total_days: i32 = 0;
+    let mut date1 = (y1, m1, d1);
+    let mut date2 = (y2, m2, d2);
+
+    // Check if dates are valid
+    if !is_valid_date(date1) || !is_valid_date(date2) {
+        return -2147483648;
+    }
+
+    // Calculate days between the two dates
+    total_days = calculate_days(date1, date2);
+
+    return total_days;
+}
+
+fn is_valid_date(date: (u16, u8, u8)) -> bool {
+    let (y, m, d) = date;
+    if y < 1 || y > 9999 {
+        return false;
+    }
+    if m < 1 || m > 12 {
+        return false;
+    }
+    let days_in_month = get_days_in_month(y, m);
+    if d < 1 || d > days_in_month {
+        return false;
+    }
+    true
+}
+
+fn get_days_in_month(y: u16, m: u8) -> u8 {
+    let months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if m == 2 {
+        if is_leap_year(y) {
+            return 29;
+        } else {
+            return 28;
+        }
+    } else {
+        return months[m as usize - 1];
+    }
+}
+
+fn is_leap_year(y: u16) -> bool {
+    if y % 4 != 0 {
+        return false;
+    }
+    if y % 100 != 0 {
+        return true;
+    }
+    if y % 400 == 0 {
+        return true;
+    }
+    false
+}
+
+fn calculate_days(date1: (u16, u8, u8), date2: (u16, u8, u8)) -> i32 {
+    let (y1, m1, d1) = date1;
+    let (y2, m2, d2) = date2;
+
+    let days1 = days_since_epoch(y1, m1, d1);
+    let days2 = days_since_epoch(y2, m2, d2);
+
+    days2 as i32 - days1 as i32
+}
+
+fn days_since_epoch(y: u16, m: u8, d: u8) -> u32 {
+    let mut days = 0;
+    let mut year = y;
+    let mut month = m;
+
+    // Add days from years
+    for y in 1..year {
+        days += 366 if is_leap_year(y) else 365;
+    }
+
+    // Add days from months
+    for m in 1..month {
+        days += get_days_in_month(year, m);
+    }
+
+    // Add days from the current month
+    days += d;
+
+    days
+}

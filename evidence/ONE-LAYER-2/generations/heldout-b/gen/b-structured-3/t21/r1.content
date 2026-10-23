@@ -1,0 +1,23 @@
+```json
+{
+  "functions": [
+    {
+      "name": "count_true",
+      "params": ["bool", "bool", "bool", "bool", "bool", "bool"],
+      "ret": "u8",
+      "locals": ["u8"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "add", "dst": 1, "a": 0, "b": 2},
+          {"op": "add", "dst": 1, "a": 1, "b": 3},
+          {"op": "add", "dst": 1, "a": 1, "b": 4},
+          {"op": "add", "dst": 1, "a": 1, "b": 5},
+          {"op": "add", "dst": 1, "a": 1, "b": 6},
+          {"op": "ret", "a": 1}
+        ]
+      ]
+    }
+  ]
+}
+```

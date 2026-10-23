@@ -1,0 +1,19 @@
+```json
+{
+  "functions": [
+    {
+      "name": "avg_floor",
+      "params": ["u32", "u32"],
+      "ret": "u32",
+      "locals": ["u32"],
+      "blocks": [
+        [
+          {"op": "add", "dst": 2, "a": 0, "b": 1},
+          {"op": "shr", "dst": 1, "a": 2, "b": 1},
+          {"op": "ret", "a": 1}
+        ]
+      ]
+    }
+  ]
+}
+```

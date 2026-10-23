@@ -1,0 +1,7 @@
+fn abs_diff(a: u64, b: u64) -> u64 {
+    let diff: u64 = a - b;
+    if diff < b {
+        return b - a;
+    }
+    return diff;
+}

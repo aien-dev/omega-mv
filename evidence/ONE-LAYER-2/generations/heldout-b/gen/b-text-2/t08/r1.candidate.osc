@@ -1,0 +1,84 @@
+fn roman_len(x: u16) -> u8 {
+    let mut result: u8 = 0;
+    let mut num = x;
+    
+    // M (1000)
+    if num >= 1000 {
+        result += 1;
+        num -= 1000;
+    }
+    
+    // CM (900)
+    if num >= 900 {
+        result += 1;
+        num -= 900;
+    }
+    
+    // D (500)
+    if num >= 500 {
+        result += 1;
+        num -= 500;
+    }
+    
+    // CD (400)
+    if num >= 400 {
+        result += 1;
+        num -= 400;
+    }
+    
+    // C (100)
+    if num >= 100 {
+        result += 1;
+        num -= 100;
+    }
+    
+    // XC (90)
+    if num >= 90 {
+        result += 1;
+        num -= 90;
+    }
+    
+    // L (50)
+    if num >= 50 {
+        result += 1;
+        num -= 50;
+    }
+    
+    // XL (40)
+    if num >= 40 {
+        result += 1;
+        num -= 40;
+    }
+    
+    // X (10)
+    if num >= 10 {
+        result += 1;
+        num -= 10;
+    }
+    
+    // IX (9)
+    if num >= 9 {
+        result += 1;
+        num -= 9;
+    }
+    
+    // V (5)
+    if num >= 5 {
+        result += 1;
+        num -= 5;
+    }
+    
+    // IV (4)
+    if num >= 4 {
+        result += 1;
+        num -= 4;
+    }
+    
+    // I (1)
+    while num > 0 {
+        result += 1;
+        num -= 1;
+    }
+    
+    return result;
+}

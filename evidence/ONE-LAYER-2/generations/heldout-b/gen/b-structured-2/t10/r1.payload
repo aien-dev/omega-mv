@@ -1,0 +1,57 @@
+{
+  "functions": [
+    {
+      "name": "powmod",
+      "params": ["u32", "u32", "u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "eq", "dst": 3, "a": 1, "b": 2},
+          {"op": "trap", "code": 2},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 1},
+          {"op": "br", "to": 3}
+        ],
+        [
+          {"op": "eq", "dst": 2, "a": 2, "b": 3},
+          {"op": "trap", "code": 2},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 0},
+          {"op": "ret", "a": 4}
+        ],
+        [
+          {"op": "const", "dst": 4, "value": 1},
+          {"op": "br", "to": 5}
+        ],
+        [
+          {"op": "const", "dst": 5, "value": 0},
+          {"op": "br", "to": 6}
+        ],
+        [
+          {"op": "add", "dst": 5, "a": 5, "b": 1},
+          {"op": "cbr", "cond": 5, "then": 6, "else": 7}
+        ],
+        [
+          {"op": "mul", "dst": 4, "a": 4, "b": 0},
+          {"op": "br", "to": 8}
+        ],
+        [
+          {"op": "shl", "dst": 4, "a": 4, "b": 1},
+          {"op": "br", "to": 8}
+        ],
+        [
+          {"op": "add", "dst": 4, "a": 4, "b": 0},
+          {"op": "br", "to": 8}
+        ],
+        [
+          {"op": "ret", "a": 4}
+        ]
+      ]
+    }
+  ]
+}

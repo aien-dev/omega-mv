@@ -1,0 +1,22 @@
+fn crc32(x: u32) -> u32 {
+    let mut crc: u32 = 4294967295;
+    let data: [u8; 4] = [
+        (x & 0xFF) as u8,
+        ((x >> 8) & 0xFF) as u8,
+        ((x >> 16) & 0xFF) as u8,
+        ((x >> 24) & 0xFF) as u8,
+    ];
+    
+    for &byte in &data {
+        for _ in 0..8 {
+            if (crc as u8) & 1 == 1 {
+                crc = (crc >> 1) ^ 3988292384;
+            } else {
+                crc = crc >> 1;
+            }
+        }
+        crc = crc ^ (byte as u32);
+    }
+    
+    crc ^ 4294967295
+}

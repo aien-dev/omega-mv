@@ -1,0 +1,11 @@
+```osc
+fn is_pow2(x: u64) -> bool {
+    let mut result: bool = false;
+    if x == 0 {
+        result = false;
+    } else if x & (x - 1) == 0 {
+        result = true;
+    }
+    return result;
+}
+```

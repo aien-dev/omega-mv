@@ -1,0 +1,25 @@
+fn crc32(x: u32) -> u32 {
+    let mut crc: u32 = 4294967295;
+    let mut data: u32 = x;
+    
+    // Extract each byte of the message
+    let b0 = (data >> 0) & 0xff;
+    let b1 = (data >> 8) & 0xff;
+    let b2 = (data >> 16) & 0xff;
+    let b3 = (data >> 24) & 0xff;
+    
+    // Process each byte
+    for byte in [b0, b1, b2, b3] {
+        for _ in 0..8 {
+            if (crc & 1) != 0 {
+                crc = (crc >> 1) ^ 3988292384;
+            } else {
+                crc = (crc >> 1);
+            }
+            data = (data >> 8) | (data << 24);
+        }
+    }
+    
+    // Final XOR
+    crc ^ 4294967295
+}

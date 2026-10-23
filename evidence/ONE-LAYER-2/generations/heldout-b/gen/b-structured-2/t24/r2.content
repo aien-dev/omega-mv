@@ -1,0 +1,33 @@
+```json
+{
+  "functions": [
+    {
+      "name": "bitrev32",
+      "params": ["u32"],
+      "ret": "u32",
+      "locals": ["u32", "u32", "u32", "u32", "u32"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 0, "value": 0},
+          {"op": "const", "dst": 1, "value": 0x55555555},
+          {"op": "const", "dst": 2, "value": 0x33333333},
+          {"op": "const", "dst": 3, "value": 0x0f0f0f0f},
+          {"op": "const", "dst": 4, "value": 0x00ff00ff},
+          {"op": "and", "dst": 0, "a": 0, "b": 1},
+          {"op": "shl", "dst": 0, "a": 0, "b": 4},
+          {"op": "and", "dst": 1, "a": 1, "b": 2},
+          {"op": "shl", "dst": 1, "a": 1, "b": 4},
+          {"op": "and", "dst": 2, "a": 2, "b": 3},
+          {"op": "shl", "dst": 2, "a": 2, "b": 4},
+          {"op": "and", "dst": 3, "a": 3, "b": 4},
+          {"op": "shl", "dst": 3, "a": 3, "b": 4},
+          {"op": "or", "dst": 0, "a": 0, "b": 1},
+          {"op": "or", "dst": 0, "a": 0, "b": 2},
+          {"op": "or", "dst": 0, "a": 0, "b": 3},
+          {"op": "ret", "a": 0}
+        ]
+      ]
+    }
+  ]
+}
+```

@@ -1,0 +1,43 @@
+```json
+{
+  "functions": [
+    {
+      "name": "median3",
+      "params": ["u16", "u16", "u16"],
+      "ret": "u16",
+      "locals": ["u16", "u16", "u16"],
+      "blocks": [
+        [
+          {"op": "const", "dst": 3, "value": 0},
+          {"op": "const", "dst": 4, "value": 0},
+          {"op": "const", "dst": 5, "value": 0},
+          {"op": "br", "to": 1}
+        ],
+        [
+          {"op": "mov", "dst": 0, "a": 0},
+          {"op": "mov", "dst": 1, "a": 1},
+          {"op": "mov", "dst": 2, "a": 2},
+          {"op": "cbr", "cond": 0, "then": 2, "else": 3},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "add", "dst": 3, "a": 0, "b": 1},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "add", "dst": 3, "a": 1, "b": 2},
+          {"op": "br", "to": 4}
+        ],
+        [
+          {"op": "add", "dst": 3, "a": 0, "b": 2},
+          {"op": "ret", "a": 3}
+        ],
+        [
+          {"op": "const", "dst": 3, "value": 0},
+          {"op": "ret", "a": 3}
+        ]
+      ]
+    }
+  ]
+}
+```

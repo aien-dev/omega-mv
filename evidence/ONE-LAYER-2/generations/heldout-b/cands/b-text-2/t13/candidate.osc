@@ -1,0 +1,19 @@
+fn median3(a: u16, b: u16, c: u16) -> u16 {
+    if a >= b {
+        if b >= c {
+            return b;
+        } else if a >= c {
+            return c;
+        } else {
+            return a;
+        }
+    } else {
+        if a >= c {
+            return a;
+        } else if b >= c {
+            return c;
+        } else {
+            return b;
+        }
+    }
+}

@@ -1,0 +1,31 @@
+fn count_primes_below(n: u16) -> u16 {
+    let mut count: u16 = 0;
+    if n > 2000 {
+        return 65535;
+    }
+    for i in 2..n {
+        if is_prime(i) {
+            count = count + 1;
+        }
+    }
+    return count;
+}
+
+fn is_prime(num: u16) -> bool {
+    if num < 2 {
+        return false;
+    }
+    if num == 2 {
+        return true;
+    }
+    if num % 2 == 0 {
+        return false;
+    }
+    let sqrt_num = num.sqrt();
+    for i in 3..sqrt_num {
+        if num % i == 0 {
+            return false;
+        }
+    }
+    return true;
+}
