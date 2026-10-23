@@ -254,14 +254,14 @@ it came from.
     comparison catches it. The same wrong word put into both om4 and omc fools both of those checks,
     and only the C path catches it (fm1, fm2: -7 / 2). A broken program is refused with error 3;
   - the output does not change with the run: same bytes under another environment and a second later;
-  - the branch-range gate (`seed/qualification/security673/gate669.sh`, results in
-    `evidence/SECURITY-673/`): a 300,000-statement `if` made the old compiler truncate a conditional
-    branch's 19-bit displacement and die at run time. The fixed compiler accepts the exact forward
-    maximum (262,143 words = 1,048,572 bytes), refuses one word beyond and a signed-wrap case with
-    error 24 and empty output, and an independent GNU objdump decode checks every accepted branch
-    target against a marker. Nested if, while exit and trap-site layouts are refused at the same
-    range. A one-word range-bound mutant escapes the compiler and is caught by that decoder. The
-    generator and fixtures are seeded `.om`.
+  - the branch-range gate is seeded `.om`, including its coordinator, generator, source mutator
+    and decoder-output checker. See `seed/qualification/security673/README.md` for reconstruction.
+    The compiler accepts the exact forward maximum and refuses larger conditional branches
+    before emitting an executable. Direct probes of the actual encoder cover both signed extrema
+    and misalignment; a local-array fixture exercises the current backward caller. GNU objdump
+    independently decodes accepted forward branches and catches a deliberately weakened limit.
+    Malformed-output controls and supervisor failures are separate from compiler correctness.
+    Corrected evidence is in `evidence/SECURITY-673/correction1/`; earlier evidence is historical.
 - Size and speed (`size.tsv`, `size-history.tsv`, `omc-words.tsv`, `compile-time.tsv` in `evidence/SEED-0/omc/`;
   `size-history.tsv` gets one row per self-rewrite, and the gate fails if the current omc has no row):
   - omc is 27,218 machine words; the value reader alone is 19,140 words, then local arrays (695);

@@ -934,7 +934,7 @@ diff = sub target at
 if ne and diff 3 0
 fail 24
 end
-if and gt diff 1048572 lt diff 18446744073709550592
+if and gt diff 1048572 lt diff 18446744073708503040
 fail 24
 end
 ret and shr diff 2 524287
@@ -947,7 +947,7 @@ wrword at or rdword at shl d 5
 end
 
 note patch26: the word distance from a B at `at` to `target`, into bits 0..25. No range check is needed:
-note the output pool is 8 MiB = 2^21 bytes, below the 2^25-word reach, and every position in it is a
+note the output pool is 8 MiB = 2^23 bytes, below the 2^25-word reach, and every position in it is a
 note word boundary, so the displacement is aligned and inside the signed 26-bit field by construction.
 fn patch26 at ulong target ulong to void
 d = and shr sub target at 2 67108863

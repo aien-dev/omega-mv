@@ -3,6 +3,7 @@ note count on stdin, then writes one program. Mode0 if over the body, mode1 nest
 note the body, mode3 a trap followed by the body. Every program ends with a unique mov x1, 12345 marker
 note whose address is the expected branch target. Only synthetic source is produced.
 global arg uchar 5
+global extra uchar 1
 text pre0 "fn main to int\nx = ulong 0\ny = ulong 0\nif eq x 1\n"
 text pre1 "fn main to int\nx = ulong 0\ny = ulong 0\nif eq x 1\nif eq x 2\n"
 text pre2 "fn main to int\nx = ulong 0\ny = ulong 0\nwhile eq x 1\n"
@@ -22,6 +23,12 @@ end
 pos = add pos ulong r
 end
 mode = ulong get arg 0
+if gt mode 3
+ret 90
+end
+if ne read 0 extra 0 1 0
+ret 90
+end
 n = ulong 0
 i = ulong 0
 while lt i 4
@@ -29,26 +36,29 @@ b = ulong get arg add i 1
 n = or n shl b mul i 8
 i = add i 1
 end
+if gt n 600000
+ret 90
+end
 if eq mode 0
 r = write 1 pre0 0 len pre0
-if lt r 0
+if ne r long len pre0
 ret 91
 end
 else
 if eq mode 1
 r = write 1 pre1 0 len pre1
-if lt r 0
+if ne r long len pre1
 ret 91
 end
 else
 if eq mode 2
 r = write 1 pre2 0 len pre2
-if lt r 0
+if ne r long len pre2
 ret 91
 end
 else
 r = write 1 pre3 0 len pre3
-if lt r 0
+if ne r long len pre3
 ret 91
 end
 end
@@ -57,26 +67,31 @@ end
 i = ulong 0
 while lt i n
 r = write 1 stmt 0 len stmt
-if lt r 0
+if ne r long len stmt
 ret 91
 end
 i = add i 1
 end
 r = long 0
+expected = ulong 0
 if eq mode 0
 r = write 1 post0 0 len post0
+expected = len post0
 else
 if eq mode 1
 r = write 1 post1 0 len post1
+expected = len post1
 else
 if eq mode 2
 r = write 1 post2 0 len post2
+expected = len post2
 else
 r = write 1 post3 0 len post3
+expected = len post3
 end
 end
 end
-if lt r 0
+if ne r long expected
 ret 91
 end
 ret 0

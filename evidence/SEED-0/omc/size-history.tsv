@@ -1,4 +1,3 @@
 rewrite	change	source_lines	functions	words	sha256
 R5	first omc, om4 subset only (calls go to earlier functions only, so the value reader is one self-recursive function)	3101	123	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
 R5b	names pass: a call may name any function in the unit; mutual recursion in program mode; a call cycle in function mode is error 9; a function name used as a statement is error 7	3212	125	19143	191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
-R5c	native host extension plus checked 19-bit branch displacement (issue 669): disp19 rejects unaligned or out-of-range B.cond/CBZ/CBNZ targets with error 24; B.LO uses the same check	4001	148	27218	2c189f308c78e64e1b51ac86b139e8a662d5e622b764674f068b07e178fab0e9
