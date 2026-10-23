@@ -1,0 +1,11 @@
+--- native/hermes/src/json.om	2026-10-23 05:52:00.016420979 -0500
++++ /home/drakestapleton/handoffs/allen-hermes-L690/json-utf8-mutant.om	2026-10-23 05:58:01.080318173 -0500
+@@ -68,7 +68,7 @@
+ n = ulong 0
+ lo = ulong 128
+ hi = ulong 191
+-if and ge c 194 le c 223
++if and ge c 192 le c 223
+ n = 1
+ end
+ if and ge c 224 le c 239
