@@ -1,0 +1,27 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "369cd4ddfc36629a1c57bbebd30b644890582ed70bc8a435fa5aec5e4d7a0025",
+          "last_commit": "",
+          "name": "negative",
+          "purpose": "Deliberately weakened Om admission modules that replace the production module in control builds;"
+        }
+      ],
+      "children_root": "sha256:af97ee34fc073f64885271f4e397a6165308e3b2d2573a7aa5395ade8f0640c6",
+      "compiled_at": "2026-10-23T21:03:55Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:1fb61a1f1163b151fec19a53bd392a72f633c47683a69f5f8fe4aba12805b888",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "7959c9409f428308d078bf341d535c49c009dd45",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "layer": "tests/learning/curriculum",
+  "name": "curriculum",
+  "purpose": "Native Om tests of bounded public curriculum admission, observed-output failures, task identity, provenance, accounting and readiness.",
+  "schema_version": "1.0.0"
+}

@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-23T21:03:55Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:369cd4ddfc36629a1c57bbebd30b644890582ed70bc8a435fa5aec5e4d7a0025",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "7959c9409f428308d078bf341d535c49c009dd45",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "layer": "tests/learning/curriculum/negative",
+  "name": "negative",
+  "purpose": "Deliberately weakened Om admission modules that replace the production module in control builds; tests must reject both.",
+  "schema_version": "1.0.0"
+}

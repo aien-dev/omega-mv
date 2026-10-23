@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-23T21:03:55Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:1733f72708175361e834cbb8bcec763433a4a57b7567f8b5dc4753f92ecfd103",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "7959c9409f428308d078bf341d535c49c009dd45",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "layer": "src/learning/curriculum",
+  "name": "curriculum",
+  "purpose": "Bounded public record admission consuming the pinned L775 benchmark core; metadata checks and observed-output comparison only, without execution, authentication, generation or persistence.",
+  "schema_version": "1.0.0"
+}
