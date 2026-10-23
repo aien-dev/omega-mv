@@ -8,7 +8,7 @@ params u32 u32 u32 u32
 ret u32
 signature fn second_max a uint b uint c uint d uint to uint
 desc second largest of four values, counting repeats
-receipt cd82babd4452c7d10e71e8053660d05077dc994afc43bbc2365309e803a91c8f
+receipt 9e716153b09cb3daaef637edd8581c8938bf662f77dcf70fe0f95042b8cf1550
 validity verified
 ancestry second_max e47c2e2199df706e05b23806e53ea726c80ddf1826167f05e50e0d53f7f98f1c
 source tests/one_layer/generalization/corpus/META 179c34c50f6d843d41b10aabdbd69c425248a3107e107c64630836199e15ab0b

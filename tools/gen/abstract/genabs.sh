@@ -8,14 +8,15 @@ export LC_ALL=C
 GA_CORPUS=tests/one_layer/generalization/corpus
 GA_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GA_PROPERTY_N=256
+GA_GEN_SEED=478001 GA_GEN_N=200   # generated-input check of every solution: fixed seed, 200 cases per task
 
 ga_init() {
   GA_B="$1" GA_ROOT="$2" GA_W="$3" GA_ERR=""
   GA_OMEGESE="$GA_B/omegese/omegese" GA_EMIT="$GA_B/omega_emit/omega_emit" GA_X445="$GA_B/omega_emit/x445"
   GA_CHK="$GA_B/checker2/checker2" GA_RUNNER="$GA_B/one_layer/ola_runner" GA_GABS="$GA_B/gen_abstract/gabs"
-  GA_FAMSIG="${GEN_FAMSIG:-$GA_B/gen_abstract/famsig}"
+  GA_FAMSIG="$GA_B/gen_abstract/famsig" GA_ORACLE="$GA_B/gen_abstract/oracle"
   local t
-  for t in "$GA_OMEGESE" "$GA_EMIT" "$GA_X445" "$GA_CHK" "$GA_RUNNER" "$GA_GABS" "$GA_FAMSIG"; do
+  for t in "$GA_OMEGESE" "$GA_EMIT" "$GA_X445" "$GA_CHK" "$GA_RUNNER" "$GA_GABS" "$GA_FAMSIG" "$GA_ORACLE"; do
     [ -x "$t" ] || { echo "genabs: missing tool $t (make omegese omega_emit checker2 ola gen-abstract)" >&2; return 2; }
   done
   mkdir -p "$GA_W/scratch"
@@ -27,6 +28,7 @@ ga_shas() { printf '%s' "$1" | sha256sum | cut -c1-64; }
 ga_tool_lines() {
   local f
   for f in extract genabs.sh gabs.c; do printf 'tool tools/gen/abstract/%s %s\n' "$f" "$(ga_sha "$GA_HERE/$f")"; done
+  printf "tool %s %s\n" "$GA_CORPUS/oracle.c" "$(ga_sha "$GA_HERE/../../../$GA_CORPUS/oracle.c")"
 }
 
 # ga_chain <prog.omegese> <base> -- reader chain: omegese emit, omega_emit emit, checker2 check.
@@ -167,6 +169,7 @@ ga_raw_checks() {
   local p ret
   p="$(sed -n 's/^params//p' "$d/requirement")" ret="$(sed -n 's/^ret //p' "$d/requirement")"
   ga_run "tests" "$w.s.ir" "$(sed -n 's/^entry //p' "$d/requirement")" "$ret" "$d/inputs" "$d/expected" $p || return 1
+  ga_gen_check "$w.s.ir" "$d" "$w" || return 1
   return 0
 }
 
@@ -199,4 +202,36 @@ ga_meta_token() {
   local shape; shape="$(awk -v t="$1" '$1 == t { print $9 }' "$GA_ROOT/$GA_CORPUS/META")"
   [ -n "$shape" ] || { GA_ERR="no META line for $1"; return 1; }
   "$GA_FAMSIG" token "$shape"
+}
+
+# ga_gen_check <ir> <task dir> <work prefix> -- generated-input check: GA_GEN_N inputs from `oracle gen` (seed
+# GA_GEN_SEED, the task's stated preconditions kept), expected values from the C oracle, run in the harness
+# runner; the receipt line names the seed and count. Returns 1 (GA_ERR) unless every case matches.
+ga_gen_check() {
+  local ir="$1" d="$2" w="$3" t p ret
+  t="$(sed -n 's/^entry //p' "$d/requirement")" p="$(sed -n 's/^params//p' "$d/requirement")" ret="$(sed -n 's/^ret //p' "$d/requirement")"
+  # shellcheck disable=SC2086
+  "$GA_ORACLE" gen "$t" "$GA_GEN_SEED" "$GA_GEN_N" $(printf '%s\n' $p | wc -l) > "$w.gin" || { GA_ERR="oracle gen failed for $t"; return 1; }
+  "$GA_ORACLE" "$t" < "$w.gin" > "$w.gexp" || { GA_ERR="oracle failed for $t"; return 1; }
+  ga_run "generated seed=$GA_GEN_SEED n=$GA_GEN_N" "$ir" "$t" "$ret" "$w.gin" "$w.gexp" $p
+}
+
+# ga_famrule <corpus META> <out receipt> -- the family rule gate (FAMSIG v1 R1..R7 and later): runs the famsig
+# built by famsig_build (its famsig.built must match FAMSIG.pin and the binary) on the pinned dev/META and the
+# corpus META. Writes the receipt only on RULE PASS; returns 1 with GA_ERR otherwise.
+ga_famrule() {
+  local meta="$1" out="$2" S="$GA_B/gen_abstract/famsig-src" pin="$GA_HERE/FAMSIG.pin" r kw path sha
+  [ "$(cat "$GA_B/gen_abstract/famsig.built" 2>/dev/null)" = "$(cat "$pin"; echo "binary $(sha256sum < "$GA_FAMSIG" | cut -c1-64)")" ] \
+    || { GA_ERR="famsig binary was not built from FAMSIG.pin (run make gen-abstract)"; return 1; }
+  while read -r kw path sha; do
+    [ "$kw" != file ] || [ "$(ga_sha "$S/$path")" = "$sha" ] || { GA_ERR="famsig source $path does not match FAMSIG.pin"; return 1; }
+  done < "$pin"
+  r="$("$GA_FAMSIG" rule "$S/tests/one_layer/generalization/dev/META" "$meta" 2>&1)" || true
+  [ "$(printf '%s\n' "$r" | tail -n 1)" = "RULE PASS" ] || { GA_ERR="famsig rule dev/META corpus/META: $(printf '%s\n' "$r" | grep -m 3 '^FAIL\|^famsig' | paste -sd';' -) $(printf '%s\n' "$r" | tail -n 1)"; return 1; }
+  { echo "gen-famrule 1"
+    echo "famsig_commit $(sed -n 's/^commit //p' "$pin")"
+    while read -r kw path sha; do if [ "$kw" = file ]; then echo "pinned $path $sha"; fi; done < "$pin"
+    echo "corpus_meta $GA_CORPUS/META $(ga_sha "$meta")"
+    echo "command famsig rule tests/one_layer/generalization/dev/META $GA_CORPUS/META"
+    printf '%s\n' "$r"; } > "$out"
 }

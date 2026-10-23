@@ -8,7 +8,7 @@ params u32
 ret u32
 signature fn digsum_mod9 n uint to uint
 desc decimal digit sum of n modulo 9, with a digsum helper
-receipt 88ca33a964426b583e02286a6e7dc4f9bc68e3745ff0448bad8e88d6fd2923f1
+receipt 04ab7ff1a15a35b278b1cdb5126186285bcd1b9842348c77e3ac1f6d339e3c06
 validity verified
 ancestry digsum_mod9 7a9b0cdb057c8c408a475b693341f42d5c8bf76db62bc3fd19b7b6b049062b6a
 source tests/one_layer/generalization/corpus/META 179c34c50f6d843d41b10aabdbd69c425248a3107e107c64630836199e15ab0b

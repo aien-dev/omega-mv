@@ -1,0 +1,16 @@
+gen-receipt 1
+record abs-1a1cf516b3c016e9
+tool tools/gen/abstract/extract aae127af262959146b38f4fd8be043fdba73ffaf580cb00bdf57b47c1f7d9192
+tool tools/gen/abstract/genabs.sh 0003dd83a740b91c51a2c9cec594c14e4ddb2775bf9ae1267694960dff413970
+tool tools/gen/abstract/gabs.c 16023e76cb19000eebb4c341692a831ad3d8d12093a4ecf2ed3e5c189532bf38
+tool tests/one_layer/generalization/corpus/oracle.c bdf17a5ffefff7876a405ab139584304d08628cee682735641ec69991b5c4577
+helper_ir 4552978bcee2799217de0fc637fe3a935ba999aa164512ca3f696b21efef6b44
+checker2 ACCEPT
+pre true
+post or and gt x 255 eq res 255 and le x 255 eq uint res x
+example 300 -> 255
+property inputs=01d9e5c8c3c7efd306651e88bd8d3b8d45a1f19223c405d7b4f0ed2e4281d45d expected=23c04e4d3c8d5abea295504bcdab63f60f7d857852a0fe95e049676f6dfc65e4 ACCEPT n=256
+example inputs=f807fe6dc767be2e7021d41540114b33b30fa7784f6de5521251f23a3eb66468 expected=ce8bafb38615aeb5d44ebbabe78ec14ac35a5de87bdc5ad5ea82a72656024ce4 ACCEPT n=1
+occurs sat_prod sat8
+occurs sat_sum sat8
+occurs sum_sat sat8

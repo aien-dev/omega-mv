@@ -1,0 +1,36 @@
+gen-famrule 1
+famsig_commit 23c9c7e93040f6a71cd51e17f8b9c5ef8d475ad4
+pinned tools/gen/protocol/famsig.c 42d372ffab771b2796e885563de7ff6ec36244fefc6533a09988690562c05c75
+pinned tools/gen/protocol/famsig_lib.h 13405b3615c7aa792cb357af1e2ce1ecfca7dec8366d3369a4ba3e7cdd73454c
+pinned tests/one_layer/generalization/families/FAMSIG_V1.md 5ebbc8efe6e125863b17fb8b73a3b56a191d18d8a9be730dd2b4ea7133714092
+pinned tests/one_layer/generalization/dev/META 1de87149b3c2e0ab80b9ba225bdd1e8b928e7a2c921d18df7dcb804daec6f0b2
+corpus_meta tests/one_layer/generalization/corpus/META 179c34c50f6d843d41b10aabdbd69c425248a3107e107c64630836199e15ab0b
+command famsig rule tests/one_layer/generalization/dev/META tests/one_layer/generalization/corpus/META
+split corpus tasks=49 families=20
+split dev tasks=10 families=4
+split heldout tasks=0 families=0
+family corpus gs1:arith tasks=2
+family corpus gs1:branch(call(loop(arith)),call(loop(arith))) tasks=3
+family dev gs1:branch(loop(arith),nested) tasks=3
+family corpus gs1:loop(arith) tasks=3
+family corpus gs1:loop(arith,call(branch(arith))) tasks=3
+family corpus gs1:loop(branch(arith),call(loop(arith))) tasks=1
+family dev gs1:loop(call(nested)) tasks=3
+family dev gs1:loop(loop(branch(arith))) tasks=2
+family corpus gs1:nested tasks=3
+family corpus gs1:seq(arith,array,call(loop(arith,array))) tasks=3
+family corpus gs1:seq(arith,array,call(loop(array,branch(arith)))) tasks=2
+family corpus gs1:seq(arith,branch(arith),call(loop(arith))) tasks=1
+family corpus gs1:seq(arith,call(branch(arith))) tasks=6
+family corpus gs1:seq(arith,call(call(loop(arith)))) tasks=2
+family corpus gs1:seq(arith,call(loop(arith))) tasks=6
+family corpus gs1:seq(arith,call(loop(arith)),call(loop(arith))) tasks=5
+family corpus gs1:seq(arith,call(nested)) tasks=3
+family corpus gs1:seq(array,branch(arith),loop(array,branch(arith)),loop(array,branch(arith),branch(arith))) tasks=1
+family corpus gs1:seq(array,call(loop(arith,array)),call(loop(array,branch(arith))),nested) tasks=1
+family dev gs1:seq(array,loop(array,branch(arith))) tasks=2
+family corpus gs1:seq(branch(arith),loop(arith)) tasks=1
+family corpus gs1:seq(call(branch(arith)),call(branch(arith))) tasks=1
+family corpus gs1:seq(call(branch(arith)),nested) tasks=1
+family corpus gs1:seq(call(nested),call(nested),call(nested)) tasks=1
+RULE PASS

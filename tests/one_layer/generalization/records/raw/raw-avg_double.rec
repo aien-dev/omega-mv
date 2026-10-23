@@ -8,7 +8,7 @@ params u32 u32
 ret u32
 signature fn avg_double a uint b uint to uint
 desc twice the average of a and b rounded down, with an overflow-free avg2 helper
-receipt 3f45ed299d08b9facf2f587e37e538a8bfcaae8525066323bf8d6c5772c9af4c
+receipt 5fdaad82191c2fa1c488c9c094575de942edcb6384829c23e9922808f397735f
 validity verified
 ancestry avg_double ac7c4d41503e44ba6b346e72429e994ac0ccf763a2718270ae69530ed1791a72
 source tests/one_layer/generalization/corpus/META 179c34c50f6d843d41b10aabdbd69c425248a3107e107c64630836199e15ab0b

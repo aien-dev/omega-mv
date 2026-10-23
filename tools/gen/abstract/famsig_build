@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# tools/gen/abstract/famsig_build <build dir> -- GEN-3 (aien-spark/omega#478): build GEN-1's famsig from the commit
+# pinned in tools/gen/abstract/FAMSIG.pin, never from a stale binary.
+# Reads every pinned file with `git show <commit>:<path>` into <build dir>/gen_abstract/famsig-src/ and checks its
+# sha256 against the pin (a mismatch is fatal). If the commit is missing (shallow clone) it runs
+# `git fetch --depth=1 origin <commit>` once, else fails with a clear message. famsig is recompiled unless
+# <build dir>/gen_abstract/famsig.built holds exactly the pin plus the sha256 of the current binary, so a changed
+# pin, changed sources or a replaced binary always lead to a rebuild. Nothing is copied into the source tree.
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$HERE/../../.." && pwd)"
+[ $# -eq 1 ] || { echo "usage: famsig_build <build dir>" >&2; exit 2; }
+mkdir -p "$1/gen_abstract"; G="$(cd "$1/gen_abstract" && pwd)"
+PIN="$HERE/FAMSIG.pin"
+C="$(sed -n 's/^commit //p' "$PIN")"
+[ "${#C}" = 40 ] || { echo "famsig_build: FAMSIG.pin has no 40-hex commit" >&2; exit 1; }
+if ! git -C "$ROOT" cat-file -e "$C^{commit}" 2>/dev/null; then
+  echo "famsig_build: pinned famsig commit $C is not in this clone (shallow?); fetching it from origin" >&2
+  git -C "$ROOT" fetch -q --depth=1 origin "$C" 2>/dev/null && git -C "$ROOT" cat-file -e "$C^{commit}" 2>/dev/null || {
+    echo "famsig_build: cannot get pinned commit $C; run 'git fetch origin $C' (or clone with full history) and retry" >&2; exit 1; }
+fi
+S="$G/famsig-src"; rm -rf "$S.new"
+while read -r kw path sha; do
+  [ "$kw" = file ] || continue
+  mkdir -p "$S.new/$(dirname "$path")"
+  git -C "$ROOT" show "$C:$path" > "$S.new/$path"
+  got="$(sha256sum < "$S.new/$path" | cut -c1-64)"
+  [ "$got" = "$sha" ] || { echo "famsig_build: $path at $C has sha256 $got, pin says $sha" >&2; exit 1; }
+done < "$PIN"
+rm -rf "$S"; mv "$S.new" "$S"
+if [ -x "$G/famsig" ] && [ -f "$G/famsig.built" ] && \
+   [ "$(cat "$G/famsig.built")" = "$(cat "$PIN"; echo "binary $(sha256sum < "$G/famsig" | cut -c1-64)")" ]; then
+  exit 0
+fi
+rm -f "$G/famsig" "$G/famsig.built"
+"${CC:-cc}" -std=gnu11 -Wall -Wextra -Werror -O2 -I"$ROOT/src" -o "$G/famsig" "$S/tools/gen/protocol/famsig.c" "$ROOT/src/sha256.c"
+{ cat "$PIN"; echo "binary $(sha256sum < "$G/famsig" | cut -c1-64)"; } > "$G/famsig.built"
+echo "famsig_build: built famsig from $C"

@@ -8,7 +8,7 @@ params u32
 ret u32
 signature fn digit_product n uint to uint
 desc product of the decimal digits of n (0 for n = 0)
-receipt 7a5a17c4409344555b35ca15f644f0cd277051fad9a323ebb4f19d36b7e5cc74
+receipt 4bb95f38e91ff6725c225dbd347a22ddd5e716b31e0565ee2500899592898a44
 validity verified
 ancestry digit_product eca3a65d0afabb580c0632502c993650173f83de13a9c37e1bd1ec865ac0891e
 source tests/one_layer/generalization/corpus/META 179c34c50f6d843d41b10aabdbd69c425248a3107e107c64630836199e15ab0b

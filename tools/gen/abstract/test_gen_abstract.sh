@@ -93,15 +93,33 @@ done
 [ -z "$cbad" ] && ok "corpus: every task has its files, prompt bytes, >= 8 inputs, and expected == C oracle" || bad "corpus:$cbad"
 sed '1s/^\(.*\)$/9999999/' "$CO/tasks/clamp_sum/inputs" | "$B/gen_abstract/oracle" clamp_sum | cmp -s - "$CO/tasks/clamp_sum/expected" \
   && bad "oracle negative control: a changed input still matched" || ok "  negative control: one changed input changes the oracle output"
-if [ -f "$ROOT/tests/one_layer/generalization/dev/META" ]; then cp "$ROOT/tests/one_layer/generalization/dev/META" "$T/devMETA"
-else git -C "$ROOT" show 7eb8534c42304505640013f64753d9c9db40dcf3:tests/one_layer/generalization/dev/META > "$T/devMETA"; fi
+FSRC="$B/gen_abstract/famsig-src"; PIN="$HERE/FAMSIG.pin"
+cp "$FSRC/tests/one_layer/generalization/dev/META" "$T/devMETA"
 FS="$B/gen_abstract/famsig"
-FC=7eb8534c42304505640013f64753d9c9db40dcf3
-[ "$(git -C "$ROOT" show "$FC:tests/one_layer/generalization/families/FAMSIG_V1.md" | sha256sum | cut -c1-64)" = dee5b30d9aebfc96b3b9e3418ca3089ab7be2f0f5e02cc4f6cbebe3601db1e76 ] \
-  && cmp -s "$B/gen_abstract/famsig-src/tools/gen/protocol/famsig.c" <(git -C "$ROOT" show "$FC:tools/gen/protocol/famsig.c") \
-  && ok "famsig consumed from gen/protocol 7eb8534c (FAMSIG_V1.md sha256 dee5b30d..., famsig.c as at that commit)" || bad "famsig pin: FAMSIG_V1.md or famsig.c is not the 7eb8534c one"
+[ "$(sed -n 's/^commit //p' "$PIN")" = 23c9c7e93040f6a71cd51e17f8b9c5ef8d475ad4 ] \
+  && grep -qx 'file tests/one_layer/generalization/families/FAMSIG_V1.md 5ebbc8efe6e125863b17fb8b73a3b56a191d18d8a9be730dd2b4ea7133714092' "$PIN" \
+  && [ "$(cat "$B/gen_abstract/famsig.built")" = "$(cat "$PIN"; echo "binary $(sha256sum < "$FS" | cut -c1-64)")" ] \
+  && (while read -r kw p s; do [ "$kw" != file ] || [ "$(sha256sum < "$FSRC/$p" | cut -c1-64)" = "$s" ] || exit 1; done < "$PIN") \
+  && ok "famsig built from the FAMSIG.pin commit 23c9c7e9 (FAMSIG_V1.md sha256 5ebbc8ef..., every pinned file's sha256 checked, binary recorded)" || bad "famsig pin: the binary or its sources are not the FAMSIG.pin ones"
+# famsig_build never reuses a stale binary; in a copy of the build dir
+FB="$T/fb"; mkdir -p "$FB/gen_abstract"; cp "$FS" "$B/gen_abstract/famsig.built" "$FB/gen_abstract/"
+bash "$HERE/famsig_build" "$FB" > "$T/fb.out" 2>&1 && ! grep -q 'built famsig' "$T/fb.out" && ok "famsig_build: an up-to-date binary is kept" || bad "famsig_build rebuilt an up-to-date binary: $(cat "$T/fb.out")"
+printf 'stale\n' > "$FB/gen_abstract/famsig"; chmod +x "$FB/gen_abstract/famsig"
+bash "$HERE/famsig_build" "$FB" > "$T/fb.out" 2>&1 && grep -q 'built famsig' "$T/fb.out" && "$FB/gen_abstract/famsig" canon arith > /dev/null \
+  && ok "  stale control: a replaced famsig binary is rebuilt" || bad "famsig_build kept a replaced binary"
+sed -i 's/^commit .*/commit 8255a59031146e9f6de535425d591e0fdcee5b8d/' "$FB/gen_abstract/famsig.built"
+bash "$HERE/famsig_build" "$FB" > "$T/fb.out" 2>&1 && grep -q 'built famsig' "$T/fb.out" && cmp -s "$FB/gen_abstract/famsig.built" <(cat "$PIN"; echo "binary $(sha256sum < "$FB/gen_abstract/famsig" | cut -c1-64)") \
+  && ok "  stale control: a binary built from another pin (8255a590) is rebuilt from FAMSIG.pin" || bad "famsig_build kept a binary built from another pin"
+# shallow clone: a repo without the pinned commit fetches it from origin, or fails with a clear message
+SH="$T/sh"; mkdir -p "$SH/tools/gen/abstract" "$SH/src"; cp "$HERE/famsig_build" "$PIN" "$SH/tools/gen/abstract/"; cp "$ROOT/src/sha256.c" "$ROOT/src/sha256.h" "$SH/src/"
+git -C "$SH" init -q && git -C "$SH" remote add origin "$ROOT"
+bash "$SH/tools/gen/abstract/famsig_build" "$SH/build" > "$T/sh.out" 2>&1 && grep -q 'fetching it from origin' "$T/sh.out" && [ -x "$SH/build/gen_abstract/famsig" ] \
+  && ok "famsig_build in a clone without the pinned commit fetches it from origin and builds" || bad "famsig_build shallow fetch: $(tail -n 1 "$T/sh.out")"
+git -C "$SH" remote set-url origin "$T/nonexistent"; rm -rf "$SH/build"; rm -rf "$SH/.git"; git -C "$SH" init -q; git -C "$SH" remote add origin "$T/nonexistent"
+! bash "$SH/tools/gen/abstract/famsig_build" "$SH/build" > "$T/sh.out" 2>&1 && grep -q "cannot get pinned commit .* run 'git fetch origin" "$T/sh.out" && [ ! -e "$SH/build/gen_abstract/famsig" ] \
+  && ok "  negative control: without any way to get the commit it fails with a clear message and builds nothing" || bad "famsig_build without the commit: $(tail -n 1 "$T/sh.out")"
 "$FS" rule "$T/devMETA" "$CO/META" > "$T/rule.out" 2>&1 && tail -n 1 "$T/rule.out" | grep -qx 'RULE PASS' \
-  && ok "famsig rule dev/META corpus/META: RULE PASS, R1-R7 incl. coarse R6 ($(grep -c . "$CO/META") META lines, $(sed -n 's/^split corpus .*families=//p' "$T/rule.out") corpus families)" \
+  && ok "famsig rule dev/META corpus/META: RULE PASS, R1-R8 incl. coarse R6 and R8 ($(grep -c . "$CO/META") META lines, $(sed -n 's/^split corpus .*families=//p' "$T/rule.out") corpus families)" \
   || bad "famsig rule: $(tail -n 2 "$T/rule.out")"
 prims=""; for p in arith branch loop array call nested; do grep -v '^#' "$CO/META" | grep -q "$p" || prims+=" $p"; done
 [ -z "$prims" ] && ok "corpus META covers all six primitives" || bad "corpus META misses:$prims"
@@ -155,9 +173,15 @@ done
 # dpool <prefix file>: abstraction MANIFEST lines with at least one ancestry task outside the prefix
 dpool() { grep ' abstraction/' "$RS/MANIFEST" | while read -r h f; do
   if sed -n '/^body$/q; s/^ancestry \([^ ]*\) .*/\1/p' "$RS/$f" | grep -qvxF -f "$1"; then echo "$h  $f"; fi; done; }
-cmp -s <(grep ' raw/' "$RS/MANIFEST" | grep -vF -f <(sed 's|.*|raw/raw-&.rec|' "$RS/PREFIX")) "$RS/C.MANIFEST" \
-  && [ "$(wc -l < "$RS/C.MANIFEST")" = 35 ] \
-  && ok "C.MANIFEST: the 35 raw records outside the prefix, MANIFEST lines (sha256 $(sha256sum < "$RS/C.MANIFEST" | cut -c1-16)...)" || bad "C.MANIFEST is not MANIFEST raw lines minus the prefix"
+probes_list="$(grep -v '^#' "$CO/PROBES" | cut -d' ' -f1 | sort -u)"
+cpool() { grep ' raw/' "$RS/MANIFEST" | while read -r h f; do t="${f#raw/raw-}"; t="${t%.rec}"
+  if ! printf '%s\n' "$probes_list" | grep -qxF "$t" && ! grep -qxF "$t" "$RS/PREFIX"; then echo "$h  $f"; fi; done; }
+cmp -s <(cpool) "$RS/C.MANIFEST" \
+  && ok "C.MANIFEST: the $(wc -l < "$RS/C.MANIFEST") raw records of extraction tasks outside the prefix (sha256 $(sha256sum < "$RS/C.MANIFEST" | cut -c1-16)...)" || bad "C.MANIFEST is not MANIFEST raw lines minus probes and the prefix"
+pl=""; for f in $(awk '{ print $2 }' "$RS/C.MANIFEST" "$RS/D.MANIFEST"); do
+  if grep -qx 'split probe' "$RS/$f" || sed -n '/^body$/q; s/^ancestry \([^ ]*\) .*/\1/p' "$RS/$f" | grep -qxF -f <(printf '%s\n' $probes_list); then pl+=" $f"; fi
+done
+[ -z "$pl" ] && ok "no probe task (split probe, or a PROBES task in the ancestry) in C.MANIFEST or D.MANIFEST" || bad "probe records in a retrieval pool:$pl"
 cmp -s <(dpool "$RS/PREFIX") "$RS/D.MANIFEST" \
   && ok "D.MANIFEST: the $(wc -l < "$RS/D.MANIFEST") abstraction records with ancestry outside the prefix (sha256 $(sha256sum < "$RS/D.MANIFEST" | cut -c1-16)...)" || bad "D.MANIFEST is not the abstraction lines minus prefix-only ancestry"
 { cat "$RS/PREFIX"; echo avg_inc; } > "$T/pre+"
@@ -166,6 +190,32 @@ dpool "$T/pre+" | grep -q "$(grep -l '^entry avg2$' "$RS"/abstraction/*.rec | xa
 (cd "$RS" && sha256sum --quiet -c C.MANIFEST && sha256sum --quiet -c D.MANIFEST) && "$RC" --receipts "$RS/receipts" $(awk -v d="$RS" '{ print d "/" $2 }' "$RS/C.MANIFEST" "$RS/D.MANIFEST") > /dev/null 2>&1 \
   && ok "C and D manifests: every listed record matches its digest and passes recheck --receipts (what genret runs)" || bad "C or D manifest lists a bad record"
 
+# family rule gate: FAMRULE.receipt is a fresh famsig rule run, and a failing rule leaves no records or manifests
+cmp -s "$T/r1/FAMRULE.receipt" "$RS/FAMRULE.receipt" && tail -n 1 "$RS/FAMRULE.receipt" | grep -qx 'RULE PASS' \
+  && grep -qx "famsig_commit $(sed -n 's/^commit //p' "$HERE/FAMSIG.pin")" "$RS/FAMRULE.receipt" \
+  && grep -qx "corpus_meta tests/one_layer/generalization/corpus/META $(sha256sum < "$CO/META" | cut -c1-64)" "$RS/FAMRULE.receipt" \
+  && ok "FAMRULE.receipt equals a fresh run: pinned famsig commit, pinned file digests, corpus META digest, RULE PASS" || bad "FAMRULE.receipt is stale or not a RULE PASS"
+FR="$T/frroot"; rm -rf "$FR"; mkdir -p "$FR/tests/one_layer/generalization"; cp -R "$CO" "$FR/tests/one_layer/generalization/"
+echo "zz_coarse corpus 1 0 1 0 1 1 seq(arith,loop(call(nested)))" >> "$FR/tests/one_layer/generalization/corpus/META"
+cp -R "$RS" "$T/frout"
+if bash "$X" --root "$FR" "$B" "$T/frout" > "$T/fr.out" 2>&1; then bad "extract wrote a record set although the family rule fails"
+else left="$(cd "$T/frout" && ls MANIFEST SET.sha256 C.MANIFEST D.MANIFEST FAMRULE.receipt PREFIX raw abstraction 2>/dev/null | head -n 3 || true)"
+  grep -q 'famsig rule dev/META corpus/META: FAIL R6' "$T/fr.out" && [ -z "$left" ] \
+    && ok "  mutant: a corpus META line in a dev coarse family (R6) stops extract; no manifest, SET.sha256, receipt or record is left" \
+    || bad "family rule mutant: $(tail -n 1 "$T/fr.out") left: $left"
+fi
+# generated-input check: sat_sum with sat8 saturating at 200 instead of 255 is refused
+SM="$T/satmut"; mkdir -p "$SM"; cp -R "$CO/tasks/sat_sum" "$SM/"
+sed -i 's/^if gt x 255$/if gt x 200/; s/^ret 255$/ret 200/' "$SM/sat_sum/solution.omegese"
+if ! grep -q 'gt x 200' "$SM/sat_sum/solution.omegese"; then bad "sat_sum mutant: the edit did not apply"
+else
+  gm="$( . "$HERE/genabs.sh"; ga_init "$B" "$ROOT" "$T/gm" && ga_chain "$SM/sat_sum/solution.omegese" "$T/gm.s" && GA_RCPT="" \
+         && { ga_gen_check "$T/gm.s.ir" "$SM/sat_sum" "$T/gm.g" && echo "ACCEPTED"; } || echo "REFUSED $GA_ERR" )"
+  case "$gm" in "REFUSED generated seed=478001 n=200 check failed: REJECT"*) ok "  mutant: sat_sum saturating at 200 is refused by the generated-input check (${gm:0:90}...)";;
+    *) bad "sat_sum at-200 mutant not refused by the generated-input check: $gm";; esac
+fi
+gc="$(grep -l '^generated seed=478001 n=200 inputs=[0-9a-f]* expected=[0-9a-f]* ACCEPT n=200$' "$RS"/receipts/* | wc -l)"
+[ "$gc" = 49 ] && ok "every raw receipt (49) records the generated-input check: seed 478001, 200 cases, ACCEPT" || bad "only $gc raw receipts carry the generated-input check"
 # ---- 4. verify ------------------------------------------------------------------------------------------
 V="$HERE/verify"
 bash "$V" "$B" "$RS"/raw/*.rec "$RS"/abstraction/*.rec > "$T/v.out" 2>&1 \

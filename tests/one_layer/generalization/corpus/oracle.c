@@ -3,7 +3,8 @@
  * harness reads them) gives one expected line, the decimal result or `TRAP 2` (division by zero, the only
  * trap these tasks have). Written from each task's prompt, separately from the Omegese solutions and the OSC
  * references, so a shared mistake has to be made three times. Unsigned 32-bit arithmetic wraps modulo 2^32, as
- * in OSC-1 and Omegese (docs/osc/OSC-2-DESIGN.md: wrap for unsigned types); it is computed in 64 bits and masked. */
+ * in OSC-1 and Omegese (docs/osc/OSC-2-DESIGN.md: wrap for unsigned types); it is computed in 64 bits and masked.
+ * `oracle gen` (below) writes the generated inputs the GEN-3 verifier runs every solution on. */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,9 +86,49 @@ static u task(const char *t, const u *a)
     exit(2);
 }
 
+
+/* `oracle gen <task> <seed> <n> <nparams>`: n deterministic input lines for the task (no clock, no libc rand).
+ * xorshift64* seeded by seed and an FNV-1a hash of the task id. Each value is drawn from a mix of small, medium,
+ * boundary and full 32-bit values. The preconditions the prompts state are kept: lo <= hi (clamp_gap, sum_clamped)
+ * and the loop count n of sum_clamped, sum_dists, sum_sat and even_digsums is kept <= 2000 (the prompts allow
+ * n <= 100000; 2000 keeps 200 cases fast in the runner, so no task needs a smaller case count). */
+static u rs;
+static u rnd(void) { rs ^= rs >> 12; rs ^= rs << 25; rs ^= rs >> 27; return rs * 0x2545F4914F6CDD1Dull; }
+static u draw(void)
+{
+    static const u edge[] = {0, 1, 2, 9, 10, 99, 100, 255, 256, 1000, 65535, 65536,
+                             0x7fffffffull, 0x80000000ull, 0xfffffffeull, 0xffffffffull};
+    u k = rnd() % 8, r = rnd();
+    switch (k) {
+    case 0: return r % 16;
+    case 1: return r % 301;
+    case 2: return r % 100001;
+    case 3: return edge[r % 16];
+    default: return r & M32;
+    }
+}
+static int gen(const char *t, u seed, long n, int np)
+{
+    if (np < 1 || np > 8 || n < 1) { fprintf(stderr, "oracle: bad gen arguments\n"); return 2; }
+    u h = 0xcbf29ce484222325ull;
+    for (const char *p = t; *p; p++) h = (h ^ (unsigned char)*p) * 0x100000001b3ull;
+    rs = (seed ^ h) | 1;
+    int loopn = !strcmp(t, "sum_clamped") || !strcmp(t, "sum_dists") || !strcmp(t, "sum_sat") || !strcmp(t, "even_digsums");
+    int lo = !strcmp(t, "clamp_gap") ? 2 : !strcmp(t, "sum_clamped") ? 1 : -1;
+    for (long i = 0; i < n; i++) {
+        u a[8];
+        for (int j = 0; j < np; j++) a[j] = draw();
+        if (loopn) a[0] %= 2001;
+        if (lo >= 0 && lo + 1 < np && a[lo] > a[lo + 1]) { u x = a[lo]; a[lo] = a[lo + 1]; a[lo + 1] = x; }
+        for (int j = 0; j < np; j++) printf(j ? " %llu" : "%llu", (unsigned long long)a[j]);
+        printf("\n");
+    }
+    return 0;
+}
 int main(int argc, char **argv)
 {
-    if (argc != 2) { fprintf(stderr, "usage: oracle <task_id> < inputs > expected\n"); return 2; }
+    if (argc == 6 && !strcmp(argv[1], "gen")) return gen(argv[2], strtoull(argv[3], 0, 10), strtol(argv[4], 0, 10), atoi(argv[5]));
+    if (argc != 2) { fprintf(stderr, "usage: oracle <task_id> < inputs > expected | oracle gen <task> <seed> <n> <nparams>\n"); return 2; }
     char line[512];
     while (fgets(line, sizeof line, stdin)) {
         u a[8] = {0};

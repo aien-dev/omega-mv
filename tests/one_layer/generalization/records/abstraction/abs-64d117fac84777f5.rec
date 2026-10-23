@@ -8,7 +8,7 @@ params u32 u32 u32
 ret u32
 signature fn clamp x uint lo uint hi uint to uint
 desc limit an unsigned 32-bit x to lo..hi: below lo gives lo, above hi gives hi, otherwise x
-receipt ce6196ee1ed345c29a7c2bf735d65c6890bede52fe366c1c25595a332155cee6
+receipt bde19bd1efa55e462343562ad33a833048c062dff039b37ed0c3fd8c65131ce7
 validity verified
 ancestry clamp_sum 1ac3a275e14084decd20e203fbc53bbc83f226517f9dcd7a47aacad7ca2a1bac
 ancestry clamp_triple 2850efbe16088dfd807e0040e7c05d8222191deddbf0514444ae03eec6d3356d
