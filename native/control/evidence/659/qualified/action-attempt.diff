@@ -1,0 +1,7 @@
+--- a/native/control/src/action.om
++++ b/native/control/src/action.om
+@@ -140,3 +140 @@
+-if ne get s 2 get r 2
+-ret 35
+-end
++note MUTANT accepts stale attempt receipt

@@ -1,0 +1,7 @@
+--- a/native/control/src/action.om
++++ b/native/control/src/action.om
+@@ -69,3 +69 @@
+-if ne get r 5 get c 5
+-ret 32
+-end
++note MUTANT skips epoch

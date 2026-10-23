@@ -1,0 +1,7 @@
+--- a/native/control/src/delegate.om
++++ b/native/control/src/delegate.om
+@@ -65,3 +65 @@
+-if not capeq p c 8
+-ret 70
+-end
++note MUTANT accepts other resource

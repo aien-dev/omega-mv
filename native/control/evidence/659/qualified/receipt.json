@@ -1,0 +1,395 @@
+{
+  "schema": "omega.control.component-receipt.v1",
+  "source_clean_at_start": true,
+  "evidence_class": "EMULATED",
+  "host": "x86_64 Linux",
+  "compiler_source_commit": "57f5f4258cebf3d5b2c22853cd062e351265c525",
+  "compiler_sha256": "01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6",
+  "emulator_sha256": "e4f8d99e9ff69c3cefffab71cee358ce2af1ecba1282d04c3eeb44ef76f5a71e",
+  "emulator_version": "qemu-aarch64 version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)",
+  "positive_assertions": 367,
+  "positive_suites": 3,
+  "negative_stubs_detected": 3,
+  "compiled_guard_mutants_detected": 10,
+  "compile_refusals_checked": 3,
+  "not_run": [
+    "independent final-source review",
+    "authoritative durable store/dispatch integration",
+    "real provider effects and crash/restart",
+    "concurrent dispatch/revocation races",
+    "native AArch64 and GB10 hardware",
+    "legacy runtime regression suite"
+  ],
+  "claim": "Bounded contract component tests only. No production or hardware qualification.",
+  "source_commit": "baa1587fc1542177595b90dccf36f98b1e294b0a",
+  "source_tree": "27c1d4e8af1ff81ea1aabc3fa08e7153e69a8277",
+  "source_closure_sha256": {
+    "native/control/src/action.om": "698aa7d6232837be9c4ba85ebb57d6c656aacb60ae9e703b0e4f11967562e5de",
+    "native/control/src/delegate.om": "501c3c8a760724ae56d836dbbe650205b55a4b9371d18609caccdb0c312cc981",
+    "native/control/src/reuse.om": "dd35c5d4216958bf2f7676067c4d6aeee349d01cdca5b619f56f9765df623a9a",
+    "native/control/tests/action.om": "47c6c44e81af5521551927b7125bdca3b7b0b9cf6ca4549801f5067c200feea4",
+    "native/control/tests/delegate.om": "af75da450c98fa7650398041979a4fc7ad4f7e9182928f90998a7c9c85fe1c7d",
+    "native/control/tests/negative/action-stub.om": "2c9e4dd2f6ab2ebd589363f9a5d45416dda5b79c9629a0c6ffbfb1e51dd4bdbd",
+    "native/control/tests/negative/aliased-action.om": "8b0de9f802fe3bd526af9e8807a4a6f0f0e99642295245cca9f37fbff223bef3",
+    "native/control/tests/negative/delegate-stub.om": "13f8812ddefbbe0357c64cf7595bfd5cc0d2f9bb3463d49631c6537eea784164",
+    "native/control/tests/negative/reuse-stub.om": "e367df060c80d3b46eac56158ddb49c90ded4491ecfc69a2fe2291b425d97583",
+    "native/control/tests/negative/wrong-action-size.om": "0b352d83e9e422071a051e79ff18dfa10cf24235a232918b827f97311df390f8",
+    "native/control/tests/negative/wrong-payload-size.om": "1599dab6dfbca6dcd2970a7999e28c64db7b9e52fb0afdcecd054f6e97a210f2",
+    "native/control/tests/reuse.om": "28c5d17a301bea4d95bd7c5d3f2c9753df12d236d6246dbd9e914cece4788be9"
+  },
+  "cases": [
+    {
+      "case": "action",
+      "unit_sha256": "3dda4fd54ac6c31b44ee73fe44761266734969abf77cbea3015d3b48686ce127",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "f56e5696dfcfc8a16430147db176eb5b6568ec794fd3de9303f9dcd505f246aa",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/action.elf"
+      ],
+      "run_exit": 0,
+      "expected_run_exit": 0,
+      "stdout": "action checks=219 000\n",
+      "stderr": ""
+    },
+    {
+      "case": "action-deny-none",
+      "unit_sha256": "2a09d4f9dd1dc8a6140c8dc71d71f2d1766ea3763d031f64dae01184e2585989",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "58a096688e47124e82bb6fe059ff385e9935e4d7dadac690cc51436a6c192fe0",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/action-deny-none.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "action checks=219 124\n",
+      "stderr": ""
+    },
+    {
+      "case": "delegate",
+      "unit_sha256": "03adbc46b47ae9be64385740c0d8c2d96dc8b6f05cd2d8cf40dd6632f09ca110",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "2c00ea7f17b93a1f18b40c6b0215b487ac06dc83a8b79a3793072edb6d6bee50",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/delegate.elf"
+      ],
+      "run_exit": 0,
+      "expected_run_exit": 0,
+      "stdout": "delegate checks=074 000\n",
+      "stderr": ""
+    },
+    {
+      "case": "delegate-deny-none",
+      "unit_sha256": "e0c6ef386114f7cc923225b2c3e069b5892cf97daeb243d844b5e53271c8d066",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "3ac2454aaad1518e00810bc999b8c3bae1f2bed6dad46d889dfbc3d5f2ced023",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/delegate-deny-none.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "delegate checks=074 060\n",
+      "stderr": ""
+    },
+    {
+      "case": "reuse",
+      "unit_sha256": "04f948feb581707298c82f24d2a156be3b27685b137178ffae1649b8133f491e",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "f4fb1d2c0d9a0c8fd2efa6d6239b968aa5ccc9edc9d8c3a662c4743e9b729105",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/reuse.elf"
+      ],
+      "run_exit": 0,
+      "expected_run_exit": 0,
+      "stdout": "reuse checks=074 000\n",
+      "stderr": ""
+    },
+    {
+      "case": "reuse-deny-none",
+      "unit_sha256": "e6029666bf437bc5424a75c016097b00483d8c16c6cac5606b12add9830409aa",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "ffd65a2a4ffa30440feddbe93aaf6f9609eaaddd1a2d69418da9d50407977f8c",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/reuse-deny-none.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "reuse checks=074 072\n",
+      "stderr": ""
+    },
+    {
+      "case": "action-unknown",
+      "unit_sha256": "0cddec9f9c7a7a1a53b465342a569656f23412e843fca94b4520e7a1654246ad",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "66bbe32f75309cb482b61cdb773d45caa474b1da68cf666400258597716206ed",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/action-unknown.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "action checks=219 013\n",
+      "stderr": ""
+    },
+    {
+      "case": "action-authority",
+      "unit_sha256": "402ece8d6c742052524a2accf87b831fce95409209bfd4094ad65d4f33992781",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "f2d13529a1d1b0ec30a5ec6ac36575378c79ec1ba39c3707b5005ec6509423fd",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/action-authority.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "action checks=219 008\n",
+      "stderr": ""
+    },
+    {
+      "case": "action-epoch",
+      "unit_sha256": "7231718a0bc0526fdd216b40f503100ee7561427fd956ca317979e72e6f694af",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "635539342a41aadf08e9b351cdda9bf40da80448809eb0348582800a29e2126b",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/action-epoch.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "action checks=219 003\n",
+      "stderr": ""
+    },
+    {
+      "case": "action-attempt",
+      "unit_sha256": "53ba5dde14ee43e55940d195807d3d482d9e33b89ddeebbc1a62456976d16936",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "feac5a0fe6fa887c9281321baf9efd79f7de5a0e11f8875a638e752afa917cec",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/action-attempt.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "action checks=219 003\n",
+      "stderr": ""
+    },
+    {
+      "case": "action-binding",
+      "unit_sha256": "1be550c4c0d7d3c7a333d5e7c1f569c065a450cebb68ac47b9d23cd12923844a",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "e40aa0cd6fa2ab2368b1cd5875333f5207d4cc8fcd527b99f5374ec94a7e97ef",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/action-binding.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "action checks=219 072\n",
+      "stderr": ""
+    },
+    {
+      "case": "delegate-rights",
+      "unit_sha256": "9c3bc76886e4d702e0a7a17df867af6b620a9c83ffb3d6194f74952a23e7b9b1",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "325fbae2aeb0f6984acb16d186c03144dea7e61a5e6ace310c5661297881a1df",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/delegate-rights.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "delegate checks=074 028\n",
+      "stderr": ""
+    },
+    {
+      "case": "delegate-depth",
+      "unit_sha256": "21b4c3d429441adb41ec951c319d53c46803c9edb8abb06f8a16c293989621b4",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "a58604f014111866b957cf8394994b65f274c1afc7ceb726ab56b4687c132313",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/delegate-depth.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "delegate checks=074 001\n",
+      "stderr": ""
+    },
+    {
+      "case": "delegate-scope",
+      "unit_sha256": "3bd5599277666e8d8c7bc75e1794168ad795d2ed38468e786d886e8ac8867776",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "92dea90f16cb87e742c71d8bb03b048a68641400f4dfc620734b560bef64df6e",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/delegate-scope.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "delegate checks=074 004\n",
+      "stderr": ""
+    },
+    {
+      "case": "reuse-identity",
+      "unit_sha256": "c55ade1d2e3784e44c09d61b169735c8b98a5d18865e936ab8ba05ef59a789c1",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "741b064c2e48bdde735b5ecbeb91a6dc042d06dbaa675097c0cdcdb72a3da8b0",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/reuse-identity.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "reuse checks=074 031\n",
+      "stderr": ""
+    },
+    {
+      "case": "reuse-payload",
+      "unit_sha256": "bee98fbf28432d7d0c20a7c890d538525403570f51809e4bbbcf6651fe803160",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "compile_diagnostic": "",
+      "binary_sha256": "19eff1c989e513a4016e969dd1be3a19629d95a073ad8b88481005de6eaf55fe",
+      "run_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega-published/build/control/reuse-payload.elf"
+      ],
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "stdout": "reuse checks=074 004\n",
+      "stderr": ""
+    },
+    {
+      "case": "wrong-action-size",
+      "unit_sha256": "29fce568d19da0831218fbbb390aef2a7256716b7a16ab13083c022f77decdb8",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 7,
+      "expected_compile_exit": 7,
+      "compile_diagnostic": "omc: line 170: error 7\n"
+    },
+    {
+      "case": "aliased-action",
+      "unit_sha256": "9a5b8d69d13fb77aba0b1ca7910bf20b5df5b00bc7d600ccd6be4da494cb6d84",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 19,
+      "expected_compile_exit": 19,
+      "compile_diagnostic": "omc: line 169: error 19\n"
+    },
+    {
+      "case": "wrong-payload-size",
+      "unit_sha256": "7577c1aba9c3d3b73e3cfd95ca7ffe3d28780f398c01cd97871c936a61654ff9",
+      "compile_argv": [
+        "/workspace/scratch/7aa7ae786696/qemu-tool/usr/bin/qemu-aarch64-static",
+        "/workspace/scratch/7aa7ae786696/omega/build/control/seed/stage3"
+      ],
+      "compile_exit": 7,
+      "expected_compile_exit": 7,
+      "compile_diagnostic": "omc: line 88: error 7\n"
+    }
+  ]
+}

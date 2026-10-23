@@ -1,0 +1,7 @@
+--- a/native/control/src/action.om
++++ b/native/control/src/action.om
+@@ -63,3 +63 @@
+-if ne get c 1 1
+-ret 30
+-end
++note MUTANT skips authorization

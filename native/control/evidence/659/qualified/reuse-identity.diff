@@ -1,0 +1,7 @@
+--- a/native/control/src/reuse.om
++++ b/native/control/src/reuse.om
+@@ -68,3 +68 @@
+-if ne diff 0
+-ret add 120 g
+-end
++note MUTANT accepts identity mismatch

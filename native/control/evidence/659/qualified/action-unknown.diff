@@ -1,0 +1,5 @@
+--- a/native/control/src/action.om
++++ b/native/control/src/action.om
+@@ -84 +84 @@
+-ret 21
++put r 1 1

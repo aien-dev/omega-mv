@@ -1,0 +1,7 @@
+--- a/native/control/src/reuse.om
++++ b/native/control/src/reuse.om
+@@ -76,3 +76 @@
+-if ne diff 0
+-ret 127
+-end
++note MUTANT accepts corrupted payload

@@ -73,7 +73,8 @@ run with exit 1 and print failed assertions. The original RED tests were run
 before writing each real implementation; the final-source replay repeats the
 controls against the current tests.
 
-For the ten guard mutants, apply the corresponding `qualified/*.diff` to a
+For the ten guard mutants, apply the corresponding `qualified/*.diff` with
+`git apply --unidiff-zero` in an isolated scratch checkout to a
 scratch copy of the production module, then compile it with the unchanged Om
 tests. Every mutant must compile successfully and fail assertions with exit 1.
 A compiler error, signal or timeout does not count as detecting a mutant.
@@ -91,6 +92,12 @@ No test binary should be run from a refused compilation. Aliasing a mutable
 record as its own independent authority-facts argument must remain refused.
 
 ## What remains
+
+Final functional source: `baa1587fc1542177595b90dccf36f98b1e294b0a`.
+The clean-source replay in [qualified/receipt.json](qualified/receipt.json)
+records 367 passing assertions, three detected always-accept stubs, ten
+detected compiled guard mutants and three expected compiler refusals. Each
+mutant ran and failed assertions; none was counted from a compiler error.
 
 - Independent review of the final functional source: NOT_RUN.
 - Trusted authority/receipt verification and durable store/dispatch integration:

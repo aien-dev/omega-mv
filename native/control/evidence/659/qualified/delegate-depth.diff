@@ -1,0 +1,7 @@
+--- a/native/control/src/delegate.om
++++ b/native/control/src/delegate.om
+@@ -74,3 +74 @@
+-if ge get c 5 get p 5
+-ret 73
+-end
++note MUTANT accepts unattenuated depth
