@@ -1,0 +1,9 @@
+date_utc 2026-09-29T21:07:11Z
+git_head 4386897f438b325728de862647d02f9c10895700
+git_dirty 0
+bin d0a78a5602cd71f47f4e714e8478ee680a17d5a7de9ee7243d647661a2b17166  build/ty/ty_workload
+bin e1ad10558a9e87fc9aac4981fc9e8f9b11baf4b11aa0afcd4dd468ef4d600ac8  build/ty/ty_energy_window
+bin f42bf1f9669e333c6178f724ac536a4ea2a49d1c9bdd578dab0f8a18c94c23f0  build/ty/ty_energy_reduce
+kernel 7.0.0-1019-nvidia
+stage1_seed 0x7459510001 (config order: --shuffle seed; round order: --plan seed+k, k = position of the config in S1..S6)
+stage2_seed 0x7459520001 (contention case --plan seed, control case --plan seed+1)
