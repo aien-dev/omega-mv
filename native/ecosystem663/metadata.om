@@ -1,0 +1,108 @@
+note M20 metadata-v1. Integer metadata only; no allocator or numeric execution.
+note ED: schema,dtype,rank,elements,offset,slot,generation,reserved,shape8,stride8.
+note ES: live,retired,slot,generation,dtype,elements,reserved,reserved.
+note ES is the caller-owned allocator snapshot. It is not untrusted wire input.
+global ED ulong 24
+global ES ulong 8
+
+fn emshape to int
+rank = get ED 2
+if gt rank 8
+ret -2
+end
+n = ulong 1
+for d ulong rank
+size = get ED add 8 d
+if eq size 0
+ret -3
+end
+if gt size div 1073741824 n
+ret -8
+end
+n = mul n size
+end
+if ne get ED 3 n
+ret -3
+end
+ret 0
+end
+
+fn emlive slot ulong gen ulong to int
+if gt slot 4294967295
+ret -5
+end
+if or ne get ES 0 1 ne get ES 1 0
+ret -5
+end
+if or eq gen 0 ne slot get ES 2
+ret -5
+end
+if ne gen get ES 3
+ret -5
+end
+ret 0
+end
+
+fn embounds to int
+size = get ES 5
+offset = get ED 4
+if or eq size 0 gt size 1073741824
+ret -8
+end
+if ge offset size
+ret -6
+end
+note Compare against remaining extent before multiplication, never overflow.
+room = sub sub size 1 offset
+for d ulong get ED 2
+count = sub get ED add 8 d 1
+stride = get ED add 16 d
+if ne stride 0
+if gt count div room stride
+ret -6
+end
+room = sub room mul count stride
+end
+end
+ret 0
+end
+
+fn emcheck to int
+if or ne get ED 0 1 ne get ED 7 0
+ret -1
+end
+if or ne get ES 6 0 ne get ES 7 0
+ret -1
+end
+dtype = get ED 1
+if or lt dtype 1 gt dtype 3
+ret -4
+end
+status = emshape
+if ne status 0
+ret status
+end
+status = emlive get ED 5 get ED 6
+if ne status 0
+ret status
+end
+if ne dtype get ES 4
+ret -4
+end
+ret embounds
+end
+
+fn emrelease slot ulong gen ulong to int
+status = emlive slot gen
+if ne status 0
+ret status
+end
+note A maximal generation is retired, never wrapped into a valid old handle.
+if eq gen 18446744073709551615
+put ES 1 1
+else
+put ES 3 add gen 1
+end
+put ES 0 0
+ret 0
+end
