@@ -1,0 +1,70 @@
+PASS required interfaces
+PASS isolated source-only installation from unrelated cwd
+PASS aliases target exactly the same implementation
+PASS exact source pins
+PASS full help names bounds and shell boundary
+PASS alias identity help
+PASS alias identity version
+PASS alias identity math diff (x+1)^5
+PASS alias identity math eval 1/0
+PASS alias identity wrong
+PASS alias identity status
+PASS alias identity math eval 1 extra
+PASS all frozen math vectors through installed streaming command
+PASS one-shot exact differentiation
+PASS one-shot refusal 1
+PASS one-shot refusal 2
+PASS one-shot refusal 3
+PASS one-shot refusal 4
+PASS one-shot refusal 7
+PASS one-shot refusal 8
+PASS stream refusal and recovery preserve native semantics
+PASS stream empty EOF
+PASS stream partial EOF
+PASS oversize line recovery
+PASS native transport failure propagated
+PASS newline in one-shot rejected
+PASS shell metacharacters never evaluated
+PASS attach explicit unsupported
+PASS discover explicit unsupported
+PASS status explicit unsupported
+PASS c output matches frozen converter exactly
+PASS c alias output identity
+PASS c atomic output with spaces and leading dash
+PASS c actual emitted target execution
+PASS python output matches frozen converter exactly
+PASS python alias output identity
+PASS python atomic output with spaces and leading dash
+PASS python actual emitted target execution
+PASS source and destination may be the same file
+PASS failed syntax conversion preserves existing output
+PASS failed unsupported conversion preserves existing output
+PASS failed include conversion preserves existing output
+PASS failed nul conversion preserves existing output
+PASS failed conversion creates no destination
+PASS missing input deterministic
+PASS unknown conversion target
+PASS output symlink protected
+PASS output directory protected
+PASS missing output parent publishes nothing
+PASS temporary output files cleaned
+PASS om collision refuses before any prefix write
+PASS omg collision refuses before any prefix write
+PASS dangling alias collision
+PASS repeat installation preserves installed files
+PASS rollback after second alias failure restores absent prefix
+PASS rollback preserves existing empty directories and unrelated data
+PASS changed file permissions prevent uninstall
+PASS owned file replaced with equal-content symlink is preserved
+PASS changed owned file prevents uninstall
+PASS changed alias prevents uninstall
+PASS missing native executable fails closed
+PASS tampered installed native executable fails closed
+PASS ELF closure absent for all installed Omega executables
+PASS traced installed math executes native component and no foreign engine
+PASS traced conversion executes native checker then native converter
+PASS native math dispatch negative control is caught by output assertion
+PASS uninstall from alias preserves unrelated files and user data
+PASS uninstall restores previously absent prefix
+PASS uninstall preserves previously existing directories
+PASS 69 native command integration checks

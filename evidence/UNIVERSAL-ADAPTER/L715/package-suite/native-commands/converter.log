@@ -1,0 +1,178 @@
+PASS bytecopy
+PASS echo
+PASS fib
+PASS for_expr_once
+PASS for_varchange
+PASS io_errno
+PASS local_array
+PASS num_bool
+PASS num_byte_add
+PASS num_byte_cast
+PASS num_byte_div
+PASS num_byte_mul
+PASS num_byte_neg
+PASS num_byte_rem
+PASS num_byte_shiftlimit
+PASS num_byte_shl
+PASS num_byte_shr
+PASS num_byte_sub
+PASS num_div_negative
+PASS num_int_add
+PASS num_int_cast
+PASS num_int_div
+PASS num_int_mul
+PASS num_int_neg
+PASS num_int_rem
+PASS num_int_shiftlimit
+PASS num_int_shl
+PASS num_int_shr
+PASS num_int_sub
+PASS num_intmin_literal
+PASS num_long_add
+PASS num_long_cast
+PASS num_long_div
+PASS num_long_mul
+PASS num_long_neg
+PASS num_long_rem
+PASS num_long_shiftlimit
+PASS num_long_shl
+PASS num_long_shr
+PASS num_long_sub
+PASS num_not
+PASS num_rem_negative
+PASS num_short_add
+PASS num_short_cast
+PASS num_short_div
+PASS num_short_mul
+PASS num_short_neg
+PASS num_short_rem
+PASS num_short_shiftlimit
+PASS num_short_shl
+PASS num_short_shr
+PASS num_short_sub
+PASS num_uchar_add
+PASS num_uchar_cast
+PASS num_uchar_div
+PASS num_uchar_mul
+PASS num_uchar_neg
+PASS num_uchar_rem
+PASS num_uchar_shiftlimit
+PASS num_uchar_shl
+PASS num_uchar_shr
+PASS num_uchar_sub
+PASS num_uint_add
+PASS num_uint_cast
+PASS num_uint_div
+PASS num_uint_mul
+PASS num_uint_neg
+PASS num_uint_rem
+PASS num_uint_shiftlimit
+PASS num_uint_shl
+PASS num_uint_shr
+PASS num_uint_sub
+PASS num_ulong_add
+PASS num_ulong_cast
+PASS num_ulong_div
+PASS num_ulong_mul
+PASS num_ulong_neg
+PASS num_ulong_rem
+PASS num_ulong_shiftlimit
+PASS num_ulong_shl
+PASS num_ulong_shr
+PASS num_ulong_sub
+PASS num_ushort_add
+PASS num_ushort_cast
+PASS num_ushort_div
+PASS num_ushort_mul
+PASS num_ushort_neg
+PASS num_ushort_rem
+PASS num_ushort_shiftlimit
+PASS num_ushort_shl
+PASS num_ushort_shr
+PASS num_ushort_sub
+PASS order_calls
+PASS order_put
+PASS order_trap
+PASS r5b_fwd
+PASS r5b_mut
+PASS sort
+PASS t_bounds
+PASS t_cmp_unsigned
+PASS t_conv
+PASS t_conv_sign
+PASS t_div0
+PASS t_exit
+PASS t_loop
+PASS t_ovf
+PASS t_rw
+PASS t_stack
+PASS t_u63
+PASS t_u64max
+PASS t_void
+PASS t_write_wrap
+PASS two_loops
+cases=113 failures=0 RC=0
+PASS seed_1 3
+PASS seed_2 7
+PASS seed_3 7
+PASS seed_4 16
+PASS seed_5 16
+PASS seed_6 19
+PASS seed_7 19
+PASS seed_8 20
+PASS seed_9 20
+PASS seed_10 20
+PASS seed_11 20
+PASS seed_12 21
+PASS seed_13 7
+PASS seed_14 22
+PASS seed_15 22
+PASS seed_16 23
+PASS seed_17 23
+PASS seed_18 17
+PASS seed_19 18
+PASS seed_20 9
+PASS seed_21 9
+PASS seed_22 9
+PASS seed_23 9
+PASS seed_24 20
+PASS seed_25 8
+PASS seed_26 8
+PASS seed_27 8
+PASS seed_28 8
+PASS seed_29 6
+PASS seed_30 23
+PASS seed_31 9
+PASS seed_32 9
+PASS seed_33 10
+PASS seed_34 13
+PASS seed_35 15
+PASS seed_36 16
+PASS seed_37 16
+PASS seed_38 6
+PASS seed_39 7
+PASS seed_40 7
+PASS empty 16
+PASS text_target 24
+PASS five_params 24
+PASS long_name 13
+PASS library_io 24
+PASS library_array_width 24
+PASS local_storage_limit 23
+PASS inherited_text_program 24
+PASS r5b_assign 7
+PASS r5b_cycle 9
+refusal cases=50 failures=0 RC=0
+C caller: values, mutation, traps, invalid lengths and recovery OK
+Python caller: values, mutation, traps, invalid lengths and recovery OK
+attachment cases=2 failures=0 RC=0
+PASS detected c num_ulong_add native_exit 0 mutant_exit 126
+PASS detected python num_ulong_add native_exit 0 mutant_exit 126
+PASS detected c t_bounds native_exit 103 mutant_exit 1
+PASS detected python t_bounds native_exit 103 mutant_exit 1
+PASS detected c order_calls native_exit 1 mutant_exit 105
+PASS detected python order_calls native_exit 1 mutant_exit 105
+PASS deterministic nonempty output
+control cases=7 failures=0 RC=0
+robustness cases=225 target_accepts=4 target_refusals=446 failures=0 RC=0
+ALL SUITES RC=0

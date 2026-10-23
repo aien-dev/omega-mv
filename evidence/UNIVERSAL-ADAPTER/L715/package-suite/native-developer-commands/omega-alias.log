@@ -1,0 +1,8 @@
+{"name":"omega is installed as the identical third alias","ok":true}
+{"name":"omega checks builds and runs a real native project","ok":true}
+{"name":"all command names preserve matching help and version","ok":true}
+{"name":"changed omega alias blocks uninstall and preserves payload","ok":true}
+{"name":"omega uninstall removes all three aliases","ok":true}
+{"name":"existing omega regular is preserved without partial installation","ok":true}
+{"name":"existing omega dangling symlink is preserved without partial installation","ok":true}
+{"executed":7,"failed":0}
