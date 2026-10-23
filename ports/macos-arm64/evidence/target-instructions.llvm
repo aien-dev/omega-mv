@@ -1,0 +1,8 @@
+	.text
+	adr	x1, #-84                        // encoding: [0x61,0xfd,0xff,0x10]
+	mov	x16, #1                         // encoding: [0x30,0x00,0x80,0xd2]
+                                        // =0x1
+	mov	x16, #4                         // encoding: [0x90,0x00,0x80,0xd2]
+                                        // =0x4
+	svc	#0x80                           // encoding: [0x01,0x10,0x00,0xd4]
+	cneg	x0, x0, hs                      // encoding: [0x00,0x34,0x80,0xda]

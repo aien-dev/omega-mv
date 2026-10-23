@@ -46,9 +46,11 @@ function refuse(name, input, status, executable) {
     save(`${name}.exit`, String(r.status) + '\n');
     save(`${name}.stderr`, r.stderr);
     const infile = path.join(evidence, `${name}.input`), outfile = path.join(evidence, `${name}.preserved`);
-    fs.writeFileSync(infile, input); fs.writeFileSync(outfile, 'L615 existing output\n');
+    fs.writeFileSync(infile, input); fs.writeFileSync(outfile, 'L615 existing output\n', { mode: 0o640 });
+    fs.chmodSync(outfile, 0o640);
     const s = run(path.join(root, 'target.sh'), [infile, outfile]);
     assert.equal(s.status, status); assert.equal(fs.readFileSync(outfile, 'utf8'), 'L615 existing output\n');
+    assert.equal(fs.statSync(outfile).mode & 0o777, 0o640, 'refusal preserves existing mode');
     assert.equal(fs.readdirSync(evidence).filter(x => x.startsWith(`${name}.preserved.L615.`)).length, 0);
   });
 }
@@ -109,6 +111,14 @@ refuse('body falls into startup', word(integer, 184, 0xd2800000), 26);
 refuse('branch out of body', word(integer, 180, 0x14000002), 27);
 refuse('conditional branch into bootstrap', word(integer, 180, 0x54000040), 27);
 refuse('branch before body', word(integer, 180, 0x17ffffff), 27);
+const divzero = inputs.get('divzero');
+const exitSvc = divzero.indexOf(Buffer.from([1, 0, 0, 0xd4]), 180);
+assert.ok(exitSvc > 180 && exitSvc < divzero.length - 24);
+refuse('branch into exit SVC', word(divzero, 180, 0x14000000 + (exitSvc - 180) / 4), 27);
+refuse('size precedes magic and ISA', Buffer.alloc(211), 21);
+refuse('magic precedes ISA', word(word(integer, 0, 0), 16, 0), 22);
+refuse('ISA precedes other headers', word(word(integer, 16, 0), 24, 0), 23);
+refuse('header precedes instruction', word(word(integer, 96, 0), 180, 0xffffffff), 24);
 refuse('changed hello literal', word(hello, 180, 0x6c6c6548), 28);
 refuse('changed hello syscall fd', word(hello, 260, 0xd2800040), 28);
 refuse('changed hello syscall number', word(hello, 284, 0xd28007e8), 28);
@@ -128,12 +138,39 @@ test('hello exact-template byte closure (172 single-byte mutations)', () => {
   }
   save('hello-byte-closure.count', String(count) + '\n');
 });
+// Exact supported and excess size boundaries come from real source compilation.
+const largeSource = count => Buffer.from('fn main to ulong\nx = ulong 0\n' + 'x = add x ulong 1\n'.repeat(count) + 'ret x\nend\n');
+const largest = compile('largest', largeSource(4043));
+test('exact 16384-byte compiled boundary and native control', () => {
+  assert.equal(largest.length, 16384);
+  const native = run(path.join(evidence, 'largest.elf'));
+  assert.equal(native.status, 4043 % 256);
+  save('largest.native.exit', String(native.status) + '\n');
+  const r = adapt(largest); assert.equal(r.status, 0); checkMacho(r.stdout, largest);
+  save('largest.macho', r.stdout); pin('largest.macho', r.stdout);
+});
+refuse('compiled 16388-byte excess boundary', compile('excess', largeSource(4044)), 21);
+test('host output write failure has exact exit 29', () => {
+  const fd = fs.openSync('/dev/full', 'w');
+  try {
+    const r = run(path.join(build, 'adapter'), [], { input: integer, stdio: ['pipe', fd, 'pipe'] });
+    assert.equal(r.status, 29); save('output-failure.exit', '29\n');
+  } finally { fs.closeSync(fd); }
+});
+test('LLVM assembler independently verifies target syscall/address/error words', () => {
+  const asm = 'adr x1, #-84\nmov x16, #1\nmov x16, #4\nsvc #0x80\ncneg x0, x0, cs\n';
+  const r = run('/usr/bin/llvm-mc-18', ['-triple=aarch64', '-show-encoding'], { input: asm });
+  assert.equal(r.status, 0); save('target-instructions.llvm', r.stdout);
+  for (const bytes of ['[0x61,0xfd,0xff,0x10]', '[0x30,0x00,0x80,0xd2]', '[0x90,0x00,0x80,0xd2]',
+    '[0x01,0x10,0x00,0xd4]', '[0x00,0x34,0x80,0xda]']) assert.ok(r.stdout.toString().includes(bytes));
+});
 // Discriminating controls are compiled Omega adapters, not byte-patched executables.
 const adapterSource = fs.readFileSync(path.join(root, 'adapter.om'), 'utf8');
 const controls = [
   ['control-linux-exit', 'wr add 16384 sub p 176 3531604016', 'wr add 16384 sub p 176 3531606952', false],
   ['control-wrong-entry', 'wr 624 add 16384 sub e 176', 'wr 624 16384', false],
   ['control-wrong-error', 'wr add t 8 3665835008', 'wr add t 8 3573751839', true],
+  ['control-hello-address', 'wr 16472 285212001', 'wr 16472 285212033', true],
 ];
 for (const [name, before, after, useHello] of controls) {
   assert.equal(adapterSource.split(before).length, 2, 'unique source mutation');
@@ -147,10 +184,21 @@ for (const [name, before, after, useHello] of controls) {
     assert.throws(() => checkMacho(r.stdout, input, useHello), assert.AssertionError);
   });
 }
+test('compiled unknown-instruction validator control is caught by refusal gate', () => {
+  const name = 'control-unknown-accepted';
+  assert.equal(adapterSource.split('if not integer w').length, 2);
+  const source = Buffer.from(adapterSource.replace('if not integer w', 'if false'));
+  save(`${name}.om`, source); compile(name, source);
+  const input = word(integer, 180, 0xffffffff);
+  const r = adapt(input, path.join(evidence, `${name}.elf`));
+  assert.equal(r.status, 0); checkMacho(r.stdout, input);
+  save(`${name}.macho`, r.stdout); pin(`${name}.macho`, r.stdout);
+  assert.throws(() => assert.equal(r.status, 26), assert.AssertionError);
+});
 pin('adapter.om', Buffer.from(adapterSource)); pin('adapter', fs.readFileSync(path.join(build, 'adapter')));
 pins.push(`${compilerHash}  shared/omc-191b776e`);
 save('SHA256SUMS', pins.join('\n') + '\n');
-save('summary.json', JSON.stringify({ checks: results.length, compiledControls: controls.length,
-  helloByteMutations: 172, linuxNative: fixtures.length, macOS: 'NOT_RUN', independentReview: 'NOT_RUN',
+save('summary.json', JSON.stringify({ checks: results.length, compiledControls: controls.length + 1,
+  helloByteMutations: 172, linuxNative: fixtures.length + 1, macOS: 'NOT_RUN', independentReview: 'NOT_RUN',
   compilerHash, checksPassed: results }, null, 2) + '\n');
-console.log(`PASS ${results.length} checks; ${fixtures.length} Linux native fixtures; ${controls.length} compiled controls; macOS NOT_RUN`);
+console.log(`PASS ${results.length} checks; ${fixtures.length + 1} Linux native fixtures; ${controls.length + 1} compiled controls; macOS NOT_RUN`);
