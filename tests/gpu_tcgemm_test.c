@@ -460,8 +460,10 @@ int tv_tests(int argc, char **argv) {
         if (done) {
             qsort(ce, done, 8, cmp_u64);
             const double med = (double)ce[done / 2];
-            printf("TVGEMM %s N %u (median of %u, min %.1f, max %.1f us): chip %.1f us; weights %.1f GB/s; %.2f TFLOPS\n", shape, N, done, ce[0] / 1e3, ce[done - 1] / 1e3,
-                   med / 1e3, (double)n * k / med, 2.0 * N * n * k / med / 1e3);
+            double sum = 0; for (uint32_t i = 0; i < done; i++) sum += (double)ce[i];
+            const double mean = sum / done;
+            printf("TVGEMM %s N %u (median of %u, min %.1f, max %.1f, mean %.1f us): chip %.1f us; weights %.1f GB/s; %.2f TFLOPS\n", shape, N, done, ce[0] / 1e3, ce[done - 1] / 1e3,
+                   mean / 1e3, med / 1e3, (double)n * k / med, 2.0 * N * n * k / med / 1e3);
             if (jf) fprintf(jf, "{\"shape\":\"%s\",\"n\":%u,\"k\":%u,\"rows\":%u,\"rt\":%u,\"ct\":%u,\"warps\":%u,\"weight_cache\":%d,\"reps\":%u,\"chip_median_ns\":%.0f,\"chip_min_ns\":%" PRIu64 ",\"weights_gbps\":%.2f}\n",
                             shape, n, k, N, sp.rt, sp.ct, sp.warps, wcache, done, med, ce[0], (double)n * k / med);
         }
