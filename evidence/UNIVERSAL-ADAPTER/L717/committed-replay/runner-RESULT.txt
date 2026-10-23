@@ -1,0 +1,4 @@
+candidate compile_rc=0 run_rc=0 elf_bytes=15288
+mutant-no-cancel compile_rc=0 run_rc=162 caught=yes
+mutant-no-generation compile_rc=0 run_rc=42 caught=yes
+mutant-no-rights compile_rc=0 run_rc=161 caught=yes
