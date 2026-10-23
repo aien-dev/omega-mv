@@ -147,3 +147,9 @@ to a final filename would truncate it before the adapter starts, so consumers
 requiring preservation must use target.sh or equivalent atomic host glue.
 File I/O, timeout, chmod, rename, build orchestration and checks remain disclosed
 shell/Node host glue, not seeded host-facility retirement.
+
+Host wrapper output paths must not name directories (including symlinks to
+directories). Both build.sh and target.sh refuse these paths with status73,
+preserving the directory and its contents. Publication uses GNU mv -T on the
+Linux construction host so a directory appearing after preflight cannot be
+silently treated as a container destination. This is not a hostile-race sandbox.

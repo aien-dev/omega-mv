@@ -195,6 +195,12 @@ test('compiled unknown-instruction validator control is caught by refusal gate',
   save(`${name}.macho`, r.stdout); pin(`${name}.macho`, r.stdout);
   assert.throws(() => assert.equal(r.status, 26), assert.AssertionError);
 });
+test('host wrappers: six output-path regressions including directory and symlink-directory refusals', () => {
+  const r = run(process.execPath, ['--test', path.join(root, 'tests', 'output-paths.mjs')]);
+  save('output-paths.stdout', r.stdout); save('output-paths.stderr', r.stderr);
+  save('output-paths.exit', String(r.status) + '\n');
+  assert.equal(r.status, 0, r.stdout.toString() + r.stderr.toString());
+});
 pin('adapter.om', Buffer.from(adapterSource)); pin('adapter', fs.readFileSync(path.join(build, 'adapter')));
 pins.push(`${compilerHash}  shared/omc-191b776e`);
 save('SHA256SUMS', pins.join('\n') + '\n');
