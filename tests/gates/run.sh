@@ -68,20 +68,24 @@ receipt() {
 gates_pass() { grep -E 'TOTAL GATES: [0-9]+ \| PASSED: [0-9]+ \| FAILED: 0' "$1" && ! grep -E 'FAILED: [1-9]' "$1"; }
 
 case "$step" in
-  crumb-verify)
-    # Hosted crumb.yml builds the crumb tool from the aien-architecture commit in crumb.lock.
-    # Same here, from the sibling checkout ../aien-architecture into a temp dir outside the
-    # tree, so a newer crumb on PATH can never change the verdict.
-    if [ ! -d ../aien-architecture ]; then
-      echo "run.sh: ../aien-architecture is missing; the hosted job checks out aien-dev/aien-architecture at crumb.lock" >&2
-      exit 3
+  crumb-lint)
+    # RFC-0004 (aien-architecture docs/CRUMB_PROTOCOL_RFC_0004.md): crumbs are notes, never a merge rule.
+    # The one check: no committed generated data or provenance (that is what made unrelated PRs conflict).
+    # git grep only, so no crumb tool version can change the verdict. Directories in .crumbignore are frozen.
+    excl=()
+    if [ -f .crumbignore ]; then
+      while IFS= read -r d; do
+        case "$d" in ''|'#'*) continue ;; esac
+        excl+=(":(exclude)${d%/}/")
+      done < .crumbignore
     fi
-    tool="$(mktemp -d /tmp/omega-crumb-tool.XXXXXX)"
-    trap 'rm -rf "$tool" "$STEP_MARK"' EXIT
-    git -C ../aien-architecture archive "$(lock crumb.lock)" tools/crumb | tar -x -C "$tool"
-    make -s -C "$tool/tools/crumb" crumb
-    obs crumb_tool_commit "\"$(lock crumb.lock)\""
-    "$tool/tools/crumb/crumb" verify .
+    bad=$(git grep -l -E '"(generated|provenance)"[[:space:]]*:' -- .crumb ':(glob)**/.crumb' "${excl[@]}" || true)
+    if [ -n "$bad" ]; then
+      echo "crumb-lint: FAIL: generated data or provenance committed in: $(echo $bad)" >&2
+      echo "crumb-lint: fix: crumb compile . (strips generated data); delete extensions.provenance by hand" >&2
+      exit 1
+    fi
+    echo "crumb-lint: OK: $(git ls-files .crumb ':(glob)**/.crumb' | grep -c . || true) crumbs, notes only (RFC-0004)"
     ;;
   # pr-smoke.yml
   base)
