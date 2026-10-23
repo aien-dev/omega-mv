@@ -176,6 +176,43 @@ typedef struct {
  * a half-written record. All zero before the first call; a call that fails records the stages it reached. */
 void omega_gpu_matmul_last_stages(OmegaGpuMatmulStages *out);
 
+/* Running totals since the last reset (omega #473 resident training), process-wide like the stage record and
+ * updated under the session lock. A "crossing" is one host-to-device or device-to-host hand-over of data the
+ * other side then reads, each closed by one platform sync:
+ *   h2d: an upload's packed B, an update's packed B (its first, validating sync moves no data and is not
+ *        counted), and a matmul's packed activation rows (bytes mp x kp x 2; the result sentinels ride along);
+ *   d2h: a matmul's result made visible to the CPU (bytes m x n x 4, the block copied out).
+ * uploads counts every omega_gpu_tensor_upload_* (and the one inside each omega_gpu_matmul_bf16/_f32), bytes
+ * kp x np x 2 of packed B; upload_ns spans entry to return, including the f32 rounding pass. updates likewise
+ * for omega_gpu_tensor_update_*. frees counts omega_gpu_tensor_free of a non-NULL tensor. matmuls counts
+ * matmul bodies that reached the device (resident and non-resident), launches the kernel submissions they
+ * made (one per row block of the CTA budget). Failed calls count what they reached. */
+typedef struct {
+    uint64_t uploads, upload_bytes, upload_ns;
+    uint64_t updates, update_bytes, update_ns;
+    uint64_t frees;
+    uint64_t matmuls, launches;
+    uint64_t h2d_crossings, h2d_bytes, d2h_crossings, d2h_bytes;
+} OmegaGpuMatmulCounters;
+void omega_gpu_matmul_counters(OmegaGpuMatmulCounters *out);
+void omega_gpu_matmul_counters_reset(void);
+
+/* Resident-weights training pattern (omega #473). A training step must not re-upload its weights: an upload
+ * asks the driver for memory and frees it again, an update re-packs into the buffer it already has (on the
+ * GB10, 768 x 2304 f32: 1.6 ms update against 10.1 ms upload + free; bf16 0.6 ms, evidence R3-TENSOR-UPDATE-B1024).
+ *   startup:   omega_gpu_tensor_upload_f32 once per weight matrix, and once per extra layout the step needs
+ *              (W^T for the forward pass and W for the backward pass are two tensors, as today);
+ *              once per fixed-shape per-step operand (for dW = X^T dY the B operand is an activation, k x n
+ *              fixed by the batch: upload one scratch tensor per distinct shape);
+ *   each step: forward and backward through omega_gpu_matmul_resident_f32 only (never omega_gpu_matmul_f32,
+ *              which uploads and frees B per call); a per-step operand goes in with
+ *              omega_gpu_tensor_update_f32(scratch, ...) right before its matmul (one scratch tensor can
+ *              serve every call of its shape: the update and the matmul are each complete on return);
+ *              after the optimizer step, omega_gpu_tensor_update_f32 on every weight tensor (both layouts);
+ *   shutdown:  omega_gpu_tensor_free each tensor.
+ * After step 1 a step then makes no upload, no free and no driver allocation; omega_gpu_matmul_counters shows
+ * it (tests/gpu_serving_alloc_count_test.c train mode). */
+
 /* CTA budget per launch (default OMEGA_GPU_MATMUL_MAX_CTAS; 0 restores it).
  * Clears the kernel cache (kernels bake in grid_x). Test and measurement knob. */
 void omega_gpu_matmul_set_cta_budget(uint32_t ctas);

@@ -92,6 +92,13 @@ void omega_gpu_matmul_last_stages(OmegaGpuMatmulStages *out) {
     omega_gpu_session_unlock();
 }
 
+/* red stub (omega #473 resident training): counts nothing yet */
+void omega_gpu_matmul_counters(OmegaGpuMatmulCounters *out) {
+    if (!out) return;
+    memset(out, 0, sizeof *out);
+}
+void omega_gpu_matmul_counters_reset(void) {}
+
 /* ---- device-side state (caller holds the session lock) ---- */
 
 static void cache_clear_locked(void) {
