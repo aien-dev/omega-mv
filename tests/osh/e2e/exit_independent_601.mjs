@@ -16,9 +16,13 @@ for(const v of ['+000256','-000257','\t-513 \t'])cases.push({name:'count'+cases.
 cases.push({name:'repeat',args:['--','--','--','7'],status:2,kind:'numeric'},{name:'noarg',args:[],status:37,kind:'none'},{name:'delimiter-only',args:['--'],status:37,kind:'none'});
 const quote=x=>"'"+x.replaceAll("'","'\\''")+"'";
 const ec=s=>s.includes('numeric argument required')?'numeric':s.includes('too many arguments')?'count':s===''?'none':'other';
+const shardParts=(process.argv[4]??'0/1').split('/').map(Number);
+const [shardIndex,shardCount]=shardParts;
+assert(shardParts.length===2&&Number.isInteger(shardIndex)&&Number.isInteger(shardCount)&&shardCount>=1&&shardCount<=4&&shardIndex>=0&&shardIndex<shardCount,'invalid shard selection');
+const selectedCases=cases.filter((_,index)=>index%shardCount===shardIndex);
 const rows=[];
 for(const binary of binaries){const leg=binary.endsWith('_asan')?'sanitizer':'plain';const out=join(root,'independent-'+leg);mkdir(out,{mode:0o700});assert((statSync(out).mode&511)===448,'0700');const env={PATH:'/usr/bin:/bin',HOME:out,XDG_STATE_HOME:out,LC_ALL:'C',TZ:'UTC'};
-for(const c of cases)for(const mode of ['command','script','stdin'])for(const position of ['parent','first','last']){
+for(const c of selectedCases)for(const mode of ['command','script','stdin'])for(const position of ['parent','first','last']){
  const exit='exit '+c.args.map(quote).join(' ');let text='printf "" | exit 37\n';
  text+=(position==='first'?exit+' | printf "pipe\\n"':position==='last'?'printf "" | '+exit:exit)+'; printf "same:%s\\n" "$?"\nprintf "next:%s\\n" "$?"\n';
  const key=[c.name,mode,position].join('-'),file=join(out,key+'.sh');write(file,text);
@@ -27,6 +31,6 @@ for(const c of cases)for(const mode of ['command','script','stdin'])for(const po
  if(position==='parent')assert(bash.status===(c.kind==='count'&&mode!=='command'?0:c.status)&&ec(bash.stderr)===c.kind,'independent explicit oracle '+key);
  for(const core of ['native','interp']){const got=run(binary,['--journal',join(out,key+'-'+core+'.journal'),...args],{env:{...env,OSH_INTERP:core==='interp'?'1':'0'},input});const ok=got.status===bash.status&&got.stdout===bash.stdout&&ec(got.stderr)===ec(bash.stderr)&&ec(got.stderr)!=='other';rows.push({leg,key,core,text,bash,got,ok});}
 }}
-write(join(root,'independent-results.json'),JSON.stringify({cases:cases.length,rows},null,2));
+write(join(root,'independent-results.json'),JSON.stringify({cases:selectedCases.length,rows},null,2));
 write(join(root,'independent-commands.json'),JSON.stringify(commands,null,2));
-const failed=rows.filter(x=>!x.ok);console.log(JSON.stringify({cases:cases.length,plain:rows.filter(x=>x.leg==='plain').length,sanitizer:rows.filter(x=>x.leg==='sanitizer').length,failed:failed.length}));assert(failed.length===0,JSON.stringify(failed.slice(0,3)));
+const failed=rows.filter(x=>!x.ok);console.log(JSON.stringify({cases:selectedCases.length,plain:rows.filter(x=>x.leg==='plain').length,sanitizer:rows.filter(x=>x.leg==='sanitizer').length,failed:failed.length}));assert(failed.length===0,JSON.stringify(failed.slice(0,3)));

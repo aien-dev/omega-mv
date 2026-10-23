@@ -1,14 +1,25 @@
-# L611: status of a resumable list after a parent exit count error.
-.PHONY: test-osh-exit-abort-status test-osh-exit-abort-mutants
+# L611: independently bounded, complete status-regression phases.
+.PHONY: test-osh-exit-abort-status test-osh-exit-abort-mutants test-osh-exit-abort-focused-plain test-osh-exit-abort-focused-sanitizer test-osh-exit-abort-independent-plain test-osh-exit-abort-independent-sanitizer test-osh-exit-abort-pty test-osh-exit-abort-coverage
 
-test-osh-exit-abort-status: $(OSH_DIR)/osh $(OSH_DIR)/osh_numeric_priority_asan
-	@set -eu; d=$$(mktemp -d $(OSH_DIR)/abort-status.XXXXXX); \
-	 node tests/osh/e2e/exit_abort_status.mjs $(abspath $(OSH_DIR)/osh) $$d/plain > $$d/plain.log; \
-	 node tests/osh/e2e/exit_abort_status.mjs $(abspath $(OSH_DIR)/osh_numeric_priority_asan) $$d/sanitizer > $$d/sanitizer.log; \
-	 node tests/osh/e2e/exit_independent_601.mjs $(abspath $(OSH_DIR)/osh) $$d/independent-plain > $$d/independent-plain.log; \
-	 node tests/osh/e2e/exit_independent_601.mjs $(abspath $(OSH_DIR)/osh_numeric_priority_asan) $$d/independent-sanitizer > $$d/independent-sanitizer.log; \
-	 python3 tests/osh/host/exit_abort_pty.py $(abspath $(OSH_DIR)/osh) $$d/pty > $$d/pty.log; \
-	 for f in $$d/*.log; do tail -1 $$f; done; echo "abort status artifacts: $$d"
+test-osh-exit-abort-status: test-osh-exit-abort-coverage test-osh-exit-abort-focused-plain test-osh-exit-abort-focused-sanitizer test-osh-exit-abort-independent-plain test-osh-exit-abort-independent-sanitizer test-osh-exit-abort-pty
+
+test-osh-exit-abort-coverage:
+	python3 tests/osh/e2e/independent_601_coverage.py --self-test
+
+test-osh-exit-abort-focused-plain: $(OSH_DIR)/osh
+	@set -eu; d=$$(mktemp -d $(OSH_DIR)/abort-focused-plain.XXXXXX); node tests/osh/e2e/exit_abort_status.mjs $(abspath $(OSH_DIR)/osh) $$d/cases > $$d/run.log; cat $$d/run.log
+
+test-osh-exit-abort-focused-sanitizer: $(OSH_DIR)/osh_numeric_priority_asan
+	@set -eu; d=$$(mktemp -d $(OSH_DIR)/abort-focused-asan.XXXXXX); node tests/osh/e2e/exit_abort_status.mjs $(abspath $(OSH_DIR)/osh_numeric_priority_asan) $$d/cases > $$d/run.log; cat $$d/run.log
+
+test-osh-exit-abort-independent-plain: $(OSH_DIR)/osh
+	@set -eu; d=$$(mktemp -d $(OSH_DIR)/abort-independent-plain.XXXXXX); python3 tests/osh/e2e/independent_601_parallel.py $(abspath $(OSH_DIR)/osh) $$d/cases > $$d/run.log; cat $$d/run.log
+
+test-osh-exit-abort-independent-sanitizer: $(OSH_DIR)/osh_numeric_priority_asan
+	@set -eu; d=$$(mktemp -d $(OSH_DIR)/abort-independent-asan.XXXXXX); python3 tests/osh/e2e/independent_601_parallel.py $(abspath $(OSH_DIR)/osh_numeric_priority_asan) $$d/cases > $$d/run.log; cat $$d/run.log
+
+test-osh-exit-abort-pty: $(OSH_DIR)/osh
+	@set -eu; d=$$(mktemp -d $(OSH_DIR)/abort-pty.XXXXXX); python3 tests/osh/host/exit_abort_pty.py $(abspath $(OSH_DIR)/osh) $$d/cases > $$d/run.log; cat $$d/run.log
 
 test-osh-exit-abort-mutants: $(OSH_DIR)/osh
 	@set -eu; d=$$(mktemp -d $(OSH_DIR)/abort-status-mutants.XXXXXX); \

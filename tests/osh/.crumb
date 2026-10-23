@@ -9,14 +9,14 @@
           "purpose": "Existing cross-adapter shell differential runner and fixtures, plus strict result-reader boundar"
         },
         {
-          "digest": "a92b0771add11e2490fe87dbc0f70d5337c1cf6468575c567a60047143b70481",
-          "last_commit": "47aaea70",
+          "digest": "21f67f4bd2be5530a9e44582ce3097c4fe6fd00589b419179df65d5ed378ccb7",
+          "last_commit": "26b15c01",
           "name": "e2e",
           "purpose": "end-to-end tests of the osh program: argprint helper plus a runner comparing native and OSH_INTE"
         },
         {
           "digest": "b046f52e28d99b68947843f6c778608ef6fda1c6fdff0c425fc5cb7f9d4343ba",
-          "last_commit": "7177ad74",
+          "last_commit": "26b15c01",
           "name": "host",
           "purpose": "tests for the osh Linux host adapter execution service (hand-built request records, helper-mode "
         },
@@ -27,15 +27,15 @@
           "purpose": "Core-only step traces of the osh shell units over fixture scripts (OSH-AIENOS-0 differential fix"
         }
       ],
-      "children_root": "sha256:37c527d7994d6c3ac3e022ec2d7ddf85b397b00958fa08c371666cf79bf1a5fa",
-      "compiled_at": "2026-10-22T23:43:21Z",
+      "children_root": "sha256:bc5fd5d4ecc82fee25883fea425d4b26f76f3ab89f0dc1b050897dfe11fb5648",
+      "compiled_at": "2026-10-23T11:16:42Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:c21d72f782c0e576d9ea2706812e2fb95d59a753f0650db6066c908cf1229ef5",
+      "digest": "sha256:0b3265ab5e0a3b51da60b8620679fb08d3c5c4b35a60c54a9d857ef89fdadc91",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 113,
-      "generated_at_commit": "be37dccaf5e73da735256a6cdae96a9b4f7c19ef",
-      "source_tree": "sha256:842dff3826230863639a30aab207567e95034e3df19c74728ca7bf30da6acf6c"
+      "files": 117,
+      "generated_at_commit": "26b15c01480cd3617ca99a84c9d9c05be89bf430",
+      "source_tree": "sha256:8806703dc1fdc3164546d2b408d2c02e31cefddb520623db61ffd67fdfef6a72"
     }
   },
   "name": "osh-tests",

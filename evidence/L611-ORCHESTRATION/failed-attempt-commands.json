@@ -1,0 +1,18 @@
+[
+  {
+    "name": "new-positive",
+    "command": [
+      "timeout",
+      "600s",
+      "quiet-build",
+      "make",
+      "--no-print-directory",
+      "-j2",
+      "OUT_DIR=/home/drakestapleton/workspace/targets/L611/final",
+      "test-osh-exit-abort-status"
+    ],
+    "actual_exit": 124,
+    "log": "/home/drakestapleton/workspace/targets/L611/full-new-positive.log",
+    "elapsed_seconds_not_a_performance_measurement": 600.0039427280426
+  }
+]

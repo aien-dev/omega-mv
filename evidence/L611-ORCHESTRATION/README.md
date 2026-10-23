@@ -1,0 +1,9 @@
+# L611 batch orchestration correction
+
+The original new-positive batch timed out with actual124 at its600s outer cap. Compile, focused504plain, focused504ASan and independent1224plain completedPASS; independentASan was still emitting successive case/journal files at termination. It did not complete and has no PASS. The original log, all partial inputs and L611.exit1 remain preserved. No source assertion failure is inferred from this aggregate timeout.
+
+Parent repairs orchestration rather than enlarging individual process limits or treating partial coverage as success. Each positive suite now has its own bounded Make leaf; independent matrices are partitioned across four disjoint case-index shards on the20-CPU host. Every original case generator, input and assertion plus20s command limit is mechanically unchanged after normalizing the selector/count lines. The real Bash and candidate processes still run for every assigned case; there is no cached/fabricated execution substitution.
+
+The collector independently requires all1224 exact identities once per executable leg, identical program bytes and actual Bash status/stdout/error class, normal process observations, and recomputed candidate equality. A pinned earlier complete observed matrix supplies only membership/oracle comparison. Eight synthetic collector controls replay real observed rows; seven corruption/omission controls must refuse. These collector tests are not new program execution or behavioral mutant kills.
+
+Runtime source is byte-identical to26b15c01. All failed/partial evidence remains immutable. This changes test dispatch, not shell semantics, expected cases, masks or per-command deadlines. Whole qualification, original fault gates and independent corrective review still must finish. No performance/speedup, hardware/model or issue-closure claim.
