@@ -1,0 +1,320 @@
+note M20 metadata-v1. Integer metadata only; no allocator or numeric execution.
+note ED: schema,dtype,rank,elements,offset,slot,generation,reserved,shape8,stride8.
+note ES: live,retired,slot,generation,dtype,elements,reserved,reserved.
+note ES is the caller-owned allocator snapshot. It is not untrusted wire input.
+global ED ulong 24
+global ES ulong 8
+
+fn emshape to int
+rank = get ED 2
+if gt rank 8
+ret -2
+end
+n = ulong 1
+for d ulong rank
+size = get ED add 8 d
+if eq size 0
+ret -3
+end
+if gt size div 1073741824 n
+ret -8
+end
+n = mul n size
+end
+if ne get ED 3 n
+ret -3
+end
+ret 0
+end
+
+fn emlive slot ulong gen ulong to int
+if gt slot 4294967295
+ret -5
+end
+if or ne get ES 0 1 ne get ES 1 0
+ret -5
+end
+if or eq gen 0 ne slot get ES 2
+ret -5
+end
+if ne gen get ES 3
+ret -5
+end
+ret 0
+end
+
+fn embounds to int
+size = get ES 5
+offset = get ED 4
+if or eq size 0 gt size 1073741824
+ret -8
+end
+if ge offset size
+ret -6
+end
+note Compare against remaining extent before multiplication, never overflow.
+room = sub sub size 1 offset
+for d ulong get ED 2
+count = sub get ED add 8 d 1
+stride = get ED add 16 d
+if ne stride 0
+if gt count div room stride
+ret -6
+end
+room = sub room mul count stride
+end
+end
+ret 0
+end
+
+fn emcheck to int
+if or ne get ED 0 1 ne get ED 7 0
+ret -1
+end
+if or ne get ES 6 0 ne get ES 7 0
+ret -1
+end
+dtype = get ED 1
+if or lt dtype 1 gt dtype 3
+ret -4
+end
+status = emshape
+if ne status 0
+ret status
+end
+status = emlive get ED 5 get ED 6
+if ne status 0
+ret status
+end
+if ne dtype get ES 4
+ret -4
+end
+ret embounds
+end
+
+fn emrelease slot ulong gen ulong to int
+status = emlive slot gen
+if ne status 0
+ret status
+end
+note A maximal generation is retired, never wrapped into a valid old handle.
+if eq gen 18446744073709551615
+put ES 1 1
+else
+put ES 3 add gen 1
+end
+put ES 0 0
+ret 0
+end
+note Independent reviewer probes for metadata source3a995ba8.
+note Small 3D oracle enumerates elements. It does not use maximum extents.
+global RC ulong 1
+global SaveD ulong 24
+global SaveS ulong 8
+global Dig uchar 20
+text Pass "TENSOR_REVIEW_PASS checks="
+text NL "\n"
+
+fn ck b bool to void
+put RC 0 add get RC 0 1
+if not b
+exit 1
+end
+end
+
+fn base to void
+for d ulong 24
+put ED d 0
+end
+for d ulong 8
+put ES d 0
+end
+put ED 0 1
+put ED 1 1
+put ED 3 1
+put ED 5 9
+put ED 6 23
+put ES 0 1
+put ES 2 9
+put ES 3 23
+put ES 4 1
+put ES 5 1
+end
+
+fn snap to void
+for d ulong 24
+put SaveD d get ED d
+end
+for d ulong 8
+put SaveS d get ES d
+end
+end
+
+fn same to void
+for d ulong 24
+ck eq get SaveD d get ED d
+end
+for d ulong 8
+ck eq get SaveS d get ES d
+end
+end
+
+fn element n ulong to ulong
+x = get ED 4
+x = add x mul rem n get ED 10 get ED 18
+n = div n get ED 10
+x = add x mul rem n get ED 9 get ED 17
+n = div n get ED 9
+ret add x mul n get ED 16
+end
+
+fn boundsoracle to int
+for i ulong get ED 3
+if ge element i get ES 5
+ret -6
+end
+end
+ret 0
+end
+
+fn decode n ulong to void
+put ED 8 add rem n 2 1
+n = div n 2
+put ED 9 add rem n 2 1
+n = div n 2
+put ED 10 add rem n 2 1
+n = div n 2
+put ED 16 rem n 5
+n = div n 5
+put ED 17 rem n 5
+n = div n 5
+put ED 18 rem n 5
+n = div n 5
+put ED 4 rem n 4
+n = div n 4
+put ES 5 add rem n 12 1
+put ED 3 mul get ED 8 mul get ED 9 get ED 10
+end
+
+fn three to void
+base
+put ED 2 3
+for n ulong 48000
+decode n
+want = boundsoracle
+got = emcheck
+ck eq got want
+end
+end
+
+fn edges to void
+base
+for i ulong 8
+put ED add 8 i 18446744073709551615
+put ED add 16 i 18446744073709551615
+end
+snap
+ck eq emcheck 0
+same
+put ED 2 8
+put ED 3 256
+for i ulong 8
+put ED add 8 i 2
+put ED add 16 i shl ulong 1 i
+end
+put ES 5 256
+snap
+ck eq emcheck 0
+same
+put ED 4 1
+snap
+ck eq emcheck -6
+same
+put ED 4 0
+put ED 16 18446744073709551615
+snap
+ck eq emcheck -6
+same
+base
+put ED 2 8
+put ED 3 1
+for i ulong 8
+put ED add 8 i 1
+put ED add 16 i 18446744073709551615
+end
+snap
+ck eq emcheck 0
+same
+base
+put ED 2 2
+put ED 3 1073741824
+put ED 8 32768
+put ED 9 32768
+put ED 16 32768
+put ED 17 1
+put ES 5 1073741824
+snap
+ck eq emcheck 0
+same
+put ED 9 32769
+snap
+ck eq emcheck -8
+same
+base
+put ED 6 0
+put ES 3 0
+snap
+ck eq emcheck -5
+same
+base
+snap
+ck eq emrelease 10 23 -5
+same
+ck eq emrelease 9 22 -5
+same
+ck eq emrelease 9 23 0
+ck eq get ES 0 0
+ck eq get ES 3 24
+for i ulong 8
+if and ne i 0 ne i 3
+ck eq get ES i get SaveS i
+end
+end
+snap
+ck eq emrelease 9 23 -5
+same
+base
+put ES 3 18446744073709551614
+put ED 6 18446744073709551614
+ck eq emrelease 9 18446744073709551614 0
+ck eq get ES 3 18446744073709551615
+ck eq get ES 1 0
+put ES 0 1
+ck eq emlive 9 18446744073709551615 0
+ck eq emrelease 9 18446744073709551615 0
+ck eq get ES 3 18446744073709551615
+ck eq get ES 1 1
+ck eq get ES 0 0
+end
+
+fn show n ulong to void
+p = ulong 20
+while gt n 0 bound 20
+p = sub p 1
+put Dig p uchar add 48 rem n 10
+n = div n 10
+end
+w = write 1 Dig p sub 20 p
+if ne w long sub 20 p
+exit 90
+end
+end
+
+fn main to int
+three
+edges
+w = write 1 Pass 0 len Pass
+show get RC 0
+w = write 1 NL 0 1
+ret 0
+end
