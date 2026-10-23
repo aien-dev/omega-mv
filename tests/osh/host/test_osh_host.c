@@ -1184,6 +1184,18 @@ static void test_fd_leaks(void)
     o = slurp(P("fd2"));
     CHECK(strcmp(o, "fdcount 0\n") == 0, "stage 3 fd list: '%s'", o);
     free(o);
+    /* an embedder-held descriptor without O_CLOEXEC must not reach the child */
+    int leak = open(P("fd1"), O_RDONLY);
+    CHECK(leak >= 3, "could not open the inherited test descriptor (%d)", leak);
+    t_clear(&t);
+    b = nb(0, 0);
+    helper(b, "fdlist", NULL);
+    CHECK(go(&t, b, &r) == 0, "inherited descriptor run");
+    o = t_out(&t);
+    CHECK(strcmp(o, "fdcount 0\n") == 0, "inherited descriptor leaked into the child: '%s'", o);
+    free(o);
+    CHECK(fcntl(leak, F_GETFD) >= 0, "the test descriptor was closed in the parent");
+    close(leak);
     /* single command with every redirection kind */
     t_clear(&t);
     b = nb(0, 0);

@@ -73,6 +73,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -140,6 +141,19 @@ static void child_signals(void)
     sigset_t all;
     sigemptyset(&all);
     sigprocmask(SIG_SETMASK, &all, NULL);
+}
+
+/* In a forked child: close every descriptor above stderr, including descriptors inherited from the embedder that
+ * this shell never opened. The known shell descriptors were closed just before this call; close_range makes the
+ * remaining table empty without walking RLIMIT_NOFILE. Fall back to a bounded loop where the call is unavailable. */
+static void close_inherited_fds(void)
+{
+#ifdef SYS_close_range
+    if (syscall(SYS_close_range, 3U, ~0U, 0U) == 0) return;
+#endif
+    long max = sysconf(_SC_OPEN_MAX);
+    if (max < 0 || max > 65536) max = 65536;
+    for (long fd = 3; fd < max; fd++) close((int)fd);
 }
 
 /* ---------------- resolution ---------------- */
@@ -687,6 +701,7 @@ static void run_pipeline(OshSession *s, const OshRequest *r, JCtx *jc, OshResult
                     for (int j = 0; j < k && !dup; j++) dup = cl[j] == cl[k];
                     if (!dup) close(cl[k]);
                 }
+                close_inherited_fds();
                 if (external) {
                     if (osh_effect_check(s, OSH_OP_SPAWN, path, 2) != OSH_E_OK) _exit(126); /* defensive: revoked between fork and exec; the osh program seals its policy before the first command, so it cannot trigger there (no test reaches it) */
                     execve(path, (char *const *)c->argv, envp);

@@ -1,0 +1,28 @@
+# Issue 670: inherited descriptor is closed before exec
+Date: 2026-10-23. Host: AArch64 Linux (spark-b87b). Binary: build/osh/osh sha256 ca224fa624c4208c4ba9bd4536ae6f3662fc85deec17d821350166081f434843 (after fix).
+Source: src/osh/host/osh_exec.c sha256 ed9e2e68dcefcfc7f3e61bd0a6411125607e8cff00ef91c2b6631cded9877dc9 (after fix).
+
+Same policy and command as the before log:
+    ./build/osh/osh --caps policy-noread --journal journal3 \
+        -c '/bin/sh -c "echo FDS:; ls -l /proc/self/fd; cat <&9"' 9</etc/hostname
+
+Result: the child sees only 0, 1, 2 and the /proc/self/fd handle opened by ls;
+fd 9 is gone and reading it fails:
+    FDS:
+    total 0
+    lrwx------ ... 0 -> /dev/null
+    l-wx------ ... 1 -> .../fixed.out
+    l-wx------ ... 2 -> .../fixed.err
+    lr-x------ ... 3 -> /proc/484490/fd
+    /bin/sh: 1: 9: Bad file descriptor
+
+Regression suites (clean descriptor table; close fds 3..255 before make):
+    make test-osh-host     -> checks passed 1569 failed 0, OSH_HOST_PASS (plain and ASan/UBSan)
+    make test-osh-caps     -> checks: 77 passed, 0 failed, OSH_CAPS_PASS (plain and ASan/UBSan)
+    make test-osh-journal  -> 185 checks, 0 failed, OSH_JOURNAL_PASS (plain and ASan/UBSan)
+
+RED before the source change, same clean table:
+    make test-osh-host     -> checks passed 1568 failed 1
+    FAIL tests/osh/host/test_osh_host.c:1195: inherited descriptor leaked into the child:
+    'leak fd 6 -> /tmp/osh-host-BtiZUH/fd1
+    fdcount 1'
