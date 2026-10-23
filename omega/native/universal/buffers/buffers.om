@@ -1,0 +1,206 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Bounded host uchar descriptors: 16 slots x 256 bytes, generation-tagged handles.
+global ubdata uchar 4096
+global ublen ulong 16
+global ubgen ulong 16
+global ubrights uchar 16
+global ubused uchar 16
+global ubretire uchar 16
+global ubcflag uchar 16
+global ubowned ulong 1
+global ubpeak ulong 1
+global ubbytes ulong 1
+global ubcopies ulong 1
+global uberror ulong 1
+fn ubcheck h ulong to ulong
+put uberror 0 1
+if eq h 0
+ret 0
+end
+slot = rem h 256
+gen = div h 256
+if or eq slot 0 gt slot 16
+ret 0
+end
+i = sub slot 1
+if eq gen 0
+ret 0
+end
+if eq get ubretire i 1
+put uberror 0 8
+ret 0
+end
+if eq get ubused i 0
+ret 0
+end
+if ne gen get ubgen i
+ret 0
+end
+put uberror 0 0
+ret slot
+end
+fn ubnew t ulong n ulong r ulong p ulong to ulong
+if or ne t 1 ne p 1
+ret 0
+end
+if or lt n 1 gt n 256
+ret 0
+end
+if not or eq r 1 or eq r 2 eq r 3
+ret 0
+end
+for i ulong 16
+if and eq get ubused i 0 eq get ubretire i 0
+if eq get ubgen i 0
+put ubgen i 1
+end
+put ubused i 1
+put ublen i n
+put ubrights i uchar r
+put ubcflag i 0
+for j ulong 256
+put ubdata add mul i 256 j 0
+end
+put ubowned 0 add get ubowned 0 n
+if gt get ubowned 0 get ubpeak 0
+put ubpeak 0 get ubowned 0
+end
+ret add mul get ubgen i 256 add i 1
+end
+end
+ret 0
+end
+fn ubfree h ulong to ulong
+i = ubcheck h
+if eq i 0
+ret get uberror 0
+end
+i = sub i 1
+for j ulong 256
+put ubdata add mul i 256 j 0
+end
+put ubowned 0 sub get ubowned 0 get ublen i
+put ubused i 0
+put ublen i 0
+put ubrights i 0
+put ubcflag i 0
+if eq get ubgen i 72057594037927935
+put ubretire i 1
+else
+put ubgen i add get ubgen i 1
+end
+ret 0
+end
+fn ubstore h ulong o ulong v ulong to ulong
+i = ubcheck h
+if eq i 0
+ret get uberror 0
+end
+i = sub i 1
+if eq get ubcflag i 1
+ret 7
+end
+if eq and get ubrights i 2 0
+ret 2
+end
+if ge o get ublen i
+ret 3
+end
+if gt v 255
+ret 3
+end
+put ubdata add mul i 256 o uchar v
+ret 0
+end
+fn ubload h ulong o ulong to ulong
+i = ubcheck h
+if eq i 0
+ret 0
+end
+i = sub i 1
+if eq get ubcflag i 1
+ret 0
+end
+if eq and get ubrights i 1 0
+ret 0
+end
+if ge o get ublen i
+ret 0
+end
+ret ulong get ubdata add mul i 256 o
+end
+fn ubcpr s ulong d ulong n ulong after ulong to ulong
+s = ubcheck s
+if eq s 0
+ret get uberror 0
+end
+d = ubcheck d
+if eq d 0
+ret get uberror 0
+end
+s = sub s 1
+d = sub d 1
+if eq s d
+ret 6
+end
+if or eq get ubcflag s 1 eq get ubcflag d 1
+ret 7
+end
+if eq and get ubrights s 1 0
+ret 2
+end
+if eq and get ubrights d 2 0
+ret 2
+end
+if or gt n get ublen s gt n get ublen d
+ret 3
+end
+put ubcopies 0 add get ubcopies 0 1
+chunks = ulong 0
+for k ulong n
+v = get ubdata add mul s 256 k
+put ubdata add mul d 256 k v
+put ubbytes 0 add get ubbytes 0 1
+if or eq rem add k 1 16 0 eq add k 1 n
+chunks = add chunks 1
+if and gt after 0 eq chunks after
+put ubcflag s 1
+ret 7
+end
+end
+end
+ret 0
+end
+fn ubcopy s ulong d ulong n ulong to ulong
+ret ubcpr s d n 0
+end
+fn ubcsched s ulong d ulong n ulong a ulong to ulong
+ret ubcpr s d n a
+end
+fn ubcancel h ulong to ulong
+i = ubcheck h
+if eq i 0
+ret get uberror 0
+end
+i = sub i 1
+if eq and get ubrights i 2 0
+ret 2
+end
+put ubcflag i 1
+ret 0
+end
+fn ubstat k ulong to ulong
+if eq k 1
+ret get ubbytes 0
+end
+if eq k 2
+ret get ubcopies 0
+end
+if eq k 3
+ret get ubowned 0
+end
+if eq k 4
+ret get ubpeak 0
+end
+ret 0
+end
