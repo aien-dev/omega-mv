@@ -1,0 +1,22 @@
+{
+  "schema": "L776-independent-consumer-review-v1",
+  "reviewer": "/root/resume_learning_lead",
+  "source_commit": "d8d14c47647e49774f64b58e3c138335656f175d",
+  "dependency_commit": "84d03c5523f39ca1045d1c313c5f62597779462b",
+  "compiler_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "review_result": "NO_BLOCKING_FINDINGS_WITHIN_BOUNDED_PUBLIC_IN_MEMORY_SCOPE",
+  "production_exit": 0,
+  "compiled_mutant_exits": [83,93],
+  "independent_probes_exit": 0,
+  "independent_probe_source_sha256": "c58c58ddd4d2c73d37602df6bc37be6b8d50ff49ac62c916a33916c0bf733f4d",
+  "independent_probe_elf_sha256": "423f3c14b036d117d738ca6111d40f207d18ffa7aa06156b656156fef345948e",
+  "additional_measured_compiles": 4,
+  "additional_measured_native_runs": 4,
+  "combined_measured_admission_compiles": 8,
+  "combined_measured_admission_native_runs": 7,
+  "complete_lifecycle_cost": "UNKNOWN",
+  "broader_review_owner": "L781_PENDING",
+  "publisher": "EXISTING_RENDA_OWNER",
+  "full_653": "NOT_RUN",
+  "full_654": "NOT_RUN"
+}

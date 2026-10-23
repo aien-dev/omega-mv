@@ -1,0 +1,119 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note NEGATIVE CONTROL ONLY: source identity refusal disabled; replace admit.om to test detection.
+note Caller supplies independently measured metadata and observation bytes.
+note This component does not authenticate receipts, execute candidates or persist state.
+note CMeta schema/profile/license/provenance/oracle/template/evidence/samples then source SHA256 then zero reserved.
+global CMeta ulong 16
+global CSeen ulong 64
+global CDiag ulong 64
+global CGood ulong 64
+global CBad ulong 64
+global CFreeze ulong 2048
+note CState good count,bad count,ready. Consume accepted indices only after cfinish returns zero.
+global CState ulong 3
+
+fn cbegin n ulong budget ulong to ulong
+put CState 2 0
+r = lbegin n 1 budget
+if ne r 0
+ret r
+end
+for i ulong mul n 32
+put CFreeze i get LT i
+end
+for i ulong 64
+put CSeen i 0
+put CDiag i 99
+put CGood i 0
+put CBad i 0
+end
+for i ulong 3
+put CState i 0
+end
+ret 0
+end
+
+fn cmeta task ulong to ulong
+base = mul task 32
+for k ulong 32
+if ne get LT add base k get CFreeze add base k
+ret 47
+end
+end
+if or ne get CMeta 0 1 ne get CMeta 1 get LT add base 4
+ret 40
+end
+note License1 is AGPL-3.0-or-later; provenance1 is disclosed handwritten public fixture.
+if ne get CMeta 2 1
+ret 41
+end
+if ne get CMeta 3 1
+ret 42
+end
+if ne get CMeta 4 get LT add base 6
+ret 43
+end
+if ne get CMeta 5 get LT add base 7
+ret 43
+end
+if eq get CMeta 4 get CMeta 5
+ret 43
+end
+note Only bounded tested evidence1; no formal-proof label admitted here.
+if ne get CMeta 6 1
+ret 44
+end
+note Narrow supported packet: three independent fixed u64 observations,24bytes.
+if or ne get CMeta 7 3 lt get LT add base 29 24
+ret 45
+end
+for k ulong 4
+note Deliberately omit candidate source identity comparison.
+if ne get CMeta add k 12 0
+ret 40
+end
+end
+ret 0
+end
+
+fn csubmit task ulong status ulong gotcode ulong gotn ulong to ulong
+if ne get LS 0 1
+ret 24
+end
+if ge task get LS 1
+ret lattempt task 1 10
+end
+if ne get CSeen task 0
+note Charge the attempted duplicate; preserve its first stored record.
+ret lattempt task 2 10
+end
+why = cmeta task
+outcome = ulong 10
+if eq why 0
+outcome = lobserve status 0 gotcode 24 gotn
+why = outcome
+end
+code = lattempt task 1 outcome
+put CSeen task 1
+if ne code 0
+why = code
+end
+put CDiag task why
+if eq why 0
+put CGood get CState 0 task
+put CState 0 add get CState 0 1
+else
+put CBad get CState 1 task
+put CState 1 add get CState 1 1
+end
+ret why
+end
+
+fn cfinish to ulong
+code = lfinish
+if ne code 0
+ret code
+end
+put CState 2 1
+ret 0
+end

@@ -1,0 +1,89 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native public admission controls; synthetic metadata, never an authenticated receipt.
+global NCheck ulong 1
+text good "CURRICULUM_ADMISSION_PASS\n"
+
+fn ck got ulong want ulong to void
+put NCheck 0 add get NCheck 0 1
+if ne got want
+exit int add get NCheck 0 50
+end
+end
+
+fn fixture to void
+for i ulong 2048
+put LT i 0
+end
+for i ulong 2
+base = mul i 32
+put LT base add i 1
+put LT add base 1 2
+put LT add base 2 1
+put LT add base 3 add i 1
+put LT add base 4 1
+put LT add base 5 1
+put LT add base 6 776
+put LT add base 7 add i 17
+for k ulong 20
+put LT add base add k 8 add add mul i 100 k 1
+end
+put LT add base 28 24
+put LT add base 29 24
+put LT add base 30 1000
+end
+for i ulong 4
+put LPin i add i 1
+put LPin add i 4 add i 1
+put LPin add i 8 add i 5
+put LPin add i 12 add i 5
+end
+for i ulong 24
+put LS i 0
+end
+for i ulong 9
+put LC i 0
+end
+put LC 0 10
+put LC 1 20
+put LC 2 30
+put LC 3 40
+put LC 4 50
+put LC 5 60
+put LC 6 4096
+end
+
+fn packet task ulong to void
+for i ulong 16
+put CMeta i 0
+end
+put CMeta 0 1
+put CMeta 1 1
+put CMeta 2 1
+put CMeta 3 1
+put CMeta 4 776
+put CMeta 5 get LT add mul task 32 7
+put CMeta 6 1
+put CMeta 7 3
+for i ulong 4
+put CMeta add i 8 get LT add mul task 32 add i 12
+end
+for i ulong 256
+put LWant i 0
+put LGot i 0
+end
+note Independent affine3*x+2 expectations at public inputs0,4,7 are2,14,23.
+note Last value is held out from the deliberately hardcoded two-example candidate.
+put LWant 0 2
+put LWant 8 14
+put LWant 16 23
+put LGot 0 2
+put LGot 8 14
+put LGot 16 23
+end
+
+fn reset to void
+fixture
+ck cbegin 1 10000 0
+packet 0
+end
+

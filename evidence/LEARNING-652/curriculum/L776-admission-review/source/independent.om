@@ -1,0 +1,61 @@
+note Independent frozen-consumer boundary probes, not product executable logic.
+note Helpers and public synthetic fixture values are reused from frozen owner tests.
+fn main to int
+fixture
+ck cbegin 1 10000 0
+packet 0
+ck csubmit 0 0 0 24 0
+note Accepted indices belong to CFreeze even when caller changes LT after submission.
+put LT 1 4
+put LT 12 1001
+ck cfinish 0
+ck get CState 2 1
+ck get CFreeze 1 2
+ck get CFreeze 12 5
+ck get CGood 0 0
+ck cfinish 24
+
+fixture
+note Construct all64 bounded public development records, preserving distinct identities.
+for i ulong 64
+base = mul i 32
+for k ulong 32
+put LT add base k get LT k
+end
+put LT base add i 1
+put LT add base 3 add i 1
+put LT add base 7 add i 17
+for k ulong 20
+put LT add base add k 8 add add mul i 100 k 1
+end
+end
+ck cbegin 64 1000000 0
+for i ulong 64
+packet i
+ck csubmit i 0 0 24 0
+end
+ck get CState 0 64
+ck get CState 1 0
+ck get CGood 63 63
+ck get LS 3 64
+ck cfinish 0
+ck get CState 2 1
+
+fixture
+put LT 29 23
+ck cbegin 1 10000 0
+packet 0
+ck csubmit 0 0 0 24 45
+ck get CState 0 0
+ck get CState 1 1
+ck cfinish 0
+
+fixture
+ck cbegin 1 10000 0
+packet 0
+ck csubmit 2 0 0 24 27
+ck get LS 8 10
+ck cfinish 27
+ck get CState 2 0
+ret 0
+end

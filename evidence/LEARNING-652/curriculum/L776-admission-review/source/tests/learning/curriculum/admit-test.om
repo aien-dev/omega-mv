@@ -1,0 +1,219 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native public admission controls; synthetic metadata, never an authenticated receipt.
+global NCheck ulong 1
+text good "CURRICULUM_ADMISSION_PASS\n"
+
+fn ck got ulong want ulong to void
+put NCheck 0 add get NCheck 0 1
+if ne got want
+exit int add get NCheck 0 50
+end
+end
+
+fn fixture to void
+for i ulong 2048
+put LT i 0
+end
+for i ulong 2
+base = mul i 32
+put LT base add i 1
+put LT add base 1 2
+put LT add base 2 1
+put LT add base 3 add i 1
+put LT add base 4 1
+put LT add base 5 1
+put LT add base 6 776
+put LT add base 7 add i 17
+for k ulong 20
+put LT add base add k 8 add add mul i 100 k 1
+end
+put LT add base 28 24
+put LT add base 29 24
+put LT add base 30 1000
+end
+for i ulong 4
+put LPin i add i 1
+put LPin add i 4 add i 1
+put LPin add i 8 add i 5
+put LPin add i 12 add i 5
+end
+for i ulong 24
+put LS i 0
+end
+for i ulong 9
+put LC i 0
+end
+put LC 0 10
+put LC 1 20
+put LC 2 30
+put LC 3 40
+put LC 4 50
+put LC 5 60
+put LC 6 4096
+end
+
+fn packet task ulong to void
+for i ulong 16
+put CMeta i 0
+end
+put CMeta 0 1
+put CMeta 1 1
+put CMeta 2 1
+put CMeta 3 1
+put CMeta 4 776
+put CMeta 5 get LT add mul task 32 7
+put CMeta 6 1
+put CMeta 7 3
+for i ulong 4
+put CMeta add i 8 get LT add mul task 32 add i 12
+end
+for i ulong 256
+put LWant i 0
+put LGot i 0
+end
+note Independent affine3*x+2 expectations at public inputs0,4,7 are2,14,23.
+note Last value is held out from the deliberately hardcoded two-example candidate.
+put LWant 0 2
+put LWant 8 14
+put LWant 16 23
+put LGot 0 2
+put LGot 8 14
+put LGot 16 23
+end
+
+fn reset to void
+fixture
+ck cbegin 1 10000 0
+packet 0
+end
+
+fn main to int
+fixture
+ck cbegin 2 10000 0
+packet 0
+ck csubmit 0 0 0 24 0
+packet 1
+put LGot 16 14
+ck csubmit 1 0 0 24 7
+ck get CState 0 1
+ck get CState 1 1
+ck get CGood 0 0
+ck get CBad 0 1
+ck get CDiag 1 7
+ck get LS 8 20
+ck get LS 9 40
+ck get LS 10 60
+ck get LS 11 80
+ck get LS 12 100
+ck get LS 13 120
+ck get LS 14 4096
+ck get LS 16 2
+ck get CState 2 0
+ck cfinish 0
+ck get CState 2 1
+ck get LS 5 1
+put LT 1 4
+ck cbegin 2 10000 5
+ck get CState 2 0
+
+reset
+put CMeta 0 2
+ck csubmit 0 0 0 24 40
+ck get CState 0 0
+ck get CState 1 1
+ck cfinish 0
+reset
+put CMeta 1 2
+ck csubmit 0 0 0 24 40
+reset
+put CMeta 2 0
+ck csubmit 0 0 0 24 41
+reset
+put CMeta 3 0
+ck csubmit 0 0 0 24 42
+reset
+put CMeta 4 17
+ck csubmit 0 0 0 24 43
+reset
+put CMeta 5 776
+ck csubmit 0 0 0 24 43
+reset
+put CMeta 6 2
+ck csubmit 0 0 0 24 44
+reset
+put CMeta 7 2
+ck csubmit 0 0 0 24 45
+reset
+put CMeta 8 1001
+ck csubmit 0 0 0 24 46
+reset
+put CMeta 11 1001
+ck csubmit 0 0 0 24 46
+reset
+put CMeta 15 1
+ck csubmit 0 0 0 24 40
+reset
+put LT 1 4
+ck csubmit 0 0 0 24 47
+reset
+put LT 12 1001
+put CMeta 8 1001
+ck csubmit 0 0 0 24 47
+
+reset
+ck csubmit 0 1 0 0 1
+ck get LS 8 10
+ck get CState 0 0
+ck cfinish 0
+reset
+ck csubmit 0 4 0 0 4
+reset
+ck csubmit 0 0 0 0 9
+reset
+ck csubmit 0 0 0 16 7
+reset
+ck csubmit 0 0 105 24 8
+reset
+ck csubmit 0 0 0 257 10
+reset
+put LPin 15 1001
+ck csubmit 0 0 0 24 26
+ck get CState 0 0
+ck cfinish 26
+ck get CState 2 0
+reset
+put LC 0 18446744073709551615
+ck csubmit 0 0 0 24 23
+ck get CState 0 0
+ck cfinish 23
+
+reset
+ck csubmit 0 0 0 24 0
+ck csubmit 0 0 0 24 28
+ck get CDiag 0 0
+ck get LS 8 20
+ck cfinish 28
+ck get CState 2 0
+reset
+ck cfinish 30
+ck get CState 2 0
+fixture
+put LT 1 4
+ck cbegin 1 10000 5
+fixture
+put LT 4 2
+ck cbegin 1 10000 3
+fixture
+ck cbegin 65 10000 1
+fixture
+ck cbegin 1 50 0
+packet 0
+ck csubmit 0 0 0 24 29
+ck cfinish 29
+ck get CState 2 0
+wrote = write 1 good 0 len good
+if ne wrote long len good
+ret 81
+end
+ret 0
+end
