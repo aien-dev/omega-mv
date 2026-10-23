@@ -40,106 +40,8 @@
 #define JS_ERR_IO        -4
 #define JS_ERR_CORRUPT   -5   /* restored bytes disagree with the recorded content digest */
 #define JS_ERR_NOMEM     -6
-#define JS_ERR_STALE     -7   /* handle generation is not current: the object was reclaimed */
-#define JS_ERR_REMOTE    -8   /* not locally owned; this build has no remote transport */
-#define JS_ERR_OWNER     -9   /* caller is not the recorded owner */
-#define JS_ERR_VERSION  -10   /* durable checkpoint in a refused older format (v1: 32-bit realization generations) */
-
-#include <pthread.h>
 
 typedef struct { uint8_t b[32]; } JsSemId;
-
-/* ---- production mechanics (M20) -------------------------------------------
- *
- * Logical identity is separate from physical address. A realization has a
- * stable JsRealId {slot, gen}; a branch has a stable JsBranchRef {id, gen}.
- * Both survive js_space_commit / js_space_open unchanged. A slot is reused
- * only after its generation advances, so a reference to a reclaimed object
- * is refused with JS_ERR_STALE and never aliases the new occupant. The
- * legacy uint32_t branch-id API stays: the id is the slot, and it is only
- * safe while the caller still holds the branch. Code that keeps a branch
- * beyond one call (World fields, other subsystems) keeps a JsBranchRef.
- *
- * Ownership rules (J-Space storage):
- *  - J-Space holds runtime state-space material only. Memory, evidence and
- *    provenance belong to Cortex; J-Space never records them.
- *  - A realization lives while a branch unit or a child recipe holds it
- *    (refs). Reclamation is immediate in memory; spill/patch extents that a
- *    durable checkpoint may still name are quarantined until the next
- *    js_space_commit makes a checkpoint that no longer names them.
- *  - A branch has one owner subject (0 = the space itself). Owner-checked
- *    release (js_branch_release_ref) refuses other subjects.
- *  - Shared logical state is published only through a World commit. A writer
- *    forks a STAGED branch, works on it privately, then publishes its packed
- *    JsBranchRef as a World field value through the World's own commit path.
- *    After the commit the branch is sealed (js_branch_seal); staged branches
- *    a World commit never named are reclaimed (js_space_reclaim_staged) and
- *    are never persisted. A branch a World field names is never mutated in
- *    place: once forked it is frozen, so older World generations keep reading
- *    the bytes they named.
- *
- * Generations never wrap. A realization generation is 64 bits: one slot
- * reused once per nanosecond needs about 584 years to exhaust it, and if it
- * ever were, the slot retires (JS_REAL_GEN_RETIRED) instead of wrapping. A
- * branch generation stays 32 bits because a JsBranchRef packs into one 64-bit
- * World field ({id, gen}); a branch slot whose next generation would be
- * JS_BRANCH_GEN_RETIRED (UINT32_MAX) retires instead: it is never handed out
- * again, in memory or after js_space_open, the rule World objects follow
- * (rx_world_retire). A retired branch slot costs one of max_branches; when no
- * slot is left, a new branch fails JS_ERR_FULL. Either way a reference to a
- * reclaimed object never validates again.
- *
- * Concurrency: one space mutex (recursive) serializes every public call,
- * matching the World reference's single world mutex. Realized bytes never
- * change after publication, so a read returns the bytes of the generation
- * the caller named. Raw JsReal pointers are only valid while a holder keeps
- * the realization alive.
- *
- * Machine placement: JsHome is a placeholder for the canonical machine
- * identity being defined by M20 Agent 1. `machine` is an opaque fixed-size
- * byte field; J-Space never interprets it beyond equality. Fabric is not
- * implemented: mutating a branch whose home is not JS_HOME_LOCAL, and
- * reading non-resident units of a REMOTE_OWNED branch, fail JS_ERR_REMOTE.
- */
-#define JS_MACHINE_ID_BYTES 32u   /* == AIEN_MID_ID_BYTES; holds AienMachineId bytes (placement is still a placeholder) */
-
-typedef enum {
-    JS_HOME_LOCAL = 0,          /* owned and authoritative on this machine */
-    JS_HOME_REMOTE_OWNED = 1,   /* authoritative elsewhere; no local writes */
-    JS_HOME_REPLICA = 2         /* local read-only copy of a remote owner's branch */
-} JsLocality;
-
-typedef struct {
-    uint8_t machine[JS_MACHINE_ID_BYTES];   /* opaque canonical machine identity bytes */
-    uint32_t locality;                      /* JsLocality */
-} JsHome;
-
-typedef struct { uint32_t slot; uint64_t gen; } JsRealId;
-typedef struct { uint32_t id; uint32_t gen; } JsBranchRef;
-
-/* Generation values that are never live (see "Generations never wrap"). */
-#define JS_REAL_GEN_RETIRED   UINT64_MAX
-#define JS_BRANCH_GEN_RETIRED UINT32_MAX
-
-/* A branch reference fits one 64-bit World field. */
-static inline uint64_t js_branch_ref_pack(JsBranchRef r) {
-    return ((uint64_t)r.gen << 32) | r.id;
-}
-static inline JsBranchRef js_branch_ref_unpack(uint64_t v) {
-    JsBranchRef r = { (uint32_t)v, (uint32_t)(v >> 32) };
-    return r;
-}
-
-/* Hard limits. Exceeding one fails deterministically with JS_ERR_FULL before
- * anything changes. Zero for a byte limit means unlimited. */
-typedef struct {
-    uint32_t max_reals;             /* live realizations (slab slots) */
-    uint32_t max_branches;          /* branch slots, at most JS_MAX_BRANCHES */
-    uint64_t max_spill_bytes;       /* extent space in the spill/data file */
-    uint64_t max_resident_bytes;    /* HOT + COLD + COMPRESSED bytes */
-} JsLimits;
-
-typedef struct { uint64_t off, len; } JsExtent;
 
 /* Realization types. Listed so receipts can name them; none is privileged. */
 typedef enum {
@@ -207,11 +109,6 @@ struct JsReal {
     uint64_t last_use;              /* logical clock of the last read */
     uint64_t reads;
     JsReal *index_next;             /* semantic reuse index chain */
-    /* M20: stable identity and durable recipe input. */
-    uint32_t slot;                  /* JsRealId slot; the slab never moves a JsReal */
-    uint64_t gen;                   /* JsRealId generation, never JS_REAL_GEN_RETIRED while live */
-    uint64_t patch_off;             /* EDIT patch extent in the data file, UINT64_MAX if none */
-    JsReal *free_next;              /* slab free list */
 };
 
 /* Measured costs, all in nanoseconds or bytes. The policy reads nothing else. */
@@ -238,11 +135,6 @@ typedef struct {
     uint32_t n_units, cap_units;
     JsReal **units;                 /* units[i] realizes semantic unit i */
     const JsRealizer *realizer;
-    /* M20 */
-    uint32_t gen;                   /* JsBranchRef generation of this occupant */
-    uint32_t owner;                 /* owner subject, 0 = the space */
-    bool staged;                    /* not yet named by a World commit; never persisted */
-    JsHome home;
 } JsBranch;
 
 /* The SharedStateRealization record of one branch, derived on demand. */
@@ -268,10 +160,6 @@ typedef struct {
     uint64_t corrupt_restores;
 } JsStats;
 
-/* DUAL-3a observer (declared in full after the policy section below). */
-typedef struct JsDualObservation_ JsDualObservation;
-typedef void (*JsDualObserver)(const JsDualObservation *obs, const void *ctx);
-
 #define JS_MAX_BRANCHES 4096u
 #define JS_INDEX_BUCKETS 65536u
 
@@ -291,97 +179,10 @@ typedef struct {
     const JsReal *cache_r;
     uint8_t *cache_bytes;
     size_t cache_len;
-    /* ---- M20 production mechanics ---- */
-    JsLimits limits;
-    pthread_mutex_t mu;             /* recursive; serializes every public call */
-    bool mu_ready;
-    uint32_t branch_gen[JS_MAX_BRANCHES];   /* JS_BRANCH_GEN_RETIRED = slot retired */
-    uint32_t free_branch[JS_MAX_BRANCHES];
-    uint32_t n_free_branch;
-    JsReal **slab;                  /* chunks of JS_SLAB_CHUNK realizations */
-    uint32_t slab_chunks;
-    uint32_t real_hw;               /* slots ever handed out */
-    uint64_t real_gen_floor;        /* first generation of a never-used slot (saturates) */
-    JsReal *real_free;
-    JsExtent *ext_free;             /* free extents, sorted by offset, coalesced */
-    uint32_t n_ext_free, cap_ext_free;
-    JsExtent *ext_pending;          /* freed but maybe named by the last checkpoint */
-    uint32_t n_ext_pending, cap_ext_pending;
-    bool durable;
-    char *dir;
-    uint64_t commit_seq;
-    uint8_t anchor[48];             /* opaque client anchor (v3 checkpoint) */
-    bool anchor_set;
-    JsHome local_home;              /* home given to locally created branches */
-    /* DUAL-3a decision-site observer; NULL = no observation (default) */
-    JsDualObserver dual_observer;
-    const void *dual_ctx;
-    uint64_t dual_seq;
 } JsSpace;
 
-#define JS_SLAB_CHUNK 1024u
-
-/* Anonymous, volatile space: the spill file is unlinked at once. Default limits. */
 int  js_space_init(JsSpace *s, const char *spill_path);
-/* Same, with explicit limits (NULL = defaults). */
-int  js_space_init_limits(JsSpace *s, const char *spill_path, const JsLimits *lim);
 void js_space_destroy(JsSpace *s);
-void js_limits_default(JsLimits *lim);
-
-/* Durable space in directory `dir` (created if missing): data file
- * jspace.data (spill + EDIT patches, fixed extents) and metadata checkpoint
- * jspace.meta. If a checkpoint exists, it is validated and loaded: every
- * branch, realization id and generation comes back; realizations reopen as
- * SPILLED (if their extent was checkpointed) or EVICTED and rebuild from their
- * recipe. `realizers` must name every realization type the checkpoint uses
- * (matched by type and unit_bytes). A torn or corrupt checkpoint fails with
- * JS_ERR_CORRUPT and leaves no state; a leftover temporary file is ignored.
- * A version-1 checkpoint (32-bit realization generations) fails with
- * JS_ERR_VERSION and leaves no state: it is refused, never reinterpreted.
- * A version-2 checkpoint (no client anchor) still loads, with the anchor absent
- * (js_space_anchor returns 0). Commits write version 3. */
-int  js_space_open(JsSpace *s, const char *dir, const JsRealizer *const *realizers,
-                   uint32_t n_realizers, const JsLimits *lim, const JsHome *local_home);
-/* Make the current non-staged state the durable checkpoint: data first
- * (fdatasync), then metadata to a temporary file, fsync, atomic rename,
- * directory fsync. Only then are quarantined extents reusable. */
-int  js_space_commit(JsSpace *s);
-/* Opaque 48-byte client anchor stored in the checkpoint (format v3), covered
- * by the body digest. js_space_set_anchor copies it into the space; the next
- * js_space_commit writes it. js_space_anchor copies it out and returns 1 if one
- * is loaded or set, 0 if absent (a version-2 checkpoint, never set, or an
- * all-zero section: clients must make a real anchor non-zero). J-Space
- * never interprets the bytes. */
-void js_space_set_anchor(JsSpace *s, const uint8_t anchor[48]);
-int  js_space_anchor(const JsSpace *s, uint8_t out[48]);
-
-/* Stable references. */
-int  js_branch_ref(JsSpace *s, uint32_t id, JsBranchRef *out);
-int  js_branch_check(JsSpace *s, JsBranchRef ref);          /* JS_OK or JS_ERR_STALE */
-int  js_real_id(JsSpace *s, uint32_t b, uint32_t idx, JsRealId *out);
-/* NULL when the slot was reclaimed (generation mismatch). Valid while held. */
-JsReal *js_real_lookup(JsSpace *s, JsRealId id);
-
-/* Ownership and staging. */
-int  js_branch_fork_staged(JsSpace *s, JsBranchRef parent, uint32_t owner, JsBranchRef *out);
-int  js_branch_seal(JsSpace *s, JsBranchRef b);              /* a World commit named it */
-int  js_branch_release_ref(JsSpace *s, JsBranchRef b, uint32_t subject);
-/* Release every branch still staged. Call when no commit can name them. */
-uint32_t js_space_reclaim_staged(JsSpace *s);
-int  js_branch_set_owner(JsSpace *s, JsBranchRef b, uint32_t owner);
-int  js_branch_set_home(JsSpace *s, JsBranchRef b, const JsHome *home);
-int  js_branch_home(JsSpace *s, JsBranchRef b, JsHome *out);
-/* COMPOSITION-2: lifecycle facts of one branch, read under the space lock
- * (JS_ERR_STALE for a reclaimed reference). parent_gen is the generation of
- * the parent slot's current occupant, 0 when the branch is a root or the
- * parent slot is empty. */
-typedef struct {
-    uint32_t owner;
-    uint32_t parent, parent_gen;
-    bool staged;
-    uint32_t locality;              /* JsLocality */
-} JsBranchInfo;
-int  js_branch_info(JsSpace *s, JsBranchRef b, JsBranchInfo *out);
 
 /* Measure the costs the policy reads, for this realizer on this machine. */
 void js_calibrate(JsSpace *s, const JsRealizer *r);
@@ -426,83 +227,6 @@ typedef struct {
 } JsPolicyReport;
 JsAction js_forge_choose(const JsSpace *s, const JsReal *r, double pressure);
 int  js_forge_enforce(JsSpace *s, uint64_t budget_bytes, JsPolicyReport *rep);
-
-/* ---- DUAL decision site "jspace.residency" (ADR 0031 section 7.3, DUAL-3a) --
- *
- * A read-only observation tap on the residency decision inside
- * js_forge_enforce. When an observer is set, each candidate the chooser
- * decides on emits one JsDualObservation: the alternatives it priced (every
- * action with the cost inputs and the score the chooser computed, and whether
- * the action was admissible), the chosen action, the pressure value and which
- * case produced it (over total budget: CAPACITY, stays hard; hot arena over
- * half the budget: SOFT), the realization's identity, and the budget and
- * residency bytes at that instant. The observer receives a const record and
- * returns nothing: it cannot alter the decision by type. With no observer (the
- * default) the policy runs exactly as before and no record is built. The
- * observer runs under the space lock and must not mutate the space or any
- * realization. There is no wall-clock field: seq is a per-space logical
- * counter that only advances while an observer is set.
- *
- * Canonical encoding (js_dual_observation_encode): fixed little-endian layout
- * of every field but digest, JS_DUAL_OBS_BYTES long, kind byte and version
- * first so the record is self-describing. digest = SHA-256 over
- * JS_DUAL_OBS_DOMAIN, one zero byte, then the canonical bytes. */
-#define JS_DUAL_SITE_ID      "jspace.residency"
-#define JS_DUAL_SITE_ID_LEN  16u
-#define JS_DUAL_OBS_KIND     0xD3u  /* kind byte: DUAL decision-site observation */
-#define JS_DUAL_OBS_VERSION  1u
-#define JS_DUAL_OBS_DOMAIN   "omega.dual.site.jspace_residency.v1"
-#define JS_DUAL_OBS_N_ALT    4u     /* MOVE, COMPRESS, SPILL, EVICT: the chooser's order */
-#define JS_DUAL_OBS_BYTES    302u   /* canonical encoding length (version 1) */
-
-typedef enum {
-    JS_DUAL_PRESSURE_CAPACITY = 1,  /* total residency over budget: pressure 1e9, MOVE not allowed */
-    JS_DUAL_PRESSURE_SOFT = 2       /* only the hot arena over half the budget: pressure 1e3 */
-} JsDualPressureCase;
-
-typedef enum {
-    JS_DUAL_ALT_INADMISSIBLE = 0,   /* not built: MOVE without allow_move or not HOT; COMPRESS of a
-                                       compressed realization or one predicted not to shrink */
-    JS_DUAL_ALT_UNPRICED = 1,       /* built but frees no bytes: skipped by the chooser */
-    JS_DUAL_ALT_PRICED = 2          /* scored: (now + expected_reads * later) / freed */
-} JsDualAltStatus;
-
-typedef struct {
-    uint8_t action;                 /* JsAction */
-    uint8_t status;                 /* JsDualAltStatus */
-    double now_ns, later_ns, freed_bytes;   /* chooser inputs; 0 when inadmissible */
-    double score;                   /* nanoseconds per byte given back; 0 unless PRICED */
-} JsDualAlternative;
-
-struct JsDualObservation_ {
-    uint8_t kind, version;
-    uint64_t seq;                   /* monotonically increasing per space */
-    double pressure;                /* the value the chooser used */
-    uint8_t pressure_case;          /* JsDualPressureCase */
-    uint8_t allow_move;
-    uint8_t chosen;                 /* JsAction; JS_ACT_COUNT = keep */
-    uint8_t n_priced;
-    JsDualAlternative alt[JS_DUAL_OBS_N_ALT];
-    double best_score;              /* cheapest priced score; 0 when none was priced */
-    double keep_threshold;          /* pressure * retain_ns_per_byte: keep when best >= this */
-    double expected_reads;
-    /* realization identity and state at the instant of the decision */
-    uint32_t real_slot;
-    uint64_t real_gen;
-    uint8_t real_type, placement, recipe;
-    uint64_t unit_bytes, held_bytes;
-    uint32_t holders, refs;
-    uint64_t last_use;
-    uint8_t semantic_state_id[32];
-    /* the instant */
-    uint64_t budget_bytes, resident_bytes, hot_bytes;
-    uint8_t digest[32];
-};
-
-/* NULL fn restores the default (no observation). */
-void js_dual_set_observer(JsSpace *s, JsDualObserver fn, const void *ctx);
-/* Canonical bytes of obs (all fields but digest). Returns JS_DUAL_OBS_BYTES. */
-size_t js_dual_observation_encode(const JsDualObservation *obs, uint8_t out[JS_DUAL_OBS_BYTES]);
 
 const char *js_action_name(JsAction a);
 const char *js_placement_name(JsPlacement p);

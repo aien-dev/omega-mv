@@ -4,18 +4,13 @@
 #include "rx_world.h"
 #include "rx_argus.h"
 #include "sha256.h"
-#include "rx_generation.h"   /* RX_GEN_HALT_MARK */
 
 #include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/random.h>
-#include <sys/stat.h>
 #include <time.h>
-#include <unistd.h>
 
 /* ---- helpers ------------------------------------------------------------ */
 
@@ -119,9 +114,6 @@ const char *rx_crumb_kind_name(RxCrumbKind k) {
     case RX_CRUMB_NOOP: return "NOOP";
     case RX_CRUMB_RETIRE: return "RETIRE";
     case RX_CRUMB_QUARANTINE: return "QUARANTINE";
-    case RX_CRUMB_CANCELLED: return "CANCELLED";
-    case RX_CRUMB_OPERATOR_STOP: return "OPERATOR_STOP";
-    case RX_CRUMB_OPERATOR_RESUME: return "OPERATOR_RESUME";
     default: return "?";
     }
 }
@@ -211,7 +203,6 @@ static uint64_t crumb_append(RxWorld *w, RxCrumb *k) {
     else k->episode = 0;
     w->crumbs[w->n_crumbs++] = *k;
     if (k->reaction < w->n_reactions) w->reactions[k->reaction].last_crumb = k->id;
-    if (w->recorder) w->recorder(w->recorder_ctx, w, &w->crumbs[w->n_crumbs - 1]);
     return k->id;
 }
 
@@ -242,37 +233,6 @@ const int rx_world_causal_digest_enabled = 0;
 const RxCrumb *rx_world_crumb(const RxWorld *w, uint64_t id) {
     if (id == 0 || id > w->n_crumbs) return NULL;
     return &w->crumbs[id - 1];
-}
-
-int rx_world_set_recorder(RxWorld *w, RxRecordFn fn, RxRecordReleaseFn release, void *ctx,
-                          bool replay) {
-    if (!w || !fn) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    if (w->recorder) {
-        pthread_mutex_unlock(&w->mu);
-        return RX_ERR_EXISTS;
-    }
-    if (replay)
-        for (uint64_t i = 0; i < w->n_crumbs; i++) fn(ctx, w, &w->crumbs[i]);
-    w->recorder = fn;
-    w->recorder_release = release;
-    w->recorder_ctx = ctx;
-    pthread_mutex_unlock(&w->mu);
-    return RX_OK;
-}
-
-int rx_world_clear_recorder(RxWorld *w, void *ctx) {
-    if (!w) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    int rc = RX_ERR_NOT_FOUND;
-    if (w->recorder && w->recorder_ctx == ctx) {
-        w->recorder = NULL;
-        w->recorder_release = NULL;
-        w->recorder_ctx = NULL;
-        rc = RX_OK;
-    }
-    pthread_mutex_unlock(&w->mu);
-    return rc;
 }
 
 int rx_world_crumb_origin(RxWorld *w, uint64_t id, uint32_t *reaction, uint32_t *subject,
@@ -496,7 +456,6 @@ static void demand(RxWorld *w, uint32_t rid, uint64_t cause) {
 
 static void demand_inner(RxWorld *w, uint32_t rid, uint64_t cause) {
     RxReaction *r = &w->reactions[rid];
-    if (r->removed) return;   /* rx_world_remove_reaction: never woken again */
     w->stats.wakes++;
     if (r->quarantined && !cause_is_external(w, cause)) {
         r->suppressed++;
@@ -836,8 +795,7 @@ int rx_world_bind_callers(RxWorld *w) {
      * unbound would run in the bound world under a subject nobody proved.
      * Refuse, and leave the world unbound. */
     for (uint32_t i = 0; i < w->n_reactions; i++)
-        if (!w->reactions[i].removed && w->reactions[i].desc.caller.generation == 0)
-            rc = RX_ERR_IDENTITY;
+        if (w->reactions[i].desc.caller.generation == 0) rc = RX_ERR_IDENTITY;
     if (rc == RX_OK) {
         pthread_mutex_lock(&w->callers_mu);
         w->callers_bound = true;
@@ -883,294 +841,10 @@ int rx_world_caller_check_fn(void *world, uint32_t subject, const RxCallerCred *
         return RX_CALLER_OK;
     }
     pthread_mutex_lock(&w->callers_mu);
-    /* R16 G6: under an operator stop a bound generation store neither
-     * proposes nor promotes. halted is written under callers_mu too. */
-    if (w->halted) {
-        pthread_mutex_unlock(&w->callers_mu);
-        return RX_CALLER_ERR_HALTED;
-    }
     int rc = caller_check_locked(w, subject, cred);
     /* HOLD: a pass keeps the table locked until RELEASE (no revocation). */
     if (op != RX_CALLER_OP_HOLD || rc != RX_CALLER_OK) pthread_mutex_unlock(&w->callers_mu);
     return rc;
-}
-
-/* ---- R16 G6 operator emergency stop (spec/r16-operator-emergency-stop.md) ---- */
-
-static void stamp_cap(RxWorld *w, RxCrumb *k, uint32_t i, RxCapRef ref);
-
-static uint64_t realtime_ns(void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
-}
-
-/* Caller holds mu and callers_mu. The credential, then the subject (no
- * reaction ever added to this world runs under it), then the capability. */
-static int halt_authorize(RxWorld *w, uint32_t subject, const RxCallerCred *cred, RxCapRef cap) {
-    if (caller_check_locked(w, subject, cred) != RX_CALLER_OK) return RX_ERR_IDENTITY;
-    for (uint32_t i = 0; i < w->n_reactions; i++)
-        if (w->reactions[i].desc.subject == subject) return RX_ERR_AUTHORITY;
-    if (rx_world_validate_cap(w, cap, subject, RX_WORLD_RES_CONTROL, RX_WORLD_RIGHT_HALT, NULL)
-        != RX_CAP_OK)
-        return RX_ERR_AUTHORITY;
-    return RX_OK;
-}
-
-/* The mark's text: fixed lines, then "sha256 <hex>" over every byte before it. */
-static int halt_record(const RxHaltStatus *h, char *buf, size_t cap) {
-    int n = snprintf(buf, cap,
-                     "aien-operator-halt v1\nseq %llu\nsubject %u\ncap %u %llu\nreason %d\n"
-                     "t_ns %llu\ncrumb %llu\n",
-                     (unsigned long long)h->seq, h->subject, h->cap.cap_id,
-                     (unsigned long long)h->cap.generation,
-                     (int)h->reason, (unsigned long long)h->t_ns, (unsigned long long)h->crumb);
-    return n > 0 && (size_t)n < cap ? n : -1;
-}
-
-static int seal_append(char *buf, size_t len, size_t cap) {
-    uint8_t d[32];
-    sha256_ctx c;
-    sha256_init(&c);
-    sha256_update(&c, (const uint8_t *)buf, len);
-    sha256_final(&c, d);
-    if (len + 8 + 64 + 2 > cap) return -1;
-    memcpy(buf + len, "sha256 ", 7);
-    for (int i = 0; i < 32; i++) snprintf(buf + len + 7 + 2 * i, 3, "%02x", d[i]);
-    buf[len + 71] = '\n';
-    buf[len + 72] = 0;
-    return (int)len + 72;
-}
-
-static int fsync_dir(const char *dir) {
-    int fd = open(dir, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-    if (fd < 0) return -errno;
-    int rc = fsync(fd) == 0 ? 0 : -errno;
-    close(fd);
-    return rc;
-}
-
-/* Write `buf` to dir/name durably (temporary file, fsync, rename, fsync dir).
- * With excl, an existing dir/name is never replaced (link, not rename). */
-static int durable_write(const char *dir, const char *name, const char *buf, size_t len, bool excl) {
-    char tmp[512], dst[512];
-    if (snprintf(tmp, sizeof tmp, "%s/%s.partial", dir, name) >= (int)sizeof tmp ||
-        snprintf(dst, sizeof dst, "%s/%s", dir, name) >= (int)sizeof dst)
-        return -ENAMETOOLONG;
-    int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
-    if (fd < 0) return -errno;
-    size_t off = 0;
-    while (off < len) {
-        ssize_t n = write(fd, buf + off, len - off);
-        if (n < 0 && errno == EINTR) continue;
-        if (n <= 0) { int e = n < 0 ? errno : EIO; close(fd); unlink(tmp); return -e; }
-        off += (size_t)n;
-    }
-    if (fsync(fd) != 0) { int e = errno; close(fd); unlink(tmp); return -e; }
-    close(fd);
-    if (excl) {
-        if (link(tmp, dst) != 0) { int e = errno; unlink(tmp); return -e; }
-        unlink(tmp);
-    } else if (rename(tmp, dst) != 0) {
-        int e = errno; unlink(tmp); return -e;
-    }
-    return fsync_dir(dir);
-}
-
-static int halt_mark_write(const RxWorld *w) {
-    if (!w->halt_dir[0]) return 0;
-    char buf[512];
-    int n = halt_record(&w->halt, buf, sizeof buf);
-    if (n < 0 || (n = seal_append(buf, (size_t)n, sizeof buf)) < 0) return -EOVERFLOW;
-    int rc = durable_write(w->halt_dir, RX_GEN_HALT_MARK, buf, (size_t)n, false);
-    return rc == 0 ? 1 : rc;
-}
-
-/* Read dir/OPERATOR_HALT. 0 absent, 1 read and its seal holds (h filled),
- * RX_ERR_TORN present but unreadable as a sealed record, RX_ERR_IO cannot tell. */
-static int halt_mark_read(const char *dir, RxHaltStatus *h, char *raw, size_t cap, size_t *raw_len) {
-    char path[512];
-    if (snprintf(path, sizeof path, "%s/%s", dir, RX_GEN_HALT_MARK) >= (int)sizeof path)
-        return RX_ERR_IO;
-    raw[0] = 0;
-    *raw_len = 0;
-    /* Never follow a link or block on a FIFO under the world locks: a mark that
-     * is not a regular file is damaged (TORN: the world stays stopped, and resume
-     * keeps a record and removes it, so the store is never blocked for good). */
-    int fd = open(path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
-    if (fd < 0) return errno == ENOENT ? 0 : errno == ELOOP ? RX_ERR_TORN : RX_ERR_IO;
-    struct stat st;
-    if (fstat(fd, &st) != 0 || !S_ISREG(st.st_mode)) {
-        close(fd);
-        return RX_ERR_TORN;
-    }
-    ssize_t n = read(fd, raw, cap - 1);
-    close(fd);
-    if (n < 0) return RX_ERR_IO;
-    raw[n] = 0;
-    *raw_len = (size_t)n;
-    RxHaltStatus r;
-    memset(&r, 0, sizeof r);
-    unsigned long long seq, t, crumb, cgen;
-    unsigned subject, cid;
-    int reason, used = 0;
-    if (sscanf(raw, "aien-operator-halt v1\nseq %llu\nsubject %u\ncap %u %llu\nreason %d\n"
-                    "t_ns %llu\ncrumb %llu\n%n",
-               &seq, &subject, &cid, &cgen, &reason, &t, &crumb, &used) != 7 || used <= 0)
-        return RX_ERR_TORN;
-    char want[600];
-    memcpy(want, raw, (size_t)used);
-    if (seal_append(want, (size_t)used, sizeof want) < 0 || strcmp(want, raw) != 0)
-        return RX_ERR_TORN;
-    r.seq = seq; r.subject = subject; r.cap.cap_id = cid; r.cap.generation = cgen;
-    r.reason = reason; r.t_ns = t; r.crumb = crumb;
-    *h = r;
-    return 1;
-}
-
-static uint64_t halt_crumb(RxWorld *w, RxCrumbKind kind, RxCapRef cap, int32_t reason,
-                           uint64_t parent) {
-    RxCrumb k;
-    memset(&k, 0, sizeof k);
-    k.kind = kind;
-    k.reaction = UINT32_MAX;
-    k.faculty = RX_FACULTY_EXTERNAL;
-    k.worker = UINT32_MAX;
-    k.n_caps = 1;
-    stamp_cap(w, &k, 0, cap);
-    add_parent(&k, parent);
-    k.reason = reason;
-    k.t_start_ns = now_ns();
-    k.t_end_ns = k.t_start_ns;
-    return crumb_append(w, &k);
-}
-
-int rx_world_set_halt_dir(RxWorld *w, const char *dir) {
-    if (!w || !dir || !dir[0] || strlen(dir) >= sizeof w->halt_dir) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
-    snprintf(w->halt_dir, sizeof w->halt_dir, "%s", dir);
-    RxHaltStatus h;
-    char raw[600];
-    size_t raw_len = 0;
-    int rc = halt_mark_read(dir, &h, raw, sizeof raw, &raw_len);
-    if (rc == 0 && w->halted) {
-        w->halt.durable = halt_mark_write(w);   /* a stop taken before the directory was set */
-    } else if (rc != 0 && !w->halted) {
-        /* A stop outlives the process: the world starts stopped. A mark that
-         * cannot be read or verified still stops it (unknown is not "go"). */
-        if (rc != 1) {
-            memset(&h, 0, sizeof h);
-            h.reason = rc;
-        }
-        h.halted = true;
-        h.restored = true;
-        h.durable = 1;
-        h.refused = w->halt.refused;
-        h.cancelled = w->halt.cancelled;
-        h.crumb = halt_crumb(w, RX_CRUMB_OPERATOR_STOP, h.cap, h.reason, 0);
-        w->halt = h;
-        w->halted = true;
-    }
-    pthread_mutex_unlock(&w->callers_mu);
-    pthread_mutex_unlock(&w->mu);
-    return rc;
-}
-
-int rx_world_emergency_stop(RxWorld *w, uint32_t subject, const RxCallerCred *cred,
-                            RxCapRef cap, int32_t reason, RxHaltStatus *out) {
-    if (!w) return RX_ERR_ARG;
-    /* mu then callers_mu (R16 C7 order): a commit or seat result holds mu from
-     * its checks to its publish, and a promotion holds callers_mu (HOLD) across
-     * its flip, so each finishes before the stop or sees it. */
-    pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
-    int rc = halt_authorize(w, subject, cred, cap);
-    if (rc == RX_OK && w->halted) rc = RX_HALT_ALREADY;
-    if (rc == RX_OK) {
-        RxHaltStatus h;
-        memset(&h, 0, sizeof h);
-        h.halted = true;
-        h.seq = w->halt.seq + 1;
-        h.subject = subject;
-        h.cap = cap;
-        h.reason = reason;
-        h.t_ns = realtime_ns();
-        h.refused = w->halt.refused;
-        h.cancelled = w->halt.cancelled;
-        h.crumb = halt_crumb(w, RX_CRUMB_OPERATOR_STOP, cap, reason, 0);
-        w->halt = h;
-        w->halted = true;               /* in force before any disk work */
-        w->halt.durable = halt_mark_write(w);
-    }
-    if (out) *out = w->halt;
-    pthread_mutex_unlock(&w->callers_mu);
-    pthread_mutex_unlock(&w->mu);
-    return rc;
-}
-
-int rx_world_emergency_resume(RxWorld *w, uint32_t subject, const RxCallerCred *cred,
-                              RxCapRef cap, RxHaltStatus *out) {
-    if (!w) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
-    int rc = halt_authorize(w, subject, cred, cap);
-    if (rc == RX_OK && !w->halted) rc = RX_HALT_NOT_STOPPED;
-    if (rc == RX_OK && w->halt_dir[0]) {
-        /* The stop record is kept, never deleted: its bytes, then the resume,
-         * sealed together under a name no later resume can take; only then is
-         * the mark removed. Any failure leaves the world stopped. */
-        RxHaltStatus disk;
-        char raw[600];
-        size_t raw_len = 0;
-        int mr = halt_mark_read(w->halt_dir, &disk, raw, sizeof raw, &raw_len);
-        if (mr == RX_ERR_IO) rc = RX_ERR_IO;
-        else if (mr != 0) {
-            char buf[1200], name[160];
-            uint64_t t = realtime_ns();
-            int n = snprintf(buf, sizeof buf, "%s%sresumed_by %u\nresume_cap %u %llu\nresume_t_ns %llu\n",
-                             raw, raw_len && raw[raw_len - 1] != '\n' ? "\n" : "", subject,
-                             cap.cap_id, (unsigned long long)cap.generation, (unsigned long long)t);
-            if (n < 0 || (size_t)n >= sizeof buf || (n = seal_append(buf, (size_t)n, sizeof buf)) < 0)
-                rc = RX_ERR_IO;
-            snprintf(name, sizeof name, "%s.resumed.%llu.%llu", RX_GEN_HALT_MARK,
-                     (unsigned long long)w->halt.seq, (unsigned long long)t);
-            if (rc == RX_OK && durable_write(w->halt_dir, name, buf, (size_t)n, true) != 0)
-                rc = RX_ERR_IO;
-            char mark[512];
-            snprintf(mark, sizeof mark, "%s/%s", w->halt_dir, RX_GEN_HALT_MARK);
-            if (rc == RX_OK && (unlink(mark) != 0 || fsync_dir(w->halt_dir) != 0)) rc = RX_ERR_IO;
-        }
-    }
-    if (rc == RX_OK) {
-        halt_crumb(w, RX_CRUMB_OPERATOR_RESUME, cap, 0, w->halt.crumb);
-        w->halted = false;
-        w->halt.halted = false;
-        w->halt.restored = false;
-        pthread_cond_broadcast(&w->work_cv);
-    }
-    if (out) *out = w->halt;
-    pthread_mutex_unlock(&w->callers_mu);
-    pthread_mutex_unlock(&w->mu);
-    return rc;
-}
-
-int rx_world_operator_authorize(RxWorld *w, uint32_t subject, const RxCallerCred *cred, RxCapRef cap) {
-    if (!w) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    pthread_mutex_lock(&w->callers_mu);
-    int rc = halt_authorize(w, subject, cred, cap);
-    pthread_mutex_unlock(&w->callers_mu);
-    pthread_mutex_unlock(&w->mu);
-    return rc;
-}
-
-void rx_world_halt_status(RxWorld *w, RxHaltStatus *out) {
-    if (!w || !out) return;
-    pthread_mutex_lock(&w->mu);
-    *out = w->halt;
-    out->halted = w->halted;
-    pthread_mutex_unlock(&w->mu);
 }
 
 static int validate_caps(const RxWorld *w, const RxReactionDesc *d, int *first_err) {
@@ -1268,119 +942,6 @@ static int stage_mutations(RxWorld *w, const RxMutation *m, uint32_t n,
     return RX_OK;
 }
 
-/* ---- COMPOSITION-2 commit binder ---------------------------------------- */
-
-int rx_world_set_binder(RxWorld *w, RxBindCheckFn check, RxBindFn bind, RxBindAbortFn abort_fn,
-                        void *ctx) {
-    if (!w || !check || !bind) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    int rc = RX_ERR_FULL, free_at = -1;
-    for (uint32_t i = 0; i < RX_MAX_BINDERS; i++) {
-        if (w->binder[i].check && w->binder[i].ctx == ctx) { free_at = -2; break; }
-        if (!w->binder[i].check && free_at == -1) free_at = (int)i;
-    }
-    if (free_at == -2) rc = RX_ERR_EXISTS;
-    else if (free_at >= 0) {
-        w->binder[free_at].check = check;
-        w->binder[free_at].bind = bind;
-        w->binder[free_at].abort_fn = abort_fn;
-        w->binder[free_at].ctx = ctx;
-        w->n_binders++;
-        rc = RX_OK;
-    }
-    pthread_mutex_unlock(&w->mu);
-    return rc;
-}
-
-static int binder_of(const RxWorld *w, const void *ctx) {
-    for (uint32_t i = 0; i < RX_MAX_BINDERS; i++)
-        if (w->binder[i].check && w->binder[i].ctx == ctx) return (int)i;
-    return -1;
-}
-
-int rx_world_bind_field(RxWorld *w, void *ctx, RxObjRef obj, uint32_t field) {
-    if (!w || field >= RX_MAX_FIELDS) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    int b = binder_of(w, ctx);
-    int rc = b < 0 ? RX_ERR_NOT_FOUND : !ref_live(w, obj) ? RX_ERR_STALE_GEN : RX_OK;
-    if (rc == RX_OK && w->bind_mask[obj.id] && w->bind_owner[obj.id] != (uint8_t)b)
-        rc = RX_ERR_EXISTS;   /* one owner per object */
-    if (rc == RX_OK) {
-        w->bind_mask[obj.id] |= (uint8_t)(1u << field);
-        w->bind_owner[obj.id] = (uint8_t)b;
-    }
-    pthread_mutex_unlock(&w->mu);
-    return rc;
-}
-
-int rx_world_clear_binder(RxWorld *w, void *ctx) {
-    if (!w) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    int rc = RX_ERR_NOT_FOUND;
-    int b = binder_of(w, ctx);
-    if (b >= 0) {
-        memset(&w->binder[b], 0, sizeof w->binder[b]);
-        w->n_binders--;
-        for (uint32_t i = 0; i < RX_MAX_OBJECTS; i++)
-            if (w->bind_mask[i] && w->bind_owner[i] == (uint8_t)b) {
-                w->bind_mask[i] = 0;
-                w->bind_owner[i] = 0;
-            }
-        rc = RX_OK;
-    }
-    pthread_mutex_unlock(&w->mu);
-    return rc;
-}
-
-uint32_t rx_world_binder_count(RxWorld *w) {
-    if (!w) return 0;
-    pthread_mutex_lock(&w->mu);
-    uint32_t n = w->n_binders;
-    pthread_mutex_unlock(&w->mu);
-    return n;
-}
-
-/* Caller holds mu; pw[] is staged and passed every other check. RX_OK when
- * nothing is bound or every bound value was checked and bound by the binder
- * that owns it; otherwise RX_ERR_BINDING and every proposed bound value went
- * to its own binder's abort(). */
-static int bind_writes(RxWorld *w, const PendingWrite *pw, uint32_t n_pw, uint32_t subject) {
-    if (!w->n_binders) return RX_OK;
-    uint32_t n_bound = 0;
-    int rc = RX_OK;
-    for (int phase = 0; phase < 2 && rc == RX_OK; phase++)
-        for (uint32_t j = 0; j < n_pw && rc == RX_OK; j++) {
-            const RxObject *o = &w->objects[pw[j].obj.id];
-            uint64_t m = pw[j].changed & w->bind_mask[pw[j].obj.id];
-            if (!m) continue;
-            const __typeof__(w->binder[0]) *b = &w->binder[w->bind_owner[pw[j].obj.id]];
-            for (uint32_t f = 0; f < RX_MAX_FIELDS && rc == RX_OK; f++) {
-                if (!(m & RX_FIELD(f))) continue;
-                rc = phase == 0 ? b->check(b->ctx, pw[j].obj, f, o->field[f], pw[j].value[f],
-                                           subject)
-                                : b->bind(b->ctx, pw[j].obj, f, o->field[f], pw[j].value[f],
-                                          subject);
-                if (rc == RX_OK && phase == 1) n_bound++;
-            }
-        }
-    if (rc == RX_OK) return RX_OK;
-    /* Refused: hand every proposed bound value back, saying which were bound
-     * (bound values precede the refused one in the same iteration order). */
-    uint32_t seen = 0;
-    for (uint32_t j = 0; j < n_pw; j++) {
-        uint64_t m = pw[j].changed & w->bind_mask[pw[j].obj.id];
-        if (!m) continue;
-        const __typeof__(w->binder[0]) *b = &w->binder[w->bind_owner[pw[j].obj.id]];
-        for (uint32_t f = 0; f < RX_MAX_FIELDS; f++) {
-            if (!(m & RX_FIELD(f))) continue;
-            if (b->abort_fn)
-                b->abort_fn(b->ctx, pw[j].obj, f, pw[j].value[f], subject, seen < n_bound);
-            seen++;
-        }
-    }
-    return RX_ERR_BINDING;
-}
-
 static void commit_writes(RxWorld *w, PendingWrite *pw, uint32_t n_pw, RxCrumb *k) {
     k->n_outputs = 0;
     for (uint32_t j = 0; j < n_pw; j++) {
@@ -1421,61 +982,6 @@ static void finish_writes(RxWorld *w, PendingWrite *pw, uint32_t n_pw, uint64_t 
     }
 }
 
-
-/* ---- I11: merge an upstream writer's wake ------------------------------- */
-
-/* Is another activation running (fn called, not yet published) that may write
- * a field rid triggers on or reads? With one worker this is never true when a
- * worker pops rid: the only worker is the one popping, and the sequential
- * reference never pops. With several workers it is true exactly when rid was
- * popped while such a writer was still computing; run now, rid would read the
- * pre-publication value, commit on it, and then be woken again by the writer:
- * one extra commit per stimulus that a single worker merges (I11, omega.risk
- * behind aien.hypothesis). Deferred and graphics-seat activations do not
- * hold anyone: their completion is not bounded by this world's workers.
- * Caller holds mu. */
-static bool upstream_running(const RxWorld *w, uint32_t rid) {
-#ifdef RX_WORLD_MUTATE_NO_UPSTREAM_HOLD
-    (void)w;
-    (void)rid;
-    return false;
-#else
-    RxDep deps[RX_MAX_DEPS];
-    uint32_t n = gather_deps(&w->reactions[rid].desc, deps);
-    for (uint32_t j = 0; j < w->n_reactions; j++) {
-        if (j == rid) continue;
-        const RxReaction *u = &w->reactions[j];
-        if (u->state != RX_RUNNING && u->state != RX_PUBLISHING) continue;
-        if (u->deferred || u->resident_seat || u->removed) continue;
-        for (uint32_t a = 0; a < u->desc.n_writes; a++) {
-            const RxDep *wd = &u->desc.writes[a];
-            for (uint32_t b = 0; b < n; b++)
-                if (wd->obj.id == deps[b].obj.id && wd->obj.generation == deps[b].obj.generation &&
-                    (wd->mask & deps[b].mask))
-                    return true;
-        }
-    }
-    return false;
-#endif
-}
-
-/* Put every held activation whose writers have all finished back on its ready
- * ring, lowest reaction id first. It is still admitted (slot charged, counted
- * in in_flight), so it is not admitted again. Caller holds mu. */
-static void release_upstream_held(RxWorld *w) {
-    for (uint32_t i = 0; i < w->n_reactions; i++) {
-        RxReaction *r = &w->reactions[i];
-        if (!r->upstream_held || upstream_running(w, i)) continue;
-        r->upstream_held = false;
-        uint32_t p = r->desc.priority;
-        if (p >= RX_PRIORITY_CLASSES) p = RX_PRIO_BACKGROUND;
-        uint32_t tail = (w->ready_head[p] + w->ready_len[p]) % RX_MAX_REACTIONS;
-        w->ready_q[p][tail] = i;
-        w->ready_len[p]++;
-        if (w->timing) r->t_ready = now_ns();
-        pthread_cond_signal(&w->work_cv);
-    }
-}
 /* ---- worker ------------------------------------------------------------- */
 
 static void arm_backoff(RxReaction *r) {
@@ -1623,9 +1129,6 @@ static void end_activation_inner(RxWorld *w, uint32_t rid) {
     if (r->quarantined) r->rearm = false;
     set_state(w, r, RX_DORMANT);
     if (w->in_flight) w->in_flight--;
-    /* I11: this activation published (or gave up); a dependent held behind
-     * it may run now, after its wake, if any, has merged. */
-    release_upstream_held(w);
     if (r->rearm && r->yield_left && others_busy(w, rid)) {
         r->yield_left--;
         r->parked = true;
@@ -1766,7 +1269,6 @@ static void run_one(RxWorld *w, uint32_t rid, uint32_t worker) {
         r->resident_seq = seq;
         r->resident_parent = r->wake_cause;
         pthread_cond_broadcast(&w->claim_cv);
-        release_upstream_held(w);   /* a seat activation holds no one (I11) */
         return;
     }
     RxCtx ctx;
@@ -1800,7 +1302,6 @@ static void run_one(RxWorld *w, uint32_t rid, uint32_t worker) {
             w->n_deferred++;
             w->stats.deferrals++;
             if (r->resume_pending) resume_locked(w, rid);
-            release_upstream_held(w);   /* a deferred activation holds no one (I11) */
             return;
         }
     }
@@ -1818,42 +1319,6 @@ static void run_one(RxWorld *w, uint32_t rid, uint32_t worker) {
         k.t_end_ns = now_ns();
         crumb_append(w, &k);
         w->stats.failed++;
-        end_activation(w, rid);
-        return;
-    }
-
-    /* HD-09 resource contract v0, first enforcement cut (aien-architecture
-     * docs/hardening/resource-contract-v0.md section 5): a declared deadline
-     * is enforced before publishing. Same comparison as charge(): strictly
-     * greater than the logical tick. The proposals in ctx.out are never
-     * staged, so nothing late is published; end_activation refunds the
-     * charge once. A function that never returns is not covered here. */
-    if (d->need.deadline && w->budget.logical_tick > d->need.deadline) {
-        set_state(w, r, RX_CANCELLED);
-        k.kind = RX_CRUMB_CANCELLED;
-        k.reason = RX_ERR_DEADLINE;
-        k.t_end_ns = now_ns();
-        crumb_append(w, &k);
-        w->stats.deadline_cancelled++;
-        end_activation(w, rid);
-        return;
-    }
-
-    /* R16 G6 operator emergency stop: the stop was taken while this
-     * activation computed. Nothing it proposed is published; it runs again
-     * on resume, against the state then (rearm keeps its admission path). */
-    if (w->halted) {
-        set_state(w, r, RX_CANCELLED);
-        k.kind = RX_CRUMB_CANCELLED;
-        k.reason = RX_ERR_HALTED;
-        k.t_end_ns = now_ns();
-        crumb_append(w, &k);
-        w->halt.refused++;
-        w->halt.cancelled++;
-        /* A refused activation is not spent: it must not count toward the
-         * episode budget, or the re-run could be quarantined instead. */
-        if (r->episode_activations) r->episode_activations--;
-        r->rearm = true;
         end_activation(w, rid);
         return;
     }
@@ -1902,20 +1367,6 @@ static void run_one(RxWorld *w, uint32_t rid, uint32_t worker) {
     PendingWrite pw[RX_MAX_WRITES];
     uint32_t n_pw = 0;
     int src = stage_mutations(w, ctx.out, ctx.n_out, d->writes, d->n_writes, pw, &n_pw);
-    if (src != RX_OK) {
-        set_state(w, r, RX_REJECTED);
-        k.kind = RX_CRUMB_REJECTED;
-        k.reason = src;
-        k.t_end_ns = now_ns();
-        crumb_append(w, &k);
-        w->stats.rejected++;
-        note_conflict(w, r);
-        end_activation(w, rid);
-        return;
-    }
-    /* 3b. COMPOSITION-2: every changed bound field accepted and bound by its
-     * store (rx_world_set_binder). Refusal leaves nothing visible. */
-    src = bind_writes(w, pw, n_pw, d->subject);
     if (src != RX_OK) {
         set_state(w, r, RX_REJECTED);
         k.kind = RX_CRUMB_REJECTED;
@@ -1998,8 +1449,7 @@ static void *worker_main(void *arg) {
 #if RX_ARGUS
         int argus_parked = 0;
 #endif
-        /* R16 G6: under an operator stop no work is taken; resume broadcasts. */
-        while (!w->stopping && (w->halted || !pop_ready(w, &rid))) {
+        while (!w->stopping && !pop_ready(w, &rid)) {
 #if RX_ARGUS
             /* ARGUS: before the first wait of a park, flush this worker's use table
              * and publish idle. The flush touches only this thread's own ARGUS slot,
@@ -2021,13 +1471,6 @@ static void *worker_main(void *arg) {
             c0 = w->timing ? thread_cpu_ns() : 0;
         }
         if (w->stopping) break;
-        if (upstream_running(w, rid)) {
-            /* I11: a writer of its inputs is still computing. Hold the
-             * activation (admitted, READY, off the ring) so that writer's
-             * wake coalesces into it, as one worker would. */
-            w->reactions[rid].upstream_held = true;
-            continue;
-        }
         if (w->timing) {
             uint64_t c1 = thread_cpu_ns();
             uint64_t t1 = now_ns();
@@ -2162,10 +1605,6 @@ void rx_world_destroy(RxWorld *w) {
     pthread_cond_broadcast(&w->work_cv);
     pthread_mutex_unlock(&w->mu);
     for (uint32_t i = 0; i < w->n_workers; i++) pthread_join(w->workers[i], NULL);
-    if (w->recorder_release) w->recorder_release(w->recorder_ctx);
-    w->recorder = NULL;
-    w->recorder_release = NULL;
-    w->recorder_ctx = NULL;
     for (uint32_t i = 0; i < RX_MAX_OBJECTS; i++) free(w->subs[i]);
     rx_coherent_free(w);
     free(w->deferred);
@@ -2181,11 +1620,6 @@ void rx_world_destroy(RxWorld *w) {
 int rx_world_create(RxWorld *w, uint32_t type, RxPersist persist, uint64_t resource,
                     const uint64_t init[RX_MAX_FIELDS], RxObjRef *out) {
     pthread_mutex_lock(&w->mu);
-    if (w->halted) {                     /* R16 G6: nothing new commits under a stop */
-        w->halt.refused++;
-        pthread_mutex_unlock(&w->mu);
-        return RX_ERR_HALTED;
-    }
     for (uint32_t i = 0; i < RX_MAX_OBJECTS; i++) {
         RxObject *o = &w->objects[i];
         if (o->live) continue;
@@ -2201,8 +1635,6 @@ int rx_world_create(RxWorld *w, uint32_t type, RxPersist persist, uint64_t resou
         o->locality = 0;
         o->coherency = 0;
         o->cap = (RxCapRef){ 0, 0 };
-        w->bind_mask[i] = 0;
-        w->bind_owner[i] = 0;
         o->version = 1;
         for (uint32_t f = 0; f < RX_MAX_FIELDS; f++) {
             o->field[f] = init ? init[f] : 0;
@@ -2233,11 +1665,6 @@ int rx_world_create(RxWorld *w, uint32_t type, RxPersist persist, uint64_t resou
 
 int rx_world_retire(RxWorld *w, RxObjRef ref) {
     pthread_mutex_lock(&w->mu);
-    if (w->halted) {                     /* R16 G6: nothing new commits under a stop */
-        w->halt.refused++;
-        pthread_mutex_unlock(&w->mu);
-        return RX_ERR_HALTED;
-    }
     if (!ref_live(w, ref)) {
         pthread_mutex_unlock(&w->mu);
         return RX_ERR_STALE_GEN;
@@ -2307,15 +1734,7 @@ int rx_world_add_reaction(RxWorld *w, const RxReactionDesc *d, uint32_t *out_id)
         pthread_mutex_unlock(&w->callers_mu);
         if (irc != RX_CALLER_OK) { rc = RX_ERR_IDENTITY; goto out; }
     }
-    /* A removed slot of the same subject and faculty is reused before the
-     * table grows (rx_world_remove_reaction): crumbs naming the slot keep
-     * naming the same principal. */
-    int reuse = -1;
-    for (uint32_t i = 0; i < w->n_reactions && reuse < 0; i++)
-        if (w->reactions[i].removed && w->reactions[i].desc.subject == d->subject &&
-            w->reactions[i].desc.faculty == d->faculty)
-            reuse = (int)i;
-    if (reuse < 0 && w->n_reactions >= RX_MAX_REACTIONS) { rc = RX_ERR_FULL; goto out; }
+    if (w->n_reactions >= RX_MAX_REACTIONS) { rc = RX_ERR_FULL; goto out; }
     /* Declared dependencies must exist now, and every read and write must be
      * covered by a declared capability need on that object's resource. The
      * needs themselves are only validated against the root at run time. */
@@ -2340,7 +1759,7 @@ int rx_world_add_reaction(RxWorld *w, const RxReactionDesc *d, uint32_t *out_id)
         }
         if (w->n_subs[o] >= RX_MAX_SUBS) { rc = RX_ERR_FULL; goto out; }
     }
-    uint32_t rid = reuse >= 0 ? (uint32_t)reuse : w->n_reactions++;
+    uint32_t rid = w->n_reactions++;
     RxReaction *r = &w->reactions[rid];
     memset(r, 0, sizeof(*r));
     r->desc = *d;
@@ -2365,68 +1784,6 @@ out:
     return rc;
 }
 
-int rx_world_remove_reaction(RxWorld *w, uint32_t rid) {
-    if (!w) return RX_ERR_ARG;
-    pthread_mutex_lock(&w->mu);
-    int rc = RX_OK;
-    RxReaction *r = rid < w->n_reactions ? &w->reactions[rid] : NULL;
-    if (!r || r->removed) {
-        rc = RX_ERR_NOT_FOUND;
-        goto out;
-    }
-    if (r->state != RX_DORMANT || r->rearm || r->parked || r->deferred || r->resume_pending ||
-        r->holding || r->seq_pending) {
-        rc = RX_ERR_BUSY;
-        goto out;
-    }
-    for (uint32_t j = 0; j < w->deferred_len; j++)
-        if (w->deferred[w->deferred_head + j].reaction == rid) {
-            rc = RX_ERR_BUSY;
-            goto out;
-        }
-    /* Out of the dependency index: no publication can name it again. */
-    for (uint32_t i = 0; i < r->desc.n_triggers; i++) {
-        uint32_t o = r->desc.triggers[i].obj.id;
-        if (o >= RX_MAX_OBJECTS || !w->subs[o]) continue;
-        uint32_t k = 0;
-        for (uint32_t s = 0; s < w->n_subs[o]; s++)
-            if (w->subs[o][s].reaction != rid) w->subs[o][k++] = w->subs[o][s];
-        w->n_subs[o] = k;
-    }
-    r->removed = true;
-    r->quarantined = false;
-    r->desc.fn = NULL;      /* nothing of the old owner stays callable */
-    r->desc.user = NULL;
-out:
-    pthread_mutex_unlock(&w->mu);
-    return rc;
-}
-
-void rx_world_footprint(RxWorld *w, RxFootprint *out) {
-    memset(out, 0, sizeof *out);
-    if (!w) return;
-    pthread_mutex_lock(&w->mu);
-    out->reaction_slots = w->n_reactions;
-    for (uint32_t i = 0; i < w->n_reactions; i++) {
-        if (w->reactions[i].removed) out->reactions_removed++;
-        else out->reactions_active++;
-    }
-    for (uint32_t o = 0; o < RX_MAX_OBJECTS; o++) {
-        out->subscriptions += w->n_subs[o];
-        if (w->objects[o].live) out->objects_live++;
-        for (uint32_t f = 0; f < RX_MAX_FIELDS; f++)
-            if (w->bind_mask[o] & (1u << f)) out->bound_fields++;
-    }
-    out->binders = w->n_binders;
-    out->in_flight = w->in_flight;
-    out->fanout_backlog = w->deferred_len;
-    out->deferred = w->n_deferred;
-    out->used_slots = w->used_slots;
-    out->used_memory = w->used_memory;
-    out->used_energy = w->used_energy;
-    pthread_mutex_unlock(&w->mu);
-}
-
 int rx_world_add_reaction_keyed(RxWorld *w, const RxCallerKeyring *keys,
                                 const RxReactionDesc *d, uint32_t *out_id) {
     if (!d) return RX_ERR_ARG;
@@ -2441,11 +1798,6 @@ int rx_world_add_reaction_keyed(RxWorld *w, const RxCallerKeyring *keys,
 int64_t rx_world_publish_external(RxWorld *w, RxCapRef cap, const RxMutation *muts, uint32_t n) {
     if (!muts || n == 0 || n > RX_MAX_MUTATIONS) return RX_ERR_ARG;
     pthread_mutex_lock(&w->mu);
-    if (w->halted) {                     /* R16 G6: nothing outside publishes */
-        w->halt.refused++;
-        pthread_mutex_unlock(&w->mu);
-        return RX_ERR_HALTED;
-    }
     for (uint32_t i = 0; i < n; i++) {
         if (!ref_live(w, muts[i].obj)) { pthread_mutex_unlock(&w->mu); return RX_ERR_STALE_GEN; }
         int rc = rx_world_validate_cap(w, cap, w->external_subject,
@@ -2455,8 +1807,6 @@ int64_t rx_world_publish_external(RxWorld *w, RxCapRef cap, const RxMutation *mu
     PendingWrite pw[RX_MAX_WRITES];
     uint32_t n_pw = 0;
     int rc = stage_mutations(w, muts, n, NULL, 0, pw, &n_pw);
-    if (rc != RX_OK) { pthread_mutex_unlock(&w->mu); return rc; }
-    rc = bind_writes(w, pw, n_pw, w->external_subject);
     if (rc != RX_OK) { pthread_mutex_unlock(&w->mu); return rc; }
     RxCrumb k;
     memset(&k, 0, sizeof(k));
@@ -2559,27 +1909,6 @@ int rx_resident_accept(RxWorld *w) {
         add_parent(&k, a->field_writer[1]);
     }
 
-    /* R16 G6 operator emergency stop: a seat result that lands while the
-     * world is stopped is not published. The image is re-projected from the
-     * world, the activation ends CANCELLED and runs again on resume. */
-    if (w->halted) {
-        if (o->placed) rx_coherent_project(w, id);
-        if (r->state == RX_RUNNING) set_state(w, r, RX_CANCELLED);
-        k.kind = RX_CRUMB_CANCELLED;
-        k.reason = RX_ERR_HALTED;
-        k.t_end_ns = now_ns();
-        crumb_append(w, &k);
-        r->resident_seat = false;
-        w->stats.resident_closed++;
-        w->stats.resident_halted++;
-        w->halt.refused++;
-        w->halt.cancelled++;
-        if (r->episode_activations) r->episode_activations--;   /* not spent */
-        r->rearm = true;
-        end_activation(w, (uint32_t)rid);
-        pthread_mutex_unlock(&w->mu);
-        return RX_ERR_HALTED;
-    }
     if (tr != RX_OK) {
         if (o->placed) rx_coherent_project(w, id);
         seat_fail(w, (uint32_t)rid, &k, RX_CRUMB_REJECTED, tr);
@@ -2649,13 +1978,6 @@ int rx_resident_accept(RxWorld *w) {
     PendingWrite pw[RX_MAX_WRITES];
     uint32_t n_pw = 0;
     int src = stage_mutations(w, &mut, 1, desc->writes, desc->n_writes, pw, &n_pw);
-    if (src != RX_OK) {
-        rx_coherent_project(w, id);
-        seat_fail(w, (uint32_t)rid, &k, RX_CRUMB_REJECTED, src);
-        pthread_mutex_unlock(&w->mu);
-        return src;
-    }
-    src = bind_writes(w, pw, n_pw, desc->subject);
     if (src != RX_OK) {
         rx_coherent_project(w, id);
         seat_fail(w, (uint32_t)rid, &k, RX_CRUMB_REJECTED, src);
@@ -2778,8 +2100,7 @@ int rx_world_seq_activate_timed_locked(RxWorld *w, uint32_t rid, uint64_t cause,
                                        uint64_t poll_cpu) {
     if (!w || !w->sequential || rid >= w->n_reactions) return RX_ERR_ARG;
     RxReaction *r = &w->reactions[rid];
-    if (r->state != RX_DORMANT || r->removed) return RX_ERR_ARG; /* removed: never demanded */
-    if (w->halted) return RX_ERR_HALTED;  /* R16 G6 operator emergency stop */
+    if (r->state != RX_DORMANT) return RX_ERR_ARG;
     r->seq_pending = false;
     demand(w, rid, cause);          /* R6 budgets and quarantine, unchanged */
     if (!r->seq_pending) return 0;

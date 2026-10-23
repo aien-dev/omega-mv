@@ -35,7 +35,6 @@
 #include "rx_aien.h"
 #include "rx_omega.h"
 #include "rx_generation.h"
-#include "rx_cortex_record.h"
 
 /* Objects in the caller's RxWorld. Not a second world, not a device namespace.
  * input:     0 operand a, 1 operand b, 2 search epoch it is for, 3 trial,
@@ -105,15 +104,6 @@ typedef struct {
     uint64_t selected_ps, reference_ps, trials;
 } RxLivingEvidence;
 
-/* The lesson the body wrote into Cortex for one epoch (G1/N6); zero when no
- * recorder was attached. Written by generation.prepare, read by
- * generation.promote. */
-typedef struct {
-    uint64_t epoch, candidate, evidence_ref, promotion;   /* promotion: 0 until recorded */
-    CxStore *store;
-    uint8_t digest[32];         /* rx_living_object_digest of the evidence object */
-} RxLivingLesson;
-
 typedef struct {
     /* living.experiment.prepare (RX_LIVING_SUBJ) */
     RxCapRef plan_read, search_read, input_write;
@@ -135,7 +125,6 @@ typedef struct {
     RxGenStore *store;
     const struct AienosCapView *authority;
     RxObjRef candidate, promotion, inforce;
-    RxLivingLesson *lesson;     /* the proposer's lesson record (set by rx_living_register) */
     RxCapRef candidate_read, promotion_write, inforce_write, promotion_authority;
     uint32_t reaction;
     int result;
@@ -157,7 +146,6 @@ typedef struct {
      * made it is invalidated and runs again for the same epoch, it reuses
      * the proposal instead of making a second one. */
     uint64_t proposed_epoch, candidate_id;
-    RxLivingLesson lesson;
     uint64_t refusals;          /* observability: why nothing was proposed */
     int last_refusal;
     /* R16 C5: credentials of the living subjects other than the promotion
@@ -208,31 +196,5 @@ int rx_living_native_authority(void *ctx, uint32_t cap_id, uint64_t generation,
  * "AIEN_RX_OBJECT_V1", type and the eight fields. */
 void rx_living_object_digest(uint32_t type, const uint64_t field[RX_MAX_FIELDS],
                              uint8_t out[32]);
-
-/* ---- Cortex journal of the experience (G1) ----------------------------------
- * A lesson is a CX_K_CANDIDATE. It becomes a fact only through
- * rx_living_lesson_promote, which refuses unless the evidence record is a
- * CX_K_EVIDENCE_REF that verifies and whose payload words
- * RX_LIVING_EV_DIGEST0.. hold `object_digest`, the rx_living_object_digest of
- * the R13 evidence object. cx_promote alone only checks record kinds. */
-enum { RX_LIVING_EV_DIGEST0 = 0, RX_LIVING_EV_CRUMB = 4, RX_LIVING_EV_WORDS = 5 };
-/* RX_OK, RX_ERR_NOT_FOUND (no such record), RX_ERR_ARG (wrong kind or digest
- * mismatch), RX_ERR_IDENTITY (record fails its digest check). */
-int rx_living_lesson_evidence_ok(const CxStore *s, uint64_t evidence, const uint8_t object_digest[32]);
-/* The gate above, then rx_cortex_promote_in on the attached writer of `s`. */
-int rx_living_lesson_promote(RxWorld *w, CxStore *s, uint64_t candidate, uint64_t evidence,
-                             const uint8_t object_digest[32], uint64_t *out_id);
-/* Layout of the CX_K_CANDIDATE lesson generation.prepare writes (words):
- * the RxLivingEvidence, the realization id (4), the regime, the condition key
- * rx_aien_key(core class, regime). Its subject is the evidence object slot + 1,
- * its tag the epoch; links {experiment belief, evidence ref, evidence}. */
-enum { RX_LIVING_LESSON_REALIZATION = 7, RX_LIVING_LESSON_REGIME = 11, RX_LIVING_LESSON_KEY = 12,
-       RX_LIVING_LESSON_WORDS = 13 };
-/* Condition keys of the PROMOTED lessons about `subject` (typed recall of
- * CX_K_PROMOTION; each promotion, its candidate and its evidence ref must
- * verify and agree). An un-promoted candidate contributes nothing. Up to
- * `max` distinct keys, oldest first; returns the number. Call when no writer
- * is appending (restart, or before the body runs). */
-uint32_t rx_living_explored_keys(CxStore *s, uint64_t subject, uint64_t *keys, uint32_t max);
 
 #endif

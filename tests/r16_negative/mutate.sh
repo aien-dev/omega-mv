@@ -23,7 +23,7 @@ set -u
 [ $# -ge 4 ] || { echo "usage: $0 <cc> <cflags> <aienos-r7-dir> <sources...>" >&2; exit 2; }
 cc=$1; cflags=$2; r7=$3; shift 3
 srcs="$*"
-lib=${R16_CAP_LIB:-$r7/native/capability/out/libaienos_capability.a}   # make passes $(AIENOS_CAP_LIB)
+lib="$r7/native/capability/out/libaienos_capability.a"
 [ -f "$lib" ] || { echo "R16-G4 mutants: missing $lib" >&2; exit 2; }
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/r16-mutants.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT INT TERM
@@ -169,9 +169,10 @@ mutant id_revoke_needs_credential $W 1 'if (rc == RX_CALLER_OK) {' 'if (rc == RX
 mutant id_enroll_closed $W 1 \
     'if (w->callers_bound) { rc = RX_CALLER_ERR_CLOSED; goto out; }' '(void)0;'
 mutant id_promote $G 1 \
-    'int crc = store->caller(store->caller_ctx, request->subject, &request->caller, RX_CALLER_OP_CHECK);' 'int crc = 0;'
+    'if (store->caller(store->caller_ctx, request->subject, &request->caller, RX_CALLER_OP_CHECK) != 0)' 'if (0)'
 mutant id_propose $G 1 \
-    'int crc = store->caller(store->caller_ctx, proposer, cred, RX_CALLER_OP_CHECK);' 'int crc = 0; (void)proposer; (void)cred;'
+    'if (store_bound(store) && store->caller(store->caller_ctx, proposer, cred, RX_CALLER_OP_CHECK) != 0)' \
+    'if (0 && store_bound(store) && store->caller(store->caller_ctx, proposer, cred, RX_CALLER_OP_CHECK) != 0)'
 mutant id_bound_authority $G 1 'auth = store->bound_auth;' '(void)0;'
 
 # R16 C7: outside review of C5/C6. Each removes one fix; spec C7 names the probe.
@@ -180,16 +181,17 @@ mutant c7_revoke_serialized $W 1 'const int serialize = 1;' 'const int serialize
 mutant c7_prebind_check $W 1 \
     'if (w->callers_bound || d->caller.generation != 0) {' 'if (w->callers_bound) {'
 mutant c7_bind_refuses_unauthenticated $W 1 \
-    'if (!w->reactions[i].removed && w->reactions[i].desc.caller.generation == 0)' \
-    'if (0 && !w->reactions[i].removed && w->reactions[i].desc.caller.generation == 0)'
+    'if (w->reactions[i].desc.caller.generation == 0) rc = RX_ERR_IDENTITY;' '(void)0;'
 mutant c7_mutate_object_bound $G 1 \
     'if (store_bound(store)) return RX_GEN_ERR_IDENTITY;' '(void)0;'
 mutant c7_set_evidence_bound $G 2 \
     'if (store_bound(store)) return RX_GEN_ERR_IDENTITY;' '(void)0;'
 mutant c7_add_work_credential $G 1 \
-    'int crc = store->caller(store->caller_ctx, subject, cred, RX_CALLER_OP_CHECK);' 'int crc = 0; (void)subject; (void)cred;'
+    'if (store_bound(store) && store->caller(store->caller_ctx, subject, cred, RX_CALLER_OP_CHECK) != 0)' \
+    'if (0 && store_bound(store) && store->caller(store->caller_ctx, subject, cred, RX_CALLER_OP_CHECK) != 0)'
 mutant c7_finish_work_credential $G 2 \
-    'int crc = store->caller(store->caller_ctx, subject, cred, RX_CALLER_OP_CHECK);' 'int crc = 0; (void)subject; (void)cred;'
+    'if (store_bound(store) && store->caller(store->caller_ctx, subject, cred, RX_CALLER_OP_CHECK) != 0)' \
+    'if (0 && store_bound(store) && store->caller(store->caller_ctx, subject, cred, RX_CALLER_OP_CHECK) != 0)'
 mutant c7_add_work_state $G 1 'if (!starts_open) return RX_GEN_ERR_ARG;' '(void)starts_open;'
 
 echo "R16 G4 mutants: $total total, $killed killed, $survived survived, $broken broken"

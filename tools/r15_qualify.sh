@@ -109,26 +109,6 @@ ps -eo pid,pcpu,rss,comm --sort=-pcpu > "$OUT/processes-before.txt"
 [ -n "$servers" ] && say "WARNING: a model server looks resident: $servers (spec §9 says nothing heavy may run)"
 [ "$DIRTY" = true ] && say "NOTE: the working tree has uncommitted changes, so this run is not candidate-bound"
 
-# ---- instrument preflight (spec §7, §17 C2) ----------------------------------
-# Package energy is a mandatory metric (17) and G9's input. If the signed SPBM
-# reader is absent or returns invalid samples, the run cannot PASS, so stop
-# before consuming an acceptance window. This is BLOCKED_INSTRUMENT, not a
-# measured FAIL: no trial runs, no summary and no receipt is written.
-# planned run length for the counter-headroom check: the full default run (12/5/5) took 2068 s (CAND-1 window 2),
-# 2400 s with margin; scaled by the number of rounds and level runs. Override with R15_PLANNED_RUN_SECONDS.
-export R15_PLANNED_RUN_SECONDS=${R15_PLANNED_RUN_SECONDS:-$(( 2400 * (ROUNDS + L1RUNS + L2RUNS) / 22 + 1 ))}
-if [ "$MODE" = silicon ]; then
-    if ! ENERGY_MSG=$("$STATE" energy-preflight); then
-        say "BLOCKED_INSTRUMENT: $ENERGY_MSG"
-        printf 'BLOCKED_INSTRUMENT\n%s\n' "$ENERGY_MSG" > "$OUT/instrument-unavailable.txt"
-        echo instrument-unavailable > "$OUT/done"
-        # the blocked attempt stays on disk as evidence, never deleted; seal it
-        ( cd "$OUT" && find . -type f ! -name SHA256SUMS -printf "%P\n" | LC_ALL=C sort | xargs sha256sum > SHA256SUMS )
-        exit 4
-    fi
-    say "$ENERGY_MSG"
-fi
-
 # ---- machine physical state (§18 C3, observability only) --------------------
 # The preflight stops the run before any trial if the X925 does not sustain
 # its clock (the power-limited state seen on 2026-09-28). After that nothing

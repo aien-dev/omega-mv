@@ -43,7 +43,6 @@
  * 38 GB of reserved address space at 1128 B each), backed only as written. */
 #define RX_CRUMBS_LONG_EPISODE (1ull << 25)
 #define RX_MAX_WORKERS      16u
-#define RX_MAX_BINDERS      4u     /* commit binders per World (COMPOSITION-2) */
 #define RX_MAX_PARENTS      (RX_MAX_DEPS * RX_MAX_FIELDS + 1u)
 #define RX_PRIORITY_CLASSES 7u
 #define RX_DEFERRED_INITIAL 64u
@@ -98,14 +97,7 @@ typedef enum {
     RX_CRUMB_FAILED,
     RX_CRUMB_NOOP,             /* ran, proposed no change: fixed point */
     RX_CRUMB_RETIRE,
-    RX_CRUMB_QUARANTINE,       /* an R6 limit stopped this reaction; reason names it */
-    RX_CRUMB_CANCELLED,        /* HD-09: ran past its declared deadline; nothing
-                                  published; reason RX_ERR_DEADLINE, or
-                                  RX_ERR_HALTED when an operator stop refused it */
-    /* R16 G6 operator emergency control (spec/r16-operator-emergency-stop.md):
-     * reaction UINT32_MAX, caps[0] the operator's control capability. */
-    RX_CRUMB_OPERATOR_STOP,    /* a stop took effect; reason = the operator's code */
-    RX_CRUMB_OPERATOR_RESUME   /* a stopped world resumed; parent = its stop */
+    RX_CRUMB_QUARANTINE        /* an R6 limit stopped this reaction; reason names it */
 } RxCrumbKind;
 
 /* Which R6 limit engaged (reason of a QUARANTINE crumb). */
@@ -129,11 +121,6 @@ enum { RX_CONTAIN_BUDGET = 1, RX_CONTAIN_OSCILLATION, RX_CONTAIN_LIVELOCK,
 #define RX_ERR_EXISTS      -25
 #define RX_ERR_SEAT_LOST   -26   /* the graphics seat died holding the claim */
 #define RX_ERR_IDENTITY    -27   /* caller credential absent, forged, stale or revoked */
-#define RX_ERR_BINDING     -28   /* a bound field's external reference was refused (COMPOSITION-2) */
-#define RX_ERR_BUSY        -29   /* the reaction still has work pending (rx_world_remove_reaction) */
-#define RX_ERR_DEADLINE    -30   /* the logical tick passed the declared deadline (RX_CRUMB_CANCELLED) */
-#define RX_ERR_HALTED      -31   /* operator emergency stop in force (RX_CRUMB_CANCELLED) */
-#define RX_ERR_IO          -32   /* an operator-stop mark could not be read or retired */
 
 /* Reaction notices carried in the frozen 128-byte descriptor.
  * The older transform request/result values stay in the frozen layout and
@@ -396,15 +383,6 @@ typedef struct {
     bool resident_seat;         /* handed to the graphics seat; fn is not called */
     bool deferred;              /* fn returned RX_FN_DEFER; waits for rx_world_resume */
     bool resume_pending;        /* resumed before the deferring run returned */
-    /* I11: popped while a running writer of one of its inputs had not yet
-     * published. Admitted (charged, in in_flight), state READY, not on a
-     * ready ring; released when no such writer is running, so the writer's
-     * wake merges into this activation instead of causing a second one. */
-    bool upstream_held;
-    /* Taken out by rx_world_remove_reaction: no subscriptions, never woken
-     * or run; the slot may be reused by a registration with the same subject
-     * and faculty. */
-    bool removed;
     /* R15 timing (only with a timing buffer). */
     uint64_t t_demand, t_ready, t_run, t_fn_end, sched_ns, sched_cpu_ns;
     /* Sequential reference only (rx_seq_reference.c): the newest version of
@@ -444,7 +422,6 @@ typedef struct {
     uint64_t desc_rejected;
     uint64_t resident_claims;   /* claims posted to a resident seat */
     uint64_t resident_closed;   /* claims ended: committed, refused, or lost */
-    uint64_t resident_halted;   /* of those closed, results caught by an operator stop (re-run on resume) */
     uint64_t deferrals;         /* activations that handed an effect to a durable executor */
     uint64_t seat_losses;       /* times a seat was declared lost */
     /* R15 instrumentation. Counted, never inferred. */
@@ -485,11 +462,6 @@ typedef struct {
     uint64_t seq_pulses;        /* sequential reference only: pulses run */
     uint64_t seq_polls;         /* sequential reference only: readiness polls */
     uint64_t seq_runs;          /* sequential reference only: stages run */
-    /* HD-09 resource contract v0, first enforcement cut: activations whose
-     * function returned after the logical tick passed need.deadline (strictly
-     * greater). Each was cancelled before publishing; its charge was refunded
-     * once by end_activation. */
-    uint64_t deadline_cancelled;
 } RxStats;
 
 /* R15 timing sample, recorded only when a timing buffer is installed
@@ -517,57 +489,6 @@ typedef struct {
 typedef int (*RxAuthValidateFn)(const void *ctx, RxCapRef ref, uint32_t subject,
                                  uint64_t resource, uint32_t rights, RxCapEntry *out);
 typedef int (*RxAuthInspectFn)(const void *ctx, RxCapRef ref, RxCapEntry *out);
-
-/* State of the R16 G6 operator emergency stop (rx_world_halt_status). */
-typedef struct {
-    bool halted;
-    bool restored;          /* this stop was read back from the durable mark */
-    uint64_t seq;           /* stops taken (a restored stop keeps its number) */
-    uint32_t subject;       /* operator of the stop in force or last lifted */
-    RxCapRef cap;           /* the control capability that operator presented */
-    int32_t reason;         /* the operator's reason code */
-    uint64_t crumb;         /* its OPERATOR_STOP crumb (0 if the log was full) */
-    uint64_t t_ns;          /* CLOCK_REALTIME of the stop */
-    int durable;            /* 1 mark on disk; 0 no halt dir; < 0 -errno of the write */
-    uint64_t refused;       /* activations, publications, seat results, creates and retires refused */
-    uint64_t cancelled;     /* of those, activations and seat results caught by a stop, re-run on resume */
-} RxHaltStatus;
-
-/* Durable recorder (M20 Cortex). Called with the world mutex held, once per
- * crumb, after the crumb is in the log; it reads the world and must not call
- * back into it. It cannot veto or fail the commit it records. The one
- * installed recorder is rx_cortex_record.c, the Cortex writer for World. */
-struct RxWorld;
-typedef void (*RxRecordFn)(void *ctx, const struct RxWorld *w, const RxCrumb *k);
-typedef void (*RxRecordReleaseFn)(void *ctx);
-
-/* Commit binder (COMPOSITION-2). A bound field holds a reference into a store
- * outside the World (a J-Space branch). The binder is consulted with the world
- * mutex held, after a publication has passed every other check (versions,
- * authority, write set) and before anything in it becomes visible:
- *
- *   check(each changed bound field)   may refuse: nothing is visible, the
- *                                     activation ends REJECTED with
- *                                     RX_ERR_BINDING, abort() runs for every
- *                                     bound value the publication proposed
- *   bind(each changed bound field)    the binder's point of no return (J-Space
- *                                     seals the branch). A failure here also
- *                                     refuses the publication; abort() is told
- *                                     which values were already bound
- *   then the commit is applied        old values stay in the binder's care
- *
- * So a World value never names a reference its store did not accept, and a
- * refused reference never becomes a World value. The binder must not call
- * back into the World. `subject` is the publishing reaction's subject, or the
- * World's external subject. Up to RX_MAX_BINDERS binders per World, each
- * owning the fields it bound (a field has at most one owner); a publication's
- * bound fields are each checked, bound and aborted by their own binder. */
-typedef int  (*RxBindCheckFn)(void *ctx, RxObjRef obj, uint32_t field, uint64_t old_value,
-                              uint64_t new_value, uint32_t subject);
-typedef int  (*RxBindFn)(void *ctx, RxObjRef obj, uint32_t field, uint64_t old_value,
-                         uint64_t new_value, uint32_t subject);
-typedef void (*RxBindAbortFn)(void *ctx, RxObjRef obj, uint32_t field, uint64_t value,
-                              uint32_t subject, int was_bound);
 
 typedef struct RxWorld {
     pthread_mutex_t mu;
@@ -663,31 +584,6 @@ typedef struct RxWorld {
     uint32_t n_callers;
     uint64_t caller_generation;      /* last generation issued */
     bool callers_bound;              /* one way: set once, never cleared */
-
-    /* R16 G6 operator emergency stop (spec/r16-operator-emergency-stop.md).
-     * Written under mu and callers_mu together, so either lock reads it.
-     * No worker takes work and nothing publishes while it is set. */
-    bool halted;
-    RxHaltStatus halt;
-    char halt_dir[384];              /* durable mark directory; "" = none */
-
-    /* M20 durable recorder (rx_world_set_recorder); at most one. */
-    RxRecordFn recorder;
-    RxRecordReleaseFn recorder_release;
-    void *recorder_ctx;
-
-    /* COMPOSITION-2 commit binders (rx_world_set_binder); up to
-     * RX_MAX_BINDERS. bind_mask[slot]: bound fields of that object;
-     * bind_owner[slot]: index into binder[] of the binder owning them. */
-    struct {
-        RxBindCheckFn check;
-        RxBindFn bind;
-        RxBindAbortFn abort_fn;
-        void *ctx;
-    } binder[RX_MAX_BINDERS];
-    uint32_t n_binders;
-    uint8_t bind_mask[RX_MAX_OBJECTS];
-    uint8_t bind_owner[RX_MAX_OBJECTS];
 } RxWorld;
 
 int  rx_world_init(RxWorld *w, RxCapRoot *root, uint32_t n_workers, uint64_t crumb_cap);
@@ -703,25 +599,6 @@ struct AienosCapView;
 int  rx_world_init_native(RxWorld *w, const struct AienosCapView *view,
                           uint32_t n_workers, uint64_t crumb_cap);
 void rx_world_destroy(RxWorld *w);
-/* Install the durable recorder. With `replay`, every crumb already in the
- * log is handed to it first, under the same lock, so nothing recorded before
- * installation is missed. RX_ERR_EXISTS if one is installed. `release` (may
- * be null) is called by rx_world_destroy if the recorder is still installed. */
-int  rx_world_set_recorder(RxWorld *w, RxRecordFn fn, RxRecordReleaseFn release, void *ctx,
-                           bool replay);
-/* Remove the recorder installed with `ctx` (RX_ERR_NOT_FOUND otherwise).
- * release is not called. */
-int  rx_world_clear_recorder(RxWorld *w, void *ctx);
-/* COMPOSITION-2: install a commit binder (RX_ERR_EXISTS if one with `ctx` is
- * installed, RX_ERR_FULL past RX_MAX_BINDERS) and name the fields it owns.
- * Binding a field of a stale object is RX_ERR_STALE_GEN; a field another
- * binder owns is RX_ERR_EXISTS; without a binder for `ctx`, RX_ERR_NOT_FOUND.
- * clear removes the binder of `ctx` and every field it bound. */
-int  rx_world_set_binder(RxWorld *w, RxBindCheckFn check, RxBindFn bind, RxBindAbortFn abort_fn,
-                         void *ctx);
-int  rx_world_bind_field(RxWorld *w, void *ctx, RxObjRef obj, uint32_t field);
-int  rx_world_clear_binder(RxWorld *w, void *ctx);
-uint32_t rx_world_binder_count(RxWorld *w);
 /* R15: record an RxTiming per activation into `buf` (cap entries; later ones
  * are dropped and counted in n_timing beyond cap). Null turns it off. */
 void rx_world_set_timing(RxWorld *w, RxTiming *buf, uint64_t cap);
@@ -749,34 +626,6 @@ int  rx_world_add_reaction(RxWorld *w, const RxReactionDesc *d, uint32_t *out_id
  * keyring has no entry). The caller's descriptor is not modified. */
 int  rx_world_add_reaction_keyed(RxWorld *w, const RxCallerKeyring *keys,
                                  const RxReactionDesc *d, uint32_t *out_id);
-/* Take a reaction out of the World. Allowed only while it is DORMANT with
- * nothing pending (not re-armed, parked, deferred, resume-pending, holding
- * resources, nor waiting in the fan-out backlog): RX_ERR_BUSY otherwise,
- * nothing changed. Its subscriptions leave the dependency index, it is never
- * woken or run again (demand ignores it), and its table slot is kept for
- * reuse: rx_world_add_reaction fills a removed slot before growing the table,
- * but only for a reaction with the same subject and faculty, so a crumb's
- * reaction id keeps naming the principal that wrote it
- * (rx_world_crumb_origin). RX_ERR_NOT_FOUND if out of range or removed. */
-int  rx_world_remove_reaction(RxWorld *w, uint32_t rid);
-
-/* What the World holds right now, for leak checks (read under the lock).
- * The causal crumb log is history (append-only by design) and is not here. */
-typedef struct {
-    uint32_t reaction_slots;     /* n_reactions: table slots ever used */
-    uint32_t reactions_active;   /* registered, not removed */
-    uint32_t reactions_removed;  /* removed slots waiting for reuse */
-    uint64_t subscriptions;      /* entries in the dependency index */
-    uint32_t objects_live;
-    uint32_t binders;
-    uint32_t bound_fields;
-    uint32_t in_flight;
-    uint32_t fanout_backlog;
-    uint32_t deferred;
-    uint32_t used_slots;
-    uint64_t used_memory, used_energy;
-} RxFootprint;
-void rx_world_footprint(RxWorld *w, RxFootprint *out);
 
 /* R16 C5 caller credentials (rx_caller.h).
  * enroll: mint a credential for `subject` (RX_CALLER_ERR_EXISTS if it has
@@ -801,36 +650,6 @@ int  rx_world_bind_callers(RxWorld *w);
 int  rx_world_revoke_caller(RxWorld *w, uint32_t subject, const RxCallerCred *cred);
 int  rx_world_check_caller(RxWorld *w, uint32_t subject, const RxCallerCred *cred);
 int  rx_world_caller_check_fn(void *world, uint32_t subject, const RxCallerCred *cred, int op);
-
-/* ---- R16 G6 operator emergency stop (spec/r16-operator-emergency-stop.md) ----
- * Authority: the caller credential of `subject` (rx_world_enroll_caller) AND a
- * capability for `subject` on RX_WORLD_RES_CONTROL carrying RX_WORLD_RIGHT_HALT,
- * validated by the world's authority. A subject any registered reaction runs
- * under is refused: no reaction can stop or resume the world it runs in.
- * Stop: no worker takes work, a computed activation is refused at its commit
- * (CANCELLED, RX_ERR_HALTED) and re-run on resume, outside publications and
- * seat results are refused, object create and retire are refused, and the
- * caller check refuses so a bound generation store neither proposes nor
- * promotes. A refused activation does not count toward the episode budget. Work already committing
- * finishes first (the stop waits for the world lock). A durable mark is
- * written when a halt directory is set; the stop takes effect even if that
- * write fails (`durable` < 0 says so). Never call with mu held. */
-#define RX_WORLD_RES_CONTROL  0x906ull   /* the world's control resource */
-#define RX_WORLD_RIGHT_HALT   RX_RIGHT_EPOCH /* the right that may void every
-                                           capability may also pause the world */
-#define RX_HALT_ALREADY       1   /* stop: already stopped, nothing changed */
-#define RX_HALT_NOT_STOPPED   2   /* resume: not stopped, nothing changed */
-int  rx_world_set_halt_dir(RxWorld *w, const char *dir);
-int  rx_world_emergency_stop(RxWorld *w, uint32_t subject, const RxCallerCred *cred,
-                             RxCapRef cap, int32_t reason, RxHaltStatus *out);
-int  rx_world_emergency_resume(RxWorld *w, uint32_t subject, const RxCallerCred *cred,
-                               RxCapRef cap, RxHaltStatus *out);
-void rx_world_halt_status(RxWorld *w, RxHaltStatus *out);
-/* The same authority check as stop and resume (credential, not a reaction
- * subject, live control capability), without acting: RX_OK, RX_ERR_IDENTITY
- * or RX_ERR_AUTHORITY. For operator requests that read or retire the
- * operator's own authority (docs/r16-operator-control.md). Never call with mu held. */
-int  rx_world_operator_authorize(RxWorld *w, uint32_t subject, const RxCallerCred *cred, RxCapRef cap);
 
 /* A stimulus from outside the organism (sensor, human input). Requires a
  * capability for (external_subject, object resource, WRITE). Returns the

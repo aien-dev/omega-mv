@@ -64,49 +64,8 @@ typedef enum {
     BW_IR_LDS,          /* LDS Rd, [Ra] */
     BW_IR_STS,          /* STS [Ra], Rb */
     BW_IR_EXIT,         /* EXIT */
-    BW_IR_BRA,          /* BRA. imm = signed instruction delta; predicate_p0 / predicate_not select @P0 or @!P0 */
-    /* FB-1 cut 4 (2026-10-04), additive. Encodings decoded with nvdisasm 13.0 -b SM121
-     * (tools/divsqrt_nvdisasm_check.sh method); the BAR/LDS/STS words are the ones
-     * src/omega_numeric.c:884-886 runs on the chip (LDS_STS op, 148/148 specs PASS). */
-    BW_IR_MUFU_EX2,     /* MUFU.EX2 Rd, Ra (2^x, approximate: PTX ex2.approx.f32 bound 2^-22.5 rel) */
-    BW_IR_BAR_SYNC,     /* BAR.SYNC.DEFER_BLOCKING 0x0 (CTA barrier 0; the QMD declares 1 barrier) */
-    BW_IR_LDS32,        /* LDS Rd, [Ra+URZ]  32-bit shared load  (BW_IR_LDS encodes LDS.U8: byte) */
-    BW_IR_STS32,        /* STS [Ra+URZ], Rb  32-bit shared store (BW_IR_STS encodes STS.U8: byte) */
-    /* Prime race cut (2026-10-05), additive, general integer ops. Words derived from the
-     * register forms of LOP3_XOR / SHF_R / IMAD and matched word for word against
-     * nvcc 13.0.88 -arch=sm_121 -cubin + cuobjdump -sass (offline oracle only; see
-     * omega_blackwell_verify_codegen_fixtures_intops). For these three ops an operand
-     * vreg of -1 encodes RZ (not R0). */
-    BW_IR_LOP3_LUT,     /* LOP3.LUT Rd, Ra, Rb, Rc, imm8, !PT: Rd = LUT(Ra, Rb, Rc). imm & 0xff is the
-                         * truth table over Ra = 0xf0, Rb = 0xcc, Rc = 0xaa (a|b = 0xfc, ~(a|b) = 0x03) */
-    BW_IR_SHF_L_U32,    /* SHF.L.U32 Rd, Ra, Rb, RZ: Rd = Ra << Rb, register amount (the form nvcc emits
-                         * for PTX shl.b32). Amounts >= 32 are NOT chip-verified: callers keep Rb < 32 */
-    BW_IR_IMAD_HI_U32,  /* IMAD.HI.U32 Rd, Ra, Rb, Rc: Rd = hi32(Ra * Rb) + Rc mod 2^32 (nvcc emits this
-                         * word for __umulhi(a, b) + c) */
-    /* Structured warp reconvergence (omega #308, 2026-10-05), additive. Words matched against
-     * nvcc 13.0.88 -arch=sm_121 output (BSSY.RECONVERGENT / BSYNC.RECONVERGENT; the oracle
-     * kernels are listed in docs/gpu-reconvergence-308.md) and the Mesa NAK encoder
-     * (sm70_encode.rs OpBSSy 0x945 / OpBSync 0x941, barrier register at bits 16..19).
-     * bar_reg selects B0..B15. BSSY arms the barrier for the lanes executing it and names
-     * the join point; BSYNC waits for every armed lane that has not exited, then the warp
-     * continues as one. imm of BSSY = signed instruction delta to the join point (the
-     * instruction after the BSYNC), like BW_IR_BRA; the encoder refuses deltas < 1. */
-    BW_IR_BSSY,
-    BW_IR_BSYNC,
-    /* Fragment-major matmul (omega #328, 2026-10-07), additive. Words matched against nvcc 13.0.88
-     * -arch=sm_121 (omega_blackwell_verify_codegen_fixtures_fragmm). imm = signed byte offset,
-     * -2^23 .. 2^23-1; dst is a register pair (64) or an aligned quad (128). */
-    BW_IR_LDG_E_64,     /* LDG.E.64 Rd:Rd+1, desc[URd][Ra.64+imm] */
-    BW_IR_LDG_E_128,    /* LDG.E.128 Rd..Rd+3, desc[URd][Ra.64+imm] */
-    /* Batched attention loads (2026-10-12). Words matched against nvcc 13.0.88 -arch=sm_121
-     * (omega_blackwell_verify_codegen_fixtures_fragmm). imm = unsigned byte offset < 2^23; dst an aligned quad. */
-    BW_IR_LDS128        /* LDS.128 Rd..Rd+3, [Ra+imm] */
+    BW_IR_BRA           /* BRA. imm = signed instruction delta; predicate_p0 / predicate_not select @P0 or @!P0 */
 } BlackwellIROpcode;
-
-/* Barrier (reconvergence) registers: the sm_121 BSSY/BSYNC words carry a 4-bit barrier id
- * (NAK sm70_encode.rs set_bar_dst(16..20)), so B0..B15 are encodable. How many the chip
- * provides is not documented to us; chip tests nest to BW_RECONV_CHIP_TESTED_DEPTH. */
-#define BW_RECONV_MAX_BAR 16
 
 /* Special Register Identifiers */
 typedef enum {
@@ -135,7 +94,6 @@ typedef struct {
     uint8_t src1_subreg;
     uint8_t src2_subreg;
     uint8_t src3_subreg;
-    uint8_t bar_reg;    /* BW_IR_BSSY / BW_IR_BSYNC: barrier register B0..B15 */
 } BlackwellIRInsn;
 
 /* Live Interval for Bounded Linear Register Allocation */
@@ -203,77 +161,8 @@ int omega_blackwell_codegen_matmul_i32(const OmegaMatMulSpec *spec, OmegaBlackwe
 int omega_blackwell_codegen_matmul_tensor_prog(const OmegaMatMulSpec *spec, BlackwellIRProgram *prog);
 int omega_blackwell_codegen_matmul_tensor(const OmegaMatMulSpec *spec, OmegaBlackwellKernel *kernel);
 
-/* FB-1 cut 1b: looped Tensor Core matmul. One warp per CTA. CTA (x, y) owns row
- * tile y (16 rows) and column tiles x, x + grid_x, x + 2 grid_x, ... (8 columns
- * each); the whole K dimension is accumulated in the HMMA accumulator on the
- * chip (no host K slicing). Requires M % 16 == 0, N % 8 == 0, K % 16 == 0 and
- * 1 <= grid_x <= N / 8. The kernel does not depend on M (rows come from
- * CTAID.Y), so one kernel serves every row count of a (K, N, grid_x) triple.
- * Uses only instructions already present in the chip-proven single-tile kernel
- * plus the predicated backward BRA and ISETP.GE this IR already encodes.
- * mutant != 0 drops the last K step (test oracle: the wrong kernel must be
- * caught by the parity test; never set in production). */
-int omega_blackwell_codegen_matmul_tensor_loop_prog(const OmegaMatMulSpec *spec, uint32_t grid_x,
-                                                    int mutant, BlackwellIRProgram *prog);
-int omega_blackwell_codegen_matmul_tensor_loop(const OmegaMatMulSpec *spec, uint32_t grid_x,
-                                               int mutant, OmegaBlackwellKernel *kernel);
-
-/* omega #328: fragment-major tensor matmul. Same grid, C layout (row-major f32) and argument
- * words as the looped kernel; A and B are in fragment order instead of row-major:
- *   A (mp x kp, from omega_matmul_frag_pack_a): block (mt, ks) of 256 bf16 at ((mt*KS + ks)*32
- *     + lane)*8, lane = group*4 + tig, holding A[r][c], A[r][c+1], A[r+8][c], A[r+8][c+1],
- *     A[r][c+8], A[r][c+9], A[r+8][c+8], A[r+8][c+9] with r = 16mt + group, c = 16ks + 2tig;
- *   B (kp x np, from omega_matmul_frag_pack_b): block (nt, ks) of 128 bf16 at ((nt*KS + ks)*32
- *     + lane)*4 holding B[k][j], B[k+1][j], B[k+8][j], B[k+9][j] with k = 16ks + 2tig,
- *     j = 8nt + group;  KS = kp / 16, entries outside the real matrix are zero.
- * One LDG.E.128 (A) and one LDG.E.64 (B) per K step; `unroll` (1, 2, 4 or 8, dividing KS)
- * steps of loads are issued before the HMMA chain. mutant != 0 drops the last pass (test
- * oracle only). Each tile occupies 16*kp (A) and 8*kp (B) elements, so a row-tile offset into
- * A is the same in bytes as for row-major A. */
-int omega_blackwell_codegen_matmul_frag_prog(const OmegaMatMulSpec *spec, uint32_t grid_x, uint32_t unroll,
-                                             int mutant, BlackwellIRProgram *prog);
-int omega_blackwell_codegen_matmul_frag(const OmegaMatMulSpec *spec, uint32_t grid_x, uint32_t unroll,
-                                        int mutant, OmegaBlackwellKernel *kernel);
-/* The largest of 4, 2, 1 that divides kp / 16 (unroll 8 is generated for experiments only: it
- * did not complete on the GB10, see the definition). */
-uint32_t omega_matmul_frag_unroll(uint32_t kp);
-/* 2026-10-12: blocked fragment kernel for prefill rows. One warp owns rt row tiles x ct column tiles
- * (rt in 1, 2, 4, 8; ct in 1, 2, 4; 2 <= rt*ct <= 16; unroll 1 or 2 with unroll*(rt+ct) <= 8; nt % ct == 0;
- * grid_x <= nt/ct). Same packing, argument words and C layout as the single-tile kernel; a CTA's
- * row block is rt row tiles (grid_y = row tiles / rt). mutant != 0 drops the last K pass. */
-int omega_blackwell_codegen_matmul_frag_block_prog(const OmegaMatMulSpec *spec, uint32_t grid_x, uint32_t unroll,
-                                                   uint32_t rt, uint32_t ct, int mutant, BlackwellIRProgram *prog);
-int omega_blackwell_codegen_matmul_frag_block(const OmegaMatMulSpec *spec, uint32_t grid_x, uint32_t unroll,
-                                              uint32_t rt, uint32_t ct, int mutant, OmegaBlackwellKernel *kernel);
-/* rt, ct for mt row tiles and nt column tiles (1, 1 = the single-tile kernel), and the unroll the API uses */
-void omega_matmul_frag_block_shape(uint32_t mt, uint32_t nt, uint32_t *rt, uint32_t *ct);
-uint32_t omega_matmul_frag_block_unroll(uint32_t kp, uint32_t rt, uint32_t ct);
-/* a: m x k row-major. dst: mp x kp elements, fully written (zero padding). */
-void omega_matmul_frag_pack_a(const uint16_t *a, uint32_t m, uint32_t k, uint32_t mp, uint32_t kp, uint16_t *dst);
-/* b: k x n row-major. dst: the column tiles [nt0, nt1), (nt1 - nt0) * kp * 8 elements, fully
- * written; it is the part of the packed tensor starting at element nt0 * kp * 8. */
-void omega_matmul_frag_pack_b(const uint16_t *b, uint32_t k, uint32_t n, uint32_t kp,
-                              uint32_t nt0, uint32_t nt1, uint16_t *dst);
-
 /* Unit test for instruction encoding bitfield fixtures (Gate 3) */
 int omega_blackwell_verify_codegen_fixtures(void);
-
-/* FB-1 cut 4: fixtures for MUFU_EX2, BAR_SYNC, LDS32, STS32 (0 = pass) */
-int omega_blackwell_verify_codegen_fixtures_fb1cut4(void);
-
-/* Prime race cut: golden words for LOP3_LUT, SHF_L_U32, IMAD_HI_U32 (0 = pass) */
-int omega_blackwell_verify_codegen_fixtures_intops(void);
-
-/* omega #328: golden words for LDG.E.64 / LDG.E.128 with offsets and the timed NOP (0 = pass) */
-int omega_blackwell_verify_codegen_fixtures_fragmm(void);
-
-/* omega #308: golden words for BSSY / BSYNC (nvcc 13.0.88 sm_121 oracle), plus the
- * encoder's refusals (negative delta, barrier id > 15). 0 = pass. */
-int omega_blackwell_verify_codegen_fixtures_reconv(void);
-
-/* omega #308: encodes one instruction with a given physical register map of
- * identity (vreg n -> Rn) so offline tools can disassemble single words. 0 = ok. */
-int omega_blackwell_encode_one(const BlackwellIRInsn *insn, uint32_t w[4]);
 
 /* Unit test for bounded register allocation live intervals and bounds enforcement (Gate 4) */
 int omega_blackwell_test_regalloc_bounds(void);

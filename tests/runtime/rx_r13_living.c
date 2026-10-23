@@ -1,47 +1,16 @@
-    /* Timing sensitivity (omega #313 item 1): `target` is 55 percent of the incumbent cost AIEN confirmed
-     * on the old core class, and `final_expected` is the cost AIEN later confirmed on the new one. Both
-     * are wall-clock (CLOCK_MONOTONIC) measurements taken at different times, so CPU contention that
-     * slows the second more than the first can miss the goal. The check is deliberately unchanged: a
-     * CPU-time or repeat-and-median variant needs the measurement in src/runtime (rx_omega.c, rx_aien.c)
-     * changed, which is outside this test program and a separate, declared change. */
 /* R13: one world; after the goal, only production requests and observation. */
 #include "runtime/rx_living.h"
 #include "runtime/rx_resident_gpu.h"
-#include "runtime/aien_machine_id.h"
-#include "runtime/rx_operator.h"
-/* Lane 32: two programs from this file (docs/r16-production-entry-point.md).
- * PRODUCTION (default, no flag): no test pieces. ARGUS is linked and observes
- * (RX_ARGUS=2, authority observer, consumer ingest), pinned by argus.lock; the
- * composition and Fabric phases are reported NOT_RUN with their reason.
- * TEST BUILD (-DAIEN_TEST_BUILD=1, test-r13-testbuild-*): adds the composition
- * phase (rx_compose test hooks, host only) and the Fabric F5-0 phase (loopback
- * transport, HMAC stand-in, fixed test keys); its gate line is
- * R13_LIVING_SYSTEM_TEST_BUILD and it never claims R13_LIVING_SYSTEM. */
-#ifdef AIEN_TEST_BUILD
-#include "rx_compose_fixture.h"
-#include "../fabric/fab_living_phase.h"
-#else
-#include "runtime/rx_argus.h"
-#if RX_ARGUS != 2 || !defined(RX_ARGUS_AUTHORITY_OBSERVER)
-#error "the production R13 program links ARGUS: build with -DRX_ARGUS=2 -DRX_ARGUS_AUTHORITY_OBSERVER (Makefile RX_PROD_ARGUS_FLAGS)"
-#endif
-#endif
 #include "omega_evidence.h"
 #include "sha256.h"
 
 #include <dirent.h>
-#include <errno.h>
-#include <ftw.h>
-#include <stdarg.h>
 #include <stdatomic.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/random.h>
-#include <sys/stat.h>
-#include <sys/un.h>
 #include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
@@ -54,7 +23,6 @@ enum { POSITIVE, NO_AIEN, NO_PROMOTION, REVOKED_EXPERIMENT,
 #define CLASS_A725 0xd87u
 #define CLASS_X925 0xd85u
 #define RES_INTENT 0x6130010ull
-#define U(x) ((unsigned long long)(x))
 
 typedef struct {
     AienosCapAdmin *admin;
@@ -66,7 +34,6 @@ typedef struct {
     RxLiving living;
     RxLivingPromoter promoter;
     RxLivingKeyrings keys;    /* R16 C6: runtime-issued caller credentials */
-    RxCallerKeyring compose_keys;  /* the composition's subjects (rx_compose_enroll_callers) */
     RxGenStore *gen;
     RxGpuSeat *seat;
     pthread_t acceptor;
@@ -84,20 +51,6 @@ typedef struct {
     int producer_live;
     uint64_t minted;
     char generation_dir[128];
-    /* The living system's durable home: its provisioned machine identity
-     * (home/machine.id, created once, reused on every start) and the
-     * composition it runs (home/compose). */
-    char home_dir[128];
-    AienMachineId machine;
-    /* R16 G6 operator control (docs/r16-operator-control.md): the operator's
-     * credential is handed to its file and wiped; the program keeps no copy. */
-    int mode;
-    RxCallerCred op_cred;
-    RxCapRef op_cap;
-    RxOperator *op;
-    int op_gate_held, op_restored, ready;
-    atomic_ullong op_halt_since, op_halt_total;   /* ns; stopped time is not run time */
-    atomic_int op_shutdown, op_teardown;
 } Rig;
 static int g_stage;
 typedef struct {
@@ -219,252 +172,22 @@ static int new_object(Rig *r, uint32_t type, uint64_t resource, RxObjRef *out) {
     return rx_world_create(&r->w, type, RX_PERSIST_RESIDENT, resource, z, out);
 }
 
-static int rm_one(const char *p, const struct stat *sb, int flag, struct FTW *ftw) {
-    (void)sb; (void)flag; (void)ftw;
-    return remove(p);
-}
-
-/* A scratch directory under $TMPDIR (default /tmp). */
-static int scratch_dir(char *out, size_t n, const char *stem) {
-    const char *t = getenv("TMPDIR");
-    if (!t || !t[0]) t = "/tmp";
-    if ((size_t)snprintf(out, n, "%s/%s-XXXXXX", t, stem) >= n) return -1;
-    return mkdtemp(out) ? 0 : -1;
-}
-
-/* Provisioning (aienos ADR 0010): the machine identity is created once in
- * the living home from fresh provisioned root bytes, then only loaded. */
-static int living_identity(Rig *r) {
-    char p[192];
-    snprintf(p, sizeof p, "%s/machine.id", r->home_dir);
-    if (access(p, F_OK) == 0) return aien_mid_load(p, &r->machine) == AIEN_MID_OK ? 0 : -1;
-    uint8_t root[32];
-    if (getrandom(root, sizeof root, 0) != (ssize_t)sizeof root) return -1;
-    if (aien_mid_derive(AIEN_MID_ROOT_PROVISIONED, root, sizeof root, &r->machine) != AIEN_MID_OK)
-        return -1;
-    return aien_mid_store(p, &r->machine) == AIEN_MID_OK ? 0 : -1;
-}
-
-/* ---- R16 G6 operator control (docs/r16-operator-control.md) --------------
- * The program's durable state: <state>/control (the operator's credential
- * file and socket) and one generation store per mode, <state>/gen-<key>,
- * which is also the world's durable halt directory. */
-enum { OP_SHUTDOWN = 2 };
-static const char *const g_mode_key[] = {"positive", "no-aien", "no-promotion",
-    "revoked-experiment", "stale-gpu", "failed-verification"};
-static char g_state_dir[192];
-static char g_control_dir[224];
-/* flock descriptors held for the program's life (rx_operator_lock_dir): the
- * state directory and each generation (halt) directory once a world uses it. */
-static int g_state_lock = -1;
-static int g_gen_lock[] = {-1, -1, -1, -1, -1, -1};
-static uint64_t g_op_stops, g_op_resumes, g_op_restored, g_op_open, g_op_cancelled;
-
-static int world_halted(Rig *r) {
-    RxHaltStatus h;
-    rx_world_halt_status(&r->w, &h);
-    return h.halted;
-}
-
-/* Run time: wall time minus the time the world spent stopped. Episode
- * deadlines count run time, so a stop delays the episode and never fails it. */
-static uint64_t run_clock(Rig *r) {
-    uint64_t now = now_ns(), since = atomic_load(&r->op_halt_since);
-    return now - atomic_load(&r->op_halt_total) - (since && since < now ? now - since : 0);
-}
-
-static void op_on_halt(void *ctx, int halted) {
-    Rig *r = ctx;
-    uint64_t now = now_ns(), since = atomic_load(&r->op_halt_since);
-    if (halted && !since) atomic_store(&r->op_halt_since, now);
-    if (!halted && since) {
-        atomic_fetch_add(&r->op_halt_total, now - since);
-        atomic_store(&r->op_halt_since, 0);
-    }
-}
-
-static atomic_int g_op_shutdown;   /* the operator ended this program (FAIL reports it) */
-static void op_on_shutdown(void *ctx) {
-    atomic_store(&((Rig *)ctx)->op_shutdown, 1);
-    atomic_store(&g_op_shutdown, 1);
-}
-
-static void op_describe(void *ctx, char *buf, size_t n) {
-    Rig *r = ctx;
-    if (!r->ready) { snprintf(buf, n, "world=%s setup=pending", g_mode_key[r->mode]); return; }
-    uint64_t active = 0, lineage = 0;
-    rx_gen_active(r->gen, &active, &lineage);
-    snprintf(buf, n, "world=%s served=%llu production_commits=%llu promotion=%llu inforce=%llu "
-             "active_generation=%llu seat_claims=%llu seat_halted=%llu",
-             g_mode_key[r->mode], (unsigned long long)__atomic_load_n(&r->served, __ATOMIC_RELAXED),
-             (unsigned long long)__atomic_load_n(&r->w.reactions[r->omega.r_serve].commits,
-                                                 __ATOMIC_RELAXED),
-             (unsigned long long)field(r, r->living.o.promotion, 0),
-             (unsigned long long)field(r, r->living.o.inforce, 0), (unsigned long long)active,
-             (unsigned long long)__atomic_load_n(&r->w.stats.resident_claims, __ATOMIC_RELAXED),
-             (unsigned long long)__atomic_load_n(&r->w.stats.resident_halted, __ATOMIC_RELAXED));
-}
-
-/* Wait while the world is stopped. -1 when the operator shut the program
- * down, the program is tearing the world down, or the production thread
- * is told to stop, 0 when the world runs. */
-static __thread int t_producer;   /* set on the production request thread */
-static int wait_running(Rig *r) {
-    while (world_halted(r)) {
-        if (atomic_load(&r->op_shutdown) || atomic_load(&r->op_teardown) ||
-            (t_producer && atomic_load(&r->producer_stop))) return -1;
-        pause_us(1000);
-    }
-    return atomic_load(&r->op_shutdown) ? -1 : 0;
-}
-
-/* An outside publication refused by an operator stop is published again
- * after the resume; any other refusal is an error. */
-static int publish(Rig *r, RxCapRef cap, const RxMutation *m, uint32_t n) {
-    for (;;) {
-        int64_t rc = rx_world_publish_external(&r->w, cap, m, n);
-        if (rc != RX_ERR_HALTED) return rc > 0 ? 0 : -1;
-        if (wait_running(r) != 0) return 1;   /* abandoned under a stop, not an error */
-    }
-}
-
-static int operator_open(Rig *r) {
-    RxOperatorConfig oc = {&r->w, r->admin, g_control_dir, g_mode_key[r->mode],
-                           op_describe, op_on_halt, op_on_shutdown, r};
-    if (rx_operator_open(&r->op, &oc, RX_OPERATOR_SUBJ, &r->op_cred, r->op_cap) != 0) return -1;
-    r->op_gate_held = 1;
-    return 0;
-}
-static void operator_release(Rig *r) {
-    if (r->op && r->op_gate_held) { r->op_gate_held = 0; rx_operator_release(r->op); }
-}
-static void operator_hold(Rig *r) {
-    if (r->op && !r->op_gate_held) { rx_operator_hold(r->op); r->op_gate_held = 1; }
-}
-
-/* The canonical evidence of operator control in this world: its crumb log.
- * Between an OPERATOR_STOP and its OPERATOR_RESUME (or after a stop never
- * resumed) no COMMIT and no EXTERNAL crumb may appear; each RESUME is caused
- * by the STOP before it. */
-static int operator_audit(Rig *r) {
-    uint64_t stops = 0, resumes = 0, commits = 0, externals = 0, cancelled = 0, open = 0;
-    int order_ok = 1;
-    for (uint64_t id = 1; id <= r->w.n_crumbs; id++) {
-        const RxCrumb *c = rx_world_crumb(&r->w, id);
-        if (!c) continue;
-        if (c->kind == RX_CRUMB_OPERATOR_STOP) {
-            if (open) order_ok = 0;
-            stops++;
-            open = id;
-        } else if (c->kind == RX_CRUMB_OPERATOR_RESUME) {
-            if (!open || c->n_parents < 1 || c->parents[0] != open) order_ok = 0;
-            resumes++;
-            open = 0;
-        } else if (open) {
-            if (c->kind == RX_CRUMB_COMMIT) commits++;
-            if (c->kind == RX_CRUMB_EXTERNAL) externals++;
-            if (c->kind == RX_CRUMB_CANCELLED && c->reason == RX_ERR_HALTED) cancelled++;
-        }
-    }
-    g_op_stops += stops; g_op_resumes += resumes; g_op_cancelled += cancelled;
-    g_op_restored += (uint64_t)r->op_restored; g_op_open += open ? 1 : 0;
-    printf("R13 operator %s: stops %llu resumes %llu restored %d open %d; under stop: commits %llu "
-           "externals %llu cancelled %llu; order %s\n", g_mode_key[r->mode], U(stops), U(resumes),
-           r->op_restored, open ? 1 : 0, U(commits), U(externals), U(cancelled),
-           order_ok ? "ok" : "BROKEN");
-    return commits || externals || !order_ok ? -1 : 0;
-}
-
-
-/* The program's state directory: --state-dir, or a fresh 0700 scratch
- * directory. Refused (exit 2, before any world starts) unless it and its
- * control directory are real directories owned by this uid with no group or
- * other permission bits, and the socket path fits a socket address. */
-static int operator_state(const char *dir) {
-    char why[320];
-    if (dir) {
-        if ((size_t)snprintf(g_state_dir, sizeof g_state_dir, "%s", dir) >= sizeof g_state_dir) {
-            fprintf(stderr, "R13 operator: state directory refused: path too long\n");
-            return -1;
-        }
-    } else if (scratch_dir(g_state_dir, sizeof g_state_dir, "r13-state") != 0) {
-        fprintf(stderr, "R13 operator: no scratch state directory\n");
-        return -1;
-    }
-    /* Held for the program's life: a second program on the same state
-     * directory is refused here, before it touches a socket or a credential. */
-    if (rx_operator_lock_dir(g_state_dir, 1, &g_state_lock, why, sizeof why) != 0) {
-        fprintf(stderr, "R13 operator: state directory refused: %s\n", why);
-        return -1;
-    }
-    if ((size_t)snprintf(g_control_dir, sizeof g_control_dir, "%s/control", g_state_dir) >=
-            sizeof g_control_dir ||
-        strlen(g_control_dir) + 1 + strlen(RX_OPERATOR_SOCK) >=
-            sizeof(((struct sockaddr_un *)0)->sun_path)) {
-        fprintf(stderr, "R13 operator: state directory refused: socket path too long\n");
-        return -1;
-    }
-    if (rx_operator_dir_check(g_control_dir, 1, why, sizeof why) != 0) {
-        fprintf(stderr, "R13 operator: control directory refused: %s\n", why);
-        return -1;
-    }
-    printf("R13 operator: state %s, control %s (operator subject %u, pid %ld)\n", g_state_dir,
-           g_control_dir, (unsigned)RX_OPERATOR_SUBJ, (long)getpid());
-    return 0;
-}
 static int start(Rig *r, int mode) {
     int with_aien = mode != NO_AIEN;
     int promotion_authority = mode != NO_PROMOTION;
     memset(r, 0, sizeof *r);
-    r->mode = mode;
     g_stage = 1;
     if (aienos_cap_start(&r->admin, &r->view) != 0) return -1;
     if (rx_world_init_native(&r->w, r->view, 4, RX_CRUMBS_LONG_EPISODE) != RX_OK) return -1;
     r->w.external_subject = EXTERNAL;
     /* R16 C6: every production subject gets a runtime-issued credential,
      * then the world refuses any registration that does not present one. */
-    if (rx_living_enroll_callers(&r->w, &r->keys) != RX_OK) return -1;
-    /* R16 G6: the operator, enrolled like every production subject before
-     * enrollment closes. It runs no reaction (docs/r16-operator-control.md). */
-    if (rx_world_enroll_caller(&r->w, RX_OPERATOR_SUBJ, &r->op_cred) != RX_OK) return -1;
-    /* Test build only: the composition and Fabric phases run inside this
-     * World (rx_compose_attach); their subjects are enrolled here, before
-     * enrollment closes. The production program enrolls no test subject. */
-#ifdef AIEN_TEST_BUILD
-    if (rx_compose_enroll_callers(&r->w, &r->compose_keys) != RX_OK) return -1;
-#endif
-    if (rx_world_bind_callers(&r->w) != RX_OK) return -1;
-    /* The generation store of this mode lives in the program's validated
-     * state directory; it is also the world's durable halt directory. */
-    char why[320];
-    if ((size_t)snprintf(r->generation_dir, sizeof r->generation_dir, "%s/gen-%s", g_state_dir,
-                         g_mode_key[mode]) >= sizeof r->generation_dir ||
-        (g_gen_lock[mode] < 0 &&
-         rx_operator_lock_dir(r->generation_dir, 1, &g_gen_lock[mode], why, sizeof why) != 0)) {
-        fprintf(stderr, "R13 operator: generation directory refused: %s\n", why);
-        return -1;
-    }
-    if (scratch_dir(r->home_dir, sizeof r->home_dir, "r13-home") != 0 || living_identity(r) != 0)
-        return -1;
+    if (rx_living_enroll_callers(&r->w, &r->keys) != RX_OK ||
+        rx_world_bind_callers(&r->w) != RX_OK) return -1;
+    if (!mkdtemp(strcpy(r->generation_dir, "/tmp/r13-living-XXXXXX"))) return -1;
     if (rx_gen_open(r->generation_dir, &r->gen) != RX_GEN_OK) return -1;
     if (rx_gen_bind_authority(r->gen, rx_world_caller_check_fn, &r->w,
                               rx_living_native_authority, r->view) != RX_GEN_OK) return -1;
-    /* R16 G6: the control capability, the durable halt directory, then the
-     * entry point, all before any object exists or any work is published. A
-     * stop that outlived the last start is in force from here; the program
-     * then serves the operator and does nothing else until it is resumed. */
-    r->op_cap = mint(r, RX_OPERATOR_SUBJ, RX_WORLD_RES_CONTROL, RX_WORLD_RIGHT_HALT);
-    int halt_mark = rx_world_set_halt_dir(&r->w, r->generation_dir);
-    if (operator_open(r) != 0) return -1;
-    if (world_halted(r)) {
-        r->op_restored = 1;
-        atomic_store(&r->op_halt_since, now_ns());
-        printf("R13 operator %s: restored STOPPED from %s (mark %d); no work until an operator "
-               "resume\n", g_mode_key[mode], r->generation_dir, halt_mark);
-        operator_release(r);
-        if (wait_running(r) != 0) return OP_SHUTDOWN;
-        operator_hold(r);
-    }
     g_stage = 2;
     const uint32_t R = RX_RIGHT_READ, RW = RX_RIGHT_READ | RX_RIGHT_WRITE;
     RxOmegaConfig oc;
@@ -674,8 +397,6 @@ static int start(Rig *r, int mode) {
     if (rx_gpu_seat_begin(&r->w, &r->seat) != 0 || !r->seat) return -1;
 #endif
     g_stage = 7;
-    r->ready = 1;
-    operator_release(r);     /* operator requests are served from here */
     return 0;
 }
 
@@ -705,17 +426,10 @@ static int serve(Rig *r) {
     RxMutation m[4] = {{r->omega.o.request, 0, seq},
         {r->omega.o.request, 1, M}, {r->omega.o.request, 2, N},
         {r->omega.o.request, 3, seed}};
-    int p = publish(r, r->ext_request, m, 4);
-    if (p != 0) return p;
-    uint64_t t = run_clock(r);   /* a stop pauses this deadline */
+    if (rx_world_publish_external(&r->w, r->ext_request, m, 4) <= 0) return -1;
+    uint64_t t = now_ns();
     while (field(r, r->omega.o.result, 0) != seq) {
-        /* Under a stop (seen through the operator clock, no world lock in this
-         * spin) the request is refused or queued: it runs again on resume. */
-        if (atomic_load(&r->op_halt_since) && world_halted(r)) {
-            if (wait_running(r) != 0) return 1;
-            continue;
-        }
-        if (run_clock(r) - t > 5000000000ull) return -1;
+        if (now_ns() - t > 5000000000ull) return -1;
         spin_us(5);   /* a workload does not nap between requests */
     }
     if (field(r, r->omega.o.result, 1) != expected_digest(seed)) r->wrong++;
@@ -731,12 +445,8 @@ static int serve(Rig *r) {
 
 static void *producer_main(void *arg) {
     Rig *r = arg;
-    t_producer = 1;
-    while (!atomic_load(&r->producer_stop)) {
-        int s = serve(r);
-        if (s < 0) { atomic_store(&r->producer_error, 1); break; }
-        if (s > 0) break;   /* told to stop while the world was stopped */
-    }
+    while (!atomic_load(&r->producer_stop))
+        if (serve(r) != 0) { atomic_store(&r->producer_error, 1); break; }
     return NULL;
 }
 
@@ -758,14 +468,14 @@ static int publish_placement(Rig *r, uint64_t cls) {
     RxMutation m[2] = {{r->aien.o.placement, 0,
                          field(r, r->aien.o.placement, 0)+1},
                         {r->aien.o.placement, 1, cls}};
-    return publish(r, r->ext_placement, m, 2);
+    return rx_world_publish_external(&r->w, r->ext_placement, m, 2) > 0 ? 0 : -1;
 }
 
 static int publish_goal(Rig *r, uint64_t target) {
     RxMutation m[3] = {{r->aien.o.goal, 0, 1},
         {r->aien.o.goal, 1, rx_omega_regime(M, N)},
         {r->aien.o.goal, 2, target}};
-    return publish(r, r->ext_goal, m, 3);
+    return rx_world_publish_external(&r->w, r->ext_goal, m, 3) > 0 ? 0 : -1;
 }
 
 /* Is `wanted` a causal ancestor of (or equal to) `node`? Iterative, with a
@@ -844,20 +554,14 @@ static uint64_t production_between(Rig *r, uint64_t lo, uint64_t hi) {
 
 /* Ring transport only: accept the seat's completion notices into the world.
  * It carries no meaning and decides nothing. */
-/* R16 G6: a seat result refused because an operator stop is in force
- * (RX_ERR_HALTED) is not a transport fault: the world re-projected the window
- * and runs the activation again on resume (spec section 3). */
 static int progress(Rig *r) {
 #ifdef R13_SILICON
     int rc = rx_resident_accept(&r->w);
-    return rc == RX_ERR_NOT_FOUND || rc == RX_OK || rc == RX_ERR_HALTED ? 0 : rc;
+    return rc == RX_ERR_NOT_FOUND || rc == RX_OK ? 0 : rc;
 #else
     int rc = rx_resident_seat_step(&r->w);
-    if (rc == 1) {
-        rc = rx_resident_accept(&r->w);
-        return rc == RX_ERR_HALTED ? 0 : rc;
-    }
-    return rc < 0 && rc != RX_ERR_HALTED ? rc : 0;
+    if (rc == 1) return rx_resident_accept(&r->w);
+    return rc < 0 ? rc : 0;
 #endif
 }
 
@@ -899,12 +603,6 @@ static int authority_sweep(Rig *r, uint64_t *swept, uint64_t *holders) {
             if (e.subject == RX_LIVING_PROMOTE_SUBJ &&
                 (e.rights & RX_RIGHT_PRIVILEGED & ~RX_RIGHT_PROMOTE))
                 return -3;
-            /* R16 G6: only the operator holds the world's control resource,
-             * with exactly the halt right; the operator holds nothing else. */
-            if ((e.resource == RX_WORLD_RES_CONTROL &&
-                 (e.subject != RX_OPERATOR_SUBJ || e.rights != RX_WORLD_RIGHT_HALT)) ||
-                (e.subject == RX_OPERATOR_SUBJ && e.resource != RX_WORLD_RES_CONTROL))
-                return -5;
         }
     return 0;
 }
@@ -1005,39 +703,24 @@ static int seat_blocked(Rig *r, uint64_t after) {
 
 static uint64_t acts(Rig *r, uint32_t id) { return r->w.reactions[id].activations; }
 
-/* Failure evidence (omega #313 item 3): the FIRST failure message is kept for the receipt,
- * never overwritten by later ones. stderr still gets every message. */
-static char g_first_failure[512];
-static void note_failure(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-static void note_failure(const char *fmt, ...) {
-    char msg[512];
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(msg, sizeof msg, fmt, ap);
-    va_end(ap);
-    fprintf(stderr, "%s\n", msg);
-    if (!g_first_failure[0]) snprintf(g_first_failure, sizeof g_first_failure, "%s", msg);
-}
+#define FAIL(...) do { fprintf(stderr, "R13 mode %d: ", mode); \
+                       fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); return -1; } while (0)
 
-#define FAIL(...) do { if (atomic_load(&g_op_shutdown)) return OP_SHUTDOWN; \
-                       char fail_msg_[400]; \
-                       snprintf(fail_msg_, sizeof fail_msg_, __VA_ARGS__); \
-                       note_failure("R13 mode %d: %s", mode, fail_msg_); return -1; } while (0)
-
+#define U(x) ((unsigned long long)(x))
 static int run(Rig *r, int mode) {
     int with_aien = mode != NO_AIEN;
     cpu_set_t a, x;
     if (core_sets(&a, &x) != 0 || move_threads(&a) <= 0) FAIL("needs both core classes");
     if (publish_placement(r, CLASS_A725) != 0) FAIL("placement");
-    uint64_t limit = run_clock(r) + 60000000000ull;
-    while (field(r, r->omega.o.selection, 0) < 1 && run_clock(r) < limit)
+    uint64_t limit = now_ns() + 60000000000ull;
+    while (field(r, r->omega.o.selection, 0) < 1 && now_ns() < limit)
         if (serve(r) != 0) FAIL("serve");
     if (field(r, r->omega.o.selection, 0) != 1) FAIL("no first selection");
     uint64_t incumbent = field(r, r->omega.o.selection, 1);
     uint64_t incumbent_ns = 0;
     if (with_aien) {
         while (field(r, r->aien.o.prediction, 6) != RX_AIEN_PRED_CONFIRMED &&
-               run_clock(r) < limit)
+               now_ns() < limit)
             if (serve(r) != 0) FAIL("serve");
         if (field(r, r->aien.o.prediction, 6) != RX_AIEN_PRED_CONFIRMED)
             FAIL("AIEN never confirmed the incumbent cost");
@@ -1074,18 +757,15 @@ static int run(Rig *r, int mode) {
     }
     /* From here production runs on its own thread, like any workload, and
      * this thread only observes. Nothing below advances a faculty. */
-    limit = run_clock(r) + 90000000000ull;
+    limit = now_ns() + 90000000000ull;
     int stale_injected = 0;
-    while (run_clock(r) < limit) {
+    while (now_ns() < limit) {
         pause_us(20);
         if (atomic_load(&r->producer_error)) FAIL("serve");
         if (mode == STALE_GPU && !stale_injected &&
             r->w.reactions[r->living.r_seat].state == RX_RUNNING) {
             /* The object the seat is writing changes generation mid-claim. */
-            int rr;
-            while ((rr = rx_world_retire(&r->w, r->living.o.output)) == RX_ERR_HALTED)
-                if (wait_running(r) != 0) FAIL("retire");
-            if (rr != RX_OK) FAIL("retire");
+            if (rx_world_retire(&r->w, r->living.o.output) != RX_OK) FAIL("retire");
             stale_injected = 1;
         }
         int step = mode == STALE_GPU ?
@@ -1103,10 +783,10 @@ static int run(Rig *r, int mode) {
     /* The organism keeps working. With a promotion, until AIEN has a
      * confirmed prediction for the promoted record and has assessed the goal
      * on it. Without one, long enough to see production stay put. */
-    uint64_t final_limit = run_clock(r) + 60000000000ull;
+    uint64_t final_limit = now_ns() + 60000000000ull;
     if (promoted) {
         uint64_t epoch = field(r, r->living.o.inforce, 0);
-        while (run_clock(r) < final_limit && !atomic_load(&r->producer_error) &&
+        while (now_ns() < final_limit && !atomic_load(&r->producer_error) &&
                !(field(r, r->aien.o.prediction, 1) == epoch &&
                  field(r, r->aien.o.prediction, 6) == RX_AIEN_PRED_CONFIRMED &&
                  field(r, r->aien.o.prediction, 4) == CLASS_X925 &&
@@ -1114,20 +794,15 @@ static int run(Rig *r, int mode) {
             pause_us(100);
     } else {
         uint64_t until = __atomic_load_n(&r->served, __ATOMIC_RELAXED) + 256;
-        while (run_clock(r) < final_limit && !atomic_load(&r->producer_error) &&
+        while (now_ns() < final_limit && !atomic_load(&r->producer_error) &&
                __atomic_load_n(&r->served, __ATOMIC_RELAXED) < until)
             pause_us(100);
     }
     stop_producer(r);
     if (atomic_load(&r->producer_error)) FAIL("serve");
-    /* The checks below read a settled world: they wait while it is stopped. */
-    if (wait_running(r) != 0) FAIL("operator shutdown");
-    int quiet;
-    while ((quiet = rx_world_wait_quiescent(&r->w, 10000)) != RX_OK && world_halted(r))
-        if (wait_running(r) != 0) FAIL("operator shutdown");
     uint64_t active = 0, after_lineage = 0;
     rx_gen_active(r->gen, &active, &after_lineage);
-    if (quiet != RX_OK &&
+    if (rx_world_wait_quiescent(&r->w, 10000) != RX_OK &&
         mode != REVOKED_EXPERIMENT && mode != STALE_GPU) FAIL("did not quiesce");
     uint64_t checked = 0;
     if (rx_world_verify_crumbs(&r->w, &checked) != 0) FAIL("crumbs do not verify");
@@ -1227,14 +902,12 @@ static int run(Rig *r, int mode) {
         field(r, r->aien.o.experiment_belief, 2) != RX_AIEN_EXP_SUPPORTED ||
         field(r, r->aien.o.experiment_belief, 3) != RX_LIVING_TRIALS ||
         field(r, r->living.o.evidence, 4) != RX_LIVING_TRIALS ||
-        /* A seat result caught by an operator stop is claimed again on resume. */
-        r->w.stats.resident_claims - r->w.stats.resident_halted != RX_LIVING_TRIALS ||
+        r->w.stats.resident_claims != RX_LIVING_TRIALS ||
         r->w.reactions[r->living.r_seat].commits != RX_LIVING_TRIALS ||
         r->w.reactions[r->living.r_candidate].commits != 1 ||
         r->w.reactions[r->promoter.reaction].commits != 1)
-        FAIL("episode shape: claims %llu (%llu caught by a stop) seat commits %llu trials %llu",
-             U(r->w.stats.resident_claims), U(r->w.stats.resident_halted),
-             U(r->w.reactions[r->living.r_seat].commits),
+        FAIL("episode shape: claims %llu seat commits %llu trials %llu",
+             U(r->w.stats.resident_claims), U(r->w.reactions[r->living.r_seat].commits),
              U(field(r, r->living.o.evidence, 4)));
     if (after_lineage != lineage + 1 || active == before_generation ||
         field(r, r->living.o.inforce, 7) != active)
@@ -1387,12 +1060,6 @@ static int run(Rig *r, int mode) {
 }
 
 static void stop(Rig *r) {
-    /* The entry point goes first: no operator request reaches a world being
-     * torn down. A stop still in force stays in force (and on disk). */
-    atomic_store(&r->op_teardown, 1);
-    operator_release(r);
-    rx_operator_close(r->op);
-    r->op = NULL;
     stop_producer(r);
     if (r->acceptor_live) {
         atomic_store(&r->acceptor_stop, 1);
@@ -1409,394 +1076,7 @@ static void stop(Rig *r) {
     rx_omega_destroy(&r->omega);
     rx_gen_close(r->gen);
     aienos_cap_stop(r->admin, r->view);
-    if (r->home_dir[0]) nftw(r->home_dir, rm_one, 16, FTW_DEPTH | FTW_PHYS);
 }
-
-/* ---- COMPOSITION-2 in the living system (host phase) ----------------------
- * The living system's provisioned machine identity, its AIENOS authority and
- * its durable home carry one goal at a time through rx_compose: Capability
- * Graph registration of digest-pinned Skills for this machine, route, two
- * staged J-Space candidates, AEGIS verify, World commit binder (seal), settle
- * (loser reclaim, durable winner, Cortex record), reopen/replay and recall.
- * The boundaries of the living system must hold through it: the living
- * World refuses composition subjects and capabilities, a revoked (stale
- * generation) composition capability writes nothing, and the R9 generation,
- * the in-force record and the promotion right are untouched.
- *
- * The composition runs inside the living World (rx_compose_attach on r->w):
- * its five objects are created in that World, its reactions are registered
- * with the credentials enrolled in start() before rx_world_bind_callers, its
- * Cortex store is a scoped link on the World's recorder (only its own
- * objects' crumbs reach it), the World keeps its external subject (the
- * composition's goal right is minted to it) and close leaves the World up.
- * Limits (stated in the receipt): the World has no reaction unregister, so a
- * closed composition's reactions stay registered but inert (their objects are
- * retired and their rights revoked); the composition subjects 200..204 are
- * fixed, so one composition per World. */
-/* Test build only (Lane 32): it needs the AIEN_TEST_BUILD rogue-candidate hook
- * and the test fixture (rx_compose_fixture.h). */
-#if defined(AIEN_TEST_BUILD) && !defined(R13_SILICON)
-typedef struct {
-    int ran, ok;
-    uint64_t result1, result2;
-    uint32_t alternatives, winner, reclaimed;
-    uint64_t cx_records, cx_promotions;
-    int recall_verified, replay_ok, identity_refused;
-    int stale_commit_refused, stale_external_refused, rogue_refused;
-    int living_refuses_subject, living_refuses_cap, compose_refuses_living_cap;
-    int in_living_world, keyed_foreign_refused, world_alive_after_close;
-    int subject_rc, stale_commit_outcome, stale_goal_rc;   /* the refusals as returned */
-    int generation_untouched, inforce_untouched, promote_holders_ok;
-    char machine[65];
-    char winner_digest[65];
-} CompositionReceipt;
-static CompositionReceipt g_comp;
-static RxCompose g_compose;              /* large: static */
-static Fx g_cfx;
-
-static int intruder_fn(RxCtx *x) { (void)x; return 0; }
-
-/* Attach this machine's composition to the living World. */
-static int compose_attach(Rig *r, Fx *f, RxCompose *c, const char *dir) {
-    memset(c, 0, sizeof *c);
-    return rx_compose_attach(c, &r->w, &r->compose_keys, dir, &f->self, FX_SESSION, &f->router,
-                             fx_contract, r->admin);
-}
-
-static int composition_ok_route(const RxcResult *o) {
-    return o->n_alternatives == 2 && o->route[0].chosen.skill_id == FX_SKILL_A &&
-           o->route[1].chosen.skill_id == FX_SKILL_B;
-}
-
-static int revoke_cap(Rig *r, RxCapRef cap) {
-    AienosCapRef office;
-    if (aienos_cap_office(r->admin, &office) != 0) return -1;
-    return aienos_cap_revoke(r->admin, office, (AienosCapRef){cap.cap_id, cap.generation});
-}
-
-/* Cleanup after a run inside the living World, checked before any close
- * (L7-LIVING): every candidate branch the run forked and did not commit is
- * reclaimed, no staged branch survives, and exactly one branch is live (the
- * superseded one is released after a commit; nothing new after a refusal). */
-static int compose_cleanup_ok(RxCompose *c, const RxcResult *o) {
-    JsBranchRef s = rx_compose_state(c);
-    for (uint32_t k = 0; k < RXC_K; k++) {
-        JsBranchRef b = o->cand_ref[k];
-        if (!b.id && !b.gen) continue;
-        if (b.id == s.id && b.gen == s.gen) continue;
-        if (js_branch_check(&c->js, b) != JS_ERR_STALE) return 0;
-    }
-    uint32_t staged = 0;
-    for (uint32_t i = 0; i < c->js.n_branches; i++)
-        staged += c->js.branches[i] && c->js.branches[i]->staged;
-    return staged == 0 && fx_live_branches(&c->js) == 1;
-}
-
-#define CFAIL(...) do { fprintf(stderr, "R13 composition: "); fprintf(stderr, __VA_ARGS__); \
-                        fputc('\n', stderr); goto out; } while (0)
-
-static int composition_phase(Rig *r) {
-    CompositionReceipt *g = &g_comp;
-    RxCompose *c = &g_compose;
-    char dir[200];
-    int rc, is_open = 0, fx = 0;
-    memset(g, 0, sizeof *g);
-    g->ran = 1;
-    hex(r->machine.id, g->machine);
-    if (snprintf(dir, sizeof dir, "%s/compose", r->home_dir) >= (int)sizeof dir)
-        CFAIL("home path too long");
-
-    /* What the living system had in force before the composition. */
-    uint64_t gen_before = 0, lineage_before = 0, inforce_before[RX_MAX_FIELDS];
-    rx_gen_active(r->gen, &gen_before, &lineage_before);
-    for (uint32_t i = 0; i < RX_MAX_FIELDS; i++) inforce_before[i] = field(r, r->living.o.inforce, i);
-
-    /* Capability Graph: two digest-pinned Skills registered for this machine. */
-    if (fx_init_for(&g_cfx, &r->machine) != 0) CFAIL("capability graph");
-    fx = 1;
-    rc = compose_attach(r, &g_cfx, c, dir);
-    if (rc != RX_OK) CFAIL("attach (%d)", rc);
-    is_open = 1;
-    g->in_living_world = c->world == &r->w && !c->owns_world;
-    if (!g->in_living_world) CFAIL("composition is not in the living World");
-    if (r->w.external_subject != EXTERNAL) CFAIL("attach changed the external subject");
-    if (memcmp(c->self.id, r->machine.id, 32) != 0) CFAIL("composition machine is not the living one");
-
-    RxcResult o;
-    JsBranchRef s0 = rx_compose_state(c);
-    if (fx_run(&g_cfx, c, 5, &o) != RX_OK || o.outcome != RXC_OUT_COMMITTED)
-        CFAIL("goal 1 not committed (outcome %d)", o.outcome);
-    if (!composition_ok_route(&o)) CFAIL("route: %u alternatives, not A then B", o.n_alternatives);
-    if (o.winner != 0 || o.result != 16) CFAIL("winner %u result %llu", o.winner, U(o.result));
-    if (o.old_ref.id != s0.id || o.old_ref.gen != s0.gen) CFAIL("old ref");
-    JsBranchRef now = rx_compose_state(c);
-    if (now.id != o.new_ref.id || now.gen != o.new_ref.gen) CFAIL("World does not name NEW");
-    if (js_branch_check(&c->js, o.cand_ref[1]) != JS_ERR_STALE) CFAIL("loser not reclaimed");
-    JsBranchInfo bi;
-    if (js_branch_info(&c->js, o.new_ref, &bi) != JS_OK || bi.staged) CFAIL("winner not sealed");
-    if (!compose_cleanup_ok(c, &o))
-        CFAIL("cleanup after commit: branch left (live %u)", fx_live_branches(&c->js));
-    if (!o.cx_candidate[0] || !o.cx_candidate[1] || !o.cx_evidence || !o.cx_promotion ||
-        !o.cx_admission[1]) CFAIL("composition record incomplete");
-    g->alternatives = o.n_alternatives;
-    g->winner = o.winner;
-    g->reclaimed = o.reclaimed;
-    g->result1 = o.result;
-    hex(o.winner_digest, g->winner_digest);
-    JsBranchRef first = o.new_ref;
-    uint64_t winner_claim = o.cx_candidate[0];
-
-    /* The boundary holds inside the shared World: a composition subject cannot
-     * be registered without the composition's credential (unkeyed, or keyed
-     * with the living system's keyrings). */
-    RxReactionDesc d;
-    memset(&d, 0, sizeof d);
-    d.name = "compose.commit.intruder";
-    d.faculty = RX_FACULTY_OMEGA;
-    d.subject = RXC_SUBJ_COMMIT;
-    d.priority = RX_PRIO_FOREGROUND;
-    d.triggers[d.n_triggers++] = (RxDep){r->intent, RX_ALL_FIELDS};
-    d.writes[d.n_writes++] = (RxDep){r->living.o.inforce, RX_ALL_FIELDS};
-    d.caps[d.n_caps++] = (RxCapNeed){c->cap_commit[1], RXC_RES_STATE, RX_RIGHT_WRITE};
-    d.fn = intruder_fn;
-    uint32_t rid = 0;
-    rc = rx_world_add_reaction(&r->w, &d, &rid);
-    g->subject_rc = rc;
-    g->living_refuses_subject = rc == RX_ERR_IDENTITY || rc == RX_ERR_AUTHORITY;
-    if (!g->living_refuses_subject) CFAIL("living World registered a composition subject (%d)", rc);
-    int krc = rx_world_add_reaction_keyed(&r->w, &r->keys.living, &d, &rid);
-    int krc2 = rx_world_add_reaction_keyed(&r->w, &r->keys.omega, &d, &rid);
-    g->keyed_foreign_refused = krc != RX_OK && krc2 != RX_OK;
-    if (!g->keyed_foreign_refused)
-        CFAIL("composition subject registered with living credentials (%d %d)", krc, krc2);
-    RxMutation mi = {r->intent, 0, 1};
-    g->living_refuses_cap = rx_world_publish_external(&r->w, c->cap_ext, &mi, 1) < 0;
-    if (!g->living_refuses_cap) CFAIL("living World took a composition capability");
-    RxMutation mg = {c->goal, RXC_G_INPUT, 9};
-    g->compose_refuses_living_cap = rx_world_publish_external(c->world, r->ext_goal, &mg, 1) < 0;
-    if (!g->compose_refuses_living_cap) CFAIL("composition goal took a living capability");
-
-    /* A candidate that also proposes a state write is refused; OLD kept. */
-    c->test.rogue_candidate = 1;
-    rc = fx_run(&g_cfx, c, 6, &o);
-    c->test.rogue_candidate = 0;
-    now = rx_compose_state(c);
-    g->rogue_refused = rc == RX_OK && o.outcome == RXC_OUT_NOT_COMMITTED &&
-                       now.id == first.id && now.gen == first.gen &&
-                       compose_cleanup_ok(c, &o);   /* cleanup after a refusal */
-    if (!g->rogue_refused) CFAIL("rogue candidate (rc %d outcome %d)", rc, o.outcome);
-
-    /* Replay: close (the living World stays up), attach again on the same
-     * machine, authority and World; recovery names OLD or NEW. */
-    rx_compose_close(c);
-    is_open = 0;
-    if ((rc = compose_attach(r, &g_cfx, c, dir)) != RX_OK) CFAIL("reattach (%d)", rc);
-    is_open = 1;
-    now = rx_compose_state(c);
-    if (now.id != first.id || now.gen != first.gen) CFAIL("reopen does not name the winner");
-    if (cx_verify_chain(&c->cx) != CX_OK) CFAIL("Cortex chain");
-    CxFilter cf = {CX_CLAIM, CX_K_CANDIDATE, 0, 1};
-    CxRecord rec[16];
-    uint32_t nr = cx_recall(&c->cx, RXC_CX_SUBJECT(RXC_SLOT_STATE), 0, UINT64_MAX, &cf, rec, 16);
-    for (uint32_t i = 0; i < nr; i++)
-        if (rec[i].hdr.id == winner_claim && rec[i].verified &&
-            rec[i].payload[RXC_CP_REF] == fx_pack(first)) g->recall_verified = 1;
-    if (!g->recall_verified) CFAIL("recall did not find the verified winner claim (%u)", nr);
-    if (fx_run(&g_cfx, c, 7, &o) != RX_OK || o.outcome != RXC_OUT_COMMITTED || o.result != 22 ||
-        o.old_ref.id != first.id || o.old_ref.gen != first.gen)
-        CFAIL("goal after replay (outcome %d result %llu)", o.outcome, U(o.result));
-    g->replay_ok = 1;
-    g->result2 = o.result;
-    JsBranchRef second = o.new_ref;
-
-    /* Stale generation: the commit step's state-write right is revoked; the
-     * next goal's winner cannot be written and nothing changes. */
-    if (revoke_cap(r, c->cap_commit[1]) != 0) CFAIL("revoke commit right");
-    rc = fx_run(&g_cfx, c, 8, &o);
-    now = rx_compose_state(c);
-    g->stale_commit_outcome = rc == RX_OK ? o.outcome : rc;
-    g->stale_commit_refused = rc == RX_OK && o.outcome != RXC_OUT_COMMITTED &&
-                              now.id == second.id && now.gen == second.gen &&
-                              compose_cleanup_ok(c, &o);   /* cleanup after a refusal */
-    if (!g->stale_commit_refused) CFAIL("revoked commit right still wrote (rc %d outcome %d)", rc,
-                                        o.outcome);
-    /* Outside input under a revoked capability is refused at the World. */
-    if (revoke_cap(r, c->cap_ext) != 0) CFAIL("revoke goal right");
-    rc = fx_run(&g_cfx, c, 9, &o);
-    now = rx_compose_state(c);
-    g->stale_goal_rc = rc;
-    g->stale_external_refused = rc < 0 && now.id == second.id && now.gen == second.gen;
-    if (!g->stale_external_refused) CFAIL("revoked goal right accepted (rc %d)", rc);
-    g->cx_records = c->cx.n;
-    g->cx_promotions = fx_count(&c->cx, CX_K_PROMOTION, UINT64_MAX);
-    if (g->cx_promotions != 2) CFAIL("promotions %llu, want 2", U(g->cx_promotions));
-    rx_compose_close(c);
-    is_open = 0;
-    /* Close left the living World up: its objects still read. */
-    g->world_alive_after_close = field(r, r->living.o.inforce, 0) != UINT64_MAX &&
-                                 field(r, r->intent, 0) != UINT64_MAX;
-    if (!g->world_alive_after_close) CFAIL("living World objects gone after close");
-
-    /* Another machine cannot open this machine's composition. */
-    AienMachineId other = fx_mid(2);
-    Fx foreign;
-    if (fx_init_for(&foreign, &other) != 0) CFAIL("foreign graph");
-    rc = compose_attach(r, &foreign, c, dir);
-    g->identity_refused = rc == RX_ERR_IDENTITY;
-    if (rc == RX_OK) rx_compose_close(c);
-    fx_free(&foreign);
-    if (!g->identity_refused) CFAIL("foreign machine opened the composition (%d)", rc);
-
-    /* The living system's generation management is untouched. */
-    uint64_t gen_after = 0, lineage_after = 0;
-    rx_gen_active(r->gen, &gen_after, &lineage_after);
-    g->generation_untouched = gen_after == gen_before && lineage_after == lineage_before;
-    g->inforce_untouched = 1;
-    for (uint32_t i = 0; i < RX_MAX_FIELDS; i++)
-        if (field(r, r->living.o.inforce, i) != inforce_before[i]) g->inforce_untouched = 0;
-    uint64_t swept = 0, holders = 0;
-    g->promote_holders_ok = authority_sweep(r, &swept, &holders) == 0 && holders == 1;
-    if (!g->generation_untouched || !g->inforce_untouched || !g->promote_holders_ok)
-        CFAIL("living generation %d in force %d promotion right %d", g->generation_untouched,
-              g->inforce_untouched, g->promote_holders_ok);
-    /* No composition subject holds a privileged right. */
-    AienosCapRef office;
-    if (aienos_cap_office(r->admin, &office) != 0) CFAIL("office");
-    for (uint32_t id = 1; id < 1024; id++)
-        for (uint64_t gn = office.generation; gn < office.generation + 8; gn++) {
-            AienosCapEntry e;
-            if (aienos_cap_inspect(r->view, (AienosCapRef){id, gn}, &e) != 0 || e.state != 1u)
-                continue;
-            if (e.subject >= RXC_SUBJ_EXTERNAL && e.subject < RXC_SUBJ_OF(RXC_MAX_ACTIVE, RXC_SUBJ_EXTERNAL) &&
-                (e.rights & RX_RIGHT_PRIVILEGED))
-                CFAIL("composition subject %u holds a privileged right", e.subject);
-        }
-    g->ok = 1;
-out:
-    if (is_open) rx_compose_close(c);
-    if (fx) fx_free(&g_cfx);
-    printf("R13 composition (host, inside the living World): %s; machine %.16s..., "
-           "goal 5 -> %llu (winner %u of %u, reclaimed %u), replay -> %llu, recall %s, "
-           "Cortex %llu records %llu promotions; refusals: living subject %d, living cap %d, "
-           "cross cap %d, keyed living credential %d, rogue %d, stale commit %d, stale goal %d, foreign machine %d; "
-           "living generation %d in force %d promotion right %d; codes: subject rc %d, "
-           "revoked commit outcome %d, revoked goal rc %d\n",
-           g->ok ? "PASS" : "FAIL", g->machine, U(g->result1), g->winner, g->alternatives,
-           g->reclaimed, U(g->result2), g->recall_verified ? "verified" : "missing",
-           U(g->cx_records), U(g->cx_promotions), g->living_refuses_subject,
-           g->living_refuses_cap, g->compose_refuses_living_cap, g->keyed_foreign_refused,
-           g->rogue_refused,
-           g->stale_commit_refused, g->stale_external_refused, g->identity_refused,
-           g->generation_untouched, g->inforce_untouched, g->promote_holders_ok, g->subject_rc,
-           g->stale_commit_outcome, g->stale_goal_rc);
-    return g->ok ? 0 : -1;
-}
-
-#endif /* AIEN_TEST_BUILD && !R13_SILICON (composition phase) */
-
-#ifdef AIEN_TEST_BUILD
-/* Fabric F5-0 in the living World (Lane 13; host and silicon TEST builds since
- * Lane 17; test build only since Lane 32: loopback, HMAC stand-in and fixed
- * test keys never enter the production program). A second simulated
- * machine joins over the loopback transport and advertises a Skill; the
- * composition attached to this World finds it in the Capability Graph as a
- * CQ_SRC_FABRIC candidate, runs it through the Fabric dispatcher (an
- * in-process stand-in: F5-0 has no work message) and commits it; then the
- * machine leaves, is lost and rejoins, and forged, stale and wrong-machine
- * traffic is refused (fab_living_phase.h has the steps). The living
- * generation, the in-force record and the single promotion holder must be
- * untouched. On the host it runs after composition_phase, on a fresh
- * composition directory, after the first composition closed (up to
- * RXC_MAX_ACTIVE run at once, each isolated). In the silicon build (Lane 17) it runs in the World whose GPU
- * work goes to the physical resident GB10 seat; the Fabric part stays CPU-only
- * loopback (no network, HMAC stand-in) and its Skills are CPU procedures. */
-#ifdef R13_SILICON
-#define FL_BUILD "silicon"
-#else
-#define FL_BUILD "host"
-#endif
-static FlReceipt g_fab;
-
-static int fabric_attach(void *ctx, RxCompose *c, const char *dir, const AienMachineId *self,
-                         const SrRouter *router) {
-    Rig *r = ctx;
-    memset(c, 0, sizeof *c);
-    return rx_compose_attach(c, &r->w, &r->compose_keys, dir, self, FX_SESSION, router,
-                             fx_contract, r->admin);
-}
-
-static void fabric_close(void *ctx, RxCompose *c) { (void)ctx; rx_compose_close(c); }
-
-static int fabric_phase(Rig *r) {
-    char dir[200];
-    if (snprintf(dir, sizeof dir, "%s/compose-fabric", r->home_dir) >= (int)sizeof dir) {
-        fprintf(stderr, "R13 Fabric: home path too long\n");
-        return -1;
-    }
-    uint64_t gen_before = 0, lineage_before = 0, inforce_before[RX_MAX_FIELDS];
-    rx_gen_active(r->gen, &gen_before, &lineage_before);
-    for (uint32_t i = 0; i < RX_MAX_FIELDS; i++) inforce_before[i] = field(r, r->living.o.inforce, i);
-    int rc = fl_run(&r->machine, dir, fabric_attach, fabric_close, r, &g_fab);
-    uint64_t gen_after = 0, lineage_after = 0;
-    rx_gen_active(r->gen, &gen_after, &lineage_after);
-    int untouched = gen_after == gen_before && lineage_after == lineage_before &&
-                    r->w.external_subject == EXTERNAL;
-    for (uint32_t i = 0; i < RX_MAX_FIELDS; i++)
-        if (field(r, r->living.o.inforce, i) != inforce_before[i]) untouched = 0;
-    uint64_t swept = 0, holders = 0;
-    if (authority_sweep(r, &swept, &holders) != 0 || holders != 1) untouched = 0;
-    g_fab.ok = rc == 0 && untouched;
-    printf("R13 Fabric (" FL_BUILD ", second machine in the living World): %s; %u checks, %u failed; "
-           "remote wins %u, dispatched %llu, dispatcher refusals route %llu digest %llu; "
-           "living untouched %d\n",
-           g_fab.ok ? "PASS" : "FAIL", g_fab.checks, g_fab.failures, g_fab.remote_wins,
-           U(g_fab.dispatched), U(g_fab.dispatch_refused[FAB_DX_ROUTE]),
-           U(g_fab.dispatch_refused[FAB_DX_DIGEST]), untouched);
-    return g_fab.ok ? 0 : -1;
-}
-
-static void fabric_json(char *out, size_t n) {
-    const FlReceipt *g = &g_fab;
-    if (!g->ran) {
-        snprintf(out, n, "  \"fabric_host_phase\": {\"result\": \"NOT_RUN\", \"build\": \"" FL_BUILD "\"},\n");
-        return;
-    }
-    char rec[65], fab[65];
-    fx_hex(g->record_digest, 32, rec);
-    fx_hex(g->fabric_digest, 32, fab);
-    snprintf(out, n,
-        "  \"fabric_host_phase\": {\"result\": \"%s\", \"build\": \"" FL_BUILD "\", \"checks\": %u, \"failures\": %u, "
-        "\"transport\": \"F5-0 loopback (in-process)\", \"auth\": \"HMAC stand-in\", "
-        "\"remote_execution\": \"in-process stand-in (fab_dispatch); no work message in F5-0\", "
-        "\"remote_wins\": %u, \"dispatched\": %llu, \"results\": [%llu, %llu, %llu, %llu, %llu, %llu], "
-        "\"winners\": [%u, %u, %u, %u, %u, %u], \"refused\": {\"forged_wrong_key\": \"%s\", "
-        "\"forged_altered_byte\": \"%s\", \"relayed_other_machine_record\": \"%s\", "
-        "\"misdelivered\": \"%s\", \"stale_generation_replay\": \"%s\", "
-        "\"advertise_after_lease\": \"%s\", \"pinned_unknown_machine\": %d, "
-        "\"remote_only_after_loss\": %d, \"dispatch_route\": %llu, \"dispatch_digest\": %llu}, "
-        "\"fabric_candidates_held\": %d, \"record_digest\": \"%s\", \"fabric_digest\": \"%s\"},\n",
-        g->ok ? "PASS" : "FAIL", g->checks, g->failures, g->remote_wins, U(g->dispatched),
-        U(g->result[0]), U(g->result[1]), U(g->result[2]), U(g->result[3]), U(g->result[4]),
-        U(g->result[5]), g->winner[0], g->winner[1], g->winner[2], g->winner[3], g->winner[4],
-        g->winner[5], fab_strerror(g->forged_wrong_key), fab_strerror(g->forged_altered),
-        fab_strerror(g->relayed_record), fab_strerror(g->misdelivered),
-        fab_strerror(g->stale_gen), fab_strerror(g->lease_expired), g->pinned_wrong_machine,
-        g->remote_only_after_loss, U(g->dispatch_refused[FAB_DX_ROUTE]),
-        U(g->dispatch_refused[FAB_DX_DIGEST]), g->fabric_held, rec, fab);
-}
-/* end Fabric phase */
-#else  /* production program: no Fabric (no real transport before TRUST-1) */
-#ifdef R13_SILICON
-#define FL_BUILD "silicon"
-#else
-#define FL_BUILD "host"
-#endif
-static void fabric_json(char *out, size_t n) {
-    snprintf(out, n, "  \"fabric_host_phase\": {\"result\": \"NOT_RUN\", \"build\": \"" FL_BUILD "\", "
-             "\"reason\": \"production program: Fabric F5-0 has only the loopback transport and "
-             "HMAC stand-in (test build only, AIEN_TEST_BUILD); no real transport before TRUST-1\"},\n");
-}
-#endif /* AIEN_TEST_BUILD (Fabric phase) */
 
 static void binary_digest(char out[65]) {
     strcpy(out, "unavailable");
@@ -1814,150 +1094,10 @@ static void binary_digest(char out[65]) {
 }
 
 #define OBJ(o) (o).id, (o).generation
-/* The composition phase in the receipt (host TEST build only: it needs the
- * AIEN_TEST_BUILD rogue-candidate hook and the test fixture), then the Fabric
- * phase (test builds only). */
-static void composition_json(char *out, size_t n) {
-#if defined(AIEN_TEST_BUILD) && !defined(R13_SILICON)
-    const CompositionReceipt *c = &g_comp;
-    if (c->ran) {
-        snprintf(out, n,
-            "  \"composition_host_phase\": {\"result\": \"%s\", \"machine_id\": \"%s\", "
-            "\"world\": \"the living RxWorld (rx_compose_attach)\", \"in_living_world\": %s, "
-            "\"world_alive_after_close\": %s, "
-            "\"authority\": \"living AIENOS admin\", \"alternatives\": %u, \"winner\": %u, "
-            "\"goal_5_result\": %llu, \"after_replay_goal_7_result\": %llu, "
-            "\"winner_digest\": \"%s\", \"cortex_records\": %llu, \"promotions\": %llu, "
-            "\"recall_verified\": %s, \"refused\": {\"composition_subject_in_living_world\": %s, "
-            "\"composition_subject_with_living_credential\": %s, "
-            "\"composition_cap_in_living_world\": %s, \"living_cap_in_composition\": %s, "
-            "\"rogue_candidate_state_write\": %s, \"revoked_commit_right\": %s, "
-            "\"revoked_goal_right\": %s, \"foreign_machine\": %s}, "
-            "\"living_generation_untouched\": %s, \"in_force_untouched\": %s, "
-            "\"single_promotion_holder\": %s},\n",
-            c->ok ? "PASS" : "FAIL", c->machine, c->in_living_world ? "true" : "false",
-            c->world_alive_after_close ? "true" : "false", c->alternatives, c->winner, U(c->result1),
-            U(c->result2), c->winner_digest, U(c->cx_records), U(c->cx_promotions),
-            c->recall_verified ? "true" : "false",
-            c->living_refuses_subject ? "true" : "false", c->keyed_foreign_refused ? "true" : "false",
-            c->living_refuses_cap ? "true" : "false",
-            c->compose_refuses_living_cap ? "true" : "false", c->rogue_refused ? "true" : "false",
-            c->stale_commit_refused ? "true" : "false", c->stale_external_refused ? "true" : "false",
-            c->identity_refused ? "true" : "false", c->generation_untouched ? "true" : "false",
-            c->inforce_untouched ? "true" : "false", c->promote_holders_ok ? "true" : "false");
-    } else {
-        snprintf(out, n, "  \"composition_host_phase\": {\"result\": \"NOT_RUN\", "
-                 "\"reason\": \"phase did not run (an earlier step failed)\"},\n");
-    }
-#elif defined(AIEN_TEST_BUILD)
-    snprintf(out, n, "  \"composition_host_phase\": {\"result\": \"NOT_RUN\", \"reason\": "
-             "\"silicon test build: the composition phase runs in the host test build only\"},\n");
-#else
-    snprintf(out, n, "  \"composition_host_phase\": {\"result\": \"NOT_RUN\", \"reason\": "
-             "\"production program: the composition phase needs the AIEN_TEST_BUILD rogue-candidate "
-             "hook and test fixture (test-r13-testbuild-host)\"},\n");
-#endif
-    /* Then the Fabric phase (NOT_RUN with its reason in the production program). */
-    size_t used = strlen(out);
-    if (used < n) fabric_json(out + used, n - used);
-}
-
-/* Which program this is (Lane 32). The test build has its own receipt and
- * gate key, so it can never stand in for the production R13 gate. */
-#ifdef AIEN_TEST_BUILD
-#define R13_RECEIPT "R13/rx_living_test_build_receipt.json"
-#define R13_GATE_KEY "R13_LIVING_SYSTEM_TEST_BUILD"
-#define R13_BUILD "test (AIEN_TEST_BUILD)"
-static int g_argus_ok = 1;   /* ARGUS is not linked into the test build */
-static char g_argus_json[512] =
-    "  \"argus\": {\"result\": \"NOT_RUN\", \"reason\": \"test build: ARGUS is linked into "
-    "the production program only\"},\n";
-#else
-#define R13_RECEIPT "R13/rx_living_receipt.json"
-#define R13_GATE_KEY "R13_LIVING_SYSTEM"
-#define R13_BUILD "production"
-static int g_argus_ok;
-static char g_argus_json[1024] =
-    "  \"argus\": {\"result\": \"FAIL\", \"reason\": \"ARGUS was not checked\"},\n";
-
-/* ARGUS in the production program (ARGUS-1 decisions, 2026-09-29): observe and
- * record only. ARGUS (pinned by argus.lock) receives the runtime's capability
- * events and the authority's own mint/revoke announcements, runs its
- * detectors and keeps findings. It holds no capability, takes no action and
- * never blocks a request, so it cannot expand its own authority; the one
- * narrow automatic revoke the decisions allow is not in the pinned ARGUS.
- * The program refuses to run unobserved: ARGUS must be active with its
- * consumer ingesting (RX_ARGUS_AUTO=0 or RX_ARGUS_CONSUMER=off/discard make
- * the gate FAIL). */
-static int argus_check_start(void) {
-    RxArgusStats s;
-    rx_argus_stats(&s);
-    if (rx_argus_active() && s.consumer_mode == RX_ARGUS_CONSUMER_INGEST) return 0;
-    snprintf(g_argus_json, sizeof g_argus_json,
-             "  \"argus\": {\"result\": \"FAIL\", \"reason\": \"ARGUS not observing at start "
-             "(active %d, consumer mode %d; production needs ingest)\"},\n",
-             rx_argus_active(), s.consumer_mode);
-    fprintf(stderr, "R13 ARGUS: not observing at start (active %d, consumer mode %d); "
-            "the production program refuses to run unobserved\n", rx_argus_active(), s.consumer_mode);
-    return -1;
-}
-
-/* After every World is stopped (producers quiescent): drain, stop the
- * consumer, record what ARGUS saw. Findings are recorded, never acted on. */
-static void argus_finish(void) {
-    RxArgusStats s;
-    rx_argus_stats(&s);
-    int mode = s.consumer_mode;
-    rx_argus_shutdown();
-    rx_argus_stats(&s);
-    uint64_t obs = 0;
-    for (unsigned k = 0; k < 9; k++) obs += s.authority_obs[k];
-    g_argus_ok = mode == RX_ARGUS_CONSUMER_INGEST && s.received > 0 && obs > 0 &&
-                 s.ingest_errors == 0;
-    snprintf(g_argus_json, sizeof g_argus_json,
-             "  \"argus\": {\"result\": \"%s\", \"mode\": \"observe and record (RX_ARGUS=2, "
-             "authority observer, consumer ingest); no response action, holds no capability\", "
-             "\"argus_lock\": \"argus.lock\", \"emitted\": %llu, \"received\": %llu, "
-             "\"authority_observations\": %llu, \"authority_mints\": %llu, "
-             "\"authority_revokes\": %llu, \"findings\": %llu, \"ingest_errors\": %llu, "
-             "\"ring_refused\": %llu},\n",
-             g_argus_ok ? "OBSERVED" : "FAIL", U(s.emitted), U(s.received), U(obs),
-             U(s.authority_obs[AIENOS_CAP_OBS_MINT]), U(s.authority_obs[AIENOS_CAP_OBS_REVOKE]),
-             U(s.findings_total), U(s.ingest_errors), U(s.ring_refused));
-    printf("R13 ARGUS: %s; observe and record, received %llu events, %llu authority "
-           "observations, %llu findings, %llu ingest errors\n",
-           g_argus_ok ? "observing" : "FAIL", U(s.received), U(obs), U(s.findings_total),
-           U(s.ingest_errors));
-    const char *p = getenv("RX_ARGUS_SUMMARY");
-    if (p) rx_argus_write_summary(p, getenv("RX_ARGUS_SUITE") ? getenv("RX_ARGUS_SUITE") : "r13");
-}
-
-/* `--argus-probe`: the host-run check that ARGUS is present and observing in
- * THIS binary (test-prod-hygiene; CI cannot run the living episode, which
- * needs both Spark core classes). It starts one authority through the same
- * link-wrapped aienos_cap_start the living run uses, makes one observed
- * authority call, stops it and requires ARGUS to have received the events.
- * It runs no living episode and writes no receipt. */
-static int argus_probe(void) {
-    if (argus_check_start() != 0) return 1;
-    AienosCapAdmin *admin = NULL;
-    AienosCapView *view = NULL;
-    AienosCapRef office;
-    if (aienos_cap_start(&admin, &view) != 0 || aienos_cap_office(admin, &office) != 0 ||
-        aienos_cap_advance_clock(admin, office, 1) != 0) {
-        fprintf(stderr, "R13 ARGUS probe: authority start failed\n");
-        return 1;
-    }
-    aienos_cap_stop(admin, view);
-    argus_finish();
-    printf("R13 ARGUS probe: ARGUS_OBSERVING=%s\n", g_argus_ok ? "PASS" : "FAIL");
-    return g_argus_ok ? 0 : 1;
-}
-#endif
 
 static void receipt(int tests_ok) {
     char path[512], commit[41] = {0}, binary[65], physics[80] = {0};
-    if (omega_evidence_path(R13_RECEIPT, path, sizeof path) != 0)
+    if (omega_evidence_path("R13/rx_living_receipt.json", path, sizeof path) != 0)
         return;
     if (!omega_evidence_run_commit(commit)) strcpy(commit, "unknown");
     if (!omega_evidence_physics_commit(physics, sizeof physics))
@@ -1970,44 +1110,14 @@ static void receipt(int tests_ok) {
     int controls = 1;
     for (uint32_t i = 0; i < 5; i++) controls &= g_controls[i];
     const Receipt *g = &g_receipt;
-    int pass = tests_ok && controls && g_argus_ok && bound && g->silicon_observed;
+    int pass = tests_ok && controls && bound && g->silicon_observed;
     const char *gate = pass ? "PASS"
-        : !tests_ok || !controls || !g_argus_ok ? "FAIL"
+        : !tests_ok || !controls ? "FAIL"
         : !g->silicon_observed ? "HOST_PASS_NON_SILICON"
         : "SILICON_PASS_UNBOUND";
-    /* The first failure message as a JSON string, or null when there was none. */
-    char first_failure[1100];
-    if (!g_first_failure[0]) strcpy(first_failure, "null");
-    else {
-        size_t k = 0;
-        first_failure[k++] = '"';
-        for (const char *s = g_first_failure; *s && k + 8 < sizeof first_failure; s++) {
-            unsigned char c = (unsigned char)*s;
-            if (c == '"' || c == '\\') { first_failure[k++] = '\\'; first_failure[k++] = (char)c; }
-            else if (c < 0x20 || c >= 0x7f) k += (size_t)snprintf(first_failure + k, 7, "\\u%04x", c);
-            else first_failure[k++] = (char)c;
-        }
-        first_failure[k++] = '"';
-        first_failure[k] = 0;
-    }
     struct utsname host;
     memset(&host, 0, sizeof host);
     uname(&host);
-    char comp[6144];
-    composition_json(comp, sizeof comp);
-    size_t used = strlen(comp);
-    if (used < sizeof comp)
-        snprintf(comp + used, sizeof comp - used, "  \"build\": \"" R13_BUILD "\",\n%s", g_argus_json);
-    used = strlen(comp);
-    if (used < sizeof comp)
-        snprintf(comp + used, sizeof comp - used,
-                 "  \"operator\": {\"entry_point\": \"owner-only unix socket, SO_PEERCRED, runtime-issued "
-                 "caller credential plus RX_WORLD_RES_CONTROL halt capability "
-                 "(docs/r16-operator-control.md)\", \"subject\": %u, \"stops\": %llu, "
-                 "\"resumes\": %llu, \"restored_stops\": %llu, \"open_stops\": %llu, "
-                 "\"activations_cancelled_under_stop\": %llu},\n",
-                 (unsigned)RX_OPERATOR_SUBJ, U(g_op_stops), U(g_op_resumes), U(g_op_restored),
-                 U(g_op_open), U(g_op_cancelled));
     FILE *f = fopen(path, "w");
     if (!f) return;
     fprintf(f,
@@ -2024,8 +1134,7 @@ static void receipt(int tests_ok) {
         "  \"machine_identity\": {\"node\": \"%s\", \"system\": \"%s\", "
             "\"release\": \"%s\", \"architecture\": \"%s\"},\n"
         "  \"silicon_observed\": %s,\n"
-        "  \"gate\": {\"" R13_GATE_KEY "\": \"%s\"},\n"
-        "  \"first_failure\": %s,\n"
+        "  \"gate\": {\"R13_LIVING_SYSTEM\": \"%s\"},\n"
         "  \"scenario\": {\"operation\": \"omega integer matvec 64x256\", "
             "\"goal\": \"cost below %u%% of the confirmed incumbent, semantics preserved\", "
             "\"incumbent_ns\": %llu, \"target_ns\": %llu, "
@@ -2083,7 +1192,6 @@ static void receipt(int tests_ok) {
             "\"C_revoked_experiment\": \"%s\", "
             "\"D_stale_generation\": \"%s\", "
             "\"E_failed_verification\": \"%s\"},\n"
-        "%s"
         "  \"not_claimed\": [\"R14\", \"R15\", \"R16\", "
             "\"neural/general cognition beyond R11\", "
             "\"open-ended realization invention beyond R10\", "
@@ -2095,7 +1203,6 @@ static void receipt(int tests_ok) {
         aienos ? aienos : "unknown", physics, binary,
         host.nodename, host.sysname, host.release, host.machine,
         g->silicon_observed ? "true" : "false", gate,
-        first_failure,
         TARGET_PCT, U(g->incumbent_ns), U(g->target_ns), U(g->selected_ps), U(g->reference_ps),
         U(g->final_expected_ns), g->final_status == RX_AIEN_GOAL_MET ? "MET" : "NOT_MET",
         U(g->final_prediction_epoch),
@@ -2117,67 +1224,25 @@ static void receipt(int tests_ok) {
         U(g->caps_swept), U(g->promote_holders), (unsigned)RX_LIVING_PROMOTE_SUBJ,
         g_controls[0] ? "PASS" : "FAIL", g_controls[1] ? "PASS" : "FAIL",
         g_controls[2] ? "PASS" : "FAIL", g_controls[3] ? "PASS" : "FAIL",
-        g_controls[4] ? "PASS" : "FAIL", comp);
+        g_controls[4] ? "PASS" : "FAIL");
     fclose(f);
-    printf("R13 gate: " R13_GATE_KEY "=%s\nR13 receipt: %s\n", gate, path);
+    printf("R13 gate: R13_LIVING_SYSTEM=%s\nR13 receipt: %s\n", gate, path);
 }
 
-int main(int argc, char **argv) {
+int main(void) {
     signal(SIGPIPE, SIG_IGN);
     setvbuf(stdout, NULL, _IONBF, 0);
-#ifndef AIEN_TEST_BUILD
-    if (argc == 2 && strcmp(argv[1], "--argus-probe") == 0) return argus_probe();
-#endif
-    const char *state = NULL;
-    if (argc == 3 && strcmp(argv[1], "--state-dir") == 0) state = argv[2];
-    else if (argc != 1) {
-        fprintf(stderr, "usage: %s [--state-dir <dir>] [--argus-probe (production program only)]\n",
-                argv[0]);
-        return 2;
-    }
-    if (operator_state(state) != 0) return 2;
     if (seen_fit(1u << 17) != 0) return 1;
     int result = 0;
-#ifndef AIEN_TEST_BUILD
-    /* Production: ARGUS observes from the first authority on, or nothing runs. */
-    if (argus_check_start() != 0) {
-        receipt(0);
-        return 1;
-    }
-#endif
     static const char *names[] = {"positive", "A no AIEN", "B no promotion authority",
         "C revoked experiment", "D stale generation", "E failed verification"};
     for (int mode = POSITIVE; mode <= FAILED_VERIFICATION; mode++) {
         Rig *r = calloc(1, sizeof *r);
         if (!r) return 1;
         int rc = start(r, mode);
-        if (rc != 0 && rc != OP_SHUTDOWN)
-            note_failure("R13 %s: setup failed at stage %d", names[mode], g_stage);
+        if (rc != 0) fprintf(stderr, "R13 %s: setup failed at stage %d\n", names[mode], g_stage);
         if (rc == 0) rc = run(r, mode);
-#if defined(AIEN_TEST_BUILD) && !defined(R13_SILICON)
-        /* COMPOSITION-2 in the living system (host test build only), after the episode,
-         * while the living World and its authority are still up. */
-        if (rc == 0 && mode == POSITIVE) rc = composition_phase(r);
-#endif
-#ifdef AIEN_TEST_BUILD
-        /* Fabric F5-0: host and silicon test builds (Lane 17, Lane 32). */
-        if (rc == 0 && mode == POSITIVE) rc = fabric_phase(r);
-#endif
-        /* R16 G6: a world is not torn down under an operator stop. A stop that lands
-         * after the episode keeps the world up until the operator resumes it (or
-         * shuts the program down); only then is the mode audited and ended. */
-        if (rc == 0 && r->ready && world_halted(r)) {
-            printf("R13 operator %s: stopped after its episode; waiting for an operator resume\n",
-                   g_mode_key[mode]);
-            if (wait_running(r) != 0) rc = OP_SHUTDOWN;
-        }
-        /* R16 G6: the crumb log shows what operator control did in this world. */
-        if (r->ready && (rc == 0 || rc == OP_SHUTDOWN) && operator_audit(r) != 0 && rc == 0) {
-            note_failure("R13 %s: work committed or published while the operator stop was in force",
-                         names[mode]);
-            rc = -1;
-        }
-        if (rc != 0 && rc != OP_SHUTDOWN)
+        if (rc != 0)
             fprintf(stderr, "R13 %s FAILED: plan %llu search %llu GPU %llu evidence %llu "
                     "belief %llu selection %llu candidate %llu promotion %llu in force %llu "
                     "result %d prepare refusal %d\n", names[mode],
@@ -2189,23 +1254,8 @@ int main(int argc, char **argv) {
                     r->promoter.result, r->living.last_refusal);
         if (r->admin && r->view) stop(r);
         free(r);
-        if (rc == OP_SHUTDOWN) {
-            /* An operator shutdown of a stopped world: the stop stays on disk, the
-             * next start of this mode comes up stopped. No receipt is written. */
-#ifndef AIEN_TEST_BUILD
-            argus_finish();
-#endif
-            printf("R13 operator: shutdown while stopped in %s; the stop stays in %s/gen-%s; "
-                   "no receipt written\n", g_mode_key[mode], g_state_dir, g_mode_key[mode]);
-            free(g_seen);
-            free(g_stack);
-            return 3;
-        }
         if (rc != 0) { result = 1; break; }
     }
-#ifndef AIEN_TEST_BUILD
-    argus_finish();   /* every World is stopped: producers are quiescent */
-#endif
     receipt(result == 0);
     free(g_seen);
     free(g_stack);

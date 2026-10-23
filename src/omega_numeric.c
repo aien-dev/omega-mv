@@ -4,16 +4,12 @@
  * comparators. No device access here (see src/omega_numeric_gb10.c).
  */
 #include "omega_numeric.h"
-#include "omega_numeric_lifecycle.h"
 #include "omega_blackwell_encoder.h"
 #include "omega_blackwell_qmd.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/auxv.h>
-
-atomic_int omega_numeric_native_state = ATOMIC_VAR_INIT(OMEGA_NUMERIC_NATIVE_IDLE);
 
 #if !defined(__aarch64__)
 #error "OMEGA-NUMERIC-0 host tiers use AArch64 FP instructions (fmadd, fdiv, fsqrt, fminnm, scvtf, fcvtzs)"
@@ -82,250 +78,6 @@ int32_t omega_ref_f2i(float a) {
     if (a >= 2147483647.0f) return 2147483647;
     if (a <= -2147483648.0f) return (int32_t)-2147483648LL;
     return (int32_t)a;
-}
-
-/* ---- E1 scalar contract: reference definitions -----------------------------
- * Integer operations on the bit patterns only, so nothing here depends on
- * FPCR or on how the compiler lowers a float operation. The semantic text is
- * docs/numeric/E1_SCALAR_CONTRACT.md. */
-
-enum { REF_RTZ, REF_FLOOR, REF_CEIL, REF_RNE };
-
-/* Round the FP32 value u to an integer in direction mode, saturate to
- * [lo, hi]. NaN -> 0. */
-static int64_t ref_to_int(uint32_t u, int mode, int64_t lo, int64_t hi) {
-    uint32_t be = (u >> 23) & 0xffU, f = u & 0x007fffffU;
-    bool neg = (u & 0x80000000U) != 0;
-    if (be == 0xffU) return f ? 0 : (neg ? lo : hi);
-    if (be == 0 && f == 0) return 0;
-    uint64_t m = be ? (f | 0x00800000U) : f;
-    int32_t e = be ? (int32_t)be - 150 : -149;
-    uint64_t ip;              /* integer part of |x|                       */
-    int frac;                 /* 0: none, 1: below half, 2: half, 3: above */
-    if (e >= 0) {
-        if (e > 16) return neg ? lo : hi;          /* |x| >= 2^40        */
-        ip = m << e;
-        frac = 0;
-    } else if (-e >= 40) {
-        ip = 0;
-        frac = 1;                                   /* 0 < |x| < 2^-16    */
-    } else {
-        int sh = -e;
-        ip = m >> sh;
-        uint64_t rem = m & ((1ULL << sh) - 1U), half = 1ULL << (sh - 1);
-        frac = rem == 0 ? 0 : rem < half ? 1 : rem == half ? 2 : 3;
-    }
-    uint64_t mag = ip;
-    switch (mode) {
-    case REF_RTZ:   break;
-    case REF_FLOOR: if (neg && frac) mag++; break;
-    case REF_CEIL:  if (!neg && frac) mag++; break;
-    default:        if (frac == 3 || (frac == 2 && (ip & 1U))) mag++; break;
-    }
-    int64_t v = neg ? -(int64_t)mag : (int64_t)mag;
-    return v < lo ? lo : v > hi ? hi : v;
-}
-
-int32_t omega_ref_f2i_floor(float a) {
-    return (int32_t)ref_to_int(omega_float_to_bits(a), REF_FLOOR, INT32_MIN, INT32_MAX);
-}
-int32_t omega_ref_f2i_ceil(float a) {
-    return (int32_t)ref_to_int(omega_float_to_bits(a), REF_CEIL, INT32_MIN, INT32_MAX);
-}
-int32_t omega_ref_f2i_rni(float a) {
-    return (int32_t)ref_to_int(omega_float_to_bits(a), REF_RNE, INT32_MIN, INT32_MAX);
-}
-uint32_t omega_ref_f2u(float a) {
-    return (uint32_t)ref_to_int(omega_float_to_bits(a), REF_RTZ, 0, UINT32_MAX);
-}
-
-/*
- * Round sig * 2^exp2 (exact, sig > 0) to a binary format with man explicit
- * mantissa bits and exponent bias bias (all-ones exponent field emax_field),
- * nearest even, subnormals kept, overflow to infinity. Returns the format's
- * bits without the sign.
- */
-typedef unsigned __int128 ref_u128;
-
-static uint32_t ref_round_small(ref_u128 sig, int32_t exp2, int man, int bias, uint32_t emax_field) {
-    int32_t p = 127;
-    while (((sig >> p) & 1U) == 0) p--;
-    int32_t lead = p + exp2;
-    int32_t be = lead + bias;
-    if (be >= (int32_t)emax_field) return emax_field << man;
-    int32_t lsb = (be >= 1) ? lead - man : 1 - bias - man;
-    int32_t s = lsb - exp2;
-    uint64_t mant;
-    if (s <= 0) {
-        mant = (uint64_t)(sig << -s);
-    } else if (s > p + 1) {
-        return 0;
-    } else {
-        mant = (s >= 128) ? 0 : (uint64_t)(sig >> s);
-        bool guard = ((sig >> (s - 1)) & 1U) != 0;
-        bool rest = (s >= 2) && (sig & ((((ref_u128)1) << (s - 1)) - 1U)) != 0;
-        if (guard && (rest || (mant & 1U))) mant++;
-    }
-    /* normal: mant in [2^man, 2^(man+1)], the carry moves into the exponent */
-    uint64_t bits = (be >= 1) ? ((uint64_t)(be - 1) << man) + mant : mant;
-    if (bits >= ((uint64_t)emax_field << man)) return emax_field << man;
-    return (uint32_t)bits;
-}
-
-float omega_ref_u2f(uint32_t a) {
-    if (a == 0) return 0.0f;
-    return omega_bits_to_float(ref_round_small(a, 0, 23, 127, 0xffU));
-}
-
-static uint16_t ref_narrow(float a, int man, int bias, uint32_t emax_field) {
-    uint32_t u = omega_float_to_bits(a);
-    uint32_t sign = (u >> 16) & 0x8000U;
-    uint32_t be = (u >> 23) & 0xffU, f = u & 0x007fffffU;
-    uint32_t inf = emax_field << man;
-    if (be == 0xffU) {
-        if (!f) return (uint16_t)(sign | inf);
-        /* quiet NaN of the target format, top payload bits kept (not semantic) */
-        return (uint16_t)(sign | inf | (1U << (man - 1)) | (f >> (23 - man)));
-    }
-    if (be == 0 && f == 0) return (uint16_t)sign;
-    uint64_t m = be ? (f | 0x00800000U) : f;
-    int32_t e = be ? (int32_t)be - 150 : -149;
-    return (uint16_t)(sign | ref_round_small(m, e, man, bias, emax_field));
-}
-
-uint16_t omega_ref_f32_to_f16(float a)  { return ref_narrow(a, 10, 15, 0x1fU); }
-uint16_t omega_ref_f32_to_bf16(float a) { return ref_narrow(a, 7, 127, 0xffU); }
-
-float omega_ref_f16_to_f32(uint16_t h) {
-    uint32_t sign = ((uint32_t)h & 0x8000U) << 16;
-    uint32_t be = ((uint32_t)h >> 10) & 0x1fU, f = (uint32_t)h & 0x3ffU;
-    if (be == 0x1fU) return omega_bits_to_float(sign | 0x7f800000U | (f ? 0x00400000U | (f << 13) : 0));
-    if (be == 0) {
-        if (f == 0) return omega_bits_to_float(sign);
-        int32_t e = -14;                    /* value f * 2^-24 = (f / 2^10) * 2^-14 */
-        while ((f & 0x400U) == 0) { f <<= 1; e--; }
-        return omega_bits_to_float(sign | ((uint32_t)(e + 127) << 23) | ((f & 0x3ffU) << 13));
-    }
-    return omega_bits_to_float(sign | ((be - 15 + 127) << 23) | (f << 13));
-}
-
-/* BF16 is the top half of FP32: widening is exact by construction. */
-float omega_ref_bf16_to_f32(uint16_t h) { return omega_bits_to_float((uint32_t)h << 16); }
-
-/* Finite nonzero FP32 bits u as m * 2^e (m below 2^24, not normalized). */
-static void ref_split(uint32_t u, uint64_t *m, int32_t *e) {
-    uint32_t be = (u >> 23) & 0xffU, f = u & 0x007fffffU;
-    *m = be ? (f | 0x00800000U) : f;
-    *e = be ? (int32_t)be - 150 : -149;
-}
-
-static int32_t ref_msb(ref_u128 v) {
-    int32_t p = 127;
-    while (((v >> p) & 1U) == 0) p--;
-    return p;
-}
-
-/*
- * a * b + c, one rounding. The exact product (below 2^48) and c are placed in
- * one 128-bit window: the term whose leading bit is higher goes to bit 125,
- * the other is shifted to the same scale with every lost bit ORed into bit 0.
- * When bits are lost the terms are more than 2^77 apart, so the result keeps
- * far more than the 26 bits rounding needs and the sticky bit only breaks
- * ties, which is all it has to do.
- */
-float omega_ref_ffma_int(float a, float b, float c) {
-    uint32_t ua = omega_float_to_bits(a), ub = omega_float_to_bits(b), uc = omega_float_to_bits(c);
-    uint32_t ps = (ua ^ ub) & 0x80000000U, cs = uc & 0x80000000U;
-    uint32_t xa = ua & 0x7fffffffU, xb = ub & 0x7fffffffU, xc = uc & 0x7fffffffU;
-    if (xa > OMEGA_INF_POS || xb > OMEGA_INF_POS || xc > OMEGA_INF_POS) return omega_bits_to_float(OMEGA_QNAN_BITS);
-    bool pinf = xa == OMEGA_INF_POS || xb == OMEGA_INF_POS, pzero = xa == 0 || xb == 0;
-    if (pinf && pzero) return omega_bits_to_float(OMEGA_QNAN_BITS);          /* inf * 0 */
-    if (pinf) {
-        if (xc == OMEGA_INF_POS && cs != ps) return omega_bits_to_float(OMEGA_QNAN_BITS);
-        return omega_bits_to_float(ps | OMEGA_INF_POS);
-    }
-    if (xc == OMEGA_INF_POS) return c;
-    if (pzero) return xc ? c : omega_bits_to_float(ps & cs);              /* exact zero sum: +0 unless both -0 */
-    uint64_t ma, mb, mc;
-    int32_t ea, eb, ec;
-    ref_split(xa, &ma, &ea);
-    ref_split(xb, &mb, &eb);
-    ref_u128 mp = (ref_u128)ma * mb;
-    int32_t ep = ea + eb;
-    if (xc == 0) return omega_bits_to_float(ps | ref_round_small(mp, ep, 23, 127, 0xffU));
-    ref_split(xc, &mc, &ec);
-    /* X: the term with the higher leading bit. */
-    ref_u128 X = mp, Y = mc;
-    int32_t ex = ep, ey = ec;
-    uint32_t sx = ps, sy = cs;
-    if (ref_msb(mc) + ec > ref_msb(mp) + ep) { X = mc; ex = ec; sx = cs; Y = mp; ey = ep; sy = ps; }
-    int32_t up = 125 - ref_msb(X);
-    X <<= up;
-    ex -= up;
-    int32_t d = ex - ey;                     /* Y is scaled by 2^-d: d >= 0 here */
-    if (d < 0) {
-        Y <<= -d;                            /* only when Y has fewer bits than X */
-    } else if (d >= 128) {
-        Y = 1;                               /* all of Y below bit 0: sticky only */
-    } else if (d > 0) {
-        bool lost = (Y & ((((ref_u128)1) << d) - 1U)) != 0;
-        Y = (Y >> d) | (lost ? 1U : 0U);
-    }
-    ref_u128 m;
-    uint32_t s;
-    if (sx == sy)    { m = X + Y; s = sx; }
-    else if (X >= Y) { m = X - Y; s = sx; }
-    else             { m = Y - X; s = sy; }
-    if (m == 0) return 0.0f;                 /* exact cancellation: +0 under RNE */
-    return omega_bits_to_float(s | ref_round_small(m, ex, 23, 127, 0xffU));
-}
-
-#ifndef HWCAP2_BF16
-#define HWCAP2_BF16 (1UL << 14)
-#endif
-bool omega_numeric_cpu_has_bf16(void) {
-    return (getauxval(AT_HWCAP2) & HWCAP2_BF16) != 0;
-}
-
-/* Predicate truth per comparison outcome: bit 0 less, bit 1 equal, bit 2
- * greater, bit 3 unordered. */
-#define PL 1u
-#define PE 2u
-#define PG 4u
-#define PU 8u
-static unsigned fsetp_mask(int op) {
-    switch (op) {
-    case OMEGA_NOP_FSETP_SEL:     return PG | PE;            /* GE  */
-    case OMEGA_NOP_FSETP_LT_SEL:  return PL;
-    case OMEGA_NOP_FSETP_LE_SEL:  return PL | PE;
-    case OMEGA_NOP_FSETP_GT_SEL:  return PG;
-    case OMEGA_NOP_FSETP_EQ_SEL:  return PE;
-    case OMEGA_NOP_FSETP_NE_SEL:  return PL | PG;
-    case OMEGA_NOP_FSETP_NUM_SEL: return PL | PE | PG;
-    case OMEGA_NOP_FSETP_NAN_SEL: return PU;
-    case OMEGA_NOP_FSETP_LTU_SEL: return PL | PU;
-    case OMEGA_NOP_FSETP_LEU_SEL: return PL | PE | PU;
-    case OMEGA_NOP_FSETP_GTU_SEL: return PG | PU;
-    case OMEGA_NOP_FSETP_GEU_SEL: return PG | PE | PU;
-    case OMEGA_NOP_FSETP_EQU_SEL: return PE | PU;
-    case OMEGA_NOP_FSETP_NEU_SEL: return PL | PG | PU;
-    default:                      return 0;
-    }
-}
-
-/* Comparison outcome from the bit patterns: sign-magnitude to a signed key,
- * so -0 and +0 both map to 0. */
-static unsigned ref_order(uint32_t ua, uint32_t ub) {
-    if ((ua & 0x7fffffffU) > 0x7f800000U || (ub & 0x7fffffffU) > 0x7f800000U) return PU;
-    int64_t ka = (ua & 0x80000000U) ? -(int64_t)(ua & 0x7fffffffU) : (int64_t)ua;
-    int64_t kb = (ub & 0x80000000U) ? -(int64_t)(ub & 0x7fffffffU) : (int64_t)ub;
-    return ka < kb ? PL : ka > kb ? PG : PE;
-}
-
-int omega_ref_fsetp_pred(int op, float a, float b) {
-    unsigned m = fsetp_mask(op);
-    if (!m) return -1;
-    return (m & ref_order(omega_float_to_bits(a), omega_float_to_bits(b))) ? 1 : 0;
 }
 
 float omega_ieee_div(float x, float y) {
@@ -581,61 +333,19 @@ static const OmegaNumericOpInfo OP_TABLE[OMEGA_NOP_COUNT] = {
       "(mirror exchange inside each 64-thread CTA), bits moved unchanged", NULL },
     { OMEGA_NOP_SHFL_DOWN, "SHFL_DOWN", 1, true, OMEGA_CMP_INT_EXACT,
       "a[lane+1] within each 32-lane warp, lane 31 keeps its own value", NULL },
-    /* DIV and SQRT run the whole-program kernels of
-     * src/omega_numeric_divsqrt_gb10.c (E1 row 7), not a vecadd patch. */
-    { OMEGA_NOP_DIV, "DIV", 2, true, OMEGA_CMP_BIT_EXACT, "correctly rounded a / b (integer long division, RNE)", NULL },
-    { OMEGA_NOP_SQRT, "SQRT", 1, true, OMEGA_CMP_BIT_EXACT, "correctly rounded sqrt(a) (integer square root, RNE)", NULL },
+    { OMEGA_NOP_DIV, "DIV", 2, false, OMEGA_CMP_BIT_EXACT, "correctly rounded a / b (integer long division, RNE)",
+      "no GB10 kernel for the Omega division sequence exists (the old path ran FADD)" },
+    { OMEGA_NOP_SQRT, "SQRT", 1, false, OMEGA_CMP_BIT_EXACT, "correctly rounded sqrt(a) (integer square root, RNE)",
+      "no GB10 kernel for the Omega square-root sequence exists (the old path ran FMUL)" },
     { OMEGA_NOP_EXP, "EXP", 1, false, OMEGA_CMP_BIT_EXACT, "omega_math_exp(a)",
       "no GB10 kernel for the Omega exp polynomial exists (the old path ran FADD)" },
     { OMEGA_NOP_LOG, "LOG", 1, false, OMEGA_CMP_BIT_EXACT, "omega_math_log(a)",
       "no GB10 kernel for the Omega log polynomial exists (the old path ran FADD)" },
     { OMEGA_NOP_REDUCE_SUM, "REDUCE_SUM", 1, true, OMEGA_CMP_BIT_EXACT,
       "declared pairwise-tree warp sum (" OMEGA_WARP_REDUCTION_DECLARED_ORDER "), lane 0 of each warp", NULL },
-    /* E1 scalar contract ops (docs/numeric/E1_SCALAR_CONTRACT.md), GB10
-     * encodings added by E1 WP-C. Compare-and-select: FSETP.<P> P0, a, b ;
-     * FSEL out, a, b, P0, bits moved unchanged. */
-#define E1_SEL(op_, name_, text_) \
-    { op_, name_, 2, true, OMEGA_CMP_INT_EXACT, text_ " ? a : b, bits moved unchanged", NULL }
-    E1_SEL(OMEGA_NOP_FSETP_LT_SEL,  "FSETP_LT_SEL",  "(a < b, false if either is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_LE_SEL,  "FSETP_LE_SEL",  "(a <= b, false if either is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_GT_SEL,  "FSETP_GT_SEL",  "(a > b, false if either is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_EQ_SEL,  "FSETP_EQ_SEL",  "(a == b, false if either is NaN, -0 == +0)"),
-    E1_SEL(OMEGA_NOP_FSETP_NE_SEL,  "FSETP_NE_SEL",  "(a != b, false if either is NaN, -0 == +0)"),
-    E1_SEL(OMEGA_NOP_FSETP_NUM_SEL, "FSETP_NUM_SEL", "(neither a nor b is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_NAN_SEL, "FSETP_NAN_SEL", "(a or b is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_LTU_SEL, "FSETP_LTU_SEL", "(a < b, true if either is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_LEU_SEL, "FSETP_LEU_SEL", "(a <= b, true if either is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_GTU_SEL, "FSETP_GTU_SEL", "(a > b, true if either is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_GEU_SEL, "FSETP_GEU_SEL", "(a >= b, true if either is NaN)"),
-    E1_SEL(OMEGA_NOP_FSETP_EQU_SEL, "FSETP_EQU_SEL", "(a == b, true if either is NaN, -0 == +0)"),
-    E1_SEL(OMEGA_NOP_FSETP_NEU_SEL, "FSETP_NEU_SEL", "(a != b, true if either is NaN, -0 == +0)"),
-#undef E1_SEL
-    { OMEGA_NOP_F2I_FLOOR, "F2I_FLOOR", 1, true, OMEGA_CMP_INT_EXACT,
-      "int32 floor of a, NaN -> 0, saturating", NULL },
-    { OMEGA_NOP_F2I_CEIL, "F2I_CEIL", 1, true, OMEGA_CMP_INT_EXACT,
-      "int32 ceiling of a, NaN -> 0, saturating", NULL },
-    { OMEGA_NOP_F2I_RNI, "F2I_RNI", 1, true, OMEGA_CMP_INT_EXACT,
-      "int32 round-to-nearest-even of a, NaN -> 0, saturating", NULL },
-    { OMEGA_NOP_F2U, "F2U", 1, true, OMEGA_CMP_INT_EXACT,
-      "uint32 truncate of a, NaN -> 0, negatives -> 0, saturating", NULL },
-    { OMEGA_NOP_I2FP_U32, "I2FP_U32", 1, true, OMEGA_CMP_BIT_EXACT,
-      "(float)(uint32 bits of a), RNE", NULL },
-    { OMEGA_NOP_F32_TO_F16, "F32_TO_F16", 1, true, OMEGA_CMP_F16_BITS,
-      "binary16 of a in bits [15:0] (RNE, overflow to inf, subnormals kept, NaN stays NaN), bits [31:16] zero", NULL },
-    { OMEGA_NOP_F32_TO_BF16, "F32_TO_BF16", 1, true, OMEGA_CMP_BF16_BITS,
-      "bfloat16 of a in bits [15:0] (RNE, overflow to inf, subnormals kept, NaN stays NaN), bits [31:16] zero", NULL },
-    { OMEGA_NOP_F16_TO_F32, "F16_TO_F32", 1, true, OMEGA_CMP_BIT_EXACT,
-      "exact FP32 of the binary16 in bits [15:0] of a (bits [31:16] ignored)", NULL },
-    { OMEGA_NOP_BF16_TO_F32, "BF16_TO_F32", 1, true, OMEGA_CMP_BIT_EXACT,
-      "exact FP32 of the bfloat16 in bits [15:0] of a (bits [31:16] ignored)", NULL },
-    { OMEGA_NOP_FFMA_V, "FFMA_V", 3, true, OMEGA_CMP_BIT_EXACT, "fma(a, b, c), c read per element", NULL },
 };
 
 size_t omega_numeric_op_count(void) { return OMEGA_NOP_COUNT; }
-
-bool omega_numeric_op_whole_kernel(OmegaNumericOp op) {
-    return op == OMEGA_NOP_DIV || op == OMEGA_NOP_SQRT;
-}
 
 const OmegaNumericOpInfo *omega_numeric_op_at(size_t index) {
     return index < OMEGA_NOP_COUNT ? &OP_TABLE[index] : NULL;
@@ -656,31 +366,8 @@ const char *omega_numeric_compare_name(OmegaNumericCompare c) {
     case OMEGA_CMP_BIT_EXACT:  return "BIT_EXACT";
     case OMEGA_CMP_INT_EXACT:  return "INT_EXACT";
     case OMEGA_CMP_SEED_BOUND: return "SEED_BOUND";
-    case OMEGA_CMP_F16_BITS:   return "F16_BITS";
-    case OMEGA_CMP_BF16_BITS:  return "BF16_BITS";
     }
     return "UNKNOWN";
-}
-
-bool omega_numeric_compare_equal(OmegaNumericCompare mode, uint32_t expect, uint32_t got) {
-    switch (mode) {
-    case OMEGA_CMP_BIT_EXACT:
-        return omega_numeric_bits_equal(omega_bits_to_float(expect), omega_bits_to_float(got));
-    case OMEGA_CMP_INT_EXACT:
-        return expect == got;
-    case OMEGA_CMP_F16_BITS:
-    case OMEGA_CMP_BF16_BITS: {
-        /* 16-bit payload in [15:0]; [31:16] must be zero in both words. */
-        if ((expect >> 16) != 0 || (got >> 16) != 0) return false;
-        uint32_t inf = (mode == OMEGA_CMP_F16_BITS) ? 0x7c00U : 0x7f80U;
-        bool en = (expect & 0x7fffU) > inf, gn = (got & 0x7fffU) > inf;
-        if (en || gn) return en && gn;  /* NaN class: any NaN equals any NaN */
-        return expect == got;
-    }
-    case OMEGA_CMP_SEED_BOUND:
-        return false;                   /* never compared bit for bit */
-    }
-    return false;
 }
 
 /* ---- Refused variants ------------------------------------------------------ */
@@ -745,7 +432,6 @@ int omega_numeric_submit_check(const char *op_name,
         return refuse(err, err_len, OMEGA_NUMERIC_ERR_BAD_ARGS,
                       "op %s needs a second input%s", info->name, NULL);
     }
-    if (info->arity >= 3 && !in_c) return refuse(err, err_len, OMEGA_NUMERIC_ERR_BAD_ARGS, "op %s needs a third input (c)%s", info->name, NULL); /* CHECK:third_input */
     if (info->op == OMEGA_NOP_FFMA) {
         if (!in_c) {
             return refuse(err, err_len, OMEGA_NUMERIC_ERR_BAD_ARGS,
@@ -762,9 +448,6 @@ int omega_numeric_submit_check(const char *op_name,
     }
     if ((info->op == OMEGA_NOP_SHFL_DOWN || info->op == OMEGA_NOP_REDUCE_SUM) && (count % 32u) != 0) return refuse(err, err_len, OMEGA_NUMERIC_ERR_OPERANDS, "op %s: count must be a multiple of 32 (whole warps only)%s", info->name, NULL); /* CHECK:warp_count */
     if (info->op == OMEGA_NOP_LDS_STS && (count % OMEGA_NUMERIC_CTA_THREADS) != 0) return refuse(err, err_len, OMEGA_NUMERIC_ERR_OPERANDS, "op %s: count must be a multiple of the CTA size 64 (whole CTAs: every thread must reach BAR.SYNC)%s", info->name, NULL); /* CHECK:cta_count */
-    /* DIV/SQRT: whole-program kernels; omega_ds_gb10_run checks the kernel
-     * image, its nvdisasm-verified digest and the QMD before submission. */
-    if (omega_numeric_op_whole_kernel(info->op)) return OMEGA_NUMERIC_OK;
     /* The patch this op would submit, checked against a QMD for this launch. */
     OmegaNumericPatchInsn patch[OMEGA_NUMERIC_PATCH_MAX];
     int n = omega_numeric_patch_words(info->op, patch);
@@ -909,89 +592,6 @@ int omega_numeric_patch_words(OmegaNumericOp op,
     case OMEGA_NOP_EXP:
     case OMEGA_NOP_LOG:
         return OMEGA_NUMERIC_ERR_NOT_ENCODED;
-    /* ---- E1 scalar contract ops (E1 WP-C). Every word decoded with nvdisasm
-     * 13.0.88 -b SM121 (2026-09-30); control words follow ptxas 13.0.88 sm_121
-     * output for the same op stored with STG: FSETP/FSEL, I2FP.U32, HADD2.F32
-     * and SHF are fixed latency (stall 5 before the baseline STG); F2I and F2F
-     * set write barrier SB0 and the STG waits on it; the FFMA_V prologue
-     * (LDC.64, IMAD.WIDE.U32, LDG) mirrors the vecadd a/b address sequence. */
-#define E1_FSETP_SEL(op_, cmp_, text_, key_) \
-    case op_: \
-        PUT(0x0200720bU, 0x00000005U, 0x03f00000U | ((uint32_t)(cmp_) << 12), CTRL_FIXED, text_, key_); \
-        PUT(0x02097208U, 0x00000005U, 0x00000000U, 0x000fca00U, "FSEL R9, R2, R5, P0", "FSEL_R2_R5_P0"); \
-        out[n++] = STG0; \
-        out[n++] = EXIT; \
-        return n;
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_LT_SEL,  0x1, "FSETP.LT.AND P0, PT, R2, R5, PT",  "FSETP_LT_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_EQ_SEL,  0x2, "FSETP.EQ.AND P0, PT, R2, R5, PT",  "FSETP_EQ_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_LE_SEL,  0x3, "FSETP.LE.AND P0, PT, R2, R5, PT",  "FSETP_LE_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_GT_SEL,  0x4, "FSETP.GT.AND P0, PT, R2, R5, PT",  "FSETP_GT_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_NE_SEL,  0x5, "FSETP.NE.AND P0, PT, R2, R5, PT",  "FSETP_NE_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_NUM_SEL, 0x7, "FSETP.NUM.AND P0, PT, R2, R5, PT", "FSETP_NUM_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_NAN_SEL, 0x8, "FSETP.NAN.AND P0, PT, R2, R5, PT", "FSETP_NAN_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_LTU_SEL, 0x9, "FSETP.LTU.AND P0, PT, R2, R5, PT", "FSETP_LTU_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_EQU_SEL, 0xa, "FSETP.EQU.AND P0, PT, R2, R5, PT", "FSETP_EQU_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_LEU_SEL, 0xb, "FSETP.LEU.AND P0, PT, R2, R5, PT", "FSETP_LEU_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_GTU_SEL, 0xc, "FSETP.GTU.AND P0, PT, R2, R5, PT", "FSETP_GTU_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_NEU_SEL, 0xd, "FSETP.NEU.AND P0, PT, R2, R5, PT", "FSETP_NEU_R2_R5")
-    E1_FSETP_SEL(OMEGA_NOP_FSETP_GEU_SEL, 0xe, "FSETP.GEU.AND P0, PT, R2, R5, PT", "FSETP_GEU_R2_R5")
-#undef E1_FSETP_SEL
-    case OMEGA_NOP_F2I_FLOOR:
-        PUT(0x00097305U, 0x00000002U, 0x00207100U, CTRL_VAR, "F2I.FLOOR.NTZ R9, R2", "F2I_FLOOR");
-        out[n++] = STG1;
-        out[n++] = EXIT;
-        return n;
-    case OMEGA_NOP_F2I_CEIL:
-        PUT(0x00097305U, 0x00000002U, 0x0020b100U, CTRL_VAR, "F2I.CEIL.NTZ R9, R2", "F2I_CEIL");
-        out[n++] = STG1;
-        out[n++] = EXIT;
-        return n;
-    case OMEGA_NOP_F2I_RNI:
-        PUT(0x00097305U, 0x00000002U, 0x00203100U, CTRL_VAR, "F2I.NTZ R9, R2", "F2I_RNI");
-        out[n++] = STG1;
-        out[n++] = EXIT;
-        return n;
-    case OMEGA_NOP_F2U:
-        PUT(0x00097305U, 0x00000002U, 0x0020f000U, CTRL_VAR, "F2I.U32.TRUNC.NTZ R9, R2", "F2U");
-        out[n++] = STG1;
-        out[n++] = EXIT;
-        return n;
-    case OMEGA_NOP_I2FP_U32:
-        PUT(0x00097245U, 0x00000002U, 0x00201000U, CTRL_FIXED, "I2FP.F32.U32 R9, R2", "I2FP_U32");
-        return n;
-    case OMEGA_NOP_F32_TO_F16:
-        /* ptxas stores cvt.rn.f16.f32 + cvt.u32.u16 with no mask after F2F,
-         * i.e. it relies on F2F writing [31:16] = 0. F16_BITS parity requires
-         * [31:16] == 0 on every chip word, so the receipt is the check. */
-        PUT(0x00097304U, 0x00000002U, 0x00200800U, CTRL_VAR, "F2F.F16.F32 R9, R2", "F2F_F16_F32");
-        out[n++] = STG1;
-        out[n++] = EXIT;
-        return n;
-    case OMEGA_NOP_F32_TO_BF16:
-        PUT(0x00097304U, 0x00000002U, 0x00202000U, CTRL_VAR, "F2F.BF16.F32 R9, R2", "F2F_BF16_F32");
-        out[n++] = STG1;
-        out[n++] = EXIT;
-        return n;
-    case OMEGA_NOP_F16_TO_F32:
-        /* -0 + h widened to f32: the sequence ptxas emits for cvt.f32.f16. */
-        PUT(0xff097230U, 0x20000002U, 0x00004100U, CTRL_FIXED, "HADD2.F32 R9, -RZ, R2.H0_H0", "HADD2_F32_R2_H0");
-        return n;
-    case OMEGA_NOP_BF16_TO_F32:
-        /* A 16-bit left shift, as ptxas emits for cvt.f32.bf16. Exact by
-         * definition; NOT an independent hardware conversion unit. */
-        PUT(0x02097819U, 0x00000010U, 0x000006ffU, CTRL_FIXED, "SHF.L.U32 R9, R2, 0x10, RZ", "SHF_L_R9_R2_16");
-        return n;
-    case OMEGA_NOP_FFMA_V:
-        /* c pointer = kernel argument words 8..9 at c[0x0][0x3a0] (the executor
-         * uploads it there and copies in_c to device memory); c[i] is loaded
-         * like a[i] and b[i], then FFMA. R10/R11 are free in the baseline. */
-        PUT(0xff0a7b82U, 0x0000e800U, 0x00000a00U, CTRL_VAR, "LDC.64 R10, c[0x0][0x3a0]", "LDC64_R10_C3A0");
-        PUT(0x090a7825U, 0x00000004U, 0x078e000aU, 0x001fcc00U, "IMAD.WIDE.U32 R10, R9, 0x4, R10", "IMAD_WIDE_R10_R9_4");
-        PUT(0x0a0b7981U, 0x00000004U, 0x0c1e1900U, 0x000e2800U, "LDG.E R11, desc[UR4][R10.64]", "LDG_R11_R10");
-        PUT(0x02097223U, 0x00000005U, 0x0000000bU, CTRL_FADD_SB0, "FFMA R9, R2, R5, R11", "FFMA_R9_R2_R5_R11");
-        out[n++] = STG0;
-        out[n++] = EXIT;
-        return n;
     case OMEGA_NOP_COUNT:
         break;
     }
@@ -1034,7 +634,6 @@ static int bad(char *err, size_t err_len, const char *fmt, ...) {
 #define INSN_SRCB(p) ((p).w[1] & 0xffu)
 #define CTRL_WBAR(w3) (((w3) >> 14) & 7u)
 #define CTRL_WAIT(w3) (((w3) >> 20) & 0x3fu)
-#define CTRL_STALL(w3) (((w3) >> 9) & 0xfu)
 
 #define OPC_STS  0x7988u
 #define OPC_LDS  0x7984u
@@ -1052,85 +651,17 @@ static int bad(char *err, size_t err_len, const char *fmt, ...) {
 #define SHFL_CLAMP(p) (((p).w[1] >> 8) & 0x1fu)
 #define SHFL_FIELDS   ((0x1fu << 21) | (0x1fu << 8))
 
-#define OPC_FSETP 0x720bu
-#define OPC_LDC   0x7b82u
-#define OPC_IMADW 0x7825u
-#define OPC_LDG   0x7981u
-#define OPC_FFMA  0x7223u
-
-/* Opcodes (predicate nibble ignored) whose result is not scoreboarded: an ALU result read after a
- * fixed delay. Stores, barriers, EXIT and the variable-latency units (LDG, LDS, LDC, SHFL, MUFU,
- * F2I, F2F) are not producers in this sense; the scoreboard rules cover the latter. */
-static inline bool fixed_latency_producer(uint32_t o) {
-    switch (o & 0x0fffu) {
-    case 0x986u: case 0x988u: case 0xb1du: case 0x94du:            /* STG STS BAR EXIT */
-    case 0x981u: case 0x984u: case 0xb82u: case 0xf89u:            /* LDG LDS LDC SHFL */
-    case 0x308u: case 0x305u: case 0x304u:                         /* MUFU F2I F2F */
-        return false;
-    default:
-        return true;
-    }
-}
-
-/* FSETP compare code per E1 select op (nvdisasm 13.0.88 -b SM121). */
-static int e1_fsetp_code(OmegaNumericOp op) {
-    switch (op) {
-    case OMEGA_NOP_FSETP_LT_SEL:  return 0x1;
-    case OMEGA_NOP_FSETP_EQ_SEL:  return 0x2;
-    case OMEGA_NOP_FSETP_LE_SEL:  return 0x3;
-    case OMEGA_NOP_FSETP_GT_SEL:  return 0x4;
-    case OMEGA_NOP_FSETP_NE_SEL:  return 0x5;
-    case OMEGA_NOP_FSETP_NUM_SEL: return 0x7;
-    case OMEGA_NOP_FSETP_NAN_SEL: return 0x8;
-    case OMEGA_NOP_FSETP_LTU_SEL: return 0x9;
-    case OMEGA_NOP_FSETP_EQU_SEL: return 0xa;
-    case OMEGA_NOP_FSETP_LEU_SEL: return 0xb;
-    case OMEGA_NOP_FSETP_GTU_SEL: return 0xc;
-    case OMEGA_NOP_FSETP_NEU_SEL: return 0xd;
-    case OMEGA_NOP_FSETP_GEU_SEL: return 0xe;
-    default: return -1;
-    }
-}
-
-/* The one conversion instruction each E1 conversion op must use, R9 <- R2. */
-typedef struct { OmegaNumericOp op; uint32_t w0, w1, w2; bool variable; const char *text; } E1Cvt;
-static const E1Cvt E1_CVT[] = {
-    { OMEGA_NOP_F2I_FLOOR,    0x00097305u, 0x00000002u, 0x00207100u, true,  "F2I.FLOOR.NTZ R9, R2" },
-    { OMEGA_NOP_F2I_CEIL,     0x00097305u, 0x00000002u, 0x0020b100u, true,  "F2I.CEIL.NTZ R9, R2" },
-    { OMEGA_NOP_F2I_RNI,      0x00097305u, 0x00000002u, 0x00203100u, true,  "F2I.NTZ R9, R2 (round to nearest even)" },
-    { OMEGA_NOP_F2U,          0x00097305u, 0x00000002u, 0x0020f000u, true,  "F2I.U32.TRUNC.NTZ R9, R2" },
-    { OMEGA_NOP_I2FP_U32,     0x00097245u, 0x00000002u, 0x00201000u, false, "I2FP.F32.U32 R9, R2" },
-    { OMEGA_NOP_F32_TO_F16,   0x00097304u, 0x00000002u, 0x00200800u, true,  "F2F.F16.F32 R9, R2" },
-    { OMEGA_NOP_F32_TO_BF16,  0x00097304u, 0x00000002u, 0x00202000u, true,  "F2F.BF16.F32 R9, R2" },
-    { OMEGA_NOP_F16_TO_F32,   0xff097230u, 0x20000002u, 0x00004100u, false, "HADD2.F32 R9, -RZ, R2.H0_H0" },
-    { OMEGA_NOP_BF16_TO_F32,  0x02097819u, 0x00000010u, 0x000006ffu, false, "SHF.L.U32 R9, R2, 0x10, RZ" },
-};
-static const E1Cvt *e1_cvt(OmegaNumericOp op) {
-    for (size_t i = 0; i < sizeof(E1_CVT) / sizeof(E1_CVT[0]); i++)
-        if (E1_CVT[i].op == op) return &E1_CVT[i];
-    return NULL;
-}
-
 int omega_numeric_check_patch(OmegaNumericOp op, const OmegaNumericPatchInsn *p, int n,
                               const uint32_t *qmd1, char *err, size_t err_len) {
     if (err && err_len) err[0] = '\0';
     if (!p || !qmd1 || (unsigned)op >= OMEGA_NOP_COUNT) return bad(err, err_len, "check_patch: missing patch or QMD");
     if (n < 1 || n > (int)OMEGA_NUMERIC_PATCH_MAX) return bad(err, err_len, "patch length %d outside 1..%u", n, OMEGA_NUMERIC_PATCH_MAX); /* CHECK:patch_len */
     const char *name = OP_TABLE[op].name;
-    if (!(CTRL_WAIT(p[0].w[3]) & (1u << 4))) return bad(err, err_len, "%s: first instruction does not wait on SB4 (the a/b loads)", name); /* CHECK:first_waits_loads */
     int sts = -1, lds = -1, bar = -1, shf = -1, lop = -1, n_sts = 0, n_lds = 0, n_bar = 0, n_shfl = 0;
     for (int t = 0; t < n; t++) {
         uint32_t o = INSN_OP(p[t]);
         /* a result that arrives through a scoreboard is waited on by the next instruction */
         if (CTRL_WBAR(p[t].w[3]) <= 5u && (t + 1 >= n || !(CTRL_WAIT(p[t + 1].w[3]) & (1u << CTRL_WBAR(p[t].w[3]))))) return bad(err, err_len, "%s: instruction %d sets SB%u but the next instruction does not wait on it", name, t, CTRL_WBAR(p[t].w[3])); /* CHECK:scoreboard_wait */
-        /* ... and the setter stalls at least 2 cycles first: on GB10 a waiter issued 1 cycle after the
-         * setter does not see the barrier (chip, 2026-10-01: LDG stall 1 then FFMA read the stale R11;
-         * SHFL stall 2 then FADD is chip-proven in REDUCE_SUM) */
-        if (CTRL_WBAR(p[t].w[3]) <= 5u && CTRL_STALL(p[t].w[3]) < 2u) return bad(err, err_len, "%s: instruction %d sets SB%u with stall %u; the waiter needs a stall of at least 2", name, t, CTRL_WBAR(p[t].w[3]), CTRL_STALL(p[t].w[3])); /* CHECK:scoreboard_set_stall */
-        /* a fixed-latency result has no scoreboard: its own stall is the only thing keeping the next
-         * instruction (or the baseline STG) from reading it early. Every chip-proven fixed-latency
-         * patch instruction stalls at least 5 (ptxas 13.0.88 sm_121 uses 5 before a dependent STG). */
-        if (CTRL_WBAR(p[t].w[3]) > 5u && fixed_latency_producer(o) && CTRL_STALL(p[t].w[3]) < 5u) return bad(err, err_len, "%s: fixed-latency instruction %d stalls %u cycles; its consumer needs at least 5", name, t, CTRL_STALL(p[t].w[3])); /* CHECK:fixed_latency_stall */
         if (o == OPC_STS) {
             if ((p[t].w[0] & 0x00ffffffu) != 0x00007988u || (p[t].w[1] & ~0xffu) != 0 || p[t].w[2] != 0x080008ffu) return bad(err, err_len, "%s: STS at %d is not the encoded 32-bit STS [Rx+URZ] form", name, t); /* CHECK:sts_form */
             sts = t; n_sts++;
@@ -1193,27 +724,6 @@ int omega_numeric_check_patch(OmegaNumericOp op, const OmegaNumericPatchInsn *p,
         }
         if (p[10].w[0] != W_STG_WORD0 || p[10].w[1] != W_STG_WORD1 || p[10].w[2] != W_STG_WORD2) return bad(err, err_len, "%s: the sum in R9 is not stored by STG.E desc[UR4][R6.64] (unpredicated, 32-bit)", name); /* CHECK:reduce_store */
     }
-    /* ---- E1 scalar ops (E1 WP-C) ---- */
-    int e1_cmp = e1_fsetp_code(op);
-    if (e1_cmp >= 0) {
-        if (n != 4 || INSN_OP(p[0]) != OPC_FSETP || p[0].w[0] != 0x0200720bu || p[0].w[1] != 5u || (p[0].w[2] & ~0xf000u) != 0x03f00000u) return bad(err, err_len, "%s: patch is not FSETP.<cmp>.AND P0, PT, R2, R5, PT ; FSEL ; STG ; EXIT", name); /* CHECK:e1_fsetp_form */
-        if ((int)((p[0].w[2] >> 12) & 0xfu) != e1_cmp) return bad(err, err_len, "%s: FSETP compare code %u is not the op's code %d", name, (p[0].w[2] >> 12) & 0xfu, e1_cmp); /* CHECK:e1_fsetp_cmp */
-        if (p[1].w[0] != 0x02097208u || p[1].w[1] != 5u || p[1].w[2] != 0u) return bad(err, err_len, "%s: select is not FSEL R9, R2, R5, P0", name); /* CHECK:e1_fsel_form */
-    }
-    const E1Cvt *cv = e1_cvt(op);
-    if (cv) {
-        if (p[0].w[0] != cv->w0 || p[0].w[1] != cv->w1 || p[0].w[2] != cv->w2) return bad(err, err_len, "%s: conversion at 0 is not %s (wrong unit, rounding, type or registers)", name, cv->text); /* CHECK:e1_cvt_mode */
-        if (cv->variable != (CTRL_WBAR(p[0].w[3]) <= 5u) || n != (cv->variable ? 3 : 1)) return bad(err, err_len, "%s: %s must be %s (patch of %d)", name, cv->text, cv->variable ? "a scoreboarded result followed by STG, EXIT" : "fixed latency, the baseline STG stores it", n); /* CHECK:e1_cvt_latency */
-    }
-    if (op == OMEGA_NOP_FFMA_V) {
-        if (n != 6 || INSN_OP(p[0]) != OPC_LDC || INSN_OP(p[1]) != OPC_IMADW || INSN_OP(p[2]) != OPC_LDG || INSN_OP(p[3]) != OPC_FFMA) return bad(err, err_len, "%s: expected LDC.64, IMAD.WIDE.U32, LDG.E, FFMA, STG, EXIT", name); /* CHECK:ffmav_shape */
-        if (p[0].w[0] != 0xff0a7b82u || p[0].w[1] != 0x0000e800u || p[0].w[2] != 0x00000a00u || CTRL_WBAR(p[0].w[3]) > 5u) return bad(err, err_len, "%s: c pointer is not LDC.64 R10 (free pair R10:R11) of c[0x0][0x3a0] (kernel argument words 8..9) with a write barrier", name); /* CHECK:ffmav_cptr */
-        if (INSN_SRCA(p[1]) != 9u || p[1].w[1] != 4u || p[1].w[2] != 0x078e000au || INSN_DST(p[1]) != INSN_DST(p[0])) return bad(err, err_len, "%s: c address is not IMAD.WIDE.U32 of the index R9 by 4 onto the c pointer", name); /* CHECK:ffmav_addr */
-        if (INSN_SRCA(p[2]) != INSN_DST(p[1]) || INSN_DST(p[2]) != 11u || p[2].w[1] != 4u || p[2].w[2] != 0x0c1e1900u || CTRL_WBAR(p[2].w[3]) > 5u) return bad(err, err_len, "%s: c[i] is not LDG.E (32-bit, desc[UR4]) from the computed address into the free R11, with a write barrier", name); /* CHECK:ffmav_load */
-        if (INSN_DST(p[3]) != 9u || INSN_SRCA(p[3]) != 2u || INSN_SRCB(p[3]) != 5u || (p[3].w[2] & 0xffu) != INSN_DST(p[2]) || (p[3].w[1] & ~0xffu) != 0 || (p[3].w[2] & ~0xffu) != 0) return bad(err, err_len, "%s: FFMA is not R9 = R2 * R5 + c[i] (no negate, no modifiers)", name); /* CHECK:ffmav_fma_regs */
-    }
-    /* A multi-instruction patch stores R9 itself and ends; a single one uses the baseline STG. */
-    if (n > 1 && (p[n - 2].w[0] != W_STG_WORD0 || p[n - 2].w[1] != W_STG_WORD1 || p[n - 2].w[2] != W_STG_WORD2 || p[n - 1].w[0] != 0x0000794du || p[n - 1].w[1] != 0u || p[n - 1].w[2] != 0x03800000u)) return bad(err, err_len, "%s: patch does not end with STG.E desc[UR4][R6.64], R9 ; EXIT", name); /* CHECK:tail_store_exit */
     return OMEGA_NUMERIC_OK;
 }
 
@@ -1240,7 +750,7 @@ int omega_numeric_reference(OmegaNumericOp op, const float *a, const float *b,
     if ((unsigned)op >= OMEGA_NOP_COUNT || !a || !out) return OMEGA_NUMERIC_ERR_BAD_ARGS;
     if (!omega_numeric_fpenv_ok()) return OMEGA_NUMERIC_ERR_FPENV;
     if (needs_b(op) && !b) return OMEGA_NUMERIC_ERR_BAD_ARGS;
-    if (OP_TABLE[op].arity >= 3 && !c) return OMEGA_NUMERIC_ERR_BAD_ARGS;
+    if (op == OMEGA_NOP_FFMA && !c) return OMEGA_NUMERIC_ERR_BAD_ARGS;
     if ((op == OMEGA_NOP_SHFL_DOWN || op == OMEGA_NOP_REDUCE_SUM) && (count % 32u) != 0)
         return OMEGA_NUMERIC_ERR_OPERANDS;
     if (op == OMEGA_NOP_LDS_STS && (count % OMEGA_NUMERIC_CTA_THREADS) != 0) return OMEGA_NUMERIC_ERR_OPERANDS;
@@ -1268,35 +778,6 @@ int omega_numeric_reference(OmegaNumericOp op, const float *a, const float *b,
         case OMEGA_NOP_REDUCE_SUM:
             r = ((i % 32u) == 0) ? omega_warp_reduce_sum(&a[i]) : 0.0f;
             break;
-        case OMEGA_NOP_FSETP_LT_SEL:
-        case OMEGA_NOP_FSETP_LE_SEL:
-        case OMEGA_NOP_FSETP_GT_SEL:
-        case OMEGA_NOP_FSETP_EQ_SEL:
-        case OMEGA_NOP_FSETP_NE_SEL:
-        case OMEGA_NOP_FSETP_NUM_SEL:
-        case OMEGA_NOP_FSETP_NAN_SEL:
-        case OMEGA_NOP_FSETP_LTU_SEL:
-        case OMEGA_NOP_FSETP_LEU_SEL:
-        case OMEGA_NOP_FSETP_GTU_SEL:
-        case OMEGA_NOP_FSETP_GEU_SEL:
-        case OMEGA_NOP_FSETP_EQU_SEL:
-        case OMEGA_NOP_FSETP_NEU_SEL:
-            r = omega_ref_fsetp_pred((int)op, a[i], b[i]) == 1 ? a[i] : b[i]; /* bits moved, no FP op */
-            break;
-        case OMEGA_NOP_F2I_FLOOR: r = omega_bits_to_float((uint32_t)omega_ref_f2i_floor(a[i])); break;
-        case OMEGA_NOP_F2I_CEIL:  r = omega_bits_to_float((uint32_t)omega_ref_f2i_ceil(a[i])); break;
-        case OMEGA_NOP_F2I_RNI:   r = omega_bits_to_float((uint32_t)omega_ref_f2i_rni(a[i])); break;
-        case OMEGA_NOP_F2U:       r = omega_bits_to_float(omega_ref_f2u(a[i])); break;
-        case OMEGA_NOP_I2FP_U32:  r = omega_ref_u2f(omega_float_to_bits(a[i])); break;
-        case OMEGA_NOP_F32_TO_F16:  r = omega_bits_to_float(omega_ref_f32_to_f16(a[i])); break;
-        case OMEGA_NOP_F32_TO_BF16: r = omega_bits_to_float(omega_ref_f32_to_bf16(a[i])); break;
-        case OMEGA_NOP_F16_TO_F32:
-            r = omega_ref_f16_to_f32((uint16_t)(omega_float_to_bits(a[i]) & 0xffffU));
-            break;
-        case OMEGA_NOP_BF16_TO_F32:
-            r = omega_ref_bf16_to_f32((uint16_t)(omega_float_to_bits(a[i]) & 0xffffU));
-            break;
-        case OMEGA_NOP_FFMA_V: r = omega_ref_ffma_int(a[i], b[i], c[i]); break;
         case OMEGA_NOP_COUNT: return OMEGA_NUMERIC_ERR_BAD_ARGS;
         }
         out[i] = r;
@@ -1319,11 +800,10 @@ int omega_numeric_cpu_realize(OmegaNumericOp op, const float *a, const float *b,
     if ((unsigned)op >= OMEGA_NOP_COUNT || !a || !out) return OMEGA_NUMERIC_ERR_BAD_ARGS;
     if (!omega_numeric_fpenv_ok()) return OMEGA_NUMERIC_ERR_FPENV;
     if (needs_b(op) && !b) return OMEGA_NUMERIC_ERR_BAD_ARGS;
-    if (OP_TABLE[op].arity >= 3 && !c) return OMEGA_NUMERIC_ERR_BAD_ARGS;
+    if (op == OMEGA_NOP_FFMA && !c) return OMEGA_NUMERIC_ERR_BAD_ARGS;
     if ((op == OMEGA_NOP_SHFL_DOWN || op == OMEGA_NOP_REDUCE_SUM) && (count % 32u) != 0)
         return OMEGA_NUMERIC_ERR_OPERANDS;
     if (op == OMEGA_NOP_LDS_STS && (count % OMEGA_NUMERIC_CTA_THREADS) != 0) return OMEGA_NUMERIC_ERR_OPERANDS;
-    const bool bf16 = op == OMEGA_NOP_F32_TO_BF16 && omega_numeric_cpu_has_bf16();
     for (size_t i = 0; i < count; i++) {
         float r = 0.0f;
         float x = a[i];
@@ -1390,83 +870,6 @@ int omega_numeric_cpu_realize(OmegaNumericOp op, const float *a, const float *b,
         case OMEGA_NOP_EXP: r = omega_math_exp(x); break;
         case OMEGA_NOP_LOG: r = omega_math_log(x); break;
         case OMEGA_NOP_REDUCE_SUM: r = ((i & 31u) == 0) ? cpu_tree_sum32(&a[i]) : 0.0f; break;
-        /*
-         * E1 compare-and-select: FCMP then FCSEL on the AArch64 condition that
-         * is the predicate. FCMP flags: less 1000, equal 0110, greater 0010,
-         * unordered 0011 (NZCV). NE and EQU have no single condition, so they
-         * chain two FCSELs.
-         */
-#define CPU_SEL(cond_) __asm__ volatile("fcmp %s1, %s2\n\tfcsel %s0, %s1, %s2, " cond_ \
-                                        : "=&w"(r) : "w"(x), "w"(y) : "cc")
-        case OMEGA_NOP_FSETP_LT_SEL:  CPU_SEL("mi"); break;   /* N           */
-        case OMEGA_NOP_FSETP_LE_SEL:  CPU_SEL("ls"); break;   /* C==0 or Z   */
-        case OMEGA_NOP_FSETP_GT_SEL:  CPU_SEL("gt"); break;   /* !Z, N==V    */
-        case OMEGA_NOP_FSETP_EQ_SEL:  CPU_SEL("eq"); break;
-        case OMEGA_NOP_FSETP_NUM_SEL: CPU_SEL("vc"); break;   /* ordered     */
-        case OMEGA_NOP_FSETP_NAN_SEL: CPU_SEL("vs"); break;   /* unordered   */
-        case OMEGA_NOP_FSETP_LTU_SEL: CPU_SEL("lt"); break;   /* N!=V        */
-        case OMEGA_NOP_FSETP_LEU_SEL: CPU_SEL("le"); break;   /* Z or N!=V   */
-        case OMEGA_NOP_FSETP_GTU_SEL: CPU_SEL("hi"); break;   /* C and !Z    */
-        case OMEGA_NOP_FSETP_GEU_SEL: CPU_SEL("pl"); break;   /* N==0        */
-        case OMEGA_NOP_FSETP_NEU_SEL: CPU_SEL("ne"); break;   /* !Z          */
-#undef CPU_SEL
-        case OMEGA_NOP_FSETP_NE_SEL: {   /* less or greater */
-            float t;
-            __asm__ volatile("fcmp %s2, %s3\n\tfcsel %s1, %s2, %s3, gt\n\tfcsel %s0, %s2, %s1, mi"
-                             : "=&w"(r), "=&w"(t) : "w"(x), "w"(y) : "cc");
-            break;
-        }
-        case OMEGA_NOP_FSETP_EQU_SEL: {  /* equal or unordered */
-            float t;
-            __asm__ volatile("fcmp %s2, %s3\n\tfcsel %s1, %s2, %s3, vs\n\tfcsel %s0, %s2, %s1, eq"
-                             : "=&w"(r), "=&w"(t) : "w"(x), "w"(y) : "cc");
-            break;
-        }
-        /* E1 conversions: the AArch64 conversion instructions. NaN -> 0 and
-         * saturation are architectural for FCVT*S / FCVT*U. */
-#define CPU_F2I(insn_) do { int32_t iv_; \
-            __asm__ volatile(insn_ " %w0, %s1" : "=r"(iv_) : "w"(x)); \
-            r = omega_bits_to_float((uint32_t)iv_); } while (0)
-        case OMEGA_NOP_F2I_FLOOR: CPU_F2I("fcvtms"); break;
-        case OMEGA_NOP_F2I_CEIL:  CPU_F2I("fcvtps"); break;
-        case OMEGA_NOP_F2I_RNI:   CPU_F2I("fcvtns"); break;
-        case OMEGA_NOP_F2U:       CPU_F2I("fcvtzu"); break;
-#undef CPU_F2I
-        case OMEGA_NOP_I2FP_U32: {
-            uint32_t uv = omega_float_to_bits(x);
-            __asm__ volatile("ucvtf %s0, %w1" : "=w"(r) : "r"(uv));
-            break;
-        }
-        case OMEGA_NOP_F32_TO_F16: {
-            uint32_t hv;
-            __asm__ volatile("fcvt h16, %s1\n\tfmov %w0, s16" : "=r"(hv) : "w"(x) : "v16");
-            r = omega_bits_to_float(hv & 0xffffU);
-            break;
-        }
-        case OMEGA_NOP_F32_TO_BF16: {
-            if (!bf16) return OMEGA_NUMERIC_ERR_NOT_ENCODED;
-            uint32_t hv;
-            __asm__ volatile(".arch_extension bf16\n\tbfcvt h16, %s1\n\tfmov %w0, s16" : "=r"(hv) : "w"(x) : "v16");
-            r = omega_bits_to_float(hv & 0xffffU);
-            break;
-        }
-        case OMEGA_NOP_F16_TO_F32: {
-            uint32_t hv = omega_float_to_bits(x) & 0xffffU;
-            __asm__ volatile("fmov s16, %w1\n\tfcvt %s0, h16" : "=w"(r) : "r"(hv) : "v16");
-            break;
-        }
-        case OMEGA_NOP_BF16_TO_F32: {
-            /* AArch64 has no scalar BF16 -> FP32 instruction: widening is a
-             * 16-bit left shift (what SHLL / BFCVTN's inverse do). Same
-             * definition as the reference, so this is not an independent check. */
-            uint32_t hv = omega_float_to_bits(x) & 0xffffU, wv;
-            __asm__ volatile("lsl %w0, %w1, #16" : "=r"(wv) : "r"(hv));
-            r = omega_bits_to_float(wv);
-            break;
-        }
-        case OMEGA_NOP_FFMA_V:
-            __asm__ volatile("fmadd %s0, %s1, %s2, %s3" : "=w"(r) : "w"(x), "w"(y), "w"(c[i]));
-            break;
         case OMEGA_NOP_COUNT: return OMEGA_NUMERIC_ERR_BAD_ARGS;
         }
         out[i] = r;
@@ -1489,7 +892,8 @@ int omega_numeric_parity(OmegaNumericOp op, const float *expect, const float *go
         uint32_t ue = omega_float_to_bits(expect[i]);
         uint32_t ug = omega_float_to_bits(got[i]);
         if (mode == OMEGA_CMP_BIT_EXACT && omega_issubnormal(expect[i])) trace->subnormal_expected++;
-        bool same = omega_numeric_compare_equal(mode, ue, ug);
+        bool same = (mode == OMEGA_CMP_INT_EXACT) ? (ue == ug)
+                                                  : omega_numeric_bits_equal(expect[i], got[i]);
         if (!same) {
             if (trace->mismatches == 0) {
                 trace->first_index = (long)i;
@@ -1555,7 +959,7 @@ int omega_numeric_reference_ftz(OmegaNumericOp op, const float *a, const float *
     if ((unsigned)op >= OMEGA_NOP_COUNT || !a || !out) return OMEGA_NUMERIC_ERR_BAD_ARGS;
     if (!omega_numeric_fpenv_ok()) return OMEGA_NUMERIC_ERR_FPENV;
     if (needs_b(op) && !b) return OMEGA_NUMERIC_ERR_BAD_ARGS;
-    if (OP_TABLE[op].arity >= 3 && !c) return OMEGA_NUMERIC_ERR_BAD_ARGS;
+    if (op == OMEGA_NOP_FFMA && !c) return OMEGA_NUMERIC_ERR_BAD_ARGS;
     for (size_t i = 0; i < count; i++) {
         float x = ftz(a[i]);
         float y = b ? ftz(b[i]) : 0.0f;
@@ -1565,7 +969,6 @@ int omega_numeric_reference_ftz(OmegaNumericOp op, const float *a, const float *
         case OMEGA_NOP_FSUB: r = omega_ref_fsub(x, y); break;
         case OMEGA_NOP_FMUL: r = omega_ref_fmul(x, y); break;
         case OMEGA_NOP_FFMA: r = omega_ref_ffma(x, y, ftz(c[i])); break;
-        case OMEGA_NOP_FFMA_V: r = omega_ref_ffma_int(x, y, ftz(c[i])); break;
         case OMEGA_NOP_FMNMX_MIN: r = omega_ref_fmin(x, y); break;
         case OMEGA_NOP_FMNMX_MAX: r = omega_ref_fmax(x, y); break;
         default: return OMEGA_NUMERIC_ERR_OPERANDS; /* only arithmetic ops have an FTZ model */
