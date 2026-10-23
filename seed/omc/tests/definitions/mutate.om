@@ -1,0 +1,124 @@
+note Compiler controls are generated in seeded Om from one exact source match.
+global src uchar 100000
+global out uchar 100000
+global ctl uchar 1
+global used ulong 1
+global dst ulong 1
+global mode ulong 1
+global hits ulong 1
+text n0 "dhbyte get dmeta i"
+text r0 "dhbyte 0"
+text n1 "put dend sub get curfn 0 1 get cur 0"
+text r1 "put dend sub get curfn 0 1 sub get cur 0 1"
+text n2 "emitb get dsrcsha i"
+text r2 "emitb 0"
+
+fn match p ulong to ulong
+yes = true
+if eq get mode 0 0
+if gt add p len n0 get used 0
+ret 0
+end
+for i ulong len n0
+if ne get src add p i get n0 i
+yes = false
+end
+end
+if yes
+ret len n0
+end
+end
+if eq get mode 0 1
+if gt add p len n1 get used 0
+ret 0
+end
+for i ulong len n1
+if ne get src add p i get n1 i
+yes = false
+end
+end
+if yes
+ret len n1
+end
+end
+if eq get mode 0 2
+if gt add p len n2 get used 0
+ret 0
+end
+for i ulong len n2
+if ne get src add p i get n2 i
+yes = false
+end
+end
+if yes
+ret len n2
+end
+end
+ret 0
+end
+
+fn addb b uchar to void
+put out get dst 0 b
+put dst 0 add get dst 0 1
+end
+fn change to void
+if eq get mode 0 0
+for i ulong len r0
+addb get r0 i
+end
+end
+if eq get mode 0 1
+for i ulong len r1
+addb get r1 i
+end
+end
+if eq get mode 0 2
+for i ulong len r2
+addb get r2 i
+end
+end
+end
+
+fn main to int
+n = read 0 ctl 0 1
+if ne n 1
+ret 90
+end
+put mode 0 ulong get ctl 0
+if gt get mode 0 2
+ret 90
+end
+go = true
+while go
+n = read 0 src get used 0 sub len src get used 0
+if lt n 0
+ret 91
+end
+if eq n 0
+go = false
+else
+put used 0 add get used 0 ulong n
+end
+end
+p = ulong 0
+while lt p get used 0
+k = match p
+if ne k 0
+change
+put hits 0 add get hits 0 1
+p = add p k
+else
+addb get src p
+p = add p 1
+end
+end
+if ne get hits 0 1
+ret 92
+end
+n = write 1 out 0 get dst 0
+if ne n long get dst 0
+ret 93
+end
+ret 0
+end
+

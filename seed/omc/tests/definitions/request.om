@@ -1,0 +1,181 @@
+note Definition-export request fixtures. Mode byte0..12 is external test data.
+global req uchar 70000
+global qlen ulong 1
+global mode uchar 1
+text repo "aien-dev/omega-mv"
+text other "aien-dev/other"
+text path "src/a.om"
+text path2 "src/b.om"
+text rev "57f5f4258cebf3d5b2c22853cd062e351265c525"
+text rev2 "0000000000000000000000000000000000000000"
+text s0 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\nend\n"
+text s1 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn beta to int\nret 3\nend\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\nend\n"
+text s2 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 8\nend\nfn main to int\nret alpha\nend\n"
+text s3 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn main to int\nret 0\nend\n"
+text s4 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\nend\n"
+text s5 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\nend\n"
+text s6 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\nend\n"
+text s7 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn alpha to int\nret 9\nend\nfn main to int\nret alpha\nend\n"
+text s8 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret false\nend\nfn main to int\nret alpha\nend\n"
+text s9 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\n"
+text s10 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\nend\n"
+text s11 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\nend\n"
+text s12 "note fn ghost to int\ntext decoy \"fn shadow to int\"\nfn alpha to int\nret 7\nend\nfn main to int\nret alpha\nend\n"
+
+fn qbyte v uchar to void
+put req get qlen 0 v
+put qlen 0 add get qlen 0 1
+end
+fn qword v ulong to void
+for i ulong 4
+qbyte uchar and shr v mul i 8 255
+end
+end
+fn head n ulong to void
+qbyte 79
+qbyte 77
+qbyte 68
+qbyte 69
+qbyte 70
+qbyte 48
+qbyte 48
+if eq get mode 0 10
+qbyte 50
+else
+qbyte 49
+end
+if eq get mode 0 5
+qword len other
+else
+qword len repo
+end
+qword len path
+qword len rev
+if eq get mode 0 11
+qword 65537
+else
+qword n
+end
+if eq get mode 0 5
+for i ulong len other
+qbyte get other i
+end
+else
+for i ulong len repo
+qbyte get repo i
+end
+end
+if eq get mode 0 4
+for i ulong len path2
+qbyte get path2 i
+end
+else
+for i ulong len path
+qbyte get path i
+end
+end
+if eq get mode 0 6
+for i ulong len rev2
+qbyte get rev2 i
+end
+else
+for i ulong len rev
+qbyte get rev i
+end
+end
+end
+
+fn main to int
+n = read 0 mode 0 1
+if ne n 1
+ret 90
+end
+if eq get mode 0 0
+head len s0
+for i ulong len s0
+qbyte get s0 i
+end
+end
+if eq get mode 0 1
+head len s1
+for i ulong len s1
+qbyte get s1 i
+end
+end
+if eq get mode 0 2
+head len s2
+for i ulong len s2
+qbyte get s2 i
+end
+end
+if eq get mode 0 3
+head len s3
+for i ulong len s3
+qbyte get s3 i
+end
+end
+if eq get mode 0 4
+head len s4
+for i ulong len s4
+qbyte get s4 i
+end
+end
+if eq get mode 0 5
+head len s5
+for i ulong len s5
+qbyte get s5 i
+end
+end
+if eq get mode 0 6
+head len s6
+for i ulong len s6
+qbyte get s6 i
+end
+end
+if eq get mode 0 7
+head len s7
+for i ulong len s7
+qbyte get s7 i
+end
+end
+if eq get mode 0 8
+head len s8
+for i ulong len s8
+qbyte get s8 i
+end
+end
+if eq get mode 0 9
+head len s9
+for i ulong len s9
+qbyte get s9 i
+end
+end
+if eq get mode 0 10
+head len s10
+for i ulong len s10
+qbyte get s10 i
+end
+end
+if eq get mode 0 11
+head len s11
+for i ulong len s11
+qbyte get s11 i
+end
+end
+if eq get mode 0 12
+head len s12
+for i ulong len s12
+qbyte get s12 i
+end
+end
+
+if eq get mode 0 12
+put qlen 0 sub get qlen 0 1
+end
+n = write 1 req 0 get qlen 0
+if ne n long get qlen 0
+ret 91
+end
+ret 0
+end
+

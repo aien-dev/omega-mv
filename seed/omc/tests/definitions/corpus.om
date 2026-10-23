@@ -1,0 +1,79 @@
+note Pinned public corpus request packer. Input mode byte1 or2 then exact source.
+global source uchar 65537
+global used ulong 1
+global req uchar 66264
+global dst ulong 1
+global mode uchar 1
+text repo "aien-dev/omega-mv"
+text path1 "seed/omc/tests/struct/t1.om"
+text path2 "seed/omc/tests/struct/t2.om"
+text rev "57f5f4258cebf3d5b2c22853cd062e351265c525"
+text magic "OMDEF001"
+
+fn qbyte v uchar to void
+put req get dst 0 v
+put dst 0 add get dst 0 1
+end
+fn qword v ulong to void
+for i ulong 4
+qbyte uchar and shr v mul i 8 255
+end
+end
+fn main to int
+n = read 0 mode 0 1
+if ne n 1
+ret 90
+end
+if or lt get mode 0 1 gt get mode 0 2
+ret 90
+end
+go = true
+while go
+n = read 0 source get used 0 sub len source get used 0
+if lt n 0
+ret 91
+end
+if eq n 0
+go = false
+else
+put used 0 add get used 0 ulong n
+end
+end
+if or eq get used 0 0 gt get used 0 65536
+ret 92
+end
+for i ulong len magic
+qbyte get magic i
+end
+qword len repo
+qword len path1
+qword len rev
+qword get used 0
+for i ulong len repo
+qbyte get repo i
+end
+if eq get mode 0 1
+for i ulong len path1
+qbyte get path1 i
+end
+else
+for i ulong len path2
+qbyte get path2 i
+end
+end
+for i ulong len rev
+qbyte get rev i
+end
+for i ulong get used 0
+qbyte get source i
+end
+done = ulong 0
+while lt done get dst 0
+n = write 1 req done sub get dst 0 done
+if lt n 1
+ret 93
+end
+done = add done ulong n
+end
+ret 0
+end

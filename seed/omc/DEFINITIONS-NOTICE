@@ -1,0 +1,28 @@
+Definition export SHA-256 attribution
+Copyright 2026 Drake Stapleton and AIEN Contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+The SHA-256 arithmetic embedded in omc.om is reused from the native Omega file
+src/source-aware/vendor/sha256.om in aien-dev/omega-mv, branch
+universal/621-source-aware, commit cd2c41f3c697524629585b2a228e2f0ab5b99c45.
+Original file SHA-256:
+12d492b5f99b47b1e525067e1660c7cedbf6b414032cfc8b7e174919a28c052c.
+Identifiers are namespaced to avoid collisions in this single-source compiler.
+
+Retained upstream notice:
+AIEN TRN1 native verifier
+Native Omega port of the complete TRN1 schema-1 verification utility in
+AIEN Sovereign Core, crates/aien-replay/src/lib.rs at
+754c07b118f41ad899607b60329bd851b1ccb13e.
+Original source SHA-256:
+8824370f30573dea68a011ec457e55470eb4d688483a1de0fec96ffcb5757aeb.
+Original author: Drake Stapleton <aien@aienos.com>.
+Original repository: https://github.com/aien-dev/aien-sovereign-core-mv
+
+This product includes software developed by Drake Stapleton in cognitive
+partnership with AIEN (Autonomous Cognitive Architecture operating on the
+Atlas Framework).
+
+Licensed under GNU Affero General Public License v3.0 or later. The repository
+LICENSE contains the license text. No model weights or third-party model
+implementation are included.

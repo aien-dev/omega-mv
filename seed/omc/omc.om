@@ -17,6 +17,17 @@ global tbig ulong 1
 global out uchar 8388608
 global oc ulong 1
 
+note Definition export v1 is an opt-in framed compiler result, never a second parser.
+global dmode ulong 1
+global dmeta uchar 704
+global drepo ulong 1
+global dpath ulong 1
+global drev ulong 1
+global dstart ulong 512
+global dend ulong 512
+global dtoken ulong 1
+global dsrcsha uchar 32
+
 note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
 global nm_name ulong 1024
 global nm_reg uchar 1024
@@ -117,6 +128,9 @@ end
 
 note fail: write "omc: line N: error E" to stderr (fd 2) and exit with the code
 fn fail code ulong to void
+if ne get dmode 0 0
+derror code
+end
 put mc 0 0
 mputb 111
 mputb 109
@@ -2370,6 +2384,7 @@ put fn_ret f 0
 put fn_np f 0
 put fn_nmlen f l
 put fn_off f s
+put dstart f get dtoken 0
 else
 f = sub findfn w l s 1
 put curfn 0 add f 1
@@ -2746,6 +2761,9 @@ note one returns; then the trap stubs: shared tail, function mode MOV X0, X7; LD
 note (C6.2.282, C6.2.216, C6.2.46: OscRt.trap); program mode ADD X0, X1, #100; MOVZ X8, #93; SVC #0 (exit
 note 100 + code). Per trap code used: MOVZ X1, #code (C6.2.285); B tail. om4 FINISH.
 fn finish to void
+if ne get dmode 0 0
+put dend sub get curfn 0 1 get cur 0
+end
 eol
 if eq get dead 0 0
 if ne get curret 0 10
@@ -2958,6 +2976,9 @@ if eq get nf 0 0
 fail 16
 end
 resolve
+if ne get dmode 0 0
+dexport
+end
 if ne get progmode 0 0
 eof_prog
 end
@@ -3204,6 +3225,7 @@ go = false
 else
 if ne get tk 0 0
 if and eq get tk 0 1 eq get tw 0 28262
+put dtoken 0 get ts 0
 s_fn
 else
 if and eq get tk 0 1 eq get tw 0 127970521019507
@@ -3729,6 +3751,374 @@ put fr q 5
 put fr add q 1 ulong get nm_reg sub e 1
 put fr add q 2 e
 end
+
+note Definition export SHA256 arithmetic is reused from source-aware/vendor/sha256.om
+note at cd2c41f3c697524629585b2a228e2f0ab5b99c45, SHA256
+note 12d492b5f99b47b1e525067e1660c7cedbf6b414032cfc8b7e174919a28c052c.
+note Only identifiers are namespaced; the AGPL-3.0-or-later notice is retained.
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Exact native TRN1 SHA256 functions; see NOTICE. Buffer declarations bounded for this caller.
+global dBuf uchar 8192
+global dH uint 8
+global dVv uint 8
+global dW uint 64
+global dK uint 64
+global dHb uchar 64
+global dHs ulong 2
+global dHash uchar 32
+fn drotate x uint n uint to uint
+ret or shr x n shl x sub 32 n
+end
+
+fn dround i ulong to void
+e = get dVv 4
+a = get dVv 0
+s = xor xor drotate e 6 drotate e 11 drotate e 25
+c = xor and e get dVv 5 and not e get dVv 6
+t = add add get dVv 7 s add c add get dK i get dW i
+s = xor xor drotate a 2 drotate a 13 drotate a 22
+c = and a get dVv 1
+c = xor c and a get dVv 2
+c = xor c and get dVv 1 get dVv 2
+u = add s c
+put dVv 7 get dVv 6
+put dVv 6 get dVv 5
+put dVv 5 e
+put dVv 4 add get dVv 3 t
+put dVv 3 get dVv 2
+put dVv 2 get dVv 1
+put dVv 1 a
+put dVv 0 add t u
+end
+
+fn dblock to void
+for i ulong 16
+x = uint 0
+for j ulong 4
+x = or shl x 8 uint get dHb add mul i 4 j
+end
+put dW i x
+end
+for j ulong 48
+i = add j 16
+x = get dW sub i 15
+y = get dW sub i 2
+s = xor xor drotate x 7 drotate x 18 shr x 3
+t = xor xor drotate y 17 drotate y 19 shr y 10
+put dW i add add get dW sub i 16 s add get dW sub i 7 t
+end
+for i ulong 8
+put dVv i get dH i
+end
+for i ulong 64
+dround i
+end
+for i ulong 8
+put dH i add get dH i get dVv i
+end
+end
+
+fn dhinit to void
+put dH 0 1779033703
+put dH 1 3144134277
+put dH 2 1013904242
+put dH 3 2773480762
+put dH 4 1359893119
+put dH 5 2600822924
+put dH 6 528734635
+put dH 7 1541459225
+put dHs 0 0
+put dHs 1 0
+end
+
+fn dhbyte c uchar to void
+p = get dHs 0
+put dHb p c
+p = add p 1
+put dHs 1 add get dHs 1 1
+if eq p 64
+dblock
+p = 0
+end
+put dHs 0 p
+end
+
+fn dupdate off ulong count ulong to void
+for i ulong count
+dhbyte get dBuf add off i
+end
+end
+
+fn dhfinish to void
+bits = mul get dHs 1 8
+dhbyte 128
+while ne get dHs 0 56
+dhbyte 0
+end
+for i ulong 8
+dhbyte uchar and shr bits mul sub 7 i 8 255
+end
+for i ulong 32
+x = get dH div i 4
+put dHash i uchar and shr x uint mul sub 3 rem i 4 8 255
+end
+end
+
+fn dconst to void
+put dK 0 1116352408
+put dK 1 1899447441
+put dK 2 3049323471
+put dK 3 3921009573
+put dK 4 961987163
+put dK 5 1508970993
+put dK 6 2453635748
+put dK 7 2870763221
+put dK 8 3624381080
+put dK 9 310598401
+put dK 10 607225278
+put dK 11 1426881987
+put dK 12 1925078388
+put dK 13 2162078206
+put dK 14 2614888103
+put dK 15 3248222580
+put dK 16 3835390401
+put dK 17 4022224774
+put dK 18 264347078
+put dK 19 604807628
+put dK 20 770255983
+put dK 21 1249150122
+put dK 22 1555081692
+put dK 23 1996064986
+put dK 24 2554220882
+put dK 25 2821834349
+put dK 26 2952996808
+put dK 27 3210313671
+put dK 28 3336571891
+put dK 29 3584528711
+put dK 30 113926993
+put dK 31 338241895
+put dK 32 666307205
+put dK 33 773529912
+put dK 34 1294757372
+put dK 35 1396182291
+put dK 36 1695183700
+put dK 37 1986661051
+put dK 38 2177026350
+put dK 39 2456956037
+put dK 40 2730485921
+put dK 41 2820302411
+put dK 42 3259730800
+put dK 43 3345764771
+put dK 44 3516065817
+put dK 45 3600352804
+put dK 46 4094571909
+put dK 47 275423344
+put dK 48 430227734
+put dK 49 506948616
+put dK 50 659060556
+put dK 51 883997877
+put dK 52 958139571
+put dK 53 1322822218
+put dK 54 1537002063
+put dK 55 1747873779
+put dK 56 1955562222
+put dK 57 2024104815
+put dK 58 2227730452
+put dK 59 2361852424
+put dK 60 2428436474
+put dK 61 2756734187
+put dK 62 3204031479
+put dK 63 3329325298
+end
+
+
+note Detect framed mode early so bounded framing failures remain structured.
+fn ddetect to void
+if lt get inlen 0 5
+ret
+end
+if ne get inp 0 79
+ret
+end
+if ne get inp 1 77
+ret
+end
+if ne get inp 2 68
+ret
+end
+if ne get inp 3 69
+ret
+end
+if ne get inp 4 70
+ret
+end
+put dmode 0 1
+if gt get inlen 0 66264
+fail 81
+end
+end
+
+fn dget32 p ulong to ulong
+v = ulong 0
+for i ulong 4
+v = or v shl ulong get inp add p i mul i 8
+end
+ret v
+end
+
+note Metadata identifies a corpus coordinate, not an authorization grant.
+fn dframe to void
+if eq get dmode 0 0
+ret
+end
+if lt get inlen 0 24
+fail 80
+end
+if ne get inp 5 48
+fail 80
+end
+if ne get inp 6 48
+fail 80
+end
+if ne get inp 7 49
+fail 80
+end
+r = dget32 8
+p = dget32 12
+v = dget32 16
+n = dget32 20
+if or eq r 0 gt r 128
+fail 82
+end
+if or eq p 0 gt p 512
+fail 82
+end
+if and ne v 40 ne v 64
+fail 82
+end
+if or eq n 0 gt n 65536
+fail 81
+end
+m = add add r p v
+if ne add add 24 m n get inlen 0
+fail 80
+end
+for i ulong m
+b = get inp add 24 i
+if or lt b 33 gt b 126
+fail 82
+end
+put dmeta i b
+end
+for i ulong v
+b = get dmeta add add r p i
+if not or and ge b 48 le b 57 and ge b 97 le b 102
+fail 82
+end
+end
+put drepo 0 r
+put dpath 0 p
+put drev 0 v
+for i ulong n
+put inp i get inp add add 24 m i
+end
+put inlen 0 n
+dconst
+dhinit
+for i ulong n
+dhbyte get inp i
+end
+dhfinish
+for i ulong 32
+put dsrcsha i get dHash i
+end
+end
+
+note LE u32 hashing is length-delimited, domain-separated, and independent of revision/order.
+fn dh32 v ulong to void
+for i ulong 4
+dhbyte uchar and shr v mul i 8 255
+end
+end
+
+fn did f ulong to void
+dhinit
+dhbyte 79
+dhbyte 109
+dhbyte 68
+dhbyte 101
+dhbyte 102
+dhbyte 73
+dhbyte 100
+dhbyte 49
+dh32 get drepo 0
+for i ulong get drepo 0
+dhbyte get dmeta i
+end
+dh32 get dpath 0
+for i ulong get dpath 0
+dhbyte get dmeta add get drepo 0 i
+end
+dh32 1
+dh32 get fn_nmlen f
+for i ulong get fn_nmlen f
+dhbyte get inp add get fn_off f i
+end
+dhfinish
+end
+
+fn dheader code ulong count ulong to void
+put oc 0 0
+emitb 79
+emitb 77
+emitb 68
+emitb 69
+emitb 70
+emitb 82
+emitb 48
+emitb 49
+emit 1
+emit code
+emit get inlen 0
+emit count
+for i ulong 32
+emitb get dsrcsha i
+end
+end
+
+note A refusal has no records. Only structured framing bytes are exposed on stdout.
+fn derror code ulong to void
+dheader code 0
+p = ulong 0
+while lt p 56
+n = write 1 out p sub 56 p
+if le n 0
+exit int 2
+end
+p = add p ulong n
+end
+exit int code
+end
+
+note Export only after the ordinary complete compiler passes and call resolution succeed.
+fn dexport to void
+dheader 0 get nf 0
+for f ulong get nf 0
+emit 1
+emit get dstart f
+emit get dend f
+emit get fn_nmlen f
+did f
+for i ulong 32
+emitb get dHash i
+end
+for i ulong get fn_nmlen f
+emitb get inp add get fn_off f i
+end
+end
+writeout 0
+end
+
 note main: read all of stdin
 note (8 MiB at most, error 14; a read error is 1), find the mode, then one
 note statement per line from output byte 180 (om4 START .. STMT)
@@ -3749,11 +4139,14 @@ if lt n 0
 fail 1
 end
 off = add off ulong n
+put inlen 0 off
+ddetect
 end
 m = add m 1
 end
 end
 put inlen 0 off
+dframe
 prescan
 namescan
 put oc 0 180

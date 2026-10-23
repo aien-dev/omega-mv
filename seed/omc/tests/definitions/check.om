@@ -1,0 +1,197 @@
+note Independent definition-export result oracle. Golden SHA256 from external sha256sum.
+note Exact spans computed from the fixed public source literals, never candidate output.
+global data uchar 20000
+global total ulong 1
+global checks ulong 1
+global bad ulong 1
+global msg uchar 64
+global mc ulong 1
+text magic "OMDEFR01"
+text hs0 "1a97b2dba35313ff25dcc7fc372ad9446a3cfafb025de3d041fcee13f3430625"
+text hs1 "ba76433658e8220b1df92c7b5e31fa7aeb782525cd110a018b9e1f3f450c8ae8"
+text hs2 "c532fce748267d120b6d6b4b561c9403860c3213482123389111170ef7509cda"
+text hs3 "c25ea21d0e3d3a8f347f6f2a3eee6bc672397924a3300faa65a3470088b1dfdb"
+text hs4 "1a97b2dba35313ff25dcc7fc372ad9446a3cfafb025de3d041fcee13f3430625"
+text hs5 "1a97b2dba35313ff25dcc7fc372ad9446a3cfafb025de3d041fcee13f3430625"
+text hs6 "1a97b2dba35313ff25dcc7fc372ad9446a3cfafb025de3d041fcee13f3430625"
+text ha "3956a4f66d2cab944d0ef36909d8ba6b14f8ebbd1f9c719e42475aaceeb3fe11"
+text hm "f118ba20a55cbea9f44fbb5d53569d0b7dbc30ac6e6f4e8cb04902010406679a"
+text hb "a87ac548b2f300a204a9543f535efce80e225ff0343d7bb81e84fc8cc50bcb8a"
+text hpa "2bc79ec3afa863c5c79d5e8608803498900b8a8d5c9a69d50cc0e9773de4bce6"
+text hpm "52aff277e6f1b2a8f1d7c90e664bd4eb0cc549b7d97b529463d82734dafbf8de"
+text hra "af58168c632c6b424f5a221d10d3a26e62b203f666739481c60818ba82dcfd9f"
+text hrm "86a7562ef631d36052c0bb0a3821b022b618b2986997783cb4f67dc8b99afc32"
+
+fn chk b bool to void
+put checks 0 add get checks 0 1
+if not b
+put bad 0 add get bad 0 1
+end
+end
+fn at32 p ulong to ulong
+v = ulong 0
+for i ulong 4
+v = or v shl ulong get data add p i mul i 8
+end
+ret v
+end
+fn digit b uchar to uchar
+if le b 57
+ret sub b 48
+end
+ret sub b 87
+end
+fn hashchk p ulong h view uchar 64 to void
+for i ulong 32
+v = add mul digit get h mul i 2 16 digit get h add mul i 2 1
+chk eq get data add p i v
+end
+end
+fn header p ulong code ulong sl ulong count ulong to void
+for i ulong 8
+chk eq get data add p i get magic i
+end
+chk eq at32 add p 8 1
+chk eq at32 add p 12 code
+chk eq at32 add p 16 sl
+chk eq at32 add p 20 count
+end
+fn record p ulong st ulong en ulong n ulong to void
+chk eq at32 p 1
+chk eq at32 add p 4 st
+chk eq at32 add p 8 en
+chk eq at32 add p 12 n
+end
+fn recname p ulong n ulong nm ulong to ulong
+for i ulong n
+pos = add add p 48 i
+got = get data pos
+want = uchar and shr nm mul i 8 255
+chk eq got want
+end
+ret add add p 48 n
+end
+fn emit v uchar to void
+put msg get mc 0 v
+put mc 0 add get mc 0 1
+end
+fn number v ulong to void
+digits = new uchar 20 0
+n = ulong 0
+x = v
+while or eq n 0 ne x 0
+put digits n uchar add rem x 10 48
+x = div x 10
+n = add n 1
+end
+while ne n 0
+n = sub n 1
+emit get digits n
+end
+end
+fn main to int
+off = ulong 0
+go = true
+while go
+n = read 0 data off sub len data off
+if lt n 0
+ret 98
+end
+if eq n 0
+go = false
+else
+off = add off ulong n
+end
+end
+put total 0 off
+p = ulong 0
+header p 0 106 2
+hashchk add p 24 hs0
+p = add p 56
+record p 51 76 5
+hashchk add p 16 ha
+p = recname p 5 418364025953
+record p 77 105 4
+hashchk add p 16 hm
+p = recname p 4 1852399981
+header p 0 131 3
+hashchk add p 24 hs1
+p = add p 56
+record p 51 75 4
+hashchk add p 16 hb
+p = recname p 4 1635018082
+record p 76 101 5
+hashchk add p 16 ha
+p = recname p 5 418364025953
+record p 102 130 4
+hashchk add p 16 hm
+p = recname p 4 1852399981
+header p 0 106 2
+hashchk add p 24 hs2
+p = add p 56
+record p 51 76 5
+hashchk add p 16 ha
+p = recname p 5 418364025953
+record p 77 105 4
+hashchk add p 16 hm
+p = recname p 4 1852399981
+header p 0 76 1
+hashchk add p 24 hs3
+p = add p 56
+record p 51 75 4
+hashchk add p 16 hm
+p = recname p 4 1852399981
+header p 0 106 2
+hashchk add p 24 hs4
+p = add p 56
+record p 51 76 5
+hashchk add p 16 hpa
+p = recname p 5 418364025953
+record p 77 105 4
+hashchk add p 16 hpm
+p = recname p 4 1852399981
+header p 0 106 2
+hashchk add p 24 hs5
+p = add p 56
+record p 51 76 5
+hashchk add p 16 hra
+p = recname p 5 418364025953
+record p 77 105 4
+hashchk add p 16 hrm
+p = recname p 4 1852399981
+header p 0 106 2
+hashchk add p 24 hs6
+p = add p 56
+record p 51 76 5
+hashchk add p 16 ha
+p = recname p 5 418364025953
+record p 77 105 4
+hashchk add p 16 hm
+p = recname p 4 1852399981
+header p 10 132 0
+p = add p 56
+header p 7 110 0
+p = add p 56
+header p 15 102 0
+p = add p 56
+header p 80 195 0
+p = add p 56
+header p 81 195 0
+p = add p 56
+header p 80 194 0
+p = add p 56
+chk eq p get total 0
+number get checks 0
+emit 32
+number get bad 0
+emit 10
+n = write 1 msg 0 get mc 0
+if ne n long get mc 0
+ret 99
+end
+if ne get bad 0 0
+ret 1
+end
+ret 0
+end
+
