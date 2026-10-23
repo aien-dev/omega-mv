@@ -1,0 +1,5 @@
+struct P x uint y uint end
+fn main to uint
+p = new P 20 22
+ret get p x
+end
