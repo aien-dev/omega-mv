@@ -1,0 +1,6 @@
+// prove: next_counter8
+// expect: holds
+// Bounded byte-counter model only. Actual u64 transport boundary is host tested.
+fn next_counter8(n: u8) -> u8 requires n < 255 ensures result > n {
+    return n + 1;
+}

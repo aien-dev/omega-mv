@@ -1,0 +1,6 @@
+// prove: next_counter
+// expect: trap
+// Unsigned wrap at MAX violates strict advancement when the guard is removed.
+fn next_counter(n: u64) -> u64 ensures result > n {
+    return n + 1;
+}

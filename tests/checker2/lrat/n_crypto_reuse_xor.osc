@@ -1,0 +1,6 @@
+// prove: reuse_xor
+// expect: trap
+// Deliberately incorrect detector: any byte triple is allowed.
+fn reuse_xor(p: u8, q: u8, k: u8) -> u8 ensures result == (p ^ q) {
+    return (p ^ k) ^ q;
+}

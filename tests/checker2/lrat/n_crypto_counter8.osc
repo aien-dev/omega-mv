@@ -1,0 +1,6 @@
+// prove: next_counter8
+// expect: trap
+// Remove byte-model exhaustion guard; MAX=255 must violate strict advancement.
+fn next_counter8(n: u8) -> u8 ensures result > n {
+    return n + 1;
+}

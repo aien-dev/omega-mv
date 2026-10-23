@@ -1,0 +1,6 @@
+// prove: next_counter
+// expect: holds
+// Exact guard used by the transport, unsigned 64-bit arithmetic.
+fn next_counter(n: u64) -> u64 requires n < 18446744073709551615 ensures result > n {
+    return n + 1;
+}

@@ -1,0 +1,6 @@
+// prove: reuse_xor_bit
+// expect: holds
+// One-bit keystream reuse identity. All eight Boolean triples, not cipher security.
+fn reuse_xor_bit(p: bool, q: bool, k: bool) -> bool ensures result == (p != q) {
+    return (p != k) != (q != k);
+}

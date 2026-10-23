@@ -1,0 +1,6 @@
+// prove: reuse_xor
+// expect: holds
+// Scalar byte relation only, not cipher security or a cipher model.
+fn reuse_xor(p: u8, q: u8, k: u8) -> u8 ensures result == (p ^ q) {
+    return (p ^ k) ^ (q ^ k);
+}
