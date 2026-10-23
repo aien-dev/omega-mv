@@ -1,0 +1,1239 @@
+note c2om scalar stage. C source on stdin, Omegese on stdout, atomic refusal on stderr.
+note Fixed pools; names are compared by full byte spans and renamed vN/fN in output.
+global src uchar 1048576
+global size ulong 1
+global pos ulong 1
+global line ulong 1
+global tok ulong 1
+global start ulong 1
+global width ulong 1
+global number ulong 1
+global output uchar 4194304
+global used ulong 1
+global ns ulong 4096
+global nl ulong 4096
+global nk ulong 4096
+global na ulong 4096
+global names ulong 1
+global base ulong 1
+global curfn ulong 1
+global mainid ulong 1
+global depth ulong 1
+global ak ulong 65536
+global al ulong 65536
+global ar ulong 65536
+global ae ulong 65536
+global nodes ulong 1
+
+fn emit b uchar to void
+n = get used 0
+if ge n 4194304
+exit 65
+end
+put output n b
+put used 0 add n 1
+end
+
+fn decimal v ulong to void
+a = new uchar 20 0
+n = ulong 0
+x = v
+put a n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+while gt x 0
+put a n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+end
+while gt n 0
+n = sub n 1
+emit get a n
+end
+end
+text t1 "fn "
+text t2 "main"
+text t3 "f"
+text t4 "v"
+text t5 " int"
+text t6 " to int\n"
+text t7 " = int "
+text t8 "\n"
+text t9 "end\n"
+text t10 "ret "
+text t11 "if ne "
+text t12 " 0\n"
+text t13 "else\n"
+text t14 "while ne "
+text t15 " = "
+text t16 "add "
+text t17 "sub "
+text t18 "mul "
+text t19 "div "
+text t20 "rem "
+text t21 "int eq "
+text t22 "int ne "
+text t23 "int lt "
+text t24 "int le "
+text t25 "int gt "
+text t26 "int ge "
+text t27 "neg "
+text t28 "int eq "
+text t29 "cg"
+text t30 "cp"
+text t31 "discard = "
+text t32 "int "
+text t33 "not "
+text t34 "and "
+text t35 "or "
+text t36 "xor "
+
+fn say id ulong to void
+if eq id 1
+i = ulong 0
+while lt i len t1
+emit get t1 i
+i = add i 1
+end
+ret
+end
+if eq id 2
+i = ulong 0
+while lt i len t2
+emit get t2 i
+i = add i 1
+end
+ret
+end
+if eq id 3
+i = ulong 0
+while lt i len t3
+emit get t3 i
+i = add i 1
+end
+ret
+end
+if eq id 4
+i = ulong 0
+while lt i len t4
+emit get t4 i
+i = add i 1
+end
+ret
+end
+if eq id 5
+i = ulong 0
+while lt i len t5
+emit get t5 i
+i = add i 1
+end
+ret
+end
+if eq id 6
+i = ulong 0
+while lt i len t6
+emit get t6 i
+i = add i 1
+end
+ret
+end
+if eq id 7
+i = ulong 0
+while lt i len t7
+emit get t7 i
+i = add i 1
+end
+ret
+end
+if eq id 8
+i = ulong 0
+while lt i len t8
+emit get t8 i
+i = add i 1
+end
+ret
+end
+if eq id 9
+i = ulong 0
+while lt i len t9
+emit get t9 i
+i = add i 1
+end
+ret
+end
+if eq id 10
+i = ulong 0
+while lt i len t10
+emit get t10 i
+i = add i 1
+end
+ret
+end
+if eq id 11
+i = ulong 0
+while lt i len t11
+emit get t11 i
+i = add i 1
+end
+ret
+end
+if eq id 12
+i = ulong 0
+while lt i len t12
+emit get t12 i
+i = add i 1
+end
+ret
+end
+if eq id 13
+i = ulong 0
+while lt i len t13
+emit get t13 i
+i = add i 1
+end
+ret
+end
+if eq id 14
+i = ulong 0
+while lt i len t14
+emit get t14 i
+i = add i 1
+end
+ret
+end
+if eq id 15
+i = ulong 0
+while lt i len t15
+emit get t15 i
+i = add i 1
+end
+ret
+end
+if eq id 16
+i = ulong 0
+while lt i len t16
+emit get t16 i
+i = add i 1
+end
+ret
+end
+if eq id 17
+i = ulong 0
+while lt i len t17
+emit get t17 i
+i = add i 1
+end
+ret
+end
+if eq id 18
+i = ulong 0
+while lt i len t18
+emit get t18 i
+i = add i 1
+end
+ret
+end
+if eq id 19
+i = ulong 0
+while lt i len t19
+emit get t19 i
+i = add i 1
+end
+ret
+end
+if eq id 20
+i = ulong 0
+while lt i len t20
+emit get t20 i
+i = add i 1
+end
+ret
+end
+if eq id 21
+i = ulong 0
+while lt i len t21
+emit get t21 i
+i = add i 1
+end
+ret
+end
+if eq id 22
+i = ulong 0
+while lt i len t22
+emit get t22 i
+i = add i 1
+end
+ret
+end
+if eq id 23
+i = ulong 0
+while lt i len t23
+emit get t23 i
+i = add i 1
+end
+ret
+end
+if eq id 24
+i = ulong 0
+while lt i len t24
+emit get t24 i
+i = add i 1
+end
+ret
+end
+if eq id 25
+i = ulong 0
+while lt i len t25
+emit get t25 i
+i = add i 1
+end
+ret
+end
+if eq id 26
+i = ulong 0
+while lt i len t26
+emit get t26 i
+i = add i 1
+end
+ret
+end
+if eq id 27
+i = ulong 0
+while lt i len t27
+emit get t27 i
+i = add i 1
+end
+ret
+end
+if eq id 28
+i = ulong 0
+while lt i len t28
+emit get t28 i
+i = add i 1
+end
+ret
+end
+if eq id 29
+i = ulong 0
+while lt i len t29
+emit get t29 i
+i = add i 1
+end
+ret
+end
+if eq id 30
+i = ulong 0
+while lt i len t30
+emit get t30 i
+i = add i 1
+end
+ret
+end
+if eq id 31
+i = ulong 0
+while lt i len t31
+emit get t31 i
+i = add i 1
+end
+ret
+end
+if eq id 32
+i = ulong 0
+while lt i len t32
+emit get t32 i
+i = add i 1
+end
+ret
+end
+if eq id 33
+i = ulong 0
+while lt i len t33
+emit get t33 i
+i = add i 1
+end
+ret
+end
+if eq id 34
+i = ulong 0
+while lt i len t34
+emit get t34 i
+i = add i 1
+end
+ret
+end
+if eq id 35
+i = ulong 0
+while lt i len t35
+emit get t35 i
+i = add i 1
+end
+ret
+end
+if eq id 36
+i = ulong 0
+while lt i len t36
+emit get t36 i
+i = add i 1
+end
+ret
+end
+end
+text e1 "c2om: R_SYNTAX at line "
+text e2 "c2om: R_CAPACITY at line "
+text e3 "c2om: R_NUMBER at line "
+text e4 "c2om: R_PREPROCESSOR at line "
+text e5 "c2om: R_POINTER_ALIAS at line "
+text e6 "c2om: R_UNION at line "
+text e7 "c2om: R_STRUCT_FR2 at line "
+text e8 "c2om: R_ALLOCATION at line "
+text e9 "c2om: R_VARARGS at line "
+text e10 "c2om: R_CAST_OR_TYPE at line "
+text e11 "c2om: R_CONTROL at line "
+text e12 "c2om: R_NAME at line "
+text e13 "c2om: R_SCOPE at line "
+text e14 "c2om: R_EFFECT_ORDER at line "
+text e15 "c2om: R_SHORT_CIRCUIT at line "
+text e16 "c2om: R_ARRAY at line "
+text e17 "c2om: R_LITERAL at line "
+text e18 "c2om: R_IO at line "
+text e19 "c2om: R_MAIN at line "
+text e20 "c2om: R_PARAMETERS at line "
+fn refuse id ulong to void
+put used 0 0
+if eq id 1
+i = ulong 0
+while lt i len e1
+emit get e1 i
+i = add i 1
+end
+end
+if eq id 2
+i = ulong 0
+while lt i len e2
+emit get e2 i
+i = add i 1
+end
+end
+if eq id 3
+i = ulong 0
+while lt i len e3
+emit get e3 i
+i = add i 1
+end
+end
+if eq id 4
+i = ulong 0
+while lt i len e4
+emit get e4 i
+i = add i 1
+end
+end
+if eq id 5
+i = ulong 0
+while lt i len e5
+emit get e5 i
+i = add i 1
+end
+end
+if eq id 6
+i = ulong 0
+while lt i len e6
+emit get e6 i
+i = add i 1
+end
+end
+if eq id 7
+i = ulong 0
+while lt i len e7
+emit get e7 i
+i = add i 1
+end
+end
+if eq id 8
+i = ulong 0
+while lt i len e8
+emit get e8 i
+i = add i 1
+end
+end
+if eq id 9
+i = ulong 0
+while lt i len e9
+emit get e9 i
+i = add i 1
+end
+end
+if eq id 10
+i = ulong 0
+while lt i len e10
+emit get e10 i
+i = add i 1
+end
+end
+if eq id 11
+i = ulong 0
+while lt i len e11
+emit get e11 i
+i = add i 1
+end
+end
+if eq id 12
+i = ulong 0
+while lt i len e12
+emit get e12 i
+i = add i 1
+end
+end
+if eq id 13
+i = ulong 0
+while lt i len e13
+emit get e13 i
+i = add i 1
+end
+end
+if eq id 14
+i = ulong 0
+while lt i len e14
+emit get e14 i
+i = add i 1
+end
+end
+if eq id 15
+i = ulong 0
+while lt i len e15
+emit get e15 i
+i = add i 1
+end
+end
+if eq id 16
+i = ulong 0
+while lt i len e16
+emit get e16 i
+i = add i 1
+end
+end
+if eq id 17
+i = ulong 0
+while lt i len e17
+emit get e17 i
+i = add i 1
+end
+end
+if eq id 18
+i = ulong 0
+while lt i len e18
+emit get e18 i
+i = add i 1
+end
+end
+if eq id 19
+i = ulong 0
+while lt i len e19
+emit get e19 i
+i = add i 1
+end
+end
+if eq id 20
+i = ulong 0
+while lt i len e20
+emit get e20 i
+i = add i 1
+end
+end
+decimal get line 0
+emit 10
+w = write 2 output 0 get used 0
+exit 65
+end
+
+text keys "int void return if else while getchar putchar main union struct malloc calloc realloc free goto switch for do break continue sizeof typedef unsigned long short char float double volatile restrict enum extern static const"
+note Keyword token = 300 plus position in keys. Names = 256, decimal = 257.
+fn keyword to ulong
+p = ulong 0
+k = ulong 300
+while lt p len keys
+q = p
+while and lt q len keys ne get keys q 32
+q = add q 1
+end
+if eq sub q p get width 0
+i = ulong 0
+same = true
+while lt i get width 0
+if ne get src add get start 0 i get keys add p i
+same = false
+end
+i = add i 1
+end
+if same
+ret k
+end
+end
+p = add q 1
+k = add k 1
+end
+ret 256
+end
+
+fn letter b uchar to bool
+ret or or and ge b 65 le b 90 and ge b 97 le b 122 eq b 95
+end
+fn digit b uchar to bool
+ret and ge b 48 le b 57
+end
+fn advance to void
+if eq get src get pos 0 10
+put line 0 add get line 0 1
+end
+put pos 0 add get pos 0 1
+end
+
+note next scans comments and whitespace, never delegates preprocessing to a C compiler.
+fn next to void
+skip = true
+while skip
+skip = false
+while and lt get pos 0 get size 0 le get src get pos 0 32
+if eq get src get pos 0 0
+refuse 1
+end
+advance
+end
+p = get pos 0
+if and lt add p 1 get size 0 eq get src p 47
+b = get src add p 1
+if eq b 47
+while and lt get pos 0 get size 0 ne get src get pos 0 10
+advance
+end
+skip = true
+end
+if eq b 42
+advance
+advance
+closed = false
+while and lt add get pos 0 1 get size 0 not closed
+if and eq get src get pos 0 42 eq get src add get pos 0 1 47
+advance
+advance
+closed = true
+else
+advance
+end
+end
+if not closed
+refuse 1
+end
+skip = true
+end
+end
+end
+put start 0 get pos 0
+put width 0 0
+if ge get pos 0 get size 0
+put tok 0 0
+ret
+end
+b = get src get pos 0
+if letter b
+advance
+while and lt get pos 0 get size 0 or letter get src get pos 0 digit get src get pos 0
+advance
+end
+put width 0 sub get pos 0 get start 0
+k = keyword
+put tok 0 k
+if eq k 309
+refuse 6
+end
+if eq k 310
+refuse 7
+end
+if and ge k 311 le k 314
+refuse 8
+end
+if and ge k 315 le k 320
+refuse 11
+end
+if ge k 321
+refuse 10
+end
+ret
+end
+if digit b
+v = ulong 0
+while and lt get pos 0 get size 0 digit get src get pos 0
+v = add mul v 10 sub ulong get src get pos 0 48
+if gt v 2147483647
+refuse 3
+end
+advance
+end
+put width 0 sub get pos 0 get start 0
+if and gt get width 0 1 eq b 48
+refuse 3
+end
+if and lt get pos 0 get size 0 letter get src get pos 0
+refuse 3
+end
+put number 0 v
+put tok 0 257
+ret
+end
+advance
+put tok 0 ulong b
+put width 0 1
+if eq b 35
+refuse 4
+end
+if or eq b 34 eq b 39
+refuse 17
+end
+if or eq b 91 eq b 93
+refuse 16
+end
+if eq b 46
+refuse 9
+end
+if or eq b 38 eq b 124
+if eq get src get pos 0 b
+refuse 15
+end
+end
+if and or or eq b 61 eq b 33 or eq b 60 eq b 62 eq get src get pos 0 61
+advance
+put tok 0 add ulong b 128
+ret
+end
+if or and eq b 43 eq get src get pos 0 43 and eq b 45 eq get src get pos 0 45
+refuse 14
+end
+end
+
+fn expect k ulong to void
+if ne get tok 0 k
+refuse 1
+end
+next
+end
+fn isname to bool
+ret or eq get tok 0 256 eq get tok 0 308
+end
+fn equalname id ulong to bool
+if ne get nl id get width 0
+ret false
+end
+i = ulong 0
+while lt i get width 0
+if ne get src add get ns id i get src add get start 0 i
+ret false
+end
+i = add i 1
+end
+ret true
+end
+fn lookup to ulong
+n = get names 0
+while gt n 0
+n = sub n 1
+if equalname n
+ret add n 1
+end
+end
+ret 0
+end
+fn addname kind ulong to ulong
+if not isname
+if eq get tok 0 42
+refuse 5
+end
+refuse 12
+end
+if ne lookup 0
+refuse 13
+end
+n = get names 0
+if ge n 4096
+refuse 2
+end
+put ns n get start 0
+put nl n get width 0
+put nk n kind
+put na n 0
+put names 0 add n 1
+next
+ret n
+end
+fn ename id ulong to void
+if eq get nk id 1
+if eq add id 1 get mainid 0
+say 2
+ret
+end
+say 3
+else
+say 4
+end
+decimal id
+end
+fn node k ulong a ulong b ulong effect ulong to ulong
+n = get nodes 0
+if ge n 65536
+refuse 2
+end
+put nodes 0 add n 1
+put ak n k
+put al n a
+put ar n b
+put ae n effect
+ret n
+end
+fn precedence k ulong to ulong
+if or eq k 42 or eq k 47 eq k 37
+ret 10
+end
+if or eq k 43 eq k 45
+ret 9
+end
+if or or eq k 60 eq k 62 or eq k 188 eq k 190
+ret 7
+end
+if or eq k 189 eq k 161
+ret 6
+end
+if eq k 38
+ret 5
+end
+if eq k 94
+ret 4
+end
+if eq k 124
+ret 3
+end
+ret 0
+end
+
+note Pratt reader; call arguments are a linked list of nodes (kind 260).
+note At most one call per expression: no reliance on C's unspecified operand evaluation order.
+fn expr minimum ulong to ulong
+put depth 0 add get depth 0 1
+if gt get depth 0 128
+refuse 2
+end
+k = get tok 0
+lhs = ulong 0
+if eq k 257
+lhs = node 257 get number 0 0 0
+next
+else
+if eq k 40
+next
+lhs = expr 1
+expect 41
+else
+if or or eq k 45 eq k 33 or eq k 43 eq k 126
+next
+lhs = expr 11
+if ne k 43
+lhs = node add k 512 lhs 0 get ae lhs
+end
+else
+if or isname or eq k 306 eq k 307
+id = ulong 0
+if or eq k 306 eq k 307
+id = add k 1000
+else
+found = lookup
+if eq found 0
+refuse 12
+end
+id = sub found 1
+end
+next
+if eq get tok 0 40
+if lt id 1000
+if ne get nk id 1
+refuse 12
+end
+end
+next
+head = ulong 0
+tail = ulong 0
+argc = ulong 0
+while ne get tok 0 41
+a = expr 1
+if ne get ae a 0
+refuse 14
+end
+link = node 260 a 0 0
+if eq head 0
+head = link
+else
+put ar tail link
+end
+tail = link
+argc = add argc 1
+if eq get tok 0 44
+next
+if eq get tok 0 41
+refuse 1
+end
+else
+if ne get tok 0 41
+refuse 1
+end
+end
+end
+expect 41
+want = ulong 0
+if eq id 1307
+want = 1
+else
+if lt id 1000
+want = get na id
+end
+end
+if ne argc want
+refuse 20
+end
+lhs = node 259 id head 1
+else
+if ge id 1000
+refuse 12
+end
+if ne get nk id 2
+refuse 12
+end
+lhs = node 258 id 0 0
+end
+else
+if or eq k 42 eq k 38
+refuse 5
+end
+if eq k 300
+refuse 10
+end
+refuse 1
+end
+end
+end
+end
+go = true
+while go
+k = get tok 0
+prec = precedence k
+if or eq prec 0 lt prec minimum
+go = false
+else
+next
+rhs = expr add prec 1
+effects = add get ae lhs get ae rhs
+if gt effects 1
+refuse 14
+end
+lhs = node k lhs rhs effects
+end
+end
+put depth 0 sub get depth 0 1
+ret lhs
+end
+
+fn emitexpr n ulong to void
+k = get ak n
+a = get al n
+b = get ar n
+if eq k 257
+decimal a
+ret
+end
+if eq k 258
+ename a
+ret
+end
+if eq k 259
+if eq a 1306
+say 29
+else
+if eq a 1307
+say 30
+else
+ename a
+end
+end
+while ne b 0
+emit 32
+emitexpr get al b
+b = get ar b
+end
+ret
+end
+if eq k 557
+say 27
+emitexpr a
+ret
+end
+if eq k 545
+say 28
+emitexpr a
+say 12
+note Strip the line ending from " 0\n" because this is a value.
+put used 0 sub get used 0 1
+ret
+end
+if eq k 638
+say 33
+emitexpr a
+ret
+end
+if eq k 43
+say 16
+end
+if eq k 45
+say 17
+end
+if eq k 42
+say 18
+end
+if eq k 47
+say 19
+end
+if eq k 37
+say 20
+end
+if eq k 189
+say 21
+end
+if eq k 161
+say 22
+end
+if eq k 60
+say 23
+end
+if eq k 188
+say 24
+end
+if eq k 62
+say 25
+end
+if eq k 190
+say 26
+end
+if eq k 38
+say 34
+end
+if eq k 124
+say 35
+end
+if eq k 94
+say 36
+end
+emitexpr a
+emit 32
+emitexpr b
+end
+
+note Every statement returns whether it terminates all paths. Nested declarations refused for now.
+fn statement level ulong to bool
+if gt level 128
+refuse 2
+end
+k = get tok 0
+if eq k 123
+next
+dead = false
+while ne get tok 0 125
+if dead
+refuse 11
+end
+dead = statement add level 1
+end
+next
+ret dead
+end
+if eq k 300
+if ne level 1
+refuse 13
+end
+next
+id = addname 2
+expect 61
+a = expr 1
+ename id
+say 7
+emitexpr a
+say 8
+expect 59
+ret false
+end
+if eq k 302
+next
+a = expr 1
+say 10
+emitexpr a
+say 8
+expect 59
+ret true
+end
+if or eq k 303 eq k 305
+next
+expect 40
+a = expr 1
+expect 41
+if eq k 303
+say 11
+else
+say 14
+end
+emitexpr a
+say 12
+dead = statement add level 1
+if eq k 303
+if eq get tok 0 304
+next
+say 13
+other = statement add level 1
+dead = and dead other
+else
+dead = false
+end
+else
+dead = false
+end
+say 9
+ret dead
+end
+if isname
+found = lookup
+if ne found 0
+id = sub found 1
+if eq get nk id 2
+next
+expect 61
+a = expr 1
+ename id
+say 15
+emitexpr a
+say 8
+expect 59
+ret false
+end
+end
+end
+if eq k 59
+next
+ret false
+end
+a = expr 1
+say 31
+say 32
+emitexpr a
+say 8
+expect 59
+ret false
+end
+
+fn function to void
+expect 300
+ismain = eq get tok 0 308
+id = addname 1
+put curfn 0 id
+put base 0 get names 0
+if ismain
+if ne get mainid 0 0
+refuse 19
+end
+put mainid 0 add id 1
+end
+say 1
+ename id
+expect 40
+argc = ulong 0
+if eq get tok 0 301
+next
+else
+if ne get tok 0 41
+more = true
+while more
+expect 300
+arg = addname 2
+emit 32
+ename arg
+say 5
+argc = add argc 1
+if gt argc 6
+refuse 20
+end
+if eq get tok 0 44
+next
+else
+more = false
+end
+end
+end
+end
+expect 41
+if and ismain ne argc 0
+refuse 19
+end
+put na id argc
+say 6
+if ne get tok 0 123
+refuse 1
+end
+dead = statement 0
+if not dead
+if ismain
+say 10
+decimal 0
+say 8
+else
+refuse 11
+end
+end
+say 9
+put names 0 get base 0
+end
+
+text prelude "note c2om scalar translation; signed overflow traps; no C undefined behavior preserved.\nglobal cio uchar 1\nfn cg to int\nn = read 0 cio 0 1\nif eq n 1\nret int get cio 0\nend\nret -1\nend\nfn cp x int to int\nb = uchar and x 255\nput cio 0 b\nn = write 1 cio 0 1\nif eq n 1\nret int b\nend\nret -1\nend\n"
+fn main to int
+put line 0 1
+put nodes 0 1
+more = true
+while more
+n = get size 0
+if ge n 1048575
+refuse 2
+end
+r = read 0 src n sub 1048575 n
+if lt r 0
+refuse 18
+end
+if eq r 0
+more = false
+else
+put size 0 add n ulong r
+end
+end
+i = ulong 0
+while lt i len prelude
+emit get prelude i
+i = add i 1
+end
+next
+while ne get tok 0 0
+function
+end
+if eq get mainid 0 0
+refuse 19
+end
+n = get used 0
+off = ulong 0
+while lt off n
+r = write 1 output off sub n off
+if le r 0
+exit 74
+end
+off = add off ulong r
+end
+ret 0
+end
