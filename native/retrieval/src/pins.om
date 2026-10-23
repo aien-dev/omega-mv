@@ -1,0 +1,145 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Public corpus frozen at one omega-mv revision. Exact compiler receipts are evidence.
+text prepo "aien-dev/omega-mv"
+text prev "57f5f4258cebf3d5b2c22853cd062e351265c525"
+text patha "seed/omc/tests/struct/t1.om"
+text pathb "seed/omc/tests/struct/t2.om"
+text sha "c076ef26f041417a543b291437881291d2b0899b1d2c81ddd5bc2d2984aa027f"
+text shb "68a1efe3f203bf166430c748c53f4affe55101b52fb0b211cdf1ef02af371573"
+text ida "efa5637e89c6ba98aec3102050df259f97476a9980bfb1506e02eb4f28a95a84"
+text idb "1e60197f29b4cd098fe80ad483339a97f964391ef2d62c5de19cc05628576603"
+text pname "main"
+text pindex "om-l779-seed57"
+text srca "struct P x uint y uint end\nfn main to uint\np = new P 20 22\nret add get p x get p y\nend\n"
+text srcb "struct H n uint v uint 4 end\nfn main to uint\nh = new H 3 3\nput h v 1 add get h n get h v 1\nret get h v 1\nend\n"
+text idtag "OmDefId1"
+text hexdig "0123456789abcdef"
+fn plen pin ulong to ulong
+if eq pin 0
+ret len prepo
+end
+if eq pin 1
+ret len prev
+end
+if eq pin 2
+ret len patha
+end
+if eq pin 3
+ret len pathb
+end
+if and ge pin 4 le pin 7
+ret 64
+end
+if eq pin 8
+ret len pname
+end
+if eq pin 9
+ret len pindex
+end
+ret 0
+end
+fn pbyte pin ulong at ulong to uchar
+if eq pin 0
+ret get prepo at
+end
+if eq pin 1
+ret get prev at
+end
+if eq pin 2
+ret get patha at
+end
+if eq pin 3
+ret get pathb at
+end
+if eq pin 4
+ret get sha at
+end
+if eq pin 5
+ret get shb at
+end
+if eq pin 6
+ret get ida at
+end
+if eq pin 7
+ret get idb at
+end
+if eq pin 8
+ret get pname at
+end
+ret get pindex at
+end
+fn srclen slot ulong to ulong
+if eq slot 0
+ret len srca
+end
+ret len srcb
+end
+fn srcbyte slot ulong at ulong to uchar
+if eq slot 0
+ret get srca at
+end
+ret get srcb at
+end
+fn pstart slot ulong to ulong
+if eq slot 0
+ret 27
+end
+ret 29
+end
+fn pend slot ulong to ulong
+ret sub srclen slot 1
+end
+fn hashpin pin ulong to void
+for i ulong plen pin
+hbyte pbyte pin i
+end
+end
+fn hu32 n ulong to void
+for i ulong 4
+hbyte uchar and shr n mul i 8 255
+end
+end
+fn hashid slot ulong to void
+hinit
+for i ulong len idtag
+hbyte get idtag i
+end
+hu32 plen 0
+hashpin 0
+hu32 plen add slot 2
+hashpin add slot 2
+hu32 1
+hu32 plen 8
+hashpin 8
+finish
+end
+fn hashok pin ulong to bool
+for i ulong 32
+b = ulong get Hash i
+if ne get hexdig shr b 4 pbyte pin mul i 2
+ret false
+end
+if ne get hexdig and b 15 pbyte pin add mul i 2 1
+ret false
+end
+end
+ret true
+end
+fn pincheck to bool
+constants
+for slot ulong 2
+hinit
+for i ulong srclen slot
+hbyte srcbyte slot i
+end
+finish
+if not hashok add slot 4
+ret false
+end
+hashid slot
+if not hashok add slot 6
+ret false
+end
+end
+ret true
+end

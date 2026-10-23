@@ -1,0 +1,96 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Finite exact-token profile, not a general tokenizer implementation.
+note Counts include the complete serialized evidence packet and all citations.
+note The selected-model owner supplies its actual tokenizer SHA256 in modelkey.
+note Receipts use unchanged HF tokenizers0.21.4 encode(add_special_tokens=true).
+note Error13 budget,14 tokenizer/packet mismatch,15 verification not ready.
+global modelkey uchar 64
+global pcount ulong 1
+global pdropped ulong 1
+text tokpin "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42"
+text packhash "7126eae646ff489d19d31331681dd1e6e882630342c71bef5fc98577095255ab4e73bef7d7d97a652bbfc049df6667f5c0d36a5ea0e6408b61e616e350b347332035f7adcb0ea596596e92ee14da1ba8c1b878192b8d0d172686ce68557411be29b550190d4d380aaf582e307f41e5f760ad8e6b51a92546b7fac584f2c58162"
+fn packcost shape ulong to ulong
+if eq shape 1
+ret 255
+end
+if eq shape 2
+ret 263
+end
+if or eq shape 3 eq shape 4
+ret 502
+end
+ret 0
+end
+fn pkhash shape ulong to bool
+if or eq shape 0 gt shape 4
+ret false
+end
+hinit
+for i ulong get olen 0
+hbyte get out i
+end
+finish
+start = mul sub shape 1 64
+for i ulong 32
+b = ulong get Hash i
+at = add start mul i 2
+if ne get hexdig shr b 4 get packhash at
+ret false
+end
+if ne get hexdig and b 15 get packhash add at 1
+ret false
+end
+end
+ret true
+end
+fn pack budget ulong to ulong
+put olen 0 0
+put pcount 0 0
+put pdropped 0 0
+if eq get vstate 0 0
+ret 15
+end
+for i ulong 64
+if ne get modelkey i get tokpin i
+ret 14
+end
+end
+if eq get vstate 0 2
+ret 1
+end
+if or eq get vcount 0 0 gt get vcount 0 2
+ret 15
+end
+first = get vslots 0
+if gt first 1
+ret 15
+end
+shape = add first 1
+if eq get vcount 0 2
+if ne get vslots 1 sub 1 first
+ret 15
+end
+shape = add first 3
+end
+if gt packcost shape budget
+if eq get vcount 0 2
+shape = add first 1
+put pdropped 0 1
+end
+end
+if gt packcost shape budget
+put pdropped 0 get vcount 0
+ret 13
+end
+code = packet shape
+if ne code 0
+put olen 0 0
+ret code
+end
+if not pkhash shape
+put olen 0 0
+ret 14
+end
+put pcount 0 packcost shape
+ret 0
+end

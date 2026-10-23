@@ -1,0 +1,71 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Read-only request surface and JSON escaping checks.
+text attack "\"}},\"index\":\"*\",\"write\":true,\"x\":\""
+text simple "add"
+fn main to int
+if ne request 0 9
+ret 1
+end
+if ne request 257 9
+ret 2
+end
+put query 0 0
+if ne request 1 2
+ret 3
+end
+put query 0 255
+if ne request 1 2
+ret 4
+end
+for i ulong len attack
+put query i get attack i
+end
+if ne request len attack 0
+ret 5
+end
+for i ulong get olen 0
+put jin i get out i
+end
+if ne jparse get olen 0 0
+ret 6
+end
+note Attack remains one string, not a method/index/authority field.
+matches = ulong 0
+for i ulong get jcnt 0
+if eq get jtyp i 3
+if decode i
+if eq get dlen 0 len attack
+same = true
+for at ulong len attack
+if ne get dec at get attack at
+same = false
+end
+end
+if same
+matches = add matches 1
+end
+end
+end
+end
+end
+if ne matches 1
+ret 7
+end
+for i ulong 256
+put query i 97
+end
+if ne request 256 0
+ret 8
+end
+for i ulong len simple
+put query i get simple i
+end
+if ne request len simple 0
+ret 9
+end
+obyte 10
+if not owrite
+ret 74
+end
+ret 0
+end

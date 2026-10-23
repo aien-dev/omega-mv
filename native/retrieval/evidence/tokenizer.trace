@@ -1,0 +1,8 @@
+2805233 openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+2805233 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+2805233 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libgcc_s.so.1", O_RDONLY|O_CLOEXEC) = 3
+2805233 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+2805233 openat(AT_FDCWD, "/proc/self/maps", O_RDONLY|O_CLOEXEC) = 3
+2805233 openat(AT_FDCWD, "/home/drakestapleton/models/qwen3.6-35b-a3b-fp8-95a723d0/tokenizer.json", O_RDONLY|O_CLOEXEC) = 3
+2805233 openat(AT_FDCWD, "native/retrieval/evidence/packet-3.json", O_RDONLY|O_CLOEXEC) = 3
+2805233 +++ exited with 2 +++

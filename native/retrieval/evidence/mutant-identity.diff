@@ -1,0 +1,13 @@
+--- native/retrieval/src/verify.om	2026-10-23 16:13:34.335179799 -0500
++++ /tmp/om-xerj-L779/mutant-identity.om	2026-10-23 16:19:36.279059966 -0500
+@@ -200,9 +200,7 @@
+ if not eqpin get fields 7 add slot 4
+ ret 6
+ end
+-if not eqpin get fields 8 add slot 6
+-ret 5
+-end
++note Deliberately ineffective identity check, qualification control only.
+ if not eqpin get fields 11 8
+ ret 5
+ end

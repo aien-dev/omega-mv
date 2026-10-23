@@ -1,0 +1,379 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note L779 function-definitions-v1 verifier. No server-supplied authority.
+note Requires json.om, sha256.om, and the frozen compiler-derived pins.om.
+note 0 verified,1 no-match,2 schema,3 revision,4 scope,5 identity,6 digest,
+note 7 span,8 text,9 size,10 upstream,11 authority,12 trusted-pin failure.
+note Verification is not permission to expose evidence before exact token packing.
+global dec uchar 8192
+global dlen ulong 1
+global verr ulong 1
+global vcount ulong 1
+global vslots ulong 8
+global seen ulong 2
+global fields ulong 22
+global upbeg ulong 1
+global upend ulong 1
+global upstat ulong 1
+global elist ulong 1
+global vstate ulong 1
+text keys "hits\n_source\n_index\nschema\nrepo\nrevision\npath\nsource_sha256\nsymbol_id\nstart\nend\nname\nkind\ntext\nerror\nstatus\ntimed_out\n_shards\nfailed\ntotal\nvalue\nrelation\n"
+
+fn decode id ulong to bool
+put dlen 0 0
+if ge id get jcnt 0
+ret false
+end
+if ne get jtyp id 3
+ret false
+end
+put jpos 0 add get jbeg id 1
+stop = sub get jend id 1
+while lt get jpos 0 stop
+c = jtake
+if eq c 92
+c = jtake
+if eq c 117
+c = jhex
+else
+if eq c 110
+c = 10
+else
+if eq c 114
+c = 13
+else
+if eq c 116
+c = 9
+else
+if eq c 98
+c = 8
+else
+if eq c 102
+c = 12
+end
+end
+end
+end
+end
+end
+end
+n = get dlen 0
+if or ge n len dec gt c 127
+ret false
+end
+put dec n uchar c
+put dlen 0 add n 1
+end
+ret true
+end
+
+fn keyid id ulong to ulong
+if not decode id
+ret 0
+end
+at = ulong 0
+slot = ulong 1
+same = true
+for i ulong len keys
+c = get keys i
+if eq c 10
+if and same eq at get dlen 0
+ret slot
+end
+at = 0
+slot = add slot 1
+same = true
+else
+if ge at get dlen 0
+same = false
+else
+same = and same eq c get dec at
+end
+at = add at 1
+end
+end
+ret 0
+end
+
+fn object id ulong to bool
+for i ulong 22
+put fields i 4096
+end
+if ge id get jcnt 0
+ret false
+end
+if ne get jtyp id 1
+ret false
+end
+nextkey = true
+key = ulong 0
+for i ulong get jcnt 0
+if eq get jpar i id
+if nextkey
+key = keyid i
+nextkey = false
+else
+if ne key 0
+k = sub key 1
+if ne get fields k 4096
+ret false
+end
+put fields k i
+end
+nextkey = true
+end
+end
+end
+ret nextkey
+end
+
+fn number id ulong to ulong
+if ge id get jcnt 0
+put verr 0 2
+ret 0
+end
+if ne get jtyp id 4
+put verr 0 2
+ret 0
+end
+n = ulong 0
+at = get jbeg id
+stop = get jend id
+if gt sub stop at 10
+put verr 0 2
+ret 0
+end
+while lt at stop
+c = ulong get jin at
+if or lt c 48 gt c 57
+put verr 0 2
+ret 0
+end
+n = add mul n 10 sub c 48
+at = add at 1
+end
+ret n
+end
+
+fn eqpin id ulong pin ulong to bool
+if not decode id
+ret false
+end
+if ne get dlen 0 plen pin
+ret false
+end
+for i ulong get dlen 0
+if ne get dec i pbyte pin i
+ret false
+end
+end
+ret true
+end
+
+fn record id ulong to ulong
+if not object id
+ret 2
+end
+for i ulong 11
+if eq get fields add i 3 4096
+ret 2
+end
+end
+if ne number get fields 3 1
+ret 2
+end
+if not eqpin get fields 4 0
+ret 4
+end
+if not eqpin get fields 5 1
+ret 3
+end
+slot = ulong 2
+if eqpin get fields 6 2
+slot = 0
+end
+if eqpin get fields 6 3
+slot = 1
+end
+if eq slot 2
+ret 4
+end
+if not eqpin get fields 7 add slot 4
+ret 6
+end
+if not eqpin get fields 8 add slot 6
+ret 5
+end
+if not eqpin get fields 11 8
+ret 5
+end
+if ne number get fields 12 1
+ret 2
+end
+if ne number get fields 9 pstart slot
+ret 7
+end
+if ne number get fields 10 pend slot
+ret 7
+end
+if ne get verr 0 0
+ret get verr 0
+end
+if not decode get fields 13
+ret 8
+end
+start = pstart slot
+size = sub pend slot start
+if ne get dlen 0 size
+ret 8
+end
+for i ulong size
+if ne get dec i srcbyte slot add start i
+ret 8
+end
+end
+if ne get seen slot 0
+ret 5
+end
+put seen slot 1
+put vslots get vcount 0 slot
+put vcount 0 add get vcount 0 1
+ret 0
+end
+
+fn hit id ulong to ulong
+if not object id
+ret 2
+end
+if not eqpin get fields 2 9
+ret 4
+end
+ret record get fields 1
+end
+
+fn envelope to ulong
+if not object 0
+ret 2
+end
+if ne get fields 14 4096
+note Upstream errors are separate from no-match and never become evidence.
+errid = get fields 14
+if gt sub get jend errid get jbeg errid 4096
+ret 9
+end
+put upbeg 0 get jbeg errid
+put upend 0 get jend errid
+if ne get fields 15 4096
+put upstat 0 number get fields 15
+if ne get verr 0 0
+ret 2
+end
+end
+ret 10
+end
+outer = get fields 0
+timeout = get fields 16
+shards = get fields 17
+if ge timeout get jcnt 0
+ret 2
+end
+if ne get jtyp timeout 6
+ret 10
+end
+if not object shards
+ret 2
+end
+if ne number get fields 18 0
+ret 10
+end
+if ne get verr 0 0
+ret 2
+end
+if not object outer
+ret 2
+end
+list = get fields 0
+totals = get fields 19
+if ge list get jcnt 0
+ret 2
+end
+if ne get jtyp list 2
+ret 2
+end
+if not object totals
+ret 2
+end
+reported = number get fields 20
+if ne get verr 0 0
+ret 2
+end
+if not decode get fields 21
+ret 2
+end
+if ne get dlen 0 2
+ret 2
+end
+if or ne get dec 0 101 ne get dec 1 113
+ret 10
+end
+total = ulong 0
+for i ulong get jcnt 0
+if eq get jpar i list
+total = add total 1
+end
+end
+if gt total 8
+ret 9
+end
+if ne total reported
+ret 10
+end
+put elist 0 list
+ret 0
+end
+fn verify n ulong auth ulong to ulong
+put vstate 0 0
+put vcount 0 0
+put verr 0 0
+put seen 0 0
+put seen 1 0
+put upbeg 0 0
+put upend 0 0
+put upstat 0 0
+put elist 0 4096
+if ne auth 1
+ret 11
+end
+if not pincheck
+ret 12
+end
+if gt n 65536
+ret 9
+end
+if ne jparse n 0
+ret 2
+end
+status = envelope
+if ne status 0
+ret status
+end
+list = get elist 0
+for i ulong get jcnt 0
+if eq get jpar i list
+if ge get vcount 0 8
+put vcount 0 0
+ret 9
+end
+status = hit i
+if ne status 0
+put vcount 0 0
+ret status
+end
+end
+end
+if eq get vcount 0 0
+put vstate 0 2
+ret 1
+end
+put vstate 0 1
+ret 0
+end

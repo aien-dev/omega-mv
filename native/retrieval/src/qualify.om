@@ -1,0 +1,106 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Offline response qualification executable, not an authenticated network adapter.
+note It withholds evidence text because the exact pinned tokenizer binding is pending.
+global chunk uchar 4096
+text result "{\"verification_code\":"
+text qstate ",\"agent_exposure\":\"withheld\",\"packing\":\"not_run\",\"verified_citations\":["
+text chead "{\"repo\":"
+text cpath ",\"path\":"
+text crev ",\"revision\":"
+text cstart ",\"start\":"
+text cend ",\"end\":"
+text uerror ",\"upstream_error\":"
+text ustatus ",\"upstream_status\":"
+fn citation slot ulong to void
+for i ulong len chead
+obyte get chead i
+end
+optext 0
+for i ulong len cpath
+obyte get cpath i
+end
+optext add slot 2
+for i ulong len crev
+obyte get crev i
+end
+optext 1
+for i ulong len cstart
+obyte get cstart i
+end
+onum pstart slot
+for i ulong len cend
+obyte get cend i
+end
+onum pend slot
+obyte 125
+end
+fn main to int
+size = ulong 0
+more = true
+large = false
+while more
+n = read 0 chunk 0 len chunk
+if eq n neg long 4
+else
+if lt n 0
+ret 74
+end
+if eq n 0
+more = false
+else
+if gt add size ulong n len jin
+large = true
+more = false
+else
+for i ulong ulong n
+put jin add size i get chunk i
+end
+size = add size ulong n
+end
+end
+end
+end
+code = ulong 9
+if not large
+note 1 means offline test authority only. It is not a caller-supplied authentication claim.
+code = verify size 1
+end
+for i ulong len result
+obyte get result i
+end
+onum code
+for i ulong len qstate
+obyte get qstate i
+end
+if eq code 0
+for i ulong get vcount 0
+if ne i 0
+obyte 44
+end
+citation get vslots i
+end
+end
+obyte 93
+if and eq code 10 ne get upend 0 0
+for i ulong len uerror
+obyte get uerror i
+end
+start = get upbeg 0
+for i ulong sub get upend 0 start
+obyte get jin add start i
+end
+for i ulong len ustatus
+obyte get ustatus i
+end
+onum get upstat 0
+end
+obyte 125
+obyte 10
+if not owrite
+ret 74
+end
+if and ne code 0 ne code 1
+ret int code
+end
+ret 0
+end

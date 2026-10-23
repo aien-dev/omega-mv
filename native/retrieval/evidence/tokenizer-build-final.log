@@ -1,0 +1,13 @@
+   Compiling aien-omega-gpu v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-gpu)
+   Compiling aien-omega-dattn v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-dattn)
+   Compiling aien-omega-fp8 v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-fp8)
+warning: aien-omega-gpu@0.1.0: aien-omega-gpu: linking prebuilt /tmp/om-xerj-L779/tokenizer-native/libomega_gpu.a (sha256 110295ef23dc7561eea371636347c005835f37b82c22f92401aa8a887a3ca990): a development override, not a qualified build
+   Compiling aien-omega-bf16 v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-bf16)
+   Compiling aien-omega-moe v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-moe)
+   Compiling aien-omega-dgraph v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-dgraph)
+   Compiling aien-omega-pf v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-pf)
+   Compiling aien-omega-router v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-router)
+   Compiling aien-omega-q38 v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-q38)
+   Compiling aien-kv-cache v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-kv-cache)
+   Compiling aien-inference-abi v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-inference-abi)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.65s

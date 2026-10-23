@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-23T21:20:42Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:31c909e11d1e1fae9cb233646e21dc9bf68d7aeede5ea23b6c3ce9cea02af11e",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 8,
+      "generated_at_commit": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+      "source_tree": "sha256:56cbf51a95c96eb6f75dca76d106acaccafed39967147bb62214360f52bebc33"
+    }
+  },
+  "name": "src",
+  "purpose": "Om-only request, verification and finite exact-token evidence packing.",
+  "schema_version": "1.0.0"
+}

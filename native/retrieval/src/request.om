@@ -1,0 +1,40 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Transport-independent read request for the single frozen corpus.
+note The owner supplies the scoped credential separately; never serialize secrets.
+note No arbitrary URL, method, index expression, query DSL, or write operation.
+global query uchar 256
+text qhead "{\"size\":8,\"query\":{\"bool\":{\"must\":[{\"match\":{\"text\":"
+text qmid "}}],\"filter\":[{\"term\":{\"revision\":"
+text qtail "}}]}}}"
+fn request n ulong to ulong
+put olen 0 0
+put oerr 0 0
+if or eq n 0 gt n len query
+ret 9
+end
+for i ulong n
+c = get query i
+if or lt c 32 gt c 126
+ret 2
+end
+end
+for i ulong len qhead
+obyte get qhead i
+end
+obyte 34
+for i ulong n
+escape get query i
+end
+obyte 34
+for i ulong len qmid
+obyte get qmid i
+end
+optext 1
+for i ulong len qtail
+obyte get qtail i
+end
+if ne get oerr 0 0
+ret 9
+end
+ret 0
+end

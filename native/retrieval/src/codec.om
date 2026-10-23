@@ -1,0 +1,135 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Bounded serializer for compiler records; raw source is never executable instructions.
+global out uchar 65536
+global olen ulong 1
+global oerr ulong 1
+global digits uchar 20
+text dochead "{\"schema\":1,\"repo\":"
+text doctail ",\"kind\":1,\"name\":\"main\",\"text\":"
+text fkeys "revision\npath\nsource_sha256\nsymbol_id\nstart\nend\n"
+fn obyte c uchar to void
+n = get olen 0
+if ge n len out
+put oerr 0 1
+ret
+end
+put out n c
+put olen 0 add n 1
+end
+fn escape c uchar to void
+if or eq c 34 eq c 92
+obyte 92
+obyte c
+ret
+end
+if eq c 10
+obyte 92
+obyte 110
+ret
+end
+if eq c 9
+obyte 92
+obyte 116
+ret
+end
+if eq c 13
+obyte 92
+obyte 114
+ret
+end
+if lt c 32
+obyte 92
+obyte 117
+obyte 48
+obyte 48
+obyte get hexdig shr ulong c 4
+obyte get hexdig and ulong c 15
+ret
+end
+obyte c
+end
+fn optext pin ulong to void
+obyte 34
+for i ulong plen pin
+escape pbyte pin i
+end
+obyte 34
+end
+fn onum n ulong to void
+x = n
+size = ulong 0
+while or ne x 0 eq size 0
+put digits size uchar add rem x 10 48
+size = add size 1
+x = div x 10
+end
+while ne size 0
+size = sub size 1
+obyte get digits size
+end
+end
+fn okey want ulong to void
+obyte 44
+obyte 34
+slot = ulong 0
+for i ulong len fkeys
+c = get fkeys i
+if eq c 10
+if eq slot want
+obyte 34
+obyte 58
+ret
+end
+slot = add slot 1
+else
+if eq slot want
+obyte c
+end
+end
+end
+end
+fn document slot ulong to void
+for i ulong len dochead
+obyte get dochead i
+end
+optext 0
+okey 0
+optext 1
+okey 1
+optext add slot 2
+okey 2
+optext add slot 4
+okey 3
+optext add slot 6
+okey 4
+onum pstart slot
+okey 5
+onum pend slot
+for i ulong len doctail
+obyte get doctail i
+end
+obyte 34
+start = pstart slot
+for i ulong sub pend slot start
+escape srcbyte slot add start i
+end
+obyte 34
+obyte 125
+end
+fn owrite to bool
+if ne get oerr 0 0
+ret false
+end
+at = ulong 0
+while lt at get olen 0
+n = write 1 out at sub get olen 0 at
+if eq n neg long 4
+else
+if le n 0
+ret false
+end
+at = add at ulong n
+end
+end
+ret true
+end

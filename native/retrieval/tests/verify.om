@@ -1,0 +1,253 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Executed native malformed-response and substitution controls.
+global checks ulong 1
+global failed ulong 1
+text rh "{\"timed_out\":false,\"_shards\":{\"failed\":0},\"hits\":{\"total\":{\"value\":"
+text rmid ",\"relation\":\"eq\"},\"hits\":["
+text hh "{\"_index\":\"om-l779-seed57\",\"_source\":"
+text rt "]}}"
+text errdoc "{\"error\":{\"type\":\"security_exception\",\"reason\":\"denied\"},\"status\":403}"
+text doneh "{\"checks\":"
+text donef ",\"failures\":"
+text schemak "\"schema\":1"
+text startk "\"start\":27"
+text textk "fn main to uint"
+text delname "main"
+text dupl "{\"hits\":{\"hits\":[],\"h\\u0069ts\":[]}}"
+text timed "{\"timed_out\":true,\"_shards\":{\"failed\":0},\"hits\":{\"total\":{\"value\":0,\"relation\":\"eq\"},\"hits\":[]}}"
+text partial "{\"timed_out\":false,\"_shards\":{\"failed\":1},\"hits\":{\"total\":{\"value\":0,\"relation\":\"eq\"},\"hits\":[]}}"
+text lost "{\"timed_out\":false,\"_shards\":{\"failed\":0},\"hits\":{\"total\":{\"value\":2,\"relation\":\"eq\"},\"hits\":[]}}"
+text missing "{}"
+
+fn check got ulong want ulong to void
+put checks 0 add get checks 0 1
+if ne got want
+put failed 0 add get failed 0 1
+end
+end
+fn fixture count ulong to void
+put olen 0 0
+put oerr 0 0
+for i ulong len rh
+obyte get rh i
+end
+onum count
+for i ulong len rmid
+obyte get rmid i
+end
+for slot ulong count
+if ne slot 0
+obyte 44
+end
+for i ulong len hh
+obyte get hh i
+end
+document rem slot 2
+obyte 125
+end
+for i ulong len rt
+obyte get rt i
+end
+end
+fn transfer to ulong
+for i ulong get olen 0
+put jin i get out i
+end
+ret get olen 0
+end
+fn corrupt pin ulong to void
+limit = sub get olen 0 plen pin
+for at ulong add limit 1
+same = true
+for i ulong plen pin
+if ne get out add at i pbyte pin i
+same = false
+end
+end
+if same
+put out at 120
+ret
+end
+end
+check 1 0
+end
+fn change key ulong to void
+limit = get olen 0
+for at ulong limit
+same = true
+size = ulong 0
+if eq key 0
+size = len schemak
+end
+if eq key 1
+size = len startk
+end
+if eq key 2
+size = len textk
+end
+if le add at size limit
+for i ulong size
+c = uchar 0
+if eq key 0
+c = get schemak i
+end
+if eq key 1
+c = get startk i
+end
+if eq key 2
+c = get textk i
+end
+if ne get out add at i c
+same = false
+end
+end
+if same
+if eq key 0
+put out sub add at size 1 50
+end
+if eq key 1
+put out sub add at size 1 56
+end
+if eq key 2
+put out at 120
+end
+ret
+end
+end
+end
+check 1 0
+end
+fn swapid to void
+for at ulong sub get olen 0 64
+same = true
+for i ulong 64
+if ne get out add at i get ida i
+same = false
+end
+end
+if same
+for i ulong 64
+put out add at i get idb i
+end
+ret
+end
+end
+check 1 0
+end
+fn main to int
+if pincheck
+check 1 1
+else
+check 0 1
+end
+fixture 1
+check verify transfer 1 0
+check get vcount 0 1
+fixture 2
+check verify transfer 1 0
+check get vcount 0 2
+check get vslots 0 0
+check get vslots 1 1
+fixture 0
+put out 13 116
+check verify transfer 1 2
+fixture 0
+check verify transfer 1 1
+check get vcount 0 0
+fixture 1
+check verify transfer 0 11
+check get vcount 0 0
+check verify transfer 2 11
+check verify 65537 1 9
+check get vcount 0 0
+fixture 9
+check verify transfer 1 9
+fixture 3
+check verify transfer 1 5
+check get vcount 0 0
+fixture 1
+corrupt 0
+check verify transfer 1 4
+fixture 1
+corrupt 1
+check verify transfer 1 3
+fixture 1
+corrupt 2
+check verify transfer 1 4
+fixture 1
+corrupt 4
+check verify transfer 1 6
+fixture 1
+corrupt 6
+check verify transfer 1 5
+fixture 1
+swapid
+check verify transfer 1 5
+fixture 1
+corrupt 8
+check verify transfer 1 5
+fixture 1
+corrupt 9
+check verify transfer 1 4
+fixture 1
+change 0
+check verify transfer 1 2
+fixture 1
+change 1
+check verify transfer 1 7
+fixture 1
+change 2
+check verify transfer 1 8
+fixture 2
+corrupt 7
+check verify transfer 1 5
+check get vcount 0 0
+fixture 1
+put olen 0 sub get olen 0 1
+check verify transfer 1 2
+for i ulong len errdoc
+put jin i get errdoc i
+end
+check verify len errdoc 1 10
+check get vcount 0 0
+check get upstat 0 403
+for i ulong len dupl
+put jin i get dupl i
+end
+check verify len dupl 1 2
+check get upend 0 0
+for i ulong len timed
+put jin i get timed i
+end
+check verify len timed 1 10
+for i ulong len partial
+put jin i get partial i
+end
+check verify len partial 1 10
+for i ulong len lost
+put jin i get lost i
+end
+check verify len lost 1 10
+for i ulong len missing
+put jin i get missing i
+end
+check verify len missing 1 2
+put olen 0 0
+for i ulong len doneh
+obyte get doneh i
+end
+onum get checks 0
+for i ulong len donef
+obyte get donef i
+end
+onum get failed 0
+obyte 125
+obyte 10
+if not owrite
+ret 74
+end
+if ne get failed 0 0
+ret 1
+end
+ret 0
+end

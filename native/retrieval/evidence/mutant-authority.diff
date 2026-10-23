@@ -1,0 +1,13 @@
+--- native/retrieval/src/verify.om	2026-10-23 16:13:34.335179799 -0500
++++ /tmp/om-xerj-L779/mutant-authority.om	2026-10-23 16:19:36.279059966 -0500
+@@ -340,9 +340,7 @@
+ put upend 0 0
+ put upstat 0 0
+ put elist 0 4096
+-if ne auth 1
+-ret 11
+-end
++note Deliberately ineffective authority gate, qualification control only.
+ if not pincheck
+ ret 12
+ end

@@ -1,0 +1,10 @@
+   Compiling aien-omega-gpu v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-gpu)
+   Compiling aien-omega-dattn v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-dattn)
+   Compiling aien-omega-bf16 v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-bf16)
+warning: aien-omega-gpu@0.1.0: aien-omega-gpu: linking prebuilt /tmp/om-xerj-L779/tokenizer-libomega_gpu.a (sha256 110295ef23dc7561eea371636347c005835f37b82c22f92401aa8a887a3ca990): a development override, not a qualified build
+   Compiling aien-omega-q38 v0.1.0 (/home/drakestapleton/workspace/sc-motor/crates/aien-omega-q38)
+error: could not find native static library `omega_gpu`, perhaps an -L flag is missing?
+
+warning: aien-omega-gpu@0.1.0: aien-omega-gpu: linking prebuilt /tmp/om-xerj-L779/tokenizer-libomega_gpu.a (sha256 110295ef23dc7561eea371636347c005835f37b82c22f92401aa8a887a3ca990): a development override, not a qualified build
+error: could not compile `aien-omega-gpu` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

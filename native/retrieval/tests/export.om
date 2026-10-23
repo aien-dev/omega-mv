@@ -1,0 +1,80 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Independent consumer checks both raw compiler outputs against the verifier pins.
+global frames uchar 217
+text magic "OMDEFR01"
+fn word at ulong to ulong
+n = ulong 0
+for i ulong 4
+n = or n shl ulong get frames add at i mul i 8
+end
+ret n
+end
+fn bytes at ulong pin ulong to bool
+for i ulong 32
+b = ulong get frames add at i
+if ne get hexdig shr b 4 pbyte pin mul i 2
+ret false
+end
+if ne get hexdig and b 15 pbyte pin add mul i 2 1
+ret false
+end
+end
+ret true
+end
+fn main to int
+size = ulong 0
+while lt size len frames
+n = read 0 frames size sub len frames size
+if eq n neg long 4
+else
+if lt n 0
+ret 74
+end
+if eq n 0
+if ne size 216
+ret 1
+end
+for slot ulong 2
+at = mul slot 108
+for i ulong len magic
+if ne get frames add at i get magic i
+ret 2
+end
+end
+if or ne word add at 8 1 ne word add at 12 0
+ret 3
+end
+if or ne word add at 16 srclen slot ne word add at 20 1
+ret 4
+end
+if not bytes add at 24 add slot 4
+ret 5
+end
+if ne word add at 56 1
+ret 6
+end
+if or ne word add at 60 pstart slot ne word add at 64 pend slot
+ret 7
+end
+if ne word add at 68 4
+ret 8
+end
+if not bytes add at 72 add slot 6
+ret 9
+end
+for i ulong 4
+if ne get frames add add at 104 i get pname i
+ret 10
+end
+end
+end
+if not pincheck
+ret 12
+end
+ret 0
+end
+size = add size ulong n
+end
+end
+ret 11
+end

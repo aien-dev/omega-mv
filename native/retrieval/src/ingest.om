@@ -1,0 +1,23 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Offline administrative artifact generation only. No service credentials or networking.
+text bulkhead "{\"index\":{\"_index\":\"om-l779-seed57\",\"_id\":"
+fn main to int
+if not pincheck
+ret 12
+end
+for slot ulong 2
+for i ulong len bulkhead
+obyte get bulkhead i
+end
+optext add slot 6
+obyte 125
+obyte 125
+obyte 10
+document slot
+obyte 10
+end
+if not owrite
+ret 74
+end
+ret 0
+end

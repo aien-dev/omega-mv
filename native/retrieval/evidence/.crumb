@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-23T21:21:30Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:681a3ccb8568438b430b74f123d559d01ea3f2e17ab320f2b9672b6ae4d96371",
+      "evidence_files": 68,
+      "evidence_root": "sha256:8fe9a355618bcf9f825321a2282128131c4bedc5d226e19b40f6347a54e150f4",
+      "files": 68,
+      "generated_at_commit": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+      "source_tree": "sha256:82241ee7928c39cd200aed2ed6f844480cf846e8533de6a523beab53f64bef4f"
+    }
+  },
+  "name": "evidence",
+  "purpose": "Public raw qualification artifacts and explicit failures; excludes credentials and private source.",
+  "schema_version": "1.0.0"
+}

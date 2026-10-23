@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-23T21:20:42Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:070d0a73fb5a186e63cf8226dc61f83fddc2810e828cf52bcb231c1846d62bcc",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 5,
+      "generated_at_commit": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+      "source_tree": "sha256:f34f34939a3ba6d5c27661eab0f874607cd9e2714100d0777a63283fa6ee2d83"
+    }
+  },
+  "name": "vendor",
+  "purpose": "Unchanged pinned Om SHA256 and JSON from existing source-aware and transport owners; preserve licenses.",
+  "schema_version": "1.0.0"
+}

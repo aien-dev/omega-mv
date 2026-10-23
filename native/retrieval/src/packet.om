@@ -1,0 +1,36 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Full evidence packet, including source locators and trust boundary labels.
+note This frozen two-record corpus has exactly four nonempty ordered subsets.
+text phead "{\"kind\":\"source_evidence\",\"instruction_authority\":\"none\",\"records\":["
+fn packet shape ulong to ulong
+put olen 0 0
+put oerr 0 0
+if or eq shape 0 gt shape 4
+ret 2
+end
+for i ulong len phead
+obyte get phead i
+end
+if eq shape 1
+document 0
+end
+if eq shape 2
+document 1
+end
+if eq shape 3
+document 0
+obyte 44
+document 1
+end
+if eq shape 4
+document 1
+obyte 44
+document 0
+end
+obyte 93
+obyte 125
+if ne get oerr 0 0
+ret 9
+end
+ret 0
+end

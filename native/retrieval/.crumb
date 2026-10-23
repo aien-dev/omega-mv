@@ -1,0 +1,44 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "681a3ccb8568438b430b74f123d559d01ea3f2e17ab320f2b9672b6ae4d96371",
+          "last_commit": "",
+          "name": "evidence",
+          "purpose": "Public raw qualification artifacts and explicit failures; excludes credentials and private sourc"
+        },
+        {
+          "digest": "31c909e11d1e1fae9cb233646e21dc9bf68d7aeede5ea23b6c3ce9cea02af11e",
+          "last_commit": "",
+          "name": "src",
+          "purpose": "Om-only request, verification and finite exact-token evidence packing."
+        },
+        {
+          "digest": "86c11d4af93597c3584758f596ea2f0b7d753ace60b248a8a26beba4c2fa7dbb",
+          "last_commit": "",
+          "name": "tests",
+          "purpose": "Om-only component and offline integration tests; never use test authority as real credentials."
+        },
+        {
+          "digest": "070d0a73fb5a186e63cf8226dc61f83fddc2810e828cf52bcb231c1846d62bcc",
+          "last_commit": "",
+          "name": "vendor",
+          "purpose": "Unchanged pinned Om SHA256 and JSON from existing source-aware and transport owners; preserve li"
+        }
+      ],
+      "children_root": "sha256:bd446d8bb3a965484a5f3f0b4864214a70fab35a4d78cb06f8cc895171b0f55f",
+      "compiled_at": "2026-10-23T21:21:30Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:a05c87d56104b1d66bf6ae11171a30a44b89d208b92f7266b9f19ecfc1b3c4df",
+      "evidence_files": 68,
+      "evidence_root": "sha256:8fe9a355618bcf9f825321a2282128131c4bedc5d226e19b40f6347a54e150f4",
+      "files": 88,
+      "generated_at_commit": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+      "source_tree": "sha256:aa91b65a6d6e87a8021b5c16314e1c2abab0d175b66c499d9570c339bf96cb07"
+    }
+  },
+  "name": "retrieval",
+  "purpose": "L779 bounded Om-Xerj consumer qualification; no deployed agent or native network binding claimed.",
+  "schema_version": "1.0.0"
+}

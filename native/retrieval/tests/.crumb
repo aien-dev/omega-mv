@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-23T21:20:42Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:86c11d4af93597c3584758f596ea2f0b7d753ace60b248a8a26beba4c2fa7dbb",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 6,
+      "generated_at_commit": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+      "source_tree": "sha256:656ab2d0abe4401e0b479739848219525eb6fc571dc6b04746d286459cf43c57"
+    }
+  },
+  "name": "tests",
+  "purpose": "Om-only component and offline integration tests; never use test authority as real credentials.",
+  "schema_version": "1.0.0"
+}

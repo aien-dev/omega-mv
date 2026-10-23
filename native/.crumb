@@ -1,0 +1,26 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "a05c87d56104b1d66bf6ae11171a30a44b89d208b92f7266b9f19ecfc1b3c4df",
+          "last_commit": "",
+          "name": "retrieval",
+          "purpose": "L779 bounded Om-Xerj consumer qualification; no deployed agent or native network binding claimed"
+        }
+      ],
+      "children_root": "sha256:383d101e0979b2d048f19ca1aa318b894a17d55a57b1fa0d55766dd76a304ea3",
+      "compiled_at": "2026-10-23T21:21:30Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:7a28d48d2fc6e447bb8f764dcdca01e592cc3991149a7f5d82c53d691c1edfdb",
+      "evidence_files": 68,
+      "evidence_root": "sha256:8fe9a355618bcf9f825321a2282128131c4bedc5d226e19b40f6347a54e150f4",
+      "files": 88,
+      "generated_at_commit": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+      "source_tree": "sha256:aa91b65a6d6e87a8021b5c16314e1c2abab0d175b66c499d9570c339bf96cb07"
+    }
+  },
+  "name": "native",
+  "purpose": "Native Om components; each module retains its existing compiler, interface and review owners.",
+  "schema_version": "1.0.0"
+}
