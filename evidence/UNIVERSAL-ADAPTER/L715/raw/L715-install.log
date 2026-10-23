@@ -1,0 +1,5 @@
+$ mkdir -m 700 -p /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay; cd /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay; test ! -e omega || exit 91; tar -xzf ../../shared/public-payload.tar.gz; mkdir -m 700 home project tmp; HOME="$PWD/home" TMPDIR="$PWD/tmp" quiet-build omega/tools/install.sh --offline --prefix "$PWD/prefix" > install.log 2>&1; c=$?; printf "INSTALL_RC=%s\n" "$c"; tail -15 install.log; exit "$c"
+INSTALL_RC=0
+PASS source-only seed bootstrap and compiler fixpoint
+PASS native converter and math, shared source-born compiler
+Installed omega (om and omg aliases) in /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin (PATH unchanged)

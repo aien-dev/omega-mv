@@ -1,0 +1,7 @@
+$ mkdir -p /home/drakestapleton/handoffs/universal-adapter-L707/L715/mutant-ignore-pins; cd /home/drakestapleton/handoffs/universal-adapter-L707/L715/mutant-ignore-pins; cat ../../mutant-ignore-pins.om ../../profile-unit.om > unit.om; quiet-build ../../shared/omc < unit.om > unit 2>compile.err; c=$?; printf "COMPILE_RC=%s\n" "$c"; cat compile.err; test "$c" = 0 && test -s unit || exit 90; chmod 500 unit; file unit; sha256sum unit.om unit; ./unit; c=$?; printf "TEST_RC=%s\n" "$c"; test "$c" = 1
+COMPILE_RC=0
+unit: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+171ef130ec38a12f1b9d0339c0852cb8e79b2a3e83af004228ceb2c7b926ee50  unit.om
+d335eb1d675809c8d8e4da19df87092f79b0918d21f02e4fe9c6461183ac62e8  unit
+64/1204 UAP1 direct checks
+TEST_RC=1

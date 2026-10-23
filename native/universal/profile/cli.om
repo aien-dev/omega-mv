@@ -1,0 +1,55 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Fixed serialized plan data, not runtime qualification.
+text upp1 "{\"schema\":\"omega.application-plan.v1\",\"execution_authorized\":false,\"effect\":\"explain-only\",\"qualification\":\"inherited-tests-only\",\"fresh_execution\":\"NOT_RUN\",\"application\":\"omega-exact-math-v1\",\"interface\":\"process-byte-stream-not-FFI\",\"realization\":\"native-Omega-CPU\",\"target\":\"GB10-aarch64-linux-hosted\",\"required_services\":[\"Linux-read\",\"Linux-write\",\"Linux-exit\",\"ELF-loader\"],\"retained_host_tools\":[\"POSIX-shell\",\"GNU-file-integrity-tools\"],\"foreign_compute_runtime\":null,\"gpu\":\"UNSUPPORTED\",\"remote\":false,\"buffers\":\"borrowed-stream-input-request-local-core-output-copy-before-reentry\",\"precision\":\"Q[x]-128-decimal-digits-degree16\",\"compiler_sha256\":\"191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9\",\"public_archive_sha256\":\"eaf37ff32d17166de403372069b52aeb98b9523ce154b8f065ae9e4c161c8480\",\"math_core_sha256\":\"b70391a7a38464cd63ff796748565baf3dc2f73afaed90cbc2b94774dba02db6\",\"stream_driver_sha256\":\"145db7e5184efbc5076ce27e93ddc7822e3f509c793f04f2413e0fd29f3343d0\",\"required_before_launch\":[\"rehash-actual-inputs\",\"verify-current-evidence-authority\",\"observe-actual-host-profile\",\"use-existing-validated-launcher\"],\"cache\":\"none\"}\n"
+text upp2 "{\"schema\":\"omega.application-plan.v1\",\"execution_authorized\":false,\"effect\":\"explain-only\",\"qualification\":\"inherited-tests-only\",\"fresh_execution\":\"NOT_RUN\",\"application\":\"omega-exact-math-v1\",\"interface\":\"process-byte-stream-not-FFI\",\"realization\":\"native-Omega-CPU\",\"target\":\"BCM2712-aarch64-linux-hosted\",\"required_services\":[\"Linux-read\",\"Linux-write\",\"Linux-exit\",\"ELF-loader\"],\"retained_host_tools\":[\"POSIX-shell\",\"GNU-file-integrity-tools\"],\"foreign_compute_runtime\":null,\"gpu\":\"UNSUPPORTED\",\"remote\":false,\"buffers\":\"borrowed-stream-input-request-local-core-output-copy-before-reentry\",\"precision\":\"Q[x]-128-decimal-digits-degree16\",\"compiler_sha256\":\"191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9\",\"public_archive_sha256\":\"eaf37ff32d17166de403372069b52aeb98b9523ce154b8f065ae9e4c161c8480\",\"math_core_sha256\":\"b70391a7a38464cd63ff796748565baf3dc2f73afaed90cbc2b94774dba02db6\",\"stream_driver_sha256\":\"145db7e5184efbc5076ce27e93ddc7822e3f509c793f04f2413e0fd29f3343d0\",\"required_before_launch\":[\"rehash-actual-inputs\",\"verify-current-evidence-authority\",\"observe-actual-host-profile\",\"use-existing-validated-launcher\"],\"cache\":\"none\"}\n"
+text uperrs "UAP1 MALFORMED                 \nUAP1 VERSION                   \nUAP1 SEMANTICS                 \nUAP1 ABI                       \nUAP1 PRECISION                 \nUAP1 RUNTIME_MISSING           \nUAP1 ADAPTER_STALE             \nUAP1 RIGHTS                    \nUAP1 TARGET                    \nUAP1 UNSUPPORTED               \nUAP1 EVIDENCE                  \nUAP1 REMOTE_DENIED             \nUAP1 CAPACITY                  \nUAP1 IO                        \n"
+fn uprf rc ulong to int
+pos = mul sub rc 64 32
+n = ulong 0
+while lt n 32
+w = write 2 uperrs add pos n sub ulong 32 n
+if le w 0
+ret 77
+end
+n = add n ulong w
+end
+ret int rc
+end
+fn main to int
+n = ulong 0
+done = false
+while and not done lt n 289
+r = read 0 upin n sub ulong 289 n
+if lt r 0
+ret uprf 77
+end
+if eq r 0
+done = true
+else
+n = add n ulong r
+end
+end
+rc = upcheck n
+if ne rc 0
+ret uprf rc
+end
+o = ulong 0
+if eq get upin 8 1
+while lt o len upp1
+w = write 1 upp1 o sub len upp1 o
+if le w 0
+ret 77
+end
+o = add o ulong w
+end
+else
+while lt o len upp2
+w = write 1 upp2 o sub len upp2 o
+if le w 0
+ret 77
+end
+o = add o ulong w
+end
+end
+ret 0
+end

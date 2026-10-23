@@ -1,0 +1,7 @@
+$ mkdir -p /home/drakestapleton/handoffs/universal-adapter-L707/L715/mutant-allow-missing-runtime; cd /home/drakestapleton/handoffs/universal-adapter-L707/L715/mutant-allow-missing-runtime; cat ../../mutant-allow-missing-runtime.om ../../profile-unit.om > unit.om; quiet-build ../../shared/omc < unit.om > unit 2>compile.err; c=$?; printf "COMPILE_RC=%s\n" "$c"; cat compile.err; test "$c" = 0 && test -s unit || exit 90; chmod 500 unit; file unit; sha256sum unit.om unit; ./unit; c=$?; printf "TEST_RC=%s\n" "$c"; test "$c" = 1
+COMPILE_RC=0
+unit: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+38adf6e3d7e4ef5599e0a5edff8cbb77dc01ba6f523f78c41470c3c41313b96c  unit.om
+ada8aa9dab18e517896fdb0f2418944aa19b990b2aab26c3a9c2a27b57ea22da  unit
+2/1204 UAP1 direct checks
+TEST_RC=1

@@ -1,0 +1,122 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note UAP1 declarations, not authenticated execution authority.
+global upin uchar 289
+text upcmp "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9"
+text uppkg "eaf37ff32d17166de403372069b52aeb98b9523ce154b8f065ae9e4c161c8480"
+text upcore "b70391a7a38464cd63ff796748565baf3dc2f73afaed90cbc2b94774dba02db6"
+text updrv "145db7e5184efbc5076ce27e93ddc7822e3f509c793f04f2413e0fd29f3343d0"
+fn upcheck n ulong to ulong
+if ne n 288
+ret 64
+end
+if ne get upin 0 85
+ret 64
+end
+if ne get upin 1 65
+ret 64
+end
+if ne get upin 2 80
+ret 64
+end
+if ne get upin 3 49
+ret 64
+end
+for i ulong 4
+if ne get upin add i 28 0
+ret 64
+end
+end
+if or eq get upin 10 0 gt get upin 10 2
+ret 64
+end
+if gt get upin 11 1
+ret 64
+end
+if gt get upin 12 1
+ret 64
+end
+if gt get upin 13 3
+ret 64
+end
+if or eq get upin 15 0 gt get upin 15 4
+ret 64
+end
+if gt get upin 16 1
+ret 64
+end
+if gt get upin 17 1
+ret 64
+end
+if ne get upin 4 1
+ret 65
+end
+if ne get upin 5 1
+ret 66
+end
+if ne get upin 6 1
+ret 67
+end
+if ne get upin 7 1
+ret 68
+end
+if and eq get upin 11 1 eq get upin 12 0
+ret 69
+end
+if or ne get upin 18 1 ne get upin 19 0
+ret 70
+end
+for i ulong 64
+if ne get upin add i 32 get upcmp i
+ret 70
+end
+if ne get upin add i 96 get uppkg i
+ret 70
+end
+if ne get upin add i 160 get upcore i
+ret 70
+end
+if ne get upin add i 224 get updrv i
+ret 70
+end
+end
+if ne get upin 13 3
+ret 71
+end
+if or eq get upin 8 0 gt get upin 8 2
+ret 72
+end
+if ne get upin 8 get upin 9
+ret 72
+end
+if and eq get upin 16 1 eq get upin 17 0
+ret 75
+end
+if ne get upin 10 1
+ret 73
+end
+if ne get upin 11 0
+ret 73
+end
+if ne get upin 15 1
+ret 73
+end
+if ne get upin 16 0
+ret 73
+end
+if ne get upin 14 1
+ret 74
+end
+for i ulong 8
+expected = uchar 0
+if eq i 1
+expected = 16
+end
+if eq i 5
+expected = 32
+end
+if ne get upin add i 20 expected
+ret 76
+end
+end
+ret 0
+end
