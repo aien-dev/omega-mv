@@ -1,0 +1,1923 @@
+{
+  "schema": "omega.recursion.development.v2",
+  "run": "build/L729/run-1eaFly",
+  "status": "PASS",
+  "signed": false,
+  "fidelity": "BOUNDED_DIFFERENTIAL_TESTING",
+  "sourceHEAD": "6de092948a7c8f87dd2cd18a0886c335bd635a3e",
+  "host": {
+    "platform": "linux",
+    "arch": "arm64",
+    "release": "7.0.0-1019-nvidia",
+    "cpu": "unknown"
+  },
+  "node": "v24.21.0",
+  "compilerSHA256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "sourceHashes": {
+    "src/source-aware/recursion-v2.om": "f73660bee1b3c93fe737d4cd2a7f9609cd8da7e0c5cb0479c1cbe4e511121558",
+    "tests/universal/recursion/workloads.om": "c4b06d3bb406e2c9894e1c54a9c6ed7a91b28c3ad5b869b4cc42fb4ff1950468",
+    "tests/universal/recursion/batch.om": "991907b148975aa86c1b18415d13d30471bbcd6260dc37e5c2c5dbe55f671cfc",
+    "spec/universal/bounded-recursion-v2.md": "e2e72e8340fcf714a7d6f59f2207aaaeac78f7a77d8565cfc94dd57a08218883",
+    "tests/universal/recursion/gate.mjs": "cfc5e1d30009ccb501d304a3c2111cc29e0af3bed201c32527c8627b10bfd17e",
+    "tests/universal/recursion/tutorial.om": "f5c4ed844706917e325140f309df7e993ecc928952a4707e193da58ced433044"
+  },
+  "notRun": [
+    "general recursive interchange codec/lowering",
+    "source/native translation proof",
+    "native cache seam",
+    "native verifier worklist",
+    "signed Spark judge",
+    "independent final-source review",
+    "GPU/non-AArch64 execution"
+  ],
+  "commands": [
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 2.82484,
+      "tag": "000",
+      "stdinSHA256": "014eab197b745f6129daf58170cc737df56b356b3e104c825ca1b0b8b0748049",
+      "stdoutSHA256": "3440819847002b999c9cfe2c897360dca9425a9708cd6c29aa0c39d63f195c4e"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/red-fuel"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 10.729897,
+      "tag": "001",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/red-fuel",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 16.638009,
+      "tag": "002",
+      "stdinSHA256": "281ad2407cada8dc4153ec6c1ef56fcfb9507631e9433841f6c6746ec07c08b0",
+      "stdoutSHA256": "a0a9684d60069bd3d5782fb8647f7bd267464a6aa52396c2672c1b42fabb8ae9"
+    },
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 3.187931,
+      "tag": "003",
+      "stdinSHA256": "5664e3b04e89231da085078ca4b98099fd4dbe81f0422241e009d96ec0ae94fd",
+      "stdoutSHA256": "c906ec230ffe6c9d90b3aabfd83a089809d9be50732e62c3463ab9b62da35184"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/native"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 10.093091,
+      "tag": "004",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 18.880651,
+      "tag": "005",
+      "stdinSHA256": "281ad2407cada8dc4153ec6c1ef56fcfb9507631e9433841f6c6746ec07c08b0",
+      "stdoutSHA256": "72b215e590567751ef415c5a06ee870f860761cae667b298d07deaea2361646f"
+    },
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 2.599862,
+      "tag": "006",
+      "stdinSHA256": "e8adc7cb197d56c01ebe7fcc712d8718295bd451770f966b629b69dc25e4610f",
+      "stdoutSHA256": "aaaea5d734ef1a240bddba2fe67f0500c966d8d77b8d4d53659ba2884eb02467"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/frame-off-by-one"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 10.217669,
+      "tag": "007",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/frame-off-by-one",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 19.824164,
+      "tag": "008",
+      "stdinSHA256": "281ad2407cada8dc4153ec6c1ef56fcfb9507631e9433841f6c6746ec07c08b0",
+      "stdoutSHA256": "2a0322907d3281ffabff1bc855af39a4a89b13e2433a1f89cedc167ce37ca410"
+    },
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 2.565253,
+      "tag": "009",
+      "stdinSHA256": "122b00f3342b7d734bf1119375be7bd144c911009ccd637e43ef00755c3edb54",
+      "stdoutSHA256": "6f4e627642f8cfba4d599394ce01e862ef8674d2ddccb41541c24b06532063a9"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/storage-off-by-one"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 8.277252,
+      "tag": "010",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/storage-off-by-one",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 20.709355,
+      "tag": "011",
+      "stdinSHA256": "281ad2407cada8dc4153ec6c1ef56fcfb9507631e9433841f6c6746ec07c08b0",
+      "stdoutSHA256": "976c5e73f732ea8e0dda3905be49ef69bfeed5433a96ed2c18c60fa6b1698006"
+    },
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 6.58575,
+      "tag": "012",
+      "stdinSHA256": "bca56f2f21d1971bd2c41f78b0df52efa3116e5f1bbe5d2c7a1b20398c26f2f5",
+      "stdoutSHA256": "1d6fc9035e986c0ff848268f68dd80a5e4028dce5c26b3096b4d4e9a1707f164"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/wrong-return"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 12.345174,
+      "tag": "013",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/wrong-return",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 16.752314,
+      "tag": "014",
+      "stdinSHA256": "281ad2407cada8dc4153ec6c1ef56fcfb9507631e9433841f6c6746ec07c08b0",
+      "stdoutSHA256": "168d2d8357f8b23c938f00843aa6002d1f519d7891fffd2b8ff910d37622f12a"
+    },
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 6.569862,
+      "tag": "015",
+      "stdinSHA256": "e5ceedfc0a9cf735d3490b542b92a7692df10999438a6c4c847ad82d506e426d",
+      "stdoutSHA256": "6352219c5251d4f91a583676a32b690ded25c5c9d42683fdf6de530a184e1e40"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/argument-order"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 12.878682,
+      "tag": "016",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/argument-order",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 23.230047,
+      "tag": "017",
+      "stdinSHA256": "281ad2407cada8dc4153ec6c1ef56fcfb9507631e9433841f6c6746ec07c08b0",
+      "stdoutSHA256": "f12ae6f63a919e39dc67fbed883a49a41b63e6f19eda8be63144e4acfd06cafe"
+    },
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 3.601149,
+      "tag": "018",
+      "stdinSHA256": "7ba0be78c9aec4479de899c780fc1dfdcfb872ca1a9e9c4a656828911c81d616",
+      "stdoutSHA256": "0cc0a194d592ba0666e08f8bd26d780c896e75d06d5381eeb69e315c0ca38c76"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/wrong-continuation"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 12.887755,
+      "tag": "019",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/wrong-continuation",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 9.357917,
+      "tag": "020",
+      "stdinSHA256": "281ad2407cada8dc4153ec6c1ef56fcfb9507631e9433841f6c6746ec07c08b0",
+      "stdoutSHA256": "2f7758640da3f95222ce30580dd0cfd11ac5d6ba2b914c41f98e955115e0649a"
+    },
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 2.615557,
+      "tag": "021",
+      "stdinSHA256": "f25d60e6e94cd4531ae2269a2dfe4121f4948fda9a93f6e4abdfe9860a5b2cdf",
+      "stdoutSHA256": "58a1626b3873211cc200322d66d8c0e351970fadc1bacf1d746e0d15f76ea494"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/child-order"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 9.055307,
+      "tag": "022",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/child-order",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 18.814107,
+      "tag": "023",
+      "stdinSHA256": "281ad2407cada8dc4153ec6c1ef56fcfb9507631e9433841f6c6746ec07c08b0",
+      "stdoutSHA256": "663b8f311f67d21d6c23391a2c0268b65c42b8fcbee3b5d373e1bec0b609b808"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 65,
+      "signal": null,
+      "elapsedMs": 6.064482,
+      "tag": "024",
+      "stdinSHA256": "23540fab601fa5034335097bf015e3c081b58982108447bfa74d474edfd43469",
+      "stdoutSHA256": "f19448aa7efe74441eabc30b2f6d2cefc4a131ad656cdd0537cc750130ee5845"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 5.283676,
+      "tag": "025",
+      "stdinSHA256": "b1d992210bb802b01961e5ba187f8f6c275893a0b4f5df8e1a595c5c2e926a17",
+      "stdoutSHA256": "5935790a59c335cc265427aacfba3cfaad2a41f16150e060264307d8e7b9293b"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 37.363332,
+      "tag": "026",
+      "stdinSHA256": "ae700cc5c6d240db842c331f536782e3c1d84d41eb2d739ecc6f35cc135202bb",
+      "stdoutSHA256": "ea8eea0f7cf9542564cb6b800699f8b31f620ef001bbd968e32e20e43a61de6b"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 33.622213,
+      "tag": "027",
+      "stdinSHA256": "d5ebff7c686c78e1758d754b50eb4472570467709c7e293d5f5a867f36cb1de2",
+      "stdoutSHA256": "39748f8613d7ce21cf30786a2bb5e5a353e7e2191856011eb41cfc68276c8e06"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 67,
+      "signal": null,
+      "elapsedMs": 23.831909,
+      "tag": "028",
+      "stdinSHA256": "a98d63ef58b6e3e42ece4d32e2add8294964cc413478113b01318c123280e98a",
+      "stdoutSHA256": "39748f8613d7ce21cf30786a2bb5e5a353e7e2191856011eb41cfc68276c8e06"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 67,
+      "signal": null,
+      "elapsedMs": 22.769244,
+      "tag": "029",
+      "stdinSHA256": "de5518849ea1e5945358ba536dac1b83daae1bfe72375a37e6ed9099e3653b4d",
+      "stdoutSHA256": "39748f8613d7ce21cf30786a2bb5e5a353e7e2191856011eb41cfc68276c8e06"
+    },
+    {
+      "exe": "build/L574/toolchain/build/bootstrap/omc",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 4.34306,
+      "tag": "030",
+      "stdinSHA256": "6e540edacb4a17a1dccdb129397fb830d55b8b9a80adb93466984b6504c7f947",
+      "stdoutSHA256": "408ce96883e7f3dc507cc52b7498de1ef4cc15364307b93b0952566fbcd3a1a5"
+    },
+    {
+      "exe": "sh",
+      "args": [
+        "build/L574/toolchain/tools/verify-elf.sh",
+        "build/L729/run-1eaFly/tutorial"
+      ],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 11.619824,
+      "tag": "031",
+      "stdinSHA256": null,
+      "stdoutSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/tutorial",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 2.960616,
+      "tag": "032",
+      "stdinSHA256": null,
+      "stdoutSHA256": "cd79476bb5a85cca40106d75b6707dc7e090c29c3dcc206c7743e6b40bc1151f"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 9.517087,
+      "tag": "033",
+      "stdinSHA256": "b5b0fda6b477b3cf9a3c3da873c16a4982c84c5a0a0cfefa2de5720b553495f2",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 8.127827,
+      "tag": "034",
+      "stdinSHA256": "d6a99cfa31ac60037230463d355826cbfade3bc603005ce28e47df03ae9a0190",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 5.759967,
+      "tag": "035",
+      "stdinSHA256": "d6a99cfa31ac60037230463d355826cbfade3bc603005ce28e47df03ae9a0190",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 8.109331,
+      "tag": "036",
+      "stdinSHA256": "b5b0fda6b477b3cf9a3c3da873c16a4982c84c5a0a0cfefa2de5720b553495f2",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 7.798145,
+      "tag": "037",
+      "stdinSHA256": "b5b0fda6b477b3cf9a3c3da873c16a4982c84c5a0a0cfefa2de5720b553495f2",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 6.203971,
+      "tag": "038",
+      "stdinSHA256": "d6a99cfa31ac60037230463d355826cbfade3bc603005ce28e47df03ae9a0190",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 8.917673,
+      "tag": "039",
+      "stdinSHA256": "d6a99cfa31ac60037230463d355826cbfade3bc603005ce28e47df03ae9a0190",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 10.441078,
+      "tag": "040",
+      "stdinSHA256": "b5b0fda6b477b3cf9a3c3da873c16a4982c84c5a0a0cfefa2de5720b553495f2",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 8.724328,
+      "tag": "041",
+      "stdinSHA256": "b5b0fda6b477b3cf9a3c3da873c16a4982c84c5a0a0cfefa2de5720b553495f2",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 9.608527,
+      "tag": "042",
+      "stdinSHA256": "d6a99cfa31ac60037230463d355826cbfade3bc603005ce28e47df03ae9a0190",
+      "stdoutSHA256": "d3c04596f6c3c4f2b02e4151c2972b5e98ea43333e90b90c22d0d7e658ca3593"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 9.121003,
+      "tag": "043",
+      "stdinSHA256": "37621b55b3a416451fc220709b2b7e537b40daa61ec18f321196de15996bdc91",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 9.194524,
+      "tag": "044",
+      "stdinSHA256": "5c71c8e0b022798a8c35db5c17b34edbfa3e94cc79ffaa72d63f517887ff34d1",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 4.919721,
+      "tag": "045",
+      "stdinSHA256": "5c71c8e0b022798a8c35db5c17b34edbfa3e94cc79ffaa72d63f517887ff34d1",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 5.660655,
+      "tag": "046",
+      "stdinSHA256": "37621b55b3a416451fc220709b2b7e537b40daa61ec18f321196de15996bdc91",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 5.538813,
+      "tag": "047",
+      "stdinSHA256": "37621b55b3a416451fc220709b2b7e537b40daa61ec18f321196de15996bdc91",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 6.158611,
+      "tag": "048",
+      "stdinSHA256": "5c71c8e0b022798a8c35db5c17b34edbfa3e94cc79ffaa72d63f517887ff34d1",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 6.256804,
+      "tag": "049",
+      "stdinSHA256": "5c71c8e0b022798a8c35db5c17b34edbfa3e94cc79ffaa72d63f517887ff34d1",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 5.451965,
+      "tag": "050",
+      "stdinSHA256": "37621b55b3a416451fc220709b2b7e537b40daa61ec18f321196de15996bdc91",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 9.208156,
+      "tag": "051",
+      "stdinSHA256": "37621b55b3a416451fc220709b2b7e537b40daa61ec18f321196de15996bdc91",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 6.581478,
+      "tag": "052",
+      "stdinSHA256": "5c71c8e0b022798a8c35db5c17b34edbfa3e94cc79ffaa72d63f517887ff34d1",
+      "stdoutSHA256": "4e0fa9e8be738ddbcdcb7a3a4d2b5a20cced7f313de5421a1427b3267ea5ccfb"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 14.459432,
+      "tag": "053",
+      "stdinSHA256": "50498588b34535de7360c126f241aa3cb5e151a99b82d0f4cd4925b6a6e5d020",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 43.528968,
+      "tag": "054",
+      "stdinSHA256": "beb050ab6435e75fd1e8862deeff561d717026a35cfa802ca5dd63443b3a294e",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 43.513352,
+      "tag": "055",
+      "stdinSHA256": "beb050ab6435e75fd1e8862deeff561d717026a35cfa802ca5dd63443b3a294e",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 14.121332,
+      "tag": "056",
+      "stdinSHA256": "50498588b34535de7360c126f241aa3cb5e151a99b82d0f4cd4925b6a6e5d020",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 15.585872,
+      "tag": "057",
+      "stdinSHA256": "50498588b34535de7360c126f241aa3cb5e151a99b82d0f4cd4925b6a6e5d020",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 20.83734,
+      "tag": "058",
+      "stdinSHA256": "beb050ab6435e75fd1e8862deeff561d717026a35cfa802ca5dd63443b3a294e",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 20.912669,
+      "tag": "059",
+      "stdinSHA256": "beb050ab6435e75fd1e8862deeff561d717026a35cfa802ca5dd63443b3a294e",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 25.014879,
+      "tag": "060",
+      "stdinSHA256": "50498588b34535de7360c126f241aa3cb5e151a99b82d0f4cd4925b6a6e5d020",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 25.479026,
+      "tag": "061",
+      "stdinSHA256": "50498588b34535de7360c126f241aa3cb5e151a99b82d0f4cd4925b6a6e5d020",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    },
+    {
+      "exe": "build/L729/run-1eaFly/native",
+      "args": [],
+      "status": 0,
+      "signal": null,
+      "elapsedMs": 42.870258,
+      "tag": "062",
+      "stdinSHA256": "beb050ab6435e75fd1e8862deeff561d717026a35cfa802ca5dd63443b3a294e",
+      "stdoutSHA256": "b020d00a8681d1be2c8d9ff8cd9e2756747c94a0ff8a870918fd884151589354"
+    }
+  ],
+  "mutants": [
+    {
+      "path": "build/L729/run-1eaFly/frame-off-by-one",
+      "sourceSHA256": "e8adc7cb197d56c01ebe7fcc712d8718295bd451770f966b629b69dc25e4610f",
+      "binarySHA256": "aaaea5d734ef1a240bddba2fe67f0500c966d8d77b8d4d53659ba2884eb02467",
+      "compileMs": 2.599862,
+      "label": "frame-off-by-one",
+      "status": 0,
+      "signal": null,
+      "observations": 3464,
+      "expected": 3464,
+      "mismatches": 952,
+      "first": [
+        {
+          "i": 5,
+          "label": "tail n0 fuel1 frames0",
+          "want": [
+            "81",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "got": [
+            "0",
+            "18446744073709551615",
+            "1",
+            "1",
+            "32",
+            "0"
+          ]
+        },
+        {
+          "i": 7,
+          "label": "tail n0 fuel1 frames0",
+          "want": [
+            "81",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "got": [
+            "0",
+            "18446744073709551615",
+            "1",
+            "1",
+            "32",
+            "0"
+          ]
+        },
+        {
+          "i": 15,
+          "label": "tail n0 fuel1 frames0",
+          "want": [
+            "81",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "got": [
+            "0",
+            "18446744073709551615",
+            "1",
+            "1",
+            "32",
+            "0"
+          ]
+        },
+        {
+          "i": 17,
+          "label": "tail n0 fuel1 frames0",
+          "want": [
+            "81",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "got": [
+            "0",
+            "18446744073709551615",
+            "1",
+            "1",
+            "32",
+            "0"
+          ]
+        },
+        {
+          "i": 20,
+          "label": "tail n0 fuel4096 frames0",
+          "want": [
+            "81",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "got": [
+            "0",
+            "18446744073709551615",
+            "1",
+            "1",
+            "32",
+            "0"
+          ]
+        },
+        {
+          "i": 22,
+          "label": "tail n0 fuel4096 frames0",
+          "want": [
+            "81",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "got": [
+            "0",
+            "18446744073709551615",
+            "1",
+            "1",
+            "32",
+            "0"
+          ]
+        }
+      ],
+      "elapsedMs": 19.824164
+    },
+    {
+      "path": "build/L729/run-1eaFly/storage-off-by-one",
+      "sourceSHA256": "122b00f3342b7d734bf1119375be7bd144c911009ccd637e43ef00755c3edb54",
+      "binarySHA256": "6f4e627642f8cfba4d599394ce01e862ef8674d2ddccb41541c24b06532063a9",
+      "compileMs": 2.565253,
+      "label": "storage-off-by-one",
+      "status": 0,
+      "signal": null,
+      "observations": 3464,
+      "expected": 3464,
+      "mismatches": 79,
+      "first": [
+        {
+          "i": 268,
+          "label": "tail n63 fuel64 frames64",
+          "want": [
+            "0",
+            "2015",
+            "64",
+            "64",
+            "2048",
+            "0"
+          ],
+          "got": [
+            "82",
+            "0",
+            "63",
+            "63",
+            "2016",
+            "0"
+          ]
+        },
+        {
+          "i": 269,
+          "label": "tail n63 fuel64 frames64",
+          "want": [
+            "0",
+            "2015",
+            "64",
+            "64",
+            "2048",
+            "0"
+          ],
+          "got": [
+            "82",
+            "0",
+            "63",
+            "63",
+            "2016",
+            "0"
+          ]
+        },
+        {
+          "i": 273,
+          "label": "tail n63 fuel4096 frames64",
+          "want": [
+            "0",
+            "2015",
+            "64",
+            "64",
+            "2048",
+            "0"
+          ],
+          "got": [
+            "82",
+            "0",
+            "63",
+            "63",
+            "2016",
+            "0"
+          ]
+        },
+        {
+          "i": 274,
+          "label": "tail n63 fuel4096 frames64",
+          "want": [
+            "0",
+            "2015",
+            "64",
+            "64",
+            "2048",
+            "0"
+          ],
+          "got": [
+            "82",
+            "0",
+            "63",
+            "63",
+            "2016",
+            "0"
+          ]
+        },
+        {
+          "i": 293,
+          "label": "tail n63 fuel64 frames64",
+          "want": [
+            "0",
+            "2015",
+            "64",
+            "64",
+            "2048",
+            "0"
+          ],
+          "got": [
+            "82",
+            "0",
+            "63",
+            "63",
+            "2016",
+            "0"
+          ]
+        },
+        {
+          "i": 294,
+          "label": "tail n63 fuel64 frames64",
+          "want": [
+            "0",
+            "2015",
+            "64",
+            "64",
+            "2048",
+            "0"
+          ],
+          "got": [
+            "82",
+            "0",
+            "63",
+            "63",
+            "2016",
+            "0"
+          ]
+        }
+      ],
+      "elapsedMs": 20.709355
+    },
+    {
+      "path": "build/L729/run-1eaFly/wrong-return",
+      "sourceSHA256": "bca56f2f21d1971bd2c41f78b0df52efa3116e5f1bbe5d2c7a1b20398c26f2f5",
+      "binarySHA256": "1d6fc9035e986c0ff848268f68dd80a5e4028dce5c26b3096b4d4e9a1707f164",
+      "compileMs": 6.58575,
+      "label": "wrong-return",
+      "status": 0,
+      "signal": null,
+      "observations": 3464,
+      "expected": 3464,
+      "mismatches": 224,
+      "first": [
+        {
+          "i": 851,
+          "label": "tree6 fuel7 frames4",
+          "want": [
+            "0",
+            "13119011722441604652",
+            "5",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "0",
+            "14728696036463064858",
+            "5",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 852,
+          "label": "tree6 fuel7 frames16",
+          "want": [
+            "0",
+            "13119011722441604652",
+            "5",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "0",
+            "14728696036463064858",
+            "5",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 853,
+          "label": "tree6 fuel7 frames64",
+          "want": [
+            "0",
+            "13119011722441604652",
+            "5",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "0",
+            "14728696036463064858",
+            "5",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 855,
+          "label": "tree6 fuel31 frames4",
+          "want": [
+            "0",
+            "13119011722441604652",
+            "5",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "0",
+            "14728696036463064858",
+            "5",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 856,
+          "label": "tree6 fuel31 frames16",
+          "want": [
+            "0",
+            "13119011722441604652",
+            "5",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "0",
+            "14728696036463064858",
+            "5",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 857,
+          "label": "tree6 fuel31 frames64",
+          "want": [
+            "0",
+            "13119011722441604652",
+            "5",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "0",
+            "14728696036463064858",
+            "5",
+            "3",
+            "96",
+            "0"
+          ]
+        }
+      ],
+      "elapsedMs": 16.752314
+    },
+    {
+      "path": "build/L729/run-1eaFly/argument-order",
+      "sourceSHA256": "e5ceedfc0a9cf735d3490b542b92a7692df10999438a6c4c847ad82d506e426d",
+      "binarySHA256": "6352219c5251d4f91a583676a32b690ded25c5c9d42683fdf6de530a184e1e40",
+      "compileMs": 6.569862,
+      "label": "argument-order",
+      "status": 0,
+      "signal": null,
+      "observations": 3464,
+      "expected": 3464,
+      "mismatches": 1,
+      "first": [
+        {
+          "i": 3380,
+          "label": "argument evaluation order",
+          "want": [
+            "0",
+            "123123",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "got": [
+            "0",
+            "321321",
+            "0",
+            "0",
+            "0",
+            "0"
+          ]
+        }
+      ],
+      "elapsedMs": 23.230047
+    },
+    {
+      "path": "build/L729/run-1eaFly/wrong-continuation",
+      "sourceSHA256": "7ba0be78c9aec4479de899c780fc1dfdcfb872ca1a9e9c4a656828911c81d616",
+      "binarySHA256": "0cc0a194d592ba0666e08f8bd26d780c896e75d06d5381eeb69e315c0ca38c76",
+      "compileMs": 3.601149,
+      "label": "wrong-continuation",
+      "status": 0,
+      "signal": null,
+      "observations": 3464,
+      "expected": 3464,
+      "mismatches": 22,
+      "first": [
+        {
+          "i": 68,
+          "label": "tail n1 fuel2 frames2",
+          "want": [
+            "0",
+            "0",
+            "2",
+            "2",
+            "64",
+            "0"
+          ],
+          "got": [
+            "0",
+            "1",
+            "2",
+            "2",
+            "64",
+            "0"
+          ]
+        },
+        {
+          "i": 69,
+          "label": "tail n1 fuel2 frames64",
+          "want": [
+            "0",
+            "0",
+            "2",
+            "2",
+            "64",
+            "0"
+          ],
+          "got": [
+            "0",
+            "1",
+            "2",
+            "2",
+            "64",
+            "0"
+          ]
+        },
+        {
+          "i": 73,
+          "label": "tail n1 fuel4096 frames2",
+          "want": [
+            "0",
+            "0",
+            "2",
+            "2",
+            "64",
+            "0"
+          ],
+          "got": [
+            "0",
+            "1",
+            "2",
+            "2",
+            "64",
+            "0"
+          ]
+        },
+        {
+          "i": 74,
+          "label": "tail n1 fuel4096 frames64",
+          "want": [
+            "0",
+            "0",
+            "2",
+            "2",
+            "64",
+            "0"
+          ],
+          "got": [
+            "0",
+            "1",
+            "2",
+            "2",
+            "64",
+            "0"
+          ]
+        },
+        {
+          "i": 118,
+          "label": "tail n2 fuel3 frames3",
+          "want": [
+            "0",
+            "2",
+            "3",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "0",
+            "4",
+            "3",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 119,
+          "label": "tail n2 fuel3 frames64",
+          "want": [
+            "0",
+            "2",
+            "3",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "0",
+            "4",
+            "3",
+            "3",
+            "96",
+            "0"
+          ]
+        }
+      ],
+      "elapsedMs": 9.357917
+    },
+    {
+      "path": "build/L729/run-1eaFly/child-order",
+      "sourceSHA256": "f25d60e6e94cd4531ae2269a2dfe4121f4948fda9a93f6e4abdfe9860a5b2cdf",
+      "binarySHA256": "58a1626b3873211cc200322d66d8c0e351970fadc1bacf1d746e0d15f76ea494",
+      "compileMs": 2.615557,
+      "label": "child-order",
+      "status": 0,
+      "signal": null,
+      "observations": 3464,
+      "expected": 3464,
+      "mismatches": 195,
+      "first": [
+        {
+          "i": 595,
+          "label": "tree2 fuel7 frames4",
+          "want": [
+            "80",
+            "0",
+            "7",
+            "4",
+            "128",
+            "0"
+          ],
+          "got": [
+            "80",
+            "0",
+            "7",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 596,
+          "label": "tree2 fuel7 frames16",
+          "want": [
+            "80",
+            "0",
+            "7",
+            "4",
+            "128",
+            "0"
+          ],
+          "got": [
+            "80",
+            "0",
+            "7",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 597,
+          "label": "tree2 fuel7 frames64",
+          "want": [
+            "80",
+            "0",
+            "7",
+            "4",
+            "128",
+            "0"
+          ],
+          "got": [
+            "80",
+            "0",
+            "7",
+            "3",
+            "96",
+            "0"
+          ]
+        },
+        {
+          "i": 655,
+          "label": "tree3 fuel3 frames4",
+          "want": [
+            "80",
+            "0",
+            "3",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "80",
+            "0",
+            "3",
+            "2",
+            "64",
+            "0"
+          ]
+        },
+        {
+          "i": 656,
+          "label": "tree3 fuel3 frames16",
+          "want": [
+            "80",
+            "0",
+            "3",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "80",
+            "0",
+            "3",
+            "2",
+            "64",
+            "0"
+          ]
+        },
+        {
+          "i": 657,
+          "label": "tree3 fuel3 frames64",
+          "want": [
+            "80",
+            "0",
+            "3",
+            "3",
+            "96",
+            "0"
+          ],
+          "got": [
+            "80",
+            "0",
+            "3",
+            "2",
+            "64",
+            "0"
+          ]
+        }
+      ],
+      "elapsedMs": 18.814107
+    }
+  ],
+  "measurements": [
+    {
+      "workload": "tail63",
+      "iterative": false,
+      "rep": 0,
+      "requests": 1024,
+      "totalMs": 9.517087,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": true,
+      "rep": 0,
+      "requests": 1024,
+      "totalMs": 8.127827,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": true,
+      "rep": 1,
+      "requests": 1024,
+      "totalMs": 5.759967,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": false,
+      "rep": 1,
+      "requests": 1024,
+      "totalMs": 8.109331,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": false,
+      "rep": 2,
+      "requests": 1024,
+      "totalMs": 7.798145,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": true,
+      "rep": 2,
+      "requests": 1024,
+      "totalMs": 6.203971,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": true,
+      "rep": 3,
+      "requests": 1024,
+      "totalMs": 8.917673,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": false,
+      "rep": 3,
+      "requests": 1024,
+      "totalMs": 10.441078,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": false,
+      "rep": 4,
+      "requests": 1024,
+      "totalMs": 8.724328,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "tail63",
+      "iterative": true,
+      "rep": 4,
+      "requests": 1024,
+      "totalMs": 9.608527,
+      "logicalEntriesPerRequest": 64,
+      "peakLogicalFrames": 64,
+      "peakLogicalBytes": 2048,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": false,
+      "rep": 0,
+      "requests": 1024,
+      "totalMs": 9.121003,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": true,
+      "rep": 0,
+      "requests": 1024,
+      "totalMs": 9.194524,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": true,
+      "rep": 1,
+      "requests": 1024,
+      "totalMs": 4.919721,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": false,
+      "rep": 1,
+      "requests": 1024,
+      "totalMs": 5.660655,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": false,
+      "rep": 2,
+      "requests": 1024,
+      "totalMs": 5.538813,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": true,
+      "rep": 2,
+      "requests": 1024,
+      "totalMs": 6.158611,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": true,
+      "rep": 3,
+      "requests": 1024,
+      "totalMs": 6.256804,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": false,
+      "rep": 3,
+      "requests": 1024,
+      "totalMs": 5.451965,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": false,
+      "rep": 4,
+      "requests": 1024,
+      "totalMs": 9.208156,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "empty",
+      "iterative": true,
+      "rep": 4,
+      "requests": 1024,
+      "totalMs": 6.581478,
+      "logicalEntriesPerRequest": 1,
+      "peakLogicalFrames": 1,
+      "peakLogicalBytes": 32,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": false,
+      "rep": 0,
+      "requests": 1024,
+      "totalMs": 14.459432,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": true,
+      "rep": 0,
+      "requests": 1024,
+      "totalMs": 43.528968,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": true,
+      "rep": 1,
+      "requests": 1024,
+      "totalMs": 43.513352,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": false,
+      "rep": 1,
+      "requests": 1024,
+      "totalMs": 14.121332,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": false,
+      "rep": 2,
+      "requests": 1024,
+      "totalMs": 15.585872,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": true,
+      "rep": 2,
+      "requests": 1024,
+      "totalMs": 20.83734,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": true,
+      "rep": 3,
+      "requests": 1024,
+      "totalMs": 20.912669,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": false,
+      "rep": 3,
+      "requests": 1024,
+      "totalMs": 25.014879,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": false,
+      "rep": 4,
+      "requests": 1024,
+      "totalMs": 25.479026,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    },
+    {
+      "workload": "branching",
+      "iterative": true,
+      "rep": 4,
+      "requests": 1024,
+      "totalMs": 42.870258,
+      "logicalEntriesPerRequest": 2047,
+      "peakLogicalFrames": 11,
+      "peakLogicalBytes": 352,
+      "measurement": "shared-host full process; includes input validation/transport/startup"
+    }
+  ],
+  "red": {
+    "path": "build/L729/run-1eaFly/red-fuel",
+    "sourceSHA256": "014eab197b745f6129daf58170cc737df56b356b3e104c825ca1b0b8b0748049",
+    "binarySHA256": "3440819847002b999c9cfe2c897360dca9425a9708cd6c29aa0c39d63f195c4e",
+    "compileMs": 2.82484,
+    "label": "red-fuel",
+    "status": 0,
+    "signal": null,
+    "observations": 3464,
+    "expected": 3464,
+    "mismatches": 1135,
+    "first": [
+      {
+        "i": 56,
+        "label": "tail n1 fuel1 frames1",
+        "want": [
+          "80",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ],
+        "got": [
+          "81",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ]
+      },
+      {
+        "i": 57,
+        "label": "tail n1 fuel1 frames1",
+        "want": [
+          "80",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ],
+        "got": [
+          "81",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ]
+      },
+      {
+        "i": 58,
+        "label": "tail n1 fuel1 frames2",
+        "want": [
+          "80",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ],
+        "got": [
+          "0",
+          "0",
+          "2",
+          "2",
+          "64",
+          "0"
+        ]
+      },
+      {
+        "i": 59,
+        "label": "tail n1 fuel1 frames64",
+        "want": [
+          "80",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ],
+        "got": [
+          "0",
+          "0",
+          "2",
+          "2",
+          "64",
+          "0"
+        ]
+      },
+      {
+        "i": 61,
+        "label": "tail n1 fuel1 frames1",
+        "want": [
+          "80",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ],
+        "got": [
+          "81",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ]
+      },
+      {
+        "i": 62,
+        "label": "tail n1 fuel1 frames1",
+        "want": [
+          "80",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ],
+        "got": [
+          "81",
+          "0",
+          "1",
+          "1",
+          "32",
+          "0"
+        ]
+      }
+    ],
+    "elapsedMs": 16.638009
+  },
+  "native": {
+    "path": "build/L729/run-1eaFly/native",
+    "sourceSHA256": "5664e3b04e89231da085078ca4b98099fd4dbe81f0422241e009d96ec0ae94fd",
+    "binarySHA256": "c906ec230ffe6c9d90b3aabfd83a089809d9be50732e62c3463ab9b62da35184",
+    "compileMs": 3.187931
+  },
+  "correctness": {
+    "label": "correctness",
+    "status": 0,
+    "signal": null,
+    "observations": 3464,
+    "expected": 3464,
+    "mismatches": 0,
+    "first": [],
+    "elapsedMs": 18.880651
+  },
+  "transport": {
+    "truncationExit": 65,
+    "recoveryRequests": 3,
+    "status": "PASS",
+    "sessionLimits": [
+      {
+        "requests": 8191,
+        "status": 0,
+        "responses": 8191
+      },
+      {
+        "requests": 8192,
+        "status": 0,
+        "responses": 8192
+      },
+      {
+        "requests": 8193,
+        "status": 67,
+        "responses": 8192
+      },
+      {
+        "requests": 8192,
+        "extraBytes": 1,
+        "status": 67,
+        "responses": 8192
+      }
+    ]
+  },
+  "tutorial": {
+    "path": "build/L729/run-1eaFly/tutorial",
+    "sourceSHA256": "6e540edacb4a17a1dccdb129397fb830d55b8b9a80adb93466984b6504c7f947",
+    "binarySHA256": "408ce96883e7f3dc507cc52b7498de1ef4cc15364307b93b0952566fbcd3a1a5",
+    "compileMs": 4.34306,
+    "status": 0,
+    "stdout": "2016\n80\n"
+  }
+}

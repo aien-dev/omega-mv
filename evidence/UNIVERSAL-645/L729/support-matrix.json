@@ -1,0 +1,69 @@
+{
+  "schema": "omega.recursion.support.v2",
+  "functionalSource": "6de092948a7c8f87dd2cd18a0886c335bd635a3e",
+  "qualifiedScope": "specific handwritten .om workload/source-native pairs",
+  "sourceProfile": "proposed direct recursive pure u64 fixture profile",
+  "recursionClass": "direct",
+  "maxFuel": 4096,
+  "maxLogicalFrames": 64,
+  "maxLogicalBytes": 2048,
+  "exhaustion": [
+    "FUEL_EXHAUSTED",
+    "FRAME_EXHAUSTED",
+    "STORAGE_EXHAUSTED"
+  ],
+  "loweringStrategy": "existing seeded compiler native calls; iterative .om matched controls",
+  "cacheMode": "NOT_RUN_MISSING_NATIVE_SEAM",
+  "verifierAnalysis": "NOT_RUN_MISSING_NATIVE_SEAM",
+  "evidenceClass": "BOUNDED_DIFFERENTIAL_TESTING",
+  "target": "physical Linux AArch64 host CPU",
+  "physicalStackHighWater": "UNMEASURED",
+  "staticStackBoundBytes": 10080,
+  "independentReview": "PASS_SCOPED",
+  "signedSparkJudge": "NOT_RUN",
+  "sourceToNativeTranslationProof": "NOT_RUN",
+  "issues": [
+    {
+      "issue": 625,
+      "status": "PROPOSED_CONTRACT_TESTED_FIXTURES",
+      "owner": "L569 / existing semantics owner",
+      "remaining": "Accept versioned bounded recursive semantic profile; historical v1 unchanged."
+    },
+    {
+      "issue": 621,
+      "status": "V2_IMPLEMENTATION_NOT_RUN",
+      "owner": "Existing codec owner via L569/L707",
+      "remaining": "Canonical recursive function/control-flow/call/return representation, identity migration and structural fuzz gates."
+    },
+    {
+      "issue": 645,
+      "status": "HANDWRITTEN_NATIVE_WORKLOADS_TESTED",
+      "owner": "L729 additive fixture; L408 compiler",
+      "remaining": "Actual source-aware v2 interchange-to-native realization and independent #623 relation."
+    },
+    {
+      "issue": 646,
+      "status": "MISSING_NATIVE_SEAM",
+      "owner": "L418/L495 semantic-cache migration, awaiting interface confirmation",
+      "remaining": "Immutable native cache API with completed-result DAG, pending states, invalidation/provenance and logical-fuel policy; all cache execution NOT_RUN."
+    },
+    {
+      "issue": 647,
+      "status": "MISSING_NATIVE_SEAM",
+      "owner": "L418 / existing native verifier migration, awaiting interface confirmation",
+      "remaining": "Immutable native ownership/reachability transfer and diagnostic API; full-scan/worklist execution NOT_RUN."
+    },
+    {
+      "issue": 623,
+      "status": "BOUNDED_DIFFERENTIAL_ONLY",
+      "owner": "Existing native trust-boundary migration owner via L569/L707",
+      "remaining": "Independently validated source/upper/lowering/native relation and authenticated versioned receipt binding; translation proof NOT_RUN."
+    },
+    {
+      "issue": 624,
+      "status": "ADDITIVE_FIXTURES_TUTORIAL_EVIDENCE_READY",
+      "owner": "L707 integration; L726 README; Renda publication",
+      "remaining": "Integrate v2/cache/worklist cells and complete support matrix, signed judge and publication."
+    }
+  ]
+}
