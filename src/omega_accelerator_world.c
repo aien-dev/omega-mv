@@ -92,6 +92,11 @@ static void release_unreferenced_retiring(OmegaAcceleratorWorld *world) {
     }
 }
 
+/* RECOVER-DIAG scratch switch (variant V5): OMEGA_DIAG_UNCACHED_ALL makes scratch + registered buffers GPU-uncached too. */
+static int diag_alloc(Nvrm *rm, uint64_t size, NvrmMem *out) {
+    return getenv("OMEGA_DIAG_UNCACHED_ALL") ? nvrm_alloc_gpu_uncached(rm, size, out) : nvrm_alloc(rm, size, out);
+}
+
 int omega_world_init(OmegaAcceleratorWorld *world) {
     if (!world) return OMEGA_WORLD_ERR_INVALID_ARG;
     memset(world, 0, sizeof(*world));
@@ -121,7 +126,7 @@ int omega_world_init(OmegaAcceleratorWorld *world) {
     world->m16.pb_mem = world->pb_mem;
 
     /* Allocate persistent scratch arena */
-    if (nvrm_alloc(&world->m16.rm, OMEGA_WORLD_SCRATCH_SIZE, &world->scratch.mem) != 0) {
+    if (diag_alloc(&world->m16.rm, OMEGA_WORLD_SCRATCH_SIZE, &world->scratch.mem) != 0) {
         m16_native_close(&world->m16);
         return OMEGA_WORLD_ERR_NO_MEM;
     }
@@ -129,7 +134,8 @@ int omega_world_init(OmegaAcceleratorWorld *world) {
     world->scratch.allocated_bytes = 0;
 
     /* Allocate persistent completion marker */
-    if (nvrm_alloc(&world->m16.rm, 0x1000, &world->completion.mem) != 0) {
+    /* RECOVER-DIAG scratch switch (variant V4): OMEGA_DIAG_UNCACHED_MARKER makes the completion page GPU-uncached. */
+    if ((getenv("OMEGA_DIAG_UNCACHED_MARKER") ? nvrm_alloc_gpu_uncached(&world->m16.rm, 0x1000, &world->completion.mem) : nvrm_alloc(&world->m16.rm, 0x1000, &world->completion.mem)) != 0) {
         m16_native_close(&world->m16);
         return OMEGA_WORLD_ERR_NO_MEM;
     }
@@ -208,7 +214,7 @@ int omega_world_register_buffer(OmegaAcceleratorWorld *world,
     size_t alloc_bytes = (size_bytes + 0xfffULL) & ~0xfffULL;
     if (alloc_bytes < 0x1000) alloc_bytes = 0x1000;
 
-    if (nvrm_alloc(&world->m16.rm, alloc_bytes, &entry->mem) != 0) {
+    if (diag_alloc(&world->m16.rm, alloc_bytes, &entry->mem) != 0) {
         return OMEGA_WORLD_ERR_NO_MEM;
     }
 
@@ -314,7 +320,7 @@ int omega_world_register_code(OmegaAcceleratorWorld *world,
     size_t alloc_bytes = (code_size + 0xfffULL) & ~0xfffULL;
     if (alloc_bytes < 0x1000) alloc_bytes = 0x1000;
 
-    if (nvrm_alloc(&world->m16.rm, alloc_bytes, &entry->mem) != 0) {
+    if (diag_alloc(&world->m16.rm, alloc_bytes, &entry->mem) != 0) {
         return OMEGA_WORLD_ERR_NO_MEM;
     }
 

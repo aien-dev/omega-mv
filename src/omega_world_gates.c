@@ -1829,9 +1829,16 @@ static int lc_gate_count = 0;
 static int lc_gate_passed = 0;
 
 static void report_lc_gate(const char *name, bool ok) {
+    /* STALEGEN-DIAG: elapsed wall time since the previous gate report (first gate: since first call). */
+    static struct timespec lc_prev = {0, 0};
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    long ms = (lc_prev.tv_sec == 0 && lc_prev.tv_nsec == 0) ? -1
+            : (now.tv_sec - lc_prev.tv_sec) * 1000L + (now.tv_nsec - lc_prev.tv_nsec) / 1000000L;
+    lc_prev = now;
     lc_gate_count++;
     if (ok) lc_gate_passed++;
-    printf("  [%s] %s\n", ok ? "PASS" : "FAIL", name);
+    printf("  [%s] %s (gate_ms=%ld)\n", ok ? "PASS" : "FAIL", name, ms);
 }
 
 /* Code + three 256-byte buffers, as in the drain-decoupling test. */
@@ -2086,7 +2093,7 @@ static bool test_lc_timeout_completion_race(void) {
     return ok;
 }
 
-static bool test_lc_stale_generation_marker(void) {
+static bool __attribute__((unused)) test_lc_stale_generation_marker(void) { /* STALEGEN-DIAG: original kept for reference */
     OmegaAcceleratorWorld world;
     if (omega_world_init(&world) != OMEGA_WORLD_OK) return false;
     OmegaHandle code, a, b, c;
@@ -2104,6 +2111,224 @@ static bool test_lc_stale_generation_marker(void) {
          world.abandoned_dispatches == 1 && lc_vecadd_ok(&world, &code);
     omega_world_destroy(&world);
     return ok;
+}
+
+/* STALEGEN-DIAG (scratch copy, not the candidate): same steps as
+ * test_lc_stale_generation_marker, recording which step fails and the marker
+ * value before and after the zero-wait drain. No output inside the
+ * submit -> drain(2, 0) window, so the measured timing is not disturbed. */
+static bool test_lc_stale_generation_marker_diag(int iter) {
+    OmegaAcceleratorWorld world;
+    int step = 0, failed_step = 0, rc_drain2 = -999;
+    uint32_t m_before_submit2 = 0xffffffffu, m_after_submit2 = 0xffffffffu;
+    uint32_t m_after_drain2 = 0xffffffffu, m_late = 0xffffffffu;
+    long drain_ns = -1;
+    struct timespec t0 = {0, 0}, t1 = {0, 0};
+    if (omega_world_init(&world) != OMEGA_WORLD_OK) {
+        printf("STALEGEN iter=%d FAIL failed_step=init\n", iter);
+        return false;
+    }
+    OmegaHandle code, a, b, c;
+    bool ok = true;
+#define SG_STEP(cond) do { if (ok) { step++; if (!(cond)) { ok = false; failed_step = step; } } } while (0)
+    SG_STEP(lc_setup(&world, &code, &a, &b, &c));                                    /* 1 */
+    SG_STEP(lc_submit_release(&world, 0, 1, &code, &a, &b, &c) == OMEGA_WORLD_OK);    /* 2 */
+    SG_STEP(omega_world_ring(&world) == OMEGA_WORLD_OK);                              /* 3 */
+    SG_STEP(omega_world_drain(&world, 1, 5000) == 1);                                 /* 4 */
+    SG_STEP(omega_world_recover_channel_fault(&world) == OMEGA_WORLD_OK);             /* 5 */
+    SG_STEP(*world.completion.cpu_marker == 1);                                       /* 6 */
+    if (ok) m_before_submit2 = *world.completion.cpu_marker;
+    SG_STEP(lc_submit_release(&world, 0, 2, &code, &a, &b, &c) == OMEGA_WORLD_OK);    /* 7 */
+    if (ok) {
+        m_after_submit2 = *world.completion.cpu_marker;
+        clock_gettime(CLOCK_MONOTONIC, &t0);
+        rc_drain2 = omega_world_drain(&world, 2, 0);
+        clock_gettime(CLOCK_MONOTONIC, &t1);
+        m_after_drain2 = *world.completion.cpu_marker;
+        drain_ns = (t1.tv_sec - t0.tv_sec) * 1000000000L + (t1.tv_nsec - t0.tv_nsec);
+        step++;                                                                       /* 8 */
+        if (rc_drain2 != OMEGA_WORLD_ERR_HARDWARE) { ok = false; failed_step = step; }
+    }
+    SG_STEP(world.total_dispatches == 1);                                             /* 9 */
+    SG_STEP(world.faulted);                                                           /* 10 */
+    SG_STEP(omega_world_recover_channel_fault(&world) == OMEGA_WORLD_OK);             /* 11 */
+    SG_STEP(world.abandoned_dispatches == 1);                                         /* 12 */
+    SG_STEP(lc_vecadd_ok(&world, &code));                                             /* 13 */
+#undef SG_STEP
+    usleep(20000);
+    m_late = *world.completion.cpu_marker;
+    printf("STALEGEN iter=%d %s failed_step=%d marker_before_submit2=%u marker_after_submit2=%u "
+           "rc_drain2=%d marker_after_drain2=%u drain_ns=%ld marker_late=%u total_dispatches=%llu "
+           "faulted=%d abandoned=%llu\n",
+           iter, ok ? "PASS" : "FAIL", failed_step, m_before_submit2, m_after_submit2, rc_drain2,
+           m_after_drain2, drain_ns, m_late, (unsigned long long)world.total_dispatches,
+           world.faulted ? 1 : 0, (unsigned long long)world.abandoned_dispatches);
+    omega_world_destroy(&world);
+    return ok;
+}
+
+/* ===== RECOVER-DIAG (scratch copy only, not the candidate) =====
+ * OMEGA_RECOVER_DIAG=N  runs N iterations of one variant, nothing else.
+ * OMEGA_RECOVER_VARIANT = B  exact gate sequence (job 2 pending, un-rung, before recover #2)
+ *                         V1 job 2 rung and drained before recover #2 (no pending entry)
+ *                         V2 no job 2 (two back-to-back recovers, nothing pending)
+ *                         V3 single recover then vecadd
+ * The camera acts only after the real path (dispatch_vector's own 5 s wait) has given up. */
+static uint64_t rd_now_ns(void) {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec;
+}
+
+static void rd_snap_channel(const char *site, OmegaAcceleratorWorld *w) {
+    Nvrm *rm = &w->m16.rm;
+    volatile uint32_t *ring32 = (volatile uint32_t *)rm->fifo.cpu;
+    volatile uint32_t *userd = (volatile uint32_t *)((uint8_t *)rm->fifo.cpu + rm->userd_off);
+    volatile uint32_t *nt = (volatile uint32_t *)rm->notifier.cpu;
+    printf("SNAP site=%s marker=%u last_payload=%u rm_put=%u rm_retired=%u gpput=%u generation=%u "
+           "faulted=%d rm_faulted=%d fifo_va=0x%llx ring0=%08x_%08x ring1=%08x_%08x "
+           "userd_raw0..3=%08x,%08x,%08x,%08x(UNDECODED) notifier_raw0..3=%08x,%08x,%08x,%08x(UNDECODED) "
+           "GPGET=UNKNOWN(reason=Blackwell USERD documents no GPGet)\n",
+           site, *w->completion.cpu_marker, w->completion.last_payload, rm->put, rm->retired,
+           (unsigned)*nvrm_userd_gpput(rm), w->channel_generation, w->faulted ? 1 : 0, rm->faulted ? 1 : 0,
+           (unsigned long long)rm->fifo.va, ring32[1], ring32[0], ring32[3], ring32[2],
+           userd[0], userd[1], userd[2], userd[3], nt[0], nt[1], nt[2], nt[3]);
+}
+
+/* returns 1 ok, 0 fail. lat_ns = dispatch time. */
+static int rd_vecadd(OmegaAcceleratorWorld *w, const OmegaHandle *code, uint64_t *lat_ns,
+                     uint32_t *pre_marker, uint32_t *payload_expect, int *negctl_ok,
+                     uint32_t pc_out[4], int *rc_out) {
+    OmegaHandle a, b, c;
+    *lat_ns = 0; *rc_out = -999;
+    if (omega_world_register_buffer(w, 4096, OMEGA_PERM_READ, &a) != OMEGA_WORLD_OK ||
+        omega_world_register_buffer(w, 4096, OMEGA_PERM_READ, &b) != OMEGA_WORLD_OK ||
+        omega_world_register_buffer(w, 4096, OMEGA_PERM_READ | OMEGA_PERM_WRITE, &c) != OMEGA_WORLD_OK)
+        return 0;
+    uint32_t *pa, *pb, *pc;
+    uint64_t va;
+    omega_world_resolve_buffer(w, &a, OMEGA_PERM_READ, 0, 256, (void **)&pa, &va);
+    omega_world_resolve_buffer(w, &b, OMEGA_PERM_READ, 0, 256, (void **)&pb, &va);
+    omega_world_resolve_buffer(w, &c, OMEGA_PERM_WRITE, 0, 256, (void **)&pc, &va);
+    for (uint32_t i = 0; i < 64; i++) { pa[i] = i * 3u; pb[i] = 7u; pc[i] = 0xdeadbeefu; }
+    /* NEGATIVE CONTROL: before the dispatch the marker must be strictly below the payload it will wait for,
+     * and the output must still hold the sentinel, so a pass cannot be a leftover. */
+    *payload_expect = w->completion.last_payload + 1;
+    *pre_marker = *w->completion.cpu_marker;
+    *negctl_ok = (*pre_marker < *payload_expect) && pc[0] == 0xdeadbeefu;
+    uint32_t done = 0;
+    uint64_t t0 = rd_now_ns();
+    int rc = omega_world_dispatch_vector(w, code, &a, &b, &c, 64, &done);
+    *lat_ns = rd_now_ns() - t0;
+    *rc_out = rc;
+    for (int i = 0; i < 4; i++) pc_out[i] = pc[i];
+    if (rc != OMEGA_WORLD_OK) return 0;
+    for (uint32_t i = 0; i < 64; i++) if (pc[i] != i * 3u + 7u) return 0;
+    return 1;
+}
+
+static int recover_diag_iter(const char *variant, int iter, uint64_t *lat1_ns, uint64_t *lat13_ns) {
+    OmegaAcceleratorWorld world;
+    *lat1_ns = 0; *lat13_ns = 0;
+    if (omega_world_init(&world) != OMEGA_WORLD_OK) {
+        printf("SNAP iter=%d variant=%s result=FAIL failed_at=init\n", iter, variant);
+        return 0;
+    }
+    OmegaHandle code, a, b, c;
+    const char *failed_at = "none";
+    int v_b = !strcmp(variant, "B"), v_v1 = !strcmp(variant, "V1"), v_v2 = !strcmp(variant, "V2"), v_v3 = !strcmp(variant, "V3");
+    int ok = 1;
+    uint32_t m_pre_recover2 = 0xffffffffu, m_after_drain2 = 0xffffffffu;
+    int rc_drain2 = -999;
+    int pending_before_recover2 = -1;
+    if (!lc_setup(&world, &code, &a, &b, &c)) { ok = 0; failed_at = "setup"; }
+    if (ok && lc_submit_release(&world, 0, 1, &code, &a, &b, &c) != OMEGA_WORLD_OK) { ok = 0; failed_at = "submit1"; }
+    if (ok && omega_world_ring(&world) != OMEGA_WORLD_OK) { ok = 0; failed_at = "ring1"; }
+    if (ok) {
+        uint64_t t0 = rd_now_ns();
+        int rc = omega_world_drain(&world, 1, 5000);
+        *lat1_ns = rd_now_ns() - t0;
+        if (rc != 1) { ok = 0; failed_at = "drain1"; }
+    }
+    if (ok && omega_world_recover_channel_fault(&world) != OMEGA_WORLD_OK) { ok = 0; failed_at = "recover1"; }
+    if (ok && !v_v3) {
+        if (v_b) {
+            if (lc_submit_release(&world, 0, 2, &code, &a, &b, &c) != OMEGA_WORLD_OK) { ok = 0; failed_at = "submit2"; }
+            if (ok) {
+                rc_drain2 = omega_world_drain(&world, 2, 0);
+                m_after_drain2 = *world.completion.cpu_marker;
+                if (rc_drain2 != OMEGA_WORLD_ERR_HARDWARE) { ok = 0; failed_at = "drain2_zero_wait"; }
+            }
+        } else if (v_v1) {
+            if (lc_submit_release(&world, 0, 2, &code, &a, &b, &c) != OMEGA_WORLD_OK) { ok = 0; failed_at = "submit2"; }
+            if (ok && omega_world_ring(&world) != OMEGA_WORLD_OK) { ok = 0; failed_at = "ring2"; }
+            if (ok) {
+                rc_drain2 = omega_world_drain(&world, 2, 5000);
+                m_after_drain2 = *world.completion.cpu_marker;
+                if (rc_drain2 != 1) { ok = 0; failed_at = "drain2_5s"; }
+            }
+        } /* V2: nothing */
+        if (ok) {
+            pending_before_recover2 = (int)(world.m16.rm.put - world.m16.rm.retired);
+            m_pre_recover2 = *world.completion.cpu_marker;
+            if (omega_world_recover_channel_fault(&world) != OMEGA_WORLD_OK) { ok = 0; failed_at = "recover2"; }
+        }
+    }
+    (void)v_v2;
+    uint64_t lat = 0; uint32_t pre_m = 0, pexp = 0, pc[4] = {0, 0, 0, 0}; int neg = 0, drc = -999;
+    int vec_ok = 0;
+    if (ok) {
+        rd_snap_channel("pre_vecadd", &world);   /* CPU reads only, before the dispatch */
+        vec_ok = rd_vecadd(&world, &code, &lat, &pre_m, &pexp, &neg, pc, &drc);
+        *lat13_ns = lat;
+        if (!vec_ok) { ok = 0; failed_at = "vecadd"; }
+    }
+    printf("SNAP iter=%d variant=%s result=%s failed_at=%s uncached_marker=%d marker_pre_recover2=%u "
+           "pending_entries_before_recover2=%d rc_drain2=%d marker_after_drain2=%u pre_marker=%u payload_expect=%u "
+           "negctl_ok=%d dispatch_rc=%d lat_drain1_ns=%llu lat_vecadd_ns=%llu marker_after=%u "
+           "rm_put=%u rm_retired=%u generation=%u faulted=%d pc0..3=%08x,%08x,%08x,%08x rm_err=\"%s\"\n",
+           iter, variant, ok ? "PASS" : "FAIL", failed_at, getenv("OMEGA_DIAG_UNCACHED_MARKER") ? (getenv("OMEGA_DIAG_UNCACHED_ALL") ? 2 : 1) : 0,
+           m_pre_recover2, pending_before_recover2, rc_drain2, m_after_drain2, pre_m, pexp, neg, drc,
+           (unsigned long long)*lat1_ns, (unsigned long long)*lat13_ns, *world.completion.cpu_marker,
+           world.m16.rm.put, world.m16.rm.retired, world.channel_generation, world.faulted ? 1 : 0,
+           pc[0], pc[1], pc[2], pc[3], world.m16.rm.err);
+    if (!ok && !strcmp(failed_at, "vecadd")) {
+        rd_snap_channel("fail_after_5s", &world);
+        /* late-or-never: keep watching the same marker word, host-read only, 60 s */
+        uint64_t t0 = rd_now_ns();
+        long arrival_ms = -1;
+        while (rd_now_ns() - t0 < 60ull * 1000000000ull) {
+            if ((int32_t)(*world.completion.cpu_marker - pexp) >= 0) { arrival_ms = (long)((rd_now_ns() - t0) / 1000000ull); break; }
+            usleep(1000);
+        }
+        if (arrival_ms >= 0)
+            printf("SNAP iter=%d variant=%s site=watch_after_fail marker_arrived_after_ms=%ld (after the 5 s wait expired) pc0..3_now=%08x\n",
+                   iter, variant, arrival_ms, pc[0]);
+        else
+            printf("SNAP iter=%d variant=%s site=watch_after_fail marker=NEVER_within_60s final_marker=%u\n",
+                   iter, variant, *world.completion.cpu_marker);
+    }
+    omega_world_destroy(&world);
+    return ok;
+}
+
+static int recover_diag_main(int n, const char *variant) {
+    int pass = 0;
+    uint64_t sum1 = 0, max1 = 0, sum13 = 0, max13 = 0, min13 = UINT64_MAX;
+    printf("RECOVER_DIAG start variant=%s iterations=%d\n", variant, n);
+    for (int i = 1; i <= n; i++) {
+        uint64_t l1, l13;
+        if (recover_diag_iter(variant, i, &l1, &l13)) pass++;
+        sum1 += l1; if (l1 > max1) max1 = l1;
+        sum13 += l13; if (l13 > max13) max13 = l13; if (l13 < min13) min13 = l13;
+        fflush(stdout);
+    }
+    printf("RECOVER_DIAG_SUMMARY variant=%s iterations=%d pass=%d fail=%d drain1_ms_mean=%llu drain1_ms_max=%llu "
+           "vecadd_ms_mean=%llu vecadd_ms_min=%llu vecadd_ms_max=%llu uncached_marker=%d\n",
+           variant, n, pass, n - pass, (unsigned long long)(sum1 / n / 1000000ull), (unsigned long long)(max1 / 1000000ull),
+           (unsigned long long)(sum13 / n / 1000000ull), (unsigned long long)(min13 == UINT64_MAX ? 0 : min13 / 1000000ull),
+           (unsigned long long)(max13 / 1000000ull), getenv("OMEGA_DIAG_UNCACHED_MARKER") ? (getenv("OMEGA_DIAG_UNCACHED_ALL") ? 2 : 1) : 0);
+    return pass == n ? 0 : 1;
 }
 
 static bool lc_provenance_run(uint8_t mutation, uint8_t digest[32]) {
@@ -2207,6 +2432,24 @@ static bool test_lc_faulted_world_refuses_register(void) {
 }
 
 int run_world_lifecycle_gates(void) {
+    /* STALEGEN-DIAG: OMEGA_STALEGEN_REPEAT=N runs only the instrumented stale
+     * generation gate N times and reports a summary. Scratch copy only. */
+    const char *rdn = getenv("OMEGA_RECOVER_DIAG");
+    if (rdn) {
+        const char *rv = getenv("OMEGA_RECOVER_VARIANT");
+        int n = atoi(rdn);
+        if (n < 1) n = 1;
+        return recover_diag_main(n, rv ? rv : "B");
+    }
+    const char *rep = getenv("OMEGA_STALEGEN_REPEAT");
+    if (rep) {
+        int n = atoi(rep), pass = 0;
+        if (n < 1) n = 1;
+        printf("STALEGEN_DIAG start runs=%d\n", n);
+        for (int i = 1; i <= n; i++) if (test_lc_stale_generation_marker_diag(i)) pass++;
+        printf("STALEGEN_SUMMARY runs=%d pass=%d fail=%d\n", n, pass, n - pass);
+        return (pass == n) ? 0 : 1;
+    }
     printf("================================================================================\n");
     printf("    AIEN OMEGA M19R: WORLD LIFECYCLE GATES\n");
     printf("================================================================================\n");
@@ -2219,7 +2462,7 @@ int run_world_lifecycle_gates(void) {
     report_lc_gate("WORLD_OUTPUT_IN_FLIGHT_ALIAS_REFUSED", test_lc_output_alias_refusal());
     report_lc_gate("WORLD_BOUNDS_OVERFLOW_REFUSED", test_lc_bounds_overflow());
     report_lc_gate("WORLD_TIMEOUT_COMPLETION_RACE", test_lc_timeout_completion_race());
-    report_lc_gate("WORLD_STALE_GENERATION_MARKER_REFUSED", test_lc_stale_generation_marker());
+    report_lc_gate("WORLD_STALE_GENERATION_MARKER_REFUSED", test_lc_stale_generation_marker_diag(0)); /* STALEGEN-DIAG: instrumented copy */
     report_lc_gate("WORLD_BATCHED_RESULT_IDENTITY", test_lc_batched_result_identity());
     report_lc_gate("WORLD_STALE_HANDLE_AFTER_RESTART", test_lc_stale_handle_after_world_restart());
     report_lc_gate("WORLD_FAULTED_REFUSES_REGISTER", test_lc_faulted_world_refuses_register());
