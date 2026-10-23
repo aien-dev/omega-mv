@@ -37,6 +37,15 @@ The stdio exchange first failed a byte comparison against the stub, then matched
 not fabricated. Syscall trace shows only execve, read, write and exit for that
 exchange; ELF has no dynamic interpreter segment.
 
+## WebSocket codec follow-on
+
+The Omega-only handshake accept calculation, incremental masked-frame decoder,
+and server frame encoder are now implemented and qualified on Linux AArch64.
+See [wire-codec scope, interfaces and evidence](docs/WEBSOCKET.md). A fresh
+committed-source replay passed159 native checks across all six suites, plus the
+original byte-exact stdio exchange. This does **not** add an HTTP Upgrade server,
+authentication, sockets or Allen session dispatch. The product remains unfinished.
+
 ## Bounds and restrictions
 
 65,536 input bytes, 4,096 tokens, 32 container levels. One active stream per
