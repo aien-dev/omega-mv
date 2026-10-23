@@ -132,6 +132,17 @@ try{
   const rr=command(native.path,[],Buffer.concat(recovery.map(encode)));assert.equal(rr.status,0);
   recovery.forEach((q,i)=>reference(q).forEach((v,j)=>assert.equal(rr.stdout.readBigUInt64LE(i*48+j*8),v)));
   report.transport={truncationExit:partial.status,recoveryRequests:recovery.length,status:'PASS'};
+  report.transport.sessionLimits=[];
+  const basecase=encode(request());
+  for(const count of [8191,8192,8193]){
+    const br=command(native.path,[],Buffer.concat(Array.from({length:count},()=>basecase)));
+    assert.equal(br.status,count>8192?67:0);assert.equal(br.stdout.length,Math.min(count,8192)*48);
+    for(let i=0;i<Math.min(count,8192);i++)reference(request()).forEach((v,j)=>assert.equal(br.stdout.readBigUInt64LE(i*48+j*8),v));
+    report.transport.sessionLimits.push({requests:count,status:br.status,responses:br.stdout.length/48});
+  }
+  const excess=command(native.path,[],Buffer.concat([...Array.from({length:8192},()=>basecase),Buffer.of(0)]));
+  assert.equal(excess.status,67);assert.equal(excess.stdout.length,8192*48);
+  report.transport.sessionLimits.push({requests:8192,extraBytes:1,status:excess.status,responses:excess.stdout.length/48});
   const tutorial=compile(files.slice(0,2).map(p=>fs.readFileSync(p,'utf8')).join('')+fs.readFileSync('tests/universal/recursion/tutorial.om','utf8'),'tutorial');
   const tr=command(tutorial.path);assert.equal(tr.status,0);assert.equal(tr.stdout.toString(),'2016\n80\n');
   report.tutorial={...tutorial,status:tr.status,stdout:tr.stdout.toString()};

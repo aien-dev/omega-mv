@@ -136,5 +136,12 @@ end
 sent = add sent ulong w
 end
 end
+r = read 0 Rin 0 1
+if lt r 0
+ret 77
+end
+if eq r 0
+ret 0
+end
 ret 67
 end

@@ -73,7 +73,9 @@ recursive/iterative accumulation,2/3 recursive/iterative tree,4 endless recursio
 Header budget validation precedes version validation. Mutual probe n is0..64.
 Output is six u64 words: status, value (zero on failure), entries, peak frames,
 peak logical bytes, final live frames (must be zero). Batch limit8192 requests;
-short request/IO/session overflow returns65/77/67. This transport has no authority
+short request/IO/session overflow returns65/77/67. Exactly8192 requests followed
+by EOF succeeds; any extra byte after those8192 requests is overflow. This
+transport has no authority
 or source-association claim and must never be passed to the v1 codec as upper IR.
 
 ## Cache and verifier integration dependencies
