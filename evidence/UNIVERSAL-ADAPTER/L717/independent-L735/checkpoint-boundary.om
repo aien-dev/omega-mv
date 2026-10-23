@@ -1,0 +1,52 @@
+global pf ulong 1
+fn ck a ulong b ulong to void
+if ne a b
+put pf 0 1
+end
+end
+fn main to int
+s = ubnew 1 17 3 1
+d = ubnew 1 17 3 1
+for i ulong 17
+rc = ubstore s i 0
+ck rc 0
+rc = ubstore d i 91
+ck rc 0
+end
+b = ubstat 1
+c = ubstat 2
+note Beyond-last-checkpoint must not deliver cancel; two chunks for 17 bytes.
+rc = ubcsched s d 17 3
+ck rc 0
+ck ubstat 1 add b 17
+ck ubstat 2 add c 1
+ck ubload s 0 0
+ck ubload d 16 0
+note Zero-length distinct copy is accepted; same-slot alias refuses even at zero.
+b = ubstat 1
+c = ubstat 2
+rc = ubcopy s d 0
+ck rc 0
+ck ubstat 1 b
+ck ubstat 2 add c 1
+rc = ubcopy s s 0
+ck rc 6
+ck ubstat 1 b
+ck ubstat 2 add c 1
+note Refusal must keep destination, source liveness and copy metrics unchanged.
+x = ubstat 2
+rc = ubcopy s d 18
+ck rc 3
+ck ubstat 2 x
+ck ubload d 0 0
+ck ubload s 0 0
+rc = ubfree s
+ck rc 0
+rc = ubfree d
+ck rc 0
+ck ubstat 3 0
+if ne get pf 0 0
+ret 1
+end
+ret 0
+end
