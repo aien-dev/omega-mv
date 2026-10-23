@@ -1,0 +1,13 @@
+--- a/native/control/src/reuse.om
++++ b/native/control/src/reuse.om
+@@ -65,9 +65,7 @@
+ at = add 8 add mul g 4 j
+ diff = or diff xor get s at get w at
+ end
+-if ne diff 0
+-ret add 120 g
+-end
++note MUTANT accepts identity mismatch
+ end
+ diff = ulong 0
+ for i ulong 4

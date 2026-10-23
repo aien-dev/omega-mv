@@ -1,0 +1,12 @@
+--- a/native/control/src/reuse.om
++++ b/native/control/src/reuse.om
+@@ -73,8 +73,6 @@
+ for i ulong 4
+ diff = or diff xor get s add i 36 get h i
+ end
+-if ne diff 0
+-ret 127
+-end
++note MUTANT accepts corrupted payload
+ ret 0
+ end

@@ -1,0 +1,11 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Negative control only: admits everything and performs no transitions.
+fn actstart r edit ulong 32 c view ulong 32 to ulong
+ret 0
+end
+fn actlost r edit ulong 32 to ulong
+ret 0
+end
+fn actrecon r edit ulong 32 s view ulong 32 to ulong
+ret 0
+end

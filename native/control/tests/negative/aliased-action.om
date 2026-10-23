@@ -1,0 +1,6 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Must be refused: mutable record aliases the purported current authority facts.
+fn main to int
+r = new ulong 32 0
+ret int actstart r r
+end

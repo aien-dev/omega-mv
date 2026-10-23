@@ -1,0 +1,5 @@
+--- a/native/control/src/action.om
++++ b/native/control/src/action.om
+@@ -75 +75 @@
+-ret actbind r c
++ret 0

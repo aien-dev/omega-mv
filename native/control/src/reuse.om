@@ -1,0 +1,80 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note KV reuse admission v1. This module hashes nothing and deserializes no payload.
+note The store must hash the exact payload with its existing SHA-256 owner before calling.
+note Header words 0..7: format,semantic-profile,prefix-tokens,context-size,layout,dtype,rope-profile,reserved.
+note Seven four-word identities: model,weights,engine,tokenizer,scope,prefix-tokens,numeric-target-config.
+note Saved words 36..39 are payload SHA-256. Expected words 36..39 must be zero.
+
+fn kvvalid p view ulong 40 to ulong
+if ne get p 0 1
+ret 100
+end
+if ne get p 7 0
+ret 102
+end
+for i ulong 6
+if eq get p add i 1 0
+ret 103
+end
+end
+if gt get p 2 get p 3
+ret 103
+end
+if gt get p 5 4
+ret 103
+end
+for g ulong 7
+bits = ulong 0
+for j ulong 4
+bits = or bits get p add 8 add mul g 4 j
+end
+if eq bits 0
+ret 104
+end
+end
+ret 0
+end
+
+fn kvmatch s view ulong 40 w view ulong 40 h view ulong 4 to ulong
+err = kvvalid s
+if ne err 0
+ret err
+end
+err = kvvalid w
+if ne err 0
+ret err
+end
+bits = ulong 0
+for i ulong 4
+if ne get w add i 36 0
+ret 128
+end
+bits = or bits get s add i 36
+end
+if eq bits 0
+ret 104
+end
+for i ulong 6
+if ne get s add i 1 get w add i 1
+ret add 111 i
+end
+end
+for g ulong 7
+diff = ulong 0
+for j ulong 4
+at = add 8 add mul g 4 j
+diff = or diff xor get s at get w at
+end
+if ne diff 0
+ret add 120 g
+end
+end
+diff = ulong 0
+for i ulong 4
+diff = or diff xor get s add i 36 get h i
+end
+if ne diff 0
+ret 127
+end
+ret 0
+end

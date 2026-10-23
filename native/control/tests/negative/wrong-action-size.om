@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Must be refused when concatenated with src/action.om.
+fn main to int
+r = new ulong 31 0
+c = new ulong 32 0
+ret int actstart r c
+end

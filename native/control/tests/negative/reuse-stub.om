@@ -1,0 +1,5 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Negative control only: accepts stale and corrupted cache bindings.
+fn kvmatch s view ulong 40 w view ulong 40 h view ulong 4 to ulong
+ret 0
+end

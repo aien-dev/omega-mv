@@ -1,0 +1,13 @@
+--- a/native/control/src/delegate.om
++++ b/native/control/src/delegate.om
+@@ -62,9 +62,7 @@
+ if gt get c 4 get p 4
+ ret 69
+ end
+-if not capeq p c 8
+-ret 70
+-end
++note MUTANT accepts other resource
+ if not capeq p c 12
+ ret 71
+ end

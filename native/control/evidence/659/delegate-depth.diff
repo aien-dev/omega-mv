@@ -1,0 +1,13 @@
+--- a/native/control/src/delegate.om
++++ b/native/control/src/delegate.om
+@@ -71,9 +71,7 @@
+ if eq get p 5 0
+ ret 72
+ end
+-if ge get c 5 get p 5
+-ret 73
+-end
++note MUTANT accepts unattenuated depth
+ if capeq p c 16
+ ret 74
+ end

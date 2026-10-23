@@ -1,0 +1,188 @@
+{
+  "evidence_class": "EMULATED",
+  "compiler_sha256": "01b1545b23e8ff40cb5691e20b5df910ea4acaefde3495f0d62d270465b98cd6",
+  "emulator_sha256": "e4f8d99e9ff69c3cefffab71cee358ce2af1ecba1282d04c3eeb44ef76f5a71e",
+  "cases": [
+    {
+      "case": "action-final",
+      "source_sha256": "3dda4fd54ac6c31b44ee73fe44761266734969abf77cbea3015d3b48686ce127",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 0,
+      "expected_run_exit": 0,
+      "binary_sha256": "f56e5696dfcfc8a16430147db176eb5b6568ec794fd3de9303f9dcd505f246aa",
+      "output": "action checks=219 000\n"
+    },
+    {
+      "case": "action-deny-none",
+      "source_sha256": "2a09d4f9dd1dc8a6140c8dc71d71f2d1766ea3763d031f64dae01184e2585989",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "58a096688e47124e82bb6fe059ff385e9935e4d7dadac690cc51436a6c192fe0",
+      "output": "action checks=219 124\n"
+    },
+    {
+      "case": "delegate-final",
+      "source_sha256": "0169a4c874c94e3ff50d7feba4d7e37c57a188594a78dc34b695e280a0069915",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 0,
+      "expected_run_exit": 0,
+      "binary_sha256": "c9b55c7309a1d71e61b4a2d9df61e32a925cbca60f7d65dc803775f92305431d",
+      "output": "delegate checks=072 000\n"
+    },
+    {
+      "case": "delegate-deny-none",
+      "source_sha256": "1e0b5ca1e5adf8c7676401f3d84f4eed949e4065eb246d54df30958bc2c0378e",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "767c77c72f2c63094740824a6ef82b6da1dd0c6dd1dcff1b0080cabb7c389c99",
+      "output": "delegate checks=072 059\n"
+    },
+    {
+      "case": "reuse-final",
+      "source_sha256": "04f948feb581707298c82f24d2a156be3b27685b137178ffae1649b8133f491e",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 0,
+      "expected_run_exit": 0,
+      "binary_sha256": "f4fb1d2c0d9a0c8fd2efa6d6239b968aa5ccc9edc9d8c3a662c4743e9b729105",
+      "output": "reuse checks=074 000\n"
+    },
+    {
+      "case": "reuse-deny-none",
+      "source_sha256": "e6029666bf437bc5424a75c016097b00483d8c16c6cac5606b12add9830409aa",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "ffd65a2a4ffa30440feddbe93aaf6f9609eaaddd1a2d69418da9d50407977f8c",
+      "output": "reuse checks=074 072\n"
+    },
+    {
+      "case": "action-unknown",
+      "source_sha256": "0cddec9f9c7a7a1a53b465342a569656f23412e843fca94b4520e7a1654246ad",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "66bbe32f75309cb482b61cdb773d45caa474b1da68cf666400258597716206ed",
+      "output": "action checks=219 013\n"
+    },
+    {
+      "case": "action-authority",
+      "source_sha256": "402ece8d6c742052524a2accf87b831fce95409209bfd4094ad65d4f33992781",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "f2d13529a1d1b0ec30a5ec6ac36575378c79ec1ba39c3707b5005ec6509423fd",
+      "output": "action checks=219 008\n"
+    },
+    {
+      "case": "action-epoch",
+      "source_sha256": "7231718a0bc0526fdd216b40f503100ee7561427fd956ca317979e72e6f694af",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "635539342a41aadf08e9b351cdda9bf40da80448809eb0348582800a29e2126b",
+      "output": "action checks=219 003\n"
+    },
+    {
+      "case": "action-attempt",
+      "source_sha256": "53ba5dde14ee43e55940d195807d3d482d9e33b89ddeebbc1a62456976d16936",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "feac5a0fe6fa887c9281321baf9efd79f7de5a0e11f8875a638e752afa917cec",
+      "output": "action checks=219 003\n"
+    },
+    {
+      "case": "action-binding",
+      "source_sha256": "1be550c4c0d7d3c7a333d5e7c1f569c065a450cebb68ac47b9d23cd12923844a",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "e40aa0cd6fa2ab2368b1cd5875333f5207d4cc8fcd527b99f5374ec94a7e97ef",
+      "output": "action checks=219 072\n"
+    },
+    {
+      "case": "delegate-rights",
+      "source_sha256": "96e9291499e88045198c9397f6d86592b34519ce183bd1456a4826ce04d6840a",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "eaa3461d47a8bc6629905bff3b63bdce36d303728883dc69c761dcdd172d0885",
+      "output": "delegate checks=072 026\n"
+    },
+    {
+      "case": "delegate-depth",
+      "source_sha256": "6cd1aa71e948376a9ed6ac4f2e0b498bd33849bdac87c7d868b045131399c244",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "d05ad555f1cb2c0c076a47c4c94dcc97613e2841a79c85a913e08f9514b3e4fc",
+      "output": "delegate checks=072 001\n"
+    },
+    {
+      "case": "delegate-scope",
+      "source_sha256": "8e7f200b0086a86b70068255716b47ce025e1e87b7659089b7bf081903cd6d13",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "0b57fb2fde61fa5e45eeed1bb9607f4ff541f2cca9ee95354eb299828cd86379",
+      "output": "delegate checks=072 004\n"
+    },
+    {
+      "case": "reuse-identity",
+      "source_sha256": "c55ade1d2e3784e44c09d61b169735c8b98a5d18865e936ab8ba05ef59a789c1",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "741b064c2e48bdde735b5ecbeb91a6dc042d06dbaa675097c0cdcdb72a3da8b0",
+      "output": "reuse checks=074 031\n"
+    },
+    {
+      "case": "reuse-payload",
+      "source_sha256": "bee98fbf28432d7d0c20a7c890d538525403570f51809e4bbbcf6651fe803160",
+      "compile_exit": 0,
+      "expected_compile_exit": 0,
+      "run_exit": 1,
+      "expected_run_exit": 1,
+      "binary_sha256": "19eff1c989e513a4016e969dd1be3a19629d95a073ad8b88481005de6eaf55fe",
+      "output": "reuse checks=074 004\n"
+    },
+    {
+      "case": "wrong-action-size",
+      "source_sha256": "29fce568d19da0831218fbbb390aef2a7256716b7a16ab13083c022f77decdb8",
+      "compile_exit": 7,
+      "expected": "compile refusal",
+      "diagnostic": "omc: line 170: error 7\n"
+    },
+    {
+      "case": "aliased-action",
+      "source_sha256": "9a5b8d69d13fb77aba0b1ca7910bf20b5df5b00bc7d600ccd6be4da494cb6d84",
+      "compile_exit": 19,
+      "expected": "compile refusal",
+      "diagnostic": "omc: line 169: error 19\n"
+    },
+    {
+      "case": "wrong-payload-size",
+      "source_sha256": "7577c1aba9c3d3b73e3cfd95ca7ffe3d28780f398c01cd97871c936a61654ff9",
+      "compile_exit": 7,
+      "expected": "compile refusal",
+      "diagnostic": "omc: line 88: error 7\n"
+    }
+  ]
+}

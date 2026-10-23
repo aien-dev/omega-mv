@@ -1,0 +1,5 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Negative control only: accepts escalated child authority.
+fn capchild p view ulong 24 c view ulong 24 now ulong to ulong
+ret 0
+end

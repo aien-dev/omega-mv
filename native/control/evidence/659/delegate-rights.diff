@@ -1,0 +1,13 @@
+--- a/native/control/src/delegate.om
++++ b/native/control/src/delegate.om
+@@ -50,9 +50,7 @@
+ if ge now get c 4
+ ret 65
+ end
+-if ne and get c 1 get p 1 get c 1
+-ret 66
+-end
++note MUTANT accepts rights escalation
+ if gt get c 2 get p 2
+ ret 67
+ end

@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Must be refused when concatenated with src/reuse.om.
+fn main to int
+s = new ulong 40 0
+w = new ulong 40 0
+h = new ulong 3 0
+ret int kvmatch s w h
+end
