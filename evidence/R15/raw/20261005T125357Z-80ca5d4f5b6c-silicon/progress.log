@@ -1,0 +1,3 @@
+07:53:57 WARNING: a model server looks resident: max ollama  (spec §9 says nothing heavy may run)
+07:53:57 machine-state preflight: 20 s sustained on one X925 core
+07:54:18 MACHINE-STATE FAILURE: the X925 did not sustain its clock (preflight.txt); stopped before any trial
