@@ -1,0 +1,315 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Bounded strict JSON. Tokens are valid only when jparse returns zero.
+note Types object1 array2 string3 number4 true5 false6 null7.
+note Raw token spans include string quotes; parent4096 denotes root.
+global jin uchar 65536
+global jerr ulong 1
+global jcnt ulong 1
+global jbeg ulong 4096
+global jend ulong 4096
+global jtyp ulong 4096
+global jpar ulong 4096
+global jpos ulong 1
+global jlen ulong 1
+fn jfail to void
+put jerr 0 1
+end
+fn jpeek to ulong
+p = get jpos 0
+if ge p get jlen 0
+ret 256
+end
+ret ulong get jin p
+end
+fn jtake to ulong
+c = jpeek
+if eq c 256
+jfail
+else
+put jpos 0 add get jpos 0 1
+end
+ret c
+end
+fn jspace to void
+c = jpeek
+while or or eq c 32 eq c 9 or eq c 10 eq c 13
+c = jtake
+c = jpeek
+end
+end
+fn jexpect want ulong to void
+if ne jtake want
+jfail
+end
+end
+fn jhex to ulong
+v = ulong 0
+for i ulong 4
+c = jtake
+d = ulong 16
+if and ge c 48 le c 57
+d = sub c 48
+end
+if and ge c 65 le c 70
+d = sub c 55
+end
+if and ge c 97 le c 102
+d = sub c 87
+end
+if eq d 16
+jfail
+ret 0
+end
+v = add mul v 16 d
+end
+ret v
+end
+fn jutf c ulong to void
+n = ulong 0
+lo = ulong 128
+hi = ulong 191
+if and ge c 194 le c 223
+n = 1
+end
+if and ge c 224 le c 239
+n = 2
+if eq c 224
+lo = 160
+end
+if eq c 237
+hi = 159
+end
+end
+if and ge c 240 le c 244
+n = 3
+if eq c 240
+lo = 144
+end
+if eq c 244
+hi = 143
+end
+end
+if eq n 0
+jfail
+ret
+end
+for i ulong n
+d = jtake
+if or lt d lo gt d hi
+jfail
+ret
+end
+lo = 128
+hi = 191
+end
+end
+fn jstring to void
+jexpect 34
+while eq get jerr 0 0
+c = jtake
+if eq c 34
+ret
+end
+if or lt c 32 eq c 256
+jfail
+ret
+end
+if eq c 92
+c = jtake
+if eq c 117
+u = jhex
+if and ge u 55296 le u 56319
+jexpect 92
+jexpect 117
+v = jhex
+if or lt v 56320 gt v 57343
+jfail
+end
+else
+if and ge u 56320 le u 57343
+jfail
+end
+end
+else
+ok = or or eq c 34 eq c 92 eq c 47
+ok = or ok or eq c 98 eq c 102
+ok = or ok or eq c 110 eq c 114
+ok = or ok eq c 116
+if not ok
+jfail
+end
+end
+else
+if ge c 128
+jutf c
+end
+end
+end
+end
+fn jdigit c ulong to bool
+ret and ge c 48 le c 57
+end
+fn jdigits to void
+if not jdigit jpeek
+jfail
+ret
+end
+while jdigit jpeek
+c = jtake
+end
+end
+fn jnumber to void
+if eq jpeek 45
+c = jtake
+end
+if eq jpeek 48
+c = jtake
+else
+jdigits
+end
+if eq jpeek 46
+c = jtake
+jdigits
+end
+if or eq jpeek 101 eq jpeek 69
+c = jtake
+if or eq jpeek 43 eq jpeek 45
+c = jtake
+end
+jdigits
+end
+end
+fn jtoken typ ulong par ulong to ulong
+n = get jcnt 0
+if ge n 4096
+jfail
+ret 4096
+end
+put jcnt 0 add n 1
+put jbeg n get jpos 0
+put jtyp n typ
+put jpar n par
+ret n
+end
+fn jvalue par ulong depth ulong to void
+jspace
+c = jpeek
+t = ulong 0
+if eq c 123
+t = 1
+end
+if eq c 91
+t = 2
+end
+if eq c 34
+t = 3
+end
+if or eq c 45 jdigit c
+t = 4
+end
+if eq c 116
+t = 5
+end
+if eq c 102
+t = 6
+end
+if eq c 110
+t = 7
+end
+if eq t 0
+jfail
+ret
+end
+id = jtoken t par
+if ne get jerr 0 0
+ret
+end
+if le t 2
+if ge depth 32
+jfail
+ret
+end
+c = jtake
+closing = ulong 93
+if eq t 1
+closing = 125
+end
+jspace
+if ne jpeek closing
+more = true
+while and more eq get jerr 0 0
+if eq t 1
+if ne jpeek 34
+jfail
+ret
+end
+key = jtoken 3 id
+if ne get jerr 0 0
+ret
+end
+jstring
+put jend key get jpos 0
+jspace
+jexpect 58
+end
+if eq get jerr 0 0
+jvalue id add depth 1
+end
+jspace
+if eq jpeek 44
+c = jtake
+jspace
+else
+more = false
+end
+end
+end
+jexpect closing
+else
+if eq t 3
+jstring
+end
+if eq t 4
+jnumber
+end
+if eq t 5
+jexpect 116
+jexpect 114
+jexpect 117
+jexpect 101
+end
+if eq t 6
+jexpect 102
+jexpect 97
+jexpect 108
+jexpect 115
+jexpect 101
+end
+if eq t 7
+jexpect 110
+jexpect 117
+jexpect 108
+jexpect 108
+end
+end
+put jend id get jpos 0
+end
+fn jparse n ulong to ulong
+put jerr 0 0
+put jcnt 0 0
+put jpos 0 0
+put jlen 0 n
+if or eq n 0 gt n len jin
+jfail
+ret 1
+end
+jvalue 4096 0
+jspace
+if ne get jpos 0 n
+jfail
+end
+if ne get jerr 0 0
+put jcnt 0 0
+end
+ret get jerr 0
+end

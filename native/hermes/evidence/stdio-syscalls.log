@@ -1,0 +1,8 @@
+3240366 execve("/home/drakestapleton/handoffs/allen-hermes-L690/gateway", ["/home/drakestapleton/handoffs/al"...], 0xffffdbdf80c8 /* 18 vars */) = 0
+3240366 read(0, "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\""..., 4096) = 237
+3240366 write(1, "{\"jsonrpc\":\"2.0\",\"id\":7,\"result\""..., 48) = 48
+3240366 write(1, "{\"jsonrpc\":\"2.0\",\"id\":\"resume-pr"..., 91) = 91
+3240366 write(1, "{\"jsonrpc\":\"2.0\",\"id\":9,\"result\""..., 48) = 48
+3240366 read(0, "", 4096)               = 0
+3240366 exit(0)                         = ?
+3240366 +++ exited with 0 +++

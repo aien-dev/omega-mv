@@ -1,0 +1,165 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Real compiled Omega tests; ids printed as numbered PASS/FAIL rows.
+global fails ulong 1
+global checks ulong 1
+global report uchar 32
+text good "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"ping\",\"params\":{}}"
+text arr "[null,true,false,-12.5e+2,[],{}]"
+text trail "{}x"
+text comma "[1,]"
+text colon "{\"a\" 1}"
+text zeros "01"
+text digit "1."
+text expbad "1e+"
+text escbad "\"\\x\""
+text escgood "\"\\uD83D\\uDE00\\n\\t\\/\\\\\\\"\""
+text surbad "\"\\uD800x\""
+text lowbad "\"\\uDC00\""
+text bare "{x:1}"
+text cut "{\"x\":"
+text whites " \t\n {} \n"
+text keybad "{1:2}"
+text litbad "tru"
+text nullex "null true"
+text validnum "-0.25E-12"
+fn check ok bool to void
+id = add get checks 0 1
+put checks 0 id
+put report 0 uchar add 48 div id 10
+put report 1 uchar add 48 rem id 10
+put report 2 32
+put report 3 80
+if not ok
+put report 3 70
+put fails 0 add get fails 0 1
+end
+put report 4 10
+w = write 1 report 0 5
+end
+fn main to int
+for i ulong len good
+put jin i get good i
+end
+r = jparse len good
+check eq r 0
+check eq get jcnt 0 9
+check eq get jtyp 0 1
+check eq get jpar 8 0
+check eq get jin get jbeg 8 123
+for i ulong len arr
+put jin i get arr i
+end
+check eq jparse len arr 0
+check eq get jcnt 0 7
+for i ulong len trail
+put jin i get trail i
+end
+check ne jparse len trail 0
+for i ulong len comma
+put jin i get comma i
+end
+check ne jparse len comma 0
+for i ulong len colon
+put jin i get colon i
+end
+check ne jparse len colon 0
+for i ulong len zeros
+put jin i get zeros i
+end
+check ne jparse len zeros 0
+for i ulong len digit
+put jin i get digit i
+end
+check ne jparse len digit 0
+for i ulong len expbad
+put jin i get expbad i
+end
+check ne jparse len expbad 0
+for i ulong len escbad
+put jin i get escbad i
+end
+check ne jparse len escbad 0
+for i ulong len escgood
+put jin i get escgood i
+end
+check eq jparse len escgood 0
+for i ulong len surbad
+put jin i get surbad i
+end
+check ne jparse len surbad 0
+for i ulong len lowbad
+put jin i get lowbad i
+end
+check ne jparse len lowbad 0
+for i ulong len bare
+put jin i get bare i
+end
+check ne jparse len bare 0
+for i ulong len cut
+put jin i get cut i
+end
+check ne jparse len cut 0
+for i ulong len whites
+put jin i get whites i
+end
+check eq jparse len whites 0
+for i ulong len keybad
+put jin i get keybad i
+end
+check ne jparse len keybad 0
+for i ulong len litbad
+put jin i get litbad i
+end
+check ne jparse len litbad 0
+for i ulong len nullex
+put jin i get nullex i
+end
+check ne jparse len nullex 0
+for i ulong len validnum
+put jin i get validnum i
+end
+check eq jparse len validnum 0
+check ne jparse 0 0
+check ne jparse 65537 0
+put jin 0 34
+put jin 1 192
+put jin 2 128
+put jin 3 34
+check ne jparse 4 0
+put jin 1 237
+put jin 2 160
+put jin 3 128
+put jin 4 34
+check ne jparse 5 0
+put jin 1 240
+put jin 2 159
+put jin 3 152
+put jin 4 128
+put jin 5 34
+check eq jparse 6 0
+put jin 1 10
+put jin 2 34
+check ne jparse 3 0
+for i ulong 32
+put jin i 91
+put jin add 32 i 93
+end
+check eq jparse 64 0
+for i ulong 33
+put jin i 91
+put jin add 33 i 93
+end
+check ne jparse 66 0
+put jin 0 91
+for i ulong 4096
+put jin add 1 mul i 2 48
+put jin add 2 mul i 2 44
+end
+put jin 8192 93
+check ne jparse 8193 0
+for i ulong len good
+put jin i get good i
+end
+check eq jparse len good 0
+ret int get fails 0
+end

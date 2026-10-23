@@ -1,0 +1,114 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+global fails ulong 1
+global checks ulong 1
+global report uchar 32
+text ping "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"ping\",\"params\":{}}"
+text pong "{\"jsonrpc\":\"2.0\",\"id\":7,\"result\":{\"pong\":true}}\n"
+text notify "{\"jsonrpc\":\"2.0\",\"method\":\"ping\"}"
+text unknown "{\"jsonrpc\":\"2.0\",\"id\":\"a\\\"b\",\"method\":\"session.create\"}"
+text badid "{\"jsonrpc\":\"2.0\",\"id\":true,\"method\":\"ping\"}"
+text version "{\"jsonrpc\":\"1.0\",\"id\":1,\"method\":\"ping\"}"
+text dup "{\"jsonrpc\":\"2.0\",\"id\":1,\"id\":2,\"method\":\"ping\"}"
+text escdup "{\"jsonrpc\":\"2.0\",\"id\":1,\"\\u0069d\":2,\"method\":\"ping\"}"
+text escaped "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"p\\u0069ng\"}"
+text badpar "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\",\"params\":{\"x\":1}}"
+text decoy "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"nope\",\"params\":{\"method\":\"ping\"}}"
+text junk "{bad}"
+text array "[]"
+text fract "{\"jsonrpc\":\"2.0\",\"id\":1.5,\"method\":\"ping\"}"
+text negative "{\"jsonrpc\":\"2.0\",\"id\":-123,\"method\":\"ping\"}"
+text unotify "{\"jsonrpc\":\"2.0\",\"method\":\"nope\"}"
+text unknownr "{\"jsonrpc\":\"2.0\",\"id\":\"a\\\"b\",\"error\":{\"code\":-32601,\"message\":\"Method not found\"}}\n"
+fn check ok bool to void
+id = add get checks 0 1
+put checks 0 id
+put report 0 uchar add 48 div id 10
+put report 1 uchar add 48 rem id 10
+put report 2 32
+put report 3 80
+if not ok
+put report 3 70
+put fails 0 add get fails 0 1
+end
+put report 4 10
+w = write 1 report 0 5
+end
+fn main to int
+for i ulong len ping
+put jin i get ping i
+end
+check eq rrun len ping 0
+ok = eq get rlen 0 len pong
+for i ulong len pong
+ok = and ok eq get rout i get pong i
+end
+check ok
+for i ulong len notify
+put jin i get notify i
+end
+check eq rrun len notify 0
+check eq get rlen 0 0
+for i ulong len unknown
+put jin i get unknown i
+end
+check eq rrun len unknown 3
+ok = eq get rlen 0 len unknownr
+for i ulong len unknownr
+ok = and ok eq get rout i get unknownr i
+end
+check ok
+for i ulong len badid
+put jin i get badid i
+end
+check eq rrun len badid 2
+for i ulong len version
+put jin i get version i
+end
+check eq rrun len version 2
+for i ulong len dup
+put jin i get dup i
+end
+check eq rrun len dup 2
+for i ulong len escdup
+put jin i get escdup i
+end
+check eq rrun len escdup 2
+for i ulong len escaped
+put jin i get escaped i
+end
+check eq rrun len escaped 0
+for i ulong len badpar
+put jin i get badpar i
+end
+check eq rrun len badpar 4
+for i ulong len decoy
+put jin i get decoy i
+end
+check eq rrun len decoy 3
+for i ulong len junk
+put jin i get junk i
+end
+check eq rrun len junk 1
+for i ulong len array
+put jin i get array i
+end
+check eq rrun len array 2
+for i ulong len fract
+put jin i get fract i
+end
+check eq rrun len fract 2
+for i ulong len negative
+put jin i get negative i
+end
+check eq rrun len negative 0
+for i ulong len unotify
+put jin i get unotify i
+end
+check eq rrun len unotify 3
+check eq get rlen 0 0
+for i ulong len ping
+put jin i get ping i
+end
+check eq rrun len ping 0
+ret int get fails 0
+end

@@ -1,0 +1,56 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Linux AArch64 stdio qualification adapter. No sockets or foreign runtime.
+note Compiler loop fuel bounds this probe; not a deployed long-lived service.
+global schunk uchar 4096
+fn swrite to bool
+p = ulong 0
+n = get rlen 0
+while lt p n
+w = write 1 rout p sub n p
+if eq w neg long 4
+note Interrupted system call: retry the unconsumed suffix.
+else
+if le w 0
+ret false
+end
+p = add p ulong w
+end
+end
+ret true
+end
+fn main to int
+while true
+n = read 0 schunk 0 len schunk
+if eq n neg long 4
+note Interrupted system call: no bytes consumed.
+else
+if lt n 0
+ret 74
+end
+if eq n 0
+r = seof
+if eq r 1
+if not swrite
+ret 74
+end
+end
+if eq r 2
+ret 65
+end
+ret 0
+end
+for i ulong ulong n
+r = sfeed get schunk i
+if eq r 1
+if not swrite
+ret 74
+end
+end
+if eq r 2
+ret 65
+end
+end
+end
+end
+ret 0
+end

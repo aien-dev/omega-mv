@@ -1,0 +1,70 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+global fails ulong 1
+global checks ulong 1
+global report uchar 32
+text ping "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"ping\"}"
+text pong "{\"jsonrpc\":\"2.0\",\"id\":7,\"result\":{\"pong\":true}}\n"
+text notify "{\"jsonrpc\":\"2.0\",\"method\":\"ping\"}"
+fn check ok bool to void
+id = add get checks 0 1
+put checks 0 id
+put report 0 uchar add 48 div id 10
+put report 1 uchar add 48 rem id 10
+put report 2 32
+put report 3 80
+if not ok
+put report 3 70
+put fails 0 add get fails 0 1
+end
+put report 4 10
+w = write 1 report 0 5
+end
+fn main to int
+ready = ulong 0
+for i ulong len ping
+ready = add ready sfeed get ping i
+end
+check eq ready 0
+check eq sfeed 10 1
+ok = eq get rlen 0 len pong
+for i ulong len pong
+ok = and ok eq get rout i get pong i
+end
+check ok
+check eq get sused 0 0
+for i ulong len notify
+r = sfeed get notify i
+end
+check eq sfeed 10 0
+check eq get rlen 0 0
+for i ulong 65537
+r = sfeed 32
+end
+check eq sfeed 10 2
+check eq get sused 0 0
+check eq get sdrop 0 0
+for i ulong len ping
+r = sfeed get ping i
+end
+check eq sfeed 10 1
+r = sfeed 123
+check eq seof 1
+check eq get sused 0 0
+check eq seof 0
+for i ulong len ping
+r = sfeed get ping i
+end
+r = sfeed 13
+check eq sfeed 10 1
+for i ulong len ping
+r = sfeed get ping i
+end
+check eq seof 1
+check eq get sused 0 0
+for i ulong 65537
+r = sfeed 32
+end
+check eq seof 2
+check eq get sdrop 0 0
+ret int get fails 0
+end

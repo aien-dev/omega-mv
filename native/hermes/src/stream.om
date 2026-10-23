@@ -1,0 +1,46 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Bounded newline framing, no I/O. Feed one byte at a time.
+note Caller must consume rout before feeding more bytes; one stream per state.
+note Return1=response ready,0=incomplete/notification,2=oversized discarded.
+global sused ulong 1
+global sdrop ulong 1
+fn sdone to ulong
+if ne get sdrop 0 0
+put sdrop 0 0
+put sused 0 0
+put rlen 0 0
+ret 2
+end
+n = get sused 0
+put sused 0 0
+r = rrun n
+if eq get rlen 0 0
+ret 0
+end
+ret 1
+end
+fn sfeed c uchar to ulong
+if eq c 10
+ret sdone
+end
+if ne get sdrop 0 0
+ret 0
+end
+n = get sused 0
+if eq n len jin
+put sdrop 0 1
+put sused 0 0
+put rlen 0 0
+ret 0
+end
+put jin n c
+put sused 0 add n 1
+ret 0
+end
+fn seof to ulong
+if or ne get sused 0 0 ne get sdrop 0 0
+ret sdone
+end
+put rlen 0 0
+ret 0
+end

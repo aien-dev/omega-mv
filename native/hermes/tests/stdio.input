@@ -1,0 +1,4 @@
+{"jsonrpc":"2.0","id":7,"method":"ping","params":{}}
+{"jsonrpc":"2.0","method":"ping"}
+{"jsonrpc":"2.0","id":"resume-probe","method":"session.resume","params":{"session_id":"not-a-real-session"}}
+{"jsonrpc":"2.0","id":9,"method":"ping"}

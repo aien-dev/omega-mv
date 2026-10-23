@@ -1,0 +1,223 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note JSON-RPC core, no identity or model fabricated. Return0 ping,1 parse,
+note 2 invalid envelope,3 unknown method,4 invalid params. No response to notifications.
+global rout uchar 131072
+global rlen ulong 1
+global rdec uchar 16
+text rnames "jsonrpc\nmethod\nparams\nid\n2.0\nping\n"
+text rhead "{\"jsonrpc\":\"2.0\",\"id\":"
+text rnull "null"
+text rpong ",\"result\":{\"pong\":true}}\n"
+text rparse ",\"error\":{\"code\":-32700,\"message\":\"Parse error\"}}\n"
+text rinvalid ",\"error\":{\"code\":-32600,\"message\":\"Invalid Request\"}}\n"
+text rmethod ",\"error\":{\"code\":-32601,\"message\":\"Method not found\"}}\n"
+text rparams ",\"error\":{\"code\":-32602,\"message\":\"Invalid params\"}}\n"
+fn rbyte c uchar to void
+n = get rlen 0
+put rout n c
+put rlen 0 add n 1
+end
+fn rwhich id ulong to ulong
+if ne get jtyp id 3
+ret 0
+end
+put jpos 0 add get jbeg id 1
+stop = sub get jend id 1
+n = ulong 0
+while lt get jpos 0 stop
+c = jtake
+if eq c 92
+c = jtake
+if eq c 117
+c = jhex
+else
+ret 0
+end
+end
+if or ge n 16 gt c 127
+ret 0
+end
+put rdec n uchar c
+n = add n 1
+end
+slot = ulong 1
+at = ulong 0
+same = true
+for i ulong len rnames
+c = get rnames i
+if eq c 10
+if and same eq at n
+ret slot
+end
+slot = add slot 1
+at = 0
+same = true
+else
+if ge at n
+same = false
+else
+same = and same eq c get rdec at
+end
+at = add at 1
+end
+end
+ret 0
+end
+fn ridok id ulong to bool
+t = get jtyp id
+if or eq t 3 eq t 7
+ret true
+end
+if ne t 4
+ret false
+end
+start = get jbeg id
+stop = get jend id
+while lt start stop
+c = get jin start
+if or or eq c 46 eq c 101 eq c 69
+ret false
+end
+start = add start 1
+end
+ret true
+end
+fn rreply code ulong id ulong to void
+for i ulong len rhead
+rbyte get rhead i
+end
+if eq id 4096
+for i ulong len rnull
+rbyte get rnull i
+end
+else
+p = get jbeg id
+stop = get jend id
+while lt p stop
+rbyte get jin p
+p = add p 1
+end
+end
+if eq code 0
+for i ulong len rpong
+rbyte get rpong i
+end
+end
+if eq code 1
+for i ulong len rparse
+rbyte get rparse i
+end
+end
+if eq code 2
+for i ulong len rinvalid
+rbyte get rinvalid i
+end
+end
+if eq code 3
+for i ulong len rmethod
+rbyte get rmethod i
+end
+end
+if eq code 4
+for i ulong len rparams
+rbyte get rparams i
+end
+end
+end
+fn rnext v ulong to ulong
+stop = get jend v
+i = add v 1
+while lt i get jcnt 0
+if ge get jbeg i stop
+ret i
+end
+i = add i 1
+end
+ret i
+end
+fn rrun n ulong to ulong
+put rlen 0 0
+if ne jparse n 0
+rreply 1 4096
+ret 1
+end
+if ne get jtyp 0 1
+rreply 2 4096
+ret 2
+end
+seen = new uchar 5 0
+id = ulong 4096
+meth = ulong 4096
+param = ulong 4096
+valid = true
+i = ulong 1
+while lt i get jcnt 0
+key = rwhich i
+if or eq key 0 gt key 4
+valid = false
+else
+if ne get seen key 0
+valid = false
+end
+put seen key 1
+end
+v = add i 1
+if ge v get jcnt 0
+valid = false
+ret 2
+end
+if eq key 1
+if ne rwhich v 5
+valid = false
+end
+end
+if eq key 2
+meth = v
+if ne get jtyp v 3
+valid = false
+end
+end
+if eq key 3
+param = v
+if ne get jtyp v 1
+if ne get jtyp v 2
+valid = false
+end
+end
+end
+if eq key 4
+id = v
+if not ridok id
+valid = false
+end
+end
+i = rnext v
+end
+if or eq get seen 1 0 eq get seen 2 0
+valid = false
+end
+if not valid
+rreply 2 4096
+ret 2
+end
+code = ulong 3
+if eq rwhich meth 6
+code = 0
+if ne param 4096
+if ne get jtyp param 1
+code = 4
+else
+next = add param 1
+if lt next get jcnt 0
+if eq get jpar next param
+code = 4
+end
+end
+end
+end
+end
+if ne id 4096
+rreply code id
+end
+ret code
+end
