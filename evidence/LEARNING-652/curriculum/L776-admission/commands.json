@@ -1,0 +1,18 @@
+{
+  "working_directory": "/home/drakestapleton/workspace/omega-learning652-corpus-L776",
+  "source_commit": "d8d14c47647e49774f64b58e3c138335656f175d",
+  "dependency_export": "git show 84d03c5523f39ca1045d1c313c5f62597779462b:src/learning/benchmark/core.om > build/learning652/admission/core.om",
+  "production_assembly": "cat build/learning652/admission/core.om src/learning/curriculum/admit.om tests/learning/curriculum/admit-test.om > build/learning652/admission/test.om",
+  "control_assembly": "cat build/learning652/admission/core.om tests/learning/curriculum/negative/<control>.om tests/learning/curriculum/admit-test.om > build/learning652/admission/<control>.om",
+  "compiler": "/home/drakestapleton/workspace/omega-bridge-native-development/build/bootstrap/omc",
+  "compile_template": "quiet-build /usr/bin/time -f 'wall_seconds=%e\\nuser_seconds=%U\\nsystem_seconds=%S\\npeak_rss_kib=%M\\nexit=%x' -o <compile.cost> timeout 5 <compiler> < <composed.om> > <program.elf> 2> <compile.stderr>",
+  "verify_template": "bash /home/drakestapleton/workspace/omega-bridge-native-development/tools/verify-elf.sh <program.elf> > <verify.stdout> 2> <verify.stderr>",
+  "run_template": "/usr/bin/time -f 'wall_seconds=%e\\nuser_seconds=%U\\nsystem_seconds=%S\\npeak_rss_kib=%M\\nexit=%x' -o <run.cost> timeout 5 <program.elf> > <run.stdout> 2> <run.stderr>",
+  "exit_capture": "Each command's process status is written to its matching .exit file before any following command; ELF execution occurs only after successful ELF verification.",
+  "invocations": [
+    {"id":"attempt1","composed_source":"attempt1.om","compile_exit":12,"run":"NOT_RUN"},
+    {"id":"attempt2","composed_source":"attempt2.om","compile_exit":0,"verify_exit":0,"run_exit":0,"stdout":"CURRICULUM_ADMISSION_PASS\n"},
+    {"id":"provenance-bypass","replacement_module":"tests/learning/curriculum/negative/provenance-bypass.om","compile_exit":0,"verify_exit":0,"run_exit":83,"failed_assertion":33},
+    {"id":"source-identity-bypass","replacement_module":"tests/learning/curriculum/negative/source-identity-bypass.om","compile_exit":0,"verify_exit":0,"run_exit":93,"failed_assertion":43}
+  ]
+}
