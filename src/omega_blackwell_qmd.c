@@ -112,10 +112,17 @@ int omega_blackwell_build_qmd1(uint32_t *qmd1_words, const OmegaBlackwellQmdConf
     qmd1_words[35] = (tz & 0xff) | ((gpr & 0x1ff) << 8) | (1u << 17);
 
     /* Word 36: SHARED_MEMORY_SIZE_SHIFTED7 in bits 10:0 (default 8 = 1024 bytes), then the
-     * MIN/MAX/TARGET_SM_CONFIG_SHARED_MEM_SIZE fields (9, 26, 9) kept as they were. */
-    if (cfg->shared_bytes > OMEGA_BW_QMD_MAX_SHARED_BYTES) return -1;
+     * MIN/MAX/TARGET_SM_CONFIG_SHARED_MEM_SIZE fields (9, 26, 9) kept as they were up to 32 KiB. Above that (issue #560)
+     * MIN and TARGET (bits 16:11 and 28:23, clcec0qmd.h) name the 64 or 100 KB carve-out, hw value = KB / 4 + 1 (mesa
+     * nak qmd.rs); MAX stays 26 (100 KB). */
+    if (cfg->shared_bytes > OMEGA_BW_QMD_MAX_SHARED_BYTES_HW) return -1;
     uint32_t smem7 = cfg->shared_bytes ? (cfg->shared_bytes + 127u) / 128u : 8u;
-    qmd1_words[36] = (0x04b44808u & ~0x7ffu) | smem7;
+    uint32_t w36 = 0x04b44808u;
+    if (cfg->shared_bytes > 32768u) {
+        const uint32_t carve = cfg->shared_bytes <= 65536u ? 64u / 4u + 1u : 100u / 4u + 1u;
+        w36 = (w36 & ~((0x3fu << 11) | (0x3fu << 23))) | (carve << 11) | (carve << 23);
+    }
+    qmd1_words[36] = (w36 & ~0x7ffu) | smem7;
 
     /* Word 37: SHADER_LOCAL_MEMORY_HIGH_SIZE_SHIFTED4 = 0 (SKEDCHECK05 compliance) */
     qmd1_words[37] = 0x00000000;

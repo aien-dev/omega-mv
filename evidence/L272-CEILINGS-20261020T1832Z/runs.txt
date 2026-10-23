@@ -1,0 +1,6 @@
+2026-10-20T18:32:06Z start ceilings: build/l272/gpu_ceilings_test
+2026-10-20T18:47:10Z end ceilings rc=1
+2026-10-20T18:47:10Z start tc_peak_bf16: build/l272/gpu_tc_peak_test
+2026-10-20T18:58:22Z end tc_peak_bf16 rc=0
+2026-10-20T18:58:22Z start qmma_fp8: build/l272/gpu_qmma_probe_test
+2026-10-20T19:15:13Z end qmma_fp8 rc=1

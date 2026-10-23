@@ -181,6 +181,10 @@ int omega_gpu_fp8_deep(void);
  * golden 24/24) or 0; env AIEN_OMEGA_FP8_BIGK when never set. Shapes with k <= 4096 (the 30B lane) are unchanged. */
 void omega_gpu_fp8_set_bigk(int on);
 int omega_gpu_fp8_bigk(void);
+/* #560 (L272, 2026-10-20): with the big-k rule, also stage x' past 16 rounds and 32 KiB (up to the 99 KB block limit; the
+ * launch descriptor then names the 64 or 100 KB shared-memory carve-out). 0 (default) or 1; env AIEN_OMEGA_FP8_DEEP_BIG. */
+void omega_gpu_fp8_set_deep_big(int on);
+int omega_gpu_fp8_deep_big(void);
 /* Host-only: the spec the automatic choice makes for a call of k columns, n rows, `groups` experts under the current knobs
  * (shape, depth, sched, coal, wfirst, mutant). No chip, no kernel build. */
 void omega_gpu_fp8_spec_for(uint32_t k, uint32_t n, uint32_t groups, OmegaFp8GemvSpec *spec);

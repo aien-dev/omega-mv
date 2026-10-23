@@ -47,6 +47,7 @@ static struct {
     int coal, coal_set, wfirst, wfirst_set; /* CUT5 variants A (coalesced output) and B (weights before x), variant 1 only; env AIEN_OMEGA_FP8_COAL / AIEN_OMEGA_FP8_WFIRST when never set */
     int deep, deep_set; /* SPEED-1B: automatic deep kernel for single projections whenever it fits (1, default) or never (0); env AIEN_OMEGA_FP8_DEEP when never set */
     int bigk, bigk_set; /* qwen38/decode-speed: single projections with k > 4096 (Qwen3.8-27B) get 16 warps and a partial-depth deep kernel when x fits; default on, env AIEN_OMEGA_FP8_BIGK when never set */
+    int deepbig, deepbig_set; /* #560 (L272): partial-depth deep kernel past 16 staging rounds and 32 KiB of x' (the k 17408 down projection, 68 KiB), up to the 99 KB block limit; default off, env AIEN_OMEGA_FP8_DEEP_BIG */
     bool hooked;
     Slot cache[CACHE_SLOTS];
     unsigned next;
@@ -149,6 +150,8 @@ void omega_gpu_fp8_set_deep(int on) { flag_set(&g.deep, &g.deep_set, on); }
 int omega_gpu_fp8_deep(void) { return flag_now(&g.deep, &g.deep_set, "AIEN_OMEGA_FP8_DEEP", 1); }
 void omega_gpu_fp8_set_bigk(int on) { flag_set(&g.bigk, &g.bigk_set, on); }
 int omega_gpu_fp8_bigk(void) { return flag_now(&g.bigk, &g.bigk_set, "AIEN_OMEGA_FP8_BIGK", 1); }
+void omega_gpu_fp8_set_deep_big(int on) { flag_set(&g.deepbig, &g.deepbig_set, on); }
+int omega_gpu_fp8_deep_big(void) { return flag_now(&g.deepbig, &g.deepbig_set, "AIEN_OMEGA_FP8_DEEP_BIG", 0); }
 /* codegen by variant */
 static int prog_for(int variant, const OmegaFp8GemvSpec *spec, BlackwellIRProgram *prog) {
     return variant == 2 ? omega_blackwell_codegen_fp8_gemv2_prog(spec, prog) : omega_blackwell_codegen_fp8_gemv_prog(spec, prog);
@@ -248,7 +251,8 @@ uint32_t omega_gpu_fp8_depth_for(const OmegaFp8GemvSpec *spec, uint32_t n, uint3
      * count that divides KS within the 128-byte lane budget; x' still has to fit the launch descriptor's shared memory */
     const int partial = ks * spec->rows * spec->lane_bytes > 128u && spec->k > 4096u && groups == 1u && omega_gpu_fp8_bigk();
     if (partial) { do ks--; while (ks > 1u && (spec->k / (32u * spec->lane_bytes) % ks || ks * spec->rows * spec->lane_bytes > 128u)); if (ks < 2u) return 0; }
-    if (ks * spec->rows * spec->lane_bytes > 128u || spec->k % (32u * spec->warps) || spec->k > 512u * spec->warps) return 0;
+    const int big = partial && omega_gpu_fp8_deep_big(); /* #560: x' past 16 staging rounds and 32 KiB, up to the block limit */
+    if (ks * spec->rows * spec->lane_bytes > 128u || spec->k % (32u * spec->warps) || (spec->k > 512u * spec->warps && !big)) return 0;
     /* Measured (evidence OWN30B-FP8-GEMV-fc05176a-*, main vs depth0 in one run, before variant A): the deep kernel won on
      * single projections up to a few MB (gate+up 1536x2048: 30 us vs 51; k_proj: 30 vs 44) and lost on the grouped
      * 8-expert launches (its per-CTA x staging re-reads 8 KB per CTA: 188 us vs 150) and on o_proj (79 vs 64), so the rule
@@ -260,7 +264,7 @@ uint32_t omega_gpu_fp8_depth_for(const OmegaFp8GemvSpec *spec, uint32_t n, uint3
     (void)n;
     if (groups != 1u || !omega_gpu_fp8_deep()) return 0;
     OmegaFp8GemvSpec deep = *spec; deep.depth = ks; deep.mutant = 0;
-    if (omega_fp8_gemv_shared_bytes(&deep) > (partial ? OMEGA_BW_QMD_MAX_SHARED_BYTES : OMEGA_GPU_FP8_DEEP_MAX_SHARED_BYTES)) return 0;
+    if (omega_fp8_gemv_shared_bytes(&deep) > (big ? OMEGA_BW_QMD_MAX_SHARED_BYTES_HW : partial ? OMEGA_BW_QMD_MAX_SHARED_BYTES : OMEGA_GPU_FP8_DEEP_MAX_SHARED_BYTES)) return 0;
     /* The register check builds the whole kernel (codegen + register allocation). spec_for runs on every launch and every
      * record, so the answer is remembered per spec: SPEED-1B graph A/B (2026-10-17) measured the unremembered check at
      * 853..1172 us of host record time per token (48 qkv records) against 45..113 us without the deep default. The answer is

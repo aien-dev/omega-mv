@@ -8,6 +8,7 @@
  * SB0, only the first waits), so a warp has every load of the step in flight at once.
  */
 #include "omega_blackwell_codegen_moe.h"
+#include "omega_blackwell_qmd.h" /* OMEGA_BW_QMD_MAX_SHARED_BYTES_HW: the deep kernel's x stage */
 #ifndef OMEGA_GPU_NO_POSIX
 #include <stdlib.h>
 #endif
@@ -138,7 +139,7 @@ static int spec_ok(const OmegaFp8GemvSpec *s) {
     if (s->depth) { /* deep kernel: staging rounds (32-bit words, one per thread per round) must be exact and few */
         uint32_t ks = s->k / (32u * s->lane_bytes);
         if (s->depth > 16 || ks % s->depth || s->rows * s->depth * s->lane_bytes > 128u) return 0; /* <= 128 weight bytes per lane per iteration: instruction and register budgets */
-        if (s->k > 512u * s->warps) return 0; /* at most 16 staging rounds; a partial last round is clamped */
+        if (s->k * 4u + 16u > OMEGA_BW_QMD_MAX_SHARED_BYTES_HW) return 0; /* x' fits one block's shared memory (99 KB, #560); staging runs in batches of 16 rounds, a partial last round is clamped */
     }
     /* row offsets of a step must fit the 24-bit signed LDG immediate */
     if ((uint64_t)(s->rows - 1) * s->k + s->lane_bytes >= (1u << 23)) return 0;
@@ -323,32 +324,38 @@ int omega_blackwell_codegen_fp8_gemv_prog(const OmegaFp8GemvSpec *spec, Blackwel
 
     if (deep) {
         /* ---- stage this group's x' row in shared memory (k floats), one 32-bit word per thread per round ---- */
-        const uint32_t rounds = (K + 32u * W - 1u) / (32u * W);
+        /* more than 16 rounds (x' above 16 KiB per 1024 threads, #560): batches of 16, each loaded then stored, so the
+         * address and value registers stay 16 pairs; 16 rounds or fewer are one batch, the code they always had */
+        const uint32_t rounds = (K + 32u * W - 1u) / (32u * W), NB = rounds < 16u ? rounds : 16u;
         int pxt = V64(e), sa0 = V(e), sa = V(e), sap = V(e), pxs[16], xst[16], kq = V(e), over = V(e), tq = V(e), qs = V(e), qg = V(e);
-        for (uint32_t j = 0; j < rounds; j++) { pxs[j] = V64(e); xst[j] = V(e); }
+        for (uint32_t j = 0; j < NB; j++) { pxs[j] = V64(e); xst[j] = V(e); }
         xl = V(e); xl0 = V(e);
         if (e->err) return -1;
         imadw(e, pxt, tid, 4, xrow);
         imadi(e, sa0, tid, 0, 4, NOREG);
-        for (uint32_t j = 0; j < rounds; j++) imadw(e, pxs[j], one, j * 128u * W, pxt);
-        if (K % (32u * W)) {
-            /* partial last round: word q = tid + j * 32 W may pass K. over = (q >= K) as 0/1 = (K - 1 - q) >> 31;
-             * the load is clamped to x[K - 1] and the store to the dummy slot K (never read). */
-            const uint32_t j = rounds - 1u;
-            imadi(e, kq, tid, 0, 1, NOREG); imadi(e, kq, one, 0, j * 32u * W, kq);          /* q */
-            imadi(e, tq, kq, 0, 0xffffffffu, NOREG); imadi(e, tq, one, 0, K - 1u, tq);     /* K - 1 - q */
-            shr(e, over, tq, 0, 31);                                                        /* 1 iff q >= K */
-            imadi(e, tq, kq, 0, 1, NOREG); imadi(e, tq, one, 0, (uint32_t)(0u - K), tq);   /* q - K */
-            imadr(e, qs, over, tq, NOREG); imadi(e, qs, qs, 0, 0xffffffffu, kq);           /* q - over * (q - K): K when over */
-            imadi(e, qg, tq, 0, 1, NOREG); imadi(e, qg, one, 0, 1, qg);                   /* q - K + 1 */
-            imadr(e, qg, over, qg, NOREG); imadi(e, qg, qg, 0, 0xffffffffu, kq);           /* K - 1 when over */
-            imadw(e, pxs[j], qg, 4, xrow);
-            imadi(e, sap, qs, 0, 4, NOREG);
-        }
-        for (uint32_t j = 0; j < rounds; j++) ldg32(e, xst[j], pxs[j], udesc, j == 0);
-        for (uint32_t j = 0; j < rounds; j++) {
-            if (K % (32u * W) && j == rounds - 1u) { sts32(e, sap, xst[j]); continue; }
-            imadi(e, sa, one, 0, j * 128u * W, sa0); sts32(e, sa, xst[j]);
+        for (uint32_t b0 = 0; b0 < rounds; b0 += 16u) {
+            const uint32_t nb = rounds - b0 < 16u ? rounds - b0 : 16u;
+            for (uint32_t i = 0; i < nb; i++) imadw(e, pxs[i], one, (b0 + i) * 128u * W, pxt);
+            if (K % (32u * W) && b0 + nb == rounds) {
+                /* partial last round: word q = tid + j * 32 W may pass K. over = (q >= K) as 0/1 = (K - 1 - q) >> 31;
+                 * the load is clamped to x[K - 1] and the store to the dummy slot K (never read). */
+                const uint32_t j = rounds - 1u;
+                imadi(e, kq, tid, 0, 1, NOREG); imadi(e, kq, one, 0, j * 32u * W, kq);          /* q */
+                imadi(e, tq, kq, 0, 0xffffffffu, NOREG); imadi(e, tq, one, 0, K - 1u, tq);     /* K - 1 - q */
+                shr(e, over, tq, 0, 31);                                                        /* 1 iff q >= K */
+                imadi(e, tq, kq, 0, 1, NOREG); imadi(e, tq, one, 0, (uint32_t)(0u - K), tq);   /* q - K */
+                imadr(e, qs, over, tq, NOREG); imadi(e, qs, qs, 0, 0xffffffffu, kq);           /* q - over * (q - K): K when over */
+                imadi(e, qg, tq, 0, 1, NOREG); imadi(e, qg, one, 0, 1, qg);                   /* q - K + 1 */
+                imadr(e, qg, over, qg, NOREG); imadi(e, qg, qg, 0, 0xffffffffu, kq);           /* K - 1 when over */
+                imadw(e, pxs[j - b0], qg, 4, xrow);
+                imadi(e, sap, qs, 0, 4, NOREG);
+            }
+            for (uint32_t i = 0; i < nb; i++) ldg32(e, xst[i], pxs[i], udesc, i == 0);
+            for (uint32_t i = 0; i < nb; i++) {
+                const uint32_t j = b0 + i;
+                if (K % (32u * W) && j == rounds - 1u) { sts32(e, sap, xst[i]); continue; }
+                imadi(e, sa, one, 0, j * 128u * W, sa0); sts32(e, sa, xst[i]);
+            }
         }
         bar_sync(e);
         imadi(e, xl0, lane, 0, LB * 4u, NOREG);     /* this lane's x' chunk of step 0, shared byte offset */

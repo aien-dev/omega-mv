@@ -298,6 +298,12 @@ static void bigk_check(void) {
         CHECK(g8.warps == 32u && g8.depth == 0u, "bigk %d: grouped launches keep 32 warps, classic (warps %u depth %u)", on, g8.warps, g8.depth);
     }
     omega_gpu_fp8_set_bigk(1); /* the default */
+    /* #560 (L272): deep_big (default off) stages the k 17408 down projection's 68 KiB of x' at depth 2 */
+    CHECK(omega_gpu_fp8_deep_big() == 0, "deep_big defaults off");
+    omega_gpu_fp8_set_deep_big(1);
+    { OmegaFp8GemvSpec d; omega_gpu_fp8_spec_for(17408, 5120, 1, &d); CHECK(d.warps == 16u && d.depth == 2u, "deep_big: 5120x17408 warps %u depth %u (want 16, 2)", d.warps, d.depth);
+      omega_gpu_fp8_spec_for(5120, 34816, 1, &d); CHECK(d.warps == 16u && d.depth == 5u, "deep_big: 34816x5120 unchanged (warps %u depth %u)", d.warps, d.depth); }
+    omega_gpu_fp8_set_deep_big(0);
 }
 
 static void host_only(void) {
@@ -584,6 +590,33 @@ static int sim_gemv(const OmegaFp8GemvSpec *spec, const Weights *W, uint32_t gro
 }
 
 typedef struct { uint32_t experts, n, k, groups, x_rows, lb, rows, warps; const char *name; } SimPoint;
+
+/* #560 (L272): the deep kernel past 16 staging rounds (batches of 16) and 32 KiB of x', against the step kernel and the oracle.
+ * Points: the Qwen3.8-27B down projection's k 17408 at 16 warps, depth 2 (34 exact rounds, 68 KiB), and k 9216 at 7 warps,
+ * depth 6 (42 rounds, the last partial: the clamp lands in the third batch). Prints whether y is bit-identical to depth 0. */
+static void sim_bigstage(uint32_t cta_budget) {
+    static const struct { uint32_t n, k, warps, depth; const char *name; } pts[] = {
+        { 128, 17408, 16, 2, "k17408 w16 depth 2: 34 rounds" }, { 128, 9216, 7, 6, "k9216 w7 depth 6: 42 rounds, partial" } };
+    char msg[240];
+    for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
+        Weights W; weights_make(&W, 1, pts[i].n, pts[i].k, 4560 + (uint32_t)i);
+        uint32_t st = 560 + (uint32_t)i, id = 0;
+        float *x = malloc((size_t)pts[i].k * 4); for (uint32_t j = 0; j < pts[i].k; j++) x[j] = frand(&st, -1.0f, 1.0f);
+        float *y0 = malloc((size_t)pts[i].n * 4), *y1 = malloc((size_t)pts[i].n * 4);
+        OmegaFp8GemvSpec sp = { .k = pts[i].k, .lane_bytes = 16, .rows = 1, .warps = pts[i].warps, .coal = 1 };
+        int rc0 = sim_gemv(&sp, &W, 1, &id, x, 1, y0, cta_budget, 0, msg, sizeof msg);
+        CHECK(rc0 == 0, "bigstage step reference %s: %s", pts[i].name, msg);
+        OmegaFp8GemvSpec sd = sp; sd.depth = pts[i].depth;
+        const uint32_t sh = omega_fp8_gemv_shared_bytes(&sd);
+        CHECK(sh > 32768u && sh <= OMEGA_BW_QMD_MAX_SHARED_BYTES_HW, "bigstage %s: shared %u bytes (want 32 KiB < s <= 99 KB)", pts[i].name, sh);
+        int rc1 = sim_gemv(&sd, &W, 1, &id, x, 1, y1, cta_budget, 0, msg, sizeof msg);
+        size_t bad = 0; double worst = rc1 == 0 ? parity(&W, 1, &id, x, 1, y1, &bad) : 1.0;
+        const int same = rc0 == 0 && rc1 == 0 && memcmp(y0, y1, (size_t)pts[i].n * 4) == 0;
+        CHECK(rc1 == 0 && bad == 0, "sim bigstage %s: rc=%d bad=%zu worst_rel=%.3e %s", pts[i].name, rc1, bad, worst, msg);
+        printf("sim bigstage %-40s shared %u rc=%d worst_rel=%.3e bad=%zu identical_to_step=%d\n", pts[i].name, sh, rc1, worst, bad, same);
+        free(x); free(y0); free(y1); weights_free(&W);
+    }
+}
 
 static void sim_battery(uint32_t cta_budget) {
     char msg[240];
@@ -1109,6 +1142,7 @@ int main(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
         else if (strcmp(argv[i], "--sim") == 0) sim = 1;
+        else if (strcmp(argv[i], "--sim-bigstage") == 0) sim = 2; /* #560 (L272): only the past-16-rounds deep kernel check */
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
         else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--lane-bytes") == 0 && i + 1 < argc) lb = (uint32_t)atoi(argv[++i]);
@@ -1134,7 +1168,8 @@ int main(int argc, char **argv) {
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
     if (host) host_only();
-    if (sim) sim_battery(budget ? budget : 4);
+    if (sim == 1) sim_battery(budget ? budget : 4);
+    if (sim) sim_bigstage(budget ? budget : 4);
     if (!host && !sim) {
         if (lb || rows || warps) omega_gpu_fp8_set_shape(lb, rows, warps);
         if (budget) omega_gpu_fp8_set_cta_budget(budget);

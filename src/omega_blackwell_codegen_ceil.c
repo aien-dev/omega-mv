@@ -108,12 +108,13 @@ int omega_blackwell_codegen_ceil_resid_prog(uint32_t spin, BlackwellIRProgram *p
     Region r = region_skip_if_p0(e);
     atom_add(e, old, pc, one, udesc);
     movi(e, cnt, spin);
+    imadw(e, pa, cta, 4u, py);
     const int L = here(e);
     loop_begin(e);
-    ldg_strong(e, v, pc, udesc);
+    ldg_strong(e, v, pa, udesc); /* own slot: no contention (chip run 2026-10-20: 3072 CTAs re-reading the one counter took 3.2 s) */
     dec_loop(e, cnt, one, L);
     loop_end(e);
-    imadw(e, pa, cta, 4u, py);
+    ldg_strong(e, v, pc, udesc);
     stg(e, pa, 0, v, udesc);
     atom_add(e, old, pc, m1, udesc);
     region_end(e, r);

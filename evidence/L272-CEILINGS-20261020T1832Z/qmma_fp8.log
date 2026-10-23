@@ -1,0 +1,5 @@
+QMMA patch self-test: PASS (QMMA.16832.F32.E4M3.E4M3 and F2FP.SATFINITE.E4M3.F32.PACK_AB_MERGE_C match the oracle bits, HMMA untouched)
+host-only checks: PASS (0 failures)
+chip probe mutant 0 nops 8: declared 64, 1605583 ns
+launch failed: marker wait timed out (latched)
+GPU_QMMA_PROBE: FAIL chip

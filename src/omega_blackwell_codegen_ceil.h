@@ -14,8 +14,8 @@
  *   chase    one warp follows a pointer chain p = *p, iters loads (iters even), and stores the last pointer at py: load-to-use
  *            latency of the memory the chain lives in (DRAM through an uncached mapping, L2 through a cached one).
  *            args: 0x380 p0 (the first node's GPU address), 0x388 py.
- *   resid    thread 0 of every CTA adds 1 to *pcnt, re-reads it spin times (strong, system scope), stores the last value it
- *            saw at py[cta] and subtracts 1. The largest stored value is the number of CTAs that were resident at the
+ *   resid    thread 0 of every CTA adds 1 to *pcnt, re-reads its own py[cta] spin times (strong, system scope), then reads *pcnt once, stores that
+ *            value at py[cta] and subtracts 1. The largest stored value is the number of CTAs that were resident at the
  *            same time: the co-residency limit for the launch's threads, declared registers and shared memory.
  *            args: 0x380 pcnt, 0x388 py.
  *   empty    EXIT: the fixed cost of one launch in a command list.

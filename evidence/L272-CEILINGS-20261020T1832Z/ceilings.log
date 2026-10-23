@@ -1,0 +1,15 @@
+sim stream phases 1 mask ffffffff: ran, 52 registers, 90 instructions, 0 wrong, counter 0
+sim stream phases 1 mask 00003fff: ran, 52 registers, 90 instructions, 0 wrong, counter 0
+sim stream phases 3 mask ffffffff: ran, 56 registers, 103 instructions, 0 wrong, counter 3
+sim chase: ran, end right
+sim resid: ran, seen 1 1 1, counter after 0
+CEIL resid threads=32 gpr=16 smem=0 max_resident_ctas=1152 per_sm=24.00 regs_per_sm_used=12288 span_us=3241004.3
+submit: cmdlist: marker wait timed out (latched)
+FAIL: resid launch 1
+cmdlist add 0: cmdlist add: arguments
+FAIL: launch list
+submit: cmdlist submit: latched
+submit: cmdlist submit: latched
+submit: cmdlist submit: latched
+FAIL: boundary: no residency figure (run resid first)
+GPU_CEILINGS: FAIL

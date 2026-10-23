@@ -1,0 +1,10 @@
+2026-10-20T18:32:05Z
+ 13:32:05 up 2 days,  8:39, 40 users,  load average: 50.58, 49.50, 47.79
+MemTotal:       127598528 kB
+MemAvailable:   36740856 kB
+de30caeaa821b450ba2746746552446a1cb3ea9d
+window 20261020T134016Z-713c9c  name=l131-measure  owner=L131  gb10=exclusive  state=queued  opened_request=2026-10-20T13:40:16Z  holder_pid=4047114  lease_min=150
+quiet lock holders: holds shared pid 3830157 (s) (set by a finished flock; the open window 20261020T134016Z-713c9c holder 4047114 keeps it); queued exclusive pid 3755211 (10920s) flock -x 8; queued exclusive pid 4113077 (10412s) flock -x /tmp/aien-quiet.lock taskset -c 5-9,15-19 flock /tmp/aien-gb10.lock env AIEN_GB10_LOCK_HELD=1 /home/d; queued exclusive pid 3240675 (535s) flock -x /tmp/aien-quiet.lock taskset -c 5-9,15-19 flock /tmp/aien-gb10.lock sh -c echo "# started $(date -u +; queued exclusive pid 3266806 (423s) flock -x /tmp/aien-quiet.lock taskset -c 5-9,15-19 /tmp/l215-measure.sh; holds shared pid 3204229 (689s) flock -s /tmp/aien-quiet.lock /home/drakestapleton/handoffs/L202/final2.sh; holds shared pid 3203481 (691s) flock -s /tmp/aien-quiet.lock bash scripts/qemu_ck_allen_wizard_test.sh; holds shared pid 3108735 (1094s) flock -s /tmp/aien-quiet.lock /home/drakestapleton/handoffs/L200/batch5.sh; holds shared pid 540906 (s) (set by a finished flock; the open window 20261020T134016Z-713c9c holder 4047114 keeps it); 
+quiet waiters: pid 3240663 waiting 537s: flock /tmp/aien-gb10.lock sh -c echo "# started $(date -u +%FT%TZ) load $(cut -d" " -f1-3 /proc/loadavg) MemAvailable $; pid 3266776 waiting 424s: /tmp/l215-measure.sh; pid 4113065 waiting 10413s: flock /tmp/aien-gb10.lock env AIEN_GB10_LOCK_HELD=1 /home/drakestapleton/workspace/l182-final/aien-demo/target/release/; 
+gb10 lock holders: 
+waiting line (--wait):

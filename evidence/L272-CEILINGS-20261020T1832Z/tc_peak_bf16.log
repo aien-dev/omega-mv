@@ -1,0 +1,16 @@
+sim chains 8: ran, peak 48 registers, 93 instructions, 0 wrong
+sim chains 16: ran, peak 80 registers, 165 instructions, 0 wrong
+peak stall 8 chains 16 threads 128 ctas 192 (declared 88): median 4807.0 us, 42.89 TFLOPS, 0 wrong values
+peak stall 4 chains 16 threads 128 ctas 192 (declared 88): median 4936.2 us, 41.76 TFLOPS, 0 wrong values
+peak stall 2 chains 16 threads 128 ctas 192 (declared 88): median 5373.9 us, 38.36 TFLOPS, 0 wrong values
+peak stall 2 chains 8 threads 128 ctas 192 (declared 56): median 2440.3 us, 42.24 TFLOPS, 0 wrong values
+peak stall 2 chains 16 threads 256 ctas 192 (declared 88): median 7181.6 us, 57.41 TFLOPS, 0 wrong values
+peak stall 2 chains 16 threads 128 ctas 384 (declared 88): median 7093.9 us, 58.12 TFLOPS, 0 wrong values
+peak stall 2 chains 16 threads 512 ctas 96 (declared 88): median 8406.9 us, 49.05 TFLOPS, 0 wrong values
+peak stall 4 chains 8 threads 256 ctas 384 (declared 56): median 7352.6 us, 56.08 TFLOPS, 0 wrong values
+peak stall 1 chains 16 threads 256 ctas 384 (declared 88): median 9965.0 us, 82.75 TFLOPS, 0 wrong values
+bw distinct bytes per CTA, 1024 KB per CTA, 384 CTAs: median 6775.1 us, 59.4 GB/s delivered (384 MB distinct), 0 wrong
+bw SAME bytes for every CTA, 1024 KB per CTA, 384 CTAs: median 2883.4 us, 139.6 GB/s delivered (1 MB distinct), 0 wrong
+bw distinct bytes per CTA, 256 KB per CTA, 384 CTAs: median 3918.0 us, 25.7 GB/s delivered (96 MB distinct), 0 wrong
+bw SAME bytes for every CTA, 256 KB per CTA, 384 CTAs: median 2760.3 us, 36.5 GB/s delivered (0 MB distinct), 0 wrong
+GPU_TC_PEAK: PASS
