@@ -1,0 +1,14 @@
+$ set -e; mkdir -m 700 /home/drakestapleton/handoffs/universal-adapter-L707/L717-replay-e30355ee91fe; git -C /home/drakestapleton/workspace/hermes-desk/ua-buffers-L717 archive e30355ee91fe1417e1906adec7e51ddebb6caa4e -o /home/drakestapleton/handoffs/universal-adapter-L707/L717-replay-e30355ee91fe/source.tar; mkdir /home/drakestapleton/handoffs/universal-adapter-L707/L717-replay-e30355ee91fe/source /home/drakestapleton/handoffs/universal-adapter-L707/L717-replay-e30355ee91fe/out; tar -xf /home/drakestapleton/handoffs/universal-adapter-L707/L717-replay-e30355ee91fe/source.tar -C /home/drakestapleton/handoffs/universal-adapter-L707/L717-replay-e30355ee91fe/source; cd /home/drakestapleton/handoffs/universal-adapter-L707/L717-replay-e30355ee91fe/out; m=../source/native/universal/buffers; for n in rights read; do cat "$m/buffers.om" "$m/tests/$n-regression.om" > "$n.om"; quiet-build /home/drakestapleton/handoffs/universal-adapter-L707/shared/omc < "$n.om" > "$n"; test -s "$n"; chmod 500 "$n"; ./$n; cmp "$n" /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-green/"$n"; done; cat "$m/buffers.om" "$m/tests/test_globals.om" "$m/tests/test_buffers.om" > suite.om; quiet-build /home/drakestapleton/handoffs/universal-adapter-L707/shared/omc < suite.om > suite; test -s suite; chmod 500 suite; ./suite; cmp suite /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-green/suite; cat "$m/buffers.om" "$m/tests/test_globals.om" "$m/tests/exit-wrap-control.om" > wrap.om; quiet-build /home/drakestapleton/handoffs/universal-adapter-L707/shared/omc < wrap.om > wrap; test -s wrap; chmod 500 wrap; c=0; ./wrap || c=$?; printf "WRAP_CONTROL_RC=%s\n" "$c"; test "$c" = 1; cmp wrap /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-green/wrap; sha256sum *.om rights read suite wrap ../source.tar; printf "CORRECTED_IMMUTABLE_REPLAY_RC=0\n"
+PASS cancellation rights and transactional refusal
+PASS explicit read status and unchanged output
+WRAP_CONTROL_RC=1
+82f2397d52689c1e0cc97f5faccee9c2c4c8077f65545d6b5babcc72933ffdf7  read.om
+16b94f21dba5713735e158391878d9c40e98c99f47ec581efa9b650743d9217e  rights.om
+7810fe72be39369967c16d835d4c22a70485a5c6503e83b91f16b4194d1a15c9  suite.om
+660471611dfda591536ad30443562de65172a2954cce25ee3badf6d66d48fb46  wrap.om
+cb8c4af79e7847f5a8982bfef245910d72c9f5881aa4e28431cbff3d038d3740  rights
+a3e1f1f36659337347c3a432f7d22948acf2829637f6847db5c0fd4753d5f7c9  read
+522b77ab876904b551551b5cc217414934a23ca98abdb42ee3ba3e079b334594  suite
+6efef8dfe57fcfc1cf7863233bb7515c1b10ca01685467cda92838070754c015  wrap
+7b33913b0b17bac756c923ab0116a100f720193a1b0cc094a98f2500f3ec1b57  ../source.tar
+CORRECTED_IMMUTABLE_REPLAY_RC=0

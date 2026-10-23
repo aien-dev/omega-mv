@@ -1,0 +1,343 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Bounded host uchar descriptors: 16 slots x 256 bytes, generation-tagged handles.
+global ubdata uchar 4096
+global ublen ulong 16
+global ubgen ulong 16
+global ubrights uchar 16
+global ubused uchar 16
+global ubretire uchar 16
+global ubcflag uchar 16
+global ubowned ulong 1
+global ubpeak ulong 1
+global ubbytes ulong 1
+global ubcopies ulong 1
+global uberror ulong 1
+fn ubcheck h ulong to ulong
+put uberror 0 1
+if eq h 0
+ret 0
+end
+slot = rem h 256
+gen = div h 256
+if or eq slot 0 gt slot 16
+ret 0
+end
+i = sub slot 1
+if eq gen 0
+ret 0
+end
+if eq get ubretire i 1
+put uberror 0 8
+ret 0
+end
+if eq get ubused i 0
+ret 0
+end
+note MUTANT omits stale-generation comparison
+put uberror 0 0
+ret slot
+end
+fn ubnew t ulong n ulong r ulong p ulong to ulong
+if or ne t 1 ne p 1
+ret 0
+end
+if or lt n 1 gt n 256
+ret 0
+end
+if not or eq r 1 or eq r 2 eq r 3
+ret 0
+end
+for i ulong 16
+if and eq get ubused i 0 eq get ubretire i 0
+if eq get ubgen i 0
+put ubgen i 1
+end
+put ubused i 1
+put ublen i n
+put ubrights i uchar r
+put ubcflag i 0
+for j ulong 256
+put ubdata add mul i 256 j 0
+end
+put ubowned 0 add get ubowned 0 n
+if gt get ubowned 0 get ubpeak 0
+put ubpeak 0 get ubowned 0
+end
+ret add mul get ubgen i 256 add i 1
+end
+end
+ret 0
+end
+fn ubfree h ulong to ulong
+i = ubcheck h
+if eq i 0
+ret get uberror 0
+end
+i = sub i 1
+for j ulong 256
+put ubdata add mul i 256 j 0
+end
+put ubowned 0 sub get ubowned 0 get ublen i
+put ubused i 0
+put ublen i 0
+put ubrights i 0
+put ubcflag i 0
+if eq get ubgen i 72057594037927935
+put ubretire i 1
+else
+put ubgen i add get ubgen i 1
+end
+ret 0
+end
+fn ubstore h ulong o ulong v ulong to ulong
+i = ubcheck h
+if eq i 0
+ret get uberror 0
+end
+i = sub i 1
+if eq get ubcflag i 1
+ret 7
+end
+if eq and get ubrights i 2 0
+ret 2
+end
+if ge o get ublen i
+ret 3
+end
+if gt v 255
+ret 3
+end
+put ubdata add mul i 256 o uchar v
+ret 0
+end
+fn ubload h ulong o ulong to ulong
+i = ubcheck h
+if eq i 0
+ret 0
+end
+i = sub i 1
+if eq get ubcflag i 1
+ret 0
+end
+if eq and get ubrights i 1 0
+ret 0
+end
+if ge o get ublen i
+ret 0
+end
+ret ulong get ubdata add mul i 256 o
+end
+fn ubcpr s ulong d ulong n ulong after ulong to ulong
+s = ubcheck s
+if eq s 0
+ret get uberror 0
+end
+d = ubcheck d
+if eq d 0
+ret get uberror 0
+end
+s = sub s 1
+d = sub d 1
+if eq s d
+ret 6
+end
+if or eq get ubcflag s 1 eq get ubcflag d 1
+ret 7
+end
+if eq and get ubrights s 1 0
+ret 2
+end
+if eq and get ubrights d 2 0
+ret 2
+end
+if or gt n get ublen s gt n get ublen d
+ret 3
+end
+put ubcopies 0 add get ubcopies 0 1
+chunks = ulong 0
+for k ulong n
+v = get ubdata add mul s 256 k
+put ubdata add mul d 256 k v
+put ubbytes 0 add get ubbytes 0 1
+if or eq rem add k 1 16 0 eq add k 1 n
+chunks = add chunks 1
+if and gt after 0 eq chunks after
+put ubcflag s 1
+ret 7
+end
+end
+end
+ret 0
+end
+fn ubcopy s ulong d ulong n ulong to ulong
+ret ubcpr s d n 0
+end
+fn ubcsched s ulong d ulong n ulong a ulong to ulong
+ret ubcpr s d n a
+end
+fn ubcancel h ulong to ulong
+i = ubcheck h
+if eq i 0
+ret get uberror 0
+end
+i = sub i 1
+if eq and get ubrights i 2 0
+ret 2
+end
+put ubcflag i 1
+ret 0
+end
+fn ubstat k ulong to ulong
+if eq k 1
+ret get ubbytes 0
+end
+if eq k 2
+ret get ubcopies 0
+end
+if eq k 3
+ret get ubowned 0
+end
+if eq k 4
+ret get ubpeak 0
+end
+ret 0
+end
+global failures ulong 1
+global poolh ulong 16
+global tcount ulong 1
+global failedat ulong 1
+fn check got ulong want ulong to void
+put tcount 0 add get tcount 0 1
+if ne got want
+put failures 0 add get failures 0 1
+put failedat 0 get tcount 0
+end
+end
+fn chknonzero got ulong to void
+put tcount 0 add get tcount 0 1
+if eq got 0
+put failures 0 add get failures 0 1
+put failedat 0 get tcount 0
+end
+end
+fn chkdiff left ulong right ulong to void
+put tcount 0 add get tcount 0 1
+if eq left right
+put failures 0 add get failures 0 1
+put failedat 0 get tcount 0
+end
+end
+fn main to int
+note Capacity type rights lifetime tests run in one bounded native program.
+check ubnew 2 8 3 1 0
+check ubnew 1 8 3 2 0
+check ubnew 1 0 3 1 0
+h1 = ubnew 1 64 3 1
+h2 = ubnew 1 64 3 1
+chknonzero h1
+chknonzero h2
+chkdiff h1 h2
+check ubstore h1 0 65 0
+check ubstore h1 1 0 0
+check ubstore h1 2 255 0
+check ubstore h1 64 17 3
+check ubstore h1 0 256 3
+check ubload h1 0 65
+check ubcopy h1 h2 3 0
+check ubload h2 0 65
+check ubload h2 1 0
+check ubload h2 2 255
+check ubstat 1 3
+check ubstat 2 1
+note Direct unchanged-output control for alias refusal.
+check ubload h2 0 65
+check ubcopy h2 h2 1 6
+check ubload h2 0 65
+note Wrong rights and out-of-range controls preserve destination.
+ro = ubnew 1 8 1 1
+wo = ubnew 1 8 2 1
+check ubstore ro 0 99 2
+check ubcancel ro 2
+check ubstore wo 0 77 0
+check ubcopy wo h2 1 2
+check ubcopy h1 ro 1 2
+check ubload ro 0 0
+check ubload h2 0 65
+check ubcopy ro h2 9 3
+check ubload h2 0 65
+check ubload wo 0 0
+check ubload ro 0 0
+check ubfree h1 0
+check ubload h1 0 0
+check ubcopy h1 h2 1 1
+check ubload h2 0 65
+note A recycled slot has a new generation; the old handle remains stale.
+h3 = ubnew 1 16 3 1
+chknonzero h3
+chkdiff h1 h3
+check ubload h1 0 0
+check ubstore h3 0 123 0
+check ubload h3 0 123
+check ubload h1 0 0
+check ubfree ro 0
+check ubfree wo 0
+check ubfree h2 0
+check ubfree h3 0
+note Mid-transfer cancellation copies one chunk and leaves suffix unchanged.
+src = ubnew 1 40 3 1
+dst = ubnew 1 40 3 1
+for i ulong 40
+check ubstore src i add i 1 0
+check ubstore dst i 238 0
+end
+check ubcsched src dst 40 1 7
+for i ulong 16
+check ubload dst i add i 1
+end
+for i ulong 16
+check ubload dst add i 16 238
+end
+check ubstat 1 19
+check ubstat 2 2
+check ubcopy src dst 1 7
+check ubcancel dst 0
+check ubstore dst 0 3 7
+check ubfree src 0
+check ubfree dst 0
+note Full pool pressure refuses allocation without changing current state.
+for i ulong 16
+slot = ubnew 1 256 3 1
+chknonzero slot
+put poolh i slot
+end
+check ubnew 1 1 3 1 0
+check ubstat 3 4096
+check ubstat 4 4096
+for i ulong 16
+note allocation order is deterministic; free the slot handle constructed from generation 1.
+slot = get poolh i
+check ubfree slot 0
+end
+check ubstat 3 0
+note Retire rather than wrap the slot at maximum generation
+put ubgen 0 72057594037927935
+retire = ubnew 1 1 3 1
+chknonzero retire
+check ubfree retire 0
+check ulong get ubretire 0 1
+for i ulong 15
+slot = ubnew 1 1 3 1
+chknonzero slot
+put poolh i slot
+end
+check ubnew 1 1 3 1 0
+for i ulong 15
+slot = get poolh i
+check ubfree slot 0
+end
+check ubstat 3 0
+if ne get failures 0 0
+ret int get failedat 0
+end
+ret 0
+end

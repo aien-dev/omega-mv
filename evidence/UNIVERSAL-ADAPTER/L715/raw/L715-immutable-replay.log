@@ -1,0 +1,22 @@
+$ set -e; mkdir -m 700 /home/drakestapleton/handoffs/universal-adapter-L707/L715/replay-f71d0718e96b; git -C /home/drakestapleton/workspace/hermes-desk/ua-profile-L715 archive f71d0718e96bf849157619ea6d42d3616e4769d7 -o /home/drakestapleton/handoffs/universal-adapter-L707/L715/replay-f71d0718e96b/source.tar; mkdir /home/drakestapleton/handoffs/universal-adapter-L707/L715/replay-f71d0718e96b/source /home/drakestapleton/handoffs/universal-adapter-L707/L715/replay-f71d0718e96b/out; tar -xf /home/drakestapleton/handoffs/universal-adapter-L707/L715/replay-f71d0718e96b/source.tar -C /home/drakestapleton/handoffs/universal-adapter-L707/L715/replay-f71d0718e96b/source; cd /home/drakestapleton/handoffs/universal-adapter-L707/L715/replay-f71d0718e96b/out; src=../source/native/universal/profile; cmp /home/drakestapleton/handoffs/universal-adapter-L707/shared/omc /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/lib/omega-native/omc; sha256sum /home/drakestapleton/handoffs/universal-adapter-L707/shared/omc ../source.tar; for kind in unit fixture cli; do cat "$src/core.om" "$src/$kind.om" > "$kind.om"; quiet-build /home/drakestapleton/handoffs/universal-adapter-L707/shared/omc < "$kind.om" > "$kind"; test -s "$kind"; chmod 500 "$kind"; file "$kind"; done; ./unit; ./fixture > valid.uap; ./cli < valid.uap > valid.json; cmp valid.json "$src/plan-target1.json"; cmp cli /home/drakestapleton/handoffs/universal-adapter-L707/L715/cli-fixed/cli; ./cli < valid.uap > repeat.json; cmp valid.json repeat.json; cp valid.uap target2.uap; printf "\002\002" | dd of=target2.uap bs=1 seek=8 conv=notrunc status=none; ./cli < target2.uap > target2.json; cmp target2.json "$src/plan-target2.json"; c=0; ./cli < /dev/null > empty.out 2>empty.err || c=$?; printf "EMPTY_RC=%s\n" "$c"; test "$c" = 64; test ! -s empty.out; cp valid.uap extra.uap; printf x >> extra.uap; c=0; ./cli < extra.uap > extra.out 2>extra.err || c=$?; printf "EXTRA_RC=%s\n" "$c"; test "$c" = 64; test ! -s extra.out; sha256sum *.om cli unit fixture *.uap *.json; printf "IMMUTABLE_REPLAY_RC=0\n"
+191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9  /home/drakestapleton/handoffs/universal-adapter-L707/shared/omc
+1753ec955107a07e0b9aeba4d91e4b37eb747ad2ddfddecb5ed1853173213b86  ../source.tar
+unit: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+fixture: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+cli: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+0/1204 UAP1 direct checks
+EMPTY_RC=64
+EXTRA_RC=64
+4138c1730d14d807457068ef0fb27044cf8feef7b72a17122f75bcabf165f024  cli.om
+7dc78e3f184f20f72a2089ff55cc528f31c4d69fa1edc924bf8094d34f33c6e2  fixture.om
+bb3095d18a970da9f00beaba911c564656ef75c96a8233587ff083466fc783af  unit.om
+8acb94458753269be0f24bdd89f137a16378d7bcc628defcd0f6c4f4f3ecc045  cli
+622841e543f1d3f0216d987fa3b3e6fafdd713098737af60b443bd0b8769510b  unit
+21a0cf653c5d249ceca0bbae38ff2c5f52d41af7d7dbf1d0bc32cd5df5a34da2  fixture
+7f21e7d05026d26cefda8295caf2d968b5b110cbf98a5b56ce658f5ce45ea551  extra.uap
+89fbe7fa143178cdde4ce9702347b6ad5164bce3aebfa501a283908646da2fa1  target2.uap
+dd9ca041e7607eafb2f4e75938684377cf76fef63de2033dcf8b99a13ed2b514  valid.uap
+417de71219fa00c3065750b635e33e0bfe20cac79f750ef01a792776e0e601a1  repeat.json
+890a5a43c20c90e4ececd76b38543c756ce932288afe7b77f6144d81cf35284a  target2.json
+417de71219fa00c3065750b635e33e0bfe20cac79f750ef01a792776e0e601a1  valid.json
+IMMUTABLE_REPLAY_RC=0

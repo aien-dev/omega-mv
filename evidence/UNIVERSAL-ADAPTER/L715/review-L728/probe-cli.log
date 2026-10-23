@@ -1,0 +1,12 @@
+{"case": "valid", "n": 288, "exit": 0, "stdout_len": 1157, "stderr": "", "expected": 0, "pass_": true}
+{"case": "empty-eof", "n": 0, "exit": 64, "stdout_len": 0, "stderr": "UAP1 MALFORMED", "expected": 64, "pass_": true}
+{"case": "1-byte-truncated", "n": 1, "exit": 64, "stdout_len": 0, "stderr": "UAP1 MALFORMED", "expected": 64, "pass_": true}
+{"case": "287-byte-truncated", "n": 287, "exit": 64, "stdout_len": 0, "stderr": "UAP1 MALFORMED", "expected": 64, "pass_": true}
+{"case": "valid-plus-one", "n": 289, "exit": 64, "stdout_len": 0, "stderr": "UAP1 MALFORMED", "expected": 64, "pass_": true}
+{"case": "oversize", "n": 4384, "exit": 64, "stdout_len": 0, "stderr": "UAP1 MALFORMED", "expected": 64, "pass_": true}
+{"case": "native-Aienux-metadata-only", "n": 288, "exit": 73, "stdout_len": 0, "stderr": "UAP1 UNSUPPORTED", "expected": 73, "pass_": true}
+{"case": "foreign-runtime-metadata-only", "n": 288, "exit": 73, "stdout_len": 0, "stderr": "UAP1 UNSUPPORTED", "expected": 73, "pass_": true}
+{"case": "unknown-target", "n": 288, "exit": 72, "stdout_len": 0, "stderr": "UAP1 TARGET", "expected": 72, "pass_": true}
+{"case": "compiler-pin-mismatch", "n": 288, "exit": 70, "stdout_len": 0, "stderr": "UAP1 ADAPTER_STALE", "expected": 70, "pass_": true}
+{"case": "evidence-missing", "n": 288, "exit": 74, "stdout_len": 0, "stderr": "UAP1 EVIDENCE", "expected": 74, "pass_": true}
+ALL_PROBES_PASS

@@ -1,0 +1,19 @@
+PASS dynamic host ELF refused by build qualification gate
+PASS empty executable refused
+PASS copied source has valid immutable provenance
+PASS dirty native math fails before build/publication
+PASS dirty converter fails before build/publication
+PASS dirty seed compiler fails before build/publication
+PASS malformed pin fails before build/publication
+PASS different pin fails before build/publication
+PASS unsafe import path fails before build/publication
+PASS forged source manifest fails before build/publication
+PASS forged lock fails before build/publication
+PASS unlisted source include overlay refused
+PASS same-byte source symlink refused
+PASS no installed compiler override or fallback
+PASS offline missing upstream pin refused
+PASS dirty upstream cache refused before import
+PASS unsupported host rejected before writes
+PASS source build trace contains no first-party C/Rust toolchain
+PASS 18 source provenance checks

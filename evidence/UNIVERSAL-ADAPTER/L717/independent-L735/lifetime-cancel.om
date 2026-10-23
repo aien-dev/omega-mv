@@ -1,0 +1,54 @@
+global pf ulong 1
+fn ck a ulong b ulong to void
+if ne a b
+put pf 0 1
+end
+end
+fn main to int
+s = ubnew 1 33 3 1
+d = ubnew 1 33 3 1
+rc = ubstore s 0 1
+ck rc 0
+rc = ubstore s 15 16
+ck rc 0
+rc = ubstore s 16 17
+ck rc 0
+rc = ubstore s 32 33
+ck rc 0
+for i ulong 33
+rc = ubstore d i 238
+ck rc 0
+end
+cb = ubstat 1
+cc = ubstat 2
+rc = ubcsched s d 33 1
+ck rc 7
+ck ubstat 1 add cb 16
+ck ubstat 2 add cc 1
+rc = ubread s 0
+ck rc 7
+ck ubload d 0 1
+ck ubload d 15 16
+ck ubload d 16 238
+ck ubload d 32 238
+rc = ubfree s
+ck rc 0
+rc = ubread s 0
+ck rc 1
+s2 = ubnew 1 33 3 1
+if eq s s2
+put pf 0 1
+end
+rc = ubstore s2 0 91
+ck rc 0
+ck ubload s2 0 91
+rc = ubfree s2
+ck rc 0
+rc = ubfree d
+ck rc 0
+ck ubstat 3 0
+if ne get pf 0 0
+ret 1
+end
+ret 0
+end

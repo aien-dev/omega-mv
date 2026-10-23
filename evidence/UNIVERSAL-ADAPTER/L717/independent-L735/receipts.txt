@@ -1,0 +1,23 @@
+SOURCE_COMMIT=e30355ee91fe1417e1906adec7e51ddebb6caa4e
+CHECKOUT_HEAD=1688767f82ad92e5ec9912febf4ab20a62036716
+5ca411be68e3b03c8f67a3391edc120a44118b8481617adbf012072aed605432  /home/drakestapleton/workspace/hermes-desk/ua-buffers-L717/native/universal/buffers/buffers.om
+191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9  /home/drakestapleton/handoffs/universal-adapter-L707/shared/omc
+44b2097eec74a06c0fb53a36422492ac9eb6fc3d7f7e592c251358c0c33d6748  lifetime-cancel.om
+7f95600984f22ba8198008b9a255254138568ecde64f6a16152f2cde529b64f4  checkpoint-boundary.om
+lifetime-cancel COMPILE_RC=0
+  Class:                             ELF64
+  Machine:                           AArch64
+lifetime-cancel RUN_RC=0
+50fa5624e196b8ca544f8918e5a28cc56d3c4f0f472e4a5fede5e7c8dd7c0dda  lifetime-cancel.source.om
+ef533ff05ee909d3c30c3feda27c3c5fe3255c585f5a519bb6c9f34bbd3f992c  lifetime-cancel.bin
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  lifetime-cancel.stdout
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  lifetime-cancel.stderr
+checkpoint-boundary COMPILE_RC=0
+  Class:                             ELF64
+  Machine:                           AArch64
+checkpoint-boundary RUN_RC=0
+ec2b8b2beb35bf257d02e12a34476b545dfac55200fec096ffce9408fe7fb10f  checkpoint-boundary.source.om
+09c4e0c41c0230ab52a35fadcece668aa2a54be69cef4bb310ce6be703e0573e  checkpoint-boundary.bin
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  checkpoint-boundary.stdout
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  checkpoint-boundary.stderr
+REVIEW_PROBES_RC=0

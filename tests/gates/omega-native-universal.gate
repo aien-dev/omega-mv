@@ -1,0 +1,23 @@
+# tests/gates/omega-native-universal.gate
+gate: OMEGA-NATIVE-UNIVERSAL
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - native/universal/profile/
+  - native/universal/buffers/
+  - evidence/UNIVERSAL-ADAPTER/L715/mutants/
+  - evidence/UNIVERSAL-ADAPTER/L717/mutants/
+  - evidence/UNIVERSAL-ADAPTER/L717/parent-correction/
+  - tests/gates/run.sh
+  - tests/gates/omega-native-universal.gate
+run:
+  exec: tests/gates/run.sh
+  args: ["native-universal"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 10m
+exactness: EXACT
+cache_scope: machine

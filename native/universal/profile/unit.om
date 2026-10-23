@@ -1,0 +1,217 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Direct policy tests, not a manufactured execution receipt.
+global snap uchar 289
+global total ulong 1
+global fails ulong 1
+global digs uchar 32
+text sep "/"
+text tail " UAP1 direct checks\n"
+fn ck yes bool to void
+put total 0 add get total 0 1
+if not yes
+put fails 0 add get fails 0 1
+end
+end
+fn fill to void
+for i ulong 289
+put upin i 0
+end
+put upin 0 85
+put upin 1 65
+put upin 2 80
+put upin 3 49
+for i ulong 7
+put upin add i 4 1
+end
+put upin 13 3
+put upin 14 1
+put upin 15 1
+put upin 18 1
+put upin 21 16
+put upin 25 32
+for i ulong 64
+put upin add i 32 get upcmp i
+put upin add i 96 get uppkg i
+put upin add i 160 get upcore i
+put upin add i 224 get updrv i
+end
+end
+fn trial n ulong expected ulong to void
+for i ulong 289
+put snap i get upin i
+end
+rc = upcheck n
+ck eq rc expected
+same = true
+for i ulong 289
+if ne get snap i get upin i
+same = false
+end
+end
+ck same
+end
+fn num n ulong to void
+i = ulong 32
+while gt n 0
+i = sub i 1
+put digs i uchar add rem n 10 48
+n = div n 10
+end
+if eq i 32
+i = 31
+put digs i 48
+end
+w = write 1 digs i sub ulong 32 i
+end
+fn main to int
+fill
+trial 288 0
+put upin 8 2
+put upin 9 2
+trial 288 0
+fill
+for i ulong 288
+trial i 64
+end
+trial 289 64
+for i ulong 4
+fill
+put upin i 0
+trial 288 64
+end
+fill
+put upin 4 2
+trial 288 65
+fill
+put upin 5 2
+trial 288 66
+fill
+put upin 6 2
+trial 288 67
+fill
+put upin 7 2
+trial 288 68
+fill
+put upin 11 1
+trial 288 69
+put upin 12 1
+trial 288 73
+fill
+put upin 18 2
+trial 288 70
+fill
+put upin 19 1
+trial 288 70
+for i ulong 256
+fill
+put upin add i 32 88
+trial 288 70
+end
+fill
+put upin 13 1
+trial 288 71
+put upin 13 2
+trial 288 71
+put upin 13 0
+trial 288 71
+put upin 13 4
+trial 288 64
+fill
+put upin 8 0
+trial 288 72
+put upin 8 3
+trial 288 72
+put upin 8 2
+trial 288 72
+fill
+put upin 9 0
+trial 288 72
+fill
+put upin 10 2
+trial 288 73
+fill
+put upin 15 2
+trial 288 73
+put upin 15 3
+trial 288 73
+put upin 15 4
+trial 288 73
+fill
+put upin 16 1
+trial 288 75
+put upin 17 1
+trial 288 73
+fill
+put upin 14 0
+trial 288 74
+put upin 14 2
+trial 288 74
+for i ulong 8
+fill
+put upin add i 20 255
+trial 288 76
+end
+for i ulong 4
+fill
+put upin add i 28 1
+trial 288 64
+end
+fill
+put upin 10 0
+trial 288 64
+put upin 10 3
+trial 288 64
+fill
+put upin 11 2
+trial 288 64
+fill
+put upin 12 2
+trial 288 64
+fill
+put upin 15 0
+trial 288 64
+put upin 15 5
+trial 288 64
+fill
+put upin 16 2
+trial 288 64
+fill
+put upin 17 2
+trial 288 64
+note Multiple defects enforce deterministic first refusal.
+fill
+put upin 4 2
+put upin 5 2
+trial 288 65
+fill
+put upin 11 1
+put upin 18 2
+trial 288 69
+fill
+put upin 18 2
+put upin 13 1
+trial 288 70
+fill
+put upin 13 1
+put upin 8 3
+trial 288 71
+fill
+put upin 16 1
+put upin 14 0
+trial 288 75
+fill
+put upin 14 0
+put upin 20 1
+trial 288 74
+note Recovery: final valid request after all refusals.
+fill
+trial 288 0
+num get fails 0
+w = write 1 sep 0 len sep
+num get total 0
+w = write 1 tail 0 len tail
+if ne get fails 0 0
+ret 1
+end
+ret 0
+end

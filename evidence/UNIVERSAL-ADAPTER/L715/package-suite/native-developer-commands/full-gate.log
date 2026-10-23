@@ -1,0 +1,38 @@
+{"name":"one implementation for both names","ok":true}
+{"name":"om checks without execution","ok":true}
+{"name":"om rejects invalid source","ok":true}
+{"name":"om refuses missing input","ok":true}
+{"name":"om rejects extra arguments","ok":true}
+{"name":"om runs native stdout and status","ok":true}
+{"name":"om preserves raw program stdin","ok":true}
+{"name":"om builds silent executable output","ok":true}
+{"name":"omg checks without execution","ok":true}
+{"name":"omg rejects invalid source","ok":true}
+{"name":"omg refuses missing input","ok":true}
+{"name":"omg rejects extra arguments","ok":true}
+{"name":"omg runs native stdout and status","ok":true}
+{"name":"omg preserves raw program stdin","ok":true}
+{"name":"omg builds silent executable output","ok":true}
+{"name":"leading-dash source is literal after --","ok":true}
+{"name":"literal dash source is not stdin","ok":true}
+{"name":"literal dash run preserves program stdin","ok":true}
+{"name":"conversion snapshots literal dash file instead of caller stdin","ok":true}
+{"name":"shell metacharacters are literal filenames","ok":true}
+{"name":"check accepts a source symlink snapshot","ok":true}
+{"name":"directory is not an input file","ok":true}
+{"name":"build needs explicit destination","ok":true}
+{"name":"failed compilation preserves existing output and mode","ok":true}
+{"name":"failed compilation creates no output","ok":true}
+{"name":"successful explicit build atomically replaces regular file","ok":true}
+{"name":"build never follows an output symlink","ok":true}
+{"name":"build rename preserves a hardlink peer","ok":true}
+{"name":"unavailable destination refuses without residue","ok":true}
+{"name":"nonregular destination is preserved","ok":true}
+{"name":"ELF verifier is owned and hash-checked","ok":true}
+{"name":"wrong native compiler cannot publish or run non-ELF","ok":true}
+{"name":"actual run uses no foreign compiler/interpreter fallback","ok":true}
+{"name":"build never overwrites its own source","ok":true}
+{"name":"invalid run never prints program output","ok":true}
+{"name":"help documents native developer commands","ok":true}
+{"name":"uninstall removes all new owned files and both aliases","ok":true}
+{"executed":37,"passed":37,"failed":0}

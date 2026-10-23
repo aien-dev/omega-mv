@@ -1,0 +1,4 @@
+global ubvalue uchar 1
+fn ubread h ulong off ulong to ulong
+ret 0
+end

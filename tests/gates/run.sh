@@ -257,5 +257,97 @@ case "$step" in
     obs env_files_found false
     echo "Zero plaintext .env files verified."
     ;;
+  native-universal)
+    # Reconstruct every reviewed module executable from its exact source using the pinned OMC.
+    OMC=/home/drakestapleton/handoffs/universal-adapter-L707/shared/omc
+    OMC_SHA=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+    test "$(sha256sum "$OMC" | awk '{print $1}')" = "$OMC_SHA"
+    work="$(mktemp -d "$ROOT/build/native-universal.XXXXXX")"
+    trap 'rm -rf "$work" "$STEP_MARK"' EXIT
+    compile_run() {
+      local name="$1" expected="$2"; shift 2
+      cat "$@" > "$work/$name.om"
+      "$OMC" < "$work/$name.om" > "$work/$name.elf" 2> "$work/$name.compile.log"
+      test -s "$work/$name.elf"
+      readelf -h "$work/$name.elf" | grep -q 'Machine:.*AArch64'
+      readelf -h "$work/$name.elf" | grep -q 'Type:.*EXEC'
+      ! readelf -l "$work/$name.elf" | grep -q INTERP
+      chmod 700 "$work/$name.elf"
+      set +e
+      "$work/$name.elf" > "$work/$name.stdout" 2> "$work/$name.stderr"
+      local rc=$?
+      set -e
+      test "$rc" -eq "$expected"
+    }
+    P=native/universal/profile
+    B=native/universal/buffers
+    E=evidence/UNIVERSAL-ADAPTER
+    compile_run profile-unit 0 "$P/core.om" "$P/unit.om"
+    compile_run buffer-suite 0 "$B/buffers.om" "$B/tests/test_globals.om" "$B/tests/test_buffers.om"
+    compile_run buffer-rights 0 "$B/buffers.om" "$B/tests/rights-regression.om"
+    compile_run buffer-read 0 "$B/buffers.om" "$B/tests/read-regression.om"
+    # Each behavioral control must compile to a real native executable before its failure counts.
+    compile_run buffer-exit-wrap-mutant 1 "$B/buffers.om" "$B/tests/test_globals.om" "$B/tests/exit-wrap-control.om"
+    for mutant in mutant-allow-missing-runtime mutant-corrupt-input mutant-ignore-pins; do
+      compile_run "profile-$mutant" 1 "$E/L715/mutants/$mutant.om" "$P/unit.om"
+    done
+    for mutant in mutant-no-cancel mutant-no-generation mutant-no-rights; do
+      compile_run "buffer-$mutant" 1 "$E/L717/mutants/$mutant.om" "$B/tests/test_globals.om" "$B/tests/test_buffers.om"
+    done
+    for mutant in L717-mutant-cancel-rights L717-mutant-read-status; do
+      if [ "$mutant" = L717-mutant-read-status ]; then
+        compile_run "buffer-$mutant" 1 "$E/L717/parent-correction/$mutant.om" "$B/tests/test_globals.om" "$B/tests/read-regression.om"
+      else
+        compile_run "buffer-$mutant" 1 "$E/L717/parent-correction/$mutant.om" "$B/tests/test_globals.om" "$B/tests/rights-regression.om"
+      fi
+    done
+    echo 'NATIVE_UNIVERSAL_PASS profile assertions=1204 profile_mutants=3 buffer suite+rights+read=3 buffer_mutants=6'
+    ;;
+  native-universal)
+    # Reconstruct every reviewed module executable from its exact source using the pinned OMC.
+    OMC=/home/drakestapleton/handoffs/universal-adapter-L707/shared/omc
+    OMC_SHA=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+    test "$(sha256sum "$OMC" | awk '{print $1}')" = "$OMC_SHA"
+    work="$(mktemp -d "$ROOT/build/native-universal.XXXXXX")"
+    trap 'rm -rf "$work" "$STEP_MARK"' EXIT
+    compile_run() {
+      local name="$1" expected="$2"; shift 2
+      cat "$@" > "$work/$name.om"
+      "$OMC" < "$work/$name.om" > "$work/$name.elf" 2> "$work/$name.compile.log"
+      test -s "$work/$name.elf"
+      readelf -h "$work/$name.elf" | grep -q 'Machine:.*AArch64'
+      readelf -h "$work/$name.elf" | grep -q 'Type:.*EXEC'
+      ! readelf -l "$work/$name.elf" | grep -q INTERP
+      chmod 700 "$work/$name.elf"
+      set +e
+      "$work/$name.elf" > "$work/$name.stdout" 2> "$work/$name.stderr"
+      local rc=$?
+      set -e
+      test "$rc" -eq "$expected"
+    }
+    P=native/universal/profile
+    B=native/universal/buffers
+    E=evidence/UNIVERSAL-ADAPTER
+    compile_run profile-unit 0 "$P/core.om" "$P/unit.om"
+    compile_run buffer-suite 0 "$B/buffers.om" "$B/tests/test_globals.om" "$B/tests/test_buffers.om"
+    compile_run buffer-rights 0 "$B/buffers.om" "$B/tests/rights-regression.om"
+    compile_run buffer-read 0 "$B/buffers.om" "$B/tests/read-regression.om"
+    # Each behavioral control must compile to a real native executable before its failure counts.
+    compile_run buffer-exit-wrap-mutant 1 "$B/buffers.om" "$B/tests/test_globals.om" "$B/tests/exit-wrap-control.om"
+    for mutant in mutant-allow-missing-runtime mutant-corrupt-input mutant-ignore-pins; do
+      compile_run "profile-$mutant" 1 "$E/L715/mutants/$mutant.om" "$P/unit.om"
+    done
+    for mutant in mutant-no-cancel mutant-no-generation mutant-no-rights; do
+      compile_run "buffer-$mutant" 1 "$E/L717/mutants/$mutant.om" "$B/tests/test_globals.om" "$B/tests/test_buffers.om"
+    done
+    for mutant in L717-mutant-cancel-rights L717-mutant-read-status; do
+      if [ "$mutant" = L717-mutant-read-status ]; then
+        compile_run "buffer-$mutant" 1 "$E/L717/parent-correction/$mutant.om" "$B/tests/test_globals.om" "$B/tests/read-regression.om"
+      else
+        compile_run "buffer-$mutant" 1 "$E/L717/parent-correction/$mutant.om" "$B/tests/test_globals.om" "$B/tests/rights-regression.om"
+      fi
+    done
+    echo 'NATIVE_UNIVERSAL_PASS profile assertions=1204 profile_mutants=3 buffer suite+rights+read=3 buffer_mutants=6'
+    ;;
   *) echo "run.sh: unknown step '$step'" >&2; exit 2 ;;
 esac

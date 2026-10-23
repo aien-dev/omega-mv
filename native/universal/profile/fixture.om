@@ -1,0 +1,35 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note UAP1 valid test fixture, generated natively, not qualification evidence.
+fn main to int
+for i ulong 289
+put upin i 0
+end
+put upin 0 85
+put upin 1 65
+put upin 2 80
+put upin 3 49
+for i ulong 7
+put upin add i 4 1
+end
+put upin 13 3
+put upin 14 1
+put upin 15 1
+put upin 18 1
+put upin 21 16
+put upin 25 32
+for i ulong 64
+put upin add i 32 get upcmp i
+put upin add i 96 get uppkg i
+put upin add i 160 get upcore i
+put upin add i 224 get updrv i
+end
+o = ulong 0
+while lt o 288
+w = write 1 upin o sub ulong 288 o
+if le w 0
+ret 77
+end
+o = add o ulong w
+end
+ret 0
+end

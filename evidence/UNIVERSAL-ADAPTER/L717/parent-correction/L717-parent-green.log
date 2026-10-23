@@ -1,0 +1,17 @@
+$ set -e; mkdir -p /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-green; cd /home/drakestapleton/handoffs/universal-adapter-L707/L717-parent-green; for name in rights read; do cat ../L717-buffers.om ../L717-$name-regression.om > "$name.om"; quiet-build ../shared/omc < "$name.om" > "$name"; test -s "$name"; chmod 500 "$name"; file "$name"; ./$name; printf "%s_RC=0\n" "$name"; done; cat ../L717-buffers.om ../L717-test_globals.om ../L717-test_buffers.om > suite.om; quiet-build ../shared/omc < suite.om > suite; test -s suite; chmod 500 suite; ./suite; printf "FULL_NATIVE_BUFFER_SUITE_RC=0\n"; cat ../L717-buffers.om ../L717-test_globals.om ../L717-exit-wrap-fixed.om > wrap.om; quiet-build ../shared/omc < wrap.om > wrap; test -s wrap; chmod 500 wrap; c=0; ./wrap || c=$?; printf "INJECTED_FAILURE256_RC=%s\n" "$c"; test "$c" = 1; sha256sum *.om rights read suite wrap
+rights: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+PASS cancellation rights and transactional refusal
+rights_RC=0
+read: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, no section header
+PASS explicit read status and unchanged output
+read_RC=0
+FULL_NATIVE_BUFFER_SUITE_RC=0
+INJECTED_FAILURE256_RC=1
+82f2397d52689c1e0cc97f5faccee9c2c4c8077f65545d6b5babcc72933ffdf7  read.om
+16b94f21dba5713735e158391878d9c40e98c99f47ec581efa9b650743d9217e  rights.om
+7810fe72be39369967c16d835d4c22a70485a5c6503e83b91f16b4194d1a15c9  suite.om
+660471611dfda591536ad30443562de65172a2954cce25ee3badf6d66d48fb46  wrap.om
+cb8c4af79e7847f5a8982bfef245910d72c9f5881aa4e28431cbff3d038d3740  rights
+a3e1f1f36659337347c3a432f7d22948acf2829637f6847db5c0fd4753d5f7c9  read
+522b77ab876904b551551b5cc217414934a23ca98abdb42ee3ba3e079b334594  suite
+6efef8dfe57fcfc1cf7863233bb7515c1b10ca01685467cda92838070754c015  wrap

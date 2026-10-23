@@ -1,0 +1,19 @@
+$ cd /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/project; export HOME=/home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/home TMPDIR=/home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/tmp; cat ../../../profile-core.om ../../../profile-cli.om > plan.om; /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/omega check plan.om; c=$?; printf "OMEGA_CHECK=%s\n" "$c"; /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/om build plan.om -o plan; c=$?; printf "OM_BUILD=%s\n" "$c"; cmp plan ../../cli-fixed/cli; c=$?; printf "DIRECT_BUILD_IDENTITY=%s\n" "$c"; /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/omg run plan.om < ../../cli-red/valid.uap > installed-plan.json; c=$?; cmp installed-plan.json ../../../plan-target1.json; m=$?; printf "OMG_RUN=%s EXACT_PLAN=%s\n" "$c" "$m"; printf "eval 1/3+1/6\neval 1/0\ndiff x^2\n" | /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/omega math > math-stream.out; c=$?; printf "MATH_STREAM=%s\n" "$c"; cat math-stream.out; /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/omega math "eval 1/0" > math-refusal.out; c=$?; printf "MATH_ONESHOT_REFUSAL=%s\n" "$c"; cat math-refusal.out; /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/omega discover > discover.out; c=$?; printf "DISCOVER_UNSUPPORTED=%s\n" "$c"; cat discover.out; readlink -f /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/omega /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/om /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/bin/omg; sha256sum /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/lib/omega-native/omc /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/lib/omega-native/math plan
+OMEGA_CHECK=0
+OM_BUILD=0
+DIRECT_BUILD_IDENTITY=0
+OMG_RUN=0 EXACT_PLAN=0
+MATH_STREAM=0
+OK 1/2
+REFUSED 2
+OK 2*x
+MATH_ONESHOT_REFUSAL=65
+REFUSED 2
+DISCOVER_UNSUPPORTED=69
+UNSUPPORTED: native host discovery and runtime hooks are not qualified; no runtimes attached.
+/home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/lib/omega-native/om
+/home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/lib/omega-native/om
+/home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/lib/omega-native/om
+191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9  /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/lib/omega-native/omc
+aa7906f534ffb63575f5b59be15e3ed93a02fe56d103aa35298beed5a35d7ac6  /home/drakestapleton/handoffs/universal-adapter-L707/L715/developer-replay/prefix/lib/omega-native/math
+8acb94458753269be0f24bdd89f137a16378d7bcc628defcd0f6c4f4f3ecc045  plan

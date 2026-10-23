@@ -1,0 +1,46 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note ubread status is independent of the returned byte; refusal preserves ubvalue.
+global urfails ulong 1
+text urbad "FAIL explicit read status or unchanged output\n"
+text urgood "PASS explicit read status and unchanged output\n"
+fn urcase h ulong off ulong want ulong to void
+put ubvalue 0 238
+rc = ubread h off
+if ne rc want
+put urfails 0 1
+end
+if ne get ubvalue 0 238
+put urfails 0 1
+end
+end
+fn main to int
+urcase 0 0 1
+r = ubnew 1 4 3 1
+w = ubnew 1 4 2 1
+urcase w 0 2
+urcase r 4 3
+put ubvalue 0 238
+rc = ubread r 0
+if or ne rc 0 ne get ubvalue 0 0
+put urfails 0 1
+end
+rc = ubstore r 0 255
+rc = ubread r 0
+if or ne rc 0 ne get ubvalue 0 255
+put urfails 0 1
+end
+rc = ubcancel r
+urcase r 0 7
+rc = ubfree r
+urcase r 0 1
+rc = ubfree w
+if ne ubstat 3 0
+put urfails 0 1
+end
+if ne get urfails 0 0
+v = write 1 urbad 0 len urbad
+ret 1
+end
+v = write 1 urgood 0 len urgood
+ret 0
+end
