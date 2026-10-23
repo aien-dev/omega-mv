@@ -36,3 +36,9 @@ No production compiler change was required by these observations. The original
 compiler hash and receipt remain valid. New test-source hashes and actual control
 results are recorded in review-controls.json. Independent final-source review and
 the native GPU/model integration gates remain open.
+
+Three explanatory statements in the original desk report also need correction:
+slot128 is valid (the emitted condition rejects values greater than128, and zero);
+mapdrop retains the generation and allocation advances it; and mapwrite accepts
+read-only input arrays while mapread requires a writable destination. The actual
+source and tests establish these behaviors. The original review is preserved.
