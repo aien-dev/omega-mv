@@ -50,7 +50,7 @@ function reference(q){
   else if(q.mode===2||q.mode===3){
     if(q.acc!==0n||(q.n!==64n&&q.n>=BigInt(q.nodes.length)))status=65;
   }else if(q.nodes.length)status=65;
-  for(const [i,t] of q.nodes.entries())if(t[1]!==64&&t[1]>=i||t[2]!==64&&t[2]>=i)status=65;
+  if(!status)for(const [i,t] of q.nodes.entries())if(t[1]!==64&&t[1]>=i||t[2]!==64&&t[2]>=i)status=65;
   if(!status){
     if(q.mode<2){
       // Independent closed-form value; separate finite resource trace.
@@ -97,7 +97,12 @@ add(request({mode:5}),'argument evaluation order');
 for(let n=0;n<=65;n++)add(request({mode:6,n:BigInt(n)}),`mutual inventory${n}`);
 for(const fields of [{version:1},{version:3},{mode:7},{fuel:4097},{frames:65},{bytes:2049},
   {mode:2,n:0n},{mode:2,n:64n,acc:1n},{mode:2,n:0n,nodes:[[1n,0,64]]},
-  {mode:2,n:0n,nodes:[[1n,64,1]]},{nodes:[[0n,64,64]]}])add(request(fields),'malformed/bounds');
+  {mode:2,n:0n,nodes:[[1n,64,1]]},{nodes:[[0n,64,64]]},
+  {version:3,mode:2,n:0n,nodes:[[1n,0,64]]},
+  {fuel:4097,mode:2,n:0n,nodes:[[1n,0,64]]},
+  {version:3,fuel:4097,mode:2,n:0n,nodes:[[1n,0,64]]},
+  {mode:7,n:0n,nodes:[[1n,0,64]]}])add(request(fields),'malformed/bounds');
+for(const mode of [0,1])add(request({mode,n:U}),'max ulong input exhausts bounded fuel/frames');
 assert.ok(cases.length<8192);
 const input=Buffer.concat(cases.map(({q})=>encode(q)));
 fs.writeFileSync(path.join(run,'requests.bin'),input);
