@@ -1,0 +1,7 @@
+fn main to int
+x = ulong 0
+while lt x 5 bound 4
+x = add x 1
+end
+ret 0
+end
