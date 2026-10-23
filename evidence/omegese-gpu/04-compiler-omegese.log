@@ -1,0 +1,108 @@
+head a99d711c start 2026-10-22T00:57:43Z
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=2 -o build/compiler/test_osc_ir_decode_mutant2 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=3 -o build/compiler/test_osc_ir_decode_mutant3 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=4 -o build/compiler/test_osc_ir_decode_mutant4 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=5 -o build/compiler/test_osc_ir_decode_mutant5 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=6 -o build/compiler/test_osc_ir_decode_mutant6 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=7 -o build/compiler/test_osc_ir_decode_mutant7 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -DOSC_IR_DECODE_MUTANT=8 -o build/compiler/test_osc_ir_decode_mutant8 tests/compiler/test_osc_ir_decode.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -o build/omegese/omegese tools/omegese/omegese.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/x445 tools/exp445/x445.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c -lm
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/fake445 tools/exp445/fake445.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/typediff tools/omega_emit/typediff.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -o build/omegese/omegese_asan tools/omegese/omegese.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -DOMEGESE_CANARY=1 -o build/omegese/omegese_canary1 tools/omegese/omegese.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -DOMEGESE_CANARY=2 -o build/omegese/omegese_canary2 tools/omegese/omegese.c
+decoder mutant 1 caught: FAIL: counterexample one trailing byte: got NONCANONICAL, want TRAILING
+bash tools/omegese/test_omegese.sh /home/drakestapleton/workspace/omega-omegese-gpu/build/omegese/omegese /home/drakestapleton/workspace/omega-omegese-gpu/build/omega_emit/omega_emit /home/drakestapleton/workspace/omega-omegese-gpu/build/checker2/checker2
+decoder mutant 2 caught: FAIL: counterexample version 2 with no structs: got NONCANONICAL, want VERSION_MISMATCH
+decoder mutant 3 caught: FAIL: counterexample last byte missing: refused but output not zeroed
+dev: 10/10 omegese -> omega_emit -> checker2 ACCEPT
+decoder mutant 4 caught: FAIL: counterexample f32 in a host function: got OK, want INVALID
+nested: 6/6 rewritten dev programs and 5/5 trial-2 model answers ACCEPT; trial-2 dev07 refused for its extra value
+review fixes: stacked conversions convert; brackets around a for count change nothing
+coverage: 8/8 accepted
+next: 69 prefixes give the expected words
+refusals: 46/46 refused with the expected reason, every control accepted
+loop guard: mutant without the counter increment REJECTED (C2-LOOP-UNBOUNDED)
+tokenizer gate: SKIPPED (set OMEGESE_TOKCOUNT and OMEGESE_TOKENIZER)
+decoder mutant 5 caught: FAIL: counterexample NUL inside a function name: got NONCANONICAL, want TEXT
+decoder mutant 6 caught: FAIL: counterexample register 0x8000: got INVALID, want RANGE
+decoder mutant 7 caught: FAIL: counterexample input longer than OSC_IR_ENCODED_MAX: got TRAILING, want OVERSIZED
+decoder mutant 8 caught: FAIL: counterexample last byte missing: got NONCANONICAL, want TRUNCATED
+test-osc-ir-decode-mutants: PASS (8 of 8 caught)
+/home/drakestapleton/workspace/omega-omegese-gpu/build/compiler/test_osc_ir_decode full > build/compiler/ir_decode.out
+next oracle: every word and the end of input legal at all 2636 word boundaries of 75 accepted programs
+completeness: 150 single-word mutants (15 accepted by emit): emit accepts iff every word was legal (2906 word boundaries)
+make: *** [mk/compiler.mk:113: test-osc-ir-decode] Error 1
+make: *** Waiting for unfinished jobs....
+soundness fuzz: 40/40 random walks (852 legal items picked) never met an empty set and closed into accepted programs
+checker2 residual: 0 of 80 completed walks that emit accepts are rejected later (omega_emit or checker2)
+truncation fuzz: 2799 byte prefixes through emit, next and next --machine, exit 0 or 1; at the 2698 prefixes of accepted programs, next allows the byte that follows and complete finishes into a program emit accepts
+test-omegese: PASS
+OMEGESE_SANITIZED=1 OMEGESE_CANARIES="/home/drakestapleton/workspace/omega-omegese-gpu/build/omegese/omegese_canary1 /home/drakestapleton/workspace/omega-omegese-gpu/build/omegese/omegese_canary2" \
+OMEGESE_WALKS=10 OMEGESE_MUTANTS=1 \
+bash tools/omegese/test_omegese.sh /home/drakestapleton/workspace/omega-omegese-gpu/build/omegese/omegese_asan /home/drakestapleton/workspace/omega-omegese-gpu/build/omega_emit/omega_emit /home/drakestapleton/workspace/omega-omegese-gpu/build/checker2/checker2
+sanitizers: 2/2 canaries caught (read after free, signed overflow)
+dev: 10/10 omegese -> omega_emit -> checker2 ACCEPT
+nested: 6/6 rewritten dev programs and 5/5 trial-2 model answers ACCEPT; trial-2 dev07 refused for its extra value
+review fixes: stacked conversions convert; brackets around a for count change nothing
+coverage: 8/8 accepted
+next: 69 prefixes give the expected words
+refusals: 46/46 refused with the expected reason, every control accepted
+loop guard: mutant without the counter increment REJECTED (C2-LOOP-UNBOUNDED)
+tokenizer gate: SKIPPED (set OMEGESE_TOKCOUNT and OMEGESE_TOKENIZER)
+next oracle: every word and the end of input legal at all 2636 word boundaries of 75 accepted programs
+completeness: 75 single-word mutants (12 accepted by emit): emit accepts iff every word was legal (1502 word boundaries)
+soundness fuzz: 10/10 random walks (188 legal items picked) never met an empty set and closed into accepted programs
+checker2 residual: 0 of 80 completed walks that emit accepts are rejected later (omega_emit or checker2)
+truncation fuzz: 2799 byte prefixes through emit, next and next --machine, exit 0 or 1; at the 2698 prefixes of accepted programs, next allows the byte that follows and complete finishes into a program emit accepts
+sanitizers: no ASan or UBSan report in the whole run
+test-omegese: PASS
+bash tools/omegese/test_omegese.sh /home/drakestapleton/workspace/omega-omegese-gpu/build/omegese/omegese /home/drakestapleton/workspace/omega-omegese-gpu/build/omega_emit/omega_emit /home/drakestapleton/workspace/omega-omegese-gpu/build/checker2/checker2
+dev: 10/10 omegese -> omega_emit -> checker2 ACCEPT
+nested: 6/6 rewritten dev programs and 5/5 trial-2 model answers ACCEPT; trial-2 dev07 refused for its extra value
+review fixes: stacked conversions convert; brackets around a for count change nothing
+coverage: 8/8 accepted
+next: 69 prefixes give the expected words
+refusals: 46/46 refused with the expected reason, every control accepted
+loop guard: mutant without the counter increment REJECTED (C2-LOOP-UNBOUNDED)
+tokenizer gate: SKIPPED (set OMEGESE_TOKCOUNT and OMEGESE_TOKENIZER)
+decoder mutant 1 caught: FAIL: counterexample one trailing byte: got NONCANONICAL, want TRAILING
+decoder mutant 2 caught: FAIL: counterexample version 2 with no structs: got NONCANONICAL, want VERSION_MISMATCH
+decoder mutant 3 caught: FAIL: counterexample last byte missing: refused but output not zeroed
+decoder mutant 4 caught: FAIL: counterexample f32 in a host function: got OK, want INVALID
+decoder mutant 5 caught: FAIL: counterexample NUL inside a function name: got NONCANONICAL, want TEXT
+next oracle: every word and the end of input legal at all 2636 word boundaries of 75 accepted programs
+decoder mutant 6 caught: FAIL: counterexample register 0x8000: got INVALID, want RANGE
+decoder mutant 7 caught: FAIL: counterexample input longer than OSC_IR_ENCODED_MAX: got TRAILING, want OVERSIZED
+decoder mutant 8 caught: FAIL: counterexample last byte missing: got NONCANONICAL, want TRUNCATED
+test-osc-ir-decode-mutants: PASS (8 of 8 caught)
+/home/drakestapleton/workspace/omega-omegese-gpu/build/compiler/test_osc_ir_decode full > build/compiler/ir_decode.out
+completeness: 150 single-word mutants (15 accepted by emit): emit accepts iff every word was legal (2906 word boundaries)
+soundness fuzz: 40/40 random walks (852 legal items picked) never met an empty set and closed into accepted programs
+make: *** [mk/compiler.mk:113: test-osc-ir-decode] Error 1
+make: *** Waiting for unfinished jobs....
+checker2 residual: 0 of 80 completed walks that emit accepts are rejected later (omega_emit or checker2)
+truncation fuzz: 2799 byte prefixes through emit, next and next --machine, exit 0 or 1; at the 2698 prefixes of accepted programs, next allows the byte that follows and complete finishes into a program emit accepts
+test-omegese: PASS
+OMEGESE_SANITIZED=1 OMEGESE_CANARIES="/home/drakestapleton/workspace/omega-omegese-gpu/build/omegese/omegese_canary1 /home/drakestapleton/workspace/omega-omegese-gpu/build/omegese/omegese_canary2" \
+OMEGESE_WALKS=10 OMEGESE_MUTANTS=1 \
+bash tools/omegese/test_omegese.sh /home/drakestapleton/workspace/omega-omegese-gpu/build/omegese/omegese_asan /home/drakestapleton/workspace/omega-omegese-gpu/build/omega_emit/omega_emit /home/drakestapleton/workspace/omega-omegese-gpu/build/checker2/checker2
+sanitizers: 2/2 canaries caught (read after free, signed overflow)
+dev: 10/10 omegese -> omega_emit -> checker2 ACCEPT
+nested: 6/6 rewritten dev programs and 5/5 trial-2 model answers ACCEPT; trial-2 dev07 refused for its extra value
+review fixes: stacked conversions convert; brackets around a for count change nothing
+coverage: 8/8 accepted
+next: 69 prefixes give the expected words
+refusals: 46/46 refused with the expected reason, every control accepted
+loop guard: mutant without the counter increment REJECTED (C2-LOOP-UNBOUNDED)
+tokenizer gate: SKIPPED (set OMEGESE_TOKCOUNT and OMEGESE_TOKENIZER)
+next oracle: every word and the end of input legal at all 2636 word boundaries of 75 accepted programs
+completeness: 75 single-word mutants (12 accepted by emit): emit accepts iff every word was legal (1502 word boundaries)
+soundness fuzz: 10/10 random walks (188 legal items picked) never met an empty set and closed into accepted programs
+checker2 residual: 0 of 80 completed walks that emit accepts are rejected later (omega_emit or checker2)
+truncation fuzz: 2799 byte prefixes through emit, next and next --machine, exit 0 or 1; at the 2698 prefixes of accepted programs, next allows the byte that follows and complete finishes into a program emit accepts
+sanitizers: no ASan or UBSan report in the whole run
+test-omegese: PASS
+exit 2 2026-10-22T01:15:01Z

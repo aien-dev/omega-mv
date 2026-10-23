@@ -1,0 +1,25 @@
+head a99d711c start 2026-10-21T23:21:15Z
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_receipt tests/checker2/test_c2_receipt.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/checker2/test_c2_receipt_asan tests/checker2/test_c2_receipt.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_ir tests/checker2/test_c2_ir.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/checker2/test_c2_ir_asan tests/checker2/test_c2_ir.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/compiler/oscc src/compiler/oscc_main.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/checker2/osc_emit_ir tests/checker2/producer/osc_emit_ir.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -DC2_SOURCES_SHA256='"abc8a0b20ed030d8f4d87c1d49497a38dcc03af6e1e9b4c5b16bd935acc656a0"' -o build/checker2/checker2 src/checker2/checker2_main.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/omega_emit tools/omega_emit/omega_emit.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -DC2_SOURCES_SHA256='"other-checker-build-for-tests"' -o build/checker2/checker2_other src/checker2/checker2_main.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/c2sat src/checker2/untrusted/c2sat.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_lrat tests/checker2/test_c2_lrat.c src/checker2/c2_lrat.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -o build/checker2/test_c2_lrat_asan tests/checker2/test_c2_lrat.c src/checker2/c2_lrat.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_blast tests/checker2/test_c2_blast.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -o build/checker2/test_c2_blast_native tests/checker2/test_c2_blast_native.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
+sh tests/checker2/owner_receipt.sh build/checker2/checker2 tests/checker2/fixtures/owner-receipt build/checker2/owner-receipt
+owner_receipt: FAIL owner draft is not byte-identical to the committed draft
+owner_receipt: FAIL production verify: receipt=UNTRUSTED_CHECKER
+owner_receipt: FAIL default (production) verify: receipt=UNTRUSTED_CHECKER
+owner_receipt: FAIL control wrong-target: want WRONG_TARGET, got receipt=UNTRUSTED_CHECKER
+owner_receipt: FAIL control wrong-executable: want EXECUTABLE_MISMATCH, got receipt=UNTRUSTED_CHECKER
+owner_receipt: FAIL (5)
+make: *** [mk/checker2.mk:108: test-checker2-owner-receipt] Error 1
+make: *** Waiting for unfinished jobs....
+exit 2 2026-10-22T00:57:43Z
