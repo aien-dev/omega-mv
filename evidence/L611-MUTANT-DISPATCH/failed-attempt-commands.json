@@ -1,0 +1,114 @@
+[
+  {
+    "name": "coverage",
+    "command": [
+      "timeout",
+      "60s",
+      "quiet-build",
+      "make",
+      "--no-print-directory",
+      "-j2",
+      "OUT_DIR=/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/build",
+      "test-osh-exit-abort-coverage"
+    ],
+    "actual_exit": 0,
+    "log": "/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/coverage.log",
+    "elapsed_seconds_not_a_performance_measurement": 0.7960710525512695
+  },
+  {
+    "name": "focused-plain",
+    "command": [
+      "timeout",
+      "600s",
+      "quiet-build",
+      "make",
+      "--no-print-directory",
+      "-j2",
+      "OUT_DIR=/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/build",
+      "test-osh-exit-abort-focused-plain"
+    ],
+    "actual_exit": 0,
+    "log": "/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/focused-plain.log",
+    "elapsed_seconds_not_a_performance_measurement": 20.995925664901733
+  },
+  {
+    "name": "focused-sanitizer",
+    "command": [
+      "timeout",
+      "600s",
+      "quiet-build",
+      "make",
+      "--no-print-directory",
+      "-j2",
+      "OUT_DIR=/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/build",
+      "test-osh-exit-abort-focused-sanitizer"
+    ],
+    "actual_exit": 0,
+    "log": "/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/focused-sanitizer.log",
+    "elapsed_seconds_not_a_performance_measurement": 283.48383045196533
+  },
+  {
+    "name": "independent-plain",
+    "command": [
+      "timeout",
+      "600s",
+      "quiet-build",
+      "make",
+      "--no-print-directory",
+      "-j2",
+      "OUT_DIR=/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/build",
+      "test-osh-exit-abort-independent-plain"
+    ],
+    "actual_exit": 0,
+    "log": "/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/independent-plain.log",
+    "elapsed_seconds_not_a_performance_measurement": 13.32822299003601
+  },
+  {
+    "name": "independent-sanitizer",
+    "command": [
+      "timeout",
+      "600s",
+      "quiet-build",
+      "make",
+      "--no-print-directory",
+      "-j2",
+      "OUT_DIR=/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/build",
+      "test-osh-exit-abort-independent-sanitizer"
+    ],
+    "actual_exit": 0,
+    "log": "/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/independent-sanitizer.log",
+    "elapsed_seconds_not_a_performance_measurement": 172.58652448654175
+  },
+  {
+    "name": "pty",
+    "command": [
+      "timeout",
+      "120s",
+      "quiet-build",
+      "make",
+      "--no-print-directory",
+      "-j2",
+      "OUT_DIR=/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/build",
+      "test-osh-exit-abort-pty"
+    ],
+    "actual_exit": 0,
+    "log": "/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/pty.log",
+    "elapsed_seconds_not_a_performance_measurement": 0.6857826709747314
+  },
+  {
+    "name": "new-controls",
+    "command": [
+      "timeout",
+      "1800s",
+      "quiet-build",
+      "make",
+      "--no-print-directory",
+      "-j2",
+      "OUT_DIR=/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/build",
+      "test-osh-exit-abort-mutants"
+    ],
+    "actual_exit": 2,
+    "log": "/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/new-controls.log",
+    "elapsed_seconds_not_a_performance_measurement": 229.66590571403503
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "src/osh/host/osh_shell.c": "fbede40b59377b6f1988ae4151b6792b31dfcb156c80eba02d1d681aafe63620",
+  "mk/zz_osh_abort_status.mk": "ab2134af462385872531116eca35fbd5bb30193bd559a21f8ac78515d44cd6be",
+  "tests/osh/e2e/exit_abort_status.mjs": "14badb5e944a434ef09b23b476f0368efb0fc8a48efcdf2672d420fc78e6bd8e",
+  "tests/osh/e2e/exit_abort_status_mutants.mjs": "3d6929a7f77895d0415b46679e0b830307eb7ed38c94997a5374240d0f67e395",
+  "tests/osh/e2e/exit_independent_601.mjs": "cce592c9ebd000fa73f613e3b257a5db641a9ee9a8a2817b8b0f9b9dbd4dc52c",
+  "tests/osh/e2e/independent_601_coverage.py": "345200e27c43f1ac0ae3374a59c5a0a335a79f2d457bb6823a37bbebe8b119ca",
+  "tests/osh/e2e/independent_601_parallel.py": "c66d6298315840e5bc0daa9f87af5fe547e65c3bba06b36b25a6390ad92a764f",
+  "tests/osh/e2e/fixtures/l601-complete-observed-reference.json.gz": "4df206586603b87d259ec1bd0dfc1c3ea130e07a1c5445e59bd46cffd6fb4955",
+  "tests/osh/e2e/fixtures/l601-reference-provenance.json": "8cc753a9f511d28d55d5b8a2497c835e75ac8db1101791b247607e6263f1e02e",
+  "tests/osh/host/exit_abort_pty.py": "eec7ec96d88feeaf2b3c614a7f3cea6e46aa24411febcac0d18d6caf372d3008",
+  "tests/osh/e2e/exit_abort_parallel.py": "3da4cf91efd40180c0a093168bb6609d8ba04177e28f302943aa89e6070b2c02"
+}

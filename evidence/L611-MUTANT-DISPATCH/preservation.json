@@ -1,0 +1,8 @@
+{
+  "old_focused_source_sha256": "495d5839f232ba5f46e77b54c2fffd256caab6e9e26c7b42d5332cda2af37c74",
+  "normalized_new_source_sha256": "495d5839f232ba5f46e77b54c2fffd256caab6e9e26c7b42d5332cda2af37c74",
+  "cases_and_assertions_unchanged": true,
+  "per_command_timeout_ms": 20000,
+  "mutant_runner_timeout_ms": 180000,
+  "changes": "Disjoint case-index dispatch and explicitly captured process metadata only; exact failure identities unchanged"
+}

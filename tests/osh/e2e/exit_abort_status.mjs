@@ -25,13 +25,15 @@ for(const prior of [0,1,2,37,128,255]){
   ['pipeline-last','printf "" | exit 7 9; printf "same:%s\\n" "$?"\n'+tail],
  ])cases.push({name:name+'-prior'+prior,text:seed+body});
 }
+const shard=(process.argv[4]??'0/1').split('/').map(Number);if(shard.length!==2||!Number.isInteger(shard[0])||!Number.isInteger(shard[1])||shard[1]<1||shard[1]>4||shard[0]<0||shard[0]>=shard[1])throw Error('invalid shard');
+const selectedCases=cases.filter((_,index)=>index%shard[1]===shard[0]);
 const rows=[];const errorClass=s=>s.includes('numeric argument required')?'numeric':s.includes('too many arguments')?'count':s===''?'none':'other';
 function run(cmd,args,input,extra={}){
  const p=spawnSync(cmd,args,{env:{...env,...extra},input,encoding:'utf8',timeout:20000,maxBuffer:4<<20});
  if(p.error||p.signal||p.status===null||/Sanitizer|runtime error:|journal unavailable/.test(p.stderr??''))throw Error('abnormal test process '+JSON.stringify({status:p.status,signal:p.signal,error:p.error?.message,stderr:p.stderr}));
- return {status:p.status,stdout:p.stdout,stderr:p.stderr,errorClass:errorClass(p.stderr)};
+ return {status:p.status,signal:p.signal,error:p.error?.message??null,stdout:p.stdout,stderr:p.stderr,errorClass:errorClass(p.stderr)};
 }
-for(const c of cases)for(const mode of ['command','script','stdin']){
+for(const c of selectedCases)for(const mode of ['command','script','stdin']){
  const key=c.name+'-'+mode,file=join(out,key+'.sh');writeFileSync(file,c.text);const args=mode==='command'?['-c',c.text]:mode==='script'?[file]:[],input=mode==='stdin'?c.text:undefined;
  const bash=run('/bin/bash',['--noprofile','--norc',...args],input);
  for(const core of ['native','interp']){
@@ -39,5 +41,5 @@ for(const c of cases)for(const mode of ['command','script','stdin']){
   const pass=bash.status===got.status&&bash.stdout===got.stdout&&bash.errorClass===got.errorClass&&got.errorClass!=='other';rows.push({name:c.name,mode,core,text:c.text,bash,got,pass});
  }
 }
-const failed=rows.filter(r=>!r.pass);writeFileSync(join(out,'results.json'),JSON.stringify({programs:cases.length,rows},null,2)+'\n');
-console.log(JSON.stringify({programs:cases.length,comparisons:rows.length,passed:rows.length-failed.length,failed:failed.length,failures:failed.map(x=>({name:x.name,mode:x.mode,core:x.core,bash:[x.bash.status,x.bash.stdout],got:[x.got.status,x.got.stdout]}))}));process.exitCode=failed.length?1:0;
+const failed=rows.filter(r=>!r.pass);writeFileSync(join(out,'results.json'),JSON.stringify({programs:selectedCases.length,rows},null,2)+'\n');
+console.log(JSON.stringify({programs:selectedCases.length,comparisons:rows.length,passed:rows.length-failed.length,failed:failed.length,failures:failed.map(x=>({name:x.name,mode:x.mode,core:x.core,bash:[x.bash.status,x.bash.stdout],got:[x.got.status,x.got.stdout]}))}));process.exitCode=failed.length?1:0;
