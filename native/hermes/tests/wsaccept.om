@@ -1,0 +1,83 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note RFC6455 vector plus OpenSSL external-reference values, no reference linked.
+global fails ulong 1
+global checks ulong 1
+global report uchar 32
+text key1 "dGhlIHNhbXBsZSBub25jZQ=="
+text want1 "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
+text key2 "AAAAAAAAAAAAAAAAAAAAAA=="
+text want2 "ICX+Yqv66kxgM0FcWaLWlFLwTAI="
+text key3 "/////////////////////w=="
+text want3 "XXpj4jYzLM2yUE0C7TIgMwTQh2g="
+fn check ok bool to void
+id = add get checks 0 1
+put checks 0 id
+put report 0 uchar add 48 div id 10
+put report 1 uchar add 48 rem id 10
+put report 2 32
+put report 3 80
+if not ok
+put report 3 70
+put fails 0 add get fails 0 1
+end
+put report 4 10
+w = write 1 report 0 5
+end
+fn main to int
+for i ulong 24
+put wkey i get key1 i
+end
+check eq wshake 24 0
+ok = true
+for i ulong 28
+ok = and ok eq get waccept i get want1 i
+end
+check ok
+for i ulong 24
+put wkey i get key2 i
+end
+check eq wshake 24 0
+ok = true
+for i ulong 28
+ok = and ok eq get waccept i get want2 i
+end
+check ok
+for i ulong 24
+put wkey i get key3 i
+end
+check eq wshake 24 0
+ok = true
+for i ulong 28
+ok = and ok eq get waccept i get want3 i
+end
+check ok
+check ne wshake 23 0
+check ne wshake 25 0
+put wkey 22 65
+check ne wshake 24 0
+put wkey 22 61
+put wkey 23 65
+check ne wshake 24 0
+put wkey 23 61
+put wkey 5 33
+check ne wshake 24 0
+for i ulong 24
+put wkey i get key2 i
+end
+put wkey 21 66
+check ne wshake 24 0
+for i ulong 28
+put waccept i 90
+end
+r = wshake 24
+ok = true
+for i ulong 28
+ok = and ok eq get waccept i 90
+end
+check ok
+for i ulong 24
+put wkey i get key1 i
+end
+check eq wshake 24 0
+ret int get fails 0
+end

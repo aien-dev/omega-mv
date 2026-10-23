@@ -1,0 +1,58 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Server frame encoder, final unmasked text or control. No network writes.
+note source0 rout(131072), source1 wctrl(125). Caller validates payload first.
+note wolen zero on refusal; unused scratch is not scrubbed or published.
+global wout uchar 131082
+global wolen ulong 1
+fn wpack op ulong n ulong source ulong to ulong
+put wolen 0 0
+if not or eq op 1 or eq op 8 or eq op 9 eq op 10
+ret 1
+end
+if gt source 1
+ret 1
+end
+if eq source 0
+if gt n 131072
+ret 1
+end
+else
+if gt n 125
+ret 1
+end
+end
+if ge op 8
+if gt n 125
+ret 1
+end
+end
+put wout 0 uchar add 128 op
+start = ulong 2
+if le n 125
+put wout 1 uchar n
+else
+if le n 65535
+start = 4
+put wout 1 126
+put wout 2 uchar shr n 8
+put wout 3 uchar and n 255
+else
+start = 10
+put wout 1 127
+for i ulong 8
+shift = mul sub 7 i 8
+part = uchar and shr n shift 255
+put wout add 2 i part
+end
+end
+end
+for i ulong n
+if eq source 0
+put wout add start i get rout i
+else
+put wout add start i get wctrl i
+end
+end
+put wolen 0 add start n
+ret 0
+end

@@ -1,0 +1,139 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note RFC6455 Sec-WebSocket-Accept, SHA1 is mandated wire compatibility, not auth.
+note Fixed24-byte canonical base64 key, exactly16 decoded bytes, no heap.
+global wkey uchar 24
+global waccept uchar 28
+global whash uchar 20
+global wblock uchar 128
+global wwords uint 80
+global wstate uint 5
+text wguid "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+text wb64 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+fn windex c uchar to ulong
+for i ulong len wb64
+if eq c get wb64 i
+ret i
+end
+end
+ret 64
+end
+fn wrotate x uint n uint to uint
+ret or shl x n shr x sub uint 32 n
+end
+fn wcompress offset ulong to void
+for i ulong 16
+p = add offset mul i 4
+v = uint get wblock p
+v = or shl v 8 uint get wblock add p 1
+v = or shl v 8 uint get wblock add p 2
+v = or shl v 8 uint get wblock add p 3
+put wwords i v
+end
+for j ulong 64
+i = add j 16
+v = xor get wwords sub i 3 get wwords sub i 8
+v = xor v get wwords sub i 14
+v = xor v get wwords sub i 16
+put wwords i wrotate v 1
+end
+a = get wstate 0
+b = get wstate 1
+c = get wstate 2
+d = get wstate 3
+e = get wstate 4
+for i ulong 80
+f = uint 0
+k = uint 0
+if lt i 20
+f = or and b c and not b d
+k = 1518500249
+else
+if lt i 40
+f = xor xor b c d
+k = 1859775393
+else
+if lt i 60
+f = or or and b c and b d and c d
+k = 2400959708
+else
+f = xor xor b c d
+k = 3395469782
+end
+end
+end
+t = add wrotate a 5 f
+t = add t e
+t = add t k
+t = add t get wwords i
+e = d
+d = c
+c = wrotate b 30
+b = a
+a = t
+end
+put wstate 0 add get wstate 0 a
+put wstate 1 add get wstate 1 b
+put wstate 2 add get wstate 2 c
+put wstate 3 add get wstate 3 d
+put wstate 4 add get wstate 4 e
+end
+fn wshake n ulong to ulong
+if ne n 24
+ret 1
+end
+for i ulong 22
+if eq windex get wkey i 64
+ret 1
+end
+end
+if or ne get wkey 22 61 ne get wkey 23 61
+ret 1
+end
+if ne and windex get wkey 21 15 0
+ret 1
+end
+for i ulong 128
+put wblock i 0
+end
+for i ulong 24
+put wblock i get wkey i
+end
+for i ulong len wguid
+put wblock add 24 i get wguid i
+end
+put wblock 60 128
+put wblock 126 1
+put wblock 127 224
+put wstate 0 1732584193
+put wstate 1 4023233417
+put wstate 2 2562383102
+put wstate 3 271733878
+put wstate 4 3285377520
+wcompress 0
+wcompress 64
+for i ulong 5
+v = get wstate i
+for j ulong 4
+shift = uint mul sub 3 j 8
+put whash add mul i 4 j uchar and shr v shift 255
+end
+end
+for i ulong 6
+p = mul i 3
+a = ulong get whash p
+b = ulong get whash add p 1
+c = ulong get whash add p 2
+q = mul i 4
+put waccept q get wb64 shr a 2
+put waccept add q 1 get wb64 or shl and a 3 4 shr b 4
+put waccept add q 2 get wb64 or shl and b 15 2 shr c 6
+put waccept add q 3 get wb64 and c 63
+end
+a = ulong get whash 18
+b = ulong get whash 19
+put waccept 24 get wb64 shr a 2
+put waccept 25 get wb64 or shl and a 3 4 shr b 4
+put waccept 26 get wb64 shl and b 15 2
+put waccept 27 61
+ret 0
+end

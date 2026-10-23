@@ -1,0 +1,70 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+global fails ulong 1
+global checks ulong 1
+global report uchar 32
+text request "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"ping\"}"
+text expected "{\"jsonrpc\":\"2.0\",\"id\":7,\"result\":{\"pong\":true}}\n"
+fn check ok bool to void
+id = add get checks 0 1
+put checks 0 id
+put report 0 uchar add 48 div id 10
+put report 1 uchar add 48 rem id 10
+put report 2 32
+put report 3 80
+if not ok
+put report 3 70
+put fails 0 add get fails 0 1
+end
+put report 4 10
+w = write 1 report 0 5
+end
+fn main to int
+wreset
+r = wrecv 129
+r = wrecv uchar add 128 len request
+for i ulong 4
+r = wrecv uchar add i 1
+end
+for i ulong len request
+r = wrecv xor get request i uchar add rem i 4 1
+end
+check eq r 1
+check eq rrun get wnmsg 0 0
+check eq wpack 1 get rlen 0 0 0
+check eq get wolen 0 add 2 len expected
+ok = true
+for i ulong len expected
+ok = and ok eq get wout add 2 i get expected i
+end
+check ok
+check eq get wout 0 129
+check eq get wout 1 uchar len expected
+for i ulong 131072
+put rout i 97
+end
+check eq wpack 1 126 0 0
+check and eq get wolen 0 130 eq get wout 1 126
+check and eq get wout 2 0 eq get wout 3 126
+check eq wpack 1 65535 0 0
+check and eq get wout 2 255 eq get wout 3 255
+check eq wpack 1 65536 0 0
+check and eq get wolen 0 65546 eq get wout 1 127
+check and eq get wout 7 1 eq get wout 8 0
+check eq get wout 9 0
+check eq wpack 1 131072 0 0
+check eq get wolen 0 131082
+check eq get wout 131081 97
+check ne wpack 1 131073 0 0
+check eq get wolen 0 0
+check ne wpack 10 126 1 0
+check ne wpack 2 1 0 0
+check ne wpack 1 1 2 0
+put wctrl 0 111
+put wctrl 1 107
+check eq wpack 10 2 1 0
+check and eq get wout 0 138 eq get wout 1 2
+check and eq get wout 2 111 eq get wout 3 107
+check eq wpack 8 0 1 0
+check and eq get wout 0 136 eq get wolen 0 2
+ret int get fails 0
+end

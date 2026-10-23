@@ -1,0 +1,197 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+global fails ulong 1
+global checks ulong 1
+global report uchar 32
+global wpayload uchar 65536
+text hello "hello"
+fn check ok bool to void
+id = add get checks 0 1
+put checks 0 id
+put report 0 uchar add 48 div id 10
+put report 1 uchar add 48 rem id 10
+put report 2 32
+put report 3 80
+if not ok
+put report 3 70
+put fails 0 add get fails 0 1
+end
+put report 4 10
+w = write 1 report 0 5
+end
+fn frame op uchar n ulong to ulong
+r = wrecv op
+if ne r 0
+ret r
+end
+if le n 125
+r = wrecv uchar add n 128
+else
+r = wrecv 254
+r = wrecv uchar shr n 8
+r = wrecv uchar and n 255
+end
+if ne r 0
+ret r
+end
+for i ulong 4
+r = wrecv uchar add i 1
+end
+for i ulong n
+if lt r 1000
+r = wrecv xor get wpayload i uchar add rem i 4 1
+end
+end
+ret r
+end
+fn main to int
+wreset
+for i ulong len hello
+put wpayload i get hello i
+end
+check eq frame 129 5 1
+check eq get wnmsg 0 5
+ok = true
+for i ulong len hello
+ok = and ok eq get jin i get hello i
+end
+check ok
+wreset
+check eq frame 1 2 0
+check eq frame 137 2 2
+check eq get wclen 0 2
+check eq get wctrl 0 104
+put wpayload 0 108
+put wpayload 1 108
+put wpayload 2 111
+check eq frame 128 3 1
+ok = eq get wnmsg 0 5
+for i ulong len hello
+ok = and ok eq get jin i get hello i
+end
+check ok
+wreset
+check eq wrecv 130 1003
+wreset
+r = wrecv 129
+check eq wrecv 5 1002
+wreset
+check eq wrecv 193 1002
+wreset
+check eq frame 1 0 0
+check eq wrecv 129 1002
+wreset
+check eq wrecv 128 1002
+wreset
+check eq wrecv 9 1002
+wreset
+r = wrecv 137
+check eq wrecv 254 1002
+wreset
+r = wrecv 129
+r = wrecv 254
+r = wrecv 0
+check eq wrecv 5 1002
+wreset
+check eq frame 129 0 1
+wreset
+r = wrecv 129
+r = wrecv 255
+for i ulong 7
+r = wrecv 0
+end
+check eq wrecv 125 1002
+wreset
+r = wrecv 129
+r = wrecv 255
+for i ulong 5
+r = wrecv 0
+end
+r = wrecv 1
+r = wrecv 0
+check eq wrecv 1 1009
+wreset
+put wpayload 0 192
+put wpayload 1 128
+check eq frame 129 2 1007
+wreset
+put wpayload 0 240
+put wpayload 1 159
+check eq frame 1 2 0
+put wpayload 0 152
+put wpayload 1 128
+check eq frame 128 2 1
+wreset
+put wpayload 0 3
+check eq frame 136 1 1002
+wreset
+put wpayload 0 3
+put wpayload 1 232
+put wpayload 2 111
+put wpayload 3 107
+check eq frame 136 4 4
+check eq get wclen 0 4
+check eq wrecv 129 1002
+wreset
+put wpayload 0 3
+put wpayload 1 237
+check eq frame 136 2 1002
+wreset
+put wpayload 0 3
+put wpayload 1 232
+put wpayload 2 255
+check eq frame 136 3 1007
+wreset
+check eq frame 138 0 3
+wreset
+for i ulong 126
+put wpayload i 97
+end
+check eq frame 129 126 1
+check eq get wnmsg 0 126
+check eq get jin 125 97
+wreset
+for i ulong 65535
+put wpayload i 97
+end
+check eq frame 1 65535 0
+check eq frame 128 2 1009
+wreset
+r = wrecv 129
+r = wrecv 255
+check eq wrecv 128 1002
+wreset
+r = wrecv 129
+r = wrecv 255
+for i ulong 5
+r = wrecv 0
+end
+r = wrecv 1
+r = wrecv 0
+r = wrecv 0
+for i ulong 4
+r = wrecv uchar add i 1
+end
+for i ulong 65536
+r = wrecv xor uchar 97 uchar add rem i 4 1
+end
+check eq r 1
+check eq get wnmsg 0 65536
+check eq get jin 65535 97
+wreset
+put wpayload 0 237
+put wpayload 1 160
+put wpayload 2 128
+check eq frame 129 3 1007
+wreset
+put wpayload 0 244
+put wpayload 1 144
+put wpayload 2 128
+put wpayload 3 128
+check eq frame 129 4 1007
+wreset
+put wpayload 0 226
+check eq frame 129 1 1007
+wreset
+check eq wrecv 131 1002
+ret int get fails 0
+end

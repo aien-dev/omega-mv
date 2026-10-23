@@ -1,0 +1,261 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note RFC6455 server-side incremental frame decoder. Input must be authenticated
+note and upgraded by the caller. No socket, auth or session authority here.
+note Result0 pending;1 text in jin/wnmsg;2 ping;3 pong;4 close in wctrl/wclen.
+note >=1000 is terminal close reason; consume output before next octet.
+note wm phase,fin,opcode,size,extleft,marker,maskread,payloadread,total,frag,closed.
+global wm ulong 11
+global wmask uchar 4
+global wnmsg ulong 1
+global wclen ulong 1
+global wctrl uchar 125
+global wutf ulong 3
+fn wreset to void
+for i ulong 11
+put wm i 0
+end
+put wnmsg 0 0
+put wclen 0 0
+end
+fn wbad code ulong to ulong
+put wm 10 code
+put wnmsg 0 0
+put wclen 0 0
+ret code
+end
+fn wuchar c ulong to bool
+n = get wutf 0
+if gt n 0
+if or lt c get wutf 1 gt c get wutf 2
+ret false
+end
+put wutf 0 sub n 1
+put wutf 1 128
+put wutf 2 191
+ret true
+end
+if lt c 128
+ret true
+end
+put wutf 1 128
+put wutf 2 191
+if and ge c 194 le c 223
+put wutf 0 1
+ret true
+end
+if and ge c 224 le c 239
+put wutf 0 2
+if eq c 224
+put wutf 1 160
+end
+if eq c 237
+put wutf 2 159
+end
+ret true
+end
+if and ge c 240 le c 244
+put wutf 0 3
+if eq c 240
+put wutf 1 144
+end
+if eq c 244
+put wutf 2 143
+end
+ret true
+end
+ret false
+end
+fn wvalid mode ulong n ulong to bool
+put wutf 0 0
+start = ulong 0
+if eq mode 1
+start = 2
+end
+while lt start n
+c = ulong 0
+if eq mode 0
+c = ulong get jin start
+else
+c = ulong get wctrl start
+end
+if not wuchar c
+ret false
+end
+start = add start 1
+end
+ret eq get wutf 0 0
+end
+fn wfinish to ulong
+put wm 0 0
+op = get wm 2
+n = get wm 3
+if ge op 8
+put wclen 0 n
+if eq op 9
+ret 2
+end
+if eq op 10
+ret 3
+end
+if eq n 1
+ret wbad 1002
+end
+if ge n 2
+code = add mul ulong get wctrl 0 256 ulong get wctrl 1
+ok = and ge code 1000 le code 1014
+if or or eq code 1004 eq code 1005 eq code 1006
+ok = false
+end
+ok = or ok and ge code 3000 le code 4999
+if not ok
+ret wbad 1002
+end
+if not wvalid 1 n
+ret wbad 1007
+end
+end
+put wm 10 1002
+ret 4
+end
+if eq get wm 1 0
+put wm 9 1
+ret 0
+end
+if not wvalid 0 get wm 8
+ret wbad 1007
+end
+put wnmsg 0 get wm 8
+put wm 8 0
+put wm 9 0
+ret 1
+end
+fn wlength to ulong
+n = get wm 3
+mark = get wm 5
+if and eq mark 126 lt n 126
+ret wbad 1002
+end
+if and eq mark 127 lt n 65536
+ret wbad 1002
+end
+if lt get wm 2 8
+if gt n sub 65536 get wm 8
+ret wbad 1009
+end
+end
+put wm 6 0
+put wm 7 0
+put wm 0 3
+ret 0
+end
+fn wfirst c ulong to ulong
+if ne and c 112 0
+ret wbad 1002
+end
+op = and c 15
+fin = shr c 7
+if eq op 2
+ret wbad 1003
+end
+valid = or or eq op 0 eq op 1 or eq op 8 or eq op 9 eq op 10
+if not valid
+ret wbad 1002
+end
+if ge op 8
+if eq fin 0
+ret wbad 1002
+end
+else
+if eq op 0
+if eq get wm 9 0
+ret wbad 1002
+end
+else
+if ne get wm 9 0
+ret wbad 1002
+end
+put wm 8 0
+end
+put wnmsg 0 0
+end
+put wm 1 fin
+put wm 2 op
+put wm 0 1
+ret 0
+end
+fn wrecv octet uchar to ulong
+if ne get wm 10 0
+ret get wm 10
+end
+c = ulong octet
+phase = get wm 0
+if eq phase 0
+ret wfirst c
+end
+if eq phase 1
+if eq and c 128 0
+ret wbad 1002
+end
+n = and c 127
+put wm 5 n
+put wm 3 0
+if ge get wm 2 8
+if gt n 125
+ret wbad 1002
+end
+end
+if lt n 126
+put wm 3 n
+ret wlength
+end
+put wm 4 2
+if eq n 127
+put wm 4 8
+end
+put wm 0 2
+ret 0
+end
+if eq phase 2
+if eq get wm 4 8
+if ge c 128
+ret wbad 1002
+end
+end
+n = add mul get wm 3 256 c
+if gt n 65536
+ret wbad 1009
+end
+put wm 3 n
+put wm 4 sub get wm 4 1
+if eq get wm 4 0
+ret wlength
+end
+ret 0
+end
+if eq phase 3
+n = get wm 6
+put wmask n octet
+put wm 6 add n 1
+if eq n 3
+put wm 0 4
+if eq get wm 3 0
+ret wfinish
+end
+end
+ret 0
+end
+n = get wm 7
+d = xor octet get wmask rem n 4
+if ge get wm 2 8
+put wctrl n d
+else
+t = get wm 8
+put jin t d
+put wm 8 add t 1
+end
+put wm 7 add n 1
+if eq get wm 7 get wm 3
+ret wfinish
+end
+ret 0
+end
