@@ -1,0 +1,39 @@
+note Handwritten seeded Omega tutorial entry; concatenate after core and workloads.
+global Textout uchar 32
+
+fn printnum v ulong to void
+p = ulong 31
+put Textout p 10
+x = v
+while gt x 9
+p = sub p 1
+put Textout p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put Textout p uchar add x 48
+sent = p
+while lt sent 32
+w = write 1 Textout sent sub ulong 32 sent
+if le w 0
+exit 77
+end
+sent = add sent ulong w
+end
+end
+
+fn main to int
+code = rbegin 64 64 2048
+value = accum 63 0
+if ne get Rstate 0 0
+ret int get Rstate 0
+end
+printnum value
+code = rbegin 63 64 2048
+value = accum 63 0
+if ne get Rstate 0 80
+ret 1
+end
+printnum get Rstate 0
+ret 0
+end

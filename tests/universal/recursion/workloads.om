@@ -1,0 +1,149 @@
+note Handwritten qualification workloads, not a general recursive-program importer.
+global Values ulong 64
+global Left ulong 64
+global Right ulong 64
+global Nodes ulong 1
+global Stnode ulong 64
+global Stphase ulong 64
+global Stsum ulong 64
+global Order ulong 1
+
+fn accum n ulong acc ulong to ulong
+if eq renter false
+ret 0
+end
+result = acc
+if ne n 0
+result = accum sub n 1 add acc n
+end
+rleave
+ret result
+end
+
+fn acciter n ulong acc ulong to ulong
+x = n
+result = acc
+active = ulong 0
+running = true
+while running
+if eq renter false
+running = false
+else
+active = add active 1
+if eq x 0
+running = false
+else
+result = add result x
+x = sub x 1
+end
+end
+end
+for i ulong active
+rleave
+end
+ret result
+end
+
+fn tree node ulong to ulong
+if eq renter false
+ret 0
+end
+result = ulong 0
+if ne node 64
+a = tree get Left node
+if eq get Rstate 0 0
+b = tree get Right node
+if eq get Rstate 0 0
+result = add get Values node add a b
+end
+end
+end
+rleave
+ret result
+end
+
+fn treeiter root ulong to ulong
+if eq renter false
+ret 0
+end
+put Stnode 0 root
+put Stphase 0 0
+sp = ulong 1
+result = ulong 0
+while ne sp 0
+at = sub sp 1
+node = get Stnode at
+phase = get Stphase at
+if or eq node 64 eq phase 2
+result = 0
+if ne node 64
+result = get Stsum at
+end
+rleave
+sp = sub sp 1
+if ne sp 0
+parent = sub sp 1
+put Stsum parent add get Stsum parent result
+end
+else
+child = get Left node
+if eq phase 0
+put Stsum at get Values node
+else
+child = get Right node
+end
+put Stphase at add phase 1
+if eq renter false
+while ne sp 0
+rleave
+sp = sub sp 1
+end
+ret 0
+end
+put Stnode sp child
+put Stphase sp 0
+sp = add sp 1
+end
+end
+ret result
+end
+
+fn endless to ulong
+if eq renter false
+ret 0
+end
+x = endless
+rleave
+ret x
+end
+
+note The following direct/mutual/order controls inventory existing compiler support.
+note Mutual recursion is a compiler probe only, excluded from the interchange profile.
+fn odd n ulong to ulong
+if eq n 0
+ret 0
+end
+ret even sub n 1
+end
+
+fn even n ulong to ulong
+if eq n 0
+ret 1
+end
+ret odd sub n 1
+end
+
+fn mark n ulong to ulong
+put Order 0 add mul get Order 0 10 n
+ret n
+end
+
+fn digits a ulong b ulong c ulong to ulong
+ret add mul a 100 add mul b 10 c
+end
+
+fn abiprobe to ulong
+put Order 0 0
+x = digits mark 1 mark 2 mark 3
+ret add mul x 1000 get Order 0
+end

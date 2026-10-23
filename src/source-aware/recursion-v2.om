@@ -1,0 +1,50 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Additive bounded-call instrumentation. Serial invocation, no cache or effects.
+note State: status, fuel left, admitted calls, live frames, peak frames, frame cap,
+note byte cap, peak logical bytes. One logical activation costs 32 bytes.
+global Rstate ulong 8
+
+fn rbegin fuel ulong frames ulong bytes ulong to ulong
+for i ulong 8
+put Rstate i 0
+end
+if or gt fuel 4096 or gt frames 64 gt bytes 2048
+put Rstate 0 67
+ret 67
+end
+put Rstate 1 fuel
+put Rstate 5 frames
+put Rstate 6 bytes
+ret 0
+end
+
+fn renter to bool
+if ne get Rstate 0 0
+ret false
+end
+if eq get Rstate 1 0
+put Rstate 0 80
+ret false
+end
+if ge get Rstate 3 get Rstate 5
+put Rstate 0 81
+ret false
+end
+need = mul add get Rstate 3 1 32
+if gt need get Rstate 6
+put Rstate 0 82
+ret false
+end
+put Rstate 1 sub get Rstate 1 1
+put Rstate 2 add get Rstate 2 1
+put Rstate 3 add get Rstate 3 1
+if gt get Rstate 3 get Rstate 4
+put Rstate 4 get Rstate 3
+put Rstate 7 need
+end
+ret true
+end
+
+fn rleave to void
+put Rstate 3 sub get Rstate 3 1
+end

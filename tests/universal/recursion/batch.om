@@ -1,0 +1,140 @@
+note Test transport only. Fixed-size 1600-byte request, 48-byte response, little endian.
+note Header: version2, mode, fuel, frame cap, byte cap, n/root, accumulator, node count.
+note Then 64 triples value/left/right. Unused triples must be zero.
+global Rin uchar 1600
+global Rout uchar 48
+
+fn rword at ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or v shl ulong get Rin add at i mul i 8
+end
+ret v
+end
+
+fn outword at ulong v ulong to void
+for i ulong 8
+put Rout add at i uchar and shr v mul i 8 255
+end
+end
+
+fn loadtree count ulong to bool
+for i ulong 64
+at = add 64 mul i 24
+v = rword at
+l = rword add at 8
+r = rword add at 16
+if ge i count
+if or ne v 0 or ne l 0 ne r 0
+ret false
+end
+else
+if and ne l 64 ge l i
+ret false
+end
+if and ne r 64 ge r i
+ret false
+end
+end
+put Values i v
+put Left i l
+put Right i r
+end
+put Nodes 0 count
+ret true
+end
+
+fn request to ulong
+code = rbegin rword 16 rword 24 rword 32
+if ne code 0
+ret 0
+end
+if ne rword 0 2
+put Rstate 0 66
+ret 0
+end
+mode = rword 8
+n = rword 40
+acc = rword 48
+count = rword 56
+if or gt mode 6 gt count 64
+put Rstate 0 65
+ret 0
+end
+if and ne mode 2 ne mode 3
+if ne count 0
+put Rstate 0 65
+ret 0
+end
+else
+if or ne acc 0 and ne n 64 ge n count
+put Rstate 0 65
+ret 0
+end
+end
+if eq loadtree count false
+put Rstate 0 65
+ret 0
+end
+if eq mode 0
+ret accum n acc
+end
+if eq mode 1
+ret acciter n acc
+end
+if eq mode 2
+ret tree n
+end
+if eq mode 3
+ret treeiter n
+end
+if eq mode 4
+ret endless
+end
+if eq mode 5
+ret abiprobe
+end
+if gt n 64
+put Rstate 0 67
+ret 0
+end
+ret even n
+end
+
+fn main to int
+for attempt ulong 8192
+got = ulong 0
+while lt got 1600
+r = read 0 Rin got sub ulong 1600 got
+if lt r 0
+ret 77
+end
+if eq r 0
+if eq got 0
+ret 0
+end
+ret 65
+end
+got = add got ulong r
+end
+value = request
+if ne get Rstate 0 0
+value = 0
+end
+outword 0 get Rstate 0
+outword 8 value
+outword 16 get Rstate 2
+outword 24 get Rstate 4
+outword 32 get Rstate 7
+outword 40 get Rstate 3
+sent = ulong 0
+while lt sent 48
+w = write 1 Rout sent sub ulong 48 sent
+if le w 0
+ret 77
+end
+sent = add sent ulong w
+end
+end
+ret 67
+end
