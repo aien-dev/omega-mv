@@ -1,0 +1,5 @@
+Initial implementation attempt (preserved):
+- boundary-u64.om with `global UMAX ulong 18446744073709551615`: omc exit 23, zero stdout bytes, `omc: line 7: error 23`. Cause found by source inspection: global's third field is a buffer length, not an initial scalar value. Replaced with a `umax()` function.
+- negative/saturating-add.om with the same global form: omc exit 23, zero stdout bytes, `omc: line 6: error 23`. Replaced with `umax()`.
+- negative/u64-literal-overflow.om: omc exit 8, zero stdout bytes, `omc: line 7: error 8`, matching intended refusal.
+No failed output was executed or used as evidence.

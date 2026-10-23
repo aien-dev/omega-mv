@@ -1,0 +1,37 @@
+compiler=/home/drakestapleton/workspace/omega-bridge-native-development/build/bootstrap/omc
+compiler_sha256=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+compiler_revision=0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9
+
+preflight compile: /home/drakestapleton/workspace/omega-bridge-native-development/build/bootstrap/omc < source > elf
+compile_rc=0 bytes=212
+verify_elf_rc=0
+run_rc=0
+
+positive arithmetic compile/run
+compile_rc=0 bytes=496
+verify_elf_rc=0
+run_rc=0
+
+positive boundary-u64 compile/run
+compile_rc=0 bytes=660
+verify_elf_rc=0
+run_rc=0
+
+positive composition compile/run
+compile_rc=0 bytes=700
+verify_elf_rc=0
+run_rc=0
+
+positive family-duplicates compile/run
+compile_rc=0 bytes=352
+verify_elf_rc=0
+run_rc=0
+
+negative saturating-add compile/run; expected correct status=0
+compile_rc=0 bytes=412
+verify_elf_rc=0
+run_rc=105
+
+negative u64-literal-overflow compile; expected refusal
+compile_rc=8 stdout_bytes=0 stderr=omc: line 14: error 8
+
