@@ -1,0 +1,40 @@
+Thu Oct 22 07:03:23 UTC 2026
+3aafd8a887d091fc239bd3aa43723571667f8720
+COMMAND: quiet-build make -j4 PHYSICS_DIR=../physics-l386 test-osc-gpu build/osc_gpu/test_osc_gpu_chip
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -Isrc -Isrc/compiler -Itests -o build/osc_gpu/test_osc_gpu tests/osc_gpu/test_osc_gpu.c src/omega_osc_gpu.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_osc_launch_args.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c -lm
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -o build/omegese/omegese tools/omegese/omegese.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -o build/omega_emit/omega_emit tools/omega_emit/omega_emit.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2 -DC2_SOURCES_SHA256='"abc8a0b20ed030d8f4d87c1d49497a38dcc03af6e1e9b4c5b16bd935acc656a0"' -o build/checker2/checker2 src/checker2/checker2_main.c src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c src/checker2/c2_receipt.c src/sha256.c src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -Isrc -Isrc/compiler -Itests -o build/osc_gpu/osc_gpu_build tools/osc_gpu/osc_gpu_build.c src/omega_osc_gpu.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_osc_launch_args.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c -lm
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -Isrc -Isrc/compiler -Itests -DOSC_CHIP -Wno-unused-function -pthread -I../physics-l386/m16 -I../physics-l386/nvrm -I../physics-l386/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I../physics-l386/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I../physics-l386/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I../physics-l386/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -o build/osc_gpu/test_osc_gpu_chip tests/osc_gpu/test_osc_gpu.c \
+	src/omega_osc_gpu.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_osc_launch_args.c src/omega_osc_launch.c src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c src/omega_gpu_fmt.c src/omega_blackwell_qmd.c ../physics-l386/m16/m16_native.c ../physics-l386/nvrm/nvrm.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c -lm
+sh tests/osc_gpu/run.sh build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2 build/osc_gpu/test_osc_gpu build/osc_gpu/ir build/osc_gpu/osc_gpu_build
+run.sh: 13 kernels emitted and accepted by checker2
+run.sh: 12 broken kernels refused with their expected reasons
+run.sh: 1 embedded kernels still build to the bytes they embed
+  division by a number: 5899975 quotients checked
+  vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  gate     72 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  gemm    248 instructions,  40 registers, 256 threads, 2048 shared bytes, 1 regions on 1 barriers, 16 argument words
+  reduce  192 instructions,  24 registers, 256 threads, 8224 shared bytes, 2 regions on 1 barriers, 12 argument words
+  nest16  112 instructions,  16 registers, 32 threads, 0 shared bytes, 0 regions on 0 barriers, 8 argument words
+  ops_u   624 instructions,  32 registers, 256 threads, 0 shared bytes, 16 regions on 1 barriers, 24 argument words
+  ops_f   208 instructions,  32 registers, 256 threads, 256 shared bytes, 0 regions on 0 barriers, 20 argument words
+  nest16j 288 instructions,  16 registers, 32 threads, 0 shared bytes, 16 regions on 16 barriers, 8 argument words
+  vloop    80 instructions,  24 registers, 64 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  om_vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  om_gate     72 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  om_gemm    256 instructions,  40 registers, 256 threads, 2048 shared bytes, 1 regions on 1 barriers, 16 argument words
+  om_attn    248 instructions,  48 registers, 128 threads, 16 shared bytes, 1 regions on 1 barriers, 22 argument words
+  ops_f   208 instructions,  32 registers, 256 threads, 256 shared bytes, 0 regions on 0 barriers, 20 argument words
+  vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  mutant 1 (stores ignore poison): caught by 16 checks
+  mutant 2 (joins dropped): caught by 52 checks
+  mutant 3 (no add overflow trap): caught by 5 checks
+  mutant 4 (intervals not stretched): caught by 10 checks
+  mutant 5 (every region on barrier 0): caught by 3 checks
+  mutant 6 (shared not zeroed): caught by 2 checks
+  mutant 7 (bounds-failed loads run): caught by 4 checks
+  mutant 8 (division magic off by one): caught by 4 checks
+test_osc_gpu: 1308 checks, 0 failed
+EXIT_CODE=0

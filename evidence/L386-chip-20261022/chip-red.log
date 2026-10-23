@@ -1,0 +1,6 @@
+Thu Oct 22 07:04:27 UTC 2026
+3aafd8a887d091fc239bd3aa43723571667f8720
+b5c0674ad7af704c2f256a08ff166559aa9b0dfd7abd0dfcef31857305cc2c85  build/osc_gpu/test_osc_gpu_chip
+COMMAND: spark-window run env OSC_GPU_MUTANT=1 timeout 180 build/osc_gpu/test_osc_gpu_chip build/osc_gpu/ir
+Terminated
+EXIT_CODE=143 (expected 1 with value mismatches)
