@@ -11,7 +11,7 @@ for label,text,bad in variants:
  d=out/label;d.mkdir();(d/'Makefile').write_text(text);(d/'tools').mkdir();shutil.copy2(repo/'tools/osh_test_plan.py',d/'tools/osh_test_plan.py');shutil.copytree(repo/'mk',d/'mk')
  p=subprocess.run([sys.executable,str(d/'tools/osh_test_plan.py')],capture_output=True,text=True,timeout=15)
  report=json.loads(p.stdout);ok=p.returncode==int(bad)
- if label=='old-plan':ok=ok and len(report['missing'])==8
+ if label=='old-plan':ok=ok and len(report['missing'])==9
  if label=='duplicate':ok=ok and report['duplicates']
  if label=='undefined':ok=ok and report['undefined']==['test-osh-undefined']
  if label=='default-only':ok=ok and report['default_goal']=='test-plan'

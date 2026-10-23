@@ -3,7 +3,7 @@
 import json,pathlib,subprocess,sys,tempfile
 repo=pathlib.Path(__file__).resolve().parents[1]
 legacy='osh-gen-check test-osh-lex test-osh-parse test-osh-expand test-osh-e2e osh-trace test-osh-host test-osh-caps test-osh-journal'.split()
-added='test-osh-diff test-osh-prompt-signals test-osh-prompt-interrupt test-osh-prompt-pty test-osh-exit-numeric-priority test-osh-exit-arguments test-osh-reader-boundaries'.split()
+added='test-osh-diff test-osh-prompt-signals test-osh-prompt-interrupt test-osh-prompt-pty test-osh-exit-numeric-priority test-osh-exit-arguments test-osh-reader-boundaries test-osh-exit-abort-status'.split()
 rule='l570-print-plan:;@printf "tests=%s\\nqualify=%s\\ndefault=%s\\n" "$(TESTS)" "$(QUALIFY_TESTS)" "$(.DEFAULT_GOAL)"'
 (repo/'build').mkdir(exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='osh-plan-query.',dir=repo/'build') as folder:

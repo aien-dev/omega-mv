@@ -1,0 +1,73 @@
+{
+  "base": "be37dccaf5e73da735256a6cdae96a9b4f7c19ef",
+  "incoming": "8d2afd87289ce457c04104a5b9b180796a956d2c",
+  "canonical_stage": "8f8570e600cf7c03560d306ee7cb9b02d0802787",
+  "paths": [
+    {
+      "path": "mk/zz_osh_abort_status.mk",
+      "action": "new_exact_file",
+      "incoming_sha256": "ab2134af462385872531116eca35fbd5bb30193bd559a21f8ac78515d44cd6be",
+      "carried_sha256": "ab2134af462385872531116eca35fbd5bb30193bd559a21f8ac78515d44cd6be"
+    },
+    {
+      "path": "src/osh/host/osh_shell.c",
+      "action": "three_way_reverse_verified",
+      "incoming_sha256": "fbede40b59377b6f1988ae4151b6792b31dfcb156c80eba02d1d681aafe63620",
+      "carried_sha256": "d3c7868eb8b5079b0615f0efa6a980872518419f033de4d8e38a3a762c19e68c"
+    },
+    {
+      "path": "tests/osh/e2e/exit_abort_status.mjs",
+      "action": "new_exact_file",
+      "incoming_sha256": "495d5839f232ba5f46e77b54c2fffd256caab6e9e26c7b42d5332cda2af37c74",
+      "carried_sha256": "495d5839f232ba5f46e77b54c2fffd256caab6e9e26c7b42d5332cda2af37c74"
+    },
+    {
+      "path": "tests/osh/e2e/exit_abort_status_mutants.mjs",
+      "action": "new_exact_file",
+      "incoming_sha256": "76883de37a10c238d774e5d270016d1b17ccebd5baf12937749af966129050fb",
+      "carried_sha256": "76883de37a10c238d774e5d270016d1b17ccebd5baf12937749af966129050fb"
+    },
+    {
+      "path": "tests/osh/e2e/exit_independent_601.mjs",
+      "action": "new_exact_file",
+      "incoming_sha256": "cce592c9ebd000fa73f613e3b257a5db641a9ee9a8a2817b8b0f9b9dbd4dc52c",
+      "carried_sha256": "cce592c9ebd000fa73f613e3b257a5db641a9ee9a8a2817b8b0f9b9dbd4dc52c"
+    },
+    {
+      "path": "tests/osh/e2e/fixtures/l601-complete-observed-reference.json.gz",
+      "action": "new_exact_file",
+      "incoming_sha256": "4df206586603b87d259ec1bd0dfc1c3ea130e07a1c5445e59bd46cffd6fb4955",
+      "carried_sha256": "4df206586603b87d259ec1bd0dfc1c3ea130e07a1c5445e59bd46cffd6fb4955"
+    },
+    {
+      "path": "tests/osh/e2e/fixtures/l601-reference-provenance.json",
+      "action": "new_exact_file",
+      "incoming_sha256": "8cc753a9f511d28d55d5b8a2497c835e75ac8db1101791b247607e6263f1e02e",
+      "carried_sha256": "8cc753a9f511d28d55d5b8a2497c835e75ac8db1101791b247607e6263f1e02e"
+    },
+    {
+      "path": "tests/osh/e2e/independent_601_coverage.py",
+      "action": "new_exact_file",
+      "incoming_sha256": "345200e27c43f1ac0ae3374a59c5a0a335a79f2d457bb6823a37bbebe8b119ca",
+      "carried_sha256": "345200e27c43f1ac0ae3374a59c5a0a335a79f2d457bb6823a37bbebe8b119ca"
+    },
+    {
+      "path": "tests/osh/e2e/independent_601_parallel.py",
+      "action": "new_exact_file",
+      "incoming_sha256": "c66d6298315840e5bc0daa9f87af5fe547e65c3bba06b36b25a6390ad92a764f",
+      "carried_sha256": "c66d6298315840e5bc0daa9f87af5fe547e65c3bba06b36b25a6390ad92a764f"
+    },
+    {
+      "path": "tests/osh/host/exit_abort_pty.py",
+      "action": "new_exact_file",
+      "incoming_sha256": "eec7ec96d88feeaf2b3c614a7f3cea6e46aa24411febcac0d18d6caf372d3008",
+      "carried_sha256": "eec7ec96d88feeaf2b3c614a7f3cea6e46aa24411febcac0d18d6caf372d3008"
+    }
+  ],
+  "protected_hashes_preserved": {
+    "src/osh/host/osh_builtin.c": "bc2971974facfc64e191bb116e8ceb772bfdd185c244a36092d7e28b28791f02",
+    "src/osh/host/osh_shell.h": "59349061e6be4f3a5447ede5c0b1f591240a74befe8cb11c226a350cc84a604c",
+    "tests/osh/e2e/exit_numeric_priority_mutants.mjs": "5efa8c8a3d87497e8affcfc21043ab6fb9bf8cb96e76126a502f5c954abc6cd1",
+    "tests/osh/host/test_entry_controls.py": "edac74480020957647f7861ae099a385f1f2404fcde897dce88204f1df80d48d"
+  }
+}

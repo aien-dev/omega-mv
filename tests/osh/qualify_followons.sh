@@ -15,5 +15,6 @@ node tests/osh/host/prompt_interrupt_mutants.mjs "$out/prompt-interrupt" > "$out
 node tests/osh/e2e/exit_numeric_priority_mutants.mjs "$out/numeric-priority" > "$out/numeric-priority.log"
 node tests/osh/e2e/exit_argument_completion_mutants.mjs "$out/exit-arguments" > "$out/exit-arguments.log"
 python3 tests/osh/host/test_entry_controls.py "$PWD" "$out/entry" tests/osh/host/fixtures/original-entry-failures.out > "$out/entry.log"
+make --no-print-directory OUT_DIR="$(dirname "$bin")" test-osh-exit-abort-mutants > "$out/abort-state-mutants.log"
 for f in "$out"/*.log; do tail -1 "$f"; done
 echo 'OSH_FOLLOWON_MUTANTS_PASS'
