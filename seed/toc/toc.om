@@ -1,0 +1,1534 @@
+note toc: the bridge. Reads Omega, writes C a C compiler can build.
+note Arrays leave as address then length. gcc is not in this program.
+note Built by seed/out/omc. Traps in the C exit 100+code, as om4 does.
+
+global src uchar 65536
+global slen ulong 1
+global cur ulong 1
+global line ulong 1
+global tk ulong 1
+global tw ulong 1
+global tl ulong 1
+global ts ulong 1
+global held ulong 1
+global outb uchar 65536
+global oc ulong 1
+global msg uchar 64
+global digs uchar 24
+global side uchar 4096
+global sidec ulong 1
+global mc ulong 1
+global nf ulong 1
+global fn_name ulong 32
+global fn_off ulong 32
+global fn_nl ulong 32
+global fn_ret ulong 32
+global fn_np ulong 32
+global fn_pt ulong 128
+global fn_pl ulong 128
+global fn_pk ulong 128
+global fn_poff ulong 128
+global fn_pnl ulong 128
+global ng ulong 1
+global g_off ulong 8
+global g_nl ulong 8
+global g_ty ulong 8
+global g_len ulong 8
+global nloc ulong 1
+global loc_off ulong 32
+global loc_nl ulong 32
+global loc_ty ulong 32
+global loc_k ulong 32
+global loc_len ulong 32
+global loc_par ulong 32
+global bd ulong 1
+global bk ulong 32
+global cfi ulong 1
+global hasmain ulong 1
+
+text t0 "/* Omega bridge. A C compiler builds this file. Arrays are address then length. */\n#include <stdint.h>\n#include <unistd.h>\nstatic void o_trap(int c){_exit(100+c);}\n"
+text t1 "static uint64_t o_add_u(uint64_t a,uint64_t b){return a+b;}\nstatic uint64_t o_sub_u(uint64_t a,uint64_t b){return a-b;}\nstatic uint64_t o_mul_u(uint64_t a,uint64_t b){return a*b;}\nstatic uint64_t o_div_u(uint64_t a,uint64_t b){if(b==0)o_trap(2);return a/b;}\nstatic uint64_t o_rem_u(uint64_t a,uint64_t b){if(b==0)o_trap(2);return a%b;}\n"
+text t2 "static int64_t o_div_s(int64_t a,int64_t b){if(b==0)o_trap(2);if(a==(-9223372036854775807LL-1)&&b==-1)o_trap(1);return a/b;}\nstatic int64_t o_rem_s(int64_t a,int64_t b){if(b==0)o_trap(2);if(a==(-9223372036854775807LL-1)&&b==-1)return 0;return a%b;}\n"
+text t3 "static uint64_t o_get_u8(uint8_t *p,uint64_t n,uint64_t i){if(i>=n)o_trap(3);return p[i];}\nstatic void o_put_u8(uint8_t *p,uint64_t n,uint64_t i,uint64_t v){if(i>=n)o_trap(3);if(v>255)o_trap(5);p[i]=(uint8_t)v;}\nstatic uint64_t o_get_u64(uint64_t *p,uint64_t n,uint64_t i){if(i>=n)o_trap(3);return p[i];}\nstatic void o_put_u64(uint64_t *p,uint64_t n,uint64_t i,uint64_t v){if(i>=n)o_trap(3);p[i]=v;}\n"
+text t4 "static void o_fill_u8(uint8_t *p,uint64_t n,uint64_t v){uint64_t i;if(v>255)o_trap(5);for(i=0;i<n;i++)p[i]=(uint8_t)v;}\nstatic void o_fill_u64(uint64_t *p,uint64_t n,uint64_t v){uint64_t i;for(i=0;i<n;i++)p[i]=v;}\n"
+text t5 "static int64_t o_read(int64_t fd,uint8_t *p,uint64_t n,uint64_t off,uint64_t len){if(off>n||len>n-off)o_trap(3);return (int64_t)read((int)fd,p+off,(size_t)len);}\nstatic int64_t o_write(int64_t fd,uint8_t *p,uint64_t n,uint64_t off,uint64_t len){if(off>n||len>n-off)o_trap(3);return (int64_t)write((int)fd,p+off,(size_t)len);}\nstatic uint64_t o_to_u64(int64_t v){if(v<0)o_trap(5);return (uint64_t)v;}\n"
+
+fn mputb b uchar to void
+m = get mc 0
+put msg m b
+put mc 0 add m 1
+end
+
+fn mputn v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+j = i
+while gt j 0
+j = sub j 1
+mputb get d j
+end
+end
+
+fn fail code ulong to void
+put mc 0 0
+mputb 116
+mputb 111
+mputb 99
+mputb 58
+mputb 32
+mputb 108
+mputb 105
+mputb 110
+mputb 101
+mputb 32
+mputn get line 0
+mputb 58
+mputb 32
+mputb 101
+mputb 114
+mputb 114
+mputb 111
+mputb 114
+mputb 32
+mputn code
+mputb 10
+w = write 2 msg 0 get mc 0
+exit int code
+end
+
+fn e_b c ulong to void
+o = get oc 0
+if ge o 65536
+fail 14
+end
+put outb o uchar c
+put oc 0 add o 1
+end
+
+fn e_text k ulong to void
+i = ulong 0
+n = ulong 0
+if eq k 0
+n = len t0
+end
+if eq k 1
+n = len t1
+end
+if eq k 2
+n = len t2
+end
+if eq k 3
+n = len t3
+end
+if eq k 4
+n = len t4
+end
+if eq k 5
+n = len t5
+end
+while lt i n
+if eq k 0
+e_b ulong get t0 i
+end
+if eq k 1
+e_b ulong get t1 i
+end
+if eq k 2
+e_b ulong get t2 i
+end
+if eq k 3
+e_b ulong get t3 i
+end
+if eq k 4
+e_b ulong get t4 i
+end
+if eq k 5
+e_b ulong get t5 i
+end
+i = add i 1
+end
+end
+
+fn e_src a ulong n ulong to void
+i = ulong 0
+while lt i n
+e_b ulong get src add a i
+i = add i 1
+end
+end
+
+fn e_s0 to void
+e_b 32
+end
+
+fn isw w ulong to ulong
+if and eq get tk 0 1 eq get tw 0 w
+ret 1
+end
+ret 0
+end
+
+fn tok_num to void
+v = ulong 0
+i = ulong 0
+minus = ulong 0
+p = get ts 0
+if eq get src p 45
+minus = 1
+i = 1
+end
+while lt i get tl 0
+b = get src add p i
+v = add mul v 10 sub ulong b ulong 48
+i = add i 1
+end
+if eq minus 1
+v = sub 0 v
+end
+put tw 0 v
+put tk 0 2
+end
+
+fn tok2 c uchar to void
+put ts 0 get cur 0
+w = ulong 0
+sh = ulong 0
+n = ulong 0
+go = ulong 1
+while eq go 1
+if ge get cur 0 get slen 0
+go = 0
+else
+b = get src get cur 0
+if le b 32
+go = 0
+else
+if lt n 8
+w = or w shl ulong b sh
+sh = add sh 8
+end
+n = add n 1
+put cur 0 add get cur 0 1
+end
+end
+end
+put tw 0 w
+put tl 0 n
+f = get src get ts 0
+num = ulong 0
+if eq f 45
+num = 1
+end
+if and ge f 48 le f 57
+num = 1
+end
+if eq num 1
+tok_num
+else
+put tk 0 1
+end
+end
+
+fn tok to void
+if eq get held 0 1
+put held 0 0
+ret
+end
+go = ulong 1
+while eq go 1
+if ge get cur 0 get slen 0
+put tk 0 3
+ret
+end
+c = get src get cur 0
+if or or eq c 32 eq c 9 eq c 13
+put cur 0 add get cur 0 1
+else
+if eq c 10
+put cur 0 add get cur 0 1
+put line 0 add get line 0 1
+put tk 0 0
+ret
+end
+if lt c 32
+fail 16
+end
+tok2 c
+ret
+end
+end
+end
+
+fn ty_of w ulong to ulong
+if eq w 1819242338
+ret 1
+end
+if eq w 491260502901
+ret 2
+end
+if eq w 128034844210037
+ret 3
+end
+if eq w 1953393013
+ret 4
+end
+if eq w 444234427509
+ret 5
+end
+if eq w 1702132066
+ret 6
+end
+if eq w 500136110195
+ret 7
+end
+if eq w 7630441
+ret 8
+end
+if eq w 1735290732
+ret 9
+end
+ret 0
+end
+
+fn signed t ulong to ulong
+if ge t 6
+ret 1
+end
+ret 0
+end
+
+fn e_ty t ulong to void
+if eq t 2
+e_b 117
+e_b 105
+e_b 110
+e_b 116
+e_b 56
+e_b 95
+e_b 116
+ret
+end
+if eq t 8
+e_b 105
+e_b 110
+e_b 116
+e_b 51
+e_b 50
+e_b 95
+e_b 116
+ret
+end
+if eq t 9
+e_b 105
+e_b 110
+e_b 116
+e_b 54
+e_b 52
+e_b 95
+e_b 116
+ret
+end
+if eq t 10
+e_b 118
+e_b 111
+e_b 105
+e_b 100
+ret
+end
+e_b 117
+e_b 105
+e_b 110
+e_b 116
+e_b 54
+e_b 52
+e_b 95
+e_b 116
+end
+
+fn find_fn to ulong
+i = ulong 0
+while lt i get nf 0
+if eq get fn_name i get tw 0
+ret i
+end
+i = add i 1
+end
+ret 99
+end
+
+fn find_loc to ulong
+i = ulong 0
+while lt i get nloc 0
+if and eq get loc_off i get ts 0 eq get loc_nl i get tl 0
+ret i
+end
+i = add i 1
+end
+ret 99
+end
+
+fn find_g to ulong
+i = ulong 0
+while lt i get ng 0
+if and eq get g_off i get ts 0 eq get g_nl i get tl 0
+ret i
+end
+i = add i 1
+end
+ret 99
+end
+
+fn e_ident o ulong n ulong to void
+e_src o n
+end
+
+fn e_arr_p o ulong n ulong par ulong to void
+e_src o n
+if eq par 0
+e_b 95
+e_b 98
+end
+end
+
+fn e_arr_n o ulong n ulong to void
+e_src o n
+e_b 95
+e_b 110
+end
+
+fn same_name o ulong n ulong to ulong
+if ne n get tl 0
+ret 0
+end
+i = ulong 0
+while lt i n
+if ne get src add o i get src add get ts 0 i
+ret 0
+end
+i = add i 1
+end
+ret 1
+end
+
+fn loc_of to ulong
+i = ulong 0
+while lt i get nloc 0
+if eq same_name get loc_off i get loc_nl i 1
+ret i
+end
+i = add i 1
+end
+ret 99
+end
+
+fn glob_of to ulong
+i = ulong 0
+while lt i get ng 0
+if eq same_name get g_off i get g_nl i 1
+ret i
+end
+i = add i 1
+end
+ret 99
+end
+
+fn fn_of to ulong
+i = ulong 0
+while lt i get nf 0
+if eq same_name get fn_off i get fn_nl i 1
+ret i
+end
+i = add i 1
+end
+ret 99
+end
+
+fn add_loc o ulong n ulong ty ulong k ulong ln ulong par ulong to void
+i = get nloc 0
+if ge i 32
+fail 14
+end
+put loc_off i o
+put loc_nl i n
+put loc_ty i ty
+put loc_k i k
+put loc_len i ln
+put loc_par i par
+put nloc 0 add i 1
+end
+
+fn walk_sig rec ulong to void
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+ix = get nf 0
+if eq rec 1
+if ge ix 32
+fail 14
+end
+put fn_name ix get tw 0
+put fn_off ix get ts 0
+put fn_nl ix get tl 0
+put fn_np ix 0
+if eq get tw 0 1835098989
+put hasmain 0 1
+end
+put cfi 0 ix
+else
+put cfi 0 fn_of
+if eq get cfi 0 99
+fail 3
+end
+end
+tok
+while eq isw 28532 0
+if ne get tk 0 1
+fail 16
+end
+po = get ts 0
+pn = get tl 0
+tok
+pk = ulong 0
+pty = ulong 0
+pln = ulong 0
+if eq isw 2003134838 1
+pk = 2
+end
+if eq isw 1953064037 1
+pk = 3
+end
+if gt pk 0
+tok
+pty = ty_of get tw 0
+if eq pty 0
+fail 7
+end
+tok
+if ne get tk 0 2
+fail 16
+end
+pln = get tw 0
+else
+pty = ty_of get tw 0
+if eq pty 0
+fail 7
+end
+end
+if eq rec 1
+slot = add mul ix 4 get fn_np ix
+put fn_pt slot pty
+put fn_pl slot pln
+put fn_pk slot pk
+put fn_poff slot po
+put fn_pnl slot pn
+put fn_np ix add get fn_np ix 1
+end
+tok
+end
+tok
+rt = ulong 10
+if eq isw 1684631414 0
+rt = ty_of get tw 0
+if eq rt 0
+fail 7
+end
+end
+if eq rec 1
+put fn_ret ix rt
+put nf 0 add ix 1
+end
+end
+
+fn parse_global to void
+tok
+if ne get tk 0 1
+fail 16
+end
+i = get ng 0
+if ge i 8
+fail 14
+end
+put g_off i get ts 0
+put g_nl i get tl 0
+tok
+ty = ty_of get tw 0
+if eq ty 0
+fail 7
+end
+put g_ty i ty
+tok
+if ne get tk 0 2
+fail 16
+end
+put g_len i get tw 0
+put ng 0 add i 1
+end
+
+fn namescan to void
+put cur 0 0
+put line 0 1
+put held 0 0
+tok
+go = ulong 1
+while eq go 1
+if eq get tk 0 3
+go = 0
+else
+if eq get tk 0 0
+tok
+else
+if eq isw 28262 1
+walk_sig 1
+tok
+else
+if eq isw 119165519096935 1
+parse_global
+tok
+else
+while and ne get tk 0 0 ne get tk 0 3
+tok
+end
+tok
+end
+end
+end
+end
+end
+end
+
+fn e_hdr to void
+k = ulong 0
+while lt k 6
+e_text k
+k = add k 1
+end
+end
+
+fn e_comma to void
+e_b 44
+e_b 32
+end
+
+fn e_sig tail ulong to void
+ix = get cfi 0
+rt = get fn_ret ix
+if and eq rt 8 eq same_name get fn_off ix get fn_nl ix 0
+e_b 105
+e_b 110
+e_b 116
+else
+e_ty rt
+end
+e_s0
+e_ident get fn_off ix get fn_nl ix
+e_b 40
+np = get fn_np ix
+if eq np 0
+e_b 118
+e_b 111
+e_b 105
+e_b 100
+end
+i = ulong 0
+while lt i np
+if gt i 0
+e_comma
+end
+slot = add mul ix 4 i
+pk = get fn_pk slot
+if gt pk 0
+if eq pk 2
+e_b 99
+e_b 111
+e_b 110
+e_b 115
+e_b 116
+e_b 32
+end
+e_ty get fn_pt slot
+e_b 32
+e_b 42
+e_ident get fn_poff slot get fn_pnl slot
+e_comma
+e_ty 5
+e_s0
+e_ident get fn_poff slot get fn_pnl slot
+e_b 95
+e_b 110
+else
+e_ty get fn_pt slot
+e_s0
+e_ident get fn_poff slot get fn_pnl slot
+end
+i = add i 1
+end
+e_b 41
+if eq tail 1
+e_b 59
+end
+e_b 10
+end
+
+fn e_fdecls to void
+i = ulong 0
+while lt i get nf 0
+put cfi 0 i
+e_sig 1
+i = add i 1
+end
+end
+
+fn e_dec v ulong to void
+x = v
+p = ulong 0
+put digs 0 uchar add rem x 10 48
+x = div x 10
+p = add p 1
+while gt x 0
+put digs p uchar add rem x 10 48
+x = div x 10
+p = add p 1
+end
+while gt p 0
+p = sub p 1
+e_b ulong get digs p
+end
+end
+
+fn e_globs to void
+i = ulong 0
+while lt i get ng 0
+e_ty get g_ty i
+e_s0
+e_ident get g_off i get g_nl i
+e_b 95
+e_b 98
+e_b 91
+e_dec get g_len i
+e_b 93
+e_b 59
+e_b 10
+e_ty 5
+e_s0
+e_ident get g_off i get g_nl i
+e_b 95
+e_b 110
+e_b 32
+e_b 61
+e_b 32
+e_dec get g_len i
+e_b 59
+e_b 10
+i = add i 1
+end
+end
+
+fn e_num ty ulong to void
+if eq signed ty 1
+e_b 40
+e_ty ty
+e_b 41
+end
+e_src get ts 0 get tl 0
+end
+
+fn take_side mark ulong to void
+n = sub get oc 0 mark
+i = ulong 0
+if ge n 4096
+fail 14
+end
+while lt i n
+put side i get outb add mark i
+i = add i 1
+end
+put sidec 0 n
+put oc 0 mark
+end
+
+fn e_side to void
+i = ulong 0
+while lt i get sidec 0
+e_b ulong get side i
+i = add i 1
+end
+end
+
+fn op_of w ulong to ulong
+if eq w 6579297
+ret 1
+end
+if eq w 6452595
+ret 2
+end
+if eq w 7107949
+ret 3
+end
+if eq w 7760228
+ret 4
+end
+if eq w 7169394
+ret 5
+end
+if eq w 29029
+ret 6
+end
+if eq w 25966
+ret 7
+end
+if eq w 29804
+ret 8
+end
+if eq w 25964
+ret 9
+end
+if eq w 29799
+ret 10
+end
+if eq w 25959
+ret 11
+end
+if eq w 6581857
+ret 12
+end
+if eq w 29295
+ret 13
+end
+ret 0
+end
+
+fn emit_len to ulong
+tok
+g = glob_of
+l = loc_of
+if ne g 99
+e_arr_n get g_off g get g_nl g
+ret 5
+end
+if eq l 99
+fail 3
+end
+e_arr_n get loc_off l get loc_nl l
+ret 5
+end
+
+fn emit_get to ulong
+tok
+ao = get ts 0
+an = get tl 0
+at = ulong 5
+par = ulong 0
+g = glob_of
+if ne g 99
+at = get g_ty g
+else
+l = loc_of
+if eq l 99
+fail 3
+end
+at = get loc_ty l
+par = get loc_par l
+end
+e_b 111
+e_b 95
+e_b 103
+e_b 101
+e_b 116
+e_b 95
+if eq at 2
+e_b 117
+e_b 56
+else
+e_b 117
+e_b 54
+e_b 52
+end
+e_b 40
+e_arr_p ao an par
+e_comma
+e_arr_n ao an
+e_comma
+idx = emit_expr 5
+e_b 41
+ret at
+end
+
+fn emit_cmp op ulong to ulong
+e_b 40
+e_b 117
+e_b 105
+e_b 110
+e_b 116
+e_b 54
+e_b 52
+e_b 95
+e_b 116
+e_b 41
+e_b 40
+e_b 40
+left = ulong 0
+left = emit_expr left
+if eq op 6
+e_b 61
+e_b 61
+end
+if eq op 7
+e_b 33
+e_b 61
+end
+if eq op 8
+e_b 60
+end
+if eq op 9
+e_b 60
+e_b 61
+end
+if eq op 10
+e_b 62
+end
+if eq op 11
+e_b 62
+e_b 61
+end
+right = emit_expr left
+e_b 41
+e_b 41
+ret 1
+end
+
+fn emit_both op ulong to ulong
+e_b 40
+e_b 40
+a1 = emit_expr 1
+e_b 41
+if eq op 12
+e_b 38
+else
+e_b 124
+end
+e_b 40
+a2 = emit_expr 1
+e_b 41
+e_b 41
+ret 1
+end
+
+fn emit_arith op ulong to ulong
+mark = get oc 0
+left = emit_expr 0
+take_side mark
+e_b 111
+e_b 95
+if eq op 1
+e_b 97
+e_b 100
+e_b 100
+end
+if eq op 2
+e_b 115
+e_b 117
+e_b 98
+end
+if eq op 3
+e_b 109
+e_b 117
+e_b 108
+end
+if eq op 4
+e_b 100
+e_b 105
+e_b 118
+end
+if eq op 5
+e_b 114
+e_b 101
+e_b 109
+end
+e_b 95
+if eq signed left 1
+e_b 115
+else
+e_b 117
+end
+e_b 40
+e_side
+e_comma
+right = emit_expr left
+e_b 41
+ret left
+end
+
+fn emit_call f ulong to ulong
+e_ident get fn_off f get fn_nl f
+e_b 40
+np = get fn_np f
+i = ulong 0
+while lt i np
+if gt i 0
+e_comma
+end
+slot = add mul f 4 i
+if gt get fn_pk slot 0
+tok
+lg = loc_of
+if ne lg 99
+e_arr_p get loc_off lg get loc_nl lg get loc_par lg
+e_comma
+e_arr_n get loc_off lg get loc_nl lg
+else
+gg = glob_of
+e_arr_p get g_off gg get g_nl gg 0
+e_comma
+e_arr_n get g_off gg get g_nl gg
+end
+else
+arg = emit_expr get fn_pt slot
+end
+i = add i 1
+end
+e_b 41
+ret get fn_ret f
+end
+
+fn emit_cast tyc ulong to ulong
+e_b 40
+e_ty tyc
+e_b 41
+junk = emit_expr tyc
+ret tyc
+end
+
+fn emit_io which ulong to ulong
+if eq which 1
+e_b 111
+e_b 95
+e_b 114
+e_b 101
+e_b 97
+e_b 100
+else
+e_b 111
+e_b 95
+e_b 119
+e_b 114
+e_b 105
+e_b 116
+e_b 101
+end
+e_b 40
+fd = emit_expr 9
+e_comma
+tok
+ao = get ts 0
+an = get tl 0
+par = ulong 0
+g = glob_of
+if ne g 99
+par = 0
+else
+l = loc_of
+par = get loc_par l
+end
+e_arr_p ao an par
+e_comma
+e_arr_n ao an
+e_comma
+off = emit_expr 5
+e_comma
+leng = emit_expr 5
+e_b 41
+ret 9
+end
+
+fn emit_expr exp ulong to ulong
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if eq get tk 0 2
+e_num exp
+if eq exp 0
+ret 5
+end
+ret exp
+end
+if ne get tk 0 1
+fail 16
+end
+w = get tw 0
+if eq w 1702195828
+e_b 49
+ret 1
+end
+if eq w 435728179558
+e_b 48
+ret 1
+end
+tyc = ty_of w
+if gt tyc 0
+ret emit_cast tyc
+end
+if eq w 7234924
+ret emit_len
+end
+if eq w 7628135
+ret emit_get
+end
+op = op_of w
+if and ge op 6 le op 11
+ret emit_cmp op
+end
+if or eq op 12 eq op 13
+ret emit_both op
+end
+if gt op 0
+ret emit_arith op
+end
+if eq w 1684104562
+ret emit_io 1
+end
+if eq w 435744764535
+ret emit_io 2
+end
+f = fn_of
+if ne f 99
+ret emit_call f
+end
+g = glob_of
+if ne g 99
+fail 7
+end
+l = loc_of
+if eq l 99
+fail 3
+end
+if ne get loc_k l 0
+fail 7
+end
+e_ident get ts 0 get tl 0
+ret get loc_ty l
+end
+
+fn e_semi to void
+e_b 59
+e_b 10
+end
+
+fn emit_put to void
+tok
+if ne get tk 0 1
+fail 16
+end
+ao = get ts 0
+an = get tl 0
+at = ulong 2
+par = ulong 0
+g = glob_of
+l = loc_of
+if ne g 99
+at = get g_ty g
+else
+if eq l 99
+fail 3
+end
+at = get loc_ty l
+par = get loc_par l
+end
+e_b 111
+e_b 95
+e_b 112
+e_b 117
+e_b 116
+e_b 95
+if eq at 2
+e_b 117
+e_b 56
+else
+e_b 117
+e_b 54
+e_b 52
+end
+e_b 40
+if ne g 99
+e_arr_p ao an 0
+else
+e_arr_p ao an par
+end
+e_comma
+e_arr_n ao an
+e_comma
+ix = emit_expr 5
+e_comma
+vy = emit_expr at
+e_b 41
+e_semi
+end
+
+fn span_eq a ulong an ulong b ulong bn ulong to ulong
+if ne an bn
+ret 0
+end
+i = ulong 0
+while lt i an
+if ne get src add a i get src add b i
+ret 0
+end
+i = add i 1
+end
+ret 1
+end
+
+fn emit_assign to void
+o = get ts 0
+n = get tl 0
+tok
+if ne isw 61 1
+fail 16
+end
+tok
+if eq isw 7824750 1
+tok
+ty = ty_of get tw 0
+if eq ty 0
+fail 7
+end
+tok
+if ne get tk 0 2
+fail 16
+end
+ln = get tw 0
+tok
+if ne get tk 0 2
+fail 7
+end
+fv = get tw 0
+e_ty ty
+e_s0
+e_ident o n
+e_b 95
+e_b 98
+e_b 91
+e_dec ln
+e_b 93
+e_semi
+e_ty 5
+e_s0
+e_ident o n
+e_b 95
+e_b 110
+e_b 61
+e_dec ln
+e_semi
+if eq ty 2
+e_b 111
+e_b 95
+e_b 102
+e_b 105
+e_b 108
+e_b 108
+e_b 95
+e_b 117
+e_b 56
+else
+e_b 111
+e_b 95
+e_b 102
+e_b 105
+e_b 108
+e_b 108
+e_b 95
+e_b 117
+e_b 54
+e_b 52
+end
+e_b 40
+e_ident o n
+e_b 95
+e_b 98
+e_comma
+e_ident o n
+e_b 95
+e_b 110
+e_comma
+e_dec fv
+e_b 41
+e_semi
+add_loc o n ty 1 ln 0
+else
+put held 0 1
+mark = get oc 0
+ty = emit_expr 0
+take_side mark
+known = ulong 99
+i = ulong 0
+while lt i get nloc 0
+if eq span_eq o n get loc_off i get loc_nl i 1
+known = i
+end
+i = add i 1
+end
+if eq known 99
+e_ty ty
+e_s0
+e_ident o n
+add_loc o n ty 0 0 0
+else
+e_ident o n
+end
+e_b 61
+e_side
+e_semi
+end
+end
+
+fn push k ulong to void
+d = get bd 0
+if ge d 32
+fail 14
+end
+put bk d k
+put bd 0 add d 1
+end
+
+fn emit_for to void
+tok
+if ne get tk 0 1
+fail 16
+end
+o = get ts 0
+n = get tl 0
+tok
+ty = ty_of get tw 0
+if eq ty 0
+fail 7
+end
+e_b 102
+e_b 111
+e_b 114
+e_b 40
+e_ty ty
+e_s0
+e_ident o n
+e_b 61
+e_b 48
+e_b 59
+e_ident o n
+e_b 60
+lim = emit_expr ty
+e_b 59
+e_ident o n
+e_b 43
+e_b 43
+e_b 41
+e_b 123
+e_b 10
+add_loc o n ty 0 0 0
+push 5
+end
+
+fn emit_one to ulong
+if eq isw 1702129518 1
+while and ne get tk 0 0 ne get tk 0 3
+tok
+end
+ret 1
+end
+if eq isw 6581861 1
+d = get bd 0
+if eq d 0
+fail 15
+end
+d = sub d 1
+put bd 0 d
+e_b 125
+e_b 10
+if eq d 0
+ret 0
+end
+ret 1
+end
+if eq isw 1702063205 1
+e_b 125
+e_b 32
+e_b 101
+e_b 108
+e_b 115
+e_b 101
+e_b 32
+e_b 123
+e_b 10
+ret 1
+end
+if eq isw 26217 1
+e_b 105
+e_b 102
+e_b 40
+cond = emit_expr 1
+e_b 41
+e_b 123
+e_b 10
+push 2
+ret 1
+end
+if eq isw 435610544247 1
+e_b 119
+e_b 104
+e_b 105
+e_b 108
+e_b 101
+e_b 40
+cond = emit_expr 1
+e_b 41
+e_b 123
+e_b 10
+push 4
+ret 1
+end
+if eq isw 7499622 1
+emit_for
+ret 1
+end
+if eq isw 7628146 1
+e_b 114
+e_b 101
+e_b 116
+e_b 117
+e_b 114
+e_b 110
+e_b 32
+tok
+if eq get tk 0 0
+e_semi
+ret 1
+end
+put held 0 1
+rv = emit_expr get fn_ret get cfi 0
+e_semi
+ret 1
+end
+if eq isw 7632240 1
+emit_put
+ret 1
+end
+if eq isw 28262 1
+fail 16
+end
+if eq isw 119165519096935 1
+fail 16
+end
+f = fn_of
+if ne f 99
+put held 0 1
+call = emit_expr 0
+e_semi
+ret 1
+end
+if ne get tk 0 1
+fail 16
+end
+emit_assign
+ret 1
+end
+
+fn emit_fn to void
+walk_sig 0
+ix = get cfi 0
+e_sig 0
+e_b 123
+e_b 10
+put nloc 0 0
+i = ulong 0
+np = get fn_np ix
+while lt i np
+slot = add mul ix 4 i
+k = ulong 0
+if gt get fn_pk slot 0
+k = 1
+end
+add_loc get fn_poff slot get fn_pnl slot get fn_pt slot k get fn_pl slot 1
+i = add i 1
+end
+put bd 0 1
+go = ulong 1
+while eq go 1
+tok
+if eq get tk 0 3
+fail 15
+end
+if ne get tk 0 0
+go = emit_one
+end
+end
+end
+
+fn emit_all to void
+put cur 0 0
+put line 0 1
+put held 0 0
+put oc 0 0
+e_hdr
+e_fdecls
+e_globs
+put cur 0 0
+put line 0 1
+put held 0 0
+tok
+go = ulong 1
+while eq go 1
+if eq get tk 0 3
+go = 0
+else
+if eq get tk 0 0
+tok
+else
+if eq isw 28262 1
+emit_fn
+tok
+else
+while and ne get tk 0 0 ne get tk 0 3
+tok
+end
+tok
+end
+end
+end
+end
+end
+
+fn main to int
+off = ulong 0
+go = ulong 1
+while eq go 1
+n = read 0 src off sub 65536 off
+if le n 0
+go = 0
+else
+off = add off ulong n
+if ge off 65536
+fail 14
+end
+end
+end
+put slen 0 off
+put line 0 1
+namescan
+if eq get nf 0 0
+fail 16
+end
+emit_all
+w = write 1 outb 0 get oc 0
+ret 0
+end
