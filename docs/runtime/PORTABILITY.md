@@ -25,7 +25,7 @@ The table `docs/runtime/portability_table.tsv` answers both, one row per `src/om
 | `reason` | text | Why, with the evidence (an include list, a constant, a make target). |
 | `os_binding` | `FREESTANDING_PROVEN`, `NO_HOSTED_INCLUDE`, `HOSTED_LIBC`, `LINUX_DRIVER` | `FREESTANDING_PROVEN`: a `.c` file in `GPU_FS_SRCS` (`mk/omega-gpu-engine.mk`), built by `make gpu-engine-freestanding` with no hosted headers. `NO_HOSTED_INCLUDE`: no hosted header by include scan only (a header, or a `.c` outside that build). `HOSTED_LIBC`: includes stdio, stdlib, time, errno, math or pthread. `LINUX_DRIVER`: includes `nvrm.h`, `m16_native.h` or `omega_gpu_platform_linux.h`. |
 
-Totals at base commit a8ffd2b9: 87 files are `CHIP_SPECIFIC` and 15 are `PORTABLE`. By `os_binding`: 13 `FREESTANDING_PROVEN`,
+Totals over the source tree based on a8ffd2b9, corrected after source review: 93 files are `CHIP_SPECIFIC` and 9 are `PORTABLE`. By `os_binding`: 13 `FREESTANDING_PROVEN`,
 77 `NO_HOSTED_INCLUDE`, 9 `HOSTED_LIBC`, 3 `LINUX_DRIVER`. The small `PORTABLE` count is the honest result: almost everything
 in `src/omega_gpu_*` launches a Blackwell kernel. Command to recount: section 7.
 
@@ -58,12 +58,14 @@ stall counts. The platform contract hides the *driver*; it does not hide the *GP
 
 | Piece | Where | Why it is portable |
 |---|---|---|
-| Platform contract, ABI 1.2 | `src/omega_gpu_platform.h`, `src/omega_gpu_platform.c` | Typed handles (index plus generation), separate CPU, GPU and bus address types, buffer kinds and rights, a service set negotiated up front, named refusals (`OmegaGpuPlatformRefusal`), no silent fallback. ABI 1.2 adds `submit_prefix_words`. Included in `make gpu-engine-freestanding`. |
+| Platform validation implementation | `src/omega_gpu_platform.c` | Reusable capability negotiation and handle-table checks, included in `make gpu-engine-freestanding`. This does not make the header contract chip-neutral: `omega_gpu_platform.h` specifies NVIDIA cache policy and GPFIFO queue semantics and is classified separately as `CHIP_SPECIFIC`. |
 | Engine state machine | `src/omega_gpu_engine.c`, `.h` | Open, validate, submit, verify, close, with a named failing step. Talks to a backend through a function table (`OmegaGpuBackend`). No chip knowledge. |
 | Bounded wait | `src/omega_gpu_wait.c` | Clock and hooks come from the caller; the freestanding build has no default clock. |
-| Serving reservation | `src/omega_gpu_serving.c` | Counts and bounds a session's allocations. |
 | Text and host math | `src/omega_gpu_fmt.c`, `src/omega_gpu_hostmath.c` | A bounded formatter and libm-free log, exp, pow. |
-| Public tensor entry points | `src/omega_gpu_matmul_api.h`, `src/omega_gpu_moe_api.h`, `src/omega_gpu_session.h` | Plain types in the signatures. The `.c` files behind the matmul and attention calls are chip-specific (section 2). |
+
+Plain C signatures are not evidence of a chip-neutral contract. The matmul header exposes Blackwell tile macros (16/8/16), the MoE header defines tile-major packing and column alignment, and the session header exposes QMD fields/defaults and the two-marker/L2-flush launch protocol. All three are `CHIP_SPECIFIC`. The platform header also requires review for another chip because its queue contract names GPFIFO and its host-polled rights require the NVIDIA GPU-uncached visibility rule. The serving header describes the GB10 reservation/cache contract; `omega_gpu_serving.c` calls those matmul/attention reservation APIs rather than implementing generic allocation accounting. Both serving files are therefore `CHIP_SPECIFIC`, even though the implementation builds without hosted headers.
+
+A hardware name in an example or historical comment alone is not a machine dependency. The classifications above are based on exposed layout, tile, visibility, queue or backend-call semantics. The remaining portable engine/math/formatter/wait helpers do not prove that their consumer or a complete backend supports another GPU.
 
 What the freestanding build proves, and what it does not, is in `docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md` section 1 and
 section 4: the listed files link with only `memcpy`, `memmove`, `memset`, `memcmp`, `strlen` and `strcmp` undefined, and
