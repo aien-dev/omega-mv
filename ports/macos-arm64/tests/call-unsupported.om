@@ -1,0 +1,6 @@
+fn f to ulong
+ret 9
+end
+fn main to ulong
+ret f
+end

@@ -1,0 +1,7 @@
+fn main to ulong
+s = ulong 0
+for i ulong 10
+s = add s i
+end
+ret s
+end

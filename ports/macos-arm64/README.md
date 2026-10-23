@@ -1,23 +1,34 @@
 # Bounded macOS ARM64 target (L615)
 
-Under construction. Native macOS execution: NOT_RUN. Issue #634 stays OPEN.
-Production namespace belongs to L615, compiler source belongs to L408.
+The handwritten Omega adapter builds selected seed-compiled integer/control-flow
+programs and one exact hello into native ARM64 Mach-O candidates. Native macOS
+execution and independent review are **NOT_RUN**. Issue634 stays **OPEN**.
+This milestone does not qualify a Mac SDK, installer or complete developer package.
 
-The seed compiler produces Linux AArch64 ELF with Linux syscalls, fixed stack
-and absolute text addresses. The initial real seed-compiled integer fixture
-fails the independent Mach-O boundary assertion (evidence/initial-red.log).
+On the assigned Linux ARM64 Spark worktree:
 
-Selected mechanism: a handwritten Omega format/target adapter with full input
-validation. First scope: no-memory leaf integer/control-flow seed programs and
-one exact source-built hello program, preserving all other valid instructions.
-No general ELF translator, source compiler replacement or SDK qualification.
-Unknown headers/instructions/branches/addresses/program forms are refused.
+```sh
+ports/macos-arm64/build.sh
+quiet-build node ports/macos-arm64/tests/run.mjs
+ports/macos-arm64/target.sh INPUT.elf OUTPUT.macho
+```
 
-Apple XNU rejects static ARM64 MH_EXECUTE on production kernels. Output must use
-dyld, PIE, four-gigabyte PAGEZERO, and explicit native entry. Apple signing and
-inspection tools are separately disclosed host dependencies. Code generation
-and format construction remain seeded Omega; no foreign tool builds the target.
+The build script verifies the immutable shared seed compiler's hash immediately
+before consuming it. The target adapter verifies the entire input before writing.
+The file wrapper preserves existing output on refusal. Read [CONTRACT.md](CONTRACT.md)
+for exact instruction/header/ABI/resource/refusal closure and host dependencies.
 
-References inspected: Apple xnu bsd/kern/mach_loader.c, bsd/dev/arm/systemcalls.c,
-EXTERNAL_HEADERS/mach-o/loader.h; dyld common/MachOFile.cpp. Exact contracts,
-source pins and replay commands will accompany the implemented milestone.
+Pure leaf integer/control flow is supported within the frozen instruction subset.
+The hello family is precisely [tests/hello.om](tests/hello.om), including its
+stdout/error behavior; changed literals or syscall shapes are refused. Stdin,
+arrays, calls and other program forms are explicitly refused. All production
+computation and file construction use seeded Omega. Shell/Node orchestrate tests
+and files; LLVM is an external format/instruction oracle. Apple dyld/libSystem
+and host signing tools are required and are not claimed to be independent.
+
+[evidence/initial-red.log](evidence/initial-red.log) preserves the original failing
+boundary assertion against real seed output. Qualification artifacts are in
+`build/qualification/`, with full source/input/output hashes, native Linux exits,
+refusals and compiled negative controls. [tests/mac-replay.sh](tests/mac-replay.sh)
+is the parent-owned native Mac gate. Export instructions and raw receipts are
+recorded in [evidence/RESULTS.md](evidence/RESULTS.md).

@@ -1,0 +1,563 @@
+note L615 bounded seed ELF to Darwin ARM64 target adapter, revision 1.
+note All input is validated before stdout is written. See CONTRACT.md.
+global inp uchar 16385
+global hdr uchar 176
+global out uchar 32784
+
+text pzero "__PAGEZERO"
+text ptext "__TEXT"
+text plink "__LINKEDIT"
+text stext "__text"
+text dyld "/usr/lib/dyld"
+text system "/usr/lib/libSystem.B.dylib"
+
+fn rd p ulong to ulong
+a = ulong get inp p
+b = shl ulong get inp add p 1 8
+c = shl ulong get inp add p 2 16
+d = shl ulong get inp add p 3 24
+ret or or a b or c d
+end
+
+fn wr p ulong v ulong to void
+put out p uchar and v 255
+put out add p 1 uchar and shr v 8 255
+put out add p 2 uchar and shr v 16 255
+put out add p 3 uchar and shr v 24 255
+end
+
+fn hw p ulong v ulong to void
+put hdr p uchar and v 255
+put hdr add p 1 uchar and shr v 8 255
+put hdr add p 2 uchar and shr v 16 255
+put hdr add p 3 uchar and shr v 24 255
+end
+
+fn checkhdr n ulong to void
+hw 0 1179403647
+hw 4 65794
+hw 16 11993090
+hw 20 1
+hw 24 4194480
+hw 32 64
+hw 52 3670080
+hw 56 2
+hw 64 1
+hw 68 5
+hw 80 4194304
+hw 88 4194304
+hw 96 n
+hw 104 n
+hw 112 4096
+hw 120 1
+hw 124 6
+hw 136 268435456
+hw 144 268435456
+hw 160 8388608
+hw 168 4096
+for i ulong 176
+if ne get inp i get hdr i
+exit 24
+end
+end
+end
+
+note Every word of the hello family is fixed, including text, bounds, stack,
+note syscall registers, branch targets and bootstrap. No wildcards.
+fn hello p ulong to ulong
+if eq p 176
+ret 335544364
+end
+if eq p 180
+ret 1819043176
+end
+if eq p 184
+ret 1835999343
+end
+if eq p 188
+ret 543254373
+end
+if eq p 192
+ret 174285165
+end
+if eq p 196
+ret 3531603969
+end
+if eq p 200
+ret 3531604482
+end
+if eq p 204
+ret 3531604483
+end
+if eq p 208
+ret 3942842463
+end
+if eq p 212
+ret 1409287144
+end
+if eq p 216
+ret 3405906019
+end
+if eq p 220
+ret 3942842431
+end
+if eq p 224
+ret 1409287048
+end
+if eq p 228
+ret 3506488319
+end
+if eq p 232
+ret 3946603519
+end
+if eq p 236
+ret 1409287011
+end
+if eq p 240
+ret 4177527776
+end
+if eq p 244
+ret 4177528801
+end
+if eq p 248
+ret 4177529826
+end
+if eq p 252
+ret 4177530851
+end
+if eq p 256
+ret 4177531902
+end
+if eq p 260
+ret 3531604000
+end
+if eq p 264
+ret 3531609729
+end
+if eq p 268
+ret 4070574081
+end
+if eq p 272
+ret 4181723120
+end
+if eq p 276
+ret 2333081633
+end
+if eq p 280
+ret 4181724130
+end
+if eq p 284
+ret 3531606024
+end
+if eq p 288
+ret 3556769793
+end
+if eq p 292
+ret 4181726206
+end
+if eq p 296
+ret 2432746495
+end
+if eq p 300
+ret 4043325471
+end
+if eq p 304
+ret 1409286241
+end
+if eq p 308
+ret 3531603968
+end
+if eq p 312
+ret 3596551104
+end
+if eq p 316
+ret 3531606336
+end
+if eq p 320
+ret 3596551104
+end
+if eq p 324
+ret 2432798752
+end
+if eq p 328
+ret 3531606952
+end
+if eq p 332
+ret 3556769793
+end
+if eq p 336
+ret 3531604065
+end
+if eq p 340
+ret 402653180
+end
+if eq p 344
+ret 3531604161
+end
+if eq p 348
+ret 402653178
+end
+if eq p 352
+ret 3533832220
+end
+if eq p 356
+ret 3533836304
+end
+if eq p 360
+ret 2432696863
+end
+if eq p 364
+ret 2550136790
+end
+if eq p 368
+ret 3531606952
+end
+if eq p 372
+ret 3556769793
+end
+ret 0
+end
+
+note Integer register subset X0..X17 plus XZR. X18 and X19..X30 refused.
+note X30 only appears in the exact RET instruction handled separately.
+fn reg r ulong to bool
+ret or le r 17 eq r 31
+end
+
+note Strict operation masks: no memory, indirect branches, FP, system registers,
+note SP, ADR/ADRP, calls, literals, or extension forms outside these patterns.
+fn integer w ulong to bool
+d = and w 31
+s = and shr w 5 31
+t = and shr w 16 31
+if not reg d
+ret false
+end
+note 64-bit MOVN/MOVZ/MOVK. All four halfwords allowed.
+a = and w 4286578688
+if or eq a 2457862144 or eq a 3531603968 eq a 4068474880
+ret le d 17
+end
+if not reg s
+ret false
+end
+note ADD/SUB immediate: Rn=31 means SP, so forbidden. Rd=31 only for flags.
+a = and w 4290772992
+if or eq a 2432696320 or eq a 2969567232 or eq a 3506438144 eq a 4043309056
+if eq s 31
+ret false
+end
+ret or le d 17 ne and w 536870912 0
+end
+note SBFM/UBFM, 64-bit fields only.
+a = and w 4290772992
+if or eq a 2470445056 eq a 3544186880
+ret le d 17
+end
+note CSET only, XZR operands fixed and condition <=13.
+if eq and w 4294905824 2594113504
+ret and le d 17 le and shr w 12 15 13
+end
+if not reg t
+ret false
+end
+note Unshifted 32/64 ADD/ADDS/SUB/SUBS and logical operations.
+a = and w 4292934656
+if or eq a 2332033024 or eq a 2868903936 or eq a 3405774848 eq a 3942645760
+ret true
+end
+if or eq a 184549376 or eq a 721420288 or eq a 1258291200 eq a 1795162112
+ret true
+end
+if or eq a 2315255808 or eq a 2852126720 eq a 3388997632
+ret true
+end
+note UDIV/SDIV, variable shifts, MUL with Ra=XZR, all 64-bit.
+if or eq a 2596276224 or eq a 2596277248 eq a 2596282368
+ret le d 17
+end
+if or eq a 2596283392 or eq a 2596284416 eq a 2600500224
+ret le d 17
+end
+note 32-bit MUL.
+if eq a 453016576
+ret le d 17
+end
+ret false
+end
+
+note Signed branch displacement encoded as unsigned modular arithmetic.
+fn target p ulong x ulong bits ulong to ulong
+lim = shl ulong 1 bits
+if ge x shr lim 1
+ret sub p mul sub lim x 4
+end
+ret add p mul x 4
+end
+
+fn branch q ulong e ulong to void
+if or lt q 180 ge q e
+exit 27
+end
+note Never branch into the SVC half of an exit pair.
+if eq rd q 3556769793
+exit 27
+end
+end
+
+fn leaf e ulong to void
+note The body may not fall through into startup and call itself accidentally.
+last = rd sub e 4
+if and ne last 3596551104 ne last 3556769793
+if ne and last 4227858432 335544320
+exit 26
+end
+end
+p = ulong 180
+while lt p e
+w = rd p
+if eq w 3556769793
+if or eq p 180 ne rd sub p 4 3531606952
+exit 26
+end
+else
+if eq w 3531606952
+if or ge add p 4 e ne rd add p 4 3556769793
+exit 26
+end
+else
+if ne w 3596551104
+if eq and w 4227858432 335544320
+branch target p and w 67108863 26 e
+else
+if eq and w 4278190096 1409286144
+if gt and w 15 13
+exit 26
+end
+branch target p and shr w 5 524287 19 e
+else
+if or eq and w 4278190080 3019898880 eq and w 4278190080 3036676096
+if not reg and w 31
+exit 26
+end
+branch target p and shr w 5 524287 19 e
+else
+if not integer w
+exit 26
+end
+end
+end
+end
+end
+end
+end
+p = add p 4
+end
+end
+
+note Fixed output layout: 16KB header padding, copied payload at 16KB,
+note RX text 32KB, 16-byte read-only LINKEDIT. Signing is a separate host step.
+fn macho n ulong e ulong to void
+wr 0 4277009103
+wr 4 16777228
+wr 12 2
+wr 16 11
+wr 20 608
+wr 24 2097285
+note PAGEZERO command, 4GB.
+wr 32 25
+wr 36 72
+for i ulong len pzero
+put out add 40 i get pzero i
+end
+wr 68 1
+note TEXT segment with one section.
+wr 104 25
+wr 108 152
+for i ulong len ptext
+put out add 112 i get ptext i
+put out add 192 i get ptext i
+end
+wr 132 1
+wr 136 32768
+wr 152 32768
+wr 160 5
+wr 164 5
+wr 168 1
+for i ulong len stext
+put out add 176 i get stext i
+end
+wr 208 16384
+wr 212 1
+wr 216 add sub n 176 16
+wr 224 16384
+wr 228 2
+wr 240 2147484672
+note LINKEDIT segment.
+wr 256 25
+wr 260 72
+for i ulong len plink
+put out add 264 i get plink i
+end
+wr 280 32768
+wr 284 1
+wr 288 16384
+wr 296 32768
+wr 304 16
+wr 312 1
+wr 316 1
+note DYLD_INFO_ONLY with no rebase/bind/export data.
+wr 328 2147483682
+wr 332 48
+note SYMTAB, empty symbols, 16-byte empty string table.
+wr 376 2
+wr 380 24
+wr 384 32768
+wr 392 32768
+wr 396 16
+note DYSYMTAB, all counts zero.
+wr 400 11
+wr 404 80
+note LOAD_DYLINKER /usr/lib/dyld.
+wr 480 14
+wr 484 32
+wr 488 12
+for i ulong len dyld
+put out add 492 i get dyld i
+end
+note LOAD_DYLIB /usr/lib/libSystem.B.dylib.
+wr 512 12
+wr 516 56
+wr 520 24
+wr 528 65536
+wr 532 65536
+for i ulong len system
+put out add 536 i get system i
+end
+note BUILD_VERSION, macOS 11.0 minimum and SDK.
+wr 568 50
+wr 572 24
+wr 576 1
+wr 580 720896
+wr 584 720896
+note Deterministic UUID assigned to this format revision.
+wr 592 27
+wr 596 24
+wr 600 892417100
+wr 604 1634166095
+wr 608 1261654605
+wr 612 1
+note MAIN points at adapted bootstrap. Kernel/dyld owns stack allocation.
+wr 616 2147483688
+wr 620 24
+wr 624 add 16384 sub e 176
+for i ulong sub n 176
+put out add 16384 i get inp add 176 i
+end
+note Keep OS stack; X28=0 is the hello stack-check floor. No memory leaf uses it.
+a = add 16384 sub e 176
+wr a 3531603996
+wr add a 4 3573751839
+wr add a 8 3573751839
+note Convert only fully validated Linux exit pairs, no arbitrary syscall patch.
+p = ulong 180
+while lt p n
+if eq rd p 3531606952
+wr add 16384 sub p 176 3531604016
+wr add 16384 sub add p 4 176 3556773889
+end
+p = add p 4
+end
+end
+
+fn adapthello n ulong to void
+note Absolute Linux text materialization becomes PC-relative ADR X1 to text.
+wr 16472 285212001
+wr 16476 3573751839
+note BL write thunk, followed by NOP. Original save/restore protects X30.
+t = add 16384 sub n 176
+p = ulong 16492
+wr p or 2483027968 shr sub t p 2
+wr add p 4 3573751839
+note Darwin write X16=4, SVC80, CNEG X0,X0,CS, RET.
+wr t 3531604112
+wr add t 4 3556773889
+wr add t 8 3665835008
+wr add t 12 3596551104
+end
+
+fn main to int
+n = ulong 0
+for i ulong 16386
+r = read 0 inp n sub len inp n
+if lt r 0
+exit 20
+end
+if eq r 0
+if or lt n 212 or gt n 16384 ne and n 3 0
+exit 21
+end
+if ne rd 0 1179403647
+exit 22
+end
+if ne and rd 16 4294901760 11993088
+exit 23
+end
+checkhdr n
+e = sub n 24
+if or ne rd e 3533832220 ne rd add e 4 3533836304
+exit 25
+end
+if ne rd add e 8 2432696863
+exit 25
+end
+if or ne rd sub n 8 3531606952 ne rd sub n 4 3556769793
+exit 25
+end
+if ne rd 176 or 335544320 shr sub e 176 2
+exit 25
+end
+b = rd add e 12
+if ne and b 4227858432 2483027968
+exit 25
+end
+m = target add e 12 and b 67108863 26
+h = eq m 196
+if h
+if ne n 376
+exit 28
+end
+p = ulong 176
+while lt p n
+if ne rd p hello p
+exit 28
+end
+p = add p 4
+end
+else
+if ne m 180
+exit 25
+end
+leaf e
+end
+macho n e
+if h
+adapthello n
+end
+p = ulong 0
+while lt p len out
+w = write 1 out p sub len out p
+if le w 0
+exit 29
+end
+p = add p ulong w
+end
+ret 0
+end
+n = add n ulong r
+if ge n len inp
+exit 21
+end
+end
+ret 21
+end

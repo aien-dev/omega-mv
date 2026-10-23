@@ -1,0 +1,4 @@
+global buf uchar 16
+fn main to long
+ret read int 0 buf ulong 0 ulong 16
+end

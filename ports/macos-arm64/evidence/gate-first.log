@@ -1,0 +1,55 @@
+PASS native Linux seed fixture return42 exit 42
+PASS target return42: independent format + byte preservation + LLVM
+PASS native Linux seed fixture sum exit 45
+PASS target sum: independent format + byte preservation + LLVM
+PASS native Linux seed fixture branch exit 23
+PASS target branch: independent format + byte preservation + LLVM
+PASS native Linux seed fixture overflow exit 101
+PASS target overflow: independent format + byte preservation + LLVM
+PASS native Linux seed fixture bitwise exit 58
+PASS target bitwise: independent format + byte preservation + LLVM
+PASS native Linux seed fixture divide exit 25
+PASS target divide: independent format + byte preservation + LLVM
+PASS native Linux seed fixture divzero exit 102
+PASS target divzero: independent format + byte preservation + LLVM
+PASS native Linux seed fixture shift exit 24
+PASS target shift: independent format + byte preservation + LLVM
+PASS native Linux seed fixture hello exit 0
+PASS target hello: independent format + byte preservation + LLVM
+PASS empty
+PASS truncated header
+PASS truncated program
+PASS partial word
+PASS oversized
+PASS wrong magic
+PASS wrong ISA
+PASS wrong endian
+PASS claimed relocation table
+PASS ELF entry address
+PASS segment size
+PASS global storage
+PASS bootstrap stack
+PASS bootstrap branch
+PASS bootstrap call
+PASS unknown instruction
+PASS memory instruction
+PASS Apple reserved X18
+PASS callee saved X19
+PASS SP immediate
+PASS indirect branch
+PASS unknown syscall
+PASS branch out of body
+PASS conditional branch into bootstrap
+PASS branch before body
+PASS changed hello literal
+PASS changed hello syscall fd
+PASS changed hello syscall number
+PASS changed hello address
+PASS compiled memory-unsupported
+PASS compiled call-unsupported
+PASS compiled stdin-unsupported
+PASS hello exact-template byte closure (156 single-byte mutations)
+PASS compiled control-linux-exit caught by independent semantic oracle
+PASS compiled control-wrong-entry caught by independent semantic oracle
+PASS compiled control-wrong-error caught by independent semantic oracle
+PASS 54 checks; 9 Linux native fixtures; 3 compiled controls; macOS NOT_RUN
