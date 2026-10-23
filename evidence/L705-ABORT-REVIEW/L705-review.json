@@ -1,0 +1,70 @@
+{
+  "id": "L705",
+  "status": "OPEN_FOR_PARENT_DISPOSITION",
+  "review_head": "8d2afd87289ce457c04104a5b9b180796a956d2c",
+  "runtime_head": "26b15c01480cd3617ca99a84c9d9c05be89bf430",
+  "baseline": "be37dccaf5e73da735256a6cdae96a9b4f7c19ef",
+  "prior_review": "7ccc00f8bc4c9e6438c75448cb6b71e985a3160d",
+  "runtime_verdict": "ACCEPT_HOST_SCOPE",
+  "dispatch_verdict": "HOLD",
+  "full_author_qualification": "FAILED_NEW_CONTROLS_MAKE_EXIT2_WRAPPER_EXIT1",
+  "integration_verdict": "HOLD_NOT_APPROVED",
+  "findings": [
+    {
+      "id": "L705-F1",
+      "severity": "P2",
+      "file": "tests/osh/e2e/exit_abort_status_mutants.mjs",
+      "line": 28,
+      "related_line": 29,
+      "summary": "Remaining serial sanitizer compiled-control runner fails required qualification before complete observations",
+      "observed": "new-controls Make exit2, parent wrapper exit1; ENOENT no-restore-sanitizer-cases/results.json; plain no-restore exact112 failures normal assertion exit1 completed",
+      "cause_inference": "180000ms aggregate spawnSync deadline remains around504 sanitizer comparisons; same-source positive sanitizer leaf completed in283.48s. ETIMEDOUT is not preserved by the driver before readFileSync, so timeout attribution is inferred, not a captured error field.",
+      "repro": "timeout 1800s quiet-build make --no-print-directory -j2 OUT_DIR=/home/drakestapleton/workspace/targets/L611-qualification-8d2afd87/build test-osh-exit-abort-mutants (actual parent run, not reviewer rerun)",
+      "recommendation": "Parent split or shard compiled-control execution, retain all504 identities/exact failure assertions and20s process bounds, preserve runner abnormal status before reading results, then complete qualification"
+    }
+  ],
+  "independent": {
+    "old_comparisons": 108,
+    "old_exact_normal_failures": 28,
+    "fixed_plain_pass": 108,
+    "fixed_sanitizer_pass": 108,
+    "embedded_boundaries_pass": 18,
+    "real_controlling_pty_sessions_pass": 6,
+    "real_pilot_observations_verified": 1224,
+    "programs": 68,
+    "independent_synthetic_coverage_controls": 9
+  },
+  "inherited": {
+    "compiled_controls_inspected": 12,
+    "unchanged_inputs": 251,
+    "original_regression_exit": 0,
+    "full_changed_source_regression_rerun": false
+  },
+  "not_run": [
+    "L611 new compiled control matrix by this reviewer",
+    "combined canonical omega-host integration",
+    "native AIENOS/QEMU",
+    "current35B/model/shared-train/hardware",
+    "remaining original qualification phases after failed new-controls"
+  ],
+  "unmeasured": [
+    "performance",
+    "energy"
+  ],
+  "retained_failures": [
+    "parent original aggregate 600s timeout124",
+    "L601 old12/1224 failures",
+    "own old28/108 disagreements",
+    "own initial metadata scope audit1",
+    "own initial Make wrapper compile2",
+    "own initial EOF workspace expectation1",
+    "own initial summary filter audit1",
+    "actual parent new-controls Make2/wrapper1, missing sanitizer results; no behavioral kill"
+  ],
+  "publication": {
+    "repository": "aien-dev/omega-mv",
+    "branch": "issues/osh-abort-corrective-review-20261022",
+    "commit": "RECORDED_IN_EXTERNAL_HANDOFF_AFTER_COMMIT",
+    "approval": "desk REVIEW only; no merge or closure"
+  }
+}
