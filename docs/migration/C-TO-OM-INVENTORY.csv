@@ -1,0 +1,1006 @@
+path,extension,category,bytes,lines,literal_build_mentions,reason
+bench/prime_race/cpu_base.c,.c,tools_tests_bench_research,4294,128,,Tool/test/benchmark/research/calibration source; not a production exemption.
+bench/prime_race/gb10_native.c,.c,tools_tests_bench_research,15091,309,mk/prime_race_gb10.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+bench/prime_race/prime_race_impl.c,.c,tools_tests_bench_research,11860,292,,Tool/test/benchmark/research/calibration source; not a production exemption.
+bench/prime_race/prime_race_impl.h,.h,tools_tests_bench_research,4003,88,,Tool/test/benchmark/research/calibration source; not a production exemption.
+bench/prime_race/tests/gb10_launch_cost.c,.c,tools_tests_bench_research,7666,138,,Tool/test/benchmark/research/calibration source; not a production exemption.
+bench/prime_race/tests/gb10_sieve_host_test.c,.c,tools_tests_bench_research,48168,801,,Tool/test/benchmark/research/calibration source; not a production exemption.
+bench/prime_race/tests/prime_race_host_test.c,.c,tools_tests_bench_research,11480,248,,Tool/test/benchmark/research/calibration source; not a production exemption.
+calibration/scripts/power_simulation.c,.c,tools_tests_bench_research,17259,357,mk/turing_exp001_a.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+docs/osc/audit/baseline/shim.c,.c,historical_evidence,4414,106,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/CODEPAD-PREFETCH-f1d57c5/hd64-regression/gpu_attention_test.c,.c,historical_evidence,66702,849,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/CODEPAD-PREFETCH-f1d57c5/hd64-regression/omega_gpu_attention_api.c,.c,historical_evidence,48584,892,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/CODEPAD-PREFETCH-f1d57c5/hd64-regression/omega_gpu_attention_api.h,.h,historical_evidence,12545,205,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/CODEPAD-PREFETCH-f1d57c5/red-green-probe/va_camera.c,.c,historical_evidence,6036,81,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4-0d0241a/gpu_elementwise_test.c,.c,historical_evidence,22133,329,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4-0d0241a/omega_gpu_elementwise_api.c,.c,historical_evidence,34462,657,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4-0d0241a/omega_gpu_elementwise_api.h,.h,historical_evidence,6470,124,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4-ac0d42c/gpu_elementwise_test.c,.c,historical_evidence,18382,278,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4-ac0d42c/omega_gpu_elementwise_api.c,.c,historical_evidence,34064,653,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4-ac0d42c/omega_gpu_elementwise_api.h,.h,historical_evidence,6470,124,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/gpu_attention_test.c,.c,historical_evidence,40881,555,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/gpu_elementwise_test.c,.c,historical_evidence,27042,386,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/gpu_matmul_api_test.c,.c,historical_evidence,18620,258,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/omega_gpu_attention_api.c,.c,historical_evidence,39790,748,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/omega_gpu_attention_api.h,.h,historical_evidence,9736,171,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/omega_gpu_elementwise_api.c,.c,historical_evidence,30661,615,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/omega_gpu_elementwise_api.h,.h,historical_evidence,7134,134,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/omega_gpu_matmul_api.c,.c,historical_evidence,16474,375,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/omega_gpu_session.c,.c,historical_evidence,11628,224,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-0396844/omega_gpu_session.h,.h,historical_evidence,6112,125,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-88f3f59-probe/gpu_session_probe.c,.c,historical_evidence,2996,56,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT4B-88f3f59-probe/omega_gpu_session.c,.c,historical_evidence,11628,224,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-HD128-7dd92dc/FB1-CUT5-7dd92dc/gpu_attention_test.c,.c,historical_evidence,76442,972,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-HD128-7dd92dc/FB1-CUT5-7dd92dc/omega_gpu_attention_api.c,.c,historical_evidence,50781,909,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-HD128-7dd92dc/FB1-CUT5-7dd92dc/omega_gpu_attention_api.h,.h,historical_evidence,13310,214,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-b016322/gpu_attention_test.c,.c,historical_evidence,36184,498,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-b016322/omega_gpu_attention_api.c,.c,historical_evidence,43375,776,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-b016322/omega_gpu_attention_api.h,.h,historical_evidence,9114,161,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-cd80bf4/gpu_attention_test.c,.c,historical_evidence,59944,760,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-cd80bf4/omega_gpu_attention_api.c,.c,historical_evidence,44728,823,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/FB1-CUT5-cd80bf4/omega_gpu_attention_api.h,.h,historical_evidence,12188,199,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/attention/FB1-CUT5-710d438c/gpu_attention_test.c,.c,historical_evidence,94338,1182,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/attention/FB1-CUT5-710d438c/omega_gpu_attention_api.c,.c,historical_evidence,87411,1436,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/attention/FB1-CUT5-710d438c/omega_gpu_attention_api.h,.h,historical_evidence,20358,290,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/gpu_attention_test.c,.c,historical_evidence,94338,1182,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/gpu_elementwise_test.c,.c,historical_evidence,27174,387,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/gpu_matmul_api_test.c,.c,historical_evidence,38567,505,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_attention_api.c,.c,historical_evidence,87411,1436,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_attention_api.h,.h,historical_evidence,20358,290,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_elementwise_api.c,.c,historical_evidence,59977,1139,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_elementwise_api.h,.h,historical_evidence,11048,183,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_fmt.c,.c,historical_evidence,2349,65,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_matmul_api.c,.c,historical_evidence,27827,538,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_platform.c,.c,historical_evidence,9268,192,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_platform_linux.c,.c,historical_evidence,16092,349,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_session.c,.c,historical_evidence,25863,542,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_session.h,.h,historical_evidence,14990,253,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/probe/gpu_session_probe.c,.c,historical_evidence,2996,56,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/probe/omega_gpu_platform.c,.c,historical_evidence,9268,192,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/probe/omega_gpu_platform_linux.c,.c,historical_evidence,16092,349,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/probe/omega_gpu_session.c,.c,historical_evidence,25863,542,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/elementwise/FB1-CUT4-710d438c/gpu_elementwise_test.c,.c,historical_evidence,27174,387,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/elementwise/FB1-CUT4-710d438c/omega_gpu_elementwise_api.c,.c,historical_evidence,59977,1139,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/elementwise/FB1-CUT4-710d438c/omega_gpu_elementwise_api.h,.h,historical_evidence,11048,183,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/reconv/GPU-RECONV-710d438c/bw_warp_sim.h,.h,historical_evidence,20836,318,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/reconv/GPU-RECONV-710d438c/gpu_reconv_test.c,.c,historical_evidence,32836,472,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/reconv/GPU-RECONV-710d438c/omega_blackwell_codegen.c,.c,historical_evidence,144041,2528,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/reconv/GPU-RECONV-710d438c/omega_bw_reconv.h,.h,historical_evidence,4242,83,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/reconv/GPU-RECONV-710d438c/omega_gpu_elementwise_api.c,.c,historical_evidence,59977,1139,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/reconv/GPU-RECONV-710d438c/omega_gpu_elementwise_api.h,.h,historical_evidence,11048,183,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/omega457/src/l2_stale_test.c,.c,historical_evidence,6456,105,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/WIDEPF-460-CHIP-7e041401/widepf_repro.c,.c,historical_evidence,7291,125,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/bw_warp_sim.h,.h,historical_evidence,19167,313,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/gpu_reconv_test.c,.c,historical_evidence,32700,470,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/omega_blackwell_codegen.c,.c,historical_evidence,99619,1945,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/omega_bw_reconv.h,.h,historical_evidence,4242,83,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/omega_gpu_elementwise_api.c,.c,historical_evidence,59968,1139,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/omega_gpu_elementwise_api.h,.h,historical_evidence,10599,177,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/bw_warp_sim.h,.h,historical_evidence,19167,313,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/gpu_reconv_test.c,.c,historical_evidence,32700,470,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/omega_blackwell_codegen.c,.c,historical_evidence,99619,1945,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/omega_bw_reconv.h,.h,historical_evidence,4242,83,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/omega_gpu_elementwise_api.c,.c,historical_evidence,59968,1139,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/omega_gpu_elementwise_api.h,.h,historical_evidence,10599,177,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4-0a1812f/gpu_elementwise_test.c,.c,historical_evidence,27042,386,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4-0a1812f/omega_gpu_elementwise_api.c,.c,historical_evidence,59968,1139,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4-0a1812f/omega_gpu_elementwise_api.h,.h,historical_evidence,10599,177,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/gpu_attention_test.c,.c,historical_evidence,66702,849,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/gpu_elementwise_test.c,.c,historical_evidence,27042,386,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/gpu_matmul_api_test.c,.c,historical_evidence,18620,258,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_attention_api.c,.c,historical_evidence,48579,892,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_attention_api.h,.h,historical_evidence,12545,205,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_elementwise_api.c,.c,historical_evidence,59968,1139,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_elementwise_api.h,.h,historical_evidence,10599,177,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_matmul_api.c,.c,historical_evidence,16474,375,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_session.c,.c,historical_evidence,12604,241,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_session.h,.h,historical_evidence,6462,129,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/probe/gpu_session_probe.c,.c,historical_evidence,2996,56,,Recorded evidence copy or audit baseline; preserve historical provenance.
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/probe/omega_gpu_session.c,.c,historical_evidence,12604,241,,Recorded evidence copy or audit baseline; preserve historical provenance.
+research/atemporal/at0/evaluator/gates/clean_control.c,.c,tools_tests_bench_research,874,20,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/gates/fortified_read_mutant.c,.c,tools_tests_bench_research,1375,27,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/gates/hidden_clock_mutant.c,.c,tools_tests_bench_research,1002,25,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/src/at0e.h,.h,tools_tests_bench_research,11765,258,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/src/at0e_big.c,.c,tools_tests_bench_research,11045,271,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/src/at0e_case.c,.c,tools_tests_bench_research,20487,388,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/src/at0e_main.c,.c,tools_tests_bench_research,11911,193,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/src/at0e_result.c,.c,tools_tests_bench_research,37193,529,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/src/at0e_shadow.c,.c,tools_tests_bench_research,8956,178,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/src/at0e_synth.c,.c,tools_tests_bench_research,17288,237,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/evaluator/src/at0e_text.c,.c,tools_tests_bench_research,6070,157,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/integration/at0_assemble.c,.c,tools_tests_bench_research,26854,511,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_case.c,.c,tools_tests_bench_research,25108,529,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_conditional.c,.c,tools_tests_bench_research,2464,59,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_constraint.c,.c,tools_tests_bench_research,7241,152,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_engine.c,.c,tools_tests_bench_research,4494,94,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_exact.c,.c,tools_tests_bench_research,17142,387,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_hamiltonian.c,.c,tools_tests_bench_research,3621,80,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_io.c,.c,tools_tests_bench_research,1959,52,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_main.c,.c,tools_tests_bench_research,2323,46,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_model.h,.h,tools_tests_bench_research,13902,272,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_observable.c,.c,tools_tests_bench_research,2235,53,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_output.c,.c,tools_tests_bench_research,4214,92,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_povm.c,.c,tools_tests_bench_research,3658,90,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/at0_state.c,.c,tools_tests_bench_research,3403,92,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at0/model/tests/test_model.c,.c,tools_tests_bench_research,42501,666,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/evaluator/gates/clean_control.c,.c,tools_tests_bench_research,902,20,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/evaluator/gates/counter_mutant.c,.c,tools_tests_bench_research,1334,34,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/evaluator/gates/hidden_clock_mutant.c,.c,tools_tests_bench_research,1022,25,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/evaluator/gates/raw_syscall_mutant.c,.c,tools_tests_bench_research,2042,46,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/at1_bn.c,.c,tools_tests_bench_research,17157,463,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/at1_case.c,.c,tools_tests_bench_research,26162,568,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/at1_exact.c,.c,tools_tests_bench_research,12495,307,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/at1_io.c,.c,tools_tests_bench_research,2027,58,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/at1_main.c,.c,tools_tests_bench_research,5112,120,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/at1_model.h,.h,tools_tests_bench_research,12770,253,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/at1_numeric.c,.c,tools_tests_bench_research,12299,277,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/at1_result.c,.c,tools_tests_bench_research,34643,689,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/atemporal/at1/model/tests/test_model.c,.c,tools_tests_bench_research,72920,1075,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/dirac-oracle/src/oracle_clifford.c,.c,tools_tests_bench_research,3726,101,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/m15/pmu/pmu_probe.c,.c,tools_tests_bench_research,3385,87,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/m15/spbm/aien_spbm_readonly.c,.c,tools_tests_bench_research,7862,237,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/m15/spbm/contract.h,.h,tools_tests_bench_research,2023,50,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/m15/spbm/contract_test.c,.c,tools_tests_bench_research,1126,27,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/m15/spbm/load.c,.c,tools_tests_bench_research,2803,73,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/m15/spbm/reduce.c,.c,tools_tests_bench_research,4143,74,,Tool/test/benchmark/research/calibration source; not a production exemption.
+research/m15/spbm/sample.c,.c,tools_tests_bench_research,4888,116,,Tool/test/benchmark/research/calibration source; not a production exemption.
+src/aarch64_decoder.c,.c,active_source_candidate,8132,246,Makefile;mk/compiler.mk;mk/searchtrace.mk;mk/one-layer-acceptance.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/aarch64_decoder.h,.h,active_source_candidate,1597,61,mk/compiler.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/aarch64_encoder.c,.c,active_source_candidate,12434,249,Makefile;mk/compiler.mk;mk/searchtrace.mk;mk/one-layer-acceptance.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/aarch64_encoder.h,.h,active_source_candidate,3479,49,mk/compiler.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/aarch64_target.h,.h,active_source_candidate,2438,67,mk/compiler.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/aegis_verification.c,.c,active_source_candidate,1487,37,,First-party source; active build family. Per-file production deployment NOT established.
+src/aegis_verification.h,.h,active_source_candidate,1234,33,,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_pack.c,.c,active_source_candidate,5226,139,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_pack.h,.h,active_source_candidate,2274,52,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_quant.c,.c,active_source_candidate,2836,71,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_quant.h,.h,active_source_candidate,2363,48,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_select.c,.c,active_source_candidate,13578,294,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_select.h,.h,active_source_candidate,6115,137,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_trit.c,.c,active_source_candidate,9543,272,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_trit.h,.h,active_source_candidate,4981,114,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_z3.c,.c,active_source_candidate,4304,141,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/oma_z3.h,.h,active_source_candidate,2153,52,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/phase_twin.c,.c,active_source_candidate,17074,474,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/phase_twin.h,.h,active_source_candidate,7031,173,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/realize_binary.c,.c,active_source_candidate,14305,334,Makefile;mk/polyglot.mk;mk/polyglot-asm.mk;mk/turing_yield_energy.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/realize_bitplane.c,.c,active_source_candidate,18053,405,Makefile;mk/polyglot.mk;mk/polyglot-asm.mk;mk/turing_yield_energy.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/realize_common.c,.c,active_source_candidate,3127,98,Makefile;mk/polyglot.mk;mk/polyglot-asm.mk;mk/turing_yield_energy.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/realize_common.h,.h,active_source_candidate,4343,98,Makefile;mk/polyglot.mk;mk/polyglot-asm.mk;mk/turing_yield_energy.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/realize_dense.c,.c,active_source_candidate,4903,113,Makefile;mk/polyglot.mk;mk/polyglot-asm.mk;mk/turing_yield_energy.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/realize_rns.c,.c,active_source_candidate,5002,122,Makefile;mk/polyglot.mk;mk/polyglot-asm.mk;mk/turing_yield_energy.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/algebra/realize_sparse.c,.c,active_source_candidate,3399,93,Makefile;mk/polyglot.mk;mk/polyglot-asm.mk;mk/turing_yield_energy.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/allen/allen_bind.c,.c,active_source_candidate,3699,121,mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/allen/allen_bind.h,.h,active_source_candidate,4090,85,mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/ans/ans.c,.c,active_source_candidate,13555,337,mk/ans.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/ans/ans.h,.h,active_source_candidate,12100,262,mk/ans.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/ans/ans_encode.c,.c,active_source_candidate,13971,358,mk/ans.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/autodiff/omega_autodiff.c,.c,active_source_candidate,22231,598,mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/autodiff/omega_autodiff.h,.h,active_source_candidate,10275,190,mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_blast.c,.c,active_source_candidate,16739,439,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_blast.h,.h,active_source_candidate,2978,60,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_check.c,.c,active_source_candidate,43385,919,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_ir.c,.c,active_source_candidate,16126,409,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_ir.h,.h,active_source_candidate,4680,135,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_lrat.c,.c,active_source_candidate,10547,298,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_lrat.h,.h,active_source_candidate,3178,65,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_receipt.c,.c,active_source_candidate,13595,308,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/c2_receipt.h,.h,active_source_candidate,9033,161,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/checker2_main.c,.c,active_source_candidate,22160,533,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/checker2/untrusted/c2sat.c,.c,active_source_candidate,8550,231,mk/checker2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/model/osc_model.c,.c,migration_reference,15830,431,mk/compiler.mk,Explicit reference oracle / retired selector or independent compiler model; still used by test/build targets.
+src/compiler/model/osc_model.h,.h,migration_reference,10947,229,,Explicit reference oracle / retired selector or independent compiler model; still used by test/build targets.
+src/compiler/model/osc_model_gen.c,.c,migration_reference,34894,794,mk/compiler.mk,Explicit reference oracle / retired selector or independent compiler model; still used by test/build targets.
+src/compiler/model/osc_model_gen.h,.h,migration_reference,2204,55,,Explicit reference oracle / retired selector or independent compiler model; still used by test/build targets.
+src/compiler/osc_a64.c,.c,active_source_candidate,18202,350,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_a64.h,.h,active_source_candidate,5626,125,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_alloc.c,.c,active_source_candidate,3657,122,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_alloc.h,.h,active_source_candidate,3725,71,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_cg.c,.c,active_source_candidate,23784,615,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_cg.h,.h,active_source_candidate,2517,56,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_check.c,.c,active_source_candidate,99987,2371,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_check.h,.h,active_source_candidate,3714,80,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_diag.c,.c,active_source_candidate,2754,76,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_diag.h,.h,active_source_candidate,5041,94,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_front.c,.c,active_source_candidate,4330,109,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_front.h,.h,active_source_candidate,3333,60,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_interp.c,.c,active_source_candidate,11888,259,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_interp.h,.h,active_source_candidate,2128,48,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_ir.c,.c,active_source_candidate,47586,945,mk/compiler.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_ir.h,.h,active_source_candidate,18678,326,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_lex.c,.c,active_source_candidate,9303,216,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_lex.h,.h,active_source_candidate,3084,75,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_lower.c,.c,active_source_candidate,25802,746,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_lower.h,.h,active_source_candidate,1451,37,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_native.c,.c,active_source_candidate,2407,69,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_native.h,.h,active_source_candidate,1991,48,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_parse.c,.c,active_source_candidate,43468,1195,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_parse.h,.h,active_source_candidate,8592,171,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_rt.c,.c,active_source_candidate,15448,352,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/osc_rt.h,.h,active_source_candidate,10559,205,,First-party source; active build family. Per-file production deployment NOT established.
+src/compiler/oscc_main.c,.c,active_source_candidate,7561,180,Makefile;mk/compiler.mk;mk/omega-emit.mk;mk/checker2.mk;mk/one-layer-acceptance.mk;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/crumbline/cl_common.c,.c,active_source_candidate,4562,151,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/crumbline/cl_common.h,.h,active_source_candidate,3399,97,,First-party source; active build family. Per-file production deployment NOT established.
+src/crumbline/cl_crumb.c,.c,active_source_candidate,6468,162,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/crumbline/cl_crumb.h,.h,active_source_candidate,2472,69,,First-party source; active build family. Per-file production deployment NOT established.
+src/crumbline/cl_program.c,.c,active_source_candidate,9712,292,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/crumbline/cl_program.h,.h,active_source_candidate,5776,138,,First-party source; active build family. Per-file production deployment NOT established.
+src/crumbline/cl_search.c,.c,active_source_candidate,14133,393,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/crumbline/cl_search.h,.h,active_source_candidate,4151,116,,First-party source; active build family. Per-file production deployment NOT established.
+src/dual/rx_dual.c,.c,active_source_candidate,26735,661,mk/dual.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual/rx_dual.h,.h,active_source_candidate,17072,320,mk/dual.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual/rx_dual_bind.c,.c,active_source_candidate,9399,184,mk/dual.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual/rx_dual_bind.h,.h,active_source_candidate,5597,97,mk/dual.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual/rx_dual_replay.c,.c,active_source_candidate,11646,273,mk/dual.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual/rx_dual_replay.h,.h,active_source_candidate,6993,133,mk/dual.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual/rx_dual_update.c,.c,active_source_candidate,6596,139,mk/dual.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual/rx_dual_update.h,.h,active_source_candidate,3337,62,mk/dual.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual_experiment/applic.h,.h,active_source_candidate,6736,145,mk/dual_applicability.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual_experiment/applic_metrics.c,.c,active_source_candidate,10303,227,mk/dual_applicability.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual_experiment/applic_params.h,.h,active_source_candidate,4772,102,mk/dual_applicability.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual_experiment/applic_predict.c,.c,active_source_candidate,5596,110,mk/dual_applicability.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/dual_experiment/applic_sim.c,.c,active_source_candidate,9588,247,mk/dual_applicability.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_kf.c,.c,active_source_candidate,13645,379,mk/estimation.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_kf.h,.h,active_source_candidate,3369,64,mk/estimation.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_mix.c,.c,active_source_candidate,6797,196,mk/estimation_v3_tools.mk;mk/estimation_v5.mk;mk/estimation_v6dev.mk;mk/estimation_v3.mk;mk/estimation_v4.mk;mk/estimation_tools.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_mix.h,.h,active_source_candidate,3152,64,mk/estimation_v3_tools.mk;mk/estimation.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_pred.c,.c,active_source_candidate,27794,766,mk/estimation_v3_tools.mk;mk/estimation_v5.mk;mk/estimation_v6dev.mk;mk/estimation_v3.mk;mk/estimation_v4.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_pred.h,.h,active_source_candidate,13312,269,mk/estimation_v3_tools.mk;mk/estimation_v3.mk;mk/estimation_v4.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_types.c,.c,active_source_candidate,23357,616,mk/estimation.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_types.h,.h,active_source_candidate,11292,233,mk/estimation.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_v4.c,.c,active_source_candidate,12895,354,mk/estimation_v5.mk;mk/estimation_v6dev.mk;mk/estimation_v4.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/estimation/est_v4.h,.h,active_source_candidate,6470,123,mk/estimation_v4.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/fabric/fab_dispatch.c,.c,active_source_candidate,4843,129,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/fabric/fab_dispatch.h,.h,active_source_candidate,5555,111,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/fabric/fab_hmac.c,.c,active_source_candidate,2481,63,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/fabric/fab_hmac.h,.h,active_source_candidate,1973,45,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/fabric/fab_loopback.c,.c,active_source_candidate,5053,143,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/fabric/fab_loopback.h,.h,active_source_candidate,3687,92,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/fabric/fabric.c,.c,active_source_candidate,22982,542,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/fabric/fabric.h,.h,active_source_candidate,15833,324,mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/forge_realization.c,.c,active_source_candidate,2434,58,,First-party source; active build family. Per-file production deployment NOT established.
+src/forge_realization.h,.h,active_source_candidate,2378,64,,First-party source; active build family. Per-file production deployment NOT established.
+src/language/omega_lex.c,.c,active_source_candidate,7968,213,,First-party source; active build family. Per-file production deployment NOT established.
+src/language/omega_lex.h,.h,active_source_candidate,2663,68,,First-party source; active build family. Per-file production deployment NOT established.
+src/language/omega_lower.c,.c,active_source_candidate,23220,507,,First-party source; active build family. Per-file production deployment NOT established.
+src/language/omega_lower.h,.h,active_source_candidate,4006,83,,First-party source; active build family. Per-file production deployment NOT established.
+src/language/omega_parse.c,.c,active_source_candidate,17151,445,,First-party source; active build family. Per-file production deployment NOT established.
+src/language/omega_parse.h,.h,active_source_candidate,4182,112,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_accelerator.c,.c,active_source_candidate,6156,159,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_accelerator.h,.h,active_source_candidate,6088,152,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_accelerator_world.c,.c,active_source_candidate,58060,1338,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_accelerator_world.h,.h,active_source_candidate,11677,307,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen.c,.c,active_source_candidate,145307,2555,Makefile;mk/tensor.mk;mk/autodiff.mk;mk/omega-gpu-engine.mk;mk/numeric-slices.mk;mk/program-fp32.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen.h,.h,active_source_candidate,21351,349,Makefile;mk/prime_race_gb10.mk;mk/omega-gpu-engine.mk;mk/numeric-slices.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_attn.c,.c,active_source_candidate,34942,565,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_attn.h,.h,active_source_candidate,6885,106,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_bf16.c,.c,active_source_candidate,16527,278,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_bf16.h,.h,active_source_candidate,4061,83,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_dec.c,.c,active_source_candidate,21703,384,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_dec.h,.h,active_source_candidate,5006,98,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_gemm.c,.c,active_source_candidate,22204,359,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_gemm.h,.h,active_source_candidate,4448,84,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_moe.c,.c,active_source_candidate,21899,344,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_moe.h,.h,active_source_candidate,7043,123,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_moe2.c,.c,active_source_candidate,22251,358,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_moe2.h,.h,active_source_candidate,4158,73,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_pattn.c,.c,active_source_candidate,37267,574,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_pattn.h,.h,active_source_candidate,6801,99,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_pf.c,.c,active_source_candidate,1871,38,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_pf.h,.h,active_source_candidate,1510,38,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_pfhost.c,.c,active_source_candidate,8841,161,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_pfhost.h,.h,active_source_candidate,3604,64,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_qg.c,.c,active_source_candidate,18473,286,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_qg.h,.h,active_source_candidate,5096,84,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_qmma.c,.c,active_source_candidate,9068,153,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_qmma.h,.h,active_source_candidate,3905,65,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_router.c,.c,active_source_candidate,24252,421,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_router.h,.h,active_source_candidate,6209,99,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_tc.c,.c,active_source_candidate,21904,357,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_tc.h,.h,active_source_candidate,8000,119,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_tc2.c,.c,active_source_candidate,14388,245,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_tc2.h,.h,active_source_candidate,4353,73,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_tern.c,.c,active_source_candidate,26174,436,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_codegen_tern.h,.h,active_source_candidate,7244,124,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_encoder.c,.c,active_source_candidate,6103,126,Makefile;mk/tensor.mk;mk/autodiff.mk;mk/omega-gpu-engine.mk;mk/numeric-slices.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_encoder.h,.h,active_source_candidate,1695,43,Makefile;mk/numeric-slices.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_engine.c,.c,active_source_candidate,25173,679,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_engine.h,.h,active_source_candidate,3504,71,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_gates.c,.c,active_source_candidate,69346,1533,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_gates.h,.h,active_source_candidate,1277,32,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_matmul.c,.c,active_source_candidate,6883,205,Makefile;mk/tensor.mk;mk/autodiff.mk;mk/omega-gpu-engine.mk;mk/numeric-slices.mk;mk/program-fp32.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_matmul.h,.h,active_source_candidate,4154,98,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_qmd.c,.c,active_source_candidate,11518,253,Makefile;mk/tensor.mk;mk/autodiff.mk;mk/omega-gpu-engine.mk;mk/numeric-slices.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_qmd.h,.h,active_source_candidate,3591,84,Makefile;mk/numeric-slices.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_realize.c,.c,active_source_candidate,2772,68,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_realize.h,.h,active_source_candidate,1828,51,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_submit.c,.c,active_source_candidate,32217,740,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blackwell_submit.h,.h,active_source_candidate,5097,111,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blake3.c,.c,active_source_candidate,5865,170,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_blake3.h,.h,active_source_candidate,1394,33,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_bw_em.h,.h,active_source_candidate,11941,161,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_bw_em_q.h,.h,active_source_candidate,1990,34,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_bw_reconv.h,.h,active_source_candidate,4896,99,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_canonical.c,.c,active_source_candidate,7872,225,Makefile;mk/turing_exp001_a.mk;mk/omega-gpu-engine.mk;mk/turing_yield_math.mk;mk/searchtrace.mk;mk/turing_yield_energy.mk;mk/turing_qrecord.mk;mk/one-layer-acceptance.mk;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_canonical.h,.h,active_source_candidate,1718,37,Makefile;mk/turing_yield_math.mk;mk/turing_yield_energy.mk;mk/turing_qrecord.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_codec.c,.c,active_source_candidate,11491,296,Makefile;mk/searchtrace.mk;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_codec.h,.h,active_source_candidate,1258,30,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_core.c,.c,active_source_candidate,16948,474,Makefile;mk/omega-gpu-engine.mk;mk/searchtrace.mk;mk/one-layer-acceptance.mk;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_core.h,.h,active_source_candidate,4527,83,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_discovery.c,.c,active_source_candidate,15563,359,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_discovery.h,.h,active_source_candidate,3441,88,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_evidence.c,.c,active_source_candidate,5636,180,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_evidence.h,.h,active_source_candidate,5678,129,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_exec.c,.c,active_source_candidate,6847,183,Makefile;mk/searchtrace.mk;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_exec.h,.h,active_source_candidate,1186,31,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_genesis.h,.h,active_source_candidate,3614,83,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_attention_api.c,.c,active_source_candidate,88065,1452,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_attention_api.h,.h,active_source_candidate,20358,290,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_bf16_gemv_api.c,.c,active_source_candidate,14713,291,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_bf16_gemv_api.h,.h,active_source_candidate,5738,108,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_cmdlist.c,.c,active_source_candidate,22555,385,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_cmdlist.h,.h,active_source_candidate,8333,127,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_code_alloc.h,.h,active_source_candidate,2489,52,mk/omega-gpu-code-alloc.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_decode_attn_api.c,.c,active_source_candidate,18243,295,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_decode_attn_api.h,.h,active_source_candidate,8069,124,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_decode_graph.c,.c,active_source_candidate,26750,428,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_decode_graph.h,.h,active_source_candidate,13717,204,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_elementwise_api.c,.c,active_source_candidate,60631,1155,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_elementwise_api.h,.h,active_source_candidate,11048,183,Makefile;mk/prime_race_gb10.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_engine.c,.c,active_source_candidate,18625,480,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_engine.h,.h,active_source_candidate,13754,274,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_fmt.c,.c,active_source_candidate,3003,81,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_fmt.h,.h,active_source_candidate,1324,26,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_fp8_api.c,.c,active_source_candidate,25278,432,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_fp8_api.h,.h,active_source_candidate,13372,198,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_fp8_pack.c,.c,active_source_candidate,3776,90,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_fp8gemm_api.c,.c,active_source_candidate,15200,272,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_fp8gemm_api.h,.h,active_source_candidate,5516,103,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_hostmath.c,.c,active_source_candidate,4402,98,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_hostmath.h,.h,active_source_candidate,1903,36,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_matmul_api.c,.c,active_source_candidate,33836,656,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_matmul_api.h,.h,active_source_candidate,13940,222,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_mem_cached.c,.c,active_source_candidate,2062,40,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_mem_cached.h,.h,active_source_candidate,1890,38,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_moe_api.c,.c,active_source_candidate,21646,440,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_moe_api.h,.h,active_source_candidate,8365,132,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_pfgemm.c,.c,active_source_candidate,12608,216,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_pfhost.c,.c,active_source_candidate,4568,75,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_pfhost.h,.h,active_source_candidate,2819,53,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_platform.c,.c,active_source_candidate,9922,208,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_platform.h,.h,active_source_candidate,15799,265,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_platform_linux.c,.c,active_source_candidate,19367,399,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_platform_linux.h,.h,active_source_candidate,2865,56,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_prefill.c,.c,active_source_candidate,10541,184,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_prefill.h,.h,active_source_candidate,8272,117,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_prefill_attn_api.c,.c,active_source_candidate,24067,411,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_prefill_attn_api.h,.h,active_source_candidate,6969,94,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_router_api.c,.c,active_source_candidate,16405,292,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_router_api.h,.h,active_source_candidate,6721,105,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_serving.c,.c,active_source_candidate,1915,41,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_serving.h,.h,active_source_candidate,3980,64,mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_session.c,.c,active_source_candidate,26675,559,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_session.h,.h,active_source_candidate,15937,272,Makefile;mk/prime_race_gb10.mk;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_tcgemm_api.c,.c,active_source_candidate,12058,204,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_tcgemm_api.h,.h,active_source_candidate,3514,68,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_tern_api.c,.c,active_source_candidate,19294,364,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_tern_api.h,.h,active_source_candidate,6919,121,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_wait.c,.c,active_source_candidate,6089,171,Makefile;mk/omega-gpu-engine.mk;mk/omega-gpu-wait.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_gpu_wait.h,.h,active_source_candidate,5468,116,mk/omega-gpu-engine.mk;mk/omega-gpu-wait.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_library.c,.c,active_source_candidate,9417,245,Makefile;mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_library.h,.h,active_source_candidate,4941,111,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_machine.c,.c,active_source_candidate,12132,316,Makefile;mk/searchtrace.mk;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_machine.h,.h,active_source_candidate,4111,124,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_matvec.c,.c,active_source_candidate,19581,459,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_matvec.h,.h,active_source_candidate,3859,107,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_matvec_quad.c,.c,active_source_candidate,5914,120,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_matvec_quad.h,.h,active_source_candidate,1705,41,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric.c,.c,active_source_candidate,82867,1592,Makefile;mk/tensor.mk;mk/autodiff.mk;mk/program-fp32.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric.h,.h,active_source_candidate,19941,440,Makefile;mk/tensor.mk;mk/autodiff.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_divsqrt_gb10.c,.c,active_source_candidate,87252,1654,Makefile;mk/numeric-lifecycle.mk;mk/program-fp32.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_divsqrt_gb10.h,.h,active_source_candidate,9026,164,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_gb10.c,.c,active_source_candidate,15144,333,mk/numeric-lifecycle.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_ldst_gb10.c,.c,active_source_candidate,22678,390,Makefile;mk/numeric-lifecycle.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_ldst_gb10.h,.h,active_source_candidate,5093,94,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_lifecycle.h,.h,active_source_candidate,2084,47,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_native.h,.h,active_source_candidate,2410,61,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_provenance.c,.c,active_source_candidate,14542,246,Makefile;mk/tensor.mk;mk/autodiff.mk;mk/program-fp32.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_provenance.h,.h,active_source_candidate,2748,63,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_reduce.c,.c,active_source_candidate,9134,218,Makefile;mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_reduce.h,.h,active_source_candidate,6531,132,Makefile;mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_reduce_gb10.c,.c,active_source_candidate,32610,581,Makefile;mk/numeric-lifecycle.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_transc.c,.c,active_source_candidate,21829,533,Makefile;mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_transc.h,.h,active_source_candidate,3496,71,Makefile;mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_numeric_transc_tables.h,.h,active_source_candidate,4733,48,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_physics_dir.h,.h,active_source_candidate,6055,136,mk/omegatool-path.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_program.c,.c,active_source_candidate,36544,809,Makefile;mk/searchtrace.mk;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_program.h,.h,active_source_candidate,8818,191,mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_program_fp32.c,.c,active_source_candidate,6333,125,mk/program-fp32.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_program_fp32.h,.h,active_source_candidate,2649,54,mk/program-fp32.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_program_ir.c,.c,active_source_candidate,4399,124,Makefile;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_program_ir.h,.h,active_source_candidate,2553,56,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_realize.c,.c,active_source_candidate,5155,136,Makefile;mk/searchtrace.mk;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_realize.h,.h,active_source_candidate,1709,45,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_realize_synth.c,.c,active_source_candidate,12944,302,Makefile;mk/searchtrace.mk;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_realize_synth.h,.h,active_source_candidate,4192,89,mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_receipt.c,.c,active_source_candidate,32428,711,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_receipt.h,.h,active_source_candidate,4347,86,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_resolve.c,.c,active_source_candidate,38055,767,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_resolve.h,.h,active_source_candidate,13043,217,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_resolve_osc.c,.c,active_source_candidate,1653,43,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_resolve_osc.h,.h,active_source_candidate,1666,39,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_self_host.c,.c,active_source_candidate,15631,394,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_self_host.h,.h,active_source_candidate,2095,51,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_synthesis.c,.c,active_source_candidate,16958,456,Makefile;mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_synthesis.h,.h,active_source_candidate,3147,96,mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_types.h,.h,active_source_candidate,6582,220,Makefile;mk/turing_yield_math.mk;mk/turing_yield_energy.mk;mk/turing_qrecord.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_unwritten_trap.c,.c,active_source_candidate,1717,46,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_unwritten_trap.h,.h,active_source_candidate,2263,50,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_validate.c,.c,active_source_candidate,11937,278,Makefile;mk/omega-gpu-engine.mk;mk/searchtrace.mk;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_validate.h,.h,active_source_candidate,959,25,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_vc_bridge.c,.c,active_source_candidate,12359,291,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_vc_bridge.h,.h,active_source_candidate,4633,84,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_vcstore.c,.c,active_source_candidate,30640,723,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_vcstore.h,.h,active_source_candidate,11703,224,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_vcstore_priv.h,.h,active_source_candidate,3060,58,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_vector.c,.c,active_source_candidate,4241,113,Makefile;mk/omega-gpu-engine.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_vector.h,.h,active_source_candidate,2110,54,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_verify.c,.c,active_source_candidate,12213,315,Makefile;mk/searchtrace.mk;mk/one-layer-acceptance.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_verify.h,.h,active_source_candidate,2635,69,,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_world_gates.c,.c,active_source_candidate,132129,2680,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/omega_world_gates.h,.h,active_source_candidate,1363,35,,First-party source; active build family. Per-file production deployment NOT established.
+src/oscv_main.c,.c,active_source_candidate,9374,217,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_builtin.c,.c,active_source_candidate,29739,704,mk/osh-host.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_caps.c,.c,active_source_candidate,9271,229,mk/osh-host.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_caps.h,.h,active_source_candidate,3880,76,mk/osh-host.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_codes.c,.c,active_source_candidate,2113,36,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_core.c,.c,active_source_candidate,3451,90,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_core.h,.h,active_source_candidate,2363,59,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_exec.c,.c,active_source_candidate,39344,874,mk/osh-host.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_host.h,.h,active_source_candidate,12162,225,mk/osh-host.mk;mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_journal.c,.c,active_source_candidate,23988,642,mk/osh-host.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_journal.h,.h,active_source_candidate,6734,109,mk/osh-host.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_main.c,.c,active_source_candidate,9601,205,,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_priv.h,.h,active_source_candidate,1652,32,mk/osh-host.mk;mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_req.c,.c,active_source_candidate,7587,188,mk/osh-host.mk;mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_shell.c,.c,active_source_candidate,11657,336,,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_shell.h,.h,active_source_candidate,2674,59,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/host/osh_vars.c,.c,active_source_candidate,7490,227,mk/osh-host.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/osh_expand_ref.c,.c,active_source_candidate,16290,430,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/osh_expand_ref.h,.h,active_source_candidate,3044,83,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/osh_layout.h,.h,generated,2657,98,mk/osh.mk,Header explicitly generated by src/osh/osh_gen.sh from osh_layout.lst; active ABI artifact.
+src/osh/osh_lex_ref.c,.c,active_source_candidate,19307,443,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/osh_lex_ref.h,.h,active_source_candidate,1910,48,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/osh_parse_ref.c,.c,active_source_candidate,8417,209,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/osh/osh_parse_ref.h,.h,active_source_candidate,2001,45,mk/osh.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/path/rx_path.c,.c,active_source_candidate,24321,599,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/path/rx_path.h,.h,active_source_candidate,9198,217,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/controls/pd0_controls.c,.c,active_source_candidate,5647,83,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/controls/pd0_controls.h,.h,active_source_candidate,2025,35,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/controls/pd0_receipt.c,.c,active_source_candidate,1923,39,mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/controls/pd0_receipt.h,.h,active_source_candidate,1161,27,mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/ladder/pd0_codes.c,.c,active_source_candidate,2608,36,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/ladder/pd0_codes.h,.h,active_source_candidate,3058,53,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/ladder/pd0_fmt.c,.c,active_source_candidate,21485,367,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/ladder/pd0_fmt.h,.h,active_source_candidate,7867,159,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/ladder/pd0_ladder.c,.c,active_source_candidate,40043,530,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/ladder/pd0_ladder.h,.h,active_source_candidate,3956,72,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/ladder/pd0_rng.h,.h,active_source_candidate,1846,45,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/learner/pd0_learner.c,.c,active_source_candidate,23460,300,mk/physics0-learner-v2.mk;mk/physics0-learner.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/learner/pd0_learner.h,.h,active_source_candidate,5153,86,mk/physics0-learner-v2.mk;mk/physics0-learner.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/learner/pd0_learner_main.c,.c,active_source_candidate,2491,41,mk/physics0-learner.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/learner_v2/pd0_learner.c,.c,active_source_candidate,32376,408,mk/physics0-learner-v2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/learner_v2/pd0_learner.h,.h,active_source_candidate,8645,131,mk/physics0-learner-v2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_chan.c,.c,active_source_candidate,2666,69,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_gen.c,.c,active_source_candidate,10715,260,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_gen.h,.h,active_source_candidate,4079,78,,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_guard.c,.c,active_source_candidate,1261,33,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_guard.h,.h,active_source_candidate,1728,40,,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_relation.c,.c,active_source_candidate,17872,397,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_relation.h,.h,active_source_candidate,5674,126,,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_rng.c,.c,active_source_candidate,1889,52,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_rng.h,.h,active_source_candidate,2536,58,,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_wire.c,.c,active_source_candidate,6877,149,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_wire.h,.h,active_source_candidate,4287,97,,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_world.c,.c,active_source_candidate,10588,241,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-planner.mk;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_world.h,.h,active_source_candidate,3482,82,,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/pd0_world_main.c,.c,active_source_candidate,1384,33,mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/planner/pd0_planner.c,.c,active_source_candidate,12243,284,mk/physics0-planner.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/planner/pd0_planner.h,.h,active_source_candidate,5748,111,mk/physics0-planner.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/regime/pd0_regime.c,.c,active_source_candidate,1632,36,mk/physics0-learner-v2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/regime/pd0_regime.h,.h,active_source_candidate,1731,32,mk/physics0-learner-v2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/score/pd0_score.c,.c,active_source_candidate,10374,134,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/physics0/score/pd0_score.h,.h,active_source_candidate,3146,50,mk/physics0-learner-v2.mk;mk/physics0-learner.mk;mk/physics0-verify.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_asm.c,.c,active_source_candidate,4694,115,mk/polyglot.mk;mk/polyglot-asm.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_bench.c,.c,active_source_candidate,11203,354,mk/polyglot.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_bench.h,.h,active_source_candidate,3955,83,mk/polyglot.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_encoder.c,.c,active_source_candidate,32927,830,mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_encoder.h,.h,active_source_candidate,3154,67,mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_encoder_ext.c,.c,active_source_candidate,13421,275,mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_encoder_ext.h,.h,active_source_candidate,6142,110,mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_lang.c,.c,active_source_candidate,5203,136,mk/polyglot.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/polyglot/omx_lang.h,.h,active_source_candidate,3332,76,mk/polyglot.mk;mk/polyglot-asm.mk;mk/polyglot-encoder.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/reservoir/omega_reservoir.c,.c,active_source_candidate,29373,656,mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/reservoir/omega_reservoir.h,.h,active_source_candidate,20471,384,mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/reservoir/omega_reservoir_readout.c,.c,active_source_candidate,5889,138,mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/reservoir/omega_reservoir_readout.h,.h,active_source_candidate,3820,79,mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/aien_machine_id.c,.c,active_source_candidate,3797,107,Makefile;mk/machine-identity.mk;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/aien_machine_id.h,.h,active_source_candidate,11779,271,Makefile;mk/machine-identity.mk;mk/dual_jspace_tap.mk;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/aienos_cap.h,.h,active_source_candidate,4693,112,Makefile;mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/omega_shared_world_abi.h,.h,active_source_candidate,15865,315,Makefile;mk/proof.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_aegis.c,.c,active_source_candidate,14925,361,Makefile;mk/visor-authority.mk;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_aegis.h,.h,active_source_candidate,7741,180,Makefile;mk/visor-authority.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_aien.c,.c,active_source_candidate,21064,500,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_aien.h,.h,active_source_candidate,8811,190,Makefile;mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_argus.c,.c,active_source_candidate,40537,991,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_argus.h,.h,active_source_candidate,10901,223,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_caller.h,.h,active_source_candidate,4602,102,Makefile;mk/proof.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_capq.c,.c,active_source_candidate,34096,853,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_capq.h,.h,active_source_candidate,21369,433,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_caproot.c,.c,active_source_candidate,25363,678,Makefile;mk/osh-host.mk;mk/osh.mk;mk/visor-authority.mk;mk/proof.mk;mk/allen.mk;mk/fabric.mk;mk/visor-world.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_caproot.h,.h,active_source_candidate,10007,250,Makefile;mk/osh-host.mk;mk/visor-authority.mk;mk/proof.mk;mk/visor-world.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_coherent.c,.c,active_source_candidate,36045,947,Makefile;mk/visor-authority.mk;mk/proof.mk;mk/allen.mk;mk/fabric.mk;mk/visor-world.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_compose.c,.c,active_source_candidate,58304,1318,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_compose.h,.h,active_source_candidate,20389,362,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_contract.c,.c,active_source_candidate,51860,1325,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_contract.h,.h,active_source_candidate,16650,366,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_cortex.c,.c,active_source_candidate,22127,638,Makefile;mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_cortex.h,.h,active_source_candidate,19239,392,Makefile;mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_cortex_record.c,.c,active_source_candidate,15126,402,Makefile;mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_cortex_record.h,.h,active_source_candidate,6209,118,Makefile;mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_costmodel.c,.c,active_source_candidate,19703,528,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_costmodel.h,.h,active_source_candidate,10273,208,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_fusion.c,.c,active_source_candidate,47058,1138,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_fusion.h,.h,active_source_candidate,14623,335,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_generation.c,.c,active_source_candidate,58386,1571,Makefile;mk/visor-authority.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_generation.h,.h,active_source_candidate,12572,284,Makefile;mk/visor-authority.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_graph.c,.c,active_source_candidate,80018,1962,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_graph.h,.h,active_source_candidate,23724,526,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_jspace.c,.c,active_source_candidate,78025,1978,Makefile;mk/dual_jspace_tap.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_jspace.h,.h,active_source_candidate,26284,529,Makefile;mk/dual_jspace_tap.mk;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_living.c,.c,active_source_candidate,39483,863,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_living.h,.h,active_source_candidate,13110,254,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_native_bind.c,.c,active_source_candidate,3172,71,Makefile;mk/allen.mk;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_omega.c,.c,active_source_candidate,39001,989,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_omega.h,.h,active_source_candidate,11396,243,Makefile;mk/allen.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_operator.c,.c,active_source_candidate,24141,565,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_operator.h,.h,active_source_candidate,4116,84,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_plan.c,.c,active_source_candidate,20859,572,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_plan.h,.h,active_source_candidate,13182,312,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_plan_arrange.c,.c,active_source_candidate,27224,673,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_plan_arrange.h,.h,active_source_candidate,5581,128,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_projection.c,.c,active_source_candidate,26587,762,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_projection.h,.h,active_source_candidate,12210,303,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_regulate.c,.c,active_source_candidate,7057,174,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_regulate.h,.h,active_source_candidate,6178,126,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_resident_gpu.c,.c,active_source_candidate,41804,1153,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_resident_gpu.h,.h,active_source_candidate,2682,56,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_route.c,.c,active_source_candidate,29993,805,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_route.h,.h,active_source_candidate,10710,233,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_semantic.c,.c,active_source_candidate,36127,962,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_semantic.h,.h,active_source_candidate,16091,372,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_semcomm.c,.c,active_source_candidate,25908,650,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_semcomm.h,.h,active_source_candidate,11005,271,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_seq_reference.c,.c,migration_reference,5066,128,Makefile,Explicit reference oracle / retired selector or independent compiler model; still used by test/build targets.
+src/runtime/rx_seq_reference.h,.h,migration_reference,3596,75,Makefile,Explicit reference oracle / retired selector or independent compiler model; still used by test/build targets.
+src/runtime/rx_skillroute.c,.c,active_source_candidate,11009,266,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_skillroute.h,.h,active_source_candidate,9010,169,Makefile;mk/fabric.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_world.c,.c,active_source_candidate,112191,2888,Makefile;mk/visor-authority.mk;mk/proof.mk;mk/allen.mk;mk/fabric.mk;mk/visor-world.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rx_world.h,.h,active_source_candidate,49220,1000,Makefile;mk/visor-authority.mk;mk/proof.mk;mk/allen.mk;mk/visor-world.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rxc_host_abi.c,.c,active_source_candidate,27121,706,mk/rx_compose_lib.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/runtime/rxc_host_abi.h,.h,active_source_candidate,16783,307,mk/rx_compose_lib.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/sig/aienos_sig.h,.h,active_source_candidate,2946,70,mk/checker2.mk;mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/sig/ct.c,.c,active_source_candidate,1330,37,mk/checker2.mk;mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/sig/ed25519.c,.c,active_source_candidate,18993,591,mk/checker2.mk;mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/sig/sha512.c,.c,active_source_candidate,5797,159,mk/checker2.mk;mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/sig/sig_internal.h,.h,active_source_candidate,1857,43,mk/checker2.mk;mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/st_corpus.c,.c,active_source_candidate,30835,617,mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/st_corpus.h,.h,active_source_candidate,2907,75,,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/st_holdout.c,.c,active_source_candidate,34074,1055,mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/st_holdout.h,.h,active_source_candidate,6093,126,mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/st_hook.h,.h,active_source_candidate,4698,99,,First-party source; active build family. Per-file production deployment NOT established.
+src/searchtrace/st_tool.c,.c,active_source_candidate,6467,165,mk/searchtrace.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/sha256.c,.c,active_source_candidate,5228,164,Makefile;mk/turing_exp001_a.mk;mk/tensor.mk;mk/dual_applicability.mk;mk/osh-host.mk;mk/physics0-learner-v2.mk;mk/autodiff.mk;mk/machine-identity.mk;mk/physics0-pd1.mk;mk/compiler.mk;mk/omega-emit.mk;mk/omega-gpu-engine.mk;mk/turing_exp001_eval.mk;mk/physics0-learner.mk;mk/turing_yield_math.mk;mk/polyglot.mk;mk/numeric-slices.mk;mk/checker2.mk;mk/searchtrace.mk;mk/turing_yield_energy.mk;mk/turing_qrecord.mk;mk/dual_jspace_tap.mk;mk/brownian_tps.mk;mk/physics0-planner.mk;mk/one-layer-acceptance.mk;mk/dual.mk;mk/estimation.mk;mk/physics0.mk;mk/proof.mk;mk/turing_exp001_c.mk;mk/turing_exp001_b.mk;mk/allen.mk;mk/brownian_active.mk;mk/fabric.mk;mk/visor-world.mk;mk/train.mk;mk/physics0-verify.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/sha256.h,.h,active_source_candidate,1209,37,Makefile;mk/tensor.mk;mk/dual_applicability.mk;mk/osh-host.mk;mk/autodiff.mk;mk/machine-identity.mk;mk/compiler.mk;mk/turing_exp001_eval.mk;mk/turing_yield_math.mk;mk/polyglot.mk;mk/numeric-slices.mk;mk/checker2.mk;mk/turing_yield_energy.mk;mk/turing_qrecord.mk;mk/dual_jspace_tap.mk;mk/brownian_tps.mk;mk/one-layer-acceptance.mk;mk/physics0.mk;mk/turing_exp001_c.mk;mk/turing_exp001_b.mk;mk/brownian_active.mk;mk/train.mk;mk/reservoir.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/tensor/omega_tensor.c,.c,active_source_candidate,51605,1247,mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/tensor/omega_tensor.h,.h,active_source_candidate,26406,455,mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/tensor/omega_tensor_cpu.c,.c,active_source_candidate,5756,111,mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/tensor/omega_tensor_gb10.c,.c,active_source_candidate,10626,210,,First-party source; active build family. Per-file production deployment NOT established.
+src/tensor/omega_tensor_reduce_seam.c,.c,active_source_candidate,1679,45,mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/tensor/omega_tensor_reduce_seam.h,.h,active_source_candidate,2140,49,mk/tensor.mk;mk/autodiff.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/tensor/omega_tensor_store.c,.c,active_source_candidate,24536,650,mk/tensor.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/tensor/omega_tensor_store.h,.h,active_source_candidate,6603,123,mk/tensor.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/train/tg_sgd.c,.c,active_source_candidate,2239,60,mk/train.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/train/tg_sgd.h,.h,active_source_candidate,1735,39,mk/train.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/train/tg_store.c,.c,active_source_candidate,28535,746,mk/train.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/train/tg_store.h,.h,active_source_candidate,8205,196,mk/train.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/field.c,.c,active_source_candidate,26282,666,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/field.h,.h,active_source_candidate,9087,219,Makefile;mk/turing_yield_energy.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/field_select.c,.c,active_source_candidate,9431,217,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/field_select_v0_retired.c,.c,migration_reference,10381,246,Makefile,Explicit reference oracle / retired selector or independent compiler model; still used by test/build targets.
+src/turing/history_selector.c,.c,active_source_candidate,6664,158,Makefile;mk/physics0.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/replay.c,.c,active_source_candidate,8012,203,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/select.h,.h,active_source_candidate,7126,150,Makefile,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_produce.c,.c,active_source_candidate,5486,162,mk/turing_exp001_eval.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_produce.h,.h,active_source_candidate,2260,46,mk/turing_exp001_eval.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_pstream.c,.c,active_source_candidate,16369,456,mk/turing_exp001_eval.mk;mk/brownian_tps.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_pstream.h,.h,active_source_candidate,7597,156,mk/turing_exp001_eval.mk;mk/brownian_tps.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_range.c,.c,active_source_candidate,7038,210,mk/turing_exp001_eval.mk;mk/brownian_tps.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_range.h,.h,active_source_candidate,2648,56,mk/turing_exp001_eval.mk;mk/brownian_tps.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_rans.c,.c,active_source_candidate,5882,163,mk/turing_exp001_eval.mk;mk/brownian_tps.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_rans.h,.h,active_source_candidate,2337,49,mk/turing_exp001_eval.mk;mk/brownian_tps.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/tc_tool.c,.c,active_source_candidate,13675,304,mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_ctr1.c,.c,active_source_candidate,5815,177,mk/turing_exp001_a.mk;mk/turing_exp001_eval.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_ctr1.h,.h,active_source_candidate,4497,96,mk/turing_exp001_a.mk;mk/turing_exp001_eval.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk;mk/turing_exp001_c.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_energy.c,.c,active_source_candidate,16076,351,mk/turing_yield_energy.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_energy.h,.h,active_source_candidate,7709,170,mk/turing_yield_energy.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_math.c,.c,active_source_candidate,6930,200,mk/turing_exp001_a.mk;mk/turing_exp001_eval.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk;mk/brownian_tps.mk;mk/turing_qcont.mk;mk/turing_exp001_b.mk;mk/brownian_active.mk;mk/turing_prd2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_math.h,.h,active_source_candidate,5286,107,mk/turing_exp001_a.mk;mk/turing_exp001_eval.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk;mk/brownian_tps.mk;mk/turing_qcont.mk;mk/turing_exp001_b.mk;mk/brownian_active.mk;mk/turing_prd2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_model.c,.c,active_source_candidate,14581,478,mk/turing_exp001_a.mk;mk/turing_exp001_eval.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_model.h,.h,active_source_candidate,3659,91,mk/turing_exp001_a.mk;mk/turing_exp001_eval.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk;mk/turing_exp001_b.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_prd.c,.c,active_source_candidate,4898,176,mk/turing_qcont.mk;mk/brownian_active.mk;mk/turing_prd2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_prd.h,.h,active_source_candidate,1573,36,mk/turing_qcont.mk;mk/brownian_active.mk;mk/turing_prd2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_prd2.c,.c,active_source_candidate,9566,321,mk/brownian_active.mk;mk/turing_prd2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_prd2.h,.h,active_source_candidate,2590,55,mk/brownian_active.mk;mk/turing_prd2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_profile.c,.c,active_source_candidate,3722,68,mk/turing_exp001_a.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_qcont.c,.c,active_source_candidate,4746,159,mk/brownian_tps.mk;mk/turing_qcont.mk;mk/brownian_active.mk;mk/turing_prd2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_qcont.h,.h,active_source_candidate,3229,74,mk/brownian_tps.mk;mk/turing_qcont.mk;mk/brownian_active.mk;mk/turing_prd2.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_qrecord.c,.c,active_source_candidate,30254,714,mk/turing_qrecord.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_qrecord.h,.h,active_source_candidate,9611,199,mk/turing_qrecord.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_record.c,.c,active_source_candidate,17700,465,mk/turing_exp001_a.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/turing/ty_record.h,.h,active_source_candidate,5859,137,mk/turing_exp001_a.mk;mk/turing_yield_math.mk;mk/turing_qrecord.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/rx/visor_world_rx.c,.c,active_source_candidate,4465,114,mk/visor-world.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor.c,.c,active_source_candidate,6143,170,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor.h,.h,active_source_candidate,5492,130,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_console.c,.c,active_source_candidate,22360,511,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_console.h,.h,active_source_candidate,7711,151,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_effect_request.c,.c,active_source_candidate,10172,264,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_effect_request.h,.h,active_source_candidate,4756,95,Makefile;mk/visor-authority.mk,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_evidence.c,.c,active_source_candidate,25836,643,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_evidence.h,.h,active_source_candidate,5328,104,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_machine.c,.c,active_source_candidate,14506,317,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_machine.h,.h,active_source_candidate,4267,113,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_parse_command.c,.c,active_source_candidate,7215,195,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_parse_command.h,.h,active_source_candidate,3998,97,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_realization.c,.c,active_source_candidate,34829,746,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_realization.h,.h,active_source_candidate,5588,120,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_semantic.c,.c,active_source_candidate,37963,928,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_semantic.h,.h,active_source_candidate,8511,202,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_verify.c,.c,active_source_candidate,24419,525,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_verify.h,.h,active_source_candidate,3836,96,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_world.c,.c,active_source_candidate,6017,139,,First-party source; active build family. Per-file production deployment NOT established.
+src/visor/visor_world.h,.h,active_source_candidate,5968,111,mk/visor-world.mk,First-party source; active build family. Per-file production deployment NOT established.
+tests/algebra/bench_mixed_algebra.c,.c,tools_tests_bench_research,27509,627,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/algebra/bench_select.c,.c,tools_tests_bench_research,11989,206,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/algebra/ma_digital_v1_gate.c,.c,tools_tests_bench_research,23203,518,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/algebra/test_ma_digital_bottom.c,.c,tools_tests_bench_research,12737,282,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/algebra/test_oma.c,.c,tools_tests_bench_research,46307,957,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/algebra/test_phase_twin.c,.c,tools_tests_bench_research,31690,625,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/algebra/test_realize.c,.c,tools_tests_bench_research,16459,350,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/ans/test_ans.c,.c,tools_tests_bench_research,21817,471,mk/ans.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/bench_rx_argus.c,.c,tools_tests_bench_research,7808,180,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/brownian/brw_act_reanalyse.c,.c,tools_tests_bench_research,4572,87,mk/brownian_active.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/brownian/brw_act_report.h,.h,tools_tests_bench_research,2050,48,mk/brownian_active.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/brownian/brw_active_dev0.c,.c,tools_tests_bench_research,28697,597,mk/brownian_active.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/brownian/test_brw_act_report.c,.c,tools_tests_bench_research,2672,59,mk/brownian_active.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/brownian/test_brw_active.c,.c,tools_tests_bench_research,13529,368,mk/brownian_active.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/brownian/test_brw_tps.c,.c,tools_tests_bench_research,17841,392,mk/brownian_tps.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/bw_hmma_model.h,.h,tools_tests_bench_research,4003,73,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/bw_qmma_model.h,.h,tools_tests_bench_research,4156,82,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/bw_warp_sim.h,.h,tools_tests_bench_research,21490,334,Makefile;mk/prime_race_gb10.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/bw_warp_sim_k.h,.h,tools_tests_bench_research,23069,345,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/bw_warp_sim_pa.h,.h,tools_tests_bench_research,26390,386,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/bw_warp_sim_tc.h,.h,tools_tests_bench_research,29452,417,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/checker2/producer/osc_emit_ir.c,.c,tools_tests_bench_research,2482,59,mk/checker2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/checker2/test_c2_blast.c,.c,tools_tests_bench_research,9529,240,mk/checker2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/checker2/test_c2_blast_native.c,.c,tools_tests_bench_research,18483,484,mk/checker2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/checker2/test_c2_ir.c,.c,tools_tests_bench_research,39862,1032,mk/checker2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/checker2/test_c2_lrat.c,.c,tools_tests_bench_research,6567,140,mk/checker2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/checker2/test_c2_receipt.c,.c,tools_tests_bench_research,18751,427,mk/checker2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/compiler/test_legacy_a64.c,.c,tools_tests_bench_research,29265,551,mk/compiler.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/compiler/test_osc_alloc.c,.c,tools_tests_bench_research,16257,381,mk/compiler.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/compiler/test_osc_backend.c,.c,tools_tests_bench_research,54187,1076,mk/compiler.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/compiler/test_osc_compiler.c,.c,tools_tests_bench_research,110833,2257,mk/compiler.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/compiler/test_osc_ir_decode.c,.c,tools_tests_bench_research,31170,622,mk/compiler.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/compiler/test_osc_model.c,.c,tools_tests_bench_research,18627,329,mk/compiler.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/dual_fixtures.h,.h,tools_tests_bench_research,3429,76,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/dual_ref.c,.c,tools_tests_bench_research,1305,33,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/dual_ref.h,.h,tools_tests_bench_research,1630,32,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/dual_traces.c,.c,tools_tests_bench_research,4253,92,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/dual_traces.h,.h,tools_tests_bench_research,1406,32,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/test_dual_bind.c,.c,tools_tests_bench_research,11004,157,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/test_dual_replay.c,.c,tools_tests_bench_research,24210,322,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/test_dual_types.c,.c,tools_tests_bench_research,27662,443,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual/test_dual_update.c,.c,tools_tests_bench_research,15120,223,mk/dual.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/dual_experiment/test_applic.c,.c,tools_tests_bench_research,8803,194,mk/dual_applicability.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/effect/test_effect_cap64.c,.c,tools_tests_bench_research,35459,704,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/estimation/est_ref_info.c,.c,tools_tests_bench_research,7674,257,mk/estimation.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/estimation/est_ref_info.h,.h,tools_tests_bench_research,2233,51,mk/estimation.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/estimation/test_est_kf.c,.c,tools_tests_bench_research,36585,756,mk/estimation.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/estimation/test_est_pred.c,.c,tools_tests_bench_research,41808,867,mk/estimation_v3.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/estimation/test_est_ref.c,.c,tools_tests_bench_research,20050,462,mk/estimation.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/estimation/test_est_types.c,.c,tools_tests_bench_research,32761,606,mk/estimation.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/estimation/test_est_v4.c,.c,tools_tests_bench_research,15503,379,mk/estimation_v4.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/fabric/fab_living_phase.h,.h,tools_tests_bench_research,26485,543,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/fabric/fabric_living_test.c,.c,tools_tests_bench_research,3860,96,mk/fabric.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/fabric/fabric_test.c,.c,tools_tests_bench_research,33068,683,mk/fabric.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/fake_m16_native.c,.c,tools_tests_bench_research,16379,474,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/fake_m16_native.h,.h,tools_tests_bench_research,8327,183,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_attention_test.c,.c,tools_tests_bench_research,94992,1198,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_bf16_gemv_test.c,.c,tools_tests_bench_research,19524,295,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_cmdlist_test.c,.c,tools_tests_bench_research,37552,480,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_decode_attn_test.c,.c,tools_tests_bench_research,35106,472,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_decode_graph_test.c,.c,tools_tests_bench_research,28134,371,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_elementwise_test.c,.c,tools_tests_bench_research,27828,403,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_fp8_api_test.c,.c,tools_tests_bench_research,47179,614,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_fp8gemm_test.c,.c,tools_tests_bench_research,27988,361,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_gpr_boundary_test.c,.c,tools_tests_bench_research,7929,101,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_l2_reuse_test.c,.c,tools_tests_bench_research,10235,136,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_l2_stale_test.c,.c,tools_tests_bench_research,7281,122,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_launch_cost_test.c,.c,tools_tests_bench_research,12390,170,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_lmhead_fp8_study.c,.c,tools_tests_bench_research,8338,134,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_matmul_api_test.c,.c,tools_tests_bench_research,53527,708,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_matmul_r4_receipt.c,.c,tools_tests_bench_research,24601,393,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_moe_window_test.c,.c,tools_tests_bench_research,23067,299,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_pf_mem_test.c,.c,tools_tests_bench_research,7620,122,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_pfgemm_test.c,.c,tools_tests_bench_research,24232,343,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_pfhost_test.c,.c,tools_tests_bench_research,17424,294,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_prefill_attn_test.c,.c,tools_tests_bench_research,47462,670,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_qgemm_test.c,.c,tools_tests_bench_research,30210,454,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_qmma_probe_test.c,.c,tools_tests_bench_research,21737,303,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_reconv_test.c,.c,tools_tests_bench_research,33490,488,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_router_test.c,.c,tools_tests_bench_research,26654,376,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_serving_alloc_count_test.c,.c,tools_tests_bench_research,41804,688,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_session_probe.c,.c,tools_tests_bench_research,3650,72,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_tc_peak_test.c,.c,tools_tests_bench_research,8772,115,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_tc_probe_test.c,.c,tools_tests_bench_research,14593,216,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_tcgemm_test.c,.c,tools_tests_bench_research,22142,339,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/gpu_tern_test.c,.c,tools_tests_bench_research,41977,626,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/language/test_language_v0.c,.c,tools_tests_bench_research,26285,545,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/model/model_check.c,.c,tools_tests_bench_research,4073,91,mk/proof.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/model/world_diff.c,.c,tools_tests_bench_research,30652,762,mk/proof.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/model/world_explore.c,.c,tools_tests_bench_research,4317,128,mk/proof.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/model/world_explore.h,.h,tools_tests_bench_research,1331,35,mk/proof.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/model/world_model.c,.c,tools_tests_bench_research,10919,316,mk/proof.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/model/world_model.h,.h,tools_tests_bench_research,4491,112,mk/proof.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/numeric_native/m16_native.h,.h,tools_tests_bench_research,980,25,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/numeric_native/other_launcher.c,.c,tools_tests_bench_research,800,21,mk/numeric-lifecycle.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/numeric_oracle.h,.h,tools_tests_bench_research,18226,432,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/omegatool_path/physics_dir_test.c,.c,tools_tests_bench_research,6044,112,mk/omegatool-path.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/one_layer/acceptance/ola.c,.c,tools_tests_bench_research,65879,1386,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/one_layer/acceptance/ola_runner.c,.c,tools_tests_bench_research,21268,506,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/one_layer/acceptance/sample/mkopir.c,.c,tools_tests_bench_research,2563,62,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/one_layer/acceptance/sample/mkoscir.c,.c,tools_tests_bench_research,1754,47,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/one_layer/exp445/gen_expected.c,.c,tools_tests_bench_research,3395,68,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/e2e/argprint.c,.c,tools_tests_bench_research,2194,59,mk/osh.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/e2e/test_osh_e2e.c,.c,tools_tests_bench_research,22286,405,mk/osh.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/host/test_osh_caps.c,.c,tools_tests_bench_research,21116,434,mk/osh-host.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/host/test_osh_host.c,.c,tools_tests_bench_research,95648,2314,mk/osh-host.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/host/test_osh_journal.c,.c,tools_tests_bench_research,50046,1214,mk/osh-host.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/osh_trace.c,.c,tools_tests_bench_research,12044,343,mk/osh.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/test_osh_expand.c,.c,tools_tests_bench_research,61625,1297,mk/osh.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/test_osh_lex.c,.c,tools_tests_bench_research,46308,990,mk/osh.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/osh/test_osh_parse.c,.c,tools_tests_bench_research,45676,998,mk/osh.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/path/test_path_identity.c,.c,tools_tests_bench_research,29083,636,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/learner/pd0_harness.c,.c,tools_tests_bench_research,29703,321,mk/physics0-learner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/learner/pd0_truth_main.c,.c,tools_tests_bench_research,3209,53,mk/physics0-learner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/learner/test_pd0_learner.c,.c,tools_tests_bench_research,10995,94,mk/physics0-learner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/learner/test_pd0_protocol_v2.c,.c,tools_tests_bench_research,6521,94,mk/physics0-learner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/learner_v2/pd0_dev2.c,.c,tools_tests_bench_research,28915,334,mk/physics0-learner-v2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/learner_v2/pd0_dev_world.c,.c,tools_tests_bench_research,1401,27,mk/physics0-learner-v2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/learner_v2/pd0_dev_world.h,.h,tools_tests_bench_research,1373,29,mk/physics0-learner-v2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/learner_v2/test_pd0_learner2.c,.c,tools_tests_bench_research,13535,112,mk/physics0-learner-v2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/pd0_calib.c,.c,tools_tests_bench_research,6434,154,mk/physics0.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/pd0_calib.h,.h,tools_tests_bench_research,2839,60,mk/physics0.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/pd0_oracle.c,.c,tools_tests_bench_research,15597,263,mk/physics0.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/pd0_sparse.c,.c,tools_tests_bench_research,5934,138,mk/physics0.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/pd0_sparse.h,.h,tools_tests_bench_research,1579,36,mk/physics0.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/pd1/pd1_run.c,.c,tools_tests_bench_research,27278,330,mk/physics0-pd1.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/planner/pd0_plan_eff.c,.c,tools_tests_bench_research,12336,215,mk/physics0-planner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/planner/pd0_plan_eff2.c,.c,tools_tests_bench_research,18542,281,mk/physics0-planner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/planner/pd0p_bridge.c,.c,tools_tests_bench_research,3552,77,mk/physics0-planner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/planner/pd0p_bridge.h,.h,tools_tests_bench_research,2724,58,mk/physics0-planner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/planner/test_pd0_planner.c,.c,tools_tests_bench_research,9700,160,mk/physics0-planner.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/test_pd0_osc.c,.c,tools_tests_bench_research,7618,164,mk/physics0.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/test_pd0_world.c,.c,tools_tests_bench_research,23977,435,mk/physics0.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/verify/bundle.h,.h,tools_tests_bench_research,11179,121,mk/physics0-verify.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/verify/test_pd0_fmt.c,.c,tools_tests_bench_research,6474,73,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/verify/test_pd0_ladder.c,.c,tools_tests_bench_research,10415,92,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/verify/test_pd0_score.c,.c,tools_tests_bench_research,10532,90,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/physics0/verify/truth.h,.h,tools_tests_bench_research,6169,90,mk/physics0-verify.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/polyglot/bench_polyglot.c,.c,tools_tests_bench_research,49594,1077,mk/polyglot.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/polyglot/polyglot_explain.c,.c,tools_tests_bench_research,23564,537,mk/polyglot.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/polyglot/test_asm.c,.c,tools_tests_bench_research,15403,331,mk/polyglot-asm.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/polyglot/test_encoder.c,.c,tools_tests_bench_research,29266,617,mk/polyglot-encoder.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/polyglot/verify_polyglot.c,.c,tools_tests_bench_research,24727,518,mk/polyglot.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/program/test_program_id.c,.c,tools_tests_bench_research,35498,669,mk/program-id.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/r16_inventory/fixture/omega/src/legacy_oracle_demo.c,.c,tools_tests_bench_research,743,23,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/r16_inventory/fixture/omega/src/world.c,.c,tools_tests_bench_research,1292,43,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/r16_inventory/fixture/omega/tools/tool.c,.c,tools_tests_bench_research,794,22,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/r16_inventory/fixture/physics/nvrm.c,.c,tools_tests_bench_research,776,24,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/realize/test_program_fp32.c,.c,tools_tests_bench_research,8459,146,mk/program-fp32.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/realize/test_program_realize.c,.c,tools_tests_bench_research,29945,542,mk/program-realize.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/reservoir/res_fixtures.h,.h,tools_tests_bench_research,5209,148,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/reservoir/res_oracle64.c,.c,tools_tests_bench_research,8816,189,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/reservoir/res_oracle64.h,.h,tools_tests_bench_research,2292,49,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/reservoir/test_res_mat.c,.c,tools_tests_bench_research,9352,220,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/reservoir/test_reservoir.c,.c,tools_tests_bench_research,46007,906,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/aien_machine_id_test.c,.c,tools_tests_bench_research,10239,218,mk/machine-identity.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/aienos_cap_abi_test.c,.c,tools_tests_bench_research,6133,122,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/cx_config_freestanding.h,.h,tools_tests_bench_research,1185,29,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/r15_gpu_load.c,.c,tools_tests_bench_research,5853,149,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/r15_measure.c,.c,tools_tests_bench_research,15710,409,Makefile;mk/turing_yield_energy.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/r15_measure.h,.h,tools_tests_bench_research,5155,134,Makefile;mk/turing_yield_energy.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/r15_seat_diag.h,.h,tools_tests_bench_research,3134,73,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/r15_seat_diag_test.c,.c,tools_tests_bench_research,3733,77,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/r15_stage_clock.h,.h,tools_tests_bench_research,2928,68,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_action_graph.c,.c,tools_tests_bench_research,57854,1337,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_branch_reuse.c,.c,tools_tests_bench_research,42658,859,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_c4_requal.c,.c,tools_tests_bench_research,40600,944,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_capability_graph.c,.c,tools_tests_bench_research,25570,563,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_capability_query.c,.c,tools_tests_bench_research,61574,1268,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_cog_engines.c,.c,tools_tests_bench_research,17687,519,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_cog_engines.h,.h,tools_tests_bench_research,2834,85,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_cognitive_routing.c,.c,tools_tests_bench_research,49646,1088,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_compose_attach_test.c,.c,tools_tests_bench_research,33304,665,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_compose_fixture.h,.h,tools_tests_bench_research,7719,210,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_compose_gpu_skill.h,.h,tools_tests_bench_research,5056,119,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_compose_test.c,.c,tools_tests_bench_research,31125,675,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_composition_gate.c,.c,tools_tests_bench_research,17058,349,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_cortex_canon.c,.c,tools_tests_bench_research,17240,410,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_cortex_journal.c,.c,tools_tests_bench_research,9612,220,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_costmodel_unit.c,.c,tools_tests_bench_research,19553,452,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_deadline_cancel.c,.c,tools_tests_bench_research,13148,341,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_dual_jspace_tap.c,.c,tools_tests_bench_research,32822,688,mk/dual_jspace_tap.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_dual_jspace_tap_bench.c,.c,tools_tests_bench_research,6741,193,mk/dual_jspace_tap.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_emergency.c,.c,tools_tests_bench_research,36660,814,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_empirical_optimizer.c,.c,tools_tests_bench_research,70492,1621,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_heartbeat_test.c,.c,tools_tests_bench_research,123861,2668,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_i11_wake_merge.c,.c,tools_tests_bench_research,12429,280,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_jspace_prod.c,.c,tools_tests_bench_research,43481,943,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_operator_authority_misuse.c,.c,tools_tests_bench_research,7705,154,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_plan_reuse.c,.c,tools_tests_bench_research,61943,1351,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r10_omega.c,.c,tools_tests_bench_research,31305,689,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r11_aien.c,.c,tools_tests_bench_research,48640,1048,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r12_resident.c,.c,tools_tests_bench_research,37288,829,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r12_silicon.c,.c,tools_tests_bench_research,46182,1051,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r13_cortex_episode.c,.c,tools_tests_bench_research,20895,340,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r13_living.c,.c,tools_tests_bench_research,110649,2229,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r14_recovery.c,.c,tools_tests_bench_research,128157,2661,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r15_g7.c,.c,tools_tests_bench_research,15151,339,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r15_instr.c,.c,tools_tests_bench_research,18165,401,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r15_parity.c,.c,tools_tests_bench_research,11384,240,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r15_perf.c,.c,tools_tests_bench_research,57542,1416,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r15_rig.c,.c,tools_tests_bench_research,40790,902,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r15_rig.h,.h,tools_tests_bench_research,8108,180,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r16_negative.c,.c,tools_tests_bench_research,78047,1483,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r7_native.c,.c,tools_tests_bench_research,29974,718,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r8_aegis.c,.c,tools_tests_bench_research,34707,726,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_r9_barrier.c,.c,tools_tests_bench_research,36875,896,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_regulate_test.c,.c,tools_tests_bench_research,22275,433,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_sem_incremental.c,.c,tools_tests_bench_research,70270,1530,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_semantic_comm.c,.c,tools_tests_bench_research,55474,1242,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_skillroute_compose_test.c,.c,tools_tests_bench_research,23920,513,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_sp_workloads.c,.c,tools_tests_bench_research,36550,916,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_sp_workloads.h,.h,tools_tests_bench_research,3041,83,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_state_projection.c,.c,tools_tests_bench_research,49587,1018,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_typed_results.c,.c,tools_tests_bench_research,70900,1564,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rx_workflow_fusion.c,.c,tools_tests_bench_research,74811,1651,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/runtime/rxc_host_abi_test.c,.c,tools_tests_bench_research,27045,534,mk/rx_compose_lib.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/searchtrace/test_st_corpus.c,.c,tools_tests_bench_research,9670,197,mk/searchtrace.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/searchtrace/test_st_holdout.c,.c,tools_tests_bench_research,16166,397,mk/searchtrace.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/searchtrace/test_st_holdout_sig.c,.c,tools_tests_bench_research,24949,590,mk/searchtrace.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_numeric_lifecycle.c,.c,tools_tests_bench_research,4190,113,mk/numeric-lifecycle.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_autodiff.c,.c,tools_tests_bench_research,48572,1046,mk/autodiff.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_blackwell_engine.c,.c,tools_tests_bench_research,45445,1011,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_c3_ab_gb10.c,.c,tools_tests_bench_research,13905,306,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_codegen_freestanding.c,.c,tools_tests_bench_research,12263,230,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_divsqrt_gb10.c,.c,tools_tests_bench_research,24466,466,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_genesis.c,.c,tools_tests_bench_research,5525,118,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_genesis_set.c,.c,tools_tests_bench_research,11577,228,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_gpu_code_alloc.c,.c,tools_tests_bench_research,2733,47,mk/omega-gpu-code-alloc.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_gpu_engine.c,.c,tools_tests_bench_research,40591,1171,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_gpu_engine_compile.c,.c,tools_tests_bench_research,10051,182,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_gpu_engine_gb10.c,.c,tools_tests_bench_research,7051,184,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_gpu_platform.c,.c,tools_tests_bench_research,21675,333,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_gpu_platform_linux.c,.c,tools_tests_bench_research,15431,285,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_gpu_session_platform.c,.c,tools_tests_bench_research,26104,533,mk/omega-gpu-engine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_gpu_wait.c,.c,tools_tests_bench_research,14870,319,mk/omega-gpu-wait.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_ldst_gb10.c,.c,tools_tests_bench_research,16144,300,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_library.c,.c,tools_tests_bench_research,8212,179,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_numeric.c,.c,tools_tests_bench_research,80461,1463,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_numeric_transc_gb10.c,.c,tools_tests_bench_research,11972,274,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_program_ir.c,.c,tools_tests_bench_research,6593,142,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_reduce.c,.c,tools_tests_bench_research,42858,767,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_resolve.c,.c,tools_tests_bench_research,99385,1768,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_tensor.c,.c,tools_tests_bench_research,103975,2002,mk/tensor.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_tensor_gb10.c,.c,tools_tests_bench_research,36244,727,mk/tensor.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_tensor_store.c,.c,tools_tests_bench_research,28147,636,mk/tensor.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_transc.c,.c,tools_tests_bench_research,33827,760,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_unwritten_trap.c,.c,tools_tests_bench_research,4136,93,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_unwritten_trap_gb10.c,.c,tools_tests_bench_research,9437,203,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_vc_bridge.c,.c,tools_tests_bench_research,6481,139,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/test_omega_vcstore.c,.c,tools_tests_bench_research,47938,967,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/train/test_train.c,.c,tools_tests_bench_research,24640,550,mk/train.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/qcont_kat_gen.c,.c,tools_tests_bench_research,3411,81,mk/turing_qcont.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/test_tc.c,.c,tools_tests_bench_research,25616,588,mk/turing_exp001_b.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/test_tc_produce.c,.c,tools_tests_bench_research,5968,132,mk/turing_exp001_b.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/test_turing.c,.c,tools_tests_bench_research,23497,489,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/test_ty_energy.c,.c,tools_tests_bench_research,7817,134,mk/turing_yield_energy.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/test_ty_math.c,.c,tools_tests_bench_research,28789,638,mk/turing_yield_math.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/test_ty_prd2.c,.c,tools_tests_bench_research,9780,196,mk/turing_prd2.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/test_ty_qcont.c,.c,tools_tests_bench_research,14732,318,mk/turing_qcont.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/test_ty_qrecord.c,.c,tools_tests_bench_research,27375,423,mk/turing_qrecord.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/ty_energy_fixture.c,.c,tools_tests_bench_research,2960,47,mk/turing_yield_energy.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/ty_energy_window.c,.c,tools_tests_bench_research,14561,364,mk/turing_yield_energy.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/turing/ty_workload.c,.c,tools_tests_bench_research,7646,204,mk/turing_yield_energy.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/vc_fixture.h,.h,tools_tests_bench_research,4295,97,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/visor/test_visor_authority.c,.c,tools_tests_bench_research,34970,694,mk/visor-authority.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/visor/test_visor_console.c,.c,tools_tests_bench_research,32534,723,mk/visor-console.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/visor/test_visor_evidence.c,.c,tools_tests_bench_research,9059,145,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/visor/test_visor_machine.c,.c,tools_tests_bench_research,6495,115,mk/visor-machine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/visor/test_visor_realization.c,.c,tools_tests_bench_research,12443,210,mk/visor-machine.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/visor/test_visor_semantic.c,.c,tools_tests_bench_research,14741,253,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/visor/test_visor_verify.c,.c,tools_tests_bench_research,10314,193,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tests/visor/test_visor_world.c,.c,tools_tests_bench_research,8475,186,mk/visor-world.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/allen.c,.c,tools_tests_bench_research,17917,468,mk/allen.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/argus_replay.c,.c,tools_tests_bench_research,5344,122,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/brownian/brw_active.c,.c,tools_tests_bench_research,11874,368,mk/brownian_active.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/brownian/brw_active.h,.h,tools_tests_bench_research,5146,96,mk/brownian_active.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/brownian/brw_tps_adapter.c,.c,tools_tests_bench_research,13327,368,mk/brownian_tps.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/brownian/brw_tps_adapter.h,.h,tools_tests_bench_research,6056,118,mk/brownian_tps.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/crumbline_learner.c,.c,tools_tests_bench_research,10535,313,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/dual_experiment/applic_run.c,.c,tools_tests_bench_research,13521,254,mk/dual_applicability.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est3c_common.c,.c,tools_tests_bench_research,47046,1065,mk/estimation_v3_tools.mk;mk/estimation_v5.mk;mk/estimation_v6dev.mk;mk/estimation_v4.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est3c_common.h,.h,tools_tests_bench_research,12660,265,mk/estimation_v3_tools.mk;mk/estimation_v5.mk;mk/estimation_v6dev.mk;mk/estimation_v4.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est3c_eval.c,.c,tools_tests_bench_research,21461,380,mk/estimation_v3_tools.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est3c_fit.c,.c,tools_tests_bench_research,14078,271,mk/estimation_v3_tools.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est3c_forensics.c,.c,tools_tests_bench_research,16208,327,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est4.c,.c,tools_tests_bench_research,40030,731,mk/estimation_v4.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est5.c,.c,tools_tests_bench_research,42268,778,mk/estimation_v5.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est6dev.c,.c,tools_tests_bench_research,60343,1121,mk/estimation_v6dev.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est6opchar.c,.c,tools_tests_bench_research,19850,381,mk/estimation_v6dev.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est_eval.c,.c,tools_tests_bench_research,44126,750,mk/estimation_tools.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est_fit.c,.c,tools_tests_bench_research,6569,122,mk/estimation_tools.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est_load.c,.c,tools_tests_bench_research,5449,156,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est_replay.c,.c,tools_tests_bench_research,24546,607,mk/estimation_v3_tools.mk;mk/estimation_v5.mk;mk/estimation_v6dev.mk;mk/estimation_v4.mk;mk/estimation_tools.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/est_replay.h,.h,tools_tests_bench_research,8448,185,mk/estimation_v3_tools.mk;mk/estimation_v5.mk;mk/estimation_v6dev.mk;mk/estimation_v4.mk;mk/estimation_tools.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/test_est3c_tools.c,.c,tools_tests_bench_research,23365,365,mk/estimation_v3_tools.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/test_est_json.c,.c,tools_tests_bench_research,12738,271,mk/estimation_v5.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/estimation/test_est_tools.c,.c,tools_tests_bench_research,43253,748,mk/estimation_tools.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/exp445/examples_expected.c,.c,tools_tests_bench_research,5975,131,mk/omega-emit.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/exp445/fake445.c,.c,tools_tests_bench_research,11393,235,mk/omega-emit.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/exp445/x445.c,.c,tools_tests_bench_research,12255,271,mk/omega-emit.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/json_canon.c,.c,tools_tests_bench_research,20433,566,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/omega.c,.c,tools_tests_bench_research,35173,811,mk/visor-console.mk;mk/00-visor-core.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/omega_emit/omega_emit.c,.c,tools_tests_bench_research,39803,798,mk/omega-emit.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/omega_emit/typediff.c,.c,tools_tests_bench_research,10511,221,mk/omega-emit.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/omegatool.c,.c,tools_tests_bench_research,173203,4083,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/omegese/omegese.c,.c,tools_tests_bench_research,95190,2185,mk/omegese.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/own30b_decode_profile.c,.c,tools_tests_bench_research,6277,148,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/physics0/pd1-convert/pd1_convert.c,.c,tools_tests_bench_research,7761,138,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/quietlock/quietlock.c,.c,tools_tests_bench_research,28949,956,mk/quiet.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/r15_reduce.c,.c,tools_tests_bench_research,58935,1348,Makefile;mk/turing_yield_energy.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/r16_loop_inventory.c,.c,tools_tests_bench_research,45280,1125,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/reservoir/res_bench.c,.c,tools_tests_bench_research,40322,961,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/reservoir/res_common.c,.c,tools_tests_bench_research,22365,572,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/reservoir/res_common.h,.h,tools_tests_bench_research,6747,140,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/reservoir/res_inflate.c,.c,tools_tests_bench_research,10884,329,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/reservoir/res_inflate.h,.h,tools_tests_bench_research,2647,57,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/reservoir/res_mat.c,.c,tools_tests_bench_research,13415,379,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/reservoir/res_mat.h,.h,tools_tests_bench_research,4375,101,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/reservoir/res_qualify.c,.c,tools_tests_bench_research,43443,869,mk/reservoir.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/rx_operator.c,.c,tools_tests_bench_research,6871,149,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_cal_candidates.c,.c,tools_tests_bench_research,13023,311,mk/turing_exp001_a.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_cal_dev.h,.h,tools_tests_bench_research,3794,111,mk/turing_exp001_a.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_cal_eval.c,.c,tools_tests_bench_research,95076,1776,mk/turing_exp001_eval.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_cal_overlap.c,.c,tools_tests_bench_research,8493,227,mk/turing_exp001_c.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_field.c,.c,tools_tests_bench_research,11393,226,Makefile,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_verify_indep/src/core.c,.c,tools_tests_bench_research,13974,291,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_verify_indep/src/core.h,.h,tools_tests_bench_research,3581,86,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_verify_indep/src/main.c,.c,tools_tests_bench_research,30130,422,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_verify_indep/src/selftest.c,.c,tools_tests_bench_research,7740,106,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_verify_indep/src/sha256.c,.c,tools_tests_bench_research,4135,81,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_verify_indep/src/sha256.h,.h,tools_tests_bench_research,1161,28,,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/turing_yield.c,.c,tools_tests_bench_research,22012,540,mk/turing_yield_math.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
+tools/ty_energy_reduce.c,.c,tools_tests_bench_research,38706,941,mk/turing_yield_energy.mk,Tool/test/benchmark/research/calibration source; not a production exemption.
