@@ -151,5 +151,5 @@ ir_multi call_value 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint\
 ir_multi call_void 'fn sink a uint to void\nret\nend\nfn f to uint\nsink uint 1\nret uint 2\nend'
 ir_multi call_zero 'fn z to uint\nret uint 1\nend\nfn f to uint\nret z\nend'
 ir_multi call_two 'fn add2 a uint b uint to uint\nret add a b\nend\nfn f to uint\nret add2 uint 3 uint 4\nend'
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 13 refusals + 4 multi-call units; structs IR still open'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 13 refusals + 4 multi-call units; structs IR spec-blocked'
 echo 'RC=0'

@@ -813,8 +813,21 @@ IR mode now emits a unit of up to 32 function records and supports calls to earl
   `0eec74110bb3580dcd0aaff0f963bdb4010183e3e89cdf14e8a2a54eef89f01a` (117,218 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`).
-- Still open: IR structs; calls remain earlier-only and scalar, and IR call names are at most eight
-  characters.
+- Still open: IR structs are spec-blocked (OSC-1 excludes structs); calls remain earlier-only and
+  scalar, and IR call names are at most eight characters.
+
+## Rung R42: positioned I/O (done)
+
+`pread fd A off n pos` and `pwrite fd A off n pos` (syscalls 67/68) move bytes at an explicit `long`
+position without changing the descriptor's file offset; slice checks and the result match
+`read`/`write`. A `text` is readonly, so `pwrite`'s source must be a writable array (error 20).
+
+- The host gate creates 8 bytes, writes "XY" at offset 4 with `pwrite`, reads all 8 with `pread`,
+  checks bytes 4 and 5, and refuses a closed descriptor.
+- `seed/omc/omc.om`, 7,073 lines and 247 functions, sha256
+  `7c51a738aaa034e0897157b03c9ae87c48ab1810a69afe2fa49ef02f2b9a735d` (117,737 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`). Neither word is used as an identifier there.
 
 ## How the checks stay honest
 

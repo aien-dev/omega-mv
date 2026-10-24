@@ -471,6 +471,12 @@ end
 if eq w 28263390660289907
 ret 160
 end
+if eq w 431130767984
+ret 161
+end
+if eq w 111550659721072
+ret 162
+end
 if eq w 1819242338
 ret 1
 end
@@ -3655,6 +3661,30 @@ hreturn dst x
 end
 note stat: path slice (readonly) + output slice, at least 128 bytes for the ARM64 stat structure.
 note Linux newfstatat(AT_FDCWD, path, out, 0); returns 0 or -errno. A short output traps 3.
+note pread/pwrite: fd, byte slice (off, n), position long. The file offset is not moved.
+fn hpread c ulong dst ulong x ulong to void
+harg x 4 8
+wr = ulong 0
+if eq c 162
+wr = ulong 1
+end
+e = harray x wr
+harg x 3 9
+save
+hload x 4 0
+basearg 1 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 1 1 16
+loadarg 2 1 get fr add x 22
+hload x 3 3
+nr = ulong 67
+if eq c 162
+nr = ulong 68
+end
+hsys nr
+hreturn dst x
+end
+
 fn hstat c ulong dst ulong x ulong to void
 e = harray x 0
 put fr add x 23 e
@@ -3768,6 +3798,10 @@ ret
 end
 if and ge c 158 le c 160
 hscalar c dst x
+ret
+end
+if or eq c 161 eq c 162
+hpread c dst x
 ret
 end
 if or or eq c 127 eq c 129 eq c 139
@@ -4014,7 +4048,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 160
+if and ge c 100 le c 162
 hostval c dst
 ret
 end

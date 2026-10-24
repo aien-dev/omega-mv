@@ -115,6 +115,9 @@ printf 'PASS native fchdir/umask/getppid: directory fd, 0777 under mask 0, paren
 compile fdsync
 (cd "$stage"; ./fdsync)
 printf 'PASS native fdsync/memfd: data sync, closed fd refused, anonymous file rw\n'
+compile pio
+(cd "$stage"; ./pio)
+printf 'PASS native pread/pwrite: positioned I/O, bytes intact, closed fd refused\n'
 compile pgroup
 (cd "$stage"; ./pgroup)
 printf 'PASS native process groups: getpgid/setpgid, setsid or EPERM\n'
