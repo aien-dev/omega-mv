@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # record_void.sh: record a VOID attempt of EXP-001 that no tool records by itself: a failed build or test of the
 # frozen tree at BLINDING_PROTOCOL.md step 7 (stage "tests"). It writes the next void receipt in the one EXP-001
 # counter ($TC_EVAL_ROOT/<C_f>/run/bundle, tc_void_lib.sh) and, on the third void of the experiment, the

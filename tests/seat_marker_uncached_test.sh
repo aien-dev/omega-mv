@@ -1,4 +1,19 @@
 #!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Source guard: every page the host POLLS or reads for the resident seat's completion must be GPU-uncached.
 # NVIDIA nvos.h NVOS32_ATTR2_GPU_CACHEABLE_YES: "For system memory this will not be coherent with direct CPU
 # mappings"; spark-hardware-manual s4.1: "Any word the host polls ... must be allocated nvrm_alloc_gpu_uncached".

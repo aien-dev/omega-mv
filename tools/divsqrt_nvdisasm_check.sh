@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # divsqrt_nvdisasm_check.sh -- offline provenance for the E1 row 7 kernels.
 # Builds the CPU-only test, dumps every whole-program kernel (DIV, SQRT and the transcendentals) Omega's own encoder
 # emits, disassembles every word with Omega's own sm121dis (C6; it agrees with nvdisasm on every library
