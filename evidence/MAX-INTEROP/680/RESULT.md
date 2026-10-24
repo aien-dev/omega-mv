@@ -82,7 +82,7 @@ stdin is a first line `mode=id|check|manifest|sha256` followed by the payload
   Capacity and I/O refusals write nothing to stdout.
 
 The checker uses no heap and no local `new` arrays; it hashes with the adapted
-native SHA-256 from `benchmarks-om/build/base/om-sha256.om` (AGPL-3.0-or-later,
+native SHA-256 from `benchmarks-om/build/base/om-sha256.om` (Apache-2.0 WITH LLVM-exception,
 attributed in the source).
 
 ## Oracle and tests

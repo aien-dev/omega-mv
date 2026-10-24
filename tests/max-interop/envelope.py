@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """Cross-runtime evidence envelope v1 and the C2 receipt binding.
 
 The envelope is canonical text. envelope_id = SHA-256 over the lines from `op=`

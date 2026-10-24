@@ -58,3 +58,11 @@ Open a pull request with the exact command you ran and its output. Receipts are 
 This repo uses the Crumb Protocol (RFC-0001). Each directory carries a `.crumb` file (what the directory is for, its rules, and a backfilled history). Live coordination between agents goes in `.crumb.local`, which is never committed.
 Before editing a directory, read its `.crumb`. Rules and the `crumb` tool: https://github.com/aien-spark/aien-architecture/blob/main/docs/CRUMB_PROTOCOL.md
 Backfilled history (marked as such, not live whispers) is in `docs/crumbs/BACKFILL.md`.
+
+## License
+
+First-party material is licensed under the Apache License, Version 2.0 with LLVM
+Exceptions (`Apache-2.0 WITH LLVM-exception`). See [LICENSE](LICENSE) and
+[NOTICE](NOTICE). The LLVM exception permits compiled object code derived from
+this software to be redistributed under terms of the recipient's choosing.
+Third-party components keep their own notices.

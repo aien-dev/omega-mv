@@ -1,4 +1,4 @@
-note SPDX-License-Identifier: AGPL-3.0-or-later
+note SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 note contract_check: native Omega checker for the MAX interop op contracts.
 note Protocol: stdin starts with a line mode=id|check|manifest|sha256, then the payload.
 note mode=id / mode=sha256 hash the payload; mode=check validates a canonical
@@ -17,7 +17,7 @@ note   [payload_hex=<even-length lowercase hex>]
 note The payload_hex checksum, when present, must match input_sha256, and the
 note contract must be the frozen id for op and equal the expect id.
 note SHA-256 is adapted from benchmarks-om/build/base/om-sha256.om, itself
-note AGPL-3.0-or-later and checked against Omega seed/atlas/atlas.s2 and src/sha256.c.
+note Apache-2.0 WITH LLVM-exception and checked against Omega seed/atlas/atlas.s2 and src/sha256.c.
 note No heap: all state is in fixed globals and the fixed input pool.
 
 global big uchar 1048576

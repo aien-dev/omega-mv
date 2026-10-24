@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """Tests for the cross-runtime envelope and its C2 receipt binding.
 
 Requires build/receipt-tool (tests/max-interop/build_receipt.sh) and a CUDApp

@@ -1,5 +1,5 @@
 #!/bin/sh
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # Build the native Omega contract checker with the fixed seed compiler.
 # The seed reads .om on stdin and writes an AArch64 ELF on stdout.
 set -eu
