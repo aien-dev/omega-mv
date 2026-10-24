@@ -57,6 +57,9 @@ compile chdir
 (cd "$stage"; ./chdir)
 test -f "$stage/sub/inside"
 printf 'PASS native chdir: relative file created in the new directory; missing path refused\n'
+compile trunc
+(cd "$stage"; ./trunc)
+printf 'PASS native ftrunc: write, shorten, rewind, read 4 then EOF; closed fd refused\n'
 compile environment_trap
 set +e
 (cd "$stage"; ./environment_trap)

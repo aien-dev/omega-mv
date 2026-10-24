@@ -517,6 +517,18 @@ boundary and checks both sides:
 
 The 600 programs run in about two seconds and `seed/host/check.sh` runs the gate.
 
+## Rung R22: ftrunc (done)
+
+`ftrunc fd length` sets an open descriptor's length through the scalar host path (Linux `ftruncate`,
+syscall 46). `fd` is `int`, `length` is `long`, and the result is `long`: 0 or minus the kernel error.
+
+- The host gate writes 8 bytes, shortens the file to 4, rewinds, reads 4 bytes and then EOF, and
+  refuses a closed descriptor; the file is unlinked at the end.
+- Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). No corpus file uses `ftrunc` as an identifier.
+- `seed/omc/omc.om`, 6,480 lines and 238 functions, sha256
+  `4aa1b0bfd082e2ed11785b179c97af6cb848f926ed6818e9a3c08eb433b5deb3` (108,629 bytes).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

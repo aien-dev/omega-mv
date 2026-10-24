@@ -625,6 +625,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `fsync fd` | Sync file data and metadata. |
 | `fchmod fd mode` | Set permissions on an open descriptor. |
 | `fseek fd offset whence` | Seek and return the resulting signed file offset. |
+| `ftrunc fd length` | Set an open descriptor's length (Linux `ftruncate`). |
 | `unlink A off n` | Remove the named file. |
 | `makedir A off n mode` | Create a directory. |
 | `rmdir A off n` | Remove an empty directory. |
