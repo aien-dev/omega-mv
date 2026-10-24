@@ -108,6 +108,9 @@ printf 'PASS native identity: getuid/geteuid/getgid/getegid match id\n'
 compile lstat
 (cd "$stage"; ./lstat)
 printf 'PASS native lstat: stat follows the link, lstat reports S_IFLNK\n'
+compile truncate
+(cd "$stage"; ./truncate)
+printf 'PASS native truncate: path length set to 4; missing path errno\n'
 compile environment_trap
 set +e
 (cd "$stage"; ./environment_trap)

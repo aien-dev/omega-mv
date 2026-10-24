@@ -629,6 +629,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `getuid` / `geteuid` / `getgid` / `getegid` | Process identity (syscalls 174-177). |
 | `fseek fd offset whence` | Seek and return the resulting signed file offset. |
 | `ftrunc fd length` | Set an open descriptor's length (Linux `ftruncate`). |
+| `truncate A off n length` | Set a checked path's length (Linux `truncate`). |
 | `unlink A off n` | Remove the named file. |
 | `makedir A off n mode` | Create a directory. |
 | `rmdir A off n` | Remove an empty directory. |

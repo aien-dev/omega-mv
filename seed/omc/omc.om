@@ -438,6 +438,9 @@ end
 if eq w 499851228012
 ret 149
 end
+if eq w 7310575174812004980
+ret 150
+end
 if eq w 1819242338
 ret 1
 end
@@ -3005,6 +3008,9 @@ end
 if or or eq c 112 eq c 143 eq c 144
 harg x 2 8
 end
+if eq c 150
+harg x 2 9
+end
 hpathcp x
 if eq c 110
 hload x 2 2
@@ -3023,6 +3029,9 @@ if or eq c 143 eq c 144
 hload x 2 2
 matconst 3 0
 end
+if eq c 150
+hload x 2 2
+end
 hcopy
 nr = ulong 56
 if or eq c 111 eq c 126
@@ -3037,10 +3046,18 @@ end
 if eq c 144
 nr = ulong 48
 end
+if eq c 150
+nr = ulong 45
+end
 if eq c 138
 nr = ulong 49
 note hcopy leaves AT_FDCWD in X0 and the path in X1; chdir takes the path in X0.
 e3 2852126720 0 31 1
+end
+if eq c 150
+note truncate takes the path in X0 and the length in X1.
+e3 2852126720 0 31 1
+e3 2852126720 1 31 2
 end
 hsys nr
 spadd 4096
@@ -3573,7 +3590,7 @@ if or or or eq c 124 eq c 125 eq c 141 eq c 142
 hpack c dst x
 ret
 end
-if or or or eq c 126 eq c 138 eq c 143 eq c 144
+if or or or or eq c 126 eq c 138 eq c 143 eq c 144 eq c 150
 hpath c dst x
 ret
 end
@@ -3823,7 +3840,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 149
+if and ge c 100 le c 150
 hostval c dst
 ret
 end

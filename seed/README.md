@@ -619,6 +619,19 @@ followed. It returns 0 or minus the kernel error; a short output traps 3.
 - Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
   against the pinned compiler (`e5d60db8…`). No corpus file uses `lstat` as an identifier.
 
+## Rung R29: path truncate (done)
+
+`truncate A off n length` sets a checked path's length through Linux `truncate` (syscall 45). It
+reuses the path-copy machinery; the length is a `long`, and after the copy the path moves to X0 and
+the length to X1.
+
+- The host gate creates an 8-byte file, truncates it to 4, and checks `st_size` 4 at byte 48; a
+  missing path returns a negative error; the file is unlinked.
+- `seed/omc/omc.om`, 6,616 lines and 239 functions, sha256
+  `45029fb384a4944ffe9b021991cf214d86e0ae794dc09830096787dff8bf541e` (110,921 bytes).
+- Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). No corpus file uses `truncate` as an identifier.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
