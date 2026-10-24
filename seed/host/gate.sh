@@ -47,3 +47,6 @@ compile structfile
 (cd "$stage"; ./structfile)
 test ! -e "$stage/structfile.tmp"
 printf 'PASS struct values and native file operations in one program\n'
+compile random
+"$stage/random"
+printf 'PASS native random: exact count, non-zero, two calls differ, invalid flags refused\n'

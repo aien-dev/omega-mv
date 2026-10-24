@@ -452,6 +452,19 @@ declaration is error 9, and any other token is error 16. Nothing is lowered by a
 - `seed/omc/omc.om`, 6,391 lines and 237 functions, sha256
   `22be10f8cccd23de1830e06ddb1c28ba77c7e78a6d7284bd1334fc18908a0cd8` (172,640 bytes).
 
+## Rung R17: getrandom (done)
+
+`random A off n flags` fills a writable `uchar` slice from Linux `getrandom` through the same
+host-word path as the other slice operations: `off`/`n` are bounds-checked (trap 3), a `view` or
+`text` is refused (error 20), and `flags` is a typed `int`. It returns the bytes written or -errno;
+unknown flags return -EINVAL.
+
+- The host gate compiles and runs `seed/host/tests/random.om`: exactly 8 bytes, not all zero, two
+  calls differ (a byte-for-byte comparison), and flags 8 is refused with a negative result.
+- Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes.
+- `seed/omc/omc.om`, 6,414 lines and 238 functions, sha256
+  `7326b100d3c85d4e58707deb8a8c3cf826b6dcc55280b3ffb3e76272cc07eaa8` (173,472 bytes).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
