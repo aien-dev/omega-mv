@@ -1,0 +1,6 @@
+source a8742c96499447c0bcf3049c732d364f178d5458
+cmd: make test-costmodel
+    80% coverage on later, drifted data: 0.323 before calibration, 0.820 after
+    model blob: 28112 bytes
+checks 68 failures 0
+exit 0

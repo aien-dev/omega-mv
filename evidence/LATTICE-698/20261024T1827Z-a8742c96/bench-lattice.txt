@@ -1,0 +1,26 @@
+source a8742c96499447c0bcf3049c732d364f178d5458
+host Linux 7.0.0-1019-nvidia aarch64
+cmd: make build/rx_lattice_bench && ./build/rx_lattice_bench 31
+rx_lattice host benchmark (omega-mv #698). Host CPUs only, no GPU.
+  arm reference     verified
+  arm scalar        verified
+  arm quad4         verified
+  arm planted_wrong refused
+  arm model_call    refused
+  lanes: x925 cpu8 (busy 0.00) cpu17 (busy 0.00); a725 cpu0 (busy 0.00) cpu10 (busy 0.00); loadavg 3.78 4.63 5.10 4/2434 2147836
+  calibration: 240 timed observations in 0.11 s (training grid, not the graph's shapes)
+  lattice: 109 candidates, 0 nodes without a candidate; admitted 76 scope 8 realization 14 unverified 11
+  predicted critical path (best admitted estimate per node; caps for unmodelled ops): 132.7 us
+  dispatcher cpu5
+  serial outputs equal the independent reference-only oracle: yes
+  MEASURED, 31 rounds after 1 warm-up, rotating policy order; loadavg after: 3.78 4.63 5.10 5/2434 2147856
+  policy  wall_med_us  wall_min  wall_max  select_us  busy_sum_us  busy/wall  crit_path_us  util_x925  util_a725  arms(ref/scalar/quad4)  dispatched(x925/a725/gpu.sim)  weight_switches
+  serial        655.8     646.2     678.1       13.6        490.4       0.75         195.1      0.373      0.000  11/0/0  17/0/0  9
+  lcf           243.4     235.9     259.0       14.1        434.9       1.79         163.9      0.636      0.259  0/0/11  15/2/0  10
+  q3d           303.3     260.1     314.0       15.6        380.4       1.25         150.5      0.625      0.000  0/0/11  17/0/0  9
+  lcf/serial wall ratio: median 0.366; faster than serial in 31 of 31 paired rounds
+  q3d/serial wall ratio: median 0.461; faster than serial in 31 of 31 paired rounds
+  q3d/lcf wall ratio: median 1.255; q3d faster in 0 of 31 paired rounds
+  outputs and effect value identical to serial in every run: yes; failed runs: 0
+  not measured: energy, memory bytes, GPU (gpu.sim refused: no FORGE lease).
+exit 0
