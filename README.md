@@ -20,6 +20,8 @@ Research-grade and pre-alpha. Plainly:
 
 The live status is owned by [aien-architecture](https://github.com/aien-spark/aien-architecture): [CURRENT_EXECUTION_PLAN.md](https://github.com/aien-spark/aien-architecture/blob/main/CURRENT_EXECUTION_PLAN.md) and [doctrine/ROADMAP.md](https://github.com/aien-spark/aien-architecture/blob/main/doctrine/ROADMAP.md). This file does not restate numbers that drift. Historical milestone receipts (for example Milestone 4, `OMEGA_SEMANTICS`, 12 of 12 gates) stay in `evidence/` unchanged as history.
 
+- **FP8 expert launch in one wave (2026-10-24, L310, measured on the real chip):** the grouped expert GEMV used 6 CTAs per group, a value tuned on 8 groups; a 9-group model (the 35B: 8 routed experts + the shared one) therefore launched 54 CTAs on 48 SMs, two waves, in each of its 80 expert launches per token. `AIEN_OMEGA_FP8_GROUPED_WAVE=1` sizes the launch to one wave (min(6, 48 / groups); 9 groups -> 5) and the 35B 1-row step measured 20.498 -> 19.347 ms, expert stream 160.5 -> 193.3 GB/s (N=3, chip alone; receipts in aien-sovereign-core `docs/speed/Q36_CEILING.md` section 11). Off by default until the merge train has judged it; `AIEN_OMEGA_FP8_GROUPED_CTAS=n` forces an exact value. `gpu_fp8_api_test --sim` checks the rule table without the chip; the server prints the value it runs with at load.
+
 ## Core ideas
 
 - **SMART is not TRUSTED, INTELLIGENCE is not AUTHORITY.** Trust comes from verified invariants, never from capability.
