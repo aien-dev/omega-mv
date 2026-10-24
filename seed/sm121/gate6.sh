@@ -23,6 +23,7 @@ say "gate6 $(date -u +%FT%TZ) at $(git rev-parse HEAD)"
 say "asm2 $(sha256sum $ASM | cut -d' ' -f1)  table $(sha256sum $TAB | cut -d' ' -f1)  ($(grep -c '^=' $TAB) lines)"
 [ -x $B/sm121list ] || { bad "reference tool $B/sm121list not built (see README: build)"; exit 1; }
 rm -f "$O"/k/*.s2 "$O"/k/*.bin
+rm -f "$O/kernels.tsv" "$O/vecadd.c.bin" "$O/edges.s2" "$O/edges.c.bin"
 $B/sm121list kernels "$O" | tee -a "$E/gate6.log"
 $B/sm121list edges "$O" | tee -a "$E/gate6.log"
 
