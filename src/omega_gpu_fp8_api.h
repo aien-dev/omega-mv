@@ -154,6 +154,9 @@ void omega_gpu_fp8_set_cta_budget(uint32_t ctas);
  * (measured: gate_up + down 6.962 -> 5.874 ms per 1-row step, investigations/2026-10-24-l310-grouped-ctas). Servers log auto(). */
 uint32_t omega_gpu_fp8_grouped_ctas_rule(uint32_t groups, uint32_t forced, int wave);
 uint32_t omega_gpu_fp8_grouped_ctas_auto(uint32_t groups);
+/* L310 lever 2 (2026-10-24): AIEN_OMEGA_FP8_SINGLE_SHAPE=rows,warps,ctas overrides the automatic shape of single-projection
+ * launches (groups == 1) for measurement; 0 or missing keeps the automatic choice. Returns 1 when any field is set. */
+int omega_gpu_fp8_single_shape(uint32_t *rows, uint32_t *warps, uint32_t *ctas);
 /* 1: tensors uploaded from now on live in GPU-cached memory (read-only weights; omega_gpu_mem_cached.h). Default 0:
  * GPU-uncached like every session buffer. Tensors already uploaded keep their policy. Never set: the first upload reads env
  * AIEN_OMEGA_FP8_WEIGHT_CACHE ("1" = cached; W-L2d, so sc can switch it without a code change). */

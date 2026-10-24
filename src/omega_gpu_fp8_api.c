@@ -11,6 +11,9 @@
 #include "omega_gpu_fmt.h"
 #include "omega_gpu_cmdlist.h"
 #include "omega_blackwell_qmd.h" /* OMEGA_BW_QMD_MAX_SHARED_BYTES: the deep kernel's x stage must fit the launch descriptor */
+#include <stdlib.h> /* L310 lever 2: getenv, strtoul */
+#include <string.h>
+#include <unistd.h> /* write(2): the single-shape proof line */
 #include <stdlib.h>
 #include <string.h>
 
@@ -277,6 +280,38 @@ uint32_t omega_gpu_fp8_depth_for(const OmegaFp8GemvSpec *spec, uint32_t n, uint3
     return fits ? ks : 0;
 }
 
+
+/* L310 lever 2 (2026-10-24): the shape of single-projection launches (groups == 1), for measurement. Host probe
+ * (investigations/2026-10-24-l310-single-proj-waves): o_proj (k 4096, n 2048) launches 256 CTAs of 8 warps, but at 64
+ * declared registers the register file seats 4 per SM = 192 per wave (CC 12.x: 1536 threads and 65536 registers per SM,
+ * CUDA Programming Guide Table 30; 48 SMs, GB10 whitepaper Table 4), and mix/head (80 declared) 144: every single
+ * projection runs a full wave plus a ragged tail. AIEN_OMEGA_FP8_SINGLE_SHAPE=rows,warps,ctas overrides the automatic
+ * rows per warp, warps per CTA and CTA budget of single projections only (a missing or 0 field keeps the automatic choice;
+ * rows that do not divide n are ignored for that launch). Grouped launches never read it. Unset: no change at all. */
+static struct { uint32_t v[3]; int set, any; } g_single;
+static void single_shape_now(void) {
+    if (g_single.set) return;
+    const char *s = getenv("AIEN_OMEGA_FP8_SINGLE_SHAPE");
+    for (int i = 0; s && *s && i < 3; i++) {
+        char *end; unsigned long u = strtoul(s, &end, 10);
+        if (end == s) break;
+        g_single.v[i] = (uint32_t)u; g_single.any |= u != 0;
+        s = *end == ',' ? end + 1 : "";
+    }
+    if (g_single.any) { /* the proof line of a measured run: the process itself says what it applied */
+        char line[160];
+        omega_gpu_fmt(line, sizeof line, "omega fp8: single-projection shape override rows %u warps %u ctas %u (AIEN_OMEGA_FP8_SINGLE_SHAPE)\n", g_single.v[0], g_single.v[1], g_single.v[2]);
+        ssize_t w = write(2, line, strlen(line)); (void)w;
+    }
+    g_single.set = 1;
+}
+int omega_gpu_fp8_single_shape(uint32_t *rows, uint32_t *warps, uint32_t *ctas) {
+    single_shape_now();
+    if (rows) *rows = g_single.v[0];
+    if (warps) *warps = g_single.v[1];
+    if (ctas) *ctas = g_single.v[2];
+    return g_single.any;
+}
 static void spec_for(uint32_t k, uint32_t n, uint32_t groups, OmegaFp8GemvSpec *spec) {
     memset(spec, 0, sizeof *spec);
     spec->k = k;
@@ -288,6 +323,11 @@ static void spec_for(uint32_t k, uint32_t n, uint32_t groups, OmegaFp8GemvSpec *
     /* big k (opt-in AIEN_OMEGA_FP8_BIGK=1): 16 warps per CTA (sweep 2026-10-19, ~/workspace/omega-q38-speed-work/runs/sweep1:
      * warps 16 beat 8 on every Qwen3.8-27B projection, 4 lost) */
     if (groups == 1u && k > 4096u && !g.warps && omega_gpu_fp8_bigk()) spec->warps = 16u;
+    if (groups == 1u) { /* L310 lever 2: measured override of single-projection shapes (AIEN_OMEGA_FP8_SINGLE_SHAPE) */
+        single_shape_now();
+        if (g_single.v[0] && !g.rows && n % g_single.v[0] == 0u) spec->rows = g_single.v[0];
+        if (g_single.v[1] && !g.warps) spec->warps = g_single.v[1];
+    }
     if (variant_now() == 2) {
         /* variant 2 (W-L2c): 16 warps per CTA (two CTAs per SM at its register count) for every launch unless overridden;
          * the whole row group is always in flight (depth = KS, informational: the generator ignores the field). */
@@ -416,6 +456,7 @@ static int gemv_core(const OmegaGpuFp8Tensor *t, uint32_t groups, const uint32_t
      * shapes run best at 160 CTAs, two row groups per warp: o_proj 186 -> 198 GB/s) */
     const int bigk_grid = !g.cta_budget_set && groups == 1u && k > 4096u && omega_gpu_fp8_bigk();
     if (bigk_grid) { uint32_t waves = (grid_x + OMEGA_GPU_FP8_BIGK_CTAS - 1u) / OMEGA_GPU_FP8_BIGK_CTAS; if (waves < 2u) waves = 2u; grid_x = (grid_x + waves - 1u) / waves; budget = grid_x; }
+    if (groups == 1u && !g.cta_budget_set && !bigk_grid) { single_shape_now(); if (g_single.v[2]) budget = g_single.v[2]; } /* L310 lever 2: measured CTA budget of single projections */
     if (grid_x > budget) grid_x = budget;
     if (grid_x == 0) grid_x = 1;
 
