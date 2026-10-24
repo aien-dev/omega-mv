@@ -17,7 +17,6 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import envelope  # noqa: E402
-import oracle  # noqa: E402
 
 
 class T:
@@ -107,6 +106,16 @@ def main():
     t.refused(lambda: envelope.validate(render_with(receipt_sha256="0" * 63)), "E_VALUE", "short receipt digest")
     t.refused(lambda: envelope.validate(render_with(tolerance="")), "E_VALUE", "empty tolerance")
     t.refused(lambda: envelope.validate("x\n"), "E_ORDER", "truncated envelope")
+    t.refused(lambda: envelope.validate(render_with(contract_id="0" * 64)),
+              "E_CONTRACT", "op/contract mismatch")
+    h = dict(f); h["receipt_sha256"] = "0" * 64
+    t.ok(envelope.verify(a.receipt_tool, rpath, h)[0] != 0, "changed receipt_sha256 rejected")
+    h = dict(f); h["receipt_id"] = "f" * 64
+    t.ok(envelope.verify(a.receipt_tool, rpath, h)[0] != 0, "changed receipt_id rejected")
+    t.refused(lambda: envelope.validate(render_with(
+        execution="measured", oracle_verdict="PASS",
+        proof_tiers=envelope.MEASURED_TIER, timings="compile=measured;run=measured",
+        output_sha256="0" * 64)), "E_RESULT", "measured PASS with no output")
     # Duplicate/extra line.
     lines = render_with().splitlines()
     t.refused(lambda: envelope.validate("\n".join(lines + ["extra=1"]) + "\n"), "E_ORDER", "extra line")

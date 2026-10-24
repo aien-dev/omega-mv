@@ -67,7 +67,8 @@ static void fill(C2Receipt *r, const uint8_t eid[32], const uint8_t cub[32],
     sha_text("omega-envelope-checker-v1", r->checker);
     sha_text("cudapp-artifact-export/1", r->producer_checker);
     c2r_target_id("gpu-sm121-max-interop", r->target);
-    sha_text("nvidia-580.173.02-gsp", r->firmware);
+    /* No firmware image was read: zero means "none", not a hash of a label. */
+    memset(r->firmware, 0, sizeof r->firmware);
     memcpy(r->input, in, 32);
     r->policy_epoch = 1;
     r->expiry_epoch = 1000000;

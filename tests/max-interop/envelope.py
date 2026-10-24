@@ -26,8 +26,12 @@ FIELDS = [
 ]
 HEADER = "omega-cross-runtime-envelope/1"
 MEASURED_TIER = "identity:hash,provenance:signature,result:bounded-check,execution:measured"
-NOT_RUN_TIER = "identity:hash,provenance:signature,result:bounded-check,execution:not-run"
+NOT_RUN_TIER = "identity:hash,provenance:signature,result:not-run,execution:not-run"
 HEX64 = set("0123456789abcdef")
+CONTRACTS = {
+    "matmul": "647116fc1ba1e1394982fc8ba181ce565293f160a6b56afc0f02b2128a675704",
+    "gqa-causal-attention": "003696e422bba7274877ba9e01a61076ea0f862f32760cbaa06c60f85a115359",
+}
 
 
 class Refused(Exception):
@@ -61,7 +65,7 @@ def build(artifact_prefix, fixture, output_bin=None, runtime="omega-native",
           execution="NOT_RUN", verdict="PASS", tolerance=None):
     a = manifest_fields(artifact_prefix)
     if device_identity is None:
-        device_identity = hashlib.sha256(b"GB10 sm_121 qualification NOT_RUN").hexdigest()
+        device_identity = "0" * 64  # no device identity was measured
     if tolerance is None:
         tolerance = a["tolerance"]
     inputs = {k: fixture["inputs"][k] for k in fixture["inputs"]}
@@ -134,6 +138,8 @@ def validate(text):
             raise Refused("E_VALUE")
     if f["op"] not in ("matmul", "gqa-causal-attention"):
         raise Refused("E_OP")
+    if f["contract_id"] != CONTRACTS[f["op"]]:
+        raise Refused("E_CONTRACT")
     if f["isa"] != "sm_121":
         raise Refused("E_ISA")
     if f["runtime"] not in ("omega-native", "modular-max"):
@@ -156,6 +162,13 @@ def validate(text):
     want = MEASURED_TIER if f["execution"] == "measured" else NOT_RUN_TIER
     if f["proof_tiers"] != want:
         raise Refused("E_TIERS")
+    zero_out = f["output_sha256"] == "0" * 64
+    if f["oracle_verdict"] == "PASS" and zero_out:
+        raise Refused("E_RESULT")  # a PASS must bind a result
+    if f["execution"] == "measured" and zero_out:
+        raise Refused("E_RESULT")
+    if f["execution"] == "NOT_RUN" and not zero_out:
+        raise Refused("E_RESULT")
     return f, envelope_id(f)
 
 
@@ -172,7 +185,15 @@ def issue(receipt_tool, f, out_path):
 
 def verify(receipt_tool, receipt_path, f, epoch_floor="1"):
     eid = envelope_id(f)
+    raw = open(receipt_path, "rb").read()
+    if hashlib.sha256(raw).hexdigest() != f["receipt_sha256"]:
+        return 3, "REFUSED receipt_sha256 does not match the receipt file"
     cmd = [receipt_tool, "verify", receipt_path, eid,
            f["artifact_cubin_sha256"], f["input_sha256"], f["artifact_id"], str(epoch_floor)]
     p = subprocess.run(cmd, capture_output=True, text=True)
-    return p.returncode, (p.stdout + p.stderr).strip()
+    out = (p.stdout + p.stderr).strip()
+    if p.returncode == 0:
+        got = out.split("receipt_id=")[-1].strip()
+        if got != f["receipt_id"]:
+            return 3, "REFUSED receipt_id does not match the verified receipt"
+    return p.returncode, out
