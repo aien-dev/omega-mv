@@ -1,0 +1,12 @@
+chip: speed gates JUDGED (exclusive spark-window)
+chip: in-list launch floor (8 x 256, 512 B) median 3.62 us, min 3.23 us
+chip: cold 3840x2560 (2457600 B x 41 launches = 96.1 MiB per list): 25.22 us per launch -> 97.5 GB/s = 0.357 of 273 spec, 0.411 of 237.2 practical; minus the launch floor 21.60 us -> 113.8 GB/s (0.480 of 237.2)
+chip: 3840x2560 113.8 GB/s minus the floor = 0.632 of the 180 target, 0.480 of 237.2 practical (target not gated, omega-mv#556)
+chip: cold 2560x2560 (1638400 B x 62 launches = 96.9 MiB per list): 16.32 us per launch -> 100.4 GB/s = 0.368 of 273 spec, 0.423 of 237.2 practical; minus the launch floor 12.70 us -> 129.0 GB/s (0.544 of 237.2)
+chip: 2560x2560 129.0 GB/s minus the floor = 0.716 of the 180 target, 0.544 of 237.2 practical (target not gated, omega-mv#556)
+chip: cold 13824x2560 (8847360 B x 12 launches = 101.2 MiB per list): 55.04 us per launch -> 160.7 GB/s = 0.589 of 273 spec, 0.678 of 237.2 practical; minus the launch floor 51.42 us -> 172.0 GB/s (0.725 of 237.2)
+chip: 13824x2560 172.0 GB/s minus the floor = 0.860 of the 200 target, 0.725 of 237.2 practical (target not gated, omega-mv#556)
+chip: cold 2560x6912 (4423680 B x 23 launches = 97.0 MiB per list): 29.70 us per launch -> 149.0 GB/s = 0.546 of 273 spec, 0.628 of 237.2 practical; minus the launch floor 26.08 us -> 169.6 GB/s (0.715 of 237.2)
+chip: 2560x6912 169.6 GB/s minus the floor = 0.942 of the 180 target, 0.715 of 237.2 practical (target not gated, omega-mv#556)
+receipt: evidence/TERN-556-REGRESSION-FLOOR-20261024/receipt-verify.json
+gpu_tern_test: 9 checks, 0 failed: PASS

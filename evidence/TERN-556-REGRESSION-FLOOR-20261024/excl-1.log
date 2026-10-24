@@ -1,0 +1,12 @@
+chip: speed gates JUDGED (exclusive spark-window)
+chip: in-list launch floor (8 x 256, 512 B) median 3.49 us, min 3.20 us
+chip: cold 3840x2560 (2457600 B x 41 launches = 96.1 MiB per list): 24.67 us per launch -> 99.6 GB/s = 0.365 of 273 spec, 0.420 of 237.2 practical; minus the launch floor 21.18 us -> 116.0 GB/s (0.489 of 237.2)
+FAIL: cold GB/s minus the launch floor at 3840x2560: 116.0 (99.6 with it), gate >= 180
+chip: cold 2560x2560 (1638400 B x 62 launches = 96.9 MiB per list): 16.35 us per launch -> 100.2 GB/s = 0.367 of 273 spec, 0.422 of 237.2 practical; minus the launch floor 12.86 us -> 127.4 GB/s (0.537 of 237.2)
+FAIL: cold GB/s minus the launch floor at 2560x2560: 127.4 (100.2 with it), gate >= 180
+chip: cold 13824x2560 (8847360 B x 12 launches = 101.2 MiB per list): 51.74 us per launch -> 171.0 GB/s = 0.626 of 273 spec, 0.721 of 237.2 practical; minus the launch floor 48.26 us -> 183.3 GB/s (0.773 of 237.2)
+FAIL: cold GB/s minus the launch floor at 13824x2560: 183.3 (171.0 with it), gate >= 200
+chip: cold 2560x6912 (4423680 B x 23 launches = 97.0 MiB per list): 29.70 us per launch -> 149.0 GB/s = 0.546 of 273 spec, 0.628 of 237.2 practical; minus the launch floor 26.21 us -> 168.8 GB/s (0.712 of 237.2)
+FAIL: cold GB/s minus the launch floor at 2560x6912: 168.8 (149.0 with it), gate >= 180
+receipt: /home/drakestapleton/.claude/jobs/c0ab471d/tmp/tern-excl.json
+gpu_tern_test: 9 checks, 4 failed: FAIL
