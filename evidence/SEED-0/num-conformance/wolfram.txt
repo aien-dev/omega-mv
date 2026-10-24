@@ -1,0 +1,95 @@
+Numeric conformance expectations from the Wolfram MCP server
+================================================================
+
+Date: 2026-10-23
+Server: https://agenttools.wolfram.com/mcp (public, no API key)
+Client: node /home/drakestapleton/.local/lib/aien/wolfram-mcp-bridge.mjs (the bridge opencode uses)
+Tool: WolframLanguageEvaluator (Wolfram 2026.09.15, protocol 2025-03-26)
+Consumer: seed/omc/gate14.sh
+
+Nothing here was produced by the Omega compiler. The gate compiles its own programs and compares
+main's exit status (value mod 256, or 100 + trap code) with these exact results.
+
+Wolfram Language code (one evaluation):
+
+  truncDiv[a_, b_] := Sign[a] Sign[b] Quotient[Abs[a], Abs[b]];
+  truncRem[a_, b_] := a - b truncDiv[a, b];
+  rows = {
+    {"u8_add", Mod[255 + 1, 256]},
+    {"u8_sub", Mod[0 - 1, 256]},
+    {"u16_add", Mod[65535 + 2, 65536]},
+    {"u32_add", Mod[2^32 - 1 + 1, 2^32]},
+    {"u64_add", Mod[2^64 - 1 + 1, 2^64]},
+    {"u8_shl7", Mod[BitShiftLeft[1, 7], 256]},
+    {"u64_shl63_high_byte", Mod[BitShiftRight[BitShiftLeft[1, 63], 56], 256]},
+    {"i32_shr_neg8", Mod[BitShiftRight[-8, 1], 256]},
+    {"i32_div_neg7_2", Mod[truncDiv[-7, 2], 256]},
+    {"i32_rem_neg7_2", Mod[truncRem[-7, 2], 256]},
+    {"i32_div_7_neg2", Mod[truncDiv[7, -2], 256]},
+    {"i32_rem_7_neg2", Mod[truncRem[7, -2], 256]},
+    {"i32_min_rem_neg1", Mod[truncRem[-2^31, -1], 256]},
+    {"u64_max_div10_byte", Mod[Quotient[2^64 - 1, 10], 256]},
+    {"u64_max_rem10", Mod[Mod[2^64 - 1, 10], 256]},
+    {"i32_min", Mod[-2^31, 256]},
+    {"i32_max", Mod[2^31 - 1, 256]},
+    {"conv_u8_255", Mod[255, 256]},
+    {"conv_byte_neg128", Mod[-128, 256]}
+  };
+
+  checks = {
+    {"byte_127_plus_1_traps1", Not[Between[127 + 1, {-128, 127}]]},
+    {"byte_minus128_minus_1_traps1", Not[Between[-128 - 1, {-128, 127}]]},
+    {"byte_neg_minus128_traps1", Not[Between[-(-128), {-128, 127}]]},
+    {"short_32767_plus_1_traps1", Not[Between[32767 + 1, {-32768, 32767}]]},
+    {"int_max_plus_1_traps1", Not[Between[2^31 - 1 + 1, {-2^31, 2^31 - 1}]]},
+    {"long_max_plus_1_traps1", Not[Between[2^63 - 1 + 1, {-2^63, 2^63 - 1}]]},
+    {"int_min_div_neg1_traps1", Not[Between[truncDiv[-2^31, -1], {-2^31, 2^31 - 1}]]},
+    {"int_1_shl31_traps1", Not[Between[BitShiftLeft[1, 31], {-2^31, 2^31 - 1}]]},
+    {"conv_uchar_300_traps5", Not[Between[300, {0, 255}]]},
+    {"conv_byte_neg129_traps5", Not[Between[-129, {-128, 127}]]},
+    {"conv_int_2pow31_traps5", Not[Between[2^31, {-2^31, 2^31 - 1}]]},
+    {"u8_shl8_traps7", Not[0 <= 8 <= 7]}
+  };
+
+Returned values (cleaned from the kernel output):
+
+  u8_add                        0
+  u8_sub                        255
+  u16_add                       1
+  u32_add                       0
+  u64_add                       0
+  u8_shl7                       128
+  u64_shl63_high_byte           128
+  i32_shr_neg8                  252
+  i32_div_neg7_2                253
+  i32_rem_neg7_2                255
+  i32_div_7_neg2                253
+  i32_rem_7_neg2                1
+  i32_min_rem_neg1              0
+  u64_max_div10_byte            153
+  u64_max_rem10                 5
+  i32_min                       0
+  i32_max                       255
+  conv_u8_255                   255
+  conv_byte_neg128              128
+
+  byte_127_plus_1_traps1        True
+  byte_minus128_minus_1_traps1  True
+  byte_neg_minus128_traps1      True
+  short_32767_plus_1_traps1     True
+  int_max_plus_1_traps1         True
+  long_max_plus_1_traps1        True
+  int_min_div_neg1_traps1       True
+  int_1_shl31_traps1            True
+  conv_uchar_300_traps5         True
+  conv_byte_neg129_traps5       True
+  conv_int_2pow31_traps5        True
+  u8_shl8_traps7                True
+
+Exact rationals also returned (float evidence; gate8 owns the bit patterns):
+
+  f64 0.1 = 3602879701896397/36028797018963968
+  f64 pi  = Pi (exact)
+
+Trap rows not derived from Wolfram (structural, obvious): div0 and rem0 -> 102, an out-of-range
+runtime array index -> 103, and a while whose bound is passed -> 104.

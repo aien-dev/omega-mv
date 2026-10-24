@@ -529,6 +529,22 @@ syscall 46). `fd` is `int`, `length` is `long`, and the result is `long`: 0 or m
 - `seed/omc/omc.om`, 6,480 lines and 238 functions, sha256
   `4aa1b0bfd082e2ed11785b179c97af6cb848f926ed6818e9a3c08eb433b5deb3` (108,629 bytes).
 
+## Rung R23: numeric conformance from Wolfram (done)
+
+`seed/omc/gate14.sh` runs 35 programs whose expected exit statuses were computed exactly in Wolfram
+Language through the Wolfram MCP server (2026-10-23; server 2026.09.15), not by this compiler. The
+expressions and the returned table are in `evidence/SEED-0/num-conformance/wolfram.txt`.
+
+- 19 value cases: unsigned wrap at 8/16/32/64 bits, arithmetic right shift, truncating signed
+  division and remainder at both signs, `min rem -1`, 64-bit max div/rem, and conversions.
+- 16 trap cases: signed overflow for byte/short/int/long, `min div -1`, signed `shl` overflow,
+  divide/remainder by zero, a runtime bounds check, a passed loop bound, conversions and a shift
+  out of range.
+
+Values are compared as `main`'s value mod 256; traps must exit `100 + code`. The gate runs in about
+0.1 s and `seed/host/check.sh` runs it. Compiler unchanged: 6,480 lines, 238 functions, sha256
+`4aa1b0bf…`.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
