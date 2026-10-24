@@ -704,6 +704,18 @@ field lengths (1..64; over that is error 14), while a float constant used as any
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`).
 
+## Rung R35: constants in trap codes, loop bounds and for counts (done)
+
+`trap N` and `while ... bound N` now accept an integer constant as well as a literal (ranges 1..14
+and 1..999999); a `for` count was already an ordinary value, so a constant works there too. A float
+constant is error 16 and an out-of-range integer keeps error 8.
+
+- `gate16` now runs 18 accepted programs and 19 refusals.
+- `seed/omc/omc.om`, 6,716 lines and 241 functions, sha256
+  `1e1b7cde509347dfc351c26419df298907d85bb0572712b62f55d3fe95e6ee19` (112,706 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

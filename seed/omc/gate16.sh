@@ -45,8 +45,11 @@ float_bits|154|const H f64 0.1\nfn main to int\nret int rem bitcast ulong H ulon
 float32_bits|205|const H f32 0.1\nfn main to int\nret int rem bitcast uint H uint 256\nend
 float_arith|0|const H f64 0.1\nfn main to int\nx = add H f64 0.2\nif eq x f64 0.3\nret 1\nend\nret 0\nend
 struct_length|32|const N uint 4\nstruct S a uchar N end\nfn main to int\np = new S 0\nret int sizeof S\nend
+const_bound|2|const B ulong 3\nfn main to int\nx = ulong 0\nwhile lt x ulong 2 bound B\nx = add x 1\nend\nret int x\nend
+trap_const|102|const T uint 2\nfn main to int\ntrap T\nend
+for_const|4|const K ulong 4\nfn main to int\nx = ulong 0\nfor i ulong K\nx = add x 1\nend\nret int x\nend
 RUN
-[ "$n" = 15 ] || bad "value table ran $n of 15 cases"
+[ "$n" = 18 ] || bad "value table ran $n of 18 cases"
 
 n=0
 while IFS='|' read -r name want src; do
@@ -77,8 +80,10 @@ len_after|16|fn f to int\na = new uint N 0\nret 0\nend\nconst N uint 4\nfn main 
 float_as_length|16|const H f64 0.1\nfn main to int\na = new uchar H 0\nret 0\nend
 float_int_literal|16|const H f64 5\nfn main to int\nret 0\nend
 struct_length_big|14|const N uint 65\nstruct S a uchar N end\nfn main to int\nret 0\nend
+float_bound|16|const B f64 0.5\nfn main to int\nwhile eq int 1 int 1 bound B\nend\nret 0\nend
+trap_range|8|const T uint 0\nfn main to int\ntrap T\nend
 REF
-[ "$n" = 17 ] || bad "refusal table ran $n of 17 cases"
+[ "$n" = 19 ] || bad "refusal table ran $n of 19 cases"
 
-say "PASS gate16 15 constant programs and 17 refusals"
+say "PASS gate16 18 constant programs and 19 refusals"
 exit 0

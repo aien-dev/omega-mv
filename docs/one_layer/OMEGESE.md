@@ -614,6 +614,10 @@ length is error 16. A length token that is a name other than an integer constant
 `arrlen` still enforces 1..16777216 for arrays (errors 8 and 23). Signatures are pre-scanned, so a
 constant used in a parameter length must be defined before that function.
 
+An integer constant is also accepted as a `trap` code (1..14) and as a `while ... bound` count
+(1..999999); a `for` count is an ordinary value, so a constant works there too. Out-of-range values
+keep error 8, and a float constant in any of these positions is error 16.
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original

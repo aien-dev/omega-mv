@@ -1677,6 +1677,9 @@ note not an integer constant is error 16; arrlen then applies the 1..16777216 ra
 fn lenval to ulong
 tok
 k = get tk 0
+if eq k 0
+fail 4
+end
 if eq k 2
 ret get tw 0
 end
@@ -4470,14 +4473,7 @@ end
 note s_trap: trap N (1 .. 14): an always-taken branch to the trap stub for code N, which finish makes.
 note Program mode exits 100 + N; function mode calls OscRt.trap (OMEGESE 9.1). The line ends the path.
 fn s_trap to void
-tok
-if eq get tk 0 0
-fail 4
-end
-if ne get tk 0 2
-fail 16
-end
-v = get tw 0
+v = lenval
 if or lt v 1 gt v 14
 fail 8
 end
@@ -4701,17 +4697,11 @@ end
 if ne kw get tw 0 70
 fail 5
 end
-tok
-if eq get tk 0 0
-fail 4
-end
-if ne get tk 0 2
-fail 16
-end
-if ge sub get tw 0 1 999999
+v = lenval
+if ge sub v 1 999999
 fail 8
 end
-n = get tw 0
+n = v
 eol
 end
 lpcnt c n
