@@ -61,6 +61,11 @@ static int g_checks, g_failed;
 static int g_sim_mode; /* --sim: the host simulator never opens the device */
 static int g_divergent; /* --divergent (omega #308 R2): the j >= ctx branch inside a BSSY/BSYNC region */
 static uint32_t g_hd = 64; /* --hd 128: the whole battery at head_dim 128 (Qwen3-4B shapes); both simulators size the CTA from it */
+/* Host-only register bound (omega#470). hd 64 kernels are the program from before cut K (#417 keeps them byte-identical,
+ * see the hd64 digest pins) and stay under 64. hd 128 follows AT_GPR_BUDGET in src/omega_gpu_attention_api.c (96 since
+ * cut K, chip battery 225/225): the codegen refuses any kernel above it and every launch declares exactly that many
+ * registers, so a peak under it changes nothing on the chip. The pinned-digest check further down uses the same 96. */
+#define ATTN_GPR_BOUND (g_hd == 64 ? 64u : 96u)
 #define CHECK(cond, ...) do { g_checks++; if (!(cond)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 
 static uint32_t lcg(uint32_t *s) { *s = *s * 1664525u + 1013904223u; return *s; }
@@ -146,6 +151,18 @@ static size_t compare(const float *got, const float *want, size_t n, double rel,
 }
 
 /* ------------------------------------------------------------- host only */
+/* One instruction line of an nvdisasm listing: leading blanks, then the byte offset as a hex comment, "/" "*" hex "*" "/".
+ * omega#470: the old test matched the text "/" "*" "0", which stops at offset 0x1000, so every listing looked cut off at
+ * 256 instructions and any opcode first emitted past 4 KiB (the hd 128 kernels are 512 and 624 instructions) was missed. */
+static bool is_sass_insn_line(const char *line) {
+    while (*line == ' ' || *line == '\t') line++;
+    if (line[0] != '/' || line[1] != '*') return false;
+    const char *p = line + 2;
+    int digits = 0;
+    while ((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'f') || (*p >= 'A' && *p <= 'F')) { p++; digits++; }
+    return digits >= 4 && p[0] == '*' && p[1] == '/';
+}
+
 static int nvdisasm_check(bool f32, const char *name, const char *const *must, int n_must) {
     const char *nv = "/usr/local/cuda/bin/nvdisasm";
     if (access(nv, X_OK) != 0) { printf("nvdisasm: not present, listing check skipped for %s\n", name); return 0; }
@@ -158,11 +175,12 @@ static int nvdisasm_check(bool f32, const char *name, const char *const *must, i
     fwrite(k.code, 1, k.code_size, f); fclose(f);
     snprintf(cmd, sizeof cmd, "%s -b SM121 %s > %s 2>&1", nv, bin, lst);
     int rc = system(cmd);
+    const int want_insns = (int)(k.code_size / 16); /* every 16-byte slot, padding included, is one listing line */
     free(k.code);
     FILE *l = fopen(lst, "r"); if (!l) return -1;
     char line[512]; int seen[16] = {0}; int bad = 0, insns = 0;
     while (fgets(line, sizeof line, l)) {
-        if (!strstr(line, "/*0")) continue;
+        if (!is_sass_insn_line(line)) continue;
         insns++;
         if (strstr(line, "?") || strstr(line, "error")) bad++;
         for (int i = 0; i < n_must; i++) if (strstr(line, must[i])) seen[i] = 1;
@@ -170,9 +188,9 @@ static int nvdisasm_check(bool f32, const char *name, const char *const *must, i
     fclose(l);
     int miss = 0;
     for (int i = 0; i < n_must; i++) if (!seen[i]) { printf("  %s: nvdisasm listing lacks %s\n", name, must[i]); miss++; }
-    printf("nvdisasm %s: rc=%d insns=%d undecodable=%d missing=%d (%s)\n", name, rc, insns, bad, miss, lst);
+    printf("nvdisasm %s: rc=%d insns=%d of %d undecodable=%d missing=%d (%s)\n", name, rc, insns, want_insns, bad, miss, lst);
     unlink(bin);
-    return (rc == 0 && bad == 0 && miss == 0) ? 0 : -1;
+    return (rc == 0 && insns == want_insns && bad == 0 && miss == 0) ? 0 : -1;
 }
 
 static OmegaGpuKvLayout layout_for(uint32_t num_blocks, uint32_t bs, uint32_t layers, uint32_t nkv, uint32_t hd) {
@@ -214,7 +232,7 @@ static void host_only(void) {
         const char *name = f32 ? "gqa_f32" : "paged_bf16";
         OmegaBlackwellKernel k; memset(&k, 0, sizeof k);
         int rc = omega_gpu_attention_codegen_hd(f32 != 0, f32 ? 12 : 4, 3, g_hd, &k);
-        CHECK(rc == OMEGA_GPU_ATTN_OK && k.code_size > 0 && k.gpr_count <= 64, "%s kernel generated (rc %s, %zu insns, %u gprs)", name, omega_gpu_attention_rc_name(rc), k.insn_count, k.gpr_count);
+        CHECK(rc == OMEGA_GPU_ATTN_OK && k.code_size > 0 && k.gpr_count <= ATTN_GPR_BOUND, "%s kernel generated (rc %s, %zu insns, %u gprs)", name, omega_gpu_attention_rc_name(rc), k.insn_count, k.gpr_count);
         printf("codegen %s: %zu insns, %u gprs, %u ugprs\n", name, k.insn_count, k.gpr_count, k.uniform_gpr_count);
         /* every mutant (1 .. COUNT-1) is a distinct kernel: different from the baseline and from
          * every other mutant, named, and inside the register budget */
@@ -224,7 +242,7 @@ static void host_only(void) {
             omega_gpu_attention_test_set_mutant((OmegaGpuAttnMutant)m);
             memset(&k, 0, sizeof k);
             int mrc = omega_gpu_attention_codegen_hd(f32 != 0, f32 ? 12 : 4, 3, g_hd, &k);
-            CHECK(mrc == OMEGA_GPU_ATTN_OK && k.gpr_count <= 64, "%s mutant %s generated (rc %s, %u gprs)", name, omega_gpu_attention_mutant_name((OmegaGpuAttnMutant)m), omega_gpu_attention_rc_name(mrc), k.gpr_count);
+            CHECK(mrc == OMEGA_GPU_ATTN_OK && k.gpr_count <= ATTN_GPR_BOUND, "%s mutant %s generated (rc %s, %u gprs)", name, omega_gpu_attention_mutant_name((OmegaGpuAttnMutant)m), omega_gpu_attention_rc_name(mrc), k.gpr_count);
             CHECK(strcmp(omega_gpu_attention_mutant_name((OmegaGpuAttnMutant)m), "?") != 0, "mutant %d has a name", m);
             memcpy(digests[m], k.code_digest, 32);
             free(k.code);
@@ -1125,15 +1143,17 @@ static void hd128_checks(void) {
 
 /* head_dim 64 byte-identity pin and head_dim 128 codegen facts (CPU only, no device, no simulator).
  * The digests are SHA-256 of the encoded kernel bytes as emitted by the batched-load program of 2026-10-12
- * (speed/attention-batched-loads; before it, main c0369e6 was pinned at 160 instructions); any change to the head_dim 64 program changes a digest and fails here. */
+ * (speed/attention-batched-loads; before it, main c0369e6 was pinned at 160 instructions), re-pinned 2026-10-18 for the encoder
+ * control-word fix (omega-mv#545: 8 IADD3 and 1 EXIT word 3 per kernel carry the scheduled waits; reverting only those
+ * words reproduces the previous digests); any change to the head_dim 64 program changes a digest and fails here. */
 typedef struct { bool f32; uint32_t log2bs, log2gqa; size_t insns; const char *sha256; } Pin;
 static const Pin k_pins64[] = {
-    { false, 4, 3, 216, "44d27fae78ea21ee77fd7a0ebd2ebfcac52e9e45a81de84b035868092e13e424" }, 
-    { false, 4, 2, 216, "3bc79d4a54fd0d82024b376dfdb718e8326431917251f13f5c44be6ba8eb6f0c" }, 
-    { false, 4, 0, 216, "83eca9872e32c17321d2f8ec6a6ec92638ed72b136d8958cda5cdfc451c01ef8" }, 
-    { true, 12, 3, 184, "b6a25d8739185bbd944bfcc1ec174abb24ce46529f06c56f8d5ac77bf6883ddd" }, 
-    { true, 12, 2, 184, "46a2b82ebcb55237f4a7585679b42ac9558c7a434e8e80ccef6cc0bfaed8fcb9" }, 
-    { true, 12, 0, 184, "970db9533c836eca7c86783875a2ad898cd69bc3070cae418cc92b3ce2dbbd9c" },
+    { false, 4, 3, 216, "5e183059327a4b3f188d749f296385ec43e718bbbf98de4f2697b5b553e7ccb1" }, 
+    { false, 4, 2, 216, "6656927ae80d3677c8444e5ccbb696b50850e21b3ff52bf14dd79d6f83232243" }, 
+    { false, 4, 0, 216, "b3d40b99628c4bb9bdb25c503766aca5c904456e63301b5338963071ab9b28e0" }, 
+    { true, 12, 3, 184, "61eab0c548f36364ee4d7547fa8f32fffcc20096182112d5fef12fe381712e31" }, 
+    { true, 12, 2, 184, "0095f8fb408efad952f0cad4f0e9d6d99f950d4aa8bbd14ee71a5347297fcbc9" }, 
+    { true, 12, 0, 184, "e0c44b49246198765f0eb60a6cc065d59c98f41fadc10b1d4e3fbc18587d855d" },
 };
 static void hex_digest(const uint8_t d[32], char out[65]) { for (int i = 0; i < 32; i++) snprintf(out + 2 * i, 3, "%02x", d[i]); }
 static void hd_codegen_checks(void) {

@@ -129,6 +129,11 @@ case "$step" in
   one-layer-acceptance) make $NOPHYS test-one-layer-acceptance ;;
   physics0)           make $NOPHYS physics0-test ;;
   chip-tool-selftests) for t in test-m19r-qualify test-gate14-combine test-window-lane-guard test-unwritten-trap-host test-ldst-host; do make $NOPHYS $t; done ;;
+  # seed compiler (no hosted mirror; Spark only): rebuild from the loader, full qualification, IR oracles required
+  seed)               make OUT_DIR=build build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2
+                      sh seed/omega-from-seed.sh
+                      sh seed/host/check.sh 2>&1 | tee "$OUT_DIR.seed-check.log"
+                      if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;
@@ -168,6 +173,19 @@ case "$step" in
     make $NOPHYS test-numeric-transc-digest | tee build/digest.log
     n=$(grep -c 'matches frozen digest' build/digest.log); obs frozen_digests_matched "$n"
     test "$n" -ge 1
+    ;;
+  gpu-attention)      # host-suites-3.yml gpu-attention (omega#470): physics-src at physics.lock, lock check on;
+                      # host-only, sim and sweep tiers, nothing touches a GPU (the Spark has nvdisasm, so the
+                      # listing check runs here where the hosted runner printed "skipped")
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-attention | tee build/attn.log
+    test "$(grep -cE '^PASS: [0-9]+ checks, 0 failed$' build/attn.log)" -eq 6
+    ! grep -qE '^FAIL' build/attn.log
+    ;;
+  gpu-libm-free)      # omega-mv#471: no libm symbol left undefined in libomega_gpu.a (physics-src at physics.lock)
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-libm-free | tee build/libm-free.log
+    grep -q '^PASS: libomega_gpu.a is libm-free$' build/libm-free.log
     ;;
   numeric-transc-full) make $NOPHYS test-numeric-transc-full ;;
   m6|m7|m8|m9|m10|m11|m12|m13|m14|m15|m17|m5|m19|m19r-qualify|gate14-combine)

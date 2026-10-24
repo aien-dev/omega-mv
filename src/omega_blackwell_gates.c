@@ -1010,8 +1010,8 @@ static bool test_m18_gate16_clean_clone(void) {
                        "rm -rf /tmp/omega_clean_m18 && "
                        "cp -r \"$root\" /tmp/omega_clean_m18 && "
                        "cd /tmp/omega_clean_m18 && "
-                       "make clean >/dev/null 2>&1 && "
-                       "make -j PHYSICS_DIR='%s' >/dev/null 2>&1 && "
+                       "make OUT_DIR=build clean >/dev/null 2>&1 && "
+                       "make -j OUT_DIR=build PHYSICS_DIR='%s' >/dev/null 2>&1 && "
                        "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1",
                        physics_dir_resolved);
     if (len < 0 || (size_t)len >= sizeof(command)) return false;

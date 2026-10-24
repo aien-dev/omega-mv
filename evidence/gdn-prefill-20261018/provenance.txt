@@ -1,0 +1,1 @@
+chip binary = base-commit.txt (19bb4437, the first decode commit before the stack was rebased; same patch as 47eec857) + change.diff = commit in built-from-commit.txt. Rebasing onto feat/gdn-decode changed no GDN file; the FP8 cap change underneath only raises OMEGA_FP8_MAX_K / OMEGA_TCGEMM_MAX_K.

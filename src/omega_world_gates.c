@@ -1812,10 +1812,13 @@ static bool test_m19_gate16_clean_clone(void) {
         return false;
     }
 
+    /* OUT_DIR=build on the clone's make: tests/gates/run.sh exports a per-step OUT_DIR
+     * (omega#511), which the clone would inherit and build into, while the line below runs
+     * ./build/omegatool. The clone is its own directory, so its default build/ is private. */
     char command[4608];
     int len = snprintf(command, sizeof(command),
                        "git clone --quiet --no-hardlinks . %s && cd %s && git checkout --quiet %s && "
-                       "make clean >/dev/null 2>&1 && make -j PHYSICS_DIR=%s >/dev/null 2>&1 && "
+                       "make OUT_DIR=build clean >/dev/null 2>&1 && make -j OUT_DIR=build PHYSICS_DIR=%s >/dev/null 2>&1 && "
                        "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m19-gates >%s/qualification.log 2>&1",
                        checkout, checkout, src_sha, physics_dir_resolved, clone);
     if (len < 0 || (size_t)len >= sizeof(command)) return false;
