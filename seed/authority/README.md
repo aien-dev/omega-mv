@@ -45,8 +45,9 @@ Expected output and exit:
 | dispatch | `dispatch checks=037 000` | 0 |
 | lock | `lock checks=5 fails=0` | 0 |
 
-The authority gates are run by `seed/qualification/security673/gate669.om` as part of the
-security qualification; the lock is exercised inside the dispatch gate. A failure is a failed check count or a nonzero exit; a compile failure is
+The authority gates and the standalone lock gate are run by
+`seed/qualification/security673/gate669.om` as part of the security qualification; the dispatcher
+also exercises the lock in its 37-check gate. A failure is a failed check count or a nonzero exit; a compile failure is
 `INVALID`, not a pass.
 
 ## Cutover rule

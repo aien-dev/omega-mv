@@ -40,7 +40,8 @@ chmod +x build/sha256-gate
 ./build/sha256-gate
 ```
 
-Expected: `sha256 vectors=5 fails=0`, exit 0.
+Expected: `sha256 vectors=5 fails=0`, exit 0. The same gate is compiled and run by
+`seed/qualification/security673/gate669.om`.
 
 ## Next
 

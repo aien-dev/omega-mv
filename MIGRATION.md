@@ -46,7 +46,8 @@ deleted legacy code and qualified consumers; a plan or a passing unit test is no
 3. **Trace and privacy (#607)**: `rx_argus`, trace producers and the Open Humanity consent lane.
    Status: the local `.om` segment writer (`seed/trace/segment.om`) is qualified with 117 checks:
    header, append+fsync, complete-record scan, short-tail quarantine and fresh-segment recovery.
-   A `.om` SHA-256 implementation passes five standard vectors (`seed/trace/sha256.om`).
+   A `.om` SHA-256 implementation passes five standard vectors (`seed/trace/sha256.om`) and runs in
+   the qualification gate.
    Exact-byte consent/export and the receiver contract remain `NOT_RUN`: the Open Humanity receiver
    contract is not in this repository, and no second wire contract is invented here.
 4. **Evaluation and promotion (spark-rsi #67)**: replace the Rust promotion/evaluator gate with the

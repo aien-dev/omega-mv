@@ -18,6 +18,8 @@ never a PASS for an integration, hardware or release claim.
 | #671 `renames` packed-list ingress | PASS, 7 cases | `renames1` |
 | #671 native path and `argread` boundaries | PASS, 7 cases | `paths1` |
 | Reproducibility of the seed compiler | PASS: `om4 -> stage1 -> stage2` fixed point | `pure2`, gate logs |
+| Supporting `.om` SHA-256 digest | PASS: five standard vectors, also in gate669 | `sha256-gate`, gate669 |
+| Supporting `.om` cross-process lock | PASS: exclusive/busy/release/waiter/stale, also in gate669; dispatcher holds it | `lock-gate`, dispatch gate |
 
 ## Not run, with the exact reason
 
