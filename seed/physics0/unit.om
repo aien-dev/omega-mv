@@ -1,0 +1,339 @@
+note SPDX-License-Identifier: Apache-2.0
+note Concatenate rng.om, request.om, unit.om. Exit 0 only if all checks pass.
+note Expected values from the unmodified C baseline at d863780eb42bd940349eba61a3d1c78b0b819941.
+text world "world"
+fn main to int
+note Modular arithmetic carries and maximum products.
+if ne rngadd 18446744073709551615 1 0
+ret 1
+end
+if ne rngadd 18446744073709551615 18446744073709551615 18446744073709551614
+ret 2
+end
+if ne rngmul 18446744073709551615 18446744073709551615 1
+ret 3
+end
+if ne rngmul 4294967296 4294967296 0
+ret 4
+end
+if ne rngmul 18446744073709551615 65536 18446744073709486080
+ret 5
+end
+note Raw SplitMix state extremes, including increment wraparound.
+put rngstate 0 0
+if ne rngnext 16294208416658607535
+ret 6
+end
+if ne get rngstate 0 11400714819323198485
+ret 7
+end
+put rngstate 0 18446744073709551615
+if ne rngnext 16490336266968443936
+ret 8
+end
+if ne get rngstate 0 11400714819323198484
+ret 9
+end
+note Empty tag, zero seed, eight consecutive outputs and post-draw state.
+if ne rnginit 0 0 0
+ret 10
+end
+if ne get rngstate 0 14695981039346656037
+ret 11
+end
+if ne rngnext 14087677454934409008
+ret 12
+end
+if ne rngnext 1156539639830188822
+ret 13
+end
+if ne rngnext 6107907394010225435
+ret 14
+end
+if ne rngnext 3199123669689638002
+ret 15
+end
+if ne rngnext 7288325018142838421
+ret 16
+end
+if ne rngnext 17866453389242143151
+ret 17
+end
+if ne rngnext 8177402106386418192
+ret 18
+end
+if ne rngnext 7327937117123367831
+ret 19
+end
+if ne get rngstate 0 13667979225384485837
+ret 20
+end
+if ne rnginit 18446744073709551615 0 0
+ret 21
+end
+if ne rngnext 3526150024844925518
+ret 22
+end
+if ne rngnext 11731478886250893314
+ret 23
+end
+note One byte and multibyte ASCII, both seed extremes.
+put rngtag 0 97
+if ne rnginit 0 1 0
+ret 24
+end
+if ne get rngstate 0 12638187200555641996
+ret 25
+end
+if ne rngnext 6857225946766476583
+ret 26
+end
+if ne rngnext 18412106973715859535
+ret 27
+end
+if ne rnginit 18446744073709551615 1 0
+ret 28
+end
+if ne rngnext 15365624696913284058
+ret 29
+end
+if ne rngnext 14384683269263029524
+ret 30
+end
+for i ulong len world
+put rngtag i get world i
+end
+if ne rnginit 0 len world 0
+ret 31
+end
+if ne get rngstate 0 5717881983045765875
+ret 32
+end
+if ne rngnext 17513863605490730988
+ret 33
+end
+if ne rngnext 9401024372741141497
+ret 34
+end
+if ne rnginit 18446744073709551615 len world 0
+ret 35
+end
+if ne rngnext 5751318989716258026
+ret 36
+end
+if ne rngnext 12984362597069512417
+ret 37
+end
+note High-bit bytes are unsigned, not sign-extended.
+put rngtag 0 128
+put rngtag 1 255
+if ne rnginit 0 2 0
+ret 40
+end
+if ne get rngstate 0 713197150969623264
+ret 41
+end
+if ne rngnext 11707748180763584890
+ret 42
+end
+if ne rngnext 14667845794806978071
+ret 43
+end
+if ne rngnext 7581507163619784878
+ret 44
+end
+if ne rngnext 6812334620058058772
+ret 45
+end
+if ne rngnext 793927904360208106
+ret 46
+end
+if ne rngnext 1256370476000318575
+ret 47
+end
+if ne rngnext 14222632400573449213
+ret 48
+end
+if ne rngnext 4532184365850327507
+ret 49
+end
+if ne get rngstate 0 18131939410717004680
+ret 50
+end
+if ne rnginit 18446744073709551615 2 0
+ret 51
+end
+if ne rngnext 15903987064210817861
+ret 52
+end
+if ne rngnext 7962989993763865288
+ret 53
+end
+note Capacity boundary, last byte included, and both seed extremes.
+for i ulong len rngtag
+put rngtag i 97
+end
+if ne rnginit 0 256 0
+ret 60
+end
+if ne get rngstate 0 18242136092491110437
+ret 61
+end
+if ne rngnext 1543074406968970713
+ret 62
+end
+if ne rngnext 16439775865296349378
+ret 63
+end
+if ne rnginit 18446744073709551615 256 0
+ret 64
+end
+if ne rngnext 6955825034878021046
+ret 65
+end
+if ne rngnext 8540932145809807677
+ret 66
+end
+note Uniform consumes exactly one draw, preserving the following word.
+if ne rnginit 0 0 0
+ret 70
+end
+if ne rnguniform 41737
+ret 71
+end
+if ne rngnext 1156539639830188822
+ret 72
+end
+note Invalid tags must refuse before changing the prior stream state.
+old = get rngstate 0
+if ne rnginit 0 257 2
+ret 80
+end
+if ne rnginit 0 18446744073709551615 2
+ret 81
+end
+put rngtag 0 0
+if ne rnginit 0 1 2
+ret 82
+end
+put rngtag 0 97
+put rngtag 255 0
+if ne rnginit 0 256 2
+ret 83
+end
+if ne get rngstate 0 old
+ret 84
+end
+note Request framing rejects short and oversized lengths without indexing.
+if ne rngreqok 0 2
+ret 90
+end
+if ne rngreqok 7 2
+ret 91
+end
+if ne rngreqok 265 2
+ret 92
+end
+if ne rngreqok 18446744073709551615 2
+ret 93
+end
+if ne get rngstate 0 old
+ret 94
+end
+for i ulong 8
+put rngreq i 0
+end
+put rngreq 8 0
+if ne rngreqok 9 2
+ret 95
+end
+if ne get rngstate 0 old
+ret 96
+end
+note Valid request, full response packing, repeated-call determinism.
+if ne rngreqok 8 0
+ret 100
+end
+rngpack
+if ne get rngstate 0 13667979225384485837
+ret 101
+end
+note Independently fixed byte order for the first response word.
+if ne get rngout 0 48
+ret 109
+end
+if ne get rngout 1 255
+ret 110
+end
+if ne get rngout 2 164
+ret 111
+end
+if ne get rngout 3 107
+ret 112
+end
+if ne get rngout 4 1
+ret 113
+end
+if ne get rngout 5 124
+ret 114
+end
+if ne get rngout 6 129
+ret 115
+end
+if ne get rngout 7 195
+ret 116
+end
+if ne rnginit 0 0 0
+ret 102
+end
+for word ulong 8
+v = rngnext
+for octet ulong 8
+if ne get rngout add mul word 8 octet uchar and shr v mul octet 8 255
+ret 103
+end
+end
+end
+for i ulong 8
+put rngreq i 255
+end
+put rngreq 8 128
+put rngreq 9 255
+if ne rngreqok 10 0
+ret 104
+end
+if ne get rngstate 0 17733546922739928351
+ret 105
+end
+if ne rngnext 15903987064210817861
+ret 106
+end
+for i ulong 256
+put rngreq add i 8 97
+end
+if ne rngreqok 264 0
+ret 107
+end
+if ne rngnext 6955825034878021046
+ret 108
+end
+note Mixed seed bytes detect reversed or permuted seed decoding.
+put rngreq 0 1
+put rngreq 1 35
+put rngreq 2 69
+put rngreq 3 103
+put rngreq 4 137
+put rngreq 5 171
+put rngreq 6 205
+put rngreq 7 239
+if ne rngreqok 8 0
+ret 117
+end
+if ne get rngstate 0 2611867254004318244
+ret 118
+end
+if ne rngnext 7292048037619145208
+ret 119
+end
+ret 0
+end
