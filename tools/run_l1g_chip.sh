@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # run_l1g_chip.sh EVIDENCE_DIR [what...]  (W-L1G, OWN-30B L1 GEMM, 2026-10-14)
 # what: qmma (QMMA arithmetic probe + peak, then a confirmation seed), pfgemm (GEMM v2 chip gate, 4 shapes at 3600 tokens),
 # qgemm (native FP8 path: quantiser + QMMA GEMM chip gate, 4 shapes at 3600 tokens, then a wait-0 probe on gateup).
