@@ -1,4 +1,4 @@
-# OMEGA — the .om language
+# OMEGA (.om or .omg)
 
 **Omega is a systems language and compute platform being implemented in handwritten, seeded `.om`.** Its goal is one inspectable path from a small seed through compiler, runtime and applications to machine execution. Pure computation and authorized effects have distinct contracts; semantic identities identify declared computations, while validation and receipts record what was actually checked.
 
