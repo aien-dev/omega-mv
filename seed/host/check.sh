@@ -3,6 +3,12 @@
 set -eu
 cd "$(dirname "$0")/../.."
 sh seed/omega-from-seed.sh
+if [ -x build/omegese/omegese ] && [ -x build/omega_emit/omega_emit ] && [ -x build/checker2/checker2 ]; then
+    sh seed/omc/gate-ir.sh
+else
+    printf 'SKIP gate-ir: C oracles not built\n'
+    printf '  make build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2\n'
+fi
 sh seed/omc/gate7.sh
 sh seed/host/gate.sh
 sh seed/host/negative.sh

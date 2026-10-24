@@ -282,8 +282,8 @@ given back when the function returns. There is no `free`.
   ignored field names would fail.
 - Thirteen broken programs are refused with the stated error number. om4 itself refuses a struct
   program (exit 16). `free` is still refused.
-- Not in this piece: a kernel on the chip. That stays on L408. (An experimental single-function
-  OSC IR emitter exists on `fix/seed-ir-trap`; it is not part of this line.)
+- Not in this piece: a kernel on the chip. That stays on L408. The experimental single-function
+  OSC IR emitter from `fix/seed-ir-trap` is now part of this line; see rung R8.
 
 ## Rung R6b: one compiler line, structs and native host operations (done)
 
@@ -313,6 +313,22 @@ om4 refusal); `seed/host/check.sh` runs gate7.
 - `trap N` takes 1..14 (error 8 out of range, error 4 when the line ends, 16 when the token is not a
   number). Program mode exits 100 + N; function mode calls `OscRt.trap` through the same stub the
   runtime checks use. A later line in the same block is error 17.
+
+## Rung R8: OSC IR output, one line (experimental checkpoint)
+
+`fix/seed-ir-trap` added a leading `ir` line that writes OSC IR version 1 for one function instead of
+AArch64 words. It branched from R6, so it lacked the native host words and break/trap. It is now part
+of the same compiler: `seed/omc/omc.om`, 5,395 lines and 209 functions, sha256
+`2b029a217e8f2d033b484dec3a5a24570370b8a139157f4204358e226d1e5bd9` (149,904 bytes).
+
+- `seed/omc/gate-ir.sh` passes: 10/10 dev programs are byte-identical to the C-built `omegese` +
+  `omega_emit` oracle, `checker2` ACCEPTs every unit, and the mul-to-add mutant differs. The C tools
+  are referees only.
+- IR mode is still one function and scalar values. It refuses `struct`, the native host words and
+  `break` with error 3, because none has an IR lowering yet. Multifunction IR, struct IR and refusal
+  hardening remain open.
+- `seed/host/check.sh` runs gate-ir only when the three oracle binaries exist, and prints `SKIP`
+  with the build command otherwise; the compiler itself still needs no C tool.
 
 ## How the checks stay honest
 

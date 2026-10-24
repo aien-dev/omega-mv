@@ -629,3 +629,17 @@ host-specific; portable library contracts remain separate work.
 Qualification is `sh seed/host/check.sh`; see `seed/host/README.md`. The seed
 loader and shell test coordinator do not implement these operations. No
 foreign-language compiler or runtime is on the new implementation path.
+
+## 11. OSC IR output (omc only, experimental checkpoint)
+
+A leading line `ir`, before any other line, puts omc in IR mode: it writes OSC IR version 1
+(`spec/one-layer-format.md`) for one function instead of AArch64 machine words, and the AArch64 path
+is not taken. `seed/omc/gate-ir.sh` compares the bytes with the C-built `omegese` + `omega_emit`
+oracle on the 10 dev programs, requires `checker2` to ACCEPT every unit, and requires a mul-to-add
+mutant to differ. Those C tools are referees only; they never write omc's bytes.
+
+Limits, said plainly: one function, scalar values. IR mode refuses a `struct` line, the native host
+words and `break` with error 3 because none of them has an IR lowering yet. Multifunction IR, struct
+IR, and refusal hardening remain open. The gate needs the C-built oracles, so `seed/host/check.sh`
+runs it only when `build/omegese/omegese`, `build/omega_emit/omega_emit` and
+`build/checker2/checker2` exist, and says `SKIP` otherwise.
