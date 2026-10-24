@@ -1,0 +1,75 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Standard SHA-256 vectors: empty, abc, one-block boundary, two blocks and 1000 bytes.
+global fails ulong 1
+global checks ulong 1
+text digs "0123456789abcdef"
+text v0 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+text e1 "abc"
+text v1 "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+text e2 "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+text v2 "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
+text e3 "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
+text v3 "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1"
+text v4 "41edece42d63e8d9bf515a9ba6932e1c20cbc9f5a5d134645adb5db1b9737ea3"
+text passm "sha256 vectors=5 fails=0\n"
+
+fn hi b uchar to uchar
+ret get digs shr b 4
+end
+fn lo b uchar to uchar
+ret get digs and b 15
+end
+fn hexout d view uchar 32 o edit uchar 64 to void
+for i ulong 32
+put o mul i 2 hi get d i
+put o add mul i 2 1 lo get d i
+end
+end
+fn cmp a view uchar 64 b view uchar 64 to void
+for i ulong 64
+if ne get a i get b i
+put fails 0 add get fails 0 1
+end
+end
+put checks 0 add get checks 0 1
+end
+fn main to int
+buf = new uchar 4096 0
+out = new uchar 32 0
+hxb = new uchar 64 0
+sha256 buf 0 out
+hexout out hxb
+cmp hxb v0
+for i ulong len e1
+put buf i get e1 i
+end
+sha256 buf len e1 out
+hexout out hxb
+cmp hxb v1
+for i ulong len e2
+put buf i get e2 i
+end
+sha256 buf len e2 out
+hexout out hxb
+cmp hxb v2
+for i ulong len e3
+put buf i get e3 i
+end
+sha256 buf len e3 out
+hexout out hxb
+cmp hxb v3
+for i ulong 1000
+put buf i 97
+end
+sha256 buf 1000 out
+hexout out hxb
+cmp hxb v4
+if ne get fails 0 0
+ret 1
+end
+nw = write 1 passm 0 len passm
+if ne nw long len passm
+ret 2
+end
+ret 0
+end

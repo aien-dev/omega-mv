@@ -28,8 +28,22 @@ chmod +x build/segment-gate
 
 Expected: `trace checks=117 000`, exit 0. The same program runs inside `gate669`.
 
+## SHA-256 digest
+
+`sha256.om` is a one-shot FIPS 180-4 SHA-256 over at most 4096 input bytes. It holds 32-bit words
+in `ulong`, masks every addition, and writes 32 big-endian output bytes. `sha256-test.om` checks the
+empty, `abc`, 56-byte, 112-byte and 1000-byte vectors.
+
+```
+seed/out/omc < seed/trace/sha256-gate.om > build/sha256-gate
+chmod +x build/sha256-gate
+./build/sha256-gate
+```
+
+Expected: `sha256 vectors=5 fails=0`, exit 0.
+
 ## Next
 
-Exact-byte consent and the sanitized export bundle are the remaining #607 work. They need a `.om`
-cryptographic digest and the existing Open Humanity receiver contract; neither exists yet, so they
-are `NOT_RUN` rather than approximated with a non-cryptographic hash.
+The digest prerequisite is present. Exact-byte consent and the sanitized export bundle remain
+`NOT_RUN`: the Open Humanity receiver contract is not in this repository, and this branch does not
+invent a second wire contract. The sender-side bundle waits on that owner.

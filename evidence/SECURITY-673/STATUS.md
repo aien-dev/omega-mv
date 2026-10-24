@@ -25,11 +25,11 @@ never a PASS for an integration, hardware or release claim.
 | --- | --- | --- |
 | #669 long backward source reachability | NOT_RUN | The current backward B.LO caller is a short array-fill loop; direct encoder extrema do not prove a source-level long backward branch is reachable. |
 | #669 release integration and consumer audit | BLOCKED | Needs the compiler/release owners' integrated review and a real consumer outside the qualification corpus. |
-| #670 grant identity, generation, revocation, durable budgets, atomic check/dispatch | BLOCKED | Needs the existing authority/store/dispatch owners (#649/#659) in a seeded `.om` form. This branch does not create a second authority service. |
+| #670 grant identity, generation, revocation, durable budgets, atomic check/dispatch | BLOCKED | Seeded `.om` action/store/dispatch and a cross-process pid lock exist, but the dispatcher does not yet hold the lock across check/persist and no production consumer is cut over. |
 | #671 manifests, receipts, RPC/tool arguments, model metadata, trace bundles, device descriptions | BLOCKED | No seeded `.om` implementation exists; these are migration dependencies, not PASS. |
 | #649/#659 control lifecycle and authority integration | BLOCKED | The control contracts exist as `.om` artifacts (`control659`) but are not wired to a durable authoritative store and real dispatch. |
 | #651 capability-aware reuse | BLOCKED | Needs the `.om` successor of the existing semantic reuse/store owner; no second cache is authorized. |
-| #607 private-data confinement and exact-byte export consent | BLOCKED | Needs the `.om` trace producers and consent path; only legacy/C/Rust owners exist. |
+| #607 private-data confinement and exact-byte export consent | BLOCKED | A seeded `.om` SHA-256 passes five standard vectors, but the Open Humanity receiver contract is absent; no second wire contract is invented. |
 | spark-rsi #67 poisoned-benchmark defenses | BLOCKED | Needs the `.om` successor of the existing promotion/evaluator gate; the current owner is Rust. |
 | #672 device/DMA isolation and reset | NOT_RUN | Requires reserved physical hardware and driver work. Emulation is not hardware qualification. |
 | #650 diverse double compilation | NOT_RUN | The C reference path cannot express `omc.om`; no sufficiently independent route exists for the final compiler. Same-lineage fixpoint is reproducibility, not DDC. |

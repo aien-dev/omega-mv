@@ -1,0 +1,290 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note SHA-256, one-shot over a byte slice, in seeded .om.
+note The digest is the standard FIPS 180-4 construction with 32-bit words held in ulong and
+note masked after every addition. It has no host crypto dependency and no network path.
+global h ulong 8
+global w ulong 64
+global k ulong 64
+global blk uchar 64
+global kset ulong 1
+
+fn mask x ulong to ulong
+ret and x 4294967295
+end
+
+fn ror x ulong n ulong to ulong
+ret mask or shr x n shl x sub 32 n
+end
+
+fn ch e ulong f ulong g ulong to ulong
+ret xor and e f and xor e 4294967295 g
+end
+
+fn maj a ulong b ulong c ulong to ulong
+ret xor and a b xor and a c and b c
+end
+
+fn bs0 x ulong to ulong
+ret xor ror x 2 xor ror x 13 ror x 22
+end
+
+fn bs1 x ulong to ulong
+ret xor ror x 6 xor ror x 11 ror x 25
+end
+
+fn ss0 x ulong to ulong
+ret xor ror x 7 xor ror x 18 shr x 3
+end
+
+fn ss1 x ulong to ulong
+ret xor ror x 17 xor ror x 19 shr x 10
+end
+
+fn kinit to void
+if ne get kset 0 0
+ret
+end
+put k 0 ulong 1116352408
+put k 1 ulong 1899447441
+put k 2 ulong 3049323471
+put k 3 ulong 3921009573
+put k 4 ulong 961987163
+put k 5 ulong 1508970993
+put k 6 ulong 2453635748
+put k 7 ulong 2870763221
+put k 8 ulong 3624381080
+put k 9 ulong 310598401
+put k 10 ulong 607225278
+put k 11 ulong 1426881987
+put k 12 ulong 1925078388
+put k 13 ulong 2162078206
+put k 14 ulong 2614888103
+put k 15 ulong 3248222580
+put k 16 ulong 3835390401
+put k 17 ulong 4022224774
+put k 18 ulong 264347078
+put k 19 ulong 604807628
+put k 20 ulong 770255983
+put k 21 ulong 1249150122
+put k 22 ulong 1555081692
+put k 23 ulong 1996064986
+put k 24 ulong 2554220882
+put k 25 ulong 2821834349
+put k 26 ulong 2952996808
+put k 27 ulong 3210313671
+put k 28 ulong 3336571891
+put k 29 ulong 3584528711
+put k 30 ulong 113926993
+put k 31 ulong 338241895
+put k 32 ulong 666307205
+put k 33 ulong 773529912
+put k 34 ulong 1294757372
+put k 35 ulong 1396182291
+put k 36 ulong 1695183700
+put k 37 ulong 1986661051
+put k 38 ulong 2177026350
+put k 39 ulong 2456956037
+put k 40 ulong 2730485921
+put k 41 ulong 2820302411
+put k 42 ulong 3259730800
+put k 43 ulong 3345764771
+put k 44 ulong 3516065817
+put k 45 ulong 3600352804
+put k 46 ulong 4094571909
+put k 47 ulong 275423344
+put k 48 ulong 430227734
+put k 49 ulong 506948616
+put k 50 ulong 659060556
+put k 51 ulong 883997877
+put k 52 ulong 958139571
+put k 53 ulong 1322822218
+put k 54 ulong 1537002063
+put k 55 ulong 1747873779
+put k 56 ulong 1955562222
+put k 57 ulong 2024104815
+put k 58 ulong 2227730452
+put k 59 ulong 2361852424
+put k 60 ulong 2428436474
+put k 61 ulong 2756734187
+put k 62 ulong 3204031479
+put k 63 ulong 3329325298
+put kset 0 1
+end
+
+fn hinit to void
+put h 0 ulong 1779033703
+put h 1 ulong 3144134277
+put h 2 ulong 1013904242
+put h 3 ulong 2773480762
+put h 4 ulong 1359893119
+put h 5 ulong 2600822924
+put h 6 ulong 528734635
+put h 7 ulong 1541459225
+end
+
+fn compress to void
+kinit
+for i ulong 16
+v = ulong 0
+for j ulong 4
+v = or shl v 8 ulong get blk add mul i 4 j
+end
+put w i v
+end
+for i ulong 48
+j = add i 16
+v = add ss1 get w sub j 2 add ss0 get w sub j 15 add get w sub j 7 get w sub j 16
+put w j mask v
+end
+a = ulong get h 0
+b = ulong get h 1
+c = ulong get h 2
+d = ulong get h 3
+e = ulong get h 4
+f = ulong get h 5
+g = ulong get h 6
+hh = ulong get h 7
+for i ulong 64
+x = ch e f g
+x = add x get k i
+x = add x get w i
+x = add x bs1 e
+x = add x hh
+t1 = mask x
+x = maj a b c
+x = add bs0 a x
+hh = g
+g = f
+f = e
+e = mask add d t1
+d = c
+c = b
+b = a
+a = mask add t1 x
+end
+put h 0 mask add get h 0 a
+put h 1 mask add get h 1 b
+put h 2 mask add get h 2 c
+put h 3 mask add get h 3 d
+put h 4 mask add get h 4 e
+put h 5 mask add get h 5 f
+put h 6 mask add get h 6 g
+put h 7 mask add get h 7 hh
+end
+
+fn sha256 data view uchar 4096 n ulong out edit uchar 32 to void
+hinit
+full = div n 64
+for b ulong full
+for i ulong 64
+put blk i get data add mul b 64 i
+end
+compress
+end
+left = rem n 64
+for i ulong 64
+put blk i 0
+end
+for i ulong left
+put blk i get data add mul full 64 i
+end
+put blk left 128
+if ge left 56
+compress
+for i ulong 64
+put blk i 0
+end
+end
+bits = mul n 8
+for i ulong 8
+sh = mul sub 7 i 8
+v = shr bits sh
+v = and v 255
+put blk add 56 i uchar v
+end
+compress
+for i ulong 8
+v = ulong get h i
+for j ulong 4
+sh = mul sub 3 j 8
+x = shr v sh
+x = and x 255
+put out add mul i 4 j uchar x
+end
+end
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Standard SHA-256 vectors: empty, abc, one-block boundary, two blocks and 1000 bytes.
+global fails ulong 1
+global checks ulong 1
+text digs "0123456789abcdef"
+text v0 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+text e1 "abc"
+text v1 "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+text e2 "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+text v2 "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
+text e3 "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
+text v3 "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1"
+text v4 "41edece42d63e8d9bf515a9ba6932e1c20cbc9f5a5d134645adb5db1b9737ea3"
+text passm "sha256 vectors=5 fails=0\n"
+
+fn hi b uchar to uchar
+ret get digs shr b 4
+end
+fn lo b uchar to uchar
+ret get digs and b 15
+end
+fn hexout d view uchar 32 o edit uchar 64 to void
+for i ulong 32
+put o mul i 2 hi get d i
+put o add mul i 2 1 lo get d i
+end
+end
+fn cmp a view uchar 64 b view uchar 64 to void
+for i ulong 64
+if ne get a i get b i
+put fails 0 add get fails 0 1
+end
+end
+put checks 0 add get checks 0 1
+end
+fn main to int
+buf = new uchar 4096 0
+out = new uchar 32 0
+hxb = new uchar 64 0
+sha256 buf 0 out
+hexout out hxb
+cmp hxb v0
+for i ulong len e1
+put buf i get e1 i
+end
+sha256 buf len e1 out
+hexout out hxb
+cmp hxb v1
+for i ulong len e2
+put buf i get e2 i
+end
+sha256 buf len e2 out
+hexout out hxb
+cmp hxb v2
+for i ulong len e3
+put buf i get e3 i
+end
+sha256 buf len e3 out
+hexout out hxb
+cmp hxb v3
+for i ulong 1000
+put buf i 97
+end
+sha256 buf 1000 out
+hexout out hxb
+cmp hxb v4
+if ne get fails 0 0
+ret 1
+end
+nw = write 1 passm 0 len passm
+if ne nw long len passm
+ret 2
+end
+ret 0
+end

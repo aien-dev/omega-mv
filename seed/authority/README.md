@@ -13,6 +13,8 @@ dispatcher are the next phase; the C owner remains active until every consumer i
 | `reuse.om` | exact-key reuse checks, including whole-token prefix identity |
 | `store.om` | durable 32-word record and generation file: temp write, fsync, atomic rename, exact 256-byte read; torn/short files refused |
 | `dispatch.om` | persists in-flight, runs /bin/true and a static execpure effect, records performed/unknown, and marks unknown if the generation changes during the effect |
+| `lock.om` | cross-process O_EXCL pid lock with bounded retry and stale-pid reclaim; serializes read-check-persist, not the effect |
+| `lock-test.om` | exclusive acquire, busy refusal, release, forked waiter and stale-pid reclaim |
 | `*-test.om` | transition and store checks; no provider simulation |
 | `*-gate.om` | source + test concatenation for the current single-file compiler |
 
@@ -37,6 +39,7 @@ Expected output and exit:
 | reuse | `reuse checks=074 000` | 0 |
 | store | `store checks=077 000` | 0 |
 | dispatch | `dispatch checks=037 000` | 0 |
+| lock | `lock checks=5 fails=0` | 0 |
 
 The same five programs are run by `seed/qualification/security673/gate669.om` as part of the
 security qualification. A failure is a failed check count or a nonzero exit; a compile failure is
@@ -44,6 +47,7 @@ security qualification. A failure is a failed check count or a nonzero exit; a c
 
 ## Cutover rule
 
-The C authority/reuse sources are deleted only after the `.om` owner has a durable store, dispatch,
-revocation and budget behaviour, and every consumer uses it. A parallel production authority path is
-not an end state.
+The lock is a component, not the cutover: `dispatch.om` does not yet hold it across its
+read-check-persist window, and no production consumer uses this store. The C authority/reuse
+sources are deleted only after the `.om` owner has a durable store, dispatch, revocation and budget
+behaviour, and every consumer uses it. A parallel production authority path is not an end state.

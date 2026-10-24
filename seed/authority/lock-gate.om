@@ -1,0 +1,215 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Cross-process lock for the authority store. A lock is an O_EXCL file containing the owner pid.
+note A contending process retries with a bounded sleep; a lock whose pid is gone is reclaimed.
+note This serializes the read-check-persist window. It does not serialize the effect itself.
+global lb uchar 8
+text lpath "build/authority-store/lock"
+
+fn lpid p ulong to void
+put lb 0 uchar and p 255
+put lb 1 uchar and shr p 8 255
+put lb 2 uchar and shr p 16 255
+put lb 3 uchar and shr p 24 255
+put lb 4 uchar and shr p 32 255
+put lb 5 uchar and shr p 40 255
+put lb 6 uchar and shr p 48 255
+put lb 7 uchar shr p 56
+end
+
+fn lget to ulong
+v = ulong 0
+for i ulong 8
+v = or v shl ulong get lb i mul i 8
+end
+ret v
+end
+
+fn ltake p ulong to ulong
+fd = fopen lpath 0 len lpath 193 384
+if lt fd 0
+if eq fd -17
+ret 20
+end
+ret 40
+end
+lpid p
+n = write int fd lb 0 8
+if ne n 8
+if ne fclose int fd 0
+ret 30
+end
+ret 31
+end
+if ne fclose int fd 0
+ret 31
+end
+ret 0
+end
+
+fn lread to ulong
+fd = fopen lpath 0 len lpath 0 0
+if lt fd 0
+ret 32
+end
+n = read int fd lb 0 8
+if ne fclose int fd 0
+ret 33
+end
+if ne n 8
+ret 34
+end
+ret lget
+end
+
+fn lrm to ulong
+r = unlink lpath 0 len lpath
+if lt r 0
+ret 0
+end
+ret 0
+end
+
+fn ltry p ulong to ulong
+r = ltake p
+if eq r 0
+ret 0
+end
+if ne r 20
+ret r
+end
+q = lread
+if or eq q 32 or eq q 33 eq q 34
+ret 40
+end
+k = killpid int q 0
+if ne k -3
+ret 20
+end
+r = lrm
+if ne r 0
+ret 41
+end
+ret ltake p
+end
+
+fn lacq p ulong tries ulong to ulong
+i = ulong 0
+while lt i tries
+r = ltry p
+if eq r 0
+ret 0
+end
+if ne r 20
+ret r
+end
+if ne sleepns 1000000 0
+ret 42
+end
+i = add i 1
+end
+ret 22
+end
+
+fn lrel to ulong
+ret lrm
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Lock checks: exclusive acquire, busy refusal, release, a forked waiter, and stale-pid reclaim.
+text passm "lock checks=5 fails=0\n"
+global checks ulong 1
+global fails ulong 1
+global lbuf uchar 8
+global rb uchar 8
+text childf "build/authority-store/lock.child"
+text bd "build"
+text ad "build/authority-store"
+fn check got ulong want ulong to void
+put checks 0 add get checks 0 1
+if ne got want
+put fails 0 add get fails 0 1
+end
+end
+fn cbyte c uchar to void
+r = fopen childf 0 len childf 0 0
+if lt r 0
+put rb 0 255
+ret
+end
+n = read int r rb 0 1
+if ne fclose int r 0
+ret
+end
+end
+fn main to int
+r = makedir bd 0 len bd 448
+if or eq r 0 eq r -17
+else
+ret 90
+end
+r = makedir ad 0 len ad 448
+if or eq r 0 eq r -17
+else
+ret 91
+end
+u = lrel
+u = ltry ulong getpid
+check u 0
+u = ltry ulong getpid
+check u 20
+u = lrel
+if ne u 0
+ret 92
+end
+u = ltry ulong getpid
+check u 0
+pid = fork
+if lt pid 0
+ret 93
+end
+if eq pid 0
+u = lacq ulong getpid 1000
+put lbuf 0 uchar u
+fd = fopen childf 0 len childf 577 384
+if lt fd 0
+exit 94
+end
+n = write int fd lbuf 0 1
+if ne n 1
+exit 95
+end
+exit 0
+end
+if ne sleepns 50000000 0
+ret 96
+end
+u = lrel
+if ne u 0
+ret 97
+end
+wr = waitpid int pid lbuf 0 8 0
+if ne wr long pid
+ret 98
+end
+cbyte 0
+check ulong get rb 0 0
+lpid 999999
+fd = fopen lpath 0 len lpath 577 384
+if lt fd 0
+ret 99
+end
+n = write int fd lb 0 8
+if ne n 8
+ret 100
+end
+u = ltry ulong getpid
+check u 0
+u = lrel
+if ne get fails 0 0
+ret 1
+end
+nw = write 1 passm 0 len passm
+if ne nw long len passm
+ret 2
+end
+ret 0
+end
