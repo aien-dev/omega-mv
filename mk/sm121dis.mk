@@ -35,3 +35,13 @@ build/sm121dis: tools/sm121dis/sm121dis.c src/omega_sm121_disasm.c src/omega_sm1
 	@mkdir -p build
 	$(CC) -std=gnu11 -Wall -Wextra -Werror -O2 -Isrc -o $@ tools/sm121dis/sm121dis.c src/omega_sm121_disasm.c
 endif
+
+# ZERO-NVDISASM (bar C6, second half: nothing calls nvdisasm). tools/sm121dis/zero_nvdisasm.sh runs every listing and
+# provenance check with a decoy nvdisasm first on PATH, the CUDA directories removed from PATH, and strace on execve;
+# then its own red check plants two calls to nvdisasm and must see the gate FAIL.
+.PHONY: test-zero-nvdisasm
+test-zero-nvdisasm: $(SM121DIS) build/sm121dis $(addprefix $(OUT_DIR)/,gpu_attention_test gpu_elementwise_test gpu_fp8_api_test gpu_reconv_test)
+	PHYSICS_DIR="$(PHYSICS_DIR)" sh tools/sm121dis/zero_nvdisasm.sh $(OUT_DIR)
+	@if PHYSICS_DIR="$(PHYSICS_DIR)" sh tools/sm121dis/zero_nvdisasm.sh $(OUT_DIR) --red > $(OUT_DIR)/zero-nvdisasm-red.log 2>&1; then \
+		echo "RED CHECK BROKEN: the planted nvdisasm calls passed the gate"; exit 1; \
+	else echo "red check: the planted nvdisasm calls FAIL the gate, as they must ($$(grep -c 'FAIL$$' $(OUT_DIR)/zero-nvdisasm-red.log) lines)"; fi

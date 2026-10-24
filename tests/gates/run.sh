@@ -182,6 +182,18 @@ case "$step" in
     test "$(grep -cE '^PASS: [0-9]+ checks, 0 failed$' build/attn.log)" -eq 6
     ! grep -qE '^FAIL' build/attn.log
     ;;
+  sm121dis)           # L386 bar C6 (docs/OMEGA.md): Omega's own sm_121 disassembler. Host only. Every kernel the
+                      # library builds, decoded by build/sm121dis and compared word for word with nvdisasm (the
+                      # offline oracle the Spark has), plus the faulty-decoder red check; then ZERO-NVDISASM: the
+                      # listing and provenance checks under a decoy nvdisasm and strace, plus its planted-call red check.
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-sm121dis | tee build/sm121dis.log
+    grep -qE '^kernels: [0-9]+, words: [0-9]+, failed kernels: 0$' build/sm121dis.log
+    grep -qE '^red check: the faulty decoder FAILS the comparison' build/sm121dis.log
+    make test-zero-nvdisasm | tee build/zero-nvdisasm.log
+    grep -qE '^ZERO-NVDISASM: PASS' build/zero-nvdisasm.log
+    grep -qE '^red check: the planted nvdisasm calls FAIL the gate' build/zero-nvdisasm.log
+    ;;
   gpu-libm-free)      # omega-mv#471: no libm symbol left undefined in libomega_gpu.a (physics-src at physics.lock)
     physics_pin; set -o pipefail; mkdir -p build
     make -j"$(nproc)" test-gpu-libm-free | tee build/libm-free.log

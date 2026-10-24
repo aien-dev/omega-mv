@@ -1,0 +1,30 @@
+# tests/gates/omega-sm121dis.gate
+# Bar C6 of docs/OMEGA.md (L386): Omega's own sm_121 disassembler. Host only, no GPU. Three parts, one step word:
+# (1) make test-sm121dis: every kernel the library builds (331 on 2026-10-24) decoded by build/sm121dis and compared
+#     word for word with nvdisasm, the offline oracle the Spark has; then the red check, a decoder with one planted
+#     fault must fail the same comparison. (2) make test-zero-nvdisasm: the listing and provenance checks run with a
+#     decoy nvdisasm first on PATH, the CUDA directories removed from PATH and strace on execve; nothing may call
+#     nvdisasm; then the gate's own red check plants two calls and must fail. Evidence: evidence/C6-DISASM/.
+gate: OMEGA-SM121DIS
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/
+  - tools/sm121dis/
+  - tools/divsqrt_nvdisasm_check.sh
+  - tools/ldst_nvdisasm_check.sh
+  - physics.lock
+run:
+  exec: tests/gates/run.sh
+  args: ["sm121dis"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 30m
+exactness: EXACT
+cache_scope: machine
