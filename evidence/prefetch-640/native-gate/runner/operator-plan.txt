@@ -1,0 +1,108 @@
+AIEN PLAN
+Repository: omega
+Base: cd5897e3f92f72a015892c67b17f096e433b54f7
+Head: fe66fb9565d04cc6e785ca2247594adacf896e5b
+Changed files: 26
+  evidence/prefetch-640/compiler-correction/README.md
+  evidence/prefetch-640/compiler-correction/receipt.json
+  evidence/prefetch-640/initial-finding.txt
+  evidence/prefetch-640/native-gate/README.md
+  evidence/prefetch-640/native-gate/author.log
+  evidence/prefetch-640/native-gate/combined-entry.log
+  evidence/prefetch-640/native-gate/independent-results.txt
+  evidence/prefetch-640/native-gate/independent-review.txt
+  evidence/prefetch-640/native-gate/receipt.json
+  evidence/prefetch-640/nested-results.txt
+  evidence/prefetch-640/parent-checks.txt
+  evidence/prefetch-640/receipt.json
+  evidence/prefetch-640/reproduce.md
+  evidence/prefetch-640/results.txt
+  evidence/prefetch-640/review.txt
+  native/prefetch/README.md
+  native/prefetch/classify.om
+  native/prefetch/classify.sha256
+  native/prefetch/compiler.sha256
+  native/prefetch/gate-child.om
+  native/prefetch/gate.om
+  native/prefetch/review-fixtures.om
+  native/prefetch/review-nested.om
+  native/prefetch/source.sha256
+  tests/gates/omega-prefetch-native.gate
+  tools/run_gpu_l2d_prefetch_chip.sh
+Graph digest: 947dd1e2c68e3c13e859c79ed40a681afe33691d04e884bff0d60b09526494db
+Required:
+  CRUMB-VERIFY pool=host exactness=EXACT check=bfdecfb71828 because=always
+  OMEGA-ALGEBRA pool=host exactness=EXACT check=170fbf1a6fdf because=tests/gates/omega-prefetch-native.gate
+  OMEGA-ANS pool=host exactness=EXACT check=bcaba0dfef37 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-ARGUS pool=host exactness=EXACT check=4321a81cf8c8 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-BASE pool=host exactness=EXACT check=05eebe0fa427 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-BROWNIAN pool=host exactness=EXACT check=05c9a90f3fdf because=tests/gates/omega-prefetch-native.gate
+  OMEGA-CHIP-TOOL-SELFTESTS pool=host exactness=EXACT check=55c4f64b3f9d because=tests/gates/omega-prefetch-native.gate
+  OMEGA-COMPILER pool=host exactness=EXACT check=ed74e1ed823a because=tests/gates/omega-prefetch-native.gate
+  OMEGA-CRUMBLINE pool=host exactness=EXACT check=75eca11e7a2a because=tests/gates/omega-prefetch-native.gate
+  OMEGA-ESTIMATION pool=host exactness=EXACT check=4062ecd06cff because=tests/gates/omega-prefetch-native.gate
+  OMEGA-EVIDENCE-IMMUTABLE pool=host exactness=EXACT check=52c898aeaa75 because=always
+  OMEGA-FACULTY-ARM pool=host exactness=EXACT check=78ad6a8ed7fd because=tests/gates/omega-prefetch-native.gate
+  OMEGA-LANGUAGE pool=host exactness=EXACT check=bb6e36651c99 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M10 pool=host exactness=EXACT check=16f77be37874 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M11 pool=host exactness=EXACT check=c58b86e7a50c because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M12 pool=host exactness=EXACT check=62e55bad79f7 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M13 pool=host exactness=EXACT check=067878a12e59 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M14 pool=host exactness=EXACT check=ef4f8eef71d4 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M15 pool=host exactness=EXACT check=edd0a171a94c because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M6 pool=host exactness=EXACT check=73638466a62d because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M7 pool=host exactness=EXACT check=4b3764c99dad because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M8 pool=host exactness=EXACT check=aebc77b4cea1 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M9 pool=host exactness=EXACT check=f01c6875c3ea because=tests/gates/omega-prefetch-native.gate
+  OMEGA-NUMERIC-CPU pool=host exactness=EXACT check=1d269781964c because=tests/gates/omega-prefetch-native.gate
+  OMEGA-NUMERIC-LIFECYCLE pool=host exactness=EXACT check=af394f70d393 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-NUMERIC-TRANSC pool=host exactness=EXACT check=c749718a0250 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-NUMERIC-TRANSC-DIGEST pool=host exactness=EXACT check=42558d315c6a because=tests/gates/omega-prefetch-native.gate
+  OMEGA-NUMERIC-TRANSC-FULL pool=host exactness=EXACT check=d69ceeb8e55d because=tests/gates/omega-prefetch-native.gate
+  OMEGA-NUMERIC2 pool=host exactness=EXACT check=e90cff79f39a because=tests/gates/omega-prefetch-native.gate
+  OMEGA-ONE-LAYER-ACCEPTANCE pool=host exactness=EXACT check=09ffc6f4a980 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-PATH pool=host exactness=EXACT check=5e497df14fd2 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-PHYSICS0 pool=host exactness=EXACT check=4f13d3f61a3f because=tests/gates/omega-prefetch-native.gate
+  OMEGA-POLYGLOT pool=host exactness=EXACT check=ada13c2915d7 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-PREFETCH-NATIVE pool=host exactness=EXACT check=16fcde4329c7 because=native/prefetch/README.md
+  OMEGA-RUNTIME pool=host exactness=EXACT check=e91ac3fe4221 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-RX-HOST-REFERENCE pool=host exactness=EXACT check=93a2762e3ba9 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-SEARCHTRACE pool=host exactness=EXACT check=c4554153be5f because=tests/gates/omega-prefetch-native.gate
+  OMEGA-TENSOR pool=host exactness=EXACT check=ffc3fe329be6 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-TRAIN pool=host exactness=EXACT check=b9e1b7392c2f because=tests/gates/omega-prefetch-native.gate
+  OMEGA-TURING pool=host exactness=EXACT check=d7650fc22a7e because=tests/gates/omega-prefetch-native.gate
+  OMEGA-TURING-YIELD pool=host exactness=EXACT check=0a404f2040c2 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-VISOR pool=host exactness=EXACT check=54904d39e3b3 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-ZERO-DISK-SECRETS pool=host exactness=EXACT check=821968c994de because=always
+Cached:
+  (none)
+Needs Spark:
+  OMEGA-R11-OWN-HOLD pool=host exactness=EXACT check=c82d2d7068fd because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R13-HOST pool=host exactness=EXACT check=2155bc806e4d because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R13-TESTBUILD-HOST pool=host exactness=EXACT check=c140a02619a5 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R14-HOST pool=host exactness=EXACT check=66303f5a2b08 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R15-G7-HOST pool=host exactness=EXACT check=cd82f11224a7 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R15-PARITY-HOST pool=host exactness=EXACT check=8a613a76ee6b because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R16-AUTHPATH pool=host exactness=EXACT check=a0b7dd382b21 because=tests/gates/omega-prefetch-native.gate
+Needs GB10:
+  OMEGA-COMPOSITION-GATE-GPU pool=gb10 exactness=EXACT check=e21bad06ce43 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M17 pool=gb10 exactness=EXACT check=604f99450ed6 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M19 pool=gb10 exactness=EXACT check=73a5d0f6fe06 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-M5 pool=gb10 exactness=EXACT check=53574c6aa14f because=tests/gates/omega-prefetch-native.gate
+  OMEGA-PROD-HYGIENE-SILICON pool=gb10 exactness=EXACT check=41d9bf7e6150 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R12-SILICON pool=gb10 exactness=EXACT check=52ac2b6bba40 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R13-SILICON pool=gb10 exactness=EXACT check=da7a704843f3 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R13-TESTBUILD-SILICON pool=gb10 exactness=EXACT check=ff9b5224347a because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R14-SILICON pool=gb10 exactness=EXACT check=8367b3ac9bef because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R15-PARITY-SILICON pool=gb10 exactness=EXACT check=3df339ce3bb5 because=tests/gates/omega-prefetch-native.gate
+  OMEGA-R16-AUTHPATH-SILICON pool=gb10 exactness=EXACT check=148afae4558d because=tests/gates/omega-prefetch-native.gate
+Advisory:
+  (none)
+Blocked:
+  (none)
+UNMAPPED:
+  (none)
+Note: pipeline configuration changed; allowed by --operator
+Note: hardware identity not given; the machine digest stands in for cache_scope: hardware
+Note: operator gate OMEGA-NUMERIC-TRANSC-FULL: started by --operator
+Plan verdict: RUNNABLE
