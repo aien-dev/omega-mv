@@ -1,0 +1,11 @@
+3082883 landlock_restrict_self(4, 0)    = 0
+3082883 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3082883 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3082883 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3082883 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3082883 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3082883 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3082883 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3082883 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fddc0}) = 0
+3082883 execveat(3, "", ["build/security673-pure/raw-other"], 0x107fefc8 /* 0 vars */, AT_EMPTY_PATH) = 0
+3082883 execveat(3, "/tmp/omega-check/build/security673-pure/pure-other", NULL, NULL, AT_EMPTY_PATH) = -1 EACCES (Permission denied)

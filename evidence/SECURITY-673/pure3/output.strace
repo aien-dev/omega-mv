@@ -1,0 +1,9 @@
+3083030 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3083030 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3083030 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3083030 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3083030 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3083030 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3083030 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3083030 write(1, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 1048577) = 1048576
+3083030 exit(0)                         = ?

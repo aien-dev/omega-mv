@@ -102,6 +102,13 @@ the harmless unassigned static fixture (exit77). Unexpected signals and deadline
 Fault-injected missing kernel facilities are separately traced in `pure1`; independent review and
 fresh integrated gate receipts supplement the earlier `pure2` campaign.
 
+Bypass controls remove one enforcement step at a time with `branch-mutate.om` and require the named
+result: seccomp removed lets raw getpid through (71), Landlock restriction removed lets the second
+image execute (77), CPU exhaustion dies with SIGXCPU (152), and a 1,048,577-byte write stops at the
+1 MiB file limit (0, 1,048,576 bytes). An unavailable close_range refuses the launch with 38.
+`pure-raw.om` accepts an optional absolute target path for the second-image and fixed-inode
+controls. Evidence is `evidence/SECURITY-673/pure3`; the earlier author run is `pure1`.
+
 ## Bounded source ingress (#671)
 
 With fresh scratch, `build/gate669 3` runs eighteen source cases through the real rebuilt compiler.
@@ -139,3 +146,15 @@ On the inspected host, kernel crash collection is piped to Apport; CORE0 does no
 collector. Private/holdout input confinement remains unqualified until the runtime owner verifies
 crash handling in a disposable execution environment. No live crash policy was changed and these
 fixtures contain only synthetic data. See `pure4/core-pattern.txt` and independent review.
+`renames` is qualified by seven cases: the accepted pair must rename the source and leave the
+destination, while one record, three records, either empty path, a trailing byte and an embedded NUL
+each trap 3 before the kernel rename. The consumer creates the source under the scratch directory,
+so the positive case also proves the packet was consumed exactly. Evidence is
+`evidence/SECURITY-673/renames1`.
+
+Path and argument boundaries are covered by seven more cases: a valid `fopen`; embedded-zero and
+4096-byte paths trap 3; an empty path returns the kernel's negative errno; `argread` into a short
+buffer returns -105 without changing the slice; an invalid index traps 3; and an exact-capacity
+read returns the length. Evidence is `evidence/SECURITY-673/paths1`. Path traversal is not confined
+by `fopen`; the strict launch profile is the confined path. Legacy manifest, receipt, RPC, model,
+trace and device parsers remain NOT_RUN.

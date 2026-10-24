@@ -1,0 +1,96 @@
+note Synthetic issue671 renames packet corpus. Reads one mode byte and writes one packed list.
+note Mode0 is accepted; modes1..6 must trap before any kernel rename.
+global pkt uchar 4096
+global n ulong 1
+global name uchar 64
+global namelen ulong 1
+text old "build/security673-native/ren-src"
+text dst "build/security673-native/ren-dst"
+fn put16 v ulong to void
+put pkt get n 0 uchar and v 255
+put pkt add get n 0 1 uchar shr v 8
+put n 0 add get n 0 2
+end
+fn recname to void
+put16 get namelen 0
+for i ulong get namelen 0
+put pkt add get n 0 i get name i
+end
+put n 0 add get n 0 get namelen 0
+end
+fn setold to void
+put namelen 0 len old
+for i ulong len old
+put name i get old i
+end
+end
+fn setnew to void
+put namelen 0 len dst
+for i ulong len dst
+put name i get dst i
+end
+end
+fn main to int
+if ne read 0 pkt 0 1 1
+ret 90
+end
+m = ulong get pkt 0
+put n 0 0
+if eq m 0
+put16 2
+setold
+recname
+setnew
+recname
+end
+if eq m 1
+put16 1
+setold
+recname
+end
+if eq m 2
+put16 3
+setold
+recname
+setnew
+recname
+setnew
+recname
+end
+if eq m 3
+put16 2
+put namelen 0 0
+recname
+setnew
+recname
+end
+if eq m 4
+put16 2
+setold
+recname
+put namelen 0 0
+recname
+end
+if eq m 5
+put16 2
+setold
+recname
+setnew
+recname
+put pkt get n 0 0
+put n 0 add get n 0 1
+end
+if eq m 6
+setold
+put name 5 0
+put16 2
+recname
+setnew
+recname
+end
+r = write 1 pkt 0 get n 0
+if ne r long get n 0
+ret 91
+end
+ret 0
+end

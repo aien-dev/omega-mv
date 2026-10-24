@@ -1,0 +1,48 @@
+note Synthetic issue671 renames consumer. Creates a source file, then renames from stdin packet.
+note A malformed packet traps 3; a valid packet renames without replacing.
+global pkt uchar 4096
+global result uchar 2
+text src "build/security673-native/ren-src"
+text dst "build/security673-native/ren-dst"
+text data "x"
+fn source to void
+fd = fopen src 0 len src 577 384
+if lt fd 0
+exit 90
+end
+if ne write int fd data 0 1 1
+exit 91
+end
+if ne fclose int fd 0
+exit 92
+end
+end
+fn main to int
+source
+n = ulong read 0 pkt 0 4096
+r = renames pkt 0 n 1
+if ne r 0
+ret 93
+end
+if ne fopen src 0 len src 0 0 neg long 2
+ret 94
+end
+fd = fopen dst 0 len dst 0 0
+if lt fd 0
+ret 95
+end
+if ne read int fd result 0 2 1
+ret 96
+end
+if ne get result 0 120
+ret 97
+end
+if ne fclose int fd 0
+ret 98
+end
+source
+if ne renames pkt 0 n 1 neg long 17
+ret 99
+end
+ret 0
+end
