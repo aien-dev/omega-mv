@@ -1,0 +1,16 @@
+   0:	aa0003e2 	orr	x2, xzr, x0
+   4:	aa0103e3 	orr	x3, xzr, x1
+   8:	eb030044 	subs	x4, x2, x3
+   c:	54000166 	b.vs	0x38
+  10:	f100009f 	subs	xzr, x4, #0x0
+  14:	5400008a 	b.ge	0x24  // b.tcont
+  18:	eb0403e0 	subs	x0, xzr, x4
+  1c:	540000e6 	b.vs	0x38
+  20:	d65f03c0 	ret
+  24:	aa0403e0 	orr	x0, xzr, x4
+  28:	d65f03c0 	ret
+  2c:	aa0703e0 	orr	x0, xzr, x7
+  30:	f94008f0 	ldr	x16, [x7, #16]
+  34:	d61f0200 	br	x16
+  38:	d2800021 	movz	x1, #0x1
+  3c:	17fffffc 	b	0x2c

@@ -1,0 +1,79 @@
+note Parameter binding checks use invalid descriptors, never a GPU device.
+global header uchar 48
+global params uchar 32
+global large uchar 16384
+global status uchar 4
+text msg "PASS native device parameter binding\n"
+fn ck yes bool to void
+if not yes
+exit int 80
+end
+end
+fn fault k int to int
+if eq k 0
+r = devcall neg int 1 uint 3223340587 header 0 31 params 0 0
+ret int r
+end
+if eq k 1
+r = devcall neg int 1 uint 3223340587 header 17 32 params 0 0
+ret int r
+end
+if eq k 2
+r = devcall neg int 1 uint 3223340587 header 0 32 params 31 2
+ret int r
+end
+if eq k 3
+put header 16 1
+r = devcall neg int 1 uint 3223340587 header 0 32 params 0 1
+ret int r
+end
+if eq k 4
+r = devcall neg int 1 uint 3223340587 header 0 32 large 0 16384
+ret int r
+end
+r = devcall neg int 1 uint 3223340587 header 0 32 params 18446744073709551615 1
+ret int r
+end
+fn main to int
+for i ulong 48
+put header i 171
+end
+for i ulong 8
+put header add i 24 0
+end
+for n ulong 33
+ck eq devcall neg int 1 uint 3223340587 header 8 32 params 0 n neg long 9
+for i ulong 48
+if and ge i 24 lt i 32
+ck eq get header i 0
+else
+if eq i 32
+ck eq get header i uchar n
+else
+if and gt i 32 lt i 36
+ck eq get header i 0
+else
+ck eq get header i 171
+end
+end
+end
+end
+end
+ck eq add devcall neg int 1 uint 3223340586 header 8 32 params 4 12 10 1
+for i ulong 48
+put header i 0
+end
+ck eq devcall neg int 1 uint 3223340587 header 0 32 large 1 16383 neg long 9
+for k int 6
+p = fork
+ck ge p 0
+if eq p 0
+exit fault k
+end
+ck eq waitpid int p status 0 4 0 p
+ck eq get status 0 0
+ck eq get status 1 103
+end
+ck eq write 1 msg 0 len msg long len msg
+ret 0
+end

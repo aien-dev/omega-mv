@@ -1,0 +1,77 @@
+note link/symlnk take a packed two-path list: u16 count 2, then each u16 length + bytes.
+text a "pl1.tmp"
+text b "pl2.tmp"
+text c "pl3.tmp"
+text body "abcd"
+fn main to int
+fd = int fopen a 0 len a 578 420
+if lt fd 0
+ret 1
+end
+w = write fd body 0 len body
+if ne w long len body
+ret 2
+end
+r = fclose fd
+if ne r 0
+ret 3
+end
+list = new uchar 64 0
+put list 0 2
+put list 1 0
+put list 2 uchar len a
+put list 3 0
+i = ulong 0
+while lt i len a bound 64
+put list add 4 i get a i
+i = add i 1
+end
+off = add 4 len a
+put list off uchar len b
+put list add off 1 0
+i = ulong 0
+while lt i len b bound 64
+put list add add off 2 i get b i
+i = add i 1
+end
+total = add add off 2 len b
+r = link list 0 total
+if ne r 0
+ret 4
+end
+st = new uchar 128 0
+r = stat b 0 len b st 0 128
+if ne r 0
+ret 5
+end
+if ne get st 20 2
+ret 6
+end
+i = ulong 0
+while lt i len c bound 64
+put list add add off 2 i get c i
+i = add i 1
+end
+r = symlnk list 0 total
+if ne r 0
+ret 7
+end
+buf = new uchar 64 0
+n = readlnk c 0 len c buf 0 64
+if ne n long len a
+ret 8
+end
+r = unlink c 0 len c
+if ne r 0
+ret 9
+end
+r = unlink b 0 len b
+if ne r 0
+ret 10
+end
+r = unlink a 0 len a
+if ne r 0
+ret 11
+end
+ret 0
+end

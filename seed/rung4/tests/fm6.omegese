@@ -1,0 +1,7 @@
+fn tri n uint to uint
+s = uint 0
+for i uint n
+s = add s i
+end
+ret s
+end

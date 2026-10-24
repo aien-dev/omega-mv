@@ -1,0 +1,9 @@
+note L412 probe cmp_unsigned: 2^64 - 1 is a ulong and is not below 1
+fn main to int
+x = ulong 18446744073709551615
+y = ulong 1
+if lt x y
+ret 1
+end
+ret 0
+end

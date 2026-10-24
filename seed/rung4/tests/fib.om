@@ -1,0 +1,29 @@
+note recursive fib(n) for n = 0 .. 25, one number per line
+global out uchar 32
+fn fib n ulong to ulong
+if lt n 2
+ret n
+end
+a = fib sub n 1
+b = fib sub n 2
+ret add a b
+end
+fn putnum v ulong to void
+put out 31 10
+p = ulong 31
+x = v
+while gt x 9
+p = sub p 1
+put out p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put out p uchar add x 48
+w = write 1 out p sub 32 p
+end
+fn main to int
+for i ulong 26
+putnum fib i
+end
+ret 0
+end

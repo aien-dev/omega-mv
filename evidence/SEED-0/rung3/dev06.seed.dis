@@ -1,0 +1,8 @@
+   0:	b40000c1 	cbz	x1, 0x18
+   4:	9ac10800 	udiv	x0, x0, x1
+   8:	d65f03c0 	ret
+   c:	aa0703e0 	orr	x0, xzr, x7
+  10:	f94008f0 	ldr	x16, [x7, #16]
+  14:	d61f0200 	br	x16
+  18:	d2800041 	movz	x1, #0x2
+  1c:	17fffffc 	b	0xc
