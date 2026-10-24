@@ -1,0 +1,31 @@
+chip one-hot conversion: rc=OK 256/256 rows exact (subnormal codes 0x01..0x07 included: no flush to zero)
+chip k256 n128                        variant=1 rc=OK        bad=0 worst_rel=3.713e-08 grid=16x1 lb=8 rows=1 warps=8 depth=1 bytes=32776 upload=0.1ms chip_med=16.8us (2.0 GB/s) call_med=22.8us (1.4 GB/s) reps=20
+chip k768 n256                        variant=1 rc=OK        bad=0 worst_rel=2.681e-08 grid=32x1 lb=8 rows=1 warps=8 depth=3 bytes=196656 upload=0.3ms chip_med=16.3us (12.1 GB/s) call_med=25.6us (7.7 GB/s) reps=20
+chip k2048 n384                       variant=1 rc=OK        bad=0 worst_rel=2.689e-08 grid=48x1 lb=16 rows=1 warps=8 depth=4 bytes=786624 upload=0.5ms chip_med=20.3us (38.8 GB/s) call_med=36.0us (21.9 GB/s) reps=20
+chip gate 768x2048                    variant=1 rc=OK        bad=0 worst_rel=3.011e-08 grid=96x1 lb=16 rows=1 warps=8 depth=4 bytes=1573248 upload=0.8ms chip_med=20.0us (78.5 GB/s) call_med=35.6us (44.3 GB/s) reps=20
+chip gate+up 1536x2048                variant=1 rc=OK        bad=0 worst_rel=2.434e-08 grid=192x1 lb=16 rows=1 warps=8 depth=4 bytes=3146496 upload=1.6ms chip_med=31.7us (99.4 GB/s) call_med=48.0us (65.5 GB/s) reps=20
+chip gate+up 1536x2048                mutant 1: caught (rc=OK bad=1536 worst_rel=2.507e-01)
+chip gate+up 1536x2048                mutant 2: caught (rc=OK bad=1535 worst_rel=1.913e-01)
+chip gate+up 1536x2048                mutant 4: caught (rc=OK bad=1536 worst_rel=2.507e-01)
+chip down 2048x768                    variant=1 rc=OK        bad=0 worst_rel=4.271e-08 grid=256x1 lb=8 rows=1 warps=8 depth=3 bytes=1573248 upload=0.8ms chip_med=40.6us (38.7 GB/s) call_med=51.5us (30.5 GB/s) reps=20
+chip q_proj 4096x2048                 variant=1 rc=OK        bad=0 worst_rel=2.705e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=8390656 upload=3.8ms chip_med=74.2us (113.1 GB/s) call_med=78.4us (107.0 GB/s) reps=20
+chip k_proj 512x2048                  variant=1 rc=OK        bad=0 worst_rel=2.309e-08 grid=64x1 lb=16 rows=1 warps=8 depth=4 bytes=1048832 upload=0.6ms chip_med=25.5us (41.2 GB/s) call_med=40.9us (25.7 GB/s) reps=20
+chip o_proj 2048x4096                 variant=1 rc=OK        bad=0 worst_rel=2.168e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=8390656 upload=3.6ms chip_med=59.6us (140.9 GB/s) call_med=63.3us (132.6 GB/s) reps=20
+chip qkv fused 5120x2048              variant=1 rc=OK        bad=0 worst_rel=3.281e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=10488320 upload=4.5ms chip_med=69.3us (151.4 GB/s) call_med=74.8us (140.3 GB/s) reps=20
+chip 8 experts gate+up shared x       variant=1 rc=OK        bad=0 worst_rel=3.010e-08 grid=6x8 lb=16 rows=1 warps=32 depth=0 bytes=25171968 upload=10.9ms chip_med=146.8us (171.5 GB/s) call_med=154.9us (162.5 GB/s) reps=20
+chip 8 experts gate+up shared x       mutant 1: caught (rc=OK bad=12288 worst_rel=2.601e-01)
+chip 8 experts gate+up shared x       mutant 2: caught (rc=OK bad=12287 worst_rel=2.790e-01)
+chip 8 experts gate+up shared x       mutant 3: caught (rc=OK bad=12288 worst_rel=4.290e-01)
+chip 8 experts gate+up shared x       mutant 4: caught (rc=OK bad=12288 worst_rel=2.601e-01)
+chip 8 experts down per-group x       variant=1 rc=OK        bad=0 worst_rel=4.885e-08 grid=6x8 lb=8 rows=1 warps=32 depth=0 bytes=12585984 upload=5.4ms chip_med=91.9us (136.9 GB/s) call_med=104.0us (121.0 GB/s) reps=20
+chip 8 of 16 experts gate+up          variant=1 rc=OK        bad=0 worst_rel=3.255e-08 grid=6x8 lb=16 rows=1 warps=32 depth=0 bytes=25171968 upload=21.7ms chip_med=148.5us (169.5 GB/s) call_med=156.5us (160.8 GB/s) reps=20
+chip large 16384x2048                 variant=1 rc=OK        bad=0 worst_rel=3.250e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=33562624 upload=14.5ms chip_med=176.3us (190.3 GB/s) call_med=186.8us (179.7 GB/s) reps=20
+chip q38 gate 17408x5120              variant=1 rc=OK        bad=0 worst_rel=2.265e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=89150720 upload=38.5ms chip_med=443.7us (200.9 GB/s) call_med=455.7us (195.6 GB/s) reps=20
+chip q38 down 5120x17408              variant=1 rc=OK        bad=0 worst_rel=1.367e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=89150720 upload=38.5ms chip_med=501.5us (177.8 GB/s) call_med=509.8us (174.9 GB/s) reps=20
+chip q38 q_proj 12288x5120            variant=1 rc=OK        bad=0 worst_rel=2.324e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=62929920 upload=27.6ms chip_med=313.1us (201.0 GB/s) call_med=322.5us (195.2 GB/s) reps=20
+chip q38 k_proj 1024x5120             variant=1 rc=OK        bad=0 worst_rel=2.100e-08 grid=128x1 lb=16 rows=1 warps=8 depth=0 bytes=5244160 upload=2.4ms chip_med=56.9us (92.1 GB/s) call_med=59.6us (88.0 GB/s) reps=20
+chip q38 in_proj_qkv 10240x5120       variant=1 rc=OK        bad=0 worst_rel=2.163e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=52441600 upload=22.9ms chip_med=254.4us (206.2 GB/s) call_med=262.4us (199.9 GB/s) reps=20
+chip q38 in_proj_z 6144x5120          variant=1 rc=OK        bad=0 worst_rel=2.183e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=31464960 upload=13.5ms chip_med=166.3us (189.2 GB/s) call_med=171.8us (183.1 GB/s) reps=20
+chip q38 out_proj 5120x6144           variant=1 rc=OK        bad=0 worst_rel=1.806e-08 grid=256x1 lb=16 rows=1 warps=8 depth=0 bytes=31464960 upload=13.6ms chip_med=158.0us (199.1 GB/s) call_med=163.2us (192.9 GB/s) reps=20
+chip width cap 256x32768              variant=1 rc=OK        bad=0 worst_rel=1.208e-08 grid=32x1 lb=16 rows=1 warps=8 depth=0 bytes=8390656 upload=3.6ms chip_med=142.6us (58.8 GB/s) call_med=151.7us (55.3 GB/s) reps=20
+gpu_fp8_api_test: 30 checks, 0 failed: PASS

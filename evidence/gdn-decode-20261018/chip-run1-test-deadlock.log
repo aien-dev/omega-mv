@@ -1,0 +1,8 @@
+gdn alloc (2 layers): rc=OK 47.0 ms ()
+chip layer 1, 5 steps                         rc=OK err out 2.34e-07 tail 0 state 3.23e-07 
+chip layer 0, 5 steps, in 2^-10 out 2^64      rc=OK err out 3.03e-07 tail 0 state 3.64e-07 
+chip mutant 1                                 rc=OK err out 0.913 tail 0 state 0.983
+chip mutant 2                                 rc=OK err out 0.509 tail 0 state 0.973
+chip mutant 3                                 rc=OK err out 1.46 tail 0 state 2.24e-07
+chip mutant 4                                 rc=OK err out 1.02 tail 1.79 state 0.844
+rc=143
