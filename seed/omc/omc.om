@@ -6606,7 +6606,10 @@ if ne isb2 0
 right = ir_lit get ir_bare 0 lty
 end
 if ge c 43
+d = dst
+if or eq dst 65534 eq dst 65535
 d = ir_newreg 1
+end
 ir_op 5 sub c 42 d left right
 put ir_rr 0 d
 put ir_vt 0 1
@@ -6690,18 +6693,30 @@ ret
 end
 if and ge c 33 le c 48
 ir_bin c dst
+if and ne exp 0 ne get ir_vt 0 exp
+fail 7
+end
 ret
 end
 if or eq c 49 eq c 50
 ir_un c dst
+if and ne exp 0 ne get ir_vt 0 exp
+fail 7
+end
 ret
 end
 if eq c 55
+if and ne exp 0 ne exp 1
+fail 7
+end
 r = ir_lit 1 1
 ir_set dst r 1
 ret
 end
 if eq c 56
+if and ne exp 0 ne exp 1
+fail 7
+end
 r = ir_lit 0 1
 ir_set dst r 1
 ret

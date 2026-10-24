@@ -884,6 +884,19 @@ fails 7 instead.
   `fe3fde9be68a069d20d89e3851596ebac1bd6daa42e4caf3079b0c60b87ba8d8` (119,291 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences.
 
+## Rung R48: IR operator result types and comparison destinations (done)
+
+`ir_val` now checks the result type of `bin`/`un`/`true`/`false` against the expected context
+(error 7), closing the class where `ret uchar add uint 1 uint 2` or `x = eq ...` with a `uint` `x`
+emitted checker2-rejected IR. `ir_bin_r` writes comparison results into the destination register
+(a fresh one only for the sentinels), so reassigning a bool local now matches the oracle exactly.
+
+- gate-ir: 23 refusals and a bool-assignment oracle unit; totals are 10/10 dev, 9 call units, 3 break
+  units, 1 shift unit, 1 bool unit, 30 fuzz units.
+- `seed/omc/omc.om`, 7,196 lines and 251 functions, sha256
+  `3379c90abf70beb9ca76079956de2ac9dbb2a30e709ae8cfb9c777effe5053a9` (119,499 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
