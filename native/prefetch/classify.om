@@ -1,0 +1,491 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Historical decode-graph prefetch control classifier. argv:exit,log,receipt.
+note Trusted runner output only. Bounded 64KiB files; strict emitted JSON subset.
+text invalid "PREFETCH_CONTROL: INVALID\n"
+text caught "PREFETCH_CONTROL: CAUGHT\n"
+text missed "PREFETCH_CONTROL: UNCAUGHT\n"
+text checks "A (baseline, host glue) \nA deterministic over \nC (one list per token) \nC deterministic over \nargmax token identical: \nlogits A vs C within \nB (one launch per submission) \nB bit-identical to C (x, hidden, logits, token) in every rep\nnegative control: SWIGLU mutant fails the comparison \nnegative control: COMBINE mutant fails the comparison \nC after the mutants bit-identical to the first C\ntimeline: \ntimeline off: \ndgraph prefetch 1 (red 1)\nok: \nFAIL: \nchip: 13 checks, \n failed: FAIL\n failed: PASS\n"
+text marker "dgraph prefetch 1 (red 1)"
+text okprefix "ok: "
+text failpre "FAIL: "
+text summary "chip: 13 checks, "
+text sumtail " failed: FAIL"
+text passtail " failed: PASS"
+text keys "checks\nfailed\nverdict\nreps\nred\ncached_weights\nlayers\nvocab\npos\nA\nC\nA_vs_C\nmutant1\nmutant2\nC0_token\nC0_logits_fnv\ntimeline\nmedian_ns\nB\ntok_same\ncaught\nrc\nidentical\n"
+text failword "FAIL"
+text password "PASS"
+global data uchar 65537
+global path uchar 4096
+global states ulong 32
+global seen ulong 1
+global values ulong 19
+global badcount ulong 1
+global mode ulong 1
+global ls ulong 3
+global js ulong 4
+global isint ulong 1
+global owners ulong 32
+global leafmask ulong 1
+global badmask ulong 1
+fn reject to void
+r = write 1 invalid 0 len invalid
+exit 65
+end
+fn load index ulong to ulong
+n = argread index path 0 len path
+if le n 0
+reject
+end
+fd = fopen path 0 ulong n 0 0
+if lt fd 0
+reject
+end
+have = ulong 0
+while lt have len data
+r = read int fd data have sub len data have
+if lt r 0
+reject
+end
+if eq r 0
+if ne fclose int fd 0
+reject
+end
+if gt have 65536
+reject
+end
+ret have
+end
+have = add have ulong r
+end
+reject
+ret 0
+end
+fn matchtxt start ulong size ulong id ulong table bool to bool
+p = ulong 0
+which = ulong 0
+n = len checks
+if table
+n = len keys
+end
+for i ulong n
+b = get checks 0
+if table
+b = get keys i
+else
+b = get checks i
+end
+if eq b 10
+if eq which id
+if table
+ret eq p size
+end
+ret le p size
+end
+which = add which 1
+p = 0
+else
+if eq which id
+if ge p size
+ret false
+end
+if ne get data add start p b
+ret false
+end
+p = add p 1
+end
+end
+end
+ret false
+end
+fn logline start ulong size ulong to void
+if ne get ls 2 0
+reject
+end
+if gt size 2048
+reject
+end
+if and eq size len marker matchtxt start size 13 false
+put ls 1 add get ls 1 1
+end
+kind = ulong 0
+if matchtxt start size 14 false
+kind = 4
+end
+if matchtxt start size 15 false
+kind = 6
+end
+if ne kind 0
+count = get ls 0
+if ge count 13
+reject
+end
+if not matchtxt add start kind sub size kind count false
+reject
+end
+if eq kind 6
+if and ne count 4 ne count 5
+reject
+end
+put badcount 0 add get badcount 0 1
+put badmask 0 or get badmask 0 shl ulong 1 count
+end
+put ls 0 add count 1
+end
+if matchtxt start size 16 false
+if or ne get ls 0 13 ne get ls 1 1
+reject
+end
+p = add start len summary
+if ne ulong get data p add 48 get badcount 0
+reject
+end
+p = add p 1
+if ne size add add len summary 1 len sumtail
+reject
+end
+id = ulong 17
+if eq get badcount 0 0
+id = 18
+end
+if not matchtxt p len sumtail id false
+reject
+end
+put ls 2 1
+end
+end
+fn logcheck n ulong to void
+start = ulong 0
+for i ulong n
+b = get data i
+if or lt b 32 gt b 126
+if ne b 10
+reject
+end
+end
+if eq b 10
+logline start sub i start
+start = add i 1
+end
+end
+if or ne start n ne get ls 2 1
+reject
+end
+end
+note JSON states:object key/end0,key1,colon2,value3,comma/end4; array value/end5,value6,comma/end7.
+fn jstring to ulong
+start = add get js 1 1
+i = start
+while lt i get js 0
+b = get data i
+if eq b 34
+put js 1 add i 1
+ret start
+end
+if or lt b 32 or gt b 126 eq b 92
+reject
+end
+i = add i 1
+end
+reject
+ret 0
+end
+fn digit i ulong to bool
+if ge i get js 0
+ret false
+end
+b = get data i
+ret and ge b 48 le b 57
+end
+fn jnumber to ulong
+i = get js 1
+put isint 0 1
+if eq get data i 45
+put isint 0 0
+i = add i 1
+end
+if not digit i
+reject
+end
+v = sub ulong get data i 48
+i = add i 1
+if ne v 0
+while digit i
+if gt v 1000000000000000000
+reject
+end
+v = add mul v 10 sub ulong get data i 48
+i = add i 1
+end
+end
+if and lt i get js 0 eq get data i 46
+put isint 0 0
+i = add i 1
+begin = i
+while digit i
+i = add i 1
+end
+if eq i begin
+reject
+end
+end
+if and lt i get js 0 or eq get data i 101 eq get data i 69
+put isint 0 0
+i = add i 1
+if and lt i get js 0 or eq get data i 43 eq get data i 45
+i = add i 1
+end
+begin = i
+while digit i
+i = add i 1
+end
+if eq i begin
+reject
+end
+end
+put js 1 i
+ret v
+end
+fn jkey to void
+if ne get data get js 1 34
+reject
+end
+start = jstring
+size = sub sub get js 1 start 1
+put js 3 99
+if eq get js 2 1
+for k ulong 19
+if matchtxt start size k true
+put js 3 k
+bit = shl ulong 1 k
+if ne and get seen 0 bit 0
+reject
+end
+put seen 0 or get seen 0 bit
+end
+end
+end
+if eq get js 2 2
+for k ulong 4
+if matchtxt start size add k 19 true
+put js 3 add k 19
+end
+end
+end
+put states sub get js 2 1 2
+end
+fn jstrval key ulong to void
+start = jstring
+if and eq get js 2 1 ne key 15
+if or ne key 2 ne sub sub get js 1 start 1 4
+reject
+end
+for j ulong 4
+expected = get failword j
+if eq get badcount 0 0
+expected = get password j
+end
+if ne get data add start j expected
+reject
+end
+end
+put values 2 1
+end
+if and eq get js 2 1 eq key 15
+if ne sub sub get js 1 start 1 16
+reject
+end
+for j ulong 16
+b = get data add start j
+if not or and ge b 48 le b 57 and ge b 97 le b 102
+reject
+end
+end
+end
+end
+fn leaf key ulong value ulong to void
+owner = get owners 1
+slot = ulong 99
+want = ulong 1
+if and eq owner 11 eq key 19
+slot = 0
+if ne and get badmask 0 16 0
+want = 0
+end
+end
+if and or eq owner 12 eq owner 13 or eq key 20 eq key 21
+slot = add mul sub owner 12 2 1
+if eq key 20
+slot = add slot 1
+else
+want = 0
+end
+end
+if and eq owner 18 eq key 22
+slot = 5
+end
+if lt slot 6
+bit = shl ulong 1 slot
+if ne and get leafmask 0 bit 0
+reject
+end
+if or eq get isint 0 0 ne value want
+reject
+end
+put leafmask 0 or get leafmask 0 bit
+end
+end
+fn jvalue to void
+depth = get js 2
+key = get js 3
+i = get js 1
+b = get data i
+state = get states sub depth 1
+next = ulong 4
+if ne state 3
+next = 7
+end
+put states sub depth 1 next
+if or eq b 123 eq b 91
+if eq depth 1
+if or ne b 123 or lt key 9 or eq key 14 or eq key 15 ge key 19
+reject
+end
+end
+if ge depth len states
+reject
+end
+next = 0
+if eq b 91
+next = 5
+end
+put states depth next
+put owners depth key
+put js 2 add depth 1
+put js 1 add i 1
+ret
+end
+if eq b 34
+jstrval key
+ret
+end
+v = jnumber
+if eq depth 1
+if or ge key 19 eq key 2
+reject
+end
+if and ge key 9 ne key 14
+reject
+end
+if eq get isint 0 0
+reject
+end
+put values key v
+else
+if eq depth 2
+leaf key v
+end
+end
+end
+fn jstep to void
+i = get js 1
+b = get data i
+if or eq b 32 or eq b 10 or eq b 13 eq b 9
+put js 1 add i 1
+ret
+end
+depth = get js 2
+if eq depth 0
+reject
+end
+state = get states sub depth 1
+if or and eq b 125 or eq state 0 eq state 4 and eq b 93 or eq state 5 eq state 7
+put js 2 sub depth 1
+put js 1 add i 1
+ret
+end
+if eq state 2
+if ne b 58
+reject
+end
+put states sub depth 1 3
+put js 1 add i 1
+ret
+end
+if or eq state 4 eq state 7
+if ne b 44
+reject
+end
+next = ulong 1
+if eq state 7
+next = 6
+end
+put states sub depth 1 next
+put js 1 add i 1
+ret
+end
+if or eq state 0 eq state 1
+jkey
+ret
+end
+if and ne state 3 and ne state 5 ne state 6
+reject
+end
+jvalue
+end
+fn jsonchk n ulong to void
+if or eq n 0 ne get data 0 123
+reject
+end
+put js 0 n
+put js 1 1
+put js 2 1
+put js 3 99
+put states 0 0
+while lt get js 1 n
+jstep
+end
+if ne get leafmask 0 63
+reject
+end
+if or ne get js 2 0 ne get seen 0 524287
+reject
+end
+if or ne get values 0 13 ne get values 1 get badcount 0
+reject
+end
+if or ne get values 2 1 ne get values 3 3
+reject
+end
+if or ne get values 4 0 ne get values 5 1
+reject
+end
+if or ne get values 6 2 or ne get values 7 151936 ne get values 8 300
+reject
+end
+end
+fn main to int
+if ne argcnt 4
+reject
+end
+r = argread 1 path 0 len path
+if ne r 1
+reject
+end
+if and ne get path 0 48 ne get path 0 49
+reject
+end
+put mode 0 sub ulong get path 0 48
+n = load 2
+logcheck n
+if ne eq get mode 0 0 eq get badcount 0 0
+reject
+end
+n = load 3
+jsonchk n
+if eq get badcount 0 0
+r = write 1 missed 0 len missed
+ret 1
+end
+r = write 1 caught 0 len caught
+ret 0
+end

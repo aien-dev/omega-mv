@@ -1,0 +1,71 @@
+Final independent Omega640 classifier review, 2026-10-23
+PASS:53 executable cases match their expected classifications.
+No unresolved blocker within the trusted-runner contract.
+
+Final source SHA256:
+0eb1fa54b044b041da650c825270bbffe959348ad2edc7c75a2b998fc7bcbfc7
+Final binary SHA256:
+7b8eef8dc2055a1b9b67f44246ab5de592365e10f290e6e401b0fb6a316ce892
+Independent rebuild is byte-identical to primary /tmp/prefetch640/classify.elf.
+Compiler /tmp/core711-resident/omc verified SHA256:
+1d1aad082539399920bc6c90ff41f0a0c3a1ca3225e518fd0d259e0aeb71732d
+Frozen review source/binary:classify-v2.om,classify-v2.elf.
+No classifier, runner, or compiler files changed by this reviewer.
+
+Executed43 baseline/adversarial cases on final binary (results-v2.txt):
+- Complete19-field receipt and13 named ordered checks:argmax-only,logits-only,
+  both failures return CAUGHT0; full pass returns UNCAUGHT1.
+- Each of13 possible failed slots individually tested. Only4/5 accepted.
+  SlotQ uses the logits-only receipt1.json so tok_same matches its log.
+- Unrelated failure, swapped check order, receipt count mismatch, wrong
+  red/reps/cache, duplicate recognized key, trailing JSON, malformed array,
+  incomplete log, missing/duplicate marker, unknown top-level field rejected65.
+- Oversized65537-byte log, NUL and missing final newline rejected65.
+- Exit0/2/124/137/139/-1/01/empty with failed record rejected65; exit1 with
+  passing record rejected65.
+- Full receipt with contradictory A_vs_C.tok_same now rejected65.
+
+10 additional native nested mutations all reject65 (nested-results.txt):
+wrong/missing/duplicate tok_same; mutant1 rc1 or caught0; mutant2 rc1 or
+caught0; B.identical0, duplicate B.identical, and missing B.identical.
+Every mutation generator itself exits0 and emits a complete745-byte-class
+receipt derived from the normal full receipt. These are not empty-input
+or empty-JSON negative tests. Generation logic is handwritten native .om.
+
+Resolved finding
+Initial version505f7cfc accepted a complete argmax-failure log with a full
+receipt whose A_vs_C.tok_same claimed success. Primary fixed it and added
+required unique nested flags:tok_same matching the argmax check, both
+mutants rc0/caught1, and B.identical1. All new regression cases pass against
+the final hash. initial-report.txt preserves the original finding and
+initial executable evidence; it is superseded by this report.
+
+Scope and limitations
+The classifier trusts numeric bodies of named check lines and does not
+recompute floating-point logit comparisons from receipt metrics. This
+review does not call it an independent numerical verifier or a hostile
+receipt-proof system. Nested JSON syntax and selected required flags are
+checked, not the complete semantics of every diagnostic number.
+No GPU execution, prefetch hardware experiment, crash generation, timeout
+implementation test, performance claim, public write, or compiler change.
+All records are synthetic contract fixtures. Parent owns runner/wiring review.
+
+Sources and reproduction
+Fixture source copied into repository as native/prefetch/review-fixtures.om
+and native/prefetch/review-nested.om, exactly matching fixtures.om/nested.om.
+Review workspace:/tmp/prefetch640-review.
+  /tmp/core711-resident/omc < fixtures.om > fixtures.elf 2> fixtures.log
+  /tmp/core711-resident/omc < nested.om > nested.elf 2> nested.log
+  /tmp/core711-resident/omc < classify-v2.om > classify-v2.elf 2> classify-v2.log
+  chmod700 each generated executable (shell chmod 700).
+  ./fixtures.elf 0 L > 0.log
+  ./fixtures.elf 0 J > 0.json
+  ./classify-v2.elf 1 0.log 0.json
+  ./nested.elf 0 < 0.json > nested-0.json
+  ./classify-v2.elf 1 0.log nested-0.json
+Native modes0/1/2/3:argmax/logits/both/pass. Pass uses supplied process exit0.
+Modes4..9,A..K correspond to negative/limitation entries in results-v2.txt;
+L..X select failed slot0..12. Nested modes0..9 enumerate mutations above.
+Early fixture compilation failures were fixed before evidence collection.
+No failed authoring build is counted as successful qualification.
+SHA256SUMS identifies all retained native source,binaries and evidence.

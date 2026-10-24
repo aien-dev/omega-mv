@@ -1,0 +1,63 @@
+note Independent mutations of complete native-generated receipt. argv0..9.
+text needles "\"tok_same\":0\n\"tok_same\":0\n\"tok_same\":0\n\"mutant1\":{\"rc\":0\n\"mutant1\":{\"rc\":0,\"token\":2,\"logit_max_abs\":0.2,\"caught\":1\n\"mutant2\":{\"rc\":0\n\"mutant2\":{\"rc\":0,\"token\":2,\"logit_max_abs\":0.2,\"caught\":1\n\"B\":{\"launches\":100,\"submits\":100,\"identical\":1\n\"B\":{\"launches\":100,\"submits\":100,\"identical\":1\n\"B\":{\"launches\":100,\"submits\":100,\"identical\":1\n"
+text repl "\"tok_same\":1\n\"tok_wrong\":0\n\"tok_same\":0,\"tok_same\":0\n\"mutant1\":{\"rc\":1\n\"mutant1\":{\"rc\":0,\"token\":2,\"logit_max_abs\":0.2,\"caught\":0\n\"mutant2\":{\"rc\":1\n\"mutant2\":{\"rc\":0,\"token\":2,\"logit_max_abs\":0.2,\"caught\":0\n\"B\":{\"launches\":100,\"submits\":100,\"identical\":0\n\"B\":{\"launches\":100,\"submits\":100,\"identical\":1,\"identical\":1\n\"B\":{\"launches\":100,\"submits\":100,\"other\":1\n"
+global data uchar 4096
+global mode uchar 1
+global loc ulong 4
+fn matches pos ulong to bool
+for j ulong get loc 1
+if ne get data add pos j get needles add get loc 0 j
+ret false
+end
+end
+ret true
+end
+fn main to int
+if ne argread 1 mode 0 1 1
+ret 64
+end
+m = sub ulong get mode 0 48
+if gt m 9
+ret 64
+end
+begin = ulong 0
+line = ulong 0
+for i ulong len needles
+if eq get needles i 10
+if eq line m
+put loc 0 begin
+put loc 1 sub i begin
+end
+begin = add i 1
+line = add line 1
+end
+end
+begin = 0
+line = 0
+for i ulong len repl
+if eq get repl i 10
+if eq line m
+put loc 2 begin
+put loc 3 sub i begin
+end
+begin = add i 1
+line = add line 1
+end
+end
+n = read 0 data 0 len data
+if le n 0
+ret 65
+end
+for pos ulong ulong n
+if le add pos get loc 1 ulong n
+if matches pos
+r = write 1 data 0 pos
+r = write 1 repl get loc 2 get loc 3
+after = add pos get loc 1
+r = write 1 data after sub ulong n after
+ret 0
+end
+end
+end
+ret 1
+end
