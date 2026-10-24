@@ -1,0 +1,249 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Durable 32-word authority record store. Caller supplies the record and generation.
+note Writes a temporary 256-byte file, fsyncs it, then atomically renames it into place.
+note Reads require exactly 256 bytes; a short or torn file is refused. Store calls do not lock; the
+note dispatcher holds lock.om around its read-check-persist window.
+text recp "build/authority-store/rec"
+text tmpp "build/authority-store/tmp"
+text genp "build/authority-store/gen"
+global sb uchar 256
+global stail uchar 1
+global spkt uchar 256
+global sn ulong 1
+global spath uchar 128
+global splen ulong 1
+global sgerr ulong 1
+fn put16 v ulong to void
+put spkt get sn 0 uchar and v 255
+put spkt add get sn 0 1 uchar shr v 8
+put sn 0 add get sn 0 2
+end
+fn setrec to void
+put splen 0 len recp
+for i ulong len recp
+put spath i get recp i
+end
+end
+fn settmp to void
+put splen 0 len tmpp
+for i ulong len tmpp
+put spath i get tmpp i
+end
+end
+fn setgen to void
+put splen 0 len genp
+for i ulong len genp
+put spath i get genp i
+end
+end
+fn pack2 to ulong
+put sn 0 0
+put16 2
+put16 len tmpp
+for i ulong len tmpp
+put spkt add get sn 0 i get tmpp i
+end
+put sn 0 add get sn 0 len tmpp
+put16 len recp
+for i ulong len recp
+put spkt add get sn 0 i get recp i
+end
+put sn 0 add get sn 0 len recp
+ret get sn 0
+end
+fn enc r view ulong 32 to void
+for i ulong 32
+v = get r i
+for j ulong 8
+put sb add mul i 8 j uchar and shr v mul j 8 255
+end
+end
+end
+fn dec r edit ulong 32 to ulong
+for i ulong 32
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get sb add mul i 8 j mul j 8
+end
+put r i v
+end
+ret 0
+end
+fn writerec r view ulong 32 to ulong
+enc r
+settmp
+fd = fopen spath 0 get splen 0 577 384
+if lt fd 0
+ret 10
+end
+n = write int fd sb 0 256
+if ne n 256
+ret 11
+end
+if ne fsync int fd 0
+ret 12
+end
+if ne fclose int fd 0
+ret 13
+end
+pn = pack2
+rr = renames spkt 0 pn 0
+if lt rr 0
+ret 14
+end
+ret 0
+end
+fn readrec r edit ulong 32 to ulong
+setrec
+fd = fopen spath 0 get splen 0 0 0
+if lt fd 0
+ret 20
+end
+n = read int fd sb 0 256
+extra = long -1
+if eq n 256
+extra = read int fd stail 0 1
+end
+if ne fclose int fd 0
+ret 21
+end
+if or ne n 256 ne extra 0
+ret 22
+end
+dv = dec r
+ret 0
+end
+fn readgen to ulong
+put sgerr 0 0
+setgen
+fd = fopen spath 0 get splen 0 0 0
+if lt fd 0
+put sgerr 0 30
+ret 0
+end
+n = read int fd sb 0 8
+extra = long -1
+if eq n 8
+extra = read int fd stail 0 1
+end
+if ne fclose int fd 0
+put sgerr 0 31
+ret 0
+end
+if or ne n 8 ne extra 0
+put sgerr 0 32
+ret 0
+end
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get sb j mul j 8
+end
+ret v
+end
+fn writegen v ulong to ulong
+setgen
+fd = fopen spath 0 get splen 0 577 384
+if lt fd 0
+ret 40
+end
+for j ulong 8
+put sb j uchar and shr v mul j 8 255
+end
+n = write int fd sb 0 8
+if ne n 8
+ret 41
+end
+if ne fsync int fd 0
+ret 42
+end
+if ne fclose int fd 0
+ret 43
+end
+ret 0
+end
+fn storevalid r view ulong 32 g ulong to ulong
+if ne get r 0 1
+ret 51
+end
+if ne get r 4 g
+ret 52
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Actual store parser accepts exact records and refuses one trailing byte.
+text exbuild "build"
+text exactdir "build/authority-store"
+text badrec "FAIL store trailing-record refusal\n"
+text badgen "FAIL store trailing-generation refusal\n"
+text expass "store exact checks=4 fails=0\n"
+global exfails ulong 1
+global extail uchar 1
+fn appendbyte to void
+fd = fopen spath 0 get splen 0 1025 384
+if lt fd 0
+exit 90
+end
+put extail 0 165
+n = write int fd extail 0 1
+if ne fclose int fd 0
+exit 91
+end
+if ne n 1
+exit 92
+end
+end
+fn main to int
+mk = makedir exbuild 0 len exbuild 448
+if not or eq mk 0 eq mk -17
+ret 93
+end
+mk = makedir exactdir 0 len exactdir 448
+if not or eq mk 0 eq mk -17
+ret 94
+end
+r = new ulong 32 0
+q = new ulong 32 0
+put r 0 1
+put r 4 1
+if ne writerec r 0
+ret 95
+end
+if ne readrec q 0
+ret 96
+end
+setrec
+appendbyte
+if ne readrec q 22
+put exfails 0 add get exfails 0 1
+w = write 1 badrec 0 len badrec
+if ne w long len badrec
+ret 97
+end
+end
+if ne writegen 1 0
+ret 98
+end
+g = readgen
+if or ne g 1 ne get sgerr 0 0
+ret 99
+end
+setgen
+appendbyte
+g = readgen
+if or ne g 0 ne get sgerr 0 32
+put exfails 0 add get exfails 0 1
+w = write 1 badgen 0 len badgen
+if ne w long len badgen
+ret 100
+end
+end
+if ne get exfails 0 0
+ret 1
+end
+w = write 1 expass 0 len expass
+if ne w long len expass
+ret 101
+end
+ret 0
+end

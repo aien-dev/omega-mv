@@ -92,11 +92,45 @@ Committed concatenations are the byte-for-byte sequences below (no extra separat
 The acquisition-order patch and regression were source-reviewed only on the editing host;
 compiled positive/negative runs remain NOT_RUN until the AArch64 qualification above is performed.
 
+## Exact store-input consumption regression
+
+`readrec` accepts exactly 256 bytes and `readgen` accepts exactly 8 bytes. Both now probe for
+EOF before decoding. A trailing byte or an error in that probe is refused through the existing
+record error (22) or generation error (`sgerr=32`, returned value 0). This is exact stream
+consumption, not authentication or a defense against concurrent file replacement/writes.
+
+`store-exact-gate.om` is exactly `store.om` followed by `store-exact-test.om`. It uses real
+store writes/reads and appends a synthetic byte with Linux `O_WRONLY | O_APPEND` (1025).
+It checks the exact-length positives and both trailing-byte refusals. In a fresh disposable
+Linux AArch64 checkout, using the reconstructed and approved existing compiler:
+
+```sh
+mkdir -p build
+seed/out/omc < seed/authority/store-exact-gate.om > build/store-exact-gate
+readelf -h build/store-exact-gate
+chmod +x build/store-exact-gate
+build/store-exact-gate
+```
+
+Run each command only after its predecessor succeeds. Expected output is
+`store exact checks=4 fails=0`, exit 0. The negative control concatenates the unmodified
+`store.om` from `a35697e94b5eeb72efadfee6edab7f14344aea43` with this test; it must report
+`FAIL store trailing-record refusal` and `FAIL store trailing-generation refusal`, exit 1.
+The test deliberately has no dependency on the new EOF-probe scratch buffer, so the old-source
+control remains a valid compilation unit. Failed compilation, signals and timeouts are INVALID.
+Run the existing store, dispatch, dispatcher-order and complete security gates as regressions.
+This standalone gate is not yet wired into `gate669`; all compiled runs remain NOT_RUN.
+
+`store-gate.om` has been regenerated as `store.om` followed by `store-test.om`. Its prior copy
+also lacked the already-existing `sgerr` generation-error interface; it now tests the current
+implementation rather than preserving that stale copy.
+
 ## Fixture source correction (2026-10-24)
 
 The dispatcher-order fixture now uses global/text names within the existing
 compiler's eight-character limit and copies its scheduled record into a local
 array before calling `writerec`; global arrays cannot be function arguments.
+The exact-store fixture likewise uses global/text names within that limit.
 These correct known source compilation blockers without changing the test
 scenarios or production sources. Declared concatenated gates are regenerated
 from this revision's own component sources. Source review is not compiler
