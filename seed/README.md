@@ -492,6 +492,20 @@ moves the path into X0 before syscall 49.
 - `seed/omc/omc.om`, 6,474 lines and 238 functions, sha256
   `7e7b68fd8922284e4b535005aef40b179bca70d8f3e775d7862af8c62c57e382` (176,188 bytes).
 
+## Rung R20: capacity boundaries gated (done)
+
+OMEGESE 9.6 states where the compiler runs out of room. `seed/omc/gate12.sh` now generates each
+boundary and checks both sides:
+
+- 1024 globals accepted, the 1025th error 14; 511 functions plus `main` accepted, a 512th function
+  (512 total) error 14; 512 nested blocks accepted, the 513th error 14.
+- a 4 MiB + 1 local array and a 16 MiB + 1 array length are refused with error 23; 64 pools of
+  16 MiB plus one more byte (1 GiB + 1) error 23.
+- an input one byte over 8 MiB is refused with error 14.
+
+`seed/host/check.sh` runs gate12. Compiler unchanged since R19: 6,474 lines, 238 functions, sha256
+`7e7b68fd8922284e4b535005aef40b179bca70d8f3e775d7862af8c62c57e382`.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
