@@ -425,6 +425,20 @@ marked spent) and the same 1024-site limit per function.
 - `seed/omc/omc.om`, 6,374 lines and 237 functions, sha256
   `068a9675ca20699433cd51b468703012cdbc12cfd5ea0e9204a1d0dc1ca7544e` (172,296 bytes).
 
+## Rung R15: benchmark parity audit (evidence)
+
+The current compiler was checked against the benchmark-pinned compiler over the real benchmark
+workspace, not just this repository's fixtures:
+
+- 103 authored `.om` sources: 0 output differences, 0 crashes.
+- 53 `om/build.plan` targets (each a concatenation of 2 to 21 units, including `prime_race`, the
+  JSON/measure/stream tools and every test target): 0 differences, 0 crashes.
+- `prime-reference` runtime behaviour on six requests (two primes, a pseudoprime, two counts and a
+  raw bitmap): identical stdout, stderr and exit status.
+
+Method and per-scope counts: `evidence/SEED-0/benchmark-parity/README.md`. The corpus is external,
+so this is evidence rather than a gate.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
