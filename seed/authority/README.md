@@ -14,7 +14,7 @@ dispatcher are the next phase; the C owner remains active until every consumer i
 | `store.om` | durable 32-word record and generation file: temp write, fsync, atomic rename, exact 256-byte read; torn/short files refused |
 | `dispatch.om` | persists in-flight, runs /bin/true and a static execpure effect, records performed/unknown, and marks unknown if the generation changes during the effect |
 | `lock.om` | cross-process O_EXCL pid lock with bounded retry and stale-pid reclaim; serializes read-check-persist, not the effect |
-| `lock-test.om` | exclusive acquire, busy refusal, release, forked waiter and stale-pid reclaim |
+| `lock-test.om` | exclusive acquire, busy refusal, release, forked waiter, stale-pid reclaim and failed-release reporting |
 | `*-test.om` | transition and store checks; no provider simulation |
 | `*-gate.om` | source + test concatenation for the current single-file compiler |
 
@@ -43,7 +43,7 @@ Expected output and exit:
 | reuse | `reuse checks=074 000` | 0 |
 | store | `store checks=077 000` | 0 |
 | dispatch | `dispatch checks=037 000` | 0 |
-| lock | `lock checks=5 fails=0` | 0 |
+| lock | `lock checks=8 fails=0` | 0 |
 
 The authority gates and the standalone lock gate are run by
 `seed/qualification/security673/gate669.om` as part of the security qualification; the dispatcher
@@ -124,6 +124,16 @@ This standalone gate is not yet wired into `gate669`; all compiled runs remain N
 `store-gate.om` has been regenerated as `store.om` followed by `store-test.om`. Its prior copy
 also lacked the already-existing `sgerr` generation-error interface; it now tests the current
 implementation rather than preserving that stale copy.
+## Lock release errors
+
+`lrm`/`lrel` return 0 only when unlink succeeds, and 41 on unlink failure (including
+an absent path). The lock gate checks ordinary release, directory refusal and
+missing-path refusal. Its directory fixture is removed with `rmdir`; run gates
+only in disposable test working directories, never against an active store.
+
+The pre-effect dispatcher release check returns 78 on this failure. Other dispatcher
+cleanup and final-release sites still ignore the release result; this change does not
+claim those paths report it, nor does it redesign stale-lock reclamation.
 
 ## Fixture source correction (2026-10-24)
 
