@@ -402,6 +402,9 @@ end
 if eq w 28254586011020901
 ret 137
 end
+if eq w 491394459747
+ret 138
+end
 if eq w 1819242338
 ret 1
 end
@@ -2973,6 +2976,11 @@ end
 if eq c 112
 nr = ulong 34
 end
+if eq c 138
+nr = ulong 49
+note hcopy leaves AT_FDCWD in X0 and the path in X1; chdir takes the path in X0.
+e3 2852126720 0 31 1
+end
 hsys nr
 spadd 4096
 hreturn dst x
@@ -3452,7 +3460,7 @@ if or eq c 124 eq c 125
 hpack c dst x
 ret
 end
-if eq c 126
+if or eq c 126 eq c 138
 hpath c dst x
 ret
 end
@@ -3690,7 +3698,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 137
+if and ge c 100 le c 138
 hostval c dst
 ret
 end

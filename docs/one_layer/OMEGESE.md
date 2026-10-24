@@ -629,6 +629,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `makedir A off n mode` | Create a directory. |
 | `rmdir A off n` | Remove an empty directory. |
 | `cwd A off capacity` | Write the current directory into writable bytes. Return the kernel byte count including the trailing zero byte. A short buffer returns a negative error. |
+| `chdir A off n` | Change the working directory to a checked, nonempty path. Return 0 or -errno. |
 | `readlnk PATH off n OUT off capacity` | Read a symbolic link through a checked, nonempty path into writable output bytes. Return the byte count without a terminator. A result equal to capacity may be truncated. |
 | `getdnts fd A off n` | Write raw Linux `getdents64` records; return bytes written. |
 | `fstat fd A off n` | Write the 128-byte Linux ARM64 stat structure; requires capacity at least 128. |

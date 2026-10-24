@@ -479,6 +479,19 @@ without modifying it.
 - `seed/omc/omc.om`, 6,466 lines and 238 functions, sha256
   `cd928e07506a505a7ec4e2b9f018bde6df20d56b9b59d7c13e7d50ebe81ba8fc` (176,048 bytes).
 
+## Rung R19: chdir (done)
+
+`chdir A off n` changes the working directory through the same checked-path machinery as
+open/unlink/mkdir/rmdir: length-delimited path, private NUL-terminated copy, bounds trap 3,
+nonempty/embedded-zero refused, result 0 or -errno. The `*at` words leave AT_FDCWD in X0; `chdir`
+moves the path into X0 before syscall 49.
+
+- The host gate creates `sub`, enters it, creates a relative file there, returns, and refuses a
+  missing directory; it then verifies the file exists at `sub/inside`.
+- Auditing the benchmark corpus after the keyword: 103 files, 0 output differences, 0 crashes.
+- `seed/omc/omc.om`, 6,474 lines and 238 functions, sha256
+  `7e7b68fd8922284e4b535005aef40b179bca70d8f3e775d7862af8c62c57e382` (176,188 bytes).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

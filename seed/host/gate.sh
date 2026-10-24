@@ -53,6 +53,10 @@ printf 'PASS native random: exact count, non-zero, two calls differ, invalid fla
 compile environment
 (cd "$stage"; env OMTEST=hello ./environment)
 printf 'PASS native environment: count, entry bytes, short-buffer refusal\n'
+compile chdir
+(cd "$stage"; ./chdir)
+test -f "$stage/sub/inside"
+printf 'PASS native chdir: relative file created in the new directory; missing path refused\n'
 compile environment_trap
 set +e
 (cd "$stage"; ./environment_trap)
