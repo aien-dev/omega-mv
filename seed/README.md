@@ -593,6 +593,19 @@ the kernel error.
 - Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
   against the pinned compiler (`e5d60db8…`). No corpus file uses `chmod` as an identifier.
 
+## Rung R27: access checks and identity (done)
+
+`faccess A off n mode` checks a checked path through `faccessat` (syscall 48, flags 0); mode is
+`F_OK` 0, `X_OK` 1, `W_OK` 2, `R_OK` 4. `getuid`, `geteuid`, `getgid` and `getegid` are
+zero-argument words (syscalls 174-177) returning the process's real and effective ids.
+
+- The host gate checks `F_OK` on an existing path (0) and on a missing path (negative). Each
+  identity word's exit equals the low byte of `id -u` or `id -g`.
+- `seed/omc/omc.om`, 6,589 lines and 239 functions, sha256
+  `aa4e1fee085671718255da851aafa41a92a619317868a26ed4463708675e91c2` (110,557 bytes).
+- Auditing the benchmark corpus after adding the words: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). None of the five words is used as an identifier there.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

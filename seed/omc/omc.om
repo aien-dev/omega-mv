@@ -420,6 +420,21 @@ end
 if eq w 431366170723
 ret 143
 end
+if eq w 32496501618073958
+ret 144
+end
+if eq w 110404104906087
+ret 145
+end
+if eq w 28263450605282663
+ret 146
+end
+if eq w 110403870025063
+ret 147
+end
+if eq w 28263390475740519
+ret 148
+end
 if eq w 1819242338
 ret 1
 end
@@ -2786,7 +2801,7 @@ note Native Linux ARM64 host operations. Encoding forms are those in seed/rung2/
 note Syscall numbers and layouts: Linux asm-generic/unistd.h, fcntl.h and time.h.
 note No raw address or arbitrary syscall is exposed to an Omega program.
 fn hargc c ulong to ulong
-if or or eq c 107 eq c 109 eq c 129
+if or or or or or or eq c 107 eq c 109 eq c 129 eq c 145 eq c 146 eq c 147 eq c 148
 ret 0
 end
 if or eq c 100 eq c 101
@@ -2821,6 +2836,21 @@ ret 198
 end
 if eq c 139
 ret 46
+end
+if eq c 145
+ret 174
+end
+if eq c 146
+ret 175
+end
+if eq c 147
+ret 176
+end
+if eq c 148
+ret 177
+end
+if eq c 144
+ret 48
 end
 if eq c 105
 ret 201
@@ -2969,7 +2999,7 @@ if eq c 110
 harg x 2 8
 harg x 3 8
 end
-if or eq c 112 eq c 143
+if or or eq c 112 eq c 143 eq c 144
 harg x 2 8
 end
 hpathcp x
@@ -2986,7 +3016,7 @@ end
 if eq c 112
 hload x 2 2
 end
-if eq c 143
+if or eq c 143 eq c 144
 hload x 2 2
 matconst 3 0
 end
@@ -3000,6 +3030,9 @@ nr = ulong 34
 end
 if eq c 143
 nr = ulong 53
+end
+if eq c 144
+nr = ulong 48
 end
 if eq c 138
 nr = ulong 49
@@ -3534,12 +3567,16 @@ if or or or eq c 124 eq c 125 eq c 141 eq c 142
 hpack c dst x
 ret
 end
-if or or eq c 126 eq c 138 eq c 143
+if or or or eq c 126 eq c 138 eq c 143 eq c 144
 hpath c dst x
 ret
 end
 if eq c 140
 hstat dst x
+ret
+end
+if and ge c 145 le c 148
+hscalar c dst x
 ret
 end
 if or or eq c 127 eq c 129 eq c 139
@@ -3776,7 +3813,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 143
+if and ge c 100 le c 148
 hostval c dst
 ret
 end

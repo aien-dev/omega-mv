@@ -83,6 +83,28 @@ printf 'PASS native link: one-record packed list traps 3\n'
 compile chmod
 (cd "$stage"; ./chmod)
 printf 'PASS native chmod: 0600 mode in st_mode; missing path errno\n'
+compile faccess
+(cd "$stage"; ./faccess)
+printf 'PASS native faccess: existing path accepted, missing path refused\n'
+uid=$(id -u)
+gid=$(id -g)
+for pair in "getuid:$uid" "geteuid:$uid" "getgid:$gid" "getegid:$gid"; do
+    word=${pair%%:*}
+    val=${pair#*:}
+    want=$((val % 256))
+    printf 'fn main to int\nret int %s\nend\n' "$word" > "$stage/id.om"
+    "$root/seed/out/omc" < "$stage/id.om" > "$stage/id.bin" 2> "$stage/id.err" || {
+        printf 'FAIL: %s did not compile: %s\n' "$word" "$(cat "$stage/id.err")" >&2
+        exit 1
+    }
+    chmod +x "$stage/id.bin"
+    set +e
+    "$stage/id.bin"
+    got=$?
+    set -e
+    [ "$got" = "$want" ] || { printf 'FAIL: %s exit %s, wanted %s (id %s mod 256)\n' "$word" "$got" "$want" "$val" >&2; exit 1; }
+done
+printf 'PASS native identity: getuid/geteuid/getgid/getegid match id\n'
 compile environment_trap
 set +e
 (cd "$stage"; ./environment_trap)
