@@ -157,6 +157,15 @@ uint32_t omega_gpu_fp8_grouped_ctas_auto(uint32_t groups);
 /* L310 lever 2 (2026-10-24): AIEN_OMEGA_FP8_SINGLE_SHAPE=rows,warps,ctas[,k] overrides the automatic shape of single-projection
  * launches (groups == 1) for measurement; 0 or missing keeps the automatic choice. Returns 1 when any field is set. */
 int omega_gpu_fp8_single_shape(uint32_t *rows, uint32_t *warps, uint32_t *ctas, uint32_t *k_only);
+/* L310 lever 2 ship (2026-10-24): the one-wave rule for the k 4096 single projection. rule(k, n, groups, wave) returns the
+ * rows per warp it imposes (2 for groups == 1, k == 4096, n even, wave != 0) or 0 (the automatic choice). single_wave()
+ * reads AIEN_OMEGA_FP8_SINGLE_WAVE once ("1" = on; default OFF until the merge train has judged the step);
+ * set_single_wave() overrides it (tests). Measured on the 35B: o_proj 54.66 -> 53.04 us per launch (byte floor 30.73),
+ * -64.9 us per 1-row step over 40 launches, output bit-identical (investigations/2026-10-24-l310-single-proj-waves,
+ * window 2). The process prints one proof line to stderr when the rule first applies. */
+void omega_gpu_fp8_set_single_wave(int on);
+int omega_gpu_fp8_single_wave(void);
+uint32_t omega_gpu_fp8_single_rows_rule(uint32_t k, uint32_t n, uint32_t groups, int wave);
 /* 1: tensors uploaded from now on live in GPU-cached memory (read-only weights; omega_gpu_mem_cached.h). Default 0:
  * GPU-uncached like every session buffer. Tensors already uploaded keep their policy. Never set: the first upload reads env
  * AIEN_OMEGA_FP8_WEIGHT_CACHE ("1" = cached; W-L2d, so sc can switch it without a code change). */

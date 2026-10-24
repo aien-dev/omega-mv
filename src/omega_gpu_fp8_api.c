@@ -50,6 +50,7 @@ static struct {
     int coal, coal_set, wfirst, wfirst_set; /* CUT5 variants A (coalesced output) and B (weights before x), variant 1 only; env AIEN_OMEGA_FP8_COAL / AIEN_OMEGA_FP8_WFIRST when never set */
     int deep, deep_set; /* SPEED-1B: automatic deep kernel for single projections whenever it fits (1, default) or never (0); env AIEN_OMEGA_FP8_DEEP when never set */
     int bigk, bigk_set; /* qwen38/decode-speed: single projections with k > 4096 (Qwen3.8-27B) get 16 warps and a partial-depth deep kernel when x fits; default on, env AIEN_OMEGA_FP8_BIGK when never set */
+    int single_wave, single_wave_set; /* L310 lever 2 ship: the k 4096 one-wave rule (AIEN_OMEGA_FP8_SINGLE_WAVE), read once; default off */
     bool hooked;
     Slot cache[CACHE_SLOTS];
     unsigned next;
@@ -152,6 +153,27 @@ void omega_gpu_fp8_set_deep(int on) { flag_set(&g.deep, &g.deep_set, on); }
 int omega_gpu_fp8_deep(void) { return flag_now(&g.deep, &g.deep_set, "AIEN_OMEGA_FP8_DEEP", 1); }
 void omega_gpu_fp8_set_bigk(int on) { flag_set(&g.bigk, &g.bigk_set, on); }
 int omega_gpu_fp8_bigk(void) { return flag_now(&g.bigk, &g.bigk_set, "AIEN_OMEGA_FP8_BIGK", 1); }
+/* L310 lever 2 (2026-10-24, ships OFF): the one-wave rule for the k 4096 single projection. Measured on the 35B
+ * (investigations/2026-10-24-l310-single-proj-waves, window 2, runs/20261024T231316Z): o_proj (k 4096, n 2048, 40 launches
+ * per token) at rows 1 per warp launches 256 CTAs of 8 warps; at 64 declared registers the register file seats 4 CTAs per SM
+ * (CC 12.x: 65536 registers and 1536 threads per SM, CUDA Programming Guide Table 30) = 192 slots on the 48 SMs (GB10
+ * whitepaper Table 4): two waves. rows 2 per warp = 128 CTAs at 72 registers = 3 per SM = 144 slots: one wave, one row-step.
+ * Measured 54.66 -> 53.04 us per launch against the 30.73 us byte floor (8 MiB at 273 GB/s), -64.9 us per 1-row step, lower
+ * at 15/15 positions, output bit-identical; whole-step effect below the harness drift, left to the merge train. rows 2 on
+ * every single projection is WORSE (mix/head at 96 registers = 2 per SM: +175.8 us per step), so the rule names one width.
+ * Env read once: AIEN_OMEGA_FP8_SINGLE_WAVE=1 turns it on; AIEN_OMEGA_FP8_SINGLE_SHAPE (measurement) wins over it. */
+void omega_gpu_fp8_set_single_wave(int on) { flag_set(&g.single_wave, &g.single_wave_set, on); }
+int omega_gpu_fp8_single_wave(void) { return flag_now(&g.single_wave, &g.single_wave_set, "AIEN_OMEGA_FP8_SINGLE_WAVE", 0); }
+uint32_t omega_gpu_fp8_single_rows_rule(uint32_t k, uint32_t n, uint32_t groups, int wave) {
+    return (wave && groups == 1u && k == 4096u && n != 0u && n % 2u == 0u) ? 2u : 0u; /* 0 = the automatic rows per warp */
+}
+static void single_wave_said(void) { /* the proof line of a run with the rule on (merge-train log_proof): the process says what it applied */
+    static int said;
+    static const char line[] = "omega fp8: single-projection one-wave rule: rows 2 per warp for k 4096 (AIEN_OMEGA_FP8_SINGLE_WAVE)\n";
+    if (said) return;
+    said = 1;
+    ssize_t w = write(2, line, sizeof line - 1); (void)w;
+}
 /* codegen by variant */
 static int prog_for(int variant, const OmegaFp8GemvSpec *spec, BlackwellIRProgram *prog) {
     return variant == 2 ? omega_blackwell_codegen_fp8_gemv2_prog(spec, prog) : omega_blackwell_codegen_fp8_gemv_prog(spec, prog);
@@ -326,6 +348,10 @@ static void spec_for(uint32_t k, uint32_t n, uint32_t groups, OmegaFp8GemvSpec *
     if (groups == 1u && k > 4096u && !g.warps && omega_gpu_fp8_bigk()) spec->warps = 16u;
     if (groups == 1u) { /* L310 lever 2: measured override of single-projection shapes (AIEN_OMEGA_FP8_SINGLE_SHAPE) */
         single_shape_now();
+        { /* L310 lever 2 ship: the k 4096 one-wave rule (off unless AIEN_OMEGA_FP8_SINGLE_WAVE=1); the measurement knob below wins */
+            const uint32_t r = omega_gpu_fp8_single_rows_rule(k, n, groups, omega_gpu_fp8_single_wave());
+            if (r && !g.rows) { spec->rows = r; single_wave_said(); }
+        }
         if (!g_single.v[3] || k == g_single.v[3]) { /* the optional 4th field limits the override to one width k */
             if (g_single.v[0] && !g.rows && n % g_single.v[0] == 0u) spec->rows = g_single.v[0];
             if (g_single.v[1] && !g.warps) spec->warps = g_single.v[1];

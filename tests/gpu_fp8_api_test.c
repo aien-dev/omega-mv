@@ -1115,8 +1115,36 @@ static void rule_checks(void) {
     printf("grouped CTA rule: %zu/%zu ok (8 groups -> 6, 9 groups -> 5)\n", sizeof c / sizeof c[0], sizeof c / sizeof c[0]);
 }
 
+/* L310 lever 2: the k 4096 one-wave rule, pure, then through spec_for (no chip). One width: k 4096, n even, single launch. */
+static void single_wave_checks(void) {
+    static const struct { uint32_t k, n, groups; int wave; uint32_t want; } c[] = {
+        {4096, 2048, 1, 1, 2}, {4096, 2048, 1, 0, 0}, {4096, 4096, 1, 1, 2}, {4096, 2047, 1, 1, 0}, {2048, 5120, 1, 1, 0},
+        {5120, 2048, 1, 1, 0}, {4096, 2048, 8, 1, 0}, {4096, 2048, 9, 1, 0}, {4096, 0, 1, 1, 0}, {8192, 2048, 1, 1, 0} };
+    for (size_t i = 0; i < sizeof c / sizeof c[0]; i++) {
+        const uint32_t got = omega_gpu_fp8_single_rows_rule(c[i].k, c[i].n, c[i].groups, c[i].wave);
+        CHECK(got == c[i].want, "single one-wave rule: k %u n %u groups %u wave %d: got %u want %u", c[i].k, c[i].n, c[i].groups, c[i].wave, got, c[i].want);
+    }
+    CHECK(omega_gpu_fp8_single_wave() == 0, "single one-wave rule defaults OFF (AIEN_OMEGA_FP8_SINGLE_WAVE unset in this run)");
+    for (int on = 1; on >= 0; on--) {
+        omega_gpu_fp8_set_single_wave(on);
+        OmegaFp8GemvSpec o, q, m; omega_gpu_fp8_spec_for(4096, 2048, 1, &o); omega_gpu_fp8_spec_for(2048, 5120, 1, &q); omega_gpu_fp8_spec_for(2048, 4096, 1, &m);
+        CHECK(o.rows == (on ? 2u : 1u) && o.warps == 8u && o.depth == 0u, "single one-wave %d: o_proj 2048x4096 rows %u warps %u depth %u (want %u, 8, 0: classic kernel)", on, o.rows, o.warps, o.depth, on ? 2u : 1u);
+        CHECK(q.rows == 1u && m.rows == 1u, "single one-wave %d: k 2048 shapes keep rows 1 (qkv %u, 4096x2048 %u)", on, q.rows, m.rows);
+        if (on) {
+            uint32_t decl = 0; const int rf = omega_gpu_fp8_kernel_fits(&o, &decl);
+            const uint32_t per_sm = decl ? 65536u / (decl * 32u * o.warps) : 0u; /* CTAs the register file seats per SM (CC 12.x: 65536 registers, CUDA guide Table 30) */
+            const uint32_t grid = (2048u / o.rows + o.warps - 1u) / o.warps;
+            CHECK(rf == OMEGA_GPU_FP8_OK && per_sm >= 3u && grid <= per_sm * OMEGA_GPU_SM_COUNT, "single one-wave: o_proj rows 2 declares %u registers -> %u CTAs per SM, grid %u <= %u = one wave of %u SMs", decl, per_sm, grid, per_sm * OMEGA_GPU_SM_COUNT, OMEGA_GPU_SM_COUNT);
+            if (rf == OMEGA_GPU_FP8_OK) printf("single one-wave rule: o_proj rows 2 declares %u registers, %u CTAs per SM, grid %u (one wave = %u slots)\n", decl, per_sm, grid, per_sm * OMEGA_GPU_SM_COUNT);
+        }
+    }
+    omega_gpu_fp8_set_single_wave(0); /* the default */
+    printf("single one-wave rule: %zu table cases, o_proj rows 2 with the switch, rows 1 without, k 2048 untouched\n", sizeof c / sizeof c[0]);
+}
+
 int main(int argc, char **argv) {
     rule_checks();
+    single_wave_checks();
     int host = 0, sim = 0; const char *out_path = NULL; uint32_t reps = 20, lb = 0, rows = 0, warps = 0, budget = 0, spin = 2000, depth = 0; int depth_set = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host-only") == 0) host = 1;
