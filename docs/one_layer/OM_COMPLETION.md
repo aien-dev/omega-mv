@@ -20,7 +20,7 @@ Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/chec
 | Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync, pread/pwrite, getsid/syncfs/shutdown | seed/host/check.sh |
 | Diagnostics | 23 named refusal codes with one minimal case each | gate15 |
 | Robustness | 600 deterministic fuzz programs; capacity boundaries; 300-program differential fuzz against the pinned compiler; 30 randomized two-function IR units | gate12, gate13, gate17, gate-ir |
-| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded, break; refuses what it cannot lower | gate-ir (10/10 dev, 9 call units, 3 break units, 1 shift unit, 1 bool unit, 1 cast unit, 30 fuzz units, 26 refusals) |
+| IR mode | OSC IR v1 scalar subset: up to 32 functions, calls to earlier functions, integer constants folded, break; arrays/structs/floats out of scope | gate-ir (10/10 dev, 9 call units, 3 break units, 1 shift unit, 1 bool unit, 1 cast unit, 30 fuzz units, 26 refusals) |
 
 Compiler: 7,208 lines, 251 functions, sha256
 `ef19aa993d210ad20070ef99bce1e2ef02921d9541d7a443f973072c4d6fa6a3` (119,643 bytes).
@@ -30,23 +30,29 @@ and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after eve
 
 ## 2. Open compiler work
 
-IR mode is complete for the OSC-1 slice: scalar values, up to 32 functions, calls to earlier
-functions with full 63-byte names, integer constants (values, trap codes, loop bounds, for counts),
-and break. `gate-ir` pins this against the C oracle and checker2. No self-contained compiler feature
-remains for that slice.
+IR mode is complete for the **scalar** OSC-1 subset: scalar values, up to 32 functions, calls to
+earlier functions with full 63-byte names, integer constants (values, trap codes, loop bounds, for
+counts), and break. `gate-ir` pins this against the C oracle and checker2. No self-contained compiler
+feature remains for that subset.
 
-**Spec-blocked target extensions.** OSC-1 explicitly excludes structs and strings, and its scalar
-tags are integer-only; `omegese` cannot emit them, so there is no reference unit to verify against.
+**Spec-blocked / model-divergent target extensions.**
+
+1. **IR arrays.** OSC-1 arrays carry explicit `free`; the `.om` language has no `free` (decision 24)
+   and returns arrays automatically. The C oracle therefore cannot validate an IR lowering of `.om`
+   arrays, and IR mode refuses `new`/`get`/`put`. Needs an ownership model that both sides share.
+
+OSC-1 also explicitly excludes structs and strings, and its scalar tags are integer-only; `omegese`
+cannot emit them, so there is no reference unit to verify against.
 
 1. **IR structs.** Version-2 struct records exist, but allocation, field ops and identity need the
    OSC-1 struct lowering spec.
-2. **IR floats.** Float constants cannot be folded until the IR type system carries f32/f64.
+3. **IR floats.** Float constants cannot be folded until the IR type system carries f32/f64.
 
 **Decision-bound language/ecosystem work.**
 
-3. **Generic byte/string utilities.** Array parameters carry an exact length; a standard library
+4. **Generic byte/string utilities.** Array parameters carry an exact length; a standard library
    needs open arrays or a max-length convention (language decision).
-4. **`sync` naming.** The benchmark corpus uses `sync` as an identifier four times; any new keyword
+5. **`sync` naming.** The benchmark corpus uses `sync` as an identifier four times; any new keyword
    must pass the corpus collision audit (rung R13).
 
 ## 3. Blocked on a decision or an external store
@@ -67,6 +73,6 @@ tags are integer-only; `omegese` cannot emit them, so there is no reference unit
 
 ## 4. Next concrete step
 
-No self-contained compiler feature remains for OSC-1. Next work requires a decision (FR-2/3/5/6/7/8/9,
-decisions 24/37) or a target-extension spec (OSC-1 struct/float lowering); host-surface polish is
-optional.
+No self-contained compiler feature remains for the supported scalar subset. Next work requires a
+decision (FR-2/3/5/6/7/8/9, decisions 24/37) or a shared target-extension model (IR arrays,
+structs, floats); host-surface polish is optional.
