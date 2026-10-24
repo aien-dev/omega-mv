@@ -409,6 +409,22 @@ take a name that existing code uses, so the float words are now `bitcast`, `fsqr
   `c7f4fc4fac585653226468251ca86e1900ff7f51e9f731687cc2e176702c7f8d` (171,088 bytes).
 - The audit method and result are recorded in `evidence/SEED-0/keyword-compat/README.md`.
 
+## Rung R14: continue (done)
+
+`break` had no counterpart. `continue` now finds the innermost loop like `break`, but its branch is
+patched to the loop's latch instead of its exit: the head of a `while`, so the condition and the
+hidden bound count run again, or the increment of a `for`, so the counter still advances. It uses the
+same fixup discipline (recorded with the loop's block index, patched when that loop closes, then
+marked spent) and the same 1024-site limit per function.
+
+- `seed/omc/gate7.sh` now has 18 cases: while (18), for (12), nested (36), an empty `for` body that
+  still terminates, a bounded while that still traps 4 (exit 104), and refusals (error 9 outside a
+  loop, error 17 for a later line). om4 refuses the word, which the gate also checks.
+- Auditing the benchmark corpus again after adding the keyword: 103 files, 0 output differences,
+  0 crashes against the pinned compiler.
+- `seed/omc/omc.om`, 6,374 lines and 237 functions, sha256
+  `068a9675ca20699433cd51b468703012cdbc12cfd5ea0e9204a1d0dc1ca7544e` (172,296 bytes).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

@@ -60,6 +60,8 @@ for <name> <type> <count> / end   name = 0 .. count-1 (count a number, or a valu
                           (any other count: trap 4 after 1000000 passes, as a while with no bound)
 break                     leave the innermost loop; outside a loop: error 9. Like ret, it ends the
                           path (a later line in the same block is error 17)
+continue                  jump to the next iteration: a while's head, a for's increment. Outside a
+                          loop: error 9. Like ret, it ends the path (a later line is error 17)
 ret [<value>]
 put <array> <index> <value>      store
 trap <code 1..14>         stop with that code (out of range: error 8). Program mode exits 100 + code;
@@ -512,10 +514,10 @@ om4(omc.om) stays equal to omc(omc.om). Checked by `seed/omc/gate6.sh`.
   structs of one call are distinct names (error 19). A function does not return a struct.
 - `len` of a struct is refused (error 7). `read` and `write` of a struct are refused (error 7).
 
-### 9.8 Break and trap (omc only, gate7)
+### 9.8 Break, continue and trap (omc only, gate7)
 
-`break` and `trap` are the two path-ending statements §3 lists. omc implements both; om4 refuses
-them, so they are omc-only like structs. Checked by `seed/omc/gate7.sh`; it is run by
+`break`, `continue` and `trap` are the path-ending statements §3 lists. omc implements all three;
+om4 refuses them, so they are omc-only like structs. Checked by `seed/omc/gate7.sh`; it is run by
 `seed/host/check.sh`.
 
 - `break` scans the open blocks for the innermost loop (kind 3 while, 4 for), emits an
@@ -524,12 +526,17 @@ them, so they are omc-only like structs. Checked by `seed/omc/gate7.sh`; it is r
   reuses the block slot cannot move an earlier break. Outside a loop it is error 9. Like `ret`,
   the line ends the path: a later line in the same block is error 17. At most 1024 break sites
   per function (error 14 over that), reset when the function ends. (gate7 w1, f1, n1-n3)
+- `continue` finds the innermost loop the same way, but its recorded branch is patched to the loop's
+  latch, not its exit: the head of a while, so the condition and the bound count run again, or the
+  increment of a for, so the counter still advances. Outside a loop it is error 9; a later line in the
+  same block is error 17; at most 1024 sites per function (error 14). (gate7 c1-c5, bad_continue,
+  bad_after_continue)
 - `trap N` takes a decimal number 1..14 (error 4 when the line ends, 16 when the token is not a
   number, 8 out of range). It emits the same always-taken branch the runtime trap checks use;
   `finish` makes one stub per code, so program mode exits 100 + N and function mode calls
   `OscRt.trap`. The line ends the path (error 17 for a later line in the same block).
   (gate7 t1, t2, bad_trap0, bad_trap15)
-- Neither word may be a name; both are reserved from the keyword table. (gate7 om4 refusal)
+- None of the three may be a name; all are reserved from the keyword table. (gate7 om4 refusal)
 
 
 ### 9.9 Floating point (omc only, gate8)

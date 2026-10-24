@@ -1,6 +1,6 @@
 #!/bin/sh
-# gate7.sh -- break and trap (OMEGESE 9.8). The compiler under test is seed/out/omc, which
-# seed/omega-from-seed.sh has already built and proved self-identical. om4 refuses both words
+# gate7.sh -- break, continue and trap (OMEGESE 9.8). The compiler under test is seed/out/omc, which
+# seed/omega-from-seed.sh has already built and proved self-identical. om4 refuses all three words
 # (they are omc-only), and that refusal is checked here too. RC=0 only when every case passed.
 set -eu
 R=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
@@ -15,7 +15,7 @@ bad() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 say() { printf '%s\n' "$*"; }
 
 # om4 has neither word: each such line must be refused, never compiled.
-for f in w1.om t1.om; do
+for f in w1.om c2.om t1.om; do
     set +e
     "$OM4" < "$T/$f" > "$B/om4-$f.bin" 2> "$B/om4-$f.err"
     orc=$?
@@ -57,10 +57,17 @@ run_exit f1 3
 run_exit n1 33
 run_exit n2 4
 run_exit n3 3
+run_exit c1 18
+run_exit c2 12
+run_exit c3 36
+run_exit c4 0
+run_exit c5 104
 run_exit t1 105
 run_exit t2 107
 refuse bad_outside 9
 refuse bad_after 17
+refuse bad_continue 9
+refuse bad_after_continue 17
 refuse bad_trap0 8
 refuse bad_trap15 8
 

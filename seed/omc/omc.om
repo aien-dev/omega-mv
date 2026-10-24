@@ -717,6 +717,9 @@ end
 if eq w 7381246293360141935
 ret 96
 end
+if eq w 7310870969309884259
+ret 97
+end
 ret 0
 end
 
@@ -1261,6 +1264,9 @@ note ---- break fixups (1024): output offset of the branch, block index of the l
 global brkpos ulong 1024
 global brkblk ulong 1024
 global nbrk ulong 1
+global cpos ulong 1024
+global cblk ulong 1024
+global ncont ulong 1
 note ======== names and functions ========
 note findname: packed name -> its index + 1 among the names in scope (0 none). om4 FINDNAME.
 fn findname w ulong to ulong
@@ -4168,6 +4174,35 @@ dead1
 eol
 end
 
+note s_cont: continue: like break it finds the innermost loop, but its exit is the latch: the head of a
+note while, the increment of a for (patched by s_end). Outside a loop it is error 9; the line ends the
+note path (error 17 for a later line in the same block).
+fn s_cont to void
+j = get nb 0
+found = ulong 0
+bi = ulong 0
+while and eq found 0 gt j 0
+j = sub j 1
+if ge get bkind j 3
+found = ulong 1
+bi = j
+end
+end
+if eq found 0
+fail 9
+end
+n = get ncont 0
+if ge n 1024
+fail 14
+end
+put cpos n get oc 0
+put cblk n bi
+put ncont 0 add n 1
+emit 1409286158
+dead1
+eol
+end
+
 note s_trap: trap N (1 .. 14): an always-taken branch to the trap stub for code N, which finish makes.
 note Program mode exits 100 + N; function mode calls OscRt.trap (OMEGESE 9.1). The line ends the path.
 fn s_trap to void
@@ -4528,6 +4563,7 @@ put curret 0 0
 put nn 0 get nglob 0
 put curfn 0 0
 put nbrk 0 0
+put ncont 0 0
 end
 
 note s_end: close the innermost block (if: patch its branch; else: patch its jump; while: B head; for: i =
@@ -4547,6 +4583,15 @@ else
 put dead 0 0
 end
 if eq k 4
+lat = get oc 0
+j = ulong 0
+while lt j get ncont 0
+if eq get cblk j i
+patch19 get cpos j lat
+put cblk j 65535
+end
+j = add j 1
+end
 put fr 0 1
 put fr 1 get breg i
 put fr 2 get btyp i
@@ -4554,6 +4599,16 @@ put fr 3 3
 put fr 4 1
 put fr 5 get btyp i
 binop 33 get breg i 0
+end
+if eq k 3
+j = ulong 0
+while lt j get ncont 0
+if eq get cblk j i
+patch19 get cpos j get bhead i
+put cblk j 65535
+end
+j = add j 1
+end
 end
 if ge k 3
 back get bhead i
@@ -4816,6 +4871,10 @@ ret 0
 end
 if eq c 87
 s_trap
+ret 0
+end
+if eq c 97
+s_cont
 ret 0
 end
 if or or or eq c 77 eq c 78 eq c 79 eq c 81
