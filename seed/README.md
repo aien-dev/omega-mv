@@ -632,6 +632,19 @@ the length to X1.
 - Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
   against the pinned compiler (`e5d60db8…`). No corpus file uses `truncate` as an identifier.
 
+## Rung R30: refusal-code conformance gate (done)
+
+`seed/omc/gate15.sh` pins the compiler's refusal table: one minimal program per code 3..23, each of
+which must exit with exactly that code and print `error N`, plus a valid control. Codes 1 and 2 are
+I/O errors on the compiler's own input/output, not language inputs, and are excluded.
+
+- The cases are: 3 unknown name, 4 line ends early, 5 extra words, 6 bad number, 7 type mismatch,
+  8 out of range, 9 word not allowed, 10 duplicate name, 11 ambiguous literal, 12 register pool,
+  13 long variable, 14 capacity, 15 missing end, 16 syntax, 17 line after a path end, 18 missing
+  return, 19 aliasing, 20 readonly, 21 constant index, 22 text literal, 23 size capacity.
+- 21 cases and the control run in about 0.04 s; `seed/host/check.sh` runs the gate. Compiler
+  unchanged: 6,616 lines, 239 functions, sha256 `45029fb3…`.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
