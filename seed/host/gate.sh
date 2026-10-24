@@ -50,3 +50,13 @@ printf 'PASS struct values and native file operations in one program\n'
 compile random
 "$stage/random"
 printf 'PASS native random: exact count, non-zero, two calls differ, invalid flags refused\n'
+compile environment
+(cd "$stage"; env OMTEST=hello ./environment)
+printf 'PASS native environment: count, entry bytes, short-buffer refusal\n'
+compile environment_trap
+set +e
+(cd "$stage"; ./environment_trap)
+erc=$?
+set -e
+[ "$erc" = 103 ] || { printf 'FAIL: environment_trap exit %s, wanted 103\n' "$erc" >&2; exit 1; }
+printf 'PASS native environment: index at the count traps 3\n'

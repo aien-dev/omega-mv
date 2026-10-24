@@ -655,6 +655,8 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `execprog A off n` | Replace the process using a packed argument list. Only returns on failure. |
 | `argcnt` | Return argument count, including the executable name. |
 | `argread index A off capacity` | Copy argument bytes without a terminator; return byte length. An invalid index traps 3. Insufficient capacity returns -105 without changing the slice. |
+| `envcnt` | Return the number of entries in the process environment (the `envp` the kernel supplied). |
+| `envread index A off capacity` | Copy one environment entry without its terminator; return its byte length. An index at or past `envcnt` traps 3; insufficient capacity returns -105 without changing the slice. |
 | `random A off n flags` | Fill a writable byte slice from Linux `getrandom`. Return the bytes written or -errno. `flags` is `int`: 0 blocks until the pool is ready, 1 `GRND_NONBLOCK`, 2 `GRND_RANDOM`, 4 `GRND_INSECURE`; other flags return -EINVAL. |
 
 ### Path and process boundaries

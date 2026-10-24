@@ -465,6 +465,20 @@ unknown flags return -EINVAL.
 - `seed/omc/omc.om`, 6,414 lines and 238 functions, sha256
   `7326b100d3c85d4e58707deb8a8c3cf826b6dcc55280b3ffb3e76272cc07eaa8` (173,472 bytes).
 
+## Rung R18: environment access (done)
+
+`envcnt` and `envread index A off capacity` read the process's own environment vector, which the
+start code preserves in X27 beside argv. `envp[0]` sits at `X27 + 8*(argc+2)`; `envread` walks the
+entries before the requested index, so an index at or past the count traps 3. The slice rules match
+`argread`: bounds trap 3, a `view`/`text` is refused (error 20), and a short buffer returns -105
+without modifying it.
+
+- The host gate runs with `OMTEST=hello` in both a full and a minimal environment, finds the entry
+  byte-for-byte, checks the short-buffer refusal and checks that `envread envcnt` exits 103.
+- Auditing the benchmark corpus after the two keywords: 103 files, 0 output differences, 0 crashes.
+- `seed/omc/omc.om`, 6,466 lines and 238 functions, sha256
+  `cd928e07506a505a7ec4e2b9f018bde6df20d56b9b59d7c13e7d50ebe81ba8fc` (176,048 bytes).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
