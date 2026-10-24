@@ -1,20 +1,26 @@
-note process groups: getpgid/setpgid always; setsid succeeds or reports EPERM when already a leader.
+note process groups: setsid succeeds or returns EPERM when already a leader; on success the new
+note group id must be the pid. setpgid(0,0) may succeed or return EPERM depending on that state.
 fn main to int
-p = getpgid 0
-if le p long 0
+i = getpgid 0
+if le i long 0
 ret 1
-end
-r = setpgid 0 int p
-if and ne r 0 ne r long -1
-ret 2
 end
 s = setsid
 if and lt s 0 ne s long -1
-ret 3
+ret 2
 end
 q = getpgid 0
 if le q long 0
+ret 3
+end
+if ge s 0
+if ne q getpid
 ret 4
+end
+end
+r = setpgid 0 0
+if and ne r 0 ne r long -1
+ret 5
 end
 ret 0
 end
