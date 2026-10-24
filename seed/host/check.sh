@@ -3,6 +3,7 @@
 set -eu
 cd "$(dirname "$0")/../.."
 sh seed/omega-from-seed.sh
+sh seed/omc/gate7.sh
 sh seed/host/gate.sh
 sh seed/host/negative.sh
 sh seed/host/regression.sh

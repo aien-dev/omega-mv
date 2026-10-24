@@ -267,7 +267,7 @@ it came from.
 - Limits, said plainly: omc has om4's limits, because it copies om4 (names up to 8 characters, 16
   registers per function, values nested up to 1,024 deep, 8 MiB of input).
 
-## Rung R6, first piece: structs (done for the language; IR and GPU words still open)
+## Rung R6, first piece: structs (done for the language; GPU words still open)
 
 om4 does not learn structs. It remains the parent that rebuilds omc, and omc.om does not use the new
 words, so the two parents still build the same compiler. A struct program is a stack of 8-byte cells,
@@ -282,7 +282,37 @@ given back when the function returns. There is no `free`.
   ignored field names would fail.
 - Thirteen broken programs are refused with the stated error number. om4 itself refuses a struct
   program (exit 16). `free` is still refused.
-- Not in this piece: the IR emitter, and a kernel on the chip. Those stay on L408.
+- Not in this piece: a kernel on the chip. That stays on L408. (An experimental single-function
+  OSC IR emitter exists on `fix/seed-ir-trap`; it is not part of this line.)
+
+## Rung R6b: one compiler line, structs and native host operations (done)
+
+Structs and the native host extension were built on separate branches from R5. They are now one
+compiler: `seed/omc/omc.om`, 4,616 lines and 173 functions, accepts both. The keyword table keeps
+both islands with no id shared (struct 85; host words 100 to 131).
+
+- self-rebuild: stage1 = stage2 = stage3, sha256
+  `1a25cf0be96972206d6904638ded6729c65b69a12c788d7fe370e6dadd22e533` (126,528 bytes).
+- `seed/omc/gate6.sh` passes its 26 struct cases; struct programs stay omc-only (om4 error 16).
+- `seed/host/check.sh` passes every host case and the 70 original corpus fixtures. The om4/omc
+  corpus leaves out `seed/omc/tests/struct/`: om4's refusal there is the documented om4-only limit
+  (decision 32), and gate6 owns that check.
+- `seed/host/tests/structfile.om` is one program that builds a struct, creates and writes a file
+  through the native host words, closes and unlinks it, and returns a struct field; `gate.sh` runs it.
+
+## Rung R7: break and trap (done)
+
+Section 3 listed both words while the compiler refused them (keyword 77). omc now implements them
+(86 and 87) with the following semantics, and `seed/omc/gate7.sh` checks each one (11 cases plus the
+om4 refusal); `seed/host/check.sh` runs gate7.
+
+- `break` leaves the innermost `while` or `for`. Outside a loop it is error 9. Like `ret` it ends the
+  path, so a later line in the same block is error 17. Its branch is recorded with the loop's block
+  index, patched when that loop closes, and marked spent, so a later loop reusing the slot cannot move
+  an earlier break. 1024 sites per function (error 14).
+- `trap N` takes 1..14 (error 8 out of range, error 4 when the line ends, 16 when the token is not a
+  number). Program mode exits 100 + N; function mode calls `OscRt.trap` through the same stub the
+  runtime checks use. A later line in the same block is error 17.
 
 ## How the checks stay honest
 

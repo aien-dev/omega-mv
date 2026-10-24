@@ -5,12 +5,17 @@ cd "$(dirname "$0")/../.."
 mkdir -p build/seed/host
 stage=$(mktemp -d build/seed/host/regression.XXXXXX)
 trap 'rm -rf "$stage"' EXIT HUP INT TERM
-# Struct programs are an omc-only extension (OMEGESE 9.7): om4 refuses them by design, and
-# seed/omc/gate6.sh is the gate that checks that refusal. They are not part of the corpus where
-# om4 and omc must agree byte for byte.
+# Struct, break and trap are omc-only words (OMEGESE 9.7, 9.8): om4 refuses them by design, and
+# gate6 and gate7 own those semantics. The strict byte-equality corpus leaves out every fixture that
+# uses one of them and keeps everything else under the full comparison.
+: > "$stage/inputs"
 git ls-files seed/rung4/tests seed/omc/tests tests/one_layer/omegese tools/exp445/arms/examples \
     | grep -v '^seed/omc/tests/struct/' \
-    | sed -n '/\.om$/p; /\.omegese$/p' > "$stage/inputs"
+    | sed -n '/\.om$/p; /\.omegese$/p' > "$stage/all"
+while IFS= read -r f; do
+    grep -qE '^[[:space:]]*(break|trap|struct)([[:space:]]|$)' "$f" && continue
+    printf '%s\n' "$f" >> "$stage/inputs"
+done < "$stage/all"
 count=0
 while IFS= read -r source; do
     old=0

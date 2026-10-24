@@ -558,10 +558,10 @@ if eq w 7824750
 ret 84
 end
 if eq w 461195539042
-ret 77
+ret 86
 end
 if eq w 1885434484
-ret 77
+ret 87
 end
 if eq w 7239535
 ret 77
@@ -814,6 +814,10 @@ global bheld ulong 512
 global bdead ulong 512
 global nb ulong 1
 global curfn ulong 1
+note ---- break fixups (1024): output offset of the branch, block index of the loop it leaves ----
+global brkpos ulong 1024
+global brkblk ulong 1024
+global nbrk ulong 1
 
 note ======== names and functions ========
 note findname: packed name -> its index + 1 among the names in scope (0 none). om4 FINDNAME.
@@ -3216,6 +3220,54 @@ dead1
 eol
 end
 
+note s_break: leave the innermost loop: find the nearest block of kind 3 (while) or 4 (for), emit an
+note always-taken B.cond to the loop's exit and record the word for s_end to patch. Outside a loop the
+note line is error 9. Like ret, the line ends the path (a later line in the same block is error 17).
+fn s_break to void
+j = get nb 0
+found = ulong 0
+bi = ulong 0
+while and eq found 0 gt j 0
+j = sub j 1
+if ge get bkind j 3
+found = ulong 1
+bi = j
+end
+end
+if eq found 0
+fail 9
+end
+n = get nbrk 0
+if ge n 1024
+fail 14
+end
+put brkpos n get oc 0
+put brkblk n bi
+put nbrk 0 add n 1
+emit 1409286158
+dead1
+eol
+end
+
+note s_trap: trap N (1 .. 14): an always-taken branch to the trap stub for code N, which finish makes.
+note Program mode exits 100 + N; function mode calls OscRt.trap (OMEGESE 9.1). The line ends the path.
+fn s_trap to void
+tok
+if eq get tk 0 0
+fail 4
+end
+if ne get tk 0 2
+fail 16
+end
+v = get tw 0
+if or lt v 1 gt v 14
+fail 8
+end
+trapc 14 v
+dead1
+eol
+end
+
 note stel: the checked store of v (type t) at ea_b / ea_i (the STOP table: register offset, scaled)
 fn stel t ulong v ulong to void
 b = shl get ea_b 0 5
@@ -3556,6 +3608,7 @@ end
 put curret 0 0
 put nn 0 get nglob 0
 put curfn 0 0
+put nbrk 0 0
 end
 
 note s_end: close the innermost block (if: patch its branch; else: patch its jump; while: B head; for: i =
@@ -3585,6 +3638,15 @@ binop 33 get breg i 0
 end
 if ge k 3
 back get bhead i
+ex = get oc 0
+j = ulong 0
+while lt j get nbrk 0
+if eq get brkblk j i
+patch19 get brkpos j ex
+put brkblk j 65535
+end
+j = add j 1
+end
 end
 if eq k 2
 patch26 get bbr i get oc 0
@@ -3827,6 +3889,14 @@ ret 0
 end
 if eq c 82
 s_exit
+ret 0
+end
+if eq c 86
+s_break
+ret 0
+end
+if eq c 87
+s_trap
 ret 0
 end
 if or or or eq c 77 eq c 78 eq c 79 eq c 81
