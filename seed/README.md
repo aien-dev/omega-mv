@@ -897,6 +897,22 @@ emitted checker2-rejected IR. `ir_bin_r` writes comparison results into the dest
   `3379c90abf70beb9ca76079956de2ac9dbb2a30e709ae8cfb9c777effe5053a9` (119,499 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences.
 
+## Rung R49: IR context types without blocking casts (done)
+
+Type enforcement moved out of `ir_val`'s name/literal/call paths (which wrongly rejected explicit
+conversions such as `x = ushort a` and `ret uchar uint 1`) to the sites that require an exact type:
+`if`/`while` conditions, `for` counts, returns, local assignments, binary operands and call
+arguments. Explicit `TYPE value` casts may still change type; the cast-return unit is oracle-identical.
+
+This fixes `if x` with `uint x`, `ret x` in a `uchar` function, and `x = eq ...` with a `uint x`
+(all now error 7), while dev01/dev02 (`ushort a`, `long a`) and `uchar inc ...` compile.
+
+- gate-ir: 26 refusals and a cast-return oracle unit; totals are 10/10 dev, 9 call units, 3 break
+  units, 1 shift unit, 1 bool unit, 1 cast unit, 30 fuzz units.
+- `seed/omc/omc.om`, 7,208 lines and 251 functions, sha256
+  `ef19aa993d210ad20070ef99bce1e2ef02921d9541d7a443f973072c4d6fa6a3` (119,643 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

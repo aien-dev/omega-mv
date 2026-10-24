@@ -6556,6 +6556,9 @@ end
 fn ir_un c ulong dst ulong to void
 ir_val 65534 0
 ty = get ir_vt 0
+if and eq c 49 eq ty 1
+fail 7
+end
 d = dst
 if or eq dst 65534 eq dst 65535
 d = ir_newreg ty
@@ -6685,9 +6688,6 @@ ret
 end
 c = kw get tw 0
 if and ge c 1 le c 9
-if and ne exp 0 ne c exp
-fail 7
-end
 ir_cast c dst
 ret
 end
@@ -6732,9 +6732,6 @@ end
 j = sub f 1
 rtv = ulong get irf_ret j
 if eq rtv 76
-fail 7
-end
-if and ne exp 0 ne rtv exp
 fail 7
 end
 np = get irf_np j
@@ -6810,6 +6807,9 @@ end
 
 fn ir_if to void
 ir_val 65534 1
+if ne get ir_vt 0 1
+fail 7
+end
 th = ir_block
 el = ir_block
 ir_op 14 get ir_rr 0 th el 0
@@ -6845,6 +6845,9 @@ ir_op 13 h 0 0 0
 put ir_dead 0 1
 ir_start h
 ir_val 65534 1
+if ne get ir_vt 0 1
+fail 7
+end
 bnd = ulong 1000000
 tok
 if and eq get tk 0 1 eq kw get tw 0 70
@@ -6875,6 +6878,9 @@ tok
 ty = kw get tw 0
 z = ir_lit 0 ty
 ir_val 65534 ty
+if ne get ir_vt 0 ty
+fail 7
+end
 bnd = get ir_rr 0
 uu = ir_lit 1 ty
 ctr = ir_newreg ty
@@ -6900,6 +6906,9 @@ ir_op 15 65535 0 0 0
 else
 put cur 0 get ts 0
 ir_val 65534 get ir_ret 0
+if ne get ir_vt 0 get ir_ret 0
+fail 7
+end
 ir_op 15 get ir_rr 0 0 0 0
 end
 put ir_dead 0 1
@@ -6939,6 +6948,9 @@ e = ir_find w
 if ne e 0
 r = ulong get ir_nrr sub e 1
 ir_val r ulong get ir_rty r
+if ne get ir_vt 0 ulong get ir_rty r
+fail 7
+end
 ret
 end
 put ir_cl 0 l

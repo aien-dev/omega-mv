@@ -187,6 +187,24 @@ ir_refuse neg_bool 7 'ir
 fn f to uint
 ret neg true
 end'
+ir_refuse cond_type 7 'ir
+fn f to uint
+x = uint 1
+if x
+ret 1
+end
+ret 0
+end'
+ir_refuse ret_type_local 7 'ir
+fn f to uchar
+x = uint 1
+ret x
+end'
+ir_refuse neg_bool_local 7 'ir
+fn f to uint
+x = neg true
+ret uint 0
+end'
 
 # Multi-function units with calls: byte-identical to the C oracle and checker2 ACCEPT.
 ir_multi() { # name source
@@ -214,6 +232,7 @@ ir_multi break_for 'fn f to uint\ns = uint 0\nfor i ulong 10\nif eq i ulong 3\nb
 ir_multi break_nested 'fn f to uint\nx = uint 0\nwhile lt x uint 5 bound 20\ny = uint 0\nwhile lt y uint 5 bound 20\nif eq y uint 2\nbreak\nend\ny = add y uint 1\nend\nx = add x y\nend\nret x\nend'
 ir_multi shift_mixed 'fn f to ulong\nret shl ulong 1 uint 3\nend'
 ir_multi cmp_assign 'fn f to bool\nx = lt uint 1 uint 2\nx = eq uint 1 uint 1\nret x\nend'
+ir_multi cast_ret 'fn f to uchar\nret uchar uint 1\nend'
 # Random two-function programs with a call: differential against the oracle.
 rm -f "$B"/fz*
 awk -v dir="$B" 'BEGIN{
@@ -265,5 +284,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 23 refusals + 9 multi-call units + 3 break units + 1 shift unit + 1 bool unit + 30 fuzz units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 1 bool unit + 1 cast unit + 30 fuzz units; structs IR spec-blocked'
 echo 'RC=0'
