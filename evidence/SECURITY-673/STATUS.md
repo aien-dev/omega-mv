@@ -57,3 +57,21 @@ The branch is not merged to `main`; `main` has no `seed/` tree. No deployment, h
 qualification, key-compromise exercise or issue closure follows from these source and native-host
 results. Missing hardware, independent compiler route or authority integration is `NOT_RUN` or
 `BLOCKED`, never `PASS`.
+
+## Independent review and current correction
+
+The later correction87788715 and integrationc860d915 supersede the supervisor coverage claims
+above. `independent-pure` records actual kernel/bypass tests and corrected signal-verdict checks;
+`pure4` preserves the author's integrated native gate. `independent-merge` replays the assembled
+normal/strict gates and independently traces all rename/path cases. The normal152/SIGXCPU collision
+and old unconditional99 controls were fixed; historical observations remain preserved.
+
+The actual host pipes crash handling to Apport. CORE0 does not establish private-memory confinement.
+Private/holdout inputs remain unqualified pending an independently tested crash-supervision or
+controlled-environment boundary. No dump persistence or upload was demonstrated. Descriptor3 closes
+on exec, stdio remains assigned authority and no grant/revocation/durable-budget claim follows.
+
+Public benchmark process-boundary integration is continuing under L775's existing component, in
+`fix/security673-benchmark-boundary`, with synthetic files only. This does not complete the adaptive
+poisoning campaign, statistical policy, authenticated custody or promotion boundary. Missing native
+owner integration is unfinished implementation, not evidence that the work is intrinsically blocked.
