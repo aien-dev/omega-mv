@@ -1,0 +1,6 @@
+chip one-hot conversion: rc=OK 256/256 rows exact (subnormal codes 0x01..0x07 included: no flush to zero)
+chip custom 248320x5120               variant=1 rc=OK        bad=0 worst_rel=2.824e-08 grid=256x1 lb=16 rows=1 warps=16 depth=5 bytes=1271708800 upload=555.5ms chip_med=5582.1us (227.8 GB/s) call_med=5766.2us (220.5 GB/s) reps=3
+chip custom 248320x5120               mutant 1: caught (rc=OK bad=248283 worst_rel=2.052e-01)
+chip custom 248320x5120               mutant 2: caught (rc=OK bad=248243 worst_rel=1.663e-01)
+chip custom 248320x5120               mutant 4: caught (rc=OK bad=248283 worst_rel=2.052e-01)
+gpu_fp8_api_test: 5 checks, 0 failed: PASS

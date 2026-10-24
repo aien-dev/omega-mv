@@ -1,0 +1,32 @@
+QUANT chip k 2048 f32 rows 2048: 0 differ from the reference; median 0.044 ms (484 GB/s moved)
+QUANT chip k 2048 mutant 1: caught
+QUANT chip k 768 bf16 rows 16384: 0 differ from the reference; median 0.149 ms (255 GB/s moved)
+QUANT chip k 768 mutant 1: caught
+QUANT chip k 5120 f32 rows 2048: 0 differ from the reference; median 0.210 ms (251 GB/s moved)
+QUANT chip k 5120 mutant 3: caught
+QUANT chip k 6144 bf16 rows 2048: 0 differ from the reference; median 0.162 ms (235 GB/s moved)
+QUANT chip k 6144 mutant 3: caught
+QUANT chip k 17408 bf16 rows 2048: 0 differ from the reference; median 0.508 ms (213 GB/s moved)
+QUANT chip k 17408 mutant 3: caught
+q38gu second launch identical: yes
+q38gu bit-identity on 64 sampled rows: 0 differ (beyond 1 bf16 ulp; 0 within 1 ulp of 1114112)
+QGEMM-inplace q38gu tokens 2048 M 2048 n 34816 k 5120 tiles 32: median 29.771 ms (min 29.351), 24.5 TFLOPS, weights 178 MB -> 6 GB/s of distinct weights
+q38gu mutant 1: caught
+q38gu mutant 2: caught
+q38gu mutant 3: caught
+q38gu mutant 4: caught
+q38down second launch identical: yes
+q38down bit-identity on 64 sampled rows: 0 differ
+QGEMM-inplace q38down tokens 2048 M 2048 n 5120 k 17408 tiles 32: median 15.946 ms (min 15.340), 22.9 TFLOPS, weights 89 MB -> 6 GB/s of distinct weights
+q38down mutant 1: caught
+q38down mutant 2: caught
+q38down mutant 3: caught
+q38down mutant 4: caught
+q38mix second launch identical: yes
+q38mix bit-identity on 64 sampled rows: 0 differ
+QGEMM-inplace q38mix tokens 2048 M 2048 n 16384 k 5120 tiles 32: median 14.690 ms (min 14.532), 23.4 TFLOPS, weights 84 MB -> 6 GB/s of distinct weights
+q38o second launch identical: yes
+q38o bit-identity on 64 sampled rows: 0 differ
+QGEMM-inplace q38o tokens 2048 M 2048 n 5120 k 6144 tiles 32: median 5.371 ms (min 5.351), 24.0 TFLOPS, weights 31 MB -> 6 GB/s of distinct weights
+GPU_QGEMM: PASS
+rc=0

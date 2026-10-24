@@ -1,0 +1,1 @@
+run 1 (12:44Z): the decode checks passed on the chip, then the test deadlocked on its own session lock in the record path (omega_gpu_cmdlist_create takes the lock itself; the test held it). Output flushed with gdb, then SIGTERM (no launch in flight). Test fixed; run 2 below.
