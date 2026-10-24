@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Codex | Seeded-program teaching guide and explicit legacy identity/receipt boundary (issue #619); static documentation checks only |
 | Codex | BUILD receipt cleanliness enforcement and optional diagnostic pointer regression fixes |
 | Claude Opus 5.5 | Numeric GB10 operations (LDS_STS, REDUCE_SUM), the independent CPU oracle, the Gate 5 qualifier and its receipts, and the fixes from review |
 | Codex (GPT-6.1 Sol) | Code review of the numeric changes (patch checks, receipt blobs, GPU lock handling) |

@@ -1,12 +1,18 @@
 # OMEGA
 
-Omega is the reaction runtime and the compiler for Omega Systems Core, written in C. It defines what computation means without committing that meaning to one machine representation: every program has a content-addressed semantic identity, and realizations (CPU, GB10 GPU) are derived from it and verified against it.
+This main-branch tree retains the legacy C reaction runtime and compiler for Omega Systems Core while the seed-born `.om` implementation is developed separately. The legacy semantic object model separates computation from machine representation: supported programs have content-addressed semantic identities, with machine realizations checked against their meaning. That model must not be assumed to cover every seeded-language program.
 
 ```text
 SILICON -> ATLAS -> PHYSICS/FORGE -> OMEGA -> AIEN        (full picture: aien-architecture)
 ```
 
 Omega was decided by Drake on 2026-09-29 to be both the reaction runtime and the compiler for Omega Systems Core ([decision record](docs/adr/OMEGA-SYSTEMS-CORE-0000.md), frozen). This retires the earlier "not a compiler" wording.
+
+## How it works / How we built it
+
+[Follow one small seeded Omega program from source to executable and result](docs/TEACH_OMEGA.md): a forward call, a consistent rename, and an invalid assignment. The lesson pins the existing `.om` compiler development work, explains its seed ancestry, and separates expected results from fresh evidence. The seed-born implementation is the migration destination; the C implementation in this main-branch tree remains legacy work to replace only after the required gates pass.
+
+The key idea is to separate meaning from machine representation. The legacy identity scheme binds a canonical body and contract rather than a function name or measured cost; its realization stage emits and checks machine code. **The seeded `.om` example currently emits an ELF directly, not that legacy semantic-id/receipt pipeline.** The walkthrough maps both implementations without claiming their integration or qualification. Its CPU replay is NOT_RUN in this documentation pass; no GPU or model is needed.
 
 ## Current state
 
@@ -22,7 +28,7 @@ The live status is owned by [aien-architecture](https://github.com/aien-spark/ai
 ## Core ideas
 
 - **SMART is not TRUSTED, INTELLIGENCE is not AUTHORITY.** Trust comes from verified invariants, never from capability.
-- **Meaning is permanent; representation is disposable.** Equivalent programs collapse to one `SEMANTIC_ID` (SHA-256 of the canonical encoding); different programs get different ones.
+- **Meaning is permanent; representation is disposable.** Within the supported canonical representation, the same meaning and contract have the same identity (SHA-256 of the canonical encoding); this is not a general equivalence solver.
 - **Pure computation is separate from effects**, and effects need capability-bounded, receipt-producing transactions.
 
 ## How this fits with the other repositories
