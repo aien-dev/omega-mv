@@ -387,13 +387,14 @@ static const char *const MUST_GLOBAL[] = { "LOP3.LUT", "SHF.L.U32", "IMAD.HI.U32
 static const char *const MUST_STAGED[] = { "LDS", "STS", "BAR.SYNC", "LDG.E", "STG.E", "IMAD.HI.U32", "@P0 BRA", "@!P0 BRA" };
 static void sm121dis_check(const OmegaBlackwellKernel *k, const BlackwellIRProgram *p, const char *const *must, const char *tag) {
     char lst[64];
-    snprintf(lst, sizeof lst, "/tmp/pr_gb10_sieve_%d.sass", (int)getpid());
-    FILE *f = fopen(lst, "w");
-    if (!f) { CHECK(0, "cannot write %s", lst); return; }
-    int rc = omega_sm121_listing(k->code, k->code_size, f); fclose(f);
+    snprintf(lst, sizeof lst, "/tmp/pr_gb10_sieve_%d.sass.XXXXXX", (int)getpid());
+    int fd = mkstemp(lst); /* private, unique listing; read back the same descriptor */
+    FILE *f = fd >= 0 ? fdopen(fd, "w+") : NULL;
+    if (!f) { if (fd >= 0) close(fd); CHECK(0, "cannot write %s", lst); return; }
+    int rc = omega_sm121_listing(k->code, k->code_size, f);
     CHECK(rc == 0, "sm121dis rc %d", rc);
-    FILE *l = fopen(lst, "r");
-    if (!l) { CHECK(0, "cannot read %s", lst); return; }
+    if (fflush(f) != 0 || fseek(f, 0, SEEK_SET) != 0) { fclose(f); CHECK(0, "cannot read %s", lst); return; }
+    FILE *l = f;
     int seen[8] = {0}, insns = 0, bad = 0, bra_ok = 0, bra_bad = 0;
     char line[512];
     while (fgets(line, sizeof line, l)) {
@@ -413,7 +414,8 @@ static void sm121dis_check(const OmegaBlackwellKernel *k, const BlackwellIRProgr
             else { bra_bad++; printf("  branch at 0x%04x: sm121dis target 0x%lx, IR target 0x%lx\n", addr, target, want); }
         }
     }
-    fclose(l);
+    CHECK(!ferror(l), "read listing %s", lst);
+    CHECK(fclose(l) == 0, "close listing %s", lst);
     for (int i = 0; i < 8; i++) CHECK(seen[i], "sm121dis listing lacks %s (%s)", must[i], lst);
     CHECK(bad == 0, "%d undecodable words (%s)", bad, lst);
     CHECK(bra_bad == 0 && bra_ok >= 6, "branch targets: %d match, %d differ", bra_ok, bra_bad);
