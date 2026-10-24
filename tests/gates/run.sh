@@ -182,6 +182,11 @@ case "$step" in
     test "$(grep -cE '^PASS: [0-9]+ checks, 0 failed$' build/attn.log)" -eq 6
     ! grep -qE '^FAIL' build/attn.log
     ;;
+  gpu-libm-free)      # omega-mv#471: no libm symbol left undefined in libomega_gpu.a (physics-src at physics.lock)
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-libm-free | tee build/libm-free.log
+    grep -q '^PASS: libomega_gpu.a is libm-free$' build/libm-free.log
+    ;;
   numeric-transc-full) make $NOPHYS test-numeric-transc-full ;;
   m6|m7|m8|m9|m10|m11|m12|m13|m14|m15|m17|m5|m19|m19r-qualify|gate14-combine)
     physics_pin; set -o pipefail; mkdir -p build
