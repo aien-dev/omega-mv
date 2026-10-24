@@ -1763,13 +1763,14 @@ fail 23
 end
 end
 
-note lenval: an array length token: a number, or an integer constant name (kind 9). A name that is
-note not an integer constant is error 16; arrlen then applies the 1..16777216 range.
-fn lenval to ulong
+note lenval: an array length, loop bound or trap code token: a number, or an integer constant name (kind 9).
+note A name that is not an integer constant is error 16. When the line ends it is error eolc: 16 for a pool,
+note a new array or a parameter written without its length (OMEGESE s.7, as om4), 4 for trap and bound.
+fn lenval eolc ulong to ulong
 tok
 k = get tk 0
 if eq k 0
-fail 4
+fail eolc
 end
 if eq k 2
 ret get tw 0
@@ -4924,7 +4925,7 @@ fail 9
 end
 t = typeword
 elemtype t
-n = lenval
+n = lenval 16
 arrlen n
 by = shl shr add shl n tlog t 15 4 4
 s = add get stkbytes 0 by
@@ -5052,7 +5053,7 @@ ret
 end
 t = typeword
 elemtype t
-ln = lenval
+ln = lenval 16
 arrlen ln
 else
 if eq c 88
@@ -5288,7 +5289,7 @@ end
 note s_trap: trap N (1 .. 14): an always-taken branch to the trap stub for code N, which finish makes.
 note Program mode exits 100 + N; function mode calls OscRt.trap (OMEGESE 9.1). The line ends the path.
 fn s_trap to void
-v = lenval
+v = lenval 4
 if or lt v 1 gt v 14
 fail 8
 end
@@ -5380,7 +5381,7 @@ fn s_global to void
 w = topname
 t = typeword
 elemtype t
-n = lenval
+n = lenval 16
 arrlen n
 by = shl shr add shl n tlog t 15 4 4
 pb = get poolb 0
@@ -5512,7 +5513,7 @@ end
 if ne kw get tw 0 70
 fail 5
 end
-v = lenval
+v = lenval 4
 if ge sub v 1 999999
 fail 8
 end
@@ -7480,7 +7481,7 @@ end
 bnd = ulong 1000000
 tok
 if and eq get tk 0 1 eq kw get tw 0 70
-bnd = lenval
+bnd = lenval 4
 if ge sub bnd 1 999999
 fail 8
 end
@@ -7624,7 +7625,7 @@ note ir_trap: OMEGESE section 4. A trap ends the path but the IR still
 note needs an unreachable ret terminator (zero of the return type, or void).
 note trap is packed little endian 1885434484; independently checked in Wolfram.
 fn ir_trap to void
-code = lenval
+code = lenval 4
 if or lt code 1 gt code 14
 fail 8
 end

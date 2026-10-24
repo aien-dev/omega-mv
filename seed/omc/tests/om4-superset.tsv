@@ -1,0 +1,12 @@
+# om4-superset.tsv: corpus programs that om4 (rung 4, seed/rung4) refuses and omc accepts, because they use words omc
+# added beyond om4 (docs/one_layer/OMEGESE.md section 9: grouping parentheses 9.10, trap 9.8, fixed-width type names).
+# gate5 section 3 requires om4 = stage2 on every corpus input unless the input is listed here by the sha256 of its
+# text; a listed input must give exactly this om4 refusal, exit omc_exit from omc with no message, and be accepted by
+# the C path (build/omegese/omegese, the language oracle). A row that no longer differs or is not in the corpus FAILs.
+sha256	source	words_beyond_om4	om4_exit	om4_error	omc_exit
+ac0eb5306b4233a8c49dc9db8d503ec343b76c0bac0b3681c22b3d0d866a99f3	tests/one_layer/omegese/nested/dev05.omegese	parentheses, trap	3	line 3: error 3	0
+55b567b2c43c115ec5cfafd9ec7d0085feef7ca688da5a63c34203224b27e35e	tests/one_layer/omegese/trial2/dev02.omegese	i32/i64 names, parentheses	3	line 3: error 3	0
+6a56da67212db3956af91e36a2b680b9c78f98bb8d9f0e76a49eaac7ee8cffd1	tests/one_layer/omegese/trial2/dev03.omegese	u64/u8 names, parentheses	3	line 4: error 3	0
+184e9efad7fccc9b147f4813b2434ae1a5cb9122a0ce423b3b7356be18849874	tests/one_layer/omegese/trial2/dev05.omegese	i16 names, trap, else	9	line 7: error 9	0
+4098c21c8e3ef82a9d6bc61012537a3b30ef89568cb1bbe3b2cf3f33cad6595a	tests/one_layer/omegese/trial2/dev08.omegese	u32 names, parentheses	3	line 4: error 3	0
+895c35cbfdfc9d94103790214e47f5409af1b0d87788b4925b25fccb59d4e02c	tests/one_layer/omegese/trial2/dev09.omegese	u8 names, parentheses	3	line 4: error 3	0

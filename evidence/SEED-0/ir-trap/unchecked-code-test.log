@@ -1,5 +1,5 @@
 PASS om4/omc parents and stage2/stage3 fixpoint
-COMPILER_SHA256=b81baf3403f2cdae109ffddec137050f9acb885f860418a4be84f7d728afa0bf
+COMPILER_SHA256=a8d6a4349914dd4e391ed72892963be57611cb869b697cb8321bb02388c34c10
 PASS trap01 exact C-oracle IR
 PASS trap01 checker2 ACCEPT
 PASS trap01 Wolfram boundary outputs + interpreter/native agreement (6 runs)
@@ -59,10 +59,10 @@ FAIL zero refused error 8; no output
 FAIL too_large refused error 8; no output
 FAIL negative refused error 8; no output
 PASS missing refused error 4; no output
-PASS named refused error 4; no output
+PASS named refused error 16; no output
 PASS extra refused error 4; no output
 PASS extra_word refused error 4; no output
-PASS typed refused error 4; no output
+PASS typed refused error 16; no output
 PASS after refused error 17; no output
 PASS unsupported_break refused error 9; no output
 PASS unsupported_own refused error 9; no output

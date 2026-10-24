@@ -112,10 +112,12 @@ for name, text, inp, expected in [
     q = run([B/'oracle-runner', got, 'f', B/(name+'.inputs')])
     check(q.returncode == 0 and q.stdout.decode().splitlines()[1:] == expected, name+' interpreter/native expected behavior')
 
+# Refusal codes follow docs/one_layer/OMEGESE.md 9.8 and seed/README.md ("trap N": error 4 when the line ends,
+# 16 when the token is not a number, 8 out of range): `trap a` and `trap uint 3` are error 16, `trap` alone is 4.
 bad = [
     ('zero', 'trap 0', 8), ('too_large', 'trap 15', 8), ('negative', 'trap -1', 8),
-    ('missing', 'trap', 4), ('named', 'trap a', 4), ('extra', 'trap 3 4', 4),
-    ('extra_word', 'trap 3 ret a', 4), ('typed', 'trap uint 3', 4),
+    ('missing', 'trap', 4), ('named', 'trap a', 16), ('extra', 'trap 3 4', 4),
+    ('extra_word', 'trap 3 ret a', 4), ('typed', 'trap uint 3', 16),
     ('after', 'trap 3\nret a', 17),
     ('unsupported_break', 'break', 9), ('unsupported_own', 'own', 9),
 ]

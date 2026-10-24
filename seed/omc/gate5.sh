@@ -75,16 +75,28 @@ g4 $B/cap.sh $B/g4cap $B/g4cape || bad "gate4 (capturing) did not pass: $(grep F
 for f in $(find $R4/tests tests/one_layer/omegese tools/exp445/arms/examples -name '*.om' -o -name '*.omegese' | sort) $R/omc.om; do
   cp $f $C/$(printf '%04d' $(ls $C | wc -l)).in
 done
-same=0; n=0
+#    om4 = stage2 on every input, or the input is a row of $R/tests/om4-superset.tsv: a program using words omc
+#    added beyond om4 (OMEGESE.md section 9), listed by the sha256 of its text with om4's refusal and omc's exit;
+#    the C path (the language oracle) must accept it. An unlisted difference, a listed row that no longer differs,
+#    a listed row the corpus does not reach, or a listed program the C path refuses is a FAIL.
+X=$R/tests/om4-superset.tsv; same=0; ext=0; n=0; seen=""
 for f in $C/*.in; do n=$((n + 1))
   set +e; $R4/om4.bin < $f > $B/c.a 2> $B/c.ae; ra=$?; $S < $f > $B/c.b 2> $B/c.be; rb=$?; set -e
   CODES="$CODES $ra"
   sed -i 's/^om4:/X:/' $B/c.ae; sed -i 's/^omc:/X:/' $B/c.be
+  h=$(sha $f); row=$(grep "^$h[[:space:]]" $X || true)
   if [ $ra = $rb ] && cmp -s $B/c.a $B/c.b && cmp -s $B/c.ae $B/c.be; then same=$((same + 1))
-  else bad "corpus $(basename $f): om4 exit $ra $(cat $B/c.ae), stage2 exit $rb $(cat $B/c.be)"; fi
+    [ -z "$row" ] || bad "om4-superset row $(echo "$row" | cut -f2) no longer differs from om4: drop the row"
+  elif [ -z "$row" ]; then bad "corpus $(basename $f): om4 exit $ra $(cat $B/c.ae), stage2 exit $rb $(cat $B/c.be)"
+  else seen="$seen $h"; src=$(echo "$row" | cut -f2); xa=$(echo "$row" | cut -f4); xe=$(echo "$row" | cut -f5); xb=$(echo "$row" | cut -f6)
+    if [ $ra = $xa ] && [ "$(cat $B/c.ae)" = "X: $xe" ] && [ $rb = $xb ] && [ -s $B/c.b ] && [ ! -s $B/c.be ] && build/omegese/omegese emit $f $B/c.json > /dev/null 2>&1
+    then ext=$((ext + 1)); say "  beyond om4: $src ($(echo "$row" | cut -f3)): om4 $xe, omc exit $xb, the C path accepts it"
+    else bad "om4-superset $src: om4 exit $ra $(cat $B/c.ae) (row: $xa $xe), stage2 exit $rb $(cat $B/c.be) (row: $xb), C path: $(build/omegese/omegese emit $f $B/c.json 2>&1 | head -1)"; fi
+  fi
 done
+for h in $(grep -v '^#' $X | tail -n +2 | cut -f1); do case "$seen" in *" $h"*) ;; *) bad "om4-superset row $h is not in the corpus: stale row";; esac; done
 refused=$(for f in $C/*.in; do $R4/om4.bin < $f > /dev/null 2>&1 || echo x; done | wc -l)
-[ $same = $n ] && say "PASS corpus: om4 = stage2 on $n inputs ($refused of them refused, same error number and line)"
+[ $((same + ext)) = $n ] && say "PASS corpus: om4 = stage2 on $same inputs ($refused of them refused, same error number and line); $ext inputs beyond om4 are listed in seed/omc/tests/om4-superset.tsv, each accepted by omc and the C path"
 cases=$((cases + n))
 
 # 3b. what the corpus does not reach. A program that writes a text with every escape, checked against fixed

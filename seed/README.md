@@ -241,8 +241,12 @@ it came from.
     these and requires the refusal to name that word, so it notices if the C path learns one. So, as the brief allows, the two parents
     are om4 and omc itself: both build the same omc. This is weaker than a truly independent route,
     because one author designed both;
-  - om4 and stage 2 agree on 153 inputs: every input gate4 gives om4, every Omegese file in the repo,
-    and `omc.om`. They agree on output, exit status, and the error number and line of all 57 refusals;
+  - om4 and stage 2 agree on 147 of the 153 inputs: every input gate4 gives om4, every Omegese file in the
+    repo, and `omc.om`. They agree on output, exit status, and the error number and line of all 57 refusals.
+    The other 6 are repo programs that use words omc added beyond om4 (grouping parentheses, trap, fixed-width
+    type names); each is listed in `seed/omc/tests/om4-superset.tsv` by the sha256 of its text with om4's
+    refusal and omc's exit, and the C path must accept it. A difference not on the list, a listed program that
+    no longer differs, a listed program the corpus does not reach, or one the C path refuses fails the gate;
   - what that list missed, found by an outside review: no program in it wrote out a text successfully,
     and error numbers 1, 2, 4, 11, 12, 13 and 14 never came up. Now a program writes a text with every
     escape and must give fixed bytes and a fixed exit value (204, worked out by hand, not taken from om4),

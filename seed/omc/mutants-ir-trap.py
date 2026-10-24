@@ -14,6 +14,8 @@ mutants = [
     ('wrong-code', 'ir_op 12 code 0 0 0', 'ir_op 12 1 0 0 0', 'FAIL trap03 Wolfram boundary outputs'),
     ('void-tag', 'if eq get ir_ret 0 76\nemitb 0', 'if eq get ir_ret 0 76\nemitb 76', 'FAIL void exact C-oracle IR'),
     ('unchecked-code', 'if or lt code 1 gt code 14\nfail 8', 'if false\nfail 8', 'FAIL too_large refused error 8'),
+    ('eol-code', 'if eq k 0\nfail eolc', 'if eq k 0\nfail 16', 'FAIL missing refused error 4'),
+    ('name-code', 'end\nend\nend\nend\nfail 16\nret 0', 'end\nend\nend\nend\nfail 4\nret 0', 'FAIL named refused error 16'),
 ]
 for name, old, new, marker in mutants:
     assert src.count(old) == 1, name
