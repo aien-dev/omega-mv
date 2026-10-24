@@ -28,20 +28,26 @@ Compiler: 7,098 lines, 249 functions, sha256
 Benchmark parity: 103 authored `.om` sources and 53 build-plan targets compile to identical bytes
 and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after every keyword).
 
-## 2. Open language/compiler work (no external decision needed)
+## 2. Open compiler work
 
-1. **IR structs (spec-blocked).** OSC-1 explicitly excludes structs. The format's version-2 struct
-   records have no lowering reference, and the C `omegese` refuses `struct`, so an emitter cannot be
-   verified against an oracle. Needs the OSC-1 struct lowering spec (allocation, field ops, identity).
-2. **IR floats (spec-blocked).** OSC-1 scalar tags are integers only; IR refuses float words. Float
-   constants cannot be folded until the IR type system carries f32/f64.
-3. **IR call forms.** Calls are earlier-only by design (checker2 enforces it), scalar, and at most
-   six arguments. Full 63-byte names are matched.
-3. **Generic byte/string utilities.** Array parameters carry an exact length, so one library routine
-   cannot take arrays of several lengths. A standard library needs either open arrays or a
-   max-length convention; that is a language decision, not a library chore.
-5. **`sync`** cannot be a keyword: the benchmark corpus uses it as an identifier four times. Any
-   name must pass the corpus collision audit (rung R13).
+IR mode is complete for the OSC-1 slice: scalar values, up to 32 functions, calls to earlier
+functions with full 63-byte names, and integer constants (values, trap codes, loop bounds, for
+counts). `gate-ir` pins this against the C oracle and checker2. No self-contained compiler feature
+remains for that slice.
+
+**Spec-blocked target extensions.** OSC-1 explicitly excludes structs and strings, and its scalar
+tags are integer-only; `omegese` cannot emit them, so there is no reference unit to verify against.
+
+1. **IR structs.** Version-2 struct records exist, but allocation, field ops and identity need the
+   OSC-1 struct lowering spec.
+2. **IR floats.** Float constants cannot be folded until the IR type system carries f32/f64.
+
+**Decision-bound language/ecosystem work.**
+
+3. **Generic byte/string utilities.** Array parameters carry an exact length; a standard library
+   needs open arrays or a max-length convention (language decision).
+4. **`sync` naming.** The benchmark corpus uses `sync` as an identifier four times; any new keyword
+   must pass the corpus collision audit (rung R13).
 
 ## 3. Blocked on a decision or an external store
 
@@ -50,7 +56,7 @@ and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after eve
 | FR-1 file I/O | complete for the exposed set (open/read/write/seek/stat/link/chmod/chown/truncate/memfd) | no blocker for this subset |
 | FR-2 packed structs | structs are 8-byte cells; packed u8/u16/u32/u64 fields are not expressible | needs a layout syntax and alignment rule (decision) |
 | FR-3 imports by digest | no `import`; units concatenate | requires the OSC content-addressed unit store (external) |
-| FR-4 floats | implemented end to end (types, literals, arithmetic, arrays, pools, structs) | none for AArch64; IR float folding open |
+| FR-4 floats | implemented end to end for AArch64 (types, literals, arithmetic, arrays, pools, structs) | IR floats are spec-blocked: OSC-1 scalar tags are integer-only |
 | FR-5 mmap/ioctl | absent | the language exposes no address values; needs an address/pointer escape decision |
 | FR-6 threads/atomics | absent | decision 37 (disjoint threads) has no chosen design |
 | FR-7 shared objects/C ABI | absent | needs an ABI contract (calling convention, symbols, relocation) |
@@ -61,5 +67,6 @@ and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after eve
 
 ## 4. Next concrete step
 
-No self-contained kernel-language feature remains. The next work is decision-bound (FR-2/3/5/6/7/8/9,
-decisions 24/37) or spec-bound (OSC-1 struct/float lowering); host-surface polish is optional.
+No self-contained compiler feature remains for OSC-1. Next work requires a decision (FR-2/3/5/6/7/8/9,
+decisions 24/37) or a target-extension spec (OSC-1 struct/float lowering); host-surface polish is
+optional.
