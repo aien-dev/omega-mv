@@ -1,6 +1,6 @@
 # License note for research/m15/spbm
 
-Omega is licensed AGPL-3.0-or-later (see the LICENSE at the repository root, decision of Drake Stapleton, 2026-10-04).
+Omega is licensed Apache-2.0 (see the LICENSE at the repository root, decision of Drake Stapleton, 2026-10-23).
 
 The six source files in this folder (`aien_spbm_readonly.c`, `load.c`, `reduce.c`, `sample.c`, `contract.h`, `contract_test.c`) carry `SPDX-License-Identifier: GPL-2.0-only` and stay GPL-2.0-only. `aien_spbm_readonly.c` is a Linux kernel module, which is why it uses the kernel's license.
 
