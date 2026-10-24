@@ -1,0 +1,85 @@
+note Synthetic issue671 packed-list corpus. Reads one mode byte and writes one exec packet.
+note Modes0 and8 are accepted; modes1..7 must be refused before any kernel exec.
+global pkt uchar 4096
+global n ulong 1
+global name uchar 64
+global namelen ulong 1
+text path "/bin/true"
+fn put16 v ulong to void
+put pkt get n 0 uchar and v 255
+put pkt add get n 0 1 uchar shr v 8
+put n 0 add get n 0 2
+end
+fn recname to void
+put16 get namelen 0
+for i ulong get namelen 0
+put pkt add get n 0 i get name i
+end
+put n 0 add get n 0 get namelen 0
+end
+fn main to int
+if ne read 0 pkt 0 1 1
+ret 90
+end
+m = ulong get pkt 0
+put n 0 0
+for i ulong len path
+put name i get path i
+end
+put namelen 0 len path
+if eq m 0
+put16 1
+recname
+end
+if eq m 1
+put16 0
+end
+if eq m 2
+put16 65
+end
+if eq m 3
+put16 1
+put16 5
+put pkt get n 0 97
+put pkt add get n 0 1 98
+put pkt add get n 0 2 99
+put n 0 add get n 0 3
+end
+if eq m 4
+put16 1
+recname
+put pkt get n 0 0
+put n 0 add get n 0 1
+end
+if eq m 5
+put16 1
+put namelen 0 0
+recname
+end
+if eq m 6
+put name 7 0
+put16 1
+recname
+end
+if eq m 7
+put16 1
+put16 4093
+for i ulong 4092
+put pkt add get n 0 i 97
+end
+put n 0 add get n 0 4092
+end
+if eq m 8
+put16 64
+recname
+put namelen 0 0
+for i ulong 63
+recname
+end
+end
+r = write 1 pkt 0 get n 0
+if ne r long get n 0
+ret 91
+end
+ret 0
+end

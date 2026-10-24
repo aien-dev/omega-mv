@@ -1,0 +1,8 @@
+note Synthetic issue671 packed-list consumer. Reads one packet and calls execprog.
+note A malformed packet traps 3; a valid packet replaces this process.
+global pkt uchar 4096
+fn main to int
+n = ulong read 0 pkt 0 4096
+r = execprog pkt 0 n
+ret int r
+end

@@ -1,0 +1,9 @@
+PASS native files, errno, exclusive creation, permissions, seek, sync and monotonic time
+PASS native argument access, empty arguments, UTF-8 bytes and short-buffer refusal
+PASS native socket exchange, poll timeout, fork, accept and child reaping
+PASS native TCP loopback exchange on an OS-assigned port
+PASS native exec with exact arguments, exec failure, pipes, descriptor duplication, sleep, kill and wait
+PASS native directory enumeration, file metadata and rename without overwriting
+PASS native syscall errors and nested expression register preservation
+PASS native cwd and readlnk offsets, counts, truncation, errno and private path copy
+PASS native socket options with independent bind behavior, readonly input and errno

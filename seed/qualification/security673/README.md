@@ -49,6 +49,20 @@ a full disassembly grammar or authentication of attacker-supplied text. The chec
 share the seed compiler lineage. Binary equality and SHA256 identities are reproducibility and
 identity evidence, not diverse compilation or proof of general semantic correctness.
 
+## Branch-form semantics (#669)
+
+`branch-forms.om` adds fifteen small programs covering every source conditional form: `eq`, `ne`,
+`lt`, `le`, `gt` and `ge`; the CBZ path for a value compared with zero; `while` and `for` back
+edges; the unconditional B over an `else`; a branch inside a called function; and the shift-width
+and divide-by-zero trap sites. The coordinator compiles and executes each and compares the exit
+with the fixed table in `formwant`. These cases check target selection, while `boundaries`,
+`positive`, `negative`, `array-fill` and `mutant` continue to check the imm19 range and refusal.
+
+All imm19 writes still flow through `disp19`/`patch19`. The compiler does not expand or relax a
+branch: a target outside the signed 19-bit word displacement, or an unaligned target, is refused
+with error 24 before an artifact is accepted. Unconditional B uses `patch26` and the inspected
+8 MiB output-pool capacity. Evidence is `evidence/SECURITY-673/branchforms1`.
+
 ## Bounded source ingress (#671)
 
 With fresh scratch, `build/gate669 3` runs eighteen source cases through the real rebuilt compiler.
@@ -69,3 +83,9 @@ This is a deterministic bounded source campaign. Other ingress paths, broad gram
 fuzzing, authenticated canonicalization and kernel resource limits remain under their existing
 owners. Current evidence and independent review are `evidence/SECURITY-673/hostile1` and
 `independent671`. Earlier failed development fixtures are preserved and excluded from PASS.
+
+The same gate also runs nine packed-list cases through a compiled consumer. `packet-corpus.om`
+builds valid, empty-count, over-count, truncated-record, trailing-byte, empty-path, embedded-NUL
+and oversized-record packets; `pkt-consumer.om` reads one packet and calls `execprog`. Accepted
+modes execute `/bin/true`; malformed modes trap 3 with exit 103 before any kernel exec. Evidence is
+`evidence/SECURITY-673/packet1`; the wider ingress map is `evidence/SECURITY-673/ingress-inventory.md`.

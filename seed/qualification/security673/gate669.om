@@ -3,7 +3,7 @@ note All child exits are observed; signal, timeout, failed build, malformed orac
 note GNU objdump is an independent decoder. Hashes identify artifacts and do not prove correctness.
 text scratch "build/security673-native"
 text prefix "build/security673-native/"
-text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\n"
+text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\nseed/qualification/security673/branch-forms.om\nseed/qualification/security673/packet-corpus.om\nseed/qualification/security673/pkt-consumer.om\n"
 text input " < "
 text output " > "
 text errors " 2> "
@@ -422,6 +422,87 @@ if ne r long len ingress
 stop
 end
 end
+fn formwant m ulong to ulong
+if eq m 0
+ret 11
+end
+if eq m 1
+ret 12
+end
+if eq m 2
+ret 11
+end
+if eq m 3
+ret 11
+end
+if eq m 4
+ret 11
+end
+if eq m 5
+ret 11
+end
+if eq m 6
+ret 11
+end
+if eq m 7
+ret 12
+end
+if eq m 8
+ret 12
+end
+if eq m 9
+ret 3
+end
+if eq m 10
+ret 3
+end
+if eq m 11
+ret 21
+end
+if eq m 12
+ret 30
+end
+if eq m 13
+ret 107
+end
+if eq m 14
+ret 102
+end
+ret 90
+end
+fn forms cc ulong to void
+gen = compile cc 20 0
+for m ulong 15
+p = params uchar m 0 1
+command gen
+src = run p 0
+elf = compile cc src 0
+command elf
+outid = run 13 formwant m
+empty outid
+end
+end
+fn packetwant m ulong to ulong
+if eq m 0
+ret 0
+end
+if eq m 8
+ret 0
+end
+ret 103
+end
+fn packets cc ulong to void
+gen = compile cc 21 0
+cons = compile cc 22 0
+for m ulong 9
+p = params uchar m 0 1
+command gen
+src = run p 0
+command cons
+outid = run src packetwant m
+empty outid
+end
+end
 fn main to int
 if or lt argcnt 1 gt argcnt 2
 ret 90
@@ -451,6 +532,8 @@ array = compile cc2 15 0
 command array
 result = run 13 0
 oracle cc2 checker
+forms cc2
+packets cc2
 positive cc2 gen checker 16
 positive cc2 gen checker 262142
 negative cc2 gen 0 262143
