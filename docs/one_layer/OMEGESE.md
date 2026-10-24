@@ -750,8 +750,7 @@ A leading line `ir`, before any other line, puts omc in IR mode: it writes OSC I
 the AArch64 path is not taken. Every function is encoded in source order. A function may call an
 **earlier** function (self and forward calls are error 3) with at most six arguments; a
 value-returning call composes as a value, a void call is a statement, and using one where the other
-is needed is error 7. IR call names are limited to 8 characters, and argument types are checked at
-compile time (error 7).
+is needed is error 7. Argument types are checked at compile time (error 7).
 
 `seed/omc/gate-ir.sh` compares 10 dev programs and four multi-function call units byte-for-byte
 with the C-built `omegese` + `omega_emit` oracle, requires `checker2` to ACCEPT every unit, requires

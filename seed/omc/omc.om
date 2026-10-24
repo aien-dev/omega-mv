@@ -6085,6 +6085,8 @@ global irf_n ulong 1
 global ir_args ulong 6
 global ir_oarg ulong 1536
 global ir_miss ulong 1
+global ir_cl ulong 1
+global ir_cs ulong 1
 
 fn ir_lead to ulong
 p = ulong 0
@@ -6432,9 +6434,32 @@ i = add i 1
 end
 end
 
+fn ir_byteeq o ulong s ulong k ulong to ulong
+if eq get inp add o k get inp add s k
+ret 1
+end
+ret 0
+end
+
+note ir_nameeq: table entry j's name equals the current source name token (length and bytes past 8).
+fn ir_nameeq j ulong to ulong
+fl = get irf_nl j
+if ne fl get ir_cl 0
+ret 0
+end
+k = ulong 8
+same = ulong 1
+while and eq same 1 lt k get ir_cl 0
+if eq ir_byteeq get irf_ns j get ir_cs 0 k 0
+same = 0
+end
+k = add k 1
+end
+ret same
+end
+
 note ir_findfn: packed name -> earlier function index + 1, or 0. The current function is the newest
-note table entry and is never returned, so self and forward calls fail. Calls use names up to 8
-note characters in IR mode; longer names are refused (3).
+note table entry and is never returned, so self and forward calls fail.
 fn ir_findfn w ulong to ulong
 if le get irf_n 0 1
 ret 0
@@ -6443,7 +6468,9 @@ fc = sub get irf_n 0 1
 j = ulong 0
 while lt j fc
 if eq get irf_nm j w
+if ne ir_nameeq j 0
 ret add j 1
+end
 end
 j = add j 1
 end
@@ -6628,9 +6655,8 @@ ret
 end
 ir_name
 if ne get ir_miss 0 0
-if gt get tl 0 8
-fail 3
-end
+put ir_cl 0 get tl 0
+put ir_cs 0 get ts 0
 f = ir_findfn get tw 0
 if eq f 0
 fail 3
@@ -6845,9 +6871,8 @@ r = ulong get ir_nrr sub e 1
 ir_val r ulong get ir_rty r
 ret
 end
-if gt l 8
-fail 3
-end
+put ir_cl 0 l
+put ir_cs 0 p
 f = ir_findfn w
 if ne f 0
 if eqs

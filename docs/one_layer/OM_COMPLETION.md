@@ -20,10 +20,10 @@ Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/chec
 | Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync, pread/pwrite | seed/host/check.sh |
 | Diagnostics | 23 named refusal codes with one minimal case each | gate15 |
 | Robustness | 600 deterministic fuzz programs; capacity boundaries | gate12, gate13 |
-| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded (values, trap, bound, for); refuses what it cannot lower | gate-ir (10/10 dev programs, 4 multi-call units, 13 refusals) |
+| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded (values, trap, bound, for); refuses what it cannot lower | gate-ir (10/10 dev programs, 5 multi-call units, 13 refusals) |
 
-Compiler: 7,073 lines, 247 functions, sha256
-`7c51a738aaa034e0897157b03c9ae87c48ab1810a69afe2fa49ef02f2b9a735d` (117,737 bytes).
+Compiler: 7,098 lines, 249 functions, sha256
+`f9d160fceb5774503179368e335d12bdb91e25b1c8c71f25262c2293dace62e9` (118,179 bytes).
 
 Benchmark parity: 103 authored `.om` sources and 53 build-plan targets compile to identical bytes
 and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after every keyword).
@@ -35,10 +35,9 @@ and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after eve
    verified against an oracle. Needs the OSC-1 struct lowering spec (allocation, field ops, identity).
 2. **IR floats (spec-blocked).** OSC-1 scalar tags are integers only; IR refuses float words. Float
    constants cannot be folded until the IR type system carries f32/f64.
-3. **IR call names.** Calls are earlier-only by design (checker2 enforces it), scalar, at most six
-   arguments. The emitter currently matches call names by their first 8 bytes; a split
-   name-comparison helper can lift this to the 63-character format limit.
-4. **Generic byte/string utilities.** Array parameters carry an exact length, so one library routine
+3. **IR call forms.** Calls are earlier-only by design (checker2 enforces it), scalar, and at most
+   six arguments. Full 63-byte names are matched.
+3. **Generic byte/string utilities.** Array parameters carry an exact length, so one library routine
    cannot take arrays of several lengths. A standard library needs either open arrays or a
    max-length convention; that is a language decision, not a library chore.
 5. **`sync`** cannot be a keyword: the benchmark corpus uses it as an identifier four times. Any
@@ -62,6 +61,5 @@ and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after eve
 
 ## 4. Next concrete step
 
-Lift the 8-character IR call-name limit with a split name-comparison helper (checker2 accepts names
-up to 63 bytes). Beyond that, no self-contained kernel-language feature remains: the next work is
-decision-bound (FR-2/3/5/6/7/8/9, decisions 24/37) or spec-bound (OSC-1 struct/float lowering).
+No self-contained kernel-language feature remains. The next work is decision-bound (FR-2/3/5/6/7/8/9,
+decisions 24/37) or spec-bound (OSC-1 struct/float lowering); host-surface polish is optional.
