@@ -11,7 +11,8 @@ dispatcher are the next phase; the C owner remains active until every consumer i
 | `action.om` | operation lifecycle: ready/in-flight/unknown/performed, attempts, limit, generation, expiry, identity binding |
 | `delegate.om` | child capability derivation and subset checks |
 | `reuse.om` | exact-key reuse checks, including whole-token prefix identity |
-| `*-test.om` | transition checks; no store or provider simulation |
+| `store.om` | durable 32-word record and generation file: temp write, fsync, atomic rename, exact 256-byte read; torn/short files refused |
+| `*-test.om` | transition and store checks; no provider simulation |
 | `*-gate.om` | source + test concatenation for the current single-file compiler |
 
 `action-gate.om`, `delegate-gate.om` and `reuse-gate.om` are committed concatenations because the
@@ -33,8 +34,9 @@ Expected output and exit:
 | action | `action checks=219 000` | 0 |
 | delegate | `delegate checks=074 000` | 0 |
 | reuse | `reuse checks=074 000` | 0 |
+| store | `store checks=077 000` | 0 |
 
-The same three programs are run by `seed/qualification/security673/gate669.om` as part of the
+The same four programs are run by `seed/qualification/security673/gate669.om` as part of the
 security qualification. A failure is a failed check count or a nonzero exit; a compile failure is
 `INVALID`, not a pass.
 

@@ -12,15 +12,19 @@ under `seed/authority/`:
 | `action.om` | operation state ready/in-flight/unknown/performed, attempt and limit, generation, expiry, identity binding | `action checks=219 000`, exit 0 |
 | `delegate.om` | child capability derivation and subset checks, including all small right subsets | `delegate checks=074 000`, exit 0 |
 | `reuse.om` | exact-key reuse and whole-token prefix identity | `reuse checks=074 000`, exit 0 |
+| `store.om` | 32-word durable record and generation file: temp write, fsync, atomic rename, exact read, torn refusal | `store checks=077 000`, exit 0 |
 
-The three `*-gate.om` files are committed source-plus-test concatenations because the current
+The four `*-gate.om` files are committed source-plus-test concatenations because the current
 compiler reads one file. That is a compiler capability gap (modules/imports), not a permanent
 design.
 
 ## What is not claimed
 
-- These are pure transitions. They do not mint authority, read or write a durable store, dispatch an
-  effect, enforce a budget or revoke a grant.
+- The transition contracts are pure. `store.om` adds a durable record/generation file, but there is
+  no dispatcher, revocation fence, budget enforcement or consumer cutover yet.
+- `store.om` uses a same-directory temp plus rename for atomic replacement; it does not implement a
+  cross-process lock. A short or torn file is refused on read. Generation equality is a caller check
+  (`storevalid`), not enforcement by the store.
 - The legacy C authority/reuse sources remain active until the `.om` owner has a durable store,
   dispatch and revocation, and every consumer is cut over.
 - The tests run against the same seed compiler lineage; this is not an independent implementation

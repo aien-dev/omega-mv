@@ -3,7 +3,7 @@ note All child exits are observed; signal, timeout, failed build, malformed orac
 note GNU objdump is an independent decoder. Hashes identify artifacts and do not prove correctness.
 text scratch "build/security673-native"
 text prefix "build/security673-native/"
-text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\nseed/qualification/security673/branch-forms.om\nseed/qualification/security673/packet-corpus.om\nseed/qualification/security673/pkt-consumer.om\nseed/qualification/security673/renames-corpus.om\nseed/qualification/security673/renames-consumer.om\nseed/qualification/security673/path-consumer.om\nseed/authority/action-gate.om\nseed/authority/delegate-gate.om\nseed/authority/reuse-gate.om\n"
+text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\nseed/qualification/security673/branch-forms.om\nseed/qualification/security673/packet-corpus.om\nseed/qualification/security673/pkt-consumer.om\nseed/qualification/security673/renames-corpus.om\nseed/qualification/security673/renames-consumer.om\nseed/qualification/security673/path-consumer.om\nseed/authority/action-gate.om\nseed/authority/delegate-gate.om\nseed/authority/reuse-gate.om\nseed/authority/store-gate.om\n"
 text input " < "
 text output " > "
 text errors " 2> "
@@ -546,6 +546,7 @@ fn authority cc ulong to void
 authone cc 26
 authone cc 27
 authone cc 28
+authone cc 29
 end
 fn main to int
 if or lt argcnt 1 gt argcnt 2
