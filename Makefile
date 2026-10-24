@@ -2401,6 +2401,15 @@ GPU_R4_RECEIPT = $(OUT_DIR)/gpu_matmul_r4_receipt
 $(OUT_DIR)/libomega_gpu.a: $(GPU_API_OBJS) | check-physics-lock
 	ar rcs $@ $(GPU_API_OBJS)
 libomega_gpu: $(OUT_DIR)/libomega_gpu.a
+# omega-mv#471: the archive must link without -lm (omegatool, the Rust FFI crate and AIENOS link it bare). Fails if any symbol
+# the archive leaves undefined is one libm exports (the export list is read from this toolchain's libm.so.6).
+.PHONY: test-gpu-libm-free
+test-gpu-libm-free: $(OUT_DIR)/libomega_gpu.a
+	@export LC_ALL=C; libm="$$($(CC) -print-file-name=libm.so.6)"; test -f "$$libm" || { echo "libm-free: no libm.so.6 from $(CC)"; exit 1; }; \
+	nm -D --defined-only "$$libm" | awk '{print $$3}' | sed 's/@.*//' | sort -u > $(OUT_DIR)/libm.syms; \
+	nm -u $(OUT_DIR)/libomega_gpu.a | awk '{print $$2}' | sort -u | comm -12 - $(OUT_DIR)/libm.syms > $(OUT_DIR)/libm-refs.txt; \
+	n=$$(wc -l < $(OUT_DIR)/libm-refs.txt); echo "libm-free: $$n libm symbols referenced by libomega_gpu.a ($$(wc -l < $(OUT_DIR)/libm.syms) libm exports checked)"; \
+	if [ "$$n" -ne 0 ]; then sed 's/^/  /' $(OUT_DIR)/libm-refs.txt; echo "FAIL: libomega_gpu.a is not libm-free"; exit 1; fi; echo "PASS: libomega_gpu.a is libm-free"
 $(GPU_API_TEST): tests/gpu_matmul_api_test.c src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-matmul-api: $(GPU_API_TEST) $(GPU_R4_RECEIPT)
