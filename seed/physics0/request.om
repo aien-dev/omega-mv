@@ -1,0 +1,29 @@
+note SPDX-License-Identifier: Apache-2.0
+note Binary request adapter for the native stream consumer, also exercised by unit.om.
+global rngreq uchar 265
+global rngout uchar 64
+
+fn rngreqok n ulong to int
+if or lt n 8 gt n 264
+ret 2
+end
+seed = ulong 0
+for i ulong 8
+seed = or seed shl ulong get rngreq i mul i 8
+end
+size = sub n 8
+for i ulong size
+put rngtag i get rngreq add i 8
+end
+ret rnginit seed size
+end
+
+fn rngpack to void
+for word ulong 8
+v = rngnext
+for octet ulong 8
+put rngout add mul word 8 octet uchar and shr v mul octet 8 255
+end
+end
+ret
+end

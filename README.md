@@ -7,6 +7,7 @@
 - [The Omega programme: seed to model](https://github.com/aien-dev/omega-mv/issues/599)
 - [Seeded compiler/native-host candidate](https://github.com/aien-dev/omega-mv/pull/678) and [checked device/mapping candidate](https://github.com/aien-dev/omega-mv/pull/676)
 - [Remaining C source/header inventory](docs/migration/C-TO-OM-INVENTORY.md)
+- [Experimental `.om` deterministic-stream successor](seed/physics0/README.md): source/host checks passed; native compilation and execution NOT_RUN.
 - [Alpha model/platform qualification](https://github.com/aien-dev/aien-architecture-mv/issues/305)
 
 ### Why GitHub still shows C
