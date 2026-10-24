@@ -134,6 +134,13 @@ fn f to uint
 x = uint 4
 ret inc x
 end'
+ir_refuse call_result_type 7 'ir
+fn inc a uint to uint
+ret add a uint 1
+end
+fn f to uchar
+ret inc uint 4
+end'
 
 # Multi-function units with calls: byte-identical to the C oracle and checker2 ACCEPT.
 ir_multi() { # name source
@@ -152,5 +159,9 @@ ir_multi call_void 'fn sink a uint to void\nret\nend\nfn f to uint\nsink uint 1\
 ir_multi call_zero 'fn z to uint\nret uint 1\nend\nfn f to uint\nret z\nend'
 ir_multi call_two 'fn add2 a uint b uint to uint\nret add a b\nend\nfn f to uint\nret add2 uint 3 uint 4\nend'
 ir_multi call_long 'fn increment_one a uint to uint\nret add a uint 1\nend\nfn f to uint\nret increment_one uint 4\nend'
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 13 refusals + 5 multi-call units; structs IR spec-blocked'
+ir_multi call_nested 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint\nret inc inc uint 4\nend'
+ir_multi call_expr 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint\nret add inc uint 1 inc uint 2\nend'
+ir_multi call_loop 'fn add1 a uint to uint\nret add a uint 1\nend\nfn f to uint\nx = uint 0\nwhile lt x uint 3 bound 8\nx = add1 x\nend\nret x\nend'
+ir_multi call_six 'fn sum6 a uint b uint c uint d uint e uint f uint to uint\nret add add add add add a b c d e f\nend\nfn f to uint\nret sum6 uint 1 uint 2 uint 3 uint 4 uint 5 uint 6\nend'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 14 refusals + 9 multi-call units; structs IR spec-blocked'
 echo 'RC=0'

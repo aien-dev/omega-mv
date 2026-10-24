@@ -752,9 +752,9 @@ the AArch64 path is not taken. Every function is encoded in source order. A func
 value-returning call composes as a value, a void call is a statement, and using one where the other
 is needed is error 7. Argument types are checked at compile time (error 7).
 
-`seed/omc/gate-ir.sh` compares 10 dev programs and four multi-function call units byte-for-byte
+`seed/omc/gate-ir.sh` compares 10 dev programs and nine multi-function call units byte-for-byte
 with the C-built `omegese` + `omega_emit` oracle, requires `checker2` to ACCEPT every unit, requires
-a mul-to-add mutant to differ, and pins 12 refusal cases. Those C tools are referees only; they
+a mul-to-add mutant to differ, and pins 14 refusal cases. Those C tools are referees only; they
 never write omc's bytes.
 
 Limits, said plainly: scalar values, calls to earlier functions, at most 32 functions and 6

@@ -806,9 +806,9 @@ IR mode now emits a unit of up to 32 function records and supports calls to earl
   and void statement calls are both supported; argument types are checked (error 7); self and
   forward calls are error 3; call names use the full 63-byte format limit; non-void as a statement and
   void as a value are error 7.
-- `gate-ir` compares four multi-function units (value call, void call, zero arguments, two
-  arguments) byte-for-byte with the C `omegese` + `omega_emit` oracle and requires `checker2`
-  ACCEPT. The ten one-function dev outputs stay byte-identical; the gate now pins 13 refusals.
+- `gate-ir` compares nine multi-function units (value call, void call, zero arguments, two
+  arguments, long name, nested call, two calls in an expression, a call in a loop, six arguments) byte-for-byte with the C `omegese` + `omega_emit` oracle and requires `checker2`
+  ACCEPT. The ten one-function dev outputs stay byte-identical; the gate now pins 14 refusals.
 - `seed/omc/omc.om`, 7,039 lines and 246 functions, sha256
   `0eec74110bb3580dcd0aaff0f963bdb4010183e3e89cdf14e8a2a54eef89f01a` (117,218 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
@@ -824,8 +824,8 @@ position without changing the descriptor's file offset; slice checks and the res
 
 - The host gate creates 8 bytes, writes "XY" at offset 4 with `pwrite`, reads all 8 with `pread`,
   checks bytes 4 and 5, and refuses a closed descriptor.
-- `seed/omc/omc.om`, 7,098 lines and 249 functions, sha256
-  `f9d160fceb5774503179368e335d12bdb91e25b1c8c71f25262c2293dace62e9` (118,179 bytes).
+- `seed/omc/omc.om`, 7,100 lines and 249 functions, sha256
+  `bdc20d7dd10c3b3ccd70ce742f2622c59fc6207cbd792a128ef69ae1ed97ec60` (118,219 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`). Neither word is used as an identifier there.
 

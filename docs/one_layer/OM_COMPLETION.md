@@ -20,10 +20,10 @@ Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/chec
 | Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync, pread/pwrite | seed/host/check.sh |
 | Diagnostics | 23 named refusal codes with one minimal case each | gate15 |
 | Robustness | 600 deterministic fuzz programs; capacity boundaries | gate12, gate13 |
-| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded (values, trap, bound, for); refuses what it cannot lower | gate-ir (10/10 dev programs, 5 multi-call units, 13 refusals) |
+| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded (values, trap, bound, for); refuses what it cannot lower | gate-ir (10/10 dev programs, 9 multi-call units, 14 refusals) |
 
-Compiler: 7,098 lines, 249 functions, sha256
-`f9d160fceb5774503179368e335d12bdb91e25b1c8c71f25262c2293dace62e9` (118,179 bytes).
+Compiler: 7,100 lines, 249 functions, sha256
+`bdc20d7dd10c3b3ccd70ce742f2622c59fc6207cbd792a128ef69ae1ed97ec60` (118,219 bytes).
 
 Benchmark parity: 103 authored `.om` sources and 53 build-plan targets compile to identical bytes
 and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after every keyword).

@@ -6666,6 +6666,9 @@ rtv = ulong get irf_ret j
 if eq rtv 76
 fail 7
 end
+if and ne exp 0 ne rtv exp
+fail 7
+end
 np = get irf_np j
 i = ulong 0
 while lt i np
@@ -6677,14 +6680,13 @@ end
 put ir_args i get ir_rr 0
 i = add i 1
 end
+r = dst
+if or eq dst 65534 eq dst 65535
 r = ir_newreg rtv
+end
 ir_callop r j np
-if eq dst 65534
 put ir_rr 0 r
 put ir_vt 0 rtv
-else
-ir_set dst r rtv
-end
 ret
 end
 if ne dst 65534
