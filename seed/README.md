@@ -716,6 +716,20 @@ constant is error 16 and an out-of-range integer keeps error 8.
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`).
 
+## Rung R36: integer constants in IR mode (done)
+
+IR mode now accepts top-level integer constants and folds each use to the same IR literal: the
+gate compiles `const N uint 5` with `ret N` and the literal `ret uint 5` form and requires
+byte-identical IR. Float constants in IR are still refused (error 9), as are struct/global/text
+declarations. `ir_name` consults the global name table only after failing to find an IR-local name,
+so locals still shadow as before.
+
+- `gate-ir` passes 10/10 dev programs, 7 refusals, and the const-fold equality case.
+- `seed/omc/omc.om`, 6,732 lines and 241 functions, sha256
+  `4fb90a600960c62221ec2862752f5d44880449e9e8f30ae1d99352d6d7230d02` (112,897 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

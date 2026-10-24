@@ -6229,6 +6229,18 @@ end
 fn ir_name to void
 e = ir_find get tw 0
 if eq e 0
+e = findname get tw 0
+if ne e 0
+if eq get nm_kind sub e 1 9
+t = ulong get nm_type sub e 1
+if ge t 10
+fail 9
+end
+r = ir_lit get nm_addr sub e 1 t
+ir_set 65534 r t
+ret
+end
+end
 fail 3
 end
 r = ulong get ir_nrr sub e 1
@@ -6655,10 +6667,14 @@ else
 if eq c 83
 skipnl
 else
-if or or or eq c 85 eq c 78 eq c 79 eq c 152
+if eq c 152
+s_const
+else
+if or or eq c 85 eq c 78 eq c 79
 fail 9
 end
 fail 16
+end
 end
 end
 end

@@ -68,5 +68,18 @@ ir_refuse continue_use 3 'ir
 fn main to int
 continue
 end'
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 5 refusals; structs/multifunction IR still open'
+# Integer constants fold to the IR of their literal; float constants are still refused.
+printf 'ir\nconst N uint 5\nfn f to uint\nret N\nend\n' > "$B/c1.om"
+printf 'ir\nfn f to uint\nret uint 5\nend\n' > "$B/c2.om"
+timeout 5 "$B/stage2" < "$B/c1.om" > "$B/c1.ir"
+timeout 5 "$B/stage2" < "$B/c2.om" > "$B/c2.ir"
+cmp -s "$B/c1.ir" "$B/c2.ir" || fail 'integer constant IR differs from its literal'
+echo 'PASS integer constant folds to the literal IR'
+ir_refuse float_const 9 'ir
+const H f64 0.1
+fn f to f64
+ret H
+end'
+
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 7 refusals; structs/multifunction IR still open'
 echo 'RC=0'
