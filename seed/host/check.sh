@@ -10,6 +10,7 @@ else
     printf '  make build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2\n'
 fi
 sh seed/omc/gate7.sh
+sh seed/omc/gate8.sh
 sh seed/host/gate.sh
 sh seed/host/negative.sh
 sh seed/host/regression.sh

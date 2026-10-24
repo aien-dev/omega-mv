@@ -1,0 +1,41 @@
+note comparisons follow IEEE: unordered (NaN) makes every ordered comparison false and != true.
+fn main to int
+if not lt 1.5f64 2.0f64
+ret 1
+end
+if lt 2.5f64 2.0f64
+ret 2
+end
+if not le 2.0f64 2.0f64
+ret 3
+end
+if not gt 3.0f64 2.0f64
+ret 4
+end
+if not ge 3.0f64 3.0f64
+ret 5
+end
+if not eq 2.0f64 2.0f64
+ret 6
+end
+n = div 0.0f64 0.0f64
+if eq n n
+ret 7
+end
+if not ne n n
+ret 8
+end
+if lt n 1.0f64
+ret 9
+end
+if le n 1.0f64
+ret 10
+end
+if gt n 1.0f64
+ret 11
+end
+if ge n 1.0f64
+ret 12
+end
+ret 0
+end

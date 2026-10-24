@@ -8,6 +8,7 @@ note (raw 64 bits) so the language's checked conversions never fire on om4's unt
 note ---- input, output, token ----
 global inp uchar 8388608
 global inlen ulong 1
+global irmode ulong 1
 global cur ulong 1
 global line ulong 1
 global tk ulong 1
@@ -172,6 +173,19 @@ note when it is 2^63 or more (only a ulong holds it), else 0. As om4's TK_NUM.
 fn tok_num to void
 p = get ts 0
 e = get cur 0
+i = p
+fl = false
+while lt i e
+b = get inp i
+if or or or eq b 46 eq b 101 eq b 69 eq b 102
+fl = true
+end
+i = add i 1
+end
+if fl
+put tk 0 5
+ret
+end
 minus = false
 if eq get inp p 45
 minus = true
@@ -665,12 +679,345 @@ end
 if eq w 127970521019507
 ret 85
 end
+if eq w 3289958
+ret 88
+end
+if eq w 3421798
+ret 89
+end
+if eq w 1937008994
+ret 90
+end
+ret 0
+end
+
+note ---- float literals: a token is the decimal value fsgn * fnd * 10^fp10, fsuf 0 none / 1 f32 / 2 f64.
+note fg_* hold the working state of the one literal being converted (see fparse/fbits/fnorm/fgen).
+global fsgn ulong 1
+global fnd ulong 1
+global fp10 long 1
+global fsuf ulong 1
+global fg_fl ulong 1
+global fg_seen ulong 1
+global fg_ex long 1
+global fg_esign long 1
+global fg_ed ulong 1
+global fg_ty ulong 1
+global fg_num ulong 1
+global fg_den ulong 1
+global fg_p ulong 1
+global fg_e long 1
+global fg_q ulong 1
+global fg_r ulong 1
+global fg_d ulong 1
+
+note ======== float literals: decimal text to IEEE-754 binary32/binary64 ========
+note Scope (deliberate first slice): the literal value is fnd * 10^fp10 with fnd up to 2^63-1 and
+note |fp10| <= 18, so the numerator and denominator fit u64; the result must be a normal number of its
+note type. The conversion is exact (long division, round to nearest even), never a double rounding.
+note Anything outside that range is error 8; nothing is approximated.
+
+fn pow10 p ulong to ulong
+v = ulong 1
+i = ulong 0
+while lt i p
+if gt v 1844674407370955161
+fail 8
+end
+v = mul v 10
+i = add i 1
+end
+ret v
+end
+
+note blen: bits needed for x (0 for zero)
+fn blen x ulong to ulong
+n = ulong 0
+while ne x 0
+x = shr x 1
+n = add n 1
+end
+ret n
+end
+
+note fparse: read the literal text inp[pos, pos+len) into fsgn, fnd, fp10, fsuf (0 none, 1 f32, 2 f64).
+note Grammar: [-]digits[.digits][(e|E)[+|-]digits][f32|f64]. At most 2^63-1 significant digits
+note (error 8), a dot with no digit after it is error 6, |exponent| <= 999 (error 8).
+fn fparse pos ulong ln ulong to void
+p = pos
+e = add pos ln
+put fsgn 0 0
+put fsuf 0 0
+put fnd 0 0
+put fg_fl 0 0
+put fg_seen 0 0
+if eq get inp p 45
+put fsgn 0 1
+p = add p 1
+end
+go = true
+while and go lt p e
+b = get inp p
+d = sub ulong b 48
+if le d 9
+if gt get fnd 0 922337203685477580
+fail 8
+end
+if and eq get fnd 0 922337203685477580 gt d 7
+fail 8
+end
+put fnd 0 add mul get fnd 0 10 d
+if ne get fg_seen 0 0
+put fg_fl 0 add get fg_fl 0 1
+end
+p = add p 1
+else
+if and eq b 46 eq get fg_seen 0 0
+put fg_seen 0 1
+p = add p 1
+else
+go = false
+end
+end
+end
+if and ne get fg_seen 0 0 eq get fg_fl 0 0
+fail 6
+end
+p = fexp p e
+p = fsufx p e
+if ne p e
+fail 6
+end
+x = mul get fg_esign 0 get fg_ex 0
+put fp10 0 sub x long get fg_fl 0
+end
+
+note fexp: the exponent of the literal, if present: fg_ex, fg_esign, fg_ed. Returns the new position.
+fn fexp p ulong e ulong to ulong
+put fg_ex 0 0
+put fg_esign 0 1
+if and lt p e or eq get inp p 101 eq get inp p 69
+p = add p 1
+if lt p e
+if or eq get inp p 43 eq get inp p 45
+if eq get inp p 45
+put fg_esign 0 -1
+end
+p = add p 1
+end
+end
+put fg_ed 0 0
+go = true
+while and go lt p e
+d = sub ulong get inp p 48
+if gt d 9
+go = false
+else
+put fg_ex 0 add mul get fg_ex 0 10 long d
+if gt get fg_ex 0 999
+fail 8
+end
+put fg_ed 0 add get fg_ed 0 1
+p = add p 1
+end
+end
+if eq get fg_ed 0 0
+fail 6
+end
+end
+ret p
+end
+
+note fsufx: the optional f32/f64 suffix: fsuf 1 or 2. Returns the new position.
+fn fsufx p ulong e ulong to ulong
+if lt p e
+r = sub e p
+if ne r 3
+fail 6
+end
+if ne get inp p 102
+fail 6
+end
+if and eq get inp add p 1 51 eq get inp add p 2 50
+put fsuf 0 1
+else
+if and eq get inp add p 1 54 eq get inp add p 2 52
+put fsuf 0 2
+else
+fail 6
+end
+end
+p = add p 3
+end
+ret p
+end
+
+note fbits: the parsed literal as IEEE bits of type ty (10 f32, 11 f64). Zero keeps the sign (-0.0).
+fn fbits ty ulong to ulong
+put fg_ty 0 ty
+put fg_num 0 get fnd 0
+put fg_den 0 1
+if lt get fp10 0 0
+put fg_den 0 pow10 ulong sub 0 get fp10 0
+else
+d = pow10 ulong get fp10 0
+if gt get fnd 0 div 18446744073709551615 d
+fail 8
+end
+put fg_num 0 mul get fnd 0 d
+end
+if eq get fg_num 0 0
+w = ulong 64
+if eq ty 10
+w = ulong 32
+end
+b = ulong 0
+if ne get fsgn 0 0
+b = shl ulong 1 sub w 1
+end
+ret b
+end
+p = ulong 53
+if eq ty 10
+p = ulong 24
+end
+put fg_p 0 p
+fnorm
+fgen
+ret fround
+end
+
+note fnorm: fg_e such that 2^fg_e <= fg_num / fg_den < 2^(fg_e+1). Shifts stay below 2^62 because the
+note quotient lies between 10^-18 and 10^18.
+fn fnorm to void
+bn = blen get fg_num 0
+bd = blen get fg_den 0
+e = sub long bn long bd
+if ge e 0
+t = shl get fg_den 0 ulong e
+if lt get fg_num 0 t
+e = sub e 1
+else
+t2 = shl get fg_den 0 ulong add e 1
+if ge get fg_num 0 t2
+e = add e 1
+end
+end
+else
+t = shl get fg_num 0 ulong sub 0 e
+if lt t get fg_den 0
+e = sub e 1
+else
+t2 = shl get fg_num 0 ulong sub sub 0 e 1
+if ge t2 get fg_den 0
+e = add e 1
+end
+end
+end
+put fg_e 0 e
+end
+
+note fgen: p exact quotient bits into fg_q by long division; fg_r is the remainder (unit: one last bit).
+fn fgen to void
+e = get fg_e 0
+den = get fg_den 0
+r = ulong 0
+q = ulong 0
+d = ulong 0
+if ge e 0
+d = shl den ulong e
+r = sub get fg_num 0 d
+q = ulong 1
+else
+r = get fg_num 0
+while lt r den
+r = shl r 1
+end
+r = sub r den
+q = ulong 1
+d = den
+end
+i = ulong 1
+p = get fg_p 0
+while lt i p
+r = shl r 1
+q = shl q 1
+if ge r d
+r = sub r d
+q = or q 1
+end
+i = add i 1
+end
+put fg_q 0 q
+put fg_r 0 r
+put fg_d 0 d
+put fg_e 0 e
+end
+
+note fround: round fg_q to nearest even (2*fg_r against fg_den), renormalise, check the normal range,
+note and pack the sign, exponent and mantissa.
+fn fround to ulong
+q = get fg_q 0
+den = get fg_d 0
+r2 = shl get fg_r 0 1
+if gt r2 den
+q = add q 1
+else
+if and eq r2 den eq and q 1 1
+q = add q 1
+end
+end
+p = get fg_p 0
+e = get fg_e 0
+if eq q shl 1 p
+q = shr q 1
+e = add e 1
+end
+w = ulong 32
+bias = long 127
+maxe = long 255
+if eq get fg_ty 0 11
+w = ulong 64
+bias = long 1023
+maxe = long 2047
+end
+E = add e bias
+if or le E 0 ge E sub maxe 1
+fail 8
+end
+den = sub shl ulong 1 sub p 1 1
+r2 = and q den
+q = shl ulong E sub p 1
+ret or or q r2 shl get fsgn 0 sub w 1
+end
+
+note fconst: the float token just read, as bits of ty. fspan: a deferred literal stored as pos*64+len.
+fn fconst ty ulong to ulong
+fparse get ts 0 get tl 0
+ret fbits ty
+end
+
+fn fspan ty ulong packed ulong to ulong
+fparse div packed 64 rem packed 64
+ret fbits ty
+end
+
+fn isfloat t ulong to ulong
+if ge t 10
+ret 1
+end
 ret 0
 end
 
 note ======== om4's small tables, as functions ========
 note twid: width in bits by type 0..9 (bool 1; uchar ushort uint ulong; byte short int long)
 fn twid t ulong to ulong
+if eq t 10
+ret 32
+end
+if eq t 11
+ret 64
+end
 if eq t 1
 ret 1
 end
@@ -691,6 +1038,12 @@ end
 
 note tlog: log2 of the element size by type
 fn tlog t ulong to ulong
+if eq t 10
+ret 2
+end
+if eq t 11
+ret 3
+end
 if or eq t 3 eq t 7
 ret 1
 end
@@ -769,6 +1122,12 @@ end
 if or eq t 5 eq t 9
 ret 4167071744
 end
+if eq t 10
+ret 3093329920
+end
+if eq t 11
+ret 4167071744
+end
 if eq t 6
 ret 950036480
 end
@@ -795,6 +1154,12 @@ end
 if or eq t 5 eq t 9
 ret 4162877440
 end
+if eq t 10
+ret 3089135616
+end
+if eq t 11
+ret 4162877440
+end
 ret 0
 end
 
@@ -818,7 +1183,6 @@ note ---- break fixups (1024): output offset of the branch, block index of the l
 global brkpos ulong 1024
 global brkblk ulong 1024
 global nbrk ulong 1
-
 note ======== names and functions ========
 note findname: packed name -> its index + 1 among the names in scope (0 none). om4 FINDNAME.
 fn findname w ulong to ulong
@@ -1069,7 +1433,7 @@ emit or or 2852127712 r shl v 16
 end
 ret
 end
-if eq k 3
+if or eq k 3 eq k 7
 matconst r v
 ret
 end
@@ -1186,6 +1550,17 @@ end
 c = kw get tw 0
 if eq c 76
 fail 9
+end
+if or eq c 88 eq c 89
+if ne get irmode 0 0
+fail 9
+end
+end
+if eq c 88
+ret 10
+end
+if eq c 89
+ret 11
 end
 if gt sub c 1 8
 fail 16
@@ -1447,11 +1822,208 @@ put rv 0 conds i
 put rt 0 1
 end
 
+note ---- floating point. A float value is its IEEE bit pattern in an x register; arithmetic moves it to
+note v0/v1, runs one scalar FP instruction (round to nearest even, no fused op), and moves it back.
+note f32 uses the S form (low 32 bits), f64 the D form.
+fn f2v ty ulong xr ulong vr ulong to void
+if eq ty 10
+emit or or 505872384 shl xr 5 vr
+else
+emit or or 2657550336 shl xr 5 vr
+end
+end
+
+fn fv2x ty ulong vr ulong xr ulong to void
+if eq ty 10
+emit or or 505806848 shl vr 5 xr
+else
+emit or or 2657484800 shl vr 5 xr
+end
+end
+
+fn fp_binop op ulong ty ulong ra ulong rb ulong rd ulong to void
+f2v ty ra 0
+f2v ty rb 1
+base = ulong 509609984
+if eq ty 10
+base = ulong 505415680
+end
+if eq op 33
+if eq ty 10
+base = ulong 505423872
+else
+base = ulong 509618176
+end
+else
+if eq op 34
+if eq ty 10
+base = ulong 505427968
+else
+base = ulong 509622272
+end
+else
+if eq op 36
+if eq ty 10
+base = ulong 505419776
+else
+base = ulong 509614080
+end
+end
+end
+end
+emit or or or base shl ulong 1 16 ulong 0 2
+fv2x ty 2 rd
+end
+
+fn fp_neg ty ulong ra ulong rd ulong to void
+f2v ty ra 0
+if eq ty 10
+emit or ulong 505495552 1
+else
+emit or ulong 509689856 1
+end
+fv2x ty 1 rd
+end
+
+note fcond: the condition for a float compare op: EQ, NE, MI (lt), LS (le), GT, GE. MI/LS/GT/GE are
+note false for NaN, so unordered comparisons come out as the IEEE rules require.
+fn fcond op ulong to ulong
+i = sub op 43
+if eq i 0
+ret 0
+end
+if eq i 1
+ret 1
+end
+if eq i 2
+ret 4
+end
+if eq i 3
+ret 9
+end
+if eq i 4
+ret 12
+end
+ret 10
+end
+
+fn fp_cmp op ulong ty ulong ra ulong rb ulong to void
+f2v ty ra 0
+f2v ty rb 1
+if eq ty 10
+emit or or 505487360 shl ulong 1 16 ulong 0
+else
+emit or or 509616128 shl ulong 1 16 ulong 0
+end
+put rk 0 4
+put rv 0 fcond op
+put rt 0 1
+end
+
+note fp_conv: one scalar conversion (int<->float, f32<->f64). Same type is a copy. Returns the register.
+fn fp_conv ft ulong tt ulong ra ulong to ulong
+if eq ft tt
+ret ra
+end
+if eq ft 1
+fail 9
+end
+if eq tt 1
+fail 9
+end
+rd = alloc
+if ge ft 10
+f2v ft ra 0
+ra = ulong 0
+if ge tt 10
+if eq ft 10
+emit or or 505593856 shl ra 5 rd
+else
+emit or or 509755392 shl ra 5 rd
+end
+else
+if eq ft 10
+if eq twid tt 32
+emit or or 506986496 shl ra 5 rd
+if ge tt 6
+emit or or 2470476800 rd shl rd 5
+end
+else
+emit or or 2654470144 shl ra 5 rd
+end
+else
+if eq twid tt 32
+emit or or 511180800 shl ra 5 rd
+if ge tt 6
+emit or or 2470476800 rd shl rd 5
+end
+else
+emit or or 2658664448 shl ra 5 rd
+end
+end
+end
+else
+sgn = false
+if ge ft 6
+sgn = true
+end
+if eq tt 10
+if eq twid ft 32
+if sgn
+emit or or 505544704 shl ra 5 rd
+else
+emit or or 505610240 shl ra 5 rd
+end
+else
+if sgn
+emit or or 2653028352 shl ra 5 rd
+else
+emit or or 2653093888 shl ra 5 rd
+end
+end
+else
+if eq twid ft 32
+if sgn
+emit or or 509739008 shl ra 5 rd
+else
+emit or or 509804544 shl ra 5 rd
+end
+else
+if sgn
+emit or or 2657222656 shl ra 5 rd
+else
+emit or or 2657288192 shl ra 5 rd
+end
+end
+end
+end
+if ge tt 10
+fv2x tt rd rd
+end
+ret rd
+end
+
 note binop: op 33..48, destination (255 none), ix the fr slot of a (kind, number/register, type) then b.
 note Result in rk/rv/rt. om4 BINOP.
 fn binop op ulong dst ulong ix ulong to void
 ty = get fr add ix 2
 ra = matreg get fr ix get fr add ix 1 ty
+if ge ty 10
+rb = matreg get fr add ix 3 get fr add ix 4 ty
+if ge op 43
+fp_cmp op ty ra rb
+ret
+end
+if or or lt op 33 gt op 36 ge op 41
+fail 7
+end
+rd = destreg dst
+fp_binop op ty ra rb rd
+put rk 0 1
+put rv 0 rd
+put rt 0 ty
+ret
+end
 imm = ulong 0
 bk = get fr add ix 3
 bn = get fr add ix 4
@@ -1541,9 +2113,9 @@ emit or 4177527806 shl n 10
 end
 
 note loadarg: register t from an argument: kind 1 or 5 a register v, read back from its save slot (LDR Xt,
-note [SP, #8 slot], C6.2.216); kind 3 or 6 the number or address v. om4 LOADARG.
+note [SP, #8 slot], C6.2.216); kind 3, 6 or 7 the number, address or float bits v. om4 LOADARG.
 fn loadarg t ulong k ulong v ulong to void
-if or eq k 3 eq k 6
+if or or eq k 3 eq k 6 eq k 7
 matconst t v
 ret
 end
@@ -1613,7 +2185,7 @@ note be inside the array (error 21) and needs no check; a register index: CMP Xi
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
 note (the array's register, or a new one holding its address), ea_i index register. om4 ELEMADDR.
 fn elemaddr e ulong k ulong v ulong t ulong to void
-if eq t 1
+if or eq t 1 ge t 10
 fail 7
 end
 i = sub e 1
@@ -1740,6 +2312,18 @@ note sign check; not: bool EOR Xd, Xn, #1 (C6.2.155), else MVN (ORN from XZR, C6
 note om4 VU1 .. VU_E.
 fn vt_un c ulong dst ulong to void
 ty = get rt 0
+if ge ty 10
+if eq c 50
+fail 7
+end
+ra = matreg get rk 0 get rv 0 ty
+rd = destreg dst
+fp_neg ty ra rd
+put rk 0 1
+put rv 0 rd
+put rt 0 ty
+ret
+end
 ra = matreg get rk 0 get rv 0 ty
 rd = destreg dst
 if eq c 50
@@ -1785,6 +2369,20 @@ note at or above s is set: LSR Xt, Xa, #s (UBFM, C6.2.487); CBNZ Xt trap 5 (C6.2
 note signed type: the sign-extension check, trap 5. om4 VTT1 .. VC_OK.
 fn vt_conv tt ulong to void
 ft = get rt 0
+if or ge ft 10 ge tt 10
+if eq ft 1
+fail 9
+end
+if eq tt 1
+fail 9
+end
+ra = matreg get rk 0 get rv 0 ft
+rd = fp_conv ft tt ra
+put rk 0 1
+put rv 0 rd
+put rt 0 tt
+ret
+end
 ra = matreg get rk 0 get rv 0 ft
 if eq ft 1
 fail 9
@@ -1843,6 +2441,9 @@ end
 note vs_chk: read / write bounds: n <= len A and off <= len A - n, else trap 3 (CMP C6.2.97, B.HI C6.2.34,
 note SUB C6.2.458). om4 VT_SYS.
 fn vs_chk e ulong ro ulong rn ulong to void
+if ne get nm_type sub e 1 2
+fail 7
+end
 t = alloc
 matconst t get nm_len sub e 1
 emit or or 3942645791 shl rn 5 shl t 16
@@ -2664,6 +3265,34 @@ end
 if eq get tk 0 4
 fail 16
 end
+if eq get tk 0 5
+if ne get irmode 0 0
+fail 9
+end
+fparse get ts 0 get tl 0
+t = ulong 0
+if eq get fsuf 0 0
+if eq exp 0
+vdone 6 add mul get ts 0 64 get tl 0 ulong 0
+ret
+end
+if lt exp 10
+fail 7
+end
+t = exp
+else
+t = ulong 10
+if eq get fsuf 0 2
+t = ulong 11
+end
+if and ne exp 0 ne exp t
+fail 7
+end
+end
+v = fbits t
+vdone 7 v t
+ret
+end
 if eq get tk 0 2
 if eq exp 0
 vdone 2 get tw 0 get tbig 0
@@ -2703,6 +3332,53 @@ if eq get fn_ret sub f 1 10
 fail 7
 end
 rdval 2 0 dst f
+vdec
+ret
+end
+if or eq c 88 eq c 89
+t = ulong 10
+if eq c 89
+t = ulong 11
+end
+rdval 0 0 255 0
+if eq get rk 0 6
+v = fspan t get rv 0
+put rk 0 7
+put rv 0 v
+put rt 0 t
+end
+if eq get rk 0 2
+range get rv 0 9 get tbig 0
+put rk 0 3
+put rt 0 9
+end
+if eq get rt 0 1
+fail 7
+end
+vt_conv t
+vdec
+ret
+end
+if eq c 90
+if ne get irmode 0 0
+fail 9
+end
+tt = typeword
+rdval 0 0 255 0
+if or eq get rk 0 6 eq get rk 0 2
+fail 11
+end
+ft = get rt 0
+if eq ft 1
+fail 7
+end
+if ne twid ft twid tt
+fail 7
+end
+r = matreg get rk 0 get rv 0 ft
+put rk 0 1
+put rv 0 r
+put rt 0 tt
 vdec
 ret
 end
@@ -2818,6 +3494,39 @@ if eq bk 4
 bv = matreg 4 bv bt
 bk = ulong 1
 bt = ulong 1
+end
+if and eq ak 6 eq bk 6
+fail 11
+end
+if or ge at 10 ge bt 10
+if eq ak 6
+if eq bt 0
+fail 11
+end
+if lt bt 10
+fail 7
+end
+av = fspan bt av
+ak = ulong 7
+at = bt
+end
+if eq bk 6
+if eq at 0
+fail 11
+end
+if lt at 10
+fail 7
+end
+bv = fspan at bv
+bk = ulong 7
+bt = at
+end
+if or eq ak 2 eq ak 3
+fail 7
+end
+if or eq bk 2 eq bk 3
+fail 7
+end
 end
 if eq ak 2
 if eq bk 2
@@ -3064,10 +3773,18 @@ end
 ln = get tw 0
 arrlen ln
 else
+if eq c 88
+t = ulong 10
+else
+if eq c 89
+t = ulong 11
+else
 if gt sub c 1 8
 fail 16
 end
 t = c
+end
+end
 end
 addname pw poolc np t ln k 0
 p = add mul f 6 np
@@ -3093,8 +3810,16 @@ r = c
 if eq c 76
 r = ulong 10
 else
+if eq c 88
+r = ulong 10
+else
+if eq c 89
+r = ulong 11
+else
 if gt sub c 1 8
 fail 16
+end
+end
 end
 end
 put curret 0 r
@@ -3539,7 +4264,7 @@ fail 16
 end
 newname w get tl 0 get ts 0
 t = typeword
-if eq t 1
+if or eq t 1 ge t 10
 fail 7
 end
 tok
@@ -4137,6 +4862,9 @@ if ne field_dup fo fw 0
 fail 10
 end
 t = typeword
+if ge t 10
+fail 7
+end
 ln = ulong 0
 p = get cur 0
 ln0 = get line 0
@@ -5375,6 +6103,7 @@ end
 end
 put inlen 0 off
 if ne ir_lead 0
+put irmode 0 1
 ir_run
 end
 prescan

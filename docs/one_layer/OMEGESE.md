@@ -530,6 +530,35 @@ them, so they are omc-only like structs. Checked by `seed/omc/gate7.sh`; it is r
 - Neither word may be a name; both are reserved from the keyword table. (gate7 om4 refusal)
 
 
+### 9.9 Floating point (omc only, gate8)
+
+`f32` and `f64` are IEEE-754 binary32 and binary64. A float value is its bit pattern held in an
+ordinary integer register; arithmetic moves it to v0/v1, runs one scalar FP instruction, and moves it
+back. FPCR is never written: round to nearest even, subnormals kept, no fused operations, one rounding
+per operator. There is no implicit conversion: mixing f32 and f64, or float and integer, without a
+conversion is error 7.
+
+- Literals: `digits.digits[(e|E)[+|-]digits][f32|f64]`; a digit must be present on both sides of the
+  dot, and a leading `-` negates. A literal with no suffix takes its type from context exactly as an
+  integer literal does; where no context gives a float type it is error 11. The decimal text is
+  converted exactly (long division, round to nearest even) to the target type: 0.1f64 is
+  0x3FB999999999999A. This slice refuses (error 8) a literal whose significant integer exceeds
+  2^63-1 or whose decimal scale exceeds 18, and one that is not a normal number of its type. (gate8
+  f64_bits, f32_bits, neg_ambiguous, neg_dot, neg_overflow)
+- Operators: `+ - * /` and unary `neg`; comparisons `eq ne lt le gt ge`. Bit operators, shifts and
+  `rem` on a float are error 7. IEEE results: division by zero and overflow give infinity, 0/0 gives
+  NaN, and no float operation traps. NaN compares false everywhere except `ne`, which is true. -0.0
+  compares equal to 0.0; `bits` exposes the sign. (gate8 arith, compare)
+- Conversions `<type> value` handle int<->float, f32<->f64 and float->int. Int to float is SCVTF/UCVTF
+  (round to nearest even); float to int is FCVTZS/FCVTZU (truncate, saturate, NaN -> 0); f32<->f64 is
+  FCVT. `bits T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64) without
+  changing its bits; any other width or a bool is error 7. (gate8 convert)
+- Floats are allowed in `global` pools, `new` arrays, parameters and returns; the same 8-byte / 4-byte
+  element rules as integers apply. A float cannot index an array or be a `for` count (error 7), a
+  struct field cannot be float (error 7), `read`/`write` still need a uchar array (error 7), and IR
+  mode refuses float words (error 3). (gate8 arrays, globals, params, neg_*)
+
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original

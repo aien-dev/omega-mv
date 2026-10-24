@@ -330,6 +330,25 @@ of the same compiler: `seed/omc/omc.om`, 5,395 lines and 209 functions, sha256
 - `seed/host/check.sh` runs gate-ir only when the three oracle binaries exist, and prints `SKIP`
   with the build command otherwise; the compiler itself still needs no C tool.
 
+## Rung R9: f32 and f64 (done)
+
+IEEE-754 binary32 and binary64 are now part of the language, written in omc (`f32`, `f64`, `bits`,
+decimal literals, arithmetic, comparisons and conversions). A float value is its bit pattern in an
+ordinary integer register; arithmetic moves it to v0/v1, runs one scalar FP instruction and moves it
+back, with FPCR untouched and no fused operation.
+
+- `seed/omc/omc.om`, 6,124 lines and 228 functions, sha256
+  `d1b1c1a8a4a6220fbacfd02e804a5d7071ad928561744bcbc14a8b6d641f695a` (165,708 bytes).
+- `seed/omc/gate8.sh` passes 17 cases: exact bits for 1.5, 0.1, pi, 1e-3 and -0.0 in both widths;
+  arithmetic; IEEE comparisons including NaN; int<->float and f32<->f64 conversions with saturation;
+  float arrays, pools, parameters and returns; and refusals for mixed types, float indices, float
+  `for` counts, float struct fields, `read`/`write` on float arrays, ambiguous literals, malformed
+  literals, out-of-range literals and IR mode. om4 refuses float syntax, and the gate checks that.
+- Limits, said plainly: this slice converts literals whose significant integer is below 2^63 and
+  whose decimal scale is at most 18, and refuses (error 8) anything outside that instead of
+  approximating. Struct fields and IR lowering of floats are not implemented and are refused, not
+  miscompiled.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
