@@ -3,7 +3,10 @@
 set -eu
 cd "$(dirname "$0")/../.."
 sh seed/omega-from-seed.sh
-sh seed/host/gate.sh
+mkdir -p build/seed/host
+seed/out/omc < seed/host/gate.om > build/seed/host/gate
+chmod +x build/seed/host/gate
+build/seed/host/gate
 sh seed/host/negative.sh
 sh seed/host/regression.sh
 if readelf -l -d seed/out/omc | grep -Eq 'INTERP|NEEDED'; then

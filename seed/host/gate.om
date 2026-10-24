@@ -1,0 +1,520 @@
+note Native host fixture gate. Run from repository root.
+note Each fixture is compiled by the seed compiler, run in an isolated stage directory,
+note and every child exit, timeout and leftover artifact fails closed.
+
+text omc "seed/out/omc"
+text stage "build/seed/host/run"
+text ofile "build/seed/host/run/fixture"
+text fx "./fixture"
+text echild "build/seed/host/run/exec-child"
+text fsrc "seed/host/tests/files.om"
+text asrc "seed/host/tests/args.om"
+text nsrc "seed/host/tests/network.om"
+text psrc "seed/host/tests/process.om"
+text dsrc "seed/host/tests/directories.om"
+text esrc "seed/host/tests/errors.om"
+text lsrc "seed/host/tests/location.om"
+text ssrc "seed/host/tests/sockopt.om"
+text csrc "seed/host/tests/chdir.om"
+text locbin "build/seed/host/run/location"
+text locfx "./location"
+text tcp "tcp"
+text twowords "two words"
+text pi "π"
+text pfprobe "build/seed/host/run/probe.bin"
+text pfsock "build/seed/host/run/native.sock"
+text pfadir "build/seed/host/run/adir"
+text pfbef "build/seed/host/run/before"
+text pfaft "build/seed/host/run/after"
+text pfreg "build/seed/host/run/regular-file"
+text pfx "build/seed/host/run/chdir-test/x"
+text pfd "build/seed/host/run/chdir-test"
+text fm "PASS native files, errno, exclusive creation, permissions, seek, sync and monotonic time\n"
+text am "PASS native argument access, empty arguments, UTF-8 bytes and short-buffer refusal\n"
+text nm "PASS native socket exchange, poll timeout, fork, accept and child reaping\n"
+text tm "PASS native TCP loopback exchange on an OS-assigned port\n"
+text pm "PASS native exec with exact arguments, exec failure, pipes, descriptor duplication, sleep, kill and wait\n"
+text dm "PASS native directory enumeration, file metadata and rename without overwriting\n"
+text em "PASS native syscall errors and nested expression register preservation\n"
+text lm "PASS native cwd and readlnk offsets, counts, truncation, errno and private path copy\n"
+text sm "PASS native socket options with independent bind behavior, readonly input and errno\n"
+text cm "PASS native chdir, create below it and unlink\n"
+text failm "GATE-HOST FAIL; retained stage build/seed/host/run\n"
+
+global srcbuf uchar 128
+global srclen ulong 1
+global argv uchar 4096
+global argc ulong 1
+global apos ulong 1
+global abuf uchar 64
+global alen ulong 1
+global statbuf uchar 4
+global copybuf uchar 4096
+
+fn stop to void
+r = write 2 failm 0 len failm
+exit 99
+end
+
+fn status pid int to void
+if ne get statbuf 0 0
+stop
+end
+if ne get statbuf 1 0
+stop
+end
+end
+
+fn waitpid0 pid int to void
+r = waitpid pid statbuf 0 4 0
+if ne r long pid
+stop
+end
+status pid
+end
+
+fn waitpidt pid int to void
+start = monons
+if lt start 0
+stop
+end
+while true
+r = waitpid pid statbuf 0 4 1
+if eq r long pid
+status pid
+ret
+end
+if lt r 0
+stop
+end
+now = monons
+if gt sub now start 10000000000
+r = killpid pid 9
+r = waitpid pid statbuf 0 4 0
+stop
+end
+r = sleepns 1000000
+if ne r 0
+stop
+end
+end
+end
+
+fn child to void
+r = chdir stage 0 len stage
+if ne r 0
+stop
+end
+r = execprog argv 0 get apos 0
+exit 98
+end
+
+fn launch to int
+pid = fork
+if lt pid 0
+stop
+end
+if eq pid 0
+child
+end
+ret int pid
+end
+
+fn argreset to void
+put argc 0 0
+put apos 0 2
+end
+
+fn argaddsel to void
+p = get apos 0
+n = get alen 0
+if gt add add p n 2 4096
+stop
+end
+put argv p uchar and n 255
+put argv add p 1 uchar shr n 8
+p = add p 2
+for i ulong n
+put argv add p i get abuf i
+end
+put apos 0 add p n
+put argc 0 add get argc 0 1
+end
+
+fn argclose to void
+put argv 0 uchar and get argc 0 255
+put argv 1 uchar shr get argc 0 8
+end
+
+fn selomc to void
+put alen 0 len omc
+for i ulong len omc
+put abuf i get omc i
+end
+end
+
+fn selfx to void
+put alen 0 len fx
+for i ulong len fx
+put abuf i get fx i
+end
+end
+
+fn seltcp to void
+put alen 0 len tcp
+for i ulong len tcp
+put abuf i get tcp i
+end
+end
+
+fn seltw to void
+put alen 0 len twowords
+for i ulong len twowords
+put abuf i get twowords i
+end
+end
+
+fn selpi to void
+put alen 0 len pi
+for i ulong len pi
+put abuf i get pi i
+end
+end
+
+fn selfs to void
+put srclen 0 len fsrc
+for i ulong len fsrc
+put srcbuf i get fsrc i
+end
+end
+
+fn selas to void
+put srclen 0 len asrc
+for i ulong len asrc
+put srcbuf i get asrc i
+end
+end
+
+fn selns to void
+put srclen 0 len nsrc
+for i ulong len nsrc
+put srcbuf i get nsrc i
+end
+end
+
+fn selps to void
+put srclen 0 len psrc
+for i ulong len psrc
+put srcbuf i get psrc i
+end
+end
+
+fn selds to void
+put srclen 0 len dsrc
+for i ulong len dsrc
+put srcbuf i get dsrc i
+end
+end
+
+fn seles to void
+put srclen 0 len esrc
+for i ulong len esrc
+put srcbuf i get esrc i
+end
+end
+
+fn sells to void
+put srclen 0 len lsrc
+for i ulong len lsrc
+put srcbuf i get lsrc i
+end
+end
+
+fn selss to void
+put srclen 0 len ssrc
+for i ulong len ssrc
+put srcbuf i get ssrc i
+end
+end
+
+fn selcs to void
+put srclen 0 len csrc
+for i ulong len csrc
+put srcbuf i get csrc i
+end
+end
+
+fn compile1 to void
+sfd = fopen srcbuf 0 get srclen 0 0 0
+if lt sfd 0
+stop
+end
+ofd = fopen ofile 0 len ofile 577 384
+if lt ofd 0
+stop
+end
+argreset
+selomc
+argaddsel
+argclose
+pid = fork
+if lt pid 0
+stop
+end
+if eq pid 0
+if ne dupfd int sfd 0 0 long 0
+stop
+end
+if ne dupfd int ofd 1 0 long 1
+stop
+end
+r = execprog argv 0 get apos 0
+exit 98
+end
+if ne fclose int sfd 0
+stop
+end
+if ne fclose int ofd 0
+stop
+end
+waitpid0 int pid
+fd = fopen ofile 0 len ofile 0 0
+if lt fd 0
+stop
+end
+if ne fchmod int fd 448 0
+stop
+end
+if ne fclose int fd 0
+stop
+end
+end
+
+fn compileloc to void
+sfd = fopen srcbuf 0 get srclen 0 0 0
+if lt sfd 0
+stop
+end
+ofd = fopen locbin 0 len locbin 577 384
+if lt ofd 0
+stop
+end
+argreset
+selomc
+argaddsel
+argclose
+pid = fork
+if lt pid 0
+stop
+end
+if eq pid 0
+if ne dupfd int sfd 0 0 long 0
+stop
+end
+if ne dupfd int ofd 1 0 long 1
+stop
+end
+r = execprog argv 0 get apos 0
+exit 98
+end
+if ne fclose int sfd 0
+stop
+end
+if ne fclose int ofd 0
+stop
+end
+waitpid0 int pid
+fd = fopen locbin 0 len locbin 0 0
+if lt fd 0
+stop
+end
+if ne fchmod int fd 448 0
+stop
+end
+if ne fclose int fd 0
+stop
+end
+end
+
+fn runloc to void
+argreset
+put alen 0 len locfx
+for i ulong len locfx
+put abuf i get locfx i
+end
+argaddsel
+argclose
+pid = launch
+waitpid0 pid
+end
+
+fn run0 to void
+argreset
+selfx
+argaddsel
+argclose
+pid = launch
+waitpid0 pid
+end
+
+fn run0t to void
+argreset
+selfx
+argaddsel
+argclose
+pid = launch
+waitpidt pid
+end
+
+fn runargs to void
+argreset
+selfx
+argaddsel
+put alen 0 0
+argaddsel
+seltw
+argaddsel
+selpi
+argaddsel
+argclose
+pid = launch
+waitpid0 pid
+end
+
+fn runtcp to void
+argreset
+selfx
+argaddsel
+seltcp
+argaddsel
+argclose
+pid = launch
+waitpidt pid
+end
+
+fn copyexec to void
+s = fopen ofile 0 len ofile 0 0
+if lt s 0
+stop
+end
+d = fopen echild 0 len echild 577 384
+if lt d 0
+stop
+end
+while true
+n = read int s copybuf 0 len copybuf
+if lt n 0
+stop
+end
+if eq n 0
+if ne fchmod int d 448 0
+stop
+end
+if ne fclose int d 0
+stop
+end
+if ne fclose int s 0
+stop
+end
+ret
+end
+r = write int d copybuf 0 ulong n
+if ne r n
+stop
+end
+end
+end
+
+fn main to int
+r = makedir stage 0 len stage 448
+if or eq r 0 eq r -17
+else
+stop
+end
+r = unlink pfprobe 0 len pfprobe
+r = unlink pfsock 0 len pfsock
+r = rmdir pfadir 0 len pfadir
+r = unlink pfbef 0 len pfbef
+r = unlink pfaft 0 len pfaft
+r = unlink pfreg 0 len pfreg
+r = unlink echild 0 len echild
+r = unlink pfx 0 len pfx
+r = rmdir pfd 0 len pfd
+
+selfs
+compile1
+run0
+r = unlink pfprobe 0 len pfprobe
+if ne r -2
+stop
+end
+r = write 1 fm 0 len fm
+
+selas
+compile1
+runargs
+copyexec
+r = write 1 am 0 len am
+
+selns
+compile1
+run0t
+r = unlink pfsock 0 len pfsock
+if ne r -2
+stop
+end
+r = write 1 nm 0 len nm
+runtcp
+r = write 1 tm 0 len tm
+
+selps
+compile1
+run0
+r = write 1 pm 0 len pm
+
+selds
+compile1
+run0
+r = rmdir pfadir 0 len pfadir
+if ne r -2
+stop
+end
+r = unlink pfbef 0 len pfbef
+if ne r -2
+stop
+end
+r = unlink pfaft 0 len pfaft
+if ne r -2
+stop
+end
+r = write 1 dm 0 len dm
+
+seles
+compile1
+run0
+r = write 1 em 0 len em
+
+sells
+compileloc
+runloc
+r = unlink pfreg 0 len pfreg
+if ne r -2
+stop
+end
+r = write 1 lm 0 len lm
+
+selss
+compile1
+run0t
+r = write 1 sm 0 len sm
+
+selcs
+compile1
+run0
+r = unlink pfx 0 len pfx
+if ne r -2
+stop
+end
+r = write 1 cm 0 len cm
+ret 0
+end

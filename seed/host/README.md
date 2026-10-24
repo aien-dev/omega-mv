@@ -27,11 +27,15 @@ On a machine without the Spark build coordinator, run the script directly.
 The script rebuilds the seed chain, proves compiler self-reproduction, runs
 native Omega fixtures, rejects malformed inputs, and compares the original
 fixture corpus against the original native parent. It does not run the older
-C-reference gate scripts.
+C-reference gate scripts. The fixture gate itself is `seed/host/gate.om`,
+compiled by `seed/out/omc`; the remaining shell step only builds and launches
+it.
 
 Verified on the Spark on 2026-10-23:
 
 - Native file create/read/write/seek/sync/chmod/close/unlink and errno checks.
+- Current-directory change, file creation below it and unlink through the
+  native `chdir` word.
 - Monotonic nanoseconds, realtime nanoseconds and a measured native sleep.
 - Argument copying, including empty arguments, spaces, UTF-8 bytes, and refusal
   of short output buffers without modifying them.
