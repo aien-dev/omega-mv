@@ -1,0 +1,268 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Attenuation predicate only. A trusted authority must verify the parent and issue the child.
+note Words 0..7: version,rights,memory,fuel,expiry,remaining-depth,reserved,reserved.
+note Words 8..23: exact resource scope,authority root,subject,grant identities, four words each.
+note This profile supports the same resource only. No wildcard, path or network-subnet inference.
+
+fn capvalid p view ulong 24 to ulong
+if ne get p 0 1
+ret 61
+end
+if gt get p 5 64
+ret 62
+end
+if or eq get p 4 0 or ne get p 6 0 ne get p 7 0
+ret 62
+end
+for g ulong 4
+bits = ulong 0
+for j ulong 4
+bits = or bits get p add 8 add mul g 4 j
+end
+if eq bits 0
+ret 62
+end
+end
+ret 0
+end
+
+fn capeq p view ulong 24 c view ulong 24 off ulong to bool
+diff = ulong 0
+for j ulong 4
+at = add off j
+diff = or diff xor get p at get c at
+end
+ret eq diff 0
+end
+
+fn capchild p view ulong 24 c view ulong 24 now ulong to ulong
+err = capvalid p
+if ne err 0
+ret err
+end
+err = capvalid c
+if ne err 0
+ret err
+end
+if ge now get p 4
+ret 64
+end
+if ge now get c 4
+ret 65
+end
+if ne and get c 1 get p 1 get c 1
+ret 66
+end
+if gt get c 2 get p 2
+ret 67
+end
+if gt get c 3 get p 3
+ret 68
+end
+if gt get c 4 get p 4
+ret 69
+end
+if not capeq p c 8
+ret 70
+end
+if not capeq p c 12
+ret 71
+end
+if eq get p 5 0
+ret 72
+end
+if ge get c 5 get p 5
+ret 73
+end
+if capeq p c 16
+ret 74
+end
+if capeq p c 20
+ret 75
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+global checks ulong 1
+global fails ulong 1
+global report uchar 64
+text title "delegate checks="
+fn check got ulong want ulong to void
+put checks 0 add get checks 0 1
+if ne got want
+put fails 0 add get fails 0 1
+end
+end
+fn parent p edit ulong 24 to void
+for i ulong 24
+put p i 0
+end
+put p 0 1
+put p 1 7
+put p 2 1024
+put p 3 200
+put p 4 100
+put p 5 4
+for i ulong 16
+put p add i 8 add i 100
+end
+end
+fn child c edit ulong 24 to void
+parent c
+put c 1 3
+put c 2 512
+put c 3 100
+put c 4 90
+put c 5 3
+put c 16 200
+put c 20 300
+end
+fn summary to int
+for i ulong len title
+put report i get title i
+end
+n = get checks 0
+at = len title
+put report at uchar add 48 div n 100
+put report add at 1 uchar add 48 rem div n 10 10
+put report add at 2 uchar add 48 rem n 10
+put report add at 3 32
+put report add at 4 uchar add 48 div get fails 0 100
+put report add at 5 uchar add 48 rem div get fails 0 10 10
+put report add at 6 uchar add 48 rem get fails 0 10
+put report add at 7 10
+w = write 1 report 0 add at 8
+if ne w long add at 8
+ret 2
+end
+if ne get fails 0 0
+ret 1
+end
+ret 0
+end
+fn main to int
+p = new ulong 24 0
+c = new ulong 24 0
+parent p
+child c
+check capchild p c 50 0
+put c 1 8
+check capchild p c 50 66
+child c
+put c 2 1025
+check capchild p c 50 67
+child c
+put c 3 201
+check capchild p c 50 68
+child c
+put c 4 101
+check capchild p c 50 69
+child c
+put c 5 4
+check capchild p c 50 73
+child c
+put p 5 0
+check capchild p c 50 72
+parent p
+child c
+put c 4 50
+check capchild p c 50 65
+child c
+check capchild p c 100 64
+child c
+put c 1 0
+put c 2 0
+put c 3 0
+put c 5 0
+check capchild p c 50 0
+put p 1 0
+put p 2 0
+put p 3 0
+check capchild p c 50 0
+put c 1 1
+check capchild p c 50 66
+
+for i ulong 8
+parent p
+child c
+put c add i 8 add get c add i 8 1
+check capchild p c 50 add 70 div i 4
+end
+parent p
+child c
+for i ulong 4
+put c add i 16 get p add i 16
+end
+check capchild p c 50 74
+child c
+for i ulong 4
+put c add i 20 get p add i 20
+end
+check capchild p c 50 75
+for group ulong 4
+parent p
+child c
+for j ulong 4
+put p add 8 add mul group 4 j 0
+end
+check capchild p c 50 62
+parent p
+for j ulong 4
+put c add 8 add mul group 4 j 0
+end
+check capchild p c 50 62
+end
+
+parent p
+child c
+put p 0 2
+check capchild p c 50 61
+parent p
+put c 0 2
+check capchild p c 50 61
+child c
+put c 1 512
+check capchild p c 50 66
+child c
+put c 6 1
+check capchild p c 50 62
+child c
+put c 7 1
+check capchild p c 50 62
+child c
+put c 5 18446744073709551615
+check capchild p c 50 62
+child c
+put p 5 65
+check capchild p c 50 62
+parent p
+child c
+put p 5 1
+put c 5 0
+check capchild p c 50 0
+put p 2 18446744073709551615
+put c 2 18446744073709551615
+check capchild p c 50 0
+put p 2 18446744073709551614
+check capchild p c 50 67
+parent p
+child c
+put p 1 9223372036854775808
+put c 1 9223372036854775808
+check capchild p c 50 0
+put c 1 9223372036854775809
+check capchild p c 50 66
+
+note Exhaust all subsets of the small rights profile, not only one happy case.
+for rights ulong 32
+parent p
+child c
+put c 1 rights
+want = ulong 66
+if lt rights 8
+want = 0
+end
+check capchild p c 50 want
+end
+ret summary
+end

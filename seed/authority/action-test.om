@@ -1,0 +1,237 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Tests call the production transition functions. Provider/store I/O is not simulated as durable.
+global checks ulong 1
+global fails ulong 1
+global report uchar 64
+text title "action checks="
+
+fn check got ulong want ulong to void
+put checks 0 add get checks 0 1
+if ne got want
+put fails 0 add get fails 0 1
+end
+end
+
+fn plan r edit ulong 32 to void
+for i ulong 32
+put r i 0
+end
+put r 0 1
+put r 1 1
+put r 3 3
+put r 4 7
+put r 5 9
+put r 6 100
+for i ulong 24
+put r add i 8 add i 100
+end
+end
+
+fn context c edit ulong 32 to void
+for i ulong 32
+put c i 0
+end
+put c 0 1
+put c 1 1
+put c 2 50
+put c 4 7
+put c 5 9
+for i ulong 24
+put c add i 8 add i 100
+end
+end
+
+fn receipt s edit ulong 32 n ulong outcome ulong to void
+context s
+put s 1 outcome
+put s 2 n
+put s 3 1
+end
+
+fn summary to int
+for i ulong len title
+put report i get title i
+end
+n = get checks 0
+at = len title
+put report at uchar add 48 div n 100
+put report add at 1 uchar add 48 rem div n 10 10
+put report add at 2 uchar add 48 rem n 10
+put report add at 3 32
+put report add at 4 uchar add 48 div get fails 0 100
+put report add at 5 uchar add 48 rem div get fails 0 10 10
+put report add at 6 uchar add 48 rem get fails 0 10
+put report add at 7 10
+w = write 1 report 0 add at 8
+if ne w long add at 8
+ret 2
+end
+if ne get fails 0 0
+ret 1
+end
+ret 0
+end
+
+fn main to int
+r = new ulong 32 0
+c = new ulong 32 0
+s = new ulong 32 0
+plan r
+context c
+check actstart r c 0
+check get r 1 2
+check get r 2 1
+check actstart r c 20
+check get r 2 1
+check actlost r 0
+check get r 1 3
+check actlost r 0
+check actstart r c 21
+receipt s 1 0
+check actrecon r s 21
+check get r 1 3
+check actstart r c 21
+receipt s 1 2
+check actrecon r s 0
+check get r 1 4
+check actstart r c 22
+check actrecon r s 20
+
+note An observed uncertain outcome also moves an in-flight record to unknown.
+plan r
+check actstart r c 0
+receipt s 1 0
+check actrecon r s 21
+check get r 1 3
+check actstart r c 21
+
+note Confirmed not performed enables a new attempt only after a fresh admission check.
+plan r
+check actstart r c 0
+check actlost r 0
+receipt s 1 1
+check actrecon r s 0
+check get r 1 1
+check get r 2 1
+put c 1 0
+check actstart r c 30
+check get r 2 1
+context c
+put c 4 8
+check actstart r c 31
+context c
+put c 5 10
+check actstart r c 32
+context c
+put c 2 100
+check actstart r c 33
+context c
+check actstart r c 0
+check get r 2 2
+receipt s 1 2
+check actrecon r s 35
+check get r 1 2
+receipt s 2 2
+check actrecon r s 0
+check actstart r c 22
+
+note Every word of every identity is checked before mutating the record.
+for i ulong 24
+plan r
+context c
+put c add i 8 add get c add i 8 1
+check actstart r c add 40 div i 4
+check get r 1 1
+check get r 2 0
+end
+note Receipt binding includes all identities and cannot resolve a different attempt.
+for i ulong 24
+plan r
+context c
+check actstart r c 0
+receipt s 1 1
+put s add i 8 add get s add i 8 1
+check actrecon r s add 40 div i 4
+check get r 1 2
+end
+
+plan r
+context c
+put r 2 3
+check actstart r c 23
+put r 2 18446744073709551615
+check actstart r c 12
+check get r 2 18446744073709551615
+plan r
+put r 3 0
+check actstart r c 12
+plan r
+put r 3 1025
+check actstart r c 12
+plan r
+put r 7 1
+check actstart r c 12
+plan r
+put r 0 2
+check actstart r c 11
+plan r
+put r 1 99
+check actstart r c 12
+plan r
+put r 1 2
+check actstart r c 12
+plan r
+context c
+put c 0 2
+check actstart r c 11
+context c
+put c 1 2
+check actstart r c 30
+context c
+put c 3 1
+check actstart r c 12
+context c
+for group ulong 6
+plan r
+for j ulong 4
+put r add 8 add mul group 4 j 0
+end
+check actstart r c 12
+end
+
+plan r
+check actstart r c 0
+receipt s 1 1
+put s 3 0
+check actrecon r s 36
+check get r 1 2
+receipt s 1 1
+put s 4 8
+check actrecon r s 31
+receipt s 1 1
+put s 5 10
+check actrecon r s 32
+receipt s 1 3
+check actrecon r s 12
+receipt s 1 1
+put s 6 1
+check actrecon r s 12
+check actlost r 0
+check actstart r c 21
+receipt s 1 1
+check actrecon r s 0
+check actlost r 20
+check get r 1 1
+
+note Limit is enforced across reconciliation cycles, without rotating operation identity.
+plan r
+for i ulong 3
+check actstart r c 0
+receipt s add i 1 1
+check actrecon r s 0
+end
+check actstart r c 23
+check get r 2 3
+check get r 8 100
+ret summary
+end

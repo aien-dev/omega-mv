@@ -1,0 +1,228 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note KV reuse admission v1. This module hashes nothing and deserializes no payload.
+note The store must hash the exact payload with its existing SHA-256 owner before calling.
+note Header words 0..7: format,semantic-profile,prefix-tokens,context-size,layout,dtype,rope-profile,reserved.
+note Seven four-word identities: model,weights,engine,tokenizer,scope,prefix-tokens,numeric-target-config.
+note Saved words 36..39 are payload SHA-256. Expected words 36..39 must be zero.
+
+fn kvvalid p view ulong 40 to ulong
+if ne get p 0 1
+ret 100
+end
+if ne get p 7 0
+ret 102
+end
+for i ulong 6
+if eq get p add i 1 0
+ret 103
+end
+end
+if gt get p 2 get p 3
+ret 103
+end
+if gt get p 5 4
+ret 103
+end
+for g ulong 7
+bits = ulong 0
+for j ulong 4
+bits = or bits get p add 8 add mul g 4 j
+end
+if eq bits 0
+ret 104
+end
+end
+ret 0
+end
+
+fn kvmatch s view ulong 40 w view ulong 40 h view ulong 4 to ulong
+err = kvvalid s
+if ne err 0
+ret err
+end
+err = kvvalid w
+if ne err 0
+ret err
+end
+bits = ulong 0
+for i ulong 4
+if ne get w add i 36 0
+ret 128
+end
+bits = or bits get s add i 36
+end
+if eq bits 0
+ret 104
+end
+for i ulong 6
+if ne get s add i 1 get w add i 1
+ret add 111 i
+end
+end
+for g ulong 7
+diff = ulong 0
+for j ulong 4
+at = add 8 add mul g 4 j
+diff = or diff xor get s at get w at
+end
+if ne diff 0
+ret add 120 g
+end
+end
+diff = ulong 0
+for i ulong 4
+diff = or diff xor get s add i 36 get h i
+end
+if ne diff 0
+ret 127
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+global checks ulong 1
+global fails ulong 1
+global report uchar 64
+text title "reuse checks="
+fn check got ulong want ulong to void
+put checks 0 add get checks 0 1
+if ne got want
+put fails 0 add get fails 0 1
+end
+end
+fn profile p edit ulong 40 to void
+for i ulong 40
+put p i 0
+end
+put p 0 1
+put p 1 1
+put p 2 32
+put p 3 4096
+put p 4 1
+put p 5 2
+put p 6 1
+for i ulong 28
+put p add i 8 add i 100
+end
+end
+fn saved s edit ulong 40 to void
+profile s
+for i ulong 4
+put s add i 36 add i 200
+end
+end
+fn payload h edit ulong 4 to void
+for i ulong 4
+put h i add i 200
+end
+end
+fn summary to int
+for i ulong len title
+put report i get title i
+end
+n = get checks 0
+at = len title
+put report at uchar add 48 div n 100
+put report add at 1 uchar add 48 rem div n 10 10
+put report add at 2 uchar add 48 rem n 10
+put report add at 3 32
+put report add at 4 uchar add 48 div get fails 0 100
+put report add at 5 uchar add 48 rem div get fails 0 10 10
+put report add at 6 uchar add 48 rem get fails 0 10
+put report add at 7 10
+w = write 1 report 0 add at 8
+if ne w long add at 8
+ret 2
+end
+if ne get fails 0 0
+ret 1
+end
+ret 0
+end
+fn main to int
+s = new ulong 40 0
+w = new ulong 40 0
+h = new ulong 4 0
+saved s
+profile w
+payload h
+check kvmatch s w h 0
+for i ulong 6
+saved s
+put s add i 1 add get s add i 1 1
+check kvmatch s w h add 111 i
+end
+for i ulong 28
+saved s
+put s add i 8 add get s add i 8 1
+check kvmatch s w h add 120 div i 4
+end
+for i ulong 4
+saved s
+payload h
+put h i add get h i 1
+check kvmatch s w h 127
+end
+payload h
+for g ulong 7
+saved s
+profile w
+for j ulong 4
+put s add 8 add mul g 4 j 0
+end
+check kvmatch s w h 104
+saved s
+for j ulong 4
+put w add 8 add mul g 4 j 0
+end
+check kvmatch s w h 104
+end
+profile w
+saved s
+put s 0 2
+check kvmatch s w h 100
+saved s
+put w 0 2
+check kvmatch s w h 100
+profile w
+put s 7 1
+check kvmatch s w h 102
+saved s
+put w 7 1
+check kvmatch s w h 102
+profile w
+for i ulong 6
+saved s
+put s add i 1 0
+check kvmatch s w h 103
+end
+saved s
+put s 2 4097
+check kvmatch s w h 103
+saved s
+put s 5 5
+check kvmatch s w h 103
+saved s
+for i ulong 4
+put s add i 36 0
+end
+check kvmatch s w h 104
+saved s
+for i ulong 4
+profile w
+put w add i 36 1
+check kvmatch s w h 128
+end
+profile w
+saved s
+check kvmatch s w h 0
+note Whole-token prefix identity is required even if lengths match.
+put w 28 999
+check kvmatch s w h 125
+profile w
+put w 24 999
+check kvmatch s w h 124
+profile w
+put w 16 999
+check kvmatch s w h 122
+ret summary
+end
