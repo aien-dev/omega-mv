@@ -48,3 +48,24 @@ format and rejects the enumerated malformed/missing/duplicate/wrong-target contr
 a full disassembly grammar or authentication of attacker-supplied text. The checker and runner
 share the seed compiler lineage. Binary equality and SHA256 identities are reproducibility and
 identity evidence, not diverse compilation or proof of general semantic correctness.
+
+## Bounded source ingress (#671)
+
+With fresh scratch, `build/gate669 3` runs eighteen source cases through the real rebuilt compiler.
+The generator is `hostile-corpus.om`; the existing coordinator is reused. The campaign covers
+decimal length, nested values, nested blocks, large literals, function count, invalid control byte,
+oversized pool, unterminated quote, unknown name, long whitespace and input capacity. Eight
+accepted fixed-compiler programs execute with expected exits; ten refused inputs leave empty
+artifacts. Both parities of the nested Boolean expression are exercised.
+
+A separately compiled numeric-limit mutant changes the existing20-digit rule to21. It accepts
+the21-zero source, violating the published profile; the fixed compiler refuses6. That mutant's
+program is format-inspected and retained, not executed. The independent report records the
+distinction. The gate logs elapsed nanoseconds for each child. External `/usr/bin/time -v` can
+record observed campaign wall time and maximum resident memory; those observations do not
+establish a general complexity bound or enforce a kernel memory limit.
+
+This is a deterministic bounded source campaign. Other ingress paths, broad grammar/mutation
+fuzzing, authenticated canonicalization and kernel resource limits remain under their existing
+owners. Current evidence and independent review are `evidence/SECURITY-673/hostile1` and
+`independent671`. Earlier failed development fixtures are preserved and excluded from PASS.

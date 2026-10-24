@@ -1,0 +1,196 @@
+note Synthetic source ingress campaign. Binary stdin is mode plus little-endian u32 count, no tail.
+note Output is source only. This generator grants no execution authority and uses no private data.
+global args uchar 5
+global extra uchar 1
+global buf uchar 4096
+global nums uchar 32
+text mainpre "fn main to int\n"
+text done "ret 0\nend\n"
+text numpre "fn main to int\nx = ulong "
+text numend "\nret 0\nend\n"
+text exprpre "fn main to int\nx = int 0\nif "
+text addword "not "
+text exprend "eq x 0\nret 0\nelse\nret 1\nend\nend\n"
+text ifword "if true\n"
+text endword "end\n"
+text textpre "text data \""
+text textend "\"\nfn main to int\nret 0\nend\n"
+text fnpre "fn f"
+text fnpost " to int\nret 0\nend\n"
+text array "global data uchar 16777217\nfn main to int\nret 0\nend\n"
+text quote "text data \"abc"
+text unknown "fn main to int\nret unknown\nend\n"
+fn fill b uchar count ulong to void
+for i ulong len buf
+put buf i b
+end
+n = count
+while ne n 0
+chunk = n
+if gt chunk len buf
+chunk = len buf
+end
+if ne write 1 buf 0 chunk long chunk
+exit 91
+end
+n = sub n chunk
+end
+end
+fn putnum v ulong to void
+x = v
+n = ulong 0
+while ge x 10
+put nums n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put nums n uchar add 48 x
+n = add n 1
+for i ulong n
+if ne write 1 nums sub sub n i 1 1 1
+exit 91
+end
+end
+end
+fn numeric n ulong to void
+if ne write 1 numpre 0 len numpre long len numpre
+exit 91
+end
+fill 48 n
+if ne write 1 numend 0 len numend long len numend
+exit 91
+end
+end
+fn nested n ulong to void
+if ne write 1 exprpre 0 len exprpre long len exprpre
+exit 91
+end
+for i ulong n
+if ne write 1 addword 0 len addword long len addword
+exit 91
+end
+end
+if ne write 1 exprend 0 len exprend long len exprend
+exit 91
+end
+end
+fn blocks n ulong to void
+if ne write 1 mainpre 0 len mainpre long len mainpre
+exit 91
+end
+for i ulong n
+if ne write 1 ifword 0 len ifword long len ifword
+exit 91
+end
+end
+for i ulong n
+if ne write 1 endword 0 len endword long len endword
+exit 91
+end
+end
+if ne write 1 done 0 len done long len done
+exit 91
+end
+end
+fn literal n ulong to void
+if ne write 1 textpre 0 len textpre long len textpre
+exit 91
+end
+fill 97 n
+if ne write 1 textend 0 len textend long len textend
+exit 91
+end
+end
+fn funcs n ulong to void
+for i ulong n
+if ne write 1 fnpre 0 len fnpre long len fnpre
+exit 91
+end
+putnum i
+if ne write 1 fnpost 0 len fnpost long len fnpost
+exit 91
+end
+end
+if ne write 1 mainpre 0 len mainpre long len mainpre
+exit 91
+end
+if ne write 1 done 0 len done long len done
+exit 91
+end
+end
+fn main to int
+p = ulong 0
+while lt p 5
+r = read 0 args p sub 5 p
+if le r 0
+ret 90
+end
+p = add p ulong r
+end
+if ne read 0 extra 0 1 0
+ret 90
+end
+m = get args 0
+if gt m 10
+ret 90
+end
+n = ulong 0
+for i ulong 4
+n = or n shl ulong get args add i 1 mul i 8
+end
+if gt n 8388608
+ret 90
+end
+if eq m 0
+numeric n
+end
+if eq m 1
+if gt n 2048
+ret 90
+end
+nested n
+end
+if eq m 2
+if gt n 1024
+ret 90
+end
+blocks n
+end
+if eq m 3
+literal n
+end
+if eq m 4
+if gt n 1024
+ret 90
+end
+funcs n
+end
+if eq m 5
+fill 0 1
+end
+if eq m 6
+if ne write 1 array 0 len array long len array
+ret 91
+end
+end
+if eq m 7
+if ne write 1 quote 0 len quote long len quote
+ret 91
+end
+end
+if eq m 8
+if ne write 1 unknown 0 len unknown long len unknown
+ret 91
+end
+end
+if ge m 9
+fill 32 n
+if ne write 1 mainpre 0 len mainpre long len mainpre
+ret 91
+end
+if ne write 1 done 0 len done long len done
+ret 91
+end
+end
+ret 0
+end

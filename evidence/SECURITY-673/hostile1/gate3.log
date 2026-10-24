@@ -1,0 +1,133 @@
+seed/rung4/om4.bin < seed/omc/omc.om > build/security673-native/1001 2> build/security673-native/501001
+elapsed_ns=2143555
+exit=0 expected=0
+build/security673-native/1001 < seed/omc/omc.om > build/security673-native/1002 2> build/security673-native/501002
+elapsed_ns=3193662
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/hostile-corpus.om > build/security673-native/1003 2> build/security673-native/501003
+elapsed_ns=1072538
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1004 > build/security673-native/1005 2> build/security673-native/501005
+elapsed_ns=1071546
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1005 > build/security673-native/1006 2> build/security673-native/501006
+elapsed_ns=1072490
+exit=0 expected=0
+build/security673-native/1006 < /dev/null > build/security673-native/1007 2> build/security673-native/501007
+elapsed_ns=1072650
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1008 > build/security673-native/1009 2> build/security673-native/501009
+elapsed_ns=1072330
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1009 > build/security673-native/1010 2> build/security673-native/501010
+elapsed_ns=1069418
+exit=6 expected=6
+build/security673-native/1003 < build/security673-native/1011 > build/security673-native/1012 2> build/security673-native/501012
+elapsed_ns=1069482
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1012 > build/security673-native/1013 2> build/security673-native/501013
+elapsed_ns=7431397
+exit=6 expected=6
+build/security673-native/1003 < build/security673-native/1014 > build/security673-native/1015 2> build/security673-native/501015
+elapsed_ns=1078122
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1015 > build/security673-native/1016 2> build/security673-native/501016
+elapsed_ns=1076266
+exit=0 expected=0
+build/security673-native/1016 < /dev/null > build/security673-native/1017 2> build/security673-native/501017
+elapsed_ns=1072634
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1018 > build/security673-native/1019 2> build/security673-native/501019
+elapsed_ns=1072841
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1019 > build/security673-native/1020 2> build/security673-native/501020
+elapsed_ns=1068521
+exit=0 expected=0
+build/security673-native/1020 < /dev/null > build/security673-native/1021 2> build/security673-native/501021
+elapsed_ns=1092058
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1022 > build/security673-native/1023 2> build/security673-native/501023
+elapsed_ns=1080298
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1023 > build/security673-native/1024 2> build/security673-native/501024
+elapsed_ns=1075354
+exit=14 expected=14
+build/security673-native/1003 < build/security673-native/1025 > build/security673-native/1026 2> build/security673-native/501026
+elapsed_ns=1078234
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1026 > build/security673-native/1027 2> build/security673-native/501027
+elapsed_ns=1072634
+exit=0 expected=0
+build/security673-native/1027 < /dev/null > build/security673-native/1028 2> build/security673-native/501028
+elapsed_ns=1071658
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1029 > build/security673-native/1030 2> build/security673-native/501030
+elapsed_ns=1071562
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1030 > build/security673-native/1031 2> build/security673-native/501031
+elapsed_ns=1072538
+exit=14 expected=14
+build/security673-native/1003 < build/security673-native/1032 > build/security673-native/1033 2> build/security673-native/501033
+elapsed_ns=1074026
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1033 > build/security673-native/1034 2> build/security673-native/501034
+elapsed_ns=13760688
+exit=0 expected=0
+build/security673-native/1034 < /dev/null > build/security673-native/1035 2> build/security673-native/501035
+elapsed_ns=1073850
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1036 > build/security673-native/1037 2> build/security673-native/501037
+elapsed_ns=1073418
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1037 > build/security673-native/1038 2> build/security673-native/501038
+elapsed_ns=1073226
+exit=0 expected=0
+build/security673-native/1038 < /dev/null > build/security673-native/1039 2> build/security673-native/501039
+elapsed_ns=1072538
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1040 > build/security673-native/1041 2> build/security673-native/501041
+elapsed_ns=1073210
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1041 > build/security673-native/1042 2> build/security673-native/501042
+elapsed_ns=1069146
+exit=14 expected=14
+build/security673-native/1003 < build/security673-native/1043 > build/security673-native/1044 2> build/security673-native/501044
+elapsed_ns=1070410
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1044 > build/security673-native/1045 2> build/security673-native/501045
+elapsed_ns=1091098
+exit=16 expected=16
+build/security673-native/1003 < build/security673-native/1046 > build/security673-native/1047 2> build/security673-native/501047
+elapsed_ns=1073530
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1047 > build/security673-native/1048 2> build/security673-native/501048
+elapsed_ns=1071194
+exit=23 expected=23
+build/security673-native/1003 < build/security673-native/1049 > build/security673-native/1050 2> build/security673-native/501050
+elapsed_ns=1072154
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1050 > build/security673-native/1051 2> build/security673-native/501051
+elapsed_ns=1044938
+exit=22 expected=22
+build/security673-native/1003 < build/security673-native/1052 > build/security673-native/1053 2> build/security673-native/501053
+elapsed_ns=1069977
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1053 > build/security673-native/1054 2> build/security673-native/501054
+elapsed_ns=1068313
+exit=3 expected=3
+build/security673-native/1003 < build/security673-native/1055 > build/security673-native/1056 2> build/security673-native/501056
+elapsed_ns=1094618
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1056 > build/security673-native/1057 2> build/security673-native/501057
+elapsed_ns=10633651
+exit=0 expected=0
+build/security673-native/1057 < /dev/null > build/security673-native/1058 2> build/security673-native/501058
+elapsed_ns=1072186
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1059 > build/security673-native/1060 2> build/security673-native/501060
+elapsed_ns=3165277
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1060 > build/security673-native/1061 2> build/security673-native/501061
+elapsed_ns=5289137
+exit=14 expected=14
+GATE671 SOURCE PASS bounded synthetic source families only
