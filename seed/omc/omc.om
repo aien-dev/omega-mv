@@ -408,6 +408,9 @@ end
 if eq w 109326067987558
 ret 139
 end
+if eq w 1952543859
+ret 140
+end
 if eq w 1819242338
 ret 1
 end
@@ -3407,6 +3410,37 @@ hsys 78
 spadd 4096
 hreturn dst x
 end
+note stat: path slice (readonly) + output slice, at least 128 bytes for the ARM64 stat structure.
+note Linux newfstatat(AT_FDCWD, path, out, 0); returns 0 or -errno. A short output traps 3.
+fn hstat dst ulong x ulong to void
+e = harray x 0
+put fr add x 23 e
+put fr add x 24 get fr add x 21
+put fr add x 25 get fr add x 22
+e = harray x 1
+put fr add x 26 e
+put fr add x 27 get fr add x 21
+put fr add x 28 get fr add x 22
+put fr add x 20 get fr add x 23
+put fr add x 21 get fr add x 24
+put fr add x 22 get fr add x 25
+hpathcp x
+note stat refuses an empty path before the kernel call.
+emit 4043309247
+trapc 0 3
+basearg 2 get fr add x 26
+loadarg 16 1 get fr add x 27
+e3 2332033024 2 2 16
+loadarg 3 1 get fr add x 28
+matconst 6 128
+e3 3942645760 31 3 6
+trapc 3 3
+matconst 3 0
+hcopy
+hsys 79
+spadd 4096
+hreturn dst x
+end
 fn hsockopt dst ulong x ulong to void
 harg x 2 8
 harg x 3 8
@@ -3468,6 +3502,10 @@ ret
 end
 if or eq c 126 eq c 138
 hpath c dst x
+ret
+end
+if eq c 140
+hstat dst x
 ret
 end
 if or or eq c 127 eq c 129 eq c 139
@@ -3704,7 +3742,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 139
+if and ge c 100 le c 140
 hostval c dst
 ret
 end

@@ -634,6 +634,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `readlnk PATH off n OUT off capacity` | Read a symbolic link through a checked, nonempty path into writable output bytes. Return the byte count without a terminator. A result equal to capacity may be truncated. |
 | `getdnts fd A off n` | Write raw Linux `getdents64` records; return bytes written. |
 | `fstat fd A off n` | Write the 128-byte Linux ARM64 stat structure; requires capacity at least 128. |
+| `stat A off n B off capacity` | Metadata for a checked path via `newfstatat`; writes the same 128-byte ARM64 structure; a short output traps 3. |
 | `renames A off n flags` | Rename the two paths in a packed list using `renameat2`; flag 1 refuses replacement. |
 | `monons` | Monotonic nanoseconds, suitable for elapsed-time measurement. |
 | `realns` | Realtime nanoseconds since the Unix epoch, suitable for timestamps. |

@@ -60,6 +60,16 @@ printf 'PASS native chdir: relative file created in the new directory; missing p
 compile trunc
 (cd "$stage"; ./trunc)
 printf 'PASS native ftrunc: write, shorten, rewind, read 4 then EOF; closed fd refused\n'
+compile stat
+(cd "$stage"; ./stat)
+printf 'PASS native stat: size field, missing path errno, 128-byte structure\n'
+compile stat_short
+set +e
+(cd "$stage"; ./stat_short)
+src=$?
+set -e
+[ "$src" = 103 ] || { printf 'FAIL: stat short output exit %s, wanted 103\n' "$src" >&2; exit 1; }
+printf 'PASS native stat: short output traps 3 before the kernel\n'
 compile environment_trap
 set +e
 (cd "$stage"; ./environment_trap)

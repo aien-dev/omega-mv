@@ -545,6 +545,23 @@ Values are compared as `main`'s value mod 256; traps must exit `100 + code`. The
 0.1 s and `seed/host/check.sh` runs it. Compiler unchanged: 6,480 lines, 238 functions, sha256
 `4aa1b0bf…`.
 
+## Rung R24: path stat (done)
+
+`stat A off n B off capacity` returns metadata for a checked path without opening it: Linux
+`newfstatat` with `AT_FDCWD` (syscall 79), writing the same 128-byte ARM64 structure as `fstat`.
+It returns 0 or minus the kernel error. The output slice must hold 128 bytes; a shorter one traps 3
+before the kernel writes anything.
+
+- The host gate creates an 8-byte file, states it, checks `st_size` at byte 48 (8) and that the
+  other seven size bytes are zero, checks that a missing path returns a negative error, and checks
+  that a 64-byte output traps 3 (exit 103).
+- The first `hstat` draft used X4 for the capacity constant, clobbering the path source register
+  that `hcopy` needs; the gate caught it as a SIGSEGV before the syscall. The constant now uses X6.
+- `seed/omc/omc.om`, 6,518 lines and 239 functions, sha256
+  `e4f1e7e9e315151ca4b0b2d188d2b8778a1cc62224043f067089338078519ad5` (109,505 bytes).
+- Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). No corpus file uses `stat` as an identifier.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
