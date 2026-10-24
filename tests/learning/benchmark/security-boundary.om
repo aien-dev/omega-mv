@@ -1,0 +1,265 @@
+note Compose with the unchanged L775 core.om. Actual process output feeds existing lobserve.
+note Public synthetic data only. This is qualification, not a judge, signer or promotion service.
+global Path uchar 1024
+global Packet uchar 4096
+global Used ulong 1
+global Wait uchar 4
+global Bytes uchar 257
+global Pathbuf uchar 256
+global Cases ulong 1
+text Root "build/bench-security"
+text Inpath "build/bench-security/input-0"
+text Outpath "build/bench-security/output-0"
+text Errpath "build/bench-security/stderr-0"
+text Files "build/bench-security/judge\nbuild/bench-security/policy\nbuild/bench-security/keys\nbuild/bench-security/receipt\nbuild/bench-security/budget\n"
+text Secret "SYNTHETIC-NONSECRET-QUALIFICATION"
+text Label "case mode, child exit, observer result: "
+text Pass "BENCHMARK SECURITY BOUNDARY PASS; public synthetic scope only\n"
+fn die code int to void
+exit code
+end
+fn number n ulong to void
+put Bytes 0 uchar add 48 div n 100
+put Bytes 1 uchar add 48 rem div n 10 10
+put Bytes 2 uchar add 48 rem n 10
+put Bytes 3 32
+if ne write 1 Bytes 0 4 4
+die 90
+end
+end
+fn pfile kind ulong mode ulong flags int to int
+sz = ulong len Inpath
+if eq kind 0
+for i ulong sz
+put Pathbuf i get Inpath i
+end
+end
+if eq kind 1
+sz = ulong len Outpath
+for i ulong sz
+put Pathbuf i get Outpath i
+end
+end
+if eq kind 2
+sz = ulong len Errpath
+for i ulong sz
+put Pathbuf i get Errpath i
+end
+end
+put Pathbuf sub sz 1 uchar add 48 mode
+fd = fopen Pathbuf 0 sz flags 384
+if lt fd 0
+die 91
+end
+ret int fd
+end
+fn close fd int to void
+if ne fclose fd 0
+die 92
+end
+end
+fn readfile fd int to ulong
+n = ulong 0
+while lt n len Bytes
+r = read fd Bytes n sub len Bytes n
+if lt r 0
+die 108
+end
+if eq r 0
+ret n
+end
+n = add n ulong r
+end
+ret n
+end
+fn protect check bool to void
+n = ulong 0
+for i ulong len Files
+b = get Files i
+if eq b 10
+flags = int 524481
+if check
+flags = int 524288
+end
+fd = fopen Pathbuf 0 n flags 384
+if lt fd 0
+die 93
+end
+if check
+sz = readfile int fd
+if ne sz len Secret
+die 94
+end
+for j ulong len Secret
+if ne get Bytes j get Secret j
+die 95
+end
+end
+else
+if ne write int fd Secret 0 len Secret long len Secret
+die 96
+end
+if ne fsync int fd 0
+die 97
+end
+end
+close int fd
+n = 0
+else
+put Pathbuf n b
+n = add n 1
+end
+end
+end
+fn redirect src int dst int to void
+if ne src dst
+if ne dupfd src dst 0 long dst
+die 98
+end
+end
+end
+fn waitfor pid int to ulong
+start = monons
+if lt start 0
+die 99
+end
+while true
+r = waitpid pid Wait 0 len Wait 1
+if eq r long pid
+if ne get Wait 0 0
+die 100
+end
+ret ulong get Wait 1
+end
+if lt r 0
+die 101
+end
+now = monons
+if or lt now start gt sub now start 10000000000
+r = killpid pid 9
+r = waitpid pid Wait 0 len Wait 0
+die 102
+end
+if ne sleepns 1000000 0
+die 103
+end
+end
+exit 104
+end
+fn spawn mode ulong to ulong
+rd = pfile 0 mode 524481
+put Bytes 0 uchar mode
+if ne write rd Bytes 0 1 1
+die 105
+end
+close rd
+rd = pfile 0 mode 524288
+wr = pfile 1 mode 524481
+er = pfile 2 mode 524481
+pid = fork
+if lt pid 0
+die 106
+end
+if eq pid 0
+redirect rd 0
+redirect wr 1
+redirect er 2
+r = execpure Packet 0 get Used 0
+exit 107
+end
+close rd
+close wr
+close er
+ret waitfor int pid
+end
+fn expected mode ulong to ulong
+if eq mode 0
+ret 0
+end
+if eq mode 3
+ret 9
+end
+if eq mode 4
+ret 8
+end
+if eq mode 5
+ret 10
+end
+if eq mode 7
+ret 0
+end
+ret 7
+end
+fn observe mode ulong code ulong to ulong
+fd = pfile 1 mode 524288
+n = readfile fd
+close fd
+put LWant 0 42
+if le n 256
+for i ulong n
+put LGot i get Bytes i
+end
+end
+ret lobserve 0 0 code 1 n
+end
+fn one mode ulong to void
+code = spawn mode
+result = observe mode code
+r = write 1 Label 0 len Label
+number mode
+number code
+number result
+put Bytes 0 10
+r = write 1 Bytes 0 1
+if ne result expected mode
+die 109
+end
+if eq mode 4
+if ne code 77
+die 110
+end
+else
+if ne code 0
+die 111
+end
+end
+fd = pfile 2 mode 524288
+n = read fd Bytes 0 1
+close fd
+if ne n 0
+die 112
+end
+protect true
+put Cases 0 add get Cases 0 1
+end
+fn main to int
+if ne argcnt 2
+ret 113
+end
+n = argread 1 Path 0 len Path
+if or le n 0 ge n long len Path
+ret 114
+end
+put Packet 0 1
+put Packet 2 uchar and ulong n 255
+put Packet 3 uchar shr ulong n 8
+for i ulong ulong n
+put Packet add i 4 get Path i
+end
+put Used 0 add ulong n 4
+if ne makedir Root 0 len Root 448 0
+ret 115
+end
+protect false
+for m ulong 8
+one m
+end
+if ne get Cases 0 8
+ret 116
+end
+r = write 1 Pass 0 len Pass
+if ne r long len Pass
+ret 117
+end
+ret 0
+end

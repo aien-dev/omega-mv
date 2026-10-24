@@ -1,0 +1,99 @@
+3291057 execve("build/bench-security-tools/mutant-1", ["build/bench-security-tools/mutan"..., "build/bench-security-tools/candi"...], 0xfffffcf8e0d0 /* 39 vars */) = 0
+3291057 openat(AT_FDCWD, "build/bench-security/judge", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3291057 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/policy", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3291057 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/keys", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3291057 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/receipt", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3291057 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/budget", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3291057 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/input-0", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3291057 write(3, "\0", 1)               = 1
+3291057 openat(AT_FDCWD, "build/bench-security/input-0", O_RDONLY|O_CLOEXEC) = 3
+3291057 openat(AT_FDCWD, "build/bench-security/output-0", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3291057 openat(AT_FDCWD, "build/bench-security/stderr-0", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3291057 clone(child_stack=NULL, flags=SIGCHLD) = 3291058
+3291057 wait4(3291058, 0x108065b0, WNOHANG, NULL) = 0
+3291058 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3291058 execve("build/bench-security-tools/candidate", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */) = 0
+3291058 read(0, "\0", 1)                = 1
+3291058 write(1, "*", 1)                = 1
+3291058 +++ exited with 0 +++
+3291057 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3291058, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3291057 wait4(3291058, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3291058
+3291057 openat(AT_FDCWD, "build/bench-security/output-0", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "*", 257)               = 1
+3291057 write(1, "case mode, child exit, observer "..., 40) = 40
+3291057 write(1, "000 ", 4)             = 4
+3291057 write(1, "000 ", 4)             = 4
+3291057 write(1, "000 ", 4)             = 4
+3291057 write(1, "\n", 1)               = 1
+3291057 openat(AT_FDCWD, "build/bench-security/stderr-0", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "", 1)                  = 0
+3291057 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/input-1", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3291057 write(3, "\1", 1)               = 1
+3291057 openat(AT_FDCWD, "build/bench-security/input-1", O_RDONLY|O_CLOEXEC) = 3
+3291057 openat(AT_FDCWD, "build/bench-security/output-1", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3291057 openat(AT_FDCWD, "build/bench-security/stderr-1", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3291057 clone(child_stack=NULL, flags=SIGCHLD) = 3291059
+3291057 wait4(3291059, 0x108065b0, WNOHANG, NULL) = 0
+3291059 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3291059 execve("build/bench-security-tools/candidate", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */) = 0
+3291059 read(0, "\1", 1)                = 1
+3291059 write(1, "+", 1)                = 1
+3291059 +++ exited with 0 +++
+3291057 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3291059, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3291057 wait4(3291059, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3291059
+3291057 openat(AT_FDCWD, "build/bench-security/output-1", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "+", 257)               = 1
+3291057 write(1, "case mode, child exit, observer "..., 40) = 40
+3291057 write(1, "001 ", 4)             = 4
+3291057 write(1, "000 ", 4)             = 4
+3291057 write(1, "007 ", 4)             = 4
+3291057 write(1, "\n", 1)               = 1
+3291057 openat(AT_FDCWD, "build/bench-security/stderr-1", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "", 1)                  = 0
+3291057 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3291057 openat(AT_FDCWD, "build/bench-security/input-2", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3291057 write(3, "\2", 1)               = 1
+3291057 openat(AT_FDCWD, "build/bench-security/input-2", O_RDONLY|O_CLOEXEC) = 3
+3291057 openat(AT_FDCWD, "build/bench-security/output-2", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3291057 openat(AT_FDCWD, "build/bench-security/stderr-2", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3291057 clone(child_stack=NULL, flags=SIGCHLD) = 3291060
+3291057 wait4(3291060, 0x108065b0, WNOHANG, NULL) = 0
+3291060 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3291060 execve("build/bench-security-tools/candidate", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */) = 0
+3291060 read(0, "\2", 1)                = 1
+3291060 openat(AT_FDCWD, "build/bench-security/judge", O_WRONLY|O_TRUNC) = 3
+3291060 +++ exited with 61 +++
+3291057 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3291060, si_uid=1000, si_status=61, si_utime=0, si_stime=0} ---
+3291057 wait4(3291060, [{WIFEXITED(s) && WEXITSTATUS(s) == 61}], WNOHANG, NULL) = 3291060
+3291057 openat(AT_FDCWD, "build/bench-security/output-2", O_RDONLY|O_CLOEXEC) = 3
+3291057 read(3, "", 257)                = 0
+3291057 write(1, "case mode, child exit, observer "..., 40) = 40
+3291057 write(1, "002 ", 4)             = 4
+3291057 write(1, "061 ", 4)             = 4
+3291057 write(1, "008 ", 4)             = 4
+3291057 write(1, "\n", 1)               = 1
+3291057 +++ exited with 109 +++

@@ -1,0 +1,59 @@
+note Deliberately hostile synthetic candidate. No private task, key or policy is used.
+global Mode uchar 1
+global Data uchar 257
+global Path uchar 256
+text Claims "APPROVED"
+text Files "build/bench-security/judge\nbuild/bench-security/policy\nbuild/bench-security/keys\nbuild/bench-security/receipt\nbuild/bench-security/budget\n"
+fn attack to void
+n = ulong 0
+for i ulong len Files
+b = get Files i
+if eq b 10
+if ne fopen Path 0 n 513 384 neg long 1
+exit 61
+end
+if ne fopen Path 0 n 0 0 neg long 1
+exit 62
+end
+n = 0
+else
+put Path n b
+n = add n 1
+end
+end
+end
+fn main to int
+if ne read 0 Mode 0 1 1
+ret 60
+end
+m = get Mode 0
+if eq m 2
+attack
+end
+if eq m 3
+ret 0
+end
+if eq m 4
+ret 77
+end
+if eq m 5
+if ne write 1 Data 0 len Data long len Data
+ret 63
+end
+ret 0
+end
+if eq m 6
+if ne write 1 Claims 0 len Claims long len Claims
+ret 63
+end
+ret 0
+end
+put Data 0 42
+if or eq m 1 eq m 2
+put Data 0 43
+end
+if ne write 1 Data 0 1 1
+ret 63
+end
+ret 0
+end

@@ -1,0 +1,399 @@
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3284139 fsync(3)                        = 0
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3284139 fsync(3)                        = 0
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3284139 fsync(3)                        = 0
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3284139 fsync(3)                        = 0
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 33) = 33
+3284139 fsync(3)                        = 0
+3284139 openat(AT_FDCWD, "build/bench-security/input-0", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "\0", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/input-0", O_RDONLY|O_CLOEXEC) = 3
+3284139 openat(AT_FDCWD, "build/bench-security/output-0", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-0", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3284139 clone(child_stack=NULL, flags=SIGCHLD) = 3284216
+3284139 wait4(3284216, 0x108065b0, WNOHANG, NULL) = 0
+3284216 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3284216 openat(AT_FDCWD, "build/bench-security-tools/candidate", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+3284216 landlock_create_ruleset({handled_access_fs=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_WRITE_FILE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_REG|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE}, 8, 0) = 4
+3284216 landlock_add_rule(4, LANDLOCK_RULE_PATH_BENEATH, {allowed_access=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE, parent_fd=3}, 0) = 0
+3284216 landlock_restrict_self(4, 0)    = 0
+3284216 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3284216 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3284216 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3284216 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284216 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284216 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3284216 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3284216 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fdd60}) = 0
+3284216 execveat(3, "", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */, AT_EMPTY_PATH) = 0
+3284216 read(0, "\0", 1)                = 1
+3284216 write(1, "*", 1)                = 1
+3284216 +++ exited with 0 +++
+3284139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3284216, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3284139 wait4(3284216, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3284216
+3284139 openat(AT_FDCWD, "build/bench-security/output-0", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "*", 257)               = 1
+3284139 write(1, "case mode, child exit, observer "..., 40) = 40
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "\n", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-0", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 1)                  = 0
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/input-1", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "\1", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/input-1", O_RDONLY|O_CLOEXEC) = 3
+3284139 openat(AT_FDCWD, "build/bench-security/output-1", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-1", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3284139 clone(child_stack=NULL, flags=SIGCHLD) = 3284225
+3284139 wait4(3284225, 0x108065b0, WNOHANG, NULL) = 0
+3284225 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3284225 openat(AT_FDCWD, "build/bench-security-tools/candidate", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+3284225 landlock_create_ruleset({handled_access_fs=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_WRITE_FILE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_REG|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE}, 8, 0) = 4
+3284225 landlock_add_rule(4, LANDLOCK_RULE_PATH_BENEATH, {allowed_access=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE, parent_fd=3}, 0) = 0
+3284225 landlock_restrict_self(4, 0)    = 0
+3284225 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3284225 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3284225 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3284225 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284225 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284225 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3284225 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3284225 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fdd60}) = 0
+3284225 execveat(3, "", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */, AT_EMPTY_PATH <unfinished ...>
+3284139 wait4(3284225,  <unfinished ...>
+3284225 <... execveat resumed>)         = 0
+3284139 <... wait4 resumed>0x108065b0, WNOHANG, NULL) = 0
+3284225 read(0, "\1", 1)                = 1
+3284225 write(1, "+", 1)                = 1
+3284225 +++ exited with 0 +++
+3284139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3284225, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3284139 wait4(3284225, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3284225
+3284139 openat(AT_FDCWD, "build/bench-security/output-1", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "+", 257)               = 1
+3284139 write(1, "case mode, child exit, observer "..., 40) = 40
+3284139 write(1, "001 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "007 ", 4)             = 4
+3284139 write(1, "\n", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-1", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 1)                  = 0
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/input-2", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "\2", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/input-2", O_RDONLY|O_CLOEXEC) = 3
+3284139 openat(AT_FDCWD, "build/bench-security/output-2", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-2", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3284139 clone(child_stack=NULL, flags=SIGCHLD) = 3284233
+3284139 wait4(3284233, 0x108065b0, WNOHANG, NULL) = 0
+3284233 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3284233 openat(AT_FDCWD, "build/bench-security-tools/candidate", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+3284233 landlock_create_ruleset({handled_access_fs=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_WRITE_FILE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_REG|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE}, 8, 0) = 4
+3284233 landlock_add_rule(4, LANDLOCK_RULE_PATH_BENEATH, {allowed_access=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE, parent_fd=3}, 0) = 0
+3284233 landlock_restrict_self(4, 0)    = 0
+3284233 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3284233 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3284233 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3284233 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284233 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284233 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3284233 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3284233 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fdd60}) = 0
+3284233 execveat(3, "", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */, AT_EMPTY_PATH <unfinished ...>
+3284139 wait4(3284233, 0x108065b0, WNOHANG, NULL) = 0
+3284233 <... execveat resumed>)         = 0
+3284233 read(0, "\2", 1)                = 1
+3284233 openat(AT_FDCWD, "build/bench-security/judge", O_WRONLY|O_TRUNC) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/policy", O_WRONLY|O_TRUNC) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/keys", O_WRONLY|O_TRUNC) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/receipt", O_WRONLY|O_TRUNC) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/budget", O_WRONLY|O_TRUNC) = -1 EPERM (Operation not permitted)
+3284233 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY) = -1 EPERM (Operation not permitted)
+3284233 write(1, "+", 1)                = 1
+3284233 +++ exited with 0 +++
+3284139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3284233, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3284139 wait4(3284233, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3284233
+3284139 openat(AT_FDCWD, "build/bench-security/output-2", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "+", 257)               = 1
+3284139 write(1, "case mode, child exit, observer "..., 40) = 40
+3284139 write(1, "002 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "007 ", 4)             = 4
+3284139 write(1, "\n", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-2", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 1)                  = 0
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/input-3", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "\3", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/input-3", O_RDONLY|O_CLOEXEC) = 3
+3284139 openat(AT_FDCWD, "build/bench-security/output-3", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-3", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3284139 clone(child_stack=NULL, flags=SIGCHLD) = 3284243
+3284139 wait4(3284243, 0x108065b0, WNOHANG, NULL) = 0
+3284243 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3284243 openat(AT_FDCWD, "build/bench-security-tools/candidate", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+3284243 landlock_create_ruleset({handled_access_fs=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_WRITE_FILE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_REG|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE}, 8, 0) = 4
+3284243 landlock_add_rule(4, LANDLOCK_RULE_PATH_BENEATH, {allowed_access=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE, parent_fd=3}, 0) = 0
+3284243 landlock_restrict_self(4, 0)    = 0
+3284243 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3284243 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3284243 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3284243 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284243 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284243 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3284243 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3284243 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fdd60}) = 0
+3284243 execveat(3, "", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */, AT_EMPTY_PATH <unfinished ...>
+3284139 wait4(3284243, 0x108065b0, WNOHANG, NULL) = 0
+3284243 <... execveat resumed>)         = 0
+3284243 read(0, "\3", 1)                = 1
+3284243 +++ exited with 0 +++
+3284139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3284243, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3284139 wait4(3284243, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3284243
+3284139 openat(AT_FDCWD, "build/bench-security/output-3", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 257)                = 0
+3284139 write(1, "case mode, child exit, observer "..., 40) = 40
+3284139 write(1, "003 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "009 ", 4)             = 4
+3284139 write(1, "\n", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-3", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 1)                  = 0
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/input-4", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "\4", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/input-4", O_RDONLY|O_CLOEXEC) = 3
+3284139 openat(AT_FDCWD, "build/bench-security/output-4", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-4", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3284139 clone(child_stack=NULL, flags=SIGCHLD) = 3284248
+3284248 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE <unfinished ...>
+3284139 wait4(3284248,  <unfinished ...>
+3284248 <... close_range resumed>)      = 0
+3284139 <... wait4 resumed>0x108065b0, WNOHANG, NULL) = 0
+3284248 openat(AT_FDCWD, "build/bench-security-tools/candidate", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+3284248 landlock_create_ruleset({handled_access_fs=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_WRITE_FILE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_REG|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE}, 8, 0) = 4
+3284248 landlock_add_rule(4, LANDLOCK_RULE_PATH_BENEATH, {allowed_access=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE, parent_fd=3}, 0) = 0
+3284248 landlock_restrict_self(4, 0)    = 0
+3284248 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3284248 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3284248 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3284248 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284248 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284248 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3284248 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3284248 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fdd60}) = 0
+3284248 execveat(3, "", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */, AT_EMPTY_PATH) = 0
+3284248 read(0, "\4", 1)                = 1
+3284248 +++ exited with 77 +++
+3284139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3284248, si_uid=1000, si_status=77, si_utime=0, si_stime=0} ---
+3284139 wait4(3284248, [{WIFEXITED(s) && WEXITSTATUS(s) == 77}], WNOHANG, NULL) = 3284248
+3284139 openat(AT_FDCWD, "build/bench-security/output-4", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 257)                = 0
+3284139 write(1, "case mode, child exit, observer "..., 40) = 40
+3284139 write(1, "004 ", 4)             = 4
+3284139 write(1, "077 ", 4)             = 4
+3284139 write(1, "008 ", 4)             = 4
+3284139 write(1, "\n", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-4", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 1)                  = 0
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/input-5", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "\5", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/input-5", O_RDONLY|O_CLOEXEC) = 3
+3284139 openat(AT_FDCWD, "build/bench-security/output-5", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-5", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3284139 clone(child_stack=NULL, flags=SIGCHLD) = 3284258
+3284139 wait4(3284258, 0x108065b0, WNOHANG, NULL) = 0
+3284258 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3284258 openat(AT_FDCWD, "build/bench-security-tools/candidate", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+3284258 landlock_create_ruleset({handled_access_fs=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_WRITE_FILE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_REG|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE}, 8, 0) = 4
+3284258 landlock_add_rule(4, LANDLOCK_RULE_PATH_BENEATH, {allowed_access=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE, parent_fd=3}, 0) = 0
+3284258 landlock_restrict_self(4, 0)    = 0
+3284258 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3284258 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3284258 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3284258 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284258 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284258 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3284258 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3284258 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fdd60}) = 0
+3284258 execveat(3, "", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */, AT_EMPTY_PATH) = 0
+3284258 read(0, "\5", 1)                = 1
+3284258 write(1, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 257) = 257
+3284139 wait4(3284258, 0x108065b0, WNOHANG, NULL) = 0
+3284258 +++ exited with 0 +++
+3284139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3284258, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3284139 wait4(3284258, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3284258
+3284139 openat(AT_FDCWD, "build/bench-security/output-5", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 257) = 257
+3284139 write(1, "case mode, child exit, observer "..., 40) = 40
+3284139 write(1, "005 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "010 ", 4)             = 4
+3284139 write(1, "\n", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-5", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 1)                  = 0
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/input-6", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "\6", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/input-6", O_RDONLY|O_CLOEXEC) = 3
+3284139 openat(AT_FDCWD, "build/bench-security/output-6", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-6", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3284139 clone(child_stack=NULL, flags=SIGCHLD) = 3284265
+3284139 wait4(3284265, 0x108065b0, WNOHANG, NULL) = 0
+3284139 wait4(3284265, 0x108065b0, WNOHANG, NULL) = 0
+3284265 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3284265 openat(AT_FDCWD, "build/bench-security-tools/candidate", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+3284265 landlock_create_ruleset({handled_access_fs=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_WRITE_FILE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_REG|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE}, 8, 0) = 4
+3284265 landlock_add_rule(4, LANDLOCK_RULE_PATH_BENEATH, {allowed_access=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE, parent_fd=3}, 0) = 0
+3284265 landlock_restrict_self(4, 0)    = 0
+3284265 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3284265 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3284265 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3284265 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284265 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284265 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3284265 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3284265 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fdd60}) = 0
+3284265 execveat(3, "", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */, AT_EMPTY_PATH) = 0
+3284265 read(0, "\6", 1)                = 1
+3284265 write(1, "APPROVED", 8)         = 8
+3284265 +++ exited with 0 +++
+3284139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3284265, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3284139 wait4(3284265, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3284265
+3284139 openat(AT_FDCWD, "build/bench-security/output-6", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "APPROVED", 257)        = 8
+3284139 write(1, "case mode, child exit, observer "..., 40) = 40
+3284139 write(1, "006 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "007 ", 4)             = 4
+3284139 write(1, "\n", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-6", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 1)                  = 0
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/input-7", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+3284139 write(3, "\7", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/input-7", O_RDONLY|O_CLOEXEC) = 3
+3284139 openat(AT_FDCWD, "build/bench-security/output-7", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 4
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-7", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 5
+3284139 clone(child_stack=NULL, flags=SIGCHLD) = 3284274
+3284139 wait4(3284274, 0x108065b0, WNOHANG, NULL) = 0
+3284139 wait4(3284274, 0x108065b0, WNOHANG, NULL) = 0
+3284274 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+3284274 openat(AT_FDCWD, "build/bench-security-tools/candidate", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+3284274 landlock_create_ruleset({handled_access_fs=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_WRITE_FILE|LANDLOCK_ACCESS_FS_READ_FILE|LANDLOCK_ACCESS_FS_READ_DIR|LANDLOCK_ACCESS_FS_REMOVE_DIR|LANDLOCK_ACCESS_FS_REMOVE_FILE|LANDLOCK_ACCESS_FS_MAKE_CHAR|LANDLOCK_ACCESS_FS_MAKE_DIR|LANDLOCK_ACCESS_FS_MAKE_REG|LANDLOCK_ACCESS_FS_MAKE_SOCK|LANDLOCK_ACCESS_FS_MAKE_FIFO|LANDLOCK_ACCESS_FS_MAKE_BLOCK|LANDLOCK_ACCESS_FS_MAKE_SYM|LANDLOCK_ACCESS_FS_REFER|LANDLOCK_ACCESS_FS_TRUNCATE}, 8, 0) = 4
+3284274 landlock_add_rule(4, LANDLOCK_RULE_PATH_BENEATH, {allowed_access=LANDLOCK_ACCESS_FS_EXECUTE|LANDLOCK_ACCESS_FS_READ_FILE, parent_fd=3}, 0) = 0
+3284274 landlock_restrict_self(4, 0)    = 0
+3284274 prlimit64(0, RLIMIT_CPU, {rlim_cur=1, rlim_max=2}, NULL) = 0
+3284274 prlimit64(0, RLIMIT_FSIZE, {rlim_cur=1024*1024, rlim_max=1024*1024}, NULL) = 0
+3284274 prlimit64(0, RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=8192*1024}, NULL) = 0
+3284274 prlimit64(0, RLIMIT_CORE, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284274 prlimit64(0, RLIMIT_NPROC, {rlim_cur=0, rlim_max=0}, NULL) = 0
+3284274 prlimit64(0, RLIMIT_NOFILE, {rlim_cur=4, rlim_max=4}, NULL) = 0
+3284274 prlimit64(0, RLIMIT_AS, {rlim_cur=131072*1024, rlim_max=131072*1024}, NULL) = 0
+3284274 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fdd60}) = 0
+3284274 execveat(3, "", ["build/bench-security-tools/candi"...], 0x107fef68 /* 0 vars */, AT_EMPTY_PATH <unfinished ...>
+3284139 wait4(3284274, 0x108065b0, WNOHANG, NULL) = 0
+3284274 <... execveat resumed>)         = 0
+3284274 read(0, "\7", 1)                = 1
+3284274 write(1, "*", 1)                = 1
+3284274 +++ exited with 0 +++
+3284139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=3284274, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+3284139 wait4(3284274, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], WNOHANG, NULL) = 3284274
+3284139 openat(AT_FDCWD, "build/bench-security/output-7", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "*", 257)               = 1
+3284139 write(1, "case mode, child exit, observer "..., 40) = 40
+3284139 write(1, "007 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "000 ", 4)             = 4
+3284139 write(1, "\n", 1)               = 1
+3284139 openat(AT_FDCWD, "build/bench-security/stderr-7", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "", 1)                  = 0
+3284139 openat(AT_FDCWD, "build/bench-security/judge", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/policy", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/keys", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/receipt", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 openat(AT_FDCWD, "build/bench-security/budget", O_RDONLY|O_CLOEXEC) = 3
+3284139 read(3, "SYNTHETIC-NONSECRET-QUALIFICATIO"..., 257) = 33
+3284139 write(1, "BENCHMARK SECURITY BOUNDARY PASS"..., 62) = 62
+3284139 +++ exited with 0 +++

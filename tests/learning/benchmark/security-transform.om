@@ -1,0 +1,82 @@
+note Exact-once negative controls for the existing benchmark component and its boundary test.
+global Source uchar 262144
+global Arg uchar 1
+text Val "if ne get LWant i get LGot i\nret 7"
+text Badval "if ne get LWant i get LGot i\nret 0"
+text Launch "r = execpure Packet"
+text Badexec "r = execprog Packet"
+global Needle uchar 64
+global Replace uchar 64
+global Size ulong 1
+fn match at ulong to bool
+for j ulong get Size 0
+if ne get Source add at j get Needle j
+ret false
+end
+end
+ret true
+end
+fn main to int
+if ne argcnt 2
+ret 90
+end
+if ne argread 1 Arg 0 1 1
+ret 90
+end
+m = get Arg 0
+if and ne m 48 ne m 49
+ret 90
+end
+if eq m 48
+put Size 0 len Val
+for i ulong len Val
+put Needle i get Val i
+put Replace i get Badval i
+end
+else
+put Size 0 len Launch
+for i ulong len Launch
+put Needle i get Launch i
+put Replace i get Badexec i
+end
+end
+n = ulong 0
+more = true
+while more
+if eq n len Source
+ret 91
+end
+r = read 0 Source n sub len Source n
+if lt r 0
+ret 92
+end
+if eq r 0
+more = false
+else
+n = add n ulong r
+end
+end
+found = ulong 0
+for i ulong n
+if le get Size 0 sub n i
+if match i
+found = add found 1
+for j ulong get Size 0
+put Source add i j get Replace j
+end
+end
+end
+end
+if ne found 1
+ret 93
+end
+p = ulong 0
+while lt p n
+r = write 1 Source p sub n p
+if le r 0
+ret 94
+end
+p = add p ulong r
+end
+ret 0
+end
