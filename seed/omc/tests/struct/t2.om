@@ -1,0 +1,6 @@
+struct H n uint v uint 4 end
+fn main to uint
+h = new H 3 3
+put h v 1 add get h n get h v 1
+ret get h v 1
+end

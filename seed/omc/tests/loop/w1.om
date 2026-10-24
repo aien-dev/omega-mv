@@ -1,0 +1,13 @@
+note while with a conditional break: 1 + 2 + 3 = 6
+fn main to ulong
+i = ulong 0
+s = ulong 0
+while lt i 10
+i = add i 1
+if eq i 4
+break
+end
+s = add s i
+end
+ret s
+end

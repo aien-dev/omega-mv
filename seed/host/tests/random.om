@@ -1,0 +1,40 @@
+note random A off n flags: exact byte count, not all zero, two calls differ, invalid flags negative.
+fn main to int
+a = new uchar 8 0
+r = random a 0 8 0
+if ne r 8
+ret 1
+end
+i = ulong 0
+z = ulong 1
+while lt i 8
+if ne get a i 0
+z = ulong 0
+end
+i = add i 1
+end
+if eq z 1
+ret 2
+end
+b = new uchar 8 0
+r = random b 0 8 0
+if ne r 8
+ret 3
+end
+i = ulong 0
+same = ulong 1
+while lt i 8
+if ne get a i get b i
+same = ulong 0
+end
+i = add i 1
+end
+if eq same 1
+ret 4
+end
+r = random a 0 8 8
+if ge r 0
+ret 5
+end
+ret 0
+end

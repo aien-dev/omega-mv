@@ -4,7 +4,7 @@ text payload "native Omega mapped memory"
 text ok "PASS native mapping\n"
 global buf uchar 8192
 global caps long 128
-global stat uchar 4
+global wstat uchar 4
 global fdnum int 1
 fn expect yes bool to void
 if not yes
@@ -164,9 +164,9 @@ expect ge pid 0
 if eq pid 0
 exit fault kind
 end
-expect eq waitpid int pid stat 0 4 0 pid
-expect eq get stat 0 0
-expect eq get stat 1 103
+expect eq waitpid int pid wstat 0 4 0 pid
+expect eq get wstat 0 0
+expect eq get wstat 1 103
 end
 expect eq fclose int fd 0
 expect eq unlink path 0 len path 0

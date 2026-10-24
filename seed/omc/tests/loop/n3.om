@@ -1,0 +1,15 @@
+note two loops reuse a block slot; the first break must not be patched by the second loop
+fn main to ulong
+n = ulong 0
+while lt n 1
+break
+end
+n = add n 1
+while lt n 5
+n = add n 1
+if eq n 3
+break
+end
+end
+ret n
+end

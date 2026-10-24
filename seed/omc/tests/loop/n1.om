@@ -1,0 +1,14 @@
+note break leaves only the inner loop: 1 + 10 per outer pass, 3 x 11 = 33
+fn main to ulong
+n = ulong 0
+for i ulong 3
+for j ulong 3
+if eq j 1
+break
+end
+n = add n 1
+end
+n = add n 10
+end
+ret n
+end
