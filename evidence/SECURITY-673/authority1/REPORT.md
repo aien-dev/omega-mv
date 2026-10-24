@@ -13,20 +13,25 @@ under `seed/authority/`:
 | `delegate.om` | child capability derivation and subset checks, including all small right subsets | `delegate checks=074 000`, exit 0 |
 | `reuse.om` | exact-key reuse and whole-token prefix identity | `reuse checks=074 000`, exit 0 |
 | `store.om` | 32-word durable record and generation file: temp write, fsync, atomic rename, exact read, torn refusal | `store checks=077 000`, exit 0 |
+| `dispatch.om` | persist in-flight, /bin/true and static execpure effects, performed/unknown receipt, generation-change fence, duplicate/limit/stale refusal | `dispatch checks=037 000`, exit 0 |
 
-The four `*-gate.om` files are committed source-plus-test concatenations because the current
+The five `*-gate.om` files are committed source-plus-test concatenations because the current
 compiler reads one file. That is a compiler capability gap (modules/imports), not a permanent
 design.
 
 ## What is not claimed
 
-- The transition contracts are pure. `store.om` adds a durable record/generation file, but there is
-  no dispatcher, revocation fence, budget enforcement or consumer cutover yet.
+- The transition contracts are pure. `store.om` adds a durable record/generation file and
+  `dispatch.om` adds the state/effect/fence loop and runs a real `/bin/true` effect, but there is no
+  process-tree budget, cross-process lock or consumer cutover yet.
 - `store.om` uses a same-directory temp plus rename for atomic replacement; it does not implement a
   cross-process lock. A short or torn file is refused on read. Generation equality is a caller check
   (`storevalid`), not enforcement by the store.
-- The legacy C authority/reuse sources remain active until the `.om` owner has a durable store,
-  dispatch and revocation, and every consumer is cut over.
+- `dispatch.om` runs `/bin/true` for the performed path and synthetic fork children for the revocation
+  and nonzero modes. It does not yet apply process-tree budgets or check a provider receipt after a
+  crash. Revocation is detected after the
+  effect returns; a change that lands after the read is outside this bounded test.
+- The legacy C authority/reuse owners are still active. No consumer has been cut over.
 - The tests run against the same seed compiler lineage; this is not an independent implementation
   proof.
 

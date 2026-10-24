@@ -39,8 +39,10 @@ deleted legacy code and qualified consumers; a plan or a passing unit test is no
    effect boundary. Delete the C authority path only after every consumer is cut over.
    Status: the action, delegation and reuse transition contracts are promoted to
    `seed/authority/` and pass 219/074/074 checks; the durable 32-word record store with fsync,
-   atomic rename and torn-file refusal passes 77 checks. Dispatcher, revocation fence and consumer
-   cutover are next; the C owner remains active.
+   atomic rename and torn-file refusal passes 77 checks. The dispatcher persists in-flight, runs a
+   synthetic effect, records performed/unknown, and marks unknown when the generation changes during
+   the effect (37 checks, including /bin/true and a static strict-profile exec). Real-effect dispatch, a cross-process lock and consumer cutover are next;
+   the C owner remains active.
 3. **Trace and privacy (#607)**: `rx_argus`, trace producers and the Open Humanity consent lane.
 4. **Evaluation and promotion (spark-rsi #67)**: replace the Rust promotion/evaluator gate with the
    `.om` owner; keep sealed tasks outside the proposer's writable surface.

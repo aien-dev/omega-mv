@@ -1,0 +1,132 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Single-effect dispatcher over the action contract and durable store.
+note The state is persisted in-flight before the effect. A generation change during the effect
+note marks the operation unknown; a duplicate or performed record is refused. The effect here is
+note a synthetic fork child: mode '1' writes generation2, mode '2' exits1, mode '0' exits0.
+global dstat uchar 4
+global dpkt uchar 256
+global dn ulong 1
+global dpath uchar 128
+global dplen ulong 1
+text truep "/bin/true"
+text strictp "seed/authority/effect-ok"
+fn dput16 v ulong to void
+put dpkt get dn 0 uchar and v 255
+put dpkt add get dn 0 1 uchar shr v 8
+put dn 0 add get dn 0 2
+end
+fn dcopy to void
+for i ulong get dplen 0
+put dpkt add get dn 0 i get dpath i
+end
+put dn 0 add get dn 0 get dplen 0
+end
+fn packtrue to ulong
+put dn 0 0
+dput16 1
+dput16 len truep
+for i ulong len truep
+put dpkt add get dn 0 i get truep i
+end
+put dn 0 add get dn 0 len truep
+ret get dn 0
+end
+fn doreceipt r view ulong 32 s edit ulong 32 outcome ulong to void
+for i ulong 32
+put s i 0
+end
+put s 0 1
+put s 1 outcome
+put s 2 get r 2
+put s 3 1
+put s 4 get r 4
+put s 5 get r 5
+for i ulong 24
+put s add 8 i get r add 8 i
+end
+end
+fn dispatch r edit ulong 32 c view ulong 32 mode uchar to ulong
+err = readrec r
+if ne err 0
+ret 70
+end
+g = readgen
+if ne get sgerr 0 0
+ret 71
+end
+err = storevalid r g
+if ne err 0
+ret err
+end
+err = actstart r c
+if ne err 0
+ret err
+end
+err = writerec r
+if ne err 0
+ret 72
+end
+pid = fork
+if lt pid 0
+ret 73
+end
+if eq pid 0
+if eq mode 49
+e = writegen 2
+if ne e 0
+exit int 97
+end
+end
+if eq mode 50
+exit int 1
+end
+if eq mode 51
+n = packtrue
+rr = execprog dpkt 0 n
+exit int 98
+end
+if eq mode 52
+put dn 0 0
+dput16 1
+dput16 get dplen 0
+dcopy
+rx = execpure dpkt 0 get dn 0
+exit int 98
+end
+exit int 0
+end
+wr = waitpid int pid dstat 0 len dstat 0
+if ne wr long pid
+ret 74
+end
+sig = ulong get dstat 0
+code = ulong get dstat 1
+g2 = readgen
+if ne get sgerr 0 0
+ret 75
+end
+if ne g2 g
+err = actlost r
+err = writerec r
+ret 60
+end
+s = new ulong 32 0
+outcome = ulong 0
+if and eq sig 0 eq code 0
+outcome = ulong 2
+end
+doreceipt r s outcome
+err = actrecon r s
+if ne err 0
+err = writerec r
+ret 76
+end
+err = writerec r
+if ne err 0
+ret 77
+end
+if eq outcome 0
+ret 61
+end
+ret 0
+end
