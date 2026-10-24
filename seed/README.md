@@ -580,6 +580,19 @@ bytes. They call `linkat` (syscall 37) and `symlinkat` (36) and return 0 or minu
 - Auditing the benchmark corpus after adding the words: 103 files, 0 output differences, 0 crashes
   against the pinned compiler (`e5d60db8…`). Neither word is used as an identifier there.
 
+## Rung R26: chmod (done)
+
+`chmod A off n mode` sets permissions on a checked path through `fchmodat` (syscall 53, flags 0). It
+reuses the path-copy machinery and the one-int argument shape of `makedir`; it returns 0 or minus
+the kernel error.
+
+- The host gate creates a file, sets mode 0600 (384), states it, and checks the low 12 bits of
+  `st_mode` at byte 16; a missing path returns a negative error; the file is unlinked.
+- `seed/omc/omc.om`, 6,552 lines and 239 functions, sha256
+  `36ff6d3f5565aebb4ceffd0a1908a85b9289578e2fa78fb502ac1fe0dd17e2a1` (110,089 bytes).
+- Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). No corpus file uses `chmod` as an identifier.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

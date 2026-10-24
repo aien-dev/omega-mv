@@ -80,6 +80,9 @@ lrc=$?
 set -e
 [ "$lrc" = 103 ] || { printf 'FAIL: one-record link list exit %s, wanted 103\n' "$lrc" >&2; exit 1; }
 printf 'PASS native link: one-record packed list traps 3\n'
+compile chmod
+(cd "$stage"; ./chmod)
+printf 'PASS native chmod: 0600 mode in st_mode; missing path errno\n'
 compile environment_trap
 set +e
 (cd "$stage"; ./environment_trap)

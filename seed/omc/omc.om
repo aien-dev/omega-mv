@@ -417,6 +417,9 @@ end
 if eq w 118122009688435
 ret 142
 end
+if eq w 431366170723
+ret 143
+end
 if eq w 1819242338
 ret 1
 end
@@ -2966,7 +2969,7 @@ if eq c 110
 harg x 2 8
 harg x 3 8
 end
-if eq c 112
+if or eq c 112 eq c 143
 harg x 2 8
 end
 hpathcp x
@@ -2983,6 +2986,10 @@ end
 if eq c 112
 hload x 2 2
 end
+if eq c 143
+hload x 2 2
+matconst 3 0
+end
 hcopy
 nr = ulong 56
 if or eq c 111 eq c 126
@@ -2990,6 +2997,9 @@ nr = ulong 35
 end
 if eq c 112
 nr = ulong 34
+end
+if eq c 143
+nr = ulong 53
 end
 if eq c 138
 nr = ulong 49
@@ -3524,7 +3534,7 @@ if or or or eq c 124 eq c 125 eq c 141 eq c 142
 hpack c dst x
 ret
 end
-if or eq c 126 eq c 138
+if or or eq c 126 eq c 138 eq c 143
 hpath c dst x
 ret
 end
@@ -3766,7 +3776,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 142
+if and ge c 100 le c 143
 hostval c dst
 ret
 end
