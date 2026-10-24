@@ -808,9 +808,9 @@ IR mode now emits a unit of up to 32 function records and supports calls to earl
   void as a value are error 7.
 - `gate-ir` compares four multi-function units (value call, void call, zero arguments, two
   arguments) byte-for-byte with the C `omegese` + `omega_emit` oracle and requires `checker2`
-  ACCEPT. The ten one-function dev outputs stay byte-identical; the gate now pins 12 refusals.
-- `seed/omc/omc.om`, 7,030 lines and 246 functions, sha256
-  `6af832556e7be14dfc695f7c7eb37006716200a68c2001dd0483c87031911c8c` (117,124 bytes).
+  ACCEPT. The ten one-function dev outputs stay byte-identical; the gate now pins 13 refusals.
+- `seed/omc/omc.om`, 7,039 lines and 246 functions, sha256
+  `0eec74110bb3580dcd0aaff0f963bdb4010183e3e89cdf14e8a2a54eef89f01a` (117,218 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`).
 - Still open: IR structs; calls remain earlier-only and scalar, and IR call names are at most eight

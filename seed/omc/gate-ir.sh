@@ -126,6 +126,14 @@ end
 fn f to uint
 ret inc uint 4
 end'
+ir_refuse call_arg_local 7 'ir
+fn inc a uchar to uint
+ret uint 1
+end
+fn f to uint
+x = uint 4
+ret inc x
+end'
 
 # Multi-function units with calls: byte-identical to the C oracle and checker2 ACCEPT.
 ir_multi() { # name source
@@ -143,5 +151,5 @@ ir_multi call_value 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint\
 ir_multi call_void 'fn sink a uint to void\nret\nend\nfn f to uint\nsink uint 1\nret uint 2\nend'
 ir_multi call_zero 'fn z to uint\nret uint 1\nend\nfn f to uint\nret z\nend'
 ir_multi call_two 'fn add2 a uint b uint to uint\nret add a b\nend\nfn f to uint\nret add2 uint 3 uint 4\nend'
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 12 refusals + 4 multi-call units; structs IR still open'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 13 refusals + 4 multi-call units; structs IR still open'
 echo 'RC=0'

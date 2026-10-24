@@ -6402,6 +6402,9 @@ note ir_findfn: packed name -> earlier function index + 1, or 0. The current fun
 note table entry and is never returned, so self and forward calls fail. Calls use names up to 8
 note characters in IR mode; longer names are refused (3).
 fn ir_findfn w ulong to ulong
+if le get irf_n 0 1
+ret 0
+end
 fc = sub get irf_n 0 1
 j = ulong 0
 while lt j fc
@@ -6608,6 +6611,9 @@ i = ulong 0
 while lt i np
 ty = ulong get irf_pt add mul j 6 i
 ir_val 65534 ty
+if ne get ir_vt 0 ty
+fail 7
+end
 put ir_args i get ir_rr 0
 i = add i 1
 end
@@ -6780,6 +6786,9 @@ i = ulong 0
 while lt i np
 ty = ulong get irf_pt add mul j 6 i
 ir_val 65534 ty
+if ne get ir_vt 0 ty
+fail 7
+end
 put ir_args i get ir_rr 0
 i = add i 1
 end
