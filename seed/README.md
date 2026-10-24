@@ -860,6 +860,16 @@ refused (error 3), matching the C `omegese`, which does not accept it.
   `a9cd48e909861051cd3ee771b1160fa31ce0cf8b95b559f54e6bf6e50958c297` (118,732 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences.
 
+## Rung R46: getsid, syncfs and shutdown (done)
+
+`getsid pid` (syscall 156), `syncfs fd` (267) and `shutdown fd how` (210) are scalar host words.
+The gate checks `getsid 0 > 0`, a successful `syncfs` on an open file, and a negative `shutdown` on
+a regular file (not a socket); the file is unlinked.
+
+- `seed/omc/omc.om`, 7,159 lines and 251 functions, sha256
+  `a75ee5dec21c784c4bbc27e426b5124aebef4580b1b9587f60f7a2d6b7aa2a91` (119,031 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

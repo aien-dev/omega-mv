@@ -17,13 +17,13 @@ Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/chec
 | Memory model | stack arrays (new), globals (pools), structs, view/edit, no free, no pointers, checked indices | gates 6-12, host |
 | Constants | integer and float literals; expressions, calls, array lengths, struct field lengths, trap codes, loop bounds, for counts; integer folding in IR | gate16, gate-ir |
 | Layout | sizeof/offsetof over 8-byte cells; scalar sizes | gate10 |
-| Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync, pread/pwrite | seed/host/check.sh |
+| Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync, pread/pwrite, getsid/syncfs/shutdown | seed/host/check.sh |
 | Diagnostics | 23 named refusal codes with one minimal case each | gate15 |
 | Robustness | 600 deterministic fuzz programs; capacity boundaries; 300-program differential fuzz against the pinned compiler; 30 randomized two-function IR units | gate12, gate13, gate17, gate-ir |
 | IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded, break; refuses what it cannot lower | gate-ir (10/10 dev, 9 call units, 3 break units, 30 fuzz units, 16 refusals) |
 
-Compiler: 7,128 lines, 251 functions, sha256
-`a9cd48e909861051cd3ee771b1160fa31ce0cf8b95b559f54e6bf6e50958c297` (118,732 bytes).
+Compiler: 7,159 lines, 251 functions, sha256
+`a75ee5dec21c784c4bbc27e426b5124aebef4580b1b9587f60f7a2d6b7aa2a91` (119,031 bytes).
 
 Benchmark parity: 103 authored `.om` sources and 53 build-plan targets compile to identical bytes
 and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after every keyword).

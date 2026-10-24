@@ -657,6 +657,9 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `getppid` | Parent process id. |
 | `setsid` | Create a session and become its leader. |
 | `getpgid pid` | Process group id of `pid` (0 = self). |
+| `getsid pid` | Session id of `pid` (0 = self). |
+| `syncfs fd` | Sync the filesystem containing an open descriptor. |
+| `shutdown fd how` | Shut down part of a connected socket. |
 | `setpgid pid pgid` | Set a process's group (0 = self/own pid). |
 | `umask mask` | Set the file-mode mask; return the previous mask. |
 | `fseek fd offset whence` | Seek and return the resulting signed file offset. |

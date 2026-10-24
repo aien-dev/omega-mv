@@ -118,6 +118,9 @@ printf 'PASS native fdsync/memfd: data sync, closed fd refused, anonymous file r
 compile pio
 (cd "$stage"; ./pio)
 printf 'PASS native pread/pwrite: positioned I/O, bytes intact, closed fd refused\n'
+compile psync
+(cd "$stage"; ./psync)
+printf 'PASS native getsid/syncfs/shutdown: session id, filesystem sync, non-socket refusal\n'
 compile pgroup
 (cd "$stage"; ./pgroup)
 printf 'PASS native process groups: getpgid/setpgid, setsid or EPERM\n'

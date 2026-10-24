@@ -477,6 +477,15 @@ end
 if eq w 111550659721072
 ret 162
 end
+if eq w 110404071351655
+ret 163
+end
+if eq w 126883592042867
+ret 164
+end
+if eq w 7959953343641905267
+ret 165
+end
 if eq w 1819242338
 ret 1
 end
@@ -2918,6 +2927,12 @@ end
 if eq c 159
 ret 1
 end
+if eq c 163
+ret 1
+end
+if eq c 164
+ret 1
+end
 if eq c 102
 ret 2
 end
@@ -2934,6 +2949,9 @@ if eq c 139
 ret 2
 end
 if eq c 160
+ret 2
+end
+if eq c 165
 ret 2
 end
 ret 3
@@ -3001,6 +3019,15 @@ ret 155
 end
 if eq c 160
 ret 154
+end
+if eq c 163
+ret 156
+end
+if eq c 164
+ret 267
+end
+if eq c 165
+ret 210
 end
 if eq c 105
 ret 201
@@ -3804,6 +3831,10 @@ if or eq c 161 eq c 162
 hpread c dst x
 ret
 end
+if and ge c 163 le c 165
+hscalar c dst x
+ret
+end
 if or or eq c 127 eq c 129 eq c 139
 hscalar c dst x
 ret
@@ -4048,7 +4079,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 162
+if and ge c 100 le c 165
 hostval c dst
 ret
 end
