@@ -62,140 +62,140 @@
       "children": [
         {
           "digest": "728ab6985dea994eb78a7eb2521384a911492d1c36819c17970a5dc3a8a0c5e2",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "algebra",
           "purpose": "Directory src/algebra. Purpose not yet described by a human."
         },
         {
           "digest": "1881ed1d139a405a777d24d4b26f97bc8405dee0552d6ce21841ce4833560ce2",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "ans",
           "purpose": "ANS (Alignment Navigation System), Inertial Alignment v1: frozen reference atoms, drift filter o"
         },
         {
           "digest": "92c3e2481f7457afd6c7717e6c1a75ebab950ec9114b48025dd137a6edb2975c",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "autodiff",
           "purpose": "M21 OMEGA_AUTODIFF: reverse-mode tape over M20 tensor CPU ops, caller-owned nodes and scratch, p"
         },
         {
           "digest": "3bd51397fcd28cd54db65c1df72c320883798bc8550779b2b79c8498b28ffb0d",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "compiler",
           "purpose": "Directory src/compiler. Purpose not yet described by a human."
         },
         {
           "digest": "36a66980895553ae73884798bc09a92141e1aeba5e5068a7d9d62a99bad02548",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "crumbline",
           "purpose": "Directory src/crumbline. Purpose not yet described by a human."
         },
         {
           "digest": "c75df77ddb2bae35ac5e1225a0ae9dcef77b24608775c7b8d02dce1af0ec3ca4",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "dual_experiment",
           "purpose": "DUAL applicability experiment library (ARCH-0031 offline evidence lane): deterministic discrete "
         },
         {
           "digest": "8856d5162c55cb33997201cd580638f80ea933b46e11c61e1913185d419731d7",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "estimation",
           "purpose": "Directory src/estimation. Purpose not yet described by a human."
         },
         {
           "digest": "391e337c60cb8b2ae549595394482c23717c1757d83747a7446e81cd780750c1",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "fabric",
           "purpose": "Directory src/fabric. Purpose not yet described by a human."
         },
         {
           "digest": "2d33eb528dafb5954bb027cdd9a7c7923594c177f17181194311155b4e1f40b3",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "language",
           "purpose": "Directory src/language. Purpose not yet described by a human."
         },
         {
           "digest": "cd0551dbfb6fc354741efe9a3ad1808ffaaf6a8d7e9e7345851333d7a721cee0",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "osh",
           "purpose": "osh (Omega-native shell, arch#158) lexer unit: layout list, generator, osh_lex.osc, C reference "
         },
         {
           "digest": "2b5dd2c64d4bbba8c41471dc1af5a0b00bfc1361a2c680d78b99fb30b5b547fe",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "path",
           "purpose": "Directory src/path. Purpose not yet described by a human."
         },
         {
           "digest": "e0b91129cc9c188fc0e47b7f3189a3a9a09f9c55eecd018786794571ffc39aad",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "physics0",
           "purpose": "PD-0 hidden-equation benchmark (Physics-0 Discovery Engine cut 1): world, oracle, scorer, ladder"
         },
         {
           "digest": "8b923fb5dc1de3b04afae043a4770f7b1fb27d959a8f597191ae2556d822a1cf",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "polyglot",
           "purpose": "Directory src/polyglot. Purpose not yet described by a human."
         },
         {
           "digest": "076f486fdf51e12a26160e7f0bf7686fea611db54216f7fef81367620e7a6bdb",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "reservoir",
           "purpose": "Ionic-droplet reservoir simulator (omega#440): binary32 fixed-step RK4 of the authors' droplet m"
         },
         {
           "digest": "c6af24b823d6a18a8ad1593003a214fcd577955d1d134bc4304a5c097a71cd35",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "runtime",
           "purpose": "Directory src/runtime. Purpose not yet described by a human."
         },
         {
           "digest": "af5fcc64fe83dc35f782724372854febde5461f5eab8b327f3c3ed75f8572053",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "searchtrace",
           "purpose": "Directory src/searchtrace. Purpose not yet described by a human."
         },
         {
           "digest": "b82288db7e732d10f954e921ac98c60e19579a3e58118cc12c49230587929ea2",
-          "last_commit": "ed8de573",
+          "last_commit": "ed8de5736",
           "name": "synapse",
           "purpose": "Synapse ADR 0003 J1 binary codec port: layout list, generator, syn_codec.osc (A1 WAL records + c"
         },
         {
           "digest": "9723dd7c18d4e2c22db631680974e1025bccb9c309619424e2f4dfcc43cc7068",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "tensor",
           "purpose": "M20 OMEGA_TENSOR: immutable tensor semantic layer, views, generation-checked storage, CPU realiz"
         },
         {
           "digest": "06d9fb18dddf7ab0f8ad02fffd15ce8b80808c77d0904609b6baae83c2b05ce5",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "train",
           "purpose": "Directory src/train. Purpose not yet described by a human."
         },
         {
           "digest": "812a7faed07b21e066b732ed596eb0aea609379a2b2af0e8b61dd1ea05bef602",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "turing",
           "purpose": "Directory src/turing. Purpose not yet described by a human."
         },
         {
           "digest": "b2e34b2ea0392059ac30d17e27289b1146e523db60a02ef825edef96036817ab",
-          "last_commit": "d863780e",
+          "last_commit": "d863780eb",
           "name": "visor",
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
       "children_root": "sha256:4460b4a6d5ed4054d462af660a6a02691350a35a8f44197e60ce605e243f698e",
-      "compiled_at": "2026-10-24T23:28:54Z",
+      "compiled_at": "2026-10-24T23:54:33Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:4718c14bd4052ff822a315892aebc3c2229900b338191d98c95945b109be4e91",
+      "digest": "sha256:ba3fa7cfe0a7e2df29583c0450bf5f7b5789349b5bbe735d1448a50295a87ec8",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 558,
-      "generated_at_commit": "0d72560ad82c657b9b51b62119781b36484e2bdc",
-      "source_tree": "sha256:2c08e2cc72d20b23284775f67a56a7c759fe03ad159060f06ad765e7b76d1526"
+      "files": 561,
+      "generated_at_commit": "961bde0e1306142feaff6e77f2a150653c4dfd0a",
+      "source_tree": "sha256:286ee3dab8eced7c5c94e6383d494fd218b10140043352907a3eb7ab3f49e413"
     },
     "owner_lane": "",
     "provenance": {
