@@ -10,6 +10,7 @@ global spkt uchar 256
 global sn ulong 1
 global spath uchar 128
 global splen ulong 1
+global sgerr ulong 1
 fn put16 v ulong to void
 put spkt get sn 0 uchar and v 255
 put spkt add get sn 0 1 uchar shr v 8
@@ -107,17 +108,21 @@ dv = dec r
 ret 0
 end
 fn readgen to ulong
+put sgerr 0 0
 setgen
 fd = fopen spath 0 get splen 0 0 0
 if lt fd 0
-ret 30
+put sgerr 0 30
+ret 0
 end
 n = read int fd sb 0 8
 if ne fclose int fd 0
-ret 31
+put sgerr 0 31
+ret 0
 end
 if ne n 8
-ret 32
+put sgerr 0 32
+ret 0
 end
 v = ulong 0
 for j ulong 8
