@@ -105,6 +105,9 @@ for pair in "getuid:$uid" "geteuid:$uid" "getgid:$gid" "getegid:$gid"; do
     [ "$got" = "$want" ] || { printf 'FAIL: %s exit %s, wanted %s (id %s mod 256)\n' "$word" "$got" "$want" "$val" >&2; exit 1; }
 done
 printf 'PASS native identity: getuid/geteuid/getgid/getegid match id\n'
+compile lstat
+(cd "$stage"; ./lstat)
+printf 'PASS native lstat: stat follows the link, lstat reports S_IFLNK\n'
 compile environment_trap
 set +e
 (cd "$stage"; ./environment_trap)

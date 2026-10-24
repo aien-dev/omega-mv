@@ -606,6 +606,19 @@ zero-argument words (syscalls 174-177) returning the process's real and effectiv
 - Auditing the benchmark corpus after adding the words: 103 files, 0 output differences, 0 crashes
   against the pinned compiler (`e5d60db8…`). None of the five words is used as an identifier there.
 
+## Rung R28: lstat (done)
+
+`lstat A off n B off capacity` writes the same 128-byte ARM64 stat structure as `stat`, but passes
+`AT_SYMLINK_NOFOLLOW` (256) to `newfstatat`, so a final symbolic link is reported instead of
+followed. It returns 0 or minus the kernel error; a short output traps 3.
+
+- The host gate creates a 4-byte file and a symlink to it: `stat` reports size 4 at byte 48,
+  `lstat` reports `S_IFLNK` (`mode & 0xF000 == 0xA000`) at byte 16; both names are unlinked.
+- `seed/omc/omc.om`, 6,599 lines and 239 functions, sha256
+  `1b4de297c969f6c75dc58c02491a466fba617c00f6e48f849ef75c9c3bd557d0` (110,669 bytes).
+- Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). No corpus file uses `lstat` as an identifier.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
