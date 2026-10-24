@@ -1,0 +1,110 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Handwritten deterministic effect doubles, not a real fd/syscall/durability test.
+note Build with store-cleanup-source.sh; only the store's five write-side effects are doubled.
+note Modes: open error, write error, short write, sync error, close error, success,
+note write plus close error, sync plus close error, rename error. Both writers run all modes.
+global cmode ulong 1
+global ctrace ulong 1
+global cbad ulong 1
+global cfails ulong 1
+text cleanok "store cleanup cases=18 fails=0\n"
+fn cstep step ulong to void
+put ctrace 0 add mul get ctrace 0 10 step
+end
+fn cfd fd int to void
+if ne fd 7
+put cbad 0 1
+end
+end
+fn cfopen off ulong count ulong flags ulong mode ulong to long
+cstep 1
+if eq get cmode 0 0
+ret -1
+end
+ret 7
+end
+fn cwrite fd int off ulong count ulong to long
+cfd fd
+cstep 2
+if or eq get cmode 0 1 eq get cmode 0 6
+ret -1
+end
+if eq get cmode 0 2
+ret long sub count 1
+end
+ret long count
+end
+fn cfsync fd int to long
+cfd fd
+cstep 3
+if or eq get cmode 0 3 eq get cmode 0 7
+ret -1
+end
+ret 0
+end
+fn cfclose fd int to long
+cfd fd
+cstep 4
+if or eq get cmode 0 4 or eq get cmode 0 6 eq get cmode 0 7
+ret -1
+end
+ret 0
+end
+fn crenames off ulong count ulong flags ulong to long
+cstep 5
+if eq get cmode 0 8
+ret -1
+end
+ret 0
+end
+fn main to int
+r = new ulong 32 0
+for writer ulong 2
+for mode ulong 9
+put cmode 0 mode
+put ctrace 0 0
+put cbad 0 0
+result = ulong 0
+base = ulong 10
+trace = ulong 12345
+if eq writer 0
+result = writerec r
+else
+base = 40
+trace = 1234
+result = writegen 1
+end
+want = ulong 0
+if eq mode 0
+want = base
+trace = 1
+end
+if or eq mode 1 or eq mode 2 eq mode 6
+want = add base 1
+trace = 124
+end
+if or eq mode 3 eq mode 7
+want = add base 2
+trace = 1234
+end
+if eq mode 4
+want = add base 3
+trace = 1234
+end
+if and eq mode 8 eq writer 0
+want = 14
+end
+if or ne result want or ne get ctrace 0 trace ne get cbad 0 0
+put cfails 0 add get cfails 0 1
+end
+end
+end
+if ne get cfails 0 0
+ret 1
+end
+w = write 1 cleanok 0 len cleanok
+if ne w long len cleanok
+ret 2
+end
+ret 0
+end

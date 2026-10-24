@@ -1,0 +1,286 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Durable 32-word authority record store. Caller supplies the record and generation.
+note Writes a temporary 256-byte file, fsyncs it, then atomically renames it into place.
+note Reads require exactly 256 bytes; a short or torn file is refused. Store calls do not lock; the
+note dispatcher holds lock.om around its read-check-persist window.
+text recp "build/authority-store/rec"
+text tmpp "build/authority-store/tmp"
+text genp "build/authority-store/gen"
+global sb uchar 256
+global stail uchar 1
+global spkt uchar 256
+global sn ulong 1
+global spath uchar 128
+global splen ulong 1
+global sgerr ulong 1
+fn put16 v ulong to void
+put spkt get sn 0 uchar and v 255
+put spkt add get sn 0 1 uchar shr v 8
+put sn 0 add get sn 0 2
+end
+fn setrec to void
+put splen 0 len recp
+for i ulong len recp
+put spath i get recp i
+end
+end
+fn settmp to void
+put splen 0 len tmpp
+for i ulong len tmpp
+put spath i get tmpp i
+end
+end
+fn setgen to void
+put splen 0 len genp
+for i ulong len genp
+put spath i get genp i
+end
+end
+fn pack2 to ulong
+put sn 0 0
+put16 2
+put16 len tmpp
+for i ulong len tmpp
+put spkt add get sn 0 i get tmpp i
+end
+put sn 0 add get sn 0 len tmpp
+put16 len recp
+for i ulong len recp
+put spkt add get sn 0 i get recp i
+end
+put sn 0 add get sn 0 len recp
+ret get sn 0
+end
+fn enc r view ulong 32 to void
+for i ulong 32
+v = get r i
+for j ulong 8
+put sb add mul i 8 j uchar and shr v mul j 8 255
+end
+end
+end
+fn dec r edit ulong 32 to ulong
+for i ulong 32
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get sb add mul i 8 j mul j 8
+end
+put r i v
+end
+ret 0
+end
+fn writerec r view ulong 32 to ulong
+enc r
+settmp
+fd = cfopen 0 get splen 0 577 384
+if lt fd 0
+ret 10
+end
+n = cwrite int fd 0 256
+if ne n 256
+cleanup = cfclose int fd
+ret 11
+end
+if ne cfsync int fd 0
+cleanup = cfclose int fd
+ret 12
+end
+if ne cfclose int fd 0
+ret 13
+end
+pn = pack2
+rr = crenames 0 pn 0
+if lt rr 0
+ret 14
+end
+ret 0
+end
+fn readrec r edit ulong 32 to ulong
+setrec
+fd = cfopen 0 get splen 0 0 0
+if lt fd 0
+ret 20
+end
+n = read int fd sb 0 256
+extra = long -1
+if eq n 256
+extra = read int fd stail 0 1
+end
+if ne cfclose int fd 0
+ret 21
+end
+if or ne n 256 ne extra 0
+ret 22
+end
+dv = dec r
+ret 0
+end
+fn readgen to ulong
+put sgerr 0 0
+setgen
+fd = cfopen 0 get splen 0 0 0
+if lt fd 0
+put sgerr 0 30
+ret 0
+end
+n = read int fd sb 0 8
+extra = long -1
+if eq n 8
+extra = read int fd stail 0 1
+end
+if ne cfclose int fd 0
+put sgerr 0 31
+ret 0
+end
+if or ne n 8 ne extra 0
+put sgerr 0 32
+ret 0
+end
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get sb j mul j 8
+end
+ret v
+end
+fn writegen v ulong to ulong
+setgen
+fd = cfopen 0 get splen 0 577 384
+if lt fd 0
+ret 40
+end
+for j ulong 8
+put sb j uchar and shr v mul j 8 255
+end
+n = cwrite int fd 0 8
+if ne n 8
+cleanup = cfclose int fd
+ret 41
+end
+if ne cfsync int fd 0
+cleanup = cfclose int fd
+ret 42
+end
+if ne cfclose int fd 0
+ret 43
+end
+ret 0
+end
+fn storevalid r view ulong 32 g ulong to ulong
+if ne get r 0 1
+ret 51
+end
+if ne get r 4 g
+ret 52
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Handwritten deterministic effect doubles, not a real fd/syscall/durability test.
+note Build with store-cleanup-source.sh; only the store's five write-side effects are doubled.
+note Modes: open error, write error, short write, sync error, close error, success,
+note write plus close error, sync plus close error, rename error. Both writers run all modes.
+global cmode ulong 1
+global ctrace ulong 1
+global cbad ulong 1
+global cfails ulong 1
+text cleanok "store cleanup cases=18 fails=0\n"
+fn cstep step ulong to void
+put ctrace 0 add mul get ctrace 0 10 step
+end
+fn cfd fd int to void
+if ne fd 7
+put cbad 0 1
+end
+end
+fn cfopen off ulong count ulong flags ulong mode ulong to long
+cstep 1
+if eq get cmode 0 0
+ret -1
+end
+ret 7
+end
+fn cwrite fd int off ulong count ulong to long
+cfd fd
+cstep 2
+if or eq get cmode 0 1 eq get cmode 0 6
+ret -1
+end
+if eq get cmode 0 2
+ret long sub count 1
+end
+ret long count
+end
+fn cfsync fd int to long
+cfd fd
+cstep 3
+if or eq get cmode 0 3 eq get cmode 0 7
+ret -1
+end
+ret 0
+end
+fn cfclose fd int to long
+cfd fd
+cstep 4
+if or eq get cmode 0 4 or eq get cmode 0 6 eq get cmode 0 7
+ret -1
+end
+ret 0
+end
+fn crenames off ulong count ulong flags ulong to long
+cstep 5
+if eq get cmode 0 8
+ret -1
+end
+ret 0
+end
+fn main to int
+r = new ulong 32 0
+for writer ulong 2
+for mode ulong 9
+put cmode 0 mode
+put ctrace 0 0
+put cbad 0 0
+result = ulong 0
+base = ulong 10
+trace = ulong 12345
+if eq writer 0
+result = writerec r
+else
+base = 40
+trace = 1234
+result = writegen 1
+end
+want = ulong 0
+if eq mode 0
+want = base
+trace = 1
+end
+if or eq mode 1 or eq mode 2 eq mode 6
+want = add base 1
+trace = 124
+end
+if or eq mode 3 eq mode 7
+want = add base 2
+trace = 1234
+end
+if eq mode 4
+want = add base 3
+trace = 1234
+end
+if and eq mode 8 eq writer 0
+want = 14
+end
+if or ne result want or ne get ctrace 0 trace ne get cbad 0 0
+put cfails 0 add get cfails 0 1
+end
+end
+end
+if ne get cfails 0 0
+ret 1
+end
+w = write 1 cleanok 0 len cleanok
+if ne w long len cleanok
+ret 2
+end
+ret 0
+end

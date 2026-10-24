@@ -146,3 +146,23 @@ scenarios or production sources. Declared concatenated gates are regenerated
 from this revision's own component sources. Source review is not compiler
 acceptance: Omega compilation and native positive/negative runs remain NOT_RUN.
 Historical evidence is unchanged.
+
+## Store write failure cleanup
+
+`writerec` and `writegen` close their opened descriptor once on failed/short
+write and failed fsync, preserving the primary errors (11/12 and 41/42) even
+if cleanup also fails. Close is never retried. Successful-path close errors
+remain 13/43, and record rename is skipped after any earlier error.
+
+`store-cleanup-test.om` provides 18 deterministic fake-effect cases, composed
+with the real store source by `sh seed/authority/store-cleanup-source.sh` into
+`store-cleanup-gate.om`. Only write-side effect prefixes in the store are
+renamed and global buffer arguments omitted; production code has no test hooks. It checks effect order, exactly-one
+The composer fails closed on unexpected write-side effect prefixes and reads
+both sources successfully before emitting output, preventing accidental real
+write-side effects when a call shape drifts.
+close, descriptor identity and primary error precedence. It does not test real
+syscalls, fd ownership, durability or hardware. See
+[`store-write-cleanup/REVIEW.md`](../../evidence/SECURITY-673/store-write-cleanup/REVIEW.md)
+for fixed/old-source replay instructions and limits. All native runs are NOT_RUN;
+the standalone gate is not yet wired into the security coordinator.

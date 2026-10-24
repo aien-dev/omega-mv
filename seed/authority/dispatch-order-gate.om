@@ -241,9 +241,11 @@ ret 10
 end
 n = write int fd sb 0 256
 if ne n 256
+cleanup = fclose int fd
 ret 11
 end
 if ne fsync int fd 0
+cleanup = fclose int fd
 ret 12
 end
 if ne fclose int fd 0
@@ -314,9 +316,11 @@ put sb j uchar and shr v mul j 8 255
 end
 n = write int fd sb 0 8
 if ne n 8
+cleanup = fclose int fd
 ret 41
 end
 if ne fsync int fd 0
+cleanup = fclose int fd
 ret 42
 end
 if ne fclose int fd 0
