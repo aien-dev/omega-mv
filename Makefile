@@ -1167,6 +1167,18 @@ $(RX_PLAN_TEST): $(RX_PLAN_SRCS) $(RX_PLAN_OBJS) $(RX_GRAPH_OBJ) src/runtime/rx_
 test-plan-reuse: $(RX_PLAN_TEST)
 	./$(RX_PLAN_TEST)
 
+# E03 extension (aien-architecture#246): lifecycle payback of the existing plan
+# cache. Same sources and objects as the plan-reuse test, one more driver.
+RX_PAYBACK_SRCS = $(filter-out tests/runtime/rx_plan_reuse.c,$(RX_PLAN_SRCS)) tests/runtime/rx_plan_payback.c
+RX_PAYBACK_TEST = $(OUT_DIR)/rx_plan_payback_test
+
+$(RX_PAYBACK_TEST): $(RX_PAYBACK_SRCS) $(RX_PLAN_OBJS) $(RX_GRAPH_OBJ) src/runtime/rx_caproot.h \
+	src/runtime/aienos_cap.h $(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(CC) $(CFLAGS) -pthread -o $@ $(RX_PAYBACK_SRCS) $(RX_PLAN_OBJS) $(RX_GRAPH_OBJ) $(AIENOS_CAP_LIB) -lm
+
+test-plan-payback: $(RX_PAYBACK_TEST)
+	./$(RX_PAYBACK_TEST) dev
+
 # OMEGA_SEMANTIC_COMMUNICATION: branches and workers receive the semantic
 # projection their InformationNeed selects, then only deltas, not full state.
 # rx_semcomm.o is built alone first. It enforces capability boundaries, so it

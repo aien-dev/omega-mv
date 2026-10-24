@@ -1,0 +1,81 @@
+heldout measurement requested 2026-10-19T19:40:13Z load 7.87 8.60 13.33 6/2399 3805032 quiet_flags 4 commit 23472463f4edd7d9ee12fcfc49f0069efb9e3986
+quiet lock granted 2026-10-19T19:52:57Z load 16.56 17.26 15.30 5/2498 4185790
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 1, path 3)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 3, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 5, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 7, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 9, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 11, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 13, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 15, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 17, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 19, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 21, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_warmup_dev_seeds task 23, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 1, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 4, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 7, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 10, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 13, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 16, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 19, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 22, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 25, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 28, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 31, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 34, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S2_heldout_bindings_compositions task 37, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S3_interference task 1, path 3)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S3_interference task 3, path 3)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S3_interference task 6, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S3_interference task 8, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S3_interference task 11, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S3_interference task 13, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S3_interference task 16, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S3_interference task 18, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S3_interference task 21, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S3_interference task 23, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S3_interference task 26, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S3_interference task 28, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S3_interference task 31, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S3_interference task 33, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 9 vs 12 (S3_interference task 36, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S3_interference task 38, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 1, path 3)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 5, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 9, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 13, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 17, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 21, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 25, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 29, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 33, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:702 F2 plan length 7 vs 10 (S4_changed_preconditions task 37, path 2)
+  FAIL tests/runtime/rx_plan_payback.c:1232 ledger reconciles with traces (1 bad)
+[*] placed on 10 Cortex-X925 cores
+[*] stream S1_reverse: 40 tasks, seeds 300.., cache fresh
+    S1_reverse: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 0; net -7090 ns, break-even 2, floors ok, neg transfer 0
+[*] stream S1_merge_P+: 40 tasks, seeds 300.., cache fresh
+    S1_merge_P+: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 0; net 2322808 ns, break-even 2, floors ok, neg transfer 0
+[*] stream S2_warmup_dev_seeds: 24 tasks, seeds 200.., cache fresh
+    S2_warmup_dev_seeds: hits 22 misses 2 acq 2 adapt 1 refusals 12 restarts 0; net -15149629 ns, break-even -1, floors VIOLATED, neg transfer 11
+[*] stream S2_heldout_bindings_compositions: 40 tasks, seeds 400.., cache kept
+    S2_heldout_bindings_compositions: hits 39 misses 1 acq 1 adapt 0 refusals 13 restarts 0; net -15139430 ns, break-even -1, floors VIOLATED, neg transfer 13
+[*] stream S3_interference: 40 tasks, seeds 500.., cache fresh
+    S3_interference: hits 35 misses 5 acq 5 adapt 3 refusals 48 restarts 0; net -20079657 ns, break-even 2, floors VIOLATED, neg transfer 14
+[*] stream S4_changed_preconditions: 40 tasks, seeds 600.., cache fresh
+    S4_changed_preconditions: hits 37 misses 3 acq 3 adapt 2 refusals 30 restarts 0; net -10138023 ns, break-even -1, floors VIOLATED, neg transfer 9
+[*] stream S5_stale_generations: 40 tasks, seeds 700.., cache fresh
+    S5_stale_generations: hits 30 misses 10 acq 10 adapt 0 refusals 9 restarts 0; net -6355893 ns, break-even -1, floors ok, neg transfer 0
+[*] stream S6_restart: 40 tasks, seeds 800.., cache fresh
+    restart before task 20: 1 records serialised, 1 reloaded, 0 refused
+    S6_restart: hits 39 misses 1 acq 1 adapt 0 refusals 0 restarts 1; net 1661561 ns, break-even 2, floors ok, neg transfer 0
+[*] stream P0_no_payoff: 40 tasks, seeds 900.., cache fresh
+    P0_no_payoff: hits 0 misses 40 acq 40 adapt 0 refusals 39 restarts 0; net -5769200 ns, break-even 30, floors ok, neg transfer 0
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 3 refused, 0 stored
+checks 3058 failures 52 bad_rows 1
+receipt: build/payback-held/heldout-receipt.json
+rc=1
+done 2026-10-19T19:53:01Z load 16.56 17.26 15.30 4/2542 4189289

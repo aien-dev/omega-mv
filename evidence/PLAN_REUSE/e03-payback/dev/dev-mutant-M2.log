@@ -1,0 +1,15 @@
+  FAIL tests/runtime/rx_plan_payback.c:780 corrupt record case 1 was stored (stored)
+  FAIL tests/runtime/rx_plan_payback.c:780 corrupt record case 2 was stored (stored)
+[*] placed on 10 Cortex-X925 cores
+[*] MUTANT M2 active: this run must report bad rows > 0
+[*] stream S1_reverse: 12 tasks, seeds 200.., cache fresh
+    restart before task 6: 1 records serialised, 1 reloaded, 0 refused
+[*] stream S1_merge_P+: 12 tasks, seeds 200.., cache fresh
+[*] stream dev_P0_no_payoff: 6 tasks, seeds 250.., cache fresh
+[*] control: a STALE template is refused on the stale axis, re-derived, then revalidated
+[*] control: corrupt serialised records are refused on reload
+    3 corrupt records: 1 refused, 2 stored
+checks 288 failures 2 bad_rows 2
+dev: S1_reverse p 1.000 Delta -288 ns [-13424, 4392] C 74560 ns; S1_merge p 1.000 Delta 33712 ns [25241, 60922] C 94944 ns; P0 m 55312 ns [53696, 80992]
+dev: net S1_reverse -243340 ns, S1_merge 413727 ns (P+ sign positive), P0 -442320 ns (sign negative); reconciliation OK; stale refused/rederived/revalidated; corrupt 1/3 refused
+receipt: build/payback-M2/dev-receipt.json
