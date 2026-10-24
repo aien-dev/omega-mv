@@ -1,0 +1,6 @@
+fn a to int
+ret b
+end
+fn b to int
+ret a
+end

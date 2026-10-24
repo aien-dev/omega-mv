@@ -385,3 +385,208 @@ Grammar-constrained decoding (Outlines, XGrammar, llguidance, SynCode), grammar-
 redesigned for fewer tokens (SimPy, 2024). Not found: a lexicon chosen so one terminal is one vocab
 token, with type-aware prefix checking feeding an independently checked, signed IR. "New" is
 UNVERIFIED.
+
+## 9. Systems words (seed chain om4 and omc, ledger L408)
+
+Added 2026-10-22 for the Omega compiler written in Omegese (`seed/omc/omc.om`) and the translator that
+first builds it (`seed/rung4/om4.s`). Every word below is used by omc or by the seed test corpus
+(`seed/rung4/tests`); the C path (`tools/omegese`) does not read these words yet. Each rule names the
+gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Decisions 16-24 are those of
+`docs/PROGRAM.md` (branch doc/program).
+
+### 9.1 Two kinds of output
+
+- A program with a line `fn main` is a whole Linux program (program mode); otherwise the output is the
+  functions' machine words under the OSC-1 native rules (function mode), entry = word 0. (gate 4 s.4-6)
+- `fn main` has no parameters and returns a whole-number type or void. The program's exit status is
+  main's value modulo 256 (Linux keeps the low 8 bits), 0 for a void main. (s.6 t_exit, s.7)
+- A trap in program mode ends the program with exit status 100 + the trap code; in function mode it
+  calls OscRt.trap as the C path does. (s.6 t_*, s.4-5)
+
+### 9.2 Functions and calls
+
+- `fn` may appear many times. A names pass reads every signature before any code is written, so a call
+  names any function in the unit, earlier or later. A name that is a function never becomes a new
+  scalar: a value-returning function used as a statement is error 7, including `name = value`.
+  (s.6 r5b_fwd, r5b_assign, r5b_fwd_fm)
+- In program mode a function may call itself, and two functions may call each other. In function mode
+  a call cycle, including a function calling itself, is error 9, so the stack a call chain uses is
+  bounded. (s.6 fib, r5b_mut, r5b_cycle, s.7)
+- `<function> <args>` as a value calls a function that returns a value; as a line it calls a void one.
+  Using the one where the other is needed is error 7. (s.7)
+- `to void` makes a void function; `ret` with no value returns from it, and so does reaching its `end`.
+  A function with a return type whose `end` can be reached is error 18. (s.6 t_void, s.7)
+- Arguments are read left to right, each fully before the next. (s.5 fm5)
+- Function names may have up to 63 characters; other names up to 8 (error 13). (s.4 dev01, s.7)
+- In program mode the stack is a fixed 8 MiB pool; a call or a local array that would go below it traps
+  6 before it writes anything. (s.6 t_stack)
+
+### 9.3 Numbers (decision 19: one meaning per word and width)
+
+- Unsigned add, sub, mul, shl, neg, not wrap modulo 2^width (uchar 8, ushort 16, uint 32, ulong 64 bits).
+  (gate 3, s.4)
+- Signed add, sub, mul, neg, div and shl trap 1 when the exact result is outside the type (byte 8,
+  short 16, int 32, long 64 bits), including the minimum divided by -1. (s.5 fm1-fm4, fm9)
+- div and rem trap 2 when the divisor is 0. Signed div rounds toward zero; signed rem has the sign of
+  the dividend, and the minimum rem -1 is 0. (s.5 fm1, fm2, fm9)
+- A shift amount outside 0 .. width - 1 traps 7, for every type. shr of a signed value keeps the sign.
+  (s.5 fm3, fm4)
+- A conversion `<type> v` traps 5 when the value is outside the new type. (s.6 t_conv)
+- There are no implicit conversions (decision 20): the two values of an op, a value and the name it is
+  written to, an argument and its parameter, all have the same type, or the line is refused (error 7).
+  A bare number takes the type the place needs. `uchar` is an 8-bit unsigned number, never a character. (s.7)
+- A number is written in decimal, with a `-` in front when negative, in at most 20 digits; it must be a
+  value of the type it takes: -2^63 .. 2^63 - 1 for long, 0 .. 2^64 - 1 for ulong, and so on (error 8
+  outside; more than 20 digits, or a character that is not a digit, is error 6). (s.6 t_u63, t_u64max,
+  t_cmp_unsigned, t_conv_sign, t_write_wrap, s.7)
+- `true` and `false` are the bool numbers 1 and 0. (s.6 t_loop)
+
+### 9.4 Arrays (decisions 16, 17, 18, 23, 24)
+
+- Every array has a fixed element type (uchar .. long, never bool) and a fixed length written as a
+  number; the length travels with the array's name, never as a terminator byte. An array parameter or
+  a pool written without its length is refused (error 16). (s.7)
+- `global NAME T N`: a pool of N elements (1 .. 16777216), all 0 when the program starts, in the
+  program's own memory image (no heap, no allocation call); at most 1 GiB of pools, else error 23.
+  Program mode only (error 9). (s.6 echo, bytecopy, s.7)
+- `text NAME "bytes"`: a read-only array of uchar holding the bytes between the quotes, with its
+  length; `\n` is 10, `\t` is 9, `\\` is 92, `\"` is 34; any other escape, or a quote missing its end,
+  is error 22. Program mode only. (s.7)
+- `NAME = new T N v`: a local array of N elements, each v, on the stack, given back when the function
+  returns. Only in a function's outermost block (error 9); at most 4 MiB of local arrays (error 23).
+  There is no `free`: nothing is given back by hand (decision 24), and the word is refused (error 9).
+  (s.5 fm7, fm8, s.6 sort, s.7)
+- A parameter `NAME view T N` or `NAME edit T N` takes an array of exactly that type and length (error 7
+  otherwise). A view is read-only; `put`, `read` into it, or passing it as edit is error 20. A text is
+  read-only in the same way. (s.7)
+- An argument is a local array or an array parameter, optionally after `view` or `edit`. A global is
+  never passed (error 19), and the arrays of one call are distinct names (error 19); so two live
+  references in one function are always distinct storage, and no write is ever seen through another
+  name. (s.7)
+- `get A i` reads element i; `put A i v` reads i, then v, then writes. `len A` is A's length as a ulong.
+  A number index must be inside A when om4 reads it (error 21); any other index is checked when it runs
+  and traps 3 when it is not below the length (a negative signed index traps too). There is no word that
+  turns an array into an address or adds to one. (s.5 fm8, s.6 t_bounds, s.7)
+
+### 9.5 System calls and lines
+
+- `read fd A off n` and `write fd A off n` (fd int, off and n ulong) move n bytes between the open file
+  fd and A's elements off .. off + n - 1 with the Linux read and write calls, and give a long: the bytes
+  moved, or minus the Linux error number. They trap 3 unless n <= len A and off <= len A - n, before the
+  call. `read` needs a writable array (error 20). A must be an array of uchar for the counts to be bytes.
+  (s.6 echo, bytecopy, t_rw)
+- `exit v` (v int) ends the program with status v modulo 256. Like `ret`, it ends the path: a line after
+  it in the same block is error 17. (s.6 t_exit, s.7)
+- `note ...` is a line the translator does not read beyond its first word. (s.6 sort, fib)
+
+### 9.6 Capacities (decision 23)
+
+Input over a capacity is refused with error 14, never overrun: om4 reads at most 8 MiB - 1 bytes and
+writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 512 functions, 8192 trap sites per function, 512 nested
+blocks. A function that needs more than the 16 registers it hands out is error 12.
+
+## 10. Native host extension (2026-10-23)
+
+Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original
+om4 parent builds this extended compiler; the extended compiler reproduces
+itself byte for byte. The original subset retains its machine code. The new
+words are reserved and require program mode (error 9 in function mode).
+
+All results below have type `long`. Successful kernel results are nonnegative;
+failures return minus the Linux error number. Programs must check errors.
+These operations do not form a sandbox: they operate with the process's
+existing permissions. They expose no pointer values and no arbitrary syscall.
+
+In signatures, `fd`, `flags`, `mode`, `pid`, `signal`, `events`, `domain`,
+`kind`, `protocol`, `backlog`, `target`, `options`, `level`, `option` and `whence` are `int`.
+Offsets, byte counts, capacities and argument indices are `ulong`. File offsets
+and time intervals are `long`. `A` is a `uchar` array. Every slice checks
+`n <= len A` and `off <= len A - n` before kernel access, otherwise trap 3
+(program exit 103). Writable operations reject `view` and `text` (error 20).
+Non-byte arrays and mismatched scalar types are error 7.
+
+| Expression | Meaning |
+| --- | --- |
+| `fopen A off n flags mode` | Open a length-delimited path relative to the current directory. Return descriptor. |
+| `fclose fd` | Close descriptor. |
+| `fsync fd` | Sync file data and metadata. |
+| `fchmod fd mode` | Set permissions on an open descriptor. |
+| `fseek fd offset whence` | Seek and return the resulting signed file offset. |
+| `unlink A off n` | Remove the named file. |
+| `makedir A off n mode` | Create a directory. |
+| `rmdir A off n` | Remove an empty directory. |
+| `cwd A off capacity` | Write the current directory into writable bytes. Return the kernel byte count including the trailing zero byte. A short buffer returns a negative error. |
+| `readlnk PATH off n OUT off capacity` | Read a symbolic link through a checked, nonempty path into writable output bytes. Return the byte count without a terminator. A result equal to capacity may be truncated. |
+| `getdnts fd A off n` | Write raw Linux `getdents64` records; return bytes written. |
+| `fstat fd A off n` | Write the 128-byte Linux ARM64 stat structure; requires capacity at least 128. |
+| `renames A off n flags` | Rename the two paths in a packed list using `renameat2`; flag 1 refuses replacement. |
+| `monons` | Monotonic nanoseconds, suitable for elapsed-time measurement. |
+| `realns` | Realtime nanoseconds since the Unix epoch, suitable for timestamps. |
+| `sleepns interval` | Sleep for nonnegative nanoseconds. Negative intervals trap 3. Interruptions return the kernel error. |
+| `socknew domain kind protocol` | Create a socket. |
+| `bind fd A off n` | Bind the socket to the address bytes in the slice. |
+| `connect fd A off n` | Connect using the address bytes in the slice. |
+| `listen fd backlog` | Listen for connections. |
+| `accept fd flags` | Accept a connection with `accept4`; return descriptor, without peer-address output. |
+| `sockname fd A off n` | Write socket address bytes; return the full address length, which may exceed capacity when truncated. |
+| `sockopt fd level option A off n` | Set a socket option from a readonly byte slice. Option values and layouts follow the Linux ARM64 interface. |
+| `recv fd A off n flags` | Receive into a writable slice. |
+| `send fd A off n flags` | Send a slice with `MSG_NOSIGNAL` added, so a closed peer returns an error. |
+| `waitio fd events interval` | Poll one descriptor. Return readiness bits, zero on timeout, or negative errno. Interval is nanoseconds; negative means infinite. Events outside 0..65535 trap 3. |
+| `fork` | Copy the current process: zero in the child, child PID in the parent, negative errno on failure. |
+| `getpid` | Return the current process ID. |
+| `killpid pid signal` | Send a signal; zero signal checks existence/permission. |
+| `waitpid pid A off n options` | Wait with `wait4`; write a four-byte status, return PID or zero for an unfinished nonblocking wait. Capacity at least four. |
+| `pipefds A off n flags` | Create a pipe with `pipe2`; write two little-endian 32-bit descriptors. Capacity at least eight. |
+| `dupfd fd target flags` | Duplicate onto a chosen descriptor using `dup3`. |
+| `execprog A off n` | Replace the process using a packed argument list. Only returns on failure. |
+| `argcnt` | Return argument count, including the executable name. |
+| `argread index A off capacity` | Copy argument bytes without a terminator; return byte length. An invalid index traps 3. Insufficient capacity returns -105 without changing the slice. |
+
+### Path and process boundaries
+
+Paths are at most 4095 bytes. Embedded zero bytes and longer paths trap 3
+before a kernel operation. The compiler privately copies and terminates paths
+at the Linux boundary; Omega array lengths remain explicit. Private stack
+space is checked against the existing stack floor before writing.
+
+`readlnk` additionally rejects an empty path with trap 3. Its path may be a
+readonly slice; its output must be writable. Both slices receive the ordinary
+array bounds and byte-type checks. The private path copy is complete before
+the kernel writes the output, so overlapping path and output slices are safe.
+`cwd` requires writable bytes. It preserves the kernel's count convention:
+the returned count includes its trailing zero byte. `readlnk` never appends a
+zero byte. These operations are Linux `getcwd` and `readlinkat(AT_FDCWD)`.
+`sockopt` is Linux `setsockopt`; it accepts readonly option bytes and does not
+provide pointer values or arbitrary system-call access.
+
+A packed list is a little-endian `u16` count followed by that many records,
+each a little-endian `u16` byte length and those bytes. There is no padding or
+terminator in the public format. The whole packet is at most 4096 bytes and
+the count is 1..64. Embedded zero bytes, truncated records, extra trailing
+bytes and out-of-range counts trap 3. `execprog` uses the first record as both
+the executable path and argument zero; it must be nonempty. Other arguments
+may be empty. `renames` requires exactly two nonempty path records.
+
+The compiler constructs private, bounded pointer lists for the kernel. They
+are never exposed as language values. `execprog` supplies an empty environment,
+preserves the working directory and ordinary inherited descriptors, and does
+not search PATH or invoke a shell. Programs should explicitly request
+close-on-exec descriptors where needed. Forked children are independent
+processes and must be reaped; this extension does not add shared-memory threads.
+
+Clock results require nonnegative seconds and a signed nanosecond total;
+values outside that range trap 1. `argread` bounds
+its internal string scan at 1 MiB; reaching that bound traps 3. Linux ARM64 is
+the only qualified host. OS flags, address layouts and metadata layouts are
+host-specific; portable library contracts remain separate work.
+
+Qualification is `sh seed/host/check.sh`; see `seed/host/README.md`. The seed
+loader and shell test coordinator do not implement these operations. No
+foreign-language compiler or runtime is on the new implementation path.
+
+The proposed device/memory extension adds checked `devctl`, `mapnew`,
+`mapdrop`, `mapread` and `mapwrite` to this same compiler. Its exact type,
+ownership, range and refusal contract is [seed/host/MAPPING.md](../../seed/host/MAPPING.md).
+It adds process-local mapped resources while the compiler's own storage remains
+fixed pools. GPU launch and model execution are separate, still-unqualified gates.

@@ -1,0 +1,23 @@
+note byte copy: read up to 65536 bytes, copy them byte by byte into a second pool reversed, write it
+global src uchar 65536
+global dst uchar 65536
+fn fill to ulong
+t = ulong 0
+k = read 0 src 0 len src
+while gt k 0
+t = add t ulong k
+k = long 0
+if lt t len src
+k = read 0 src t sub len src t
+end
+end
+ret t
+end
+fn main to int
+n = fill
+for i ulong n
+put dst sub sub n i 1 get src i
+end
+w = write 1 dst 0 n
+ret 0
+end

@@ -1,0 +1,175 @@
+note Native memory ownership, shared/private files, bounds, stale handles and resource limits.
+text path "mapped.bin"
+text payload "native Omega mapped memory"
+text ok "PASS native mapping\n"
+global buf uchar 8192
+global caps long 128
+global stat uchar 4
+global fdnum int 1
+fn expect yes bool to void
+if not yes
+exit int 80
+end
+end
+note Keep five distinct caller values live across each native mapping operation.
+fn held h long a ulong b ulong c ulong d ulong e ulong to void
+expect eq mapwrite h 31 payload 0 len payload long len payload
+expect eq a 101
+expect eq b 202
+expect eq c 303
+expect eq d 404
+expect eq e 505
+expect eq mapread h 31 buf 1 len payload long len payload
+expect eq a 101
+expect eq b 202
+expect eq c 303
+expect eq d 404
+expect eq e 505
+expect eq mapdrop h 0
+expect eq a 101
+expect eq b 202
+expect eq c 303
+expect eq d 404
+expect eq e 505
+end
+fn fault kind int to int
+h = mapnew neg int 1 0 4096 3 34
+expect gt h 0
+if eq kind 0
+expect eq mapdrop h 0
+r = mapread h 0 buf 0 1
+ret int r
+end
+if eq kind 1
+expect eq mapdrop h 0
+next = mapnew neg int 1 0 4096 3 34
+expect ne next h
+r = mapwrite h 0 payload 0 1
+ret int r
+end
+if eq kind 2
+r = mapread h 4096 buf 0 1
+ret int r
+end
+if eq kind 3
+r = mapwrite h 18446744073709551615 payload 0 1
+ret int r
+end
+if eq kind 4
+ro = mapnew get fdnum 0 0 4096 1 2
+r = mapwrite ro 0 payload 0 1
+ret int r
+end
+if eq kind 5
+r = mapdrop long 0
+ret int r
+end
+if eq kind 6
+r = mapdrop long 129
+ret int r
+end
+if eq kind 7
+r = mapnew neg int 1 0 0 3 34
+ret int r
+end
+if eq kind 8
+r = mapnew neg int 1 0 68719476737 3 34
+ret int r
+end
+if eq kind 9
+r = mapnew neg int 1 1 4096 3 34
+ret int r
+end
+if eq kind 10
+r = mapread h 0 buf 8192 1
+ret int r
+end
+if eq kind 11
+r = mapread h 0 buf 0 18446744073709551615
+ret int r
+end
+if eq kind 12
+r = mapdrop neg long 1
+ret int r
+end
+if eq kind 13
+r = mapnew int 0 0 4096 3 34
+ret int r
+end
+ret 99
+end
+fn main to int
+fd = fopen path 0 len path 194 384
+expect ge fd 0
+put fdnum 0 int fd
+expect eq write int fd buf 0 8192 8192
+shared = mapnew int fd 0 8192 3 1
+expect gt shared 0
+expect eq mapwrite shared 4099 payload 0 len payload long len payload
+expect eq fseek int fd 4099 0 4099
+expect eq read int fd buf 0 len payload long len payload
+for i ulong len payload
+expect eq get buf i get payload i
+end
+private = mapnew int fd 4096 4096 3 2
+expect gt private 0
+expect ne private shared
+expect eq mapread private 3 buf 100 len payload long len payload
+for i ulong len payload
+expect eq get buf add i 100 get payload i
+end
+put buf 0 222
+expect eq mapwrite private 3 buf 0 1 1
+expect eq mapread private 3 buf 1 1 1
+expect eq get buf 1 222
+expect eq mapread shared 4099 buf 2 1 1
+expect eq get buf 2 get payload 0
+expect eq mapdrop shared 0
+expect eq mapdrop private 0
+ro = mapnew int fd 0 8192 1 2
+expect gt ro 0
+expect eq mapread ro 4099 buf 0 len payload long len payload
+expect eq mapdrop ro 0
+expect eq mapnew neg int 1 0 4096 1 2 neg long 9
+expect eq mapnew int fd 1 4096 1 2 neg long 22
+live = mapnew neg int 1 0 4096 3 34
+held live 101 202 303 404 505
+note A failed kernel mapping must not consume a slot.
+for i ulong 128
+h = mapnew neg int 1 0 4096 3 34
+expect gt h 0
+put caps i h
+expect eq mapread h 4095 buf 0 1 1
+expect eq get buf 0 0
+expect eq mapwrite h 4096 payload len payload 0 0
+end
+expect eq mapnew neg int 1 0 4096 3 34 neg long 24
+for i ulong 128
+expect eq mapdrop get caps i 0
+end
+for i ulong 1024
+h = mapnew neg int 1 0 4096 3 34
+expect gt h get caps 0
+expect eq mapwrite h 13 payload 0 len payload long len payload
+expect eq mapread h 13 buf 1 len payload long len payload
+for j ulong len payload
+expect eq get buf add j 1 get payload j
+end
+expect eq mapdrop h 0
+put caps 0 h
+end
+for kind int 14
+pid = fork
+expect ge pid 0
+if eq pid 0
+exit fault kind
+end
+expect eq waitpid int pid stat 0 4 0 pid
+expect eq get stat 0 0
+expect eq get stat 1 103
+end
+expect eq fclose int fd 0
+expect eq unlink path 0 len path 0
+expect eq write 1 ok 0 len ok long len ok
+ret 0
+end

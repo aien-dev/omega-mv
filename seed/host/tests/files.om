@@ -1,0 +1,74 @@
+note Native host file and monotonic clock checks. Paths belong to the gate's isolated working directory.
+text path "probe.bin"
+text data "Omega host test\n"
+global bytes uchar 32
+fn main to int
+if lt realns 1700000000000000000
+ret 16
+end
+start = monons
+if lt start 0
+ret 1
+end
+fd = fopen path 0 len path 194 384
+if lt fd 0
+ret 2
+end
+dup = fopen path 0 len path 194 384
+if ne dup neg long 17
+ret 3
+end
+n = write int fd data 0 len data
+if ne n long len data
+ret 4
+end
+r = fsync int fd
+if ne r 0
+ret 5
+end
+r = fchmod int fd 256
+if ne r 0
+ret 6
+end
+r = fseek int fd 0 0
+if ne r 0
+ret 7
+end
+n = read int fd bytes 0 len bytes
+if ne n long len data
+ret 8
+end
+for i ulong len data
+if ne get bytes i get data i
+ret 9
+end
+end
+r = fclose int fd
+if ne r 0
+ret 10
+end
+r = fclose int fd
+if ne r neg long 9
+ret 11
+end
+r = unlink path 0 len path
+if ne r 0
+ret 12
+end
+r = fopen path 0 len path 0 0
+if ne r neg long 2
+ret 13
+end
+last = start
+for i ulong 10000
+now = monons
+if lt now last
+ret 14
+end
+last = now
+end
+if le last start
+ret 15
+end
+ret 0
+end

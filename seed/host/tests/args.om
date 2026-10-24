@@ -1,0 +1,36 @@
+text want "two words"
+global buf uchar 32
+fn main to int
+if ne argcnt 4
+ret 1
+end
+n = argread 1 buf 0 len buf
+if ne n 0
+ret 2
+end
+n = argread 2 buf 3 29
+if ne n long len want
+ret 3
+end
+for i ulong len want
+if ne get buf add i 3 get want i
+ret 4
+end
+end
+put buf 0 42
+n = argread 2 buf 0 1
+if ne n neg long 105
+ret 5
+end
+if ne get buf 0 42
+ret 6
+end
+n = argread 3 buf 0 len buf
+if ne n 2
+ret 7
+end
+if or ne get buf 0 207 ne get buf 1 128
+ret 8
+end
+ret 0
+end

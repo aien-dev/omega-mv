@@ -1,0 +1,16 @@
+fn sum4 v view uint 4 to uint
+s = uint 0
+for i uint 4
+s = add s get v i
+end
+ret s
+end
+fn f a uint b uint to uint
+x = new uint 4 0
+put x 0 a
+put x 3 b
+put x 1 add a 1
+r = sum4 x
+free x
+ret r
+end

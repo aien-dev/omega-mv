@@ -1,0 +1,7 @@
+fn r n ulong to ulong
+ret add r add n 1 1
+end
+fn main to int
+x = r 0
+ret 0
+end

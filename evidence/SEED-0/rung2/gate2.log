@@ -1,0 +1,21 @@
+PASS rung 1 gate (and rung 0 inside it)
+PASS build: hex1 makes asm2.bin = committed (2464 bytes)
+PASS self: asm2 assembles itself from table.s2 + asm2.s byte for byte
+PASS audit AUDIT words=616 code=580 data=36 decoder_mismatch=0 objdump_mismatch=0 byte_mismatch=0
+PASS encoder: 5450 cases over 24 forms, asm2 = C encoder on every one
+PASS encoder, label path: 46 cases (b, b.cond, cbz, cbnz, adr; up to the largest distances) all = C encoder
+PASS refusals: 11 out-of-range operands refused by asm2 (error 8) and by the C encoder
+PASS refusal: b.ne to a label 262144 words away (one past imm19) refused (error 8)
+PASS control: unknown instruction name -> "asm2: line 94: error 3"
+PASS control: too few operands -> "asm2: line 93: error 4"
+PASS control: extra words -> "asm2: line 93: error 5"
+PASS control: bad number -> "asm2: line 93: error 6"
+PASS control: bad register (x31 is spelled xzr or sp) -> "asm2: line 93: error 7"
+PASS control: unknown label -> "asm2: line 93: error 9"
+PASS control: label named twice -> "asm2: line 94: error 10"
+PASS control: table name defined twice -> "asm2: line 93: error 11"
+PASS control: bad table field -> "asm2: line 93: error 12"
+PASS control: word over 16 characters -> "asm2: line 93: error 13"
+PASS control: instruction not 4-byte aligned -> "asm2: line 94: error 14"
+PASS control: unknown directive -> "asm2: line 93: error 15"
+GATE2 PASS
