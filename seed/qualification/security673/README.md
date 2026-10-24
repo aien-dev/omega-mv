@@ -79,6 +79,11 @@ must pass and the protected files must be unchanged. Evidence and traces are
 `evidence/SECURITY-673/pure2`. This is a fixed strict profile, not a general sandbox; grant
 generations, revocation and durable budgets remain open under #670/#649.
 
+Descriptor scope is deliberate: generic `execprog` admits only descriptors 0, 1 and 2;
+`execpure` adds exactly one pinned executable descriptor (3). Arbitrary high-descriptor handoff is
+not part of the supported profile. A caller that needs other resources passes paths or data, not
+inherited authority, so numeric descriptor reuse cannot resurrect an old grant.
+
 ## Bounded source ingress (#671)
 
 With fresh scratch, `build/gate669 3` runs eighteen source cases through the real rebuilt compiler.
