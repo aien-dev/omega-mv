@@ -18,6 +18,7 @@
 #define ffma em_ffma
 #include "omega_bw_em.h"
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,7 +99,7 @@ static float expect(unsigned i, unsigned seed, float tag) { return input(i, seed
 
 /* ------------------------------------------------------------------ host */
 
-static const char *g_dump; /* --dump-hang PATH: the never-ending kernel's code bytes, for the disassembler */
+static const char *g_dump; /* --dump-hang PATH: code bytes for the disassembler; PATH must not already exist */
 
 static void host_only(void) {
     char w[200];
@@ -109,7 +110,16 @@ static void host_only(void) {
         void *code = ok ? calloc(1, need) : NULL;
         OmegaBlackwellKernel kk;
         ok = ok && code && omega_blackwell_kernel_encode_into(p, code, need, &kk) == 0 && kk.code_size == need;
-        if (ok && k == 2 && g_dump) { FILE *f = fopen(g_dump, "wb"); ok = f && fwrite(code, 1, need, f) == need; if (f) fclose(f); }
+        if (ok && k == 2 && g_dump) {
+            /* Never truncate an existing file or follow a final-component symlink.
+             * A new dump is private even with a permissive caller umask. */
+            int fd = open(g_dump, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
+            FILE *f = fd >= 0 ? fdopen(fd, "wb") : NULL;
+            ok = f && fwrite(code, 1, need, f) == need;
+            if (f) { if (fclose(f) != 0) ok = 0; }
+            else if (fd >= 0) close(fd);
+            if (!ok) fprintf(stderr, "cannot write private kernel dump: %s (requires a new path)\n", g_dump);
+        }
         snprintf(w, sizeof w, "codegen + encode: %s (%zu bytes)", k == 0 ? "work kernel" : k == 1 ? "work kernel mutant 1" : "never-ending kernel", need);
         check(ok, w);
         free(code); free(p);
