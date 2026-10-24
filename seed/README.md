@@ -915,6 +915,14 @@ This fixes `if x` with `uint x`, `ret x` in a `uchar` function, and `x = eq ...`
   `ef19aa993d210ad20070ef99bce1e2ef02921d9541d7a443f973072c4d6fa6a3` (119,643 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences.
 
+## Rung R50: keyword generator parity (done)
+
+`seed/omc/gate18.sh` regenerates the chain with `genkw.awk` and compares its 141 literal pack/id
+pairs with `fn kw` scoped to that function; it also checks the two computed entries (`readlnk` 133,
+`sockopt` 134) and that the generator lists them. The generator now includes every host word
+100-134 and packs 64-bit words with decimal string arithmetic, so values above 2^53 print exactly.
+0 mismatches; `seed/host/check.sh` runs the gate.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

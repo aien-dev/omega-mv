@@ -20,6 +20,7 @@ sh seed/omc/gate14.sh
 sh seed/omc/gate15.sh
 sh seed/omc/gate16.sh
 sh seed/omc/gate17.sh
+sh seed/omc/gate18.sh
 sh seed/host/gate.sh
 sh seed/host/negative.sh
 sh seed/host/regression.sh
