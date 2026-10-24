@@ -1,0 +1,21 @@
+{
+  "schema": "LS584_RUN_V1", "arm": "B", "seed": "5852", "control": "stale", "mutant": "none", "restart_after": 0, "persist": 1,
+  "load1_at_end": 11.56, "wall_ns_total": 608920047, "cpu_ns_total": 608525968,
+  "objectives": 240, "success": 231, "wrong": 2, "abstain": 0, "failed_search": 7, "refused_realize": 0, "clarify": 0,
+  "preface": {"n": 8, "abstained": 8, "committed": 0},
+  "semantic": {"inconsistent_commits": 0, "mutant_bad_rows": 0},
+  "candidates_total": 13357565, "realizations_total": 225,
+  "table": {"stored": 50, "dedup": 17, "refused_full": 144, "stale_marked": 35, "promotions": 14, "entries_at_end": 32},
+  "state": {"peak_bytes": 7296, "persist_bytes": 16352, "persist_cpu_ns": 527088},
+  "restart": {"loaded_entries": 0, "journal_refused": 0, "realizations_bound": 0, "realizations_unbound": 0},
+  "joules": "UNMEASURED",
+  "blocks": {
+    "first_exposure": {"n": 64, "success": 64, "hits": 0, "cpu_ns_total": 171582752, "cpu_ns_median": 2533296},
+    "repeated": {"n": 48, "success": 48, "hits": 14, "cpu_ns_total": 109616960, "cpu_ns_median": 2454032},
+    "novel_bindings": {"n": 32, "success": 32, "hits": 0, "cpu_ns_total": 82912384, "cpu_ns_median": 2506384},
+    "compositions": {"n": 32, "success": 24, "hits": 0, "cpu_ns_total": 84938272, "cpu_ns_median": 2522672},
+    "delayed_recall": {"n": 24, "success": 24, "hits": 10, "cpu_ns_total": 49755296, "cpu_ns_median": 2505712},
+    "changed_rules": {"n": 24, "success": 24, "hits": 0, "cpu_ns_total": 62490864, "cpu_ns_median": 2598416},
+    "correction": {"n": 16, "success": 15, "hits": 2, "cpu_ns_total": 47229440, "cpu_ns_median": 2358032}
+  }
+}

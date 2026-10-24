@@ -1,0 +1,24 @@
+# OEV1: omega-mv#584 arm C0 lifecycle DAG for one objective of each frozen block.
+# Source: evidence/LEARNING-SEARCH-584/calib/C0-5852/summary.json (CPU thread time, loaded host). Emitted by research/learning-search-584/oev-emit.sh.
+oev version=1
+machine id=spark-b87b soc=GB10 cores=20 mem_bytes=137438953472 prov=specified src=nvidia-dgx-spark-datasheet
+build repo=omega-mv sha=40b8e43222f4d3db3a69d8941acfb545adb7ab1f physics=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
+calibration id=LS584-calib-20261019 taken=2026-10-19 valid_days=30 load1=10.61 src=evidence/LEARNING-SEARCH-584/calib/C0-5852/summary.json
+resource id=cpu kind=compute slots=20 prov=specified src=nproc
+resource id=unified_mem kind=capacity cap=137438953472 prov=specified src=nvidia-dgx-spark-datasheet
+op id=adapter kind=compute engine=cpu t_ns=1232 prov=measured src=evidence/LEARNING-SEARCH-584/calib/C0-5852/rows.csv:adapter_cpu_ns:block1
+op id=first_solve kind=compute engine=cpu t_ns=2802784 prov=measured src=evidence/LEARNING-SEARCH-584/calib/C0-5852/rows.csv:cpu_ns:block1
+op id=repeat_solve kind=compute engine=cpu t_ns=2724832 prov=measured src=evidence/LEARNING-SEARCH-584/calib/C0-5852/rows.csv:cpu_ns:block2
+op id=novel_solve kind=compute engine=cpu t_ns=2716992 prov=measured src=evidence/LEARNING-SEARCH-584/calib/C0-5852/rows.csv:cpu_ns:block3
+op id=compose_solve kind=compute engine=cpu t_ns=2701744 prov=measured src=evidence/LEARNING-SEARCH-584/calib/C0-5852/rows.csv:cpu_ns:block4
+op id=recall_solve kind=compute engine=cpu t_ns=2597824 prov=measured src=evidence/LEARNING-SEARCH-584/calib/C0-5852/rows.csv:cpu_ns:block5
+# persist: CPU time of the Cortex journal append (measured); storage bandwidth was not measured in 584, so no bytes/bw claim is made (20672 B appended per stream is in summary.json).
+op id=persist kind=persist engine=cpu t_ns=4304 prov=measured src=evidence/LEARNING-SEARCH-584/calib/C0-5852/rows.csv:persist_cpu_ns:block1
+dep adapter first_solve
+dep first_solve persist
+dep persist repeat_solve
+dep repeat_solve novel_solve
+dep novel_solve compose_solve
+dep compose_solve recall_solve
+buffer id=arm_state bytes=7894 cap=unified_mem
+energy instrument=none
