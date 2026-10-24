@@ -1,0 +1,26 @@
+note Trusted launch adapter for strict-profile tests. Invoke only as a fresh supervised child.
+note Failure may already have restricted this process; report the error and exit, never fall back.
+global path uchar 1024
+global packet uchar 4096
+text error "PURE_LAUNCH_REFUSED\n"
+fn main to int
+if ne argcnt 2
+ret 90
+end
+n = argread 1 path 0 len path
+if or le n 0 gt n 1024
+ret 90
+end
+put packet 0 1
+put packet 2 uchar and ulong n 255
+put packet 3 uchar shr ulong n 8
+for i ulong ulong n
+put packet add i 4 get path i
+end
+r = execpure packet 0 add 4 ulong n
+s = write 2 error 0 len error
+if lt r 0
+ret int neg r
+end
+ret 99
+end

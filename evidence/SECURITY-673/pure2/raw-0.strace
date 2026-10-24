@@ -1,0 +1,5 @@
+2504482 openat(AT_FDCWD, "build/security673-pure/raw-0", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+2504482 landlock_restrict_self(4, 0)    = 0
+2504482 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fddc0}) = 0
+2504482 execveat(3, "", ["build/security673-pure/raw-0"], 0x107fefc8 /* 0 vars */, AT_EMPTY_PATH) = 0
+2504482 execveat(3, "/usr/bin/true", NULL, NULL, AT_EMPTY_PATH) = -1 EACCES (Permission denied)

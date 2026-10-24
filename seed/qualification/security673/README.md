@@ -63,6 +63,22 @@ branch: a target outside the signed 19-bit word displacement, or an unaligned ta
 with error 24 before an artifact is accepted. Unconditional B uses `patch26` and the inspected
 8 MiB output-pool capacity. Evidence is `evidence/SECURITY-673/branchforms1`.
 
+## Strict launch profile (#670)
+
+`execpure` (native host word 135) pins one executable as descriptor 3 and then applies a fixed
+kernel profile before `execveat(AT_EMPTY_PATH)`: Landlock execute/read only beneath that inode,
+`PR_SET_NO_NEW_PRIVS`, CPU/file/stack/core/process/descriptor/address-space limits, and a seccomp
+filter that allows only stdin read, stdout/stderr write, the pinned exec and exit. Any setup
+failure returns the kernel error; there is no weaker fallback.
+
+`pure-child.om` is the hostile consumer; `pure-launch.om` is the caller; `pure-raw.om` emits four
+fixed native images for absolute exec, raw open, raw getpid and a 1 GiB mmap. Build the launcher and
+child with the rebuilt compiler, create `build/security673-pure/private.data` and `judge.data`, then
+run `pure-launch build/security673-pure/pure-child` with `public-input` on stdin. Every assertion
+must pass and the protected files must be unchanged. Evidence and traces are
+`evidence/SECURITY-673/pure2`. This is a fixed strict profile, not a general sandbox; grant
+generations, revocation and durable budgets remain open under #670/#649.
+
 ## Bounded source ingress (#671)
 
 With fresh scratch, `build/gate669 3` runs eighteen source cases through the real rebuilt compiler.
