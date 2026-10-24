@@ -4,10 +4,11 @@ note GNU objdump is an independent decoder. Hashes identify artifacts and do not
 text bd "build"
 text scratch "build/security673-native"
 text prefix "build/security673-native/"
-text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\nseed/qualification/security673/branch-forms.om\nseed/qualification/security673/packet-corpus.om\nseed/qualification/security673/pkt-consumer.om\nseed/qualification/security673/renames-corpus.om\nseed/qualification/security673/renames-consumer.om\nseed/qualification/security673/path-consumer.om\nseed/authority/action-gate.om\nseed/authority/delegate-gate.om\nseed/authority/reuse-gate.om\nseed/authority/store-gate.om\nseed/authority/dispatch-gate.om\nseed/trace/segment-gate.om\nseed/trace/sha256-gate.om\nseed/authority/lock-gate.om\n"
+text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\nseed/qualification/security673/branch-forms.om\nseed/qualification/security673/packet-corpus.om\nseed/qualification/security673/pkt-consumer.om\nseed/qualification/security673/renames-corpus.om\nseed/qualification/security673/renames-consumer.om\nseed/qualification/security673/path-consumer.om\nseed/authority/action-gate.om\nseed/authority/delegate-gate.om\nseed/authority/reuse-gate.om\nseed/authority/store-gate.om\nseed/authority/dispatch-gate.om\nseed/trace/segment-gate.om\nseed/trace/sha256-gate.om\nseed/authority/lock-gate.om\nseed/authority/dispatch-order-gate.om\nseed/authority/store-exact-gate.om\nseed/authority/store-cleanup-gate.om\n"
 text input " < "
 text output " > "
 text errors " 2> "
+text cwdmsg " cwd="
 text nl "\n"
 text statusm "exit="
 text expect " expected="
@@ -21,6 +22,7 @@ text failed "GATE669 FAIL; retain all scratch files and command output\n"
 global pathbuf uchar 4096
 global plen ulong 1
 global serial ulong 1
+global workdir ulong 1
 global argv uchar 4096
 global argc ulong 1
 global apos ulong 1
@@ -106,8 +108,7 @@ end
 put serial 0 n
 ret add 1000 n
 end
-fn arg id ulong to void
-setpath id
+fn packarg to void
 p = get apos 0
 n = get plen 0
 if gt add add p n 2 len argv
@@ -121,6 +122,42 @@ put argv add p i get pathbuf i
 end
 put apos 0 add p n
 put argc 0 add get argc 0 1
+end
+fn arg id ulong to void
+setpath id
+packarg
+end
+note Isolated children use the absolute executable path captured before chdir.
+fn abscmd exe ulong to void
+setpath exe
+n = cwd other 0 len other
+if or le n 1 gt n long len other
+stop
+end
+base = sub ulong n 1
+if or ne get other 0 47 ne get other base 0
+stop
+end
+size = add add base 1 get plen 0
+if gt size len pathbuf
+stop
+end
+for i ulong get plen 0
+at = sub sub get plen 0 i 1
+put pathbuf add add base 1 at get pathbuf at
+end
+for i ulong base
+put pathbuf i get other i
+end
+put pathbuf base 47
+put plen 0 size
+put argc 0 0
+put apos 0 2
+packarg
+r = write 1 pathbuf 0 size
+if ne r long size
+stop
+end
 end
 fn command exe ulong to void
 put argc 0 0
@@ -192,6 +229,10 @@ r = write 1 output 0 len output
 showpath outid
 r = write 1 errors 0 len errors
 showpath errid
+if ne get workdir 0 0
+r = write 1 cwdmsg 0 len cwdmsg
+showpath get workdir 0
+end
 r = write 1 nl 0 1
 rd = openfile source 524288
 wr = openfile outid 524481
@@ -206,6 +247,12 @@ if eq pid 0
 redirect rd 0
 redirect wr 1
 redirect er 2
+if ne get workdir 0 0
+setpath get workdir 0
+if ne chdir pathbuf 0 get plen 0 0
+exit 97
+end
+end
 r = execprog argv 0 get apos 0
 exit 98
 end
@@ -543,6 +590,19 @@ elf = compile cc id 0
 command elf
 outid = run 13 0
 end
+note Only these three regressions get fresh child cwd; parent stays at repository root.
+fn authiso cc ulong id ulong to void
+elf = compile cc id 0
+dir = fresh
+setpath dir
+if ne makedir pathbuf 0 get plen 0 448 0
+stop
+end
+abscmd elf
+put workdir 0 dir
+outid = run 13 0
+put workdir 0 0
+end
 fn authority cc ulong to void
 authone cc 26
 authone cc 27
@@ -551,6 +611,9 @@ authone cc 29
 authone cc 30
 authone cc 32
 authone cc 33
+authiso cc 34
+authiso cc 35
+authiso cc 36
 end
 fn tracegate cc ulong to void
 elf = compile cc 31 0

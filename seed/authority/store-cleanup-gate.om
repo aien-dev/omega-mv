@@ -176,7 +176,8 @@ ret 0
 end
 note SPDX-License-Identifier: AGPL-3.0-only
 note Handwritten deterministic effect doubles, not a real fd/syscall/durability test.
-note Build with store-cleanup-source.sh; only the store's five write-side effects are doubled.
+note Committed gate derivation and manual correspondence checks are in README.md.
+note Only the store's five write-side effects are doubled; no shipped shell composer.
 note Modes: open error, write error, short write, sync error, close error, success,
 note write plus close error, sync plus close error, rename error. Both writers run all modes.
 global cmode ulong 1
