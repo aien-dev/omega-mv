@@ -1883,9 +1883,13 @@ static bool test_m19_gate18_receipt(void) {
         if (!candidate || strcmp(candidate, head_sha) != 0 ||
             omega_evidence_tree_dirty()) return false;
     }
+    /* The binary under test is wherever make put it: build/step-<step>/omegatool under
+     * tests/gates/run.sh (omega#511), build/omegatool in a clean clone or by hand. */
+    char self_path[PATH_MAX];
+    if (!omega_evidence_self_binary(self_path, sizeof(self_path))) return false;
     uint8_t digest[32];
     char hex[65];
-    return compute_file_sha256("build/omegatool", digest, hex);
+    return compute_file_sha256(self_path, digest, hex);
 }
 
 int run_m19_gates(void) {

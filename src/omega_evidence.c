@@ -178,3 +178,18 @@ void omega_evidence_hardware_from_nvrm(const Nvrm *rm, OmegaEvidenceHardware *ou
     }
     out->gpu_uuid_hex[32] = '\0';
 }
+
+bool omega_evidence_self_binary(char *out, size_t n) {
+    if (!out || n == 0) return false;
+    const char *out_dir = getenv("OUT_DIR");
+    if (!out_dir || !*out_dir) out_dir = "build";
+    int len = snprintf(out, n, "%s/omegatool", out_dir);
+    if (len > 0 && (size_t)len < n && access(out, R_OK) == 0) return true;
+    ssize_t r = readlink("/proc/self/exe", out, n - 1);
+    if (r <= 0) {
+        out[0] = '\0';
+        return false;
+    }
+    out[r] = '\0';
+    return access(out, R_OK) == 0;
+}
