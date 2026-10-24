@@ -332,15 +332,15 @@ of the same compiler: `seed/omc/omc.om`, 5,395 lines and 209 functions, sha256
 
 ## Rung R9: f32 and f64 (done)
 
-IEEE-754 binary32 and binary64 are now part of the language, written in omc (`f32`, `f64`, `bits`,
-decimal literals, arithmetic, comparisons and conversions). A float value is its bit pattern in an
+IEEE-754 binary32 and binary64 are now part of the language, written in omc (`f32`, `f64`,
+`bitcast`, decimal literals, arithmetic, comparisons and conversions). A float value is its bit pattern in an
 ordinary integer register; arithmetic moves it to v0/v1, runs one scalar FP instruction and moves it
 back, with FPCR untouched and no fused operation.
 
 - `seed/omc/omc.om`, 6,241 lines and 233 functions, sha256
   `f769b4a8c2ecd9006ade38b5d10c6d3e12bd3044b7418a3a87b6b4e2731c824a` (169,276 bytes).
 - `seed/omc/gate8.sh` passes 21 cases: exact bits for 1.5, 0.1, pi, 1e-3 and -0.0 in both widths;
-  arithmetic; IEEE comparisons including NaN; sqrt, abs, min and max with minNum/maxNum and -0.0
+  arithmetic; IEEE comparisons including NaN; fsqrt, fabs, fmin and fmax with minNum/maxNum and -0.0
   ordering; int<->float and f32<->f64 conversions with saturation; float arrays, pools, parameters,
   returns and struct fields; and refusals for mixed types, integer intrinsic operands, ambiguous
   literals, float indices, float `for` counts, `read`/`write` on float arrays, malformed literals,
@@ -392,6 +392,22 @@ without hard-coded numbers.
 - `seed/omc/gate10.sh` passes 5 cases: every scalar size, a struct with scalar and array fields
   (size 40, offsets 0/8/16), composition in an expression, and refusals (unknown type 16, unknown
   struct or field 3, `sizeof void` 9).
+
+## Rung R13: keyword compatibility (done)
+
+The first float slice spelled its words `bits`, `sqrt`, `abs`, `min` and `max`. Auditing the 103
+`.om` files of the benchmark corpus against the pinned compiler (`e5d60db8…`) showed seven refusals:
+existing code uses `bits` as a parameter or variable in six files and `min` in one. A keyword may not
+take a name that existing code uses, so the float words are now `bitcast`, `fsqrt`, `fabs`, `fmin`,
+`fmax` (ids unchanged).
+
+- Re-running the same audit after the rename: 103 files, 0 output differences, 0 crashes against the
+  pinned compiler, so every existing program still compiles to identical machine code.
+- `seed/omc/gate11.sh` pins the rule: `bits`, `min`, `max`, `abs` and `sqrt` are usable as names
+  (`names.om`, exit 10), while `bitcast` is a keyword (`neg_reserved.om`, error 16).
+- `seed/omc/omc.om`, 6,315 lines and 236 functions, sha256
+  `c7f4fc4fac585653226468251ca86e1900ff7f51e9f731687cc2e176702c7f8d` (171,088 bytes).
+- The audit method and result are recorded in `evidence/SEED-0/keyword-compat/README.md`.
 
 ## How the checks stay honest
 

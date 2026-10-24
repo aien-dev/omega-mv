@@ -1,33 +1,33 @@
-note sqrt, abs, min, max: one scalar FP instruction each; min/max are the IEEE minNum/maxNum rule.
+note fsqrt, fabs, fmin, fmax: one scalar FP instruction each; fmin/fmax are the IEEE minNum/maxNum rule.
 fn main to int
-a = sqrt 4.0f64
+a = fsqrt 4.0f64
 if ne int a 2
 ret 1
 end
-b = abs -2.5f64
-if ne bits ulong b 4612811918334230528
+b = fabs -2.5f64
+if ne bitcast ulong b 4612811918334230528
 ret 2
 end
 n = div 0.0f64 0.0f64
-c = min n 1.5f64
-if ne bits ulong c 4609434218613702656
+c = fmin n 1.5f64
+if ne bitcast ulong c 4609434218613702656
 ret 3
 end
-d = max -0.0f64 0.0f64
-if ne bits ulong d 0
+d = fmax -0.0f64 0.0f64
+if ne bitcast ulong d 0
 ret 4
 end
-e = sqrt f32 4.0f32
+e = fsqrt f32 4.0f32
 if ne int e 2
 ret 5
 end
 f = f32 0.5
-g = abs f
-if ne bits uint g 1056964608
+g = fabs f
+if ne bitcast uint g 1056964608
 ret 6
 end
-h = max f32 -0.0f32 f32 0.0f32
-if ne bits uint h 0
+h = fmax f32 -0.0f32 f32 0.0f32
+if ne bitcast uint h 0
 ret 7
 end
 ret 0

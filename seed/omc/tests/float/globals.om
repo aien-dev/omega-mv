@@ -3,12 +3,12 @@ global g f64 4
 global h f32 4
 fn main to int
 put g 1 0.5
-b = bits ulong get g 1
+b = bitcast ulong get g 1
 if ne b 4602678819172646912
 ret 1
 end
 put h 3 1.5
-c = bits uint get h 3
+c = bitcast uint get h 3
 if ne c 1069547520
 ret 2
 end

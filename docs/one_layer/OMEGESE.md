@@ -532,6 +532,10 @@ them, so they are omc-only like structs. Checked by `seed/omc/gate7.sh`; it is r
 
 ### 9.9 Floating point (omc only, gate8)
 
+The words are `bitcast`, `fsqrt`, `fabs`, `fmin` and `fmax`, not `bits`, `sqrt`, `abs`, `min` and
+`max`: the benchmark corpus uses those shorter spellings as ordinary identifiers, and a keyword may
+not take a name that existing `.om` code already uses. gate11 pins both halves of that rule.
+
 `f32` and `f64` are IEEE-754 binary32 and binary64. A float value is its bit pattern held in an
 ordinary integer register; arithmetic moves it to v0/v1, runs one scalar FP instruction, and moves it
 back. FPCR is never written: round to nearest even, subnormals kept, no fused operations, one rounding
@@ -550,14 +554,14 @@ conversion is error 7.
 - Operators: `+ - * /` and unary `neg`; comparisons `eq ne lt le gt ge`. Bit operators, shifts and
   `rem` on a float are error 7. IEEE results: division by zero and overflow give infinity, 0/0 gives
   NaN, and no float operation traps. NaN compares false everywhere except `ne`, which is true. -0.0
-  compares equal to 0.0; `bits` exposes the sign. (gate8 arith, compare)
-- Intrinsics `sqrt x` and `abs x` take one float; `min a b` and `max a b` take two of one float type
-  and follow FMINNM/FMAXNM (IEEE minNum/maxNum: one quiet NaN returns the other operand; -0.0 orders
-  below +0.0). A bare integer operand is error 7 and an unresolved literal is error 11. (gate8
-  intrinsics, neg_intr_*)
+  compares equal to 0.0; `bitcast` exposes the sign. (gate8 arith, compare)
+- Intrinsics `fsqrt x` and `fabs x` take one float; `fmin a b` and `fmax a b` take two of one float
+  type and follow FMINNM/FMAXNM (IEEE minNum/maxNum: one quiet NaN returns the other operand; -0.0
+  orders below +0.0). A bare integer operand is error 7 and an unresolved literal is error 11.
+  (gate8 intrinsics, neg_intr_*)
 - Conversions `<type> value` handle int<->float, f32<->f64 and float->int. Int to float is SCVTF/UCVTF
   (round to nearest even); float to int is FCVTZS/FCVTZU (truncate, saturate, NaN -> 0); f32<->f64 is
-  FCVT. `bits T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64) without
+  FCVT. `bitcast T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64) without
   changing its bits; any other width or a bool is error 7. (gate8 convert)
 - Floats are allowed in `global` pools, `new` arrays, parameters, returns and struct fields; the same
   8-byte cell rule as for structs applies (an f32 field or array element still occupies an 8-byte

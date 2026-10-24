@@ -23,7 +23,7 @@ ret 6
 end
 z = f64 0.1
 w = f32 z
-if ne bits uint w 1036831949
+if ne bitcast uint w 1036831949
 ret 7
 end
 ret 0
