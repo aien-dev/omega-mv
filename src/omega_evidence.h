@@ -85,6 +85,13 @@ bool omega_evidence_run_commit(char out[41]);
 /* True if the full relevant git tree (including untracked files) is dirty. */
 bool omega_evidence_tree_dirty(void);
 
+/* Path of the omegatool that is running the gates, for receipt digests and manifests:
+ * "$OUT_DIR/omegatool" (tests/gates/run.sh builds each step into build/step-<step>/,
+ * omega#511; a clean clone builds with OUT_DIR=build), "build/omegatool" when OUT_DIR
+ * is unset, else the kernel's record of the running executable (/proc/self/exe).
+ * Returns false when no readable file is found. */
+bool omega_evidence_self_binary(char *out, size_t n);
+
 /* Reads physics.lock at the repo root; trims whitespace/newline. Returns
  * false if the file cannot be read. */
 bool omega_evidence_physics_commit(char *out, size_t n);
