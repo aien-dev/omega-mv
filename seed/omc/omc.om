@@ -6587,8 +6587,10 @@ ir_val 65534 1
 bnd = ulong 1000000
 tok
 if and eq get tk 0 1 eq kw get tw 0 70
-tok
-bnd = get tw 0
+bnd = lenval
+if ge sub bnd 1 999999
+fail 8
+end
 end
 lim = ir_lit bnd 5
 ir_op 14 get ir_rr 0 g ex 0
@@ -6610,10 +6612,9 @@ tok
 w = get tw 0
 tok
 ty = kw get tw 0
-tok
-k = get tw 0
 z = ir_lit 0 ty
-kk = ir_lit k ty
+ir_val 65534 ty
+bnd = get ir_rr 0
 uu = ir_lit 1 ty
 ctr = ir_newreg ty
 ir_bind w ctr
@@ -6625,7 +6626,7 @@ ir_op 13 h 0 0 0
 put ir_dead 0 1
 ir_start h
 c = ir_newreg 1
-ir_op 5 3 c ctr ir_lit k ty
+ir_op 5 3 c ctr bnd
 ir_op 14 c body ex 0
 ir_push 3 h ex ctr 0
 ir_start body
@@ -6662,11 +6663,7 @@ note ir_trap: OMEGESE section 4. A trap ends the path but the IR still
 note needs an unreachable ret terminator (zero of the return type, or void).
 note trap is packed little endian 1885434484; independently checked in Wolfram.
 fn ir_trap to void
-tok
-if ne get tk 0 2
-fail 4
-end
-code = get tw 0
+code = lenval
 if or lt code 1 gt code 14
 fail 8
 end
@@ -6695,11 +6692,11 @@ fail 17
 end
 end
 if eq c 77
-if eq get tw 0 1885434484
+fail 9
+end
+if eq c 87
 ir_trap
 ret 0
-end
-fail 9
 end
 if eq c 66
 ir_end

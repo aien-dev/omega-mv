@@ -75,6 +75,18 @@ timeout 5 "$B/stage2" < "$B/c1.om" > "$B/c1.ir"
 timeout 5 "$B/stage2" < "$B/c2.om" > "$B/c2.ir"
 cmp -s "$B/c1.ir" "$B/c2.ir" || fail 'integer constant IR differs from its literal'
 echo 'PASS integer constant folds to the literal IR'
+# Constants in trap, bound and for positions fold to the same IR as literals.
+ir_fold() { # name const-source literal-source
+    printf '%b\n' "$2" > "$B/$1c.om"
+    printf '%b\n' "$3" > "$B/$1l.om"
+    timeout 5 "$B/stage2" < "$B/$1c.om" > "$B/$1c.ir"
+    timeout 5 "$B/stage2" < "$B/$1l.om" > "$B/$1l.ir"
+    cmp -s "$B/$1c.ir" "$B/$1l.ir" || fail "$1 constant IR differs from its literal"
+    echo "PASS $1 constant folds to the literal IR"
+}
+ir_fold trap_const 'ir\nconst T uint 2\nfn f to uint\ntrap T\nend' 'ir\nfn f to uint\ntrap 2\nend'
+ir_fold bound_const 'ir\nconst B ulong 3\nfn f to uint\nx = uint 0\nwhile lt x uint 2 bound B\nx = add x uint 1\nend\nret x\nend' 'ir\nfn f to uint\nx = uint 0\nwhile lt x uint 2 bound 3\nx = add x uint 1\nend\nret x\nend'
+ir_fold for_const 'ir\nconst K ulong 4\nfn f to uint\nx = uint 0\nfor i ulong K\nx = add x uint 1\nend\nret x\nend' 'ir\nfn f to uint\nx = uint 0\nfor i ulong 4\nx = add x uint 1\nend\nret x\nend'
 ir_refuse float_const 9 'ir
 const H f64 0.1
 fn f to f64

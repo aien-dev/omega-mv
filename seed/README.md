@@ -777,6 +777,25 @@ checks; the argument counts are unchanged.
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`). None of the three words is used as an identifier there.
 
+## Rung R40: IR constants in trap/bound/for; IR trap dispatch fixed (done)
+
+IR mode now folds integer constants used as `trap` codes, `while` bounds and `for` counts to the
+same IR as their literals; gate-ir compares each pair byte for byte. Two latent IR bugs surfaced and
+were fixed:
+
+- `ir_stmt` dispatched `trap` on keyword id 77 (`own`) instead of 87, so `trap` in IR fell through
+  to assignment parsing and was miscompiled. It now reaches `ir_trap`.
+- `ir_while` and `ir_for` read the token bits directly, so `bound B` / `for i ulong K` fed the
+  packed name into the IR instead of the constant's value. They now use `lenval` and `ir_val`.
+
+The ten one-function dev outputs stay byte-identical; the literal `for` count is still allocated in
+the same register order as before.
+
+- `seed/omc/omc.om`, 6,850 lines and 241 functions, sha256
+  `d0a15906da52c69c128bb1f38540a0ce33f3404fbecf9eeb7014c797f69c049d` (113,927 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

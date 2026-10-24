@@ -605,8 +605,9 @@ error 9. Checked by `seed/omc/gate10.sh`, which `seed/host/check.sh` runs.
 must fit the type (error 8). The constant is a typed number: an integer (`uint 5`, `long -3`) or a
 float literal (`f64 0.1`, `f32 0.1`); an integer literal under a float type is refused (error 16).
 It composes wherever a value goes, including inside functions and as a call argument, and it cannot
-be assigned (error 7). In IR mode an integer constant is folded to its literal; a float constant
-there is refused (error 9), as are struct/global/text declarations. Definitions are sequential, so a
+be assigned (error 7). In IR mode an integer constant is folded to its literal, including as a
+`trap` code, a `while` bound, or a `for` count; a float constant there is refused (error 9), as are
+struct/global/text declarations. Definitions are sequential, so a
 constant defined after a function is not visible to that function.
 
 An integer constant is also accepted as an array length in `new`, `global`, a parameter declaration
