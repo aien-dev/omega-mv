@@ -44,11 +44,18 @@ Expected output and exit:
 | store | `store checks=077 000` | 0 |
 | dispatch | `dispatch checks=037 000` | 0 |
 | lock | `lock checks=8 fails=0` | 0 |
+| dispatch-order | `dispatch order checks=3 fails=0` | 0 |
+| store-exact | `store exact checks=4 fails=0` | 0 |
+| store-cleanup | `store cleanup cases=18 fails=0` | 0 |
 
 The authority gates and the standalone lock gate are run by
 `seed/qualification/security673/gate669.om` as part of the security qualification; the dispatcher
 also exercises the lock in its 37-check gate. A failure is a failed check count or a nonzero exit; a compile failure is
-`INVALID`, not a pass.
+`INVALID`, not a pass. The three newer regressions run after the existing authority gates,
+each with its own fresh child working directory beneath `build/security673-native`. Their
+relative `build/authority-store` fixtures cannot overwrite each other or the earlier gates.
+This filesystem separation is not a sandbox. See the coordinator README for retained artifacts
+and native verification limits.
 
 ## Cutover rule
 
@@ -78,8 +85,8 @@ build/dispatch-order-gate
 ```
 
 Run each command only after its predecessor succeeds; never execute failed compiler output.
-Expected: `dispatch order checks=3 fails=0`, exit 0. Build/run the existing dispatch gate and
-full security gate separately; this standalone regression is not yet wired into `gate669`.
+Expected: `dispatch order checks=3 fails=0`, exit 0. This regression is also wired into
+`gate669`; the existing dispatch and lock gates remain in that campaign.
 The negative control is the same compilation unit with only `dispatch.om` restored to the base
 revision's pre-acquisition read. It must print `FAIL dispatch acquired-record refusal` and exit 1;
 a compiler failure, signal, or timeout is INVALID, not a passing control.
@@ -119,7 +126,7 @@ Run each command only after its predecessor succeeds. Expected output is
 The test deliberately has no dependency on the new EOF-probe scratch buffer, so the old-source
 control remains a valid compilation unit. Failed compilation, signals and timeouts are INVALID.
 Run the existing store, dispatch, dispatcher-order and complete security gates as regressions.
-This standalone gate is not yet wired into `gate669`; all compiled runs remain NOT_RUN.
+This gate is also wired into `gate669`; all compiled runs remain NOT_RUN.
 
 `store-gate.om` has been regenerated as `store.om` followed by `store-test.om`. Its prior copy
 also lacked the already-existing `sgerr` generation-error interface; it now tests the current
@@ -146,3 +153,63 @@ scenarios or production sources. Declared concatenated gates are regenerated
 from this revision's own component sources. Source review is not compiler
 acceptance: Omega compilation and native positive/negative runs remain NOT_RUN.
 Historical evidence is unchanged.
+
+## Store write failure cleanup
+
+`writerec` and `writegen` close their opened descriptor once on failed/short
+write and failed fsync, preserving the primary errors (11/12 and 41/42) even
+if cleanup also fails. Close is never retried. Successful-path close errors
+remain 13/43, and record rename is skipped after any earlier error.
+
+`store-cleanup-test.om` provides 18 handwritten deterministic fake-effect cases.
+The committed `store-cleanup-gate.om` contains a test-only derivation of `store.om`
+followed by this test verbatim. It checks effect order, exactly-one close,
+descriptor identity and primary error precedence. It does not test real syscalls,
+fd ownership, durability or hardware. Production code has no test hooks.
+
+### Derivation and manual source-correspondence review
+
+New first-party runners/automation must be seeded `.om`. The temporary shell
+composer used during preparation is removed from active source; it was disposable
+authoring validation, not a supported runner. No replacement compiler or runner
+is introduced. Keep the handwritten test and committed `.om` gate reviewable.
+
+To derive the store prefix, preserve every line and scalar argument of `store.om`
+except these exact effect-call prefixes (ignore `note` comments):
+
+| Production prefix | Test-only prefix |
+| --- | --- |
+| `fopen spath` | `cfopen` |
+| `write int fd sb` | `cwrite int fd` |
+| `fsync int fd` | `cfsync int fd` |
+| `fclose int fd` | `cfclose int fd` |
+| `renames spkt` | `crenames` |
+
+The omitted global-buffer arguments cannot be passed to ordinary Omega functions;
+buffer contents are outside this test. Append `store-cleanup-test.om` unchanged.
+Before any approved compilation, manually compare the gate prefix against
+`store.om`: only the five substitutions above may differ. Compare its remaining
+suffix byte-for-byte against the test. Check that no executable `fopen`, `write`,
+`fsync`, `fclose` or `renames` token remains in the derived store prefix; reject
+any unrecognized call shape rather than leave a real write-side effect behind.
+The store read functions retain real `read` primitives but are never called by
+this fixture. The harness alone uses real stdout for its success message.
+
+For approved Linux AArch64 replay, compile the committed `store-cleanup-gate.om`
+with the existing reconstructed compiler, inspect the output, and execute only
+a successfully compiled artifact. Expected output: `store cleanup cases=18
+fails=0`, exit 0. For the negative control, apply the same reviewed derivation
+to `store.om` from `95529421e9a0e6d6d63ca5d8b8cdfaf443e0ef78`, followed by the
+current test unchanged. That prefix must differ only by four missing cleanup
+calls. Expected: exit 1 without the success message. Compilation failure,
+signal or timeout is INVALID, not a passing control.
+
+The historical preparation checks in
+[`store-write-cleanup/REVIEW.md`](../../evidence/SECURITY-673/store-write-cleanup/REVIEW.md)
+remain unchanged as evidence of checks observed then; its removed shell-helper
+commands are not current replay instructions. The manual derivation above and
+committed gate supersede those commands. Current source correspondence, absence
+of unmatched write-side effects, and metadata checks pass; all Omega compilation,
+native positive/negative runs and security qualification remain NOT_RUN. This
+gate is wired into the existing security coordinator with its own fresh child
+working directory; the standalone replay and negative control remain available.
