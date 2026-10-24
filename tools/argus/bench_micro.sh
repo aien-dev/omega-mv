@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # ARGUS_PERFORMANCE micro-op: interleaved RX_ARGUS=0/1/2(discard)/2(ingest) runs of
 # bench_rx_argus pinned with taskset. Usage: bench_micro.sh OUT_DIR CPUS ROUNDS N S > out.jsonl
 # CFGS (env) selects configs; 2dn/2in = discard/ingest with RX_ARGUS_CONSUMER_CPU=none
