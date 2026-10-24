@@ -750,7 +750,8 @@ A leading line `ir`, before any other line, puts omc in IR mode: it writes OSC I
 the AArch64 path is not taken. Every function is encoded in source order. A function may call an
 **earlier** function (self and forward calls are error 3) with at most six arguments; a
 value-returning call composes as a value, a void call is a statement, and using one where the other
-is needed is error 7. Argument types are checked at compile time (error 7).
+is needed is error 7. Argument types are checked at compile time (error 7). `break` lowers to a
+`BR` to the innermost loop's exit and marks the path dead; `continue` is still refused (error 3).
 
 `seed/omc/gate-ir.sh` compares 10 dev programs, nine hand-written multi-function call units and 30
 randomized two-function call units byte-for-byte with the C-built `omegese` + `omega_emit` oracle, requires `checker2` to ACCEPT every unit, requires
@@ -759,7 +760,7 @@ never write omc's bytes.
 
 Limits, said plainly: scalar values, calls to earlier functions, at most 32 functions and 6
 parameters. IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
-float word, a host word, `break`, `continue`, `sizeof` or `offsetof` with error 3; it never skips a
+float word, a host word, `continue`, `sizeof` or `offsetof` with error 3; it never skips a
 declaration it cannot lower. `note` lines are skipped. Struct IR remains open. The gate needs the
 C-built oracles, so `seed/host/check.sh` runs it only when `build/omegese/omegese`,
 `build/omega_emit/omega_emit` and `build/checker2/checker2` exist, and says `SKIP` otherwise.

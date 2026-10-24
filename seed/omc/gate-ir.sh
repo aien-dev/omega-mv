@@ -141,6 +141,18 @@ end
 fn f to uchar
 ret inc uint 4
 end'
+ir_refuse break_outside 9 'ir
+fn f to uint
+break
+end'
+ir_refuse after_break 17 'ir
+fn f to uint
+while lt uint 1 uint 2 bound 3
+break
+ret uint 0
+end
+ret uint 0
+end'
 
 # Multi-function units with calls: byte-identical to the C oracle and checker2 ACCEPT.
 ir_multi() { # name source
@@ -152,7 +164,7 @@ ir_multi() { # name source
     cmp -s "$B/$1.oracle" "$B/$1.got" || fail "$1 multi-function IR differs"
     build/checker2/checker2 check "$B/$1.got" > "$B/$1.check"
     grep -q '^checker2=ACCEPT ' "$B/$1.check" || fail "$1 checker refusal"
-    echo "PASS $1 multi-function IR identical; checker2 ACCEPT"
+    echo "PASS $1 IR identical; checker2 ACCEPT"
 }
 ir_multi call_value 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint\nret inc uint 4\nend'
 ir_multi call_void 'fn sink a uint to void\nret\nend\nfn f to uint\nsink uint 1\nret uint 2\nend'
@@ -163,6 +175,9 @@ ir_multi call_nested 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint
 ir_multi call_expr 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint\nret add inc uint 1 inc uint 2\nend'
 ir_multi call_loop 'fn add1 a uint to uint\nret add a uint 1\nend\nfn f to uint\nx = uint 0\nwhile lt x uint 3 bound 8\nx = add1 x\nend\nret x\nend'
 ir_multi call_six 'fn sum6 a uint b uint c uint d uint e uint f uint to uint\nret add add add add add a b c d e f\nend\nfn f to uint\nret sum6 uint 1 uint 2 uint 3 uint 4 uint 5 uint 6\nend'
+ir_multi break_while 'fn f to uint\nx = uint 0\nwhile lt x uint 10 bound 100\nif eq x uint 3\nbreak\nend\nx = add x uint 1\nend\nret x\nend'
+ir_multi break_for 'fn f to uint\ns = uint 0\nfor i ulong 10\nif eq i ulong 3\nbreak\nend\ns = add s uint i\nend\nret s\nend'
+ir_multi break_nested 'fn f to uint\nx = uint 0\nwhile lt x uint 5 bound 20\ny = uint 0\nwhile lt y uint 5 bound 20\nif eq y uint 2\nbreak\nend\ny = add y uint 1\nend\nx = add x y\nend\nret x\nend'
 # Random two-function programs with a call: differential against the oracle.
 rm -f "$B"/fz*
 awk -v dir="$B" 'BEGIN{
@@ -214,5 +229,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 14 refusals + 9 multi-call units + 30 fuzz units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 16 refusals + 9 multi-call units + 3 break units + 30 fuzz units; structs IR spec-blocked'
 echo 'RC=0'

@@ -20,10 +20,10 @@ Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/chec
 | Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync, pread/pwrite | seed/host/check.sh |
 | Diagnostics | 23 named refusal codes with one minimal case each | gate15 |
 | Robustness | 600 deterministic fuzz programs; capacity boundaries; 300-program differential fuzz against the pinned compiler; 30 randomized two-function IR units | gate12, gate13, gate17, gate-ir |
-| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded (values, trap, bound, for); refuses what it cannot lower | gate-ir (10/10 dev programs, 9 multi-call units, 14 refusals) |
+| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded, break; refuses what it cannot lower | gate-ir (10/10 dev, 9 call units, 3 break units, 30 fuzz units, 16 refusals) |
 
-Compiler: 7,100 lines, 249 functions, sha256
-`bdc20d7dd10c3b3ccd70ce742f2622c59fc6207cbd792a128ef69ae1ed97ec60` (118,219 bytes).
+Compiler: 7,128 lines, 251 functions, sha256
+`a9cd48e909861051cd3ee771b1160fa31ce0cf8b95b559f54e6bf6e50958c297` (118,732 bytes).
 
 Benchmark parity: 103 authored `.om` sources and 53 build-plan targets compile to identical bytes
 and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after every keyword).
@@ -31,8 +31,8 @@ and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after eve
 ## 2. Open compiler work
 
 IR mode is complete for the OSC-1 slice: scalar values, up to 32 functions, calls to earlier
-functions with full 63-byte names, and integer constants (values, trap codes, loop bounds, for
-counts). `gate-ir` pins this against the C oracle and checker2. No self-contained compiler feature
+functions with full 63-byte names, integer constants (values, trap codes, loop bounds, for counts),
+and break. `gate-ir` pins this against the C oracle and checker2. No self-contained compiler feature
 remains for that slice.
 
 **Spec-blocked target extensions.** OSC-1 explicitly excludes structs and strings, and its scalar

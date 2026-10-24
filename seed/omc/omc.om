@@ -6887,6 +6887,30 @@ ir_val 65535 0
 ir_bind w get ir_rr 0
 end
 
+note ir_loopexit: innermost loop block's exit + 1, or 0 outside a loop.
+fn ir_loopexit to ulong
+i = get ir_nf 0
+while gt i 0
+i = sub i 1
+k = ulong get ir_fk i
+if or eq k 2 eq k 3
+ret add get ir_fb i 1
+end
+end
+ret 0
+end
+
+note ir_break: BR to the innermost loop's exit, then the path is dead. The if/loop closes skip the
+note unreachable join exactly as they do after ret or trap.
+fn ir_break to void
+ex = ir_loopexit
+if eq ex 0
+fail 9
+end
+ir_op 13 sub ex 1 0 0 0
+put ir_dead 0 1
+end
+
 note ir_trap: OMEGESE section 4. A trap ends the path but the IR still
 note needs an unreachable ret terminator (zero of the return type, or void).
 note trap is packed little endian 1885434484; independently checked in Wolfram.
@@ -6928,6 +6952,10 @@ fail 9
 end
 if eq c 87
 ir_trap
+ret 0
+end
+if eq c 86
+ir_break
 ret 0
 end
 if eq c 66

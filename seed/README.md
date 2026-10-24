@@ -847,6 +847,19 @@ must be byte-identical to the C `omegese` + `omega_emit` oracle and checker2 ACC
 call sites and argument values beyond the nine hand-written units: 30 programs, 0 differences, about
 0.5 s.
 
+## Rung R45: IR break (done)
+
+IR mode lowers `break` to a `BR` to the innermost loop's exit and marks the path dead; the enclosing
+`if`/loop closes skip unreachable joins exactly as after `ret` or `trap`. The gate compares `while`,
+`for` and nested-loop break programs byte-for-byte with the C oracle and requires checker2 ACCEPT;
+`break` outside a loop is error 9 and a later line in the same block is error 17. `continue` remains
+refused (error 3), matching the C `omegese`, which does not accept it.
+
+- gate-ir now pins 10 dev programs, 9 call units, 3 break units, 30 fuzz units and 16 refusals.
+- `seed/omc/omc.om`, 7,128 lines and 251 functions, sha256
+  `a9cd48e909861051cd3ee771b1160fa31ce0cf8b95b559f54e6bf6e50958c297` (118,732 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
