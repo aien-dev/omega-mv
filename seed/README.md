@@ -5,6 +5,9 @@ we would inherit all of it. So this folder grows a toolchain from a few hundred 
 step, with the existing C compiler and the GNU tools used only as a referee that checks the answers, never
 as a builder.
 
+The current completeness audit (implemented areas, open compiler work, and what is blocked on a
+decision or an external store) is `docs/one_layer/OM_COMPLETION.md`.
+
 Think of it as a ladder. Each rung is a small program, written in the language the rung below understands,
 and built by the rung below. Every rung must rebuild itself to the exact same bytes, which proves it reads
 its own language the same way the rung below does.
