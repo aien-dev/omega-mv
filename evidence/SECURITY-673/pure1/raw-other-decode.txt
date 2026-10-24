@@ -1,0 +1,23 @@
+
+build/security673-pure/raw-other:     file format binary
+
+
+Disassembly of section .data:
+
+00000000000000b0 <.data+0xb0>:
+  b0:	d2800060 	mov	x0, #0x3                   	// #3
+  b4:	d2802801 	mov	x1, #0x140                 	// #320
+  b8:	f2a00801 	movk	x1, #0x40, lsl #16
+  bc:	d2800002 	mov	x2, #0x0                   	// #0
+  c0:	d2800003 	mov	x3, #0x0                   	// #0
+  c4:	d2820004 	mov	x4, #0x1000                	// #4096
+  c8:	d2802328 	mov	x8, #0x119                 	// #281
+  cc:	d4000001 	svc	#0x0
+  d0:	b100341f 	cmn	x0, #0xd
+  d4:	54000060 	b.eq	0xe0  // b.none
+  d8:	d28008e0 	mov	x0, #0x47                  	// #71
+  dc:	14000002 	b	0xe4
+  e0:	d2800000 	mov	x0, #0x0                   	// #0
+  e4:	d2800ba8 	mov	x8, #0x5d                  	// #93
+  e8:	d4000001 	svc	#0x0
+	...

@@ -84,6 +84,13 @@ Descriptor scope is deliberate: generic `execprog` admits only descriptors 0, 1 
 not part of the supported profile. A caller that needs other resources passes paths or data, not
 inherited authority, so numeric descriptor reuse cannot resurrect an old grant.
 
+Bypass controls remove one enforcement step at a time with `branch-mutate.om` and require the named
+result: seccomp removed lets raw getpid through (71), Landlock restriction removed lets the second
+image execute (77), CPU exhaustion dies with SIGXCPU (152), and a 1,048,577-byte write stops at the
+1 MiB file limit (0, 1,048,576 bytes). An unavailable close_range refuses the launch with 38.
+`pure-raw.om` accepts an optional absolute target path for the second-image and fixed-inode
+controls. Evidence is `evidence/SECURITY-673/pure3`; the earlier author run is `pure1`.
+
 ## Bounded source ingress (#671)
 
 With fresh scratch, `build/gate669 3` runs eighteen source cases through the real rebuilt compiler.
