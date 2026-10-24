@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # run_gpu_l2d_prefetch_chip.sh EVIDENCE_DIR [PHYSICS_DIR]   (OWN-30B W-L2d, 2026-10-14; run under flock /tmp/aien-gb10.lock)
 # One variable: the o_proj weight prefetch launch beside the attention (decode graph --prefetch), on GPU-cached weights.
 # Synthetic 2-layer token (no model load). Interleaved A/B: cached base, cached prefetch, cached base, cached prefetch;
