@@ -495,30 +495,34 @@ note Deterministic lock-acquisition schedule, not a qualification of the real pi
 note Link action.om, store.om, dispatch.om and this file, WITHOUT lock.om.
 note The acquisition double commits another owner's performed record before returning.
 note Production dispatch must read that record after acquisition and refuse a duplicate.
-global scheduled ulong 32
-global acquiremode ulong 1
+global schedrec ulong 32
+global acqmode ulong 1
 global releases ulong 1
 global acquired ulong 1
 global failures ulong 1
 text orderdir "build/authority-store"
-text orderbuild "build"
-text stalecheck "FAIL dispatch acquired-record refusal\n"
-text releasecheck "FAIL dispatch read-error release\n"
-text acquirecheck "FAIL dispatch acquisition-error refusal\n"
+text ordbuild "build"
+text stalechk "FAIL dispatch acquired-record refusal\n"
+text relcheck "FAIL dispatch read-error release\n"
+text acqcheck "FAIL dispatch acquisition-error refusal\n"
 text okorder "dispatch order checks=3 fails=0\n"
 fn lacq p ulong tries ulong to ulong
 put acquired 0 add get acquired 0 1
-if eq get acquiremode 0 2
+if eq get acqmode 0 2
 ret 22
 end
-if eq get acquiremode 0 1
+if eq get acqmode 0 1
 r = unlink recp 0 len recp
 if ne r 0
 ret 40
 end
 ret 0
 end
-ret writerec scheduled
+localrec = new ulong 32 0
+for i ulong 32
+put localrec i get schedrec i
+end
+ret writerec localrec
 end
 fn lrel to ulong
 put releases 0 add get releases 0 1
@@ -527,26 +531,26 @@ end
 fn orderfail mode ulong to void
 put failures 0 add get failures 0 1
 if eq mode 0
-w = write 1 stalecheck 0 len stalecheck
-if ne w long len stalecheck
+w = write 1 stalechk 0 len stalechk
+if ne w long len stalechk
 exit 90
 end
 end
 if eq mode 1
-w = write 1 releasecheck 0 len releasecheck
-if ne w long len releasecheck
+w = write 1 relcheck 0 len relcheck
+if ne w long len relcheck
 exit 90
 end
 end
 if eq mode 2
-w = write 1 acquirecheck 0 len acquirecheck
-if ne w long len acquirecheck
+w = write 1 acqcheck 0 len acqcheck
+if ne w long len acqcheck
 exit 90
 end
 end
 end
 fn main to int
-mk = makedir orderbuild 0 len orderbuild 448
+mk = makedir ordbuild 0 len ordbuild 448
 if not or eq mk 0 eq mk -17
 ret 91
 end
@@ -573,10 +577,10 @@ put r add i 8 add i 100
 put c add i 8 add i 100
 end
 for i ulong 32
-put scheduled i get r i
+put schedrec i get r i
 end
-put scheduled 1 4
-put scheduled 2 1
+put schedrec 1 4
+put schedrec 2 1
 if ne writegen 1 0
 ret 93
 end
@@ -587,14 +591,14 @@ result = dispatch r c 48
 if or ne result 22 or ne get acquired 0 1 ne get releases 0 1
 orderfail 0
 end
-put acquiremode 0 1
+put acqmode 0 1
 put acquired 0 0
 put releases 0 0
 result = dispatch r c 48
 if or ne result 70 or ne get acquired 0 1 ne get releases 0 1
 orderfail 1
 end
-put acquiremode 0 2
+put acqmode 0 2
 put acquired 0 0
 put releases 0 0
 result = dispatch r c 48

@@ -124,3 +124,15 @@ This standalone gate is not yet wired into `gate669`; all compiled runs remain N
 `store-gate.om` has been regenerated as `store.om` followed by `store-test.om`. Its prior copy
 also lacked the already-existing `sgerr` generation-error interface; it now tests the current
 implementation rather than preserving that stale copy.
+
+## Fixture source correction (2026-10-24)
+
+The dispatcher-order fixture now uses global/text names within the existing
+compiler's eight-character limit and copies its scheduled record into a local
+array before calling `writerec`; global arrays cannot be function arguments.
+The exact-store fixture likewise uses global/text names within that limit.
+These correct known source compilation blockers without changing the test
+scenarios or production sources. Declared concatenated gates are regenerated
+from this revision's own component sources. Source review is not compiler
+acceptance: Omega compilation and native positive/negative runs remain NOT_RUN.
+Historical evidence is unchanged.
