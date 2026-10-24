@@ -119,8 +119,13 @@ enum {
     CX_K_PROMOTION,                     /* EVIDENCE: candidate promoted; links[0] = candidate,
                                            links[1] = evidence (cx_promote) */
     CX_K_ADMISSION,                     /* EVIDENCE: admission decision; links name its inputs */
-    CX_K_IMPORTED = CX_K_BASE + 0x20    /* CLAIM: record from a non-authoritative store;
+    CX_K_IMPORTED = CX_K_BASE + 0x20,   /* CLAIM: record from a non-authoritative store;
                                            tag = CX_SRC_* */
+    /* Experience (written only by rx_experience.c, payload RX_EXP_W_*) */
+    CX_K_EXPERIENCE = CX_K_BASE + 0x30, /* EVIDENCE: verified state/action/next-state
+                                           transition; links[0] = its World commit receipt */
+    CX_K_CONSENT_REVOKED                /* EVIDENCE: owner withdrew consent for experiences;
+                                           links[0] = the experience, 0 = all of the owner's */
 };
 
 /* Sources of CX_K_IMPORTED records (see AUTHORITY above). */
