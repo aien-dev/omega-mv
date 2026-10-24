@@ -6038,6 +6038,19 @@ global ir_isb ulong 1
 global ir_ns ulong 1
 global ir_nl ulong 1
 global ir_have ulong 1
+global irrec uchar 2620252
+global irrlen ulong 1
+global irnf ulong 1
+global irf_nm ulong 32
+global irf_ns ulong 32
+global irf_nl ulong 32
+global irf_np ulong 32
+global irf_ret uchar 32
+global irf_pt uchar 192
+global irf_n ulong 1
+global ir_args ulong 6
+global ir_oarg ulong 1536
+global ir_miss ulong 1
 
 fn ir_lead to ulong
 p = ulong 0
@@ -6274,6 +6287,16 @@ if eq op 6
 ir_w16 get ir_oa i
 ir_w16 get ir_ob i
 end
+if eq op 11
+ir_w16 get ir_oa i
+ir_w16 get ir_ob i
+emitb uchar get ir_oc i
+j = ulong 0
+while lt j get ir_oc i
+ir_w16 get ir_oarg add mul i 6 j
+j = add j 1
+end
+end
 if eq op 12
 emitb uchar get ir_oa i
 end
@@ -6293,17 +6316,7 @@ i = add i 1
 end
 end
 
-fn ir_encode to void
-put oc 0 0
-emitb 79
-emitb 83
-emitb 67
-emitb 49
-emitb 73
-emitb 82
-emitb 0
-emitb 1
-ir_w16 1
+fn ir_record to void
 emitb uchar get ir_nl 0
 p = get ir_ns 0
 e = add p get ir_nl 0
@@ -6347,6 +6360,82 @@ ir_w16 0
 ir_w16 0
 end
 
+note ir_emit_record: encode the current function into irrec and count it. The per-function IR state is
+note reset by ir_fn, so this must run before the next fn line.
+fn ir_emit_record to void
+if ge get irnf 0 32
+fail 14
+end
+put oc 0 0
+ir_record
+n = get oc 0
+base = get irrlen 0
+i = ulong 0
+while lt i n
+put irrec add base i get out i
+i = add i 1
+end
+put irrlen 0 add base n
+put irnf 0 add get irnf 0 1
+end
+
+note ir_encode: header (magic, version 1, nfuncs) followed by every collected function record.
+fn ir_encode to void
+put oc 0 0
+emitb 79
+emitb 83
+emitb 67
+emitb 49
+emitb 73
+emitb 82
+emitb 0
+emitb 1
+ir_w16 get irnf 0
+i = ulong 0
+while lt i get irrlen 0
+emitb get irrec i
+i = add i 1
+end
+end
+
+note ir_findfn: packed name -> earlier function index + 1, or 0. The current function is the newest
+note table entry and is never returned, so self and forward calls fail. Calls use names up to 8
+note characters in IR mode; longer names are refused (3).
+fn ir_findfn w ulong to ulong
+fc = sub get irf_n 0 1
+j = ulong 0
+while lt j fc
+if eq get irf_nm j w
+ret add j 1
+end
+j = add j 1
+end
+ret 0
+end
+
+note ir_callop: CALL in the IR's five-field form; the argument registers live in ir_args[0..nargs).
+fn ir_callop dst ulong callee ulong nargs ulong to void
+if ne get ir_dead 0 0
+fail 17
+end
+n = get ir_no 0
+if ge n 256
+fail 14
+end
+put ir_ok n 11
+put ir_oa n dst
+put ir_ob n callee
+put ir_oc n nargs
+put ir_od n 0
+put ir_obl n get ir_cur 0
+j = ulong 0
+while lt j nargs
+put ir_oarg add mul n 6 j get ir_args j
+j = add j 1
+end
+put ir_no 0 add n 1
+end
+
 fn ir_name to void
 e = ir_find get tw 0
 if eq e 0
@@ -6362,7 +6451,8 @@ ir_set 65534 r t
 ret
 end
 end
-fail 3
+put ir_miss 0 1
+ret
 end
 r = ulong get ir_nrr sub e 1
 ir_set 65534 r ulong get ir_rty r
@@ -6461,6 +6551,7 @@ end
 
 fn ir_val dst ulong exp ulong to void
 put ir_isb 0 0
+put ir_miss 0 0
 tok
 if eq get tk 0 2
 if eq exp 0
@@ -6474,6 +6565,9 @@ ret
 end
 c = kw get tw 0
 if and ge c 1 le c 9
+if and ne exp 0 ne c exp
+fail 7
+end
 ir_cast c dst
 ret
 end
@@ -6496,6 +6590,37 @@ ir_set dst r 1
 ret
 end
 ir_name
+if ne get ir_miss 0 0
+if gt get tl 0 8
+fail 3
+end
+f = ir_findfn get tw 0
+if eq f 0
+fail 3
+end
+j = sub f 1
+rtv = ulong get irf_ret j
+if eq rtv 76
+fail 7
+end
+np = get irf_np j
+i = ulong 0
+while lt i np
+ty = ulong get irf_pt add mul j 6 i
+ir_val 65534 ty
+put ir_args i get ir_rr 0
+i = add i 1
+end
+r = ir_newreg rtv
+ir_callop r j np
+if eq dst 65534
+put ir_rr 0 r
+put ir_vt 0 rtv
+else
+ir_set dst r rtv
+end
+ret
+end
 if ne dst 65534
 ir_set dst get ir_rr 0 get ir_vt 0
 end
@@ -6644,19 +6769,52 @@ end
 put ir_dead 0 1
 end
 
+note ir_stmtcall: a void call as a statement; f is the table index + 1.
+fn ir_stmtcall f ulong to void
+j = sub f 1
+if ne get irf_ret j 76
+fail 7
+end
+np = get irf_np j
+i = ulong 0
+while lt i np
+ty = ulong get irf_pt add mul j 6 i
+ir_val 65534 ty
+put ir_args i get ir_rr 0
+i = add i 1
+end
+ir_callop 65535 j np
+end
+
 fn ir_assign w ulong to void
+p = get ts 0
+l = get tl 0
 tok
-if ne kw get tw 0 73
+eqs = false
+if eq kw get tw 0 73
+eqs = true
+else
 put cur 0 get ts 0
 end
 e = ir_find w
-if eq e 0
-ir_val 65535 0
-ir_bind w get ir_rr 0
-else
+if ne e 0
 r = ulong get ir_nrr sub e 1
 ir_val r ulong get ir_rty r
+ret
 end
+if gt l 8
+fail 3
+end
+f = ir_findfn w
+if ne f 0
+if eqs
+fail 7
+end
+ir_stmtcall f
+ret
+end
+ir_val 65535 0
+ir_bind w get ir_rr 0
 end
 
 note ir_trap: OMEGESE section 4. A trap ends the path but the IR still
@@ -6690,6 +6848,10 @@ if and ne c 66 ne c 68
 if ne get ir_dead 0 0
 fail 17
 end
+end
+if eq c 83
+skipnl
+ret 0
 end
 if eq c 77
 fail 9
@@ -6731,6 +6893,14 @@ end
 
 fn ir_fn to void
 tok
+fcur = get irf_n 0
+if ge fcur 32
+fail 14
+end
+put irf_nm fcur get tw 0
+put irf_ns fcur get ts 0
+put irf_nl fcur get tl 0
+put irf_np fcur 0
 put ir_ns 0 get ts 0
 put ir_nl 0 get tl 0
 put ir_nreg 0 0
@@ -6749,12 +6919,21 @@ go = false
 else
 w = get tw 0
 tok
-r = ir_newreg kw get tw 0
+ty = kw get tw 0
+np = get irf_np fcur
+if ge np 6
+fail 9
+end
+put irf_pt add mul fcur 6 np uchar ty
+put irf_np fcur add np 1
+r = ir_newreg ty
 ir_bind w r
 end
 end
 tok
 put ir_ret 0 kw get tw 0
+put irf_ret fcur uchar get ir_ret 0
+put irf_n 0 add fcur 1
 put ir_npar 0 get ir_nreg 0
 b = ir_block
 ir_start b
@@ -6781,6 +6960,7 @@ end
 c = kw get tw 0
 if eq c 64
 ir_fn
+ir_emit_record
 else
 if eq c 83
 skipnl

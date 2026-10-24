@@ -92,6 +92,56 @@ const H f64 0.1
 fn f to f64
 ret H
 end'
+ir_refuse call_self 3 'ir
+fn f to uint
+ret f
+end'
+ir_refuse call_forward 3 'ir
+fn f to uint
+ret g
+end
+fn g to uint
+ret uint 1
+end'
+ir_refuse call_nonvoid_stmt 7 'ir
+fn inc a uint to uint
+ret add a uint 1
+end
+fn f to uint
+inc uint 4
+ret uint 2
+end'
+ir_refuse call_void_value 7 'ir
+fn sink a uint to void
+ret
+end
+fn f to uint
+x = sink uint 1
+ret uint 2
+end'
+ir_refuse call_arg_type 7 'ir
+fn inc a uchar to uint
+ret uint 1
+end
+fn f to uint
+ret inc uint 4
+end'
 
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 7 refusals; structs/multifunction IR still open'
+# Multi-function units with calls: byte-identical to the C oracle and checker2 ACCEPT.
+ir_multi() { # name source
+    printf '%b\n' "$2" > "$B/$1.omegese"
+    build/omegese/omegese emit "$B/$1.omegese" "$B/$1.json"
+    build/omega_emit/omega_emit emit "$B/$1.json" "$B/$1.oracle"
+    { printf 'ir\n'; cat "$B/$1.omegese"; } > "$B/$1.input"
+    timeout 5 "$B/stage2" < "$B/$1.input" > "$B/$1.got"
+    cmp -s "$B/$1.oracle" "$B/$1.got" || fail "$1 multi-function IR differs"
+    build/checker2/checker2 check "$B/$1.got" > "$B/$1.check"
+    grep -q '^checker2=ACCEPT ' "$B/$1.check" || fail "$1 checker refusal"
+    echo "PASS $1 multi-function IR identical; checker2 ACCEPT"
+}
+ir_multi call_value 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint\nret inc uint 4\nend'
+ir_multi call_void 'fn sink a uint to void\nret\nend\nfn f to uint\nsink uint 1\nret uint 2\nend'
+ir_multi call_zero 'fn z to uint\nret uint 1\nend\nfn f to uint\nret z\nend'
+ir_multi call_two 'fn add2 a uint b uint to uint\nret add a b\nend\nfn f to uint\nret add2 uint 3 uint 4\nend'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 12 refusals + 4 multi-call units; structs IR still open'
 echo 'RC=0'

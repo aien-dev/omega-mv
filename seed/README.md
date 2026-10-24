@@ -796,6 +796,26 @@ the same register order as before.
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`).
 
+## Rung R41: IR multi-function calls (done)
+
+IR mode now emits a unit of up to 32 function records and supports calls to earlier functions.
+
+- `ir_fn` records each signature (packed name, parameters, return) in a 32-entry table;
+  `ir_emit_record` appends each encoded record; `ir_encode` writes `nfuncs` and the records.
+- CALL (opcode 11) carries dst, callee index, nargs and up to six argument registers. Value calls
+  and void statement calls are both supported; argument types are checked (error 7); self and
+  forward calls are error 3; IR call names are limited to 8 characters; non-void as a statement and
+  void as a value are error 7.
+- `gate-ir` compares four multi-function units (value call, void call, zero arguments, two
+  arguments) byte-for-byte with the C `omegese` + `omega_emit` oracle and requires `checker2`
+  ACCEPT. The ten one-function dev outputs stay byte-identical; the gate now pins 12 refusals.
+- `seed/omc/omc.om`, 7,030 lines and 246 functions, sha256
+  `6af832556e7be14dfc695f7c7eb37006716200a68c2001dd0483c87031911c8c` (117,124 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`).
+- Still open: IR structs; calls remain earlier-only and scalar, and IR call names are at most eight
+  characters.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

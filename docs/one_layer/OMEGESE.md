@@ -745,14 +745,21 @@ foreign-language compiler or runtime is on the new implementation path.
 ## 11. OSC IR output (omc only, experimental checkpoint)
 
 A leading line `ir`, before any other line, puts omc in IR mode: it writes OSC IR version 1
-(`spec/one-layer-format.md`) for one function instead of AArch64 machine words, and the AArch64 path
-is not taken. `seed/omc/gate-ir.sh` compares the bytes with the C-built `omegese` + `omega_emit`
-oracle on the 10 dev programs, requires `checker2` to ACCEPT every unit, and requires a mul-to-add
-mutant to differ. Those C tools are referees only; they never write omc's bytes.
+(`spec/one-layer-format.md`) for a unit of up to 32 functions instead of AArch64 machine words, and
+the AArch64 path is not taken. Every function is encoded in source order. A function may call an
+**earlier** function (self and forward calls are error 3) with at most six arguments; a
+value-returning call composes as a value, a void call is a statement, and using one where the other
+is needed is error 7. IR call names are limited to 8 characters, and argument types are checked at
+compile time (error 7).
 
-Limits, said plainly: one function, scalar values. IR mode refuses a `struct`, `global` or `text`
-declaration with error 9 and refuses a float word, a host word, `break`, `continue`, `sizeof` or
-`offsetof` with error 3; it never skips a declaration it cannot lower. `note` lines are skipped.
-Multifunction IR and struct IR remain open. The gate needs the C-built oracles, so
-`seed/host/check.sh` runs it only when `build/omegese/omegese`, `build/omega_emit/omega_emit` and
-`build/checker2/checker2` exist, and says `SKIP` otherwise.
+`seed/omc/gate-ir.sh` compares 10 dev programs and four multi-function call units byte-for-byte
+with the C-built `omegese` + `omega_emit` oracle, requires `checker2` to ACCEPT every unit, requires
+a mul-to-add mutant to differ, and pins 12 refusal cases. Those C tools are referees only; they
+never write omc's bytes.
+
+Limits, said plainly: scalar values, calls to earlier functions, at most 32 functions and 6
+parameters. IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
+float word, a host word, `break`, `continue`, `sizeof` or `offsetof` with error 3; it never skips a
+declaration it cannot lower. `note` lines are skipped. Struct IR remains open. The gate needs the
+C-built oracles, so `seed/host/check.sh` runs it only when `build/omegese/omegese`,
+`build/omega_emit/omega_emit` and `build/checker2/checker2` exist, and says `SKIP` otherwise.

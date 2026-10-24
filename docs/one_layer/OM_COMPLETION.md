@@ -20,26 +20,24 @@ Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/chec
 | Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync | seed/host/check.sh |
 | Diagnostics | 23 named refusal codes with one minimal case each | gate15 |
 | Robustness | 600 deterministic fuzz programs; capacity boundaries | gate12, gate13 |
-| IR mode | one scalar function, OSC IR v1, integer constants folded; refuses what it cannot lower | gate-ir (10/10 dev programs + 7 refusals) |
+| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded (values, trap, bound, for); refuses what it cannot lower | gate-ir (10/10 dev programs, 4 multi-call units, 12 refusals) |
 
-Compiler: 6,853 lines, 241 functions, sha256
-`ff9f6e71378747885e0473a6661d139ce0cfa1291fc844ec61dff31dc9b4b8b6` (113,956 bytes).
+Compiler: 7,030 lines, 246 functions, sha256
+`6af832556e7be14dfc695f7c7eb37006716200a68c2001dd0483c87031911c8c` (117,124 bytes).
 
 Benchmark parity: 103 authored `.om` sources and 53 build-plan targets compile to identical bytes
 and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after every keyword).
 
 ## 2. Open language/compiler work (no external decision needed)
 
-1. **IR multi-function.** `spec/one-layer-format.md` admits `nfuncs` up to 32 and CALL to earlier
-   functions. The emitter still writes one function. This is the largest self-contained gap: parse
-   several `fn` records, allocate callee indices, emit CALL with the argument registers, and encode
-   all records. Gate-ir must keep the ten one-function outputs byte-identical and add a checker2
-   ACCEPT for a two-function unit.
-2. **IR structs.** Version 2 records exist in the format (names, fields, cells); the emitter refuses
+1. **IR structs.** Version 2 records exist in the format (names, fields, cells); the emitter refuses
    `struct`. Needs FLOAD/FSTORE and struct-typed references with the cell layout already used by the
    AArch64 path.
-3. **Constants in more IR positions.** Float constants remain refused in IR (error 9); folding them
-   needs the IR literal path for f32/f64.
+2. **IR float constants.** Float constants remain refused in IR (error 9); folding them needs the
+   IR literal path for f32/f64.
+3. **IR call limits.** Calls are earlier-only by design, scalar, at most six arguments, and call
+   names are limited to 8 characters in IR mode. Forward-call prescan would lift the last of these
+   and let calls precede definitions.
 4. **Generic byte/string utilities.** Array parameters carry an exact length, so one library routine
    cannot take arrays of several lengths. A standard library needs either open arrays or a
    max-length convention; that is a language decision, not a library chore.
@@ -64,6 +62,7 @@ and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after eve
 
 ## 4. Next concrete step
 
-Implement IR multi-function against `spec/one-layer-format.md` §3.3 (CALL, callee index, `nfuncs`),
-keeping gate-ir's ten one-function comparisons byte-identical and adding one two-function unit that
-checker2 accepts. That is the last kernel-language feature that needs no operator decision.
+Implement IR structs against `spec/one-layer-format.md` §3.2/§3.4 (struct records, FLOAD/FSTORE,
+struct-typed references), keeping the current one-function and multi-call comparisons byte-identical
+and adding a struct unit the C oracle and checker2 accept. That is the last self-contained IR
+feature that needs no operator decision.
