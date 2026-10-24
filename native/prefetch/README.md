@@ -75,3 +75,38 @@ and hardware correctness/performance requirements of #640 remain open.
 
 The compiler safety correction in Omega PR676 also reproduces this component
 without changing its executable bytes. See [evidence/prefetch-640/compiler-correction](../../evidence/prefetch-640/compiler-correction/README.md) for the exact compiler/source pins, binary comparisons and fresh host replays. The original qualification remains preserved.
+
+## Automatic host verification
+
+`OMEGA-PREFETCH-NATIVE` now selects this component's actual native tests.
+Its entry is the existing experiment script with `--host-qualification`.
+This mode never enters the GPU experiment. It checks both compiler source and
+executable against `compiler.sha256`, creates private scratch, builds `gate.om`,
+and runs it. The gate itself builds the classifier and the two independent
+fixture generators, executes all53 cases, and compares exact exits and verdict
+bytes. Each child has a30-second deadline. Scratch and child outputs remain
+available for inspection; the shell creates a separate directory on each run.
+
+The required compiler is the corrected mapping profile from OmegaPR676 commit
+`1dffceaeb0dd26fb69ea64d367a49a9950c25a62`, executable9f48f66a. This is an explicit
+integration dependency. The current main-based branch has no seed directory
+and the entry refuses with3 until that dependency is assembled. It does not
+fetch code, accept an arbitrary environment compiler, silently select an older
+profile, or waive missing prerequisites. Qualification here used a private
+combined source snapshot with exact committed compiler/source bytes. This is
+not evidence that the dependency has merged into main.
+
+Native process supervision reuses the existing gate669 pattern from that
+compiler revision. `gate-child.om` is the existing supervisor control fixture.
+Direct `gate.om` invocation takes the absolute compiler path and optionally
+control0/1/2 for wrong exit, self-signal and deadline overrun. Each requires a
+fresh `build/prefetch-native-gate` directory; repeats refuse91. Controlled
+failure exits99 and never emits the success observation. This is trusted host
+qualification, not a security sandbox or process-tree isolation mechanism.
+
+Independent replay passes53 cases and catches all six tested refusal/control
+scenarios. The existing runner passes twice with separate scratch in the exact
+combined candidate. Evidence is in `evidence/prefetch-640/native-gate/`.
+The verification planner must inspect the committed manifest; dirty-file
+preview alone does not load a new manifest. Operator review of pipeline changes
+and all pre-existing gates remain required. No allow-list exemption was added.

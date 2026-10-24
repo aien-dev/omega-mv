@@ -1,0 +1,30 @@
+{
+  "compiler_head": "1dffceaeb0dd26fb69ea64d367a49a9950c25a62",
+  "compiler_sha256": "9f48f66a9ee9f6a166df615a7ab9c48bf5b06ac2ba544ac51e52e9a3d290a6c4",
+  "gate_binary_sha256": "cd4782ba1d41424273e96ec927c2728d314c7d2c5a9bd5e57d7ea142818c921b",
+  "source": {
+    "native/prefetch/gate.om": "8dec394f5719ae02e6eb90304dc76d6c8d2d5b1fb73a915ad08e191212d6f842",
+    "native/prefetch/gate-child.om": "459a60da8e660ee1f433a9679bb41467074fda45997e5168e23e92ebad0d570b",
+    "native/prefetch/compiler.sha256": "db5f815ceba1a3c9514900c89491510a02934a73236b75cc07fd24ceedf76200",
+    "tools/run_gpu_l2d_prefetch_chip.sh": "7ce79c2e10efeeecd35f370619a398657fb23bb255c4bb22cb993d656f824a1c",
+    "tests/gates/omega-prefetch-native.gate": "59f8997128be1e8e911a4f9608959cb5c717691dca23563490672ba79b18681a"
+  },
+  "normal_cases": 53,
+  "normal_exit": 0,
+  "independent_rebuild_identical": true,
+  "controls": {
+    "reused_scratch": 91,
+    "wrong_exit": 99,
+    "signal": 99,
+    "deadline": 99,
+    "wrong_verdict_text": 99,
+    "compile_failure": 99
+  },
+  "combined_entry_exits": [
+    0,
+    0
+  ],
+  "missing_prerequisite_exit": 3,
+  "gpu": false,
+  "signed_judge": "NOT_RUN"
+}

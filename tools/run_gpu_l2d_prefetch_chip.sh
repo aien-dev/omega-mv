@@ -6,8 +6,24 @@
 # cmdlist chip test (regression of the cmdlist change). Every graph run checks B == C bit for bit + mutants and prints the
 # per-kind TIMELINE and the logits hash. Verdict line last: "GPU_L2D_PREFETCH_CHIP: PASS|FAIL".
 set -u
-EVID="${1:?evidence dir}"; PHYS="${2:-$HOME/workspace/physics-own30b-k}"
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
+# Host-only gate. All test generation, child supervision and result decisions
+# live in gate.om. This retained shell entry only verifies and builds the
+# existing native tools. Missing/unqualified compiler dependencies fail closed.
+if [ "${1:-}" = --host-qualification ]; then
+  cd "$HERE" || exit 3
+  sha256sum -c native/prefetch/compiler.sha256 || { echo "PREFETCH_NATIVE_GATE: compiler prerequisite unavailable"; exit 3; }
+  [ -x seed/out/omc ] || exit 3
+  mkdir -p build || exit 3
+  stage="$(mktemp -d "$HERE/build/prefetch-check.XXXXXX")" || exit 3
+  mkdir -p "$stage/native" "$stage/build" || exit 3
+  cp -R native/prefetch "$stage/native/prefetch" || exit 3
+  timeout --kill-after=2 30 seed/out/omc < "$stage/native/prefetch/gate.om" > "$stage/gate.elf" || exit 3
+  chmod 700 "$stage/gate.elf" || exit 3
+  cd "$stage" || exit 3
+  exec "$stage/gate.elf" "$HERE/seed/out/omc"
+fi
+EVID="${1:?evidence dir}"; PHYS="${2:-$HOME/workspace/physics-own30b-k}"
 # Classification is implemented by native/prefetch/classify.om. Require the
 # explicitly built native classifier before any device work; never fall back
 # to accepting a nonzero child exit. An exclusive directory prevents stale
