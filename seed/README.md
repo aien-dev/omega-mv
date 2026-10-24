@@ -829,6 +829,16 @@ position without changing the descriptor's file offset; slice checks and the res
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`). Neither word is used as an identifier there.
 
+## Rung R43: differential fuzz against the pinned compiler (done)
+
+`seed/omc/pinned.om` is the R5 compiler source from commit `f0499f41`. `gate17.sh` builds it with
+the seed-owned om4 and asserts the resulting digest `e5d60db8…`; it then generates 300 deterministic
+structured programs (scalars, arrays, `if`/`while`/`for`, arithmetic; explicit 16-bit LCG) and
+compiles each with both compilers. Every program must be accepted with byte-identical machine code.
+
+This is a regression net wider than the 103-file benchmark corpus: 300 programs, 0 differences,
+about 0.5 s total. `seed/host/check.sh` runs it.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
