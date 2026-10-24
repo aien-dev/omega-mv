@@ -1,0 +1,30 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "evidence/DAGSIM-583-48ca401/fixtures/round2_memcpy_k6.oev",
+  "machine": "spark-b87b", "build_sha": "f4a9849f00000000000000000000000000000000",
+  "calibration": {"id": "round2-same-state", "taken_day": 20745, "valid_days": 30, "load1": 25.11, "src": "evidence/DAGSIM-583-48ca401/round2_fit"},
+  "asof_day": 20746,
+  "status": "OK", "reason": "",
+  "provenance": ["measured", "specified"], "synthetic": 0, "offline": true, "gpu_executed": false,
+  "makespan_ns": {"nominal": 2.10416e+07, "lo": 1.76991e+07, "hi": 3.30033e+07, "interval_known": true},
+  "bounds_ns": {"critical_path": 8808333, "max": 2.10416e+07, "resources": {"cpu": 2.6425e+06, "dram_cpu": 2.10416e+07, "unified_mem": 0}, "makespan_ge_bounds": true},
+  "ops": [
+    {"id": "copy0", "start_ns": 0, "end_ns": 2.10416e+07, "floor_ns": 8808333, "contention_ns": 1.75346e+07, "prov": "measured", "src": "evidence/DAGSIM-583-48ca401/round2_fit:gb=1,threads=1"},
+    {"id": "copy1", "start_ns": 0, "end_ns": 2.10416e+07, "floor_ns": 8808333, "contention_ns": 1.75346e+07, "prov": "measured", "src": "evidence/DAGSIM-583-48ca401/round2_fit:gb=1,threads=1"},
+    {"id": "copy2", "start_ns": 0, "end_ns": 2.10416e+07, "floor_ns": 8808333, "contention_ns": 1.75346e+07, "prov": "measured", "src": "evidence/DAGSIM-583-48ca401/round2_fit:gb=1,threads=1"},
+    {"id": "copy3", "start_ns": 0, "end_ns": 2.10416e+07, "floor_ns": 8808333, "contention_ns": 1.75346e+07, "prov": "measured", "src": "evidence/DAGSIM-583-48ca401/round2_fit:gb=1,threads=1"},
+    {"id": "copy4", "start_ns": 0, "end_ns": 2.10416e+07, "floor_ns": 8808333, "contention_ns": 1.75346e+07, "prov": "measured", "src": "evidence/DAGSIM-583-48ca401/round2_fit:gb=1,threads=1"},
+    {"id": "copy5", "start_ns": 0, "end_ns": 2.10416e+07, "floor_ns": 8808333, "contention_ns": 1.75346e+07, "prov": "measured", "src": "evidence/DAGSIM-583-48ca401/round2_fit:gb=1,threads=1"}
+  ],
+  "critical_path": ["copy0"],
+  "peak_live_bytes": {"unified_mem": {"bytes": 2000000000, "at_ns": 0, "cap": 137438953472}},
+  "attribution_ns": {"compute": 0, "bandwidth": 3.50693e+06, "contention": 1.75346e+07, "launch": 0, "serialization": 0, "sync": 0, "residual": 0},
+  "energy": {"status": "UNMEASURED", "joules": null, "instrument": "none", "boundary": "", "ranking_valid": false},
+  "conservation": {"n_ops": 6, "total_bytes": 1999999998, "total_busy_ns": 52849998, "total_launch_ns": 0, "instrument_overhead_ns": null},
+  "sensitivities": [
+    {"resource": "dram_cpu", "kind": "bandwidth", "makespan_if_doubled_ns": 1.05208e+07, "delta_ns": 1.05208e+07, "interval_width_frac": 0.551289, "decision_score": 5.79999e+06, "next_experiment": "repeat the bandwidth receipt on a quiet box to tighten lo/hi"},
+    {"resource": "cpu", "kind": "compute", "makespan_if_doubled_ns": 2.10416e+07, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "measure the critical op at the next larger shape"},
+    {"resource": "unified_mem", "kind": "capacity", "makespan_if_doubled_ns": 2.10416e+07, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "none: capacity is a ledger, not a rate"}
+  ],
+  "unresolved_residual_ns": 0,
+  "note": "loaded-box calibration (load1 above); bounds are floors, not predictions; no performance claim from this simulation alone"
+}

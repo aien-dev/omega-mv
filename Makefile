@@ -2604,3 +2604,29 @@ $(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h sr
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
 $(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# OMEGA_OFFLINE_DAGSIM (omega-mv#583): offline resource-DAG cost evaluator.
+# Composes per-op costs (from OEV1 files or rx_costmodel predictions) under
+# finite resources. Host only, no GPU; reuses rx_costmodel.o and never links
+# anything that maps or runs code.
+.PHONY: test-dagsim dagsim
+DS_OBJ = $(OUT_DIR)/dagsim.o
+$(DS_OBJ): tools/dagsim/dagsim.c tools/dagsim/dagsim.h src/runtime/rx_costmodel.h | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -c -o $@ tools/dagsim/dagsim.c
+	@if nm -u $@ | grep -E 'rx_gen_|aienos_cap_|rx_caproot_|rx_capadmin_|rx_world_|mmap|mprotect|fork|exec|dlopen|system' ; then \
+		echo "dagsim.o references an operation an offline evaluator must not have"; \
+		rm -f $@; exit 1; fi
+
+DS_UNIT = $(OUT_DIR)/dagsim_unit
+$(DS_UNIT): tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) src/sha256.c | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) src/sha256.c -lm
+
+test-dagsim: $(DS_UNIT) $(DS_CLI)
+	./$(DS_UNIT)
+	sh tests/dagsim/run_cli.sh $(DS_CLI) $(OUT_DIR)/dagsim-cli-out
+
+DS_CLI = $(OUT_DIR)/dagsim
+$(DS_CLI): tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) src/sha256.c | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) src/sha256.c -lm
+
+dagsim: $(DS_CLI)

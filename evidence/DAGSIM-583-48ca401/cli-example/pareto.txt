@@ -1,0 +1,6 @@
+# dagsim pareto: objectives = seconds, peak bytes. Energy not measured on every row: shown, never ranked.
+# file                                 status                          seconds           lo_s           hi_s   peak_bytes energy         front
+  tests/dagsim/fixtures/m1_spark_subset.oev OK                             0.151757       0.148656       0.157360   2000000000 UNMEASURED     no
+  tests/dagsim/fixtures/m1_spark_overlap.oev OK                             0.096257       0.094706       0.099060   2000000000 UNMEASURED     yes
+  tests/dagsim/fixtures/m1_synthetic_power.oev OK                             0.151757       0.148656       0.157360   2000000000 syn 15.176 J   no
+  tests/dagsim/fixtures/needs_arch244_trace.oev REFUSED_UNKNOWN                       -              -              -            - -              refused   # op objective_replay has prov=unknown (aien-architecture); unknown stays unknown

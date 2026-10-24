@@ -1,0 +1,29 @@
+{
+  "schema": "oev1", "tool": "dagsim", "file": "evidence/DAGSIM-583-48ca401/fixtures/memcpy_k5.oev",
+  "machine": "spark-b87b", "build_sha": "f4a9849f00000000000000000000000000000000",
+  "calibration": {"id": "M1-20261019-block4", "taken_day": 20745, "valid_days": 30, "load1": 14.8, "src": "~/yardsticks/aien-model/M1/block4.csv"},
+  "asof_day": 20746,
+  "status": "OK", "reason": "",
+  "provenance": ["measured", "specified"], "synthetic": 0, "offline": true, "gpu_executed": false,
+  "makespan_ns": {"nominal": 3.0581e+07, "lo": 2.86533e+07, "hi": 3.28947e+07, "interval_known": true},
+  "bounds_ns": {"critical_path": 22340000, "max": 3.0581e+07, "resources": {"cpu": 5585000, "dram_cpu": 3.0581e+07, "unified_mem": 0}, "makespan_ge_bounds": true},
+  "ops": [
+    {"id": "copy0", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 22340000, "contention_ns": 2.44648e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy1", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 22340000, "contention_ns": 2.44648e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy2", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 22340000, "contention_ns": 2.44648e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy3", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 22340000, "contention_ns": 2.44648e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"},
+    {"id": "copy4", "start_ns": 0, "end_ns": 3.0581e+07, "floor_ns": 22340000, "contention_ns": 2.44648e+07, "prov": "measured", "src": "~/yardsticks/aien-model/M1/block4.csv:gb=1,threads=1"}
+  ],
+  "critical_path": ["copy0"],
+  "peak_live_bytes": {"unified_mem": {"bytes": 2000000000, "at_ns": 0, "cap": 137438953472}},
+  "attribution_ns": {"compute": 0, "bandwidth": 6.11621e+06, "contention": 2.44648e+07, "launch": 0, "serialization": 0, "sync": 0, "residual": 0},
+  "energy": {"status": "UNMEASURED", "joules": null, "instrument": "none", "boundary": "", "ranking_valid": false},
+  "conservation": {"n_ops": 5, "total_bytes": 2000000000, "total_busy_ns": 111700000, "total_launch_ns": 0, "instrument_overhead_ns": null},
+  "sensitivities": [
+    {"resource": "dram_cpu", "kind": "bandwidth", "makespan_if_doubled_ns": 22340000, "delta_ns": 8.24104e+06, "interval_width_frac": 0.137615, "decision_score": 1.13409e+06, "next_experiment": "repeat the bandwidth receipt on a quiet box to tighten lo/hi"},
+    {"resource": "cpu", "kind": "compute", "makespan_if_doubled_ns": 3.0581e+07, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "measure the critical op at the next larger shape"},
+    {"resource": "unified_mem", "kind": "capacity", "makespan_if_doubled_ns": 3.0581e+07, "delta_ns": 0, "interval_width_frac": 1, "decision_score": 0, "next_experiment": "none: capacity is a ledger, not a rate"}
+  ],
+  "unresolved_residual_ns": 0,
+  "note": "loaded-box calibration (load1 above); bounds are floors, not predictions; no performance claim from this simulation alone"
+}
