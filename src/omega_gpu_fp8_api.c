@@ -26,6 +26,7 @@
 #include "omega_gpu_session.h"
 #include "omega_gpu_fmt.h"
 #include "omega_gpu_cmdlist.h"
+#include "omega_gpu_fp8_internal.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -430,3 +431,36 @@ int omega_gpu_fp8_gemv_grouped_record(OmegaGpuCmdList *cl, const OmegaGpuFp8Tens
 /* ---- weight cache policy (OWN-30B L2 kernel-time cut) ---- */
 void omega_gpu_fp8_set_weight_cache(int on) { omega_gpu_session_lock(); g.weights_cached = on ? 1 : 0; g.weights_cached_set = 1; omega_gpu_session_unlock(); }
 int omega_gpu_fp8_weight_cache(void) { return g.weights_cached; }
+
+/* ---- slot pool support (omega_gpu_fp8_internal.h, Expert Ribbon omega#533) ---- */
+int omega_gpu_fp8_tensor_alloc_uncached(uint32_t experts, uint32_t n, uint32_t k, OmegaGpuFp8Tensor **out) {
+    if (out) *out = NULL;
+    if (!out || experts == 0 || n == 0 || k == 0 || n % OMEGA_FP8_BLOCK || k % OMEGA_FP8_BLOCK) return OMEGA_GPU_FP8_BAD_ARGS;
+    if (k > OMEGA_FP8_MAX_K) return OMEGA_GPU_FP8_TOO_LARGE;
+    const size_t wbytes = (size_t)experts * n * k, scount = (size_t)experts * (n / OMEGA_FP8_BLOCK) * (k / OMEGA_FP8_BLOCK);
+    OmegaGpuFp8Tensor *t = omega_gpu_host_calloc(1, sizeof *t);
+    if (!t) return OMEGA_GPU_FP8_BAD_ARGS;
+    t->experts = experts; t->n = n; t->k = k;
+    int rc = OMEGA_GPU_FP8_OK;
+    omega_gpu_session_lock();
+    if (!dev_open_locked() || omega_gpu_session_alloc(wbytes, &t->w) != 0 || omega_gpu_session_alloc(scount * 4u, &t->s) != 0) rc = OMEGA_GPU_FP8_CHIP_FAIL;
+    omega_gpu_session_unlock();
+    if (rc == OMEGA_GPU_FP8_OK) {
+        memset(t->w.cpu, 0, wbytes);
+        memset(t->s.cpu, 0, scount * 4u);
+        if (omega_gpu_session_sync_to_gpu(&t->w) != 0 || omega_gpu_session_sync_to_gpu(&t->s) != 0) rc = OMEGA_GPU_FP8_CHIP_FAIL;
+    }
+    if (rc != OMEGA_GPU_FP8_OK) { omega_gpu_fp8_tensor_free(t); return rc; }
+    *out = t;
+    return OMEGA_GPU_FP8_OK;
+}
+int omega_gpu_fp8_tensor_cpu_view(const OmegaGpuFp8Tensor *t, uint32_t expert, uint8_t **w, float **s) {
+    if (!t || !t->w.cpu || !t->s.cpu || expert >= t->experts || !w || !s) return OMEGA_GPU_FP8_BAD_ARGS;
+    *w = (uint8_t *)t->w.cpu + (size_t)expert * t->n * t->k;
+    *s = (float *)t->s.cpu + (size_t)expert * (t->n / OMEGA_FP8_BLOCK) * (t->k / OMEGA_FP8_BLOCK);
+    return OMEGA_GPU_FP8_OK;
+}
+int omega_gpu_fp8_tensor_sync_to_gpu(const OmegaGpuFp8Tensor *t) {
+    if (!t) return -1;
+    return (omega_gpu_session_sync_to_gpu(&t->w) != 0 || omega_gpu_session_sync_to_gpu(&t->s) != 0) ? -1 : 0;
+}
