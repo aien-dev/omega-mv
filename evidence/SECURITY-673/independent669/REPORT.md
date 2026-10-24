@@ -122,3 +122,9 @@ All normal pipeline compilation, fixture, decoding, execution, and expected-refu
 - This review does not cover the shell-runner retirement, historical-evidence restoration, fresh full seed-chain reconstruction, future host changes, release integration, or the other #673 requirements. Any later source change needs appropriate follow-up qualification and a new identity record.
 
 Only this report was written outside disposable review directories. No tracked implementation or test source was changed by the reviewer.
+
+Additive later review correction: the earlier supervisor control cases unconditionally returned99
+on their final path, so those observed exits alone did not demonstrate sensitivity to an incorrectly
+accepted child. The successor coordinator removes forced failure and qualifies a separately
+compiled normal-exit/signal-confusion mutant. See `../pure4/REPORT.md` and the strict-profile
+independent report. Earlier raw evidence remains preserved; no original run is relabeled.

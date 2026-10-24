@@ -1,0 +1,113 @@
+seed/rung4/om4.bin < seed/omc/omc.om > build/security673-native/1001 2> build/security673-native/501001
+elapsed_ns=7852059
+exit=0 expected=0
+build/security673-native/1001 < seed/omc/omc.om > build/security673-native/1002 2> build/security673-native/501002
+elapsed_ns=5750652
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/pure-launch.om > build/security673-native/1003 2> build/security673-native/501003
+elapsed_ns=1071448
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/pure-child.om > build/security673-native/1004 2> build/security673-native/501004
+elapsed_ns=1067192
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1004 < build/security673-native/1005 > build/security673-native/1006 2> build/security673-native/501006
+elapsed_ns=1084009
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/pure-raw.om > build/security673-native/1007 2> build/security673-native/501007
+elapsed_ns=1082184
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/pure-other.om > build/security673-native/1008 2> build/security673-native/501008
+elapsed_ns=1069016
+exit=0 expected=0
+build/security673-native/1007 0 < build/security673-native/1009 > build/security673-native/1010 2> build/security673-native/501010
+elapsed_ns=1144168
+exit=92 expected=92
+build/security673-native/1007 0 < build/security673-native/1011 > build/security673-native/1012 2> build/security673-native/501012
+elapsed_ns=1081816
+exit=92 expected=92
+build/security673-native/1007 0 < build/security673-native/1013 > build/security673-native/1014 2> build/security673-native/501014
+elapsed_ns=1076856
+exit=92 expected=92
+build/security673-native/1007 0 /home/drakestapleton/workspace/omega-security673-reviewed/build/security673-native/1008 < build/security673-native/1008 > build/security673-native/1015 2> build/security673-native/501015
+elapsed_ns=1078536
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1015 < /dev/null > build/security673-native/1016 2> build/security673-native/501016
+elapsed_ns=1104984
+exit=0 expected=0
+build/security673-native/1007 1 /home/drakestapleton/workspace/omega-security673-reviewed/build/security673-native/1008 < build/security673-native/1008 > build/security673-native/1017 2> build/security673-native/501017
+elapsed_ns=2235297
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1017 < /dev/null > build/security673-native/1018 2> build/security673-native/501018
+elapsed_ns=1086440
+exit=0 expected=0
+build/security673-native/1007 2 /home/drakestapleton/workspace/omega-security673-reviewed/build/security673-native/1008 < build/security673-native/1008 > build/security673-native/1019 2> build/security673-native/501019
+elapsed_ns=1088984
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1019 < /dev/null > build/security673-native/1020 2> build/security673-native/501020
+elapsed_ns=2147264
+exit=0 expected=0
+build/security673-native/1007 3 /home/drakestapleton/workspace/omega-security673-reviewed/build/security673-native/1008 < build/security673-native/1008 > build/security673-native/1021 2> build/security673-native/501021
+elapsed_ns=1087545
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1021 < /dev/null > build/security673-native/1022 2> build/security673-native/501022
+elapsed_ns=4350673
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/pure-raw.om > build/security673-native/1023 2> build/security673-native/501023
+elapsed_ns=1099704
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/branch-mutate.om > build/security673-native/1024 2> build/security673-native/501024
+elapsed_ns=1087225
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/pure-other.om > build/security673-native/1025 2> build/security673-native/501025
+elapsed_ns=4853941
+exit=0 expected=0
+build/security673-native/1024 4 < seed/omc/omc.om > build/security673-native/1026 2> build/security673-native/501026
+elapsed_ns=1092088
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1026 > build/security673-native/1027 2> build/security673-native/501027
+elapsed_ns=6572930
+exit=0 expected=0
+build/security673-native/1027 < seed/qualification/security673/pure-launch.om > build/security673-native/1028 2> build/security673-native/501028
+elapsed_ns=1103880
+exit=0 expected=0
+build/security673-native/1023 2 /home/drakestapleton/workspace/omega-security673-reviewed/build/security673-native/1025 < build/security673-native/1025 > build/security673-native/1029 2> build/security673-native/501029
+elapsed_ns=1146969
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1029 < /dev/null > build/security673-native/1030 2> build/security673-native/501030
+elapsed_ns=1120169
+exit=0 expected=0
+build/security673-native/1028 build/security673-native/1029 < /dev/null > build/security673-native/1031 2> build/security673-native/501031
+elapsed_ns=2148480
+exit=71 expected=71
+build/security673-native/1024 5 < seed/omc/omc.om > build/security673-native/1032 2> build/security673-native/501032
+elapsed_ns=1067576
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1032 > build/security673-native/1033 2> build/security673-native/501033
+elapsed_ns=4285329
+exit=0 expected=0
+build/security673-native/1033 < seed/qualification/security673/pure-launch.om > build/security673-native/1034 2> build/security673-native/501034
+elapsed_ns=1137097
+exit=0 expected=0
+build/security673-native/1023 0 /home/drakestapleton/workspace/omega-security673-reviewed/build/security673-native/1025 < build/security673-native/1025 > build/security673-native/1035 2> build/security673-native/501035
+elapsed_ns=1086841
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1035 < /dev/null > build/security673-native/1036 2> build/security673-native/501036
+elapsed_ns=1076232
+exit=0 expected=0
+build/security673-native/1034 build/security673-native/1035 < /dev/null > build/security673-native/1037 2> build/security673-native/501037
+elapsed_ns=1084904
+exit=77 expected=77
+build/security673-native/1002 < seed/qualification/security673/pure-busy.om > build/security673-native/1038 2> build/security673-native/501038
+elapsed_ns=1063992
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1038 < /dev/null > build/security673-native/1039 2> build/security673-native/501039
+elapsed_ns=1126783267
+planned signal=24 wait_low_byte=152
+exit=152 expected=152
+build/security673-native/1002 < seed/qualification/security673/pure-output.om > build/security673-native/1040 2> build/security673-native/501040
+elapsed_ns=1106121
+exit=0 expected=0
+build/security673-native/1003 build/security673-native/1040 < /dev/null > build/security673-native/1041 2> build/security673-native/501041
+elapsed_ns=2140992
+exit=0 expected=0
+GATE670 STRICT PASS bounded Linux AArch64 kernel profile only

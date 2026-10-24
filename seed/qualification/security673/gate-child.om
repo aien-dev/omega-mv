@@ -16,5 +16,8 @@ if eq m 2
 r = sleepns 45000000000
 ret 98
 end
+if eq m 3
+ret 152
+end
 ret 90
 end

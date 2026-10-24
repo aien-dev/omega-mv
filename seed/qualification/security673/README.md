@@ -52,9 +52,10 @@ identity evidence, not diverse compilation or proof of general semantic correctn
 ## Branch-form semantics (#669)
 
 `branch-forms.om` adds fifteen small programs covering every source conditional form: `eq`, `ne`,
-`lt`, `le`, `gt` and `ge`; the CBZ path for a value compared with zero; `while` and `for` back
+`lt`, `le`, `gt` and `ge`; comparison with zero; `while` and `for` back
 edges; the unconditional B over an `else`; a branch inside a called function; and the shift-width
-and divide-by-zero trap sites. The coordinator compiles and executes each and compares the exit
+and divide-by-zero trap sites. Independent disassembly shows comparison with zero uses CMP/B.NE;
+the divide-by-zero fixture exercises CBZ. The coordinator compiles and executes each and compares the exit
 with the fixed table in `formwant`. These cases check target selection, while `boundaries`,
 `positive`, `negative`, `array-fill` and `mutant` continue to check the imm19 range and refusal.
 
@@ -79,10 +80,27 @@ must pass and the protected files must be unchanged. Evidence and traces are
 `evidence/SECURITY-673/pure2`. This is a fixed strict profile, not a general sandbox; grant
 generations, revocation and durable budgets remain open under #670/#649.
 
-Descriptor scope is deliberate: generic `execprog` admits only descriptors 0, 1 and 2;
-`execpure` adds exactly one pinned executable descriptor (3). Arbitrary high-descriptor handoff is
-not part of the supported profile. A caller that needs other resources passes paths or data, not
-inherited authority, so numeric descriptor reuse cannot resurrect an old grant.
+Both words preserve the caller-assigned descriptors 0, 1 and 2. `execpure` temporarily opens the
+selected executable as descriptor 3; CLOEXEC closes it when execution succeeds. The three standard
+descriptors remain real capabilities and must be assigned by the trusted caller. This does not
+establish grant identity, generation, revocation or authority-aware reuse.
+
+Invoke `execpure` only in a fresh supervised child. A setup failure can leave that process partly
+restricted; it must report failure and exit, without retrying through `execprog`. All three standard
+descriptors must be present. The fixed profile supports static Linux AArch64 executables on a kernel
+with close_range, Landlock ABI3 rights and seccomp filter support. Missing facilities cause refusal.
+The pinned inode is not an immutable content identity. The trusted supervisor must own and protect
+the selected artifact and supply bounded input, wall deadlines and pipe-output accounting. CPU and
+regular-file size limits do not supply those additional guarantees. Fork/clone denial comes from
+seccomp; RLIMIT_NPROC alone is not a sufficient process-isolation boundary.
+
+With fresh `build/security673-native` and `build/security673-pure` directories, `build/gate669 4`
+rebuilds and tests the strict profile. It checks actual child file/network/process denials, raw native
+syscalls, two compiled bypass controls, the planned SIGXCPU termination and exactly one MiB regular
+output. Filter removal must expose raw getpid (fixture exit71), and inode-fence removal must execute
+the harmless unassigned static fixture (exit77). Unexpected signals and deadlines remain INVALID.
+Fault-injected missing kernel facilities are separately traced in `pure1`; independent review and
+fresh integrated gate receipts supplement the earlier `pure2` campaign.
 
 ## Bounded source ingress (#671)
 
@@ -110,3 +128,14 @@ builds valid, empty-count, over-count, truncated-record, trailing-byte, empty-pa
 and oversized-record packets; `pkt-consumer.om` reads one packet and calls `execprog`. Accepted
 modes execute `/bin/true`; malformed modes trap 3 with exit 103 before any kernel exec. Evidence is
 `evidence/SECURITY-673/packet1`; the wider ingress map is `evidence/SECURITY-673/ingress-inventory.md`.
+
+The strict CPU control requires a signaled wait, including Linux's optional core flag. A normal
+exit152 is refused by mode5 with99. A separately compiled mode6 mutator control removes only that
+check and wrongly accepts the same fixture with0. Earlier supervisor0/1/2 controls had an
+unconditional failure after execution; the corrected runner returns0 if an invalid result is ever
+accepted, making expected99 meaningful. Original observations remain historical.
+
+On the inspected host, kernel crash collection is piped to Apport; CORE0 does not disable a piped
+collector. Private/holdout input confinement remains unqualified until the runtime owner verifies
+crash handling in a disposable execution environment. No live crash policy was changed and these
+fixtures contain only synthetic data. See `pure4/core-pattern.txt` and independent review.

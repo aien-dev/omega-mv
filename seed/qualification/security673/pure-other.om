@@ -1,0 +1,4 @@
+note Harmless unassigned executable used only as the missing-inode-fence negative control.
+fn main to int
+ret 77
+end

@@ -1,0 +1,11 @@
+seed/rung4/om4.bin < seed/omc/omc.om > build/security673-native/1001 2> build/security673-native/501001
+elapsed_ns=2140320
+exit=0 expected=0
+build/security673-native/1001 < seed/omc/omc.om > build/security673-native/1002 2> build/security673-native/501002
+elapsed_ns=2130785
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/gate-child.om > build/security673-native/1004 2> build/security673-native/501004
+elapsed_ns=1074057
+exit=0 expected=0
+build/security673-native/1004 < build/security673-native/1003 > build/security673-native/1005 2> build/security673-native/501005
+elapsed_ns=1072360

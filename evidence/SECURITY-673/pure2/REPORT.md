@@ -85,3 +85,14 @@ filter, pinned `execveat`, and each refusal. `protected-before.sha256` and
   fail closed at the kernel call; no emulation was used.
 - Only synthetic files and native fixtures were used. No device, GPU, network service or private
   data was touched. This does not close #670 or #673.
+
+## Additive review correction
+
+The descriptor3 used to pin the executable is CLOEXEC and closes on successful exec. Descriptors
+0/1/2 remain caller-assigned capabilities. Seccomp blocks clone/fork; RLIMIT_NPROC is only an
+additional limit and does not by itself isolate processes. A selected inode is not immutable content
+identity. Setup failure may leave restrictions and transient descriptors installed in the child;
+the supported caller exits without fallback. Pipe output and blocked-I/O wall deadlines require the
+trusted supervisor. The later `pure1`/`pure4` evidence adds compiled missing-filter and missing-inode
+controls, resource-boundary checks and missing-facility refusals. The original observations above
+remain historical; they do not establish generation-bound grants or durable evaluation custody.

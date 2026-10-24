@@ -4,6 +4,7 @@ note Modes0 absolute execveat to unassigned inode;1 raw openat;2 raw getpid;3 ra
 global image uchar 512
 global mode uchar 8
 global pos ulong 1
+global target uchar 192
 text path "/usr/bin/true"
 fn set64 off ulong value ulong to void
 for i ulong 8
@@ -54,7 +55,7 @@ mov 5 0
 mov 8 222
 end
 fn main to int
-if ne argcnt 2
+if and ne argcnt 2 ne argcnt 3
 ret 90
 end
 if ne argread 1 mode 0 len mode 1
@@ -65,7 +66,11 @@ if or lt m 48 gt m 51
 ret 90
 end
 n = ulong 0
-while lt n len image
+more = true
+while more
+if eq n len image
+ret 92
+end
 r = read 0 image n sub len image n
 if lt r 0
 ret 91
@@ -74,7 +79,7 @@ if eq r 0
 if ne n 212
 ret 92
 end
-n = len image
+more = false
 else
 n = add n ulong r
 end
@@ -119,8 +124,22 @@ word 335544322
 mov 0 0
 mov 8 93
 word 3556769793
-for i ulong len path
-put image add 320 i get path i
+sz = ulong len path
+for i ulong sz
+put target i get path i
+end
+if eq argcnt 3
+t = argread 2 target 0 len target
+if or le t 0 ge t long len target
+ret 94
+end
+if ne get target 0 47
+ret 94
+end
+sz = ulong t
+end
+for i ulong sz
+put image add 320 i get target i
 end
 p = ulong 0
 while lt p len image

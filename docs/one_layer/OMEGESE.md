@@ -546,6 +546,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `pipefds A off n flags` | Create a pipe with `pipe2`; write two little-endian 32-bit descriptors. Capacity at least eight. |
 | `dupfd fd target flags` | Duplicate onto a chosen descriptor using `dup3`. |
 | `execprog A off n` | Replace the process using a packed argument list. Only returns on failure. |
+| `execpure A off n` | Apply the fixed Linux AArch64 stdio-only kernel profile, then execute the selected inode from a packed argument list. Only returns on failure. |
 | `argcnt` | Return argument count, including the executable name. |
 | `argread index A off capacity` | Copy argument bytes without a terminator; return byte length. An invalid index traps 3. Insufficient capacity returns -105 without changing the slice. |
 
@@ -589,6 +590,25 @@ it does not restrict filesystem paths, network creation, current-directory acces
 subprocesses or arbitrary native code. Existing authority/launcher integration is
 still required for those effects. Forked children are independent
 processes and must be reaped; this extension does not add shared-memory threads.
+
+`execpure` reserves host word135 and uses the same packet and descriptor-closure rules. It is
+intended only for a fresh, supervised child with all three standard descriptors present. It pins
+the executable using O_PATH|O_CLOEXEC, installs a Landlock filesystem rule permitting read/execute
+of that inode, sets no-new-privileges and applies fixed limits: CPU1second soft/2hard, regular file
+size1MiB, stack8MiB, core0, process count0, descriptor count4 and address space128MiB. Its AArch64
+seccomp filter permits read only on0, write only on1/2, exit/exit_group, and execveat with descriptor3
+and AT_EMPTY_PATH. All other syscalls return EPERM. Landlock also fences absolute execveat paths;
+the syscall filter's descriptor argument alone is not an inode fence. Successful exec closes
+descriptor3. The environment is empty. This profile supports static executables only.
+
+Any failed setup call returns its negative kernel error without a weaker fallback. Earlier setup
+steps may already have irreversibly restricted the child, which must exit rather than retrying
+unrestricted execution. This profile requires close_range, Landlock ABI3 rights and seccomp filter
+support. Stdio capabilities and executable content remain trusted-caller responsibilities. Inode
+pinning does not seal bytes or authorize a grant. A trusted supervisor must enforce wall deadlines
+and pipe-output budgets. CORE0 does not disable piped crash collectors; private-input confinement
+requires a separately qualified host crash policy. This word does not establish revocation,
+durable budgets, cryptographic identity, full isolation or portable host semantics.
 
 Clock results require nonnegative seconds and a signed nanosecond total;
 values outside that range trap 1. `argread` bounds

@@ -1,0 +1,5 @@
+2910617 execve("build/security673-pure/pure-launch", ["build/security673-pure/pure-laun"..., "build/security673-pure/pure-othe"...], 0xfffff77432d0 /* 39 vars */) = 0
+2910617 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = -1 ENOSYS (Function not implemented) (INJECTED)
+2910617 write(2, "PURE_LAUNCH_REFUSED\n", 20) = 20
+2910617 exit(38)                        = ?
+2910617 +++ exited with 38 +++

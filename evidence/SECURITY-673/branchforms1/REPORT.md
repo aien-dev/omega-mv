@@ -19,10 +19,10 @@ below the signed 26-bit reach.
 
 | Source form | Enforcing emitter | Branch instruction | Patching path |
 | --- | --- | --- | --- |
-| `if`/`while` condition on a value | `cond` (line 2999) | CBZ Xr; B.cond for a constant condition | `patch19` in `s_end` |
+| `if`/`while` Boolean condition | `cond` | CBZ Xr for a materialized value; B.cond for condition flags | `patch19` in `s_end` |
 | `if`/`while` condition with relational operands | `binop`/`conds` | B.cond with the inverted condition | `patch19` in `s_end` |
 | `else` | `s_else` | B (unconditional) over the else part | `patch26` |
-| `while`/`for` back edge | `s_end`, `blo` (line 3055) | B / B.LO to the loop head | `patch19` |
+| `while`/`for` back edge | `s_end`, `back` | B to the loop head | direct imm26 encoding in `back`; inspected output-capacity bound |
 | Local array fill | `sa_arr` | B.LO back to the fill loop | `patch19` via `blo` |
 | Trap sites, including shift/width checks | `trapsite` (line 1813) | CBNZ/B.HS to the trap stub | `patch19` in `finish` |
 | Boolean branch materialization | `bbr` paths | B.cond | `patch19` |
@@ -46,7 +46,7 @@ executed natively; the coordinator compares the actual exit:
 | 3 | `if le` taken | 11 |
 | 4 | `if gt` taken | 11 |
 | 5 | `if ge` taken | 11 |
-| 6 | `if eq` against zero (CBZ path) | 11 |
+| 6 | `if eq` against zero (CMP/B.NE in independent disassembly) | 11 |
 | 7 | `if ne` against zero, false | 12 |
 | 8 | `if eq` false | 12 |
 | 9 | `while` back edge | 3 |
@@ -54,7 +54,7 @@ executed natively; the coordinator compares the actual exit:
 | 11 | `if`/`else` unconditional B | 21 |
 | 12 | branch inside a called function | 30 |
 | 13 | shift-width trap site | 107 |
-| 14 | divide-by-zero trap site | 102 |
+| 14 | divide-by-zero trap site (CBZ in independent disassembly) | 102 |
 
 These complement, rather than replace, the existing range cases: `boundaries` checks the encoder
 extrema directly, `positive`/`negative` check source-level range refusal, `array-fill` exercises the
