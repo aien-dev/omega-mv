@@ -44,6 +44,9 @@ deleted legacy code and qualified consumers; a plan or a passing unit test is no
    the effect (37 checks, including /bin/true and a static strict-profile exec). Real-effect dispatch, a cross-process lock and consumer cutover are next;
    the C owner remains active.
 3. **Trace and privacy (#607)**: `rx_argus`, trace producers and the Open Humanity consent lane.
+   Status: the local `.om` segment writer (`seed/trace/segment.om`) is qualified with 117 checks:
+   header, append+fsync, complete-record scan, short-tail quarantine and fresh-segment recovery.
+   Exact-byte consent/export and the receiver contract are `NOT_RUN`; they need a `.om` digest.
 4. **Evaluation and promotion (spark-rsi #67)**: replace the Rust promotion/evaluator gate with the
    `.om` owner; keep sealed tasks outside the proposer's writable surface.
 5. **Device and DMA (#672)**: `.om` device contracts and queues. Firmware and hardware are outside

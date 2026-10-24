@@ -1,0 +1,306 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Local trace segment writer. 16-byte header plus 64-byte records (type u16, length u16,
+note sequence u32, 56 payload bytes). Append is O_APPEND + fsync; a short tail is quarantined
+note by renaming the segment and creating a fresh one. No network, consent or export here.
+global thdr uchar 16
+global trec uchar 64
+global tpath uchar 128
+global tlen ulong 1
+global scount ulong 1
+global stail ulong 1
+global serr ulong 1
+global pay uchar 56
+global paylen ulong 1
+global tpkt uchar 256
+global tn ulong 1
+text segp "build/trace-store/segment"
+text badp "build/trace-store/segment.bad"
+fn setseg to void
+put tlen 0 len segp
+for i ulong len segp
+put tpath i get segp i
+end
+end
+fn setbad to void
+put tlen 0 len badp
+for i ulong len badp
+put tpath i get badp i
+end
+end
+fn tput16 v ulong to void
+put tpkt get tn 0 uchar and v 255
+put tpkt add get tn 0 1 uchar shr v 8
+put tn 0 add get tn 0 2
+end
+fn mkheader to void
+for i ulong 16
+put thdr i 0
+end
+put thdr 0 65
+put thdr 1 73
+put thdr 2 84
+put thdr 3 82
+put thdr 4 1
+put thdr 6 64
+put thdr 8 16
+end
+fn segcreate to ulong
+mkheader
+setseg
+fd = fopen tpath 0 get tlen 0 577 384
+if lt fd 0
+ret 10
+end
+n = write int fd thdr 0 16
+if ne n 16
+ret 11
+end
+if ne fsync int fd 0
+ret 12
+end
+if ne fclose int fd 0
+ret 13
+end
+ret 0
+end
+fn segensure to ulong
+setseg
+fd = fopen tpath 0 get tlen 0 0 0
+if lt fd 0
+ret segcreate
+end
+n = read int fd thdr 0 16
+if ne fclose int fd 0
+ret 14
+end
+if ne n 16
+ret segcreate
+end
+if or ne get thdr 0 65 ne get thdr 1 73
+ret segcreate
+end
+if or ne get thdr 2 84 ne get thdr 3 82
+ret segcreate
+end
+if or ne get thdr 4 1 ne get thdr 6 64
+ret segcreate
+end
+if ne get thdr 8 16
+ret segcreate
+end
+ret 0
+end
+fn segappend t ulong n ulong seq ulong to ulong
+if gt n 56
+ret 20
+end
+err = segensure
+if ne err 0
+ret err
+end
+for i ulong 64
+put trec i 0
+end
+put trec 0 uchar and t 255
+put trec 1 uchar shr t 8
+put trec 2 uchar and n 255
+put trec 3 uchar shr n 8
+put trec 4 uchar and seq 255
+put trec 5 uchar and shr seq 8 255
+put trec 6 uchar and shr seq 16 255
+put trec 7 uchar shr seq 24
+for i ulong n
+put trec add 8 i get pay i
+end
+setseg
+fd = fopen tpath 0 get tlen 0 1089 384
+if lt fd 0
+ret 21
+end
+m = write int fd trec 0 64
+if ne m 64
+ret 22
+end
+if ne fsync int fd 0
+ret 23
+end
+if ne fclose int fd 0
+ret 24
+end
+ret 0
+end
+fn segcount to ulong
+put serr 0 0
+put scount 0 0
+put stail 0 0
+setseg
+fd = fopen tpath 0 get tlen 0 0 0
+if lt fd 0
+put serr 0 10
+ret get serr 0
+end
+n = read int fd thdr 0 16
+if ne n 16
+put serr 0 11
+if ne fclose int fd 0
+put serr 0 12
+end
+ret get serr 0
+end
+if or ne get thdr 0 65 ne get thdr 1 73
+put serr 0 11
+end
+if or ne get thdr 2 84 ne get thdr 3 82
+put serr 0 11
+end
+go = true
+while go
+m = read int fd trec 0 64
+if eq m 64
+put scount 0 add get scount 0 1
+else
+if eq m 0
+go = false
+else
+put stail 0 1
+go = false
+end
+end
+end
+if ne fclose int fd 0
+put serr 0 12
+end
+ret get serr 0
+end
+fn segrecover to ulong
+err = segcount
+if ne err 0
+ret err
+end
+if eq get stail 0 0
+ret 0
+end
+put tn 0 0
+tput16 2
+tput16 len segp
+for i ulong len segp
+put tpkt add get tn 0 i get segp i
+end
+put tn 0 add get tn 0 len segp
+tput16 len badp
+for i ulong len badp
+put tpkt add get tn 0 i get badp i
+end
+put tn 0 add get tn 0 len badp
+rr = renames tpkt 0 get tn 0 0
+if lt rr 0
+ret 30
+end
+err = segcreate
+if ne err 0
+ret err
+end
+ret 1
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Trace checks: create, append, count, short-tail quarantine, fresh segment and bad header.
+global checks ulong 1
+global fails ulong 1
+global report uchar 64
+text title "trace checks="
+text dir "build/trace-store"
+fn check got ulong want ulong to void
+put checks 0 add get checks 0 1
+if ne got want
+put fails 0 add get fails 0 1
+end
+end
+fn summary to int
+for i ulong len title
+put report i get title i
+end
+n = get checks 0
+at = len title
+put report at uchar add 48 div n 100
+put report add at 1 uchar add 48 rem div n 10 10
+put report add at 2 uchar add 48 rem n 10
+put report add at 3 32
+put report add at 4 uchar add 48 div get fails 0 100
+put report add at 5 uchar add 48 rem div get fails 0 10 10
+put report add at 6 uchar add 48 rem get fails 0 10
+put report add at 7 10
+w = write 1 report 0 add at 8
+if ne w long add at 8
+ret 2
+end
+if ne get fails 0 0
+ret 1
+end
+ret 0
+end
+fn main to int
+if ne makedir dir 0 len dir 448 0
+put pay 0 0
+end
+check segcreate 0
+for i ulong 100
+put pay 0 uchar and i 255
+put pay 1 uchar and shr i 8 255
+put pay 2 uchar and shr i 16 255
+put pay 3 uchar shr i 24
+check segappend 1 4 i 0
+end
+check segcount 0
+check get scount 0 100
+check get stail 0 0
+setseg
+fd = fopen tpath 0 get tlen 0 1089 384
+if lt fd 0
+check 0 1
+else
+for i ulong 10
+put trec i 0
+end
+n = write int fd trec 0 10
+if ne fclose int fd 0
+check 0 1
+end
+end
+check segcount 0
+check get scount 0 100
+check get stail 0 1
+check segrecover 1
+check segcount 0
+check get scount 0 0
+check get stail 0 0
+setbad
+fd = fopen tpath 0 get tlen 0 0 0
+if ge fd 0
+check 1 1
+if ne fclose int fd 0
+check 0 1
+end
+else
+check 0 1
+end
+put pay 0 7
+check segappend 1 1 200 0
+check segcount 0
+check get scount 0 1
+setseg
+fd = fopen tpath 0 get tlen 0 577 384
+if lt fd 0
+check 0 1
+else
+for i ulong 16
+put thdr i 0
+end
+n = write int fd thdr 0 16
+if ne fclose int fd 0
+check 0 1
+end
+end
+check segcount 11
+check segcreate 0
+ret summary
+end
