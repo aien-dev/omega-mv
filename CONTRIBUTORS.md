@@ -11,6 +11,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Gemini 3.8 Flash | Code review of the numeric changes (patch checks, qualifier script, build rules) |
 | Codex | Numeric uncertain-completion retention, exact completion checks, and simulated-driver lifecycle regression tests |
 | Claude Opus 5.5 | Ionic-droplet reservoir (#440): pinned reference, CPU simulator and readout, `.mat` reader, Gate 2 comparison, benchmarks, timing and receipt |
+| Codex (GPT-6 Astra Pro) | PR #515 integration with current main, generated Crumb conflict resolution with the pinned tool, and host syntax and build review; Spark qualification remains pending |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
