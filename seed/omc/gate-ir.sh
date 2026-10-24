@@ -34,5 +34,39 @@ sed 's/ret mul a b/ret add a b/' tests/one_layer/omegese/dev/dev05.omegese > "$B
 timeout 5 "$B/stage2" < "$B/mut.input" > "$B/mut.ir"
 if cmp -s "$B/mut.ir" "$B/dev05.oracle"; then fail 'mutant did not change IR'; fi
 echo 'PASS mul-to-add mutant differs'
-echo 'SCALAR_IR_CHECKPOINT 10/10; structs/multifunction/refusal hardening still open'
+# IR mode must refuse what it cannot lower, never skip a declaration silently.
+ir_refuse() { # name expected-error source
+    printf '%s\n' "$3" > "$B/$1.om"
+    set +e
+    timeout 5 "$B/stage2" < "$B/$1.om" > "$B/$1.out" 2> "$B/$1.err"
+    crc=$?
+    set -e
+    [ "$crc" = "$2" ] || fail "$1: exit $crc, wanted $2"
+    echo "PASS $1 refused $2"
+}
+ir_refuse struct_decl 9 'ir
+struct S a uchar end
+fn main to int
+ret 0
+end'
+ir_refuse global_decl 9 'ir
+global g uchar 4
+fn main to int
+ret 0
+end'
+ir_refuse text_decl 9 'ir
+text t "x"
+fn main to int
+ret 0
+end'
+ir_refuse float_use 3 'ir
+fn main to int
+x = f64 1.0
+ret 0
+end'
+ir_refuse continue_use 3 'ir
+fn main to int
+continue
+end'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 5 refusals; structs/multifunction IR still open'
 echo 'RC=0'

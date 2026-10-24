@@ -6314,11 +6314,28 @@ fn ir_run to void
 go = true
 while go
 tok
-if eq get tk 0 3
+k = get tk 0
+if eq k 3
 go = false
 else
-if eq kw get tw 0 64
+if eq k 0
+else
+if ne k 1
+fail 16
+end
+c = kw get tw 0
+if eq c 64
 ir_fn
+else
+if eq c 83
+skipnl
+else
+if or or eq c 85 eq c 78 eq c 79
+fail 9
+end
+fail 16
+end
+end
 end
 end
 end

@@ -706,8 +706,9 @@ is not taken. `seed/omc/gate-ir.sh` compares the bytes with the C-built `omegese
 oracle on the 10 dev programs, requires `checker2` to ACCEPT every unit, and requires a mul-to-add
 mutant to differ. Those C tools are referees only; they never write omc's bytes.
 
-Limits, said plainly: one function, scalar values. IR mode refuses a `struct` line, the native host
-words and `break` with error 3 because none of them has an IR lowering yet. Multifunction IR, struct
-IR, and refusal hardening remain open. The gate needs the C-built oracles, so `seed/host/check.sh`
-runs it only when `build/omegese/omegese`, `build/omega_emit/omega_emit` and
+Limits, said plainly: one function, scalar values. IR mode refuses a `struct`, `global` or `text`
+declaration with error 9 and refuses a float word, a host word, `break`, `continue`, `sizeof` or
+`offsetof` with error 3; it never skips a declaration it cannot lower. `note` lines are skipped.
+Multifunction IR and struct IR remain open. The gate needs the C-built oracles, so
+`seed/host/check.sh` runs it only when `build/omegese/omegese`, `build/omega_emit/omega_emit` and
 `build/checker2/checker2` exist, and says `SKIP` otherwise.

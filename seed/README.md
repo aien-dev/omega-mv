@@ -439,6 +439,19 @@ workspace, not just this repository's fixtures:
 Method and per-scope counts: `evidence/SEED-0/benchmark-parity/README.md`. The corpus is external,
 so this is evidence rather than a gate.
 
+## Rung R16: IR refusals (done)
+
+IR mode used to consume non-`fn` top-level tokens and silently skip them, so a `struct`, `global` or
+`text` declaration simply vanished from the IR. `ir_run` now classifies every top-level token: blank
+lines and `note` lines are skipped, `fn` goes through the IR path, a `struct`/`global`/`text`
+declaration is error 9, and any other token is error 16. Nothing is lowered by accident.
+
+- `seed/omc/gate-ir.sh` still proves 10/10 dev programs byte-identical with checker2 ACCEPT, and now
+  also checks five refusals: struct, global and text declarations (9), a float use and a continue
+  use (3).
+- `seed/omc/omc.om`, 6,391 lines and 237 functions, sha256
+  `22be10f8cccd23de1830e06ddb1c28ba77c7e78a6d7284bd1334fc18908a0cd8` (172,640 bytes).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
