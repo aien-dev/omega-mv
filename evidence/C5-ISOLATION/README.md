@@ -36,12 +36,13 @@ Review fixes (independent Opus review, 2026-10-22):
 
 | file | what | result |
 | --- | --- | --- |
-| 01-host-only.log | codegen + encode of the work, mutant and never-ending kernels; simulator exact, mutant caught | PASS |
-| 02-session-platform.log | the session on a fake GPU, both recover cases included | PASS 16/16 |
-| 03-session-mutants.log | 11 broken copies of the session, each caught | 11/11 killed |
-| 05-platform-linux.log | the Linux platform on a simulated driver | PASS 8/8 |
+| 01-host-only.log | codegen + encode of the work, mutant and never-ending kernels; simulator exact, mutant caught | PASS (5 checks), 2026-10-24T23:29Z on the train tip |
+| 02-session-platform.log | the session on a fake GPU, both recover cases included | PASS 16/16, 2026-10-24T23:29Z on the train tip |
+| 03-session-mutants.log | 11 broken copies of the session, each caught | 11/11 killed, 2026-10-24T23:29Z on the train tip |
+| 05-platform-linux.log | the Linux platform on a simulated driver | 7/8 on the train tip (2026-10-24T23:29Z): the one failure, CMDLIST_NEAR_CAP_SUBMITS_WITH_L2_INVAL_PENDING, is main's own regression from omega-mv #712 (OMEGA_GPU_CMDLIST_MAX_LAUNCHES 2048 -> 4096; the test hard-codes 2 submissions, 4096 launches take 4). Plain main 9a8a0fe2 fails it the same way; the old head 5cb252994 passed 8/8. Fixer lane L823 (ledger) fixes the test on main. Nothing in this layer changes that case. |
 | 04-never-ending-kernel.sass.txt | our disassembler: `IADD3; BRA 0x20` (branch back for ever) | as designed |
-| (chip, pending slot) | hang + recover + right values; two processes right; hang beside a working process | NOT RUN |
+| 03-chip-values-20261022-f792cd1d.log | chip, values only, 2026-10-22 07:06Z on `c5/isolation` f792cd1d: header only (date, head, binary sha256, command). The worker died at 07:06Z before the test printed a line. NO RESULT. | NO RESULT |
+| (chip, pending slot) | hang + recover + right values; two processes right; hang beside a working process, on the train tip (the never-ending-kernel run touches the live server's GPU: 1-second-spin precursor first, then only with Drake's or the server owner's OK) | NOT RUN |
 
 Chip command (GB10 lock): `build/gpu_isolation_test`. Safety note for the slot: the never-ending kernel is one warp;
 its teardown is the RM channel free, which must preempt it; this is the first chip run of that path.

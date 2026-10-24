@@ -1,8 +1,6 @@
-$ build/gpu_streams_test --host-only   (db9c5596 + this commit, 2026-10-22T02:31Z)
 ok: codegen + encode: spin kernel (512 bytes, 12 registers)
 ok: codegen + encode: spin kernel mutant 1 (512 bytes, 12 registers)
 ok: codegen + encode: copy kernel (512 bytes, 12 registers)
 ok: codegen + encode: copy kernel mutant 1 (512 bytes, 12 registers)
 ok: wait_for refuses missing lists
 C4 streams host: PASS (5 checks)
-exit 0
