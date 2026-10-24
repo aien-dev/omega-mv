@@ -1,4 +1,3 @@
-$ ./build/gpu_gemm_test --sim   (omega c3/gemm, 2026-10-22T02:19Z)
 the bf16 model is a multiply (A row B row): worst error 3.81e-07 of the magnitude sum
 the bf16 model is a multiply (A col B row): worst error 5.42e-07 of the magnitude sum
 the bf16 model is a multiply (A row B col): worst error 5.77e-07 of the magnitude sum
@@ -50,4 +49,3 @@ simulator red check: e4m3 mutant 1 is caught (4095 wrong)
 simulator red check: e4m3 mutant 2 is caught (4095 wrong)
 simulator red check: e4m3 mutant 3 is caught (4095 wrong)
 C3 gemm sim: PASS (154 checks)
-exit=0
