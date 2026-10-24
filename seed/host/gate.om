@@ -3,6 +3,9 @@ note Each fixture is compiled by the seed compiler, run in an isolated stage dir
 note and every child exit, timeout and leftover artifact fails closed.
 
 text omc "seed/out/omc"
+text b1 "build"
+text b2 "build/seed"
+text b3 "build/seed/host"
 text stage "build/seed/host/run"
 text ofile "build/seed/host/run/fixture"
 text fx "./fixture"
@@ -426,6 +429,21 @@ end
 end
 
 fn main to int
+r = makedir b1 0 len b1 448
+if or eq r 0 eq r -17
+else
+stop
+end
+r = makedir b2 0 len b2 448
+if or eq r 0 eq r -17
+else
+stop
+end
+r = makedir b3 0 len b3 448
+if or eq r 0 eq r -17
+else
+stop
+end
 r = makedir stage 0 len stage 448
 if or eq r 0 eq r -17
 else
