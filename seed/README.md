@@ -218,6 +218,8 @@ it came from.
   program on its input and writes a ready-to-run Linux program (or, without `fn main`, bare machine
   words) on its output, with the file header laid out by hand and no linker. 3,212 lines, 125 functions.
   `omc/genkw.awk` once wrote the keyword chain into `omc.om`; the committed `omc.om` is the source,
+  and the generator now lists every keyword (including host words 100-134) and packs 64-bit words
+  exactly with decimal string arithmetic (verified against the chain: 0 mismatches).
   and the seed path does not run awk.
 - It is meant to do exactly what om4 does, word for word: the same machine words, the same error
   numbers, on the same line. That is on purpose: om4 then becomes a strict referee for omc, because any
