@@ -574,6 +574,17 @@ code. A group whose only value has no type is still ambiguous (error 11), and a 
 `)` is error 16. Checked by `seed/omc/gate9.sh`, which `seed/host/check.sh` runs.
 
 
+### 9.11 Layout queries (omc only, gate10)
+
+`sizeof T` is the size in bytes of a scalar type (bool 1; uchar/byte 1; ushort/short 2;
+uint/int/f32 4; ulong/long/f64 8). `sizeof S` is a struct's size: 8 bytes for each of its cells.
+`offsetof S f` is the byte offset of field `f`; an array field gives its first element. Both are
+compile-time constants of type ulong and add no code, so they compose in expressions.
+
+An unknown type name is error 16, an unknown struct or field is error 3, and `sizeof void` is
+error 9. Checked by `seed/omc/gate10.sh`, which `seed/host/check.sh` runs.
+
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original

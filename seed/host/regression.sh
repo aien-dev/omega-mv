@@ -10,7 +10,7 @@ trap 'rm -rf "$stage"' EXIT HUP INT TERM
 # those fixture directories and keeps everything else under the full comparison.
 : > "$stage/inputs"
 git ls-files seed/rung4/tests seed/omc/tests tests/one_layer/omegese tools/exp445/arms/examples \
-    | grep -vE '^seed/omc/tests/(struct|loop|float|paren)/' \
+    | grep -vE '^seed/omc/tests/(struct|loop|float|paren|layout)/' \
     | sed -n '/\.om$/p; /\.omegese$/p' > "$stage/all"
 while IFS= read -r f; do
     [ -f "$f" ] || continue

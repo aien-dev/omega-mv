@@ -380,6 +380,19 @@ converter now keeps a normalized 64-bit significand, a binary exponent and one s
 - `gate8` now has 23 cases: the two literal fixtures cover large and subnormal values, and
   `neg_overflow2`/`neg_overflow3` check that a literal which rounds to infinity is refused.
 
+## Rung R12: layout queries (done)
+
+`sizeof T` / `sizeof S` and `offsetof S f` are compile-time constants of type ulong over the same
+8-byte-cell layout that `new`/`get`/`put` use. They add no code and compose in expressions, which is
+the primitive that structure formats and the future C ABI work need in order to describe a layout
+without hard-coded numbers.
+
+- `seed/omc/omc.om`, 6,315 lines and 236 functions, sha256
+  `1912bef8638c39ef8730d2ec3bddff3a9169f00f21613b5f5e68a55375847f34` (171,076 bytes).
+- `seed/omc/gate10.sh` passes 5 cases: every scalar size, a struct with scalar and array fields
+  (size 40, offsets 0/8/16), composition in an expression, and refusals (unknown type 16, unknown
+  struct or field 3, `sizeof void` 9).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
