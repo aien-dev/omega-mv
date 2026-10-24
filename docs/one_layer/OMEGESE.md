@@ -653,6 +653,9 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `getuid` / `geteuid` / `getgid` / `getegid` | Process identity (syscalls 174-177). |
 | `fchdir fd` | Change the working directory to an open directory descriptor. |
 | `getppid` | Parent process id. |
+| `setsid` | Create a session and become its leader. |
+| `getpgid pid` | Process group id of `pid` (0 = self). |
+| `setpgid pid pgid` | Set a process's group (0 = self/own pid). |
 | `umask mask` | Set the file-mode mask; return the previous mask. |
 | `fseek fd offset whence` | Seek and return the resulting signed file offset. |
 | `ftrunc fd length` | Set an open descriptor's length (Linux `ftruncate`). |

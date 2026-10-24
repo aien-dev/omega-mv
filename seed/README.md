@@ -758,6 +758,22 @@ name, copied privately like a path. Both are ordinary host words.
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`). Neither word is used as an identifier there.
 
+## Rung R39: process groups (done)
+
+`setsid` (syscall 157), `getpgid pid` (155) and `setpgid pid pgid` (154) are scalar host words;
+pid/pgid 0 means self (and own pid for `setpgid`). The gate checks `getpgid 0 > 0`, accepts
+`setpgid` to the current group (0) or EPERM, accepts `setsid` or EPERM when already a session
+leader, and checks `getpgid 0 > 0` afterwards.
+
+While adding these, the zero-argument `hargc` chain reached nine `or` operands and om4 refused the
+source with error 12 (register pool). `hargc` is now a list of individual `if eq c N ret K end`
+checks; the argument counts are unchanged.
+
+- `seed/omc/omc.om`, 6,853 lines and 241 functions, sha256
+  `ff9f6e71378747885e0473a6661d139ce0cfa1291fc844ec61dff31dc9b4b8b6` (113,956 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`). None of the three words is used as an identifier there.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
