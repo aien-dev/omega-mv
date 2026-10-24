@@ -745,6 +745,19 @@ previous one (166). All use the scalar host path; `fd` and `mask` are `int`, res
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`). `sync` was not added: the corpus uses it as an identifier four times.
 
+## Rung R38: data sync and anonymous files (done)
+
+`fdsync fd` syncs file data only (`fdatasync`, syscall 83). `memfd A off n flags` creates an
+anonymous in-memory file (`memfd_create`, syscall 279) and returns its descriptor; the slice is a
+name, copied privately like a path. Both are ordinary host words.
+
+- The host gate writes 4 bytes, calls `fdsync`, closes, and checks a later `fdsync` returns a
+  negative error. It then creates a memfd, writes, seeks to 0, reads 4 bytes back, and closes.
+- `seed/omc/omc.om`, 6,777 lines and 241 functions, sha256
+  `f9539e127e6696c62e32817bc57deb030cc296c564fa9adcd28d8140f2e09ae7` (113,507 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`). Neither word is used as an identifier there.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

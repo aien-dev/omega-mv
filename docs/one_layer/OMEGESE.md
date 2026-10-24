@@ -644,6 +644,8 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `fopen A off n flags mode` | Open a length-delimited path relative to the current directory. Return descriptor. |
 | `fclose fd` | Close descriptor. |
 | `fsync fd` | Sync file data and metadata. |
+| `fdsync fd` | Sync file data only (`fdatasync`). |
+| `memfd A off n flags` | Create an anonymous in-memory file and return its descriptor (`memfd_create`). |
 | `fchmod fd mode` | Set permissions on an open descriptor. |
 | `chmod A off n mode` | Set permissions on a checked path (`fchmodat`, flags 0). |
 | `chown A off n uid gid` | Set ownership on a checked path (`fchownat`, flags 0). |

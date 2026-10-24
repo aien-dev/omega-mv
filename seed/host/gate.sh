@@ -112,6 +112,9 @@ compile fchdir
 (cd "$stage"; ./fchdir)
 test -f "$stage/subdir/inside"
 printf 'PASS native fchdir/umask/getppid: directory fd, 0777 under mask 0, parent id\n'
+compile fdsync
+(cd "$stage"; ./fdsync)
+printf 'PASS native fdsync/memfd: data sync, closed fd refused, anonymous file rw\n'
 compile lstat
 (cd "$stage"; ./lstat)
 printf 'PASS native lstat: stat follows the link, lstat reports S_IFLNK\n'

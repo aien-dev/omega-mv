@@ -456,6 +456,12 @@ end
 if eq w 461497265525
 ret 155
 end
+if eq w 109326135157862
+ret 156
+end
+if eq w 431215175021
+ret 157
+end
 if eq w 1819242338
 ret 1
 end
@@ -2855,7 +2861,7 @@ fn hargc c ulong to ulong
 if or or or or or or or eq c 107 eq c 109 eq c 129 eq c 145 eq c 146 eq c 147 eq c 148 eq c 154
 ret 0
 end
-if or or or eq c 100 eq c 101 eq c 153 eq c 155
+if or or or or eq c 100 eq c 101 eq c 153 eq c 155 eq c 156
 ret 1
 end
 if or or or or eq c 102 eq c 105 eq c 106 eq c 127 eq c 139
@@ -2911,6 +2917,12 @@ ret 110
 end
 if eq c 155
 ret 166
+end
+if eq c 156
+ret 83
+end
+if eq c 157
+ret 279
 end
 if eq c 105
 ret 201
@@ -3059,7 +3071,7 @@ if or eq c 110 eq c 151
 harg x 2 8
 harg x 3 8
 end
-if or or eq c 112 eq c 143 eq c 144
+if or or or eq c 112 eq c 143 eq c 144 eq c 157
 harg x 2 8
 end
 if eq c 150
@@ -3083,6 +3095,9 @@ if or eq c 143 eq c 144
 hload x 2 2
 matconst 3 0
 end
+if eq c 157
+hload x 2 2
+end
 if eq c 150
 hload x 2 2
 end
@@ -3099,6 +3114,9 @@ nr = ulong 53
 end
 if eq c 144
 nr = ulong 48
+end
+if eq c 157
+nr = ulong 279
 end
 if eq c 150
 nr = ulong 45
@@ -3119,6 +3137,11 @@ end
 if eq c 151
 note fchownat(dirfd, path, uid, gid, 0): X2/X3 are the ids, X4 is set after the copy.
 matconst 4 0
+end
+if eq c 157
+note memfd_create(name, flags): X0 = name, X1 = flags.
+e3 2852126720 0 31 1
+e3 2852126720 1 31 2
 end
 hsys nr
 spadd 4096
@@ -3651,7 +3674,7 @@ if or or or eq c 124 eq c 125 eq c 141 eq c 142
 hpack c dst x
 ret
 end
-if or or or or or eq c 126 eq c 138 eq c 143 eq c 144 eq c 150 eq c 151
+if or or or or or or eq c 126 eq c 138 eq c 143 eq c 144 eq c 150 eq c 151 eq c 157
 hpath c dst x
 ret
 end
@@ -3667,7 +3690,7 @@ if and ge c 145 le c 148
 hscalar c dst x
 ret
 end
-if or or eq c 153 eq c 154 eq c 155
+if or or or eq c 153 eq c 154 eq c 155 eq c 156
 hscalar c dst x
 ret
 end
@@ -3915,7 +3938,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 155
+if and ge c 100 le c 157
 hostval c dst
 ret
 end
