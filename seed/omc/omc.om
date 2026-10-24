@@ -411,6 +411,12 @@ end
 if eq w 1952543859
 ret 140
 end
+if eq w 1802398060
+ret 141
+end
+if eq w 118122009688435
+ret 142
+end
 if eq w 1819242338
 ret 1
 end
@@ -3288,7 +3294,7 @@ trapc 0 3
 matconst 16 64
 e3 3942645760 31 6 16
 trapc 8 3
-if eq c 125
+if or or eq c 125 eq c 141 eq c 142
 emit 4043311327
 trapc 1 3
 end
@@ -3348,6 +3354,7 @@ emit 2436892641
 e3 2852126720 2 31 11
 hsys 221
 else
+if eq c 125
 emit 2436892656
 emit 4181721601
 emit 4181722627
@@ -3355,6 +3362,23 @@ matconst 0 18446744073709551516
 matconst 2 18446744073709551516
 e3 2852126720 4 31 14
 hsys 276
+else
+note linkat/symlnk: the packed list's two records are pointer-list entries 0 and 1.
+emit 2436892656
+emit 4181721601
+emit 4181722627
+if eq c 141
+matconst 0 18446744073709551516
+matconst 2 18446744073709551516
+matconst 4 0
+hsys 37
+else
+e3 2852126720 2 31 3
+e3 2852126720 0 31 1
+matconst 1 18446744073709551516
+hsys 36
+end
+end
 end
 spadd 8192
 hreturn dst x
@@ -3496,7 +3520,7 @@ if eq c 123
 hwaitio dst x
 ret
 end
-if or eq c 124 eq c 125
+if or or or eq c 124 eq c 125 eq c 141 eq c 142
 hpack c dst x
 ret
 end
@@ -3742,7 +3766,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 140
+if and ge c 100 le c 142
 hostval c dst
 ret
 end

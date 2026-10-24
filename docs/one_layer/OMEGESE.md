@@ -636,6 +636,8 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `fstat fd A off n` | Write the 128-byte Linux ARM64 stat structure; requires capacity at least 128. |
 | `stat A off n B off capacity` | Metadata for a checked path via `newfstatat`; writes the same 128-byte ARM64 structure; a short output traps 3. |
 | `renames A off n flags` | Rename the two paths in a packed list using `renameat2`; flag 1 refuses replacement. |
+| `link A off n` | Create a hard link from a packed two-path list (old, new). |
+| `symlnk A off n` | Create a symbolic link from a packed two-path list (target text, link path). |
 | `monons` | Monotonic nanoseconds, suitable for elapsed-time measurement. |
 | `realns` | Realtime nanoseconds since the Unix epoch, suitable for timestamps. |
 | `sleepns interval` | Sleep for nonnegative nanoseconds. Negative intervals trap 3. Interruptions return the kernel error. |

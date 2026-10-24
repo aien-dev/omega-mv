@@ -70,6 +70,16 @@ src=$?
 set -e
 [ "$src" = 103 ] || { printf 'FAIL: stat short output exit %s, wanted 103\n' "$src" >&2; exit 1; }
 printf 'PASS native stat: short output traps 3 before the kernel\n'
+compile links
+(cd "$stage"; ./links)
+printf 'PASS native link/symlnk: hard link nlink 2, symlink target, unlink\n'
+compile links_short
+set +e
+(cd "$stage"; ./links_short)
+lrc=$?
+set -e
+[ "$lrc" = 103 ] || { printf 'FAIL: one-record link list exit %s, wanted 103\n' "$lrc" >&2; exit 1; }
+printf 'PASS native link: one-record packed list traps 3\n'
 compile environment_trap
 set +e
 (cd "$stage"; ./environment_trap)

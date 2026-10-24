@@ -562,6 +562,24 @@ before the kernel writes anything.
 - Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
   against the pinned compiler (`e5d60db8…`). No corpus file uses `stat` as an identifier.
 
+## Rung R25: hard and symbolic links (done)
+
+`link A off n` and `symlnk A off n` create a hard link or a symbolic link from a packed two-path
+list, reusing the `renames`/`execprog` list format: little-endian `u16` count, then per record a
+`u16` length and the bytes. The count must be 2, both records nonempty, the packet at most 4096
+bytes. They call `linkat` (syscall 37) and `symlinkat` (36) and return 0 or minus the kernel error.
+
+- The host gate builds `[a, b]`, links, and checks `st_nlink` is 2 at byte 20 of the stat structure;
+  it then overwrites the second record with `c`, creates the symlink, and checks `readlnk c` returns
+  a's bytes. All three names are unlinked. A one-record list traps 3 before the kernel.
+- A two-slice draft was rejected: carrying the second path across the first copy either clobbers
+  value registers or breaks the save-frame discipline. The packed list reuses the proven `hpack`
+  buffer and pointer list, with one save frame.
+- `seed/omc/omc.om`, 6,542 lines and 239 functions, sha256
+  `540baf9338b5b26bcfffb852a3a94af0d7617d60e2d3bbebbf5d31931a4ee5e2` (109,961 bytes).
+- Auditing the benchmark corpus after adding the words: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). Neither word is used as an identifier there.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
