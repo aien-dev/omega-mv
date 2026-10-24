@@ -147,6 +147,13 @@ typedef struct {
     uint64_t slot_cps[RX_OMEGA_SLOTS], slot_rps[RX_OMEGA_SLOTS];
 } R15Outcome;
 
+/* The AIEN detector configuration the next r15_start uses (rx_aien_default_config
+ * when none is set; NULL clears it). The SEQ parity gate sets one whose miss streak
+ * cannot fail a prediction within an episode: its stimulus has no drift, so a failed
+ * prediction there can only come from host timing noise in Omega's serve costs, and
+ * it makes one side research the regime because of DRIFT where the other does so
+ * because of the GOAL. G7 and the R15 harness leave the product default. */
+void r15_set_aien_config(const RxAienConfig *cfg);
 int  r15_start(R15Rig *r, R15Config config);
 /* As r15_start, and also enrolls up to RX_CALLER_KEYRING_MAX fixture subjects
  * (harness-only callers) before the world's caller set is bound; their
