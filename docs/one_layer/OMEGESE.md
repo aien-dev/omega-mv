@@ -541,10 +541,12 @@ conversion is error 7.
 - Literals: `digits.digits[(e|E)[+|-]digits][f32|f64]`; a digit must be present on both sides of the
   dot, and a leading `-` negates. A literal with no suffix takes its type from context exactly as an
   integer literal does; where no context gives a float type it is error 11. The decimal text is
-  converted exactly (long division, round to nearest even) to the target type: 0.1f64 is
-  0x3FB999999999999A. This slice refuses (error 8) a literal whose significant integer exceeds
-  2^63-1 or whose decimal scale exceeds 18, and one that is not a normal number of its type. (gate8
-  f64_bits, f32_bits, neg_ambiguous, neg_dot, neg_overflow)
+  converted exactly to the target type, keeping a 64-bit significand, a binary exponent and one
+  sticky bit, then rounding once to nearest even: 0.1f64 is 0x3FB999999999999A. The full binary32 and
+  binary64 range is covered, including subnormals (5e-324, 1e-45) and signed zero. A literal that
+  rounds to infinity is refused (error 8); one below the smallest subnormal underflows to signed
+  zero. The significant digits must still fit in 2^63-1 (error 8 beyond that). (gate8 f64_bits,
+  f32_bits, neg_ambiguous, neg_dot, neg_overflow, neg_overflow2, neg_overflow3)
 - Operators: `+ - * /` and unary `neg`; comparisons `eq ne lt le gt ge`. Bit operators, shifts and
   `rem` on a float are error 7. IEEE results: division by zero and overflow give infinity, 0/0 gives
   NaN, and no float operation traps. NaN compares false everywhere except `ne`, which is true. -0.0

@@ -72,6 +72,8 @@ refuse neg_read 7
 refuse neg_ambiguous 11
 refuse neg_dot 6
 refuse neg_overflow 8
+refuse neg_overflow2 8
+refuse neg_overflow3 8
 refuse neg_ir 3
 
 say "PASS gate8 $n cases"

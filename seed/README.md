@@ -345,10 +345,11 @@ back, with FPCR untouched and no fused operation.
   returns and struct fields; and refusals for mixed types, integer intrinsic operands, ambiguous
   literals, float indices, float `for` counts, `read`/`write` on float arrays, malformed literals,
   out-of-range literals and IR mode. om4 refuses float syntax, and the gate checks that.
-- Limits, said plainly: this slice converts literals whose significant integer is below 2^63 and
-  whose decimal scale is at most 18, and refuses (error 8) anything outside that instead of
-  approximating. Struct fields may be floats (an f32 field still uses an 8-byte cell). IR lowering
-  of floats is not implemented and is refused, not miscompiled.
+- Limits, said plainly: the significant digits of a literal must fit in 2^63-1 (error 8 beyond
+  that); the decimal scale is unlimited, and the full IEEE range is converted exactly, subnormals
+  included. A literal that rounds to infinity is refused (error 8); underflow gives signed zero.
+  Struct fields may be floats (an f32 field still uses an 8-byte cell). IR lowering of floats is not
+  implemented and is refused, not miscompiled.
 
 ## Rung R10: grouping parentheses (done)
 
@@ -362,6 +363,21 @@ they touch a value, and the existing group path returns the inner value with no 
   the still-ambiguous `x = (5)` (error 11) and an unclosed group (error 16).
 - No existing program changes meaning: the om4/omc byte-equality corpus continues to pass with the
   paren fixtures excluded, since om4's lexer does not split them.
+
+## Rung R11: full-range decimal literals (done)
+
+The first float slice converted `N * 10^p` only while both factors fit u64 (scale at most 18). The
+converter now keeps a normalized 64-bit significand, a binary exponent and one sticky bit
+(`fmul10`/`fdiv10`), rounds once to nearest even (`froundsh`) and packs with subnormal handling
+(`fpack`). No 128-bit integer and no double rounding are needed.
+
+- `seed/omc/omc.om`, 6,380 lines and 238 functions, sha256
+  `45dadae1b0418773769b523d737d55d44e6a3a9004d6112f323a3e1be31984d8` (171,248 bytes).
+- The expected bits for 50 literals were produced with `strtod`/`strtof` outside this compiler and
+  matched exactly: 0.1, pi, 6.02214076e23, 1.602176634e-19, 1e308, 5e-324, 1e-45, the maximum finite
+  values, values just below the overflow boundary, and values that underflow to zero.
+- `gate8` now has 23 cases: the two literal fixtures cover large and subnormal values, and
+  `neg_overflow2`/`neg_overflow3` check that a literal which rounds to infinity is refused.
 
 ## How the checks stay honest
 

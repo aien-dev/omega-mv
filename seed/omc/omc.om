@@ -733,6 +733,10 @@ global fg_e long 1
 global fg_q ulong 1
 global fg_r ulong 1
 global fg_d ulong 1
+global fg_m ulong 1
+global fg_stk ulong 1
+global fg_low ulong 1
+global fg_ov ulong 1
 
 note ======== float literals: decimal text to IEEE-754 binary32/binary64 ========
 note Scope (deliberate first slice): the literal value is fnd * 10^fp10 with fnd up to 2^63-1 and
@@ -876,20 +880,129 @@ ret p
 end
 
 note fbits: the parsed literal as IEEE bits of type ty (10 f32, 11 f64). Zero keeps the sign (-0.0).
-fn fbits ty ulong to ulong
-put fg_ty 0 ty
-put fg_num 0 get fnd 0
-put fg_den 0 1
-if lt get fp10 0 0
-put fg_den 0 pow10 ulong sub 0 get fp10 0
+note fmul10 / fdiv10: one exact decimal step on the normalized significand fg_m (value = fg_m * 2^fg_e),
+note keeping fg_m in [2^63, 2^64) and folding every lost bit into fg_stk. No rounding happens here.
+fn fmul10 to void
+m = get fg_m 0
+hi = shr m 32
+lo = and m 4294967295
+p0 = mul lo 10
+p1 = mul hi 10
+hi2 = add p1 shr p0 32
+put fg_low 0 or shl and hi2 4294967295 32 and p0 4294967295
+put fg_ov 0 shr hi2 32
+fmn10
+end
+
+fn fmn10 to void
+ov = get fg_ov 0
+low = get fg_low 0
+s = blen ov
+if ne s 0
+st = or get fg_stk 0 and low sub shl 1 s 1
+put fg_stk 0 st
+put fg_m 0 or shl ov sub 64 s shr low s
+put fg_e 0 add get fg_e 0 long s
 else
-d = pow10 ulong get fp10 0
-if gt get fnd 0 div 18446744073709551615 d
+put fg_m 0 low
+end
+end
+
+fn fdiv10 to void
+m = get fg_m 0
+q = div m 10
+if ne rem m 10 0
+put fg_stk 0 1
+end
+s = ulong 0
+while lt q 9223372036854775808
+q = shl q 1
+s = add s 1
+end
+put fg_m 0 q
+put fg_e 0 sub get fg_e 0 long s
+end
+
+note froundsh: round fg_m right by sh bits to fg_q, nearest even; the guard and every lower bit
+note (plus fg_stk) decide. sh may be 64 (then q is zero and bit 63 is the guard).
+fn froundsh sh ulong to void
+m = get fg_m 0
+q = ulong 0
+guard = ulong 0
+lost = ulong 0
+if eq sh 0
+q = m
+else
+if ge sh 64
+guard = shr m 63
+lost = and m 9223372036854775807
+else
+q = shr m sh
+guard = and shr m sub sh 1 1
+if gt sub sh 1 0
+lost = and m sub shl 1 sub sh 1 1
+end
+end
+end
+sticky = or get fg_stk 0 lost
+if ne guard 0
+if or ne sticky 0 eq and q 1 1
+q = add q 1
+end
+end
+put fg_q 0 q
+end
+
+note fpack: fg_m/fg_e to IEEE bits of fg_ty, including subnormals; a literal that rounds to infinity
+note is refused (error 8).
+fn fpack to ulong
+p = ulong 53
+bias = long 1023
+maxe = long 2047
+emin = long -1022
+mb = ulong 52
+w = ulong 64
+if eq get fg_ty 0 10
+p = ulong 24
+bias = long 127
+maxe = long 255
+emin = long -126
+mb = ulong 23
+w = ulong 32
+end
+e = add get fg_e 0 63
+if ge e emin
+sh = sub 64 p
+froundsh sh
+q = get fg_q 0
+if eq q shl 1 p
+q = shr q 1
+e = add e 1
+end
+E = add e bias
+if ge E maxe
 fail 8
 end
-put fg_num 0 mul get fnd 0 d
+q = and q sub shl 1 sub p 1 1
+q = or q shl ulong E mb
+q = or q shl get fsgn 0 sub w 1
+ret q
 end
-if eq get fg_num 0 0
+k = ulong sub emin e
+sh = add sub 64 p k
+if gt sh 64
+ret shl get fsgn 0 sub w 1
+end
+froundsh sh
+q = get fg_q 0
+q = or q shl get fsgn 0 sub w 1
+ret q
+end
+
+fn fbits ty ulong to ulong
+put fg_ty 0 ty
+put fg_stk 0 0
+if eq get fnd 0 0
 w = ulong 64
 if eq ty 10
 w = ulong 32
@@ -900,14 +1013,29 @@ b = shl ulong 1 sub w 1
 end
 ret b
 end
-p = ulong 53
-if eq ty 10
-p = ulong 24
+b = blen get fnd 0
+sh = sub 64 b
+put fg_m 0 shl get fnd 0 sh
+put fg_e 0 sub 0 long sh
+p = get fp10 0
+if gt p 0
+i = ulong 0
+n = ulong p
+while lt i n
+fmul10
+i = add i 1
 end
-put fg_p 0 p
-fnorm
-fgen
-ret fround
+else
+if lt p 0
+i = ulong 0
+n = ulong sub 0 p
+while lt i n
+fdiv10
+i = add i 1
+end
+end
+end
+ret fpack
 end
 
 note fnorm: fg_e such that 2^fg_e <= fg_num / fg_den < 2^(fg_e+1). Shifts stay below 2^62 because the

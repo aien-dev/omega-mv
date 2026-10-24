@@ -20,5 +20,29 @@ e = bits ulong f64 -0.0
 if ne e 9223372036854775808
 ret 5
 end
+f = bits ulong f64 6.02214076e23
+if ne f 4962933279127225623
+ret 6
+end
+g = bits ulong f64 1.602176634e-19
+if ne g 4325607224011134547
+ret 7
+end
+h = bits ulong f64 1e308
+if ne h 9214871658872686752
+ret 8
+end
+i = bits ulong f64 5e-324
+if ne i 1
+ret 9
+end
+j = bits ulong f64 1e-324
+if ne j 0
+ret 10
+end
+k = bits ulong f64 1.7976931348623158e308
+if ne k 9218868437227405311
+ret 11
+end
 ret 0
 end
