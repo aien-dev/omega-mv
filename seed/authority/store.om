@@ -1,7 +1,8 @@
 note SPDX-License-Identifier: AGPL-3.0-only
 note Durable 32-word authority record store. Caller supplies the record and generation.
 note Writes a temporary 256-byte file, fsyncs it, then atomically renames it into place.
-note Reads require exactly 256 bytes; a short or torn file is refused. No lock is claimed.
+note Reads require exactly 256 bytes; a short or torn file is refused. Store calls do not lock; the
+note dispatcher holds lock.om around its read-check-persist window.
 text recp "build/authority-store/rec"
 text tmpp "build/authority-store/tmp"
 text genp "build/authority-store/gen"

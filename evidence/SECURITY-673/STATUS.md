@@ -25,7 +25,7 @@ never a PASS for an integration, hardware or release claim.
 | --- | --- | --- |
 | #669 long backward source reachability | NOT_RUN | The current backward B.LO caller is a short array-fill loop; direct encoder extrema do not prove a source-level long backward branch is reachable. |
 | #669 release integration and consumer audit | BLOCKED | Needs the compiler/release owners' integrated review and a real consumer outside the qualification corpus. |
-| #670 grant identity, generation, revocation, durable budgets, atomic check/dispatch | BLOCKED | Seeded `.om` action/store/dispatch and a cross-process pid lock exist, but the dispatcher does not yet hold the lock across check/persist and no production consumer is cut over. |
+| #670 grant identity, generation, revocation, durable budgets, atomic check/dispatch | BLOCKED | Seeded `.om` action/store/dispatch hold a cross-process pid lock across check/persist; no production consumer is cut over and broader budget/revocation behaviour is absent. |
 | #671 manifests, receipts, RPC/tool arguments, model metadata, trace bundles, device descriptions | BLOCKED | No seeded `.om` implementation exists; these are migration dependencies, not PASS. |
 | #649/#659 control lifecycle and authority integration | BLOCKED | The control contracts exist as `.om` artifacts (`control659`) but are not wired to a durable authoritative store and real dispatch. |
 | #651 capability-aware reuse | BLOCKED | Needs the `.om` successor of the existing semantic reuse/store owner; no second cache is authorized. |

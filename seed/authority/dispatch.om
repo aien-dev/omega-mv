@@ -8,6 +8,7 @@ global dpkt uchar 256
 global dn ulong 1
 global dpath uchar 128
 global dplen ulong 1
+global dpid ulong 1
 text truep "/bin/true"
 text strictp "seed/authority/effect-ok"
 fn dput16 v ulong to void
@@ -50,21 +51,33 @@ err = readrec r
 if ne err 0
 ret 70
 end
+err = lacq get dpid 0 1000
+if ne err 0
+ret 80
+end
 g = readgen
 if ne get sgerr 0 0
+lk = lrel
 ret 71
 end
 err = storevalid r g
 if ne err 0
+lk = lrel
 ret err
 end
 err = actstart r c
 if ne err 0
+lk = lrel
 ret err
 end
 err = writerec r
 if ne err 0
+lk = lrel
 ret 72
+end
+lk = lrel
+if ne lk 0
+ret 78
 end
 pid = fork
 if lt pid 0
@@ -106,9 +119,18 @@ if ne get sgerr 0 0
 ret 75
 end
 if ne g2 g
+err = lacq get dpid 0 1000
+if ne err 0
+ret 80
+end
 err = actlost r
 err = writerec r
+lk = lrel
 ret 60
+end
+err = lacq get dpid 0 1000
+if ne err 0
+ret 80
 end
 s = new ulong 32 0
 outcome = ulong 0
@@ -119,9 +141,11 @@ doreceipt r s outcome
 err = actrecon r s
 if ne err 0
 err = writerec r
+lk = lrel
 ret 76
 end
 err = writerec r
+lk = lrel
 if ne err 0
 ret 77
 end

@@ -18,6 +18,10 @@ dispatcher are the next phase; the C owner remains active until every consumer i
 | `*-test.om` | transition and store checks; no provider simulation |
 | `*-gate.om` | source + test concatenation for the current single-file compiler |
 
+`dispatch.om` holds `lock.om` across read, generation check, start and the in-flight write, releases
+before the effect, and reacquires before recording the outcome. The dispatch gate therefore exercises
+the locked path (37 checks).
+
 `action-gate.om`, `delegate-gate.om` and `reuse-gate.om` are committed concatenations because the
 seeded compiler currently reads one source file. Module/import support is a compiler capability
 dependency; it is not a reason to keep a legacy implementation.
@@ -41,13 +45,12 @@ Expected output and exit:
 | dispatch | `dispatch checks=037 000` | 0 |
 | lock | `lock checks=5 fails=0` | 0 |
 
-The same five programs are run by `seed/qualification/security673/gate669.om` as part of the
-security qualification. A failure is a failed check count or a nonzero exit; a compile failure is
+The authority gates are run by `seed/qualification/security673/gate669.om` as part of the
+security qualification; the lock is exercised inside the dispatch gate. A failure is a failed check count or a nonzero exit; a compile failure is
 `INVALID`, not a pass.
 
 ## Cutover rule
 
-The lock is a component, not the cutover: `dispatch.om` does not yet hold it across its
-read-check-persist window, and no production consumer uses this store. The C authority/reuse
+The lock is integrated in the dispatcher, but no production consumer uses this store yet. The C authority/reuse
 sources are deleted only after the `.om` owner has a durable store, dispatch, revocation and budget
 behaviour, and every consumer uses it. A parallel production authority path is not an end state.
