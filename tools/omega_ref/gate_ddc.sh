@@ -3,10 +3,13 @@
 # Omega (L408). Stage 1 is om4(omc.om); stage 1 applied to omc.om gives stage 2. The reference interpreter
 # (tools/omega_ref, written from the spec, not from om4's code generator) runs omc.om on omc.om directly.
 # Its output must equal stage 2 byte for byte: a miscompile that om4 and stage 1 share would show here.
-# Run from the repo root: sh tools/omega_ref/gate_ddc.sh [omc.om]   (default: omc.om from
-# origin/seed/omega-in-omega). Results: evidence/OMEGA-REF/gate_ddc.log and ddc.sha256.
+# Run from the repo root: sh tools/omega_ref/gate_ddc.sh [omc.om]   (default: $SEED/omc/omc.om, else fetched
+# from $OMC_REF, origin/seed/omc-unified). SEED=<dir> points the gate at another seed tree (om4.bin and omc.om
+# must come from the same seed; default seed). EVID=<dir> is the results dir (default evidence/OMEGA-REF):
+# gate_ddc.log and ddc.sha256. DDC_FLIP=<offset> flips one byte of stage 2 on purpose: that run must end in
+# GATE_DDC FAIL (the negative control of the whole gate, run by hand; never set it for a real run).
 set -eu
-R=seed/rung4; B=build/omega_ref/ddc; E=evidence/OMEGA-REF; I=build/omega_ref/omega_ref
+SEED=${SEED:-seed}; R=$SEED/rung4; B=build/omega_ref/ddc; E=${EVID:-evidence/OMEGA-REF}; I=build/omega_ref/omega_ref
 mkdir -p "$B" "$E"
 LOG=$E/gate_ddc.log
 : > "$LOG"
@@ -14,12 +17,14 @@ fail=0
 say() { printf '%s\n' "$*" | tee -a "$LOG"; }
 bad() { say "FAIL: $*"; fail=1; }
 sh tools/omega_ref/build.sh
+OMC_REF=${OMC_REF:-origin/seed/omc-unified}
 if [ $# -ge 1 ]; then cp "$1" $B/omc.om; from="$1"
+elif [ -f $SEED/omc/omc.om ]; then cp $SEED/omc/omc.om $B/omc.om; from="$SEED/omc/omc.om"
 else
-  git fetch -q origin seed/omega-in-omega
-  git show origin/seed/omega-in-omega:seed/omc/omc.om > $B/omc.om
-  from="origin/seed/omega-in-omega@$(git rev-parse origin/seed/omega-in-omega)"
-  git show origin/seed/omega-in-omega:seed/rung4/om4.bin > $B/om4.bin; chmod +x $B/om4.bin
+  git fetch -q "${OMC_REF%%/*}" "${OMC_REF#*/}"
+  git show $OMC_REF:seed/omc/omc.om > $B/omc.om
+  from="$OMC_REF@$(git rev-parse $OMC_REF)"
+  git show $OMC_REF:seed/rung4/om4.bin > $B/om4.bin; chmod +x $B/om4.bin
   R=$B
 fi
 OM4=$R/om4.bin
@@ -32,6 +37,11 @@ set +e; $OM4 < $B/omc.om > $B/stage1 2> $B/stage1.err; rc=$?; set -e
 chmod +x $B/stage1
 set +e; ./$B/stage1 < $B/omc.om > $B/stage2 2> $B/stage2.err; rc1=$?; set -e
 say "stage 2 = stage1(omc.om): exit $rc1, $(wc -c < $B/stage2) bytes"
+if [ -n "${DDC_FLIP:-}" ]; then # the gate's own negative control: one byte of stage 2 inverted on purpose
+  v=$(od -An -tu1 -j "$DDC_FLIP" -N 1 $B/stage2 | tr -d ' ')
+  printf "$(printf '\\%03o' $((255 - v)))" | dd of=$B/stage2 bs=1 seek="$DDC_FLIP" conv=notrunc 2> /dev/null
+  say "NEGATIVE CONTROL RUN: byte $DDC_FLIP of stage 2 changed from $v to $((255 - v)) on purpose (DDC_FLIP); this run must FAIL"
+fi
 
 # the third parent: the interpreter runs omc.om with omc.om as its input
 t0=$(date +%s)

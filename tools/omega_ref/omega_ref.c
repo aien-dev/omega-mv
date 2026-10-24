@@ -166,12 +166,14 @@ typedef struct {
     int nslots;
     int has_call;  /* a non-leaf function: the stack model charges it a frame */
     int done;      /* its end has been read */
+    int sig_line;  /* the line of its fn line (the names pass, 9.2) */
 } Func;
 
 typedef struct { char name[16]; int ety; uint64_t len; int is_text; Arr arr; } Global;
 
 static Func funcs[MAX_FUNCS];
 static int nfuncs;
+static unsigned char callg[MAX_FUNCS][MAX_FUNCS]; /* callg[f][g]: f's body calls g (9.2: a call cycle in function mode is error 9) */
 static Global *globals;
 static int nglobals, capglobals;
 static uint64_t pool_bytes;
@@ -329,8 +331,11 @@ static void fix_bare(Node *n, int t)
     n->ty = t;
     switch (n->kind) {
     case N_BARE:
-        if (t == T_BOOL || !tnum(t)) refuse(7, "a number where a %s is needed", TNAME[t]);
-        if (!fits(t, n->neg, n->num)) refuse(8, "number %s%" PRIu64 " outside %s", n->neg ? "-" : "", n->num, TNAME[t]);
+        /* a bare number takes the type its place needs (s.7); the bool numbers are 0 and 1 (s.6), any other is 8 as
+         * for a number outside its type (om4: `while 1` runs, `while 255` is 8; gap G28) */
+        if (t == T_BOOL) { if (n->neg || n->num > 1) refuse(8, "number %s%" PRIu64 " outside bool (0 or 1)", n->neg ? "-" : "", n->num); }
+        else if (!tnum(t)) refuse(7, "a number where a %s is needed", TNAME[t]);
+        else if (!fits(t, n->neg, n->num)) refuse(8, "number %s%" PRIu64 " outside %s", n->neg ? "-" : "", n->num, TNAME[t]);
         n->num = canon(t, num_value(n->neg, n->num));
         n->kind = N_NUM;
         break;
@@ -381,8 +386,11 @@ static Node *parse_call(int fi, int want_void)
     Func *f = &funcs[fi];
     if (!want_void && f->ret == T_VOID) refuse(7, "void function '%s' used as a value", f->name);
     if (want_void && f->ret != T_VOID) refuse(7, "value function '%s' called as a line", f->name);
-    if (&funcs[fi] == curf && !program_mode) refuse(9, "'%s' calls itself in function mode", f->name);
     curf->has_call = 1;
+    /* function mode (9.2): a function calling itself is refused here, at the call; a cycle through other
+     * functions at the end of the unit, when every body has been read (om4 does both so: gap G26) */
+    if (!program_mode && curf == f) refuse(9, "'%s' calls itself in function mode", f->name);
+    callg[curf - funcs][fi] = 1;
     Node *n = new_node(N_CALL);
     n->fn = fi; n->ty = f->ret;
     n->args = calloc(f->np + 1, sizeof *n->args);
@@ -595,6 +603,9 @@ static void parse_statement(void)
 {
     const char *w = nextw();
     Block *top = &blocks[nblocks - 1];
+    /* a number never starts a line: 16 before anything else about the line (om4 on mutant t_conv.om.m17: a number
+     * on the line after ret is 16, not 17; a word like `read` there is 17, mutant r5b_fwd.om.m7); gap G25 */
+    if (looks_number(w)) refuse(16, "'%s' cannot start a line", w);
     if (top->ended && strcmp(w, "end") && strcmp(w, "else")) refuse(17, "a line after ret or exit in the same block");
     if (!strcmp(w, "end")) {
         line_end();
@@ -628,6 +639,7 @@ static void parse_statement(void)
     if (!strcmp(w, "if") || !strcmp(w, "while")) {
         Stmt *s = new_stmt(w[0] == 'i' ? S_IF : S_WHILE);
         s->v = value_for(T_BOOL, "a condition");
+        npend--; place_check(s->v, T_BOOL, "a condition"); /* at once, before extra words: om4 gives 7 for `if r 1` with r int (G29) */
         if (s->kind == S_WHILE) {
             s->n = LOOP_MAX;
             if (peekw() && !strcmp(peekw(), "bound")) {
@@ -635,6 +647,7 @@ static void parse_statement(void)
                 const char *b = nextw();
                 if (!b) refuse(4, "bound needs a number");
                 int neg; uint64_t mag;
+                if (is_reserved(b) || (!is_name(b) && !looks_number(b))) refuse(16, "'%s' where the bound number belongs", b); /* gap G25 */
                 if (!looks_number(b)) refuse(6, "bound needs a number");
                 parse_number(b, &neg, &mag);
                 if (neg || mag < 1 || mag > LOOP_MAX) refuse(8, "bound %s outside 1..1000000", b);
@@ -818,15 +831,25 @@ static int local_arr_bytes_ok(uint64_t add)
     return local_arr_bytes <= MAX_LOCAL_ARR_BYTES;
 }
 
-static void parse_fn_header(void)
+/* The names pass (9.2): every fn line's signature is read before any code, so a call may name a function
+ * written later. prepass: the signature is read into f (refusals in the signature are reported here, in
+ * input order, before any body). Not prepass: the same line is read again when the body pass reaches it,
+ * to put its parameters in scope. */
+static void parse_fn_signature(Func *f, int prepass)
 {
-    if (nfuncs >= MAX_FUNCS) refuse(14, "more than %d functions", MAX_FUNCS);
     const char *nmw = nextw();
     if (!nmw) refuse(4, "fn needs a name");
-    check_new_name(nmw, 1);
-    Func *f = &funcs[nfuncs];
-    memset(f, 0, sizeof *f);
-    snprintf(f->name, sizeof f->name, "%s", nmw);
+    if (prepass) {
+        if (!is_name(nmw) || is_reserved(nmw)) refuse(16, "'%s' cannot be a name", nmw); /* gap G25 */
+        if (strlen(nmw) > 63) refuse(13, "name '%s' too long", nmw);
+        if (find_func(nmw) >= 0) refuse(10, "'%s' is already in use", nmw);
+        memset(f, 0, sizeof *f);
+        snprintf(f->name, sizeof f->name, "%s", nmw);
+        f->sig_line = cur_line;
+    } else {
+        if (find_global(nmw) >= 0) refuse(10, "'%s' is already in use", nmw); /* a pool or text written before it */
+        f->np = 0;
+    }
     curf = f;
     nnames = 0; nslots = 0; depth = 0; local_arr_bytes = 0;
     int is_main = !strcmp(nmw, "main");
@@ -834,7 +857,7 @@ static void parse_fn_header(void)
         const char *pw = nextw();
         if (!pw) refuse(4, "fn %s needs 'to' and a return type", nmw);
         if (!strcmp(pw, "to")) break;
-        if (f->np >= MAX_PARAMS) refuse(14, "too many parameters");
+        if (f->np >= 6) refuse(9, "more than 6 parameters (9.2)"); /* om4: 9 at the fn line */
         if (!strcmp(pw, nmw)) refuse(10, "parameter '%s' has the function's name", pw);
         check_new_name(pw, 0);
         if (is_main) refuse(9, "main has no parameters");
@@ -870,9 +893,28 @@ static void parse_fn_header(void)
     else if ((f->ret = type_word(rw)) == T_NONE) refuse(16, "'%s' is not a type", rw);
     if (is_main && f->ret != T_VOID && f->ret != T_BOOL && !tnum(f->ret)) /* bool allowed: gap G4 */ refuse(9, "main returns a whole number or void");
     line_end();
-    nfuncs++; /* visible from here on (recursion in program mode) */
+    if (prepass) return;
     nblocks = 0;
     open_block(0, NULL, &f->body);
+}
+
+static int fn_seen; /* fn lines the body pass has reached, in order: the k-th is funcs[k] (the names pass read them all) */
+static void parse_fn_header(void)
+{
+    parse_fn_signature(&funcs[fn_seen++], 0);
+}
+
+/* 9.2: in function mode a call cycle, a function calling itself included, is error 9 */
+static int on_path[MAX_FUNCS], visited[MAX_FUNCS];
+static int find_cycle(int f)
+{
+    if (on_path[f]) return f;
+    if (visited[f]) return -1;
+    visited[f] = on_path[f] = 1;
+    for (int g = 0; g < nfuncs; g++)
+        if (callg[f][g]) { int c = find_cycle(g); if (c >= 0) return c; }
+    on_path[f] = 0;
+    return -1;
 }
 
 static void parse_global(int is_text, const char *line, size_t n)
@@ -937,15 +979,26 @@ static void parse_global(int is_text, const char *line, size_t n)
 
 static void parse_program(void)
 {
-    /* program mode: a line `fn main` anywhere (9.1) */
+    /* program mode: a line `fn main` anywhere (9.1). The names pass (9.2): every line that starts with fn
+     * has its signature read before any code, so a call may name a function written later. The pass
+     * knows nothing of blocks: a fn line inside a function that lacks its end is read here like any
+     * other, and the body pass refuses it (15) when it gets there (gap G27: observed on om4's mutants). */
     size_t pos = 0;
+    cur_line = 0;
     while (pos < srclen) {
         const char *ls = src + pos, *nl = memchr(ls, '\n', srclen - pos);
         size_t n = nl ? (size_t)(nl - ls) : srclen - pos;
-        split_words(ls, n);
-        if (nw >= 2 && !strcmp(W[0], "fn") && !strcmp(W[1], "main")) program_mode = 1;
         pos += n + 1;
+        cur_line++;
+        split_words(ls, n);
+        if (nw == 0 || strcmp(W[0], "fn")) continue;
+        if (nw >= 2 && !strcmp(W[1], "main")) program_mode = 1;
+        if (nfuncs >= MAX_FUNCS) refuse(14, "more than %d functions", MAX_FUNCS);
+        wi = 1;
+        parse_fn_signature(&funcs[nfuncs], 1);
+        nfuncs++;
     }
+    nnames = 0; nslots = 0; depth = 0; curf = NULL;
     pos = 0;
     cur_line = 0;
     int infn = 0;
@@ -975,6 +1028,14 @@ static void parse_program(void)
     }
     if (infn) refuse(15, "function '%s' has no end", curf->name);
     if (!program_mode && nglobals) { cur_line = first_global_line; refuse(9, "a pool or text only in program mode (no fn main)"); }
+    if (!program_mode)
+        for (int f = 0; f < nfuncs; f++) {
+            int c = find_cycle(f);
+            if (c >= 0) { /* reported at the end of the input, the line after the last (as om4: gap G26) */
+                cur_line = 1; for (size_t i = 0; i < srclen; i++) if (src[i] == '\n') cur_line++;
+                refuse(9, "'%s' is in a call cycle in function mode", funcs[c].name);
+            }
+        }
     if (nfuncs == 0) refuse(16, "no function"); /* spec silent */
 }
 

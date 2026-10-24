@@ -2,7 +2,8 @@
 
 Found while writing the reference interpreter from `docs/one_layer/OMEGESE.md` alone, then running
 small probe programs through both om4 and the interpreter (`tools/omega_ref/probe_ref.sh`, log in
-`evidence/OMEGA-REF/probe_ref.log`: 125 probes, PROBE_REF PASS, RC=0).
+`evidence/OMEGA-REF/probe_ref.log`: 125 probes, PROBE_REF PASS, RC=0; 144 since the names-pass sync,
+`evidence/OMEGA-REF-SYNC/probe_ref.log`).
 
 Decision 19 says no meaning may be left open. Each gap below gets the sentence we propose adding to
 OMEGESE.md section 9. Unless a line says otherwise the proposal is what om4 already does, and the
@@ -122,3 +123,53 @@ cases.
   write this list into section 9 as the table of refusal numbers, one line per number, with 16 named
   "a word where the grammar allows none" (decision 22: the grammar in `tools/omega_ref/s9.grammar`
   is exactly the list of places).
+
+## Found by the sync to the names pass (L423, 2026-10-24: omc.om 18d7e80b, om4 of seed/omc-unified)
+
+9.2 now reads every signature before any code, so a call may name a function written later. The
+interpreter and the grammar oracle do the same (`evidence/OMEGA-REF-SYNC/`). Each item below is what
+om4 does where the rule book says nothing: **observed, not specified**, written here as the sentence we
+propose. The interpreter does the same as om4 on every one.
+
+- **G26. Where a function-mode call cycle is reported.** 9.2 says a cycle, including a function calling
+  itself, is error 9; not when. om4 refuses a function calling itself at once, at the call line (mutants
+  `t_stack.om.m3`, `m14`); a cycle through other functions at the end of the input, reported on the line
+  after the last one (`r5b_cycle.om`: line 7 of a 6-line file), so a mistake in any body comes first
+  (probe `fm_cycle_late`: error 3 on the later body, not 9). Proposed: "A function that calls itself is
+  refused at the call. Any other cycle is refused when the whole unit has been read."
+- **G27. The names pass knows nothing of blocks.** 9.2: "every signature read before any code". om4
+  takes every line that starts with `fn` as a signature, wherever it stands: a `fn` line inside a function
+  that lacks its `end` is known to the bodies before it (`ret later` on line 2 is fine) and is refused
+  with 15 when the body pass reaches it, after any earlier body mistake (mutants `r5b_fwd.om.m19`,
+  `m7`; probe `fn_in_fn`). Proposed: "The names pass reads every line whose first word is fn; the body
+  pass refuses one that stands inside a function (15)."
+- **G28. Which numbers are bool numbers.** Section 6 makes `true` and `false` the bool numbers 1 and 0,
+  section 7 lets a bare number take the type of its place; nothing says what `while 255` is. om4 runs
+  `while 1`, `if 1` and `while bool 1`, and refuses `while 255` and `while -1` with 8, as a number outside
+  its type. Before this sync the interpreter refused every number in a bool place with 7, against
+  section 7; it now does as om4 (probes `if_one`, `bool_255`). Proposed: "The bool numbers are 0 and 1;
+  any other number in a bool place is outside its type (8)."
+- **G29. Order within an if or while line.** G25 has extra words (5) reported before the type a place
+  needs (7). For a condition om4 checks the type first: `if r 1` with r an int is 7, not 5 (mutant
+  `r5b_mut.om.m2`, probe `cond_type_first`). Proposed: add to the G25 table "except a condition, whose
+  type is checked as soon as it is read".
+- **G30. Two more numbers for the G25 table.** A line that starts with a number is 16 before the
+  after-ret rule (17) applies (`ret 0` then a line `0`: 16, mutant `t_conv.om.m17`), while a word such
+  as `read` on that line is 17 (mutant `r5b_fwd.om.m7`); a fixed word where the bound number belongs
+  (`bound bound 10`) is 16, not 6 (mutant `t_loop.om.m0`). Both in the interpreter now (probes
+  `num_line_after_ret`, `bound_word`); 800 of 800 mutants give the same verdict and number.
+- **G31. A void function's name on the left of `=`.** 9.2 makes a value function's name as a line, or
+  as a new scalar, error 7. For a void function, `later = 2` reads as the call `later` followed by extra
+  words: om4 and the interpreter give 5 (probe `void_assign`). Proposed: "A void function's name starts
+  a call line; anything after its arguments is extra words (5)."
+- **G32. The next-word mask depends on text written later.** Decision 22 reads left to right, but with
+  the names pass the class of a name (a call, or a new name) depends on `fn` lines that may come later.
+  `omega_next` reads the `fn` lines of the whole available text first, as 9.2 reads them, so on a cut
+  prefix a call to a function whose `fn` line is past the cut is not offered as a next word (the word is
+  still accepted when the text is whole: the fuzz passes on omc.om). Not a rule of om4; a fact about
+  masked writing. Proposed: "A writer under a mask declares its functions, or their signatures, before
+  the bodies that call them", or that the mask is computed from the signatures of the finished plan.
+- **Checked and found specified (no gap):** at most 6 parameters (`seven_params`: 9 at the fn line, as
+  om4; the interpreter allowed 64 before this sync), fn names of 63 letters accepted and 64 refused (13),
+  a function's name reused by a function, a pool or a parameter (10), a later function's name as a new
+  scalar (7).

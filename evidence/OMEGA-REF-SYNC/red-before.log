@@ -1,0 +1,6 @@
+red: 2026-10-24T21:35:56Z omega_ref at 3bc7d9faa589379280226d24f35886da0aca493a vs omc.om 18d7e80bd5ab5a3b
+omega_ref: line 935: error 3: unknown name 'fexp'
+check rc=3
+omega_ref: line 2: error 3: unknown name 'g'
+fwd check rc=3
+omc-built fwd runs rc=7

@@ -1,0 +1,5 @@
+gate_ref rc=0 4 s
+probe_ref rc=0 1 s
+gate_next rc=0 4 s
+gate_ddc rc=0 1 s
+gate_ddc DDC_FLIP=100 (negative control, must FAIL) rc=1 2 s

@@ -1,0 +1,14 @@
+gate_ddc 2026-10-24T22:08:18Z at 3bc7d9faa589379280226d24f35886da0aca493a; omc.om from /home/drakestapleton/workspace/omc-unified-ddc/seed/omc/omc.om
+om4.bin d0da40e45f1fcc45d9a39c9c52c9d745b545e076970729e51c12d76ef519efab  omc.om 18d7e80bd5ab5a3b73766c596f05ed872b7fcd537a1a40086c1c33d077ed26c5
+stage 2 = stage1(omc.om): exit 0, 224520 bytes
+NEGATIVE CONTROL RUN: byte 100 of stage 2 changed from 0 to 255 on purpose (DDC_FLIP); this run must FAIL
+interpreter: omc.om run on omc.om: exit 0, 224520 bytes, 0 s
+sha256 stage2 c73d138fe4498897098f1bc168b948473b3274eca73d9e1009f6d891ebb0da6a
+sha256 interp d0603ff8fc276774ac7b438c27d146123b9a4513547fe9671e36d8e02d183e83
+FAIL: DDC mismatch: stage 2 exit 0, interpreter exit 0
+first difference: build/omega_ref/ddc/stage2 build/omega_ref/ddc/ref.out differ: byte 101, line 1
+   101 377   0
+side check: stage3 differs from stage2 (exit 139), L408's gate decides
+PASS negative control: the mutant interpreter (unsigned shl by 3 flips bit 0) differs from stage 2
+PASS negative control: one changed byte of stage 2 is caught
+GATE_DDC FAIL

@@ -1,0 +1,6 @@
+fn main to ulong
+ret g 3
+end
+fn g x ulong to ulong
+ret add x 4
+end

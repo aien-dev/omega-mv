@@ -1,0 +1,147 @@
+probe_ref 2026-10-24T22:08:14Z at 3bc7d9faa589379280226d24f35886da0aca493a, om4.bin d0da40e45f1fcc45
+PASS  add_u8_wrap: 0
+PASS  add_u16_wrap: 1
+PASS  sub_u32_wrap: 255
+PASS  neg_u64_wrap: 255
+PASS  shl_u8_wrap: 0
+PASS  not_u16: 255
+PASS  add_i8_ovf: 101
+PASS  sub_i16_ovf: 101
+PASS  mul_i32_ovf: 101
+PASS  mul_i64_ovf: 101
+PASS  neg_i8_min: 101
+PASS  div_i16_min: 101
+PASS  rem_i64_min: 0
+PASS  div_trunc: 253
+PASS  rem_sign: 255
+PASS  rem_sign2: 1
+PASS  div0_u: 102
+PASS  rem0_i: 102
+PASS  shl_i_ovf: 101
+PASS  shl_i_neg_ok: 252
+PASS  shr_i_sign: 255
+PASS  shr_u: 31
+PASS  shift_w: 107
+PASS  shift_w8: 107
+PASS  shift_neg: 107
+PASS  shift_bare_l: 16
+PASS  shift_bare_l_w: 107
+PASS  conv_ok: 128
+PASS  conv_hi: 105
+PASS  conv_neg: 105
+PASS  conv_typed: 105
+PASS  conv_sign: 105
+PASS  conv_bool: R9 (spec silent, G2)
+PASS  typed_range: R8
+PASS  typed_neg_u: R8
+PASS  cmp_signed: 1
+PASS  cmp_unsigned: 0
+PASS  mixed: R7
+PASS  two_bare: R11
+PASS  bare_new: R11 (spec silent, G3)
+PASS  bare_unary: 251
+PASS  bool_arith: R7
+PASS  true_false: 1
+PASS  ret_mod: 44
+PASS  ret_neg: 255
+PASS  ret_void: 0
+PASS  exit_mod: 0
+PASS  exit_neg: 254
+PASS  exit_in_fn: 9
+PASS  main_bool: 1 (spec silent, G4)
+PASS  arg_order: 0:31320a
+PASS  and_both: 0:3231
+PASS  deep_rec: 0
+PASS  fn_name_63: 0
+PASS  fn_name_64: R13
+PASS  name_8: 0
+PASS  ret_both: 3
+PASS  after_ifelse: R17 (spec silent, G9)
+PASS  after_break: R9 (spec silent, G1)
+PASS  void_ret: R17
+PASS  while_default: 104
+PASS  while_exact: 10
+PASS  for_value_cap: 104
+PASS  for_value_ok: 64
+PASS  for_lit_cap: 0 (spec silent, G10)
+PASS  for_name_reread: 3
+PASS  for_value_once: 10
+PASS  for_neg_count: 0
+PASS  break_inner: R9 (spec silent, G1)
+PASS  scope_reuse: 2
+PASS  scope_dead: R3
+PASS  bound_0: R8
+PASS  trap_15: R9 (spec silent, G1)
+PASS  trap_14: R9 (spec silent, G1)
+PASS  pool_zero: 0
+PASS  get_neg: 103
+PASS  put_order: R21
+PASS  put_idx_first: 102 (spec silent, G11)
+PASS  new_init: 28
+PASS  new_fresh: 14
+PASS  view_len: 5
+PASS  edit_through: 9
+PASS  view_edit_pfx: 9
+PASS  view_pfx_to_edit: R20
+PASS  text_pass: 0 (spec silent, G6)
+PASS  free_noop: R9
+PASS  local_4mib: 0
+PASS  local_4mib_1: R23
+PASS  pool_max: 0
+PASS  pool_1gib: R23
+PASS  idx_lit_neg: R8 (spec silent, G7)
+PASS  len_text: 3
+PASS  text_bytes: 0:6109620a5c22
+PASS  text_empty: 0 (spec silent, G12)
+PASS  text_space: 0:61202062
+PASS  text_fnmode: R9
+PASS  stack_local: 106
+PASS  write_bad: 103
+PASS  write_wrap: 103
+PASS  write_n0: 0
+PASS  write_badfd: 247
+PASS  read_eof: 0
+KNOWN rw_ulong: want R7 (spec silent, G8) = interpreter; om4 0:00 (SPEC_GAPS.md)
+PASS  brackets: 8
+PASS  tab_sep: 3 (spec silent, G13)
+KNOWN lead_zero: want R6 (spec silent, G5) = interpreter; om4 7 (SPEC_GAPS.md)
+KNOWN minus_zero: want R6 (spec silent, G5) = interpreter; om4 0 (SPEC_GAPS.md)
+PASS  eq_less: 4
+PASS  ir_types: 4 (spec silent, G14)
+PASS  crlf: 3 (spec silent, G15)
+PASS  note_inside: 0
+PASS  nest_1024: R14 (spec silent, G16)
+PASS  shadow_param: R10
+PASS  loop_name_assign: 1 (spec silent, G17)
+PASS  break_while: R9 (spec silent, G1)
+PASS  trap_1: R9 (spec silent, G1)
+PASS  to_bool: R9 (spec silent, G2)
+PASS  u63: 1
+PASS  idx_2_32: R21
+PASS  text_edit: R20
+PASS  fn_after_main: 0
+PASS  global_after: 0
+PASS  reach18: R18
+PASS  write_local: 0:00000000
+KNOWN regs17: want 0 (spec silent, G18) = interpreter; om4 R12 (SPEC_GAPS.md)
+PASS  fwd_call: 7
+PASS  mutual_rec: 1
+PASS  fm_cycle: R9
+PASS  fm_self: R9
+PASS  fm_cycle_late: R3 (spec silent, G26)
+PASS  later_assign: R7
+PASS  void_assign: R5 (spec silent, G31)
+PASS  fn_in_fn: R15 (spec silent, G27)
+PASS  seven_params: R9
+PASS  six_params: 1
+PASS  fn_name_63_fwd: 7
+PASS  fn_name_64_fwd: R13
+PASS  dup_fn: R10
+PASS  fn_global_clash: R10
+PASS  if_one: 3
+PASS  bool_255: R8 (spec silent, G28)
+PASS  cond_type_first: R7 (spec silent, G29)
+PASS  num_line_after_ret: R16 (spec silent, G25)
+PASS  bound_word: R16 (spec silent, G25)
+probes: 144 written, 144 run (32 where the spec is silent; 4 known om4 differences)
+PROBE_REF PASS

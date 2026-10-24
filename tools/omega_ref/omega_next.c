@@ -27,8 +27,8 @@ typedef struct { char name[24]; int kind; int nalt; int alt[16][24]; int altn[16
 static Sym syms[256];
 static int nsyms;
 static int S_value, S_arrarg, S_program;
-enum { C_NUM, C_TYPE, C_OP2, C_OP1, C_VAR, C_ARR, C_POOL, C_FNV, C_FNVOID, C_NEWNAME, C_STR, C_REST, C_NL, C_EOF, NCLS };
-static const char *CLSN[] = {"NUM", "TYPE", "OP2", "OP1", "VAR", "ARR", "POOL", "FNV", "FNVOID", "NEWNAME", "STR", "REST", "NL", "EOF"};
+enum { C_NUM, C_TYPE, C_OP2, C_OP1, C_VAR, C_ARR, C_POOL, C_FNV, C_FNVOID, C_NEWNAME, C_STR, C_REST, C_NL, C_EOF, C_FNNAME, NCLS };
+static const char *CLSN[] = {"NUM", "TYPE", "OP2", "OP1", "VAR", "ARR", "POOL", "FNV", "FNVOID", "NEWNAME", "STR", "REST", "NL", "EOF", "FNNAME"};
 static int cls_sym[NCLS];
 
 static int sym(const char *name, int kind)
@@ -83,7 +83,7 @@ static void load_grammar(const char *path)
 }
 
 /* ---------- words of a source ---------- */
-typedef struct { const char *t; int len; int kind; long off; } Word; /* kind: 0 word, 1 STR, 2 REST, 3 NL, 4 EOF */
+typedef struct { const char *t; int len; int kind; long off; } Word; /* kind: 0 word, 1 STR, 2 REST, 3 NL, 4 EOF, 5 the name after fn */
 static Word *words;
 static int nwords;
 
@@ -113,7 +113,9 @@ static void lex(const char *src, long n, int final)
             long s = j;
             if (c == '(' || c == ')') j++;
             else while (j < le && src[j] != ' ' && src[j] != '\t' && src[j] != '\r' && src[j] != '(' && src[j] != ')') j++;
-            words[nwords++] = (Word){src + s, (int)(j - s), 0, s};
+            /* the word after fn at the start of a line is the function's name (the names pass, 9.2) */
+            int kind = (idx == 1 && fw && fwl == 2 && !strncmp(fw, "fn", 2)) ? 5 : 0;
+            words[nwords++] = (Word){src + s, (int)(j - s), kind, s};
             if (first) { fw = src + s; fwl = (int)(j - s); first = 0; }
             idx++;
         }
@@ -194,6 +196,7 @@ static int classify(const Word *w, int *fi)
     if (w->kind == 2) return cls_sym[C_REST];
     if (w->kind == 3) return cls_sym[C_NL];
     if (w->kind == 4) return cls_sym[C_EOF];
+    if (w->kind == 5) return ident(w->t, w->len) && !reserved(w->t, w->len) ? cls_sym[C_FNNAME] : -1;
     int k = kw_sym(w->t, w->len);
     if (k >= 0) return k;
     if (in(OTHER_RESERVED, w->t, w->len)) return -1; /* a fixed word no rule takes */
@@ -215,14 +218,46 @@ static void add_nm(int cls)
     nms[nnms].cls = cls; nms[nnms].level = level;
     nnms++;
 }
+/* The names pass (9.2): every function of the unit is known before any body is read, so a call may name a
+ * function written later. The fn lines are read here, from the lexed words, before the parse starts;
+ * the grammar's !fn then finds the function instead of adding it (and its !param actions fill the
+ * parameters again, to the same values). */
+static void prescan_fns(void)
+{
+    nfns = 0;
+    for (int i = 0; i < nwords; i++) {
+        const Word *w = &words[i];
+        if (w->kind != 5 || !ident(w->t, w->len) || reserved(w->t, w->len) || find_fn(w->t, w->len) >= 0) continue;
+        if (nfns >= 1024) die("too many functions", NULL);
+        Fn *f = &fns[nfns++]; memset(f, 0, sizeof *f);
+        snprintf(f->name, sizeof f->name, "%.*s", w->len, w->t);
+        int j = i + 1;
+        while (j < nwords && words[j].kind == 0) {
+            if (words[j].len == 2 && !strncmp(words[j].t, "to", 2)) {
+                j++;
+                if (j < nwords && words[j].kind == 0) f->retvoid = words[j].len == 4 && !strncmp(words[j].t, "void", 4);
+                break;
+            }
+            j++; /* a parameter: NAME TYPE, or NAME view|edit TYPE NUM */
+            if (j >= nwords || words[j].kind != 0) break;
+            int arr = words[j].len == 4 && (!strncmp(words[j].t, "view", 4) || !strncmp(words[j].t, "edit", 4));
+            if (f->np < 64) f->pk[f->np++] = arr;
+            j += arr ? 3 : 1;
+        }
+    }
+}
 static void act(int a)
 {
     const char *n = syms[a].name;
     if (!strcmp(n, "!fn")) {
-        if (nfns >= 1024) die("too many functions", NULL);
-        Fn *f = &fns[nfns]; memset(f, 0, sizeof *f);
-        snprintf(f->name, sizeof f->name, "%s", lastnew);
-        curfn = nfns++; level++;
+        int f = find_fn(lastnew, (int)strlen(lastnew));
+        if (f < 0) {
+            if (nfns >= 1024) die("too many functions", NULL);
+            f = nfns++; memset(&fns[f], 0, sizeof fns[f]);
+            snprintf(fns[f].name, sizeof fns[f].name, "%s", lastnew);
+        }
+        fns[f].np = 0; /* the !param actions fill them again */
+        curfn = f; level++;
     } else if (!strcmp(n, "!param_s") || !strcmp(n, "!param_a")) {
         Fn *f = &fns[curfn];
         if (f->np < 64) f->pk[f->np++] = n[7] == 'a';
@@ -262,6 +297,7 @@ static void reset(void)
     live[0].s = malloc(sizeof(int) * 4); live[0].s[0] = S_program; live[0].n = 1;
     live[0].acts = malloc(sizeof(int) * 64); live[0].na = 0;
     nfns = 0; curfn = -1; nnms = 0; level = 0; lastnew[0] = 0; late_actions = 0;
+    prescan_fns();
 }
 
 /* every live parse takes the word, trying every rule; returns how many parses read it */
@@ -303,7 +339,7 @@ static int step(const Word *w)
     if (c->na) late_actions++; /* an action reached only through an empty rule: it ran after this word was classified */
     for (int i = 0; i < c->na; i++) act(c->acts[i]);
     c->na = 0;
-    if (t == cls_sym[C_NEWNAME]) snprintf(lastnew, sizeof lastnew, "%.*s", w->len, w->t);
+    if (t == cls_sym[C_NEWNAME] || t == cls_sym[C_FNNAME]) snprintf(lastnew, sizeof lastnew, "%.*s", w->len, w->t);
     if ((t == cls_sym[C_FNV] || t == cls_sym[C_FNVOID])) {
         if (c->n == 0 || syms[c->s[c->n - 1]].kind != Y_ARGS) die("a function word not followed by @args", NULL);
         c->n--;
@@ -371,7 +407,7 @@ static int extendable(const int *set, const char *u, int un, int kind)
     }
     for (int i = 0; i < nnms; i++) if (set[cls_sym[nms[i].cls]] && has_prefix(nms[i].name, u, un)) return 1;
     for (int i = 0; i < nfns; i++) if (set[cls_sym[fns[i].retvoid ? C_FNVOID : C_FNV]] && has_prefix(fns[i].name, u, un)) return 1;
-    if (set[cls_sym[C_NEWNAME]] && ident(u, un)) return 1; /* a longer name is always new */
+    if ((set[cls_sym[C_NEWNAME]] || set[cls_sym[C_FNNAME]]) && ident(u, un)) return 1; /* a longer name is always new */
     return 0;
 }
 static void print_set(const int *set, const char *u, int un)
@@ -383,7 +419,7 @@ static void print_set(const int *set, const char *u, int un)
     for (int l = 0; l < 3; l++) if (set[cls_sym[lc[l]]]) for (int i = 0; lists[l][i]; i++) P(lists[l][i]);
     for (int i = 0; i < nnms; i++) if (set[cls_sym[nms[i].cls]] && find_nm(nms[i].name, (int)strlen(nms[i].name)) == &nms[i]) P(nms[i].name);
     for (int i = 0; i < nfns; i++) if (set[cls_sym[fns[i].retvoid ? C_FNVOID : C_FNV]]) P(fns[i].name);
-    if (set[cls_sym[C_NEWNAME]] && (!un || ident(u, un))) printf("newname\n");
+    if ((set[cls_sym[C_NEWNAME]] || set[cls_sym[C_FNNAME]]) && (!un || ident(u, un))) printf("newname\n");
     int only[256]; memset(only, 0, sizeof only); only[cls_sym[C_NUM]] = 1;
     if (set[cls_sym[C_NUM]] && (!un || extendable(only, u, un, 0))) printf("number\n");
     if (un) return;
@@ -486,7 +522,7 @@ static int cmd_mutants(const char *path, long seed, int count, const char *dir)
     long n; char *src = slurp(path, &n);
     lex(src, n, 0);
     int idx[200000], ni = 0;
-    for (int i = 0; i < nwords && ni < 200000; i++) if (words[i].kind == 0) idx[ni++] = i;
+    for (int i = 0; i < nwords && ni < 200000; i++) if (words[i].kind == 0 || words[i].kind == 5) idx[ni++] = i; /* plain words and fn names */
     if (!ni) return 0;
     static const char *POOL[] = {"fn", "to", "end", "if", "else", "while", "for", "ret", "put", "get", "len", "new",
                                  "view", "edit", "global", "text", "read", "write", "exit", "add", "neg", "uint",

@@ -7,7 +7,9 @@
 #   NUM a number (6.1 spelling, gap G5)  TYPE a type word  OP2 add..ge  OP1 neg not
 #   VAR a visible scalar name  ARR a visible local array, array parameter or text  POOL a visible pool
 #   (a pool is never an argument, decision 18; a text may be one, gap G6)
-#   FNV / FNVOID an earlier function (or the one being written) that returns a value / nothing
+#   FNV / FNVOID a function of the unit that returns a value / nothing: earlier, later or the one being
+#   written (9.2: the names pass reads every fn line first; omega_next reads them before it parses)
+#   FNNAME the word after fn at the start of a line (the function's name, decided by the lexer)
 #   NEWNAME any other name  STR the quoted bytes of a text line  REST the rest of a note line
 #   NL end of line  EOF end of input.  _ is the empty sequence.
 # @args stands for the arguments of the function just read: `value` per scalar parameter, `arrarg` per
@@ -22,7 +24,7 @@ program  -> NL program
           | 'note' rest NL program
           | EOF
 rest     -> REST | _
-fn_def   -> 'fn' NEWNAME !fn params 'to' rettype NL !open body 'end' !close !fnend NL
+fn_def   -> 'fn' FNNAME !fn params 'to' rettype NL !open body 'end' !close !fnend NL
 params   -> NEWNAME ptype params | _
 ptype    -> TYPE !param_s | 'view' TYPE NUM !param_a | 'edit' TYPE NUM !param_a
 rettype  -> TYPE !ret_val | 'void' !ret_void

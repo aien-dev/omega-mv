@@ -6,9 +6,10 @@
 # or G<k>:<answer> where the spec is silent and SPEC_GAPS.md G<k> proposes that answer. The interpreter must
 # give exactly that answer on every case. om4 must equal it too, except the cases listed in KNOWN below
 # (om4 findings F<k> and gaps where om4 differs from the proposal), each explained in SPEC_GAPS.md.
-# Results: evidence/OMEGA-REF/probe_ref.log; a disagreement with the spec is a finding.
+# SEED=<dir> points it at another seed tree (om4.bin; default seed); EVID=<dir> is the results dir (default
+# evidence/OMEGA-REF): probe_ref.log. A disagreement with the spec is a finding.
 set -eu
-R=seed/rung4; B=build/omega_ref/probe; E=evidence/OMEGA-REF; I=build/omega_ref/omega_ref
+SEED=${SEED:-seed}; R=$SEED/rung4; B=build/omega_ref/probe; E=${EVID:-evidence/OMEGA-REF}; I=build/omega_ref/omega_ref
 mkdir -p "$B" "$E"
 LOG=$E/probe_ref.log
 : > "$LOG"
@@ -176,6 +177,29 @@ p global_after 0      'fn main to int\nret 0\nend\nglobal g uchar 4\nfn g2 to in
 p reach18 R18         "${M}x = int 1\nif eq x 1\nret 2\nend\nend\n"
 p write_local 0:00000000 "${M}x = new uchar 4 0\nw = write 1 x 0 4\nret 0\nend\n"
 p regs17 G18:0        "${M}x = int 0\ny = int 0\nz = int 0\na1 = int 0\na2 = int 0\na3 = int 0\na4 = int 0\na5 = int 0\na6 = int 0\na7 = int 0\na8 = int 0\na9 = int 0\nb1 = int 0\nb2 = int 0\nb3 = int 0\nb4 = int 0\nb5 = int 0\nret add x add y add z add a1 add a2 add a3 add a4 add a5 add a6 add a7 add a8 add a9 add b1 add b2 add b3 add b4 b5\nend\n"
+# 9.2 names pass (synced 2026-10-24 to the om4 of seed/omc-unified): a function written later is a call,
+# cycles, the names of functions, at most 6 parameters, fn names up to 63 letters
+L63=$(printf 'a%.0s' $(seq 63)); L64=${L63}a
+p fwd_call 7          'fn main to int\nret later\nend\nfn later to int\nret 7\nend\n'
+p mutual_rec 1        'fn main to int\nret even 8\nend\nfn even n int to int\nif eq n 0\nret 1\nend\nret odd sub n 1\nend\nfn odd n int to int\nif eq n 0\nret 0\nend\nret even sub n 1\nend\n'
+p fm_cycle R9         'fn a to int\nret b\nend\nfn b to int\nret a\nend\n'
+p fm_self R9          'fn r n ulong to ulong\nret r n\nend\n'
+p fm_cycle_late G26:R3 'fn a to int\nret b\nend\nfn b to int\nret a\nend\nfn c to int\nret zz\nend\n'
+p later_assign R7     'fn main to int\nlater = 2\nret 0\nend\nfn later to int\nret 0\nend\n'
+p void_assign G31:R5  'fn main to int\nlater = 2\nret 0\nend\nfn later to void\nend\n'
+p fn_in_fn G27:R15    'fn main to int\nret later\n\nfn later to int\nret 7\nend\n'
+p seven_params R9     'fn f a int b int c int d int e int f1 int g int to int\nret a\nend\nfn main to int\nret f 1 2 3 4 5 6 7\nend\n'
+p six_params 1        'fn f a int b int c int d int e int f1 int to int\nret a\nend\nfn main to int\nret f 1 2 3 4 5 6\nend\n'
+p fn_name_63_fwd 7       "fn main to int\nret $L63\nend\nfn $L63 to int\nret 7\nend\n"
+p fn_name_64_fwd R13     "fn main to int\nret $L64\nend\nfn $L64 to int\nret 7\nend\n"
+p dup_fn R10          'fn main to int\nret 0\nend\nfn main to int\nret 0\nend\n'
+p fn_global_clash R10 'global g uchar 4\nfn g to int\nret 0\nend\nfn main to int\nret 0\nend\n'
+# bool numbers (s.6, s.7) and the order of refusals within a line (G25, G28, G29)
+p if_one 3            "${M}if 1\nret 3\nend\nret 0\nend\n"
+p bool_255 G28:R8     "${M}while 255\nret 0\nend\nret 0\nend\n"
+p cond_type_first G29:R7 "${M}r = int 3\nif r 1\nret 0\nend\nret r\nend\n"
+p num_line_after_ret G25:R16 "${M}ret 0\n0\nend\n"
+p bound_word G25:R16  "${M}while true bound bound 10\nret 0\nend\nret 0\nend\n"
 say "probes: $n written, $n run ($silent where the spec is silent; $known known om4 differences)"
 [ $fail = 0 ] && say "PROBE_REF PASS" || say "PROBE_REF FAIL"
 exit $fail
