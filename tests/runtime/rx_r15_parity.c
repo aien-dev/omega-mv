@@ -31,7 +31,8 @@
  * and the authority outcome. Gated on each side: goal MET, crumbs verify,
  * no crumb overflow, no illegal transition, no wrong result, no use of a
  * realization not in force, and no lost trigger. Measured costs are printed
- * and not compared.
+ * and not compared; the detector that reads them is configured (see main)
+ * so that host timing noise cannot change a compared plan field.
  *
  * R15_PARITY_PAIRS (default 5) sets the number of pairs.
  * Exit status 0 = SEQ_SEMANTIC_PARITY PASS.
@@ -198,6 +199,23 @@ int main(void) {
         printf("R15 repeat %s: %d of %d failed\n", r15_config_name(c), bad, n);
         return bad ? 1 : 0;
     }
+    /* AIEN's drift detector reads Omega's wall-clock serve costs. Under host
+     * load one side can see two consecutive intervals outside the tolerance,
+     * fail its prediction, and research the regime because of DRIFT (plan
+     * reason 2, condition A725, no goal) where the other side researches
+     * because of the GOAL (reason 3, condition X925, goal 1): the same work
+     * for a different reason, and the gate rightly fails. The stimulus here
+     * has no drift, so both sides get a detector whose miss streak cannot
+     * fail a prediction within an episode, and a hit band that one preempted
+     * baseline interval cannot defeat: within 20 percent of a baseline mean
+     * that one such interval inflated, a normal interval never lands, so
+     * the confirmation the episode waits for never comes. Everything else
+     * stays the product default and every compared field is still compared. */
+    RxAienConfig ac;
+    rx_aien_default_config(&ac);
+    ac.misses_to_fail = UINT32_MAX;
+    ac.tolerance_pct = 99;
+    r15_set_aien_config(&ac);
     detector_control(R15_RES1);
     detector_control(R15_SEQ);
     for (int p = 0; p < pairs; p++) {
