@@ -163,5 +163,56 @@ ir_multi call_nested 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint
 ir_multi call_expr 'fn inc a uint to uint\nret add a uint 1\nend\nfn f to uint\nret add inc uint 1 inc uint 2\nend'
 ir_multi call_loop 'fn add1 a uint to uint\nret add a uint 1\nend\nfn f to uint\nx = uint 0\nwhile lt x uint 3 bound 8\nx = add1 x\nend\nret x\nend'
 ir_multi call_six 'fn sum6 a uint b uint c uint d uint e uint f uint to uint\nret add add add add add a b c d e f\nend\nfn f to uint\nret sum6 uint 1 uint 2 uint 3 uint 4 uint 5 uint 6\nend'
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 14 refusals + 9 multi-call units; structs IR spec-blocked'
+# Random two-function programs with a call: differential against the oracle.
+rm -f "$B"/fz*
+awk -v dir="$B" 'BEGIN{
+    M = 65536;
+    split("add sub mul xor and or", O, " ");
+    split("eq ne lt le gt ge", C, " ");
+    for (p = 0; p < 30; p++) {
+        s = 1000 + p * 37;
+        s = (s * 25173 + 13849) % M; o1 = O[1 + (s % 6)];
+        s = (s * 25173 + 13849) % M; o2 = O[1 + (s % 6)];
+        s = (s * 25173 + 13849) % M; o3 = O[1 + (s % 6)];
+        s = (s * 25173 + 13849) % M; cm = C[1 + (s % 6)];
+        s = (s * 25173 + 13849) % M; n1 = 1 + (s % 9);
+        s = (s * 25173 + 13849) % M; n2 = 1 + (s % 9);
+        s = (s * 25173 + 13849) % M; n3 = 1 + (s % 9);
+        s = (s * 25173 + 13849) % M; n4 = 1 + (s % 9);
+        s = (s * 25173 + 13849) % M; o4 = O[1 + (s % 6)];
+        s = (s * 25173 + 13849) % M; n5 = 1 + (s % 9);
+        f = sprintf("%s/fz%02d.omegese", dir, p);
+        print "fn h a ulong b ulong to ulong" > f;
+        print "x = " o1 " a b" > f;
+        print "y = " o2 " x " n1 > f;
+        print "if " cm " y " n2 > f;
+        print "y = " o3 " y " n3 > f;
+        print "end" > f;
+        print "ret y" > f;
+        print "end" > f;
+        print "fn f to ulong" > f;
+        print "p = ulong " n4 > f;
+        print "q = ulong " n4 > f;
+        print "r = h p q" > f;
+        print "z = " o4 " r " n5 > f;
+        print "ret z" > f;
+        print "end" > f;
+        close(f);
+    }
+}'
+fzn=0
+for f in "$B"/fz*.omegese; do
+    fzn=$((fzn + 1))
+    b=${f%.omegese}
+    build/omegese/omegese emit "$f" "$b.json" > /dev/null
+    build/omega_emit/omega_emit emit "$b.json" "$b.oracle" > /dev/null
+    { printf 'ir\n'; cat "$f"; } > "$b.input"
+    timeout 5 "$B/stage2" < "$b.input" > "$b.got"
+    cmp -s "$b.oracle" "$b.got" || fail "fuzz $b differs from the oracle"
+    build/checker2/checker2 check "$b.got" > "$b.check"
+    grep -q '^checker2=ACCEPT ' "$b.check" || fail "fuzz $b checker refusal"
+done
+[ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
+echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 14 refusals + 9 multi-call units + 30 fuzz units; structs IR spec-blocked'
 echo 'RC=0'

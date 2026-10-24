@@ -839,6 +839,14 @@ compiles each with both compilers. Every program must be accepted with byte-iden
 This is a regression net wider than the 103-file benchmark corpus: 300 programs, 0 differences,
 about 0.5 s total. `seed/host/check.sh` runs it.
 
+## Rung R44: IR differential fuzz (done)
+
+gate-ir now generates 30 deterministic two-function programs (a helper with random
+arithmetic/comparison/`if`, and a caller with a call and arithmetic) from an explicit 16-bit LCG. Each
+must be byte-identical to the C `omegese` + `omega_emit` oracle and checker2 ACCEPT. This covers random
+call sites and argument values beyond the nine hand-written units: 30 programs, 0 differences, about
+0.5 s.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
