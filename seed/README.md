@@ -162,8 +162,8 @@ it came from.
   - 9 new programs in the old calling form that the C path can also express (signed divide and
     remainder at their limits, signed shifts, calls, computed loop counts, local arrays, a bad index):
     om4 and the C path give the same result or the same trap on all 69 inputs;
-  - 4 whole programs against twins written in C and built by gcc (gcc as the referee only): recursive
-    Fibonacci, sorting 1,000 numbers, echo of 50,000 random bytes, a byte copy that reverses its input:
+  - 4 whole programs against committed expected outputs (no C twin at runtime): recursive
+    Fibonacci, sorting 1,000 numbers, echo of 50,000 fixture bytes, a byte copy that reverses its input:
     same output every time;
   - 14 whole programs that must stop with a given status or value (among them 2^64 - 1 and 2^63 read as
     ulong numbers, fixed after the independent interpreter L412 found om4 refused them): divide by zero, bad index, read past the end, loop
@@ -246,8 +246,8 @@ it came from.
   - the next-word fuzz (decision 22, below): om4 and omc give the same answer on 4,860 cut or altered
     programs;
   - (c) the whole of gate4 run with stage 2 in om4's place passes (116 checks): the 10 practice tasks
-    and 9 programs give the C path's results and traps; the 4 whole programs match their gcc-built
-    twins; its refusals give the same numbers. Table: `evidence/SEED-0/omc/corpus-words.tsv`;
+    and 9 programs give the C path's results and traps; the 4 whole programs match their committed
+    expected outputs; its refusals give the same numbers. Table: `evidence/SEED-0/omc/corpus-words.tsv`;
   - (d) planted mistakes. A changed word that omc itself uses (`or` made into `and`) breaks the
     self-rebuild and the comparison with om4. A changed word omc does not use (signed divide made
     unsigned) keeps the self-rebuild, which shows a self-rebuild alone proves too little, but the om4
