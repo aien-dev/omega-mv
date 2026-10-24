@@ -42,7 +42,10 @@ The gates read om4.bin, gate4.sh and the gate4 tests from `$SEED/rung4` and omc.
 Point SEED at the seed tree of the compiler under test. On this branch `seed/` is still the tree from
 before the names pass (9.2: every signature read before any code, so a call may name a function written
 later); the sync of 2026-10-24 ran every gate with SEED at a checkout of `seed/omc-unified` (omc.om
-18d7e80b, om4.bin d0da40e4), logs in `evidence/OMEGA-REF-SYNC/`. `gate_ddc.sh` also takes `OMC_REF`
+18d7e80b, om4.bin d0da40e4), logs in `evidence/OMEGA-REF-SYNC/`. The omc.om under this branch's own
+`seed/omc` (1e5542bc) is no longer a program of the current language: the current om4 and the interpreter
+both refuse it at line 908 with error 10 (a parameter named `cond` while a function `cond` exists, 9.2), so
+a default run of `gate_ddc.sh` here fails for that reason, not for a mismatch. `gate_ddc.sh` also takes `OMC_REF`
 (the branch to fetch omc.om and om4.bin from when `$SEED/omc/omc.om` is missing, default
 `origin/seed/omc-unified`) and `DDC_FLIP=<offset>`, which inverts one byte of stage 2 on purpose so the
 whole gate must end in FAIL (its negative control, run by hand).
