@@ -1,6 +1,6 @@
 # Omega #673 security status matrix
 
-Date: 2026-10-23. Branch: `fix/security673-qualified`, tip `833078c`.
+Date: 2026-10-23. Branch: `fix/security673-qualified`, tip `c60e5e4`.
 This file records what is qualified, what is not run, and what is blocked. A source-only result is
 never a PASS for an integration, hardware or release claim.
 
