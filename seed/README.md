@@ -506,6 +506,17 @@ boundary and checks both sides:
 `seed/host/check.sh` runs gate12. Compiler unchanged since R19: 6,474 lines, 238 functions, sha256
 `7e7b68fd8922284e4b535005aef40b179bca70d8f3e775d7862af8c62c57e382`.
 
+## Rung R21: compiler fuzz gate (done)
+
+`seed/omc/gate13.sh` embeds two deterministic generators (an explicit 16-bit LCG, never `rand()`):
+
+- 300 token streams drawn from the language vocabulary plus garbage: every run exits inside 0..23,
+  twice with identical bytes and diagnostics, and never crashes, traps (100+) or times out.
+- 300 structured programs (typed variables, array `put`/`get`, balanced `if`/`while`/`for` up to
+  depth four): all compile, and twice to identical output.
+
+The 600 programs run in about two seconds and `seed/host/check.sh` runs the gate.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
