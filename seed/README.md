@@ -371,8 +371,9 @@ converter now keeps a normalized 64-bit significand, a binary exponent and one s
 (`fmul10`/`fdiv10`), rounds once to nearest even (`froundsh`) and packs with subnormal handling
 (`fpack`). No 128-bit integer and no double rounding are needed.
 
-- `seed/omc/omc.om`, 6,380 lines and 238 functions, sha256
-  `45dadae1b0418773769b523d737d55d44e6a3a9004d6112f323a3e1be31984d8` (171,248 bytes).
+- `seed/omc/omc.om`, 6,259 lines and 234 functions, sha256
+  `7453603d943a5bb75e85b672bbbbd200abfe12a38b040b8521cf00a2beac29ef` (169,636 bytes). The restricted
+  long-division converter and its state are removed, not left beside the new one.
 - The expected bits for 50 literals were produced with `strtod`/`strtof` outside this compiler and
   matched exactly: 0.1, pi, 6.02214076e23, 1.602176634e-19, 1e308, 5e-324, 1e-45, the maximum finite
   values, values just below the overflow boundary, and values that underflow to zero.

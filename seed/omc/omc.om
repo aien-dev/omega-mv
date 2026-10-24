@@ -726,36 +726,19 @@ global fg_ex long 1
 global fg_esign long 1
 global fg_ed ulong 1
 global fg_ty ulong 1
-global fg_num ulong 1
-global fg_den ulong 1
-global fg_p ulong 1
 global fg_e long 1
 global fg_q ulong 1
-global fg_r ulong 1
-global fg_d ulong 1
 global fg_m ulong 1
 global fg_stk ulong 1
 global fg_low ulong 1
 global fg_ov ulong 1
 
 note ======== float literals: decimal text to IEEE-754 binary32/binary64 ========
-note Scope (deliberate first slice): the literal value is fnd * 10^fp10 with fnd up to 2^63-1 and
-note |fp10| <= 18, so the numerator and denominator fit u64; the result must be a normal number of its
-note type. The conversion is exact (long division, round to nearest even), never a double rounding.
-note Anything outside that range is error 8; nothing is approximated.
-
-fn pow10 p ulong to ulong
-v = ulong 1
-i = ulong 0
-while lt i p
-if gt v 1844674407370955161
-fail 8
-end
-v = mul v 10
-i = add i 1
-end
-ret v
-end
+note The literal is fnd * 10^fp10. The converter normalizes fnd to a 64-bit significand, applies the
+note decimal scale one factor of ten at a time (fmul10/fdiv10) while folding lost bits into one sticky
+note flag, then rounds once (froundsh) and packs (fpack). It covers the full IEEE range, subnormals
+note included, and refuses (error 8) only a value that rounds to infinity or whose digits do not fit
+note in 2^63-1.
 
 note blen: bits needed for x (0 for zero)
 fn blen x ulong to ulong
@@ -1036,110 +1019,6 @@ end
 end
 end
 ret fpack
-end
-
-note fnorm: fg_e such that 2^fg_e <= fg_num / fg_den < 2^(fg_e+1). Shifts stay below 2^62 because the
-note quotient lies between 10^-18 and 10^18.
-fn fnorm to void
-bn = blen get fg_num 0
-bd = blen get fg_den 0
-e = sub long bn long bd
-if ge e 0
-t = shl get fg_den 0 ulong e
-if lt get fg_num 0 t
-e = sub e 1
-else
-t2 = shl get fg_den 0 ulong add e 1
-if ge get fg_num 0 t2
-e = add e 1
-end
-end
-else
-t = shl get fg_num 0 ulong sub 0 e
-if lt t get fg_den 0
-e = sub e 1
-else
-t2 = shl get fg_num 0 ulong sub sub 0 e 1
-if ge t2 get fg_den 0
-e = add e 1
-end
-end
-end
-put fg_e 0 e
-end
-
-note fgen: p exact quotient bits into fg_q by long division; fg_r is the remainder (unit: one last bit).
-fn fgen to void
-e = get fg_e 0
-den = get fg_den 0
-r = ulong 0
-q = ulong 0
-d = ulong 0
-if ge e 0
-d = shl den ulong e
-r = sub get fg_num 0 d
-q = ulong 1
-else
-r = get fg_num 0
-while lt r den
-r = shl r 1
-end
-r = sub r den
-q = ulong 1
-d = den
-end
-i = ulong 1
-p = get fg_p 0
-while lt i p
-r = shl r 1
-q = shl q 1
-if ge r d
-r = sub r d
-q = or q 1
-end
-i = add i 1
-end
-put fg_q 0 q
-put fg_r 0 r
-put fg_d 0 d
-put fg_e 0 e
-end
-
-note fround: round fg_q to nearest even (2*fg_r against fg_den), renormalise, check the normal range,
-note and pack the sign, exponent and mantissa.
-fn fround to ulong
-q = get fg_q 0
-den = get fg_d 0
-r2 = shl get fg_r 0 1
-if gt r2 den
-q = add q 1
-else
-if and eq r2 den eq and q 1 1
-q = add q 1
-end
-end
-p = get fg_p 0
-e = get fg_e 0
-if eq q shl 1 p
-q = shr q 1
-e = add e 1
-end
-w = ulong 32
-bias = long 127
-maxe = long 255
-if eq get fg_ty 0 11
-w = ulong 64
-bias = long 1023
-maxe = long 2047
-end
-E = add e bias
-if or le E 0 ge E sub maxe 1
-fail 8
-end
-den = sub shl ulong 1 sub p 1 1
-r2 = and q den
-q = shl ulong E sub p 1
-ret or or q r2 shl get fsgn 0 sub w 1
 end
 
 note fconst: the float token just read, as bits of ty. fspan: a deferred literal stored as pos*64+len.
