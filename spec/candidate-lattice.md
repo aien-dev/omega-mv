@@ -134,30 +134,32 @@ not measurements: serial 658.3 µs, lcf 154.2 µs, q3d 118.6 µs.
 
 ### Host benchmark (`make bench-lattice`, measured)
 
-Each run is 15 or 31 paired rounds after one warm-up, in rotating policy
-order. The cost model is fitted from 240 timed observations on a training
-grid that does not contain the graph's shapes. `gpu.sim` is refused
-(unverified: no FORGE lease), so no GPU work happens. Typical run on the Spark
-host CPUs (loadavg ≈ 5), median wall time:
+Five runs: 15 or 31 paired rounds each after one warm-up, in rotating policy
+order. The recorded run is `evidence/LATTICE-698/20261024T1827Z-a8742c96/`.
+The cost model is fitted from 240 timed observations on a training grid that
+does not contain the graph's shapes. `gpu.sim` is refused (unverified: no
+FORGE lease), so no GPU work happens. Results on the Spark host CPUs
+(loadavg 3.8–5.3), range of the per-run median:
 
 | policy | wall | busy sum | busy / wall | realized critical path |
 |---|---|---|---|---|
-| serial | 674–688 µs | 484–494 µs | 0.70–0.73 | 187–194 µs |
-| lcf | 252–281 µs | 427–435 µs | 1.52–1.72 | 156–160 µs |
-| q3d | 313–345 µs | 369–384 µs | 1.08–1.21 | 147–152 µs |
+| serial | 656–688 µs | 473–494 µs | 0.69–0.75 | 187–195 µs |
+| lcf | 243–281 µs | 427–435 µs | 1.52–1.79 | 156–164 µs |
+| q3d | 303–345 µs | 369–384 µs | 1.08–1.25 | 147–152 µs |
 
-- **q3d loses to lcf:** a median wall ratio of 1.21–1.24. q3d was faster in
-  4/31, 5/31 and 0/15 paired rounds. One-sided sign test, P(≤ 4 of 31) =
-  1.7 × 10⁻⁵.
-- Both beat serial: lcf/serial 0.37–0.41 and q3d/serial 0.46–0.50, in 30–31
-  of 31 rounds.
+- **q3d loses to lcf:** a median wall ratio of 1.21–1.26. q3d was faster in
+  0/31, 4/31, 5/31, 1/15 and 0/15 paired rounds. One-sided sign test for the
+  recorded run, P(0 of 31) = 4.7 × 10⁻¹⁰.
+- Both beat serial: lcf/serial 0.37–0.41 and q3d/serial 0.46–0.50, in 14–31
+  of each run's rounds.
 - q3d does the least total work (all quad4 on X925, lowest busy sum and
   shortest realized critical path). It keeps the A725 lanes idle because it
   predicts that waiting for an X925 lane finishes sooner.
-- Serial's wall exceeds its busy sum by about 10.6 µs per node, which is
-  thread hand-off and verification. `rx_costmodel` has no feature for that
-  overhead. With nodes of 10–40 µs, waiting costs more than predicted.
-- Selection overhead (inside pick and finish) is 22–27 µs per objective.
+- Serial's wall exceeds its busy sum by 9.7–10.6 µs per node, which is thread
+  hand-off and dispatch. `rx_costmodel` has no feature for that overhead. With
+  nodes of 10–40 µs, waiting costs more than predicted.
+- Selection overhead (inside pick and finish) is 14–27 µs per objective. It
+  depends on which cpu the dispatcher lands on.
 
 Not measured: energy, memory bytes, GPU utilization. None is claimed.
 

@@ -1,0 +1,21 @@
+source a8742c96499447c0bcf3049c732d364f178d5458
+host Linux 7.0.0-1019-nvidia aarch64 spark-b87b
+cc gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+cmd: make test-lattice
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I../physics/m16 -I../physics/nvrm -I../physics/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I../physics/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I../physics/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I../physics/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -c -o build/rx_lattice.o src/runtime/rx_lattice.c
+cc -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -I../physics/m16 -I../physics/nvrm -I../physics/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc -I../physics/third_party/nvidia-open-580.173.02/kernel-open/common/inc -I../physics/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm -I../physics/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include -Itests -o build/rx_lattice_unit tests/runtime/rx_lattice_unit.c build/rx_lattice.o src/sha256.c src/omega_evidence.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_realize_synth.c src/omega_program.c src/omega_machine.c src/omega_exec.c src/omega_verify.c src/omega_matvec.c src/omega_matvec_quad.c src/runtime/rx_costmodel.c -lm
+./build/rx_lattice_unit
+rx_lattice unit (omega-mv #698)
+  arm reference     verified
+  arm scalar        verified
+  arm quad4         verified
+  arm planted_wrong REFUSED
+  arm model_call    REFUSED
+  build: 109 candidates; admitted 83; refused unverified 11 seat 7 scope 8
+  MODELED time (synthetic truth table, not a measurement):
+    predicted critical path 187.8 us
+    serial makespan    658.3 us  busy x925   658.3 a725     0.0 gpu.sim     0.0 us  arms ref 11 scalar 0 quad4 0  weight switches 9
+    lcf    makespan    154.2 us  busy x925   187.3 a725    88.3 gpu.sim    56.6 us  arms ref 0 scalar 0 quad4 11  weight switches 10
+    q3d    makespan    118.6 us  busy x925   172.8 a725     0.0 gpu.sim   105.6 us  arms ref 0 scalar 0 quad4 11  weight switches 11
+checks 237 failures 0
+exit 0
