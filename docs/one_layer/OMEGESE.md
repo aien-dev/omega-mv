@@ -564,6 +564,14 @@ conversion is error 7.
   (error 3). (gate8 arrays, globals, params, structs, neg_*)
 
 
+### 9.10 Grouping parentheses (omc only, gate9)
+
+`(` and `)` are separate words even when written against a value (`(int 2)`, `((7))`); the lexer
+splits them out of the surrounding word. A group returns exactly the value inside it and adds no
+code. A group whose only value has no type is still ambiguous (error 11), and a group missing its
+`)` is error 16. Checked by `seed/omc/gate9.sh`, which `seed/host/check.sh` runs.
+
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original

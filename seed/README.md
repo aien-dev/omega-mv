@@ -350,6 +350,19 @@ back, with FPCR untouched and no fused operation.
   approximating. Struct fields may be floats (an f32 field still uses an 8-byte cell). IR lowering
   of floats is not implemented and is refused, not miscompiled.
 
+## Rung R10: grouping parentheses (done)
+
+The design says brackets are optional and separate words; the lexer did not implement that, so
+`(5)` was read as one unknown name. `tok2` now emits `(` and `)` as one-character tokens even when
+they touch a value, and the existing group path returns the inner value with no code.
+
+- `seed/omc/omc.om`, 6,252 lines and 233 functions, sha256
+  `89887ff473e89f870f8f1dbd1e2b46f008ad076ef168480238ac1ec1bc3e557a` (169,428 bytes).
+- `seed/omc/gate9.sh` passes 4 cases: grouped integers, nested groups, a grouped float expression,
+  the still-ambiguous `x = (5)` (error 11) and an unclosed group (error 16).
+- No existing program changes meaning: the om4/omc byte-equality corpus continues to pass with the
+  paren fixtures excluded, since om4's lexer does not split them.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

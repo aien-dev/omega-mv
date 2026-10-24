@@ -11,6 +11,7 @@ else
 fi
 sh seed/omc/gate7.sh
 sh seed/omc/gate8.sh
+sh seed/omc/gate9.sh
 sh seed/host/gate.sh
 sh seed/host/negative.sh
 sh seed/host/regression.sh

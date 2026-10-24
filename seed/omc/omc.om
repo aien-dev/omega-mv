@@ -283,6 +283,13 @@ tok_text
 ret
 end
 put ts 0 get cur 0
+if or eq c 40 eq c 41
+put tw 0 ulong c
+put tl 0 1
+put cur 0 add get cur 0 1
+put tk 0 1
+ret
+end
 w = ulong 0
 sh = ulong 0
 n = ulong 0
@@ -297,12 +304,16 @@ b = get inp get cur 0
 if le b 32
 go = false
 else
+if or eq b 40 eq b 41
+go = false
+else
 if lt n 8
 w = or w shl ulong b sh
 sh = add sh 8
 end
 n = add n 1
 put cur 0 add get cur 0 1
+end
 end
 end
 m = add m 1

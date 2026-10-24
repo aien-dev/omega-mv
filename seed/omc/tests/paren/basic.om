@@ -1,0 +1,15 @@
+note parentheses are separate words even when written next to a value; they only group.
+fn main to int
+a = (int 2)
+b = ((int 3))
+if ne add a b 5
+ret 1
+end
+if ne add (mul (int 2) (int 3)) (int 4) 10
+ret 2
+end
+if ne (int 7) 7
+ret 3
+end
+ret 0
+end
