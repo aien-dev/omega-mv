@@ -8,11 +8,11 @@ sh tests/max-interop/build_receipt.sh
 python3 tests/max-interop/test_envelope.py \
   --artifact /home/drakestapleton/workspace/maxinterop/cudapp/evidence/MAX-INTEROP/68/matmul-16x16x8 \
   --fixture tests/max-interop/fixtures/matmul-v1.json
-# 22 checks, 0 fail; envelope_id b1268c18adfb949d930e547c34c39f4689aff020894d0fd5d08be101fc70a6be
-# receipt_id   8a6e9b8a46c761407b483e68790a1697f87d27196dfd5f1bbeb785c07a5d8a7a
+# 22 checks, 0 fail; envelope_id 86aabdb2e296636cd485b33a3f7141955431e3165bf857d86077315494622054
+# receipt_id   5c05295af4e9eb482827db52d7f6b6a6b0c2a6b7392d15c8ac9e18b5296a9c27
 ```
 The issued receipt is `receipt.bin` (416 bytes); `envelope.txt` binds the real
-matmul artifact `6704f28d…`. The verifier accepted it with the existing TEST
+matmul artifact `8dcc18e0…`. The verifier accepted it with the existing TEST
 anchor and refused a stale epoch (floor 2) and a one-byte signature change.
 
 ## What is NOT proven
