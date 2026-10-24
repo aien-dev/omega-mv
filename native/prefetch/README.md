@@ -70,3 +70,8 @@ Host classifier verification does not measure prefetch benefit, establish
 CPU/GPU visibility or qualify the actual dependency mutation on hardware.
 The full-token experiment, ownership reconciliation for a new prefetch candidate,
 and hardware correctness/performance requirements of #640 remain open.
+
+## Corrected compiler compatibility
+
+The compiler safety correction in Omega PR676 also reproduces this component
+without changing its executable bytes. See [evidence/prefetch-640/compiler-correction](../../evidence/prefetch-640/compiler-correction/README.md) for the exact compiler/source pins, binary comparisons and fresh host replays. The original qualification remains preserved.
