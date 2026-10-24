@@ -645,6 +645,18 @@ I/O errors on the compiler's own input/output, not language inputs, and are excl
 - 21 cases and the control run in about 0.04 s; `seed/host/check.sh` runs the gate. Compiler
   unchanged: 6,616 lines, 239 functions, sha256 `45029fb3…`.
 
+## Rung R31: chown (done)
+
+`chown A off n uid gid` sets ownership on a checked path through `fchownat` (syscall 54, flags 0).
+It reuses the open-path argument shape (path plus two `int` ids); -1 leaves that id unchanged.
+
+- The host gate creates a file, chowns it to the current uid with gid -1, states it, and checks the
+  low byte of `st_uid` at byte 24; a missing path returns a negative error; the file is unlinked.
+- `seed/omc/omc.om`, 6,626 lines and 239 functions, sha256
+  `c0c2a935c6f2cde58f2e2c83e89df062e50fef8ced9d074ff2c6a882bf0cdd7a` (111,135 bytes).
+- Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). No corpus file uses `chown` as an identifier.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

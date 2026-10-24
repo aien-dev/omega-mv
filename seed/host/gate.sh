@@ -83,6 +83,9 @@ printf 'PASS native link: one-record packed list traps 3\n'
 compile chmod
 (cd "$stage"; ./chmod)
 printf 'PASS native chmod: 0600 mode in st_mode; missing path errno\n'
+compile chown
+(cd "$stage"; ./chown)
+printf 'PASS native chown: owner uid kept in st_uid; missing path errno\n'
 compile faccess
 (cd "$stage"; ./faccess)
 printf 'PASS native faccess: existing path accepted, missing path refused\n'

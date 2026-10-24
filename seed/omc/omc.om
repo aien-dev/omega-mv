@@ -441,6 +441,9 @@ end
 if eq w 7310575174812004980
 ret 150
 end
+if eq w 474450192483
+ret 151
+end
 if eq w 1819242338
 ret 1
 end
@@ -3001,7 +3004,7 @@ matconst 0 18446744073709551516
 end
 fn hpath c ulong dst ulong x ulong to void
 e = harray x 0
-if eq c 110
+if or eq c 110 eq c 151
 harg x 2 8
 harg x 3 8
 end
@@ -3012,7 +3015,7 @@ if eq c 150
 harg x 2 9
 end
 hpathcp x
-if eq c 110
+if or eq c 110 eq c 151
 hload x 2 2
 hload x 3 3
 end
@@ -3049,6 +3052,9 @@ end
 if eq c 150
 nr = ulong 45
 end
+if eq c 151
+nr = ulong 54
+end
 if eq c 138
 nr = ulong 49
 note hcopy leaves AT_FDCWD in X0 and the path in X1; chdir takes the path in X0.
@@ -3058,6 +3064,10 @@ if eq c 150
 note truncate takes the path in X0 and the length in X1.
 e3 2852126720 0 31 1
 e3 2852126720 1 31 2
+end
+if eq c 151
+note fchownat(dirfd, path, uid, gid, 0): X2/X3 are the ids, X4 is set after the copy.
+matconst 4 0
 end
 hsys nr
 spadd 4096
@@ -3590,7 +3600,7 @@ if or or or eq c 124 eq c 125 eq c 141 eq c 142
 hpack c dst x
 ret
 end
-if or or or or eq c 126 eq c 138 eq c 143 eq c 144 eq c 150
+if or or or or or eq c 126 eq c 138 eq c 143 eq c 144 eq c 150 eq c 151
 hpath c dst x
 ret
 end
@@ -3840,7 +3850,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 150
+if and ge c 100 le c 151
 hostval c dst
 ret
 end
