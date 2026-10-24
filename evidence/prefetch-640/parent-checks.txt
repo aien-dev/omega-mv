@@ -1,0 +1,47 @@
+Parent host-only verification, 2026-10-24 UTC
+Source base: omega-mv main cd5897e3f92f72a015892c67b17f096e433b54f7
+No GPU/device execution or service changes.
+
+Old behavior reproduced using the exact red-verdict shell line extracted from
+HEAD:tools/run_gpu_l2d_prefetch_chip.sh, rc=1, and log:
+  FAIL: synthetic model build
+  chip: 1 checks, 1 failed: FAIL
+Old line left fail=0 and accepted the startup failure.
+
+New compiled classifier on the same startup failure:
+  quiet-build /tmp/prefetch640/classify.elf 1 /tmp/prefetch640/old-repro/red.log /tmp/prefetch640/old-repro/receipt.json
+  PREFETCH_CONTROL: INVALID
+  exit65
+Receipt intentionally absent, as with a failed setup. No success evidence.
+
+Parent independently replayed reviewer fixtures against final current binary:
+  fixture0, observed child exit1: PREFETCH_CONTROL: CAUGHT, classifier exit0
+  fixture3, observed child exit0: PREFETCH_CONTROL: UNCAUGHT, classifier exit1
+
+Actual modified shell script admission checks, all stop before device work:
+  PREFETCH_CLASSIFIER=/usr/bin/true with new evidence directory:
+  GPU_L2D_PREFETCH_CHIP: INVALID classifier digest; exit2
+  Qualified classifier with already-existing evidence directory:
+  GPU_L2D_PREFETCH_CHIP: INVALID evidence directory must be new; exit2
+  Private copy of runner/source with appended source comment and original
+  recorded source digest, qualified classifier, new evidence directory:
+  GPU_L2D_PREFETCH_CHIP: INVALID classifier source; exit2
+
+bash -n tools/run_gpu_l2d_prefetch_chip.sh: PASS
+Source whitespace check: git diff --check PASS
+
+Native compiler source-authoring failures were corrected, not counted as
+passing tests: overlong identifier (error13), register pressure (error12),
+unsupported bool-to-ulong cast (error9). Helpers were split within the existing
+compiler's16-register limit. No compiler changes or alternate implementation.
+
+Hardware/control execution, timing, performance benefit and full experiment:
+NOT_RUN. No claim of completed Omega640 acceptance or readiness to merge.
+
+Final wiring review found an unchecked final evidence-manifest pipeline.
+Replaced it with direct sha256sum whose exit/write failure propagates INVALID.
+Executed the exact updated manifest statement extracted from the real runner:
+- Private directory containing a subdirectory (hash error): INVALID evidence
+  manifest, exit2. No later PASS path reached.
+- Private directory containing one file: statement exit0; sha256sum -c of the
+  resulting manifest passes and the manifest does not include itself.

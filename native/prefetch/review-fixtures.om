@@ -1,0 +1,215 @@
+note Independent emitted-shape prefetch classifier fixtures. argv mode L/J.
+text lines "A (baseline, host glue) 3 reps ran\nA deterministic over 3 reps (token 1)\nC (one list per token) 3 reps ran: 100 launches in 1 submission(s)\nC deterministic over 3 reps (token 2)\nargmax token identical: A 1, C 2\nlogits A vs C within 1e-03 of max|logit| (max |d| 0.0001, scale 1)\nB (one launch per submission) 3 reps ran: 100 launches in 100 submissions\nB bit-identical to C (x, hidden, logits, token) in every rep\nnegative control: SWIGLU mutant fails the comparison (token 1 vs 2, max |d| 0.2 = 0.2 of scale)\nnegative control: COMBINE mutant fails the comparison (token 1 vs 2, max |d| 0.2 = 0.2 of scale)\nC after the mutants bit-identical to the first C\ntimeline: rc 0, 100 stamps for 100 launches, monotonic 1, span 1.0 us <= chip 2.0 us, token and logits unchanged\ntimeline off: token rc 0, stamps accessor refuses (-1)\n"
+text cline "C deterministic over 3 reps (token 1)\n"
+text argline "argmax token identical: A 1, C 1\n"
+text bigline "logits A vs C within 1e-03 of max|logit| (max |d| 0.2, scale 1)\n"
+text mark "dgraph prefetch 1 (red 1)\n"
+text ok "ok: "
+text fail "FAIL: "
+text sum "chip: 13 checks, "
+text failed " failed: FAIL\n"
+text passed " failed: PASS\n"
+text start "{\"layers\":2,\"vocab\":151936,\"pos\":300,\"reps\":"
+text red ",\"red\":"
+text cache ",\"cached_weights\":"
+text a ",\"A\":{\"token\":1,\"runner_up\":2,\"gap\":0.00001,\"launches\":100},\"C\":{\"token\":"
+text c ",\"launches\":100,\"submits\":1},\"A_vs_C\":{\"tok_same\":"
+text diff ",\"logit_max_abs\":"
+text tiny "0.0001"
+text large "0.2"
+text tail ",\"logit_scale\":1,\"x_max_rel\":0.001,\"hidden_max_rel\":0.001,\"tol_rel\":0.001},\"mutant1\":{\"rc\":0,\"token\":2,\"logit_max_abs\":0.2,\"caught\":1},\"mutant2\":{\"rc\":0,\"token\":2,\"logit_max_abs\":0.2,\"caught\":1},\"C0_token\":"
+text tailtwo ",\"C0_logits_fnv\":\"0123456789abcdef\",\"timeline\":{\"launches\":100,\"span_ns\":1000,\"chip_ns\":2000,\"per_kind_ns\":{\"ATTN\":[2,1000]}},\"median_ns\":{\"A_total\":3000,\"C_total\":2200,\"C_chip\":2000,\"C_record\":200,\"B_total\":4000,\"B_chip\":2000},\"B\":{\"launches\":100,\"submits\":100,\"identical\":1},\"checks\":13,\"failed\":"
+text verdict ",\"verdict\":"
+text fv "\"FAIL\""
+text pv "\"PASS\""
+text duptext ",\"checks\":13"
+text extra ",\"unrelated\":1"
+text badjson ",\"extra\":[1,]"
+text finish "}\n"
+text garbage "x"
+global mode uchar 1
+global kind uchar 1
+global onechar uchar 1
+fn digit n ulong to void
+put onechar 0 uchar add n 48
+r = write 1 onechar 0 1
+end
+fn line index ulong to void
+m = get mode 0
+if or eq m 49 eq m 51
+if eq index 3
+r = write 1 cline 0 len cline
+ret
+end
+if eq index 4
+r = write 1 argline 0 len argline
+ret
+end
+end
+if and eq index 5 or eq m 49 eq m 50
+r = write 1 bigline 0 len bigline
+ret
+end
+begin = ulong 0
+current = ulong 0
+for i ulong len lines
+if eq get lines i 10
+if eq current index
+r = write 1 lines begin add sub i begin 1
+ret
+end
+current = add current 1
+begin = add i 1
+end
+end
+end
+fn main to int
+if ne argread 1 mode 0 1 1
+ret 64
+end
+if ne argread 2 kind 0 1 1
+ret 64
+end
+m = get mode 0
+bad = ulong 1
+if eq m 50
+bad = 2
+end
+if eq m 51
+bad = 0
+end
+if eq get kind 0 76
+if eq m 73
+put onechar 0 120
+for i ulong 65537
+r = write 1 onechar 0 1
+end
+ret 0
+end
+if eq m 74
+put onechar 0 0
+r = write 1 onechar 0 1
+end
+if ne m 70
+r = write 1 mark 0 len mark
+end
+if eq m 69
+r = write 1 mark 0 len mark
+end
+for i ulong 13
+if and eq m 68 eq i 12
+ret 0
+end
+j = i
+if eq m 53
+if eq i 4
+j = 5
+end
+if eq i 5
+j = 4
+end
+end
+isbad = eq i 4
+if eq m 49
+isbad = eq i 5
+end
+if eq m 50
+isbad = or eq i 4 eq i 5
+end
+if eq m 51
+isbad = false
+end
+if eq m 52
+isbad = eq i 0
+end
+if and ge m 76 le m 88
+isbad = eq i sub ulong m 76
+end
+if isbad
+r = write 1 fail 0 len fail
+else
+r = write 1 ok 0 len ok
+end
+line j
+end
+r = write 1 sum 0 len sum
+digit bad
+if eq bad 0
+r = write 1 passed 0 len passed
+else
+n = len failed
+if eq m 75
+n = sub n 1
+end
+r = write 1 failed 0 n
+end
+ret 0
+end
+r = write 1 start 0 len start
+n = ulong 3
+if eq m 56
+n = 2
+end
+digit n
+r = write 1 red 0 len red
+n = 0
+if eq m 55
+n = 1
+end
+digit n
+r = write 1 cache 0 len cache
+n = 1
+if eq m 57
+n = 0
+end
+digit n
+r = write 1 a 0 len a
+n = 2
+if or eq m 49 eq m 51
+n = 1
+end
+digit n
+r = write 1 c 0 len c
+n = 0
+if or eq m 49 or eq m 51 eq m 71
+n = 1
+end
+digit n
+r = write 1 diff 0 len diff
+if or eq m 49 eq m 50
+r = write 1 large 0 len large
+else
+r = write 1 tiny 0 len tiny
+end
+r = write 1 tail 0 len tail
+n = ulong 2
+if or eq m 49 eq m 51
+n = 1
+end
+digit n
+r = write 1 tailtwo 0 len tailtwo
+if eq m 54
+bad = 2
+end
+digit bad
+r = write 1 verdict 0 len verdict
+if eq bad 0
+r = write 1 pv 0 len pv
+else
+r = write 1 fv 0 len fv
+end
+if eq m 65
+r = write 1 duptext 0 len duptext
+end
+if eq m 67
+r = write 1 badjson 0 len badjson
+end
+if eq m 72
+r = write 1 extra 0 len extra
+end
+r = write 1 finish 0 len finish
+if eq m 66
+r = write 1 garbage 0 len garbage
+end
+ret 0
+end

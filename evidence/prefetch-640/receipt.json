@@ -1,0 +1,32 @@
+{
+  "issue": "https://github.com/aien-dev/omega-mv/issues/640",
+  "base": "cd5897e3f92f72a015892c67b17f096e433b54f7",
+  "compiler_sha256": "1d1aad082539399920bc6c90ff41f0a0c3a1ca3225e518fd0d259e0aeb71732d",
+  "classifier_sha256": "7b8eef8dc2055a1b9b67f44246ab5de592365e10f290e6e401b0fb6a316ce892",
+  "files": {
+    "native/prefetch/classify.om": "0eb1fa54b044b041da650c825270bbffe959348ad2edc7c75a2b998fc7bcbfc7",
+    "native/prefetch/review-fixtures.om": "f3850a853f70ccd44c9c6a570ed500c10e5ead2baae53b3b90efd988aa9791cf",
+    "native/prefetch/review-nested.om": "2b7cf6ab7cb5351e8e6ec6da96cadb7b585a85025e3ab5efd7f87b295d56105e",
+    "tools/run_gpu_l2d_prefetch_chip.sh": "0f79fb79e411329ca5e949acfa301c4921663be37708df7d4ecac7f2f4428872",
+    "evidence/prefetch-640/review.txt": "d7cb0726aeb2373a92b6e215a0ae052a7e6ec9c346bb7ebe72c70c2e61027d37",
+    "evidence/prefetch-640/results.txt": "8fc7b72be09d6c9101fef73b91bb9a1c633f1746c038e5302676b0b3377239d1",
+    "evidence/prefetch-640/nested-results.txt": "71d60bb235945e5ea65145917beab2ad3c15b340b4ecbb245a01b5caf399e3c2"
+  },
+  "qualification": {
+    "independent_cases": 53,
+    "passed": 53,
+    "independent_rebuild": "byte-identical",
+    "parent_replay": [
+      "CAUGHT0",
+      "UNCAUGHT1",
+      "contradictory tok_same INVALID65"
+    ],
+    "admission": [
+      "wrong executable INVALID2",
+      "existing evidence INVALID2",
+      "source mismatch INVALID2"
+    ]
+  },
+  "hardware": "NOT_RUN",
+  "full_issue_acceptance": "INCOMPLETE"
+}
