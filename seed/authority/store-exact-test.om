@@ -1,19 +1,19 @@
 note SPDX-License-Identifier: AGPL-3.0-only
 note Actual store parser accepts exact records and refuses one trailing byte.
-text exactbuild "build"
+text exbuild "build"
 text exactdir "build/authority-store"
 text badrec "FAIL store trailing-record refusal\n"
 text badgen "FAIL store trailing-generation refusal\n"
-text exactpass "store exact checks=4 fails=0\n"
-global exactfails ulong 1
-global exacttail uchar 1
+text expass "store exact checks=4 fails=0\n"
+global exfails ulong 1
+global extail uchar 1
 fn appendbyte to void
 fd = fopen spath 0 get splen 0 1025 384
 if lt fd 0
 exit 90
 end
-put exacttail 0 165
-n = write int fd exacttail 0 1
+put extail 0 165
+n = write int fd extail 0 1
 if ne fclose int fd 0
 exit 91
 end
@@ -22,7 +22,7 @@ exit 92
 end
 end
 fn main to int
-mk = makedir exactbuild 0 len exactbuild 448
+mk = makedir exbuild 0 len exbuild 448
 if not or eq mk 0 eq mk -17
 ret 93
 end
@@ -43,7 +43,7 @@ end
 setrec
 appendbyte
 if ne readrec q 22
-put exactfails 0 add get exactfails 0 1
+put exfails 0 add get exfails 0 1
 w = write 1 badrec 0 len badrec
 if ne w long len badrec
 ret 97
@@ -60,17 +60,17 @@ setgen
 appendbyte
 g = readgen
 if or ne g 0 ne get sgerr 0 32
-put exactfails 0 add get exactfails 0 1
+put exfails 0 add get exfails 0 1
 w = write 1 badgen 0 len badgen
 if ne w long len badgen
 ret 100
 end
 end
-if ne get exactfails 0 0
+if ne get exfails 0 0
 ret 1
 end
-w = write 1 exactpass 0 len exactpass
-if ne w long len exactpass
+w = write 1 expass 0 len expass
+if ne w long len expass
 ret 101
 end
 ret 0

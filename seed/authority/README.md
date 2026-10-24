@@ -134,3 +134,15 @@ only in disposable test working directories, never against an active store.
 The pre-effect dispatcher release check returns 78 on this failure. Other dispatcher
 cleanup and final-release sites still ignore the release result; this change does not
 claim those paths report it, nor does it redesign stale-lock reclamation.
+
+## Fixture source correction (2026-10-24)
+
+The dispatcher-order fixture now uses global/text names within the existing
+compiler's eight-character limit and copies its scheduled record into a local
+array before calling `writerec`; global arrays cannot be function arguments.
+The exact-store fixture likewise uses global/text names within that limit.
+These correct known source compilation blockers without changing the test
+scenarios or production sources. Declared concatenated gates are regenerated
+from this revision's own component sources. Source review is not compiler
+acceptance: Omega compilation and native positive/negative runs remain NOT_RUN.
+Historical evidence is unchanged.
