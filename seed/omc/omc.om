@@ -60,6 +60,21 @@ global stkbytes ulong 1
 global dead ulong 1
 global poolb ulong 1
 
+note ---- structs (16) and fields (256). R6. nm_type 16+index, kind 6 own, 7 edit, 8 view ----
+global st_name ulong 16
+global st_nf uchar 16
+global st_cells uchar 16
+global st_foff uchar 16
+global nst ulong 1
+global sf_name ulong 256
+global sf_type uchar 256
+global sf_len uchar 256
+global sf_off uchar 256
+global nsf ulong 1
+global svk ulong 16
+global svv ulong 16
+global svt ulong 16
+
 note ======== leaf helpers ========
 
 note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
@@ -647,6 +662,9 @@ end
 if eq w 32204027264196973
 ret 112
 end
+if eq w 127970521019507
+ret 85
+end
 ret 0
 end
 
@@ -847,6 +865,9 @@ end
 
 note newname: the name must not be in use (a name in scope when 8 bytes or fewer, or a function): error 10
 fn newname w ulong l ulong s ulong to void
+if ne findstruct w 0
+fail 10
+end
 if le l 8
 if ne findname w 0
 fail 10
@@ -1661,6 +1682,9 @@ k = ulong get nm_kind i
 if eq k 0
 fail 7
 end
+if ge k 6
+fail 7
+end
 if eq k 4
 fail 19
 end
@@ -1907,6 +1931,9 @@ put fr add x 10 get rv 0
 end
 
 fn vs_arr c ulong e ulong to void
+if ge get nm_kind sub e 1 6
+fail 7
+end
 if eq c 53
 k = get nm_kind sub e 1
 if or eq k 2 eq k 5
@@ -2609,7 +2636,11 @@ if eq get fn_pk p 0
 rdval 0 ulong get fn_pt p 255 0
 ca_scal p add cb mul i 3
 else
+if ge get fn_pk p 6
+ca_st fe i cb
+else
 ca_arr fe i cb
+end
 end
 i = add i 1
 end
@@ -2710,6 +2741,11 @@ ret
 end
 if eq c 51
 e = arrname
+if ge get nm_kind sub e 1 6
+vt_fget e dst
+vdec
+ret
+end
 rdval 0 5 255 0
 vt_get e dst
 vdec
@@ -2717,6 +2753,9 @@ ret
 end
 if eq c 52
 e = arrname
+if ge get nm_kind sub e 1 6
+fail 7
+end
 vdone 3 get nm_len sub e 1 5
 ret
 end
@@ -2952,7 +2991,7 @@ end
 if eq get tk 0 1
 if le get tl 0 8
 if eq kw get tw 0 84
-sa_arr w
+sa_new w
 eol
 ret
 end
@@ -3004,6 +3043,11 @@ ln = ulong 0
 k = ulong 0
 if or eq c 57 eq c 58
 k = sub c 55
+sid = peek_struct
+if ne sid 0
+fn_p_st f np pw sid k
+ret
+end
 t = typeword
 elemtype t
 tok
@@ -3183,6 +3227,10 @@ note s_put: put A i v: index, then value, then the checked store (STOP table). o
 fn s_put to void
 e = arrname
 k = get nm_kind sub e 1
+if ge k 6
+s_putf e
+ret
+end
 if or eq k 2 eq k 5
 fail 20
 end
@@ -3736,6 +3784,10 @@ if eq c 79
 s_text
 ret 0
 end
+if eq c 85
+skipnl
+ret 0
+end
 fail 16
 end
 if eq c 66
@@ -3778,6 +3830,9 @@ s_exit
 ret 0
 end
 if or or or eq c 77 eq c 78 eq c 79 eq c 81
+fail 9
+end
+if eq c 85
 fail 9
 end
 fail 16
@@ -3925,7 +3980,11 @@ if ne get tk 0 0
 if and eq get tk 0 1 eq get tw 0 28262
 s_fn
 else
+if and eq get tk 0 1 eq get tw 0 127970521019507
+s_struct
+else
 skipnl
+end
 end
 end
 end
@@ -3943,6 +4002,507 @@ put nslot 0 0
 put held 0 0
 end
 
+note ======== R6 structs (omc only; om4 stays the parent that rebuilds this file) ========
+note A struct is 8-byte cells, declaration order, no padding (OSC-2). new is a stack slot, given
+note back at ret, like a local array. There is no free (decision 24). Field scale: cell << (3 - tlog)
+note so a typed store lands on cell * 8. Pack of struct is 127970521019507 (Wolfram, little-endian).
+
+note findstruct: packed name -> index + 1, or 0
+fn findstruct w ulong to ulong
+i = ulong 0
+n = get nst 0
+while lt i n
+if eq get st_name i w
+ret add i 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note findfield: struct index, packed field name -> field-table index + 1, or 0
+fn findfield si ulong w ulong to ulong
+fo = ulong get st_foff si
+nfd = ulong get st_nf si
+i = ulong 0
+while lt i nfd
+j = add fo i
+if eq get sf_name j w
+ret add j 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note field_dup: 1 if w is already a field of the struct being read (fields fo .. nsf)
+fn field_dup fo ulong w ulong to ulong
+i = fo
+e = get nsf 0
+while lt i e
+if eq get sf_name i w
+ret 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note s_field: the current word is a field name of struct w. Returns the cell count after this field.
+fn s_field w ulong fo ulong cells ulong to ulong
+if ne kw get tw 0 0
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+fw = get tw 0
+if eq fw w
+fail 10
+end
+if ne findstruct fw 0
+fail 10
+end
+if ne field_dup fo fw 0
+fail 10
+end
+t = typeword
+ln = ulong 0
+p = get cur 0
+ln0 = get line 0
+tok
+if eq get tk 0 2
+ln = get tw 0
+if ne get tbig 0 0
+fail 14
+end
+if or eq ln 0 gt ln 64
+fail 14
+end
+else
+put cur 0 p
+put line 0 ln0
+end
+addc = ulong 1
+if ne ln 0
+addc = ln
+end
+if gt add cells addc 64
+fail 14
+end
+put sf_name get nsf 0 fw
+put sf_type get nsf 0 uchar t
+put sf_len get nsf 0 uchar ln
+put sf_off get nsf 0 uchar cells
+put nsf 0 add get nsf 0 1
+ret add cells addc
+end
+
+note s_struct: struct Name (field type [len])* end. Before any fn (namescan). 1..16 fields, <= 64 cells.
+fn s_struct to void
+if ne get nf 0 0
+fail 9
+end
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+if ne kw get tw 0 0
+fail 16
+end
+w = get tw 0
+if ne findstruct w 0
+fail 10
+end
+if ne findfn w get tl 0 get ts 0 0
+fail 10
+end
+if ge get nst 0 16
+fail 14
+end
+sid = get nst 0
+fo = get nsf 0
+cells = ulong 0
+nfld = ulong 0
+go = true
+while go
+tok
+if eq get tk 0 0
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+if eq kw get tw 0 66
+go = false
+else
+if ge nfld 16
+fail 14
+end
+cells = s_field w fo cells
+nfld = add nfld 1
+end
+end
+if eq nfld 0
+fail 16
+end
+put st_name sid w
+put st_nf sid uchar nfld
+put st_cells sid uchar cells
+put st_foff sid uchar fo
+put nst 0 add sid 1
+eol
+end
+
+note peek_struct: if the next word is a struct name, consume it and return index + 1; else rewind
+fn peek_struct to ulong
+p = get cur 0
+ln = get line 0
+tok
+if ne get tk 0 1
+put cur 0 p
+put line 0 ln
+ret 0
+end
+sid = findstruct get tw 0
+if eq sid 0
+put cur 0 p
+put line 0 ln
+ret 0
+end
+ret sid
+end
+
+note fn_p_st: parameter pw is view (k 2, name kind 8) or edit (k 3, name kind 7). fn_pk is 6 or 7.
+fn fn_p_st f ulong np ulong pw ulong sid ulong k ulong to void
+si = sub sid 1
+t = add si 16
+ln = ulong get st_cells si
+sk = add k 4
+if eq k 2
+addname pw poolc np t ln 8 0
+else
+addname pw poolc np t ln 7 0
+end
+p = add mul f 6 np
+put fn_pt p uchar t
+put fn_pl p ln
+put fn_pk p uchar sk
+end
+
+note sa_new: name = new <type or struct>. Rewind unless the next word is a struct name.
+fn sa_new w ulong to void
+p = get cur 0
+ln = get line 0
+tok
+sid = ulong 0
+if eq get tk 0 1
+sid = findstruct get tw 0
+end
+if ne sid 0
+sa_st w sid
+ret
+end
+put cur 0 p
+put line 0 ln
+sa_arr w
+end
+
+note st_read: one value per field, saved in svk/svv/svt. An array field takes one value.
+fn st_read si ulong to void
+fo = ulong get st_foff si
+nfd = ulong get st_nf si
+i = ulong 0
+while lt i nfd
+ft = ulong get sf_type add fo i
+rdval 0 ft 255 0
+if ne get rt 0 ft
+fail 7
+end
+put svk i get rk 0
+put svv i get rv 0
+put svt i get rt 0
+i = add i 1
+end
+end
+
+note st_store: STR of v at cell, scaled so the typed store lands on cell * 8. ADD is not used; the
+note index register holds cell << (3 - tlog). STR register-offset is the STOP table (om4).
+fn st_store base ulong idx ulong cell ulong t ulong v ulong to void
+matconst idx shl cell sub 3 tlog t
+put ea_b 0 base
+put ea_i 0 idx
+stel t v
+end
+
+note st_ixreg: runtime element index iv, field length fl, cell offset off. CMP + B.HS trap 3
+note (elemaddr, C6.2.96 / C6.2.34), then ADD Xidx, Xiv, #off (C6.2.5, base word 2432696320) and
+note LSL by 3 - tlog (bo_lsl) so the STOP store lands on (off + i) * 8.
+fn st_ixreg idx ulong iv ulong off ulong fl ulong t ulong to void
+emit or or 4043309087 shl fl 10 shl iv 5
+trapc 2 3
+emit or or or 2432696320 idx shl iv 5 shl off 10
+sh = sub 3 tlog t
+if ne sh 0
+bo_lsl idx sh idx
+end
+end
+
+note st_ld: LDR of type t from base + idx into dst (or a new register). LDOP table, as vt_get.
+fn st_ld base ulong idx ulong t ulong dst ulong to void
+rd = destreg dst
+w = or ldop t rd
+emit or or w shl base 5 shl idx 16
+put rk 0 1
+put rv 0 rd
+put rt 0 t
+end
+
+note st_write1: store field j (value saved at sv* i) into the struct at base.
+fn st_write1 base ulong tmp ulong idx ulong j ulong i ulong to void
+ft = ulong get sf_type j
+fl = ulong get sf_len j
+off = ulong get sf_off j
+force get svk i get svv i get svt i tmp
+if eq fl 0
+st_store base idx off ft tmp
+else
+k = ulong 0
+while lt k fl
+st_store base idx add off k ft tmp
+k = add k 1
+end
+end
+end
+
+note st_write: store each field value. An array field is filled with its one value.
+fn st_write base ulong tmp ulong idx ulong si ulong to void
+fo = ulong get st_foff si
+nfd = ulong get st_nf si
+i = ulong 0
+while lt i nfd
+st_write1 base tmp idx add fo i i
+i = add i 1
+end
+end
+
+note sa_st: p = new S v1 .. vn. Stack slot of the cell count, 16-byte aligned, outermost block only.
+fn sa_st w ulong sid ulong to void
+if ne get nb 0 0
+fail 9
+end
+si = sub sid 1
+cells = ulong get st_cells si
+by = shl shr add shl cells 3 15 4 4
+s = add get stkbytes 0 by
+if gt s 4194304
+fail 23
+end
+put stkbytes 0 s
+r = alloc
+put held 0 get nslot 0
+st_read si
+spsub by
+stkchk
+emit or 2432697312 r
+tmp = alloc
+idx = alloc
+st_write r tmp idx si
+addname w r add si 16 cells 6 0
+end
+
+note vt_fget_go: field j of struct name e. Scalar, or an index then the element.
+fn vt_fget_go e ulong dst ulong j ulong to void
+fl = ulong get sf_len j
+ft = ulong get sf_type j
+off = ulong get sf_off j
+base = ulong get nm_reg sub e 1
+idx = alloc
+if eq fl 0
+st_store_ld base idx off ft dst
+else
+rdval 0 5 255 0
+if eq get rt 0 1
+fail 7
+end
+if eq get rk 0 3
+if ge get rv 0 fl
+fail 21
+end
+st_store_ld base idx add off get rv 0 ft dst
+else
+if ne get rk 0 1
+fail 7
+end
+st_ixreg idx get rv 0 off fl ft
+st_ld base idx ft dst
+end
+end
+end
+
+note vt_fget: get p f, or get p f i for an array field. Kind 6 own, 7 edit, 8 view; all may be read.
+fn vt_fget e ulong dst ulong to void
+i = sub e 1
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+si = sub ulong get nm_type i 16
+fid = findfield si get tw 0
+if eq fid 0
+fail 3
+end
+vt_fget_go e dst sub fid 1
+end
+
+note st_store_ld: constant cell, then load. Split out so vt_fget stays under 16 registers.
+fn st_store_ld base ulong idx ulong cell ulong t ulong dst ulong to void
+matconst idx shl cell sub 3 tlog t
+st_ld base idx t dst
+end
+
+note s_putf_go: field j of struct name e. Read the value (and the index, if an array field) and store.
+fn s_putf_go e ulong j ulong to void
+fl = ulong get sf_len j
+ft = ulong get sf_type j
+off = ulong get sf_off j
+base = ulong get nm_reg sub e 1
+if ne fl 0
+rdval 0 5 255 0
+if eq get rt 0 1
+fail 7
+end
+put svk 0 get rk 0
+put svv 0 get rv 0
+put svt 0 get rt 0
+end
+rdval 0 ft 255 0
+if ne get rt 0 ft
+fail 7
+end
+v = matreg get rk 0 get rv 0 get rt 0
+idx = alloc
+if eq fl 0
+st_store base idx off ft v
+else
+s_putf_ix base idx v off fl ft
+end
+eol
+end
+
+note s_putf: put p f v, or put p f i v. A view struct is error 20.
+fn s_putf e ulong to void
+i = sub e 1
+if eq ulong get nm_kind i 8
+fail 20
+end
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+si = sub ulong get nm_type i 16
+fid = findfield si get tw 0
+if eq fid 0
+fail 3
+end
+s_putf_go e sub fid 1
+end
+
+note s_putf_ix: the index was saved in svk/svv/svt before the value was read
+fn s_putf_ix base ulong idx ulong v ulong off ulong fl ulong ft ulong to void
+ik = get svk 0
+iv = get svv 0
+if eq get svt 0 1
+fail 7
+end
+if eq ik 3
+if ge iv fl
+fail 21
+end
+st_store base idx add off iv ft v
+else
+if ne ik 1
+fail 7
+end
+st_ixreg idx iv off fl ft
+put ea_b 0 base
+put ea_i 0 idx
+stel ft v
+end
+end
+
+note ca_st_ok: read one struct argument of parameter i of function f. Returns the name entry.
+fn ca_st_ok f ulong i ulong to ulong
+md = ulong 0
+aa_word
+w = get tw 0
+c = kw w
+if ne c 0
+if or lt c 57 gt c 58
+fail 16
+end
+md = c
+aa_word
+w = get tw 0
+end
+e = findname w
+if eq e 0
+fail 3
+end
+ni = sub e 1
+k = ulong get nm_kind ni
+if lt k 6
+fail 7
+end
+p = add mul sub f 1 6 i
+pk = ulong get fn_pk p
+if eq pk 7
+if eq md 57
+fail 20
+end
+if eq k 8
+fail 20
+end
+else
+if eq md 58
+fail 7
+end
+end
+if ne ulong get nm_type ni ulong get fn_pt p
+fail 7
+end
+ret e
+end
+
+note ca_dist: the same struct name passed twice in one call is error 19.
+fn ca_dist cb ulong i ulong e ulong to void
+j = ulong 0
+while lt j i
+if eq get fr add add cb mul j 3 2 e
+fail 19
+end
+j = add j 1
+end
+end
+
+note ca_st: a struct argument. edit (fn_pk 7) needs own or edit; view takes any. Same struct.
+fn ca_st f ulong i ulong cb ulong to void
+e = ca_st_ok f i
+ca_dist cb i e
+q = add cb mul i 3
+put fr q 5
+put fr add q 1 ulong get nm_reg sub e 1
+put fr add q 2 e
+end
 note main: read all of stdin
 note (8 MiB at most, error 14; a read error is 1), find the mode, then one
 note statement per line from output byte 180 (om4 START .. STMT)

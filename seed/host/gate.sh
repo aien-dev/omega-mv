@@ -43,3 +43,7 @@ printf 'PASS native cwd and readlnk offsets, counts, truncation, errno and priva
 compile sockopt
 (cd "$stage"; timeout 10 ./sockopt)
 printf 'PASS native socket options with independent bind behavior, readonly input and errno\n'
+compile structfile
+(cd "$stage"; ./structfile)
+test ! -e "$stage/structfile.tmp"
+printf 'PASS struct values and native file operations in one program\n'

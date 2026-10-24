@@ -5,7 +5,12 @@ cd "$(dirname "$0")/../.."
 mkdir -p build/seed/host
 stage=$(mktemp -d build/seed/host/regression.XXXXXX)
 trap 'rm -rf "$stage"' EXIT HUP INT TERM
-git ls-files seed/rung4/tests seed/omc/tests tests/one_layer/omegese tools/exp445/arms/examples | sed -n '/\.om$/p; /\.omegese$/p' > "$stage/inputs"
+# Struct programs are an omc-only extension (OMEGESE 9.7): om4 refuses them by design, and
+# seed/omc/gate6.sh is the gate that checks that refusal. They are not part of the corpus where
+# om4 and omc must agree byte for byte.
+git ls-files seed/rung4/tests seed/omc/tests tests/one_layer/omegese tools/exp445/arms/examples \
+    | grep -v '^seed/omc/tests/struct/' \
+    | sed -n '/\.om$/p; /\.omegese$/p' > "$stage/inputs"
 count=0
 while IFS= read -r source; do
     old=0

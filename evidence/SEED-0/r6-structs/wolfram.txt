@@ -1,0 +1,41 @@
+# R6 struct numbers, checked in Wolfram (stateless kernel, 2026-10-22)
+
+pack is little-endian: byte i of the word is character i, as the lexer does
+(`w = or w shl ulong b sh`, sh += 8).
+
+  pack("fn")     = 28262            matches omc.om kw (fn is 28262)
+  pack("end")    = 6581861          matches omc.om kw
+  pack("new")    = 7824750          matches
+  pack("get")    = 7628135          matches
+  pack("put")    = 7632240          matches
+  pack("struct") = 127970521019507  the new keyword, code 85
+
+t6 recurrence. sum starts at a. For i = 0, 1, 2, 3: v[i] becomes a+i, then sum += v[i].
+  sum_final = a + Sum[a + i, {i, 0, 3}] = 6 + 5*a
+  a = 3 -> 21. The gate expects exit 21.
+
+Stack bytes for `cells` cells of 8, rounded up to 16, the same form om4 uses for arrays:
+  align(n) = BitShiftLeft[BitShiftRight[BitShiftLeft[n, 3] + 15, 4], 4]
+  n = 1..8 -> 16, 16, 32, 32, 48, 48, 64, 64. Each is a multiple of 16 and within 15 of 8*n.
+
+Scale so a typed store of width 2^tlog lands on byte cell*8:
+  scaled_index = cell * 2^(3 - tlog)
+  uint  (tlog 2) cell 3 -> index 6, byte offset 24
+  long  (tlog 3) cell 3 -> index 3, byte offset 24
+  uchar (tlog 0) cell 5 -> index 40, byte offset 40
+
+Overlap if the scale is forgotten (index = cell, store uses the type's own width):
+  t7  struct M a uint, b uchar. put b 9 writes byte 1 of a. a was 1, becomes 1 + 9*256 = 2305.
+      Correct layout: b is at byte 8. get a stays 1. Gate expects 1.
+  t8  struct N a uchar, b uint, c uchar, d uchar, e uchar. put e 9 writes byte 4, which is b's
+      low byte. b was 1, becomes 9. Correct: e is at byte 32. get b stays 1. Gate expects 1.
+  t9  struct H v uint 2, t uchar. put t 9 writes byte 2 of v[0]. v[0] was 1, becomes
+      1 + 9*65536 = 589825. Correct: t is at byte 16. get v 0 stays 1. Gate expects 1.
+
+Twin exits used by the gate, same formulas as the C-path twins, without free:
+  t1  20+22 = 42
+  t2  3+3 = 6
+  t3  5*(4-1) = 15
+  t4  10+7 = 17
+  t5  4+2*3 = 10
+  t6  21

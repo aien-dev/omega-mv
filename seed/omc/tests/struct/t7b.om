@@ -1,0 +1,6 @@
+struct M a uint b uchar end
+fn main to uint
+p = new M 1 2
+put p b 9
+ret uint get p b
+end

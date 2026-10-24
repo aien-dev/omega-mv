@@ -485,6 +485,31 @@ Input over a capacity is refused with error 14, never overrun: om4 reads at most
 writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 512 functions, 8192 trap sites per function, 512 nested
 blocks. A function that needs more than the 16 registers it hands out is error 12.
 
+### 9.7 Structs (omc only, rung 6)
+
+om4 does not grow for this. A struct program is refused by om4. omc.om does not use these words, so
+om4(omc.om) stays equal to omc(omc.om). Checked by `seed/omc/gate6.sh`.
+
+- `struct Name field type [len] ... end`, one line, before the first `fn`. 1 to 16 fields, at most 16
+  structs, at most 64 cells (error 14 over that, error 16 if empty, error 4 if the line ends before `end`). A field is a name
+  and a scalar type; a number after the type is an array field of that length (1 .. 64). Every field
+  is one or more 8-byte cells, in order, no padding. (gate6 t7, t8, t9: a wrong scale overlaps a
+  neighbour and changes the result; the expected results are 1, from the layout, not from this compiler)
+- The struct's name is a word from that line on. No function, variable, or field may be spelled the
+  same (error 10). Field names are unique in their struct (error 10). A variable may share a field's name.
+- `p = new S v1 .. vn`, only as the whole of an assignment, and only in the function's outermost block
+  (error 9 inside `if` / `while` / `for`). One value per field; an array field takes one value, stored
+  in every element. The cells are a stack slot, 16-byte aligned, given back when the function returns.
+  There is no `free` (decision 24); the word stays error 9. (gate6 t1-t6, still_free, new_in_if)
+- `get p f` reads a scalar field. `get p f i` reads an element of an array field. `put p f v` and
+  `put p f i v` write. A view cannot be written (error 20). An unknown field is error 3. A number index
+  outside the field is error 21; any other index is checked when it runs and traps 3, as for arrays.
+- A parameter is `p view S` or `p edit S`. A call passes an own or edit struct to edit, and any struct
+  to view, always of the same struct (error 7 otherwise, error 20 for a view passed to edit). The
+  structs of one call are distinct names (error 19). A function does not return a struct.
+- `len` of a struct is refused (error 7). `read` and `write` of a struct are refused (error 7).
+
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original
