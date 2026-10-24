@@ -1,0 +1,29 @@
+TEST contract_ids_match_sha256sum PASS
+TEST checker_contract_ids PASS
+TEST checker_sha256 PASS
+TEST checker_input_bound PASS
+TEST json_mirrors PASS
+TEST checker_accepts_contracts PASS
+TEST checker_rejects_mutations PASS
+TEST validator_rejects_mutations PASS
+TEST validator_accepts_contracts PASS
+TEST matmul_known_2x2 PASS
+TEST matmul_known_1x1 PASS
+TEST bf16_conversion PASS
+TEST attention_single_token PASS
+TEST attention_causal_boundary PASS
+TEST attention_zero_length PASS
+TEST attention_head_map PASS
+TEST mutation_non_causal_mask PASS
+TEST mutation_wrong_head_map PASS
+TEST mutation_wrong_stride PASS
+TEST mutation_fp32_accumulation PASS
+TEST mutation_changed_tolerance_and_unknown_field PASS
+TEST manifest_accepts PASS
+TEST manifest_mutations PASS
+TEST fixtures_regenerate PASS
+TEST fixture_checksums PASS
+TEST fixture_oracle_matches PASS
+SUMMARY {"fail": 0, "pass": 26, "total": 26}
+{"summary": {"fail": 0, "pass": 26, "total": 26}, "tests": [{"status": "PASS", "test": "contract_ids_match_sha256sum"}, {"status": "PASS", "test": "checker_contract_ids"}, {"status": "PASS", "test": "checker_sha256"}, {"status": "PASS", "test": "checker_input_bound"}, {"status": "PASS", "test": "json_mirrors"}, {"status": "PASS", "test": "checker_accepts_contracts"}, {"status": "PASS", "test": "checker_rejects_mutations"}, {"status": "PASS", "test": "validator_rejects_mutations"}, {"status": "PASS", "test": "validator_accepts_contracts"}, {"status": "PASS", "test": "matmul_known_2x2"}, {"status": "PASS", "test": "matmul_known_1x1"}, {"status": "PASS", "test": "bf16_conversion"}, {"status": "PASS", "test": "attention_single_token"}, {"status": "PASS", "test": "attention_causal_boundary"}, {"status": "PASS", "test": "attention_zero_length"}, {"status": "PASS", "test": "attention_head_map"}, {"status": "PASS", "test": "mutation_non_causal_mask"}, {"status": "PASS", "test": "mutation_wrong_head_map"}, {"status": "PASS", "test": "mutation_wrong_stride"}, {"status": "PASS", "test": "mutation_fp32_accumulation"}, {"status": "PASS", "test": "mutation_changed_tolerance_and_unknown_field"}, {"status": "PASS", "test": "manifest_accepts"}, {"status": "PASS", "test": "manifest_mutations"}, {"status": "PASS", "test": "fixtures_regenerate"}, {"status": "PASS", "test": "fixture_checksums"}, {"status": "PASS", "test": "fixture_oracle_matches"}]}
+contracts rc=0

@@ -1,0 +1,1253 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note contract_check: native Omega checker for the MAX interop op contracts.
+note Protocol: stdin starts with a line mode=id|check|manifest|sha256, then the payload.
+note mode=id / mode=sha256 hash the payload; mode=check validates a canonical
+note omega-op-contract/1 file; mode=manifest validates an omega-input-manifest/1.
+note Output is only written for a decision (OK / REFUSED); exit 0 on OK, 1 on refusal.
+note mode=manifest payload (after the mode line):
+note   expect=<hex64>
+note   omega-input-manifest/1
+note   op=<matmul|gqa-causal-attention>
+note   contract=<hex64>
+note   fixture=<name>
+note   input_sha256=<hex64>
+note   seed=<u64>
+note   count=<u32>
+note   [payload_hex=<even-length lowercase hex>]
+note The payload_hex checksum, when present, must match input_sha256, and the
+note contract must be the frozen id for op and equal the expect id.
+note SHA-256 is adapted from benchmarks-om/build/base/om-sha256.om, itself
+note AGPL-3.0-or-later and checked against Omega seed/atlas/atlas.s2 and src/sha256.c.
+note No heap: all state is in fixed globals and the fixed input pool.
+
+global big uchar 1048576
+global irlen ulong 1
+global pstart ulong 1
+global nline ulong 1
+global pofs ulong 256
+global plen ulong 256
+global sofs ulong 256
+global slen ulong 256
+global nsch ulong 1
+
+global hk uint 64
+global hs uint 8
+global hm uint 64
+global hb uchar 64
+global hd uchar 64
+global hmeta ulong 3
+
+text schm0 "omega-op-contract/1\nop=matmul\nabi=1\ndtype_a=bf16\ndtype_b=bf16\ndtype_c=f32\nlayout_a=row-major\nlayout_b=row-major\nlayout_c=row-major\nstride_a=contiguous\nstride_b=contiguous\nstride_c=contiguous\naccumulation=fp32\nrounding=input-rne-bf16,accumulate-fp32\nalpha=1\nbeta=0\nalias=forbid\nnan=forbid\ninf=forbid\nm_min=1\nm_max=8192\nk_min=1\nk_max=16384\nn_min=1\nn_max=8192\ntail=zero-pad-to-multiple-of-16\ntolerance=abs<=1e-5*max(1,abs(ref))\nreference=fp64-sum-of-exact-bf16-products\n"
+text schm1 "omega-op-contract/1\nop=gqa-causal-attention\nabi=1\ndtype_q=f32\ndtype_k=f32\ndtype_v=f32\ndtype_out=f32\nlayout_q=token-head-dim\nlayout_k=token-head-dim\nlayout_v=token-head-dim\nlayout_out=token-head-dim\nhead_dim=128\nq_heads_min=1\nq_heads_max=64\nkv_heads_min=1\nkv_heads_max=64\nhead_map=h_q/(q_heads/kv_heads)\nscale=1/sqrt(128)\nmask=causal-inclusive\nsoftmax=fp32-max-subtracted\nkv_stride=token-major\nzero_length=zero-output\nalias=forbid\nnan=forbid\ninf=forbid\ntolerance_normal=rel<=2e-4,abs<=2e-5\ntolerance_large_scores=rel<=1e-3,abs<=1e-4\nreference=fp64-softmax-fp64-weighted-sum\n"
+text mhdr "omega-input-manifest/1"
+text omth "matmul"
+text ogqa "gqa-causal-attention"
+text mid "647116fc1ba1e1394982fc8ba181ce565293f160a6b56afc0f02b2128a675704"
+text gid "003696e422bba7274877ba9e01a61076ea0f862f32760cbaa06c60f85a115359"
+text okmsg "OK "
+text refmsg "REFUSED "
+text newln "\n"
+text ehead "E_HEADER\n"
+text eorder "E_ORDER\n"
+text evalue "E_VALUE\n"
+text emiss "E_MISSING\n"
+text eunknown "E_UNKNOWN\n"
+text etol "E_TOLERANCE\n"
+text edtype "E_DTYPE\n"
+text elayout "E_LAYOUT\n"
+text etarget "E_TARGET\n"
+
+note ---- SHA-256, adapted from the proven om-sha256.om ----
+text hconst "428a2f9871374491b5c0fbcfe9b5dba53956c25b59f111f1923f82a4ab1c5ed5d807aa9812835b01243185be550c7dc372be5d7480deb1fe9bdc06a7c19bf174e49b69c1efbe47860fc19dc6240ca1cc2de92c6f4a7484aa5cb0a9dc76f988da983e5152a831c66db00327c8bf597fc7c6e00bf3d5a7914706ca63511429296727b70a852e1b21384d2c6dfc53380d13650a7354766a0abb81c2c92e92722c85a2bfe8a1a81a664bc24b8b70c76c51a3d192e819d6990624f40e3585106aa07019a4c1161e376c082748774c34b0bcb5391c0cb34ed8aa4a5b9cca4f682e6ff3748f82ee78a5636f84c878148cc7020890befffaa4506cebbef9a3f7c67178f2"
+text hseed "6a09e667bb67ae853c6ef372a54ff53a510e527f9b05688c1f83d9ab5be0cd19"
+text hhex "0123456789abcdef"
+
+fn hnibble c uchar to uint
+if le c 57
+ret uint sub c 48
+end
+ret uint sub c 87
+end
+
+fn hreset to void
+for i ulong 64
+v = uint 0
+for j ulong 8
+v = or shl v 4 hnibble get hconst add mul i 8 j
+end
+put hk i v
+end
+for i ulong 8
+v = uint 0
+for j ulong 8
+v = or shl v 4 hnibble get hseed add mul i 8 j
+end
+put hs i v
+end
+for i ulong 3
+put hmeta i 0
+end
+end
+
+fn hrot x uint n uint to uint
+ret or shr x n shl x sub 32 n
+end
+
+fn hsmall0 x uint to uint
+ret xor xor hrot x 7 hrot x 18 shr x 3
+end
+
+fn hsmall1 x uint to uint
+ret xor xor hrot x 17 hrot x 19 shr x 10
+end
+
+fn hbig0 x uint to uint
+ret xor xor hrot x 2 hrot x 13 hrot x 22
+end
+
+fn hbig1 x uint to uint
+ret xor xor hrot x 6 hrot x 11 hrot x 25
+end
+
+fn hblock to void
+for i ulong 16
+v = uint 0
+for j ulong 4
+v = or shl v 8 uint get hb add mul i 4 j
+end
+put hm i v
+end
+for j ulong 48
+i = add j 16
+v = add hsmall1 get hm sub i 2 get hm sub i 7
+v = add v hsmall0 get hm sub i 15
+put hm i add v get hm sub i 16
+end
+a = get hs 0
+b = get hs 1
+c = get hs 2
+d = get hs 3
+e = get hs 4
+f = get hs 5
+g = get hs 6
+h = get hs 7
+for i ulong 64
+t1 = add h hbig1 e
+t1 = add t1 xor and e f and not e g
+t1 = add t1 get hk i
+t1 = add t1 get hm i
+t2 = hbig0 a
+t2 = add t2 xor xor and a b and a c and b c
+h = g
+g = f
+f = e
+e = add d t1
+d = c
+c = b
+b = a
+a = add t1 t2
+end
+put hs 0 add get hs 0 a
+put hs 1 add get hs 1 b
+put hs 2 add get hs 2 c
+put hs 3 add get hs 3 d
+put hs 4 add get hs 4 e
+put hs 5 add get hs 5 f
+put hs 6 add get hs 6 g
+put hs 7 add get hs 7 h
+end
+
+fn hraw c uchar to void
+n = get hmeta 0
+put hb n c
+n = add n 1
+if eq n 64
+hblock
+n = ulong 0
+end
+put hmeta 0 n
+end
+
+fn hpush c uchar to bool
+if ne get hmeta 2 0
+ret false
+end
+if eq get hmeta 1 2305843009213693951
+put hmeta 2 2
+ret false
+end
+hraw c
+put hmeta 1 add get hmeta 1 1
+ret true
+end
+
+fn hfinal to bool
+if ne get hmeta 2 0
+ret false
+end
+bits = mul get hmeta 1 8
+hraw 128
+while ne get hmeta 0 56
+hraw 0
+end
+for i ulong 8
+shift = mul sub 7 i 8
+hraw uchar and shr bits shift 255
+end
+for i ulong 8
+v = get hs i
+for j ulong 8
+shift = uint mul sub 7 j 4
+digit = ulong and shr v shift 15
+put hd add mul i 8 j get hhex digit
+end
+end
+put hmeta 2 1
+ret true
+end
+
+note ---- input, mode, lines ----
+
+fn readall to int
+more = true
+while more
+n = read 0 big get irlen 0 sub 1048576 get irlen 0
+if eq n -4
+else
+if lt n 0
+ret 74
+end
+if eq n 0
+more = false
+else
+put irlen 0 add get irlen 0 ulong n
+if ge get irlen 0 1048576
+n2 = read 0 hb 0 1
+while eq n2 -4
+n2 = read 0 hb 0 1
+end
+if gt n2 0
+ret 65
+end
+if lt n2 0
+ret 74
+end
+more = false
+end
+end
+end
+end
+ret 0
+end
+
+fn findnl from ulong to ulong
+i = from
+while lt i get irlen 0
+if eq get big i 10
+ret i
+end
+i = add i 1
+end
+ret get irlen 0
+end
+
+fn modeis o ulong n ulong t ulong to bool
+if eq t 1
+if ne n 2
+ret false
+end
+if ne get big o 105
+ret false
+end
+ret eq get big add o 1 100
+end
+if eq t 2
+if ne n 5
+ret false
+end
+if ne get big o 99
+ret false
+end
+if ne get big add o 1 104
+ret false
+end
+if ne get big add o 2 101
+ret false
+end
+if ne get big add o 3 99
+ret false
+end
+ret eq get big add o 4 107
+end
+if eq t 3
+if ne n 8
+ret false
+end
+if ne get big o 109
+ret false
+end
+if ne get big add o 1 97
+ret false
+end
+if ne get big add o 2 110
+ret false
+end
+if ne get big add o 3 105
+ret false
+end
+if ne get big add o 4 102
+ret false
+end
+if ne get big add o 5 101
+ret false
+end
+if ne get big add o 6 115
+ret false
+end
+ret eq get big add o 7 116
+end
+if eq t 4
+if ne n 6
+ret false
+end
+if ne get big o 115
+ret false
+end
+if ne get big add o 1 104
+ret false
+end
+if ne get big add o 2 97
+ret false
+end
+if ne get big add o 3 50
+ret false
+end
+if ne get big add o 4 53
+ret false
+end
+ret eq get big add o 5 54
+end
+ret false
+end
+
+fn runmode to ulong
+e = findnl 0
+if lt e 5
+ret 0
+end
+if ne get big 0 109
+ret 0
+end
+if ne get big 1 111
+ret 0
+end
+if ne get big 2 100
+ret 0
+end
+if ne get big 3 101
+ret 0
+end
+if ne get big 4 61
+ret 0
+end
+v = ulong 5
+n = sub e v
+if modeis v n 1
+ret 1
+end
+if modeis v n 2
+ret 2
+end
+if modeis v n 3
+ret 3
+end
+if modeis v n 4
+ret 4
+end
+ret 0
+end
+
+fn splp to void
+st = get pstart 0
+n = ulong 0
+i = st
+while lt i get irlen 0
+if eq get big i 10
+if ge n 256
+put nline 0 257
+ret
+end
+put pofs n st
+put plen n sub i st
+n = add n 1
+st = add i 1
+end
+i = add i 1
+end
+if lt st get irlen 0
+if ge n 256
+put nline 0 257
+ret
+end
+put pofs n st
+put plen n sub get irlen 0 st
+n = add n 1
+end
+put nline 0 n
+end
+
+fn schlen s ulong to ulong
+if eq s 0
+ret len schm0
+end
+ret len schm1
+end
+
+fn schbyte s ulong i ulong to uchar
+if eq s 0
+ret get schm0 i
+end
+ret get schm1 i
+end
+
+fn schsplit s ulong to void
+L = schlen s
+st = ulong 0
+n = ulong 0
+i = ulong 0
+while lt i L
+if eq schbyte s i 10
+put sofs n st
+put slen n sub i st
+n = add n 1
+st = add i 1
+end
+i = add i 1
+end
+if lt st L
+put sofs n st
+put slen n sub L st
+n = add n 1
+end
+put nsch 0 n
+end
+
+note ---- payload / schema line helpers ----
+
+fn peq i ulong s ulong to bool
+if ne get plen i get slen i
+ret false
+end
+j = ulong 0
+while lt j get plen i
+if ne get big add get pofs i j schbyte s add get sofs i j
+ret false
+end
+j = add j 1
+end
+ret true
+end
+
+fn klen i ulong to ulong
+j = ulong 0
+while lt j get plen i
+if eq get big add get pofs i j 61
+ret j
+end
+j = add j 1
+end
+ret j
+end
+
+fn haseq i ulong to bool
+ret lt klen i get plen i
+end
+
+fn vlen i ulong to ulong
+n = klen i
+if ge n get plen i
+ret 0
+end
+ret sub get plen i add n 1
+end
+
+fn sklen s ulong j ulong to ulong
+o = get sofs j
+L = get slen j
+q = ulong 0
+while lt q L
+if eq schbyte s add o q 61
+ret q
+end
+q = add q 1
+end
+ret L
+end
+
+fn keysame i ulong s ulong j ulong to bool
+n = klen i
+if ne n sklen s j
+ret false
+end
+q = ulong 0
+while lt q n
+if ne get big add get pofs i q schbyte s add get sofs j q
+ret false
+end
+q = add q 1
+end
+ret true
+end
+
+fn findpk s ulong j ulong to bool
+i = ulong 0
+while lt i get nline 0
+if keysame i s j
+ret true
+end
+i = add i 1
+end
+ret false
+end
+
+fn findpkey s ulong i ulong to bool
+j = ulong 0
+while lt j get nsch 0
+if keysame i s j
+ret true
+end
+j = add j 1
+end
+ret false
+end
+
+fn isdtype s ulong i ulong to bool
+if lt get slen i 2
+ret false
+end
+if ne schbyte s get sofs i 100
+ret false
+end
+ret eq schbyte s add get sofs i 1 116
+end
+
+fn islayout s ulong i ulong to bool
+ret eq schbyte s get sofs i 108
+end
+
+fn isstride s ulong i ulong to bool
+o = get sofs i
+L = get slen i
+if lt L 6
+ret false
+end
+q = ulong 0
+while le add q 6 L
+if eq schbyte s add o q 115
+if eq schbyte s add o add q 1 116
+if eq schbyte s add o add q 2 114
+if eq schbyte s add o add q 3 105
+if eq schbyte s add o add q 4 100
+if eq schbyte s add o add q 5 101
+ret true
+end
+end
+end
+end
+end
+end
+q = add q 1
+end
+ret false
+end
+
+fn istol s ulong i ulong to bool
+if lt get slen i 2
+ret false
+end
+if ne schbyte s get sofs i 116
+ret false
+end
+ret eq schbyte s add get sofs i 1 111
+end
+
+fn vbyte i ulong q ulong to uchar
+ret get big add add get pofs i add klen i 1 q
+end
+
+fn veqt i ulong t ulong to bool
+n = vlen i
+if eq n 0
+ret false
+end
+if eq t 0
+if ne n len mid
+ret false
+end
+j = ulong 0
+while lt j n
+if ne vbyte i j get mid j
+ret false
+end
+j = add j 1
+end
+ret true
+end
+if eq t 1
+if ne n len gid
+ret false
+end
+j = ulong 0
+while lt j n
+if ne vbyte i j get gid j
+ret false
+end
+j = add j 1
+end
+ret true
+end
+if eq t 2
+if ne n len omth
+ret false
+end
+j = ulong 0
+while lt j n
+if ne vbyte i j get omth j
+ret false
+end
+j = add j 1
+end
+ret true
+end
+if eq t 3
+if ne n len ogqa
+ret false
+end
+j = ulong 0
+while lt j n
+if ne vbyte i j get ogqa j
+ret false
+end
+j = add j 1
+end
+ret true
+end
+ret false
+end
+
+fn valcmp i ulong j ulong to bool
+n1 = vlen i
+if eq n1 0
+ret false
+end
+if ne n1 vlen j
+ret false
+end
+q = ulong 0
+while lt q n1
+if ne vbyte i q vbyte j q
+ret false
+end
+q = add q 1
+end
+ret true
+end
+
+fn pclass i ulong s ulong to ulong
+if peq i s
+ret 0
+end
+if eq get plen i 0
+ret 4
+end
+if not haseq i
+ret 2
+end
+if keysame i s i
+if isdtype s i
+ret 7
+end
+if islayout s i
+ret 8
+end
+if isstride s i
+ret 8
+end
+if istol s i
+ret 6
+end
+ret 3
+end
+if findpkey s i
+ret 2
+end
+ret 5
+end
+
+fn docheck to ulong
+schsplit 0
+if gt get nline 0 256
+ret 3
+end
+if lt get nline 0 1
+ret 1
+end
+if eq get irlen 0 get pstart 0
+ret 3
+end
+if ne get big sub get irlen 0 1 10
+ret 2
+end
+if not peq 0 0
+ret 1
+end
+if lt get nline 0 2
+ret 4
+end
+if not keysame 1 0 1
+ret 2
+end
+s = ulong 9
+if veqt 1 2
+s = ulong 0
+else
+if veqt 1 3
+s = ulong 1
+else
+ret 3
+end
+end
+schsplit s
+if lt get nline 0 get nsch 0
+ret 4
+end
+j = ulong 0
+while lt j get nsch 0
+if not findpk s j
+ret 4
+end
+j = add j 1
+end
+i = ulong 0
+while lt i get nsch 0
+c = pclass i s
+if ne c 0
+ret c
+end
+i = add i 1
+end
+while lt i get nline 0
+if eq get plen i 0
+ret 2
+end
+if not haseq i
+ret 2
+end
+if findpkey s i
+ret 2
+end
+ret 5
+end
+ret 0
+end
+
+note ---- manifest ----
+
+fn packn o ulong n ulong to ulong
+v = ulong 0
+j = ulong 0
+while lt j n
+v = or shl v 8 ulong get big add o j
+j = add j 1
+end
+ret v
+end
+
+fn keyis i ulong t ulong to bool
+n = klen i
+o = get pofs i
+if eq t 1
+if ne n 6
+ret false
+end
+ret eq packn o 6 111567956173684
+end
+if eq t 2
+if ne n 2
+ret false
+end
+ret eq packn o 2 28528
+end
+if eq t 3
+if ne n 8
+ret false
+end
+ret eq packn o 8 7165066978583995252
+end
+if eq t 4
+if ne n 7
+ret false
+end
+ret eq packn o 7 28826413695332965
+end
+if eq t 5
+if ne n 12
+ret false
+end
+if ne packn o 8 7597133271186502504
+ret false
+end
+ret eq packn add o 8 4 1630680374
+end
+if eq t 6
+if ne n 4
+ret false
+end
+ret eq packn o 4 1936024932
+end
+if eq t 7
+if ne n 5
+ret false
+end
+ret eq packn o 5 427071729268
+end
+if eq t 8
+if ne n 11
+ret false
+end
+if ne packn o 8 8097887111620944991
+ret false
+end
+ret eq packn add o 8 3 6841720
+end
+ret false
+end
+
+fn hdigit c uchar to bool
+if ge c 48
+if le c 57
+ret true
+end
+end
+if ge c 97
+if le c 102
+ret true
+end
+end
+ret false
+end
+
+fn hval c uchar to uchar
+if le c 57
+ret uchar sub c 48
+end
+ret uchar sub c 87
+end
+
+fn hex64 i ulong to bool
+if not haseq i
+ret false
+end
+if ne vlen i 64
+ret false
+end
+j = ulong 0
+while lt j 64
+if not hdigit vbyte i j
+ret false
+end
+j = add j 1
+end
+ret true
+end
+
+fn decok i ulong lim ulong to bool
+if not haseq i
+ret false
+end
+n = vlen i
+if eq n 0
+ret false
+end
+v = ulong 0
+j = ulong 0
+while lt j n
+c = vbyte i j
+if or lt c 48 gt c 57
+ret false
+end
+d = ulong sub c 48
+if gt v div sub lim d 10
+ret false
+end
+v = add mul v 10 d
+j = add j 1
+end
+ret true
+end
+
+fn nameok i ulong to bool
+if not haseq i
+ret false
+end
+n = vlen i
+if eq n 0
+ret false
+end
+if gt n 64
+ret false
+end
+j = ulong 0
+while lt j n
+c = vbyte i j
+ok = false
+if ge c 65
+if le c 90
+ok = true
+end
+end
+if ge c 97
+if le c 122
+ok = true
+end
+end
+if ge c 48
+if le c 57
+ok = true
+end
+end
+if eq c 46
+ok = true
+end
+if eq c 95
+ok = true
+end
+if eq c 45
+ok = true
+end
+if not ok
+ret false
+end
+j = add j 1
+end
+ret true
+end
+
+fn mfind t ulong to bool
+i = ulong 0
+while lt i get nline 0
+if keyis i t
+ret true
+end
+i = add i 1
+end
+ret false
+end
+
+fn mhdrline to bool
+if ne get plen 1 len mhdr
+ret false
+end
+j = ulong 0
+while lt j len mhdr
+if ne get big add get pofs 1 j get mhdr j
+ret false
+end
+j = add j 1
+end
+ret true
+end
+
+fn hashhexline i ulong to bool
+if not haseq i
+ret false
+end
+n = vlen i
+if eq n 0
+ret false
+end
+if ne and n 1 0
+ret false
+end
+hreset
+j = ulong 0
+while lt j n
+c1 = vbyte i j
+c2 = vbyte i add j 1
+if not hdigit c1
+ret false
+end
+if not hdigit c2
+ret false
+end
+b = uchar add shl hval c1 4 hval c2
+if not hpush b
+ret false
+end
+j = add j 2
+end
+ret hfinal
+end
+
+fn hdeqline i ulong to bool
+if ne vlen i 64
+ret false
+end
+j = ulong 0
+while lt j 64
+if ne get hd j vbyte i j
+ret false
+end
+j = add j 1
+end
+ret true
+end
+
+fn domain to ulong
+if lt get nline 0 2
+ret 1
+end
+if eq get irlen 0 get pstart 0
+ret 1
+end
+if ne get big sub get irlen 0 1 10
+ret 2
+end
+if not keyis 0 1
+ret 1
+end
+if not mhdrline
+ret 1
+end
+if lt get nline 0 8
+ret 4
+end
+if gt get nline 0 9
+ret 5
+end
+t = ulong 2
+while le t 7
+if not mfind t
+ret 4
+end
+t = add t 1
+end
+t = ulong 2
+while le t 7
+if not keyis t t
+ret 2
+end
+t = add t 1
+end
+if eq get nline 0 9
+if not keyis 8 8
+ret 5
+end
+end
+if not hex64 0
+ret 3
+end
+if not hex64 3
+ret 3
+end
+if not hex64 5
+ret 3
+end
+if not veqt 2 2
+if not veqt 2 3
+ret 3
+end
+end
+if not veqt 3 0
+if not veqt 3 1
+ret 3
+end
+end
+if not valcmp 3 0
+ret 9
+end
+if veqt 2 2
+if not veqt 3 0
+ret 9
+end
+end
+if veqt 2 3
+if not veqt 3 1
+ret 9
+end
+end
+if not nameok 4
+ret 3
+end
+if not decok 6 18446744073709551615
+ret 3
+end
+if not decok 7 4294967295
+ret 3
+end
+if eq get nline 0 9
+if not hashhexline 8
+ret 3
+end
+if not hdeqline 5
+ret 3
+end
+end
+ret 0
+end
+
+note ---- output ----
+
+fn wokhex to bool
+w = write 1 okmsg 0 len okmsg
+if ne ulong w len okmsg
+ret false
+end
+w = write 1 hd 0 64
+if ne ulong w 64
+ret false
+end
+w = write 1 newln 0 1
+ret eq ulong w 1
+end
+
+fn whex to bool
+w = write 1 hd 0 64
+if ne ulong w 64
+ret false
+end
+w = write 1 newln 0 1
+ret eq ulong w 1
+end
+
+fn wslice off ulong n ulong to bool
+p = off
+e = add off n
+while lt p e
+w = write 1 big p sub e p
+if le w 0
+ret false
+end
+p = add p ulong w
+end
+ret true
+end
+
+fn wmanok to bool
+w = write 1 okmsg 0 len okmsg
+if ne ulong w len okmsg
+ret false
+end
+if not wslice add get pofs 3 add klen 3 1 64
+ret false
+end
+w = write 1 newln 0 1
+ret eq ulong w 1
+end
+
+fn eref c ulong to void
+w = write 1 refmsg 0 len refmsg
+if eq c 1
+w = write 1 ehead 0 len ehead
+end
+if eq c 2
+w = write 1 eorder 0 len eorder
+end
+if eq c 3
+w = write 1 evalue 0 len evalue
+end
+if eq c 4
+w = write 1 emiss 0 len emiss
+end
+if eq c 5
+w = write 1 eunknown 0 len eunknown
+end
+if eq c 6
+w = write 1 etol 0 len etol
+end
+if eq c 7
+w = write 1 edtype 0 len edtype
+end
+if eq c 8
+w = write 1 elayout 0 len elayout
+end
+if eq c 9
+w = write 1 etarget 0 len etarget
+end
+end
+
+fn hashpay to bool
+hreset
+i = get pstart 0
+while lt i get irlen 0
+if not hpush get big i
+ret false
+end
+i = add i 1
+end
+ret hfinal
+end
+
+fn main to int
+r = readall
+if ne r 0
+ret r
+end
+m = runmode
+if eq m 0
+eref 1
+ret 1
+end
+e = findnl 0
+if lt e get irlen 0
+put pstart 0 add e 1
+else
+put pstart 0 get irlen 0
+end
+splp
+if eq m 1
+if not hashpay
+ret 65
+end
+if not whex
+ret 74
+end
+ret 0
+end
+if eq m 4
+if not hashpay
+ret 65
+end
+if not whex
+ret 74
+end
+ret 0
+end
+if eq m 2
+c = docheck
+if eq c 0
+if not hashpay
+ret 65
+end
+if not wokhex
+ret 74
+end
+ret 0
+end
+eref c
+ret 1
+end
+if eq m 3
+c = domain
+if eq c 0
+if not wmanok
+ret 74
+end
+ret 0
+end
+eref c
+ret 1
+end
+eref 1
+ret 1
+end

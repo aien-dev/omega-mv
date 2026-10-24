@@ -6,3 +6,6 @@ build/qual-runs/
 /omega
 tests/test_omega_numeric
 .crumb.local
+
+# Python test cache (MAX interop)
+tests/max-interop/__pycache__/
