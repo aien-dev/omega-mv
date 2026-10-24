@@ -598,6 +598,15 @@ An unknown type name is error 16, an unknown struct or field is error 3, and `si
 error 9. Checked by `seed/omc/gate10.sh`, which `seed/host/check.sh` runs.
 
 
+### 9.12 Constants (omc only, gate16)
+
+`const NAME TYPE INTEGER` at top level defines a named integer value before use. `NAME` is at most
+8 characters and may not collide with a visible name, a function or a struct (error 10); the value
+must fit the type (error 8). The constant is a typed number: it composes wherever a value goes,
+including inside functions and as a call argument, and it cannot be assigned (error 7). Integer
+types only: `f32`/`f64` constants and any constant in IR mode are refused (error 9). Definitions are
+sequential, so a constant defined after a function is not visible to that function.
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original

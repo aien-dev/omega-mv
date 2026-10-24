@@ -444,6 +444,9 @@ end
 if eq w 474450192483
 ret 151
 end
+if eq w 500152823651
+ret 152
+end
 if eq w 1819242338
 ret 1
 end
@@ -3737,6 +3740,10 @@ c = kw get tw 0
 if eq c 0
 e = findname get tw 0
 if ne e 0
+if eq get nm_kind sub e 1 9
+vdone 3 get nm_addr sub e 1 ulong get nm_type sub e 1
+ret
+end
 if ne get nm_kind sub e 1 0
 fail 7
 end
@@ -3850,7 +3857,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 151
+if and ge c 100 le c 152
 hostval c dst
 ret
 end
@@ -4490,6 +4497,39 @@ stel t v
 eol
 end
 
+note s_const: const NAME TYPE INTEGER at top level. The value is a typed number read wherever a value
+note goes; it may not be assigned and is refused in IR mode. Integer types only.
+fn s_const to void
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+w = get tw 0
+if ne kw w 0
+fail 16
+end
+newname w get tl 0 get ts 0
+t = typeword
+if ge t 10
+fail 9
+end
+tok
+if eq get tk 0 0
+fail 4
+end
+if ne get tk 0 2
+fail 16
+end
+v = get tw 0
+range v t get tbig 0
+addname w 0 t 0 9 v
+put nglob 0 get nn 0
+eol
+end
+
 note s_global: global NAME T N: a fixed pool of N elements, zero at start, in the read/write part of the
 note program image after the 8 MiB stack pool (address 0x10800000 + pool bytes so far); at most 1 GiB of
 note pools (error 23). om4 S_GLOBAL.
@@ -5053,6 +5093,10 @@ ret 0
 end
 if eq c 79
 s_text
+ret 0
+end
+if eq c 152
+s_const
 ret 0
 end
 if eq c 85
@@ -6565,7 +6609,7 @@ else
 if eq c 83
 skipnl
 else
-if or or eq c 85 eq c 78 eq c 79
+if or or or eq c 85 eq c 78 eq c 79 eq c 152
 fail 9
 end
 fail 16

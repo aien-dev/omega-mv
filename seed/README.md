@@ -657,6 +657,23 @@ It reuses the open-path argument shape (path plus two `int` ids); -1 leaves that
 - Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
   against the pinned compiler (`e5d60db8…`). No corpus file uses `chown` as an identifier.
 
+## Rung R32: named integer constants (done)
+
+`const NAME TYPE INTEGER` at top level defines a typed value before use. It is visible to later
+functions, composes wherever a value goes (including call arguments), cannot be assigned (error 7),
+and is kept across function scope resets by advancing the global-name watermark. Integer types only;
+`f32`/`f64` constants and IR mode are refused (error 9). Names are at most 8 characters and may not
+collide with a visible name, function or struct (error 10); the value must fit (error 8).
+
+- `seed/omc/gate16.sh` runs 8 accepted programs (basic, negative, expression, call argument, bool
+  flag, ulong max, long min, defined between functions) and 11 refusals (assign, duplicate, range,
+  float, IR, extra word, long name, reserved, missing value, inside a function, use before
+  definition). `seed/host/check.sh` runs it.
+- `seed/omc/omc.om`, 6,670 lines and 240 functions, sha256
+  `a2a9c1df23270408e1c2e63c43dcae043dee36ad5fd0ce2076b2848c338d62ba` (111,810 bytes).
+- Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
+  against the pinned compiler (`e5d60db8…`). No corpus file uses `const` as an identifier.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
