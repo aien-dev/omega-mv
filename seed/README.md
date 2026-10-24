@@ -337,17 +337,18 @@ decimal literals, arithmetic, comparisons and conversions). A float value is its
 ordinary integer register; arithmetic moves it to v0/v1, runs one scalar FP instruction and moves it
 back, with FPCR untouched and no fused operation.
 
-- `seed/omc/omc.om`, 6,124 lines and 228 functions, sha256
-  `d1b1c1a8a4a6220fbacfd02e804a5d7071ad928561744bcbc14a8b6d641f695a` (165,708 bytes).
-- `seed/omc/gate8.sh` passes 17 cases: exact bits for 1.5, 0.1, pi, 1e-3 and -0.0 in both widths;
-  arithmetic; IEEE comparisons including NaN; int<->float and f32<->f64 conversions with saturation;
-  float arrays, pools, parameters and returns; and refusals for mixed types, float indices, float
-  `for` counts, float struct fields, `read`/`write` on float arrays, ambiguous literals, malformed
-  literals, out-of-range literals and IR mode. om4 refuses float syntax, and the gate checks that.
+- `seed/omc/omc.om`, 6,241 lines and 233 functions, sha256
+  `f769b4a8c2ecd9006ade38b5d10c6d3e12bd3044b7418a3a87b6b4e2731c824a` (169,276 bytes).
+- `seed/omc/gate8.sh` passes 21 cases: exact bits for 1.5, 0.1, pi, 1e-3 and -0.0 in both widths;
+  arithmetic; IEEE comparisons including NaN; sqrt, abs, min and max with minNum/maxNum and -0.0
+  ordering; int<->float and f32<->f64 conversions with saturation; float arrays, pools, parameters,
+  returns and struct fields; and refusals for mixed types, integer intrinsic operands, ambiguous
+  literals, float indices, float `for` counts, `read`/`write` on float arrays, malformed literals,
+  out-of-range literals and IR mode. om4 refuses float syntax, and the gate checks that.
 - Limits, said plainly: this slice converts literals whose significant integer is below 2^63 and
   whose decimal scale is at most 18, and refuses (error 8) anything outside that instead of
-  approximating. Struct fields and IR lowering of floats are not implemented and are refused, not
-  miscompiled.
+  approximating. Struct fields may be floats (an f32 field still uses an 8-byte cell). IR lowering
+  of floats is not implemented and is refused, not miscompiled.
 
 ## How the checks stay honest
 

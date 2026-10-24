@@ -549,14 +549,19 @@ conversion is error 7.
   `rem` on a float are error 7. IEEE results: division by zero and overflow give infinity, 0/0 gives
   NaN, and no float operation traps. NaN compares false everywhere except `ne`, which is true. -0.0
   compares equal to 0.0; `bits` exposes the sign. (gate8 arith, compare)
+- Intrinsics `sqrt x` and `abs x` take one float; `min a b` and `max a b` take two of one float type
+  and follow FMINNM/FMAXNM (IEEE minNum/maxNum: one quiet NaN returns the other operand; -0.0 orders
+  below +0.0). A bare integer operand is error 7 and an unresolved literal is error 11. (gate8
+  intrinsics, neg_intr_*)
 - Conversions `<type> value` handle int<->float, f32<->f64 and float->int. Int to float is SCVTF/UCVTF
   (round to nearest even); float to int is FCVTZS/FCVTZU (truncate, saturate, NaN -> 0); f32<->f64 is
   FCVT. `bits T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64) without
   changing its bits; any other width or a bool is error 7. (gate8 convert)
-- Floats are allowed in `global` pools, `new` arrays, parameters and returns; the same 8-byte / 4-byte
-  element rules as integers apply. A float cannot index an array or be a `for` count (error 7), a
-  struct field cannot be float (error 7), `read`/`write` still need a uchar array (error 7), and IR
-  mode refuses float words (error 3). (gate8 arrays, globals, params, neg_*)
+- Floats are allowed in `global` pools, `new` arrays, parameters, returns and struct fields; the same
+  8-byte cell rule as for structs applies (an f32 field or array element still occupies an 8-byte
+  cell, with the 32-bit pattern in its low half). A float cannot index an array or be a `for` count
+  (error 7), `read`/`write` still need a uchar array (error 7), and IR mode refuses float words
+  (error 3). (gate8 arrays, globals, params, structs, neg_*)
 
 
 ## 10. Native host extension (2026-10-23)

@@ -60,10 +60,14 @@ run_ok convert
 run_ok arrays
 run_ok globals
 run_ok params
+run_ok structs
+run_ok intrinsics
+refuse neg_intr_int 7
+refuse neg_intr_mixed 7
+refuse neg_intr_ambig 11
 refuse neg_mixed 7
 refuse neg_index 7
 refuse neg_for 7
-refuse neg_struct 7
 refuse neg_read 7
 refuse neg_ambiguous 11
 refuse neg_dot 6

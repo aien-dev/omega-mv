@@ -688,6 +688,18 @@ end
 if eq w 1937008994
 ret 90
 end
+if eq w 1953657203
+ret 91
+end
+if eq w 7561825
+ret 92
+end
+if eq w 7235949
+ret 93
+end
+if eq w 7889261
+ret 94
+end
 ret 0
 end
 
@@ -1883,6 +1895,106 @@ else
 emit or ulong 509689856 1
 end
 fv2x ty 1 rd
+end
+
+fn fp_sqrt ty ulong ra ulong rd ulong to void
+f2v ty ra 0
+if eq ty 10
+emit or ulong 505528320 1
+else
+emit or ulong 509722624 1
+end
+fv2x ty 1 rd
+end
+
+fn fp_abs ty ulong ra ulong rd ulong to void
+f2v ty ra 0
+if eq ty 10
+emit or ulong 505462784 1
+else
+emit or ulong 509657088 1
+end
+fv2x ty 1 rd
+end
+
+note fp_minmax: FMINNM/FMAXNM, the IEEE minNum/maxNum rule: one quiet NaN returns the other operand,
+note and -0.0 orders below +0.0.
+fn fp_minmax c ulong ty ulong ra ulong rb ulong rd ulong to void
+f2v ty ra 0
+f2v ty rb 1
+base = ulong 509638656
+if eq c 94
+base = ulong 509634560
+end
+if eq ty 10
+base = ulong 505444352
+if eq c 94
+base = ulong 505440256
+end
+end
+emit or or or base shl ulong 1 16 ulong 0 2
+fv2x ty 2 rd
+end
+
+note fintr: sqrt or abs of one float value; fminmax: min or max of two values of one float type.
+note Both refuse a bare integer operand and an unresolved literal, as everywhere else.
+fn fintr c ulong dst ulong to void
+if ne get irmode 0 0
+fail 9
+end
+rdval 0 0 255 0
+if eq get rk 0 2
+fail 7
+end
+if eq get rk 0 6
+fail 11
+end
+t = get rt 0
+if lt t 10
+fail 7
+end
+ra = matreg get rk 0 get rv 0 t
+rd = destreg dst
+if eq c 91
+fp_sqrt t ra rd
+else
+fp_abs t ra rd
+end
+put rk 0 1
+put rv 0 rd
+put rt 0 t
+vdec
+end
+
+fn fminmax c ulong dst ulong to void
+if ne get irmode 0 0
+fail 9
+end
+rdval 0 0 255 0
+if or eq get rk 0 2 eq get rk 0 6
+fail 11
+end
+at = get rt 0
+ak = get rk 0
+av = get rv 0
+rdval 0 0 255 0
+if or eq get rk 0 2 eq get rk 0 6
+fail 11
+end
+if or lt at 10 lt get rt 0 10
+fail 7
+end
+if ne at get rt 0
+fail 7
+end
+ra = matreg ak av at
+rb = matreg get rk 0 get rv 0 at
+rd = destreg dst
+fp_minmax c at ra rb rd
+put rk 0 1
+put rv 0 rd
+put rt 0 at
+vdec
 end
 
 note fcond: the condition for a float compare op: EQ, NE, MI (lt), LS (le), GT, GE. MI/LS/GT/GE are
@@ -3382,6 +3494,14 @@ put rt 0 tt
 vdec
 ret
 end
+if or or or eq c 91 eq c 92 eq c 93 eq c 94
+if or eq c 91 eq c 92
+fintr c dst
+else
+fminmax c dst
+end
+ret
+end
 if le sub c 1 8
 tok
 if eq get tk 0 2
@@ -4862,9 +4982,6 @@ if ne field_dup fo fw 0
 fail 10
 end
 t = typeword
-if ge t 10
-fail 7
-end
 ln = ulong 0
 p = get cur 0
 ln0 = get line 0
