@@ -1,4 +1,3 @@
-$ ./build/gpu_scan_test --sim   (omega c3/reduce-scan, 2026-10-22T02:07Z)
 kernel 0: 45 insns, 768 bytes, 18 gprs
 kernel 1: 45 insns, 768 bytes, 18 gprs
 kernel 2: 45 insns, 768 bytes, 18 gprs
@@ -7,4 +6,3 @@ kernel 4: 33 insns, 640 bytes, 18 gprs
 simulator order 0: 340 runs, reductions wrong 0, prefix sums wrong 0
 simulator order 1: 336 runs, reductions wrong 0, prefix sums wrong 0
 C3 scan sim: PASS (139 checks)
-exit=0
