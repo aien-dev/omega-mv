@@ -117,3 +117,9 @@ builds valid, empty-count, over-count, truncated-record, trailing-byte, empty-pa
 and oversized-record packets; `pkt-consumer.om` reads one packet and calls `execprog`. Accepted
 modes execute `/bin/true`; malformed modes trap 3 with exit 103 before any kernel exec. Evidence is
 `evidence/SECURITY-673/packet1`; the wider ingress map is `evidence/SECURITY-673/ingress-inventory.md`.
+
+`renames` is qualified by seven cases: the accepted pair must rename the source and leave the
+destination, while one record, three records, either empty path, a trailing byte and an embedded NUL
+each trap 3 before the kernel rename. The consumer creates the source under the scratch directory,
+so the positive case also proves the packet was consumed exactly. Evidence is
+`evidence/SECURITY-673/renames1`. `argread`, native path words and legacy parsers remain NOT_RUN.
