@@ -674,6 +674,21 @@ collide with a visible name, function or struct (error 10); the value must fit (
 - Auditing the benchmark corpus after adding the keyword: 103 files, 0 output differences, 0 crashes
   against the pinned compiler (`e5d60db8…`). No corpus file uses `const` as an identifier.
 
+## Rung R33: constants as array lengths (done)
+
+`lenval` accepts either a number or an integer constant name wherever an array length is parsed:
+local `new`, `global` pools, and `view`/`edit` parameter declarations. A name that is not an integer
+constant is error 16, and `arrlen` keeps the 1..16777216 range (errors 8 and 23). `namescan` now
+scans `const` lines before function signatures, so a signature may use a previously defined
+constant; the scan resets the global-name watermark afterwards so the body pass re-registers it.
+
+- `gate16` now runs 11 accepted programs (adding local, global and parameter array lengths) and 15
+  refusals (adding zero length, too-large length, a variable as length, and use before definition).
+- `seed/omc/omc.om`, 6,687 lines and 241 functions, sha256
+  `b4ac449f19fa5b77f90d697fc6c35223f3ca23c071732fc7e340754cbe5be642` (112,213 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

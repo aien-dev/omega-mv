@@ -607,6 +607,11 @@ including inside functions and as a call argument, and it cannot be assigned (er
 types only: `f32`/`f64` constants and any constant in IR mode are refused (error 9). Definitions are
 sequential, so a constant defined after a function is not visible to that function.
 
+A constant is also accepted as an array length in `new`, `global` and a parameter declaration
+(`view T N` / `edit T N`). A length token that is a name other than an integer constant is error 16,
+and `arrlen` still enforces 1..16777216 (errors 8 and 23). Signatures are pre-scanned, so a constant
+used in a parameter length must be defined before that function.
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original

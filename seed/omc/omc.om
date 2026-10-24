@@ -1672,6 +1672,33 @@ fail 23
 end
 end
 
+note lenval: an array length token: a number, or an integer constant name (kind 9). A name that is
+note not an integer constant is error 16; arrlen then applies the 1..16777216 range.
+fn lenval to ulong
+tok
+k = get tk 0
+if eq k 2
+ret get tw 0
+end
+if eq k 1
+if le get tl 0 8
+e = findname get tw 0
+if ne e 0
+if eq get nm_kind sub e 1 9
+t = ulong get nm_type sub e 1
+if ge t 10
+fail 16
+end
+put tbig 0 0
+ret get nm_addr sub e 1
+end
+end
+end
+end
+fail 16
+ret 0
+end
+
 note typeword: read a type name -> 1..9
 fn typeword to ulong
 tok
@@ -4073,11 +4100,7 @@ fail 9
 end
 t = typeword
 elemtype t
-tok
-if ne get tk 0 2
-fail 16
-end
-n = get tw 0
+n = lenval
 arrlen n
 by = shl shr add shl n tlog t 15 4 4
 s = add get stkbytes 0 by
@@ -4205,14 +4228,7 @@ ret
 end
 t = typeword
 elemtype t
-tok
-if eq get tk 0 0
-fail 4
-end
-if ne get tk 0 2
-fail 16
-end
-ln = get tw 0
+ln = lenval
 arrlen ln
 else
 if eq c 88
@@ -4537,11 +4553,7 @@ fn s_global to void
 w = topname
 t = typeword
 elemtype t
-tok
-if ne get tk 0 2
-fail 16
-end
-n = get tw 0
+n = lenval
 arrlen n
 by = shl shr add shl n tlog t 15 4 4
 pb = get poolb 0
@@ -5310,7 +5322,11 @@ else
 if and eq get tk 0 1 eq get tw 0 127970521019507
 s_struct
 else
+if and eq get tk 0 1 eq get tw 0 500152823651
+s_const
+else
 skipnl
+end
 end
 end
 end
@@ -5322,6 +5338,7 @@ put scanning 0 0
 put cur 0 0
 put line 0 1
 put nn 0 0
+put nglob 0 0
 put curfn 0 0
 put curret 0 0
 put npar 0 0

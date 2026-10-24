@@ -38,8 +38,11 @@ bool_flag|3|const B bool 1\nfn main to int\nif B\nret 3\nend\nret 4\nend
 ulong_max|255|const U ulong 18446744073709551615\nfn main to int\nret int rem U ulong 256\nend
 long_min|0|const L long -9223372036854775808\nfn main to int\nret int rem L long 256\nend
 between_fns|9|fn f to int\nret 1\nend\nconst N int 9\nfn main to int\nret N\nend
+length_local|7|const N uint 4\nfn main to int\na = new uint N 0\nput a 3 7\nret int get a 3\nend
+length_global|4|const N uint 4\nglobal g uchar N\nfn main to int\nret int len g\nend
+length_param|4|const N uint 4\nfn f a view uint N to int\nret int len a\nend\nfn main to int\nx = new uint N 0\nret f x\nend
 RUN
-[ "$n" = 8 ] || bad "value table ran $n of 8 cases"
+[ "$n" = 11 ] || bad "value table ran $n of 11 cases"
 
 n=0
 while IFS='|' read -r name want src; do
@@ -64,8 +67,12 @@ reserved|16|const while uint 5\nfn main to int\nret 0\nend
 missing_value|4|const N uint\nfn main to int\nret 0\nend
 inside_fn|16|fn main to int\nconst N uint 5\nret 0\nend
 use_before|3|fn f to int\nret int N\nend\nconst N int 9\nfn main to int\nret f\nend
+len_zero|8|const N uint 0\nfn main to int\na = new uint N 0\nret 0\nend
+len_big|23|const N uint 16777217\nfn main to int\na = new uint N 0\nret 0\nend
+len_varname|16|fn main to int\nn = uint 4\na = new uint n 0\nret 0\nend
+len_after|16|fn f to int\na = new uint N 0\nret 0\nend\nconst N uint 4\nfn main to int\nret f\nend
 REF
-[ "$n" = 11 ] || bad "refusal table ran $n of 11 cases"
+[ "$n" = 15 ] || bad "refusal table ran $n of 15 cases"
 
-say "PASS gate16 8 constant programs and 11 refusals"
+say "PASS gate16 11 constant programs and 15 refusals"
 exit 0
