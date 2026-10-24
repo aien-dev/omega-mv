@@ -870,6 +870,20 @@ a regular file (not a socket); the file is unlinked.
   `a75ee5dec21c784c4bbc27e426b5124aebef4580b1b9587f60f7a2d6b7aa2a91` (119,031 bytes).
 - Auditing the benchmark corpus: 103 files, 0 output differences.
 
+## Rung R47: IR binary operand types (done)
+
+`ir_bin_r` now checks the right operand against the left: arithmetic and comparisons require the
+same type (bool arithmetic is refused); shifts allow any whole-number amount, matching the language
+(`shl ulong 1 uint 3` is oracle-identical), but refuse bool or float amounts; float operands are
+refused. Before this, `add s i` with `s uint`, `i ulong` emitted IR that checker2 rejected; it now
+fails 7 instead.
+
+- gate-ir: 19 refusals and one mixed-shift unit; totals are 10/10 dev, 9 call units, 3 break units,
+  1 shift unit, 30 fuzz units.
+- `seed/omc/omc.om`, 7,181 lines and 251 functions, sha256
+  `fe3fde9be68a069d20d89e3851596ebac1bd6daa42e4caf3079b0c60b87ba8d8` (119,291 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

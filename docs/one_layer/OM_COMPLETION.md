@@ -20,10 +20,10 @@ Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/chec
 | Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync, pread/pwrite, getsid/syncfs/shutdown | seed/host/check.sh |
 | Diagnostics | 23 named refusal codes with one minimal case each | gate15 |
 | Robustness | 600 deterministic fuzz programs; capacity boundaries; 300-program differential fuzz against the pinned compiler; 30 randomized two-function IR units | gate12, gate13, gate17, gate-ir |
-| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded, break; refuses what it cannot lower | gate-ir (10/10 dev, 9 call units, 3 break units, 30 fuzz units, 16 refusals) |
+| IR mode | OSC IR v1, up to 32 functions, calls to earlier functions, integer constants folded, break; refuses what it cannot lower | gate-ir (10/10 dev, 9 call units, 3 break units, 1 shift unit, 30 fuzz units, 19 refusals) |
 
-Compiler: 7,159 lines, 251 functions, sha256
-`a75ee5dec21c784c4bbc27e426b5124aebef4580b1b9587f60f7a2d6b7aa2a91` (119,031 bytes).
+Compiler: 7,181 lines, 251 functions, sha256
+`fe3fde9be68a069d20d89e3851596ebac1bd6daa42e4caf3079b0c60b87ba8d8` (119,291 bytes).
 
 Benchmark parity: 103 authored `.om` sources and 53 build-plan targets compile to identical bytes
 and refusals as the pinned compiler `e5d60db8…` (rung R15; rechecked after every keyword).

@@ -6579,8 +6579,30 @@ if or eq c 41 eq c 42
 exp2 = ulong 0
 end
 ir_val 65534 exp2
+isb2 = get ir_isb 0
+ty2 = get ir_vt 0
+if or eq c 41 eq c 42
+if or ge lty 10 eq lty 1
+fail 7
+end
+if eq isb2 0
+if or ge ty2 10 eq ty2 1
+fail 7
+end
+end
+else
+if ge lty 10
+fail 7
+end
+if and eq isb2 0 ne ty2 lty
+fail 7
+end
+if and and ge c 33 le c 40 eq lty 1
+fail 7
+end
+end
 right = get ir_rr 0
-if ne get ir_isb 0 0
+if ne isb2 0
 right = ir_lit get ir_bare 0 lty
 end
 if ge c 43
