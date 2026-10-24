@@ -600,17 +600,19 @@ error 9. Checked by `seed/omc/gate10.sh`, which `seed/host/check.sh` runs.
 
 ### 9.12 Constants (omc only, gate16)
 
-`const NAME TYPE INTEGER` at top level defines a named integer value before use. `NAME` is at most
+`const NAME TYPE LITERAL` at top level defines a named value before use. `NAME` is at most
 8 characters and may not collide with a visible name, a function or a struct (error 10); the value
-must fit the type (error 8). The constant is a typed number: it composes wherever a value goes,
-including inside functions and as a call argument, and it cannot be assigned (error 7). Integer
-types only: `f32`/`f64` constants and any constant in IR mode are refused (error 9). Definitions are
-sequential, so a constant defined after a function is not visible to that function.
+must fit the type (error 8). The constant is a typed number: an integer (`uint 5`, `long -3`) or a
+float literal (`f64 0.1`, `f32 0.1`); an integer literal under a float type is refused (error 16).
+It composes wherever a value goes, including inside functions and as a call argument, and it cannot
+be assigned (error 7). Constants in IR mode are refused (error 9). Definitions are sequential, so a
+constant defined after a function is not visible to that function.
 
-A constant is also accepted as an array length in `new`, `global` and a parameter declaration
-(`view T N` / `edit T N`). A length token that is a name other than an integer constant is error 16,
-and `arrlen` still enforces 1..16777216 (errors 8 and 23). Signatures are pre-scanned, so a constant
-used in a parameter length must be defined before that function.
+An integer constant is also accepted as an array length in `new`, `global`, a parameter declaration
+(`view T N` / `edit T N`) and a struct field length (1..64, error 14); a float constant used as a
+length is error 16. A length token that is a name other than an integer constant is error 16, and
+`arrlen` still enforces 1..16777216 for arrays (errors 8 and 23). Signatures are pre-scanned, so a
+constant used in a parameter length must be defined before that function.
 
 ## 10. Native host extension (2026-10-23)
 

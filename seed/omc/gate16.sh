@@ -41,8 +41,12 @@ between_fns|9|fn f to int\nret 1\nend\nconst N int 9\nfn main to int\nret N\nend
 length_local|7|const N uint 4\nfn main to int\na = new uint N 0\nput a 3 7\nret int get a 3\nend
 length_global|4|const N uint 4\nglobal g uchar N\nfn main to int\nret int len g\nend
 length_param|4|const N uint 4\nfn f a view uint N to int\nret int len a\nend\nfn main to int\nx = new uint N 0\nret f x\nend
+float_bits|154|const H f64 0.1\nfn main to int\nret int rem bitcast ulong H ulong 256\nend
+float32_bits|205|const H f32 0.1\nfn main to int\nret int rem bitcast uint H uint 256\nend
+float_arith|0|const H f64 0.1\nfn main to int\nx = add H f64 0.2\nif eq x f64 0.3\nret 1\nend\nret 0\nend
+struct_length|32|const N uint 4\nstruct S a uchar N end\nfn main to int\np = new S 0\nret int sizeof S\nend
 RUN
-[ "$n" = 11 ] || bad "value table ran $n of 11 cases"
+[ "$n" = 15 ] || bad "value table ran $n of 15 cases"
 
 n=0
 while IFS='|' read -r name want src; do
@@ -59,7 +63,6 @@ done <<'REF'
 assign|7|const N uint 5\nfn main to int\nN = uint 6\nret 0\nend
 duplicate|10|const N uint 5\nconst N uint 6\nfn main to int\nret 0\nend
 out_of_range|8|const N uchar 300\nfn main to int\nret 0\nend
-float_refused|9|const N f64 1.5\nfn main to int\nret 0\nend
 ir_refused|9|ir\nconst N uint 5\nfn f to uint\nret N\nend
 extra_word|5|const N uint 5 6\nfn main to int\nret 0\nend
 long_name|13|const abcdefghi uint 5\nfn main to int\nret 0\nend
@@ -71,8 +74,11 @@ len_zero|8|const N uint 0\nfn main to int\na = new uint N 0\nret 0\nend
 len_big|23|const N uint 16777217\nfn main to int\na = new uint N 0\nret 0\nend
 len_varname|16|fn main to int\nn = uint 4\na = new uint n 0\nret 0\nend
 len_after|16|fn f to int\na = new uint N 0\nret 0\nend\nconst N uint 4\nfn main to int\nret f\nend
+float_as_length|16|const H f64 0.1\nfn main to int\na = new uchar H 0\nret 0\nend
+float_int_literal|16|const H f64 5\nfn main to int\nret 0\nend
+struct_length_big|14|const N uint 65\nstruct S a uchar N end\nfn main to int\nret 0\nend
 REF
-[ "$n" = 15 ] || bad "refusal table ran $n of 15 cases"
+[ "$n" = 17 ] || bad "refusal table ran $n of 17 cases"
 
-say "PASS gate16 11 constant programs and 15 refusals"
+say "PASS gate16 15 constant programs and 17 refusals"
 exit 0

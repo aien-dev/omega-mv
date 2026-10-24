@@ -3768,7 +3768,13 @@ if eq c 0
 e = findname get tw 0
 if ne e 0
 if eq get nm_kind sub e 1 9
-vdone 3 get nm_addr sub e 1 ulong get nm_type sub e 1
+ct = ulong get nm_type sub e 1
+cv = get nm_addr sub e 1
+if ge ct 10
+vdone 7 cv ct
+else
+vdone 3 cv ct
+end
 ret
 end
 if ne get nm_kind sub e 1 0
@@ -4513,8 +4519,8 @@ stel t v
 eol
 end
 
-note s_const: const NAME TYPE INTEGER at top level. The value is a typed number read wherever a value
-note goes; it may not be assigned and is refused in IR mode. Integer types only.
+note s_const: const NAME TYPE LITERAL at top level. The value is a typed number (integer or float)
+note read wherever a value goes; it may not be assigned and is refused in IR mode.
 fn s_const to void
 tok
 if ne get tk 0 1
@@ -4530,7 +4536,17 @@ end
 newname w get tl 0 get ts 0
 t = typeword
 if ge t 10
-fail 9
+note float constant: rdval reads the float token as a value (kind 6); fspan converts it to the
+note target type's bits and rdval has already balanced the nesting depth.
+rdval 0 0 255 0
+if ne get rk 0 6
+fail 16
+end
+v = fspan t get rv 0
+addname w 0 t 0 9 v
+put nglob 0 get nn 0
+eol
+ret
 end
 tok
 if eq get tk 0 0
@@ -5415,7 +5431,8 @@ ln = ulong 0
 p = get cur 0
 ln0 = get line 0
 tok
-if eq get tk 0 2
+k = get tk 0
+if eq k 2
 ln = get tw 0
 if ne get tbig 0 0
 fail 14
@@ -5424,8 +5441,30 @@ if or eq ln 0 gt ln 64
 fail 14
 end
 else
+if eq k 1
+e = findname get tw 0
+if ne e 0
+if eq get nm_kind sub e 1 9
+ct = ulong get nm_type sub e 1
+if ge ct 10
+fail 14
+end
+ln = get nm_addr sub e 1
+if or eq ln 0 gt ln 64
+fail 14
+end
+else
 put cur 0 p
 put line 0 ln0
+end
+else
+put cur 0 p
+put line 0 ln0
+end
+else
+put cur 0 p
+put line 0 ln0
+end
 end
 addc = ulong 1
 if ne ln 0

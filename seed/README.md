@@ -689,6 +689,21 @@ constant; the scan resets the global-name watermark afterwards so the body pass 
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`).
 
+## Rung R34: float constants and constant field lengths (done)
+
+`const` now accepts a float literal (`f64 0.1`, `f32 0.1`): `rdval` reads the float token, `fspan`
+converts it to target bits, and the name stores the bits with the float type. An integer literal
+under a float type (`f64 5`) is refused (error 16). Integer constants are also accepted as struct
+field lengths (1..64; over that is error 14), while a float constant used as any length is error 16.
+
+- `gate16` now runs 15 accepted programs (adding f64/f32 bit patterns, float arithmetic, and a
+  struct length) and 17 refusals (adding a float length, an integer literal under a float type, and
+  an over-limit struct length).
+- `seed/omc/omc.om`, 6,726 lines and 241 functions, sha256
+  `8f359d577d78195ee2debdeb263e1347b42aa8733ae36d03e13ce1b99e9ec4af` (112,812 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`).
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
