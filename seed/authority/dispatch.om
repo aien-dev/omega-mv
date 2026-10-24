@@ -47,13 +47,14 @@ put s add 8 i get r add 8 i
 end
 end
 fn dispatch r edit ulong 32 c view ulong 32 mode uchar to ulong
-err = readrec r
-if ne err 0
-ret 70
-end
 err = lacq get dpid 0 1000
 if ne err 0
 ret 80
+end
+err = readrec r
+if ne err 0
+lk = lrel
+ret 70
 end
 g = readgen
 if ne get sgerr 0 0

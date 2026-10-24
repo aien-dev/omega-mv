@@ -55,3 +55,39 @@ also exercises the lock in its 37-check gate. A failure is a failed check count 
 The lock is integrated in the dispatcher, but no production consumer uses this store yet. The C authority/reuse
 sources are deleted only after the `.om` owner has a durable store, dispatch, revocation and budget
 behaviour, and every consumer uses it. A parallel production authority path is not an end state.
+
+## Dispatcher acquisition-order regression
+
+`dispatch-order-gate.om` links the production action, store and dispatch sources with a
+**test-only lock-acquisition schedule** from `dispatch-order-test.om`, rather than `lock.om`.
+The acquisition double writes a performed record before granting the lock. A dispatcher that
+reads before acquiring sees stale ready state and misses the required duplicate refusal (22).
+The other two named assertions require release on a failed protected read (70), and require an
+acquisition error (80) to return without a read or release. No timing or scheduler luck is used.
+This checks dispatcher ordering; it does not qualify pid-lock exclusion, stale-owner recovery,
+revocation fencing, or production concurrent execution.
+
+In a fresh disposable Linux AArch64 checkout, after rebuilding the existing approved compiler:
+
+```sh
+mkdir -p build
+seed/out/omc < seed/authority/dispatch-order-gate.om > build/dispatch-order-gate
+readelf -h build/dispatch-order-gate
+chmod +x build/dispatch-order-gate
+build/dispatch-order-gate
+```
+
+Run each command only after its predecessor succeeds; never execute failed compiler output.
+Expected: `dispatch order checks=3 fails=0`, exit 0. Build/run the existing dispatch gate and
+full security gate separately; this standalone regression is not yet wired into `gate669`.
+The negative control is the same compilation unit with only `dispatch.om` restored to the base
+revision's pre-acquisition read. It must print `FAIL dispatch acquired-record refusal` and exit 1;
+a compiler failure, signal, or timeout is INVALID, not a passing control.
+
+Committed concatenations are the byte-for-byte sequences below (no extra separators):
+
+- `dispatch-gate.om`: action, store, lock, dispatch, dispatch-test.
+- `dispatch-order-gate.om`: action, store, dispatch, dispatch-order-test.
+
+The acquisition-order patch and regression were source-reviewed only on the editing host;
+compiled positive/negative runs remain NOT_RUN until the AArch64 qualification above is performed.
