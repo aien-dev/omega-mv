@@ -2,7 +2,7 @@ note Native compiler refusal driver. argv[1] names the exact compiler under test
 text infile "case.om"
 text outfile "case.elf"
 text errfile "case.err"
-text passed "PASS 16 device/mapping compiler refusals\n"
+text passed "PASS 36 device/mapping compiler refusals\n"
 text a "global b uint 4\nfn main to int\nr = devctl int 0 uint 21531 b 0 4\nret 0\nend\n"
 text b "global b uchar 4\nfn main to int\nq = uint 21531\nr = devctl int 0 q b 0 4\nret 0\nend\n"
 text c "global b uchar 4\nfn main to int\nr = devctl int 0 uint 1 b 0 4\nret 0\nend\n"
@@ -19,6 +19,26 @@ text p "global a uint 4\nfn main to int\nr = mapwrite long 257 0 a 0 4\nret 0\ne
 text q "fn test to long\nret mapnew neg int 1 0 4096 3 34\nend\n"
 text s "global b uchar 4\nfn main to int\nr = devctl int 0 uint 3221243393 b 0 4\nret 0\nend\n"
 text t "fn main to int\nr = mapnew long 0 0 4096 1 2\nret 0\nend\n"
+text u "global a uchar 32\nglobal b uchar 32\nfn main to int\nr = devcall neg int 1 uint 21531 a 0 32 b 0 32\nret 0\nend\n"
+text v "global a uchar 32\nglobal b uchar 32\nfn main to int\nq = uint 3223340587\nr = devcall neg int 1 q a 0 32 b 0 32\nret 0\nend\n"
+text w "global a uchar 32\nfn main to int\nr = devcall neg int 1 uint 3223340587 a 0 32 a 0 32\nret 0\nend\n"
+text x "text a \"readonly\"\nglobal b uchar 32\nfn main to int\nr = devcall neg int 1 uint 3223340587 a 0 32 b 0 32\nret 0\nend\n"
+text y "global a uchar 32\ntext b \"readonly\"\nfn main to int\nr = devcall neg int 1 uint 3223340587 a 0 32 b 0 8\nret 0\nend\n"
+text z "global a uchar 32\nglobal b uint 32\nfn main to int\nr = devcall neg int 1 uint 3223340587 a 0 32 b 0 32\nret 0\nend\n"
+text aa "global a uchar 32\nfn main to int\nr = uvmctl neg int 1 uint 1 a 0 32\nret 0\nend\n"
+text ab "global a uchar 32\nfn main to int\nq = uint 25\nr = uvmctl neg int 1 q a 0 32\nret 0\nend\n"
+text ac "text a \"readonly\"\nfn main to int\nr = uvmctl neg int 1 uint 75 a 0 8\nret 0\nend\n"
+text ad "global a uint 32\nfn main to int\nr = uvmctl neg int 1 uint 25 a 0 32\nret 0\nend\n"
+text ae "fn test a edit uchar 32 b edit uchar 32 to long\nret devcall neg int 1 uint 3223340587 a 0 32 b 0 32\nend\n"
+text af "fn test a edit uchar 32 to long\nret uvmctl neg int 1 uint 25 a 0 32\nend\n"
+text ag "fn main to int\nr = mapget long 257 0 2\nret 0\nend\n"
+text ah "fn main to int\nw = int 4\nr = mapset long 257 0 w 0\nret 0\nend\n"
+text aj "fn main to int\nr = mapaddr ulong 257\nret 0\nend\n"
+text ak "fn main to int\nr = maphold long 68719476736 4096\nret 0\nend\n"
+text am "fn main to int\nr = mapbind long 257 int 3 0 7\nret 0\nend\n"
+text an "fn main to int\nr = mapbind long 257 long 3 0 3\nret 0\nend\n"
+text ap "fn test to ulong\nret mapaddr long 257\nend\n"
+text aq "fn test to long\nret maphold 68719476736 4096\nend\n"
 global packet uchar 4096
 global status uchar 4
 global tmp uchar 1
@@ -86,6 +106,75 @@ if eq num 15
 r = write fd t 0 len t
 want = 7
 end
+if eq num 16
+r = write fd u 0 len u
+end
+if eq num 17
+r = write fd v 0 len v
+end
+if eq num 18
+r = write fd w 0 len w
+want = 19
+end
+if eq num 19
+r = write fd x 0 len x
+want = 20
+end
+if eq num 20
+r = write fd y 0 len y
+want = 20
+end
+if eq num 21
+r = write fd z 0 len z
+want = 7
+end
+if eq num 22
+r = write fd aa 0 len aa
+end
+if eq num 23
+r = write fd ab 0 len ab
+end
+if eq num 24
+r = write fd ac 0 len ac
+want = 20
+end
+if eq num 25
+r = write fd ad 0 len ad
+want = 7
+end
+if eq num 26
+r = write fd ae 0 len ae
+end
+if eq num 27
+r = write fd af 0 len af
+end
+if eq num 28
+r = write fd ag 0 len ag
+end
+if eq num 29
+r = write fd ah 0 len ah
+end
+if eq num 30
+r = write fd aj 0 len aj
+want = 7
+end
+if eq num 31
+r = write fd ak 0 len ak
+want = 7
+end
+if eq num 32
+r = write fd am 0 len am
+end
+if eq num 33
+r = write fd an 0 len an
+want = 7
+end
+if eq num 34
+r = write fd ap 0 len ap
+end
+if eq num 35
+r = write fd aq 0 len aq
+end
 expect gt r 0
 ret want
 end
@@ -96,7 +185,7 @@ expect and gt size 0 le size 4092
 put packet 0 1
 put packet 2 uchar and size 255
 put packet 3 uchar shr size 8
-for num int 16
+for num int 36
 input = fopen infile 0 len infile 524482 384
 output = fopen outfile 0 len outfile 524482 384
 errors = fopen errfile 0 len errfile 524482 384

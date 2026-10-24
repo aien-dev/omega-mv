@@ -46,8 +46,17 @@ printf 'PASS native socket options with independent bind behavior, readonly inpu
 compile device
 "$stage/device"
 printf 'PASS native checked device ioctl composed with host files and pipes\n'
+compile devcall
+"$stage/devcall"
+compile uvmctl
+"$stage/uvmctl"
 compile mapping
 (cd "$stage"; ./mapping)
 test ! -e "$stage/mapped.bin"
+compile mapio
+"$stage/mapio"
+compile reserve
+(cd "$stage"; ./reserve)
+test ! -e "$stage/reserve.bin"
 compile memcheck
 (cd "$stage"; ./memcheck "$root/seed/out/omc")

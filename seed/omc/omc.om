@@ -330,9 +330,41 @@ end
 put tk 0 3
 end
 
-note ======== keyword lookup (original om4 KWTAB plus hand-maintained native host words 100..139) ========
+note ======== keyword lookup (original om4 KWTAB plus hand-maintained native host words 100..146) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
+if eq w 28266723420430701
+ret 145
+end
+if eq w 28268896573219181
+ret 146
+end
+if eq w 32198529639276909
+ret 142
+end
+if eq w 127978875937133
+ret 143
+end
+if eq w 127979077263725
+ret 144
+end
+packed = or ulong 117 shl ulong 118 8
+packed = or packed shl ulong 109 16
+packed = or packed shl ulong 99 24
+packed = or packed shl ulong 116 32
+packed = or packed shl ulong 108 40
+if eq w packed
+ret 141
+end
+packed = or ulong 100 shl ulong 101 8
+packed = or packed shl ulong 118 16
+packed = or packed shl ulong 99 24
+packed = or packed shl ulong 97 32
+packed = or packed shl ulong 108 40
+packed = or packed shl ulong 108 48
+if eq w packed
+ret 140
+end
 packed = or ulong 109 shl ulong 97 8
 packed = or packed shl ulong 112 16
 v = or packed shl ulong 110 24
@@ -2614,7 +2646,7 @@ hreturn dst x
 end
 
 note Bounded mapping table belongs to the emitted program, not the compiler process.
-note 128 slots of address, byte length, generation, access. No raw addresses escape.
+note 128 slots of address, byte length, generation, access. Only owned spans are accessible.
 fn mtinit to void
 if eq get maptab 0 0
 p = get poolb 0
@@ -2669,7 +2701,10 @@ end
 
 note mapnew fd:int offset:ulong bytes:ulong access:int mode:int -> long handle/errno.
 note Access 1 or 3 and modes 1/2/33/34 must be literal. No fixed address or executable map.
-fn mnew dst ulong x ulong to void
+fn mnew c ulong dst ulong x ulong to void
+acc = ulong 0
+mode = ulong 1048610
+if eq c 136
 harg x 0 8
 harg x 1 5
 harg x 2 5
@@ -2686,6 +2721,10 @@ end
 if and and and ne mode 1 ne mode 2 ne mode 33 ne mode 34
 fail 9
 end
+else
+harg x 1 5
+harg x 2 5
+end
 save
 hload x 2 1
 mimmed 4043309056 31 1 0
@@ -2693,6 +2732,7 @@ trapc 0 3
 matconst 15 68719476736
 e3 3942645760 31 1 15
 trapc 8 3
+if eq c 136
 hload x 0 4
 hload x 1 5
 if ge mode 32
@@ -2701,6 +2741,26 @@ e3 3942645760 31 4 15
 trapc 1 3
 mimmed 4043309056 31 5 0
 trapc 1 3
+end
+else
+hload x 1 0
+note Reservations are page aligned and bounded below the 40-bit GPU command limit.
+matconst 15 65536
+e3 3942645760 31 0 15
+trapc 3 3
+matconst 15 1099511627776
+e3 3405774848 15 15 1
+e3 3942645760 31 0 15
+trapc 8 3
+matconst 15 4095
+e3 2315255808 14 0 15
+mimmed 4043309056 31 14 0
+trapc 1 3
+e3 2315255808 14 1 15
+mimmed 4043309056 31 14 0
+trapc 1 3
+matconst 4 18446744073709551615
+matconst 5 0
 end
 matconst 9 get maptab 0
 matconst 10 1
@@ -2722,12 +2782,30 @@ matconst 0 18446744073709551592
 full = get oc 0
 emit 335544320
 patch19 vacant get oc 0
+if eq c 136
 matconst 0 0
+else
+hload x 1 0
+end
 matconst 2 acc
 matconst 3 mode
 hsys 222
 mimmed 4043309056 31 0 0
 failed = mbranch 11
+if eq c 145
+hload x 1 14
+e3 3942645760 31 0 14
+exact = mbranch 0
+note Old kernels may ignore NOREPLACE; reject and unmap any displaced result.
+hsys 215
+mimmed 4043309056 31 0 0
+trapc 1 3
+matconst 0 18446744073709551521
+wrong = get oc 0
+emit 335544320
+patch19 exact get oc 0
+put fr add x 23 wrong
+end
 mstore 0 9 0
 mstore 1 9 1
 mimmed 2432696320 11 11 1
@@ -2739,6 +2817,60 @@ e3 2596282368 0 11 15
 e3 2852126720 0 0 10
 patch19 failed get oc 0
 patch26 full get oc 0
+if eq c 145
+head = get fr add x 23
+patch26 head get oc 0
+end
+hreturn dst x
+end
+
+note Replace only an entire owned PROT_NONE reservation. Failed binds retire the handle.
+fn mbind dst ulong x ulong to void
+harg x 0 9
+harg x 1 8
+harg x 2 5
+harg x 3 8
+if ne get fr add x 14 3
+fail 9
+end
+acc = get fr add x 15
+if and ne acc 1 ne acc 3
+fail 9
+end
+save
+hload x 0 10
+mcheck
+mload 15 11 3
+mimmed 4043309056 31 15 0
+trapc 1 3
+e3 2852126720 0 31 13
+e3 2852126720 1 31 12
+matconst 2 acc
+matconst 3 17
+hload x 1 4
+hload x 2 5
+hsys 222
+mimmed 4043309056 31 0 0
+failed = mbranch 11
+e3 3942645760 31 0 13
+trapc 1 3
+matconst 15 acc
+mstore 15 11 3
+matconst 0 0
+done = get oc 0
+emit 335544320
+patch19 failed get oc 0
+e3 2852126720 10 31 0
+e3 2852126720 0 31 13
+e3 2852126720 1 31 12
+hsys 215
+mimmed 4043309056 31 0 0
+trapc 1 3
+mstore 31 11 0
+mstore 31 11 1
+mstore 31 11 3
+e3 2852126720 0 31 10
+patch26 done get oc 0
 hreturn dst x
 end
 
@@ -2772,6 +2904,9 @@ e = harray x wr
 save
 hload x 4 10
 mcheck
+mload 15 11 3
+mimmed 4043309056 31 15 0
+trapc 0 3
 hload x 3 0
 e3 3942645760 31 0 12
 trapc 8 3
@@ -2806,16 +2941,244 @@ e3 2852126720 0 31 4
 hreturn dst x
 end
 
+note NVRM NVOS21/NVOS54 parameter binding. The kernel sees one private header.
+note Pointer and length are derived from a checked byte span, never from user bytes.
+note Request is exactly the 32-byte RM_ALLOC or RM_CONTROL encoding.
+fn hdevcall dst ulong x ulong to void
+harg x 4 8
+harg x 2 4
+if ne get fr add x 12 3
+fail 9
+end
+q = get fr add x 13
+if and ne q 3223340586 ne q 3223340587
+fail 9
+end
+e = harray x 1
+put fr add x 23 e
+put fr add x 24 get fr add x 21
+t = alloc
+matconst t 32
+e3 3942645760 31 get fr add x 22 t
+trapc 1 3
+f = harray x 1
+if eq e f
+fail 19
+end
+t = alloc
+matconst t 16383
+e3 3942645760 31 get fr add x 22 t
+trapc 8 3
+save
+hload x 4 0
+hload x 2 1
+basearg 10 get fr add x 23
+loadarg 16 1 get fr add x 24
+e3 2332033024 10 10 16
+basearg 11 f
+loadarg 16 1 get fr add x 21
+e3 2332033024 11 11 16
+loadarg 12 1 get fr add x 22
+note Refuse overlapping parameter/header spans even through distinct edit parameters.
+mimmed 4043309056 31 12 0
+empty = mbranch 0
+e3 2332033024 14 11 12
+e3 3942645760 31 14 10
+before = mbranch 9
+mimmed 2432696320 14 10 32
+e3 3942645760 31 11 14
+trapc 3 3
+patch19 before get oc 0
+patch19 empty get oc 0
+mload 13 10 2
+mimmed 4043309056 31 13 0
+trapc 1 3
+mimmed 4043309056 31 12 0
+nonzero = mbranch 1
+matconst 11 0
+patch19 nonzero get oc 0
+spsub 32
+stkchk
+for i ulong 4
+mload 13 10 i
+mstore 13 31 i
+end
+mstore 11 31 2
+emit 3103792108
+emit 2432697314
+hsys 29
+for i ulong 4
+if ne i 2
+mload 13 31 i
+mstore 13 10 i
+end
+end
+spadd 32
+hreturn dst x
+end
+
+note Linux UVM has unencoded commands. Exact allowlist and ABI580.173.02 byte sizes.
+fn huvmctl dst ulong x ulong to void
+harg x 4 8
+harg x 2 4
+if ne get fr add x 12 3
+fail 9
+end
+q = get fr add x 13
+n = ulong 0
+if eq q 805306369
+n = ulong 16
+end
+if eq q 75
+n = ulong 8
+end
+if eq q 37
+n = ulong 40
+end
+if or eq q 38 eq q 26
+n = ulong 20
+end
+if eq q 25
+n = ulong 32
+end
+if eq q 27
+n = ulong 56
+end
+if eq q 28
+n = ulong 28
+end
+if eq q 33
+n = ulong 9264
+end
+if or eq q 34 eq q 73
+n = ulong 24
+end
+if eq n 0
+fail 9
+end
+put fr add x 23 n
+e = harray x 1
+t = alloc
+matconst t get fr add x 23
+e3 3942645760 31 get fr add x 22 t
+trapc 1 3
+save
+hload x 4 0
+hload x 2 1
+basearg 2 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 2 2 16
+hsys 29
+hreturn dst x
+end
+
+note Mapped-address export for driver GPU VA serialization; no arbitrary-address access.
+note Aligned word access uses exactly one 32/64-bit load/store bracketed by DSB SY.
+fn mmapio c ulong dst ulong x ulong to void
+harg x 0 9
+if eq c 142
+save
+hload x 0 10
+mcheck
+e3 2852126720 0 31 13
+hreturn dst x
+put rt 0 5
+ret
+end
+harg x 1 5
+harg x 2 8
+if ne get fr add x 12 3
+fail 9
+end
+w = get fr add x 13
+if and ne w 4 ne w 8
+fail 9
+end
+if eq c 144
+harg x 3 5
+end
+save
+hload x 0 10
+mcheck
+hload x 1 0
+mload 15 11 3
+mimmed 4043309056 31 15 0
+trapc 0 3
+e3 3942645760 31 0 12
+trapc 8 3
+e3 3405774848 12 12 0
+mimmed 4043309056 31 12 w
+trapc 3 3
+matconst 15 sub w 1
+e3 2315255808 14 0 15
+mimmed 4043309056 31 14 0
+trapc 1 3
+e3 2332033024 13 13 0
+if eq c 144
+mload 15 11 3
+mimmed 4043309056 31 15 3
+trapc 1 3
+hload x 3 2
+if eq w 4
+matconst 15 4294967295
+e3 3942645760 31 2 15
+trapc 8 3
+end
+emit 3573759903
+if eq w 4
+mimmed 3103784960 2 13 0
+else
+mstore 2 13 0
+end
+emit 3573759903
+matconst 0 0
+hreturn dst x
+else
+emit 3573759903
+if eq w 4
+mimmed 3107979264 0 13 0
+else
+mload 0 13 0
+end
+emit 3573759903
+hreturn dst x
+put rt 0 5
+end
+end
+
 fn hostval c ulong dst ulong to void
 if eq get progmode 0 0
 fail 9
 end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0
+if eq c 145
+mtinit
+mnew c dst x
+ret
+end
+if eq c 146
+mtinit
+mbind dst x
+ret
+end
+if ge c 142
+mtinit
+mmapio c dst x
+ret
+end
+if eq c 141
+huvmctl dst x
+ret
+end
+if eq c 140
+hdevcall dst x
+ret
+end
 if ge c 136
 mtinit
 if eq c 136
-mnew dst x
+mnew c dst x
 ret
 end
 if eq c 137
@@ -3004,7 +3367,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 139
+if and ge c 100 le c 146
 hostval c dst
 ret
 end
