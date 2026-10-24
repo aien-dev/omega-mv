@@ -1,0 +1,67 @@
+note Synthetic issue671 path and argread boundary consumer. Mode byte on stdin.
+note Modes0-3 exercise fopen; modes4-6 exercise argread with the first argument.
+global mode uchar 1
+global buf uchar 4096
+text ok "build/security673-native/path-ok"
+text data "x"
+fn main to int
+if ne read 0 mode 0 1 1
+ret 90
+end
+m = ulong get mode 0
+if eq m 0
+fd = fopen ok 0 len ok 577 384
+if lt fd 0
+ret 91
+end
+r = write int fd data 0 1
+if ne r 1
+ret 92
+end
+if ne fclose int fd 0
+ret 93
+end
+ret 0
+end
+if eq m 1
+for i ulong len ok
+put buf i get ok i
+end
+put buf 5 0
+r = fopen buf 0 len ok 0 0
+ret 94
+end
+if eq m 2
+for i ulong 4096
+put buf i 97
+end
+r = fopen buf 0 4096 0 0
+ret 95
+end
+if eq m 3
+r = fopen buf 0 0 0 0
+if lt r 0
+ret 0
+end
+ret 96
+end
+if eq m 4
+n = argread 1 buf 0 1
+if ne n neg long 105
+ret 97
+end
+ret 0
+end
+if eq m 5
+n = argread 99 buf 0 4
+ret 98
+end
+if eq m 6
+n = argread 1 buf 0 len buf
+if le n 0
+ret 99
+end
+ret 0
+end
+ret 98
+end

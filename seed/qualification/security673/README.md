@@ -122,4 +122,11 @@ modes execute `/bin/true`; malformed modes trap 3 with exit 103 before any kerne
 destination, while one record, three records, either empty path, a trailing byte and an embedded NUL
 each trap 3 before the kernel rename. The consumer creates the source under the scratch directory,
 so the positive case also proves the packet was consumed exactly. Evidence is
-`evidence/SECURITY-673/renames1`. `argread`, native path words and legacy parsers remain NOT_RUN.
+`evidence/SECURITY-673/renames1`.
+
+Path and argument boundaries are covered by seven more cases: a valid `fopen`; embedded-zero and
+4096-byte paths trap 3; an empty path returns the kernel's negative errno; `argread` into a short
+buffer returns -105 without changing the slice; an invalid index traps 3; and an exact-capacity
+read returns the length. Evidence is `evidence/SECURITY-673/paths1`. Path traversal is not confined
+by `fopen`; the strict launch profile is the confined path. Legacy manifest, receipt, RPC, model,
+trace and device parsers remain NOT_RUN.

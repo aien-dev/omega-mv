@@ -3,7 +3,7 @@ note All child exits are observed; signal, timeout, failed build, malformed orac
 note GNU objdump is an independent decoder. Hashes identify artifacts and do not prove correctness.
 text scratch "build/security673-native"
 text prefix "build/security673-native/"
-text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\nseed/qualification/security673/branch-forms.om\nseed/qualification/security673/packet-corpus.om\nseed/qualification/security673/pkt-consumer.om\nseed/qualification/security673/renames-corpus.om\nseed/qualification/security673/renames-consumer.om\n"
+text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\nseed/qualification/security673/branch-forms.om\nseed/qualification/security673/packet-corpus.om\nseed/qualification/security673/pkt-consumer.om\nseed/qualification/security673/renames-corpus.om\nseed/qualification/security673/renames-consumer.om\nseed/qualification/security673/path-consumer.om\n"
 text input " < "
 text output " > "
 text errors " 2> "
@@ -521,6 +521,22 @@ outid = run src renameswant m
 empty outid
 end
 end
+fn pathwant m ulong to ulong
+if or or eq m 1 eq m 2 eq m 5
+ret 103
+end
+ret 0
+end
+fn pathcc cc ulong to void
+cons = compile cc 25 0
+for m ulong 7
+p = params uchar m 0 1
+command cons
+argument 1
+outid = run p pathwant m
+empty outid
+end
+end
 fn main to int
 if or lt argcnt 1 gt argcnt 2
 ret 90
@@ -553,6 +569,7 @@ oracle cc2 checker
 forms cc2
 packets cc2
 renamescc cc2
+pathcc cc2
 positive cc2 gen checker 16
 positive cc2 gen checker 262142
 negative cc2 gen 0 262143
