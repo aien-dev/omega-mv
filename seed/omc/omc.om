@@ -447,6 +447,15 @@ end
 if eq w 500152823651
 ret 152
 end
+if eq w 125796981695334
+ret 153
+end
+if eq w 28263429314995559
+ret 154
+end
+if eq w 461497265525
+ret 155
+end
 if eq w 1819242338
 ret 1
 end
@@ -2843,10 +2852,10 @@ note Native Linux ARM64 host operations. Encoding forms are those in seed/rung2/
 note Syscall numbers and layouts: Linux asm-generic/unistd.h, fcntl.h and time.h.
 note No raw address or arbitrary syscall is exposed to an Omega program.
 fn hargc c ulong to ulong
-if or or or or or or eq c 107 eq c 109 eq c 129 eq c 145 eq c 146 eq c 147 eq c 148
+if or or or or or or or eq c 107 eq c 109 eq c 129 eq c 145 eq c 146 eq c 147 eq c 148 eq c 154
 ret 0
 end
-if or eq c 100 eq c 101
+if or or or eq c 100 eq c 101 eq c 153 eq c 155
 ret 1
 end
 if or or or or eq c 102 eq c 105 eq c 106 eq c 127 eq c 139
@@ -2893,6 +2902,15 @@ ret 177
 end
 if eq c 144
 ret 48
+end
+if eq c 153
+ret 50
+end
+if eq c 154
+ret 110
+end
+if eq c 155
+ret 166
 end
 if eq c 105
 ret 201
@@ -3649,6 +3667,10 @@ if and ge c 145 le c 148
 hscalar c dst x
 ret
 end
+if or or eq c 153 eq c 154 eq c 155
+hscalar c dst x
+ret
+end
 if or or eq c 127 eq c 129 eq c 139
 hscalar c dst x
 ret
@@ -3893,7 +3915,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 152
+if and ge c 100 le c 155
 hostval c dst
 ret
 end

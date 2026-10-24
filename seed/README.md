@@ -730,6 +730,21 @@ so locals still shadow as before.
 - Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
   compiler (`e5d60db8…`).
 
+## Rung R37: fchdir, getppid and umask (done)
+
+`fchdir fd` changes the working directory to an open directory descriptor (syscall 50);
+`getppid` returns the parent process id (110); `umask mask` sets the file-mode mask and returns the
+previous one (166). All use the scalar host path; `fd` and `mask` are `int`, results are `long`.
+
+- The host gate opens `subdir` with `O_DIRECTORY` (16384 on ARM64), calls `fchdir`, and creates a
+  relative file that lands in `subdir/inside`. It also sets umask 0, creates a 0777 file, checks the
+  low 12 bits of `st_mode` are 0777, restores the mask, and checks `getppid` is nonzero and differs
+  from `getpid`.
+- `seed/omc/omc.om`, 6,754 lines and 241 functions, sha256
+  `fcd8b9da50c47975bafb8414d972e045c09d73bb4f7071494d94f36b35c70e6f` (113,171 bytes).
+- Auditing the benchmark corpus: 103 files, 0 output differences, 0 crashes against the pinned
+  compiler (`e5d60db8…`). `sync` was not added: the corpus uses it as an identifier four times.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

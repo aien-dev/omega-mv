@@ -649,6 +649,9 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `chown A off n uid gid` | Set ownership on a checked path (`fchownat`, flags 0). |
 | `faccess A off n mode` | Check access to a checked path (`faccessat`, flags 0): mode 0/1/2/4. |
 | `getuid` / `geteuid` / `getgid` / `getegid` | Process identity (syscalls 174-177). |
+| `fchdir fd` | Change the working directory to an open directory descriptor. |
+| `getppid` | Parent process id. |
+| `umask mask` | Set the file-mode mask; return the previous mask. |
 | `fseek fd offset whence` | Seek and return the resulting signed file offset. |
 | `ftrunc fd length` | Set an open descriptor's length (Linux `ftruncate`). |
 | `truncate A off n length` | Set a checked path's length (Linux `truncate`). |
