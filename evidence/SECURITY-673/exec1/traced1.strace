@@ -1,0 +1,13 @@
+1187763 execve("../exec-parent", ["../exec-parent"], 0xffffdf1fcb88 /* 40 vars */) = 0
+1187763 read(0, "\1", 1)                = 1
+1187763 write(3, "synthetic-secret", 16) = 16
+1187763 write(5, "public-input", 12)    = 12
+1187764 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = 0
+1187764 execve("./no-such-executable", ["./no-such-executable"], 0x107fef88 /* 0 vars */) = -1 ENOENT (No such file or directory)
+1187764 read(3, 0x10801000, 1)          = -1 EBADF (Bad file descriptor)
+1187764 read(65537, 0x10801000, 1)      = -1 EBADF (Bad file descriptor)
+1187764 +++ exited with 0 +++
+1187763 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1187764, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1187763 read(3, "synthetic-secret", 16) = 16
+1187763 read(5, "", 64)                 = 0
+1187763 +++ exited with 0 +++

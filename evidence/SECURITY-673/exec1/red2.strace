@@ -1,0 +1,10 @@
+1176205 execve("../old-parent-v2", ["../old-parent-v2"], 0xfffffcb8ce08 /* 40 vars */) = 0
+1176205 read(0, "\2", 1)                = 1
+1176205 write(3, "synthetic-secret", 16) = 16
+1176205 write(5, "public-input", 12)    = 12
+1176206 execve("./exec-child", ["./exec-child"], 0x107fef88 /* 0 vars */) = 0
+1176206 read(3, 0x10800000, 1)          = -1 EBADF (Bad file descriptor)
+1176206 read(65537, "s", 1)             = 1
+1176206 +++ exited with 43 +++
+1176205 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1176206, si_uid=1000, si_status=43, si_utime=0, si_stime=0} ---
+1176205 +++ exited with 43 +++

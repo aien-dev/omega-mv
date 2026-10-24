@@ -1,0 +1,176 @@
+note Disposable integration parent. No private input, network, devices, or external service.
+note Modes0 success,1 missing executable,2 isolate high-descriptor leak,3 unavailable-kernel mutant.
+note Parent retains its own descriptor table; this is not a sandbox or resource-fencing test.
+text secret "synthetic-secret"
+text public "public-input"
+text answer "public-output"
+text name "synthetic-secret.data"
+text child "./exec-child"
+text absent "./no-such-executable"
+global packet uchar 4096
+global bytes uchar 64
+global fds uchar 8
+global status uchar 4
+global mode uchar 1
+fn fdword off ulong to int
+x = ulong 0
+for i ulong 4
+x = or x shl ulong get fds add off i mul i 8
+end
+ret int x
+end
+fn addpath missing bool to ulong
+put packet 0 1
+if missing
+put packet 2 uchar len absent
+for i ulong len absent
+put packet add i 4 get absent i
+end
+ret add 4 len absent
+end
+put packet 2 uchar len child
+for i ulong len child
+put packet add i 4 get child i
+end
+ret add 4 len child
+end
+fn childrun rd int wr int missing bool to int
+if ne dupfd rd 0 0 0
+ret 51
+end
+if ne dupfd wr 1 0 1
+ret 52
+end
+if eq get mode 0 2
+if ne fclose 3 0
+ret 57
+end
+end
+n = addpath missing
+r = execprog packet 0 n
+if eq get mode 0 3
+if ne r neg long 38
+ret 58
+end
+ret 0
+end
+if not missing
+ret 53
+end
+if ne r neg long 2
+ret 54
+end
+if ne read 3 bytes 0 1 neg long 9
+ret 55
+end
+if ne read 65537 bytes 0 1 neg long 9
+ret 56
+end
+ret 0
+end
+fn parent pid long inputfd int outputfd int fd int missing bool to int
+if ne fclose inputfd 0
+ret 61
+end
+if ne fclose outputfd 0
+ret 62
+end
+if ne waitpid int pid status 0 len status 0 pid
+ret 63
+end
+if ne get status 0 0
+ret 64
+end
+if ne get status 1 0
+ret int get status 1
+end
+if ne fseek fd 0 0 0
+ret 65
+end
+if ne read fd bytes 0 len secret long len secret
+ret 66
+end
+for i ulong len secret
+if ne get bytes i get secret i
+ret 67
+end
+end
+ret 0
+end
+fn main to int
+if ne read 0 mode 0 1 1
+ret 90
+end
+if gt get mode 0 3
+ret 90
+end
+missing = eq get mode 0 1
+fd = fopen name 0 len name 194 384
+if lt fd 0
+ret 1
+end
+if ne fd 3
+ret 2
+end
+if ne write int fd secret 0 len secret long len secret
+ret 3
+end
+if ne fseek int fd 0 0 0
+ret 4
+end
+if ne dupfd int fd 65537 0 65537
+ret 5
+end
+if ne pipefds fds 0 len fds 0 0
+ret 6
+end
+rd = fdword 0
+wr = fdword 4
+if ne write wr public 0 len public long len public
+ret 7
+end
+if ne fclose wr 0
+ret 8
+end
+if ne pipefds fds 0 len fds 0 0
+ret 9
+end
+outread = fdword 0
+outwrite = fdword 4
+pid = fork
+if lt pid 0
+ret 10
+end
+if eq pid 0
+ret childrun rd outwrite missing
+end
+rc = parent pid rd outwrite int fd missing
+if ne rc 0
+ret rc
+end
+n = read outread bytes 0 len bytes
+if or missing eq get mode 0 3
+if ne n 0
+ret 70
+end
+else
+if ne n long len answer
+ret 71
+end
+for i ulong len answer
+if ne get bytes i get answer i
+ret 72
+end
+end
+end
+if ne fclose outread 0
+ret 73
+end
+if ne fclose 65537 0
+ret 74
+end
+if ne fclose int fd 0
+ret 75
+end
+ret 0
+end

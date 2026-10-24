@@ -1,0 +1,10 @@
+1176216 execve("../unavailable-parent", ["../unavailable-parent"], 0xffffd8f32448 /* 40 vars */) = 0
+1176216 read(0, "\3", 1)                = 1
+1176216 write(3, "synthetic-secret", 16) = 16
+1176216 write(5, "public-input", 12)    = 12
+1176217 syscall_0x3e7(0x3, 0xffffffff, 0x2, 0x10, 0x10800010, 0) = -1 ENOSYS (Function not implemented)
+1176217 +++ exited with 0 +++
+1176216 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1176217, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1176216 read(3, "synthetic-secret", 16) = 16
+1176216 read(5, "", 64)                 = 0
+1176216 +++ exited with 0 +++

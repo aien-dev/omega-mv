@@ -1,0 +1,25 @@
+PASS seed0 408 bytes, rebuilds itself
+PASS hex1 776 bytes, born from seed0
+PASS asm2 2464 bytes, born from hex1
+PASS om4 om4.bin 14224 bytes
+PASS omc fixpoint 6b5d94033b9705d78c8e85e806612aac5a94d90f217c54a97fe1891a2ce5aa55
+PASS fwd exit 0
+PASS fwd runs, exit 7
+PASS mut exit 0
+PASS mut runs, exit 0
+PASS cycle exit 9
+PASS assign exit 7
+RC=0
+PASS native files, errno, exclusive creation, permissions, seek, sync and monotonic time
+PASS native argument access, empty arguments, UTF-8 bytes and short-buffer refusal
+PASS native socket exchange, poll timeout, fork, accept and child reaping
+PASS native TCP loopback exchange on an OS-assigned port
+PASS native exec with exact arguments, exec failure, pipes, descriptor duplication, sleep, kill and wait
+PASS native directory enumeration, file metadata and rename without overwriting
+PASS native syscall errors and nested expression register preservation
+PASS native cwd and readlnk offsets, counts, truncation, errno and private path copy
+PASS native socket options with independent bind behavior, readonly input and errno
+PASS 18 bounds, packet, mutability, type and function-mode negative controls
+PASS 41 total host negative controls, including cwd, readlnk and sockopt
+PASS 70 original fixtures retain identical machine code, refusal status and diagnostics
+PASS native-host qualification; no C/Rust compiler, assembler or linker used

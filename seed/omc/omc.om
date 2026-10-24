@@ -2454,10 +2454,21 @@ emit 4043309247
 trapc 1 3
 emit 4177527167
 if eq c 124
+note Exec admits only the caller-assigned standard streams. Linux close_range with UNSHARE
+note closes every descriptor >=3 in a private table. Failure returns without executing a child;
+note no guessed descriptor ceiling or permissive fallback. This is not filesystem isolation.
+matconst 0 3
+matconst 1 4294967295
+matconst 2 2
+hsys 436
+emit 4043309087
+noclose = get oc 0
+emit 1409286145
 emit 2432697312
 emit 2436892641
 e3 2852126720 2 31 11
 hsys 221
+patch19 noclose get oc 0
 else
 emit 2436892656
 emit 4181721601

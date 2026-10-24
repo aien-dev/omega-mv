@@ -1,5 +1,6 @@
 note Exact-source qualification transform. Mode0 exposes the real disp19 through a new main.
-note Mode1 weakens the forward limit by two instructions. No transformed artifact is a production compiler.
+note Mode1 weakens the forward limit;mode2 replaces close_range with an unavailable syscall.
+note No transformed artifact is a production compiler.
 global src uchar 262144
 global used ulong 1
 global mode uchar 8
@@ -9,6 +10,8 @@ text entry "fn main to int"
 text renamed "fn prev to int"
 text limit "gt diff 1048572"
 text weak "gt diff 1048580"
+text seal "hsys 436"
+text noseal "hsys 999"
 text probe "\nfn main to int\nn = read 0 msg 0 1\nif ne n 1\nret 90\nend\nm = get msg 0\na = ulong 0\nt = ulong 0\ne = ulong 0\nif eq m 0\nt = ulong 1048572\ne = ulong 262143\nend\nif eq m 1\na = ulong 1048576\ne = ulong 262144\nend\nif eq m 2\na = ulong 1024\ne = ulong 524032\nend\nif eq m 3\na = ulong 1028\ne = ulong 524031\nend\nif eq m 4\nt = ulong 1048576\nend\nif eq m 5\na = ulong 1048580\nend\nif eq m 6\nt = ulong 2\nend\nif eq m 7\na = ulong 2\nend\nv = disp19 a t\nif ge m 4\nret 81\nend\nif ne v e\nret 82\nend\nret 0\nend\n"
 fn matches i ulong to bool
 for j ulong get used 0
@@ -32,7 +35,7 @@ if ne r 1
 ret 90
 end
 m = get mode 0
-if and ne m 48 ne m 49
+if or lt m 48 gt m 50
 ret 90
 end
 if eq m 48
@@ -42,10 +45,18 @@ put needle i get entry i
 put repl i get renamed i
 end
 else
+if eq m 49
 put used 0 len limit
 for i ulong len limit
 put needle i get limit i
 put repl i get weak i
+end
+else
+put used 0 len seal
+for i ulong len seal
+put needle i get seal i
+put repl i get noseal i
+end
 end
 end
 n = ulong 0

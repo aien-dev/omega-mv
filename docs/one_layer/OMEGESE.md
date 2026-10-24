@@ -576,9 +576,18 @@ may be empty. `renames` requires exactly two nonempty path records.
 
 The compiler constructs private, bounded pointer lists for the kernel. They
 are never exposed as language values. `execprog` supplies an empty environment,
-preserves the working directory and ordinary inherited descriptors, and does
-not search PATH or invoke a shell. Programs should explicitly request
-close-on-exec descriptors where needed. Forked children are independent
+preserves the working directory and standard streams (descriptors0,1,2), and does
+not search PATH or invoke a shell. Before execution it closes every descriptor
+at or above3 using Linux `close_range(3, UINT_MAX, CLOSE_RANGE_UNSHARE)`.
+If that kernel operation fails or is unavailable, execution is refused with
+the kernel's negative error result; no descriptor-loop fallback is used.
+After a successful close, an executable-path failure still leaves those descriptors
+closed. Malformed packets trap before descriptor closure. Callers must explicitly
+bind intended streams before invoking `execprog`; higher-numbered descriptor
+inheritance is unsupported. This prevents accidental descriptor inheritance;
+it does not restrict filesystem paths, network creation, current-directory access,
+subprocesses or arbitrary native code. Existing authority/launcher integration is
+still required for those effects. Forked children are independent
 processes and must be reaped; this extension does not add shared-memory threads.
 
 Clock results require nonnegative seconds and a signed nanosecond total;
