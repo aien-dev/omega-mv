@@ -335,6 +335,9 @@ fn kw w ulong to ulong
 if eq w 7310034270740117605
 ret 135
 end
+if eq w 491394459747
+ret 136
+end
 if eq w 6584163
 ret 132
 end
@@ -2159,12 +2162,19 @@ if eq c 112
 hload x 2 2
 end
 hcopy
+if eq c 136
+note chdir takes the path in x0; hcopy leaves AT_FDCWD in x0 and the path in x1.
+emit 2852193248
+end
 nr = ulong 56
 if or eq c 111 eq c 126
 nr = ulong 35
 end
 if eq c 112
 nr = ulong 34
+end
+if eq c 136
+nr = ulong 49
 end
 hsys nr
 spadd 4096
@@ -2762,6 +2772,10 @@ if eq c 128
 hpipe dst x
 ret
 end
+if eq c 136
+hpath c dst x
+ret
+end
 if ge c 121
 put hostargs 0 1
 hargs c dst x
@@ -2893,7 +2907,7 @@ end
 if eq c 77
 fail 9
 end
-if and ge c 100 le c 135
+if and ge c 100 le c 136
 hostval c dst
 ret
 end

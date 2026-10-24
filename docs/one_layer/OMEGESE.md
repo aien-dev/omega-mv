@@ -519,6 +519,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `fchmod fd mode` | Set permissions on an open descriptor. |
 | `fseek fd offset whence` | Seek and return the resulting signed file offset. |
 | `unlink A off n` | Remove the named file. |
+| `chdir A off n` | Change the current directory to the named path. |
 | `makedir A off n mode` | Create a directory. |
 | `rmdir A off n` | Remove an empty directory. |
 | `cwd A off capacity` | Write the current directory into writable bytes. Return the kernel byte count including the trailing zero byte. A short buffer returns a negative error. |

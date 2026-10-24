@@ -43,3 +43,7 @@ printf 'PASS native cwd and readlnk offsets, counts, truncation, errno and priva
 compile sockopt
 (cd "$stage"; timeout 10 ./sockopt)
 printf 'PASS native socket options with independent bind behavior, readonly input and errno\n'
+compile chdir
+(cd "$stage"; ./chdir)
+test ! -e "$stage/chdir-test/x"
+printf 'PASS native chdir, create below it and unlink\n'

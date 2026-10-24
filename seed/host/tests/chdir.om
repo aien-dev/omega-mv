@@ -1,0 +1,25 @@
+note Native chdir and unlink: change directory, create a file below it, remove the file.
+text dir "chdir-test"
+text file "x"
+fn main to int
+if ne makedir dir 0 len dir 448 0
+ret 88
+end
+rc = chdir dir 0 len dir
+if lt rc 0
+ret 89
+end
+fd = fopen file 0 len file 577 384
+if lt fd 0
+ret 90
+end
+n = write int fd file 0 1
+if ne fclose int fd 0
+ret 91
+end
+rc = unlink file 0 len file
+if lt rc 0
+ret 92
+end
+ret 0
+end
