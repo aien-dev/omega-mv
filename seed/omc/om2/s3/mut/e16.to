@@ -1,0 +1,33 @@
+fuelc get line 0 1
+tok
+eol
+addname w 0 t 0 9 0
+n = get nb 0
+pushb 0 5 0 sub get nn 0 1 t
+pushnh sn sh
+put u_cur n get cur 0
+put u_line n get line 0
+put u_it n 0
+put u_k n kk
+put u_nn n get nn 0
+put u_held n get held 0
+put fzone 0 add get fzone 0 1
+end
+
+note fuelc: charge n to the function's fuel at the construct on line ln, before anything of it expands; a
+note total above 65536 is error 14 on line ln (E14, E16)
+fn fuelc ln ulong n ulong to void
+if gt add get fuel 0 n 65536
+put line 0 ln
+fail 14
+end
+put fuel 0 add get fuel 0 n
+end
+
+note s_unr: the end of an unrolled body: read it again with the next value of i, or close the block
+fn s_unr i ulong to void
+eol
+it = add get u_it i 1
+if lt it get u_k i
+fuelc sub get u_line i 1 1
+put u_it i it

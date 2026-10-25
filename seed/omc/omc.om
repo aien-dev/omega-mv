@@ -73,10 +73,9 @@ global u_it ulong 512
 global u_k ulong 512
 global u_nn ulong 512
 global u_held ulong 512
-note fuel / u_fl (E14): the expansion fuel used by the function being compiled (each unrolled-body copy and
-note each inline expansion costs 1, at most 65536, error 14) and the line of each unrolled loop
+note fuel (E14, E16): the expansion fuel used by the function being compiled: an unrolled loop costs K when
+note it starts, an inline expansion 1, at most 65536 in all (error 14)
 global fuel ulong 1
-global u_fl ulong 512
 global fok ulong 1
 global fval ulong 1
 global fty ulong 1
@@ -6852,8 +6851,7 @@ fn s_unroll w ulong t ulong kk ulong sn ulong sh ulong to void
 if or eq kk 0 gt kk 64
 fail 8
 end
-fl = get line 0
-fuelc fl
+fuelc get line 0 kk
 tok
 eol
 addname w 0 t 0 9 0
@@ -6866,17 +6864,17 @@ put u_it n 0
 put u_k n kk
 put u_nn n get nn 0
 put u_held n get held 0
-put u_fl n fl
 put fzone 0 add get fzone 0 1
 end
 
-note fuelc: charge one expansion to the function's fuel; the 65537th is error 14 on line ln (E14)
-fn fuelc ln ulong to void
-if ge get fuel 0 65536
+note fuelc: charge n to the function's fuel at the construct on line ln, before anything of it expands; a
+note total above 65536 is error 14 on line ln (E14, E16)
+fn fuelc ln ulong n ulong to void
+if gt add get fuel 0 n 65536
 put line 0 ln
 fail 14
 end
-put fuel 0 add get fuel 0 1
+put fuel 0 add get fuel 0 n
 end
 
 note s_unr: the end of an unrolled body: read it again with the next value of i, or close the block
@@ -6884,7 +6882,6 @@ fn s_unr i ulong to void
 eol
 it = add get u_it i 1
 if lt it get u_k i
-fuelc get u_fl i
 put u_it i it
 put nm_addr get breg i it
 put nn 0 get u_nn i
@@ -7044,7 +7041,7 @@ note bound, and the body's lines compiled here until its end (s_inlx) closes the
 note Each expansion costs one unit of the function's fuel (E14).
 fn inl_body fe ulong cb ulong ns ulong rres ulong to void
 lv = get inl 0
-fuelc get line 0
+fuelc get line 0 1
 if ge lv 4
 fail 14
 end

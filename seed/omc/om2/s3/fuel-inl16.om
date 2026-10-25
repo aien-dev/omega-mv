@@ -1,4 +1,6 @@
-note S3 E14 fuel: as fuel-inl14 with 16 inline expansions per inner copy (69760 > 65536): error 14 at a call line
+note S3 E14/E16 fuel: as fuel-inl14 with 16 inline expansions per inner copy (64 + 64 * 1088 = 69696 > 65536).
+note After 60 a-copies 65344, the a-copy 61 b loop 65408, then 8 b-copies of 16 calls reach 65536: the first
+note call of the 9th b-copy (line 10) is error 14.
 om2
 fn nop to void inline
 end
