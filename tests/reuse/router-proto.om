@@ -1,0 +1,1449 @@
+note units: sha256 r1 exp
+note router-proto: end-to-end protocol test of the baseline router B (contract 2, K2, K9). The router
+note ELF is argv 4 when given, else built by `DRIVE base OMC DIR` (argv 3, 2, 1: the run.om
+note convention) as DIR/base.elf. Every arm (echo full cache tap method delta select, LIBDIR "-")
+note runs one scenario over pipes: every request kind and every status (0 2 3 4 5 6), framing errors
+note with the payload discarded, BEGIN refusals keeping the session, BATCH all or nothing, PROGRAM,
+note AGG (all six folds, both widths) and FSM, n = 4096 and BATCH of 1024; every QUERY's r0, r1 is
+note compared with this process's own r1full of the same state and its route with the arm's route.
+note Then: cache hits and FIFO, tap records admitted by exadmit, a library load refused (route 5),
+note exits 4 (unknown op, p too large), 3 (EOF), 2 (argv, existing TAPFILE, bad SPLIT).
+note Exit 0 pass; else 1 + (check number mod 254), with "FAIL check N" on stderr.
+text tbase "/tmp/reuse-test-core-rt-"
+text tarmE "echo"
+text tarmF "full"
+text tarmC "cache"
+text tarmM "method"
+text tarmD "delta"
+text tarmS "select"
+text tarmT "tap"
+text tbaseA "base"
+text tbelf "/base.elf"
+text tftap "/tap.exp"
+text tfall "/allow"
+text tfnolib "/nolib"
+text tfail "FAIL check "
+global TDIR uchar 4096
+global TDL ulong 2
+global TRT uchar 4096
+global TRTL ulong 1
+global TPK uchar 4096
+global TPKO ulong 2
+global TFDS uchar 8
+global TST uchar 4
+global TCH ulong 3
+global TQ ulong 7300
+global TOB uchar 65536
+global TIB uchar 512
+global TR ulong 40
+global TRS ulong 2
+global TCK ulong 1
+global TARM ulong 1
+global TMS ulong 64
+global TS ulong 4096
+global TSN ulong 1
+
+note ---- small helpers ----
+fn tdirc b ulong to void
+n = get TDL 0
+put TDIR n uchar b
+put TDL 0 add n 1
+end
+
+fn tmkdir to int
+if ge argcnt 2
+n = argread 1 TDIR 0 4000
+if lt n 1
+ret 1
+end
+put TDL 0 ulong n
+ret 0
+end
+for i ulong len tbase
+tdirc ulong get tbase i
+end
+p = ulong getpid
+dig = new ulong 20 0
+nd = ulong 0
+while gt p 0 bound 20
+put dig nd rem p 10
+p = div p 10
+nd = add nd 1
+end
+while gt nd 0 bound 20
+nd = sub nd 1
+tdirc add 48 get dig nd
+end
+r = makedir TDIR 0 get TDL 0 448
+if ne r 0
+ret 1
+end
+put TDL 1 1
+ret 0
+end
+
+note decimal v to stderr
+fn tputd v ulong to void
+b = new uchar 24 0
+n = ulong 0
+x = v
+while gt x 9 bound 24
+put b sub 22 n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put b sub 22 n uchar add 48 x
+put b 23 10
+w = write 2 b sub 22 n add n 2
+end
+
+note one more check; false gives the failure
+fn tok c bool to bool
+put TCK 0 add get TCK 0 1
+if not c
+w = write 2 tfail 0 len tfail
+tputd get TCK 0
+end
+ret c
+end
+
+fn tfailcode to int
+ret int add 1 rem get TCK 0 254
+end
+
+note ---- packed argv ----
+fn tpkreset to void
+put TPKO 0 2
+put TPK 0 0
+put TPK 1 0
+end
+
+fn tpkb b ulong to void
+o = get TPKO 0
+put TPK o uchar b
+put TPKO 0 add o 1
+end
+
+fn tpkopen to void
+c = add get TPK 0 1
+put TPK 0 uchar c
+o = get TPKO 0
+put TPKO 1 o
+put TPKO 0 add o 2
+end
+
+fn tpkclose to void
+s = get TPKO 1
+n = sub sub get TPKO 0 s 2
+put TPK s uchar and n 255
+put TPK add s 1 uchar shr n 8
+end
+
+fn tpkdash to void
+tpkopen
+tpkb 45
+tpkclose
+end
+
+fn tpkdir to void
+for i ulong get TDL 0
+tpkb ulong get TDIR i
+end
+end
+
+note TDIR followed by fixed text k: 1 base.elf 2 tap.exp 3 allow 4 nolib
+fn tpkfile k ulong to void
+tpkdir
+if eq k 1
+for i ulong len tbelf
+tpkb ulong get tbelf i
+end
+end
+if eq k 2
+for i ulong len tftap
+tpkb ulong get tftap i
+end
+end
+if eq k 3
+for i ulong len tfall
+tpkb ulong get tfall i
+end
+end
+if eq k 4
+for i ulong len tfnolib
+tpkb ulong get tfnolib i
+end
+end
+end
+
+fn tpkarm a ulong to void
+tpkopen
+if eq a 1
+for i ulong len tarmE
+tpkb ulong get tarmE i
+end
+end
+if eq a 2
+for i ulong len tarmF
+tpkb ulong get tarmF i
+end
+end
+if eq a 3
+for i ulong len tarmC
+tpkb ulong get tarmC i
+end
+end
+if eq a 4
+for i ulong len tarmM
+tpkb ulong get tarmM i
+end
+end
+if eq a 5
+for i ulong len tarmD
+tpkb ulong get tarmD i
+end
+end
+if eq a 6
+for i ulong len tarmS
+tpkb ulong get tarmS i
+end
+end
+if eq a 7
+for i ulong len tarmT
+tpkb ulong get tarmT i
+end
+end
+if eq a 8
+tpkb 98
+tpkb 111
+tpkb 103
+tpkb 117
+tpkb 115
+end
+tpkclose
+end
+
+fn tpkrouter to void
+tpkopen
+for i ulong get TRTL 0
+tpkb ulong get TRT i
+end
+tpkclose
+end
+
+note argv for arm a: lib 0 "-" or 1 DIR/nolib; tap 0 "-", 1 DIR/tap.exp; split byte sp (0 = "-")
+fn tpkargs a ulong lib ulong tap ulong sp ulong to void
+tpkreset
+tpkrouter
+tpkarm a
+if eq lib 1
+tpkopen
+tpkfile 4
+tpkclose
+else
+tpkdash
+end
+tpkdash
+tpkdash
+if eq tap 1
+tpkopen
+tpkfile 2
+tpkclose
+else
+tpkdash
+end
+if eq sp 0
+tpkdash
+else
+tpkopen
+tpkb sp
+tpkclose
+end
+end
+
+fn tfdword off ulong to int
+x = ulong 0
+for i ulong 4
+x = or x shl ulong get TFDS add off i mul i 8
+end
+ret int x
+end
+
+note ---- the router process ----
+note start the router with TPK as argv: TCH = stdin write fd, stdout read fd, pid; 0 ok
+fn tspawn to int
+r = pipefds TFDS 0 8 524288
+if ne r 0
+ret 1
+end
+inr = tfdword 0
+inw = tfdword 4
+r = pipefds TFDS 0 8 524288
+if ne r 0
+ret 1
+end
+outr = tfdword 0
+outw = tfdword 4
+pid = fork
+if eq pid 0
+r = dupfd inr 0 0
+r = dupfd outw 1 0
+r = execprog TPK 0 get TPKO 0
+exit 90
+end
+r = fclose inr
+r = fclose outw
+put TCH 0 ulong inw
+put TCH 1 ulong outr
+put TCH 2 ulong pid
+ret 0
+end
+
+note close the pipes, wait: the exit status (0..255), 256 + signal
+fn treap to ulong
+r = fclose int get TCH 0
+r = fclose int get TCH 1
+r = waitpid int get TCH 2 TST 0 4 0
+s = ulong get TST 0
+if ne s 0
+ret add 256 s
+end
+ret ulong get TST 1
+end
+
+fn tputw o ulong w ulong to void
+v = w
+for i ulong 8
+put TOB add o i uchar and v 255
+v = shr v 8
+end
+end
+
+fn twr n ulong to bool
+fd = int get TCH 0
+off = ulong 0
+while lt off n bound 100000
+k = write fd TOB off sub n off
+if le k 0
+ret false
+end
+off = add off ulong k
+end
+ret true
+end
+
+note send op, p and TQ[0..np) (np may differ from p)
+fn tsend op ulong p ulong np ulong to bool
+tputw 0 op
+tputw 8 p
+for i ulong np
+tputw mul add i 2 8 get TQ i
+end
+ret twr mul add np 2 8
+end
+
+note read n bytes into TIB; false on EOF
+fn trd n ulong to bool
+fd = int get TCH 1
+got = ulong 0
+while lt got n bound 100000
+k = read fd TIB got sub n got
+if le k 0
+ret false
+end
+got = add got ulong k
+end
+ret true
+end
+
+fn tgetw o ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or shl v 8 ulong get TIB sub add o 7 i
+end
+ret v
+end
+
+note one response into TRS (status, q) and TR; false on EOF or q > 32
+fn trecv to bool
+if not trd 16
+ret false
+end
+put TRS 0 tgetw 0
+q = tgetw 8
+put TRS 1 q
+if gt q 32
+ret false
+end
+if not trd mul q 8
+ret false
+end
+for i ulong q
+put TR i tgetw mul i 8
+end
+ret true
+end
+
+note a request whose response must be status s with q 0
+fn tst op ulong p ulong s ulong to bool
+if not tsend op p p
+ret false
+end
+if not trecv
+ret false
+end
+ret and eq get TRS 0 s eq get TRS 1 0
+end
+
+note ---- model ----
+fn tclr fam ulong to void
+for i ulong 64
+put TQ i 0
+end
+put TQ 0 3544411312749556050
+put TQ 1 fam
+end
+
+note TQ[0..64) is a program: an AGG of wl, f, k; op_j = (j + f) mod 8 + 1, c_j = c + j, for the
+note shifts c_j = (c + j) mod wl
+fn tagg wl ulong f ulong k ulong c ulong to void
+tclr 1
+put TQ 2 wl
+put TQ 3 f
+put TQ 4 k
+for j ulong k
+op = add rem add j f 8 1
+put TQ add 5 mul j 2 op
+if ge op 7
+put TQ add 6 mul j 2 rem add c j wl
+else
+put TQ add 6 mul j 2 add c j
+end
+end
+end
+
+note the FSM of r1-ops (S 3, A 4) with rule 0 target t0 (1 or 2)
+fn tfsm t0 ulong to void
+tclr 2
+put TQ 2 3
+put TQ 3 4
+put TQ 5 3
+put TQ 6 10
+put TQ 7 20
+put TQ 8 30
+put TQ 22 add 131328 mul t0 16777216
+put TQ 23 33751040
+put TQ 24 197377
+end
+
+note save the model program; TQ[0..64) into R1P
+fn tsetp to void
+for i ulong 64
+put TMS i get R1P i
+put R1P i get TQ i
+end
+end
+
+fn tbackp to void
+for i ulong 64
+put R1P i get TMS i
+end
+end
+
+note BEGIN with TQ[0..64) and n values v_i = (s + 37 i) mod lim; expected status st;
+note on st 0 the model takes it
+fn tbegin n ulong s ulong lim ulong st ulong to bool
+put TQ 64 n
+for i ulong n
+put TQ add 65 i rem add s mul i 37 lim
+end
+r = tst 1 add 65 n st
+if and r eq st 0
+for i ulong 64
+put R1P i get TQ i
+end
+put R1N 0 n
+for i ulong n
+put R1X i get TQ add 65 i
+end
+put TSN 0 1
+end
+ret r
+end
+
+note the arm's expected route, 9 = cache (1 or 2)
+fn troute to ulong
+a = get TARM 0
+if eq a 1
+ret 0
+end
+if eq a 3
+ret 9
+end
+if or eq a 5 eq a 6
+ret 4
+end
+ret 1
+end
+
+fn tquery to bool
+if not tsend 2 0 0
+ret false
+end
+if not trecv
+ret false
+end
+if or ne get TRS 0 0 ne get TRS 1 3
+ret false
+end
+er = troute
+r = get TR 2
+if eq er 0
+ret and and eq r 0 eq get TR 0 0 eq get TR 1 0
+end
+if eq er 9
+if and ne r 1 ne r 2
+ret false
+end
+else
+if ne r er
+ret false
+end
+end
+r1full
+ret and eq get TR 0 get R1R 0 eq get TR 1 get R1R 1
+end
+
+note one change op (3..6) a b; expected status st; the model follows on 0
+fn tchg op ulong a ulong b ulong st ulong to bool
+put TQ 0 a
+put TQ 1 b
+p = ulong 2
+if eq op 5
+p = 1
+end
+if not tst op p st
+ret false
+end
+if eq st 0
+x = r1apply op a b
+end
+ret true
+end
+
+note PROGRAM with TQ[0..64); on 0 the model takes it
+fn tprog st ulong to bool
+if not tst 8 64 st
+ret false
+end
+if eq st 0
+for i ulong 64
+put R1P i get TQ i
+end
+end
+ret true
+end
+
+note ---- the scenario ----
+fn tnosess to int
+if not tok tsend 9 0 0
+ret 1
+end
+if not tok trecv
+ret 1
+end
+if not tok and eq get TRS 0 0 eq get TRS 1 32
+ret 1
+end
+if not tok tst 2 0 6
+ret 1
+end
+put TQ 0 0
+put TQ 1 0
+if not tok tst 3 2 6
+ret 1
+end
+if not tok tst 4 2 6
+ret 1
+end
+if not tok tst 5 1 6
+ret 1
+end
+if not tok tst 6 2 6
+ret 1
+end
+put TQ 0 1
+put TQ 1 3
+put TQ 2 0
+put TQ 3 0
+if not tok tst 7 4 6
+ret 1
+end
+tagg 8 1 1 0
+if not tok tst 8 64 6
+ret 1
+end
+put TQ 0 2
+if not tok tst 7 4 4
+ret 1
+end
+ret 0
+end
+
+fn tbegins to int
+tagg 16 1 3 5
+put TQ 64 0
+if not tok tst 1 64 4
+ret 1
+end
+put TQ 64 3
+for i ulong 3
+put TQ add 65 i 1
+end
+if not tok tst 1 67 4
+ret 1
+end
+put TQ 64 4097
+if not tok tst 1 4162 5
+ret 1
+end
+tagg 16 1 3 5
+put TQ 2 12
+if not tok tbegin 10 1 256 2
+ret 1
+end
+tagg 8 1 3 5
+if not tok tbegin 10 250 300 3
+ret 1
+end
+if not tok tst 2 0 6
+ret 1
+end
+tagg 16 1 3 5
+if not tok tbegin 10 3 65536 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+tagg 16 1 3 5
+put TQ 6 70000
+put TQ 64 1
+put TQ 65 1
+if not tok tst 1 66 2
+ret 1
+end
+if not tok tquery
+ret 1
+end
+ret 0
+end
+
+fn tchanges to int
+if not tok tchg 3 0 65535 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 3 10 1 3
+ret 1
+end
+if not tok tchg 3 0 65536 3
+ret 1
+end
+if not tok tchg 4 10 7 0
+ret 1
+end
+if not tok tchg 4 12 7 3
+ret 1
+end
+if not tok tchg 4 0 70000 3
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 5 0 0 0
+ret 1
+end
+if not tok tchg 5 10 0 3
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 6 0 9 0
+ret 1
+end
+if not tok tchg 6 4 4 0
+ret 1
+end
+if not tok tchg 6 0 10 3
+ret 1
+end
+if not tok tquery
+ret 1
+end
+put TQ 0 1
+put TQ 1 2
+if not tok tst 2 1 4
+ret 1
+end
+if not tok tst 3 3 4
+ret 1
+end
+if not tok tst 5 2 4
+ret 1
+end
+if not tok tst 9 1 4
+ret 1
+end
+if not tok tst 10 1 4
+ret 1
+end
+if not tok tquery
+ret 1
+end
+ret 0
+end
+
+note BATCH items into TQ: m items of (op, a, b)
+fn tbitem i ulong op ulong a ulong b ulong to void
+q = add 1 mul i 3
+put TQ q op
+put TQ add q 1 a
+put TQ add q 2 b
+end
+
+fn tbatches to int
+put TQ 0 4
+tbitem 0 3 0 7
+tbitem 1 4 0 9
+tbitem 2 5 3 0
+tbitem 3 6 1 8
+if not tok tst 7 13 0
+ret 1
+end
+x = r1apply 3 0 7
+x = r1apply 4 0 9
+x = r1apply 5 3 0
+x = r1apply 6 1 8
+if not tok tquery
+ret 1
+end
+n = get R1N 0
+put TQ 0 3
+tbitem 0 3 0 1
+tbitem 1 5 sub n 1 0
+tbitem 2 3 sub n 1 0
+if not tok tst 7 10 3
+ret 1
+end
+if not tok tquery
+ret 1
+end
+put TQ 0 2
+tbitem 0 3 0 1
+tbitem 1 5 0 1
+if not tok tst 7 7 3
+ret 1
+end
+put TQ 0 2
+tbitem 0 3 0 1
+tbitem 1 7 0 1
+if not tok tst 7 7 3
+ret 1
+end
+put TQ 0 1
+tbitem 0 4 0 65536
+if not tok tst 7 4 3
+ret 1
+end
+put TQ 0 0
+if not tok tst 7 1 3
+ret 1
+end
+put TQ 0 1025
+if not tok tst 7 3076 3
+ret 1
+end
+put TQ 0 1
+tbitem 0 3 0 1
+if not tok tst 7 5 4
+ret 1
+end
+if not tok tquery
+ret 1
+end
+ret 0
+end
+
+fn tprogs to int
+tagg 16 1 3 5
+put TQ 5 9
+if not tok tprog 2
+ret 1
+end
+tagg 8 1 2 3
+if not tok tprog 3
+ret 1
+end
+if not tok tquery
+ret 1
+end
+tagg 16 4 6 11
+if not tok tprog 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 3 2 1 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+ret 0
+end
+
+note every fold at both widths over a fresh session, then MIN and MAX extreme churn
+fn tfolds to int
+for f ulong 6
+for w ulong 2
+tagg add 8 mul w 8 add f 1 add w 2 add f 1
+if not tok tbegin 50 add f 3 shl ulong 1 add 8 mul w 8 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 3 7 0 0
+ret 1
+end
+if not tok tchg 5 0 0 0
+ret 1
+end
+if not tok tchg 4 3 255 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+end
+end
+tagg 8 3 1 0
+put TQ 5 1
+put TQ 6 0
+if not tok tbegin 20 5 256 0
+ret 1
+end
+for r ulong 8
+if not tok tchg 5 tminat 0 0
+ret 1
+end
+if not tok tchg 4 0 add mul r 31 1 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+end
+ret 0
+end
+
+note index of the smallest value of the model state
+fn tminat to ulong
+n = get R1N 0
+b = ulong 0
+for i ulong n
+if lt get R1X i get R1X b
+b = i
+end
+end
+ret b
+end
+
+fn tfsms to int
+tfsm 1
+if not tok tbegin 30 1 4 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 3 0 3 0
+ret 1
+end
+if not tok tchg 3 0 4 3
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 4 5 1 0
+ret 1
+end
+if not tok tchg 5 2 0 0
+ret 1
+end
+if not tok tchg 6 1 20 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+tfsm 2
+if not tok tprog 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+tclr 2
+put TQ 2 2
+put TQ 3 2
+put TQ 5 1
+put TQ 6 1
+put TQ 7 2
+put TQ 22 16842752
+if not tok tprog 3
+ret 1
+end
+if not tok tquery
+ret 1
+end
+ret 0
+end
+
+fn tbig to int
+tagg 16 2 6 100
+if not tok tbegin 4096 11 65536 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 4 0 1 3
+ret 1
+end
+put TQ 0 1024
+for i ulong 1024
+tbitem i 3 mul i 4 rem mul i 7 65536
+end
+if not tok tst 7 3073 0
+ret 1
+end
+for i ulong 1024
+x = r1apply 3 mul i 4 rem mul i 7 65536
+end
+if not tok tquery
+ret 1
+end
+if not tok tchg 5 4095 0 0
+ret 1
+end
+if not tok tchg 4 4095 5 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+ret 0
+end
+
+note STATS: 32 counters; the arm's route counter equals the QUERYs answered so far
+fn tstats nq ulong to int
+if not tok tsend 9 0 0
+ret 1
+end
+if not tok trecv
+ret 1
+end
+if not tok and eq get TRS 0 0 eq get TRS 1 32
+ret 1
+end
+er = troute
+if eq er 9
+if not tok eq add get TR 1 get TR 2 nq
+ret 1
+end
+else
+if not tok eq get TR er nq
+tputd get TR er
+ret 1
+end
+end
+ret 0
+end
+
+fn tscenario a ulong to int
+put TARM 0 a
+put TCK 0 mul a 1000
+tap = ulong 0
+sp = ulong 0
+if eq a 7
+tap = 1
+sp = 51
+end
+tpkargs a 0 tap sp
+if not tok eq tspawn 0
+ret 1
+end
+r = tnosess
+if eq r 0
+r = tbegins
+end
+if eq r 0
+r = tchanges
+end
+if eq r 0
+r = tbatches
+end
+if eq r 0
+r = tprogs
+end
+if eq r 0
+r = tfolds
+end
+if eq r 0
+r = tfsms
+end
+if eq r 0
+r = tbig
+end
+if eq r 0
+r = tstats 53
+end
+if ne r 0
+x = treap
+ret r
+end
+if not tok tst 10 0 0
+ret 1
+end
+if not tok eq treap 0
+ret 1
+end
+ret 0
+end
+
+note cache: repeated QUERY hits, a change misses, undoing it hits the earlier entry
+fn tcache to int
+put TARM 0 3
+put TCK 0 8000
+tpkargs 3 0 0 0
+if not tok eq tspawn 0
+ret 1
+end
+tagg 8 1 2 3
+if not tok tbegin 100 1 256 0
+ret 1
+end
+r = tcq 1
+if eq r 0
+r = tcq 2
+end
+if eq r 0
+if not tok tchg 3 5 0 0
+ret 1
+end
+r = tcq 1
+end
+if eq r 0
+r = tcq 2
+end
+if eq r 0
+if not tok tchg 3 5 186 0
+ret 1
+end
+r = tcq 2
+end
+if eq r 0
+tagg 8 1 2 3
+if not tok tbegin 100 1 256 0
+ret 1
+end
+r = tcq 2
+end
+x = treap
+if eq r 0
+r = tcfifo
+end
+ret r
+end
+
+note a fresh cache router: x_0 = 0 .. 4095 (n 1) fill the FIFO with 4096 misses; then x_0 = 0 hits
+note (capacity >= 4096); 4096 misses and evicts the oldest; 1 still hits; 0 misses (FIFO order)
+fn tcfifo to int
+tpkargs 3 0 0 0
+if not tok eq tspawn 0
+ret 1
+end
+tagg 16 1 1 0
+if not tok tbegin 1 0 1 0
+ret 1
+end
+for v ulong 4096
+if not tok tchg 3 0 v 0
+ret 1
+end
+if not tok tcq1
+ret 1
+end
+end
+r = tcfx 0 2
+if eq r 0
+r = tcfx 4096 1
+end
+if eq r 0
+r = tcfx 1 2
+end
+if eq r 0
+r = tcfx 4095 2
+end
+if eq r 0
+r = tcfx 0 1
+end
+x = treap
+ret r
+end
+
+fn tcfx v ulong route ulong to int
+if not tok tchg 3 0 v 0
+ret 1
+end
+ret tcq route
+end
+
+note a QUERY that must miss
+fn tcq1 to bool
+if not tquery
+ret false
+end
+ret eq get TR 2 1
+end
+
+fn tcq route ulong to int
+if not tok tquery
+ret 1
+end
+if not tok eq get TR 2 route
+ret 1
+end
+ret 0
+end
+
+note tap: two sessions; the TAPFILE then holds one record per QUERY, admitted by exadmit
+fn ttap to int
+put TCK 0 9000
+put EXFLEN 0 0
+tpkreset
+tpkfile 2
+for i ulong get TPKO 0
+if ge i 2
+put EXFPATH sub i 2 get TPK i
+end
+end
+put EXFLEN 0 sub get TPKO 0 2
+x = unlink EXFPATH 0 get EXFLEN 0
+put TARM 0 7
+tpkargs 7 0 1 49
+if not tok eq tspawn 0
+ret 1
+end
+tagg 16 5 4 9
+if not tok tbegin 40 2 65536 0
+ret 1
+end
+for i ulong 3
+if not tok tchg 3 i 0 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+end
+tfsm 1
+if not tok tbegin 30 1 4 0
+ret 1
+end
+if not tok tquery
+ret 1
+end
+if not tok tst 10 0 0
+ret 1
+end
+if not tok eq treap 0
+ret 1
+end
+tpkargs 7 0 1 49
+if not tok eq tspawn 0
+ret 1
+end
+if not tok eq treap 2
+ret 1
+end
+ret ttapadmit
+end
+
+note the tap file is admitted under an ALLOW naming its SHA-256, and holds 4 records
+fn ttapadmit to int
+if not tok eq exfread 4096
+ret 1
+end
+tpkreset
+tpkfile 3
+n = sub get TPKO 0 2
+for i ulong n
+put EXAPATH i get TPK add i 2
+end
+put EXALEN 0 n
+o = ulong 0
+for j ulong 4
+v = get EXFD j
+for i ulong 16
+d = and shr v sub 60 mul i 4 15
+if lt d 10
+put R1HB add o i uchar add d 48
+else
+put R1HB add o i uchar add d 87
+end
+end
+o = add o 16
+end
+put R1HB 64 32
+put R1HB 65 83
+put R1HB 66 89
+put R1HB 67 78
+put R1HB 68 84
+put R1HB 69 72
+put R1HB 70 69
+put R1HB 71 84
+put R1HB 72 73
+put R1HB 73 67
+put R1HB 74 32
+put R1HB 75 116
+put R1HB 76 10
+fd = fopen EXAPATH 0 n 577 384
+if not tok ge fd 0
+ret 1
+end
+w = write int fd R1HB 0 77
+x = fclose int fd
+if not tok eq exaload 0
+ret 1
+end
+if not tok eq exadmit 0
+ret 1
+end
+if not tok eq get EXFN 0 4
+ret 1
+end
+if not tok and eq get EXFW 9 1 eq get EXFW 387 2
+ret 1
+end
+if not tok and eq get EXFW 394 2 eq get EXFW 395 1
+ret 1
+end
+if not tok and eq get EXFW 267 3 eq get EXFW 268 1
+ret 1
+end
+x = unlink EXAPATH 0 n
+x = unlink EXFPATH 0 get EXFLEN 0
+ret 0
+end
+
+note a library that cannot load: route 5 on every QUERY, values still exact
+fn tnolib to int
+put TCK 0 10000
+for a ulong 3
+tpkargs add a 4 1 0 0
+if not tok eq tspawn 0
+ret 1
+end
+tagg 8 2 2 1
+if not tok tbegin 9 1 256 0
+ret 1
+end
+if not tok tsend 2 0 0
+ret 1
+end
+if not tok trecv
+ret 1
+end
+r1full
+if not tok and eq get TR 2 5 eq get TR 0 get R1R 0
+ret 1
+end
+if not tok tst 10 0 0
+ret 1
+end
+if not tok eq treap 0
+ret 1
+end
+end
+ret 0
+end
+
+note exits: unknown op, op 0, p too large -> 4 then exit 4; EOF -> 3; argv errors -> 2
+fn texits to int
+put TCK 0 11000
+tpkargs 2 0 0 0
+if not tok eq tspawn 0
+ret 1
+end
+if not tok tst 11 0 4
+ret 1
+end
+if not tok eq treap 4
+ret 1
+end
+tpkargs 2 0 0 0
+x = tspawn
+if not tok tst 0 0 4
+ret 1
+end
+if not tok eq treap 4
+ret 1
+end
+tpkargs 2 0 0 0
+x = tspawn
+if not tok tsend 3 7235 7235
+ret 1
+end
+if not tok trecv
+ret 1
+end
+if not tok and eq get TRS 0 4 eq treap 4
+ret 1
+end
+tpkargs 2 0 0 0
+x = tspawn
+tagg 8 1 1 1
+put TQ 64 0
+if not tok tst 1 65 0
+ret 1
+end
+if not tok tsend 2 0 0
+ret 1
+end
+if not tok trecv
+ret 1
+end
+put TQ 0 1
+if not tok tsend 3 2 1
+ret 1
+end
+if not tok eq treap 3
+ret 1
+end
+tpkargs 8 0 0 0
+x = tspawn
+if not tok eq treap 2
+ret 1
+end
+tpkargs 7 0 0 52
+x = tspawn
+if not tok eq treap 2
+ret 1
+end
+tpkreset
+tpkrouter
+tpkarm 2
+x = tspawn
+if not tok eq treap 2
+ret 1
+end
+ret 0
+end
+
+note the router: argv 4, or DRIVE base OMC DIR
+fn trouter to int
+if ge argcnt 5
+n = argread 4 TRT 0 4096
+if lt n 1
+ret 1
+end
+put TRTL 0 ulong n
+ret 0
+end
+if lt argcnt 4
+ret 2
+end
+tpkreset
+for k ulong 3
+tpkopen
+if eq k 1
+for i ulong len tbaseA
+tpkb ulong get tbaseA i
+end
+else
+n = argread sub 3 shr k 1 TRT 0 4096
+for i ulong ulong n
+tpkb ulong get TRT i
+end
+end
+tpkclose
+end
+tpkopen
+tpkdir
+tpkclose
+pid = fork
+if eq pid 0
+r = execprog TPK 0 get TPKO 0
+exit 90
+end
+r = waitpid int pid TST 0 4 0
+if or ne get TST 0 0 ne get TST 1 0
+ret 3
+end
+tpkreset
+tpkfile 1
+n = sub get TPKO 0 2
+for i ulong n
+put TRT i get TPK add i 2
+end
+put TRTL 0 n
+ret 0
+end
+
+fn tall to int
+for a ulong 7
+r = tscenario add a 1
+if ne r 0
+ret r
+end
+end
+r = tcache
+if ne r 0
+ret r
+end
+r = ttap
+if ne r 0
+ret r
+end
+r = tnolib
+if ne r 0
+ret r
+end
+ret texits
+end
+
+fn main to int
+if ne tmkdir 0
+ret 1
+end
+if ne trouter 0
+ret 2
+end
+r = tall
+if ne r 0
+r = tfailcode
+end
+if eq get TDL 1 1
+x = rmdir TDIR 0 get TDL 0
+end
+ret r
+end
