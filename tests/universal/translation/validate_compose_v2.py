@@ -21,7 +21,7 @@ Exit: 0 PASS, 1 FAIL, 3 NOT_RUN.
 """
 from pathlib import Path
 from types import SimpleNamespace
-import argparse, hashlib, json, os, re, struct, subprocess, sys
+import argparse, hashlib, json, os, re, shutil, struct, subprocess, sys
 
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
@@ -288,7 +288,7 @@ class Run(C1.Run):
             (d / 'unit.go').write_bytes(src)
             (d / 'main.go').write_text(GO_DRIVER % {'k': n, 'name': name, 'args': ', '.join(
                 'oracleRead(d, base+%d)' % (8 * i) for i in range(n))})
-            env = dict(os.environ, **GO_ENV)
+            env = dict(os.environ, **GO_ENV, GOCACHE=str(self.ctx.work / 'go-cache'), GOPATH=str(self.ctx.work / 'gopath'))
             r = subprocess.run([self.a.go, 'build', '-trimpath', '-o', str(d / 'run'), '.'], cwd=d, env=env,
                                capture_output=True, timeout=300)
             self.res[k] = (None, 'go build exit %s: %s' % (r.returncode, r.stderr.decode(errors='replace')[:300])) \
@@ -668,14 +668,17 @@ def main():
     ap.add_argument('--repo', default=str(ROOT))
     ap.add_argument('--omc', required=True)
     ap.add_argument('--bridge-native', required=True)
-    ap.add_argument('--bridge-repo', default=os.path.expanduser('~/workspace/omega-bridge'))
+    ap.add_argument('--bridge-repo', default=os.environ.get('OMEGA_BRIDGE_REPO'),
+                    help='omega-bridge clone holding %s (default $OMEGA_BRIDGE_REPO; no host default)' % G.BRIDGE_COMMIT)
     ap.add_argument('--sa2', required=True, help='v2 codec binary build/L832/sa (refusal probes must be valid v2)')
     ap.add_argument('--cc', default=os.environ.get('CC', 'cc'))
-    ap.add_argument('--cxx', default='g++')
-    ap.add_argument('--rustc', default='rustc')
+    ap.add_argument('--cxx', default=os.environ.get('CXX', 'g++'))
+    ap.add_argument('--rustc', default=os.environ.get('RUSTC', 'rustc'))
     ap.add_argument('--python', default=sys.executable)
-    ap.add_argument('--zig', default=os.path.expanduser('~/.local/toolchains/zig/zig'))
-    ap.add_argument('--go', default=os.path.expanduser('~/.local/toolchains/go/bin/go'))
+    # oracles come from the caller ($ZIG, $GO, $GOFMT) or PATH; a missing one is NOT_RUN, never a host default
+    ap.add_argument('--zig', default=os.environ.get('ZIG', 'zig'))
+    ap.add_argument('--go', default=os.environ.get('GO', 'go'))
+    ap.add_argument('--gofmt', default=os.environ.get('GOFMT', 'gofmt'))
     ap.add_argument('--no-mutants', action='store_true')
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
@@ -706,8 +709,17 @@ def main():
     for rel in LANE_SPECS.values():
         pins[rel] = sha((ROOT / rel).read_bytes()) if (ROOT / rel).is_file() else None
     ev['pins'] = pins
-    gofmt = str(Path(a.go).parent / 'gofmt')
-    for exe in (a.omc, a.bridge_native, a.sa2, a.zig, a.go, gofmt):
+    found = {}
+    for key, exe in (('cc', a.cc), ('cxx', a.cxx), ('rustc', a.rustc), ('python', a.python), ('zig', a.zig),
+                     ('go', a.go), ('gofmt', a.gofmt)):
+        found[key] = shutil.which(exe)
+        if found[key] is None:
+            return not_run('oracle %s absent: %r (set it explicitly or put it on PATH)' % (key, exe))
+    a.cc, a.cxx, a.rustc, a.python, a.zig, a.go = (found[k] for k in ('cc', 'cxx', 'rustc', 'python', 'zig', 'go'))
+    gofmt = found['gofmt']
+    if not a.bridge_repo:
+        return not_run('no omega-bridge clone: pass --bridge-repo or set OMEGA_BRIDGE_REPO')
+    for exe in (a.omc, a.bridge_native, a.sa2):
         if not Path(exe).is_file():
             return not_run('absent: %s' % exe)
     if sha(Path(a.omc).read_bytes()) != G.OMC_SHA:
@@ -729,9 +741,10 @@ def main():
     head = G.run(['git', '-C', repo, 'rev-parse', 'HEAD'])
     ev['repo'] = {'path': str(repo), 'head': head[1].decode().strip() if head[0] == 0 else None}
     ev['tools'] = tinfo
-    ev['toolchains'] = {k: {'version': G.run(v)[1].decode().split('\n')[0], 'sha256': sha(Path(G.run(['which', v[0]])[1].decode().strip() or v[0]).read_bytes())}
+    ev['toolchains'] = {k: {'path': v[0], 'version': G.run(v)[1].decode().split('\n')[0], 'sha256': sha(Path(v[0]).read_bytes())}
                         for k, v in {'cc': [a.cc, '--version'], 'g++': [a.cxx, '--version'], 'rustc': [a.rustc, '--version'],
-                                     'python': [a.python, '--version'], 'zig': [a.zig, 'version'], 'go': [a.go, 'version']}.items()}
+                                     'python': [a.python, '--version'], 'zig': [a.zig, 'version'], 'go': [a.go, 'version'],
+                                     'gofmt': [gofmt, '-h']}.items()}
     ev['sa2_sha256'] = sha(Path(a.sa2).read_bytes())
     if 'lower' not in tools:
         return not_run('tools/adapters/lower absent')

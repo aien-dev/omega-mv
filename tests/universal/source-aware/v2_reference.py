@@ -18,7 +18,7 @@ import argparse, hashlib, json, os, random, struct, subprocess, sys
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[3]
-SPEC = ('spec/universal/source-aware-v2.md', 'ea2e14654cbba902fca8c4e070e95bb3ada384c061ee20bcd87c67fff8a9ce1c')
+SPEC = ('spec/universal/source-aware-v2.md', '2f894c7b923db7e4e89d7ed7339dae97cdb2969742e7b1ed2026637007edb5c7')
 SEMANTICS = 'spec/universal/semantics.md'
 U = 65535
 MAX_INPUT, MAX_SEM, MAX_SIDE, MAX_SRC = 8192, 1324, 4682, 4096
@@ -29,10 +29,6 @@ PROFILES = {1: (1, {(0, 1)}, {1}), 2: (2, {(0, 1)}, {1}), 3: (3, {(1, 1), (2, 1)
 # family members (translation-compose-v2 section 1): OMSA version, language, profile, dialect, arith obligations
 MEMBERS = {'c': (1, 1, 1, 1, 1), 'rust': (1, 2, 2, 2, 1), 'python': (1, 3, 4, 3, 5),
            'cpp': (2, 5, 7, 5, 1), 'zig': (2, 6, 8, 6, 1), 'go': (2, 7, 9, 7, 1)}
-# The one rule both codecs (v1 build/L574 and v2 build/L832) apply that neither source-aware-v1.md (op 7/8
-# rows: "alias1..8 or255") nor source-aware-v2.md states: a profile-6 byte read/write (op 7/8) must carry the
-# alias of its view operand A, else 71. Disagreements it explains are reported as a spec gap, never hidden.
-GAP_VIEW_ALIAS = 'profile-6 op 7/8 alias must equal the alias of view operand A (codec rule absent from the specs)'
 
 
 def semantics_digest(root=ROOT):
@@ -40,9 +36,8 @@ def semantics_digest(root=ROOT):
 
 
 class Ref:
-    def __init__(self, digest, gap_view_alias=False):
+    def __init__(self, digest):
         self.digest = digest
-        self.gap_view_alias = gap_view_alias
 
     def decode(self, b):
         """Returns (status, fields). Section 5 order; the first failure wins."""
@@ -123,74 +118,73 @@ class Ref:
             src = None
         return 0, {'sem': s, 'source': src, 'ops': ops, 'profile': prof, 'version': version}
 
-    def row(self, prof, i, op, t, attr, eff, alias, obl, A, B, imm, types, slots, aliases):
-        def earlier(x, want):
+    @staticmethod
+    def row(prof, i, op, t, attr, eff, alias, obl, A, B, imm, types, slots, aliases):
+        """One operation row, transcribed check by check from source-aware-v2.md section 5 step 6
+        (sha256 2f894c7b...); within a row the first failing check decides."""
+        def earlier(x, want):  # an operand index < i whose record has type `want` (65535 is never one)
             return x < i and types[x] == want
 
-        if op in (6, 7, 8) and prof != 6:
-            return 68
         if op == 1:
-            if t not in (1, 2):
-                return 70
-            if attr != t or A != U or B != U:
+            if t > 2 or attr != t or A != U or B != U:
                 return 70
             if obl != 0:
                 return 72
-            if eff or alias:
+            if eff != 0 or alias != 0:
                 return 71
             return 0
         if op in (2, 3, 4, 5):
-            if t not in (1, 2) or attr != t:
-                return 70
-            if not earlier(A, t) or not earlier(B, t):
+            if t > 2 or attr != t or not earlier(A, t) or not earlier(B, t):
                 return 70
             if imm != 0:
                 return 65
-            if t == 1:
-                if eff or alias:
-                    return 71
-                want = (1 if op < 5 else 3) | (4 if prof in (4, 6) else 0)
-            else:
-                if (eff, alias) != (20, 255):
-                    return 71
-                want = 8 if op < 5 else 10
+            if t == 1 and (eff != 0 or alias != 0):
+                return 71
+            if t == 2 and (eff != 20 or alias != 255):
+                return 71
+            want = (1 | (4 if prof in (4, 6) else 0)) if t == 1 else 8
+            if op == 5:
+                want += 2
             return 72 if obl != want else 0
-        if op == 9:
-            if attr != 0 or A != U or B != U:
-                return 70
-            if imm > 5:
-                return 67
-            if imm in slots:
-                return 70
-            slots.add(imm)
-            if obl != 1:
-                return 72
-            if eff:
-                return 71
-            if (t == 4 and not (1 <= alias <= 8 or alias == 255)) or (t != 4 and alias):
-                return 71
-            return 0
-        # profile 6 only (section 5 leaves this order to the v1 table; order inferred)
         if op == 6:
+            if prof != 6:
+                return 68
             if t != 3 or attr != 3 or not earlier(A, 3) or B != U:
                 return 70
             if imm != 0:
                 return 65
-            if (eff, alias) != (63, 255):
+            if eff != 63 or alias != 255:
                 return 71
             return 72 if obl != 8 else 0
-        # ops 7 / 8: symbolic byte read / write
-        if t != 1 or attr != 4 or not earlier(A, 4) or not earlier(B, 1):
+        if op in (7, 8):
+            if prof != 6:
+                return 68
+            if t != 1 or attr != 4 or not earlier(A, 4) or not earlier(B, 1):
+                return 70
+            if not (1 <= alias <= 8 or alias == 255) or alias != aliases[A]:
+                return 71
+            if op == 8 and not earlier(imm, 1):
+                return 70
+            if op == 7 and imm != 0:
+                return 65
+            if eff != (17 if op == 7 else 19):
+                return 71
+            return 72 if obl != 24 else 0
+        # op 9 (input)
+        if attr != 0 or A != U or B != U:
             return 70
-        if op == 7 and imm != 0:
-            return 65
-        if op == 8 and not earlier(imm, 1):
+        if imm > 5:
+            return 67
+        if imm in slots:
             return 70
-        if eff != (17 if op == 7 else 19) or not (1 <= alias <= 8 or alias == 255):
+        slots.add(imm)
+        if obl != 1:
+            return 72
+        if eff != 0:
             return 71
-        if self.gap_view_alias and alias != aliases[A]:
+        if (t == 4 and not (1 <= alias <= 8 or alias == 255)) or (t != 4 and alias != 0):
             return 71
-        return 72 if obl != 24 else 0
+        return 0
 
     def perform(self, mode, b):
         """(status, stdout) of `sa` for mode byte + envelope."""
@@ -433,8 +427,7 @@ def main():
         pick = next(((l, e) for l, e in valid if l.startswith('import-%s-' % lang) and l.endswith('P05')), None)
         if pick:
             cases += [('%s/%s' % (pick[0], n), b) for n, b in corner_cases(pick[1], lang in ('c', 'go'))]
-    # valid profile 3 and 6 units (v1 rows, ops 6/7/8): their field checks follow section 5's pattern with the
-    # order inferred, and every disagreement on them is classified as such
+    # valid profile 3 and 6 units (ops 6/7/8) and division, checked by the section 5 step 6 rows
     built = constructed_units(semantics_digest())
     cases += [('constructed-%s' % n, e) for n, e in built]
     rng = random.Random(a.seed)
@@ -444,7 +437,6 @@ def main():
     base = valid[0][1]
     cases += [('mode-check', base)]
     agree, dis, by_status = 0, [], {}
-    gap_ref = Ref(semantics_digest(), gap_view_alias=True)
     modes = [1, 2, 3, 4, 5]
     v1rows = {'total': 0, 'agree': 0, 'disagree': []}
     for label, b in cases:
@@ -458,15 +450,8 @@ def main():
                 agree += 1
                 by_status[want[0]] = by_status.get(want[0], 0) + 1
             else:
-                # classify: explained by the one codec rule neither spec states, or two refusals of a
-                # profile 3/6 record whose field order section 5 does not give (it orders the profile 1/7/8/9
-                # rows; "Profiles 1..6 keep their v1 rows", and v1 states no order)?
-                explained = gap_ref.perform(mode, b) == got
-                prof = b[19] if len(b) > 19 and b[:4] == b'OMSB' else None
-                unordered = not explained and prof in (3, 6) and want[0] != 0 and got[0] != 0
                 dis.append({'case': label, 'mode': mode, 'reference': [want[0], want[1].hex()[:96]],
-                            'native': [got[0], got[1].hex()[:96]], 'envelope_hex': b.hex(),
-                            'class': 'SPEC_GAP' if explained else 'ORDER_UNSPECIFIED' if unordered else 'UNEXPLAINED'})
+                            'native': [got[0], got[1].hex()[:96]], 'envelope_hex': b.hex()})
         if a.sa_v1 and len(b) > 17 and b[:5] == b'OMSB\x01' and ref.decode(b)[0] == 0 and b[17] == 2:
             v1rows['total'] += 1
             got = run([a.sa_v1], b'\x02' + b)
@@ -474,25 +459,18 @@ def main():
                 v1rows['agree'] += 1
             else:
                 v1rows['disagree'].append({'case': label, 'status': got[0], 'stdout_bytes': len(got[1])})
-    unexplained = [d for d in dis if d['class'] == 'UNEXPLAINED']
-    ncls = {c: sum(d['class'] == c for d in dis) for c in ('SPEC_GAP', 'ORDER_UNSPECIFIED', 'UNEXPLAINED')}
     ev.update({'cases': len(cases), 'comparisons': agree + len(dis), 'agree': agree, 'disagree': len(dis),
-               'disagree_unexplained': ncls['UNEXPLAINED'], 'disagree_spec_gap': ncls['SPEC_GAP'],
-               'disagree_order_unspecified': ncls['ORDER_UNSPECIFIED'],
-               'classes': {'SPEC_GAP': GAP_VIEW_ALIAS,
-                           'ORDER_UNSPECIFIED': 'a profile 3/6 record failing two field checks; section 5 orders '
-                                                'only the profile 1/7/8/9 rows, so either refusal name is admissible'},
                'agreements_by_status': {str(k): v for k, v in sorted(by_status.items())},
                'v1_codec_refuses_v2_66': v1rows if a.sa_v1 else 'NOT_RUN', 'disagreements': dis[:400]})
     v1ok = not a.sa_v1 or not v1rows['disagree']
-    ev['result'] = 'FAIL' if unexplained or not v1ok else 'PASS_WITH_SPEC_GAP' if dis else 'PASS'
+    ev['result'] = 'FAIL' if dis or not v1ok else 'PASS'
     (out / 'evidence.json').write_text(json.dumps(ev, indent=1) + '\n')
-    print(json.dumps({k: ev[k] for k in ('result', 'cases', 'comparisons', 'agree', 'disagree', 'disagree_unexplained',
-                                         'disagree_spec_gap', 'disagree_order_unspecified', 'agreements_by_status')}, indent=1))
+    print(json.dumps({k: ev[k] for k in ('result', 'cases', 'comparisons', 'agree', 'disagree',
+                                         'agreements_by_status')}, indent=1))
     if a.sa_v1:
         print('v1 codec refuses v2 with 66: %d/%d' % (v1rows['agree'], v1rows['total']))
     for d in dis[:20]:
-        print('DISAGREE', d['case'], 'mode', d['mode'], 'ref', d['reference'][0], 'native', d['native'][0], d['class'])
+        print('DISAGREE', d['case'], 'mode', d['mode'], 'ref', d['reference'][0], 'native', d['native'][0])
     return 1 if ev['result'] == 'FAIL' else 0
 
 

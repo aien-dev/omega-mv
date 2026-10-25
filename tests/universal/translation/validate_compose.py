@@ -765,7 +765,8 @@ def main():
     ap.add_argument('--repo', default=str(ROOT), help='checkout holding tools/adapters/* and their builds')
     ap.add_argument('--omc', required=True)
     ap.add_argument('--bridge-native', required=True)
-    ap.add_argument('--bridge-repo', default=os.path.expanduser('~/workspace/omega-bridge'))
+    ap.add_argument('--bridge-repo', default=os.environ.get('OMEGA_BRIDGE_REPO'),
+                    help='omega-bridge clone (default $OMEGA_BRIDGE_REPO; no host default)')
     ap.add_argument('--sa', required=True, help='#621 native sa binary (confirms refusal probes are valid v1)')
     ap.add_argument('--cc', default=os.environ.get('CC', 'cc'))
     ap.add_argument('--rustc', default='rustc')
@@ -800,6 +801,8 @@ def main():
         p = ROOT / rel
         pins[rel] = sha(p.read_bytes()) if p.is_file() else None
     ev['pins'] = pins
+    if not a.bridge_repo:
+        return not_run('no omega-bridge clone: pass --bridge-repo or set OMEGA_BRIDGE_REPO')
     for exe in (a.omc, a.bridge_native, a.sa):
         if not Path(exe).is_file():
             return not_run('absent: %s' % exe)

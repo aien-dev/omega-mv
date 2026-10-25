@@ -832,6 +832,8 @@ def check_pins(a):
     if set(m.get('inputs', {})) != set(IMPORT_INPUTS) or any(sha((ROOT / r).read_bytes()) != m['inputs'][r] for r in IMPORT_INPUTS):
         raise NotRun('importer build.json inputs differ from this checkout')
     tools['importer']['build_json'] = m
+    if not a.bridge_repo:
+        raise NotRun('no omega-bridge clone: pass --bridge-repo or set OMEGA_BRIDGE_REPO')
     repo = Path(a.bridge_repo)
     rc, src, _ = run(['git', '-C', repo, 'show', BRIDGE_COMMIT + ':src/native.om'])
     if rc != 0:
@@ -893,7 +895,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     for k in ('lower', 'export', 'importer', 'omc', 'bridge_native'):
         ap.add_argument('--' + k.replace('_', '-'), dest=k)
-    ap.add_argument('--bridge-repo', default=os.path.expanduser('~/workspace/omega-bridge'),
+    ap.add_argument('--bridge-repo', default=os.environ.get('OMEGA_BRIDGE_REPO'),
                     help='omega-bridge clone holding commit %s (the generator is rebuilt and compared)' % BRIDGE_COMMIT)
     ap.add_argument('--sa', help='optional #621 native sa binary: confirms refusal probes are valid / malformed v1')
     ap.add_argument('--cc', default=os.environ.get('CC', 'cc'))
