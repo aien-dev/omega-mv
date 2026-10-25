@@ -13,6 +13,12 @@ ctl-f-loopc emit seed/omc/om2/s3/f-bad-loopc.om - err:7:27 27
 ctl-f-call emit seed/omc/om2/s3/f-bad-call.om - err:10:27 27
 ctl-f-partial emit seed/omc/om2/s3/f-bad-partial.om - err:7:27 27
 ctl-f-n65 refuse seed/omc/om2/s3/f-bad-n65.om 14
+ctl-a-ok run seed/omc/om2/s3/a-ok.om - - - 0
+ctl-a-kept run seed/omc/om2/s3/a-kept.om - - - 110
+ctl-a-kept-diag emit seed/omc/om2/s3/a-kept-diag.om any file:seed/omc/om2/s3/a-kept-diag.err 0
+ctl-a-sealinl emit seed/omc/om2/s3/a-bad-sealinl.om - err:9:28 28
+ctl-a-op refuse seed/omc/om2/s3/a-bad-op.om 7
+ctl-a-rawnum refuse seed/omc/om2/s3/a-bad-rawnum.om 7
 # layout: the overlap check removed
 subst seed/omc/om2/s3/mut/ovl.from seed/omc/om2/s3/mut/ovl.to
 cc seed/omc/omc.om
@@ -53,3 +59,23 @@ m-fzr emit seed/omc/om2/s3/f-bad-partial.om - err:7:27 27
 subst seed/omc/om2/s3/mut/fzn.from seed/omc/om2/s3/mut/fzn.to
 cc seed/omc/omc.om
 m-fzn refuse seed/omc/om2/s3/f-bad-n65.om 14
+# abstract: the kept dup32 check not emitted
+subst seed/omc/om2/s3/mut/aer.from seed/omc/om2/s3/mut/aer.to
+cc seed/omc/omc.om
+m-aer run seed/omc/om2/s3/a-kept.om - - - 110
+# abstract: every constructor body taken as exact (check erased)
+subst seed/omc/om2/s3/mut/aex.from seed/omc/om2/s3/mut/aex.to
+cc seed/omc/omc.om
+m-aex emit seed/omc/om2/s3/a-kept-diag.om any file:seed/omc/om2/s3/a-kept-diag.err 0
+# abstract: seal allowed outside NAMEmk
+subst seed/omc/om2/s3/mut/act.from seed/omc/om2/s3/mut/act.to
+cc seed/omc/omc.om
+m-act emit seed/omc/om2/s3/a-bad-sealinl.om - err:9:28 28
+# abstract: the ops list ignored
+subst seed/omc/om2/s3/mut/aop.from seed/omc/om2/s3/mut/aop.to
+cc seed/omc/omc.om
+m-aop refuse seed/omc/om2/s3/a-bad-op.om 7
+# abstract: a number taken where NAME is required
+subst seed/omc/om2/s3/mut/araw.from seed/omc/om2/s3/mut/araw.to
+cc seed/omc/omc.om
+m-araw refuse seed/omc/om2/s3/a-bad-rawnum.om 7

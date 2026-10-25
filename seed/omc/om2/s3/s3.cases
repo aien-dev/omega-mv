@@ -47,3 +47,30 @@ s3-f-bad-inlfresh emit seed/omc/om2/s3/f-bad-inlfresh.om - err:4:27 27
 s3-f-bad-n65 refuse seed/omc/om2/s3/f-bad-n65.om 14
 s3-f-bad-view refuse seed/omc/om2/s3/f-bad-view.om 16
 s3-f-bad-idx refuse seed/omc/om2/s3/f-bad-idx.om 21
+## abstract
+s3-a-ok run seed/omc/om2/s3/a-ok.om - - - 0
+s3-a-om1 run seed/omc/om2/s3/a-om1.om - - - 5
+s3-a-kept run seed/omc/om2/s3/a-kept.om - - - 110
+s3-a-kept-diag emit seed/omc/om2/s3/a-kept-diag.om any file:seed/omc/om2/s3/a-kept-diag.err 0
+s3-a-exact-diag emit seed/omc/om2/s3/a-exact-diag.om any file:seed/omc/om2/s3/a-exact-diag.err 0
+s3-a-bad-sealinl emit seed/omc/om2/s3/a-bad-sealinl.om - err:9:28 28
+s3-a-bad-holdsuint emit seed/omc/om2/s3/a-bad-holdsuint.om - err:4:28 28
+s3-a-bad-ctorname emit seed/omc/om2/s3/a-bad-ctorname.om - err:9:28 28
+s3-a-bad-ctorret emit seed/omc/om2/s3/a-bad-ctorret.om - err:5:28 28
+s3-a-bad-base refuse seed/omc/om2/s3/a-bad-base.om 7
+s3-a-bad-bitcast refuse seed/omc/om2/s3/a-bad-bitcast.om 7
+s3-a-bad-cmp refuse seed/omc/om2/s3/a-bad-cmp.om 7
+s3-a-bad-const refuse seed/omc/om2/s3/a-bad-const.om 7
+s3-a-bad-conv refuse seed/omc/om2/s3/a-bad-conv.om 7
+s3-a-bad-holds2 refuse seed/omc/om2/s3/a-bad-holds2.om 10
+s3-a-bad-holdsname refuse seed/omc/om2/s3/a-bad-holdsname.om 16
+s3-a-bad-late refuse seed/omc/om2/s3/a-bad-late.om 9
+s3-a-bad-lateabs refuse seed/omc/om2/s3/a-bad-lateabs.om 9
+s3-a-bad-open refuse seed/omc/om2/s3/a-bad-open.om 7
+s3-a-bad-opword refuse seed/omc/om2/s3/a-bad-opword.om 16
+s3-a-bad-rawleft refuse seed/omc/om2/s3/a-bad-rawleft.om 7
+s3-a-bad-rotcnt refuse seed/omc/om2/s3/a-bad-rotcnt.om 7
+s3-a-bad-sizeof refuse seed/omc/om2/s3/a-bad-sizeof.om 7
+s3-a-bad-struct refuse seed/omc/om2/s3/a-bad-struct.om 7
+s3-a-bad-op refuse seed/omc/om2/s3/a-bad-op.om 7
+s3-a-bad-rawnum refuse seed/omc/om2/s3/a-bad-rawnum.om 7

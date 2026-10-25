@@ -1,0 +1,157 @@
+OM2GATE START cases=seed/omc/om2/s1/s1.cases scratch=/tmp/om2c/s3/g-abstract-s1-cases
+IDENTITY omc /tmp/om2c/s3/omc-abstract sha256=98cd1621ca4f69c5589641b3437e7e512838596fdfbf2f7775a48de19c284b16 pinned=98cd1621ca4f69c5589641b3437e7e512838596fdfbf2f7775a48de19c284b16 match
+CASE s1-optin line=4
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/4.src > /tmp/om2c/s3/g-abstract-s1-cases/4.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/4.cerr
+  $ /tmp/om2c/s3/g-abstract-s1-cases/4.elf < /dev/null > /tmp/om2c/s3/g-abstract-s1-cases/4.out 2> /tmp/om2c/s3/g-abstract-s1-cases/4.err
+VERDICT s1-optin PASS run exit=42 expected=42 stdout=match stderr=match
+CASE s1-hex-same line=5
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/5.src.b > /tmp/om2c/s3/g-abstract-s1-cases/5.elf.b 2> /tmp/om2c/s3/g-abstract-s1-cases/5.cerr.b
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/5.src > /tmp/om2c/s3/g-abstract-s1-cases/5.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/5.cerr
+VERDICT s1-hex-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s1-hex-run line=6
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/6.src > /tmp/om2c/s3/g-abstract-s1-cases/6.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/6.cerr
+  $ /tmp/om2c/s3/g-abstract-s1-cases/6.elf < /dev/null > /tmp/om2c/s3/g-abstract-s1-cases/6.out 2> /tmp/om2c/s3/g-abstract-s1-cases/6.err
+VERDICT s1-hex-run PASS run exit=255 expected=255 stdout=match stderr=match
+CASE s1-hex-max line=7
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/7.src > /tmp/om2c/s3/g-abstract-s1-cases/7.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/7.cerr
+  $ /tmp/om2c/s3/g-abstract-s1-cases/7.elf < /dev/null > /tmp/om2c/s3/g-abstract-s1-cases/7.out 2> /tmp/om2c/s3/g-abstract-s1-cases/7.err
+VERDICT s1-hex-max PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s1-rot line=8
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/8.src > /tmp/om2c/s3/g-abstract-s1-cases/8.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/8.cerr
+  $ /tmp/om2c/s3/g-abstract-s1-cases/8.elf < /dev/null > /tmp/om2c/s3/g-abstract-s1-cases/8.out 2> /tmp/om2c/s3/g-abstract-s1-cases/8.err
+VERDICT s1-rot PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s1-rot-trap-var line=9
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/9.src > /tmp/om2c/s3/g-abstract-s1-cases/9.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/9.cerr
+  $ /tmp/om2c/s3/g-abstract-s1-cases/9.elf < /dev/null > /tmp/om2c/s3/g-abstract-s1-cases/9.out 2> /tmp/om2c/s3/g-abstract-s1-cases/9.err
+VERDICT s1-rot-trap-var PASS run exit=107 expected=107 stdout=match stderr=match
+CASE s1-rot-trap-const line=10
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/10.src > /tmp/om2c/s3/g-abstract-s1-cases/10.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/10.cerr
+  $ /tmp/om2c/s3/g-abstract-s1-cases/10.elf < /dev/null > /tmp/om2c/s3/g-abstract-s1-cases/10.out 2> /tmp/om2c/s3/g-abstract-s1-cases/10.err
+VERDICT s1-rot-trap-const PASS run exit=107 expected=107 stdout=match stderr=match
+CASE s1-rot-trap-u8 line=11
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/11.src > /tmp/om2c/s3/g-abstract-s1-cases/11.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/11.cerr
+  $ /tmp/om2c/s3/g-abstract-s1-cases/11.elf < /dev/null > /tmp/om2c/s3/g-abstract-s1-cases/11.out 2> /tmp/om2c/s3/g-abstract-s1-cases/11.err
+VERDICT s1-rot-trap-u8 PASS run exit=107 expected=107 stdout=match stderr=match
+CASE s1-om1-names line=12
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/12.src > /tmp/om2c/s3/g-abstract-s1-cases/12.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/12.cerr
+  $ /tmp/om2c/s3/g-abstract-s1-cases/12.elf < /dev/null > /tmp/om2c/s3/g-abstract-s1-cases/12.out 2> /tmp/om2c/s3/g-abstract-s1-cases/12.err
+VERDICT s1-om1-names PASS run exit=2 expected=2 stdout=match stderr=match
+CASE s1-bad-hex-int line=14
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/14.src > /tmp/om2c/s3/g-abstract-s1-cases/14.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/14.cerr
+VERDICT s1-bad-hex-int PASS compile exit=8 expected=8 refused with the expected error
+CASE s1-bad-hex-neg line=15
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/15.src > /tmp/om2c/s3/g-abstract-s1-cases/15.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/15.cerr
+VERDICT s1-bad-hex-neg PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-upper line=16
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/16.src > /tmp/om2c/s3/g-abstract-s1-cases/16.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/16.cerr
+VERDICT s1-bad-hex-upper PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-bigx line=17
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/17.src > /tmp/om2c/s3/g-abstract-s1-cases/17.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/17.cerr
+VERDICT s1-bad-hex-bigx PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-empty line=18
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/18.src > /tmp/om2c/s3/g-abstract-s1-cases/18.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/18.cerr
+VERDICT s1-bad-hex-empty PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-long line=19
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/19.src > /tmp/om2c/s3/g-abstract-s1-cases/19.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/19.cerr
+VERDICT s1-bad-hex-long PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-under line=20
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/20.src > /tmp/om2c/s3/g-abstract-s1-cases/20.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/20.cerr
+VERDICT s1-bad-hex-under PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-char line=21
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/21.src > /tmp/om2c/s3/g-abstract-s1-cases/21.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/21.cerr
+VERDICT s1-bad-hex-char PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-om1-hex line=22
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/22.src > /tmp/om2c/s3/g-abstract-s1-cases/22.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/22.cerr
+VERDICT s1-om1-hex PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-om1-late line=23
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/23.src > /tmp/om2c/s3/g-abstract-s1-cases/23.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/23.cerr
+VERDICT s1-om1-late PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-om1-space line=24
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/24.src > /tmp/om2c/s3/g-abstract-s1-cases/24.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/24.cerr
+VERDICT s1-om1-space PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-reserved-fn line=25
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/25.src > /tmp/om2c/s3/g-abstract-s1-cases/25.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/25.cerr
+VERDICT s1-bad-reserved-fn PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-reserved-var line=26
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/26.src > /tmp/om2c/s3/g-abstract-s1-cases/26.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/26.cerr
+VERDICT s1-bad-reserved-var PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-reserved-par line=27
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/27.src > /tmp/om2c/s3/g-abstract-s1-cases/27.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/27.cerr
+VERDICT s1-bad-reserved-par PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-rot-signed line=28
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/28.src > /tmp/om2c/s3/g-abstract-s1-cases/28.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/28.cerr
+VERDICT s1-bad-rot-signed PASS compile exit=7 expected=7 refused with the expected error
+CASE s1-bad-rot-mixed line=29
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/29.src > /tmp/om2c/s3/g-abstract-s1-cases/29.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/29.cerr
+VERDICT s1-bad-rot-mixed PASS compile exit=7 expected=7 refused with the expected error
+CASE s1-bad-rot-float line=30
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/30.src > /tmp/om2c/s3/g-abstract-s1-cases/30.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/30.cerr
+VERDICT s1-bad-rot-float PASS compile exit=7 expected=7 refused with the expected error
+CASE s1-diag-eof line=32
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/32.src > /tmp/om2c/s3/g-abstract-s1-cases/32.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/32.cerr
+VERDICT s1-diag-eof PASS compile exit=4 expected=4 stdout=match stderr=match
+CASE s1-diag-extra line=33
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/33.src > /tmp/om2c/s3/g-abstract-s1-cases/33.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/33.cerr
+VERDICT s1-diag-extra PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE s1-diag-hex line=34
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/34.src > /tmp/om2c/s3/g-abstract-s1-cases/34.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/34.cerr
+VERDICT s1-diag-hex PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s1-diag-lf line=35
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/35.src > /tmp/om2c/s3/g-abstract-s1-cases/35.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/35.cerr
+VERDICT s1-diag-lf PASS compile exit=4 expected=4 stdout=match stderr=match
+CASE s1-diag-noend line=36
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/36.src > /tmp/om2c/s3/g-abstract-s1-cases/36.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/36.cerr
+VERDICT s1-diag-noend PASS compile exit=15 expected=15 stdout=match stderr=match
+CASE s1-diag-range line=37
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/37.src > /tmp/om2c/s3/g-abstract-s1-cases/37.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/37.cerr
+VERDICT s1-diag-range PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s1-diag-unknown line=38
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/38.src > /tmp/om2c/s3/g-abstract-s1-cases/38.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/38.cerr
+VERDICT s1-diag-unknown PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE s1-diag-plain line=39
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/39.src > /tmp/om2c/s3/g-abstract-s1-cases/39.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/39.cerr
+VERDICT s1-diag-plain PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s1-diag-ok line=40
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/40.src > /tmp/om2c/s3/g-abstract-s1-cases/40.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/40.cerr
+VERDICT s1-diag-ok PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE s1-fmt line=42
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/42.src > /tmp/om2c/s3/g-abstract-s1-cases/42.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/42.cerr
+VERDICT s1-fmt PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE s1-fmt-idem line=43
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/43.src > /tmp/om2c/s3/g-abstract-s1-cases/43.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/43.cerr
+VERDICT s1-fmt-idem PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE s1-fmt-compile line=44
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/44.src.b > /tmp/om2c/s3/g-abstract-s1-cases/44.elf.b 2> /tmp/om2c/s3/g-abstract-s1-cases/44.cerr.b
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/44.src > /tmp/om2c/s3/g-abstract-s1-cases/44.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/44.cerr
+VERDICT s1-fmt-compile PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s1-fmt-om1 line=45
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/45.src > /tmp/om2c/s3/g-abstract-s1-cases/45.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/45.cerr
+VERDICT s1-fmt-om1 PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE s1-bad-fmt-cr line=46
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/46.src > /tmp/om2c/s3/g-abstract-s1-cases/46.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/46.cerr
+VERDICT s1-bad-fmt-cr PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s1-bad-fmt-tail line=47
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/47.src > /tmp/om2c/s3/g-abstract-s1-cases/47.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/47.cerr
+VERDICT s1-bad-fmt-tail PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s1-bad-fmt-tailws line=48
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/48.src > /tmp/om2c/s3/g-abstract-s1-cases/48.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/48.cerr
+VERDICT s1-bad-fmt-tailws PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s1-bad-fmt-late line=49
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/49.src > /tmp/om2c/s3/g-abstract-s1-cases/49.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/49.cerr
+VERDICT s1-bad-fmt-late PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s1-bad-fmt-nested line=50
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/50.src > /tmp/om2c/s3/g-abstract-s1-cases/50.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/50.cerr
+VERDICT s1-bad-fmt-nested PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s1-bad-fmt-compile line=51
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/51.src > /tmp/om2c/s3/g-abstract-s1-cases/51.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/51.cerr
+VERDICT s1-bad-fmt-compile PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE s1-diag-newpt line=54
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/54.src > /tmp/om2c/s3/g-abstract-s1-cases/54.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/54.cerr
+VERDICT s1-diag-newpt PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s1-diag-viewpt line=55
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/55.src > /tmp/om2c/s3/g-abstract-s1-cases/55.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/55.cerr
+VERDICT s1-diag-viewpt PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s1-bad-fmt-crtext line=56
+  $ /tmp/om2c/s3/omc-abstract < /tmp/om2c/s3/g-abstract-s1-cases/56.src > /tmp/om2c/s3/g-abstract-s1-cases/56.elf 2> /tmp/om2c/s3/g-abstract-s1-cases/56.cerr
+VERDICT s1-bad-fmt-crtext PASS compile exit=6 expected=6 stdout=match stderr=match
+OM2GATE PASS cases=48 pass=48 fail=0 invalid=0 not_run=0

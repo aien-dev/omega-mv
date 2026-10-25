@@ -181,6 +181,21 @@ global fz_thn ulong 8192
 global il_fz ulong 8
 global dobx ulong 1
 
+note ---- OM-2 section 5 abstract types (16; type 64 + index): name, its length, representation type (4 uint,
+note 5 ulong), the preserving operations listed (1 rotr, 2 rotl, 4 and, 8 or, 16 xor), 1 when `holds NAME
+note dup32` is declared. aw_*: the word reader of the exact-constructor test (place, packed word, length,
+note newlines crossed before it) ----
+global ab_name ulong 16
+global ab_len ulong 16
+global ab_base uchar 16
+global ab_ops ulong 16
+global ab_holds uchar 16
+global nab ulong 1
+global aw_p ulong 1
+global aw_w ulong 1
+global aw_l ulong 1
+global aw_nl ulong 1
+
 note ======== leaf helpers ========
 
 note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
@@ -1988,6 +2003,9 @@ vdone 3 mul n 8 5
 ret
 end
 t = typeword
+if ge t 64
+fail 7
+end
 v = shl 1 tlog t
 vdone 3 v 5
 end
@@ -2282,6 +2300,9 @@ if ne findname w 0
 fail 10
 end
 if ne findlay w 0
+fail 10
+end
+if ne findab w 0
 fail 10
 end
 end
@@ -2590,6 +2611,9 @@ fn elemtype t ulong to void
 if lt t 2
 fail 9
 end
+if ge t 64
+fail 7
+end
 end
 
 note arrlen: an array length 1 .. 16777216 (error 8 below, 23 above, 23 when written as 2^63 or more)
@@ -2652,6 +2676,10 @@ fail 16
 end
 c = kw get tw 0
 if eq c 0
+a = findab get tw 0
+if ne a 0
+ret add a 63
+end
 unkfail 16
 end
 if eq c 76
@@ -5516,6 +5544,9 @@ if eq get tk 0 5
 if ne get irmode 0 0
 fail 9
 end
+if ge exp 64
+fail 7
+end
 fparse get ts 0 get tl 0
 t = ulong 0
 if eq get fsuf 0 0
@@ -5544,6 +5575,9 @@ if eq get tk 0 2
 if eq exp 0
 vdone 2 get tw 0 get tbig 0
 ret
+end
+if ge exp 64
+fail 7
 end
 range get tw 0 exp get tbig 0
 vdone 3 get tw 0 exp
@@ -5598,6 +5632,9 @@ if eq c 89
 t = ulong 11
 end
 rdval 0 0 255 0
+if ge get rt 0 64
+fail 7
+end
 if eq get rk 0 6
 v = fspan t get rv 0
 put rk 0 7
@@ -5627,6 +5664,9 @@ fail 11
 end
 ft = get rt 0
 if eq ft 1
+fail 7
+end
+if or ge ft 64 ge tt 64
 fail 7
 end
 if ne twid ft twid tt
@@ -5663,6 +5703,9 @@ vdone 3 get tw 0 c
 ret
 end
 rdval 1 0 255 0
+if ge get rt 0 64
+fail 7
+end
 if eq get rk 0 2
 fail 11
 end
@@ -5690,6 +5733,17 @@ fail 9
 end
 if and ge c 100 le c 177
 hostval c dst
+ret
+end
+if eq c 186
+rdval 0 0 255 0
+ab_open
+vdec
+ret
+end
+if eq c 185
+ab_seal
+vdec
 ret
 end
 if eq c 51
@@ -5743,6 +5797,9 @@ fail 16
 end
 if and ge c 49 le c 50
 rdval 0 exp 255 0
+if ge get rt 0 64
+fail 7
+end
 if and eq c 50 eq get rk 0 4
 put rv 0 xor get rv 0 1
 vdec
@@ -5772,6 +5829,18 @@ if eq bk 4
 bv = matreg 4 bv bt
 bk = ulong 1
 bt = ulong 1
+end
+if or ge at 64 ge bt 64
+x = mul get depth 0 32
+put fr x ak
+put fr add x 1 av
+put fr add x 2 at
+put fr add x 3 bk
+put fr add x 4 bv
+put fr add x 5 bt
+ab_bin c dst x
+vdec
+ret
 end
 if and eq ak 6 eq bk 6
 fail 11
@@ -6060,9 +6129,10 @@ if eq c 89
 t = ulong 11
 else
 if gt sub c 1 8
-fail 16
-end
+t = abty
+else
 t = c
+end
 end
 end
 end
@@ -6098,7 +6168,7 @@ if eq c 89
 r = ulong 11
 else
 if gt sub c 1 8
-fail 16
+r = abty
 end
 end
 end
@@ -6191,6 +6261,7 @@ np = add np 1
 end
 end
 fn_to f np
+ab_entry f
 if eq get scanning 0 1
 put curret 0 0
 put nn 0 0
@@ -6361,6 +6432,9 @@ fail 16
 end
 newname w get tl 0 get ts 0
 t = typeword
+if ge t 64
+fail 7
+end
 if ge t 10
 note float constant: rdval reads the float token as a value (kind 6); fspan converts it to the
 note target type's bits and rdval has already balanced the nesting depth.
@@ -7792,6 +7866,10 @@ if eq c 188
 s_lyskip
 ret 0
 end
+if or eq c 184 eq c 187
+skipnl
+ret 0
+end
 fail 16
 end
 if eq c 66
@@ -8090,6 +8168,9 @@ if ne field_dup fo fw 0
 fail 10
 end
 t = typeword
+if ge t 64
+fail 7
+end
 ln = ulong 0
 p = get cur 0
 ln0 = get line 0
@@ -8368,6 +8449,451 @@ st_write r tmp idx si
 addname w r add si 16 cells 6 0
 end
 
+note ======== OM-2 section 5: abstract types (spec 5, errata E8, E9). `abstract NAME T [ops W..]` and
+note `holds NAME dup32` at top level before the first fn (names pass). NAME is type 64 + index: a value of
+note it comes only from `seal NAME v` inside the function NAMEmk returning NAME (else error 28), `open v`
+note gives the T value, and the listed operations (rotr/rotl with a T count, and/or/xor of two NAME
+note values) keep NAME; anything else on it, a T value or a number where NAME is needed, an array of it and
+note the entry function's parameters and result are error 7. With holds, seal checks high32 == low32
+note (LSR, CMP ..., UXTW, B.NE trap 10) unless the constructor body is exactly `ret seal NAME or shl ulong
+note x 32 ulong x` with x a uint parameter (rule dup32: uint values are held zero-extended). om2 diag
+note reports each check as omc-check 1 kept|erased line=N rule=dup32|-. ========
+fn findab w ulong to ulong
+i = ulong 0
+while lt i get nab 0
+if eq get ab_name i w
+ret add i 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note abty: the current word (not a type word) as an abstract type; anything else is error 16
+fn abty to ulong
+a = findab get tw 0
+if eq a 0
+fail 16
+end
+ret add a 63
+end
+
+note opbit: the ops bit of a preserving operation (rotr rotl and or xor), else 0
+fn opbit c ulong to ulong
+if eq c 59
+ret 1
+end
+if eq c 60
+ret 2
+end
+if eq c 38
+ret 4
+end
+if eq c 39
+ret 8
+end
+if eq c 40
+ret 16
+end
+ret 0
+end
+
+note s_abstract: abstract NAME uint|ulong [ops W ..] (another type is error 7, another op word 16)
+fn s_abstract to void
+if ne get nf 0 0
+fail 9
+end
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+w = get tw 0
+if ne kw w 0
+fail 16
+end
+newname w get tl 0 get ts 0
+n = get nab 0
+if ge n 16
+fail 14
+end
+put ab_len n get tl 0
+t = typeword
+if and ne t 4 ne t 5
+fail 7
+end
+ops = ulong 0
+tok
+if eq get tk 0 1
+if or gt get tl 0 8 ne kw get tw 0 196
+fail 5
+end
+go = true
+while go
+tok
+k = get tk 0
+if or eq k 0 eq k 3
+go = false
+else
+if or ne k 1 gt get tl 0 8
+fail 16
+end
+b = opbit kw get tw 0
+if eq b 0
+fail 16
+end
+ops = or ops b
+end
+end
+else
+if and ne get tk 0 0 ne get tk 0 3
+fail 5
+end
+end
+put ab_name n w
+put ab_base n uchar t
+put ab_ops n ops
+put nab 0 add n 1
+end
+
+note s_holds: holds NAME dup32 (ulong representation only); any other predicate is error 28 on this line
+fn s_holds to void
+if ne get nf 0 0
+fail 9
+end
+tok
+if ne get tk 0 1
+fail 16
+end
+a = ulong 0
+if le get tl 0 8
+a = findab get tw 0
+end
+if eq a 0
+fail 16
+end
+a = sub a 1
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 28
+end
+if or ne get tl 0 5 ne get tw 0 215611372900
+fail 28
+end
+if ne get ab_base a 5
+fail 28
+end
+if ne get ab_holds a 0
+fail 10
+end
+put ab_holds a 1
+eol
+end
+
+note ab_entry: function f (index) is the entry of a function-mode unit: no abstract parameter or result
+fn ab_entry f ulong to void
+if eq get om2 0 0
+ret
+end
+if ne get scanning 0 0
+ret
+end
+if ne get progmode 0 0
+ret
+end
+if ne add f 1 get nf 0
+ret
+end
+if ge get fn_ret f 64
+fail 7
+end
+i = ulong 0
+while lt i ulong get fn_np f
+if ge get fn_pt add mul f 6 i 64
+fail 7
+end
+i = add i 1
+end
+end
+
+note ab_open: open v (the value read): an abstract value becomes its representation type
+fn ab_open to void
+t = get rt 0
+if lt t 64
+fail 7
+end
+put rt 0 ulong get ab_base sub t 64
+end
+
+note ab_seal: seal NAME v, only in the function NAMEmk (inlined or not) returning NAME (else error 28)
+fn ab_seal to void
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+a = ulong 0
+if and eq get tk 0 1 le get tl 0 8
+a = findab get tw 0
+end
+if eq a 0
+fail 16
+end
+a = sub a 1
+fe = get curfn 0
+if ne get inl 0 0
+fe = get il_fn sub get inl 0 1
+end
+if eq ab_ctor fe a 0
+fail 28
+end
+t = ulong get ab_base a
+rdval 0 t 255 0
+if ne get rt 0 t
+fail 7
+end
+r = matreg get rk 0 get rv 0 get rt 0
+if ne get ab_holds a 0
+ab_check fe a r
+end
+put rk 0 1
+put rv 0 r
+put rt 0 add a 64
+end
+
+note ab_ctor: 1 when function fe (index + 1) is NAMEmk for abstract a and returns it
+fn ab_ctor fe ulong a ulong to ulong
+if eq fe 0
+ret 0
+end
+f = sub fe 1
+if ne ulong get fn_ret f add a 64
+ret 0
+end
+l = get ab_len a
+if ne get fn_nmlen f add l 2
+ret 0
+end
+o = get fn_off f
+w = get ab_name a
+i = ulong 0
+while lt i l
+if ne ulong get inp add o i and shr w shl i 3 255
+ret 0
+end
+i = add i 1
+end
+if ne get inp add o l 109
+ret 0
+end
+if ne get inp add add o l 1 107
+ret 0
+end
+ret 1
+end
+
+note ab_check: the dup32 check of a seal (value in r): erased for the exact body, else LSR Xt, Xr, #32
+note (UBFM, C6.2.487); CMP Xt, Wr, UXTW (SUBS extended, C6.2.463); B.NE trap 10
+fn ab_check fe ulong a ulong r ulong to void
+ex = ab_exact fe a
+if eq get om2m 0 1
+ab_rec ex
+end
+if eq ex 0
+t = alloc
+emit or or 3546348544 t shl r 5
+emit or or 3944759327 shl r 16 shl t 5
+trapc 1 10
+end
+end
+
+note ab_rec: omc-check 1 kept|erased line=N rule=dup32|- (om2 diag, with the omc-site records)
+fn ab_rec ex ulong to void
+sitew 7162245557575183727 8
+sitew 540090475 4
+if ne ex 0
+sitew 110386890240613 6
+else
+sitew 1953523051 4
+end
+sitew 67505853393952 6
+siten add get line 0 get lbase 0
+sitew 67505820627488 6
+if ne ex 0
+sitew 215611372900 5
+else
+siteb 45
+end
+siteb 10
+end
+
+note aw_next: the next word of the input from aw_p (blanks skipped, newlines counted in aw_nl)
+fn aw_next to void
+p = get aw_p 0
+e = get inlen 0
+nl = ulong 0
+go = true
+while and go lt p e
+b = get inp p
+if or eq b 32 eq b 9
+p = add p 1
+else
+if eq b 10
+nl = add nl 1
+p = add p 1
+else
+go = false
+end
+end
+end
+w = ulong 0
+l = ulong 0
+go2 = true
+while and go2 lt p e
+c = get inp p
+if or or eq c 32 eq c 9 eq c 10
+go2 = false
+else
+if lt l 8
+w = or w shl ulong c shl l 3
+end
+l = add l 1
+p = add p 1
+end
+end
+put aw_p 0 p
+put aw_w 0 w
+put aw_l 0 l
+put aw_nl 0 nl
+end
+
+note aw_is: the next word is w (length l) after exactly nl newlines
+fn aw_is w ulong l ulong nl ulong to ulong
+aw_next
+if ne get aw_w 0 w
+ret 0
+end
+if ne get aw_l 0 l
+ret 0
+end
+if ne get aw_nl 0 nl
+ret 0
+end
+ret 1
+end
+
+note ab_upar: x (length xl) is a uint scalar parameter of function f (index)
+fn ab_upar f ulong x ulong xl ulong to ulong
+if gt xl 8
+ret 0
+end
+i = ulong 0
+while lt i ulong get fn_np f
+p = add mul f 6 i
+if eq get fn_pn p x
+if eq get fn_pk p 0
+if eq get fn_pt p 4
+ret 1
+end
+end
+end
+i = add i 1
+end
+ret 0
+end
+
+note ab_exact: the body of constructor fe is exactly `ret seal NAME or shl ulong x 32 ulong x` then `end`
+fn ab_exact fe ulong a ulong to ulong
+f = sub fe 1
+put aw_p 0 get fn_body f
+if eq aw_is 7628146 3 0 0
+ret 0
+end
+if eq aw_is 1818322291 4 0 0
+ret 0
+end
+if eq aw_is get ab_name a get ab_len a 0 0
+ret 0
+end
+if eq aw_is 29295 2 0 0
+ret 0
+end
+if eq aw_is 7104627 3 0 0
+ret 0
+end
+if eq aw_is 444234427509 5 0 0
+ret 0
+end
+aw_next
+if ne get aw_nl 0 0
+ret 0
+end
+x = get aw_w 0
+xl = get aw_l 0
+if eq ab_upar f x xl 0
+ret 0
+end
+if eq aw_is 12851 2 0 0
+ret 0
+end
+if eq aw_is 444234427509 5 0 0
+ret 0
+end
+if eq aw_is x xl 0 0
+ret 0
+end
+if eq aw_is 6581861 3 1 0
+ret 0
+end
+aw_next
+if and ne get aw_l 0 0 eq get aw_nl 0 0
+ret 0
+end
+ret 1
+end
+
+note ab_bin: a binary operation whose operand (fr[x..x+5]) is abstract: only a listed preserving one, run
+note on the representation type T and giving NAME; rotr/rotl take a T count (E9), and/or/xor two NAME values
+fn ab_bin c ulong dst ulong x ulong to void
+at = get fr add x 2
+if lt at 64
+fail 7
+end
+a = sub at 64
+b = opbit c
+if eq b 0
+fail 7
+end
+if eq and get ab_ops a b 0
+fail 7
+end
+t = ulong get ab_base a
+bk = get fr add x 3
+bt = get fr add x 5
+if or eq c 59 eq c 60
+if eq bk 2
+range get fr add x 4 t bt
+put fr add x 3 3
+else
+if ne bt t
+fail 7
+end
+end
+else
+if ne bt at
+fail 7
+end
+end
+put fr add x 2 t
+put fr add x 5 t
+binop c dst x
+put rt 0 at
+end
+
 note ======== OM-2 section 5: fresh scratch (spec 5, erratum E8). `NAME edit T N fresh` (N <= 64): the
 note incoming elements are unspecified. Each such array has a written set (bit i: element i definitely
 note written on the path being compiled). A put with a number index (after unrolling and inlining) sets
@@ -8551,8 +9077,19 @@ end
 if ne get tk 0 1
 ret 0
 end
+if gt get tl 0 8
+ret 0
+end
 if eq get tw 0 128047730221420
 s_layout
+ret 1
+end
+if eq get tw 0 8386654075301880417
+s_abstract
+ret 1
+end
+if eq get tw 0 495606067048
+s_holds
 ret 1
 end
 ret 0

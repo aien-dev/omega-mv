@@ -710,6 +710,20 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   what it wrote. Passing the array to a non-inline call, `read`, `write` or a host operation is error
   27 on that line; an inline callee works on the same set, and its own `fresh` parameter starts empty.
   At most 16 fresh arrays per function, inline ones included (error 14). The generated code is unchanged.
+- **Abstract types.** `abstract NAME T [ops W ...]` (T `uint` or `ulong`, else error 7; W from `rotr rotl
+  and or xor`, else error 16) and `holds NAME dup32`, at top level before the first `fn` (error 9 after
+  it). NAME is a type distinct from T. A value of it is made only by `seal NAME v` (v of type T) in the
+  function named NAME followed by `mk` that returns NAME, inlined or not; a `seal` anywhere else is
+  error 28 (`obligation=ctor`) on its line. `open v` gives the T value. A T value or a number where NAME
+  is needed, a conversion, comparison or any operation on it not listed by `ops`, an array or struct
+  field or `const` of it, `sizeof`/`bitcast` of it, and NAME as a parameter or result of the entry of a
+  function-mode unit are error 7. Listed operations run on T and give NAME: `rotr`/`rotl` of NAME by a T
+  count (E9; 64 traps 7), `and`/`or`/`xor` of two NAME values. `holds NAME dup32` (ulong only; any
+  other predicate, or a uint NAME, is error 28 on the holds line) makes every seal check high32 ==
+  low32 at run time (LSR, CMP UXTW, B.NE trap 10), except when the constructor's body is exactly the
+  line `ret seal NAME or shl ulong x 32 ulong x`, x a uint parameter, then `end` (the check is erased,
+  rule `dup32`: uint values are held zero-extended). With `om2 diag` each seal compiled writes
+  `omc-check 1 kept|erased line=N rule=dup32|-` (N the seal line) with the omc-site records.
 
 ## 10. Native host extension (2026-10-23)
 
