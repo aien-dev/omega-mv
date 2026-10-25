@@ -2,7 +2,7 @@ Owner-signed realization receipt (receipt v1, spec/one-layer-receipts.md): the p
 section 11. PUBLIC data only.
 
 Program:   a01.ir and a01.code are section 1 (OSC IR, 109 bytes) and section 2 (code, 164 bytes) of aienos
-           native/kernel/tests/fixtures/osc_unit/vectors/a01_valid_min.unit at aien-spark/aienos 69abd96c45d2
+           native/kernel/tests/fixtures/osc_unit/vectors/a01_valid_min.unit at aien-dev/aienux 69abd96c45d2
            (unit sha256 5711ca0a71062f7df709bde41ed80c8e724f4826b886ecc9b0ceb55f80682da4). Each section was extracted
            the way aienos tests/fixtures/osc_receipt/make-receipts.sh does it and hashes to its section-table entry:
            ir_sha256   084803c232dc44effcc44704c9ed0600dec1231451e0b76693633e98a48d1a1d
