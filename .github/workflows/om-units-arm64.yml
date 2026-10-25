@@ -36,3 +36,4 @@ jobs:
           cc -O2 -Isrc -c /tmp/oracle.c -o /tmp/oracle.o
           cc -O2 -Isrc om/sha256/parity/bench.c /tmp/new.o /tmp/oracle.o -o /tmp/bench -pthread
           /tmp/bench
+          cc -O2 -Isrc om/sha256/parity/small.c /tmp/new.o /tmp/oracle.o -o /tmp/small -pthread && /tmp/small

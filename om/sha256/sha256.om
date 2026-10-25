@@ -13,6 +13,8 @@ note   op 0  init: count 0, FIPS initial hash value
 note   op 1  absorb b[0..n), n <= 4096, with src/sha256.c's buffering rules
 note   op 2  final: pad, absorb the bit length, write the 32-byte digest into o
 note   op 3  one shot: the digest of b[0..n), n < 4096, written into o; c is not used
+note w is the caller's scratch for the message schedule (64 words, contents ignored and overwritten):
+note Omega writes every word before reading it, so the caller need not clear it.
 note n > 4096 traps 3; any other op traps 9.
 
 note little-endian word of nb bytes at byte offset p of the context
@@ -880,11 +882,10 @@ end
 end
 
 note absorb b[0..n), n <= 4096, exactly as src/sha256.c sha256_update does for that piece
-fn absorb c edit uchar 104 b view uchar 4096 n ulong to void
+fn absorb c edit uchar 104 b view uchar 4096 n ulong w edit ulong 64 to void
 if gt n 4096
 trap 3
 end
-w = new ulong 64 0
 h = new uint 8 0
 cnt = getle c 32 8
 bi = and cnt 63
@@ -941,8 +942,7 @@ end
 end
 
 note compress the context's own block buffer (bytes 40..103) into its hash words
-fn compbuf c edit uchar 104 to void
-w = new ulong 64 0
+fn compbuf c edit uchar 104 w edit ulong 64 to void
 h = new uint 8 0
 loadh c h
 schedc c w
@@ -962,13 +962,13 @@ end
 note sha256_final of src/sha256.c, padding in place: 0x80, zeros to 56 mod 64 (one more block
 note when the pending part is 56 bytes or more), the 64-bit big-endian bit count, then the digest.
 note The count field is left as it was (src/sha256.c adds the padding to it; nothing reads it after).
-fn final c edit uchar 104 o edit uchar 32 to void
+fn final c edit uchar 104 o edit uchar 32 w edit ulong 64 to void
 cnt = getle c 32 8
 bi = and cnt 63
 put c add 40 bi 128
 zbuf c add bi 1 64
 if ge bi 56
-compbuf c
+compbuf c w
 zbuf c 0 56
 end
 bits = mul cnt 8
@@ -976,7 +976,7 @@ for i ulong 8
 sh = mul sub 7 i 8
 put c add 96 i uchar and shr bits sh 255
 end
-compbuf c
+compbuf c w
 digest c o
 end
 
@@ -1070,11 +1070,10 @@ ret shl v mul sub 3 nr 8
 end
 
 note SHA-256 of b[0..n), n < 4096, with the state in locals only (sha256_hash's short path)
-fn oneshot b view uchar 4096 n ulong o edit uchar 32 to void
+fn oneshot b view uchar 4096 n ulong o edit uchar 32 w edit ulong 64 to void
 if ge n 4096
 trap 3
 end
-w = new ulong 64 0
 h = new uint 8 0
 initiv h
 off = ulong 0
@@ -1087,21 +1086,21 @@ tail h b off n w
 digesth h o
 end
 
-fn omsha c edit uchar 104 b view uchar 4096 n ulong op ulong o edit uchar 32 to void
+fn omsha c edit uchar 104 b view uchar 4096 n ulong op ulong o edit uchar 32 w edit ulong 64 to void
 if eq op 0
 init c
 ret
 end
 if eq op 1
-absorb c b n
+absorb c b n w
 ret
 end
 if eq op 2
-final c o
+final c o w
 ret
 end
 if eq op 3
-oneshot b n o
+oneshot b n o w
 ret
 end
 trap 9

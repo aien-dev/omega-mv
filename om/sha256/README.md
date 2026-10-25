@@ -39,13 +39,13 @@ array in the ABI.
 ## Limits
 
 - Throughput (`parity/bench.c`, 64 MiB and 200,000 x 32 bytes), against the C it replaced compiled
-  with gcc -O2 on the same machine: GB10 245.0 MB/s against 202.8 MB/s, 0.30 us against 0.34 us per
+  with gcc -O2 on the same machine: GB10 245.6 MB/s against 202.8 MB/s, 0.29 us against 0.34 us per
   32-byte `sha256_hash`; the hosted ARM64 runner's numbers are in the om-units-arm64 job log. The
   speed comes from the source, not the compiler: working words in `ulong` cells whose low 32 bits are
   the value (add/and/xor need no masks), a rotate as one shift of the word duplicated into both halves
   (omc has no rotate; a masked rotate costs 4 instructions), the 64 rounds unrolled with rotating local
   names (no moves, no stores), K as immediates, blocks read in place, and a one-shot path (op 3) for
-  inputs under 4096 bytes that never touches `sha256_ctx`. 35 instructions per round. The first
+  inputs under 4096 bytes that never touches `sha256_ctx`, and the message-schedule scratch lent by the C caller (no zero fill per call). 35 instructions per round; `parity/small.c` times lengths 0..200. The first
   port ran at 37.7 MB/s.
 - After `sha256_final` the context's buffer and count fields differ from the C (padding is built
   in place and the count is not advanced). No caller reads a finished context; digests are identical.
