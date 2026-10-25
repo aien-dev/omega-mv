@@ -94,3 +94,22 @@ edit). Unsized parameters are allowed on internal functions, not only on exporte
   unrolled loop's counter, from outer to inner and joined by `.` (for example `iter=3.15`), or `-`.
 - OM-1 shifts accept a shift amount of a different type. OM-2 `rotr`/`rotl` require the same type;
   this stricter rule applies to OM-2 words only.
+
+## E8 (QualPhaseB L836, 2026-10-25): codes and lines for §5/§6 refusals
+
+- A `fresh` with N > 64 is error 14 (`obligation=init`).
+- An abstract type used as an entry parameter or return, or as an array element type, is error 7.
+- An operation on an abstract value that its `abstract` line does not list is error 7.
+- A field access with the wrong arity: a missing index on an array field (any COUNT) is error 4; an
+  extra index on a scalar field is error 5.
+- Layout SIZE 0 or > 4096, and a `layout` after the first `fn`, are error 29 (`obligation=layout`).
+- `part` anywhere other than as a call argument is error 9.
+- Which line each error names:
+  - error 27: the offending `get` or call line;
+  - error 28: the `seal` line, or the `holds` line for a bad predicate;
+  - error 29: the offending `field` line, or the `layout` line for a SIZE error.
+- Confirmed as written:
+  - `rotr` of a dup32 value with n = 64 traps 7;
+  - `omc-check` records name the constructor's `ret seal` line;
+  - for layout fields, a constant out-of-range index is error 21, a `put` through a view is error 20,
+    and an array of the wrong size is error 7.
