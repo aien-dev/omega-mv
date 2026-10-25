@@ -1,0 +1,14 @@
+note S3 fresh refusal
+om2
+fn g t view uchar 8 to ulong
+ret 0
+end
+fn f s edit uchar 8 fresh to ulong
+for i ulong 8 unroll
+put s i 1
+end
+ret g s
+end
+fn main to int
+ret 0
+end

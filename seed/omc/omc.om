@@ -166,6 +166,21 @@ global lymap uchar 4096
 global nm_lay uchar 1024
 global fn_play uchar 3072
 
+note ---- OM-2 section 5 fresh scratch (erratum E8). fn_pfr: 1 for a `fresh` parameter slot. nm_fr: the
+note written-set slot (index + 1) a name's elements are tracked in, else 0. fz_n slots in use by the
+note function being compiled (16), fz_len their N, fz_cur the elements definitely written on the path
+note being compiled (bit i for element i); fz_ent / fz_thn (16 per block): the sets when the block opened
+note and at its else. il_fz: fz_n when an inline frame opened. dobx 1: error 14 reports obligation=init ----
+global fn_pfr uchar 3072
+global nm_fr uchar 1024
+global fz_n ulong 1
+global fz_len ulong 16
+global fz_cur ulong 16
+global fz_ent ulong 8192
+global fz_thn ulong 8192
+global il_fz ulong 8
+global dobx ulong 1
+
 note ======== leaf helpers ========
 
 note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
@@ -350,6 +365,10 @@ ret
 end
 if eq code 21
 mputw 126875187113826 6
+ret
+end
+if and eq code 14 ne get dobx 0 0
+mputw 1953066601 4
 ret
 end
 if eq code 14
@@ -2284,6 +2303,7 @@ put nm_len n ln
 put nm_kind n uchar k
 put nm_addr n a
 put nm_lay n 0
+put nm_fr n 0
 put nn 0 add n 1
 end
 
@@ -2556,6 +2576,7 @@ put breg n reg
 put btyp n ty
 put bdead n 0
 put nb 0 add n 1
+fz_push n
 end
 
 fn pushnh names ulong hd ulong to void
@@ -3844,6 +3865,7 @@ put fr add x 10 get rv 0
 end
 
 fn vs_arr c ulong e ulong to void
+fz_arg e
 if ge get nm_kind sub e 1 6
 fail 7
 end
@@ -4127,6 +4149,7 @@ end
 if ne writable 0
 vs_arr 53 e
 end
+fz_arg e
 put fr add x 20 e
 harg x 0 5
 harg x 1 5
@@ -5468,6 +5491,7 @@ if ge get fn_pk p 6
 ca_st fe i cb
 else
 ca_arr fe i cb
+fz_arg get rt 0
 end
 end
 i = add i 1
@@ -5680,6 +5704,7 @@ vdec
 ret
 end
 rdval 0 5 255 0
+fz_get e
 vt_get e dst
 vdec
 ret
@@ -6021,6 +6046,12 @@ t = typeword
 elemtype t
 ln = lenval 16
 arrlen ln
+if ne get om2 0 0
+if eq peekw 183
+tok
+fz_par f np k ln
+end
+end
 else
 if eq c 88
 t = ulong 10
@@ -6036,6 +6067,7 @@ end
 end
 end
 addname pw poolc np t ln k 0
+fz_bind add mul f 6 np ln
 p = add mul f 6 np
 put fn_pt p uchar t
 put fn_pl p ln
@@ -6125,6 +6157,7 @@ put lastfn 0 add f 1
 put fn_addr f get oc 0
 put fstart 0 get oc 0
 put fuel 0 0
+put fz_n 0 0
 end
 put nn 0 get nglob 0
 np = ulong 0
@@ -6306,6 +6339,7 @@ if ne get rt 0 t
 fail 7
 end
 v = matreg get rk 0 get rv 0 get rt 0
+fz_put e ik iv
 elemaddr e ik iv it
 stel t v
 eol
@@ -6449,6 +6483,7 @@ emit 335544320
 patch19 get bbr i get oc 0
 put bkind i 2
 put bbr i b
+fz_else i
 put nn 0 get bnames i
 put held 0 get bheld i
 put bdead i get dead 0
@@ -6781,6 +6816,7 @@ matconst r v
 end
 end
 inl_add p r
+fz_inl p get fr add q 2
 end
 
 note inl_add: the name of parameter slot p on register r (a view struct is name kind 8, an edit one 7)
@@ -6847,6 +6883,7 @@ put il_ns lv ns
 put il_res lv rres
 put il_fn lv fe
 put il_p0 lv get nilp 0
+put il_fz lv get fz_n 0
 inl_bind fe cb
 pushb 0 6 0 fe 0
 pushnh get il_nn lv get il_held lv
@@ -6945,6 +6982,7 @@ put nslot 0 get il_ns lv
 put dead 0 0
 put inl 0 lv
 put fzone 0 sub get fzone 0 1
+put fz_n 0 get il_fz lv
 put rk 0 1
 put rv 0 get il_res lv
 put rt 0 ulong get fn_ret sub fe 1
@@ -7412,6 +7450,7 @@ ret
 end
 put nb 0 i
 k = get bkind i
+fz_join i k
 if eq k 2
 put dead 0 and get dead 0 get bdead i
 else
@@ -8327,6 +8366,150 @@ tmp = alloc
 idx = alloc
 st_write r tmp idx si
 addname w r add si 16 cells 6 0
+end
+
+note ======== OM-2 section 5: fresh scratch (spec 5, erratum E8). `NAME edit T N fresh` (N <= 64): the
+note incoming elements are unspecified. Each such array has a written set (bit i: element i definitely
+note written on the path being compiled). A put with a number index (after unrolling and inlining) sets
+note its bit; a get with a number index needs its bit, any other get all N bits (else error 27,
+note obligation=init). Joins: an if without else, a while and a rolled for keep the set they opened with;
+note an if/else takes the intersection of its arms (or the arm that does not end in ret); an unrolled
+note body and an inlined body keep what they wrote. Passing the array to a non-inline call, read, write or
+note a host operation is error 27; an inline callee works on the same set. ========
+note fz_par: parameter slot f*6+np of kind k with N = ln is fresh: an edit only (else 16), N <= 64 (else 14)
+fn fz_par f ulong np ulong k ulong ln ulong to void
+if ne k 3
+fail 16
+end
+if gt ln 64
+put dobx 0 1
+fail 14
+end
+put fn_pfr add mul f 6 np 1
+end
+
+note fz_bind: the parameter name just added for slot p gets a new written set in the body pass
+fn fz_bind p ulong ln ulong to void
+if eq get fn_pfr p 0
+ret
+end
+if ne get scanning 0 0
+ret
+end
+fz_new sub get nn 0 1 ln
+end
+
+note fz_new: a new, empty written set of N elements for name index n (16 per function, error 14)
+fn fz_new n ulong ln ulong to void
+s = get fz_n 0
+if ge s 16
+put dobx 0 1
+fail 14
+end
+put fz_len s ln
+put fz_cur s 0
+put nm_fr n uchar add s 1
+put fz_n 0 add s 1
+end
+
+note fz_inl: an inline parameter slot p bound to array name e: its own fresh set, or e's set
+fn fz_inl p ulong e ulong to void
+pk = ulong get fn_pk p
+if or eq pk 0 ge pk 6
+ret
+end
+n = sub get nn 0 1
+if ne get fn_pfr p 0
+fz_new n get fn_pl p
+ret
+end
+put nm_fr n get nm_fr sub e 1
+end
+
+note fz_push / fz_else / fz_join: the sets when block n opens; at its else (the then sets kept, the
+note opening sets back); at its end (kind k: 1 if, 2 else, 3 while, 4 for)
+fn fz_push n ulong to void
+j = ulong 0
+while lt j get fz_n 0
+put fz_ent add mul n 16 j get fz_cur j
+j = add j 1
+end
+end
+
+fn fz_else i ulong to void
+j = ulong 0
+while lt j get fz_n 0
+x = add mul i 16 j
+put fz_thn x get fz_cur j
+put fz_cur j get fz_ent x
+j = add j 1
+end
+end
+
+fn fz_join i ulong k ulong to void
+td = get bdead i
+ed = get dead 0
+j = ulong 0
+while lt j get fz_n 0
+x = add mul i 16 j
+if eq k 2
+v = and get fz_cur j get fz_thn x
+if and ne td 0 eq ed 0
+v = get fz_cur j
+end
+if and ne ed 0 eq td 0
+v = get fz_thn x
+end
+put fz_cur j v
+else
+put fz_cur j get fz_ent x
+end
+j = add j 1
+end
+end
+
+note fz_get: get e i with the index in rk/rv/rt
+fn fz_get e ulong to void
+s = ulong get nm_fr sub e 1
+if eq s 0
+ret
+end
+s = sub s 1
+n = get fz_len s
+if eq get rk 0 3
+v = get rv 0
+if lt v n
+if eq and shr get fz_cur s v 1 0
+fail 27
+end
+end
+ret
+end
+if ne get fz_cur s fmask n
+fail 27
+end
+end
+
+note fz_put: put e i v with index (k, v): a number index sets its bit
+fn fz_put e ulong k ulong v ulong to void
+s = ulong get nm_fr sub e 1
+if eq s 0
+ret
+end
+s = sub s 1
+if eq k 3
+if lt v get fz_len s
+put fz_cur s or get fz_cur s shl ulong 1 v
+end
+end
+end
+
+note fz_arg: array name e leaves the analysis (a non-inline call, read, write, a host operation): error 27
+note when it is tracked
+fn fz_arg e ulong to void
+if ne get nm_fr sub e 1 0
+fail 27
+end
 end
 
 note ======== OM-2 section 5: external layouts (spec 5, errata E5, E8, E9). `layout NAME SIZE`, then one

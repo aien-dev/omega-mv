@@ -700,6 +700,16 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   error 21, a run-time one traps 3. A missing index on an array field is error 4, an extra one on a
   scalar field error 5, `put` through a view error 20. Any other word after `c` reads it as the plain
   `uchar` array (`get c i`, `len c`, passing it on). Structs (9.7) are unchanged.
+- **Fresh scratch.** A parameter `s edit T N fresh` (N at most 64, else error 14 `obligation=init`; on
+  a view error 16) has unspecified incoming elements. omc tracks, per such array, which elements are
+  definitely written on the path being compiled: a `put` with a number index (after unrolling,
+  inlining and folding) marks its element; a `get` with a number index needs that element, any other
+  `get` all N (else error 27, `obligation=init`, on the get line). An if without else, a while and a
+  rolled for leave the set as it was when they opened (no induction); an if/else keeps the elements
+  written in both arms, or in the arm that does not end in `ret`; an unrolled or inlined body keeps
+  what it wrote. Passing the array to a non-inline call, `read`, `write` or a host operation is error
+  27 on that line; an inline callee works on the same set, and its own `fresh` parameter starts empty.
+  At most 16 fresh arrays per function, inline ones included (error 14). The generated code is unchanged.
 
 ## 10. Native host extension (2026-10-23)
 

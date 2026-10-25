@@ -1,0 +1,4 @@
+S3 feature 2 (fresh scratch, spec 5, erratum E8; L834), evidence class HOST. omc f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97 (birth stage1 == stage2 == stage3). Runner gate-c 6c8691c2...acefa.
+C2 5876/5876; s1 48/48; s2 21/21; s3 42/42; mutants s1 8/8, s2 7/7, s3 10/10 detected (12 controls PASS); s5s7 section 5 rows l5 + f5 35/35.
+birth, seed/host/check.sh, tests/gates/run.sh seed (0 SKIP), om-units (OMC_PIN moved), qualify-ir-trap: RC=0.
+NOT_RUN: gate5 section 7 timing; s5s7 f5-part (needs part / unsized views, section 6); a5-* (abstract types, next commit).

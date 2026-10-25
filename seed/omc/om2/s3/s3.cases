@@ -30,3 +30,20 @@ s3-fuel-d2 run seed/omc/om2/s3/fuel-d2.om - - - 0
 s3-fuel-d3 emit seed/omc/om2/s3/fuel-d3.om - err:6:14 14
 s3-fuel-inl14 run seed/omc/om2/s3/fuel-inl14.om - - - 0
 s3-fuel-inl16 emit seed/omc/om2/s3/fuel-inl16.om - err:15:14 14
+## fresh
+s3-f-ok run seed/omc/om2/s3/f-ok.om - - - 0
+s3-f-om1 run seed/omc/om2/s3/f-om1.om - - - 5
+s3-f-bad-ifonly emit seed/omc/om2/s3/f-bad-ifonly.om - err:7:27 27
+s3-f-bad-join emit seed/omc/om2/s3/f-bad-join.om - err:9:27 27
+s3-f-bad-loop emit seed/omc/om2/s3/f-bad-loop.om - err:7:27 27
+s3-f-bad-loopc emit seed/omc/om2/s3/f-bad-loopc.om - err:7:27 27
+s3-f-bad-partial emit seed/omc/om2/s3/f-bad-partial.om - err:7:27 27
+s3-f-bad-self emit seed/omc/om2/s3/f-bad-self.om - err:4:27 27
+s3-f-bad-call emit seed/omc/om2/s3/f-bad-call.om - err:10:27 27
+s3-f-bad-write emit seed/omc/om2/s3/f-bad-write.om - err:7:27 27
+s3-f-bad-read emit seed/omc/om2/s3/f-bad-read.om - err:4:27 27
+s3-f-bad-inl emit seed/omc/om2/s3/f-bad-inl.om - err:4:27 27
+s3-f-bad-inlfresh emit seed/omc/om2/s3/f-bad-inlfresh.om - err:4:27 27
+s3-f-bad-n65 refuse seed/omc/om2/s3/f-bad-n65.om 14
+s3-f-bad-view refuse seed/omc/om2/s3/f-bad-view.om 16
+s3-f-bad-idx refuse seed/omc/om2/s3/f-bad-idx.om 21
