@@ -10,7 +10,6 @@ Rust->C only with --c-export (the G1 C exporter accepts C-member units only, so 
 from pathlib import Path
 import argparse,hashlib,json,os,random,shutil,struct,subprocess,sys,tempfile
 ROOT=Path(__file__).resolve().parents[3]
-HOME=Path.home()
 MASK=(1<<64)-1
 SEMDOM=b'omega.source.semantic.v1'
 CONTRACT=hashlib.sha256((ROOT/'spec/universal/semantics.md').read_bytes()).digest()
@@ -125,10 +124,10 @@ def vectors(nargs,rng):
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--out',required=True)
-    ap.add_argument('--c-import',default=str(HOME/'workspace/universal-read/build/L589/c-import'))
-    ap.add_argument('--sa-root',default=str(HOME/'workspace/universal-read'))
+    ap.add_argument('--c-import',default=str(ROOT/'build/L589/c-import'),help='native C importer (default: in-tree build of mk/c-u64-import.mk)')
+    ap.add_argument('--sa-root',default=str(ROOT),help='checkout holding tools/source-aware/sa and build/L574/sa (default: this repo)')
     ap.add_argument('--c-export',default=os.environ.get('RUST_SELFTEST_C_EXPORT',''),help='public tools/adapters/c-export of a passing G1 checkout')
-    ap.add_argument('--rustc',default=shutil.which('rustc') or str(HOME/'.cargo/bin/rustc'))
+    ap.add_argument('--rustc',default=shutil.which('rustc') or 'rustc')
     ap.add_argument('--cc',default=os.environ.get('CC','cc'))
     a=ap.parse_args()
     out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)

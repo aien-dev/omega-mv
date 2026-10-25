@@ -136,8 +136,9 @@ tools/adapters/rust-export < calc.upper > exported.rs
 
 `tests/universal/translation/rust_selftest.py` (fixtures `fixtures-f2-rust.json`: all 35 F1 positives in
 this profile, `not_in_profile` empty, plus Rust refusal fixtures) checks per fixture: import; an
-independent decoder (header, fields, sidecar binding, spans); #621 `sa identity|decode|replay` from the
-reviewed universal-read build; N equality with the C import of the F1 source; export of the unit and of
+independent decoder (header, fields, sidecar binding, spans); #621 `sa identity|decode|replay` built
+in-tree (`mk/source-aware.mk`, overridable with `RUST_SA_ROOT`); N equality with the C import
+(`mk/c-u64-import.mk` in-tree build, overridable with `RUST_C_IMPORT`) of the F1 source; export of the unit and of
 R(U, C|Rust|Python) semantic-only (identical bytes); re-import identity; `rustc --edition 2021 -O -C
 overflow-checks=on` on the original and the exported Rust and `cc` on the F1 C, compared with a bigint
 evaluation of the records on the boundary vectors of `translation-v1.md` section 3 (all pairs for two
