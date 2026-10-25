@@ -117,7 +117,10 @@ x = uint 0
 y = uint 0
 for i ulong 16 unroll
 q = add o mul i 4
-put w i or or or shl uint get m q 24 shl uint get m add q 1 16 shl uint get m add q 2 8 uint get m add q 3
+x = uint get m q
+x = or shl x 8 uint get m add q 1
+x = or shl x 8 uint get m add q 2
+put w i or shl x 8 uint get m add q 3
 end
 for i ulong 48 unroll
 x = get w add i 1
@@ -131,6 +134,8 @@ note in each copy, so get kt i and get w i need no run-time check. uint arithmet
 note Ch(e,f,g) = (e and f) xor (not e and g) is written g xor (e and (f xor g)); Maj(a,b,c) =
 note (a and b) xor (a and c) xor (b and c) is written (a and b) or (c and (a or b)). Both are bitwise
 note identities. h first becomes T1, then T1 + T2, which is the next a; the names then shift by one.
+note The sums are built a term per line: with 12 names live, a one-line round body needs more than
+note the 16 registers omc hands out (error 12, seen under compiler-s1 in the reduced test unit).
 fn rounds s edit uint 8 w view uint 64 kt view uint 64 to void
 a = get s 0
 b = get s 1
@@ -142,9 +147,14 @@ g = get s 6
 h = get s 7
 t = uint 0
 for i ulong 64 unroll
-h = add add add add h xor xor rotr e 6 rotr e 11 rotr e 25 xor g and e xor f g get kt i get w i
+h = add h get kt i
+h = add h get w i
+h = add h xor xor rotr e 6 rotr e 11 rotr e 25
+h = add h xor g and e xor f g
 d = add d h
-h = add h add xor xor rotr a 2 rotr a 13 rotr a 22 or and a b and c or a b
+h = add h xor xor rotr a 2 rotr a 13 rotr a 22
+t = and c or a b
+h = add h or and a b t
 t = h
 h = g
 g = f
@@ -170,6 +180,32 @@ note one 16-register frame with this function's parameters (no spilling, error 1
 fn compress s edit uint 8 w edit uint 64 kt view uint 64 m view uchar * o ulong to void
 sched w m o
 rounds s w kt
+end
+
+note The whole blocks of m (len m is a multiple of 64 and at most 2^25, so under 2^19 passes).
+fn run s edit uint 8 w edit uint 64 kt view uint 64 m view uchar * to void
+for j ulong shr len m 6
+compress s w kt m shl j 6
+end
+end
+
+note The whole blocks of m (len m a multiple of 64). A rolled loop traps 4 after 1000000 passes
+note (OMEGESE.md section 2; omc s_for), so m is cut into runs of 2^25 bytes (2^19 blocks):
+note len m = top * 2^44 + mid * 2^25 + rest, and no loop passes 2^20 times. top reaches 1000000
+note only above 1.7e19 bytes, which no AArch64 address space holds.
+fn blocks s edit uint 8 w edit uint 64 kt view uint 64 m view uchar * to void
+q = ulong 0
+for a ulong shr len m 44
+for b ulong 0x80000
+run s w kt part m q 0x2000000
+q = add q 0x2000000
+end
+end
+for b ulong and shr len m 25 0x7ffff
+run s w kt part m q 0x2000000
+q = add q 0x2000000
+end
+run s w kt part m q sub len m q
 end
 
 note Pad the k pending bytes already in p (k < 64; p was all zero past them): 0x80, zeros, and the
@@ -221,9 +257,7 @@ end
 compress s w kt view blk 0
 end
 nb = shr sub n off 6
-for j ulong nb
-compress s w kt d add off shl j 6
-end
+blocks s w kt part d off shl nb 6
 off = add off shl nb 6
 for i ulong sub n off
 put c buf i get d add off i
@@ -284,9 +318,7 @@ kinit kt
 iv s
 n = len d
 nb = shr n 6
-for j ulong nb
-compress s w kt d shl j 6
-end
+blocks s w kt part d 0 shl nb 6
 off = shl nb 6
 k = sub n off
 for i ulong k
