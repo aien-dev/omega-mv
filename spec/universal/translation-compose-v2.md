@@ -38,9 +38,12 @@ not in the family 68, bad command 64. Output is byte-deterministic.
   importers do, and declare whether they append a normalization pair (compose-v1 section 3).
 - C++/Zig/Go exporters decode with the v2 codec and accept every member of the extended family.
 - The v1-core tools (`c-import`, `lower`, `c-export`, Rust and Python adapters) are unchanged and keep
-  refusing version 2 units (66). A composition into a v1-core exporter, and the native realization,
-  use `retarget`: `export_B(R(U_A, B))` and `lower(N(U_A))`. Moving those tools onto the v2 codec is a
-  separate change and not part of G3.
+  refusing version 2 units with empty stdout: the v1 codec `sa` with 66 (UNKNOWN_VERSION); the tools
+  with 65 (`*_MALFORMED`), because translation-v1 sections 5 and 6 map every decode failure other
+  than 68 to 65. (Amended 2026-10-25 after the Go lane measured 65; the first text said 66 for all.)
+  A composition into a v1-core exporter, and the native realization, use `retarget`:
+  `export_B(R(U_A, B))` and `lower(N(U_A))`. Moving those tools onto the v2 codec is a separate change
+  and not part of G3.
 
 ## 4. Compositions and evidence
 
