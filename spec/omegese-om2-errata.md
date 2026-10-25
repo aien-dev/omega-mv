@@ -189,3 +189,9 @@ replaced by:
 6. A `note` line inside a constructor body makes the body not exact, so the runtime check is kept.
 7. A missing index or value is error 4 reported on the next line (OM-1 behaviour). E8 fixes the lines
    only for errors 27, 28 and 29.
+
+## E16 (QualPhaseB L836, 2026-10-25): when fuel is charged
+
+Fuel (E14) is charged in source/emission order. An unrolled loop is charged K units when it starts, at
+its own line, before any copy is expanded. An inline expansion is charged 1 when it starts, at the call
+line. Error 14 names the line of the construct whose charge exceeds the fuel.
