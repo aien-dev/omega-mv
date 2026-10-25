@@ -1,4 +1,5 @@
-SC1-L relational comparison profile, version1
+SC1-L relational comparison profile, revision2
+Composition contract ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496.
 
 Source entry: compare32(a:view uchar32,b:view uchar32)->ulong.
 Public: both valid, stable entry addresses; fixed extent32; caller and runtime ABI.
@@ -27,12 +28,19 @@ Execution is sequential Linux AArch64 little-endian with OM-1 function ABI, main
 Scanner assumptions, decode subset and ABI invariant A1 remain those in pinned PR752 README.txt.
 No instruction latency, cache, speculation, branch predictor, power, OS scheduling, memory fault,
 shared-resource or physical-time property is claimed. No statistical timing test is a secrecy proof.
+The stronger SC1 revision2 policy separately forbids secret-dependent UDIV/SDIV. Current scanner
+taint propagation does not enforce that policy: dividend.om (secret dividend, constant divisor7,
+constant output0) scans PASS. It is UNQUALIFIED under that policy, not a successful negative kill.
+L4 division is BLOCKED pending the existing scanner owner's extension or reviewed division-free
+artifact admission. division.om's secret zero-check refusal does not close this gap.
 
-Controls: branch/helper/error/division entry x0 is secret; address x1 is secret and pointer x0 is
-public, with pub:0:0:16. public-branch has x0 public,x1 secret. public-address has x0 pointer public,
-x1 selector public,x2 secret, with pub:0:0:16. Initial public table words are7,7. For these controls
-only constant7 is disclosed except explicit error/early fixtures, whose observed outcomes are
-negative witnesses. Public declarations label content, not addresses; no blanket declassification.
+Controls: branch/helper/error/division/dividend entry x0 is secret; address x1 is secret and pointer
+x0 is public, with pub:0:0:16. public-branch has x0 public,x1 secret. public-address has x0 pointer
+public,x1 selector public,x2 secret, with pub:0:0:16. Initial public table words are7,7.
+dividend returns constant0 but still computes a secret-dependent division. Other scalar controls
+return constant7 except the explicit error/early fixtures. Public declarations label content,
+not addresses; no blanket declassification. For the omnet profile, request length and public
+candidate count/shape are public under SC1 revision2, not inferred secret-length hiding.
 
 Nondeterminism: source choice in{0,1} is independent of secret in{0,1}. Hold the same choice across
 a secret pair. The faulty lowering returns the secret, so ordinary per-run inclusion4/4 holds,
@@ -42,6 +50,9 @@ nondeterministic feature in omc and not a proof of hyperproperty-preserving comp
 Evidence classes: native paired functional execution; finite model enumeration; scanner finite
 static architectural evidence. Dynamic hardware instruction/address trace capture is NOT_RUN.
 Mechanized relational proof, general translation validation and signed receipts are NOT_RUN.
-The #623 owner must supply native relation plus authenticated target/model/disclosure/checker
-binding before promoting this evidence. Current gate hashes compiler and requested emitted bytes;
-it cannot infer or certify disclosure policy, target metadata or memory/leakage model.
+The #623/#624 owners must supply native relation plus authenticated target/model/disclosure/checker
+binding before promoting this evidence. Current gate re-derives recorded artifacts and pins
+requested emitted bytes; it cannot certify disclosure policy, target metadata or leakage model.
+L6 real daemon emitted-word plus call/return/observation correspondence is BLOCKED; byte containment
+inside this test harness does not qualify a real program-mode daemon. L7 remains a baseline audit
+and closure inventory, not qualification of the changed omnet proposal or whole secret closure.

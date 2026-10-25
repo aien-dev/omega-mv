@@ -1,6 +1,6 @@
 note SPDX-License-Identifier: Apache-2.0
 note Concatenate after compare32.om. Test assertions are outside scanned primitive.
-text ok "PASS L1 native: equal, every mismatch position, all256 bytes, paired unequal outputs\n"
+text ok "PASS L2 native: all32 positions x256 values x255 mismatches, paired complements, two-position and all32 flips\n"
 fn main to int
 a = new uchar 32 0
 b = new uchar 32 0
@@ -14,17 +14,45 @@ put b p uchar v
 if ne compare32 a b 1
 ret 12
 end
-put b p xor uchar v 1
+for k ulong 255
+put a p uchar v
+put b p xor uchar v uchar add k 1
 if ne compare32 a b 0
 ret 13
 end
-put a p xor uchar v 128
+put a p xor uchar v 255
+put b p xor get b p 255
 if ne compare32 a b 0
 ret 14
 end
 end
+end
 put a p 0
 put b p 0
+end
+for k ulong 255
+for j ulong 32
+put a j 0
+put b j 0
+end
+put b 0 uchar add k 1
+put b 1 uchar add k 1
+if ne compare32 a b 0
+ret 16
+end
+for j ulong 32
+put b j uchar add k 1
+end
+if ne compare32 a b 0
+ret 17
+end
+for j ulong 32
+put a j 255
+put b j xor get b j 255
+end
+if ne compare32 a b 0
+ret 18
+end
 end
 n = write 1 ok 0 len ok
 if ne n long len ok

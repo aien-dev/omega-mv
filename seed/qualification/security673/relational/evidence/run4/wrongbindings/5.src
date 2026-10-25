@@ -1,0 +1,2432 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/qualification/om2/leak/leakscan.om: static leakage scan of one omc FUNCTION-MODE artifact
+note (raw little-endian AArch64 words, entry word 0), contract spec/omegese-om2.md section 8, evidence (a)
+note (#748, ledger L836). Handwritten seeded Omega, OM-1, program mode, built by the pinned omc 734f0a39.
+note README.txt in this directory states the decode subset, the taint rules, the call rule and what is
+note MANUAL. The scan is a may-analysis: "data" means "may depend on data", never "proved to leak".
+note
+note Usage: leakscan [xN | pub:SLOT:OFF:LEN ...] < artifact. xN marks DATA (N 0..5).
+note pub declares public memory relative to entry xSLOT, fully contained in the half-open byte range.
+note Output, in this order: one LEAKSCAN line; per word, in word order, UNKNOWN, UNHANDLED, BRANCH and MEM
+note lines; one SUMMARY line; MANUAL-ITEMS when needed; one VERDICT line.
+note Exit status: 0 PASS, 1 FAIL (data address), 2 NOT_RUN (MANUAL), 90 usage, 91 invalid artifact.
+note
+note Taint state per word (the state on entry to the word): rm bit b is 1 when the value may be DATA;
+note bits 0..30 x0..x30, bit 31 the NZCV flags, bits 32..63 v0..v31. sm bit j is 1 when the 8 bytes
+note at [SP + 8j] (current SP) may hold DATA. dep is the bytes the SP is below the function's entry SP,
+note plus 1 (0: never reached). fid is the function's entry word.
+global inb uchar 8388612
+global wd uint 2097152
+global rm ulong 2097152
+global sm ulong 2097152
+global dep ulong 2097152
+global fid ulong 2097152
+global ex ulong 2097152
+global exs uchar 2097152
+global blt ulong 2097152
+global trp uchar 2097152
+global uh uchar 2097152
+global inq uchar 2097152
+global wl ulong 2097152
+global dc ulong 24
+global cu ulong 4
+global gv ulong 32
+global ob uchar 1048576
+global obn ulong 1
+global dig uchar 32
+global tbo ulong 128
+global tbl ulong 128
+global ab uchar 16
+global pab uchar 128
+note Exact provenance and E12 known-zero bits, allocated for reached words.
+note Tokens: tag:8 | signed-offset:56; tag 1 constant, tags 2..7 entry x0..x5 + offset, 0 unknown.
+note ps/pe point into pp (128 cells: 31 regs, AND-proof mask, 64 spill slots, 32 known-zero masks).
+note At most 131072 records; exhaustion is UNHANDLED provenance-cap and forces NOT_RUN.
+global pp ulong 16777216
+global ps ulong 2097152
+global pe ulong 2097152
+global pc ulong 128
+global pdecl ulong 96
+note E13 whole-artifact revocation: rv[word] lists the public-range bits revoked by that store.
+global rv ulong 2097152
+text revmsg "PUBLIC-MEM-REVOKED @"
+text pmsg "PUBLIC-DECL \nPUBLIC-MEM @\n public-mem \n+\n:\nprovenance-cap\nusage: leakscan [x0..x5 | pub:SLOT:OFF:LEN ...] < function-mode artifact\n"
+text e12 "data MANUAL\nVERDICT TRACE-EQUIV-STATIC NOT_RUN\n"
+note decoded fields, indices into dc
+const dkind ulong 0
+const dtgt ulong 1
+const ddst ulong 2
+const ds1 ulong 3
+const ds2 ulong 4
+const ds3 ulong 5
+const dfl ulong 6
+const dmk ulong 7
+const dmb ulong 8
+const dmi ulong 9
+const dmo ulong 10
+const dms ulong 11
+const dmt ulong 12
+const dmt2 ulong 13
+const dwb ulong 14
+const dmn ulong 15
+const dcc ulong 16
+const dspo ulong 17
+const dspa ulong 18
+const dmf ulong 19
+note gv: 0 words, 1 worklist size, 2 entry word, 3 DATA parameter bits, 4 len branches, 5 trap checks,
+note 6 data branches, 7 unreached branches, 8 const, 9 public-index, 10 data-index, 11 unreached memory,
+note 12 unknown, 13 unhandled, 14 branches, 15 memory accesses, 16 word 0 is the entry branch
+text tb "b\nbl\ncbz\ncbnz\ntbz\ntbnz\nret\nbr\nblr\nsvc\nldrb\nldrsb\nldrh\nldrsh\nldr\nldrsw\nstrb\nstrh\nstr\nldp\nstp\nldpsw\n?\nnop\ndsb\nb.eq\nb.ne\nb.cs\nb.cc\nb.mi\nb.pl\nb.vs\nb.vc\nb.hi\nb.ls\nb.ge\nb.lt\nb.gt\nb.le\nb.al\nb.nv\nLEAKSCAN 1 words=\n entry=@\n data=\nnone\nUNKNOWN @\nUNHANDLED @\nBRANCH @\nMEM @\n ->@\nlen\ndata never-taken-trap-check\ndata DATA-BRANCH\nunreached\nconst\npublic-index\ndata-index\n trap=\n base=\n index=\nsp\n-\n trap-tail\nSUMMARY branches=\n len=\n trap-check=\n data-branch=\n branch-unreached=\n mem=\n const=\n public-index=\n data-index=\n mem-unreached=\n unknown=\n unhandled=\nVERDICT TRACE-EQUIV-STATIC PASS\nVERDICT TRACE-EQUIV-STATIC FAIL\nVERDICT TRACE-EQUIV-STATIC MANUAL\n 0x\nusage: leakscan [x0..x5 ...] < function-mode artifact\nleakscan: input is not a function-mode artifact: empty, not whole words, ELF, or over 8 MiB\nimm\nreg\nunscaled\npost\npre\npair\nliteral\nunpriv\n?\nsp-write\nsp-writeback\nstack-escape\ndepth-mismatch\nshared-code\nret-depth\nret-x30-data\nbr-indirect\nblr-indirect\nsvc-syscall\nflow-out\nsp-underflow\nx7-write\nbelow-sp\n \nMANUAL-ITEMS \n listed above as UNKNOWN and UNHANDLED lines\n always\nx\n,\n"
+
+note ---- output ----------------------------------------------------------------------------------
+fn inittb to void
+k = ulong 0
+s = ulong 0
+for i ulong len tb
+if eq get tb i 10
+put tbo k s
+put tbl k sub i s
+k = add k 1
+s = add i 1
+end
+end
+end
+fn obf to void
+n = get obn 0
+o = ulong 0
+while lt o n
+r = write 1 ob o sub n o
+if le r 0
+exit 93
+end
+o = add o ulong r
+end
+put obn 0 0
+end
+fn ob1 b uchar to void
+n = get obn 0
+if ge n 1048000
+obf
+n = ulong 0
+end
+put ob n b
+put obn 0 add n 1
+end
+fn say id ulong to void
+o = get tbo id
+for i ulong get tbl id
+ob1 get tb add o i
+end
+end
+fn onl to void
+ob1 10
+end
+fn od v ulong to void
+x = v
+n = ulong 0
+while ge x 10
+put dig n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put dig n uchar add 48 x
+n = add n 1
+for i ulong n
+ob1 get dig sub sub n i 1
+end
+end
+fn hexd v ulong to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+fn oh v ulong to void
+for i ulong 8
+ob1 hexd and shr v mul sub 7 i 4 15
+end
+end
+note a register field: 255 "-", 31 "sp" (a base), else xN
+fn oreg r ulong to void
+if eq r 255
+say 61
+ret
+end
+if eq r 31
+say 60
+ret
+end
+say 108
+od r
+end
+fn inc k ulong to void
+put gv k add get gv k 1
+end
+
+note ---- bit helpers -----------------------------------------------------------------------------
+fn fld x ulong lo ulong n ulong to ulong
+ret and shr x lo sub shl ulong 1 n 1
+end
+note a general register field where 31 is the zero register (public, no state bit)
+fn gz r ulong to ulong
+if eq r 31
+ret 255
+end
+ret r
+end
+note sign extension of an n-bit field to 64 bits (two's complement in a ulong)
+fn sx v ulong n ulong to ulong
+if eq and shr v sub n 1 1 0
+ret v
+end
+ret or v not sub shl ulong 1 n 1
+end
+fn tnt r ulong b ulong to ulong
+if ge b 64
+ret 0
+end
+ret and shr r b 1
+end
+fn sbit r ulong b ulong v ulong to ulong
+if ge b 64
+ret r
+end
+m = shl ulong 1 b
+if eq v 0
+ret and r not m
+end
+ret or r m
+end
+
+note ---- decoder: the classes omc emits (README.txt lists them with their omc.om sources) ---------
+fn dclr to void
+for i ulong 24
+put dc i 255
+end
+put dc dkind 0
+put dc dfl 0
+put dc dmk 0
+put dc dwb 0
+put dc dmn 22
+put dc dspo 0
+put dc dspa 0
+put dc dmf 0
+put dc dtgt 0
+put dc dmo 0
+put dc dms 0
+end
+note kinds: 0 straight-line, 1 B, 2 BL, 3 B.cond, 4 CBZ/CBNZ, 5 TBZ/TBNZ, 6 RET, 7 BR, 8 BLR, 9 SVC,
+note 10 unknown, 11 no effect (NOP, DSB)
+fn dbr x ulong w ulong to bool
+m = and x 4227858432
+if eq m 335544320
+put dc dkind 1
+put dc dtgt add w sx and x 67108863 26
+put dc dmn 0
+ret true
+end
+if eq m 2483027968
+put dc dkind 2
+put dc dtgt add w sx and x 67108863 26
+put dc dmn 1
+ret true
+end
+if eq and x 4278190096 1409286144
+put dc dkind 3
+put dc dtgt add w sx fld x 5 19 19
+put dc dcc and x 15
+put dc dmn add 25 and x 15
+ret true
+end
+m = and x 2113929216
+if eq m 872415232
+put dc dkind 4
+put dc dtgt add w sx fld x 5 19 19
+put dc ds1 gz and x 31
+put dc dmn add 2 fld x 24 1
+ret true
+end
+if eq m 905969664
+put dc dkind 5
+put dc dtgt add w sx fld x 5 14 14
+put dc ds1 gz and x 31
+put dc dcc or shl fld x 31 1 5 fld x 19 5
+put dc dmn add 4 fld x 24 1
+ret true
+end
+m = and x 4294966303
+if eq m 3592355840
+put dc dkind 7
+put dc ds1 fld x 5 5
+put dc dmn 7
+ret true
+end
+if eq m 3594452992
+put dc dkind 8
+put dc ds1 fld x 5 5
+put dc dmn 8
+ret true
+end
+if eq m 3596550144
+put dc dkind 6
+put dc ds1 fld x 5 5
+put dc dmn 6
+ret true
+end
+if eq and x 4292870175 3556769793
+put dc dkind 9
+put dc dmn 9
+ret true
+end
+if eq x 3573751839
+put dc dkind 11
+put dc dmn 23
+ret true
+end
+if eq and x 4294963455 3573756063
+put dc dkind 11
+put dc dmn 24
+ret true
+end
+ret false
+end
+
+note ADD/SUB (immediate): Rn 31 is SP; Rd 31 is SP unless flags are set (then the zero register)
+fn daddi x ulong to void
+rd = and x 31
+rn = fld x 5 5
+if eq fld x 29 1 1
+put dc ddst gz rd
+put dc ds1 gz rn
+put dc dfl 2
+ret
+end
+if eq rd 31
+if eq rn 31
+put dc dspo add 1 fld x 30 1
+put dc dspa shl fld x 10 12 mul fld x 22 1 12
+ret
+end
+put dc dspo 3
+ret
+end
+put dc ddst rd
+put dc ds1 gz rn
+end
+fn dlogi x ulong to void
+rd = and x 31
+if eq fld x 29 2 3
+put dc dfl 2
+put dc ddst gz rd
+else
+if eq rd 31
+put dc dspo 3
+ret
+end
+put dc ddst rd
+end
+put dc ds1 gz fld x 5 5
+end
+fn dmovw x ulong to bool
+opc = fld x 29 2
+if eq opc 1
+ret false
+end
+put dc ddst gz and x 31
+if eq opc 3
+put dc dfl 4
+end
+ret true
+end
+fn dbfm x ulong to bool
+opc = fld x 29 2
+if eq opc 3
+ret false
+end
+put dc ddst gz and x 31
+put dc ds1 gz fld x 5 5
+if eq opc 1
+put dc dfl 4
+end
+ret true
+end
+note three-register forms: Rd, Rn, Rm (31 the zero register); fl as given
+fn d3r x ulong fl ulong to void
+put dc ddst gz and x 31
+put dc ds1 gz fld x 5 5
+put dc ds2 gz fld x 16 5
+put dc dfl fl
+end
+note ADD/SUB (extended register): Rn 31 is SP (public); Rd 31 is SP unless flags are set
+fn daddx x ulong to void
+rd = and x 31
+s = fld x 29 1
+if eq s 1
+put dc ddst gz rd
+put dc dfl 2
+else
+if eq rd 31
+put dc dspo 3
+ret
+end
+put dc ddst rd
+end
+put dc ds1 gz fld x 5 5
+put dc ds2 gz fld x 16 5
+end
+fn dalu x ulong to bool
+m = and x 528482304
+if eq m 285212672
+daddi x
+ret true
+end
+if eq m 301989888
+dlogi x
+ret true
+end
+if eq m 310378496
+ret dmovw x
+end
+if eq m 318767104
+ret dbfm x
+end
+if eq m 327155712
+if or ne fld x 29 2 0 ne fld x 21 1 0
+ret false
+end
+d3r x 0
+ret true
+end
+if eq and x 520093696 268435456
+put dc ddst gz and x 31
+ret true
+end
+if eq and x 520093696 167772160
+if eq fld x 29 2 3
+d3r x 2
+else
+d3r x 0
+end
+ret true
+end
+m = and x 522190848
+if eq m 184549376
+d3r x shl fld x 29 1 1
+ret true
+end
+if eq m 186646528
+daddx x
+ret true
+end
+m = and x 534773760
+if eq m 436207616
+if ne fld x 10 6 0
+ret false
+end
+d3r x or 1 shl fld x 29 1 1
+ret true
+end
+if eq m 440401920
+if eq fld x 29 1 0
+ret false
+end
+put dc ds1 gz fld x 5 5
+if eq fld x 11 1 0
+put dc ds2 gz fld x 16 5
+end
+put dc dfl 3
+ret true
+end
+if eq m 444596224
+if or ne fld x 29 1 0 ne fld x 11 1 0
+ret false
+end
+d3r x 1
+ret true
+end
+m = and x 1608515584
+if eq m 448790528
+d3r x 0
+ret true
+end
+if eq m 1522532352
+put dc ddst gz and x 31
+put dc ds1 gz fld x 5 5
+ret true
+end
+if eq and x 520093696 452984832
+d3r x 0
+put dc ds3 gz fld x 10 5
+ret true
+end
+ret false
+end
+note allocation checks (Arm ARM C4.1): an encoding of a decoded class that is unallocated, reserved
+note or outside the subset is UNKNOWN. bmok: the logical-immediate bitmask (DecodeBitMasks) is valid.
+fn bmok x ulong to bool
+n = fld x 22 1
+s = fld x 10 6
+if and eq fld x 31 1 0 eq n 1
+ret false
+end
+v = or shl n 6 and not s 63
+if eq v 0
+ret false
+end
+l = ulong 6
+while eq and shr v l 1 0 bound 8
+l = sub l 1
+end
+if eq l 0
+ret false
+end
+lv = sub shl ulong 1 l 1
+ret ne and s lv lv
+end
+fn dp3ok x ulong sf ulong to bool
+if ne fld x 29 2 0
+ret false
+end
+o = fld x 21 3
+if eq o 0
+ret true
+end
+if eq sf 0
+ret false
+end
+if or eq o 1 eq o 5
+ret true
+end
+if or eq o 2 eq o 6
+ret eq fld x 15 1 0
+end
+ret false
+end
+fn aluok x ulong to bool
+sf = fld x 31 1
+m = and x 528482304
+if eq m 301989888
+ret bmok x
+end
+if eq m 310378496
+ret or eq sf 1 eq fld x 22 1 0
+end
+if or eq m 318767104 eq m 327155712
+if ne fld x 22 1 sf
+ret false
+end
+if and eq sf 0 eq m 318767104
+ret and eq fld x 21 1 0 eq fld x 15 1 0
+end
+ret or eq sf 1 eq fld x 15 1 0
+end
+if eq and x 520093696 167772160
+ret or eq sf 1 eq fld x 15 1 0
+end
+m = and x 522190848
+if eq m 184549376
+if eq fld x 22 2 3
+ret false
+end
+ret or eq sf 1 eq fld x 15 1 0
+end
+if eq m 186646528
+if ne fld x 22 2 0
+ret false
+end
+ret le fld x 10 3 4
+end
+if eq and x 534773760 440401920
+ret and eq fld x 10 1 0 eq fld x 4 1 0
+end
+m = and x 1608515584
+if eq m 448790528
+if ne fld x 29 1 0
+ret false
+end
+o = fld x 10 6
+ret or or eq o 2 eq o 3 and ge o 8 le o 11
+end
+if eq m 1522532352
+o = fld x 10 6
+if or gt o 5 ne fld x 16 5 0
+ret false
+end
+ret or eq sf 1 ne o 3
+end
+if eq and x 520093696 452984832
+ret dp3ok x sf
+end
+ret true
+end
+fn fpok x ulong to bool
+ty = fld x 22 2
+if gt ty 1
+ret false
+end
+if eq and x 1595997184 505413632
+op = fld x 16 3
+if le op 1
+ret true
+end
+if ne fld x 19 2 0
+ret false
+end
+if le op 5
+ret true
+end
+ret eq fld x 31 1 ty
+end
+if eq and x 1595964416 505430016
+op = fld x 15 6
+if le op 3
+ret true
+end
+if or eq op 4 eq op 5
+ret ne sub op 4 ty
+end
+ret false
+end
+if eq and x 1595948032 505421824
+ret and eq fld x 14 2 0 eq and x 7 0
+end
+ret le fld x 12 4 8
+end
+note constrained-unpredictable load/store forms omc never emits: writeback with Rt or Rt2 = Rn, and a
+note load pair with Rt = Rt2
+fn lsok to bool
+b = get dc dmb
+if and ne get dc dwb 0 ne b 31
+if or eq get dc dmt b eq get dc dmt2 b
+ret false
+end
+end
+if and eq get dc dmk 1 ne get dc dmt2 255
+ret ne get dc dmt get dc dmt2
+end
+ret true
+end
+note scalar floating point: FMOV/convert (general <-> FP), 1-source, compare, 2-source
+fn dfp x ulong to bool
+if ne fld x 29 2 0
+ret false
+end
+rd = and x 31
+rn = fld x 5 5
+if eq and x 1595997184 505413632
+op = fld x 16 3
+if or or eq op 2 eq op 3 eq op 7
+put dc ddst add 32 rd
+put dc ds1 gz rn
+else
+put dc ddst gz rd
+put dc ds1 add 32 rn
+end
+ret true
+end
+if ne fld x 31 1 0
+ret false
+end
+if eq and x 1595964416 505430016
+put dc ddst add 32 rd
+put dc ds1 add 32 rn
+ret true
+end
+if eq and x 1595948032 505421824
+put dc ds1 add 32 rn
+if eq fld x 3 1 0
+put dc ds2 add 32 fld x 16 5
+end
+put dc dfl 2
+ret true
+end
+if eq and x 1595935744 505415680
+put dc ddst add 32 rd
+put dc ds1 add 32 rn
+put dc ds2 add 32 fld x 16 5
+ret true
+end
+ret false
+end
+
+note load/store kind, size and mnemonic from size, V and opc; false for PRFM and unallocated forms
+fn lsk sz ulong v ulong opc ulong rt ulong to bool
+if eq v 1
+b = shl ulong 1 sz
+if ne and opc 2 0
+if ne sz 0
+ret false
+end
+b = ulong 16
+end
+put dc dms b
+put dc dmt add 32 rt
+if eq and opc 1 1
+put dc dmk 1
+put dc dmn 14
+else
+put dc dmk 2
+put dc dmn 18
+end
+ret true
+end
+put dc dms shl ulong 1 sz
+put dc dmt gz rt
+k = sz
+if gt k 2
+k = ulong 2
+end
+if eq opc 0
+put dc dmk 2
+put dc dmn add 16 k
+ret true
+end
+put dc dmk 1
+if eq opc 1
+put dc dmn add 10 mul k 2
+ret true
+end
+if eq opc 2
+if eq sz 3
+ret false
+end
+put dc dmn add 11 mul k 2
+ret true
+end
+if ge sz 2
+ret false
+end
+put dc dmn add 11 mul k 2
+ret true
+end
+fn dpair x ulong to bool
+v = fld x 26 1
+opc = fld x 30 2
+l = fld x 22 1
+es = ulong 0
+if eq v 0
+if eq opc 0
+es = ulong 4
+end
+if eq opc 2
+es = ulong 8
+end
+if and and eq opc 1 eq l 1 ne fld x 23 2 0
+es = ulong 4
+end
+put dc dmt gz and x 31
+put dc dmt2 gz fld x 10 5
+else
+if lt opc 3
+es = shl ulong 4 opc
+end
+put dc dmt add 32 and x 31
+put dc dmt2 add 32 fld x 10 5
+end
+if eq es 0
+ret false
+end
+put dc dms es
+put dc dmf 6
+if eq l 1
+put dc dmk 1
+put dc dmn 19
+if and eq v 0 eq opc 1
+put dc dmn 21
+end
+else
+put dc dmk 2
+put dc dmn 20
+end
+put dc dmb fld x 5 5
+ty = fld x 23 2
+off = mul sx fld x 15 7 7 es
+if ne ty 1
+put dc dmo off
+end
+if or eq ty 1 eq ty 3
+put dc dwb 1
+put dc dspa off
+end
+ret true
+end
+note the immediate (unscaled / pre / post / unprivileged) forms by bits 11..10: 3 unscaled, 4 post,
+note 8 unprivileged, 5 pre
+fn uform ty ulong to ulong
+if eq ty 0
+ret 3
+end
+if eq ty 1
+ret 4
+end
+if eq ty 2
+ret 8
+end
+ret 5
+end
+fn dls x ulong to bool
+sz = fld x 30 2
+v = fld x 26 1
+opc = fld x 22 2
+rt = and x 31
+if eq and x 989855744 956301312
+if not lsk sz v opc rt
+ret false
+end
+sc = sz
+if and eq v 1 ne and opc 2 0
+sc = ulong 4
+end
+put dc dmf 1
+put dc dmb fld x 5 5
+put dc dmo shl fld x 10 12 sc
+ret true
+end
+if eq and x 991955968 941623296
+if eq fld x 14 1 0
+ret false
+end
+if not lsk sz v opc rt
+ret false
+end
+put dc dmf 2
+put dc dmb fld x 5 5
+put dc dmi gz fld x 16 5
+ret true
+end
+if eq and x 991952896 939524096
+if not lsk sz v opc rt
+ret false
+end
+ty = fld x 10 2
+im = sx fld x 12 9 9
+put dc dmb fld x 5 5
+if and eq v 1 eq ty 2
+ret false
+end
+put dc dmf uform ty
+if ne ty 1
+put dc dmo im
+end
+if or eq ty 1 eq ty 3
+put dc dwb 1
+put dc dspa im
+end
+ret true
+end
+if eq and x 973078528 671088640
+ret dpair x
+end
+if eq and x 989855744 402653184
+o2 = fld x 30 2
+if eq o2 3
+ret false
+end
+put dc dmk 3
+put dc dmf 7
+put dc dmn 14
+if eq v 1
+put dc dmt add 32 rt
+else
+put dc dmt gz rt
+if eq o2 2
+put dc dmn 15
+end
+end
+ret true
+end
+ret false
+end
+fn dec x ulong w ulong to void
+dclr
+if dbr x w
+ret
+end
+if dls x
+if lsok
+ret
+end
+end
+dclr
+if dalu x
+if aluok x
+ret
+end
+end
+dclr
+if dfp x
+if fpok x
+ret
+end
+end
+dclr
+put dc dkind 10
+put dc dmn 22
+end
+
+note ---- dataflow ----------------------------------------------------------------------------------
+fn unh w ulong k ulong to void
+if eq get uh w 0
+put uh w uchar k
+end
+end
+fn push u ulong to void
+if eq get inq u 0
+put inq u 1
+n = get gv 1
+put wl n u
+put gv 1 add n 1
+end
+end
+note join the current state cu into word u
+fn join u ulong to void
+dd = add get cu 2 1
+if eq get dep u 0
+put rm u get cu 0
+put sm u get cu 1
+put dep u dd
+put fid u get cu 3
+push u
+pjoin u true
+ret
+end
+if ne get dep u dd
+unh u 4
+ret
+end
+if ne get fid u get cu 3
+unh u 5
+ret
+end
+a = or get rm u get cu 0
+b = or get sm u get cu 1
+if or ne a get rm u ne b get sm u
+put rm u a
+put sm u b
+push u
+end
+pjoin u false
+end
+note an edge from w to u: outside the artifact is unhandled; into the trap stubs it ends the path
+fn flow w ulong u ulong to void
+if ge u get gv 0
+unh w 11
+ret
+end
+if ne get trp u 0
+ret
+end
+join u
+end
+fn talu to void
+r = get cu 0
+t = or or tnt r get dc ds1 tnt r get dc ds2 tnt r get dc ds3
+fl = get dc dfl
+if ne and fl 1 0
+t = or t tnt r 31
+end
+if ne and fl 4 0
+t = or t tnt r get dc ddst
+end
+if ne and fl 2 0
+r = sbit r 31 t
+end
+put cu 0 sbit r get dc ddst t
+end
+note SP arithmetic: k = bytes / 8 slots shift; the slots that come into view are unknown (DATA)
+fn tsp w ulong to void
+k = get dc dspo
+if eq k 3
+unh w 1
+ret
+end
+a = get dc dspa
+d = get cu 2
+s = get cu 1
+q = div a 8
+all = not ulong 0
+if ne rem a 8 0
+q = ulong 64
+end
+if eq k 1
+if gt a d
+unh w 12
+put cu 2 0
+put cu 1 all
+ret
+end
+put cu 2 sub d a
+if ge q 64
+put cu 1 all
+ret
+end
+if ne q 0
+put cu 1 or shr s q not shr all q
+end
+ret
+end
+put cu 2 add d a
+if ge q 64
+put cu 1 all
+ret
+end
+if ne q 0
+put cu 1 or shl s q sub shl ulong 1 q 1
+end
+end
+note SP-relative slot range check: below SP or above the function's entry SP is unhandled
+fn slotok w ulong off ulong es ulong to bool
+if ne shr off 63 0
+unh w 14
+ret false
+end
+if gt add off es get cu 2
+unh w 3
+ret false
+end
+ret true
+end
+fn slotld w ulong off ulong es ulong to ulong
+if not slotok w off es
+ret 1
+end
+s = get cu 1
+t = ulong 0
+j = div off 8
+e = div add off sub es 1 8
+while le j e bound 8
+if ge j 64
+t = ulong 1
+else
+t = or t and shr s j 1
+end
+j = add j 1
+end
+ret t
+end
+fn slotst w ulong off ulong es ulong v ulong to void
+if not slotok w off es
+ret
+end
+s = get cu 1
+j = div off 8
+if and and eq rem off 8 0 eq es 8 lt j 64
+put cu 1 sbit s j v
+ret
+end
+e = div add off sub es 1 8
+while le j e bound 8
+if lt j 64
+s = sbit s j or v and shr s j 1
+end
+j = add j 1
+end
+put cu 1 s
+end
+fn tslot w ulong to void
+off = get dc dmo
+es = get dc dms
+r = get cu 0
+if eq get dc dmk 1
+t = slotld w off es
+r = sbit r get dc dmt t
+if ne get dc dmt2 255
+r = sbit r get dc dmt2 slotld w add off es es
+end
+put cu 0 r
+ret
+end
+slotst w off es tnt r get dc dmt
+if ne get dc dmt2 255
+slotst w add off es es tnt r get dc dmt2
+end
+end
+fn tmem w ulong to void
+mk = get dc dmk
+r = get cu 0
+if eq mk 3
+put cu 0 sbit r get dc dmt 0
+ret
+end
+b = get dc dmb
+if eq b 31
+if ne get dc dwb 0
+unh w 2
+else
+if eq get dc dmi 255
+tslot w
+ret
+end
+end
+end
+if eq mk 1
+t = ppublic ulong get wd w
+v = ulong 1
+if ne t 0
+v = ulong 0
+end
+r = sbit r get dc dmt v
+r = sbit r get dc dmt2 v
+put cu 0 r
+end
+end
+fn pseq w ulong to void
+if ne get dc dspo 0
+tsp w
+pshift
+flow w add w 1
+ret
+end
+if eq get dc ddst 7
+unh w 13
+end
+mk = get dc dmk
+if ne mk 0
+if eq mk 1
+if or eq get dc dmt 7 eq get dc dmt2 7
+unh w 13
+end
+end
+tmem w
+else
+talu
+end
+zstep w
+pstep w
+flow w add w 1
+end
+note BL: the callee's entry state joins the caller's registers (x30 public), a fresh stack; after the
+note call the registers are the callee's exit summary, the caller's own slots and depth are kept
+fn pbl w ulong to void
+t = get dc dtgt
+if ge t get gv 0
+unh w 11
+ret
+end
+r = get cu 0
+s = get cu 1
+d = get cu 2
+f = get cu 3
+put cu 0 and r not shl ulong 1 30
+put cu 1 not ulong 0
+put cu 2 0
+put cu 3 t
+pcall
+if eq get trp t 0
+join t
+end
+put cu 1 s
+put cu 2 d
+put cu 3 f
+if ne get exs t 0
+put cu 0 get ex t
+preturn w t
+flow w add w 1
+end
+end
+fn requeue f ulong to void
+n = get gv 0
+for a ulong 5
+for b ulong 500000
+j = add mul a 500000 b
+if ge j n
+ret
+end
+if and eq get blt j add f 1 ne get dep j 0
+push j
+end
+end
+end
+end
+fn pret w ulong to void
+if ne get dc ds1 30
+unh w 8
+end
+if ne get cu 2 0
+unh w 6
+end
+if ne tnt get cu 0 30 0
+unh w 7
+end
+f = get cu 3
+e = get ex f
+n = or e get cu 0
+if pexit f
+requeue f
+end
+if or eq get exs f 0 ne n e
+put ex f n
+put exs f 1
+requeue f
+end
+end
+fn proc w ulong to void
+dec ulong get wd w w
+put cu 0 get rm w
+put cu 1 get sm w
+put cu 2 sub get dep w 1
+put cu 3 get fid w
+pload w
+k = get dc dkind
+if eq k 0
+pseq w
+ret
+end
+if eq k 11
+flow w add w 1
+ret
+end
+if eq k 1
+flow w get dc dtgt
+ret
+end
+if eq k 3
+flow w get dc dtgt
+if lt get dc dcc 14
+flow w add w 1
+end
+ret
+end
+if or eq k 4 eq k 5
+flow w get dc dtgt
+flow w add w 1
+ret
+end
+if eq k 2
+pbl w
+ret
+end
+if eq k 6
+pret w
+ret
+end
+if eq k 7
+unh w 8
+ret
+end
+if eq k 8
+unh w 9
+ret
+end
+if eq k 9
+unh w 10
+put cu 0 sbit get cu 0 0 1
+put pc 0 0
+flow w add w 1
+end
+end
+fn fix to void
+for a ulong 999999
+if eq get gv 1 0
+ret
+end
+for b ulong 999999
+n = get gv 1
+if eq n 0
+break
+end
+u = get wl sub n 1
+put gv 1 sub n 1
+put inq u 0
+proc u
+end
+end
+exit 92
+end
+
+note ---- preparation -------------------------------------------------------------------------------
+note trap stubs (omc.om finish): MOVZ X1, #code (1..14); B tail; tail = MOV X0, X7; LDR X16, [X7, #16];
+note BR X16. trp: code at the MOVZ, 16 at its B, 15 on the three tail words
+fn stubat w ulong to void
+n = get gv 0
+x = ulong get wd w
+if ne and x 4292870175 3531603969
+ret
+end
+code = fld x 5 16
+if or lt code 1 gt code 14
+ret
+end
+if ge add w 1 n
+ret
+end
+y = ulong get wd add w 1
+if ne and y 4227858432 335544320
+ret
+end
+u = add add w 1 sx and y 67108863 26
+if or ge u n ge add u 2 n
+ret
+end
+if ne ulong get wd u 2852586464
+ret
+end
+if ne ulong get wd add u 1 4181723376
+ret
+end
+if ne ulong get wd add u 2 3592356352
+ret
+end
+put trp w uchar code
+put trp add w 1 16
+put trp u 15
+put trp add u 1 15
+put trp add u 2 15
+end
+fn blat w ulong to void
+x = ulong get wd w
+if eq and x 4227858432 2483027968
+t = add w sx and x 67108863 26
+if lt t get gv 0
+put blt w add t 1
+end
+end
+end
+fn prep to void
+n = get gv 0
+for a ulong 5
+for b ulong 500000
+j = add mul a 500000 b
+if ge j n
+ret
+end
+stubat j
+blat j
+end
+end
+end
+fn seed to void
+e = ulong 0
+x = ulong get wd 0
+if eq and x 4227858432 335544320
+t = sx and x 67108863 26
+if and lt t get gv 0 ne t 0
+e = t
+put gv 16 1
+end
+end
+put gv 2 e
+m = not ulong 63
+m = and m not shl ulong 1 7
+m = and m not shl ulong 1 30
+put cu 0 or m get gv 3
+put cu 1 not ulong 0
+put cu 2 0
+put cu 3 e
+for i ulong 6
+put pc i ptok add i 2 0
+end
+if eq get trp e 0
+join e
+end
+end
+
+note ---- report ------------------------------------------------------------------------------------
+fn reached w ulong to bool
+if ne get dep w 0
+ret true
+end
+ret and eq w 0 eq get gv 16 1
+end
+fn rbr w ulong to void
+inc 14
+say 47
+od w
+say 104
+say get dc dmn
+say 49
+t = get dc dtgt
+od t
+say 104
+tc = ulong 0
+if lt t get gv 0
+tc = ulong get trp t
+end
+if not reached w
+say 53
+inc 7
+onl
+ret
+end
+k = get dc dkind
+d = ulong 0
+r = get rm w
+if eq k 3
+if lt get dc dcc 14
+d = tnt r 31
+end
+else
+d = tnt r get dc ds1
+end
+if eq d 0
+say 50
+inc 4
+else
+pload w
+if and ne tc 0 ztrap w
+say 51
+inc 5
+else
+ezsay 0
+inc 6
+end
+end
+if and eq k 3 ge get dc dcc 14
+say 107
+end
+if ne tc 0
+say 57
+if le tc 14
+od tc
+else
+say 61
+end
+end
+onl
+end
+fn listed to bool
+mk = get dc dmk
+if or eq mk 0 eq mk 3
+ret false
+end
+b = get dc dmb
+if and ne b 31 ne b 29
+ret true
+end
+ret ne get dc dmi 255
+end
+fn rmem w ulong to void
+inc 15
+say 48
+od w
+say 104
+say get dc dmn
+say 104
+say add 80 get dc dmf
+say 58
+b = get dc dmb
+oreg b
+say 59
+i = get dc dmi
+oreg i
+say 104
+if ne get trp w 0
+say 54
+say 62
+inc 8
+onl
+ret
+end
+if not reached w
+say 53
+inc 11
+onl
+ret
+end
+r = get rm w
+t = tnt r i
+if ne b 31
+t = or t tnt r b
+end
+if ne t 0
+say 56
+inc 10
+else
+if ne i 255
+say 55
+inc 9
+else
+say 54
+inc 8
+end
+end
+onl
+end
+fn rep w ulong to void
+x = ulong get wd w
+dec x w
+k = get dc dkind
+if eq k 10
+say 45
+od w
+say 78
+oh x
+onl
+inc 12
+end
+u = ulong get uh w
+if ne u 0
+say 46
+od w
+say 104
+if eq u 15
+psay 5
+else
+say add 89 u
+end
+onl
+inc 13
+end
+if or or eq k 3 eq k 4 eq k 5
+rbr w
+end
+if listed
+rmem w
+end
+if ne get dep w 0
+pload w
+t = ppublic x
+if ne t 0
+psay 1
+od w
+psay 2
+od sub shr t 56 2
+psay 3
+od and t 72057594037927935
+onl
+end
+end
+end
+fn header to void
+say 41
+od get gv 0
+say 42
+od get gv 2
+say 43
+m = get gv 3
+if eq m 0
+say 44
+else
+first = true
+for i ulong 6
+if ne and shr m i 1 0
+if not first
+say 109
+end
+say 108
+od i
+first = false
+end
+end
+end
+onl
+for i ulong get gv 19
+psay 0
+od get pdecl mul i 3
+psay 3
+od get pdecl add mul i 3 1
+psay 4
+od get pdecl add mul i 3 2
+onl
+end
+end
+fn sumkv id ulong k ulong to void
+say id
+od get gv k
+end
+fn summary to int
+sumkv 63 14
+sumkv 64 4
+sumkv 65 5
+sumkv 66 6
+sumkv 67 7
+sumkv 68 15
+sumkv 69 8
+sumkv 70 9
+sumkv 71 10
+sumkv 72 11
+sumkv 73 12
+sumkv 74 13
+onl
+man = add get gv 12 get gv 13
+if ne man 0
+say 105
+od man
+say 106
+onl
+ezsay 1
+onl
+ret 2
+end
+if ne get gv 6 0
+ezsay 1
+onl
+ret 2
+end
+if ne get gv 10 0
+say 76
+onl
+ret 1
+end
+say 75
+onl
+ret 0
+end
+fn report to int
+header
+n = get gv 0
+for a ulong 5
+for b ulong 500000
+j = add mul a 500000 b
+if ge j n
+break
+end
+rep j
+rvshow j
+end
+end
+v = summary
+obf
+ret v
+end
+
+note ---- input -------------------------------------------------------------------------------------
+note xN marks a DATA entry register; pub:SLOT:OFF:LEN declares a public immutable memory range.
+fn args to bool
+c = argcnt
+i = ulong 1
+while lt long i c bound 64
+r = argread i pab 0 len pab
+if lt r 0
+ret false
+end
+if and eq r 2 eq get pab 0 120
+d = get pab 1
+if or lt d 48 gt d 53
+ret false
+end
+put gv 3 or get gv 3 shl ulong 1 ulong sub d 48
+else
+if not parg ulong r
+ret false
+end
+end
+i = add i 1
+end
+ret true
+end
+fn rdin to ulong
+n = ulong 0
+go = true
+while go bound 999999
+r = read 0 inb n sub len inb n
+if lt r 0
+ret 0
+end
+if eq r 0
+go = false
+else
+n = add n ulong r
+if eq n len inb
+go = false
+end
+end
+end
+ret n
+end
+fn bad to void
+say 80
+onl
+obf
+exit 91
+end
+fn main to int
+inittb
+if not args
+psay 6
+onl
+obf
+ret 90
+end
+n = rdin
+if or or eq n 0 ne rem n 4 0 gt n 8388608
+bad
+end
+nw = div n 4
+put gv 0 nw
+for a ulong 5
+for b ulong 500000
+j = add mul a 500000 b
+if ge j nw
+break
+end
+o = mul j 4
+v = or ulong get inb o shl ulong get inb add o 1 8
+v = or v shl ulong get inb add o 2 16
+v = or v shl ulong get inb add o 3 24
+put wd j uint v
+end
+end
+if eq ulong get wd 0 1179403647
+bad
+end
+prep
+seed
+rvfix
+ret report
+end
+
+note ---- exact entry-parameter provenance (constant domain, no interval or call specialization) -----
+fn psay id ulong to void
+k = ulong 0
+s = ulong 0
+for i ulong len pmsg
+if eq get pmsg i 10
+if eq k id
+for j ulong sub i s
+ob1 get pmsg add s j
+end
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+end
+fn parg n ulong to bool
+if or lt n 9 ge get gv 19 32
+ret false
+end
+if ne get pab 0 112
+ret false
+end
+if ne get pab 1 117
+ret false
+end
+if ne get pab 2 98
+ret false
+end
+if ne get pab 3 58
+ret false
+end
+f = ulong 0
+v = ulong 0
+digits = ulong 0
+b = mul get gv 19 3
+for i ulong sub n 3
+j = add i 4
+c = uchar 58
+if lt j n
+c = get pab j
+end
+if eq c 58
+if or eq digits 0 ge f 3
+ret false
+end
+put pdecl add b f v
+f = add f 1
+v = ulong 0
+digits = ulong 0
+else
+if or lt c 48 gt c 57
+ret false
+end
+if gt v 3602879701896396
+ret false
+end
+v = add mul v 10 ulong sub c 48
+if gt v 36028797018963967
+ret false
+end
+digits = add digits 1
+end
+end
+if ne f 3
+ret false
+end
+if gt get pdecl b 5
+ret false
+end
+if gt add get pdecl add b 1 get pdecl add b 2 36028797018963967
+ret false
+end
+inc 19
+ret true
+end
+fn ptok k ulong v ulong to ulong
+if ne sx and v 72057594037927935 56 v
+ret 0
+end
+ret or shl k 56 and v 72057594037927935
+end
+fn pget i ulong to ulong
+if ge i 31
+ret 0
+end
+ret get pc i
+end
+fn pval v ulong to ulong
+ret sx and v 72057594037927935 56
+end
+fn pconst i ulong to ulong
+if eq i 255
+ret ptok 1 0
+end
+ret pget i
+end
+fn padd a ulong b ulong subtr bool to ulong
+ak = shr a 56
+bk = shr b 56
+if or eq ak 0 eq bk 0
+ret 0
+end
+if subtr
+if ne bk 1
+ret 0
+end
+ret ptok ak sub pval a pval b
+end
+if eq bk 1
+ret ptok ak add pval a pval b
+end
+if eq ak 1
+ret ptok bk add pval a pval b
+end
+ret 0
+end
+fn palloc w ulong to ulong
+n = get gv 18
+if gt add n 128 len pp
+unh w 15
+ret 0
+end
+put gv 18 add n 128
+for i ulong 128
+put pp add n i get pc i
+end
+ret add n 1
+end
+fn pmerge ptr ulong count ulong to bool
+if eq ptr 0
+ret false
+end
+b = sub ptr 1
+changed = false
+for i ulong count
+v = get pp add b i
+n = ulong 0
+if or ge i 96 eq i 31
+n = and v get pc i
+else
+if eq v get pc i
+n = v
+end
+end
+if ne v n
+put pp add b i n
+changed = true
+end
+end
+ret changed
+end
+fn pjoin w ulong fresh bool to void
+if fresh
+put ps w palloc w
+ret
+end
+if pmerge get ps w 128
+push w
+end
+end
+fn pload w ulong to void
+b = get ps w
+for i ulong 128
+v = ulong 0
+if ne b 0
+v = get pp add sub b 1 i
+end
+put pc i v
+end
+end
+fn pexit f ulong to bool
+if eq get pe f 0
+put pe f palloc f
+ret ne get pe f 0
+end
+ret pmerge get pe f 128
+end
+fn pcall to void
+put pc 30 0
+for i ulong 64
+put pc add i 32 0
+end
+end
+fn preturn w ulong t ulong to void
+s = get ps w
+e = get pe t
+if ne e 0
+put pc 31 get pp add sub e 1 31
+else
+put pc 31 0
+end
+for i ulong 31
+v = ulong 0
+if ne e 0
+v = get pp add sub e 1 i
+end
+put pc i v
+end
+for i ulong 64
+v = ulong 0
+if ne s 0
+v = get pp add add sub s 1 i 32
+end
+put pc add i 32 v
+end
+for i ulong 32
+v = ulong 0
+if ne e 0
+v = get pp add add sub e 1 i 96
+end
+put pc add i 96 v
+end
+end
+fn pshift to void
+a = get dc dspa
+k = get dc dspo
+if or eq k 3 ne rem a 8 0
+a = ulong 512
+end
+q = div a 8
+if eq k 1
+for i ulong 64
+v = ulong 0
+if lt add i q 64
+v = get pc add add i q 32
+end
+put pc add i 32 v
+end
+else
+for i ulong 64
+j = sub 63 i
+v = ulong 0
+if ge j q
+v = get pc add sub j q 32
+end
+put pc add j 32 v
+end
+end
+end
+note Register-offset addressing: UXTW/UXTX/SXTW/SXTX; S means scale by element size.
+fn pindex x ulong to ulong
+i = get dc dmi
+if eq i 255
+ret ptok 1 0
+end
+v = pget i
+if ne shr v 56 1
+ret 0
+end
+v = pval v
+opt = fld x 13 3
+if eq opt 2
+v = and v 4294967295
+end
+if eq opt 6
+v = sx and v 4294967295 32
+end
+if ne fld x 12 1 0
+v = mul v get dc dms
+end
+ret ptok 1 v
+end
+fn paddr x ulong to ulong
+b = pget get dc dmb
+v = padd b pindex x false
+ret padd v ptok 1 get dc dmo false
+end
+fn pinrange b ulong k ulong off ulong size ulong to bool
+if ne get pdecl b sub k 2
+ret false
+end
+lo = get pdecl add b 1
+hi = add lo get pdecl add b 2
+ret and ge off lo le add off size hi
+end
+fn ppublic x ulong to ulong
+if or eq get gv 19 0 ne get dc dmk 1
+ret 0
+end
+v = paddr x
+k = shr v 56
+if or lt k 2 gt k 7
+ret 0
+end
+off = pval v
+if ne shr off 63 0
+ret 0
+end
+size = get dc dms
+if ne get dc dmt2 255
+size = mul size 2
+end
+for i ulong get gv 19
+if and eq tnt get gv 20 i 0 pinrange mul i 3 k off size
+ret v
+end
+end
+ret 0
+end
+note Exact immediate constants plus param-base +/- constant. Other results lose provenance.
+fn pim x ulong to ulong
+k = fld x 29 2
+shift = mul fld x 21 2 16
+v = shl fld x 5 16 shift
+if eq k 0
+v = not v
+end
+if eq k 3
+a = pget and x 31
+if ne shr a 56 1
+ret 0
+end
+v = or and pval a not shl ulong 65535 shift v
+end
+if eq fld x 31 1 0
+v = and v 4294967295
+end
+ret ptok 1 v
+end
+fn pregcalc x ulong to ulong
+a = pconst get dc ds1
+b = pconst get dc ds2
+if ne shr b 56 1
+ret 0
+end
+v = pval b
+if eq and x 522190848 186646528
+opt = fld x 13 3
+if lt opt 3
+v = and v sub shl ulong 1 shl ulong 8 opt 1
+end
+if ge opt 4
+bits = shl ulong 8 sub opt 4
+if lt bits 64
+v = sx and v sub shl ulong 1 bits 1 bits
+end
+end
+v = shl v fld x 10 3
+else
+sh = fld x 10 6
+ty = fld x 22 2
+if eq ty 0
+v = shl v sh
+end
+if eq ty 1
+v = shr v sh
+end
+if eq ty 2
+if ne sh 0
+v = or shr v sh shl sub 0 shr v 63 sub 64 sh
+end
+end
+end
+ret padd a ptok 1 v eq fld x 30 1 1
+end
+fn palu x ulong to ulong
+m = and x 528482304
+if eq m 310378496
+ret pim x
+end
+if eq m 285212672
+a = pconst get dc ds1
+b = shl fld x 10 12 mul fld x 22 1 12
+ret padd a ptok 1 b eq fld x 30 1 1
+end
+if eq and x 520093696 184549376
+ret pregcalc x
+end
+note MOV is ORR Xd,XZR,Xm with no shift; full-width copies preserve base identity.
+if eq and x 4292935648 2852127712
+ret pconst fld x 16 5
+end
+ret 0
+end
+fn pslotone off ulong size ulong rt ulong to void
+idx = div off 8
+if eq get dc dmk 1
+v = ulong 0
+if and and eq rem off 8 0 eq size 8 lt idx 64
+v = get pc add idx 32
+end
+if lt rt 31
+put pc rt v
+end
+ret
+end
+if and and eq rem off 8 0 eq size 8 lt idx 64
+put pc add idx 32 pconst rt
+ret
+end
+last = div add off sub size 1 8
+while le idx last bound 8
+if lt idx 64
+put pc add idx 32 0
+end
+idx = add idx 1
+end
+end
+fn pslot to void
+pslotone get dc dmo get dc dms get dc dmt
+if ne get dc dmt2 255
+pslotone add get dc dmo get dc dms get dc dms get dc dmt2
+end
+end
+fn pspmem to bool
+if ne get dc dmb 31
+ret false
+end
+if ne get dc dwb 0
+ret false
+end
+ret eq get dc dmi 255
+end
+fn pstep w ulong to void
+x = ulong get wd w
+mk = get dc dmk
+if ne mk 0
+if pspmem
+pslot
+ret
+end
+if or eq mk 1 eq mk 3
+if lt get dc dmt 31
+put pc get dc dmt 0
+end
+if lt get dc dmt2 31
+put pc get dc dmt2 0
+end
+end
+if and ne get dc dwb 0 lt get dc dmb 31
+put pc get dc dmb 0
+end
+ret
+end
+d = get dc ddst
+if lt d 31
+v = palu x
+if and eq fld x 31 1 0 ne shr v 56 1
+v = ulong 0
+end
+if and eq fld x 31 1 0 ne v 0
+v = ptok 1 and pval v 4294967295
+end
+put pc d v
+end
+end
+
+note E12: only a proven-zero CBNZ conversion check discharges a DATA trap edge.
+note pc[96+r] is known-zero bits of Xr. Meet at joins is intersection, unlike provenance tokens.
+fn ezsay id ulong to void
+s = ulong 0
+k = ulong 0
+for i ulong len e12
+if eq get e12 i 10
+if eq k id
+for j ulong sub i s
+ob1 get e12 add s j
+end
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+end
+fn zget r ulong to ulong
+if ge r 31
+ret not ulong 0
+end
+ret get pc add r 96
+end
+fn zimm x ulong to ulong
+k = fld x 29 2
+sh = mul fld x 21 2 16
+v = shl fld x 5 16 sh
+if eq k 0
+ret v
+end
+if eq k 3
+old = zget and x 31
+ret or and old not shl ulong 65535 sh and not v shl ulong 65535 sh
+end
+ret not v
+end
+fn zalu x ulong to ulong
+if and eq and x 528482304 301989888 or eq fld x 29 2 0 eq fld x 29 2 3
+ret or zget get dc ds1 not zmask x
+end
+if eq and x 528482304 310378496
+ret zimm x
+end
+if eq and x 520093696 167772160
+a = zget get dc ds1
+b = zget get dc ds2
+if ne fld x 21 1 0
+ret 0
+end
+if ne fld x 10 6 0
+ret 0
+end
+op = fld x 29 2
+if or eq op 0 eq op 3
+ret or a b
+end
+if eq op 1
+ret and a b
+end
+ret 0
+end
+if and eq and x 528482304 318767104 eq fld x 29 2 2
+r = fld x 16 6
+s = fld x 10 6
+z = zget get dc ds1
+bits = ulong 64
+if eq fld x 31 1 0
+bits = ulong 32
+end
+if eq r 0
+if lt s 63
+ret or z not sub shl ulong 1 add s 1 1
+end
+ret z
+end
+if eq s sub bits 1
+ret or shr z r not shr not ulong 0 r
+end
+end
+ret 0
+end
+fn zstep w ulong to void
+x = ulong get wd w
+if ne get dc dmk 0
+if or eq get dc dmk 1 eq get dc dmk 3
+for i ulong 2
+r = get dc dmt
+if eq i 1
+r = get dc dmt2
+end
+if lt r 31
+z = ulong 0
+put pc add r 96 z
+put pc 31 sbit get pc 31 r 0
+end
+end
+end
+ret
+end
+d = get dc ddst
+if lt d 31
+proof = zproof x
+put pc 31 sbit get pc 31 d proof
+z = zalu x
+if eq fld x 31 1 0
+z = or z 18446744069414584320
+end
+put pc add d 96 z
+end
+end
+fn ztrap w ulong to bool
+x = ulong get wd w
+if ne and x 4278190080 3036676096
+ret false
+end
+if eq tnt get pc 31 and x 31 0
+ret false
+end
+ret eq zget and x 31 not ulong 0
+end
+note Arm DecodeBitMasks (logical immediate), unallocated masks already rejected by bmok.
+fn zmask x ulong to ulong
+v = or shl fld x 22 1 6 and not fld x 10 6 63
+l = ulong 6
+while eq and shr v l 1 0 bound 8
+l = sub l 1
+end
+width = shl ulong 1 l
+levels = sub width 1
+s = and fld x 10 6 levels
+r = and fld x 16 6 levels
+base = sub shl ulong 1 add s 1 1
+if ne r 0
+base = or shr base r shl base sub width r
+end
+if lt width 64
+base = and base sub shl ulong 1 width 1
+end
+result = ulong 0
+for i ulong div 64 width
+result = or result shl base mul i width
+end
+ret result
+end
+fn zproof x ulong to ulong
+m = and x 528482304
+if and eq m 301989888 or eq fld x 29 2 0 eq fld x 29 2 3
+ret 1
+end
+if eq and x 520093696 167772160
+op = fld x 29 2
+if and eq fld x 21 1 0 or eq op 0 eq op 3
+a = pconst get dc ds1
+b = pconst get dc ds2
+if or eq shr a 56 1 eq shr b 56 1
+ret 1
+end
+end
+if eq and x 4292935648 2852127712
+ret tnt get pc 31 fld x 16 5
+end
+end
+if eq m 318767104
+ret tnt get pc 31 get dc ds1
+end
+ret 0
+end
+note Rotation decode citations, independent of all OM-2 compiler sources:
+note ARM DDI0487M.d C6.2.160 (p2201): EXTR sf|00|100111|N|0|Rm|imms|Rn|Rd, N=sf; ROR immediate Rn=Rm.
+note C6.2.349 (p2580): RORV sf|00|11010110|Rm|001011|Rn|Rd (DP2 opcode 11).
+note C6.2.295 (p2475): NEG is SUB shifted-register with Rn=31 (XZR), not SP.
+note dalu already covers these instruction classes; E12 zero/provenance transfer drops rotate knowledge.
+
+note E13 fallback: revoke ranges globally if any DATA/unclassified store may overlap.
+note Re-run the analysis after revocation so declassified-load dependencies cannot retain false PUBLIC.
+fn rvoutside decl ulong addr ulong size ulong to bool
+b = mul decl 3
+if eq get pdecl add b 2 0
+ret true
+end
+if ne shr addr 56 add get pdecl b 2
+ret false
+end
+off = pval addr
+endoff = add off size
+lo = get pdecl add b 1
+hi = add lo get pdecl add b 2
+if ne shr off 63 0
+if ne shr endoff 63 0
+ret true
+end
+ret le endoff lo
+end
+ret or ge off hi le endoff lo
+end
+fn rvbad w ulong to bool
+if ne get uh w 0
+ret true
+end
+if eq get dc dkind 10
+ret true
+end
+if ne get dc dmk 2
+ret false
+end
+if eq get dep w 0
+ret true
+end
+r = get rm w
+v = or tnt r get dc dmt tnt r get dc dmt2
+if ne get dc dmb 31
+v = or v tnt r get dc dmb
+end
+v = or v tnt r get dc dmi
+ret ne v 0
+end
+fn rvstore w ulong to void
+dec ulong get wd w w
+if not rvbad w
+ret
+end
+addr = ulong 0
+size = ulong 0
+if and eq get dc dmk 2 ne get dep w 0
+note Proven current-frame SP spills cannot alias entry-parameter ranges (existing A1 invariant).
+if and eq get uh w 0 pspmem
+ret
+end
+pload w
+addr = paddr ulong get wd w
+size = get dc dms
+if ne get dc dmt2 255
+size = mul size 2
+end
+end
+for i ulong get gv 19
+if not rvoutside i addr size
+bit = shl ulong 1 i
+put rv w or get rv w bit
+put gv 20 or get gv 20 bit
+end
+end
+end
+fn rvcollect to void
+n = get gv 0
+for a ulong 5
+for b ulong 500000
+j = add mul a 500000 b
+if ge j n
+ret
+end
+rvstore j
+end
+end
+end
+fn rvclearword w ulong to void
+put dep w 0
+put ex w 0
+put exs w 0
+put inq w 0
+put ps w 0
+put pe w 0
+end
+fn rvreset to void
+put gv 1 0
+put gv 18 0
+put gv 16 0
+for i ulong 128
+put pc i 0
+end
+n = get gv 0
+for a ulong 5
+for b ulong 500000
+j = add mul a 500000 b
+if ge j n
+ret
+end
+rvclearword j
+end
+end
+end
+fn rvfix to void
+for pass ulong 34
+fix
+if eq get gv 19 0
+ret
+end
+before = get gv 20
+rvcollect
+if eq before get gv 20
+ret
+end
+rvreset
+seed
+end
+exit 92
+end
+fn rvshow w ulong to void
+for i ulong get gv 19
+if ne tnt get rv w i 0
+for j ulong len revmsg
+ob1 get revmsg j
+end
+od w
+psay 2
+od get pdecl mul i 3
+psay 3
+od get pdecl add mul i 3 1
+psay 4
+od get pdecl add mul i 3 2
+onl
+end
+end
+end

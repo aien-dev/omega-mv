@@ -1,107 +1,107 @@
-#758 relational comparison slice (SC1-L)
+#758 relational comparison slice, SC1 revision2
 
-Scope and result
-----------------
-Owned implementation and test logic is seeded OM-1 .om. No compiler, scanner, signer, authority,
-store, gate implementation or omnet source is replaced. FROZEN.txt preceded implementation;
-SC1-L.txt defines entry labels, disclosure and architectural model. Source review is still required.
+Current contract: ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496.
+Current records: CURRENT-BINDINGS.json, FROZEN-R2.txt, SC1-L.txt, SHA256SUMS.
+BINDINGS.json, CONSUMER-BINDINGS.json and FROZEN.txt are HISTORICAL DRAFT records for commit
+4883943fd993401a3701d95f9c5fa031a6c887ea, not current-source qualifications. Their old L1-L8 IDs
+and draft8bc52 contract are not SC1 revision2 IDs. Historical run1/run2/run3 evidence and the
+parent's initial-clean-replay.json are preserved. No old PASS is relabeled as a new qualification.
 
-Measured native host results, not a general proof:
-- Existing PR752 qualification gate: qualification.cases35/35, bindings.cases10/10,
-  consumer.cases3/3 expected outcomes. Logs: evidence/run3/gate2.log,
-  evidence/run3/bindings2.log, evidence/consumer/gate.log.
-- compare32 native paired fixture completes24,577 equality checks: equal arrays plus all256 byte
-  values at every32 positions and paired differing inputs with the same disclosed result0.
-- Exact complete raw compare32 function is776 bytes,194 instructions. Scanner reports64 public
-  indexed loads, zero branches, zero DATA addresses, zero UNKNOWN and zero UNHANDLED, PASS.
-  embed.om finds the WHOLE raw function exactly once in the executed1872-byte native ELF.
-  This mechanical containment witness is not a replacement translation checker.
-- Secret branch, early exit, address, division-zero, explicit trap and direct-helper controls
-  produce DATA-dependent scanner evidence and NOT_RUN (exit2), never a secrecy PASS. Gate PASS
-  on these rows means the expected refusal was observed. No UNKNOWN item is counted as a kill.
-- Branch/helper/address native twins both complete with output7. Deliberate error controls
-  produce7/106 and division controls102/7. Those explicit trap controls are NOT mutation kills.
-- Native-output mutants change the actual compiled raw code AND full ELF. Branch operand changes
-  CMP x0,#0 to CMP x1,#0 (f100001f -> f100003f); address operand changes AND x4,x1,x3 to
-  AND x4,x2,x3 (8a030024 -> 8a030044). patchword.om requires exactly one aligned old word.
-  Native secret0/1 executions of BOTH mutants still complete with output7. Raw scanner changes
-  from PASS to DATA branch/address NOT_RUN. No crash, timeout, build failure or unsupported
-  instruction counts as detection. Whole branch-mutant raw code also matches its ELF exactly.
-  The address probe has mode-specific trap tails, so raw and ELF are separately bound, not
-  claimed byte-identical or translation-proved. The changed address-computing instruction is
-  checked exact-once in each full artifact. Raw scanner input includes the whole trap tail.
-- Instruction authority for those changes: Arm DDI0487M.d C6.2.96 p1973, CMP(immediate), and
-  C6.2.15 p1832, AND(shifted register). Rn is bits9:5. Existing objdump is an external oracle,
-  not first-party implementation; captured disassemblies are under evidence/run2/.
-- The compiled finite nondeterminism model has4/4 ordinary inclusion checks succeeding while
-  both same-choice secret pairs differ. Independent choice pairs agree. A source mutant that
-  removes the leak reaches named assertion83; a wrong equality result reaches assertion13.
-- Byte-binding negatives compile successfully then existing gate rejects changed source/native
-  bytes and wrong checker output hash (binding-negative.cases, exit1, two FAIL outcomes).
-  Wrong compiler hash produces gate INVALID3 with no case run. Wrong image reaches assertion61;
-  missing patch word reaches assertion93. These are narrow test pins, not authenticated receipts.
+Obligation matrix
+-----------------
+L1 VERIFIED finite/native fixture: source output{0,1} independent of secret, faulty result=secret.
+   Ordinary inclusion4/4; both same-choice secret pairs differ; correct pairs agree. Assertion83
+   catches a compiled leak-removing control. This is not a compiler preservation theorem.
+L2 VERIFIED bounded component tests/static scan: compare32 has fixed public addresses/extents,
+   secret bytes and final equality-only disclosure. Whole776-byte raw function occurs once in
+   the current executed native paired harness. No real-daemon qualification follows.
+L3 VERIFIED emitted controls: actual raw and ELF branch/address mutations preserve output7 for
+   secret0/1 but trigger DATA scanner refusal. No crash/build failure/UNKNOWN counts as a kill.
+L4 BLOCKED stronger division policy: current scanner PASSES dividend.om (secret x0 divided by
+   constant7, then xor(q,q) returns0). SC1 revision2 forbids secret-dependent UDIV/SDIV, so that
+   artifact is UNQUALIFIED despite scanner PASS. The existing scanner owner must add reviewed
+   enforcement or approve explicit division-free admission. Secret divisor zero-check, helper
+   and explicit trap controls do produce DATA refusals, but do NOT establish division policy.
+L5 BLOCKED general target/model/disclosure/checker trust binding under #623/#624. Byte controls
+   are VERIFIED tests: re-derived source/native artifacts, actual mutated checker-output hash,
+   wrong-source bytes, wrong-image containment and compiler pin refusal. No alternate signer.
+L6 BLOCKED real function-to-daemon correspondence: relevant emitted words AND call/return and
+   observation contracts must be bound. Test-harness containment is not daemon correspondence.
+L7 BLOCKED actual consumer/whole closure qualification. Captured original dseqhash baseline has
+   DATA early-exit branch@12; native outputs1/0 and closure inventory are evidence of the baseline,
+   not approval of either an old base or a later consumer proposal. Consumer owner owns fixes.
 
-Actual consumer audit
----------------------
-OMNET-AUDIT.txt records the real disablement path and unresolved dependency closure. An unchanged
-byte-exact dseqhash excerpt from helpers.om238-245 is retained as evidence/consumer/dseqhash.src,
-with complete-file hash and byte range in provenance.json. The existing scanner identifies its
-DATA branch@12; native inputs complete with1/0. This is a baseline audit finding, not consumer
-qualification. ConsumerSecret/WORM owns any subsequent fixes and must bind its new source anew.
-Argon2i/BLAKE2b, JSON/base64, authority-list iteration, retained copies, BLAKE2s snapshot hashing,
-restart, cleanup and intended bootstrap disclosure remain outside this primitive's qualification.
+Measured repaired suite
+-----------------------
+The pinned existing PR752 gate completed qualification.cases56/56, bindings.cases16/16 and
+consumer.cases4/4 expected outcomes. binding-negative.cases correctly returns1 with2 FAIL rows.
+Logs and exact compiled inputs/outputs: evidence/run4/{qualification,bindings,consumer,wrongbindings}.
+These gate PASS counts include expected scanner refusals and the explicit L4 unsupported-policy
+witness. They are not blanket SC1-L or service PASS counts. Independent final review/replay pending.
 
-Binding and limits
-------------------
-BINDINGS.json binds sources, compiler source/binary, exact raw and ELF bytes, scanner source/binary,
-SC1 model/disclosure and policy labels. CONSUMER-BINDINGS.json adds the later audit fixture bindings.
-These JSON records are UNSIGNED TEST RECORDS and not an alternate trust path. The scanner has no
-API to authenticate target/model/disclosure metadata or decide that a return value is authorized.
-Such mismatches remain BLOCKED_OWNER_623; wrong target/model/disclosure rejection is NOT_RUN.
-The #623 owner must supply the relation and receipt adapter. L836/ORPHAN retains the scanner.
+paired.om now executes4,186,878 comparison assertions: each of32 positions, all256 base values,
+all255 nonzero mismatch masks, and complemented paired inputs with the same mismatch. It also
+checks identical flips at two positions and all32 positions for every mask, plus complements.
+The exact same checker compiles with the XOR-instead-of-OR accumulator mutant and normally reaches
+assertion16 at the first two-position cancellation. The constant-validity mutant reaches13.
+This repairs the original narrow test, which only covered differences1/129 and let XOR survive.
 
-Paired outputs are actual native executions. Branch/address results are static scanner evidence,
-not measured instruction traces. Dynamic native trace capture, mechanized relational proof,
-physical constant time, cache/speculation/latency immunity, shared-resource secrecy, complete
-consumer closure and deployment are NOT_RUN. The finite source-choice counterexample is not an
-implemented nondeterministic source-language feature or a compiler-preservation theorem. No
-external theorem is claimed. #759 must separately qualify scheduling/allocation/reclamation.
+Whole raw compare32 remains776bytes/194 instructions. Existing scanner reports64 public-index
+loads, zero branches, zero UNKNOWN/UNHANDLED: PASS for its architectural model. Current native
+paired harness is separately hashed in CURRENT-BINDINGS.json. The wrong-image containment test
+now searches the2184-byte embed executable, larger than776, and fails hits!=1 with assertion61;
+it no longer tests only the an>bn early refusal. embed.om is mechanical byte containment only.
 
-Evidence chronology
--------------------
-run1 preserves initial compile failures (unsupported bool conversion and mixed signed length
-comparison), successful scanner/gate builds and controls. run2 preserves the passing loop
-primitive and first35-case gate. run3 uses explicit fixed indices to make the entire raw function
-identical inside the ELF, not to evade a scanner refusal (the loop was already PASS). The first
-bindings run has a malformed case token and is INVALID, preserved unchanged; bindings2 corrects
-that token and completes10/10. Wrongbytes and wrongcompiler are expected refusal runs. Generated
-.src files are immutable gate input snapshots, not a second scanner implementation or owner.
+Before scans, qualification.cases re-compiles EVERY recorded raw control and compares emitted
+bytes directly against the exact scanner-input file. It also re-derives paired/native mutation
+bases and reproduces raw/ELF mutation outputs with patchword.om. consumer.cases re-derives the
+captured dseqhash excerpt's raw output. bindings.cases independently re-derives its native/raw
+bases and wrong image. File-byte comparisons are stronger than accepting self-reported hashes.
 
-Reproduction
-------------
-Check out main00eb0e7106d2f8fc841e5e16eb624fa1bd029111 plus this slice as security673-relational,
-and PR752155ff3178f35013e405ed40d09a7dd75ede2a403 as sibling security673-scanner. Never consume
-live moving scanner or OM2 compiler source. Existing bootstrap is the only shell runner required:
+The wrong-checker control now compiles the ACTUAL pinned scanner with exact-once source mutation
+rvfix pass bound33->34. Its executable hash changes to73b682c9e26f30520b9cfd3030a706e77912303c7bedc582889f9a902b855cee,
+which the existing gate rejects against the originalaa60061e... pin. It is not branch.om compared
+to a scanner hash. No scanner working-tree file is edited or deployed; mutated .src/.elf files are
+immutable test artifacts, not a second scanner implementation.
 
-  cd security673-relational
-  nice -n19 sh seed/omega-from-seed.sh
-  sha256sum seed/out/omc
+Emitted mutation details
+------------------------
+CMP x0,#0 -> CMP x1,#0 (f100001f -> f100003f) changes the branch decision's source.
+AND x4,x1,x3 -> AND x4,x2,x3 (8a030024 -> 8a030044) changes the address selector's source.
+patchword.om requires exactly one aligned old instruction in each complete raw/ELF artifact.
+Native executions both retain output7 for both secrets. Full raw branch code also embeds exactly.
+Address raw/ELF have different mode-specific trap tails, so they are separately bound, NOT called
+translation-proved. The scanner receives the COMPLETE raw artifact including trap tail.
+Arm DDI0487M.d C6.2.96 p1973 and C6.2.15 p1832 define Rn bits9:5. objdump is external oracle only.
 
-Expected734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61.
-From sibling security673-scanner, with P=../security673-relational/seed/qualification/security673/relational
-and C=../security673-relational/seed/out/omc, use the existing gate (build it from the pinned source
-with C, or use recorded P/evidence/run1/gate.bin after verifying its BINDINGS digest):
+Boundary and provenance
+-----------------------
+Actual omnet closure is in OMNET-AUDIT.txt and omnet-audit.json. The captured audit used mixed live
+working-tree inputs at HEAD6eb49ccf, whereas SC1 base is1e075776. adapter.om differs; the captured
+helpers comparison agrees. Neither entire base is qualified by that audit. Argon2i/BLAKE2b,
+JSON/base64, list matching, copies, snapshot/BLAKE2s, restart, cleanup and intended bootstrap
+secret disclosure remain outside this comparison's assurance. Public length/candidate count/shape
+are declared by SC1 revision2, not inferred length hiding. No omnet source was changed here.
 
-  nice -n19 "$P/evidence/run1/gate.bin" "$C" 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 "$P/qualification.cases" "$P/evidence/replay-qualification"
-  nice -n19 "$P/evidence/run1/gate.bin" "$C" 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 "$P/bindings.cases" "$P/evidence/replay-bindings"
-  nice -n19 "$P/evidence/run1/gate.bin" "$C" 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 "$P/consumer.cases" "$P/evidence/replay-consumer"
-  nice -n19 "$P/evidence/run1/gate.bin" "$C" 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 "$P/binding-negative.cases" "$P/evidence/replay-negative"
+Source labels/disclosure are explicit assertions, not enforced information-flow types. The
+scanner cannot authenticate target/model/disclosure metadata or authorize returned data. Dynamic
+native instruction/address traces, mechanized relational proof, authenticated translation receipt,
+physical constant time, cache/speculation/latency protection and service scheduling secrecy are
+NOT_RUN. #759 separately owns the real envelope. No foreign first-party implementation was added.
 
-Expected exits0,0,0,1. Scratch directories must not exist; do not overwrite prior evidence.
-Gate rebuilds every case from source. Scanner-source compilation emits its pinned output hash in
-bindings.cases. Binary mutation reproduction is four patchword cases in bindings.cases, not a
-foreign-language patcher. Raw commands, stderr, stdout and source inputs are retained in evidence.
-No GPU, network/deployment action, PR publication or ready-to-merge label was used.
+Replay
+------
+Use sibling checkouts security673-relational and security673-scanner. Scanner must be immutable
+PR752155ff3178f35013e405ed40d09a7dd75ede2a403. Compiler was rebuilt through existing bootstrap;
+required SHA734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61.
+From security673-scanner, set P=../security673-relational/seed/qualification/security673/relational,
+C=../security673-relational/seed/out/omc, H=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61.
+Use fresh scratch paths and the pinned gate (or rebuild its source with C):
 
-Integration owner: run independent final-source review/replay and add root contributor attribution
-as appropriate; this lane is restricted to this new directory. Attribution: AIEN coding assistants.
+  nice -n19 "$P/evidence/run1/gate.bin" "$C" "$H" "$P/qualification.cases" "$P/evidence/replay-r2-qualification"
+  nice -n19 "$P/evidence/run1/gate.bin" "$C" "$H" "$P/bindings.cases" "$P/evidence/replay-r2-bindings"
+  nice -n19 "$P/evidence/run1/gate.bin" "$C" "$H" "$P/consumer.cases" "$P/evidence/replay-r2-consumer"
+  nice -n19 "$P/evidence/run1/gate.bin" "$C" "$H" "$P/binding-negative.cases" "$P/evidence/replay-r2-negative"
+
+Expected exits0,0,0,1. Never overwrite old scratch/evidence. No GPU, deployment, publication,
+new scanner/checker authority, compiler edits or consumer edits occurred. Parent owns final review.

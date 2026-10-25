@@ -1,4 +1,5 @@
 # These cases must produce OM2GATE FAIL, not a qualification PASS.
 subst ../security673-relational/seed/qualification/security673/relational/compare.from ../security673-relational/seed/qualification/security673/relational/compare.to
 wrong-source-bytes emit ../security673-relational/seed/qualification/security673/relational/compare32.om sha:df0d1193b9555f3d6a4a1c5bc0e5d04605397000a22d8175e9b9f28965bdb162 - 0
-wrong-checker-bytes emit ../security673-relational/seed/qualification/security673/relational/branch.om sha:aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633 - 0
+subst ../security673-relational/seed/qualification/security673/relational/checker.from ../security673-relational/seed/qualification/security673/relational/checker.to
+wrong-checker-bytes emit seed/qualification/om2/leak/leakscan.om sha:aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633 - 0

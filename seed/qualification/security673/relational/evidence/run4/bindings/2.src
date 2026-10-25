@@ -1,0 +1,99 @@
+note SPDX-License-Identifier: Apache-2.0
+note SC1-L: public pointers a,b; secret contents; only equality result disclosed.
+fn compare32 a view uchar 32 b view uchar 32 to ulong
+d = xor get a 0 get b 0
+d = or d xor get a 1 get b 1
+d = or d xor get a 2 get b 2
+d = or d xor get a 3 get b 3
+d = or d xor get a 4 get b 4
+d = or d xor get a 5 get b 5
+d = or d xor get a 6 get b 6
+d = or d xor get a 7 get b 7
+d = or d xor get a 8 get b 8
+d = or d xor get a 9 get b 9
+d = or d xor get a 10 get b 10
+d = or d xor get a 11 get b 11
+d = or d xor get a 12 get b 12
+d = or d xor get a 13 get b 13
+d = or d xor get a 14 get b 14
+d = or d xor get a 15 get b 15
+d = or d xor get a 16 get b 16
+d = or d xor get a 17 get b 17
+d = or d xor get a 18 get b 18
+d = or d xor get a 19 get b 19
+d = or d xor get a 20 get b 20
+d = or d xor get a 21 get b 21
+d = or d xor get a 22 get b 22
+d = or d xor get a 23 get b 23
+d = or d xor get a 24 get b 24
+d = or d xor get a 25 get b 25
+d = or d xor get a 26 get b 26
+d = or d xor get a 27 get b 27
+d = or d xor get a 28 get b 28
+d = or d xor get a 29 get b 29
+d = or d xor get a 30 get b 30
+d = or d xor get a 31 get b 31
+ret shr sub ulong d 1 63
+end
+note SPDX-License-Identifier: Apache-2.0
+note Concatenate after compare32.om. Test assertions are outside scanned primitive.
+text ok "PASS L2 native: all32 positions x256 values x255 mismatches, paired complements, two-position and all32 flips\n"
+fn main to int
+a = new uchar 32 0
+b = new uchar 32 0
+if ne compare32 a b 1
+ret 11
+end
+for p ulong 32
+for v ulong 256
+put a p uchar v
+put b p uchar v
+if ne compare32 a b 1
+ret 12
+end
+for k ulong 255
+put a p uchar v
+put b p xor uchar v uchar add k 1
+if ne compare32 a b 0
+ret 13
+end
+put a p xor uchar v 255
+put b p xor get b p 255
+if ne compare32 a b 0
+ret 14
+end
+end
+end
+put a p 0
+put b p 0
+end
+for k ulong 255
+for j ulong 32
+put a j 0
+put b j 0
+end
+put b 0 uchar add k 1
+put b 1 uchar add k 1
+if ne compare32 a b 0
+ret 16
+end
+for j ulong 32
+put b j uchar add k 1
+end
+if ne compare32 a b 0
+ret 17
+end
+for j ulong 32
+put a j 255
+put b j xor get b j 255
+end
+if ne compare32 a b 0
+ret 18
+end
+end
+n = write 1 ok 0 len ok
+if ne n long len ok
+ret 15
+end
+ret 0
+end

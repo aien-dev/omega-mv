@@ -1,0 +1,40 @@
+note SPDX-License-Identifier: Apache-2.0
+note Frozen source set{0,1} independent of secret; universal same-choice coupling.
+text ok "PASS L1 finite: inclusion4/4, faulty same-choice pairs2/2 differ, correct pairs2/2 equal\n"
+fn allowed s ulong choice ulong to ulong
+ret choice
+end
+fn faulty s ulong choice ulong to ulong
+ret s
+end
+fn main to int
+inc = ulong 0
+bad = ulong 0
+for s ulong 2
+for c ulong 2
+r = faulty s c
+if or eq r allowed s 0 eq r allowed s 1
+inc = add inc 1
+end
+end
+end
+for c ulong 2
+if ne allowed 0 c allowed 1 c
+ret 81
+end
+if ne faulty 0 c faulty 1 c
+bad = add bad 1
+end
+end
+if ne inc 4
+ret 82
+end
+if ne bad 2
+ret 83
+end
+n = write 1 ok 0 len ok
+if ne n long len ok
+ret 84
+end
+ret 0
+end

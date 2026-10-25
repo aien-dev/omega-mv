@@ -1,0 +1,75 @@
+note SPDX-License-Identifier: Apache-2.0
+note Exact-once aligned u32 replacement in raw compiler output or full ELF, no instruction hiding.
+text err "REFUSED patch: usage, size, word range or occurrence count\n"
+global buf uchar 1048576
+global arg uchar 32
+fn number k ulong to ulong
+n = argread k arg 0 32
+if or le n 0 gt n 10
+exit 90
+end
+v = ulong 0
+for i ulong ulong n
+c = get arg i
+if or lt c 48 gt c 57
+exit 90
+end
+v = add mul v 10 ulong sub c 48
+end
+if gt v 4294967295
+exit 90
+end
+ret v
+end
+fn word p ulong to ulong
+v = ulong 0
+for k ulong 4
+v = or v shl ulong get buf add p k mul k 8
+end
+ret v
+end
+fn main to int
+if ne argcnt 3
+ret 90
+end
+old = number 1
+fresh = number 2
+n = ulong 0
+while lt n len buf bound 100000
+r = read 0 buf n sub len buf n
+if lt r 0
+ret 91
+end
+if eq r 0
+break
+end
+n = add n ulong r
+end
+if or eq n len buf ne rem n 4 0
+ret 92
+end
+hits = ulong 0
+at = ulong 0
+for i ulong div n 4
+if eq word mul i 4 old
+hits = add hits 1
+at = mul i 4
+end
+end
+if ne hits 1
+r = write 2 err 0 len err
+ret 93
+end
+for k ulong 4
+put buf add at k uchar and shr fresh mul k 8 255
+end
+at = 0
+while lt at n bound 100000
+r = write 1 buf at sub n at
+if le r 0
+ret 94
+end
+at = add at ulong r
+end
+ret 0
+end

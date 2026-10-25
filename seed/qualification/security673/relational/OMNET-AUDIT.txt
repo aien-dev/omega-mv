@@ -3,6 +3,10 @@ Read-only omnet secret dependency audit, 2026-10-25
 Working-tree observation, not immutable owner handoff. Observed HEAD
 6eb49ccf1dd0d3f0456caf1a4295f195e38d7768; individual source hashes in omnet-audit.json
 bind the observed live files, which may include WORM's uncommitted work. No omnet file changed.
+SC1 revision2 names base1e075776855d4389b69b23b54b49ed230d488717. This audit used a mixed live
+working-tree input at6eb49ccf, NOT that pinned base. In particular adapter.om differs between
+those commits; the captured helpers.om dseqhash excerpt agrees. The recorded file hashes identify
+only the observed inputs. Neither whole commit is qualified by this mixed-source audit.
 
 Actual consumer: cmd/tkad/rpc.om dsdisable344-366. The adapter/admin condition is checked,
 status and current head are checked, then dsbytes decodes DisablementSecret, length>1024 refuses,

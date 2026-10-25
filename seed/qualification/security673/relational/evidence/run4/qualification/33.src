@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note Secret divisor x0; zero trap is forbidden observation.
+fn probe s ulong to ulong
+ret div ulong 7 s
+end
+note SPDX-License-Identifier: Apache-2.0
+fn main to int
+ret int probe sub ulong argcnt 1
+end

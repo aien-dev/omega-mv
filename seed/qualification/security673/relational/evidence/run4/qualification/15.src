@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note public pointer x0, public selector x1, secret selector x2. Table entries both7.
+fn probe a view ulong 2 p ulong s ulong to ulong
+ret get a and p 1
+end
+note SPDX-License-Identifier: Apache-2.0
+fn main to int
+a = new ulong 2 7
+ret int probe a 0 sub ulong argcnt 1
+end

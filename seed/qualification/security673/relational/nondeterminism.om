@@ -1,6 +1,6 @@
 note SPDX-License-Identifier: Apache-2.0
 note Frozen source set{0,1} independent of secret; universal same-choice coupling.
-text ok "PASS L8 finite: inclusion4/4, faulty same-choice pairs2/2 differ, correct pairs2/2 equal\n"
+text ok "PASS L1 finite: inclusion4/4, faulty same-choice pairs2/2 differ, correct pairs2/2 equal\n"
 fn allowed s ulong choice ulong to ulong
 ret choice
 end
