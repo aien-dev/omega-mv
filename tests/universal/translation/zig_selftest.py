@@ -12,7 +12,6 @@ realization lower(N(U_A)) when the G1 lowering tools are present.
 from pathlib import Path
 import argparse,hashlib,json,os,random,re,shutil,struct,subprocess,sys,tempfile
 ROOT=Path(__file__).resolve().parents[3]
-HOME=Path.home()
 MASK=(1<<64)-1
 SEMDOM=b'omega.source.semantic.v1'
 CONTRACT=hashlib.sha256((ROOT/'spec/universal/semantics.md').read_bytes()).digest()
@@ -234,17 +233,21 @@ class Native:
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--out',required=True)
-    ap.add_argument('--zig',default=str(HOME/'.local/toolchains/zig/zig'))
+    ap.add_argument('--zig',default=os.environ.get('ZIG') or shutil.which('zig') or '',help='Zig 0.17.0 (default: $ZIG, else zig on PATH; missing = NOT_RUN, exit 3)')
     ap.add_argument('--cc',default=os.environ.get('CC','cc'))
-    ap.add_argument('--c-import',default=str(HOME/'workspace/universal-read/build/L589/c-import'))
-    ap.add_argument('--c-export',default=os.environ.get('ZIG_SELFTEST_C_EXPORT',str(HOME/'workspace/u624-int/tools/adapters/c-export')),help='public tools/adapters/c-export of a passing G1 checkout')
-    ap.add_argument('--lower',default=os.environ.get('ZIG_SELFTEST_LOWER',str(HOME/'workspace/u624-int/tools/adapters/lower')))
-    ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC',str(HOME/'workspace/omega-seedqual-20261025/seed/out/omc')))
-    ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO',str(HOME/'workspace/omega-bridge')))
-    ap.add_argument('--sa-v2-root',default=os.environ.get('ZIG_SELFTEST_SA_V2_ROOT',str(ROOT)),help='tree with build/L832/sa (the #621 v2 codec)')
-    ap.add_argument('--retarget',default=os.environ.get('ZIG_SELFTEST_RETARGET',str(ROOT/'tools/adapters/retarget') if (ROOT/'tools/adapters/retarget').is_file() else ''),
-                    help='public tools/adapters/retarget; every use is cross-checked against the test-code R')
+    ap.add_argument('--c-import',default=str(ROOT/'build/L589/c-import'),help='native C importer (default: in-tree build of mk/c-u64-import.mk)')
+    ap.add_argument('--c-export',default=str(ROOT/'tools/adapters/c-export'),help='public C exporter (default: in-tree, built by mk/c-u64-export.mk)')
+    ap.add_argument('--lower',default=str(ROOT/'tools/adapters/lower'),help='public lowering (default: in-tree, built by mk/lower.mk)')
+    ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC'),required='OMEGA_NATIVE_OMC' not in os.environ,help='native realization omc 734f0a39 (default: $OMEGA_NATIVE_OMC)')
+    ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO'),required='OMEGA_BRIDGE_REPO' not in os.environ,help='omega-bridge repository holding 012860db (default: $OMEGA_BRIDGE_REPO)')
+    ap.add_argument('--sa-v2-root',default=str(ROOT),help='tree with build/L832/sa, the #621 v2 codec (default: this repo, built by mk/source-aware-v2.mk)')
+    ap.add_argument('--retarget',default=str(ROOT/'tools/adapters/retarget') if (ROOT/'tools/adapters/retarget').is_file() else '',
+                    help='public tools/adapters/retarget (default: in-tree when present); every use is cross-checked against the test-code R')
     a=ap.parse_args()
+    zig=shutil.which(a.zig) if a.zig else None
+    if not zig:
+        print('NOT_RUN zig oracle not found (set ZIG or put zig 0.17.0 on PATH): %r'%a.zig,file=sys.stderr);return 3
+    a.zig=str(Path(zig).resolve())
     out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)
     cimp=Path(a.c_import);cexp=Path(a.c_export);v2root=Path(a.sa_v2_root);rtool=Path(a.retarget) if a.retarget else None
     Z=Zig(out,a.zig);C=COracle(out,a.cc);NAT=Native(out,a.lower,a.omc,a.bridge,a.cc)
