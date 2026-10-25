@@ -40,3 +40,15 @@ Constructs used by the unit, and the slice that is expected to provide each
   Change to the delivered unit from this: load and round body split a term per line (error 12 seen
   under S1 for the one-line forms).
   Not yet compilable: unroll (S2); layout, fresh (S3); view uchar *, part, out, export (S4).
+
+2026-10-25T17:40Z  compiler-s2 @ 7fb62f3a (PR #753), omc c23b3376…b533
+  Delivered unit: refused, "omc: line 114: error 16" (fresh, S3), as under S1.
+  Reduced test unit s2/sha256-s2.om (delivered sched and rounds bodies verbatim, see s2/README.txt):
+    for i ulong 16|48|64 unroll ... compiles; one round body, one schedule step
+    rotr in unrolled bodies ........ 576 ROR immediate (64x6 + 48x4), no RORV
+    constant-index gets ............ 336 LDR immediate, no run-time check
+  Result: 158/158 fixture vectors; unroll removed: 158/158; rotr-amount mutant: 0/158. HOST.
+  Code: S1 test unit 4904 bytes / 1213 insns; S2 17648 / 4399; S2 with unroll removed 3988 / 984.
+  Change to the delivered unit: each Sigma in two lines through t, the schedule step in two lines
+  through x (error 12 under S2 for the one-line forms). Unit now 339 lines.
+  Not yet compilable: layout, fresh (S3); view uchar *, part, out, export (S4).

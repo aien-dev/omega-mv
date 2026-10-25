@@ -1,0 +1,230 @@
+note sha256-s2.om: REDUCED test unit for OM-2 compiler slice S2 (ledger L838). It is NOT the delivered
+note unit om/sha256/sha256-om2.om and is never linked into the product.
+note Kept from the delivered unit: the om2 line, the K and IV hex lines (the same lines, produced
+note mechanically from fixtures/sha256-k.dec and sha256-iv.dec), and rotr-based Sigma/sigma with the
+note same round and schedule formulas.
+note The schedule and round loops are `for ... unroll` with the delivered unit's exact bodies.
+note Reduced: the state in a uint array instead of layout shactx
+note (S3); w a zeroed new array instead of fresh (S3); program mode reading stdin 64 bytes at a time
+note and writing the hex digest instead of unsized views, out and export entries (S4).
+om2
+
+note K[0..63] (fixtures/sha256-k.dec)
+fn kinit k edit uint 64 to void
+put k 0 0x428a2f98
+put k 1 0x71374491
+put k 2 0xb5c0fbcf
+put k 3 0xe9b5dba5
+put k 4 0x3956c25b
+put k 5 0x59f111f1
+put k 6 0x923f82a4
+put k 7 0xab1c5ed5
+put k 8 0xd807aa98
+put k 9 0x12835b01
+put k 10 0x243185be
+put k 11 0x550c7dc3
+put k 12 0x72be5d74
+put k 13 0x80deb1fe
+put k 14 0x9bdc06a7
+put k 15 0xc19bf174
+put k 16 0xe49b69c1
+put k 17 0xefbe4786
+put k 18 0x0fc19dc6
+put k 19 0x240ca1cc
+put k 20 0x2de92c6f
+put k 21 0x4a7484aa
+put k 22 0x5cb0a9dc
+put k 23 0x76f988da
+put k 24 0x983e5152
+put k 25 0xa831c66d
+put k 26 0xb00327c8
+put k 27 0xbf597fc7
+put k 28 0xc6e00bf3
+put k 29 0xd5a79147
+put k 30 0x06ca6351
+put k 31 0x14292967
+put k 32 0x27b70a85
+put k 33 0x2e1b2138
+put k 34 0x4d2c6dfc
+put k 35 0x53380d13
+put k 36 0x650a7354
+put k 37 0x766a0abb
+put k 38 0x81c2c92e
+put k 39 0x92722c85
+put k 40 0xa2bfe8a1
+put k 41 0xa81a664b
+put k 42 0xc24b8b70
+put k 43 0xc76c51a3
+put k 44 0xd192e819
+put k 45 0xd6990624
+put k 46 0xf40e3585
+put k 47 0x106aa070
+put k 48 0x19a4c116
+put k 49 0x1e376c08
+put k 50 0x2748774c
+put k 51 0x34b0bcb5
+put k 52 0x391c0cb3
+put k 53 0x4ed8aa4a
+put k 54 0x5b9cca4f
+put k 55 0x682e6ff3
+put k 56 0x748f82ee
+put k 57 0x78a5636f
+put k 58 0x84c87814
+put k 59 0x8cc70208
+put k 60 0x90befffa
+put k 61 0xa4506ceb
+put k 62 0xbef9a3f7
+put k 63 0xc67178f2
+end
+
+note H(0) (fixtures/sha256-iv.dec)
+fn iv s edit uint 8 to void
+put s 0 0x6a09e667
+put s 1 0xbb67ae85
+put s 2 0x3c6ef372
+put s 3 0xa54ff53a
+put s 4 0x510e527f
+put s 5 0x9b05688c
+put s 6 0x1f83d9ab
+put s 7 0x5be0cd19
+end
+
+
+
+
+
+note message schedule of the block b
+fn sched w edit uint 64 b view uchar 64 to void
+q = ulong 0
+x = uint 0
+y = uint 0
+for i ulong 16 unroll
+q = mul i 4
+x = uint get b q
+x = or shl x 8 uint get b add q 1
+x = or shl x 8 uint get b add q 2
+put w i or shl x 8 uint get b add q 3
+end
+for i ulong 48 unroll
+x = get w add i 1
+y = get w add i 14
+x = add add get w i get w add i 9 xor xor rotr x 7 rotr x 18 shr x 3
+put w add i 16 add x xor xor rotr y 17 rotr y 19 shr y 10
+end
+end
+
+note the 64 rounds; Ch and Maj written as in the delivered unit
+fn rounds s edit uint 8 w view uint 64 kt view uint 64 to void
+a = get s 0
+b = get s 1
+c = get s 2
+d = get s 3
+e = get s 4
+f = get s 5
+g = get s 6
+h = get s 7
+t = uint 0
+for i ulong 64 unroll
+h = add h get kt i
+h = add h get w i
+t = xor rotr e 6 rotr e 11
+t = xor t rotr e 25
+h = add h t
+h = add h xor g and e xor f g
+d = add d h
+t = xor rotr a 2 rotr a 13
+t = xor t rotr a 22
+h = add h t
+t = and c or a b
+h = add h or and a b t
+t = h
+h = g
+g = f
+f = e
+e = d
+d = c
+c = b
+b = a
+a = t
+end
+put s 0 add get s 0 a
+put s 1 add get s 1 b
+put s 2 add get s 2 c
+put s 3 add get s 3 d
+put s 4 add get s 4 e
+put s 5 add get s 5 f
+put s 6 add get s 6 g
+put s 7 add get s 7 h
+end
+
+fn hexd d uint to uchar
+if lt d 10
+ret uchar add d 48
+end
+ret uchar add d 87
+end
+
+note stdin -> lowercase hex digest and LF on stdout; a read error exits 2
+note pad the k pending bytes of b (k < 64) and absorb the bit length of the n-byte message
+fn finish s edit uint 8 w edit uint 64 kt view uint 64 b edit uchar 64 k ulong n ulong to void
+put b k 0x80
+for i ulong sub 63 k
+put b add add k 1 i 0
+end
+if ge k 56
+sched w b
+rounds s w kt
+for i ulong 56
+put b i 0
+end
+end
+bits = shl n 3
+for i ulong 8
+put b sub 63 i uchar and shr bits mul i 8 0xff
+end
+sched w b
+rounds s w kt
+end
+
+note the digest of s as lowercase hex and LF on stdout
+fn hexout s view uint 8 to void
+o = new uchar 65 10
+x = uint 0
+for i ulong 32
+x = get s shr i 2
+x = and shr x sub 24 mul and i 3 8 0xff
+put o mul i 2 hexd shr x 4
+put o add mul i 2 1 hexd and x 15
+end
+z = write 1 o 0 65
+end
+
+fn main to int
+s = new uint 8 0
+w = new uint 64 0
+kt = new uint 64 0
+b = new uchar 64 0
+kinit kt
+iv s
+n = ulong 0
+k = ulong 0
+r = long 1
+while gt r 0
+r = read 0 b k sub 64 k
+if lt r 0
+exit 2
+end
+if gt r 0
+k = add k ulong r
+n = add n ulong r
+if eq k 64
+sched w b
+rounds s w kt
+k = 0
+end
+end
+end
+finish s w kt b k n
+hexout s
+ret 0
+end

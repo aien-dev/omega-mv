@@ -125,7 +125,8 @@ end
 for i ulong 48 unroll
 x = get w add i 1
 y = get w add i 14
-put w add i 16 add add add get w i get w add i 9 xor xor rotr x 7 rotr x 18 shr x 3 xor xor rotr y 17 rotr y 19 shr y 10
+x = add add get w i get w add i 9 xor xor rotr x 7 rotr x 18 shr x 3
+put w add i 16 add x xor xor rotr y 17 rotr y 19 shr y 10
 end
 end
 
@@ -134,8 +135,8 @@ note in each copy, so get kt i and get w i need no run-time check. uint arithmet
 note Ch(e,f,g) = (e and f) xor (not e and g) is written g xor (e and (f xor g)); Maj(a,b,c) =
 note (a and b) xor (a and c) xor (b and c) is written (a and b) or (c and (a or b)). Both are bitwise
 note identities. h first becomes T1, then T1 + T2, which is the next a; the names then shift by one.
-note The sums are built a term per line: with 12 names live, a one-line round body needs more than
-note the 16 registers omc hands out (error 12, seen under compiler-s1 in the reduced test unit).
+note The sums are built a term per line and each Sigma in two lines through t: 12 names are live, and
+note omc hands out 16 registers with no spilling (error 12 under compiler-s1/s2 for longer lines).
 fn rounds s edit uint 8 w view uint 64 kt view uint 64 to void
 a = get s 0
 b = get s 1
@@ -149,10 +150,14 @@ t = uint 0
 for i ulong 64 unroll
 h = add h get kt i
 h = add h get w i
-h = add h xor xor rotr e 6 rotr e 11 rotr e 25
+t = xor rotr e 6 rotr e 11
+t = xor t rotr e 25
+h = add h t
 h = add h xor g and e xor f g
 d = add d h
-h = add h xor xor rotr a 2 rotr a 13 rotr a 22
+t = xor rotr a 2 rotr a 13
+t = xor t rotr a 22
+h = add h t
 t = and c or a b
 h = add h or and a b t
 t = h
