@@ -7,11 +7,13 @@ T624 := build/T624
 T624_SEED_COMMIT := f8588e10ae70ddcb901ebf4fd20618b283a94005
 T624_OMC_SHA256 := 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
 OMEGA_NATIVE_OMC ?= $(CURDIR)/$(T624)/seed/seed/out/omc
-SA_SEED_REPO ?= $(HOME)/workspace/omega-bridge
+# SA_SEED_REPO: an aien-dev/omega-bridge clone holding seed 0fc7d866 and native.om 012860db. Required
+# (absolute path); there is no host default.
 OMEGA_BRIDGE_REPO ?= $(SA_SEED_REPO)
 export OMEGA_NATIVE_OMC SA_SEED_REPO OMEGA_BRIDGE_REPO
 
 translation-omc:
+	@test -n "$(SA_SEED_REPO)" || { echo "T624: set SA_SEED_REPO to an aien-dev/omega-bridge clone (absolute path)"; exit 2; }
 	@if [ ! -x "$(OMEGA_NATIVE_OMC)" ] && [ "$(OMEGA_NATIVE_OMC)" = "$(CURDIR)/$(T624)/seed/seed/out/omc" ]; then \
 	  rm -rf $(T624)/seed && mkdir -p $(T624)/seed && \
 	  git archive $(T624_SEED_COMMIT) seed | tar -x -C $(T624)/seed && \
