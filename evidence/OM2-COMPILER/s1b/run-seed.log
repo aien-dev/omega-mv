@@ -1,0 +1,232 @@
+make: 'build/omegese/omegese' is up to date.
+make: 'build/omega_emit/omega_emit' is up to date.
+make: 'build/checker2/checker2' is up to date.
+PASS seed0 408 bytes, rebuilds itself
+PASS hex1 776 bytes, born from seed0
+PASS asm2 2464 bytes, born from hex1
+PASS om4 om4.bin 14224 bytes
+PASS omc fixpoint ce4facbe194e8909c171f48d7922f9bfa42efc0cf7ab77d860ac6c799e03f019
+PASS fwd exit 0
+PASS fwd runs, exit 7
+PASS mut exit 0
+PASS mut runs, exit 0
+PASS cycle exit 9
+PASS assign exit 7
+RC=0
+PASS seed0 408 bytes, rebuilds itself
+PASS hex1 776 bytes, born from seed0
+PASS asm2 2464 bytes, born from hex1
+PASS om4 om4.bin 14224 bytes
+PASS omc fixpoint ce4facbe194e8909c171f48d7922f9bfa42efc0cf7ab77d860ac6c799e03f019
+PASS fwd exit 0
+PASS fwd runs, exit 7
+PASS mut exit 0
+PASS mut runs, exit 0
+PASS cycle exit 9
+PASS assign exit 7
+RC=0
+PASS fixpoint ce4facbe194e8909c171f48d7922f9bfa42efc0cf7ab77d860ac6c799e03f019  build/seed/ir/stage3
+OK bytes=133 functions=1
+PASS dev01 identical; checker2 ACCEPT
+OK bytes=120 functions=1
+PASS dev02 identical; checker2 ACCEPT
+OK bytes=243 functions=1
+PASS dev03 identical; checker2 ACCEPT
+OK bytes=205 functions=1
+PASS dev04 identical; checker2 ACCEPT
+OK bytes=58 functions=1
+PASS dev05 identical; checker2 ACCEPT
+OK bytes=55 functions=1
+PASS dev06 identical; checker2 ACCEPT
+OK bytes=244 functions=1
+PASS dev07 identical; checker2 ACCEPT
+OK bytes=331 functions=1
+PASS dev08 identical; checker2 ACCEPT
+OK bytes=203 functions=1
+PASS dev09 identical; checker2 ACCEPT
+OK bytes=48 functions=1
+PASS dev10 identical; checker2 ACCEPT
+PASS mul-to-add mutant differs
+PASS struct_decl refused 9
+PASS global_decl refused 9
+PASS text_decl refused 9
+PASS float_use refused 3
+PASS continue_use refused 3
+PASS integer constant folds to the literal IR
+PASS trap_const constant folds to the literal IR
+PASS bound_const constant folds to the literal IR
+PASS for_const constant folds to the literal IR
+PASS float_const refused 9
+PASS call_self refused 3
+PASS call_forward refused 3
+PASS call_nonvoid_stmt refused 7
+PASS call_void_value refused 7
+PASS call_arg_type refused 7
+PASS call_arg_local refused 7
+PASS call_result_type refused 7
+PASS break_outside refused 9
+PASS after_break refused 17
+PASS bin_type_local refused 7
+PASS bin_bool refused 7
+PASS bin_shift_bool refused 7
+PASS bin_result_type refused 7
+PASS cmp_assign_type refused 7
+PASS bool_result refused 7
+PASS neg_bool refused 7
+PASS cond_type refused 7
+PASS ret_type_local refused 7
+PASS neg_bool_local refused 7
+OK bytes=109 functions=2
+PASS call_value IR identical; checker2 ACCEPT
+OK bytes=100 functions=2
+PASS call_void IR identical; checker2 ACCEPT
+OK bytes=83 functions=2
+PASS call_zero IR identical; checker2 ACCEPT
+OK bytes=113 functions=2
+PASS call_two IR identical; checker2 ACCEPT
+OK bytes=119 functions=2
+PASS call_long IR identical; checker2 ACCEPT
+OK bytes=118 functions=2
+PASS call_nested IR identical; checker2 ACCEPT
+OK bytes=139 functions=2
+PASS call_expr IR identical; checker2 ACCEPT
+OK bytes=260 functions=2
+PASS call_loop IR identical; checker2 ACCEPT
+OK bytes=209 functions=2
+PASS call_six IR identical; checker2 ACCEPT
+OK bytes=267 functions=1
+PASS break_while IR identical; checker2 ACCEPT
+OK bytes=212 functions=1
+PASS break_for IR identical; checker2 ACCEPT
+OK bytes=378 functions=1
+PASS break_nested IR identical; checker2 ACCEPT
+OK bytes=70 functions=1
+PASS shift_mixed IR identical; checker2 ACCEPT
+OK bytes=78 functions=1
+PASS cmp_assign IR identical; checker2 ACCEPT
+OK bytes=55 functions=1
+PASS cast_ret IR identical; checker2 ACCEPT
+PASS 30 random two-function call units identical; checker2 ACCEPT
+SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 1 bool unit + 1 cast unit + 30 fuzz units; structs IR spec-blocked
+RC=0
+PASS om4 refuses break and trap
+PASS w1 exit 6
+PASS f1 exit 3
+PASS n1 exit 33
+PASS n2 exit 4
+PASS n3 exit 3
+PASS c1 exit 18
+PASS c2 exit 12
+PASS c3 exit 36
+PASS c4 exit 0
+PASS c5 exit 104
+PASS t1 exit 105
+PASS t2 exit 107
+PASS bad_outside error 9
+PASS bad_after error 17
+PASS bad_continue error 9
+PASS bad_after_continue error 17
+PASS bad_trap0 error 8
+PASS bad_trap15 error 8
+PASS gate7 18 cases
+PASS om4 refuses float syntax
+PASS f64_bits exit 0
+PASS f32_bits exit 0
+PASS arith exit 0
+PASS compare exit 0
+PASS convert exit 0
+PASS arrays exit 0
+PASS globals exit 0
+PASS params exit 0
+PASS structs exit 0
+PASS intrinsics exit 0
+PASS neg_intr_int error 7
+PASS neg_intr_mixed error 7
+PASS neg_intr_ambig error 11
+PASS neg_mixed error 7
+PASS neg_index error 7
+PASS neg_for error 7
+PASS neg_read error 7
+PASS neg_ambiguous error 11
+PASS neg_dot error 6
+PASS neg_overflow error 8
+PASS neg_overflow2 error 8
+PASS neg_overflow3 error 8
+PASS neg_ir error 3
+PASS gate8 23 cases
+PASS basic exit 0
+PASS float exit 4
+PASS neg_ambiguous error 11
+PASS neg_unclosed error 16
+PASS gate9 4 cases
+PASS sizes exit 0
+PASS neg_type error 16
+PASS neg_field error 3
+PASS neg_struct error 3
+PASS neg_void error 9
+PASS gate10 5 cases
+PASS names exit 10 (bits/min/max/abs/sqrt usable as names)
+PASS neg_reserved error 16 (bitcast is a keyword)
+PASS gate11 2 cases
+PASS g1024 accepted
+PASS g1025 error 14
+PASS f511 accepted
+PASS f512 error 14
+PASS b512 accepted
+PASS b513 error 14
+PASS local error 23
+PASS arr error 23
+PASS pools error 23
+PASS big error 14
+PASS gate12 10 cases
+PASS 300 token-stream programs: 0..23, deterministic, no crash or timeout
+PASS 300 structured programs: compiled, byte-identical twice
+PASS gate13 600 programs
+PASS gate14 35 numeric cases (19 values, 16 traps; Wolfram-derived expectations)
+PASS gate15 21 refusal cases (codes 3..23; 1 and 2 are compiler I/O) plus a valid control
+PASS gate16 18 constant programs and 19 refusals
+PASS pinned reference compiler e5d60db8...
+PASS gate17 300 programs byte-identical to the pinned compiler
+PASS gate18 153 literal packs and both computed entries match the committed chain
+PASS native files, errno, exclusive creation, permissions, seek, sync and monotonic time
+PASS native argument access, empty arguments, UTF-8 bytes and short-buffer refusal
+PASS native socket exchange, poll timeout, fork, accept and child reaping
+PASS native TCP loopback exchange on an OS-assigned port
+PASS native exec with exact arguments, exec failure, pipes, descriptor duplication, sleep, kill and wait
+PASS native directory enumeration, file metadata and rename without overwriting
+PASS native syscall errors and nested expression register preservation
+PASS native cwd and readlnk offsets, counts, truncation, errno and private path copy
+PASS native socket options with independent bind behavior, readonly input and errno
+PASS native checked device ioctl composed with host files and pipes
+PASS native device parameter binding
+PASS bounded native UVM requests
+PASS native mapping
+PASS managed addresses and ordered mapped words
+PASS owned reservations, collision refusal and failed-bind retirement
+PASS 36 device/mapping compiler refusals
+PASS struct values and native file operations in one program
+PASS native random: exact count, non-zero, two calls differ, invalid flags refused
+PASS native environment: count, entry bytes, short-buffer refusal
+PASS native chdir: relative file created in the new directory; missing path refused
+PASS native ftrunc: write, shorten, rewind, read 4 then EOF; closed fd refused
+PASS native stat: size field, missing path errno, 128-byte structure
+PASS native stat: short output traps 3 before the kernel
+PASS native link/symlnk: hard link nlink 2, symlink target, unlink
+PASS native link: one-record packed list traps 3
+PASS native chmod: 0600 mode in st_mode; missing path errno
+PASS native chown: owner uid kept in st_uid; missing path errno
+PASS native faccess: existing path accepted, missing path refused
+PASS native identity: getuid/geteuid/getgid/getegid match id
+PASS native fchdir/umask/getppid: directory fd, 0777 under mask 0, parent id
+PASS native fdsync/memfd: data sync, closed fd refused, anonymous file rw
+PASS native pread/pwrite: positioned I/O, bytes intact, closed fd refused
+PASS native getsid/syncfs/shutdown: session id, filesystem sync, non-socket refusal
+PASS native process groups: getpgid/setpgid, setsid or EPERM
+PASS native lstat: stat follows the link, lstat reports S_IFLNK
+PASS native truncate: path length set to 4; missing path errno
+PASS native environment: index at the count traps 3
+PASS 18 bounds, packet, mutability, type and function-mode negative controls
+PASS 41 total host negative controls, including cwd, readlnk and sockopt
+PASS 62 original fixtures retain identical machine code, refusal status and diagnostics
+PASS native-host qualification; no C/Rust compiler, assembler or linker used
+RC=0

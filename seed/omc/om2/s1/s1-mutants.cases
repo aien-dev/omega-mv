@@ -10,6 +10,7 @@ ctl-hex-upper refuse seed/omc/om2/s1/bad-hex-upper.om 6
 ctl-om1-names run seed/omc/om2/s1/om1-names.om - - - 2
 ctl-fmt emit seed/omc/om2/s1/fmt-in.om file:seed/omc/om2/s1/fmt-out.txt - 0
 ctl-diag-unknown emit seed/omc/om2/s1/diag-unknown.om - file:seed/omc/om2/s1/diag-unknown.err 3
+ctl-diag-newpt emit seed/omc/om2/s1/diag-newpt.om - file:seed/omc/om2/s1/diag-newpt.err 16
 # rotl by a number becomes rotr
 subst seed/omc/om2/s1/mut/rotl.from seed/omc/om2/s1/mut/rotl.to
 cc seed/omc/omc.om
@@ -38,3 +39,7 @@ m-paren emit seed/omc/om2/s1/fmt-in.om file:seed/omc/om2/s1/fmt-out.txt - 0
 subst seed/omc/om2/s1/mut/unk.from seed/omc/om2/s1/mut/unk.to
 cc seed/omc/omc.om
 m-unk emit seed/omc/om2/s1/diag-unknown.om - file:seed/omc/om2/s1/diag-unknown.err 3
+# an undeclared type name (a struct not yet declared) is no longer sev=unknown expect=name
+subst seed/omc/om2/s1/mut/tyunk.from seed/omc/om2/s1/mut/tyunk.to
+cc seed/omc/omc.om
+m-tyunk emit seed/omc/om2/s1/diag-newpt.om - file:seed/omc/om2/s1/diag-newpt.err 16

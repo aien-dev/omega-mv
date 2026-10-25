@@ -1,0 +1,4 @@
+c = kw get tw 0
+if eq c 0
+unkfail 16
+end

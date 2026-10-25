@@ -640,7 +640,8 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   the span's bytes in hex (at most 32 bytes), `-` when empty. `expect` is the class being read: `number`
   for errors 6 and 8, `end` for error 15, `name` for an unknown name, otherwise `value`, `type`, `name`,
   `newline` or `word` from the reader that failed. `sev` is `unknown` for an undeclared function or struct
-  (errors 3 and 13 at a call or `offsetof`), `incomplete` when the failure is on the end-of-input token or
+  (errors 3 and 13 at a call or `offsetof`; error 16 for an undeclared word where a type or struct is
+  read, as in `new Pt` or `p view Pt`), `incomplete` when the failure is on the end-of-input token or
   in a text cut by the end (except the call-cycle error 9), else `error`. `obligation` is `bounds` (21),
   `growth` (14), `regs` (12), `init` (27), `ctor` (28), `layout` (29) or `-`.
 - **Hex literals.** `0x` and 1..16 digits `0-9a-f` is the unsigned value and takes the type the place

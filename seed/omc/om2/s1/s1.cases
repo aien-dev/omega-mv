@@ -49,3 +49,8 @@ s1-bad-fmt-tailws emit seed/omc/om2/s1/bad-fmt-tailws.om - err:5:6 6
 s1-bad-fmt-late emit seed/omc/om2/s1/bad-fmt-late.om - err:2:16 16
 s1-bad-fmt-nested emit seed/omc/om2/s1/bad-fmt-nested.om - err:2:16 16
 s1-bad-fmt-compile emit seed/omc/om2/s1/bad-fmt-compile.om - err:3:5 5
+# regressions for the L836 S1 findings: an undeclared struct is future-dependent (D1); a CR inside a text
+# literal is reported on the line that holds it (D2 check)
+s1-diag-newpt emit seed/omc/om2/s1/diag-newpt.om - file:seed/omc/om2/s1/diag-newpt.err 16
+s1-diag-viewpt emit seed/omc/om2/s1/diag-viewpt.om - file:seed/omc/om2/s1/diag-viewpt.err 16
+s1-bad-fmt-crtext emit seed/omc/om2/s1/bad-fmt-crtext.om - err:4:6 6

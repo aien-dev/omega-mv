@@ -2528,6 +2528,9 @@ if gt get tl 0 8
 fail 16
 end
 c = kw get tw 0
+if eq c 0
+unkfail 16
+end
 if eq c 76
 fail 9
 end
