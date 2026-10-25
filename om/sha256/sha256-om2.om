@@ -22,7 +22,7 @@ om2
 
 layout shactx 104
 field state uint 8 at 0 little
-field count ulong 1 at 32 little
+field count ulong at 32 little
 field buf uchar 64 at 40 little
 end
 
@@ -196,7 +196,7 @@ iv s
 for i ulong 8 unroll
 put c state i get s i
 end
-put c count 0 0
+put c count 0
 end
 
 note Whole blocks are hashed straight from d; the bytes that complete a pending block go through blk.
@@ -236,9 +236,9 @@ end
 note Any length, including 0 and >= 2^32. lt n sub 64 bi cannot wrap (bi < 64); add bi n could.
 export fn sha256_update c edit shactx d view uchar * to void
 n = len d
-cnt = get c count 0
+cnt = get c count
 bi = and cnt 63
-put c count 0 add cnt n
+put c count add cnt n
 if lt n sub 64 bi
 for i ulong n
 put c buf add bi i get d i
@@ -258,7 +258,7 @@ kinit kt
 for i ulong 8 unroll
 put s i get c state i
 end
-cnt = get c count 0
+cnt = get c count
 k = and cnt 63
 for i ulong k
 put p i get c buf i
