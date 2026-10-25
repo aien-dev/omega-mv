@@ -21,7 +21,9 @@ def parse(src):
             name, size = w[1], int(w[2]); fields = {}; i += 1
             while lines[i].split()[0] != 'end':
                 f = lines[i].split()  # field F T COUNT at OFF little
-                fields[f[1]] = (f[2], int(f[3]), int(f[5])); i += 1
+                if f[3] == 'at': fields[f[1]] = (f[2], None, int(f[4]))  # E5: no COUNT = scalar
+                else: fields[f[1]] = (f[2], int(f[3]), int(f[5]))
+                i += 1
             layouts[name] = (size, fields); i += 1; continue
         exp = w[0] == 'export'
         if exp: w = w[1:]
@@ -99,7 +101,10 @@ class VM:
             tgt = env[t[1]]
             if isinstance(tgt, View): tgt = tgt.arr
             if isinstance(tgt, Lay):
-                f = t[2]; i, r = s.expr(t[3:], env); v, r = s.expr(r, env); assert not r
+                f = t[2]; r = t[3:]
+                if tgt.f[f][1] is None: i = (0, None)
+                else: i, r = s.expr(r, env)
+                v, r = s.expr(r, env); assert not r
                 tgt.put(f, i[0], v[0]); return
             i, r = s.expr(t[2:], env); v, r = s.expr(r, env); assert not r, t
             if not (0 <= i[0] < len(tgt.a)): raise Trap(3)
@@ -135,7 +140,9 @@ class VM:
         if w == 'get':
             a = env[r[0]]; a = a.arr if isinstance(a, View) else a; r = r[1:]
             if isinstance(a, Lay):
-                f = r[0]; i, r = s.expr(r[1:], env); return a.get(f, i[0]), r
+                f = r[0]; r = r[1:]
+                if a.f[f][1] is None: return a.get(f, 0), r
+                i, r = s.expr(r, env); return a.get(f, i[0]), r
             i, r = s.expr(r, env)
             if not (0 <= i[0] < len(a.a)): raise Trap(3)
             return (a.a[i[0]], a.t), r
@@ -160,11 +167,11 @@ class Lay:
     def __init__(s, fields, size, data=None):
         s.f, s.b = fields, bytearray(size) if data is None else data
     def get(s, f, i):
-        t, n, off = s.f[f]; wb = W[t] // 8
+        t, n, off = s.f[f]; wb = W[t] // 8; n = 1 if n is None else n
         if not (0 <= i < n): raise Trap(3)
         return (int.from_bytes(s.b[off + i * wb: off + (i + 1) * wb], 'little'), t)
     def put(s, f, i, v):
-        t, n, off = s.f[f]; wb = W[t] // 8
+        t, n, off = s.f[f]; wb = W[t] // 8; n = 1 if n is None else n
         if not (0 <= i < n): raise Trap(3)
         s.b[off + i * wb: off + (i + 1) * wb] = v.to_bytes(wb, 'little')
 

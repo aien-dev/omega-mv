@@ -28,12 +28,12 @@ Cutover commit (one commit, after P1-P5)
   3. src/sha256.h becomes the include of the generated header only (or is replaced by it); it holds
      no handwritten logic. The 104-byte layout is checked by the generator's _Static_asserts and by an
      offsetof oracle outside the closure (section 5).
-  4. Delete src/sha256.c. The generated units need a translation unit of their own, because today
-     src/sha256.c is the only file that includes omega_om_units.inc and src/omega_blake3.c links
-     against omega_omb3 from it. Either the bridge emits a generated src/omega_om_units.c, or the
-     build compiles the .inc directly. Every build line naming src/sha256.c (Makefile 61, mk/*.mk 37
-     files, shell recipes in tests/, tools/, seed/rung3, seed/rung4, research/atemporal) is changed
-     to that unit. Those files have other owners: the coordinator assigns the writer.
+  4. Delete src/sha256.c. The generated bindings move to a generated src/omega_om_units.c
+     (erratum E5 (2)), because today src/sha256.c is the only file that includes
+     omega_om_units.inc and src/omega_blake3.c links against omega_omb3 from it. Every build line
+     naming src/sha256.c (Makefile 61, mk/*.mk 37 files, shell recipes in tests/, tools/, seed/rung3,
+     seed/rung4, research/atemporal, om/*/parity) is changed to src/omega_om_units.c. L838 is the
+     single writer of those lines, in the cutover commit only (E5 (2)).
   5. Makefile:657 RX_CX_FS_ALLOWED: sha256_* -> omega2_sha256_* (erratum E3 (3)).
   6. om/sha256/sha256.om (OM-1, entry omsha) and its v1 binding are removed; om/sha256/parity/run.sh
      and README are rewritten for the v2 path; the ARM64 workflow path filter

@@ -10,6 +10,9 @@ Cases, seed 838: lengths 0..259, 447, 448, 511, 512, 1000, 4095, 4096, 4097, 123
   updates) + final; copy of a live context after the first half, both continued (erratum E3);
   init/update/final on a context that was already finalized.
   python3 interp.py om/sha256/sha256-om2.om  ->  desk-check cases=1076 fail=0
+  After erratum E5 (count is a scalar field; interp.py reads `field F T at OFF E` as a scalar):
+  python3 interp.py om/sha256/sha256-om2.om  ->  desk-check cases=1076 fail=0
+  mutant s/^put c count 0$/put c count 1/    ->  fail=807
 
 Mutants (sed on a copy; each must fail):
   s/rotr e 11/rotr e 12/                      fail=1076
