@@ -1,0 +1,13 @@
+# Faulty-transform mutant of the CURRENT compiler (scratch copy of omc.om only): shift right by a
+# number is lowered with immr = s+1 instead of s (UBFM/SBFM, omc.om bo_shr). The pinned compiler's
+# SHA must pass; the mutant compiler's build of the same consumer source must exit 0 and print a
+# wrong digest for each FIPS vector (a clean, specific mismatch, never a crash or a refusal).
+sha-abc-pinned run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+subst seed/qualification/om2/compiler-mutants/shr-imm-plus1.from seed/qualification/om2/compiler-mutants/shr-imm-plus1.to
+cc seed/omc/omc.om
+sha-abc-shr-mutant kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+sha-empty-shr-mutant kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om - line:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 - 0
+sha-448-shr-mutant kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m448.bin line:248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1 - 0
+sha-million-shr-mutant kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rep:97:1000000 line:cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0 - 0
+cc pinned
+sha-abc-pinned-again run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0

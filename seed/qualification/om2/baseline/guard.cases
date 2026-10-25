@@ -1,0 +1,11 @@
+# Weakened-guard mutant of the CURRENT compiler's read/write slice check (omc.om vs_chk), applied to
+# a scratch copy only. The pinned compiler must trap the witness; the mutant compiler must let it
+# through (a specific stdout line, exit 0) while still compiling the SHA consumer correctly.
+witness-pinned run seed/qualification/om2/baseline/slice-witness.om - - - 103
+subst seed/qualification/om2/compiler-mutants/guard-wrapped.from seed/qualification/om2/compiler-mutants/guard-wrapped.to
+cc seed/omc/omc.om
+witness-guard-mutant kill seed/qualification/om2/baseline/slice-witness.om - - - 0
+witness-guard-mutant-exact run seed/qualification/om2/baseline/slice-witness.om - line:WRAPPED_SLICE_ACCEPTED_4 - 0
+sha-abc-guard-mutant run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+cc pinned
+witness-pinned-again run seed/qualification/om2/baseline/slice-witness.om - - - 103

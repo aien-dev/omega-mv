@@ -1,0 +1,1690 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/qualification/om2/gate.om: OM-2 qualification coordinator (#748, ledger L836).
+note Handwritten seeded Omega, program mode, Linux AArch64, modelled on security673/gate669.om.
+note
+note Run from the repository root:   gate OMC OMC_SHA256 CASES SCRATCH
+note   OMC         compiler under test (path); every case source is compiled by it
+note   OMC_SHA256  64 lowercase hex digits; the gate hashes OMC itself (FIPS 180-4 SHA-256 written
+note               below, constants read from the bc-derived fixtures) and refuses to run any case
+note               when the digest differs: every case is then NOT_RUN and the gate is INVALID
+note   CASES       case list file, at most 262144 bytes
+note   SCRATCH     evidence directory; must not exist (exit 91), created 0700, never overwritten
+note
+note Case list: one line per case, words separated by single or repeated spaces, # starts a comment
+note line. Paths are relative to the working directory. Scratch files are SCRATCH/<line>.<suffix>.
+note   NAME run    SRC STDIN STDOUT STDERR EXIT [ARG ...]   compile SRC (exit 0, ELF), run it with
+note               a deadline; PASS only if exit, stdout and stderr all equal the expectation
+note   NAME kill   SRC STDIN ORACLE STDERR EXIT [ARG ...]   a mutant: PASS only if it exits with EXIT,
+note               stderr matches and stdout DIFFERS from the oracle (reports the first byte); a
+note               survivor or any other exit is FAIL; a signal or timeout is INVALID, never a kill
+note   NAME refuse SRC CODE        PASS only if the compiler exits CODE, writes no output and its
+note               diagnostic names "error CODE"
+note   NAME notrun REASON ...      recorded as NOT_RUN (a planned case whose prerequisite is absent)
+note   cc pinned | cc SRC          later cases use OMC, or a compiler built from SRC by the pinned OMC;
+note               the built compiler's sha256 is printed; a failed build makes later cases NOT_RUN
+note   deadline SECONDS            per-child deadline, 1..900 (default 30)
+note   subst FROMFILE TOFILE       the next run/kill/refuse/cc source gets the bytes of FROMFILE
+note               replaced by those of TOFILE; the source must contain FROMFILE exactly once
+note SRC is a path or several joined by + (concatenated in order into SCRATCH/<line>.src).
+note STDIN: - (/dev/null) | file:PATH | rep:BYTE:N (N copies) | seq:N (byte i = i mod 251) |
+note        rnd:SEED:N (splitmix64 from SEED, each output word little endian).
+note STDOUT, STDERR: - (empty) | file:PATH | line:TEXT (TEXT and a newline) | any (STDERR only).
+note EXIT 127 is refused: the child uses it to report an exec or redirect failure.
+note
+note Per case: CASE line, one "  $" line per child command with its redirects, one VERDICT line:
+note PASS, FAIL (deterministic wrong behaviour), INVALID (no evidence: malformed line, unreadable
+note input, signal, timeout, exec failure, scratch I/O) or NOT_RUN. Final line, exit status:
+note OM2GATE PASS 0 | FAIL 1 | NOT_RUN 2 | INVALID 3 (any INVALID case, identity mismatch, no cases).
+note Usage error 90, existing scratch 91. This is not a sandbox: children run with the caller's
+note permissions, the deadline covers only the direct child, and only trusted sources belong here.
+text words "run\nkill\nrefuse\nnotrun\ncc\ndeadline\nsubst\npinned\n-\nfile:\nline:\nrep:\nseq:\nrnd:\nany\n.src\n.elf\n.cout\n.cerr\n.in\n.exp\n.eexp\n.out\n.err\nerror \nseed/qualification/om2/fixtures/sha256-k.dec\nseed/qualification/om2/fixtures/sha256-iv.dec\n/dev/null\n"
+text msg "VERDICT \n PASS\n FAIL\n INVALID\n NOT_RUN\n compile exit=\n expected=\n run exit=\n stdout=match\n stdout differs at byte \n stderr=match\n stderr differs at byte \n mutant survived: stdout equals the oracle\n killed: stdout differs from the oracle at byte \n compiler exit 0 but its output is not an ELF file\n refusal wrote compiler output\n diagnostic does not name the expected error\n child signal; wait low byte=\n child deadline exceeded, sent SIGKILL; wait low byte=\n malformed case line\n input, source or fixture unreadable or too large\n scratch I/O, fork or argument capacity failure\n exec or redirect failed (child exit 127)\n refused with the expected error\nOM2GATE PASS\nOM2GATE FAIL\nOM2GATE INVALID\nOM2GATE NOT_RUN\n cases=\n pass=\n fail=\n invalid=\n not_run=\nIDENTITY omc \n sha256=\n pinned=\n match\n MISMATCH: every case is NOT_RUN and the gate is INVALID\n  $ \n < \n > \n 2> \nCASE \n line=\n compiler build failed earlier; case not run\n omc identity mismatch; case not run\n substitution must match exactly once; matches=\n  MUTATE exact-once substitution at byte \nCOMPILER \n stderr=unchecked\n a substitution was not followed by a source-building line\n no cases\nUSAGE gate OMC OMC_SHA256 CASES SCRATCH; INVALID\nINVALID scratch directory exists or cannot be created\nINVALID SHA-256 constant fixture unreadable or malformed\nINVALID case list unreadable or larger than 262144 bytes\n not run:\n; not a meaningful kill\n compiler build: compile exit=\nDEADLINE \nSUBST \n source line=\nOM2GATE START cases=\n scratch=\n"
+global pb uchar 4096
+global pn ulong 1
+global scr uchar 4096
+global scn ulong 1
+global omc uchar 4096
+global omn ulong 1
+global ccp uchar 4096
+global ccn ulong 1
+global pin uchar 64
+global hexd uchar 64
+global av uchar 4096
+global ap ulong 2
+global lst uchar 262144
+global lsn ulong 1
+global tko ulong 64
+global tkl ulong 64
+global ntk ulong 1
+global big uchar 8388608
+global bgn ulong 1
+global sfr uchar 65536
+global sto uchar 65536
+global sb ulong 3
+global buf uchar 65536
+global oth uchar 65536
+global dig uchar 32
+global stb uchar 4
+global gst ulong 1
+global wlow ulong 1
+global dl long 1
+global cnt ulong 4
+global ccbad ulong 1
+global idok ulong 1
+global wpos ulong 2
+global lno ulong 1
+global res ulong 8
+global rz ulong 2
+global kk uint 64
+global ivs uint 8
+global hv uint 8
+global ws uint 64
+global st uint 8
+global blk uchar 64
+global bk ulong 2
+global nums ulong 64
+note ---- output -------------------------------------------------------------------------------
+fn say id ulong to void
+k = ulong 1
+s = ulong 0
+for i ulong len msg
+if eq get msg i 10
+if eq k id
+r = write 1 msg s sub i s
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+exit 99
+end
+fn newline to void
+put dig 0 10
+r = write 1 dig 0 1
+end
+fn space to void
+put dig 0 32
+r = write 1 dig 0 1
+end
+fn decimal v ulong to ulong
+x = v
+n = ulong 0
+while ge x 10
+put dig n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put dig n uchar add 48 x
+ret add n 1
+end
+fn num v ulong to void
+n = decimal v
+for i ulong n
+r = write 1 dig sub sub n i 1 1
+end
+end
+fn showpb to void
+r = write 1 pb 0 get pn 0
+end
+fn showtok t ulong to void
+r = write 1 lst get tko t get tkl t
+end
+fn setbad id ulong to void
+if eq get gst 0 0
+put gst 0 id
+end
+end
+note ---- fixed words and tokens ---------------------------------------------------------------
+fn wordat id ulong to void
+k = ulong 1
+s = ulong 0
+for i ulong len words
+if eq get words i 10
+if eq k id
+put wpos 0 s
+put wpos 1 sub i s
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+exit 99
+end
+fn tokpre t ulong id ulong to bool
+wordat id
+n = get wpos 1
+if lt get tkl t n
+ret false
+end
+o = get tko t
+s = get wpos 0
+for i ulong n
+if ne get lst add o i get words add s i
+ret false
+end
+end
+ret true
+end
+fn tokword t ulong id ulong to bool
+wordat id
+if ne get tkl t get wpos 1
+ret false
+end
+ret tokpre t id
+end
+note decimal digits lst[o .. o+n); malformed or overflowing text marks the case malformed
+fn decat o ulong n ulong to ulong
+if or eq n 0 gt n 20
+setbad 20
+ret 0
+end
+m = not ulong 0
+v = ulong 0
+for i ulong n
+c = get lst add o i
+if or lt c 48 gt c 57
+setbad 20
+ret 0
+end
+d = ulong sub c 48
+if gt v div sub m d 10
+setbad 20
+ret 0
+end
+v = add mul v 10 d
+end
+ret v
+end
+note field k (0-based) of the ':'-separated fields after the first skip bytes of token t
+fn fieldat t ulong skip ulong k ulong to ulong
+o = add get tko t skip
+e = add get tko t get tkl t
+f = ulong 0
+s = o
+for i ulong sub e o
+if eq get lst add o i 58
+if eq f k
+ret decat s sub add o i s
+end
+f = add f 1
+s = add add o i 1
+end
+end
+if eq f k
+ret decat s sub e s
+end
+setbad 20
+ret 0
+end
+fn fields t ulong skip ulong to ulong
+f = ulong 1
+o = add get tko t skip
+for i ulong sub get tkl t skip
+if eq get lst add o i 58
+f = add f 1
+end
+end
+ret f
+end
+note ---- paths and child argument lists --------------------------------------------------------
+fn pclear to void
+put pn 0 0
+end
+fn pbyte b uchar to void
+n = get pn 0
+if ge n 4095
+setbad 22
+ret
+end
+put pb n b
+put pn 0 add n 1
+end
+fn pword id ulong to void
+wordat id
+s = get wpos 0
+for i ulong get wpos 1
+pbyte get words add s i
+end
+end
+fn plst o ulong n ulong to void
+for i ulong n
+pbyte get lst add o i
+end
+end
+fn pnum v ulong to void
+n = decimal v
+for i ulong n
+pbyte get dig sub sub n i 1
+end
+end
+fn pomc to void
+pclear
+for i ulong get omn 0
+pbyte get omc i
+end
+end
+fn pccp to void
+pclear
+for i ulong get ccn 0
+pbyte get ccp i
+end
+end
+fn pfile id ulong to void
+pclear
+for i ulong get scn 0
+pbyte get scr i
+end
+pnum get lno 0
+pword id
+end
+fn popen fl int to int
+if ne get gst 0 0
+ret -1
+end
+r = fopen pb 0 get pn 0 fl 384
+if lt r 0
+ret -1
+end
+ret int r
+end
+fn fclo fd int to void
+if ge fd 0
+r = fclose fd
+end
+end
+fn aclear to void
+put ap 0 2
+put ap 1 0
+end
+fn ahead n ulong to bool
+p = get ap 0
+if or gt add add p n 2 len av ge get ap 1 64
+setbad 22
+ret false
+end
+put av p uchar and n 255
+put av add p 1 uchar shr n 8
+put ap 0 add p 2
+put ap 1 add get ap 1 1
+ret true
+end
+fn apb to void
+n = get pn 0
+if ahead n
+p = get ap 0
+for i ulong n
+put av add p i get pb i
+end
+put ap 0 add p n
+end
+end
+fn atok t ulong to void
+n = get tkl t
+o = get tko t
+if ahead n
+p = get ap 0
+for i ulong n
+put av add p i get lst add o i
+end
+put ap 0 add p n
+end
+end
+note ---- children ------------------------------------------------------------------------------
+fn redir s int d int to void
+if ne s d
+if ne dupfd s d 0 long d
+exit 127
+end
+end
+end
+fn reap pid int to ulong
+t0 = monons
+while true
+r = waitpid pid stb 0 len stb 1
+if eq r long pid
+if ne get stb 0 0
+put wlow 0 ulong get stb 0
+setbad 18
+ret 0
+end
+x = ulong get stb 1
+if eq x 127
+setbad 23
+end
+ret x
+end
+if lt r 0
+setbad 22
+ret 0
+end
+now = monons
+if or lt now t0 gt sub now t0 get dl 0
+r = killpid pid 9
+r = waitpid pid stb 0 len stb 0
+put wlow 0 ulong get stb 0
+setbad 19
+ret 0
+end
+if ne sleepns 1000000 0
+setbad 22
+ret 0
+end
+end
+exit 99
+end
+fn spawn fi int fo int fe int to ulong
+newline
+if ne get gst 0 0
+fclo fi
+fclo fo
+fclo fe
+ret 0
+end
+put av 0 uchar and get ap 1 255
+put av 1 uchar shr get ap 1 8
+pid = fork
+if lt pid 0
+fclo fi
+fclo fo
+fclo fe
+setbad 22
+ret 0
+end
+if eq pid 0
+redir fi 0
+redir fo 1
+redir fe 2
+r = execprog av 0 get ap 0
+exit 127
+end
+fclo fi
+fclo fo
+fclo fe
+ret reap int pid
+end
+note compile SCRATCH/<line>.src with the pinned omc (pinned true) or the current compiler
+fn compile pinned bool to ulong
+aclear
+say 39
+if pinned
+pomc
+else
+pccp
+end
+showpb
+apb
+say 40
+pfile 16
+showpb
+fi = popen 524288
+say 41
+pfile 17
+showpb
+fo = popen 524481
+say 42
+pfile 19
+showpb
+fe = popen 524481
+ret spawn fi fo fe
+end
+fn stdinpath t ulong to void
+pclear
+if tokword t 9
+pword 28
+ret
+end
+if tokpre t 10
+plst add get tko t 5 sub get tkl t 5
+ret
+end
+pfile 20
+end
+fn runprog to ulong
+aclear
+say 39
+pfile 17
+showpb
+apb
+for j ulong sub get ntk 0 7
+space
+showtok add j 7
+atok add j 7
+end
+say 40
+stdinpath 3
+showpb
+fi = popen 524288
+say 41
+pfile 23
+showpb
+fo = popen 524481
+say 42
+pfile 24
+showpb
+fe = popen 524481
+ret spawn fi fo fe
+end
+note ---- file helpers --------------------------------------------------------------------------
+fn rfulla fd int to long
+n = ulong 0
+while lt n len buf
+r = read fd buf n sub len buf n
+if lt r 0
+ret r
+end
+if eq r 0
+ret long n
+end
+n = add n ulong r
+end
+ret long n
+end
+fn rfullb fd int to long
+n = ulong 0
+while lt n len oth
+r = read fd oth n sub len oth n
+if lt r 0
+ret r
+end
+if eq r 0
+ret long n
+end
+n = add n ulong r
+end
+ret long n
+end
+fn firstdif m ulong to ulong
+for i ulong m
+if ne get buf i get oth i
+ret i
+end
+end
+ret m
+end
+note first differing byte of two scratch files, or not 0 when they are equal
+fn diffat a ulong b ulong to ulong
+pfile a
+fa = popen 524288
+pfile b
+fb = popen 524288
+if or lt fa 0 lt fb 0
+fclo fa
+fclo fb
+setbad 22
+ret 0
+end
+off = ulong 0
+while true
+ra = rfulla fa
+rb = rfullb fb
+if or lt ra 0 lt rb 0
+fclo fa
+fclo fb
+setbad 22
+ret 0
+end
+m = ulong ra
+if lt rb ra
+m = ulong rb
+end
+d = firstdif m
+if lt d m
+fclo fa
+fclo fb
+ret add off d
+end
+if or ne ra rb eq ra 0
+fclo fa
+fclo fb
+if eq ra rb
+ret not ulong 0
+end
+ret add off m
+end
+off = add off m
+end
+exit 99
+end
+fn copyfd s int d int to void
+while true
+r = rfulla s
+if lt r 0
+setbad 21
+ret
+end
+if eq r 0
+ret
+end
+if ne write d buf 0 ulong r r
+setbad 22
+ret
+end
+end
+end
+note compiler output: ELF magic, then made executable (0700); false when it is not an ELF file
+fn elfok to bool
+pfile 17
+fd = popen 524288
+if lt fd 0
+setbad 22
+ret false
+end
+r = read fd buf 0 4
+ok = eq r 4
+if ok
+m1 = and eq get buf 0 127 eq get buf 1 69
+m2 = and eq get buf 2 76 eq get buf 3 70
+ok = and m1 m2
+end
+if ok
+if ne fchmod fd 448 0
+setbad 22
+end
+end
+fclo fd
+ret ok
+end
+fn isempty id ulong to bool
+pfile id
+fd = popen 524288
+if lt fd 0
+setbad 22
+ret false
+end
+r = read fd buf 0 1
+fclo fd
+ret eq r 0
+end
+note does SCRATCH/<line>.cerr contain "error CODE" not followed by another digit
+fn names code ulong to bool
+pfile 19
+fd = popen 524288
+if lt fd 0
+setbad 22
+ret false
+end
+r = rfulla fd
+fclo fd
+if lt r 0
+setbad 22
+ret false
+end
+wordat 25
+s = get wpos 0
+k = get wpos 1
+for i ulong k
+put oth i get words add s i
+end
+n = decimal code
+for i ulong n
+put oth add k i get dig sub sub n i 1
+end
+k = add k n
+hay = ulong r
+for i ulong hay
+if le add i k hay
+if hasat i k
+if eq add i k hay
+ret true
+end
+c = get buf add i k
+if or lt c 48 gt c 57
+ret true
+end
+end
+end
+end
+ret false
+end
+fn hasat i ulong k ulong to bool
+for j ulong k
+if ne get buf add i j get oth j
+ret false
+end
+end
+ret true
+end
+note ---- inputs and expectations ---------------------------------------------------------------
+fn splitmix to ulong
+s = add get rz 0 11400714819323198485
+put rz 0 s
+z = mul xor s shr s 30 13787848793156543929
+z = mul xor z shr z 27 10723151780598845931
+ret xor z shr z 31
+end
+fn genone kind ulong a ulong i ulong to uchar
+if eq kind 12
+ret uchar a
+end
+if eq kind 13
+ret uchar rem i 251
+end
+j = rem i 8
+if eq j 0
+put rz 1 splitmix
+end
+ret uchar and shr get rz 1 mul j 8 255
+end
+fn genbytes fd int kind ulong a ulong n ulong to void
+put rz 0 a
+done = ulong 0
+while lt done n
+c = sub n done
+if gt c len buf
+c = len buf
+end
+for i ulong c
+put buf i genone kind a add done i
+end
+if ne write fd buf 0 c long c
+setbad 22
+ret
+end
+done = add done c
+end
+end
+fn geninput t ulong to void
+if tokword t 9
+ret
+end
+if tokpre t 10
+stdinpath t
+fd = popen 524288
+if lt fd 0
+setbad 21
+end
+fclo fd
+ret
+end
+kind = ulong 0
+a = ulong 0
+n = ulong 0
+if tokpre t 12
+if ne fields t 4 2
+setbad 20
+end
+kind = ulong 12
+a = fieldat t 4 0
+n = fieldat t 4 1
+if gt a 255
+setbad 20
+end
+end
+if tokpre t 13
+if ne fields t 4 1
+setbad 20
+end
+kind = ulong 13
+n = fieldat t 4 0
+end
+if tokpre t 14
+if ne fields t 4 2
+setbad 20
+end
+kind = ulong 14
+a = fieldat t 4 0
+n = fieldat t 4 1
+end
+if or eq kind 0 gt n 1073741824
+setbad 20
+end
+pfile 20
+fd = popen 524481
+if ge fd 0
+genbytes fd kind a n
+end
+fclo fd
+end
+note SCRATCH/<line>.<id> from an expectation word: -, file:PATH or line:TEXT
+fn mkexp t ulong id ulong to void
+pfile id
+fo = popen 524481
+if lt fo 0
+setbad 22
+ret
+end
+if tokword t 9
+fclo fo
+ret
+end
+if tokpre t 10
+pclear
+plst add get tko t 5 sub get tkl t 5
+fi = popen 524288
+if lt fi 0
+setbad 21
+else
+copyfd fi fo
+end
+fclo fi
+fclo fo
+ret
+end
+if tokpre t 11
+n = sub get tkl t 5
+o = add get tko t 5
+for i ulong n
+put buf i get lst add o i
+end
+put buf n 10
+if ne write fo buf 0 add n 1 long add n 1
+setbad 22
+end
+fclo fo
+ret
+end
+setbad 20
+fclo fo
+end
+note ---- case sources --------------------------------------------------------------------------
+fn addpart o ulong n ulong to void
+pclear
+plst o n
+fd = popen 524288
+if lt fd 0
+setbad 21
+ret
+end
+while true
+b = get bgn 0
+c = sub len big b
+if gt c len buf
+c = len buf
+end
+if eq c 0
+r = read fd buf 0 1
+if ne r 0
+setbad 21
+end
+fclo fd
+ret
+end
+r = read fd big b c
+if lt r 0
+setbad 21
+fclo fd
+ret
+end
+if eq r 0
+fclo fd
+ret
+end
+put bgn 0 add b ulong r
+end
+end
+fn matchat p ulong to bool
+for j ulong get sb 1
+if ne get big add p j get sfr j
+ret false
+end
+end
+ret true
+end
+note matches of sfr in big[base .. base+c): count in res 6, last position in res 7
+fn scanchnk base ulong c ulong to void
+for i ulong c
+if eq get big add base i get sfr 0
+if matchat add base i
+put res 6 add get res 6 1
+put res 7 add base i
+end
+end
+end
+end
+note exact-once position of sfr in big; otherwise the match count goes to wlow with gst 47
+fn findonce to ulong
+fl = get sb 1
+n = get bgn 0
+put res 6 0
+put res 7 0
+if ge n fl
+last = sub n fl
+base = ulong 0
+while le base last
+c = add sub last base 1
+if gt c 65536
+c = ulong 65536
+end
+scanchnk base c
+base = add base c
+end
+end
+if ne get res 6 1
+put wlow 0 get res 6
+setbad 47
+end
+ret get res 7
+end
+fn wbig fd int o ulong n ulong to void
+if ne write fd big o n long n
+setbad 22
+end
+end
+fn mksrc t ulong to void
+put bgn 0 0
+o = get tko t
+e = add o get tkl t
+s = o
+for i ulong get tkl t
+if eq get lst add o i 43
+addpart s sub add o i s
+s = add add o i 1
+end
+end
+addpart s sub e s
+pfile 16
+fd = popen 524481
+if lt fd 0
+setbad 22
+put sb 0 0
+ret
+end
+if ne get sb 0 0
+put sb 0 0
+p = findonce
+if eq get gst 0 0
+say 48
+num p
+newline
+wbig fd 0 p
+if ne write fd sto 0 get sb 2 long get sb 2
+setbad 22
+end
+q = add p get sb 1
+wbig fd q sub get bgn 0 q
+end
+else
+wbig fd 0 get bgn 0
+end
+fclo fd
+end
+note ---- SHA-256 (FIPS 180-4) for compiler identity only ---------------------------------------
+fn rotr x uint n uint to uint
+ret or shr x n shl x sub 32 n
+end
+fn shasched to void
+for i ulong 16
+b = mul i 4
+v = shl uint get blk b 24
+v = or v shl uint get blk add b 1 16
+v = or v shl uint get blk add b 2 8
+v = or v uint get blk add b 3
+put ws i v
+end
+for j ulong 48
+q = add j 16
+x = get ws sub q 15
+y = get ws sub q 2
+s0 = xor xor rotr x 7 rotr x 18 shr x 3
+s1 = xor xor rotr y 17 rotr y 19 shr y 10
+put ws q add add add get ws sub q 16 s0 get ws sub q 7 s1
+end
+end
+fn shat1 i ulong to uint
+e = get st 4
+s1 = xor xor rotr e 6 rotr e 11 rotr e 25
+ch = xor and e get st 5 and not e get st 6
+ret add add add add get st 7 s1 ch get kk i get ws i
+end
+fn shat2 to uint
+a = get st 0
+b = get st 1
+c = get st 2
+s0 = xor xor rotr a 2 rotr a 13 rotr a 22
+mj = xor xor and a b and a c and b c
+ret add s0 mj
+end
+fn shacomp to void
+shasched
+for i ulong 8
+put st i get hv i
+end
+for i ulong 64
+t1 = shat1 i
+t2 = shat2
+put st 7 get st 6
+put st 6 get st 5
+put st 5 get st 4
+put st 4 add get st 3 t1
+put st 3 get st 2
+put st 2 get st 1
+put st 1 get st 0
+put st 0 add t1 t2
+end
+for i ulong 8
+put hv i add get hv i get st i
+end
+end
+fn shabyte b uchar to void
+n = get bk 0
+put blk n b
+n = add n 1
+if eq n 64
+shacomp
+n = ulong 0
+end
+put bk 0 n
+put bk 1 add get bk 1 1
+end
+fn hexch v uint to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+fn shafinal to void
+bits = mul get bk 1 8
+shabyte 128
+while ne get bk 0 56 bound 64
+shabyte 0
+end
+for i ulong 8
+shabyte uchar and shr bits mul sub 7 i 8 255
+end
+for i ulong 8
+v = get hv i
+for j ulong 8
+put hexd add mul i 8 j hexch and shr v mul sub 7 j 4 15
+end
+end
+end
+note hash the file named by pb into hexd; false when it cannot be read
+fn hashfile to bool
+fd = popen 524288
+if lt fd 0
+ret false
+end
+for i ulong 8
+put hv i get ivs i
+end
+put bk 0 0
+put bk 1 0
+while true
+r = read fd buf 0 len buf
+if lt r 0
+fclo fd
+ret false
+end
+if eq r 0
+fclo fd
+shafinal
+ret true
+end
+for i ulong ulong r
+shabyte get buf i
+end
+end
+ret false
+end
+note decimal numbers, one per line, each below 2^32, exactly want of them, into nums
+fn loadnums id ulong want ulong to bool
+pclear
+pword id
+fd = popen 524288
+if lt fd 0
+ret false
+end
+r = rfulla fd
+fclo fd
+if or le r 0 ge r long len buf
+ret false
+end
+ret parsenum ulong r want
+end
+fn parsenum n ulong want ulong to bool
+m = ulong not uint 0
+k = ulong 0
+v = ulong 0
+nd = ulong 0
+for i ulong n
+c = get buf i
+if and ge c 48 le c 57
+if ge nd 10
+ret false
+end
+v = add mul v 10 ulong sub c 48
+nd = add nd 1
+else
+if or ne c 10 eq nd 0
+ret false
+end
+if ge k want
+ret false
+end
+if gt v m
+ret false
+end
+put nums k v
+k = add k 1
+v = ulong 0
+nd = ulong 0
+end
+end
+ret and eq nd 0 eq k want
+end
+note ---- verdicts ------------------------------------------------------------------------------
+fn verdict s ulong to void
+say 1
+showtok 0
+say s
+put cnt sub s 2 add get cnt sub s 2 1
+end
+fn invalid to void
+verdict 4
+g = get gst 0
+say g
+if or or eq g 18 eq g 19 eq g 47
+num get wlow 0
+end
+newline
+end
+fn header to void
+say 43
+showtok 0
+say 44
+num get lno 0
+newline
+end
+fn showexit a ulong id ulong b ulong to void
+say id
+num a
+say 7
+num b
+end
+fn runcase kill bool to void
+if lt get ntk 0 7
+setbad 20
+invalid
+ret
+end
+ex = decat get tko 6 get tkl 6
+if or gt ex 255 eq ex 127
+setbad 20
+end
+if ne get gst 0 0
+invalid
+ret
+end
+mksrc 2
+ce = compile false
+if ne get gst 0 0
+invalid
+ret
+end
+if ne ce 0
+verdict 3
+showexit ce 6 0
+newline
+ret
+end
+if not elfok
+if ne get gst 0 0
+invalid
+ret
+end
+verdict 3
+say 15
+newline
+ret
+end
+geninput 3
+mkexp 4 21
+anyerr = tokword 5 15
+if not anyerr
+mkexp 5 22
+end
+if ne get gst 0 0
+invalid
+ret
+end
+rx = runprog
+if ne get gst 0 0
+invalid
+ret
+end
+put res 0 ex
+put res 1 rx
+put res 2 diffat 23 21
+put res 3 not ulong 0
+if not anyerr
+put res 3 diffat 24 22
+end
+if ne get gst 0 0
+invalid
+ret
+end
+judge kill anyerr
+end
+fn judge kill bool anyerr bool to void
+all = not ulong 0
+ex = get res 0
+rx = get res 1
+od = get res 2
+ed = get res 3
+ok = and eq rx ex eq ed all
+if kill
+ok = and ok ne od all
+else
+ok = and ok eq od all
+end
+if ok
+verdict 2
+else
+verdict 3
+end
+showexit rx 8 ex
+if eq od all
+if kill
+say 13
+else
+say 9
+end
+else
+if kill
+say 14
+else
+say 10
+end
+num od
+end
+if anyerr
+say 50
+else
+if eq ed all
+say 11
+else
+say 12
+num ed
+end
+end
+if and kill ne rx ex
+say 58
+end
+newline
+end
+fn refusecase to void
+if ne get ntk 0 4
+setbad 20
+invalid
+ret
+end
+code = decat get tko 3 get tkl 3
+if or eq code 0 gt code 255
+setbad 20
+end
+if ne get gst 0 0
+invalid
+ret
+end
+mksrc 2
+ce = compile false
+if ne get gst 0 0
+invalid
+ret
+end
+quiet = isempty 17
+named = names code
+if ne get gst 0 0
+invalid
+ret
+end
+if and and eq ce code quiet named
+verdict 2
+else
+verdict 3
+end
+showexit ce 6 code
+if not quiet
+say 16
+end
+if named
+say 24
+else
+say 17
+end
+newline
+end
+fn notruncase to void
+if lt get ntk 0 3
+setbad 20
+invalid
+ret
+end
+verdict 5
+say 57
+for i ulong sub get ntk 0 2
+space
+showtok add i 2
+end
+newline
+end
+fn dircc to void
+if ne get ntk 0 2
+setbad 20
+invalid
+ret
+end
+if tokword 1 8
+for i ulong get omn 0
+put ccp i get omc i
+end
+put ccn 0 get omn 0
+put ccbad 0 0
+say 49
+pomc
+showpb
+newline
+ret
+end
+put ccbad 0 1
+mksrc 1
+ce = compile true
+if ne get gst 0 0
+invalid
+ret
+end
+if ne ce 0
+verdict 3
+showexit ce 60 0
+newline
+ret
+end
+if not elfok
+if ne get gst 0 0
+invalid
+ret
+end
+verdict 3
+say 15
+newline
+ret
+end
+pfile 17
+for i ulong get pn 0
+put ccp i get pb i
+end
+put ccn 0 get pn 0
+if not hashfile
+setbad 22
+invalid
+ret
+end
+put ccbad 0 0
+say 49
+showpb
+say 35
+r = write 1 hexd 0 64
+say 62
+num get lno 0
+newline
+end
+fn dirdl to void
+if ne get ntk 0 2
+setbad 20
+invalid
+ret
+end
+s = decat get tko 1 get tkl 1
+if or eq s 0 gt s 900
+setbad 20
+end
+if ne get gst 0 0
+invalid
+ret
+end
+put dl 0 mul long s 1000000000
+say 60
+num s
+newline
+end
+fn loadsub t ulong to ulong
+pclear
+plst get tko t get tkl t
+fd = popen 524288
+if lt fd 0
+setbad 21
+ret 0
+end
+r = rfulla fd
+if eq r long len buf
+x = read fd oth 0 1
+if ne x 0
+setbad 21
+end
+end
+fclo fd
+if lt r 0
+setbad 21
+ret 0
+end
+ret ulong r
+end
+fn dirsub to void
+if or ne get ntk 0 3 ne get sb 0 0
+put sb 0 0
+setbad 20
+invalid
+ret
+end
+n = loadsub 1
+for i ulong n
+put sfr i get buf i
+end
+m = loadsub 2
+for i ulong m
+put sto i get buf i
+end
+if eq n 0
+setbad 20
+end
+if ne get gst 0 0
+invalid
+ret
+end
+put sb 0 1
+put sb 1 n
+put sb 2 m
+say 61
+showtok 1
+space
+showtok 2
+newline
+end
+note one non-comment line, already split into tokens
+fn docase to void
+put gst 0 0
+if tokword 0 5
+dircc
+ret
+end
+if tokword 0 6
+dirdl
+ret
+end
+if tokword 0 7
+dirsub
+ret
+end
+header
+if lt get ntk 0 2
+setbad 20
+invalid
+ret
+end
+mode = ulong 0
+for k ulong 4
+if tokword 1 add k 1
+mode = add k 1
+end
+end
+if and ne get sb 0 0 or eq mode 0 eq mode 4
+put sb 0 0
+setbad 51
+invalid
+ret
+end
+if eq mode 0
+setbad 20
+invalid
+ret
+end
+if eq get idok 0 0
+put sb 0 0
+verdict 5
+say 46
+newline
+ret
+end
+if and ne get ccbad 0 0 ne mode 4
+put sb 0 0
+verdict 5
+say 45
+newline
+ret
+end
+if eq mode 1
+runcase false
+end
+if eq mode 2
+runcase true
+end
+if eq mode 3
+refusecase
+end
+if eq mode 4
+notruncase
+end
+end
+fn lineend p ulong to ulong
+n = get lsn 0
+for i ulong sub n p
+if eq get lst add p i 10
+ret add p i
+end
+end
+ret n
+end
+fn tokenize p ulong e ulong to bool
+put ntk 0 0
+s = p
+inw = false
+for i ulong sub e p
+c = get lst add p i
+if eq c 32
+if inw
+k = get ntk 0
+put tkl k sub add p i s
+put ntk 0 add k 1
+inw = false
+end
+else
+if not inw
+if ge get ntk 0 len tko
+ret false
+end
+put tko get ntk 0 add p i
+s = add p i
+inw = true
+end
+end
+end
+if inw
+k = get ntk 0
+put tkl k sub e s
+put ntk 0 add k 1
+end
+ret true
+end
+fn runlist to void
+p = ulong 0
+ln = ulong 0
+while lt p get lsn 0
+ln = add ln 1
+put lno 0 ln
+e = lineend p
+if tokenize p e
+if gt get ntk 0 0
+if ne get lst get tko 0 35
+docase
+end
+end
+else
+put ntk 0 1
+put tkl 0 0
+put gst 0 20
+invalid
+end
+p = add e 1
+end
+if ne get sb 0 0
+say 1
+wordat 7
+r = write 1 words get wpos 0 get wpos 1
+say 4
+say 51
+newline
+put cnt 2 add get cnt 2 1
+end
+end
+fn summary to int
+pas = get cnt 0
+fal = get cnt 1
+inv = get cnt 2
+nr = get cnt 3
+tot = add add add pas fal inv nr
+rc = int 0
+s = ulong 25
+if gt nr 0
+rc = 2
+s = ulong 28
+end
+if gt fal 0
+rc = 1
+s = ulong 26
+end
+if or or gt inv 0 eq tot 0 eq get idok 0 0
+rc = 3
+s = ulong 27
+end
+say s
+say 29
+num tot
+say 30
+num pas
+say 31
+num fal
+say 32
+num inv
+say 33
+num nr
+if eq tot 0
+say 52
+end
+newline
+ret rc
+end
+fn identity to void
+pomc
+ok = hashfile
+say 34
+showpb
+say 35
+if ok
+r = write 1 hexd 0 64
+end
+say 36
+r = write 1 pin 0 64
+put idok 0 0
+if ok
+put idok 0 1
+for i ulong 64
+if ne get hexd i get pin i
+put idok 0 0
+end
+end
+end
+if eq get idok 0 1
+say 37
+else
+say 38
+end
+newline
+end
+fn loadlist to bool
+pclear
+r = argread 3 pb 0 4095
+if lt r 1
+ret false
+end
+put pn 0 ulong r
+fd = popen 524288
+if lt fd 0
+ret false
+end
+n = ulong 0
+while lt n len lst
+x = read fd lst n sub len lst n
+if le x 0
+fclo fd
+put lsn 0 n
+ret eq x 0
+end
+n = add n ulong x
+end
+x = read fd buf 0 1
+fclo fd
+put lsn 0 n
+ret eq x 0
+end
+fn main to int
+if ne argcnt 5
+say 53
+newline
+ret 90
+end
+put dl 0 30000000000
+r = argread 1 omc 0 4095
+if lt r 1
+say 53
+newline
+ret 90
+end
+put omn 0 ulong r
+for i ulong get omn 0
+put ccp i get omc i
+end
+put ccn 0 get omn 0
+r = argread 2 pin 0 64
+if ne r 64
+say 53
+newline
+ret 90
+end
+r = argread 4 scr 0 4094
+if lt r 1
+say 53
+newline
+ret 90
+end
+n = ulong r
+if ne makedir scr 0 n 448 0
+say 54
+newline
+ret 91
+end
+put scr n 47
+put scn 0 add n 1
+say 63
+r = argread 3 pb 0 4095
+put pn 0 ulong r
+showpb
+say 64
+r = write 1 scr 0 n
+newline
+if not loadnums 26 64
+say 55
+newline
+ret 3
+end
+for i ulong 64
+put kk i uint get nums i
+end
+if not loadnums 27 8
+say 55
+newline
+ret 3
+end
+for i ulong 8
+put ivs i uint get nums i
+end
+identity
+if not loadlist
+say 56
+newline
+ret 3
+end
+runlist
+ret summary
+end

@@ -1,0 +1,42 @@
+/* EXTERNAL ORACLE RECIPE (outside the delivered closure). GNU bc exact integers.
+   dup32: for each x read from stdin (terminated by -1), d = (2^32+1)*x, low32(d), high32(d),
+   and ok = 1 when d < 2^64 and low32(d) = high32(d) = x.
+   slice: n o k, wrapped = ((o+k) mod 2^64 <= n), exact = (o <= n and k <= n-o). */
+scale = 0
+t = 2^32
+m = 2^64 - 1
+define s(n, o, k) {
+  auto w, e
+  w = 0
+  if ((o + k) % (m + 1) <= n) w = 1
+  e = 0
+  if (o <= n) { if (k <= n - o) e = 1 }
+  print "slice ", n, " ", o, " ", k, " ", w, " ", e, "\n"
+  return (0)
+}
+while (1) {
+  x = read()
+  if (x < 0) break
+  d = (t + 1) * x
+  l = d % t
+  h = d / t
+  ok = 0
+  if (d <= m) { if (l == x) { if (h == x) ok = 1 } }
+  print "dup32 ", x, " ", d, " ", l, " ", h, " ", ok, "\n"
+}
+z = s(m, m - 1, 4)
+z = s(m, m - 1, 1)
+z = s(m, m - 1, 2)
+z = s(m, m, 0)
+z = s(m, m, 1)
+z = s(10, 11, 0)
+z = s(10, m, 2)
+z = s(10, 3, 0)
+z = s(0, 0, 0)
+z = s(0, 0, 1)
+z = s(10, 10, 0)
+z = s(10, 10, 1)
+z = s(10, 3, 7)
+z = s(10, 3, 8)
+z = s(4096, 4095, 1)
+z = s(4096, 4095, 2)

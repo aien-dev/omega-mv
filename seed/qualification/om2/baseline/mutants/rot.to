@@ -1,0 +1,4 @@
+t = add x add get w 0 1116352408
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 24

@@ -1,0 +1,27 @@
+note Harness self-test program (deliberately wrong): copy standard input to standard output, but
+note add 1 (wrapping) to the byte at offset 5. The gate must report FAIL, stdout differs at byte 5.
+fn main to int
+b = new uchar 4096 0
+pos = ulong 0
+go = true
+while go
+r = read 0 b 0 4096
+if lt r 0
+ret 91
+end
+if eq r 0
+go = false
+else
+n = ulong r
+if and le pos 5 lt 5 add pos n
+put b sub 5 pos add get b sub 5 pos 1
+end
+pos = add pos n
+w = write 1 b 0 n
+if ne w r
+ret 92
+end
+end
+end
+ret 0
+end
