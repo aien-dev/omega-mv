@@ -58,6 +58,12 @@ TRAIN session s is FSM iff s mod 6 = 5; CALIB: 2 families x 3 n x 4 change class
 BATCH of 1024 SETs; AGG type A deletes the first index whose mapped value equals the current fold
 result, then inserts a random value at a random index.
 
+K9..K17 provenance. These entries were written into this file on 2026-10-25 after the FINAL run
+(commit after the candidate freeze `6ad09bff`, which carries K1..K8 only). Each records a decision
+already implemented in the frozen code before FINAL (notes in judge.om, lib.om, router.om,
+select.om, delta.om at evaluator `4345eda9` and candidate `6ad09bff`, and the evaluator-internal
+format notes for K6, K7, K17). No rule, threshold or control changed after the data was seen.
+
 K9 (CandCore, EvalJudge). Experience tap (6.1): the evaluator runs one baseline router B process
 over every group of a split, in order, as `BASE tap - - - TAPFILE SPLITARG`. TAPFILE must not exist
 (a fresh file per tap); SPLITARG is the record word 9 value: 1 TRAIN and TRAINP, 2 CALIB, 3 DEV. The
@@ -65,9 +71,10 @@ operator admits a tap by appending `<sha256> AUTHORIZED <label>` to ALLOW.
 
 K10 (CandLib, EvalJudge). Control mutants C1, C1b, C1c are codegen-only (`drive build ...
 mutant:c1|c1b|c1c`): c1 compares AGG shape ids with the wl byte cleared; c1b ends every wl-16 lane
-map with `v = and v 255`; c1c reads c_j from R1P word 5 + 2j. Each also runs with
-`unit:check=NOG3` (G3 removed). C1 is detected by G3 (route 5 on every QUERY) or by wrong answers;
-C1b and C1c with G3 must give route 5 and no wrong answer; every NOG3 variant must give wrong answers.
+map with `v = and v 255`; c1c reads c_j from R1P word 5 + 2j. C1 and C1b also run with
+`unit:check=NOG3` (G3 removed); C1c runs with G3 only. C1 is detected by G3 (route 5 on every QUERY)
+or by wrong answers; C1b and C1c with G3 must give route 5 and no wrong answer; the NOG3 variants of
+C1 and C1b must give wrong answers.
 
 K11 (EvalJudge). C1 detection evidence: the controls log prints both the route-5 count and the
 wrong count, so the record shows which mechanism caught the mutant.

@@ -3,6 +3,9 @@
 The frozen candidate is omega-mv `6ad09bff0c544bf73ceb3c63b349ba0cd6998e52`, with source `2b25e1bf`.
 Commits after it change only `docs/` and `evidence/`.
 
+Clarifications K1..K8 are in the freeze. K9..K17 record decisions already present in the frozen
+code; they were written into `docs/reuse/REUSE-1-CLARIFICATIONS.md` after FINAL, and no rule changed.
+
 The evaluation ran once on the FINAL split. The independent evaluator is spark-rsi-mv `4345eda9`.
 Its raw evidence, reproduction commands and receipt are in spark-rsi-mv `84900162`, under
 `evidence/REUSE-73/final/`.
