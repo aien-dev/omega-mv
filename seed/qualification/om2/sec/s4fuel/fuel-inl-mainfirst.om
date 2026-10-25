@@ -1,0 +1,24 @@
+note SPDX-License-Identifier: Apache-2.0
+note E14/E16 fuel, inline variant with main FIRST: the same f1..f4 chain; main is compiled before any inline function.
+om2
+fn main to int
+f1
+ret 0
+end
+fn f4 to void inline
+end
+fn f3 to void inline
+for i ulong 64 unroll
+f4
+end
+end
+fn f2 to void inline
+for i ulong 64 unroll
+f3
+end
+end
+fn f1 to void inline
+for i ulong 64 unroll
+f2
+end
+end

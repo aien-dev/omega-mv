@@ -15,8 +15,12 @@ fuel-d3-code refuse seed/qualification/om2/sec/s4fuel/fuel-d3.om 14
 deadline 2
 fuel-d4 emit seed/qualification/om2/sec/s4fuel/fuel-d4.om - err:8:14 14
 fuel-d4-code refuse seed/qualification/om2/sec/s4fuel/fuel-d4.om 14
-# inline variant: expansions of f1..f4 under 64-copy unrolls; E16 oracle: exhausted at the f3 unroll, line 7 (used 65537)
+# inline variant (fuel-inl: f4, f3, f2, f1, main in source order). fuel_e16f.py: every function, inline ones too, is
+# compiled in source order with its own fuel; f1 standalone exhausts first: 56th f3 loop reaches 65536, the next f4
+# call (line 8) makes 65537
 deadline 10
-fuel-inl emit seed/qualification/om2/sec/s4fuel/fuel-inl.om - err:7:14 14
+fuel-inl emit seed/qualification/om2/sec/s4fuel/fuel-inl.om - err:8:14 14
 fuel-inl-code refuse seed/qualification/om2/sec/s4fuel/fuel-inl.om 14
+# main first (fuel-inl-mainfirst): main compiled before the inline functions exhausts at the f3 unroll (line 11)
+fuel-inl-mainfirst emit seed/qualification/om2/sec/s4fuel/fuel-inl-mainfirst.om - err:11:14 14
 deadline 30
