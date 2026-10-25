@@ -149,10 +149,13 @@ followed by encode returns the input bytes exactly for v1 and for v2 units.
 
 ## 6. Compatibility with v1 consumers
 
-A v1 decoder (the frozen #621 codec, `tests/universal/source-aware/reference.mjs`, and every consumer
-built on the v1 core: the C importer, the lowering and the C exporter) refuses every v2 unit with 66
-(UNKNOWN_VERSION) at step 3, before reading any v2 field, and writes no output. Adopting v2 in a
-consumer is a separate, coordinator-planned change; this file does not change any consumer.
+The frozen #621 codec and `tests/universal/source-aware/reference.mjs` refuse every v2 unit with 66
+(UNKNOWN_VERSION) at step 3, before reading any v2 field, and write no output. The consumers built on
+the v1 core decode with it and report their own refusal: the lowering (`tools/adapters/lower`) and
+the C exporter (`tools/adapters/c-export`) exit 65 (`LOWER_MALFORMED`, `C_EXPORT_MALFORMED`) with no
+stdout, exactly as for a v1 envelope with an unknown semantic header version. The C importer reads C
+source, not envelopes, and emits only v1 profile 1 units. Adopting v2 in a consumer is a separate,
+coordinator-planned change; this file does not change any consumer.
 
 ## 7. Implementation and build
 
@@ -160,7 +163,9 @@ consumer is a separate, coordinator-planned change; this file does not change an
 stays byte-identical, because the lowering (`build/L831`) and C exporter (`build/L622`) builds prepend
 that path and their dispatchers pin its bytes. The v2 codec is the single handwritten seeded Omega file
 `src/source-aware/core-v2.om` with the same non-reentrant fixed-buffer API (`decode n`, `encode`,
-`perform mode n`); it accepts semantic header versions 1 and 2. `tools/source-aware/build-v2` compiles
+`perform mode n`); it accepts semantic header versions 1 and 2. After a successful `decode n` the global
+`M 8` holds the decoded semantic header version, next to the v1 fields `M 0..7`; consumers that
+prepend `core-v2.om` read the version there. `tools/source-aware/build-v2` compiles
 `src/source-aware/vendor/sha256.om`, `core-v2.om` and the unchanged `src/source-aware/main.om` with
 the same pinned bridge seed compiler as v1 (`191b776e…98e9`) into `build/L832/sa`; the commands are
 `SA_BUILD=build/L832 tools/source-aware/sa encode|decode|identity|provenance|replay|legality`.

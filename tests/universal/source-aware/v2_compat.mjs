@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import {spawn,spawnSync,execFileSync} from 'node:child_process';
+import {spawnSync,execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {hash,unit,op,u32,expected} from './fixtures.mjs';
 import {inspect,legality} from './reference.mjs';
@@ -21,11 +21,31 @@ const report={schema:'omega.source-aware.v2-compat.development.v1',fidelity:'DIF
  notRun:['independent v2 reference decoder (#623)','v2 adoption by any consumer','Python adapters on universal/627-python-u64','GPU/hardware targets'],steps:[]};
 
 // ---------- process helpers ----------
-function once(exe,mode,input){return new Promise((res,rej)=>{const p=spawn(exe,[],{stdio:['pipe','pipe','pipe']});const out=[],err=[];
- p.stdout.on('data',d=>out.push(d));p.stderr.on('data',d=>err.push(d));p.stdin.on('error',()=>{});p.on('error',rej);
- p.on('close',(status,signal)=>res({status,signal,stdout:Buffer.concat(out),stderr:Buffer.concat(err)}));
- p.stdin.end(mode===null?input:Buffer.concat([Buffer.of(mode),input]));});}
-async function pool(items,fn){let next=0;await Promise.all(Array.from({length:CONC},async()=>{while(next<items.length){const k=next++;await fn(items[k],k);}}));}
+// One request per process for both codecs. Node's fork-based spawn costs about 2 ms per process here,
+// so a small Python posix_spawn runner executes the job file (orchestration only, no codec logic).
+const RUNNER=`import struct,subprocess,sys
+from multiprocessing import Pool
+src,dst,jobs=sys.argv[1],sys.argv[2],int(sys.argv[3]);exes=sys.argv[4:]
+def go(chunk):
+    out=[]
+    for e,m,inp in chunk:
+        r=subprocess.run([exes[e]],input=bytes([m])+inp,capture_output=True,close_fds=False)
+        st=r.returncode if r.returncode>=0 else 1000-r.returncode
+        out.append(struct.pack('<HI',st,len(r.stdout))+r.stdout)
+    return b''.join(out)
+data=open(src,'rb').read();items=[];p=0
+while p<len(data):
+    e,m,n=struct.unpack_from('<BBI',data,p);p+=6;items.append((e,m,data[p:p+n]));p+=n
+with Pool(jobs) as pool, open(dst,'wb') as f:
+    for part in pool.imap(go,[items[i:i+256] for i in range(0,len(items),256)]):f.write(part)
+`;
+let spawned=0;
+function runAll(jobs){const exes=[...new Set(jobs.map(j=>j[0]))],idx=new Map(exes.map((e,i)=>[e,i])),parts=[];
+ for(const [e,m,input] of jobs){const h=Buffer.alloc(6);h[0]=idx.get(e);h[1]=m;h.writeUInt32LE(input.length,2);parts.push(h,input);}
+ const src=path.join(run,'jobs.bin'),dst=path.join(run,'results.bin');fs.writeFileSync(src,Buffer.concat(parts));
+ const r=spawnSync('python3',['-c',RUNNER,src,dst,String(CONC),...exes],{stdio:['ignore','inherit','inherit']});assert.equal(r.status,0,'process runner');
+ const out=fs.readFileSync(dst),res=[];let p=0;for(let i=0;i<jobs.length;i++){const status=out.readUInt16LE(p),n=out.readUInt32LE(p+2);p+=6;res.push({status,stdout:out.subarray(p,p+n)});p+=n;}
+ assert.equal(p,out.length,'runner result framing');fs.rmSync(src);fs.rmSync(dst);spawned+=jobs.length;return res;}
 function compile(source,name){const exe=path.join(run,name);fs.writeFileSync(exe+'.om',source);const r=spawnSync(compiler,[],{input:Buffer.from(source),maxBuffer:64<<20});
  assert.equal(r.status,0,`${name} compilation: ${r.stderr}`);fs.writeFileSync(exe,r.stdout,{mode:0o700});
  assert.equal(spawnSync('sh',[path.join(root,'toolchain/tools/verify-elf.sh'),exe]).status,0,'AArch64 ELF required');return {exe,sourceSHA256:digest(Buffer.from(source)),binarySHA256:digest(r.stdout)};}
@@ -89,38 +109,44 @@ try{
  const extra=[{set:'empty',input:Buffer.alloc(0)},{set:'oversized',input:Buffer.alloc(8193)},{set:'oversized-legality',input:Buffer.alloc(8197)},{set:'short-caps',input:Buffer.of(1,0,1)}];
  const eq={requests:0,identical:0,excludedByte17Is2:0,bySet:{},byStatus:{}},excluded={};let mismatches=[],k=0;
  const t1=Date.now();
- await pool([...inputs,...extra],async(item,idx)=>{
-  const reqs=[];for(const m of [1,2,3,4,5])reqs.push([m,item.input]);
-  for(const c of item.allCaps?ALLCAPS:[ALLCAPS[idx%ALLCAPS.length]])reqs.push([6,Buffer.concat([c,item.input])]);
-  if(idx%50===0)for(const m of [0,7,255])reqs.push([m,item.input]);
-  for(const [m,input] of reqs){const [a,b]=[await once(FROZEN,m,input),await once(NEW,m,input)];eq.requests++;
+ const items=[...inputs,...extra];
+ for(let start=0;start<items.length;start+=8000){
+  const reqs=[];items.slice(start,start+8000).forEach((item,j)=>{const idx=start+j;for(const m of [1,2,3,4,5])reqs.push({item,m,input:item.input});
+   for(const c of item.allCaps?ALLCAPS:[ALLCAPS[idx%ALLCAPS.length]])reqs.push({item,m:6,input:Buffer.concat([c,item.input])});
+   if(idx%50===0)for(const m of [0,7,255])reqs.push({item,m,input:item.input});});
+  const res=runAll(reqs.flatMap(q=>[[FROZEN,q.m,q.input],[NEW,q.m,q.input]]));
+  reqs.forEach(({item,m,input},j)=>{const a=res[2*j],b=res[2*j+1];eq.requests++;
    const key=item.set.split(':')[0];eq.bySet[key]=(eq.bySet[key]??0)+1;
    if(byte17(m,input)===2){eq.excludedByte17Is2++;assert.ok(a.status!==0&&a.stdout.length===0,'frozen accepted a byte17=2 input');
     const tag=`${item.set} frozen=${a.status} new=${b.status}`;excluded[tag]=(excluded[tag]??0)+1;
-    if(item.category==='semantic-version'&&m>=1&&m<=6)assert.equal(b.status,68,'(v2, profile 1) must refuse 68');continue;}
-   if(same(a,b)){eq.identical++;eq.byStatus[a.status]=(eq.byStatus[a.status]??0)+1;}else if(mismatches.length<20)mismatches.push({set:item.set,mode:m,hex:input.toString('hex').slice(0,400),frozen:a.status,next:b.status});
-  }
-  if(++k%20000===0)console.log('equivalence',k,'inputs',eq.requests,'requests',Math.round((Date.now()-t1)/1000)+'s');
- });
+    if(item.category==='semantic-version'&&m>=1&&m<=6)assert.equal(b.status,68,'(v2, profile 1) must refuse 68');return;}
+   if(same(a,b)){eq.identical++;eq.byStatus[a.status]=(eq.byStatus[a.status]??0)+1;}else if(mismatches.length<20)mismatches.push({set:item.set,mode:m,hex:input.toString('hex').slice(0,400),frozen:a.status,next:b.status});});
+  console.log('equivalence',Math.min(start+8000,items.length),'inputs',eq.requests,'requests',Math.round((Date.now()-t1)/1000)+'s');
+ }
  eq.byte17Is2Outcomes=excluded;eq.seconds=Math.round((Date.now()-t1)/1000);report.frozenEquivalence=eq;
  assert.equal(mismatches.length,0,'frozen-v1 equivalence: '+JSON.stringify(mismatches));assert.equal(eq.identical+eq.excludedByte17Is2,eq.requests);
  report.steps.push('frozen-v1 equivalence');console.log('1 frozen-v1 equivalence PASS',JSON.stringify({requests:eq.requests,identical:eq.identical,excluded:eq.excludedByte17Is2}));
+
  // ---------- 3. retargeted corpus (valid v2 units are also the refusal inputs of step 2) ----------
  const p1=validUnits.filter((_,i)=>i%6===0),f1base=f1Units.map(f=>f.input),v2Valid=[];
  for(const u of [...p1,...f1base])for(const p of [7,8,9])v2Valid.push({u,r:retarget(u,p),profile:p});
- const rt={units:v2Valid.length,requests:0,legalityRequests:0,roundtrips:0,malformedPairs:0,explicit:0};
- await pool(v2Valid,async({u,r},idx)=>{
-  for(const m of [1,2,3,4,5]){const o=await once(NEW,m,r);rt.requests++;assert.equal(o.status,0,`retarget mode ${m}: ${o.stderr}`);assert.ok(o.stdout.equals(expected(m,r)),`retarget mode ${m} bytes`);}
-  const dec=await once(NEW,2,r),enc=await once(NEW,1,dec.stdout);rt.roundtrips++;assert.ok(enc.status===0&&enc.stdout.equals(r),'decode->encode');
-  for(const c of idx<60?ALLCAPS:[ALLCAPS[idx%ALLCAPS.length]]){const v1=await once(FROZEN,6,Buffer.concat([c,u])),v2=await once(NEW,6,Buffer.concat([c,r]));rt.legalityRequests++;
-   assert.ok(same(v1,v2),'retargeted legality differs from v1');if(v1.status===0)assert.ok(v2.stdout.equals(legality(inspect(u),[...c])),'legality vs reference');}
- });
+ const rt={units:v2Valid.length,requests:0,legalityRequests:0,roundtrips:0,malformedPairs:0,malformedStatuses:{},explicit:0};
+ {const jobs=[],checks=[];v2Valid.forEach(({u,r},idx)=>{
+   for(const m of [1,2,3,4,5]){checks.push({kind:'mode',m,r});jobs.push([NEW,m,r]);}
+   for(const c of idx<60?ALLCAPS:[ALLCAPS[idx%ALLCAPS.length]]){checks.push({kind:'legality',u,c});jobs.push([FROZEN,6,Buffer.concat([c,u])],[NEW,6,Buffer.concat([c,r])]);}});
+  const res=runAll(jobs);let j=0,decoded=[];
+  for(const q of checks){if(q.kind==='mode'){const o=res[j++];rt.requests++;assert.equal(o.status,0,`retarget mode ${q.m}`);assert.ok(o.stdout.equals(expected(q.m,q.r)),`retarget mode ${q.m} bytes`);if(q.m===2)decoded.push({r:q.r,out:o.stdout});}
+   else{const v1=res[j++],v2=res[j++];rt.legalityRequests++;assert.ok(same(v1,v2),'retargeted legality differs from v1');if(v1.status===0)assert.ok(v2.stdout.equals(legality(inspect(q.u),[...q.c])),'legality vs reference');}}
+  // decode -> encode: the decoded output is fed back to encode and must reproduce the input.
+  runAll(decoded.map(d=>[NEW,1,d.out])).forEach((o,i)=>{rt.roundtrips++;assert.ok(o.status===0&&o.stdout.equals(decoded[i].r),'decode->encode');});}
  // Malformed retargets: the same corruption gets the same verdict as on the original v1 profile-1 unit.
  const mutations=[];for(const c of categories)if(c.name!=='semantic-version')mutations.push({name:c.name,f:b=>c.mutate(Buffer.from(b))});
  for(let i=0;i<14;i++)for(const at of [2,3,4,5,6,7,8,10,12])for(const re of [false,true])mutations.push({name:`op${i}+${at}${re?'-rehash':''}`,f:b=>{if(i>=b.readUInt16LE(23))return null;const d=Buffer.from(b);d[57+i*20+at]^=255;return re?rehash(d):d;}});
  const malPairs=[];for(const u of p1.slice(0,60))for(const p of [7,8,9])for(const mu of mutations)malPairs.push({u,p,mu});
- await pool(malPairs,async({u,p,mu})=>{const a=mu.f(u);if(!a)return;const b=mu.f(retarget(u,p));const [x,y]=[await once(FROZEN,2,a),await once(NEW,2,b)];rt.malformedPairs++;
-  assert.equal(y.status,x.status,`retargeted ${mu.name} verdict`);if(x.status===0){assert.ok(y.stdout.equals(b),'retargeted mutant roundtrip');}else assert.equal(y.stdout.length,0);});
+ {const pairs=[];for(const {u,p,mu} of malPairs){const a=mu.f(u);if(a)pairs.push({name:mu.name,a,b:mu.f(retarget(u,p))});}
+  const res=runAll(pairs.flatMap(q=>[[FROZEN,2,q.a],[NEW,2,q.b]]));
+  pairs.forEach((q,i)=>{const x=res[2*i],y=res[2*i+1];rt.malformedPairs++;assert.equal(y.status,x.status,`retargeted ${q.name} verdict`);
+   if(x.status===0)assert.ok(y.stdout.equals(q.b),'retargeted mutant roundtrip');else assert.equal(y.stdout.length,0);rt.malformedStatuses[x.status]=(rt.malformedStatuses[x.status]??0)+1;});}
  // Explicit v2 rules with hand-stated expected statuses from the spec.
  const base=p1[0],explicit=[];const ex=(name,input,code)=>explicit.push({name,input,code});
  for(const p of [1,2,3,4,5,6]){const u=validUnits[p-1];assert.equal(u[19],p);ex(`v2 with profile ${p}`,header(u,{version:2}),68);}
@@ -155,10 +181,11 @@ try{
   ex(`v2 profile ${p} op 7 on u64`,mk([inA,inB,{code:7,attr:4,effect:17,alias:1,ob:24,a:0,b:1}]),68);
   ex(`v2 profile ${p} op 8 on u64`,mk([inA,inB,{code:8,attr:4,effect:19,alias:1,ob:24,a:0,b:1,imm:1n}]),68);
  }
- for(const e of explicit){const o=await once(NEW,2,e.input),f=await once(FROZEN,2,e.input);rt.explicit++;
+ const explicitRes=runAll(explicit.flatMap(e=>[[NEW,2,e.input],[FROZEN,2,e.input]]));
+ explicit.forEach((e,i)=>{const o=explicitRes[2*i],f=explicitRes[2*i+1];rt.explicit++;e.out=o;
   assert.equal(o.status,e.code,`explicit '${e.name}'`);assert.ok(e.code?o.stdout.length===0:o.stdout.equals(e.input),`explicit '${e.name}' output`);
   if(e.input[17]!==2)assert.ok(same(o,f),`explicit '${e.name}' frozen equivalence`);
-  const pub=spawnSync('sh',['tools/source-aware/sa','decode'],{input:e.input,env:{...process.env,SA_BUILD:root}});assert.equal(pub.status,e.code,`public '${e.name}'`);assert.equal(pub.stdout.length,e.code?0:e.input.length);}
+  const pub=spawnSync('sh',['tools/source-aware/sa','decode'],{input:e.input,env:{...process.env,SA_BUILD:root}});assert.equal(pub.status,e.code,`public '${e.name}'`);assert.equal(pub.stdout.length,e.code?0:e.input.length);});
  const explicitValid=explicit.filter(e=>e.code===0&&e.input[17]===2).map(e=>e.input);
  report.retargeted={...rt,profiles:[7,8,9],baseUnits:{corpusProfile1:p1.length,f1Imports:f1base.length},mutationsPerUnit:mutations.length,explicitCases:explicit.map(e=>({name:e.name,code:e.code}))};
  report.steps.push('retargeted corpus');console.log('3 retargeted corpus PASS',JSON.stringify(rt));
@@ -166,9 +193,8 @@ try{
  // ---------- 2. frozen codec and v1 reference refuse every valid v2 unit (66, empty stdout) ----------
  const refusal={units:0,frozenRequests:0,referenceChecks:0,publicChecks:0,consumers:{}};
  const allV2=[...v2Valid.map(v=>v.r),...explicitValid];
- await pool(allV2,async(r,idx)=>{refusal.units++;const ref=inspect(r);refusal.referenceChecks++;assert.equal(ref.code,66,'reference.mjs must refuse v2 with 66');
-  for(const m of [1,2,3,4,5]){const o=await once(FROZEN,m,r);refusal.frozenRequests++;assert.equal(o.status,66);assert.equal(o.stdout.length,0);}
-  const o=await once(FROZEN,6,Buffer.concat([CAPS[idx%CAPS.length],r]));refusal.frozenRequests++;assert.equal(o.status,66);assert.equal(o.stdout.length,0);});
+ for(const r of allV2){refusal.units++;refusal.referenceChecks++;assert.equal(inspect(r).code,66,'reference.mjs must refuse v2 with 66');}
+ runAll(allV2.flatMap((r,idx)=>[...[1,2,3,4,5].map(m=>[FROZEN,m,r]),[FROZEN,6,Buffer.concat([CAPS[idx%CAPS.length],r])]])).forEach(o=>{refusal.frozenRequests++;assert.equal(o.status,66,'frozen v1 must refuse v2 with 66');assert.equal(o.stdout.length,0);});
  for(const r of allV2.slice(0,12))for(const c of ['decode','identity','replay']){const o=spawnSync('sh',['tools/source-aware/sa',c],{input:r});refusal.publicChecks++;assert.equal(o.status,66);assert.equal(o.stdout.length,0);assert.ok(o.stderr.toString().includes('UNKNOWN_VERSION'));}
  // Consumers built on the v1 core (tools/adapters/lower -> build/L831, tools/adapters/c-export -> build/L622).
  for(const tool of ['tools/adapters/lower','tools/adapters/c-export']){const row={units:0,statuses:{}};
@@ -182,14 +208,14 @@ try{
  for(let i=0;i<120;i++){const u=validUnits[i],r=v2Valid[i].r;for(const m of [1,2,3,4,5]){add(m,u);add(m,r);}add(6,Buffer.concat([CAPS[i%CAPS.length],u]));add(6,Buffer.concat([CAPS[(i+7)%CAPS.length],r]));
   add(2,bad[i].input);add(1+i%5,explicit[i%explicit.length].input);add(6,Buffer.concat([BADCAPS[i%BADCAPS.length],r]));add(i%2?0:7,r);add(2,header(r,{version:i%2?1:3}));}
  add(6,Buffer.of(1,0,1));add(2,Buffer.alloc(0));
- const isolated=[];await pool(mixed.map((q,i)=>i),async i=>{isolated[i]=await once(NEW,mixed[i].mode,mixed[i].input);});
+ const isolated=runAll(mixed.map(q=>[NEW,q.mode,q.input]));
  const prod=compile(vendor+coreV2+batchOm,'batch-v2');
  let state=0x8327;const rnd=()=>{state^=state<<13;state^=state>>>17;state^=state<<5;return state>>>0;};
  const shuffled=mixed.map((_,i)=>i);for(let i=shuffled.length-1;i>0;i--){const j=rnd()%(i+1);[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
  // 64 operations and a 4096-byte source: the largest outputs any request can leave behind.
  const bigOps=[op({code:9,attr:0,ob:1,imm:0n}),op({code:9,attr:0,ob:1,imm:1n})];while(bigOps.length<64)bigOps.push(op({code:2+bigOps.length%3,ob:1,a:bigOps.length-1,b:bigOps.length-2}));
  const big=header(unit({ops:bigOps,source:Buffer.alloc(4096,0xab)}),{version:2,lang:6,profile:8}),fail=header(p1[1],{version:2});
- assert.equal((await once(NEW,1,big)).status,0,'big v2 unit');
+ assert.equal(runAll([[NEW,1,big]])[0].status,0,'big v2 unit');
  const orders={forward:mixed.map((_,i)=>i),reverse:mixed.map((_,i)=>mixed.length-1-i),shuffled,
   sandwiched:mixed.flatMap((_,i)=>[-1,i,-2,i,-3,i])};
  const stale={requests:mixed.length,orders:{}};
@@ -216,7 +242,7 @@ try{
 
  // ---------- compiled v2 mutants must be caught by the controls above ----------
  const controls=[...orders.forward.map(pick),...explicit.map(e=>({mode:2,input:e.input}))];
- const want=[...isolated,...await Promise.all(explicit.map(e=>once(NEW,2,e.input)))];
+ const want=[...isolated,...explicit.map(e=>e.out)];
  const mutants=[
   ['encode-version-hardcoded',s=>s.replace('ebyte get M 8\nebyte get M 0','ebyte 1\nebyte get M 0')],
   ['v2-low-profile-admitted',s=>s.replace('if ne get M 8 1\nret 68','if false\nret 68')],
@@ -230,6 +256,6 @@ try{
   const res=batch(built.exe,controls);let wrong=res.complete?0:1;res.rows.forEach((g,i)=>{if(!same(g,want[i]))wrong++;});assert.ok(wrong>0,'survived '+name);report.mutants.push({name,...built,executed:res.rows.length,mismatches:wrong,caught:true});}
  report.steps.push('mutants');console.log('mutants caught',report.mutants.map(m=>`${m.name}:${m.mismatches}`).join(' '));
 
- report.verdict='PASS';fs.writeFileSync(path.join(run,'receipt.json'),JSON.stringify(report,null,2)+'\n');fs.writeFileSync(path.join(root,'PASS.json'),JSON.stringify(report,null,2)+'\n');
- console.log(JSON.stringify({verdict:'PASS',equivalenceRequests:eq.requests,identical:eq.identical,excludedByte17Is2:eq.excludedByte17Is2,retargetedUnits:rt.units,retargetRequests:rt.requests+rt.legalityRequests+rt.roundtrips*2+rt.malformedPairs*2+rt.explicit,v2Refused:refusal.units,staleRequests:Object.values(stale.orders).reduce((a,o)=>a+o.requests,0),mutants:report.mutants.length,run}));
+ report.processRequests=spawned;report.verdict='PASS';fs.writeFileSync(path.join(run,'receipt.json'),JSON.stringify(report,null,2)+'\n');fs.writeFileSync(path.join(root,'PASS.json'),JSON.stringify(report,null,2)+'\n');
+ console.log(JSON.stringify({verdict:'PASS',equivalence:{requests:eq.requests,identical:eq.identical,excludedByte17Is2:eq.excludedByte17Is2},retargeted:{units:rt.units,modeRequests:rt.requests,legalityPairs:rt.legalityRequests,decodeEncode:rt.roundtrips,malformedPairs:rt.malformedPairs,explicit:rt.explicit},v2RefusedByFrozen:{units:refusal.units,requests:refusal.frozenRequests},staleBatchRequests:Object.values(stale.orders).reduce((a,o)=>a+o.requests,0),mutantsCaught:report.mutants.length,singleProcessRequests:spawned,run}));
 }catch(e){report.verdict='FAIL';report.failure={message:e.message,stack:e.stack};fs.writeFileSync(path.join(run,'failure.json'),JSON.stringify(report,null,2)+'\n');fs.rmSync(path.join(root,'PASS.json'),{force:true});console.error(e.stack);process.exitCode=1;}
