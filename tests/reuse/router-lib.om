@@ -23,6 +23,8 @@ text tfall "/allow"
 text tflib "/lib"
 text tflibb "/libb"
 text tflibn "/libn"
+text tflibc "/libc"
+text tfcal "/cal"
 text tmc1b "mutant:c1b"
 text tunit "unit:check=tests/reuse/mutants/nog3-check.om"
 text tmankey "manifest_sha256="
@@ -424,6 +426,16 @@ for i ulong len tflibn
 tpkb ulong get tflibn i
 end
 end
+if eq k 7
+for i ulong len tflibc
+tpkb ulong get tflibc i
+end
+end
+if eq k 8
+for i ulong len tfcal
+tpkb ulong get tfcal i
+end
+end
 end
 
 fn tpkrec k ulong to void
@@ -574,8 +586,8 @@ put TRTL 0 n
 ret 0
 end
 
-note drive build OMC DIR/allow - DIR/<lib l> [options] DIR/tap.exp; opt 1 c1b, 2 nog3 and c1b;
-note the printed manifest SHA-256 into TMAN slot l
+note drive build OMC DIR/allow CALIB DIR/<lib l> [options] DIR/tap.exp; opt 1 c1b, 2 nog3 and c1b,
+note 3 CALIB = DIR/cal (else "-"); the printed manifest SHA-256 into TMAN slot l
 fn tbuildl l ulong opt ulong to int
 tpkreset
 tpkargv 3
@@ -586,7 +598,11 @@ end
 tpkclose
 tpkargv 2
 tpkrec 3
+if eq opt 3
+tpkrec 8
+else
 tpkdash
+end
 tpkrec l
 if eq opt 2
 tpkopen
@@ -1076,6 +1092,75 @@ end
 ret 0
 end
 
+note K16: a library built with a calibration file; the loaded select router reads it from
+note /proc/self/fd/7 (STATS 31 flags 8 path set and 16 slload accepted); answers stay exact
+fn tcalib to int
+put TCK 0 10000
+for i ulong 200
+r1putw mul i 8 0
+end
+r1putw 0 3544386010811150674
+r1putw 8 1
+r1putw 16 4000
+r1putw 64 1000
+r1putw 72 2000
+tpkreset
+tpkname 8
+n = sub get TPKO 0 2
+for i ulong n
+put TAR i get TPK add i 2
+end
+fd = fopen TAR 0 n 577 384
+if not tok ge fd 0
+ret 1
+end
+w = write int fd R1HB 0 1600
+x = fclose int fd
+if not tok eq w 1600
+ret 1
+end
+if not tok eq tbuildl 7 3 0
+ret 1
+end
+tpkargs 6 7
+if not tok eq tspawn 0
+ret 1
+end
+tsha 1001 77
+if not tok tbegin 50 3 65536 0
+ret 1
+end
+if not tsend 2 0 0
+ret 1
+end
+if not tok trecv
+ret 1
+end
+r1full
+ok = eq get TR 0 get R1R 0
+if not tok and ok eq get TR 1 get R1R 1
+ret 1
+end
+if not tok tsend 9 0 0
+ret 1
+end
+if not tok trecv
+ret 1
+end
+f = get TR 31
+if not tok eq and f 31 25
+tputd f
+ret 1
+end
+if not tok tst 10 0 0
+ret 1
+end
+if not tok eq treap 0
+ret 1
+end
+ret 0
+end
+
 fn tall to int
 put TCK 0 100
 if not tok eq tbuildb 0
@@ -1101,6 +1186,9 @@ r = trevoke
 end
 if eq r 0
 r = tcontrols
+end
+if eq r 0
+r = tcalib
 end
 ret r
 end

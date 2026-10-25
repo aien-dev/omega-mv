@@ -12,8 +12,9 @@ note the generation and never returns on success; on its nonzero return this pro
 note QUERY as full with route 5. A generation (argv ends in "loaded") never loads again; it reads its
 note lineage (lblineage) and checks it against ALLOW at every BEGIN and, whenever the stat snapshot
 note of ALLOW (inode, size, mtime ns, ctime ns) changed, at QUERY: a revoked or unverifiable lineage
-note gives route 5 from that QUERY on for the rest of the process. select in a generation reads
-note LIBDIR/gen-G.cal (K1, lbcalpath); with LIBDIR "-" it has no calibration.
+note gives route 5 from that QUERY on for the rest of the process. select in a generation reads its
+note calibration from /proc/self/fd/7, the memfd of verified bytes lbload left open before exec (K16),
+note iff the manifest names one (LBCAL); never LIBDIR/gen-G.cal. With LIBDIR "-" it has no calibration.
 note Arms at QUERY (route): echo 0 0 (0); full r1full (1); tap r1full and one experience record (1);
 note cache key SHA-256(program digest, n, state digest), the state digest recomputed only at the first
 note QUERY after a change, 4096 entries FIFO: hit (2), miss r1full (1); method mtrun (3) when a
@@ -25,7 +26,7 @@ note STATS answers 32 counters RTST: 0..5 QUERYs by route 0..5, 6 sessions, 7 ch
 note 8 PROGRAMs applied, 9 refused requests, 10 ckbind calls, 11 bind failures, 12 G3 FIFO hits,
 note 13 G3 lane pairs, 14..25 dlstat 0..11, 26 select delta disables (SLDIS), 27 select refusals
 note (SLREF), 28 cache entries, 29 template count (mtcount), 30 load refusal code, 31 flags
-note (1 generation, 2 refused, 4 revoked, 8 calibration path set).
+note (1 generation, 2 refused, 4 revoked, 8 calibration path set, 16 calibration loaded by slload).
 text RTTE "echo"
 text RTTF "full"
 text RTTC "cache"
@@ -34,6 +35,7 @@ text RTTD "delta"
 text RTTS "select"
 text RTTT "tap"
 text RTTL "loaded"
+text RTTCAL "/proc/self/fd/7"
 global RTARM ulong 1
 global RTFLG ulong 1
 global RTLC ulong 1
@@ -313,13 +315,13 @@ put EXALEN 0 n
 end
 
 fn rtcal to void
-n = lbcalpath
-if le n 0
+if ne get LBCAL 0 1
 ret
 end
-for i ulong 4096
-put SLPATH i get LBCP i
+for i ulong len RTTCAL
+put SLPATH i get RTTCAL i
 end
+put SLPATH len RTTCAL 0
 put RTFLG 0 or get RTFLG 0 8
 end
 
@@ -367,7 +369,9 @@ rtrefuse x
 end
 end
 if eq a 6
-x = slload
+if eq slload 0
+put RTFLG 0 or get RTFLG 0 16
+end
 end
 end
 
