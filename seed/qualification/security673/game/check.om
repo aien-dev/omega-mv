@@ -1,13 +1,15 @@
-note Independent SC1-G enumerator. No solver transition, availability or invariant helpers used.
+note Independent SC1-G-v3 enumerator and rename safety monitor.
 note Reverse-order in-place losing attractor, versus synchronous solver bitmaps.
 global fields uint 5
 global costs uint 18
 global rules uint 18
 global submit uint 2593
+global chosen uint 2593
 global alive uchar 2593
 global counts ulong 3
-global pairs ulong 2
-global fault uint 1
+global pairs ulong 4
+global variant uint 1
+global claim uint 1
 fn refuse id uint to void
 if eq id 8
 label 17
@@ -15,6 +17,14 @@ exit 78
 end
 label add id 8
 exit add int id 70
+end
+fn witness s uint u uint d uint raw uint effect uint to void
+label 26
+number ulong s
+number ulong u
+number ulong d
+number ulong raw
+number ulong effect
 end
 fn unpack s uint to void
 put fields 0 rem s 18
@@ -65,6 +75,9 @@ m = shl get rules x 2
 m = or m shl get rules y 10
 if gt add get costs x get costs y 1
 m = and m not uint 1028
+end
+if ne rem div s 324 4 0
+m = and m not uint 131584
 end
 if and or eq x 0 eq x 14 or eq y 0 eq y 14
 m = or m 1
@@ -236,26 +249,69 @@ ret pack
 end
 ret enact div sub u 2 8 rem sub u 2 8 d
 end
+fn clientphase s uint c uint to uint
+if eq c 1
+s = div s 18
+end
+ret rem s 18
+end
+fn monitor s uint u uint d uint got uint to uint
+if or lt u 2 ge got 2592
+ret 0
+end
+c = div sub u 2 8
+p = clientphase s c
+q = clientphase got c
+if and eq p 11 eq q 17
+ret 4
+end
+if ne rem sub u 2 8 4
+ret 0
+end
+if or lt p 7 gt p 10
+ret 0
+end
+if ne q 11
+ret 0
+end
+e = and div s 324 1
+v = and div s 648 1
+if eq d 3
+e = 1
+end
+if eq d 4
+v = 1
+end
+if ne sub p 7 add e mul v 2
+ret 3
+end
+ret 0
+end
 fn readstate s uint to void
 m = recvword
 if ne m actions s
 refuse 7
 end
 put submit s recvword
+put chosen s recvword
 for u uint 18
 if ne and m shl uint 1 u 0
 for d uint 9
 got = recvword
+if ge got 2593
+refuse 7
+end
+bad = monitor s u d got
+if ne bad 0
+witness s u d got 2592
+refuse bad
+end
 want = oracle s u d
 put counts 0 add get counts 0 1
 if ne got want
-if and ge u 2 eq rem sub u 2 8 4
-refuse 3
-end
-if and ge u 2 eq rem sub u 2 8 5
-refuse 4
-end
-refuse 7
+witness s u d got want
+label 27
+exit 79
 end
 end
 end
@@ -309,21 +365,48 @@ end
 end
 end
 end
+fn closurefail s uint u uint d uint y uint to void
+witness s u d y y
+label 28
+note Untrusted experiment label annotates an observed closure violation, not its inferred cause.
+v = get claim 0
+if or eq v 1 or eq v 2 eq v 6
+refuse v
+end
+exit 80
+end
+fn closeone s uint to void
+m = get submit s
+if eq m 0
+ret
+end
+if not localok s
+witness s 18 9 s s
+label 29
+exit 81
+end
+if ne and m not actions s 0
+witness s 18 9 m actions s
+label 30
+exit 82
+end
+for u uint 18
+if ne and m shl uint 1 u 0
+for d uint 9
+y = oracle s u d
+if eq get submit y 0
+closurefail s u d y
+end
+end
+end
+end
+end
 fn validate to void
-if ne get submit 15 0
-if ne and get submit 15 shl uint 1 7 0
-refuse 1
-end
-refuse 2
-end
-if ne get submit 16 0
-refuse 6
-end
-if ne and get submit 3 shl uint 1 9 0
-refuse 5
-end
-if eq get submit 0 0
+if eq get submit fixture 0 0
 refuse 7
+end
+for s uint 2593
+closeone s
 end
 for s uint 2593
 m = uint 0
@@ -332,7 +415,9 @@ m = actionmask s
 put counts 2 add get counts 2 1
 end
 if ne get submit s m
-refuse 7
+witness s 18 9 get submit s m
+label 31
+exit 83
 end
 end
 end
@@ -369,6 +454,40 @@ end
 end
 ret best
 end
+fn selections to void
+for s uint 2593
+u = get chosen s
+if eq get submit s 0
+require eq u 18
+else
+if ge u 18
+witness s u 9 2592 2592
+refuse 5
+end
+if eq and get submit s shl uint 1 u 0
+witness s u 9 u get submit s
+refuse 5
+end
+if ne u rank s 1
+witness s u 9 u rank s 1
+label 32
+exit 84
+end
+if ge u 2
+require ne rem sub u 2 8 7
+end
+require eq rank s 0 18
+require eq rank s 2 18
+end
+end
+end
+fn serial s uint u uint d uint to uint
+require ne get submit s 0
+require ne and get submit s shl uint 1 u 0
+y = oracle s u d
+require ne get submit y 0
+ret y
+end
 fn observation secret uint protect bool to uint
 used = secret
 if protect
@@ -378,40 +497,38 @@ note Public envelope size2 within public capacity3 and fixed release identity1.
 ret add sub uint 3 used 16
 end
 fn witnesses to void
-require localok 15
-require eq get alive 15 0
-require eq oracle 15 6 4 2592
-require eq oracle 15 7 3 2592
-require eq oracle 331 6 0 331
-require eq oracle 11 7 6 11
-require eq and actions 20 shl uint 1 10 0
-require ne and actions 32 shl uint 1 10 0
-note Native serial trace queues both, reserves, prepares, writes, renames, settles, acknowledges.
-s = oracle 0 0 1
-s = oracle s 2 2
-require eq s 20
-s = oracle s 4 0
-s = oracle s 5 0
-s = oracle s 6 0
-s = oracle s 7 0
-s = oracle s 8 0
-require eq s 32
-s = oracle s 10 0
-s = oracle s 12 0
-s = oracle s 13 0
-s = oracle s 14 0
-s = oracle s 15 0
-s = oracle s 16 0
-require eq s 266
+require localok fixture 1
+require eq get alive fixture 1 0
+require eq get alive fixture 2 0
+require eq oracle fixture 1 6 4 fixture 8
+require eq oracle fixture 1 7 3 fixture 8
+require eq oracle fixture 3 6 0 fixture 3
+require eq oracle fixture 4 7 6 fixture 4
+require eq and actions fixture 5 shl uint 1 10 0
+require ne and actions fixture 6 shl uint 1 10 0
+note Every step uses the submitted safe certificate, not only the transition relation.
+s = serial fixture 0 0 1
+s = serial s 2 2
+require eq s fixture 5
+s = serial s 4 0
+s = serial s 5 0
+s = serial s 6 0
+s = serial s 7 0
+s = serial s 8 0
+require eq s fixture 6
+s = serial s 10 0
+s = serial s 12 0
+s = serial s 13 0
+s = serial s 14 0
+s = serial s 15 0
+s = serial s 16 0
+require eq s fixture 7
 require eq add get costs rem s 18 get costs rem div s 18 18 2
-require eq actions 2592 0
-require eq oracle 2592 0 0 2592
-require eq oracle 0 0 0 0
+require eq actions fixture 8 0
+require eq oracle fixture 8 0 0 fixture 8
+require eq oracle fixture 0 0 0 fixture 0
 require not allwithin 0 0 0
 require not allwithin 0 0 10
-require eq rank 3 0 18
-require eq rank 3 2 18
-require ne rank 3 1 9
 require eq observation 1 true observation 2 true
 require ne observation 1 false observation 2 false
 label 16
@@ -434,7 +551,7 @@ refuse 8
 end
 m = actions s
 note Negative baseline incorrectly uses physical hidden occupancy instead of full reservation.
-if and eq get fault 0 8 eq h 1
+if and eq get variant 0 8 eq h 1
 if eq rem s 18 1
 m = or m 4
 end
@@ -474,11 +591,24 @@ ret old
 end
 ret 0
 end
+fn pairselect s uint h uint to uint
+m = pairmask s h
+if ne and get submit s not m 0
+witness s 18 9 get submit s m
+refuse 8
+end
+ret get chosen s
+end
 fn pairrun s uint h1 uint h2 uint to void
 m = pairmask s h1
 if ne m pairmask s h2
+witness s 18 9 m pairmask s h2
 refuse 8
 end
+if ne pairselect s h1 pairselect s h2
+refuse 8
+end
+m = get submit s
 if ne publicob s h1 publicob s h2
 refuse 8
 end
@@ -490,10 +620,17 @@ y = pairnext s u d h2
 if ne x y
 refuse 8
 end
+if eq get submit x 0
+refuse 8
+end
 if ne publicob x newlabel x h1 publicob y newlabel y h2
 refuse 8
 end
+if eq h1 h2
+put pairs 3 add get pairs 3 1
+else
 put pairs 1 add get pairs 1 1
+end
 end
 end
 end
@@ -501,10 +638,11 @@ end
 fn product to void
 for s uint 2593
 if localok s
-put pairs 0 add get pairs 0 1
 if envelope s
+put pairs 0 add get pairs 0 1
 pairrun s 1 2
 else
+put pairs 2 add get pairs 2 1
 pairrun s 0 0
 end
 end
@@ -514,16 +652,21 @@ fn checkonce to void
 for i ulong 3
 put counts i 0
 end
-put pairs 0 0
-put pairs 1 0
+for i ulong 4
+put pairs i 0
+end
 init
 if ne recvword 1396912455
 refuse 7
 end
-if ne recvword 1
+if ne recvword 3
 refuse 7
 end
 if ne recvword 2593
+refuse 7
+end
+put claim 0 recvword
+if gt get claim 0 6
 refuse 7
 end
 for s uint 2593
@@ -532,14 +675,15 @@ end
 endinput
 attractor
 validate
+selections
 product
 end
 fn main to int
 m = mode
-if and ne m 0 and ne m 7 ne m 8
+if and ne m 0 ne m 7
 ret 90
 end
-put fault 0 m
+put variant 0 fault
 start = monons
 checkonce
 label 2
@@ -554,11 +698,15 @@ number get counts 2
 label 6
 number get counts 1
 label 7
-number 18125
+number 28517
 label 18
 number get pairs 0
 label 19
 number get pairs 1
+label 24
+number get pairs 2
+label 25
+number get pairs 3
 if eq m 7
 for i ulong 101
 if ne fseek 0 0 0 0

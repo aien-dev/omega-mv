@@ -1,8 +1,8 @@
 note Fixed two-child lifecycle measurement using gate669 fork/exec/wait pattern.
 note Not a general runner. Existing compiled solver/checker required; no model code here.
-text solver "build/security760-native/solve"
-text checker "build/security760-native/check"
-text spool "build/security760-native/roundtrip.bin"
+text solver "build/security760-v3/solve0"
+text checker "build/security760-v3/check0"
+text spool "build/security760-v3/roundtrip.bin"
 text nullpath "/dev/null"
 global argv uchar 256
 global status uchar 4

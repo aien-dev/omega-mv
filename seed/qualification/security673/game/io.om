@@ -6,7 +6,7 @@ global digits uchar 32
 global samples ulong 101
 text nl "\n"
 text sp " "
-text tags "construct_ns=\nsolve_ns=\ncheck_ns=\nstates=\nedges=\nwinning=\nrounds=\narray_bytes=\nPASS SC1-G finite model only\nFAIL QUANTIFIER\nFAIL OMITTED_DISTURBANCE\nFAIL STALE_EPOCH\nFAIL UNCERTAIN_REFUND\nFAIL UNSAFE_OPTIMIZER\nFAIL EARLY_STOP\nFAIL CERTIFICATE\nPASS witnesses serial capacity empty-set paired costs\nFAIL PAIRED_PRODUCT\npaired_states=\npaired_edges=\nsample_ns=\np50_ns=\np95_ns=\np99_ns=\n"
+text tags "construct_ns=\nsolve_ns=\ncheck_ns=\nstates=\nedges=\nwinning=\nrounds=\narray_bytes=\nPASS SC1-G-v3 finite model only\nFAIL QUANTIFIER_CLOSURE\nFAIL OMITTED_DISTURBANCE_CLOSURE\nFAIL FRESHNESS_AT_RENAME\nFAIL UNCERTAIN_REFUND\nFAIL SELECTED_NOT_SAFE\nFAIL EARLY_STOP_CLOSURE\nFAIL CERTIFICATE\nPASS certified serial witnesses empty-set costs\nFAIL PAIRED_PRODUCT\ndistinct_hidden_states=\ndistinct_hidden_edges=\nsample_ns=\np50_ns=\np95_ns=\np99_ns=\nidentical_zero_states=\nidentical_zero_edges=\nWITNESS source action disturbance raw effective\nFAIL TRANSITION_CONFORMANCE\nFAIL CLOSURE\nFAIL SOURCE_INVARIANT\nFAIL DISABLED_ACTION\nFAIL EXACTNESS\nFAIL SELECTION_COST\n"
 fn label id uint to void
 p = ulong 0
 n = uint 0

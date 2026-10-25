@@ -1,6 +1,7 @@
-note SC1-G-v1 synchronous greatest fixed point. Concatenate io.om first.
+note SC1-G-v3 synchronous greatest fixed point over monitored raw transitions.
 global moves uint 2593
 global cert uint 2593
+global chosen uint 2593
 global edges uint 420066
 global keep uchar 2593
 global next uchar 2593
@@ -78,6 +79,9 @@ ret eq p 2
 end
 if or eq k 3 eq k 7
 if and ge p 3 le p 6
+if eq k 7
+ret eq rem div s 324 4 0
+end
 ret true
 end
 ret and eq k 7 eq p 16
@@ -232,6 +236,29 @@ end
 fn index s uint u uint d uint to uint
 ret add mul add mul s 18 u 9 d
 end
+fn monitored s uint u uint d uint raw uint to uint
+if or lt u 2 ge raw 2592
+ret raw
+end
+c = div sub u 2 8
+p = phase s c
+q = phase raw c
+if and eq p 11 eq q 17
+ret 2592
+end
+if and eq rem sub u 2 8 4 eq q 11
+if and ge p 7 le p 10
+now = environment s d
+if ne sub p 7 rem div now 324 4
+ret 2592
+end
+end
+end
+ret raw
+end
+fn destination s uint u uint d uint to uint
+ret monitored s u d get edges index s u d
+end
 fn construct to void
 for i uint 4
 put totals i 0
@@ -260,7 +287,7 @@ ret false
 end
 for d uint 9
 if not and eq get mut 0 2 eq d 4
-if eq get keep get edges index s u d 0
+if eq get keep destination s u d 0
 ret false
 end
 end
@@ -280,7 +307,7 @@ for d uint 9
 found = false
 for u uint 18
 if ne and get moves s shl uint 1 u 0
-if ne get keep get edges index s u d 0
+if ne get keep destination s u d 0
 found = true
 end
 end
@@ -339,17 +366,56 @@ end
 end
 put cert s m
 end
+end
+fn select s uint identity uint to uint
+if ne identity 1
+ret 18
+end
+m = get cert s
+if eq m 0
+ret 18
+end
 if eq get mut 0 5
-put cert 3 shl uint 1 9
+m = get moves s
+end
+best = uint 18
+price = uint 99
+for u uint 18
+if ne and m shl uint 1 u 0
+p = uint 2
+if lt u 2
+p = 1
+else
+k = rem sub u 2 8
+if eq k 7
+p = 0
+end
+if eq k 1
+p = 4
+end
+end
+if lt p price
+price = p
+best = u
+end
+end
+end
+ret best
+end
+fn selections to void
+for s uint 2593
+put chosen s select s 1
 end
 end
 fn output to void
 sendword 1396912455
-sendword 1
+sendword 3
 sendword 2593
+sendword get mut 0
 for s uint 2593
 sendword get moves s
 sendword get cert s
+sendword get chosen s
 for u uint 18
 if ne and get moves s shl uint 1 u 0
 for d uint 9
@@ -361,24 +427,28 @@ end
 flush
 end
 fn benchmark to void
-put mut 0 0
+if ne get mut 0 0
+exit 90
+end
 for i ulong 101
 start = monons
 construct
 solve
 certificate
+selections
 put samples i ulong sub monons start
 end
 percentiles
 end
 fn main to int
-put mut 0 mode
-if eq get mut 0 7
+put mut 0 fault
+m = mode
+if eq m 7
 benchmark
 output
 ret 0
 end
-if gt get mut 0 6
+if or ne m 0 gt get mut 0 6
 ret 90
 end
 start = monons
@@ -388,6 +458,7 @@ number ulong sub monons start
 start = monons
 solve
 certificate
+selections
 label 1
 number ulong sub monons start
 label 3
@@ -399,7 +470,7 @@ number get totals 2
 label 6
 number get totals 1
 label 7
-number 1711182
+number 1721554
 output
 ret 0
 end
