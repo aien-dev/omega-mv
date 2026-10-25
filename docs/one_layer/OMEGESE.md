@@ -680,7 +680,10 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   unsigned offset) with no runtime check. Every other index keeps its runtime check.
 - **Bounds.** At most 65536 emitted words per function after unrolling and inlining, 64 copies per
   unrolled loop and 4 inline levels (error 14, `obligation=growth`). 16 registers stay the limit
-  (error 12, `obligation=regs`).
+  (error 12, `obligation=regs`). Expansion fuel (E14): each copy of an unrolled body and each inline
+  expansion costs 1 of the function's 65536, at every nesting depth (nested unrolls multiply); the
+  65537th is error 14 (`growth`) on the line of the loop or call that needs it. So two nested 64-copy
+  unrolls (4160) compile and three (266304) do not. The inline call graph keeps each edge once.
 - **Trap sites.** With `om2 diag`, an accepted unit's stderr gets one `omc-site 1 line=N iter=k` record
   per runtime trap site, in emission order: N the source line, k the counters of the open unrolled loops
   outer to inner joined by `.`, or `-`. stdout is unchanged.

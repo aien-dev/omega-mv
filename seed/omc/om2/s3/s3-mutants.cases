@@ -5,6 +5,7 @@ ctl-l-rw run seed/omc/om2/s3/l-rw.om - file:seed/omc/om2/s3/l-rw.out - 0
 ctl-l-trap run seed/omc/om2/s3/l-trap.om - - - 103
 ctl-l-overlap emit seed/omc/om2/s3/l-bad-overlap.om - err:6:29 29
 ctl-l-past emit seed/omc/om2/s3/l-bad-past.om - err:4:29 29
+ctl-fuel emit seed/omc/om2/s3/fuel-d3.om - err:6:14 14
 # layout: the overlap check removed
 subst seed/omc/om2/s3/mut/ovl.from seed/omc/om2/s3/mut/ovl.to
 cc seed/omc/omc.om
@@ -21,3 +22,7 @@ m-l-lix run seed/omc/om2/s3/l-trap.om - - - 103
 subst seed/omc/om2/s3/mut/past.from seed/omc/om2/s3/mut/past.to
 cc seed/omc/omc.om
 m-l-past emit seed/omc/om2/s3/l-bad-past.om - err:4:29 29
+# E14: the expansion fuel check removed (depth 3 compiles)
+subst seed/omc/om2/s3/mut/fuel.from seed/omc/om2/s3/mut/fuel.to
+cc seed/omc/omc.om
+m-fuel emit seed/omc/om2/s3/fuel-d3.om - err:6:14 14
