@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+# §5 mutants of om2/compiler-s3 @ ad220c05 (omc 98cd1621...). Kill rows: sec/s5s7/mutant-side.cases (b-d),
+# written before S3 was read. Copy the head's seed/omc/omc.om to build/om2-qual/cand-s3/omc.om first.
+cc build/om2-qual/cand-s3/omc.om
+ctl-s3-rebuilt run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+cc pinned
+# --- mutant fresh-union
+subst seed/qualification/om2/candidates/s3/mutants/fresh-union.from seed/qualification/om2/candidates/s3/mutants/fresh-union.to
+cc build/om2-qual/cand-s3/omc.om
+ctl-fresh-union-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+fresh-union-ctl-a5-exact run seed/qualification/om2/sec/s5s7/a5-exact.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+fresh-union-ctl-f5-ifelse run seed/qualification/om2/sec/s5s7/f5-ifelse.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-ifelse.out - 0
+fresh-union-mut-b-join-diff run seed/qualification/om2/sec/s5s7/f5-join-diff.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-join-diff.mutant - 0
+# f5-branch is an if WITHOUT else: its join keeps the opening set, not the intersection, so the
+# union-at-if/else mutant cannot reach it (prediction corrected; killed by fresh-noreset below)
+# fresh-union-mut-b-branch run seed/qualification/om2/sec/s5s7/f5-branch.om+seed/qualification/om2/sec/s5s7/pr.om - line:7 - 0
+cc pinned
+# --- mutant ctor-bypass
+subst seed/qualification/om2/candidates/s3/mutants/ctor-bypass.from seed/qualification/om2/candidates/s3/mutants/ctor-bypass.to
+cc build/om2-qual/cand-s3/omc.om
+ctl-ctor-bypass-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+ctor-bypass-ctl-a5-exact run seed/qualification/om2/sec/s5s7/a5-exact.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+ctor-bypass-ctl-f5-ifelse run seed/qualification/om2/sec/s5s7/f5-ifelse.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-ifelse.out - 0
+ctor-bypass-mut-c-seal-main emit seed/qualification/om2/sec/s5s7/a5-seal-main.om+seed/qualification/om2/sec/s5s7/pr.om any any 0
+ctor-bypass-mut-c-seal-other emit seed/qualification/om2/sec/s5s7/a5-seal-other.om+seed/qualification/om2/sec/s5s7/pr.om any any 0
+cc pinned
+# --- mutant check-erased
+subst seed/qualification/om2/candidates/s3/mutants/check-erased.from seed/qualification/om2/candidates/s3/mutants/check-erased.to
+cc build/om2-qual/cand-s3/omc.om
+ctl-check-erased-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+check-erased-ctl-a5-exact run seed/qualification/om2/sec/s5s7/a5-exact.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+check-erased-ctl-f5-ifelse run seed/qualification/om2/sec/s5s7/f5-ifelse.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-ifelse.out - 0
+check-erased-mut-d-kept run seed/qualification/om2/sec/s5s7/a5-kept.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-kept.mutant - 0
+check-erased-mut-d-kept-diag emit seed/qualification/om2/sec/s5s7/a5-kept-diag.om any has:seed/qualification/om2/sec/s5s7/diag/a5-kept-diag.mutant.has 0
+cc pinned
+# --- mutant fresh-noreset: an if without else (and a rolled loop) keeps the arm's writes at the join
+subst seed/qualification/om2/candidates/s3/mutants/fresh-noreset.from seed/qualification/om2/candidates/s3/mutants/fresh-noreset.to
+cc build/om2-qual/cand-s3/omc.om
+ctl-fresh-noreset-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+fresh-noreset-mut-b-branch run seed/qualification/om2/sec/s5s7/f5-branch.om+seed/qualification/om2/sec/s5s7/pr.om - line:7 - 0
+cc pinned
