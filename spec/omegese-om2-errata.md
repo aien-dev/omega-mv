@@ -125,3 +125,14 @@ edit). Unsized parameters are allowed on internal functions, not only on exporte
 A unit is OM-2 iff its first line that is neither a `note` line nor blank (empty, or only spaces) is
 exactly `om2` (or `om2 diag`). OM-1 refuses such a unit at the `om2` line whether or not blank lines
 precede it, so C1 and C3 hold. The fmt mode rule (E6 Q4 f, the first line at byte 0) is unchanged.
+
+## E11 (QualPhaseB L836, 2026-10-25): leakage scan wording and public memory
+
+- §8 evidence (a): a static scan cannot show that a branch is never taken. The requirement reads
+  instead: "a data-dependent conditional branch must branch only to a trap stub (a check such as the
+  uint conversion range check after `and x 0xffffffff`), and is listed."
+- The context's `count` field (bytes 32..39) encodes the number of bytes absorbed so far, which the
+  leakage model treats as public (a length). The scanner takes an explicit, reviewable public-memory
+  declaration `pub:SLOT:OFF:LEN` (for SHA: the context slot, bytes 32..39). Items derived only from
+  declared public memory are classified as length-dependent. Every declaration is listed in the
+  evidence.
