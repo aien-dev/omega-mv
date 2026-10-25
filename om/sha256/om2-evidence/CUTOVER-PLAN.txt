@@ -18,7 +18,9 @@ Preconditions (each is a NOT_RUN item until done)
       flags). Slower but correct is reported, not hidden.
 
 Cutover commit (one commit, after P1-P5)
-  1. om/units.sh: OMC_PIN and NATIVE_PIN set to the new omc and generator; UNITS becomes
+  1. om/units.sh: the OMC_PIN= line is CompilerLane's (L834): each compiler-slice commit sets it,
+     and this branch takes that line unchanged when it rebases onto a slice. L838 sets NATIVE_PIN to
+     the new generator; UNITS becomes
      "om/sha256/sha256-om2.om om/blake3/b3unit.om"; --check also refuses a stale unit, compiler or
      profile: for the OM-2 unit it compares omega2_ident_sha256_om2() fields (src sha256, omc pin,
      profile OM-2) with the recomputed ones; for the OM-1 unit the harness-side record (erratum E1).
