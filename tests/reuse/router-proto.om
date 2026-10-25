@@ -39,9 +39,6 @@ global TR ulong 40
 global TRS ulong 2
 global TCK ulong 1
 global TARM ulong 1
-global TMS ulong 64
-global TS ulong 4096
-global TSN ulong 1
 
 note ---- small helpers ----
 fn tdirc b ulong to void
@@ -436,20 +433,6 @@ put TQ 23 33751040
 put TQ 24 197377
 end
 
-note save the model program; TQ[0..64) into R1P
-fn tsetp to void
-for i ulong 64
-put TMS i get R1P i
-put R1P i get TQ i
-end
-end
-
-fn tbackp to void
-for i ulong 64
-put R1P i get TMS i
-end
-end
-
 note BEGIN with TQ[0..64) and n values v_i = (s + 37 i) mod lim; expected status st;
 note on st 0 the model takes it
 fn tbegin n ulong s ulong lim ulong st ulong to bool
@@ -466,7 +449,6 @@ put R1N 0 n
 for i ulong n
 put R1X i get TQ add 65 i
 end
-put TSN 0 1
 end
 ret r
 end
