@@ -96,7 +96,9 @@ left-leaning chain `a+a+...+a` is emitted without parentheses). Shared SSA resul
 trees (C has no sharing in this profile); the root per section 4. The output must import under
 `c-u64-import-v1` (so: at most 4096 bytes, parenthesis depth at most 16, at most 64 upper operations
 after re-import). An export that would break any of these refuses 67 LIMIT with no stdout; it never
-writes unimportable C. `<name>` is `calc` unless given (`c-export NAME`, C-import-profile name rules).
+writes unimportable C. The other refusals are the same as lowering (section 5): malformed envelope 65,
+non-S1 unit 68, bad command or name 64. `<name>` is `calc` unless given (`c-export NAME`,
+C-import-profile name rules).
 
 Required boundaries: every F1 positive and every accepted boundary control of `c_import_controls.py`
 (including operation-capacity, the 61-term `a+...+a` chain at 64 operations, and nesting-limit, 16
@@ -122,9 +124,9 @@ fixtures get new IDs in a new fixture set; F1 IDs are never reused or edited.
 | lane | owner | paths |
 |---|---|---|
 | integration, contract, fixtures, build, matrix (#624) | coordinator | `spec/universal/translation-v1.md`, `tests/universal/translation/fixtures-*.json`, `mk/translation.mk`, `docs/universal/MATRIX.md` |
-| lowering + native realization (compiler/core) | compiler lane | `src/adapters/upper-lower.om`, `tools/adapters/lower` |
-| C export (#622) | C adapter lane | `src/adapters/c-u64-export.om`, `tools/adapters/c-export`, `spec/universal/c-u64-export-v1.md` |
-| independent validation (#623) | validation lane | `tests/universal/translation/validate*.py`, `tests/universal/translation/mutants/` |
+| lowering + native realization (compiler/core) | compiler lane | `src/adapters/upper-lower.om`, `tools/adapters/lower`, `tools/adapters/build-lower.py`, `mk/lower.mk`, `spec/universal/upper-lower-v1.md`, `tests/universal/translation/lower_selftest.py` |
+| C export (#622) | C adapter lane | `src/adapters/c-u64-export.om`, `tools/adapters/c-export`, `tools/adapters/build-c-export.py`, `mk/c-u64-export.mk`, `spec/universal/c-u64-export-v1.md`, `tests/universal/translation/c_export_selftest.py` |
+| independent validation (#623) | validation lane | `tests/universal/translation/validate*.py`, `tests/universal/translation/mutants/`, `mk/translation-validate.mk` |
 | bindings, six callers, artifact manifests | bridge lane | omega-bridge repository |
 | Rust (#626), Python (#627), C++ (#739), Zig (#740), Go (#741) | one agent each, after G1 | `src/adapters/<lang>-u64-*.om`, `spec/universal/<lang>-u64-*-v1.md`, `tools/adapters/<lang>-*` |
 | upper registry extension for C++/Zig/Go | #621 codec owner only | `src/source-aware/core.om`, `spec/universal/source-aware-v2.md` |
