@@ -148,3 +148,14 @@ M a constant that fits the target type. Every other data-dependent branch, trap 
 reported `MANUAL`. A unit with any `MANUAL` item gets the verdict NOT_RUN for trace equivalence, never
 PASS. The counterexample above is a required negative control (expected: MANUAL / NOT_RUN). E11's
 public-memory declaration stands.
+
+## E13 (advisor review, 2026-10-25): a public-memory declaration needs public stores
+
+A `pub:SLOT:OFF:LEN` declaration makes a load length-dependent only if every store the unit can make
+into that range stores a value that is itself length-dependent (derived from lengths, counts, the op
+code, constants or declared-public loads). A store into a declared-public range of a data-dependent or
+unclassified value makes every later load from that range data-dependent, or `MANUAL` when the
+scanner cannot order the store and the load. Required negative control:
+`fn f c edit uchar 104 a view uchar 1 to ulong / put c 32 get a 0 / if eq get c 32 0 / ret 0 / else /
+ret 1 / end / end` with `pub:0:32:8`. Expected: MANUAL or data-dependent, NOT_RUN; natively, message
+bytes 0 and 1 give exits 0 and 1.
