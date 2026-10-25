@@ -1,0 +1,425 @@
+note units: sha256 r1 exp lib learn
+note learn-select: template admission (contract 5.3, K3) on experience files written by this test and
+note admitted by exp.om: threshold 8 (a shape with 7 TRAIN records is not admitted), descending
+note count, ties to the lower shape id, CALIB and DEV records not counted, FSM admitted iff >= 8 FSM
+note TRAIN records and placed last, K <= 16 (15 AGG + FSM, or 16 AGG without FSM), the lineage
+note sorted ascending, a duplicate file refused (1) and a ninth file refused (2). Files in argv 1
+note (run.om's temp dir), else /tmp/reuse-test-learn-PID. Exit 0 pass, else the failed check's code.
+text tbase "/tmp/reuse-test-learn-"
+text tsyn " SYNTHETIC t\n"
+global TDIR uchar 4096
+global TDN ulong 1
+global TW ulong 65536
+global TNR ulong 1
+global TBF uchar 524288
+global TL uchar 65536
+global TLN ulong 1
+global TP uchar 4096
+global TPN ulong 1
+
+fn tmkdir to int
+if ge argcnt 2
+n = argread 1 TDIR 0 3000
+if lt n 1
+ret 1
+end
+put TDN 0 ulong n
+ret 0
+end
+for i ulong len tbase
+put TDIR i get tbase i
+end
+lbpz
+lbpnum ulong getpid
+for i ulong get LBPN 0
+put TDIR add len tbase i get LBP i
+end
+put TDN 0 add len tbase get LBPN 0
+r = makedir TDIR 0 get TDN 0 448
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note TP = TDIR/e<id> (id 0 = TDIR/allow)
+fn tpath id ulong to void
+n = get TDN 0
+for i ulong n
+put TP i get TDIR i
+end
+put TP n 47
+lbpz
+if eq id 0
+lbpc 97
+lbpc 108
+lbpc 108
+else
+lbpc 101
+lbpnum id
+end
+for i ulong get LBPN 0
+put TP add add n 1 i get LBP i
+end
+put TPN 0 add add n 1 get LBPN 0
+end
+
+note AGG program: wl, fold f, k steps, ops packed 4 bits each (op_1 lowest), constants from seed c
+fn tagg wl ulong f ulong k ulong ops ulong c ulong to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 wl
+put R1P 3 f
+put R1P 4 k
+for j ulong k
+op = and shr ops mul j 4 15
+v = and add c mul j 37 sub shl ulong 1 wl 1
+if ge op 7
+v = rem v wl
+end
+put R1P add 5 mul j 2 op
+put R1P add 6 mul j 2 v
+end
+end
+
+note the FSM program of the tests (S 2, A 2, one rule 0 -[0,1]-> 1), lambda shifted by c
+fn tfsm c ulong to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 2
+put R1P 3 2
+put R1P 4 0
+put R1P 5 1
+put R1P 6 and c 255
+put R1P 7 2
+put R1P 22 16842752
+end
+
+note append one experience record for R1P (n = 0, m = 0) with split sp
+fn trec sp ulong to void
+b = mul get TNR 0 128
+for i ulong 128
+put TW add b i 0
+end
+r1pdig
+put R1N 0 0
+r1sdig
+put TW b 3544386028377026898
+put TW add b 1 1
+put TW add b 2 add get TNR 0 1
+put TW add b 3 get R1P 1
+put TW add b 9 sp
+put TW add b 10 1
+put TW add b 11 add get TNR 0 1
+put TW add b 13 1
+for j ulong 4
+put TW add add b 48 j get R1SD j
+put TW add add b 52 j get R1PD j
+end
+for i ulong 64
+put TW add add b 64 i get R1P i
+end
+put TNR 0 add get TNR 0 1
+end
+
+fn treps n ulong sp ulong to void
+for i ulong n
+trec sp
+end
+end
+
+fn tlc c ulong to void
+n = get TLN 0
+put TL n uchar c
+put TLN 0 add n 1
+end
+
+note TW[0..nw) as LE bytes into TBF
+fn tser nw ulong to void
+for w ulong nw
+v = get TW w
+for k ulong 8
+put TBF add mul w 8 k uchar and shr v mul k 8 255
+end
+end
+end
+
+note LBH as hex plus " SYNTHETIC t" appended to TL
+fn tline to void
+for j ulong 4
+v = get LBH j
+for q ulong 16
+d = and shr v mul sub 15 q 4 15
+if lt d 10
+tlc add d 48
+else
+tlc add d 87
+end
+end
+end
+for i ulong len tsyn
+tlc ulong get tsyn i
+end
+end
+
+note write the records to TDIR/e<id>, reset them, append its SYNTHETIC line to TL; 0 ok
+fn twfile id ulong to int
+nw = mul get TNR 0 128
+tser nw
+tpath id
+r = fopen TP 0 get TPN 0 524865 384
+if lt r 0
+ret 1
+end
+fd = int r
+x = write fd TBF 0 mul nw 8
+s = fclose fd
+if ne x long mul nw 8
+ret 1
+end
+put TNR 0 0
+lbpz
+for i ulong get TPN 0
+lbpc ulong get TP i
+end
+n = lbhpath
+if lt n 0
+ret 1
+end
+tline
+ret 0
+end
+
+note write TL as TDIR/allow and load it; 0 ok
+fn tallow to int
+tpath 0
+r = fopen TP 0 get TPN 0 524865 384
+if lt r 0
+ret 1
+end
+fd = int r
+x = write fd TL 0 get TLN 0
+s = fclose fd
+for i ulong get TPN 0
+put EXAPATH i get TP i
+end
+put EXALEN 0 get TPN 0
+ret exaload
+end
+
+note admit TDIR/e<id>, add it to the lineage and count it: exadmit code, or 100 + lglin, 200 lgcount
+fn tadmit id ulong to int
+tpath id
+for i ulong get TPN 0
+put EXFPATH i get TP i
+end
+put EXFLEN 0 get TPN 0
+c = exadmit
+if ne c 0
+ret c
+end
+l = lglin
+if ne l 0
+ret add 100 l
+end
+if ne lgcount 0
+ret 200
+end
+ret 0
+end
+
+note shape of a program built with tagg
+fn tshape wl ulong f ulong k ulong ops ulong to ulong
+tagg wl f k ops 1
+ret r1shape
+end
+
+note scenario 1: X 10, Y 9 and Z 9 (tie), W 7 TRAIN (+5 DEV), V 20 CALIB, FSM 8; two files
+fn tscen1 to int
+put TLN 0 0
+tagg 8 1 2 49 3
+treps 10 1
+tagg 16 2 1 2 5
+treps 9 1
+tagg 8 3 1 8 7
+treps 9 1
+tagg 8 4 3 1093 9
+treps 7 1
+treps 5 3
+if ne twfile 1 0
+ret 1
+end
+tagg 16 6 2 115 11
+treps 20 2
+tfsm 3
+treps 8 1
+if ne twfile 2 0
+ret 2
+end
+if ne tallow 0
+ret 3
+end
+lgreset
+if ne tadmit 1 0
+ret 4
+end
+if ne tadmit 2 0
+ret 5
+end
+lgselect
+sx = tshape 8 1 2 49
+sy = tshape 16 2 1 2
+sz = tshape 8 3 1 8
+if ne get LGK 0 4
+ret 6
+end
+if or ne get LGSH 0 sx ne get LGCN 0 10
+ret 7
+end
+lo = sy
+hi = sz
+if gt sy sz
+lo = sz
+hi = sy
+end
+if or ne get LGSH 1 lo ne get LGCN 1 9
+ret 8
+end
+if or ne get LGSH 2 hi ne get LGCN 2 9
+ret 9
+end
+if or ne get LGSH 3 1 ne get LGCN 3 8
+ret 10
+end
+if ne get LGLN 0 2
+ret 11
+end
+for j ulong 4
+if gt get LGLD j get LGLD add 4 j
+ret 12
+end
+if lt get LGLD j get LGLD add 4 j
+break
+end
+end
+if ne tadmit 1 101
+ret 13
+end
+ret 0
+end
+
+note op packing for scenario 2 shape s: op1 ADD, op2 1 + s mod 8, op3 1 + s / 8
+fn tops s ulong to ulong
+a = mul add rem s 8 1 16
+b = mul add div s 8 1 256
+ret add add a b 1
+end
+
+note scenario 2: 17 AGG shapes with 8 TRAIN records each and fsm FSM records
+fn tscen2 fsm ulong id ulong to int
+put TLN 0 0
+for s ulong 17
+ops = tops s
+tagg 8 1 3 ops s
+treps 8 1
+end
+tfsm 1
+treps fsm 1
+if ne twfile id 0
+ret 1
+end
+if ne tallow 0
+ret 2
+end
+lgreset
+if ne tadmit id 0
+ret 3
+end
+lgselect
+k = get LGK 0
+if ne k 16
+ret 4
+end
+nagg = ulong 16
+if ge fsm 8
+nagg = 15
+if or ne get LGSH 15 1 ne get LGCN 15 fsm
+ret 5
+end
+end
+prev = ulong 0
+for t ulong nagg
+s = get LGSH t
+if or le s prev ne get LGCN t 8
+ret 6
+end
+prev = s
+end
+ret 0
+end
+
+note nine distinct one-record files: the ninth lineage entry is refused (2)
+fn tnine to int
+put TLN 0 0
+for f ulong 9
+tagg 16 5 1 6 add f 1
+treps 1 1
+if ne twfile add 20 f 0
+ret 1
+end
+end
+if ne tallow 0
+ret 2
+end
+lgreset
+for f ulong 8
+if ne tadmit add 20 f 0
+ret 3
+end
+end
+if ne tadmit 28 102
+ret 4
+end
+for e ulong 7
+for j ulong 4
+x = get LGLD add mul e 4 j
+y = get LGLD add mul add e 1 4 j
+if gt x y
+ret 5
+end
+if lt x y
+break
+end
+end
+end
+ret 0
+end
+
+fn main to int
+if ne tmkdir 0
+ret 99
+end
+r = tscen1
+if ne r 0
+ret r
+end
+r = tscen2 8 10
+if ne r 0
+ret add 20 r
+end
+r = tscen2 7 11
+if ne r 0
+ret add 30 r
+end
+r = tnine
+if ne r 0
+ret add 40 r
+end
+ret 0
+end

@@ -1,0 +1,261 @@
+note units: sha256 r1 exp lib
+note lib-publish: the manifest self-check against a value computed outside Omega (FNV-1a 64 of words
+note i = 7i + 1, Python), manifest byte round trip, CURRENT layout (G LE, then the SHA-256 bytes of
+note gen-G.man), lbpub refusing to replace an existing generation (renames flag 1), and lbpub stopped
+note after each step 1..9 (control C8): CURRENT names a complete generation whose manifest passes
+note every check, and lbclean plus a new publish recovers. Files in argv 1 (run.om's temp dir), else
+note /tmp/reuse-test-lib-publish-PID. Exit 0 pass, else the failed check's code.
+text tbase "/tmp/reuse-test-lib-publish-"
+global TDIR uchar 4096
+global TDN ulong 1
+global TB uchar 4096
+
+fn tmkdir to int
+if ge argcnt 2
+n = argread 1 TDIR 0 3000
+if lt n 1
+ret 1
+end
+put TDN 0 ulong n
+ret 0
+end
+for i ulong len tbase
+put TDIR i get tbase i
+end
+lbpz
+lbpnum ulong getpid
+for i ulong get LBPN 0
+put TDIR add len tbase i get LBP i
+end
+put TDN 0 add len tbase get LBPN 0
+r = makedir TDIR 0 get TDN 0 448
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note LBDIR = TDIR/p<v>, created
+fn tsetlib v ulong to void
+n = get TDN 0
+for i ulong n
+put LBDIR i get TDIR i
+end
+put LBDIR n 47
+put LBDIR add n 1 112
+put LBDN 0 add n 2
+lbpz
+lbpnum v
+for i ulong get LBPN 0
+put LBDIR add get LBDN 0 i get LBP i
+end
+put LBDN 0 add get LBDN 0 get LBPN 0
+r = makedir LBDIR 0 get LBDN 0 448
+end
+
+note a small file with byte b at LBP; 0 ok
+fn tsmall b ulong to int
+fd = lbopen 524865 384
+if lt fd 0
+ret 1
+end
+put TB 0 uchar b
+w = write fd TB 0 1
+s = fclose fd
+if ne w 1
+ret 1
+end
+ret 0
+end
+
+note tmp files and sealed manifest of generation g (parent p) in LBDIR; 0 ok
+fn tgen g ulong p ulong to int
+lbpgen g 1 true
+if ne tsmall add 64 g 0
+ret 1
+end
+lbpgen g 2 true
+if ne tsmall add 96 g 0
+ret 1
+end
+for i ulong 256
+put LBMAN i 0
+end
+put LBMAN 0 3544386019401740626
+put LBMAN 1 1
+put LBMAN 2 g
+put LBMAN 3 p
+put LBMAN 5 1
+lbpgen g 1 true
+n = lbhpath
+for j ulong 4
+put LBMAN add 6 j get LBH j
+end
+lbpgen g 2 true
+n = lbhpath
+for j ulong 4
+put LBMAN add 10 j get LBH j
+end
+put LBMAN 14 8308871078283820969
+put LBMAN 15 3511899704727027462
+put LBMAN 16 15311527216533678964
+put LBMAN 17 17706733685053746017
+put LBMAN 18 1
+lbseal
+put LBG 0 g
+ret 0
+end
+
+note CURRENT names generation g whose manifest file passes every load check; 0 ok
+fn tcurrent g ulong to int
+if ne lbcurrd 0
+ret 1
+end
+if ne get LBG 0 g
+ret 2
+end
+if ne lbmanrd 0
+ret 3
+end
+lbhman
+for j ulong 4
+if ne get LBH j get LBCD j
+ret 4
+end
+end
+if ne lbmchk 0
+ret 5
+end
+lbpgen g 3 false
+n = lbhpath
+for j ulong 4
+if ne get LBH j get LBCD j
+ret 6
+end
+end
+ret 0
+end
+
+fn tfnv to int
+for i ulong 255
+put LBMAN i add mul i 7 1
+end
+put LBMAN 255 0
+lbseal
+if ne get LBMAN 255 2476265286114091297
+ret 1
+end
+for i ulong 256
+put LBMAN i 0
+end
+lbb2m
+for i ulong 255
+if ne get LBMAN i add mul i 7 1
+ret 2
+end
+end
+if ne get LBMAN 255 2476265286114091297
+ret 2
+end
+ret 0
+end
+
+note publish generation 1, check CURRENT bytes and that no tmp file is left
+fn tfirst to int
+tsetlib 1
+if ne tgen 1 0 0
+ret 3
+end
+if ne lbpub 0 0
+ret 4
+end
+if ne tcurrent 1 0
+ret 5
+end
+lbpcurr false
+fd = lbopen 524288 0
+n = lbrdio fd 100
+r = fclose fd
+if ne n 40
+ret 6
+end
+if ne lbgetle 0 1
+ret 7
+end
+for e ulong 3
+lbpgen 1 add e 1 true
+if ge lbfsize 0
+ret 8
+end
+end
+lbpgen 1 1 true
+if ne tsmall 1 0
+ret 9
+end
+if ne lbpub 0 101
+ret 10
+end
+if ne tcurrent 1 0
+ret 11
+end
+ret 0
+end
+
+note stop after step k while publishing generation 2 over generation 1, then recover
+fn tcrash k ulong to int
+tsetlib add 10 k
+if ne tgen 1 0 0
+ret 1
+end
+if ne lbpub 0 0
+ret 2
+end
+if ne tgen 2 1 0
+ret 3
+end
+if ne lbpub k 97
+ret 4
+end
+want = ulong 1
+if ge k 8
+want = 2
+end
+if ne tcurrent want 0
+ret 5
+end
+if eq want 2
+ret 0
+end
+lbclean 2
+if ne tgen 2 1 0
+ret 6
+end
+if ne lbpub 0 0
+ret 7
+end
+if ne tcurrent 2 0
+ret 8
+end
+ret 0
+end
+
+fn main to int
+if ne tmkdir 0
+ret 99
+end
+r = tfnv
+if ne r 0
+ret r
+end
+r = tfirst
+if ne r 0
+ret r
+end
+for k ulong 9
+r = tcrash add k 1
+if ne r 0
+ret add add 20 mul int k 10 r
+end
+end
+ret 0
+end
