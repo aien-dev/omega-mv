@@ -176,3 +176,16 @@ replaced by:
   - depth 2 of 64-copy empty unrolls (4096 copies) compiles;
   - depth 3 (262144 copies) is error 14;
   - the compile time of the largest accepted case is reported.
+
+## E15 (CompilerS3 L834, 2026-10-25): S3 points the contract did not settle (accepted)
+
+1. `abstract` and `holds` lines are accepted only before the first `fn`; after it they are error 9.
+2. `holds X dup32` with X of base type uint is error 28 (dup32 needs ulong).
+3. A bad base type in `abstract` is error 7; an unknown word after `ops` is error 16.
+4. Layout fields accept every integer type; signed fields are sign-extended on read.
+5. A layout parameter is also a plain `uchar` array of SIZE bytes (`get c i`, `len c`) when the word
+   after it is not one of its fields. A field name therefore shadows a local of the same name in that
+   position.
+6. A `note` line inside a constructor body makes the body not exact, so the runtime check is kept.
+7. A missing index or value is error 4 reported on the next line (OM-1 behaviour). E8 fixes the lines
+   only for errors 27, 28 and 29.
