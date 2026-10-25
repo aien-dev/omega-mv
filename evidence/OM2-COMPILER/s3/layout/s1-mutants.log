@@ -1,0 +1,92 @@
+OM2GATE START cases=seed/omc/om2/s1/s1-mutants.cases scratch=g-layout-s1-mutants
+IDENTITY omc omc-layout sha256=8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 pinned=8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 match
+DEADLINE 60
+  $ omc-layout < g-layout-s1-mutants/5.src > g-layout-s1-mutants/5.elf 2> g-layout-s1-mutants/5.cerr
+COMPILER g-layout-s1-mutants/5.elf sha256=8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 source line=5
+CASE ctl-rot line=6
+  $ g-layout-s1-mutants/5.elf < g-layout-s1-mutants/6.src > g-layout-s1-mutants/6.elf 2> g-layout-s1-mutants/6.cerr
+  $ g-layout-s1-mutants/6.elf < /dev/null > g-layout-s1-mutants/6.out 2> g-layout-s1-mutants/6.err
+VERDICT ctl-rot PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-rot-trap line=7
+  $ g-layout-s1-mutants/5.elf < g-layout-s1-mutants/7.src > g-layout-s1-mutants/7.elf 2> g-layout-s1-mutants/7.cerr
+  $ g-layout-s1-mutants/7.elf < /dev/null > g-layout-s1-mutants/7.out 2> g-layout-s1-mutants/7.err
+VERDICT ctl-rot-trap PASS run exit=107 expected=107 stdout=match stderr=match
+CASE ctl-hex-max line=8
+  $ g-layout-s1-mutants/5.elf < g-layout-s1-mutants/8.src > g-layout-s1-mutants/8.elf 2> g-layout-s1-mutants/8.cerr
+  $ g-layout-s1-mutants/8.elf < /dev/null > g-layout-s1-mutants/8.out 2> g-layout-s1-mutants/8.err
+VERDICT ctl-hex-max PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-hex-upper line=9
+  $ g-layout-s1-mutants/5.elf < g-layout-s1-mutants/9.src > g-layout-s1-mutants/9.elf 2> g-layout-s1-mutants/9.cerr
+VERDICT ctl-hex-upper PASS compile exit=6 expected=6 refused with the expected error
+CASE ctl-om1-names line=10
+  $ g-layout-s1-mutants/5.elf < g-layout-s1-mutants/10.src > g-layout-s1-mutants/10.elf 2> g-layout-s1-mutants/10.cerr
+  $ g-layout-s1-mutants/10.elf < /dev/null > g-layout-s1-mutants/10.out 2> g-layout-s1-mutants/10.err
+VERDICT ctl-om1-names PASS run exit=2 expected=2 stdout=match stderr=match
+CASE ctl-fmt line=11
+  $ g-layout-s1-mutants/5.elf < g-layout-s1-mutants/11.src > g-layout-s1-mutants/11.elf 2> g-layout-s1-mutants/11.cerr
+VERDICT ctl-fmt PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE ctl-diag-unknown line=12
+  $ g-layout-s1-mutants/5.elf < g-layout-s1-mutants/12.src > g-layout-s1-mutants/12.elf 2> g-layout-s1-mutants/12.cerr
+VERDICT ctl-diag-unknown PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE ctl-diag-newpt line=13
+  $ g-layout-s1-mutants/5.elf < g-layout-s1-mutants/13.src > g-layout-s1-mutants/13.elf 2> g-layout-s1-mutants/13.cerr
+VERDICT ctl-diag-newpt PASS compile exit=16 expected=16 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/rotl.from seed/omc/om2/s1/mut/rotl.to
+  MUTATE exact-once substitution at byte 56359
+  $ omc-layout < g-layout-s1-mutants/16.src > g-layout-s1-mutants/16.elf 2> g-layout-s1-mutants/16.cerr
+COMPILER g-layout-s1-mutants/16.elf sha256=3923363fdeac18dd2324528329bca6ef4ddfdf9319f850ed8640df715d08f2ae source line=16
+CASE m-rotl line=17
+  $ g-layout-s1-mutants/16.elf < g-layout-s1-mutants/17.src > g-layout-s1-mutants/17.elf 2> g-layout-s1-mutants/17.cerr
+  $ g-layout-s1-mutants/17.elf < /dev/null > g-layout-s1-mutants/17.out 2> g-layout-s1-mutants/17.err
+VERDICT m-rotl FAIL run exit=4 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/rchk.from seed/omc/om2/s1/mut/rchk.to
+  MUTATE exact-once substitution at byte 56280
+  $ omc-layout < g-layout-s1-mutants/20.src > g-layout-s1-mutants/20.elf 2> g-layout-s1-mutants/20.cerr
+COMPILER g-layout-s1-mutants/20.elf sha256=9bdbf5d72a94658e271032f2dff22e5bf82a4d25eed45de2b5c58dd491e5c9b5 source line=20
+CASE m-rchk line=21
+  $ g-layout-s1-mutants/20.elf < g-layout-s1-mutants/21.src > g-layout-s1-mutants/21.elf 2> g-layout-s1-mutants/21.cerr
+  $ g-layout-s1-mutants/21.elf < /dev/null > g-layout-s1-mutants/21.out 2> g-layout-s1-mutants/21.err
+VERDICT m-rchk FAIL run exit=5 expected=107 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/hexd.from seed/omc/om2/s1/mut/hexd.to
+  MUTATE exact-once substitution at byte 26478
+  $ omc-layout < g-layout-s1-mutants/24.src > g-layout-s1-mutants/24.elf 2> g-layout-s1-mutants/24.cerr
+COMPILER g-layout-s1-mutants/24.elf sha256=24250264a1c64c481dda37e505beed9880f5b1bfcf78d6a097fa83511abc8059 source line=24
+CASE m-hexd line=25
+  $ g-layout-s1-mutants/24.elf < g-layout-s1-mutants/25.src > g-layout-s1-mutants/25.elf 2> g-layout-s1-mutants/25.cerr
+VERDICT m-hexd FAIL compile exit=8 expected=0
+SUBST seed/omc/om2/s1/mut/hexU.from seed/omc/om2/s1/mut/hexU.to
+  MUTATE exact-once substitution at byte 26454
+  $ omc-layout < g-layout-s1-mutants/28.src > g-layout-s1-mutants/28.elf 2> g-layout-s1-mutants/28.cerr
+COMPILER g-layout-s1-mutants/28.elf sha256=1f5f732a0d6c719104e113bcad6b7f4eaa2817421e7e6902f29e1a4d68f6ae9f source line=28
+CASE m-hexU line=29
+  $ g-layout-s1-mutants/28.elf < g-layout-s1-mutants/29.src > g-layout-s1-mutants/29.elf 2> g-layout-s1-mutants/29.cerr
+VERDICT m-hexU FAIL compile exit=8 expected=6 diagnostic does not name the expected error
+SUBST seed/omc/om2/s1/mut/optin.from seed/omc/om2/s1/mut/optin.to
+  MUTATE exact-once substitution at byte 19306
+  $ omc-layout < g-layout-s1-mutants/32.src > g-layout-s1-mutants/32.elf 2> g-layout-s1-mutants/32.cerr
+COMPILER g-layout-s1-mutants/32.elf sha256=4162f47d206f76470e501ff4d9f293dc864c7c95302d81ab09ff33f466396295 source line=32
+CASE m-optin line=33
+  $ g-layout-s1-mutants/32.elf < g-layout-s1-mutants/33.src > g-layout-s1-mutants/33.elf 2> g-layout-s1-mutants/33.cerr
+VERDICT m-optin FAIL compile exit=16 expected=0
+SUBST seed/omc/om2/s1/mut/paren.from seed/omc/om2/s1/mut/paren.to
+  MUTATE exact-once substitution at byte 25172
+  $ omc-layout < g-layout-s1-mutants/36.src > g-layout-s1-mutants/36.elf 2> g-layout-s1-mutants/36.cerr
+COMPILER g-layout-s1-mutants/36.elf sha256=7fd504fcf5dcaa3799d3f05a62ac81daa7b14077332b0ef59137be13f2956f44 source line=36
+CASE m-paren line=37
+  $ g-layout-s1-mutants/36.elf < g-layout-s1-mutants/37.src > g-layout-s1-mutants/37.elf 2> g-layout-s1-mutants/37.cerr
+VERDICT m-paren FAIL compile exit=0 expected=0 stdout differs at byte 102 stderr=match
+SUBST seed/omc/om2/s1/mut/unk.from seed/omc/om2/s1/mut/unk.to
+  MUTATE exact-once substitution at byte 20351
+  $ omc-layout < g-layout-s1-mutants/40.src > g-layout-s1-mutants/40.elf 2> g-layout-s1-mutants/40.cerr
+COMPILER g-layout-s1-mutants/40.elf sha256=d3213c8f061b98cc3ab514023c96abab2b749b72ece9b10af0cd79cabb64913c source line=40
+CASE m-unk line=41
+  $ g-layout-s1-mutants/40.elf < g-layout-s1-mutants/41.src > g-layout-s1-mutants/41.elf 2> g-layout-s1-mutants/41.cerr
+VERDICT m-unk FAIL compile exit=3 expected=3 stdout=match stderr differs at byte 43
+SUBST seed/omc/om2/s1/mut/tyunk.from seed/omc/om2/s1/mut/tyunk.to
+  MUTATE exact-once substitution at byte 44875
+  $ omc-layout < g-layout-s1-mutants/44.src > g-layout-s1-mutants/44.elf 2> g-layout-s1-mutants/44.cerr
+COMPILER g-layout-s1-mutants/44.elf sha256=b6e6ff9563752ff69fe7d2c8093836da365ee283de6202439157a431d39f00ff source line=44
+CASE m-tyunk line=45
+  $ g-layout-s1-mutants/44.elf < g-layout-s1-mutants/45.src > g-layout-s1-mutants/45.elf 2> g-layout-s1-mutants/45.cerr
+VERDICT m-tyunk FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 45
+OM2GATE FAIL cases=16 pass=8 fail=8 invalid=0 not_run=0

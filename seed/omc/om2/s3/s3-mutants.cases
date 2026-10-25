@@ -1,0 +1,23 @@
+# S3 compiled mutants of omc.om. Expected verdicts fixed in advance: ctl-* PASS, m-* FAIL (detected).
+deadline 60
+cc seed/omc/omc.om
+ctl-l-rw run seed/omc/om2/s3/l-rw.om - file:seed/omc/om2/s3/l-rw.out - 0
+ctl-l-trap run seed/omc/om2/s3/l-trap.om - - - 103
+ctl-l-overlap emit seed/omc/om2/s3/l-bad-overlap.om - err:6:29 29
+ctl-l-past emit seed/omc/om2/s3/l-bad-past.om - err:4:29 29
+# layout: the overlap check removed
+subst seed/omc/om2/s3/mut/ovl.from seed/omc/om2/s3/mut/ovl.to
+cc seed/omc/omc.om
+m-l-ovl emit seed/omc/om2/s3/l-bad-overlap.om - err:6:29 29
+# layout: a big-endian field read without the byte reversal
+subst seed/omc/om2/s3/mut/rev.from seed/omc/om2/s3/mut/rev.to
+cc seed/omc/omc.om
+m-l-rev run seed/omc/om2/s3/l-rw.om - file:seed/omc/om2/s3/l-rw.out - 0
+# layout: the run-time field index check off by one
+subst seed/omc/om2/s3/mut/lix.from seed/omc/om2/s3/mut/lix.to
+cc seed/omc/omc.om
+m-l-lix run seed/omc/om2/s3/l-trap.om - - - 103
+# layout: a field ending one byte past SIZE accepted
+subst seed/omc/om2/s3/mut/past.from seed/omc/om2/s3/mut/past.to
+cc seed/omc/omc.om
+m-l-past emit seed/omc/om2/s3/l-bad-past.om - err:4:29 29

@@ -1,0 +1,25 @@
+note S3 E14 fuel: 64 + 4096 unrolled copies plus 14 inline expansions in each inner copy (57344) = 61504: accepted
+om2
+fn nop to void inline
+end
+fn main to int
+for a ulong 64 unroll
+for b ulong 64 unroll
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+end
+end
+ret 0
+end

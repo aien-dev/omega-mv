@@ -1,0 +1,27 @@
+# S3 (#746) fixtures for the OM-2 compiler: external layouts, fresh scratch, abstract types (spec 5,
+# errata E5, E8, E9, E14). Run by seed/qualification/om2/gate.om (L836) from the repository root:
+#   gate OMC OMC_SHA256 seed/omc/om2/s3/s3.cases SCRATCH
+# 27/28/29 refusals are exact (err:LINE:CODE, lines per E8); other codes are refuse (code only).
+## layout
+s3-l-rw run seed/omc/om2/s3/l-rw.om - file:seed/omc/om2/s3/l-rw.out - 0
+s3-l-trap run seed/omc/om2/s3/l-trap.om - - - 103
+s3-l-om1 run seed/omc/om2/s3/l-om1.om - - - 10
+s3-l-bad-size emit seed/omc/om2/s3/l-bad-size.om - err:3:29 29
+s3-l-bad-late emit seed/omc/om2/s3/l-bad-late.om - err:6:29 29
+s3-l-bad-overlap emit seed/omc/om2/s3/l-bad-overlap.om - err:6:29 29
+s3-l-bad-past emit seed/omc/om2/s3/l-bad-past.om - err:4:29 29
+s3-l-bad-count emit seed/omc/om2/s3/l-bad-count.om - err:4:29 29
+s3-l-bad-off emit seed/omc/om2/s3/l-bad-off.om - err:4:29 29
+s3-l-bad-dup refuse seed/omc/om2/s3/l-bad-dup.om 10
+s3-l-bad-bool refuse seed/omc/om2/s3/l-bad-bool.om 7
+s3-l-bad-noat refuse seed/omc/om2/s3/l-bad-noat.om 16
+s3-l-bad-order refuse seed/omc/om2/s3/l-bad-order.om 16
+s3-l-bad-kwname refuse seed/omc/om2/s3/l-bad-kwname.om 16
+s3-l-bad-clash refuse seed/omc/om2/s3/l-bad-clash.om 10
+s3-l-bad-noend refuse seed/omc/om2/s3/l-bad-noend.om 4
+s3-l-bad-const refuse seed/omc/om2/s3/l-bad-const.om 21
+s3-l-bad-view refuse seed/omc/om2/s3/l-bad-view.om 20
+s3-l-bad-size7 refuse seed/omc/om2/s3/l-bad-size7.om 7
+s3-l-bad-noidx refuse seed/omc/om2/s3/l-bad-noidx.om 4
+s3-l-bad-extra refuse seed/omc/om2/s3/l-bad-extra.om 5
+s3-l-bad-type refuse seed/omc/om2/s3/l-bad-type.om 7

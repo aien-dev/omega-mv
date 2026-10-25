@@ -1,0 +1,85 @@
+PASS fixpoint 8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3  build/seed/ir/stage3
+OK bytes=133 functions=1
+PASS dev01 identical; checker2 ACCEPT
+OK bytes=120 functions=1
+PASS dev02 identical; checker2 ACCEPT
+OK bytes=243 functions=1
+PASS dev03 identical; checker2 ACCEPT
+OK bytes=205 functions=1
+PASS dev04 identical; checker2 ACCEPT
+OK bytes=58 functions=1
+PASS dev05 identical; checker2 ACCEPT
+OK bytes=55 functions=1
+PASS dev06 identical; checker2 ACCEPT
+OK bytes=244 functions=1
+PASS dev07 identical; checker2 ACCEPT
+OK bytes=331 functions=1
+PASS dev08 identical; checker2 ACCEPT
+OK bytes=203 functions=1
+PASS dev09 identical; checker2 ACCEPT
+OK bytes=48 functions=1
+PASS dev10 identical; checker2 ACCEPT
+PASS mul-to-add mutant differs
+PASS struct_decl refused 9
+PASS global_decl refused 9
+PASS text_decl refused 9
+PASS float_use refused 3
+PASS continue_use refused 3
+PASS integer constant folds to the literal IR
+PASS trap_const constant folds to the literal IR
+PASS bound_const constant folds to the literal IR
+PASS for_const constant folds to the literal IR
+PASS float_const refused 9
+PASS call_self refused 3
+PASS call_forward refused 3
+PASS call_nonvoid_stmt refused 7
+PASS call_void_value refused 7
+PASS call_arg_type refused 7
+PASS call_arg_local refused 7
+PASS call_result_type refused 7
+PASS break_outside refused 9
+PASS after_break refused 17
+PASS bin_type_local refused 7
+PASS bin_bool refused 7
+PASS bin_shift_bool refused 7
+PASS bin_result_type refused 7
+PASS cmp_assign_type refused 7
+PASS bool_result refused 7
+PASS neg_bool refused 7
+PASS cond_type refused 7
+PASS ret_type_local refused 7
+PASS neg_bool_local refused 7
+OK bytes=109 functions=2
+PASS call_value IR identical; checker2 ACCEPT
+OK bytes=100 functions=2
+PASS call_void IR identical; checker2 ACCEPT
+OK bytes=83 functions=2
+PASS call_zero IR identical; checker2 ACCEPT
+OK bytes=113 functions=2
+PASS call_two IR identical; checker2 ACCEPT
+OK bytes=119 functions=2
+PASS call_long IR identical; checker2 ACCEPT
+OK bytes=118 functions=2
+PASS call_nested IR identical; checker2 ACCEPT
+OK bytes=139 functions=2
+PASS call_expr IR identical; checker2 ACCEPT
+OK bytes=260 functions=2
+PASS call_loop IR identical; checker2 ACCEPT
+OK bytes=209 functions=2
+PASS call_six IR identical; checker2 ACCEPT
+OK bytes=267 functions=1
+PASS break_while IR identical; checker2 ACCEPT
+OK bytes=212 functions=1
+PASS break_for IR identical; checker2 ACCEPT
+OK bytes=378 functions=1
+PASS break_nested IR identical; checker2 ACCEPT
+OK bytes=70 functions=1
+PASS shift_mixed IR identical; checker2 ACCEPT
+OK bytes=78 functions=1
+PASS cmp_assign IR identical; checker2 ACCEPT
+OK bytes=55 functions=1
+PASS cast_ret IR identical; checker2 ACCEPT
+PASS 30 random two-function call units identical; checker2 ACCEPT
+SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 1 bool unit + 1 cast unit + 30 fuzz units; structs IR spec-blocked
+RC=0
+RC=0

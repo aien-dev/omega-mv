@@ -684,6 +684,19 @@ meaning and, for the C2 manifest, its exact output bytes or error.
 - **Trap sites.** With `om2 diag`, an accepted unit's stderr gets one `omc-site 1 line=N iter=k` record
   per runtime trap site, in emission order: N the source line, k the counters of the open unrolled loops
   outer to inner joined by `.`, or `-`. stdout is unchanged.
+- **External layout.** `layout NAME SIZE`, then one line `field F T [COUNT] at OFF little|big` per field
+  (note lines allowed), then `end`, at top level before the first `fn`. NAME and F at most 8 bytes and not
+  OM-2 words; NAME is a new name (error 10), F unique in its layout (error 10); T an integer type
+  (`uchar` .. `long`; else error 7). SIZE outside 1..4096 or a `layout` after the first `fn` is error 29
+  on the layout line; a COUNT outside 1..4096, an OFF or field extent past SIZE, or a byte shared with an
+  earlier field is error 29 on the field line (`obligation=layout`). No COUNT is a scalar field (E5).
+  A parameter `c view NAME` / `c edit NAME` is a `uchar` array of exactly SIZE bytes (another array is
+  error 7; ABI: one pointer). `get c F` / `get c F i` and `put c F v` / `put c F i v` load / store the field
+  at OFF + i * width with its width and byte order (unscaled register-offset LDR/STR, REV16/REV for
+  big; signed fields sign-extended). The index is checked like an array's: a number outside COUNT is
+  error 21, a run-time one traps 3. A missing index on an array field is error 4, an extra one on a
+  scalar field error 5, `put` through a view error 20. Any other word after `c` reads it as the plain
+  `uchar` array (`get c i`, `len c`, passing it on). Structs (9.7) are unchanged.
 
 ## 10. Native host extension (2026-10-23)
 

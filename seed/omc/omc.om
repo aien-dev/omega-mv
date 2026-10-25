@@ -141,6 +141,27 @@ global svk ulong 16
 global svv ulong 16
 global svt ulong 16
 
+note ---- OM-2 section 5 external layouts (16) and their fields (256): name, SIZE, first field, field count,
+note the cursor and line after the block's end (the body pass jumps there). Field: name, type, COUNT (0 a
+note scalar), byte offset, 1 big-endian. lymap marks the bytes taken while a layout is read. nm_lay /
+note fn_play: the layout (index + 1) of a layout parameter name / parameter slot, else 0 ----
+global ly_name ulong 16
+global ly_size ulong 16
+global ly_fo ulong 16
+global ly_nf ulong 16
+global ly_ec ulong 16
+global ly_el ulong 16
+global nly ulong 1
+global lf_name ulong 256
+global lf_type uchar 256
+global lf_cnt ulong 256
+global lf_off ulong 256
+global lf_big uchar 256
+global nlf ulong 1
+global lymap uchar 4096
+global nm_lay uchar 1024
+global fn_play uchar 3072
+
 note ======== leaf helpers ========
 
 note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
@@ -2237,6 +2258,9 @@ if le l 8
 if ne findname w 0
 fail 10
 end
+if ne findlay w 0
+fail 10
+end
 end
 if ne findfn w l s 0
 fail 10
@@ -2255,6 +2279,7 @@ put nm_type n uchar t
 put nm_len n ln
 put nm_kind n uchar k
 put nm_addr n a
+put nm_lay n 0
 put nn 0 add n 1
 end
 
@@ -5646,6 +5671,10 @@ vt_fget e dst
 vdec
 ret
 end
+if ne ly_get e dst 0
+vdec
+ret
+end
 rdval 0 5 255 0
 vt_get e dst
 vdec
@@ -5977,6 +6006,13 @@ if ne sid 0
 fn_p_st f np pw sid k
 ret
 end
+if ne get om2 0 0
+lid = peek_lay
+if ne lid 0
+fn_p_ly f np pw lid k
+ret
+end
+end
 t = typeword
 elemtype t
 ln = lenval 16
@@ -6251,6 +6287,9 @@ ret
 end
 if or eq k 2 eq k 5
 fail 20
+end
+if ne ly_put e 0
+ret
 end
 rdval 0 5 255 0
 ik = get rk 0
@@ -6738,6 +6777,7 @@ if eq pk 6
 nk = ulong 8
 end
 addname get fn_pn p r ulong get fn_pt p get fn_pl p nk 0
+put nm_lay sub get nn 0 1 get fn_play p
 end
 
 note inl_body: at most 4 nested inline frames (error 14); an inline function reached again while it is
@@ -7677,6 +7717,10 @@ if eq c 85
 skipnl
 ret 0
 end
+if eq c 188
+s_lyskip
+ret 0
+end
 fail 16
 end
 if eq c 66
@@ -7887,7 +7931,9 @@ else
 if and eq get tk 0 1 eq get tw 0 500152823651
 s_const
 else
+if eq ns_om2 0
 skipnl
+end
 end
 end
 end
@@ -8249,6 +8295,454 @@ tmp = alloc
 idx = alloc
 st_write r tmp idx si
 addname w r add si 16 cells 6 0
+end
+
+note ======== OM-2 section 5: external layouts (spec 5, errata E5, E8, E9). `layout NAME SIZE`, then one
+note `field F T [COUNT] at OFF little|big` per line, then `end`, before the first fn. Read in the names pass;
+note the body pass jumps over the block. A parameter `c view|edit NAME` is a uchar array of SIZE bytes (one
+note pointer); `get c F [i]` / `put c F [i] v` load / store the field at its width and byte order:
+note LDR/STR (register, unscaled offset; C6.2.216 family) at base + OFF + i * width, REV16 / REV (C6.2.333,
+note C6.2.331) for big, a run-time index checked like an array's (CMP, B.HS trap 3) ========
+note findlay: packed name -> layout index + 1, or 0
+fn findlay w ulong to ulong
+i = ulong 0
+while lt i get nly 0
+if eq get ly_name i w
+ret add i 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note findlf: layout index li, packed field name -> field-table index + 1, or 0
+fn findlf li ulong w ulong to ulong
+fo = get ly_fo li
+i = ulong 0
+while lt i get ly_nf li
+if eq get lf_name add fo i w
+ret add add fo i 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note ns_om2: an OM-2 declaration line in the names pass (1 when it was read), else 0
+fn ns_om2 to ulong
+if eq get om2 0 0
+ret 0
+end
+if ne get tk 0 1
+ret 0
+end
+if eq get tw 0 128047730221420
+s_layout
+ret 1
+end
+ret 0
+end
+
+note ly_num: the next token must be a number (error 4 at the line end, 16 for another token, 29 when it
+note was written as 2^63 or more)
+fn ly_num to ulong
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 2
+fail 16
+end
+if ne get tbig 0 0
+fail 29
+end
+ret get tw 0
+end
+
+note s_layout: SIZE 1..4096 and a layout after the first fn are error 29 on the layout line
+fn s_layout to void
+if ne get nf 0 0
+fail 29
+end
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+w = get tw 0
+if ne kw w 0
+fail 16
+end
+newname w get tl 0 get ts 0
+if ge get nly 0 16
+fail 14
+end
+sz = ly_num
+if or eq sz 0 gt sz 4096
+fail 29
+end
+eol
+li = get nly 0
+fo = get nlf 0
+i = ulong 0
+while lt i sz
+put lymap i 0
+i = add i 1
+end
+go = true
+while go
+tok
+k = get tk 0
+if eq k 3
+fail 4
+end
+if eq k 1
+c = ulong 0
+if le get tl 0 8
+c = kw get tw 0
+end
+if eq c 66
+eol
+go = false
+else
+if eq c 83
+skipnl
+else
+if ne c 189
+fail 16
+end
+ly_field fo sz
+end
+end
+else
+if ne k 0
+fail 16
+end
+end
+end
+put ly_name li w
+put ly_size li sz
+put ly_fo li fo
+put ly_nf li sub get nlf 0 fo
+put ly_ec li get cur 0
+put ly_el li get line 0
+put nly 0 add li 1
+end
+
+note ly_field: F T [COUNT] at OFF little|big. A field over SIZE, a COUNT outside 1..4096, an OFF out of range
+note or two fields sharing a byte are error 29 on the field line. Field types are the integer types.
+fn ly_field fo ulong sz ulong to void
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+fw = get tw 0
+if ne kw fw 0
+fail 16
+end
+n = get nlf 0
+i = fo
+while lt i n
+if eq get lf_name i fw
+fail 10
+end
+i = add i 1
+end
+if ge n 256
+fail 14
+end
+t = typeword
+if or lt t 2 gt t 9
+fail 7
+end
+cnt = ulong 0
+tok
+if eq get tk 0 2
+if ne get tbig 0 0
+fail 29
+end
+cnt = get tw 0
+if or eq cnt 0 gt cnt 4096
+fail 29
+end
+tok
+end
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+if ne kw get tw 0 190
+fail 16
+end
+off = ly_num
+big = ly_end
+ly_mark off cnt t sz
+eol
+put lf_name n fw
+put lf_type n uchar t
+put lf_cnt n cnt
+put lf_off n off
+put lf_big n uchar big
+put nlf 0 add n 1
+end
+
+note ly_end: little (0) or big (1)
+fn ly_end to ulong
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+c = kw get tw 0
+if eq c 191
+ret 0
+end
+if eq c 192
+ret 1
+end
+fail 16
+ret 0
+end
+
+note ly_mark: the bytes OFF .. OFF + max(COUNT, 1) * width must lie inside SIZE and be free (error 29)
+fn ly_mark off ulong cnt ulong t ulong sz ulong to void
+n = cnt
+if eq n 0
+n = ulong 1
+end
+by = shl n tlog t
+if gt off sz
+fail 29
+end
+e = add off by
+if gt e sz
+fail 29
+end
+i = off
+while lt i e
+if ne get lymap i 0
+fail 29
+end
+put lymap i 1
+i = add i 1
+end
+end
+
+note s_lyskip: the body pass jumps to the place after the layout's end (read in the names pass)
+fn s_lyskip to void
+tok
+li = sub findlay get tw 0 1
+put cur 0 get ly_ec li
+put line 0 get ly_el li
+end
+
+note peek_lay: if the next word is a layout name, consume it and return index + 1; else rewind
+fn peek_lay to ulong
+p = get cur 0
+ln = get line 0
+tok
+if eq get tk 0 1
+if le get tl 0 8
+lid = findlay get tw 0
+if ne lid 0
+ret lid
+end
+end
+end
+put cur 0 p
+put line 0 ln
+ret 0
+end
+
+note fn_p_ly: parameter pw is a layout (view k 2 / edit k 3): a uchar array of SIZE bytes, name kind 2 / 3
+fn fn_p_ly f ulong np ulong pw ulong lid ulong k ulong to void
+ln = get ly_size sub lid 1
+addname pw poolc np 2 ln k 0
+put nm_lay sub get nn 0 1 uchar lid
+p = add mul f 6 np
+put fn_pt p 2
+put fn_pl p ln
+put fn_pk p uchar k
+put fn_play p uchar lid
+end
+
+note ly_fld: for a layout name e, when the next word is one of its fields: consume it, return the field-table
+note index + 1; otherwise rewind and return 0 (the name is then an ordinary uchar array)
+fn ly_fld e ulong to ulong
+lid = ulong get nm_lay sub e 1
+if eq lid 0
+ret 0
+end
+p = get cur 0
+ln = get line 0
+tok
+if eq get tk 0 1
+if le get tl 0 8
+j = findlf sub lid 1 get tw 0
+if ne j 0
+ret j
+end
+end
+end
+put cur 0 p
+put line 0 ln
+ret 0
+end
+
+note ldun / stun: LDRB / LDRH / LDR w / LDR x and the stores, register offset, LSL #0 (S = 0)
+fn ldun t ulong to ulong
+if or eq t 2 eq t 6
+ret 945842176
+end
+if or eq t 3 eq t 7
+ret 2019584000
+end
+if or eq t 4 eq t 8
+ret 3093325824
+end
+ret 4167067648
+end
+
+fn stun t ulong to ulong
+if or eq t 2 eq t 6
+ret 941647872
+end
+if or eq t 3 eq t 7
+ret 2015389696
+end
+if or eq t 4 eq t 8
+ret 3089131520
+end
+ret 4162873344
+end
+
+note ly_rev: Rd = the bytes of Rs reversed at width t: REV16 Wd (C6.2.333), REV Wd, REV Xd (C6.2.331)
+fn ly_rev t ulong s ulong d ulong to void
+if or eq t 3 eq t 7
+emit or or 1522533376 d shl s 5
+end
+if or eq t 4 eq t 8
+emit or or 1522534400 d shl s 5
+end
+if or eq t 5 eq t 9
+emit or or 3670019072 d shl s 5
+end
+end
+
+note ly_ix: the byte-offset register of element (k, v, t) of array field j: a number index must be below
+note COUNT (error 21); a register index: CMP Xi, #COUNT or Xc (C6.2.96 / C6.2.97), B.HS trap 3, then
+note Xo = OFF; ADD Xo, Xo, Xi, LSL #log2 width (C6.2.6)
+fn ly_ix j ulong k ulong v ulong t ulong to ulong
+if or eq t 1 ge t 10
+fail 7
+end
+cnt = get lf_cnt j
+sh = tlog ulong get lf_type j
+x = alloc
+if eq k 3
+if ge v cnt
+fail 21
+end
+matconst x add get lf_off j shl v sh
+ret x
+end
+r = matreg k v t
+if le cnt 4095
+emit or or 4043309087 shl cnt 10 shl r 5
+else
+y = alloc
+matconst y cnt
+emit or or 3942645791 shl y 16 shl r 5
+end
+trapc 2 3
+matconst x get lf_off j
+emit or or or or 2332033024 x shl x 5 shl r 16 shl sh 10
+ret x
+end
+
+note ly_get: get c F [i] on a layout name e (1 when it was a field, the value in rk/rv/rt), else 0
+fn ly_get e ulong dst ulong to ulong
+j = ly_fld e
+if eq j 0
+ret 0
+end
+j = sub j 1
+ft = ulong get lf_type j
+x = ulong 0
+if eq get lf_cnt j 0
+x = alloc
+matconst x get lf_off j
+else
+rdval 0 5 255 0
+x = ly_ix j get rk 0 get rv 0 get rt 0
+end
+rd = destreg dst
+emit or or or ldun ft rd shl ulong get nm_reg sub e 1 5 shl x 16
+if ne get lf_big j 0
+ly_rev ft rd rd
+end
+if gt ft 5
+canon rd ft
+end
+put rk 0 1
+put rv 0 rd
+put rt 0 ft
+ret 1
+end
+
+note ly_put: put c F [i] v on a layout name e (an edit; a view was refused 20 before): index, value, then
+note the store; 1 when it was a field, else 0
+fn ly_put e ulong to ulong
+j = ly_fld e
+if eq j 0
+ret 0
+end
+j = sub j 1
+if ne get lf_cnt j 0
+rdval 0 5 255 0
+put svk 0 get rk 0
+put svv 0 get rv 0
+put svt 0 get rt 0
+end
+ly_st e j
+eol
+ret 1
+end
+
+note ly_st: the value of field j (index saved in svk/svv/svt), then the store through layout name e
+fn ly_st e ulong j ulong to void
+ft = ulong get lf_type j
+cnt = get lf_cnt j
+rdval 0 ft 255 0
+if ne get rt 0 ft
+fail 7
+end
+v = matreg get rk 0 get rv 0 get rt 0
+x = ulong 0
+if eq cnt 0
+x = alloc
+matconst x get lf_off j
+else
+x = ly_ix j get svk 0 get svv 0 get svt 0
+end
+if and ne get lf_big j 0 ne tlog ft 0
+y = alloc
+ly_rev ft v y
+v = y
+end
+emit or or or stun ft v shl ulong get nm_reg sub e 1 5 shl x 16
 end
 
 note vt_fget_go: field j of struct name e. Scalar, or an index then the element.

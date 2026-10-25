@@ -1,0 +1,27 @@
+note S3 E14 fuel: as fuel-inl14 with 16 inline expansions per inner copy (69760 > 65536): error 14 at a call line
+om2
+fn nop to void inline
+end
+fn main to int
+for a ulong 64 unroll
+for b ulong 64 unroll
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+end
+end
+ret 0
+end

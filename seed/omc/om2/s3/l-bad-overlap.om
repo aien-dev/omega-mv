@@ -1,0 +1,10 @@
+note S3 layout refusal
+om2
+layout z 8
+field a uchar at 0 little
+field b ushort 2 at 4 big
+field c uint at 3 little
+end
+fn main to int
+ret 0
+end

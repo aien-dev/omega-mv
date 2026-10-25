@@ -1,0 +1,9 @@
+note S3 C1 control: layout, field, at, little and big stay ordinary names in an OM-1 unit
+fn main to int
+layout = ulong 3
+field = add layout 4
+at = ulong 1
+little = ulong 2
+big = add add at little field
+ret int big
+end

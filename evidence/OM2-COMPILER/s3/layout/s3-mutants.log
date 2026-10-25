@@ -1,0 +1,50 @@
+OM2GATE START cases=seed/omc/om2/s3/s3-mutants.cases scratch=/tmp/om2c/s3/g-layout-s3-mutants
+IDENTITY omc /tmp/om2c/s3/omc-layout sha256=8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 pinned=8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 match
+DEADLINE 60
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s3-mutants/3.src > /tmp/om2c/s3/g-layout-s3-mutants/3.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/3.cerr
+COMPILER /tmp/om2c/s3/g-layout-s3-mutants/3.elf sha256=8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 source line=3
+CASE ctl-l-rw line=4
+  $ /tmp/om2c/s3/g-layout-s3-mutants/3.elf < /tmp/om2c/s3/g-layout-s3-mutants/4.src > /tmp/om2c/s3/g-layout-s3-mutants/4.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/4.cerr
+  $ /tmp/om2c/s3/g-layout-s3-mutants/4.elf < /dev/null > /tmp/om2c/s3/g-layout-s3-mutants/4.out 2> /tmp/om2c/s3/g-layout-s3-mutants/4.err
+VERDICT ctl-l-rw PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-l-trap line=5
+  $ /tmp/om2c/s3/g-layout-s3-mutants/3.elf < /tmp/om2c/s3/g-layout-s3-mutants/5.src > /tmp/om2c/s3/g-layout-s3-mutants/5.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/5.cerr
+  $ /tmp/om2c/s3/g-layout-s3-mutants/5.elf < /dev/null > /tmp/om2c/s3/g-layout-s3-mutants/5.out 2> /tmp/om2c/s3/g-layout-s3-mutants/5.err
+VERDICT ctl-l-trap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ctl-l-overlap line=6
+  $ /tmp/om2c/s3/g-layout-s3-mutants/3.elf < /tmp/om2c/s3/g-layout-s3-mutants/6.src > /tmp/om2c/s3/g-layout-s3-mutants/6.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/6.cerr
+VERDICT ctl-l-overlap PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE ctl-l-past line=7
+  $ /tmp/om2c/s3/g-layout-s3-mutants/3.elf < /tmp/om2c/s3/g-layout-s3-mutants/7.src > /tmp/om2c/s3/g-layout-s3-mutants/7.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/7.cerr
+VERDICT ctl-l-past PASS compile exit=29 expected=29 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/ovl.from seed/omc/om2/s3/mut/ovl.to
+  MUTATE exact-once substitution at byte 145319
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s3-mutants/10.src > /tmp/om2c/s3/g-layout-s3-mutants/10.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/10.cerr
+COMPILER /tmp/om2c/s3/g-layout-s3-mutants/10.elf sha256=e4274864c01b0b1e2eaf324358e6c61270bf26f7e63122e457ea3eab2a87db33 source line=10
+CASE m-l-ovl line=11
+  $ /tmp/om2c/s3/g-layout-s3-mutants/10.elf < /tmp/om2c/s3/g-layout-s3-mutants/11.src > /tmp/om2c/s3/g-layout-s3-mutants/11.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/11.cerr
+VERDICT m-l-ovl FAIL compile exit=0 expected=29 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/rev.from seed/omc/om2/s3/mut/rev.to
+  MUTATE exact-once substitution at byte 148547
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s3-mutants/14.src > /tmp/om2c/s3/g-layout-s3-mutants/14.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/14.cerr
+COMPILER /tmp/om2c/s3/g-layout-s3-mutants/14.elf sha256=035640aea2b4c97d64b2a22ce042cd547967758af7b441f71a15aaca51e5d7fd source line=14
+CASE m-l-rev line=15
+  $ /tmp/om2c/s3/g-layout-s3-mutants/14.elf < /tmp/om2c/s3/g-layout-s3-mutants/15.src > /tmp/om2c/s3/g-layout-s3-mutants/15.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/15.cerr
+  $ /tmp/om2c/s3/g-layout-s3-mutants/15.elf < /dev/null > /tmp/om2c/s3/g-layout-s3-mutants/15.out 2> /tmp/om2c/s3/g-layout-s3-mutants/15.err
+VERDICT m-l-rev FAIL run exit=2 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/lix.from seed/omc/om2/s3/mut/lix.to
+  MUTATE exact-once substitution at byte 147912
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s3-mutants/18.src > /tmp/om2c/s3/g-layout-s3-mutants/18.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/18.cerr
+COMPILER /tmp/om2c/s3/g-layout-s3-mutants/18.elf sha256=f3cb164de1ae6c1f82bbe5898df8bb46bf0a340d37a5d4f8b30b1fcfa988d3e4 source line=18
+CASE m-l-lix line=19
+  $ /tmp/om2c/s3/g-layout-s3-mutants/18.elf < /tmp/om2c/s3/g-layout-s3-mutants/19.src > /tmp/om2c/s3/g-layout-s3-mutants/19.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/19.cerr
+  $ /tmp/om2c/s3/g-layout-s3-mutants/19.elf < /dev/null > /tmp/om2c/s3/g-layout-s3-mutants/19.out 2> /tmp/om2c/s3/g-layout-s3-mutants/19.err
+VERDICT m-l-lix FAIL run exit=0 expected=103 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/past.from seed/omc/om2/s3/mut/past.to
+  MUTATE exact-once substitution at byte 145275
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s3-mutants/22.src > /tmp/om2c/s3/g-layout-s3-mutants/22.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/22.cerr
+COMPILER /tmp/om2c/s3/g-layout-s3-mutants/22.elf sha256=dfe56d648831bf5a02831c893f7bc20c833b523f8c3cd4ad20484c23bff59303 source line=22
+CASE m-l-past line=23
+  $ /tmp/om2c/s3/g-layout-s3-mutants/22.elf < /tmp/om2c/s3/g-layout-s3-mutants/23.src > /tmp/om2c/s3/g-layout-s3-mutants/23.elf 2> /tmp/om2c/s3/g-layout-s3-mutants/23.cerr
+VERDICT m-l-past FAIL compile exit=0 expected=29 stdout differs at byte 0 stderr differs at byte 0
+OM2GATE FAIL cases=8 pass=4 fail=4 invalid=0 not_run=0
