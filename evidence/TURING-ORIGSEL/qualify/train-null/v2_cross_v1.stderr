@@ -1,5 +1,5 @@
 Command exited with non-zero status 68
-	Command being timed: "/tmp/turx/qbE4/train-null/selmain.elf"
+	Command being timed: "/tmp/turx/q12/build/train-null/selmain.elf"
 	User time (seconds): 0.00
 	System time (seconds): 0.00
 	Percent of CPU this job got: 0%
@@ -12,8 +12,8 @@ Command exited with non-zero status 68
 	Average resident set size (kbytes): 0
 	Major (requiring I/O) page faults: 0
 	Minor (reclaiming a frame) page faults: 82
-	Voluntary context switches: 66
-	Involuntary context switches: 0
+	Voluntary context switches: 68
+	Involuntary context switches: 1
 	Swaps: 0
 	File system inputs: 0
 	File system outputs: 8

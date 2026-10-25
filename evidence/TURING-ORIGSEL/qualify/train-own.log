@@ -1,19 +1,19 @@
-build_dir=/tmp/turx/qbE4/train-own
-source_commit=692d85104369cf0fc0bec9f35c4ca693cf746012
+build_dir=/tmp/turx/q12/build/train-own
+source_commit=351402e89b3a657cdfedc13f83e36543578329c7
 host=Linux 7.0.0-1019-nvidia aarch64
 compiler_sha256=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
 second_compiler_sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
 second_compiler_units=select-test selmain compiled
-select-test rc=0 wall_ms=306 SI19_SELECT_TEST_PASS checks=50991 Maximum resident set size (kbytes): 320
+select-test rc=0 wall_ms=300 SI19_SELECT_TEST_PASS checks=50991 Maximum resident set size (kbytes): 320
 select-test(r6 compiler) rc=0 SI19_SELECT_TEST_PASS checks=50991
 records_source=/home/drakestapleton/.local/state/aien-train/orig1/records-20261025T034737Z.bin (real-record run; development-only)
 records_sha256=403156f5ca34479715d2f96fabcbd11b9cab3fd4668e9dd3a41a6eb89b128d37
-v2_train_mlp mode=T rc=0 wall_ms=3324 epochs=61 updates=100650 dev_loss_dec=3.939923 Maximum resident set size (kbytes): 320
-v2_ctrl_shuffled mode=T rc=0 wall_ms=1072 epochs=20 updates=33000 dev_loss_dec=111.535682 Maximum resident set size (kbytes): 480
-v2_ctrl_untrained mode=T rc=0 wall_ms=118 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 320
-v2_eval_mlp mode=E rc=0 wall_ms=93 epochs=61 updates=100650 dev_loss_dec=3.939923 Maximum resident set size (kbytes): 320
-v2_eval_shuffled mode=E rc=0 wall_ms=117 epochs=20 updates=33000 dev_loss_dec=111.535682 Maximum resident set size (kbytes): 480
-v2_eval_untrained mode=E rc=0 wall_ms=115 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 320
+v2_train_mlp mode=T rc=0 wall_ms=3354 epochs=61 updates=100650 dev_loss_dec=3.939923 Maximum resident set size (kbytes): 320
+v2_ctrl_shuffled mode=T rc=0 wall_ms=1081 epochs=20 updates=33000 dev_loss_dec=111.535682 Maximum resident set size (kbytes): 480
+v2_ctrl_untrained mode=T rc=0 wall_ms=114 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 320
+v2_eval_mlp mode=E rc=0 wall_ms=124 epochs=61 updates=100650 dev_loss_dec=3.939923 Maximum resident set size (kbytes): 320
+v2_eval_shuffled mode=E rc=0 wall_ms=93 epochs=20 updates=33000 dev_loss_dec=111.535682 Maximum resident set size (kbytes): 480
+v2_eval_untrained mode=E rc=0 wall_ms=125 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 320
 v2_cross_v1 mode=E rc=68 wall_ms=29 epochs= updates= dev_loss_dec= Maximum resident set size (kbytes): 320
 v2_admitted=583 train=330 validation=108 heldout=145 refused=155
 /home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-own/v2_eval_mlp.stdout:eval part=1 core=0 50 632876466 632876466 1027601629 993724955 633236290 635883728 0 50 50 0 3 0 4 0 46 0

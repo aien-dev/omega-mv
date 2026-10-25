@@ -1,9 +1,9 @@
 Command exited with non-zero status 68
-	Command being timed: "/tmp/turx/qbE4/train-fix-cprime/selmain.elf"
+	Command being timed: "/tmp/turx/q12/build/train-fix-cprime/selmain.elf"
 	User time (seconds): 0.00
 	System time (seconds): 0.00
 	Percent of CPU this job got: 3%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.02
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.03
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
@@ -11,9 +11,9 @@ Command exited with non-zero status 68
 	Maximum resident set size (kbytes): 192
 	Average resident set size (kbytes): 0
 	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 82
-	Voluntary context switches: 66
-	Involuntary context switches: 0
+	Minor (reclaiming a frame) page faults: 81
+	Voluntary context switches: 67
+	Involuntary context switches: 1
 	Swaps: 0
 	File system inputs: 0
 	File system outputs: 8

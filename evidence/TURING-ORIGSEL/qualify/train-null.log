@@ -1,20 +1,20 @@
-build_dir=/tmp/turx/qbE4/train-null
-source_commit=692d85104369cf0fc0bec9f35c4ca693cf746012
+build_dir=/tmp/turx/q12/build/train-null
+source_commit=351402e89b3a657cdfedc13f83e36543578329c7
 host=Linux 7.0.0-1019-nvidia aarch64
 compiler_sha256=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
 second_compiler_sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
 second_compiler_units=select-test selmain compiled
-select-test rc=0 wall_ms=306 SI19_SELECT_TEST_PASS checks=50991 Maximum resident set size (kbytes): 320
+select-test rc=0 wall_ms=278 SI19_SELECT_TEST_PASS checks=50991 Maximum resident set size (kbytes): 320
 select-test(r6 compiler) rc=0 SI19_SELECT_TEST_PASS checks=50991
-records_source=/tmp/turx/qbE4/null.rec (real-record run; development-only)
+records_source=/tmp/turx/q12/build/null.rec (real-record run; development-only)
 records_sha256=fbd546f4a0a04d016341046e4184dc1fd6dea42fa7c7b3d4219f74438fb63e54
-v2_train_mlp mode=T rc=0 wall_ms=1078 epochs=38 updates=39140 dev_loss_dec=365.750854 Maximum resident set size (kbytes): 192
-v2_ctrl_shuffled mode=T rc=0 wall_ms=809 epochs=26 updates=26780 dev_loss_dec=383.579040 Maximum resident set size (kbytes): 320
-v2_ctrl_untrained mode=T rc=0 wall_ms=69 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 192
-v2_eval_mlp mode=E rc=0 wall_ms=72 epochs=38 updates=39140 dev_loss_dec=365.750854 Maximum resident set size (kbytes): 192
-v2_eval_shuffled mode=E rc=0 wall_ms=71 epochs=26 updates=26780 dev_loss_dec=383.579040 Maximum resident set size (kbytes): 320
-v2_eval_untrained mode=E rc=0 wall_ms=73 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 192
-v2_cross_v1 mode=E rc=68 wall_ms=25 epochs= updates= dev_loss_dec= Maximum resident set size (kbytes): 192
+v2_train_mlp mode=T rc=0 wall_ms=1084 epochs=38 updates=39140 dev_loss_dec=365.750854 Maximum resident set size (kbytes): 192
+v2_ctrl_shuffled mode=T rc=0 wall_ms=786 epochs=26 updates=26780 dev_loss_dec=383.579040 Maximum resident set size (kbytes): 320
+v2_ctrl_untrained mode=T rc=0 wall_ms=55 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 192
+v2_eval_mlp mode=E rc=0 wall_ms=66 epochs=38 updates=39140 dev_loss_dec=365.750854 Maximum resident set size (kbytes): 192
+v2_eval_shuffled mode=E rc=0 wall_ms=70 epochs=26 updates=26780 dev_loss_dec=383.579040 Maximum resident set size (kbytes): 320
+v2_eval_untrained mode=E rc=0 wall_ms=69 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 192
+v2_cross_v1 mode=E rc=68 wall_ms=24 epochs= updates= dev_loss_dec= Maximum resident set size (kbytes): 192
 v2_admitted=318 train=206 validation=58 heldout=54 refused=82
 /home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-null/v2_eval_mlp.stdout:eval part=1 core=0 29 85000000 29000000 95000000 92000000 92000000 93000000 0 5 13 16 12 8 11 1 11 1
 /home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-null/v2_eval_mlp.stdout:eval part=1 core=1 29 92000000 29000000 80000000 92000000 92000000 95000000 0 6 11 18 10 8 0 0 0 0

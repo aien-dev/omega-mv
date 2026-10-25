@@ -1,8 +1,8 @@
-	Command being timed: "/tmp/turx/qbE4/train-fix/selmain.elf"
+	Command being timed: "/tmp/turx/q12/build/train-fix/selmain.elf"
 	User time (seconds): 0.04
 	System time (seconds): 0.00
-	Percent of CPU this job got: 67%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.06
+	Percent of CPU this job got: 58%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.07
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
@@ -12,7 +12,7 @@
 	Major (requiring I/O) page faults: 0
 	Minor (reclaiming a frame) page faults: 85
 	Voluntary context switches: 68
-	Involuntary context switches: 0
+	Involuntary context switches: 5
 	Swaps: 0
 	File system inputs: 0
 	File system outputs: 24
