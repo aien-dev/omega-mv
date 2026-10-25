@@ -17,11 +17,15 @@ $(SM121DIS_RED): tools/sm121dis/sm121dis.c src/omega_sm121_disasm.c src/omega_sm
 sm121dis-corpus-bins: $(addprefix $(OUT_DIR)/,gpu_matmul_api_test gpu_elementwise_test gpu_reconv_test gpu_attention_test \
 	gpu_moe_window_test gpu_fp8_api_test gpu_decode_attn_test gpu_router_test gpu_bf16_gemv_test gpu_tern_test gpu_fp8gemm_test \
 	gpu_tc_probe_test gpu_tc_peak_test gpu_pf_mem_test gpu_qmma_probe_test gpu_cmdlist_test gpu_decode_graph_test gpu_tcgemm_test \
-	gpu_prefill_attn_test gpu_pfgemm_test gpu_qgemm_test gpu_pfhost_test gpu_gpr_boundary_test) \
+	gpu_prefill_attn_test gpu_pfgemm_test gpu_qgemm_test gpu_pfhost_test gpu_gpr_boundary_test \
+	gpu_scan_test gpu_gemm_test gpu_streams_test gpu_isolation_test) \
 	build/test_omega_divsqrt_gb10_cpu build/test_omega_ldst_gb10_cpu
 
-.PHONY: test-sm121dis sm121dis-corpus-bins
-test-sm121dis: $(SM121DIS) $(SM121DIS_RED) sm121dis-corpus-bins
+.PHONY: test-sm121dis sm121dis-corpus-bins test-sm121dis-corpus-controls
+test-sm121dis-corpus-controls:
+	sh tools/sm121dis/corpus_selftest.sh
+
+test-sm121dis: $(SM121DIS) $(SM121DIS_RED) sm121dis-corpus-bins test-sm121dis-corpus-controls
 	rm -rf $(SM121DIS_K) && sh tools/sm121dis/corpus.sh $(OUT_DIR) $(SM121DIS_K)
 	sh tools/sm121dis/check.sh $(SM121DIS) $(SM121DIS_K) $(OUT_DIR)/sm121dis-work
 	@if sh tools/sm121dis/check.sh $(SM121DIS_RED) $(SM121DIS_K) $(OUT_DIR)/sm121dis-red > $(OUT_DIR)/sm121dis-red.log 2>&1; then \
