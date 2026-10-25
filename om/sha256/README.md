@@ -45,7 +45,7 @@ array in the ABI.
   the value (add/and/xor need no masks), a rotate as one shift of the word duplicated into both halves
   (omc has no rotate; a masked rotate costs 4 instructions), the 64 rounds unrolled with rotating local
   names (no moves, no stores), K as immediates, blocks read in place, and a one-shot path (op 3) for
-  inputs under 4096 bytes that never touches `sha256_ctx`, and the message-schedule scratch lent by the C caller (no zero fill per call). 35 instructions per round; `parity/small.c` times lengths 0..200. The first
+  inputs under 4096 bytes that never touches `sha256_ctx`, the message-schedule scratch lent by the C caller (no zero fill per call), and on the one-shot path the caller's aligned copy lent a second time as `view ulong 512`, so a load brings 8 bytes and two mask-and-shift steps byte-swap two words; the digest comes back packed in the scratch. 35 instructions per round; `parity/small.c` times lengths 0..200. The first
   port ran at 37.7 MB/s.
 - After `sha256_final` the context's buffer and count fields differ from the C (padding is built
   in place and the count is not advanced). No caller reads a finished context; digests are identical.

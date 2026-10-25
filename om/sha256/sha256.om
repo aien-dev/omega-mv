@@ -8,11 +8,11 @@ note The whole hash state lives in the caller's sha256_ctx (104 bytes, src/sha25
 note   bytes 0..31   state[8], uint32 little endian
 note   bytes 32..39  count, uint64 little endian (bytes absorbed so far)
 note   bytes 40..103 buffer, the pending partial block
-note omsha c b n op o:
+note omsha c b n op w b8:
 note   op 0  init: count 0, FIPS initial hash value
 note   op 1  absorb b[0..n), n <= 4096, with src/sha256.c's buffering rules
-note   op 2  final: pad, absorb the bit length, write the 32-byte digest into o
-note   op 3  one shot: the digest of b[0..n), n < 4096, written into o; c is not used
+note   op 2  final: pad, absorb the bit length, the 32-byte digest packed into w[0..4)
+note   op 3  one shot: the digest of the n < 4096 bytes of b8 packed into w[0..4); c is not used
 note w is the caller's scratch for the message schedule (64 words, contents ignored and overwritten):
 note Omega writes every word before reading it, so the caller need not clear it.
 note n > 4096 traps 3; any other op traps 9.
@@ -928,19 +928,6 @@ putle c 24 4 528734635
 putle c 28 4 1541459225
 end
 
-note big-endian 64-bit bit count into p[0..8)
-note the state words, big endian, into o
-fn digest c edit uchar 104 o edit uchar 32 to void
-for i ulong 8
-v = getle c mul i 4 4
-q = mul i 4
-put o q uchar shr v 24
-put o add q 1 uchar and shr v 16 255
-put o add q 2 uchar and shr v 8 255
-put o add q 3 uchar and v 255
-end
-end
-
 note compress the context's own block buffer (bytes 40..103) into its hash words
 fn compbuf c edit uchar 104 w edit ulong 64 to void
 h = new uint 8 0
@@ -962,7 +949,7 @@ end
 note sha256_final of src/sha256.c, padding in place: 0x80, zeros to 56 mod 64 (one more block
 note when the pending part is 56 bytes or more), the 64-bit big-endian bit count, then the digest.
 note The count field is left as it was (src/sha256.c adds the padding to it; nothing reads it after).
-fn final c edit uchar 104 o edit uchar 32 w edit ulong 64 to void
+fn final c edit uchar 104 w edit ulong 64 to void
 cnt = getle c 32 8
 bi = and cnt 63
 put c add 40 bi 128
@@ -977,7 +964,9 @@ sh = mul sub 7 i 8
 put c add 96 i uchar and shr bits sh 255
 end
 compbuf c w
-digest c o
+h = new uint 8 0
+loadh c h
+digest8 h w
 end
 
 note IV into h
@@ -990,18 +979,6 @@ put h 4 uint 1359893119
 put h 5 uint 2600822924
 put h 6 uint 528734635
 put h 7 uint 1541459225
-end
-
-note h, big endian, into o
-fn digesth h edit uint 8 o edit uchar 32 to void
-for i ulong 8
-v = get h i
-q = mul i 4
-put o q uchar shr v 24
-put o add q 1 uchar and shr v 16 255
-put o add q 2 uchar and shr v 8 255
-put o add q 3 uchar and v 255
-end
 end
 
 note expand w[0..16) into the full 64-word schedule. Words are ulong cells whose low 32 bits are
@@ -1025,21 +1002,36 @@ put w i add u get w sub i 16
 end
 end
 
-note the padded tail b[off..n) (less than 64 bytes) written straight into schedule words:
-note whole big-endian words, the word holding 0x80, zeros, the 64-bit bit count in words 14 and 15;
-note a second block when the tail is 56 bytes or more
-fn tail h edit uint 8 b view uchar 4096 off ulong n ulong w edit ulong 64 to void
+note Word access for the aligned paths. b8 is the caller's 8-byte-aligned copy of the input lent a
+note second time as ulong cells (b views the same bytes), so one load brings 8 bytes. Swapping the
+note bytes inside each 32-bit half (two mask-and-shift steps; the constants stay in registers) turns
+note little-endian bytes b0..b7 into the big-endian words b0..b3 (low half) and b4..b7 (high half).
+note The low word keeps the high half as don't-care bits, as the schedule allows.
+fn blk8 b8 view ulong 512 q ulong w edit ulong 64 to void
+for i ulong 8
+x = get b8 add q i
+y = or shl and x 71777214294589695 8 and shr x 8 71777214294589695
+y = or shl and y 281470681808895 16 and shr y 16 281470681808895
+j = mul i 2
+put w j y
+put w add j 1 shr y 32
+end
+end
+
+note the padded tail b[off..n) (less than 64 bytes), read as words through b8 (the bytes past n
+note are inside the caller's 4096-byte copy and are masked off here): the word holding byte n keeps
+note its k valid bytes and gets 0x80 after them, later words are zero, the 64-bit bit count goes in
+note words 14 and 15; a second block when the tail is 56 bytes or more
+fn tail8 h edit uint 8 b8 view ulong 512 off ulong n ulong w edit ulong 64 to void
+blk8 b8 shr off 3 w
 r = sub n off
 fw = shr r 2
-for i ulong fw
-q = add off mul i 4
-v = ulong get b q
-v = or shl v 8 ulong get b add q 1
-v = or shl v 8 ulong get b add q 2
-v = or shl v 8 ulong get b add q 3
-put w i v
-end
-put w fw ulong partw b add off mul fw 4 and r 3
+k = and r 3
+sh = mul k 8
+v = get w fw
+v = and v shl 4294967295 sub 32 sh
+v = and v 4294967295
+put w fw or v shl 128 sub 24 sh
 i = add fw 1
 while lt i 16 bound 16
 put w i 0
@@ -1059,18 +1051,20 @@ expand w
 rounds h w
 end
 
-note the big-endian word of nr (0..3) bytes of b at q, then 0x80, then zeros
-fn partw b view uchar 4096 q ulong nr ulong to uint
-v = uint 0
-for j ulong nr
-v = or shl v 8 uint get b add q j
+note the digest of h as 32 bytes packed little endian into w[0..4): word i holds the big-endian
+note bytes of h[2i] then h[2i+1], so the caller copies the digest out of w with memcpy
+fn digest8 h edit uint 8 w edit ulong 64 to void
+for i ulong 4
+j = mul i 2
+x = or ulong get h j shl ulong get h add j 1 32
+y = or shl and x 71777214294589695 8 and shr x 8 71777214294589695
+y = or shl and y 281470681808895 16 and shr y 16 281470681808895
+put w i y
 end
-v = or shl v 8 128
-ret shl v mul sub 3 nr 8
 end
 
-note SHA-256 of b[0..n), n < 4096, with the state in locals only (sha256_hash's short path)
-fn oneshot b view uchar 4096 n ulong o edit uchar 32 w edit ulong 64 to void
+note SHA-256 of the n < 4096 bytes in b8, state in locals only (sha256_hash's short path)
+fn oneshot b8 view ulong 512 n ulong w edit ulong 64 to void
 if ge n 4096
 trap 3
 end
@@ -1078,15 +1072,16 @@ h = new uint 8 0
 initiv h
 off = ulong 0
 while le add off 64 n bound 64
-schedb b off w
+blk8 b8 shr off 3 w
+expand w
 rounds h w
 off = add off 64
 end
-tail h b off n w
-digesth h o
+tail8 h b8 off n w
+digest8 h w
 end
 
-fn omsha c edit uchar 104 b view uchar 4096 n ulong op ulong o edit uchar 32 w edit ulong 64 to void
+fn omsha c edit uchar 104 b view uchar 4096 n ulong op ulong w edit ulong 64 b8 view ulong 512 to void
 if eq op 0
 init c
 ret
@@ -1096,11 +1091,11 @@ absorb c b n w
 ret
 end
 if eq op 2
-final c o w
+final c w
 ret
 end
 if eq op 3
-oneshot b n o w
+oneshot b8 n w
 ret
 end
 trap 9
