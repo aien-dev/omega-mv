@@ -1,8 +1,8 @@
 note SPDX-License-Identifier: Apache-2.0
 note omega-mv#700 ORIGSEL evaluator entry point: the last file of the unit (after origsel.om).
 note First stdin byte: R report, H report + h1, P TPS1, Y TSY1, M model code, A audit file C',
-note N null fixture, Q / W synthetic coder streams, K image comparison, B band check;
-note anything else exits 64.
+note N null fixture, Q / W synthetic coder streams, K image comparison, B band check, F FNV
+note bytes; anything else exits 64.
 fn main to int
 r = read 0 TQM 0 1
 if ne r 1
@@ -14,6 +14,9 @@ ret tqcmp
 end
 if eq m 66
 ret tqband
+end
+if eq m 70
+ret tqfnvm
 end
 ret tqrun ulong m
 end

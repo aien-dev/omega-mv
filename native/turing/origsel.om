@@ -1591,6 +1591,18 @@ o = add o ulong w
 end
 end
 
+fn tqfnvm to int
+note F: FNV-1a 64 of the rest of the input (at most 524288 bytes) as 8 little-endian bytes,
+note so the glue never does shell arithmetic on a 64-bit value.
+n = tqrdrb
+if gt n 524288
+ret 68
+end
+tqpb 0 oxfnv n 8
+tqout 8
+ret 0
+end
+
 fn tqcmp to int
 note K: two images and an FNV word. Same outside bytes 104..111 and the trailer; the second
 note image's binding word equals the given FNV and its trailer equals FNV-1a of its prefix.

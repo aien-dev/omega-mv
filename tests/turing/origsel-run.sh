@@ -143,7 +143,7 @@ streams() {
   ac=1
   for a in $ARMS; do
     stream M "$ac" "$5" 0 "$2" "$3" "$4" $Z64 $Z64 | "$E" > "$W/$a.code" || return 2
-    MD=$({ printf 'turing.origsel.arm.v1\0%s\0' "$a"; cat "$W/$a.code"; } | sha256sum | cut -c1-64)
+    MD=$({ printf 'turing.origsel.arm.v1\0'; cat "$W/$a.code"; } | sha256sum | cut -c1-64)
     stream P "$ac" "$5" 0 "$2" "$3" "$4" "$MD" "$DATAD" | "$E" > "$W/$a.body" || return 3
     { cat "$W/$a.body"; hexbin "$(trailer turing.tc.pstream.v1 "$W/$a.body")"; } > "$W/$a.tps"
     for c in rans range; do
@@ -172,24 +172,31 @@ retrain() {
 rows() { awk '$1 == "arm" {for (i = 1; i <= NF; i++) if ($i ~ /^rows=/) print $2, $i}' "$1"; }
 recbody() { n=$(sed -n 's/^d n=\([0-9]*\).*/\1/p' "$OUT/$1.om.report"); tail -c +129 "$BUILD/w/$1/$2.tps" | head -c $((34 * n)); }
 # audit TAG REC ALLOW IMGDIR V1: the program-enforced non-access audit (profile blinding_mechanism 2).
+# Returns 0 PASS; 1..9 the audit could not run or C' does not reproduce admission (BLOCKED);
+# 11..19 a predictive artifact changed with the held-out outcomes (INVALID).
 audit() {
   t=$1
   stream A 0 "$5" 0 "$2" "$3" "$4" $Z64 $Z64 | "$E" > "$BUILD/$t.cprime" || return 1
   CF=$("$IND" --fnv "$BUILD/$t.cprime")
+  { printf 'F'; cat "$BUILD/$t.cprime"; } | "$E" > "$BUILD/$t.cprime.fnv" || return 1
   printf '%s SYNTHETIC orig-turing-audit\n' "$CF" > "$BUILD/$t.cprime.allow"
   retrain "$t-cprime" "$BUILD/$t.cprime" "$BUILD/$t.cprime.allow" || return 2
   CI=$BUILD/train-$t-cprime
-  for img in v2_train_mlp v2_ctrl_shuffled v2_ctrl_untrained; do
-    { printf 'K'; cat "$4/$img.img" "$CI/$img.img"; le64 "$CF"; } | "$E" > "$OUT/$t.audit-$img.txt" || return 3
-  done
   report "$t-cprime" "$BUILD/$t.cprime" "$BUILD/$t.cprime.allow" "$CI" "$5" || return 4
+  [ "$(sed -n 2,3p "$OUT/$t.om.report")" = "$(sed -n 2,3p "$OUT/$t-cprime.om.report")" ] || return 8
+  for img in v2_train_mlp v2_ctrl_shuffled v2_ctrl_untrained; do
+    { printf 'K'; cat "$4/$img.img" "$CI/$img.img" "$BUILD/$t.cprime.fnv"; } | "$E" > "$OUT/$t.audit-$img.txt"
+    grep -q '^K same$' "$OUT/$t.audit-$img.txt" || { grep -q '^K diff' "$OUT/$t.audit-$img.txt" && return 13; return 3; }
+  done
   rows "$OUT/$t.om.report" > "$OUT/$t.rows"; rows "$OUT/$t-cprime.om.report" > "$OUT/$t-cprime.rows"
-  cmp -s "$OUT/$t.rows" "$OUT/$t-cprime.rows" || return 5
+  cmp -s "$OUT/$t.rows" "$OUT/$t-cprime.rows" || return 15
   streams "$t-cprime" "$BUILD/$t.cprime" "$BUILD/$t.cprime.allow" "$CI" "$5" || return 6
   for a in $ARMS; do
-    [ "$(recbody "$t" "$a" | sha256sum)" = "$(recbody "$t-cprime" "$a" | sha256sum)" ] || return 7
+    [ "$(recbody "$t" "$a" | sha256sum)" = "$(recbody "$t-cprime" "$a" | sha256sum)" ] || return 17
   done
 }
+# idealbad TAG: a round-tripped stream whose turing-coder ideal_ub differs from the .om sum.
+idealbad() { grep -q '^h1 .* rt=1 ideal=mismatch' "$OUT/$1.h.report"; }
 
 if [ "$MODE" = qualify ]; then
   "$BUILD/origsel-test.elf" > "$OUT/unit-test.stdout"; [ $? = 0 ] || fail "unit tests $(cat "$OUT/unit-test.stdout")"
@@ -202,9 +209,17 @@ if [ "$MODE" = qualify ]; then
   report fix "$FREC" "$FALLOW" "$FIXB" "$BUILD/empty" || fail "fixture report (rc $?)"
   note "fixture_report om=indep identical sha256=$(sha256sum "$OUT/fix.om.report" | cut -c1-64)"
   streams fix "$FREC" "$FALLOW" "$FIXB" "$BUILD/empty" || fail "fixture streams (rc $?)"
-  grep -q 'ideal=mismatch' "$OUT/fix.h.report" && fail "ideal_ub mismatch between .om and turing-coder"
+  idealbad fix && fail "ideal_ub mismatch between .om and turing-coder"
   [ "$(grep -c '^h1 .* rt=1 ideal=match' "$OUT/fix.h.report")" = 20 ] || fail "fixture round trips"
   note "fixture_h1 roundtrip=20/20 ideal_match=20/20 band_ok=$(grep -c '^h1 .*band=ok' "$OUT/fix.h.report")/20"
+  # The F mode (64-bit FNV as bytes) on a value at or above 2^63; od reads it back.
+  FB=$({ printf 'F'; cat "$FREC"; } | "$E" | od -An -tu8 | tr -d ' ')
+  [ "$FB" = "$("$IND" --fnv "$FREC")" ] || fail "F mode $FB differs from the recomputer's FNV"
+  note "fnv_bytes PASS ($FB)"
+  # Burned exclusion and D_fresh / D_v1fam: V1 = the fixture's first 100 records.
+  head -c 25600 "$FREC" > "$BUILD/v1part"
+  report fixv1 "$FREC" "$FALLOW" "$FIXB" "$BUILD/v1part" || fail "burned-path report (rc $?)"
+  note "burned_path om=indep identical $(sed -n 3p "$OUT/fixv1.om.report")"
   # Synthetic K=5 coder streams (no record involved): n 50, 100, 300.
   for n in 50 100 300; do
     stream Q "$n" "$BUILD/empty" 0 "$FREC" "$FALLOW" "$FIXB" $Z64 $Z64 | "$E" > "$BUILD/q$n.body" || fail "synthetic Q $n"
@@ -300,10 +315,23 @@ if [ "$MODE" = qualify ]; then
 fi
 
 if [ "$MODE" = measure ]; then
-  [ -f "${RECORDS:-}" ] && [ -f "${ALLOW:-}" ] || fail "RECORDS and ALLOW required"
-  cat ${V1:?} > "$BUILD/v1.bin" || fail "V1 files"
+  blocked() { note "ORIGSEL_VERDICT BLOCKED ($*)"; exit 3; }
+  invalid() { note "ORIGSEL_VERDICT INVALID ($*)"; exit 2; }
+  [ -f "${RECORDS:-}" ] && [ -f "${ALLOW:-}" ] || blocked "RECORDS and ALLOW required"
+  # E's qualification receipts must be PASS for exactly this evaluator and recomputer.
+  QS=$ROOT/evidence/TURING-ORIGSEL/qualify/summary.txt
+  [ "$(tail -n 1 "$QS" 2> /dev/null)" = ORIGSEL_QUALIFY_PASS ] || blocked "qualification receipt not PASS"
+  grep -q "origsel_om_sha256=$(sha256sum "$N/origsel.om" | cut -c1-64)" "$QS" || blocked "evaluator differs from the qualified one"
+  grep -q "indep_src_sha256=$(sha256sum "$ROOT/tools/turing_origsel_indep/origsel_indep.c" | cut -c1-64)" "$QS" || blocked "recomputer differs from the qualified one"
+  grep -q "origsel_elf_sha256=$(sha256sum "$E" | cut -c1-64)" "$QS" || blocked "evaluator binary differs from the qualified one"
+  # V1 = exactly the two pinned v1 files, in order (profile burned_exclusion).
+  set -- ${V1:-}
+  [ "$#" = 2 ] || blocked "V1 must name the v1 owner file and the v1 sealed file"
+  [ "$("$IND" --fnv "$1")" = 16622604375676129865 ] || blocked "V1 owner file fnv"
+  [ "$("$IND" --fnv "$2")" = 12602815733741495377 ] || blocked "V1 sealed file fnv"
+  cat "$1" "$2" > "$BUILD/v1.bin" || blocked "V1 read"
   if [ -z "${IMAGES:-}" ]; then
-    retrain d "$RECORDS" "$ALLOW" || fail "pinned V2=1 trainer on RECORDS"
+    retrain d "$RECORDS" "$ALLOW" || blocked "pinned V2=1 trainer on RECORDS"
     IMAGES=$BUILD/train-d
     note "images: pinned V2=1 run by this glue (aien-train $TRAINC)"
   fi
@@ -312,17 +340,21 @@ if [ "$MODE" = measure ]; then
   note "v1_sha256=$(sha256sum "$BUILD/v1.bin" | cut -c1-64)"
   report d "$RECORDS" "$ALLOW" "$IMAGES" "$BUILD/v1.bin"
   rc=$?
-  [ "$rc" = 2 ] && { note "RECOMPUTATION_DISAGREES"; note "ORIGSEL_VERDICT INVALID"; exit 2; }
-  [ "$rc" = 0 ] || { note "ORIGSEL_VERDICT BLOCKED (evaluator refusal rc $(cat "$OUT/d.om.rc"))"; exit 3; }
+  [ "$rc" = 2 ] && invalid "the independent recomputation disagrees with the evaluator"
+  [ "$rc" = 0 ] || blocked "evaluator refusal or instrument failure, rc $(cat "$OUT/d.om.rc"): $(head -c 200 "$OUT/d.om.report")"
   note "report om=indep identical sha256=$(sha256sum "$OUT/d.om.report" | cut -c1-64)"
-  streams d "$RECORDS" "$ALLOW" "$IMAGES" "$BUILD/v1.bin" || fail "streams (rc $?)"
-  grep -q 'ideal=mismatch' "$OUT/d.h.report" && fail "ideal_ub mismatch between .om and turing-coder"
-  audit d "$RECORDS" "$ALLOW" "$IMAGES" "$BUILD/v1.bin" || { note "NON_ACCESS_AUDIT_FAIL rc=$?"; note "ORIGSEL_VERDICT INVALID"; exit 2; }
+  streams d "$RECORDS" "$ALLOW" "$IMAGES" "$BUILD/v1.bin" || blocked "stream writer failure (rc $?)"
+  idealbad d && invalid "turing-coder ideal_ub differs from the evaluator on a round-tripped stream"
+  note "h1 $(grep -c '^h1 .*rt=1 ideal=match.*band=ok' "$OUT/d.h.report")/20 arm x coder round trip + ideal + band"
+  audit d "$RECORDS" "$ALLOW" "$IMAGES" "$BUILD/v1.bin"
+  rc=$?
+  [ "$rc" -ge 11 ] && invalid "non-access audit failed (rc $rc)"
+  [ "$rc" = 0 ] || blocked "non-access audit could not run or C' admission differs (rc $rc)"
   note "non_access_audit PASS"
   rm -rf "$OUT/train-d-cprime"
   (cd "$OUT" && sha256sum -- *.report *.txt *.rc 2> /dev/null) > "$OUT/raw.sha256"
   note "$(grep '^experiment' "$OUT/d.om.report")"
-  note "ORIGSEL_MEASURE_DONE"
+  note "ORIGSEL_VERDICT $(sed -n 's/^experiment //p' "$OUT/d.om.report")"
   exit 0
 fi
 fail "unknown MODE $MODE"
