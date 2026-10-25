@@ -1,0 +1,92 @@
+{
+  "profile": "SC1 authority repair replay",
+  "base": "08bd7aa7d7b73864e56163772ccceaa9cc91de0b",
+  "compiler_sha256": "66b4cf34e5cd2c8ff003bd142e7309f52178b66c2380f78ac313b6eb8b67471b",
+  "target": "Linux AArch64 native",
+  "records": [
+    {
+      "name": "dispatch-order",
+      "compile_exit": 0,
+      "source_sha256": "ba6e35675f2efdeb9091224d74fd0550f675522fd89a8377ebdf2c4fb96e4baf",
+      "exit": 0,
+      "stdout": "dispatch order checks=3 fails=0\n",
+      "binary_sha256": "b638e460535cdad038eb96300b7cecb162d0ecd1d898dc89f4507b952c361940"
+    },
+    {
+      "name": "store-exact",
+      "compile_exit": 0,
+      "source_sha256": "662f9e59d6d6a176b830533953a34fd1a9c1cbec5beb37d1a70c67784ceb0cd1",
+      "exit": 0,
+      "stdout": "store exact checks=4 fails=0\n",
+      "binary_sha256": "c2bac93ecee444be1f393dbfb424a709d4d88d2167f1b1abed31690276fadf28"
+    },
+    {
+      "name": "lock",
+      "compile_exit": 0,
+      "source_sha256": "db671123db01a23d28bf5a9ee80a0c5a7bb4d6dba659b16f375ad60115a8ffae",
+      "exit": 0,
+      "stdout": "lock checks=8 fails=0\n",
+      "binary_sha256": "f5b42f3129d0964f928a404effd8a4ccaea4348e6524a9f59ee902046dd9463d"
+    },
+    {
+      "name": "store-cleanup",
+      "compile_exit": 12,
+      "source_sha256": "2819aee2253a3c966687c7ce8639890e960ae4ed2e5345dc0432b2c7e62ff0d6",
+      "compiler_error": "omc: line 274: error 12\n"
+    },
+    {
+      "name": "store-cleanup-fixed",
+      "compile_exit": 0,
+      "exit": 0,
+      "stdout": "store cleanup cases=18 fails=0\n",
+      "source_sha256": "2e6de0feb55fb52279476342d552e9d6f80e53f0c4989fb27d700cef22126692",
+      "binary_sha256": "9e32929ad2500f16cd71a0afdc75bfa67669e427bf0bb07ed33c9b0f41315c42"
+    },
+    {
+      "name": "dispatch-order-mutant",
+      "transform_exit": 0,
+      "compile_exit": 0,
+      "exit": 1,
+      "stdout": "FAIL dispatch acquired-record refusal\nFAIL dispatch read-error release\nFAIL dispatch acquisition-error refusal\n",
+      "stderr": "",
+      "source_sha256": "16d065f24c9d77c6a54a3c3947fcbc8d6b04d4c71780fc54496ab9a854a9a330",
+      "binary_sha256": "c8fd58470cc9c4a90687befaf6ca0d0f97afb63f29a105bdab5746aea6477be5"
+    },
+    {
+      "name": "store-exact-mutant",
+      "transform_exit": 0,
+      "compile_exit": 0,
+      "exit": 1,
+      "stdout": "FAIL store trailing-record refusal\n",
+      "stderr": "",
+      "source_sha256": "4681bcbdf2f279fb2fd71bef694fd91df642c97412102acc3eab57fe27988e31",
+      "binary_sha256": "89881522558dd970fbeb55d67c07ce203082a7f5dbbb08d50def682647f1869b"
+    },
+    {
+      "name": "lock-mutant",
+      "transform_exit": 0,
+      "compile_exit": 0,
+      "exit": 1,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "f37a1a5fe6d64487fd4a97c942c62ef1d706f1cf0f5b6503db94d295d518b060",
+      "binary_sha256": "7da6f68c696fd59ec113ab1376d114352049aeccac778e06cd45dc96616a518f"
+    },
+    {
+      "name": "store-cleanup-mutant",
+      "transform_exit": 0,
+      "compile_exit": 0,
+      "exit": 1,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "67ae4cbfe18c32d60ec5c63a9666177528d768c1980874d640a2fae405ddb09e",
+      "binary_sha256": "577f3203f1e314bc358b821d09fa13de2cb2ae4615e23adb6ae3873c0942103d"
+    }
+  ],
+  "limits": [
+    "No full coordinator replay",
+    "Cleanup uses deterministic fake effects",
+    "No production revocation fence or stale-lock ABA proof",
+    "No power-loss qualification"
+  ]
+}

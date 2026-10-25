@@ -213,3 +213,29 @@ of unmatched write-side effects, and metadata checks pass; all Omega compilation
 native positive/negative runs and security qualification remain NOT_RUN. This
 gate is wired into the existing security coordinator with its own fresh child
 working directory; the standalone replay and negative control remain available.
+
+## Native replay and compiler register bound (2026-10-25)
+
+The original cleanup gate at `08bd7aa7d7b73864e56163772ccceaa9cc91de0b`
+failed compilation with error 12 at line 274. Moving its unchanged three-part
+assertion into `cbadcase` reduces live register pressure in `main`; both the
+handwritten test and its committed concatenation now compile. No production
+store behavior or expected outcome changes.
+
+Linux AArch64 native replay with the reconstructed compiler
+`66b4cf34e5cd2c8ff003bd142e7309f52178b66c2380f78ac313b6eb8b67471b`
+passed dispatch-order (3), store-exact (4), lock (8), and cleanup (18).
+Compiled controls restoring read-before-lock, accepting a trailing record byte,
+masking unlink failure, and omitting the four error-path closes each compiled
+successfully and exited 1 from their fixture assertions. The cleanup control
+fails `cbadcase`; the lock control fails its accumulated release-result checks.
+These are not crashes or failed-build controls. The exact-input control covers
+the record probe only; it does not claim the generation-probe mutant was run.
+
+Raw bindings and output are in `../qualification/security673/repairs/native.json`.
+The `.om` mutation producer in that directory requires exactly the declared
+number of source matches before writing a mutant. Historical NOT_RUN statements
+above describe their original preparation; this replay supersedes them only for
+these four positive fixtures and these four controls. The full coordinator,
+production revocation fencing, stale-pid ABA exclusion, actual concurrent
+effects, power loss and durable aggregate accounting remain unqualified here.

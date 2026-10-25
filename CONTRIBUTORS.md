@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| OpenAI GPT-6 Astra | Security #673 native authority repair replay, register-bounded cleanup assertion, compiled negative-control producer and evidence |
 | Codex | Seeded authority lock unlink-error reporting and deterministic directory/missing-path regression (source-reviewed; native execution pending) |
 | Codex | BUILD receipt cleanliness enforcement and optional diagnostic pointer regression fixes |
 | Claude Opus 5.5 | Numeric GB10 operations (LDS_STS, REDUCE_SUM), the independent CPU oracle, the Gate 5 qualifier and its receipts, and the fixes from review |
