@@ -1,0 +1,939 @@
+note units: sha256 r1 exp lib
+note drive-smoke: routers built by drive (argv 3 = drive ELF, argv 2 = OMC, cwd = repo root, real
+note units) answer the arm protocol (contract 2): a library built from experience written here (one
+note AGG shape and the FSM template, 8 TRAIN records each, a calibration file) loads (STATS flags bit
+note 1, 2 templates) and serves QUERYs of a new program of the admitted shape and of an FSM program
+note by method (route 3), an unseen shape by full (route 1), every answer equal to r1full here;
+note delta and select arms answer correctly after a SET (routes 3/4 and 1/3/4); a wrong MANSHA gives
+note route 5 with correct answers and STATS 30 = 8; a mutant:c1c library is refused by G3 (route 5);
+note drive base gives a router whose full arm answers with route 1 and whose SHA-256 is the one
+note printed. Files in argv 1, else /tmp/reuse-test-drive-smoke-PID.
+note Exit 0 pass, else the failed check's code.
+text tbase "/tmp/reuse-test-drive-smoke-"
+text tsyn " SYNTHETIC t\n"
+text tbuild "build"
+text tbasew "base"
+text tmutc "mutant:c1c"
+text tnames "exp allow calib out err base lib1 lib2 "
+text tarms "method delta select full "
+text tbsha "base_elf_sha256="
+text tbelf "base.elf"
+global TDIR uchar 4096
+global TDN ulong 1
+global TDRV uchar 4096
+global TDRN ulong 1
+global TOMC uchar 4096
+global TOMN ulong 1
+global TP uchar 4096
+global TPN ulong 1
+global TK uchar 8192
+global TKN ulong 1
+global TKA ulong 1
+global TKC ulong 1
+global TST uchar 4
+global TW ulong 4096
+global TNR ulong 1
+global TBF uchar 65536
+global TL uchar 4096
+global TLN ulong 1
+global TMS uchar 64
+global TFD ulong 4
+global TIO uchar 65536
+global TQ ulong 8192
+global TR ulong 64
+global TPID long 1
+global TSAVE ulong 64
+global TSN ulong 1
+global TSX ulong 4096
+
+fn tpz to void
+put TPN 0 0
+end
+
+fn tpc c ulong to void
+n = get TPN 0
+put TP n uchar c
+put TPN 0 add n 1
+end
+
+fn tpnum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+tpc ulong get d n
+end
+end
+
+fn tpword w ulong to void
+c = ulong 0
+for i ulong len tnames
+ch = ulong get tnames i
+if eq ch 32
+c = add c 1
+else
+if eq c w
+tpc ch
+end
+end
+end
+end
+
+note TP = TDIR/<name w>
+fn tpname w ulong to void
+tpz
+for i ulong get TDN 0
+tpc ulong get TDIR i
+end
+tpc 47
+tpword w
+end
+
+fn tmkdir to int
+tpz
+if ge argcnt 2
+n = argread 1 TDIR 0 3000
+if lt n 1
+ret 1
+end
+put TDN 0 ulong n
+ret 0
+end
+for i ulong len tbase
+tpc ulong get tbase i
+end
+tpnum ulong getpid
+for i ulong get TPN 0
+put TDIR i get TP i
+end
+put TDN 0 get TPN 0
+r = makedir TDIR 0 get TDN 0 448
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+fn twrite n ulong to int
+r = fopen TP 0 get TPN 0 524865 384
+if lt r 0
+ret 1
+end
+fd = int r
+w = write fd TBF 0 n
+s = fclose fd
+if ne w long n
+ret 1
+end
+ret 0
+end
+
+note AGG program wl, f, k, ops packed, constants seeded by c
+fn tagg wl ulong f ulong k ulong ops ulong c ulong to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 wl
+put R1P 3 f
+put R1P 4 k
+for j ulong k
+op = and shr ops mul j 4 15
+v = and add c mul j 37 sub shl ulong 1 wl 1
+if ge op 7
+v = rem v wl
+end
+put R1P add 5 mul j 2 op
+put R1P add 6 mul j 2 v
+end
+end
+
+note FSM: S 3, A 4, rules 0 -[0,1]-> 1, 1 -[2,3]-> 2, 2 -[0,3]-> 0 (lambda shifted by c)
+fn tfsm c ulong to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 3
+put R1P 3 4
+put R1P 5 3
+put R1P 6 and c 255
+put R1P 7 5
+put R1P 8 9
+put R1P 22 16842752
+put R1P 23 33751553
+put R1P 24 196610
+end
+
+fn trec to void
+b = mul get TNR 0 128
+for i ulong 128
+put TW add b i 0
+end
+r1pdig
+put R1N 0 0
+r1sdig
+put TW b 3544386028377026898
+put TW add b 1 1
+put TW add b 2 add get TNR 0 1
+put TW add b 3 get R1P 1
+put TW add b 9 1
+put TW add b 10 1
+put TW add b 11 add get TNR 0 1
+put TW add b 13 1
+for j ulong 4
+put TW add add b 48 j get R1SD j
+put TW add add b 52 j get R1PD j
+end
+for i ulong 64
+put TW add add b 64 i get R1P i
+end
+put TNR 0 add get TNR 0 1
+end
+
+fn tser nw ulong to void
+for w ulong nw
+v = get TW w
+for k ulong 8
+put TBF add mul w 8 k uchar and shr v mul k 8 255
+end
+end
+end
+
+fn tlc c ulong to void
+n = get TLN 0
+put TL n uchar c
+put TLN 0 add n 1
+end
+
+note LBH as hex into TMS
+fn thex to void
+for j ulong 4
+v = get LBH j
+for q ulong 16
+d = and shr v mul sub 15 q 4 15
+c = add d 48
+if ge d 10
+c = add d 87
+end
+put TMS add mul j 16 q uchar c
+end
+end
+end
+
+fn tinputs to int
+put TNR 0 0
+tagg 8 1 2 49 3
+for i ulong 8
+trec
+end
+tfsm 1
+for i ulong 8
+trec
+end
+nw = mul get TNR 0 128
+tser nw
+tpname 0
+if ne twrite mul nw 8 0
+ret 1
+end
+lbpz
+for i ulong get TPN 0
+lbpc ulong get TP i
+end
+n = lbhpath
+thex
+put TLN 0 0
+for i ulong 64
+tlc ulong get TMS i
+end
+for i ulong len tsyn
+tlc ulong get tsyn i
+end
+for i ulong get TLN 0
+put TBF i get TL i
+end
+tpname 1
+if ne twrite get TLN 0 0
+ret 2
+end
+for i ulong 1600
+put TBF i 0
+end
+put TBF 0 82
+put TBF 1 49
+put TBF 2 67
+put TBF 3 65
+put TBF 4 76
+put TBF 5 48
+put TBF 6 48
+put TBF 7 49
+put TBF 8 1
+put TBF 16 136
+put TBF 17 19
+tpname 2
+ret twrite 1600
+end
+
+fn tkreset to void
+put TKN 0 2
+put TKC 0 0
+end
+
+fn tkbeg to void
+put TKA 0 get TKN 0
+put TKN 0 add get TKN 0 2
+end
+
+fn tkc c ulong to void
+n = get TKN 0
+put TK n uchar c
+put TKN 0 add n 1
+end
+
+fn tkend to void
+a = get TKA 0
+l = sub sub get TKN 0 a 2
+put TK a uchar and l 255
+put TK add a 1 uchar shr l 8
+put TKC 0 add get TKC 0 1
+end
+
+fn tktp to void
+tkbeg
+for i ulong get TPN 0
+tkc ulong get TP i
+end
+tkend
+end
+
+fn tkdash to void
+tkbeg
+tkc 45
+tkend
+end
+
+note arm word a of tarms (0 method 1 delta 2 select 3 full)
+fn tkarm a ulong to void
+tkbeg
+c = ulong 0
+for i ulong len tarms
+ch = ulong get tarms i
+if eq ch 32
+c = add c 1
+else
+if eq c a
+tkc ch
+end
+end
+end
+tkend
+end
+
+note drive build OMC allow calib lib<w> [mutant:c1c] exp
+fn tkbuild w ulong mut bool to void
+tkreset
+tkbeg
+for i ulong get TDRN 0
+tkc ulong get TDRV i
+end
+tkend
+tkbeg
+for i ulong len tbuild
+tkc ulong get tbuild i
+end
+tkend
+tkbeg
+for i ulong get TOMN 0
+tkc ulong get TOMC i
+end
+tkend
+tpname 1
+tktp
+tpname 2
+tktp
+tpname w
+tktp
+if mut
+tkbeg
+for i ulong len tmutc
+tkc ulong get tmutc i
+end
+tkend
+end
+tpname 0
+tktp
+end
+
+note drive base OMC TDIR/base
+fn tkbase to void
+tkreset
+tkbeg
+for i ulong get TDRN 0
+tkc ulong get TDRV i
+end
+tkend
+tkbeg
+for i ulong len tbasew
+tkc ulong get tbasew i
+end
+tkend
+tkbeg
+for i ulong get TOMN 0
+tkc ulong get TOMC i
+end
+tkend
+tpname 5
+tktp
+end
+
+note run TK, stdout to TDIR/out, stderr to TDIR/err; exit status
+fn trun to int
+c = get TKC 0
+put TK 0 uchar and c 255
+put TK 1 uchar shr c 8
+pid = fork
+if lt pid 0
+ret 250
+end
+if eq pid 0
+tpname 3
+r = fopen TP 0 get TPN 0 577 384
+s = dupfd int r 1 0
+tpname 4
+r2 = fopen TP 0 get TPN 0 577 384
+s = dupfd int r2 2 0
+e = execprog TK 0 get TKN 0
+exit 127
+end
+r = waitpid int pid TST 0 4 0
+if ne r pid
+ret 251
+end
+s = or ulong get TST 0 shl ulong get TST 1 8
+if ne and s 127 0
+ret 252
+end
+ret int and shr s 8 255
+end
+
+note TMS = SHA-256 of TDIR/<w>/gen-1.man; 0 ok
+fn tmansha w ulong to int
+tpname w
+for i ulong get TPN 0
+put LBDIR i get TP i
+end
+put LBDN 0 get TPN 0
+lbpgen 1 3 false
+n = lbhpath
+if lt n 0
+ret 1
+end
+thex
+ret 0
+end
+
+note pipe descriptor words
+fn tfdw b view uchar 8 off ulong to ulong
+x = ulong 0
+for i ulong 4
+x = or x shl ulong get b add off i mul i 8
+end
+ret x
+end
+
+note start router: exe = TDIR/<w>/gen-1.elf (or TDIR/base/base.elf when w = 5), arm a, LIBDIR
+note TDIR/<w> (or "-" when lib false); TFD[0] = request fd, TFD[1] = response fd; 0 ok
+fn tstart w ulong a ulong lib bool to int
+tkreset
+tpname w
+tpc 47
+if eq w 5
+for i ulong len tbelf
+tpc ulong get tbelf i
+end
+else
+tpc 103
+tpc 101
+tpc 110
+tpc 45
+tpc 49
+tpc 46
+tpc 101
+tpc 108
+tpc 102
+end
+tktp
+tkarm a
+if lib
+tpname w
+tktp
+tkbeg
+for i ulong 64
+tkc ulong get TMS i
+end
+tkend
+else
+tkdash
+tkdash
+end
+tpname 1
+tktp
+tkdash
+tkdash
+ret tspawn
+end
+
+fn tspawn to int
+c = get TKC 0
+put TK 0 uchar and c 255
+put TK 1 uchar shr c 8
+p1 = new uchar 8 0
+p2 = new uchar 8 0
+r = pipefds p1 0 8 524288
+if ne r 0
+ret 1
+end
+r = pipefds p2 0 8 524288
+if ne r 0
+ret 1
+end
+put TFD 0 tfdw p1 4
+put TFD 1 tfdw p2 0
+put TFD 2 tfdw p1 0
+put TFD 3 tfdw p2 4
+pid = fork
+if lt pid 0
+ret 2
+end
+if eq pid 0
+x = dupfd int get TFD 2 0 0
+x = dupfd int get TFD 3 1 0
+e = execprog TK 0 get TKN 0
+exit 127
+end
+x = fclose int get TFD 2
+x = fclose int get TFD 3
+put TPID 0 pid
+ret 0
+end
+
+note send TQ[0..n) as LE words; 0 ok
+fn tsend n ulong to int
+for w ulong n
+v = get TQ w
+for k ulong 8
+put TIO add mul w 8 k uchar and shr v mul k 8 255
+end
+end
+t = ulong 0
+nb = mul n 8
+while lt t nb bound 99999
+r = write int get TFD 0 TIO t sub nb t
+if le r 0
+ret 1
+end
+t = add t ulong r
+end
+ret 0
+end
+
+note read n LE words into TR; 0 ok
+fn trecv n ulong to int
+nb = mul n 8
+t = ulong 0
+while lt t nb bound 99999
+r = read int get TFD 1 TIO t sub nb t
+if le r 0
+ret 1
+end
+t = add t ulong r
+end
+for w ulong n
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get TIO add mul w 8 k mul k 8
+end
+put TR w v
+end
+ret 0
+end
+
+note BEGIN with R1P and the state R1N/R1X; response status (or 99)
+fn tbegin to ulong
+n = get R1N 0
+put TQ 0 1
+put TQ 1 add 65 n
+for i ulong 64
+put TQ add 2 i get R1P i
+end
+put TQ 66 n
+for i ulong n
+put TQ add 67 i get R1X i
+end
+if ne tsend add 67 n 0
+ret 99
+end
+if ne trecv 2 0
+ret 99
+end
+ret get TR 0
+end
+
+note QUERY: 0 when status 0, q 3 and r0 r1 equal r1full here; the route in TR[4]; else 1
+fn tquery to int
+put TQ 0 2
+put TQ 1 0
+if ne tsend 2 0
+ret 1
+end
+if ne trecv 5 0
+ret 1
+end
+if or ne get TR 0 0 ne get TR 1 3
+ret 1
+end
+r0 = get TR 2
+r1 = get TR 3
+r1full
+if or ne get R1R 0 r0 ne get R1R 1 r1
+ret 1
+end
+ret 0
+end
+
+note STATS: counter i (or 99999)
+fn tstats i ulong to ulong
+put TQ 0 9
+put TQ 1 0
+if ne tsend 2 0
+ret 99999
+end
+if ne trecv 2 0
+ret 99999
+end
+q = get TR 1
+if or ne get TR 0 0 gt q 32
+ret 99999
+end
+put TQ 0 0
+if ne trecvq q 0
+ret 99999
+end
+if ge i q
+ret 99999
+end
+ret get TSX i
+end
+
+fn trecvq q ulong to int
+if eq q 0
+ret 0
+end
+if ne trecv q 0
+ret 1
+end
+for i ulong q
+put TSX i get TR i
+end
+ret 0
+end
+
+note SET x_i = v (applied here too); response status
+fn tset i ulong v ulong to ulong
+put TQ 0 3
+put TQ 1 2
+put TQ 2 i
+put TQ 3 v
+if ne tsend 4 0
+ret 99
+end
+if ne trecv 2 0
+ret 99
+end
+if eq get TR 0 0
+put R1X i v
+end
+ret get TR 0
+end
+
+note END: 0 when status 0 and the arm exits 0
+fn tend to int
+put TQ 0 10
+put TQ 1 0
+if ne tsend 2 0
+ret 1
+end
+if ne trecv 2 0
+ret 2
+end
+if ne get TR 0 0
+ret 3
+end
+x = fclose int get TFD 0
+x = fclose int get TFD 1
+r = waitpid int get TPID 0 TST 0 4 0
+if ne r get TPID 0
+ret 4
+end
+s = or ulong get TST 0 shl ulong get TST 1 8
+if ne s 0
+ret 5
+end
+ret 0
+end
+
+note a state of n values below m from seed z
+fn tstate n ulong m ulong z ulong to void
+put R1N 0 n
+x = z
+for i ulong n
+x = add mul x 6364136223846793005 1442695040888963407
+put R1X i rem shr x 33 m
+end
+end
+
+note method arm on lib1: AGG (route 3), FSM (route 3), unseen shape (route 1), generation flags
+fn tmethod to int
+if ne tstart 6 0 true 0
+ret 1
+end
+tagg 8 1 2 49 77
+tstate 300 256 5
+if ne tbegin 0
+ret 2
+end
+if ne tquery 0
+ret 3
+end
+if ne get TR 4 3
+ret 4
+end
+if ne and tstats 31 1 1
+ret 5
+end
+if ne tstats 29 2
+ret 6
+end
+tfsm 9
+tstate 500 4 7
+if ne tbegin 0
+ret 7
+end
+if ne tquery 0
+ret 8
+end
+if ne get TR 4 3
+ret 9
+end
+tagg 16 4 1 3 5
+tstate 100 65536 9
+if ne tbegin 0
+ret 10
+end
+if ne tquery 0
+ret 11
+end
+if ne get TR 4 1
+ret 12
+end
+ret mul tend 100
+end
+
+note arm a (1 delta, 2 select) on lib1 with SET changes; allowed routes
+fn tchange a ulong to int
+if ne tstart 6 a true 0
+ret 1
+end
+tagg 8 1 2 49 91
+tstate 400 256 11
+if ne tbegin 0
+ret 2
+end
+for q ulong 6
+if ne tquery 0
+ret 3
+end
+rt = get TR 4
+if and ne rt 3 and ne rt 4 ne rt 1
+ret 4
+end
+if and eq a 1 eq rt 1
+ret 5
+end
+if ne tset mul q 50 add q 7 0
+ret 6
+end
+end
+ret mul tend 100
+end
+
+note wrong MANSHA (route 5, STATS 30 = 8) and a c1c library (route 5 by G3)
+fn trefused to int
+put TMS 0 102
+put TMS 1 102
+if ne tstart 6 0 true 0
+ret 1
+end
+tagg 8 1 2 49 77
+tstate 50 256 5
+if ne tbegin 0
+ret 2
+end
+if ne tquery 0
+ret 3
+end
+if ne get TR 4 5
+ret 4
+end
+if ne tstats 30 8
+ret 5
+end
+r = tend
+if ne r 0
+ret 6
+end
+tkbuild 7 true
+if ne trun 0
+ret 7
+end
+if ne tmansha 7 0
+ret 8
+end
+if ne tstart 7 0 true 0
+ret 9
+end
+tagg 8 1 2 49 77
+tstate 50 256 5
+if ne tbegin 0
+ret 10
+end
+if ne tquery 0
+ret 11
+end
+if ne get TR 4 5
+ret 12
+end
+ret mul tend 100
+end
+
+note drive base: printed SHA-256 = SHA-256(base.elf); full arm answers with route 1
+fn tbasechk to int
+tkbase
+if ne trun 0
+ret 1
+end
+tpname 5
+tpc 47
+for i ulong len tbelf
+tpc ulong get tbelf i
+end
+lbpz
+for i ulong get TPN 0
+lbpc ulong get TP i
+end
+n = lbhpath
+if lt n 0
+ret 2
+end
+thex
+tpname 3
+r = fopen TP 0 get TPN 0 524288 0
+if lt r 0
+ret 3
+end
+fd = int r
+m = read fd TBF 0 200
+x = fclose fd
+if lt m 81
+ret 4
+end
+for i ulong len tbsha
+if ne get TBF i get tbsha i
+ret 5
+end
+end
+for i ulong 64
+if ne get TBF add len tbsha i get TMS i
+ret 6
+end
+end
+if ne tstart 5 3 false 0
+ret 7
+end
+tagg 16 2 3 801 13
+tstate 1000 65536 3
+if ne tbegin 0
+ret 8
+end
+if ne tquery 0
+ret 9
+end
+if ne get TR 4 1
+ret 10
+end
+ret mul tend 100
+end
+
+fn main to int
+if ne tmkdir 0
+ret 99
+end
+if lt argcnt 4
+ret 98
+end
+n = argread 2 TOMC 0 4000
+put TOMN 0 ulong n
+n = argread 3 TDRV 0 4000
+put TDRN 0 ulong n
+if ne tinputs 0
+ret 97
+end
+tkbuild 6 false
+if ne trun 0
+ret 96
+end
+if ne tmansha 6 0
+ret 95
+end
+r = tmethod
+if ne r 0
+ret add 10 tcap r
+end
+r = tchange 1
+if ne r 0
+ret add 30 tcap r
+end
+r = tchange 2
+if ne r 0
+ret add 50 tcap r
+end
+r = trefused
+if ne r 0
+ret add 70 tcap r
+end
+r = tbasechk
+if ne r 0
+ret add 90 tcap r
+end
+ret 0
+end
+
+note failure codes above 19 (END failures, x 100) are shown as 19
+fn tcap r int to int
+if gt r 19
+ret 19
+end
+ret r
+end
