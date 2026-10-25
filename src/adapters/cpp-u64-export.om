@@ -1,0 +1,380 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten extended-family upper-to-C++17 exporter (#739, spec/universal/cpp-u64-v1.md section 4).
+note Accepts the C, Rust, Python (v1) and C++, Zig, Go (v2) u64 members; output depends on the records only.
+note Prepended unchanged at build: src/source-aware/vendor/sha256.om and src/source-aware/core-v2.om (decode n).
+note Input: one OMSB envelope to EOF. The OMSP sidecar is validated by decode, never read for output.
+global Xone uchar 1
+global Xob ulong 1
+global Xo uchar 4096
+global Xl ulong 1
+global Xni ulong 1
+global Xpr ulong 64
+global Xln ulong 64
+global Xdp ulong 64
+global Xcn ulong 64
+text Xhead "#include <cstdint>\nstd::uint64_t calc("
+text Xpar "std::uint64_t i"
+text Xlit "std::uint64_t{"
+text Xsuf "ULL}"
+text Xret ") { return "
+text Xtail "; }\n"
+text XMal "CPP_EXPORT_MALFORMED\n"
+text XLim "CPP_EXPORT_LIMIT\n"
+text XProf "CPP_EXPORT_PROFILE_MISMATCH\n"
+text XIO "CPP_EXPORT_IO\n"
+
+fn xdie code ulong to void
+if eq code 65
+w = write 2 XMal 0 len XMal
+end
+if eq code 67
+w = write 2 XLim 0 len XLim
+end
+if eq code 68
+w = write 2 XProf 0 len XProf
+end
+if eq code 77
+w = write 2 XIO 0 len XIO
+end
+exit int code
+end
+
+fn xbyte c ulong to void
+put Xo get Xl 0 uchar c
+put Xl 0 add get Xl 0 1
+end
+
+fn xtext0 to void
+for i ulong len Xlit
+xbyte ulong get Xlit i
+end
+end
+
+fn xtext1 to void
+for i ulong len Xsuf
+xbyte ulong get Xsuf i
+end
+end
+
+fn xdigits v ulong to ulong
+d = ulong 1
+x = div v 10
+while gt x 0
+d = add d 1
+x = div x 10
+end
+ret d
+end
+
+fn xdec v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+while gt i 0
+i = sub i 1
+xbyte ulong get d i
+end
+end
+
+fn xkind i ulong to ulong
+c = get Oc i
+if or ne get Ot i 1 ne get Oef i 0
+ret 68
+end
+if ne get Oal i 0
+ret 68
+end
+if eq c 9
+if or ne get Oat i 0 ne get Oob i 1
+ret 68
+end
+put Xni 0 add get Xni 0 1
+ret 0
+end
+if eq c 1
+if or ne get Oat i 1 ne get Oob i 0
+ret 68
+end
+ret 0
+end
+if or lt c 2 gt c 4
+ret 68
+end
+if or ne get Oat i 1 ne get Oob i get Xob 0
+ret 68
+end
+ret 0
+end
+
+fn xmember l ulong p ulong to ulong
+if and eq l 1 eq p 1
+ret 1
+end
+if and eq l 2 eq p 2
+ret 1
+end
+if and eq l 3 eq p 4
+ret 5
+end
+if and eq l 5 eq p 7
+ret 1
+end
+if and eq l 6 eq p 8
+ret 1
+end
+if and eq l 7 eq p 9
+ret 1
+end
+ret 0
+end
+
+fn xfamily to ulong
+put Xob 0 xmember get M 0 get M 1
+if eq get Xob 0 0
+ret 68
+end
+if or ne get M 2 0 ne get M 3 1
+ret 68
+end
+put Xni 0 0
+for i ulong get M 4
+if ne xkind i 0
+ret 68
+end
+end
+for j ulong get M 4
+if eq get Oc j 9
+if ge get Oi j get Xni 0
+ret 68
+end
+end
+end
+ret 0
+end
+
+fn xpa k ulong to ulong
+if lt get Xpr get Oa k get Xpr k
+ret 1
+end
+ret 0
+end
+
+fn xpb k ulong to ulong
+if le get Xpr get Ob k get Xpr k
+ret 1
+end
+ret 0
+end
+
+fn xsat v ulong to ulong
+if gt v 1048576
+ret 1048576
+end
+ret v
+end
+
+fn xmetric k ulong to void
+c = get Oc k
+put Xdp k 0
+if eq c 9
+put Xpr k 3
+put Xln k 2
+put Xcn k 0
+ret
+end
+if eq c 1
+put Xpr k 3
+put Xln k add xdigits get Oi k add len Xlit len Xsuf
+put Xcn k 1
+ret
+end
+put Xpr k 1
+if eq c 4
+put Xpr k 2
+end
+a = get Oa k
+b = get Ob k
+pa = xpa k
+pb = xpb k
+l = add get Xln a get Xln b
+l = add l add 3 mul 2 add pa pb
+put Xln k xsat l
+da = add get Xdp a pa
+db = add get Xdp b pb
+if gt da db
+put Xdp k da
+else
+put Xdp k db
+end
+put Xcn k xsat add add get Xcn a get Xcn b 1
+end
+
+fn xemit k ulong to void
+c = get Oc k
+if eq c 9
+xbyte 105
+xbyte add 48 get Oi k
+ret
+end
+if eq c 1
+xtext0
+xdec get Oi k
+xtext1
+ret
+end
+pa = xpa k
+pb = xpb k
+if eq pa 1
+xbyte 40
+end
+xemit get Oa k
+if eq pa 1
+xbyte 41
+end
+xbyte 32
+if eq c 2
+xbyte 43
+end
+if eq c 3
+xbyte 45
+end
+if eq c 4
+xbyte 42
+end
+xbyte 32
+if eq pb 1
+xbyte 40
+end
+xemit get Ob k
+if eq pb 1
+xbyte 41
+end
+end
+
+fn xroot to ulong
+n = get M 4
+if lt n 3
+ret sub n 1
+end
+z = sub n 2
+y = sub n 1
+if or ne get Oc z 1 ne get Oi z 0
+ret y
+end
+if or ne get Oc y 2 ne get Ob y z
+ret y
+end
+if ge get Oa y z
+ret y
+end
+ret get Oa y
+end
+
+fn xparams to ulong
+ni = get Xni 0
+if eq ni 0
+ret 0
+end
+ret sub add mul ni len Xpar mul ni 3 2
+end
+
+fn xsignature to void
+for i ulong len Xhead
+xbyte ulong get Xhead i
+end
+for s ulong get Xni 0
+if gt s 0
+xbyte 44
+xbyte 32
+end
+for t ulong len Xpar
+xbyte ulong get Xpar t
+end
+xbyte add 48 s
+end
+for u ulong len Xret
+xbyte ulong get Xret u
+end
+end
+
+fn xreadunit to ulong
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub ulong 8192 n
+if lt r 0
+xdie 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+if eq n 8192
+r = read 0 Xone 0 1
+if lt r 0
+xdie 77
+end
+if gt r 0
+xdie 65
+end
+end
+ret n
+end
+
+fn main to int
+constants
+n = xreadunit
+code = decode n
+if eq code 68
+xdie 68
+end
+if ne code 0
+xdie 65
+end
+if ne xfamily 0
+xdie 68
+end
+for k ulong get M 4
+xmetric k
+end
+root = xroot
+total = add add len Xhead len Xret len Xtail
+total = add total add xparams get Xln root
+if gt total 4096
+xdie 67
+end
+if gt get Xdp root 16
+xdie 67
+end
+if gt add add get Xni 0 get Xcn root 2 64
+xdie 67
+end
+put Xl 0 0
+xsignature
+xemit root
+for i ulong len Xtail
+xbyte ulong get Xtail i
+end
+if ne get Xl 0 total
+xdie 65
+end
+sent = ulong 0
+while lt sent total
+r = write 1 Xo sent sub total sent
+if le r 0
+xdie 77
+end
+sent = add sent ulong r
+end
+ret 0
+end
