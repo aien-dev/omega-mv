@@ -82,3 +82,15 @@ These are boundary checks, not exhaustive u64 proof. The finite signed oracle
 shares the compiler with the library; it is algorithmically independent, not
 an independently compiled translation referee. Original evidence remains immutable;
 review additions and final clean replay have separate receipts.
+
+`oracle-export.om` emits actual helper results, with no reference arithmetic in
+the program: width1..8, a0..cap, b0..cap, then add/sub/mul, three little-endian
+u64 words per result `(status,value,cap)`. The external arbitrary-precision oracle
+compares each exact integer result with `[0,cap]`; expected success is
+`(0,result,cap)`, refusal `(3,17,19)`. All262140 records matched independently,
+including every refusal sentinel. `evidence/review-exhaustion.json` binds the
+6291360-byte output and exporter; the raw output is retained compressed beside it.
+Replay by concatenating `quantity.om oracle-export.om` into the pinned compiler,
+executing the resulting binary, and comparing its stdout SHA-256 and bytes to
+the decompressed corpus. This supplements, rather than relabels, the original
+same-compiler signed oracle.

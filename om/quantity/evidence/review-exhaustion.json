@@ -1,0 +1,43 @@
+{
+  "profile_contract_sha256": "ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496",
+  "compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+  "export_source_sha256": "09eb487ce982b60d566576f7c3949ef2632146950597f92da90ef8560ee0e1e9",
+  "export_binary_sha256": "06af414693ec76840f541ee584cd7877f0400af703012d3d7a715ea070abfdc6",
+  "compile_exit": 0,
+  "run_exit": 0,
+  "output_bytes": 6291360,
+  "output_sha256": "0841c3b0714b36b46e09a83d036243989b0295b5aa3af68650fa24eca9886bd9",
+  "records_compared": 262140,
+  "oracle": "external Python arbitrary-precision integers; each actual LEu64(status,val,cap) compared with exact a+b,a-b,a*b, 0<=exact<=cap; refusal(3,17,19)",
+  "initial_attempts": [
+    {
+      "compile_exit": 9,
+      "stderr": "omc: line 168: error 9",
+      "cause": "struct allocation nested inside loops; changed constructor values did not fix it; moved allocations to outermost function block"
+    }
+  ],
+  "review_boundary_records": [
+    {
+      "name": "tests",
+      "source_sha256": "7614bfcab3e2821e071b8b03d99ad1009f57dfbe3dc566c2e97fcb212bbda7df",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "cc328b083385ae3e2bc695f2a66d52bb8e0b31101005cc894fb7b4636c5dc6ad",
+      "run_exit": 0,
+      "stdout": "PASS Q1-Q9 runtime; Q2 widths1..8 pairs87380 operations262140\n",
+      "stderr": ""
+    },
+    {
+      "name": "mixed-object",
+      "source_sha256": "e0956012a52edb290381187f7094f5fe05c3aae86900b84b1373c71dcf4435f8",
+      "compile_exit": 7,
+      "compile_stderr": "omc: line 148: error 7\n"
+    },
+    {
+      "name": "mixed-slice",
+      "source_sha256": "6a8c33da0ada678ceccd15d7db803174f0bbbdc61cdf9c22970075d4a75ca9b3",
+      "compile_exit": 7,
+      "compile_stderr": "omc: line 148: error 7\n"
+    }
+  ]
+}
