@@ -35,3 +35,11 @@ edit). Unsized parameters are allowed on internal functions, not only on exporte
   `sha256_*` names to them (generated, not handwritten). The freestanding nm allow-list
   (`Makefile:657`, `RX_CX_FS_ALLOWED`) changes from `sha256_*` to the `omega2_sha256_*` symbols. That
   one Makefile rule is changed by the SHA lane (L838) in the cutover commit.
+
+## E4 (QualPhaseB L836, 2026-10-25): diagnostic record fields and the fmt input
+
+- `col` is the 1-based byte column of A on its line.
+- The span `A-B` is the offending lexer token; at end of input it is the empty span `len-len`.
+- `found` is the hex of the span bytes, or `-` when the span is empty.
+- `expect` is the token class the parser wanted next.
+- `om2 fmt`: "the rest" is the bytes after the first LF; the output does not contain the `om2 fmt` line.
