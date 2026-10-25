@@ -1,0 +1,1200 @@
+{
+ "schema": "omega.universal.fixtures.v1",
+ "set": "F2-rust",
+ "contract": "spec/universal/translation-compose-v1.md",
+ "profile": "spec/universal/rust-u64-v1.md",
+ "from": "tests/universal/translation/fixtures-f1.json",
+ "note": "Every F1 positive is expressible in rust-u64-wrapping-pure-v1; not_in_profile is empty. Refusals are new Rust-profile fixtures, not F1 refusals.",
+ "positives": [
+  {
+   "id": "F2-rust-F1-P00",
+   "f1_id": "F1-P00",
+   "f1_sha256": "250e3228f00b4c0cd60df70092f50106dce54f081cc77d4f3a24f7d2b5af8c4c",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b685de43eaeb694db52b110974283d469687f34452d47f49c2529d3cb507a051",
+   "source": "fn calc(a: u64, b: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-F1-P01",
+   "f1_id": "F1-P01",
+   "f1_sha256": "cc4a3ac6374b8c68eb99de6540e6896ef4c41aea9eb5fb5c1f0ae4be52662456",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b349af35563087f9a4e2508b61bb0dd6a82d96f5941ac13e748fdb20da2884e0",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { b }\n"
+  },
+  {
+   "id": "F2-rust-F1-P02",
+   "f1_id": "F1-P02",
+   "f1_sha256": "2ab81c70d64699c9afe59cda7d49edcb577e10a57e32f2402af6ad67a0632c3e",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b519c406a899996f0221e052803991e7393b20122337f50dd3502805afe47442",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(b) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P03",
+   "f1_id": "F1-P03",
+   "f1_sha256": "ce4e5d1d53ed51443e3b940939a21b8fff9bb35db202438920f398938c0f7fb6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "f79ecee05bfca06123725ece4d389d9c76d203f589d4947b956fa0f098356ef9",
+   "source": "fn calc(a: u64, b: u64) -> u64 { a.wrapping_sub(b) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P04",
+   "f1_id": "F1-P04",
+   "f1_sha256": "78db75440f5b5da2dafb59d0f771b696171c24d2698677f959e2ab430a2ebfd6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c4cb1f97bd0e0b84e7df9f84c1c404ab91f7b4ec55e7846443e61725257da8b7",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { u64::wrapping_mul(a, b) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P05",
+   "f1_id": "F1-P05",
+   "f1_sha256": "277232cc9416a0c4f06004c5b00dbaab33952fc411c7e42f505f324026ca1765",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "84db06c9c87ce272ba23432130d766df5f5430ae02b0a622ba606f1cae77dc9e",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { (a.wrapping_add(b)).wrapping_mul(a.wrapping_sub(b)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P06",
+   "f1_id": "F1-P06",
+   "f1_sha256": "4332e4105d4442afba0b586e9574f1f192d7ed740099228eae26ad15473a5099",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "fa8b158a44793735919838ffbc914835a08713901eaeb81fdc7792a453717ac1",
+   "source": "fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(0u64) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P07",
+   "f1_id": "F1-P07",
+   "f1_sha256": "7339bf648758434626305006d637470ca6d97399010515134dd4358940641451",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b50f65667d2b5ac1e960e21095ae637dbadcf5c01bd205eb4eb4974041c0f4a6",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_sub(1u64) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P08",
+   "f1_id": "F1-P08",
+   "f1_sha256": "9bb734b9718ebfbfac521731fa2bbd0ea59b201afc77ca385bcce151fa76a703",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "4447b915245bb31845e688801445b09ccab1b2063d4b3d98f6e528739aebc1d4",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_mul(2u64) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P09",
+   "f1_id": "F1-P09",
+   "f1_sha256": "9d409851a2558cf54315c84c4917ec67d1bee299ff7d371557d707416542b631",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "bf8f36cdda5f2ecadbbf8987a241069da8facaf385fdcddf5161fca8ad09968b",
+   "source": "fn calc(a: u64, b: u64) -> u64 { 0u64.wrapping_sub(a) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P10",
+   "f1_id": "F1-P10",
+   "f1_sha256": "aa0163f4a11aa259d38605ed3d26a56cbd80b381b32a9a20ffa10f82dbcd68ea",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "ba6f54c93e54c5df5fc4a1c720364b109167c5ffc49d7361b676a80c93f6aad3",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { 18446744073709551615u64.wrapping_add(a) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P11",
+   "f1_id": "F1-P11",
+   "f1_sha256": "83d8dadc4e596492af0bd7c79b865fd5c5cb6b8536370706f95efd5c59f261d5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "60dfed45688a08ef5e865c2f4bb648a4851e4b54e60010f9d391dea58ab435ed",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { u64::wrapping_add(u64::wrapping_mul(a, b), 3u64) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P12",
+   "f1_id": "F1-P12",
+   "f1_sha256": "a23775feb8d8822fc987bc087356a2dec17d4a85dd9a8fceb36606dac6e28572",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "18e8e77cb3bdea16d4541b3baf011a0c9ee521a9e46c546c982e3eabc1885a62",
+   "source": "fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(a).wrapping_add(b) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P13",
+   "f1_id": "F1-P13",
+   "f1_sha256": "23bc6a271dbba691f7a87f0f37e15ab125cecf8be229ab965777342266252ad2",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "5ed1320ee6ffc691ac2ca1eeafcfa730d318661729f0d41c0175ce4c94c929aa",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(a.wrapping_add(b)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P14",
+   "f1_id": "F1-P14",
+   "f1_sha256": "11c77e44f631b68afbf893f347a6e94498aae6213af99950deb03eea53f6da05",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "7e49f78825adeb1e7e188e8144b27efb3bf70fd7fd3e340e06b1fac512b96030",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_sub(b).wrapping_sub(b) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P15",
+   "f1_id": "F1-P15",
+   "f1_sha256": "c5f7c9fdc269761e8ad7a4a3fa9ed0a2a2ccd7115cd2721a503203c778a2da2f",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "2e100f78d2607bb9d6c0b8074d94c7c0adec498220b2cb56fbe825e52db15d6f",
+   "source": "fn calc(a: u64, b: u64) -> u64 { a.wrapping_sub(b.wrapping_sub(b)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P16",
+   "f1_id": "F1-P16",
+   "f1_sha256": "d17614f4cb5234a2234af049027f78f1f49a5f6f03d5f2e5c7c2b4b580f263c5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "887862614d2fc7777046e5bf50195d626e983b83fd903a5f8fbea7f13eba62c7",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_mul(b).wrapping_mul(a) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P17",
+   "f1_id": "F1-P17",
+   "f1_sha256": "a686cff8ae29e41a88bd4904c479806fec36f691e87d5732de68f59f319c694d",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "3539a1e5efe0475da05c74c8f1d793380cddf4f9b51d52716cd1f336baa44fe9",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_mul(b.wrapping_mul(a)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P18",
+   "f1_id": "F1-P18",
+   "f1_sha256": "262e9b705e8ba8c433e540f49209540cc7406bacb7e3b95c0b1cd5ad869af607",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "6d923e4b67da4618d4ab11e94275c383c1cb389db4826230284b8965c8f10160",
+   "source": "fn calc(a: u64, b: u64) -> u64 { 123u64 }\n"
+  },
+  {
+   "id": "F2-rust-F1-P19",
+   "f1_id": "F1-P19",
+   "f1_sha256": "0b7ae5fc5fcacdd7b3040571e1838c324ba755ab1e9ecf7ba363e4d05d118511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "0acb6d1a4eb64d032f96e1d653aa2c8eaf2971fd295fc225051f79c1efbe8dd6",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { ((a)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P20",
+   "f1_id": "F1-P20",
+   "f1_sha256": "e83ba5c9beccb2a5639359cbca57afd15b7a508aa86d912ce861d7b14b335d50",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "e70abd32cea7f72853d2f1c955ca6c7a080e5ee19b788c1e97799605e6fc1ab3",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { (a.wrapping_add(b)).wrapping_mul(b.wrapping_add(1u64)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P21",
+   "f1_id": "F1-P21",
+   "f1_sha256": "62ddab9112329da4fb6a45eb8ca1939e51c8bbfe0db85ba3784c4df0b078e757",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "aa2a24b4c3442bde2406c71e826d84faec5bc44ffa76f11f9b77f57e1480887b",
+   "source": "fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(b.wrapping_mul(2u64)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P22",
+   "f1_id": "F1-P22",
+   "f1_sha256": "f2472d246de322a108e5bc3098e7d7e359e7511b9ca07723c2560130ffc86656",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "bfa125cfdce91921995815bff7f73e430a3c07e628d328d8045a56dc85359be1",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { (a.wrapping_add(b)).wrapping_mul(2u64) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P23",
+   "f1_id": "F1-P23",
+   "f1_sha256": "6ac071f7821d7d29ca2e3961b90a89471e3f8f1a3150e06b1ab4642183ff6121",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "df9a7cabd30141df81253badcaf0ea50f806f3f0995658500efcf6c466a151ac",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_sub(2u64.wrapping_mul(b)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P24",
+   "f1_id": "F1-P24",
+   "f1_sha256": "f844f1cd780ee05f2e0218ce28afef6ae528d7d89c570253cdb8d82084784511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "dc072033aa2584514b64efd5b3ab356e2a88edf7278853c977478851246cd8d6",
+   "source": "fn calc(a: u64, b: u64) -> u64 { (a.wrapping_sub(2u64)).wrapping_mul(b) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P25",
+   "f1_id": "F1-P25",
+   "f1_sha256": "e446180a9b2462c5508e23bbd94371e2c0ee409a6b540a219a70026fe15fb568",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "0124b146c563f1a295a3372cf5bbad0995da957aabbc7b4c8170e973ea38bf96",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { u64::wrapping_add(a, u64::wrapping_mul(18446744073709551615u64, b)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P26",
+   "f1_id": "F1-P26",
+   "f1_sha256": "26762c67b1d44a63563289ecd4c80ee13655629a93ac95bc727a9d59d74eccf7",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "0df7d760f65ad50146e592ce724842acb2c6929bf6a3d215dfb7b98c3325d944",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { 2u64.wrapping_mul(3u64).wrapping_add(4u64) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P27",
+   "f1_id": "F1-P27",
+   "f1_sha256": "412ea121023c650878fc8e0dc12146e7dc9a083b3c9fde4adf813ace9baec525",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "103e3df3d8aaaa6f7dd3a11d338ccdb55e6da60155e3cf120ad5eb5fea962bb3",
+   "source": "fn calc(a: u64, b: u64) -> u64 { u64::wrapping_mul(2u64, u64::wrapping_add(3u64, 4u64)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P28",
+   "f1_id": "F1-P28",
+   "f1_sha256": "e8b386f48e1ae8e8d91a073518e0c792e7c54e1a9cca283b37662aa66f636392",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "0122327442e4549429c6cc0e81e5c04de5cc9b06f91058e6b9704e235b1f3954",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { u64::wrapping_add(a.wrapping_sub(b), a.wrapping_mul(b)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P29",
+   "f1_id": "F1-P29",
+   "f1_sha256": "5ccf53bf81d312f299d2b5e916447830417b61a1e1a696460d7121dabb941106",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "7bd14800d34ef70dc0a0ba1d02abcb98e56a7d0fdb62ebd731685325e6042237",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { (a.wrapping_add(a)).wrapping_mul(b.wrapping_add(b)) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P30",
+   "f1_id": "F1-P30",
+   "f1_sha256": "01332f15d4dc15b52bfb8f1ad9ee7c5eeb1e9cbeec229e1ebe790678b28d7963",
+   "name": "calc",
+   "inputs": 0,
+   "sha256": "ef8127c696758c03b728e134cc0136cbae2b82508351b5acbd1ae7ba710d7a72",
+   "source": "pub fn calc() -> u64 { 7u64 }\n"
+  },
+  {
+   "id": "F2-rust-F1-P31",
+   "f1_id": "F1-P31",
+   "f1_sha256": "255692046d239f102f700df892a5519525d7615e3cba14517be1f383e2aa5644",
+   "name": "calc",
+   "inputs": 1,
+   "sha256": "576b1fadee6f313027c6ea2979cbae1c8962190d68a7d436471d86c317d37683",
+   "source": "fn calc(x: u64) -> u64 { x }\n"
+  },
+  {
+   "id": "F2-rust-F1-P32",
+   "f1_id": "F1-P32",
+   "f1_sha256": "14daf8acaa708f00035d3d6dcc7bb5ce341a4f859cb9fc89517d6a5a6b18bf5b",
+   "name": "calc",
+   "inputs": 6,
+   "sha256": "56b519f18bb7991b6f4f4c2ffcbef0e7d80710a54ff449ee4491d6802f190121",
+   "source": "pub fn calc(a:u64,b:u64,c:u64,d:u64,e:u64,f:u64) -> u64 { a.wrapping_add(b).wrapping_add(c).wrapping_add(d).wrapping_add(e).wrapping_add(f) }\n"
+  },
+  {
+   "id": "F2-rust-F1-P33",
+   "f1_id": "F1-P33",
+   "f1_sha256": "48d398126ae85ad37b7fa9b96acd0d84a3bc980bed9c176843da4dc52ed4b6ef",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "6063228c423c3f43db6626de74f2818503275f0298ed593631c67502df46bdee",
+   "source": "/* α comment retained */\nfn calc(left:u64,right:u64)->u64 { /* keep */ left.wrapping_mul(right) }\r\n"
+  },
+  {
+   "id": "F2-rust-F1-P34",
+   "f1_id": "F1-P34",
+   "f1_sha256": "7c48737aa01323118ce87f9c95ed39edf11b554cd9fd9e8741b30fa548555dc6",
+   "name": "omega_fold",
+   "inputs": 2,
+   "sha256": "bf7bfe13143add24f254acc74000eb2238411fa1894b6b13ebc2a81b43687037",
+   "source": "pub fn omega_fold(a:u64,b:u64)->u64{a.wrapping_mul(b).wrapping_add(42u64)}\n"
+  }
+ ],
+ "not_in_profile": [],
+ "refusals": [
+  {
+   "id": "F2-rust-N000",
+   "name": "plain-add",
+   "status": 68,
+   "reason": "plain + panics in debug builds and wraps in release builds; refused, use wrapping_add",
+   "sha256": "f0d60a1c9409fb142878099738188c4682c91b50344dcddc20de5cef42a52fb6",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a + b }\n"
+  },
+  {
+   "id": "F2-rust-N001",
+   "name": "plain-sub",
+   "status": 68,
+   "reason": "plain - is build-mode dependent (debug overflow panic)",
+   "sha256": "9c79dda52c7b71758a1259b29dda832fb6c77612af5d9a8dad7e2d121770d9e8",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a - b }\n"
+  },
+  {
+   "id": "F2-rust-N002",
+   "name": "plain-mul",
+   "status": 68,
+   "reason": "plain * is build-mode dependent (debug overflow panic)",
+   "sha256": "fac95e944c808452200ac30e9f2dbbcda8607a2ee985b838ed808791333d007b",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a * b }\n"
+  },
+  {
+   "id": "F2-rust-N003",
+   "name": "plain-add-after-call",
+   "status": 68,
+   "reason": "plain + after a wrapping call",
+   "sha256": "2e173e2777ae8f216599e4fb539102f849ea51acc6f67fdc6a1a0bf569bafceb",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(b) + 1u64 }\n"
+  },
+  {
+   "id": "F2-rust-N004",
+   "name": "plain-add-in-arg",
+   "status": 68,
+   "reason": "plain + inside a call argument",
+   "sha256": "a20961a668d96fe3e9f8e5286ca9505d467082eff391937a08b96fe1f39d4faa",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(b + 1u64) }\n"
+  },
+  {
+   "id": "F2-rust-N005",
+   "name": "plain-add-in-parens",
+   "status": 68,
+   "reason": "plain + inside parentheses",
+   "sha256": "4f5f8fb4de7430b5527b93e0157c03bbc23e98af4288b6e957b37bf0adcf1ff5",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { (a + b) }\n"
+  },
+  {
+   "id": "F2-rust-N006",
+   "name": "compound-assign-form",
+   "status": 68,
+   "reason": "compound assignment operator",
+   "sha256": "5c4c2cf301ad317a38ec05bbcdaf5adcb5f1236db88eb912b00ce65832fea198",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a += b }\n"
+  },
+  {
+   "id": "F2-rust-N007",
+   "name": "div",
+   "status": 68,
+   "reason": "division is not in S1",
+   "sha256": "fca7b957130d75cb78af9149e3d1b9551f873cbb031c01752cf93a89f46fd3f7",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a / b }\n"
+  },
+  {
+   "id": "F2-rust-N008",
+   "name": "rem",
+   "status": 68,
+   "reason": "remainder is not in S1",
+   "sha256": "1a587207bfcd4dfee2680e52d1243d6da3522fb7d4d4fa3eb49d3f6d7c444a84",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a % b }\n"
+  },
+  {
+   "id": "F2-rust-N009",
+   "name": "shl",
+   "status": 68,
+   "reason": "shift is not in S1",
+   "sha256": "24900c52892dca8773b811364227087ae60d965ea178536a9f74d5cffd058669",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a << b }\n"
+  },
+  {
+   "id": "F2-rust-N010",
+   "name": "shr",
+   "status": 68,
+   "reason": "shift is not in S1",
+   "sha256": "20dfa80de7b4ac21cc6636cf767c40d7c172693ef959e5589def1c1cf01082b6",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a >> b }\n"
+  },
+  {
+   "id": "F2-rust-N011",
+   "name": "and",
+   "status": 68,
+   "reason": "bitwise and is not in S1",
+   "sha256": "f167cce690bfb521310d1331169f97aadd06096bc57b4de5b822c683b5a3cefa",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a & b }\n"
+  },
+  {
+   "id": "F2-rust-N012",
+   "name": "or",
+   "status": 68,
+   "reason": "bitwise or is not in S1",
+   "sha256": "6bc654eae5a52124e8d6a62df4efd2fb2cea3921fb184240c5857187bd1469a2",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a | b }\n"
+  },
+  {
+   "id": "F2-rust-N013",
+   "name": "xor",
+   "status": 68,
+   "reason": "bitwise xor is not in S1",
+   "sha256": "4e15b02d42c9f03d6fbfa23dc494f3e0c8494b12df0b34f65cc809e975ef9beb",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a ^ b }\n"
+  },
+  {
+   "id": "F2-rust-N014",
+   "name": "not",
+   "status": 68,
+   "reason": "bitwise not is not in S1",
+   "sha256": "b8f2a5f18fe8c63d721d766288d35749b72d2490625ac1ee9e7ffd3288ee198d",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { !a }\n"
+  },
+  {
+   "id": "F2-rust-N015",
+   "name": "neg",
+   "status": 68,
+   "reason": "unary minus",
+   "sha256": "820577cc431d4bc34c1e194a25c6dd8087b54246c7da45348227ac4dd7b9407b",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { -a }\n"
+  },
+  {
+   "id": "F2-rust-N016",
+   "name": "compare",
+   "status": 68,
+   "reason": "comparison",
+   "sha256": "e9b37902e9520a7fc14f837b4c6f0a5af17e85e01d3a539a6342b00e13e3ea1f",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a < b }\n"
+  },
+  {
+   "id": "F2-rust-N017",
+   "name": "cast",
+   "status": 68,
+   "reason": "as cast",
+   "sha256": "28c73e5f38aaf5795285ff26934effa1e7393e6a58e10705bb91c2c2cd31a2d5",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a as u64 }\n"
+  },
+  {
+   "id": "F2-rust-N018",
+   "name": "wrapping-div",
+   "status": 68,
+   "reason": "wrapping_div is not in S1",
+   "sha256": "07c21aa8bd67dcfe95fe3b7c78c9324e7553539086a53e5b668a8a20117812fa",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_div(b) }\n"
+  },
+  {
+   "id": "F2-rust-N019",
+   "name": "wrapping-neg",
+   "status": 68,
+   "reason": "wrapping_neg is not in S1",
+   "sha256": "be53c15060da062b5f9661b858ec2a768ad78af98d4fd4cb9607148a4c2d7c5e",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_neg() }\n"
+  },
+  {
+   "id": "F2-rust-N020",
+   "name": "wrapping-shl",
+   "status": 68,
+   "reason": "wrapping_shl is not in S1",
+   "sha256": "8e080c2a6b4a2407cffee5eb15a1cadcc8da39ae57d3b774226e77db92e2b5d0",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_shl(1u32) }\n"
+  },
+  {
+   "id": "F2-rust-N021",
+   "name": "checked-add",
+   "status": 68,
+   "reason": "checked_add is not in S1",
+   "sha256": "86d41f61a9c1bf9873e95a53c2503b06946ecb2f8589b8665f408ca58c5774da",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.checked_add(b).unwrap() }\n"
+  },
+  {
+   "id": "F2-rust-N022",
+   "name": "overflowing-add",
+   "status": 68,
+   "reason": "overflowing_add is not in S1",
+   "sha256": "06a0373b57a970f58a13b70164d49d0bc18d9df223cfcd131fbf9ccfd321539d",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.overflowing_add(b).0 }\n"
+  },
+  {
+   "id": "F2-rust-N023",
+   "name": "saturating-add",
+   "status": 68,
+   "reason": "saturating_add is not in S1",
+   "sha256": "191dc72b70001d01a1be237cbb0793cf0b0c2a97746e37779ec89f6f093abbd4",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.saturating_add(b) }\n"
+  },
+  {
+   "id": "F2-rust-N024",
+   "name": "pow",
+   "status": 68,
+   "reason": "pow is not in S1",
+   "sha256": "b92f6d758da05ebfbd2aebcfb9e4c9d6cbced147a6cbb3e739294fb901e47d7a",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.pow(2u32) }\n"
+  },
+  {
+   "id": "F2-rust-N025",
+   "name": "qualified-other",
+   "status": 68,
+   "reason": "associated item other than the three wrapping operations",
+   "sha256": "edf17cf747addea0a3ef23572bc59b766c19c278de722fb1dcc70d5639801f61",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { u64::MAX }\n"
+  },
+  {
+   "id": "F2-rust-N026",
+   "name": "unsuffixed-literal",
+   "status": 68,
+   "reason": "literal without the u64 suffix",
+   "sha256": "67aec0f5acf05218cf08fd11be266d4128314b4bc65de651c6533063b90949f5",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(1) }\n"
+  },
+  {
+   "id": "F2-rust-N027",
+   "name": "hex-literal",
+   "status": 68,
+   "reason": "hexadecimal literal",
+   "sha256": "453a19e39fb375814eeeafffccbcc362e3336da4c006002078cb9d98faeffd64",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(0x10u64) }\n"
+  },
+  {
+   "id": "F2-rust-N028",
+   "name": "octal-literal",
+   "status": 68,
+   "reason": "octal literal",
+   "sha256": "7e865640993054d24aea72d036f723406dd4995184d8490eb9b2e6d85a98221a",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(0o10u64) }\n"
+  },
+  {
+   "id": "F2-rust-N029",
+   "name": "binary-literal",
+   "status": 68,
+   "reason": "binary literal",
+   "sha256": "280b889a5f9b8342c0ea257fd01a512e2b7af3415bc63e8028403f14ee7106ff",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(0b10u64) }\n"
+  },
+  {
+   "id": "F2-rust-N030",
+   "name": "underscore-literal",
+   "status": 68,
+   "reason": "underscore digit separator",
+   "sha256": "cf66d0a104af794c4049e45276cbbb8903df2f260a3cf0948c2f6194e53b73b4",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(1_000u64) }\n"
+  },
+  {
+   "id": "F2-rust-N031",
+   "name": "underscore-suffix",
+   "status": 68,
+   "reason": "underscore before the suffix",
+   "sha256": "57903b5cff2a11c322aed4a48ddf6d58bf7a6f23a5c687f3a10d8c32c473b315",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(1_u64) }\n"
+  },
+  {
+   "id": "F2-rust-N032",
+   "name": "leading-zero",
+   "status": 68,
+   "reason": "leading zero (one spelling per value)",
+   "sha256": "3f8afa2c5d619f9df19348e7793aa609822e7fae90656c3ad563509942b98e3f",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(010u64) }\n"
+  },
+  {
+   "id": "F2-rust-N033",
+   "name": "double-zero",
+   "status": 68,
+   "reason": "leading zero",
+   "sha256": "fc78111127e0d37cb2ed3a46e4408db359d259bfdd4bbc3438ac20d2ff56c310",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(00u64) }\n"
+  },
+  {
+   "id": "F2-rust-N034",
+   "name": "u32-suffix",
+   "status": 68,
+   "reason": "u32 literal",
+   "sha256": "7ccd2c1d07b58f0aea5e936f7fa42b096d85226b1476b138fc7cd1856ecbc908",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(1u32) }\n"
+  },
+  {
+   "id": "F2-rust-N035",
+   "name": "i64-suffix",
+   "status": 68,
+   "reason": "i64 literal",
+   "sha256": "2d1d26aeb1a940f1d3381f362b929f78a842ba7296394075b0d90c6c2898db30",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(1i64) }\n"
+  },
+  {
+   "id": "F2-rust-N036",
+   "name": "usize-suffix",
+   "status": 68,
+   "reason": "usize literal",
+   "sha256": "e533f370648f0cee930574d9454b0a81888d120567da1fe3241741a407cabd67",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(1usize) }\n"
+  },
+  {
+   "id": "F2-rust-N037",
+   "name": "long-suffix",
+   "status": 68,
+   "reason": "suffix continues past u64",
+   "sha256": "11034b9f7123a02dea2576ab95e33a1590d1a38f74846ca3f5c3f914e26973a1",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(1u64x) }\n"
+  },
+  {
+   "id": "F2-rust-N038",
+   "name": "float-literal",
+   "status": 68,
+   "reason": "float literal",
+   "sha256": "a021bcdf3226b9ad8594fe1fa6a9b91114de6cc1c474f9d82b947650c5b75160",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(1.0) }\n"
+  },
+  {
+   "id": "F2-rust-N039",
+   "name": "literal-overflow",
+   "status": 67,
+   "reason": "literal above u64::MAX",
+   "sha256": "2eca9808cfa364c21fff1183e9bab9a7bd4612af648fea83121c4a37faa5a66e",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { 18446744073709551616u64 }\n"
+  },
+  {
+   "id": "F2-rust-N040",
+   "name": "seven-params",
+   "status": 67,
+   "reason": "more than six parameters",
+   "sha256": "afdc5b281c7f3d3f5c90547bcbb44b272a8a14ba281f98c15c3b48145b3d34be",
+   "source": "pub fn calc(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64, g: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N041",
+   "name": "unsafe-fn",
+   "status": 69,
+   "reason": "unsafe",
+   "sha256": "34dc4b6eb1e5abf9d9fbf735bb89501a2d81770438a9a8f3e1ab3711088f0f4d",
+   "source": "pub unsafe fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N042",
+   "name": "unsafe-block",
+   "status": 69,
+   "reason": "unsafe block",
+   "sha256": "92c6639b0be4eee865242398b600892b7ddb72d8bc78b99f8d84457bae7bc916",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { unsafe { a } }\n"
+  },
+  {
+   "id": "F2-rust-N043",
+   "name": "attribute",
+   "status": 69,
+   "reason": "attribute",
+   "sha256": "9b819d99f0d2f8befce5dee2f60ff9c65651657dfbf704f4f256e56cc3b44fc3",
+   "source": "#[inline]\npub fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N044",
+   "name": "inner-attribute",
+   "status": 69,
+   "reason": "inner attribute",
+   "sha256": "8237f91315fd07cb3fad68e94b91c6a8e87fb5b8c422898cd87df059c7af2b77",
+   "source": "#![no_std]\npub fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N045",
+   "name": "generics",
+   "status": 69,
+   "reason": "generic parameters",
+   "sha256": "0735e4e3a942e25c71a530e1111b02ad09d4bcfcaf23f08543d5fb4e76672d0f",
+   "source": "pub fn calc<T>(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N046",
+   "name": "where-clause",
+   "status": 69,
+   "reason": "where clause",
+   "sha256": "92371bc0077dc4002766b89a5a5163ea35d0ae06f3b6279893f084a82b5ccf91",
+   "source": "pub fn calc(a: u64) -> u64 where u64: Copy { a }\n"
+  },
+  {
+   "id": "F2-rust-N047",
+   "name": "const-fn",
+   "status": 69,
+   "reason": "const fn",
+   "sha256": "e7096942f368c7d97bc39cf671d8107073df60e1e417ddc4a7fb2b86bcd3dd1c",
+   "source": "pub const fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N048",
+   "name": "extern-fn",
+   "status": 69,
+   "reason": "extern ABI",
+   "sha256": "95b4e592be71a33d9ddf5405102f63a61fa0b1322add358b6e4a9f1ee6db1b9f",
+   "source": "pub extern \"C\" fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N049",
+   "name": "async-fn",
+   "status": 69,
+   "reason": "async fn",
+   "sha256": "8d1822ccd7dad0fd36c1c4c7dd807ebfd881f92b584a5d84cb9a0bf756d7649f",
+   "source": "pub async fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N050",
+   "name": "pub-crate",
+   "status": 69,
+   "reason": "restricted visibility",
+   "sha256": "9bdcc82dbbc380a7f244cb0c0e49aa966c867d1867a76c1d7754bad85717078c",
+   "source": "pub(crate) fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N051",
+   "name": "let",
+   "status": 69,
+   "reason": "let statement",
+   "sha256": "090fb19f34d3b5054f0e840f8a3315b7e93bada1c9ea547397919a07cf9c572d",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { let x = a; x }\n"
+  },
+  {
+   "id": "F2-rust-N052",
+   "name": "return-tail",
+   "status": 69,
+   "reason": "return: the body is exactly one tail expression",
+   "sha256": "40aa1eaeea48cde175192f82fa7e0d940d20d9677ab165997b40fca2a6b082e3",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { return a; }\n"
+  },
+  {
+   "id": "F2-rust-N053",
+   "name": "return-expr",
+   "status": 69,
+   "reason": "return expression",
+   "sha256": "b5d57fdc761f95f1c17ea4eb37dff2768fc30a40d5896aad8b18af0075676bfc",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { return a }\n"
+  },
+  {
+   "id": "F2-rust-N054",
+   "name": "statement",
+   "status": 69,
+   "reason": "statement instead of tail expression",
+   "sha256": "d1c6a11eba45e9974eee3e04b11ccec10825947bc33a580b8de9bbca569ee686",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a; }\n"
+  },
+  {
+   "id": "F2-rust-N055",
+   "name": "nested-fn",
+   "status": 69,
+   "reason": "nested fn item",
+   "sha256": "8cbc96aa81a129546bb1f3dc6f6c6f43a528cba0c7c62e85acbfc9822fb452f3",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { fn g() -> u64 { 1u64 } a }\n"
+  },
+  {
+   "id": "F2-rust-N056",
+   "name": "use",
+   "status": 69,
+   "reason": "use declaration",
+   "sha256": "04834cb01bd93a4e78c23304f255b9e276dfedc3c9d221234e466ed7e70397c9",
+   "source": "use std::num::Wrapping;\npub fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N057",
+   "name": "macro",
+   "status": 69,
+   "reason": "macro invocation",
+   "sha256": "65c2b0ca60ec5bcb4c99eb760d9504bbbfba1c789ef01d5a92445084e645fdb6",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { println!(\"x\") }\n"
+  },
+  {
+   "id": "F2-rust-N058",
+   "name": "param-macro",
+   "status": 69,
+   "reason": "macro-like invocation after parameter",
+   "sha256": "768ae8656663e5ed129dff138083fc2800d6adcf0b4a07142518125cbde649f6",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a!() }\n"
+  },
+  {
+   "id": "F2-rust-N059",
+   "name": "if",
+   "status": 69,
+   "reason": "control flow",
+   "sha256": "b99048c289e0f5e61e8011aa05fd2dc77b7f9dff9d0416c4a771536fbb6c446c",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { if a == b { a } else { b } }\n"
+  },
+  {
+   "id": "F2-rust-N060",
+   "name": "loop",
+   "status": 69,
+   "reason": "control flow",
+   "sha256": "9d6d86bf2b1befc7cc57fb11d5b9a148f2e7bd2743617978692bb1bcb892e8ff",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { loop { } }\n"
+  },
+  {
+   "id": "F2-rust-N061",
+   "name": "block-expr",
+   "status": 69,
+   "reason": "nested block expression",
+   "sha256": "155302e2d05eb9ac99eb6c07b62188f5e492a2639a4b0b85dce4e6fe62ea0409",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { { a } }\n"
+  },
+  {
+   "id": "F2-rust-N062",
+   "name": "turbofish",
+   "status": 69,
+   "reason": "turbofish",
+   "sha256": "3decb787e8bd9c1947e93e36f9e656fbe770bf7e243e3d54cf5fdf2be8fef1ed",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add::<u64>(b) }\n"
+  },
+  {
+   "id": "F2-rust-N063",
+   "name": "field",
+   "status": 69,
+   "reason": "method path without call",
+   "sha256": "fc8d7364d840d3eed0156e0aec76fbd7dd4a2767280017ad600e4b7c34af80bc",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add }\n"
+  },
+  {
+   "id": "F2-rust-N064",
+   "name": "qualified-turbofish",
+   "status": 69,
+   "reason": "turbofish",
+   "sha256": "5cd15c8fc708f51be2a87ed0b4e7735b152f0f85e66ce0461f590fefdea6b058",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { u64::wrapping_add::<>(a, b) }\n"
+  },
+  {
+   "id": "F2-rust-N065",
+   "name": "angle-qualified",
+   "status": 69,
+   "reason": "qualified path syntax",
+   "sha256": "a240caa2f4af1d58486d5d8d56a9e5ebe8e9836bcf6abb026ed13ca133572428",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { <u64>::wrapping_add(a, b) }\n"
+  },
+  {
+   "id": "F2-rust-N066",
+   "name": "second-item",
+   "status": 69,
+   "reason": "additional item",
+   "sha256": "ef14816358f392f440940a64a0ba541631d98faf62bd682bcdf84bdafc623b31",
+   "source": "pub fn calc(a: u64) -> u64 { a }\nfn main() {}\n"
+  },
+  {
+   "id": "F2-rust-N067",
+   "name": "non-ascii-identifier",
+   "status": 69,
+   "reason": "non-ASCII outside comments",
+   "sha256": "918424c605a25982a594bf54a662c4d968c64452022302b5eeaf4141bfdfb2a3",
+   "source": "pub fn calc(é: u64) -> u64 { é }\n"
+  },
+  {
+   "id": "F2-rust-N068",
+   "name": "closure",
+   "status": 69,
+   "reason": "closure",
+   "sha256": "83ac7b429293e4cbfed325fccfdfe4a327ab4433ca187076005d9f179a4189b2",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { |x| x }\n"
+  },
+  {
+   "id": "F2-rust-N069",
+   "name": "reference-param",
+   "status": 69,
+   "reason": "reference",
+   "sha256": "5f9f13beb92feb6c876d2855d7a970ee3cddc27e1da2f88e35b9aea921d529a4",
+   "source": "pub fn calc(a: u64) -> u64 { &a }\n"
+  },
+  {
+   "id": "F2-rust-N070",
+   "name": "tuple-pattern",
+   "status": 69,
+   "reason": "pattern parameter",
+   "sha256": "9ba6d5afd74e9d0c39a6af93ff711783731d83dc8caaa4fa69722f3db7885d25",
+   "source": "pub fn calc((a, b): (u64, u64)) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N071",
+   "name": "i64-param",
+   "status": 66,
+   "reason": "i64",
+   "sha256": "aef9630e482bc9dbf98ceedf16d6032929a93e618c76b0878928b736bda4307c",
+   "source": "pub fn calc(a: i64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N072",
+   "name": "usize-param",
+   "status": 66,
+   "reason": "usize",
+   "sha256": "9ddbcfda37f152d85f84f76481681c05ef032fcc0e7ca217f94e48ddfa307172",
+   "source": "pub fn calc(a: usize) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N073",
+   "name": "i64-return",
+   "status": 66,
+   "reason": "i64 return",
+   "sha256": "975a67aa86dcfa87b7958927d169a7f854f98911a2828c4bd6137512bcc1da60",
+   "source": "pub fn calc(a: u64) -> i64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N074",
+   "name": "wrapping-type",
+   "status": 66,
+   "reason": "Wrapping<u64>",
+   "sha256": "1fcc695756bc0a1a5a9537b3a33d0318ad41ea6a2da379d71b59f17f20a1799d",
+   "source": "pub fn calc(a: Wrapping<u64>) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N075",
+   "name": "ref-type",
+   "status": 66,
+   "reason": "reference type",
+   "sha256": "2832c978acb5d7f8c097dfdd8a53f539679d74bb9353ffe4f644c06f8d70fa17",
+   "source": "pub fn calc(a: &u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N076",
+   "name": "i64-qualified",
+   "status": 66,
+   "reason": "i64 path in body",
+   "sha256": "6190c7c0d7b2ccec5512a297abaf75a8d0a72db62224f39f159480198fd16a8c",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { i64::wrapping_add(a, b) }\n"
+  },
+  {
+   "id": "F2-rust-N077",
+   "name": "usize-qualified",
+   "status": 66,
+   "reason": "usize path in body",
+   "sha256": "7e9302838642886885a79dfb9d06747e97f05f4310f4b7d866b5ffa653f9c0aa",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { usize::wrapping_add(a, b) }\n"
+  },
+  {
+   "id": "F2-rust-N078",
+   "name": "unknown-input",
+   "status": 70,
+   "reason": "undeclared identifier",
+   "sha256": "f033096f3cfbf71e6d436afe9f7f9ead2321a24f4dd292eeab9bdb3b2548cc98",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { c }\n"
+  },
+  {
+   "id": "F2-rust-N079",
+   "name": "unknown-path",
+   "status": 70,
+   "reason": "undeclared path root",
+   "sha256": "cd24ff4f49dd870130f1742e9bff488c788f7b4b94120936de41c6e5e199bde2",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { std::u64::MAX }\n"
+  },
+  {
+   "id": "F2-rust-N080",
+   "name": "no-return-type",
+   "status": 71,
+   "reason": "missing -> u64",
+   "sha256": "f3c7a3764fc72bd97d3a6761f1be2376a0c3eb845886bf5250b09101bdcd39f8",
+   "source": "pub fn calc(a: u64) { a }\n"
+  },
+  {
+   "id": "F2-rust-N081",
+   "name": "other-name",
+   "status": 71,
+   "reason": "entry name is calc or omega_*",
+   "sha256": "4a01447be39aac7ca2e0eb39dc530da30ad05581447321dec569d47ac6ba623c",
+   "source": "pub fn foo(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N082",
+   "name": "main-name",
+   "status": 71,
+   "reason": "main reserved",
+   "sha256": "d978e3355fa5282797a26b9b0e0400d73c57ebd87fd98a3bd1df2cf030d4ca79",
+   "source": "pub fn main() -> u64 { 1u64 }\n"
+  },
+  {
+   "id": "F2-rust-N083",
+   "name": "omega-bare",
+   "status": 71,
+   "reason": "omega_ needs a following character",
+   "sha256": "edd3d069a8fea2b736985753ae4f772fd9ef255cd2486c05293e64a8ba5e0ce7",
+   "source": "pub fn omega_() -> u64 { 1u64 }\n"
+  },
+  {
+   "id": "F2-rust-N084",
+   "name": "uppercase-name",
+   "status": 71,
+   "reason": "names start lowercase",
+   "sha256": "f59812341cbbe9fa3aed5fafe4324b1615a0ffe13ed17c5bef25f8e685848b12",
+   "source": "pub fn Calc() -> u64 { 1u64 }\n"
+  },
+  {
+   "id": "F2-rust-N085",
+   "name": "mut-param",
+   "status": 71,
+   "reason": "mut binding",
+   "sha256": "4b83154f14f8bc47d60f4ac3678faddd53ceae71a922a2f35fff554ce4d1c8a1",
+   "source": "pub fn calc(mut a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N086",
+   "name": "duplicate-param",
+   "status": 71,
+   "reason": "duplicate parameter",
+   "sha256": "468c52fc5885265df6c2af3c42e69b98af7d96ac59cbc4a90e183fb7059cafad",
+   "source": "pub fn calc(a: u64, a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N087",
+   "name": "keyword-param",
+   "status": 71,
+   "reason": "keyword as parameter",
+   "sha256": "b170dcb7a01c9bc4a3e3873bb8817909d85d23aec3a4b0a9bca049dcbb8c2aeb",
+   "source": "pub fn calc(self) -> u64 { 1u64 }\n"
+  },
+  {
+   "id": "F2-rust-N088",
+   "name": "prim-param",
+   "status": 71,
+   "reason": "primitive type name as parameter",
+   "sha256": "89dc80e6c06d51a0ab344d94f3b49bf615ef7d9ef30c9820f44affe0fbfddde2",
+   "source": "pub fn calc(u8: u64) -> u64 { u8 }\n"
+  },
+  {
+   "id": "F2-rust-N089",
+   "name": "long-identifier",
+   "status": 71,
+   "reason": "identifier longer than 32 bytes",
+   "sha256": "ebf563744f561375e33106dccf41343a94c564c2cb40956d4b92695e786488f4",
+   "source": "pub fn calc(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: u64) -> u64 { 1u64 }\n"
+  },
+  {
+   "id": "F2-rust-N090",
+   "name": "trailing-comma-call",
+   "status": 65,
+   "reason": "trailing comma in call (one spelling)",
+   "sha256": "45887adfc8ce30db375246a9e5389c2d896930f4770bc5cb8e1534021f443a5b",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(b,) }\n"
+  },
+  {
+   "id": "F2-rust-N091",
+   "name": "trailing-comma-param",
+   "status": 65,
+   "reason": "trailing comma in parameters",
+   "sha256": "de2f292ddefa4d3309b19dc3945f81c66a7f742c124a4b1a6bab6e8edcc7eb1e",
+   "source": "pub fn calc(a: u64, b: u64,) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N092",
+   "name": "extra-arg",
+   "status": 65,
+   "reason": "two arguments to a method",
+   "sha256": "c04469a8a4c90304d4c3c1c8c777878bb1eff67ce93bae46cd7b6dfbe3cfe2af",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { a.wrapping_add(b, a) }\n"
+  },
+  {
+   "id": "F2-rust-N093",
+   "name": "qualified-one-arg",
+   "status": 65,
+   "reason": "one argument to the qualified form",
+   "sha256": "11d48782870b5cc4365f59661dc823e486e29928d0686ada8980a6ebfe9c4779",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { u64::wrapping_add(a) }\n"
+  },
+  {
+   "id": "F2-rust-N094",
+   "name": "empty-body",
+   "status": 65,
+   "reason": "no tail expression",
+   "sha256": "0a82ed691b5633585b3c50633a4199b2145e4dd5be376f08ffa6fb83473827fd",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 {  }\n"
+  },
+  {
+   "id": "F2-rust-N095",
+   "name": "spaced-path",
+   "status": 69,
+   "reason": "path separator must be one token",
+   "sha256": "9cc7cb7b00d533ab8dd0d4f055c2d1c895ad924323456e8780f63971ce32f62c",
+   "source": "pub fn calc(a: u64, b: u64) -> u64 { u64: :wrapping_add(a, b) }\n"
+  },
+  {
+   "id": "F2-rust-N096",
+   "name": "unterminated-comment",
+   "status": 65,
+   "reason": "unterminated block comment",
+   "sha256": "d9ba697e840bd87bd57e52749e7271d551147803f47b97b2af1e4de65990cf25",
+   "source": "pub fn calc(a: u64) -> u64 { a } /* open"
+  },
+  {
+   "id": "F2-rust-N097",
+   "name": "unterminated-nested-comment",
+   "status": 65,
+   "reason": "Rust block comments nest",
+   "sha256": "ef3f8846080691429b6a06a25c16d913be7db7b324a154779973fe4713b27e40",
+   "source": "pub fn calc(a: u64) -> u64 { a } /* x /* y */"
+  },
+  {
+   "id": "F2-rust-N098",
+   "name": "nul",
+   "status": 65,
+   "reason": "NUL byte",
+   "sha256": "fb113c1d997f4f63fcf52e23723cd334736325be8e77ced3bff024b0c8ad9e98",
+   "source_hex": "70756220666e2063616c6328613a2075363429202d3e20753634207b2061207d00"
+  },
+  {
+   "id": "F2-rust-N099",
+   "name": "doc-line",
+   "status": 72,
+   "reason": "doc comment (attribute sugar)",
+   "sha256": "e187210777cb8c27bef2b3f2776f1f6fa6fc00a474fa6ee5ba7f2b3992af943f",
+   "source": "/// doc\npub fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N100",
+   "name": "doc-inner-line",
+   "status": 72,
+   "reason": "inner doc comment",
+   "sha256": "2b607b43b31e30094d4ddc2a49d13470720f87fdacc1d6dd7e5317ae4ab9889a",
+   "source": "//! doc\npub fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N101",
+   "name": "doc-block",
+   "status": 72,
+   "reason": "block doc comment",
+   "sha256": "6e737d65364e495665d97e685d8cdacb9137bd26ace411b12f15a10b0ea69246",
+   "source": "/** doc */\npub fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N102",
+   "name": "doc-inner-block",
+   "status": 72,
+   "reason": "inner block doc comment",
+   "sha256": "dbe23cd2b5fba13ff6603217e759bbeefeae6fcf2187aea8949c55ec1e770445",
+   "source": "/*! doc */\npub fn calc(a: u64) -> u64 { a }\n"
+  },
+  {
+   "id": "F2-rust-N103",
+   "name": "invalid-utf8",
+   "status": 72,
+   "reason": "invalid UTF-8",
+   "sha256": "8c45e4abf00ba7a63f16aaf790682d98d9a82ed9dd9ca1d5331e3a42b53cde9d",
+   "source_hex": "70756220666e2063616c6328613a2075363429202d3e20753634207b2061207d202f2a20ff202a2f0a"
+  },
+  {
+   "id": "F2-rust-N104",
+   "name": "overlong-utf8",
+   "status": 72,
+   "reason": "overlong UTF-8",
+   "sha256": "8c2572db31222fff81e70f7845f0a6ae45f20ba90fbe2f7476f53799932cbaf9",
+   "source_hex": "70756220666e2063616c6328613a2075363429202d3e20753634207b2061207d202f2f20c0af0a"
+  },
+  {
+   "id": "F2-rust-N105",
+   "name": "surrogate-utf8",
+   "status": 72,
+   "reason": "UTF-16 surrogate in UTF-8",
+   "sha256": "0e7f08d1c3a40a2759c487a728791566ee6c8320b46da15e49ce33e01bb26cdb",
+   "source_hex": "70756220666e2063616c6328613a2075363429202d3e20753634207b2061207d202f2f20eda0800a"
+  },
+  {
+   "id": "F2-rust-N106",
+   "name": "above-max-utf8",
+   "status": 72,
+   "reason": "above U+10FFFF",
+   "sha256": "152eb6e918eae643c658c6ba73ecde8507b43653fe18f50fdb7d8ba9825e908b",
+   "source_hex": "70756220666e2063616c6328613a2075363429202d3e20753634207b2061207d202f2f20f49080800a"
+  },
+  {
+   "id": "F2-rust-N107",
+   "name": "truncated-utf8",
+   "status": 72,
+   "reason": "truncated UTF-8",
+   "sha256": "5341f41acf138a7152dcc26273893e7fdc1e2b613d17e6b53af0dce4414668b4",
+   "source_hex": "70756220666e2063616c6328613a2075363429202d3e20753634207b2061207d202f2f20e282"
+  },
+  {
+   "id": "F2-rust-N108",
+   "name": "bom",
+   "status": 72,
+   "reason": "byte-order mark",
+   "sha256": "7c709b57c95440585d9afabd2d18cb5975eea242a10156d35f97e6043db21eeb",
+   "source": "﻿pub fn calc(a: u64) -> u64 { a }\n"
+  }
+ ]
+}
