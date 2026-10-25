@@ -37,7 +37,32 @@ out = new qty ulong 17 ulong 19
 a = new qty ulong 18446744073709551615 ulong 18446744073709551615
 b = new qty ulong 2 ulong 18446744073709551615
 rc = qmul out a b
-ret qcheck out rc int 3 ulong 17 ulong 19
+if not qcheck out rc int 3 ulong 17 ulong 19
+ret bool 0
+end
+put a val ulong 4294967296
+put b val ulong 4294967296
+rc = qmul out a b
+if not qcheck out rc int 3 ulong 17 ulong 19
+ret bool 0
+end
+put a val ulong 4294967297
+put b val ulong 4294967297
+rc = qmul out a b
+if not qcheck out rc int 3 ulong 17 ulong 19
+ret bool 0
+end
+put a val ulong 4294967295
+put b val ulong 4294967295
+rc = qmul out a b
+if not qcheck out rc int 0 ulong 18446744065119617025 ulong 18446744073709551615
+ret bool 0
+end
+qsent out
+put a val ulong 0
+put b val ulong 18446744073709551615
+rc = qmul out a b
+ret qcheck out rc int 0 ulong 0 ulong 18446744073709551615
 end
 
 fn edges to bool

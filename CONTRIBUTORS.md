@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| OpenAI GPT-6 Astra | SC1-Q checked quantities, object-bound slices, exhaustive arithmetic fixtures, compiled negative controls and native evidence (#756/#673) |
 | Codex | Handwritten bounded PD0 stream primitive and binary consumer in Omega, native tests, and host-reference/source review (native execution NOT_RUN) |
 | Codex | Current .om front-page status and source-backed C migration inventory |
 | Codex | BUILD receipt cleanliness enforcement and optional diagnostic pointer regression fixes |
