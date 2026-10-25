@@ -1,0 +1,444 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten S1 upper-to-C17 exporter (translation-v1 section 6). No C compiler, parser or host fallback.
+note Prepended unchanged at build: src/source-aware/vendor/sha256.om and src/source-aware/core.om (decode n).
+note Input frame: one byte name length L (0 = calc), L name bytes, then one OMSB envelope to EOF.
+note Output is generated from the OMSA operation records only; the OMSP sidecar is validated, never read for output.
+global Xn uchar 1
+global Xnm uchar 32
+global Xone uchar 1
+global Xo uchar 4096
+global Xl ulong 1
+global Xni ulong 1
+global Xpr ulong 64
+global Xln ulong 64
+global Xdp ulong 64
+global Xcn ulong 64
+text Xcalc "calc"
+text Xomg "omega_"
+text Xhead "#include <stdint.h>\nuint64_t "
+text Xpar "uint64_t i"
+text Xvoid "void"
+text Xret ") { return "
+text Xtail "; }\n"
+text XBad "C_EXPORT_BAD_COMMAND\n"
+text XMal "C_EXPORT_MALFORMED\n"
+text XLim "C_EXPORT_LIMIT\n"
+text XProf "C_EXPORT_PROFILE_MISMATCH\n"
+text XIO "C_EXPORT_IO\n"
+
+fn xdie code ulong to void
+if eq code 64
+w = write 2 XBad 0 len XBad
+end
+if eq code 65
+w = write 2 XMal 0 len XMal
+end
+if eq code 67
+w = write 2 XLim 0 len XLim
+end
+if eq code 68
+w = write 2 XProf 0 len XProf
+end
+if eq code 77
+w = write 2 XIO 0 len XIO
+end
+exit int code
+end
+
+fn xbyte c ulong to void
+put Xo get Xl 0 uchar c
+put Xl 0 add get Xl 0 1
+end
+
+fn xdigits v ulong to ulong
+d = ulong 1
+x = div v 10
+while gt x 0
+d = add d 1
+x = div x 10
+end
+ret d
+end
+
+fn xdec v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+while gt i 0
+i = sub i 1
+xbyte ulong get d i
+end
+end
+
+fn xidc c ulong to bool
+if and ge c 48 le c 57
+ret true
+end
+if and ge c 65 le c 90
+ret true
+end
+if and ge c 97 le c 122
+ret true
+end
+ret eq c 95
+end
+
+fn xnameok to bool
+n = ulong get Xn 0
+if eq n 0
+ret true
+end
+if eq n 4
+for i ulong 4
+if ne get Xnm i get Xcalc i
+ret false
+end
+end
+ret true
+end
+if lt n 7
+ret false
+end
+for i ulong 6
+if ne get Xnm i get Xomg i
+ret false
+end
+end
+for j ulong n
+if not xidc ulong get Xnm j
+ret false
+end
+end
+ret true
+end
+
+fn xkind i ulong to ulong
+c = get Oc i
+if or ne get Ot i 1 ne get Oef i 0
+ret 68
+end
+if ne get Oal i 0
+ret 68
+end
+if eq c 9
+if or ne get Oat i 0 ne get Oob i 1
+ret 68
+end
+put Xni 0 add get Xni 0 1
+ret 0
+end
+if eq c 1
+if or ne get Oat i 1 ne get Oob i 0
+ret 68
+end
+ret 0
+end
+if or lt c 2 gt c 4
+ret 68
+end
+if or ne get Oat i 1 ne get Oob i 1
+ret 68
+end
+ret 0
+end
+
+fn xs1 to ulong
+if or ne get M 0 1 ne get M 1 1
+ret 68
+end
+if or ne get M 2 0 ne get M 3 1
+ret 68
+end
+put Xni 0 0
+for i ulong get M 4
+if ne xkind i 0
+ret 68
+end
+end
+for j ulong get M 4
+if eq get Oc j 9
+if ge get Oi j get Xni 0
+ret 68
+end
+end
+end
+ret 0
+end
+
+fn xpa k ulong to ulong
+if lt get Xpr get Oa k get Xpr k
+ret 1
+end
+ret 0
+end
+
+fn xpb k ulong to ulong
+if le get Xpr get Ob k get Xpr k
+ret 1
+end
+ret 0
+end
+
+fn xsat v ulong to ulong
+if gt v 1048576
+ret 1048576
+end
+ret v
+end
+
+fn xmetric k ulong to void
+c = get Oc k
+put Xdp k 0
+if eq c 9
+put Xpr k 3
+put Xln k 2
+put Xcn k 0
+ret
+end
+if eq c 1
+put Xpr k 3
+put Xln k add xdigits get Oi k 3
+put Xcn k 1
+ret
+end
+put Xpr k 1
+if eq c 4
+put Xpr k 2
+end
+a = get Oa k
+b = get Ob k
+pa = xpa k
+pb = xpb k
+l = add get Xln a get Xln b
+l = add l add 3 mul 2 add pa pb
+put Xln k xsat l
+da = add get Xdp a pa
+db = add get Xdp b pb
+if gt da db
+put Xdp k da
+else
+put Xdp k db
+end
+put Xcn k xsat add add get Xcn a get Xcn b 1
+end
+
+fn xemit k ulong to void
+c = get Oc k
+if eq c 9
+xbyte 105
+xbyte add 48 get Oi k
+ret
+end
+if eq c 1
+xdec get Oi k
+xbyte 85
+xbyte 76
+xbyte 76
+ret
+end
+pa = xpa k
+pb = xpb k
+if eq pa 1
+xbyte 40
+end
+xemit get Oa k
+if eq pa 1
+xbyte 41
+end
+xbyte 32
+if eq c 2
+xbyte 43
+end
+if eq c 3
+xbyte 45
+end
+if eq c 4
+xbyte 42
+end
+xbyte 32
+if eq pb 1
+xbyte 40
+end
+xemit get Ob k
+if eq pb 1
+xbyte 41
+end
+end
+
+fn xroot to ulong
+n = get M 4
+if lt n 3
+ret sub n 1
+end
+z = sub n 2
+y = sub n 1
+if or ne get Oc z 1 ne get Oi z 0
+ret y
+end
+if or ne get Oc y 2 ne get Ob y z
+ret y
+end
+if ge get Oa y z
+ret y
+end
+ret get Oa y
+end
+
+fn xparams to ulong
+ni = get Xni 0
+if eq ni 0
+ret len Xvoid
+end
+ret sub add mul ni len Xpar mul ni 3 2
+end
+
+fn xsignature to void
+for i ulong len Xhead
+xbyte ulong get Xhead i
+end
+if eq ulong get Xn 0 0
+for j ulong len Xcalc
+xbyte ulong get Xcalc j
+end
+else
+for j ulong ulong get Xn 0
+xbyte ulong get Xnm j
+end
+end
+xbyte 40
+if eq get Xni 0 0
+for k ulong len Xvoid
+xbyte ulong get Xvoid k
+end
+end
+for s ulong get Xni 0
+if gt s 0
+xbyte 44
+xbyte 32
+end
+for t ulong len Xpar
+xbyte ulong get Xpar t
+end
+xbyte add 48 s
+end
+for u ulong len Xret
+xbyte ulong get Xret u
+end
+end
+
+fn xreadname to void
+r = read 0 Xn 0 1
+if lt r 0
+xdie 77
+end
+if eq r 0
+xdie 64
+end
+n = ulong get Xn 0
+if gt n 32
+xdie 64
+end
+got = ulong 0
+while lt got n
+r = read 0 Xnm got sub n got
+if lt r 0
+xdie 77
+end
+if eq r 0
+xdie 64
+end
+got = add got ulong r
+end
+if not xnameok
+xdie 64
+end
+end
+
+fn xreadunit to ulong
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub ulong 8192 n
+if lt r 0
+xdie 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+if eq n 8192
+r = read 0 Xone 0 1
+if lt r 0
+xdie 77
+end
+if gt r 0
+xdie 65
+end
+end
+ret n
+end
+
+fn main to int
+constants
+xreadname
+n = xreadunit
+code = decode n
+if eq code 68
+xdie 68
+end
+if ne code 0
+xdie 65
+end
+if ne xs1 0
+xdie 68
+end
+for k ulong get M 4
+xmetric k
+end
+root = xroot
+total = add add len Xhead len Xret len Xtail
+total = add total add xparams 1
+if eq ulong get Xn 0 0
+total = add total len Xcalc
+else
+total = add total ulong get Xn 0
+end
+total = add total get Xln root
+if gt total 4096
+xdie 67
+end
+if gt get Xdp root 16
+xdie 67
+end
+if gt add add get Xni 0 get Xcn root 2 64
+xdie 67
+end
+put Xl 0 0
+xsignature
+xemit root
+for i ulong len Xtail
+xbyte ulong get Xtail i
+end
+if ne get Xl 0 total
+xdie 65
+end
+sent = ulong 0
+while lt sent total
+r = write 1 Xo sent sub total sent
+if le r 0
+xdie 77
+end
+sent = add sent ulong r
+end
+ret 0
+end
