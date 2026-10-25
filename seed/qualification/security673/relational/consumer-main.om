@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note Audit-only driver for byte-exact dseqhash excerpt, never linked into omnet.
+fn main to int
+s = new uchar 65536 0
+h = new uchar 32 0
+put h 0 uchar sub ulong argcnt 1
+ret int dseqhash s 0 h
+end

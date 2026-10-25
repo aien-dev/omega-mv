@@ -1,0 +1,5 @@
+note SPDX-License-Identifier: Apache-2.0
+fn main to int
+a = new ulong 2 7
+ret int probe a sub ulong argcnt 1
+end

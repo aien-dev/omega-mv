@@ -1,0 +1,14 @@
+{
+  "command": [
+    "nice",
+    "-n",
+    "19",
+    "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/gate.bin",
+    "/home/drakestapleton/workspace/security673-relational/seed/out/omc",
+    "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+    "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/bindings.cases",
+    "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/bindings2"
+  ],
+  "cwd": "/home/drakestapleton/workspace/security673-scanner",
+  "exit": 0
+}

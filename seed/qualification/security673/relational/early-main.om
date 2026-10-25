@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+fn main to int
+a = new uchar 32 0
+b = new uchar 32 0
+put b 0 uchar sub ulong argcnt 1
+ret int early a b
+end

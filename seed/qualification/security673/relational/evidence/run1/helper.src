@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+fn hidden s ulong to ulong
+if eq s 0
+ret 7
+end
+ret 7
+end
+fn probe s ulong to ulong
+ret hidden s
+end

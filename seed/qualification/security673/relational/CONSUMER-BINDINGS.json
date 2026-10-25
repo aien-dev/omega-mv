@@ -1,0 +1,51 @@
+{
+  "kind": "UNSIGNED_TEST_BINDINGS_NOT_CERTIFICATE",
+  "fixture": "readonly-baseline-dseqhash-audit",
+  "parent_binding_sha256": "c91f1b22d9b38c1aaf05cc9d5f45c00b959b3c82945f6f9e46fa570d6b9828c3",
+  "sources": {
+    "consumer-main.om": "5e75b366ab8e2d63cd895a0a2e0012d6d718df98f37975ef0580d2d2e4377f7c",
+    "consumer.cases": "d40b42b34da8164f74b54ad2dbbc16ce76362805f63dcb960e53fbf6fa1ddf5c",
+    "README.txt": "f523035b3f88e67462648541faebf47a0d3a5cf2f170131dffac8df744d2861a"
+  },
+  "artifacts": {
+    "evidence/consumer/command.json": {
+      "sha256": "9bb02796ca7909902a9029d5ac1a35a1f881797fb2c7118b1960dcc09e91e79f",
+      "bytes": 646
+    },
+    "evidence/consumer/compile.err": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "evidence/consumer/dseqhash.bin": {
+      "sha256": "5831a051e11ce9ff825c4854f73b97e9c31852c4ad1c512f67e4077b77017015",
+      "bytes": 96
+    },
+    "evidence/consumer/dseqhash.scan": {
+      "sha256": "23248eb99874340a74a4c6994e8929bcab3816aec8cc9941b9458e658fc1b16c",
+      "bytes": 489
+    },
+    "evidence/consumer/dseqhash.src": {
+      "sha256": "59e22e6368bcab8afc953c8852495b08108a5a5488eda089f9219e5fe9f68277",
+      "bytes": 131
+    },
+    "evidence/consumer/gate.err": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "evidence/consumer/gate.log": {
+      "sha256": "577036362745d0071300d183316ff7717afd038bb1faf31ff6c5cd9c926e8764",
+      "bytes": 3487
+    },
+    "evidence/consumer/provenance.json": {
+      "sha256": "cab4cee1305e7e54b41f52295714fb19e30b26ed325a93283ae876888d1c20fe",
+      "bytes": 355
+    }
+  },
+  "compile_exit": 0,
+  "scan_exit": 2,
+  "native_equal_exit": 1,
+  "native_unequal_exit": 0,
+  "public_declarations": [],
+  "scanner_argv": [],
+  "note": "Baseline secret early exit; later owner changes require fresh bindings."
+}

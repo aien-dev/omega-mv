@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note SC1-L: public pointers a,b; secret contents; only equality result disclosed.
+fn compare32 a view uchar 32 b view uchar 32 to ulong
+d = uchar 0
+for i ulong 32
+d = or d xor get a i get b i
+end
+ret ulong eq d 0
+end

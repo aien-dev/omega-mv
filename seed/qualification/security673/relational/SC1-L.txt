@@ -1,0 +1,47 @@
+SC1-L relational comparison profile, version1
+
+Source entry: compare32(a:view uchar32,b:view uchar32)->ulong.
+Public: both valid, stable entry addresses; fixed extent32; caller and runtime ABI.
+Secret: every byte in a[0,32) and b[0,32). No initially public memory declaration.
+Views may overlap because the primitive only reads. Mappings must remain stable and readable;
+concurrent mutation, invalid foreign pointers and asynchronous interference are outside this slice.
+No helpers, allocations, stores, I/O, mutable globals, early exits or variable divisors occur.
+All32 positions are explicitly listed. The earlier loop source also passed the scanner; the
+straight-line form was selected to bind the WHOLE raw function byte-for-byte inside the native
+paired executable, including its return, without relocated trap stubs. No scan instruction is omitted.
+
+Disclosure policy SC1-L-EQ1: exactly the final equality bit (1 equal, 0 different) may be returned.
+No pointer, mismatch position, intermediate byte, hash value, secret length or error is disclosed.
+The accumulator is bytewise OR of XORs, hence in[0,255]. Unsigned u64(d)-1 wraps only when d=0;
+logical shift right63 produces exactly the equality bit. This uses existing modulo semantics.
+The source annotations are a reviewed contract, not enforced information-flow types or sealing.
+A conversion from a secret value is not authorization to disclose it. The scanner does not check
+output declassification, so the native functional test and independent source review are separate.
+
+Observation model SC1-L-ARCH1: architectural conditional control-flow decisions, effective memory
+addresses, iteration counts, trap/error outcomes, and the disclosed result. Different results are
+allowed only by EQ1. Publicly equivalent inputs producing the same disclosed result must have the
+same other observations. Valid pointer identity and runtime are held fixed across a pair.
+Execution is sequential Linux AArch64 little-endian with OM-1 function ABI, main omc
+734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61, no optimizer flags.
+Scanner assumptions, decode subset and ABI invariant A1 remain those in pinned PR752 README.txt.
+No instruction latency, cache, speculation, branch predictor, power, OS scheduling, memory fault,
+shared-resource or physical-time property is claimed. No statistical timing test is a secrecy proof.
+
+Controls: branch/helper/error/division entry x0 is secret; address x1 is secret and pointer x0 is
+public, with pub:0:0:16. public-branch has x0 public,x1 secret. public-address has x0 pointer public,
+x1 selector public,x2 secret, with pub:0:0:16. Initial public table words are7,7. For these controls
+only constant7 is disclosed except explicit error/early fixtures, whose observed outcomes are
+negative witnesses. Public declarations label content, not addresses; no blanket declassification.
+
+Nondeterminism: source choice in{0,1} is independent of secret in{0,1}. Hold the same choice across
+a secret pair. The faulty lowering returns the secret, so ordinary per-run inclusion4/4 holds,
+but both same-choice pairs differ. This is a four-state finite counterexample, not an actual
+nondeterministic feature in omc and not a proof of hyperproperty-preserving compilation.
+
+Evidence classes: native paired functional execution; finite model enumeration; scanner finite
+static architectural evidence. Dynamic hardware instruction/address trace capture is NOT_RUN.
+Mechanized relational proof, general translation validation and signed receipts are NOT_RUN.
+The #623 owner must supply native relation plus authenticated target/model/disclosure/checker
+binding before promoting this evidence. Current gate hashes compiler and requested emitted bytes;
+it cannot infer or certify disclosure policy, target metadata or memory/leakage model.

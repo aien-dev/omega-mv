@@ -1,0 +1,11 @@
+OM2GATE START cases=/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/binding-negative.cases scratch=/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/wrongbytes
+IDENTITY omc /home/drakestapleton/workspace/security673-relational/seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+SUBST ../security673-relational/seed/qualification/security673/relational/compare.from ../security673-relational/seed/qualification/security673/relational/compare.to
+CASE wrong-source-bytes line=3
+  MUTATE exact-once substitution at byte 1144
+  $ /home/drakestapleton/workspace/security673-relational/seed/out/omc < /home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/wrongbytes/3.src > /home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/wrongbytes/3.elf 2> /home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/wrongbytes/3.cerr
+VERDICT wrong-source-bytes FAIL compile exit=0 expected=0 sha256=9d923ab7bffd136128f1c95b147685f6d95b77f96e396855bdeb6fe4b90773b5 stdout sha256 differs; expected df0d1193b9555f3d6a4a1c5bc0e5d04605397000a22d8175e9b9f28965bdb162 stderr=match
+CASE wrong-checker-bytes line=4
+  $ /home/drakestapleton/workspace/security673-relational/seed/out/omc < /home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/wrongbytes/4.src > /home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/wrongbytes/4.elf 2> /home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/wrongbytes/4.cerr
+VERDICT wrong-checker-bytes FAIL compile exit=0 expected=0 sha256=3271943c86c14c092e0b79e1019bbace2b4cd6b8182f7ebae69fe50cea5a9ef5 stdout sha256 differs; expected aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633 stderr=match
+OM2GATE FAIL cases=2 pass=0 fail=2 invalid=0 not_run=0

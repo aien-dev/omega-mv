@@ -1,0 +1,21 @@
+{
+  "status": "READ_ONLY_WORKING_TREE_AUDIT_NOT_QUALIFIED",
+  "observed_head": "6eb49ccf1dd0d3f0456caf1a4295f195e38d7768",
+  "files": {
+    "tools/build-tkad.sh": "4d79147f5684065c3ca5ef8bb3d9fa12d88738e5efceaead06af89ff561fea44",
+    "cmd/tkad/helpers.om": "08eee01ca5d4a81a40e781321c975f6f3699acf45abe56ee9da2d420f7ab0438",
+    "cmd/tkad/rpc.om": "0e46d890be981439a2850f195c2504ba3331963eb15e8dcdaea12a1af8913193",
+    "cmd/tkad/state.om": "657bda837a04e08e16c0448b65d80355b67b9043a9837c5af000681492860bcc",
+    "cmd/tkad/adapter.om": "27ecfe27cd2df4026548344d79729d743bed7332f3a3690eee5e96982db5c8d3",
+    "om/argon2/argon2.om": "bf1984ec4735fac106ca3e5f08ddeab6b1dc3826780f93a532794e5ef46189ec",
+    "om/argon2/argon2pool.om": "247617c3055ad8fae77871d2a761cba69aa1c0c386596dc70bc0bed1aaca3ce1",
+    "om/blake2b/blake2b.om": "91299627928a67711e520b454dcde5fd9ce3f7cc4f4eebd01bb068cc564d42fd",
+    "om/codec/codec.om": "b3a2de16db05eaac663df2c1cca63c033309eb4705382634a9ed793e6b201b55",
+    "om/cbor/cbor.om": "ef329c70bb5c6ab7f29565c774ef859ddad96ecc2aef9faf7ff5628604326b43",
+    "om/json/json.om": "4223d4428d13b1ad0e2f94612e82d6d4ca455a7af068b1da4e9abe9f08047423",
+    "om/store/store.om": "ad76dc5667ef9e44f22ed432959570bc7a9ea1210d447d38496c813e913f4ad3",
+    "om/store/storepool.om": "35ec4f2c2efdf583e4fbdfe956050c58709fec21213e9e5ab807f7e15b635565",
+    "om/blake2s/blake2s.om": "f2d79b93a79621db2393d22ed4d51a216f43c286ea32461d73e1681d80b5529f",
+    "om/ed25519/ed25519.om": "7ca5ffb8f9cbf753d6d5a6008ba70270e51c94cbcc43303e29ffbdbb3bb4c167"
+  }
+}

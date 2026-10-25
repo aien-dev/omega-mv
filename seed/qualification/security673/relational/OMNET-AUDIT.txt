@@ -1,0 +1,55 @@
+Read-only omnet secret dependency audit, 2026-10-25
+
+Working-tree observation, not immutable owner handoff. Observed HEAD
+6eb49ccf1dd0d3f0456caf1a4295f195e38d7768; individual source hashes in omnet-audit.json
+bind the observed live files, which may include WORM's uncommitted work. No omnet file changed.
+
+Actual consumer: cmd/tkad/rpc.om dsdisable344-366. The adapter/admin condition is checked,
+status and current head are checked, then dsbytes decodes DisablementSecret, length>1024 refuses,
+dsvalidsecret derives/checks it, dssecretput retains it and status becomes disabled. Successful
+return does not alone prove durable publication; the existing adapter/store owner controls that.
+
+Dependency closure, not a claim of audit completion:
+1. JSON tree/string parsing and helpers.om dsbytes101, codec base64 decoding consume secret request
+   representation before comparison. Parsing branches, malformed-input errors, encoded/decoded
+   lengths and allocations need public framing/disclosure policy. The comparator cannot cover them.
+2. helpers.om dsvalidsecretat261-276 copies n secret bytes and calls a2tka. Length n affects loops.
+   argon2pool.om171-196 fixes Argon2i parameters t4,m16384KiB,p4,T32 and salt39 bytes, but includes
+   secret length in its input. a2hash calls a2setup/a2init/a2fill/a2fin, then argon2.om helpers and
+   BLAKE2b. The shared16MiB matrix and its lifecycle remain outside SC1-L. The file explicitly says
+   NOT constant-time-audited (line24). Argon2i's address design is not a native compiler guarantee.
+3. helpers.om dssecretmatch246-259 parses committed authority CBOR and iterates disablement values.
+   It exits after the first matching candidate. dseqhash238-245 exits at the first mismatching
+   byte of the secret-derived32-byte hash. This is an actual secret-consuming early-exit path,
+   not the public Ed25519 equality path. It remains unchanged and unqualified. Even replacing
+   dseqhash with compare32 does not remove list-level match-position leakage in dssecretmatch.
+4. rpc.om dssecretput and state.om candidate copying retain SupportDisablement and disablement
+   bytes. state.om99-101 copies complete1024-byte slots;162-172 serializes secret-length frames;
+   store.om sthashdata181-183 feeds snapshot bytes into BLAKE2s. Filesystem work, lengths, response
+   preparation, failure cleanup, retained copies and reclamation require the store/envelope owners.
+5. state.om322-336 reloads secret frames;382-390 revalidates retained support/disablement secrets.
+   Recovery therefore re-enters the KDF/comparison closure. Restart is not outside the secrecy scope.
+6. rpc.om dsbootstrap181-210 intentionally publishes the successful disablement secret via
+   dsputsecret173-179 and dsput64/base64 when disabled. This is upstream-compatible intentional
+   disclosure and requires a separate service policy version. EQ1 permits ONLY a comparison bit
+   and does not authorize this bootstrap disclosure. SupportDisablement remains confidential.
+
+Public verification remains separate: ed25519.om1-6 explicitly implements verification only,
+with public key/message/signature inputs and variable-time behavior. Do not route secret signing
+or secret KDF material through it or silently claim its early exits are a secret leak. No public
+verification semantics or vectors were changed or rerun.
+
+Owner requests:
+- WORM: immutable source+snapshot handoff; decide public framing/secret-length and disablement
+  disclosure policy; replace/review BOTH byte and list-level early exits only in the existing
+  service. No second authority, KDF, store, ledger or dispatch path was introduced here.
+- L836/ORPHAN scanner: preserve pinned semantics; dynamic trace evidence and broader secret
+  helper closure are still absent. Existing scanner is finite static evidence, not #623's route.
+- #623: bind the exact source/native relation, source labels, permitted output, target/ABI,
+  compiler/optimizer, architectural model and checker identity in its existing trust machinery.
+- #759/envelope owner: parsing, KDF, copy, snapshot, restart, cancellation and supervisor work must
+  live within the declared public envelope; component comparison evidence does not close service
+  scheduling/allocation/reclamation secrecy.
+
+No live keys, service execution, deployment, network mutation, GPU access, omnet edits or
+whole-Argon2/codec/storage/service safety claim occurred.
