@@ -1,0 +1,13 @@
+f5-part emit seed/qualification/om2/sec/s5s7/f5-part.om+seed/qualification/om2/sec/s5s7/pr.om - err:12:27 27
+v6-edit run seed/qualification/om2/sec/s5s7/v6-edit.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-edit.out - 0
+v6-part-wrap run seed/qualification/om2/sec/s5s7/v6-part-wrap.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+v6-part-tail run seed/qualification/om2/sec/s5s7/v6-part-tail.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+v6-part-golden-literal notrun unreachable without a 2^64-1-element view; bridge side is abi-golden-wrap (status 32)
+v6-part-empty run seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+v6-part-o run seed/qualification/om2/sec/s5s7/v6-part-o.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+v6-part-order run seed/qualification/om2/sec/s5s7/v6-part-order.om+seed/qualification/om2/sec/s5s7/pr.om - - - 102
+v6-part-local refuse seed/qualification/om2/sec/s5s7/v6-part-local.om+seed/qualification/om2/sec/s5s7/pr.om 9
+v6-part-view-edit refuse seed/qualification/om2/sec/s5s7/v6-part-view-edit.om+seed/qualification/om2/sec/s5s7/pr.om 20
+v6-part-two refuse seed/qualification/om2/sec/s5s7/v6-part-two.om+seed/qualification/om2/sec/s5s7/pr.om 19
+v6-part-base refuse seed/qualification/om2/sec/s5s7/v6-part-base.om+seed/qualification/om2/sec/s5s7/pr.om 19
+v6-name-part emit seed/qualification/om2/sec/s5s7/v6-name-part.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16

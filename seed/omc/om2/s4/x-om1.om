@@ -1,0 +1,7 @@
+note S4 C1: export is an ordinary name in OM-1 (a function here); exit 5.
+fn export a ulong to ulong
+ret add a 2
+end
+fn main to int
+ret int export 3
+end

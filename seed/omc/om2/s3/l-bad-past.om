@@ -1,0 +1,8 @@
+note S3 layout refusal
+om2
+layout z 8
+field a ulong at 1 little
+end
+fn main to int
+ret 0
+end

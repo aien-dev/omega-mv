@@ -1,0 +1,17 @@
+note S4: write and read on unsized arrays inside the count: prints ABC and a newline (exit 0).
+om2
+fn g v view uchar * to void
+w = write 1 v 0 len v
+end
+fn h e edit uchar * to void
+for i ulong len e
+put e i add uchar i 65
+end
+put e sub len e 1 10
+g e
+end
+fn main to int
+a = new uchar 4 0
+h a
+ret 0
+end

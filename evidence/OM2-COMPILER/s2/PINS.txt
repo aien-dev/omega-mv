@@ -1,0 +1,12 @@
+OM-2 compiler slice S2 (L834; #665), evidence class HOST (GB10 host CPU, AArch64 Linux). Stacked on om2/compiler-s1 874fec3b.
+S2 omc c23b33760f255bb4083a02da238ac802796bf94be23d9f4c4d2fc9bdb6e0b533 (birth: stage1 == stage2 == stage3, birth.log); S1 omc ce4facbe...f019; base omc 734f0a39...6b61
+contract spec/omegese-om2.md 245bb74e...0881 + errata E1-E9 (E7 for S2)
+case runner: L836 gate.om built as gate-c, sha256 6c8691c21074595312fdd0f22ca30b6fbe48fb88f2fb0a58936f2960056acefa
+C2 manifest (L836 worktree, now 5876 entries) sha256 abe2614f98b9dfa173eb06732cd037fbd0c92b234b8fa8996789093b814707d1: OM2GATE PASS 5876/5876
+s2-cases.log 20/20 PASS; s1-cases.log 48/48 PASS (s1 diag-ok now expects its omc-site record);
+s2-mutants.log 6 controls PASS, 6 mutants FAIL (detected): div0 folded, signed overflow folded, one unrolled copy
+fewer, break from an unrolled loop accepted, constant-index check off by one, a fifth inline level accepted.
+birth RC=0; seed/host/check.sh RC=0; tests/gates/run.sh seed RC=0 0 SKIP; qualify-ir-trap RC=0 (67/0, mutants 5/5,
+gate-ir 10/10, gate6 26, gate5 s1-6b 177/0); tests/gates/run.sh om-units RC=0 (OMC_PIN moved to the S2 omc).
+compile-time.txt: 41 runs each, median and min wall us and max RSS KiB, base vs S2.
+NOT_RUN: gate5 section 7 timing.

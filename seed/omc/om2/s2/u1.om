@@ -1,0 +1,28 @@
+om2
+fn sq x uint to uint inline
+ret mul x x
+end
+fn mix a uint b uint to uint inline
+if gt a b
+ret xor a b
+end
+ret add rotr a 3 sq b
+end
+fn main to int
+w = new uint 16 0
+for i ulong 16 unroll
+put w i uint add mul i 3 1
+end
+s = uint 0
+for i ulong 4 unroll
+for j ulong 4 unroll
+s = add s mix get w add mul i 4 j uint j
+end
+end
+k = ulong 0
+while lt k 3
+s = add s sq uint k
+k = add k 1
+end
+ret int and s 127
+end

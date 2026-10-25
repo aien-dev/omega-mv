@@ -1,0 +1,11 @@
+note   keep   this  
+  note  indented   note  
+om2
+text t "a  b\"  c"
+
+fn main to int
+  x = add int 1   (  int 2)
+	 y = rotr uint 0x10 4
+
+ret add x int add uint get t 0 y
+end

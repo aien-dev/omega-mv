@@ -1,0 +1,12 @@
+note S4 export (spec 6): two exports and a private helper. Words 0 and 1 are B to inc and dbl (source
+note order); helper is a private function called by inc (bytes pinned).
+om2
+fn helper a ulong to ulong
+ret add a 1
+end
+export fn inc a ulong to ulong
+ret helper a
+end
+export fn dbl a ulong to ulong
+ret mul a 2
+end

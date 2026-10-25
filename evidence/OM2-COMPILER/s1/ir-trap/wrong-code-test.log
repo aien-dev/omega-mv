@@ -1,0 +1,86 @@
+PASS om4/omc parents and stage2/stage3 fixpoint
+COMPILER_SHA256=3fa03b29e9d8ef3a28ba460deda408789078094894912d42118ada95b2fb035b
+PASS trap01 exact C-oracle IR
+PASS trap01 checker2 ACCEPT
+PASS trap01 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+FAIL trap02 exact C-oracle IR
+PASS trap02 checker2 ACCEPT
+FAIL trap02 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 2\t-', 'TRAP 2\t-', 'TRAP 2\t-'] ERR 
+FAIL trap03 exact C-oracle IR
+PASS trap03 checker2 ACCEPT
+FAIL trap03 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 3\t-', 'TRAP 3\t-', 'TRAP 3\t-'] ERR 
+FAIL trap04 exact C-oracle IR
+PASS trap04 checker2 ACCEPT
+FAIL trap04 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 4\t-', 'TRAP 4\t-', 'TRAP 4\t-'] ERR 
+FAIL trap05 exact C-oracle IR
+PASS trap05 checker2 ACCEPT
+FAIL trap05 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 5\t-', 'TRAP 5\t-', 'TRAP 5\t-'] ERR 
+FAIL trap06 exact C-oracle IR
+PASS trap06 checker2 ACCEPT
+FAIL trap06 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 6\t-', 'TRAP 6\t-', 'TRAP 6\t-'] ERR 
+FAIL trap07 exact C-oracle IR
+PASS trap07 checker2 ACCEPT
+FAIL trap07 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 7\t-', 'TRAP 7\t-', 'TRAP 7\t-'] ERR 
+FAIL trap08 exact C-oracle IR
+PASS trap08 checker2 ACCEPT
+FAIL trap08 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 8\t-', 'TRAP 8\t-', 'TRAP 8\t-'] ERR 
+FAIL trap09 exact C-oracle IR
+PASS trap09 checker2 ACCEPT
+FAIL trap09 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 9\t-', 'TRAP 9\t-', 'TRAP 9\t-'] ERR 
+FAIL trap10 exact C-oracle IR
+PASS trap10 checker2 ACCEPT
+FAIL trap10 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 10\t-', 'TRAP 10\t-', 'TRAP 10\t-'] ERR 
+FAIL trap11 exact C-oracle IR
+PASS trap11 checker2 ACCEPT
+FAIL trap11 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 11\t-', 'TRAP 11\t-', 'TRAP 11\t-'] ERR 
+FAIL trap12 exact C-oracle IR
+PASS trap12 checker2 ACCEPT
+FAIL trap12 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 12\t-', 'TRAP 12\t-', 'TRAP 12\t-'] ERR 
+FAIL trap13 exact C-oracle IR
+PASS trap13 checker2 ACCEPT
+FAIL trap13 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 13\t-', 'TRAP 13\t-', 'TRAP 13\t-'] ERR 
+FAIL trap14 exact C-oracle IR
+PASS trap14 checker2 ACCEPT
+FAIL trap14 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 14\t-', 'TRAP 14\t-', 'TRAP 14\t-'] ERR 
+FAIL signed exact C-oracle IR
+PASS signed checker2 ACCEPT
+FAIL signed Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 3\t-', 'TRAP 3\t-', 'TRAP 3\t-'] ERR 
+FAIL nested exact C-oracle IR
+PASS nested checker2 ACCEPT
+FAIL nested Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 3\t-', 'TRAP 3\t-', 'TRAP 3\t-'] ERR 
+FAIL bothtrap exact C-oracle IR
+PASS bothtrap checker2 ACCEPT
+FAIL bothtrap Wolfram boundary outputs + interpreter/native agreement (6 runs)
+  ACTUAL ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 1\t-', 'TRAP 1\t-', 'TRAP 1\t-'] EXPECTED ['0\t0x0000000000000000', '1\t0x0000000000000001', '10\t0x000000000000000a', 'TRAP 3\t-', 'TRAP 3\t-', 'TRAP 3\t-'] ERR 
+FAIL void exact C-oracle IR
+FAIL void interpreter/native expected behavior
+FAIL bool exact C-oracle IR
+FAIL bool interpreter/native expected behavior
+PASS zero refused error 8; no output
+PASS too_large refused error 8; no output
+PASS negative refused error 8; no output
+PASS missing refused error 4; no output
+PASS named refused error 16; no output
+PASS extra refused error 4; no output
+PASS extra_word refused error 4; no output
+PASS typed refused error 16; no output
+PASS after refused error 17; no output
+PASS unsupported_break refused error 9; no output
+PASS unsupported_own refused error 9; no output
+CHECKS=67 FAILURES=36 VALID_PROGRAMS=19 REFUSALS=11
+RC=1

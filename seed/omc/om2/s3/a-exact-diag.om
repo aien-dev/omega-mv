@@ -1,0 +1,10 @@
+note S3 abstract (om2 diag): the exact constructor body erases the check (rule dup32), no trap site
+om2 diag
+abstract dup32 ulong
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn entry x uint to ulong
+ret open dup32mk x
+end

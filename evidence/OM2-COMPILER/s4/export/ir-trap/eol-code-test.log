@@ -1,0 +1,70 @@
+PASS om4/omc parents and stage2/stage3 fixpoint
+COMPILER_SHA256=c8da03e12aff9c6f8f055a794b4c76395c05333dce0ba869af27f3e781d84341
+PASS trap01 exact C-oracle IR
+PASS trap01 checker2 ACCEPT
+PASS trap01 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap02 exact C-oracle IR
+PASS trap02 checker2 ACCEPT
+PASS trap02 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap03 exact C-oracle IR
+PASS trap03 checker2 ACCEPT
+PASS trap03 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap04 exact C-oracle IR
+PASS trap04 checker2 ACCEPT
+PASS trap04 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap05 exact C-oracle IR
+PASS trap05 checker2 ACCEPT
+PASS trap05 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap06 exact C-oracle IR
+PASS trap06 checker2 ACCEPT
+PASS trap06 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap07 exact C-oracle IR
+PASS trap07 checker2 ACCEPT
+PASS trap07 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap08 exact C-oracle IR
+PASS trap08 checker2 ACCEPT
+PASS trap08 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap09 exact C-oracle IR
+PASS trap09 checker2 ACCEPT
+PASS trap09 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap10 exact C-oracle IR
+PASS trap10 checker2 ACCEPT
+PASS trap10 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap11 exact C-oracle IR
+PASS trap11 checker2 ACCEPT
+PASS trap11 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap12 exact C-oracle IR
+PASS trap12 checker2 ACCEPT
+PASS trap12 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap13 exact C-oracle IR
+PASS trap13 checker2 ACCEPT
+PASS trap13 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS trap14 exact C-oracle IR
+PASS trap14 checker2 ACCEPT
+PASS trap14 Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS signed exact C-oracle IR
+PASS signed checker2 ACCEPT
+PASS signed Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS nested exact C-oracle IR
+PASS nested checker2 ACCEPT
+PASS nested Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS bothtrap exact C-oracle IR
+PASS bothtrap checker2 ACCEPT
+PASS bothtrap Wolfram boundary outputs + interpreter/native agreement (6 runs)
+PASS void exact C-oracle IR
+PASS void interpreter/native expected behavior
+PASS bool exact C-oracle IR
+PASS bool interpreter/native expected behavior
+PASS zero refused error 8; no output
+PASS too_large refused error 8; no output
+PASS negative refused error 8; no output
+FAIL missing refused error 4; no output
+PASS named refused error 16; no output
+PASS extra refused error 4; no output
+PASS extra_word refused error 4; no output
+PASS typed refused error 16; no output
+PASS after refused error 17; no output
+PASS unsupported_break refused error 9; no output
+PASS unsupported_own refused error 9; no output
+CHECKS=67 FAILURES=1 VALID_PROGRAMS=19 REFUSALS=11
+RC=1

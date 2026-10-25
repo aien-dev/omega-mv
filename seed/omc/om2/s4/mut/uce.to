@@ -1,0 +1,5 @@
+x = matreg k v t
+if ne k 3
+emit or or 3942645791 shl ulong get nm_lr i 16 shl x 5
+trapc 2 3
+end

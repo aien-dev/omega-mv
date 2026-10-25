@@ -1,0 +1,7 @@
+note S4 (spec 4): a scalar, an unsized view, a scalar and an unsized edit fill the six slots
+note x0 a, x1 v, x2 len v, x3 b, x4 w, x5 len w (function mode; the bytes are pinned).
+om2
+fn f a ulong v view ulong * b ulong w edit ulong * to ulong
+put w 0 add a b
+ret add get v 0 len w
+end

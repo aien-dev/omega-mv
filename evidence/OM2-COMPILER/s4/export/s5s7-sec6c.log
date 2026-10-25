@@ -1,0 +1,21 @@
+OM2GATE START cases=/tmp/om2c/s4/sec6c.cases scratch=/tmp/om2c/s4/g-export-s5s7-sec6c
+IDENTITY omc /tmp/om2c/s4/omc-export sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec pinned=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec match
+CASE v6-out line=1
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-sec6c/1.src > /tmp/om2c/s4/g-export-s5s7-sec6c/1.elf 2> /tmp/om2c/s4/g-export-s5s7-sec6c/1.cerr
+VERDICT v6-out PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE m6-export2 line=2
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-sec6c/2.src > /tmp/om2c/s4/g-export-s5s7-sec6c/2.elf 2> /tmp/om2c/s4/g-export-s5s7-sec6c/2.cerr
+VERDICT m6-export2 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE m6-noexport line=3
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-sec6c/3.src > /tmp/om2c/s4/g-export-s5s7-sec6c/3.elf 2> /tmp/om2c/s4/g-export-s5s7-sec6c/3.cerr
+VERDICT m6-noexport PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE m6-export-layout line=4
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-sec6c/4.src > /tmp/om2c/s4/g-export-s5s7-sec6c/4.elf 2> /tmp/om2c/s4/g-export-s5s7-sec6c/4.cerr
+VERDICT m6-export-layout PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE abiv-compiles line=5
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-sec6c/5.src > /tmp/om2c/s4/g-export-s5s7-sec6c/5.elf 2> /tmp/om2c/s4/g-export-s5s7-sec6c/5.cerr
+VERDICT abiv-compiles PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE abiw-compiles line=6
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-sec6c/6.src > /tmp/om2c/s4/g-export-s5s7-sec6c/6.elf 2> /tmp/om2c/s4/g-export-s5s7-sec6c/6.cerr
+VERDICT abiw-compiles PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+OM2GATE PASS cases=6 pass=6 fail=0 invalid=0 not_run=0

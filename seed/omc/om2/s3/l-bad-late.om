@@ -1,0 +1,11 @@
+note S3 layout refusal
+om2
+fn first to int
+ret 0
+end
+layout z 8
+field a uchar at 0 little
+end
+fn main to int
+ret 0
+end
