@@ -1,0 +1,15 @@
+call sites (built dirs): 894  files: 165
+by fn: {'hash': 211, 'init': 163, 'update': 353, 'final': 167}
+by top dir: {'om': 17, 'research': 29, 'src': 575, 'tests': 217, 'tools': 56}
+evidence snapshots (not built): 25 in 21 files
+definitions/declarations skipped: [('src/sha256.c', 50), ('src/sha256.c', 55), ('src/sha256.c', 69), ('src/sha256.c', 74), ('src/sha256.h', 32), ('src/sha256.h', 33), ('src/sha256.h', 34), ('src/sha256.h', 35)]
+wrappers forwarding (data, digest) params into sha256_hash: 5
+  c2r_id (src/checker2/c2_receipt.c) data=arg0 digest=arg1
+  checksum (src/runtime/rx_generation.c) data=arg0 digest=arg2
+    SAME-BASE src/runtime/rx_generation.c:297: checksum(out, ROOT_SUM, out + ROOT_SUM)
+    SAME-BASE src/runtime/rx_generation.c:339: checksum(out, PTR_SUM, out + PTR_SUM)
+    SAME-BASE src/runtime/rx_generation.c:364: checksum(out, JRN_SUM, out + JRN_SUM)
+    SAME-BASE src/runtime/rx_generation.c:562: checksum(raw, RCT_SUM, raw + RCT_SUM)
+  fill (tests/checker2/test_c2_receipt.c) data=arg1 digest=arg0
+  hash_buf (src/runtime/rx_generation.c) data=arg0 digest=arg2
+  omega_vc_compute_id (src/omega_vcstore.c) data=arg0 digest=arg2

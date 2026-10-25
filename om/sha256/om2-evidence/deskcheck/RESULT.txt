@@ -1,0 +1,19 @@
+L838 desk check of om/sha256/sha256-om2.om (evidence class SOURCE; NOT compiler or machine evidence)
+interp.py interprets the OM-2 subset the unit uses, as written in spec/omegese-om2.md and OMEGESE.md
+section 9 (prefix words of fixed arity, uint/ulong wrap, rotr, rolled and unrolled for, layout fields
+little endian, run-time index checks). It is the author's reading of the language, run by python3
+3.12.3 against hashlib (OpenSSL 3.0.13). It cannot show that an OM-2 omc accepts the unit or emits
+correct code; that waits for compiler-s1..s4 and L836.
+
+Cases, seed 838: lengths 0..259, 447, 448, 511, 512, 1000, 4095, 4096, 4097, 12345, each as
+  sha256_hash; init + random update splits (0, 1, 3, 55, 56, 63, 64, 65, 200 bytes, plus empty
+  updates) + final; copy of a live context after the first half, both continued (erratum E3);
+  init/update/final on a context that was already finalized.
+  python3 interp.py om/sha256/sha256-om2.om  ->  desk-check cases=1076 fail=0
+
+Mutants (sed on a copy; each must fail):
+  s/rotr e 11/rotr e 12/                      fail=1076
+  s/^put k 5 0x59f111f1$/put k 5 0x59f111f0/  fail=1076
+  s/^put p k 0x80$/put p k 0x81/              fail=1076
+  s/lt n sub 64 bi/le n sub 64 bi/            fail=43   (a full buffer left uncompressed)
+  s/^b = a$/b = c/                            fail=1076
