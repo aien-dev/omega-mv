@@ -136,3 +136,15 @@ precede it, so C1 and C3 hold. The fmt mode rule (E6 Q4 f, the first line at byt
   declaration `pub:SLOT:OFF:LEN` (for SHA: the context slot, bytes 32..39). Items derived only from
   declared public memory are classified as length-dependent. Every declaration is listed in the
   evidence.
+
+## E12 (advisor review, 2026-10-25): supersedes the first bullet of E11
+
+A trap destination alone does not establish trace equivalence: a reachable trap whose condition
+depends on secret data changes the trace (`fn f a view ulong 4 to uint / ret uint get a 0 / end`
+exits 0 for input 0 and 105 for input 2^32). A data-dependent conditional branch counts as
+length-dependent only when its trap edge is shown unreachable by a stated static rule. In OM-2 that
+is only the known-bits rule: the operand of a conversion range check is the result of `and x M`, with
+M a constant that fits the target type. Every other data-dependent branch, trap stub or not, is
+reported `MANUAL`. A unit with any `MANUAL` item gets the verdict NOT_RUN for trace equivalence, never
+PASS. The counterexample above is a required negative control (expected: MANUAL / NOT_RUN). E11's
+public-memory declaration stands.
