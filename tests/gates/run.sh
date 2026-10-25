@@ -271,8 +271,13 @@ case "$step" in
   # rx-host.yml chip-only-declared and spark-only targets (SKIP on GitHub, never a pass there)
   chip:*|spark:*)
     t="${step#*:}"
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    # Chip and spark steps follow physics.lock like every other step. Makefile check-physics-lock
+    # (a prerequisite of omegatool, rx_composition_gate_gpu and libomega_gpu.a) refuses any other
+    # physics commit, and omegatool itself now needs the physics API of the lock (nvrm_channel_n,
+    # L136 via #614). The former hard-coded 6d7cf0d4 failed every such chip gate on the judge once
+    # #614 moved the lock to 048e5f5 (main 18c653b3, 2026-10-25). faculty-arm and rx-host-reference
+    # keep their own pin: they mirror the hosted rx-host job, which checks out that commit itself.
+    physics_pin
     aienos_pin; argus_pin
     make "$t"
     ;;
