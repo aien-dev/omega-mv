@@ -46,92 +46,92 @@
       "children": [
         {
           "digest": "640f6b7b818c769ab0dcd91437d58dd3251044084d2ae3785f000d30d2bb768a",
-          "last_commit": "a927bd6c",
+          "last_commit": "a927bd6c2",
           "name": "adr",
           "purpose": "Directory docs/adr. Purpose not yet described by a human."
         },
         {
           "digest": "e7ac2460455a35b96b01dab649dcdc2cdf5bb4657bf230b91272c64fe1bf82cf",
-          "last_commit": "d48ab89e",
+          "last_commit": "d48ab89e5",
           "name": "autodiff",
           "purpose": "M21 OMEGA_AUTODIFF scope, op and error-contract table, status (not qualified)"
         },
         {
           "digest": "7506b1a8659e6de84e1be31a281c8d046e4946de6ed29451155bb56cda5cb365",
-          "last_commit": "6637b32b",
+          "last_commit": "6637b32b6",
           "name": "brownian",
           "purpose": "Directory docs/brownian. Purpose not yet described by a human."
         },
         {
           "digest": "1b01542d91e3b1c7c5263d6b393338a3d9d40e138a12ec833ce7852d83887ce2",
-          "last_commit": "5901baa5",
+          "last_commit": "5901baa51",
           "name": "crumbs",
           "purpose": "Directory docs/crumbs. Purpose not yet described by a human."
         },
         {
           "digest": "e9baaaeec04be41a57c4a2d6a540b01a682c70d4db96cb4af4e1a9912a133aa9",
-          "last_commit": "55d05d6a",
+          "last_commit": "55d05d6a5",
           "name": "dual",
           "purpose": "DUAL (ARCH-0031) documents in omega: applicability experiment method and findings (APPLICABILITY"
         },
         {
           "digest": "56a5a999ce726e90d89c1c88b9e20c81857c8e6ee82af8d651ac80ea70e2c46d",
-          "last_commit": "38a6a569",
+          "last_commit": "38a6a569b",
           "name": "estimation",
           "purpose": "Directory docs/estimation. Purpose not yet described by a human."
         },
         {
           "digest": "8b926a045985692f116d9469af5aaa06d778bca78cf5d7e891e68c2486ed789e",
-          "last_commit": "8ec82485",
+          "last_commit": "8ec82485d",
           "name": "numeric",
           "purpose": "Directory docs/numeric. Purpose not yet described by a human."
         },
         {
           "digest": "69239ac409b797d24c5975ac9b8510a229185b8477225efefc485e43205050d6",
-          "last_commit": "876d00ff",
+          "last_commit": "876d00ff5",
           "name": "osc",
           "purpose": "Directory docs/osc. Purpose not yet described by a human."
         },
         {
           "digest": "ffe2e59267bcc6597fdadad5fc7c54e32bbc0f0e409dae9af3ddd3ba49a0d8ad",
-          "last_commit": "61c09411",
+          "last_commit": "61c094113",
           "name": "polyglot",
           "purpose": "Directory docs/polyglot. Purpose not yet described by a human."
         },
         {
           "digest": "46d3e2d59a468271e044ccd2398eb32345df6436c15eb6d8c703953c838023a9",
-          "last_commit": "dd67f6bd",
+          "last_commit": "dd67f6bd7",
           "name": "reservoir",
           "purpose": "Reservoir reference and contracts (omega#440): RESERVOIR_REFERENCE.md pins the authors' paper an"
         },
         {
           "digest": "2ab37838f8694e5060a3789f08a16146996050af949fba329ed805429d85f695",
-          "last_commit": "f633e343",
+          "last_commit": "f633e3430",
           "name": "tensor",
           "purpose": "M20 OMEGA_TENSOR spec and qualification checklist"
         },
         {
           "digest": "41ab5cf8617e9583dcda75292e1e851e1ec4187b69d5d00b5eb354f1ee55c9d5",
-          "last_commit": "54826a37",
+          "last_commit": "54826a37f",
           "name": "train",
           "purpose": "Directory docs/train. Purpose not yet described by a human."
         },
         {
           "digest": "b6ed9ddbc50071409ece5b2a6510f57184defcba5ffc7103f1dfe24ae440ef67",
-          "last_commit": "b7a788e8",
+          "last_commit": "b7a788e82",
           "name": "turing",
           "purpose": "Directory docs/turing. Purpose not yet described by a human."
         }
       ],
       "children_root": "sha256:2d1071e88cc921d774f3363f69d352b080c718f9ab04d32d60b8bcd9b65cbc87",
-      "compiled_at": "2026-10-25T21:49:59Z",
+      "compiled_at": "2026-10-25T17:48:16Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:5c99b9eba123d8c0e27b99e4e0c07e9defa8fdf6a70648a67d6c4c7489a078dc",
+      "digest": "sha256:1d0c3ef60f0c0b67601932c4914be9c9863e10a53173aa629f1cf1da8d64c1e5",
       "evidence_files": 34,
       "evidence_root": "sha256:589d8b3706e6d7a202ab20b278dac5fc5bafc973f1c2a867b2668aa7210b65cc",
       "files": 132,
-      "generated_at_commit": "77ef3d6651faf5040f226a27747de094ea54e3cd",
-      "source_tree": "sha256:ad3b0b9a6168d33850685686a891d809a09af314ac1b1693d9a18645bac03d65"
+      "generated_at_commit": "be0381b64f715f70097bcc1812bbcf08c3158720",
+      "source_tree": "sha256:2f995584de7a0abbf8688e8bf286680b8356b1a4c333da47a4dae60678594316"
     },
     "owner_lane": "",
     "provenance": {

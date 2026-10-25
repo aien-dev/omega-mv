@@ -667,8 +667,11 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   right as for a call; a scalar argument in a named register is copied, one in a temporary is used as it
   is. The caller's locals are hidden from the body, and `ret` becomes a branch to the body's end (a last
   one is dropped). The standalone function is still emitted. `new` in it, or an inline function reached
-  again while it is being inlined (itself included), is error 9; a fifth nested inline level is
-  error 14. Calls to other functions stay calls. Removing `inline` leaves behaviour unchanged.
+  again while it is being inlined (itself included), is error 9; so is an inline function that reaches
+  itself anywhere in the call graph, through non-inline calls too (checked at the end of the input). A
+  fifth nested inline level is error 14. Calls to other functions stay calls. Removing `inline` leaves
+  behaviour unchanged. An argument that is a number is copied to a register, so folding does not reach
+  through parameters.
 - **Folding and checks.** Only inside an unrolled or inlined body, an operation (`add` .. `shr`,
   comparisons, `rotr`/`rotl`, `neg`, `not`) on two typed numbers is computed with OM-1 arithmetic. One
   that would trap (signed overflow, a divisor 0, an amount at or above the width) is not folded and keeps

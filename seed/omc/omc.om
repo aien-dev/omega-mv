@@ -78,6 +78,10 @@ global fval ulong 1
 global fty ulong 1
 global sitebuf uchar 8388608
 global nsite ulong 1
+global ie_from ulong 16384
+global ie_to ulong 16384
+global nie ulong 1
+global reach uchar 512
 
 note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
 global nm_name ulong 1024
@@ -6754,6 +6758,13 @@ fail 9
 end
 j = add j 1
 end
+n = get nie 0
+if ge n 16384
+fail 14
+end
+put ie_from n get curfn 0
+put ie_to n fe
+put nie 0 add n 1
 put il_cur lv get cur 0
 put il_line lv get line 0
 put il_ret lv get curret 0
@@ -7518,13 +7529,85 @@ end
 end
 end
 
-fn s_eof to void
+note inlcyc (OM-2): an inline function that reaches itself through the whole call graph (the calls made,
+note plus an edge from each function to every inline function expanded in it) is error 9 at the end.
+fn inlcyc to void
+f = ulong 1
+while le f get nf 0
+if ne get fn_inl sub f 1 0
+if ne reachself f 0
+put dsev 0 3
+fail 9
+end
+end
+f = add f 1
+end
+end
 
+note reachself: 1 when function f (index + 1) reaches itself
+fn reachself f ulong to ulong
+i = ulong 0
+while lt i get nf 0
+put reach i 0
+i = add i 1
+end
+put reach sub f 1 1
+go = true
+pass = ulong 0
+while and go le pass get nf 0
+r = rscan f 0
+if eq r 2
+ret 1
+end
+s = rscan f 1
+if eq s 2
+ret 1
+end
+go = or ne r 0 ne s 0
+pass = add pass 1
+end
+ret 0
+end
+
+note rscan: one pass over the calls (w 0) or the inline edges (w 1): 2 when an edge from a reached
+note function leads to f, 1 when a function was newly reached, else 0
+fn rscan f ulong w ulong to ulong
+n = get ncalls 0
+if ne w 0
+n = get nie 0
+end
+ch = ulong 0
+j = ulong 0
+while lt j n
+a = get callfrom j
+b = get callto j
+if ne w 0
+a = get ie_from j
+b = get ie_to j
+end
+if ne get reach sub a 1 0
+if eq b f
+ret 2
+end
+if eq get reach sub b 1 0
+put reach sub b 1 1
+ch = ulong 1
+end
+end
+j = add j 1
+end
+ret ch
+end
+
+fn s_eof to void
 if ne get curret 0 0
 fail 15
 end
 if eq get nf 0 0
 fail 16
+end
+if ne get om2 0 0
+inlcyc
 end
 resolve
 if ne get progmode 0 0

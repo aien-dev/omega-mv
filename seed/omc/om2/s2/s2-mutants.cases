@@ -7,6 +7,7 @@ ctl-fold-trap run seed/omc/om2/s2/fold-trap.om - - - 101
 ctl-break refuse seed/omc/om2/s2/bad-break.om 9
 ctl-depth5 refuse seed/omc/om2/s2/bad-depth5.om 14
 ctl-idx refuse seed/omc/om2/s2/bad-idx.om 21
+ctl-recur-g refuse seed/omc/om2/s2/bad-recur-g.om 9
 # division by zero folded (the trap-not-folded rule broken)
 subst seed/omc/om2/s2/mut/div0.from seed/omc/om2/s2/mut/div0.to
 cc seed/omc/omc.om
@@ -31,3 +32,7 @@ m-idx refuse seed/omc/om2/s2/bad-idx.om 21
 subst seed/omc/om2/s2/mut/depth.from seed/omc/om2/s2/mut/depth.to
 cc seed/omc/omc.om
 m-depth refuse seed/omc/om2/s2/bad-depth5.om 14
+# D-S2-1: an inline function recursive through a non-inline function is accepted
+subst seed/omc/om2/s2/mut/cyc.from seed/omc/om2/s2/mut/cyc.to
+cc seed/omc/omc.om
+m-cyc refuse seed/omc/om2/s2/bad-recur-g.om 9
