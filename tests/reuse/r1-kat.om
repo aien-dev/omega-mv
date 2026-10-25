@@ -1,0 +1,251 @@
+note units: sha256 r1
+note r1-kat: the known-answer vectors tests/reuse/kat.txt (computed outside Omega, checked in Wolfram
+note Language; read relative to the working directory = the omega-mv repo root) against r1step,
+note r1lane, r1fold, r1valid and r1full. Record kinds (integrator decision 4):
+note   1 wl op c x e   2 f a b r   3 wl f k op1 c1 .. opk ck n x0 .. x(n-1) r0
+note   4 S A s0 R lam0 .. lam(S-1) (s lo hi t) x R n w1 .. wn r0 r1
+note Every record must hold and the counts must be 336, 150, 80, 60 (626 records).
+note Exit 0 pass; 1 unreadable; 2 malformed line; 11..14 a wrong answer of that kind; 20 counts.
+text kpath "tests/reuse/kat.txt"
+global KBUF uchar 262144
+global KTOK ulong 8192
+global KNT ulong 1
+global KCNT ulong 5
+
+note tokens of the line KBUF[s..e) into KTOK, count into KNT; false on a non-digit
+fn ktoks s ulong e ulong to bool
+nt = ulong 0
+v = ulong 0
+inw = false
+i = s
+while lt i e bound 262145
+c = ulong get KBUF i
+if eq c 32
+if inw
+put KTOK nt v
+nt = add nt 1
+end
+inw = false
+v = 0
+else
+if or lt c 48 gt c 57
+ret false
+end
+v = add mul v 10 sub c 48
+inw = true
+end
+i = add i 1
+end
+if inw
+put KTOK nt v
+nt = add nt 1
+end
+put KNT 0 nt
+ret true
+end
+
+fn kclear fam ulong to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 fam
+end
+
+note kind 1: one-step program
+fn klane to int
+if ne get KNT 0 6
+ret 2
+end
+wl = get KTOK 1
+op = get KTOK 2
+c = get KTOK 3
+x = get KTOK 4
+kclear 1
+put R1P 2 wl
+put R1P 3 1
+put R1P 4 1
+put R1P 5 op
+put R1P 6 c
+if ne r1valid 0
+ret 11
+end
+if ne r1step op c x sub shl ulong 1 wl 1 get KTOK 5
+ret 11
+end
+if ne r1lane x get KTOK 5
+ret 11
+end
+ret 0
+end
+
+fn kfold to int
+if ne get KNT 0 5
+ret 2
+end
+if ne r1fold get KTOK 1 get KTOK 2 get KTOK 3 get KTOK 4
+ret 12
+end
+ret 0
+end
+
+fn kagg to int
+nt = get KNT 0
+if lt nt 6
+ret 2
+end
+k = get KTOK 3
+if gt k 6
+ret 2
+end
+p = add 4 mul k 2
+if ge p nt
+ret 2
+end
+n = get KTOK p
+if ne nt add add p n 2
+ret 2
+end
+kclear 1
+put R1P 2 get KTOK 1
+put R1P 3 get KTOK 2
+put R1P 4 k
+for j ulong mul k 2
+put R1P add 5 j get KTOK add 4 j
+end
+put R1N 0 n
+for i ulong n
+put R1X i get KTOK add add p 1 i
+end
+if ne r1valid 0
+ret 13
+end
+r1full
+if ne get R1R 0 get KTOK sub nt 1
+ret 13
+end
+if ne get R1R 1 n
+ret 13
+end
+ret 0
+end
+
+note the rule word of the quad (s lo hi t) at KTOK[b..b+4)
+fn krule b ulong to ulong
+w = get KTOK b
+w = add w mul 256 get KTOK add b 1
+w = add w mul 65536 get KTOK add b 2
+ret add w mul 16777216 get KTOK add b 3
+end
+
+fn kfsm to int
+nt = get KNT 0
+if lt nt 8
+ret 2
+end
+ns = get KTOK 1
+nr = get KTOK 4
+if or gt ns 16 gt nr 24
+ret 2
+end
+p = add add 5 ns mul nr 4
+if ge p nt
+ret 2
+end
+n = get KTOK p
+if ne nt add add p n 3
+ret 2
+end
+kclear 2
+put R1P 2 ns
+put R1P 3 get KTOK 2
+put R1P 4 get KTOK 3
+put R1P 5 nr
+for s ulong ns
+put R1P add 6 s get KTOK add 5 s
+end
+q = add 5 ns
+for r ulong nr
+put R1P add 22 r krule add q mul r 4
+end
+put R1N 0 n
+for i ulong n
+put R1X i get KTOK add add p 1 i
+end
+if ne r1valid 0
+ret 14
+end
+r1full
+if ne get R1R 0 get KTOK sub nt 2
+ret 14
+end
+if ne get R1R 1 get KTOK sub nt 1
+ret 14
+end
+ret 0
+end
+
+fn kline s ulong e ulong to int
+if not ktoks s e
+ret 2
+end
+if eq get KNT 0 0
+ret 2
+end
+kind = get KTOK 0
+if or lt kind 1 gt kind 4
+ret 2
+end
+put KCNT kind add get KCNT kind 1
+if eq kind 1
+ret klane
+end
+if eq kind 2
+ret kfold
+end
+if eq kind 3
+ret kagg
+end
+ret kfsm
+end
+
+fn main to int
+fd = fopen kpath 0 len kpath 0 0
+if lt fd 0
+ret 1
+end
+got = ulong 0
+while lt got 262144 bound 1000
+k = read int fd KBUF got sub 262144 got
+if le k 0
+break
+end
+got = add got ulong k
+end
+r = fclose int fd
+if or ge got 262144 ne r 0
+ret 1
+end
+s = ulong 0
+for i ulong got
+if eq get KBUF i 10
+if gt i s
+x = kline s i
+if ne x 0
+ret x
+end
+end
+s = add i 1
+end
+end
+if lt s got
+ret 2
+end
+if or ne get KCNT 1 336 ne get KCNT 2 150
+ret 20
+end
+if or ne get KCNT 3 80 ne get KCNT 4 60
+ret 20
+end
+ret 0
+end

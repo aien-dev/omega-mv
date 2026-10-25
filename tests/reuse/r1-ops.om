@@ -1,0 +1,300 @@
+note units: sha256 r1
+note r1-ops: every lane op at both widths at their boundaries (r1step and r1lane), every fold and
+note identity (incl. the empty state), a 2-step AGG program under all six folds, the shape id, and
+note FSM first-match and default self-loop (r1delta, r1full). Exit 0 pass, else the failed check's code.
+fn tagg wl ulong f ulong k ulong to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 wl
+put R1P 3 f
+put R1P 4 k
+end
+
+note one-step program (wl, op, c): r1valid, r1lane x = e and r1step agree
+fn tlane wl ulong op ulong c ulong x ulong e ulong to bool
+tagg wl 1 1
+put R1P 5 op
+put R1P 6 c
+if ne r1valid 0
+ret false
+end
+if ne r1step op c x sub shl ulong 1 wl 1 e
+ret false
+end
+ret eq r1lane x e
+end
+
+fn lanes to int
+if not tlane 8 1 1 255 0
+ret 1
+end
+if not tlane 8 1 100 200 44
+ret 2
+end
+if not tlane 16 1 65535 65535 65534
+ret 3
+end
+if not tlane 8 2 1 0 255
+ret 4
+end
+if not tlane 16 2 65535 0 1
+ret 5
+end
+if not tlane 8 2 3 5 2
+ret 6
+end
+if not tlane 8 3 255 255 1
+ret 7
+end
+if not tlane 16 3 65535 65535 1
+ret 8
+end
+if not tlane 16 3 256 256 0
+ret 9
+end
+if not tlane 8 4 15 255 15
+ret 10
+end
+if not tlane 16 4 0 65535 0
+ret 11
+end
+if not tlane 8 5 255 0 255
+ret 12
+end
+if not tlane 16 5 1 4096 4097
+ret 13
+end
+if not tlane 8 6 255 255 0
+ret 14
+end
+if not tlane 16 6 1 65535 65534
+ret 15
+end
+if not tlane 8 7 7 255 128
+ret 16
+end
+if not tlane 16 7 15 65535 32768
+ret 17
+end
+if not tlane 8 7 0 1 1
+ret 18
+end
+if not tlane 8 8 7 255 1
+ret 19
+end
+if not tlane 16 8 15 65535 1
+ret 20
+end
+if not tlane 16 8 0 65535 65535
+ret 21
+end
+if not tlane 16 1 0 65535 65535
+ret 22
+end
+ret 0
+end
+
+fn folds to int
+if ne r1fold 1 18446744073709551615 1 0
+ret 31
+end
+if ne r1fold 1 40 2 42
+ret 32
+end
+if ne r1fold 2 12 10 6
+ret 33
+end
+if or ne r1fold 3 5 3 3 ne r1fold 3 3 5 3
+ret 34
+end
+if or ne r1fold 4 5 3 5 ne r1fold 4 3 5 5
+ret 35
+end
+if ne r1fold 5 12 10 14
+ret 36
+end
+if ne r1fold 6 12 10 8
+ret 37
+end
+if ne r1ident 1 0
+ret 38
+end
+if ne r1ident 2 0
+ret 39
+end
+if ne r1ident 3 18446744073709551615
+ret 40
+end
+if ne r1ident 4 0
+ret 41
+end
+if ne r1ident 5 0
+ret 42
+end
+if ne r1ident 6 18446744073709551615
+ret 43
+end
+ret 0
+end
+
+note the empty state under fold f: r0 = the identity, r1 = 0
+fn tempty f ulong e ulong to bool
+tagg 16 f 1
+put R1P 5 1
+put R1N 0 0
+put R1R 0 7
+put R1R 1 7
+r1full
+ret and eq get R1R 0 e eq get R1R 1 0
+end
+
+note e = 3x + 1 mod 256 over X = 0 1 255 100: mapped 1 4 254 45
+fn tprog f ulong r ulong to bool
+tagg 8 f 2
+put R1P 5 3
+put R1P 6 3
+put R1P 7 1
+put R1P 8 1
+if ne r1valid 0
+ret false
+end
+put R1N 0 4
+put R1X 0 0
+put R1X 1 1
+put R1X 2 255
+put R1X 3 100
+r1full
+ret and eq get R1R 0 r eq get R1R 1 4
+end
+
+fn aggs to int
+if not tempty 1 0
+ret 51
+end
+if not tempty 2 0
+ret 52
+end
+if not tempty 3 18446744073709551615
+ret 53
+end
+if not tempty 4 0
+ret 54
+end
+if not tempty 5 0
+ret 55
+end
+if not tempty 6 18446744073709551615
+ret 56
+end
+if not tprog 1 304
+ret 57
+end
+if not tprog 2 214
+ret 58
+end
+if not tprog 3 1
+ret 59
+end
+if not tprog 4 254
+ret 60
+end
+if not tprog 5 255
+ret 61
+end
+if not tprog 6 0
+ret 62
+end
+if not tprog 1 304
+ret 63
+end
+if ne r1shape 1253640
+ret 64
+end
+ret 0
+end
+
+note S 3, A 4, s0 0; rules: (0, 1..2 -> 1), (0, 0..3 -> 2), (1, 3..3 -> 0); lambda 10 20 30
+fn tfsm to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 3
+put R1P 3 4
+put R1P 4 0
+put R1P 5 3
+put R1P 6 10
+put R1P 7 20
+put R1P 8 30
+put R1P 22 16908544
+put R1P 23 33751040
+put R1P 24 197377
+end
+
+fn fsms to int
+tfsm
+if ne r1valid 0
+ret 71
+end
+if ne r1delta 0 1 1
+ret 72
+end
+if ne r1delta 0 2 1
+ret 73
+end
+if or ne r1delta 0 0 2 ne r1delta 0 3 2
+ret 74
+end
+if ne r1delta 1 3 0
+ret 75
+end
+if or ne r1delta 1 0 1 ne r1delta 1 2 1
+ret 76
+end
+if or ne r1delta 2 1 2 ne r1delta 2 3 2
+ret 77
+end
+put R1N 0 6
+put R1X 0 1
+put R1X 1 3
+put R1X 2 0
+put R1X 3 1
+put R1X 4 3
+put R1X 5 2
+r1full
+if ne get R1R 0 2
+ret 78
+end
+if ne get R1R 1 150
+ret 79
+end
+put R1N 0 0
+r1full
+if or ne get R1R 0 0 ne get R1R 1 0
+ret 80
+end
+if ne r1shape 1
+ret 81
+end
+ret 0
+end
+
+fn main to int
+r = lanes
+if ne r 0
+ret r
+end
+r = folds
+if ne r 0
+ret r
+end
+r = aggs
+if ne r 0
+ret r
+end
+ret fsms
+end

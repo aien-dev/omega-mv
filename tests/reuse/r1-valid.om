@@ -1,0 +1,406 @@
+note units: sha256 r1
+note r1-valid: program validation (1.1): every out-of-range word of AGG and FSM is refused with 2,
+note including nonzero unused words, and the boundary values are accepted; then change validation
+note and application (1.3: r1chg, r1apply, r1indom, r1alldom). Exit 0 pass, else the failed check's code.
+fn aggbase to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 8
+put R1P 3 1
+put R1P 4 2
+put R1P 5 7
+put R1P 6 7
+put R1P 7 1
+put R1P 8 255
+end
+
+fn fsmbase to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 3
+put R1P 3 4
+put R1P 4 0
+put R1P 5 3
+put R1P 6 10
+put R1P 7 20
+put R1P 8 30
+put R1P 22 16908544
+put R1P 23 33751040
+put R1P 24 197377
+end
+
+note word w = v on the base program (fam 1 AGG, 2 FSM) is refused, and the base itself is valid
+fn tbad fam ulong w ulong v ulong to bool
+if eq fam 1
+aggbase
+else
+fsmbase
+end
+if ne r1valid 0
+ret false
+end
+put R1P w v
+ret eq r1valid 2
+end
+
+fn tgood fam ulong w ulong v ulong to bool
+if eq fam 1
+aggbase
+else
+fsmbase
+end
+put R1P w v
+ret eq r1valid 0
+end
+
+fn aggbad to int
+if not tbad 1 0 3544411312749556051
+ret 1
+end
+if not tbad 1 0 0
+ret 2
+end
+if not tbad 1 1 0
+ret 3
+end
+if not tbad 1 1 3
+ret 4
+end
+if not tbad 1 2 7
+ret 5
+end
+if not tbad 1 2 9
+ret 6
+end
+if not tbad 1 2 0
+ret 7
+end
+if not tbad 1 2 32
+ret 8
+end
+if not tbad 1 3 0
+ret 9
+end
+if not tbad 1 3 7
+ret 10
+end
+if not tbad 1 4 0
+ret 11
+end
+if not tbad 1 4 7
+ret 12
+end
+if not tbad 1 5 0
+ret 13
+end
+if not tbad 1 5 9
+ret 14
+end
+if not tbad 1 6 8
+ret 15
+end
+if not tbad 1 8 256
+ret 16
+end
+if not tbad 1 9 1
+ret 17
+end
+if not tbad 1 10 1
+ret 18
+end
+if not tbad 1 15 1
+ret 19
+end
+if not tbad 1 16 1
+ret 20
+end
+for i ulong 47
+if not tbad 1 add i 17 1
+ret 21
+end
+end
+for i ulong 47
+if not tbad 1 add i 17 18446744073709551615
+ret 22
+end
+end
+aggbase
+put R1P 7 8
+put R1P 8 8
+if ne r1valid 2
+ret 23
+end
+put R1P 8 7
+if ne r1valid 0
+ret 24
+end
+put R1P 2 16
+put R1P 7 7
+put R1P 8 16
+if ne r1valid 2
+ret 25
+end
+put R1P 8 15
+if ne r1valid 0
+ret 26
+end
+put R1P 7 1
+put R1P 8 65536
+if ne r1valid 2
+ret 27
+end
+put R1P 8 65535
+if ne r1valid 0
+ret 28
+end
+ret 0
+end
+
+fn agggood to int
+if not tgood 1 5 8
+ret 31
+end
+if not tgood 1 3 6
+ret 32
+end
+aggbase
+put R1P 4 6
+for j ulong 6
+put R1P add 5 mul j 2 add j 1
+put R1P add 6 mul j 2 7
+end
+if ne r1valid 0
+ret 33
+end
+put R1P 4 5
+if ne r1valid 2
+ret 34
+end
+ret 0
+end
+
+fn fsmbad to int
+if not tbad 2 2 1
+ret 41
+end
+if not tbad 2 2 17
+ret 42
+end
+if not tbad 2 3 1
+ret 43
+end
+if not tbad 2 3 17
+ret 44
+end
+if not tbad 2 4 3
+ret 45
+end
+if not tbad 2 5 0
+ret 46
+end
+if not tbad 2 5 25
+ret 47
+end
+if not tbad 2 6 256
+ret 48
+end
+if not tbad 2 9 1
+ret 49
+end
+if not tbad 2 21 1
+ret 50
+end
+if not tbad 2 22 16908547
+ret 51
+end
+if not tbad 2 24 50529025
+ret 52
+end
+if not tbad 2 22 66048
+ret 53
+end
+if not tbad 2 22 262144
+ret 54
+end
+if not tbad 2 24 4295164673
+ret 55
+end
+if not tbad 2 25 1
+ret 56
+end
+if not tbad 2 45 1
+ret 57
+end
+for i ulong 18
+if not tbad 2 add i 46 1
+ret 58
+end
+end
+if not tbad 2 1 1
+ret 59
+end
+ret 0
+end
+
+fn fsmgood to int
+if not tgood 2 8 255
+ret 61
+end
+if not tgood 2 5 4
+ret 62
+end
+if not tgood 2 4 2
+ret 63
+end
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 16
+put R1P 3 16
+put R1P 4 15
+put R1P 5 24
+for s ulong 16
+put R1P add 6 s 255
+end
+for r ulong 24
+put R1P add 22 r 252641295
+end
+if ne r1valid 0
+ret 64
+end
+ret 0
+end
+
+fn tstate to void
+aggbase
+put R1N 0 3
+put R1X 0 1
+put R1X 1 2
+put R1X 2 3
+end
+
+fn changes to int
+tstate
+if ne r1chg 3 0 255 3 3
+ret 71
+end
+if ne r1chg 3 3 0 3 -1
+ret 72
+end
+if ne r1chg 3 0 256 3 -1
+ret 73
+end
+if ne r1chg 4 3 0 3 4
+ret 74
+end
+if ne r1chg 4 4 0 3 -1
+ret 75
+end
+if ne r1chg 4 0 0 4096 -1
+ret 76
+end
+if ne r1chg 4 0 256 3 -1
+ret 77
+end
+if ne r1chg 5 2 0 3 2
+ret 78
+end
+if ne r1chg 5 2 1 3 -1
+ret 79
+end
+if ne r1chg 5 3 0 3 -1
+ret 80
+end
+if ne r1chg 6 2 2 3 3
+ret 81
+end
+if ne r1chg 6 0 3 3 -1
+ret 82
+end
+if or ne r1chg 7 0 0 3 -1 ne r1chg 2 0 0 3 -1
+ret 83
+end
+if ne r1chg 5 0 0 0 -1
+ret 84
+end
+if ne r1chg 4 0 255 0 1
+ret 85
+end
+if ne r1apply 4 1 9 0
+ret 86
+end
+if ne r1apply 5 0 0 1
+ret 87
+end
+if ne r1apply 6 0 2 3
+ret 88
+end
+if ne r1apply 3 1 7 2
+ret 89
+end
+if ne get R1N 0 3
+ret 90
+end
+if or or ne get R1X 0 3 ne get R1X 1 7 ne get R1X 2 9
+ret 91
+end
+if not r1alldom
+ret 92
+end
+put R1X 1 256
+if r1alldom
+ret 93
+end
+fsmbase
+if or not r1indom 3 r1indom 4
+ret 94
+end
+put R1X 0 3
+put R1X 1 0
+put R1X 2 3
+if not r1alldom
+ret 95
+end
+put R1N 0 4096
+for i ulong 4096
+put R1X i 0
+end
+if ne r1apply 5 0 0 0
+ret 96
+end
+if ne r1apply 4 4095 3 0
+ret 97
+end
+if or ne get R1N 0 4096 ne get R1X 4095 3
+ret 98
+end
+ret 0
+end
+
+fn main to int
+r = aggbad
+if ne r 0
+ret r
+end
+r = agggood
+if ne r 0
+ret r
+end
+r = fsmbad
+if ne r 0
+ret r
+end
+r = fsmgood
+if ne r 0
+ret r
+end
+ret changes
+end

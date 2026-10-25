@@ -1,0 +1,447 @@
+note SPDX-License-Identifier: Apache-2.0
+note r1.om: the REUSE-1 profile R1 baseline (docs/reuse/REUSE-1.md sections 1.1-1.3 and 12).
+note Concatenated after om/sha256/sha256.om. All state is in the pools below (globals cannot be passed).
+note   R1P  the current program, 64 words      R1N  n (1 word)       R1X  the state, 4096 words
+note   R1R  r0, r1 of the last r1full           R1T  FSM table, delta(s, a) at index s*16 + a
+note   R1PD program digest, R1SD state digest, R1HD r1hash output: SHA-256 as 4 words, word j =
+note        digest bytes 8j..8j+7 read big endian
+note   R1HB the hash input buffer (r1hash hashes R1HB[0..n), n <= 65536)
+note Exported beyond contract 12 (r1 prefix):
+note   r1step op c v m      one lane op (1 ADD .. 8 SHR) on v with mask m = 2^wl - 1
+note   r1chg op a b n       validity of one change (op 3..6, payload a, b; DEL needs b = 0) against
+note                        the current program's domain and a state of n values: the new n, or -1
+note   r1apply op a b       apply one change already validated by r1chg to R1X and R1N; returns
+note                        the old value at a (SET, DEL), the old value at b (SWAP), 0 (INS)
+note   r1alldom             every x_i (i < n) inside the current program's domain
+note   r1bswap x            the byte reversal of x
+note   r1putw off w         w as 8 little-endian bytes into R1HB[off..off+8)
+note A call outside a valid program (unknown op or fold) traps 10; R1 never reaches it on valid input.
+global R1P ulong 64
+global R1N ulong 1
+global R1X ulong 4096
+global R1R ulong 2
+global R1T ulong 256
+global R1PD ulong 4
+global R1SD ulong 4
+global R1HB uchar 65536
+global R1HD ulong 4
+
+note AGG words 2..63 (word 0 and 1 are checked by r1valid)
+fn r1vagg to int
+wl = get R1P 2
+if and ne wl 8 ne wl 16
+ret 2
+end
+f = get R1P 3
+if or lt f 1 gt f 6
+ret 2
+end
+k = get R1P 4
+if or lt k 1 gt k 6
+ret 2
+end
+lim = shl ulong 1 wl
+for j ulong 6
+op = get R1P add 5 mul j 2
+c = get R1P add 6 mul j 2
+if lt j k
+if or lt op 1 gt op 8
+ret 2
+end
+if ge c lim
+ret 2
+end
+if and ge op 7 ge c wl
+ret 2
+end
+else
+if or ne op 0 ne c 0
+ret 2
+end
+end
+end
+for i ulong 47
+if ne get R1P add i 17 0
+ret 2
+end
+end
+ret 0
+end
+
+note one FSM rule word for S = ns states and A = na symbols: 0 valid, 2 invalid
+fn r1vrule w ulong ns ulong na ulong to int
+s = and w 255
+lo = and shr w 8 255
+hi = and shr w 16 255
+t = shr w 24
+if or ge s ns ge t ns
+ret 2
+end
+if or gt lo hi ge hi na
+ret 2
+end
+ret 0
+end
+
+note FSM words 2..63
+fn r1vfsm to int
+ns = get R1P 2
+if or lt ns 2 gt ns 16
+ret 2
+end
+na = get R1P 3
+if or lt na 2 gt na 16
+ret 2
+end
+if ge get R1P 4 ns
+ret 2
+end
+nr = get R1P 5
+if or lt nr 1 gt nr 24
+ret 2
+end
+for i ulong 16
+v = get R1P add 6 i
+if lt i ns
+if ge v 256
+ret 2
+end
+else
+if ne v 0
+ret 2
+end
+end
+end
+for i ulong 24
+w = get R1P add 22 i
+if lt i nr
+if ne r1vrule w ns na 0
+ret 2
+end
+else
+if ne w 0
+ret 2
+end
+end
+end
+for i ulong 18
+if ne get R1P add i 46 0
+ret 2
+end
+end
+ret 0
+end
+
+note 0 when R1P is a valid R1 program (1.1), else 2
+fn r1valid to int
+if ne get R1P 0 3544411312749556050
+ret 2
+end
+fam = get R1P 1
+if eq fam 1
+ret r1vagg
+end
+if eq fam 2
+ret r1vfsm
+end
+ret 2
+end
+
+note v inside the current (valid) program's domain: AGG v < 2^wl, FSM v < A
+fn r1indom v ulong to bool
+if eq get R1P 1 1
+ret lt v shl ulong 1 get R1P 2
+end
+ret lt v get R1P 3
+end
+
+fn r1step op ulong c ulong v ulong m ulong to ulong
+if eq op 1
+ret and add v c m
+end
+if eq op 2
+ret and sub v c m
+end
+if eq op 3
+ret and mul v c m
+end
+if eq op 4
+ret and v c
+end
+if eq op 5
+ret or v c
+end
+if eq op 6
+ret xor v c
+end
+if eq op 7
+ret and shl v c m
+end
+if eq op 8
+ret shr v c
+end
+trap 10
+end
+
+note the lane map e(x) of the current AGG program (1.2)
+fn r1lane x ulong to ulong
+m = sub shl ulong 1 get R1P 2 1
+k = get R1P 4
+v = x
+for j ulong k
+q = add 5 mul j 2
+v = r1step get R1P q get R1P add q 1 v m
+end
+ret v
+end
+
+fn r1ident f ulong to ulong
+if or eq f 1 eq f 2
+ret 0
+end
+if eq f 3
+ret 18446744073709551615
+end
+if or eq f 4 eq f 5
+ret 0
+end
+if eq f 6
+ret 18446744073709551615
+end
+trap 10
+end
+
+fn r1fold f ulong a ulong b ulong to ulong
+if eq f 1
+ret add a b
+end
+if eq f 2
+ret xor a b
+end
+if eq f 3
+if lt b a
+ret b
+end
+ret a
+end
+if eq f 4
+if gt b a
+ret b
+end
+ret a
+end
+if eq f 5
+ret or a b
+end
+if eq f 6
+ret and a b
+end
+trap 10
+end
+
+note delta(s, a) of the current FSM program: the target of the lowest-numbered matching rule, else s
+fn r1delta s ulong a ulong to ulong
+nr = get R1P 5
+for i ulong nr
+w = get R1P add 22 i
+if eq and w 255 s
+lo = and shr w 8 255
+hi = and shr w 16 255
+if and le lo a le a hi
+ret shr w 24
+end
+end
+end
+ret s
+end
+
+fn r1fagg to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc r1lane get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+
+fn r1ffsm to void
+n = get R1N 0
+q = get R1P 4
+sum = ulong 0
+for i ulong n
+q = r1delta q get R1X i
+sum = add sum get R1P add 6 q
+end
+put R1R 0 q
+put R1R 1 sum
+end
+
+note the baseline: R1P, R1N, R1X -> R1R (1.2)
+fn r1full to void
+if eq get R1P 1 1
+r1fagg
+ret
+end
+r1ffsm
+end
+
+note shape id (1.1): AGG wl + 256 f + 4096 k + 65536 sum op_j 16^(j-1); FSM 1
+fn r1shape to ulong
+if eq get R1P 1 2
+ret 1
+end
+k = get R1P 4
+s = add get R1P 2 add mul get R1P 3 256 mul k 4096
+m = ulong 65536
+for j ulong k
+s = add s mul m get R1P add 5 mul j 2
+m = mul m 16
+end
+ret s
+end
+
+fn r1bswap x ulong to ulong
+y = ulong 0
+v = x
+for i ulong 8
+y = or shl y 8 and v 255
+v = shr v 8
+end
+ret y
+end
+
+fn r1putw off ulong w ulong to void
+v = w
+for i ulong 8
+put R1HB add off i uchar and v 255
+v = shr v 8
+end
+end
+
+note SHA-256 of R1HB[0..n) into R1HD, through omsha in local 4096-byte chunks
+fn r1hash n ulong to void
+if gt n 65536
+trap 3
+end
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+omsha c b 0 0 w b8
+off = ulong 0
+while lt off n bound 17
+m = sub n off
+if gt m 4096
+m = 4096
+end
+for i ulong m
+put b i get R1HB add off i
+end
+omsha c b m 1 w b8
+off = add off m
+end
+omsha c b 0 2 w b8
+for j ulong 4
+put R1HD j r1bswap get w j
+end
+end
+
+note program digest: SHA-256 of the 512 bytes of R1P (64 LE words) into R1PD
+fn r1pdig to void
+for i ulong 64
+r1putw mul i 8 get R1P i
+end
+r1hash 512
+for j ulong 4
+put R1PD j get R1HD j
+end
+end
+
+note state digest: SHA-256 of the n values as LE words into R1SD
+fn r1sdig to void
+n = get R1N 0
+for i ulong n
+r1putw mul i 8 get R1X i
+end
+r1hash mul n 8
+for j ulong 4
+put R1SD j get R1HD j
+end
+end
+
+fn r1alldom to bool
+n = get R1N 0
+for i ulong n
+if not r1indom get R1X i
+ret false
+end
+end
+ret true
+end
+
+note one change (1.3) against a state of n values: the new n, or -1 when invalid
+fn r1chg op ulong a ulong b ulong n ulong to long
+if eq op 3
+if and lt a n r1indom b
+ret long n
+end
+ret -1
+end
+if eq op 4
+if and and le a n lt n 4096 r1indom b
+ret long add n 1
+end
+ret -1
+end
+if eq op 5
+if and lt a n eq b 0
+ret long sub n 1
+end
+ret -1
+end
+if eq op 6
+if and lt a n lt b n
+ret long n
+end
+ret -1
+end
+ret -1
+end
+
+fn r1apply op ulong a ulong b ulong to ulong
+n = get R1N 0
+if eq op 3
+old = get R1X a
+put R1X a b
+ret old
+end
+if eq op 4
+t = n
+while gt t a bound 4097
+put R1X t get R1X sub t 1
+t = sub t 1
+end
+put R1X a b
+put R1N 0 add n 1
+ret 0
+end
+if eq op 5
+old = get R1X a
+t = a
+while lt add t 1 n bound 4097
+put R1X t get R1X add t 1
+t = add t 1
+end
+put R1N 0 sub n 1
+ret old
+end
+if eq op 6
+old = get R1X b
+put R1X b get R1X a
+put R1X a old
+ret old
+end
+trap 10
+end
