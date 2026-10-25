@@ -31,7 +31,7 @@ Mutation controls must compile and reach the named Q1_ADD_GUARD and Q4_MUL_GUARD
 
 ## Qualification boundary
 
-This is a bounded library profile awaiting independent review, not language-wide constructor sealing, formal/native translation proof or a real omnet consumer migration. Those remain open under #756/#673. Native execution, finite exhaustive arithmetic checks, compiler-refusal fixtures and mutation sensitivity are separate evidence categories. No GPU or timing secrecy claim.
+This is a bounded library profile. Independent review is complete (see below). It is not language-wide constructor sealing, formal/native translation proof or a qualified consumer migration. The omnet transport/Revision consumer slice exists only as a proposal in aien-dev/omnet#6, with the remaining sites inventoried, not migrated. Those remain open under #756/#673. Native execution, finite exhaustive arithmetic checks, compiler-refusal fixtures and mutation sensitivity are separate evidence categories. No GPU or timing secrecy claim.
 
 ## Native replay
 
