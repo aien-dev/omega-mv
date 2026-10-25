@@ -1,0 +1,9 @@
+om2
+note signed overflow in an unrolled body is not folded: it traps 1 at run time
+fn main to int
+x = long 0
+for i long 2 unroll
+x = add long 9223372036854775807 i
+end
+ret int and x 1
+end

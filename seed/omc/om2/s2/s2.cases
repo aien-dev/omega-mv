@@ -1,0 +1,24 @@
+# S2 (#665) fixtures for the OM-2 compiler: unroll, inline, folding, constant-index checks, growth bounds,
+# omc-site records. Run by seed/qualification/om2/gate.om (L836) from the repository root:
+#   gate OMC OMC_SHA256 seed/omc/om2/s2/s2.cases SCRATCH
+# each unrolled or inlined unit runs equal to its form with unroll and inline removed (the -r twin)
+s2-u1 run seed/omc/om2/s2/u1.om - - - 117
+s2-u1-rolled run seed/omc/om2/s2/u1r.om - - - 117
+s2-fold-guard run seed/omc/om2/s2/fold-guard.om - - - 150
+s2-fold-guard-rolled run seed/omc/om2/s2/fold-guard-r.om - - - 150
+s2-fold-trap run seed/omc/om2/s2/fold-trap.om - - - 101
+s2-fold-trap-rolled run seed/omc/om2/s2/fold-trap-r.om - - - 101
+s2-depth4 run seed/omc/om2/s2/depth4.om - - - 2
+s2-inner-break run seed/omc/om2/s2/inner-break.om - - - 8
+s2-sites emit seed/omc/om2/s2/sites.om any file:seed/omc/om2/s2/sites.err 0
+s2-bad-break refuse seed/omc/om2/s2/bad-break.om 9
+s2-bad-continue refuse seed/omc/om2/s2/bad-continue.om 9
+s2-bad-write-i refuse seed/omc/om2/s2/bad-write-i.om 7
+s2-bad-k0 refuse seed/omc/om2/s2/bad-k0.om 8
+s2-bad-k65 refuse seed/omc/om2/s2/bad-k65.om 8
+s2-bad-kname refuse seed/omc/om2/s2/bad-kname.om 16
+s2-bad-recur refuse seed/omc/om2/s2/bad-recur.om 9
+s2-bad-new refuse seed/omc/om2/s2/bad-new.om 9
+s2-bad-depth5 refuse seed/omc/om2/s2/bad-depth5.om 14
+s2-bad-growth refuse seed/omc/om2/s2/bad-growth.om 14
+s2-bad-idx refuse seed/omc/om2/s2/bad-idx.om 21

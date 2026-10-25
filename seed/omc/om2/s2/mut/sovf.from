@@ -1,0 +1,5 @@
+if eq op 33
+if ne shr and xor a r xor b r 63 0
+ret
+end
+end

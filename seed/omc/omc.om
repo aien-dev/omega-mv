@@ -37,6 +37,48 @@ global tkb ulong 1
 global dexp ulong 1
 global dsev ulong 1
 
+note ---- OM-2 section 4 (unroll, inline, folding, bounds, sites). fn_inl/fn_body/fn_bln/fn_pn: a function's
+note inline mark, its body offset and line, its parameter names. fstart: where the function being compiled
+note starts (65536 words at most in OM-2). nmlo: names below it and at or above nglob are hidden while an
+note inlined body is compiled (0 otherwise). fzone: open unrolled bodies and inline frames (folding is
+note done only when it is above 0). inl and il_*: the inline frames (at most 4). ilp/nilp: the B words of
+note an inlined ret, patched at its end. lastb/tgoc: the word after the last inlined ret's B and the last
+note place a branch was patched to. u_*: the unrolled loop of each block. fok/fval/fty: a fold result.
+note sitebuf/nsite: the omc-site records of om2 diag.
+global fn_inl uchar 512
+global fn_body ulong 512
+global fn_bln ulong 512
+global fn_pn ulong 3072
+global fstart ulong 1
+global nmlo ulong 1
+global fzone ulong 1
+global inl ulong 1
+global il_cur ulong 8
+global il_line ulong 8
+global il_ret ulong 8
+global il_nn ulong 8
+global il_lo ulong 8
+global il_held ulong 8
+global il_ns ulong 8
+global il_res ulong 8
+global il_fn ulong 8
+global il_p0 ulong 8
+global ilp ulong 4096
+global nilp ulong 1
+global lastb ulong 1
+global tgoc ulong 1
+global u_cur ulong 512
+global u_line ulong 512
+global u_it ulong 512
+global u_k ulong 512
+global u_nn ulong 512
+global u_held ulong 512
+global fok ulong 1
+global fval ulong 1
+global fty ulong 1
+global sitebuf uchar 8388608
+global nsite ulong 1
+
 note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
 global nm_name ulong 1024
 global nm_reg uchar 1024
@@ -370,6 +412,13 @@ end
 fn emit w ulong to void
 if ge get oc 0 8388608
 fail 14
+end
+if ne get om2 0 0
+if ne get curret 0 0
+if ge sub get oc 0 get fstart 0 262144
+fail 14
+end
+end
 end
 emitb uchar and w 255
 emitb uchar and shr w 8 255
@@ -1510,6 +1559,7 @@ end
 emitb 10
 end
 put fmtm 0 0
+put om2m 0 0
 writeout 0
 end
 
@@ -2121,11 +2171,21 @@ note findname: packed name -> its index + 1 among the names in scope (0 none). o
 fn findname w ulong to ulong
 i = ulong 0
 n = get nn 0
+if eq i get nglob 0
+if gt get nmlo 0 i
+i = get nmlo 0
+end
+end
 while lt i n
 if eq get nm_name i w
 ret add i 1
 end
 i = add i 1
+if eq i get nglob 0
+if gt get nmlo 0 i
+i = get nmlo 0
+end
+end
 end
 ret 0
 end
@@ -2228,6 +2288,9 @@ put tsite n get oc 0
 put tcode n code
 put nt 0 add n 1
 emit w
+if eq get om2m 0 1
+siterec
+end
 end
 
 fn trapc cc ulong code ulong to void
@@ -2266,6 +2329,9 @@ note patch19: the word distance from a B.cond / CBZ / CBNZ at `at` to `target`, 
 fn patch19 at ulong target ulong to void
 d = disp19 at target
 wrword at or rdword at shl d 5
+if eq target get oc 0
+put tgoc 0 target
+end
 end
 
 note patch26: the word distance from a B at `at` to `target`, into bits 0..25. No range check is needed:
@@ -2274,6 +2340,9 @@ note word boundary, so the displacement is aligned and inside the signed 26-bit 
 fn patch26 at ulong target ulong to void
 d = and shr sub target at 2 67108863
 wrword at or rdword at d
+if eq target get oc 0
+put tgoc 0 target
+end
 end
 
 note back: emit B to an earlier place (C6.2.35)
@@ -3171,6 +3240,17 @@ end
 note binop: op 33..48, destination (255 none), ix the fr slot of a (kind, number/register, type) then b.
 note Result in rk/rv/rt. om4 BINOP.
 fn binop op ulong dst ulong ix ulong to void
+if ne get fzone 0 0
+if and eq get fr ix 3 eq get fr add ix 3 3
+foldbin op get fr add ix 2 get fr add ix 1 get fr add ix 4
+if ne get fok 0 0
+put rk 0 3
+put rv 0 get fval 0
+put rt 0 get fty 0
+ret
+end
+end
+end
 if or eq op 59 eq op 60
 binrot op dst ix
 ret
@@ -3349,6 +3429,19 @@ end
 note ======== element addresses and array arguments ========
 global ea_b ulong 1
 global ea_i ulong 1
+global ea_k ulong 1
+
+note eaem: the load or store word base (LDOP / STOP register-offset form) of register rt at ea_b / ea_i.
+note ea_i 255 (OM-2, a number index k = ea_k up to 4095): the unsigned-offset form instead, same size and
+note opc bits, imm12 = k scaled by the element size (LDR/STR (immediate), C6.2.216 and its family).
+fn eaem wd ulong rg ulong to void
+b = get ea_b 0
+if eq get ea_i 0 255
+emit or or or or and wd 3233808384 956301312 shl get ea_k 0 10 shl b 5 rg
+ret
+end
+emit or or or wd rg shl b 5 shl get ea_i 0 16
+end
 note elemaddr: array name e (index + 1), index value (kind, number or register, type). A number index must
 note be inside the array (error 21) and needs no check; a register index: CMP Xi, #len (C6.2.96) or CMP Xi,
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
@@ -3364,8 +3457,13 @@ if eq k 3
 if ge v ln
 fail 21
 end
+if and ne get om2 0 0 le v 4095
+x = ulong 255
+put ea_k 0 v
+else
 x = alloc
 matconst x v
+end
 else
 if le ln 4095
 emit or or 4043309087 shl ln 10 shl v 5
@@ -3480,6 +3578,15 @@ note XZR, C6.2.458; the 32-bit form for u32), i64 NEGS + B.VS trap 1 (C6.2.465),
 note sign check; not: bool EOR Xd, Xn, #1 (C6.2.155), else MVN (ORN from XZR, C6.2.300), then the wrap.
 note om4 VU1 .. VU_E.
 fn vt_un c ulong dst ulong to void
+if ne get fzone 0 0
+if eq get rk 0 3
+foldun c get rt 0 get rv 0
+if ne get fok 0 0
+put rv 0 get fval 0
+ret
+end
+end
+end
 ty = get rt 0
 if ge ty 10
 if eq c 50
@@ -3600,8 +3707,7 @@ fn vt_get e ulong dst ulong to void
 elemaddr e get rk 0 get rv 0 get rt 0
 rd = destreg dst
 ty = ulong get nm_type sub e 1
-w = or ldop ty rd
-emit or or w shl get ea_b 0 5 shl get ea_i 0 16
+eaem ldop ty rd
 put rk 0 1
 put rv 0 rd
 put rt 0 ty
@@ -5304,6 +5410,12 @@ note destination. Every value nests one level deeper (at most 1024, error 14); a
 fn rdval mode ulong exp ulong dst ulong fe ulong to void
 put dexp 0 1
 if eq mode 2
+if ne get om2 0 0
+if ne get fn_inl sub fe 1 0
+inl_call fe dst
+ret
+end
+end
 cb = add mul get depth 0 32 8
 put fr add cb 18 ulong get fn_np sub fe 1
 put fr add cb 19 get nslot 0
@@ -5925,7 +6037,7 @@ put nslot 0 0
 put held 0 0
 put nb 0 0
 put nt 0 0
-eol
+fn_tail f
 end
 
 note s_fn: fn name (param type | param view T N | param edit T N)* to type | void. om4 S_FN.
@@ -5967,6 +6079,7 @@ f = sub findfn w l s 1
 put curfn 0 add f 1
 put lastfn 0 add f 1
 put fn_addr f get oc 0
+put fstart 0 get oc 0
 end
 put nn 0 get nglob 0
 np = ulong 0
@@ -5995,6 +6108,7 @@ if ge np 6
 fail 9
 end
 fn_p f np pw
+put fn_pn add mul f 6 np pw
 np = add np 1
 end
 end
@@ -6007,6 +6121,10 @@ end
 
 note s_ret: ret [value]: the value into X0, give back the local arrays' stack, RET. om4 S_RET.
 fn s_ret to void
+if ne get inl 0 0
+s_iret
+ret
+end
 r = get curret 0
 if eq r 10
 eol
@@ -6055,6 +6173,9 @@ end
 if eq found 0
 fail 9
 end
+if ge get bkind bi 5
+fail 9
+end
 n = get nbrk 0
 if ge n 1024
 fail 14
@@ -6084,6 +6205,9 @@ end
 if eq found 0
 fail 9
 end
+if ge get bkind bi 5
+fail 9
+end
 n = get ncont 0
 if ge n 1024
 fail 14
@@ -6110,9 +6234,7 @@ end
 
 note stel: the checked store of v (type t) at ea_b / ea_i (the STOP table: register offset, scaled)
 fn stel t ulong v ulong to void
-b = shl get ea_b 0 5
-i = shl get ea_i 0 16
-emit or or or stop t v b i
+eaem stop t v
 end
 
 note s_put: put A i v: index, then value, then the checked store (STOP table). om4 S_PUT.
@@ -6421,6 +6543,14 @@ fail 4
 end
 if eq get tk 0 2
 range get tw 0 t get tbig 0
+if ne get om2 0 0
+kk = get tw 0
+if eq peekw 181
+s_unroll w t kk sn sh
+ret
+end
+put tw 0 kk
+end
 sf_num w t get tw 0 sn sh
 ret
 end
@@ -6428,12 +6558,707 @@ rdval 1 t 255 0
 if ne get rt 0 t
 fail 7
 end
+if ne get om2 0 0
+if eq peekw 181
+fail 16
+end
+end
 if eq get rk 0 3
 sf_num w t get rv 0 sn sh
 ret
 end
 kr = matreg get rk 0 get rv 0 get rt 0
 sf_val w t kr sn sh
+end
+
+note ======== OM-2 section 4: unroll, inline, folding, the growth bound and trap-site records ========
+note peekw: the keyword code of the next word (0 for anything else) without reading it
+fn peekw to ulong
+c0 = get cur 0
+l0 = get line 0
+a0 = get tka 0
+b0 = get tkb 0
+tok
+r = ulong 0
+if eq get tk 0 1
+if le get tl 0 8
+r = kw get tw 0
+end
+end
+put cur 0 c0
+put line 0 l0
+put tka 0 a0
+put tkb 0 b0
+ret r
+end
+
+note s_unroll: for i T K unroll (K a number 1..64, error 8 outside). i is a constant name (kind 9) bound to
+note 0..K-1 in turn; the body is read K times from its first line (s_unr). No branch is emitted.
+fn s_unroll w ulong t ulong kk ulong sn ulong sh ulong to void
+if or eq kk 0 gt kk 64
+fail 8
+end
+tok
+eol
+addname w 0 t 0 9 0
+n = get nb 0
+pushb 0 5 0 sub get nn 0 1 t
+pushnh sn sh
+put u_cur n get cur 0
+put u_line n get line 0
+put u_it n 0
+put u_k n kk
+put u_nn n get nn 0
+put u_held n get held 0
+put fzone 0 add get fzone 0 1
+end
+
+note s_unr: the end of an unrolled body: read it again with the next value of i, or close the block
+fn s_unr i ulong to void
+eol
+it = add get u_it i 1
+if lt it get u_k i
+put u_it i it
+put nm_addr get breg i it
+put nn 0 get u_nn i
+put held 0 get u_held i
+put dead 0 0
+put cur 0 get u_cur i
+put line 0 get u_line i
+ret
+end
+put nb 0 i
+put nn 0 get bnames i
+put held 0 get bheld i
+put dead 0 0
+put fzone 0 sub get fzone 0 1
+end
+
+note fn_tail: the end of a fn line: an optional inline (OM-2), then the line ends; records the body start
+fn fn_tail f ulong to void
+tok
+k = get tk 0
+if eq k 1
+if ne get om2 0 0
+if le get tl 0 8
+if eq kw get tw 0 182
+put fn_inl f 1
+eol
+put fn_body f get cur 0
+put fn_bln f get line 0
+ret
+end
+end
+end
+end
+if and ne k 0 ne k 3
+put dexp 0 6
+fail 5
+end
+put fn_body f get cur 0
+put fn_bln f get line 0
+end
+
+note inl_call: a call of an inline function fe (index + 1): the result register first (dst, or the next
+note pool slot), then the arguments left to right exactly as for a call, then the body in place.
+fn inl_call fe ulong dst ulong to void
+s0 = get nslot 0
+rres = ulong 255
+ns = s0
+if ne get fn_ret sub fe 1 10
+if eq dst 255
+rres = alloc
+ns = add s0 1
+else
+rres = dst
+end
+end
+cb = add mul get depth 0 32 8
+np = ulong get fn_np sub fe 1
+put fr add cb 18 np
+put fr add cb 19 get nslot 0
+i = ulong 0
+while lt i np
+p = add mul sub fe 1 6 i
+if eq get fn_pk p 0
+rdval 0 ulong get fn_pt p 255 0
+ca_scal p add cb mul i 3
+else
+if ge get fn_pk p 6
+ca_st fe i cb
+else
+ca_arr fe i cb
+end
+end
+i = add i 1
+end
+inl_body fe cb ns rres
+end
+
+note inl_par: bind parameter i of inline function fe to its argument in frame cb. A scalar held in a
+note temporary register (pool index hb or above) is taken as it is; any other scalar is copied to a new
+note register. An array or struct takes its base register; a text's address is loaded into one.
+fn inl_par fe ulong cb ulong i ulong hb ulong to void
+p = add mul sub fe 1 6 i
+q = add cb mul i 3
+k = get fr q
+v = get fr add q 1
+r = ulong 0
+if eq get fn_pk p 0
+if and eq k 1 ge regidx v hb
+r = v
+else
+r = alloc
+force k v ulong get fn_pt p r
+end
+else
+if eq k 5
+r = v
+else
+r = alloc
+matconst r v
+end
+end
+inl_add p r
+end
+
+note inl_add: the name of parameter slot p on register r (a view struct is name kind 8, an edit one 7)
+fn inl_add p ulong r ulong to void
+pk = ulong get fn_pk p
+if eq pk 0
+addname get fn_pn p r ulong get fn_pt p 0 0 0
+ret
+end
+nk = pk
+if eq pk 6
+nk = ulong 8
+end
+addname get fn_pn p r ulong get fn_pt p get fn_pl p nk 0
+end
+
+note inl_body: at most 4 nested inline frames (error 14); an inline function reached again while it is
+note being inlined, or from its own body, is error 9. The caller's local names are hidden, the parameters
+note bound, and the body's lines compiled here until its end (s_inlx) closes the frame.
+fn inl_body fe ulong cb ulong ns ulong rres ulong to void
+lv = get inl 0
+if ge lv 4
+fail 14
+end
+if eq get curfn 0 fe
+fail 9
+end
+j = ulong 0
+while lt j lv
+if eq get il_fn j fe
+fail 9
+end
+j = add j 1
+end
+put il_cur lv get cur 0
+put il_line lv get line 0
+put il_ret lv get curret 0
+put il_nn lv get nn 0
+put il_lo lv get nmlo 0
+put il_held lv get held 0
+put il_ns lv ns
+put il_res lv rres
+put il_fn lv fe
+put il_p0 lv get nilp 0
+inl_bind fe cb
+pushb 0 6 0 fe 0
+pushnh get il_nn lv get il_held lv
+put inl 0 add lv 1
+put fzone 0 add get fzone 0 1
+put curret 0 ulong get fn_ret sub fe 1
+put dead 0 0
+put cur 0 get fn_body sub fe 1
+put line 0 get fn_bln sub fe 1
+inl_run lv
+end
+
+note inl_bind: hide the caller's local names, bind the parameters, protect every register in use
+fn inl_bind fe ulong cb ulong to void
+hb = add get npar 0 get held 0
+put nmlo 0 get nn 0
+np = ulong get fn_np sub fe 1
+i = ulong 0
+while lt i np
+inl_par fe cb i hb
+i = add i 1
+end
+put held 0 get nslot 0
+end
+
+note inl_run: compile the inlined body's lines until its frame (level lv) is closed
+fn inl_run lv ulong to void
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ne stmt 0
+fail 15
+end
+if le get inl 0 lv
+go = false
+end
+m = add m 1
+end
+end
+end
+
+note inlb: the B of an inlined ret, patched to the frame's end
+fn inlb to void
+n = get nilp 0
+if ge n 4096
+fail 14
+end
+put ilp n get oc 0
+put nilp 0 add n 1
+emit 335544320
+put lastb 0 get oc 0
+end
+
+note s_iret: ret inside an inlined body: the value into the frame's result register, then B to its end
+fn s_iret to void
+lv = sub get inl 0 1
+r = get curret 0
+if eq r 10
+eol
+inlb
+dead1
+ret
+end
+rdval 0 r get il_res lv 0
+if ne get rt 0 r
+fail 7
+end
+force get rk 0 get rv 0 get rt 0 get il_res lv
+inlb
+dead1
+eol
+end
+
+note s_inlx: the end of an inlined body: a value function must not reach it (error 18). A last ret's B
+note that is the last word, with no branch patched to the place after it, is taken back; the other rets
+note branch here. The caller's line, names, registers and return type come back; the result is in rk/rv/rt.
+fn s_inlx i ulong to void
+eol
+lv = sub get inl 0 1
+fe = get il_fn lv
+if eq get dead 0 0
+if ne get fn_ret sub fe 1 10
+fail 18
+end
+end
+inl_pat get il_p0 lv
+put nb 0 i
+put cur 0 get il_cur lv
+put line 0 get il_line lv
+put curret 0 get il_ret lv
+put nn 0 get il_nn lv
+put nmlo 0 get il_lo lv
+put held 0 get il_held lv
+put nslot 0 get il_ns lv
+put dead 0 0
+put inl 0 lv
+put fzone 0 sub get fzone 0 1
+put rk 0 1
+put rv 0 get il_res lv
+put rt 0 ulong get fn_ret sub fe 1
+end
+
+note inl_pat: patch the frame's ret B words (from p0) to here, after taking back a last one that is the
+note last word and that no branch was patched past
+fn inl_pat p0 ulong to void
+n = get nilp 0
+o = get oc 0
+if and ne get dead 0 0 gt n p0
+if eq get lastb 0 o
+if ne get tgoc 0 o
+if eq get ilp sub n 1 sub o 4
+put oc 0 sub o 4
+n = sub n 1
+end
+end
+end
+end
+j = p0
+while lt j n
+patch26 get ilp j get oc 0
+j = add j 1
+end
+put nilp 0 p0
+end
+
+note ---- folding (only while fzone is above 0): an operation on two typed numbers is computed with OM-1
+note arithmetic: unsigned wraps to its width, signed results are sign-extended; an operation that would
+note trap (signed overflow, divide by 0, a shift or rotate amount at or above the width) is not folded.
+fn fmask w ulong to ulong
+if ge w 64
+ret not ulong 0
+end
+ret sub shl ulong 1 w 1
+end
+
+fn fasr x ulong s ulong to ulong
+if eq shr x 63 0
+ret shr x s
+end
+ret not shr not x s
+end
+
+fn fsext r ulong w ulong to ulong
+if ge w 64
+ret r
+end
+ret fasr shl r sub 64 w sub 64 w
+end
+
+fn fyes v ulong t ulong to void
+put fval 0 v
+put fty 0 t
+put fok 0 1
+end
+
+fn fb_cmp op ulong sg ulong a ulong b ulong to void
+x = a
+y = b
+if ne sg 0
+x = xor a shl ulong 1 63
+y = xor b shl ulong 1 63
+end
+r = false
+if eq op 43
+r = eq x y
+end
+if eq op 44
+r = ne x y
+end
+if eq op 45
+r = lt x y
+end
+if eq op 46
+r = le x y
+end
+if eq op 47
+r = gt x y
+end
+if eq op 48
+r = ge x y
+end
+v = ulong 0
+if r
+v = ulong 1
+end
+fyes v 1
+end
+
+fn fb_arith op ulong ty ulong w ulong sg ulong a ulong b ulong to void
+r = ulong 0
+if eq op 33
+r = add a b
+end
+if eq op 34
+r = sub a b
+end
+if eq op 35
+if ne sg 0
+if ge add a shl ulong 1 31 shl ulong 1 32
+ret
+end
+if ge add b shl ulong 1 31 shl ulong 1 32
+ret
+end
+end
+r = mul a b
+end
+if eq sg 0
+fyes and r fmask w ty
+ret
+end
+if eq w 64
+if eq op 33
+if ne shr and xor a r xor b r 63 0
+ret
+end
+end
+if eq op 34
+if ne shr and xor a b xor a r 63 0
+ret
+end
+end
+fyes r ty
+ret
+end
+if ne fsext r w r
+ret
+end
+fyes r ty
+end
+
+fn fb_div op ulong ty ulong w ulong sg ulong a ulong b ulong to void
+if eq b 0
+ret
+end
+if eq sg 0
+if eq op 36
+fyes div a b ty
+else
+fyes rem a b ty
+end
+ret
+end
+na = shr a 63
+sb = shr b 63
+ma = a
+if ne na 0
+ma = sub 0 a
+end
+mb = b
+if ne sb 0
+mb = sub 0 b
+end
+if eq op 37
+rr = rem ma mb
+if ne na 0
+rr = sub 0 rr
+end
+fyes rr ty
+ret
+end
+if eq w 64
+if eq a shl ulong 1 63
+if eq b not ulong 0
+ret
+end
+end
+end
+q = div ma mb
+if ne xor na sb 0
+q = sub 0 q
+end
+if ne fsext q w q
+ret
+end
+fyes q ty
+end
+
+fn fb_shift op ulong ty ulong w ulong sg ulong a ulong b ulong to void
+if ge b w
+ret
+end
+if eq op 42
+if eq sg 0
+fyes shr a b ty
+else
+fyes fasr a b ty
+end
+ret
+end
+r = shl a b
+if eq sg 0
+fyes and r fmask w ty
+ret
+end
+if eq w 64
+if ne fasr r b a
+ret
+end
+fyes r ty
+ret
+end
+if ne fsext r w r
+ret
+end
+fyes r ty
+end
+
+fn fb_rot op ulong ty ulong w ulong a ulong b ulong to void
+if ge b w
+ret
+end
+s = b
+if and eq op 60 ne s 0
+s = sub w s
+end
+if eq s 0
+fyes a ty
+ret
+end
+fyes and or shr a s shl a sub w s fmask w ty
+end
+
+note foldbin: op on the typed numbers a, b of type ty (b's own type for a shift); fok 1 when folded
+fn foldbin op ulong ty ulong a ulong b ulong to void
+put fok 0 0
+if or eq ty 0 ge ty 10
+ret
+end
+sg = ulong 0
+if ge ty 6
+sg = ulong 1
+end
+if and ge op 43 le op 48
+fb_cmp op sg a b
+ret
+end
+if and ge op 38 le op 40
+r = and a b
+if eq op 39
+r = or a b
+end
+if eq op 40
+r = xor a b
+end
+fyes r ty
+ret
+end
+if eq ty 1
+ret
+end
+w = twid ty
+if le op 35
+fb_arith op ty w sg a b
+ret
+end
+if le op 37
+fb_div op ty w sg a b
+ret
+end
+if le op 42
+fb_shift op ty w sg a b
+ret
+end
+if or eq op 59 eq op 60
+if le ty 5
+fb_rot op ty w a b
+end
+end
+end
+
+note foldun: neg (49) / not (50) of the typed number a
+fn foldun c ulong ty ulong a ulong to void
+put fok 0 0
+if or eq ty 0 ge ty 10
+ret
+end
+if eq c 50
+if eq ty 1
+fyes xor a 1 ty
+ret
+end
+if lt ty 6
+fyes and not a fmask twid ty ty
+ret
+end
+fyes not a ty
+ret
+end
+if eq ty 1
+ret
+end
+r = sub 0 a
+if lt ty 6
+fyes and r fmask twid ty ty
+ret
+end
+w = twid ty
+if eq w 64
+if eq a shl ulong 1 63
+ret
+end
+fyes r ty
+ret
+end
+if ne fsext r w r
+ret
+end
+fyes r ty
+end
+
+note ---- omc-site records (om2 diag): one per runtime trap site, in emission order, after the artifact
+note on stderr: omc-site 1 line=N iter=k, k the counters of the open unrolled loops outer to inner
+note joined by '.', or '-'.
+fn siteb b ulong to void
+n = get nsite 0
+if ge n 8388608
+fail 14
+end
+put sitebuf n uchar b
+put nsite 0 add n 1
+end
+
+fn sitew w ulong n ulong to void
+i = ulong 0
+x = w
+while lt i n
+siteb and x 255
+x = shr x 8
+i = add i 1
+end
+end
+
+fn siten v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+j = i
+while gt j 0
+j = sub j 1
+siteb ulong get d j
+end
+end
+
+fn siterec to void
+sitew 7310584038532803951 8
+sitew 4424063608026050848 8
+siten add get line 0 get lbase 0
+sitew 67561537693984 6
+any = false
+j = ulong 0
+while lt j get nb 0
+if eq get bkind j 5
+if any
+siteb 46
+end
+siten get u_it j
+any = true
+end
+j = add j 1
+end
+if not any
+siteb 45
+end
+siteb 10
+end
+
+fn sitesout to void
+p = ulong 0
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge p get nsite 0
+go = false
+else
+n = write 2 sitebuf p sub get nsite 0 p
+if le n 0
+go = false
+else
+p = add p ulong n
+end
+end
+m = add m 1
+end
+end
 end
 
 note finish: end of a function: a function that needs a value must not reach its end (error 18), a void
@@ -6494,6 +7319,14 @@ finish
 ret
 end
 i = sub n 1
+if eq get bkind i 5
+s_unr i
+ret
+end
+if eq get bkind i 6
+s_inlx i
+ret
+end
 put nb 0 i
 k = get bkind i
 if eq k 2
@@ -6573,6 +7406,9 @@ p = add p ulong n
 end
 m = add m 1
 end
+end
+if eq get om2m 0 1
+sitesout
 end
 exit int 0
 end
@@ -7205,6 +8041,14 @@ end
 
 note sa_new: name = new <type or struct>. Rewind unless the next word is a struct name.
 fn sa_new w ulong to void
+if ne get om2 0 0
+if ne get inl 0 0
+fail 9
+end
+if ne get fn_inl sub get curfn 0 1 0
+fail 9
+end
+end
 p = get cur 0
 ln = get line 0
 tok

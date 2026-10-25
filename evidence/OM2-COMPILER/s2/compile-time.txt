@@ -1,0 +1,7 @@
+/tmp/om2c/omc-base /tmp/zl/main/seed/omc/omc.om: median_us=9787 min_us=5205 n=41 maxrss_kib=700
+seed/out/omc seed/omc/omc.om: median_us=13317 min_us=6859 n=41 maxrss_kib=832
+/tmp/om2c/omc-base seed/omc/pinned.om: median_us=5041 min_us=2891 n=41 maxrss_kib=540
+seed/out/omc seed/omc/pinned.om: median_us=5199 min_us=2827 n=41 maxrss_kib=512
+/tmp/om2c/omc-base om/sha256/sha256.om: median_us=3071 min_us=1666 n=41 maxrss_kib=380
+seed/out/omc om/sha256/sha256.om: median_us=2252 min_us=1926 n=41 maxrss_kib=352
+seed/out/omc seed/omc/om2/s2/u1.om: median_us=1426 min_us=1060 n=41 maxrss_kib=352

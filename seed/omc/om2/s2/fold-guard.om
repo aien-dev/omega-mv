@@ -1,0 +1,11 @@
+om2
+note a trapping operation is not folded: a guarded div stays guarded
+fn main to int
+s = ulong 0
+for i ulong 3 unroll
+if ne i 0
+s = add s div ulong 100 i
+end
+end
+ret int s
+end

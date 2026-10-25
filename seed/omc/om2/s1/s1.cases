@@ -37,7 +37,7 @@ s1-diag-noend emit seed/omc/om2/s1/diag-noend.om - file:seed/omc/om2/s1/diag-noe
 s1-diag-range emit seed/omc/om2/s1/diag-range.om - file:seed/omc/om2/s1/diag-range.err 8
 s1-diag-unknown emit seed/omc/om2/s1/diag-unknown.om - file:seed/omc/om2/s1/diag-unknown.err 3
 s1-diag-plain emit seed/omc/om2/s1/diag-plain.om - err:3:8 8
-s1-diag-ok emit seed/omc/om2/s1/diag-ok.om any - 0
+s1-diag-ok emit seed/omc/om2/s1/diag-ok.om any file:seed/omc/om2/s1/diag-ok.err 0
 # om2 fmt: canonical text, idempotence, compile(fmt(x)) == compile(x), an OM-1 rest, refusals
 s1-fmt emit seed/omc/om2/s1/fmt-in.om file:seed/omc/om2/s1/fmt-out.txt - 0
 s1-fmt-idem emit seed/omc/om2/s1/fmt-idem.om file:seed/omc/om2/s1/fmt-out.txt - 0

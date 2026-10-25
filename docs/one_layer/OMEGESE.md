@@ -659,6 +659,28 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   error 7), the result x's type. n outside 0..w-1 traps 7 at run time, a number n included. uint/ulong
   with a number n give one `ROR` (immediate, EXTR); otherwise the amount check, then `RORV` (rotl through
   `NEG`). uchar/ushort replicate the value into a 32-bit pattern, rotate it, then truncate.
+- **Unroll.** `for i T K unroll`: K a number 1..64 (error 8 outside; a name or other value is error 16).
+  The body is compiled K times with `i` the constant 0..K-1 (a write to it is error 7). `break` or
+  `continue` whose innermost loop is the unrolled one is error 9; inside a rolled loop in the body they
+  work as usual. No loop branch or counter is emitted. Removing `unroll` leaves behaviour unchanged.
+- **Inline.** `fn NAME ... to T inline`: every call is compiled in place. Arguments are read left to
+  right as for a call; a scalar argument in a named register is copied, one in a temporary is used as it
+  is. The caller's locals are hidden from the body, and `ret` becomes a branch to the body's end (a last
+  one is dropped). The standalone function is still emitted. `new` in it, or an inline function reached
+  again while it is being inlined (itself included), is error 9; a fifth nested inline level is
+  error 14. Calls to other functions stay calls. Removing `inline` leaves behaviour unchanged.
+- **Folding and checks.** Only inside an unrolled or inlined body, an operation (`add` .. `shr`,
+  comparisons, `rotr`/`rotl`, `neg`, `not`) on two typed numbers is computed with OM-1 arithmetic. One
+  that would trap (signed overflow, a divisor 0, an amount at or above the width) is not folded and keeps
+  its runtime trap. Conversions are never folded. A number index into a sized array is checked when it
+  is compiled (error 21), as in OM-1, and in an OM-2 unit up to 4095 it is an immediate offset (LDR/STR
+  unsigned offset) with no runtime check. Every other index keeps its runtime check.
+- **Bounds.** At most 65536 emitted words per function after unrolling and inlining, 64 copies per
+  unrolled loop and 4 inline levels (error 14, `obligation=growth`). 16 registers stay the limit
+  (error 12, `obligation=regs`).
+- **Trap sites.** With `om2 diag`, an accepted unit's stderr gets one `omc-site 1 line=N iter=k` record
+  per runtime trap site, in emission order: N the source line, k the counters of the open unrolled loops
+  outer to inner joined by `.`, or `-`. stdout is unchanged.
 
 ## 10. Native host extension (2026-10-23)
 
