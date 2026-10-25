@@ -95,7 +95,7 @@ commit compiles to a 29,836-byte program.
 
 | stream | function(s) | inputs | result |
 |---|---|---|---|
-| fma | `fma64` (internal, vs hardware FMADD) | 326,561 triples: special×special×special, class mix, near-cancellation, exact ties, sticky-only ties, subnormal and overflow products, hostmath shapes | 326,561/326,561 identical |
+| fma | `fma64` (internal, vs hardware FMADD) | 326,561 triples: every pair of 27 special doubles with every third special as addend (`D_SPECIAL[::3]`, 9 addends, 6,561 triples), class mix, near-cancellation, exact ties, sticky-only ties, subnormal and overflow products, hostmath shapes | 326,561/326,561 identical |
 | log | `hmlog` | 226,442: specials, every power of two 2^-1074..2^1023, 100,000 random bit patterns, 100,000 positive finite, near 1, around √2, 2^e(1+tiny) | 226,442/226,442 |
 | exp | `hmexp` | 221,309: specials, 100,000 random bits, 100,000 in [-750, 712], ±200 ulps around both cutoffs, around k·ln2 for k = -1080..1024 | 221,309/221,309 |
 | pow | `hmpow` | 100,097: RoPE θ^(±2i/d) for 7 θ × 5 d, random base/exponent, random bit pairs, special×special | 100,097/100,097 |
@@ -140,11 +140,19 @@ because the object fuses them.
   object, not the new one.
 - Fixed pieces, set by the ABI v1 array rule: 4096 elements for scan/scales/x packing, one 128-column
   block for the GEMV reference. The C adapter that loops over them is not written here. A NULL
-  `yscale` is the adapter ignoring `acc 1`.
-- `gpufmt`: `fmt` at most 1023 bytes plus its NUL inside 1024, at most 16 consuming conversions,
-  `%s` strings inside a 4096-byte pool, `cap` at most 1024 with a 1024-byte `out`. Going past any of
-  these traps, where the C would read or write out of bounds or take more varargs. A NULL `out` or
-  `fmt` cannot be expressed; the adapter keeps the C's `!out || cap == 0` and `fmt == NULL` checks.
+  `yscale` is the adapter ignoring `acc 1`, and a k that is not a multiple of 128 is the adapter
+  running only the k/128 whole blocks, as the C does. The committed corpus has neither case: both
+  were checked once in a /tmp run against the C (k = 200, 328 and 127 with `yscale` NULL and
+  non-NULL; y and yscale identical), not by `parity/run.sh`.
+- `gpufmt` limits are limits of the .om, not cases where the C goes out of bounds: `fmt` at most
+  1023 bytes plus its NUL inside 1024, at most 16 consuming conversions, `%s` strings inside a
+  4096-byte pool, a 1024-byte `out`. Past the first three the .om traps 3 where the C keeps working
+  (it takes as many varargs and as long strings as the caller passes). A `cap` above 1024 traps only
+  when an output write actually passes index 1023 of `out`; shorter output with a larger `cap` runs
+  normally. The committed corpus stays within 16 conversions; the exact 16-conversion boundary
+  (cap 1024 and cap 40: identical to the C) and the 17-conversion trap were exercised only in a /tmp
+  run, not by `parity/run.sh`. A NULL `out` or `fmt` cannot be expressed; the adapter keeps the C's
+  `!out || cap == 0` and `fmt == NULL` checks.
 - Narrowing that the C does by parameter type traps instead: an e4m3 byte above 255 traps 5, and so
   does a bf16 scale above 65535. `hmpow2f` takes a `long` where the C takes an `int`.
 - `fma64` is internal and assumes 53-bit significands (`mul128`).
