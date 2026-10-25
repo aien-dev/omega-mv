@@ -41,7 +41,8 @@ note Counters (diagnostic, process-cumulative, never reset): dlstat k
 note   0 changes tracked  1 invalidations  2 scan steps  3 FSM recompute units  4 cutoffs found
 note   5 cutoff misses  6 recomputed steps  7 longest recompute  8 binds  9 drops  10 dlres served
 note   11 dlres refused
-note Select churn (s5.2): dlinvn = invalidations (MIN/MAX extreme scans and dropped states),
+note Select churn (s5.2): dlinvn = invalidations (MIN/MAX extreme scans, and every drop of live
+note delta state: dldrop at PROGRAM, dlchg or dlres finding the state unusable; never twice for one),
 note dlmissn = FSM recompute units that ran to n without a cutoff (at least one step recomputed).
 
 global DLB ulong 1
@@ -267,7 +268,11 @@ end
 ret 1
 end
 
+note a drop of LIVE delta state is one invalidation (dlinvn); dropping an unbound state counts none
 fn dldrop to void
+if eq get DLB 0 1
+dlbump 1 1
+end
 dlbump 9 1
 end
 
