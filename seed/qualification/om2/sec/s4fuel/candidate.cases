@@ -1,22 +1,22 @@
 # SPDX-License-Identifier: Apache-2.0
 # Erratum E14 (expansion fuel 65536 per function; each unrolled copy and each inline expansion costs 1).
-# Expected lines come from oracle/s4fuel/fuel.py: a unit is charged when its copy/expansion starts, and the
-# unit that takes the total above 65536 names its loop or call line (E14: "at the line of the loop or call
-# that exhausted it"). A candidate that charges differently but stays inside E14 shows here as a stderr
-# line mismatch with the right code 14; such a disagreement goes to the coordinator, it is not a silent PASS.
+# Expected lines come from oracle/s4fuel/fuel_e16.py (erratum E16: an unrolled loop is charged K at its line
+# when it starts, an inline expansion 1 at its call line; error 14 names the construct whose charge exceeds
+# the fuel). fuel.py (pre-order per-copy charge) is the superseded pre-E16 model, kept for the record.
+# A line mismatch with code 14 is a compiler defect against E16 (coordinator ruling).
 # Deadline: 10 s per compile. Runaway compile work is INVALID (deadline) or FAIL (no error), never PASS.
 deadline 10
 # E14 control 1: depth 2 (64 + 4096 = 4160 units) compiles; the program exits 0
 fuel-d2 run seed/qualification/om2/sec/s4fuel/fuel-d2.om - - - 0
-# E14 control 2: depth 3 (262144 innermost copies) is error 14; oracle: exhausted at the b loop, line 6
-fuel-d3 emit seed/qualification/om2/sec/s4fuel/fuel-d3.om - err:6:14 14
+# E14 control 2: depth 3 (262144 innermost copies) is error 14; E16 oracle (fuel_e16.py): exhausted at the c loop, line 7 (used 65600)
+fuel-d3 emit seed/qualification/om2/sec/s4fuel/fuel-d3.om - err:7:14 14
 fuel-d3-code refuse seed/qualification/om2/sec/s4fuel/fuel-d3.om 14
 # depth 4 (E14's 1.58 s case under c23b3376): must be refused as quickly; oracle: line 8
 deadline 2
 fuel-d4 emit seed/qualification/om2/sec/s4fuel/fuel-d4.om - err:8:14 14
 fuel-d4-code refuse seed/qualification/om2/sec/s4fuel/fuel-d4.om 14
-# inline variant: expansions of f1..f4 under 64-copy unrolls; oracle: exhausted at the f4 call, line 8
+# inline variant: expansions of f1..f4 under 64-copy unrolls; E16 oracle: exhausted at the f3 unroll, line 7 (used 65537)
 deadline 10
-fuel-inl emit seed/qualification/om2/sec/s4fuel/fuel-inl.om - err:8:14 14
+fuel-inl emit seed/qualification/om2/sec/s4fuel/fuel-inl.om - err:7:14 14
 fuel-inl-code refuse seed/qualification/om2/sec/s4fuel/fuel-inl.om 14
 deadline 30

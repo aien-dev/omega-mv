@@ -46,3 +46,12 @@ Evidence: evidence/phaseB/s3-head/<commit>/. E15 (S3's points 1-7) needed no fix
 - S1 and S2 mutants rerun on the head: identical verdicts (10 + 3 killed).
 Verdict for the S3 head: PASS on C2, §0-§4 in scope and §5 in scope, with one open item: the fuel-inl error-line
 mismatch above, pending a coordinator ruling. Mutants 17/17 killed (§5: 4, earlier: 13).
+
+E16 update (2026-10-25). The coordinator ruled the charge order in erratum E16: K units for an unrolled loop at
+its line when it starts, 1 for an inline expansion at its call line. The oracle oracle/s4fuel/fuel_e16.py,
+under that rule, predicts fuel-d3 line 7 (65600), fuel-d4 line 8 (65600) and fuel-inl line 7 (65537).
+The head ad220c05 gives d3 line 6, d4 line 8 and inl line 12 (evidence/phaseB/s3-head/ad220c05/fuel-e16.log).
+D-S3-1 (FAIL against E16): fuel-d3 and fuel-inl name the wrong line. Code 14 is right, and the
+compile is fast. Under E16, line 6 (d3) and line 12 (inl) charge only 64 at a time, each followed by 64-unit
+charges at the inner loop. So the charge that crosses 65536 must be an inner loop's, unless the compiler
+charges something larger at the middle loop (for example K x the body's cost).
