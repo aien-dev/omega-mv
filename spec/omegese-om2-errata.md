@@ -159,3 +159,20 @@ scanner cannot order the store and the load. Required negative control:
 `fn f c edit uchar 104 a view uchar 1 to ulong / put c 32 get a 0 / if eq get c 32 0 / ret 0 / else /
 ret 1 / end / end` with `pub:0:32:8`. Expected: MANUAL or data-dependent, NOT_RUN; natively, message
 bytes 0 and 1 give exits 0 and 1.
+
+## E14 (advisor review, 2026-10-25): expansion work fuel
+
+The emitted-word cap alone does not bound compiler work. Nested unrolls of a body that emits nothing
+(`for a ulong 64 unroll` four deep around `note empty`) emit an identical 212-byte artifact at every
+depth, yet re-parse 64^4 bodies (1.58 s with omc c23b3376 against about 1 ms at depth 1). The §4
+sentence "each bound limits compiler work and memory linearly in the output" is withdrawn and
+replaced by:
+- Every function has an expansion fuel of 65536. Each copy of an unrolled body and each inline
+  expansion costs 1, at every nesting depth, so nested unrolls multiply their cost. Exhausting the fuel
+  is error 14 (`obligation=growth`) at the line of the loop or call that exhausted it.
+- With fuel F, compiler work is then bounded by O(F x the source length of the function) re-parsed
+  tokens, plus the OM-1 capacities.
+- Required controls:
+  - depth 2 of 64-copy empty unrolls (4096 copies) compiles;
+  - depth 3 (262144 copies) is error 14;
+  - the compile time of the largest accepted case is reported.
