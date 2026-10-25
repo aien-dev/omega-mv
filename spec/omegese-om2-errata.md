@@ -53,3 +53,30 @@ edit). Unsized parameters are allowed on internal functions, not only on exporte
   it. The generated bindings move to a generated `src/omega_om_units.c`, and every build rule that
   names `src/sha256.c` (Makefile, mk/*.mk, scripts) is switched to it in the cutover commit. The SHA
   lane (L838) is the single writer of exactly those build-rule lines in that commit.
+
+## E6 (QualPhaseB L836, 2026-10-25): reserved names, diag fields, formatter edge cases
+
+- **Q1:** declaring an OM-2 reserved word as a name inside an OM-2 unit (for example `fn rotr`) is
+  error 16, as OM-1 does for `fn break`.
+- **Q2, `expect` and spans:**
+  - A lexically bad literal (error 6) or an out-of-range literal (error 8) reports `expect=number`.
+  - A missing `end` at end of input reports `expect=end`, with `sev=incomplete`.
+  - An unknown name reports `expect=name`.
+  - A line that ends before its operand when more input follows reports the LF byte as the offending
+    token (span covers the LF), with `sev=error`.
+  - An incomplete call to a function whose signature is not yet read reports the callee name token
+    as the span, with `sev=unknown`.
+- **Q3:** line numbers always count every line of the whole input, the `om2 fmt` line included.
+- **Q4, formatter:**
+  - (f) Formatter mode applies iff the input's first line, at byte 0, is exactly `om2 fmt`. A line
+    `om2 fmt` anywhere else is error 16.
+  - (c, d) A note line is any line whose first token is `note`, indented or not. It is kept byte for
+    byte, including its indentation and any trailing spaces. `text` literal bytes are kept byte for
+    byte. These two rules take precedence over every other formatting rule.
+  - (b) A whitespace-only line becomes an empty line.
+  - (a) Blank lines at the end of the input are error 6, so the formatter never removes lines and the
+    output always ends with exactly one LF after the last non-blank line.
+  - (e) The spacing next to `(` and `)` is kept as written. Grouping is never respaced.
+  - (g) CR is error 6 anywhere, including inside a `text` literal.
+  - (h) The rest may be an OM-1 unit. The formatter is lexical, and compile(fmt(x)) == compile(x)
+    applies whatever x's profile is.
