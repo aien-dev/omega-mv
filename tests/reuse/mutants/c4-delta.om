@@ -1,0 +1,538 @@
+note SPDX-License-Identifier: Apache-2.0
+note c4-delta.om: CONTROL MUTANT C4 (REUSE-1 s9), never a product unit. It is om/reuse/delta.om with one
+note change: dldrop keeps the delta state and the binding (the line `put DLB 0 0` is removed), so a
+note PROGRAM change followed by dlbind with the same t serves the delta state of the old program.
+note Expected: wrong answers (tests/reuse/delta-random.om fails with code 3 or 4 against it).
+note Original header of delta.om follows.
+note delta.om: REUSE-1 incremental execution (#743), contract docs/reuse/REUSE-1.md v1.0 sections 4, 12.
+note Unit order: sha256 r1 exp check delta select lib methods router. Names: dl / DL only.
+note Reads R1P R1N R1X R1T, writes R1R (dlres only). Calls r1valid r1lane r1ident r1delta and,
+note for a bound AGG method, mtlane t x; a bound FSM method reads R1T[s*16 + a] (filled by ckbind).
+note
+note Router protocol (agreed with CandCore):
+note   BEGIN    after R1P R1N R1X are set: dlsreset, then dlbind t (t = template index, -1 = baseline)
+note   PROGRAM  after R1P is replaced: dldrop, then dlbind t
+note   change   the router validates the whole request (s1.3), then for each item in order applies
+note            exactly that item to R1X / R1N and calls dlchg op i v old before the next item
+note            SET  3 i v old = previous x_i     INS 4 i v old unused (0)
+note            DEL  5 i 0 old = the removed value  SWAP 6 i v = j, old = x_j before the swap (unused)
+note   AGG uses v and old (SWAP no work); FSM reads the symbols from R1X and compares new q_t with
+note   the stored trajectory (s4), so it needs neither. FSM SWAP = SET at min(i, j), then SET at max.
+note   (The other order is also correct: the stored trajectory is a valid chain under the current
+note   symbols everywhere except at changed positions, so every cutoff is sound; the reversed order
+note   passed both delta test suites when tried as a mutant.)
+note   QUERY    dlres: 0 = R1R holds r0 r1 from the delta state, 1 = no usable state (serve full)
+note dlbind returns 0 bound, 1 refused (PROG invalid or family unknown). dlbind on a session that is
+note already bound with the same t is a no-op, so dldrop before a rebind is mandatory (C4 relies on it).
+note dlchg returns 0 tracked, 1 delta state dropped (unbound until the next dlbind).
+note
+note Delta state (s4), 557,488 bytes of DL globals per process, one session (<= 1 MiB, s3.5):
+note   DLC  65536 words  MIN/MAX count per mapped value (2^wl used)
+note   DLQ   4097 words  FSM trajectory q_0..q_n
+note   DLBC    16 words  OR/AND count per bit
+note   DLL     16 words  FSM lambda copy; scalars below
+note Worst cases per change: AGG ADD/XOR/OR/AND O(1) (16 bit counts); MIN/MAX one extreme scan of
+note at most 2^wl - 1 counts when the last copy of the extreme goes; FSM SET at i recomputes at most
+note n - i steps, INS at most n + 1 - i plus a suffix shift of at most n + 1 words, DEL at most n - i - 1
+note plus a shift of at most n words; SWAP two SETs. dlbind: one pass
+note over the state plus, for MIN/MAX, clearing 2^wl counts.
+note
+note Counters (diagnostic, process-cumulative, never reset): dlstat k
+note   0 changes tracked  1 invalidations  2 scan steps  3 FSM recompute units  4 cutoffs found
+note   5 cutoff misses  6 recomputed steps  7 longest recompute  8 binds  9 drops  10 dlres served
+note   11 dlres refused
+note Select churn (s5.2): dlinvn = invalidations (MIN/MAX extreme scans and dropped states),
+note dlmissn = FSM recompute units that ran to n without a cutoff (at least one step recomputed).
+
+global DLB ulong 1
+global DLTB long 1
+global DLF ulong 1
+global DLFO ulong 1
+global DLW ulong 1
+global DLN ulong 1
+global DLA ulong 1
+global DLU ulong 1
+global DLS ulong 1
+global DLBC ulong 16
+global DLL ulong 16
+global DLC ulong 65536
+global DLQ ulong 4097
+global DLST ulong 12
+
+fn dlbump k ulong v ulong to void
+put DLST k add get DLST k v
+end
+
+fn dlstat k ulong to ulong
+if ge k 12
+ret 0
+end
+ret get DLST k
+end
+
+fn dlinvn to ulong
+ret get DLST 1
+end
+
+fn dlmissn to ulong
+ret get DLST 5
+end
+
+note mapped lane: the bound method's lane map, or the baseline's
+fn dlmap x ulong to ulong
+t = get DLTB 0
+if ge t 0
+ret mtlane ulong t x
+end
+ret r1lane x
+end
+
+note one FSM step: the bound method's table, or the baseline delta
+fn dlstep s ulong a ulong to ulong
+if eq get DLU 0 1
+ret get R1T add mul s 16 a
+end
+ret r1delta s a
+end
+
+fn dllam s ulong to ulong
+ret get DLL s
+end
+
+note MIN/MAX: the last copy of the extreme went; scan to the next nonzero count
+fn dlscan to void
+dlbump 1 1
+if eq get DLN 0 0
+put DLA 0 0
+ret
+end
+a = get DLA 0
+if eq get DLFO 0 3
+top = shl ulong 1 get DLW 0
+st = add a 1
+for j ulong sub top st
+v = add st j
+if ne get DLC v 0
+put DLA 0 v
+dlbump 2 add j 1
+ret
+end
+end
+dlbump 2 sub top st
+ret
+end
+for j ulong a
+v = sub sub a 1 j
+if ne get DLC v 0
+put DLA 0 v
+dlbump 2 add j 1
+ret
+end
+end
+dlbump 2 a
+end
+
+fn dlbitadd y ulong d ulong to void
+for b ulong 16
+if ne and shr y b 1 0
+put DLBC b add get DLBC b d
+end
+end
+end
+
+fn dlbitsub y ulong to void
+for b ulong 16
+if ne and shr y b 1 0
+put DLBC b sub get DLBC b 1
+end
+end
+end
+
+note add one mapped lane y to the AGG delta state
+fn dladd y ulong to void
+f = get DLFO 0
+n = get DLN 0
+a = get DLA 0
+if eq f 1
+put DLA 0 add a y
+end
+if eq f 2
+put DLA 0 xor a y
+end
+if eq f 3
+put DLC y add get DLC y 1
+if or eq n 0 lt y a
+put DLA 0 y
+end
+end
+if eq f 4
+put DLC y add get DLC y 1
+if or eq n 0 gt y a
+put DLA 0 y
+end
+end
+if ge f 5
+dlbitadd y 1
+end
+put DLN 0 add n 1
+end
+
+note remove one mapped lane y from the AGG delta state
+fn dlrem y ulong to void
+f = get DLFO 0
+a = get DLA 0
+put DLN 0 sub get DLN 0 1
+if eq f 1
+put DLA 0 sub a y
+end
+if eq f 2
+put DLA 0 xor a y
+end
+if ge f 5
+dlbitsub y
+end
+if or eq f 3 eq f 4
+c = sub get DLC y 1
+put DLC y c
+if and eq c 0 eq y a
+dlscan
+end
+end
+end
+
+fn dlbagg to void
+f = get R1P 3
+put DLFO 0 f
+put DLW 0 get R1P 2
+put DLN 0 0
+put DLA 0 0
+for b ulong 16
+put DLBC b 0
+end
+if or eq f 3 eq f 4
+top = shl ulong 1 get DLW 0
+for v ulong top
+put DLC v 0
+end
+end
+n = get R1N 0
+for i ulong n
+dladd dlmap get R1X i
+end
+end
+
+fn dlbfsm to void
+for s ulong 16
+put DLL s get R1P add 6 s
+end
+q = get R1P 4
+put DLQ 0 q
+sum = ulong 0
+n = get R1N 0
+for i ulong n
+q = dlstep q get R1X i
+put DLQ add i 1 q
+sum = add sum dllam q
+end
+put DLS 0 sum
+put DLN 0 n
+end
+
+fn dlbind t long to int
+if and eq get DLB 0 1 eq get DLTB 0 t
+ret 0
+end
+put DLB 0 0
+if ne r1valid 0
+ret 1
+end
+fam = get R1P 1
+put DLF 0 fam
+put DLTB 0 t
+put DLU 0 0
+if eq fam 1
+dlbagg
+end
+if eq fam 2
+if ge t 0
+put DLU 0 1
+end
+dlbfsm
+end
+if or eq fam 1 eq fam 2
+put DLB 0 1
+dlbump 8 1
+ret 0
+end
+ret 1
+end
+
+fn dldrop to void
+dlbump 9 1
+end
+
+fn dlsreset to void
+put DLB 0 0
+put DLTB 0 -1
+end
+
+note record one FSM recompute unit of sl steps; cut 1 = a cutoff was found
+fn dlfrec sl ulong cut ulong to void
+dlbump 3 1
+dlbump 6 sl
+if gt sl get DLST 7
+put DLST 7 sl
+end
+if eq cut 1
+dlbump 4 1
+end
+if and eq cut 0 gt sl 0
+dlbump 5 1
+end
+end
+
+note FSM: w_(i+1) changed (x_i); recompute from t = i+1, stop at the first equal stored q_t
+fn dlfset i ulong to void
+n = get DLN 0
+q = get DLQ i
+sum = get DLS 0
+t = add i 1
+cut = ulong 0
+sl = ulong 0
+while le t n bound 4097
+nq = dlstep q get R1X sub t 1
+sl = add sl 1
+old = get DLQ t
+if eq nq old
+cut = 1
+break
+end
+sum = add sub sum dllam old dllam nq
+put DLQ t nq
+q = nq
+t = add t 1
+end
+put DLS 0 sum
+dlfrec sl cut
+end
+
+note FSM INS at i (R1X already holds the insertion): new q_t is compared with the stored state of the
+note same symbol suffix, old q_(t-1); at the first equality the stored suffix shifts up by one
+fn dlfins i ulong to void
+n = get DLN 0
+q = get DLQ i
+po = q
+sum = get DLS 0
+t = add i 1
+cut = ulong 0
+sl = ulong 0
+while le t add n 1 bound 4098
+nq = dlstep q get R1X sub t 1
+sl = add sl 1
+if eq nq po
+cut = 1
+break
+end
+sum = add sum dllam nq
+if le t n
+nx = get DLQ t
+sum = sub sum dllam nx
+po = nx
+end
+put DLQ t nq
+q = nq
+t = add t 1
+end
+if eq cut 1
+sum = add sum dllam po
+s = n
+while ge s t bound 4097
+put DLQ add s 1 get DLQ s
+if eq s 0
+break
+end
+s = sub s 1
+end
+put DLQ t po
+end
+put DLS 0 sum
+put DLN 0 add n 1
+dlfrec sl cut
+end
+
+note FSM DEL at i (R1X already shifted down): new q_t is compared with old q_(t+1); at cutoff t (or
+note t = n with no cutoff) old q_t leaves the sum and the stored suffix from t+1 shifts down by one
+fn dlfdel i ulong to void
+n = get DLN 0
+q = get DLQ i
+sum = get DLS 0
+t = add i 1
+cut = ulong 0
+sl = ulong 0
+while lt t n bound 4097
+nq = dlstep q get R1X sub t 1
+sl = add sl 1
+if eq nq get DLQ add t 1
+cut = 1
+break
+end
+sum = add sub sum dllam get DLQ t dllam nq
+put DLQ t nq
+q = nq
+t = add t 1
+end
+sum = sub sum dllam get DLQ t
+s = t
+while lt s n bound 4097
+put DLQ s get DLQ add s 1
+s = add s 1
+end
+put DLS 0 sum
+put DLN 0 sub n 1
+dlfrec sl cut
+end
+
+fn dlfchg op ulong i ulong v ulong to int
+n = get DLN 0
+if eq op 3
+if ge i n
+ret 1
+end
+dlfset i
+ret 0
+end
+if eq op 4
+if gt i n
+ret 1
+end
+dlfins i
+ret 0
+end
+if eq op 5
+if ge i n
+ret 1
+end
+dlfdel i
+ret 0
+end
+if eq op 6
+if or ge i n ge v n
+ret 1
+end
+if lt i v
+dlfset i
+dlfset v
+end
+if gt i v
+dlfset v
+dlfset i
+end
+ret 0
+end
+ret 1
+end
+
+fn dlachg op ulong i ulong v ulong old ulong to int
+n = get DLN 0
+if eq op 3
+if ge i n
+ret 1
+end
+dladd dlmap v
+dlrem dlmap old
+ret 0
+end
+if eq op 4
+if gt i n
+ret 1
+end
+dladd dlmap v
+ret 0
+end
+if eq op 5
+if ge i n
+ret 1
+end
+dlrem dlmap old
+ret 0
+end
+if eq op 6
+if or ge i n ge v n
+ret 1
+end
+ret 0
+end
+ret 1
+end
+
+fn dlchg op ulong i ulong v ulong old ulong to int
+if eq get DLB 0 0
+ret 1
+end
+r = int 1
+if eq get DLF 0 1
+r = dlachg op i v old
+end
+if eq get DLF 0 2
+r = dlfchg op i v
+end
+if eq r 0
+if eq get DLN 0 get R1N 0
+dlbump 0 1
+ret 0
+end
+end
+put DLB 0 0
+dlbump 1 1
+ret 1
+end
+
+fn dlragg to void
+f = get DLFO 0
+n = get DLN 0
+r = get DLA 0
+if or eq f 3 eq f 4
+if eq n 0
+r = r1ident f
+end
+end
+if ge f 5
+r = r1ident f
+if gt n 0
+r = 0
+for b ulong 16
+c = get DLBC b
+if and eq f 5 gt c 0
+r = or r shl ulong 1 b
+end
+if and eq f 6 eq c n
+r = or r shl ulong 1 b
+end
+end
+end
+end
+put R1R 0 r
+end
+
+fn dlres to int
+if eq get DLB 0 0
+dlbump 11 1
+ret 1
+end
+if ne get DLN 0 get R1N 0
+put DLB 0 0
+dlbump 1 1
+dlbump 11 1
+ret 1
+end
+if eq get DLF 0 1
+dlragg
+put R1R 1 get DLN 0
+end
+if eq get DLF 0 2
+put R1R 0 get DLQ get DLN 0
+put R1R 1 get DLS 0
+end
+dlbump 10 1
+ret 0
+end

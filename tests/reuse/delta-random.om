@@ -1,0 +1,866 @@
+note units: sha256 r1 delta
+note SPDX-License-Identifier: Apache-2.0
+note delta-random.om: delta.om (REUSE-1 s4) against r1full after every change, on seeded random
+note programs (AGG wl 8 and 16, all six folds; FSM random machines and permutation machines with no
+note reconvergence) and random change sequences (SET, INS, DEL, SWAP, BATCH-like runs, zero, sparse,
+note dense, INS/DEL alternating, PROGRAM with same and new shape), edge sequences (index 0 and n-1,
+note INS at n, DEL to n = 0, n = 4096), adversarial MIN/MAX extreme deletion and FSM SET at index 0.
+note Method path: a test-local mtlane fixture (t = 0) and an R1T table filled here as ckbind would
+note (s*16 + a); baseline path t = -1. Wrong fixtures must be caught (shows the path is used).
+note This file plays the router: it validates, applies one item to R1X/R1N, then calls dlchg.
+note Exit 0 = pass; a failed check exits with its code (and prints FAIL code a b on fd 2).
+note   1 dlbind refused  2 dlres refused  3 r0 differs  4 r1 differs  5 dlchg refused
+note   6 scan bound  7 recompute bound  8 wrong AGG fixture not seen  9 wrong FSM table not seen
+note   10 baseline path used the fixture  11 FSM misses not counted  12 MIN/MAX scans not counted
+note   13 unbound dlres  14 unbound dlchg  15 too few checks  16 stats moved backwards
+note   17 dlbind accepted an invalid program  18 dropped state served
+
+global TRS ulong 1
+global TMODE ulong 1
+global TBAD ulong 1
+global TCHK ulong 1
+global TCNT ulong 1
+global TMETH ulong 1
+
+fn trnd to ulong
+s = add get TRS 0 11400714819323198485
+put TRS 0 s
+z = mul xor s shr s 30 13787848793156543465
+z = mul xor z shr z 27 10723151780598845931
+ret xor z shr z 31
+end
+
+fn tbelow m ulong to ulong
+ret rem trnd m
+end
+
+fn tsay code ulong a ulong b ulong to void
+buf = new uchar 96 32
+put buf 0 70
+put buf 1 65
+put buf 2 73
+put buf 3 76
+if eq code 0
+put buf 0 80
+put buf 1 65
+put buf 2 83
+put buf 3 83
+end
+p = ulong 5
+p = tdec edit buf p code
+p = tdec edit buf add p 1 a
+p = tdec edit buf add p 1 b
+put buf p 10
+w = write int 2 buf 0 add p 1
+end
+
+fn tdec buf edit uchar 96 p ulong v ulong to ulong
+d = new uchar 24 0
+m = ulong 0
+x = v
+while true bound 21
+put d m uchar add rem x 10 48
+m = add m 1
+x = div x 10
+if eq x 0
+break
+end
+end
+q = p
+for j ulong m
+put buf q get d sub sub m 1 j
+q = add q 1
+end
+ret q
+end
+
+note test-local method fixture: an independent lane map (TMODE 1 = deliberately wrong)
+fn tstep op ulong v ulong c ulong md ulong to ulong
+if eq op 1
+ret rem add v c md
+end
+if eq op 2
+ret rem sub add v md c md
+end
+if eq op 3
+ret rem mul v c md
+end
+if eq op 4
+ret and v c
+end
+if eq op 5
+ret or v c
+end
+if eq op 6
+ret xor v c
+end
+if eq op 7
+ret rem shl v c md
+end
+ret shr v c
+end
+
+fn mtlane t ulong x ulong to ulong
+md = shl ulong 1 get R1P 2
+k = get R1P 4
+v = x
+for j ulong k
+op = get R1P add 5 add j j
+c = get R1P add 6 add j j
+v = tstep op v c md
+end
+if eq get TMODE 0 1
+v = xor v 1
+end
+ret v
+end
+
+note the R1T table as ckbind builds it (TMODE 1 = one wrong cell per reachable state)
+fn tfillt to void
+st = get R1P 2
+al = get R1P 3
+for s ulong 16
+for a ulong 16
+d = ulong 0
+if and lt s st lt a al
+d = r1delta s a
+if eq get TMODE 0 1
+d = rem add d 1 st
+end
+end
+put R1T add mul s 16 a d
+end
+end
+end
+
+fn tdom to ulong
+if eq get R1P 1 1
+ret shl ulong 1 get R1P 2
+end
+ret get R1P 3
+end
+
+fn tval to ulong
+dm = tdom
+k = tbelow 8
+if eq k 0
+ret 0
+end
+if eq k 1
+ret sub dm 1
+end
+if le k 3
+ret rem tbelow 4 dm
+end
+ret tbelow dm
+end
+
+fn tclrp to void
+for w ulong 64
+put R1P w 0
+end
+end
+
+fn tcon op ulong wl ulong to ulong
+if ge op 7
+ret tbelow wl
+end
+k = tbelow 6
+if eq k 0
+ret 0
+end
+if eq k 1
+ret sub shl ulong 1 wl 1
+end
+if eq k 2
+ret 1
+end
+ret tbelow shl ulong 1 wl
+end
+
+note AGG program; ops from OPS words 0..5 when keep = 1 (same shape, new constants)
+fn tgagg wl ulong f ulong k ulong keep ulong to void
+ops = new ulong 6 0
+for j ulong k
+put ops j add 1 tbelow 8
+if eq keep 1
+put ops j get R1P add 5 add j j
+end
+end
+tclrp
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 wl
+put R1P 3 f
+put R1P 4 k
+for j ulong k
+op = get ops j
+put R1P add 5 add j j op
+put R1P add 6 add j j tcon op wl
+end
+end
+
+fn tgfsmh st ulong al ulong to void
+tclrp
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 st
+put R1P 3 al
+put R1P 4 tbelow st
+for s ulong st
+put R1P add 6 s tbelow 256
+end
+end
+
+note random FSM: R rules with random ranges (self loops and reconvergence are likely)
+fn tgfsm st ulong al ulong to void
+tgfsmh st al
+rc = add 1 tbelow 24
+put R1P 5 rc
+for r ulong rc
+lo = tbelow al
+hi = add lo tbelow sub al lo
+s = tbelow st
+t = tbelow st
+w = add s shl lo 8
+w = add w shl hi 16
+put R1P add 22 r add w shl t 24
+end
+end
+
+note permutation FSM: symbol 0 is the identity, symbols 1..A-1 rotate s -> s+1 mod S
+note (every symbol is a bijection, so two different states never meet again)
+fn tgperm st ulong al ulong to void
+tgfsmh st al
+put R1P 5 st
+for s ulong st
+t = rem add s 1 st
+w = add s 256
+w = add w shl sub al 1 16
+put R1P add 22 s add w shl t 24
+end
+end
+
+fn tfill n ulong to void
+put R1N 0 n
+for i ulong n
+put R1X i tval
+end
+end
+
+note bind as the router would (method fixture: t = 0, table filled first)
+fn tbind to int
+t = long -1
+if eq get TMETH 0 1
+t = long 0
+if eq get R1P 1 2
+tfillt
+end
+end
+if ne dlbind t 0
+tsay 1 get R1P 1 get R1N 0
+ret 1
+end
+ret 0
+end
+
+note compare dlres with r1full; with TCNT 1 a mismatch is counted instead of failing
+fn tcheck to int
+if ne dlres 0
+tsay 2 get R1N 0 0
+ret 2
+end
+a = get R1R 0
+b = get R1R 1
+r1full
+put TCHK 0 add get TCHK 0 1
+if or ne a get R1R 0 ne b get R1R 1
+if eq get TCNT 0 1
+put TBAD 0 add get TBAD 0 1
+ret 0
+end
+if ne a get R1R 0
+tsay 3 a get R1R 0
+ret 3
+end
+tsay 4 b get R1R 1
+ret 4
+end
+ret 0
+end
+
+fn tset i ulong v ulong to int
+old = get R1X i
+put R1X i v
+ret dlchg 3 i v old
+end
+
+fn tins i ulong v ulong to int
+n = get R1N 0
+j = n
+while gt j i bound 4097
+put R1X j get R1X sub j 1
+j = sub j 1
+end
+put R1X i v
+put R1N 0 add n 1
+ret dlchg 4 i v 0
+end
+
+fn tdel i ulong to int
+n = get R1N 0
+old = get R1X i
+j = i
+while lt add j 1 n bound 4097
+put R1X j get R1X add j 1
+j = add j 1
+end
+put R1N 0 sub n 1
+ret dlchg 5 i 0 old
+end
+
+fn tswap i ulong j ulong to int
+old = get R1X j
+put R1X j get R1X i
+put R1X i old
+ret dlchg 6 i j old
+end
+
+note one random valid change of kind op (3..6); a kind that is not valid at this n becomes INS or DEL
+fn tchg op ulong to int
+n = get R1N 0
+k = op
+if and eq n 0 ne k 4
+k = 4
+end
+if and eq k 4 eq n 4096
+k = 5
+end
+if eq k 3
+ret tset tbelow n tval
+end
+if eq k 4
+ret tins tbelow add n 1 tval
+end
+if eq k 5
+ret tdel tbelow n
+end
+ret tswap tbelow n tbelow n
+end
+
+fn tbounds s2 ulong s6 ulong to int
+if gt sub dlstat 2 s2 65535
+tsay 6 sub dlstat 2 s2 0
+ret 6
+end
+if gt sub dlstat 6 s6 8194
+tsay 7 sub dlstat 6 s6 0
+ret 7
+end
+if gt dlstat 7 4097
+tsay 7 dlstat 7 1
+ret 7
+end
+ret 0
+end
+
+note one change of the regime's kind, then the cost bounds
+fn tone reg ulong step ulong to int
+s2 = dlstat 2
+s6 = dlstat 6
+op = add 3 tbelow 4
+if eq reg 1
+op = 3
+end
+if eq reg 3
+op = 6
+end
+if eq reg 4
+op = add 4 rem step 2
+end
+if ne tchg op 0
+tsay 5 op get R1N 0
+ret 5
+end
+ret tbounds s2 s6
+end
+
+note a new program with the same state (s1.3 PROGRAM): same shape or a new one, same domain
+fn tprog to int
+if eq get R1P 1 1
+keep = ulong 1
+if eq tbelow 3 0
+keep = 0
+end
+tgagg get R1P 2 get R1P 3 get R1P 4 keep
+end
+if eq get R1P 1 2
+tgfsm get R1P 2 get R1P 3
+end
+dldrop
+ret tbind
+end
+
+note regimes: 0 mixed, 1 sparse SET, 2 dense BATCH-like runs, 3 SWAP, 4 INS/DEL alternating,
+note 5 zero change; every 16th step is a PROGRAM change in regimes 0 and 1
+fn trun reg ulong steps ulong to int
+r = tcheck
+if ne r 0
+ret r
+end
+for s ulong steps
+if and le reg 1 eq rem add s 1 16 0
+r = tprog
+if ne r 0
+ret r
+end
+end
+m = ulong 1
+if eq reg 2
+m = add 1 tbelow 64
+end
+if eq reg 5
+m = 0
+end
+for b ulong m
+r = tone reg s
+if ne r 0
+ret r
+end
+end
+r = tcheck
+if ne r 0
+ret r
+end
+end
+ret 0
+end
+
+fn tsess fam ulong a ulong b ulong reg ulong n ulong to int
+if eq fam 1
+tgagg a b add 1 tbelow 6 0
+end
+if eq fam 2
+tgfsm a b
+end
+if eq fam 3
+tgperm a b
+end
+tfill n
+dlsreset
+r = tbind
+if ne r 0
+ret r
+end
+ret trun reg 96
+end
+
+fn tsize to ulong
+k = tbelow 16
+if eq k 0
+ret 0
+end
+if eq k 1
+ret 4096
+end
+if le k 3
+ret add 1 tbelow 4
+end
+ret add 1 tbelow 600
+end
+
+fn tphaseagg to int
+for rep ulong 6
+for meth ulong 2
+put TMETH 0 meth
+for w ulong 2
+for f ulong 6
+reg = rem add add f rep mul w 3 6
+wl = add 8 mul w 8
+r = tsess 1 wl add f 1 reg tsize
+if ne r 0
+ret r
+end
+end
+end
+end
+end
+ret 0
+end
+
+fn tphasefsm to int
+for rep ulong 16
+for meth ulong 2
+put TMETH 0 meth
+for reg ulong 6
+st = add 2 tbelow 15
+al = add 2 tbelow 15
+r = tsess 2 st al reg tsize
+if ne r 0
+ret r
+end
+r = tsess 3 st al reg tsize
+if ne r 0
+ret r
+end
+end
+end
+end
+ret 0
+end
+
+note edges: DEL at n-1 down to n = 0, INS at n up again, then index 0 and n-1, SWAP i = j
+fn tedge to int
+for s ulong 6
+r = tins get R1N 0 tval
+if ne r 0
+ret 5
+end
+r = tcheck
+if ne r 0
+ret r
+end
+end
+for s ulong 3
+r = tset 0 tval
+r = add r tset sub get R1N 0 1 tval
+r = add r tswap 0 sub get R1N 0 1
+r = add r tswap 1 1
+r = add r tins 0 tval
+r = add r tdel 0
+if ne r 0
+ret 5
+end
+r = tcheck
+if ne r 0
+ret r
+end
+end
+while gt get R1N 0 0 bound 100
+r = tdel sub get R1N 0 1
+if ne r 0
+ret 5
+end
+r = tcheck
+if ne r 0
+ret r
+end
+end
+r = tins 0 tval
+if ne r 0
+ret 5
+end
+r = tdel 0
+if ne r 0
+ret 5
+end
+ret tcheck
+end
+
+fn tphaseedge to int
+for meth ulong 2
+put TMETH 0 meth
+for f ulong 6
+tgagg 16 add f 1 add 1 tbelow 6 0
+tfill 2
+dlsreset
+r = tbind
+if ne r 0
+ret r
+end
+r = tedge
+if ne r 0
+ret r
+end
+end
+for fam ulong 2
+tgfsm 5 4
+if eq fam 1
+tgperm 5 4
+end
+tfill 2
+dlsreset
+r = tbind
+if ne r 0
+ret r
+end
+r = tedge
+if ne r 0
+ret r
+end
+end
+end
+ret 0
+end
+
+note n = 4096 at the bound: DEL, INS back to 4096, INS at 4095, SET at 0 and 4095
+fn tfull4k fam ulong to int
+if eq fam 1
+tgagg 16 3 2 0
+end
+if eq fam 2
+tgperm 16 16
+end
+tfill 4096
+dlsreset
+r = tbind
+if ne r 0
+ret r
+end
+r = tdel 4095
+r = add r tins 4095 tval
+r = add r tdel 0
+r = add r tins 4095 tval
+r = add r tset 0 tval
+r = add r tset 4095 tval
+r = add r tswap 0 4095
+if ne r 0
+ret 5
+end
+ret tcheck
+end
+
+note index of a current extreme lane (MIN or MAX fold), by the baseline lane map
+fn textr to ulong
+f = get R1P 3
+n = get R1N 0
+bi = ulong 0
+bv = r1lane get R1X 0
+for i ulong n
+e = r1lane get R1X i
+if or and eq f 3 lt e bv and eq f 4 gt e bv
+bi = i
+bv = e
+end
+end
+ret bi
+end
+
+note adversarial AGG (s7.2 type A): DEL of a current extreme, INS of a random value, QUERY
+fn tadvagg f ulong wl ulong n ulong to int
+tgagg wl f 1 0
+put R1P 5 6
+put R1P 6 0
+put R1N 0 n
+for i ulong n
+put R1X i tbelow tdom
+end
+dlsreset
+r = tbind
+if ne r 0
+ret r
+end
+i0 = dlinvn
+for s ulong 64
+r = tdel textr
+r = add r tins tbelow add get R1N 0 1 tbelow tdom
+if ne r 0
+ret 5
+end
+r = tcheck
+if ne r 0
+ret r
+end
+end
+if eq dlinvn i0
+tsay 12 i0 0
+ret 12
+end
+ret 0
+end
+
+note adversarial FSM (type A): permutation machine, SET at index 0 alternating symbols 0 and 1,
+note every SET must run to n with no cutoff and be counted as a miss
+fn tadvfsm n ulong to int
+tgperm 7 5
+tfill n
+put R1X 0 0
+dlsreset
+r = tbind
+if ne r 0
+ret r
+end
+m0 = dlmissn
+for s ulong 64
+r = tset 0 rem add s 1 2
+if ne r 0
+ret 5
+end
+r = tcheck
+if ne r 0
+ret r
+end
+end
+if ne sub dlmissn m0 64
+tsay 11 sub dlmissn m0 64
+ret 11
+end
+ret 0
+end
+
+fn tphaseadv to int
+for meth ulong 2
+put TMETH 0 meth
+for w ulong 2
+wl = add 8 mul w 8
+r = tadvagg 3 wl add 1 tbelow 512
+if ne r 0
+ret r
+end
+r = tadvagg 4 wl add 1 tbelow 512
+if ne r 0
+ret r
+end
+end
+r = tadvfsm 512
+if ne r 0
+ret r
+end
+r = tadvfsm 1
+if ne r 0
+ret r
+end
+r = tfull4k 1
+if ne r 0
+ret r
+end
+r = tfull4k 2
+if ne r 0
+ret r
+end
+end
+ret 0
+end
+
+note wrong fixtures: with t = 0 they must change answers; with t = -1 they must not
+fn tphasewrong to int
+put TMODE 0 1
+put TCNT 0 1
+put TMETH 0 1
+put TBAD 0 0
+for s ulong 12
+wl = add 8 mul rem s 2 8
+n = add 1 tbelow 64
+r = tsess 1 wl add 1 rem s 6 0 n
+if ne r 0
+ret r
+end
+end
+if eq get TBAD 0 0
+tsay 8 0 0
+ret 8
+end
+put TBAD 0 0
+for s ulong 12
+st = add 2 tbelow 15
+n = add 1 tbelow 64
+r = tsess 2 st add 2 tbelow 15 0 n
+if ne r 0
+ret r
+end
+end
+if eq get TBAD 0 0
+tsay 9 0 0
+ret 9
+end
+put TBAD 0 0
+put TMETH 0 0
+for s ulong 12
+fam = add 1 rem s 2
+b = add 1 rem s 6
+if eq fam 2
+b = add 2 rem s 6
+end
+wl = add 8 mul rem s 2 8
+n = add 1 tbelow 64
+r = tsess fam wl b 0 n
+if ne r 0
+ret r
+end
+end
+put TMODE 0 0
+put TCNT 0 0
+if ne get TBAD 0 0
+tsay 10 get TBAD 0 0
+ret 10
+end
+ret 0
+end
+
+note unbound: dlres and dlchg refuse; a dropped state is never served; an invalid PROG is refused
+fn tphaseapi to int
+tgagg 8 1 1 0
+tfill 3
+dlsreset
+if ne dlres 1
+ret 13
+end
+if ne tset 0 1 1
+ret 14
+end
+put TMETH 0 0
+r = tbind
+if ne r 0
+ret r
+end
+r = tcheck
+if ne r 0
+ret r
+end
+dldrop
+if ne dlres 1
+ret 18
+end
+if ne tset 1 2 1
+ret 18
+end
+put R1P 2 9
+if ne dlbind -1 1
+ret 17
+end
+put R1P 2 8
+ret 0
+end
+
+fn main to int
+put TRS 0 7432
+sv = new ulong 12 0
+for k ulong 12
+put sv k dlstat k
+end
+r = tphaseagg
+if ne r 0
+ret r
+end
+r = tphaseapi
+if ne r 0
+ret r
+end
+r = tphasefsm
+if ne r 0
+ret r
+end
+r = tphaseedge
+if ne r 0
+ret r
+end
+r = tphaseadv
+if ne r 0
+ret r
+end
+r = tphasewrong
+if ne r 0
+ret r
+end
+for k ulong 12
+if lt dlstat k get sv k
+ret 16
+end
+end
+if lt get TCHK 0 10000
+tsay 15 get TCHK 0 0
+ret 15
+end
+tsay 0 get TCHK 0 dlstat 0
+ret 0
+end
