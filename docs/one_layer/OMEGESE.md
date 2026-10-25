@@ -489,7 +489,10 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 
 Input over a capacity is refused with error 14, never overrun: om4 reads at most 8 MiB - 1 bytes and
 writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 512 functions, 8192 trap sites per function, 512 nested
-blocks. A function that needs more than the 16 registers it hands out is error 12.
+blocks. A function that needs more than the 16 registers it hands out is error 12. omc keeps the same
+input, output, nesting, trap-site and block limits but holds 8192 names in scope, 4096 functions and
+524288 call sites per unit (`seed/omc/gate12.sh`, `gate15.sh`), so whole programs such as an
+interpreter fit in one unit; om4 itself keeps its own smaller tables.
 
 ### 9.7 Structs (omc only, rung 6)
 

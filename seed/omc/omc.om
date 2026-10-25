@@ -45,10 +45,10 @@ note done only when it is above 0). inl and il_*: the inline frames (at most 4).
 note an inlined ret, patched at its end. lastb/tgoc: the word after the last inlined ret's B and the last
 note place a branch was patched to. u_*: the unrolled loop of each block. fok/fval/fty: a fold result.
 note sitebuf/nsite: the omc-site records of om2 diag.
-global fn_inl uchar 512
-global fn_body ulong 512
-global fn_bln ulong 512
-global fn_pn ulong 3072
+global fn_inl uchar 4096
+global fn_body ulong 4096
+global fn_bln ulong 4096
+global fn_pn ulong 24576
 global fstart ulong 1
 global nmlo ulong 1
 global fzone ulong 1
@@ -84,36 +84,36 @@ global nsite ulong 1
 global ie_from ulong 16384
 global ie_to ulong 16384
 global nie ulong 1
-global reach uchar 512
+global reach uchar 4096
 
-note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
-global nm_name ulong 1024
-global nm_reg uchar 1024
-global nm_type uchar 1024
-global nm_len ulong 1024
-global nm_kind uchar 1024
-global nm_addr ulong 1024
+note ---- name table (8192 names in scope): packed name, register, type, length, kind, address ----
+global nm_name ulong 8192
+global nm_reg uchar 8192
+global nm_type uchar 8192
+global nm_len ulong 8192
+global nm_kind uchar 8192
+global nm_addr ulong 8192
 global nn ulong 1
 
-note ---- function table (512): name, address (byte offset in out), return type, parameter count,
+note ---- function table (4096): name, address (byte offset in out), return type, parameter count,
 note per-parameter type/length/kind (6 each), name length, name offset in the input ----
-global fn_name ulong 512
-global fn_addr ulong 512
-global fn_ret uchar 512
-global fn_np uchar 512
-global fn_pt uchar 3072
-global fn_pl ulong 3072
-global fn_pk uchar 3072
-global fn_nmlen ulong 512
-global fn_off ulong 512
+global fn_name ulong 4096
+global fn_addr ulong 4096
+global fn_ret uchar 4096
+global fn_np uchar 4096
+global fn_pt uchar 24576
+global fn_pl ulong 24576
+global fn_pk uchar 24576
+global fn_nmlen ulong 4096
+global fn_off ulong 4096
 global nf ulong 1
 global lastfn ulong 1
 global scanning ulong 1
 global ncalls ulong 1
-global callsite ulong 65536
-global callfrom ulong 65536
-global callto ulong 65536
-global settled uchar 512
+global callsite ulong 524288
+global callfrom ulong 524288
+global callto ulong 524288
+global settled uchar 4096
 
 
 note ---- compiler state ----
@@ -162,16 +162,16 @@ global lf_off ulong 256
 global lf_big uchar 256
 global nlf ulong 1
 global lymap uchar 4096
-global nm_lay uchar 1024
-global fn_play uchar 3072
+global nm_lay uchar 8192
+global fn_play uchar 24576
 
 note ---- OM-2 section 5 fresh scratch (erratum E8). fn_pfr: 1 for a `fresh` parameter slot. nm_fr: the
 note written-set slot (index + 1) a name's elements are tracked in, else 0. fz_n slots in use by the
 note function being compiled (16), fz_len their N, fz_cur the elements definitely written on the path
 note being compiled (bit i for element i); fz_ent / fz_thn (16 per block): the sets when the block opened
 note and at its else. il_fz: fz_n when an inline frame opened. dobx 1: error 14 reports obligation=init ----
-global fn_pfr uchar 3072
-global nm_fr uchar 1024
+global fn_pfr uchar 24576
+global nm_fr uchar 8192
 global fz_n ulong 1
 global fz_len ulong 16
 global fz_cur ulong 16
@@ -200,7 +200,7 @@ note name has length 0 in nm_len and its run-time element count in register nm_l
 note registers x0..x5 by slots: an unsized array two (pointer, then count), every other parameter one
 note (pwid, pslot); psl counts the slots of the fn line being read (6 at most, error 9). ul_k / ul_v: the
 note count (kind 1 register / 3 number) of argument i of the call at value depth d, at d * 6 + i ----
-global nm_lr uchar 1024
+global nm_lr uchar 8192
 global psl ulong 1
 global ul_k ulong 6156
 global ul_v ulong 6156
@@ -209,7 +209,7 @@ note for an exported function, expf 1 while an `export fn` line is read. With an
 note of the code are B to each export in source order and the code starts at byte 176 + 4E ----
 global nexp ulong 1
 global expf ulong 1
-global fn_exp uchar 512
+global fn_exp uchar 4096
 
 note ======== leaf helpers ========
 
@@ -2349,7 +2349,7 @@ end
 note addname: packed name, register, type, length, kind, address. om4 ADDNAME.
 fn addname w ulong r ulong t ulong ln ulong k ulong a ulong to void
 n = get nn 0
-if ge n 1024
+if ge n 8192
 fail 14
 end
 put nm_name n w
@@ -3536,7 +3536,7 @@ end
 note ca_bl: BL to function f (index + 1), C6.2.43
 fn ca_bl f ulong to void
 n = get ncalls 0
-if ge n 65536
+if ge n 524288
 fail 14
 end
 put callsite n get oc 0
@@ -6392,7 +6392,7 @@ f = ulong 0
 if eq get scanning 0 1
 newname w l s
 f = get nf 0
-if ge f 512
+if ge f 4096
 fail 14
 end
 put nf 0 add f 1
