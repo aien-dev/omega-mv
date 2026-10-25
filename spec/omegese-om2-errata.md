@@ -43,3 +43,13 @@ edit). Unsized parameters are allowed on internal functions, not only on exporte
 - `found` is the hex of the span bytes, or `-` when the span is empty.
 - `expect` is the token class the parser wanted next.
 - `om2 fmt`: "the rest" is the bytes after the first LF; the output does not contain the `om2 fmt` line.
+
+## E5 (ShaLane L838, 2026-10-25): scalar layout fields; cutover build rules
+
+- In `field F T [COUNT] at OFF little|big`, an omitted COUNT is a scalar field (`get c F`,
+  `put c F v`). A COUNT (1..4096) is an array field (`get c F i`), even when COUNT is 1. In the §5
+  SHA example, `field count ulong 1 at 32 little` reads `field count ulong at 32 little` (scalar).
+- Cutover: `src/omega_om_units.inc` is today included only by `src/sha256.c`, and BLAKE3 links through
+  it. The generated bindings move to a generated `src/omega_om_units.c`, and every build rule that
+  names `src/sha256.c` (Makefile, mk/*.mk, scripts) is switched to it in the cutover commit. The SHA
+  lane (L838) is the single writer of exactly those build-rule lines in that commit.
