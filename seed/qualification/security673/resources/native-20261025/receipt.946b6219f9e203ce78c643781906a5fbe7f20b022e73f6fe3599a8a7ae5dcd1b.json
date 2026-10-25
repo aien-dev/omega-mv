@@ -1,0 +1,218 @@
+{
+  "schema": "security673-resources-native-v1",
+  "source_commit": "5060dcf2c0e616272e9c92d0d059e7d8673d22b8",
+  "base_commit": "00eb0e7106d2f8fc841e5e16eb624fa1bd029111",
+  "contract_sha256": "8bc52be7a480e279fb77673648a2f7775ba6d4841a8b1e6c427531b25d4d1860",
+  "target": {
+    "machine": "aarch64",
+    "sysname": "Linux",
+    "release": "7.0.0-1019-nvidia",
+    "abi": "Linux AArch64 ELF64 native"
+  },
+  "compiler": {
+    "source_sha256": "2e35db7d6c2066fb4a20d19b8a9579c44caca9c9937b0594a89422010b673637",
+    "binary_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+    "birth_command": "nice -n 19 sh seed/omega-from-seed.sh",
+    "birth_exit": 0
+  },
+  "builds": {
+    "demo": {
+      "sources": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "731ac1cb8c244ede5199e7d35a3e49a929e15311a577f490f96be0e5b090b486",
+        "seed/qualification/security673/resources/demo.om": "6eccd257e4565bbb612e6e390bcf8d037a4bd119fee9a78b3f0999c833e6db22"
+      },
+      "concatenated_source_sha256": "ef9d7ceed87d27a1e8b722c826fd3da98671081965e829abdf7b2a0a47a56030",
+      "executable_sha256": "e821c7cee4a33ef455f4032136ba7862f22f6380c864cb9e7e3d1eeae1b7fa9b",
+      "executable_bytes": 17608,
+      "compiler_exit": 0,
+      "compiler_stderr": "",
+      "command": "cat seed/authority/reserve.om seed/authority/envelope.om seed/qualification/security673/resources/checks.om seed/qualification/security673/resources/demo.om | nice -n 19 seed/out/omc > /tmp/sc1-demo"
+    },
+    "negative": {
+      "sources": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "731ac1cb8c244ede5199e7d35a3e49a929e15311a577f490f96be0e5b090b486",
+        "seed/qualification/security673/resources/negative.om": "49996414322c88b52bba7387c331f6cbf6b3306b56701f46fb35f7ed9576a72c"
+      },
+      "concatenated_source_sha256": "5429fb002ecf93da919c15de6b423e4e00eca8af0dfd672a421d061d36a6044d",
+      "executable_sha256": "8c2f257729f533589d21587dabb365e3c055bf107f89ce3983c076f4c1c22523",
+      "executable_bytes": 18060,
+      "compiler_exit": 0,
+      "compiler_stderr": "",
+      "command": "cat seed/authority/reserve.om seed/authority/envelope.om seed/qualification/security673/resources/checks.om seed/qualification/security673/resources/negative.om | nice -n 19 seed/out/omc > /tmp/sc1-negative"
+    },
+    "measure": {
+      "sources": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "731ac1cb8c244ede5199e7d35a3e49a929e15311a577f490f96be0e5b090b486",
+        "seed/qualification/security673/resources/measure.om": "056348b587dec4ff4e82f4ff5563c28b16fbe0dddef13f69af0e29477bffeed8"
+      },
+      "concatenated_source_sha256": "d91a92d2030f0a5d6723a82ea9915adbbf6be01f602e4046619e44c4a290e378",
+      "executable_sha256": "f7d1b186f7800513b5ca218314a366d8abe61846227504eab119cc8d78cc0f46",
+      "executable_bytes": 18984,
+      "compiler_exit": 0,
+      "compiler_stderr": "",
+      "command": "cat seed/authority/reserve.om seed/authority/envelope.om seed/qualification/security673/resources/checks.om seed/qualification/security673/resources/measure.om | nice -n 19 seed/out/omc > /tmp/sc1-measure"
+    },
+    "oracle": {
+      "sources": {
+        "seed/qualification/security673/resources/oracle.om": "3cdc7b965c0d32d9475c27bbc5bc75dc479d93b41d82e3401b077cbcf85e1af9"
+      },
+      "concatenated_source_sha256": "3cdc7b965c0d32d9475c27bbc5bc75dc479d93b41d82e3401b077cbcf85e1af9",
+      "executable_sha256": "fa5031f7e4cfaf9cc237b6cb8d063cdee0b0d76df603d11204f713305706b1b8",
+      "executable_bytes": 1576,
+      "compiler_exit": 0,
+      "compiler_stderr": "",
+      "command": "cat seed/qualification/security673/resources/oracle.om | nice -n 19 seed/out/omc > /tmp/sc1-oracle"
+    },
+    "exhaust": {
+      "sources": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "731ac1cb8c244ede5199e7d35a3e49a929e15311a577f490f96be0e5b090b486",
+        "seed/qualification/security673/resources/exhaust.om": "1929828a17a813b3bf54afe72f3187e3b512f9be1815bbbf6c7e679fc4323e46"
+      },
+      "concatenated_source_sha256": "4412cbceb670e29b625094086c624383da03a7ea3871c1109c4c6b089bba21ec",
+      "executable_sha256": "d737baf21438d928dc1b83a6b64e00eb3ee967944be74744b9f29c78c8583278",
+      "executable_bytes": 18836,
+      "compiler_exit": 0,
+      "compiler_stderr": "",
+      "command": "cat seed/authority/reserve.om seed/authority/envelope.om seed/qualification/security673/resources/checks.om seed/qualification/security673/resources/exhaust.om | nice -n 19 seed/out/omc > /tmp/sc1-exhaust"
+    }
+  },
+  "runs": [
+    {
+      "name": "demo",
+      "args": [],
+      "command": "nice -n 19 /tmp/sc1-demo",
+      "exit": 0,
+      "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nPASS E1-E5 baseline leak protected events release restart\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "name": "oracle",
+      "args": [],
+      "command": "nice -n 19 /tmp/sc1-oracle",
+      "exit": 0,
+      "stdout": "PASS R3 states=18 edges=78 whole-service-effectfree-crash\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "name": "negative",
+      "args": [
+        "1"
+      ],
+      "command": "nice -n 19 /tmp/sc1-negative 1",
+      "exit": 21,
+      "stdout": "FAIL expected assertion: paired_public_observation\n",
+      "stderr": "",
+      "expected_exit": 21
+    },
+    {
+      "name": "negative",
+      "args": [
+        "2"
+      ],
+      "command": "nice -n 19 /tmp/sc1-negative 2",
+      "exit": 22,
+      "stdout": "FAIL expected assertion: paired_public_observation\n",
+      "stderr": "",
+      "expected_exit": 22
+    },
+    {
+      "name": "negative",
+      "args": [
+        "3"
+      ],
+      "command": "nice -n 19 /tmp/sc1-negative 3",
+      "exit": 23,
+      "stdout": "FAIL expected assertion: paired_public_observation\n",
+      "stderr": "",
+      "expected_exit": 23
+    },
+    {
+      "name": "negative",
+      "args": [
+        "4"
+      ],
+      "command": "nice -n 19 /tmp/sc1-negative 4",
+      "exit": 24,
+      "stdout": "FAIL expected assertion: paired_public_observation\n",
+      "stderr": "",
+      "expected_exit": 24
+    },
+    {
+      "name": "negative",
+      "args": [
+        "5"
+      ],
+      "command": "nice -n 19 /tmp/sc1-negative 5",
+      "exit": 25,
+      "stdout": "FAIL expected assertion: all_or_nothing_vector\n",
+      "stderr": "",
+      "expected_exit": 25
+    },
+    {
+      "name": "measure",
+      "args": [],
+      "command": "nice -n 19 /tmp/sc1-measure",
+      "exit": 0,
+      "stdout": "MEASURE helper cycles=100 samples=63 baseline_ns p50/p95/p99 then checked_ns p50/p95/p99\n2512\n2576\n4256\n89713\n95825\n102498\n",
+      "stderr": "",
+      "expected_exit": 0
+    },
+    {
+      "name": "exhaust",
+      "args": [],
+      "command": "nice -n 19 /tmp/sc1-exhaust",
+      "exit": 0,
+      "stdout": "PASS conservation finite differential 448 cases; conservative restart/fuel\n",
+      "stderr": "",
+      "expected_exit": 0
+    }
+  ],
+  "claims": {
+    "formal_proof": "NOT_RUN",
+    "finite_R3": "18 states / 78 distinct edges, independent model only",
+    "differential": "448 bounded cases plus named transition fixtures",
+    "native": "PASS",
+    "service_concurrency": "BLOCKED",
+    "durable_snapshot_integration": "BLOCKED",
+    "scheduler_integration": "BLOCKED",
+    "process_crashes": "NOT_RUN",
+    "power_loss": "NOT_RUN"
+  },
+  "resource_measurement": {
+    "command": "/usr/bin/time -v nice -n 19 /tmp/sc1-measure",
+    "exit": 0,
+    "stdout": "MEASURE helper cycles=100 samples=63 baseline_ns p50/p95/p99 then checked_ns p50/p95/p99\n2512\n2576\n3392\n89169\n92145\n130050\n",
+    "stderr": "\tCommand being timed: \"nice -n 19 <WORKTREE>/seed/qualification/security673/resources/native-20261025/measure\"\n\tUser time (seconds): 0.00\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 100%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.00\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1480\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 80\n\tVoluntary context switches: 0\n\tInvoluntary context switches: 1\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "command_path_redacted": true,
+    "scope": "whole measured invocation; helper cycles not service throughput"
+  },
+  "fixtures_sha256": "def36aa5087c57ecb6bb78ade37d126f7b6fc01cdd420bdfee651d00c74d4117",
+  "measurement_summary": {
+    "samples": 63,
+    "cycles_per_sample": 100,
+    "baseline_ns_p50_p95_p99": [
+      2512,
+      2576,
+      4256
+    ],
+    "checked_ns_p50_p95_p99": [
+      89713,
+      95825,
+      102498
+    ],
+    "checked_per_cycle_ns_p50": 897.13,
+    "checked_to_unchecked_p50_ratio": 35.71377388535032,
+    "maximum_rss_kib_resource_repeat": 1480,
+    "meaning": "overhead against unsafe unchecked matched vector mutation; retain no-win result"
+  }
+}
