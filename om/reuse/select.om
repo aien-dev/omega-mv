@@ -28,6 +28,9 @@ note     paths for (family, nclass, cclass), ties to delta, then method, then fu
 note     or a missing cell of a valid path: the fixed rule (delta if valid, else method if bound,
 note     else full). Churn: from 64 invalidations or 64 cutoff misses in the session (counted from
 note     the slsess snapshot) delta is invalid for the rest of the session.
+note   sloff: true iff churn has disabled delta for this session, as judged by the last slpick;
+note     stays true until the next slsess. The router may then drop the delta state and stop
+note     its maintenance for the session.
 note   An unsupported family (R1P word 1 not 1 or 2), n > 4096, template index outside -1..15, or
 note   a path or class id outside its range is refused before any lookup: slpick returns full,
 note   slbind returns false, and SLREF counts it (the #704 rule). No cell is indexed with such an id.
@@ -256,6 +259,10 @@ if or ge inv 64 ge mis 64
 put SLOFF 0 1
 put SLDIS 0 add get SLDIS 0 1
 end
+end
+
+fn sloff to bool
+ret eq get SLOFF 0 1
 end
 
 fn slfixed md ulong dv ulong to int

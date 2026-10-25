@@ -325,6 +325,9 @@ end
 if ne get SLDIS 0 0
 ret 3
 end
+if sloff
+ret 24
+end
 note the 64th: delta off for the rest of the session, counted once
 put TINV 0 69
 if ne tpk 1 1 1 3
@@ -332,6 +335,9 @@ ret 4
 end
 if ne get SLDIS 0 1
 ret 5
+end
+if not sloff
+ret 25
 end
 if ne tpk 1 0 1 1
 ret 6
@@ -347,6 +353,9 @@ note a new session starts clean (counted from its own snapshot)
 slsess
 if ne tpk 1 1 1 4
 ret 9
+end
+if sloff
+ret 26
 end
 note 63 then 64 cutoff misses
 put TMIS 0 72
@@ -691,11 +700,11 @@ ret add 50 r
 end
 r = trefuse
 if ne r 0
-ret add 70 r
+ret add 120 r
 end
 r = tprop
 if ne r 0
-ret add 90 r
+ret add 150 r
 end
 tclean 1
 ret 0
