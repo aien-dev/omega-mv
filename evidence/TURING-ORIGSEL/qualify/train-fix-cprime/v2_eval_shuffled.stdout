@@ -1,0 +1,38 @@
+allow=2
+v2_admitted=318 train=206 validation=58 heldout=54 refused=82
+data_bound=yes
+kind=2
+nparams=705
+seed=19024
+init_fnv=11780572735689526495
+lr=8
+lr_bits=998244352
+control=1
+epochs=19
+updates=19570
+cursor=0
+mu16=2
+sh=0
+ntrain=206
+train_loss_sum=1128441004
+train_loss_dec=194.643249
+dev_loss_sum=1111844709
+dev_loss_dec=49.350971
+best_epoch=3
+stale_epochs=16
+final_params_fnv=5386545760326372616
+best_params_fnv=11809553421561088684
+data_fnv=901518597833484524
+records=400
+image_bytes=11560
+image_fnv=8783230773043947187
+status=ok
+eval_columns=n model oracle rule ref static near affine top1 win_rule loss_rule win_near loss_near win_static loss_static win_ref loss_ref
+eval part=1 core=0 29 4371552 2318497 3750927 3871452 2347703 2328699 0 10 10 19 0 17 0 13 10 19
+eval part=1 core=1 29 4759413 3751513 5766623 3896022 3896022 3917831 0 3 17 12 2 26 4 24 4 24
+eval part=1 core=2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+eval part=1 core=3 58 9130965 6070010 9517550 7767474 6243725 6246530 0 13 27 31 2 43 4 37 14 43
+eval part=2 core=0 27 96000000 27000000 94000000 27000000 135000000 125000000 0 0 13 14 13 4 13 0 0 27
+eval part=2 core=1 27 62000000 27000000 110000000 103000000 103000000 120000000 0 7 22 5 23 4 23 3 23 3
+eval part=2 core=2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+eval part=2 core=3 54 158000000 54000000 204000000 130000000 238000000 245000000 0 7 35 19 36 8 36 3 23 30

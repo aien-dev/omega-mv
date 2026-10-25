@@ -1,0 +1,35 @@
+mode=qualify
+source_commit=f90d3078a4ea346751c20d8feb09bc4db3940451
+host=Linux 7.0.0-1019-nvidia aarch64
+profile_sha256=f47756c3cbcbb1ea63e20acadaaf7332fbad0c0733f2ca0c91d94623af89528e
+compiler_sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+units_pinned=9
+origsel_elf_sha256=f5efbbc92172a1634d1de1c63816daf2049852c21248a98e9003a1a010a2b886 origsel_om_sha256=13e7f0bf0ac4893c256b934673239dc5a0c9d549c8897ebc8d4d1f48b8a92c1d
+indep_sha256=bf0beba61ac564cc8f5935fb8b93291501bef8cc8b192ab4598ef21be9bbb87f indep_src_sha256=8e4cdc8b98a8eb62fab068953ac811fc2983fb3d35127c5d210a9334117ff7d0
+turing_coder_commit=a647b6a9821fffcf52ba9ce813f75afa4b84be62 sha256=caa33c5b0b7c4383874804f48e1e0cbc08f81aa303646850c7e710d8d87c1d23
+p2_bytes select=10133 oxrule=97 oxstatic=340 near=503 kappa=86
+unit_tests ORIGSEL_TEST_PASS checks=17
+fixture_report om=indep identical sha256=8380c286932ae257e2a49d1702c1c55d80c52fee019a1298cea01e9406164d4a
+fixture_h1 roundtrip=20/20 ideal_match=20/20 band_ok=20/20
+band_synthetic n=50 coder=rans rt=1 ideal_ub=136464606 coded_bits=616 delta=479535394 band=ok
+band_synthetic n=50 coder=range rt=1 ideal_ub=136464606 coded_bits=616 delta=479535394 band=ok
+band_synthetic n=100 coder=rans rt=1 ideal_ub=268508907 coded_bits=744 delta=475491093 band=ok
+band_synthetic n=100 coder=range rt=1 ideal_ub=268508907 coded_bits=744 delta=475491093 band=ok
+band_synthetic n=300 coder=rans rt=1 ideal_ub=812899365 coded_bits=1288 delta=475100635 band=ok
+band_synthetic n=300 coder=range rt=1 ideal_ub=812899365 coded_bits=1288 delta=475100635 band=ok
+leakage PASS (labels changed, 10/10 TPS1 record bodies and every row identical)
+audit_fixture PASS (K same K same K same )
+null_fixture PASS ub(A;O0)=-57050395
+refuse_unpinned_unit PASS
+refuse_wrong_model_cost PASS refuse_tampered_receipt PASS
+refuse_duplicate PASS (records 400 -> 401, admitted unchanged)
+refuse_unpaired PASS (admitted 318 -> 317)
+mutant 1 killed by unit tests
+mutant 2 killed by recomputation
+mutant 3 killed by recomputation
+mutant 4 killed by recomputation
+mutant 5 killed by recomputation
+mutant 6 killed by unit tests
+evaluator_mutants 6/6 killed
+owner_dry_run om=indep identical (inspected v1 file, development only, never D) experiment NO_IMPROVEMENT
+ORIGSEL_QUALIFY_PASS
