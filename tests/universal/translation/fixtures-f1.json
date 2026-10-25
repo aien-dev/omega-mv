@@ -1,0 +1,495 @@
+{
+ "schema": "omega.universal.fixtures.v1",
+ "set": "F1",
+ "contract": "spec/universal/translation-v1.md",
+ "from": "tests/universal/c_import_gate.py",
+ "positives": [
+  {
+   "id": "F1-P00",
+   "sha256": "250e3228f00b4c0cd60df70092f50106dce54f081cc77d4f3a24f7d2b5af8c4c",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F1-P01",
+   "sha256": "cc4a3ac6374b8c68eb99de6540e6896ef4c41aea9eb5fb5c1f0ae4be52662456",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return b; }\n"
+  },
+  {
+   "id": "F1-P02",
+   "sha256": "2ab81c70d64699c9afe59cda7d49edcb577e10a57e32f2402af6ad67a0632c3e",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a+b; }\n"
+  },
+  {
+   "id": "F1-P03",
+   "sha256": "ce4e5d1d53ed51443e3b940939a21b8fff9bb35db202438920f398938c0f7fb6",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a-b; }\n"
+  },
+  {
+   "id": "F1-P04",
+   "sha256": "78db75440f5b5da2dafb59d0f771b696171c24d2698677f959e2ab430a2ebfd6",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a*b; }\n"
+  },
+  {
+   "id": "F1-P05",
+   "sha256": "277232cc9416a0c4f06004c5b00dbaab33952fc411c7e42f505f324026ca1765",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return (a+b)*(a-b); }\n"
+  },
+  {
+   "id": "F1-P06",
+   "sha256": "4332e4105d4442afba0b586e9574f1f192d7ed740099228eae26ad15473a5099",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a+0ULL; }\n"
+  },
+  {
+   "id": "F1-P07",
+   "sha256": "7339bf648758434626305006d637470ca6d97399010515134dd4358940641451",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a-1ULL; }\n"
+  },
+  {
+   "id": "F1-P08",
+   "sha256": "9bb734b9718ebfbfac521731fa2bbd0ea59b201afc77ca385bcce151fa76a703",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a*2ULL; }\n"
+  },
+  {
+   "id": "F1-P09",
+   "sha256": "9d409851a2558cf54315c84c4917ec67d1bee299ff7d371557d707416542b631",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return 0ULL-a; }\n"
+  },
+  {
+   "id": "F1-P10",
+   "sha256": "aa0163f4a11aa259d38605ed3d26a56cbd80b381b32a9a20ffa10f82dbcd68ea",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return 18446744073709551615ULL+a; }\n"
+  },
+  {
+   "id": "F1-P11",
+   "sha256": "83d8dadc4e596492af0bd7c79b865fd5c5cb6b8536370706f95efd5c59f261d5",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a*b+3ULL; }\n"
+  },
+  {
+   "id": "F1-P12",
+   "sha256": "a23775feb8d8822fc987bc087356a2dec17d4a85dd9a8fceb36606dac6e28572",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a+a+b; }\n"
+  },
+  {
+   "id": "F1-P13",
+   "sha256": "23bc6a271dbba691f7a87f0f37e15ab125cecf8be229ab965777342266252ad2",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a+(a+b); }\n"
+  },
+  {
+   "id": "F1-P14",
+   "sha256": "11c77e44f631b68afbf893f347a6e94498aae6213af99950deb03eea53f6da05",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a-b-b; }\n"
+  },
+  {
+   "id": "F1-P15",
+   "sha256": "c5f7c9fdc269761e8ad7a4a3fa9ed0a2a2ccd7115cd2721a503203c778a2da2f",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a-(b-b); }\n"
+  },
+  {
+   "id": "F1-P16",
+   "sha256": "d17614f4cb5234a2234af049027f78f1f49a5f6f03d5f2e5c7c2b4b580f263c5",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a*b*a; }\n"
+  },
+  {
+   "id": "F1-P17",
+   "sha256": "a686cff8ae29e41a88bd4904c479806fec36f691e87d5732de68f59f319c694d",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a*(b*a); }\n"
+  },
+  {
+   "id": "F1-P18",
+   "sha256": "262e9b705e8ba8c433e540f49209540cc7406bacb7e3b95c0b1cd5ad869af607",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return 123ULL; }\n"
+  },
+  {
+   "id": "F1-P19",
+   "sha256": "0b7ae5fc5fcacdd7b3040571e1838c324ba755ab1e9ecf7ba363e4d05d118511",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return ((a)); }\n"
+  },
+  {
+   "id": "F1-P20",
+   "sha256": "e83ba5c9beccb2a5639359cbca57afd15b7a508aa86d912ce861d7b14b335d50",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return (a+b)*(b+1ULL); }\n"
+  },
+  {
+   "id": "F1-P21",
+   "sha256": "62ddab9112329da4fb6a45eb8ca1939e51c8bbfe0db85ba3784c4df0b078e757",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a+b*2ULL; }\n"
+  },
+  {
+   "id": "F1-P22",
+   "sha256": "f2472d246de322a108e5bc3098e7d7e359e7511b9ca07723c2560130ffc86656",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return (a+b)*2ULL; }\n"
+  },
+  {
+   "id": "F1-P23",
+   "sha256": "6ac071f7821d7d29ca2e3961b90a89471e3f8f1a3150e06b1ab4642183ff6121",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a-2ULL*b; }\n"
+  },
+  {
+   "id": "F1-P24",
+   "sha256": "f844f1cd780ee05f2e0218ce28afef6ae528d7d89c570253cdb8d82084784511",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return (a-2ULL)*b; }\n"
+  },
+  {
+   "id": "F1-P25",
+   "sha256": "e446180a9b2462c5508e23bbd94371e2c0ee409a6b540a219a70026fe15fb568",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a+18446744073709551615ULL*b; }\n"
+  },
+  {
+   "id": "F1-P26",
+   "sha256": "26762c67b1d44a63563289ecd4c80ee13655629a93ac95bc727a9d59d74eccf7",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return 2ULL*3ULL+4ULL; }\n"
+  },
+  {
+   "id": "F1-P27",
+   "sha256": "412ea121023c650878fc8e0dc12146e7dc9a083b3c9fde4adf813ace9baec525",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return 2ULL*(3ULL+4ULL); }\n"
+  },
+  {
+   "id": "F1-P28",
+   "sha256": "e8b386f48e1ae8e8d91a073518e0c792e7c54e1a9cca283b37662aa66f636392",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return a-b+a*b; }\n"
+  },
+  {
+   "id": "F1-P29",
+   "sha256": "5ccf53bf81d312f299d2b5e916447830417b61a1e1a696460d7121dabb941106",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a, uint64_t b) { return (a+a)*(b+b); }\n"
+  },
+  {
+   "id": "F1-P30",
+   "sha256": "01332f15d4dc15b52bfb8f1ad9ee7c5eeb1e9cbeec229e1ebe790678b28d7963",
+   "name": "calc",
+   "inputs": 0,
+   "source": "#include <stdint.h>\nuint64_t calc(void) { return 7ULL; }\n"
+  },
+  {
+   "id": "F1-P31",
+   "sha256": "255692046d239f102f700df892a5519525d7615e3cba14517be1f383e2aa5644",
+   "name": "calc",
+   "inputs": 1,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t x) { return x; }\n"
+  },
+  {
+   "id": "F1-P32",
+   "sha256": "14daf8acaa708f00035d3d6dcc7bb5ce341a4f859cb9fc89517d6a5a6b18bf5b",
+   "name": "calc",
+   "inputs": 6,
+   "source": "#include <stdint.h>\nuint64_t calc(uint64_t a,uint64_t b,uint64_t c,uint64_t d,uint64_t e,uint64_t f) { return a+b+c+d+e+f; }\n"
+  },
+  {
+   "id": "F1-P33",
+   "sha256": "48d398126ae85ad37b7fa9b96acd0d84a3bc980bed9c176843da4dc52ed4b6ef",
+   "name": "calc",
+   "inputs": 2,
+   "source": "#include <stdint.h>\n/* α comment retained */\nuint64_t calc(uint64_t left,uint64_t right) { /* keep */ return left*right; }\r\n"
+  },
+  {
+   "id": "F1-P34",
+   "sha256": "7c48737aa01323118ce87f9c95ed39edf11b554cd9fd9e8741b30fa548555dc6",
+   "name": "omega_fold",
+   "inputs": 2,
+   "source": "#include <stdint.h>\nuint64_t omega_fold(uint64_t a,uint64_t b){return a*b+42ULL;}\n"
+  }
+ ],
+ "refusals": [
+  {
+   "id": "F1-N00",
+   "sha256": "0af857a0f67e6acf415c878bafe2bbd0f2c2320898b248d9dc93937b50748668",
+   "bytes": 69
+  },
+  {
+   "id": "F1-N01",
+   "sha256": "b7f85d3ebc638e63d292b97a579e69c0bd18d6ea23debe776d639022cff7b1cf",
+   "bytes": 68
+  },
+  {
+   "id": "F1-N02",
+   "sha256": "b592a677ad066137dd54f34f3e5595777a9e0c10c3d645b45b3cbc0ad3ebb883",
+   "bytes": 66
+  },
+  {
+   "id": "F1-N03",
+   "sha256": "f34cf66a07ece18bfc5f03964793728d9dc3887e4b396a5bbbb2d3c97e5815a4",
+   "bytes": 58
+  },
+  {
+   "id": "F1-N04",
+   "sha256": "cc97f878326c2a792ec650c1045bec27942ff81aa30311f3b42d913e30af1e3c",
+   "bytes": 69
+  },
+  {
+   "id": "F1-N05",
+   "sha256": "1ff1952d414b644dbf386ac9d38cfb2f4d41fdb875cc5d0cf0788ffd8c44fa8a",
+   "bytes": 69
+  },
+  {
+   "id": "F1-N06",
+   "sha256": "aa50aa7a2f594d313029125cafcf43b612bdb6724c37c6387c8d8f363b12a5e7",
+   "bytes": 70
+  },
+  {
+   "id": "F1-N07",
+   "sha256": "f70d2db2175ac95d9989f3520e051e84f1d5b5b8bb2a57ebb4e5f11ce324cd3d",
+   "bytes": 70
+  },
+  {
+   "id": "F1-N08",
+   "sha256": "401206ba6aa591ced2d2e35eb189ad4ca949c2fbab4393debbdee0a7e84b14e5",
+   "bytes": 69
+  },
+  {
+   "id": "F1-N09",
+   "sha256": "cffd9283681940b6d5ed5093c934235644111d0b4fe20d169def66b80bcecbb9",
+   "bytes": 69
+  },
+  {
+   "id": "F1-N10",
+   "sha256": "ba16c74a044c675918400e2b0a1658fb29a3392210965712c883e6de6e1ba3ab",
+   "bytes": 69
+  },
+  {
+   "id": "F1-N11",
+   "sha256": "cde185c0aef9fb53b2ae9ab100133d78933ed37cdab46432c6b1456ac405745c",
+   "bytes": 70
+  },
+  {
+   "id": "F1-N12",
+   "sha256": "ad7c8d90576a3489ce705d22a3dc50ab820917c8618b3392931f9f49e9c70d39",
+   "bytes": 71
+  },
+  {
+   "id": "F1-N13",
+   "sha256": "c27556bf58661fefeda327e8f8ac4e156f8de7291ab5b41714f17e2f8859620c",
+   "bytes": 68
+  },
+  {
+   "id": "F1-N14",
+   "sha256": "30a0f71335fef290bcfd0994bddb4eca5a7f74496993a1e1c36e03bb10567163",
+   "bytes": 69
+  },
+  {
+   "id": "F1-N15",
+   "sha256": "8e89aba69fbf4d2327bfed5ce076b645f67af60bbb6ac69060be894e3b370577",
+   "bytes": 68
+  },
+  {
+   "id": "F1-N16",
+   "sha256": "429631d32bca2d4687d4c51130e2fe1a4e1cb9ed88b9f257db7b043a28afdde1",
+   "bytes": 81
+  },
+  {
+   "id": "F1-N17",
+   "sha256": "31fb2112ee36cb84ef2ec35d3fe9f6834f69152559d27905392914cb275bf215",
+   "bytes": 76
+  },
+  {
+   "id": "F1-N18",
+   "sha256": "9916fb95ce6fa2fbf4c44922f5a84e3b5d55080f00667f84e4e6b5d5aabfa584",
+   "bytes": 89
+  },
+  {
+   "id": "F1-N19",
+   "sha256": "dd7055421edaf673b201f3b07bdc9df2ccb2f1ef57f259ceef52fbe55bc5c911",
+   "bytes": 74
+  },
+  {
+   "id": "F1-N20",
+   "sha256": "f743171fdbb20d0f5eb2c2c4aa87db8a490bf3c8f53e7341888b98afb095e61c",
+   "bytes": 75
+  },
+  {
+   "id": "F1-N21",
+   "sha256": "ad52cbd4aa151c29ff4c791b9f875ae6493ec0dd62d52ff3ecf685074ccb864b",
+   "bytes": 77
+  },
+  {
+   "id": "F1-N22",
+   "sha256": "56405586ad572ddc956354a7660374847d56c58248564010438050d75b900582",
+   "bytes": 89
+  },
+  {
+   "id": "F1-N23",
+   "sha256": "a605a3603e045d8ae50c47572efc31e3d30591cc22a99498f56695e8b55ae315",
+   "bytes": 69
+  },
+  {
+   "id": "F1-N24",
+   "sha256": "60a70999cb2e7186ab1c78b15aa09660ae0e7246089b11aa3ce20bc6ad80a689",
+   "bytes": 71
+  },
+  {
+   "id": "F1-N25",
+   "sha256": "fd70868d0f50a589c420bc707d0fe1300aabb95f111b469e182499314f658405",
+   "bytes": 73
+  },
+  {
+   "id": "F1-N26",
+   "sha256": "18094d214fde2f325782c1ec61b57f04881e7f9b220ec1ad881767efb26c4a42",
+   "bytes": 67
+  },
+  {
+   "id": "F1-N27",
+   "sha256": "c0a171a8edb1cd3d8da116b43828eebb6806fc0f891b6b29dc7787ce840adb80",
+   "bytes": 49
+  },
+  {
+   "id": "F1-N28",
+   "sha256": "4805a98fde58af5ca6a346e61b4278fadc550589d2f1da016f9c0178d1856e34",
+   "bytes": 104
+  },
+  {
+   "id": "F1-N29",
+   "sha256": "3cb58c15eca27db851c3ad1ac9955515861d57044c88b48229d5022821f8d5c9",
+   "bytes": 67
+  },
+  {
+   "id": "F1-N30",
+   "sha256": "f991318e5900cbff7c6626b474b7d1c79be87e3f0c7ed5a1116919f1baaadfc7",
+   "bytes": 70
+  },
+  {
+   "id": "F1-N31",
+   "sha256": "7a621704091dda4b1b49054643d0119c33368a9104cd538fd679e7c72b064827",
+   "bytes": 67
+  },
+  {
+   "id": "F1-N32",
+   "sha256": "40afe4ba815162a82490f6effc31fa65c0b624ce11386c849a32e1f2c380c8c1",
+   "bytes": 64
+  },
+  {
+   "id": "F1-N33",
+   "sha256": "e3a3bfd0b305b96439d1354a1d966c67c89de6245e2fc47212865e699b40e530",
+   "bytes": 70
+  },
+  {
+   "id": "F1-N34",
+   "sha256": "3e428a86b6416815c620ea176f9ebb8123fd1785137c8f7cc35062b2b1297e9f",
+   "bytes": 122
+  },
+  {
+   "id": "F1-N35",
+   "sha256": "de604de4fae409eba3c200c2c7fd9791a181905337e7b5fc76e70887c8cc6229",
+   "bytes": 53
+  },
+  {
+   "id": "F1-N36",
+   "sha256": "19a396f5b5dddbca148a595eb51188a876e3ac924ad4cb24241666d5b419132f",
+   "bytes": 62
+  },
+  {
+   "id": "F1-N37",
+   "sha256": "283997005e59920fdbbcb315a9812bce8bba47920acacba204d1166792c67ada",
+   "bytes": 34
+  },
+  {
+   "id": "F1-N38",
+   "sha256": "52c09b4f675fda2330425f44cf0254df0de9dbaf1139065e5b6d3da7ee5993fd",
+   "bytes": 54
+  },
+  {
+   "id": "F1-N39",
+   "sha256": "3e97197f4b8d46a893067c94ab15e195e3d97fb5f24eede5ef047b571240d92b",
+   "bytes": 4097
+  },
+  {
+   "id": "F1-N40",
+   "sha256": "63c6c0e5a63a0e43418354b5226498e27b1bba084490b8720f66b765366ecf01",
+   "bytes": 56
+  },
+  {
+   "id": "F1-N41",
+   "sha256": "fb0a34345332985589161c23de8eff3e83824884f24adcc06389942c2cfe59b5",
+   "bytes": 55
+  },
+  {
+   "id": "F1-N42",
+   "sha256": "9a728cc3c45ddf2bc5fd0d06fe56253749d15c01ccf7f9dd0e54552e7eb99904",
+   "bytes": 55
+  },
+  {
+   "id": "F1-N43",
+   "sha256": "b93c5f6322fd0886fc64cb58e057805c788b0447d9dad6e2e8e550710250cac0",
+   "bytes": 75
+  },
+  {
+   "id": "F1-N44",
+   "sha256": "06b9d1e675bcf5e680b9d2f81443983c92ab0435cfdcb0c6a8b2cfccbb04b51b",
+   "bytes": 77
+  },
+  {
+   "id": "F1-N45",
+   "sha256": "8fad3fa68eba297fc052f777fc4229e6f541c17ef1deb130a01583d472eba45c",
+   "bytes": 68
+  },
+  {
+   "id": "F1-N46",
+   "sha256": "bf88dc418ca9cf0665b93aa836c1f5c454822f3627c1e5cb06f583020ca0e464",
+   "bytes": 57
+  },
+  {
+   "id": "F1-N47",
+   "sha256": "788b4fbf1bbd46387f0af1dbd2e3c09ad66bc4ad4a1103e90b57d7134688f3ec",
+   "bytes": 55
+  }
+ ]
+}
