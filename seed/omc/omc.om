@@ -9246,7 +9246,11 @@ xpget 1 16
 xrr 133 1 1
 nogop = xbranch 0
 xmem 139 1 1 24
+xrr 133 1 1
+z1 = xbranch 0
 xmem 139 1 1 8
+xrr 133 1 1
+z2 = xbranch 0
 note Paired 32-bit fields are copied together; no pointer fields escape.
 xmem 139 0 1 4
 xmem 137 0 12 8
@@ -9261,6 +9265,8 @@ xpget 1 24
 xrr 133 1 1
 nonet = xbranch 0
 xmem 139 1 1 120
+xrr 133 1 1
+z3 = xbranch 0
 xraw 0 1 552 4
 xput32 0 12 24
 xraw 0 1 556 2
@@ -9289,6 +9295,9 @@ xrr 133 1 1
 noptr = xbranch 0
 xeflag 8
 xpatch noptr get oc 0
+xpatch z1 get oc 0
+xpatch z2 get oc 0
+xpatch z3 get oc 0
 ximm 0 0
 end
 
@@ -9360,7 +9369,11 @@ xeerr 0 2
 xrr 133 9 9
 xeerr 0 2
 xmem 139 2 1 24
+xrr 133 2 2
+xeerr 0 2
 xmem 139 2 2 8
+xrr 133 2 2
+xeerr 0 2
 xraw 0 2 4 4
 xrr 57 9 0
 xeerr 8 2
@@ -9616,6 +9629,8 @@ xpset 0 136
 xpset 0 144
 xpget 1 128
 xmem 139 2 1 120
+xrr 133 2 2
+xeerr 0 3
 xraw 0 2 4 4
 ximm 8 6
 xrr 57 0 8
