@@ -1,0 +1,238 @@
+OM-2 SHA unit: independent qualification (#748, ledger L836, phaseB/sha-f5d14cb2), 2026-10-25
+==============================================================================================
+Verdicts below come from this worker's own runs and oracles. ShaLane (L838) evidence, notes and PR
+text were NOT read before sections 1-6 were written (section 7 is the later comparison). Evidence
+class: HOST (GB10 host CPU, Linux AArch64) unless marked SOURCE/RULE. Differential tests are finite.
+NOT_RUN is never PASS. No constant-time claim is made.
+
+Objects under test (identities: evidence/phaseB/sha-f5d14cb2/identity.txt)
+  unit       om/sha256/sha256-om2.om, aien-dev/om2/sha-compact @ f5d14cb23c832362ff31d3c08b95efee996f43e7
+             (worktree /tmp/zl/qsha, clean), 9583 bytes, 344 lines,
+             sha256 dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb (== blob at HEAD)
+  compiler   /tmp/zl/omc-f6a6492f (om2/compiler-s4 @ f6a6492f),
+             sha256 499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec (verified before use)
+  generator  omega-bridge feat/slice-abi @ 3bb8b8a9df5bd0419360c7a2bb1b9f31aee856ad (/tmp/zl/qbridge, clean),
+             src/native.om sha256 96d2cdd0...f259d5, compiled by tools/native with the pinned OM-1 omc
+             seed/out/omc (734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61; tools/native
+             refuses any other), native-gen sha256 9f8c1dab997d898c60f3a2343a293b9b1c33f11e0540003af98f8e40d7b51019
+  artifact   S4 output, 21340 bytes = 5335 words,
+             sha256 27775fb2106dc0695d32417b1545af0027c136fe05bcdc4abd12cb473460570b
+             (deterministic over two compiles; copy: evidence/phaseB/sha-f5d14cb2/sha256-om2.S4.bin)
+             words 0..3 = b 0x4180 (init), b 0x46dc (update), b 0x47c4 (final), b 0x4d34 (hash)
+  binding    omega_native.c 799c3117...0ae3, omega_native.h 41dc0877...192b, omega_api.h 79c7de9c...4824,
+             libomega_native.so 791db815...bad (full list: binding.txt)
+  oracles    seed/qualification/om2/oracle/sha/ (PROVENANCE.txt: tool versions, file sha256, commands):
+             /usr/bin/sha256sum (GNU coreutils) 9.4; Python 3.12.3 hashlib (OpenSSL 3.0.13); gcc 13.3.0;
+             GNU objdump 2.42
+
+Commands (repository root ~/workspace/om2-qualification):
+  sh seed/qualification/om2/candidates/sha/run-qual.sh            tasks 1, 2, 4, 5 (about 3 min)
+  sh seed/qualification/om2/candidates/sha/mutants/run-mutants.sh /tmp/zl/qsha/om/sha256/sha256-om2.om \
+     /tmp/zl/omc-f6a6492f 499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec /tmp/zl/shaq/mut
+                                                                   task 3 (log: mutants.log)
+  Every item's log is evidence/phaseB/sha-f5d14cb2/<item>.txt (each starts with its exact command line
+  and ends with EXIT <status>). Scratch: build/om2-qual/sha/run, /tmp/zl/shaq.
+
+1. Compile and functional vectors
+---------------------------------
+item                                                   result   evidence
+S4 compiles the unit, exit 0, deterministic            PASS     build.txt
+158 fixture vectors re-derived today: hashlib ==       PASS     t1-vecoracle.txt (158/158 agree)
+  /usr/bin/sha256sum == fixture digest (and length)
+158 vectors through the binding, 4 call paths each:    PASS     t1-vec.txt (631/631; chunks-of-7 path
+  hash; init/update(n)/final; chunks                            skipped only for the 1,000,000-byte row)
+  1,63,64,65,0,127,3,4096,55; chunks of 7
+sec/s5s7/candidate.cases sha-* rows (16, NOT_RUN       PASS     t1-s5s7-sha.txt (13 rows), t1-s5s7-sha-big.txt
+  until now), run with the s5s7 ORACLE driver                   (all 16: sha-empty, sha-abc, sha-split2,
+  oracle/s5s7/sha/sha_driver.c built unchanged                  sha-split3-zero, sha-bytewise,
+  against the GENERATED omega_api.h (-DGENHDR)                  sha-update-null0, sha-hash-overlap0/16/-before,
+                                                                sha-post-final, sha-no-init-safe,
+                                                                sha-hash-eq-stream, sha-ctx-copy,
+                                                                sha-big-1, sha-big-split, sha-big-hash)
+  expected.h EXP_BIG_ZERO re-checked with sha256sum    PASS     t2-bigzero-oracle.txt
+sha-* rows still NOT_RUN                               none     (the case file itself still says notrun: it is
+                                                                outside this worker's write scope; the rows ran
+                                                                through the driver they name)
+
+2. ABI v2 binding and section 7 / E1 / E3 receipts (driver oracle/sha/sha_qual.c, raw omega2_* calls)
+------------------------------------------------------------------------------------------------------
+item                                                   result   evidence / detail
+tools/native installs library + 6 bindings + omega_api.h PASS   binding.txt (exit 0)
+embedded code == S4 bytes (ombr2_code_sha256_om2)      PASS     binding.txt
+exported symbols exactly omega2_sha256_{init,update,   PASS     binding.txt (5 defined symbols)
+  final,hash} + omega2_ident_sha256_om2
+E1: no omega_<name> v1 symbol                          PASS     0 omega_* symbols; a v1 caller of
+                                                                omega_sha256_init fails to link
+                                                                ("undefined reference")
+E1: omega2_ident_sha256_om2() content                  PASS     t2-ident.txt: "omega-ident 1 unit=sha256_om2
+                                                                abi=2 profile=OM-2 src=dbf002dd...94bb omc=49923639...03ec"
+                                                                == string built from /usr/bin/sha256sum of the
+                                                                exact unit bytes and of the S4 omc (python hashlib
+                                                                agrees) == OMEGA2_IDENT_sha256_om2 in the header
+E5/§5 layout: sha256_ctx 104 bytes, state@0 count@32   PASS     omega_api.h static asserts compiled by tools/native
+  buf@40
+hash(n) == init/update(n)/final == sha256sum,          PASS     t2-rcpt.txt rcpt-hash-eq-stream
+  n = 0..300, 1000, 2000
+E3 context copy after k updates (k = 0..200, then every PASS     rcpt-ctx-copy; copies to an aligned struct and
+  61 to 2000), both continued with the same data:               to a MISALIGNED byte buffer (layout alignment 1);
+  equal digests == sha256sum                                    one copy continued in two updates
+hash(d,n,d+j), output overlapping input, n in          PASS     rcpt-hash-overlap (incl. hash(d,32,d))
+  {32,64,100}, j = -31..31, == sha256sum(original)
+reuse after final: init/update(n)/final after a final  PASS     rcpt-post-final; update/final without init
+  == sha256sum, n = 0..130                                      returned status 0 (memory safety only)
+empty updates (len 0 with NULL, a valid pointer and a  PASS     rcpt-empty (603 sequences); also in the random
+  bogus 0x10 pointer) at every split 0..200, first,             sets (523 + 933 empty updates)
+  before final; init,update(NULL,0),final; hash(NULL,0)
+status 32 through the real API, nothing written:       PASS     rcpt-refuse (19 cases, all 32; context, out and
+  update NULL len1 / NULL len 2^40 / wrap / end 2^64 /          result bytes unchanged)
+  len 2^64-1 / ctx NULL / ctx wrap / view overlaps ctx /
+  result in ctx / result NULL; init NULL; final out NULL /
+  ctx NULL / out overlaps ctx / out wrap; hash NULL len5 /
+  wrap / out NULL / result overlaps out
+>= 1000 seeded random messages, random chunkings       PASS     t2-rand748.txt 1200 msgs (42,309,061 B, 3258 updates),
+  (incl. empty updates), stream and hash vs sha256sum           t2-rand749.txt 2000 msgs (74,789,167 B, 5637 updates);
+                                                                second oracle python hashlib: t2-rand7{48,49}-hashlib.txt
+                                                                3200/3200 match
+2^25-byte run boundaries of blocks(): lengths 2^25-64, PASS     t2-part.txt (one update, hash, chunks
+  2^25-1, 2^25, 2^25+1, 2^25+64, 2^26, 2^26+77, 3*2^25+4095     33,2^25+5,2^24) == sha256sum
+one update >= 2^32 bytes: 2^32+1000003 random bytes    PASS     t2-big.txt (malloc 4.3 GB; 56 GiB available):
+  (malloc), one update / hash / updates 2^32-1 + rest;          sha256sum 3950ca21...1b77; big-1, big-hash,
+  hash of 2^32-1 bytes                                          big-split32, big-below
+total > 2^32 via many updates (508 updates of random   PASS     t2-big.txt big-many
+  size up to 2^24, some < 64, count crosses 2^32 inside one)
+2^32+3 zero bytes (NORESERVE mapping): update and hash PASS     t2-bigzero.txt
+informational (unit comment, not a contract claim):    yes      t2-final-unchanged.txt (n = 0..299)
+  final leaves the context unchanged; final twice equal
+section 8 effects: no SVC word in the artifact         PASS     t2-final-unchanged.txt (objdump count 0) [SOURCE]
+
+3. Source mutants (run-mutants.sh; scratch copy per mutant, S4 compile, regenerated binding, sha_qual.c)
+--------------------------------------------------------------------------------------------------------
+Each .from must occur exactly once (all 17: anchor-count=1). Kill = first FAIL line with status 0 and a
+wrong digest; no mutant produced a TRAP or signal in its killing mode (traps-in-mode=0). Control: the
+unmutated unit through the same harness passes every mode (vec 631, rcpt 6, part, rand 200, bigzero 2,
+big 5).
+mutant                  line  change                                       killed by (first case)          first diff byte
+m01-Sigma0-rot          158   rotr a 2 -> rotr a 3                          vec-fips-empty-hash             0
+m02-Sigma1-rot          154   rotr e 25 -> rotr e 26                        vec-fips-empty-hash             0
+m03-sigma0-rot          128   rotr x 18 -> rotr x 19                        vec-fips-empty-hash             0
+m04-sigma1-rot          129   rotr y 19 -> rotr y 20                        vec-fips-empty-hash             0
+m05-K63                 95    K[63] 0xc67178f2 -> 0xc67178f3                vec-fips-empty-hash             3
+m06-IV7                 108   H0[7] 0x5be0cd19 -> 0x5be0cd18                vec-fips-empty-hash             0
+m07-sched-index         127   get w add i 14 -> add i 13                    vec-fips-empty-hash             0
+m08-pad-0x80            219   put p k 0x80 -> 0x81                          vec-fips-empty-hash             0
+m09-pad-length          221   if ge k 56 -> ge k 57                         vec-fips-448-hash (56 bytes)    0
+m10-bit-length          224   shl n 3 -> shl n 2                            vec-fips-abc-hash               0
+m11-count-trunc32       287   count += n -> count += n & 0xffffffff         bigzero-1 (2^32+3-byte update)  0
+m12-count-plus1         287   count += n -> count += n + 1                  vec-fips-abc-one                0
+m13-part-offset         274   part d off ... -> part d 0 ...                vec-seq-1000-chunkA             0
+m14-run-step            209   2nd blocks loop q += 2^25 -> q += 2^24        part-len33554432 (hash)         0
+m15-final-byte-order    310   final: shr v sub 24 mul j 8 -> shr v mul j 8  vec-fips-empty-one              0
+m16-buf-index           247   tobuf: buf add bi i -> buf i                  vec-fips-abc-chunkA             0
+m17-absorb-boundary     288   if lt n sub 64 bi -> if le n sub 64 bi        vec-fips-896-chunkA             0
+Result: 17/17 killed, control PASS. m11 survives every vector, receipt, part and random case and is
+killed only by the >= 2^32-byte update; m14 only by the 2^25 run-boundary lengths. Mutant source and
+artifact sha256 per mutant: mutants.log.
+
+4. Leakage (contract §8, E11-E13): leakscan + objdump 2.42 cross-check [SOURCE/RULE]; traces [HOST]
+---------------------------------------------------------------------------------------------------
+Scanner: seed/qualification/om2/leak/leakscan.om (6b14fd9b...) built by the pinned OM-1 omc ->
+aa60061e...e633, byte-identical to build/om2-qual/leakscan-e13. The pinned leak gate
+(leak.cases incl. the E12 reachable-trap and E13 pub-secret negative controls) re-run with this build:
+OM2GATE NOT_RUN cases=55 pass=54 fail=0 invalid=0, the one NOT_RUN being its planned sha256-om2-scan
+row (t4-leak-gate-pinned.txt).
+Entry: leakscan analyses from word 0. For export k the scan input is the artifact with word 0 replaced
+by word k's B re-based to byte 0 (oracle/sha/entry.py; t4-leak-setup.txt; all other bytes unchanged).
+Slots from the signatures (all public: pointers and element counts; no xN DATA slot):
+  init x0=c; update x0=c, x1=d.ptr, x2=d.len; final x0=c, x1=out; hash x0=d.ptr, x1=d.len, x2=out.
+pub declaration (E11): pub:0:32:8 = the shactx count field (layout `field count ulong at 32`) for the
+exports that take c. hash takes no context: no declaration.
+export  args          branches len trap-chk MANUAL  data-index unknown unhandled revoked  verdict  xcheck
+init    -             199      1   0        0       0          0       0         -        PASS     AGREE
+init    pub:0:32:8    199      1   0        0       0          0       0         454      PASS     AGREE
+update  -             199      14  0        83      67         0       0         -        NOT_RUN  AGREE
+update  pub:0:32:8    199      14  0        83      67         0       0         277      NOT_RUN  AGREE
+final   -             199      80  40       3       1          0       0         -        NOT_RUN  AGREE
+final   pub:0:32:8    199      80  40       3       1          0       0         357      NOT_RUN  AGREE
+hash    -             199      106 32       0       0          0       0         -        PASS     AGREE
+(branches = all 199 conditional branches in the artifact; objdump 2.42 agrees on all 199 branches,
+732 non-SP memory accesses and 0 undecodable words for every scan: t4-xcheck-*.txt)
+E13: the count declaration is REVOKED in every scan that carries it (277/357/454 potentially poisoning
+stores), so it never classifies a load; results equal the undeclared scans. Revoking stores in the
+update scan: 109 in code unreached from update (other exports share the artifact), 84 unclassified
+words, 80 constant-offset stores through parameter pointers whose provenance the scanner loses
+(scratch arrays passed to sched/rounds etc.), 2 public-index and 2 data-index byte stores (tobuf/absorb
+buffer copies). Consequently every count-derived value (bi = count mod 64, the absorb offset, part
+lengths, final's k) is DATA to the scanner:
+  update: 83 MANUAL branches (75 bounds-check b.cs/b.hi to trap 3, 8 loop/if branches) and 67 data-index
+          accesses (65 ldrb, 2 strb), all through count-derived offsets/bases;
+  final:  3 MANUAL branches (@4049 bounds check of put p k 0x80, trap 3; @4053 if ge k 56; @4677 the
+          for i ulong k copy loop) and 1 data-index (@4050 strb p[k]).
+No item was classified data-dependent on message bytes by a proof; they are scanner may-DATA items
+whose true source is the byte count, which the leakage model treats as public but the scanner cannot
+keep public after E13 revocation.
+Static verdict TRACE-EQUIV-STATIC: init PASS, hash PASS, update NOT_RUN, final NOT_RUN
+  => unit (a) = NOT_RUN (E12: any MANUAL item => NOT_RUN, never PASS).
+Dynamic (b), oracle/sha/trace.py + trace_child.c, ptrace single-step on the HOST: 28 pairs with equal
+lengths and call sequence, different message (and pending-buffer) bytes: hash for n in
+{0,1,55,56,63,64,65,119,120,200,1000} (zeros vs ones, random vs random) and init/update/update/final with
+splits (3,60) (10,100) (63,1) (64,64) (100,200) (1,0). Recorded: every executed OM-2 instruction offset
+and every load/store effective address, plus the whole-process PC sequence. Result: 28/28 identical
+(t4-trace.txt; live code bytes == artifact). Negative controls: B one byte longer -> instruction and
+data traces differ (t4-trace-control1.txt); B at buf+64 -> only data addresses differ
+(t4-trace-control2.txt). Finite HOST evidence; no claim about speculation, latency or caches.
+Overall leakage verdict: NOT_RUN (static evidence (a) has MANUAL items in update and final). The
+dynamic comparison (b) found no difference on the 28 tested pairs. Never constant time.
+
+5. Code size, stack, rotates (oracle/sha/stack.py, t5-size-stack.txt) [SOURCE]
+------------------------------------------------------------------------------
+code size            21340 bytes, 5335 words (one artifact shared by the four exports)
+rotates              576 ROR (immediate) = EXTR with Rn == Rm, by encoding; objdump prints 576 `ror`;
+                     RORV 0, other EXTR 0 (= 48 x 4 schedule rotr + 64 x 6 round rotr in the source)
+stack bound          init 64 B, update 1040 B, final 896 B, hash 1040 B below the export's entry SP.
+                     Method: per function, SP depth over its CFG from sub/add sp,sp,#imm (the only SP
+                     writes: 34 sub, 25 add), joins and RET checked; bound = max(depth, depth at BL +
+                     callee bound) over the acyclic call graph (14 functions). The binding adds its own
+                     frame plus a 32-byte out buffer (final/hash) on its 8 MiB per-thread stack.
+                     Dynamic cross-check (t4-trace.txt): deepest observed 64 / 1008 / 896 / 1008 B
+                     (update/hash do not reach the len >= 2^44 path in the traces).
+
+6. Defects and overall verdict
+------------------------------
+Defects found: none (no functional, ABI, identity or mutant-adequacy failure).
+Not established: trace equivalence by static evidence for update and final (scanner precision after
+E13 revocation; see section 4). This is NOT_RUN, not FAIL.
+Required items: tasks 1, 2, 3, 5 all PASS; task 4 runnable items were run and are honestly NOT_RUN
+under E12 (static) with a passing finite dynamic comparison.
+OVERALL VERDICT: NOT_RUN (no FAIL, no defect). Not PASS, because the §8 trace-equivalence item is
+NOT_RUN. Component verdicts: functional correctness, ABI v2 binding, E1 identity/symbols, §7/E3
+receipts, >= 2^32 updates and mutant adequacy PASS; §8 leakage NOT_RUN (static: MANUAL items in update
+and final; dynamic: 28/28 pairs equal). No constant-time claim.
+To reach PASS on §8 the static evidence must classify the count-derived items as length-dependent,
+e.g. a scanner that keeps the E11 count declaration through stores proven outside bytes 32..39
+(scratch arrays, state, buf) and classifies the stores that do hit 32..39 in every export (init:
+constant 0; update: count + len), instead of treating unreached or provenance-less stores as
+poisoning; that is a leakscan/E13 precision change for the leak lane, not a change to the unit.
+
+7. Comparison with ShaLane (L838) evidence, read only AFTER sections 1-6 were written [LABELLED]
+--------------------------------------------------------------------------------------------------
+Read: /tmp/zl/qsha/om/sha256/om2-evidence/{s4/README.txt, s4/ident.txt, s4/receipts.out, s4/vectors.out,
+s4/omega_api.h.generated, AUDIT-L838.txt, deskcheck/RESULT.txt}.
+AGREE   artifact: 21340 bytes, sha256 27775fb2...570b, deterministic (both runs).
+AGREE   identity string src=dbf002dd...94bb omc=49923639...03ec profile=OM-2.
+AGREE   omega_api.h byte-identical to ShaLane's omega_api.h.generated (cmp).
+AGREE   158/158 vectors; receipts (copy, overlap, post-final, hash == stream, empty updates); update and
+        hash of > 2^32 bytes; ROR immediate 576, RORV 0, SVC 0.
+DIFFER (not a defect) omega_native.c / libomega_native.so sha256: ShaLane bound sha256-om2.om together
+        with om/blake3/b3unit.om (21b58846... / 0f8d029c...); this run bound the SHA unit alone
+        (799c3117... / 791db815...). The embedded SHA code is the same S4 artifact in both.
+DIFFER (method) ShaLane's functional oracle is the historical C src/sha256.c @ a647b6a9 linked into
+        the harness; this run used /usr/bin/sha256sum and Python hashlib only (plus the Phase A
+        fixture) and never the C implementation.
+NEW     items ShaLane listed NOT_RUN ("runtime mutants of the full unit, trace-equivalence scan"): run
+        here (section 3: 17/17 killed; section 4: static NOT_RUN, dynamic 28/28 equal). ShaLane's desk
+        check (interp.py) is SOURCE evidence of the author's reading, not used here.
+NOTE    ShaLane reports the generated struct field is `buf` while src/sha256.h (main acb3f15) names it
+        `buffer`. Confirmed here [SOURCE]: /tmp/zl/main/src/sha256.h:29 `uint8_t buffer[...]`, and no
+        `.buffer`/`->buffer` access exists under src/, tests/, tools/, research/, om/ of acb3f15, so no
+        caller is affected. The layout offsets/size equal sha256.h (static asserts); only the name differs.
+No contradiction between the two lanes was found.

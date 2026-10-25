@@ -1,0 +1,12 @@
+date 2026-10-25T20:18:38Z host Linux 7.0.0-1019-nvidia aarch64
+unit /tmp/zl/qsha/om/sha256/sha256-om2.om sha256 dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb bytes 9583 lines 344
+unit repo HEAD f5d14cb23c832362ff31d3c08b95efee996f43e7 status-clean=yes
+unit blob at HEAD sha256 dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb
+omc S4 /tmp/zl/omc-f6a6492f sha256 499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec (expected 499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec)
+omc OM-1 pinned /home/drakestapleton/workspace/om2-qualification/seed/out/omc sha256 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 (expected 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61)
+bridge HEAD 3bb8b8a9df5bd0419360c7a2bb1b9f31aee856ad status-clean=yes
+bridge src/native.om sha256 96d2cdd02c10b31cb8d045919feda21e0bd9b271d7504ce13263e73c20f259d5; tools/native sha256 a95e4865a20d1ff583d6e0b05a8607cc8eeab9a8e3ff259e5bcea09f4737157d
+sha256sum (GNU coreutils) 9.4
+Python 3.12.3
+gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+GNU objdump (GNU Binutils for Ubuntu) 2.42

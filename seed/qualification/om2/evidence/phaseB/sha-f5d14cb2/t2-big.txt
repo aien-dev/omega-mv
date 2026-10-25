@@ -1,0 +1,12 @@
+$ sh -c free -g; nice -n 19 '/home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/sha_qual' big
+               total        used        free      shared  buff/cache   available
+Mem:             121          65           5           0          55          55
+Swap:              0           0           0
+INFO big L=4295967299 sha256sum=3950ca2133672abc3861fdfac6d9f0558e71a04e9ef8c0454e6950cb5ed41b77
+PASS big-1 one update of 2^32+1000003 random bytes == sha256sum
+PASS big-hash sha256_hash of 2^32+1000003 bytes == sha256sum
+PASS big-split32 updates of 2^32-1 and 1000004 bytes == sha256sum
+PASS big-below hash of 2^32-1 bytes == sha256sum
+PASS big-many 508 updates totalling 2^32+1000003 bytes == sha256sum
+TOTAL big pass=5 fail=0 trap=0
+EXIT 0

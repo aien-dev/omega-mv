@@ -1,0 +1,19 @@
+$ nice -n 19 /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/sha_driver big
+PASS sha-empty init, final = sha256("")
+PASS sha-abc abc
+PASS sha-split2 every two-way split k = 0..1000 of seq:1000
+PASS sha-split3-zero three-way splits with length-0 updates between them
+PASS sha-bytewise 1000 one-byte updates
+PASS sha-update-null0 update(NULL, 0) is an empty update (ABI: len 0 any pointer)
+PASS sha-hash-overlap0 sha256_hash(buf, 64, buf)
+PASS sha-hash-overlap16 sha256_hash(buf, 64, buf + 16)
+PASS sha-hash-overlap-before digest [8,40) overlapping data [32,96)
+PASS sha-post-final init, update, final after a final == fresh context
+PASS sha-no-init-safe update, final without init returned (digest unspecified; memory safety only)
+PASS sha-hash-eq-stream hash(n) == init, update(n), final == python, n in {0,1,55,56,63,64,65,119,120,1000}
+PASS sha-ctx-copy byte copy after k updates, both continued: equal digests (E3)
+PASS sha-big-1 one update of 2^32+3 zero bytes
+PASS sha-big-split updates of 2^32-1 and 4 zero bytes
+PASS sha-big-hash hash of 2^32+3 zero bytes
+PASS SHA driver: 0 failure(s)
+EXIT 0
