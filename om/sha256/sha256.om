@@ -2,7 +2,7 @@ note SPDX-License-Identifier: Apache-2.0
 note sha256.om: FIPS 180-4 SHA-256 as one function-mode unit, bound through the omega-bridge native
 note call ABI (docs/NATIVE-ABI.md) and exported as omega_omsha. It replaces the algorithm of
 note src/sha256.c: the C file keeps only the sha256_* entry points that cut caller data into
-note pieces of at most 64 bytes.
+note pieces of at most 4096 bytes.
 note
 note The whole hash state lives in the caller's sha256_ctx (104 bytes, src/sha256.h):
 note   bytes 0..31   state[8], uint32 little endian
@@ -10,9 +10,9 @@ note   bytes 32..39  count, uint64 little endian (bytes absorbed so far)
 note   bytes 40..103 buffer, the pending partial block
 note omsha c b n op o:
 note   op 0  init: count 0, FIPS initial hash value
-note   op 1  absorb b[0..n), n <= 64, with src/sha256.c's buffering rules
+note   op 1  absorb b[0..n), n <= 4096, with src/sha256.c's buffering rules
 note   op 2  final: pad, absorb the bit length, write the 32-byte digest into o
-note n > 64 traps 3; any other op traps 9.
+note n > 4096 traps 3; any other op traps 9.
 
 
 fn initk k edit ulong 64 to void
@@ -82,34 +82,6 @@ put k 62 3204031479
 put k 63 3329325298
 end
 
-fn rotr x ulong r ulong to ulong
-ret and or shr x r shl x sub 32 r 4294967295
-end
-
-fn bsig0 x ulong to ulong
-ret xor rotr x 2 xor rotr x 13 rotr x 22
-end
-
-fn bsig1 x ulong to ulong
-ret xor rotr x 6 xor rotr x 11 rotr x 25
-end
-
-fn ssig0 x ulong to ulong
-ret xor rotr x 7 xor rotr x 18 shr x 3
-end
-
-fn ssig1 x ulong to ulong
-ret xor rotr x 17 xor rotr x 19 shr x 10
-end
-
-fn ch x ulong y ulong z ulong to ulong
-ret xor and x y and and not x 4294967295 z
-end
-
-fn maj x ulong y ulong z ulong to ulong
-ret xor and x y xor and x z and y z
-end
-
 note little-endian word of nb bytes at byte offset p of the context
 fn getle c edit uchar 104 p ulong nb ulong to ulong
 v = ulong 0
@@ -141,29 +113,57 @@ put w i v
 end
 for j ulong 48
 i = add j 16
-s = add ssig1 get w sub i 2 get w sub i 7
-s = add s ssig0 get w sub i 15
-s = add s get w sub i 16
-put w i and s 4294967295
+x = get w sub i 2
+u = and or shr x 17 shl x 15 4294967295
+u = xor u and or shr x 19 shl x 13 4294967295
+u = xor u shr x 10
+x = get w sub i 15
+v = and or shr x 7 shl x 25 4294967295
+v = xor v and or shr x 18 shl x 14 4294967295
+v = xor v shr x 3
+u = add u v
+u = add u get w sub i 7
+put w i and add u get w sub i 16 4294967295
 end
 end
 
-fn round s edit ulong 8 k view ulong 64 w edit ulong 64 i ulong to void
-a = get s 0
+note the 64 rounds over the working state s; sigma, ch and maj are written out because every call
+note spills and reloads the caller's live values
+fn rounds s edit ulong 8 k view ulong 64 w edit ulong 64 to void
+for i ulong 64
 e = get s 4
-t1 = add get s 7 bsig1 e
-t1 = add t1 ch e get s 5 get s 6
+u = and or shr e 6 shl e 26 4294967295
+v = and or shr e 11 shl e 21 4294967295
+u = xor u v
+v = and or shr e 25 shl e 7 4294967295
+u = xor u v
+f = get s 5
+g = get s 6
+v = xor and e f and and not e 4294967295 g
+t1 = add u v
+t1 = add t1 get s 7
 t1 = add t1 get k i
 t1 = and add t1 get w i 4294967295
-t2 = and add bsig0 a maj a get s 1 get s 2 4294967295
+a = get s 0
+u = and or shr a 2 shl a 30 4294967295
+v = and or shr a 13 shl a 19 4294967295
+u = xor u v
+v = and or shr a 22 shl a 10 4294967295
+u = xor u v
+f = get s 1
+g = get s 2
+v = xor and a f xor and a g and f g
+u = and add u v 4294967295
 put s 7 get s 6
 put s 6 get s 5
 put s 5 e
-put s 4 and add get s 3 t1 4294967295
-put s 3 get s 2
-put s 2 get s 1
+v = get s 3
+put s 4 and add v t1 4294967295
+put s 3 g
+put s 2 f
 put s 1 a
-put s 0 and add t1 t2 4294967295
+put s 0 and add t1 u 4294967295
+end
 end
 
 note one compression of blk into the context's state words
@@ -174,9 +174,7 @@ sched blk w
 for i ulong 8
 put s i getle c mul i 4 4
 end
-for i ulong 64
-round s k w i
-end
+rounds s k w
 for i ulong 8
 p = mul i 4
 putle c p 4 and add getle c p 4 get s i 4294967295
@@ -184,15 +182,22 @@ end
 end
 
 note copy n bytes of b from bo into the context buffer at index bi
-fn tobuf c edit uchar 104 bi ulong b view uchar 64 bo ulong n ulong to void
+fn tobuf c edit uchar 104 bi ulong b view uchar 4096 bo ulong n ulong to void
 for i ulong n
 put c add 40 add bi i get b add bo i
 end
 end
 
-note absorb b[0..n), n <= 64, exactly as src/sha256.c sha256_update does for that piece
-fn absorb c edit uchar 104 b view uchar 64 n ulong k view ulong 64 to void
-if gt n 64
+note copy the 64 bytes of b at bo into blk
+fn toblk blk edit uchar 64 b view uchar 4096 bo ulong to void
+for i ulong 64
+put blk i get b add bo i
+end
+end
+
+note absorb b[0..n), n <= 4096, exactly as src/sha256.c sha256_update does for that piece
+fn absorb c edit uchar 104 b view uchar 4096 n ulong k view ulong 64 to void
+if gt n 4096
 trap 3
 end
 blk = new uchar 64 0
@@ -200,7 +205,6 @@ cnt = getle c 32 8
 bi = and cnt 63
 putle c 32 8 add cnt n
 off = ulong 0
-rest = n
 if gt bi 0
 lf = sub 64 bi
 if lt n lf
@@ -213,16 +217,13 @@ put blk i get c add 40 i
 end
 comp c blk k
 off = lf
-rest = sub n lf
 end
-if eq rest 64
-for i ulong 64
-put blk i get b i
-end
+while le add off 64 n bound 65
+toblk blk b off
 comp c blk k
-ret
+off = add off 64
 end
-tobuf c 0 b off rest
+tobuf c 0 b off sub n off
 end
 
 fn init c edit uchar 104 to void
@@ -238,7 +239,7 @@ putle c 28 4 1541459225
 end
 
 note big-endian 64-bit bit count into p[0..8)
-fn lenbe p edit uchar 64 bits ulong to void
+fn lenbe p edit uchar 4096 bits ulong to void
 for i ulong 8
 put p i uchar and shr bits mul sub 7 i 8 255
 end
@@ -258,7 +259,7 @@ end
 
 note src/sha256.c sha256_final: 0x80, zeros to 56 mod 64, the 64-bit big-endian bit count, digest
 fn final c edit uchar 104 o edit uchar 32 k view ulong 64 to void
-p = new uchar 64 0
+p = new uchar 4096 0
 cnt = getle c 32 8
 bi = and cnt 63
 pl = sub 120 bi
@@ -276,7 +277,7 @@ absorb c p 8 k
 digest c o
 end
 
-fn omsha c edit uchar 104 b view uchar 64 n ulong op ulong o edit uchar 32 to void
+fn omsha c edit uchar 104 b view uchar 4096 n ulong op ulong o edit uchar 32 to void
 if eq op 0
 init c
 ret

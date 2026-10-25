@@ -10,18 +10,19 @@ is unchanged: the header and `sha256_ctx` are the same.
 |---|---|
 | `om/sha256/sha256.om` | the implementation: one function-mode unit, entry `omsha` |
 | `src/omega_om_units.inc` | generated: the unit's machine code, byte for byte as omc wrote it, plus the ABI binding (`omega_omsha`) |
-| `src/sha256.c` | `sha256_init/update/final/hash`: cuts caller data into pieces of at most 64 bytes; no hashing logic |
+| `src/sha256.c` | `sha256_init/update/final/hash`: cuts caller data into pieces of at most 4096 bytes; no hashing logic |
 | `om/sha256/gen.sh` | regenerates the `.inc`; `--check` proves the committed file is what the pinned tools produce |
 | `om/sha256/parity/` | parity against the replaced C (`run.sh`) and a throughput probe (`bench.c`) |
 
 Pins: omc `734f0a39…6b61`; generator `src/native.om` of omega-bridge main `c4013511`
 (sha256 `e79733f8…f80f`).
 
-## Why a 64-byte adapter remains
+## Why a 4096-byte adapter remains
 
 ABI v1 arrays have a length fixed by the Omega type, so `sha256_update(ctx, data, len)` with any
-`len` cannot be one Omega call. The adapter passes whole 64-byte blocks straight from the caller's
-buffer and copies only a final partial piece into a zeroed 64-byte block. The bytes it passes and
+`len` cannot be one Omega call. The adapter passes whole 4096-byte pieces straight from the caller's
+buffer and copies only a final partial piece into a 4096-byte stack buffer (only its first `len`
+bytes are read). The bytes it passes and
 the order of calls are the only things it decides. The adapter goes away with a variable-length
 array in the ABI.
 
@@ -37,14 +38,15 @@ array in the ABI.
 
 ## Limits
 
-- Throughput: 37.7 MB/s against 200.6 MB/s for the C (5.3x), 1.98 us against 0.34 us for a
+- Throughput: 120 MB/s against 203 MB/s for the C (1.7x), 1.9 us against 0.34 us for a
   32-byte hash. Callers in the live closure hash generated kernel code (KB), ids and evidence
-  records, not per-token data. Where the time goes: one ABI entry per 64 bytes (stack switch,
-  callee-saved save/restore), the K table rebuilt per call (function-mode units have no
-  read-only data), and helper calls per round.
+  records, not per-token data. Inlining the rounds and sigma functions (every Omega call spills and
+  reloads the caller's live values) took it from 37.7 to 120 MB/s; widening the piece from 64 to
+  4096 bytes gained little. A small hash still pays three ABI entries and two K-table builds
+  (function-mode units have no read-only data).
 - The stale bytes of `sha256_ctx.buffer` past the pending index can differ from the C after the
   same updates (the C copies only the final partial block; the adapter copies every partial piece).
   No caller reads them; digests are identical.
 - A trap or refused argument from the unit aborts the process (it can only mean a broken
-  invariant: n <= 64, valid op, fixed sizes).
+  invariant: n <= 4096, valid op, fixed sizes).
 - Each calling thread gets an 8 MiB stack plus 8 MiB guard mapping from the binding on first use.
