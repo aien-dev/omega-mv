@@ -10,7 +10,8 @@ build.mkdir(parents=True,exist_ok=True)
 # The section-1 native realization compiler, born from the seed by seed/omega-from-seed.sh.
 # It is the only pinned compiler with argv (argcnt/argread), which `lower NAME` needs.
 expected='734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61'
-compiler=Path(os.environ.get('OMEGA_NATIVE_OMC',str(Path.home()/'workspace/omega-seedqual-20261025/seed/out/omc')))
+if not os.environ.get('OMEGA_NATIVE_OMC'):raise SystemExit('LOWER_COMPILER_UNSET: set OMEGA_NATIVE_OMC to the pinned omc')
+compiler=Path(os.environ['OMEGA_NATIVE_OMC'])
 assert compiler.is_file() and hashlib.sha256(compiler.read_bytes()).hexdigest()==expected,'LOWER_COMPILER_PIN_MISMATCH'
 # Unchanged vendor SHA256 and the unchanged #621 core (its `decode` is the full source-aware v1 check).
 parts=[ROOT/'src/source-aware/vendor/sha256.om',ROOT/'src/source-aware/core.om',ROOT/'src/adapters/upper-lower.om']
