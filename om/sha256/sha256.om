@@ -981,25 +981,542 @@ put h 6 uint 528734635
 put h 7 uint 1541459225
 end
 
-note expand w[0..16) into the full 64-word schedule. Words are ulong cells whose low 32 bits are
+note expand w[0..16) into the full 64-word schedule, unrolled (constant indices need no bounds checks). Words are ulong cells whose low 32 bits are
 note the value; bits above are don't-care, because add, and, xor and or give the right low 32 bits
 note anyway. A rotate right by r of a 32-bit x is the low half of d >> r where d holds x in both
 note halves (d = (x << 32) | low(x)); a plain shift right by n is d >> (32 + n).
 fn expand w edit ulong 64 to void
-for j ulong 48
-i = add j 16
-x = get w sub i 2
+u = ulong 0
+v = ulong 0
+x = ulong 0
+x = get w 14
 u = shl x 32
 u = or u shr u 32
 u = xor xor shr u 17 shr u 19 shr u 42
-x = get w sub i 15
+x = get w 1
 v = shl x 32
 v = or v shr v 32
 v = xor xor shr v 7 shr v 18 shr v 35
 u = add u v
-u = add u get w sub i 7
-put w i add u get w sub i 16
-end
+u = add u get w 9
+put w 16 add u get w 0
+x = get w 15
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 2
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 10
+put w 17 add u get w 1
+x = get w 16
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 3
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 11
+put w 18 add u get w 2
+x = get w 17
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 4
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 12
+put w 19 add u get w 3
+x = get w 18
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 5
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 13
+put w 20 add u get w 4
+x = get w 19
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 6
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 14
+put w 21 add u get w 5
+x = get w 20
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 7
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 15
+put w 22 add u get w 6
+x = get w 21
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 8
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 16
+put w 23 add u get w 7
+x = get w 22
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 9
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 17
+put w 24 add u get w 8
+x = get w 23
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 10
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 18
+put w 25 add u get w 9
+x = get w 24
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 11
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 19
+put w 26 add u get w 10
+x = get w 25
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 12
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 20
+put w 27 add u get w 11
+x = get w 26
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 13
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 21
+put w 28 add u get w 12
+x = get w 27
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 14
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 22
+put w 29 add u get w 13
+x = get w 28
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 15
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 23
+put w 30 add u get w 14
+x = get w 29
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 16
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 24
+put w 31 add u get w 15
+x = get w 30
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 17
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 25
+put w 32 add u get w 16
+x = get w 31
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 18
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 26
+put w 33 add u get w 17
+x = get w 32
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 19
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 27
+put w 34 add u get w 18
+x = get w 33
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 20
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 28
+put w 35 add u get w 19
+x = get w 34
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 21
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 29
+put w 36 add u get w 20
+x = get w 35
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 22
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 30
+put w 37 add u get w 21
+x = get w 36
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 23
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 31
+put w 38 add u get w 22
+x = get w 37
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 24
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 32
+put w 39 add u get w 23
+x = get w 38
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 25
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 33
+put w 40 add u get w 24
+x = get w 39
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 26
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 34
+put w 41 add u get w 25
+x = get w 40
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 27
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 35
+put w 42 add u get w 26
+x = get w 41
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 28
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 36
+put w 43 add u get w 27
+x = get w 42
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 29
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 37
+put w 44 add u get w 28
+x = get w 43
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 30
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 38
+put w 45 add u get w 29
+x = get w 44
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 31
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 39
+put w 46 add u get w 30
+x = get w 45
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 32
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 40
+put w 47 add u get w 31
+x = get w 46
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 33
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 41
+put w 48 add u get w 32
+x = get w 47
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 34
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 42
+put w 49 add u get w 33
+x = get w 48
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 35
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 43
+put w 50 add u get w 34
+x = get w 49
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 36
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 44
+put w 51 add u get w 35
+x = get w 50
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 37
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 45
+put w 52 add u get w 36
+x = get w 51
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 38
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 46
+put w 53 add u get w 37
+x = get w 52
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 39
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 47
+put w 54 add u get w 38
+x = get w 53
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 40
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 48
+put w 55 add u get w 39
+x = get w 54
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 41
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 49
+put w 56 add u get w 40
+x = get w 55
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 42
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 50
+put w 57 add u get w 41
+x = get w 56
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 43
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 51
+put w 58 add u get w 42
+x = get w 57
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 44
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 52
+put w 59 add u get w 43
+x = get w 58
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 45
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 53
+put w 60 add u get w 44
+x = get w 59
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 46
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 54
+put w 61 add u get w 45
+x = get w 60
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 47
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 55
+put w 62 add u get w 46
+x = get w 61
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 17 shr u 19 shr u 42
+x = get w 48
+v = shl x 32
+v = or v shr v 32
+v = xor xor shr v 7 shr v 18 shr v 35
+u = add u v
+u = add u get w 56
+put w 63 add u get w 47
 end
 
 note Word access for the aligned paths. b8 is the caller's 8-byte-aligned copy of the input lent a
