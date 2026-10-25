@@ -37,3 +37,23 @@ inputs and answers by a Python script, then every answer recomputed independentl
 Language (Wolfram MCP kernel, 2026-10-25): `{626, 0, {}}` = 626 records, 0 disagreements. Record
 format: REUSE-1 integrator decision 4 (kinds 1 lane step, 2 fold, 3 AGG program, 4 FSM program).
 The generating script is integrator tooling, not part of the delivered closure; the file is data.
+
+K6 (EvalStats). FINAL seed use: bytes 0..7 (LE) seed the bootstrap (section 10 as written);
+bytes 8..15 seed the FINAL generator; bytes 16..23 seed the arm-order permutation.
+
+K7 (EvalStats, EvalJudge). Control outcomes are recorded one per control and sub-case as detected,
+undetected, reported (C12 ablations only) or not run, with a flag when a tampered or revoked
+artifact answered a QUERY as a method. Undetected or flagged: STOP. Not run: GO is impossible
+(INVESTIGATE at best); a control is never silently passed.
+
+K8 (EvalGen). Workload details of 7.1 and 7.2: FSM type C sessions are 4 new machines (FSM has one
+shape); of the 10 TRAIN machines 5 are general and 5 are permutation machines, FSM type A recall
+uses the permutation ones and type A new uses new permutation machines; AGG type A programs of all
+three classes have f in {MIN, MAX} (the generator fails loudly if the TRAIN pool has no such
+shape); type I starts with DEL and alternates; type P puts a PROGRAM before QUERY 4, 8, 12 and 16
+(AGG: same shape, new constants; FSM: same S and A, new s0, λ and rules); TRAIN reuse: AGG
+sessions j with j mod 4 = 3 (50 of 200) repeat a uniformly chosen earlier TRAIN AGG program;
+TRAIN session s is FSM iff s mod 6 = 5; CALIB: 2 families x 3 n x 4 change classes x 4 sessions =
+96 sessions of BEGIN + 16 x (change, QUERY), change = none, one SET, a BATCH of 2..64 SETs, or a
+BATCH of 1024 SETs; AGG type A deletes the first index whose mapped value equals the current fold
+result, then inserts a random value at a random index.
