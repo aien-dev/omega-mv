@@ -25,7 +25,7 @@ out=$("$T/par" "$V" | tail -1); echo "$out"
 [ "$out" = "vectors=35 vecfail=0 cases=1000 diff=0" ] || { echo "BLAKE3-PARITY FAIL"; exit 1; }
 # The mutants are part of the verdict: without the pinned tools this is NOT_RUN (exit 3), never PASS.
 [ -n "${OMEGA_OMC:-}" ] && [ -n "${OMEGA_BRIDGE:-}" ] || { echo "BLAKE3-PARITY NOT_RUN: the mutants need OMEGA_OMC and OMEGA_BRIDGE"; exit 3; }
-mutant() { # mutant <name> <exact line> <replacement>
+mutant() { # mutant <name> <exact line> <replacement> <vectors that must differ>
   rm -rf "$T/m"; mkdir -p "$T/m/om"; cp -r "$ROOT/om/." "$T/m/om/"; cp -r "$ROOT/src" "$T/m/src"
   python3 - "$T/m/om/blake3/b3unit.om" "$2" "$3" <<'PY'
 import sys
@@ -36,9 +36,15 @@ open(p, "w").write(s.replace(old + "\n", new + "\n"))
 PY
   sh "$T/m/om/units.sh" > /dev/null
   build "$T/m/src" "$T/mpar"
-  if "$T/mpar" "$V" > "$T/m.out" 2>&1; then echo "mutant $1 SURVIVED"; exit 1; fi
-  echo "mutant $1 killed ($(grep -c 'VEC FAIL' "$T/m.out") of 35 vectors differ)"
+  # Killed means: the driver ran to the end and reported exactly the expected official-vector failures
+  # (exit 1, summary line present). A crash, abort or other exit is not a kill.
+  rc=0; "$T/mpar" "$V" > "$T/m.out" 2>&1 || rc=$?
+  got=$(grep -c 'VEC FAIL' "$T/m.out")
+  if [ "$rc" -ne 1 ] || ! grep -q "^vectors=35 vecfail=$4 " "$T/m.out" || [ "$got" -ne "$4" ]; then
+    echo "mutant $1 NOT killed as required (exit $rc, $got vector failures, want exit 1 and $4)"; tail -3 "$T/m.out"; exit 1
+  fi
+  echo "mutant $1 killed (exit 1, $got of 35 vectors differ)"
 }
-mutant b3-merge 'while eq and tot 1 0 bound 64' 'while and eq and tot 1 0 gt get st 440 1 bound 64'
-mutant b3-root 'put w 74 or get w 74 8' 'put w 74 or get w 74 0'
+mutant b3-merge 'while eq and tot 1 0 bound 64' 'while and eq and tot 1 0 gt get st 440 1 bound 64' 16
+mutant b3-root 'put w 74 or get w 74 8' 'put w 74 or get w 74 0' 35
 echo "BLAKE3-PARITY PASS"
