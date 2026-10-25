@@ -1,0 +1,9 @@
+om2
+note an unrolled constant index past the array is error 21 at compile time
+fn main to int
+w = new uint 4 0
+for i ulong 5 unroll
+put w i 1
+end
+ret 0
+end

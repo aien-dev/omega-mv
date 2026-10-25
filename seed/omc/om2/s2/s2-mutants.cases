@@ -1,0 +1,33 @@
+# S2 compiled mutants of omc.om. Expected verdicts fixed in advance: ctl-* PASS, m-* FAIL (detected).
+deadline 60
+cc seed/omc/omc.om
+ctl-u1 run seed/omc/om2/s2/u1.om - - - 117
+ctl-fold-guard run seed/omc/om2/s2/fold-guard.om - - - 150
+ctl-fold-trap run seed/omc/om2/s2/fold-trap.om - - - 101
+ctl-break refuse seed/omc/om2/s2/bad-break.om 9
+ctl-depth5 refuse seed/omc/om2/s2/bad-depth5.om 14
+ctl-idx refuse seed/omc/om2/s2/bad-idx.om 21
+# division by zero folded (the trap-not-folded rule broken)
+subst seed/omc/om2/s2/mut/div0.from seed/omc/om2/s2/mut/div0.to
+cc seed/omc/omc.om
+m-div0 run seed/omc/om2/s2/fold-guard.om - - - 150
+# signed 64-bit add overflow folded
+subst seed/omc/om2/s2/mut/sovf.from seed/omc/om2/s2/mut/sovf.to
+cc seed/omc/omc.om
+m-sovf run seed/omc/om2/s2/fold-trap.om - - - 101
+# one unrolled copy fewer
+subst seed/omc/om2/s2/mut/ucount.from seed/omc/om2/s2/mut/ucount.to
+cc seed/omc/omc.om
+m-ucount run seed/omc/om2/s2/u1.om - - - 117
+# break out of an unrolled loop accepted
+subst seed/omc/om2/s2/mut/brk.from seed/omc/om2/s2/mut/brk.to
+cc seed/omc/omc.om
+m-brk refuse seed/omc/om2/s2/bad-break.om 9
+# the compile-time check of a constant index (error 21) is off by one
+subst seed/omc/om2/s2/mut/idx.from seed/omc/om2/s2/mut/idx.to
+cc seed/omc/omc.om
+m-idx refuse seed/omc/om2/s2/bad-idx.om 21
+# a fifth inline level accepted
+subst seed/omc/om2/s2/mut/depth.from seed/omc/om2/s2/mut/depth.to
+cc seed/omc/omc.om
+m-depth refuse seed/omc/om2/s2/bad-depth5.om 14
