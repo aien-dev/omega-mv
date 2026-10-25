@@ -1,0 +1,33 @@
+# Turing-profile-REUSE-v1.0: the measurement profile for the Turing accounting of REUSE-1
+# (omega-mv #742/#743/#744, spark-rsi-mv #73), owned by the Turing instrument issue omega-mv #700.
+#
+# Definitions 1-3 of "Computing Machinery and Understanding" v1.14 (aien-dev/aienos.com
+# c6c6d8bafcfc0b7398dc9337e2f3dd7715e0c814 public/research/computing-machinery-and-understanding/paper.tex,
+# sha256 8376faa31bea089b5adb53098e4aa6332e0a685f0d1fa0450f7be828142951f3) are binding.
+#
+# Format: flat TOML, one `key = value` per line, as calibration/profiles/Turing-profile-v1.1.toml.
+# Commitment: Turing-profile-REUSE-v1.0.sha256 = SHA-256 over the exact bytes of this file.
+# After the freeze commit this file never changes; any change is a new profile id.
+
+profile_id = "Turing-profile-REUSE-v1.0"
+profile_version = "1.0.0"
+profile_digest = "SIDECAR"
+profile_status = "FROZEN at the commit that adds this file, its sidecar and docs/reuse/REUSE-1.md, before any implementation or data"
+formula = "T = [L(B|G) + L(D|B,G)] - [L(M|G) + L(D|M,G)] (Definition 3)"
+unit = "bits"
+headline = "T(arm) for arms method, delta, idelta, delta', select, cache; D is predicted exactly by every model, so T(arm) = -(model charge of the arm beyond B). A positive T is impossible in this profile by construction; equivalent-execution savings are reported separately and are not a Turing gain."
+evaluator_freeze = "spark-rsi-mv om/reuse-eval at the evaluator-freeze commit named on #73 (REUSE-1 section 7.3)"
+d_definition = "The low 4 bits of r0 of every FINAL QUERY response of the evaluator's reference, in FINAL request order (all groups, repetition 1). Symbol alphabet K = 16."
+observation = "One symbol per FINAL QUERY. Inputs (PROG, state, changes) are context given to every model and are not coded."
+probability_representation = "Every model predicts the exact symbol: q = 65521 on the predicted symbol and q = 1 on each of the 15 others (sum 65536; CODER_SPEC section 2 requires every q >= 1)."
+tps1_mapping = "TPS1 v1, K 16, qbits 16, one record per D symbol, context_key 0, crumb ordinal = observation index; profile_digest = SHA-256 of this file; model_digest = SHA-256('turing.reuse.model.v1' 0x00 || manifest bytes of the arm's library, or 32 zero bytes for B); dataset_digest = SHA-256 of the FINAL request files (the holdout-set digest of REUSE-1 7.5). TSY1 carries the reference symbols."
+reference_coder = "turing-coder of omega-mv a647b6a9 (src/turing), rANS primary and range second, as pinned for ORIGSEL; built as an external referee outside the delivered .om closure."
+codelength_method = "L(D|X,G) = coded bits of X's stream (T_real) and ideal bits sum(-log2 q/65536) (T_ideal). B and every M produce identical q rows, so the data terms are equal; the coder run shows it (H1: |coded - ideal| within the CODER_SPEC band)."
+baseline = "B = the baseline router (drive.om base: every unit of REUSE-1 section 12 with an empty library)."
+candidates = "M(arm) = B plus the arm's library (method, delta, select: the TRAIN library; delta': the TRAIN' library; idelta, cache, full: none) plus the calibration values the arm reads (select only)."
+shared_background = "G = omc 734f0a39, profile R1, om/sha256/sha256.om, every handwritten unit of REUSE-1 section 12 including the arm code paths (they are in B), and codegen.om's fixed snippet text."
+model_code = "P1 (primary, declared parameters, the existing convention): 64 bits per manifest template word (8 words per template) plus 64 bits per calibration value the arm reads. P2 (sensitivity): 8 bits per byte of generated method source plus the manifest's 2048 bytes."
+causal_chain_disclosure = "Not decoder inputs, declared per paper s.5.7: learn.om (the template admission rule of REUSE-1 5.3), the TRAIN experience, the CALIB measurements, the authoring agents (omp sessions on anthropic/claude-opus-5-5 and openai-codex models)."
+delta_t = "Delta T between two library generations = -(change of the P1 charge). A positive Delta T can only come from deleting templates and is never reported as a gain."
+verdict_rule = "Reported: T_ideal(arm), T_real(arm) under P1 and P2, n = number of D symbols, and the H1 check. No Turing verdict word is issued; REUSE-1 section 10 decides GO / INVESTIGATE / STOP on cost and correctness, separately."
+limits = "T_real needs the external coder build; if it cannot be built the value is reported NOT_RUN and only T_ideal is given."
