@@ -145,3 +145,12 @@ r3-edges.json records every state and ordered edge plus exact source/compiler/
 binary identities and the matrix encoding. The four no-reservation self-loops
 and four simultaneous-two-reservation crash edges distinguish the78-edge model.
 This does not qualify uncertain-effect recovery or actual resource accounting.
+
+Clean checkout replay
+clean-replay.json records an independent native replay at495a53ba6: bootstrap
+fixed point734f0a39..., crumb verification, demo and448-case differential exit0,
+all five rebuilt source mutants normal-fail7/7/7/7/4 at their named assertions,
+and the complete oracle matrix exactly matches the independently reviewed bytes.
+The matched100-cycle sample p50 was2448ns unchecked versus88401ns checked;
+raw63-pair data and a separate1480KiB peak-RSS measurement are retained. This is
+helper overhead, not service throughput, durable integration or a secrecy proof.

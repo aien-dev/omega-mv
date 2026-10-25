@@ -1,0 +1,243 @@
+{
+  "profile": "SC1-R/E revision2 pure helper and finite specification model only",
+  "source_commit": "495a53ba6",
+  "contract_sha256": "ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496",
+  "compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+  "target": "linux-aarch64 native host; no GPU",
+  "clean_checkout": true,
+  "runs": [
+    {
+      "name": "demo",
+      "source_files": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+        "seed/qualification/security673/resources/demo.om": "b5cd163926815c4abf2b7a4548e59da309ec35e7ddd9cf8ad53aebeff59713c3"
+      },
+      "composition_sha256": "027ab88439289d30701f5fbf89e0e07a06f3c9c19816a11df620841d736bdac7",
+      "binary_sha256": "588ad6e76ee79b9517c361bbf1b8302c32cc1ece518c231ab69e755cadd7c0be",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/demo"
+      ],
+      "cwd": "clean repository root",
+      "exit": 0,
+      "stdout_sha256": "c34161e563f2af49722002ed5ece636a5afcc5a6ba7106d4027c91d971c5629d",
+      "stdout_bytes": 308,
+      "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nPASS E1-E6 paired_admission events release restart\n",
+      "stdout_encoding": "utf8",
+      "stderr": ""
+    },
+    {
+      "name": "exhaust",
+      "source_files": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+        "seed/qualification/security673/resources/exhaust.om": "1929828a17a813b3bf54afe72f3187e3b512f9be1815bbbf6c7e679fc4323e46"
+      },
+      "composition_sha256": "b6405e2032823698e4268c9859054834c7d79db72babe96d942ee079586ee488",
+      "binary_sha256": "dc7904bb2fae0f344a09d57e599961fe4b197eff7c12b774000e96f73ac662a8",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/exhaust"
+      ],
+      "cwd": "clean repository root",
+      "exit": 0,
+      "stdout_sha256": "7538cddf5a8d7a0015d2d6faf4b278b6eaeb29960788d4a71e110360cba95e27",
+      "stdout_bytes": 75,
+      "stdout": "PASS conservation finite differential 448 cases; conservative restart/fuel\n",
+      "stdout_encoding": "utf8",
+      "stderr": ""
+    },
+    {
+      "name": "measure",
+      "source_files": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+        "seed/qualification/security673/resources/measure.om": "429cf7c089b60bd05d2fed38092d8c05f2561dce587bbbcb95a21efbbb998e69"
+      },
+      "composition_sha256": "5eb8fbf042b6497a3b4f3c7d2999cf165cacf85474823a395a8871282fc74f87",
+      "binary_sha256": "34bd18944533b8fa6055890db9bd2dd493de4aaf7c5f995061e743f4a0787e4e",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/measure"
+      ],
+      "cwd": "clean repository root",
+      "exit": 0,
+      "stdout_sha256": "3de5768650f0167db440f7f239a038aebe459ed061b63276b2aa56d1e306079a",
+      "stdout_bytes": 895,
+      "stdout": "RAW paired samples: baseline_ns then checked_ns, 63 pairs in execution order\n3136\n93569\n2464\n90001\n2496\n89153\n2432\n89489\n2384\n89233\n2416\n89041\n2400\n100833\n2448\n88465\n2480\n88833\n2448\n89041\n2448\n88912\n2433\n89472\n2448\n88817\n2432\n87809\n2432\n88769\n2432\n88737\n2432\n87889\n2432\n89425\n2448\n87905\n2448\n87793\n2432\n88209\n2448\n88049\n2416\n87648\n2448\n87809\n2432\n88673\n2464\n87953\n2448\n88401\n2448\n88225\n2464\n91089\n2448\n88513\n2448\n88273\n2448\n88353\n2448\n88161\n2464\n87408\n2448\n88433\n2448\n88049\n2448\n88033\n2432\n87905\n2400\n88049\n2416\n102161\n2464\n88769\n2448\n87969\n2448\n87809\n2448\n88065\n2448\n88257\n2416\n88608\n2448\n88321\n2432\n88801\n2416\n88289\n2464\n91969\n2448\n88273\n2448\n88241\n2448\n88609\n2448\n88353\n2448\n88881\n2448\n87441\n2432\n88033\n2432\n87984\n2432\n88673\n2448\n88577\n2448\n91105\n2464\n88001\n2432\n88449\nMEASURE helper cycles=100 samples=63 baseline_ns p50/p95/p99 then checked_ns p50/p95/p99\n2448\n2464\n3136\n88401\n91969\n102161\n",
+      "stdout_encoding": "utf8",
+      "stderr": ""
+    },
+    {
+      "name": "oracle",
+      "source_files": {
+        "seed/qualification/security673/resources/oracle.om": "0590272c1b5d5d0b4da3c39274d1bf39b9e313263168a575c716595f90717f91"
+      },
+      "composition_sha256": "0590272c1b5d5d0b4da3c39274d1bf39b9e313263168a575c716595f90717f91",
+      "binary_sha256": "c76f84a09e246c7c84038b8367b62076eba16f2833134b70bd7e75bbaa9316c0",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/oracle",
+        "--edges"
+      ],
+      "cwd": "clean repository root",
+      "exit": 0,
+      "stdout_sha256": "19e4706d53b940f5f99d9337a0277e00844a9355d96d60ea4c19af8288e8de03",
+      "stdout_bytes": 1296,
+      "stdout": "010101010000010000000000000000000000000000000000000000000000000000000000010000000100000100010000000000000000000000000000000000000000000000000000010000000001000000010000000000000000010000000000000000000000000000000000010000000101000000010000000000000000000000000000000000000000000000000000010100010000000000000100010000000000000000000000000000000000000000000000010001010000000000000001010000000000000000010000000000000000000000000000010000000000000100010000000000000000010000000000000000000000000000000000010100000000010000000100000000010000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000010101010000010000000000000000000000000000000000000000000100000000000000010000000100000000010000000000000000000000000000000000000001000000000000010000000000000000010000000000000000010000000000000000000000010000000000010000000100000000010000000000000000000000000000000000000000000100000000010100010000000000000100010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000010000000000000000010000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000010100010000000000000000000000000000000000000000000000000100000000000000010000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000010000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "stdout_encoding": "hex",
+      "stderr": ""
+    },
+    {
+      "name": "actual-source-mutant1",
+      "mutator_source_sha256": "39364ac59ed1bcbe77665c072d811d142d789ec12cc506f43e40ef8838bba1ec",
+      "mutator_binary_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+      "mutator_argv": [
+        "build/sc1-clean/negative",
+        "1"
+      ],
+      "mutator_input": "seed/authority/envelope.om",
+      "mutator_input_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator_output_sha256": "5abde8f52f6a7678b9ccf11a9d05d602f1bb8040f66b0c5e2f1f654a693792b8",
+      "mutator_exit": 0,
+      "composition_sha256": "afe077518644917faa5639706205d2537aaa87e4bde8c27986f87d03badebdc3",
+      "binary_sha256": "57c081d91a2ef25637d37bc8ba5ba42488370b27372c41e1352dfbb41ddc045d",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/mutant1"
+      ],
+      "cwd": "clean repository root",
+      "exit": 7,
+      "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nFAIL E1-E6 paired_admission events release restart\n",
+      "stderr": "",
+      "expected_normal_exit": 7
+    },
+    {
+      "name": "actual-source-mutant2",
+      "mutator_source_sha256": "39364ac59ed1bcbe77665c072d811d142d789ec12cc506f43e40ef8838bba1ec",
+      "mutator_binary_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+      "mutator_argv": [
+        "build/sc1-clean/negative",
+        "2"
+      ],
+      "mutator_input": "seed/authority/envelope.om",
+      "mutator_input_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator_output_sha256": "6a7ad4fe7c7e0b0e963a918051ed0bf4db33a72f4d953b939210d646338bc9cc",
+      "mutator_exit": 0,
+      "composition_sha256": "d676ac413724f84de3d357cf1b2632a10ffae861faa262f7e8909f7c9990c8bf",
+      "binary_sha256": "f94598c4203a0327c47af243f2e6fd35fa7d176454663c1e9823f8118116f613",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/mutant2"
+      ],
+      "cwd": "clean repository root",
+      "exit": 7,
+      "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nFAIL E1-E6 paired_admission events release restart\n",
+      "stderr": "",
+      "expected_normal_exit": 7
+    },
+    {
+      "name": "actual-source-mutant3",
+      "mutator_source_sha256": "39364ac59ed1bcbe77665c072d811d142d789ec12cc506f43e40ef8838bba1ec",
+      "mutator_binary_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+      "mutator_argv": [
+        "build/sc1-clean/negative",
+        "3"
+      ],
+      "mutator_input": "seed/authority/envelope.om",
+      "mutator_input_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator_output_sha256": "8f9946fa9d1e6e1c438e7b198eb84f03d13b88818270132dd34f7c4f4199dfa1",
+      "mutator_exit": 0,
+      "composition_sha256": "b76d855aeebc9af396cb998ea25e877bf4db0bb2518a2ae6c942169217b11a2f",
+      "binary_sha256": "e148a69740cc880ec3ae61f9460506e47bdfc4eaf70085a6b547e1904c6675f6",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/mutant3"
+      ],
+      "cwd": "clean repository root",
+      "exit": 7,
+      "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nFAIL E1-E6 paired_admission events release restart\n",
+      "stderr": "",
+      "expected_normal_exit": 7
+    },
+    {
+      "name": "actual-source-mutant4",
+      "mutator_source_sha256": "39364ac59ed1bcbe77665c072d811d142d789ec12cc506f43e40ef8838bba1ec",
+      "mutator_binary_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+      "mutator_argv": [
+        "build/sc1-clean/negative",
+        "4"
+      ],
+      "mutator_input": "seed/authority/envelope.om",
+      "mutator_input_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator_output_sha256": "2978e0fd6ad46dfbf85556185908fcc1c3da15aade740feac8640021d53db93d",
+      "mutator_exit": 0,
+      "composition_sha256": "c03480d3ef9911cd041f7eca4e1af43d8a1e55d7a97abf1c5560d2dd56ba5e47",
+      "binary_sha256": "338f7f98a8a910fec6c93d7cd3a6191b9a31c93fec05ec8a7b7464feeb3fb045",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/mutant4"
+      ],
+      "cwd": "clean repository root",
+      "exit": 7,
+      "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nFAIL E1-E6 paired_admission events release restart\n",
+      "stderr": "",
+      "expected_normal_exit": 7
+    },
+    {
+      "name": "actual-source-mutant5",
+      "mutator_source_sha256": "39364ac59ed1bcbe77665c072d811d142d789ec12cc506f43e40ef8838bba1ec",
+      "mutator_binary_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+      "mutator_argv": [
+        "build/sc1-clean/negative",
+        "5"
+      ],
+      "mutator_input": "seed/authority/reserve.om",
+      "mutator_input_sha256": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+      "mutator_output_sha256": "aabcdf49a786f0484d962cfc2c34ddaefd315c7781e8f083c6da29118c8baf21",
+      "mutator_exit": 0,
+      "composition_sha256": "bcff71256c33a167b26bcd2ff9c67c7aa9428d5962550cf0dc6fa403a4addcf8",
+      "binary_sha256": "ebb317d299429e7cf9c653fd505f6d3032cf9ff05f677d9efa3b3bd83eb62e8b",
+      "compile_exit": 0,
+      "argv": [
+        "build/sc1-clean/mutant5"
+      ],
+      "cwd": "clean repository root",
+      "exit": 4,
+      "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nFAIL R2 all-or-nothing eight stocks\n",
+      "stderr": "",
+      "expected_normal_exit": 4
+    }
+  ],
+  "resource_repeat": {
+    "argv": [
+      "/usr/bin/time",
+      "-f",
+      "max_rss_kib=%M elapsed_s=%e user_s=%U sys_s=%S",
+      "nice",
+      "-n",
+      "19",
+      "build/sc1-clean/measure"
+    ],
+    "exit": 0,
+    "stdout": "RAW paired samples: baseline_ns then checked_ns, 63 pairs in execution order\n3584\n94049\n2464\n89425\n2432\n89841\n2464\n88721\n2432\n89985\n2432\n90240\n2449\n90016\n2432\n89441\n2464\n102849\n2464\n89057\n2448\n88865\n2496\n87809\n2448\n88353\n2496\n89233\n2432\n88369\n2432\n88737\n2432\n89073\n2432\n88465\n2432\n88272\n2432\n92433\n2448\n88497\n2416\n88561\n2416\n89057\n2448\n88433\n2432\n87537\n2448\n88481\n2432\n88193\n2448\n89601\n2432\n88401\n2448\n87648\n9649\n88944\n2432\n88833\n2448\n88641\n2480\n89057\n2448\n89185\n2432\n88337\n2480\n88065\n2480\n88689\n2416\n88401\n2448\n88769\n2448\n90800\n2432\n88705\n2432\n88721\n2464\n87985\n2448\n88065\n2448\n88145\n2432\n88577\n2448\n88785\n2432\n88561\n2512\n88929\n2480\n88209\n2464\n91297\n2448\n88640\n2448\n88593\n2448\n88497\n2432\n87729\n2448\n88193\n2448\n88353\n2432\n88593\n2448\n88113\n2432\n87825\n2448\n88353\n2448\n106593\nMEASURE helper cycles=100 samples=63 baseline_ns p50/p95/p99 then checked_ns p50/p95/p99\n2448\n2496\n9649\n88640\n92433\n106593\n",
+    "stderr": "max_rss_kib=1480 elapsed_s=0.00 user_s=0.00 sys_s=0.00\n",
+    "binary_sha256": "34bd18944533b8fa6055890db9bd2dd493de4aaf7c5f995061e743f4a0787e4e"
+  },
+  "edge_comparison": {
+    "complete_relation_bytes": 1296,
+    "sha256": "19e4706d53b940f5f99d9337a0277e00844a9355d96d60ea4c19af8288e8de03",
+    "comparison": "Exact same complete matrix as independent tuple BFS recorded in r3-edges.json; separately reviewed. Not reserve.om correspondence."
+  },
+  "limits": [
+    "Pure helper only; trusted single writer/nonaliasing inputs",
+    "No actual store/scheduler integration, durable reservation/fuel, actual concurrent writer or power-loss result",
+    "Finite oracle model distinct from helper; no formal proof",
+    "Host measurements uncontrolled background load; no timing secrecy claim",
+    "p99 of63 samples is maximum, not confidence bound"
+  ]
+}
