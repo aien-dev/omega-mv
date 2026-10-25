@@ -1,0 +1,34 @@
+OM2GATE START cases=seed/qualification/om2/candidates/s2/s2-mutants.cases scratch=build/om2-qual/s4-s2mut
+IDENTITY omc /tmp/zl/omc-s4 sha256=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 pinned=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 match
+COMPILER build/om2-qual/s4-s2mut/5.elf sha256=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 source line=5
+VERDICT ctl-s2-rebuilt PASS run exit=0 expected=0 stdout=match stderr=match
+COMPILER /tmp/zl/omc-s4
+SUBST seed/qualification/om2/candidates/s2/mutants/unroll-kminus1.from seed/qualification/om2/candidates/s2/mutants/unroll-kminus1.to
+  MUTATE exact-once substitution at byte 119632
+COMPILER build/om2-qual/s4-s2mut/10.elf sha256=b4ae54fe18ea3b4824715313cea682d9378432c549187e3a983ea46a3b5879fd source line=10
+VERDICT ctl-unroll-kminus1-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-kminus1-kill-unroll-sum PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 8 stderr=match
+VERDICT unroll-kminus1-kill-unroll-nest PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+COMPILER /tmp/zl/omc-s4
+SUBST seed/qualification/om2/candidates/s2/mutants/unroll-kplus1.from seed/qualification/om2/candidates/s2/mutants/unroll-kplus1.to
+  MUTATE exact-once substitution at byte 119632
+COMPILER build/om2-qual/s4-s2mut/17.elf sha256=09d38d45b6898e7be10b6b7cedcf6106e2929eacca5c4ea1cc7269d8d1f3465c source line=17
+VERDICT ctl-unroll-kplus1-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-kplus1-kill-unroll-sum PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 5 stderr=match
+VERDICT unroll-kplus1-kill-unroll-nest FAIL compile exit=21 expected=0
+COMPILER /tmp/zl/omc-s4
+SUBST seed/qualification/om2/candidates/s2/mutants/fold-div0.from seed/qualification/om2/candidates/s2/mutants/fold-div0.to
+  MUTATE exact-once substitution at byte 127742
+COMPILER build/om2-qual/s4-s2mut/24.elf sha256=2d84fffd7c212031263414567c8d2433a38afa736e6c14f350ac1cce3fee757c source line=24
+VERDICT ctl-fold-div0-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fold-div0-kill-fold-trap-A PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match
+VERDICT fold-div0-kill-fold-trap-B FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT fold-div0-kill-fold-trap-C FAIL run exit=105 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT fold-div0-kill-fold-trap-D FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT fold-div0-kill-fold-trap-E FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT fold-div0-kill-fold-trap-F FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT fold-div0-kill-fold-trap-G PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match
+VERDICT fold-div0-kill-fold-trap-H FAIL run exit=105 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT fold-div0-kill-fold-trap-I FAIL run exit=102 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+COMPILER /tmp/zl/omc-s4
+OM2GATE FAIL cases=17 pass=9 fail=8 invalid=0 not_run=0

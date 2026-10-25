@@ -1,0 +1,18 @@
+L836 qualification of om2/compiler-s4 @ 3ea0721a5420ebd45992ac8eef1d3ae2cc5183d0 ("fix S3 D-S3-1 (E16)") on 1c72f26f
+(S4 views), 2026-10-25. Birth (scratch worktree /tmp/zl/q3ea0721a): "PASS omc fixpoint
+26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22". Evidence: evidence/phaseB/s4-3ea0721a/.
+
+| check | result |
+|---|---|
+| C2 (5876) | PASS 5876/5876 |
+| §0-§2 | 161 PASS, 0 FAIL, 2 NOT_RUN (open under E4/E6) |
+| §3-§4 | 188 PASS, 14 FAIL, 3 NOT_RUN; the 14 FAILs use `part` (ce-view*) or `out` (slots-out6/7) |
+| E14/E16 fuel | 8/8 PASS: d2 compiles, d3 line 7, d4 line 8, inl line 8, mainfirst line 11 (fuel_e16f.py) |
+| §5 | fresh 13/14 (f5-part needs part), abstract 22/22, layout 20/20 |
+| §6 views (1c72f26f) | PASS: v6-sum, v6-idx, v6-idx-edit, v6-write, v6-name-part, v6-slots6, v6-slots7, v6-fm-e2, m6-noexport, slots-3v, -3v1s, -2v2s, -2v3s, -1v4x, -1v5x, -6s, -internal |
+| §6 not in this head | part (v6-part-*, v6-edit, f5-part, ce-view*), out (v6-out, slots-out6/7), export (m6-export*), ABI driver units: NOT_RUN by scope (they FAIL with error 16 now) |
+| mutants | S1 10/10, S2 3/3, S3 4/4 killed with identical verdicts; new S4 view-nocheck killed (4/4 PASS) |
+view-nocheck (B7 on the unsized view path; drops CMP/B.HS trap 3): v6-idx is expected to trap 3 (exit 103, empty
+stdout); the mutant reads past the view, prints, and exits 0. Killed. The mutant still hashes abc and passes v6-sum.
+Control: sec/s3s4/mutant-kills.cases run with the unmutated head gives 31/31 FAIL (no false kills).
+Verdict: PASS in scope (C2, §0-§5, §6 views, fuel E16); D-S3-1 fixed. 18/18 mutants killed.
