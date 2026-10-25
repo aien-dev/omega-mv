@@ -33,7 +33,9 @@ ROOT = G.ROOT
 MASK = G.MASK
 U = 65535
 COMPOSE2 = ('spec/universal/translation-compose-v2.md', '74cc22f371072f7acf3c3376dfb2ebc865c5ef67846316aa37c1eb5d254af159')
-SA2 = ('spec/universal/source-aware-v2.md', 'ea2e14654cbba902fca8c4e070e95bb3ada384c061ee20bcd87c67fff8a9ce1c')
+# source-aware-v2.md as amended at 621-source-aware-v2 fa9d9d19 (section 5 step 6 states the profile-6 rows; the
+# codec is unchanged); translation-compose-v2.md names the earlier text ea2e1465, which this pin supersedes
+SA2 = ('spec/universal/source-aware-v2.md', '2f894c7b923db7e4e89d7ed7339dae97cdb2969742e7b1ed2026637007edb5c7')
 LANE_SPECS = {l: 'spec/universal/%s-u64-v1.md' % l for l in ('rust', 'python', 'cpp', 'zig', 'go')}
 LANGS = ['c', 'rust', 'python', 'cpp', 'zig', 'go']
 V1CORE = {'c', 'rust', 'python'}
