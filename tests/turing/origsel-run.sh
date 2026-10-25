@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # tests/turing/origsel-run.sh: omega-mv#700 ORIGSEL host glue (POSIX sh, disclosed).
-# Turing-profile-ORIGSEL-v1.1. It sequences only. Its jobs:
+# Turing-profile-ORIGSEL-v1.2. It sequences only. Its jobs:
 # - verify the compiler, every pinned unit and the profile sidecar;
 # - build the seeded .om evaluator, its tests, the independent C recomputer and turing-coder;
 # - run the pinned aien-train V2=1 trainer where an arm needs images;
@@ -30,7 +30,7 @@
 #   inspected v1 owner file, never D) as a dry run when set.
 # MODE=measure RECORDS=<collected file> ALLOW=<allow list> IMAGES=<dir with v2_train_mlp.img,
 #   v2_ctrl_shuffled.img, v2_ctrl_untrained.img from the pinned V2=1 run on RECORDS>
-#   V1="<v1 owner file> <v1 sealed file>": the measurement of profile v1.1, run once.
+#   V1="<v1 owner file> <v1 sealed file>": the measurement of profile v1.2 (D = C3), run once.
 # Host CPU only, nice -n 19 by the caller. No GPU, network, service or model process.
 set -u
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
@@ -42,8 +42,8 @@ TRAIN=${ORIGSEL_TRAIN_GIT:-$ROOT/../aien-train}
 BRIDGE=${ORIGSEL_BRIDGE_GIT:-$ROOT/../omega-bridge}
 PIN=$ROOT/native/turing/origsel.pin
 N=$ROOT/native/turing
-PROFILE=$ROOT/calibration/profiles/Turing-profile-ORIGSEL-v1.1.toml
-TRAINC=692d85104369cf0fc0bec9f35c4ca693cf746012
+PROFILE=$ROOT/calibration/profiles/Turing-profile-ORIGSEL-v1.2.toml
+TRAINC=351402e89b3a657cdfedc13f83e36543578329c7
 mkdir -p "$OUT" "$BUILD/units" "$BUILD/w"
 SUM="$OUT/summary.txt"
 : > "$SUM"
@@ -53,7 +53,7 @@ fail() { note "ORIGSEL_RUN_FAIL $*"; exit 1; }
 note "mode=$MODE"
 note "source_commit=$(git -C "$ROOT" rev-parse HEAD)"
 note "host=$(uname -srm)"
-(cd "$ROOT/calibration/profiles" && sha256sum -c Turing-profile-ORIGSEL-v1.1.sha256) > /dev/null 2>&1 || fail "profile sidecar"
+(cd "$ROOT/calibration/profiles" && sha256sum -c Turing-profile-ORIGSEL-v1.2.sha256) > /dev/null 2>&1 || fail "profile sidecar"
 note "profile_sha256=$(sha256sum "$PROFILE" | cut -c1-64)"
 
 # 1. Compiler and pinned units.

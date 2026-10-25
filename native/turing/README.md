@@ -1,9 +1,12 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 # native/turing: seeded .om Turing evaluation for the ORIG selector (omega-mv #700)
 
-Profile: `calibration/profiles/Turing-profile-ORIGSEL-v1.1.toml`. Its digest is in the `.sha256`
-sidecar. `Turing-profile-ORIGSEL-v1.0.toml` is kept unchanged as history: it was superseded before
-any data existed (the defects are listed in v1.1 `predecessor_profile`) and is never scored.
+Profile: `calibration/profiles/Turing-profile-ORIGSEL-v1.2.toml`. Its digest is in the `.sha256`
+sidecar. `Turing-profile-ORIGSEL-v1.0.toml` was superseded before any data existed (defects in v1.1
+`predecessor_profile`). `Turing-profile-ORIGSEL-v1.1.toml` ended BLOCKED on C2 at the pinned trainer
+glue's self-check (v1.2 `predecessor_profile`); v1.2 re-pins only that glue (aien-train 351402e8,
+no .om unit changed) and draws D from a new collection C3. Both are kept unchanged as history. The
+evaluator, the recomputer and the report format (header `ORIGSEL v1.1`) are unchanged from v1.1.
 
 | file | role |
 |---|---|
