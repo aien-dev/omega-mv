@@ -25,11 +25,14 @@ s3-l-bad-size7 refuse seed/omc/om2/s3/l-bad-size7.om 7
 s3-l-bad-noidx refuse seed/omc/om2/s3/l-bad-noidx.om 4
 s3-l-bad-extra refuse seed/omc/om2/s3/l-bad-extra.om 5
 s3-l-bad-type refuse seed/omc/om2/s3/l-bad-type.om 7
-## E14 expansion fuel (S2 fix)
+## E14 expansion fuel (S2 fix), lines per E16
 s3-fuel-d2 run seed/omc/om2/s3/fuel-d2.om - - - 0
-s3-fuel-d3 emit seed/omc/om2/s3/fuel-d3.om - err:6:14 14
+s3-fuel-d3 emit seed/omc/om2/s3/fuel-d3.om - err:8:14 14
 s3-fuel-inl14 run seed/omc/om2/s3/fuel-inl14.om - - - 0
-s3-fuel-inl16 emit seed/omc/om2/s3/fuel-inl16.om - err:15:14 14
+s3-fuel-inl16 emit seed/omc/om2/s3/fuel-inl16.om - err:10:14 14
+## E16 fuel charge order (fix D-S3-1): a loop is charged K at its line before any copy, an inline call 1
+s3-fuel-e16-inl emit seed/omc/om2/s3/fuel-e16-inl.om - err:13:14 14
+s3-fuel-e16-inlsa emit seed/omc/om2/s3/fuel-e16-inlsa.om - err:11:14 14
 ## fresh
 s3-f-ok run seed/omc/om2/s3/f-ok.om - - - 0
 s3-f-om1 run seed/omc/om2/s3/f-om1.om - - - 5

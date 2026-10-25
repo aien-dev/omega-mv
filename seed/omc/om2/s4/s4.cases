@@ -1,0 +1,61 @@
+# S4 (#747) fixtures for the OM-2 compiler: unsized views, part, out, export and parameter slots (spec 4
+# parameter slots, 6; errata E1, E2, E8). Run by seed/qualification/om2/gate.om (L836) from the repository
+# root:  gate OMC OMC_SHA256 seed/omc/om2/s4/s4.cases SCRATCH
+## unsized views, len, E2
+s4-v-ok run seed/omc/om2/s4/v-ok.om - - - 0
+s4-v-len run seed/omc/om2/s4/v-len.om - - - 0
+s4-v-write run seed/omc/om2/s4/v-write.om - file:seed/omc/om2/s4/v-write.out - 0
+s4-v-trap-get run seed/omc/om2/s4/v-trap-get.om - - - 103
+s4-v-trap-put run seed/omc/om2/s4/v-trap-put.om - - - 103
+s4-v-trap-write run seed/omc/om2/s4/v-trap-write.om - file:seed/omc/om2/s4/v-trap-write.out - 103
+s4-v-fm-entry emit seed/omc/om2/s4/v-fm-entry.om sha:50ddf39453988ba55a1b7d9bbba7f1ae7c5c5c3f7414c859acf17118fa4886b8 - 0
+s4-v-slots6 emit seed/omc/om2/s4/v-slots6.om sha:0dc32d259ec68c039ce68c68655fa59364f0f2a1df61730763adca50b9435bad - 0
+s4-v-bad-slots7 emit seed/omc/om2/s4/v-bad-slots7.om - err:3:9 9
+s4-v-bad-slots-last emit seed/omc/om2/s4/v-bad-slots-last.om - err:3:9 9
+s4-v-bad-sized refuse seed/omc/om2/s4/v-bad-sized.om 7
+s4-v-bad-type refuse seed/omc/om2/s4/v-bad-type.om 7
+s4-v-bad-viewedit refuse seed/omc/om2/s4/v-bad-viewedit.om 20
+s4-v-bad-put refuse seed/omc/om2/s4/v-bad-put.om 20
+s4-v-bad-read refuse seed/omc/om2/s4/v-bad-read.om 20
+s4-v-bad-fresh refuse seed/omc/om2/s4/v-bad-fresh.om 16
+s4-v-bad-local refuse seed/omc/om2/s4/v-bad-local.om 16
+s4-v-bad-global refuse seed/omc/om2/s4/v-bad-global.om 19
+s4-v-om1 refuse seed/omc/om2/s4/v-om1.om 16
+## part (spec 6, erratum E8)
+s4-p-ok run seed/omc/om2/s4/p-ok.om - - - 0
+s4-p-wrap run seed/omc/om2/s4/p-wrap.om - - - 103
+s4-p-o run seed/omc/om2/s4/p-o.om - - - 103
+s4-p-tail run seed/omc/om2/s4/p-tail.om - - - 103
+s4-p-order run seed/omc/om2/s4/p-order.om - - - 102
+s4-p-om1 run seed/omc/om2/s4/p-om1.om - - - 7
+s4-p-bad-local refuse seed/omc/om2/s4/p-bad-local.om 9
+s4-p-bad-stmt refuse seed/omc/om2/s4/p-bad-stmt.om 9
+s4-p-bad-write refuse seed/omc/om2/s4/p-bad-write.om 9
+s4-p-bad-two refuse seed/omc/om2/s4/p-bad-two.om 19
+s4-p-bad-base refuse seed/omc/om2/s4/p-bad-base.om 19
+s4-p-bad-global refuse seed/omc/om2/s4/p-bad-global.om 19
+s4-p-bad-viewedit refuse seed/omc/om2/s4/p-bad-viewedit.om 20
+s4-p-bad-vieweditkw refuse seed/omc/om2/s4/p-bad-vieweditkw.om 20
+s4-p-bad-sized refuse seed/omc/om2/s4/p-bad-sized.om 7
+s4-p-bad-type refuse seed/omc/om2/s4/p-bad-type.om 7
+s4-p-bad-fresh emit seed/omc/om2/s4/p-bad-fresh.om - err:10:27 27
+## out, export, slots at the entry (spec 4 slots, 6; errata E1, E8)
+s4-x-two emit seed/omc/om2/s4/x-two.om sha:52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e - 0
+s4-x-one emit seed/omc/om2/s4/x-one.om sha:094e9b3eced49340f40b812ef1f472a32e5d065679235a6bf0de9cd8ba16df61 - 0
+s4-x-noexport emit seed/omc/om2/s4/x-noexport.om sha:f437a16256e51b0cf9d155535e9ba5a1091a2f576beba4f6c06a34537fce68a6 - 0
+s4-x-32 emit seed/omc/om2/s4/x-32.om sha:3d847a212266eb840d2fea159ca45e5974004fc11593abd5cab7140939d13dd6 - 0
+s4-x-abs-private emit seed/omc/om2/s4/x-abs-private.om any - 0
+s4-x-om1 run seed/omc/om2/s4/x-om1.om - - - 5
+s4-x-bad-33 emit seed/omc/om2/s4/x-bad-33.om - err:99:14 14
+s4-x-bad-prog emit seed/omc/om2/s4/x-bad-prog.om - err:3:9 9
+s4-x-bad-nofn refuse seed/omc/om2/s4/x-bad-nofn.om 16
+s4-x-bad-body refuse seed/omc/om2/s4/x-bad-body.om 16
+s4-x-bad-abs refuse seed/omc/om2/s4/x-bad-abs.om 7
+s4-o-out emit seed/omc/om2/s4/o-out.om sha:e10bf9cc1b3105512fa139345b7a4501e5953a98a291bd3d6a14f987f4c7285e - 0
+s4-o-slots6 emit seed/omc/om2/s4/o-slots6.om sha:6b6f14b97b7dbd1fbe79c4a5aed8b1be8be73d346e4fc8759e976f91298ecc63 - 0
+s4-o-run run seed/omc/om2/s4/o-run.om - - - 0
+s4-o-bad-slots7 emit seed/omc/om2/s4/o-bad-slots7.om - err:3:9 9
+s4-o-bad-star refuse seed/omc/om2/s4/o-bad-star.om 16
+s4-o-bad-fresh refuse seed/omc/om2/s4/o-bad-fresh.om 16
+s4-o-bad-view refuse seed/omc/om2/s4/o-bad-view.om 20
+s4-o-bad-size refuse seed/omc/om2/s4/o-bad-size.om 7

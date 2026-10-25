@@ -1,0 +1,7 @@
+note S4 / erratum E8: part as the array of write (not a call) is error 9.
+om2
+fn main to int
+a = new uchar 10 0
+w = write 1 part a 0 4 0 4
+ret 0
+end

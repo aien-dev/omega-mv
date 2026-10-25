@@ -1,0 +1,74 @@
+OM2GATE START cases=seed/omc/om2/s2/s2.cases scratch=/tmp/om2c/s4/g-fuel-e16-s2-cases
+IDENTITY omc /tmp/om2c/s4/omc-fuel-e16 sha256=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 pinned=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 match
+CASE s2-u1 line=5
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/5.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/5.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/5.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s2-cases/5.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s2-cases/5.out 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/5.err
+VERDICT s2-u1 PASS run exit=117 expected=117 stdout=match stderr=match
+CASE s2-u1-rolled line=6
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/6.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/6.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/6.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s2-cases/6.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s2-cases/6.out 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/6.err
+VERDICT s2-u1-rolled PASS run exit=117 expected=117 stdout=match stderr=match
+CASE s2-fold-guard line=7
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/7.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/7.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/7.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s2-cases/7.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s2-cases/7.out 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/7.err
+VERDICT s2-fold-guard PASS run exit=150 expected=150 stdout=match stderr=match
+CASE s2-fold-guard-rolled line=8
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/8.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/8.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/8.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s2-cases/8.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s2-cases/8.out 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/8.err
+VERDICT s2-fold-guard-rolled PASS run exit=150 expected=150 stdout=match stderr=match
+CASE s2-fold-trap line=9
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/9.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/9.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/9.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s2-cases/9.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s2-cases/9.out 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/9.err
+VERDICT s2-fold-trap PASS run exit=101 expected=101 stdout=match stderr=match
+CASE s2-fold-trap-rolled line=10
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/10.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/10.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/10.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s2-cases/10.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s2-cases/10.out 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/10.err
+VERDICT s2-fold-trap-rolled PASS run exit=101 expected=101 stdout=match stderr=match
+CASE s2-depth4 line=11
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/11.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/11.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/11.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s2-cases/11.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s2-cases/11.out 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/11.err
+VERDICT s2-depth4 PASS run exit=2 expected=2 stdout=match stderr=match
+CASE s2-inner-break line=12
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/12.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/12.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/12.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s2-cases/12.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s2-cases/12.out 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/12.err
+VERDICT s2-inner-break PASS run exit=8 expected=8 stdout=match stderr=match
+CASE s2-sites line=13
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/13.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/13.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/13.cerr
+VERDICT s2-sites PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE s2-bad-break line=14
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/14.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/14.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/14.cerr
+VERDICT s2-bad-break PASS compile exit=9 expected=9 refused with the expected error
+CASE s2-bad-continue line=15
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/15.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/15.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/15.cerr
+VERDICT s2-bad-continue PASS compile exit=9 expected=9 refused with the expected error
+CASE s2-bad-write-i line=16
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/16.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/16.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/16.cerr
+VERDICT s2-bad-write-i PASS compile exit=7 expected=7 refused with the expected error
+CASE s2-bad-k0 line=17
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/17.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/17.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/17.cerr
+VERDICT s2-bad-k0 PASS compile exit=8 expected=8 refused with the expected error
+CASE s2-bad-k65 line=18
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/18.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/18.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/18.cerr
+VERDICT s2-bad-k65 PASS compile exit=8 expected=8 refused with the expected error
+CASE s2-bad-kname line=19
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/19.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/19.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/19.cerr
+VERDICT s2-bad-kname PASS compile exit=16 expected=16 refused with the expected error
+CASE s2-bad-recur line=20
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/20.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/20.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/20.cerr
+VERDICT s2-bad-recur PASS compile exit=9 expected=9 refused with the expected error
+CASE s2-bad-new line=21
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/21.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/21.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/21.cerr
+VERDICT s2-bad-new PASS compile exit=9 expected=9 refused with the expected error
+CASE s2-bad-depth5 line=22
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/22.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/22.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/22.cerr
+VERDICT s2-bad-depth5 PASS compile exit=14 expected=14 refused with the expected error
+CASE s2-bad-growth line=23
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/23.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/23.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/23.cerr
+VERDICT s2-bad-growth PASS compile exit=14 expected=14 refused with the expected error
+CASE s2-bad-idx line=24
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/24.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/24.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/24.cerr
+VERDICT s2-bad-idx PASS compile exit=21 expected=21 refused with the expected error
+CASE s2-bad-recur-g line=25
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s2-cases/25.src > /tmp/om2c/s4/g-fuel-e16-s2-cases/25.elf 2> /tmp/om2c/s4/g-fuel-e16-s2-cases/25.cerr
+VERDICT s2-bad-recur-g PASS compile exit=9 expected=9 refused with the expected error
+OM2GATE PASS cases=21 pass=21 fail=0 invalid=0 not_run=0

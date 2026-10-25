@@ -1,0 +1,29 @@
+OM2GATE START cases=/tmp/om2c/s4/s4fuel.cases scratch=/tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel
+IDENTITY omc /tmp/om2c/s4/omc-fuel-e16 sha256=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 pinned=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 match
+DEADLINE 10
+CASE fuel-d2 line=10
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/10.src > /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/10.elf 2> /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/10.cerr
+  $ /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/10.elf < /dev/null > /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/10.out 2> /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/10.err
+VERDICT fuel-d2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fuel-d3 line=12
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/12.src > /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/12.elf 2> /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/12.cerr
+VERDICT fuel-d3 PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE fuel-d3-code line=13
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/13.src > /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/13.elf 2> /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/13.cerr
+VERDICT fuel-d3-code PASS compile exit=14 expected=14 refused with the expected error
+DEADLINE 2
+CASE fuel-d4 line=16
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/16.src > /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/16.elf 2> /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/16.cerr
+VERDICT fuel-d4 PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE fuel-d4-code line=17
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/17.src > /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/17.elf 2> /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/17.cerr
+VERDICT fuel-d4-code PASS compile exit=14 expected=14 refused with the expected error
+DEADLINE 10
+CASE fuel-inl line=20
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/20.src > /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/20.elf 2> /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/20.cerr
+VERDICT fuel-inl FAIL compile exit=14 expected=14 stdout=match stderr differs at byte 10
+CASE fuel-inl-code line=21
+  $ /tmp/om2c/s4/omc-fuel-e16 < /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/21.src > /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/21.elf 2> /tmp/om2c/s4/g-fuel-e16-s5s7-s4fuel/21.cerr
+VERDICT fuel-inl-code PASS compile exit=14 expected=14 refused with the expected error
+DEADLINE 30
+OM2GATE FAIL cases=7 pass=6 fail=1 invalid=0 not_run=0

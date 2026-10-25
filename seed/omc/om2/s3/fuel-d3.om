@@ -1,5 +1,6 @@
-note S3 E14 fuel: three nested 64-copy unrolls (64 + 4096 + 262144 copies) exhaust the fuel: error 14 on
-note the innermost loop line
+note S3 E14/E16 fuel: three nested 64-copy unrolls exhaust the fuel. Each loop is charged 64 when it starts
+note (E16): 15 a-copies reach 62464, the 16th adds b (62528) and 47 c loops (65536); the 48th c loop
+note (65600) is error 14 on its line 8.
 om2
 fn main to int
 for a ulong 64 unroll

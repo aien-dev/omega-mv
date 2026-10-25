@@ -1,0 +1,13 @@
+note S4: an out parameter takes a writable array; a view passed to it is error 20.
+om2
+fn f r out uchar 4 to void
+put r 0 1
+end
+fn g v view uchar 4 to void
+f v
+end
+fn main to int
+a = new uchar 4 0
+g a
+ret 0
+end

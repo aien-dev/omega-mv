@@ -1,0 +1,4 @@
+note S4 C1: OM-1 has no unsized arrays; `view uchar *` is error 16 as before.
+fn f v view uchar * to ulong
+ret len v
+end

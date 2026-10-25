@@ -1,2 +1,2 @@
-if ge get fuel 0 65536
+if gt add get fuel 0 n 65536
 put line 0 ln

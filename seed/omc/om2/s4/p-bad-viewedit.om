@@ -1,0 +1,13 @@
+note S4: a part of a view is a view; to an edit parameter it is error 20.
+om2
+fn w e edit uchar * to void
+put e 0 1
+end
+fn g v view uchar * to void
+w part v 0 1
+end
+fn main to int
+a = new uchar 10 0
+g a
+ret 0
+end

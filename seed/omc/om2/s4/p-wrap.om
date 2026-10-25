@@ -1,0 +1,11 @@
+note S4 part, #748 golden shape: count 10, o = 2^64-2, k = 4. o <= len fails: trap 3 (exit 103). The
+note wrapped o + k = 2 <= 10 would accept and print 4.
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+o = ulong 18446744073709551614
+ret int plen part a o 4
+end

@@ -1,0 +1,5 @@
+note S4: fresh needs a length; an unsized fresh edit is error 16.
+om2
+fn f e edit uchar * fresh to ulong
+ret len e
+end

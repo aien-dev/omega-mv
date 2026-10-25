@@ -1,4 +1,4 @@
-note S3 E14 fuel: 64 + 4096 unrolled copies plus 14 inline expansions in each inner copy (57344) = 61504: accepted
+note S3 E14/E16 fuel: 64 + 64 b loops of 64 plus 14 inline expansions in each inner copy (57344) = 61504: accepted
 om2
 fn nop to void inline
 end

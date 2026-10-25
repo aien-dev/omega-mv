@@ -1,0 +1,47 @@
+OM2GATE START cases=/tmp/om2c/s4/sec6b.cases scratch=/tmp/om2c/s4/g-part-s5s7-sec6b
+IDENTITY omc /tmp/om2c/s4/omc-part sha256=72eb116963608b176d0049bb932c3ee6d60a462c83d3e1f1dea1e0154e1888e6 pinned=72eb116963608b176d0049bb932c3ee6d60a462c83d3e1f1dea1e0154e1888e6 match
+CASE f5-part line=1
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/1.src > /tmp/om2c/s4/g-part-s5s7-sec6b/1.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/1.cerr
+VERDICT f5-part PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE v6-edit line=2
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/2.src > /tmp/om2c/s4/g-part-s5s7-sec6b/2.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/2.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6b/2.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6b/2.out 2> /tmp/om2c/s4/g-part-s5s7-sec6b/2.err
+VERDICT v6-edit PASS run exit=0 expected=0 stdout=match stderr=match
+CASE v6-part-wrap line=3
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/3.src > /tmp/om2c/s4/g-part-s5s7-sec6b/3.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/3.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6b/3.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6b/3.out 2> /tmp/om2c/s4/g-part-s5s7-sec6b/3.err
+VERDICT v6-part-wrap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-part-tail line=4
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/4.src > /tmp/om2c/s4/g-part-s5s7-sec6b/4.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/4.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6b/4.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6b/4.out 2> /tmp/om2c/s4/g-part-s5s7-sec6b/4.err
+VERDICT v6-part-tail PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-part-golden-literal line=5
+VERDICT v6-part-golden-literal NOT_RUN not run: unreachable without a 2^64-1-element view; bridge side is abi-golden-wrap (status 32)
+CASE v6-part-empty line=6
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/6.src > /tmp/om2c/s4/g-part-s5s7-sec6b/6.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/6.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6b/6.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6b/6.out 2> /tmp/om2c/s4/g-part-s5s7-sec6b/6.err
+VERDICT v6-part-empty PASS run exit=0 expected=0 stdout=match stderr=match
+CASE v6-part-o line=7
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/7.src > /tmp/om2c/s4/g-part-s5s7-sec6b/7.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/7.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6b/7.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6b/7.out 2> /tmp/om2c/s4/g-part-s5s7-sec6b/7.err
+VERDICT v6-part-o PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-part-order line=8
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/8.src > /tmp/om2c/s4/g-part-s5s7-sec6b/8.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/8.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6b/8.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6b/8.out 2> /tmp/om2c/s4/g-part-s5s7-sec6b/8.err
+VERDICT v6-part-order PASS run exit=102 expected=102 stdout=match stderr=match
+CASE v6-part-local line=9
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/9.src > /tmp/om2c/s4/g-part-s5s7-sec6b/9.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/9.cerr
+VERDICT v6-part-local PASS compile exit=9 expected=9 refused with the expected error
+CASE v6-part-view-edit line=10
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/10.src > /tmp/om2c/s4/g-part-s5s7-sec6b/10.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/10.cerr
+VERDICT v6-part-view-edit PASS compile exit=20 expected=20 refused with the expected error
+CASE v6-part-two line=11
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/11.src > /tmp/om2c/s4/g-part-s5s7-sec6b/11.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/11.cerr
+VERDICT v6-part-two PASS compile exit=19 expected=19 refused with the expected error
+CASE v6-part-base line=12
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/12.src > /tmp/om2c/s4/g-part-s5s7-sec6b/12.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/12.cerr
+VERDICT v6-part-base PASS compile exit=19 expected=19 refused with the expected error
+CASE v6-name-part line=13
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6b/13.src > /tmp/om2c/s4/g-part-s5s7-sec6b/13.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6b/13.cerr
+VERDICT v6-name-part PASS compile exit=16 expected=16 stdout=match stderr=match
+OM2GATE NOT_RUN cases=13 pass=12 fail=0 invalid=0 not_run=1

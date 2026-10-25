@@ -1,0 +1,72 @@
+note S4 unsized views (spec 6, erratum E2): sized arrays, an unsized name and a text passed to `view T *`
+note and `edit T *` parameters of internal functions, inline ones included; `len` is the run-time count
+note (ulong); constant and run-time indexes in range; a write slice inside the view; six parameter slots
+note mixing scalars and unsized arrays (pointer then count). Exit 0 when every check holds, else the
+note failing check's number.
+om2
+text msg "abcdef"
+fn vsum v view ulong * to ulong
+x = ulong 0
+for i ulong len v
+x = add x get v i
+end
+ret x
+end
+fn pass v view ulong * to ulong
+ret vsum v
+end
+fn isum v view ulong * to ulong inline
+ret add get v 0 get v sub len v 1
+end
+fn fill e edit uchar * c uchar to ulong
+for i ulong len e
+put e i add c uchar i
+end
+ret len e
+end
+fn six a ulong v view ulong * b ulong w edit uchar * to ulong
+put w 0 uchar b
+ret add add mul a 1000 len v add mul b 100 len w
+end
+fn bytes t view uchar * to ulong
+ret add mul ulong get t 0 256 len t
+end
+fn sl a ulong v view uchar * b ulong to ulong
+ret add add mul a 100 mul len v 10 b
+end
+fn main to int
+u = new uchar 7 0
+if ne sl 3 u 4 374
+ret 10
+end
+a = new ulong 5 3
+put a 4 10
+if ne vsum a 22
+ret 1
+end
+if ne pass a 22
+ret 2
+end
+if ne isum a 13
+ret 3
+end
+if ne fill u 40 7
+ret 4
+end
+if ne get u 6 46
+ret 5
+end
+if ne six 2 a 9 u 2912
+ret 6
+end
+if ne get u 0 9
+ret 7
+end
+if ne bytes msg 24838
+ret 8
+end
+if ne bytes view u 2311
+ret 9
+end
+ret 0
+end

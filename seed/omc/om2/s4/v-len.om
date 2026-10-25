@@ -1,0 +1,15 @@
+note S4: len of an unsized name is a ulong value, not a number: `const`-like uses refuse it;
+note here it is assigned and compared (exit 0 when len is 5).
+om2
+fn g v view uchar * to ulong
+n = len v
+m = n
+ret m
+end
+fn main to int
+a = new uchar 5 0
+if ne g a 5
+ret 1
+end
+ret 0
+end

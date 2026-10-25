@@ -1,0 +1,182 @@
+OM2GATE START cases=seed/omc/om2/s4/s4.cases scratch=/tmp/om2c/s4/g-export-s4-cases
+IDENTITY omc /tmp/om2c/s4/omc-export sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec pinned=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec match
+CASE s4-v-ok line=5
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/5.src > /tmp/om2c/s4/g-export-s4-cases/5.elf 2> /tmp/om2c/s4/g-export-s4-cases/5.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/5.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/5.out 2> /tmp/om2c/s4/g-export-s4-cases/5.err
+VERDICT s4-v-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-len line=6
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/6.src > /tmp/om2c/s4/g-export-s4-cases/6.elf 2> /tmp/om2c/s4/g-export-s4-cases/6.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/6.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/6.out 2> /tmp/om2c/s4/g-export-s4-cases/6.err
+VERDICT s4-v-len PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-write line=7
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/7.src > /tmp/om2c/s4/g-export-s4-cases/7.elf 2> /tmp/om2c/s4/g-export-s4-cases/7.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/7.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/7.out 2> /tmp/om2c/s4/g-export-s4-cases/7.err
+VERDICT s4-v-write PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-trap-get line=8
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/8.src > /tmp/om2c/s4/g-export-s4-cases/8.elf 2> /tmp/om2c/s4/g-export-s4-cases/8.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/8.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/8.out 2> /tmp/om2c/s4/g-export-s4-cases/8.err
+VERDICT s4-v-trap-get PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-trap-put line=9
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/9.src > /tmp/om2c/s4/g-export-s4-cases/9.elf 2> /tmp/om2c/s4/g-export-s4-cases/9.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/9.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/9.out 2> /tmp/om2c/s4/g-export-s4-cases/9.err
+VERDICT s4-v-trap-put PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-trap-write line=10
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/10.src > /tmp/om2c/s4/g-export-s4-cases/10.elf 2> /tmp/om2c/s4/g-export-s4-cases/10.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/10.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/10.out 2> /tmp/om2c/s4/g-export-s4-cases/10.err
+VERDICT s4-v-trap-write PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-fm-entry line=11
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/11.src > /tmp/om2c/s4/g-export-s4-cases/11.elf 2> /tmp/om2c/s4/g-export-s4-cases/11.cerr
+VERDICT s4-v-fm-entry PASS compile exit=0 expected=0 sha256=50ddf39453988ba55a1b7d9bbba7f1ae7c5c5c3f7414c859acf17118fa4886b8 stderr=match
+CASE s4-v-slots6 line=12
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/12.src > /tmp/om2c/s4/g-export-s4-cases/12.elf 2> /tmp/om2c/s4/g-export-s4-cases/12.cerr
+VERDICT s4-v-slots6 PASS compile exit=0 expected=0 sha256=0dc32d259ec68c039ce68c68655fa59364f0f2a1df61730763adca50b9435bad stderr=match
+CASE s4-v-bad-slots7 line=13
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/13.src > /tmp/om2c/s4/g-export-s4-cases/13.elf 2> /tmp/om2c/s4/g-export-s4-cases/13.cerr
+VERDICT s4-v-bad-slots7 PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-v-bad-slots-last line=14
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/14.src > /tmp/om2c/s4/g-export-s4-cases/14.elf 2> /tmp/om2c/s4/g-export-s4-cases/14.cerr
+VERDICT s4-v-bad-slots-last PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-v-bad-sized line=15
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/15.src > /tmp/om2c/s4/g-export-s4-cases/15.elf 2> /tmp/om2c/s4/g-export-s4-cases/15.cerr
+VERDICT s4-v-bad-sized PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-v-bad-type line=16
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/16.src > /tmp/om2c/s4/g-export-s4-cases/16.elf 2> /tmp/om2c/s4/g-export-s4-cases/16.cerr
+VERDICT s4-v-bad-type PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-v-bad-viewedit line=17
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/17.src > /tmp/om2c/s4/g-export-s4-cases/17.elf 2> /tmp/om2c/s4/g-export-s4-cases/17.cerr
+VERDICT s4-v-bad-viewedit PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-put line=18
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/18.src > /tmp/om2c/s4/g-export-s4-cases/18.elf 2> /tmp/om2c/s4/g-export-s4-cases/18.cerr
+VERDICT s4-v-bad-put PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-read line=19
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/19.src > /tmp/om2c/s4/g-export-s4-cases/19.elf 2> /tmp/om2c/s4/g-export-s4-cases/19.cerr
+VERDICT s4-v-bad-read PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-fresh line=20
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/20.src > /tmp/om2c/s4/g-export-s4-cases/20.elf 2> /tmp/om2c/s4/g-export-s4-cases/20.cerr
+VERDICT s4-v-bad-fresh PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-v-bad-local line=21
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/21.src > /tmp/om2c/s4/g-export-s4-cases/21.elf 2> /tmp/om2c/s4/g-export-s4-cases/21.cerr
+VERDICT s4-v-bad-local PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-v-bad-global line=22
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/22.src > /tmp/om2c/s4/g-export-s4-cases/22.elf 2> /tmp/om2c/s4/g-export-s4-cases/22.cerr
+VERDICT s4-v-bad-global PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-v-om1 line=23
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/23.src > /tmp/om2c/s4/g-export-s4-cases/23.elf 2> /tmp/om2c/s4/g-export-s4-cases/23.cerr
+VERDICT s4-v-om1 PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-p-ok line=25
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/25.src > /tmp/om2c/s4/g-export-s4-cases/25.elf 2> /tmp/om2c/s4/g-export-s4-cases/25.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/25.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/25.out 2> /tmp/om2c/s4/g-export-s4-cases/25.err
+VERDICT s4-p-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-p-wrap line=26
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/26.src > /tmp/om2c/s4/g-export-s4-cases/26.elf 2> /tmp/om2c/s4/g-export-s4-cases/26.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/26.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/26.out 2> /tmp/om2c/s4/g-export-s4-cases/26.err
+VERDICT s4-p-wrap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-p-o line=27
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/27.src > /tmp/om2c/s4/g-export-s4-cases/27.elf 2> /tmp/om2c/s4/g-export-s4-cases/27.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/27.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/27.out 2> /tmp/om2c/s4/g-export-s4-cases/27.err
+VERDICT s4-p-o PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-p-tail line=28
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/28.src > /tmp/om2c/s4/g-export-s4-cases/28.elf 2> /tmp/om2c/s4/g-export-s4-cases/28.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/28.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/28.out 2> /tmp/om2c/s4/g-export-s4-cases/28.err
+VERDICT s4-p-tail PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-p-order line=29
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/29.src > /tmp/om2c/s4/g-export-s4-cases/29.elf 2> /tmp/om2c/s4/g-export-s4-cases/29.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/29.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/29.out 2> /tmp/om2c/s4/g-export-s4-cases/29.err
+VERDICT s4-p-order PASS run exit=102 expected=102 stdout=match stderr=match
+CASE s4-p-om1 line=30
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/30.src > /tmp/om2c/s4/g-export-s4-cases/30.elf 2> /tmp/om2c/s4/g-export-s4-cases/30.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/30.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/30.out 2> /tmp/om2c/s4/g-export-s4-cases/30.err
+VERDICT s4-p-om1 PASS run exit=7 expected=7 stdout=match stderr=match
+CASE s4-p-bad-local line=31
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/31.src > /tmp/om2c/s4/g-export-s4-cases/31.elf 2> /tmp/om2c/s4/g-export-s4-cases/31.cerr
+VERDICT s4-p-bad-local PASS compile exit=9 expected=9 refused with the expected error
+CASE s4-p-bad-stmt line=32
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/32.src > /tmp/om2c/s4/g-export-s4-cases/32.elf 2> /tmp/om2c/s4/g-export-s4-cases/32.cerr
+VERDICT s4-p-bad-stmt PASS compile exit=9 expected=9 refused with the expected error
+CASE s4-p-bad-write line=33
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/33.src > /tmp/om2c/s4/g-export-s4-cases/33.elf 2> /tmp/om2c/s4/g-export-s4-cases/33.cerr
+VERDICT s4-p-bad-write PASS compile exit=9 expected=9 refused with the expected error
+CASE s4-p-bad-two line=34
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/34.src > /tmp/om2c/s4/g-export-s4-cases/34.elf 2> /tmp/om2c/s4/g-export-s4-cases/34.cerr
+VERDICT s4-p-bad-two PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-p-bad-base line=35
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/35.src > /tmp/om2c/s4/g-export-s4-cases/35.elf 2> /tmp/om2c/s4/g-export-s4-cases/35.cerr
+VERDICT s4-p-bad-base PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-p-bad-global line=36
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/36.src > /tmp/om2c/s4/g-export-s4-cases/36.elf 2> /tmp/om2c/s4/g-export-s4-cases/36.cerr
+VERDICT s4-p-bad-global PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-p-bad-viewedit line=37
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/37.src > /tmp/om2c/s4/g-export-s4-cases/37.elf 2> /tmp/om2c/s4/g-export-s4-cases/37.cerr
+VERDICT s4-p-bad-viewedit PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-p-bad-vieweditkw line=38
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/38.src > /tmp/om2c/s4/g-export-s4-cases/38.elf 2> /tmp/om2c/s4/g-export-s4-cases/38.cerr
+VERDICT s4-p-bad-vieweditkw PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-p-bad-sized line=39
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/39.src > /tmp/om2c/s4/g-export-s4-cases/39.elf 2> /tmp/om2c/s4/g-export-s4-cases/39.cerr
+VERDICT s4-p-bad-sized PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-p-bad-type line=40
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/40.src > /tmp/om2c/s4/g-export-s4-cases/40.elf 2> /tmp/om2c/s4/g-export-s4-cases/40.cerr
+VERDICT s4-p-bad-type PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-p-bad-fresh line=41
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/41.src > /tmp/om2c/s4/g-export-s4-cases/41.elf 2> /tmp/om2c/s4/g-export-s4-cases/41.cerr
+VERDICT s4-p-bad-fresh PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s4-x-two line=43
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/43.src > /tmp/om2c/s4/g-export-s4-cases/43.elf 2> /tmp/om2c/s4/g-export-s4-cases/43.cerr
+VERDICT s4-x-two PASS compile exit=0 expected=0 sha256=52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e stderr=match
+CASE s4-x-one line=44
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/44.src > /tmp/om2c/s4/g-export-s4-cases/44.elf 2> /tmp/om2c/s4/g-export-s4-cases/44.cerr
+VERDICT s4-x-one PASS compile exit=0 expected=0 sha256=094e9b3eced49340f40b812ef1f472a32e5d065679235a6bf0de9cd8ba16df61 stderr=match
+CASE s4-x-noexport line=45
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/45.src > /tmp/om2c/s4/g-export-s4-cases/45.elf 2> /tmp/om2c/s4/g-export-s4-cases/45.cerr
+VERDICT s4-x-noexport PASS compile exit=0 expected=0 sha256=f437a16256e51b0cf9d155535e9ba5a1091a2f576beba4f6c06a34537fce68a6 stderr=match
+CASE s4-x-32 line=46
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/46.src > /tmp/om2c/s4/g-export-s4-cases/46.elf 2> /tmp/om2c/s4/g-export-s4-cases/46.cerr
+VERDICT s4-x-32 PASS compile exit=0 expected=0 sha256=3d847a212266eb840d2fea159ca45e5974004fc11593abd5cab7140939d13dd6 stderr=match
+CASE s4-x-abs-private line=47
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/47.src > /tmp/om2c/s4/g-export-s4-cases/47.elf 2> /tmp/om2c/s4/g-export-s4-cases/47.cerr
+VERDICT s4-x-abs-private PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE s4-x-om1 line=48
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/48.src > /tmp/om2c/s4/g-export-s4-cases/48.elf 2> /tmp/om2c/s4/g-export-s4-cases/48.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/48.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/48.out 2> /tmp/om2c/s4/g-export-s4-cases/48.err
+VERDICT s4-x-om1 PASS run exit=5 expected=5 stdout=match stderr=match
+CASE s4-x-bad-33 line=49
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/49.src > /tmp/om2c/s4/g-export-s4-cases/49.elf 2> /tmp/om2c/s4/g-export-s4-cases/49.cerr
+VERDICT s4-x-bad-33 PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE s4-x-bad-prog line=50
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/50.src > /tmp/om2c/s4/g-export-s4-cases/50.elf 2> /tmp/om2c/s4/g-export-s4-cases/50.cerr
+VERDICT s4-x-bad-prog PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-x-bad-nofn line=51
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/51.src > /tmp/om2c/s4/g-export-s4-cases/51.elf 2> /tmp/om2c/s4/g-export-s4-cases/51.cerr
+VERDICT s4-x-bad-nofn PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-x-bad-body line=52
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/52.src > /tmp/om2c/s4/g-export-s4-cases/52.elf 2> /tmp/om2c/s4/g-export-s4-cases/52.cerr
+VERDICT s4-x-bad-body PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-x-bad-abs line=53
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/53.src > /tmp/om2c/s4/g-export-s4-cases/53.elf 2> /tmp/om2c/s4/g-export-s4-cases/53.cerr
+VERDICT s4-x-bad-abs PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-o-out line=54
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/54.src > /tmp/om2c/s4/g-export-s4-cases/54.elf 2> /tmp/om2c/s4/g-export-s4-cases/54.cerr
+VERDICT s4-o-out PASS compile exit=0 expected=0 sha256=e10bf9cc1b3105512fa139345b7a4501e5953a98a291bd3d6a14f987f4c7285e stderr=match
+CASE s4-o-slots6 line=55
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/55.src > /tmp/om2c/s4/g-export-s4-cases/55.elf 2> /tmp/om2c/s4/g-export-s4-cases/55.cerr
+VERDICT s4-o-slots6 PASS compile exit=0 expected=0 sha256=6b6f14b97b7dbd1fbe79c4a5aed8b1be8be73d346e4fc8759e976f91298ecc63 stderr=match
+CASE s4-o-run line=56
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/56.src > /tmp/om2c/s4/g-export-s4-cases/56.elf 2> /tmp/om2c/s4/g-export-s4-cases/56.cerr
+  $ /tmp/om2c/s4/g-export-s4-cases/56.elf < /dev/null > /tmp/om2c/s4/g-export-s4-cases/56.out 2> /tmp/om2c/s4/g-export-s4-cases/56.err
+VERDICT s4-o-run PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-o-bad-slots7 line=57
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/57.src > /tmp/om2c/s4/g-export-s4-cases/57.elf 2> /tmp/om2c/s4/g-export-s4-cases/57.cerr
+VERDICT s4-o-bad-slots7 PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-o-bad-star line=58
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/58.src > /tmp/om2c/s4/g-export-s4-cases/58.elf 2> /tmp/om2c/s4/g-export-s4-cases/58.cerr
+VERDICT s4-o-bad-star PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-o-bad-fresh line=59
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/59.src > /tmp/om2c/s4/g-export-s4-cases/59.elf 2> /tmp/om2c/s4/g-export-s4-cases/59.cerr
+VERDICT s4-o-bad-fresh PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-o-bad-view line=60
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/60.src > /tmp/om2c/s4/g-export-s4-cases/60.elf 2> /tmp/om2c/s4/g-export-s4-cases/60.cerr
+VERDICT s4-o-bad-view PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-o-bad-size line=61
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s4-cases/61.src > /tmp/om2c/s4/g-export-s4-cases/61.elf 2> /tmp/om2c/s4/g-export-s4-cases/61.cerr
+VERDICT s4-o-bad-size PASS compile exit=7 expected=7 refused with the expected error
+OM2GATE PASS cases=55 pass=55 fail=0 invalid=0 not_run=0
