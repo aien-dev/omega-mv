@@ -11,7 +11,7 @@ is unchanged: the header and `sha256_ctx` are the same.
 | `om/sha256/sha256.om` | the implementation: one function-mode unit, entry `omsha` |
 | `src/omega_om_units.inc` | generated: the unit's machine code, byte for byte as omc wrote it, plus the ABI binding (`omega_omsha`) |
 | `src/sha256.c` | `sha256_init/update/final/hash`: cuts caller data into pieces of at most 4096 bytes; no hashing logic |
-| `om/sha256/gen.sh` | regenerates the `.inc`; `--check` proves the committed file is what the pinned tools produce |
+| `om/units.sh` | regenerates the `.inc` (all Omega units: sha256, blake3); `--check` proves the committed file is what the pinned tools produce |
 | `om/sha256/parity/` | parity against the replaced C (`run.sh`) and a throughput probe (`bench.c`) |
 
 Pins: omc `734f0a39…6b61`; generator `src/native.om` of omega-bridge main `c4013511`

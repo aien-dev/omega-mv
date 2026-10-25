@@ -62,15 +62,21 @@ Timing on the Spark (arm64): 16 MiB in 0.33 s for the .om versus 0.05 s for the 
 - A read error after some bytes were consumed exits 65 (the C driver has no such path to
   compare against; the status is a definition, not a parity result).
 
-## Consumer note (cutover)
+## In the product: `b3unit.om`
 
-`src/omega_blake3.c` is a member of the live `libomega_gpu.a` (the aien-proof
-EvidenceReceiptV1 id is BLAKE3 over the receipt bytes, and the resolver recomputes it).
-Replacing that object with this .om is blocked on the .om object / C-ABI boundary: a
-seed-compiled Omega function has to be callable from C with a stable signature. That
-boundary is omega-bridge PR #8 (Native call ABI v1: one seed-compiled Omega function
-called from C, C++, Python, Rust). Until it lands, `blake3.om` is the parity oracle and
-the migration unit for the C file, not its replacement; the C stays in the closure.
+`src/omega_blake3.c` no longer computes BLAKE3. `om/blake3/b3unit.om` is the same tree
+construction as one function-mode unit, entry `omb3`, bound through the omega-bridge native call
+ABI v1 (omega-bridge #8, #12) and generated with the SHA-256 unit into `src/omega_om_units.inc`
+(`om/units.sh`; one file because every binding defines the shared ABI runtime). The C file keeps
+only `omega_blake3_hash`, which cuts the input into 1024-byte chunks (ABI v1 arrays are fixed
+length): state is the caller's 448-word array (54-row chaining-value stack, depth, chunk count).
+Its only caller is `omega_receipt.c` (the aien-proof EvidenceReceiptV1 id).
+
+`om/blake3/parity/run.sh` (with `OMEGA_OMC`, `OMEGA_BRIDGE`): 35/35 official vectors and 1,000
+inputs (boundaries, random to 3 MiB) identical to the replaced C (`src/omega_blake3.c` @ 633a1735);
+the two mutants `make test-resolve` used to apply to the C (B3M:merge, B3M:root) are applied to
+`b3unit.om` and killed (16/35 and 35/35 vectors differ, as for the C). `blake3.om` stays the
+file/stdin program.
 
 ## NOT_RUN
 

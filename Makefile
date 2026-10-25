@@ -2085,12 +2085,13 @@ test-vcstore: tests/test_omega_vcstore.c src/omega_vcstore.c src/omega_vcstore.h
 # VC1-RESOLVE (VC1 stage 4): import resolution in the Omega OSC compiler. `import NAME;` resolves
 # only through omega.lock -> semantic id -> Verified Crumb Store -> receipt check -> transitive
 # verified closure (src/omega_resolve.c), with a C reader of the aien-proof receipt wire contract
-# (src/omega_receipt.c, BLAKE3 in src/omega_blake3.c). oscv is the verified driver. Test inputs:
-# tests/resolve/ (official BLAKE3 vectors, three receipts written by the Rust implementation).
-# Mutation proof: each mutant is a copy of ONE source file with one tagged line (VC1R:<tag> in
-# omega_resolve.c / omega_receipt.c, B3M:<tag> in omega_blake3.c) replaced; the test must exit 1
-# with "MUTANT <name> KILLED by <check>" for the check named here, every time. A mutant whose sed
-# changed nothing, did not compile, or survived fails the build. CPU only; no physics; no chip.
+# (src/omega_receipt.c, BLAKE3 in om/blake3/b3unit.om behind src/omega_blake3.c). oscv is the verified
+# driver. Test inputs: tests/resolve/ (official BLAKE3 vectors, three receipts written by the Rust
+# implementation). Mutation proof: each mutant is a copy of ONE source file with one tagged line
+# (VC1R:<tag> in omega_resolve.c / omega_receipt.c) replaced; the test must exit 1 with "MUTANT <name>
+# KILLED by <check>" for the check named here, every time. A mutant whose sed changed nothing, did not
+# compile, or survived fails the build. The BLAKE3 mutants (merge, root) act on the Omega source and
+# need omc, so they run in om/blake3/parity/run.sh. CPU only; no physics; no chip.
 .PHONY: test-resolve oscv
 RESOLVE_FLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model
 RESOLVE_DIR = $(OUT_DIR)/resolve-test
@@ -2119,7 +2120,7 @@ test-resolve: tests/test_omega_resolve.c $(OUT_DIR)/compiler/oscv $(RESOLVE_SRC)
 	    $(CC) $(RESOLVE_FLAGS) -c -o $$o $$c & pids="$$pids $$!"; \
 	  done; for p in $$pids; do wait $$p; done; ld -r -o $(RESOLVE_DIR)/rest_stack.o $(RESOLVE_DIR)/objs/*.o; \
 	  build_mutant() { name=$$1; tag=$$2; which=$$3; chk=$$4; repl=$$5; \
-	  case $$which in blake3) f=src/omega_blake3.c; pfx=B3M;; resolve) f=src/omega_resolve.c; pfx=VC1R;; receipt) f=src/omega_receipt.c; pfx=VC1R;; *) echo "bad mutant file $$which"; exit 1;; esac; \
+	  case $$which in resolve) f=src/omega_resolve.c; pfx=VC1R;; receipt) f=src/omega_receipt.c; pfx=VC1R;; *) echo "bad mutant file $$which"; exit 1;; esac; \
 	  sed "/$$pfx:$$tag/c\\$$repl" $$f > $(RESOLVE_DIR)/mut_$$name.c; \
 	  if cmp -s $$f $(RESOLVE_DIR)/mut_$$name.c; then echo "mutant $$name: sed changed nothing"; exit 1; fi; \
 	  objs=""; for s in $(RESOLVE_SRC); do if [ "$$s" = "$$f" ]; then objs="$$objs $(RESOLVE_DIR)/mut_$$name.c"; else objs="$$objs $(RESOLVE_DIR)/src_objs/$$(basename $$s .c).o"; fi; done; \
@@ -2128,9 +2129,7 @@ test-resolve: tests/test_omega_resolve.c $(OUT_DIR)/compiler/oscv $(RESOLVE_SRC)
 	  if [ $$rc -ne 1 ] || ! grep -q "^MUTANT $$name KILLED by $$chk\$$" $(RESOLVE_DIR)/mut_$$name.out; then \
 	    echo "mutant $$name NOT killed by $$chk (exit $$rc)"; tail -5 $(RESOLVE_DIR)/mut_$$name.out; exit 1; fi; \
 	  echo "mutant $$name: killed by $$chk (exit 1)"; }; \
-	  . ./tools/mutpool.sh; mp_init; mp_run build_mutant b3-merge                 merge                  blake3   b3-official-vectors                              '        while ((total & 1) == 0 && sp > 1) {'; \
-	  mp_run build_mutant b3-root                  root                    blake3  b3-official-vectors                          '    cur.flags |= 0;'; \
-	  mp_run build_mutant profile-known            profile-known          resolve  profile-unknown-refused                          '    if (!p) p = table;'; \
+	  . ./tools/mutpool.sh; mp_init; mp_run build_mutant profile-known            profile-known          resolve  profile-unknown-refused                          '    if (!p) p = table;'; \
 	  mp_run build_mutant profile-version          profile-version        resolve profile-version-too-old-refused              '    if (cmp < -1)'; \
 	  mp_run build_mutant lock-bytes-tab           lock-bytes             resolve  lock-refuses-tab-in-comment                      '        if (text[i] == 13 || text[i] == 0) return lock_bad(err, 1, "CR or NUL byte");'; \
 	  mp_run build_mutant lock-bytes-cr            lock-bytes             resolve  lock-refuses-cr-in-comment                       '        if (text[i] == 9 || text[i] == 0) return lock_bad(err, 1, "tab or NUL byte");'; \
