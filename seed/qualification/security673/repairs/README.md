@@ -58,3 +58,13 @@ operations in disposable directories. None qualifies arbitrary filesystem
 interference, production revocation fencing, stale-pid ABA safety, power loss or
 aggregate durable accounting. Replay the full existing coordinator separately;
 its status is not inferred from these four fixtures.
+
+`clean-replay.json` records the independent clean-checkout replay of these four
+fixtures and four compiled controls. `regression-replay.json` additionally records
+unchanged action219, delegate74, reuse74, store77 and dispatch37 checks passing.
+The store fixture requires a pre-existing `build/` parent in its working directory;
+the first isolated invocation omitted it and failed70 checks. That invocation is
+retained, followed by the corrected setup with the identical executable. Dispatch
+also needs `seed/authority/effect-ok` built from its existing source inside the
+working directory. No compiler or production-source change was needed for these
+additional regressions. This still does not substitute for the full coordinator.

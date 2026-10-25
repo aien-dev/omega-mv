@@ -1,0 +1,66 @@
+{
+  "checkout": "99c7259ba",
+  "compiler_sha256": "66b4cf34e5cd2c8ff003bd142e7309f52178b66c2380f78ac313b6eb8b67471b",
+  "records": [
+    {
+      "name": "action",
+      "source_sha256": "0ab62ba91d3599d6db89dc429afc1f3821f1dea3b2d8f225cbaa7c2eb01d7e81",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "f56e5696dfcfc8a16430147db176eb5b6568ec794fd3de9303f9dcd505f246aa",
+      "exit": 0,
+      "stdout": "action checks=219 000\n",
+      "stderr": ""
+    },
+    {
+      "name": "delegate",
+      "source_sha256": "e2e5661459ff55e62ed25eaa32936feba67c847245a779db171e0aebee80086f",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "2c00ea7f17b93a1f18b40c6b0215b487ac06dc83a8b79a3793072edb6d6bee50",
+      "exit": 0,
+      "stdout": "delegate checks=074 000\n",
+      "stderr": ""
+    },
+    {
+      "name": "reuse",
+      "source_sha256": "37de7562021caf6439daea12f8039f882dfdb1caf18d74043a3f7d443ade40dd",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "f4fb1d2c0d9a0c8fd2efa6d6239b968aa5ccc9edc9d8c3a662c4743e9b729105",
+      "exit": 0,
+      "stdout": "reuse checks=074 000\n",
+      "stderr": ""
+    },
+    {
+      "name": "store",
+      "source_sha256": "de887735b8c241d87adba5260a62b788e6483d557e3a356ccf9f166c42fac6ec",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "89e7e3f1935c4eed9b084cac89a808799dbc096a8dadf64fff9466a7dfc4655c",
+      "exit": 1,
+      "stdout": "store checks=077 070\n",
+      "stderr": ""
+    },
+    {
+      "name": "dispatch",
+      "source_sha256": "44d69226f6f60bab9965db92248510d2292c6148b18483e6844cf9887aa4e4db",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "78bb52a01f950e7cf2cdf0a98874d08f19e8528414fca2a05f6cce7818044715",
+      "effect_binary_sha256": "4caebbb143d76413098649f9569eadc495aad8ca744a91ba7b29fe1bad4c7471",
+      "exit": 0,
+      "stdout": "dispatch checks=037 000\n",
+      "stderr": ""
+    },
+    {
+      "name": "store-required-build-directory",
+      "binary_sha256": "89e7e3f1935c4eed9b084cac89a808799dbc096a8dadf64fff9466a7dfc4655c",
+      "setup_correction": "create build/ before existing store gate, as README invocation requires; original isolated cwd omitted parent",
+      "exit": 0,
+      "stdout": "store checks=077 000\n",
+      "stderr": ""
+    }
+  ],
+  "scope": "existing authority components; original store invocation failure retained; no full coordinator or production revocation fencing"
+}
