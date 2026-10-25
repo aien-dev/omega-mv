@@ -1,0 +1,147 @@
+{
+  "checkout": "f696440aa",
+  "contract_sha256": "ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496",
+  "compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+  "records": [
+    {
+      "name": "tests",
+      "source_sha256": "7614bfcab3e2821e071b8b03d99ad1009f57dfbe3dc566c2e97fcb212bbda7df",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "cc328b083385ae3e2bc695f2a66d52bb8e0b31101005cc894fb7b4636c5dc6ad",
+      "exit": 0,
+      "stdout_sha256": "4813f7f491aca7d4ccf35e8e7c2676211d9c68f30a161f34b545547e899d729b",
+      "stdout_bytes": 62,
+      "stderr": "",
+      "stdout": "PASS Q1-Q9 runtime; Q2 widths1..8 pairs87380 operations262140\n"
+    },
+    {
+      "name": "demo",
+      "source_sha256": "4c236ab4dbb0f5374227e8d950af25ded11ae50b0fba0bc25db91b452e22f08d",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "fde488154d9806c49e57b27b6affbe51f2037d43569b2a87fe64b595a6d02fdb",
+      "exit": 0,
+      "stdout_sha256": "662d1da493c9e96cb4d2b3b7778dea1ec80e5953c41d59eeafa88837f0882431",
+      "stdout_bytes": 208,
+      "stderr": "",
+      "stdout": "PASS modular baseline8 checked add status3 unchanged output effects0\nPASS multiply status3 narrow status3 negative status2 unchanged output\nPASS reused object identity changed version status4 unchanged slice\n"
+    },
+    {
+      "name": "crypto",
+      "source_sha256": "92c32dd28633f6351dd2f8f053d5cccf29b97deb325da9a3bf19cb35dfe7e5fe",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "6178e84856c15364c07299ee581478b44b2e7fc1f794c36e4c1c52290277a219",
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "name": "mutate",
+      "source_sha256": "c4e7bf75938e6a4ae22c5b405773984465efa646d1a4b08521505b93904471c5",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "8078ac96be29235c0a4ff878575afa38bc9619e8c06434d4878cca728a5f4542"
+    },
+    {
+      "name": "export",
+      "source_sha256": "09eb487ce982b60d566576f7c3949ef2632146950597f92da90ef8560ee0e1e9",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "binary_sha256": "06af414693ec76840f541ee584cd7877f0400af703012d3d7a715ea070abfdc6",
+      "exit": 0,
+      "stdout_sha256": "0841c3b0714b36b46e09a83d036243989b0295b5aa3af68650fa24eca9886bd9",
+      "stdout_bytes": 6291360,
+      "stderr": "",
+      "independent_corpus": "all6291360bytes equal"
+    },
+    {
+      "name": "mixed-scalar",
+      "source_sha256": "046e8729e6808b5845941cb2591113411ecc54ff54330b3ad20d9ee7268945c9",
+      "compile_exit": 7,
+      "compile_stderr": "omc: line 148: error 7\n"
+    },
+    {
+      "name": "mixed-quantity",
+      "source_sha256": "3f9c4e55552dc320cfa5ed8a8e5581ec5fde0dbe0660b6429c085a82eb0c2bd6",
+      "compile_exit": 7,
+      "compile_stderr": "omc: line 149: error 7\n"
+    },
+    {
+      "name": "mixed-object",
+      "source_sha256": "e0956012a52edb290381187f7094f5fe05c3aae86900b84b1373c71dcf4435f8",
+      "compile_exit": 7,
+      "compile_stderr": "omc: line 148: error 7\n"
+    },
+    {
+      "name": "mixed-slice",
+      "source_sha256": "6a8c33da0ada678ceccd15d7db803174f0bbbdc61cdf9c22970075d4a75ca9b3",
+      "compile_exit": 7,
+      "compile_stderr": "omc: line 148: error 7\n"
+    },
+    {
+      "name": "mutant-a",
+      "transform_args": [
+        "a"
+      ],
+      "transform_stdin_sha256": "bb0214be78009c9af59e8fb82f22ed84de4eeba94bdc95a4bffd972d5616da97",
+      "source_sha256": "823e070d52351c797121931e3d0bfc0f6869f4e5b971bb54f1b2fc0be7513316",
+      "compile_exit": 0,
+      "binary_sha256": "51185d80447455201cfbc44afae292df7904818d9d9d753b8edc9281b8728f4a",
+      "exit": 1,
+      "stdout": "FAIL Q1_ADD_GUARD\n"
+    },
+    {
+      "name": "mutant-m",
+      "transform_args": [
+        "m"
+      ],
+      "transform_stdin_sha256": "bb0214be78009c9af59e8fb82f22ed84de4eeba94bdc95a4bffd972d5616da97",
+      "source_sha256": "7c38cf4da8faf15fe3b8b885d07968cf3cb9e672031929cb7d84197660fbb900",
+      "compile_exit": 0,
+      "binary_sha256": "c59af673d93018a6f1122d24c3ef90f1d4ee5d86e3da5fa6aab4cf8029aa1776",
+      "exit": 1,
+      "stdout": "FAIL Q4_MUL_GUARD\n"
+    },
+    {
+      "name": "missing",
+      "args": [
+        "a"
+      ],
+      "stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdin_fixture": "empty",
+      "binary_sha256": "8078ac96be29235c0a4ff878575afa38bc9619e8c06434d4878cca728a5f4542",
+      "exit": 4,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "duplicate",
+      "args": [
+        "a"
+      ],
+      "stdin_sha256": "64708d35e3ea1cddf1ace2633ff69b3174cc615dcfb509a12f9fc282e3e091ce",
+      "stdin_fixture": "quantity.om concatenated twice",
+      "binary_sha256": "8078ac96be29235c0a4ff878575afa38bc9619e8c06434d4878cca728a5f4542",
+      "exit": 4,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "bad-arg",
+      "args": [
+        "?"
+      ],
+      "stdin_sha256": "bb0214be78009c9af59e8fb82f22ed84de4eeba94bdc95a4bffd972d5616da97",
+      "stdin_fixture": "quantity.om",
+      "binary_sha256": "8078ac96be29235c0a4ff878575afa38bc9619e8c06434d4878cca728a5f4542",
+      "exit": 2,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "limits": "bounded library/external finite arithmetic evidence; no general sealed provenance or native translation proof"
+}
