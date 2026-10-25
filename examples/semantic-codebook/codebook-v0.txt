@@ -1,0 +1,9 @@
+omega.semcode.smoke.v0
+version=0
+epoch=9
+atom[0]=u8:add1:u8->u8
+atom[1]=u8:mul2:u8->u8
+atom[2]=u8:affine2plus:u8,u8->u8
+status_ff01=epoch
+status_ff02=index
+status_ff03=digest
