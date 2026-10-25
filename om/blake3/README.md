@@ -18,6 +18,22 @@ Exit codes: 0 hash written; 65 input cannot be read (missing file, no permission
 directory, read error); 66 input longer than 16 MiB (16,777,216 bytes is accepted,
 16,777,217 is refused). Messages go to stderr.
 
+Returned stdout write errors or zero-progress writes exit 74. Positive short writes
+resume at the next byte; returned negative results, including interrupted writes,
+fail closed. Signal termination (for example the default SIGPIPE action) is not
+reported as exit 74.
+
+Run the output-contract regression against a freshly compiled binary:
+
+```
+sh om/blake3/test-output.sh ./blake3
+```
+
+The fixture compares the complete empty-input digest, including its newline, and
+checks /dev/full and closed-stdout failures. Native compilation and execution of
+this output-handling revision are **NOT_RUN** in the review environment. Positive
+short writes and EINTR are not forced by this fixture.
+
 ## Construction
 
 Same as the C: 1024-byte chunks of 64-byte blocks, CHUNK_START on a chunk's first block,
@@ -28,7 +44,7 @@ reference holds trivially), ROOT on the single final compression. 32-bit words l
 split into words 12 and 13 of the state. The message permutation runs 7 times per
 compression, as in the C.
 
-## Oracle and parity
+## Historical oracle and parity (PR #732)
 
 Oracle: `src/omega_blake3.c` compiled with gcc -O2 behind a 12-line C driver (file → hex,
 kept out of the tree). The driver was first checked against the official
@@ -36,6 +52,10 @@ BLAKE3-team/BLAKE3 `test_vectors/test_vectors.json` (fetched 2026-10-24): all 35
 match, and the file is identical to the repo's `tests/resolve/blake3_vectors.txt`.
 Two single-line mutants of the C (the B3M:root and B3M:merge tags) are caught by the
 vector set (35/35 and 16/35 vectors differ), so the corpus discriminates.
+
+The following corpus and hashes belong to the original source at commit
+`c2156c7069df619797a113582fa6ad658c3db999`, before the output-handling fix.
+They are not verification of the revised source or binary.
 
 Corpus run with omc 734f0a39…6b61, `blake3.om` sha256 79857ee8…baa3, output binary
 sha256 c51199a3…f77b (8,660 bytes). Every row compares the .om output byte for byte to
@@ -51,7 +71,7 @@ the oracle (or the exit status where that is the contract).
 | Missing file, mode-000 file, directory | 3 | exit 65 all |
 | **Total** | **64** | **64/64** |
 
-Timing on the Spark (arm64): 16 MiB in 0.33 s for the .om versus 0.05 s for the -O2 C.
+Historical timing of the original PR #732 source on the Spark (arm64): 16 MiB in 0.33 s for the .om versus 0.05 s for the -O2 C.
 
 ## Limits
 
