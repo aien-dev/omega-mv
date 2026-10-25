@@ -14,8 +14,8 @@ is unchanged: the header and `sha256_ctx` are the same.
 | `om/units.sh` | regenerates the `.inc` (all Omega units: sha256, blake3); `--check` proves the committed file is what the pinned tools produce |
 | `om/sha256/parity/` | parity against the replaced C (`run.sh`) and a throughput probe (`bench.c`) |
 
-Pins: omc `734f0a39…6b61`; generator `src/native.om` of omega-bridge main `c4013511`
-(sha256 `e79733f8…f80f`).
+Pins: omc `734f0a39…6b61`; generator `src/native.om` of omega-bridge `012860db` (om/omega-bridge.lock)
+(sha256 `2c2c53f6…3940`, pinned in om/units.sh).
 
 ## Why a 4096-byte adapter remains
 
@@ -39,7 +39,7 @@ array in the ABI.
 ## Limits
 
 - Throughput (`parity/bench.c`, 64 MiB and 200,000 x 32 bytes), against the C it replaced compiled
-  with gcc -O2 on the same machine: GB10 247.4 MB/s against 202.7 MB/s, 0.29 us against 0.34 us per
+  with gcc -O2 on the same machine: GB10 248.7 MB/s against 202.7 MB/s, 0.28 us against 0.34 us per
   32-byte `sha256_hash`; the hosted ARM64 runner's numbers are in the om-units-arm64 job log. The
   speed comes from the source, not the compiler: working words in `ulong` cells whose low 32 bits are
   the value (add/and/xor need no masks), a rotate as one shift of the word duplicated into both halves
