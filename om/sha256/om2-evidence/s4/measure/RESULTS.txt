@@ -1,0 +1,56 @@
+OM-2 SHA-256 paired interleaved measurement (coordinator L835, acting for L838)
+Protocol: spec/omegese-om2-measure.md sha256 507702d0e69ccc76cefb3675e2b22f7279497d362b42ee3043f3a1057aa17bad
+          (aien-dev/omega-mv om2/contract @ 23fc7f5c9), predeclared before any cutover number existed.
+
+Arms
+  A  baseline acb3f15cd: om/sha256/sha256.om (OM-1) through the 4096-byte C adapter src/sha256.c
+  B  om2/sha-cutover 0e5f02630: om/sha256/sha256-om2.om (OM-2) through omega-bridge ABI v2 bindings
+  C  historical pure-C SHA-256: NOT_RUN (reference only, no gate role). The C predecessor lives in git
+     history before the OM-1 cutover and is exercised by `tests/gates/run.sh om-units` SHA256-PARITY.
+
+Builds: both arms `make libomega_gpu` with PHYSICS_DIR at physics.lock 048e5f5e, cc 13.3.0 -O2, same
+flags, Linux AArch64 host CPU, no GPU. A: libomega_gpu.a 1863712 B. B: 1862714 B (-998 B).
+Driver: bench.c (throwaway diagnostic, not delivered code), linked once per arm, taskset -c 3, nice -n 19.
+        3 discarded warm-up rounds, then 31 rounds; within a round the two arms run in a seeded random
+        order (seed 20261025); each round runs 31 timed repetitions per case and reports min/median/p90/max.
+        Ratio per case = median over rounds of (B round median / A round median).
+DEVIATION from the protocol: p10 was not collected; min, median, p90 and max are. Everything else as
+declared.
+
+Correctness of both arms before timing (digest.c, full 32 bytes, oracle = Python 3.12.3 hashlib/OpenSSL
+3.0.13): sizes 0, 3, 64, 1024, 1048576 and a 1 MiB stream in 4096-byte chunks - A and B digests are
+byte-identical to each other and to the oracle for all six cases.
+
+case                 A med        B med     B/A     per-round range      A MB/s   B MB/s  policy
+hash:0               496.0 ns     528.0 ns  1.032   0.970..1.065            -        -    PASS
+hash:1               496.0 ns     528.0 ns  1.065   1.000..1.097          2.0      1.9    REGRESSION
+hash:31              496.0 ns     544.0 ns  1.097   1.031..1.161         62.5     57.0    REGRESSION
+hash:32              496.0 ns     544.0 ns  1.097   1.031..1.161         64.5     58.8    REGRESSION
+hash:55              496.0 ns     560.0 ns  1.129   1.129..1.194        110.9     98.2    REGRESSION
+hash:56              880.0 ns     864.0 ns  0.982   0.964..1.000         63.6     64.8    PASS
+hash:63              880.0 ns     864.0 ns  1.000   0.982..1.019         71.6     72.9    PASS
+hash:64              896.0 ns     816.0 ns  0.911   0.895..0.928         71.4     78.4    PASS
+hash:65              896.0 ns     816.0 ns  0.895   0.877..0.929         72.5     79.7    PASS
+hash:127            1280.0 ns    1168.0 ns  0.912   0.912..0.938         99.2    108.7    PASS
+hash:128            1312.0 ns    1120.0 ns  0.854   0.841..0.866         97.6    114.3    PASS
+hash:1024           6992.0 ns    5360.0 ns  0.767   0.765..0.776        146.5    191.0    PASS
+hash:4096          27600.0 ns   19920.0 ns  0.722   0.714..0.734        148.4    205.6    PASS
+hash:65536        429508.0 ns  311282.0 ns  0.725   0.715..0.725        152.6    210.5    PASS
+hash:1048576        6.875 ms     4.987 ms  0.726   0.715..0.737        152.5    210.2    PASS
+hash:16777216     109.990 ms    79.807 ms  0.726   0.716..0.739        152.5    210.2    PASS
+stream:1 B          73.276 ms    31.983 ms  0.436   0.424..0.448         14.3     32.8    PASS
+stream:7 B          18.961 ms    12.314 ms  0.650   0.635..0.658         55.3     85.2    PASS
+stream:64 B          9.533 ms     6.949 ms  0.729   0.720..0.745        110.0    150.9    PASS
+stream:4096 B        6.875 ms     5.019 ms  0.730   0.720..0.731        152.5    208.9    PASS
+(stream rows: 1 MiB fed in that chunk size; MB/s over the whole message)
+
+Predeclared policy: PASS if every size's median paired ratio is <= 1.05 and the bulk (>= 64 KiB) ratio
+<= 1.02; otherwise REGRESSION, reported as such with no re-run selection.
+Verdict: bulk and streaming PASS with a large margin (bulk 0.72-0.73 => B is 1.38x faster; 1 MiB in
+1-byte chunks 0.436 => 2.29x faster). Inputs of 1, 31, 32 and 55 bytes REGRESS by 6.5% to 12.9%
+(496 ns -> 528-560 ns), above the 5% limit, and are declared REGRESSION under the predeclared policy.
+Ranges overlap (A 448..544, B 464..576) and the medians are quantised to the 16 ns clock tick at this
+size, but the rule was fixed before the run and is applied as written. Mechanism [INFERENCE, not
+measured in isolation]: at <= 55 bytes the OM-1 arm runs one compression and the ABI v2 call adds the
+view setup plus the digest copy-out through the binding buffer; below 56 bytes the saved work is zero.
+No re-run was selected; this is the single declared run.
