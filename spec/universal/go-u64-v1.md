@@ -194,7 +194,9 @@ original and the exported program and `cc` on the F1 C, compared with a bigint e
 on the boundary vectors of `translation-v1.md` section 3 (all pairs for two inputs) and seeded random
 vectors. Also: the untyped-constant rule (section 1.1) against `go build`, import and export boundary
 controls, the exporter refusals, public-command closure, the composition C -> Go on every F1 positive and
-the four accepted C import boundary controls, and Go -> C on every F2-go positive through R(U, C) (in test
-code until `tools/adapters/retarget` lands) and the #622 C exporter, with the native realization
-`lower(N(U_A))` (G1 lowering, omc `734f0a39`, bridge binding) on both compositions. A piece whose tool is
+the four accepted C import boundary controls, and Go -> C on every F2-go positive through R(U, C) and the
+#622 C exporter. R is computed in test code; given `--retarget` (`GO_SELFTEST_RETARGET`, the #624
+`tools/adapters/retarget` of a scratch checkout, never committed here) the tool's output is used for every
+R(U, M) and must equal the test-code R byte for byte. The native realization
+`lower(N(U_A))` (G1 lowering, omc `734f0a39`, bridge binding) runs on both compositions. A piece whose tool is
 absent is reported NOT_RUN. Finite DIFFERENTIAL evidence, not PROOF.

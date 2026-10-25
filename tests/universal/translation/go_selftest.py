@@ -7,8 +7,8 @@ unit and of R(U, M) for all six family members (identical bytes, gofmt-clean), r
 (translation-compose-v1 section 4.1), and Go 1.27.3 DIFFERENTIAL (original and exported Go) against a
 bigint evaluation of the records. The untyped-constant rule of go-u64-v1.md section 1.1 is checked
 against `go build` on the refusal fixtures and on seeded random constant/variable trees. Compositions
-C->Go and Go->C (R(U, C) in test code until tools/adapters/retarget lands; the G1 C exporter accepts
-v1 C units only), with the native realization lower(N(U_A)) when the lowering, omc 734f0a39 and the
+C->Go and Go->C (R(U, M) in test code, or tools/adapters/retarget via --retarget, cross-checked byte for
+byte; the G1 C exporter accepts v1 C units only), with the native realization lower(N(U_A)) when the lowering, omc 734f0a39 and the
 bridge are present (otherwise NOT_RUN).
 """
 from pathlib import Path
@@ -250,6 +250,7 @@ def main():
     ap.add_argument('--sa1-root',default=str(ROOT),help='checkout holding tools/source-aware/sa and build/L574/sa (#621 v1 codec)')
     ap.add_argument('--sa2-root',default=str(ROOT),help='checkout holding tools/source-aware/sa and build/L832/sa (#621 v2 codec)')
     ap.add_argument('--c-export',default=os.environ.get('GO_SELFTEST_C_EXPORT',str(HOME/'workspace/c-export-622/tools/adapters/c-export')),help='public c-export of a passing #622 checkout')
+    ap.add_argument('--retarget',default=os.environ.get('GO_SELFTEST_RETARGET',''),help='public tools/adapters/retarget of a checkout holding the #624 retarget lane (cross-checked against the Python R)')
     ap.add_argument('--lower',default=str(ROOT/'tools/adapters/lower'))
     ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC',str(HOME/'workspace/omega-seedqual-20261025/seed/out/omc')))
     ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO',str(HOME/'workspace/omega-bridge')))
@@ -280,6 +281,15 @@ def main():
         else:native_state='NOT_RUN (lowering build, omc or bridge missing)'
     except (Fail,subprocess.CalledProcessError,OSError) as e:native_state='NOT_RUN ('+str(e)+')'
     cexp=Path(a.c_export) if a.c_export and Path(a.c_export).is_file() else None
+    rtool=Path(a.retarget) if a.retarget and Path(a.retarget).is_file() else None
+    RNAME={'C':'c','Rust':'rust','Python':'python','C++':'cpp','Zig':'zig','Go':'go'}
+    def R(env,sem,m):
+        """R(U, M) semantic-only: tools/adapters/retarget when given (must equal the Python R), else the Python R."""
+        want=semonly(retarget(sem,m))
+        if rtool:
+            r=run([sys.executable,str(rtool),RNAME[m]],env);bump('retarget_runs')
+            check(r.returncode==0 and r.stdout==want,'retarget %s rc=%d differs from the Python R'%(RNAME[m],r.returncode))
+        return want
 
     f1=json.loads((ROOT/'tests/universal/translation/fixtures-f1.json').read_text())
     f2=json.loads((ROOT/'tests/universal/translation/fixtures-f2-go.json').read_text())
@@ -298,7 +308,7 @@ def main():
         r=gexport(env_with_sidecar);check(r.returncode==0 and r.stderr==b'',tag+' export refused rc=%d %s'%(r.returncode,r.stderr))
         text=r.stdout
         for m in MEMBERS:
-            u=semonly(retarget(sem,m))
+            u=R(env_with_sidecar,sem,m)
             if MEMBERS[m][0]==1:check(sa1run('decode',u).returncode==0,tag+' R(U,%s) not a valid v1 unit'%m)
             elif have_sa2:check(sa2('decode',u).returncode==0,tag+' R(U,%s) not a valid v2 unit'%m)
             q=gexport(u);check(q.returncode==0 and q.stdout==text,tag+' export differs for member '+m+' (semantic-only)')
@@ -569,7 +579,7 @@ def main():
             it={'id':'Go->C '+fx['id']}
             try:
                 src=fx['source'].encode();r=gimport(src);check(r.returncode==0,'Go import refused');sem_a,_,ops_a=decode(r.stdout,'Go')
-                q=py(cexp,semonly(retarget(sem_a,'C')));bump('c_export_runs');check(q.returncode==0,'c-export refused R(U,C) rc=%d %s'%(q.returncode,q.stderr))
+                rc_env=R(r.stdout,sem_a,'C');q=py(cexp,rc_env);bump('c_export_runs');check(q.returncode==0,'c-export refused R(U,C) rc=%d %s'%(q.returncode,q.stderr))
                 q2=py(cexp,semonly(sem_a));check(q2.returncode!=0 and not q2.stdout,'v1-core c-export accepted a v2 unit');bump('c_export_v2_refusal_status_%d'%q2.returncode)
                 c=run([str(cimp)],q.stdout);bump('c_import_runs');check(c.returncode==0,'C import of exported C refused')
                 sem_b,_,ops_b=decode(c.stdout,'C');check(N(strip(sem_b))==N(strip(sem_a)),'identity N(strip(U_B)) != N(strip(U_A))')
@@ -592,7 +602,7 @@ def main():
             'gofmt_sha256':hashlib.sha256(Path(a.gofmt).read_bytes()).hexdigest(),'cc':ver([a.cc,'--version']).splitlines()[0],
             'c_import_sha256':hashlib.sha256(cimp.read_bytes()).hexdigest(),'sa1_sha256':hashlib.sha256(sa1.read_bytes()).hexdigest(),
             'codec_v2':codec_v2,'sa2_sha256':hashlib.sha256((sa2root/'build/L832/sa').read_bytes()).hexdigest() if have_sa2 else None,
-            'c_export':str(cexp) if cexp else None,'native_realization':native_state,
+            'c_export':str(cexp) if cexp else None,'retarget_tool':('RUN '+str(rtool)+' sha256 '+hashlib.sha256(rtool.read_bytes()).hexdigest()) if rtool else 'NOT_RUN (Python R only)','native_realization':native_state,
             'positives':len(rows),'positives_passed':sum(r['result']=='PASS' for r in rows),'not_in_profile':len(f2['not_in_profile']),
             'extra_positives':len(extra_rows),'extra_positives_passed':sum(r['result']=='PASS' for r in extra_rows),
             'refusals':len(refusals),'refusals_passed':sum(r['result']=='PASS' for r in refusals),
@@ -603,7 +613,7 @@ def main():
             'cases':rows,'extra_cases':extra_rows,'refusal_cases':refusals,'control_cases':ctl,'export_rows':xrows,'c_to_go_cases':comp,'go_to_c_rows':gc_rows,'failures':failures}
     (out/'result.json').write_text(json.dumps(report,indent=1)+'\n')
     keys=['positives','positives_passed','not_in_profile','extra_positives','extra_positives_passed','refusals','refusals_passed','refusals_go_checked','controls','controls_passed',
-          'export_cases','export_cases_passed','c_to_go','c_to_go_passed','go_to_c','go_to_c_cases','go_to_c_passed','codec_v2','native_realization','native_calls','oracle_compiles','go_builds','gofmt_runs']
+          'export_cases','export_cases_passed','c_to_go','c_to_go_passed','go_to_c','go_to_c_cases','go_to_c_passed','codec_v2','retarget_tool','native_realization','native_calls','oracle_compiles','go_builds','gofmt_runs']
     print(report['result'],' '.join('%s=%s'%(k,report[k]) for k in keys),'constant_rule='+json.dumps(crow,separators=(',',':')),'random_units='+json.dumps(drow,separators=(',',':')),' '.join('%s=%s'%kv for kv in counts.items()))
     for f in failures[:20]:print('FAIL',json.dumps(f)[:600])
     return 1 if failures else 0
