@@ -24,6 +24,8 @@ MASK = (1 << 64) - 1
 CONTRACT = ('spec/universal/translation-v1.md', '063f1d630e31925876454129c0024539bea0c7eb17f7187bc0e7ef56790de86e')
 FROZEN = {  # section 1 of the contract, plus the fixture/control files this validator reads
     'spec/universal/semantics.md': 'd4ed6148bfa97cc693d3fa4495e2d7e2e68aba04607a7e96dd9a9c54bf9073a8',
+    # translation-compose-v1 section 2: c-export accepts the Rust and Python S1-family members
+    'spec/universal/translation-compose-v1.md': '51a7cc444e50fd114a6d2e2272d645333cec1ea92603a60cd9dde06fc7d4c3a0',
     'spec/universal/source-aware-v1.md': 'e0efbc717b61976614c1a1e9eee543284bcfb5410922d23b4ad70cb6a99615ec',
     'spec/universal/c-u64-import-v1.md': '84f06ce1ad1653bed08c940696b23d87ce22afb7ebb1b5c3e5970a23b3916012',
     'tests/universal/translation/fixtures-f1.json': 'da567a67f747596b1a7285f046119296f1d3b45d2d057053e5d8a084639c7c2d',
@@ -287,14 +289,17 @@ def probes():
 
 
 def non_s1_envelopes(base):
-    """Units valid under source-aware v1 that are outside S1 (section 2): expected 68."""
+    """Units valid under source-aware v1 outside S1 (translation-v1 section 2). Rows: (label, semantic bytes,
+    family). Family rows are the Rust and Python S1-family members (translation-compose-v1 sections 1-2):
+    lower refuses them 68, c-export must accept them and print the export of R(U, C). All other rows refuse
+    68 on both tools."""
     b = [o for o in base]
     E = []
-    E.append(('rust-profile-2', build_sem(b, lang=2, prof=2)))
-    E.append(('python-explicit-profile-4', build_sem(b, lang=3, prof=4, fields=lambda op: {9: (1, 0, 0, 0, 1), 1: (1, 1, 0, 0, 0)}.get(op, (1, 1, 0, 0, 5)))))
-    E.append(('osc-profile-5', build_sem(b, lang=4, prof=5)))
+    E.append(('rust-profile-2', build_sem(b, lang=2, prof=2), True))
+    E.append(('python-explicit-profile-4', build_sem(b, lang=3, prof=4, fields=lambda op: {9: (1, 0, 0, 0, 1), 1: (1, 1, 0, 0, 0)}.get(op, (1, 1, 0, 0, 5))), True))
+    E.append(('osc-profile-5', build_sem(b, lang=4, prof=5), False))
     div = [IN(0), IN(1), (5, 0, 1, 0), K(0), ADD(2, 3)]
-    E.append(('c17-division', build_sem(div, fields=lambda op: {9: (1, 0, 0, 0, 1), 1: (1, 1, 0, 0, 0), 5: (1, 1, 0, 0, 3)}.get(op, (1, 1, 0, 0, 1)))))
+    E.append(('c17-division', build_sem(div, fields=lambda op: {9: (1, 0, 0, 0, 1), 1: (1, 1, 0, 0, 0), 5: (1, 1, 0, 0, 3)}.get(op, (1, 1, 0, 0, 1))), False))
     return E
 
 
@@ -739,7 +744,7 @@ def refusal_checks(ctx, base_env, ev):
 
     sem, _ = decode_envelope(base_env)
     base_ops = decode_s1(sem)
-    for label, bad in non_s1_envelopes(base_ops):
+    for label, bad, family in non_s1_envelopes(base_ops):
         e = envelope(bad)
         if ctx.a.sa:
             rc, out, _ = run([ctx.a.sa], b'\x02' + e)
@@ -747,8 +752,16 @@ def refusal_checks(ctx, base_env, ev):
                 rows.append({'tool': 'sa', 'case': label, 'result': 'FAIL', 'status': rc,
                              'detail': 'probe is not a valid source-aware v1 unit; it cannot test 68'})
                 continue
-        for which in ('lower', 'export'):
-            expect('non-S1 ' + label, which, e, [], 68)
+        expect('non-S1 ' + label, 'lower', e, [], 68)
+        if not family:
+            expect('non-S1 ' + label, 'export', e, [], 68)
+            continue
+        rc, out, err = ctx.tool('export', e)
+        rcc, outc, _ = ctx.tool('export', envelope(build_sem(base_ops)))
+        good = rc == 0 and rcc == 0 and out != b'' and out == outc
+        rows.append({'tool': 'export', 'case': 'S1-family ' + label + ' exports as R(U, C)', 'want': 0,
+                     'status': rc, 'stdout_bytes': len(out), 'stderr': err.decode(errors='replace')[:120],
+                     'contract': 'translation-compose-v1 section 2', 'result': 'PASS' if good else 'FAIL'})
     for label, bad in malformed_envelopes(base_env):
         if ctx.a.sa:
             rc, _, _ = run([ctx.a.sa], b'\x02' + bad)
