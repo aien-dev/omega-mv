@@ -16,3 +16,9 @@ Resolution:
   (source sha256, omc pin, profile `OM-1`) is recorded by the harness, and `om/units.sh --check` refuses
   a stale OM-1 unit.
 - An `out` parameter is passed as one pointer with no count, like a layout.
+
+## E2 (QualPhaseB L836, 2026-10-25): sized arrays to unsized parameters
+
+A sized array (length N) may be passed to an unsized `view T *` / `edit T *` parameter of a function
+in either mode; `len` is N inside the callee. Writability rules are unchanged (a view never reaches an
+edit). Unsized parameters are allowed on internal functions, not only on exported entries.
