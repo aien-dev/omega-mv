@@ -13,7 +13,6 @@ lower(N(U_A)) -> omc 734f0a39 -> bridge binding.
 from pathlib import Path
 import argparse,hashlib,json,os,random,shutil,struct,subprocess,sys,tempfile
 ROOT=Path(__file__).resolve().parents[3]
-HOME=Path.home()
 MASK=(1<<64)-1
 U=65535
 SEMDOM=b'omega.source.semantic.v1'
@@ -186,15 +185,21 @@ def main():
     ap.add_argument('--out',required=True)
     ap.add_argument('--c-import',default=str(ROOT/'build/L589/c-import'))
     ap.add_argument('--sa-build',default='build/L832',help='v2 codec build directory under this checkout (SA_BUILD)')
-    ap.add_argument('--cxx',default=os.environ.get('CXX','/usr/bin/g++'))
-    ap.add_argument('--cc',default=os.environ.get('CC','cc'))
-    ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC',str(HOME/'workspace/omega-seedqual-20261025/seed/out/omc')))
-    ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO',str(HOME/'workspace/omega-bridge')))
-    ap.add_argument('--retarget',default=os.environ.get('CPP_SELFTEST_RETARGET',''),help='public tools/adapters/retarget (#624); cross-checked against the test-code R')
+    ap.add_argument('--cxx',default=os.environ.get('CXX') or shutil.which('g++') or '',help='g++ oracle (default $CXX, then g++ on PATH)')
+    ap.add_argument('--cc',default=os.environ.get('CC') or shutil.which('cc') or '',help='C oracle (default $CC, then cc on PATH)')
+    ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC',''),help='pinned omc 734f0a39 (required; $OMEGA_NATIVE_OMC)')
+    ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO',''),help='omega-bridge clone holding 012860db (required; $OMEGA_BRIDGE_REPO)')
+    intree=ROOT/'tools/adapters/retarget'
+    ap.add_argument('--retarget',default=os.environ.get('CPP_SELFTEST_RETARGET') or (str(intree) if (ROOT/'build/L833/build.json').is_file() and intree.is_file() else ''),
+                    help='public tools/adapters/retarget (#624), default the built in-tree one; cross-checked against the test-code R')
     a=ap.parse_args()
+    missing=[w for w,v in (('g++ ($CXX or PATH)',a.cxx),('cc ($CC or PATH)',a.cc)) if not (v and shutil.which(v))]
+    missing+=[w for w,v in (('$OMEGA_NATIVE_OMC',a.omc),('$OMEGA_BRIDGE_REPO',a.bridge)) if not v]
+    if missing:print('NOT_RUN cpp self-test: missing '+', '.join(missing));return 3
     out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)
     cimp=Path(a.c_import)
     O=Oracles(out,a.cxx,a.cc);NAT=Native(out,a.omc,a.bridge,a.cc);rng=random.Random(739);failures=[];counts={}
+    if NAT.status!='RUN':print('FAIL native realization setup: '+NAT.reason);return 1
     def bump(k,n=1):counts[k]=counts.get(k,0)+n
     sa_exe=ROOT/a.sa_build/'sa';codec='RUN' if sa_exe.is_file() and (ROOT/'src/source-aware/core-v2.om').is_file() else 'NOT_RUN'
     sa_env=dict(os.environ,SA_BUILD=a.sa_build)

@@ -159,8 +159,9 @@ writes `build/L739/{cpp-import,cpp-export,build.json}` with the compiler, input 
 commands check them before dispatch. The exporter needs `src/source-aware/core-v2.om` (#621 v2 codec lane).
 
 ```sh
-export SA_SEED_REPO=/path/to/omega-bridge        # contains 0fc7d866; mk/cpp-u64.mk defaults to ~/workspace/omega-bridge
-make -f mk/cpp-u64.mk test-cpp-u64
+export SA_SEED_REPO=/path/to/omega-bridge        # contains 0fc7d866 (and 012860db)
+export OMEGA_BRIDGE_REPO=$SA_SEED_REPO OMEGA_NATIVE_OMC=/path/to/omc   # omc sha256 734f0a39
+make -f mk/cpp-u64.mk test-cpp-u64               # CXX/CC default to g++/cc on PATH
 tools/adapters/cpp-import < calc.cpp > calc.upper
 tools/adapters/cpp-export < calc.upper > exported.cpp
 ```
@@ -185,7 +186,9 @@ an out-of-range braced literal does not compile), import boundary controls, expo
 exporter boundaries, public-command closure, and the compositions C -> C++ (F1 positives and the four accepted
 C import boundary controls) and C++ -> C (F2 positives and the accepted C++ boundary controls). C++ -> C uses
 `export_C(R(U, C))` with the unchanged v1-core G1 C exporter (translation-compose-v2 section 3). R is the #624
-`tools/adapters/retarget` when the self-test is given `--retarget` (or `CPP_SELFTEST_RETARGET`), and every
-tool output must then equal the test-code R byte for byte; without it the test-code R alone is used. Both compositions check identity under N and the
+`tools/adapters/retarget` when the checkout has it (`mk/cpp-u64.mk` builds it; `--retarget` or
+`CPP_SELFTEST_RETARGET` names another one), and every tool output must then equal the test-code R byte for
+byte; without it the test-code R alone is used. The self-test has no default outside the checkout: a missing
+g++/cc, `OMEGA_NATIVE_OMC` or `OMEGA_BRIDGE_REPO` is NOT_RUN (exit 3), a pin mismatch is FAIL. Both compositions check identity under N and the
 DIFFERENTIAL agreement of the original program, the reference, the generated program and the native
 realization `lower(N(U_A))`. Finite DIFFERENTIAL evidence, not PROOF.
