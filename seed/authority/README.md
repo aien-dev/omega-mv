@@ -218,9 +218,9 @@ working directory; the standalone replay and negative control remain available.
 
 The original cleanup gate at `08bd7aa7d7b73864e56163772ccceaa9cc91de0b`
 failed compilation with error 12 at line 274. Moving its unchanged three-part
-assertion into `cbadcase` reduces live register pressure in `main`; both the
-handwritten test and its committed concatenation now compile. No production
-store behavior or expected outcome changes.
+assertion into `cbadcase` reduces live register pressure in `main`. The committed
+concatenation, ending with the handwritten test verbatim, now compiles. No
+production store behavior or expected outcome changes.
 
 Linux AArch64 native replay with the reconstructed compiler
 `66b4cf34e5cd2c8ff003bd142e7309f52178b66c2380f78ac313b6eb8b67471b`

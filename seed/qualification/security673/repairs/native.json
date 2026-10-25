@@ -5,6 +5,12 @@
   "target": "Linux AArch64 native",
   "records": [
     {
+      "name": "mutate",
+      "compile_exit": 0,
+      "source_sha256": "76e9f8193db513cd1c804e8f3dfff742c59532f20935840588556ab00177edd4",
+      "binary_sha256": "fd45454b486218ca1d5e9d2593763cf75649ce28087b542722d463ba2f809caf"
+    },
+    {
       "name": "dispatch-order",
       "compile_exit": 0,
       "source_sha256": "ba6e35675f2efdeb9091224d74fd0550f675522fd89a8377ebdf2c4fb96e4baf",
