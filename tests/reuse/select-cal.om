@@ -1,0 +1,409 @@
+note units: sha256 r1 select
+note SPDX-License-Identifier: Apache-2.0
+note select-cal: calibration file parse: absent, valid, wrong magic, version, reserved words, sizes, directory, unterminated path; a refused file is never partially used.
+note argv 1 (optional): a scratch directory; default /tmp/reuse-test-CandSelect-PID, removed at the end.
+note exit 0 = pass; any other value names the failed check.
+global TW ulong 200
+global TB uchar 2048
+global TD uchar 4096
+global TDN ulong 1
+global TINV ulong 1
+global TMIS ulong 1
+text tpre "/tmp/reuse-test-CandSelect-"
+
+note churn counter fixtures for delta.om's dlinvn and dlmissn
+fn dlinvn to ulong
+ret get TINV 0
+end
+
+fn dlmissn to ulong
+ret get TMIS 0
+end
+
+note decimal digits of v, least significant first, into d; returns their count
+fn tdigs v ulong d edit uchar 20 to ulong
+x = v
+nd = ulong 0
+for i ulong 20
+put d i uchar add rem x 10 48
+nd = add nd 1
+x = div x 10
+if eq x 0
+break
+end
+end
+ret nd
+end
+
+note TD = argv 1, else /tmp/reuse-test-CandSelect-PID; the directory is created; 0 ok
+fn tsetdir to int
+d = new uchar 20 0
+if gt argcnt 1
+k = argread 1 TD 0 4000
+if le k 0
+ret 1
+end
+put TDN 0 ulong k
+else
+for i ulong len tpre
+put TD i get tpre i
+end
+nd = tdigs ulong getpid d
+for i ulong nd
+put TD add len tpre i get d sub sub nd 1 i
+end
+put TDN 0 add len tpre nd
+end
+r = makedir TD 0 get TDN 0 448
+if and ne r 0 ne r -17
+ret 1
+end
+ret 0
+end
+
+note SLPATH = TD/cK, then zero bytes
+fn tpath k ulong to void
+d = new uchar 20 0
+n = get TDN 0
+for i ulong 4096
+put SLPATH i 0
+end
+for i ulong n
+put SLPATH i get TD i
+end
+put SLPATH n 47
+put SLPATH add n 1 99
+nd = tdigs k d
+for i ulong nd
+put SLPATH add add n 2 i get d sub sub nd 1 i
+end
+end
+
+note TW as little-endian bytes in TB
+fn tenc to void
+for i ulong 200
+x = get TW i
+for j ulong 8
+put TB add mul i 8 j uchar and x 255
+x = shr x 8
+end
+end
+end
+
+note write TB[0..n) reps times to the file named by SLPATH (created or truncated); 0 ok
+fn twrite n ulong reps ulong to int
+tenc
+pn = slpathn
+fd = fopen SLPATH 0 pn 524865 384
+if lt fd 0
+ret 1
+end
+for i ulong reps
+w = write int fd TB 0 n
+if ne w long n
+ret 1
+end
+end
+r = fclose int fd
+ret int r
+end
+
+note a valid header with E_q x 1000 = eq and every cell missing
+fn thdr eqk ulong to void
+for i ulong 200
+put TW i 0
+end
+put TW 0 3544386010811150674
+put TW 1 1
+put TW 2 eqk
+end
+
+note calibration cell index, recomputed from integrator decision 3
+fn tci fam ulong path ulong ncl ulong ccl ulong to ulong
+ret add mul add mul sub fam 1 4 path 12 add mul ncl 4 ccl
+end
+
+fn tset fam ulong path ulong ncl ulong ccl ulong p50 ulong to void
+c = tci fam path ncl ccl
+put TW add 8 mul 2 c p50
+put TW add 9 mul 2 c add p50 7
+end
+
+note write TW to TD/cK as a whole 1600-byte file and load it; slload's result
+fn tload k ulong to int
+tpath k
+if ne twrite 1600 1 0
+ret 9
+end
+ret slload
+end
+
+note remove TD/c0 .. TD/c(cnt-1) and TD
+fn tclean cnt ulong to void
+for k ulong cnt
+tpath k
+r = unlink SLPATH 0 slpathn
+end
+r = rmdir TD 0 get TDN 0
+end
+
+note a known valid calibration: E_q 3.5; family 1, n class 0, change class 0: full 40, method 50;
+note extreme values elsewhere so the parse is checked on all 64 bits
+fn tvalidw to void
+thdr 3500
+tset 1 0 0 0 40
+tset 1 1 0 0 50
+tset 2 2 2 3 18446744073709551615
+tset 2 3 2 0 9223372036854775808
+put TW 199 1
+end
+
+fn tcaleq to bool
+for i ulong 200
+if ne get SLCAL i get TW i
+ret false
+end
+end
+ret true
+end
+
+fn tcalzero to bool
+for i ulong 200
+if ne get SLCAL i 0
+ret false
+end
+end
+ret true
+end
+
+global TS ulong 200
+
+note load the valid file as c0 and see the ranking use it: full (40) beats method (50); 0 ok
+fn tgood1 to int
+tvalidw
+if ne tload 0 0
+ret 1
+end
+if ne get SLOK 0 1
+ret 2
+end
+if not tcaleq
+ret 3
+end
+slset true false
+if ne slpick 0 1
+ret 4
+end
+ret 0
+end
+
+note tgood1 with TW saved in TS and restored afterwards
+fn tgood to int
+for i ulong 200
+put TS i get TW i
+end
+r = tgood1
+for i ulong 200
+put TW i get TS i
+end
+ret r
+end
+
+note after a refused load: result 1, nothing kept, the fixed rule (method bound -> 3) is back
+fn trefd r int to int
+if ne r 1
+ret 1
+end
+if ne get SLOK 0 0
+ret 2
+end
+if not tcalzero
+ret 3
+end
+slset true false
+if ne slpick 0 3
+ret 4
+end
+ret 0
+end
+
+note one malformed variant: good load first, then TW written as n bytes reps times to c1
+fn tbad n ulong reps ulong to int
+if ne tgood 0
+ret 1
+end
+tpath 1
+if ne twrite n reps 0
+ret 2
+end
+if ne trefd slload 0
+ret 3
+end
+ret 0
+end
+
+global TCWD uchar 4096
+
+note a real file named "-" in the working directory is still no calibration; the directory is
+note restored afterwards
+fn tdash to int
+k = cwd TCWD 0 4096
+if le k 1
+ret 1
+end
+r = chdir TD 0 get TDN 0
+if ne r 0
+ret 2
+end
+for i ulong 4096
+put SLPATH i 0
+end
+put SLPATH 0 45
+tvalidw
+w = twrite 1600 1
+lr = slload
+u = unlink SLPATH 0 1
+c = chdir TCWD 0 sub ulong k 1
+if or ne w 0 or ne u 0 ne c 0
+ret 3
+end
+if ne lr 1
+ret 4
+end
+ret 0
+end
+
+fn main to int
+if ne tsetdir 0
+ret 1
+end
+put R1P 1 1
+put R1N 0 10
+slsess
+note 1: empty path, "-", a file that does not exist: absent
+if ne trefd slload 0
+ret 2
+end
+put SLPATH 0 45
+if ne trefd slload 0
+ret 3
+end
+tpath 7
+if ne trefd slload 0
+ret 4
+end
+note 2: valid file, every word kept exactly, used by the ranking
+if ne tgood1 0
+ret 5
+end
+note 3: wrong magic, versions 0 and 2, each reserved word 3..7 nonzero
+tvalidw
+put TW 0 3544386010811150675
+if ne tbad 1600 1 0
+ret 6
+end
+tvalidw
+put TW 1 0
+if ne tbad 1600 1 0
+ret 7
+end
+tvalidw
+put TW 1 2
+if ne tbad 1600 1 0
+ret 8
+end
+for w ulong 5
+tvalidw
+put TW add w 3 1
+if ne tbad 1600 1 0
+ret add int w 9
+end
+end
+note 4: sizes 1599 (truncated), 1601, 1608, 0, 2048 (read cap), 3200 (two copies)
+tvalidw
+if ne tbad 1599 1 0
+ret 14
+end
+tvalidw
+if ne tbad 1601 1 0
+ret 15
+end
+tvalidw
+if ne tbad 1608 1 0
+ret 16
+end
+tvalidw
+if ne tbad 0 1 0
+ret 17
+end
+tvalidw
+if ne tbad 2048 1 0
+ret 18
+end
+tvalidw
+if ne tbad 1600 2 0
+ret 19
+end
+note 5: a directory, a path with no 0 byte in SLPATH, "-" after a good load
+if ne tgood 0
+ret 20
+end
+for i ulong 4096
+put SLPATH i 0
+end
+for i ulong get TDN 0
+put SLPATH i get TD i
+end
+if ne trefd slload 0
+ret 21
+end
+if ne tgood 0
+ret 22
+end
+for i ulong 4096
+put SLPATH i 97
+end
+if ne trefd slload 0
+ret 23
+end
+if ne tgood 0
+ret 24
+end
+for i ulong 4096
+put SLPATH i 0
+end
+put SLPATH 0 45
+if ne trefd slload 0
+ret 25
+end
+r = tdash
+if ne r 0
+ret add 32 r
+end
+note 6: missing cells: a valid file with every cell 0 loads, then every pick is the fixed rule
+thdr 1000
+if ne tload 2 0
+ret 26
+end
+slset true false
+if ne slpick 0 3
+ret 27
+end
+slset false true
+if ne slpick 5 4
+ret 28
+end
+slset false false
+if ne slpick 70 1
+ret 29
+end
+if not slbind 0
+ret 30
+end
+note 7: refusals counted nowhere: no id was out of range in this test
+if ne get SLREF 0 0
+ret 31
+end
+tclean 3
+ret 0
+end

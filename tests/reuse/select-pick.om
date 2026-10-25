@@ -1,0 +1,711 @@
+note units: sha256 r1 select
+note SPDX-License-Identifier: Apache-2.0
+note select-pick: per-QUERY choice of contract 5.2: cold start, each cheapest path, ties, missing cells, change, n and family classes, incorrect confidence (10x wrong files), churn disabling, refused ids, and 200 random calibrations against a reference.
+note argv 1 (optional): a scratch directory; default /tmp/reuse-test-CandSelect-PID, removed at the end.
+note exit 0 = pass; any other value names the failed check.
+global TW ulong 200
+global TB uchar 2048
+global TD uchar 4096
+global TDN ulong 1
+global TINV ulong 1
+global TMIS ulong 1
+text tpre "/tmp/reuse-test-CandSelect-"
+
+note churn counter fixtures for delta.om's dlinvn and dlmissn
+fn dlinvn to ulong
+ret get TINV 0
+end
+
+fn dlmissn to ulong
+ret get TMIS 0
+end
+
+note decimal digits of v, least significant first, into d; returns their count
+fn tdigs v ulong d edit uchar 20 to ulong
+x = v
+nd = ulong 0
+for i ulong 20
+put d i uchar add rem x 10 48
+nd = add nd 1
+x = div x 10
+if eq x 0
+break
+end
+end
+ret nd
+end
+
+note TD = argv 1, else /tmp/reuse-test-CandSelect-PID; the directory is created; 0 ok
+fn tsetdir to int
+d = new uchar 20 0
+if gt argcnt 1
+k = argread 1 TD 0 4000
+if le k 0
+ret 1
+end
+put TDN 0 ulong k
+else
+for i ulong len tpre
+put TD i get tpre i
+end
+nd = tdigs ulong getpid d
+for i ulong nd
+put TD add len tpre i get d sub sub nd 1 i
+end
+put TDN 0 add len tpre nd
+end
+r = makedir TD 0 get TDN 0 448
+if and ne r 0 ne r -17
+ret 1
+end
+ret 0
+end
+
+note SLPATH = TD/cK, then zero bytes
+fn tpath k ulong to void
+d = new uchar 20 0
+n = get TDN 0
+for i ulong 4096
+put SLPATH i 0
+end
+for i ulong n
+put SLPATH i get TD i
+end
+put SLPATH n 47
+put SLPATH add n 1 99
+nd = tdigs k d
+for i ulong nd
+put SLPATH add add n 2 i get d sub sub nd 1 i
+end
+end
+
+note TW as little-endian bytes in TB
+fn tenc to void
+for i ulong 200
+x = get TW i
+for j ulong 8
+put TB add mul i 8 j uchar and x 255
+x = shr x 8
+end
+end
+end
+
+note write TB[0..n) reps times to the file named by SLPATH (created or truncated); 0 ok
+fn twrite n ulong reps ulong to int
+tenc
+pn = slpathn
+fd = fopen SLPATH 0 pn 524865 384
+if lt fd 0
+ret 1
+end
+for i ulong reps
+w = write int fd TB 0 n
+if ne w long n
+ret 1
+end
+end
+r = fclose int fd
+ret int r
+end
+
+note a valid header with E_q x 1000 = eq and every cell missing
+fn thdr eqk ulong to void
+for i ulong 200
+put TW i 0
+end
+put TW 0 3544386010811150674
+put TW 1 1
+put TW 2 eqk
+end
+
+note calibration cell index, recomputed from integrator decision 3
+fn tci fam ulong path ulong ncl ulong ccl ulong to ulong
+ret add mul add mul sub fam 1 4 path 12 add mul ncl 4 ccl
+end
+
+fn tset fam ulong path ulong ncl ulong ccl ulong p50 ulong to void
+c = tci fam path ncl ccl
+put TW add 8 mul 2 c p50
+put TW add 9 mul 2 c add p50 7
+end
+
+note write TW to TD/cK as a whole 1600-byte file and load it; slload's result
+fn tload k ulong to int
+tpath k
+if ne twrite 1600 1 0
+ret 9
+end
+ret slload
+end
+
+note remove TD/c0 .. TD/c(cnt-1) and TD
+fn tclean cnt ulong to void
+for k ulong cnt
+tpath k
+r = unlink SLPATH 0 slpathn
+end
+r = rmdir TD 0 get TDN 0
+end
+
+global TRNG ulong 1
+
+fn trand to ulong
+s = add get TRNG 0 11400714819323198485
+put TRNG 0 s
+z = mul xor s shr s 30 13787848793156543417
+z = mul xor z shr z 27 10723151780598845931
+ret xor z shr z 31
+end
+
+note full, method, delta p50 of one (fam, ncl, ccl) cell group
+fn tfmd fam ulong ncl ulong ccl ulong f ulong m ulong d ulong to void
+tset fam 0 ncl ccl f
+tset fam 1 ncl ccl m
+tset fam 2 ncl ccl d
+end
+
+fn tvb x ulong to bool
+ret eq x 1
+end
+
+note pick with validity (md, dv) set through slset
+fn tpk nchg ulong md ulong dv ulong to int
+slset tvb md tvb dv
+ret slpick nchg
+end
+
+note the four validity combinations (md dv) = 00 10 01 11 must give a b c d
+fn t4 nchg ulong a int b int c int d int to bool
+if ne tpk nchg 0 0 a
+ret false
+end
+if ne tpk nchg 1 0 b
+ret false
+end
+if ne tpk nchg 0 1 c
+ret false
+end
+ret eq tpk nchg 1 1 d
+end
+
+note reference choice from the calibration words in TW: the minimum p50 over the valid paths,
+note then the first of delta, method, full at that minimum; a missing valid cell: delta if valid,
+note else method if bound, else full
+fn tref fam ulong ncl ulong ccl ulong md ulong dv ulong to int
+cf = get TW add 8 mul 2 tci fam 0 ncl ccl
+cm = get TW add 8 mul 2 tci fam 1 ncl ccl
+cd = get TW add 8 mul 2 tci fam 2 ncl ccl
+lo = cf
+miss = eq cf 0
+if eq md 1
+miss = or miss eq cm 0
+if lt cm lo
+lo = cm
+end
+end
+if eq dv 1
+miss = or miss eq cd 0
+if lt cd lo
+lo = cd
+end
+end
+if miss
+if eq dv 1
+ret 4
+end
+if eq md 1
+ret 3
+end
+ret 1
+end
+if and eq dv 1 eq cd lo
+ret 4
+end
+if and eq md 1 eq cm lo
+ret 3
+end
+ret 1
+end
+
+note n for an n class, nchg for a change class
+fn tnof ncl ulong to ulong
+if eq ncl 0
+ret 64
+end
+if eq ncl 1
+ret 300
+end
+ret 4096
+end
+
+fn tcof ccl ulong to ulong
+if eq ccl 0
+ret 0
+end
+if eq ccl 1
+ret 1
+end
+if eq ccl 2
+ret 64
+end
+ret 65
+end
+
+note one random calibration (cells 0 with probability 1/8; p50 in 1..mod) checked at every
+note family, n class, change class and validity: 0 ok, else the failing combination code
+fn tprop1 mod ulong to int
+thdr 2000
+for c ulong 96
+x = trand
+v = add rem shr x 3 mod 1
+if eq and x 7 0
+v = 0
+end
+put TW add 8 mul 2 c v
+end
+if ne tload 0 0
+ret 1
+end
+for k ulong 96
+fam = add div k 48 1
+ncl = rem div k 16 3
+ccl = rem div k 4 4
+md = rem div k 2 2
+dv = rem k 2
+put R1P 1 fam
+put R1N 0 tnof ncl
+got = tpk tcof ccl md dv
+if or and eq got 3 eq md 0 and eq got 4 eq dv 0
+ret 2
+end
+if ne got tref fam ncl ccl md dv
+ret 3
+end
+end
+ret 0
+end
+
+fn tprop to int
+put TRNG 0 20261025
+slsess
+for i ulong 200
+md = ulong 1000000
+if eq rem i 2 0
+md = 3
+end
+r = tprop1 md
+if ne r 0
+ret r
+end
+end
+ret 0
+end
+
+note true costs: family 1, n class 0, one change: full 1000, method 300, delta 50
+fn ttrue to void
+thdr 3000
+tfmd 1 0 1 1000 300 50
+end
+
+fn tchurn to int
+ttrue
+if ne tload 0 0
+ret 1
+end
+put R1P 1 1
+put R1N 0 64
+put TINV 0 5
+put TMIS 0 9
+slsess
+note 63 invalidations in the session: delta stays
+put TINV 0 68
+if ne tpk 1 1 1 4
+ret 2
+end
+if ne get SLDIS 0 0
+ret 3
+end
+if sloff
+ret 24
+end
+note the 64th: delta off for the rest of the session, counted once
+put TINV 0 69
+if ne tpk 1 1 1 3
+ret 4
+end
+if ne get SLDIS 0 1
+ret 5
+end
+if not sloff
+ret 25
+end
+if ne tpk 1 0 1 1
+ret 6
+end
+put TINV 0 1000
+if ne tpk 1 1 1 3
+ret 7
+end
+if ne get SLDIS 0 1
+ret 8
+end
+note a new session starts clean (counted from its own snapshot)
+slsess
+if ne tpk 1 1 1 4
+ret 9
+end
+if sloff
+ret 26
+end
+note 63 then 64 cutoff misses
+put TMIS 0 72
+if ne tpk 1 1 1 4
+ret 10
+end
+put TMIS 0 73
+if ne tpk 1 1 1 3
+ret 11
+end
+if ne get SLDIS 0 2
+ret 12
+end
+note 40 + 40 over two sessions never disables
+slsess
+put TINV 0 1040
+if ne tpk 1 1 1 4
+ret 13
+end
+slsess
+put TINV 0 1080
+if ne tpk 1 1 1 4
+ret 14
+end
+note a PROGRAM (rebind) in the second session keeps its count; its 64th invalidation disables
+if not slbind 0
+ret 20
+end
+put TINV 0 1103
+if ne tpk 1 1 1 4
+ret 21
+end
+put TINV 0 1104
+if ne tpk 1 1 1 3
+ret 22
+end
+if ne get SLDIS 0 3
+ret 23
+end
+note churn under the cold start rule: delta off gives method, then full
+for i ulong 4096
+put SLPATH i 0
+end
+if ne slload 1
+ret 15
+end
+slsess
+put TMIS 0 137
+if ne tpk 0 1 1 3
+ret 16
+end
+if ne tpk 0 0 1 1
+ret 17
+end
+if ne get SLDIS 0 4
+ret 18
+end
+slsess
+if ne tpk 0 0 1 4
+ret 19
+end
+ret 0
+end
+
+fn trefuse to int
+ttrue
+if ne tload 0 0
+ret 1
+end
+slsess
+put R1N 0 64
+put R1P 1 0
+if ne tpk 1 1 1 1
+ret 2
+end
+put R1P 1 3
+if ne tpk 1 1 1 1
+ret 3
+end
+put R1P 1 18446744073709551615
+if ne tpk 1 1 1 1
+ret 4
+end
+put R1P 1 1
+put R1N 0 4097
+if ne tpk 1 1 1 1
+ret 5
+end
+put R1N 0 18446744073709551615
+if ne tpk 1 1 1 1
+ret 6
+end
+if ne get SLREF 0 5
+ret 7
+end
+note direct lookups with an out-of-range id: 0 (missing), counted, nothing indexed
+if ne slcell 0 0 0 0 0
+ret 8
+end
+if ne slcell 3 0 0 0 0
+ret 9
+end
+if ne slcell 1 4 0 0 0
+ret 10
+end
+if ne slcell 1 0 3 0 0
+ret 11
+end
+if ne slcell 1 0 0 4 0
+ret 12
+end
+if ne slcell 18446744073709551615 18446744073709551615 18446744073709551615 18446744073709551615 0
+ret 13
+end
+if ne get SLREF 0 11
+ret 14
+end
+note in range: the cell, not counted
+if ne slcell 1 2 0 1 50
+ret 15
+end
+put R1N 0 64
+if ne tpk 1 1 1 4
+ret 16
+end
+if ne get SLREF 0 11
+ret 17
+end
+ret 0
+end
+
+fn main to int
+if ne tsetdir 0
+ret 1
+end
+put R1P 1 1
+put R1N 0 64
+slsess
+note 1: cold start, every change class: delta if valid, else method if bound, else full
+if ne slload 1
+ret 2
+end
+if not t4 0 1 3 4 4
+ret 3
+end
+if not t4 1 1 3 4 4
+ret 4
+end
+if not t4 1000 1 3 4 4
+ret 5
+end
+note 2: one cheapest path each, change class 1 (n 64); invalid paths never chosen
+thdr 1000
+tfmd 1 0 1 100 200 300
+if ne tload 0 0
+ret 6
+end
+if not t4 1 1 1 1 1
+ret 7
+end
+thdr 1000
+tfmd 1 0 1 300 100 200
+if ne tload 0 0
+ret 8
+end
+if not t4 1 1 3 4 3
+ret 9
+end
+thdr 1000
+tfmd 1 0 1 300 200 100
+if ne tload 0 0
+ret 10
+end
+if not t4 1 1 3 4 4
+ret 11
+end
+note 3: ties go to delta, then method, then full
+thdr 1000
+tfmd 1 0 1 100 100 100
+if ne tload 0 0
+ret 12
+end
+if not t4 1 1 3 4 4
+ret 13
+end
+thdr 1000
+tfmd 1 0 1 100 100 200
+if ne tload 0 0
+ret 14
+end
+if not t4 1 1 3 1 3
+ret 15
+end
+note 4: a missing cell of a valid path gives the fixed rule; of an invalid path, ranking stays
+thdr 1000
+tfmd 1 0 1 10 0 100
+if ne tload 0 0
+ret 16
+end
+if not t4 1 1 3 1 4
+ret 17
+end
+thdr 1000
+tfmd 1 0 1 10 100 0
+if ne tload 0 0
+ret 18
+end
+if not t4 1 1 1 4 4
+ret 19
+end
+thdr 1000
+tfmd 1 0 1 0 1 1
+if ne tload 0 0
+ret 20
+end
+if not t4 1 1 3 4 4
+ret 21
+end
+note 5: change classes 0, 1, 2..64, > 64 read their own cells
+thdr 1000
+tfmd 1 0 0 1 2 3
+tfmd 1 0 1 3 1 2
+tfmd 1 0 2 3 2 1
+tfmd 1 0 3 1 3 3
+if ne tload 0 0
+ret 22
+end
+if ne tpk 0 1 1 1
+ret 23
+end
+if ne tpk 1 1 1 3
+ret 24
+end
+if ne tpk 2 1 1 4
+ret 25
+end
+if ne tpk 64 1 1 4
+ret 26
+end
+if ne tpk 65 1 1 1
+ret 27
+end
+if ne tpk 18446744073709551615 1 1 1
+ret 28
+end
+note 6: n classes (<= 64, <= 512, <= 4096) and family 2 read their own cells
+thdr 1000
+tfmd 1 0 0 1 2 3
+tfmd 1 1 0 3 1 2
+tfmd 1 2 0 3 2 1
+tfmd 2 0 0 3 1 3
+if ne tload 0 0
+ret 29
+end
+put R1N 0 0
+if ne tpk 0 1 1 1
+ret 30
+end
+put R1N 0 64
+if ne tpk 0 1 1 1
+ret 31
+end
+put R1N 0 65
+if ne tpk 0 1 1 3
+ret 32
+end
+put R1N 0 512
+if ne tpk 0 1 1 3
+ret 33
+end
+put R1N 0 513
+if ne tpk 0 1 1 4
+ret 34
+end
+put R1N 0 4096
+if ne tpk 0 1 1 4
+ret 35
+end
+put R1N 0 64
+put R1P 1 2
+if ne tpk 0 1 1 3
+ret 36
+end
+put R1P 1 1
+note 7: slsess clears the validity marks: full until the router marks paths again (change
+note class 1 has no cells here, so a kept mark would show as the fixed rule)
+slset true true
+slsess
+if ne slpick 1 1
+ret 37
+end
+note 8: incorrect confidence. The true costs pick delta; a file with delta 10x and method 1/10
+note picks method where bound, delta where only delta is valid, full where nothing else is
+ttrue
+if ne tload 0 0
+ret 38
+end
+if not t4 1 1 3 4 4
+ret 39
+end
+thdr 3000
+tfmd 1 0 1 1000 30 500
+if ne tload 0 0
+ret 40
+end
+if not t4 1 1 3 4 3
+ret 41
+end
+note every value 10x: the same choices as the true file
+thdr 3000
+tfmd 1 0 1 10000 3000 500
+if ne tload 0 0
+ret 42
+end
+if not t4 1 1 3 4 4
+ret 43
+end
+note invalid paths claimed nearly free: still never chosen
+thdr 3000
+tfmd 1 0 1 1000000000 1 1
+if ne tload 0 0
+ret 44
+end
+if not t4 1 1 3 4 4
+ret 45
+end
+note full claimed 10x cheaper than true: full, a valid path
+thdr 3000
+tfmd 1 0 1 10 300 50
+if ne tload 0 0
+ret 46
+end
+if not t4 1 1 1 1 1
+ret 47
+end
+if ne get SLREF 0 0
+ret 48
+end
+r = tchurn
+if ne r 0
+ret add 50 r
+end
+r = trefuse
+if ne r 0
+ret add 120 r
+end
+r = tprop
+if ne r 0
+ret add 150 r
+end
+tclean 1
+ret 0
+end
