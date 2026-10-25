@@ -1,0 +1,170 @@
+note SPDX-License-Identifier: Apache-2.0
+note learn.om (drive.om only, lg prefix): template admission of REUSE-1 contract 3.2 and 5.3 with
+note clarification K3. Needs r1 (R1P, r1shape) and exp (exadmit results EXFW, EXFN, EXFD) before it.
+note After each admitted experience file: lglin adds its SHA-256 to the lineage, lgcount counts its
+note TRAIN records (split word 9 = 1; every experience record is one QUERY) per shape: FSM records
+note (family 2) in LGNF, AGG records per r1shape of their PROG (words 64..127) in an open-addressed
+note table. lgselect: the FSM template iff LGNF >= 8 (decided first); AGG shapes in descending
+note count, ties lower shape id, while count >= 8 and K < 16; result LGSH[0..LGK) (AGG in admission
+note order, then FSM = shape 1) with counts LGCN. Outcome words (r0, r1, ns) are never read.
+global LGTS ulong 65536
+global LGTC ulong 65536
+global LGTT uchar 65536
+global LGNS ulong 1
+global LGNF ulong 1
+global LGK ulong 1
+global LGSH ulong 16
+global LGCN ulong 16
+global LGLD ulong 32
+global LGLN ulong 1
+
+fn lgreset to void
+for i ulong 65536
+put LGTS i 0
+put LGTC i 0
+put LGTT i 0
+end
+put LGNS 0 0
+put LGNF 0 0
+put LGK 0 0
+put LGLN 0 0
+for i ulong 32
+put LGLD i 0
+end
+for i ulong 16
+put LGSH i 0
+put LGCN i 0
+end
+end
+
+note one AGG QUERY of shape s; 0 or 1 (table full)
+fn lgadd s ulong to int
+h = shr mul s 11400714819323198485 48
+for p ulong 65536
+i = and add h p 65535
+v = get LGTS i
+if eq v s
+put LGTC i add get LGTC i 1
+ret 0
+end
+if eq v 0
+put LGTS i s
+put LGTC i 1
+put LGNS 0 add get LGNS 0 1
+ret 0
+end
+end
+ret 1
+end
+
+note count the TRAIN records of the admitted file in EXFW[0..128 EXFN); 0 or 1 (table full)
+fn lgcount to int
+for r ulong get EXFN 0
+b = mul r 128
+if eq get EXFW add b 9 1
+if eq get EXFW add b 3 2
+put LGNF 0 add get LGNF 0 1
+else
+for i ulong 64
+put R1P i get EXFW add add b 64 i
+end
+if ne lgadd r1shape 0
+ret 1
+end
+end
+end
+end
+ret 0
+end
+
+note digest a (4 words of EXFD) compared with lineage entry e: -1 less, 0 equal, 1 greater
+fn lgcmp e ulong to int
+for j ulong 4
+x = get EXFD j
+y = get LGLD add mul e 4 j
+if lt x y
+ret -1
+end
+if gt x y
+ret 1
+end
+end
+ret 0
+end
+
+note insert EXFD into the ascending lineage; 0 ok, 1 duplicate, 2 more than 8 files
+fn lglin to int
+l = get LGLN 0
+p = ulong 0
+while lt p l bound 9
+c = lgcmp p
+if eq c 0
+ret 1
+end
+if lt c 0
+break
+end
+p = add p 1
+end
+if ge l 8
+ret 2
+end
+e = l
+while gt e p bound 9
+for j ulong 4
+put LGLD add mul e 4 j get LGLD add mul sub e 1 4 j
+end
+e = sub e 1
+end
+for j ulong 4
+put LGLD add mul p 4 j get EXFD j
+end
+put LGLN 0 add l 1
+ret 0
+end
+
+note the not yet admitted table entry with the highest count (ties lower shape id); index or 65536
+fn lgbest to ulong
+bi = ulong 65536
+bc = ulong 0
+bs = ulong 0
+for i ulong 65536
+s = get LGTS i
+if and ne s 0 eq get LGTT i 0
+c = get LGTC i
+if or gt c bc and eq c bc lt s bs
+bi = i
+bc = c
+bs = s
+end
+end
+end
+ret bi
+end
+
+fn lgselect to void
+k = ulong 0
+lim = ulong 16
+if ge get LGNF 0 8
+lim = 15
+end
+while lt k lim bound 17
+i = lgbest
+if eq i 65536
+break
+end
+if lt get LGTC i 8
+break
+end
+put LGTT i 1
+put LGSH k get LGTS i
+put LGCN k get LGTC i
+k = add k 1
+end
+if ge get LGNF 0 8
+put LGSH k 1
+put LGCN k get LGNF 0
+k = add k 1
+end
+put LGK 0 k
+end

@@ -1,0 +1,1276 @@
+note units: sha256 r1 exp lib learn codegen
+note SPDX-License-Identifier: Apache-2.0
+note drive.om: builds REUSE-1 routers (contract 2, 3.4, 3.5, 5.3, 12; clarifications K1 K3 K10).
+note cwd = the omega-mv repo root; unit sources om/sha256/sha256.om and om/reuse/NAME.om.
+note   drive base OMC OUTDIR
+note     OUTDIR/base.om, OUTDIR/base.elf (router with an empty library); prints base_elf_sha256=HEX
+note   drive build OMC ALLOW CALIB OUTLIB [unit:NAME=PATH]... [mutant:c1|c1b|c1c]... [crashafter:K] EXP...
+note     admits EXP (exp.om), selects templates (learn.om), generates methods.om (codegen.om),
+note     composes gen-G.om, compiles it with OMC (stdin/stdout by dupfd, 120 s budget), copies CALIB
+note     ('-' = none) to gen-G.cal and publishes generation G in OUTLIB (lib.om lbpub, ADR 0015 order);
+note     prints manifest_sha256=HEX, generation=G, templates=K
+note   drive selftest
+note Exit: 0 ok, 2 usage, 10 experience refused, 11 compile failed, 12 publish failed,
+note 13 budget exceeded (omc over 120 s, router source over 512 KiB, LIBDIR over 8 MiB, shape table
+note full), 97 deliberate stop after publish step K (crashafter, control C8 only).
+note Unit order: sha256 r1 exp check delta select lib methods router (methods = generated).
+global DRA uchar 4096
+global DRAN ulong 1
+global DRO uchar 8192
+global DRON ulong 1
+global DRUP uchar 36864
+global DRUL ulong 9
+global DREI ulong 16
+global DREN ulong 1
+global DRCRASH ulong 1
+global DROMC uchar 4096
+global DROMN ulong 1
+global DRCP uchar 4096
+global DRCN ulong 1
+global DRPI uchar 4096
+global DRPIN ulong 1
+global DRPO uchar 4096
+global DRPON ulong 1
+global DRPK uchar 4096
+global DRST uchar 4
+global DRIO uchar 65536
+global DRLB ulong 1
+global DRCAL ulong 200
+text DRT1 "base_elf_sha256="
+text DRT2 "manifest_sha256="
+text DRT3 "generation="
+text DRT4 "templates="
+text DRT5 "usage: drive base OMC OUTDIR | drive build OMC ALLOW CALIB OUTLIB [unit:NAME=PATH]... [mutant:c1|c1b|c1c]... [crashafter:K] EXP... | drive selftest\n"
+text DRT6 "drive: experience refused: "
+text DRT7 " code="
+text DRT8 "drive: compile failed rc="
+text DRT9 "drive: omc over the 120 s budget, killed\n"
+text DRT10 "drive: publish failed code="
+text DRT11 "selftest PASS\n"
+text DRT12 "selftest FAIL "
+text DRT13 "drive: budget exceeded: "
+text DRT14 "sha256 r1 exp check delta select lib methods router"
+text DRT15 "om/sha256/sha256.om"
+text DRT16 "om/reuse/"
+text DRT17 "unit:"
+text DRT18 "mutant:"
+text DRT19 "crashafter:"
+text DRT20 "c1"
+text DRT21 "c1b"
+text DRT22 "c1c"
+text DRT23 "build"
+text DRT24 "base"
+text DRT25 "selftest"
+text DRT26 "-"
+text DRT27 "base.om"
+text DRT28 "base.elf"
+text DRT29 "drive: usage error "
+text DRT30 "router source\n"
+text DRT31 "LIBDIR bytes\n"
+text DRT32 "shape table\n"
+text DRT33 "abc"
+
+note byte i and length of fixed text k
+fn drtl k ulong to ulong
+if eq k 1
+ret len DRT1
+end
+if eq k 2
+ret len DRT2
+end
+if eq k 3
+ret len DRT3
+end
+if eq k 4
+ret len DRT4
+end
+if eq k 5
+ret len DRT5
+end
+if eq k 6
+ret len DRT6
+end
+if eq k 7
+ret len DRT7
+end
+if eq k 8
+ret len DRT8
+end
+if eq k 9
+ret len DRT9
+end
+if eq k 10
+ret len DRT10
+end
+if eq k 11
+ret len DRT11
+end
+if eq k 12
+ret len DRT12
+end
+if eq k 13
+ret len DRT13
+end
+if eq k 14
+ret len DRT14
+end
+if eq k 15
+ret len DRT15
+end
+if eq k 16
+ret len DRT16
+end
+ret drtl2 k
+end
+
+fn drtl2 k ulong to ulong
+if eq k 17
+ret len DRT17
+end
+if eq k 18
+ret len DRT18
+end
+if eq k 19
+ret len DRT19
+end
+if eq k 20
+ret len DRT20
+end
+if eq k 21
+ret len DRT21
+end
+if eq k 22
+ret len DRT22
+end
+if eq k 23
+ret len DRT23
+end
+if eq k 24
+ret len DRT24
+end
+if eq k 25
+ret len DRT25
+end
+if eq k 26
+ret len DRT26
+end
+if eq k 27
+ret len DRT27
+end
+if eq k 28
+ret len DRT28
+end
+if eq k 29
+ret len DRT29
+end
+if eq k 30
+ret len DRT30
+end
+if eq k 31
+ret len DRT31
+end
+if eq k 32
+ret len DRT32
+end
+if eq k 33
+ret len DRT33
+end
+ret 0
+end
+
+fn drtc k ulong i ulong to ulong
+if eq k 1
+ret ulong get DRT1 i
+end
+if eq k 2
+ret ulong get DRT2 i
+end
+if eq k 3
+ret ulong get DRT3 i
+end
+if eq k 4
+ret ulong get DRT4 i
+end
+if eq k 5
+ret ulong get DRT5 i
+end
+if eq k 6
+ret ulong get DRT6 i
+end
+if eq k 7
+ret ulong get DRT7 i
+end
+if eq k 8
+ret ulong get DRT8 i
+end
+if eq k 9
+ret ulong get DRT9 i
+end
+if eq k 10
+ret ulong get DRT10 i
+end
+if eq k 11
+ret ulong get DRT11 i
+end
+if eq k 12
+ret ulong get DRT12 i
+end
+if eq k 13
+ret ulong get DRT13 i
+end
+if eq k 14
+ret ulong get DRT14 i
+end
+if eq k 15
+ret ulong get DRT15 i
+end
+if eq k 16
+ret ulong get DRT16 i
+end
+ret drtc2 k i
+end
+
+fn drtc2 k ulong i ulong to ulong
+if eq k 17
+ret ulong get DRT17 i
+end
+if eq k 18
+ret ulong get DRT18 i
+end
+if eq k 19
+ret ulong get DRT19 i
+end
+if eq k 20
+ret ulong get DRT20 i
+end
+if eq k 21
+ret ulong get DRT21 i
+end
+if eq k 22
+ret ulong get DRT22 i
+end
+if eq k 23
+ret ulong get DRT23 i
+end
+if eq k 24
+ret ulong get DRT24 i
+end
+if eq k 25
+ret ulong get DRT25 i
+end
+if eq k 26
+ret ulong get DRT26 i
+end
+if eq k 27
+ret ulong get DRT27 i
+end
+if eq k 28
+ret ulong get DRT28 i
+end
+if eq k 29
+ret ulong get DRT29 i
+end
+if eq k 30
+ret ulong get DRT30 i
+end
+if eq k 31
+ret ulong get DRT31 i
+end
+if eq k 32
+ret ulong get DRT32 i
+end
+if eq k 33
+ret ulong get DRT33 i
+end
+ret 0
+end
+
+note output line buffer DRO
+fn droc c ulong to void
+n = get DRON 0
+if lt n 8192
+put DRO n uchar c
+put DRON 0 add n 1
+end
+end
+
+fn drotx k ulong to void
+for i ulong drtl k
+droc drtc k i
+end
+end
+
+fn dronum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+droc ulong get d n
+end
+end
+
+fn dronumi v int to void
+if lt v 0
+droc 45
+dronum ulong neg long v
+ret
+end
+dronum ulong v
+end
+
+note the digest LBH as 64 lowercase hex digits
+fn drohex to void
+for j ulong 4
+v = get LBH j
+for k ulong 16
+d = and shr v mul sub 15 k 4 15
+if lt d 10
+droc add d 48
+else
+droc add d 87
+end
+end
+end
+end
+
+fn droflush fd int to void
+r = write fd DRO 0 get DRON 0
+put DRON 0 0
+end
+
+note argument a into DRA; length (0 when missing or too long)
+fn drarg a ulong to ulong
+if ge a ulong argcnt
+put DRAN 0 0
+ret 0
+end
+n = argread a DRA 0 4096
+if lt n 0
+put DRAN 0 0
+ret 0
+end
+put DRAN 0 ulong n
+ret ulong n
+end
+
+note DRA starts with text k (whole match when exact)
+fn drpre k ulong exact bool to bool
+l = drtl k
+n = get DRAN 0
+if lt n l
+ret false
+end
+if and exact ne n l
+ret false
+end
+for i ulong l
+if ne ulong get DRA i drtc k i
+ret false
+end
+end
+ret true
+end
+
+note unit name at DRA[a..b) as index 0..8 in DRT14, or 9
+fn drunit a ulong b ulong to ulong
+u = ulong 0
+p = ulong 0
+l = drtl 14
+while le p l bound 128
+q = p
+while lt q l bound 128
+if eq drtc 14 q 32
+break
+end
+q = add q 1
+end
+if eq sub q p sub b a
+ok = true
+for i ulong sub q p
+if ne ulong get DRA add a i drtc 14 add p i
+ok = false
+end
+end
+if ok
+ret u
+end
+end
+u = add u 1
+p = add q 1
+end
+ret 9
+end
+
+note option in DRA: 0 not an option, 1 accepted, 2 malformed
+fn dropt to int
+n = get DRAN 0
+if drpre 17 false
+e = ulong 5
+while lt e n bound 4096
+if eq get DRA e 61
+break
+end
+e = add e 1
+end
+if ge e n
+ret 2
+end
+u = drunit 5 e
+if or ge u 9 eq u 7
+ret 2
+end
+pl = sub sub n e 1
+if or eq pl 0 ge pl 4096
+ret 2
+end
+for i ulong pl
+put DRUP add mul u 4096 i get DRA add add e 1 i
+end
+put DRUL u pl
+ret 1
+end
+if drpre 18 false
+ret dropt2
+end
+if drpre 19 false
+k = ulong 0
+if or eq n 11 gt n 12
+ret 2
+end
+for i ulong sub n 11
+c = ulong get DRA add 11 i
+if or lt c 48 gt c 57
+ret 2
+end
+k = add mul k 10 sub c 48
+end
+if or lt k 1 gt k 9
+ret 2
+end
+put DRCRASH 0 k
+ret 1
+end
+ret 0
+end
+
+note mutant:c1|c1b|c1c
+fn dropt2 to int
+n = get DRAN 0
+for i ulong sub n 7
+put DRA i get DRA add 7 i
+end
+put DRAN 0 sub n 7
+m = get CGMUT 0
+if drpre 20 true
+put CGMUT 0 or m 1
+ret 1
+end
+if drpre 21 true
+put CGMUT 0 or m 2
+ret 1
+end
+if drpre 22 true
+put CGMUT 0 or m 4
+ret 1
+end
+ret 2
+end
+
+note LBP <- path of unit u (override or default)
+fn drupath u ulong to void
+lbpz
+l = get DRUL u
+if gt l 0
+for i ulong l
+lbpc ulong get DRUP add mul u 4096 i
+end
+ret
+end
+if eq u 0
+for i ulong drtl 15
+lbpc drtc 15 i
+end
+ret
+end
+for i ulong drtl 16
+lbpc drtc 16 i
+end
+p = ulong 0
+c = ulong 0
+l2 = drtl 14
+while lt p l2 bound 128
+ch = drtc 14 p
+if eq ch 32
+c = add c 1
+else
+if eq c u
+lbpc ch
+end
+end
+p = add p 1
+end
+lbptx 2
+end
+
+note write n bytes of DRIO to fd; 0 ok
+fn drwrio fd int n ulong to int
+t = ulong 0
+while lt t n bound 65537
+r = write fd DRIO t sub n t
+if le r 0
+ret 1
+end
+t = add t ulong r
+end
+ret 0
+end
+
+note copy the file named by LBP to fd; bytes copied, or -1
+fn drcat fd int to long
+in = lbopen 524288 0
+if lt in 0
+ret -1
+end
+tot = long 0
+while true bound 999999
+r = read in DRIO 0 65536
+if lt r 0
+s = fclose in
+ret -1
+end
+if eq r 0
+break
+end
+if ne drwrio fd ulong r 0
+s = fclose in
+ret -1
+end
+put DRLB 0 ulong get DRIO sub ulong r 1
+tot = add tot r
+end
+s = fclose in
+ret tot
+end
+
+note write CGO to fd; bytes, or -1
+fn drcgo fd int to long
+n = get CGN 0
+t = ulong 0
+while lt t n bound 999999
+r = write fd CGO t sub n t
+if le r 0
+ret -1
+end
+t = add t ulong r
+end
+if gt n 0
+put DRLB 0 ulong get CGO sub n 1
+end
+ret long n
+end
+
+note compose the router source into fd (contract 12 order); bytes, -1 unit unreadable, -2 write
+fn drcompose fd int to long
+tot = long 0
+r = long 0
+for u ulong 9
+put DRLB 0 10
+if eq u 7
+r = drcgo fd
+if lt r 0
+ret -2
+end
+else
+drupath u
+r = drcat fd
+if lt r 0
+ret -1
+end
+end
+tot = add tot r
+if ne get DRLB 0 10
+put DRIO 0 10
+if ne drwrio fd 1 0
+ret -2
+end
+tot = add tot 1
+end
+end
+ret tot
+end
+
+note save LBP as the compile input (1) or output (2) path
+fn drsavep which ulong to void
+n = get LBPN 0
+for i ulong n
+if eq which 1
+put DRPI i get LBP i
+else
+put DRPO i get LBP i
+end
+end
+if eq which 1
+put DRPIN 0 n
+else
+put DRPON 0 n
+end
+end
+
+note forked child: stdin from DRPI, stdout to DRPO (mode 0700), exec OMC; never returns
+fn drchild to void
+r = fopen DRPI 0 get DRPIN 0 0 0
+if lt r 0
+exit 127
+end
+s = dupfd int r 0 0
+r2 = fopen DRPO 0 get DRPON 0 577 448
+if lt r2 0
+exit 127
+end
+s = dupfd int r2 1 0
+n = get DROMN 0
+put DRPK 0 1
+put DRPK 1 0
+put DRPK 2 uchar and n 255
+put DRPK 3 uchar shr n 8
+for i ulong n
+put DRPK add 4 i get DROMC i
+end
+e = execprog DRPK 0 add n 4
+exit 127
+end
+
+note run OMC < DRPI > DRPO with the 120 s budget: omc exit status, 256 + signal, -1 over budget,
+note -2 fork failed
+fn drcompile to int
+pid = fork
+if lt pid 0
+ret -2
+end
+if eq pid 0
+drchild
+exit 127
+end
+t0 = monons
+while true bound 999999
+r = waitpid int pid DRST 0 4 1
+if eq r pid
+s = or ulong get DRST 0 shl ulong get DRST 1 8
+if eq and s 127 0
+ret int and shr s 8 255
+end
+ret int add 256 and s 127
+end
+if gt sub monons t0 120000000000
+k = killpid int pid 9
+r = waitpid int pid DRST 0 4 0
+ret -1
+end
+z = sleepns 2000000
+end
+ret -1
+end
+
+note OMC path (argv 2) into DROMC; 0 ok
+fn dromc to int
+n = drarg 2
+if or eq n 0 ge n 4000
+ret 1
+end
+for i ulong n
+put DROMC i get DRA i
+end
+put DROMN 0 n
+ret 0
+end
+
+note DRA into LBDIR (OUTLIB / OUTDIR) and create it 0700 when missing; 0 ok, 1 usage, 2 mkdir
+fn droutdir to int
+n = get DRAN 0
+if or eq n 0 ge n 3000
+ret 1
+end
+for i ulong n
+put LBDIR i get DRA i
+end
+put LBDN 0 n
+r = makedir LBDIR 0 n 448
+if and ne r 0 ne r -17
+ret 2
+end
+ret 0
+end
+
+note LIBDIR/NAME for fixed text k
+fn drpfix k ulong to void
+lbpz
+lbpdir
+for i ulong drtl k
+lbpc drtc k i
+end
+end
+
+fn drusage c int to int
+drotx 29
+dronum ulong c
+droc 10
+drotx 5
+droflush 2
+ret 2
+end
+
+fn drbase to int
+if ne argcnt 4
+ret drusage 1
+end
+if ne dromc 0
+ret drusage 2
+end
+n = drarg 3
+if ne droutdir 0
+ret drusage 3
+end
+put CGK 0 0
+put CGMUT 0 0
+if ne cggen 0
+ret 11
+end
+drpfix 27
+drsavep 1
+fd = lbopen 524865 384
+if lt fd 0
+ret 12
+end
+t = drcompose fd
+s = fsync fd
+s = fclose fd
+if eq t -1
+ret drusage 4
+end
+if lt t 0
+ret 12
+end
+if gt t 524288
+drotx 13
+drotx 30
+droflush 2
+ret 13
+end
+drpfix 28
+drsavep 2
+r = drcompile
+if eq r -1
+drotx 9
+droflush 2
+ret 13
+end
+if ne r 0
+drotx 8
+dronumi r
+droc 10
+droflush 2
+ret 11
+end
+h = lbhpath
+if lt h 0
+ret 12
+end
+drotx 1
+drohex
+droc 10
+droflush 1
+ret 0
+end
+
+note DRIO[0..1600) as 200 LE words into DRCAL
+fn drcaldec to void
+for w ulong 200
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get DRIO add mul w 8 k mul k 8
+end
+put DRCAL w v
+end
+end
+
+note CALIB (argv 4): '-' none, else the 1600-byte R1CAL001 file (K4 format) into DRCAL; 0 ok, 1 bad
+fn drcalib to int
+n = drarg 4
+put DRCN 0 0
+if drpre 26 true
+ret 0
+end
+if or eq n 0 ge n 4000
+ret 1
+end
+for i ulong n
+put DRCP i get DRA i
+end
+put DRCN 0 n
+r = fopen DRCP 0 n 524288 0
+if lt r 0
+ret 1
+end
+fd = int r
+t = ulong 0
+while lt t 1601 bound 1602
+m = read fd DRIO t sub 1601 t
+if le m 0
+break
+end
+t = add t ulong m
+end
+s = fclose fd
+if ne t 1600
+ret 1
+end
+drcaldec
+if or ne get DRCAL 0 3544386010811150674 ne get DRCAL 1 1
+ret 1
+end
+for w ulong 5
+if ne get DRCAL add 3 w 0
+ret 1
+end
+end
+ret 0
+end
+
+note gen-G.cal.tmp from DRCAL; 0 ok
+fn drcalwr g ulong to int
+for w ulong 200
+v = get DRCAL w
+for k ulong 8
+put DRIO add mul w 8 k uchar and shr v mul k 8 255
+end
+end
+lbpgen g 4 true
+fd = lbopen 524865 384
+if lt fd 0
+ret 1
+end
+r = drwrio fd 1600
+s = fsync fd
+s = fclose fd
+ret r
+end
+
+note LBH into LBMAN words w..w+3
+fn drmanh w ulong to void
+for j ulong 4
+put LBMAN add w j get LBH j
+end
+end
+
+note sum of the file sizes of generations 1..g of LBDIR (final and tmp names) plus CURRENT
+fn drlibbytes g ulong to ulong
+tot = ulong 40
+for h ulong g
+for e ulong 4
+lbpgen add h 1 add e 1 false
+s = lbfsize
+if gt s 0
+tot = add tot ulong s
+end
+lbpgen add h 1 add e 1 true
+s = lbfsize
+if gt s 0
+tot = add tot ulong s
+end
+end
+end
+ret tot
+end
+
+note remove the tmp files of generation g after a refused build
+fn drdrop g ulong to void
+for e ulong 4
+lbpgen g add e 1 true
+r = unlink LBP 0 get LBPN 0
+end
+end
+
+note parse build options and EXP arguments (argv 6..); 0 ok, else usage code
+fn drbopts to int
+put DREN 0 0
+put DRCRASH 0 0
+put CGMUT 0 0
+for u ulong 9
+put DRUL u 0
+end
+a = ulong 6
+while lt a ulong argcnt bound 4096
+n = drarg a
+if eq n 0
+ret 5
+end
+o = dropt
+if eq o 2
+ret 6
+end
+if eq o 0
+e = get DREN 0
+if ge e 8
+ret 7
+end
+put DREI e a
+put DREN 0 add e 1
+end
+a = add a 1
+end
+ret 0
+end
+
+note admit every EXP (exp.om) and count it (learn.om); 0, 10 refused, 2 duplicate or over 8, 13
+fn drlearn to int
+lgreset
+ne0 = get DREN 0
+if eq ne0 0
+lgselect
+ret 0
+end
+n = drarg 3
+if or eq n 0 ge n 4095
+ret 10
+end
+for i ulong n
+put EXAPATH i get DRA i
+end
+put EXAPATH n 0
+put EXALEN 0 n
+if ne exaload 0
+drotx 6
+for i ulong n
+droc ulong get DRA i
+end
+droc 10
+droflush 2
+ret 10
+end
+for e ulong ne0
+m = drarg get DREI e
+for i ulong m
+put EXFPATH i get DRA i
+end
+put EXFPATH m 0
+put EXFLEN 0 m
+c = exadmit
+if ne c 0
+drotx 6
+for i ulong m
+droc ulong get DRA i
+end
+drotx 7
+dronumi c
+droc 10
+droflush 2
+ret 10
+end
+if ne lglin 0
+ret 2
+end
+if ne lgcount 0
+drotx 13
+drotx 32
+droflush 2
+ret 13
+end
+end
+lgselect
+ret 0
+end
+
+note manifest words of generation g (sha fields filled by the caller)
+fn drmanifest g ulong prev ulong to void
+for i ulong 256
+put LBMAN i 0
+end
+put LBMAN 0 3544386019401740626
+put LBMAN 1 1
+put LBMAN 2 g
+put LBMAN 3 prev
+k = get LGK 0
+put LBMAN 4 k
+put LBMAN 18 1
+put LBMAN 19 get LGLN 0
+for i ulong 32
+put LBMAN add 20 i get LGLD i
+end
+for t ulong k
+b = add 56 mul t 8
+s = get LGSH t
+put LBMAN b s
+if eq s 1
+put LBMAN add b 1 2
+else
+put LBMAN add b 1 1
+put LBMAN add b 2 and s 255
+put LBMAN add b 3 and shr s 8 15
+put LBMAN add b 4 and shr s 12 15
+end
+put LBMAN add b 5 get LGCN t
+put LBMAN add b 6 get CGSB t
+end
+end
+
+note compose and compile generation g into LBDIR; 0 ok, else the drive exit code
+fn drgen g ulong to int
+lbpgen g 1 true
+drsavep 1
+fd = lbopen 524865 384
+if lt fd 0
+ret 12
+end
+t = drcompose fd
+s = fsync fd
+s = fclose fd
+if eq t -1
+ret drusage 8
+end
+if lt t 0
+ret 12
+end
+if gt t 524288
+drotx 13
+drotx 30
+droflush 2
+ret 13
+end
+lbpgen g 2 true
+drsavep 2
+r = drcompile
+if eq r -1
+drotx 9
+droflush 2
+ret 13
+end
+if ne r 0
+drotx 8
+dronumi r
+droc 10
+droflush 2
+ret 11
+end
+ret 0
+end
+
+note the SHA-256 fields of the manifest of generation g; 0 ok, 12 unreadable
+fn drhashes g ulong to int
+lbpgen g 1 true
+n = lbhpath
+if lt n 0
+ret 12
+end
+put LBMAN 5 ulong n
+drmanh 6
+lbpgen g 2 true
+n = lbhpath
+if lt n 0
+ret 12
+end
+drmanh 10
+lbpz
+for i ulong get DROMN 0
+lbpc ulong get DROMC i
+end
+n = lbhpath
+if lt n 0
+ret 12
+end
+drmanh 14
+if gt get DRCN 0 0
+if ne drcalwr g 0
+ret 12
+end
+lbpgen g 4 true
+n = lbhpath
+if lt n 0
+ret 12
+end
+drmanh 52
+end
+ret 0
+end
+
+fn drbuild to int
+if lt argcnt 6
+ret drusage 1
+end
+if ne dromc 0
+ret drusage 2
+end
+if ne drcalib 0
+ret drusage 3
+end
+r = drbopts
+if ne r 0
+ret drusage r
+end
+r = drlearn
+if ne r 0
+if eq r 2
+ret drusage 9
+end
+ret r
+end
+put CGK 0 get LGK 0
+for t ulong 16
+put CGSH t get LGSH t
+end
+if ne cggen 0
+ret 11
+end
+n = drarg 5
+if ne droutdir 0
+ret drusage 4
+end
+prev = ulong 0
+c = lbcurrd
+if eq c 0
+prev = get LBG 0
+else
+lbpcurr false
+if ge lbfsize 0
+drotx 10
+dronumi c
+droc 10
+droflush 2
+ret 12
+end
+end
+g = add prev 1
+lbclean g
+drmanifest g prev
+r = drgen g
+if ne r 0
+drdrop g
+ret r
+end
+r = drhashes g
+if ne r 0
+drdrop g
+ret r
+end
+if gt add drlibbytes g 2048 8388608
+drdrop g
+drotx 13
+drotx 31
+droflush 2
+ret 13
+end
+lbseal
+put LBG 0 g
+r = lbpub get DRCRASH 0
+if eq r 97
+ret 97
+end
+if ne r 0
+drotx 10
+dronumi r
+droc 10
+droflush 2
+ret 12
+end
+lbhman
+drotx 2
+drohex
+droc 10
+drotx 3
+dronum g
+droc 10
+drotx 4
+dronum get LGK 0
+droc 10
+droflush 1
+ret 0
+end
+
+note internal checks: SHA-256("abc") through lbhman's path, manifest seal and field check,
+note deterministic codegen; 0 pass, else the failed check
+fn drself to int
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+for i ulong 3
+put b i get DRT33 i
+end
+omsha c b 0 0 w b8
+omsha c b 3 1 w b8
+omsha c b 0 2 w b8
+lbdig w
+if or ne get LBH 0 13436514500253700074 ne get LBH 3 12975151322591401389
+ret 1
+end
+put LGK 0 0
+put LGLN 0 0
+put CGSB 0 0
+drmanifest 3 2
+put LBMAN 14 8308871078283820969
+put LBMAN 15 3511899704727027462
+put LBMAN 16 15311527216533678964
+put LBMAN 17 17706733685053746017
+lbseal
+put LBG 0 3
+if ne lbmchk 0
+ret 2
+end
+put LBMAN 7 1
+if ne lbmchk 11
+ret 3
+end
+put CGK 0 2
+put CGSH 0 120664328
+put CGSH 1 1
+put CGMUT 0 0
+if ne cggen 0
+ret 4
+end
+n1 = get CGN 0
+cghash 0 n1 15
+h0 = get CGSD 60
+if ne cggen 0
+ret 5
+end
+if ne get CGN 0 n1
+ret 6
+end
+cghash 0 n1 15
+if ne get CGSD 60 h0
+ret 7
+end
+ret 0
+end
+
+fn main to int
+n = drarg 1
+if drpre 24 true
+ret drbase
+end
+if drpre 23 true
+ret drbuild
+end
+if drpre 25 true
+r = drself
+if eq r 0
+drotx 11
+droflush 1
+ret 0
+end
+drotx 12
+dronumi r
+droc 10
+droflush 1
+ret 1
+end
+ret drusage 0
+end

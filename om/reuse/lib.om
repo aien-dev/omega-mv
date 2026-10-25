@@ -1,0 +1,851 @@
+note SPDX-License-Identifier: Apache-2.0
+note lib.om: REUSE-1 library generations (contract v1.0 section 3.4, clarifications K1 K3).
+note Part of every router (lbload, lblineage, lbcalpath) and of drive.om (lbpub and helpers).
+note Needs sha256 (omsha), r1 and exp (exaload, exallow, EXAPATH, EXALEN) before it.
+note Manifest: 256 LE words in LBMAN, file bytes in LBMB; word 255 = FNV-1a 64 over the 2040 LE
+note bytes of words 0..254 (K3). CURRENT: 40 bytes, G LE then the 32 SHA-256 bytes of gen-G.man.
+note Digests are 4 words, word j = digest bytes 8j..8j+7 read big endian (contract 1.1).
+note lbload refusal codes (each check distinct, nothing is trusted before all pass):
+note  1 argv (count, LIBDIR length)   2 MANSHA not 64 hex digits   3 CURRENT unreadable
+note  4 CURRENT not exactly 40 bytes   5 gen-G.man unreadable   6 gen-G.man not exactly 2048 bytes
+note  7 SHA-256(gen-G.man) differs from the CURRENT digest   8 CURRENT digest differs from MANSHA
+note  9 magic   10 version   11 self-check   12 G differs from CURRENT or parent G >= G
+note  13 compiler SHA-256 is not the pinned omc   14 profile version   15 K > 16 or L > 8
+note  16 a reserved word is nonzero   17 ALLOW unreadable   18 a lineage digest not allowed
+note  19 gen-G.cal unreadable   20 gen-G.cal digest   21 gen-G.elf unreadable   22 memfd failed
+note  23 copy into the memfd failed   24 ELF digest   25 exec failed
+
+global LBMAN ulong 256
+global LBMB uchar 2048
+global LBH ulong 4
+global LBCD ulong 4
+global LBMS ulong 4
+global LBDIR uchar 4096
+global LBDN ulong 1
+global LBP uchar 4096
+global LBPN ulong 1
+global LBPK uchar 4096
+global LBIO uchar 4096
+global LBST uchar 128
+global LBG ulong 1
+global LBLD ulong 32
+global LBLN ulong 1
+global LBGEN ulong 1
+global LBCAL ulong 1
+global LBCP uchar 4096
+text LBTGEN "gen-"
+text LBTOM ".om"
+text LBTELF ".elf"
+text LBTMAN ".man"
+text LBTCAL ".cal"
+text LBTTMP ".tmp"
+text LBTCUR "CURRENT"
+text LBTFD "/proc/self/fd/"
+text LBTLD "loaded"
+text LBTMFD "r1gen"
+
+note byte swap of a 64-bit word
+fn lbbswap x ulong to ulong
+y = or shl and x 71777214294589695 8 and shr x 8 71777214294589695
+y = or shl and y 281470681808895 16 and shr y 16 281470681808895
+ret or shl y 32 shr y 32
+end
+
+note omsha's packed digest (w[i] holds digest bytes 8i..8i+7 little endian) into LBH
+fn lbdig w view ulong 64 to void
+for i ulong 4
+put LBH i lbbswap get w i
+end
+end
+
+note SHA-256 of a whole open file read with pread from position 0 into LBH; bytes or -errno
+fn lbhfd fd int to long
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+omsha c b 0 0 w b8
+tot = long 0
+while true bound 999999
+r = pread fd b 0 4096 tot
+if lt r 0
+ret r
+end
+if eq r 0
+break
+end
+omsha c b ulong r 1 w b8
+tot = add tot r
+end
+omsha c b 0 2 w b8
+lbdig w
+ret tot
+end
+
+note SHA-256 of the 2048 manifest bytes LBMB into LBH
+fn lbhman to void
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+for i ulong 2048
+put b i get LBMB i
+end
+omsha c b 0 0 w b8
+omsha c b 2048 1 w b8
+omsha c b 0 2 w b8
+lbdig w
+end
+
+note manifest words to bytes and back
+fn lbm2b to void
+for i ulong 256
+v = get LBMAN i
+for k ulong 8
+put LBMB add mul i 8 k uchar and shr v mul k 8 255
+end
+end
+end
+
+fn lbb2m to void
+for i ulong 256
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get LBMB add mul i 8 k mul k 8
+end
+put LBMAN i v
+end
+end
+
+note FNV-1a 64 over LBMB[0..2040) (fill LBMB with lbm2b first)
+fn lbfnv to ulong
+h = ulong 14695981039346656037
+for i ulong 2040
+h = xor h ulong get LBMB i
+h = mul h 1099511628211
+end
+ret h
+end
+
+note self-check word 255 of LBMAN (drive.om, tests)
+fn lbseal to void
+lbm2b
+put LBMAN 255 lbfnv
+lbm2b
+end
+
+note little/big endian word of LBIO at byte o
+fn lbgetle o ulong to ulong
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get LBIO add o k mul k 8
+end
+ret v
+end
+
+fn lbgetbe o ulong to ulong
+v = ulong 0
+for k ulong 8
+v = or shl v 8 ulong get LBIO add o k
+end
+ret v
+end
+
+fn lbputbe o ulong v ulong to void
+for k ulong 8
+put LBIO add o k uchar and shr v mul sub 7 k 8 255
+end
+end
+
+note path builder: LBP[0..LBPN)
+fn lbpz to void
+put LBPN 0 0
+end
+
+fn lbpc c ulong to void
+n = get LBPN 0
+if ge n 4095
+trap 3
+end
+put LBP n uchar c
+put LBPN 0 add n 1
+end
+
+fn lbpnum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+lbpc ulong get d n
+end
+end
+
+note fixed name parts: 1 gen- 2 .om 3 .elf 4 .man 5 .cal 6 .tmp 7 CURRENT 8 /proc/self/fd/ 9 loaded
+fn lbptx k ulong to void
+if eq k 1
+for i ulong len LBTGEN
+lbpc ulong get LBTGEN i
+end
+end
+if eq k 2
+for i ulong len LBTOM
+lbpc ulong get LBTOM i
+end
+end
+if eq k 3
+for i ulong len LBTELF
+lbpc ulong get LBTELF i
+end
+end
+if eq k 4
+for i ulong len LBTMAN
+lbpc ulong get LBTMAN i
+end
+end
+if eq k 5
+for i ulong len LBTCAL
+lbpc ulong get LBTCAL i
+end
+end
+if eq k 6
+for i ulong len LBTTMP
+lbpc ulong get LBTTMP i
+end
+end
+if eq k 7
+for i ulong len LBTCUR
+lbpc ulong get LBTCUR i
+end
+end
+if eq k 8
+for i ulong len LBTFD
+lbpc ulong get LBTFD i
+end
+end
+if eq k 9
+for i ulong len LBTLD
+lbpc ulong get LBTLD i
+end
+end
+end
+
+fn lbpdir to void
+for i ulong get LBDN 0
+lbpc ulong get LBDIR i
+end
+lbpc 47
+end
+
+note LIBDIR/gen-G.EXT[.tmp], ext 1 om 2 elf 3 man 4 cal
+fn lbpgen g ulong ext ulong tmp bool to void
+lbpz
+lbpdir
+lbptx 1
+lbpnum g
+lbptx add ext 1
+if tmp
+lbptx 6
+end
+end
+
+fn lbpcurr tmp bool to void
+lbpz
+lbpdir
+lbptx 7
+if tmp
+lbptx 6
+end
+end
+
+note open LBP; descriptor or -1
+fn lbopen flags int mode int to int
+r = fopen LBP 0 get LBPN 0 flags mode
+if lt r 0
+ret -1
+end
+ret int r
+end
+
+note read up to cap (<= 4096) bytes of fd into LBIO; count or -errno
+fn lbrdio fd int cap ulong to long
+tot = ulong 0
+while lt tot cap bound 4097
+r = read fd LBIO tot sub cap tot
+if lt r 0
+ret r
+end
+if eq r 0
+break
+end
+tot = add tot ulong r
+end
+ret long tot
+end
+
+note write LBIO[0..n) completely; 0 or 1
+fn lbwrio fd int n ulong to int
+tot = ulong 0
+while lt tot n bound 4097
+r = write fd LBIO tot sub n tot
+if le r 0
+ret 1
+end
+tot = add tot ulong r
+end
+ret 0
+end
+
+note size of the file named by LBP, or -1
+fn lbfsize to long
+r = stat LBP 0 get LBPN 0 LBST 0 128
+if ne r 0
+ret -1
+end
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get LBST add 48 k mul k 8
+end
+ret long v
+end
+
+note SHA-256 of the file named by LBP into LBH; bytes or negative
+fn lbhpath to long
+fd = lbopen 524288 0
+if lt fd 0
+ret -1
+end
+n = lbhfd fd
+r = fclose fd
+ret n
+end
+
+fn lbhexd c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+if and ge c 65 le c 70
+ret sub c 55
+end
+ret 16
+end
+
+note 64 hex digits in LBIO[0..64) into 4 digest words at LBMS; 0 or 1
+fn lbhex2ms to int
+for j ulong 4
+v = ulong 0
+for k ulong 16
+d = lbhexd ulong get LBIO add mul j 16 k
+if gt d 15
+ret 1
+end
+v = or shl v 4 d
+end
+put LBMS j v
+end
+ret 0
+end
+
+note LIBDIR (argv 2) into LBDIR, MANSHA (argv 3) into LBMS
+fn lbargs to int
+if lt argcnt 7
+ret 1
+end
+n = argread 2 LBDIR 0 3000
+if or lt n 1 gt n 2999
+ret 1
+end
+put LBDN 0 ulong n
+m = argread 3 LBIO 0 4096
+if ne m 64
+ret 2
+end
+if ne lbhex2ms 0
+ret 2
+end
+ret 0
+end
+
+note CURRENT of LBDIR: G into LBG, digest words into LBCD; 0, 3 unreadable, 4 not 40 bytes
+fn lbcurrd to int
+lbpcurr false
+fd = lbopen 524288 0
+if lt fd 0
+ret 3
+end
+n = lbrdio fd 41
+r = fclose fd
+if ne n 40
+ret 4
+end
+put LBG 0 lbgetle 0
+for j ulong 4
+put LBCD j lbgetbe add 8 mul j 8
+end
+ret 0
+end
+
+note gen-G.man of LBDIR into LBMB and LBMAN; 0, 5 unreadable, 6 not 2048 bytes
+fn lbmanrd to int
+lbpgen get LBG 0 3 false
+fd = lbopen 524288 0
+if lt fd 0
+ret 5
+end
+n = lbrdio fd 2049
+r = fclose fd
+if ne n 2048
+ret 6
+end
+for i ulong 2048
+put LBMB i get LBIO i
+end
+lbb2m
+ret 0
+end
+
+note LBMAN words a..b-1 all zero
+fn lbzero a ulong b ulong to bool
+i = a
+while lt i b bound 257
+if ne get LBMAN i 0
+ret false
+end
+i = add i 1
+end
+ret true
+end
+
+note manifest field checks (LBMAN, LBMB); 0 or 9..16
+fn lbmchk to int
+if ne get LBMAN 0 3544386019401740626
+ret 9
+end
+if ne get LBMAN 1 1
+ret 10
+end
+lbm2b
+if ne lbfnv get LBMAN 255
+ret 11
+end
+g = get LBMAN 2
+if or ne g get LBG 0 ge get LBMAN 3 g
+ret 12
+end
+if or ne get LBMAN 14 8308871078283820969 ne get LBMAN 15 3511899704727027462
+ret 13
+end
+if or ne get LBMAN 16 15311527216533678964 ne get LBMAN 17 17706733685053746017
+ret 13
+end
+if ne get LBMAN 18 1
+ret 14
+end
+k = get LBMAN 4
+l = get LBMAN 19
+if or gt k 16 gt l 8
+ret 15
+end
+if not lbzero add 20 mul l 4 52
+ret 16
+end
+if not lbzero add 56 mul k 8 255
+ret 16
+end
+for t ulong k
+if ne get LBMAN add 63 mul t 8 0
+ret 16
+end
+end
+ret 0
+end
+
+note digest LBH equals 4 words of LBMAN at w
+fn lbhmeq w ulong to bool
+for j ulong 4
+if ne get LBH j get LBMAN add w j
+ret false
+end
+end
+ret true
+end
+
+note shared load prefix: argv, CURRENT, manifest, MANSHA, fields; 0 or 1..16
+fn lbman to int
+r = lbargs
+if ne r 0
+ret r
+end
+r = lbcurrd
+if ne r 0
+ret r
+end
+r = lbmanrd
+if ne r 0
+ret r
+end
+lbhman
+for j ulong 4
+if ne get LBH j get LBCD j
+ret 7
+end
+end
+for j ulong 4
+if ne get LBCD j get LBMS j
+ret 8
+end
+end
+ret lbmchk
+end
+
+note every lineage digest allowed by ALLOW (argv 4); 0, 17, 18
+fn lballow to int
+d = new ulong 4 0
+l = get LBMAN 19
+if eq l 0
+ret 0
+end
+n = argread 4 EXAPATH 0 4095
+if lt n 1
+ret 17
+end
+put EXAPATH ulong n 0
+put EXALEN 0 ulong n
+if ne exaload 0
+ret 17
+end
+for i ulong l
+for j ulong 4
+put d j get LBMAN add add 20 mul i 4 j
+end
+if ne exallow d 1
+ret 18
+end
+end
+ret 0
+end
+
+note calibration file digest (K1); 0, 19, 20
+fn lbcalchk to int
+if lbzero 52 56
+ret 0
+end
+lbpgen get LBG 0 4 false
+n = lbhpath
+if lt n 0
+ret 19
+end
+if not lbhmeq 52
+ret 20
+end
+ret 0
+end
+
+note gen-G.elf copied into a memfd whose SHA-256 must equal manifest 10..13; fd or -21..-24
+fn lbelfmem to int
+lbpgen get LBG 0 2 false
+fd = lbopen 524288 0
+if lt fd 0
+ret -21
+end
+m = memfd LBTMFD 0 len LBTMFD 1
+if lt m 0
+r = fclose fd
+ret -22
+end
+mf = int m
+while true bound 999999
+r = read fd LBIO 0 4096
+if lt r 0
+r = fclose fd
+ret -23
+end
+if eq r 0
+break
+end
+if ne lbwrio mf ulong r 0
+r = fclose fd
+ret -23
+end
+end
+r = fclose fd
+n = lbhfd mf
+if lt n 0
+ret -23
+end
+if not lbhmeq 10
+ret -24
+end
+ret mf
+end
+
+note append LBP to the packed list LBPK as one record at o; new offset
+fn lbpkadd o ulong to ulong
+n = get LBPN 0
+put LBPK o uchar and n 255
+put LBPK add o 1 uchar shr n 8
+for i ulong n
+put LBPK add add o 2 i get LBP i
+end
+ret add add o 2 n
+end
+
+note exec /proc/self/fd/MF with argv 1..6 and loaded; returns only on failure
+fn lbexec mf int to int
+put LBPK 0 8
+put LBPK 1 0
+lbpz
+lbptx 8
+lbpnum ulong mf
+o = lbpkadd 2
+for a ulong 6
+n = argread add a 1 LBPK add o 2 sub 4000 o
+if lt n 0
+ret 25
+end
+put LBPK o uchar and ulong n 255
+put LBPK add o 1 uchar shr ulong n 8
+o = add add o 2 ulong n
+if gt o 4000
+ret 25
+end
+end
+lbpz
+lbptx 9
+o = lbpkadd o
+r = execprog LBPK 0 o
+ret 25
+end
+
+note B's load (contract 3.4): 0 never (exec'd), nonzero = refused with the code listed above
+fn lbload to int
+if ne argcnt 7
+ret 1
+end
+r = lbman
+if ne r 0
+ret r
+end
+r = lballow
+if ne r 0
+ret r
+end
+r = lbcalchk
+if ne r 0
+ret r
+end
+mf = lbelfmem
+if lt mf 0
+ret neg mf
+end
+ret lbexec mf
+end
+
+note manifest lineage for revocation checks in a loaded generation: LBLD, LBLN, LBGEN, LBCAL
+fn lblineage to int
+r = lbman
+if ne r 0
+ret r
+end
+put LBLN 0 get LBMAN 19
+for i ulong 32
+put LBLD i get LBMAN add 20 i
+end
+put LBGEN 0 get LBG 0
+put LBCAL 0 0
+if not lbzero 52 56
+put LBCAL 0 1
+end
+ret 0
+end
+
+note LIBDIR/gen-G.cal plus a 0 byte into LBCP; length, 0 = no calibration, < 0 refused
+fn lbcalpath to int
+r = lblineage
+if ne r 0
+ret neg r
+end
+if eq get LBCAL 0 0
+ret 0
+end
+lbpgen get LBG 0 4 false
+n = get LBPN 0
+for i ulong n
+put LBCP i get LBP i
+end
+put LBCP n 0
+ret int n
+end
+
+note drive.om side. Remove a stale unpublished generation g (crash leftovers) and CURRENT.tmp.
+fn lbclean g ulong to void
+for e ulong 4
+lbpgen g add e 1 false
+r = unlink LBP 0 get LBPN 0
+lbpgen g add e 1 true
+r = unlink LBP 0 get LBPN 0
+end
+lbpcurr true
+r = unlink LBP 0 get LBPN 0
+end
+
+note fsync the file named by LBP; 0 or 1
+fn lbsyncp to int
+fd = lbopen 524288 0
+if lt fd 0
+ret 1
+end
+r = fsync fd
+s = fclose fd
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+fn lbsyncdir to int
+r = fopen LBDIR 0 get LBDN 0 524288 0
+if lt r 0
+ret 1
+end
+fd = int r
+s = fsync fd
+r = fclose fd
+if ne s 0
+ret 1
+end
+ret 0
+end
+
+note gen-G.EXT.tmp: fsync, then renames flag 1 onto gen-G.EXT; 0 or 1
+fn lbrengen g ulong ext ulong to int
+lbpgen g ext true
+if ne lbsyncp 0
+ret 1
+end
+o = lbpkadd 2
+lbpgen g ext false
+o = lbpkadd o
+put LBPK 0 2
+put LBPK 1 0
+r = renames LBPK 0 o 1
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note publish generation LBG with manifest LBMAN (sealed) in ADR 0015 order. Expects gen-G.om.tmp,
+note gen-G.elf.tmp and, when manifest 52..55 is nonzero, gen-G.cal.tmp already written. Steps:
+note 1 om, 2 elf, 3 cal (no-op without calibration), 4 man.tmp written and fsync'd, 5 man renamed,
+note 6 LIBDIR fsync, 7 CURRENT.tmp written and fsync'd, 8 CURRENT renamed, 9 LIBDIR fsync.
+note crash = K stops after step K with 97 (control C8); 0 ok; 100 + step on failure.
+fn lbpub crash ulong to int
+g = get LBG 0
+if ne lbrengen g 1 0
+ret 101
+end
+if eq crash 1
+ret 97
+end
+if ne lbrengen g 2 0
+ret 102
+end
+if eq crash 2
+ret 97
+end
+if not lbzero 52 56
+if ne lbrengen g 4 0
+ret 103
+end
+end
+if eq crash 3
+ret 97
+end
+lbm2b
+lbpgen g 3 true
+fd = lbopen 524865 384
+if lt fd 0
+ret 104
+end
+w = write fd LBMB 0 2048
+s = fsync fd
+r = fclose fd
+if or ne w 2048 ne s 0
+ret 104
+end
+if eq crash 4
+ret 97
+end
+lbpgen g 3 true
+o = lbpkadd 2
+lbpgen g 3 false
+o = lbpkadd o
+put LBPK 0 2
+put LBPK 1 0
+r = renames LBPK 0 o 1
+if ne r 0
+ret 105
+end
+if eq crash 5
+ret 97
+end
+if ne lbsyncdir 0
+ret 106
+end
+if eq crash 6
+ret 97
+end
+lbhman
+for k ulong 8
+put LBIO k uchar and shr g mul k 8 255
+end
+for j ulong 4
+lbputbe add 8 mul j 8 get LBH j
+end
+lbpcurr true
+fd = lbopen 524865 384
+if lt fd 0
+ret 107
+end
+w2 = lbwrio fd 40
+s = fsync fd
+r = fclose fd
+if or ne w2 0 ne s 0
+ret 107
+end
+if eq crash 7
+ret 97
+end
+lbpcurr true
+o = lbpkadd 2
+lbpcurr false
+o = lbpkadd o
+put LBPK 0 2
+put LBPK 1 0
+r = renames LBPK 0 o 0
+if ne r 0
+ret 108
+end
+if eq crash 8
+ret 97
+end
+if ne lbsyncdir 0
+ret 109
+end
+if eq crash 9
+ret 97
+end
+ret 0
+end
