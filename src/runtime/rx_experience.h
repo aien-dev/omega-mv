@@ -51,8 +51,28 @@
  * excludes the revoked experiences. Copies and trained weights made earlier
  * are out of scope here.
  *
+ * Who may act and own. An action runs only for a tenant that presents a live
+ * AIENOS capability (the view rx_exp_open was given) with subject = the
+ * tenant, resource RX_EXP_RESOURCE(family) and right RX_EXP_RIGHT_ACT; the
+ * experience it yields can be owned by that tenant alone. Reset and
+ * hypothesis are not capability-gated.
+ *
+ * Bounds. An episode is a bounded microjob: at most RX_EXP_MAX_STEPS
+ * committed transitions (recorded or dropped) between resets, counted in
+ * this process (like `episode`). The next action is refused with
+ * RX_EXP_ERR_TRACE; nothing is truncated silently. Longer objectives are
+ * chunked by the caller into several episodes.
+ *
+ * Taint. A hypothesis is a claim and may name its basis in its links. The
+ * basis is walked through claims: a non-authoritative import
+ * (CX_K_IMPORTED) anywhere in it, a PRIVATE experience in it while the
+ * draft is not PRIVATE, or a basis larger than RX_EXP_BASIS_MAX records
+ * refuses the record (RX_EXP_ERR_TAINTED). An experience in the basis is not
+ * descended into: its lineage was checked when it was recorded.
+ *
  * Experience, hypothesis and revocation records are about the composition
- * state object: subject RXC_CX_SUBJECT(RXC_SLOT_STATE).
+ * state object: subject RXC_CX_SUBJECT(RXC_SLOT_STATE). A retired state
+ * object takes no further actions or experiences (RX_EXP_ERR_RETIRED).
  */
 #ifndef RX_EXPERIENCE_H
 #define RX_EXPERIENCE_H
@@ -71,6 +91,13 @@
 /* CX_K_CANDIDATE.tag of a hypothesis ("exp.hyp1"); composition claims carry
  * the id of their goal record instead. */
 #define RX_EXP_TAG_HYPOTHESIS 0x6578702e68797031ull
+/* Transitions per episode (rx_exp_act refuses the next with RX_EXP_ERR_TRACE). */
+#define RX_EXP_MAX_STEPS 64u
+/* Records a hypothesis basis walk may read before it refuses as tainted. */
+#define RX_EXP_BASIS_MAX 32u
+/* AIENOS capability an actor presents to rx_exp_act: subject = tenant. */
+#define RX_EXP_RESOURCE(fam) ((fam)->family)
+#define RX_EXP_RIGHT_ACT RX_RIGHT_WRITE
 
 /* A transition family: pure functions of one 64-bit packed state. The same
  * `step` is the environment Skill (via `skill`) and the AEGIS contract (via
@@ -190,7 +217,12 @@ enum {
     RX_EXP_ERR_OWNER = -10,       /* revocation by someone other than the owner */
     RX_EXP_ERR_HYPOTHESIS = -11,  /* hypothesis id is not one for this prior + action */
     RX_EXP_ERR_REFUSED = -12,     /* the environment refused the action (no winner) */
-    RX_EXP_ERR_WORLD = -13        /* composition / World / Cortex failure */
+    RX_EXP_ERR_WORLD = -13,       /* composition / World / Cortex failure */
+    RX_EXP_ERR_RETIRED = -14,     /* the state object (the subject) is retired in the World */
+    RX_EXP_ERR_TENANT = -15,      /* owner is not the tenant whose capability took the action */
+    RX_EXP_ERR_TAINTED = -16,     /* hypothesis basis imported, private into non-private, or unreadable */
+    RX_EXP_ERR_CAPABILITY = -17,  /* action without a live capability of the tenant for the family */
+    RX_EXP_ERR_TRACE = -18        /* episode already holds RX_EXP_MAX_STEPS transitions */
 };
 const char *rx_exp_strerror(int rc);
 
@@ -198,6 +230,7 @@ const char *rx_exp_strerror(int rc);
 
 typedef struct RxExpEnv {
     const RxExpFamily *fam;
+    const AienosCapView *view; /* checks actors' capabilities */
     RxCompose c;               /* large: keep RxExpEnv static or on the heap */
     AienMachineId slots[8];
     AienMachineIndex ix;
@@ -210,11 +243,12 @@ typedef struct RxExpEnv {
     uint8_t objective[32];
     uint64_t episode;          /* resets so far in this process */
     uint64_t step;             /* experiences recorded in this episode */
+    uint64_t taken;            /* transitions committed in this episode (RX_EXP_MAX_STEPS) */
     uint64_t dropped;          /* acted, never recorded (counted, never silent) */
     uint64_t now_us;
     struct {
         int live;
-        uint64_t prior, action, input, next, cost;
+        uint64_t prior, action, input, next, cost, tenant;
         uint64_t goal_crumb, commit, evidence, promotion;
     } pend;
 } RxExpEnv;
@@ -246,10 +280,14 @@ typedef struct {
     uint64_t commit, evidence, promotion;   /* Cortex ids */
 } RxExpObservation;
 
-/* Run `action` through the accept chain. RX_EXP_OK with `obs` filled when the
- * World committed a verified next state; RX_EXP_ERR_REFUSED when the
- * environment refused it (the refusal stays in Cortex as composition records). */
-int rx_exp_act(RxExpEnv *e, uint64_t action, RxExpObservation *obs);
+/* Run `action` through the accept chain for `tenant`, which presents `cap`.
+ * RX_EXP_OK with `obs` filled when the World committed a verified next
+ * state; RX_EXP_ERR_REFUSED when the environment refused it (the refusal
+ * stays in Cortex as composition records). RX_EXP_ERR_CAPABILITY,
+ * RX_EXP_ERR_RETIRED and RX_EXP_ERR_TRACE refuse before anything runs or is
+ * written, and keep a pending transition recordable. */
+int rx_exp_act(RxExpEnv *e, uint32_t tenant, AienosCapRef cap, uint64_t action,
+               RxExpObservation *obs);
 
 typedef struct {
     uint8_t objective[32];     /* goal digest (zero = the environment's objective) */
