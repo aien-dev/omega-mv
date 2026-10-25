@@ -1,0 +1,1365 @@
+{
+ "schema": "omega.universal.fixtures.v1",
+ "set": "F2-go",
+ "contract": "spec/universal/translation-compose-v2.md",
+ "profile": "spec/universal/go-u64-v1.md",
+ "from": "tests/universal/translation/fixtures-f1.json",
+ "note": "Every F1 positive is expressible in go-u64-pure-v1; not_in_profile is empty. extra_positives exercise Go-specific accepted forms. Refusals are new Go-profile fixtures; go_build records what go build (Go 1.27.3, with a harness file holding only func main) does with the refused source: reject = a Go compile error, accept = a narrowing of this profile.",
+ "positives": [
+  {
+   "id": "F2-go-F1-P00",
+   "f1_id": "F1-P00",
+   "f1_sha256": "250e3228f00b4c0cd60df70092f50106dce54f081cc77d4f3a24f7d2b5af8c4c",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "90210a15575d05a10d6f82149ef34a2e5b8fef2bdbdee5cdb7b52cf2e1f44871",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-F1-P01",
+   "f1_id": "F1-P01",
+   "f1_sha256": "cc4a3ac6374b8c68eb99de6540e6896ef4c41aea9eb5fb5c1f0ae4be52662456",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "5509609dbad64694827934f4b2e8403360fc2a7f299c94c46820bb0bcf904601",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 {\n\treturn b\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P02",
+   "f1_id": "F1-P02",
+   "f1_sha256": "2ab81c70d64699c9afe59cda7d49edcb577e10a57e32f2402af6ad67a0632c3e",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "1ab1466ff6977c78fc11be9767a62988be683664ca65e171d2aa1ca6e25f0dac",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 { return a+b; }\n"
+  },
+  {
+   "id": "F2-go-F1-P03",
+   "f1_id": "F1-P03",
+   "f1_sha256": "ce4e5d1d53ed51443e3b940939a21b8fff9bb35db202438920f398938c0f7fb6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c1a1ea69e17e4cdd13562cbe7db8460036f21e704681a978ab0c9bbb728f9506",
+   "source": "package main\n\n// F2 rewrite of F1-P03.\nfunc calc(a uint64, b uint64) uint64 {\n\treturn a-b // result\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P04",
+   "f1_id": "F1-P04",
+   "f1_sha256": "78db75440f5b5da2dafb59d0f771b696171c24d2698677f959e2ab430a2ebfd6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "e7632847d660e6a895f353f30f1e8509a536719f49057420558fe1bda276e406",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a*b }\n"
+  },
+  {
+   "id": "F2-go-F1-P05",
+   "f1_id": "F1-P05",
+   "f1_sha256": "277232cc9416a0c4f06004c5b00dbaab33952fc411c7e42f505f324026ca1765",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "cd865647b3b8de2b1ce06e6e7194a1ce499338e09fde7ca8bb2436863d62101a",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 {\n\treturn (a+b)*(a-b)\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P06",
+   "f1_id": "F1-P06",
+   "f1_sha256": "4332e4105d4442afba0b586e9574f1f192d7ed740099228eae26ad15473a5099",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "dcf0f233bfcd2cbbec5915b2bd5b4b297cdefb3242d046656b85ce74488fcfc9",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 { return a+0; }\n"
+  },
+  {
+   "id": "F2-go-F1-P07",
+   "f1_id": "F1-P07",
+   "f1_sha256": "7339bf648758434626305006d637470ca6d97399010515134dd4358940641451",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "5547d7ff3afcc7fca4082df601d3265d2c37a33837fa450d239cbf0db6330b66",
+   "source": "package main\n\n// F2 rewrite of F1-P07.\nfunc calc(a uint64, b uint64) uint64 {\n\treturn a-1 // result\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P08",
+   "f1_id": "F1-P08",
+   "f1_sha256": "9bb734b9718ebfbfac521731fa2bbd0ea59b201afc77ca385bcce151fa76a703",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c785ac742d45d57bc9cc994fa0f5cb5739b41b45cf095aa26dfe8ffd633f416d",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a*2 }\n"
+  },
+  {
+   "id": "F2-go-F1-P09",
+   "f1_id": "F1-P09",
+   "f1_sha256": "9d409851a2558cf54315c84c4917ec67d1bee299ff7d371557d707416542b631",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "489f692e23b87b21271f6d7d6558b848f0192d4b16e453cf337e385206d90880",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 {\n\treturn 0-a\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P10",
+   "f1_id": "F1-P10",
+   "f1_sha256": "aa0163f4a11aa259d38605ed3d26a56cbd80b381b32a9a20ffa10f82dbcd68ea",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "8d70276a8443fe90a97b42eb6c407129fa2596b095311573e11b4e4234f917a0",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 { return 18446744073709551615+a; }\n"
+  },
+  {
+   "id": "F2-go-F1-P11",
+   "f1_id": "F1-P11",
+   "f1_sha256": "83d8dadc4e596492af0bd7c79b865fd5c5cb6b8536370706f95efd5c59f261d5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "37233a251316420ffb5385082c29d2bec6698ed20414ae0ba3c5ef8f852b5259",
+   "source": "package main\n\n// F2 rewrite of F1-P11.\nfunc calc(a uint64, b uint64) uint64 {\n\treturn a*b+3 // result\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P12",
+   "f1_id": "F1-P12",
+   "f1_sha256": "a23775feb8d8822fc987bc087356a2dec17d4a85dd9a8fceb36606dac6e28572",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "8408a924ffc9fc48c02afe053df23b2868055961e9ea64cf5360671995d3ce3a",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a+a+b }\n"
+  },
+  {
+   "id": "F2-go-F1-P13",
+   "f1_id": "F1-P13",
+   "f1_sha256": "23bc6a271dbba691f7a87f0f37e15ab125cecf8be229ab965777342266252ad2",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "2754b71016748382b8de735f04539f5139a4d8bfae6df4f2a3d7e5fd5fe71584",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 {\n\treturn a+(a+b)\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P14",
+   "f1_id": "F1-P14",
+   "f1_sha256": "11c77e44f631b68afbf893f347a6e94498aae6213af99950deb03eea53f6da05",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "be7e70a2b28f87b32c91fbcfc150887f023f4faa0ae8758a816427e2481624b8",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 { return a-b-b; }\n"
+  },
+  {
+   "id": "F2-go-F1-P15",
+   "f1_id": "F1-P15",
+   "f1_sha256": "c5f7c9fdc269761e8ad7a4a3fa9ed0a2a2ccd7115cd2721a503203c778a2da2f",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "67721e370589d71054f202ef6430b28a5ed512e147d773c19e08acd5d1b0d585",
+   "source": "package main\n\n// F2 rewrite of F1-P15.\nfunc calc(a uint64, b uint64) uint64 {\n\treturn a-(b-b) // result\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P16",
+   "f1_id": "F1-P16",
+   "f1_sha256": "d17614f4cb5234a2234af049027f78f1f49a5f6f03d5f2e5c7c2b4b580f263c5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "eaddacf7cfad07872fedf396794dbc6d5ef00a889a8e2b405bf02b637cce917d",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a*b*a }\n"
+  },
+  {
+   "id": "F2-go-F1-P17",
+   "f1_id": "F1-P17",
+   "f1_sha256": "a686cff8ae29e41a88bd4904c479806fec36f691e87d5732de68f59f319c694d",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "502f7a36225663b11018c235dd965f4f8a42316748b17778f2d36c85ecb54161",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 {\n\treturn a*(b*a)\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P18",
+   "f1_id": "F1-P18",
+   "f1_sha256": "262e9b705e8ba8c433e540f49209540cc7406bacb7e3b95c0b1cd5ad869af607",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "f814c7b90772087ae03fbb5f678a232b21ea825bd293ba7acf1192078eac09b4",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 { return 123; }\n"
+  },
+  {
+   "id": "F2-go-F1-P19",
+   "f1_id": "F1-P19",
+   "f1_sha256": "0b7ae5fc5fcacdd7b3040571e1838c324ba755ab1e9ecf7ba363e4d05d118511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "52e979923a2e5f5428afa30324bfb43ba70fd0668bd9f0504fbc1be0f97186f2",
+   "source": "package main\n\n// F2 rewrite of F1-P19.\nfunc calc(a uint64, b uint64) uint64 {\n\treturn ((a)) // result\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P20",
+   "f1_id": "F1-P20",
+   "f1_sha256": "e83ba5c9beccb2a5639359cbca57afd15b7a508aa86d912ce861d7b14b335d50",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b02e2e56add46e59e7f7b3ac18218c1b54c5eceb723d1c1dc242ae45031c91dd",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return (a+b)*(b+1) }\n"
+  },
+  {
+   "id": "F2-go-F1-P21",
+   "f1_id": "F1-P21",
+   "f1_sha256": "62ddab9112329da4fb6a45eb8ca1939e51c8bbfe0db85ba3784c4df0b078e757",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c4eff434bfd9e1fe90787ef50d88f6798a9a6ecd4146b10211aa9193da768462",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 {\n\treturn a+b*2\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P22",
+   "f1_id": "F1-P22",
+   "f1_sha256": "f2472d246de322a108e5bc3098e7d7e359e7511b9ca07723c2560130ffc86656",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "6b01383b48d0e5e8e7eead2bcbacd3e299542b1c05e0c85c939da93a50af3022",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 { return (a+b)*2; }\n"
+  },
+  {
+   "id": "F2-go-F1-P23",
+   "f1_id": "F1-P23",
+   "f1_sha256": "6ac071f7821d7d29ca2e3961b90a89471e3f8f1a3150e06b1ab4642183ff6121",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "28df600cf1d88cd3523fed91b3d21c05bf5bc0ea268ded0dafec1db41cbe652e",
+   "source": "package main\n\n// F2 rewrite of F1-P23.\nfunc calc(a uint64, b uint64) uint64 {\n\treturn a-2*b // result\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P24",
+   "f1_id": "F1-P24",
+   "f1_sha256": "f844f1cd780ee05f2e0218ce28afef6ae528d7d89c570253cdb8d82084784511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "70b260b683eef00d27b595e7b0e72daca16fa134f7e932167150228520752f5b",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return (a-2)*b }\n"
+  },
+  {
+   "id": "F2-go-F1-P25",
+   "f1_id": "F1-P25",
+   "f1_sha256": "e446180a9b2462c5508e23bbd94371e2c0ee409a6b540a219a70026fe15fb568",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c3232dd564f643db568162a97fb99b66bf2eb2951a367c298dcfff6264a66f2e",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 {\n\treturn a+18446744073709551615*b\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P26",
+   "f1_id": "F1-P26",
+   "f1_sha256": "26762c67b1d44a63563289ecd4c80ee13655629a93ac95bc727a9d59d74eccf7",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "5f1edbbe3b4db2f39254788853d37893908da61e2894877c239cf7166e2239ef",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 { return 2*3+4; }\n"
+  },
+  {
+   "id": "F2-go-F1-P27",
+   "f1_id": "F1-P27",
+   "f1_sha256": "412ea121023c650878fc8e0dc12146e7dc9a083b3c9fde4adf813ace9baec525",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "1725fab2b8b177830e51f4188725800936635bb65c38214c29f32bf46b079d43",
+   "source": "package main\n\n// F2 rewrite of F1-P27.\nfunc calc(a uint64, b uint64) uint64 {\n\treturn 2*(3+4) // result\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P28",
+   "f1_id": "F1-P28",
+   "f1_sha256": "e8b386f48e1ae8e8d91a073518e0c792e7c54e1a9cca283b37662aa66f636392",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "5df0f8548c789ef6ea6008f5e80b06363d92ed3330779a2b5b725d47815b659e",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a-b+a*b }\n"
+  },
+  {
+   "id": "F2-go-F1-P29",
+   "f1_id": "F1-P29",
+   "f1_sha256": "5ccf53bf81d312f299d2b5e916447830417b61a1e1a696460d7121dabb941106",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "4b7130509f3bfdf671de401c9be8d4eff13f7983bc9b31aa39170d7844727512",
+   "source": "package main\n\nfunc calc(a, b uint64) uint64 {\n\treturn (a+a)*(b+b)\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P30",
+   "f1_id": "F1-P30",
+   "f1_sha256": "01332f15d4dc15b52bfb8f1ad9ee7c5eeb1e9cbeec229e1ebe790678b28d7963",
+   "name": "calc",
+   "inputs": 0,
+   "sha256": "f4add429f20dae5982cc2b9adab7e21b043bc1cec82b0cd696cade4da9e6103e",
+   "source": "package main\n\nfunc calc() uint64 { return 7; }\n"
+  },
+  {
+   "id": "F2-go-F1-P31",
+   "f1_id": "F1-P31",
+   "f1_sha256": "255692046d239f102f700df892a5519525d7615e3cba14517be1f383e2aa5644",
+   "name": "calc",
+   "inputs": 1,
+   "sha256": "98ce7f85c5bad5e2d6cd879385b1c5fc4e447c25773ee534a6d3582f37404f43",
+   "source": "package main\n\n// F2 rewrite of F1-P31.\nfunc calc(x uint64) uint64 {\n\treturn x // result\n}\n"
+  },
+  {
+   "id": "F2-go-F1-P32",
+   "f1_id": "F1-P32",
+   "f1_sha256": "14daf8acaa708f00035d3d6dcc7bb5ce341a4f859cb9fc89517d6a5a6b18bf5b",
+   "name": "calc",
+   "inputs": 6,
+   "sha256": "264bbd6a4c01bf84f7d570070ef9c5b3480a4a696088bad565de0c4e140c538d",
+   "source": "package main\n\nfunc calc(a uint64, b uint64, c uint64, d uint64, e uint64, f uint64) uint64 { return a+b+c+d+e+f }\n"
+  },
+  {
+   "id": "F2-go-F1-P33",
+   "f1_id": "F1-P33",
+   "f1_sha256": "48d398126ae85ad37b7fa9b96acd0d84a3bc980bed9c176843da4dc52ed4b6ef",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "8167f600e41cad1eb858d02076ec0896fca48aaf512506f9ce73258d93786208",
+   "source": "package main\n\n/* \u03b1 comment retained */\nfunc calc(left, right uint64) uint64 { /* keep */ return left*right }\r\n"
+  },
+  {
+   "id": "F2-go-F1-P34",
+   "f1_id": "F1-P34",
+   "f1_sha256": "7c48737aa01323118ce87f9c95ed39edf11b554cd9fd9e8741b30fa548555dc6",
+   "name": "omega_fold",
+   "inputs": 2,
+   "sha256": "8739b9a8c1c55dd1d95016efb506ea4622bd192e0d1c2b8cea84280e5f98f89c",
+   "source": "package main\n\nfunc omega_fold(a, b uint64) uint64 { return a*b+42; }\n"
+  }
+ ],
+ "not_in_profile": [],
+ "extra_positives": [
+  {
+   "id": "F2-go-X000",
+   "name": "const-max-root",
+   "function": "calc",
+   "inputs": 0,
+   "reason": "largest literal as the whole constant root",
+   "sha256": "5eac468366694aa389661a8a1dd76dfa98c34dd6d71b1d5698a641263c59fbaa",
+   "source": "package main\n\nfunc calc() uint64 { return 18446744073709551615 }\n"
+  },
+  {
+   "id": "F2-go-X001",
+   "name": "const-exact-max",
+   "function": "calc",
+   "inputs": 2,
+   "reason": "constant-only subexpression exactly 2^64-1 (every node in range)",
+   "sha256": "55d9ecfdcb00eac269e47ab4deea750665109bf65577c5b3f9ddff4c603c95b7",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return 4294967296*4294967295 + 4294967295 }\n"
+  },
+  {
+   "id": "F2-go-X002",
+   "name": "const-sub-to-zero",
+   "function": "calc",
+   "inputs": 2,
+   "reason": "constant-only subexpression exactly 0, then a variable",
+   "sha256": "dc78b150ce1b17042534557faaae9358a2148eb53018c8c9366fbcf4890ec1de",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return 18446744073709551615 - 18446744073709551615 + a }\n"
+  },
+  {
+   "id": "F2-go-X003",
+   "name": "const-left-zero-minus-var",
+   "function": "calc",
+   "inputs": 2,
+   "reason": "constant 0 is converted to uint64 because the other operand is a variable; wraps",
+   "sha256": "606cb223bdacb72cc0b82ab6648214dbdf500288f72a3cc921d69eb81473fd02",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return 0 - a - b }\n"
+  },
+  {
+   "id": "F2-go-X004",
+   "name": "const-max-times-var",
+   "function": "calc",
+   "inputs": 2,
+   "reason": "each literal meets a uint64 operand; products wrap",
+   "sha256": "74bb7389c610edf0e31bc6b2fc438a068e02291a548b7791330e2152b2d9023f",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return 18446744073709551615 * a * 18446744073709551615 }\n"
+  },
+  {
+   "id": "F2-go-X005",
+   "name": "var-wrap-sub",
+   "function": "calc",
+   "inputs": 2,
+   "reason": "all wrapping is uint64 run-time arithmetic",
+   "sha256": "a7d514997e99ed5ad0c0a59b810cef621a8d486b1902de28daf475bc24858436",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a - b - 18446744073709551615 }\n"
+  },
+  {
+   "id": "F2-go-X006",
+   "name": "grouped-mixed-params",
+   "function": "calc",
+   "inputs": 3,
+   "reason": "grouped and single parameter groups",
+   "sha256": "1eeefa31e1a75b3922bcf5792f706e31be23bc4178e1d54bda212ac517bc851f",
+   "source": "package main\n\nfunc calc(a, b uint64, c uint64) uint64 { return a*b - c }\n"
+  },
+  {
+   "id": "F2-go-X007",
+   "name": "multiline-operator-continuation",
+   "function": "calc",
+   "inputs": 2,
+   "reason": "newlines after binary operators do not insert semicolons",
+   "sha256": "6f0d58b5f025dfc3c9f2b49af02fa13ea95835ee44ba004c6b311d0719879ac2",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 {\n\treturn a +\n\t\tb*(a -\n\t\t\tb)\n}\n"
+  },
+  {
+   "id": "F2-go-X008",
+   "name": "comment-forms",
+   "function": "calc",
+   "inputs": 2,
+   "reason": "line, general and multi-line general comments",
+   "sha256": "21ef10140ea2f05b8af7539d07d886cb47edd6708a158556e5b66f0e7ee9f793",
+   "source": "package main\n\nfunc calc(a uint64, /* b */ b uint64) uint64 { // header\n\t/* multi\n\tline */\n\treturn a /* x */ * b\n}\n"
+  },
+  {
+   "id": "F2-go-X009",
+   "name": "explicit-semicolons",
+   "function": "calc",
+   "inputs": 1,
+   "reason": "explicit semicolons in every allowed position",
+   "sha256": "6fca1aaae163e67ff20205f339a9dcc8d5dd44967747c511e1a3b60f2b4164e0",
+   "source": "package main; func calc(a uint64) uint64 { return a; };"
+  },
+  {
+   "id": "F2-go-X010",
+   "name": "omega-name",
+   "function": "omega_x9",
+   "inputs": 1,
+   "reason": "omega_ function name",
+   "sha256": "7972b5a235094ad37ea46762bdf186a717906c7cc80513fde231c04073754304",
+   "source": "package main\n\nfunc omega_x9(a uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-X011",
+   "name": "six-inputs-unused",
+   "function": "calc",
+   "inputs": 6,
+   "reason": "unused parameters keep their slots",
+   "sha256": "77ca0345a45fa4e90bc2445c8a716354482e323c58aa3cb09bc5546e939f2150",
+   "source": "package main\n\nfunc calc(a, b, c, d, e, f uint64) uint64 { return f }\n"
+  }
+ ],
+ "refusals": [
+  {
+   "id": "F2-go-N000",
+   "name": "nul",
+   "status": 65,
+   "reason": "NUL byte",
+   "sha256": "96c32aa34730e5d9d39ae18e8e0c422fe391e956bfa2a3113c7328e674762d30",
+   "go_build": "reject",
+   "source_hex": "7061636b616765206d61696e0a0a66756e632063616c6328612075696e7436342c20622075696e743634292075696e743634207b2072657475726e2061207d00"
+  },
+  {
+   "id": "F2-go-N001",
+   "name": "unterminated-block-comment",
+   "status": 65,
+   "reason": "unterminated general comment",
+   "sha256": "3668749c29ed1b8f7dc584f810667a1be98294b4282640e20cca94acb99e88ae",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n/* x"
+  },
+  {
+   "id": "F2-go-N002",
+   "name": "missing-return-value",
+   "status": 65,
+   "reason": "return with no expression",
+   "sha256": "f74c7b20bc7043dbdf081472ca7086f15c6250d441e8483a35c058b9da978d97",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64) uint64 { return }\n"
+  },
+  {
+   "id": "F2-go-N003",
+   "name": "empty-body",
+   "status": 65,
+   "reason": "no return statement",
+   "sha256": "2d938dc59c92abcf468a9ab5115bf9f85725ce5a5572325161617ae650a15341",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64) uint64 { }\n"
+  },
+  {
+   "id": "F2-go-N004",
+   "name": "trailing-comma",
+   "status": 65,
+   "reason": "trailing comma in the parameter list (one spelling)",
+   "sha256": "2e7e6b6efe2d23dc200ebefd97949b46c9dc6e654492aa75a49391c9fe5777b4",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64,) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N005",
+   "name": "newline-before-close-paren",
+   "status": 65,
+   "reason": "semicolon inserted after uint64 before ) (Go requires a trailing comma there)",
+   "sha256": "7f346bfc92852233987517be7bc59c4e04b0ac4940397aafb9d9d89384f4aa87",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64\n) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N006",
+   "name": "newline-inside-parens",
+   "status": 65,
+   "reason": "semicolon inserted after a inside parentheses",
+   "sha256": "7489baa9ac91588537a2d098fe26e8168d6ff99dfdecc92fdf1aba73ea1608a2",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return (a\n+ b) }\n"
+  },
+  {
+   "id": "F2-go-N007",
+   "name": "newline-after-return",
+   "status": 65,
+   "reason": "semicolon inserted after return",
+   "sha256": "ba00a37d160bc022b177ff4294479a2d9966a70bdc6cd7493847a299a4b1f6a5",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64) uint64 {\n\treturn\n\ta\n}\n"
+  },
+  {
+   "id": "F2-go-N008",
+   "name": "package-no-separator",
+   "status": 65,
+   "reason": "package clause not terminated",
+   "sha256": "b6d3f49afa542d8f9e7a7e9c59f7108ee0c2ba5e48a3721b1851a8533fa4d6b6",
+   "go_build": "reject",
+   "source": "package main func calc(a uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N009",
+   "name": "missing-operator",
+   "status": 65,
+   "reason": "two operands without an operator",
+   "sha256": "2d93d8dac48847c2e34af9590a60e65daedc8331d5c9f2c0db7ee85d504fafd6",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a b }\n"
+  },
+  {
+   "id": "F2-go-N010",
+   "name": "unbalanced-paren",
+   "status": 65,
+   "reason": "missing )",
+   "sha256": "f8fbb36529c186d73f7b8dc8bcee5de40322017ff0b7585a66bc0d22c050ff68",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return (a + b }\n"
+  },
+  {
+   "id": "F2-go-N011",
+   "name": "missing-param-type",
+   "status": 65,
+   "reason": "parameter list ends without a type",
+   "sha256": "921cba52e85a1186cd219a2449002a7ec0e29a9115ce58f98cbb3ccddd3ce3df",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a, b) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N012",
+   "name": "double-semicolon",
+   "status": 69,
+   "reason": "an empty statement after return (statements other than one return refuse)",
+   "sha256": "f779c5b3ac8cc1025db34ebb8c6ee892c338403f72544d15499499a80864bfcb",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) uint64 { return a;; }\n"
+  },
+  {
+   "id": "F2-go-N013",
+   "name": "param-int",
+   "status": 66,
+   "reason": "parameter type int is not uint64",
+   "sha256": "068d16ce5bcca897263d6f64e90c96d79c58c05c4d09008d8bd74ab43f74cf36",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a int) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N014",
+   "name": "param-uint",
+   "status": 66,
+   "reason": "parameter type uint is not uint64",
+   "sha256": "bab58df675fba8a119ce4aebed9894419436098dc99ed3ef7c95147562f0a1b0",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N015",
+   "name": "param-uintptr",
+   "status": 66,
+   "reason": "parameter type uintptr is not uint64",
+   "sha256": "ece29555e68ed98731675e91328fbd75fda1acc06e1d2a426756267c30136e18",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uintptr) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N016",
+   "name": "param-uint32",
+   "status": 66,
+   "reason": "parameter type uint32 is not uint64",
+   "sha256": "ee01b008e657a054f6dc000a3d55528d37df3d8a8be838e86c249fa084d9cf2b",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint32) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N017",
+   "name": "param-int64",
+   "status": 66,
+   "reason": "parameter type int64 is not uint64",
+   "sha256": "a2fe4fa4f6a4999d21b80bf241be2b8ab824e026803948ec6e19e289acf8d8e0",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a int64) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N018",
+   "name": "param-byte",
+   "status": 66,
+   "reason": "parameter type byte is not uint64",
+   "sha256": "575af80df6b1029c3dfc479191138cddff983d6565253305dd35f56e9ccf1321",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a byte) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N019",
+   "name": "param-ptr-uint64",
+   "status": 66,
+   "reason": "parameter type *uint64 is not uint64",
+   "sha256": "e9816c290af70f89ee4392766d2e7f2c3ed1013f1b714ed2242d398a2e89a299",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a *uint64) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N020",
+   "name": "param-slice-uint64",
+   "status": 66,
+   "reason": "parameter type []uint64 is not uint64",
+   "sha256": "950d6a4969f385a372b8986459efffa5c98d0ef4ff87372c684e1bc5b5fdbf9a",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a []uint64) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N021",
+   "name": "result-int",
+   "status": 66,
+   "reason": "result type int",
+   "sha256": "3f7c3fbf385ce446251d85e001c444550db5e144014c5fbe5c49bbb9d4155dc3",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) int { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N022",
+   "name": "conversion",
+   "status": 66,
+   "reason": "conversion uint64(x) (a type name in an expression)",
+   "sha256": "72a4b61aa380662e01c72209a592a10b2b4ca8a5fa0870679184f57733835d5d",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return uint64(a) }\n"
+  },
+  {
+   "id": "F2-go-N023",
+   "name": "conversion-of-constant",
+   "status": 66,
+   "reason": "conversion of a constant",
+   "sha256": "70b4d32cf484c6848960a32acb1500c7629047ea9347d710c2def9cbc6629b4c",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + uint64(1) }\n"
+  },
+  {
+   "id": "F2-go-N024",
+   "name": "literal-above-max",
+   "status": 67,
+   "reason": "literal 2^64",
+   "sha256": "68e0e22dcaca496cd84cd7c1fb854fc6b0232366b2434d3789c9d3605b6a5726",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 18446744073709551616 }\n"
+  },
+  {
+   "id": "F2-go-N025",
+   "name": "seven-params",
+   "status": 67,
+   "reason": "more than six parameters",
+   "sha256": "2890ae041e6842e7bcf8cba5e310e3c8bbecc8747426a1e5e7a7253bbf236eed",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a, b, c, d, e, f, g uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N026",
+   "name": "op-div",
+   "status": 68,
+   "reason": "division is not an S1 operation",
+   "sha256": "e5553f8a11590ecb579e6ba430af254e516584e047a2c2f30a2861ede11fd2d6",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a / b }\n"
+  },
+  {
+   "id": "F2-go-N027",
+   "name": "op-rem",
+   "status": 68,
+   "reason": "remainder is not an S1 operation",
+   "sha256": "b41c0374d7a10b54106b966cbf5b361cf65f35afb5692cb87fe1737255847a72",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a % b }\n"
+  },
+  {
+   "id": "F2-go-N028",
+   "name": "op-xor",
+   "status": 68,
+   "reason": "bitwise xor is not an S1 operation",
+   "sha256": "07427926fd19e9c69c2f64dd251d75ffd5cebfeaf5fb1499d7d9f20b6fe0ea24",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a ^ b }\n"
+  },
+  {
+   "id": "F2-go-N029",
+   "name": "op-and",
+   "status": 68,
+   "reason": "bitwise and is not an S1 operation",
+   "sha256": "78228b5a568771814458991efd086b66db231ecbba2d32a79cceed67fe26c458",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a & b }\n"
+  },
+  {
+   "id": "F2-go-N030",
+   "name": "op-or",
+   "status": 68,
+   "reason": "bitwise or is not an S1 operation",
+   "sha256": "638eca558bade4422eb96ca02883bb2b52c39335e9d7121343f11f0b2d9cf711",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a | b }\n"
+  },
+  {
+   "id": "F2-go-N031",
+   "name": "op-andnot",
+   "status": 68,
+   "reason": "bit clear is not an S1 operation",
+   "sha256": "91881c19cc1b29a56735d31680d66d1b5befebd9d51d750e61b94d581f65d98f",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a &^ b }\n"
+  },
+  {
+   "id": "F2-go-N032",
+   "name": "op-shl",
+   "status": 68,
+   "reason": "shift is not an S1 operation",
+   "sha256": "0708f4de6ed04e3a9ed56b8a85253248a5529fcf0166c430b1a6b6664a61b788",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a << b }\n"
+  },
+  {
+   "id": "F2-go-N033",
+   "name": "op-shr",
+   "status": 68,
+   "reason": "shift is not an S1 operation",
+   "sha256": "5d8248872805fd331e63a2eacce6162647ba858f7043741471b624f5ef561d05",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a >> b }\n"
+  },
+  {
+   "id": "F2-go-N034",
+   "name": "op-eq",
+   "status": 68,
+   "reason": "comparison is not an S1 operation",
+   "sha256": "7b4069b3a2ff813bb8531de8e412a8f154cb5dcaed00afff4d4c94f5ed38f629",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a == b }\n"
+  },
+  {
+   "id": "F2-go-N035",
+   "name": "op-lt",
+   "status": 68,
+   "reason": "comparison is not an S1 operation",
+   "sha256": "52ebfe5874ac20aeb8cc4d054b169e4ad708245e6da593405b7d885f34a13347",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a < b }\n"
+  },
+  {
+   "id": "F2-go-N036",
+   "name": "op-ne",
+   "status": 68,
+   "reason": "comparison is not an S1 operation",
+   "sha256": "2e4686b49c27ee269e90c1e37ddb00f2b22c33a36e57a101734cde6e96523e02",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a != b }\n"
+  },
+  {
+   "id": "F2-go-N037",
+   "name": "unary-minus",
+   "status": 68,
+   "reason": "unary minus",
+   "sha256": "74cb23b8b2aecd848719aee323600a0c6d9a4cf405e0d4afdd2471469bf275fe",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return -a }\n"
+  },
+  {
+   "id": "F2-go-N038",
+   "name": "unary-plus",
+   "status": 68,
+   "reason": "unary plus",
+   "sha256": "f1088bc73f43bd4b9d8c253cc1ffadec936bb436794fe80702c72cbdec5be47c",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return +a }\n"
+  },
+  {
+   "id": "F2-go-N039",
+   "name": "unary-complement",
+   "status": 68,
+   "reason": "unary ^ (bitwise complement)",
+   "sha256": "b2598f41821ac1ba3207fe66a722dade876ad6261493de0f3fc09b7a8f747aee",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return ^a }\n"
+  },
+  {
+   "id": "F2-go-N040",
+   "name": "octal-legacy",
+   "status": 68,
+   "reason": "010 is octal 8 in Go; a second spelling of a number",
+   "sha256": "59ccb8f33015acf20b1ed64de754047c1b92753daa8a032333e0240eef0291d6",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 010 }\n"
+  },
+  {
+   "id": "F2-go-N041",
+   "name": "octal-0o",
+   "status": 68,
+   "reason": "0o prefix",
+   "sha256": "f6326c5c9056e61ec922b8e7b16e872f74e38089fdc6f622d34d6e7fddc1c3be",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 0o10 }\n"
+  },
+  {
+   "id": "F2-go-N042",
+   "name": "hex",
+   "status": 68,
+   "reason": "hexadecimal literal",
+   "sha256": "f5f1a010b3c71c3b728ff1c7dcd06c21b2931f9aa81b07a74e012dab1f2cbd9c",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 0x10 }\n"
+  },
+  {
+   "id": "F2-go-N043",
+   "name": "binary-literal",
+   "status": 68,
+   "reason": "binary literal",
+   "sha256": "366ac75917bc02a963be2cfc9190ddc0cdf093b79da3d41c9a4c3cad00635c9b",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 0b1 }\n"
+  },
+  {
+   "id": "F2-go-N044",
+   "name": "digit-separator",
+   "status": 68,
+   "reason": "_ digit separator",
+   "sha256": "69aa0b7568e9cce39ece0c3bf15304594de98e525c3f77b7b50887ec652ea19f",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 1_000 }\n"
+  },
+  {
+   "id": "F2-go-N045",
+   "name": "float-exponent",
+   "status": 68,
+   "reason": "float constant 1e3 (converts exactly to uint64 in Go)",
+   "sha256": "9de2e71bf42c6570857f63fe2095c7d4adad4a183c1fe7f04ad58cb18f2574a9",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 1e3 }\n"
+  },
+  {
+   "id": "F2-go-N046",
+   "name": "float-point",
+   "status": 68,
+   "reason": "float constant 2.0",
+   "sha256": "4bbc61bdffe7d1dfe1267675f9358b585ed9a020f65415874cbece0fbb077959",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a * 2.0 }\n"
+  },
+  {
+   "id": "F2-go-N047",
+   "name": "float-leading-dot",
+   "status": 68,
+   "reason": "float constant .5",
+   "sha256": "0a1280065d39bdb0b4827ffd84d98bacda584b05002449176459c7c0b1a3631d",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + .5 }\n"
+  },
+  {
+   "id": "F2-go-N048",
+   "name": "imaginary",
+   "status": 68,
+   "reason": "imaginary constant",
+   "sha256": "380d08ac2e742bce695fab3c9369b1c9f9868dcc56171388ccedb31ef3b558ea",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 1i }\n"
+  },
+  {
+   "id": "F2-go-N049",
+   "name": "rune-literal",
+   "status": 68,
+   "reason": "rune constant",
+   "sha256": "f80d67d82eae9add62bf23ce3b849a673b36731cb1661f34de429b355b7b7df1",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + 'a' }\n"
+  },
+  {
+   "id": "F2-go-N050",
+   "name": "const-negative-operand",
+   "status": 68,
+   "reason": "constant-only (0 - 1) is -1: Go rejects the conversion to uint64",
+   "sha256": "595994a760f2a35d0516a5b358a7325ec11419cee8660019886c27e5d85d951b",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + (0 - 1) }\n"
+  },
+  {
+   "id": "F2-go-N051",
+   "name": "const-negative-left",
+   "status": 68,
+   "reason": "constant-only 0 - 1 on the left of + a",
+   "sha256": "b6828c13fc4917fe6a5d33e548d5365996f0132f9228d9ff490f664e87e4efe5",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return 0 - 1 + a }\n"
+  },
+  {
+   "id": "F2-go-N052",
+   "name": "const-overflow-operand",
+   "status": 68,
+   "reason": "constant-only 18446744073709551615 * 2 overflows uint64",
+   "sha256": "85c7f71aa57f2303c2db8f0dcef3b2b7fe5878126fb54dd8082ff5fee2d9e9fd",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a * (18446744073709551615 * 2) }\n"
+  },
+  {
+   "id": "F2-go-N053",
+   "name": "const-overflow-root",
+   "status": 68,
+   "reason": "constant root 2^64-1 + 1 overflows uint64",
+   "sha256": "caeceec169587ed50b9aa340a193498ce1f5733570726938f477cf33c3a9e83e",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc() uint64 { return 18446744073709551615 + 1 }\n"
+  },
+  {
+   "id": "F2-go-N054",
+   "name": "const-negative-root",
+   "status": 68,
+   "reason": "constant root 2 - 3",
+   "sha256": "995cef6dbab5cdde0cb29e9c0e4b2066c1a7de8d4cc23a50701a54c693b2dc8c",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc() uint64 { return 2 - 3 }\n"
+  },
+  {
+   "id": "F2-go-N055",
+   "name": "const-intermediate-negative",
+   "status": 68,
+   "reason": "profile rule: (0 - 1) + 1 has an out-of-range intermediate; Go accepts it (exact value 0)",
+   "sha256": "fc4d5df38fd3cf43dc0e4d32d3f6760efb581feebb25520b21c3a32f6e3cc34e",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc() uint64 { return (0 - 1) + 1 }\n"
+  },
+  {
+   "id": "F2-go-N056",
+   "name": "const-intermediate-overflow",
+   "status": 68,
+   "reason": "profile rule: 18446744073709551615 * 2 - 18446744073709551615 has an out-of-range intermediate; Go accepts it",
+   "sha256": "aa722cfee058d81bb6749563b8ec64f99cd2ce9fb2590951cfcc740061485e75",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return 18446744073709551615 * 2 - 18446744073709551615 + a }\n"
+  },
+  {
+   "id": "F2-go-N057",
+   "name": "increment",
+   "status": 68,
+   "reason": "++ statement",
+   "sha256": "e5909f47aa9c015511e8f23c8c8efe2651089ba221d00011bb721fda5aef80fb",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a++ }\n"
+  },
+  {
+   "id": "F2-go-N058",
+   "name": "import",
+   "status": 69,
+   "reason": "import declaration",
+   "sha256": "5c4c23ec2e460f0d35ef68073c781feeee758b5c85854020366b5aff22bd7a97",
+   "go_build": "reject",
+   "source": "package main\n\nimport \"math\"\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N059",
+   "name": "var-decl",
+   "status": 69,
+   "reason": "package-level var",
+   "sha256": "d637a5e221ddfede99090e37aa71b63eb914889d1847fa8ef8bc88af24a01191",
+   "go_build": "accept",
+   "source": "package main\n\nvar x uint64\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N060",
+   "name": "const-decl",
+   "status": 69,
+   "reason": "package-level const",
+   "sha256": "5292391e269cfebd0ab3df5b0da5cabcc926b701c6d0a1b4bf5584601d861580",
+   "go_build": "accept",
+   "source": "package main\n\nconst k = 1\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N061",
+   "name": "second-func",
+   "status": 69,
+   "reason": "a second declaration",
+   "sha256": "6d3f524bf12942dcab713874533693a7097896642f7bdc789475e0e1a640d01c",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n\nfunc omega_y() uint64 { return 1 }\n"
+  },
+  {
+   "id": "F2-go-N062",
+   "name": "local-var",
+   "status": 69,
+   "reason": "statement before return",
+   "sha256": "9436089ff6169272e7608aa72441f9fb47b7ef85b77ca2000edf3c3eaddb6676",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { x := a; return x }\n"
+  },
+  {
+   "id": "F2-go-N063",
+   "name": "var-stmt",
+   "status": 69,
+   "reason": "var statement",
+   "sha256": "df0d22af018a4b24b6708cca5b904865fc9b0c08952dab6e886dcdf6477eaa14",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) uint64 { var x uint64 = a; return x }\n"
+  },
+  {
+   "id": "F2-go-N064",
+   "name": "if-stmt",
+   "status": 69,
+   "reason": "control flow",
+   "sha256": "e818db272b760499d5df2c6d49f64fd7c4f01f77a998db2f093b454434d3518a",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) uint64 { if a == 0 { return 1 }; return a }\n"
+  },
+  {
+   "id": "F2-go-N065",
+   "name": "go-stmt",
+   "status": 69,
+   "reason": "go statement",
+   "sha256": "6f0686d9143c95c3ea3a963b251afd7e6a5586461c391d0c1ad5fc7a185de73d",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) uint64 { go calc(a); return a }\n"
+  },
+  {
+   "id": "F2-go-N066",
+   "name": "defer-stmt",
+   "status": 69,
+   "reason": "defer statement",
+   "sha256": "868a80d4cfc844c321d5c467fd7a24016214369b277e28cd89b5038ea77ee7bb",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) uint64 { defer calc(a); return a }\n"
+  },
+  {
+   "id": "F2-go-N067",
+   "name": "generics",
+   "status": 69,
+   "reason": "type parameters",
+   "sha256": "260c97efc732a637752e66e926bf6b4fa0f940327ea87af02f4a6a3175ea2de0",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc[T any](a uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N068",
+   "name": "method",
+   "status": 69,
+   "reason": "method receiver",
+   "sha256": "45efd928dd7b16270f7f175abb9f6aa3c506dad20e8d3d42022d9b73f79956d0",
+   "go_build": "reject",
+   "source": "package main\n\nfunc (r T) calc(a uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N069",
+   "name": "named-result",
+   "status": 69,
+   "reason": "named result",
+   "sha256": "c9ed453c8cab7f8b9fb7a16c74a977b3a38e80613d7290827f4048f38604b14b",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) (r uint64) { return a }\n"
+  },
+  {
+   "id": "F2-go-N070",
+   "name": "parenthesized-result",
+   "status": 69,
+   "reason": "parenthesised result list (one spelling)",
+   "sha256": "326f1ae8f1e0fd541407f847cf059dea14e2af85b0220c529d6838a1b710e099",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) (uint64) { return a }\n"
+  },
+  {
+   "id": "F2-go-N071",
+   "name": "multiple-results",
+   "status": 69,
+   "reason": "two results",
+   "sha256": "030dbbd1e82a9e6c9e04c95403f8e96e7d01549d8f09c8312b28fc35dd0fbee0",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) (uint64, uint64) { return a, a }\n"
+  },
+  {
+   "id": "F2-go-N072",
+   "name": "return-two",
+   "status": 69,
+   "reason": "return list",
+   "sha256": "99b4a5b6178cb7aaa80cca8b51ae1fad3171dee1abae48d646f8f81c33e66263",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a, b }\n"
+  },
+  {
+   "id": "F2-go-N073",
+   "name": "variadic",
+   "status": 69,
+   "reason": "variadic parameter",
+   "sha256": "ab78625f6cf7a09a171b9e9e660f2aa6a9bc52fbc4ea8fcb714aed2f04e8ab39",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a ...uint64) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N074",
+   "name": "call-builtin",
+   "status": 69,
+   "reason": "builtin call",
+   "sha256": "01076d2fcb9166d1ad30c5cfc162b471afafcaba697e2f895d69949b808035a9",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return max(a, b) }\n"
+  },
+  {
+   "id": "F2-go-N075",
+   "name": "call-param",
+   "status": 69,
+   "reason": "call of a parameter",
+   "sha256": "3264b721f7e32b6143f807204917b5694d979a386c74f21be2afbaed6af6fca8",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a(b) }\n"
+  },
+  {
+   "id": "F2-go-N076",
+   "name": "selector",
+   "status": 69,
+   "reason": "selector expression",
+   "sha256": "1f70334ec40a7a2f103070e5077b36bbb20722264e1aeea75f1ea3f92a9cc8ec",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a.b }\n"
+  },
+  {
+   "id": "F2-go-N077",
+   "name": "string",
+   "status": 69,
+   "reason": "string literal",
+   "sha256": "3b30fa0c6abeb496991d32792c6e5e2f8b8a0bbebdb78a21826bd4480b34ccc3",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return \"x\" }\n"
+  },
+  {
+   "id": "F2-go-N078",
+   "name": "unicode-ident",
+   "status": 69,
+   "reason": "non-ASCII identifier outside comments",
+   "sha256": "ca789466ad1c9ed4c149c045c29e2b509c871df16191e60402fbe9c8cde9a105",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(\u00e9 uint64) uint64 { return \u00e9 }\n"
+  },
+  {
+   "id": "F2-go-N079",
+   "name": "statement-after-return",
+   "status": 69,
+   "reason": "newline ends the return statement; a second statement follows",
+   "sha256": "7f4fee55c42700ffe10a56fc2ae8a7a31243436af72ccf360ba02982bddac62f",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 {\n\treturn a\n\t+ b\n}\n"
+  },
+  {
+   "id": "F2-go-N080",
+   "name": "iota",
+   "status": 69,
+   "reason": "predeclared iota",
+   "sha256": "1759105a181a7562ed5addd87bd08d47826f09968bf9be546c280689d7fa905d",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a + iota }\n"
+  },
+  {
+   "id": "F2-go-N081",
+   "name": "assignment",
+   "status": 69,
+   "reason": "assignment in expression position",
+   "sha256": "514a328bc0a20d0aae9b96fdaa1aaa6942f6e6c9ad10b3b82eda84ac74bed314",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return a = b }\n"
+  },
+  {
+   "id": "F2-go-N082",
+   "name": "not-package-first",
+   "status": 69,
+   "reason": "declaration before the package clause",
+   "sha256": "82d13d512ef78733651ea6d35be3a71f3add45ac929aa840bee116778c7d79fa",
+   "go_build": "reject",
+   "source": "func calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N083",
+   "name": "unknown-identifier",
+   "status": 70,
+   "reason": "identifier that is not a parameter",
+   "sha256": "a312855005e166f1cd5ac75f226351adad4fb4f7235d0a6fdce335da969f8c30",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return c }\n"
+  },
+  {
+   "id": "F2-go-N084",
+   "name": "self-reference",
+   "status": 70,
+   "reason": "the function itself is not an operand",
+   "sha256": "63b5757d972861fce64014f61950033cac23bcfa3a0dd2e60ba73345b67592c3",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a uint64, b uint64) uint64 { return calc }\n"
+  },
+  {
+   "id": "F2-go-N085",
+   "name": "package-calc",
+   "status": 71,
+   "reason": "package clause other than package main",
+   "sha256": "99d15ddbf269fbe3645749e0e99c906614474551606143ab0ecea1e1025ee6f6",
+   "go_build": "n/a",
+   "source": "package calc\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N086",
+   "name": "exported-name",
+   "status": 71,
+   "reason": "function name rules: Calc",
+   "sha256": "01a4f0115f57a297b6819771f84594d9ecfbd9854123459ea7724ae96802fa0f",
+   "go_build": "accept",
+   "source": "package main\n\nfunc Calc(a uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N087",
+   "name": "main-name",
+   "status": 71,
+   "reason": "function name rules: main",
+   "sha256": "d0944c1272c6f57ab3b7dc72f3c1c006206b720644b5de359dae4f4ce136cd1b",
+   "go_build": "n/a",
+   "source": "package main\n\nfunc main() uint64 { return 1 }\n"
+  },
+  {
+   "id": "F2-go-N088",
+   "name": "other-name",
+   "status": 71,
+   "reason": "function name rules: foo",
+   "sha256": "e85b0114e42aa9dec1dbb2223770130a43f779efc87de2a57d0b036372b1871a",
+   "go_build": "accept",
+   "source": "package main\n\nfunc foo(a uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N089",
+   "name": "blank-param",
+   "status": 71,
+   "reason": "parameter _ (name rules)",
+   "sha256": "11bce403e608b6e0ddc429a483feae64dc2205f7bfe2ae76aa3663094b6a11e5",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(_ uint64) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N090",
+   "name": "upper-param",
+   "status": 71,
+   "reason": "parameter name must start a..z",
+   "sha256": "41cdb2537347cabb03f03c62fbd901049e567494986f8dcfb779b40c0793ee7e",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(A uint64) uint64 { return A }\n"
+  },
+  {
+   "id": "F2-go-N091",
+   "name": "duplicate-param",
+   "status": 71,
+   "reason": "duplicate parameter",
+   "sha256": "dc2cfeb086a9d99ca2f4db070954847f31c179fca6329877c9f0dd30ac4efbea",
+   "go_build": "reject",
+   "source": "package main\n\nfunc calc(a, a uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N092",
+   "name": "param-named-uint64",
+   "status": 71,
+   "reason": "parameter shadowing a predeclared type",
+   "sha256": "6136bb523d4fc8ea0b576e1cf22c8b396af5ead1df64590a64783600a9aa7b2d",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(uint64 uint64) uint64 { return 0 }\n"
+  },
+  {
+   "id": "F2-go-N093",
+   "name": "param-named-len",
+   "status": 71,
+   "reason": "parameter shadowing a predeclared function",
+   "sha256": "ef76d5983de97dd5492bb15f0ed7705b37a21ef8f930d628c286557d19d1a21b",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(len uint64) uint64 { return len }\n"
+  },
+  {
+   "id": "F2-go-N094",
+   "name": "missing-result",
+   "status": 71,
+   "reason": "no result type",
+   "sha256": "5a1634b1da8623be9507916e0518386942871257bb73707b7beb7e2904a9ac56",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(a uint64) { return }\n"
+  },
+  {
+   "id": "F2-go-N095",
+   "name": "long-param",
+   "status": 71,
+   "reason": "parameter name over 32 bytes",
+   "sha256": "0de1b8c34602486ec672c38e8fe14e421363c26745473f2b9dab73560d753b49",
+   "go_build": "accept",
+   "source": "package main\n\nfunc calc(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa uint64) uint64 { return 1 }\n"
+  },
+  {
+   "id": "F2-go-N096",
+   "name": "go-directive",
+   "status": 72,
+   "reason": "//go: compiler directive",
+   "sha256": "c1115aa805bc1dba7d006268f29abb53a4dee949a7efdbd3b5603f5fc5e11734",
+   "go_build": "accept",
+   "source": "package main\n\n//go:noinline\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N097",
+   "name": "line-directive",
+   "status": 72,
+   "reason": "//line directive",
+   "sha256": "d7d9fe1ccb87938338b181b40599baf22185ec22042d872c98a026917aad5cb6",
+   "go_build": "accept",
+   "source": "package main\n\n//line x.go:1\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N098",
+   "name": "block-line-directive",
+   "status": 72,
+   "reason": "/*line directive",
+   "sha256": "f26214127c8cbe400721d083ff12a891df779e39687a70a3fd073aad7ab1341f",
+   "go_build": "accept",
+   "source": "package main\n\n/*line x.go:1*/func calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N099",
+   "name": "build-constraint",
+   "status": 72,
+   "reason": "// +build constraint line",
+   "sha256": "a8064255d807909b8f00f3509eff1aa030ea132461961f00457017442871b0ee",
+   "go_build": "accept",
+   "source": "// +build linux\n\npackage main\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N100",
+   "name": "go-build-constraint",
+   "status": 72,
+   "reason": "//go:build constraint line",
+   "sha256": "d0b9619ba178983c59522af2ed6ccc0f07d0c2b2e487add4987c045c07448878",
+   "go_build": "accept",
+   "source": "//go:build linux\n\npackage main\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N101",
+   "name": "bom",
+   "status": 72,
+   "reason": "byte-order mark",
+   "sha256": "59845376d4fc9f89ce47794f36cdbcd347a313fc6fe3f015c1604ef7bbc46f94",
+   "go_build": "accept",
+   "source": "\ufeffpackage main\n\nfunc calc(a uint64, b uint64) uint64 { return a }\n"
+  },
+  {
+   "id": "F2-go-N102",
+   "name": "invalid-utf8",
+   "status": 72,
+   "reason": "invalid UTF-8 (in a comment)",
+   "sha256": "e9656deefafb8dcc1baaf6df55a6ed8a5ca152e5b5ca4027ecb825283c102665",
+   "source_hex": "7061636b616765206d61696e0a0a66756e632063616c6328612075696e743634292075696e743634207b2072657475726e2061207d202f2f20ff0a",
+   "go_build": "reject"
+  }
+ ]
+}
