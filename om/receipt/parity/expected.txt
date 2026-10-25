@@ -1,0 +1,10 @@
+# stream lines sha256 of the C oracle driver's output (src/omega_receipt.c 88cfe0c5...1651 at omega-mv acb3f15c,
+# gcc 13.3.0 -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2, BLAKE3 from src/omega_blake3.c + src/sha256.c).
+# Recorded once; parity/run.sh compares receipt.om against these hashes and builds no C.
+rust 18 a86b56cb4d8de65b280ab528d233c6bdbeaa8251a2f77250068bdf8051be972c
+shapes 96 7d77d8daa4127f24cca49304bc3cd7981c0e8f2ab363abb7af701843be2f3d0a
+fields 1634 bf2c85950cfc8cc9905495719ac9c2e22dcd80b15eeb65f1d08dcf8e66b54e65
+json 3412 dceb67e08df6d67f7a3ec01e1406dedba160b1dca4ff2896d397fc93010fb293
+mutants 4062 5c8f513c1e4dbb7968f59920fe938cf175102465ef7d0e44a0816e1404e16749
+big 21 5aefacd53d4f5da8cdbfec4b56b0b786594eae5f56b45e94b22d0dbde6d6f678
+tier 18 dd9dff1784451257c48f755c7cf90c50374748065cd1c0a1bb3657475bf1894d
