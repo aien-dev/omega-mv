@@ -24,7 +24,7 @@ for line in open('fx/sha256-vectors.txt'):
     if not line.strip() or line.startswith('#'): continue
     name, spec, n, dig = line.split()
     msg = gen(spec); assert len(msg) == int(n), name
-    r = subprocess.run([sys.argv[1]], input=msg, capture_output=True)
+    r = subprocess.run(sys.argv[1:], input=msg, capture_output=True)
     got = r.stdout.decode().strip()
     if r.returncode == 0 and got == dig: ok += 1
     else: bad += 1; print('FAIL', name, r.returncode, got)

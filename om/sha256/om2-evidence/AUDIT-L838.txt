@@ -81,4 +81,14 @@ caller passes size_t).
    - Makefile:657 RX_CX_FS_ALLOWED lists sha256_* as the only allowed undefined symbols of the
      freestanding rx_cortex object; erratum E3 (3) changes that rule to omega2_sha256_*.
 
+
+7. Unit changes made after this audit that touch caller-visible behaviour (none change the API)
+   - S4 (2026-10-25): absorb exceeded the 16-register limit (error 12, line 268 @ 4c8aa0ff7). The
+     buffer copy is now fn tobuf (c, bi, d, o, k), used by absorb's tail and by sha256_update's short
+     path; absorb takes (c, d, bi) and reads n = len d. Same bytes copied in the same order.
+   - Rolled loops trap 4 after 1000000 passes: whole blocks go through blocks/run in runs of 2^25
+     bytes (part), so updates of >= 2^32 bytes stay supported (receipt: s4/README.txt, ./t big).
+   - The generated header names the buffer field `buf` (src/sha256.h: `buffer`); item 5: no caller
+     reads ctx fields, so no caller changes.
+
 Section 7 is consistent with the callers, given E3.
