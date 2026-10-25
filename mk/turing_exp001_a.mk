@@ -10,7 +10,7 @@
 .PHONY: turing-exp001-a-build turing-exp001-a-candidates turing-exp001-a-power turing-exp001-a-check test-turing-exp001-a
 TXA_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itools
 TXA_SRCS = src/turing/ty_math.c src/turing/ty_ctr1.c src/turing/ty_model.c src/turing/ty_record.c \
-	src/turing/ty_profile.c src/omega_canonical.c src/sha256.c
+	src/turing/ty_profile.c src/omega_canonical.c src/omega_om_units.c
 TXA_HDRS = src/turing/ty_math.h src/turing/ty_ctr1.h src/turing/ty_model.h src/turing/ty_record.h tools/turing_cal_dev.h
 TXA_DIR = $(OUT_DIR)/turing-exp001-a
 TXA_CAND = $(TXA_DIR)/turing-cal-candidates

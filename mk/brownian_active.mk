@@ -24,9 +24,9 @@ $(BRWA_DIR)/test_brw_active: tests/brownian/test_brw_active.c $(BRWA_LIB) $(BRWA
 $(BRWA_DIR)/test_brw_active_asan: tests/brownian/test_brw_active.c $(BRWA_LIB) $(BRWA_HDRS)
 	@mkdir -p $(BRWA_DIR)
 	$(CC) $(BRWA_FLAGS) $(BRWA_ASAN) -o $@ tests/brownian/test_brw_active.c $(BRWA_LIB) -lm
-$(BRWA_DIR)/brw_active_dev0: tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/sha256.c $(BRWA_HDRS)
+$(BRWA_DIR)/brw_active_dev0: tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/omega_om_units.c $(BRWA_HDRS)
 	@mkdir -p $(BRWA_DIR)
-	$(CC) $(BRWA_FLAGS) -DBRW_FLAGS='"$(BRWA_FLAGS)"' -o $@ tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/sha256.c -lm
+	$(CC) $(BRWA_FLAGS) -DBRW_FLAGS='"$(BRWA_FLAGS)"' -o $@ tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/omega_om_units.c -lm
 
 brwa-purity:
 	@mkdir -p $(BRWA_DIR)/purity
@@ -67,9 +67,9 @@ brownian-active-dev0: $(BRWA_DIR)/brw_active_dev0
 # Built into its own directory. The power receipt (evidence/BRW-ACT-DEV1/power/receipt.txt, never overwritten) fixes B.
 BRWA1_DIR = $(OUT_DIR)/brownian-active-dev1
 BRWA1_POWER = evidence/BRW-ACT-DEV1/power
-$(BRWA1_DIR)/brw_active_dev0: tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/sha256.c $(BRWA_HDRS)
+$(BRWA1_DIR)/brw_active_dev0: tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/omega_om_units.c $(BRWA_HDRS)
 	@mkdir -p $(BRWA1_DIR)
-	$(CC) $(BRWA_FLAGS) -DBRW_FLAGS='"$(BRWA_FLAGS)"' -o $@ tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/sha256.c -lm
+	$(CC) $(BRWA_FLAGS) -DBRW_FLAGS='"$(BRWA_FLAGS)"' -o $@ tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/omega_om_units.c -lm
 
 # DEV0 must stay bit-identical under the parametrised runner: the table digest of the committed DEV0 dev run.
 brownian-active-dev0-regress: $(BRWA1_DIR)/brw_active_dev0

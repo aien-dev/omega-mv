@@ -293,7 +293,7 @@ export STUB_LOG=$TMP/stub_body.log
 fresh_run() {
     NUM_RUN_ID=unit-$1-$RANDOM NUM_RUN_DIR=$TMP/run-$NUM_RUN_ID
     mkdir -p "$NUM_RUN_DIR"
-    gcc -std=gnu11 -O2 -I"$HERE/src" -o "$NUM_RUN_DIR/test_omega_numeric" "$TMP/stub.c" "$HERE/src/sha256.c" || return 1
+    gcc -std=gnu11 -O2 -I"$HERE/src" -o "$NUM_RUN_DIR/test_omega_numeric" "$TMP/stub.c" "$HERE/src/omega_om_units.c" || return 1
     NUM_BINARY_SHA=$(m19r_sha_file "$NUM_RUN_DIR/test_omega_numeric")
     NUM_RUN_COMMIT=$NUM_OMEGA_CAND
     STUB_RC=$1 num_execute "$omega" "$NUM_RUN_DIR/test_omega_numeric"

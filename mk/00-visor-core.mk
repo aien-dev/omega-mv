@@ -1,7 +1,7 @@
 # Omega Visor V1 (lead-owned). The `omega` binary is PHYSICS-FREE: it links only the
 # core object set below + src/visor + src/language + tools/omega.c. It must build
 # from a clean checkout with PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0.
-VISOR_CORE = sha256 omega_canonical omega_validate omega_core omega_codec aarch64_encoder aarch64_decoder \
+VISOR_CORE = omega_om_units omega_canonical omega_validate omega_core omega_codec aarch64_encoder aarch64_decoder \
 	omega_realize omega_realize_synth omega_machine omega_exec omega_verify omega_program omega_synthesis omega_library \
 	omega_vector omega_blackwell_qmd omega_blackwell_encoder omega_blackwell_realize
 VISOR_CORE_OBJS = $(addprefix $(OUT_DIR)/,$(addsuffix .o,$(VISOR_CORE)))

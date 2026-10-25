@@ -11,7 +11,7 @@
 .PHONY: test-turing-exp001-coders turing-exp001-envelope turing-coder
 TC_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc
 TC_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
-TC_CODER_SRCS = src/turing/tc_pstream.c src/turing/tc_range.c src/turing/tc_rans.c src/turing/ty_math.c src/sha256.c
+TC_CODER_SRCS = src/turing/tc_pstream.c src/turing/tc_range.c src/turing/tc_rans.c src/turing/ty_math.c src/omega_om_units.c
 TC_CODER_HDRS = src/turing/tc_pstream.h src/turing/tc_range.h src/turing/tc_rans.h src/turing/ty_math.h src/sha256.h
 TC_PROD_SRCS = $(TC_CODER_SRCS) src/turing/tc_produce.c src/turing/ty_model.c src/turing/ty_ctr1.c
 TC_PROD_HDRS = $(TC_CODER_HDRS) src/turing/tc_produce.h src/turing/ty_model.h src/turing/ty_ctr1.h

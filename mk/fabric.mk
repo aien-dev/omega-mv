@@ -36,7 +36,7 @@ FAB_HDRS = src/fabric/fabric.h src/fabric/fab_hmac.h src/fabric/fab_loopback.h s
 FAB_FORBIDDEN = ' U (aienos_|rx_caproot_|rx_world_|rx_aegis|argus_|ag_cap|socket$$|connect$$|bind$$|listen$$|accept$$|sendto$$|recvfrom$$|fork$$|exec|system$$|dlopen$$|mmap$$)'
 # Same support set test-capability-graph links for rx_capq.o.
 FAB_LINK_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
-	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/sha256.c src/omega_evidence.c \
+	src/runtime/rx_native_bind.c src/runtime/rx_aegis.c src/omega_om_units.c src/omega_evidence.c \
 	src/omega_core.c src/omega_canonical.c src/runtime/aien_machine_id.c
 
 $(FAB_DIR)/%.o: src/fabric/%.c $(FAB_HDRS)

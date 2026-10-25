@@ -10,7 +10,7 @@
 .PHONY: turing-cal-eval test-turing-exp001-eval turing-exp001-eval-dry
 TE_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -Wno-format-truncation -Isrc
 TE_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
-TE_SRCS = src/turing/tc_pstream.c src/turing/tc_range.c src/turing/tc_rans.c src/turing/ty_math.c src/sha256.c \
+TE_SRCS = src/turing/tc_pstream.c src/turing/tc_range.c src/turing/tc_rans.c src/turing/ty_math.c src/omega_om_units.c \
 	src/turing/tc_produce.c src/turing/ty_model.c src/turing/ty_ctr1.c
 TE_HDRS = src/turing/tc_pstream.h src/turing/tc_range.h src/turing/tc_rans.h src/turing/ty_math.h src/sha256.h \
 	src/turing/tc_produce.h src/turing/ty_model.h src/turing/ty_ctr1.h

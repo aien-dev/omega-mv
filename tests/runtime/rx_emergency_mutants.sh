@@ -23,7 +23,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 W=$(mktemp -d "${TMPDIR:-/tmp}/rx-estop-mut.XXXXXX")
 trap 'rm -rf "$W"' EXIT
 CC=${CC:-cc}
-SRCS="src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c src/runtime/rx_generation.c src/sha256.c tests/runtime/rx_emergency.c"
+SRCS="src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c src/runtime/rx_generation.c src/omega_om_units.c tests/runtime/rx_emergency.c"
 
 # name|file|perl substitution (applied with -0, must match exactly once)
 MUTANTS='M1 run_one publishes under a stop|src/runtime/rx_world.c|s/(on resume, against the state then \(rearm keeps its admission path\)\. \*\/\n    )if \(w->halted\) \{/${1}if (0) {/

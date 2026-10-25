@@ -1,5 +1,5 @@
 #!/bin/sh
-# Parity of the Omega BLAKE3 (src/omega_blake3.c adapter + om/blake3/b3unit.om in src/omega_om_units.inc)
+# Parity of the Omega BLAKE3 (src/omega_blake3.c adapter + om/blake3/b3unit.om, generated into src/omega_om_units.c)
 # against the C it replaced: src/omega_blake3.c at 633a1735 (sha256 c89ef819...0f21). The 35 official
 # vectors (tests/resolve/blake3_vectors.txt) and 1000 inputs (boundaries, random to 3 MiB) must agree.
 # Then the two mutants that make test-resolve used to apply to the C (B3M:merge, B3M:root) are
@@ -16,7 +16,7 @@ sed 's/omega_blake3_hash/orc_blake3_hash/' "$T/c.c" > "$T/oracle.c"
 CF="-std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2"
 build() { # build <src dir> <out>
   cc $CF -I"$1" -c "$1/omega_blake3.c" -o "$T/b3.o"
-  cc $CF -I"$1" -c "$1/sha256.c" -o "$T/sha.o"
+  cc $CF -I"$1" -c "$1/omega_om_units.c" -o "$T/sha.o"
   cc -O2 -I"$ROOT/src" -c "$T/oracle.c" -o "$T/oracle.o"
   cc -O2 "$(dirname "$0")/par.c" "$T/b3.o" "$T/sha.o" "$T/oracle.o" -o "$2" -pthread
 }

@@ -34,7 +34,7 @@ run() {
     fi
     # A compiler error does not count as an invariant caught by tests.
     ${CC:-cc} -std=c11 -Wall -Wextra -Werror -O2 -I"$root/src" -I"$root/src/path" \
-        "$scratch/mutant.c" "$root/src/sha256.c" "$root/tests/path/test_path_identity.c" \
+        "$scratch/mutant.c" "$root/src/omega_om_units.c" "$root/tests/path/test_path_identity.c" \
         -o "$scratch/test"
     if "$scratch/test" > "$scratch/log" 2>&1; then
         echo "MUTANT $name: SURVIVED" >&2; cat "$scratch/log" >&2; exit 1

@@ -76,7 +76,7 @@ if [ -n "$PHYS" ]; then
     [ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "tracked files are modified; refusing to rebuild" >&2; exit 2; }
     NV=$PHYS/third_party/nvidia-open-580.173.02
     INC=(-Isrc -I"$PHYS/nvrm" -I"$PHYS/m16" -I"$NV/src/common/sdk/nvidia/inc" -I"$NV/kernel-open/common/inc" -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include")
-    FORGE="src/forge_realization.c src/aegis_verification.c src/sha256.c $PHYS/forge/forge_descriptor.c $PHYS/forge/forge_realize.c $PHYS/sha256_clean.c $PHYS/nvrm/nvrm.c $PHYS/m16/m16_native.c"
+    FORGE="src/forge_realization.c src/aegis_verification.c src/omega_om_units.c $PHYS/forge/forge_descriptor.c $PHYS/forge/forge_realize.c $PHYS/sha256_clean.c $PHYS/nvrm/nvrm.c $PHYS/m16/m16_native.c"
     BLK="src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c"
     TMPB=$(mktemp -d "${TMPDIR:-/tmp}/e1manifest.XXXXXX") || exit 2
     trap 'rm -rf "$TMPB"' EXIT
@@ -93,9 +93,9 @@ if [ -n "$PHYS" ]; then
     # shellcheck disable=SC2086
     build REDUCE tests/run_reduce_chip.sh -I"$PHYS/forge" -- tests/test_omega_reduce.c src/omega_numeric_reduce.c src/omega_numeric_reduce_gb10.c src/omega_numeric.c src/omega_numeric_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_provenance.c $BLK $FORGE
     # shellcheck disable=SC2086
-    build LDST tools/run_numeric_ldst_chip.sh -pthread -- tests/test_omega_ldst_gb10.c src/omega_numeric_ldst_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c $PHYS/nvrm/nvrm.c $PHYS/m16/m16_native.c
+    build LDST tools/run_numeric_ldst_chip.sh -pthread -- tests/test_omega_ldst_gb10.c src/omega_numeric_ldst_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c $PHYS/nvrm/nvrm.c $PHYS/m16/m16_native.c
     # shellcheck disable=SC2086
-    build TRANSC tools/chip_run.sh+tools/manifests/numeric_transc.chiprun -fno-fast-math -pthread -- tests/test_omega_numeric_transc_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c $PHYS/nvrm/nvrm.c $PHYS/m16/m16_native.c
+    build TRANSC tools/chip_run.sh+tools/manifests/numeric_transc.chiprun -fno-fast-math -pthread -- tests/test_omega_numeric_transc_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c $PHYS/nvrm/nvrm.c $PHYS/m16/m16_native.c
 fi
 
 body="{\"schema\":\"AIEN_E1_EQUIVALENCE_MANIFEST_V1\",\"candidate_git_commit\":\"$CAND\",\"main_git_commit\":\"$MAIN\""

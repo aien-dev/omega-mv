@@ -11,9 +11,9 @@ include mk/physics0-learner.mk
 PD1_DIR = $(OUT_DIR)/physics0-pd1
 PD1_SEED ?= 1
 PD1_RECORDS ?= $(RECORDS)
-$(PD1_DIR)/pd1-run: tests/physics0/pd1/pd1_run.c $(P0L_LEARNER_SRCS) $(P0L_VERIFIER_SRCS) src/sha256.c $(P0L_HDRS)
+$(PD1_DIR)/pd1-run: tests/physics0/pd1/pd1_run.c $(P0L_LEARNER_SRCS) $(P0L_VERIFIER_SRCS) src/omega_om_units.c $(P0L_HDRS)
 	@mkdir -p $(PD1_DIR)
-	$(CC) $(P0L_CFLAGS) -o $@ tests/physics0/pd1/pd1_run.c $(P0L_LEARNER_SRCS) $(P0L_VERIFIER_SRCS) src/sha256.c -lm
+	$(CC) $(P0L_CFLAGS) -o $@ tests/physics0/pd1/pd1_run.c $(P0L_LEARNER_SRCS) $(P0L_VERIFIER_SRCS) src/omega_om_units.c -lm
 physics0-pd1-run: $(PD1_DIR)/pd1-run
 	@test -n "$(PD1_RECORDS)" || { echo "set RECORDS=<pd1-records.bin> (tools/physics0/pd1-convert: make run OUT=...)"; exit 2; }
 	@mkdir -p $(PD1_DIR)/out

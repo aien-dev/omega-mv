@@ -10,7 +10,7 @@
 TY_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc
 TY_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 TY_SRCS = src/turing/ty_math.c src/turing/ty_ctr1.c src/turing/ty_model.c src/turing/ty_record.c \
-	src/turing/ty_profile.c src/omega_canonical.c src/sha256.c
+	src/turing/ty_profile.c src/omega_canonical.c src/omega_om_units.c
 TY_HDRS = src/turing/ty_math.h src/turing/ty_ctr1.h src/turing/ty_model.h src/turing/ty_record.h \
 	src/omega_canonical.h src/omega_types.h src/sha256.h
 TY_DIR = $(OUT_DIR)/tests-turing-yield
