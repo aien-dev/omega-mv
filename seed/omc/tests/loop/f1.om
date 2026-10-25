@@ -1,0 +1,11 @@
+note for with a conditional break: 0 + 1 + 2 = 3
+fn main to ulong
+s = ulong 0
+for i ulong 5
+if eq i 3
+break
+end
+s = add s i
+end
+ret s
+end

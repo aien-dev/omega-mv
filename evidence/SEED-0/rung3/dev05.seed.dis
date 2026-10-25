@@ -1,0 +1,9 @@
+   0:	9b017c00 	madd	x0, x0, x1, xzr
+   4:	eb20a01f 	subs	xzr, x0, w0, sxth
+   8:	540000a1 	b.ne	0x1c  // b.any
+   c:	d65f03c0 	ret
+  10:	aa0703e0 	orr	x0, xzr, x7
+  14:	f94008f0 	ldr	x16, [x7, #16]
+  18:	d61f0200 	br	x16
+  1c:	d2800021 	movz	x1, #0x1
+  20:	17fffffc 	b	0x10

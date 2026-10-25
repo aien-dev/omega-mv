@@ -1,0 +1,4 @@
+check_words exit=0 want=0 ok
+run_seed exit=0 want=0 ok
+control_mutant exit=1 want=1 ok
+session PASS

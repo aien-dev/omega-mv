@@ -1,0 +1,12 @@
+chip: speed gates NOT JUDGED (shared machine: no quiet hold, no exclusive spark-window)
+chip: in-list launch floor (8 x 256, 512 B) median 3.58 us, min 3.20 us
+chip: cold 3840x2560 (2457600 B x 41 launches = 96.1 MiB per list): 23.81 us per launch -> 103.2 GB/s = 0.378 of 273 spec, 0.435 of 237.2 practical; minus the launch floor 20.22 us -> 121.5 GB/s (0.512 of 237.2)
+chip: speed gate NOT JUDGED at 3840x2560 (shared machine: no quiet hold, no exclusive spark-window): 121.5 GB/s minus the floor, gate >= 180
+chip: cold 2560x2560 (1638400 B x 62 launches = 96.9 MiB per list): 16.74 us per launch -> 97.9 GB/s = 0.359 of 273 spec, 0.413 of 237.2 practical; minus the launch floor 13.15 us -> 124.6 GB/s (0.525 of 237.2)
+chip: speed gate NOT JUDGED at 2560x2560 (shared machine: no quiet hold, no exclusive spark-window): 124.6 GB/s minus the floor, gate >= 180
+chip: cold 13824x2560 (8847360 B x 12 launches = 101.2 MiB per list): 54.37 us per launch -> 162.7 GB/s = 0.596 of 273 spec, 0.686 of 237.2 practical; minus the launch floor 50.78 us -> 174.2 GB/s (0.734 of 237.2)
+chip: speed gate NOT JUDGED at 13824x2560 (shared machine: no quiet hold, no exclusive spark-window): 174.2 GB/s minus the floor, gate >= 200
+chip: cold 2560x6912 (4423680 B x 23 launches = 97.0 MiB per list): 29.92 us per launch -> 147.9 GB/s = 0.542 of 273 spec, 0.623 of 237.2 practical; minus the launch floor 26.34 us -> 168.0 GB/s (0.708 of 237.2)
+chip: speed gate NOT JUDGED at 2560x6912 (shared machine: no quiet hold, no exclusive spark-window): 168.0 GB/s minus the floor, gate >= 180
+receipt: /home/drakestapleton/.claude/jobs/c0ab471d/tmp/tern-shared.json
+gpu_tern_test: 5 checks, 0 failed: PASS

@@ -1,0 +1,34 @@
+	.headerflags	@"EF_CUDA_64BIT_ADDRESS EF_CUDA_SM121 EF_CUDA_VIRTUAL_SM(EF_CUDA_SM121)"
+	.headerflags	@"EF_CUDA_64BIT_ADDRESS EF_CUDA_SM121 EF_CUDA_VIRTUAL_SM(EF_CUDA_SM121)"
+        /*0000*/                   LDC R1, c[0x0][0x37c] ;
+        /*0010*/                   S2R R9, SR_CTAID.X ;
+        /*0020*/                   LDCU UR4, c[0x0][0x360] ;
+        /*0030*/                   S2R R0, SR_TID.X ;
+        /*0040*/                   LDCU UR5, c[0x0][0x398] ;
+        /*0050*/                   IMAD R9, R9, UR4, R0 ;
+        /*0060*/                   ISETP.GE.U32.AND P0, PT, R9, UR5, PT ;
+        /*0070*/               @P0 EXIT ;
+        /*0080*/                   LDC.64 R2, c[0x0][0x380] ;
+        /*0090*/                   LDCU.64 UR4, c[0x0][0x358] ;
+        /*00a0*/                   LDC.64 R4, c[0x0][0x388] ;
+        /*00b0*/                   LDC.64 R6, c[0x0][0x390] ;
+        /*00c0*/                   IMAD.WIDE.U32 R2, R9, 0x4, R2 ;
+        /*00d0*/                   LDG.E R2, desc[UR4][R2.64] ;
+        /*00e0*/                   IMAD.WIDE.U32 R4, R9, 0x4, R4 ;
+        /*00f0*/                   LDG.E R5, desc[UR4][R4.64] ;
+        /*0100*/                   IMAD.WIDE.U32 R6, R9, 0x4, R6 ;
+        /*0110*/                   IADD3 R9, PT, PT, R2, R5, RZ ;
+        /*0120*/                   STG.E desc[UR4][R6.64], R9 ;
+        /*0130*/                   EXIT ;
+        /*0140*/                   BRA 0x140;
+        /*0150*/                   NOP;
+        /*0160*/                   NOP;
+        /*0170*/                   NOP;
+        /*0180*/                   NOP;
+        /*0190*/                   NOP;
+        /*01a0*/                   NOP;
+        /*01b0*/                   NOP;
+        /*01c0*/                   NOP;
+        /*01d0*/                   NOP;
+        /*01e0*/                   NOP;
+        /*01f0*/                   NOP;

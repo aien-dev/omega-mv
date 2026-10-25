@@ -1,0 +1,9 @@
+PASS (a) seed0 rebuilds itself byte for byte (408 bytes)
+PASS (a) equals the committed seed/rung0/seed0.bin
+PASS (b)(c) AUDIT words=102 code=72 data=30 decoder_mismatch=0 objdump_mismatch=0 byte_mismatch=0
+PASS control: a wrong name is caught (AUDIT words=102 code=72 data=30 decoder_mismatch=1 objdump_mismatch=1 byte_mismatch=0)
+PASS control: bad character refused (exit 4)
+PASS control: cut-short word refused (exit 1)
+PASS upper-case word D2A00837 -> bytes 37 08 a0 d2
+PASS readelf (reference) reads the hand-written header: AArch64, entry 0x400078
+GATE0 PASS

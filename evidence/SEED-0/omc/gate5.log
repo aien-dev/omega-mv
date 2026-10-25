@@ -1,0 +1,97 @@
+gate5 2026-10-24T22:13:21Z at 9329e7fca29251efa678a79186258d559006a2e3
+stage1 = om4(omc.om)    734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+stage2 = stage1(omc.om) 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+stage3 = stage2(omc.om) 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+PASS (a) fixpoint: sha256(stage2) = sha256(stage3)
+C path on omc.om: REFUSED omegese: line 1: character ':' is not part of Omegese
+  C path lacks global pools: REFUSED omegese: line 1: 'global' outside a function (start one with fn)
+  C path lacks a self-call: REFUSED omegese: line 5: f cannot call itself (calls go to earlier functions only)
+  C path lacks arrays over 64 cells: REFUSED omegese: line 2: array length '100' must be 1..64
+  C path lacks text literals: REFUSED omegese: line 1: character '"' is not part of Omegese
+  C path lacks read: REFUSED omegese: line 3: 'read' is not a name in scope here, nor an op, a type or a function
+  C path lacks write: REFUSED omegese: line 3: 'write' is not a name in scope here, nor an op, a type or a function
+  C path lacks exit (it reads exit as a new name): REFUSED omegese: line 4: 'exit' is written but never read (a typo, or a value left unused)
+  C path lacks a colon in a note: REFUSED omegese: line 1: character ':' is not part of Omegese
+  (and it writes .oscir for a runner, not a program that reads stdin and writes stdout)
+PASS (b) om4 and omc build the same omc from omc.om (stage1 = stage2)
+PASS (b) the stage from each parent is bit-identical (om4-built -> stage2, omc-built -> stage3)
+  beyond om4: tests/one_layer/omegese/nested/dev05.omegese (parentheses, trap): om4 line 3: error 3, omc exit 0, the C path accepts it
+  beyond om4: tests/one_layer/omegese/trial2/dev02.omegese (i32/i64 names, parentheses): om4 line 3: error 3, omc exit 0, the C path accepts it
+  beyond om4: tests/one_layer/omegese/trial2/dev03.omegese (u64/u8 names, parentheses): om4 line 4: error 3, omc exit 0, the C path accepts it
+  beyond om4: tests/one_layer/omegese/trial2/dev05.omegese (i16 names, trap, else): om4 line 7: error 9, omc exit 0, the C path accepts it
+  beyond om4: tests/one_layer/omegese/trial2/dev08.omegese (u32 names, parentheses): om4 line 4: error 3, omc exit 0, the C path accepts it
+  beyond om4: tests/one_layer/omegese/trial2/dev09.omegese (u8 names, parentheses): om4 line 4: error 3, omc exit 0, the C path accepts it
+PASS corpus: om4 = stage2 on 147 inputs (57 of them refused, same error number and line); 6 inputs beyond om4 are listed in seed/omc/tests/om4-superset.tsv, each accepted by omc and the C path
+PASS text program built by om4: writes its 9 bytes, exit 204
+PASS text program built by stage2: writes its 9 bytes, exit 204
+PASS text program: om4 and stage2 make the same bytes
+PASS error 1 from both: line 0: error 1
+PASS error 2 from both: line 4: error 2
+PASS error 4 from both: line 3: error 4
+PASS error 11 from both: line 2: error 11
+PASS error 12 from both: line 18: error 12
+PASS error 13 from both: line 2: error 13
+PASS error 14 from both: line 0: error 14
+PASS (c) gate4 with stage2 in om4's place: 116 checks, 0 FAIL
+(c) table: evidence/SEED-0/omc/corpus-words.tsv
+program	inputs	traps	c_path_words	omc_words
+dev01	8	0	58	17
+dev02	8	0	48	16
+dev03	8	0	80	15
+dev04	8	0	71	20
+dev05	8	3	23	9
+dev06	8	2	21	8
+dev07	8	0	95	29
+dev08	8	0	111	28
+dev09	8	0	73	14
+dev10	8	4	20	8
+fm1	11	5	56	24
+fm2	8	2	44	18
+fm3	10	4	30	15
+fm4	10	4	53	19
+fm5	6	0	59	79
+fm6	7	1	74	20
+fm7	4	0	126	50
+fm8	7	3	47	21
+fm9	6	2	63	21
+PASS (d) A caught by the fixpoint: or -> and in omc.om (a stage failed, or stage2 != stage3)
+PASS (d) A caught by the corpus: 15 inputs differ from om4
+PASS (d) B keeps the fixpoint (a fixpoint proves determinism, not correctness)
+PASS (d) B caught by the corpus: 14 inputs differ from om4
+PASS (d) C keeps the fixpoint
+PASS (d) C keeps om4 = omc on fm2
+PASS (d) C caught only by the C path: FAIL: fm1 differs from the C path FAIL: fm2 differs from the C path 
+PASS (d) refusal: omc: line 2: error 3, exit 3
+PASS deterministic: same bytes under another environment and a second later
+PASS om4 = stage2 in the nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:107 4:1351 5:64 6:66 7:115 8:48 9:277 10:4 11:37 13:24 15:487 16:2020 17:36 18:3 21:4 23:2 
+PASS every error number 1..23 is reached, om4 = stage2 on each
+omc: 7838 lines, 266 functions, 224588 bytes = 176-byte header + 56103 words (evidence/SEED-0/omc/size.tsv)
+PASS size history: its last row is this omc (R6-unified-eol)
+omc words per function: evidence/SEED-0/omc/omc-words.tsv (266 functions, 56096 words in all, mean 210)
+compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: 5891 us
+program	omc_us	c_path_us
+fm1	279	4304
+fm2	281	4568
+fm3	313	5028
+fm4	317	4693
+fm5	283	4438
+fm6	343	4725
+fm7	264	5131
+fm8	322	3881
+fm9	293	4567
+dev01	224	4868
+dev02	324	4505
+dev03	306	4727
+dev04	336	7564
+dev05	1404	8150
+dev06	454	7895
+dev07	359	5135
+dev08	342	4893
+dev09	233	4041
+dev10	233	4684
+rewrite	built_by	source_lines	functions	bytes	words	sha256
+stage1	om4	7838	266	224588	56103	734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+stage2	stage1	7838	266	224588	56103	734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+stage3	stage2	7838	266	224588	56103	734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+cases run: 177
+GATE5 PASS

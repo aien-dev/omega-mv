@@ -1,0 +1,33 @@
+note envcnt/envread: find OMTEST=hello in the process environment, and refuse a short buffer with -105.
+text want "OMTEST=hello"
+global buf uchar 128
+fn main to int
+c = ulong envcnt
+if eq c 0
+ret 1
+end
+n0 = envread 0 buf 0 1
+if ne n0 -105
+ret 3
+end
+i = ulong 0
+while lt i c
+n = envread i buf 0 len buf
+if eq n long len want
+j = long 0
+same = ulong 1
+while lt j n
+if ne get buf j get want j
+same = ulong 0
+break
+end
+j = add j 1
+end
+if eq same 1
+ret 0
+end
+end
+i = add i 1
+end
+ret 2
+end

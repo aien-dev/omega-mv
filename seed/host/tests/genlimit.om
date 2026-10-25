@@ -1,0 +1,24 @@
+note White-box boundary fixture: compiler's generation ceiling replaced with 3 for this test only.
+note Uses the same emitted vacancy/retirement branch as the real 55-bit ceiling.
+text passed "PASS generation ceiling, retirement and final exhaustion\n"
+fn main to int
+for slot long 128
+for gen long 3
+h = mapnew neg int 1 0 4096 3 34
+expected = add mul add gen 1 256 add slot 1
+if ne h expected
+ret 1
+end
+if ne mapdrop h 0
+ret 2
+end
+end
+end
+if ne mapnew neg int 1 0 4096 3 34 neg long 24
+ret 3
+end
+if ne write 1 passed 0 len passed long len passed
+ret 4
+end
+ret 0
+end

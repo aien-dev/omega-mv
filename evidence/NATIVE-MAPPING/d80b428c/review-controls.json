@@ -1,0 +1,33 @@
+{
+  "compiler_source": "d80b428c6ed9e3864fd7fc02cd7392bd4ad67f56",
+  "compiler_sha256": "1d1aad082539399920bc6c90ff41f0a0c3a1ca3225e518fd0d259e0aeb71732d",
+  "mapping_test_sha256": "a811f2f8d0d560105a5aa0711eb2c3cef07bf34e0df0283d478e7a34c8570d7f",
+  "genlimit_test_sha256": "ea4f544b49878f5532f75b0ac7e8fa42e6926d5b57ea002e748679922859ad48",
+  "full_host_gate_exit": 0,
+  "controls": [
+    {
+      "name": "generation-ceiling",
+      "test": "genlimit",
+      "status": 0,
+      "stdout": "PASS generation ceiling, retirement and final exhaustion\n",
+      "stderr": "",
+      "expected": 0
+    },
+    {
+      "name": "access-literal",
+      "test": "memcheck",
+      "status": 7,
+      "stdout": "",
+      "stderr": "",
+      "expected": 7
+    },
+    {
+      "name": "mode-literal",
+      "test": "memcheck",
+      "status": 8,
+      "stdout": "",
+      "stderr": "",
+      "expected": 8
+    }
+  ]
+}
