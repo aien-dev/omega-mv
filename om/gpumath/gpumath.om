@@ -1,0 +1,1244 @@
+note SPDX-License-Identifier: Apache-2.0
+note gpumath.om: seeded Omega port of src/omega_gpu_hostmath.c, src/omega_gpu_fp8_pack.c and
+note src/omega_gpu_fmt.c (aien-dev/omega-mv#726). Parity is on bit patterns against the C as the
+note product builds it (gcc -std=gnu11 -O2, the Makefile CFLAGS, aarch64). Where the C does float
+note arithmetic this file does the same IEEE operation in the same operand order (the operand order
+note decides which NaN payload survives). gcc contracts some of the C's a*b+c into one fused
+note FMADD/FMSUB (gnu11 implies -ffp-contract=fast); Omega has no fused operation, so fma64 below
+note computes the fused result exactly in integer arithmetic.
+note
+note Exported functions (omega-bridge native call ABI v1: ulong/long scalars, fixed-length
+note ulong/uchar arrays, ulong/long/void result). A double or float travels as its bit pattern.
+note   hmlog x                 omega_hostmath_log, f64 bits in and out
+note   hmexp y                 omega_hostmath_exp
+note   hmpow b e               omega_hostmath_pow
+note   hmsincos a o            omega_hostmath_sincos: o 0 sin bits, o 1 cos bits
+note   hmpow2f e               omega_hostmath_pow2f: f32 bits
+note   e4m3ref b               omega_fp8_e4m3_ref: f32 bits (b 0..255, else trap 5)
+note   e4m3kbits b             omega_fp8_e4m3_kernel_bits
+note   e4m3isnan b             omega_fp8_e4m3_is_nan: 1 or 0
+note   f8scannan w n base st   omega_fp8_pack_scan_nan over a 4096-byte piece (see the function)
+note   f8packscales i n o nf   omega_fp8_pack_scales over a 4096-element piece
+note   f8packxf32 i n o        omega_fp8_pack_x_f32 over a 4096-element piece
+note   f8packxbf16 i n o       omega_fp8_pack_x_bf16 over a 4096-element piece
+note   f8gemvblock w x sb acc  one 128-column block of one row of omega_fp8_gemv_oracle
+note   gpufmt o cap f args pl  omega_gpu_fmt with the varargs as 64-bit words (see the function)
+note   gpufmtkinds f kinds     the va_arg type of every conversion gpufmt consumes
+note Arrays carry little-endian element bytes exactly as the C arrays hold them in memory.
+
+note ---- 128-bit helpers and the exact fused multiply-add ----
+
+note index of the highest set bit of x (x > 0)
+fn msb64 x ulong to ulong
+n = ulong 0
+if ge x 4294967296
+x = shr x 32
+n = add n 32
+end
+if ge x 65536
+x = shr x 16
+n = add n 16
+end
+if ge x 256
+x = shr x 8
+n = add n 8
+end
+if ge x 16
+x = shr x 4
+n = add n 4
+end
+if ge x 4
+x = shr x 2
+n = add n 2
+end
+if ge x 2
+n = add n 1
+end
+ret n
+end
+
+fn isnan64 x ulong to bool
+ret gt and x 9223372036854775807 9218868437227405312
+end
+
+fn issnan64 x ulong to bool
+ret and isnan64 x eq and x 2251799813685248 0
+end
+
+fn isinf64 x ulong to bool
+ret eq and x 9223372036854775807 9218868437227405312
+end
+
+fn iszero64 x ulong to bool
+ret eq and x 9223372036854775807 0
+end
+
+note significand of a finite nonzero double, shifted so that bit 52 is its top bit
+fn mantn x ulong to ulong
+ex = and shr x 52 2047
+m = and x 4503599627370495
+if gt ex 0
+ret or m 4503599627370496
+end
+ret shl m sub 52 msb64 m
+end
+
+note exponent matching mantn: value = mantn x * 2^expn x
+fn expn x ulong to long
+ex = and shr x 52 2047
+if gt ex 0
+ret sub long ex 1075
+end
+m = and x 4503599627370495
+ret sub -1074 long sub 52 msb64 m
+end
+
+note t 0, t 1 = high, low words of a * b (a, b < 2^53)
+fn mul128 a ulong b ulong t edit ulong 8 to void
+al = and a 4294967295
+ah = shr a 32
+bl = and b 4294967295
+bh = shr b 32
+ll = mul al bl
+mid = add add mul al bh mul ah bl shr ll 32
+put t 1 or shl mid 32 and ll 4294967295
+put t 0 add mul ah bh shr mid 32
+end
+
+note shift the 128-bit value t k (high), t k+1 (low) right by n, OR-ing every lost bit into bit 0
+fn srj t edit ulong 8 k ulong n ulong to void
+if eq n 0
+ret
+end
+hi = get t k
+lo = get t add k 1
+if ge n 128
+put t k 0
+if eq or hi lo 0
+put t add k 1 0
+else
+put t add k 1 1
+end
+ret
+end
+st = ulong 0
+if ge n 64
+m = sub n 64
+nlo = hi
+if gt m 0
+nlo = shr hi m
+if ne shl hi sub 64 m 0
+st = 1
+end
+end
+if ne lo 0
+st = 1
+end
+put t k 0
+put t add k 1 or nlo st
+ret
+end
+if ne shl lo sub 64 n 0
+st = 1
+end
+put t add k 1 or or shr lo n shl hi sub 64 n st
+put t k shr hi n
+end
+
+note t 4, t 5 = (t 0, t 1) + (t 2, t 3)
+fn add128 t edit ulong 8 to void
+lo = add get t 1 get t 3
+cy = ulong 0
+if lt lo get t 1
+cy = 1
+end
+put t 5 lo
+put t 4 add add get t 0 get t 2 cy
+end
+
+note t 4, t 5 = (t a, t a+1) - (t b, t b+1), the first not below the second
+fn sub128 t edit ulong 8 a ulong b ulong to void
+l1 = get t add a 1
+l2 = get t add b 1
+bw = ulong 0
+if lt l1 l2
+bw = 1
+end
+put t 5 sub l1 l2
+put t 4 sub sub get t a get t b bw
+end
+
+fn ge128 t edit ulong 8 to bool
+if ne get t 0 get t 2
+ret gt get t 0 get t 2
+end
+ret ge get t 1 get t 3
+end
+
+note bit k of the 128-bit value hi, lo
+fn bit128 hi ulong lo ulong k ulong to ulong
+if ge k 64
+ret and shr hi sub k 64 1
+end
+ret and shr lo k 1
+end
+
+note any bit of hi, lo below bit k
+fn low128 hi ulong lo ulong k ulong to bool
+if ge k 64
+ret or ne lo 0 ne and hi sub shl ulong 1 sub k 64 1 0
+end
+ret ne and lo sub shl ulong 1 k 1 0
+end
+
+note round S = (t 4, t 5) * 2^x (S > 0) to nearest even as a double with sign sg; subnormal
+note results round once at 2^-1074, overflow gives infinity (ARM FPRound, FPCR at its Linux default)
+fn fround t edit ulong 8 x long sg ulong to ulong
+hi = get t 4
+lo = get t 5
+h = msb64 lo
+if ne hi 0
+h = add msb64 hi 64
+end
+s = sub long h 52
+mn = sub -1074 x
+if lt s mn
+s = mn
+end
+sgn = shl sg 63
+if ge s 128
+ret sgn
+end
+q = ulong 0
+if gt s 0
+us = ulong s
+if ge us 64
+q = shr hi sub us 64
+else
+q = or shr lo us shl hi sub 64 us
+end
+if eq bit128 hi lo sub us 1 1
+if or low128 hi lo sub us 1 eq and q 1 1
+q = add q 1
+end
+end
+else
+q = shl lo ulong neg s
+end
+bits = add shl ulong add add x s 1074 52 q
+if ge bits 9218868437227405312
+ret or sgn 9218868437227405312
+end
+ret or sgn bits
+end
+
+note the NaN result of c + a * b when an operand is NaN (FPProcessNaNs3, addend first; a quiet NaN
+note addend with infinity times zero gives the default NaN)
+fn fmanan a ulong b ulong c ulong to ulong
+if issnan64 c
+ret or c 2251799813685248
+end
+if issnan64 a
+ret or a 2251799813685248
+end
+if issnan64 b
+ret or b 2251799813685248
+end
+if isnan64 c
+if or and isinf64 a iszero64 b and iszero64 a isinf64 b
+ret 9221120237041090560
+end
+ret c
+end
+if isnan64 a
+ret a
+end
+ret b
+end
+
+note c + a * b with infinities or zeros among the operands (no NaN operand)
+fn fmaspec a ulong b ulong c ulong to ulong
+sp = xor shr a 63 shr b 63
+sc = shr c 63
+infp = or isinf64 a isinf64 b
+infc = isinf64 c
+if or and isinf64 a iszero64 b and iszero64 a isinf64 b
+ret 9221120237041090560
+end
+if and and infc infp ne sc sp
+ret 9221120237041090560
+end
+if or and infc eq sc 0 and infp eq sp 0
+ret 9218868437227405312
+end
+if or infc infp
+ret 18442240474082181120
+end
+if iszero64 c
+if eq sc sp
+ret c
+end
+ret 0
+end
+ret c
+end
+
+note the exact product a * b (a, b finite nonzero) and the addend c placed in t 0..1 and t 2..3,
+note both with their top bit at bit 124 or 125, the smaller shifted right with a sticky bit to the
+note larger's scale; returns that scale x (value = t * 2^x)
+fn fmaalign a ulong b ulong c ulong t edit ulong 8 to long
+mul128 mantn a mantn b t
+ph = get t 0
+pl = get t 1
+put t 0 or shl ph 20 shr pl 44
+put t 1 shl pl 20
+xp = sub add expn a expn b 20
+if iszero64 c
+ret xp
+end
+put t 2 shl mantn c 9
+xc = sub expn c 73
+d = sub xc xp
+if gt d 0
+srj t 0 ulong d
+ret xc
+end
+srj t 2 ulong neg d
+ret xp
+end
+
+note c + a * b, finite, a and b nonzero: the exact sum rounded once
+fn fmafin a ulong b ulong c ulong to ulong
+t = new ulong 8 0
+x = fmaalign a b c t
+sp = xor shr a 63 shr b 63
+sc = shr c 63
+sg = sp
+if or iszero64 c eq sp sc
+add128 t
+else
+if ge128 t
+sub128 t 0 2
+else
+sub128 t 2 0
+sg = sc
+end
+end
+if eq or get t 4 get t 5 0
+ret 0
+end
+ret fround t x sg
+end
+
+note AArch64 FMADD d = c + a * b (one rounding, ARM NaN rules); FMSUB d = c - a * b is
+note fma64 with the sign of a flipped
+fn fma64 a ulong b ulong c ulong to ulong
+if or or isnan64 a isnan64 b isnan64 c
+ret fmanan a b c
+end
+if or or or isinf64 a isinf64 b isinf64 c or iszero64 a iszero64 b
+ret fmaspec a b c
+end
+ret fmafin a b c
+end
+
+note ---- omega_gpu_hostmath.c ----
+
+note pow2i: 2^k as a double, -1074 <= k <= 1023, 0 below, +inf above
+fn pow2i k long to f64
+if gt k 1023
+ret bitcast f64 ulong 9218868437227405312
+end
+if lt k -1074
+ret 0.0f64
+end
+if ge k -1022
+ret bitcast f64 shl ulong add k 1023 52
+end
+ret mul bitcast f64 ulong 4503599627370496 bitcast f64 shl ulong add k 2045 52
+end
+
+note log(x): the s * t2 + 1/k step and the two final steps are fused in the C object
+fn hmlog xb ulong to ulong
+x = bitcast f64 xb
+if or not gt x 0.0f64 gt x bitcast f64 ulong 9218868437227405311
+ret 9221120237041090560
+end
+e = long 0
+if lt x bitcast f64 ulong 4503599627370496
+x = mul x bitcast f64 ulong 4850376798678024192
+e = -54
+end
+u = bitcast ulong x
+e = add e sub long and shr u 52 2047 1023
+m = bitcast f64 or and u 4503599627370495 4607182418800017408
+if gt m bitcast f64 ulong 4609047870845172685
+m = mul m 0.5f64
+e = add e 1
+end
+t = div sub m 1.0f64 add m 1.0f64
+t2 = bitcast ulong mul t t
+s = ulong 0
+k = long 25
+while ge k 1 bound 13
+s = fma64 s t2 bitcast ulong div 1.0f64 f64 k
+k = sub k 2
+end
+ed = f64 e
+lo = bitcast ulong mul ed bitcast f64 ulong 4461442080421002358
+lo = fma64 s bitcast ulong add t t lo
+ret fma64 bitcast ulong ed 4604418534311723008 lo
+end
+
+note exp(y): r = (y - k * ln2hi) - k * ln2lo is two FMSUBs in the C object
+fn hmexp yb ulong to ulong
+y = bitcast f64 yb
+if ne y y
+ret yb
+end
+if gt y bitcast f64 ulong 4649454506724284170
+ret 9218868437227405312
+end
+if lt y bitcast f64 ulong 13873138101193906586
+ret 0
+end
+fk = mul y bitcast f64 ulong 4609176140021203710
+h = -0.5f64
+if ge fk 0.0f64
+h = 0.5f64
+end
+k = long add fk h
+nk = bitcast ulong neg f64 k
+r = fma64 nk 4604418534311723008 yb
+r = fma64 nk 4461442080421002358 r
+rd = bitcast f64 r
+p = 1.0f64
+n = long 17
+while ge n 1 bound 17
+p = add div mul rd p f64 n 1.0f64
+n = sub n 1
+end
+if lt k -1020
+ret bitcast ulong mul mul p pow2i -1020 pow2i add k 1020
+end
+ret bitcast ulong mul p pow2i k
+end
+
+fn hmpow bb ulong eb ulong to ulong
+b = bitcast f64 bb
+e = bitcast f64 eb
+if or eq b 1.0f64 eq e 0.0f64
+ret 4607182418800017408
+end
+ret hmexp bitcast ulong mul bitcast f64 hmlog bb e
+end
+
+note sin r = r * ps, cos r = pc (w = r * r), the two series of the C
+fn sinser w f64 to f64
+ps = 1.0f64
+k = long 15
+while ge k 3 bound 7
+ps = sub 1.0f64 div mul w ps f64 mul k sub k 1
+k = sub k 2
+end
+ret ps
+end
+
+fn cosser w f64 to f64
+pc = 1.0f64
+k = long 16
+while ge k 2 bound 8
+pc = sub 1.0f64 div mul w pc f64 mul k sub k 1
+k = sub k 2
+end
+ret pc
+end
+
+note sincos(a): o 0 = sin bits, o 1 = cos bits; the four reduction steps are FMSUBs in the C object
+fn hmsincos ab ulong o edit ulong 2 to void
+a = bitcast f64 ab
+fq = mul a bitcast f64 ulong 4603909380684499075
+h = -0.5f64
+if ge fq 0.0f64
+h = 0.5f64
+end
+n = long add fq h
+nn = bitcast ulong neg f64 n
+r = fma64 nn 4609753056924401664 ab
+r = fma64 nn 4454258360616747008 r
+r = fma64 nn 4297306550709518336 r
+r = fma64 nn 4142048980368378305 r
+rd = bitcast f64 r
+w = mul rd rd
+sr = mul rd sinser w
+cr = cosser w
+q = and n 3
+if eq q 0
+put o 0 bitcast ulong sr
+put o 1 bitcast ulong cr
+ret
+end
+if eq q 1
+put o 0 bitcast ulong cr
+put o 1 bitcast ulong neg sr
+ret
+end
+if eq q 2
+put o 0 bitcast ulong neg sr
+put o 1 bitcast ulong neg cr
+ret
+end
+put o 0 bitcast ulong neg cr
+put o 1 bitcast ulong sr
+end
+
+note 2^e as f32 bits, exact for -149 <= e <= 127; 0 below, +inf above
+fn hmpow2f e long to ulong
+if gt e 127
+ret 2139095040
+end
+if ge e -126
+ret shl ulong add e 127 23
+end
+if ge e -149
+ret shl ulong 1 add e 149
+end
+ret 0
+end
+
+note ---- omega_gpu_fp8_pack.c ----
+
+note f32 helpers return the bit pattern (omc refuses an f32 result type, error 5)
+fn p2f e long to uint
+u = hmpow2f e
+ret uint u
+end
+
+fn e4m3ref bb ulong to ulong
+b = uchar bb
+ex = and shr b 3 15
+mf = f32 and b 7
+sg = 1.0f32
+if ne and b 128 0
+sg = -1.0f32
+end
+if and eq ex 15 eq and b 7 7
+ret 2143289344
+end
+if eq ex 0
+ret ulong bitcast uint mul mul sg mf bitcast f32 p2f -9
+end
+v = mul add 1.0f32 div mf 8.0f32 sg
+ret ulong bitcast uint mul v bitcast f32 p2f sub long ex 7
+end
+
+fn e4m3kbits bb ulong to ulong
+b = ulong uchar bb
+ret or shl and b 127 20 shl and b 128 24
+end
+
+fn e4m3isnan bb ulong to ulong
+b = uchar bb
+if eq and b 127 127
+ret 1
+end
+ret 0
+end
+
+note one piece of omega_fp8_pack_scan_nan(w, count, first): scans w 0 .. n-1 (n <= 4096), the
+note piece starting at element base of the whole array. st 0 is the NaN count so far (0 before the
+note first piece), st 1 the index of the first NaN, written only when the count was 0 (as the C
+note writes *first). Returns st 0.
+fn f8scannan w view uchar 4096 n ulong base ulong st edit ulong 2 to ulong
+for i ulong n
+if eq and get w i 127 127
+if eq get st 0 0
+put st 1 add base i
+end
+put st 0 add get st 0 1
+end
+end
+ret get st 0
+end
+
+fn ldbf16 v view uchar 8192 i ulong to uint
+lo = uint get v mul i 2
+hi = uint get v add mul i 2 1
+ret shl or lo shl hi 8 16
+end
+
+fn ldf32 v view uchar 16384 i ulong to uint
+o = mul i 4
+x = uint get v add o 3
+x = or shl x 8 uint get v add o 2
+x = or shl x 8 uint get v add o 1
+x = or shl x 8 uint get v o
+ret x
+end
+
+fn stf32 v edit uchar 16384 i ulong f f32 to void
+o = mul i 4
+x = bitcast uint f
+put v o uchar and x 255
+put v add o 1 uchar and shr x 8 255
+put v add o 2 uchar and shr x 16 255
+put v add o 3 uchar shr x 24
+end
+
+note one piece of omega_fp8_pack_scales: in holds n bf16 (n <= 4096), out gets n f32; nofold
+note nonzero is the C's mutant_no_fold. 0, or -1 at the first NaN/inf scale or fold overflow with
+note the earlier outputs written, as the C.
+fn f8packscales in view uchar 8192 n ulong out edit uchar 16384 nofold ulong to long
+fold = 1.0f32
+if eq nofold 0
+fold = bitcast f32 p2f 56
+end
+lim = bitcast f32 uint 2137108966
+for i ulong n
+s = bitcast f32 ldbf16 in i
+if not le fabs s lim
+ret -1
+end
+f = mul fold s
+if not le fabs f lim
+ret -1
+end
+stf32 out i f
+end
+ret 0
+end
+
+note one piece of omega_fp8_pack_x_f32: out = in * 2^64, n <= 4096 f32
+fn f8packxf32 in view uchar 16384 n ulong out edit uchar 16384 to void
+fold = bitcast f32 p2f 64
+for i ulong n
+stf32 out i mul bitcast f32 ldf32 in i fold
+end
+end
+
+note one piece of omega_fp8_pack_x_bf16: out = bf16 in * 2^64, n <= 4096
+fn f8packxbf16 in view uchar 8192 n ulong out edit uchar 16384 to void
+fold = bitcast f32 p2f 64
+for i ulong n
+stf32 out i mul bitcast f32 ldbf16 in i fold
+end
+end
+
+fn ldx v view uchar 512 i ulong to uint
+o = mul i 4
+x = uint get v add o 3
+x = or shl x 8 uint get v add o 2
+x = or shl x 8 uint get v add o 1
+x = or shl x 8 uint get v o
+ret x
+end
+
+note one 128-column block of one row of omega_fp8_gemv_oracle: w the row's 128 e4m3 bytes, x the
+note 128 f32 of x, sb the bf16 scale of the block, acc 0 / acc 1 the row's acc / mag (f64 bits,
+note 0 before the row's first block). The caller runs the blocks of a row in order, as the C.
+fn f8gemvblock w view uchar 128 x view uchar 512 sb ulong acc edit ulong 2 to void
+s = f64 bitcast f32 shl uint ushort sb 16
+a = bitcast f64 get acc 0
+mg = bitcast f64 get acc 1
+for c ulong 128
+rf = f64 bitcast f32 uint e4m3ref ulong get w c
+p = mul mul f64 bitcast f32 ldx x c rf s
+a = add a p
+mg = add mg fabs p
+end
+put acc 0 bitcast ulong a
+put acc 1 bitcast ulong mg
+end
+
+note ---- omega_gpu_fmt.c ----
+
+note the sink: sn 0 = characters written, sn 1 = cap
+fn fput out edit uchar 1024 sn edit ulong 2 c uchar to void
+n = get sn 0
+if lt add n 1 get sn 1
+put out n c
+put sn 0 add n 1
+end
+end
+
+note a %s argument: an offset into the string pool pl (NUL-terminated there), or 2^64-1 for NULL
+fn fputs out edit uchar 1024 sn edit ulong 2 pl view uchar 4096 off ulong to void
+if eq off 18446744073709551615
+fput out sn 40
+fput out sn 110
+fput out sn 117
+fput out sn 108
+fput out sn 108
+fput out sn 41
+ret
+end
+i = off
+while ne get pl i 0 bound 4096
+fput out sn get pl i
+i = add i 1
+end
+end
+
+fn fputu out edit uchar 1024 sn edit ulong 2 v ulong base ulong to void
+tmp = new uchar 24 0
+i = ulong 0
+while true bound 24
+d = rem v base
+if lt d 10
+put tmp i uchar add d 48
+else
+put tmp i uchar add d 87
+end
+i = add i 1
+v = div v base
+if eq v 0
+break
+end
+end
+while gt i 0 bound 24
+i = sub i 1
+fput out sn get tmp i
+end
+end
+
+fn fputd out edit uchar 1024 sn edit ulong 2 v long to void
+if lt v 0
+fput out sn 45
+fputu out sn add ulong neg add v 1 1 10
+ret
+end
+fputu out sn ulong v 10
+end
+
+note the low 32 bits of w as a signed int
+fn sx32 w ulong to long
+v = and w 4294967295
+if ge v 2147483648
+ret sub long v 4294967296
+end
+ret long v
+end
+
+note the conversion at fmt p (fmt p is '%'): r 0 = index of the conversion byte, r 1 = the va_arg
+note kind it consumes (0 none; 1 int, 2 long, 3 long long, 4 ptrdiff_t, 5 unsigned int,
+note 6 unsigned long, 7 unsigned long long, 8 size_t, 9 const char *)
+fn fscan fmt view uchar 1024 p ulong r edit ulong 4 to void
+q = add p 1
+z = false
+l = ulong 0
+if eq get fmt q 122
+z = true
+q = add q 1
+else
+while and eq get fmt q 108 lt l 2 bound 3
+l = add l 1
+q = add q 1
+end
+end
+ch = get fmt q
+k = ulong 0
+if eq ch 115
+k = 9
+end
+if eq ch 99
+k = 1
+end
+if eq ch 100
+k = 1
+if eq l 1
+k = 2
+end
+if eq l 2
+k = 3
+end
+if z
+k = 4
+end
+end
+if or eq ch 117 eq ch 120
+k = 5
+if eq l 1
+k = 6
+end
+if eq l 2
+k = 7
+end
+if z
+k = 8
+end
+end
+put r 0 q
+put r 1 k
+end
+
+note one consuming conversion: argument word w of kind k, conversion byte cc
+fn fconv out edit uchar 1024 sn edit ulong 2 w ulong k ulong cc uchar pl view uchar 4096 to void
+if eq k 9
+fputs out sn pl w
+ret
+end
+if eq cc 99
+fput out sn uchar and w 255
+ret
+end
+if eq k 1
+fputd out sn sx32 w
+ret
+end
+if lt k 5
+fputd out sn bitcast long w
+ret
+end
+base = ulong 10
+if eq cc 120
+base = 16
+end
+if eq k 5
+fputu out sn and w 4294967295 base
+ret
+end
+fputu out sn w base
+end
+
+note one '%' conversion (r 0, r 1 from fscan, r 2 the next argument, r 3 the '%' index)
+fn fone out edit uchar 1024 sn edit ulong 2 fmt view uchar 1024 args view ulong 16 pl view uchar 4096 r edit ulong 4 to void
+q = get r 0
+k = get r 1
+cc = get fmt q
+if gt k 0
+fconv out sn get args get r 2 k cc pl
+put r 2 add get r 2 1
+ret
+end
+if eq cc 37
+fput out sn 37
+ret
+end
+note unsupported conversion: copied literally, nothing consumed
+j = get r 3
+while le j q bound 5
+if eq get fmt j 0
+break
+end
+fput out sn get fmt j
+j = add j 1
+end
+end
+
+note omega_gpu_fmt(out, cap, fmt, ...): fmt NUL-terminated inside its 1024 bytes; the i-th consuming
+note conversion takes args i (16 at most): an int-sized kind uses the low 32 bits (the AAPCS64
+note va_arg of an int), %c the low 8; %s takes a pool offset (2^64-1 = NULL, printed "(null)").
+note Writes at most cap - 1 characters and the NUL (cap <= 1024, else out-of-range trap 3 once
+note the output reaches 1024); cap 0 writes nothing. Returns the characters written.
+fn gpufmt out edit uchar 1024 cap ulong fmt view uchar 1024 args view ulong 16 pl view uchar 4096 to ulong
+if eq cap 0
+ret 0
+end
+sn = new ulong 2 0
+r = new ulong 4 0
+put sn 1 cap
+p = ulong 0
+while ne get fmt p 0 bound 1024
+if ne get fmt p 37
+fput out sn get fmt p
+p = add p 1
+continue
+end
+fscan fmt p r
+put r 3 p
+fone out sn fmt args pl r
+q = get r 0
+p = add q 1
+if eq get fmt q 0
+p = q
+end
+end
+put out get sn 0 0
+ret get sn 0
+end
+
+note the va_arg kinds (fscan codes) of fmt's consuming conversions, in order; returns their count
+fn gpufmtkinds fmt view uchar 1024 kinds edit ulong 64 to ulong
+r = new ulong 4 0
+p = ulong 0
+nk = ulong 0
+while ne get fmt p 0 bound 1024
+if ne get fmt p 37
+p = add p 1
+continue
+end
+fscan fmt p r
+q = get r 0
+k = get r 1
+if gt k 0
+put kinds nk k
+nk = add nk 1
+end
+p = add q 1
+if eq get fmt q 0
+p = q
+end
+end
+ret nk
+end
+
+note ==== parity harness: program mode only; everything above this line is the library ====
+note Reads corpus records on stdin (om/gpumath/parity/corpus.py), writes one result line per record.
+note Numbers are lowercase hex, byte strings one hex token ("-" when empty).
+
+global ib uchar 1048576
+global ist ulong 2
+global ob uchar 1048576
+global obn ulong 1
+global tb uchar 262144
+global gw uchar 262144
+global gsc uchar 8192
+global gx uchar 131072
+
+fn inb to ulong
+p = get ist 0
+if ge p get ist 1
+r = read 0 ib 0 1048576
+if le r 0
+ret 256
+end
+put ist 1 ulong r
+p = 0
+end
+put ist 0 add p 1
+ret ulong get ib p
+end
+
+fn obflush to void
+n = get obn 0
+if gt n 0
+r = write 1 ob 0 n
+end
+put obn 0 0
+end
+
+fn ob1 c ulong to void
+n = get obn 0
+if ge n 1048576
+obflush
+n = 0
+end
+put ob n uchar c
+put obn 0 add n 1
+end
+
+fn hexdig v ulong to ulong
+if lt v 10
+ret add v 48
+end
+ret add v 87
+end
+
+fn ohex v ulong to void
+ob1 32
+for i ulong 16
+ob1 hexdig and shr v mul sub 15 i 4 15
+end
+end
+
+fn ohexb b ulong to void
+ob1 hexdig shr b 4
+ob1 hexdig and b 15
+end
+
+fn hexval c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+ret 16
+end
+
+fn rdcode to ulong
+c = inb
+while or eq c 10 eq c 32 bound 999999
+c = inb
+end
+ret c
+end
+
+fn rdhex to ulong
+c = inb
+while eq c 32 bound 999999
+c = inb
+end
+v = ulong 0
+while lt hexval c 16 bound 17
+v = or shl v 4 hexval c
+c = inb
+end
+ret v
+end
+
+note one hex byte-string token into tb; returns the byte count ("-" is empty)
+fn rdbytes to ulong
+c = inb
+while eq c 32 bound 999999
+c = inb
+end
+if eq c 45
+c = inb
+ret 0
+end
+n = ulong 0
+while lt hexval c 16 bound 999999
+d = inb
+put tb n uchar or shl hexval c 4 hexval d
+n = add n 1
+c = inb
+end
+ret n
+end
+
+fn sgnl v ulong to long
+if ge v 9223372036854775808
+ret neg long add not v 1
+end
+ret long v
+end
+
+fn u32at v view uchar 16384 i ulong to ulong
+o = mul i 4
+x = ulong get v add o 3
+x = or shl x 8 ulong get v add o 2
+x = or shl x 8 ulong get v add o 1
+ret or shl x 8 ulong get v o
+end
+
+fn doz to void
+a = rdhex
+b = rdhex
+c = rdhex
+ob1 90
+ohex fma64 a b c
+end
+
+fn dosc to void
+o = new ulong 2 0
+a = rdhex
+hmsincos a o
+ob1 68
+ohex get o 0
+ohex get o 1
+end
+
+fn dof to void
+b = rdhex
+ob1 70
+ohex e4m3ref b
+ohex e4m3kbits b
+ohex e4m3isnan b
+end
+
+note G nofold bf16-bytes / H f32-bytes / I bf16-bytes: one piece of the pack functions
+fn dopack c ulong to void
+in = new uchar 8192 0
+inf = new uchar 16384 0
+out = new uchar 16384 170
+nf = ulong 0
+if eq c 71
+nf = rdhex
+end
+nb = rdbytes
+n = div nb 2
+if eq c 72
+n = div nb 4
+end
+for i ulong nb
+if eq c 72
+put inf i get tb i
+else
+put in i get tb i
+end
+end
+ob1 c
+if eq c 71
+ohex bitcast ulong f8packscales in n out nf
+end
+if eq c 72
+f8packxf32 inf n out
+end
+if eq c 73
+f8packxbf16 in n out
+end
+for i ulong n
+ohex u32at out i
+end
+end
+
+note N bytes: omega_fp8_pack_scan_nan over the whole array, in 4096-byte pieces
+fn doscan to void
+w = new uchar 4096 0
+st = new ulong 2 0
+put st 1 12297829382473034410
+nb = rdbytes
+base = ulong 0
+while lt base nb bound 64
+m = sub nb base
+if gt m 4096
+m = 4096
+end
+for i ulong m
+put w i get tb add base i
+end
+r = f8scannan w m base st
+base = add base m
+end
+ob1 78
+ohex get st 0
+ohex get st 1
+end
+
+fn ldblk wb edit uchar 128 xb edit uchar 512 wo ulong xo ulong to void
+for c ulong 128
+put wb c get gw add wo c
+end
+for c ulong 512
+put xb c get gx add xo c
+end
+end
+
+fn gsb i ulong to ulong
+si = mul i 2
+ret or ulong get gsc si shl ulong get gsc add si 1 8
+end
+
+note one row r of the gemv held in gw, gsc, gx: the adapter's block loop (acc and mag start at 0)
+fn gemvrow wb edit uchar 128 xb edit uchar 512 acc edit ulong 2 r ulong k ulong to void
+kb = div k 128
+so = mul div r 128 kb
+put acc 0 0
+put acc 1 0
+for b ulong kb
+ldblk wb xb add mul r k mul b 128 mul b 512
+f8gemvblock wb xb gsb add so b acc
+end
+end
+
+note Q n k w-bytes scale-bytes x-bytes: omega_fp8_gemv_oracle row by row, block by block
+fn dogemv to void
+wb = new uchar 128 0
+xb = new uchar 512 0
+acc = new ulong 2 0
+n = rdhex
+k = rdhex
+nb = rdbytes
+for i ulong nb
+put gw i get tb i
+end
+nb = rdbytes
+for i ulong nb
+put gsc i get tb i
+end
+nb = rdbytes
+for i ulong nb
+put gx i get tb i
+end
+ob1 81
+for r ulong n
+gemvrow wb xb acc r k
+ohex get acc 0
+ohex get acc 1
+end
+end
+
+note M cap fmt-bytes nargs args... pool-bytes: omega_gpu_fmt and its va_arg kinds
+fn dofmt to void
+out = new uchar 1024 170
+fm = new uchar 1024 0
+args = new ulong 16 0
+pl = new uchar 4096 0
+kd = new ulong 64 0
+cap = rdhex
+nb = rdbytes
+for i ulong nb
+put fm i get tb i
+end
+na = rdhex
+for i ulong na
+put args i rdhex
+end
+nb = rdbytes
+for i ulong nb
+put pl i get tb i
+end
+n = gpufmt out cap fm args pl
+nk = gpufmtkinds fm kd
+ob1 77
+ohex n
+ob1 32
+if eq nk 0
+ob1 45
+end
+for i ulong nk
+ob1 hexdig get kd i
+end
+ob1 32
+m = add n 2
+if gt m cap
+m = cap
+end
+if eq m 0
+ob1 45
+end
+for i ulong m
+ohexb ulong get out i
+end
+end
+
+fn main to int
+while true bound 999999
+c = rdcode
+if eq c 256
+break
+end
+if eq c 90
+doz
+end
+if eq c 65
+ob1 65
+ohex hmlog rdhex
+end
+if eq c 66
+ob1 66
+ohex hmexp rdhex
+end
+if eq c 67
+ob1 67
+b = rdhex
+ohex hmpow b rdhex
+end
+if eq c 68
+dosc
+end
+if eq c 69
+ob1 69
+ohex hmpow2f sgnl rdhex
+end
+if eq c 70
+dof
+end
+if and ge c 71 le c 73
+dopack c
+end
+if eq c 78
+doscan
+end
+if eq c 81
+dogemv
+end
+if eq c 77
+dofmt
+end
+ob1 10
+end
+obflush
+ret 0
+end
