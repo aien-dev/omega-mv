@@ -1,0 +1,260 @@
+note SPDX-License-Identifier: Apache-2.0
+note b3unit.om: BLAKE3 (default unkeyed hash, 32-byte output) as one function-mode unit, bound
+note through the omega-bridge native call ABI and exported as omega_omb3. It replaces the algorithm of
+note src/omega_blake3.c, which keeps only omega_blake3_hash: that cuts the input into 1024-byte chunks.
+note The tree logic follows om/blake3/blake3.om (the program form, kept for files and stdin).
+note
+note omb3 st b n fin o:
+note   st  caller state, zeroed before the first call: rows 0..53 of 8 words are the chaining-value
+note       stack, word 440 its depth, word 441 the number of chunks absorbed
+note   fin 0  b holds a whole chunk that is not the last one (n must be 1024): its chaining value is
+note          merged into the stack
+note   fin 1  b[0..n) is the last chunk (n 0..1024): the tree is finished and the root hash goes to o
+note A wrong n traps 3.
+note
+note Working words w (one array because globals are program-mode only):
+note   0..15 state s, 16..31 message m, 32..47 permute scratch, 48..55 input chaining value,
+note   56..71 compression output, 72 block length, 73 counter, 74 flags, 75..82 node chaining value,
+note   83..90 IV, 91..106 message permutation
+
+fn initw w edit ulong 128 to void
+put w 83 1779033703
+put w 84 3144134277
+put w 85 1013904242
+put w 86 2773480762
+put w 87 1359893119
+put w 88 2600822924
+put w 89 528734635
+put w 90 1541459225
+put w 91 2
+put w 92 6
+put w 93 3
+put w 94 10
+put w 95 7
+put w 96 0
+put w 97 4
+put w 98 13
+put w 99 1
+put w 100 11
+put w 101 12
+put w 102 5
+put w 103 9
+put w 104 14
+put w 105 15
+put w 106 8
+end
+
+note the G mixing function on state words a b c d with message words 2j and 2j+1
+fn g w edit ulong 128 a ulong b ulong c ulong d ulong j ulong to void
+x = get w add 16 mul j 2
+t = add get w a get w b
+put w a and add t x 4294967295
+t = xor get w d get w a
+put w d and or shr t 16 shl t 16 4294967295
+put w c and add get w c get w d 4294967295
+t = xor get w b get w c
+put w b and or shr t 12 shl t 20 4294967295
+x = get w add 17 mul j 2
+t = add get w a get w b
+put w a and add t x 4294967295
+t = xor get w d get w a
+put w d and or shr t 8 shl t 24 4294967295
+put w c and add get w c get w d 4294967295
+t = xor get w b get w c
+put w b and or shr t 7 shl t 25 4294967295
+end
+
+fn round w edit ulong 128 to void
+g w 0 4 8 12 0
+g w 1 5 9 13 1
+g w 2 6 10 14 2
+g w 3 7 11 15 3
+g w 0 5 10 15 4
+g w 1 6 11 12 5
+g w 2 7 8 13 6
+g w 3 4 9 14 7
+end
+
+fn permute w edit ulong 128 to void
+for i ulong 16
+put w add 32 i get w add 16 get w add 91 i
+end
+for i ulong 16
+put w add 16 i get w add 32 i
+end
+end
+
+note the 16 little-endian words of blk into m
+fn loadm w edit ulong 128 blk edit uchar 64 to void
+for i ulong 16
+o = mul i 4
+v = ulong get blk add o 3
+v = or shl v 8 ulong get blk add o 2
+v = or shl v 8 ulong get blk add o 1
+v = or shl v 8 ulong get blk o
+put w add 16 i v
+end
+end
+
+note compress (input chaining value, blk, block length, counter, flags) into the output words
+fn compress w edit ulong 128 blk edit uchar 64 to void
+loadm w blk
+for i ulong 8
+put w i get w add 48 i
+put w add i 8 get w add 83 i
+end
+put w 12 and get w 73 4294967295
+put w 13 and shr get w 73 32 4294967295
+put w 14 get w 72
+put w 15 get w 74
+for r ulong 7
+round w
+permute w
+end
+for i ulong 8
+put w add 56 i xor get w i get w add i 8
+put w add 64 i xor get w add i 8 get w add 48 i
+end
+end
+
+note compress, then the node chaining value is the first 8 output words
+fn nodecv w edit ulong 128 blk edit uchar 64 to void
+compress w blk
+for i ulong 8
+put w add 75 i get w add 56 i
+end
+end
+
+note copy cnt bytes of b from offset o into blk, zero the rest
+fn loadblk blk edit uchar 64 b view uchar 1024 o ulong cnt ulong to void
+for i ulong 64
+if lt i cnt
+put blk i get b add o i
+else
+put blk i 0
+end
+end
+end
+
+fn setnb w edit ulong 128 bl ulong ctr ulong fl ulong to void
+put w 72 bl
+put w 73 ctr
+put w 74 fl
+end
+
+note chunk ctr holding b[0..cnt): every block but the last compressed, the last left set up
+fn chunk w edit ulong 128 blk edit uchar 64 b view uchar 1024 cnt ulong ctr ulong to void
+for i ulong 8
+put w add 48 i get w add 83 i
+end
+nblk = ulong 1
+if gt cnt 0
+nblk = div add cnt 63 64
+end
+k = ulong 0
+while lt add k 1 nblk bound 16
+loadblk blk b mul k 64 64
+fl = ulong 0
+if eq k 0
+fl = 1
+end
+setnb w 64 ctr fl
+compress w blk
+for i ulong 8
+put w add 48 i get w add 56 i
+end
+k = add k 1
+end
+bo = mul sub nblk 1 64
+loadblk blk b bo sub cnt bo
+fl = ulong 2
+if eq nblk 1
+fl = 3
+end
+setnb w sub cnt bo ctr fl
+end
+
+note parent node of stack row r (left) and the node chaining value (right), set up to compress
+fn parentn w edit ulong 128 blk edit uchar 64 st edit ulong 448 r ulong to void
+for i ulong 8
+put w add 48 i get w add 83 i
+end
+for i ulong 8
+l = get st add mul r 8 i
+v = get w add 75 i
+for k ulong 4
+sh = mul k 8
+q = add mul i 4 k
+put blk q uchar and shr l sh 255
+put blk add 32 q uchar and shr v sh 255
+end
+end
+setnb w 64 0 4
+end
+
+fn push w edit ulong 128 st edit ulong 448 to void
+p = get st 440
+for i ulong 8
+put st add mul p 8 i get w add 75 i
+end
+put st 440 add p 1
+end
+
+note a whole chunk that is not the last: merge completed subtrees, then push its chaining value
+fn midchk w edit ulong 128 blk edit uchar 64 st edit ulong 448 b view uchar 1024 to void
+ctr = get st 441
+chunk w blk b 1024 ctr
+nodecv w blk
+tot = add ctr 1
+while eq and tot 1 0 bound 64
+d = sub get st 440 1
+put st 440 d
+parentn w blk st d
+nodecv w blk
+tot = shr tot 1
+end
+push w st
+put st 441 add ctr 1
+end
+
+note the last chunk: fold the stack into the root and write its 32 little-endian bytes into o
+fn lastchk w edit ulong 128 blk edit uchar 64 st edit ulong 448 b view uchar 1024 n ulong o edit uchar 32 to void
+chunk w blk b n get st 441
+while gt get st 440 0 bound 64
+nodecv w blk
+d = sub get st 440 1
+put st 440 d
+parentn w blk st d
+end
+put w 74 or get w 74 8
+compress w blk
+outle w o
+end
+
+note the first 8 output words, little endian, into o
+fn outle w edit ulong 128 o edit uchar 32 to void
+for i ulong 8
+v = get w add 56 i
+for k ulong 4
+q = add mul i 4 k
+put o q uchar and shr v mul k 8 255
+end
+end
+end
+
+fn omb3 st edit ulong 448 b view uchar 1024 n ulong fin ulong o edit uchar 32 to void
+w = new ulong 128 0
+blk = new uchar 64 0
+initw w
+if gt n 1024
+trap 3
+end
+if eq fin 0
+if ne n 1024
+trap 3
+end
+midchk w blk st b
+ret
+end
+lastchk w blk st b n o
+end
