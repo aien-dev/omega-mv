@@ -1,11 +1,13 @@
 note SPDX-License-Identifier: AGPL-3.0-or-later
-note Handwritten S1 upper-to-C17 exporter (translation-v1 section 6). No C compiler, parser or host fallback.
+note Handwritten S1-family upper-to-C17 exporter (translation-v1 section 6, translation-compose-v1 section 2).
+note Accepts the C, Rust and Python u64 members; output depends on the records only, never on the member.
 note Prepended unchanged at build: src/source-aware/vendor/sha256.om and src/source-aware/core.om (decode n).
 note Input frame: one byte name length L (0 = calc), L name bytes, then one OMSB envelope to EOF.
 note Output is generated from the OMSA operation records only; the OMSP sidecar is validated, never read for output.
 global Xn uchar 1
 global Xnm uchar 32
 global Xone uchar 1
+global Xob ulong 1
 global Xo uchar 4096
 global Xl ulong 1
 global Xni ulong 1
@@ -144,14 +146,26 @@ end
 if or lt c 2 gt c 4
 ret 68
 end
-if or ne get Oat i 1 ne get Oob i 1
+if or ne get Oat i 1 ne get Oob i get Xob 0
 ret 68
 end
 ret 0
 end
 
 fn xs1 to ulong
-if or ne get M 0 1 ne get M 1 1
+l = get M 0
+p = get M 1
+put Xob 0 0
+if and eq l 1 eq p 1
+put Xob 0 1
+end
+if and eq l 2 eq p 2
+put Xob 0 1
+end
+if and eq l 3 eq p 4
+put Xob 0 5
+end
+if eq get Xob 0 0
 ret 68
 end
 if or ne get M 2 0 ne get M 3 1

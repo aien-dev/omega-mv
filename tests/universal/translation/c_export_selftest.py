@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-"""C export lane self-test (translation-v1 section 6, #622). Author-run TESTED evidence, not QUALIFIED.
+"""C export lane self-test (translation-v1 section 6, translation-compose-v1, #622). Author TESTED, not QUALIFIED.
 
 For every F1 positive and the four accepted boundary controls of c_import_controls.py:
 import (native importer) -> export (native exporter) -> re-import; the re-imported OMSA semantic bytes
-must equal the first import's. The semantic-only envelope must export byte-identically. Original and
-exported C are compiled with cc -std=c17 -O2 -Wall -Werror and compared on boundary and seeded random
-vectors (DIFFERENTIAL), and against the Python integer model of the imported graph (REFERENCE).
-Constructed units cover the non-NORMALIZED, shared-SSA and permuted-slot paths and every refusal."""
+must equal the first import's. The semantic-only envelope and its retargets R(U,Rust) and R(U,Python)
+(compose section 2) must export byte-identically. Original and exported C are compiled with
+cc -std=c17 -O2 -Wall -Werror and compared on boundary and seeded random vectors (DIFFERENTIAL), and
+against the Python integer model of the imported graph (REFERENCE). Constructed units cover the
+non-NORMALIZED, shared-SSA and permuted-slot paths and every refusal.
+
+Optional compose leg (--rust-root / --python-root: checkouts holding the #626 / #627 adapters, built):
+Rust -> C and Python -> C on fixtures-f2-<lang>.json per compose section 4: identity
+N(strip(U_B)) = N(strip(U_A)), rustc/python3 original vs cc generated C vs REFERENCE, semantic-only
+export identical. Not given = NOT_RUN."""
 from pathlib import Path
 import argparse,hashlib,importlib.util,itertools,json,os,random,shutil,struct,subprocess,sys,tempfile
 ROOT=Path(__file__).resolve().parents[3];sys.dont_write_bytecode=True
@@ -51,6 +57,29 @@ def ops_of(sem):
     count=struct.unpack_from('<H',sem,10)[0]
     return [(op,a,b,imm) for (d,v,op,t,attr,e,al,ob,a,b,imm) in (struct.unpack_from('<8BHHQ',sem,44+20*i) for i in range(count))]
 
+# translation-compose-v1 section 1: member -> (language, profile, op dialect, arithmetic obligations).
+FAMILY={'C':(1,1,1,1),'Rust':(2,2,2,1),'Python':(3,4,3,5)}
+
+def retarget(sem,member):
+    """R(U, M), compose section 2: header language/profile, every op's dialect byte, arithmetic obligations."""
+    lang,prof,dial,obl=FAMILY[member];b=bytearray(sem);b[5]=lang;b[6]=prof
+    for i in range(struct.unpack_from('<H',sem,10)[0]):
+        o=44+20*i;b[o]=dial
+        if b[o+2] in (2,3,4):b[o+7]=obl
+    return bytes(b)
+
+def strip(sem):
+    """Remove one trailing NORMALIZED pair (translation-v1 section 4); C, Rust and Python importers declare one."""
+    ops=ops_of(sem);n=len(ops)
+    assert n>=3 and ops[-2]==(1,65535,65535,0) and ops[-1][0]==2 and ops[-1][2]==n-2 and ops[-1][1]<n-2,'unit not NORMALIZED'
+    return sem[:10]+struct.pack('<H',n-2)+sem[12:44+20*(n-2)]
+
+def raw_unit(header,records):
+    """header=(language,profile,runtime,abi); records=(dialect,op,type,attr,effects,alias,obligations,a,b,imm)."""
+    lang,prof,rt,abi=header
+    body=b''.join(struct.pack('<8BHHQ',d,1,op,t,at,ef,al,ob,a,b,imm) for d,op,t,at,ef,al,ob,a,b,imm in records)
+    return semonly(b'OMSA\x01'+bytes([lang,prof,1,rt,abi])+struct.pack('<H',len(records))+SEMHASH+body)
+
 def vectors(nargs,rng):
     if nargs==0:return [()]
     if nargs<=2:vs=list(itertools.product(BOUNDARY,repeat=nargs))
@@ -70,7 +99,10 @@ def native(out,tag,src,name,nargs,payload):
     return [int(x) for x in r.stdout.split()]
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--out',required=True);a=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--out',required=True)
+    ap.add_argument('--rust-root',default='',help='checkout with built #626 adapters (tools/adapters/rust-import, fixtures-f2-rust.json)')
+    ap.add_argument('--python-root',default='',help='checkout with built #627 adapters (tools/adapters/python-import, fixtures-f2-python.json)')
+    a=ap.parse_args()
     out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)
     for p in [IMPORTER,EXPORTER]:assert p.read_bytes()[:4]==b'\x7fELF',p
     rng=random.Random(622624);rows=[];failures=[];observations=0
@@ -95,6 +127,10 @@ def main():
             d=run([str(EXPORTER)],bytes([len(fname or '')])+(fname or '').encode()+u1);assert d.returncode==0 and d.stdout==c,'native direct differs from public command'
             so=semonly(s1);v=run([str(SA),'decode'],so);assert v.returncode==0 and v.stdout==so,'semantic-only envelope not accepted by sa decode'
             e2=export(so,fname);assert e2.returncode==0 and e2.stdout==c,'semantic-only envelope exported differently'
+            for m in ('Rust','Python'):
+                rm=semonly(retarget(s1,m));v=run([str(SA),'decode'],rm);assert v.returncode==0 and v.stdout==rm,'R(U,%s) not a valid v1 unit'%m
+                em=export(rm,fname);assert em.returncode==0 and em.stdout==c,'R(U,%s) exported differently'%m
+            assert retarget(retarget(s1,'Python'),'C')==s1 and retarget(retarget(s1,'Rust'),'C')==s1,'N(R(U,M)) != N(U)'
             r2=run([str(IMPORTER)],c);assert r2.returncode==0,'re-import refused rc=%d %s'%(r2.returncode,r2.stderr)
             s2=semantic(r2.stdout);assert s2==s1,'re-imported semantic bytes differ'
             i1=run([str(SA),'identity'],u1).stdout;i2=run([str(SA),'identity'],r2.stdout).stdout;i3=run([str(SA),'identity'],so).stdout
@@ -144,7 +180,16 @@ def main():
     sem=semantic(good)
     def patch(buf,off,val):b=bytearray(buf);b[off]=val;return bytes(b)
     doubling=[A]+[(2,0,0,0)]+[(2,k,k,0) for k in range(1,62)]
-    rust=b'OMSA\x01'+bytes([2,2,1,0,1])+sem[10:44]+b''.join(bytes([2])+sem[44+20*i+1:64+20*i] for i in range(struct.unpack_from('<H',sem,10)[0]))
+    def reob(s,obl):
+        b=bytearray(s)
+        for i in range(struct.unpack_from('<H',s,10)[0]):
+            if b[44+20*i+2] in (2,3,4):b[44+20*i+7]=obl
+        return bytes(b)
+    mixed=bytearray(sem);mixed[44]=2
+    # Valid v1 units outside the S1 family (compose section 1): CPython bigint 3, OSC 5, dynamic retained 6.
+    bigint=raw_unit((3,3,1,1),[(3,9,2,0,0,0,1,65535,65535,0),(3,9,2,0,0,0,1,65535,65535,1),(3,2,2,2,20,255,8,0,1,0)])
+    osc=raw_unit((4,5,0,1),[(4,9,1,0,0,0,1,65535,65535,0),(4,9,1,0,0,0,1,65535,65535,1),(4,2,1,1,0,0,1,0,1,0)])
+    dynamic=raw_unit((3,6,1,2),[(3,9,1,0,0,0,1,65535,65535,0),(3,9,1,0,0,0,1,65535,65535,1),(3,2,1,1,0,0,5,0,1,0)])
     div=bytearray(sem);n=struct.unpack_from('<H',sem,10)[0];off=44+20*(n-3);assert div[off+2]==2;div[off+2]=5;div[off+7]=3
     # Last field: the envelope must (True) / must not (False) decode under source-aware v1 (sa decode), None unchecked.
     refusals=[('two-arguments',['calc','x'],good,64,None),('name-main',['main'],good,64,None),('name-not-profile',['foo'],good,64,None),
@@ -153,8 +198,11 @@ def main():
               ('empty-input',[],b'',65,False),('truncated',[],good[:-1],65,False),('trailing-byte',[],good+b'\x00',65,False),
               ('bad-magic',[],patch(good,0,0x58),65,False),('over-8192',[],good+b'\x00'*(8193-len(good)),65,False),
               ('sidecar-source-tamper',[],patch(good,len(good)-2,0x5a),65,False),('wrong-contract-hash',[],semonly(patch(sem,12,sem[12]^1)),65,False),
-              ('profile-language-mismatch',[],semonly(patch(sem,6,2)),68,False),('rust-profile-2',[],semonly(rust),68,True),
-              ('division-op-5',[],semonly(bytes(div)),68,True),('slot-gap',[],unit([A,(9,65535,65535,2),(2,0,1,0)]),68,True),
+              ('profile-language-mismatch',[],semonly(patch(sem,6,2)),68,False),('c-header-rust-dialect-op',[],semonly(bytes(mixed)),68,False),
+              ('rust-obligation-5',[],semonly(reob(retarget(sem,'Rust'),5)),65,False),('python-obligation-1',[],semonly(reob(retarget(sem,'Python'),1)),65,False),
+              ('cpython-bigint-profile-3',[],bigint,68,True),('osc-profile-5',[],osc,68,True),('python-dynamic-profile-6',[],dynamic,68,True),
+              ('division-op-5',[],semonly(bytes(div)),68,True),('python-division-op-5',[],semonly(patch(retarget(bytes(div),'Python'),off+7,7)),68,True),
+              ('slot-gap',[],unit([A,(9,65535,65535,2),(2,0,1,0)]),68,True),
               ('op-capacity-65',[],unit([A,B]+[(2,0,0,0)]+[(2,k,0,0) for k in range(2,62)]),67,True),
               ('nesting-17',[],unit([A]+[(2,0,0,0)]+[(2,0,k,0) for k in range(1,18)]),67,True),
               ('shared-blowup-2^61',[],unit(doubling),67,True)]
@@ -179,7 +227,56 @@ def main():
             r=run([sys.executable,str(t/'tools/adapters/c-export')],good);ok=r.returncode==78 and not r.stdout and b'C_EXPORT_STALE_OR_MISSING_BUILD' in r.stderr
             negatives.append({'id':'public-'+fault+'-identity-change','want':78,'exit':r.returncode,'result':'PASS' if ok else 'FAIL'})
             if not ok:failures.append(negatives[-1])
-    report={'schema':'omega.c-u64-export.selftest.v1','contract_sha256':hashlib.sha256((ROOT/'spec/universal/translation-v1.md').read_bytes()).hexdigest(),
+    # 5. Compose section 4: Rust -> C and Python -> C on the lanes' F2 fixtures (scratch checkouts; NOT_RUN if absent).
+    compose={};pyoracle=out/'pyoracle.py'
+    pyoracle.write_text("import sys\npath,name,n=sys.argv[1],sys.argv[2],int(sys.argv[3])\nns={}\nexec(compile(open(path,'rb').read().decode('ascii'),path,'exec'),ns)\nf=ns[name]\nfor line in sys.stdin:\n    xs=[int(t) for t in line.split()]\n    assert len(xs)==n\n    v=f(*xs)\n    assert type(v) is int and 0<=v<2**64,(xs,v)\n    print(v)\n")
+    def rust_oracle(tag,src,name,nargs,payload):
+        call=name+'('+', '.join('v[%d]'%j for j in range(nargs))+')'
+        harness=('\nfn main() {\n    use std::io::BufRead;\n    for line in std::io::stdin().lock().lines() {\n        let line = line.unwrap();\n'
+                 '        let v: Vec<u64> = line.split_whitespace().map(|x| x.parse().unwrap()).collect();\n        assert_eq!(v.len(), %d);\n        println!("{}", %s);\n    }\n}\n'%(nargs,call))
+        f=out/(tag+'.rs');exe=out/tag;f.write_bytes(src+harness.encode())
+        rustc=shutil.which('rustc') or str(Path.home()/'.cargo/bin/rustc')
+        r=subprocess.run(['nice','-n','19',rustc,'--edition','2021','-O','-C','overflow-checks=on','-o',str(exe),str(f)],capture_output=True,timeout=300)
+        assert r.returncode==0,tag+' rustc failed: '+r.stderr.decode(errors='replace')[-600:]
+        r=run([str(exe)],payload);assert r.returncode==0,tag+' rust run failed'
+        return [int(x) for x in r.stdout.split()]
+    def python_oracle(tag,src,name,nargs,payload):
+        f=out/(tag+'.py');f.write_bytes(src)
+        r=run([sys.executable,'-I','-B',str(pyoracle),str(f),name,str(nargs)],payload);assert r.returncode==0,tag+' python3 failed: '+r.stderr.decode(errors='replace')[-400:]
+        return [int(x) for x in r.stdout.split()]
+    for lang,member,root,oracle in [('rust','Rust',a.rust_root,rust_oracle),('python','Python',a.python_root,python_oracle)]:
+        if not root:compose[member+'->C']={'result':'NOT_RUN'};continue
+        root=Path(root).resolve();fx=json.loads((root/('tests/universal/translation/fixtures-f2-%s.json'%lang)).read_text())
+        imp=root/('tools/adapters/%s-import'%lang);lrows=[]
+        for f in fx['positives']+fx.get('controls',[]):
+            src=f['source'].encode();name=f['name'];nargs=f['inputs'];item={'id':f['id']}
+            try:
+                assert hashlib.sha256(src).hexdigest()==f['sha256'],'fixture hash'
+                r=run([sys.executable,str(imp)],src);assert r.returncode==0,'%s import refused rc=%d %s'%(lang,r.returncode,r.stderr)
+                ua=r.stdout;sa_=semantic(ua);l,p_=FAMILY[member][:2];assert sa_[5]==l and sa_[6]==p_,'importer member'
+                cname=name if name.startswith('omega_') and len(name)<=32 else None
+                e=export(ua,cname);assert e.returncode==0,'C export refused rc=%d %s'%(e.returncode,e.stderr)
+                srcb=e.stdout
+                assert export(semonly(sa_),cname).stdout==srcb,'semantic-only export differs'
+                assert export(semonly(retarget(sa_,'C')),cname).stdout==srcb,'export of R(U_A,C) differs'
+                r2=run([str(IMPORTER)],srcb);assert r2.returncode==0,'C import of generated C refused rc=%d'%r2.returncode
+                sb=semantic(r2.stdout)
+                assert retarget(strip(sb),'C')==retarget(strip(sa_),'C'),'N(strip(U_B)) != N(strip(U_A))'
+                vs=vectors(nargs,rng);payload=''.join(' '.join(map(str,x))+'\n' for x in vs).encode()
+                ref=[g.evaluate(ops_of(sa_),list(x)) for x in vs]
+                orig=oracle(f['id']+'-orig',src,name,nargs,payload);gen=native(out,f['id']+'-genC',srcb,cname or 'calc',nargs,payload)
+                assert orig==ref,'%s oracle(original) != REFERENCE(U_A)'%lang
+                assert gen==ref,'cc(generated C) != REFERENCE(U_A)'
+                observations+=len(vs)
+                item.update({'result':'PASS','vectors':len(vs),'n_identity':hashlib.sha256(retarget(strip(sa_),'C')).hexdigest(),'export_head':srcb.split(b'\n')[1][:80].decode()})
+            except (AssertionError,ValueError,struct.error,IndexError,KeyError) as exc:
+                item.update({'result':'FAIL','failure':str(exc)});failures.append(item)
+            lrows.append(item)
+        compose[member+'->C']={'result':'FAIL' if any(x['result']!='PASS' for x in lrows) else 'PASS','root':str(root),
+                               'root_commit':subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD'],text=True).strip(),
+                               'fixtures':len(lrows),'passed':sum(x['result']=='PASS' for x in lrows),'not_in_profile':[x['id'] for x in fx.get('not_in_profile',[])],'cases':lrows}
+    report={'schema':'omega.c-u64-export.selftest.v2','contract_sha256':hashlib.sha256((ROOT/'spec/universal/translation-v1.md').read_bytes()).hexdigest(),
+            'compose_contract_sha256':hashlib.sha256((ROOT/'spec/universal/translation-compose-v1.md').read_bytes()).hexdigest(),
             'result':'FAIL' if failures else 'PASS','status':'TESTED (author self-test; not QUALIFIED)','evidence':['DIFFERENTIAL','REFERENCE'],'proof':False,
             'source_commit':subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),
             'exporter_sha256':hashlib.sha256(EXPORTER.read_bytes()).hexdigest(),'importer_sha256':hashlib.sha256(IMPORTER.read_bytes()).hexdigest(),
@@ -187,11 +284,12 @@ def main():
             'boundaries':len(rows),'boundaries_passed':sum(x['result']=='PASS' for x in rows),
             'constructed':len(constructed),'constructed_passed':sum(x['result']=='PASS' for x in constructed),
             'refusals':len(negatives),'refusals_passed':sum(x['result']=='PASS' for x in negatives),'native_C_observations':observations,
-            'cases':rows,'constructed_cases':constructed,'refusal_cases':negatives,'failures':failures}
+            'compose':compose,'cases':rows,'constructed_cases':constructed,'refusal_cases':negatives,'failures':failures}
     (out/'result.json').write_text(json.dumps(report,indent=2)+'\n')
     for x in rows:
         if x['id'] in ('F1-P05','F1-P13','control-operation-capacity'):print(x['id'],x.get('export_head',x.get('failure')))
     for x in failures:print('FAIL',json.dumps(x)[:400])
-    print('%s boundaries=%d/%d identical_reimport=%d constructed=%d/%d refusals=%d/%d native_C_observations=%d'%(report['result'],report['boundaries_passed'],len(rows),report['boundaries_passed'],report['constructed_passed'],len(constructed),report['refusals_passed'],len(negatives),observations))
+    print('%s boundaries=%d/%d identical_reimport=%d retarget_identical_exports=%d constructed=%d/%d refusals=%d/%d native_C_observations=%d'%(report['result'],report['boundaries_passed'],len(rows),report['boundaries_passed'],2*report['boundaries_passed'],report['constructed_passed'],len(constructed),report['refusals_passed'],len(negatives),observations))
+    for k,v in compose.items():print('compose',k,v['result'],'%d/%d'%(v['passed'],v['fixtures']) if 'fixtures' in v else '','not_in_profile=%s'%v.get('not_in_profile',''))
     return 1 if failures else 0
 if __name__=='__main__':raise SystemExit(main())

@@ -1,8 +1,10 @@
 # C17 uint64 exporter v1 (#622 C export lane)
 
 Status: author-tested (TESTED), not QUALIFIED. Implements `spec/universal/translation-v1.md` section 6
-(contract sha256 `063f1d630e31925876454129c0024539bea0c7eb17f7187bc0e7ef56790de86e`). It changes no
-existing format, the importer, the #621 codec or the contract.
+(contract sha256 `063f1d630e31925876454129c0024539bea0c7eb17f7187bc0e7ef56790de86e`) and the C export
+family extension of `spec/universal/translation-compose-v1.md` section 2 (sha256
+`51a7cc444e50fd114a6d2e2272d645333cec1ea92603a60cd9dde06fc7d4c3a0`). It changes no existing format, the
+importer, the #621 codec or either contract.
 
 ## Command
 
@@ -27,6 +29,11 @@ Generated from the OMSA operation records only. The sidecar is validated (it is 
 unit) but its stored source bytes are never read for output, so a semantic-only envelope exports
 byte-identically.
 
+Accepted units: the whole S1 family (compose section 1), header language/profile/runtime/ABI and
+arithmetic (ops 2/3/4) obligations: C 1/1/0/1 obligations 1, Rust 2/2/0/1 obligations 1, Python
+3/4/0/1 obligations 5. The op dialect byte equals the header language (checked by the core decoder).
+The output does not depend on the member: `export(R(U, M))` is byte-identical for every member M.
+
 - Input record with slot s is `i<s>`; parameters are declared in slot order. A constant is `<decimal>ULL`.
 - Add/sub/mul are `<A> + <B>`, `<A> - <B>`, `<A> * <B>`. With precedence leaf 3, `*` 2, `+`/`-` 1, the
   left operand is parenthesised iff its precedence is lower than the parent's, the right operand iff it
@@ -45,7 +52,7 @@ byte-identically.
 | 64 | `C_EXPORT_BAD_COMMAND` | more than one argument, empty or invalid NAME, missing input frame |
 | 65 | `C_EXPORT_MALFORMED` | envelope fails source-aware v1 decode (any core status other than 68), or input over 8192 bytes |
 | 67 | `C_EXPORT_LIMIT` | output over 4096 bytes, parenthesis depth over 16, or re-import over 64 upper operations (inputs + expanded operations + the 2 synthetic records) |
-| 68 | `C_EXPORT_PROFILE_MISMATCH` | core decode status 68, or a valid v1 unit outside S1 (language/profile/runtime/ABI not 1/1/0/1, an operation other than 1/2/3/4/9, type, effects, alias, attribute or obligations not the S1 values, input slots not a permutation of 0..n-1) |
+| 68 | `C_EXPORT_PROFILE_MISMATCH` | core decode status 68, or a valid v1 unit outside the S1 family (language/profile not C 1/1, Rust 2/2 or Python 3/4; runtime/ABI not 0/1; profiles 3, 5, 6; an operation other than 1/2/3/4/9 such as division; type, effects, alias, attribute or obligations not the member's values; input slots not a permutation of 0..n-1) |
 | 77 | `C_EXPORT_IO` | read or write failure |
 | 78 | `C_EXPORT_STALE_OR_MISSING_BUILD` | public wrapper only: build manifest, source or binary identity mismatch |
 
@@ -78,5 +85,16 @@ exported again from the semantic-only envelope with identical output, and the or
 are compiled with `cc -std=c17 -O2 -Wall -Werror` and compared on all boundary-value pairs (or
 rotations for more than two inputs) plus 64 seeded random vectors. Constructed semantic-only units
 cover the non-NORMALIZED path (exactly one `+0` pair added on re-import), shared SSA expansion,
-permuted input records, depth exactly 16 and the maximum constant; refusals cover each status above.
+permuted input records, depth exactly 16 and the maximum constant; refusals cover each status above,
+including valid profile 3/5/6 units and C/Python division (68) and wrong member obligations (65).
+Every boundary case also exports `R(U, Rust)` and `R(U, Python)` byte-identically to U.
+
+Compose leg (compose section 4, optional): `make -f mk/c-u64-export.mk test-c-export
+C_EXPORT_RUST_ROOT=<checkout> C_EXPORT_PYTHON_ROOT=<checkout>` with checkouts that hold the built #626
+/ #627 adapters. For every `fixtures-f2-rust.json` positive and every `fixtures-f2-python.json`
+positive and control: `U_A = <lang>-import(src)`, `src_B = c-export(U_A)` (also from the
+semantic-only envelope and from `R(U_A, C)`, identical), `U_B = c-import(src_B)`, identity
+`N(strip(U_B)) = N(strip(U_A))`, and rustc (`--edition 2021 -O -C overflow-checks=on`) or python3 on
+the original, cc on `src_B` and the reference model on `U_A` agree on the vectors above. Roots not
+given are reported NOT_RUN. The native realization leg of compose section 4.1 item 2 is not run here.
 Independent validation (#623) is a separate gate.
