@@ -207,6 +207,41 @@ tck lt ulong c oxword r 13
 end
 end
 
+fn tv2 to void
+note v2 admission (oxadm2) and the retrieval advisor kind: refused records are in no split
+note (oxpart 3); retrieval advice is select.om's slnear; the image scorer is still slpick.
+n = sxgen 7 780
+tck eq oxadm2 n 0
+tck eq get RC 10 468
+k = ulong 0
+for r ulong 780
+if eq oxpart r 3
+k = add k 1
+end
+end
+tck eq k 312
+put HV 7 1
+k = ulong 0
+for r ulong 200
+if lt oxpart r 3
+c = hvscore r
+tck ge c 0
+tck eq ulong c slnear r
+tck eq get HV 0 0
+k = add k 1
+end
+end
+tck gt k 0
+put HV 7 0
+slbest
+for r ulong 200
+if lt oxpart r 3
+c = hvscore r
+tck eq ulong c slpick r
+end
+end
+end
+
 fn main to int
 timg
 n = tfix
@@ -217,6 +252,7 @@ tref3
 tpred
 tsingle
 tnarrow
+tv2
 w = write 1 TPASS 0 len TPASS
 wnum get HT 0
 w = write 1 TNL 0 1

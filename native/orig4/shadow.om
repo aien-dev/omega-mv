@@ -6,8 +6,12 @@ note plus shadowmain.om (fn main), the tests this unit plus tests/orig4/shadow-t
 note Modes (first stdin byte, dispatched by shadowmain.om): S shadow, G fixture.
 note S: config 64 bytes (8 LE words: 0 enable, 1 scoring budget in records (<= 2048),
 note 2 image length in the stream (1..32768; select.om's slload decides admissibility),
-note 3..7 reserved 0), the allow-list block (4096 bytes), the checkpoint image, then
-note omexp-v1 records to end of input (<= 524288 bytes).
+note 3 admission version (0 v1 oxload, 1 v2 oxadm2: ORIG1-CONTRACT-v2.md; with advisor kind
+note 0 the image's v2 flag SS[20] must equal it, else FALLBACK all reason=image-9), 4 advisor
+note kind (0 the image's scorer, 1 retrieval: the v2/v1 nearest-TRAIN-record rule of
+note select.om slnear, used to measure its per-decision overhead; the image is admitted
+note but not consulted), 5..7 reserved 0), the allow-list block (4096 bytes), the
+note checkpoint image, then omexp-v1 records to end of input (<= 524288 bytes).
 note Admission in order: enable word (anything but 1 prints SHADOW disabled, exit 0) ->
 note allow-list status of the records' FNV-1a 64 (oxallow) -> record admission (oxload) ->
 note checkpoint admission (sladmit: every slload check except the training-dataset binding;
@@ -24,7 +28,8 @@ note G: 16 bytes (seed, count <= 2048); the SYNTHETIC records of sxgen go to fd 
 note H: the record bytes to end of input; their FNV-1a 64 in decimal on fd 1 (the glue
 note authorizes a mutated fixture through it for the record-refusal runs).
 note HV: 0 score bits of the last hvscore, 1 scored, 2 per-record fallbacks, 3 advised
-note cost, 4 oracle cost, 5 incumbent cost (ps per call, scored records only), 6 budget.
+note cost, 4 oracle cost, 5 incumbent cost (ps per call, scored records only), 6 budget,
+note 7 advisor kind. A v2-refused record (oxpart 3) falls back with reason=refused.
 global HM uchar 1
 global HK uchar 64
 global HV ulong 8
@@ -49,6 +54,9 @@ text HROOD "ood"
 text HRSIN "single"
 text HRNON "nonfinite"
 text HRBUD "budget"
+text HRREF "refused"
+text HSV2 "SHADOW admission=v2 admitted="
+text HSKD " advisor="
 text HASEQ "ADVICE seq="
 text HAARM " arm="
 text HAINC " incumbent="
@@ -191,6 +199,10 @@ if lt hvnarms r 2
 ret -2
 end
 best = ulong 0
+if eq get HV 7 1
+put HV 0 0
+ret long slnear r
+end
 bs = slfwd r 0
 ok = affinite bs
 for k ulong 7
@@ -222,19 +234,31 @@ ret sladmit 0 n
 end
 
 fn hvcfgok to bool
-note budget <= 2048, image length 1..32768 (the SI capacity), reserved words zero.
+note budget <= 2048, image length 1..32768 (the SI capacity), admission version and
+note advisor kind 0 or 1, reserved words zero.
 if gt hkw 1 2048
 ret false
 end
 if or eq hkw 2 0 gt hkw 2 32768
 ret false
 end
-for i ulong 5
-if ne hkw add 3 i 0
+if or gt hkw 3 1 gt hkw 4 1
+ret false
+end
+for i ulong 3
+if ne hkw add 5 i 0
 ret false
 end
 end
 ret true
+end
+
+fn hvload n ulong to int
+note Record admission by the config's version word: 1 oxadm2 (v2), otherwise oxload (v1).
+if eq hkw 3 1
+ret oxadm2 n
+end
+ret oxload n
 end
 
 fn hvadmit n ulong lbn ulong to int
@@ -253,7 +277,7 @@ wnum ulong neg long st
 hvnl
 ret 67
 end
-ld = oxload n
+ld = hvload n
 if ne ld 0
 w = write 1 HFREC 0 len HFREC
 wnum ulong neg long ld
@@ -267,12 +291,22 @@ wnum get RC 2
 w = write 1 HSAL 0 len HSAL
 wnum ulong st
 hvnl
+if eq hkw 3 1
+w = write 1 HSV2 0 len HSV2
+wnum get RC 10
+w = write 1 HSKD 0 len HSKD
+wnum get HV 7
+hvnl
+end
 ret 0
 end
 
 fn hvimg n ulong to int
 note Checkpoint admission with its SHADOW line; 1 when refused (FALLBACK all printed).
 st = hvimage n
+if and ge st 0 and eq get HV 7 0 ne get SS 20 hkw 3
+st = -9
+end
 if lt st 0
 w = write 1 HFIMG 0 len HFIMG
 wnum ulong neg long st
@@ -314,6 +348,9 @@ end
 if eq code -4
 w = write 1 HRBUD 0 len HRBUD
 end
+if eq code -5
+w = write 1 HRREF 0 len HRREF
+end
 hvnl
 put HV 2 add get HV 2 1
 end
@@ -340,6 +377,10 @@ end
 fn hvrec r ulong to void
 if hvbudget r
 hvfb r -4
+ret
+end
+if eq oxpart r 3
+hvfb r -5
 ret
 end
 c = hvscore r
@@ -383,6 +424,7 @@ for i ulong 8
 put HV i 0
 end
 put HV 6 hkw 1
+put HV 7 hkw 4
 lbn = hvrdlb
 img = hkw 2
 if ne hvrdimg img img

@@ -24,6 +24,10 @@
 # Host CPU only. No GPU, network, service or model process is touched.
 # ORIG4_RECORDS=<omexp-v1 file> ORIG4_ALLOW=<allow-list file>: real-record mode, the advisor
 # runs over that file (owner records stay local; point OUT outside the tree).
+# ORIG4_OVERHEAD=1 with ORIG4_RECORDS, ORIG4_ALLOW and ORIG4_IMAGE (a v2 MLP image): the
+# per-decision overhead runs of benchmarks-mv docs/orig3/PROTOCOL-v2.md, v2 admission,
+# interleaved ORIG4_REPS (default 5) times: disabled, image scorer, retrieval. Wall times in
+# microseconds land in OUT/<run>.wall_us; the judge computes the overhead from them.
 set -u
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 OUT=${OUT:-$ROOT/evidence/ORIG4-SHADOW/run}
@@ -104,16 +108,17 @@ cfg() { for v in "$@"; do le64 "$v"; done; }
 allowblock() { { cat "$1"; head -c 4096 /dev/zero; } | head -c 4096; }
 count() { grep -c -E "$1" "$OUT/$2.stdout"; }
 
-# run NAME ENABLE BUDGET IMGLEN IMAGE RECORDS ALLOWFILE: one advisor run (mode S); the exit
-# code is returned, stdout/stderr/rc and the wall time land in OUT.
+# run NAME ENABLE BUDGET IMGLEN IMAGE RECORDS ALLOWFILE [ADMISSION KIND]: one advisor run
+# (mode S); the exit code is returned, stdout/stderr/rc and the wall time land in OUT.
 run() {
   name=$1
   t0=$(ms)
-  { printf 'S'; cfg "$2" "$3" "$4" 0 0 0 0 0; allowblock "$7"; cat "$5"; cat "$6"; } \
+  { printf 'S'; cfg "$2" "$3" "$4" "${8:-0}" "${9:-0}" 0 0 0; allowblock "$7"; cat "$5"; cat "$6"; } \
     | "$SH" > "$OUT/$name.stdout" 2> "$OUT/$name.stderr"
   rc=$?; t1=$(ms)
   echo "$rc" > "$OUT/$name.rc"
   echo "$(( (t1 - t0) / 1000000 ))" > "$OUT/$name.wall_ms"
+  echo "$(( (t1 - t0) / 1000 ))" > "$OUT/$name.wall_us"
   note "$name rc=$rc wall_ms=$(cat "$OUT/$name.wall_ms") lines=$(wc -l < "$OUT/$name.stdout") $(grep -E '^(COST|FALLBACK all|SHADOW disabled)' "$OUT/$name.stdout" | tail -n 1)"
   return "$rc"
 }
@@ -128,6 +133,28 @@ shape() {
 expect() { [ "$(cat "$OUT/$1.rc")" -eq "$2" ] || fail "$1 exit $(cat "$OUT/$1.rc"), expected $2"; }
 # hash FILE: the records' FNV-1a 64 through the advisor's H mode.
 hash() { { printf 'H'; cat "$1"; } | "$SH"; }
+
+if [ "${ORIG4_OVERHEAD:-0}" = 1 ]; then
+  [ -f "${ORIG4_RECORDS:-}" ] || fail "ORIG4_RECORDS ${ORIG4_RECORDS:-unset}"
+  [ -f "${ORIG4_ALLOW:-}" ] || fail "ORIG4_ALLOW ${ORIG4_ALLOW:-unset}"
+  [ -f "${ORIG4_IMAGE:-}" ] || fail "ORIG4_IMAGE ${ORIG4_IMAGE:-unset}"
+  note "overhead records fnv=$(hash "$ORIG4_RECORDS") bytes=$(wc -c < "$ORIG4_RECORDS") image_sha256=$(sha256sum "$ORIG4_IMAGE" | cut -c1-64)"
+  i=1
+  while [ "$i" -le "${ORIG4_REPS:-5}" ]; do
+    run "ovh_disabled_$i" 0 2048 11560 "$ORIG4_IMAGE" "$ORIG4_RECORDS" "$ORIG4_ALLOW" 1 0; expect "ovh_disabled_$i" 0
+    run "ovh_mlp_$i" 1 2048 11560 "$ORIG4_IMAGE" "$ORIG4_RECORDS" "$ORIG4_ALLOW" 1 0; expect "ovh_mlp_$i" 0
+    shape "ovh_mlp_$i" || fail "ovh_mlp_$i shape"
+    grep -q '^SHADOW admission=v2 admitted=[0-9]* advisor=0$' "$OUT/ovh_mlp_$i.stdout" || fail "ovh_mlp_$i admission line"
+    run "ovh_near_$i" 1 2048 11560 "$ORIG4_IMAGE" "$ORIG4_RECORDS" "$ORIG4_ALLOW" 1 1; expect "ovh_near_$i" 0
+    shape "ovh_near_$i" || fail "ovh_near_$i shape"
+    grep -q '^SHADOW admission=v2 admitted=[0-9]* advisor=1$' "$OUT/ovh_near_$i.stdout" || fail "ovh_near_$i admission line"
+    for k in disabled mlp near; do note "OVERHEAD run=$k rep=$i wall_us=$(cat "$OUT/ovh_${k}_$i.wall_us")"; done
+    i=$((i + 1))
+  done
+  (cd "$OUT" && sha256sum -- *.stdout *.rc *.compile.stderr *.wall_us) > "$OUT/raw.sha256"
+  note "ORIG4_SHADOW_OVERHEAD_PASS"
+  exit 0
+fi
 
 if [ -n "${ORIG4_RECORDS:-}" ]; then
   # Real-record mode: the given records, the given allow-list, both candidates; nothing else.
@@ -214,6 +241,17 @@ shape budget10 || fail budget10 shape
 [ "$(count '^FALLBACK seq=[0-9]+ reason=budget$' budget10)" -eq $((FIXCOUNT - 10)) ] || fail budget fallback count
 [ "$(count '^ADVICE ' budget10)" -eq 10 ] || fail budget advice count
 grep -q '^COST records=780 scored=10 fallback=770 ' "$OUT/budget10.stdout" || fail budget cost line
+# v2 admission (ORIG1-CONTRACT-v2.md): the retrieval advisor over the fixture scores the 468
+# admitted records and falls back on the 312 refused ones; the v1 image under the v2 scorer
+# is refused (image-9: its SS[20] is 0).
+run fixture_v2_near 1 2048 11560 "$MLP" "$BUILD/fixture.rb" "$BUILD/allow.txt" 1 1; expect fixture_v2_near 0
+shape fixture_v2_near || fail fixture_v2_near shape
+grep -q '^SHADOW admission=v2 admitted=468 advisor=1$' "$OUT/fixture_v2_near.stdout" || fail fixture_v2_near admission line
+[ "$(count '^FALLBACK seq=[0-9]+ reason=refused$' fixture_v2_near)" -eq 312 ] || fail fixture_v2_near refused count
+grep -q '^COST records=780 scored=468 fallback=312 ' "$OUT/fixture_v2_near.stdout" || fail fixture_v2_near cost line
+run fixture_v2_v1image 1 2048 11560 "$MLP" "$BUILD/fixture.rb" "$BUILD/allow.txt" 1 0; expect fixture_v2_v1image 0
+grep -q '^FALLBACK all reason=image-9$' "$OUT/fixture_v2_v1image.stdout" || fail v1 image accepted under v2
+[ "$(count '^ADVICE ' fixture_v2_v1image)" -eq 0 ] || fail v1 image advised under v2
 run bad_config 1 4096 11560 "$MLP" "$BUILD/fixture.rb" "$BUILD/allow.txt"; expect bad_config 68
 [ ! -s "$OUT/bad_config.stdout" ] || fail bad config printed
 printf 'X' | "$SH" > "$OUT/bad_mode.stdout" 2> "$OUT/bad_mode.stderr"; echo $? > "$OUT/bad_mode.rc"; expect bad_mode 64

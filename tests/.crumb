@@ -199,8 +199,8 @@
           "purpose": "Simulated M16 driver for numeric resource-lifecycle tests. No device execution or numeric parity"
         },
         {
-          "digest": "2cc282ada6befe4f176ae099a1c111a5937f931cb9a148ae379c09282b2ac0d1",
-          "last_commit": "4d0c748fe",
+          "digest": "d033d9d9e7adad9979ad244155c4ee90e8212574fd9a1b181b93d2673bfe6c0d",
+          "last_commit": "3e2b440d6",
           "name": "orig4",
           "purpose": "ORIG-4 shadow advisor tests: shadow-test.om (in-process checks over the SYNTHETIC fixture and th"
         },
@@ -271,8 +271,8 @@
           "purpose": "Reservoir tests (omega#440): Gate 1 simulator and readout checks against an independent binary64"
         },
         {
-          "digest": "d70368fa386bd5c32613787683a3cddbf453f5eda16a0c4406f745cebd1caca2",
-          "last_commit": "1ec813726",
+          "digest": "38b77ee2d7afa0f625dde081bd9cdb3b71e654c6ea806796d1549c73f3d4cab5",
+          "last_commit": "3e2b440d6",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -307,15 +307,15 @@
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:60d9c4a56cddcb3f930f185f4343084bdb164927b06733874703786f6a52a779",
-      "compiled_at": "2026-10-25T04:35:42Z",
+      "children_root": "sha256:6ec645d39e9a4c1bdf4e08be4b9c6346a4f35533e71d42c139321baf2aafe3af",
+      "compiled_at": "2026-10-25T11:59:51Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:dc81dcce82d64966c6fe663282713b89dcfdf16ec30856a12c2d070cea3e6986",
+      "digest": "sha256:125b14f4c3fe34e9542dc40983d41de0aaa829acf52789ed1299145f5826ede7",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
       "files": 1295,
-      "generated_at_commit": "4d0c748feb3f7c640f9b98e7c030a34c8d8051b1",
-      "source_tree": "sha256:483fa0c6b84ee893927e2406974374fc4411f424217536d115b1f854b759963c"
+      "generated_at_commit": "3e2b440d6940bc864ee94d51f4d65721f0c02e60",
+      "source_tree": "sha256:6345e599e6b7673a710e809247412ef3286f3cb51d9835fae17a0b1d926bfcde"
     },
     "owner_lane": "",
     "provenance": {

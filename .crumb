@@ -65,8 +65,8 @@
           "purpose": "Directory mk. Purpose not yet described by a human."
         },
         {
-          "digest": "fc80deca04bb1b06db72d4be2b4b99727bbf164f21092eea20cc51f1c0b556a5",
-          "last_commit": "345cbdc01",
+          "digest": "4b91e50f4d4959b3aaa3106527b7a99912ca3b9b059ae2712f5d91c35b461285",
+          "last_commit": "3e2b440d6",
           "name": "native",
           "purpose": "Handwritten .om units of omega-mv that are not part of the seed ladder: the ORIG-4 shadow adviso"
         },
@@ -89,8 +89,8 @@
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "dc81dcce82d64966c6fe663282713b89dcfdf16ec30856a12c2d070cea3e6986",
-          "last_commit": "345cbdc01",
+          "digest": "125b14f4c3fe34e9542dc40983d41de0aaa829acf52789ed1299145f5826ede7",
+          "last_commit": "3e2b440d6",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
@@ -101,15 +101,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:b8b53677e55e8775625a3798712ea820b4a7c21a1403571e8f19229a538e6618",
-      "compiled_at": "2026-10-25T04:36:29Z",
+      "children_root": "sha256:7423105d5bc8d5dc2cc521a78bfa1accffa152a4beba05d85c8c52b1f11b5f74",
+      "compiled_at": "2026-10-25T11:59:51Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:620727c4efeb12897748b8fb7ffa9c1c9a08d8633c98fa752df83ea43c62e6df",
+      "digest": "sha256:edafcb3a56b5198ab32a5a0e19ad6678bae765bf044e44445deb35e563e32672",
       "evidence_files": 11730,
       "evidence_root": "sha256:ca3006dc0bb5a3636ca86b87b76817884abb85b72d677d7fe1ef77b5e21fb784",
       "files": 15063,
-      "generated_at_commit": "93084db689f0c64e8ea8f180b8cf409f357fb1cd",
-      "source_tree": "sha256:9391d1fabd2c901fe905ce07075f739b1bcaa772e54c19d8090765c96169fd5d"
+      "generated_at_commit": "3e2b440d6940bc864ee94d51f4d65721f0c02e60",
+      "source_tree": "sha256:01ad029525017810bcad45fbce90cbb7cbcddcfb72f2abbc5186e1e8ff9d432b"
     },
     "owner_lane": "",
     "provenance": {

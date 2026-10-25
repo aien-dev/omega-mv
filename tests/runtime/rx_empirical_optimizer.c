@@ -365,7 +365,7 @@ static char g_meter_dir[128];
  * measured, digest-checked cost. Observation only: no decision, measurement
  * or verdict of this harness reads it. Layout omexp-v1, 32 words of 8 bytes:
  *   0 magic 0x314f4d4558505243 ("CRPXEMO1" LE)  1 version 1
- *   2 family (0 train grid, 1 validation grid, 2 H1, 3 H2, 4 H3)
+ *   2 family (0 train grid, 1 validation grid, 2 H1, 3 H2, 4 H3, 5 coverage sample)
  *   3 core class (RX_CM_CORE_*)  4 pressure bucket  5 M  6 N  7 calls
  *   8 job seed  9 state bytes  10 cache bytes  11 thermal C  12 eligible mask
  *   13 arm count  14 sequence  15 monotonic ns
@@ -1230,6 +1230,36 @@ static int promote_phase(const RxCostModel *m, RxCostModel *durable) {
     return 0;
 }
 
+/* ---- coverage sample (default off; ORIG v2, aien-train#24/#25, benchmarks#45) ----
+ * OMEGA_EMPIRICAL_COVERAGE=<n> with the record tap on: after the held-out
+ * phase, n further log-uniform shapes per present core class (M, N in
+ * [1, 8192], M N <= MAX_ELEMS, seed 9000 + core) are measured with the same
+ * truth table and tapped as family 5. Observation only: no policy, judge,
+ * learner or verdict of this harness sees them. Without the tap it does nothing. */
+#define COVERAGE_MAX 640u
+
+static uint32_t coverage_count(void) {
+    const char *e = getenv("OMEGA_EMPIRICAL_COVERAGE");
+    if (g_tap_fd < 0 || !e || !e[0]) return 0;
+    unsigned long v = strtoul(e, NULL, 10);
+    return v > COVERAGE_MAX ? COVERAGE_MAX : (uint32_t)v;
+}
+
+static void coverage_sample(uint32_t k, uint32_t count) {
+    uint64_t s = 9000u + k;
+    uint32_t n = 0;
+    tap_ctx(5, k, 0);
+    while (n < count) {
+        uint32_t M = log_uniform(&s, 0.0, 13.0), N = log_uniform(&s, 0.0, 13.0);
+        if (M < 1 || N < 1 || (uint64_t)M * N > MAX_ELEMS || M > MAX_M || N > MAX_N) continue;
+        Job j = { M, N, calls_for(M, N), 9000u + k + (uint64_t)n * 2654435761u, 0 };
+        job_load(&j);
+        uint64_t table[N_ARMS];
+        truth_table_tap(&j, table);
+        n++;
+    }
+}
+
 /* ---- held-out ---- */
 
 static Job g_h1[MAX_JOBS], g_h2[MAX_JOBS];
@@ -1673,6 +1703,15 @@ int main(void) {
         rx_cm_digest(&durable, c);
         R.online_not_durable = changed && memcmp(b, c, 32) == 0;
         CHECK(R.online_not_durable, "online learning changed only the working copy");
+    }
+    uint32_t cover = coverage_count();
+    if (cover) {
+        printf("[*] coverage sample: %u shapes per core class, tapped as family 5\n", cover);
+        for (uint32_t k = 0; k < RX_CM_CORES; k++) {
+            if (!R.present[k]) continue;
+            place_quiet(k);
+            coverage_sample(k, cover);
+        }
     }
     R.thermal_end = thermal_c();
     loadavg(R.load_end, sizeof R.load_end);
