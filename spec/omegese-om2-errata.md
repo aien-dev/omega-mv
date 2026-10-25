@@ -195,3 +195,16 @@ replaced by:
 Fuel (E14) is charged in source/emission order. An unrolled loop is charged K units when it starts, at
 its own line, before any copy is expanded. An inline expansion is charged 1 when it starts, at the call
 line. Error 14 names the line of the construct whose charge exceeds the fuel.
+
+## E17 (CompilerS4 L834, 2026-10-25): S4 points the contract did not settle (accepted)
+
+1. `export` together with `fn main` is error 9.
+2. A 33rd export is error 14.
+3. `export` not followed by `fn`, or inside a function body, is error 16.
+4. An `out T N` parameter is an `edit T N` in every function, internal ones included. `out T *` and
+   `out … fresh` are error 16.
+5. A part may be passed only to an unsized parameter; passing it to a sized one is error 7.
+6. The base of a part must be a name, so a part of a part is error 9.
+7. The six-slot limit (§4) also applies in program mode.
+8. Inline functions are also compiled standalone, in source order, each with its own fuel (E14/E16).
+   The fuel error therefore reports the first function in source order that runs out.
