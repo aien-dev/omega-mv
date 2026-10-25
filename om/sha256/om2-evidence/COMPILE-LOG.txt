@@ -27,3 +27,16 @@ Constructs used by the unit, and the slice that is expected to provide each
 
 2026-10-25T16:40Z  compiler-s1..s4: no branch on aien-dev yet (git fetch aien-dev; only om2/contract,
   om2/coverage-matrix, om2/qualification). NOT_RUN.
+
+2026-10-25T17:10Z  compiler-s1 @ a5927895 (PR #750), omc 31342447…f049f
+  Delivered unit: refused, "omc: line 114: error 16" (om2 diag: code=16 line=114 col=25 expect=type
+  found=6672657368 "fresh"). Expected: fresh is S3; the names pass stops at the first signature it
+  cannot read.
+  Constructs compiled under S1, in the reduced test unit s1/sha256-s1.om (see s1/README.txt):
+    om2 line ..................... compiles
+    hex literals (64 K, 8 IV, 0x80, 0xff masks) ... compile; K/IV correct (158/158 vectors)
+    rotr on uint, constant n ..... compiles to ROR immediate (10 of 10)
+  Result: sha-s1.bin passes all 158 fixture vectors; a rotr-amount mutant fails 158/158. HOST.
+  Change to the delivered unit from this: load and round body split a term per line (error 12 seen
+  under S1 for the one-line forms).
+  Not yet compilable: unroll (S2); layout, fresh (S3); view uchar *, part, out, export (S4).

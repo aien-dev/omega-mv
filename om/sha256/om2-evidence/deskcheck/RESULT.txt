@@ -20,3 +20,18 @@ Mutants (sed on a copy; each must fail):
   s/^put p k 0x80$/put p k 0x81/              fail=1076
   s/lt n sub 64 bi/le n sub 64 bi/            fail=43   (a full buffer left uncompressed)
   s/^b = a$/b = c/                            fail=1076
+
+Rolled-loop pass limit (AbiLane report; omc s_for/s_while: trap 4 after 1000000 passes). The unit
+now hashes whole blocks through blocks/run: runs of 2^25 bytes, nested so no loop passes 2^20 times.
+interp.py traps 4 when a rolled loop's count exceeds LIMIT (default 1000000) and models part
+(checks o <= len, then k <= len - o).
+  python3 interp.py om/sha256/sha256-om2.om                         cases=1076 fail=0
+  Scaled test (scale.sed: runs of 16 blocks, so every level is exercised by lengths up to 49216):
+  LIMIT=63 EXTRA=16383,16384,40000,49216 python3 interp.py scaled.om  cases=1092 fail=0
+  Scaled mutants (LIMIT=63, EXTRA=16383,16384,16448,40000,49216):
+    inner run loop 0x10 -> 0x8                 TRAP 4 at 49216, fail=4
+    middle mask 0xf -> 0x7                     TRAP 4 at 49216, fail=5
+    last run length -> 0                       fail=668
+    run step shr 6 -> shr 7                    fail=681
+  A wrong split only moves bytes into the final run, so digests stay right; the pass limit is what
+  catches it, which is why the scaled test sets LIMIT.

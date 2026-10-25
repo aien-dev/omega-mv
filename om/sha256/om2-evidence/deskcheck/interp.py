@@ -2,7 +2,8 @@
 # L838 desk check (oracle, outside the delivered closure, NOT compiler evidence): a small interpreter
 # of the OM-2 subset that om/sha256/sha256-om2.om uses, as the contract describes it, to check the
 # unit's algorithm (schedule, rounds, buffering, padding) against hashlib before an OM-2 omc exists.
-import sys, hashlib, random
+import sys, hashlib, random, os
+LIMIT = int(os.environ.get("LIMIT", "1000000"))
 W = {'uchar': 8, 'ushort': 16, 'uint': 32, 'ulong': 64}
 BIN = {'add', 'sub', 'mul', 'shl', 'shr', 'and', 'or', 'xor', 'rotr', 'lt', 'le', 'gt', 'ge', 'eq', 'ne'}
 class Trap(Exception): pass
@@ -68,6 +69,7 @@ class VM:
             if t[0] == 'for':
                 var, ty = t[1], t[2]
                 cnt, rest = s.expr(t[3:], env)
+                if rest != ['unroll'] and cnt[0] > LIMIT: raise Trap(4)  # rolled loop pass limit
                 for it in range(cnt[0]):
                     env[var] = (it, ty)
                     s.block(body, k + 1, end, env)
@@ -121,6 +123,11 @@ class VM:
                 v, toks = s.expr(toks, env); out.append(v)
             else:
                 if toks[0] in ('view', 'edit'): toks = toks[1:]
+                if toks[0] == 'part':  # section 6: checks o <= len, then k <= len - o; a view copy
+                    b = env[toks[1]]; b = b.arr if isinstance(b, View) else b
+                    o, toks = s.expr(toks[2:], env); k, toks = s.expr(toks, env)
+                    if o[0] > len(b.a) or k[0] > len(b.a) - o[0]: raise Trap(3)
+                    c = Arr(b.t, 0); c.a = b.a[o[0]:o[0] + k[0]]; out.append(View(c)); continue
                 a = env[toks[0]]; toks = toks[1:]
                 out.append(a)
         return out, toks
@@ -185,7 +192,9 @@ def main():
     def out(): return Arr('uchar', 32)
     rng = random.Random(838); bad = 0; cases = 0
     lens = list(range(0, 260)) + [447, 448, 511, 512, 1000, 4095, 4096, 4097, 12345]
-    for n in lens:
+    lens += [int(x) for x in os.environ.get('EXTRA', '').split(',') if x]
+    def one(n):
+        nonlocal cases, bad
         msg = bytes(rng.randrange(256) for _ in range(n)); ref = hashlib.sha256(msg).digest()
         o = out(); vm.call('sha256_hash', [view(msg), o]); cases += 1
         if bytes(o.a) != ref: bad += 1; print('hash FAIL', n)
@@ -206,6 +215,9 @@ def main():
         vm.call('sha256_init', [c1]); vm.call('sha256_update', [c1, view(msg)]); o3 = out()
         vm.call('sha256_final', [c1, o3]); cases += 1
         if bytes(o3.a) != ref: bad += 1; print('reuse FAIL', n)
+    for n in lens:
+        try: one(n)
+        except Trap as e: bad += 1; print('TRAP', e.args[0], 'at length', n)
     print(f'desk-check cases={cases} fail={bad}')
     sys.exit(1 if bad else 0)
 main()
