@@ -6,8 +6,8 @@ codec `sa identity|decode|replay` (build/L832, NOT_RUN when absent), cross-impor
 import of the F1 source, export of the unit and of R(U, M) semantic-only for all six family members (identical
 bytes), same-language re-import with identical semantic bytes, and g++ DIFFERENTIAL (original and exported
 C++) plus cc on the F1 C against a bigint evaluation of the records. Compositions C->C++ and C++->C
-(translation-compose-v2 section 3: the v1-core G1 C exporter gets R(U, C), done here in test code until the
-retarget tool lands) with identity under N and the DIFFERENTIAL check including the native realization
+(translation-compose-v2 section 3: the v1-core G1 C exporter gets R(U, C); with --retarget the #624 retarget tool
+produces every R(U, M) and must equal the test-code R byte for byte, otherwise the test-code R is used) with identity under N and the DIFFERENTIAL check including the native realization
 lower(N(U_A)) -> omc 734f0a39 -> bridge binding.
 """
 from pathlib import Path
@@ -190,6 +190,7 @@ def main():
     ap.add_argument('--cc',default=os.environ.get('CC','cc'))
     ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC',str(HOME/'workspace/omega-seedqual-20261025/seed/out/omc')))
     ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO',str(HOME/'workspace/omega-bridge')))
+    ap.add_argument('--retarget',default=os.environ.get('CPP_SELFTEST_RETARGET',''),help='public tools/adapters/retarget (#624); cross-checked against the test-code R')
     a=ap.parse_args()
     out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)
     cimp=Path(a.c_import)
@@ -205,6 +206,13 @@ def main():
         r=py(IMPORT,src);bump('cpp_import_runs');return r
     def xexport(env):
         r=py(EXPORT,env);bump('cpp_export_runs');return r
+    RMEMBER={'C':'c','Rust':'rust','Python':'python','Cpp':'cpp','Zig':'zig','Go':'go'}
+    def R(env,sem,m):
+        """R(U, M) semantic-only: the retarget tool when given (must equal the test-code R byte for byte), else the test-code R."""
+        want=semonly(retarget(sem,m))
+        if not a.retarget:return want
+        r=py(Path(a.retarget),env,RMEMBER[m]);bump('retarget_runs')
+        check(r.returncode==0 and r.stdout==want,'retarget %s differs from the test-code R (rc=%d %s)'%(m,r.returncode,r.stderr));return r.stdout
     def native_check(sem,vec,ref):
         if NAT.status!='RUN':return 'NOT_RUN ('+NAT.reason+')'
         check(NAT.values(sem,vec)==ref,'native realization lower(N(U_A)) != reference');return 'PASS'
@@ -231,7 +239,7 @@ def main():
         r=xexport(env_with_sidecar);check(r.returncode==0 and r.stderr==b'',tag+' export refused rc=%d %s'%(r.returncode,r.stderr))
         text=r.stdout
         for m in MEMBERS:
-            u=semonly(retarget(sem,m))
+            u=R(env_with_sidecar,sem,m)
             if codec=='RUN':check(sa('decode',u).returncode==0,tag+' R(U,%s) not a valid v2-codec unit'%m)
             q=xexport(u);check(q.returncode==0 and q.stdout==text,tag+' export differs for member '+m+' (semantic-only)')
         bump('member_exports',len(MEMBERS))
@@ -425,7 +433,7 @@ def main():
         try:
             r=ximport(src);check(r.returncode==0,'C++ import refused');sem_a,_,ops_a=decode(r.stdout,'Cpp')
             direct=py(CEXPORT,r.stdout);check(direct.returncode!=0 and not direct.stdout,'v1-core c-export accepted a v2 unit');bump('c_export_v2_refusal_status_%d'%direct.returncode)
-            q=py(CEXPORT,semonly(retarget(sem_a,'C')));check(q.returncode==0,'c-export refused R(U,C) rc=%d %s'%(q.returncode,q.stderr))
+            q=py(CEXPORT,R(r.stdout,sem_a,'C'));check(q.returncode==0,'c-export refused R(U,C) rc=%d %s'%(q.returncode,q.stderr))
             c=cimport(q.stdout);check(c.returncode==0,'C import of exported C refused')
             sem_b,_,ops_b=decode(c.stdout,'C');check(N(strip(sem_b))==N(strip(sem_a)),'identity N(strip(U_B)) != N(strip(U_A))')
             vec=vectors(nargs,rng);ref=[evaluate(ops_a,v) for v in vec]
@@ -445,6 +453,8 @@ def main():
             'build':json.loads((ROOT/'build/L739/build.json').read_text()),'gxx':subprocess.check_output([a.cxx,'--version'],text=True).splitlines()[0],'gxx_flags':CXXFLAGS,
             'cc':subprocess.check_output([a.cc,'--version'],text=True).splitlines()[0],
             'c_import_sha256':sha(cimp),'c_export_sha256':sha(ROOT/'build/L622/c-export'),'lower_sha256':sha(ROOT/'build/L831/lower'),
+            'retarget':('TOOL %s (cross-checked against test-code R)'%a.retarget) if a.retarget else 'test-code R only (retarget tool not given)',
+            'retarget_build':json.loads((Path(a.retarget).resolve().parents[2]/'build/L833/build.json').read_text()) if a.retarget else None,
             'codec_v2':codec,'codec_v2_sa_sha256':sha(sa_exe),'codec_v2_source_sha256':sha(ROOT/'src/source-aware/core-v2.om'),
             'native_realization':NAT.status,'native_realization_reason':NAT.reason,'native_realized_units':len(NAT.cache),'native_vectors':NAT.vectors,
             'positives':len(rows),'positives_passed':sum(r['result']=='PASS' for r in rows),'not_in_profile':len(f2['not_in_profile']),
@@ -455,7 +465,7 @@ def main():
             'cases':rows,'refusal_cases':refusals,'control_cases':ctl,'export_rows':xrows,'c_to_cpp_cases':comp,'cpp_to_c_cases':rc_rows,'failures':failures}
     (out/'result.json').write_text(json.dumps(report,indent=1)+'\n')
     keys=['positives','positives_passed','not_in_profile','refusals','refusals_passed','controls','controls_passed','export_cases','export_cases_passed',
-          'c_to_cpp','c_to_cpp_passed','cpp_to_c','cpp_to_c_passed','native_realization','native_checks_passed','native_vectors','codec_v2','oracle_compiles']
+          'c_to_cpp','c_to_cpp_passed','cpp_to_c','cpp_to_c_passed','native_realization','native_checks_passed','native_vectors','codec_v2','retarget','oracle_compiles']
     print(report['result'],' '.join('%s=%s'%(k,report[k]) for k in keys),' '.join('%s=%s'%kv for kv in counts.items()))
     for f in failures[:20]:print('FAIL',json.dumps(f)[:600])
     return 1 if failures else 0

@@ -184,7 +184,8 @@ vectors. Also: oracle controls (a `ULL` literal is not `std::uint64_t`, the brac
 an out-of-range braced literal does not compile), import boundary controls, exporter refusals and accepted
 exporter boundaries, public-command closure, and the compositions C -> C++ (F1 positives and the four accepted
 C import boundary controls) and C++ -> C (F2 positives and the accepted C++ boundary controls). C++ -> C uses
-`export_C(R(U, C))` with the unchanged v1-core G1 C exporter (translation-compose-v2 section 3); until the
-retarget tool lands, R is applied in the test code. Both compositions check identity under N and the
+`export_C(R(U, C))` with the unchanged v1-core G1 C exporter (translation-compose-v2 section 3). R is the #624
+`tools/adapters/retarget` when the self-test is given `--retarget` (or `CPP_SELFTEST_RETARGET`), and every
+tool output must then equal the test-code R byte for byte; without it the test-code R alone is used. Both compositions check identity under N and the
 DIFFERENTIAL agreement of the original program, the reference, the generated program and the native
 realization `lower(N(U_A))`. Finite DIFFERENTIAL evidence, not PROOF.

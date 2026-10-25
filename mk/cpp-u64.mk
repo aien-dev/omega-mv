@@ -2,6 +2,7 @@
 # Author self-test only (TESTED). SA_SEED_REPO must hold bridge commit 0fc7d866 (tools/source-aware/build).
 # The exporter and the codec-acceptance leg need the #621 v2 codec (src/source-aware/core-v2.om, build/L832/sa).
 # Oracles: CXX (g++ 13.3.0), CC; native realization: OMEGA_NATIVE_OMC (omc 734f0a39), OMEGA_BRIDGE_REPO.
+# Optional: CPP_SELFTEST_RETARGET=<path to a built tools/adapters/retarget> uses the #624 tool for R(U, M).
 SA_SEED_REPO ?= $(HOME)/workspace/omega-bridge
 export SA_SEED_REPO
 .PHONY: cpp-u64 test-cpp-u64
