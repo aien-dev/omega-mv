@@ -22,3 +22,16 @@ Resolution:
 A sized array (length N) may be passed to an unsized `view T *` / `edit T *` parameter of a function
 in either mode; `len` is N inside the callee. Writability rules are unchanged (a view never reaches an
 edit). Unsized parameters are allowed on internal functions, not only on exported entries.
+
+## E3 (ShaLane L838, 2026-10-25): context copies and the C API names
+
+- A byte copy of a context between `init` and `final` is an equivalent context: all hashing state lives
+  in the 104 layout bytes (no hidden state, no self-pointers). Receipt required: copy after k updates,
+  continue both copies with the same data, equal digests. Callers relying on this:
+  `src/fabric/fab_loopback.c:107`, `src/fabric/fabric.c:496`, `src/osh/host/osh_journal.c:81/104`.
+- Digest overlapping data is used by `omega_program.c:777` and `tests/runtime/rx_sem_incremental.c:183`;
+  §6 `out` semantics cover it (receipt required).
+- C API names: the SHA unit exports `omega2_sha256_init` etc. The bridge-generated header maps the
+  `sha256_*` names to them (generated, not handwritten). The freestanding nm allow-list
+  (`Makefile:657`, `RX_CX_FS_ALLOWED`) changes from `sha256_*` to the `omega2_sha256_*` symbols. That
+  one Makefile rule is changed by the SHA lane (L838) in the cutover commit.
