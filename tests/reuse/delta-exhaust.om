@@ -1,0 +1,393 @@
+note units: sha256 r1 delta
+note SPDX-License-Identifier: Apache-2.0
+note delta-exhaust.om: exhaustive small cases for delta.om (REUSE-1 s4). For each machine or program,
+note every state of n = 0..4 symbols (FSM, A = 3) or n = 0..3 values from a pool with duplicates
+note (AGG, all six folds), every change at every position (SET each i and value, INS each i = 0..n
+note and value, DEL each i, SWAP every pair including i = j), fresh bind, the change, dlres against
+note r1full, then a second change on the shifted state (DEL at 0, or INS at 0 when n = 0) and again.
+note FSM machines: random rules (self loops, reconvergence), permutation machines (no
+note reconvergence), a sink machine; each with the baseline (t = -1) and an R1T table (t = 0).
+note Exit 0 = pass; 1 dlbind refused, 2 dlres refused, 3 r0 differs, 4 r1 differs, 5 dlchg refused,
+note 15 too few checks (prints FAIL code a b on fd 2).
+
+global TRS ulong 1
+global TCHK ulong 1
+global TMETH ulong 1
+global TPOOL ulong 4
+
+fn trnd to ulong
+s = add get TRS 0 11400714819323198485
+put TRS 0 s
+z = mul xor s shr s 30 13787848793156543465
+z = mul xor z shr z 27 10723151780598845931
+ret xor z shr z 31
+end
+
+fn tbelow m ulong to ulong
+ret rem trnd m
+end
+
+fn tdec buf edit uchar 96 p ulong v ulong to ulong
+d = new uchar 24 0
+m = ulong 0
+x = v
+while true bound 21
+put d m uchar add rem x 10 48
+m = add m 1
+x = div x 10
+if eq x 0
+break
+end
+end
+q = p
+for j ulong m
+put buf q get d sub sub m 1 j
+q = add q 1
+end
+ret q
+end
+
+fn tsay code ulong a ulong b ulong to void
+buf = new uchar 96 32
+put buf 0 70
+put buf 1 65
+put buf 2 73
+put buf 3 76
+if eq code 0
+put buf 0 80
+put buf 1 65
+put buf 2 83
+put buf 3 83
+end
+p = ulong 5
+p = tdec edit buf p code
+p = tdec edit buf add p 1 a
+p = tdec edit buf add p 1 b
+put buf p 10
+w = write int 2 buf 0 add p 1
+end
+
+note test-local method fixture: an independent lane map
+fn tstep op ulong v ulong c ulong md ulong to ulong
+if eq op 1
+ret rem add v c md
+end
+if eq op 2
+ret rem sub add v md c md
+end
+if eq op 3
+ret rem mul v c md
+end
+if eq op 4
+ret and v c
+end
+if eq op 5
+ret or v c
+end
+if eq op 6
+ret xor v c
+end
+if eq op 7
+ret rem shl v c md
+end
+ret shr v c
+end
+
+fn mtlane t ulong x ulong to ulong
+md = shl ulong 1 get R1P 2
+k = get R1P 4
+v = x
+for j ulong k
+op = get R1P add 5 add j j
+c = get R1P add 6 add j j
+v = tstep op v c md
+end
+ret v
+end
+
+fn tfillt to void
+st = get R1P 2
+al = get R1P 3
+for s ulong 16
+for a ulong 16
+d = ulong 0
+if and lt s st lt a al
+d = r1delta s a
+end
+put R1T add mul s 16 a d
+end
+end
+end
+
+fn tclrp to void
+for w ulong 64
+put R1P w 0
+end
+end
+
+fn tgfsmh st ulong al ulong to void
+tclrp
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 st
+put R1P 3 al
+put R1P 4 tbelow st
+for s ulong st
+put R1P add 6 s tbelow 256
+end
+end
+
+fn trule r ulong s ulong lo ulong hi ulong t ulong to void
+w = add s shl lo 8
+w = add w shl hi 16
+put R1P add 22 r add w shl t 24
+end
+
+note kind 0 random rules, 1 permutation (symbol 0 identity, others rotate), 2 sink (all to state 0)
+fn tgfsm kind ulong st ulong to void
+tgfsmh st 3
+if eq kind 0
+rc = add 1 tbelow 8
+put R1P 5 rc
+for r ulong rc
+lo = tbelow 3
+trule r tbelow st lo add lo tbelow sub 3 lo tbelow st
+end
+end
+if eq kind 1
+put R1P 5 st
+for s ulong st
+trule s s 1 2 rem add s 1 st
+end
+end
+if eq kind 2
+put R1P 5 st
+for s ulong st
+trule s s 0 2 0
+end
+end
+end
+
+note AGG program wl 8, fold f, lane map from one of four fixed shapes
+fn tgagg f ulong shape ulong to void
+tclrp
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 8
+put R1P 3 f
+put R1P 4 1
+put R1P 5 6
+put R1P 6 0
+if eq shape 1
+put R1P 5 4
+put R1P 6 3
+end
+if eq shape 2
+put R1P 4 2
+put R1P 5 3
+put R1P 6 3
+put R1P 7 8
+put R1P 8 1
+end
+if eq shape 3
+put R1P 5 1
+put R1P 6 255
+end
+end
+
+fn tsym d ulong to ulong
+if eq get R1P 1 2
+ret d
+end
+ret get TPOOL d
+end
+
+fn tbind to int
+t = long -1
+if eq get TMETH 0 1
+t = long 0
+if eq get R1P 1 2
+tfillt
+end
+end
+if ne dlbind t 0
+tsay 1 get R1P 1 get R1N 0
+ret 1
+end
+ret 0
+end
+
+fn tcheck to int
+if ne dlres 0
+tsay 2 get R1N 0 0
+ret 2
+end
+a = get R1R 0
+b = get R1R 1
+r1full
+put TCHK 0 add get TCHK 0 1
+if ne a get R1R 0
+tsay 3 a get R1R 0
+ret 3
+end
+if ne b get R1R 1
+tsay 4 b get R1R 1
+ret 4
+end
+ret 0
+end
+
+fn tins i ulong v ulong to int
+n = get R1N 0
+j = n
+while gt j i bound 4097
+put R1X j get R1X sub j 1
+j = sub j 1
+end
+put R1X i v
+put R1N 0 add n 1
+ret dlchg 4 i v 0
+end
+
+fn tdel i ulong to int
+n = get R1N 0
+old = get R1X i
+j = i
+while lt add j 1 n bound 4097
+put R1X j get R1X add j 1
+j = add j 1
+end
+put R1N 0 sub n 1
+ret dlchg 5 i 0 old
+end
+
+fn tapply kind ulong i ulong v ulong to int
+if eq kind 3
+old = get R1X i
+put R1X i v
+ret dlchg 3 i v old
+end
+if eq kind 4
+ret tins i v
+end
+if eq kind 5
+ret tdel i
+end
+old = get R1X v
+put R1X v get R1X i
+put R1X i old
+ret dlchg 6 i v old
+end
+
+note one case: state = digits of code in base nb, fresh bind, the change, check, second change, check
+fn tcase n ulong code ulong nb ulong kind ulong i ulong v ulong to int
+x = code
+for j ulong n
+put R1X j tsym rem x nb
+x = div x nb
+end
+put R1N 0 n
+dlsreset
+r = tbind
+if ne r 0
+ret r
+end
+if ne tapply kind i v 0
+tsay 5 kind i
+ret 5
+end
+r = tcheck
+if ne r 0
+ret r
+end
+if eq get R1N 0 0
+r = tins 0 tsym sub nb 1
+else
+r = tdel 0
+end
+if ne r 0
+tsay 5 9 0
+ret 5
+end
+ret tcheck
+end
+
+note every change of every state of n symbols
+fn tstate n ulong code ulong nb ulong to int
+for i ulong n
+for d ulong nb
+r = tcase n code nb 3 i tsym d
+if ne r 0
+ret r
+end
+end
+r = tcase n code nb 5 i 0
+if ne r 0
+ret r
+end
+for j ulong n
+r = tcase n code nb 6 i j
+if ne r 0
+ret r
+end
+end
+end
+for i ulong add n 1
+for d ulong nb
+r = tcase n code nb 4 i tsym d
+if ne r 0
+ret r
+end
+end
+end
+ret 0
+end
+
+fn tall nmax ulong nb ulong to int
+for n ulong add nmax 1
+cnt = ulong 1
+for j ulong n
+cnt = mul cnt nb
+end
+for code ulong cnt
+r = tstate n code nb
+if ne r 0
+ret r
+end
+end
+end
+ret 0
+end
+
+fn main to int
+put TRS 0 9001
+put TPOOL 0 0
+put TPOOL 1 1
+put TPOOL 2 2
+put TPOOL 3 255
+for meth ulong 2
+put TMETH 0 meth
+for m ulong 12
+tgfsm rem m 3 add 2 rem div m 3 3
+r = tall 4 3
+if ne r 0
+ret r
+end
+end
+for f ulong 6
+for shape ulong 4
+tgagg add f 1 shape
+r = tall 3 4
+if ne r 0
+ret r
+end
+end
+end
+end
+if lt get TCHK 0 100000
+tsay 15 get TCHK 0 0
+ret 15
+end
+tsay 0 get TCHK 0 dlstat 0
+ret 0
+end
