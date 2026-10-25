@@ -102,30 +102,46 @@ Native replay (AArch64 Linux, no GPU, from repository root)
   nice -n 19 sh seed/omega-from-seed.sh
   sha256sum seed/out/omc
 Required compiler: 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
-For NAME in demo, exhaust, negative, measure, run the following existing-tool
+For NAME in demo, exhaust, measure, run the following existing-tool
 composition (replace NAME literally; these commands are not a shipped runner):
   cat seed/authority/reserve.om seed/authority/envelope.om seed/qualification/security673/resources/checks.om seed/qualification/security673/resources/NAME.om | nice -n 19 seed/out/omc > /tmp/sc1-NAME
   chmod +x /tmp/sc1-NAME
   nice -n 19 /tmp/sc1-NAME
-negative takes one argument1..5: completion,cancel,error,supervisor-work,partial-vector.
-Expected normal exits21,22,23,24,25 with its named FAIL assertion; never count traps.
+negative.om is compiled ALONE as an exact-source mutator. Modes1..4 mutate actual
+ep_event; mode5 mutates actual rv_reserve. Link each generated module with the
+unchanged checks.om and demo.om. Require normal exit7 with the E failure marker,
+or exit4 with the R2 marker. Exact commands are in review-addendum.txt.
   nice -n 19 seed/out/omc < seed/qualification/security673/resources/oracle.om > /tmp/sc1-oracle
   chmod +x /tmp/sc1-oracle
   nice -n 19 /tmp/sc1-oracle
   /usr/bin/time -v nice -n 19 /tmp/sc1-measure
 
 Evidence categories
-Formal proof: NOT_RUN. R3: independent finite .om enumeration18 states78 edges,
-whole-service effectfree crash including selfloop; not uncertain storage recovery.
-Native differential: 448 small reservation cases plus helper-driven binding,
-conservation, overflow, atomic rollback, recovery/fuel and paired-envelope fixtures.
-Native controls: five deliberately bad adapters compile and reach named assertions.
-Native measurement: 63 paired samples, 100 reserve/commit/reclaim cycles per sample;
-p50/p95/p99 are nearest-rank indices31/59/62. Baseline is matched unchecked vector
-mutation, not a safe service. Runtime includes token updates and function calls.
-Raw measurements retain both the initial run and the resource-measured repeat.
-These are helper overhead, not service throughput, timing noninterference or a
-scheduler benchmark. Process crash, durable store integration, real simultaneous
-clients, physical power loss and live service integration: BLOCKED/NOT_RUN.
-Main integration owner supplies independent review, root contributor entry and
-whole-repository checks; this lane edits only the assigned paths.
+Formal proof: NOT_RUN. R3: independent finite enumeration18 states78 edges,
+whole-service effectfree crash including selfloop; not uncertain storage recovery
+or correspondence to the different attributable-slot resource helper.
+Native differential:448 small reservation cases plus helper binding, exact status,
+stale/cleared/reused token, attributable reclaim, conservation, overflow, atomic
+rollback, recovery/fuel and actual paired occupancy/admission fixtures.
+Native controls: five separately mutated production-source modules compile and
+reach the SAME demo/checker assertions; no duplicated negative assertions.
+Native measurement:63 raw paired samples,100 cycles/sample; nearest-rank
+p50/p95/p99 indices31/59/62 (p99 is the maximum, not a tail-confidence claim).
+The unchecked baseline is deliberately unsafe. Trusted caller fuel charge is0 in
+this benchmark, so it establishes no work-pricing policy. Full raw outputs and
+actual source/compiler/executable/argv/cwd identities are in native-review-rev2.
+The original native-20261025 receipt is historical and does NOT qualify final SC1.
+Independent ResourceReview found no remaining actionable findings after repair.
+Actual writer/store/scheduler integration, authoritative census attribution,
+current policy/object revalidation, durable fuel/envelope restoration and physical
+power loss remain BLOCKED/NOT_RUN. Same-helper checks do not discharge them.
+
+Independent complete-relation replay (SC1 revision2)
+The oracle now accepts --edges and writes the entire36x36 byte adjacency matrix,
+row-major state code9*u+3*r1+r2. Its1296 bytes match an external tuple-set BFS
+byte-for-byte, not just counts. Matrix SHA-256:
+19e4706d53b940f5f99d9337a0277e00844a9355d96d60ea4c19af8288e8de03
+r3-edges.json records every state and ordered edge plus exact source/compiler/
+binary identities and the matrix encoding. The four no-reservation self-loops
+and four simultaneous-two-reservation crash edges distinguish the78-edge model.
+This does not qualify uncertain-effect recovery or actual resource accounting.
