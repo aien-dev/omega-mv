@@ -1,0 +1,44 @@
+L838 cutover plan: om/sha256/sha256-om2.om replaces src/sha256.c (#747/#748)
+==========================================================================
+Status: PLAN. Nothing below is applied. src/sha256.c stays until L836 qualifies the OM-2 unit.
+
+Inputs (pins to fill when they exist)
+  omc      OM-2 compiler born by seed/omega-from-seed.sh from the merged compiler-s1..s4 (sha256 TBD)
+  bridge   omega-bridge commit whose generator emits ABI v2, omega_api.h and omega2_ident (L837, TBD)
+  unit     om/sha256/sha256-om2.om (sha256 of its exact bytes, recorded by the generator)
+
+Preconditions (each is a NOT_RUN item until done)
+  P1  The unit compiles under the OM-2 omc; om2 diag lists the kept checks (section 4, 8).
+  P2  L836 qualifies it: FIPS vectors, boundary lengths and splits, mutants, trace equivalence.
+  P3  Receipts (spec section 7, erratum E3): init/update/final after a final equals a fresh context;
+      hash(n) equals init/update(n)/final; hash(d,32,d); copy of a live context after k updates,
+      both continued, equal digests; update of length 0; one update of >= 2^32 bytes.
+  P4  C2: om/blake3/b3unit.om (OM-1) gives a byte-identical v1 binding under the new omc.
+  P5  Paired interleaved measurement against the baseline in baseline-acb3f15c/ (same core, same
+      flags). Slower but correct is reported, not hidden.
+
+Cutover commit (one commit, after P1-P5)
+  1. om/units.sh: OMC_PIN and NATIVE_PIN set to the new omc and generator; UNITS becomes
+     "om/sha256/sha256-om2.om om/blake3/b3unit.om"; --check also refuses a stale unit, compiler or
+     profile: for the OM-2 unit it compares omega2_ident_sha256_om2() fields (src sha256, omc pin,
+     profile OM-2) with the recomputed ones; for the OM-1 unit the harness-side record (erratum E1).
+  2. Regenerate src/omega_om_units.inc with om/units.sh; install the generated omega_api.h (L837)
+     which declares sha256_ctx (layout shactx, `note bridge c-type`), SHA256_DIGEST_SIZE/BLOCK_SIZE
+     and static inline sha256_init/update/final/hash calling omega2_sha256_* (abort on status != 0).
+  3. src/sha256.h becomes the include of the generated header only (or is replaced by it); it holds
+     no handwritten logic. The 104-byte layout is checked by the generator's _Static_asserts and by an
+     offsetof oracle outside the closure (section 5).
+  4. Delete src/sha256.c. The generated units need a translation unit of their own, because today
+     src/sha256.c is the only file that includes omega_om_units.inc and src/omega_blake3.c links
+     against omega_omb3 from it. Either the bridge emits a generated src/omega_om_units.c, or the
+     build compiles the .inc directly. Every build line naming src/sha256.c (Makefile 61, mk/*.mk 37
+     files, shell recipes in tests/, tools/, seed/rung3, seed/rung4, research/atemporal) is changed
+     to that unit. Those files have other owners: the coordinator assigns the writer.
+  5. Makefile:657 RX_CX_FS_ALLOWED: sha256_* -> omega2_sha256_* (erratum E3 (3)).
+  6. om/sha256/sha256.om (OM-1, entry omsha) and its v1 binding are removed; om/sha256/parity/run.sh
+     and README are rewritten for the v2 path; the ARM64 workflow path filter
+     (.github/workflows/om-units-arm64.yml, other owner) follows.
+  7. Gates: tests/gates/run.sh om-units (om/units.sh --check), parity against the historical C
+     retrieved by git show a647b6a9 (outside the closure), make all, make test, freestanding rule.
+
+Rollback: revert the cutover commit; src/sha256.c and the v1 unit return from history.

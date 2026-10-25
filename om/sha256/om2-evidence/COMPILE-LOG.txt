@@ -1,0 +1,23 @@
+L838 compile log: om/sha256/sha256-om2.om against each OM-2 compiler slice
+=======================================================================
+One entry per compiler build. "compiles" means omc exit 0. A run of the code is a separate entry.
+
+Constructs used by the unit, and the slice that is expected to provide each
+  S1  rotr (uint, constant n), hex literals (K, IV, masks)
+  S2  for i ulong K unroll (16 loads, 48 schedule steps, 64 rounds, 8/4 digest bytes)
+  S3  w edit uint 64 fresh (sched); layout shactx 104 with fields state/count/buf; get/put c F i
+  S4  view uchar * (len, checked get); export fn; o out uchar 32; sized arrays passed to unsized
+      views (erratum E2)
+  Not used: inline (sched and rounds stay calls: 16 registers, no spilling), part, abstract/dup32.
+  Open reading: `field count ulong 1` is accessed as an array field (get c count 0). If S3 makes a
+  COUNT-1 field scalar, the three count accesses drop the index.
+
+2026-10-25T16:40Z  omc 734f0a39 (OM-1, main acb3f15c, /tmp/zl/main/seed/out/omc)
+  result: refused, "omc: line 114: error 16", exit 16, nothing on stdout.
+  Line 114 is the first signature with `view uchar *`: the names pass reads every signature before
+  any body, so OM-1 stops there and not at the `om2` line (20). A minimal unit "om2 / fn main to int
+  / ret 0 / end" is refused at line 1 with error 16.
+  Expected: OM-1 does not accept OM-2 units.
+
+2026-10-25T16:40Z  compiler-s1..s4: no branch on aien-dev yet (git fetch aien-dev; only om2/contract,
+  om2/coverage-matrix, om2/qualification). NOT_RUN.
