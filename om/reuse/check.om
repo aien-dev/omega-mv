@@ -1,0 +1,94 @@
+note SPDX-License-Identifier: Apache-2.0
+note check.om: G3 bind validation (docs/reuse/REUSE-1.md section 3.3). Concatenated after exp.om;
+note calls mtlane of the generated methods.om (or a test's fixture).
+note   ckbind t   0 pass, 1 fail. AGG: every x < 2^wl of R1P has mtlane t x = r1lane x, all 64 bits.
+note              FSM: fills R1T[s*16 + a] = r1delta s a for s < S, a < A; nothing else is checked.
+note              Sets R1PD (r1pdig). A passed AGG (program digest, t) enters a FIFO of 256 entries
+note              (process memory only); a later bind of the same pair skips the lane comparison.
+note   CKST       counters: 0 binds, 1 failures, 2 FIFO hits, 3 full lane comparisons, 4 lane pairs
+note              compared
+global CKFIFO ulong 1280
+global CKFN ulong 1
+global CKFH ulong 1
+global CKST ulong 5
+
+fn ckinc k ulong n ulong to void
+put CKST k add get CKST k n
+end
+
+note entry e of the FIFO holds R1PD and t
+fn ckeq e ulong t ulong to bool
+b = mul e 5
+for j ulong 4
+if ne get CKFIFO add b j get R1PD j
+ret false
+end
+end
+ret eq get CKFIFO add b 4 t
+end
+
+fn ckhas t ulong to bool
+n = get CKFN 0
+for e ulong n
+if ckeq e t
+ret true
+end
+end
+ret false
+end
+
+fn ckadd t ulong to void
+e = get CKFH 0
+b = mul e 5
+for j ulong 4
+put CKFIFO add b j get R1PD j
+end
+put CKFIFO add b 4 t
+put CKFH 0 rem add e 1 256
+if lt get CKFN 0 256
+put CKFN 0 add get CKFN 0 1
+end
+end
+
+note the lane comparison over x < 2^wl: 0 equal, 1 the first difference
+fn cklanes t ulong to int
+lim = shl ulong 1 get R1P 2
+ckinc 3 1
+for x ulong lim
+if ne mtlane t x r1lane x
+ckinc 4 add x 1
+ret 1
+end
+end
+ckinc 4 lim
+ret 0
+end
+
+fn ckfsm to void
+ns = get R1P 2
+na = get R1P 3
+for s ulong ns
+for a ulong na
+put R1T add mul s 16 a r1delta s a
+end
+end
+end
+
+fn ckbind t ulong to int
+ckinc 0 1
+r1pdig
+if eq get R1P 1 2
+ckfsm
+ret 0
+end
+if ckhas t
+ckinc 2 1
+ret 0
+end
+if ne cklanes t 0
+ckinc 1 1
+ret 1
+end
+ckadd t
+ret 0
+end

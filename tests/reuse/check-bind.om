@@ -1,0 +1,173 @@
+note units: sha256 r1 check
+note check-bind: ckbind (G3, 3.3) with fixture methods: t 0 is exact, t 1 drops the program's final
+note AND 255 (control C1b), t 2 differs only at x = 2^wl - 1 (the last lane value), t 3 differs only
+note at x = 0; the FIFO of 256 passed (digest, t) pairs with eviction; the FSM table. Exit 0 pass.
+note fixture: the generated methods' lane function
+fn mtlane t ulong x ulong to ulong
+v = r1lane x
+lim = sub shl ulong 1 get R1P 2 1
+if eq t 1
+k = get R1P 4
+q = add 5 mul sub k 1 2
+if and eq get R1P q 4 eq get R1P add q 1 255
+put R1P 4 sub k 1
+v = r1lane x
+put R1P 4 k
+end
+end
+if and eq t 2 eq x lim
+v = xor v 1
+end
+if and eq t 3 eq x 0
+v = add v 4294967296
+end
+ret v
+end
+
+note wl 16, f ADD, ops ADD c, SHL 3, AND 255
+fn tprog c ulong to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 16
+put R1P 3 1
+put R1P 4 3
+put R1P 5 1
+put R1P 6 c
+put R1P 7 7
+put R1P 8 3
+put R1P 9 4
+put R1P 10 255
+end
+
+fn aggs to int
+tprog 5
+if ne ckbind 0 0
+ret 1
+end
+if or ne get CKST 3 1 ne get CKST 4 65536
+ret 2
+end
+if ne ckbind 0 0
+ret 3
+end
+if or ne get CKST 2 1 ne get CKST 3 1
+ret 4
+end
+if ne ckbind 1 1
+ret 5
+end
+if ne get CKST 4 65564
+ret 6
+end
+if ne ckbind 2 1
+ret 7
+end
+if ne get CKST 4 131100
+ret 8
+end
+if ne ckbind 3 1
+ret 9
+end
+if ne ckbind 1 1
+ret 10
+end
+put R1P 2 8
+if ne ckbind 2 1
+ret 11
+end
+if ne ckbind 0 0
+ret 12
+end
+if or ne get CKST 0 8 ne get CKST 1 5
+ret 13
+end
+ret 0
+end
+
+fn fifo to int
+for c ulong 300
+tprog add c 1000
+if ne ckbind 0 0
+ret 21
+end
+end
+if ne get CKFN 0 256
+ret 22
+end
+h = get CKST 2
+tprog 1299
+if ne ckbind 0 0
+ret 23
+end
+if ne get CKST 2 add h 1
+ret 24
+end
+tprog 1044
+if ne ckbind 0 0
+ret 25
+end
+if ne get CKST 2 add h 2
+ret 26
+end
+tprog 1043
+if ne ckbind 0 0
+ret 27
+end
+if ne get CKST 2 add h 2
+ret 28
+end
+ret 0
+end
+
+note S 3, A 4: rules (0, 1..2 -> 1), (0, 0..3 -> 2), (1, 3..3 -> 0)
+fn fsm to int
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 3
+put R1P 3 4
+put R1P 5 3
+put R1P 22 16908544
+put R1P 23 33751040
+put R1P 24 197377
+for i ulong 256
+put R1T i 99
+end
+if ne ckbind 0 0
+ret 31
+end
+for s ulong 3
+for a ulong 4
+if ne get R1T add mul s 16 a r1delta s a
+ret 32
+end
+end
+end
+if or ne get R1T 1 1 ne get R1T 0 2
+ret 33
+end
+if or ne get R1T 19 0 ne get R1T 16 1
+ret 34
+end
+if ne get R1T 4 99
+ret 35
+end
+ret 0
+end
+
+fn main to int
+r = aggs
+if ne r 0
+ret r
+end
+r = fifo
+if ne r 0
+ret r
+end
+ret fsm
+end
