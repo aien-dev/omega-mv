@@ -145,14 +145,14 @@
           "purpose": "Ionic-droplet reservoir simulator (omega#440): binary32 fixed-step RK4 of the authors' droplet m"
         },
         {
-          "digest": "c6af24b823d6a18a8ad1593003a214fcd577955d1d134bc4304a5c097a71cd35",
-          "last_commit": "d863780e",
+          "digest": "1e400d9b84494347892448fd576be7bf596ef810ed6e88bcd70f7e7d9a6b5746",
+          "last_commit": "97a960f5",
           "name": "runtime",
           "purpose": "Directory src/runtime. Purpose not yet described by a human."
         },
         {
-          "digest": "af5fcc64fe83dc35f782724372854febde5461f5eab8b327f3c3ed75f8572053",
-          "last_commit": "d863780e",
+          "digest": "71502e9ef65e0620b94ea156cef5034e4c97d703d5ea13c489e4b65713014f84",
+          "last_commit": "97a960f5",
           "name": "searchtrace",
           "purpose": "Directory src/searchtrace. Purpose not yet described by a human."
         },
@@ -187,15 +187,15 @@
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:4460b4a6d5ed4054d462af660a6a02691350a35a8f44197e60ce605e243f698e",
-      "compiled_at": "2026-10-25T03:10:13Z",
+      "children_root": "sha256:2f729945214be989a74d7c2064ae4ba3c2deb52ebea3f334b459198a7bd032ed",
+      "compiled_at": "2026-10-25T19:38:33Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:6a1fcc31d0544a0104cef4b522b3aab281696a21671fb3920636c0244fcef424",
+      "digest": "sha256:bdaabc27c142ed8382cfb9951db4c15e9d55cd8542f725b442455901bbdae95e",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 565,
-      "generated_at_commit": "393aa3055e655913f1dc7fb69bf5404fb9f7b9a5",
-      "source_tree": "sha256:4bc686734a9cd600d5c0822c83052f6a842ee3a6e7465d412b23af5044b065fe"
+      "files": 566,
+      "generated_at_commit": "97a960f5c18fc09b506168c55c10031b3f0cffc3",
+      "source_tree": "sha256:b12c9d8fd706f1b3ebc9ba3ec150ecd175ff197b312c05f9cfdd23ff0fce7174"
     },
     "owner_lane": "",
     "provenance": {

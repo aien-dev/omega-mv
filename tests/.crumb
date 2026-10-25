@@ -200,7 +200,7 @@
         },
         {
           "digest": "d033d9d9e7adad9979ad244155c4ee90e8212574fd9a1b181b93d2673bfe6c0d",
-          "last_commit": "3e2b440d6",
+          "last_commit": "85641e1ea",
           "name": "orig4",
           "purpose": "ORIG-4 shadow advisor tests: shadow-test.om (in-process checks over the SYNTHETIC fixture and th"
         },
@@ -272,7 +272,7 @@
         },
         {
           "digest": "38b77ee2d7afa0f625dde081bd9cdb3b71e654c6ea806796d1549c73f3d4cab5",
-          "last_commit": "3e2b440d6",
+          "last_commit": "85641e1ea",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -308,14 +308,14 @@
         }
       ],
       "children_root": "sha256:6ec645d39e9a4c1bdf4e08be4b9c6346a4f35533e71d42c139321baf2aafe3af",
-      "compiled_at": "2026-10-25T11:59:51Z",
+      "compiled_at": "2026-10-25T21:49:10Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:125b14f4c3fe34e9542dc40983d41de0aaa829acf52789ed1299145f5826ede7",
+      "digest": "sha256:bfca866c7e052c37d85b35206d08800e3de16d362a9cd2b2dd0c222fc14343de",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1295,
-      "generated_at_commit": "3e2b440d6940bc864ee94d51f4d65721f0c02e60",
-      "source_tree": "sha256:6345e599e6b7673a710e809247412ef3286f3cb51d9835fae17a0b1d926bfcde"
+      "files": 1296,
+      "generated_at_commit": "e5a9a913711e40be5bed022610a188413540a958",
+      "source_tree": "sha256:f6068dde3a21c9bc426e818decbbb5182070e7ec7df0cbc2ba7a577b51c12619"
     },
     "owner_lane": "",
     "provenance": {
