@@ -170,13 +170,15 @@ writes `build/L741/{go-import,go-export,build.json}` with the compiler, input an
 public commands check them before dispatch.
 
 ```sh
-export SA_SEED_REPO=/path/to/omega-bridge        # contains 0fc7d866; mk/go-u64.mk defaults to ~/workspace/omega-bridge
+export OMEGA_BRIDGE_REPO=/path/to/omega-bridge   # holds 0fc7d866 (seed compiler, SA_SEED_REPO) and 012860db (binding)
+export OMEGA_NATIVE_OMC=/path/to/omc              # sha256 734f0a39
+export GO=/path/to/go GOFMT=/path/to/gofmt        # Go 1.27.3, or go/gofmt on PATH; missing = exit 3 NOT_RUN
 make -f mk/go-u64.mk test-go-u64
 tools/adapters/go-import < calc.go > calc.upper
 tools/adapters/go-export < calc.upper > exported.go
 ```
 
-Oracle: Go 1.27.3 linux/arm64 (`~/.local/toolchains/go/bin/go`, user-space toolchain, sha256 recorded in
+Oracle: Go 1.27.3 linux/arm64 (`$GO`/`$GOFMT` or PATH; version and sha256 recorded in
 the self-test result), `go build -trimpath` in a fresh temporary module (`go 1.27`) with
 `GOTOOLCHAIN=local GOFLAGS=-mod=mod GOPROXY=off GOWORK=off CGO_ENABLED=0`; the unit file is compiled
 unmodified beside a harness file of package `main` that reads decimal vectors and prints `calc(...)`.
@@ -195,8 +197,9 @@ on the boundary vectors of `translation-v1.md` section 3 (all pairs for two inpu
 vectors. Also: the untyped-constant rule (section 1.1) against `go build`, import and export boundary
 controls, the exporter refusals, public-command closure, the composition C -> Go on every F1 positive and
 the four accepted C import boundary controls, and Go -> C on every F2-go positive through R(U, C) and the
-#622 C exporter. R is computed in test code; given `--retarget` (`GO_SELFTEST_RETARGET`, the #624
-`tools/adapters/retarget` of a scratch checkout, never committed here) the tool's output is used for every
-R(U, M) and must equal the test-code R byte for byte. The native realization
-`lower(N(U_A))` (G1 lowering, omc `734f0a39`, bridge binding) runs on both compositions. A piece whose tool is
-absent is reported NOT_RUN. Finite DIFFERENTIAL evidence, not PROOF.
+#622 C exporter. R is computed in test code; when the tree holds the #624 `tools/adapters/retarget` (the
+default of `--retarget`) its output is used for every R(U, M) and must equal the test-code R byte for byte.
+The native realization `lower(N(U_A))` (G1 lowering, omc `734f0a39`, bridge binding) runs on both
+compositions and is required. `test-go-u64` builds every in-tree prerequisite (both codecs, C importer, C
+exporter, lowering, retarget when present); all tool defaults are in-tree or from the environment. A piece
+whose tool is absent is reported NOT_RUN. Finite DIFFERENTIAL evidence, not PROOF.

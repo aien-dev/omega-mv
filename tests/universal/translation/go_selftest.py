@@ -14,7 +14,6 @@ bridge are present (otherwise NOT_RUN).
 from pathlib import Path
 import argparse,hashlib,json,os,random,shutil,struct,subprocess,sys,tempfile
 ROOT=Path(__file__).resolve().parents[3]
-HOME=Path.home()
 MASK=(1<<64)-1
 SEMDOM=b'omega.source.semantic.v1'
 CONTRACT=hashlib.sha256((ROOT/'spec/universal/semantics.md').read_bytes()).digest()
@@ -246,19 +245,24 @@ def tval(t,args):
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--out',required=True)
-    ap.add_argument('--c-import',default=str(HOME/'workspace/universal-read/build/L589/c-import'))
+    ap.add_argument('--c-import',default=str(ROOT/'build/L589/c-import'),help='native #622 C importer (mk/c-u64-import.mk)')
     ap.add_argument('--sa1-root',default=str(ROOT),help='checkout holding tools/source-aware/sa and build/L574/sa (#621 v1 codec)')
     ap.add_argument('--sa2-root',default=str(ROOT),help='checkout holding tools/source-aware/sa and build/L832/sa (#621 v2 codec)')
-    ap.add_argument('--c-export',default=os.environ.get('GO_SELFTEST_C_EXPORT',str(HOME/'workspace/c-export-622/tools/adapters/c-export')),help='public c-export of a passing #622 checkout')
-    ap.add_argument('--retarget',default=os.environ.get('GO_SELFTEST_RETARGET',''),help='public tools/adapters/retarget of a checkout holding the #624 retarget lane (cross-checked against the Python R)')
+    ap.add_argument('--c-export',default=str(ROOT/'tools/adapters/c-export'),help='public #622 c-export (mk/c-u64-export.mk)')
+    rdef=ROOT/'tools/adapters/retarget'
+    ap.add_argument('--retarget',default=str(rdef) if rdef.is_file() else '',help='public #624 tools/adapters/retarget (mk/retarget.mk), cross-checked against the test-code R; in-tree if present')
     ap.add_argument('--lower',default=str(ROOT/'tools/adapters/lower'))
-    ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC',str(HOME/'workspace/omega-seedqual-20261025/seed/out/omc')))
-    ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO',str(HOME/'workspace/omega-bridge')))
-    ap.add_argument('--go',default=str(HOME/'.local/toolchains/go/bin/go'))
-    ap.add_argument('--gofmt',default=str(HOME/'.local/toolchains/go/bin/gofmt'))
+    omc=os.environ.get('OMEGA_NATIVE_OMC');bridge=os.environ.get('OMEGA_BRIDGE_REPO')
+    ap.add_argument('--omc',default=omc,required=not omc,help='native omc 734f0a39 (default $OMEGA_NATIVE_OMC)')
+    ap.add_argument('--bridge',default=bridge,required=not bridge,help='omega-bridge checkout holding 012860db (default $OMEGA_BRIDGE_REPO)')
+    ap.add_argument('--go',default=os.environ.get('GO') or shutil.which('go'),help='Go 1.27.3 (default $GO, then PATH)')
+    ap.add_argument('--gofmt',default=os.environ.get('GOFMT') or shutil.which('gofmt'),help='gofmt of the same toolchain (default $GOFMT, then PATH)')
     ap.add_argument('--cc',default=os.environ.get('CC','cc'))
     ap.add_argument('--random-trees',type=int,default=160)
     a=ap.parse_args()
+    missing=[n for n,p in (('go',a.go),('gofmt',a.gofmt)) if not p or not Path(p).is_file()]
+    if missing:
+        print('NOT_RUN Go oracle missing: %s (set $GO/$GOFMT or put them on PATH)'%' '.join(missing));return 3
     out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)
     cimp=Path(a.c_import);sa1root=Path(a.sa1_root);sa1=sa1root/'build/L574/sa';sa2root=Path(a.sa2_root)
     O=Oracles(out,a.go,a.gofmt,a.cc);rng=random.Random(741);failures=[];counts={}
@@ -274,12 +278,9 @@ def main():
         r=py(IMPORT,src);bump('go_import_runs');return r
     def gexport(env):
         r=py(EXPORT,env);bump('go_export_runs');return r
-    native=None;native_state='NOT_RUN'
-    try:
-        if Path(a.lower).is_file() and (ROOT/'build/L831/lower').is_file() and Path(a.omc).is_file():
-            native=Native(out,Path(a.lower),a.omc,a.bridge,a.cc);native_state='RUN'
-        else:native_state='NOT_RUN (lowering build, omc or bridge missing)'
-    except (Fail,subprocess.CalledProcessError,OSError) as e:native_state='NOT_RUN ('+str(e)+')'
+    try:native=Native(out,Path(a.lower),a.omc,a.bridge,a.cc);native_state='RUN'
+    except (Fail,subprocess.CalledProcessError,OSError) as e:
+        print('FAIL native realization setup (omc %s, bridge %s): %s'%(a.omc,a.bridge,e));return 1
     cexp=Path(a.c_export) if a.c_export and Path(a.c_export).is_file() else None
     rtool=Path(a.retarget) if a.retarget and Path(a.retarget).is_file() else None
     RNAME={'C':'c','Rust':'rust','Python':'python','C++':'cpp','Zig':'zig','Go':'go'}
