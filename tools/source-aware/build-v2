@@ -1,0 +1,44 @@
+#!/bin/bash
+# Host build orchestration only for the source-aware v2 codec (spec/universal/source-aware-v2.md).
+# Same pinned source-born seed chain as tools/source-aware/build; the v1 core and build/L574 are untouched.
+set -euo pipefail
+cd "$(dirname "$0")/../.."
+build=${SA_BUILD:-build/L832}
+case "$build" in build/L832|build/L832/*) ;; *) echo 'unsafe source-aware build path' >&2; exit 73;; esac
+case "/$build/" in */../*|*/./*|*//*) echo 'unsafe source-aware build path' >&2; exit 73;; esac
+[ ! -L build ] && [ ! -L build/L832 ] || exit 73
+if [ -d build/L832 ]; then
+    unsafe=$(find build/L832 \( -type l -o -type f -links +1 -o ! -type d ! -type f \) -print)
+    [ -z "$unsafe" ] || { echo 'unsafe source-aware build tree' >&2; exit 73; }
+fi
+mkdir -p "$build"
+# No stale success after any failed build. Test receipts are caller-owned scratch.
+rm -f "$build/PASS.json" "$build/sa" "$build/sa.tmp"
+trap 'rm -f "$build/sa.tmp"' EXIT
+seed_repo=${SA_SEED_REPO:-/home/drakestapleton/workspace/omega-bridge-native-development}
+pin=0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9
+expected=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+sourcehash=8608fa11f6a2cf1c50db22d871eef16b00d5bc719bc1a222cc3e456984ac5ebf
+# A different committed repository may be used, never an untracked binary overlay.
+git -C "$seed_repo" cat-file -e "$pin^{commit}"
+[ "$(git -C "$seed_repo" show "$pin:seed/omc/omc.om" | sha256sum | cut -d' ' -f1)" = "$sourcehash" ]
+if [ ! -d "$build/toolchain" ]; then
+    mkdir "$build/toolchain"
+    git -C "$seed_repo" archive "$pin" | tar -x -C "$build/toolchain"
+fi
+# Verify the original lock and all imported seed source before every compile.
+(cd "$build/toolchain" && tools/verify-sources.sh)
+if [ ! -f "$build/toolchain/build/bootstrap/omc" ]; then
+    (cd "$build/toolchain" && tools/bootstrap.sh --offline) > "$build/bootstrap.log" 2>&1
+fi
+compiler="$build/toolchain/build/bootstrap/omc"
+[ "$(sha256sum "$compiler" | cut -d' ' -f1)" = "$expected" ]
+[ "$(sha256sum "$build/toolchain/seed/omc/omc.om" | cut -d' ' -f1)" = "$sourcehash" ]
+sh "$build/toolchain/tools/verify-elf.sh" "$compiler"
+sha256sum -c tools/source-aware/imports.sha256 > "$build/imports.log"
+cat src/source-aware/vendor/sha256.om src/source-aware/core-v2.om src/source-aware/main.om > "$build/sa.om"
+"$compiler" < "$build/sa.om" > "$build/sa.tmp"
+sh "$build/toolchain/tools/verify-elf.sh" "$build/sa.tmp"
+chmod +x "$build/sa.tmp"
+mv "$build/sa.tmp" "$build/sa"
+sha256sum "$compiler" "$build/sa.om" "$build/sa" > "$build/toolchain.sha256"
