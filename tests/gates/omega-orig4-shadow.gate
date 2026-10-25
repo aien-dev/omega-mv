@@ -1,0 +1,22 @@
+# tests/gates/omega-orig4-shadow.gate
+# omega-mv#731 ORIG-4: default-off shadow advice; host only, no hosted mirror (local ~10 s)
+gate: OMEGA-ORIG4-SHADOW
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - native/orig4/
+  - tests/orig4/
+  - tests/gates/omega-orig4-shadow.gate
+  - tests/gates/run.sh
+  - seed/out/
+run:
+  exec: tests/gates/run.sh
+  args: ["orig4-shadow"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 15m
+exactness: EXACT
+cache_scope: machine

@@ -1,0 +1,224 @@
+note SPDX-License-Identifier: Apache-2.0
+note omega-mv#731 ORIG-4 in-process tests of native/orig4/shadow.om (same unit, this caller
+note in place of main). stdin: the candidate MLP image (11560 bytes). Records: the SYNTHETIC
+note fixture sxgen 7 780 (allow-list hash 626048380840256264). Groups: tadmit (the real
+note candidate is admitted, bound_matches=no, and the advice equals selmain E-mode's slpick
+note after slbest for 20 records), trefuse (every refusal class through the same functions
+note the advisor calls, state unchanged), tpred (non-finite score, out-of-distribution and
+note budget predicates), tnarrow (50 records: the advised arm always satisfies oxcand).
+global HT ulong 2
+global HI uchar 11560
+text TALW "626048380840256264 SYNTHETIC fixture-seed7-780-records\n"
+text TREV "626048380840256264 REVOKED fixture-seed7-780-records\n"
+text TABS "1 SYNTHETIC not-this-fixture\n"
+text TPASS "ORIG4_SHADOW_TEST_PASS checks="
+text TFAIL "ORIG4_SHADOW_TEST_FAIL check="
+text TNL "\n"
+
+fn tck ok bool to void
+put HT 0 add get HT 0 1
+if not ok
+w = write 1 TFAIL 0 len TFAIL
+wnum get HT 0
+w = write 1 TNL 0 1
+exit 1
+end
+end
+
+fn timg to void
+note The candidate image from stdin into SI and a pristine copy into HI.
+tck eq hvrdimg 11560 11560
+for i ulong 11560
+put HI i get SI i
+end
+end
+
+fn trestore to void
+for i ulong 11560
+put SI i get HI i
+end
+end
+
+fn tlb n ulong to void
+note Allow-list text n: 0 the fixture SYNTHETIC line, 1 the same hash REVOKED, 2 absent.
+for i ulong 4096
+put LB i 0
+end
+if eq n 0
+for i ulong len TALW
+put LB i get TALW i
+end
+end
+if eq n 1
+for i ulong len TREV
+put LB i get TREV i
+end
+end
+if eq n 2
+for i ulong len TABS
+put LB i get TABS i
+end
+end
+end
+
+fn tlbn to ulong
+n = ulong 0
+for i ulong 4096
+if ne get LB i 0
+n = add i 1
+end
+end
+ret n
+end
+
+fn tfix to ulong
+note Regenerate and admit the fixture; returns the byte count.
+n = sxgen 7 780
+tck eq oxfnv n 626048380840256264
+tck eq oxload n 0
+tck eq get RC 0 780
+ret n
+end
+
+fn trbput r ulong i ulong v ulong to void
+note Word i of raw record r in RB (little-endian), for the record refusal tests.
+p = add mul r 256 mul i 8
+for k ulong 8
+put RB add p k uchar and shr v mul k 8 255
+end
+end
+
+fn tadmit to void
+note The real candidate: admitted, bound_matches=no (trained on the owner records, not the
+note fixture), and for 20 records the advice is slpick's choice with the same score bits.
+tlb 0
+tck eq oxallow tlbn oxfnv get RC 1 2
+tck eq hvimage 11560 0
+tck not slbound 0
+tck eq get SS 0 2
+tck eq get SS 15 705
+tck eq get SS 11 16622604375676129865
+tck ne get SS 11 get RC 2
+tck eq siget 11552 9232652764948363499
+slbest
+for r ulong 20
+c = hvscore r
+tck ge c 0
+tck eq ulong c slpick r
+tck eq get HV 0 slfwd r ulong c
+end
+end
+
+fn tref1 to void
+note Image refusals through the advisor's admission (sladmit) with the current params left
+note untouched; the resume-mode slload additionally refuses the unbound candidate (-8).
+f = slfnvp 705
+put SI 300 xor get SI 300 1
+tck eq hvimage 11560 -5
+trestore
+tck eq hvimage 11559 -1
+tck eq hvimage 1816 -4
+put SI 0 xor get SI 0 1
+tck eq hvimage 11560 -2
+trestore
+put SI 8 2
+tck eq hvimage 11560 -3
+trestore
+tck eq slload 0 11560 -8
+tck eq slfnvp 705 f
+tck eq hvimage 11560 0
+tck not slbound 0
+end
+
+fn tref2 to void
+note Record refusals through oxload: wrong profile (cache bytes), forged outcome word,
+note unknown arm bits; each refusal leaves nothing admitted (RC[0] = 0).
+n = get RC 1
+trbput 0 10 1048576
+tck eq oxload n -9
+tck eq get RC 0 0
+n = tfix
+trbput 3 31 1
+tck eq oxload n -7
+tck eq get RC 0 0
+n = tfix
+trbput 5 12 159
+tck eq oxload n -5
+tck eq get RC 0 0
+n = tfix
+end
+
+fn tref3 to void
+note Allow-list: REVOKED and absent refuse; SYNTHETIC admits.
+h = oxfnv get RC 1
+tlb 1
+tck eq oxallow tlbn h -12
+tlb 2
+tck eq oxallow tlbn h -13
+tlb 0
+tck eq oxallow tlbn h 2
+end
+
+fn tpred to void
+note A non-finite parameter makes the score non-finite and the advice a fallback; core
+note class 2 or pressure 2 is out of distribution; the budget predicate.
+slbest
+tck ge hvscore 0 0
+put SP 704 2139095040
+tck eq hvscore 0 -3
+tck not affinite get HV 0
+slbest
+tck ge hvscore 0 0
+tck not hvood 0
+put RW 3 2
+tck hvood 0
+tck eq hvscore 0 -1
+put RW 3 0
+put RW 4 2
+tck hvood 0
+tck eq hvscore 0 -1
+put RW 4 1
+tck not hvood 0
+put RW 4 0
+put HV 6 10
+tck hvbudget 10
+tck not hvbudget 9
+tck hvbudget 2047
+end
+
+fn tsingle to void
+note With only the reference arm admissible there is nothing to rank.
+e = get RW 12
+put RW 12 1
+tck eq hvnarms 0 1
+tck eq hvscore 0 -2
+put RW 12 e
+tck eq hvnarms 0 5
+end
+
+fn tnarrow to void
+note The advice never widens the candidate set: the advised arm satisfies oxcand.
+slbest
+for r ulong 50
+c = hvscore r
+tck ge c 0
+tck oxcand r ulong c
+tck lt ulong c oxword r 13
+end
+end
+
+fn main to int
+timg
+n = tfix
+tadmit
+tref1
+tref2
+tref3
+tpred
+tsingle
+tnarrow
+w = write 1 TPASS 0 len TPASS
+wnum get HT 0
+w = write 1 TNL 0 1
+ret 0
+end

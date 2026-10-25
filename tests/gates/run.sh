@@ -134,6 +134,21 @@ case "$step" in
                       sh seed/omega-from-seed.sh
                       sh seed/host/check.sh 2>&1 | tee "$OUT_DIR.seed-check.log"
                       if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi ;;
+  # omega-mv#731 ORIG-4 (no hosted mirror; host only): the shadow advisor's glue over the
+  # pinned aien-train/omega-bridge units (native/orig4/orig4.pin), materialised under
+  # build/pins from the sibling clones; every verdict is made by the .om units.
+  orig4-shadow)
+    train_sha="$(awk '$1 == "unit" && $3 == "aien-train" && $5 ~ /si19/ {print $4; exit}' native/orig4/orig4.pin)"
+    bridge_sha="$(awk '$1 == "unit" && $3 == "omega-bridge" {print $4; exit}' native/orig4/orig4.pin)"
+    pin aien-train-src aien-train "$train_sha"
+    pin omega-bridge-src omega-bridge "$bridge_sha"
+    set -o pipefail
+    OUT="$ROOT/$OUT_DIR/orig4" ORIG4_TRAIN_GIT="$PINS/aien-train-src" ORIG4_BRIDGE_GIT="$PINS/omega-bridge-src" \
+      sh tests/orig4/run.sh | tee "$OUT_DIR.orig4.log"
+    grep -q '^ORIG4_SHADOW_RUN_PASS$' "$OUT_DIR.orig4.log"
+    obs shadow_test_checks "$(sed -n 's/.*ORIG4_SHADOW_TEST_PASS checks=\([0-9]*\).*/\1/p' "$OUT_DIR.orig4.log" | head -n 1)"
+    obs cost_wall_ms_mlp "$(sed -n 's/^COST_WALL records=780 ms=\([0-9]*\) image=mlp fixture$/\1/p' "$OUT_DIR.orig4.log" | head -n 1)"
+    ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;

@@ -1,0 +1,22 @@
+# native/orig4/orig4.pin: every input of the ORIG-4 shadow advisor unit, by hash.
+# tests/orig4/run.sh refuses to build unless each line below matches what it materializes.
+# omc <sha256>: this repository's seeded compiler, seed/out/omc (seed/out/omc.sha256).
+# unit <order> <repo> <commit> <path> <sha256>: a pinned .om source taken with
+#   git -C <repo dir> show <commit>:<path>; repo "omega" is this repository, "aien-train"
+#   and "omega-bridge" are the sibling clones ../aien-train and ../omega-bridge (the gate
+#   step materializes them under build/pins and points the glue there). The unit is the
+#   concatenation in <order>, then native/orig4/shadow.om and the caller.
+# image <file> <sha256>: an immutable candidate checkpoint under native/orig4/candidates
+#   (byte-identical to aien-train evidence/SI19-ORIG2/candidates at the pinned commit).
+omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+unit 1 omega-bridge 7e1d0d61755ec1a0bbf20941a18379861b5b9d0d native/ref32/add32.om 1de23561202b284e74690034cb07741ebcf9870bc464550b8382c85410478e95
+unit 2 omega-bridge 7e1d0d61755ec1a0bbf20941a18379861b5b9d0d native/ref32/mul32.om 9027090109e2050046c4b71fa51438c97ad94c23626c2ecc277844996b79c22e
+unit 3 omega 3a995ba8dace538c1532c747d829ca6e4a73582d native/ecosystem663/metadata.om f60b6d62c1bf90de42455effae977de66adeca1268669f6144809a3327aec7a4
+unit 4 aien-train c7642d96c0b84b6d176dbb2dc8558b536cabe729 native/ecosystem6/affine.om a3eb5b4a0a94adab8e0a2cfbe154280034d1da26bd9f3123fcd524636583af97
+unit 5 aien-train c9ae2b24fcd34ab96315644f3a25bd078e028399 native/si19/fixture.om 1d834b4048052d97f4f48b4c89f5d60215161c52e59a7ab193bc90d50f03d98d
+unit 6 aien-train c9ae2b24fcd34ab96315644f3a25bd078e028399 native/si19/world.om 7aa317033bcb55e69a0f85fbb75706226a520380bd6ab2a7660b70c2c7ca066e
+unit 7 aien-train c9ae2b24fcd34ab96315644f3a25bd078e028399 native/si19/omexp.om fec425aaf43294e89658998bc2f40e92b23277247821ac3ce3fd8ef839304f42
+unit 8 aien-train c9ae2b24fcd34ab96315644f3a25bd078e028399 native/si19/omexpfix.om 3eeebf46c0a12f31f7373008b2466b68834cb620a4a1f28ff4522672681109d5
+unit 9 aien-train c9ae2b24fcd34ab96315644f3a25bd078e028399 native/si19/select.om 3e9e84af05afb6cbad1e8d5f719a7dcb2a0a03f1083eda202965b5eb6ae686e5
+image mlp-scratch-seed19024.img 8dbd9b04a446b02d8e7bf2f1e2aa808ca439e813abfcb52fb34e57d40538acb5
+image affine-seed19024.img f04bc778b9347daa10a175a6d2a300a3cc513f6efc53e5412361ba1e9804121b

@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-25T04:35:42Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:21f0b4ef1c08b1967d748f68eb35ef18c04a04b6108f2d9b8b116a1eb944ce72",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 3,
+      "generated_at_commit": "4d0c748feb3f7c640f9b98e7c030a34c8d8051b1",
+      "source_tree": "sha256:ac61e5943c8815df87ec2c1f0699bb2a16eb5716c844adc25b42afaaf6cd60b0"
+    }
+  },
+  "name": "candidates",
+  "purpose": "Immutable ORIG-2 candidate checkpoints (aien-train evidence/SI19-ORIG2/candidates, byte-identical; SHA256SUMS) scored by the ORIG-4 shadow advisor. Never edited; a new candidate is a new file.",
+  "schema_version": "1.0.0"
+}
