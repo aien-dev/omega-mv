@@ -80,3 +80,17 @@ edit). Unsized parameters are allowed on internal functions, not only on exporte
   - (g) CR is error 6 anywhere, including inside a `text` literal.
   - (h) The rest may be an OM-1 unit. The formatter is lexical, and compile(fmt(x)) == compile(x)
     applies whatever x's profile is.
+
+## E7 (QualPhaseB L836, 2026-10-25): unroll and inline limits, site records
+
+- `for i T K unroll`: K = 0 or K > 64 is error 8. A K that is not a number is error 16.
+- The limit of 64 copies applies per unrolled loop. Nested unrolls multiply, and their total is bounded
+  only by the 65536-word limit (error 14, `obligation=growth`).
+- Inline depth: a call site in a function that is not being inlined is depth 1. A chain of 4 inlined
+  calls is accepted; a 5th level is error 14 (`obligation=growth`).
+- `break`/`continue` inside a rolled loop nested within an unrolled body is allowed; it leaves the
+  rolled loop. Only a `break`/`continue` whose innermost loop is the unrolled one is error 9.
+- `omc-site 1 line=N iter=P` records appear in emission order. P is the 0-based value of each enclosing
+  unrolled loop's counter, from outer to inner and joined by `.` (for example `iter=3.15`), or `-`.
+- OM-1 shifts accept a shift amount of a different type. OM-2 `rotr`/`rotl` require the same type;
+  this stricter rule applies to OM-2 words only.
