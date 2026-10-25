@@ -1,0 +1,762 @@
+note units: sha256 r1 exp
+note exp-admit: the tap writer (extap: every field of three records, AGG and FSM, samples, steps,
+note digests) and admission (exaload, exallow, exadmit, exastat): AUTHORIZED and SYNTHETIC admit;
+note absent, REVOKED, malformed ALLOW, size, and every record check refuse with its own code,
+note including control C2 (one byte changed; a wrong program digest) and C3 (samples permuted across
+note records). Files live in argv 1 when given (run.om's temp dir), else /tmp/reuse-test-core-exp-<pid>.
+note Exit 0 pass, else the failed check's code.
+text tbase "/tmp/reuse-test-core-exp-"
+global TDIR uchar 4096
+global TDL ulong 2
+global TP uchar 4096
+global TPL ulong 1
+global TW ulong 384
+global TM ulong 384
+global TD ulong 4
+global TS ulong 8
+global TAL ulong 1
+
+fn tdirc b ulong to void
+n = get TDL 0
+put TDIR n uchar b
+put TDL 0 add n 1
+end
+
+note the work directory: argv 1, or a fresh one (TDL[1] = 1 when this test made it)
+fn tmkdir to int
+if ge argcnt 2
+n = argread 1 TDIR 0 4000
+if lt n 1
+ret 90
+end
+put TDL 0 ulong n
+ret 0
+end
+for i ulong len tbase
+tdirc ulong get tbase i
+end
+p = ulong getpid
+dig = new ulong 20 0
+nd = ulong 0
+while gt p 0 bound 20
+put dig nd rem p 10
+p = div p 10
+nd = add nd 1
+end
+while gt nd 0 bound 20
+nd = sub nd 1
+tdirc add 48 get dig nd
+end
+r = makedir TDIR 0 get TDL 0 448
+if ne r 0
+ret 91
+end
+put TDL 1 1
+ret 0
+end
+
+fn tpc b ulong to void
+n = get TPL 0
+put TP n uchar b
+put TPL 0 add n 1
+end
+
+note TP = TDIR/name: id 1 "tap", 2 "e.exp", 3 "allow", 4 "none"
+fn tsetp id ulong to void
+put TPL 0 0
+for i ulong get TDL 0
+tpc ulong get TDIR i
+end
+tpc 47
+if eq id 1
+tpc 116
+tpc 97
+tpc 112
+end
+if eq id 2
+tpc 101
+tpc 46
+tpc 101
+tpc 120
+tpc 112
+end
+if eq id 3
+tpc 97
+tpc 108
+tpc 108
+tpc 111
+tpc 119
+end
+if eq id 4
+tpc 110
+tpc 111
+tpc 110
+tpc 101
+end
+end
+
+fn tunlink id ulong to void
+tsetp id
+r = unlink TP 0 get TPL 0
+end
+
+note R1HB[0..n) into file id
+fn twrite id ulong n ulong to int
+tsetp id
+fd = fopen TP 0 get TPL 0 577 384
+if lt fd 0
+ret 1
+end
+w = write int fd R1HB 0 n
+r = fclose int fd
+if ne w long n
+ret 1
+end
+ret int r
+end
+
+note TM[0..nw) as LE words into R1HB, written to e.exp (first nb bytes); its SHA-256 into TD
+fn tmfile nb ulong to int
+for i ulong 384
+r1putw mul i 8 get TM i
+end
+r1hash nb
+for j ulong 4
+put TD j get R1HD j
+end
+ret twrite 2 nb
+end
+
+note one ALLOW line at R1HB[o..): TD in hex, keyword k (1 AUTHORIZED, 2 SYNTHETIC, 3 REVOKED), label
+fn tline o ulong k ulong to ulong
+p = o
+for j ulong 4
+v = get TD j
+for i ulong 16
+d = and shr v sub 60 mul i 4 15
+if lt d 10
+put R1HB add p i uchar add d 48
+else
+put R1HB add p i uchar add d 87
+end
+end
+p = add p 16
+end
+put R1HB p 32
+p = add p 1
+kw = new ulong 10 0
+n = tkw k kw
+for i ulong n
+put R1HB add p i uchar get kw i
+end
+p = add p n
+put R1HB p 32
+put R1HB add p 1 120
+put R1HB add p 2 10
+ret add p 3
+end
+
+fn tkw k ulong kw edit ulong 10 to ulong
+if eq k 1
+put kw 0 65
+put kw 1 85
+put kw 2 84
+put kw 3 72
+put kw 4 79
+put kw 5 82
+put kw 6 73
+put kw 7 90
+put kw 8 69
+put kw 9 68
+ret 10
+end
+if eq k 2
+put kw 0 83
+put kw 1 89
+put kw 2 78
+put kw 3 84
+put kw 4 72
+put kw 5 69
+put kw 6 84
+put kw 7 73
+put kw 8 67
+ret 9
+end
+put kw 0 82
+put kw 1 69
+put kw 2 86
+put kw 3 79
+put kw 4 75
+put kw 5 69
+put kw 6 68
+ret 7
+end
+
+note an ALLOW for TD: kind 1 AUTHORIZED, 2 SYNTHETIC, 3 AUTHORIZED then REVOKED, 4 another digest,
+note 5 REVOKED then SYNTHETIC; then exaload (its result)
+fn tallow kind ulong to int
+o = ulong 0
+if eq kind 4
+put TD 0 xor get TD 0 1
+o = tline o 1
+put TD 0 xor get TD 0 1
+end
+if or eq kind 1 eq kind 3
+o = tline o 1
+end
+if eq kind 5
+o = tline o 3
+end
+if or eq kind 2 eq kind 5
+put R1HB o 10
+o = tline add o 1 2
+end
+if eq kind 3
+o = tline o 3
+end
+r = twrite 3 o
+if ne r 0
+ret 99
+end
+ret exaload
+end
+
+fn tsetpaths to void
+tsetp 2
+for i ulong get TPL 0
+put EXFPATH i get TP i
+end
+put EXFLEN 0 get TPL 0
+tsetp 3
+for i ulong get TPL 0
+put EXAPATH i get TP i
+end
+put EXALEN 0 get TPL 0
+end
+
+note TW with word w of record r set to v, admitted under an AUTHORIZED ALLOW: the exadmit code
+fn tmut r ulong w ulong v ulong to int
+for i ulong 384
+put TM i get TW i
+end
+put TM add mul r 128 w v
+x = tmfile 3072
+x = tallow 1
+ret exadmit
+end
+
+fn tclr to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+end
+
+note three records into the tap file: AGG wl 16 (ADD 7, AND 65280) over 5 5 7 300; FSM; AGG wl 8
+note (MUL 3, XOR fold) over 13 i mod 256, i < 20
+fn tgen to int
+tsetp 1
+fd = fopen TP 0 get TPL 0 577 384
+if lt fd 0
+ret 1
+end
+put EXTFD 0 ulong fd
+put EXTSPL 0 2
+tclr
+put R1P 1 1
+put R1P 2 16
+put R1P 3 1
+put R1P 4 2
+put R1P 5 1
+put R1P 6 7
+put R1P 7 4
+put R1P 8 65280
+put R1N 0 4
+put R1X 0 5
+put R1X 1 5
+put R1X 2 7
+put R1X 3 300
+r1full
+if ne extap 1 1 0 123 0
+ret 2
+end
+for j ulong 4
+put TS j get R1SD j
+end
+tclr
+put R1P 1 2
+put R1P 2 3
+put R1P 3 4
+put R1P 5 3
+put R1P 6 10
+put R1P 7 20
+put R1P 8 30
+put R1P 22 16908544
+put R1P 23 33751040
+put R1P 24 197377
+put R1N 0 6
+put R1X 0 1
+put R1X 1 3
+put R1X 2 0
+put R1X 3 1
+put R1X 4 3
+put R1X 5 2
+r1full
+if ne extap 1 2 3 456 0
+ret 3
+end
+tclr
+put R1P 1 1
+put R1P 2 8
+put R1P 3 2
+put R1P 4 1
+put R1P 5 3
+put R1P 6 3
+put R1N 0 20
+for i ulong 20
+put R1X i and mul i 13 255
+end
+r1full
+if ne extap 2 1 1 789 0
+ret 4
+end
+r = fclose int get EXTFD 0
+for i ulong get TPL 0
+put EXFPATH i get TP i
+end
+put EXFLEN 0 get TPL 0
+if ne exfread 3072
+ret 5
+end
+for i ulong 384
+put TW i get EXFW i
+end
+ret 0
+end
+
+note word w of record r
+fn tw r ulong w ulong to ulong
+ret get TW add mul r 128 w
+end
+
+fn tfields to int
+if or ne tw 0 0 3544386028377026898 ne tw 2 0 3544386028377026898
+ret 11
+end
+if or ne tw 0 1 1 ne tw 1 2 2
+ret 12
+end
+if or or ne tw 0 2 1 ne tw 1 2 2 ne tw 2 2 3
+ret 13
+end
+if or ne tw 0 3 1 ne tw 1 3 2
+ret 14
+end
+if or ne tw 0 4 4 ne tw 2 4 20
+ret 15
+end
+if or ne tw 0 5 256 ne tw 0 6 4
+ret 16
+end
+if or ne tw 1 5 2 ne tw 1 6 150
+ret 17
+end
+if or or ne tw 0 7 123 ne tw 1 7 456 ne tw 2 7 789
+ret 18
+end
+if or or ne tw 0 8 8 ne tw 1 8 15 ne tw 2 8 20
+ret 19
+end
+if or ne tw 0 9 2 ne tw 2 9 2
+ret 20
+end
+if or or ne tw 1 10 1 ne tw 1 11 2 ne tw 1 12 3
+ret 21
+end
+if or or ne tw 2 10 2 ne tw 2 11 1 ne tw 2 12 1
+ret 22
+end
+if or ne tw 0 13 1 ne tw 2 13 1
+ret 23
+end
+if or or ne tw 0 14 3 ne tw 1 14 6 ne tw 2 14 16
+ret 24
+end
+if or or ne tw 0 16 5 ne tw 0 17 0 ne tw 0 18 7
+ret 25
+end
+if or or ne tw 0 19 0 ne tw 0 20 300 ne tw 0 21 256
+ret 26
+end
+if ne tw 0 22 0
+ret 27
+end
+if or or ne tw 1 16 65792 ne tw 1 17 769 ne tw 1 18 131072
+ret 28
+end
+if or or ne tw 1 19 131330 ne tw 1 20 131842 ne tw 1 21 131586
+ret 29
+end
+if or ne tw 2 46 195 ne tw 2 47 73
+ret 30
+end
+for j ulong 4
+if ne tw 0 add 48 j get TS j
+ret 31
+end
+end
+for i ulong 64
+if ne tw 2 add 64 i get R1P i
+ret 32
+end
+end
+r1pdig
+for j ulong 4
+if ne tw 2 add 52 j get R1PD j
+ret 33
+end
+end
+ret 0
+end
+
+fn tallowed to int
+for i ulong 384
+put TM i get TW i
+end
+if ne tmfile 3072 0
+ret 40
+end
+if ne tallow 1 0
+ret 41
+end
+if ne exadmit 0
+ret 42
+end
+if ne get EXFN 0 3
+ret 43
+end
+for j ulong 4
+if ne get EXFD j get TD j
+ret 44
+end
+end
+for i ulong 384
+if ne get EXFW i get TW i
+ret 45
+end
+end
+if ne tallow 2 0
+ret 46
+end
+if ne exadmit 0
+ret 47
+end
+if ne tallow 3 0
+ret 48
+end
+if ne exadmit 4
+ret 49
+end
+if ne tallow 5 0
+ret 50
+end
+if ne exadmit 4
+ret 51
+end
+if ne tallow 4 0
+ret 52
+end
+if ne exadmit 3
+ret 53
+end
+d = new ulong 4 0
+for j ulong 4
+put d j get TD j
+end
+if ne exallow d 0
+ret 54
+end
+put d 0 xor get d 0 1
+if ne exallow d 1
+ret 55
+end
+put TD 0 get d 0
+x = tallow 3
+if ne exallow d -1
+ret 56
+end
+ret 0
+end
+
+fn trecs to int
+if ne tmut 0 0 1 6
+ret 61
+end
+if ne tmut 1 1 2 7
+ret 62
+end
+if ne tmut 1 2 1 8
+ret 63
+end
+if ne tmut 0 2 2 8
+ret 64
+end
+if ne tmut 2 2 2 8
+ret 65
+end
+if ne tmut 0 3 2 9
+ret 66
+end
+if ne tmut 0 3 3 9
+ret 67
+end
+if ne tmut 0 66 9 10
+ret 68
+end
+if ne tmut 2 127 1 10
+ret 69
+end
+if ne tmut 1 52 xor tw 1 52 1 11
+ret 70
+end
+if ne tmut 0 9 0 12
+ret 71
+end
+if ne tmut 0 9 4 12
+ret 72
+end
+if ne tmut 0 13 0 13
+ret 73
+end
+if ne tmut 2 14 17 14
+ret 74
+end
+if ne tmut 0 15 1 15
+ret 75
+end
+if ne tmut 0 63 1 15
+ret 76
+end
+if ne tmut 0 22 1 15
+ret 77
+end
+if ne tmut 1 22 1 15
+ret 78
+end
+if ne tmut 0 21 257 16
+ret 79
+end
+if ne tmut 0 20 65536 16
+ret 80
+end
+if ne tmut 2 47 74 16
+ret 81
+end
+if ne tmut 1 17 770 17
+ret 82
+end
+if ne tmut 1 18 131075 17
+ret 83
+end
+if ne tmut 1 16 65796 17
+ret 84
+end
+if ne tmut 0 2 1 0
+ret 85
+end
+ret 0
+end
+
+note C2: one byte changed after the ALLOW line was written; C3: samples swapped between records
+fn tcontrols to int
+for i ulong 384
+put TM i get TW i
+end
+if ne tmfile 3072 0
+ret 101
+end
+if ne tallow 1 0
+ret 102
+end
+put TM 200 xor get TM 200 256
+for i ulong 384
+r1putw mul i 8 get TM i
+end
+if ne twrite 2 3072 0
+ret 103
+end
+if ne exadmit 3
+ret 104
+end
+for i ulong 384
+put TM i get TW i
+end
+for i ulong 32
+put TM add 16 i get TW add 272 i
+put TM add 272 i get TW add 16 i
+end
+put TM 14 16
+put TM 270 3
+if ne tmfile 3072 0
+ret 105
+end
+x = tallow 1
+if ne exadmit 16
+ret 106
+end
+if ne get EXFBAD 0 0
+ret 107
+end
+ret 0
+end
+
+fn tsizes to int
+for i ulong 384
+put TM i get TW i
+end
+x = tmfile 1023
+x = tallow 1
+if ne exadmit 2
+ret 111
+end
+x = tmfile 0
+x = tallow 1
+if ne exadmit 2
+ret 112
+end
+x = tmfile 1024
+x = tallow 1
+if ne exadmit 0
+ret 113
+end
+if ne get EXFN 0 1
+ret 114
+end
+tsetp 4
+for i ulong get TPL 0
+put EXFPATH i get TP i
+end
+put EXFLEN 0 get TPL 0
+if ne exadmit 1
+ret 115
+end
+tsetpaths
+ret 0
+end
+
+note malformed ALLOW files: exaload codes, then exadmit 5 while nothing is loaded
+fn tbadallow to int
+o = tline 0 1
+put R1HB 5 103
+x = twrite 3 o
+if ne exaload 3
+ret 121
+end
+if ne exadmit 5
+ret 122
+end
+o = tline 0 2
+put R1HB sub o 3 10
+x = twrite 3 sub o 2
+if ne exaload 3
+ret 123
+end
+o = tline 0 1
+put R1HB 64 9
+x = twrite 3 o
+if ne exaload 3
+ret 124
+end
+o = tline 0 1
+put R1HB 66 97
+x = twrite 3 o
+if ne exaload 3
+ret 125
+end
+o = tline 0 1
+x = twrite 3 sub o 1
+if ne exaload 0
+ret 126
+end
+tunlink 3
+if ne exaload 1
+ret 127
+end
+ret 0
+end
+
+fn tstat to int
+x = tallow 1
+if not exastat
+ret 131
+end
+if exastat
+ret 132
+end
+x = tallow 2
+if not exastat
+ret 133
+end
+if exastat
+ret 134
+end
+tunlink 3
+if not exastat
+ret 135
+end
+if ne get EXAS 4 2
+ret 136
+end
+ret 0
+end
+
+fn tall to int
+r = tgen
+if ne r 0
+ret r
+end
+r = tfields
+if ne r 0
+ret r
+end
+tsetpaths
+r = tallowed
+if ne r 0
+ret r
+end
+r = trecs
+if ne r 0
+ret r
+end
+r = tcontrols
+if ne r 0
+ret r
+end
+r = tsizes
+if ne r 0
+ret r
+end
+r = tbadallow
+if ne r 0
+ret r
+end
+ret tstat
+end
+
+fn main to int
+r = tmkdir
+if ne r 0
+ret r
+end
+r = tall
+tunlink 1
+tunlink 2
+tunlink 3
+if eq get TDL 1 1
+x = rmdir TDIR 0 get TDL 0
+if and eq r 0 ne x 0
+ret 92
+end
+end
+ret r
+end

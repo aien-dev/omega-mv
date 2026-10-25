@@ -1,0 +1,661 @@
+note SPDX-License-Identifier: Apache-2.0
+note exp.om: R1 experience records (docs/reuse/REUSE-1.md section 3.1): the tap writer and admission.
+note Concatenated after r1.om. Exported:
+note   EXAPATH uchar 4096, EXALEN ulong 1   the ALLOW path (caller fills; no 0 byte needed)
+note   exaload to int      read ALLOW (at most 1 MiB) into the allow table and its SHA-256 into EXAD:
+note                       0 ok; 1 unreadable, 2 too large, 3 malformed line, 4 more than 8192 lines.
+note                       Lines: `<64 hex> AUTHORIZED|SYNTHETIC|REVOKED <label>`, label nonempty, one
+note                       space between fields, lowercase or uppercase hex; empty lines are skipped.
+note   exallow d view ulong 4 to int   digest (word j = bytes 8j..8j+7 big endian) against the loaded
+note                       table: 1 allowed (an AUTHORIZED or SYNTHETIC line and no REVOKED line),
+note                       0 absent, -1 revoked
+note   exastat to bool     stat of ALLOW (inode, size, mtime ns, ctime ns) into EXAS; true when it
+note                       differs from the snapshot taken by the previous call (or on the first call)
+note   EXFPATH uchar 4096, EXFLEN ulong 1   the experience file path
+note   exadmit to int      admission of that file against the loaded ALLOW: 0 admitted; on 0 the file
+note                       is in EXFW (LE words, record r = EXFW[128r .. 128r+128)), EXFN = records,
+note                       EXFD = the file's SHA-256. Codes: 1 unreadable, 2 size, 3 not in ALLOW,
+note                       4 revoked, 5 ALLOW not loaded, then the first failing record check: 6 magic,
+note                       7 version, 8 sequence, 9 family, 10 PROG invalid, 11 program digest,
+note                       12 split, 13 provenance, 14 m, 15 a zero word, 16 AGG sample, 17 FSM sample.
+note                       EXFBAD = the 0-based index of the failing record. Clobbers R1P, R1PD, R1HB,
+note                       R1HD.
+note   extopen to int      the tap: argv 5 TAPFILE is created (O_EXCL; an existing file is refused),
+note                       argv 6 SPLIT must be 1, 2 or 3: 0 ok, 1 split, 2 file exists or not creatable
+note   extap ses ulong qn ulong nchg ulong ns ulong to int   one record for the current R1P, R1N, R1X
+note                       and R1R (the baseline result, ns its evaluation time): sets R1PD and R1SD;
+note                       0 ok, 1 write failed. Sequence numbers start at 1.
+global EXAPATH uchar 4096
+global EXALEN ulong 1
+global EXAB uchar 1048576
+global EXAT ulong 40960
+global EXAN ulong 1
+global EXAOK ulong 1
+global EXAD ulong 4
+global EXAS ulong 5
+global EXSB uchar 128
+global EXFPATH uchar 4096
+global EXFLEN ulong 1
+global EXFW ulong 4194304
+global EXFN ulong 1
+global EXFD ulong 4
+global EXFBAD ulong 1
+global EXTFD ulong 1
+global EXTSEQ ulong 1
+global EXTSPL ulong 1
+global EXTR ulong 128
+global EXTB uchar 1024
+global EXTP uchar 4096
+
+note a hex digit's value, or 16 when it is not one
+fn exhex c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+if and ge c 65 le c 70
+ret sub c 55
+end
+ret 16
+end
+
+note keyword at EXAB[p..): 1 AUTHORIZED, 2 SYNTHETIC, 3 REVOKED, 0 none; the word must be followed
+note by a space (checked by the caller through its length)
+fn exkw p ulong e ulong to ulong
+kw = new uchar 10 0
+r = ulong 1
+while le r 3 bound 4
+if eq r 1
+put kw 0 65
+put kw 1 85
+put kw 2 84
+put kw 3 72
+put kw 4 79
+put kw 5 82
+put kw 6 73
+put kw 7 90
+put kw 8 69
+put kw 9 68
+end
+if eq r 2
+put kw 0 83
+put kw 1 89
+put kw 2 78
+put kw 3 84
+put kw 4 72
+put kw 5 69
+put kw 6 84
+put kw 7 73
+put kw 8 67
+end
+if eq r 3
+put kw 0 82
+put kw 1 69
+put kw 2 86
+put kw 3 79
+put kw 4 75
+put kw 5 69
+put kw 6 68
+end
+n = exkwlen r
+ok = lt add p n e
+for i ulong n
+if ok
+if ne get EXAB add p i get kw i
+ok = false
+end
+end
+end
+if ok
+if eq get EXAB add p n 32
+ret r
+end
+end
+r = add r 1
+end
+ret 0
+end
+
+fn exkwlen r ulong to ulong
+if eq r 1
+ret 10
+end
+if eq r 2
+ret 9
+end
+ret 7
+end
+
+note one ALLOW line EXAB[s..e): 0 ok (entry appended), 3 malformed, 4 table full
+fn exaline s ulong e ulong to int
+if lt sub e s 68
+ret 3
+end
+n = get EXAN 0
+if ge n 8192
+ret 4
+end
+b = mul n 5
+for j ulong 4
+v = ulong 0
+for i ulong 16
+h = exhex ulong get EXAB add s add mul j 16 i
+if gt h 15
+ret 3
+end
+v = add mul v 16 h
+end
+put EXAT add b j v
+end
+if ne get EXAB add s 64 32
+ret 3
+end
+k = exkw add s 65 e
+if eq k 0
+ret 3
+end
+if le e add add s 66 exkwlen k
+ret 3
+end
+put EXAT add b 4 k
+put EXAN 0 add n 1
+ret 0
+end
+
+note SHA-256 of EXAB[0..n) into EXAD
+fn exahash n ulong to void
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+omsha c b 0 0 w b8
+off = ulong 0
+while lt off n bound 257
+m = sub n off
+if gt m 4096
+m = 4096
+end
+for i ulong m
+put b i get EXAB add off i
+end
+omsha c b m 1 w b8
+off = add off m
+end
+omsha c b 0 2 w b8
+for j ulong 4
+put EXAD j r1bswap get w j
+end
+end
+
+fn exaload to int
+put EXAOK 0 0
+put EXAN 0 0
+fd = fopen EXAPATH 0 get EXALEN 0 0 0
+if lt fd 0
+ret 1
+end
+got = ulong 0
+while lt got 1048576 bound 100000
+k = read int fd EXAB got sub 1048576 got
+if le k 0
+break
+end
+got = add got ulong k
+end
+one = new uchar 1 0
+k = read int fd one 0 1
+r = fclose int fd
+if or ne k 0 ne r 0
+ret 2
+end
+exahash got
+s = ulong 0
+for i ulong got
+if eq get EXAB i 10
+if gt i s
+x = exaline s i
+if ne x 0
+ret x
+end
+end
+s = add i 1
+end
+end
+if lt s got
+x = exaline s got
+if ne x 0
+ret x
+end
+end
+put EXAOK 0 1
+ret 0
+end
+
+fn exallow d view ulong 4 to int
+n = get EXAN 0
+seen = int 0
+for e ulong n
+b = mul e 5
+hit = true
+for j ulong 4
+if ne get EXAT add b j get d j
+hit = false
+end
+end
+if hit
+if eq get EXAT add b 4 3
+ret -1
+end
+seen = 1
+end
+end
+ret seen
+end
+
+note the 8-byte LE word at byte p of EXSB
+fn exsw p ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or v shl ulong get EXSB add p i mul i 8
+end
+ret v
+end
+
+fn exastat to bool
+for i ulong 128
+put EXSB i 0
+end
+r = stat EXAPATH 0 get EXALEN 0 EXSB 0 128
+s = new ulong 5 0
+put s 0 exsw 8
+put s 1 exsw 48
+put s 2 add mul exsw 88 1000000000 exsw 96
+put s 3 add mul exsw 104 1000000000 exsw 112
+if eq r 0
+put s 4 1
+else
+put s 4 2
+end
+ch = false
+for j ulong 5
+if ne get s j get EXAS j
+ch = true
+end
+put EXAS j get s j
+end
+ret ch
+end
+
+note the experience file into EXFW and its SHA-256 into EXFD: the byte count, or -1 unreadable,
+note -2 larger than 32 MiB
+fn exfread to long
+fd = fopen EXFPATH 0 get EXFLEN 0 0 0
+if lt fd 0
+ret -1
+end
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+omsha c b 0 0 w b8
+tot = ulong 0
+eof = false
+while not eof bound 8194
+fill = ulong 0
+while lt fill 4096 bound 4097
+k = read int fd b fill sub 4096 fill
+if le k 0
+eof = true
+break
+end
+fill = add fill ulong k
+end
+if gt add tot fill 33554432
+r = fclose int fd
+ret -2
+end
+omsha c b fill 1 w b8
+exfwords b tot fill
+tot = add tot fill
+end
+r = fclose int fd
+omsha c b 0 2 w b8
+for j ulong 4
+put EXFD j r1bswap get w j
+end
+ret long tot
+end
+
+note bytes b[0..fill) at file offset tot into EXFW (whole words only)
+fn exfwords b view uchar 4096 tot ulong fill ulong to void
+nw = shr fill 3
+base = shr tot 3
+for i ulong nw
+v = ulong 0
+p = add mul i 8 7
+for k ulong 8
+v = or shl v 8 ulong get b sub p k
+end
+put EXFW add base i v
+end
+end
+
+note AGG samples of record base: m pairs (x, e) with x < 2^wl and e = r1lane x; R1P holds its PROG
+fn exsagg base ulong m ulong to bool
+lim = shl ulong 1 get R1P 2
+for i ulong m
+x = get EXFW add base add 16 mul i 2
+e = get EXFW add base add 17 mul i 2
+if ge x lim
+ret false
+end
+if ne r1lane x e
+ret false
+end
+end
+ret true
+end
+
+note FSM samples: m words q + 256 a + 65536 q' with q < S, a < A, q' = delta(q, a)
+fn exsfsm base ulong m ulong to bool
+for i ulong m
+w = get EXFW add base add 16 i
+q = and w 255
+a = and shr w 8 255
+if or ge q get R1P 2 ge a get R1P 3
+ret false
+end
+if ne shr w 16 r1delta q a
+ret false
+end
+end
+ret true
+end
+
+note words that must be 0: 15, 56..63, and the sample words past the m samples
+fn exzero base ulong fam ulong m ulong to bool
+if ne get EXFW add base 15 0
+ret false
+end
+for i ulong 8
+if ne get EXFW add base add 56 i 0
+ret false
+end
+end
+used = m
+if eq fam 1
+used = mul m 2
+end
+for i ulong 32
+if ge i used
+if ne get EXFW add base add 16 i 0
+ret false
+end
+end
+end
+ret true
+end
+
+note record r (0-based), prev = the previous sequence number: 0 or a code 6..17
+fn exrec r ulong prev ulong to int
+base = mul r 128
+if ne get EXFW base 3544386028377026898
+ret 6
+end
+if ne get EXFW add base 1 1
+ret 7
+end
+sq = get EXFW add base 2
+if or le sq prev and eq r 0 ne sq 1
+ret 8
+end
+fam = get EXFW add base 3
+if or ne fam get EXFW add base 65 and ne fam 1 ne fam 2
+ret 9
+end
+for i ulong 64
+put R1P i get EXFW add base add 64 i
+end
+if ne r1valid 0
+ret 10
+end
+r1pdig
+for j ulong 4
+if ne get R1PD j get EXFW add base add 52 j
+ret 11
+end
+end
+sp = get EXFW add base 9
+if or lt sp 1 gt sp 3
+ret 12
+end
+if ne get EXFW add base 13 1
+ret 13
+end
+m = get EXFW add base 14
+if gt m 16
+ret 14
+end
+if not exzero base fam m
+ret 15
+end
+if eq fam 1
+if not exsagg base m
+ret 16
+end
+else
+if not exsfsm base m
+ret 17
+end
+end
+ret 0
+end
+
+fn exadmit to int
+put EXFN 0 0
+put EXFBAD 0 0
+if ne get EXAOK 0 1
+ret 5
+end
+tot = exfread
+if eq tot -1
+ret 1
+end
+if or lt tot 0 or eq tot 0 ne rem tot 1024 0
+ret 2
+end
+a = new ulong 4 0
+for j ulong 4
+put a j get EXFD j
+end
+al = exallow a
+if eq al -1
+ret 4
+end
+if ne al 1
+ret 3
+end
+nr = shr ulong tot 10
+prev = ulong 0
+for r ulong nr
+put EXFBAD 0 r
+x = exrec r prev
+if ne x 0
+ret x
+end
+prev = get EXFW add mul r 128 2
+end
+put EXFN 0 nr
+ret 0
+end
+
+note argv i into EXTP: the length, or -1
+fn exarg i ulong to long
+n = argread i EXTP 0 4096
+if or lt n 1 gt n 4095
+ret -1
+end
+ret n
+end
+
+fn extopen to int
+put EXTSEQ 0 0
+n = exarg 6
+if ne n 1
+ret 1
+end
+sp = sub ulong get EXTP 0 48
+if or lt sp 1 gt sp 3
+ret 1
+end
+put EXTSPL 0 sp
+n = exarg 5
+if lt n 0
+ret 2
+end
+fd = fopen EXTP 0 ulong n 193 384
+if lt fd 0
+ret 2
+end
+put EXTFD 0 ulong fd
+ret 0
+end
+
+note rules tested by delta(q, a): the index of the first matching rule plus 1, else R
+fn exscan q ulong a ulong to ulong
+nr = get R1P 5
+for i ulong nr
+w = get R1P add 22 i
+if eq and w 255 q
+lo = and shr w 8 255
+hi = and shr w 16 255
+if and le lo a le a hi
+ret add i 1
+end
+end
+end
+ret nr
+end
+
+note FSM rule tests of the whole run (word 8)
+fn exsteps to ulong
+n = get R1N 0
+q = get R1P 4
+st = ulong 0
+for t ulong n
+a = get R1X t
+st = add st exscan q a
+q = r1delta q a
+end
+ret st
+end
+
+note the first m (<= 16) distinct lane values in index order, (x, e(x)) into EXTR[16..48)
+fn exsmagg to ulong
+n = get R1N 0
+m = ulong 0
+for i ulong n
+if lt m 16
+x = get R1X i
+seen = false
+for j ulong m
+if eq get EXTR add 16 mul j 2 x
+seen = true
+end
+end
+if not seen
+put EXTR add 16 mul m 2 x
+put EXTR add 17 mul m 2 r1lane x
+m = add m 1
+end
+end
+end
+ret m
+end
+
+note the first m distinct transitions q + 256 a + 65536 q' taken
+fn exsmfsm to ulong
+n = get R1N 0
+m = ulong 0
+q = get R1P 4
+for i ulong n
+a = get R1X i
+nq = r1delta q a
+if lt m 16
+w = add add q mul a 256 mul nq 65536
+seen = false
+for j ulong m
+if eq get EXTR add 16 j w
+seen = true
+end
+end
+if not seen
+put EXTR add 16 m w
+m = add m 1
+end
+end
+q = nq
+end
+ret m
+end
+
+fn extap ses ulong qn ulong nchg ulong ns ulong to int
+for i ulong 128
+put EXTR i 0
+end
+sq = add get EXTSEQ 0 1
+put EXTSEQ 0 sq
+put EXTR 0 3544386028377026898
+put EXTR 1 1
+put EXTR 2 sq
+fam = get R1P 1
+put EXTR 3 fam
+put EXTR 4 get R1N 0
+put EXTR 5 get R1R 0
+put EXTR 6 get R1R 1
+put EXTR 7 ns
+if eq fam 1
+put EXTR 8 mul get R1N 0 get R1P 4
+put EXTR 14 exsmagg
+else
+put EXTR 8 exsteps
+put EXTR 14 exsmfsm
+end
+put EXTR 9 get EXTSPL 0
+put EXTR 10 ses
+put EXTR 11 qn
+put EXTR 12 nchg
+put EXTR 13 1
+r1sdig
+r1pdig
+for j ulong 4
+put EXTR add 48 j get R1SD j
+put EXTR add 52 j get R1PD j
+end
+for i ulong 64
+put EXTR add 64 i get R1P i
+end
+ret exflush
+end
+
+fn exflush to int
+for i ulong 128
+v = get EXTR i
+for k ulong 8
+put EXTB add mul i 8 k uchar and v 255
+v = shr v 8
+end
+end
+fd = int get EXTFD 0
+off = ulong 0
+while lt off 1024 bound 1025
+k = write fd EXTB off sub 1024 off
+if le k 0
+ret 1
+end
+off = add off ulong k
+end
+ret 0
+end

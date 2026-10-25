@@ -1,0 +1,268 @@
+note units: sha256 r1
+note r1-digest: r1hash, r1pdig and r1sdig against /usr/bin/sha256sum of the same bytes written to a
+note file under /tmp/reuse-test-core-<pid> (removed at the end): hash sizes 0, 1, 55, 56, 63, 64,
+note 4095, 4096, 4097, 8192, 65536, a program digest and state digests for n 0, 700 and 4096.
+note Exit 0 pass, else the failed check's code.
+text tdir "/tmp/reuse-test-core-"
+text tfile "/h.bin"
+text tsum "/usr/bin/sha256sum"
+global TPATH uchar 256
+global TPLEN ulong 2
+global TPK uchar 4096
+global TOUT uchar 256
+global TFDS uchar 8
+global TST uchar 4
+global TWANT ulong 4
+
+fn tappend b ulong to void
+n = get TPLEN 0
+put TPATH n uchar b
+put TPLEN 0 add n 1
+end
+
+note TPATH = tdir + decimal pid; TPLEN[1] = the directory's length
+fn tmkdir to int
+put TPLEN 0 0
+for i ulong len tdir
+tappend ulong get tdir i
+end
+p = ulong getpid
+dig = new ulong 20 0
+nd = ulong 0
+while gt p 0 bound 20
+put dig nd rem p 10
+p = div p 10
+nd = add nd 1
+end
+while gt nd 0 bound 20
+nd = sub nd 1
+tappend add 48 get dig nd
+end
+put TPLEN 1 get TPLEN 0
+r = makedir TPATH 0 get TPLEN 0 448
+if ne r 0
+ret 1
+end
+for i ulong len tfile
+tappend ulong get tfile i
+end
+ret 0
+end
+
+fn tfdword off ulong to int
+x = ulong 0
+for i ulong 4
+x = or x shl ulong get TFDS add off i mul i 8
+end
+ret int x
+end
+
+fn tpk16 off ulong v ulong to void
+put TPK off uchar and v 255
+put TPK add off 1 uchar shr v 8
+end
+
+note the packed argv list (sha256sum, the file) into TPK; returns its byte length
+fn tpack to ulong
+tpk16 0 2
+tpk16 2 len tsum
+for i ulong len tsum
+put TPK add 4 i get tsum i
+end
+o = add 4 len tsum
+tpk16 o get TPLEN 0
+o = add o 2
+for i ulong get TPLEN 0
+put TPK add o i get TPATH i
+end
+ret add o get TPLEN 0
+end
+
+note run sha256sum with stdout on a pipe into TOUT; returns the bytes read, or -1 on a failed child
+fn trun to long
+o = tpack
+r = pipefds TFDS 0 8 524288
+if ne r 0
+ret -1
+end
+rd = tfdword 0
+wr = tfdword 4
+pid = fork
+if eq pid 0
+r = dupfd wr 1 0
+r = execprog TPK 0 o
+exit 90
+end
+r = fclose wr
+got = ulong 0
+while lt got 64 bound 1000
+k = read rd TOUT got sub 256 got
+if le k 0
+break
+end
+got = add got ulong k
+end
+r = fclose rd
+r = waitpid int pid TST 0 4 0
+if ne get TST 0 0
+ret -1
+end
+if ne get TST 1 0
+ret -1
+end
+ret long got
+end
+
+note the first 64 hex digits of TOUT as 4 big-endian words into TWANT
+fn tparse to void
+for j ulong 4
+v = ulong 0
+for i ulong 16
+c = ulong get TOUT add mul j 16 i
+if and ge c 48 le c 57
+v = add mul v 16 sub c 48
+else
+v = add mul v 16 sub c 87
+end
+end
+put TWANT j v
+end
+end
+
+note R1HB[0..n) into the file, sha256sum of it parsed into TWANT: 0 ok, else a code
+fn tsha n ulong to int
+fd = fopen TPATH 0 get TPLEN 0 577 384
+if lt fd 0
+ret 2
+end
+w = write int fd R1HB 0 n
+if ne w long n
+ret 3
+end
+r = fclose int fd
+if ne r 0
+ret 4
+end
+got = trun
+if lt got 64
+ret 5
+end
+tparse
+ret 0
+end
+
+note hash R1HB[0..n) both ways
+fn thash n ulong to int
+r1hash n
+r = tsha n
+if ne r 0
+ret r
+end
+for j ulong 4
+if ne get R1HD j get TWANT j
+ret 7
+end
+end
+ret 0
+end
+
+fn tsizes to int
+for i ulong 65536
+put R1HB i uchar and add mul i 7 3 255
+end
+sz = new ulong 11 0
+put sz 1 1
+put sz 2 55
+put sz 3 56
+put sz 4 63
+put sz 5 64
+put sz 6 4095
+put sz 7 4096
+put sz 8 4097
+put sz 9 8192
+put sz 10 65536
+for k ulong 11
+r = thash get sz k
+if ne r 0
+ret add 10 int k
+end
+end
+ret 0
+end
+
+fn tsd n ulong to int
+put R1N 0 n
+x = ulong 12345
+for i ulong n
+x = and add mul x 2654435761 1 65535
+put R1X i x
+end
+r1sdig
+r = tsha mul n 8
+if ne r 0
+ret r
+end
+for j ulong 4
+if ne get R1SD j get TWANT j
+ret 8
+end
+end
+ret 0
+end
+
+fn tdigests to int
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 16
+put R1P 3 4
+put R1P 4 1
+put R1P 5 3
+put R1P 6 40503
+if ne r1valid 0
+ret 30
+end
+r1pdig
+r = tsha 512
+if ne r 0
+ret 31
+end
+for j ulong 4
+if ne get R1PD j get TWANT j
+ret 32
+end
+end
+if ne tsd 0 0
+ret 33
+end
+if or ne get R1SD 0 16406829232824261652 ne get R1SD 3 11859553537011923029
+ret 34
+end
+if ne tsd 700 0
+ret 35
+end
+if ne tsd 4096 0
+ret 36
+end
+ret 0
+end
+
+fn main to int
+if ne tmkdir 0
+ret 1
+end
+r = tsizes
+if eq r 0
+r = tdigests
+end
+u = unlink TPATH 0 get TPLEN 0
+u = rmdir TPATH 0 get TPLEN 1
+if ne u 0
+if eq r 0
+ret 40
+end
+end
+ret r
+end

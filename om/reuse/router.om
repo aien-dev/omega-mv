@@ -1,0 +1,901 @@
+note SPDX-License-Identifier: Apache-2.0
+note router.om: the REUSE-1 arm process (docs/reuse/REUSE-1.md section 2, 3.4 load, 4 revocation, and
+note clarifications K1, K2, K9). Last unit; holds fn main. Every arm binary is this router.
+note argv: ARM LIBDIR MANSHA ALLOW TAPFILE SPLIT [loaded]; ARM echo full cache method delta select tap.
+note Startup exit codes (no response is written): 2 usage (argc, ARM), 2 tap refused (extopen).
+note Protocol: little-endian u64 words on stdin/stdout. Request op, p, p words; response status, q,
+note q words. Framing (K2): op outside 1..10 or p > 7234 -> 4 and exit 4 (the payload is not read);
+note otherwise the payload is read whole; a p that does not match its op -> 4; ops 2..8 without a
+note session -> 6; then the op's own statuses. EOF on stdin without END -> exit 3, no response.
+note Load (3.4): ARM method/delta/select, LIBDIR not "-", no trailing "loaded": lbload (lib.om) execs
+note the generation and never returns on success; on its nonzero return this process serves every
+note QUERY as full with route 5. A generation (argv ends in "loaded") never loads again; it reads its
+note lineage (lblineage) and checks it against ALLOW at every BEGIN and, whenever the stat snapshot
+note of ALLOW (inode, size, mtime ns, ctime ns) changed, at QUERY: a revoked or unverifiable lineage
+note gives route 5 from that QUERY on for the rest of the process. select in a generation reads
+note LIBDIR/gen-G.cal (K1, lbcalpath); with LIBDIR "-" it has no calibration.
+note Arms at QUERY (route): echo 0 0 (0); full r1full (1); tap r1full and one experience record (1);
+note cache key SHA-256(program digest, n, state digest), the state digest recomputed only at the first
+note QUERY after a change, 4096 entries FIFO: hit (2), miss r1full (1); method mtrun (3) when a
+note template is bound and passed G3, else r1full (1), G3 failure r1full (5) for the session; delta:
+note the delta state (4) of the bound method or of the baseline (t = -1), rebuilt by dlbind at a QUERY
+note after a drop, else method (3) or full (1); select: slpick among full (1), method (3), delta (4);
+note once sloff reports churn (5.2) the delta state is dropped and not maintained for the session.
+note STATS answers 32 counters RTST: 0..5 QUERYs by route 0..5, 6 sessions, 7 change items applied,
+note 8 PROGRAMs applied, 9 refused requests, 10 ckbind calls, 11 bind failures, 12 G3 FIFO hits,
+note 13 G3 lane pairs, 14..25 dlstat 0..11, 26 select delta disables (SLDIS), 27 select refusals
+note (SLREF), 28 cache entries, 29 template count (mtcount), 30 load refusal code, 31 flags
+note (1 generation, 2 refused, 4 revoked, 8 calibration path set).
+text RTTE "echo"
+text RTTF "full"
+text RTTC "cache"
+text RTTM "method"
+text RTTD "delta"
+text RTTS "select"
+text RTTT "tap"
+text RTTL "loaded"
+global RTARM ulong 1
+global RTFLG ulong 1
+global RTLC ulong 1
+global RTLIN ulong 1
+global RTSES ulong 1
+global RTSN ulong 1
+global RTQN ulong 1
+global RTNC ulong 1
+global RTT long 1
+global RTBF ulong 1
+global RTDB ulong 1
+global RTSD ulong 1
+global RTPS ulong 64
+global RTQ ulong 7234
+global RTIB uchar 65536
+global RTIP ulong 2
+global RTOW ulong 34
+global RTOB uchar 272
+global RTST ulong 32
+global RTCK ulong 24576
+global RTCN ulong 1
+global RTCH ulong 1
+global RTKEY ulong 4
+global RTA uchar 4096
+
+note ---- input and output ----
+fn rtfill to bool
+k = read 0 RTIB 0 65536
+if le k 0
+ret false
+end
+put RTIP 0 0
+put RTIP 1 ulong k
+ret true
+end
+
+fn rtbyte to ulong
+p = get RTIP 0
+if ge p get RTIP 1
+if not rtfill
+exit 3
+end
+p = 0
+end
+put RTIP 0 add p 1
+ret ulong get RTIB p
+end
+
+fn rtword to ulong
+p = get RTIP 0
+if le add p 8 get RTIP 1
+v = ulong 0
+for i ulong 8
+v = or shl v 8 ulong get RTIB sub add p 7 i
+end
+put RTIP 0 add p 8
+ret v
+end
+v = ulong 0
+for i ulong 8
+v = or v shl rtbyte mul i 8
+end
+ret v
+end
+
+note status s, q words RTOW[0..q)
+fn rtresp s ulong q ulong to void
+rtputw 0 s
+rtputw 8 q
+for i ulong q
+rtputw mul add i 2 8 get RTOW i
+end
+n = mul add q 2 8
+off = ulong 0
+while lt off n bound 1000
+k = write 1 RTOB off sub n off
+if le k 0
+exit 5
+end
+off = add off ulong k
+end
+end
+
+fn rtputw o ulong w ulong to void
+v = w
+for i ulong 8
+put RTOB add o i uchar and v 255
+v = shr v 8
+end
+end
+
+fn rtstat s ulong to void
+if ne s 0
+put RTST 9 add get RTST 9 1
+end
+rtresp s 0
+end
+
+note ---- argv ----
+note argv i into RTA: its length, or -1
+fn rtarg i ulong to long
+n = argread i RTA 0 4096
+if or lt n 0 gt n 4095
+ret -1
+end
+ret n
+end
+
+fn rtdash i ulong to bool
+n = rtarg i
+ret and eq n 1 eq get RTA 0 45
+end
+
+note RTA[0..n) equals text id (1 echo .. 7 tap, 8 loaded)
+fn rteq id ulong n ulong to bool
+if eq id 1
+ret rteqe n
+end
+if eq id 2
+ret rteqf n
+end
+if eq id 3
+ret rteqc n
+end
+if eq id 4
+ret rteqm n
+end
+if eq id 5
+ret rteqd n
+end
+if eq id 6
+ret rteqs n
+end
+if eq id 7
+ret rteqt n
+end
+ret rteql n
+end
+
+fn rteqe n ulong to bool
+if ne n len RTTE
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTE i
+ret false
+end
+end
+ret true
+end
+
+fn rteqf n ulong to bool
+if ne n len RTTF
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTF i
+ret false
+end
+end
+ret true
+end
+
+fn rteqc n ulong to bool
+if ne n len RTTC
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTC i
+ret false
+end
+end
+ret true
+end
+
+fn rteqm n ulong to bool
+if ne n len RTTM
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTM i
+ret false
+end
+end
+ret true
+end
+
+fn rteqd n ulong to bool
+if ne n len RTTD
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTD i
+ret false
+end
+end
+ret true
+end
+
+fn rteqs n ulong to bool
+if ne n len RTTS
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTS i
+ret false
+end
+end
+ret true
+end
+
+fn rteqt n ulong to bool
+if ne n len RTTT
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTT i
+ret false
+end
+end
+ret true
+end
+
+fn rteql n ulong to bool
+if ne n len RTTL
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTL i
+ret false
+end
+end
+ret true
+end
+
+note ARM: 1 echo 2 full 3 cache 4 method 5 delta 6 select 7 tap, 0 unknown
+fn rtparm to ulong
+n = rtarg 1
+if lt n 0
+ret 0
+end
+for id ulong 7
+if rteq add id 1 ulong n
+ret add id 1
+end
+end
+ret 0
+end
+
+note the arm has a library path: method, delta, select
+fn rtlibarm to bool
+a = get RTARM 0
+ret and ge a 4 le a 6
+end
+
+fn rtdelarm to bool
+a = get RTARM 0
+ret or eq a 5 eq a 6
+end
+
+note route 5 for every QUERY: refused generation or revoked lineage
+fn rtdead to bool
+ret ne and get RTFLG 0 6 0
+end
+
+note ---- startup ----
+fn rtsetallow to void
+if rtdash 4
+put EXALEN 0 0
+ret
+end
+n = ulong rtarg 4
+for i ulong n
+put EXAPATH i get RTA i
+end
+put EXALEN 0 n
+end
+
+fn rtcal to void
+n = lbcalpath
+if le n 0
+ret
+end
+for i ulong 4096
+put SLPATH i get LBCP i
+end
+put RTFLG 0 or get RTFLG 0 8
+end
+
+note a refused generation load: code x (STATS 30; 255 when it is not 1..254), route 5 from now on
+fn rtrefuse x int to void
+c = ulong 255
+if and gt x 0 lt x 255
+c = ulong x
+end
+put RTLC 0 c
+put RTFLG 0 or get RTFLG 0 2
+end
+
+fn rtinit to void
+c = argcnt
+if and ne c 7 ne c 8
+exit 2
+end
+loaded = false
+if eq c 8
+n = rtarg 7
+if or lt n 0 not rteq 8 ulong n
+exit 2
+end
+loaded = true
+end
+a = rtparm
+if eq a 0
+exit 2
+end
+put RTARM 0 a
+put RTT 0 -1
+rtsetallow
+if eq a 7
+if ne extopen 0
+exit 2
+end
+end
+if and rtlibarm not rtdash 2
+if loaded
+rtgen
+else
+x = lbload
+rtrefuse x
+end
+end
+if eq a 6
+x = slload
+end
+end
+
+note a generation: lineage from the manifest pinned by MANSHA, calibration path
+fn rtgen to void
+put RTFLG 0 or get RTFLG 0 1
+x = lblineage
+if ne x 0
+rtrefuse x
+ret
+end
+if gt get LBLN 0 0
+put RTLIN 0 1
+end
+if eq get RTARM 0 6
+rtcal
+end
+end
+
+note ---- revocation ----
+note every lineage digest allowed by the loaded ALLOW
+fn rtlinok to bool
+d = new ulong 4 0
+n = get LBLN 0
+for e ulong n
+for j ulong 4
+put d j get LBLD add mul e 4 j
+end
+if ne exallow d 1
+ret false
+end
+end
+ret true
+end
+
+fn rtrevoke to void
+put RTFLG 0 or get RTFLG 0 4
+if rtdelarm
+dldrop
+end
+put RTDB 0 0
+put RTT 0 -1
+end
+
+note read ALLOW and check the lineage; snapshot its stat
+fn rtrecheck to void
+ch = exastat
+ok = false
+if gt get EXALEN 0 0
+if eq exaload 0
+ok = rtlinok
+end
+end
+if not ok
+rtrevoke
+end
+end
+
+fn rtrevq to void
+if or eq get RTLIN 0 0 rtdead
+ret
+end
+if exastat
+x = exaload
+if or ne x 0 not rtlinok
+rtrevoke
+end
+end
+end
+
+note ---- binding ----
+note bind for the current R1P (BEGIN or PROGRAM); the delta state was reset or dropped by the caller
+fn rtbind to void
+put RTT 0 -1
+put RTBF 0 0
+put RTDB 0 0
+a = get RTARM 0
+if or lt a 4 gt a 6
+ret
+end
+if rtdead
+ret
+end
+t = mtfind
+want = ge t 0
+if eq a 6
+want = and want slbind t
+end
+if want
+if eq ckbind ulong t 0
+put RTT 0 t
+else
+put RTBF 0 1
+ret
+end
+end
+if rtdelarm
+if rtseloff
+ret
+end
+if eq dlbind get RTT 0 0
+put RTDB 0 1
+end
+end
+end
+
+note select: churn disabled the delta path for this session (sloff, after the last slpick)
+fn rtseloff to bool
+if eq get RTARM 0 6
+ret sloff
+end
+ret false
+end
+
+note ---- requests ----
+fn rtsavep to void
+for i ulong 64
+put RTPS i get R1P i
+put R1P i get RTQ i
+end
+end
+
+fn rtrestp to void
+for i ulong 64
+put R1P i get RTPS i
+end
+end
+
+note BEGIN: payload PROG, n, n values (p checked by the caller)
+fn rtbegin to ulong
+n = get RTQ 64
+if gt n 4096
+ret 5
+end
+rtsavep
+if ne r1valid 0
+rtrestp
+ret 2
+end
+for i ulong n
+if not r1indom get RTQ add 65 i
+rtrestp
+ret 3
+end
+end
+put R1N 0 n
+for i ulong n
+put R1X i get RTQ add 65 i
+end
+put RTSES 0 1
+put RTSN 0 add get RTSN 0 1
+put RTQN 0 0
+put RTNC 0 0
+put RTSD 0 1
+put RTST 6 add get RTST 6 1
+if gt get RTLIN 0 0
+if not rtdead
+rtrecheck
+end
+end
+if eq get RTARM 0 6
+slsess
+end
+if rtdelarm
+dlsreset
+end
+if eq get RTARM 0 3
+r1pdig
+end
+rtbind
+ret 0
+end
+
+fn rtprog to ulong
+rtsavep
+if ne r1valid 0
+rtrestp
+ret 2
+end
+if not r1alldom
+rtrestp
+ret 3
+end
+put RTNC 0 add get RTNC 0 1
+put RTST 8 add get RTST 8 1
+if rtdelarm
+dldrop
+end
+if eq get RTARM 0 3
+r1pdig
+end
+rtbind
+ret 0
+end
+
+note apply one validated change and tell the delta state
+fn rtapply op ulong a ulong b ulong to void
+old = r1apply op a b
+put RTNC 0 add get RTNC 0 1
+put RTSD 0 1
+put RTST 7 add get RTST 7 1
+if eq get RTDB 0 1
+v = b
+if eq op 5
+v = 0
+end
+if ne dlchg op a v old 0
+put RTDB 0 0
+end
+end
+end
+
+fn rtchange op ulong to ulong
+a = get RTQ 0
+b = ulong 0
+if ne op 5
+b = get RTQ 1
+end
+if lt r1chg op a b get R1N 0 0
+ret 3
+end
+rtapply op a b
+ret 0
+end
+
+note BATCH item i: validity against a state of n values (the new n or -1), and application
+fn rtitemchk i ulong n ulong to long
+q = add 1 mul i 3
+op = get RTQ q
+a = get RTQ add q 1
+ret r1chg op a get RTQ add q 2 n
+end
+
+fn rtitem i ulong to void
+q = add 1 mul i 3
+op = get RTQ q
+a = get RTQ add q 1
+rtapply op a get RTQ add q 2
+end
+
+fn rtbatch to ulong
+m = get RTQ 0
+if or lt m 1 gt m 1024
+ret 3
+end
+n = long get R1N 0
+for i ulong m
+n = rtitemchk i ulong n
+if lt n 0
+ret 3
+end
+end
+for i ulong m
+rtitem i
+end
+ret 0
+end
+
+note ---- QUERY ----
+fn rtfull route ulong to ulong
+r1full
+ret route
+end
+
+fn rtcache to ulong
+if eq get RTSD 0 1
+r1sdig
+put RTSD 0 0
+end
+for j ulong 4
+r1putw mul j 8 r1bswap get R1PD j
+r1putw add 40 mul j 8 r1bswap get R1SD j
+end
+r1putw 32 get R1N 0
+r1hash 72
+for j ulong 4
+put RTKEY j get R1HD j
+end
+n = get RTCN 0
+for e ulong n
+if rtckeq mul e 6
+put R1R 0 get RTCK add mul e 6 4
+put R1R 1 get RTCK add mul e 6 5
+ret 2
+end
+end
+r1full
+h = get RTCH 0
+b = mul h 6
+for j ulong 4
+put RTCK add b j get RTKEY j
+end
+put RTCK add b 4 get R1R 0
+put RTCK add b 5 get R1R 1
+put RTCH 0 rem add h 1 4096
+if lt n 4096
+put RTCN 0 add n 1
+end
+ret 1
+end
+
+fn rtckeq b ulong to bool
+if ne get RTCK b get RTKEY 0
+ret false
+end
+for j ulong 3
+if ne get RTCK add b add j 1 get RTKEY add j 1
+ret false
+end
+end
+ret true
+end
+
+fn rttap to ulong
+t0 = monons
+r1full
+ns = ulong sub monons t0
+if ne extap get RTSN 0 get RTQN 0 get RTNC 0 ns 0
+exit 12
+end
+ret 1
+end
+
+fn rtmethod to ulong
+t = get RTT 0
+if ge t 0
+mtrun ulong t
+ret 3
+end
+ret rtfull 1
+end
+
+note the delta path: rebuild after a drop, then dlres; 1 when it could not answer
+fn rtdelta to bool
+if eq get RTDB 0 0
+if eq dlbind get RTT 0 0
+put RTDB 0 1
+end
+end
+if eq get RTDB 0 1
+if eq dlres 0
+ret true
+end
+end
+ret false
+end
+
+fn rtselect to ulong
+meth = ge get RTT 0 0
+slset meth true
+p = slpick get RTNC 0
+if rtseloff
+if eq get RTDB 0 1
+dldrop
+put RTDB 0 0
+end
+end
+if eq p 4
+if rtdelta
+ret 4
+end
+end
+if and eq p 3 meth
+ret rtmethod
+end
+if meth
+if ne p 1
+ret rtmethod
+end
+end
+ret rtfull 1
+end
+
+fn rtroute to ulong
+a = get RTARM 0
+if eq a 1
+put R1R 0 0
+put R1R 1 0
+ret 0
+end
+if eq a 2
+ret rtfull 1
+end
+if eq a 3
+ret rtcache
+end
+if eq a 7
+ret rttap
+end
+rtrevq
+if or rtdead eq get RTBF 0 1
+ret rtfull 5
+end
+if eq a 4
+ret rtmethod
+end
+if eq a 5
+if rtdelta
+ret 4
+end
+ret rtmethod
+end
+ret rtselect
+end
+
+fn rtquery to void
+put RTQN 0 add get RTQN 0 1
+r = rtroute
+put RTNC 0 0
+put RTST r add get RTST r 1
+put RTOW 0 get R1R 0
+put RTOW 1 get R1R 1
+put RTOW 2 r
+rtresp 0 3
+end
+
+fn rtstats to void
+for k ulong 14
+put RTOW k get RTST k
+end
+put RTOW 10 get CKST 0
+put RTOW 11 get CKST 1
+put RTOW 12 get CKST 2
+put RTOW 13 get CKST 4
+for k ulong 12
+put RTOW add 14 k dlstat k
+end
+put RTOW 26 get SLDIS 0
+put RTOW 27 get SLREF 0
+put RTOW 28 get RTCN 0
+put RTOW 29 mtcount
+put RTOW 30 get RTLC 0
+put RTOW 31 get RTFLG 0
+rtresp 0 32
+end
+
+fn rtend to void
+rtresp 0 0
+if eq get RTARM 0 7
+fd = int get EXTFD 0
+r = fsync fd
+r = fclose fd
+end
+exit 0
+end
+
+note p matches op (K2)
+fn rtpok op ulong p ulong to bool
+if eq op 1
+if lt p 65
+ret false
+end
+n = get RTQ 64
+ret and le n 7169 eq p add 65 n
+end
+if or eq op 3 or eq op 4 eq op 6
+ret eq p 2
+end
+if eq op 5
+ret eq p 1
+end
+if eq op 7
+if lt p 1
+ret false
+end
+m = get RTQ 0
+ret and le m 2411 eq p add 1 mul m 3
+end
+if eq op 8
+ret eq p 64
+end
+ret eq p 0
+end
+
+fn rtop op ulong p ulong to void
+if not rtpok op p
+rtstat 4
+ret
+end
+if eq op 10
+rtend
+end
+if eq op 9
+rtstats
+ret
+end
+if eq op 1
+rtstat rtbegin
+ret
+end
+if eq get RTSES 0 0
+rtstat 6
+ret
+end
+if eq op 2
+rtquery
+ret
+end
+if eq op 7
+rtstat rtbatch
+ret
+end
+if eq op 8
+rtstat rtprog
+ret
+end
+rtstat rtchange op
+end
+
+fn rtreq to void
+op = rtword
+p = rtword
+if or or lt op 1 gt op 10 gt p 7234
+rtstat 4
+exit 4
+end
+for i ulong p
+put RTQ i rtword
+end
+rtop op p
+end
+
+fn main to int
+rtinit
+for o ulong 1000
+for i ulong 999999
+rtreq
+end
+end
+ret 4
+end
