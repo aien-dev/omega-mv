@@ -208,3 +208,11 @@ line. Error 14 names the line of the construct whose charge exceeds the fuel.
 7. The six-slot limit (§4) also applies in program mode.
 8. Inline functions are also compiled standalone, in source order, each with its own fuel (E14/E16).
    The fuel error therefore reports the first function in source order that runs out.
+
+## E18 (advisor review, 2026-10-25): no gate widening at cutover (supersedes E3 item 3)
+
+The compatibility wrappers `sha256_*` (status ≠ 0 → abort) are generated as out-of-line definitions in
+`src/omega_om_units.c` (bridge output `apic`). `src/omega_api_decl.h` (output `apih`) carries
+prototypes only. The freestanding `rx_cortex.o` therefore keeps exactly main's undefined symbols, and
+Makefile `RX_CX_FS_ALLOWED` is not changed. Adding `abort` or `omega2_*` to that list is refused,
+because it would weaken the freestanding gate.
