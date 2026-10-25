@@ -1,0 +1,7 @@
+fn tkappa r ulong to ulong
+k = mul 2 oxcore r
+if le oxn r 8
+k = add k 1
+end
+ret k
+end
