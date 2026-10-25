@@ -1,6 +1,7 @@
 note SPDX-License-Identifier: Apache-2.0
-note lib.om: REUSE-1 library generations (contract v1.0 section 3.4, clarifications K1 K3).
-note Part of every router (lbload, lblineage, lbcalpath) and of drive.om (lbpub and helpers).
+note lib.om: REUSE-1 library generations (contract v1.0 section 3.4, clarifications K1 K3 K16).
+note Part of every router (lbload, lblineage) and of drive.om (lbpub and helpers). lbload hands the
+note verified calibration bytes to the generation as a memfd on fd 7 (K16).
 note Needs sha256 (omsha), r1 and exp (exaload, exallow, EXAPATH, EXALEN) before it.
 note Manifest: 256 LE words in LBMAN, file bytes in LBMB; word 255 = FNV-1a 64 over the 2040 LE
 note bytes of words 0..254 (K3). CURRENT: 40 bytes, G LE then the 32 SHA-256 bytes of gen-G.man.
@@ -12,8 +13,8 @@ note  7 SHA-256(gen-G.man) differs from the CURRENT digest   8 CURRENT digest di
 note  9 magic   10 version   11 self-check   12 G differs from CURRENT or parent G >= G
 note  13 compiler SHA-256 is not the pinned omc   14 profile version   15 K > 16 or L > 8
 note  16 a reserved word is nonzero   17 ALLOW unreadable   18 a lineage digest not allowed
-note  19 gen-G.cal unreadable   20 gen-G.cal digest   21 gen-G.elf unreadable   22 memfd failed
-note  23 copy into the memfd failed   24 ELF digest   25 exec failed
+note  19 gen-G.cal unreadable or 4096 bytes or more   20 gen-G.cal digest   21 gen-G.elf unreadable
+note  22 memfd (or dup onto fd 7) failed   23 copy into a memfd failed   24 ELF digest   25 exec failed
 
 global LBMAN ulong 256
 global LBMB uchar 2048
@@ -32,7 +33,6 @@ global LBLD ulong 32
 global LBLN ulong 1
 global LBGEN ulong 1
 global LBCAL ulong 1
-global LBCP uchar 4096
 text LBTGEN "gen-"
 text LBTOM ".om"
 text LBTELF ".elf"
@@ -536,18 +536,57 @@ end
 ret 0
 end
 
-note calibration file digest (K1); 0, 19, 20
+note SHA-256 of LBIO[0..n) (n <= 4096) into LBH
+fn lbhio n ulong to void
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+for i ulong n
+put b i get LBIO i
+end
+omsha c b 0 0 w b8
+omsha c b n 1 w b8
+omsha c b 0 2 w b8
+lbdig w
+end
+
+note calibration handoff (K1, K16): gen-G.cal read once into LBIO, SHA-256 of exactly those bytes
+note against manifest 52..55, the same bytes written into a memfd left on fd 7 without CLOEXEC for
+note the generation (which reads /proc/self/fd/7, never LIBDIR). 0, 19 unreadable or not under
+note 4096 bytes, 20 digest, 22 memfd or dup failed, 23 write failed. No calibration: 0, fd 7 untouched.
 fn lbcalchk to int
 if lbzero 52 56
 ret 0
 end
 lbpgen get LBG 0 4 false
-n = lbhpath
-if lt n 0
+fd = lbopen 524288 0
+if lt fd 0
 ret 19
 end
+n = lbrdio fd 4096
+r = fclose fd
+if or lt n 1 ge n 4096
+ret 19
+end
+lbhio ulong n
 if not lbhmeq 52
 ret 20
+end
+m = memfd LBTMFD 0 len LBTMFD 0
+if lt m 0
+ret 22
+end
+mf = int m
+if ne lbwrio mf ulong n 0
+ret 23
+end
+if ne mf 7
+d = dupfd mf 7 0
+r = fclose mf
+if ne d 7
+ret 22
+end
 end
 ret 0
 end
@@ -668,24 +707,6 @@ if not lbzero 52 56
 put LBCAL 0 1
 end
 ret 0
-end
-
-note LIBDIR/gen-G.cal plus a 0 byte into LBCP; length, 0 = no calibration, < 0 refused
-fn lbcalpath to int
-r = lblineage
-if ne r 0
-ret neg r
-end
-if eq get LBCAL 0 0
-ret 0
-end
-lbpgen get LBG 0 4 false
-n = get LBPN 0
-for i ulong n
-put LBCP i get LBP i
-end
-put LBCP n 0
-ret int n
 end
 
 note drive.om side. Remove a stale unpublished generation g (crash leftovers) and CURRENT.tmp.

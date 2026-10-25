@@ -1,12 +1,14 @@
 note units: sha256 r1 exp lib
-note lib-load: lbload (contract 3.4, controls C6 C7 C9 C10), lblineage and lbcalpath. Every refusal is
+note lib-load: lbload (contract 3.4, controls C6 C7 C9 C10, K16), lblineage. Every refusal is
 note a mutant of a good library: the test builds generation 1 by hand (its own ELF as gen-1.elf, a
 note sealed manifest, lbpub), changes one thing, then runs itself as a router child
 note (argv ARM LIBDIR MANSHA ALLOW - -) and requires lbload's exact refusal code; the good library
 note must exec the generation (argc 8 child exits 77). Files live in argv 1 (run.om's temp dir),
 note else /tmp/reuse-test-lib-load-PID. Exit 0 pass, else 100 + the failed case number.
 note Child modes (argc 7): ARM method = exit lbload; lineage = exit 60 + LBLN (or the refusal);
-note calpath = exit 80 + (1 when a path came back, 0 for none) after checking LBCP.
+note calpath = exit 80 + LBCAL (80 - code when refused). Case 26 (K16): a library with calibration
+note loads; the generation overwrites LIBDIR/gen-1.cal and still reads exactly the verified bytes
+note from fd 7 (see tgen).
 text tbase "/tmp/reuse-test-lib-load-"
 text tself "/proc/self/exe"
 text tmeth "method"
@@ -355,7 +357,8 @@ put TK add o 1 uchar shr n 8
 ret add p n
 end
 
-note run this program as a router child: arm 2 method, 3 lineage, 4 calpath; dirsrc 5 or 9 (empty),
+note run this program as a router child: arm 2 method, 3 lineage, 4 calpath (lblineage, LBCAL);
+note dirsrc 5 or 9 (empty),
 note allowsrc 7 or 8; exit status, or 200 on a fork/wait failure
 fn trun arm ulong dirsrc ulong allowsrc ulong to int
 put TK 0 7
@@ -391,9 +394,10 @@ note changes: 0 none, 1 empty LIBDIR, 2 bad MANSHA, 3 no CURRENT, 4 CURRENT 39 b
 note manifest, 6 manifest 2047 bytes, 7 manifest byte flipped, 9 magic, 10 version, 11 self-check,
 note 12 G, 13 compiler SHA-256, 14 profile version, 15 K 17, 16 reserved word, 17 ALLOW missing,
 note 18 lineage REVOKED, 19 lineage absent, 20 no calibration file, 21 calibration byte flipped,
-note 22 no ELF, 23 ELF byte flipped, 24 SYNTHETIC admits, 25 empty lineage without ALLOW
+note 22 no ELF, 23 ELF byte flipped, 24 SYNTHETIC admits, 25 empty lineage without ALLOW,
+note 26 good library with calibration (generation checks fd 7, K16)
 fn tcase v ulong c ulong want int to int
-cal = or eq c 20 eq c 21
+cal = or or eq c 20 eq c 21 eq c 26
 nl = ulong 1
 if eq c 25
 nl = 0
@@ -532,7 +536,8 @@ lbpgen 2 2 true
 if ne tcopyself 0
 ret 3
 end
-r = tflip 2000
+note another ELF that still runs: one byte appended past the end of the file
+r = tflip lbfsize
 n = lbhpath
 for j ulong 4
 put LBMAN add 10 j get LBH j
@@ -563,7 +568,7 @@ end
 ret 0
 end
 
-note lblineage and lbcalpath in a good library with calibration (cal) or without
+note lblineage in a good library with calibration (cal, LBCAL 1) or without (LBCAL 0)
 fn tlineage v ulong cal bool to int
 if ne tprep v 1 cal 0
 ret 1
@@ -611,25 +616,63 @@ ret 59
 end
 ret add 60 int get LBLN 0
 end
-r = lbcalpath
-if lt r 0
-ret add 80 r
+r = lblineage
+if ne r 0
+ret sub 80 r
 end
-if eq r 0
-ret 80
+ret add 80 int get LBCAL 0
 end
-if ne get LBCP r 0
-ret 90
+
+note the exec'd generation (argc 8). With a calibration (K16): first the swap, gen-G.cal in LIBDIR
+note is overwritten with other bytes; then /proc/self/fd/7 must hold exactly the verified bytes
+note (1600 bytes i mod 256, SHA-256 = manifest 52..55). 77 ok, 70 lineage refused, 76 the swap
+note did not change LIBDIR, 78 digest, 79 fd 7 missing or other bytes
+fn tgen to int
+r = lblineage
+if ne r 0
+ret 70
 end
-if ne get LBCP sub r 4 46
-ret 91
+if eq get LBCAL 0 0
+ret 77
 end
-ret 81
+lbpgen get LBG 0 4 false
+fd = lbopen 524865 384
+for i ulong 1600
+put TB i 255
+end
+w = write fd TB 0 1600
+s = fclose fd
+n = lbhpath
+if lbhmeq 52
+ret 76
+end
+lbpz
+lbptx 8
+lbpc 55
+f7 = lbopen 524288 0
+if lt f7 0
+ret 79
+end
+m = read f7 TB 0 4096
+s = fclose f7
+if ne m 1600
+ret 79
+end
+for i ulong 1600
+if ne ulong get TB i and i 255
+ret 79
+end
+end
+n = lbhpath
+if not lbhmeq 52
+ret 78
+end
+ret 77
 end
 
 fn main to int
 if eq argcnt 8
-ret 77
+ret tgen
 end
 if eq argcnt 7
 ret tchild
@@ -637,9 +680,9 @@ end
 if ne tmkdir 0
 ret 99
 end
-cs = new ulong 26 0
-ws = new int 26 0
-for i ulong 26
+cs = new ulong 27 0
+ws = new int 27 0
+for i ulong 27
 put cs i i
 put ws i int i
 end
@@ -661,7 +704,8 @@ put ws 22 21
 put ws 23 24
 put ws 24 77
 put ws 25 77
-for i ulong 26
+put ws 26 77
+for i ulong 27
 if ne i 8
 r = tcase i get cs i get ws i
 if ne r 0
