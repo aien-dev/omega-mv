@@ -1,0 +1,12 @@
+note S4: write keeps its slice check on an unsized view (spec 6): off 2, n 3 on a count of 4 traps 3
+note before the call (exit 103) after the first write (off 1, n 3) printed AAA.
+om2
+fn g v view uchar * to void
+w = write 1 v 1 3
+w = write 1 v 2 3
+end
+fn main to int
+a = new uchar 4 65
+g a
+ret 0
+end

@@ -1,0 +1,66 @@
+OM2GATE START cases=seed/omc/om2/s4/s4.cases scratch=/tmp/om2c/s4/g-views-s4-cases
+IDENTITY omc /tmp/om2c/s4/omc-views sha256=f570e23c00266bff901d2d7ee52fd37421566820928288794482a4091cbdc372 pinned=f570e23c00266bff901d2d7ee52fd37421566820928288794482a4091cbdc372 match
+CASE s4-v-ok line=5
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/5.src > /tmp/om2c/s4/g-views-s4-cases/5.elf 2> /tmp/om2c/s4/g-views-s4-cases/5.cerr
+  $ /tmp/om2c/s4/g-views-s4-cases/5.elf < /dev/null > /tmp/om2c/s4/g-views-s4-cases/5.out 2> /tmp/om2c/s4/g-views-s4-cases/5.err
+VERDICT s4-v-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-len line=6
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/6.src > /tmp/om2c/s4/g-views-s4-cases/6.elf 2> /tmp/om2c/s4/g-views-s4-cases/6.cerr
+  $ /tmp/om2c/s4/g-views-s4-cases/6.elf < /dev/null > /tmp/om2c/s4/g-views-s4-cases/6.out 2> /tmp/om2c/s4/g-views-s4-cases/6.err
+VERDICT s4-v-len PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-write line=7
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/7.src > /tmp/om2c/s4/g-views-s4-cases/7.elf 2> /tmp/om2c/s4/g-views-s4-cases/7.cerr
+  $ /tmp/om2c/s4/g-views-s4-cases/7.elf < /dev/null > /tmp/om2c/s4/g-views-s4-cases/7.out 2> /tmp/om2c/s4/g-views-s4-cases/7.err
+VERDICT s4-v-write PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-trap-get line=8
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/8.src > /tmp/om2c/s4/g-views-s4-cases/8.elf 2> /tmp/om2c/s4/g-views-s4-cases/8.cerr
+  $ /tmp/om2c/s4/g-views-s4-cases/8.elf < /dev/null > /tmp/om2c/s4/g-views-s4-cases/8.out 2> /tmp/om2c/s4/g-views-s4-cases/8.err
+VERDICT s4-v-trap-get PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-trap-put line=9
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/9.src > /tmp/om2c/s4/g-views-s4-cases/9.elf 2> /tmp/om2c/s4/g-views-s4-cases/9.cerr
+  $ /tmp/om2c/s4/g-views-s4-cases/9.elf < /dev/null > /tmp/om2c/s4/g-views-s4-cases/9.out 2> /tmp/om2c/s4/g-views-s4-cases/9.err
+VERDICT s4-v-trap-put PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-trap-write line=10
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/10.src > /tmp/om2c/s4/g-views-s4-cases/10.elf 2> /tmp/om2c/s4/g-views-s4-cases/10.cerr
+  $ /tmp/om2c/s4/g-views-s4-cases/10.elf < /dev/null > /tmp/om2c/s4/g-views-s4-cases/10.out 2> /tmp/om2c/s4/g-views-s4-cases/10.err
+VERDICT s4-v-trap-write PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-fm-entry line=11
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/11.src > /tmp/om2c/s4/g-views-s4-cases/11.elf 2> /tmp/om2c/s4/g-views-s4-cases/11.cerr
+VERDICT s4-v-fm-entry PASS compile exit=0 expected=0 sha256=50ddf39453988ba55a1b7d9bbba7f1ae7c5c5c3f7414c859acf17118fa4886b8 stderr=match
+CASE s4-v-slots6 line=12
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/12.src > /tmp/om2c/s4/g-views-s4-cases/12.elf 2> /tmp/om2c/s4/g-views-s4-cases/12.cerr
+VERDICT s4-v-slots6 PASS compile exit=0 expected=0 sha256=0dc32d259ec68c039ce68c68655fa59364f0f2a1df61730763adca50b9435bad stderr=match
+CASE s4-v-bad-slots7 line=13
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/13.src > /tmp/om2c/s4/g-views-s4-cases/13.elf 2> /tmp/om2c/s4/g-views-s4-cases/13.cerr
+VERDICT s4-v-bad-slots7 PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-v-bad-slots-last line=14
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/14.src > /tmp/om2c/s4/g-views-s4-cases/14.elf 2> /tmp/om2c/s4/g-views-s4-cases/14.cerr
+VERDICT s4-v-bad-slots-last PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-v-bad-sized line=15
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/15.src > /tmp/om2c/s4/g-views-s4-cases/15.elf 2> /tmp/om2c/s4/g-views-s4-cases/15.cerr
+VERDICT s4-v-bad-sized PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-v-bad-type line=16
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/16.src > /tmp/om2c/s4/g-views-s4-cases/16.elf 2> /tmp/om2c/s4/g-views-s4-cases/16.cerr
+VERDICT s4-v-bad-type PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-v-bad-viewedit line=17
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/17.src > /tmp/om2c/s4/g-views-s4-cases/17.elf 2> /tmp/om2c/s4/g-views-s4-cases/17.cerr
+VERDICT s4-v-bad-viewedit PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-put line=18
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/18.src > /tmp/om2c/s4/g-views-s4-cases/18.elf 2> /tmp/om2c/s4/g-views-s4-cases/18.cerr
+VERDICT s4-v-bad-put PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-read line=19
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/19.src > /tmp/om2c/s4/g-views-s4-cases/19.elf 2> /tmp/om2c/s4/g-views-s4-cases/19.cerr
+VERDICT s4-v-bad-read PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-fresh line=20
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/20.src > /tmp/om2c/s4/g-views-s4-cases/20.elf 2> /tmp/om2c/s4/g-views-s4-cases/20.cerr
+VERDICT s4-v-bad-fresh PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-v-bad-local line=21
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/21.src > /tmp/om2c/s4/g-views-s4-cases/21.elf 2> /tmp/om2c/s4/g-views-s4-cases/21.cerr
+VERDICT s4-v-bad-local PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-v-bad-global line=22
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/22.src > /tmp/om2c/s4/g-views-s4-cases/22.elf 2> /tmp/om2c/s4/g-views-s4-cases/22.cerr
+VERDICT s4-v-bad-global PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-v-om1 line=23
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-cases/23.src > /tmp/om2c/s4/g-views-s4-cases/23.elf 2> /tmp/om2c/s4/g-views-s4-cases/23.cerr
+VERDICT s4-v-om1 PASS compile exit=16 expected=16 refused with the expected error
+OM2GATE PASS cases=19 pass=19 fail=0 invalid=0 not_run=0

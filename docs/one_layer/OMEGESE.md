@@ -724,6 +724,16 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   line `ret seal NAME or shl ulong x 32 ulong x`, x a uint parameter, then `end` (the check is erased,
   rule `dup32`: uint values are held zero-extended). With `om2 diag` each seal compiled writes
   `omc-check 1 kept|erased line=N rule=dup32|-` (N the seal line) with the omc-site records.
+- **Unsized views.** A parameter `NAME view T *` / `NAME edit T *` takes an array of element type T of any
+  length (error 7 for another type): a sized array (E2, also on internal functions), an unsized one or a
+  text (view only). `len NAME` is its run-time count, a ulong value. Every index into it, a number too,
+  is checked at run time against the count (CMP, B.HS trap 3; no error 21, no elimination); `read`,
+  `write`, `pread`, `pwrite` and the host words keep their slice checks against the count. An unsized
+  array never goes to a sized parameter (error 7); view / edit rules, distinct names (19) and fresh (27)
+  are as for sized arrays. `new` stays sized; `fresh` needs a length (error 16).
+- **Parameter slots.** Parameters take x0..x5 in order, in both modes: an unsized view or edit two slots
+  (pointer, then count), every other parameter one (a scalar, a sized array, a layout or a struct by its
+  pointer). A parameter that needs a seventh slot is error 9 on the fn line.
 
 ## 10. Native host extension (2026-10-23)
 

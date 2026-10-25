@@ -1,0 +1,5 @@
+note S4 (spec 4): two unsized views and three scalars need seven slots: error 9 on the fn line.
+om2
+fn f a view uchar * b ulong c view uchar * d ulong e ulong to ulong
+ret add d len a
+end

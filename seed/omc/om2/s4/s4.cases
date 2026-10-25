@@ -1,0 +1,23 @@
+# S4 (#747) fixtures for the OM-2 compiler: unsized views, part, out, export and parameter slots (spec 4
+# parameter slots, 6; errata E1, E2, E8). Run by seed/qualification/om2/gate.om (L836) from the repository
+# root:  gate OMC OMC_SHA256 seed/omc/om2/s4/s4.cases SCRATCH
+## unsized views, len, E2
+s4-v-ok run seed/omc/om2/s4/v-ok.om - - - 0
+s4-v-len run seed/omc/om2/s4/v-len.om - - - 0
+s4-v-write run seed/omc/om2/s4/v-write.om - file:seed/omc/om2/s4/v-write.out - 0
+s4-v-trap-get run seed/omc/om2/s4/v-trap-get.om - - - 103
+s4-v-trap-put run seed/omc/om2/s4/v-trap-put.om - - - 103
+s4-v-trap-write run seed/omc/om2/s4/v-trap-write.om - file:seed/omc/om2/s4/v-trap-write.out - 103
+s4-v-fm-entry emit seed/omc/om2/s4/v-fm-entry.om sha:50ddf39453988ba55a1b7d9bbba7f1ae7c5c5c3f7414c859acf17118fa4886b8 - 0
+s4-v-slots6 emit seed/omc/om2/s4/v-slots6.om sha:0dc32d259ec68c039ce68c68655fa59364f0f2a1df61730763adca50b9435bad - 0
+s4-v-bad-slots7 emit seed/omc/om2/s4/v-bad-slots7.om - err:3:9 9
+s4-v-bad-slots-last emit seed/omc/om2/s4/v-bad-slots-last.om - err:3:9 9
+s4-v-bad-sized refuse seed/omc/om2/s4/v-bad-sized.om 7
+s4-v-bad-type refuse seed/omc/om2/s4/v-bad-type.om 7
+s4-v-bad-viewedit refuse seed/omc/om2/s4/v-bad-viewedit.om 20
+s4-v-bad-put refuse seed/omc/om2/s4/v-bad-put.om 20
+s4-v-bad-read refuse seed/omc/om2/s4/v-bad-read.om 20
+s4-v-bad-fresh refuse seed/omc/om2/s4/v-bad-fresh.om 16
+s4-v-bad-local refuse seed/omc/om2/s4/v-bad-local.om 16
+s4-v-bad-global refuse seed/omc/om2/s4/v-bad-global.om 19
+s4-v-om1 refuse seed/omc/om2/s4/v-om1.om 16

@@ -196,6 +196,16 @@ global aw_w ulong 1
 global aw_l ulong 1
 global aw_nl ulong 1
 
+note ---- OM-2 section 6 unsized views (spec 4 slots, 6, erratum E2). An unsized `view T *` / `edit T *`
+note name has length 0 in nm_len and its run-time element count in register nm_lr. Parameters take the
+note registers x0..x5 by slots: an unsized array two (pointer, then count), every other parameter one
+note (pwid, pslot); psl counts the slots of the fn line being read (6 at most, error 9). ul_k / ul_v: the
+note count (kind 1 register / 3 number) of argument i of the call at value depth d, at d * 6 + i ----
+global nm_lr uchar 1024
+global psl ulong 1
+global ul_k ulong 6156
+global ul_v ulong 6156
+
 note ======== leaf helpers ========
 
 note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
@@ -207,6 +217,26 @@ if lt i 15
 ret add i 1
 end
 ret 17
+end
+
+note pwid: the parameter slots of fn table entry p: 2 for an unsized array (pointer, count), else 1
+fn pwid p ulong to ulong
+k = ulong get fn_pk p
+if and or eq k 2 eq k 3 eq get fn_pl p 0
+ret 2
+end
+ret 1
+end
+
+note pslot: the first slot (register) of parameter i of function f (index)
+fn pslot f ulong i ulong to ulong
+s = ulong 0
+j = ulong 0
+while lt j i
+s = add s pwid add mul f 6 j
+j = add j 1
+end
+ret s
 end
 
 note ---- error reporting ----
@@ -2325,6 +2355,7 @@ put nm_kind n uchar k
 put nm_addr n a
 put nm_lay n 0
 put nm_fr n 0
+put nm_lr n 0
 put nn 0 add n 1
 end
 
@@ -3528,6 +3559,8 @@ note elemaddr: array name e (index + 1), index value (kind, number or register, 
 note be inside the array (error 21) and needs no check; a register index: CMP Xi, #len (C6.2.96) or CMP Xi,
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
 note (the array's register, or a new one holding its address), ea_i index register. om4 ELEMADDR.
+note OM-2 unsized array (nm_len 0): every index, a number too, is checked against its count register nm_lr
+note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6).
 fn elemaddr e ulong k ulong v ulong t ulong to void
 if or eq t 1 ge t 10
 fail 7
@@ -3535,6 +3568,11 @@ end
 i = sub e 1
 ln = get nm_len i
 x = v
+if eq ln 0
+x = matreg k v t
+emit or or 3942645791 shl ulong get nm_lr i 16 shl x 5
+trapc 2 3
+else
 if eq k 3
 if ge v ln
 fail 21
@@ -3555,6 +3593,7 @@ matconst y ln
 emit or or 3942645791 shl y 16 shl v 5
 end
 trapc 2 3
+end
 end
 put ea_i 0 x
 if ge get nm_kind i 4
@@ -3585,6 +3624,8 @@ note arrarg: an array argument for parameter pi of function f (index + 1): [view
 note length must equal the parameter's; an edit parameter needs a writable array (local or edit, error 20;
 note a view passed to it is error 20, OMEGESE.md 9.4); a global is never passed (error 19). Out: rk 5
 note (register rv) or 6 (address rv, a text), rt the name entry. om4 ARRARG.
+note OM-2: an unsized parameter (length 0) takes an array of any length (erratum E2), whose count goes to
+note ul_k / ul_v at depth * 6 + pi: its count register, or its length as a number.
 fn arrarg f ulong pi ulong to void
 md = ulong 0
 aa_word
@@ -3629,8 +3670,19 @@ end
 if ne get nm_type i get fn_pt p
 fail 7
 end
+ux = add mul get depth 0 6 pi
+if eq get fn_pl p 0
+if eq get nm_len i 0
+put ul_k ux 1
+put ul_v ux ulong get nm_lr i
+else
+put ul_k ux 3
+put ul_v ux get nm_len i
+end
+else
 if ne get nm_len i get fn_pl p
 fail 7
+end
 end
 put rt 0 e
 if eq k 5
@@ -3802,10 +3854,14 @@ if ne get nm_type sub e 1 2
 fail 7
 end
 t = alloc
+l = ulong get nm_lr sub e 1
+if ne get nm_len sub e 1 0
+l = t
 matconst t get nm_len sub e 1
-emit or or 3942645791 shl rn 5 shl t 16
+end
+emit or or 3942645791 shl rn 5 shl l 16
 trapc 8 3
-e3 3405774848 t t rn
+e3 3405774848 t l rn
 emit or or 3942645791 shl ro 5 shl t 16
 trapc 8 3
 end
@@ -3864,7 +3920,12 @@ np = get fr add cb 18
 i = ulong 0
 while lt i np
 q = add cb mul i 3
-loadarg i get fr q get fr add q 1
+s = pslot sub f 1 i
+loadarg s get fr q get fr add q 1
+if eq pwid add mul sub f 1 6 i 2
+ux = add mul div cb 32 6 i
+loadarg add s 1 get ul_k ux get ul_v ux
+end
 i = add i 1
 end
 ca_bl f
@@ -5768,6 +5829,10 @@ e = arrname
 if ge get nm_kind sub e 1 6
 fail 7
 end
+if eq get nm_len sub e 1 0
+vdone 1 ulong get nm_lr sub e 1 5
+ret
+end
 vdone 3 get nm_len sub e 1 5
 ret
 end
@@ -6113,12 +6178,16 @@ end
 end
 t = typeword
 elemtype t
+if and ne get om2 0 0 ne peekstar 0
+tok
+else
 ln = lenval 16
 arrlen ln
 if ne get om2 0 0
 if eq peekw 183
 tok
 fz_par f np k ln
+end
 end
 end
 else
@@ -6136,7 +6205,10 @@ end
 end
 end
 end
-addname pw poolc np t ln k 0
+addname pw poolc get psl 0 t ln k 0
+if and ne k 0 eq ln 0
+put nm_lr sub get nn 0 1 uchar poolc add get psl 0 1
+end
 fz_bind add mul f 6 np ln
 p = add mul f 6 np
 put fn_pt p uchar t
@@ -6178,7 +6250,7 @@ put fn_ret f uchar r
 put fn_np f uchar np
 put stkbytes 0 0
 put dead 0 0
-put npar 0 np
+put npar 0 get psl 0
 put nslot 0 0
 put held 0 0
 put nb 0 0
@@ -6230,6 +6302,7 @@ put fuel 0 0
 put fz_n 0 0
 end
 put nn 0 get nglob 0
+put psl 0 0
 np = ulong 0
 go = true
 while go
@@ -6252,11 +6325,15 @@ if ne c 0
 fail 16
 end
 newname pw get tl 0 get ts 0
-if ge np 6
+if ge get psl 0 6
 fail 9
 end
 fn_p f np pw
 put fn_pn add mul f 6 np pw
+put psl 0 add get psl 0 pwid add mul f 6 np
+if gt get psl 0 6
+fail 9
+end
 np = add np 1
 end
 end
@@ -6729,6 +6806,26 @@ sf_val w t kr sn sh
 end
 
 note ======== OM-2 section 4: unroll, inline, folding, the growth bound and trap-site records ========
+note peekstar: 1 when the next word is `*` (an unsized array, OM-2), without reading it
+fn peekstar to ulong
+c0 = get cur 0
+l0 = get line 0
+a0 = get tka 0
+b0 = get tkb 0
+tok
+r = ulong 0
+if and eq get tk 0 1 eq get tl 0 1
+if eq get tw 0 42
+r = ulong 1
+end
+end
+put cur 0 c0
+put line 0 l0
+put tka 0 a0
+put tkb 0 b0
+ret r
+end
+
 note peekw: the keyword code of the next word (0 for anything else) without reading it
 fn peekw to ulong
 c0 = get cur 0
@@ -6867,7 +6964,8 @@ end
 
 note inl_par: bind parameter i of inline function fe to its argument in frame cb. A scalar held in a
 note temporary register (pool index hb or above) is taken as it is; any other scalar is copied to a new
-note register. An array or struct takes its base register; a text's address is loaded into one.
+note register. An array or struct takes its base register; a text's address is loaded into one. An
+note unsized array parameter also takes its count register, or a new one holding a number count.
 fn inl_par fe ulong cb ulong i ulong hb ulong to void
 p = add mul sub fe 1 6 i
 q = add cb mul i 3
@@ -6890,7 +6988,21 @@ matconst r v
 end
 end
 inl_add p r
+if eq pwid p 2
+inl_lr add mul div cb 32 6 i
+end
 fz_inl p get fr add q 2
+end
+
+note inl_lr: the unsized parameter name just added gets the count of argument ux (ul_k / ul_v): its
+note register, or a new one holding the number
+fn inl_lr ux ulong to void
+lr = get ul_v ux
+if ne get ul_k ux 1
+lr = alloc
+matconst lr get ul_v ux
+end
+put nm_lr sub get nn 0 1 uchar lr
 end
 
 note inl_add: the name of parameter slot p on register r (a view struct is name kind 8, an edit one 7)
@@ -8310,9 +8422,9 @@ t = add si 16
 ln = ulong get st_cells si
 sk = add k 4
 if eq k 2
-addname pw poolc np t ln 8 0
+addname pw poolc get psl 0 t ln 8 0
 else
-addname pw poolc np t ln 7 0
+addname pw poolc get psl 0 t ln 7 0
 end
 p = add mul f 6 np
 put fn_pt p uchar t
@@ -9321,7 +9433,7 @@ end
 note fn_p_ly: parameter pw is a layout (view k 2 / edit k 3): a uchar array of SIZE bytes, name kind 2 / 3
 fn fn_p_ly f ulong np ulong pw ulong lid ulong k ulong to void
 ln = get ly_size sub lid 1
-addname pw poolc np 2 ln k 0
+addname pw poolc get psl 0 2 ln k 0
 put nm_lay sub get nn 0 1 uchar lid
 p = add mul f 6 np
 put fn_pt p 2

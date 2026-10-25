@@ -1,0 +1,13 @@
+# S4 compiled mutants of omc.om. Expected verdicts fixed in advance: ctl-* PASS, m-* FAIL (detected).
+deadline 60
+cc seed/omc/omc.om
+ctl-v-ok run seed/omc/om2/s4/v-ok.om - - - 0
+ctl-v-trap-get run seed/omc/om2/s4/v-trap-get.om - - - 103
+# unsized view: a number index left unchecked (check elimination on an unsized view)
+subst seed/omc/om2/s4/mut/uce.from seed/omc/om2/s4/mut/uce.to
+cc seed/omc/omc.om
+m-uce run seed/omc/om2/s4/v-trap-get.om - - - 103
+# parameter slots: every parameter one slot at the call (the count slot of an unsized view not skipped)
+subst seed/omc/om2/s4/mut/slot.from seed/omc/om2/s4/mut/slot.to
+cc seed/omc/omc.om
+m-slot run seed/omc/om2/s4/v-ok.om - - - 0
