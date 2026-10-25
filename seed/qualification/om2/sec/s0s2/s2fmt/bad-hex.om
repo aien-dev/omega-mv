@@ -1,0 +1,6 @@
+note omegese-om2.md 2 line 70 and 56: malformed rest (uppercase hex, error 6) is refused, nothing on stdout.
+om2
+fn main  to int
+x = int 0xFF
+ret x
+end

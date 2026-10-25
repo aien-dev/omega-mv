@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 3 line 78: signed x is error 7. x byte, rotl; refused at line 6 (the rotl).
+om2
+fn main to int
+x = byte 5
+y = rotl x 1
+ret 0
+end

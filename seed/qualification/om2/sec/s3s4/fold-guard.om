@@ -1,0 +1,40 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 102-104: inside unrolled or inlined bodies only, all-constant operations
+note fold with OM-1 arithmetic; an operation that would trap is not folded, so a guarded
+note if ne i 0 / div 100 i compiles and behaves as before (no compile error at the i = 0 copy).
+note Lines: unsigned div, unsigned rem, signed long div under the guard, and an inlined guard q.
+note Twin fold-guard-rolled.om (unroll and inline removed) has the same expected stdout:
+note oracle/s3s4/exp/fold-guard.out (python3, oracle/s3s4/oracle.py).
+om2
+fn q a ulong b ulong to ulong inline
+if eq b 0
+ret 0
+end
+ret div a b
+end
+fn main to int
+s = ulong 0
+for i ulong 4 unroll
+if ne i 0
+s = add s div 100 i
+end
+end
+pu s
+r = ulong 0
+for i ulong 4 unroll
+if ne i 0
+r = add r rem 101 i
+end
+end
+pu r
+t = long 0
+for i long 4 unroll
+if ne i 0
+t = add t div 1000000 i
+end
+end
+pu ulong t
+pu q 100 0
+pu q 100 7
+ret 0
+end

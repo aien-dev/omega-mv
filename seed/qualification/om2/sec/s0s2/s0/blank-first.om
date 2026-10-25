@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 line 13, literal reading: the first line that is not a note is the blank line
+note below, not om2, so the unit is OM-1 and keeps its OM-1 verdict (C1): error 16 at the om2 line.
+
+om2
+fn main to int
+ret 0
+end

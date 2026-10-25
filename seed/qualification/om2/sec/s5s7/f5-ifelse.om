@@ -1,0 +1,18 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, line 122: element 0 written in both arms of if/else is in the intersection at
+note the join: accepted. stdout 11 then 22 (oracle exp/f5-ifelse.out).
+om2
+fn f s edit uchar 8 fresh c ulong to ulong
+if eq c 1
+put s 0 11
+else
+put s 0 22
+end
+ret ulong get s 0
+end
+fn main to int
+a = new uchar 8 0
+putd f a 1
+putd f a 2
+ret 0
+end

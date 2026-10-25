@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 line 58: 0x2a and 42 compile identically (same case with its decimal partner).
+om2
+fn main to int
+x = ulong 18446744073709551615
+y = ulong 255
+ret int and x y
+end

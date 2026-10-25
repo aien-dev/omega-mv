@@ -1,0 +1,328 @@
+# SPDX-License-Identifier: Apache-2.0
+# L836 Phase B lane FixLex: omegese-om2.md sections 0, 1, 2 (contract sha256 245bb74e..0881,
+# errata E1/E2/E4/E6 on aien-dev om2/contract fd9e05a2). Paths relative to the worktree root.
+# Expected stdout/stderr files under sec/s0s2/exp come from oracle/s0s2/oracle.py (python3 3.12.3),
+# never from a compiler. OM-1 codes/lines come from the OM-1 definition: the pinned omc 734f0a39
+# (contract 0 line 11) and C1 (line 17); they are cross-checked in pinned.cases.
+# Run against a CANDIDATE OM-2 compiler. Each case's contract citation is the # line above it.
+# ======== section 0: opt-in (line 13), OM-1 refuses the line (line 14), C1 (line 17)
+# line 13: om2 after note lines makes an OM-2 unit (accepted, exit 7)
+s0-optin-min run seed/qualification/om2/sec/s0s2/s0/optin-min.om - - - 7
+# line 36: om2 diag is an opt-in line too
+s0-optin-diag run seed/qualification/om2/sec/s0s2/s0/optin-diag.om - - - 7
+# lines 36-37: accepted diag unit; stderr may carry omc-site records (4 line 115)
+s0-optin-diag-emit emit seed/qualification/om2/sec/s0s2/s0/optin-diag.om any any 0
+# README A3: om2 diag only adds stderr records (lines 34-37, 116): same artifact as om2
+s0-optin-diag-same same seed/qualification/om2/sec/s0s2/s0/optin-min.om seed/qualification/om2/sec/s0s2/s0/optin-diag.om
+# lines 13/36: not exactly om2/om2 diag as first non-note line, so an OM-1 unit; C1 line 17 keeps the OM-1 error
+s0-notfirst emit seed/qualification/om2/sec/s0s2/s0/notfirst.om - err:7:16 16
+# lines 13/36: not exactly om2/om2 diag as first non-note line, so an OM-1 unit; C1 line 17 keeps the OM-1 error
+s0-trail-space emit seed/qualification/om2/sec/s0s2/s0/trail-space.om - err:4:16 16
+# lines 13/36: not exactly om2/om2 diag as first non-note line, so an OM-1 unit; C1 line 17 keeps the OM-1 error
+s0-trail-word emit seed/qualification/om2/sec/s0s2/s0/trail-word.om - err:4:16 16
+# lines 13/36: not exactly om2/om2 diag as first non-note line, so an OM-1 unit; C1 line 17 keeps the OM-1 error
+s0-trail-diagx emit seed/qualification/om2/sec/s0s2/s0/trail-diagx.om - err:4:16 16
+# lines 13/36: not exactly om2/om2 diag as first non-note line, so an OM-1 unit; C1 line 17 keeps the OM-1 error
+s0-double-space emit seed/qualification/om2/sec/s0s2/s0/double-space.om - err:4:16 16
+# lines 13/36: not exactly om2/om2 diag as first non-note line, so an OM-1 unit; C1 line 17 keeps the OM-1 error
+s0-indent emit seed/qualification/om2/sec/s0s2/s0/indent.om - err:4:16 16
+# lines 13/36: not exactly om2/om2 diag as first non-note line, so an OM-1 unit; C1 line 17 keeps the OM-1 error
+s0-upper emit seed/qualification/om2/sec/s0s2/s0/upper.om - err:4:16 16
+# line 13 literal reading (README A1): a blank first non-note line makes the unit OM-1; C1 line 17 keeps the OM-1 error
+s0-blank-first emit seed/qualification/om2/sec/s0s2/s0/blank-first.om - err:5:16 16
+# lines 14-16: OM-1 user names spelled like OM-2 words keep their meaning (C1 line 17)
+s0-names-fn run seed/qualification/om2/sec/s0s2/s0/names-fn.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/names-fn.out - 0
+# lines 14-16: OM-1 user names spelled like OM-2 words keep their meaning (C1 line 17)
+s0-names-var run seed/qualification/om2/sec/s0s2/s0/names-var.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/names-var.out - 0
+# C1 line 17: OM-1 accepts CR LF today; the CR refusal is the formatter's (2 line 66, E6 g)
+s0-om1-crlf run seed/qualification/om2/sec/s0s2/s0/om1-crlf.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/om1-crlf.out - 5
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-unroll emit seed/qualification/om2/sec/s0s2/s0/w-unroll.om - err:5:5 5
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-inline emit seed/qualification/om2/sec/s0s2/s0/w-inline.om - err:4:5 5
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-fresh emit seed/qualification/om2/sec/s0s2/s0/w-fresh.om - err:4:16 16
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-rotr emit seed/qualification/om2/sec/s0s2/s0/w-rotr.om - err:6:3 3
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-abstract emit seed/qualification/om2/sec/s0s2/s0/w-abstract.om - err:4:16 16
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-layout emit seed/qualification/om2/sec/s0s2/s0/w-layout.om - err:4:16 16
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-export emit seed/qualification/om2/sec/s0s2/s0/w-export.om - err:4:16 16
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-part emit seed/qualification/om2/sec/s0s2/s0/w-part.om - err:8:3 3
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-viewstar emit seed/qualification/om2/sec/s0s2/s0/w-viewstar.om - err:4:16 16
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-out emit seed/qualification/om2/sec/s0s2/s0/w-out.om - err:4:16 16
+# line 14: OM-2 words are recognised only in OM-2 units; C1 line 17 keeps the OM-1 error
+s0-w-hex emit seed/qualification/om2/sec/s0s2/s0/w-hex.om - err:5:6 6
+# line 14 + errata E6 Q1: an OM-2 reserved word declared as a name in an OM-2 unit is error 16
+s0-q1-fn-rotr emit seed/qualification/om2/sec/s0s2/s0/q1-fn-rotr.om - err:5:16 16
+# line 14 + errata E6 Q1: an OM-2 reserved word declared as a name in an OM-2 unit is error 16
+s0-q1-param-part emit seed/qualification/om2/sec/s0s2/s0/q1-param-part.om - err:5:16 16
+# line 14 + errata E6 Q1: an OM-2 reserved word declared as a name in an OM-2 unit is error 16
+s0-q1-var-fresh emit seed/qualification/om2/sec/s0s2/s0/q1-var-fresh.om - err:6:16 16
+# line 14 + errata E6 Q1: an OM-2 reserved word declared as a name in an OM-2 unit is error 16
+s0-q1-var-at emit seed/qualification/om2/sec/s0s2/s0/q1-var-at.om - err:6:16 16
+# line 14 + errata E6 Q1: an OM-2 reserved word declared as a name in an OM-2 unit is error 16
+s0-q1-fn-layout emit seed/qualification/om2/sec/s0s2/s0/q1-fn-layout.om - err:5:16 16
+# ======== section 1: diagnostics (lines 34-49), record fields per errata E4 and E6 Q2
+# file:*.err = exact stderr; tok:*.tok = every determined word (README Q2)
+# lines 34-46 + E4 + E6 Q2: tokens left after the expression: sev=error, span = the first extra token 3, expect=newline. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-left emit seed/qualification/om2/sec/s0s2/s1/d-left.om - file:seed/qualification/om2/sec/s0s2/exp/d-left.err 5
+# lines 34-46 + E4 + E6 Q2: plain om2 twin of d-left: only the human line, no record. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-left-plain emit seed/qualification/om2/sec/s0s2/s1/d-left-plain.om - file:seed/qualification/om2/sec/s0s2/exp/d-left-plain.err 5
+# lines 34-46 + E4 + E6 Q2: tokens left and the input ends there (no final LF): no continuation is accepted, so sev=error. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-eof-left emit seed/qualification/om2/sec/s0s2/s1/d-eof-left.om - file:seed/qualification/om2/sec/s0s2/exp/d-eof-left.err 5
+# lines 34-46 + E4 + E6 Q2: input ends (no final LF) inside an expression: sev=incomplete, empty span len-len, found=-, expect=value. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-eof-mid emit seed/qualification/om2/sec/s0s2/s1/d-eof-mid.om - file:seed/qualification/om2/sec/s0s2/exp/d-eof-mid.err 4
+# lines 34-46 + E4 + E6 Q2: input ends before the function's end: sev=incomplete, empty span at end of input. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-eof-noend emit seed/qualification/om2/sec/s0s2/s1/d-eof-noend.om - file:seed/qualification/om2/sec/s0s2/exp/d-eof-noend.err 15
+# lines 34-46 + E4 + E6 Q2: line ends before an operand, more input follows: not at end of input, so sev=error. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-mid-short emit seed/qualification/om2/sec/s0s2/s1/d-mid-short.om - tok:seed/qualification/om2/sec/s0s2/exp/d-mid-short.tok 4
+# lines 34-46 + E4 + E6 Q2: uppercase hex literal: error 6, sev=error, span = the literal 0xFF. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-hexupper emit seed/qualification/om2/sec/s0s2/s1/d-hexupper.om - file:seed/qualification/om2/sec/s0s2/exp/d-hexupper.err 6
+# lines 34-46 + E4 + E6 Q2: plain om2 twin of d-hexupper: only the human line, no record. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-hexupper-plain emit seed/qualification/om2/sec/s0s2/s1/d-hexupper-plain.om - file:seed/qualification/om2/sec/s0s2/exp/d-hexupper-plain.err 6
+# lines 34-46 + E4 + E6 Q2: 0xffffffff for int: error 8, sev=error, span = the literal. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-hexrange emit seed/qualification/om2/sec/s0s2/s1/d-hexrange.om - file:seed/qualification/om2/sec/s0s2/exp/d-hexrange.err 8
+# lines 34-46 + E4 + E6 Q2: a 42-byte literal (40 digits, error 6): found holds at most 32 bytes (the first 32). Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-longtok emit seed/qualification/om2/sec/s0s2/s1/d-longtok.om - file:seed/qualification/om2/sec/s0s2/exp/d-longtok.err 6
+# lines 34-46 + E4 + E6 Q2: call to a function that is not declared: sev=unknown, span = the name foo. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-unknown-fn emit seed/qualification/om2/sec/s0s2/s1/d-unknown-fn.om - file:seed/qualification/om2/sec/s0s2/exp/d-unknown-fn.err 3
+# lines 34-46 + E4 + E6 Q2: new of a struct that is not declared: sev=unknown, span = the name Pt. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-unknown-struct emit seed/qualification/om2/sec/s0s2/s1/d-unknown-struct.om - file:seed/qualification/om2/sec/s0s2/exp/d-unknown-struct.err 16
+# lines 34-46 + E4 + E6 Q2: parameter of a struct type that is not declared: sev=unknown, span = Pt. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-unknown-sparam emit seed/qualification/om2/sec/s0s2/s1/d-unknown-sparam.om - file:seed/qualification/om2/sec/s0s2/exp/d-unknown-sparam.err 16
+# lines 34-46 + E4 + E6 Q2: incomplete argument list (input ends) of a call to a function whose signature has not been read: sev=unknown. Stdout empty on refusal (line 35); no repair text (line 49)
+s1-d-unknown-args emit seed/qualification/om2/sec/s0s2/s1/d-unknown-args.om - file:seed/qualification/om2/sec/s0s2/exp/d-unknown-args.err 3
+# E4 col/span, E6 Q2
+s1-d-mid-short-line notrun E6 Q2 makes the LF the span, but whether the record's line= (and expect=) is the LF's line or the human line N (one later in OM-1) is not fixed; the tok case checks the rest
+# ======== section 2: hex literals (lines 53-58)
+# lines 53-54: 1..16 lowercase digits, unsigned value, typed by place; maxima of all 8 types, 0x0, 16 digits
+s2-hex-max run seed/qualification/om2/sec/s0s2/s2hex/hex-max.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/hex-max.out - 0
+# OM-1 decimal twin (C1 line 17) of the hex fixture: same oracle stdout
+s2-dec-max run seed/qualification/om2/sec/s0s2/s2hex/dec-max.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/hex-max.out - 0
+# OM-1 decimal twin (C1 line 17) of the hex fixture: same oracle stdout
+s2-dec-places run seed/qualification/om2/sec/s0s2/s2hex/dec-places.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/hex-places.out - 10
+# line 54: a hex literal takes the type the place needs (length, fill, index, put, for, arg, compare, sub, write)
+s2-hex-places run seed/qualification/om2/sec/s0s2/s2hex/hex-places.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/hex-places.out - 10
+# line 58: 0x2a and 42 compile identically (also the ulong maximum)
+s2-same-hex42 same seed/qualification/om2/sec/s0s2/s2hex/same-hex42.om seed/qualification/om2/sec/s0s2/s2hex/same-dec42.om
+# line 58: 0x2a and 42 compile identically (also the ulong maximum)
+s2-same-hexmax same seed/qualification/om2/sec/s0s2/s2hex/same-hexmax.om seed/qualification/om2/sec/s0s2/s2hex/same-decmax.om
+# line 54-55: uchar max is 255: error 8 on the literal's line
+s2-r8-uchar emit seed/qualification/om2/sec/s0s2/s2hex/r8-uchar.om - err:5:8 8
+# line 54-55: ushort max is 65535: error 8 on the literal's line
+s2-r8-ushort emit seed/qualification/om2/sec/s0s2/s2hex/r8-ushort.om - err:5:8 8
+# line 54-55: uint max is 2^32-1: error 8 on the literal's line
+s2-r8-uint emit seed/qualification/om2/sec/s0s2/s2hex/r8-uint.om - err:5:8 8
+# line 54-55: byte max is 127: error 8 on the literal's line
+s2-r8-byte emit seed/qualification/om2/sec/s0s2/s2hex/r8-byte.om - err:5:8 8
+# line 54-55: short max is 32767: error 8 on the literal's line
+s2-r8-short emit seed/qualification/om2/sec/s0s2/s2hex/r8-short.om - err:5:8 8
+# line 54-55: int max is 2^31-1: error 8 on the literal's line
+s2-r8-int emit seed/qualification/om2/sec/s0s2/s2hex/r8-int.om - err:5:8 8
+# line 54-55: long max is 2^63-1: error 8 on the literal's line
+s2-r8-long emit seed/qualification/om2/sec/s0s2/s2hex/r8-long.om - err:5:8 8
+# line 54-55: 0xffffffff for int, no twos-complement reinterpretation (line 55): error 8 on the literal's line
+s2-r8-intffff emit seed/qualification/om2/sec/s0s2/s2hex/r8-intffff.om - err:5:8 8
+# line 56-57: uppercase digits: error 6 on the literal's line
+s2-r6-upper emit seed/qualification/om2/sec/s0s2/s2hex/r6-upper.om - err:5:6 6
+# line 56-57: one uppercase digit: error 6 on the literal's line
+s2-r6-mixed emit seed/qualification/om2/sec/s0s2/s2hex/r6-mixed.om - err:5:6 6
+# line 56-57: 0X prefix: error 6 on the literal's line
+s2-r6-upperX emit seed/qualification/om2/sec/s0s2/s2hex/r6-upperX.om - err:5:6 6
+# line 56-57: a - before a hex literal: error 6 on the literal's line
+s2-r6-minus emit seed/qualification/om2/sec/s0s2/s2hex/r6-minus.om - err:5:6 6
+# line 56-57: 0x with no digits: error 6 on the literal's line
+s2-r6-empty emit seed/qualification/om2/sec/s0s2/s2hex/r6-empty.om - err:5:6 6
+# line 56-57: 17 digits whose value (1) fits: error 6 on the literal's line
+s2-r6-17small emit seed/qualification/om2/sec/s0s2/s2hex/r6-17small.om - err:5:6 6
+# line 56-57: 17 digits, value 2^64: error 6 on the literal's line
+s2-r6-17big emit seed/qualification/om2/sec/s0s2/s2hex/r6-17big.om - err:5:6 6
+# line 56-57: _ after 0x: error 6 on the literal's line
+s2-r6-under1 emit seed/qualification/om2/sec/s0s2/s2hex/r6-under1.om - err:5:6 6
+# line 56-57: _ between digits: error 6 on the literal's line
+s2-r6-under2 emit seed/qualification/om2/sec/s0s2/s2hex/r6-under2.om - err:5:6 6
+# line 56-57: a non-hex letter: error 6 on the literal's line
+s2-r6-g emit seed/qualification/om2/sec/s0s2/s2hex/r6-g.om - err:5:6 6
+# line 56-57: a trailing other character: error 6 on the literal's line
+s2-r6-z emit seed/qualification/om2/sec/s0s2/s2hex/r6-z.om - err:5:6 6
+# line 56-57: uppercase digits of the ulong maximum: error 6 on the literal's line
+s2-r6-upper-ulong emit seed/qualification/om2/sec/s0s2/s2hex/r6-upper-ulong.om - err:5:6 6
+# OMEGESE 9.3 decimal range rule that line 54 makes hex follow; C1 line 17
+s2-d8-uchar emit seed/qualification/om2/sec/s0s2/s2hex/d8-uchar.om - err:5:8 8
+# OMEGESE 9.3 decimal range rule that line 54 makes hex follow; C1 line 17
+s2-d8-ushort emit seed/qualification/om2/sec/s0s2/s2hex/d8-ushort.om - err:5:8 8
+# OMEGESE 9.3 decimal range rule that line 54 makes hex follow; C1 line 17
+s2-d8-uint emit seed/qualification/om2/sec/s0s2/s2hex/d8-uint.om - err:5:8 8
+# OMEGESE 9.3 decimal range rule that line 54 makes hex follow; C1 line 17
+s2-d8-byte emit seed/qualification/om2/sec/s0s2/s2hex/d8-byte.om - err:5:8 8
+# OMEGESE 9.3 decimal range rule that line 54 makes hex follow; C1 line 17
+s2-d8-short emit seed/qualification/om2/sec/s0s2/s2hex/d8-short.om - err:5:8 8
+# OMEGESE 9.3 decimal range rule that line 54 makes hex follow; C1 line 17
+s2-d8-int emit seed/qualification/om2/sec/s0s2/s2hex/d8-int.om - err:5:8 8
+# OMEGESE 9.3 decimal range rule that line 54 makes hex follow; C1 line 17
+s2-d8-long emit seed/qualification/om2/sec/s0s2/s2hex/d8-long.om - err:5:8 8
+# OMEGESE 9.3 decimal range rule that line 54 makes hex follow; C1 line 17
+s2-d8-intffff emit seed/qualification/om2/sec/s0s2/s2hex/d8-intffff.om - err:5:8 8
+# ======== section 2: expression boundaries (lines 59-62), both profiles; OM-1 codes = pinned OM-1 definition
+# lines 59-61: tokens left after the statement's expression (typed operand); OM-1 code pinned (C1 line 17)
+s2-om1-left-typed emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-typed.om - err:6:5 5
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-left-typed emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-typed.om - err:7:5 5
+# lines 59-61: tokens left after an assignment's expression; OM-1 code pinned (C1 line 17)
+s2-om1-left-assign emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-assign.om - err:6:5 5
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-left-assign emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-assign.om - err:7:5 5
+# lines 59-61: a stray ) after a complete expression; OM-1 code pinned (C1 line 17)
+s2-om1-left-paren emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-paren.om - err:6:5 5
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-left-paren emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-paren.om - err:7:5 5
+# lines 59-61: tokens left after add of two bare numbers (ambiguity is found first); OM-1 code pinned (C1 line 17)
+s2-om1-left-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-bare.om - err:5:11 11
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-left-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-bare.om - err:6:11 11
+# lines 59-61: line ends before an operand is complete, followed by end; OM-1 code pinned (C1 line 17)
+s2-om1-short-next emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-next.om - err:7:4 4
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-short-next emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-next.om - err:8:4 4
+# lines 59-61: ret add 1 then end; OM-1 code pinned (C1 line 17)
+s2-om1-short-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-bare.om - err:6:4 4
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-short-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-bare.om - err:7:4 4
+# lines 59-61: input ends (no final LF) before an operand is complete; OM-1 code pinned (C1 line 17)
+s2-om1-short-eof emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-eof.om - err:6:4 4
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-short-eof emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-eof.om - err:7:4 4
+# lines 59-61: a group missing its ) (OMEGESE 9.10); OM-1 code pinned (C1 line 17)
+s2-om1-group-open emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-open.om - err:6:16 16
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-group-open emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-open.om - err:7:16 16
+# lines 59-61: a group closed before its word has all operands; OM-1 code pinned (C1 line 17)
+s2-om1-group-short emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-short.om - err:6:16 16
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-group-short emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-short.om - err:7:16 16
+# lines 59-61: a group holding two values for one operand; OM-1 code pinned (C1 line 17)
+s2-om1-group-wide emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-wide.om - err:6:16 16
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-group-wide emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-wide.om - err:7:16 16
+# lines 59-61: [ is not grouping; OM-1 code pinned (C1 line 17)
+s2-om1-bracket emit seed/qualification/om2/sec/s0s2/s2bnd/om1-bracket.om - err:6:3 3
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-bracket emit seed/qualification/om2/sec/s0s2/s2bnd/om2-bracket.om - err:7:3 3
+# lines 59-61: { is not grouping; OM-1 code pinned (C1 line 17)
+s2-om1-brace emit seed/qualification/om2/sec/s0s2/s2bnd/om1-brace.om - err:6:3 3
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-brace emit seed/qualification/om2/sec/s0s2/s2bnd/om2-brace.om - err:7:3 3
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g0-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om - - - 7
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g1-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om - - - 7
+# line 61: a group adds no code
+s2-om1-g1-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g2-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om - - - 7
+# line 61: a group adds no code
+s2-om1-g2-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g3-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om - - - 7
+# line 61: a group adds no code
+s2-om1-g3-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g4-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om - - - 7
+# line 61: a group adds no code
+s2-om1-g4-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g0-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om - - - 7
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g1-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g1.om - - - 7
+# line 61: a group adds no code
+s2-om2-g1-same same seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om2-g1.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g2-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g2.om - - - 7
+# line 61: a group adds no code
+s2-om2-g2-same same seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om2-g2.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g3-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g3.om - - - 7
+# line 61: a group adds no code
+s2-om2-g3-same same seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om2-g3.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g4-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g4.om - - - 7
+# line 61: a group adds no code
+s2-om2-g4-same same seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om2-g4.om
+# ======== section 2: canonical formatter (lines 63-72); rest/output per E4; edge cases per E6 Q3/Q4
+# lines 63-68 + E4: canonical text of the bytes after the first LF; notes and text bytes exact; line count kept (line 72)
+s2-fmt-x1 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x1.om file:seed/qualification/om2/sec/s0s2/exp/x1.fmt - 0
+# line 69: fmt is idempotent
+s2-fmt-x1-idem emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/exp/x1.fmt file:seed/qualification/om2/sec/s0s2/exp/x1.fmt - 0
+# line 69 (+ E6 h for OM-1 x5): compile(fmt(x)) == compile(x)
+s2-fmt-x1-same same seed/qualification/om2/sec/s0s2/s2fmt/x1.om seed/qualification/om2/sec/s0s2/exp/x1.fmt
+# lines 63-68: already canonical text is returned unchanged
+s2-fmt-x2 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x2.om file:seed/qualification/om2/sec/s0s2/exp/x2.fmt - 0
+# line 69: fmt is idempotent
+s2-fmt-x2-idem emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/exp/x2.fmt file:seed/qualification/om2/sec/s0s2/exp/x2.fmt - 0
+# line 69 (+ E6 h for OM-1 x5): compile(fmt(x)) == compile(x)
+s2-fmt-x2-same same seed/qualification/om2/sec/s0s2/s2fmt/x2.om seed/qualification/om2/sec/s0s2/exp/x2.fmt
+# E6 (b,c,d,e): whitespace-only lines become empty; any line whose first token is note (indented, trailing blanks) kept byte for byte; paren spacing kept
+s2-fmt-x3 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x3.om file:seed/qualification/om2/sec/s0s2/exp/x3.fmt - 0
+# line 69: fmt is idempotent
+s2-fmt-x3-idem emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/exp/x3.fmt file:seed/qualification/om2/sec/s0s2/exp/x3.fmt - 0
+# line 69 (+ E6 h for OM-1 x5): compile(fmt(x)) == compile(x)
+s2-fmt-x3-same same seed/qualification/om2/sec/s0s2/s2fmt/x3.om seed/qualification/om2/sec/s0s2/exp/x3.fmt
+# E6 (e): whitespace next to ( or ) kept as written; other runs become one space
+s2-fmt-x4 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x4.om file:seed/qualification/om2/sec/s0s2/exp/x4.fmt - 0
+# line 69: fmt is idempotent
+s2-fmt-x4-idem emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/exp/x4.fmt file:seed/qualification/om2/sec/s0s2/exp/x4.fmt - 0
+# line 69 (+ E6 h for OM-1 x5): compile(fmt(x)) == compile(x)
+s2-fmt-x4-same same seed/qualification/om2/sec/s0s2/s2fmt/x4.om seed/qualification/om2/sec/s0s2/exp/x4.fmt
+# E6 (h): the rest may be an OM-1 unit
+s2-fmt-x5 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x5.om file:seed/qualification/om2/sec/s0s2/exp/x5.fmt - 0
+# line 69: fmt is idempotent
+s2-fmt-x5-idem emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/exp/x5.fmt file:seed/qualification/om2/sec/s0s2/exp/x5.fmt - 0
+# line 69 (+ E6 h for OM-1 x5): compile(fmt(x)) == compile(x)
+s2-fmt-x5-same same seed/qualification/om2/sec/s0s2/s2fmt/x5.om seed/qualification/om2/sec/s0s2/exp/x5.fmt
+# fmt input x1 is itself an accepted OM-2 program (precondition of the same case)
+s2-fmt-x1-run run seed/qualification/om2/sec/s0s2/s2fmt/x1.om - file:seed/qualification/om2/sec/s0s2/exp/x1.out - 42
+# line 69: the formatted text behaves the same
+s2-fmt-x1fmt-run run seed/qualification/om2/sec/s0s2/exp/x1.fmt - file:seed/qualification/om2/sec/s0s2/exp/x1.out - 42
+# E6 (h): formatted OM-1 text keeps its meaning
+s2-fmt-x5fmt-run run seed/qualification/om2/sec/s0s2/exp/x5.fmt - file:seed/qualification/om2/sec/s0s2/exp/x5.out - 9
+# malformed rest (tokens left) refused with its compile code (line 70); line counts the om2 fmt line (E6 Q3); nothing on stdout (line 70)
+s2-fmt-bad-left emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-left.om - err:6:5 5
+# malformed rest (uppercase hex, line 56) refused with its compile code (line 70); E6 Q3 line; nothing on stdout (line 70)
+s2-fmt-bad-hex emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-hex.om - err:5:6 6
+# malformed rest (line ends before an operand; OM-1 names the next line) refused (line 70); E6 Q3 line; nothing on stdout (line 70)
+s2-fmt-bad-short emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-short.om - err:7:4 4
+# CR is error 6 (line 66, E6 g), here on the first (note) line of the rest; E6 Q3 line; nothing on stdout (line 70)
+s2-fmt-bad-cr emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-cr.om - err:2:6 6
+# a single CR before the last LF is error 6 (line 66, E6 g); E6 Q3 line; nothing on stdout (line 70)
+s2-fmt-bad-cr1 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-cr1.om - err:6:6 6
+# CR inside a text literal is error 6 (E6 g); E6 Q3 line; nothing on stdout (line 70)
+s2-fmt-bad-crtext emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-crtext.om - err:3:6 6
+# om2 fmt anywhere but byte 0 is error 16 at its line (E6 f); E6 Q3 line; nothing on stdout (line 70)
+s2-fmt-bad-fmtlater emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-fmtlater.om - err:4:16 16
+# E6 (a): blank lines at the end of the input are error 6; the line of the error is not named, so refuse (code, empty stdout)
+s2-fmt-bad-trailblank refuse seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-trailblank.om 6
+# line 70 + E6 (a): nothing on stdout
+s2-fmt-bad-trailblank-nostdout emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-trailblank.om - any 6
+# E6 a, Q3
+s2-fmt-bad-trailblank-line notrun E6 (a) makes trailing blank lines error 6 but does not say which line the human line names (first or last blank line)
+# E6 (f): formatter mode only when byte 0 starts the line om2 fmt; elsewhere om2 fmt is error 16 at its line
+s2-fmt-notes-before emit seed/qualification/om2/sec/s0s2/s2fmt/notes-before.om - err:3:16 16
+# E6 (f): formatter mode only when byte 0 starts the line om2 fmt; elsewhere om2 fmt is error 16 at its line
+s2-fmt-om2-then-fmt emit seed/qualification/om2/sec/s0s2/s2fmt/om2-then-fmt.om - err:4:16 16
+# ======== C2 (contract 0 lines 19-22): these OM-1 units compile to the pinned 734f0a39 bytes (c2-extra.txt)
+c2-s0-names-fn emit seed/qualification/om2/sec/s0s2/s0/names-fn.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:8c1e625abb265e5ec2bb1d70bcf70e16f494d5f2d69d21b84d4010f02a4597cd - 0
+c2-s0-names-var emit seed/qualification/om2/sec/s0s2/s0/names-var.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:8f809f5336881a5a9a2bc8a47c7577d4d607729bfb0b94d169b072d6acd57a50 - 0
+c2-s0-om1-crlf emit seed/qualification/om2/sec/s0s2/s0/om1-crlf.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:38921391cc3b9bfdd733c61f6078165678d1290d0917715a92097e31b7fb33de - 0
+c2-s2-dec-max emit seed/qualification/om2/sec/s0s2/s2hex/dec-max.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:6921d6a044ea452a5b3a1231d8b86fc1a7afd204b26ac3c6b6a68f93dea61de3 - 0
+c2-s2-dec-places emit seed/qualification/om2/sec/s0s2/s2hex/dec-places.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:2e3ab50c6637eb326d446d9940957d98be64e2934193289716ec2c8df0e7f2c4 - 0
+c2-s2-om1-g0 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g1 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g2 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g3 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g4 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0

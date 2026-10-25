@@ -1,0 +1,23 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of l5-shactx.om (contract 163-165): the sha256_ctx image written byte by byte,
+note little endian. Expected stdout oracle/s5s7/exp/l5-shactx.out (python3 struct, gcc offsetof).
+note 270544960 = 0x10203040, 81985529216486895 = 0x0123456789abcdef.
+fn stle c edit uchar 104 o ulong v ulong n ulong to void
+x = v
+for i ulong n
+put c add o i uchar and x 255
+x = shr x 8
+end
+end
+fn main to int
+c = new uchar 104 0
+for i ulong 8
+stle c mul i 4 add 270544960 i 4
+end
+stle c 32 81985529216486895 8
+for j ulong 64
+put c add 40 j uchar add mul j 3 1
+end
+w = write 1 c 0 104
+ret 0
+end

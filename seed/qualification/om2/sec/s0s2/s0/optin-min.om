@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 line 13: a unit is OM-2 iff its first non-note line is exactly om2.
+note The note lines above om2 do not count. Candidate: accepted, exit 7. Pinned (OM-1, line 14):
+note refused at the om2 line, error 16.
+om2
+fn main to int
+ret 7
+end

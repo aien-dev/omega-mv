@@ -7,7 +7,7 @@ note   OMC         compiler under test (path); every case source is compiled by 
 note   OMC_SHA256  64 lowercase hex digits; the gate hashes OMC itself (FIPS 180-4 SHA-256 written
 note               below, constants read from the bc-derived fixtures) and refuses to run any case
 note               when the digest differs: every case is then NOT_RUN and the gate is INVALID
-note   CASES       case list file, at most 262144 bytes
+note   CASES       case list file, at most 1048576 bytes
 note   SCRATCH     evidence directory; must not exist (exit 91), created 0700, never overwritten
 note
 note Case list: one line per case, words separated by single or repeated spaces, # starts a comment
@@ -19,16 +19,26 @@ note               stderr matches and stdout DIFFERS from the oracle (reports th
 note               survivor or any other exit is FAIL; a signal or timeout is INVALID, never a kill
 note   NAME refuse SRC CODE        PASS only if the compiler exits CODE, writes no output and its
 note               diagnostic names "error CODE"
+note   NAME emit   SRC STDOUT STDERR EXIT   compile only: PASS only if the compiler exits EXIT and its
+note               stdout and stderr equal the expectations (the C2 manifest is a list of these)
+note   NAME same   SRC1 SRC2   PASS only if both compile with exit 0 to byte-identical outputs
+note               (SRC2's scratch files carry a .b suffix); never after a subst
 note   NAME notrun REASON ...      recorded as NOT_RUN (a planned case whose prerequisite is absent)
 note   cc pinned | cc SRC          later cases use OMC, or a compiler built from SRC by the pinned OMC;
 note               the built compiler's sha256 is printed; a failed build makes later cases NOT_RUN
 note   deadline SECONDS            per-child deadline, 1..900 (default 30)
 note   subst FROMFILE TOFILE       the next run/kill/refuse/cc source gets the bytes of FROMFILE
 note               replaced by those of TOFILE; the source must contain FROMFILE exactly once
-note SRC is a path or several joined by + (concatenated in order into SCRATCH/<line>.src).
+note SRC is one segment or several joined by + (concatenated in order into SCRATCH/<line>.src, at
+note most 16 MiB): a path, pack:PATH:OFF:LEN (LEN bytes of PATH from byte OFF) or cyc:PATH:N (N bytes
+note repeating the bytes of PATH).
 note STDIN: - (/dev/null) | file:PATH | rep:BYTE:N (N copies) | seq:N (byte i = i mod 251) |
 note        rnd:SEED:N (splitmix64 from SEED, each output word little endian).
-note STDOUT, STDERR: - (empty) | file:PATH | line:TEXT (TEXT and a newline) | any (STDERR only).
+note STDOUT, STDERR: - (empty) | file:PATH | line:TEXT (TEXT and a newline) | any (STDERR, and emit
+note        STDOUT). emit STDOUT also: sha:HEX (sha256 of the compiler output, 64 lowercase hex).
+note        emit STDERR also: err:LINE:CODE (exactly "omc: line LINE: error CODE" and a newline),
+note        has:PATH (each line of PATH is a whole stderr line, in any order) and tok:PATH (each
+note        line of PATH has all its words, as whole words, in one stderr line).
 note EXIT 127 is refused: the child uses it to report an exec or redirect failure.
 note
 note Per case: CASE line, one "  $" line per child command with its redirects, one VERDICT line:
@@ -37,8 +47,8 @@ note input, signal, timeout, exec failure, scratch I/O) or NOT_RUN. Final line, 
 note OM2GATE PASS 0 | FAIL 1 | NOT_RUN 2 | INVALID 3 (any INVALID case, identity mismatch, no cases).
 note Usage error 90, existing scratch 91. This is not a sandbox: children run with the caller's
 note permissions, the deadline covers only the direct child, and only trusted sources belong here.
-text words "run\nkill\nrefuse\nnotrun\ncc\ndeadline\nsubst\npinned\n-\nfile:\nline:\nrep:\nseq:\nrnd:\nany\n.src\n.elf\n.cout\n.cerr\n.in\n.exp\n.eexp\n.out\n.err\nerror \nseed/qualification/om2/fixtures/sha256-k.dec\nseed/qualification/om2/fixtures/sha256-iv.dec\n/dev/null\n"
-text msg "VERDICT \n PASS\n FAIL\n INVALID\n NOT_RUN\n compile exit=\n expected=\n run exit=\n stdout=match\n stdout differs at byte \n stderr=match\n stderr differs at byte \n mutant survived: stdout equals the oracle\n killed: stdout differs from the oracle at byte \n compiler exit 0 but its output is not an ELF file\n refusal wrote compiler output\n diagnostic does not name the expected error\n child signal; wait low byte=\n child deadline exceeded, sent SIGKILL; wait low byte=\n malformed case line\n input, source or fixture unreadable or too large\n scratch I/O, fork or argument capacity failure\n exec or redirect failed (child exit 127)\n refused with the expected error\nOM2GATE PASS\nOM2GATE FAIL\nOM2GATE INVALID\nOM2GATE NOT_RUN\n cases=\n pass=\n fail=\n invalid=\n not_run=\nIDENTITY omc \n sha256=\n pinned=\n match\n MISMATCH: every case is NOT_RUN and the gate is INVALID\n  $ \n < \n > \n 2> \nCASE \n line=\n compiler build failed earlier; case not run\n omc identity mismatch; case not run\n substitution must match exactly once; matches=\n  MUTATE exact-once substitution at byte \nCOMPILER \n stderr=unchecked\n a substitution was not followed by a source-building line\n no cases\nUSAGE gate OMC OMC_SHA256 CASES SCRATCH; INVALID\nINVALID scratch directory exists or cannot be created\nINVALID SHA-256 constant fixture unreadable or malformed\nINVALID case list unreadable or larger than 262144 bytes\n not run:\n; not a meaningful kill\n compiler build: compile exit=\nDEADLINE \nSUBST \n source line=\nOM2GATE START cases=\n scratch=\n"
+text words "run\nkill\nrefuse\nnotrun\ncc\ndeadline\nsubst\npinned\n-\nfile:\nline:\nrep:\nseq:\nrnd:\nany\n.src\n.elf\n.cout\n.cerr\n.in\n.exp\n.eexp\n.out\n.err\nerror \nseed/qualification/om2/fixtures/sha256-k.dec\nseed/qualification/om2/fixtures/sha256-iv.dec\n/dev/null\nemit\nsame\nsha:\n.b\nerr:\nomc: line \n: error \nhas:\ntok:\ncyc:\npack:\n"
+text msg "VERDICT \n PASS\n FAIL\n INVALID\n NOT_RUN\n compile exit=\n expected=\n run exit=\n stdout=match\n stdout differs at byte \n stderr=match\n stderr differs at byte \n mutant survived: stdout equals the oracle\n killed: stdout differs from the oracle at byte \n compiler exit 0 but its output is not an ELF file\n refusal wrote compiler output\n diagnostic does not name the expected error\n child signal; wait low byte=\n child deadline exceeded, sent SIGKILL; wait low byte=\n malformed case line\n input, source or fixture unreadable or too large\n scratch I/O, fork or argument capacity failure\n exec or redirect failed (child exit 127)\n refused with the expected error\nOM2GATE PASS\nOM2GATE FAIL\nOM2GATE INVALID\nOM2GATE NOT_RUN\n cases=\n pass=\n fail=\n invalid=\n not_run=\nIDENTITY omc \n sha256=\n pinned=\n match\n MISMATCH: every case is NOT_RUN and the gate is INVALID\n  $ \n < \n > \n 2> \nCASE \n line=\n compiler build failed earlier; case not run\n omc identity mismatch; case not run\n substitution must match exactly once; matches=\n  MUTATE exact-once substitution at byte \nCOMPILER \n stderr=unchecked\n a substitution was not followed by a source-building line\n no cases\nUSAGE gate OMC OMC_SHA256 CASES SCRATCH; INVALID\nINVALID scratch directory exists or cannot be created\nINVALID SHA-256 constant fixture unreadable or malformed\nINVALID case list unreadable or larger than 1048576 bytes\n not run:\n; not a meaningful kill\n compiler build: compile exit=\nDEADLINE \nSUBST \n source line=\nOM2GATE START cases=\n scratch=\n stdout sha256 differs; expected \n stdout=unchecked\n outputs identical\n outputs differ at byte \n second compile exit=\n stderr lacks expected line \n"
 global pb uchar 4096
 global pn ulong 1
 global scr uchar 4096
@@ -51,16 +61,17 @@ global pin uchar 64
 global hexd uchar 64
 global av uchar 4096
 global ap ulong 2
-global lst uchar 262144
+global lst uchar 1048576
 global lsn ulong 1
 global tko ulong 64
 global tkl ulong 64
 global ntk ulong 1
-global big uchar 8388608
+global big uchar 16777216
 global bgn ulong 1
 global sfr uchar 65536
 global sto uchar 65536
 global sb ulong 3
+global sx ulong 2
 global buf uchar 65536
 global oth uchar 65536
 global dig uchar 32
@@ -271,6 +282,7 @@ for i ulong get ccn 0
 pbyte get ccp i
 end
 end
+note SCRATCH/<line>.<word id>, with ".b" appended while sx[0] is set (the second source of `same`)
 fn pfile id ulong to void
 pclear
 for i ulong get scn 0
@@ -278,6 +290,9 @@ pbyte get scr i
 end
 pnum get lno 0
 pword id
+if ne get sx 0 0
+pword 32
+end
 end
 fn popen fl int to int
 if ne get gst 0 0
@@ -503,11 +518,14 @@ end
 end
 ret m
 end
-note first differing byte of two scratch files, or not 0 when they are equal
+note first differing byte of two scratch files, or not 0 when they are equal; file b carries the
+note ".b" suffix when sx[1] is set
 fn diffat a ulong b ulong to ulong
 pfile a
 fa = popen 524288
+put sx 0 get sx 1
 pfile b
+put sx 0 0
 fb = popen 524288
 if or lt fa 0 lt fb 0
 fclo fa
@@ -737,7 +755,8 @@ genbytes fd kind a n
 end
 fclo fd
 end
-note SCRATCH/<line>.<id> from an expectation word: -, file:PATH or line:TEXT
+note SCRATCH/<line>.<id> from an expectation word: -, file:PATH, has:PATH (a copy, compared line by
+note line), line:TEXT or err:LINE:CODE (the human diagnostic "omc: line LINE: error CODE")
 fn mkexp t ulong id ulong to void
 pfile id
 fo = popen 524481
@@ -749,9 +768,13 @@ if tokword t 9
 fclo fo
 ret
 end
-if tokpre t 10
+if or or tokpre t 10 tokpre t 36 tokpre t 37
+k = ulong 5
+if or tokpre t 36 tokpre t 37
+k = ulong 4
+end
 pclear
-plst add get tko t 5 sub get tkl t 5
+plst add get tko t k sub get tkl t k
 fi = popen 524288
 if lt fi 0
 setbad 21
@@ -775,11 +798,310 @@ end
 fclo fo
 ret
 end
+if tokpre t 33
+if ne fields t 4 2
+setbad 20
+fclo fo
+ret
+end
+n = bufword 0 34
+n = bufnum n fieldat t 4 0
+n = bufword n 35
+n = bufnum n fieldat t 4 1
+put buf n 10
+if eq get gst 0 0
+if ne write fo buf 0 add n 1 long add n 1
+setbad 22
+end
+end
+fclo fo
+ret
+end
 setbad 20
 fclo fo
 end
+fn bufword n ulong id ulong to ulong
+wordat id
+s = get wpos 0
+k = get wpos 1
+for i ulong k
+put buf add n i get words add s i
+end
+ret add n k
+end
+fn bufnum n ulong v ulong to ulong
+k = decimal v
+for i ulong k
+put buf add n i get dig sub sub k i 1
+end
+ret add n k
+end
+note has: every LF-terminated line of SCRATCH/<line>.eexp is a whole line of SCRATCH/<line>.cerr;
+note tok (tm): every such line has all its space-separated words, as whole words, in one stderr
+note line. Not 0 when so, else the 1-based number of the first expected line not found
+fn hasall tm bool to ulong
+pfile 19
+fa = popen 524288
+pfile 22
+fb = popen 524288
+if or lt fa 0 lt fb 0
+fclo fa
+fclo fb
+setbad 22
+ret 0
+end
+ra = rfulla fa
+rb = rfullb fb
+fclo fa
+fclo fb
+if or or lt ra 0 lt rb 0 or ge ra long len buf ge rb long len oth
+setbad 21
+ret 0
+end
+na = ulong ra
+nb = ulong rb
+s = ulong 0
+ln = ulong 0
+for i ulong nb
+if eq get oth i 10
+ln = add ln 1
+found = false
+if tm
+found = tokline na s sub i s
+else
+found = hasline na s sub i s
+end
+if not found
+ret ln
+end
+s = add i 1
+end
+end
+if ne s nb
+setbad 20
+ret 0
+end
+ret not ulong 0
+end
+fn eqat p ulong s ulong k ulong to bool
+for j ulong k
+if ne get buf add p j get oth add s j
+ret false
+end
+end
+ret true
+end
+note does buf[p-1] equal c, or is p the lower bound b
+fn startat p ulong b ulong c uchar to bool
+if eq p b
+ret true
+end
+ret eq get buf sub p 1 c
+end
+fn hasline na ulong s ulong k ulong to bool
+if gt k na
+ret false
+end
+for p ulong add sub na k 1
+if startat p 0 10
+if or eq add p k na eq get buf add p k 10
+if eqat p s k
+ret true
+end
+end
+end
+end
+ret false
+end
+fn tokline na ulong s ulong k ulong to bool
+ls = ulong 0
+for i ulong add na 1
+if or eq i na eq get buf i 10
+if alltoks ls i s k
+ret true
+end
+ls = add i 1
+end
+end
+ret false
+end
+fn alltoks lb ulong lz ulong s ulong k ulong to bool
+ts = s
+for i ulong add k 1
+if or eq i k eq get oth add s i 32
+te = add s i
+if gt te ts
+if not hastok lb lz ts sub te ts
+ret false
+end
+end
+ts = add te 1
+end
+end
+ret true
+end
+fn hastok lb ulong lz ulong ts ulong tl ulong to bool
+if gt tl sub lz lb
+ret false
+end
+for q ulong add sub sub lz lb tl 1
+if startat add lb q lb 32
+if endat add add lb q tl lz 32
+if eqat add lb q ts tl
+ret true
+end
+end
+end
+end
+ret false
+end
+note is e the upper bound z, or does buf[e] equal c
+fn endat e ulong z ulong c uchar to bool
+if eq e z
+ret true
+end
+ret eq get buf e c
+end
 note ---- case sources --------------------------------------------------------------------------
+note one +-separated SRC segment lst[o .. o+n): a path, pack:PATH:OFF:LEN (LEN bytes of PATH from byte
+note OFF) or cyc:PATH:N (N bytes repeating the contents of PATH, 1..65535 bytes); appended to big
 fn addpart o ulong n ulong to void
+if segpre o n 39
+addpack add o 5 sub n 5
+ret
+end
+if segpre o n 38
+addcyc add o 4 sub n 4
+ret
+end
+addfile o n
+end
+fn segpre o ulong n ulong id ulong to bool
+wordat id
+k = get wpos 1
+if lt n k
+ret false
+end
+s = get wpos 0
+for i ulong k
+if ne get lst add o i get words add s i
+ret false
+end
+end
+ret true
+end
+note offset of the last ':' in lst[o .. o+n), or n when there is none
+fn lastcol o ulong n ulong to ulong
+i = n
+while gt i 0
+i = sub i 1
+if eq get lst add o i 58
+ret i
+end
+end
+ret n
+end
+fn addpack o ulong n ulong to void
+q = lastcol o n
+if ge q n
+setbad 20
+ret
+end
+p = lastcol o q
+if ge p q
+setbad 20
+ret
+end
+k = decat add add o q 1 sub sub n q 1
+off = decat add add o p 1 sub sub q p 1
+if ne get gst 0 0
+ret
+end
+if gt k sub len big get bgn 0
+setbad 21
+ret
+end
+pclear
+plst o p
+fd = popen 524288
+if lt fd 0
+setbad 21
+ret
+end
+ok = preadall fd off k
+fclo fd
+if not ok
+setbad 21
+ret
+end
+put bgn 0 add get bgn 0 k
+end
+note k bytes of fd from position off to big at bgn
+fn preadall fd int off ulong k ulong to bool
+b = get bgn 0
+done = ulong 0
+while lt done k
+c = sub k done
+if gt c 1048576
+c = ulong 1048576
+end
+r = pread fd big add b done c long add off done
+if le r 0
+ret false
+end
+done = add done ulong r
+end
+ret true
+end
+fn addcyc o ulong n ulong to void
+q = lastcol o n
+if ge q n
+setbad 20
+ret
+end
+k = decat add add o q 1 sub sub n q 1
+if ne get gst 0 0
+ret
+end
+if gt k sub len big get bgn 0
+setbad 21
+ret
+end
+pclear
+plst o q
+fd = popen 524288
+if lt fd 0
+setbad 21
+ret
+end
+r = rfullb fd
+fclo fd
+if or le r 0 ge r long len oth
+setbad 21
+ret
+end
+cycfill ulong r k
+end
+note big[bgn .. bgn+k) = oth[i mod m], in 65536-byte rows (a loop with a value count traps 4 after
+note 1000000 passes)
+fn cycfill m ulong k ulong to void
+b = get bgn 0
+for r ulong add div k 65536 1
+s = mul r 65536
+c = sub k s
+if gt c 65536
+c = ulong 65536
+end
+cycrow b s c m
+end
+put bgn 0 add b k
+end
+fn cycrow b ulong s ulong c ulong m ulong to void
+for i ulong c
+put big add add b s i get oth rem add s i m
+end
+end
+fn addfile o ulong n ulong to void
 pclear
 plst o n
 fd = popen 524288
@@ -1103,6 +1425,9 @@ ex = decat get tko 6 get tkl 6
 if or gt ex 255 eq ex 127
 setbad 20
 end
+if or or tokpre 4 36 tokpre 5 36 or tokpre 4 37 tokpre 5 37
+setbad 20
+end
 if ne get gst 0 0
 invalid
 ret
@@ -1243,6 +1568,195 @@ if named
 say 24
 else
 say 17
+end
+newline
+end
+note emit: compile only; compiler exit, stdout (-, file:, line:, any, sha:HEX) and stderr (-, file:,
+note line:, err:LINE:CODE, has:PATH, any) must all equal the expectation
+fn emitcase to void
+if ne get ntk 0 6
+setbad 20
+invalid
+ret
+end
+ex = decat get tko 5 get tkl 5
+if or gt ex 255 eq ex 127
+setbad 20
+end
+if tokpre 3 31
+if not hexok
+setbad 20
+end
+end
+if ne get gst 0 0
+invalid
+ret
+end
+put res 0 ex
+mksrc 2
+put res 1 compile false
+if ne get gst 0 0
+invalid
+ret
+end
+if not or tokword 3 15 tokpre 3 31
+mkexp 3 21
+end
+if not tokword 4 15
+mkexp 4 22
+end
+if ne get gst 0 0
+invalid
+ret
+end
+put res 2 not ulong 0
+put res 3 not ulong 0
+put res 4 1
+if tokpre 3 31
+if not shamatch
+put res 4 0
+end
+else
+if not tokword 3 15
+put res 2 diffat 17 21
+end
+end
+if not tokword 4 15
+if or tokpre 4 36 tokpre 4 37
+put res 3 hasall tokpre 4 37
+else
+put res 3 diffat 19 22
+end
+end
+if ne get gst 0 0
+invalid
+ret
+end
+emitsay
+end
+note token 3 after "sha:" is 64 lowercase hex digits
+fn hexok to bool
+if ne get tkl 3 68
+ret false
+end
+for i ulong 64
+c = get lst add add get tko 3 4 i
+if not or and ge c 48 le c 57 and ge c 97 le c 102
+ret false
+end
+end
+ret true
+end
+note sha256 of SCRATCH/<line>.elf (into hexd) equals the hex of token 3
+fn shamatch to bool
+pfile 17
+if not hashfile
+setbad 22
+ret false
+end
+for i ulong 64
+if ne get hexd i get lst add add get tko 3 4 i
+ret false
+end
+end
+ret true
+end
+fn emitsay to void
+all = not ulong 0
+od = get res 2
+ed = get res 3
+ok = eq get res 1 get res 0
+ok = and ok eq get res 4 1
+ok = and ok and eq od all eq ed all
+if ok
+verdict 2
+else
+verdict 3
+end
+showexit get res 1 6 get res 0
+if tokword 3 15
+say 66
+end
+if tokpre 3 31
+say 35
+r = write 1 hexd 0 64
+if eq get res 4 0
+say 65
+r = write 1 lst add get tko 3 4 64
+end
+end
+if not or tokword 3 15 tokpre 3 31
+if eq od all
+say 9
+else
+say 10
+num od
+end
+end
+if tokword 4 15
+say 50
+else
+if eq ed all
+say 11
+else
+if or tokpre 4 36 tokpre 4 37
+say 70
+else
+say 12
+end
+num ed
+end
+end
+newline
+end
+note same: SRC1 and SRC2 both compile with exit 0 to byte-identical outputs (SRC2's files carry .b)
+fn samecase to void
+if ne get ntk 0 4
+setbad 20
+invalid
+ret
+end
+put sx 0 1
+mksrc 3
+c2 = compile false
+put sx 0 0
+if ne get gst 0 0
+invalid
+ret
+end
+mksrc 2
+c1 = compile false
+if ne get gst 0 0
+invalid
+ret
+end
+all = not ulong 0
+d = all
+both = and eq c1 0 eq c2 0
+if both
+put sx 1 1
+d = diffat 17 17
+put sx 1 0
+if ne get gst 0 0
+invalid
+ret
+end
+end
+if and both eq d all
+verdict 2
+else
+verdict 3
+end
+showexit c1 6 0
+say 69
+num c2
+if both
+if eq d all
+say 67
+else
+say 68
+num d
+end
 end
 newline
 end
@@ -1419,7 +1933,13 @@ if tokword 1 add k 1
 mode = add k 1
 end
 end
-if and ne get sb 0 0 or eq mode 0 eq mode 4
+if tokword 1 29
+mode = ulong 5
+end
+if tokword 1 30
+mode = ulong 6
+end
+if and ne get sb 0 0 or or eq mode 0 eq mode 4 eq mode 6
 put sb 0 0
 setbad 51
 invalid
@@ -1452,6 +1972,12 @@ runcase true
 end
 if eq mode 3
 refusecase
+end
+if eq mode 5
+emitcase
+end
+if eq mode 6
+samecase
 end
 if eq mode 4
 notruncase

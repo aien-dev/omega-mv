@@ -1,0 +1,29 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of v6-sum.om: the same sums over sized views of length 10 and 3.
+note Expected stdout oracle/s5s7/exp/v6-sum.out (python3).
+fn s10 v view uchar 10 to ulong
+x = ulong 0
+for i ulong len v
+x = add x ulong get v i
+end
+ret x
+end
+fn s3 v view uchar 3 to ulong
+x = ulong 0
+for i ulong len v
+x = add x ulong get v i
+end
+ret x
+end
+fn main to int
+a = new uchar 10 0
+for i ulong 10
+put a i uchar mul i 7
+end
+b = new uchar 3 5
+putd len a
+putd s10 a
+putd len b
+putd s3 b
+ret 0
+end

@@ -1,0 +1,209 @@
+# OM-2 qualification lane s5s7 (#748, ledger L836): cases for the PINNED OM-1 compiler 734f0a39.
+# Run from the worktree root:
+#   build/om2-qual/gate-b seed/out/omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 \
+#     seed/qualification/om2/sec/s5s7/pinned.cases build/om2-qual/s5s7-pinned
+# 1. Every OM-2 fixture is refused exactly (contract line 14: OM-1 refuses the om2 opt-in), with
+#    no stdout. Expected line, derived from OMEGESE 9.2 (a names pass reads every fn signature before
+#    any other line): the first fn line whose signature uses OM-2 syntax (fresh, `view T *`, a
+#    layout or abstract type name: unknown type = error 16, OMEGESE 9.4/9.11), else the om2 line
+#    (error 16, the observed refusal of the opt-in line). README Q1: contract line 14 holds only
+#    for units whose signatures are OM-1 valid.
+# 2. OM-1 twins and C1 controls (expected values from oracle/s5s7, never from a compiler).
+
+# ---- OM-2 fixtures under the pinned compiler ----
+# signature line 6 (OM-2 parameter/return syntax)
+pin-f5-branch emit seed/qualification/om2/sec/s5s7/f5-branch.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-f5-loop emit seed/qualification/om2/sec/s5s7/f5-loop.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-f5-line emit seed/qualification/om2/sec/s5s7/f5-line.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-f5-unroll-all emit seed/qualification/om2/sec/s5s7/f5-unroll-all.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-f5-n64 emit seed/qualification/om2/sec/s5s7/f5-n64.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 4 (OM-2 parameter/return syntax)
+pin-f5-n65 emit seed/qualification/om2/sec/s5s7/f5-n65.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-f5-partial emit seed/qualification/om2/sec/s5s7/f5-partial.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 8 (OM-2 parameter/return syntax)
+pin-f5-call emit seed/qualification/om2/sec/s5s7/f5-call.om+seed/qualification/om2/sec/s5s7/pr.om - err:8:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-f5-write emit seed/qualification/om2/sec/s5s7/f5-write.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 4 (OM-2 parameter/return syntax)
+pin-f5-read emit seed/qualification/om2/sec/s5s7/f5-read.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-f5-part emit seed/qualification/om2/sec/s5s7/f5-part.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-f5-ifelse emit seed/qualification/om2/sec/s5s7/f5-ifelse.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-f5-join-diff emit seed/qualification/om2/sec/s5s7/f5-join-diff.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# OBSERVED-REFERENCE (README Q1): `to void inline` leaves a token after a complete OM-1 signature;
+# OMEGESE does not document that code, contract 59-61 delegates such OM-1 codes to fixtures, so the
+# value 5 is the pinned compiler's recorded C1 behaviour, not an independent expectation.
+pin-f5-inline emit seed/qualification/om2/sec/s5s7/f5-inline.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:5 5
+# signature line 8 (OM-2 parameter/return syntax)
+pin-a5-exact emit seed/qualification/om2/sec/s5s7/a5-exact.om+seed/qualification/om2/sec/s5s7/pr.om - err:8:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-allops emit seed/qualification/om2/sec/s5s7/a5-allops.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:16 16
+# signature line 8 (OM-2 parameter/return syntax)
+pin-a5-rot64 emit seed/qualification/om2/sec/s5s7/a5-rot64.om+seed/qualification/om2/sec/s5s7/pr.om - err:8:16 16
+# signature line 8 (OM-2 parameter/return syntax)
+pin-a5-exact-diag emit seed/qualification/om2/sec/s5s7/a5-exact-diag.om - err:8:16 16
+# signature line 8 (OM-2 parameter/return syntax)
+pin-a5-kept emit seed/qualification/om2/sec/s5s7/a5-kept.om+seed/qualification/om2/sec/s5s7/pr.om - err:8:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-kept-diag emit seed/qualification/om2/sec/s5s7/a5-kept-diag.om - err:7:16 16
+# signature line 8 (OM-2 parameter/return syntax)
+pin-a5-swap emit seed/qualification/om2/sec/s5s7/a5-swap.om+seed/qualification/om2/sec/s5s7/pr.om - err:8:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-swap-diag emit seed/qualification/om2/sec/s5s7/a5-swap-diag.om - err:7:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-seal-main emit seed/qualification/om2/sec/s5s7/a5-seal-main.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-seal-other emit seed/qualification/om2/sec/s5s7/a5-seal-other.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-a5-raw-num emit seed/qualification/om2/sec/s5s7/a5-raw-num.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-a5-raw-arg emit seed/qualification/om2/sec/s5s7/a5-raw-arg.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-raw-ret emit seed/qualification/om2/sec/s5s7/a5-raw-ret.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-raw-assign emit seed/qualification/om2/sec/s5s7/a5-raw-assign.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-op-and emit seed/qualification/om2/sec/s5s7/a5-op-and.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-a5-op-rotl emit seed/qualification/om2/sec/s5s7/a5-op-rotl.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-op-add emit seed/qualification/om2/sec/s5s7/a5-op-add.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-a5-pred emit seed/qualification/om2/sec/s5s7/a5-pred.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-entry-param emit seed/qualification/om2/sec/s5s7/a5-entry-param.om - err:7:16 16
+# signature line 7 (OM-2 parameter/return syntax)
+pin-a5-entry-ret emit seed/qualification/om2/sec/s5s7/a5-entry-ret.om - err:7:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-a5-array emit seed/qualification/om2/sec/s5s7/a5-array.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 13 (OM-2 parameter/return syntax)
+pin-l5-shactx emit seed/qualification/om2/sec/s5s7/l5-shactx.om+seed/qualification/om2/sec/s5s7/pr.om - err:13:16 16
+# signature line 11 (OM-2 parameter/return syntax)
+pin-l5-endian emit seed/qualification/om2/sec/s5s7/l5-endian.om+seed/qualification/om2/sec/s5s7/pr.om - err:11:16 16
+# signature line 8 (OM-2 parameter/return syntax)
+pin-l5-scalar emit seed/qualification/om2/sec/s5s7/l5-scalar.om+seed/qualification/om2/sec/s5s7/pr.om - err:8:16 16
+# signature line 10 (OM-2 parameter/return syntax)
+pin-l5-trap emit seed/qualification/om2/sec/s5s7/l5-trap.om+seed/qualification/om2/sec/s5s7/pr.om - err:10:16 16
+# signature line 10 (OM-2 parameter/return syntax)
+pin-l5-const-idx emit seed/qualification/om2/sec/s5s7/l5-const-idx.om+seed/qualification/om2/sec/s5s7/pr.om - err:10:16 16
+# om2 line 4
+pin-l5-fit emit seed/qualification/om2/sec/s5s7/l5-fit.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:16 16
+# om2 line 3
+pin-l5-max emit seed/qualification/om2/sec/s5s7/l5-max.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-overlap emit seed/qualification/om2/sec/s5s7/l5-overlap.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-past emit seed/qualification/om2/sec/s5s7/l5-past.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-past1 emit seed/qualification/om2/sec/s5s7/l5-past1.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-count0 emit seed/qualification/om2/sec/s5s7/l5-count0.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-count4097 emit seed/qualification/om2/sec/s5s7/l5-count4097.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-off emit seed/qualification/om2/sec/s5s7/l5-off.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-size0 emit seed/qualification/om2/sec/s5s7/l5-size0.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-size4097 emit seed/qualification/om2/sec/s5s7/l5-size4097.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# om2 line 3
+pin-l5-after-fn emit seed/qualification/om2/sec/s5s7/l5-after-fn.om+seed/qualification/om2/sec/s5s7/pr.om - err:3:16 16
+# signature line 10 (OM-2 parameter/return syntax)
+pin-l5-view-put emit seed/qualification/om2/sec/s5s7/l5-view-put.om+seed/qualification/om2/sec/s5s7/pr.om - err:10:16 16
+# signature line 10 (OM-2 parameter/return syntax)
+pin-l5-wrong-size emit seed/qualification/om2/sec/s5s7/l5-wrong-size.om+seed/qualification/om2/sec/s5s7/pr.om - err:10:16 16
+# signature line 8 (OM-2 parameter/return syntax)
+pin-l5-count1-noidx emit seed/qualification/om2/sec/s5s7/l5-count1-noidx.om+seed/qualification/om2/sec/s5s7/pr.om - err:8:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-sum emit seed/qualification/om2/sec/s5s7/v6-sum.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-v6-edit emit seed/qualification/om2/sec/s5s7/v6-edit.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-idx emit seed/qualification/om2/sec/s5s7/v6-idx.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 4 (OM-2 parameter/return syntax)
+pin-v6-idx-edit emit seed/qualification/om2/sec/s5s7/v6-idx-edit.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:16 16
+# signature line 6 (OM-2 parameter/return syntax)
+pin-v6-part-wrap emit seed/qualification/om2/sec/s5s7/v6-part-wrap.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-part-tail emit seed/qualification/om2/sec/s5s7/v6-part-tail.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-part-empty emit seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-part-o emit seed/qualification/om2/sec/s5s7/v6-part-o.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-part-order emit seed/qualification/om2/sec/s5s7/v6-part-order.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-part-local emit seed/qualification/om2/sec/s5s7/v6-part-local.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-part-view-edit emit seed/qualification/om2/sec/s5s7/v6-part-view-edit.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-part-two emit seed/qualification/om2/sec/s5s7/v6-part-two.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-part-base emit seed/qualification/om2/sec/s5s7/v6-part-base.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-write emit seed/qualification/om2/sec/s5s7/v6-write.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-slots7 emit seed/qualification/om2/sec/s5s7/v6-slots7.om - err:5:16 16
+# signature line 4 (OM-2 parameter/return syntax)
+pin-v6-slots6 emit seed/qualification/om2/sec/s5s7/v6-slots6.om - err:4:16 16
+# signature line 5 (OM-2 parameter/return syntax)
+pin-v6-fm-e2 emit seed/qualification/om2/sec/s5s7/v6-fm-e2.om - err:5:16 16
+# om2 line 4
+pin-v6-out emit seed/qualification/om2/sec/s5s7/v6-out.om - err:4:16 16
+# om2 line 4
+pin-m6-export2 emit seed/qualification/om2/sec/s5s7/m6-export2.om - err:4:16 16
+# om2 line 4
+pin-m6-noexport emit seed/qualification/om2/sec/s5s7/m6-noexport.om - err:4:16 16
+# om2 line 4
+pin-m6-export-layout emit seed/qualification/om2/sec/s5s7/m6-export-layout.om - err:4:16 16
+# om2 line 5
+pin-abiv emit seed/qualification/om2/sec/s5s7/abi/abiv.om - err:5:16 16
+# om2 line 4
+pin-abiw emit seed/qualification/om2/sec/s5s7/abi/abiw.om - err:4:16 16
+# signature line 8 (OM-2 parameter/return syntax)
+pin-l5-scalar-idx emit seed/qualification/om2/sec/s5s7/l5-scalar-idx.om+seed/qualification/om2/sec/s5s7/pr.om - err:8:16 16
+# om2 line 4
+pin-a5-name-seal emit seed/qualification/om2/sec/s5s7/a5-name-seal.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:16 16
+# om2 line 4
+pin-v6-name-part emit seed/qualification/om2/sec/s5s7/v6-name-part.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:16 16
+
+# ---- OM-1 controls and twins (C1, contract lines 17-18; expected values from oracle/s5s7) ----
+# twin of a5-exact (python oracle values, OM-1 shifts)
+t-dup run seed/qualification/om2/sec/s5s7/om1/t-dup.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+# twin of a5-allops
+t-allops run seed/qualification/om2/sec/s5s7/om1/t-allops.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-allops.out - 0
+# twin of l5-shactx (byte stores; offsetof oracle image)
+t-shactx run seed/qualification/om2/sec/s5s7/om1/t-shactx.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out - 0
+# twin of l5-endian
+t-endian run seed/qualification/om2/sec/s5s7/om1/t-endian.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-endian.out - 0
+# twin of v6-sum (sized views)
+t-sum run seed/qualification/om2/sec/s5s7/om1/t-sum.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-sum.out - 0
+# twin of v6-edit (offset loop)
+t-edit run seed/qualification/om2/sec/s5s7/om1/t-edit.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-edit.out - 0
+# twin of v6-part-empty: write slice off = len, n = 0
+t-sle run seed/qualification/om2/sec/s5s7/om1/t-sle.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+# C1 contract 13-18: OM-2 words stay ordinary names in OM-1
+t-names run seed/qualification/om2/sec/s5s7/om1/t-names.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/t-names.out - 0
+# twin of v6-part-wrap: OM-1 write slice check, o = 2^64-2, n = 4 -> trap 3 (OMEGESE 9.5)
+t-slw run seed/qualification/om2/sec/s5s7/om1/t-slw.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# twin of v6-part-tail: off 8, n 4 on len 10 -> trap 3
+t-slt run seed/qualification/om2/sec/s5s7/om1/t-slt.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# twin of v6-part-o: off 11, n 0 on len 10 -> trap 3
+t-slo run seed/qualification/om2/sec/s5s7/om1/t-slo.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# twin of v6-part-order: arguments left to right (OMEGESE 9.2) -> trap 2 first
+t-order run seed/qualification/om2/sec/s5s7/om1/t-order.om+seed/qualification/om2/sec/s5s7/pr.om - - - 102
+# trap 10 exit status (OMEGESE 9.8; contract 151)
+t-trap10 run seed/qualification/om2/sec/s5s7/om1/t-trap10.om+seed/qualification/om2/sec/s5s7/pr.om - - - 110
+# constant shift 64 is the runtime trap 7 (contract 79-81)
+t-shl64 run seed/qualification/om2/sec/s5s7/om1/t-shl64.om+seed/qualification/om2/sec/s5s7/pr.om - - - 107
+# C1 boundary: OMEGESE 9.4, an array parameter without its length is error 16, on the fn line (5)
+t-unsized16 emit seed/qualification/om2/sec/s5s7/om1/t-unsized16.om - err:5:16 16
+# erratum E1: the OM-1 ABI unit stays OM-1 and compiles
+abi1-om1 emit seed/qualification/om2/sec/s5s7/abi/abi1.om any - 0

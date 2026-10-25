@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note Second ABI v2 unit (contract 6 lines 207-210): linked with abiv into one binary and called
+note interleaved. Only scalars, yet bound v2 (erratum E1: every OM-2 unit is v2).
+om2
+export fn madd2 a ulong b ulong to ulong
+ret add mul a 2 b
+end

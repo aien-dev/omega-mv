@@ -1,0 +1,14 @@
+note SPDX-License-Identifier: Apache-2.0
+note erratum E2: in function mode a sized array may be passed to an unsized parameter of an
+note internal function: accepted.
+om2
+fn inner v view ulong * to ulong
+x = ulong 0
+for i ulong len v
+x = add x get v i
+end
+ret x
+end
+fn outer a view ulong 4 to ulong
+ret inner a
+end

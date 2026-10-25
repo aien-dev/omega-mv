@@ -1,0 +1,42 @@
+C2 manifest capture (#748, L836 Phase B, 2026-10-25). Outside the delivered closure: these shell steps
+and enumerate.py ran once to freeze seed/qualification/om2/manifest-c2.txt and c2/. The delivered
+checker is gate.om (`emit` cases with pack:/cyc: sources). Tools: GNU bash/dash sh, GNU Awk 5.2.1,
+coreutils 9.4, Python 3.12.3, GNU objdump 2.42 (gate669 needs it).
+
+1. Scratch worktree of the baseline (never the clone, never pushed):
+     git -C ~/workspace/omega worktree add --detach /tmp/zl/c2cap acb3f15cdc691b1b046b48b0dad0f9255a12ba4b
+   seed/out/omc.real = the pinned omc (sha256 734f0a39...6b61); seed/out/omc = recording shim:
+     #!/bin/sh
+     f=$(mktemp /tmp/zl/c2corpus/in.XXXXXXXXXX) || exit 125
+     cat > "$f"
+     printf '%s\n' "$PWD $0 ${CAPTAG:-?}" > "$f.who"
+     exec /tmp/zl/c2cap/seed/out/omc.real < "$f"
+2. Gates run unmodified with the shim as seed/out/omc (all printed PASS):
+     for g in 7 8 9 10 11 12 13 14 15 16 17; do CAPTAG=gate$g sh seed/omc/gate$g.sh; done
+     CAPTAG=host sh seed/host/gate.sh
+     CAPTAG=nextfuzz NFW=/tmp/zl/nfw sh seed/check/nextfuzz.sh 20 seed/out/omc   (gate5 6b's N)
+3. Gates that build their own stage compiler were run from scratch copies that only swap the compiler
+   for the shim (stage3 = stage2 = 734f0a39 by the fixpoint they check), so their inputs are recorded:
+     gate6cap.sh  = gate6.sh with S=seed/out/omc and its two seed/out writes replaced by ':'
+     gateircap.sh = gate-ir.sh with "$B/stage2" < replaced by seed/out/omc < and the C-oracle lines
+                    (build/omegese, build/omega_emit, build/checker2, their cmp/grep) replaced by ':'
+                    (no C oracles are built here; its PASS lines are not gate results)
+     gate4cap.sh  = seed/rung4/gate4.sh with om4.bin replaced by seed/out/omc in its 5 places, exactly
+                    as gate5.sh section 3 does (the C-path parts fail without build/omegese; only the
+                    recorded inputs are used)
+4. gate5.sh inline programs (3b ok/e4/e11/e12/e13/e14, 5d bad, 7 m/zm) were written with the same
+   printf/yes commands into /tmp/zl/g5. Not included: gate5 3b error 1/2 (a directory as input,
+   /dev/full as output: no unit bytes) and gate5 7's compiles of omc.om prefixes (omc.om derivatives;
+   C2 excludes omc.om).
+5. security673: build/gate669 (compiled by the pinned omc from seed/qualification/security673/
+   gate669.om) ran in the scratch worktree (GATE669 PASS); every stdin of a compiler child (1001,
+   1002, 1007, 1076 in build/gate669.log) was taken from build/security673-native.
+6. enumerate.py CAP CORPUS G5 BRIDGE OMC OUT adds every tracked *.om/*.omegese of acb3f15 (except
+   seed/omc/omc.om) and every .om of omega-bridge 012860db (om/omega-bridge.lock), dedupes by
+   sha256, compiles each once with the pinned omc and writes manifest-c2.txt, c2/index.tsv,
+   c2/corpus.pack and the cyc-*.txt units. Inputs over 1 MiB (two capacity inputs over 8 MiB, eight
+   gate669 branch-limit programs) are stored as pack prefix + cyc: run + pack suffix.
+Result: 5720 entries (610 accepted with output, 5110 refused; every refusal's stderr is exactly
+"omc: line N: error E" with exit E). Checks: gate-c on the manifest with the pinned omc PASS 5720/5720;
+every SCRATCH/<line>.src the gate rebuilt has the sha256 recorded in c2/index.tsv (sha256sum -c,
+5720 OK); with the Phase A shr-immediate mutant compiler (06f000e5...) the manifest FAILs 175 entries.

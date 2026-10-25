@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 3 line 78: signed x is error 7. x short, rotr; refused at line 6 (the rotr).
+om2
+fn main to int
+x = short 5
+y = rotr x 1
+ret 0
+end

@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of a5-rot64.om: a constant shift of 64 compiles to the runtime trap 7 (contract 79-81,
+note omc.om:2394): exit 107.
+fn main to int
+d = ulong 30064771079
+x = shl d 64
+ret 0
+end

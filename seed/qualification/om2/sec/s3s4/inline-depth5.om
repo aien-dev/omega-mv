@@ -1,0 +1,28 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 109-111 and erratum E7: the call site in main (not inlined) is depth 1, so
+note the chain f1 -> ... -> f5 reaches a 5th level: error 14 (obligation=growth).
+note
+om2
+fn f1 a ulong to ulong inline
+ret add f2 mul a 3 1
+end
+fn f2 a ulong to ulong inline
+ret add f3 mul a 5 2
+end
+fn f3 a ulong to ulong inline
+ret add f4 mul a 7 3
+end
+fn f4 a ulong to ulong inline
+ret add f5 mul a 11 4
+end
+fn f5 a ulong to ulong inline
+ret add mul a 13 5
+end
+fn id v ulong to ulong
+ret v
+end
+fn main to int
+pu f1 2
+pu f1 id 1000
+ret 0
+end

@@ -1,6 +1,6 @@
 # OM-2 qualification: mutation plan and harness (#748, ledger L836)
 
-Status: Phase A, written before the OM-2 language contract (#745/#746/#747/#655/#665/#625) is frozen.
+Status: Phase A was written before the OM-2 contract was frozen; the Phase B section at the end was written after it.
 Rows marked **A: run** were executed in Phase A against the current baseline: omega main `acb3f15`,
 `om/sha256/sha256.om`, pinned omc `734f0a39…6b61`. Rows marked **B: NOT_RUN** wait for the frozen
 contract and the OM-2 SHA consumer. A Phase A kill is evidence about the baseline consumer and the
@@ -129,12 +129,49 @@ Limits:
 - The constant 2^64-2 in `baseline/slice-witness.om` is copied from `fixtures/obligations.txt`,
   slice row 1.
 
-## Phase B (after the contract is frozen)
+## Phase B (contract frozen: spec/omegese-om2.md 245bb74e…0881, errata E1-E8 on om2/contract)
 
-1. Replace `baseline/sha256-main.om` with a driver for the OM-2 consumer ABI, including splits and
-   the post-final context policy, and generate `om2/sha256.cases` from `fixtures/sha256-vectors.txt`.
-2. Retarget M1–M4 and M10 at the compact OM-2 source and transforms. Take M4b, M5, M6, M7c, M8, M9b
-   and M11 refusal codes from the contract, and turn the O3/O4 tables into constructor and
-   slice-check cases.
-3. Compiler mutants stay `subst` + `cc` over a scratch copy of the OM-2 `omc.om`. The pinned digest
-   moves to the OM-2 compiler's sha256 from `/usr/bin/sha256sum`.
+Phase B fixtures are written from the contract and errata alone. No CompilerLane, AbiLane or ShaLane
+diff was read. Each compiler mutant below is defined by its behaviour and by the case that kills
+it. The `subst FROM TO` patch for each one is written against the candidate `omc.om` (or bridge or
+SHA source) only after the verdict on a pushed candidate head, then applied in a scratch copy
+through `subst` + `cc` as in Phase A. Until then every row is **B: NOT_RUN (no candidate head)**.
+The killing cases already exist, and they all parse and run under the pinned compiler with
+invalid=0.
+
+A kill needs two things. The correct-side case must PASS under the unmutated candidate
+(`sec/*/candidate.cases`). The mutant-side case must PASS under the mutant compiler
+(`sec/s3s4/mutant-kills.cases` and `sec/s5s7/mutant-side.cases`: a `kill` with a clean exit and
+stdout different from the oracle, or a predicted exact line). The mutant must also pass its
+control rows.
+
+| # | Phase B mutant | killing case(s) | meaningful kill (predicted by oracle/*/oracle.py) |
+|---|---|---|---|
+| B1 | unroll emits K-1 copies | s3s4 `kill-unroll-sum` (K = 1, 4, 64, distinct weights), `kill-unroll-nest` | exit 0, stdout differs at byte 1 |
+| B2 | unroll emits K+1 copies | s3s4 `kill-unroll-sum` (the extra copy writes `a[64]` of a 65-element array, so neither refusal nor crash) | exit 0, differs at byte 5 |
+| B3 | rotate amount n+1 | s3s4 `kill-rot-values` (all four widths, every operand has w distinct rotations) | differs at byte 0 (ROR-immediate path), 29 (RORV path) |
+| B4 | rotate amount w-n | s3s4 `kill-rot-values` | byte 4 (immediate), 33 (RORV) |
+| B5 | ROR emitted for ROL | s3s4 `kill-rot-values` | byte 18 (immediate), 47 (RORV) |
+| B6 | rotate range check dropped (n mod w) | s3s4 `kill-rot-trap-A..O` (n = w, n > w, constant and run-time) | prints a value, exit 0, where the correct output is empty with exit 107 |
+| B7 | check eliminated on an unsized view | s3s4 `kill-ce-view-A/C/D/F` (a part/view of a larger caller array; the unchecked read returns a known neighbour) | A/C print 11111 (byte 14), D prints 1000000 (byte 0), F reads b[7] (byte 26); correct side traps 3 (exit 103) |
+| B8 | trapping constant folded at compile time | s3s4 `kill-fold-trap-A..I`, `fold-guard` (guarded `if ne i 0` / `div 100 i`) | stdout differs (bytes A 4, B 22, C 8, D 40, E 11, F 0, G 4, H 4, I 3). A mutant that refuses instead fails the candidate run cases with `compile exit=N expected=0` |
+| B9 | weakened part check `o + k <= len` (wrapped) | s5s7 `v6-part-wrap` (len 10, o = 2^64-2, k = 4) | correct: exit 103, empty stdout. Mutant: the part is formed and the callee prints its len "4", exit 0 (`mut-a-part-wrap`) |
+| B9b | second part check dropped / first dropped / k evaluated before o | s5s7 `v6-part-tail` (o = len-2, k = 4), `v6-part-o`, `v6-part-order` | "4" / "0" printed instead of trap 3. Order: exit 105 instead of 102 (`mut-a2..a4`). `v6-part-empty` (o = len, k = 0) must be accepted by both |
+| B9c | literal golden (2^64-1, 2^64-2, 4) inside a unit | — | **NOT_RUN: unreachable without a 2^64-1-element view** (coordinator decision). The bridge half is `abi-golden-wrap`, which expects status 32 (wrap) |
+| B10 | fresh analysis with union instead of intersection at a join | s5s7 `f5-join-diff`, `f5-branch` (refused 27 at the get line, E8) | mutant compiles them: prints "99" and "7", exit 0 (`mut-b-*`) |
+| B11 | constructor bypass allowed | s5s7 `a5-seal-main`, `a5-seal-other` (error 28 at the seal line, E8) | mutant compiles them, exit 0 (`mut-c-*`) |
+| B12 | dup32 check erased for a non-exact constructor body | s5s7 `a5-kept` (trap 10, exit 110), `a5-kept-diag` (`omc-check 1 kept line=8 rule=-`) | mutant prints `0000000500000006`, exit 0; its diag says `erased … rule=dup32` |
+| B13 | stale generation/profile identity accepted | s5s7 ABI driver `abi-ident-abiv/abiw` (the `omega2_ident_<unit>()` text = sha256 of the exact unit bytes, omc pin, `OM-2`; E1), plus `om/units.sh --check` on a stale unit, compiler or profile | a generator embedding a stale digest, pin or profile makes the driver print `FAIL abi-ident-*`, exit 1. A `--check` that skips identity exits 0 on the stale cases where the correct one refuses |
+| B14 | bad ABI length accepted | s5s7 ABI driver status-32 rows: null with len > 0, misaligned, len*size overflow, ptr+len wrap (incl. golden extents), edit overlap | the mutant bridge returns status 0 / runs Omega code (`abi-null-len1` returns 0 with result 1); the correct one returns 32 with the result and out buffer untouched |
+| B15 | SHA source: wrong constant (K[0], K[63], H0) | baseline/sha256.cases vectors retargeted to the OM-2 SHA driver (s5s7 `sha/sha_driver.c` digests, O1) | vector kill: digest differs (Phase A M1 kills at byte 1 / 0 carry over) |
+| B16 | SHA source: wrong rotation (Σ/σ amount ±1, or rotr↔rotl) | same vectors | vector kill at byte 0 |
+| B17 | SHA source: round order (K index swapped, or the round loop reversed) | same vectors | vector kill at byte 0 |
+| B18 | SHA source: missing write (length store in final, or one state word in update) | same vectors plus split cases (piece sizes 1, 32, 63, 64, 65, 4095) | vector kill. Adequacy control: the empty message alone does not kill a missing length write (Phase A M4) |
+| B19 | lexer accepts uppercase hex / 0X / 17 digits | s0s2 `s2-r6-upper*`, `s2-r6-mixed`, `s2-r6-17small`, `s1-d-hexupper(-plain)`, `s1-d-longtok` | `compile exit=0 expected=6` (or 8/0 for 17big) |
+| B20 | fmt rewrites a note line or text bytes | s0s2 `s2-fmt-x1`, `-x3`, `-x5` and their `same`/run cases | `stdout differs` |
+| B21 | diag span off | every exact s1 diag case (E4/E6) | `stderr differs at byte N` |
+| B22 | OM-2 compiler changes an OM-1 unit's bytes or error | manifest-c2.txt (5720 entries) | **run**: the harness control with the Phase A shr-immediate mutant (06f000e5…) FAILs 175 entries (`evidence/phaseB/c2-shrmutant.log`). The pinned compiler PASSes 5720/5720 (`c2-pinned.log`) |
+
+Step for each candidate head: run manifest-c2.txt, every `sec/*/candidate.cases`, then each B row:
+`subst` the mutation into a scratch copy of the candidate source, `cc` it, run the killing rows, and
+finish with `cc pinned`. The candidate's own pin replaces 734f0a39 in the gate's command line.

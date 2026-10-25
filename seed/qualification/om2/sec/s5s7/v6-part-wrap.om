@@ -1,0 +1,14 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 lines 173-174, coordinator golden: len 10, o = 2^64-2, k = 4: o <= len fails, trap 3,
+note exit 103, no stdout. A wrapped `o + k <= len` check (2 <= 10) accepts; the callee only reads len, so
+note that mutant prints 4 and exits 0 (exp/v6-part-wrap.mutant).
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+o = ulong 18446744073709551614
+putd plen part a o 4
+ret 0
+end

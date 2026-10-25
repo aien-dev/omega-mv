@@ -1,0 +1,31 @@
+note SPDX-License-Identifier: Apache-2.0
+note C1 control (contract 13-18): an OM-1 unit keeps the OM-2 words as ordinary names: at seal open
+note abstract holds layout field little big part export out rotr as scalars, fresh as a parameter,
+note dup32mk as a function. Expected stdout oracle/s5s7/exp/t-names.out (python3): 91, dup of 7.
+fn dup32mk fresh ulong to ulong
+ret or shl fresh 32 fresh
+end
+fn n1 to ulong
+at = ulong 1
+seal = ulong 2
+open = ulong 3
+abstract = ulong 4
+holds = ulong 5
+layout = ulong 6
+field = ulong 7
+ret add add add add add add at seal open abstract holds layout field
+end
+fn n2 to ulong
+little = ulong 8
+big = ulong 9
+part = ulong 10
+export = ulong 11
+out = ulong 12
+rotr = ulong 13
+ret add add add add add little big part export out rotr
+end
+fn main to int
+putd add n1 n2
+puth dup32mk 7
+ret 0
+end

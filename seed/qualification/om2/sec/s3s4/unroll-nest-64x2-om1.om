@@ -1,0 +1,20 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of unroll-nest-64x2.om for the pinned compiler 734f0a39: same expectation.
+note Contract section 4 lines 87-92, 110 and erratum E7: the 64-copy limit is per unrolled loop, so an unroll 2
+note nested in an unroll 64 (128 copies of the inner body) is accepted; the total is bounded only by the
+note 65536-word limit. Removing unroll (twin unroll-nest-64x2-rolled.om) changes nothing.
+note Expected stdout: oracle/s3s4/exp/unroll-nest-64x2.out (python3, oracle/s3s4/oracle.py).
+note OM-1 unit: this line replaces the om2 line
+fn main to int
+f = ulong 1
+c = ulong 0
+for i ulong 64
+for j ulong 2
+f = add mul f 31 add mul i 2 j
+c = add c 1
+end
+end
+pu f
+pu c
+ret 0
+end

@@ -1,0 +1,14 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract line 136: a bare number where dup32 is required is error 7 (xor is listed).
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = dup32mk 5
+e = xor d 5
+puth open e
+ret 0
+end

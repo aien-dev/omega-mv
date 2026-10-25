@@ -1,0 +1,33 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 109-111: a function's emitted words after unrolling are at most 65536,
+note else error 14 (obligation=growth). Two nested unroll 64 loops make 4096 copies of a 12-statement
+note body of unsigned ops on run-time values (each statement at least two instructions, so at least
+note 98304 words). Each loop alone is within the 64-copy bound; the word bound refuses it.
+note Twin unroll-growth-diag.om checks the om2 diag record.
+om2
+fn grow a ulong to ulong
+x = a
+s = add a 1
+t = add a 2
+u = add a 3
+for i ulong 64 unroll
+for j ulong 64 unroll
+x = add mul x 3 add s add i j
+s = xor s shr x 7
+t = add t mul s x
+u = xor u shl t 3
+x = add x mul u 5
+s = add s xor x t
+t = xor t shr s 11
+u = add u mul t 9
+x = xor x add u s
+s = mul s add x 1
+t = add t xor u 13
+u = xor u add s t
+end
+end
+ret xor xor x s xor t u
+end
+fn main to int
+ret int and grow 5 255
+end

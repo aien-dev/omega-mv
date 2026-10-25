@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, line 123: a rolled loop contributes nothing (no induction), so the constant
+note get after a loop that writes every element is error 27.
+om2
+fn f s edit uchar 8 fresh to ulong
+for i ulong 8
+put s i 27
+end
+ret ulong get s 0
+end
+fn main to int
+a = new uchar 8 0
+putd f a
+ret 0
+end

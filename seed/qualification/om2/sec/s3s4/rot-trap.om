@@ -1,0 +1,89 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 3 lines 79-81: n must be in 0..w-1; n >= w traps 7 at run time, including a
+note constant n (OM-1 compiles a constant out-of-range shift to the run-time trap). One byte of stdin
+note selects one rotation: A-D constant n = w (one per width), E-H run-time n = w, I-L run-time n > w
+note (w+1 and the type maximum), M-O constant n > w, P a control (rotr uint by 31, no trap).
+note Program mode: a trap exits 100 + 7 = 107 with nothing printed; P prints one line and exits 0.
+om2
+fn rr8 x uchar n uchar to uchar
+ret rotr x n
+end
+fn rl8 x uchar n uchar to uchar
+ret rotl x n
+end
+fn rr16 x ushort n ushort to ushort
+ret rotr x n
+end
+fn rl16 x ushort n ushort to ushort
+ret rotl x n
+end
+fn rr32 x uint n uint to uint
+ret rotr x n
+end
+fn rl32 x uint n uint to uint
+ret rotl x n
+end
+fn rr64 x ulong n ulong to ulong
+ret rotr x n
+end
+fn rl64 x ulong n ulong to ulong
+ret rotl x n
+end
+fn main to int
+s = new uchar 1 0
+r = read 0 s 0 1
+k = get s 0
+a = uchar 177
+b = ushort 45508
+c = uint 4041331395
+d = ulong 9305357566071262703
+if eq k 65
+pu ulong rotr a 8
+end
+if eq k 66
+pu ulong rotl b 16
+end
+if eq k 67
+pu ulong rotr c 32
+end
+if eq k 68
+pu rotl d 64
+end
+if eq k 69
+pu ulong rl8 a 8
+end
+if eq k 70
+pu ulong rr16 b 16
+end
+if eq k 71
+pu ulong rl32 c 32
+end
+if eq k 72
+pu rr64 d 64
+end
+if eq k 73
+pu ulong rr8 a 9
+end
+if eq k 74
+pu ulong rl16 b 65535
+end
+if eq k 75
+pu ulong rr32 c 4294967295
+end
+if eq k 76
+pu rl64 d 18446744073709551615
+end
+if eq k 77
+pu ulong rotr c 33
+end
+if eq k 78
+pu rotl d 65
+end
+if eq k 79
+pu ulong rotl a 255
+end
+if eq k 80
+pu ulong rotr c 31
+end
+ret 0
+end
