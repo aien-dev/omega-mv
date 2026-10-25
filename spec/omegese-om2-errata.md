@@ -119,3 +119,9 @@ edit). Unsized parameters are allowed on internal functions, not only on exporte
 - For `rotr`/`rotl` on an abstract value, `n` has the abstract type's representation type T (ulong
   for dup32), so a bare number takes T.
 - Error 29 for a `layout` after the first `fn` names the `layout` line.
+
+## E10 (QualPhaseB L836 D3, 2026-10-25): blank lines before `om2`
+
+A unit is OM-2 iff its first line that is neither a `note` line nor blank (empty, or only spaces) is
+exactly `om2` (or `om2 diag`). OM-1 refuses such a unit at the `om2` line whether or not blank lines
+precede it, so C1 and C3 hold. The fmt mode rule (E6 Q4 f, the first line at byte 0) is unchanged.
