@@ -3,6 +3,10 @@ deadline 60
 cc seed/omc/omc.om
 ctl-v-ok run seed/omc/om2/s4/v-ok.om - - - 0
 ctl-v-trap-get run seed/omc/om2/s4/v-trap-get.om - - - 103
+ctl-p-ok run seed/omc/om2/s4/p-ok.om - - - 0
+ctl-p-wrap run seed/omc/om2/s4/p-wrap.om - - - 103
+ctl-p-o run seed/omc/om2/s4/p-o.om - - - 103
+ctl-p-bad-base refuse seed/omc/om2/s4/p-bad-base.om 19
 # unsized view: a number index left unchecked (check elimination on an unsized view)
 subst seed/omc/om2/s4/mut/uce.from seed/omc/om2/s4/mut/uce.to
 cc seed/omc/omc.om
@@ -11,3 +15,15 @@ m-uce run seed/omc/om2/s4/v-trap-get.om - - - 103
 subst seed/omc/om2/s4/mut/slot.from seed/omc/om2/s4/mut/slot.to
 cc seed/omc/omc.om
 m-slot run seed/omc/om2/s4/v-ok.om - - - 0
+# part: the wrapped check o + k <= len instead of the two checks
+subst seed/omc/om2/s4/mut/pwrap.from seed/omc/om2/s4/mut/pwrap.to
+cc seed/omc/omc.om
+m-pwrap run seed/omc/om2/s4/p-wrap.om - - - 103
+# part: the first check (o <= len) missing
+subst seed/omc/om2/s4/mut/pfirst.from seed/omc/om2/s4/mut/pfirst.to
+cc seed/omc/omc.om
+m-pfirst run seed/omc/om2/s4/p-o.om - - - 103
+# part: not counted as its base for error 19
+subst seed/omc/om2/s4/mut/p19.from seed/omc/om2/s4/mut/p19.to
+cc seed/omc/omc.om
+m-p19 refuse seed/omc/om2/s4/p-bad-base.om 19

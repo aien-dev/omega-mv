@@ -2759,6 +2759,9 @@ end
 if gt get tl 0 8
 fail 13
 end
+if eq kw get tw 0 193
+fail 9
+end
 e = findname get tw 0
 if eq e 0
 fail 3
@@ -3624,19 +3627,27 @@ note length must equal the parameter's; an edit parameter needs a writable array
 note a view passed to it is error 20, OMEGESE.md 9.4); a global is never passed (error 19). Out: rk 5
 note (register rv) or 6 (address rv, a text), rt the name entry. om4 ARRARG.
 note OM-2: an unsized parameter (length 0) takes an array of any length (erratum E2), whose count goes to
-note ul_k / ul_v at depth * 6 + pi: its count register, or its length as a number.
+note ul_k / ul_v at depth * 6 + pi: its count register, or its length as a number. `part` is read by arrpart.
 fn arrarg f ulong pi ulong to void
 md = ulong 0
 aa_word
 w = get tw 0
 c = kw w
 if ne c 0
+if eq c 193
+arrpart f pi 0
+ret
+end
 if or lt c 57 gt c 58
 fail 16
 end
 md = c
 aa_word
 w = get tw 0
+if eq kw w 193
+arrpart f pi md
+ret
+end
 end
 e = findname w
 if eq e 0
@@ -3691,6 +3702,83 @@ else
 put rk 0 5
 put rv 0 ulong get nm_reg i
 end
+end
+
+note arrpart (OM-2, spec 6): `part A o k` as argument pi of function f (index + 1); md 57 / 58 when `view` /
+note `edit` was written before it. A is a name (a global is error 19, a fresh array 27); o, then k, are
+note ulong values. Checks, in this order: o <= len A (CMP Xo, Xlen; B.HI trap 3), then k <= len A - o (SUB,
+note CMP, B.HI trap 3); the wrapped o + k is never formed. The part is a view of A + o * size with count k:
+note an edit when A is writable (local or edit) and no `view` was written, else a view. It goes only to an
+note unsized parameter (error 7). Out as arrarg; rt is A, so for error 19 the part counts as its base.
+fn arrpart f ulong pi ulong md ulong to void
+p = add mul sub f 1 6 pi
+e = arrname
+i = sub e 1
+k = ulong get nm_kind i
+if ge k 6
+fail 7
+end
+if eq k 4
+fail 19
+end
+fz_arg e
+if eq get fn_pk p 3
+if eq md 57
+fail 20
+end
+if and ne k 1 ne k 3
+fail 20
+end
+else
+if eq md 58
+fail 7
+end
+end
+if ne ulong get nm_type i ulong get fn_pt p
+fail 7
+end
+if ne get fn_pl p 0
+fail 7
+end
+rdval 0 5 255 0
+if ne get rt 0 5
+fail 7
+end
+ro = matreg get rk 0 get rv 0 5
+rdval 0 5 255 0
+if ne get rt 0 5
+fail 7
+end
+rn = matreg get rk 0 get rv 0 5
+d = partck i ro rn
+ux = add mul get depth 0 6 pi
+put ul_k ux 1
+put ul_v ux rn
+put rt 0 e
+put rk 0 5
+put rv 0 d
+end
+
+note partck: the two checks of part (name index i, o in ro, k in rn), then the part's base register
+fn partck i ulong ro ulong rn ulong to ulong
+rl = ulong get nm_lr i
+if ne get nm_len i 0
+rl = alloc
+matconst rl get nm_len i
+end
+emit or or 3942645791 shl rl 16 shl ro 5
+trapc 8 3
+d = alloc
+e3 3405774848 d rl ro
+emit or or 3942645791 shl d 16 shl rn 5
+trapc 8 3
+b = ulong get nm_reg i
+if eq get nm_kind i 5
+b = alloc
+matconst b get nm_addr i
+end
+emit or or or or 2332033024 shl ro 16 shl tlog ulong get nm_type i 10 shl b 5 d
+ret d
 end
 
 note ======== the parts of the value reader that read no further value ========
@@ -5788,7 +5876,7 @@ end
 vdec
 ret
 end
-if eq c 77
+if or eq c 77 eq c 193
 fail 9
 end
 if and ge c 100 le c 177
@@ -8035,7 +8123,7 @@ end
 if or or or eq c 77 eq c 78 eq c 79 eq c 81
 fail 9
 end
-if eq c 85
+if or eq c 85 eq c 193
 fail 9
 end
 fail 16

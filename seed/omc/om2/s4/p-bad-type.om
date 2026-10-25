@@ -1,0 +1,10 @@
+note S4: o and k are ulong; an int o is error 7.
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+o = int 1
+ret int plen part a o 4
+end

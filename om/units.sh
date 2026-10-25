@@ -5,7 +5,7 @@
 #   OMEGA_OMC     seed-born omc, sha256 pinned below
 #   OMEGA_BRIDGE  an aien-dev/omega-bridge checkout; src/native.om sha256 pinned below
 set -eu
-OMC_PIN=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22
+OMC_PIN=72eb116963608b176d0049bb932c3ee6d60a462c83d3e1f1dea1e0154e1888e6
 NATIVE_PIN=2c2c53f61d4ab302f1a2092c3c32189335dd53f6cf2b388f47a475f99f2c3940
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 # One binding file for all units: each generated binding defines the shared ABI runtime (ombr_enter),

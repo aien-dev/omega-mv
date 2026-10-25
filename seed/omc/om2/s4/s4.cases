@@ -21,3 +21,21 @@ s4-v-bad-fresh refuse seed/omc/om2/s4/v-bad-fresh.om 16
 s4-v-bad-local refuse seed/omc/om2/s4/v-bad-local.om 16
 s4-v-bad-global refuse seed/omc/om2/s4/v-bad-global.om 19
 s4-v-om1 refuse seed/omc/om2/s4/v-om1.om 16
+## part (spec 6, erratum E8)
+s4-p-ok run seed/omc/om2/s4/p-ok.om - - - 0
+s4-p-wrap run seed/omc/om2/s4/p-wrap.om - - - 103
+s4-p-o run seed/omc/om2/s4/p-o.om - - - 103
+s4-p-tail run seed/omc/om2/s4/p-tail.om - - - 103
+s4-p-order run seed/omc/om2/s4/p-order.om - - - 102
+s4-p-om1 run seed/omc/om2/s4/p-om1.om - - - 7
+s4-p-bad-local refuse seed/omc/om2/s4/p-bad-local.om 9
+s4-p-bad-stmt refuse seed/omc/om2/s4/p-bad-stmt.om 9
+s4-p-bad-write refuse seed/omc/om2/s4/p-bad-write.om 9
+s4-p-bad-two refuse seed/omc/om2/s4/p-bad-two.om 19
+s4-p-bad-base refuse seed/omc/om2/s4/p-bad-base.om 19
+s4-p-bad-global refuse seed/omc/om2/s4/p-bad-global.om 19
+s4-p-bad-viewedit refuse seed/omc/om2/s4/p-bad-viewedit.om 20
+s4-p-bad-vieweditkw refuse seed/omc/om2/s4/p-bad-vieweditkw.om 20
+s4-p-bad-sized refuse seed/omc/om2/s4/p-bad-sized.om 7
+s4-p-bad-type refuse seed/omc/om2/s4/p-bad-type.om 7
+s4-p-bad-fresh emit seed/omc/om2/s4/p-bad-fresh.om - err:10:27 27

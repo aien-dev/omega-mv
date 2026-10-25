@@ -736,6 +736,14 @@ meaning and, for the C2 manifest, its exact output bytes or error.
 - **Parameter slots.** Parameters take x0..x5 in order, in both modes: an unsized view or edit two slots
   (pointer, then count), every other parameter one (a scalar, a sized array, a layout or a struct by its
   pointer). A parameter that needs a seventh slot is error 9 on the fn line.
+- **Part.** `part A o k` (o, k ulong; another type is error 7), only as an argument for an unsized
+  parameter of a call (a sized parameter is error 7; anywhere else, `read`/`write` included, error 9), is
+  the k elements of A from o. A is a name: a local, a view, an edit or a text (a global is error 19, a fresh
+  array error 27). o is read, then k, then the checks run in this order: o <= len A, then k <= len A - o
+  (CMP, B.HI trap 3; the wrapped o + k is never formed). The callee gets A + o * size and count k. A part
+  of a local or an edit is an edit, or a view with `view` in front; a part of a view or a text is a view
+  (to an edit parameter error 20). For distinct names a part is its base A: A and a part of it, or two
+  parts of A, in one call are error 19 whatever the ranges.
 
 ## 10. Native host extension (2026-10-23)
 
