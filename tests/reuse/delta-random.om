@@ -14,6 +14,8 @@ note   6 scan bound  7 recompute bound  8 wrong AGG fixture not seen  9 wrong FS
 note   10 baseline path used the fixture  11 FSM misses not counted  12 MIN/MAX scans not counted
 note   13 unbound dlres  14 unbound dlchg  15 too few checks  16 stats moved backwards
 note   17 dlbind accepted an invalid program  18 dropped state served
+note   19 a drop of live delta state not counted as exactly one invalidation (dlinvn), or a drop of
+note      an unbound state counted
 
 global TRS ulong 1
 global TMODE ulong 1
@@ -397,7 +399,12 @@ end
 if eq get R1P 1 2
 tgfsm get R1P 2 get R1P 3
 end
+i0 = dlinvn
 dldrop
+if ne sub dlinvn i0 1
+tsay 19 sub dlinvn i0 1
+ret 19
+end
 ret tbind
 end
 
@@ -807,7 +814,13 @@ r = tcheck
 if ne r 0
 ret r
 end
+i0 = dlinvn
 dldrop
+dldrop
+if ne sub dlinvn i0 1
+tsay 19 sub dlinvn i0 2
+ret 19
+end
 if ne dlres 1
 ret 18
 end
@@ -819,6 +832,43 @@ if ne dlbind -1 1
 ret 17
 end
 put R1P 2 8
+ret tphasedrop
+end
+
+note the review case: BEGIN, then 64 x (PROGRAM, QUERY) on the baseline path and on the method
+note fixture; every PROGRAM drops live state, so dlinvn rises by exactly 64 per session (s5.2 churn)
+fn tphasedrop to int
+for meth ulong 2
+put TMETH 0 meth
+for fam ulong 2
+if eq fam 0
+tgagg 16 3 2 0
+else
+tgfsm 6 5
+end
+tfill 64
+dlsreset
+r = tbind
+if ne r 0
+ret r
+end
+i0 = dlinvn
+for s ulong 64
+r = tprog
+if ne r 0
+ret r
+end
+r = tcheck
+if ne r 0
+ret r
+end
+end
+if ne sub dlinvn i0 64
+tsay 19 sub dlinvn i0 64
+ret 19
+end
+end
+end
 ret 0
 end
 
