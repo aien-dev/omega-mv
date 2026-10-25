@@ -744,6 +744,15 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   of a local or an edit is an edit, or a view with `view` in front; a part of a view or a text is a view
   (to an edit parameter error 20). For distinct names a part is its base A: A and a part of it, or two
   parts of A, in one call are error 19 whatever the ranges.
+- **Out.** A parameter `NAME out T N` (N a length; `*` or `fresh` is error 16) is written by the unit;
+  the bridge owns the buffer and copies it out after status 0 (spec 6, E1). Inside the unit it is an edit
+  of T N in one slot (its pointer): `get`, `put`, passing it on as an edit; a view or an array of another
+  length passed to it is error 20 / 7.
+- **Export.** `export fn NAME ...` at top level (error 16 elsewhere, and when `fn` does not follow) marks a
+  function-mode entry (with `fn main` error 9; a 33rd export error 14). With any export, words 0 .. E-1
+  are `B` to the exports in source order and the code starts at word E; the other functions are private.
+  Without export the OM-1 rule holds (one function: its bare words; more: word 0 is `B` to the last). The
+  entry rules of the abstract types apply to each export (to the last function when there is none).
 
 ## 10. Native host extension (2026-10-23)
 

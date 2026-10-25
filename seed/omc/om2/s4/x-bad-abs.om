@@ -1,0 +1,12 @@
+note S4 with S3 abstract types: an exported entry, not the last fn, may not take an abstract type (error 7).
+om2
+abstract dup32 ulong
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+export fn e d dup32 to ulong
+ret open d
+end
+fn last a ulong to ulong
+ret a
+end

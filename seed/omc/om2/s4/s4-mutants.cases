@@ -6,6 +6,7 @@ ctl-v-trap-get run seed/omc/om2/s4/v-trap-get.om - - - 103
 ctl-p-ok run seed/omc/om2/s4/p-ok.om - - - 0
 ctl-p-wrap run seed/omc/om2/s4/p-wrap.om - - - 103
 ctl-p-o run seed/omc/om2/s4/p-o.om - - - 103
+ctl-x-two emit seed/omc/om2/s4/x-two.om sha:52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e - 0
 ctl-p-bad-base refuse seed/omc/om2/s4/p-bad-base.om 19
 # unsized view: a number index left unchecked (check elimination on an unsized view)
 subst seed/omc/om2/s4/mut/uce.from seed/omc/om2/s4/mut/uce.to
@@ -27,3 +28,7 @@ m-pfirst run seed/omc/om2/s4/p-o.om - - - 103
 subst seed/omc/om2/s4/mut/p19.from seed/omc/om2/s4/mut/p19.to
 cc seed/omc/omc.om
 m-p19 refuse seed/omc/om2/s4/p-bad-base.om 19
+# export: the entry words (B to each export) not written
+subst seed/omc/om2/s4/mut/tramp.from seed/omc/om2/s4/mut/tramp.to
+cc seed/omc/omc.om
+m-tramp emit seed/omc/om2/s4/x-two.om sha:52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e - 0

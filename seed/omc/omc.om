@@ -204,6 +204,12 @@ global nm_lr uchar 1024
 global psl ulong 1
 global ul_k ulong 6156
 global ul_v ulong 6156
+note ---- OM-2 section 6 multi-entry units: nexp `export fn` lines (32 at most, function mode only), fn_exp 1
+note for an exported function, expf 1 while an `export fn` line is read. With any export, words 0 .. E-1
+note of the code are B to each export in source order and the code starts at byte 176 + 4E ----
+global nexp ulong 1
+global expf ulong 1
+global fn_exp uchar 512
 
 note ======== leaf helpers ========
 
@@ -6249,6 +6255,10 @@ c = kw get tw 0
 t = ulong 0
 ln = ulong 0
 k = ulong 0
+if eq c 194
+fn_p_out f np pw
+ret
+end
 if or eq c 57 eq c 58
 k = sub c 55
 sid = peek_struct
@@ -6301,6 +6311,21 @@ p = add mul f 6 np
 put fn_pt p uchar t
 put fn_pl p ln
 put fn_pk p uchar k
+end
+
+note fn_p_out (OM-2, spec 6, erratum E1): `NAME out T N`, a sized array the unit writes and the bridge owns
+note (copied out only after status 0). Inside the unit it is an edit of T N (kind 3) in one slot, its
+note pointer; a length `*` is error 16, and so is `fresh` after it.
+fn fn_p_out f ulong np ulong pw ulong to void
+t = typeword
+elemtype t
+ln = lenval 16
+arrlen ln
+addname pw poolc get psl 0 t ln 3 0
+p = add mul f 6 np
+put fn_pt p uchar t
+put fn_pl p ln
+put fn_pk p 3
 end
 
 note fn_to: to T | to void at the end of a fn line; the function's state starts. om4 FN_TO .. FN_T2.
@@ -6379,6 +6404,7 @@ put fn_ret f 0
 put fn_np f 0
 put fn_nmlen f l
 put fn_off f s
+put fn_exp f uchar get expf 0
 else
 f = sub findfn w l s 1
 put curfn 0 add f 1
@@ -7998,12 +8024,29 @@ end
 if ne get nglob 0 0
 fail 9
 end
+if ne get nexp 0 0
+expwords
+writeout 176
+end
 if eq get nf 0 1
 writeout 180
 end
 a = get fn_addr sub get lastfn 0 1
 wrword 176 or 335544320 and shr sub a 176 2 67108863
 writeout 176
+end
+
+note expwords (OM-2, spec 6): words 0 .. E-1 of a multi-entry unit, B to each export in source order
+fn expwords to void
+at = ulong 176
+f = ulong 0
+while lt f get nf 0
+if ne get fn_exp f 0
+wrword at or 335544320 and shr sub get fn_addr f at 2 67108863
+at = add at 4
+end
+f = add f 1
+end
 end
 
 note stmt: one line. Returns 1 at the end of the input. om4 STMT.
@@ -8057,6 +8100,10 @@ ret 0
 end
 if eq c 85
 skipnl
+ret 0
+end
+if eq c 195
+s_export
 ret 0
 end
 if eq c 188
@@ -8803,8 +8850,14 @@ end
 if ne get progmode 0 0
 ret
 end
+if ne get nexp 0 0
+if eq get fn_exp f 0
+ret
+end
+else
 if ne add f 1 get nf 0
 ret
+end
 end
 if ge get fn_ret f 64
 fail 7
@@ -9289,7 +9342,32 @@ if eq get tw 0 495606067048
 s_holds
 ret 1
 end
+if eq get tw 0 128034844735589
+s_export
+ret 1
+end
 ret 0
+end
+
+note s_export (OM-2, spec 6): `export fn ...` at top level: the fn line of an exported entry, in both
+note passes. Function mode only (error 9), at most 32 (error 14), counted and marked in the names pass.
+fn s_export to void
+tok
+if or ne get tk 0 1 ne get tw 0 28262
+fail 16
+end
+if eq get scanning 0 1
+if ne get progmode 0 0
+fail 9
+end
+if ge get nexp 0 32
+fail 14
+end
+put nexp 0 add get nexp 0 1
+end
+put expf 0 1
+s_fn
+put expf 0 0
 end
 
 note ly_num: the next token must be a number (error 4 at the line end, 16 for another token, 29 when it
@@ -11020,7 +11098,11 @@ ir_run
 end
 prescan
 namescan
+if eq get nexp 0 0
 put oc 0 180
+else
+put oc 0 add 176 shl get nexp 0 2
+end
 put line 0 1
 done = false
 while not done
