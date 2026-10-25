@@ -47,11 +47,6 @@ const char *rx_exp_strerror(int rc) {
     case RX_EXP_ERR_HYPOTHESIS: return "hypothesis is not one for this prior and action";
     case RX_EXP_ERR_REFUSED: return "environment refused the action";
     case RX_EXP_ERR_WORLD: return "composition, World or Cortex failure";
-    case RX_EXP_ERR_RETIRED: return "state object retired in the World";
-    case RX_EXP_ERR_TENANT: return "owner is not the tenant that took the action";
-    case RX_EXP_ERR_TAINTED: return "hypothesis basis imported, private into non-private, or too large";
-    case RX_EXP_ERR_CAPABILITY: return "no live capability of the tenant to act in this family";
-    case RX_EXP_ERR_TRACE: return "episode trace full: reset to start the next episode";
     default: return "unknown";
     }
 }
@@ -155,7 +150,6 @@ int rx_exp_open(RxExpEnv *e, const RxExpFamily *fam, const char *dir, const Aien
     if (!e || !fam || !dir || !self || !admin || !view) return RX_EXP_ERR_ARG;
     memset(e, 0, sizeof *e);
     e->fam = fam;
-    e->view = view;
     e->now_us = EXP_NOW_US;
     if (build_graph(e, self) != 0) {
         cq_catalog_free(&e->cat);
@@ -215,7 +209,6 @@ int rx_exp_reset(RxExpEnv *e, uint64_t seed) {
     e->fam->objective(r.result, e->objective);
     e->episode++;
     e->step = 0;
-    e->taken = 0;
     return RX_EXP_OK;
 }
 
@@ -233,23 +226,9 @@ int rx_exp_hypothesis(RxExpEnv *e, uint64_t predictor, uint64_t action, uint64_t
     return put(e, &h, p, RX_EXP_H_WORDS, out_id);
 }
 
-/* The state object is retired: its World reference is no longer live. */
-static int subject_retired(RxExpEnv *e) {
-    RxObject so;
-    return rx_world_read(e->c.world, e->c.state, &so) != RX_OK;
-}
-
-int rx_exp_act(RxExpEnv *e, uint32_t tenant, AienosCapRef cap, uint64_t action,
-               RxExpObservation *obs) {
+int rx_exp_act(RxExpEnv *e, uint64_t action, RxExpObservation *obs) {
     if (!e || !e->open || !obs) return RX_EXP_ERR_ARG;
     memset(obs, 0, sizeof *obs);
-    /* Refusals before anything runs; a pending transition stays recordable. */
-    AienosCapEntry ce;
-    if (!tenant || aienos_cap_validate(e->view, cap, tenant, RX_EXP_RESOURCE(e->fam),
-                                       RX_EXP_RIGHT_ACT, &ce) != 0)
-        return RX_EXP_ERR_CAPABILITY;
-    if (subject_retired(e)) return RX_EXP_ERR_RETIRED;
-    if (e->taken >= RX_EXP_MAX_STEPS) return RX_EXP_ERR_TRACE;
     drop_pending(e);
     uint64_t prior = rx_exp_state(e);
     uint64_t input = e->fam->encode(prior, action);
@@ -258,7 +237,6 @@ int rx_exp_act(RxExpEnv *e, uint32_t tenant, AienosCapRef cap, uint64_t action,
     if (r.outcome == RXC_OUT_NO_WINNER || r.outcome == RXC_OUT_NOT_COMMITTED)
         return RX_EXP_ERR_REFUSED;
     if (r.outcome != RXC_OUT_COMMITTED) return RX_EXP_ERR_WORLD;
-    e->taken++;
     const CxObject *ev = cx_get(&e->c.cx, r.cx_evidence);
     if (!ev) return RX_EXP_ERR_WORLD;
     uint64_t next = 0, cost = 0;
@@ -269,7 +247,6 @@ int rx_exp_act(RxExpEnv *e, uint32_t tenant, AienosCapRef cap, uint64_t action,
     e->pend.input = input;
     e->pend.next = r.result;
     e->pend.cost = cost;
-    e->pend.tenant = tenant;
     e->pend.goal_crumb = r.goal_crumb;
     e->pend.commit = ev->links[3];
     e->pend.evidence = r.cx_evidence;
@@ -345,36 +322,6 @@ static int commit_used(const CxStore *s, uint64_t commit) {
     return 0;
 }
 
-/* RX_EXP_ERR_TAINTED rule (rx_experience.h, Taint): breadth-first over the
- * hypothesis and the claims it links, digests checked. */
-static int tainted(const CxStore *s, uint64_t hyp, uint64_t privacy) {
-    uint64_t q[RX_EXP_BASIS_MAX];
-    uint32_t n = 0;
-    q[n++] = hyp;
-    for (uint32_t i = 0; i < n; i++) {
-        CxRecord r;
-        if (cx_recall_id(s, q[i], &r) != CX_OK || !r.verified) return 1;
-        if (r.hdr.kind == CX_K_IMPORTED) return 1;
-        if (r.hdr.kind == CX_K_EXPERIENCE) {
-            RxExpRecord x;
-            if (rx_exp_decode(s, q[i], &x) != RX_EXP_OK) return 1;
-            if (x.w[RX_EXP_W_PRIVACY] != RX_EXP_PRIV_SYNTHETIC && privacy != RX_EXP_PRIV_PRIVATE)
-                return 1;
-            continue;
-        }
-        if (r.hdr.cls != CX_CLAIM) continue;
-        for (uint32_t j = 0; j < CX_LINKS; j++) {
-            uint64_t l = r.hdr.links[j];
-            int seen = !l;
-            for (uint32_t k = 0; k < n && !seen; k++) seen = q[k] == l;
-            if (seen) continue;
-            if (n == RX_EXP_BASIS_MAX) return 1;
-            q[n++] = l;
-        }
-    }
-    return 0;
-}
-
 static void prediction_error(const RxExpFamily *f, uint64_t pred, uint64_t obs, uint64_t *fields,
                              uint64_t *l1) {
     int64_t a[RX_EXP_MAX_FIELDS], b[RX_EXP_MAX_FIELDS];
@@ -419,7 +366,6 @@ int rx_exp_record(RxExpEnv *e, const RxExpDraft *d, uint64_t *out_id) {
         rx_cortex_record_in(e->c.world, s, wr.crumb) != o->commit || !k ||
         k->kind != RX_CRUMB_COMMIT || memcmp(k->digest, wr.crumb_digest, 32) != 0)
         return RX_EXP_ERR_FORGED;
-    if (subject_retired(e)) return RX_EXP_ERR_RETIRED;
     if (wr.field[RXC_S_RESULT] != o->next) return RX_EXP_ERR_MISMATCH;
 
     /* 3. It is the transition this environment is waiting to record. */
@@ -427,7 +373,6 @@ int rx_exp_record(RxExpEnv *e, const RxExpDraft *d, uint64_t *out_id) {
         o->promotion != e->pend.promotion || d->prior != e->pend.prior ||
         d->action != e->pend.action || o->next != e->pend.next)
         return RX_EXP_ERR_ORDER;
-    if (d->owner != e->pend.tenant) return RX_EXP_ERR_TENANT;
 
     /* 4. AEGIS passed it, it was promoted, the accepted goal was prior + action. */
     uint64_t input = f->encode(d->prior, d->action), verdict = 0;
@@ -455,7 +400,6 @@ int rx_exp_record(RxExpEnv *e, const RxExpDraft *d, uint64_t *out_id) {
             return RX_EXP_ERR_HYPOTHESIS;
         predicted = hp[RX_EXP_H_PREDICTED];
         predictor = hp[RX_EXP_H_PREDICTOR];
-        if (tainted(s, d->hypothesis, d->privacy)) return RX_EXP_ERR_TAINTED;
     }
 
     uint64_t p[RX_EXP_W_WORDS];

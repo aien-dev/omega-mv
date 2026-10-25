@@ -32,10 +32,6 @@
  *      rebuilt identically after restart, tampering is excluded.
  *   5. determinism: same seed -> byte-identical experience payloads in fresh
  *      environments and after reset; different seeds -> different trajectories.
- *   6. refusal matrix (A2, rest): action without capability, wrong owner /
- *      tenant, tainted hypothesis basis, too-large trace, retired subject;
- *      each refused with its code and nothing written, and a valid record
- *      of the same environment still passes.
  */
 #include "physics0/pd0_rng.h"
 #include "runtime/rx_cortex_record.h"
@@ -66,18 +62,7 @@ static AienMachineId g_self;
 static char g_base[64];
 static RxExpEnv g_e, g_e2;          /* large: static */
 
-enum { OWNER_A = 0xA11CE, OWNER_B = 0xB0B, PREDICTOR = 0x7ED, ISSUER = 3 };
-static AienosCapRef g_cap_a, g_cap_b;   /* act in walk1d, for OWNER_A / OWNER_B */
-
-static AienosCapRef mint(uint32_t subject, uint64_t resource, uint32_t rights) {
-    AienosCapRef office, r = { UINT32_MAX, 0 };
-    if (aienos_cap_office(g_admin, &office) != 0) return r;
-    AienosCapMint m = { ISSUER, subject, resource, rights, 0, { UINT32_MAX, 0 }, office };
-    if (aienos_cap_mint(g_admin, &m, &r) != 0) r = (AienosCapRef){ UINT32_MAX, 0 };
-    return r;
-}
-
-static AienosCapRef cap_of(uint64_t owner) { return owner == OWNER_B ? g_cap_b : g_cap_a; }
+enum { OWNER_A = 0xA11CE, OWNER_B = 0xB0B, PREDICTOR = 0x7ED };
 
 static int rm_one(const char *p, const struct stat *sb, int flag, struct FTW *ftw) {
     (void)sb; (void)flag; (void)ftw;
@@ -127,7 +112,7 @@ static uint64_t step_record(RxExpEnv *e, uint64_t action, uint64_t pred, uint64_
     uint64_t hyp = 0, id = 0;
     RxExpObservation o;
     if (rx_exp_hypothesis(e, PREDICTOR, action, pred, &hyp) != RX_EXP_OK) return 0;
-    if (rx_exp_act(e, (uint32_t)owner, cap_of(owner), action, &o) != RX_EXP_OK) return 0;
+    if (rx_exp_act(e, action, &o) != RX_EXP_OK) return 0;
     RxExpDraft d = draft(owner, consent, split, hyp, &o);
     int rc = rx_exp_record(e, &d, &id);
     return rc == RX_EXP_OK ? id : 0;
@@ -201,7 +186,7 @@ static void t_chain_and_unobserved(void) {
     CHECK(ho && ho->cls == CX_CLAIM && ho->kind == CX_K_CANDIDATE && ho->tag == RX_EXP_TAG_HYPOTHESIS,
           "a prediction is a claim, never an observation");
     RxExpObservation o;
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, a, &o) == RX_EXP_OK, "act");
+    CHECK(rx_exp_act(e, a, &o) == RX_EXP_OK, "act");
     CHECK(o.prior == s0 && o.next == rx_exp_state(e) && o.commit && o.evidence && o.promotion,
           "observation names the World state and its receipts");
 
@@ -301,8 +286,8 @@ static void t_chain_and_unobserved(void) {
     /* 3g. stale: act twice, record the first */
     RxExpObservation o1, o2;
     uint64_t s1 = rx_exp_state(e);
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, policy(s1), &o1) == RX_EXP_OK, "act 1");
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, policy(rx_exp_state(e)), &o2) == RX_EXP_OK, "act 2");
+    CHECK(rx_exp_act(e, policy(s1), &o1) == RX_EXP_OK, "act 1");
+    CHECK(rx_exp_act(e, policy(rx_exp_state(e)), &o2) == RX_EXP_OK, "act 2");
     CHECK(e->dropped == 1, "unrecorded transition counted as dropped (%llu)", (unsigned long long)e->dropped);
     g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, 0, &o1);
     CHECK(rx_exp_record(e, &g, &id) == RX_EXP_ERR_ORDER, "stale observation: refused");
@@ -314,7 +299,7 @@ static void t_chain_and_unobserved(void) {
     uint64_t before = rx_exp_state(e), ev_before = 0, ev_after = 0;
     for (uint64_t i = 1; i <= e->c.cx.n; i++) ev_before += cx_get(&e->c.cx, i)->kind == CX_K_EVIDENCE_REF;
     RxExpObservation bad;
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, 0, &bad) == RX_EXP_ERR_REFUSED, "inadmissible action refused");
+    CHECK(rx_exp_act(e, 0, &bad) == RX_EXP_ERR_REFUSED, "inadmissible action refused");
     CHECK(rx_exp_state(e) == before, "World state unchanged");
     uint64_t last_ev = 0;
     for (uint64_t i = 1; i <= e->c.cx.n; i++)
@@ -471,204 +456,16 @@ static void t_determinism(void) {
            wrong, total);
 }
 
-/* ---- 6 ------------------------------------------------------------------------ */
-
-/* A claim through the composition's writer link (epistemic records may have
- * any claimed writer); `basis` becomes links[0]. */
-static uint64_t put_claim(RxExpEnv *e, uint32_t kind, uint64_t tag, const uint64_t *p, uint32_t n,
-                          uint64_t basis) {
-    CxHeader h;
-    memset(&h, 0, sizeof h);
-    h.cls = CX_CLAIM;
-    h.kind = kind;
-    h.subject = RX_EXP_SUBJECT;
-    h.tag = tag;
-    h.links[0] = basis;
-    h.t = rx_cortex_next_t_in(e->c.world, &e->c.cx);
-    uint64_t id = 0;
-    return rx_cortex_append_in(e->c.world, &e->c.cx, &h, p, n, &id) == RX_OK ? id : 0;
-}
-
-/* A hypothesis about `action` from the current state that names `basis`. */
-static uint64_t hyp_on(RxExpEnv *e, uint64_t action, uint64_t basis) {
-    uint64_t s = rx_exp_state(e);
-    uint64_t p[RX_EXP_H_WORDS] = { RX_EXP_VERSION, F->family, s, action,
-                                   noise_blind_prediction(s, action), PREDICTOR };
-    return put_claim(e, CX_K_CANDIDATE, RX_EXP_TAG_HYPOTHESIS, p, RX_EXP_H_WORDS, basis);
-}
-
-static void t_refusals(void) {
-    printf("[*] refusal matrix: capability, tenant, taint, trace, retired subject\n");
-    char d[200];
-    dir_for(d, sizeof d, "refuse");
-    RxExpEnv *e = &g_e;
-    CHECK(open_env(e, d, 1) == RX_EXP_OK, "open");
-    CHECK(rx_exp_reset(e, 0xD1CE) == RX_EXP_OK, "reset");
-    RxExpObservation o, o2;
-    RxExpDraft g;
-    uint64_t id = 0, recorded = 0;
-
-    /* 6a. action without capability: refused before anything runs */
-    AienosCapRef none = { UINT32_MAX, 0 }, office;
-    AienosCapRef ro = mint(OWNER_A, RX_EXP_RESOURCE(F), RX_RIGHT_READ);
-    AienosCapRef other = mint(OWNER_A, RX_EXP_RESOURCE(F) ^ 1, RX_EXP_RIGHT_ACT);
-    AienosCapRef gone = mint(OWNER_A, RX_EXP_RESOURCE(F), RX_EXP_RIGHT_ACT);
-    CHECK(ro.cap_id != UINT32_MAX && other.cap_id != UINT32_MAX && gone.cap_id != UINT32_MAX, "mint");
-    CHECK(aienos_cap_office(g_admin, &office) == 0 && aienos_cap_revoke(g_admin, office, gone) == 0,
-          "revoke one");
-    struct { uint32_t tenant; AienosCapRef cap; const char *what; } nocap[] = {
-        { OWNER_A, none, "no capability" },
-        { OWNER_B, g_cap_a, "another tenant's capability" },
-        { OWNER_A, ro, "read-only capability" },
-        { OWNER_A, other, "capability for another resource" },
-        { OWNER_A, gone, "revoked capability" },
-        { 0, g_cap_a, "no tenant" },
-    };
-    uint64_t s0 = rx_exp_state(e), a = policy(s0), n_before = e->c.cx.n;
-    for (uint32_t i = 0; i < sizeof nocap / sizeof nocap[0]; i++) {
-        int rc = rx_exp_act(e, nocap[i].tenant, nocap[i].cap, a, &o);
-        CHECK(rc == RX_EXP_ERR_CAPABILITY && rx_exp_state(e) == s0 && e->c.cx.n == n_before,
-              "%s: refused (%s), nothing written", nocap[i].what, rx_exp_strerror(rc));
-    }
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, a, &o) == RX_EXP_OK, "act with the tenant's capability");
-    uint64_t dropped = e->dropped;
-    CHECK(rx_exp_act(e, OWNER_A, none, a, &o2) == RX_EXP_ERR_CAPABILITY && e->dropped == dropped,
-          "a refused action leaves the pending transition");
-    g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, 0, &o);
-    CHECK(rx_exp_record(e, &g, &id) == RX_EXP_OK, "valid record passes");
-    recorded++;
-
-    /* 6b. wrong owner / tenant */
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, policy(rx_exp_state(e)), &o) == RX_EXP_OK, "act as A");
-    n_before = e->c.cx.n;
-    g = draft(OWNER_B, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, 0, &o);
-    int rc = rx_exp_record(e, &g, &id);
-    CHECK(rc == RX_EXP_ERR_TENANT && e->c.cx.n == n_before,
-          "B owning A's action: refused (%s), nothing written", rx_exp_strerror(rc));
-    g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, 0, &o);
-    CHECK(rx_exp_record(e, &g, &id) == RX_EXP_OK, "A owning A's action: recorded");
-    CHECK(step_record(e, policy(rx_exp_state(e)), 0, OWNER_B, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN),
-          "B owning B's action: recorded");
-    recorded += 2;
-
-    /* 6c. tainted hypothesis basis */
-    uint64_t one = 1, px = 0, chain = 0, fit = 0;
-    uint64_t imp = put_claim(e, CX_K_IMPORTED, CX_SRC_CORTEX_RS, &one, 1, 0);
-    uint64_t via = put_claim(e, CX_K_CLAIM, 0, &one, 1, imp);
-    CHECK(imp && via, "import and a claim on it");
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, policy(rx_exp_state(e)), &o) == RX_EXP_OK, "act");
-    g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, 0, &o);
-    g.privacy = RX_EXP_PRIV_PRIVATE;
-    CHECK(rx_exp_record(e, &g, &px) == RX_EXP_OK, "a private experience");
-    recorded++;
-    for (uint32_t i = 0; i < RX_EXP_BASIS_MAX; i++) {
-        chain = put_claim(e, CX_K_CLAIM, 0, &one, 1, chain);
-        if (i == RX_EXP_BASIS_MAX - 2) fit = chain;
-    }
-    a = policy(rx_exp_state(e));
-    uint64_t h_imp = hyp_on(e, a, imp), h_via = hyp_on(e, a, via), h_px = hyp_on(e, a, px);
-    uint64_t h_long = hyp_on(e, a, chain), h_syn = hyp_on(e, a, id);
-    CHECK(h_imp && h_via && h_px && h_long && h_syn, "hypotheses with a basis");
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, a, &o) == RX_EXP_OK, "act");
-    struct { uint64_t hyp; const char *what; } taint[] = {
-        { h_imp, "basis is an import" },
-        { h_via, "import one claim down" },
-        { h_px, "private experience into a synthetic record" },
-        { h_long, "basis larger than RX_EXP_BASIS_MAX" },
-    };
-    n_before = e->c.cx.n;
-    for (uint32_t i = 0; i < sizeof taint / sizeof taint[0]; i++) {
-        g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, taint[i].hyp, &o);
-        rc = rx_exp_record(e, &g, &id);
-        CHECK(rc == RX_EXP_ERR_TAINTED && e->c.cx.n == n_before, "%s: refused (%s), nothing written",
-              taint[i].what, rx_exp_strerror(rc));
-    }
-    g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, h_px, &o);
-    g.privacy = RX_EXP_PRIV_PRIVATE;
-    CHECK(rx_exp_record(e, &g, &id) == RX_EXP_OK, "private basis into a private record: recorded");
-    a = policy(rx_exp_state(e));
-    uint64_t h_fit = hyp_on(e, a, fit);
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, a, &o) == RX_EXP_OK, "act");
-    g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, h_fit, &o);
-    CHECK(rx_exp_record(e, &g, &id) == RX_EXP_OK, "basis of exactly RX_EXP_BASIS_MAX records: recorded");
-    a = policy(rx_exp_state(e));
-    h_syn = hyp_on(e, a, id);
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, a, &o) == RX_EXP_OK, "act");
-    g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, h_syn, &o);
-    CHECK(rx_exp_record(e, &g, &id) == RX_EXP_OK, "synthetic experience as basis: recorded");
-    recorded += 3;
-
-    /* 6d. too-large trace */
-    CHECK(rx_exp_reset(e, 0xD1CF) == RX_EXP_OK, "reset");
-    uint32_t ok = 0;
-    for (uint32_t i = 0; i < RX_EXP_MAX_STEPS; i++)
-        ok += step_record(e, policy(rx_exp_state(e)), 0, OWNER_A, RX_EXP_CONSENT_ALL,
-                          RX_EXP_SPLIT_TRAIN) != 0;
-    CHECK(ok == RX_EXP_MAX_STEPS && e->taken == RX_EXP_MAX_STEPS, "full episode: %u transitions", ok);
-    recorded += ok;
-    s0 = rx_exp_state(e);
-    n_before = e->c.cx.n;
-    rc = rx_exp_act(e, OWNER_A, g_cap_a, policy(s0), &o);
-    CHECK(rc == RX_EXP_ERR_TRACE && rx_exp_state(e) == s0 && e->c.cx.n == n_before,
-          "transition %u: refused (%s), nothing written", RX_EXP_MAX_STEPS + 1, rx_exp_strerror(rc));
-    CHECK(rx_exp_reset(e, 0xD1D0) == RX_EXP_OK, "reset");
-    id = step_record(e, policy(rx_exp_state(e)), 0, OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN);
-    RxExpRecord r;
-    CHECK(id && rx_exp_decode(&e->c.cx, id, &r) == RX_EXP_OK && r.w[RX_EXP_W_STEP] == 0,
-          "next episode records again from step 0");
-    recorded++;
-
-    /* 6e. retired subject */
-    CHECK(rx_exp_act(e, OWNER_A, g_cap_a, policy(rx_exp_state(e)), &o) == RX_EXP_OK, "act");
-    CHECK(rx_world_retire(e->c.world, e->c.state) == RX_OK, "World retires the state object");
-    int in_cortex = 0;
-    for (uint64_t i = 1; i <= e->c.cx.n; i++) {
-        const CxObject *x = cx_get(&e->c.cx, i);
-        in_cortex |= x->kind == CX_K_ENTITY_RETIRED && x->subject == RX_EXP_SUBJECT;
-    }
-    CHECK(in_cortex, "the retirement is a World record in Cortex");
-    n_before = e->c.cx.n;
-    g = draft(OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN, 0, &o);
-    rc = rx_exp_record(e, &g, &id);
-    CHECK(rc == RX_EXP_ERR_RETIRED && e->c.cx.n == n_before,
-          "experience of a retired subject: refused (%s), nothing written", rx_exp_strerror(rc));
-    rc = rx_exp_act(e, OWNER_A, g_cap_a, policy(o.next), &o2);
-    CHECK(rc == RX_EXP_ERR_RETIRED && e->c.cx.n == n_before,
-          "action on a retired subject: refused (%s), nothing written", rx_exp_strerror(rc));
-
-    /* the view holds every accepted record and nothing refused */
-    static RxExpRecord v[128];
-    RxExpViewStats st;
-    uint32_t nv = rx_exp_dataset(&e->c.cx, F, RX_EXP_CONSENT_RETRIEVE, RX_EXP_SPLIT_TRAIN, v, 128, &st);
-    CHECK(nv == recorded && st.seen == recorded && st.invalid == 0,
-          "view: %u of %llu recorded, invalid %llu", nv, (unsigned long long)recorded,
-          (unsigned long long)st.invalid);
-    CHECK(cx_verify_chain(&e->c.cx) == CX_OK, "chain");
-    rx_exp_close(e);
-
-    /* restart: a new state object takes valid records again */
-    CHECK(open_env(e, d, 2) == RX_EXP_OK, "reopen");
-    CHECK(rx_exp_reset(e, 0xD1D1) == RX_EXP_OK, "reset after reopen");
-    CHECK(step_record(e, policy(rx_exp_state(e)), 0, OWNER_A, RX_EXP_CONSENT_ALL, RX_EXP_SPLIT_TRAIN),
-          "valid record after reopen");
-    rx_exp_close(e);
-    rmtree(d);
-}
-
 int main(void) {
     snprintf(g_base, sizeof g_base, "/tmp/rx_exp_test.XXXXXX");
     if (!mkdtemp(g_base)) { perror("mkdtemp"); return 2; }
     uint8_t root[8] = { 'x', '1', 'e', 'x', 'p', 6, 9, 9 };
     if (aien_mid_derive(AIEN_MID_ROOT_PROVISIONED, root, sizeof root, &g_self) != 0) return 2;
     if (aienos_cap_start(&g_admin, &g_view) != 0) { fprintf(stderr, "aienos authority\n"); return 2; }
-    g_cap_a = mint(OWNER_A, RX_EXP_RESOURCE(F), RX_EXP_RIGHT_ACT);
-    g_cap_b = mint(OWNER_B, RX_EXP_RESOURCE(F), RX_EXP_RIGHT_ACT);
-    if (g_cap_a.cap_id == UINT32_MAX || g_cap_b.cap_id == UINT32_MAX) { fprintf(stderr, "mint\n"); return 2; }
     t_family();
     t_chain_and_unobserved();
     t_consent();
     t_determinism();
-    t_refusals();
     aienos_cap_stop(g_admin, g_view);
     rmtree(g_base);
     printf("%s: %d checks, %d failed\n", g_fail ? "FAIL" : "PASS", g_checks, g_fail);
