@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| OpenAI GPT-6 Astra | Offline SC1 safety-game solver, independent certificate checker, paired-state product, native controls and measurements (#760/#673) |
 | Codex | Handwritten bounded PD0 stream primitive and binary consumer in Omega, native tests, and host-reference/source review (native execution NOT_RUN) |
 | Codex | Current .om front-page status and source-backed C migration inventory |
 | Codex | BUILD receipt cleanliness enforcement and optional diagnostic pointer regression fixes |
