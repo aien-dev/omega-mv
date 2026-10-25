@@ -88,11 +88,21 @@ uint64_t <name>(uint64_t i0, uint64_t i1, ...) { return <expr>; }      ("(void)"
 ```
 
 followed by one LF. `<expr>`: input slot s is `i<s>`; a constant is `<decimal>ULL`; a binary op is
-`(<A> + <B>)`, `(<A> - <B>)`, `(<A> * <B>)` fully parenthesised; shared SSA results are expanded as trees
-(C has no sharing in this profile); the root per section 4. The output must import under
+`<A> + <B>`, `<A> - <B>` or `<A> * <B>` with single spaces, parenthesised only where C precedence and
+left associativity require it to keep the exact SSA tree: with precedence leaf 3, `*` 2, `+`/`-` 1, a
+left operand gets parentheses iff its precedence is lower than the parent's, a right operand iff its
+precedence is lower than or equal to the parent's (so `a+(b+c)` and `a-(b-c)` keep their tree, a
+left-leaning chain `a+a+...+a` is emitted without parentheses). Shared SSA results are expanded as
+trees (C has no sharing in this profile); the root per section 4. The output must import under
 `c-u64-import-v1` (so: at most 4096 bytes, parenthesis depth at most 16, at most 64 upper operations
 after re-import). An export that would break any of these refuses 67 LIMIT with no stdout; it never
 writes unimportable C. `<name>` is `calc` unless given (`c-export NAME`, C-import-profile name rules).
+
+Required boundaries: every F1 positive and every accepted boundary control of `c_import_controls.py`
+(including operation-capacity, the 61-term `a+...+a` chain at 64 operations, and nesting-limit, 16
+redundant parentheses that export without any) must export, re-import to the same semantic identity
+(section 4), and evaluate equal. A required boundary that refuses is a FAIL of the export lane, not an
+accepted limit.
 
 ## 7. Process and concurrency rules
 
