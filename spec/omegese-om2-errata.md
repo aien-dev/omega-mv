@@ -113,3 +113,9 @@ edit). Unsized parameters are allowed on internal functions, not only on exporte
   - `omc-check` records name the constructor's `ret seal` line;
   - for layout fields, a constant out-of-range index is error 21, a `put` through a view is error 20,
     and an array of the wrong size is error 7.
+
+## E9 (QualPhaseB L836, 2026-10-25): rotate count of an abstract value; late layout line
+
+- For `rotr`/`rotl` on an abstract value, `n` has the abstract type's representation type T (ulong
+  for dup32), so a bare number takes T.
+- Error 29 for a `layout` after the first `fn` names the `layout` line.
