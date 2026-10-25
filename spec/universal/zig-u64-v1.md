@@ -177,5 +177,7 @@ exported Zig, `cc` on the F1 C, compared with a bigint evaluation of the records
 `translation-v1.md` section 3 (all pairs for two inputs) and seeded random vectors. Also: import and
 export boundary controls, exporter refusals, public-command closure, and the compositions C -> Zig (every
 F1 positive and the four accepted C import boundary controls) and Zig -> C (`export_C(R(U, C))` through the
-G1 C exporter, then the C importer), each with the native realization lower(N(U_A)). R is applied in test
-code until `tools/adapters/retarget` lands. Finite DIFFERENTIAL evidence, not PROOF.
+G1 C exporter, then the C importer), each with the native realization lower(N(U_A)). Every R(U, M) is
+computed by `tools/adapters/retarget` when it is in the tree or given (`--retarget`, `ZIG_SELFTEST_RETARGET`),
+and each tool output must equal the test-code R byte for byte; without the tool, the test-code R is used
+alone. Finite DIFFERENTIAL evidence, not PROOF.

@@ -5,8 +5,8 @@ For every F2-zig fixture: Zig import, independent decode of the v2 unit, v2 code
 build/L832 tree, else NOT_RUN), cross-importer identity against the C import of the F1 source, export of
 the unit and of R(U, M) for all six family members (semantic-only, identical bytes), re-import identity
 (translation-compose-v1 section 4.1), and Zig 0.17 DIFFERENTIAL in Debug and ReleaseSafe (original and
-exported Zig) against a bigint evaluation of the records. Compositions C->Zig and Zig->C (R(U, C) applied
-here until tools/adapters/retarget lands; translation-compose-v2 section 2), each with the native
+exported Zig) against a bigint evaluation of the records. Compositions C->Zig and Zig->C (R(U, C) by
+tools/adapters/retarget when present, cross-checked against the test-code R; translation-compose-v2 section 2), each with the native
 realization lower(N(U_A)) when the G1 lowering tools are present.
 """
 from pathlib import Path
@@ -242,9 +242,11 @@ def main():
     ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC',str(HOME/'workspace/omega-seedqual-20261025/seed/out/omc')))
     ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO',str(HOME/'workspace/omega-bridge')))
     ap.add_argument('--sa-v2-root',default=os.environ.get('ZIG_SELFTEST_SA_V2_ROOT',str(ROOT)),help='tree with build/L832/sa (the #621 v2 codec)')
+    ap.add_argument('--retarget',default=os.environ.get('ZIG_SELFTEST_RETARGET',str(ROOT/'tools/adapters/retarget') if (ROOT/'tools/adapters/retarget').is_file() else ''),
+                    help='public tools/adapters/retarget; every use is cross-checked against the test-code R')
     a=ap.parse_args()
     out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)
-    cimp=Path(a.c_import);cexp=Path(a.c_export);v2root=Path(a.sa_v2_root)
+    cimp=Path(a.c_import);cexp=Path(a.c_export);v2root=Path(a.sa_v2_root);rtool=Path(a.retarget) if a.retarget else None
     Z=Zig(out,a.zig);C=COracle(out,a.cc);NAT=Native(out,a.lower,a.omc,a.bridge,a.cc)
     rng=random.Random(740);failures=[];counts={};rows_by_tag={}
     def bump(k,n=1):counts[k]=counts.get(k,0)+n
@@ -257,6 +259,14 @@ def main():
         r=py(IMPORT,src);bump('zig_import_runs');return r
     def zexport(env):
         r=py(EXPORT,env);bump('zig_export_runs');return r
+    TOOLM={'C':'c','Rust':'rust','Python':'python','Cpp':'cpp','Zig':'zig','Go':'go'}
+    def R(env,m):
+        """R(U, M) as a semantic-only envelope: the retarget tool when given (must equal the test-code R), else test code."""
+        want=semonly(retarget(split(env)[0],m))
+        if rtool is None:return want
+        r=py(rtool,env,TOOLM[m]);bump('retarget_runs')
+        check(r.returncode==0 and r.stdout==want,'retarget %s rc=%d differs from test-code R %s'%(TOOLM[m],r.returncode,r.stderr))
+        return r.stdout
     def native(sem,nargs,vecs,ref):
         if NAT.state!='RUN':return 'NOT_RUN ('+NAT.reason+')'
         check(NAT.values(N(sem),nargs,vecs)==ref,'native realization lower(N(U_A)) != reference');return 'PASS'
@@ -284,7 +294,7 @@ def main():
         r=zexport(env_with_sidecar);check(r.returncode==0 and r.stderr==b'',tag+' export refused rc=%d %s'%(r.returncode,r.stderr))
         text=r.stdout
         for m in MEMBERS:
-            rs=retarget(sem,m);u=semonly(rs)
+            u=R(env_with_sidecar,m);rs=split(u)[0]
             check(N(rs)==N(sem),tag+' N(R(U,%s)) != N(U)'%m)
             if MEMBERS[m][0]==1:check(sa1('decode',u).returncode==0,tag+' R(U,%s) not a valid v1 unit'%m)
             elif v2_state=='RUN':check(sa2('decode',u).stdout==u,tag+' R(U,%s) not a valid v2 unit'%m)
@@ -481,7 +491,7 @@ def main():
         for fx in f2['positives']:
             def body(it,fx=fx):
                 src=fx['source'].encode();r=zimport(src);sem_a,_,ops_a=decode(r.stdout,'Zig')
-                q=py(cexp,semonly(retarget(sem_a,'C')));bump('c_export_runs');check(q.returncode==0,'c-export refused R(U,C) rc=%d %s'%(q.returncode,q.stderr))
+                q=py(cexp,R(r.stdout,'C'));bump('c_export_runs');check(q.returncode==0,'c-export refused R(U,C) rc=%d %s'%(q.returncode,q.stderr))
                 c=run([str(cimp)],q.stdout);bump('c_import_runs');check(c.returncode==0,'C import of exported C refused')
                 sem_b,_,ops_b=decode(c.stdout,'C');check(N(strip(sem_b))==N(strip(sem_a)),'identity N(strip(U_B)) != N(strip(U_A))')
                 vec=vectors(fx['inputs'],rng);ref=[evaluate(ops_a,v) for v in vec]
@@ -508,7 +518,7 @@ def main():
             'c_import_sha256':hashlib.sha256(cimp.read_bytes()).hexdigest(),'sa_v1_binary_sha256':hashlib.sha256((ROOT/'build/L574/sa').read_bytes()).hexdigest(),
             'sa_v2':v2_state if v2_state=='NOT_RUN' else {'root':str(v2root),'binary_sha256':hashlib.sha256((v2root/'build/L832/sa').read_bytes()).hexdigest()},
             'c_export':str(cexp) if zig_to_c=='RUN' else 'NOT_RUN','native_realization':NAT.state if NAT.state=='RUN' else 'NOT_RUN ('+NAT.reason+')',
-            'retarget':'R applied in test code (tools/adapters/retarget not on this branch)',
+            'retarget':{'tool':str(rtool),'sha256':hashlib.sha256((rtool.parent.parent.parent/'build/L833/retarget').read_bytes()).hexdigest(),'cross_check':'every tool output equals the test-code R'} if rtool else 'R applied in test code (tools/adapters/retarget not given)',
             'positives':len(rows),'positives_passed':sum(r['result']=='PASS' for r in rows),'not_in_profile':len(f2['not_in_profile']),
             'refusals':len(refusals),'refusals_passed':sum(r['result']=='PASS' for r in refusals),
             'controls':len(ctl),'controls_passed':sum(r['result']=='PASS' for r in ctl),'export_cases':len(xrows),'export_cases_passed':sum(r['result']=='PASS' for r in xrows),
@@ -519,7 +529,7 @@ def main():
     keys=['positives','positives_passed','not_in_profile','refusals','refusals_passed','controls','controls_passed','export_cases','export_cases_passed',
           'c_to_zig','c_to_zig_passed','zig_to_c','zig_to_c_cases','zig_to_c_passed','zig_compiles','zig_observations','cc_observations','native_calls']
     print(report['result'],' '.join('%s=%s'%(k,report[k]) for k in keys),'sa_v2=%s'%('RUN' if v2_state=='RUN' else 'NOT_RUN'),
-          'native=%s'%NAT.state,'oracle_control=%s'%json.dumps(oracle_control),' '.join('%s=%s'%kv for kv in counts.items()))
+          'retarget=%s'%('TOOL' if rtool else 'TEST_CODE'),'native=%s'%NAT.state,'oracle_control=%s'%json.dumps(oracle_control),' '.join('%s=%s'%kv for kv in counts.items()))
     for f in failures[:20]:print('FAIL',json.dumps(f,ensure_ascii=False)[:600])
     return 1 if failures else 0
 
