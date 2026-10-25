@@ -150,16 +150,19 @@ Both adapters are compiled by the bridge-seed compiler `191b776ef98821597c3e3065
 (bridge commit `0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9`), built from source by `tools/source-aware/build`,
 the compiler of the reviewed C importer and the #621 v1/v2 codec. `tools/adapters/build-zig-u64.py` writes
 `build/L740/{zig-import,zig-export,build.json}` with the compiler, input and binary hashes; the public
-commands check them before dispatch. `mk/zig-u64.mk` also runs `tools/source-aware/build-v2` (the v2
-codec `build/L832/sa`) when it is in the tree.
+commands check them before dispatch. `make -f mk/zig-u64.mk test-zig-u64` builds every in-tree prerequisite
+first (`mk/source-aware.mk`, `mk/source-aware-v2.mk` for the v2 codec `build/L832/sa`, `mk/c-u64-import.mk`,
+`mk/c-u64-export.mk`, `mk/lower.mk`, and `mk/retarget.mk` when the tree has it) and uses no other checkout.
 
-Oracles (user-space, pinned): Zig 0.17.0 `~/.local/toolchains/zig/zig` (build-exe `-O Debug` and
-`-O ReleaseSafe`, harness I/O through libc `scanf`/`printf`, `-lc`); `cc` (gcc 13.3.0) `-std=c17 -O2 -Wall
--Wextra -Werror` for C sources; native realization via the G1 lowering (`tools/adapters/lower`, omc
-`734f0a39`, omega-bridge `native.om` at `012860db`). The self-test records the Zig binary sha256.
+Oracles: Zig 0.17.0 from `$ZIG` or `zig` on PATH (build-exe `-O Debug` and `-O ReleaseSafe`, harness I/O
+through libc `scanf`/`printf`, `-lc`; missing Zig = NOT_RUN, exit 3); `cc` (gcc 13.3.0) `-std=c17 -O2 -Wall
+-Wextra -Werror` for C sources; native realization via the in-tree G1 lowering (`tools/adapters/lower`, omc
+`734f0a39` from `$OMEGA_NATIVE_OMC`, omega-bridge `native.om` at `012860db` from `$OMEGA_BRIDGE_REPO`). The
+self-test records the Zig version and binary sha256. No default points outside the repository.
 
 ```sh
-export SA_SEED_REPO=/path/to/omega-bridge        # contains 0fc7d866; mk/zig-u64.mk defaults to ~/workspace/omega-bridge
+export SA_SEED_REPO=/abs/omega-bridge OMEGA_BRIDGE_REPO=/abs/omega-bridge   # hold 0fc7d866 and 012860db
+export OMEGA_NATIVE_OMC=/abs/omc ZIG=/abs/zig                              # omc 734f0a39; Zig 0.17.0 (or zig on PATH)
 make -f mk/zig-u64.mk test-zig-u64
 tools/adapters/zig-import < calc.zig > calc.upper
 tools/adapters/zig-export < calc.upper > exported.zig
