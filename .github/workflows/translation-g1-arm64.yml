@@ -24,7 +24,24 @@ jobs:
           git clone --quiet https://github.com/aien-dev/omega-bridge.git ../omega-bridge
           git -C ../omega-bridge cat-file -e 0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9^{commit}
           git -C ../omega-bridge cat-file -e 012860dbf26ee62a9838594b9dfd1e3e94a540a9^{commit}
+      - name: Go 1.27.3 and Zig 0.17.0 oracles (sha256 checked against the official release indexes)
+        run: |
+          mkdir -p ../toolchains && cd ../toolchains
+          python3 - <<'EOF'
+          import hashlib, json, urllib.request
+          go = [r for r in json.load(urllib.request.urlopen('https://go.dev/dl/?mode=json&include=all')) if r['version'] == 'go1.27.3'][0]
+          f = [x for x in go['files'] if x['os'] == 'linux' and x['arch'] == 'arm64' and x['kind'] == 'archive'][0]
+          d = urllib.request.urlopen('https://go.dev/dl/' + f['filename']).read(); assert hashlib.sha256(d).hexdigest() == f['sha256']
+          open('go.tgz', 'wb').write(d)
+          z = json.load(urllib.request.urlopen('https://ziglang.org/download/index.json'))['0.17.0']['aarch64-linux']
+          d = urllib.request.urlopen(z['tarball']).read(); assert hashlib.sha256(d).hexdigest() == z['shasum']
+          open('zig.txz', 'wb').write(d)
+          EOF
+          tar xzf go.tgz && mkdir zig && tar xJf zig.txz -C zig --strip-components=1
+          echo "GO=$PWD/go/bin/go" >> "$GITHUB_ENV"; echo "GOFMT=$PWD/go/bin/gofmt" >> "$GITHUB_ENV"; echo "ZIG=$PWD/zig/zig" >> "$GITHUB_ENV"
       - name: machine
-        run: uname -a; nproc; cc --version | head -1; python3 --version; rustc --version
-      - name: G1 + G2 translation gates
-        run: make -f mk/translation.mk test-translation-g2 SA_SEED_REPO="$(cd .. && pwd)/omega-bridge"
+        run: uname -a; nproc; cc --version | head -1; g++ --version | head -1; python3 --version; rustc --version; $GO version; $ZIG version
+      - name: G1 + G2 + G3 translation gates
+        run: |
+          B="$(cd .. && pwd)/omega-bridge"
+          make -f mk/translation.mk test-translation-g3 SA_SEED_REPO="$B" OMEGA_BRIDGE_REPO="$B" GOTOOLCHAIN=local

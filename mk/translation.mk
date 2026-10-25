@@ -1,6 +1,6 @@
 # #624 integration: the G1 C17 <-> Omega slice end to end (spec/universal/translation-v1.md).
 # Host aarch64 NATIVE only; foreign compilers (cc) are output compilers and oracles, never a fallback.
-.PHONY: translation-omc test-translation-g1 test-translation-g2
+.PHONY: translation-omc test-translation-g1 test-translation-g2 test-translation-g3
 T624 := build/T624
 # Native realization compiler (translation-v1 section 1): born from the seed of a pinned omega-mv commit
 # unless OMEGA_NATIVE_OMC names an existing one; either way its sha256 must be 734f0a39.
@@ -34,3 +34,15 @@ test-translation-g2: test-translation-g1
 	$(MAKE) -f mk/python-u64.mk test-python-u64
 	$(MAKE) -f mk/translation-validate.mk test-translation-compose
 	@echo "TRANSLATION-G2 PASS (Rust, Python adapters; 6 compositions, independent validation)"
+
+# G3 (translation-compose-v2.md): source-aware v2 codec, retarget, C++/Zig/Go adapters, the 30 directed
+# compositions of six languages and the independent v2 reference decoder. Oracles: g++ and rustc on
+# PATH, ZIG and GO (and GOFMT) set by the caller; a missing oracle is NOT_RUN (exit 3), never PASS.
+test-translation-g3: test-translation-g2
+	$(MAKE) -f mk/source-aware-v2.mk test-source-aware-v2
+	$(MAKE) -f mk/retarget.mk test-retarget
+	$(MAKE) -f mk/cpp-u64.mk test-cpp-u64
+	$(MAKE) -f mk/zig-u64.mk test-zig-u64
+	$(MAKE) -f mk/go-u64.mk test-go-u64
+	$(MAKE) -f mk/translation-validate.mk test-translation-compose-v2
+	@echo "TRANSLATION-G3 PASS (v2 codec, retarget, C++/Zig/Go adapters; 30 compositions, independent validation)"
