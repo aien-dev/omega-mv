@@ -122,17 +122,35 @@ same order gave every v1 verdict, and v2 adds only the version and profile cases
 5. Profile row (all 68): profile 0 or > 9; language != the profile's language; v2: (version,
    profile) pairing of section 3; runtime/ABI not allowed for the profile.
 6. For each operation i in record order: dialect byte != header language: 68; operation version != 1:
-   66; type 0 or > 4: 70; type not allowed by the profile: 68; opcode 0 or > 9: 69; then the
-   operation row. For profiles 7/8/9 (type is 1 here) the rows are checked in this order, the same
-   order as profile 1 under v1:
-   - op 1: attribute != 1: 70; A != 65535: 70; B != 65535: 70; obligations != 0: 72; effects != 0 or
-     alias != 0: 71. The immediate is the constant (any u64).
-   - ops 2/3/4/5: attribute != 1: 70; A not an earlier (< i) type-1 result: 70; same for B: 70;
-     immediate != 0: 65; effects != 0 or alias != 0: 71; obligations != 1 (ops 2/3/4) or 3 (op 5): 72.
-   - ops 6/7/8: 68.
-   - op 9: attribute != 0: 70; A != 65535: 70; B != 65535: 70; immediate > 5: 67; immediate equal to
-     the immediate of an earlier op 9: 70; obligations != 1: 72; effects != 0: 71; alias != 0: 71.
-   Profiles 1..6 keep their v1 rows unchanged.
+   66; type 0 or > 4: 70; type not allowed by the profile (profile 3: type != 2; profile 6: any of
+   1..4; every other profile, including 7/8/9: type != 1): 68; opcode 0 or > 9: 69; then the
+   operation row below. This documents the order and rules the v1 core (`core.om` `checkop`,
+   `arith`, `memop`, `pureop`) already enforces for profiles 1..6; v2 adds no rule and changes no
+   v1 verdict. Profiles 7/8/9 follow exactly the profile 1 path. "Earlier result of type t" means an
+   operand index < i whose record has type t (65535 is never one). Within a row the first failing
+   check decides:
+   - op 1 (constant): type > 2: 70; attribute != type: 70; A != 65535: 70; B != 65535: 70;
+     obligations != 0: 72; effects != 0: 71; alias != 0: 71. The immediate is the constant (any u64).
+   - ops 2/3/4/5 (arithmetic): type > 2: 70; attribute != type: 70; A not an earlier result of the
+     same type: 70; same for B: 70; immediate != 0: 65; then for type 1: effects != 0: 71; alias != 0:
+     71; for type 2: effects != 20: 71; alias != 255: 71; finally obligations != required: 72, where
+     required is 1 for type 1 (plus 4 under profiles 4 and 6) and 8 for type 2, plus 2 for op 5.
+     Profiles 7/8/9 therefore require 1 for ops 2/3/4 and 3 for op 5.
+   - op 6 (dynamic call): profile != 6: 68; type != 3: 70; attribute != 3: 70; A not an earlier result
+     of type 3: 70; B != 65535: 70; immediate != 0: 65; effects != 63: 71; alias != 255: 71;
+     obligations != 8: 72.
+   - ops 7/8 (symbolic byte read/write): profile != 6: 68; type != 1: 70; attribute != 4: 70; A not an
+     earlier result of type 4 (the view): 70; B not an earlier result of type 1: 70; alias not in
+     1..8 and not 255: 71; alias != the alias byte of the view record A: 71 (alias equality: a byte
+     access carries exactly its view's alias set, so 255 on a view with alias 1 refuses 71, and 1 on a
+     view with alias 255 refuses 71); then op 8: immediate not an earlier result of type 1 (the value
+     stored): 70; op 7: immediate != 0: 65; then effects != 17 (op 7) or 19 (op 8): 71; obligations
+     != 24: 72.
+   - op 9 (input): attribute != 0: 70; A != 65535: 70; B != 65535: 70; immediate > 5: 67; immediate
+     equal to the immediate of an earlier op 9: 70; obligations != 1: 72; effects != 0: 71; then type
+     4: alias not in 1..8 and not 255: 71; any other type: alias != 0: 71.
+   Under profiles 1..5 and 7..9, ops 6/7/8 reach their row only with an allowed type and refuse 68 at
+   its first check (profile != 6).
 7. If the sidecar length is nonzero (`p` at envelope offset 13 + semantic length): sidecar length
    < 74: 65; `p[0..4]` != `OMSP`: 65; `p[4]` != 1: 66; encoding > 1: 76; source length > 4096: 67;
    sidecar length != 74 + 8 x count + source length: 65; `p[10..42]` != SHA256(s): 74;
