@@ -1,0 +1,208 @@
+OM2GATE START cases=seed/qualification/om2/sec/s3s4/candidate.cases scratch=build/om2-qual/s3a-s3s4
+IDENTITY omc /tmp/zl/omc-s3a sha256=20d00b6e5309b90e5de48c3d40c1439610844348aaa49f86436b04182ca4bf87 pinned=20d00b6e5309b90e5de48c3d40c1439610844348aaa49f86436b04182ca4bf87 match
+VERDICT rot-values PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rot-values-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rot-trap-A PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-B PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-C PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-D PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-E PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-F PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-G PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-H PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-I PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-J PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-K PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-L PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-M PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-N PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-O PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-P PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rot-trap-om1-A PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-B PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-C PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-D PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-E PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-F PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-G PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-H PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-I PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-J PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-K PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-L PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-M PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-N PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-O PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT rot-trap-om1-P PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rot-signed-byte PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT rot-signed-short PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT rot-signed-int PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT rot-signed-long PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT rot-mixed-uint-ulong PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT rot-mixed-ulong-uchar PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT rot-result-type PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT rot-result-type-om1 PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT unroll-sum PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-sum-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-sum-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-nest PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-nest-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-nest-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-write-i PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT unroll-write-i-nested PASS compile exit=7 expected=7 stdout=match stderr=match
+VERDICT unroll-write-i-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-write-i-rolled-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-break PASS compile exit=9 expected=9 stdout=match stderr=match
+VERDICT unroll-continue PASS compile exit=9 expected=9 stdout=match stderr=match
+VERDICT unroll-break-rolled PASS run exit=2 expected=2 stdout=match stderr=match
+VERDICT unroll-break-om1 PASS run exit=2 expected=2 stdout=match stderr=match
+VERDICT unroll-continue-rolled PASS run exit=3 expected=3 stdout=match stderr=match
+VERDICT unroll-continue-om1 PASS run exit=3 expected=3 stdout=match stderr=match
+VERDICT unroll-break-nested PASS run exit=4 expected=4 stdout=match stderr=match
+VERDICT unroll-break-nested-rolled PASS run exit=4 expected=4 stdout=match stderr=match
+VERDICT unroll-break-nested-om1 PASS run exit=4 expected=4 stdout=match stderr=match
+VERDICT unroll-continue-nested PASS run exit=8 expected=8 stdout=match stderr=match
+VERDICT unroll-continue-nested-rolled PASS run exit=8 expected=8 stdout=match stderr=match
+VERDICT unroll-continue-nested-om1 PASS run exit=8 expected=8 stdout=match stderr=match
+VERDICT unroll-k65 PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT unroll-k65-diag PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT unroll-k0 PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT unroll-kvar PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT unroll-nest-64x2 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-nest-64x2-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-nest-64x2-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT unroll-growth PASS compile exit=14 expected=14 refused with the expected error
+VERDICT unroll-growth-diag PASS compile exit=14 expected=14 stdout=match stderr=match
+VERDICT unroll-growth-rolled PASS run exit=149 expected=149 stdout=match stderr=match
+VERDICT unroll-growth-om1 PASS run exit=149 expected=149 stdout=match stderr=match
+VERDICT inline-order-A PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-order-B PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-C PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT inline-order-D PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT inline-order-E PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-F PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-G PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-H PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-order-I PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-order-plain-A PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-order-plain-B PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-plain-C PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT inline-order-plain-D PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT inline-order-plain-E PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-plain-F PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-plain-G PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-plain-H PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-order-plain-I PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-order-om1-A PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-order-om1-B PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-om1-C PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT inline-order-om1-D PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT inline-order-om1-E PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-om1-F PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-om1-G PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT inline-order-om1-H PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-order-om1-I PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-depth4 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-depth4-plain PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-depth4-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-depth6 PASS compile exit=14 expected=14 refused with the expected error
+VERDICT inline-depth6-diag PASS compile exit=14 expected=14 stdout=match stderr=match
+VERDICT inline-depth6-plain PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-depth6-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-depth5 PASS compile exit=14 expected=14 refused with the expected error
+VERDICT inline-new PASS compile exit=9 expected=9 refused with the expected error
+VERDICT inline-new-plain PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-new-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-rec-direct PASS compile exit=9 expected=9 refused with the expected error
+VERDICT inline-rec-mutual PASS compile exit=9 expected=9 refused with the expected error
+VERDICT inline-rec-mutual1 PASS compile exit=9 expected=9 refused with the expected error
+VERDICT inline-rec-direct-plain PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-rec-direct-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-rec-mutual-plain PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-rec-mutual-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT inline-calls-stay-calls NOT_RUN not run: line 98 (calls to non-inline functions stay calls) is not observable through run/emit; needs a disassembly oracle
+VERDICT fold-guard PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fold-guard-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fold-guard-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fold-trap-A PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT fold-trap-B PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-C PASS run exit=105 expected=105 stdout=match stderr=match
+VERDICT fold-trap-D PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT fold-trap-E PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-F PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-G PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT fold-trap-H PASS run exit=105 expected=105 stdout=match stderr=match
+VERDICT fold-trap-I PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT fold-trap-rolled-A PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT fold-trap-rolled-B PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-rolled-C PASS run exit=105 expected=105 stdout=match stderr=match
+VERDICT fold-trap-rolled-D PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT fold-trap-rolled-E PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-rolled-F PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-rolled-G PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT fold-trap-rolled-H PASS run exit=105 expected=105 stdout=match stderr=match
+VERDICT fold-trap-rolled-I PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT fold-trap-om1-A PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT fold-trap-om1-B PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-om1-C PASS run exit=105 expected=105 stdout=match stderr=match
+VERDICT fold-trap-om1-D PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT fold-trap-om1-E PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-om1-F PASS run exit=101 expected=101 stdout=match stderr=match
+VERDICT fold-trap-om1-G PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT fold-trap-om1-H PASS run exit=105 expected=105 stdout=match stderr=match
+VERDICT fold-trap-om1-I PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT ce-sized PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT ce-sized-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT ce-sized-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT ce-sized-oob PASS compile exit=21 expected=21 stdout=match stderr=match
+VERDICT ce-sized-oob-fold PASS compile exit=21 expected=21 stdout=match stderr=match
+VERDICT ce-sized-oob-rolled PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT ce-sized-oob-om1 PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT ce-sized-oob-fold-rolled PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT ce-sized-oob-fold-om1 PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT ce-view-A FAIL compile exit=16 expected=0
+VERDICT ce-view-B FAIL compile exit=16 expected=0
+VERDICT ce-view-C FAIL compile exit=16 expected=0
+VERDICT ce-view-D FAIL compile exit=16 expected=0
+VERDICT ce-view-E FAIL compile exit=16 expected=0
+VERDICT ce-view-F FAIL compile exit=16 expected=0
+VERDICT ce-view-plain-A FAIL compile exit=16 expected=0
+VERDICT ce-view-plain-B FAIL compile exit=16 expected=0
+VERDICT ce-view-plain-C FAIL compile exit=16 expected=0
+VERDICT ce-view-plain-D FAIL compile exit=16 expected=0
+VERDICT ce-view-plain-E FAIL compile exit=16 expected=0
+VERDICT ce-view-plain-F FAIL compile exit=16 expected=0
+VERDICT ce-view-om1-A PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT ce-view-om1-B PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT ce-view-om1-C PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT ce-view-om1-D PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT ce-view-om1-E PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT ce-view-om1-F PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT slots-3v FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT slots-3v1s FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+VERDICT slots-2v2s FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT slots-2v3s FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+VERDICT slots-1v4x FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT slots-1v5x FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+VERDICT slots-6s PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT slots-internal FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+VERDICT slots-out6 FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT slots-out7 FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+VERDICT slots-6s-om1 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT slots-7p-om1 PASS compile exit=9 expected=9 stdout=match stderr=match
+VERDICT slots-order NOT_RUN not run: line 100-101 slot order (pointer then length) is observable only through the bridge (L837), not through omc output
+VERDICT regs PASS compile exit=12 expected=12 refused with the expected error
+VERDICT regs-diag PASS compile exit=12 expected=12 stdout=match stderr=match
+VERDICT regs-om1 PASS compile exit=12 expected=12 stdout=match stderr=match
+VERDICT diag-site PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT diag-site-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT diag-site-rolled PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT diag-site-rolled-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT diag-site-unroll PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT diag-site-unroll-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT diag-site-nest PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT diag-site-nest-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT unroll-sum-diag-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT fold-trap-diag-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT program-site-table NOT_RUN not run: exact site tables of program-mode units depend on which OM-1 trap stubs and checks exist (stack, write slices); not fixed by the contract or E7
+OM2GATE FAIL cases=205 pass=181 fail=21 invalid=0 not_run=3

@@ -1,0 +1,18 @@
+L836 qualification of om2/compiler-s3 @ 9a92f3c43cdc1137f4ed02bdfe197b6a9aabef65 ("fix S2 D-S2-1"), 2026-10-25.
+Birth (scratch worktree /tmp/zl/qs3a): "PASS omc fixpoint 20d00b6e5309b90e5de48c3d40c1439610844348aaa49f86436b04182ca4bf87".
+Its omc.om is copied to build/om2-qual/cand-s1/omc.om and cand-s2/omc.om for the mutant lists. Evidence: evidence/phaseB/s3-9a92f3c4/.
+
+| check | result |
+|---|---|
+| C2 (5876) | PASS 5876/5876 |
+| §0-§2 (s0s2) | 161 PASS, 0 FAIL, 2 NOT_RUN (open under E4/E6) |
+| §3-§4 (s3s4) | 181 PASS, 21 FAIL, 3 NOT_RUN. The 21 FAILs are ce-view-* and slots-*, which need unsized views/out (S4) |
+| D-S2-1 | inline-rec-mutual1 refused 9 (PASS); direct and inline↔inline recursion are still refused 9 |
+| S1 rotate mutants | 5/5 killed (26/26 PASS), same kill bytes 0/4/18/47 and 15/15 trap rows |
+| S1 lexer/fmt/diag mutants | 5/5 killed; verdicts identical to the S1 runs |
+| S2 mutants | 3/3 killed; verdicts identical to the S2 run (unroll ±1, fold div 0) |
+The unmutated cc rebuild reproduces 20d00b6e.
+Harness note: in S2 and later, two S1 subst anchors (`if and eq op 60 ne s 0`, `s = sub w s`) also occur in the
+rotate folding code. The gate refused them as INVALID (exact-once rule), not as kills. Both anchors were widened to
+include the binrot context; each matches exactly once in a5927895, 874fec3b, 7fb62f3a and 9a92f3c4.
+Verdict: PASS for §0-§4 in scope; C2 PASS; mutants 13/13 killed.
