@@ -1,0 +1,92 @@
+; table.s2 -- the instruction table of asm2 (rung 2), readable text. Every line:
+;   = name  0xBASE  field...
+; BASE is the word with every operand field zero, read from the encoding diagram of the Arm ARM
+; DDI 0487 M.d section named in the comment. Fields, in operand order: rP register at bit P (5 bits),
+; iP.W unsigned, sP.W signed, lP.W label distance in words, a ADR label distance in bytes.
+; Units: load/store offsets are in units of the access size (the manual's imm12), as the bits hold them.
+; Suffix .x = 64-bit (sf=1), .w = 32-bit (sf=0).
+;
+; ---- arithmetic and logic, shifted register with shift 0 (operands: Rd, Rn, Rm) ----
+= add.x    0x8b000000 r0 r5 r16     ; C6.2.6 ADD (shifted register)
+= add.w    0x0b000000 r0 r5 r16     ; C6.2.6
+= sub.x    0xcb000000 r0 r5 r16     ; C6.2.458 SUB (shifted register)
+= sub.w    0x4b000000 r0 r5 r16     ; C6.2.458
+= subs.x   0xeb000000 r0 r5 r16     ; C6.2.465 SUBS (shifted register)
+= subs.w   0x6b000000 r0 r5 r16     ; C6.2.465
+= cmp.x    0xeb00001f r5 r16        ; C6.2.97 CMP (shifted register) = SUBS with Rd 31
+= cmp.w    0x6b00001f r5 r16        ; C6.2.97
+= and.x    0x8a000000 r0 r5 r16     ; C6.2.15 AND (shifted register)
+= and.w    0x0a000000 r0 r5 r16     ; C6.2.15
+= orr.x    0xaa000000 r0 r5 r16     ; C6.2.302 ORR (shifted register)
+= orr.w    0x2a000000 r0 r5 r16     ; C6.2.302
+= eor.x    0xca000000 r0 r5 r16     ; C6.2.156 EOR (shifted register)
+= eor.w    0x4a000000 r0 r5 r16     ; C6.2.156
+= mov.x    0xaa0003e0 r0 r16        ; C6.2.282 MOV (register) = ORR Rd, ZR, Rm
+= mov.w    0x2a0003e0 r0 r16        ; C6.2.282
+; ---- multiply, divide, variable shifts ----
+= mul.x    0x9b007c00 r0 r5 r16     ; C6.2.293 MUL = MADD with Ra 31 (C6.2.275)
+= mul.w    0x1b007c00 r0 r5 r16     ; C6.2.293
+= madd.x   0x9b000000 r0 r5 r16 r10 ; C6.2.275 MADD (Rd, Rn, Rm, Ra)
+= msub.x   0x9b008000 r0 r5 r16 r10 ; C6.2.291 MSUB (Rd, Rn, Rm, Ra)
+= udiv.x   0x9ac00800 r0 r5 r16     ; C6.2.490 UDIV
+= lslv.x   0x9ac02000 r0 r5 r16     ; C6.2.271 LSLV
+= lsrv.x   0x9ac02400 r0 r5 r16     ; C6.2.274 LSRV
+= asrv.x   0x9ac02800 r0 r5 r16     ; C6.2.21 ASRV
+; ---- immediates ----
+= add.x.i  0x91000000 r0 r5 i10.12  ; C6.2.5 ADD (immediate), sh 0
+= sub.x.i  0xd1000000 r0 r5 i10.12  ; C6.2.457 SUB (immediate), sh 0
+= subs.x.i 0xf1000000 r0 r5 i10.12  ; C6.2.464 SUBS (immediate), sh 0
+= subs.w.i 0x71000000 r0 r5 i10.12  ; C6.2.464
+= cmp.x.i  0xf100001f r5 i10.12     ; C6.2.96 CMP (immediate) = SUBS with Rd 31
+= cmp.w.i  0x7100001f r5 i10.12     ; C6.2.96
+= movz.x   0xd2800000 r0 i5.16 i21.2 ; C6.2.285 MOVZ (Rd, imm16, hw = shift/16)
+= movz.w   0x52800000 r0 i5.16 i21.1 ; C6.2.285 (32-bit: hw 0 or 1)
+= movk.x   0xf2800000 r0 i5.16 i21.2 ; C6.2.283 MOVK
+= movk.w   0x72800000 r0 i5.16 i21.1 ; C6.2.283
+; ---- loads and stores (Rt, Rn, offset in access-size units / signed bytes for post-index) ----
+= ldr.x    0xf9400000 r0 r5 i10.12  ; C6.2.216 LDR (immediate), unsigned offset, size 11
+= ldr.w    0xb9400000 r0 r5 i10.12  ; C6.2.216 size 10
+= str.x    0xf9000000 r0 r5 i10.12  ; C6.2.415 STR (immediate), unsigned offset
+= str.w    0xb9000000 r0 r5 i10.12  ; C6.2.415
+= ldrb     0x39400000 r0 r5 i10.12  ; C6.2.220 LDRB (immediate), unsigned offset
+= strb     0x39000000 r0 r5 i10.12  ; C6.2.417 STRB (immediate), unsigned offset
+= ldr.w.post 0xb8400400 r0 r5 s12.9 ; C6.2.216 LDR (immediate), post-index, 32-bit
+= ldr.x.post 0xf8400400 r0 r5 s12.9 ; C6.2.216 post-index, 64-bit
+= str.w.post 0xb8000400 r0 r5 s12.9 ; C6.2.415 STR (immediate), post-index, 32-bit
+= str.x.post 0xf8000400 r0 r5 s12.9 ; C6.2.415 post-index, 64-bit
+; ---- branches (label operands) ----
+= b        0x14000000 l0.26         ; C6.2.35 B
+= bl       0x94000000 l0.26         ; C6.2.43 BL
+= b.eq     0x54000000 l5.19         ; C6.2.34 B.cond, cond from Table C1-1
+= b.ne     0x54000001 l5.19
+= b.hs     0x54000002 l5.19
+= b.lo     0x54000003 l5.19
+= b.mi     0x54000004 l5.19
+= b.pl     0x54000005 l5.19
+= b.vs     0x54000006 l5.19
+= b.vc     0x54000007 l5.19
+= b.hi     0x54000008 l5.19
+= b.ls     0x54000009 l5.19
+= b.ge     0x5400000a l5.19
+= b.lt     0x5400000b l5.19
+= b.gt     0x5400000c l5.19
+= b.le     0x5400000d l5.19
+= b.al     0x5400000e l5.19
+= b.nv     0x5400000f l5.19
+= cbz.x    0xb4000000 r0 l5.19      ; C6.2.78 CBZ
+= cbz.w    0x34000000 r0 l5.19
+= cbnz.x   0xb5000000 r0 l5.19      ; C6.2.77 CBNZ
+= cbnz.w   0x35000000 r0 l5.19
+= adr      0x10000000 r0 a          ; C6.2.12 ADR (byte distance, immlo at 29, immhi at 5)
+= ret      0xd65f03c0               ; C6.2.338 RET (x30)
+= ret.r    0xd65f0000 r5            ; C6.2.338 RET Rn
+= br       0xd61f0000 r5            ; C6.2.46 BR
+= blr      0xd63f0000 r5            ; C6.2.44 BLR
+= svc      0xd4000001 i5.16         ; C6.2.466 SVC
+; ---- the same branches with the distance written as a number (words), for checks at the edges ----
+= b.raw    0x14000000 s0.26         ; C6.2.35
+= b.c.raw  0x54000000 i0.4 s5.19    ; C6.2.34 (cond, distance)
+= cbz.x.raw  0xb4000000 r0 s5.19    ; C6.2.78
+= cbz.w.raw  0x34000000 r0 s5.19
+= cbnz.x.raw 0xb5000000 r0 s5.19    ; C6.2.77
+= cbnz.w.raw 0x35000000 r0 s5.19

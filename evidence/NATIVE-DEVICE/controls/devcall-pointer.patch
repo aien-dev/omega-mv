@@ -1,0 +1,10 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -2992,7 +2992,6 @@
+ patch19 empty get oc 0
+ mload 13 10 2
+ mimmed 4043309056 31 13 0
+-trapc 1 3
+ mimmed 4043309056 31 12 0
+ nonzero = mbranch 1
+ matconst 11 0

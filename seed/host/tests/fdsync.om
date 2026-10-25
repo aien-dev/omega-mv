@@ -1,0 +1,54 @@
+text p "dsync.tmp"
+text body "abcd"
+text name "mfd"
+fn main to int
+fd = int fopen p 0 len p 578 420
+if lt fd 0
+ret 1
+end
+w = write fd body 0 len body
+if ne w long len body
+ret 2
+end
+r = fdsync fd
+if ne r 0
+ret 3
+end
+r = fclose fd
+if ne r 0
+ret 4
+end
+r = fdsync fd
+if ge r 0
+ret 5
+end
+r = unlink p 0 len p
+if ne r 0
+ret 6
+end
+m = int memfd name 0 len name 0
+if lt m 0
+ret 7
+end
+w = write m body 0 len body
+if ne w long len body
+ret 8
+end
+r = fseek m 0 0
+if ne r 0
+ret 9
+end
+buf = new uchar 4 0
+n = read m buf 0 4
+if ne n 4
+ret 10
+end
+if ne get buf 0 97
+ret 11
+end
+r = fclose m
+if ne r 0
+ret 12
+end
+ret 0
+end

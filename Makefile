@@ -44,10 +44,17 @@ SRCS += src/omega_blackwell_codegen_router.c src/omega_gpu_router_api.c
 SRCS += src/omega_blackwell_codegen_gdn.c src/omega_gpu_gdn_api.c
 # OWN-30B W-L2 (2026-10-13): decode launch collapse, new files only: command list (N launches, one submit) + glue kernels
 SRCS += src/omega_gpu_cmdlist.c src/omega_blackwell_codegen_dec.c
+# C3 (docs/OMEGA.md): reductions and prefix sums of any length, bit-exact against the frozen-order host reference.
+SRCS += src/omega_gpu_scan.c src/omega_gpu_scan_ref.c
+# C3: matrix multiply of any shape, BF16 and FP8, both layouts, on the tensor cores (pack kernels + one multiply kernel).
+SRCS += src/omega_gpu_gemm.c
 SRCS += src/omega_gpu_mem_cached.c
 SRCS += src/omega_gpu_decode_graph.c
 # sc #642 (2026-10-18): one Qwen3.8-27B decode token as one command list (GDN + hd256 attention layers, dense MLP)
 SRCS += src/omega_gpu_q38_graph.c
+SRCS += src/omega_gpu_q36_graph.c
+# C6 (L386): Omega's own sm_121 disassembler; the listing checks in tests/ call it instead of nvdisasm
+SRCS += src/omega_sm121_disasm.c
 # OWN-30B (2026-10-13): bf16 streaming GEMV for the lm_head (omega_gpu_bf16_gemv_api.h), new files only
 SRCS += src/omega_blackwell_codegen_bf16.c src/omega_gpu_bf16_gemv_api.c
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM, each expert streamed once per pass (omega_gpu_fp8gemm_api.h), new files only
@@ -320,20 +327,19 @@ test-numeric-transc-full: build/test_omega_transc
 test-numeric-transc-digest: build/test_omega_transc
 	./build/test_omega_transc digest
 
-# Offline provenance of the GB10 MAX/MIN warp patch: nvdisasm -b SM121 must
-# decode every word to the text the patch table records. No device opened;
-# nvdisasm is a decoder only. Last line: "E1 Reduce nvdisasm: PASS".
+# Offline provenance of the GB10 MAX/MIN warp patch: Omega's own disassembler (sm121dis,
+# C6; it agrees with nvdisasm on every library kernel) must decode every word to the text the
+# patch table records. No device opened. Last line: "E1 Reduce nvdisasm: PASS" (name kept for receipts).
 .PHONY: test-numeric-reduce-nvdisasm
-REDUCE_NVDISASM ?= /usr/local/cuda/bin/nvdisasm
-test-numeric-reduce-nvdisasm: build/test_omega_reduce_cpu
-	@[ -x "$(REDUCE_NVDISASM)" ] || { echo "E1 Reduce nvdisasm: NOT_RUN ($(REDUCE_NVDISASM) missing)"; exit 2; }
+REDUCE_NVDISASM ?= build/sm121dis
+test-numeric-reduce-nvdisasm: build/test_omega_reduce_cpu build/sm121dis
 	@set -e; t=$$(mktemp -d); trap 'rm -rf "$$t"' EXIT; ./build/test_omega_reduce_cpu --dump "$$t"; \
 	for op in max min; do \
-	  "$(REDUCE_NVDISASM)" -b SM121 "$$t/$$op.bin" > "$$t/$$op.raw" || { echo "E1 Reduce nvdisasm: FAIL ($$op: nvdisasm error)"; exit 1; }; \
+	  "$(REDUCE_NVDISASM)" -b SM121 "$$t/$$op.bin" > "$$t/$$op.raw" || { echo "E1 Reduce nvdisasm: FAIL ($$op: disassembler error)"; exit 1; }; \
 	  sed -n 's|^[[:space:]]*/\*\([0-9a-f]\{4\}\)\*/[[:space:]]*\(.*;\).*$$|\1 \2|p' "$$t/$$op.raw" \
 	    | sed 's/[[:space:]]\{1,\}/ /g' > "$$t/$$op.got"; \
 	  diff -u "$$t/$$op.lst" "$$t/$$op.got" || { echo "E1 Reduce nvdisasm: FAIL ($$op)"; exit 1; }; echo "$$op: $$(wc -l < "$$t/$$op.lst") words decode to the recorded text"; \
-	done; echo "E1 Reduce nvdisasm: PASS ($$("$(REDUCE_NVDISASM)" --version | grep -o 'release [0-9.]*, V[0-9.]*'))"
+	done; echo "E1 Reduce nvdisasm: PASS ($$("$(REDUCE_NVDISASM)" --version))"
 
 # Resident reaction runtime heartbeat (ADR 0016, R3/R4 host reference).
 # CPU only; links no PHYSICS/NVRM code (omega_evidence.c needs only the header).
@@ -2401,6 +2407,15 @@ GPU_R4_RECEIPT = $(OUT_DIR)/gpu_matmul_r4_receipt
 $(OUT_DIR)/libomega_gpu.a: $(GPU_API_OBJS) | check-physics-lock
 	ar rcs $@ $(GPU_API_OBJS)
 libomega_gpu: $(OUT_DIR)/libomega_gpu.a
+# omega-mv#471: the archive must link without -lm (omegatool, the Rust FFI crate and AIENOS link it bare). Fails if any symbol
+# the archive leaves undefined is one libm exports (the export list is read from this toolchain's libm.so.6).
+.PHONY: test-gpu-libm-free
+test-gpu-libm-free: $(OUT_DIR)/libomega_gpu.a
+	@export LC_ALL=C; libm="$$($(CC) -print-file-name=libm.so.6)"; test -f "$$libm" || { echo "libm-free: no libm.so.6 from $(CC)"; exit 1; }; \
+	nm -D --defined-only "$$libm" | awk '{print $$3}' | sed 's/@.*//' | sort -u > $(OUT_DIR)/libm.syms; \
+	nm -u $(OUT_DIR)/libomega_gpu.a | awk '{print $$2}' | sort -u | comm -12 - $(OUT_DIR)/libm.syms > $(OUT_DIR)/libm-refs.txt; \
+	n=$$(wc -l < $(OUT_DIR)/libm-refs.txt); echo "libm-free: $$n libm symbols referenced by libomega_gpu.a ($$(wc -l < $(OUT_DIR)/libm.syms) libm exports checked)"; \
+	if [ "$$n" -ne 0 ]; then sed 's/^/  /' $(OUT_DIR)/libm-refs.txt; echo "FAIL: libomega_gpu.a is not libm-free"; exit 1; fi; echo "PASS: libomega_gpu.a is libm-free"
 $(GPU_API_TEST): tests/gpu_matmul_api_test.c src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-matmul-api: $(GPU_API_TEST) $(GPU_R4_RECEIPT)
@@ -2534,6 +2549,13 @@ test-gpu-router: $(GPU_ROUTER_TEST)
 GPU_GDN_TEST = $(OUT_DIR)/gpu_gdn_test
 $(GPU_GDN_TEST): tests/gpu_gdn_test.c tests/bw_warp_sim_k.h src/omega_gpu_gdn_api.h src/omega_blackwell_codegen_gdn.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+# L369: the multi-token GDN decode == T decode steps bit for bit (--sim: simulator; default: the chip, under the GB10 lock)
+GPU_GDN_MULTI_TEST = $(OUT_DIR)/gpu_gdn_multi_test
+$(GPU_GDN_MULTI_TEST): tests/gpu_gdn_multi_test.c tests/bw_warp_sim_k.h src/omega_gpu_gdn_api.h src/omega_blackwell_codegen_gdn.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_multi_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+GPU_DATTN256_MULTI_TEST = $(OUT_DIR)/gpu_dattn256_multi_test
+$(GPU_DATTN256_MULTI_TEST): tests/gpu_dattn256_multi_test.c src/omega_gpu_decode_attn256_api.h src/omega_blackwell_codegen_attn256.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_dattn256_multi_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-gdn: $(GPU_GDN_TEST)
 	./$(GPU_GDN_TEST) --host-only
 	./$(GPU_GDN_TEST) --sim
@@ -2570,6 +2592,14 @@ $(OUT_DIR)/gpu_lmhead_fp8_study: tests/gpu_lmhead_fp8_study.c src/omega_gpu_bf16
 GPU_FP8GEMM_TEST = $(OUT_DIR)/gpu_fp8gemm_test
 $(GPU_FP8GEMM_TEST): tests/gpu_fp8gemm_test.c tests/bw_warp_sim_k.h src/omega_gpu_fp8gemm_api.h src/omega_blackwell_codegen_gemm.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_fp8gemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+
+# Qwen3.6-35B (sc L306 / L312) host-only simulator checks of the decode glue kernels, and the codegen hash pin
+Q36_DEC_SIM_TEST = $(OUT_DIR)/q36_dec_sim_test
+$(Q36_DEC_SIM_TEST): tests/q36_dec_sim_test.c tests/bw_warp_sim_k.h src/omega_blackwell_codegen_dec.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/q36_dec_sim_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+Q36_CODEGEN_HASH = $(OUT_DIR)/q36_codegen_hash
+$(Q36_CODEGEN_HASH): tests/q36_codegen_hash.c $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -Itests -o $@ tests/q36_codegen_hash.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-fp8gemm: $(GPU_FP8GEMM_TEST)
 	$(GPU_FP8GEMM_TEST) --host-only
 	$(GPU_FP8GEMM_TEST) --sim
@@ -2631,6 +2661,26 @@ test-gpu-cmdlist: $(GPU_CMDLIST_TEST)
 	./$(GPU_CMDLIST_TEST) --host-only
 	./$(GPU_CMDLIST_TEST) --sim
 
+# C4 streams (docs/OMEGA.md row C4): two queues of the same half-chip work side by side, an event (cmdlist wait_for)
+# between them, both with red checks. test-gpu-streams is host + warp simulator; the chip tier is "$(GPU_STREAMS_TEST)"
+# with no flag, under the GB10 lock (timings need an exclusive window).
+.PHONY: test-gpu-streams
+GPU_STREAMS_TEST = $(OUT_DIR)/gpu_streams_test
+$(GPU_STREAMS_TEST): tests/gpu_streams_test.c tests/bw_warp_sim.h src/omega_gpu_cmdlist.h src/omega_bw_em.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_streams_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-streams: $(GPU_STREAMS_TEST)
+	./$(GPU_STREAMS_TEST) --sim
+
+# C5 isolation (docs/OMEGA.md row C5): a never-ending kernel times out, omega_gpu_session_recover, a correct launch in the
+# same process; two processes on one GPU; a hang beside a working process. test-gpu-isolation is host + simulator;
+# the chip tier is "$(GPU_ISOLATION_TEST)" with no flag, under the GB10 lock.
+.PHONY: test-gpu-isolation
+GPU_ISOLATION_TEST = $(OUT_DIR)/gpu_isolation_test
+$(GPU_ISOLATION_TEST): tests/gpu_isolation_test.c tests/bw_warp_sim.h src/omega_gpu_session.h src/omega_bw_em.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_isolation_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-isolation: $(GPU_ISOLATION_TEST)
+	./$(GPU_ISOLATION_TEST) --host-only
+
 # OWN-30B W-L2a (2026-10-13): one decode token as one command list (omega_gpu_decode_graph). test-gpu-decode-graph is
 # host-only; the chip gate is tools/run_gpu_decode_graph_chip.sh under the GB10 lock.
 .PHONY: test-gpu-decode-graph
@@ -2657,3 +2707,27 @@ $(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h $(OU
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
 	./$(GPU_Q38_GRAPH_TEST) --host-only
+
+# HUM L314 exact two-pass lm_head (XBOUND simulator proofs; the chip run comes with the export)
+GPU_EXACT_HEAD_TEST = $(OUT_DIR)/gpu_exact_head_test
+$(GPU_EXACT_HEAD_TEST): tests/gpu_exact_head_test.c tests/bw_warp_sim_k.h src/omega_blackwell_codegen_dec.h src/omega_gpu_bf16_gemv_api.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_exact_head_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+# C3 (docs/OMEGA.md): sum, max, min and prefix sum of any length 1..2^28, bit-exact against the frozen order.
+# test-gpu-scan: host refusals, codegen, references vs exact sums and vs the E1 reference, then the warp simulator
+# (both orders, mutants caught). The chip tier is "$(GPU_SCAN_TEST)" with no flag, under the GB10 lock.
+GPU_SCAN_TEST = $(OUT_DIR)/gpu_scan_test
+$(GPU_SCAN_TEST): tests/gpu_scan_test.c tests/bw_warp_sim.h src/omega_gpu_scan.h src/omega_numeric_reduce.c src/omega_numeric.c $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_scan_test.c src/omega_numeric_reduce.c src/omega_numeric.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+.PHONY: test-gpu-scan
+test-gpu-scan: $(GPU_SCAN_TEST)
+	./$(GPU_SCAN_TEST) --sim
+
+# C3 (docs/OMEGA.md): matrix multiply of any shape, BF16 and FP8 (e4m3), both layouts, on the tensor cores; bit-exact
+# against the chip-measured tensor-core model. test-gpu-gemm: host refusals and codegen, then the warp simulator.
+# The chip tier is "$(GPU_GEMM_TEST)" with no flag (>= 200 shapes up to 8192, speed vs the measured ceiling), under the GB10 lock.
+GPU_GEMM_TEST = $(OUT_DIR)/gpu_gemm_test
+$(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_model.h tests/bw_qmma_model.h src/omega_gpu_gemm.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+.PHONY: test-gpu-gemm
+test-gpu-gemm: $(GPU_GEMM_TEST)
+	./$(GPU_GEMM_TEST) --sim

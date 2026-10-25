@@ -1,0 +1,43 @@
+note ftrunc: write 8 bytes, shorten to 4, rewind, read 4 then EOF; a closed descriptor is refused.
+text p "trunc.tmp"
+text body "abcdefgh"
+fn main to int
+fd = int fopen p 0 len p 578 420
+if lt fd 0
+ret 1
+end
+n = write fd body 0 len body
+if ne n long len body
+ret 2
+end
+r = ftrunc fd 4
+if ne r 0
+ret 3
+end
+r = fseek fd 0 0
+if ne r 0
+ret 4
+end
+buf = new uchar 8 0
+n = read fd buf 0 8
+if ne n 4
+ret 5
+end
+m = read fd buf 0 8
+if ne m 0
+ret 6
+end
+r = fclose fd
+if ne r 0
+ret 7
+end
+r = ftrunc fd 0
+if ge r 0
+ret 8
+end
+r = unlink p 0 len p
+if ne r 0
+ret 9
+end
+ret 0
+end

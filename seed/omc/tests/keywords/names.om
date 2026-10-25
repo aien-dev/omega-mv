@@ -1,0 +1,11 @@
+note existing .om code uses bits, min, max, abs and sqrt as ordinary names; none may become a keyword.
+fn min a ulong b ulong to ulong
+ret add a b
+end
+fn main to ulong
+bits = ulong 1
+max = ulong 2
+abs = ulong 3
+sqrt = ulong 4
+ret min bits add max add abs sqrt
+end

@@ -1,0 +1,53 @@
+note fchdir/getppid/umask: directory fd, mask 0 with a 0777 file, parent id.
+text subd "subdir"
+text inside "inside"
+text p "mode2.tmp"
+fn main to int
+pp = getppid
+if eq pp long 0
+ret 1
+end
+me = getpid
+if eq pp long me
+ret 2
+end
+old = umask 0
+fd = int fopen p 0 len p 578 511
+if lt fd 0
+ret 3
+end
+r = fclose fd
+st = new uchar 128 0
+r = stat p 0 len p st 0 128
+if ne r 0
+ret 4
+end
+m = add ulong get st 16 shl ulong get st 17 ulong 8
+if ne and m ulong 4095 ulong 511
+ret 5
+end
+z = umask int old
+r = unlink p 0 len p
+if ne r 0
+ret 6
+end
+r = makedir subd 0 len subd 448
+if ne r 0
+ret 7
+end
+dfd = int fopen subd 0 len subd 16384 0
+if lt dfd 0
+ret 8
+end
+r = fchdir dfd
+if ne r 0
+ret 9
+end
+f = int fopen inside 0 len inside 578 511
+if lt f 0
+ret 10
+end
+z = fclose f
+z = fclose dfd
+ret 0
+end

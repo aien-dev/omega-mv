@@ -174,6 +174,31 @@ case "$step" in
     n=$(grep -c 'matches frozen digest' build/digest.log); obs frozen_digests_matched "$n"
     test "$n" -ge 1
     ;;
+  gpu-attention)      # host-suites-3.yml gpu-attention (omega#470): physics-src at physics.lock, lock check on;
+                      # host-only, sim and sweep tiers, nothing touches a GPU (the Spark has nvdisasm, so the
+                      # listing check runs here where the hosted runner printed "skipped")
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-attention | tee build/attn.log
+    test "$(grep -cE '^PASS: [0-9]+ checks, 0 failed$' build/attn.log)" -eq 6
+    ! grep -qE '^FAIL' build/attn.log
+    ;;
+  sm121dis)           # L386 bar C6 (docs/OMEGA.md): Omega's own sm_121 disassembler. Host only. Every kernel the
+                      # library builds, decoded by build/sm121dis and compared word for word with nvdisasm (the
+                      # offline oracle the Spark has), plus the faulty-decoder red check; then ZERO-NVDISASM: the
+                      # listing and provenance checks under a decoy nvdisasm and strace, plus its planted-call red check.
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-sm121dis | tee build/sm121dis.log
+    grep -qE '^kernels: [0-9]+, words: [0-9]+, failed kernels: 0$' build/sm121dis.log
+    grep -qE '^red check: the faulty decoder FAILS the comparison' build/sm121dis.log
+    make test-zero-nvdisasm | tee build/zero-nvdisasm.log
+    grep -qE '^ZERO-NVDISASM: PASS' build/zero-nvdisasm.log
+    grep -qE '^red check: the planted nvdisasm calls FAIL the gate' build/zero-nvdisasm.log
+    ;;
+  gpu-libm-free)      # omega-mv#471: no libm symbol left undefined in libomega_gpu.a (physics-src at physics.lock)
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-libm-free | tee build/libm-free.log
+    grep -q '^PASS: libomega_gpu.a is libm-free$' build/libm-free.log
+    ;;
   numeric-transc-full) make $NOPHYS test-numeric-transc-full ;;
   m6|m7|m8|m9|m10|m11|m12|m13|m14|m15|m17|m5|m19|m19r-qualify|gate14-combine)
     physics_pin; set -o pipefail; mkdir -p build

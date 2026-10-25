@@ -16,7 +16,7 @@
 
 /* Host tests for the native GB10 prime sieve (no device is opened).
  *
- *   gb10_sieve_host_test            golden words of the three new ops, codegen budget, nvdisasm
+ *   gb10_sieve_host_test            golden words of the three new ops, codegen budget, sm121dis
  *                                   listing + every branch target, then the allocated IR program
  *                                   run by a host IR simulator over the limits sweep against an
  *                                   independent Eratosthenes oracle; the mutant must be caught
@@ -33,6 +33,7 @@
 #include "prime_race_impl.h"
 #include "omega_blackwell_codegen.h"
 #include "omega_gpu_elementwise_api.h"
+#include "omega_sm121_disasm.h"
 #include "bw_warp_sim.h" /* SIMT warp simulator (omega #308): the regioned sieves run through it */
 #include <inttypes.h>
 #include <stdio.h>
@@ -396,25 +397,20 @@ static void fixed_schedule_check(const BlackwellIRProgram *p, const OmegaBlackwe
     free(bad.code);
 }
 
-/* ------------------------------------------------------------- nvdisasm */
+/* ------------------------------------------------------------- sm121dis */
 /* every word decodes, the new ops appear, and every BRA lands where the IR says */
 static const char *const MUST_GLOBAL[] = { "LOP3.LUT", "SHF.L.U32", "IMAD.HI.U32", "@P0 BRA", "@!P0 BRA", "@P0 EXIT", "STG.E", "LDG.E" };
 static const char *const MUST_STAGED[] = { "LDS", "STS", "BAR.SYNC", "LDG.E", "STG.E", "IMAD.HI.U32", "@P0 BRA", "@!P0 BRA" };
-static void nvdisasm_check(const OmegaBlackwellKernel *k, const BlackwellIRProgram *p, const char *const *must, const char *tag) {
-    const char *nv = "/usr/local/cuda/bin/nvdisasm";
-    if (access(nv, X_OK) != 0) { printf("nvdisasm: not present, listing check SKIPPED\n"); return; }
-    char bin[64], lst[64], cmd[256];
-    snprintf(bin, sizeof bin, "/tmp/pr_gb10_sieve_%d.bin", (int)getpid());
-    snprintf(lst, sizeof lst, "/tmp/pr_gb10_sieve_%d.sass", (int)getpid());
-    FILE *f = fopen(bin, "wb");
-    if (!f) { CHECK(0, "cannot write %s", bin); return; }
-    fwrite(k->code, 1, k->code_size, f); fclose(f);
-    snprintf(cmd, sizeof cmd, "%s -b SM121 %s > %s 2>&1", nv, bin, lst);
-    int rc = system(cmd);
-    unlink(bin);
-    CHECK(rc == 0, "nvdisasm rc %d", rc);
-    FILE *l = fopen(lst, "r");
-    if (!l) { CHECK(0, "cannot read %s", lst); return; }
+static void sm121dis_check(const OmegaBlackwellKernel *k, const BlackwellIRProgram *p, const char *const *must, const char *tag) {
+    char lst[64];
+    snprintf(lst, sizeof lst, "/tmp/pr_gb10_sieve_%d.sass.XXXXXX", (int)getpid());
+    int fd = mkstemp(lst); /* private, unique listing; read back the same descriptor */
+    FILE *f = fd >= 0 ? fdopen(fd, "w+") : NULL;
+    if (!f) { if (fd >= 0) close(fd); CHECK(0, "cannot write %s", lst); return; }
+    int rc = omega_sm121_listing(k->code, k->code_size, f);
+    CHECK(rc == 0, "sm121dis rc %d", rc);
+    if (fflush(f) != 0 || fseek(f, 0, SEEK_SET) != 0) { fclose(f); CHECK(0, "cannot read %s", lst); return; }
+    FILE *l = f;
     int seen[8] = {0}, insns = 0, bad = 0, bra_ok = 0, bra_bad = 0;
     char line[512];
     while (fgets(line, sizeof line, l)) {
@@ -431,14 +427,15 @@ static void nvdisasm_check(const OmegaBlackwellKernel *k, const BlackwellIRProgr
             unsigned long target = strtoul(br + 4, NULL, 16);
             unsigned long want = (unsigned long)((int)(addr / 16) + (int32_t)in->imm) * 16;
             if (in->op == BW_IR_BRA && target == want) bra_ok++;
-            else { bra_bad++; printf("  branch at 0x%04x: nvdisasm target 0x%lx, IR target 0x%lx\n", addr, target, want); }
+            else { bra_bad++; printf("  branch at 0x%04x: sm121dis target 0x%lx, IR target 0x%lx\n", addr, target, want); }
         }
     }
-    fclose(l);
-    for (int i = 0; i < 8; i++) CHECK(seen[i], "nvdisasm listing lacks %s (%s)", must[i], lst);
+    CHECK(!ferror(l), "read listing %s", lst);
+    CHECK(fclose(l) == 0, "close listing %s", lst);
+    for (int i = 0; i < 8; i++) CHECK(seen[i], "sm121dis listing lacks %s (%s)", must[i], lst);
     CHECK(bad == 0, "%d undecodable words (%s)", bad, lst);
     CHECK(bra_bad == 0 && bra_ok >= 6, "branch targets: %d match, %d differ", bra_ok, bra_bad);
-    printf("nvdisasm (%s): %d words, %d undecodable, %d branch targets checked (%s)\n", tag, insns, bad, bra_ok, lst);
+    printf("sm121dis (%s): %d words, %d undecodable, %d branch targets checked (%s)\n", tag, insns, bad, bra_ok, lst);
     if (g_failed == 0) unlink(lst);
 }
 
@@ -533,7 +530,7 @@ int main(int argc, char **argv) {
     printf("\n");
     CHECK(k.gpr_count <= 64, "GPR budget %u > 64", k.gpr_count);
     CHECK(memcmp(k.code_digest, mk.code_digest, 32) != 0, "mutant kernel differs from production");
-    nvdisasm_check(&k, prog, MUST_GLOBAL, "global table");
+    sm121dis_check(&k, prog, MUST_GLOBAL, "global table");
     fixed_schedule_check(prog, &k);
     {
         int hz = sb_hazards(prog, 1);
@@ -622,7 +619,7 @@ int main(int argc, char **argv) {
             for (int i = 0; i < 32; i++) printf("%02x", sk.code_digest[i]);
             printf("\n");
             CHECK(sk.gpr_count <= 64, "staged GPR budget %u > 64", sk.gpr_count);
-            nvdisasm_check(&sk, sp, MUST_STAGED, "staged");
+            sm121dis_check(&sk, sp, MUST_STAGED, "staged");
             fixed_schedule_check(sp, &sk);
             int hz = sb_hazards(sp, 1);
             CHECK(hz == 0, "scoreboard hazards in the staged kernel: %d", hz);
@@ -735,7 +732,7 @@ int main(int argc, char **argv) {
             printf("\n");
             CHECK(sb_hazards(dp, 1) == 0, "%s scoreboard hazards", dv[v].name);
             CHECK(fixed_hazards(dp, &dk) == 0, "%s encoded fixed RAW hazards", dv[v].name);
-            if (!dv[v].staged) nvdisasm_check(&dk, dp, MUST_DIV, dv[v].name);
+            if (!dv[v].staged) sm121dis_check(&dk, dp, MUST_DIV, dv[v].name);
             int dfail = 0, dn = 0;
             for (int order = 0; order < 2; order++) for (size_t i = 0; i < nl; i++, dn++) {
                 uint64_t L = lims[i], *want = oracle_bitmap(L), *got = calloc(pr_words64(L) + 1, 8);

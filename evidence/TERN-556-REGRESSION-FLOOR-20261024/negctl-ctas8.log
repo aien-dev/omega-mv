@@ -1,0 +1,16 @@
+chip: speed gates JUDGED (exclusive spark-window)
+chip: in-list launch floor (8 x 256, 512 B) median 3.49 us, min 3.17 us
+chip: cold 3840x2560 (2457600 B x 41 launches = 96.1 MiB per list): 55.58 us per launch -> 44.2 GB/s = 0.162 of 273 spec, 0.186 of 237.2 practical; minus the launch floor 52.10 us -> 47.2 GB/s (0.199 of 237.2)
+FAIL: cold GB/s minus the launch floor at 3840x2560: 47.2 (44.2 with it), regression floor 100.11 (2026-10-16 chip reference)
+chip: 3840x2560 47.2 GB/s minus the floor = 0.262 of the 180 target, 0.199 of 237.2 practical (target not gated, omega-mv#556)
+chip: cold 2560x2560 (1638400 B x 62 launches = 96.9 MiB per list): 45.66 us per launch -> 35.9 GB/s = 0.131 of 273 spec, 0.151 of 237.2 practical; minus the launch floor 42.18 us -> 38.8 GB/s (0.164 of 237.2)
+FAIL: cold GB/s minus the launch floor at 2560x2560: 38.8 (35.9 with it), regression floor 116.67 (2026-10-16 chip reference)
+chip: 2560x2560 38.8 GB/s minus the floor = 0.216 of the 180 target, 0.164 of 237.2 practical (target not gated, omega-mv#556)
+chip: cold 13824x2560 (8847360 B x 12 launches = 101.2 MiB per list): 172.03 us per launch -> 51.4 GB/s = 0.188 of 273 spec, 0.217 of 237.2 practical; minus the launch floor 168.54 us -> 52.5 GB/s (0.221 of 237.2)
+FAIL: cold GB/s minus the launch floor at 13824x2560: 52.5 (51.4 with it), regression floor 167.96 (2026-10-16 chip reference)
+chip: 13824x2560 52.5 GB/s minus the floor = 0.262 of the 200 target, 0.221 of 237.2 practical (target not gated, omega-mv#556)
+chip: cold 2560x6912 (4423680 B x 23 launches = 97.0 MiB per list): 88.77 us per launch -> 49.8 GB/s = 0.183 of 273 spec, 0.210 of 237.2 practical; minus the launch floor 85.28 us -> 51.9 GB/s (0.219 of 237.2)
+FAIL: cold GB/s minus the launch floor at 2560x6912: 51.9 (49.8 with it), regression floor 158.89 (2026-10-16 chip reference)
+chip: 2560x6912 51.9 GB/s minus the floor = 0.288 of the 180 target, 0.219 of 237.2 practical (target not gated, omega-mv#556)
+receipt: evidence/TERN-556-REGRESSION-FLOOR-20261024/receipt-negctl-ctas8.json
+gpu_tern_test: 9 checks, 4 failed: FAIL

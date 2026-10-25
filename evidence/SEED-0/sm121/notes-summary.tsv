@@ -1,0 +1,4 @@
+17752	IADD3: the C encoder ignores the given control word
+5490	EXIT: the C encoder ignores the given control word
+48	skipped: generator overruns its 8-slot staging arrays for this setting (fixer L149)
+1	elementwise kernels not in this build (needs -DSM121_WITH_GPU_API + libomega_gpu.a)

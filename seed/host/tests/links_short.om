@@ -1,0 +1,11 @@
+note a one-record packed list must be refused before any kernel call: link needs exactly two.
+fn main to int
+list = new uchar 16 0
+put list 0 1
+put list 1 0
+put list 2 1
+put list 3 0
+put list 4 97
+r = link list 0 5
+ret 0
+end

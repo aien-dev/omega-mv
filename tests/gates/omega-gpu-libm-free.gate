@@ -1,0 +1,22 @@
+# tests/gates/omega-gpu-libm-free.gate
+# omega-mv#471: libomega_gpu.a must link without -lm (omegatool, the Rust FFI crate and AIENOS link it bare); fails when any symbol the archive leaves undefined is a libm export; host only, no chip
+gate: OMEGA-GPU-LIBM-FREE
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["gpu-libm-free"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 20m
+exactness: EXACT
+cache_scope: machine

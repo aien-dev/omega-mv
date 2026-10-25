@@ -184,6 +184,13 @@ read-only telemetry driver.
     both PMUs, raw sums, never scaled; byte definitions; parity gate).
   - Shared rig `tests/runtime/rx_r15_rig.{c,h}` and SEQ parity gate
     `make test-r15-parity-host` / `test-r15-parity-silicon`.
+  - The parity gate gives both sides a detector configuration (rig
+    `r15_set_aien_config`; gate `main`) in which a miss streak can never fail
+    a prediction and the hit band is 99 percent, so host timing noise in
+    Omega's wall-clock serve costs can neither make one side research for
+    DRIFT where the other does for the GOAL nor stall the confirmation wait
+    behind one preempted baseline interval. Product defaults are unchanged;
+    G7 and the harness keep them.
 - The draft `rx_r15_perf.c` / `r15_reduce.c` predate these fixes and are not
   carried forward; the harness is to be rebuilt on `rx_r15_rig`.
 - Still to do, in order: energy clarification C2 (needs load tests: give

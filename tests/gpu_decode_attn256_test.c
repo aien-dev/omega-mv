@@ -38,10 +38,21 @@ static int cmp_u64(const void *a, const void *b) { uint64_t x = *(const uint64_t
 static const double THETA = 10000000.0; /* Qwen3.8-27B rope_theta */
 static const float EPS = 1e-6f;
 #define HD 256u
+/* Model shape under test: 0 = the 27B (24 q / 4 KV heads, 6 q per CTA row); -DDATTN_TEST_Q36 builds Qwen3.6-35B-A3B (16 / 2 / 4,
+ * two CTA rows per KV head; sc L306). */
+#ifdef DATTN_TEST_Q36
+#define QH 16u
+#define KVH 2u
+#define QPC 4u
+#else
 #define QH 24u
 #define KVH 4u
-#define QW OMEGA_DATTN256_QKV_WORDS   /* 8192 */
-#define OW OMEGA_DATTN256_OUT_WORDS   /* 6144 */
+#define QPC 6u
+#endif
+#define SPEC_SHAPE , .q_heads = QH, .kv_heads = KVH, .q_per_cta = QPC
+#define VY (QH / QPC)                 /* CTA rows */
+#define QW ((QH + 2u * KVH) * HD)     /* 8192 */
+#define OW (QH * HD)                  /* 6144 */
 #define QEND (QH * HD)                /* 6144: k block starts here */
 #define KEND (QEND + KVH * HD)        /* 7168: v block starts here */
 
@@ -199,7 +210,7 @@ static void host_only(void) {
     /* reference sanity: context 1 returns v_new (rounded), whatever q and k */
     { Case c; case_make(&c, 256, 0, 64, 11, 1.0f); double *ref = malloc(OW * sizeof(double)); uint16_t kn[KVH * HD], vn[KVH * HD];
       reference(c.qkv, c.kc, c.vc, 256, 0, 64, c.qn, c.kn, EPS, THETA, 1.0f, ref, kn, vn);
-      int good = 1; for (unsigned h = 0; h < QH && good; h++) for (unsigned i = 0; i < HD; i++) if (ref[h * HD + i] != (double)omega_dattn_bf16_f32(vn[(h / 6) * HD + i])) { good = 0; break; }
+      int good = 1; for (unsigned h = 0; h < QH && good; h++) for (unsigned i = 0; i < HD; i++) if (ref[h * HD + i] != (double)omega_dattn_bf16_f32(vn[(h / (QH / KVH)) * HD + i])) { good = 0; break; }
       CHECK(good, "reference: context 1 returns the rounded v_new of the head's KV group");
       free(ref); case_free(&c); }
     { Case c; case_make(&c, 256, 8, 64, 12, 1.0f);
@@ -212,23 +223,26 @@ static void host_only(void) {
       free(ref); case_free(&c); }
     /* codegen budget */
     for (uint32_t d = 1; d <= 4; d++) for (int m = 0; m <= 5; m++) {
-        OmegaDecodeAttn256Spec s = { d, m, 0 }; uint32_t n = 0, gp = 0;
+        OmegaDecodeAttn256Spec s = { .depth = d, .mutant = m SPEC_SHAPE }; uint32_t n = 0, gp = 0;
         int rc = omega_decode_attn256_prog_stats(&s, &n, &gp);
         CHECK(rc == 0 && n <= 1024 && gp <= 126, "codegen depth %u mutant %d: rc %d insns %u gprs %u", d, m, rc, n, gp);
         if (rc == 0 && m == 0) printf("codegen depth %u: %u instructions, %u registers (declared %u, 256 threads -> %u of 65536)\n", d, n, gp, omega_bw_gpr_declared(gp), 256 * omega_bw_gpr_declared(gp));
     }
-    { OmegaDecodeAttn256Spec s = { 0, 0, 0 }; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 0 refused");
+    { OmegaDecodeAttn256Spec s = { .depth = 0 SPEC_SHAPE }; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 0 refused");
       s.depth = 5; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "depth 5 refused");
-      s.depth = 1; s.mutant = 6; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "mutant 6 refused"); }
-    CHECK(omega_gpu_decode_attn256_cache_alloc(0, 256, THETA, 64, NULL) == OMEGA_GPU_DATTN_BAD_ARGS, "NULL out refused");
+      s.depth = 1; s.mutant = 6; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "mutant 6 refused");
+      s.mutant = 0; s.q_heads = 24; s.kv_heads = 4; s.q_per_cta = 5; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "q_per_cta not dividing q heads refused");
+      s.q_heads = 24; s.kv_heads = 2; s.q_per_cta = 4; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "three CTA rows per KV head refused");
+      s.q_heads = 16; s.kv_heads = 2; s.q_per_cta = 8; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "more than 6 q heads per CTA row refused"); }
+    CHECK(omega_gpu_decode_attn256_cache_alloc_shape(0, 256, THETA, 64, QH, KVH, QPC, NULL) == OMEGA_GPU_DATTN_BAD_ARGS, "NULL out refused");
     { OmegaGpuDecodeAttn256Cache *c = (OmegaGpuDecodeAttn256Cache *)1;
-      CHECK(omega_gpu_decode_attn256_cache_alloc(1, 100, THETA, 64, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "max_pos not a multiple of 256 refused before any device work");
+      CHECK(omega_gpu_decode_attn256_cache_alloc_shape(1, 100, THETA, 64, QH, KVH, QPC, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "max_pos not a multiple of 256 refused before any device work");
       c = (OmegaGpuDecodeAttn256Cache *)1;
-      CHECK(omega_gpu_decode_attn256_cache_alloc(1, 256, THETA, 63, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "odd rotary_dim refused");
+      CHECK(omega_gpu_decode_attn256_cache_alloc_shape(1, 256, THETA, 63, QH, KVH, QPC, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "odd rotary_dim refused");
       c = (OmegaGpuDecodeAttn256Cache *)1;
-      CHECK(omega_gpu_decode_attn256_cache_alloc(1, 256, THETA, 258, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "rotary_dim > 256 refused");
+      CHECK(omega_gpu_decode_attn256_cache_alloc_shape(1, 256, THETA, 258, QH, KVH, QPC, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "rotary_dim > 256 refused");
       c = (OmegaGpuDecodeAttn256Cache *)1;
-      CHECK(omega_gpu_decode_attn256_cache_alloc(1, 131072 + 256, THETA, 64, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "max_pos > 131072 refused"); }
+      CHECK(omega_gpu_decode_attn256_cache_alloc_shape(1, 131072 + 256, THETA, 64, QH, KVH, QPC, &c) == OMEGA_GPU_DATTN_BAD_ARGS && c == NULL, "max_pos > 131072 refused"); }
     CHECK(OMEGA_DATTN256_SHARED_BYTES <= 16384u, "shared memory within the QMD cap (%u)", OMEGA_DATTN256_SHARED_BYTES);
     CHECK(OMEGA_DATTN256_SM_FLAG + 16u == OMEGA_DATTN256_SHARED_BYTES && OMEGA_DATTN256_SM_S + 8192u <= OMEGA_DATTN256_SM_M && OMEGA_DATTN256_SM_M + 288u <= OMEGA_DATTN256_SM_L && OMEGA_DATTN256_SM_L + 256u <= OMEGA_DATTN256_SM_FLAG, "shared map does not overlap");
 }
@@ -237,7 +251,7 @@ static void host_only(void) {
 static uint64_t g_sim_issues;
 static int sim_point(uint32_t max_pos, uint32_t pos, uint32_t rotary, uint32_t depth, int mutant, uint32_t per_split, float qscale, uint32_t seed, char *msg, size_t n, double *worst, size_t *bad, char *rows, size_t rn) {
     static BlackwellIRProgram prog;
-    OmegaDecodeAttn256Spec spec = { depth, mutant, 0 };
+    OmegaDecodeAttn256Spec spec = { .depth = depth, .mutant = mutant SPEC_SHAPE };
     if (omega_blackwell_codegen_decode_attn256_prog(&spec, &prog) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
     Case c; case_make(&c, max_pos, pos, rotary, seed, qscale);
     uint16_t *kcp = case_kc_perm(&c);
@@ -249,7 +263,7 @@ static int sim_point(uint32_t max_pos, uint32_t pos, uint32_t rotary, uint32_t d
     float *qkv = aligned_alloc(16, sizeof c.qkv);
     case_kernel_inputs(&c, qkv, norms, norms + HD);
     float *out = aligned_alloc(16, OW * 4), *copy = malloc(OW * 4);
-    float *part = aligned_alloc(16, (size_t)KVH * splits * OMEGA_DATTN256_PARTIAL_WORDS * 4);
+    float *part = aligned_alloc(16, (size_t)VY * splits * OMEGA_DATTN256_PARTIAL_WORDS * 4);
     uint32_t *cnt = aligned_alloc(16, 16);
     int err = 0;
     for (int order = 0; order < 2 && !err; order++) {
@@ -269,9 +283,9 @@ static int sim_point(uint32_t max_pos, uint32_t pos, uint32_t rotary, uint32_t d
         s.ranges[2].lo = (uintptr_t)rope; s.ranges[2].hi = (uintptr_t)rope + (size_t)max_pos * OMEGA_DATTN256_ROPE_ROW_BYTES;
         s.ranges[3].lo = (uintptr_t)norms; s.ranges[3].hi = (uintptr_t)norms + 2048;
         s.ranges[4].lo = (uintptr_t)out; s.ranges[4].hi = (uintptr_t)out + OW * 4;
-        s.ranges[5].lo = (uintptr_t)part; s.ranges[5].hi = (uintptr_t)part + (size_t)KVH * splits * OMEGA_DATTN256_PARTIAL_WORDS * 4;
+        s.ranges[5].lo = (uintptr_t)part; s.ranges[5].hi = (uintptr_t)part + (size_t)VY * splits * OMEGA_DATTN256_PARTIAL_WORDS * 4;
         s.ranges[6].lo = (uintptr_t)cnt; s.ranges[6].hi = (uintptr_t)cnt + 16;
-        err = ws_run(&s, splits, KVH);
+        err = ws_run(&s, splits, VY);
         if (err) { snprintf(msg, n, "order %d: %s (pc %d)", order, s.msg, s.err_pc); break; }
         g_sim_issues += s.warp_issues;
         size_t unwritten = 0; for (unsigned i = 0; i < OW; i++) if (out[i] == -999.0f) unwritten++;
@@ -342,7 +356,7 @@ static int chip_run(const char *out_path, uint32_t reps) {
     const uint32_t MAXP = g_maxp;
     OmegaGpuDecodeAttn256Cache *cache = NULL;
     double t0 = now_ms();
-    int rc = omega_gpu_decode_attn256_cache_alloc(1, MAXP, THETA, 64, &cache);
+    int rc = omega_gpu_decode_attn256_cache_alloc_shape(1, MAXP, THETA, 64, QH, KVH, QPC, &cache);
     printf("cache alloc (1 layer, %u positions, %.0f MiB): rc=%s %.1f ms (%s)\n", MAXP, (double)MAXP * 2 * KVH * 512 / 1048576.0, omega_gpu_decode_attn_rc_name(rc), now_ms() - t0, rc ? omega_gpu_decode_attn_last_error() : "");
     CHECK(rc == OMEGA_GPU_DATTN_OK, "cache alloc");
     if (rc != OMEGA_GPU_DATTN_OK) { if (out) fprintf(out, "],\"verdict\":\"OMEGA_GPU_DECODE_ATTN256_FAIL\"}\n"); return 1; }
