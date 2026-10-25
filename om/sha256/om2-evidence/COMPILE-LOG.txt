@@ -62,3 +62,8 @@ Constructs used by the unit, and the slice that is expected to provide each
     (sha 0b0c074d…); 158/158. s1/sha256-s1.om compiles (binary differs from S1's; 158/158).
     Delivered unit: line 114 error 16 (fresh).
   S3 (fresh, layout) and S4 (views, part, out, export) not implemented yet (CompilerLane): NOT_RUN.
+  Note (CompilerLane, 2026-10-25): the S1 test unit's binary changes from S2 on by design: a
+  constant index (<= 4095) into a sized array is an LDR/STR unsigned-offset immediate instead of
+  MOV + register offset; folding in unrolled/inlined bodies does the same. Behaviour unchanged
+  (158/158 here); OM-1 units byte-identical under S2 (CompilerLane's C2 run, 5876/5876; not re-run
+  by L838).
