@@ -1,0 +1,330 @@
+note SPDX-License-Identifier: Apache-2.0
+note blake3: BLAKE3 default (unkeyed, 32-byte) hash of one file (or stdin when no argument),
+note 64 hex digits + newline on stdout. Seeded native Omega port of src/omega_blake3.c.
+note 32-bit words live in ulong cells and are masked after every add.
+note 1024-byte chunks of 64-byte blocks, a binary tree of parents (stack depth <= 54 for 16 MiB),
+note the ROOT flag on the last compression only.
+note Capacity: 16 MiB of input (exit 66 beyond). Exit 65 when the file cannot be read.
+note usage: blake3 [FILE]
+
+text tbad "blake3: cannot read input\n"
+text tbig "blake3: input over 16 MiB\n"
+text tnl "\n"
+
+global inp uchar 16777216
+global n ulong 1
+global iv ulong 8
+global perm ulong 16
+global m ulong 16
+global mt ulong 16
+global s ulong 16
+global co ulong 16
+global ncv ulong 8
+global blk uchar 64
+global nb ulong 3
+global cvr ulong 8
+global stk ulong 512
+global sp ulong 1
+global name uchar 4096
+global hex uchar 64
+global tiny uchar 1
+
+const mask ulong 4294967295
+const cstart ulong 1
+const cend ulong 2
+const parent ulong 4
+const root ulong 8
+
+fn initiv to void
+put iv 0 1779033703
+put iv 1 3144134277
+put iv 2 1013904242
+put iv 3 2773480762
+put iv 4 1359893119
+put iv 5 2600822924
+put iv 6 528734635
+put iv 7 1541459225
+end
+
+fn initperm to void
+put perm 0 2
+put perm 1 6
+put perm 2 3
+put perm 3 10
+put perm 4 7
+put perm 5 0
+put perm 6 4
+put perm 7 13
+put perm 8 1
+put perm 9 11
+put perm 10 12
+put perm 11 5
+put perm 12 9
+put perm 13 14
+put perm 14 15
+put perm 15 8
+end
+
+fn rotr x ulong r ulong to ulong
+ret and or shr x r shl x sub 32 r mask
+end
+
+note the G mixing function on state words a b c d with message words mx my
+fn g a ulong b ulong c ulong d ulong mx ulong my ulong to void
+t = add get s a get s b
+put s a and add t mx mask
+put s d rotr xor get s d get s a 16
+put s c and add get s c get s d mask
+put s b rotr xor get s b get s c 12
+t = add get s a get s b
+put s a and add t my mask
+put s d rotr xor get s d get s a 8
+put s c and add get s c get s d mask
+put s b rotr xor get s b get s c 7
+end
+
+fn round to void
+g 0 4 8 12 get m 0 get m 1
+g 1 5 9 13 get m 2 get m 3
+g 2 6 10 14 get m 4 get m 5
+g 3 7 11 15 get m 6 get m 7
+g 0 5 10 15 get m 8 get m 9
+g 1 6 11 12 get m 10 get m 11
+g 2 7 8 13 get m 12 get m 13
+g 3 4 9 14 get m 14 get m 15
+end
+
+fn permute to void
+for i ulong 16
+put mt i get m get perm i
+end
+for i ulong 16
+put m i get mt i
+end
+end
+
+note load the 16 little-endian words of blk into m
+fn loadm to void
+for i ulong 16
+o = mul i 4
+v = ulong get blk add o 3
+v = or shl v 8 ulong get blk add o 2
+v = or shl v 8 ulong get blk add o 1
+v = or shl v 8 ulong get blk o
+put m i v
+end
+end
+
+note compress the node (ncv, blk, nb = block_len counter flags) into co (16 words);
+note co 0..7 is the chaining value
+fn compress to void
+loadm
+for i ulong 8
+put s i get ncv i
+put s add i 8 get iv i
+end
+put s 12 and get nb 1 mask
+put s 13 and shr get nb 1 32 mask
+put s 14 get nb 0
+put s 15 get nb 2
+for r ulong 7
+round
+permute
+end
+for i ulong 8
+put co i xor get s i get s add i 8
+put co add i 8 xor get s add i 8 get ncv i
+end
+end
+
+note chaining value of the node into cvr
+fn nodecv to void
+compress
+for i ulong 8
+put cvr i get co i
+end
+end
+
+note copy cnt bytes of inp from offset o into blk, zero the rest
+fn loadblk o ulong cnt ulong to void
+for i ulong 64
+if lt i cnt
+put blk i get inp add o i
+else
+put blk i 0
+end
+end
+end
+
+note the unfinished last compression of chunk number ctr holding inp[o .. o + cnt)
+fn chunk o ulong cnt ulong ctr ulong to void
+for i ulong 8
+put ncv i get iv i
+end
+nblk = ulong 1
+if gt cnt 0
+nblk = div add cnt 63 64
+end
+b = ulong 0
+while lt add b 1 nblk bound 16
+loadblk add o mul b 64 64
+put nb 0 64
+put nb 1 ctr
+put nb 2 0
+if eq b 0
+put nb 2 cstart
+end
+compress
+for i ulong 8
+put ncv i get co i
+end
+b = add b 1
+end
+bo = mul sub nblk 1 64
+rest = sub cnt bo
+loadblk add o bo rest
+put nb 0 rest
+put nb 1 ctr
+put nb 2 cend
+if eq nblk 1
+put nb 2 or cend cstart
+end
+end
+
+note parent node of stk row r (left) and cvr (right)
+fn parentn r ulong to void
+for i ulong 8
+put ncv i get iv i
+end
+for i ulong 8
+l = get stk add mul r 8 i
+v = get cvr i
+for k ulong 4
+sh = mul k 8
+put blk add mul i 4 k uchar and shr l sh 255
+put blk add 32 add mul i 4 k uchar and shr v sh 255
+end
+end
+put nb 0 64
+put nb 1 0
+put nb 2 parent
+end
+
+fn push to void
+p = get sp 0
+for i ulong 8
+put stk add mul p 8 i get cvr i
+end
+put sp 0 add p 1
+end
+
+fn hexd v ulong to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+
+note little-endian bytes of co 0..7 as 64 hex digits
+fn emit to void
+for i ulong 8
+v = get co i
+for k ulong 4
+bt = and shr v mul k 8 255
+p = add mul i 8 mul k 2
+put hex p hexd shr bt 4
+put hex add p 1 hexd and bt 15
+end
+end
+r = write 1 hex 0 64
+r = write 1 tnl 0 1
+end
+
+note read the whole descriptor into inp; 0 ok, 65 read error, 66 over capacity
+fn slurp fd int to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+r = read fd tiny 0 1
+if lt r 0
+ret 65
+end
+if gt r 0
+ret 66
+end
+break
+end
+r = read fd inp t room
+if lt r 0
+ret 65
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put n 0 t
+ret 0
+end
+
+fn hashall to void
+sz = get n 0
+nch = ulong 1
+if gt sz 0
+nch = div add sz 1023 1024
+end
+c = ulong 0
+while lt add c 1 nch bound 16385
+chunk mul c 1024 1024 c
+nodecv
+tot = add c 1
+while eq and tot 1 0 bound 64
+put sp 0 sub get sp 0 1
+parentn get sp 0
+nodecv
+tot = shr tot 1
+end
+push
+c = add c 1
+end
+lst = mul sub nch 1 1024
+chunk lst sub sz lst sub nch 1
+while gt get sp 0 0 bound 64
+nodecv
+put sp 0 sub get sp 0 1
+parentn get sp 0
+end
+put nb 2 or get nb 2 root
+compress
+end
+
+fn main to int
+initiv
+initperm
+fd = int 0
+if ge argcnt 2
+l = argread 1 name 0 4095
+if lt l 1
+r = write 2 tbad 0 len tbad
+ret 65
+end
+fd = int fopen name 0 ulong l 0 0
+if lt fd 0
+r = write 2 tbad 0 len tbad
+ret 65
+end
+end
+e = slurp fd
+if eq e 65
+r = write 2 tbad 0 len tbad
+ret 65
+end
+if eq e 66
+r = write 2 tbig 0 len tbig
+ret 66
+end
+hashall
+emit
+ret 0
+end
