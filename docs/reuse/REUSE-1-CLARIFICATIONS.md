@@ -57,3 +57,49 @@ TRAIN session s is FSM iff s mod 6 = 5; CALIB: 2 families x 3 n x 4 change class
 96 sessions of BEGIN + 16 x (change, QUERY), change = none, one SET, a BATCH of 2..64 SETs, or a
 BATCH of 1024 SETs; AGG type A deletes the first index whose mapped value equals the current fold
 result, then inserts a random value at a random index.
+
+K9 (CandCore, EvalJudge). Experience tap (6.1): the evaluator runs one baseline router B process
+over every group of a split, in order, as `BASE tap - - - TAPFILE SPLITARG`. TAPFILE must not exist
+(a fresh file per tap); SPLITARG is the record word 9 value: 1 TRAIN and TRAINP, 2 CALIB, 3 DEV. The
+operator admits a tap by appending `<sha256> AUTHORIZED <label>` to ALLOW.
+
+K10 (CandLib, EvalJudge). Control mutants C1, C1b, C1c are codegen-only (`drive build ...
+mutant:c1|c1b|c1c`): c1 compares AGG shape ids with the wl byte cleared; c1b ends every wl-16 lane
+map with `v = and v 255`; c1c reads c_j from R1P word 5 + 2j. Each also runs with
+`unit:check=NOG3` (G3 removed). C1 is detected by G3 (route 5 on every QUERY) or by wrong answers;
+C1b and C1c with G3 must give route 5 and no wrong answer; every NOG3 variant must give wrong answers.
+
+K11 (EvalJudge). C1 detection evidence: the controls log prints both the route-5 count and the
+wrong count, so the record shows which mechanism caught the mutant.
+
+K12 (CandDelta, CandSelect). Churn (5.2): an invalidation is a MIN/MAX extreme rescan or a drop of
+live delta state (at PROGRAM, or when a change or restore finds the state unusable), counted at most
+once per drop; a cutoff miss is an FSM recompute unit that ran to n without a cutoff. From 64
+invalidations or 64 cutoff misses since the session's BEGIN snapshot, delta is invalid for the rest
+of the session.
+
+K13 (EvalJudge). C3 equality scope: with diagnostic cost words rotated across records, gen-G.om and
+gen-G.elf must be byte-identical and manifest word 4 and words 56..183 equal; the lineage words
+differ by construction.
+
+K14 (EvalJudge). STATS capture: after the last request the judge sends STATS and stores the status,
+q and the q counters zero-padded to 32 words in `stats-A-R-gNN.ctr`. Diagnostic only and excluded
+from every latency sum.
+
+K15 (CandLib, EvalJudge). C8 uses `crashafter:K` for K = 1..9, one per publish step, over a copy of
+the honest generation; drive exits 97, and the library must stay self-consistent and loadable with
+its own MANSHA.
+
+K16 (CandLib, from the independent candidate review). Calibration handoff: lbload reads gen-G.cal
+once, checks the SHA-256 of exactly those bytes against manifest words 52..55, and passes the same
+bytes to the generation on a memfd at fd 7; the router reads `/proc/self/fd/7`, never LIBDIR. This
+closes a check-then-read race (P0).
+
+K17 (EvalJudge, from the independent evaluator review). END handling: proc.log word 15 is the END
+round trip (part of the process cost); word 10 is the exit status plus 1024 when END failed
+(status not 0, q not 0, end of file or timeout). Any END failure or nonzero exit is one wrong refusal
+(STOP).
+
+Independence note. The lanes were written by separate agents under one operator account
+(UNISOLATED). One slip is recorded and not mitigated: helper names of `r1.om` were broadcast to the
+evaluator agents during integration. The evaluator's reference `ref.om` was written from the contract.
