@@ -301,8 +301,8 @@ def public_checks(ctx):
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--out',required=True)
-    ap.add_argument('--sa-root',default=str(Path.home()/'workspace/universal-read'),help='checkout whose tools/source-aware/sa (build/L574/sa) is the reference codec')
-    ap.add_argument('--c-import',default=str(Path.home()/'workspace/universal-read/build/L589/c-import'))
+    ap.add_argument('--sa-root',default=str(ROOT),help='checkout whose tools/source-aware/sa (build/L574/sa) is the reference codec')
+    ap.add_argument('--c-import',default=str(ROOT/'build/L589/c-import'))
     ap.add_argument('--c-export',default='',help='translation-v1 section 6 C exporter CLI (tools/adapters/c-export); empty = Python->C NOT_RUN')
     a=ap.parse_args();out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False);(out/'pyoracle.py').write_text(PYORACLE)
     ctx=Ctx(a,out)
