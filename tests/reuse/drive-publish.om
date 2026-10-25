@@ -1,0 +1,1003 @@
+note units: sha256 r1 exp lib
+note drive-publish: drive build (argv 3 = drive ELF, argv 2 = OMC, cwd = repo root) with a stub
+note router written by this test (unit:router=; argc 7 -> lbload, argc 8 -> exit 77): output lines,
+note manifest fields (K, lineage, calibration, template entries, source/ELF/compiler SHA-256), two
+note builds byte-identical (gen-1.om/.elf/.man/.cal and stdout), the built generation loads through
+note lbload (77) and a wrong MANSHA is refused (8); crashafter:1..9 (control C8): exit 97, CURRENT
+note names a complete generation that loads, and the next build recovers; refusals: experience not
+note in ALLOW 10, duplicate EXP 2, malformed CALIB 2, unknown mutant 2, unit:methods 2, missing unit
+note 2, compile error 11 (CURRENT unchanged, no tmp left), router source over 512 KiB 13; mutant:c1c
+note changes the manifest. Files in argv 1, else /tmp/reuse-test-drive-publish-PID.
+note Exit 0 pass, else the failed check's code.
+text tbase "/tmp/reuse-test-drive-publish-"
+text tsyn " SYNTHETIC t\n"
+text tstub "note stub router (drive-publish test)\nfn main to int\nif eq argcnt 8\nret 77\nend\nif eq argcnt 7\nret lbload\nend\nret 3\nend\n"
+text tbad "fn main to int\nret zzz\nend\n"
+text tbuild "build"
+text tmeth "method"
+text tunitr "unit:router="
+text tunitm "unit:methods="
+text tcra "crashafter:"
+text tmutb "mutant:c1c"
+text tmutx "mutant:c9"
+text tmsha "manifest_sha256="
+text tgen "generation="
+text ttpl "templates="
+text tnames "exp allow calib stub bad big out err cal2 nofile "
+global TDIR uchar 4096
+global TDN ulong 1
+global TDRV uchar 4096
+global TDRN ulong 1
+global TOMC uchar 4096
+global TOMN ulong 1
+global TP uchar 4096
+global TPN ulong 1
+global TK uchar 8192
+global TKN ulong 1
+global TKA ulong 1
+global TKC ulong 1
+global TST uchar 4
+global TW ulong 8192
+global TNR ulong 1
+global TBF uchar 1048576
+global TL uchar 4096
+global TLN ulong 1
+global TMS uchar 64
+global TMS2 uchar 64
+global TO uchar 4096
+global TON ulong 1
+global TO2 uchar 4096
+global TCMP uchar 65536
+global TCMP2 uchar 65536
+
+fn tpz to void
+put TPN 0 0
+end
+
+fn tpc c ulong to void
+n = get TPN 0
+put TP n uchar c
+put TPN 0 add n 1
+end
+
+fn tpnum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+tpc ulong get d n
+end
+end
+
+note name word w of tnames appended to TP
+fn tpword w ulong to void
+c = ulong 0
+for i ulong len tnames
+ch = ulong get tnames i
+if eq ch 32
+c = add c 1
+else
+if eq c w
+tpc ch
+end
+end
+end
+end
+
+note TP = TDIR/<word w>
+fn tpname w ulong to void
+tpz
+for i ulong get TDN 0
+tpc ulong get TDIR i
+end
+tpc 47
+tpword w
+end
+
+note TP = TDIR/lib<v>
+fn tplib v ulong to void
+tpz
+for i ulong get TDN 0
+tpc ulong get TDIR i
+end
+tpc 47
+tpc 108
+tpc 105
+tpc 98
+tpnum v
+end
+
+note LBDIR = TDIR/lib<v>
+fn tsetlib v ulong to void
+tplib v
+for i ulong get TPN 0
+put LBDIR i get TP i
+end
+put LBDN 0 get TPN 0
+end
+
+fn tmkdir to int
+tpz
+if ge argcnt 2
+n = argread 1 TDIR 0 3000
+if lt n 1
+ret 1
+end
+put TDN 0 ulong n
+ret 0
+end
+for i ulong len tbase
+tpc ulong get tbase i
+end
+tpnum ulong getpid
+for i ulong get TPN 0
+put TDIR i get TP i
+end
+put TDN 0 get TPN 0
+r = makedir TDIR 0 get TDN 0 448
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note write TBF[0..n) to the file TP; 0 ok
+fn twrite n ulong to int
+r = fopen TP 0 get TPN 0 524865 384
+if lt r 0
+ret 1
+end
+fd = int r
+t = ulong 0
+while lt t n bound 99999
+w = write fd TBF t sub n t
+if le w 0
+ret 1
+end
+t = add t ulong w
+end
+s = fclose fd
+ret 0
+end
+
+note read the file TP into TCMP (which 1) or TCMP2 (2), at most 65536 bytes; size or -1
+fn tread which ulong to long
+r = fopen TP 0 get TPN 0 524288 0
+if lt r 0
+ret -1
+end
+fd = int r
+n = long 0
+if eq which 1
+n = read fd TCMP 0 65536
+else
+n = read fd TCMP2 0 65536
+end
+s = fclose fd
+ret n
+end
+
+note AGG program wl, f, k, ops packed, constants seeded by c
+fn tagg wl ulong f ulong k ulong ops ulong c ulong to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 1
+put R1P 2 wl
+put R1P 3 f
+put R1P 4 k
+for j ulong k
+op = and shr ops mul j 4 15
+v = and add c mul j 37 sub shl ulong 1 wl 1
+if ge op 7
+v = rem v wl
+end
+put R1P add 5 mul j 2 op
+put R1P add 6 mul j 2 v
+end
+end
+
+fn tfsm to void
+for i ulong 64
+put R1P i 0
+end
+put R1P 0 3544411312749556050
+put R1P 1 2
+put R1P 2 2
+put R1P 3 2
+put R1P 5 1
+put R1P 6 1
+put R1P 7 2
+put R1P 22 16842752
+end
+
+note one experience record for R1P (n = 0, m = 0), split sp
+fn trec sp ulong to void
+b = mul get TNR 0 128
+for i ulong 128
+put TW add b i 0
+end
+r1pdig
+put R1N 0 0
+r1sdig
+put TW b 3544386028377026898
+put TW add b 1 1
+put TW add b 2 add get TNR 0 1
+put TW add b 3 get R1P 1
+put TW add b 9 sp
+put TW add b 10 1
+put TW add b 11 add get TNR 0 1
+put TW add b 13 1
+for j ulong 4
+put TW add add b 48 j get R1SD j
+put TW add add b 52 j get R1PD j
+end
+for i ulong 64
+put TW add add b 64 i get R1P i
+end
+put TNR 0 add get TNR 0 1
+end
+
+fn tser nw ulong to void
+for w ulong nw
+v = get TW w
+for k ulong 8
+put TBF add mul w 8 k uchar and shr v mul k 8 255
+end
+end
+end
+
+fn tlc c ulong to void
+n = get TLN 0
+put TL n uchar c
+put TLN 0 add n 1
+end
+
+note LBH as 64 hex digits into TMS (which 1) or TMS2 (2)
+fn thex which ulong to void
+for j ulong 4
+v = get LBH j
+for q ulong 16
+d = and shr v mul sub 15 q 4 15
+c = add d 48
+if ge d 10
+c = add d 87
+end
+if eq which 1
+put TMS add mul j 16 q uchar c
+else
+put TMS2 add mul j 16 q uchar c
+end
+end
+end
+end
+
+note the input files: exp (8 AGG TRAIN + 8 FSM TRAIN records), allow, calib, stub, bad, big, cal2
+fn tinputs to int
+put TNR 0 0
+tagg 8 1 2 49 3
+for i ulong 8
+trec 1
+end
+tfsm
+for i ulong 8
+trec 1
+end
+nw = mul get TNR 0 128
+tser nw
+tpname 0
+if ne twrite mul nw 8 0
+ret 1
+end
+lbpz
+for i ulong get TPN 0
+lbpc ulong get TP i
+end
+n = lbhpath
+thex 1
+put TLN 0 0
+for i ulong 64
+tlc ulong get TMS i
+end
+for i ulong len tsyn
+tlc ulong get tsyn i
+end
+for i ulong get TLN 0
+put TBF i get TL i
+end
+tpname 1
+if ne twrite get TLN 0 0
+ret 2
+end
+ret tinputs2
+end
+
+fn tinputs2 to int
+for i ulong 1600
+put TBF i 0
+end
+put TBF 0 82
+put TBF 1 49
+put TBF 2 67
+put TBF 3 65
+put TBF 4 76
+put TBF 5 48
+put TBF 6 48
+put TBF 7 49
+put TBF 8 1
+put TBF 16 136
+put TBF 17 19
+tpname 2
+if ne twrite 1600 0
+ret 3
+end
+tpname 8
+if ne twrite 1599 0
+ret 4
+end
+for i ulong len tstub
+put TBF i get tstub i
+end
+tpname 3
+if ne twrite len tstub 0
+ret 5
+end
+for i ulong len tbad
+put TBF i get tbad i
+end
+tpname 4
+if ne twrite len tbad 0
+ret 6
+end
+for l ulong 9600
+for i ulong 64
+put TBF add mul l 64 i 120
+end
+put TBF mul l 64 110
+put TBF add mul l 64 1 111
+put TBF add mul l 64 2 116
+put TBF add mul l 64 3 101
+put TBF add mul l 64 4 32
+put TBF add mul l 64 63 10
+end
+tpname 5
+if ne twrite 614400 0
+ret 7
+end
+ret 0
+end
+
+note argument packet TK: begin, bytes, end
+fn tkreset to void
+put TKN 0 2
+put TKC 0 0
+end
+
+fn tkbeg to void
+put TKA 0 get TKN 0
+put TKN 0 add get TKN 0 2
+end
+
+fn tkc c ulong to void
+n = get TKN 0
+put TK n uchar c
+put TKN 0 add n 1
+end
+
+fn tkend to void
+a = get TKA 0
+l = sub sub get TKN 0 a 2
+put TK a uchar and l 255
+put TK add a 1 uchar shr l 8
+put TKC 0 add get TKC 0 1
+end
+
+fn tktp to void
+tkbeg
+for i ulong get TPN 0
+tkc ulong get TP i
+end
+tkend
+end
+
+note fixed argument texts: 1 build, 2 method, 3 unit:router=, 4 unit:methods=, 5 crashafter:,
+note 6 mutant:c1c, 7 mutant:c9, 8 "-"
+fn tktx k ulong to void
+tkbeg
+tktx2 k
+tkend
+end
+
+fn tktx2 k ulong to void
+if eq k 1
+for i ulong len tbuild
+tkc ulong get tbuild i
+end
+end
+if eq k 2
+for i ulong len tmeth
+tkc ulong get tmeth i
+end
+end
+if eq k 3
+for i ulong len tunitr
+tkc ulong get tunitr i
+end
+end
+if eq k 4
+for i ulong len tunitm
+tkc ulong get tunitm i
+end
+end
+if eq k 5
+for i ulong len tcra
+tkc ulong get tcra i
+end
+end
+if eq k 6
+for i ulong len tmutb
+tkc ulong get tmutb i
+end
+end
+if eq k 7
+for i ulong len tmutx
+tkc ulong get tmutx i
+end
+end
+if eq k 8
+tkc 45
+end
+end
+
+note option argument: fixed text k followed by TP (unit:) or a digit d (crashafter:)
+fn tkopt k ulong d ulong to void
+tkbeg
+tktx2 k
+if or eq k 3 eq k 4
+for i ulong get TPN 0
+tkc ulong get TP i
+end
+end
+if eq k 5
+tkc add 48 d
+end
+tkend
+end
+
+note drive build OMC ALLOW CALIB(word cal, or "-" when cal = 99) lib<v>, then options:
+note opt 0 none, 1 unit:router=stub, plus extra: 0 none, 1 crashafter:d, 2 mutant:c1c, 3 mutant:c9,
+note 4 unit:methods=stub, 5 unit:router=bad, 6 unit:router=big, 7 unit:router=nofile; nexp EXP args
+fn tkbuild cal ulong v ulong extra ulong d ulong nexp ulong to void
+tkreset
+tkbeg
+for i ulong get TDRN 0
+tkc ulong get TDRV i
+end
+tkend
+tktx 1
+tkbeg
+for i ulong get TOMN 0
+tkc ulong get TOMC i
+end
+tkend
+tpname 1
+tktp
+if eq cal 99
+tktx 8
+else
+tpname cal
+tktp
+end
+tplib v
+tktp
+tkbuild2 extra d nexp
+end
+
+fn tkbuild2 extra ulong d ulong nexp ulong to void
+if and ne extra 5 and ne extra 6 ne extra 7
+tpname 3
+tkopt 3 0
+end
+if eq extra 1
+tkopt 5 d
+end
+if eq extra 2
+tktx 6
+end
+if eq extra 3
+tktx 7
+end
+if eq extra 4
+tpname 3
+tkopt 4 0
+end
+if eq extra 5
+tpname 4
+tkopt 3 0
+end
+if eq extra 6
+tpname 5
+tkopt 3 0
+end
+if eq extra 7
+tpname 9
+tkopt 3 0
+end
+for e ulong nexp
+tpname 0
+tktp
+end
+end
+
+note run the packet TK with stdout to TDIR/out, stderr to TDIR/err; exit status or 250+
+fn trun to int
+c = get TKC 0
+put TK 0 uchar and c 255
+put TK 1 uchar shr c 8
+pid = fork
+if lt pid 0
+ret 250
+end
+if eq pid 0
+tpname 6
+r = fopen TP 0 get TPN 0 577 384
+s = dupfd int r 1 0
+tpname 7
+r2 = fopen TP 0 get TPN 0 577 384
+s = dupfd int r2 2 0
+e = execprog TK 0 get TKN 0
+exit 127
+end
+r = waitpid int pid TST 0 4 0
+if ne r pid
+ret 251
+end
+s = or ulong get TST 0 shl ulong get TST 1 8
+if ne and s 127 0
+ret 252
+end
+ret int and shr s 8 255
+end
+
+note run lib<v>/gen-<g>.elf as router: method lib<v> MANSHA(TMS) allow - -; exit status
+fn tload v ulong g ulong to int
+tkreset
+tsetlib v
+lbpgen g 2 false
+tkbeg
+for i ulong get LBPN 0
+tkc ulong get LBP i
+end
+tkend
+tktx 2
+tplib v
+tktp
+tkbeg
+for i ulong 64
+tkc ulong get TMS i
+end
+tkend
+tpname 1
+tktp
+tktx 8
+tktx 8
+ret trun
+end
+
+note TMS = SHA-256 of lib<v>/gen-<g>.man; 0 ok
+fn tmansha v ulong g ulong to int
+tsetlib v
+lbpgen g 3 false
+n = lbhpath
+if lt n 0
+ret 1
+end
+thex 1
+ret 0
+end
+
+note the drive output TDIR/out must be manifest_sha256=TMS, generation=g, templates=k; 0 ok
+fn tout g ulong k ulong to int
+tpname 6
+n = tread 1 
+if le n 0
+ret 1
+end
+p = ulong 0
+for i ulong len tmsha
+if ne get TCMP i get tmsha i
+ret 2
+end
+end
+p = len tmsha
+for i ulong 64
+if ne get TCMP add p i get TMS i
+ret 3
+end
+end
+p = add p 65
+for i ulong len tgen
+if ne get TCMP add p i get tgen i
+ret 4
+end
+end
+p = add p len tgen
+if ne ulong get TCMP p add 48 g
+ret 5
+end
+p = add p 2
+for i ulong len ttpl
+if ne get TCMP add p i get ttpl i
+ret 6
+end
+end
+p = add p len ttpl
+if ne ulong get TCMP p add 48 k
+ret 7
+end
+ret 0
+end
+
+note files ext (1 om, 2 elf, 3 man, 4 cal) of generation 1 identical in lib<a> and lib<b>
+fn tsame a ulong b ulong ext ulong to int
+tsetlib a
+lbpgen 1 ext false
+n = lbhpath
+if lt n 0
+ret 1
+end
+thex 1
+tsetlib b
+lbpgen 1 ext false
+n2 = lbhpath
+if ne n2 n
+ret 2
+end
+thex 2
+for i ulong 64
+if ne get TMS i get TMS2 i
+ret 3
+end
+end
+ret 0
+end
+
+note manifest fields of lib<v> generation 1
+fn tfields v ulong to int
+tsetlib v
+if ne lbcurrd 0
+ret 1
+end
+if ne lbmanrd 0
+ret 2
+end
+if or ne get LBMAN 4 2 ne get LBMAN 19 1
+ret 3
+end
+tpname 0
+lbpz
+for i ulong get TPN 0
+lbpc ulong get TP i
+end
+n = lbhpath
+if not lbhmeq 20
+ret 4
+end
+tpname 2
+lbpz
+for i ulong get TPN 0
+lbpc ulong get TP i
+end
+n = lbhpath
+if not lbhmeq 52
+ret 5
+end
+lbpz
+for i ulong get TOMN 0
+lbpc ulong get TOMC i
+end
+n = lbhpath
+if not lbhmeq 14
+ret 6
+end
+tsetlib v
+lbpgen 1 1 false
+n = lbhpath
+if or not lbhmeq 6 ne get LBMAN 5 ulong n
+ret 7
+end
+lbpgen 1 2 false
+n = lbhpath
+if not lbhmeq 10
+ret 8
+end
+ret tfields2
+end
+
+note template entries: AGG shape (wl 8, f 1, k 2, 8 records) then FSM (8 records)
+fn tfields2 to int
+tagg 8 1 2 49 3
+s = r1shape
+if or ne get LBMAN 56 s ne get LBMAN 57 1
+ret 9
+end
+if or ne get LBMAN 58 8 ne get LBMAN 59 1
+ret 10
+end
+if or ne get LBMAN 60 2 ne get LBMAN 61 8
+ret 11
+end
+if or eq get LBMAN 62 0 ne get LBMAN 63 0
+ret 12
+end
+if or ne get LBMAN 64 1 ne get LBMAN 65 2
+ret 13
+end
+if or ne get LBMAN 69 8 eq get LBMAN 70 0
+ret 14
+end
+ret 0
+end
+
+note build lib1 and lib2 from the same inputs, compare, load
+fn tdeterm to int
+tkbuild 2 1 0 0 1
+x = trun
+if ne x 0
+ret 1
+end
+if ne tmansha 1 1 0
+ret 2
+end
+if ne tout 1 2 0
+ret 3
+end
+tpname 6
+n1 = tread 2
+tkbuild 2 2 0 0 1
+x = trun
+if ne x 0
+ret 4
+end
+tpname 6
+n2 = tread 1
+if ne n1 n2
+ret 5
+end
+for i ulong ulong n1
+if ne get TCMP i get TCMP2 i
+ret 5
+end
+end
+for e ulong 4
+if ne tsame 1 2 add e 1 0
+ret add 6 int e
+end
+end
+r = tfields 1
+if ne r 0
+ret add 10 r
+end
+if ne tmansha 1 1 0
+ret 30
+end
+x = tload 1 1
+if ne x 77
+ret 31
+end
+put TMS 0 48
+put TMS 1 48
+x = tload 1 1
+if ne x 8
+ret 32
+end
+ret 0
+end
+
+note crashafter:k on top of generation 1 of lib<10+k>, then recovery
+fn tcrash k ulong to int
+v = add 10 k
+tkbuild 2 v 0 0 1
+if ne trun 0
+ret 1
+end
+if ne tmansha v 1 0
+ret 2
+end
+for i ulong 64
+put TMS2 i get TMS i
+end
+tkbuild 2 v 1 k 1
+if ne trun 97
+ret 3
+end
+tsetlib v
+if ne lbcurrd 0
+ret 4
+end
+want = ulong 1
+if ge k 8
+want = 2
+end
+if ne get LBG 0 want
+ret 5
+end
+if ne tmansha v want 0
+ret 6
+end
+if eq want 1
+for i ulong 64
+if ne get TMS i get TMS2 i
+ret 7
+end
+end
+end
+if ne tload v want 77
+ret 8
+end
+tkbuild 2 v 0 0 1
+if ne trun 0
+ret 9
+end
+if ne tmansha v add want 1 0
+ret 10
+end
+if ne tout add want 1 2 0
+ret 11
+end
+if ne tload v add want 1 77
+ret 12
+end
+ret 0
+end
+
+note refusals; each on a fresh lib
+fn trefuse to int
+tpname 1
+for i ulong 10
+put TBF i 48
+end
+put TBF 10 10
+put TLN 0 0
+tkbuild 2 40 0 0 1
+tpname 1
+r = twrite 11
+if ne trun 10
+ret 1
+end
+for i ulong get TLN 0
+put TBF i get TL i
+end
+ret trefuse2
+end
+
+fn trefuse2 to int
+if ne tinputs 0
+ret 2
+end
+tkbuild 2 41 0 0 2
+if ne trun 2
+ret 3
+end
+tkbuild 8 42 0 0 1
+if ne trun 2
+ret 4
+end
+tkbuild 2 43 3 0 1
+if ne trun 2
+ret 5
+end
+tkbuild 2 44 4 0 1
+if ne trun 2
+ret 6
+end
+tkbuild 2 45 7 0 1
+if ne trun 2
+ret 7
+end
+tkbuild 2 46 0 0 1
+if ne trun 0
+ret 8
+end
+tkbuild 2 46 5 0 1
+if ne trun 11
+ret 9
+end
+tsetlib 46
+if or ne lbcurrd 0 ne get LBG 0 1
+ret 10
+end
+for e ulong 4
+lbpgen 2 add e 1 true
+if ge lbfsize 0
+ret 11
+end
+lbpgen 2 add e 1 false
+if ge lbfsize 0
+ret 11
+end
+end
+tkbuild 2 47 6 0 1
+if ne trun 13
+ret 12
+end
+tkbuild 99 49 0 0 1
+if ne trun 0
+ret 17
+end
+tsetlib 49
+if or ne lbcurrd 0 ne lbmanrd 0
+ret 18
+end
+if not lbzero 52 56
+ret 19
+end
+lbpgen 1 4 false
+if ge lbfsize 0
+ret 20
+end
+tkbuild 2 48 2 0 1
+if ne trun 0
+ret 13
+end
+if ne tmansha 48 1 0
+ret 14
+end
+for i ulong 64
+put TMS2 i get TMS i
+end
+if ne tmansha 1 1 0
+ret 15
+end
+same = true
+for i ulong 64
+if ne get TMS i get TMS2 i
+same = false
+end
+end
+if same
+ret 16
+end
+ret 0
+end
+
+fn main to int
+if ne tmkdir 0
+ret 99
+end
+if lt argcnt 4
+ret 98
+end
+n = argread 2 TOMC 0 4000
+put TOMN 0 ulong n
+n = argread 3 TDRV 0 4000
+put TDRN 0 ulong n
+if ne tinputs 0
+ret 97
+end
+r = tdeterm
+if ne r 0
+ret r
+end
+for k ulong 9
+r = tcrash add k 1
+if ne r 0
+ret add add 40 mul int k 10 r
+end
+end
+r = trefuse
+if ne r 0
+ret add 140 r
+end
+ret 0
+end

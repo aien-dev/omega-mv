@@ -1,0 +1,923 @@
+note SPDX-License-Identifier: Apache-2.0
+note tests/reuse/run.om: the REUSE-1 test runner (compiled alone: OMC < tests/reuse/run.om > run.elf).
+note cwd = the omega-mv repo root.
+note   run OMC          every tests/reuse/*.om except run.om (mutants/ is a directory, never listed)
+note   run OMC NAME     one test (NAME with or without .om)
+note   run compose OMC SRC OUT   compose SRC by its first line and compile it to OUT (builds drive.om)
+note Every test's FIRST line is `note units: NAME...`; sha256 = om/sha256/sha256.om, any other NAME =
+note om/reuse/NAME.om. The units in the listed order, then the test file, are concatenated (a newline
+note is added after a unit that lacks one) and compiled with OMC. Before the tests, run builds
+note om/reuse/drive.om the same way. Each test runs with cwd = repo root and argv 1 = its own fresh
+note temp dir, argv 2 = OMC, argv 3 = the drive ELF; 120 s per test (killed after). PASS iff exit 0.
+note Prints one PASS/FAIL line per test and `run: P passed, F failed`; exit 0 iff F = 0 (and the
+note drive build passed), 1 otherwise, 2 usage. Work files: /tmp/reuse-test-run-PID/.
+global RA uchar 4096
+global RAN ulong 1
+global ROMC uchar 4096
+global ROMN ulong 1
+global RW uchar 4096
+global RWN ulong 1
+global RP uchar 4096
+global RPN ulong 1
+global RQ uchar 4096
+global RQN ulong 1
+global RIN uchar 4096
+global RINN ulong 1
+global ROUT uchar 4096
+global ROUTN ulong 1
+global RTD uchar 4096
+global RTDN ulong 1
+global RDRV uchar 4096
+global RDRN ulong 1
+global RPK uchar 4096
+global RST uchar 4
+global RIO uchar 65536
+global RLB ulong 1
+global RNM uchar 65536
+global RNL ulong 512
+global RNC ulong 1
+global RDB uchar 65536
+global RO uchar 4096
+global RON ulong 1
+global RUL uchar 4096
+global RULN ulong 1
+text RTW "/tmp/reuse-test-run-"
+text RTDIR "tests/reuse"
+text RTSHA "om/sha256/sha256.om"
+text RTRE "om/reuse/"
+text RTNU "note units:"
+text RTDRV "om/reuse/drive.om"
+text RTRUN "run.om"
+text RTCMP "compose"
+text RTPASS "PASS "
+text RTFAIL "FAIL "
+text RTRC " rc="
+text RTCOMP " compile rc="
+text RTTO " timeout"
+text RTNOU " no units line"
+text RTSUM1 "run: "
+text RTSUM2 " passed, "
+text RTSUM3 " failed\n"
+text RTBLD "drive.elf"
+text RTUSE "usage: run OMC [NAME] | run compose OMC SRC OUT\n"
+
+fn roc c ulong to void
+n = get RON 0
+if lt n 4096
+put RO n uchar c
+put RON 0 add n 1
+end
+end
+
+fn ronum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+roc ulong get d n
+end
+end
+
+fn ronumi v int to void
+if lt v 0
+roc 45
+ronum ulong neg long v
+ret
+end
+ronum ulong v
+end
+
+note fixed texts: 1 PASS 2 FAIL 3 rc= 4 compile rc= 5 timeout 6 no units 7 run: 8 passed, 9 failed
+fn rotx k ulong to void
+if eq k 1
+for i ulong len RTPASS
+roc ulong get RTPASS i
+end
+end
+if eq k 2
+for i ulong len RTFAIL
+roc ulong get RTFAIL i
+end
+end
+if eq k 3
+for i ulong len RTRC
+roc ulong get RTRC i
+end
+end
+if eq k 4
+for i ulong len RTCOMP
+roc ulong get RTCOMP i
+end
+end
+if eq k 5
+for i ulong len RTTO
+roc ulong get RTTO i
+end
+end
+if eq k 6
+for i ulong len RTNOU
+roc ulong get RTNOU i
+end
+end
+if eq k 7
+for i ulong len RTSUM1
+roc ulong get RTSUM1 i
+end
+end
+if eq k 8
+for i ulong len RTSUM2
+roc ulong get RTSUM2 i
+end
+end
+if eq k 9
+for i ulong len RTSUM3
+roc ulong get RTSUM3 i
+end
+end
+if eq k 10
+for i ulong len RTUSE
+roc ulong get RTUSE i
+end
+end
+end
+
+fn roflush fd int to void
+r = write fd RO 0 get RON 0
+put RON 0 0
+end
+
+note argument a into RA; its length, 0 when missing
+fn rarg a ulong to ulong
+put RAN 0 0
+if ge a ulong argcnt
+ret 0
+end
+n = argread a RA 0 4096
+if lt n 1
+ret 0
+end
+put RAN 0 ulong n
+ret ulong n
+end
+
+note path buffer RP
+fn rpz to void
+put RPN 0 0
+end
+
+fn rpc c ulong to void
+n = get RPN 0
+if ge n 4095
+trap 3
+end
+put RP n uchar c
+put RPN 0 add n 1
+end
+
+fn rpnum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+rpc ulong get d n
+end
+end
+
+note RP <- work dir and '/'
+fn rpw to void
+rpz
+for i ulong get RWN 0
+rpc ulong get RW i
+end
+rpc 47
+end
+
+note RP <- name entry e
+fn rpname e ulong to void
+for i ulong get RNL e
+rpc ulong get RNM add mul e 128 i
+end
+end
+
+note RP into RIN (1), ROUT (2), RTD (3), RDRV (4), RQ (5)
+fn rsave which ulong to void
+n = get RPN 0
+for i ulong n
+if eq which 1
+put RIN i get RP i
+end
+if eq which 2
+put ROUT i get RP i
+end
+if eq which 3
+put RTD i get RP i
+end
+if eq which 4
+put RDRV i get RP i
+end
+if eq which 5
+put RQ i get RP i
+end
+end
+if eq which 1
+put RINN 0 n
+end
+if eq which 2
+put ROUTN 0 n
+end
+if eq which 3
+put RTDN 0 n
+end
+if eq which 4
+put RDRN 0 n
+end
+if eq which 5
+put RQN 0 n
+end
+end
+
+fn ropen flags int mode int to int
+r = fopen RP 0 get RPN 0 flags mode
+if lt r 0
+ret -1
+end
+ret int r
+end
+
+fn rwrio fd int n ulong to int
+t = ulong 0
+while lt t n bound 65537
+r = write fd RIO t sub n t
+if le r 0
+ret 1
+end
+t = add t ulong r
+end
+ret 0
+end
+
+note copy the file named by RP to fd; bytes or -1
+fn rcat fd int to long
+in = ropen 524288 0
+if lt in 0
+ret -1
+end
+tot = long 0
+while true bound 999999
+r = read in RIO 0 65536
+if lt r 0
+s = fclose in
+ret -1
+end
+if eq r 0
+break
+end
+if ne rwrio fd ulong r 0
+s = fclose in
+ret -1
+end
+put RLB 0 ulong get RIO sub ulong r 1
+tot = add tot r
+end
+s = fclose in
+ret tot
+end
+
+note RP <- unit path for RUL[a..b)
+fn rupath a ulong b ulong to void
+rpz
+l = sub b a
+if rissha a b
+for i ulong len RTSHA
+rpc ulong get RTSHA i
+end
+ret
+end
+for i ulong len RTRE
+rpc ulong get RTRE i
+end
+for i ulong l
+rpc ulong get RUL add a i
+end
+rpc 46
+rpc 111
+rpc 109
+end
+
+note is RUL[a..b) the unit "sha256"
+fn rissha a ulong b ulong to bool
+if ne sub b a 6
+ret false
+end
+for i ulong 6
+if ne get RUL add a i get RTSHA add 10 i
+ret false
+end
+end
+ret true
+end
+
+note read the first line of the source in RQ into RUL (the text after "note units:");
+note 0 ok, 1 unreadable, 2 no units line
+fn rfirst to int
+r = fopen RQ 0 get RQN 0 524288 0
+if lt r 0
+ret 1
+end
+fd = int r
+n = read fd RIO 0 4096
+s = fclose fd
+if le n 0
+ret 2
+end
+e = ulong 0
+while lt e ulong n bound 4097
+if eq get RIO e 10
+break
+end
+e = add e 1
+end
+l = len RTNU
+if lt e l
+ret 2
+end
+for i ulong l
+if ne get RIO i get RTNU i
+ret 2
+end
+end
+m = sub e l
+for i ulong m
+put RUL i get RIO add l i
+end
+put RULN 0 m
+ret 0
+end
+
+note compose RQ (by its units line) into RIN; 0 ok, 2 no units line, 3 a unit unreadable, 4 write
+fn rcompose to int
+r = rfirst
+if ne r 0
+ret 2
+end
+for i ulong get RINN 0
+put RP i get RIN i
+end
+put RPN 0 get RINN 0
+fd = ropen 524865 384
+if lt fd 0
+ret 4
+end
+n = get RULN 0
+p = ulong 0
+while lt p n bound 4096
+while and lt p n eq get RUL p 32 bound 4096
+p = add p 1
+end
+if ge p n
+break
+end
+q = p
+while and lt q n ne get RUL q 32 bound 4096
+q = add q 1
+end
+if ne runit fd p q 0
+s = fclose fd
+ret 3
+end
+p = q
+end
+for i ulong get RQN 0
+put RP i get RQ i
+end
+put RPN 0 get RQN 0
+put RLB 0 10
+t = rcat fd
+if lt t 0
+s = fclose fd
+ret 3
+end
+s = fclose fd
+ret 0
+end
+
+note append unit RUL[p..q) to fd; 0 ok
+fn runit fd int p ulong q ulong to int
+rupath p q
+put RLB 0 10
+t = rcat fd
+if lt t 0
+ret 1
+end
+if ne get RLB 0 10
+put RIO 0 10
+if ne rwrio fd 1 0
+ret 1
+end
+end
+ret 0
+end
+
+note forked child for omc: stdin RIN, stdout ROUT (0700), exec ROMC; never returns
+fn rcchild to void
+r = fopen RIN 0 get RINN 0 0 0
+if lt r 0
+exit 127
+end
+s = dupfd int r 0 0
+r2 = fopen ROUT 0 get ROUTN 0 577 448
+if lt r2 0
+exit 127
+end
+s = dupfd int r2 1 0
+n = get ROMN 0
+put RPK 0 1
+put RPK 1 0
+put RPK 2 uchar and n 255
+put RPK 3 uchar shr n 8
+for i ulong n
+put RPK add 4 i get ROMC i
+end
+e = execprog RPK 0 add n 4
+exit 127
+end
+
+note wait for pid at most ns nanoseconds: exit status, 256 + signal, -1 timeout (killed)
+fn rwait pid long ns long to int
+t0 = monons
+while true bound 999999
+r = waitpid int pid RST 0 4 1
+if eq r pid
+s = or ulong get RST 0 shl ulong get RST 1 8
+if eq and s 127 0
+ret int and shr s 8 255
+end
+ret int add 256 and s 127
+end
+if lt r 0
+ret -2
+end
+if gt sub monons t0 ns
+k = killpid int pid 9
+r = waitpid int pid RST 0 4 0
+ret -1
+end
+z = sleepns 1000000
+end
+ret -1
+end
+
+note OMC < RIN > ROUT; omc status, or negative
+fn rcompile to int
+pid = fork
+if lt pid 0
+ret -2
+end
+if eq pid 0
+rcchild
+exit 127
+end
+ret rwait pid 120000000000
+end
+
+note append a packed-list record of RP at o in RPK; new offset
+fn rpkadd o ulong to ulong
+n = get RPN 0
+put RPK o uchar and n 255
+put RPK add o 1 uchar shr n 8
+for i ulong n
+put RPK add add o 2 i get RP i
+end
+ret add add o 2 n
+end
+
+note run ROUT with argv RTD ROMC RDRV; exit status, 256 + signal, -1 timeout, -2 fork
+fn rexec to int
+for i ulong get ROUTN 0
+put RP i get ROUT i
+end
+put RPN 0 get ROUTN 0
+o = rpkadd 2
+for i ulong get RTDN 0
+put RP i get RTD i
+end
+put RPN 0 get RTDN 0
+o = rpkadd o
+for i ulong get ROMN 0
+put RP i get ROMC i
+end
+put RPN 0 get ROMN 0
+o = rpkadd o
+for i ulong get RDRN 0
+put RP i get RDRV i
+end
+put RPN 0 get RDRN 0
+o = rpkadd o
+put RPK 0 4
+put RPK 1 0
+pid = fork
+if lt pid 0
+ret -2
+end
+if eq pid 0
+e = execprog RPK 0 o
+exit 127
+end
+ret rwait pid 120000000000
+end
+
+note list tests/reuse/*.om except run.om into RNM/RNL, sorted; count or -1
+fn rlist to int
+r = fopen RTDIR 0 len RTDIR 540672 0
+if lt r 0
+ret -1
+end
+fd = int r
+put RNC 0 0
+while true bound 4096
+n = getdnts fd RDB 0 65536
+if lt n 0
+s = fclose fd
+ret -1
+end
+if eq n 0
+break
+end
+p = ulong 0
+while lt p ulong n bound 65536
+rl = or ulong get RDB add p 16 shl ulong get RDB add p 17 8
+radd add p 19
+p = add p rl
+end
+end
+s = fclose fd
+rsort
+ret int get RNC 0
+end
+
+note one getdents name at RDB[o..] (0-terminated): keep NAME.om, not run.om
+fn radd o ulong to void
+l = ulong 0
+while ne get RDB add o l 0 bound 256
+l = add l 1
+end
+if or lt l 4 gt l 127
+ret
+end
+if or ne get RDB add o sub l 3 46 ne get RDB add o sub l 2 111
+ret
+end
+if ne get RDB add o sub l 1 109
+ret
+end
+if eq l len RTRUN
+same = true
+for i ulong l
+if ne get RDB add o i get RTRUN i
+same = false
+end
+end
+if same
+ret
+end
+end
+c = get RNC 0
+if ge c 512
+ret
+end
+for i ulong l
+put RNM add mul c 128 i get RDB add o i
+end
+put RNL c l
+put RNC 0 add c 1
+end
+
+note name a below name b
+fn rless a ulong b ulong to bool
+la = get RNL a
+lb = get RNL b
+for i ulong 128
+if or ge i la ge i lb
+ret lt la lb
+end
+x = get RNM add mul a 128 i
+y = get RNM add mul b 128 i
+if ne x y
+ret lt x y
+end
+end
+ret false
+end
+
+fn rswap a ulong b ulong to void
+for i ulong 128
+x = get RNM add mul a 128 i
+put RNM add mul a 128 i get RNM add mul b 128 i
+put RNM add mul b 128 i x
+end
+t = get RNL a
+put RNL a get RNL b
+put RNL b t
+end
+
+fn rsort to void
+n = get RNC 0
+for i ulong n
+for j ulong sub sub n i 1
+if rless add j 1 j
+rswap j add j 1
+end
+end
+end
+end
+
+note compose and compile entry e to RW/<name> and RW/<base>.elf; 0, or a reason code
+note (1000 + c: compose failure c; else the omc status)
+fn rbuild e ulong to int
+rpz
+for i ulong len RTDIR
+rpc ulong get RTDIR i
+end
+rpc 47
+rpname e
+rsave 5
+rpw
+rpname e
+rsave 1
+rpw
+rpname e
+put RPN 0 sub get RPN 0 3
+rpc 46
+rpc 101
+rpc 108
+rpc 102
+rsave 2
+c = rcompose
+if ne c 0
+ret add 1000 c
+end
+ret rcompile
+end
+
+note run entry e: 0 pass, else 1 (prints its line)
+fn rone e ulong to int
+c = rbuild e
+if ne c 0
+rotx 2
+for i ulong get RNL e
+roc ulong get RNM add mul e 128 i
+end
+if eq c 1002
+rotx 6
+else
+rotx 4
+ronumi c
+end
+roc 10
+roflush 1
+ret 1
+end
+rpw
+for i ulong sub get RNL e 3
+rpc ulong get RNM add mul e 128 i
+end
+rpc 46
+rpc 100
+r = makedir RP 0 get RPN 0 448
+rsave 3
+x = rexec
+if eq x 0
+rotx 1
+else
+rotx 2
+end
+for i ulong get RNL e
+roc ulong get RNM add mul e 128 i
+end
+if eq x -1
+rotx 5
+end
+if gt x 0
+rotx 3
+ronumi x
+end
+if eq x -2
+rotx 3
+ronumi x
+end
+roc 10
+roflush 1
+if eq x 0
+ret 0
+end
+ret 1
+end
+
+note ROMC from argv a; 0 ok
+fn romc a ulong to int
+n = rarg a
+if or eq n 0 ge n 4000
+ret 1
+end
+for i ulong n
+put ROMC i get RA i
+end
+put ROMN 0 n
+ret 0
+end
+
+note RW <- /tmp/reuse-test-run-PID, created 0700; 0 ok
+fn rmkw to int
+rpz
+for i ulong len RTW
+rpc ulong get RTW i
+end
+rpnum ulong getpid
+n = get RPN 0
+for i ulong n
+put RW i get RP i
+end
+put RWN 0 n
+r = makedir RW 0 n 448
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note build om/reuse/drive.om into RW/drive.elf (path in RDRV); 0 or the failure code
+fn rdrive to int
+rpz
+for i ulong len RTDRV
+rpc ulong get RTDRV i
+end
+rsave 5
+rpw
+for i ulong len RTDRV
+if ge i 9
+rpc ulong get RTDRV i
+end
+end
+rsave 1
+rpw
+for i ulong len RTBLD
+rpc ulong get RTBLD i
+end
+rsave 2
+rsave 4
+c = rcompose
+if ne c 0
+ret add 1000 c
+end
+ret rcompile
+end
+
+note run compose OMC SRC OUT
+fn rcompmode to int
+if ne argcnt 5
+ret 2
+end
+if ne romc 2 0
+ret 2
+end
+n = rarg 3
+rpz
+for i ulong n
+rpc ulong get RA i
+end
+rsave 5
+if ne rmkw 0
+ret 1
+end
+rpw
+rpc 99
+rpc 46
+rpc 111
+rpc 109
+rsave 1
+n = rarg 4
+rpz
+for i ulong n
+rpc ulong get RA i
+end
+rsave 2
+c = rcompose
+if ne c 0
+ret 1
+end
+c = rcompile
+if ne c 0
+ret 1
+end
+ret 0
+end
+
+note does entry e match RA (with or without .om)
+fn rmatch e ulong to bool
+n = get RAN 0
+l = get RNL e
+if and ne n l ne add n 3 l
+ret false
+end
+for i ulong n
+if ne get RA i get RNM add mul e 128 i
+ret false
+end
+end
+ret true
+end
+
+fn main to int
+n = rarg 1
+if eq n len RTCMP
+same = true
+for i ulong n
+if ne get RA i get RTCMP i
+same = false
+end
+end
+if same
+ret rcompmode
+end
+end
+if or lt argcnt 2 gt argcnt 3
+rotx 10
+roflush 2
+ret 2
+end
+if ne romc 1 0
+rotx 10
+roflush 2
+ret 2
+end
+if ne rmkw 0
+ret 2
+end
+fails = ulong 0
+d = rdrive
+if ne d 0
+rotx 2
+for i ulong len RTBLD
+roc ulong get RTBLD i
+end
+rotx 4
+ronumi d
+roc 10
+roflush 1
+fails = 1
+end
+c = rlist
+if lt c 0
+ret 2
+end
+single = eq argcnt 3
+if single
+m = rarg 2
+end
+pass = ulong 0
+fl = ulong 0
+for e ulong ulong c
+run = true
+if single
+run = rmatch e
+end
+if run
+if eq rone e 0
+pass = add pass 1
+else
+fl = add fl 1
+end
+end
+end
+rotx 7
+ronum pass
+rotx 8
+ronum fl
+rotx 9
+roflush 1
+if or ne fl 0 ne fails 0
+ret 1
+end
+if and single eq pass 0
+ret 1
+end
+ret 0
+end

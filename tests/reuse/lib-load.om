@@ -1,0 +1,685 @@
+note units: sha256 r1 exp lib
+note lib-load: lbload (contract 3.4, controls C6 C7 C9 C10), lblineage and lbcalpath. Every refusal is
+note a mutant of a good library: the test builds generation 1 by hand (its own ELF as gen-1.elf, a
+note sealed manifest, lbpub), changes one thing, then runs itself as a router child
+note (argv ARM LIBDIR MANSHA ALLOW - -) and requires lbload's exact refusal code; the good library
+note must exec the generation (argc 8 child exits 77). Files live in argv 1 (run.om's temp dir),
+note else /tmp/reuse-test-lib-load-PID. Exit 0 pass, else 100 + the failed case number.
+note Child modes (argc 7): ARM method = exit lbload; lineage = exit 60 + LBLN (or the refusal);
+note calpath = exit 80 + (1 when a path came back, 0 for none) after checking LBCP.
+text tbase "/tmp/reuse-test-lib-load-"
+text tself "/proc/self/exe"
+text tmeth "method"
+text tline "lineage"
+text tcalp "calpath"
+text tdash "-"
+text tauth " AUTHORIZED t\n"
+text trevk " REVOKED t\n"
+text tsyn " SYNTHETIC t\n"
+text tsrc "note test generation\n"
+global TDIR uchar 4096
+global TDN ulong 1
+global TA uchar 4096
+global TAN ulong 1
+global TMS uchar 64
+global TK uchar 4096
+global TST uchar 4
+global TB uchar 65536
+global TL uchar 4096
+global TLN ulong 1
+global TARG ulong 1
+
+note TDIR from argv 1 or a fresh /tmp directory; 0 ok
+fn tmkdir to int
+if ge argcnt 2
+n = argread 1 TDIR 0 3000
+if lt n 1
+ret 1
+end
+put TDN 0 ulong n
+ret 0
+end
+for i ulong len tbase
+put TDIR i get tbase i
+end
+put TDN 0 len tbase
+lbpz
+lbpnum ulong getpid
+for i ulong get LBPN 0
+put TDIR add len tbase i get LBP i
+end
+put TDN 0 add len tbase get LBPN 0
+r = makedir TDIR 0 get TDN 0 448
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note LBDIR = TDIR/v<v>, created
+fn tsetlib v ulong to void
+n = get TDN 0
+for i ulong n
+put LBDIR i get TDIR i
+end
+put LBDIR n 47
+put LBDIR add n 1 118
+put LBDN 0 add n 2
+lbpz
+lbpnum v
+for i ulong get LBPN 0
+put LBDIR add get LBDN 0 i get LBP i
+end
+put LBDN 0 add get LBDN 0 get LBPN 0
+r = makedir LBDIR 0 get LBDN 0 448
+end
+
+note TA = TDIR/allow<v>
+fn tsetallow v ulong to void
+n = get TDN 0
+for i ulong n
+put TA i get TDIR i
+end
+put TA n 47
+put TA add n 1 97
+put TA add n 2 108
+put TA add n 3 108
+put TAN 0 add n 4
+lbpz
+lbpnum v
+for i ulong get LBPN 0
+put TA add get TAN 0 i get LBP i
+end
+put TAN 0 add get TAN 0 get LBPN 0
+end
+
+note copy /proc/self/exe to the file named by LBP (mode 0700); 0 ok
+fn tcopyself to int
+r = fopen tself 0 len tself 524288 0
+if lt r 0
+ret 1
+end
+in = int r
+o = lbopen 524865 448
+if lt o 0
+s = fclose in
+ret 1
+end
+while true bound 99999
+n = read in TB 0 65536
+if lt n 0
+ret 1
+end
+if eq n 0
+break
+end
+w = write o TB 0 ulong n
+if ne w n
+ret 1
+end
+end
+s = fclose in
+s = fclose o
+ret 0
+end
+
+note write n bytes of TB to the file named by LBP; 0 ok
+fn twrtb n ulong to int
+fd = lbopen 524865 384
+if lt fd 0
+ret 1
+end
+w = write fd TB 0 n
+s = fclose fd
+if ne w long n
+ret 1
+end
+ret 0
+end
+
+note flip bit 0 of byte off of the file named by LBP; 0 ok
+fn tflip off long to int
+fd = lbopen 2 0
+if lt fd 0
+ret 1
+end
+r = pread fd TB 0 1 off
+put TB 0 xor get TB 0 1
+w = pwrite fd TB 0 1 off
+s = fclose fd
+if ne w 1
+ret 1
+end
+ret 0
+end
+
+note digest word j of lineage entry e (test constants)
+fn tdig e ulong j ulong to ulong
+ret add mul e 1000 add j 1
+end
+
+note prepare generation 1 in TDIR/v<v>: tmp files, manifest LBMAN (sealed) with nl lineage entries
+note and a calibration file when cal; 0 ok
+fn tprep v ulong nl ulong cal bool to int
+tsetlib v
+lbpgen 1 1 true
+for i ulong len tsrc
+put TB i get tsrc i
+end
+if ne twrtb len tsrc 0
+ret 1
+end
+lbpgen 1 2 true
+if ne tcopyself 0
+ret 1
+end
+for i ulong 256
+put LBMAN i 0
+end
+put LBMAN 0 3544386019401740626
+put LBMAN 1 1
+put LBMAN 2 1
+put LBMAN 5 len tsrc
+lbpgen 1 1 true
+n = lbhpath
+for j ulong 4
+put LBMAN add 6 j get LBH j
+end
+lbpgen 1 2 true
+n = lbhpath
+for j ulong 4
+put LBMAN add 10 j get LBH j
+end
+put LBMAN 14 8308871078283820969
+put LBMAN 15 3511899704727027462
+put LBMAN 16 15311527216533678964
+put LBMAN 17 17706733685053746017
+put LBMAN 18 1
+put LBMAN 19 nl
+for e ulong nl
+for j ulong 4
+put LBMAN add add 20 mul e 4 j tdig e j
+end
+end
+if cal
+for i ulong 1600
+put TB i uchar and i 255
+end
+lbpgen 1 4 true
+if ne twrtb 1600 0
+ret 1
+end
+n = lbhpath
+for j ulong 4
+put LBMAN add 52 j get LBH j
+end
+end
+lbseal
+ret 0
+end
+
+note publish generation g of LBDIR (LBMAN as it is) and set TMS to its manifest's SHA-256; 0 ok
+fn tpub g ulong to int
+put LBG 0 g
+r = lbpub 0
+if ne r 0
+ret 1
+end
+lbhman
+tmshex
+ret 0
+end
+
+fn tmshex to void
+for j ulong 4
+v = get LBH j
+for k ulong 16
+d = and shr v mul sub 15 k 4 15
+if lt d 10
+put TMS add mul j 16 k uchar add d 48
+else
+put TMS add mul j 16 k uchar add d 87
+end
+end
+end
+end
+
+note ALLOW file TA: lineage entry e with kind 1 AUTHORIZED, 2 REVOKED, 3 SYNTHETIC per line
+note (lines given as up to three (e, kind) pairs; kind 0 = no line)
+fn tallow e1 ulong k1 ulong e2 ulong k2 ulong e3 ulong k3 ulong to int
+put TLN 0 0
+tline1 e1 k1
+tline1 e2 k2
+tline1 e3 k3
+r = fopen TA 0 get TAN 0 524865 384
+if lt r 0
+ret 1
+end
+fd = int r
+w = write fd TL 0 get TLN 0
+s = fclose fd
+ret 0
+end
+
+fn tlc c ulong to void
+n = get TLN 0
+put TL n uchar c
+put TLN 0 add n 1
+end
+
+fn tline1 e ulong k ulong to void
+if eq k 0
+ret
+end
+for j ulong 4
+v = tdig e j
+for q ulong 16
+d = and shr v mul sub 15 q 4 15
+if lt d 10
+tlc add d 48
+else
+tlc add d 87
+end
+end
+end
+if eq k 1
+for i ulong len tauth
+tlc ulong get tauth i
+end
+end
+if eq k 2
+for i ulong len trevk
+tlc ulong get trevk i
+end
+end
+if eq k 3
+for i ulong len tsyn
+tlc ulong get tsyn i
+end
+end
+end
+
+note packed-list record at o from source s: 1 self, 2 method, 3 lineage, 4 calpath, 5 LBDIR,
+note 6 TMS, 7 TA, 8 "-", 9 empty; new offset
+fn tkrec o ulong s ulong to ulong
+n = ulong 0
+p = add o 2
+if eq s 1
+for i ulong len tself
+put TK add p i get tself i
+end
+n = len tself
+end
+if eq s 2
+for i ulong len tmeth
+put TK add p i get tmeth i
+end
+n = len tmeth
+end
+if eq s 3
+for i ulong len tline
+put TK add p i get tline i
+end
+n = len tline
+end
+if eq s 4
+for i ulong len tcalp
+put TK add p i get tcalp i
+end
+n = len tcalp
+end
+if eq s 5
+for i ulong get LBDN 0
+put TK add p i get LBDIR i
+end
+n = get LBDN 0
+end
+if eq s 6
+for i ulong 64
+put TK add p i get TMS i
+end
+n = 64
+end
+if eq s 7
+for i ulong get TAN 0
+put TK add p i get TA i
+end
+n = get TAN 0
+end
+if eq s 8
+put TK p 45
+n = 1
+end
+put TK o uchar and n 255
+put TK add o 1 uchar shr n 8
+ret add p n
+end
+
+note run this program as a router child: arm 2 method, 3 lineage, 4 calpath; dirsrc 5 or 9 (empty),
+note allowsrc 7 or 8; exit status, or 200 on a fork/wait failure
+fn trun arm ulong dirsrc ulong allowsrc ulong to int
+put TK 0 7
+put TK 1 0
+o = tkrec 2 1
+o = tkrec o arm
+o = tkrec o dirsrc
+o = tkrec o 6
+o = tkrec o allowsrc
+o = tkrec o 8
+o = tkrec o 8
+pid = fork
+if lt pid 0
+ret 200
+end
+if eq pid 0
+e = execprog TK 0 o
+exit 99
+end
+r = waitpid int pid TST 0 4 0
+if ne r pid
+ret 200
+end
+s = or ulong get TST 0 shl ulong get TST 1 8
+if ne and s 127 0
+ret 201
+end
+ret int and shr s 8 255
+end
+
+note one refusal case: generation 1 in v<v> with change c applied, child result must be want
+note changes: 0 none, 1 empty LIBDIR, 2 bad MANSHA, 3 no CURRENT, 4 CURRENT 39 bytes, 5 no
+note manifest, 6 manifest 2047 bytes, 7 manifest byte flipped, 9 magic, 10 version, 11 self-check,
+note 12 G, 13 compiler SHA-256, 14 profile version, 15 K 17, 16 reserved word, 17 ALLOW missing,
+note 18 lineage REVOKED, 19 lineage absent, 20 no calibration file, 21 calibration byte flipped,
+note 22 no ELF, 23 ELF byte flipped, 24 SYNTHETIC admits, 25 empty lineage without ALLOW
+fn tcase v ulong c ulong want int to int
+cal = or eq c 20 eq c 21
+nl = ulong 1
+if eq c 25
+nl = 0
+end
+if ne tprep v nl cal 0
+ret 1
+end
+if eq c 9
+put LBMAN 0 1
+lbseal
+end
+if eq c 10
+put LBMAN 1 2
+lbseal
+end
+if eq c 11
+put LBMAN 255 add get LBMAN 255 1
+end
+if eq c 12
+put LBMAN 2 5
+lbseal
+end
+if eq c 13
+put LBMAN 16 xor get LBMAN 16 1
+lbseal
+end
+if eq c 14
+put LBMAN 18 2
+lbseal
+end
+if eq c 15
+put LBMAN 4 17
+lbseal
+end
+if eq c 16
+put LBMAN 200 1
+lbseal
+end
+if ne tpub 1 0
+ret 2
+end
+tsetallow v
+if eq c 18
+r = tallow 0 1 0 2 0 0
+else
+if eq c 19
+r = tallow 7 1 0 0 0 0
+else
+if eq c 24
+r = tallow 0 3 0 0 0 0
+else
+r = tallow 0 1 0 0 0 0
+end
+end
+end
+if eq c 17
+put TAN 0 add get TAN 0 1
+put TA sub get TAN 0 1 120
+end
+tdamage c
+asrc = ulong 7
+if eq c 25
+asrc = 8
+end
+dsrc = ulong 5
+if eq c 1
+dsrc = 9
+end
+x = trun 2 dsrc asrc
+if ne x want
+ret 3
+end
+ret 0
+end
+
+note file damage after publish
+fn tdamage c ulong to void
+if eq c 2
+put TMS 5 120
+end
+if eq c 3
+lbpcurr false
+r = unlink LBP 0 get LBPN 0
+end
+if eq c 4
+lbpcurr false
+r = truncate LBP 0 get LBPN 0 39
+end
+if eq c 5
+lbpgen 1 3 false
+r = unlink LBP 0 get LBPN 0
+end
+if eq c 6
+lbpgen 1 3 false
+r = truncate LBP 0 get LBPN 0 2047
+end
+if eq c 7
+lbpgen 1 3 false
+r = tflip 100
+end
+if eq c 20
+lbpgen 1 4 false
+r = unlink LBP 0 get LBPN 0
+end
+if eq c 21
+lbpgen 1 4 false
+r = tflip 7
+end
+if eq c 22
+lbpgen 1 2 false
+r = unlink LBP 0 get LBPN 0
+end
+if eq c 23
+lbpgen 1 2 false
+r = tflip 1000
+end
+end
+
+note C6 coherent replacement: generation 2 (another ELF, consistent manifest and CURRENT) published
+note over a good generation 1; the evaluator's MANSHA (generation 1) must refuse it with 8
+fn tcoherent v ulong to int
+if ne tprep v 1 false 0
+ret 1
+end
+if ne tpub 1 0
+ret 2
+end
+lbpgen 2 1 true
+for i ulong len tsrc
+put TB i get tsrc i
+end
+if ne twrtb len tsrc 0
+ret 3
+end
+lbpgen 2 2 true
+if ne tcopyself 0
+ret 3
+end
+r = tflip 2000
+n = lbhpath
+for j ulong 4
+put LBMAN add 10 j get LBH j
+end
+put LBMAN 2 2
+put LBMAN 3 1
+lbseal
+old = new uchar 64 0
+for i ulong 64
+put old i get TMS i
+end
+if ne tpub 2 0
+ret 4
+end
+tsetallow v
+r = tallow 0 1 0 0 0 0
+x = trun 2 5 7
+if ne x 77
+ret 5
+end
+for i ulong 64
+put TMS i get old i
+end
+x = trun 2 5 7
+if ne x 8
+ret 6
+end
+ret 0
+end
+
+note lblineage and lbcalpath in a good library with calibration (cal) or without
+fn tlineage v ulong cal bool to int
+if ne tprep v 1 cal 0
+ret 1
+end
+if ne tpub 1 0
+ret 2
+end
+tsetallow v
+r = tallow 0 1 0 0 0 0
+x = trun 3 5 7
+if ne x 61
+ret 3
+end
+x = trun 4 5 7
+if cal
+if ne x 81
+ret 4
+end
+else
+if ne x 80
+ret 5
+end
+end
+put TMS 0 120
+x = trun 4 5 7
+if ne x 78
+ret 6
+end
+ret 0
+end
+
+note child modes
+fn tchild to int
+n = argread 1 TB 0 64
+if eq get TB 0 109
+ret lbload
+end
+if eq get TB 0 108
+r = lblineage
+if ne r 0
+ret r
+end
+if or ne get LBGEN 0 1 ne get LBLD 0 1
+ret 59
+end
+ret add 60 int get LBLN 0
+end
+r = lbcalpath
+if lt r 0
+ret add 80 r
+end
+if eq r 0
+ret 80
+end
+if ne get LBCP r 0
+ret 90
+end
+if ne get LBCP sub r 4 46
+ret 91
+end
+ret 81
+end
+
+fn main to int
+if eq argcnt 8
+ret 77
+end
+if eq argcnt 7
+ret tchild
+end
+if ne tmkdir 0
+ret 99
+end
+cs = new ulong 26 0
+ws = new int 26 0
+for i ulong 26
+put cs i i
+put ws i int i
+end
+put ws 0 77
+put ws 8 0
+put ws 1 1
+put ws 2 2
+put ws 3 3
+put ws 4 4
+put ws 5 5
+put ws 6 6
+put ws 7 7
+put ws 17 17
+put ws 18 18
+put ws 19 18
+put ws 20 19
+put ws 21 20
+put ws 22 21
+put ws 23 24
+put ws 24 77
+put ws 25 77
+for i ulong 26
+if ne i 8
+r = tcase i get cs i get ws i
+if ne r 0
+ret add 100 int i
+end
+end
+end
+r = tcoherent 30 
+if ne r 0
+ret 140
+end
+r = tlineage 31 false
+if ne r 0
+ret add 141 r
+end
+r = tlineage 32 true
+if ne r 0
+ret add 150 r
+end
+ret 0
+end

@@ -1,0 +1,595 @@
+note units: sha256 r1 codegen
+note codegen-run: generated methods.om compiled with OMC (argv 2) and checked against the baseline.
+note Templates: every op at both widths, every fold, the FSM template, and a wl-8/wl-16 pair that
+note differs only in wl. For each a harness (composed here: sha256.om + r1.om + methods + harness +
+note expected values) builds random valid programs of the template's shape and requires mtfind = t
+note (G2), mtlane t x = r1lane x on the whole lane domain, mtrun = r1full on random states (n < 700),
+note FSM tables filled by r1delta, mtshape and mtsrc equal to values computed here (the source
+note SHA-256 recomputed independently through r1hash), mtcount, -1 for an unseen shape, an invalid
+note program and an FSM program without FSM template. The control mutants must be caught: c1 by
+note mtfind (1), c1b and c1c by the lane check (2). Also: generation twice gives identical bytes;
+note the empty library. Files in argv 1, else /tmp/reuse-test-codegen-PID.
+note Exit 0 pass, else the failed check's code (harness exit h in mode m gives 30 + 10 m + h).
+text tbase "/tmp/reuse-test-codegen-"
+text tsha "om/sha256/sha256.om"
+text tr1 "om/reuse/r1.om"
+text th1 "global HS ulong 1\nfn hrnd to ulong\nx = add get HS 0 11400714819323198485\nput HS 0 x\nz = mul xor x shr x 30 13787848793156543929\nz = mul xor z shr z 27 10723151780598845931\nret xor z shr z 31\nend\n"
+text th2 "fn hagg s ulong to void\nfor i ulong 64\nput R1P i 0\nend\nwl = and s 255\nk = and shr s 12 15\nput R1P 0 3544411312749556050\nput R1P 1 1\nput R1P 2 wl\nput R1P 3 and shr s 8 15\nput R1P 4 k\nfor j ulong k\nop = and shr s add 16 mul j 4 15\nc = and hrnd sub shl ulong 1 wl 1\nif ge op 7\nc = rem c wl\nend\nput R1P add 5 mul j 2 op\nput R1P add 6 mul j 2 c\nend\nend\n"
+text th3 "fn hrule r ulong ns ulong na ulong to void\na = rem hrnd na\nb = rem hrnd na\nif gt a b\nt = a\na = b\nb = t\nend\nw = add rem hrnd ns mul a 256\nw = add w mul b 65536\nw = add w mul rem hrnd ns 16777216\nput R1P add 22 r w\nend\n"
+text th4 "fn hfsm to void\nfor i ulong 64\nput R1P i 0\nend\nns = add rem hrnd 15 2\nna = add rem hrnd 15 2\nnr = add rem hrnd 24 1\nput R1P 0 3544411312749556050\nput R1P 1 2\nput R1P 2 ns\nput R1P 3 na\nput R1P 4 rem hrnd ns\nput R1P 5 nr\nfor s ulong ns\nput R1P add 6 s and hrnd 255\nend\nfor r ulong nr\nhrule r ns na\nend\nend\n"
+text th5 "fn hstate n ulong m ulong to void\nput R1N 0 n\nfor i ulong n\nput R1X i rem hrnd m\nend\nend\nfn htable to void\nfor s ulong get R1P 2\nfor a ulong get R1P 3\nput R1T add mul s 16 a r1delta s a\nend\nend\nend\n"
+text th6 "fn hsame t ulong to int\nr1full\na0 = get R1R 0\na1 = get R1R 1\nput R1R 0 7\nput R1R 1 7\nmtrun t\nif or ne get R1R 0 a0 ne get R1R 1 a1\nret 1\nend\nret 0\nend\nfn hlanes t ulong m ulong to int\nfor x ulong m\nif ne mtlane t x r1lane x\nret 2\nend\nend\nret 0\nend\n"
+text th7 "fn hcagg t ulong to int\ns = mtshape t\nm = shl ulong 1 and s 255\nfor p ulong 12\nhagg s\nif ne r1valid 0\nret 9\nend\nif ne mtfind long t\nret 1\nend\nif ne hlanes t m 0\nret 2\nend\nfor q ulong 3\nhstate rem hrnd 700 m\nif ne hsame t 0\nret 3\nend\nend\nend\nret 0\nend\n"
+text th8 "fn hcfsm t ulong to int\nfor p ulong 40\nhfsm\nif ne r1valid 0\nret 9\nend\nif ne mtfind long t\nret 1\nend\nhtable\nhstate rem hrnd 700 get R1P 3\nif ne hsame t 0\nret 7\nend\nend\nret 0\nend\n"
+text th9 "fn hone t ulong to int\ns = mtshape t\nif ne s hshape t\nret 8\nend\nd = new ulong 4 0\nmtsrc t d\nfor j ulong 4\nif ne get d j hdig t j\nret 10\nend\nend\nif eq s 1\nret hcfsm t\nend\nret hcagg t\nend\n"
+text th10 "fn main to int\nput HS 0 12345\nif ne mtcount hk\nret 6\nend\nfor t ulong mtcount\nr = hone t\nif ne r 0\nret r\nend\nend\nhagg 266760\nif ne mtfind -1\nret 4\nend\nput R1P 0 0\nif ne mtfind -1\nret 5\nend\nfsm = false\nfor t ulong mtcount\nif eq mtshape t 1\nfsm = true\nend\nend\nif not fsm\nhfsm\nif ne mtfind -1\nret 11\nend\nend\nret 0\nend\n"
+text tg1 "fn hk to ulong\nret "
+text tg2 "\nend\nfn hshape t ulong to ulong\n"
+text tg3 "if eq t "
+text tg4 "ret "
+text tg5 "end\n"
+text tg6 "ret 0\nend\nfn hdig t ulong j ulong to ulong\n"
+text tg7 "if and eq t "
+text tg8 " eq j "
+text tg9 "ret 0\nend\n"
+global TDIR uchar 4096
+global TDN ulong 1
+global TOMC uchar 4096
+global TOMN ulong 1
+global TP uchar 4096
+global TPN ulong 1
+global TIN uchar 4096
+global TINN ulong 1
+global TOUT uchar 4096
+global TOUTN ulong 1
+global TPK uchar 4096
+global TST uchar 4
+global TIO uchar 65536
+global TG uchar 65536
+global TGN ulong 1
+global TC uchar 1048576
+global TEXP ulong 64
+
+fn tpz to void
+put TPN 0 0
+end
+
+fn tpc c ulong to void
+n = get TPN 0
+put TP n uchar c
+put TPN 0 add n 1
+end
+
+fn tpnum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+tpc ulong get d n
+end
+end
+
+fn tmkdir to int
+tpz
+if ge argcnt 2
+n = argread 1 TDIR 0 3000
+if lt n 1
+ret 1
+end
+put TDN 0 ulong n
+ret 0
+end
+for i ulong len tbase
+tpc ulong get tbase i
+end
+tpnum ulong getpid
+for i ulong get TPN 0
+put TDIR i get TP i
+end
+put TDN 0 get TPN 0
+r = makedir TDIR 0 get TDN 0 448
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note TP = TDIR/h<m>.om (elf false) or .elf
+fn tpath m ulong elf bool to void
+tpz
+for i ulong get TDN 0
+tpc ulong get TDIR i
+end
+tpc 47
+tpc 104
+tpnum m
+tpc 46
+if elf
+tpc 101
+tpc 108
+tpc 102
+else
+tpc 111
+tpc 109
+end
+end
+
+fn tsave which ulong to void
+n = get TPN 0
+for i ulong n
+if eq which 1
+put TIN i get TP i
+else
+put TOUT i get TP i
+end
+end
+if eq which 1
+put TINN 0 n
+else
+put TOUTN 0 n
+end
+end
+
+note generated tail: hk, hshape, hdig (expected values computed by this test)
+fn tgc c ulong to void
+n = get TGN 0
+put TG n uchar c
+put TGN 0 add n 1
+end
+
+fn tgnum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+tgc ulong get d n
+end
+end
+
+fn tgs k ulong to void
+if eq k 1
+for i ulong len tg1
+tgc ulong get tg1 i
+end
+end
+if eq k 2
+for i ulong len tg2
+tgc ulong get tg2 i
+end
+end
+if eq k 3
+for i ulong len tg3
+tgc ulong get tg3 i
+end
+end
+if eq k 4
+for i ulong len tg4
+tgc ulong get tg4 i
+end
+end
+if eq k 5
+for i ulong len tg5
+tgc ulong get tg5 i
+end
+end
+if eq k 6
+for i ulong len tg6
+tgc ulong get tg6 i
+end
+end
+if eq k 7
+for i ulong len tg7
+tgc ulong get tg7 i
+end
+end
+if eq k 8
+for i ulong len tg8
+tgc ulong get tg8 i
+end
+end
+if eq k 9
+for i ulong len tg9
+tgc ulong get tg9 i
+end
+end
+end
+
+fn ttail to void
+put TGN 0 0
+k = get CGK 0
+tgs 1
+tgnum k
+tgs 2
+for t ulong k
+tgs 3
+tgnum t
+tgc 10
+tgs 4
+tgnum get CGSH t
+tgc 10
+tgs 5
+end
+tgs 6
+for t ulong k
+for j ulong 4
+tgs 7
+tgnum t
+tgs 8
+tgnum j
+tgc 10
+tgs 4
+tgnum get TEXP add mul t 4 j
+tgc 10
+tgs 5
+end
+end
+tgs 9
+end
+
+note independent source digests: each template's block of CGO hashed through r1hash into TEXP
+fn texpect to int
+p = len CGTHDR
+for t ulong get CGK 0
+n = get CGSB t
+if or eq n 0 gt n 65536
+ret 1
+end
+for i ulong n
+put R1HB i get CGO add p i
+end
+r1hash n
+for j ulong 4
+put TEXP add mul t 4 j get R1HD j
+if ne get R1HD j get CGSD add mul t 4 j
+ret 2
+end
+end
+p = add p n
+end
+ret 0
+end
+
+fn twr fd int n ulong to int
+t = ulong 0
+while lt t n bound 65537
+r = write fd TIO t sub n t
+if le r 0
+ret 1
+end
+t = add t ulong r
+end
+ret 0
+end
+
+note copy repo file 1 sha256.om, 2 r1.om to fd; 0 ok
+fn tcat fd int which ulong to int
+tpz
+if eq which 1
+for i ulong len tsha
+tpc ulong get tsha i
+end
+else
+for i ulong len tr1
+tpc ulong get tr1 i
+end
+end
+r = fopen TP 0 get TPN 0 524288 0
+if lt r 0
+ret 1
+end
+in = int r
+while true bound 99999
+n = read in TIO 0 65536
+if lt n 0
+ret 1
+end
+if eq n 0
+break
+end
+if ne twr fd ulong n 0
+ret 1
+end
+end
+s = fclose in
+put TIO 0 10
+ret twr fd 1
+end
+
+note harness text th<k> to fd
+fn thx fd int k ulong to int
+n = ulong 0
+if eq k 1
+for i ulong len th1
+put TIO i get th1 i
+end
+n = len th1
+end
+if eq k 2
+for i ulong len th2
+put TIO i get th2 i
+end
+n = len th2
+end
+if eq k 3
+for i ulong len th3
+put TIO i get th3 i
+end
+n = len th3
+end
+if eq k 4
+for i ulong len th4
+put TIO i get th4 i
+end
+n = len th4
+end
+if eq k 5
+for i ulong len th5
+put TIO i get th5 i
+end
+n = len th5
+end
+ret thx2 fd k n
+end
+
+fn thx2 fd int k ulong n0 ulong to int
+n = n0
+if eq k 6
+for i ulong len th6
+put TIO i get th6 i
+end
+n = len th6
+end
+if eq k 7
+for i ulong len th7
+put TIO i get th7 i
+end
+n = len th7
+end
+if eq k 8
+for i ulong len th8
+put TIO i get th8 i
+end
+n = len th8
+end
+if eq k 9
+for i ulong len th9
+put TIO i get th9 i
+end
+n = len th9
+end
+if eq k 10
+for i ulong len th10
+put TIO i get th10 i
+end
+n = len th10
+end
+ret twr fd n
+end
+
+note write the harness source of mode m: sha256, r1, CGO, harness, tail; 0 ok
+fn tcompose m ulong to int
+tpath m false
+tsave 1
+r = fopen TP 0 get TPN 0 524865 384
+if lt r 0
+ret 1
+end
+fd = int r
+if ne tcat fd 1 0
+ret 2
+end
+if ne tcat fd 2 0
+ret 3
+end
+w = write fd CGO 0 get CGN 0
+if ne w long get CGN 0
+ret 4
+end
+for k ulong 10
+if ne thx fd add k 1 0
+ret 5
+end
+end
+ttail
+w = write fd TG 0 get TGN 0
+s = fclose fd
+ret 0
+end
+
+fn twait pid long to int
+r = waitpid int pid TST 0 4 0
+if ne r pid
+ret 250
+end
+s = or ulong get TST 0 shl ulong get TST 1 8
+if ne and s 127 0
+ret 251
+end
+ret int and shr s 8 255
+end
+
+note OMC < TIN > TOUT; omc's status
+fn tcompile to int
+pid = fork
+if lt pid 0
+ret 252
+end
+if eq pid 0
+r = fopen TIN 0 get TINN 0 0 0
+if lt r 0
+exit 127
+end
+s = dupfd int r 0 0
+r2 = fopen TOUT 0 get TOUTN 0 577 448
+if lt r2 0
+exit 127
+end
+s = dupfd int r2 1 0
+n = get TOMN 0
+put TPK 0 1
+put TPK 1 0
+put TPK 2 uchar and n 255
+put TPK 3 uchar shr n 8
+for i ulong n
+put TPK add 4 i get TOMC i
+end
+e = execprog TPK 0 add n 4
+exit 127
+end
+ret twait pid
+end
+
+note run TOUT with no arguments; its exit status
+fn trunh to int
+n = get TOUTN 0
+put TPK 0 1
+put TPK 1 0
+put TPK 2 uchar and n 255
+put TPK 3 uchar shr n 8
+for i ulong n
+put TPK add 4 i get TOUT i
+end
+pid = fork
+if lt pid 0
+ret 252
+end
+if eq pid 0
+e = execprog TPK 0 add n 4
+exit 127
+end
+ret twait pid
+end
+
+note templates of the main set into CGSH (K = 9)
+fn tset to void
+put CGK 0 9
+put CGSH 0 434917957896
+put CGSH 1 163536396816
+put CGSH 2 139932424
+put CGSH 3 4400144
+put CGSH 4 136464
+put CGSH 5 940983816
+put CGSH 6 69896
+put CGSH 7 69904
+put CGSH 8 1
+end
+
+note generate (mode m: 0 plain, 1 c1, 2 c1b, 3 c1c, 4 empty), compose, compile, run; the harness exit
+note or 200 + a setup failure
+fn tmode m ulong to int
+tset
+put CGMUT 0 0
+if eq m 1
+put CGMUT 0 1
+end
+if eq m 2
+put CGMUT 0 2
+end
+if eq m 3
+put CGMUT 0 4
+end
+if eq m 4
+put CGK 0 0
+end
+if ne cggen 0
+ret 201
+end
+if ne texpect 0
+ret 202
+end
+if ne tcompose m 0
+ret 203
+end
+tpath m true
+tsave 2
+if ne tcompile 0
+ret 204
+end
+ret trunh
+end
+
+note generation twice gives identical bytes; a bad shape is refused
+fn tdeterm to int
+tset
+put CGMUT 0 0
+if ne cggen 0
+ret 1
+end
+n = get CGN 0
+for i ulong n
+put TC i get CGO i
+end
+if ne cggen 0
+ret 2
+end
+if ne get CGN 0 n
+ret 3
+end
+for i ulong n
+if ne get TC i get CGO i
+ret 4
+end
+end
+put CGSH 3 4400145
+if ne cggen 1
+ret 5
+end
+ret 0
+end
+
+fn main to int
+if ne tmkdir 0
+ret 99
+end
+if lt argcnt 3
+ret 98
+end
+n = argread 2 TOMC 0 4000
+if lt n 1
+ret 98
+end
+put TOMN 0 ulong n
+r = tdeterm
+if ne r 0
+ret add 10 r
+end
+want = new int 5 0
+put want 1 1
+put want 2 2
+put want 3 2
+for m ulong 5
+h = tmode m
+if ne h get want m
+if ge h 200
+ret add 20 int m
+end
+ret add add 30 mul int m 10 tcap h
+end
+end
+ret 0
+end
+
+fn tcap h int to int
+if gt h 9
+ret 9
+end
+ret h
+end
