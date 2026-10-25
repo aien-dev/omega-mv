@@ -1,0 +1,14 @@
+Status: FAILED paired-product implementation attempt, not acceptance evidence.
+Source base: 00eb0e7106d2f8fc841e5e16eb624fa1bd029111
+Compiler: 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+solve executable: 745579315a4f5d621c5ab097c5bc3e383894442fe44e94317bac7ee98d9ec36c
+check executable: e273dd24bc799351253edfb78b23059b6ceef8f928ce6bcabb4f5d3f3004c1d0
+concatenated solve source: 908fe5088829854f0c926dc165f805b859770e256b4765f6822bda2737a466f8
+concatenated check source: 2d44ec0ee467b11dd7068c4743022d3aac1df45c77a90181419bce2b899d76ad
+io.om: 5b57a97d8b77a6a78780ccc3c80bdc9ade4891329888abe3696c57b35b63a27e
+solve.om: ec2e1374602fd1049e7f0733607108e4580e330d9615f162468383def02c61bc
+check.om: 9ed4d404f56da8c95454847143a333f5b506f26d93004fb98ec342eacaf5bc0a
+MODEL.md: f5a038d26bfa65b519038a5882cece3b7b7612a0fbf83017a5e5b1d45afdd057
+Observed: ordinary checker and benchmark exit78 at PAIRED_PRODUCT. Controls1..6 exit71..76. Paired mutant exit78 is INVALID as a successful negative qualification because baseline also failed.
+Cause: newlabel retained hidden0 when reserve created the first full envelope; hidden() correctly refused it. Fix: initialize new envelope hidden label1, retaining1/2 only for an existing envelope. No public transition change.
+Raw command lines and statuses are present in each /usr/bin/time log. Timings here are failed-attempt data, not final qualification.

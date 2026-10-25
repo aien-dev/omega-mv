@@ -1,0 +1,116 @@
+{
+  "artifacts_sha256": {
+    "check": "a7d4c761f4890abfcfcb74e8309b9b60239fef522dfd3af7acd5a75315f427ba",
+    "check.om": "6c591611647784bf0aece9737b3797499b2a1d431397caeea2d5b7e48affa243",
+    "roundtrip": "58f19482e26b1ddcd223838699312f9f7b492eb1a8b3d15c80105e06da726768",
+    "roundtrip.om": "678cbafefc0c5be31fc8cee94a914908d3024d16044c1a0d93368f38254540f8",
+    "solve": "745579315a4f5d621c5ab097c5bc3e383894442fe44e94317bac7ee98d9ec36c",
+    "solve.om": "908fe5088829854f0c926dc165f805b859770e256b4765f6822bda2737a466f8"
+  },
+  "base_commit": "00eb0e7106d2f8fc841e5e16eb624fa1bd029111",
+  "claims": {
+    "diverse_compilation": "NOT_CLAIMED shared seed lineage",
+    "emulated_execution": "NOT_RUN",
+    "finite_differential": "PASS every labeled transition regenerated independently; exact safe-action relation checked",
+    "formal_proof": "NOT_CLAIMED",
+    "gpu": "NOT_RUN",
+    "independent_final_source_review": "PENDING parent",
+    "native_execution": "PASS Linux AArch64",
+    "power_loss": "NOT_RUN",
+    "service_correspondence": "BLOCKED existing authority/store/scheduler owners"
+  },
+  "commands": "README.md exact replay; /usr/bin/time raw logs carry command lines and exits; all host executions nice19",
+  "compile_exits": {
+    "check": 0,
+    "roundtrip": 0,
+    "solve": 0
+  },
+  "compiler_binary": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+  "compiler_source": "2e35db7d6c2066fb4a20d19b8a9579c44caca9c9937b0594a89422010b673637",
+  "contract_at_design": "8bc52be7a480e279fb77673648a2f7775ba6d4841a8b1e6c427531b25d4d1860",
+  "failed_attempt": "../native-v1/identity.txt; baseline paired failure makes its paired control INVALID",
+  "finite_result": {
+    "checker_passes": 3,
+    "greatest_fixed_point": 1000,
+    "labeled_edges": 17082,
+    "locally_invariant": 1040,
+    "paired_edges": 17082,
+    "paired_representatives": 1040,
+    "solver_passes": 3,
+    "universe": 2593
+  },
+  "later_contract_not_automatically_qualified": "8dab6ec636a27711c00245936c4d3250309f46e6289d4bace7f37713916ad9d2",
+  "measurements": {
+    "check": {
+      "measured_iterations_per_second": 217.5415995593012,
+      "samples": 101,
+      "sum_ns": 464279017
+    },
+    "roundtrip": {
+      "measured_iterations_per_second": 91.62004721924879,
+      "samples": 101,
+      "sum_ns": 1102378825
+    },
+    "solve": {
+      "measured_iterations_per_second": 957.3904380393024,
+      "samples": 101,
+      "sum_ns": 105495100
+    }
+  },
+  "native_exits": {
+    "check_benchmark": 0,
+    "check_controls_1_through_6": [
+      71,
+      72,
+      73,
+      74,
+      75,
+      76
+    ],
+    "check_positive": 0,
+    "paired_admission_mutant": 78,
+    "roundtrip": 0,
+    "solve_benchmark": 0,
+    "solve_modes_0_through_7": 0
+  },
+  "profile": "SC1-G-v1 finite model only",
+  "raw_sha256": {
+    "candidate0.bin": "310c998da4a45a737871e5c31bc80ed9f2fd2a395f54dbb6ea6a03b8fa500523",
+    "candidate1.bin": "34c20a7728475fd039f0762a84c71c35d189afba065f03d851a654ed7ae482ac",
+    "candidate2.bin": "2a9da0e82d5ae6ac08e64e7e471bc40bf8c8a7e04f90a2710db7de2a8e21a82e",
+    "candidate3.bin": "67e3b1847c8a60475a976ddf24e2ec5f99522771d6c5fb17b94d6d0e8c33da7c",
+    "candidate4.bin": "658ede4abb796874044e3fb7b231af486f7522e34624f804243cd3dbf851ca0a",
+    "candidate5.bin": "34c8b66739de1f87ebb1f5f1b74f41ad260aa292fb6d3a94b03274d4674347c2",
+    "candidate6.bin": "7314401443468d33fd648428df7bddb39f8454ce4f8f5ec134a35f8c0e49e294",
+    "check-bench.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "check-bench.log": "a6306f1badf152a1bd1d74a16d4dec143b514b82375a0e5ea023799f2164af30",
+    "check0.log": "6cfd58d1a2ab524b5904d0d9d7ec4f8a0bf9386abc1c9d31b6928d811c91c399",
+    "check1.log": "e1a06416e94fef328b82478009bc11a2bba2f5e14e0c617cf69e3909fd7dec5a",
+    "check2.log": "4bc29d4b667c6fd0b718c0828b8e57b06c6b55cb9711fb013042e39b83b05429",
+    "check3.log": "b4db0eb84e3193a66f5171289f5d22166ca5711d6ef65b1d16141c4e1b9312bc",
+    "check4.log": "98c28a3669b9da46c015d76018a47610223e241e91bb49bb2823aeb56f330f5f",
+    "check5.log": "296e83551bc143293e201dfb651225bca2db8d7d7f0f30e2b5ae3aeb49aa40a8",
+    "check6.log": "e18995857682a09cb0d667f029ba07bae07d26eba36de7f755dc28168e5ca07d",
+    "paired-mutant.log": "ea28ba6d2869bfc26e357b9ca09e93063a4d1de4c9e2ab1a692e2eda54ccb8e9",
+    "roundtrip.log": "487536fff91338d4608581859ff4f753afb829377cac4731c0242810b8c12e23",
+    "solve-bench.bin": "310c998da4a45a737871e5c31bc80ed9f2fd2a395f54dbb6ea6a03b8fa500523",
+    "solve-bench.log": "0022f11b99bb08d936240853c1c1e49f03cf9e607ed546e1967b0564c9e17e75",
+    "solve0.log": "48fdb20ee6ae6da73595f5e38c00ffb79274c0a79706d93dcd3aac693804bac9",
+    "solve1.log": "0c7618246f8873c660c3ba24f339b60bca550a63e1554b7b8286400dbb7863d3",
+    "solve2.log": "7610007a5649d2500ca2292c1c2f1d60d262dee0c4e9a94a1a082aa26d260aba",
+    "solve3.log": "c527844c2dc910ee660449cc7c28e55f3075299928e655126b7ea309e685d653",
+    "solve4.log": "de1b3b12aeaa749e750a56a80e501f3ce584fa9d188aa92261d8989294c09be1",
+    "solve5.log": "c0e3f80fa7dfacd7ddf1835b55b9e33851295ad19c6ef0aa7fa27dd0a0d36fda",
+    "solve6.log": "1fe6ffa031165bb39a51db2e8ce6cf1fa908575f0e01c2c53ce19aaf6d73747c"
+  },
+  "source_commit": "1773103178c24ec39ff71d5b48269ad0096f38f7",
+  "sources_sha256": {
+    "MODEL.md": "ad14630939342ff58c9a656c29f6e4f17ff2a6a46dd0d1ac97d833d54882dd28",
+    "check.om": "56498097304e9e225045550824e8e9a598fcf03fc4e9a0f1e96f90c1cfd26020",
+    "fixtures.tsv": "f3607895d54fac5f515eb962a6303e9349a36e52e8480bdc4e4f5c8c52a9522b",
+    "io.om": "5b57a97d8b77a6a78780ccc3c80bdc9ade4891329888abe3696c57b35b63a27e",
+    "roundtrip.om": "d713be9bbcc18d6e4b119c233d24263caadbf62a8557db943b6a36cf6569e7f3",
+    "solve.om": "ec2e1374602fd1049e7f0733607108e4580e330d9615f162468383def02c61bc"
+  },
+  "target": "Linux 7.0.0-1019-nvidia aarch64 GNU/Linux; ELF64 little-endian AArch64 System V ABI0"
+}
