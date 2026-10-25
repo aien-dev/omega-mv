@@ -1,0 +1,46 @@
+build_dir=/tmp/turx/qbE4/train-fix-cprime
+source_commit=692d85104369cf0fc0bec9f35c4ca693cf746012
+host=Linux 7.0.0-1019-nvidia aarch64
+compiler_sha256=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+second_compiler_sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+second_compiler_units=select-test selmain compiled
+select-test rc=0 wall_ms=276 SI19_SELECT_TEST_PASS checks=50991 Maximum resident set size (kbytes): 320
+select-test(r6 compiler) rc=0 SI19_SELECT_TEST_PASS checks=50991
+records_source=/tmp/turx/qbE4/fix.cprime (real-record run; development-only)
+records_sha256=a09ca4deef50c8e3f4a74b1d67f7701ecfb9d541f221408509f787e758dad314
+v2_train_mlp mode=T rc=0 wall_ms=2174 epochs=64 updates=65920 dev_loss_dec=3.372669 Maximum resident set size (kbytes): 192
+v2_ctrl_shuffled mode=T rc=0 wall_ms=662 epochs=19 updates=19570 dev_loss_dec=49.350971 Maximum resident set size (kbytes): 320
+v2_ctrl_untrained mode=T rc=0 wall_ms=50 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 192
+v2_eval_mlp mode=E rc=0 wall_ms=72 epochs=64 updates=65920 dev_loss_dec=3.372669 Maximum resident set size (kbytes): 192
+v2_eval_shuffled mode=E rc=0 wall_ms=73 epochs=19 updates=19570 dev_loss_dec=49.350971 Maximum resident set size (kbytes): 320
+v2_eval_untrained mode=E rc=0 wall_ms=52 epochs=0 updates=0 dev_loss_dec=big Maximum resident set size (kbytes): 192
+v2_cross_v1 mode=E rc=68 wall_ms=29 epochs= updates= dev_loss_dec= Maximum resident set size (kbytes): 192
+v2_admitted=318 train=206 validation=58 heldout=54 refused=82
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_mlp.stdout:eval part=1 core=0 29 2318497 2318497 3750927 3871452 2347703 2328699 0 29 23 0 2 0 6 0 29 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_mlp.stdout:eval part=1 core=1 29 3762719 3751513 5766623 3896022 3896022 3917831 0 27 20 0 1 0 9 0 9 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_mlp.stdout:eval part=1 core=2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_mlp.stdout:eval part=1 core=3 58 6081216 6070010 9517550 7767474 6243725 6246530 0 56 43 0 3 0 15 0 38 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_mlp.stdout:eval part=2 core=0 27 133000000 27000000 94000000 27000000 135000000 125000000 0 0 0 26 1 5 1 0 0 27
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_mlp.stdout:eval part=2 core=1 27 123000000 27000000 110000000 103000000 103000000 120000000 0 1 3 10 3 4 4 14 4 14
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_mlp.stdout:eval part=2 core=2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_mlp.stdout:eval part=2 core=3 54 256000000 54000000 204000000 130000000 238000000 245000000 0 1 3 36 4 9 5 14 4 41
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_shuffled.stdout:eval part=1 core=0 29 4371552 2318497 3750927 3871452 2347703 2328699 0 10 10 19 0 17 0 13 10 19
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_shuffled.stdout:eval part=1 core=1 29 4759413 3751513 5766623 3896022 3896022 3917831 0 3 17 12 2 26 4 24 4 24
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_shuffled.stdout:eval part=1 core=2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_shuffled.stdout:eval part=1 core=3 58 9130965 6070010 9517550 7767474 6243725 6246530 0 13 27 31 2 43 4 37 14 43
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_shuffled.stdout:eval part=2 core=0 27 96000000 27000000 94000000 27000000 135000000 125000000 0 0 13 14 13 4 13 0 0 27
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_shuffled.stdout:eval part=2 core=1 27 62000000 27000000 110000000 103000000 103000000 120000000 0 7 22 5 23 4 23 3 23 3
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_shuffled.stdout:eval part=2 core=2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_shuffled.stdout:eval part=2 core=3 54 158000000 54000000 204000000 130000000 238000000 245000000 0 7 35 19 36 8 36 3 23 30
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_untrained.stdout:eval part=1 core=0 29 2842412 2318497 3750927 3871452 2347703 2328699 0 15 17 12 0 12 0 8 15 6
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_untrained.stdout:eval part=1 core=1 29 3939319 3751513 5766623 3896022 3896022 3917831 0 6 20 9 1 22 3 19 3 19
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_untrained.stdout:eval part=1 core=2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_untrained.stdout:eval part=1 core=3 58 6781731 6070010 9517550 7767474 6243725 6246530 0 21 37 21 1 34 3 27 18 25
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_untrained.stdout:eval part=2 core=0 27 91000000 27000000 94000000 27000000 135000000 125000000 0 11 11 16 11 2 11 0 0 16
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_untrained.stdout:eval part=2 core=1 27 91000000 27000000 110000000 103000000 103000000 120000000 0 1 15 12 17 3 12 0 12 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_untrained.stdout:eval part=2 core=2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+/home/drakestapleton/workspace/turing-origsel/evidence/TURING-ORIGSEL/qualify/train-fix-cprime/v2_eval_untrained.stdout:eval part=2 core=3 54 182000000 54000000 204000000 130000000 238000000 245000000 0 12 26 28 28 5 23 0 12 16
+image v2_train_mlp sha256=949eccbf284a78021c384c4c468f6639c7dd572964a18e25284f67f8493c518c bytes=11560
+image v2_ctrl_shuffled sha256=ff65f002ac1e914964163bbffb0accd33283821337a85c3e68a2ccbe66b810a2 bytes=11560
+image v2_ctrl_untrained sha256=290f02b17e56521e9e23b5f9be4469681e4c2ddcb5daeb446d060e24bd170176 bytes=11560
+SI19_SELECT_V2_RUN_PASS
