@@ -27,7 +27,7 @@ Results
     every vector's digest correct AND both receipts held (exit 0) on all 158 messages
   Mutants (sed on a copy):
     copy loop 104 -> 32 bytes (copy drops count, buf)       pass=2 fail=156, all 156 exit 3
-      (the 2 passing are the empty message and seq-0 via fips-empty/seq-0: count 0, nothing buffered)
+      (the 2 passing rows, checked: fips-empty and seq-0, both the empty message: count 0, nothing buffered)
     sha256_init without `put c count 0`                     pass=0 fail=158, all exit 3 (reuse receipt)
     sched loads 15 words instead of 16 (w[15] unwritten)    compile error 27, line 109
       omc-diag 1 code=27 sev=error line=109 col=17 ... obligation=init  (`y = get w add i 14`, i=1)
