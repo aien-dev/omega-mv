@@ -149,9 +149,11 @@ def lower_ok(tag,env,name,expected):
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--out',required=True)
-    ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC',str(Path.home()/'workspace/omega-seedqual-20261025/seed/out/omc')))
-    ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO',str(Path.home()/'workspace/omega-bridge')))
-    a=ap.parse_args();out=ROOT/a.out;out.mkdir(parents=True)
+    ap.add_argument('--omc',default=os.environ.get('OMEGA_NATIVE_OMC'))
+    ap.add_argument('--bridge',default=os.environ.get('OMEGA_BRIDGE_REPO'))
+    a=ap.parse_args()
+    if not a.omc or not a.bridge:ap.error('set OMEGA_NATIVE_OMC and OMEGA_BRIDGE_REPO (or --omc/--bridge); no $HOME defaults')
+    out=ROOT/a.out;out.mkdir(parents=True)
     rng=random.Random(624831)
     nat=Native(out,a.omc,a.bridge)
     f1=json.loads((ROOT/'tests/universal/translation/fixtures-f1.json').read_text())

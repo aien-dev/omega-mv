@@ -9,7 +9,8 @@ for p in [ROOT/'build',build]:
 build.mkdir(parents=True,exist_ok=True)
 # The translation-v1 section-1 native realization compiler; it has argv (argcnt/argread) for `retarget M`.
 expected='734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61'
-compiler=Path(os.environ.get('OMEGA_NATIVE_OMC',str(Path.home()/'workspace/omega-seedqual-20261025/seed/out/omc')))
+if not os.environ.get('OMEGA_NATIVE_OMC'):raise SystemExit('RETARGET_COMPILER_UNSET: set OMEGA_NATIVE_OMC to the pinned omc')
+compiler=Path(os.environ['OMEGA_NATIVE_OMC'])
 assert compiler.is_file() and hashlib.sha256(compiler.read_bytes()).hexdigest()==expected,'RETARGET_COMPILER_PIN_MISMATCH'
 # Unchanged vendor SHA256 and the unchanged #621 v2 codec (its `decode` is the full source-aware v1/v2 check).
 parts=[ROOT/'src/source-aware/vendor/sha256.om',ROOT/'src/source-aware/core-v2.om',ROOT/'src/adapters/upper-retarget.om']

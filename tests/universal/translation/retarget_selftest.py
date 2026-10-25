@@ -21,6 +21,7 @@ LOWER=[sys.executable,str(ROOT/'tools/adapters/lower')]
 IMPORT=[sys.executable,str(ROOT/'tools/adapters/c-import')]
 NAMES={64:'BAD_COMMAND',65:'MALFORMED',66:'UNKNOWN_VERSION',67:'LIMIT',68:'PROFILE_MISMATCH',69:'UNKNOWN_OPERATION',
        70:'TYPE_MISMATCH',71:'EFFECT_ALIAS_MISMATCH',72:'OBLIGATION_MISMATCH',74:'PROVENANCE_MISMATCH',78:'CONTRACT_MISMATCH'}
+FROZEN_V1_SA='1a127bf032e403b103d12d3140f27e74ab490e9a8b7af46b70233c6f3aaa60ce'
 fails=[];notrun=set()
 
 def check(ok,what):
@@ -66,9 +67,11 @@ class Codec:
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--out',required=True)
     ap.add_argument('--v2-sa',default=str(ROOT/'build/L832/sa'))
-    ap.add_argument('--v1-sa',default=str(Path.home()/'workspace/universal-read/build/L574/sa'))
+    ap.add_argument('--v1-sa',default=str(ROOT/'build/L574/sa'))
     a=ap.parse_args();out=ROOT/a.out;out.mkdir(parents=True)
     v2=Codec(a.v2_sa,'v2-codec-decode');v1=Codec(a.v1_sa,'frozen-v1-codec')
+    # The frozen #621 v1 codec (tools/source-aware/build -> build/L574/sa); any other bytes are not it.
+    if v1.ok and not check(v1.sha==FROZEN_V1_SA,f'frozen v1 codec {a.v1_sa} sha256 {v1.sha}, pinned {FROZEN_V1_SA}'):v1.ok=False
     f1=json.loads((ROOT/'tests/universal/translation/fixtures-f1.json').read_text())
     cases=[]
     for p in f1['positives']:

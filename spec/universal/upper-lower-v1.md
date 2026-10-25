@@ -11,8 +11,8 @@ refuses 78 `LOWER_STALE_OR_MISSING_BUILD` when anything has drifted. It then exe
 binary with the same arguments. All validation, hashing and text generation run in seeded Omega.
 
 Build (`make -f mk/lower.mk lower`, `tools/adapters/build-lower.py`):
-- The compiler is the section-1 native realization compiler, omc sha256 `734f0a39…6b61`, from
-  `OMEGA_NATIVE_OMC`, by default `~/workspace/omega-seedqual-20261025/seed/out/omc`.
+- The compiler is the section-1 native realization compiler, omc sha256 `734f0a39…6b61`, named by
+  `OMEGA_NATIVE_OMC` (required; no `$HOME` default).
 - It compiles the concatenation of three unchanged or owned sources:
   - `src/source-aware/vendor/sha256.om` (hash-checked by `tools/source-aware/imports.sha256`);
   - the #621 core `src/source-aware/core.om`;
@@ -73,9 +73,10 @@ hit.
 
 ## Self-test
 
-`make -f mk/lower.mk test-lower` builds `lower` and the unchanged importer (`SA_SEED_REPO`, default
-`~/workspace/omega-bridge`), then runs `tests/universal/translation/lower_selftest.py`
-(`OMEGA_BRIDGE_REPO`, default `~/workspace/omega-bridge`). It covers:
+`make -f mk/lower.mk test-lower` builds `lower` and the unchanged importer, then runs
+`tests/universal/translation/lower_selftest.py`. It requires `OMEGA_NATIVE_OMC` and `SA_SEED_REPO` (a
+clone holding the pinned bridge seed commit); `OMEGA_BRIDGE_REPO` (a clone holding omega-bridge
+`012860db`) defaults to `SA_SEED_REPO`. None of them has a `$HOME` default. It covers:
 - every F1 positive;
 - the four accepted `c_import_controls` boundaries, including the 61-term chain at 64 operations;
 - crafted semantic-only units: permuted input records, lone constants 0 and 2^64-1, a 64-result
