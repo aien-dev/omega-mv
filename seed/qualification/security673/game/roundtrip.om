@@ -1,0 +1,105 @@
+note Fixed two-child lifecycle measurement using gate669 fork/exec/wait pattern.
+note Not a general runner. Existing compiled solver/checker required; no model code here.
+text solver "build/security760-native/solve"
+text checker "build/security760-native/check"
+text spool "build/security760-native/roundtrip.bin"
+text nullpath "/dev/null"
+global argv uchar 256
+global status uchar 4
+fn command c uint to ulong
+put argv 0 1
+put argv 1 0
+n = len solver
+if eq c 1
+n = len checker
+end
+put argv 2 uchar n
+put argv 3 0
+for i ulong n
+if eq c 0
+put argv add i 4 get solver i
+else
+put argv add i 4 get checker i
+end
+end
+ret add n 4
+end
+fn redir fd int dst int to void
+if ne fd dst
+if ne dupfd fd dst 0 long dst
+exit 90
+end
+end
+end
+fn reap pid long to void
+start = monons
+while true bound 60000
+r = waitpid int pid status 0 len status 1
+if eq r pid
+if or ne get status 0 0 ne get status 1 0
+exit 90
+end
+ret
+end
+if or lt r 0 gt sub monons start 30000000000
+r = killpid int pid 9
+r = waitpid int pid status 0 len status 0
+exit 90
+end
+if ne sleepns 1000000 0
+exit 90
+end
+end
+exit 90
+end
+fn child c uint fd int nullfd int to void
+n = command c
+pid = fork
+if lt pid 0
+exit 90
+end
+if eq pid 0
+redir nullfd 2
+if eq c 0
+redir nullfd 0
+redir fd 1
+else
+redir fd 0
+redir nullfd 1
+end
+r = execprog argv 0 n
+exit 90
+end
+reap pid
+end
+fn main to int
+fd = fopen spool 0 len spool 194 384
+if lt fd 0
+ret 90
+end
+nullfd = fopen nullpath 0 len nullpath 2 0
+if lt nullfd 0
+ret 90
+end
+for i ulong 101
+start = monons
+if ne fseek int fd 0 0 0
+ret 90
+end
+child 0 int fd int nullfd
+if ne fseek int fd 0 0 0
+ret 90
+end
+child 1 int fd int nullfd
+put samples i ulong sub monons start
+end
+percentiles
+if ne fclose int fd 0
+ret 90
+end
+if ne fclose int nullfd 0
+ret 90
+end
+label 8
+ret 0
+end
