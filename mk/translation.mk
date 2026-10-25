@@ -1,6 +1,6 @@
 # #624 integration: the G1 C17 <-> Omega slice end to end (spec/universal/translation-v1.md).
 # Host aarch64 NATIVE only; foreign compilers (cc) are output compilers and oracles, never a fallback.
-.PHONY: translation-omc test-translation-g1
+.PHONY: translation-omc test-translation-g1 test-translation-g2
 T624 := build/T624
 # Native realization compiler (translation-v1 section 1): born from the seed of a pinned omega-mv commit
 # unless OMEGA_NATIVE_OMC names an existing one; either way its sha256 must be 734f0a39.
@@ -27,3 +27,10 @@ test-translation-g1: translation-omc
 	$(MAKE) -f mk/c-u64-export.mk test-c-export
 	$(MAKE) -f mk/translation-validate.mk test-translation-validate
 	@echo "TRANSLATION-G1 PASS (fixtures, C import, codec, lower, C export, independent validation)"
+
+# G2 (translation-compose-v1.md): Rust and Python adapters and the 6 C/Rust/Python compositions.
+test-translation-g2: test-translation-g1
+	$(MAKE) -f mk/rust-u64.mk test-rust-u64
+	$(MAKE) -f mk/python-u64.mk test-python-u64
+	$(MAKE) -f mk/translation-validate.mk test-translation-compose
+	@echo "TRANSLATION-G2 PASS (Rust, Python adapters; 6 compositions, independent validation)"

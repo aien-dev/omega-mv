@@ -25,6 +25,6 @@ jobs:
           git -C ../omega-bridge cat-file -e 0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9^{commit}
           git -C ../omega-bridge cat-file -e 012860dbf26ee62a9838594b9dfd1e3e94a540a9^{commit}
       - name: machine
-        run: uname -a; nproc; cc --version | head -1; python3 --version
-      - name: G1 translation gates
-        run: make -f mk/translation.mk test-translation-g1 SA_SEED_REPO="$(cd .. && pwd)/omega-bridge"
+        run: uname -a; nproc; cc --version | head -1; python3 --version; rustc --version
+      - name: G1 + G2 translation gates
+        run: make -f mk/translation.mk test-translation-g2 SA_SEED_REPO="$(cd .. && pwd)/omega-bridge"
