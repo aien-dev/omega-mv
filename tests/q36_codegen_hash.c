@@ -68,6 +68,19 @@ int main(void) {
             snprintf(n, sizeof n, "router256s.rows.w%u.d4.m%d", warps[w], m); omega_bw_ir_init(prog);
             emit(n, omega_blackwell_codegen_router_prog(&s, prog));
         }
+    /* # new (sc L388, AIEN_OMEGA_Q36_ROUTER_FUSE): the split form at the 35B shape -- the logits kernel (grid ctas) and the
+     * select kernel (grid 1); the one-launch shapes above must stay byte-identical */
+    printf("# new\n");
+    for (int w = 0; w < 3; w++)
+        for (uint32_t d = 1; d <= 4; d *= 2) {
+            const uint32_t ctas = (256u + 1u + 32u * warps[w] - 1u) / (32u * warps[w]);
+            OmegaRouterSpec a = {.warps = warps[w], .depth = d, .experts = 256, .shared = 1, .ctas = ctas};
+            OmegaRouterSpec b = {.warps = warps[w], .depth = d, .experts = 256, .shared = 1, .select = 1};
+            snprintf(n, sizeof n, "router256s.split.logits.w%u.d%u", warps[w], d); omega_bw_ir_init(prog);
+            emit(n, omega_blackwell_codegen_router_prog(&a, prog));
+            snprintf(n, sizeof n, "router256s.split.select.w%u.d%u", warps[w], d); omega_bw_ir_init(prog);
+            emit(n, omega_blackwell_codegen_router_prog(&b, prog));
+        }
     /* the decode glue kernels (RES / SWIGLU / ARGMAX / GATHER / GATE / AXPY) at the widths the 30B and 27B graphs use */
     const uint32_t widths[3] = {0, 5120, 17408}, strides[3] = {0, 256, 65536};
     for (int k = 1; k <= 6; k++)

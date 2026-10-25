@@ -112,6 +112,17 @@ int omega_gpu_router_record_to(struct OmegaGpuCmdList *cl, OmegaGpuRouter *r, ui
 int omega_gpu_router_prepare_rows(OmegaGpuRouter *r, uint32_t xstride, uint32_t lbstride);
 int omega_gpu_router_record_rows(struct OmegaGpuCmdList *cl, OmegaGpuRouter *r, uint32_t layer, uint64_t x_va, uint32_t xstride, float eps,
                                  int norm_topk, float out_scale, uint64_t lb_va, uint32_t lbstride, uint32_t rows, OmegaGpuRouterDevOut *out);
+/* sc L388 (AIEN_OMEGA_Q36_ROUTER_FUSE): the split form of the one-row record path (record / record_to, rows 1). The layer's
+ * 1.05 MB gate is streamed by ONE CTA of 32 warps in the one-launch form, ~25 GB/s; the split form records two launches
+ * instead of one: `ctas` CTAs compute the logits (each warp one gate row, the row's dot exactly as the one-launch form
+ * computes it) into the launch buffer's logit array (LB_LOGIT: f32 [experts + shared]), and one CTA selects (top-8, the
+ * softmax denominator, the weights, the ids and the two group tables) from that array. Outputs are bit-identical to the
+ * one-launch form; the cost is one extra launch in the list. ctas 0 = the one-launch form (the default). A ctas above
+ * 64 or 1 is refused; the two launches need the launch-buffer slot, so the caller must keep the list ordering (the select
+ * launch is appended right after the logits launch). */
+int omega_gpu_router_set_split(OmegaGpuRouter *r, uint32_t ctas);
+uint32_t omega_gpu_router_split(const OmegaGpuRouter *r);
+uint32_t omega_gpu_router_rows(const OmegaGpuRouter *r); /* gate rows = experts + shared (257 for the 35B) */
 uint32_t omega_gpu_router_layout_bytes(const OmegaGpuRouter *r);
 int omega_gpu_router_read_back(OmegaGpuRouter *r, float *xout, uint64_t *tab_gu, uint64_t *tab_dn);
 const char *omega_gpu_router_last_error(void);

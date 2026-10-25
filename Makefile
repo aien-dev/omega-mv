@@ -2538,10 +2538,19 @@ test-gpu-decode-attn256: $(GPU_DATTN256_TEST)
 .PHONY: test-gpu-router
 GPU_ROUTER_TEST = $(OUT_DIR)/gpu_router_test
 $(GPU_ROUTER_TEST): tests/gpu_router_test.c tests/bw_warp_sim_k.h src/omega_gpu_router_api.h src/omega_blackwell_codegen_router.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_router_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_router_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-router: $(GPU_ROUTER_TEST)
 	./$(GPU_ROUTER_TEST) --host-only
 	./$(GPU_ROUTER_TEST) --sim
+
+# the same at the 35B shape (256 routed experts + the shared gate row, sc L306): NR = 257 rows, so the split form's logits
+# launch is ceil(257 / warps) CTAs -- the shape the q36 graph records (AIEN_OMEGA_Q36_ROUTER_FUSE)
+GPU_ROUTER_TEST_Q36 = $(OUT_DIR)/gpu_router_test_q36
+$(GPU_ROUTER_TEST_Q36): tests/gpu_router_test.c tests/bw_warp_sim_k.h src/omega_gpu_router_api.h src/omega_blackwell_codegen_router.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -DROUTER_TEST_Q36 -Itests -o $@ tests/gpu_router_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-router-q36: $(GPU_ROUTER_TEST_Q36)
+	./$(GPU_ROUTER_TEST_Q36) --host-only
+	./$(GPU_ROUTER_TEST_Q36) --sim
 
 # Qwen3.8-27B Gated DeltaNet decode step (omega#542, 2026-10-18): one launch per layer (omega_gpu_gdn_api.h).
 # test-gpu-gdn is host-only plus the warp simulator over the whole grid; the chip run is ./build/gpu_gdn_test under the GB10 lock.

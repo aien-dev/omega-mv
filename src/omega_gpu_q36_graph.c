@@ -259,6 +259,14 @@ int omega_gpu_q36_graph_create_heads(const OmegaGpuQ36GraphConfig *cfg, uint32_t
     omega_gpu_session_unlock();
     if (rc != OMEGA_GPU_DGRAPH_OK) { omega_gpu_q36_graph_free(g); return rc; }
     { const char *e = getenv("AIEN_OMEGA_Q36_BATCH"); if (e && e[0] == '1' && e[1] == 0 && omega_gpu_q36_graph_set_batch(g, 1) != OMEGA_GPU_DGRAPH_OK) { omega_gpu_q36_graph_free(g); return OMEGA_GPU_DGRAPH_CHIP_FAIL; } }
+    /* sc L388: the router's split form (two launches per layer, one launch per CTA-group of gate rows; ~25 GB/s -> the bus
+     * for the one-launch form). OFF unless AIEN_OMEGA_Q36_ROUTER_FUSE=1: then every layer's router is recorded as a logits
+     * launch of ceil(rows / warps) CTAs and a select launch, bit-identical outputs (omega_gpu_router_set_split). */
+    { const char *e = getenv("AIEN_OMEGA_Q36_ROUTER_FUSE");
+      if (e && e[0] == '1' && e[1] == 0) {
+          const uint32_t rows = omega_gpu_router_rows(cfg->router), ctas = (rows + OMEGA_GPU_ROUTER_WARPS - 1u) / OMEGA_GPU_ROUTER_WARPS;
+          if (omega_gpu_router_set_split(cfg->router, ctas) != OMEGA_GPU_ROUTER_OK) { omega_gpu_q36_graph_free(g); return OMEGA_GPU_DGRAPH_CHIP_FAIL; }
+      } }
     *out = g;
     return OMEGA_GPU_DGRAPH_OK;
 }

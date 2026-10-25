@@ -75,7 +75,10 @@
 #define OMEGA_ROUTER_ARG_EPS 0x3d0u     /* f32 rms eps */
 #define OMEGA_ROUTER_ARG_OUT_SCALE 0x3d4u /* f32 */
 #define OMEGA_ROUTER_ARG_NORM_TOPK 0x3d8u /* u32 0 or 1 (config.json norm_topk_prob) */
-#define OMEGA_ROUTER_ARGS_WORDS 23u
+#define OMEGA_ROUTER_ARG_LOGIT 0x3e0u   /* split form: u64 to f32 [experts + shared], the logits the logits kernel writes
+                                         * (STG.E by lane 0 of the row's warp) and the select kernel reads (LDG.E.STRONG.SYS):
+                                         * written by another CTA, so it is read with the system-scope load */
+#define OMEGA_ROUTER_ARGS_WORDS 26u
 
 /* shared memory map (bytes) */
 #define OMEGA_ROUTER_SM_XN 0u           /* xn[2048] f32: 8192 */
@@ -103,6 +106,16 @@ typedef struct {
                         * (>= 8192, a multiple of 16); CTA cy reads X + cy * xstride. */
     uint32_t lbstride; /* ROWS form: bytes between consecutive output buffers (a multiple of 16): CTA cy writes
                         * XOUT, IDS, WTS, TAB_GU and TAB_DN at + cy * lbstride. Both or neither of the strides are set. */
+    /* ---- the split form (sc L388, AIEN_OMEGA_Q36_ROUTER_FUSE): the one launch of the plain form is latency-bound
+     * because a single CTA of 32 warps streams one layer's 1.05 MB gate at ~25 GB/s. The split form runs the same
+     * arithmetic in two launches of the same command list: `ctas` CTAs of W warps compute the logits of one layer
+     * (warp g = cta * W + warp owns row g, g += ctas * W) and write them to the f32 array ARG_LOGIT names, then one
+     * CTA selects (phase 3 + epilogue) from that array. Every per-row op is unchanged (one warp per row, the same
+     * lane -> column mapping, the same accumulation order and the same warp sum), phase 1 is recomputed identically
+     * by every CTA (same W, so the same reduction tree), and only CTA 0 stores x' -- so the outputs are
+     * bit-identical to the plain form. 0 = the plain form. */
+    uint32_t ctas;     /* split form, logits kernel: CTAs (>= 2); 0 = plain. Refused with the ROWS form and mutant 6. */
+    uint32_t select;   /* split form, select kernel: 1 = the phase-3 + epilogue kernel that reads ARG_LOGIT (grid 1) */
 } OmegaRouterSpec;
 
 /* Shared memory map of a spec (bytes); the OMEGA_ROUTER_SM_* constants are the 128 / no-shared case. */

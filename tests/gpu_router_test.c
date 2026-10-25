@@ -166,6 +166,23 @@ static void host_only(void) {
     { OmegaRouterSpec s = { .warps = 8, .depth = 8, .xstride = 4096, .lbstride = 16896 SPEC_SHAPE }; CHECK(omega_router_prog_stats(&s, NULL, NULL) != 0, "xstride below one row refused"); }
     { OmegaRouterSpec s = { .warps = 8, .depth = 8, .xstride = 8192, .lbstride = 16900 SPEC_SHAPE }; CHECK(omega_router_prog_stats(&s, NULL, NULL) != 0, "unaligned lbstride refused"); }
     { OmegaRouterSpec s = { .warps = 8, .depth = 8, .mutant = 6 SPEC_SHAPE }; CHECK(omega_router_prog_stats(&s, NULL, NULL) != 0, "mutant 6 without the ROWS form refused"); }
+    /* the split form (L388): the logits kernel (grid ctas) and the select kernel (grid 1) at every warp count, and the
+     * shapes it must refuse (ctas 1, ctas + select, either with the ROWS form, ctas with mutant 6) */
+    for (unsigned i = 0; i < 3; i++) {
+        OmegaRouterSpec a = { .warps = ws[i], .depth = 4, .ctas = (NR + ws[i] - 1u) / ws[i] SPEC_SHAPE };
+        OmegaRouterSpec b = { .warps = ws[i], .depth = 4, .select = 1 SPEC_SHAPE };
+        uint32_t na = 0, ga = 0, nb = 0, gb = 0;
+        int ra = omega_router_prog_stats(&a, &na, &ga), rb = omega_router_prog_stats(&b, &nb, &gb);
+        uint32_t da = ((ga + 1 + 7) / 8) * 8, db = ((gb + 1 + 7) / 8) * 8;
+        CHECK(ra == 0 && na <= 1024 && 32u * ws[i] * da <= 65536u, "codegen split logits warps %u ctas %u: rc %d insns %u gprs %u declared %u", ws[i], a.ctas, ra, na, ga, da);
+        CHECK(rb == 0 && nb <= 1024 && 32u * ws[i] * db <= 65536u, "codegen split select warps %u: rc %d insns %u gprs %u declared %u", ws[i], rb, nb, gb, db);
+        if (ra == 0 && rb == 0) printf("codegen split warps %2u ctas %2u: logits %u insns (%u regs), select %u insns (%u regs)\n", ws[i], a.ctas, na, ga, nb, gb);
+    }
+    { OmegaRouterSpec s = { .warps = 8, .depth = 4, .ctas = 1 SPEC_SHAPE }; CHECK(omega_router_prog_stats(&s, NULL, NULL) != 0, "split ctas 1 refused"); }
+    { OmegaRouterSpec s = { .warps = 8, .depth = 4, .ctas = 2, .select = 1 SPEC_SHAPE }; CHECK(omega_router_prog_stats(&s, NULL, NULL) != 0, "split ctas + select refused"); }
+    { OmegaRouterSpec s = { .warps = 8, .depth = 4, .ctas = 2, .xstride = 8192, .lbstride = 16896 SPEC_SHAPE }; CHECK(omega_router_prog_stats(&s, NULL, NULL) != 0, "split with the ROWS form refused"); }
+    { OmegaRouterSpec s = { .warps = 8, .depth = 4, .select = 1, .xstride = 8192, .lbstride = 16896 SPEC_SHAPE }; CHECK(omega_router_prog_stats(&s, NULL, NULL) != 0, "select with the ROWS form refused"); }
+    { OmegaRouterSpec s = { .warps = 8, .depth = 4, .ctas = 2, .mutant = 6 SPEC_SHAPE }; CHECK(omega_router_prog_stats(&s, NULL, NULL) != 0, "split with mutant 6 refused"); }
     CHECK(OMEGA_ROUTER_ARGS_WORDS <= OMEGA_GPU_SESSION_MAX_ARGS, "argument words fit the constant bank window");
 }
 
@@ -173,15 +190,26 @@ static void host_only(void) {
 static uint64_t g_sim_issues;
 /* one "device" block: x | xout | ids | wts | tab_gu | tab_dn | dir_gu | dir_dn | norm; the gate row block apart */
 enum { B_X = 0, B_XOUT = 8192, B_IDS = 16384, B_WTS = 16448, B_TGU = 16512, B_TDN = 16672, B_DGU = 16832, B_DDN = B_DGU + NR * 16,
-       B_NORM = B_DDN + NR * 16, B_BYTES = B_NORM + 8192 };
+       B_NORM = B_DDN + NR * 16, B_BYTES = B_NORM + 8192,
+       B_LOGIT = B_BYTES,      /* the split form's logit array (L388): f32 [NR], just past the launch buffer's body */
+       B_ALL = B_LOGIT + ((NR * 4u + 63u) & ~63u) };
+#define NSIMARGS 13u        /* the argument pairs the constant bank carries: 0x380 .. 0x3e0 (index 12 = OMEGA_ROUTER_ARG_LOGIT) */
 static void fake_dirs(uint64_t *dgu, uint64_t *ddn) { for (unsigned e = 0; e < NR; e++) { dgu[2 * e] = 0x100000000ull + e * 16; dgu[2 * e + 1] = 0x200000000ull + e * 16 + 8; ddn[2 * e] = 0x300000000ull + e * 32; ddn[2 * e + 1] = 0x400000000ull + e * 32 + 16; } }
+/* the device addresses one "block" hands the kernel: the ten argument pairs of the one-launch form and (index 12) the
+ * split form's logit array (L388); index 10, 11 are unused words of the window */
+static void sim_args_of(uint64_t A[NSIMARGS], uint8_t *blk, const uint16_t *gate) {
+    memset(A, 0, sizeof(uint64_t) * NSIMARGS);
+    A[0] = (uintptr_t)(blk + B_X); A[1] = (uintptr_t)gate; A[2] = (uintptr_t)(blk + B_NORM); A[3] = (uintptr_t)(blk + B_XOUT);
+    A[4] = (uintptr_t)(blk + B_IDS); A[5] = (uintptr_t)(blk + B_WTS); A[6] = (uintptr_t)(blk + B_DGU); A[7] = (uintptr_t)(blk + B_DDN);
+    A[8] = (uintptr_t)(blk + B_TGU); A[9] = (uintptr_t)(blk + B_TDN); A[12] = (uintptr_t)(blk + B_LOGIT);
+}
 static int sim_point(uint32_t depth, int mutant, int norm_topk, float out_scale, uint32_t seed, float shared_scale, char *msg, size_t n, int *bad, int *margin_case) {
     static BlackwellIRProgram prog;
     OmegaRouterSpec spec = { .warps = 8, .depth = depth, .mutant = mutant SPEC_SHAPE };
     OmegaRouterSmem sm;
     if (omega_blackwell_codegen_router_prog(&spec, &prog) != 0 || omega_router_smem(&spec, &sm) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
     Case c; case_make_shared(&c, seed, 1.0f, norm_topk, shared_scale);
-    uint8_t *blk = aligned_alloc(16, B_BYTES); memset(blk, 0, B_BYTES);
+    uint8_t *blk = aligned_alloc(16, B_ALL); memset(blk, 0, B_ALL);
     uint16_t *gate = aligned_alloc(16, (size_t)NR * H * 2); memcpy(gate, c.gate, (size_t)NR * H * 2);
     memcpy(blk + B_X, c.x, sizeof c.x); memcpy(blk + B_NORM, c.nw, sizeof c.nw);
     uint64_t dgu[NR * 2], ddn[NR * 2]; fake_dirs(dgu, ddn);
@@ -195,9 +223,8 @@ static int sim_point(uint32_t depth, int mutant, int norm_topk, float out_scale,
         for (unsigned i = 0; i < H; i++) xo[i] = -999.0f;
         for (unsigned i = 0; i < TS; i++) { wd[i] = -999.0f; idd[i] = 0xffffffffu; }
         memset(blk + B_TGU, 0, B_DGU - B_TGU);
-        uint64_t A[10] = { (uintptr_t)(blk + B_X), (uintptr_t)gate, (uintptr_t)(blk + B_NORM), (uintptr_t)(blk + B_XOUT), (uintptr_t)(blk + B_IDS),
-                           (uintptr_t)(blk + B_WTS), (uintptr_t)(blk + B_DGU), (uintptr_t)(blk + B_DDN), (uintptr_t)(blk + B_TGU), (uintptr_t)(blk + B_TDN) };
-        for (unsigned i = 0; i < 10; i++) { s.cbank[(0x380 + 8 * i) / 4] = (uint32_t)A[i]; s.cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(A[i] >> 32); }
+        uint64_t A[NSIMARGS]; sim_args_of(A, blk, gate);
+        for (unsigned i = 0; i < NSIMARGS; i++) { s.cbank[(0x380 + 8 * i) / 4] = (uint32_t)A[i]; s.cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(A[i] >> 32); }
         float fe = EPS, fo = out_scale;
         memcpy(&s.cbank[OMEGA_ROUTER_ARG_EPS / 4], &fe, 4); memcpy(&s.cbank[OMEGA_ROUTER_ARG_OUT_SCALE / 4], &fo, 4);
         s.cbank[OMEGA_ROUTER_ARG_NORM_TOPK / 4] = norm_topk ? 1u : 0u;
@@ -223,11 +250,12 @@ static int sim_point(uint32_t depth, int mutant, int norm_topk, float out_scale,
  * (stride B_BYTES). Every row's outputs must be bit-identical to the plain kernel run on that row alone, and both
  * fragment orders must agree. Mutant 6 (every CTA reads row 0's x) must be caught. */
 #define XST_SIM (H * 4u + 64u)
-static void sim_args(WsSim *s, BlackwellIRProgram *prog, const OmegaRouterSmem *sm, int order, const uint64_t A[10], int norm_topk, float out_scale) {
-    static uint8_t smem[16384];
+static uint8_t g_sim_smem[16384]; /* one CTA's shared memory, the last CTA's contents after a run (the harness reads it) */
+static void sim_args(WsSim *s, BlackwellIRProgram *prog, const OmegaRouterSmem *sm, int order, const uint64_t A[NSIMARGS], int norm_topk, float out_scale) {
+    uint8_t *smem = g_sim_smem;
     memset(s, 0, sizeof *s);
     s->p = prog; s->threads = 256; s->order = order; s->smem = smem; s->smem_bytes = sm->total;
-    for (unsigned i = 0; i < 10; i++) { s->cbank[(0x380 + 8 * i) / 4] = (uint32_t)A[i]; s->cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(A[i] >> 32); }
+    for (unsigned i = 0; i < NSIMARGS; i++) { s->cbank[(0x380 + 8 * i) / 4] = (uint32_t)A[i]; s->cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(A[i] >> 32); }
     float fe = EPS, fo = out_scale;
     memcpy(&s->cbank[OMEGA_ROUTER_ARG_EPS / 4], &fe, 4); memcpy(&s->cbank[OMEGA_ROUTER_ARG_OUT_SCALE / 4], &fo, 4);
     s->cbank[OMEGA_ROUTER_ARG_NORM_TOPK / 4] = norm_topk ? 1u : 0u;
@@ -267,8 +295,7 @@ static int sim_rows_point(uint32_t depth, int mutant, uint32_t rows, uint32_t se
     uint64_t dgu[NR * 2], ddn[NR * 2]; fake_dirs(dgu, ddn);
     memcpy(blk + B_DGU, dgu, sizeof dgu); memcpy(blk + B_DDN, ddn, sizeof ddn);
     Out *o = calloc(rows, sizeof *o), *copy = calloc(rows, sizeof *copy); int err = 0;
-    uint64_t A[10] = { (uintptr_t)xs, (uintptr_t)gate, (uintptr_t)(blk + B_NORM), (uintptr_t)(blk + B_XOUT), (uintptr_t)(blk + B_IDS),
-                       (uintptr_t)(blk + B_WTS), (uintptr_t)(blk + B_DGU), (uintptr_t)(blk + B_DDN), (uintptr_t)(blk + B_TGU), (uintptr_t)(blk + B_TDN) };
+    uint64_t A[NSIMARGS]; sim_args_of(A, blk, gate); A[0] = (uintptr_t)xs; /* the rows form's x: NR rows, stride XST_SIM */
     for (int order = 0; order < 2 && !err; order++) {
         WsSim s; sim_args(&s, &prog, &sm, order, A, 1, 1.0f);
         s.nranges = 3;
@@ -311,6 +338,73 @@ static int sim_rows_point(uint32_t depth, int mutant, uint32_t rows, uint32_t se
     free(blk); free(xs); free(gate); free(o); free(copy); case_free(&c[0]); free(c);
     return err;
 }
+/* The split form (L388): the logits kernel (grid ctas, W warps; warp cta * W + w owns gate row cta * W + w, then
+ * += ctas * W) writes the logits, the select kernel (grid 1) runs phase 3 and the epilogue on them. The pair must give the
+ * one-launch kernel's outputs bit for bit (ids, weights, x', both tables) on the same device block, and the one-launch
+ * kernel's mutants must still be caught through the pair. */
+static int sim_split_point(uint32_t warps, uint32_t ctas, uint32_t depth, int mutant, int norm_topk, float out_scale, uint32_t seed,
+                           char *msg, size_t n, int *bad, int *margin_case) {
+    static BlackwellIRProgram plain, lg, sel;
+    OmegaRouterSpec ps = { .warps = warps, .depth = depth, .mutant = mutant SPEC_SHAPE };
+    OmegaRouterSpec a = ps; a.ctas = ctas;
+    OmegaRouterSpec b = ps; b.select = 1;
+    OmegaRouterSmem sm;
+    *bad = 0; *margin_case = 0;
+    if (omega_router_smem(&ps, &sm) != 0 || omega_blackwell_codegen_router_prog(&ps, &plain) != 0 ||
+        omega_blackwell_codegen_router_prog(&a, &lg) != 0 || omega_blackwell_codegen_router_prog(&b, &sel) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
+    Case c; case_make(&c, seed, 1.0f, norm_topk);
+    uint8_t *blk = aligned_alloc(16, B_ALL); memset(blk, 0, B_ALL);
+    uint16_t *gate = aligned_alloc(16, (size_t)NR * H * 2); memcpy(gate, c.gate, (size_t)NR * H * 2);
+    memcpy(blk + B_X, c.x, sizeof c.x); memcpy(blk + B_NORM, c.nw, sizeof c.nw);
+    uint64_t dgu[NR * 2], ddn[NR * 2]; fake_dirs(dgu, ddn);
+    memcpy(blk + B_DGU, dgu, sizeof dgu); memcpy(blk + B_DDN, ddn, sizeof ddn);
+    uint64_t A[NSIMARGS]; sim_args_of(A, blk, gate);
+    Out p, s; memset(&p, 0, sizeof p); memset(&s, 0, sizeof s);
+    int err = 0, same = 0;
+    {   /* the one-launch kernel on its own */
+        WsSim w; sim_args(&w, &plain, &sm, 0, A, norm_topk, out_scale);
+        w.threads = 32u * warps;
+        w.nranges = 2;
+        w.ranges[0].lo = (uintptr_t)blk; w.ranges[0].hi = (uintptr_t)blk + B_ALL;
+        w.ranges[1].lo = (uintptr_t)gate; w.ranges[1].hi = (uintptr_t)gate + (size_t)NR * H * 2;
+        poison_block(blk);
+        err = ws_run(&w, 1, 1);
+        if (err) snprintf(msg, n, "plain: %s (pc %d)", w.msg, w.err_pc);
+        else { g_sim_issues += w.warp_issues; if (block_out(blk, &p)) { err = -1; snprintf(msg, n, "plain: output words never written"); } }
+    }
+    if (!err) { /* the pair, with the two fragment orders of the select kernel */
+        poison_block(blk);
+        WsSim w; sim_args(&w, &lg, &sm, 0, A, norm_topk, out_scale);
+        w.threads = 32u * warps;
+        w.nranges = 2;
+        w.ranges[0].lo = (uintptr_t)blk; w.ranges[0].hi = (uintptr_t)blk + B_ALL;
+        w.ranges[1].lo = (uintptr_t)gate; w.ranges[1].hi = (uintptr_t)gate + (size_t)NR * H * 2;
+        err = ws_run(&w, ctas, 1);
+        if (err) snprintf(msg, n, "logits (%u CTAs): %s (pc %d)", ctas, w.msg, w.err_pc);
+        else g_sim_issues += w.warp_issues;
+    }
+    for (int order = 0; order < 2 && !err; order++) {
+        WsSim w; sim_args(&w, &sel, &sm, order, A, norm_topk, out_scale);
+        w.threads = 32u * warps;
+        w.nranges = 2;
+        w.ranges[0].lo = (uintptr_t)blk; w.ranges[0].hi = (uintptr_t)blk + B_ALL;
+        w.ranges[1].lo = (uintptr_t)gate; w.ranges[1].hi = (uintptr_t)gate + (size_t)NR * H * 2;
+        err = ws_run(&w, 1, 1);
+        if (err) { snprintf(msg, n, "select (order %d): %s (pc %d)", order, w.msg, w.err_pc); break; }
+        g_sim_issues += w.warp_issues;
+        Out o; if (block_out(blk, &o)) { err = -1; snprintf(msg, n, "select: output words never written"); break; }
+        if (order == 0) s = o;
+        else if (memcmp(&s, &o, sizeof s) != 0) { err = -1; snprintf(msg, n, "the fragment order changed the pair's result"); }
+    }
+    if (!err) {
+        same = memcmp(&p, &s, sizeof p) == 0;
+        int orc = compare(&c, &s, out_scale, dgu, ddn, msg, n, margin_case);
+        *bad = orc | (same ? 0 : 32);
+        if (!same && !orc) snprintf(msg, n, "the pair differs from the one-launch kernel (ids %s)", memcmp(p.ids, s.ids, sizeof p.ids) ? "DIFFER" : "equal");
+    }
+    free(blk); free(gate); case_free(&c);
+    return err;
+}
 static void sim_battery(void) {
     struct { uint32_t depth; int norm_topk; float oscale; uint32_t seed; const char *name; } pts[] = {
         { 8, 1, 1.0f, 11, "depth 8 norm" }, { 8, 1, 1.0f, 12, "depth 8 norm seed 12" }, { 8, 0, 1.0f, 13, "depth 8 no-norm" },
@@ -347,11 +441,34 @@ static void sim_battery(void) {
         CHECK(!err && bad != 0, "sim rows mutant 6 must be caught: %s", msg);
         printf("sim rows mutant 6: %s (bad mask %d) %s\n", err ? "ERROR" : bad ? "caught" : "NOT CAUGHT", bad, msg);
     }
+    { /* L388 split form: the pair (logits launch of ctas CTAs + select launch) equals the one-launch kernel bit for bit */
+        struct { uint32_t warps, depth, seed; int norm_topk; float oscale; const char *name; } sp[] = {
+            { 32, 4, 41, 1, 1.0f, "split w32 d4 norm" },
+            { 32, 4, 42, 0, 1.0f, "split w32 d4 no-norm" },
+            { 8, 4, 43, 1, 18446744073709551616.0f, "split w8 d4 norm out_scale 2^64" },
+            { 32, 8, 44, 1, 1.0f, "split w32 d8 norm" },
+        };
+        for (size_t i = 0; i < sizeof sp / sizeof sp[0]; i++) {
+            char msg[300]; int bad = 0, mc = 0;
+            const uint32_t ctas = (NR + sp[i].warps - 1u) / sp[i].warps;
+            int err = sim_split_point(sp[i].warps, ctas, sp[i].depth, 0, sp[i].norm_topk, sp[i].oscale, sp[i].seed, msg, sizeof msg, &bad, &mc);
+            CHECK(!err && bad == 0, "sim %s (%u CTAs of %u warps): %s", sp[i].name, ctas, sp[i].warps, msg);
+            printf("sim %s (%u CTAs of %u warps): %s %s\n", sp[i].name, ctas, sp[i].warps, err ? "ERROR" : bad ? "MISMATCH" : "ok", msg);
+        }
+        for (int m = 1; m <= MUT_MAX; m++) { /* a mutant must still be caught through the pair */
+            char msg[300]; int bad = 0, mc = 0;
+            const uint32_t ctas = (NR + 8u - 1u) / 8u;
+            int err = sim_split_point(8, ctas, 4, m, 1, 1.0f, 51, msg, sizeof msg, &bad, &mc);
+            CHECK(!err && bad != 0, "sim split mutant %d must be caught: %s", m, msg);
+            printf("sim split mutant %d: %s (bad mask %d) %s\n", m, err ? "ERROR" : bad ? "caught" : "NOT CAUGHT", bad, msg);
+        }
+    }
     printf("sim: %" PRIu64 " warp issues in total\n", g_sim_issues);
 }
 
 /* ------------------------------------------------------------- chip */
 static int g_evict = 1;
+static int g_split; /* L388: run the chip battery through the split form (two launches) instead of the one-launch form */
 static void evict_host_caches(void) {
     static uint8_t *buf; const size_t sz = 512u << 20; static uint8_t pass;
     if (!buf) buf = malloc(sz);
@@ -374,6 +491,14 @@ static int chip_run(const char *out_path, uint32_t reps) {
     printf("router alloc (2 layers): rc=%s %.1f ms (%s)\n", omega_gpu_router_rc_name(rc), now_ms() - t0, rc ? omega_gpu_router_last_error() : "");
     CHECK(rc == OMEGA_GPU_ROUTER_OK, "router alloc");
     if (rc) { if (out) fprintf(out, "],\"verdict\":\"FAIL\"}\n"); return 1; }
+    if (g_split) { /* L388: every call of this run records the split pair (the same outputs, two launches) */
+        const uint32_t ctas = (omega_gpu_router_rows(r) + OMEGA_GPU_ROUTER_WARPS - 1u) / OMEGA_GPU_ROUTER_WARPS;
+        rc = omega_gpu_router_set_split(r, ctas);
+        printf("split form: %u CTAs of %u warps (rc %s)\n", ctas, OMEGA_GPU_ROUTER_WARPS, omega_gpu_router_rc_name(rc));
+        CHECK(rc == OMEGA_GPU_ROUTER_OK, "set split");
+        if (rc) { if (out) fprintf(out, "],\"verdict\":\"FAIL\"}\n"); return 1; }
+        if (out) fprintf(out, "{\"split_ctas\":%u},", ctas);
+    }
     uint64_t dgu[NR * 2], ddn[NR * 2]; fake_dirs(dgu, ddn);
     CHECK(omega_gpu_router_set_directory(r, 0, dgu, ddn) == OMEGA_GPU_ROUTER_OK, "set directory layer 0");
     int first = 1, parity_fail = 0, margin_cases = 0;
@@ -509,6 +634,7 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--depth") == 0 && i + 1 < argc) depth = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--spin-us") == 0 && i + 1 < argc) spin = (uint32_t)atoi(argv[++i]);
         else if (strcmp(argv[i], "--no-evict") == 0) g_evict = 0;
+        else if (strcmp(argv[i], "--split") == 0) g_split = 1;
         else { printf("unknown argument %s\n", argv[i]); return 2; }
     }
     if (host) host_only();

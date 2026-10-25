@@ -37,9 +37,10 @@
 #define LB_WTS 16448u
 #define LB_TAB_GU 16512u
 #define LB_TAB_DN 16640u   /* 8 slots; with the shared slot (9) the down table is at LB_TAB_DN9 */
-#define LB_BYTES 16768u
 #define LB_TAB_DN9 16656u
-#define LB_BYTES9 16800u
+#define LB_LOGIT 16896u    /* sc L388 (the split form): f32 [experts + shared], the logits the logits launch writes and the
+                            * select launch reads; 256 bytes past the last table word (16800), so every offset above stays put */
+#define LB_LOGIT_BYTES(rows) ((((rows) * 4u) + 255u) & ~255u)
 
 struct OmegaGpuRouter {
     uint32_t layers;
@@ -49,7 +50,7 @@ struct OmegaGpuRouter {
     OmegaGpuMem lb;    /* launch buffer */
     uint32_t experts, shared;  /* routed experts (128 or 256) and the shared slot (0 or 1) */
     uint32_t rows, slots;      /* gate rows = experts + shared; output slots = 8 + shared */
-    uint32_t lb_tab_dn, lb_bytes;
+    uint32_t lb_tab_dn, lb_bytes, split_ctas; /* split_ctas: 0 = the one-launch form, else the split form's CTAs (L388) */
 };
 #define ROWB(r) ((size_t)(r)->rows * OMEGA_ROUTER_ROW_BYTES)  /* gate bytes per layer */
 #define DIRB(r) ((size_t)(r)->rows * 16u)                     /* one directory per layer */
@@ -65,14 +66,16 @@ static struct {
     bool hooked;
     Slot slot;  /* the plain kernel (grid 1 x 1) */
     Slot rows;  /* the ROWS form (lever 2: one launch per layer for every conversation); omega_gpu_router_prepare_rows */
+    Slot split; /* the split form's logits kernel (grid ctas x 1, L388); omega_gpu_router_set_split */
+    Slot sel;   /* the split form's select kernel (grid 1 x 1, L388) */
     uint32_t warps, depth;
     int mutant;
 } g;
 static int g_rec; /* 1 while a record call runs (lock held): kernel_for must not evict */
 
 static void slot_free(Slot *s) { if (s->valid) omega_gpu_session_free(&s->code); memset(s, 0, sizeof *s); }
-static void slot_clear_locked(void) { slot_free(&g.slot); slot_free(&g.rows); }
-static void on_session_close(void) { memset(&g.slot, 0, sizeof g.slot); memset(&g.rows, 0, sizeof g.rows); }
+static void slot_clear_locked(void) { slot_free(&g.slot); slot_free(&g.rows); slot_free(&g.split); slot_free(&g.sel); }
+static void on_session_close(void) { memset(&g.slot, 0, sizeof g.slot); memset(&g.rows, 0, sizeof g.rows); memset(&g.split, 0, sizeof g.split); memset(&g.sel, 0, sizeof g.sel); }
 static OmegaGpuSession *dev_open_locked(void) {
     if (!g.hooked) { (void)omega_gpu_session_on_close(on_session_close); g.hooked = true; }
     return omega_gpu_session_open();
@@ -103,7 +106,8 @@ int omega_gpu_router_alloc_shape(uint32_t layers, uint32_t experts, uint32_t sha
     OmegaGpuRouter *r = omega_gpu_host_calloc(1, sizeof *r);
     if (!r) return OMEGA_GPU_ROUTER_BAD_ARGS;
     r->layers = layers; r->experts = experts; r->shared = shared; r->rows = experts + shared; r->slots = OMEGA_ROUTER_TOPK + shared;
-    r->lb_tab_dn = shared ? LB_TAB_DN9 : LB_TAB_DN; r->lb_bytes = shared ? LB_BYTES9 : LB_BYTES;
+    r->lb_tab_dn = shared ? LB_TAB_DN9 : LB_TAB_DN;
+    r->lb_bytes = LB_LOGIT + LB_LOGIT_BYTES(r->rows); /* the one-launch layout plus the split form's logit array (L388) */
     omega_gpu_session_lock();
     int rc = OMEGA_GPU_ROUTER_OK;
     if (!dev_open_locked()) rc = OMEGA_GPU_ROUTER_CHIP_FAIL;
@@ -186,7 +190,7 @@ int omega_gpu_router_read_back(OmegaGpuRouter *r, float *xout, uint64_t *tab_gu,
 
 /* ---- kernel ---- */
 static int kernel_for(const OmegaRouterSpec *spec, Slot **out, bool *hit) {
-    Slot *s = spec->xstride ? &g.rows : &g.slot;
+    Slot *s = spec->select ? &g.sel : spec->ctas ? &g.split : spec->xstride ? &g.rows : &g.slot;
     if (s->valid && memcmp(&s->spec, spec, sizeof *spec) == 0) { *out = s; *hit = true; return OMEGA_GPU_ROUTER_OK; }
     if (g_rec && s->valid) { omega_gpu_session_set_error("router record: kernel cache miss would evict the resident kernel (warm up before recording)"); return OMEGA_GPU_ROUTER_TOO_LARGE; }
     slot_free(s);
@@ -229,14 +233,20 @@ static int router_core(OmegaGpuRouter *r, uint32_t layer, const float *x, float 
     OmegaRouterSpec spec; spec_for(r, &spec, rows > 1u ? xstride : 0u, rows > 1u ? lbstride : 0u);
     OmegaRouterSmem sm;
     if (omega_router_smem(&spec, &sm) != 0) return OMEGA_GPU_ROUTER_BAD_ARGS;
+    /* L388: the split form of the one-row record path (two launches, logits and select; the header has the argument) */
+    const int split = rec != NULL && rows <= 1u && r->split_ctas >= 2u;
+    if (split) { spec.ctas = r->split_ctas; if (spec.xstride || spec.lbstride || spec.mutant == 6 || spec.select) return OMEGA_GPU_ROUTER_BAD_ARGS; }
+    OmegaRouterSpec spec_sel = spec;
+    if (split) { spec_sel.ctas = 0; spec_sel.select = 1; }
 
     if (!rec) omega_gpu_session_lock();
 #define UNLOCK() do { if (!rec) omega_gpu_session_unlock(); } while (0)
     int rc = OMEGA_GPU_ROUTER_OK;
     if (!dev_open_locked()) { UNLOCK(); return OMEGA_GPU_ROUTER_CHIP_FAIL; }
-    Slot *ks = NULL; bool hit = false;
+    Slot *ks = NULL, *kss = NULL; bool hit = false, hit_s = false;
     g_rec = rec != NULL;
     rc = kernel_for(&spec, &ks, &hit);
+    if (rc == OMEGA_GPU_ROUTER_OK && split) rc = kernel_for(&spec_sel, &kss, &hit_s);
     g_rec = 0;
     if (rc != OMEGA_GPU_ROUTER_OK) { UNLOCK(); return rc; }
     uint8_t *b = r->lb.cpu;
@@ -251,6 +261,7 @@ static int router_core(OmegaGpuRouter *r, uint32_t layer, const float *x, float 
     }
 
     uint32_t args[OMEGA_ROUTER_ARGS_WORDS];
+    memset(args, 0, sizeof args);
     const uint64_t gate = r->gate.va + (uint64_t)layer * ROWB(r);
     const uint64_t norm = r->norm.va + (uint64_t)layer * OMEGA_ROUTER_HIDDEN * 4u;
     const uint64_t dgu = r->dir.va + (uint64_t)layer * 2u * DIRB(r), ddn = dgu + DIRB(r);
@@ -259,17 +270,18 @@ static int router_core(OmegaGpuRouter *r, uint32_t layer, const float *x, float 
     const uint64_t lb = rec_lb ? rec_lb : r->lb.va; /* record_to: the outputs land in the caller's buffer (one per conversation in the stroke) */
     A64(0, rec ? dev_x : r->lb.va + LB_X); A64(2, gate); A64(4, norm); A64(6, lb + LB_XOUT); A64(8, lb + LB_IDS); A64(10, lb + LB_WTS);
     A64(12, dgu); A64(14, ddn); A64(16, lb + LB_TAB_GU); A64(18, lb + r->lb_tab_dn);
+    A64(24, lb + LB_LOGIT); /* the split form's logit array (the one-launch form never reads it) */
 #undef A64
     args[20] = ue; args[21] = uo; args[22] = norm_topk ? 1u : 0u;
     if (info) {
         info->layer = layer; info->warps = spec.warps; info->depth = spec.depth; info->threads = 32u * spec.warps;
         info->weight_bytes = ROWB(r);
-        info->kernel_cache_hit = hit;
+        info->kernel_cache_hit = hit && (!split || hit_s);
     }
     if (rc == OMEGA_GPU_ROUTER_OK) {
         OmegaGpuLaunch L = {
             .code_va = ks->code.va, .gpr_count = gpr_declared(ks->kernel.gpr_count),
-            .threads_x = 32u * spec.warps, .threads_y = 1, .grid_x = 1, .grid_y = rows > 1u ? rows : 1u,
+            .threads_x = 32u * spec.warps, .threads_y = 1, .grid_x = split ? r->split_ctas : 1, .grid_y = rows > 1u ? rows : 1u,
             .num_elements = (size_t)OMEGA_ROUTER_HIDDEN * (rows > 1u ? rows : 1u),
             .args = args, .n_args = OMEGA_ROUTER_ARGS_WORDS, .timeout_ms = MARKER_TIMEOUT_MS,
             .shared_bytes = sm.total,
@@ -277,6 +289,15 @@ static int router_core(OmegaGpuRouter *r, uint32_t layer, const float *x, float 
         if (!omega_bw_gpr_declared_ok(L.gpr_count, ks->kernel.gpr_count)) { omega_gpu_session_set_error("declared registers below peak + 2: refusing to launch"); rc = OMEGA_GPU_ROUTER_CHIP_FAIL; }
         else if (rec) { if (omega_gpu_cmdlist_add(rec, &L) < 0) rc = OMEGA_GPU_ROUTER_CHIP_FAIL; }
         else if (omega_gpu_session_launch(&L, info ? &info->elapsed_ns : NULL, info ? &info->completion_marker : NULL) != 0) rc = OMEGA_GPU_ROUTER_CHIP_FAIL;
+        /* the split form: the select launch, right after the logits launch in the same list (the list's barrier makes the
+         * logits visible; the select kernel reads them with LDG.E.STRONG.SYS) */
+        if (rc == OMEGA_GPU_ROUTER_OK && split) {
+            OmegaGpuLaunch S = L;
+            S.code_va = kss->code.va; S.gpr_count = gpr_declared(kss->kernel.gpr_count);
+            S.threads_x = 32u * spec_sel.warps; S.grid_x = 1; S.grid_y = 1;
+            if (!omega_bw_gpr_declared_ok(S.gpr_count, kss->kernel.gpr_count)) { omega_gpu_session_set_error("declared registers below peak + 2: refusing to launch"); rc = OMEGA_GPU_ROUTER_CHIP_FAIL; }
+            else if (omega_gpu_cmdlist_add(rec, &S) < 0) rc = OMEGA_GPU_ROUTER_CHIP_FAIL;
+        }
     }
     if (rc == OMEGA_GPU_ROUTER_OK && !rec && omega_gpu_session_sync_to_cpu(&r->lb) != 0) rc = OMEGA_GPU_ROUTER_CHIP_FAIL;
     if (rc == OMEGA_GPU_ROUTER_OK && !rec) {
@@ -342,6 +363,20 @@ int omega_gpu_router_record_rows(OmegaGpuCmdList *cl, OmegaGpuRouter *r, uint32_
     }
     return rc;
 }
+/* The split form (L388): ctas 0 = the one-launch form; 2 .. OMEGA_GPU_ROUTER_MAX_ROWS*... = the logits launch's CTAs. The two
+ * kernels are built on the first record (a warm-up here keeps that off the timed path). */
+int omega_gpu_router_set_split(OmegaGpuRouter *r, uint32_t ctas) {
+    if (!r || ctas > 64u || ctas == 1u) return OMEGA_GPU_ROUTER_BAD_ARGS;
+    if (ctas && (r->lb_bytes < LB_LOGIT + LB_LOGIT_BYTES(r->rows))) return OMEGA_GPU_ROUTER_BAD_ARGS; /* the buffer predates L388 */
+    omega_gpu_session_lock();
+    r->split_ctas = ctas;
+    slot_free(&g.split); slot_free(&g.sel); /* the next record rebuilds them for the new shape */
+    omega_gpu_session_unlock();
+    return OMEGA_GPU_ROUTER_OK;
+}
+uint32_t omega_gpu_router_split(const OmegaGpuRouter *r) { return r ? r->split_ctas : 0u; }
+uint32_t omega_gpu_router_rows(const OmegaGpuRouter *r) { return r ? r->rows : 0u; }
+
 /* Builds (or finds) the ROWS kernel for these strides and keeps it resident beside the plain one (its own cache slot). */
 int omega_gpu_router_prepare_rows(OmegaGpuRouter *r, uint32_t xstride, uint32_t lbstride) {
     if (!r || xstride < OMEGA_ROUTER_HIDDEN * 4u || (xstride & 15u) || lbstride < r->lb_bytes || (lbstride & 255u)) return OMEGA_GPU_ROUTER_BAD_ARGS;

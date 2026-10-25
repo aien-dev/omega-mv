@@ -160,6 +160,15 @@ static void lane0_sts(Em *e, int lane, int one, int addr, Op v) {
     isetp_ge_u32(e, lane, one);
     Region r = region_skip_if_p0(e); sts32(e, addr, v); region_end(e, r);
 }
+/* the same predicate, a global f32 store: the split form's logit (one writer per row) */
+static void lane0_stg(Em *e, int lane, int one, int addr64, Op v, int udesc) {
+    isetp_ge_u32(e, lane, one);
+    Region r = region_skip_if_p0(e); stg(e, BW_IR_STG_E, addr64, v, udesc); region_end(e, r);
+}
+/* a 32-bit global load of any opcode (BW_IR_LDG_E or BW_IR_LDG_STRONG_SYS: system scope, no stale cached copy) */
+static void ldg32(Em *e, BlackwellIROpcode op, int d, int addr64, int udesc, int first) {
+    BlackwellIRInsn i = I0(op); i.dst_vreg = d; i.src1_vreg = addr64; i.ureg = udesc; emit(e, i, first ? K_VAR : K_VAR_MORE);
+}
 
 static const uint32_t NEG_BIG = 0xF149F2CAu; /* -1e30f */
 static const uint32_t C_2P23 = 0x4B000000u;  /* 8388608.0f; also the OR mask that turns a small integer n into the float 2^23 + n */
@@ -186,10 +195,14 @@ int omega_blackwell_codegen_router_prog(const OmegaRouterSpec *spec, BlackwellIR
     const int MUT = spec->mutant;
     OmegaRouterSmem L;
     const uint32_t XST = spec->xstride, LBST = spec->lbstride; /* ROWS form when set */
+    const uint32_t CTAS = spec->ctas, SEL = spec->select;     /* the split form (see the header): 0,0 = the plain kernel */
     if ((W != 8 && W != 16 && W != 32) || (D != 1 && D != 2 && D != 4 && D != 8) || MUT < 0 || MUT > 6 || omega_router_smem(spec, &L)) return -1;
     if ((XST != 0) != (LBST != 0) || (XST && (XST < OMEGA_ROUTER_HIDDEN * 4u || (XST & 15u) || (LBST & 15u))) || (MUT == 6 && !XST)) return -1;
     const uint32_t EX = spec->experts ? spec->experts : OMEGA_ROUTER_EXPERTS, SHX = spec->shared, EPL = EX / 32u; /* logits per lane */
     if (MUT == 5 && !SHX) return -1;
+    /* the split form: ctas >= 2 is the logits kernel, select 1 is the select kernel, never both, never with the ROWS form
+     * (the rows kernel is one launch per layer for every conversation already) and never with mutant 6 */
+    if (SEL > 1u || (SEL && CTAS) || CTAS == 1u || ((CTAS || SEL) && (XST || LBST)) || (SEL && MUT == 6)) return -1;
     const uint32_t E = 64u / W; /* x values per thread: 8, 4 or 2 */
     omega_bw_ir_init(prog);
     Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
@@ -197,11 +210,14 @@ int omega_blackwell_codegen_router_prog(const OmegaRouterSpec *spec, BlackwellIR
     /* ---- arguments and identities ---- */
     int udesc = UV64(e);
     int px = V64(e), pgate = V64(e), pnorm = V64(e), pxout = V64(e);
+    int plogit = NOREG;
     int eps = V(e), oscale = V(e);
     int tid = V(e), warp = V(e), lane = V(e), one = V(e), zero = V(e), c2p23 = V(e), cneg = V(e), ts = V(e), t1 = V(e), t2 = V(e);
+    int cta = NOREG;
     if (e->err) return -1;
     ldcu64(e, udesc, 0x358);
     ldc64(e, px, OMEGA_ROUTER_ARG_X); ldc64(e, pgate, OMEGA_ROUTER_ARG_GATE); ldc64(e, pnorm, OMEGA_ROUTER_ARG_NORM); ldc64(e, pxout, OMEGA_ROUTER_ARG_XOUT);
+    if (CTAS || SEL) { plogit = V64(e); if (e->err) return -1; ldc64(e, plogit, OMEGA_ROUTER_ARG_LOGIT); } /* the split form's logits */
     if (XST) { /* ROWS form: this CTA's x row and output buffer */
         int cy = V(e);
         if (e->err) return -1;
@@ -214,8 +230,10 @@ int omega_blackwell_codegen_router_prog(const OmegaRouterSpec *spec, BlackwellIR
     movi(e, one, 1); movrz(e, R(zero)); movi(e, c2p23, C_2P23); movi(e, cneg, NEG_BIG);
     shr(e, warp, tid, 5);
     andi(e, R(lane), R(tid), 31u);
+    if (CTAS) { cta = V(e); if (e->err) return -1; s2r(e, cta, BW_SR_CTAID_X); } /* this CTA's first gate row = cta * W */
 
-    /* ---- phase 1: RMSNorm ---- */
+    /* ---- phase 1: RMSNorm (every CTA of the split form recomputes it identically: same W, so the same tree) ---- */
+    if (!SEL) {
     int toff = V(e), xa = V64(e), wa = V64(e), sq = V(e), rs = V(e), a0 = V(e);
     int xq[2], wq[2];
     Op xe[8], we[8];
@@ -263,19 +281,29 @@ int omega_blackwell_codegen_router_prog(const OmegaRouterSpec *spec, BlackwellIR
             sts32(e, a0, xe[i]);
             fmul(e, R(ts), xe[i], R(oscale));
             if (i) imadw(e, xo, one, 4u, xo);
-            stg(e, BW_IR_STG_E, xo, R(ts), udesc);
+            if (CTAS) { /* the split form: CTA 0 is the one writer of x' (the other CTAs only keep xn in their shared) */
+                isetp_ge_u32(e, cta, one);
+                Region rg = region_skip_if_p0(e); stg(e, BW_IR_STG_E, xo, R(ts), udesc); region_end(e, rg);
+            } else stg(e, BW_IR_STG_E, xo, R(ts), udesc);
         }
     }
     bar_sync(e);
+    }  /* end of phase 1 (the select kernel skips it) */
 
-    /* ---- phase 2: logits, warp w -> experts w, w + W, ... ---- */
-    int c128 = V(e), ex = V(e), lane16 = V(e), lane32 = V(e), gl = V64(e), rowa = V64(e), la = V(e);
-    int acc[4], lo = V(e), hi = V(e), xs0 = V128(e), xs1 = V128(e), ld[8];
+    /* ---- phase 2: logits, warp w -> experts w, w + W, ... (split form: warp cta * W + w -> experts, += ctas * W) ---- */
+    int c128 = NOREG, ex = NOREG, lane16 = NOREG, lane32 = NOREG, gl = NOREG, rowa = NOREG, la = NOREG;
+    int acc[4] = { NOREG, NOREG, NOREG, NOREG }, lo = NOREG, hi = NOREG, xs0 = NOREG, xs1 = NOREG, ld[8];
+    if (SEL) { /* the select kernel runs no logits: phase 3 only needs the two lane offsets */
+        lane16 = V(e); lane32 = V(e);
+        imadi(e, R(lane16), R(lane), 16u, NOREG); imadi(e, R(lane32), R(lane), 32u, NOREG);
+    } else {
+    c128 = V(e); ex = V(e); lane16 = V(e); lane32 = V(e); gl = V64(e); rowa = V64(e); la = V(e);
+    lo = V(e); hi = V(e); xs0 = V128(e); xs1 = V128(e);  /* the declaration order of the one-launch form (byte-identical code) */
     for (unsigned i = 0; i < 4; i++) acc[i] = V(e);
     for (uint32_t d = 0; d < D; d++) ld[d] = V128(e);
     if (e->err) return -1;
     movi(e, c128, EX + SHX);                      /* rows: the experts, then the shared gate */
-    mov(e, R(ex), R(warp));
+    if (CTAS) imadi(e, R(ex), R(cta), W, warp); else mov(e, R(ex), R(warp));
     imadi(e, R(lane16), R(lane), 16u, NOREG);
     imadi(e, R(lane32), R(lane), 32u, NOREG);
     imadw(e, gl, lane16, 1u, pgate);
@@ -302,12 +330,42 @@ int omega_blackwell_codegen_router_prog(const OmegaRouterSpec *spec, BlackwellIR
     }
     fadd(e, R(acc[0]), R(acc[0]), R(acc[1])); fadd(e, R(acc[2]), R(acc[2]), R(acc[3])); fadd(e, R(acc[0]), R(acc[0]), R(acc[2]));
     warp_sum(e, acc[0], ts);
-    imadi(e, R(la), R(ex), 4u, NOREG); imadi(e, R(la), R(one), L.logit, la);
-    lane0_sts(e, lane, one, la, R(acc[0]));
-    imadi(e, R(ex), R(one), W, ex);
+    if (CTAS) { /* split form: the logit goes to the caller's f32 array (the select launch reads it) */
+        int la64 = V64(e);
+        if (e->err) return -1;
+        imadw(e, la64, ex, 4u, plogit);
+        lane0_stg(e, lane, one, la64, R(acc[0]), udesc);
+    } else {
+        imadi(e, R(la), R(ex), 4u, NOREG); imadi(e, R(la), R(one), L.logit, la);
+        lane0_sts(e, lane, one, la, R(acc[0]));
+    }
+    if (CTAS) imadi(e, R(ex), R(one), CTAS * W, ex); else imadi(e, R(ex), R(one), W, ex);
     bra(e, L_e);
     loop_end(e);
     patch_bra(e, bra_edone, here(e));
+    }  /* end of the logits phase (the select kernel runs none) */
+
+    if (!CTAS) { /* the plain kernel and the select kernel: phase 3 and the epilogue */
+    if (SEL) { /* the select kernel: the logits kernel's CTAs wrote them; copy them into the phase-3 shared slots. One
+                * predicated round per `threads` rows (uniform control flow: a warp may have a mix of copying and idle
+                * lanes, and the region's BSYNC reconverges it before phase 3's shuffles). */
+        int cla = V64(e), cv = V(e), cd = V(e), crows = V(e), ci = V(e);
+        if (e->err) return -1;
+        movi(e, crows, EX + SHX);
+        mov(e, R(ci), R(tid));
+        const uint32_t rounds = (EX + SHX + 32u * W - 1u) / (32u * W);
+        for (uint32_t k = 0; k < rounds; k++) {
+            if (k) imadi(e, R(ci), R(one), 32u * W, ci);  /* ci += threads */
+            isetp_ge_u32(e, ci, crows);
+            Region rg = region_skip_if_p0(e);
+            imadw(e, cla, ci, 4u, plogit);                /* the logit of row ci */
+            ldg32(e, BW_IR_LDG_STRONG_SYS, cv, cla, udesc, 1); /* another CTA of the previous launch wrote it: system scope */
+            movi(e, cd, L.logit);                         /* its phase-3 slot: L.logit + ci * 4 */
+            imadi(e, R(cd), R(ci), 4u, cd);
+            sts32(e, cd, R(cv));
+            region_end(e, rg);
+        }
+    }
     bar_sync(e);
 
     /* ---- phase 3: top-8 (every warp, uniform barriers) ---- */
@@ -453,6 +511,7 @@ int omega_blackwell_codegen_router_prog(const OmegaRouterSpec *spec, BlackwellIR
         region_end(e, rg);
     }
     patch_bra(e, bra_tail, here(e));
+    }  /* end of phase 3 + epilogue */
     tail(e);
     (void)zero;
     if (e->err) return -1;
