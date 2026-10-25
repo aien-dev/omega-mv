@@ -1,0 +1,19 @@
+REUSE-1 candidate freeze (omega-mv #742 #743 #744; contract docs/reuse/REUSE-1.md v1.0, d6edaad1)
+
+candidate_source_commit=2b25e1bf4499cfccbd556ab66b797ca377424a2e (feat/742-reuse-r1; tests/reuse/run.om 19 passed, 0 failed)
+evaluator_freeze_commit=4345eda9e58fe625a4d9b8e9175305160369f760 (spark-rsi-mv feat/73-reuse-eval, pushed 2026-10-25T16:20:47Z)
+omc_sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+drive_elf_sha256=ade1c0497cf35a2733cc05510a8c438b0330a6296ef239bd3ec0e2469e1e9825
+base_elf_sha256=bf7dd0184a2f6e831d90a5617d760d1d50f50542541dbfaf64d20933d9382568
+evaluator_elf_sha256=b550ad7e5fed2a91381c7a11599979860eff5f10859de44020e5d65d42ec46cf
+gen_elf_sha256=50930b4c2b4ab0ab1122e7ff4163c0dbe86782297d559b28bf22641e591387a9
+exp_TRAIN_sha256=cc6298e61e36a4ccd43d053b5ae88b92d186f90e1ea5c27bc2d8870582d38fd8 bytes=1966080 records=1920
+exp_TRAINP_sha256=31af132b2fb8dec33a91de37f493bcefd927dd88a659b7c4b6529d1788c7cc48 bytes=1966080 records=1920
+calib_sha256=c7971e77c59e588abf5f20399e18d35e5cf4fa3b88a64dc27b73282326a76ab0 (written by the frozen evaluator from CALIB runs of arms full, method, delta, 3 repetitions, with the TRAIN library built without calibration, manifest aef37d546f763dc0cbe141a82810fa1e9f3624c692a261220d2bdee8666ddf56)
+library_TRAIN_mansha=05f163f8301ecaa40f43a30a6bebcdc253b65688aa384e209c83eba9dfaa7cf6 templates=16 generation=1 elf_sha256=b83e7040d8c75e9cf55586031dc00736612447224d794c115a23df0590a87ac9 om_bytes=111472
+library_TRAINP_mansha=b15f71dcfc2e095a93d470cd1c54ea2ed43a35726452f220f93563f506d94c61 generation=1 elf_sha256=cb6c802a1cc1aa4c7a6fd524311f54be3912469c69c2773b34d6c47dd3f007f9 om_bytes=111139
+rebuild_check=3 builds of each library by the frozen evaluator (judge build, repetitions 0..2): identical manifests, ELF and source (contract 7.4: reproducible)
+acquisition_ns_TRAIN=81051123 68514396 72818116
+acquisition_ns_TRAINP=66233973 75181259 66066436
+library ELFs are not committed: drive.om rebuilds them byte for byte from this source, the experience files and calib.r1cal.
+FINAL: not generated before this commit is pushed; seed = SHA-256(secret || this commit id || evaluator_freeze_commit), commitment spark-rsi-mv evidence/REUSE-73/final-commitment.txt.

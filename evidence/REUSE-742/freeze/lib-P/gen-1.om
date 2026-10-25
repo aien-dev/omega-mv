@@ -1,0 +1,5979 @@
+note SPDX-License-Identifier: Apache-2.0
+note sha256.om: FIPS 180-4 SHA-256 as one function-mode unit, bound through the omega-bridge native
+note call ABI (docs/NATIVE-ABI.md) and exported as omega_omsha. It replaces the algorithm of
+note src/sha256.c: the C file keeps only the sha256_* entry points that cut caller data into
+note pieces of at most 4096 bytes.
+note
+note The whole hash state lives in the caller's sha256_ctx (104 bytes, src/sha256.h):
+note   bytes 0..31   state[8], uint32 little endian
+note   bytes 32..39  count, uint64 little endian (bytes absorbed so far)
+note   bytes 40..103 buffer, the pending partial block
+note omsha c b n op w b8:
+note   op 0  init: count 0, FIPS initial hash value
+note   op 1  absorb b[0..n), n <= 4096, with src/sha256.c's buffering rules
+note   op 2  final: pad, absorb the bit length, the 32-byte digest packed into w[0..4)
+note   op 3  one shot: the digest of the n < 4096 bytes of b8 packed into w[0..4); c is not used
+note w is the caller's scratch for the message schedule (64 words, contents ignored and overwritten):
+note Omega writes every word before reading it, so the caller need not clear it.
+note n > 4096 traps 3; any other op traps 9.
+
+note little-endian word of nb bytes at byte offset p of the context
+fn getle c edit uchar 104 p ulong nb ulong to ulong
+v = ulong 0
+i = nb
+while gt i 0 bound 8
+i = sub i 1
+v = or shl v 8 ulong get c add p i
+end
+ret v
+end
+
+fn putle c edit uchar 104 p ulong nb ulong v ulong to void
+x = v
+for i ulong nb
+put c add p i uchar and x 255
+x = shr x 8
+end
+end
+
+note the hash words of the context into h, and back
+fn loadh c edit uchar 104 h edit uint 8 to void
+for i ulong 8
+put h i uint getle c mul i 4 4
+end
+end
+
+fn storeh c edit uchar 104 h edit uint 8 to void
+for i ulong 8
+putle c mul i 4 4 ulong get h i
+end
+end
+
+note big-endian words of the block at byte o of b into w[0..16), then the schedule
+fn schedb b view uchar 4096 o ulong w edit ulong 64 to void
+for i ulong 16
+q = add o mul i 4
+v = ulong get b q
+v = or shl v 8 ulong get b add q 1
+v = or shl v 8 ulong get b add q 2
+v = or shl v 8 ulong get b add q 3
+put w i or v shl v 32
+end
+expand w
+end
+
+note big-endian words of the block at byte 40 of b into w[0..16), then the schedule
+fn schedc b edit uchar 104 w edit ulong 64 to void
+for i ulong 16
+q = add 40 mul i 4
+v = ulong get b q
+v = or shl v 8 ulong get b add q 1
+v = or shl v 8 ulong get b add q 2
+v = or shl v 8 ulong get b add q 3
+put w i or v shl v 32
+end
+expand w
+end
+
+note the 64 rounds, unrolled with the working words in locals (names rotate instead of moving).
+note Same lazy low-32-bit cells and rotate trick as expand; K is an immediate; the eight words are
+note reduced to 32 bits only when they are added back into h.
+fn rounds h edit uint 8 w view ulong 64 to void
+a = ulong get h 0
+b = ulong get h 1
+c = ulong get h 2
+d = ulong get h 3
+e = ulong get h 4
+f = ulong get h 5
+g = ulong get h 6
+x = ulong get h 7
+t = ulong 0
+u = ulong 0
+t = add x add get w 0 1116352408
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 1 1899447441
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor f and d xor e f
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 2 3049323471
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor e and c xor d e
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 3 3921009573
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor d and b xor c d
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 4 961987163
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor c and a xor b c
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 5 1508970993
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor b and x xor a b
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 6 2453635748
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor a and g xor x a
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 7 2870763221
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor x and f xor g x
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 8 3624381080
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 9 310598401
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor f and d xor e f
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 10 607225278
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor e and c xor d e
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 11 1426881987
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor d and b xor c d
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 12 1925078388
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor c and a xor b c
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 13 2162078206
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor b and x xor a b
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 14 2614888103
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor a and g xor x a
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 15 3248222580
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor x and f xor g x
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 16 3835390401
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 17 4022224774
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor f and d xor e f
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 18 264347078
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor e and c xor d e
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 19 604807628
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor d and b xor c d
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 20 770255983
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor c and a xor b c
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 21 1249150122
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor b and x xor a b
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 22 1555081692
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor a and g xor x a
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 23 1996064986
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor x and f xor g x
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 24 2554220882
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 25 2821834349
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor f and d xor e f
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 26 2952996808
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor e and c xor d e
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 27 3210313671
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor d and b xor c d
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 28 3336571891
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor c and a xor b c
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 29 3584528711
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor b and x xor a b
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 30 113926993
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor a and g xor x a
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 31 338241895
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor x and f xor g x
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 32 666307205
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 33 773529912
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor f and d xor e f
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 34 1294757372
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor e and c xor d e
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 35 1396182291
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor d and b xor c d
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 36 1695183700
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor c and a xor b c
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 37 1986661051
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor b and x xor a b
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 38 2177026350
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor a and g xor x a
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 39 2456956037
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor x and f xor g x
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 40 2730485921
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 41 2820302411
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor f and d xor e f
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 42 3259730800
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor e and c xor d e
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 43 3345764771
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor d and b xor c d
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 44 3516065817
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor c and a xor b c
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 45 3600352804
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor b and x xor a b
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 46 4094571909
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor a and g xor x a
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 47 275423344
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor x and f xor g x
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 48 430227734
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 49 506948616
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor f and d xor e f
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 50 659060556
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor e and c xor d e
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 51 883997877
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor d and b xor c d
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 52 958139571
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor c and a xor b c
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 53 1322822218
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor b and x xor a b
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 54 1537002063
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor a and g xor x a
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 55 1747873779
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor x and f xor g x
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 56 1955562222
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 57 2024104815
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor f and d xor e f
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 58 2227730452
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor e and c xor d e
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 59 2361852424
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor d and b xor c d
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 60 2428436474
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor c and a xor b c
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 61 2756734187
+u = shl x 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor b and x xor a b
+u = shl d 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 62 3204031479
+u = shl g 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor a and g xor x a
+u = shl c 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 63 3329325298
+u = shl f 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor x and f xor g x
+u = shl b 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add ulong get h 0 a
+put h 0 uint and t 4294967295
+t = add ulong get h 1 b
+put h 1 uint and t 4294967295
+t = add ulong get h 2 c
+put h 2 uint and t 4294967295
+t = add ulong get h 3 d
+put h 3 uint and t 4294967295
+t = add ulong get h 4 e
+put h 4 uint and t 4294967295
+t = add ulong get h 5 f
+put h 5 uint and t 4294967295
+t = add ulong get h 6 g
+put h 6 uint and t 4294967295
+t = add ulong get h 7 x
+put h 7 uint and t 4294967295
+end
+
+fn tobuf c edit uchar 104 bi ulong b view uchar 4096 bo ulong n ulong to void
+for i ulong n
+put c add 40 add bi i get b add bo i
+end
+end
+
+note absorb b[0..n), n <= 4096, exactly as src/sha256.c sha256_update does for that piece
+fn absorb c edit uchar 104 b view uchar 4096 n ulong w edit ulong 64 to void
+if gt n 4096
+trap 3
+end
+h = new uint 8 0
+cnt = getle c 32 8
+bi = and cnt 63
+putle c 32 8 add cnt n
+off = ulong 0
+if gt bi 0
+lf = sub 64 bi
+if lt n lf
+tobuf c bi b 0 n
+ret
+end
+tobuf c bi b 0 lf
+loadh c h
+schedc c w
+rounds h w
+storeh c h
+off = lf
+end
+if le add off 64 n
+loadh c h
+while le add off 64 n bound 65
+schedb b off w
+rounds h w
+off = add off 64
+end
+storeh c h
+end
+tobuf c 0 b off sub n off
+end
+
+fn init c edit uchar 104 to void
+putle c 32 8 0
+putle c 0 4 1779033703
+putle c 4 4 3144134277
+putle c 8 4 1013904242
+putle c 12 4 2773480762
+putle c 16 4 1359893119
+putle c 20 4 2600822924
+putle c 24 4 528734635
+putle c 28 4 1541459225
+end
+
+note compress the context's own block buffer (bytes 40..103) into its hash words
+fn compbuf c edit uchar 104 w edit ulong 64 to void
+h = new uint 8 0
+loadh c h
+schedc c w
+rounds h w
+storeh c h
+end
+
+note zero buffer bytes s..e-1 (indices into the 64-byte block)
+fn zbuf c edit uchar 104 s ulong e ulong to void
+i = s
+while lt i e bound 64
+put c add 40 i 0
+i = add i 1
+end
+end
+
+note sha256_final of src/sha256.c, padding in place: 0x80, zeros to 56 mod 64 (one more block
+note when the pending part is 56 bytes or more), the 64-bit big-endian bit count, then the digest.
+note The count field is left as it was (src/sha256.c adds the padding to it; nothing reads it after).
+fn final c edit uchar 104 w edit ulong 64 to void
+cnt = getle c 32 8
+bi = and cnt 63
+put c add 40 bi 128
+zbuf c add bi 1 64
+if ge bi 56
+compbuf c w
+zbuf c 0 56
+end
+bits = mul cnt 8
+for i ulong 8
+sh = mul sub 7 i 8
+put c add 96 i uchar and shr bits sh 255
+end
+compbuf c w
+h = new uint 8 0
+loadh c h
+digest8 h w
+end
+
+note IV into h
+fn initiv h edit uint 8 to void
+put h 0 uint 1779033703
+put h 1 uint 3144134277
+put h 2 uint 1013904242
+put h 3 uint 2773480762
+put h 4 uint 1359893119
+put h 5 uint 2600822924
+put h 6 uint 528734635
+put h 7 uint 1541459225
+end
+
+note expand w[0..16) into the full 64-word schedule, unrolled (constant indices need no bounds checks).
+note Every schedule word is stored duplicated, the 32-bit value in both halves (d = (x << 32) | x), so
+note a rotate right by r is the low half of d >> r and a plain shift right by n is d >> (32 + n); sums
+note are formed in the low 32 bits (add, and, xor, or need no masks) and duplicated once on store.
+fn expand w edit ulong 64 to void
+u = ulong 0
+v = ulong 0
+x = ulong 0
+x = get w 14
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 1
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 9
+u = add u get w 0
+u = shl u 32
+put w 16 or u shr u 32
+x = get w 15
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 2
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 10
+u = add u get w 1
+u = shl u 32
+put w 17 or u shr u 32
+x = get w 16
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 3
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 11
+u = add u get w 2
+u = shl u 32
+put w 18 or u shr u 32
+x = get w 17
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 4
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 12
+u = add u get w 3
+u = shl u 32
+put w 19 or u shr u 32
+x = get w 18
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 5
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 13
+u = add u get w 4
+u = shl u 32
+put w 20 or u shr u 32
+x = get w 19
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 6
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 14
+u = add u get w 5
+u = shl u 32
+put w 21 or u shr u 32
+x = get w 20
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 7
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 15
+u = add u get w 6
+u = shl u 32
+put w 22 or u shr u 32
+x = get w 21
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 8
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 16
+u = add u get w 7
+u = shl u 32
+put w 23 or u shr u 32
+x = get w 22
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 9
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 17
+u = add u get w 8
+u = shl u 32
+put w 24 or u shr u 32
+x = get w 23
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 10
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 18
+u = add u get w 9
+u = shl u 32
+put w 25 or u shr u 32
+x = get w 24
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 11
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 19
+u = add u get w 10
+u = shl u 32
+put w 26 or u shr u 32
+x = get w 25
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 12
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 20
+u = add u get w 11
+u = shl u 32
+put w 27 or u shr u 32
+x = get w 26
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 13
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 21
+u = add u get w 12
+u = shl u 32
+put w 28 or u shr u 32
+x = get w 27
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 14
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 22
+u = add u get w 13
+u = shl u 32
+put w 29 or u shr u 32
+x = get w 28
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 15
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 23
+u = add u get w 14
+u = shl u 32
+put w 30 or u shr u 32
+x = get w 29
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 16
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 24
+u = add u get w 15
+u = shl u 32
+put w 31 or u shr u 32
+x = get w 30
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 17
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 25
+u = add u get w 16
+u = shl u 32
+put w 32 or u shr u 32
+x = get w 31
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 18
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 26
+u = add u get w 17
+u = shl u 32
+put w 33 or u shr u 32
+x = get w 32
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 19
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 27
+u = add u get w 18
+u = shl u 32
+put w 34 or u shr u 32
+x = get w 33
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 20
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 28
+u = add u get w 19
+u = shl u 32
+put w 35 or u shr u 32
+x = get w 34
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 21
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 29
+u = add u get w 20
+u = shl u 32
+put w 36 or u shr u 32
+x = get w 35
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 22
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 30
+u = add u get w 21
+u = shl u 32
+put w 37 or u shr u 32
+x = get w 36
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 23
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 31
+u = add u get w 22
+u = shl u 32
+put w 38 or u shr u 32
+x = get w 37
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 24
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 32
+u = add u get w 23
+u = shl u 32
+put w 39 or u shr u 32
+x = get w 38
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 25
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 33
+u = add u get w 24
+u = shl u 32
+put w 40 or u shr u 32
+x = get w 39
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 26
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 34
+u = add u get w 25
+u = shl u 32
+put w 41 or u shr u 32
+x = get w 40
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 27
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 35
+u = add u get w 26
+u = shl u 32
+put w 42 or u shr u 32
+x = get w 41
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 28
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 36
+u = add u get w 27
+u = shl u 32
+put w 43 or u shr u 32
+x = get w 42
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 29
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 37
+u = add u get w 28
+u = shl u 32
+put w 44 or u shr u 32
+x = get w 43
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 30
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 38
+u = add u get w 29
+u = shl u 32
+put w 45 or u shr u 32
+x = get w 44
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 31
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 39
+u = add u get w 30
+u = shl u 32
+put w 46 or u shr u 32
+x = get w 45
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 32
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 40
+u = add u get w 31
+u = shl u 32
+put w 47 or u shr u 32
+x = get w 46
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 33
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 41
+u = add u get w 32
+u = shl u 32
+put w 48 or u shr u 32
+x = get w 47
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 34
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 42
+u = add u get w 33
+u = shl u 32
+put w 49 or u shr u 32
+x = get w 48
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 35
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 43
+u = add u get w 34
+u = shl u 32
+put w 50 or u shr u 32
+x = get w 49
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 36
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 44
+u = add u get w 35
+u = shl u 32
+put w 51 or u shr u 32
+x = get w 50
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 37
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 45
+u = add u get w 36
+u = shl u 32
+put w 52 or u shr u 32
+x = get w 51
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 38
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 46
+u = add u get w 37
+u = shl u 32
+put w 53 or u shr u 32
+x = get w 52
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 39
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 47
+u = add u get w 38
+u = shl u 32
+put w 54 or u shr u 32
+x = get w 53
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 40
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 48
+u = add u get w 39
+u = shl u 32
+put w 55 or u shr u 32
+x = get w 54
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 41
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 49
+u = add u get w 40
+u = shl u 32
+put w 56 or u shr u 32
+x = get w 55
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 42
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 50
+u = add u get w 41
+u = shl u 32
+put w 57 or u shr u 32
+x = get w 56
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 43
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 51
+u = add u get w 42
+u = shl u 32
+put w 58 or u shr u 32
+x = get w 57
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 44
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 52
+u = add u get w 43
+u = shl u 32
+put w 59 or u shr u 32
+x = get w 58
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 45
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 53
+u = add u get w 44
+u = shl u 32
+put w 60 or u shr u 32
+x = get w 59
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 46
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 54
+u = add u get w 45
+u = shl u 32
+put w 61 or u shr u 32
+x = get w 60
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 47
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 55
+u = add u get w 46
+u = shl u 32
+put w 62 or u shr u 32
+x = get w 61
+u = xor xor shr x 17 shr x 19 shr x 42
+x = get w 48
+v = xor xor shr x 7 shr x 18 shr x 35
+u = add u v
+u = add u get w 56
+u = add u get w 47
+u = shl u 32
+put w 63 or u shr u 32
+end
+
+note Word access for the aligned paths. b8 is the caller's 8-byte-aligned copy of the input lent a
+note second time as ulong cells (b views the same bytes), so one load brings 8 bytes. Swapping the
+note bytes inside each 32-bit half (two mask-and-shift steps; the constants stay in registers) turns
+note little-endian bytes b0..b7 into the big-endian words b0..b3 (low half) and b4..b7 (high half).
+note Each word is stored duplicated, as expand requires.
+fn blk8 b8 view ulong 512 q ulong w edit ulong 64 to void
+for i ulong 8
+x = get b8 add q i
+y = or shl and x 71777214294589695 8 and shr x 8 71777214294589695
+y = or shl and y 281470681808895 16 and shr y 16 281470681808895
+j = mul i 2
+t = shl y 32
+put w j or t shr t 32
+put w add j 1 or and y 18446744069414584320 shr y 32
+end
+end
+
+note the padded tail b[off..n) (less than 64 bytes), read as words through b8 (the bytes past n
+note are inside the caller's 4096-byte copy and are masked off here): the word holding byte n keeps
+note its k valid bytes and gets 0x80 after them, later words are zero, the 64-bit bit count goes in
+note words 14 and 15; a second block when the tail is 56 bytes or more
+fn tail8 h edit uint 8 b8 view ulong 512 off ulong n ulong w edit ulong 64 to void
+blk8 b8 shr off 3 w
+r = sub n off
+fw = shr r 2
+k = and r 3
+sh = mul k 8
+v = get w fw
+v = and v shl 4294967295 sub 32 sh
+v = and v 4294967295
+v = or v shl 128 sub 24 sh
+put w fw or v shl v 32
+i = add fw 1
+while lt i 16 bound 16
+put w i 0
+i = add i 1
+end
+if ge r 56
+expand w
+rounds h w
+for j ulong 14
+put w j 0
+end
+end
+bits = mul n 8
+v = shr bits 32
+put w 14 or v shl v 32
+v = and bits 4294967295
+put w 15 or v shl v 32
+expand w
+rounds h w
+end
+
+note the digest of h as 32 bytes packed little endian into w[0..4): word i holds the big-endian
+note bytes of h[2i] then h[2i+1], so the caller copies the digest out of w with memcpy
+fn digest8 h edit uint 8 w edit ulong 64 to void
+for i ulong 4
+j = mul i 2
+x = or ulong get h j shl ulong get h add j 1 32
+y = or shl and x 71777214294589695 8 and shr x 8 71777214294589695
+y = or shl and y 281470681808895 16 and shr y 16 281470681808895
+put w i y
+end
+end
+
+note SHA-256 of the n < 4096 bytes in b8, state in locals only (sha256_hash's short path)
+fn oneshot b8 view ulong 512 n ulong w edit ulong 64 to void
+if ge n 4096
+trap 3
+end
+h = new uint 8 0
+initiv h
+off = ulong 0
+while le add off 64 n bound 64
+blk8 b8 shr off 3 w
+expand w
+rounds h w
+off = add off 64
+end
+tail8 h b8 off n w
+digest8 h w
+end
+
+fn omsha c edit uchar 104 b view uchar 4096 n ulong op ulong w edit ulong 64 b8 view ulong 512 to void
+if eq op 0
+init c
+ret
+end
+if eq op 1
+absorb c b n w
+ret
+end
+if eq op 2
+final c w
+ret
+end
+if eq op 3
+oneshot b8 n w
+ret
+end
+trap 9
+end
+note SPDX-License-Identifier: Apache-2.0
+note r1.om: the REUSE-1 profile R1 baseline (docs/reuse/REUSE-1.md sections 1.1-1.3 and 12).
+note Concatenated after om/sha256/sha256.om. All state is in the pools below (globals cannot be passed).
+note   R1P  the current program, 64 words      R1N  n (1 word)       R1X  the state, 4096 words
+note   R1R  r0, r1 of the last r1full           R1T  FSM table, delta(s, a) at index s*16 + a
+note   R1PD program digest, R1SD state digest, R1HD r1hash output: SHA-256 as 4 words, word j =
+note        digest bytes 8j..8j+7 read big endian
+note   R1HB the hash input buffer (r1hash hashes R1HB[0..n), n <= 65536)
+note Exported beyond contract 12 (r1 prefix):
+note   r1step op c v m      one lane op (1 ADD .. 8 SHR) on v with mask m = 2^wl - 1
+note   r1chg op a b n       validity of one change (op 3..6, payload a, b; DEL needs b = 0) against
+note                        the current program's domain and a state of n values: the new n, or -1
+note   r1apply op a b       apply one change already validated by r1chg to R1X and R1N; returns
+note                        the old value at a (SET, DEL), the old value at b (SWAP), 0 (INS)
+note   r1alldom             every x_i (i < n) inside the current program's domain
+note   r1bswap x            the byte reversal of x
+note   r1putw off w         w as 8 little-endian bytes into R1HB[off..off+8)
+note A call outside a valid program (unknown op or fold) traps 10; R1 never reaches it on valid input.
+global R1P ulong 64
+global R1N ulong 1
+global R1X ulong 4096
+global R1R ulong 2
+global R1T ulong 256
+global R1PD ulong 4
+global R1SD ulong 4
+global R1HB uchar 65536
+global R1HD ulong 4
+
+note AGG words 2..63 (word 0 and 1 are checked by r1valid)
+fn r1vagg to int
+wl = get R1P 2
+if and ne wl 8 ne wl 16
+ret 2
+end
+f = get R1P 3
+if or lt f 1 gt f 6
+ret 2
+end
+k = get R1P 4
+if or lt k 1 gt k 6
+ret 2
+end
+lim = shl ulong 1 wl
+for j ulong 6
+op = get R1P add 5 mul j 2
+c = get R1P add 6 mul j 2
+if lt j k
+if or lt op 1 gt op 8
+ret 2
+end
+if ge c lim
+ret 2
+end
+if and ge op 7 ge c wl
+ret 2
+end
+else
+if or ne op 0 ne c 0
+ret 2
+end
+end
+end
+for i ulong 47
+if ne get R1P add i 17 0
+ret 2
+end
+end
+ret 0
+end
+
+note one FSM rule word for S = ns states and A = na symbols: 0 valid, 2 invalid
+fn r1vrule w ulong ns ulong na ulong to int
+s = and w 255
+lo = and shr w 8 255
+hi = and shr w 16 255
+t = shr w 24
+if or ge s ns ge t ns
+ret 2
+end
+if or gt lo hi ge hi na
+ret 2
+end
+ret 0
+end
+
+note FSM words 2..63
+fn r1vfsm to int
+ns = get R1P 2
+if or lt ns 2 gt ns 16
+ret 2
+end
+na = get R1P 3
+if or lt na 2 gt na 16
+ret 2
+end
+if ge get R1P 4 ns
+ret 2
+end
+nr = get R1P 5
+if or lt nr 1 gt nr 24
+ret 2
+end
+for i ulong 16
+v = get R1P add 6 i
+if lt i ns
+if ge v 256
+ret 2
+end
+else
+if ne v 0
+ret 2
+end
+end
+end
+for i ulong 24
+w = get R1P add 22 i
+if lt i nr
+if ne r1vrule w ns na 0
+ret 2
+end
+else
+if ne w 0
+ret 2
+end
+end
+end
+for i ulong 18
+if ne get R1P add i 46 0
+ret 2
+end
+end
+ret 0
+end
+
+note 0 when R1P is a valid R1 program (1.1), else 2
+fn r1valid to int
+if ne get R1P 0 3544411312749556050
+ret 2
+end
+fam = get R1P 1
+if eq fam 1
+ret r1vagg
+end
+if eq fam 2
+ret r1vfsm
+end
+ret 2
+end
+
+note v inside the current (valid) program's domain: AGG v < 2^wl, FSM v < A
+fn r1indom v ulong to bool
+if eq get R1P 1 1
+ret lt v shl ulong 1 get R1P 2
+end
+ret lt v get R1P 3
+end
+
+fn r1step op ulong c ulong v ulong m ulong to ulong
+if eq op 1
+ret and add v c m
+end
+if eq op 2
+ret and sub v c m
+end
+if eq op 3
+ret and mul v c m
+end
+if eq op 4
+ret and v c
+end
+if eq op 5
+ret or v c
+end
+if eq op 6
+ret xor v c
+end
+if eq op 7
+ret and shl v c m
+end
+if eq op 8
+ret shr v c
+end
+trap 10
+end
+
+note the lane map e(x) of the current AGG program (1.2)
+fn r1lane x ulong to ulong
+m = sub shl ulong 1 get R1P 2 1
+k = get R1P 4
+v = x
+for j ulong k
+q = add 5 mul j 2
+v = r1step get R1P q get R1P add q 1 v m
+end
+ret v
+end
+
+fn r1ident f ulong to ulong
+if or eq f 1 eq f 2
+ret 0
+end
+if eq f 3
+ret 18446744073709551615
+end
+if or eq f 4 eq f 5
+ret 0
+end
+if eq f 6
+ret 18446744073709551615
+end
+trap 10
+end
+
+fn r1fold f ulong a ulong b ulong to ulong
+if eq f 1
+ret add a b
+end
+if eq f 2
+ret xor a b
+end
+if eq f 3
+if lt b a
+ret b
+end
+ret a
+end
+if eq f 4
+if gt b a
+ret b
+end
+ret a
+end
+if eq f 5
+ret or a b
+end
+if eq f 6
+ret and a b
+end
+trap 10
+end
+
+note delta(s, a) of the current FSM program: the target of the lowest-numbered matching rule, else s
+fn r1delta s ulong a ulong to ulong
+nr = get R1P 5
+for i ulong nr
+w = get R1P add 22 i
+if eq and w 255 s
+lo = and shr w 8 255
+hi = and shr w 16 255
+if and le lo a le a hi
+ret shr w 24
+end
+end
+end
+ret s
+end
+
+fn r1fagg to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc r1lane get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+
+fn r1ffsm to void
+n = get R1N 0
+q = get R1P 4
+sum = ulong 0
+for i ulong n
+q = r1delta q get R1X i
+sum = add sum get R1P add 6 q
+end
+put R1R 0 q
+put R1R 1 sum
+end
+
+note the baseline: R1P, R1N, R1X -> R1R (1.2)
+fn r1full to void
+if eq get R1P 1 1
+r1fagg
+ret
+end
+r1ffsm
+end
+
+note shape id (1.1): AGG wl + 256 f + 4096 k + 65536 sum op_j 16^(j-1); FSM 1
+fn r1shape to ulong
+if eq get R1P 1 2
+ret 1
+end
+k = get R1P 4
+s = add get R1P 2 add mul get R1P 3 256 mul k 4096
+m = ulong 65536
+for j ulong k
+s = add s mul m get R1P add 5 mul j 2
+m = mul m 16
+end
+ret s
+end
+
+fn r1bswap x ulong to ulong
+y = ulong 0
+v = x
+for i ulong 8
+y = or shl y 8 and v 255
+v = shr v 8
+end
+ret y
+end
+
+fn r1putw off ulong w ulong to void
+v = w
+for i ulong 8
+put R1HB add off i uchar and v 255
+v = shr v 8
+end
+end
+
+note SHA-256 of R1HB[0..n) into R1HD, through omsha in local 4096-byte chunks
+fn r1hash n ulong to void
+if gt n 65536
+trap 3
+end
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+omsha c b 0 0 w b8
+off = ulong 0
+while lt off n bound 17
+m = sub n off
+if gt m 4096
+m = 4096
+end
+for i ulong m
+put b i get R1HB add off i
+end
+omsha c b m 1 w b8
+off = add off m
+end
+omsha c b 0 2 w b8
+for j ulong 4
+put R1HD j r1bswap get w j
+end
+end
+
+note program digest: SHA-256 of the 512 bytes of R1P (64 LE words) into R1PD
+fn r1pdig to void
+for i ulong 64
+r1putw mul i 8 get R1P i
+end
+r1hash 512
+for j ulong 4
+put R1PD j get R1HD j
+end
+end
+
+note state digest: SHA-256 of the n values as LE words into R1SD
+fn r1sdig to void
+n = get R1N 0
+for i ulong n
+r1putw mul i 8 get R1X i
+end
+r1hash mul n 8
+for j ulong 4
+put R1SD j get R1HD j
+end
+end
+
+fn r1alldom to bool
+n = get R1N 0
+for i ulong n
+if not r1indom get R1X i
+ret false
+end
+end
+ret true
+end
+
+note one change (1.3) against a state of n values: the new n, or -1 when invalid
+fn r1chg op ulong a ulong b ulong n ulong to long
+if eq op 3
+if and lt a n r1indom b
+ret long n
+end
+ret -1
+end
+if eq op 4
+if and and le a n lt n 4096 r1indom b
+ret long add n 1
+end
+ret -1
+end
+if eq op 5
+if and lt a n eq b 0
+ret long sub n 1
+end
+ret -1
+end
+if eq op 6
+if and lt a n lt b n
+ret long n
+end
+ret -1
+end
+ret -1
+end
+
+fn r1apply op ulong a ulong b ulong to ulong
+n = get R1N 0
+if eq op 3
+old = get R1X a
+put R1X a b
+ret old
+end
+if eq op 4
+t = n
+while gt t a bound 4097
+put R1X t get R1X sub t 1
+t = sub t 1
+end
+put R1X a b
+put R1N 0 add n 1
+ret 0
+end
+if eq op 5
+old = get R1X a
+t = a
+while lt add t 1 n bound 4097
+put R1X t get R1X add t 1
+t = add t 1
+end
+put R1N 0 sub n 1
+ret old
+end
+if eq op 6
+old = get R1X b
+put R1X b get R1X a
+put R1X a old
+ret old
+end
+trap 10
+end
+note SPDX-License-Identifier: Apache-2.0
+note exp.om: R1 experience records (docs/reuse/REUSE-1.md section 3.1): the tap writer and admission.
+note Concatenated after r1.om. Exported:
+note   EXAPATH uchar 4096, EXALEN ulong 1   the ALLOW path (caller fills; no 0 byte needed)
+note   exaload to int      read ALLOW (at most 1 MiB) into the allow table and its SHA-256 into EXAD:
+note                       0 ok; 1 unreadable, 2 too large, 3 malformed line, 4 more than 8192 lines.
+note                       Lines: `<64 hex> AUTHORIZED|SYNTHETIC|REVOKED <label>`, label nonempty, one
+note                       space between fields, lowercase or uppercase hex; empty lines are skipped.
+note   exallow d view ulong 4 to int   digest (word j = bytes 8j..8j+7 big endian) against the loaded
+note                       table: 1 allowed (an AUTHORIZED or SYNTHETIC line and no REVOKED line),
+note                       0 absent, -1 revoked
+note   exastat to bool     stat of ALLOW (inode, size, mtime ns, ctime ns) into EXAS; true when it
+note                       differs from the snapshot taken by the previous call (or on the first call)
+note   EXFPATH uchar 4096, EXFLEN ulong 1   the experience file path
+note   exadmit to int      admission of that file against the loaded ALLOW: 0 admitted; on 0 the file
+note                       is in EXFW (LE words, record r = EXFW[128r .. 128r+128)), EXFN = records,
+note                       EXFD = the file's SHA-256. Codes: 1 unreadable, 2 size, 3 not in ALLOW,
+note                       4 revoked, 5 ALLOW not loaded, then the first failing record check: 6 magic,
+note                       7 version, 8 sequence, 9 family, 10 PROG invalid, 11 program digest,
+note                       12 split, 13 provenance, 14 m, 15 a zero word, 16 AGG sample, 17 FSM sample.
+note                       EXFBAD = the 0-based index of the failing record. Clobbers R1P, R1PD, R1HB,
+note                       R1HD.
+note   extopen to int      the tap: argv 5 TAPFILE is created (O_EXCL; an existing file is refused),
+note                       argv 6 SPLIT must be 1, 2 or 3: 0 ok, 1 split, 2 file exists or not creatable
+note   extap ses ulong qn ulong nchg ulong ns ulong to int   one record for the current R1P, R1N, R1X
+note                       and R1R (the baseline result, ns its evaluation time): sets R1PD and R1SD;
+note                       0 ok, 1 write failed. Sequence numbers start at 1.
+global EXAPATH uchar 4096
+global EXALEN ulong 1
+global EXAB uchar 1048576
+global EXAT ulong 40960
+global EXAN ulong 1
+global EXAOK ulong 1
+global EXAD ulong 4
+global EXAS ulong 5
+global EXSB uchar 128
+global EXFPATH uchar 4096
+global EXFLEN ulong 1
+global EXFW ulong 4194304
+global EXFN ulong 1
+global EXFD ulong 4
+global EXFBAD ulong 1
+global EXTFD ulong 1
+global EXTSEQ ulong 1
+global EXTSPL ulong 1
+global EXTR ulong 128
+global EXTB uchar 1024
+global EXTP uchar 4096
+
+note a hex digit's value, or 16 when it is not one
+fn exhex c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+if and ge c 65 le c 70
+ret sub c 55
+end
+ret 16
+end
+
+note keyword at EXAB[p..): 1 AUTHORIZED, 2 SYNTHETIC, 3 REVOKED, 0 none; the word must be followed
+note by a space (checked by the caller through its length)
+fn exkw p ulong e ulong to ulong
+kw = new uchar 10 0
+r = ulong 1
+while le r 3 bound 4
+if eq r 1
+put kw 0 65
+put kw 1 85
+put kw 2 84
+put kw 3 72
+put kw 4 79
+put kw 5 82
+put kw 6 73
+put kw 7 90
+put kw 8 69
+put kw 9 68
+end
+if eq r 2
+put kw 0 83
+put kw 1 89
+put kw 2 78
+put kw 3 84
+put kw 4 72
+put kw 5 69
+put kw 6 84
+put kw 7 73
+put kw 8 67
+end
+if eq r 3
+put kw 0 82
+put kw 1 69
+put kw 2 86
+put kw 3 79
+put kw 4 75
+put kw 5 69
+put kw 6 68
+end
+n = exkwlen r
+ok = lt add p n e
+for i ulong n
+if ok
+if ne get EXAB add p i get kw i
+ok = false
+end
+end
+end
+if ok
+if eq get EXAB add p n 32
+ret r
+end
+end
+r = add r 1
+end
+ret 0
+end
+
+fn exkwlen r ulong to ulong
+if eq r 1
+ret 10
+end
+if eq r 2
+ret 9
+end
+ret 7
+end
+
+note one ALLOW line EXAB[s..e): 0 ok (entry appended), 3 malformed, 4 table full
+fn exaline s ulong e ulong to int
+if lt sub e s 68
+ret 3
+end
+n = get EXAN 0
+if ge n 8192
+ret 4
+end
+b = mul n 5
+for j ulong 4
+v = ulong 0
+for i ulong 16
+h = exhex ulong get EXAB add s add mul j 16 i
+if gt h 15
+ret 3
+end
+v = add mul v 16 h
+end
+put EXAT add b j v
+end
+if ne get EXAB add s 64 32
+ret 3
+end
+k = exkw add s 65 e
+if eq k 0
+ret 3
+end
+if le e add add s 66 exkwlen k
+ret 3
+end
+put EXAT add b 4 k
+put EXAN 0 add n 1
+ret 0
+end
+
+note SHA-256 of EXAB[0..n) into EXAD
+fn exahash n ulong to void
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+omsha c b 0 0 w b8
+off = ulong 0
+while lt off n bound 257
+m = sub n off
+if gt m 4096
+m = 4096
+end
+for i ulong m
+put b i get EXAB add off i
+end
+omsha c b m 1 w b8
+off = add off m
+end
+omsha c b 0 2 w b8
+for j ulong 4
+put EXAD j r1bswap get w j
+end
+end
+
+fn exaload to int
+put EXAOK 0 0
+put EXAN 0 0
+fd = fopen EXAPATH 0 get EXALEN 0 0 0
+if lt fd 0
+ret 1
+end
+got = ulong 0
+while lt got 1048576 bound 100000
+k = read int fd EXAB got sub 1048576 got
+if le k 0
+break
+end
+got = add got ulong k
+end
+one = new uchar 1 0
+k = read int fd one 0 1
+r = fclose int fd
+if or ne k 0 ne r 0
+ret 2
+end
+exahash got
+s = ulong 0
+for i ulong got
+if eq get EXAB i 10
+if gt i s
+x = exaline s i
+if ne x 0
+ret x
+end
+end
+s = add i 1
+end
+end
+if lt s got
+x = exaline s got
+if ne x 0
+ret x
+end
+end
+put EXAOK 0 1
+ret 0
+end
+
+fn exallow d view ulong 4 to int
+n = get EXAN 0
+seen = int 0
+for e ulong n
+b = mul e 5
+hit = true
+for j ulong 4
+if ne get EXAT add b j get d j
+hit = false
+end
+end
+if hit
+if eq get EXAT add b 4 3
+ret -1
+end
+seen = 1
+end
+end
+ret seen
+end
+
+note the 8-byte LE word at byte p of EXSB
+fn exsw p ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or v shl ulong get EXSB add p i mul i 8
+end
+ret v
+end
+
+fn exastat to bool
+for i ulong 128
+put EXSB i 0
+end
+r = stat EXAPATH 0 get EXALEN 0 EXSB 0 128
+s = new ulong 5 0
+put s 0 exsw 8
+put s 1 exsw 48
+put s 2 add mul exsw 88 1000000000 exsw 96
+put s 3 add mul exsw 104 1000000000 exsw 112
+if eq r 0
+put s 4 1
+else
+put s 4 2
+end
+ch = false
+for j ulong 5
+if ne get s j get EXAS j
+ch = true
+end
+put EXAS j get s j
+end
+ret ch
+end
+
+note the experience file into EXFW and its SHA-256 into EXFD: the byte count, or -1 unreadable,
+note -2 larger than 32 MiB
+fn exfread to long
+fd = fopen EXFPATH 0 get EXFLEN 0 0 0
+if lt fd 0
+ret -1
+end
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+omsha c b 0 0 w b8
+tot = ulong 0
+eof = false
+while not eof bound 8194
+fill = ulong 0
+while lt fill 4096 bound 4097
+k = read int fd b fill sub 4096 fill
+if le k 0
+eof = true
+break
+end
+fill = add fill ulong k
+end
+if gt add tot fill 33554432
+r = fclose int fd
+ret -2
+end
+omsha c b fill 1 w b8
+exfwords b tot fill
+tot = add tot fill
+end
+r = fclose int fd
+omsha c b 0 2 w b8
+for j ulong 4
+put EXFD j r1bswap get w j
+end
+ret long tot
+end
+
+note bytes b[0..fill) at file offset tot into EXFW (whole words only)
+fn exfwords b view uchar 4096 tot ulong fill ulong to void
+nw = shr fill 3
+base = shr tot 3
+for i ulong nw
+v = ulong 0
+p = add mul i 8 7
+for k ulong 8
+v = or shl v 8 ulong get b sub p k
+end
+put EXFW add base i v
+end
+end
+
+note AGG samples of record base: m pairs (x, e) with x < 2^wl and e = r1lane x; R1P holds its PROG
+fn exsagg base ulong m ulong to bool
+lim = shl ulong 1 get R1P 2
+for i ulong m
+x = get EXFW add base add 16 mul i 2
+e = get EXFW add base add 17 mul i 2
+if ge x lim
+ret false
+end
+if ne r1lane x e
+ret false
+end
+end
+ret true
+end
+
+note FSM samples: m words q + 256 a + 65536 q' with q < S, a < A, q' = delta(q, a)
+fn exsfsm base ulong m ulong to bool
+for i ulong m
+w = get EXFW add base add 16 i
+q = and w 255
+a = and shr w 8 255
+if or ge q get R1P 2 ge a get R1P 3
+ret false
+end
+if ne shr w 16 r1delta q a
+ret false
+end
+end
+ret true
+end
+
+note words that must be 0: 15, 56..63, and the sample words past the m samples
+fn exzero base ulong fam ulong m ulong to bool
+if ne get EXFW add base 15 0
+ret false
+end
+for i ulong 8
+if ne get EXFW add base add 56 i 0
+ret false
+end
+end
+used = m
+if eq fam 1
+used = mul m 2
+end
+for i ulong 32
+if ge i used
+if ne get EXFW add base add 16 i 0
+ret false
+end
+end
+end
+ret true
+end
+
+note record r (0-based), prev = the previous sequence number: 0 or a code 6..17
+fn exrec r ulong prev ulong to int
+base = mul r 128
+if ne get EXFW base 3544386028377026898
+ret 6
+end
+if ne get EXFW add base 1 1
+ret 7
+end
+sq = get EXFW add base 2
+if or le sq prev and eq r 0 ne sq 1
+ret 8
+end
+fam = get EXFW add base 3
+if or ne fam get EXFW add base 65 and ne fam 1 ne fam 2
+ret 9
+end
+for i ulong 64
+put R1P i get EXFW add base add 64 i
+end
+if ne r1valid 0
+ret 10
+end
+r1pdig
+for j ulong 4
+if ne get R1PD j get EXFW add base add 52 j
+ret 11
+end
+end
+sp = get EXFW add base 9
+if or lt sp 1 gt sp 3
+ret 12
+end
+if ne get EXFW add base 13 1
+ret 13
+end
+m = get EXFW add base 14
+if gt m 16
+ret 14
+end
+if not exzero base fam m
+ret 15
+end
+if eq fam 1
+if not exsagg base m
+ret 16
+end
+else
+if not exsfsm base m
+ret 17
+end
+end
+ret 0
+end
+
+fn exadmit to int
+put EXFN 0 0
+put EXFBAD 0 0
+if ne get EXAOK 0 1
+ret 5
+end
+tot = exfread
+if eq tot -1
+ret 1
+end
+if or lt tot 0 or eq tot 0 ne rem tot 1024 0
+ret 2
+end
+a = new ulong 4 0
+for j ulong 4
+put a j get EXFD j
+end
+al = exallow a
+if eq al -1
+ret 4
+end
+if ne al 1
+ret 3
+end
+nr = shr ulong tot 10
+prev = ulong 0
+for r ulong nr
+put EXFBAD 0 r
+x = exrec r prev
+if ne x 0
+ret x
+end
+prev = get EXFW add mul r 128 2
+end
+put EXFN 0 nr
+ret 0
+end
+
+note argv i into EXTP: the length, or -1
+fn exarg i ulong to long
+n = argread i EXTP 0 4096
+if or lt n 1 gt n 4095
+ret -1
+end
+ret n
+end
+
+fn extopen to int
+put EXTSEQ 0 0
+n = exarg 6
+if ne n 1
+ret 1
+end
+sp = sub ulong get EXTP 0 48
+if or lt sp 1 gt sp 3
+ret 1
+end
+put EXTSPL 0 sp
+n = exarg 5
+if lt n 0
+ret 2
+end
+fd = fopen EXTP 0 ulong n 193 384
+if lt fd 0
+ret 2
+end
+put EXTFD 0 ulong fd
+ret 0
+end
+
+note rules tested by delta(q, a): the index of the first matching rule plus 1, else R
+fn exscan q ulong a ulong to ulong
+nr = get R1P 5
+for i ulong nr
+w = get R1P add 22 i
+if eq and w 255 q
+lo = and shr w 8 255
+hi = and shr w 16 255
+if and le lo a le a hi
+ret add i 1
+end
+end
+end
+ret nr
+end
+
+note FSM rule tests of the whole run (word 8)
+fn exsteps to ulong
+n = get R1N 0
+q = get R1P 4
+st = ulong 0
+for t ulong n
+a = get R1X t
+st = add st exscan q a
+q = r1delta q a
+end
+ret st
+end
+
+note the first m (<= 16) distinct lane values in index order, (x, e(x)) into EXTR[16..48)
+fn exsmagg to ulong
+n = get R1N 0
+m = ulong 0
+for i ulong n
+if lt m 16
+x = get R1X i
+seen = false
+for j ulong m
+if eq get EXTR add 16 mul j 2 x
+seen = true
+end
+end
+if not seen
+put EXTR add 16 mul m 2 x
+put EXTR add 17 mul m 2 r1lane x
+m = add m 1
+end
+end
+end
+ret m
+end
+
+note the first m distinct transitions q + 256 a + 65536 q' taken
+fn exsmfsm to ulong
+n = get R1N 0
+m = ulong 0
+q = get R1P 4
+for i ulong n
+a = get R1X i
+nq = r1delta q a
+if lt m 16
+w = add add q mul a 256 mul nq 65536
+seen = false
+for j ulong m
+if eq get EXTR add 16 j w
+seen = true
+end
+end
+if not seen
+put EXTR add 16 m w
+m = add m 1
+end
+end
+q = nq
+end
+ret m
+end
+
+fn extap ses ulong qn ulong nchg ulong ns ulong to int
+for i ulong 128
+put EXTR i 0
+end
+sq = add get EXTSEQ 0 1
+put EXTSEQ 0 sq
+put EXTR 0 3544386028377026898
+put EXTR 1 1
+put EXTR 2 sq
+fam = get R1P 1
+put EXTR 3 fam
+put EXTR 4 get R1N 0
+put EXTR 5 get R1R 0
+put EXTR 6 get R1R 1
+put EXTR 7 ns
+if eq fam 1
+put EXTR 8 mul get R1N 0 get R1P 4
+put EXTR 14 exsmagg
+else
+put EXTR 8 exsteps
+put EXTR 14 exsmfsm
+end
+put EXTR 9 get EXTSPL 0
+put EXTR 10 ses
+put EXTR 11 qn
+put EXTR 12 nchg
+put EXTR 13 1
+r1sdig
+r1pdig
+for j ulong 4
+put EXTR add 48 j get R1SD j
+put EXTR add 52 j get R1PD j
+end
+for i ulong 64
+put EXTR add 64 i get R1P i
+end
+ret exflush
+end
+
+fn exflush to int
+for i ulong 128
+v = get EXTR i
+for k ulong 8
+put EXTB add mul i 8 k uchar and v 255
+v = shr v 8
+end
+end
+fd = int get EXTFD 0
+off = ulong 0
+while lt off 1024 bound 1025
+k = write fd EXTB off sub 1024 off
+if le k 0
+ret 1
+end
+off = add off ulong k
+end
+ret 0
+end
+note SPDX-License-Identifier: Apache-2.0
+note check.om: G3 bind validation (docs/reuse/REUSE-1.md section 3.3). Concatenated after exp.om;
+note calls mtlane of the generated methods.om (or a test's fixture).
+note   ckbind t   0 pass, 1 fail. AGG: every x < 2^wl of R1P has mtlane t x = r1lane x, all 64 bits.
+note              FSM: fills R1T[s*16 + a] = r1delta s a for s < S, a < A; nothing else is checked.
+note              Sets R1PD (r1pdig). A passed AGG (program digest, t) enters a FIFO of 256 entries
+note              (process memory only); a later bind of the same pair skips the lane comparison.
+note   CKST       counters: 0 binds, 1 failures, 2 FIFO hits, 3 full lane comparisons, 4 lane pairs
+note              compared
+global CKFIFO ulong 1280
+global CKFN ulong 1
+global CKFH ulong 1
+global CKST ulong 5
+
+fn ckinc k ulong n ulong to void
+put CKST k add get CKST k n
+end
+
+note entry e of the FIFO holds R1PD and t
+fn ckeq e ulong t ulong to bool
+b = mul e 5
+for j ulong 4
+if ne get CKFIFO add b j get R1PD j
+ret false
+end
+end
+ret eq get CKFIFO add b 4 t
+end
+
+fn ckhas t ulong to bool
+n = get CKFN 0
+for e ulong n
+if ckeq e t
+ret true
+end
+end
+ret false
+end
+
+fn ckadd t ulong to void
+e = get CKFH 0
+b = mul e 5
+for j ulong 4
+put CKFIFO add b j get R1PD j
+end
+put CKFIFO add b 4 t
+put CKFH 0 rem add e 1 256
+if lt get CKFN 0 256
+put CKFN 0 add get CKFN 0 1
+end
+end
+
+note the lane comparison over x < 2^wl: 0 equal, 1 the first difference
+fn cklanes t ulong to int
+lim = shl ulong 1 get R1P 2
+ckinc 3 1
+for x ulong lim
+if ne mtlane t x r1lane x
+ckinc 4 add x 1
+ret 1
+end
+end
+ckinc 4 lim
+ret 0
+end
+
+fn ckfsm to void
+ns = get R1P 2
+na = get R1P 3
+for s ulong ns
+for a ulong na
+put R1T add mul s 16 a r1delta s a
+end
+end
+end
+
+fn ckbind t ulong to int
+ckinc 0 1
+r1pdig
+if eq get R1P 1 2
+ckfsm
+ret 0
+end
+if ckhas t
+ckinc 2 1
+ret 0
+end
+if ne cklanes t 0
+ckinc 1 1
+ret 1
+end
+ckadd t
+ret 0
+end
+note SPDX-License-Identifier: Apache-2.0
+note delta.om: REUSE-1 incremental execution (#743), contract docs/reuse/REUSE-1.md v1.0 sections 4, 12.
+note Unit order: sha256 r1 exp check delta select lib methods router. Names: dl / DL only.
+note Reads R1P R1N R1X R1T, writes R1R (dlres only). Calls r1valid r1lane r1ident r1delta and,
+note for a bound AGG method, mtlane t x; a bound FSM method reads R1T[s*16 + a] (filled by ckbind).
+note
+note Router protocol (agreed with CandCore):
+note   BEGIN    after R1P R1N R1X are set: dlsreset, then dlbind t (t = template index, -1 = baseline)
+note   PROGRAM  after R1P is replaced: dldrop, then dlbind t
+note   change   the router validates the whole request (s1.3), then for each item in order applies
+note            exactly that item to R1X / R1N and calls dlchg op i v old before the next item
+note            SET  3 i v old = previous x_i     INS 4 i v old unused (0)
+note            DEL  5 i 0 old = the removed value  SWAP 6 i v = j, old = x_j before the swap (unused)
+note   AGG uses v and old (SWAP no work); FSM reads the symbols from R1X and compares new q_t with
+note   the stored trajectory (s4), so it needs neither. FSM SWAP = SET at min(i, j), then SET at max.
+note   (The other order is also correct: the stored trajectory is a valid chain under the current
+note   symbols everywhere except at changed positions, so every cutoff is sound; the reversed order
+note   passed both delta test suites when tried as a mutant.)
+note   QUERY    dlres: 0 = R1R holds r0 r1 from the delta state, 1 = no usable state (serve full)
+note dlbind returns 0 bound, 1 refused (PROG invalid or family unknown). dlbind on a session that is
+note already bound with the same t is a no-op, so dldrop before a rebind is mandatory (C4 relies on it).
+note dlchg returns 0 tracked, 1 delta state dropped (unbound until the next dlbind).
+note
+note Delta state (s4), 557,488 bytes of DL globals per process, one session (<= 1 MiB, s3.5):
+note   DLC  65536 words  MIN/MAX count per mapped value (2^wl used)
+note   DLQ   4097 words  FSM trajectory q_0..q_n
+note   DLBC    16 words  OR/AND count per bit
+note   DLL     16 words  FSM lambda copy; scalars below
+note Worst cases per change: AGG ADD/XOR/OR/AND O(1) (16 bit counts); MIN/MAX one extreme scan of
+note at most 2^wl - 1 counts when the last copy of the extreme goes; FSM SET at i recomputes at most
+note n - i steps, INS at most n + 1 - i plus a suffix shift of at most n + 1 words, DEL at most n - i - 1
+note plus a shift of at most n words; SWAP two SETs. dlbind: one pass
+note over the state plus, for MIN/MAX, clearing 2^wl counts.
+note
+note Counters (diagnostic, process-cumulative, never reset): dlstat k
+note   0 changes tracked  1 invalidations  2 scan steps  3 FSM recompute units  4 cutoffs found
+note   5 cutoff misses  6 recomputed steps  7 longest recompute  8 binds  9 drops  10 dlres served
+note   11 dlres refused
+note Select churn (s5.2): dlinvn = invalidations (MIN/MAX extreme scans, and every drop of live
+note delta state: dldrop at PROGRAM, dlchg or dlres finding the state unusable; never twice for one),
+note dlmissn = FSM recompute units that ran to n without a cutoff (at least one step recomputed).
+
+global DLB ulong 1
+global DLTB long 1
+global DLF ulong 1
+global DLFO ulong 1
+global DLW ulong 1
+global DLN ulong 1
+global DLA ulong 1
+global DLU ulong 1
+global DLS ulong 1
+global DLBC ulong 16
+global DLL ulong 16
+global DLC ulong 65536
+global DLQ ulong 4097
+global DLST ulong 12
+
+fn dlbump k ulong v ulong to void
+put DLST k add get DLST k v
+end
+
+fn dlstat k ulong to ulong
+if ge k 12
+ret 0
+end
+ret get DLST k
+end
+
+fn dlinvn to ulong
+ret get DLST 1
+end
+
+fn dlmissn to ulong
+ret get DLST 5
+end
+
+note mapped lane: the bound method's lane map, or the baseline's
+fn dlmap x ulong to ulong
+t = get DLTB 0
+if ge t 0
+ret mtlane ulong t x
+end
+ret r1lane x
+end
+
+note one FSM step: the bound method's table, or the baseline delta
+fn dlstep s ulong a ulong to ulong
+if eq get DLU 0 1
+ret get R1T add mul s 16 a
+end
+ret r1delta s a
+end
+
+fn dllam s ulong to ulong
+ret get DLL s
+end
+
+note MIN/MAX: the last copy of the extreme went; scan to the next nonzero count
+fn dlscan to void
+dlbump 1 1
+if eq get DLN 0 0
+put DLA 0 0
+ret
+end
+a = get DLA 0
+if eq get DLFO 0 3
+top = shl ulong 1 get DLW 0
+st = add a 1
+for j ulong sub top st
+v = add st j
+if ne get DLC v 0
+put DLA 0 v
+dlbump 2 add j 1
+ret
+end
+end
+dlbump 2 sub top st
+ret
+end
+for j ulong a
+v = sub sub a 1 j
+if ne get DLC v 0
+put DLA 0 v
+dlbump 2 add j 1
+ret
+end
+end
+dlbump 2 a
+end
+
+fn dlbitadd y ulong d ulong to void
+for b ulong 16
+if ne and shr y b 1 0
+put DLBC b add get DLBC b d
+end
+end
+end
+
+fn dlbitsub y ulong to void
+for b ulong 16
+if ne and shr y b 1 0
+put DLBC b sub get DLBC b 1
+end
+end
+end
+
+note add one mapped lane y to the AGG delta state
+fn dladd y ulong to void
+f = get DLFO 0
+n = get DLN 0
+a = get DLA 0
+if eq f 1
+put DLA 0 add a y
+end
+if eq f 2
+put DLA 0 xor a y
+end
+if eq f 3
+put DLC y add get DLC y 1
+if or eq n 0 lt y a
+put DLA 0 y
+end
+end
+if eq f 4
+put DLC y add get DLC y 1
+if or eq n 0 gt y a
+put DLA 0 y
+end
+end
+if ge f 5
+dlbitadd y 1
+end
+put DLN 0 add n 1
+end
+
+note remove one mapped lane y from the AGG delta state
+fn dlrem y ulong to void
+f = get DLFO 0
+a = get DLA 0
+put DLN 0 sub get DLN 0 1
+if eq f 1
+put DLA 0 sub a y
+end
+if eq f 2
+put DLA 0 xor a y
+end
+if ge f 5
+dlbitsub y
+end
+if or eq f 3 eq f 4
+c = sub get DLC y 1
+put DLC y c
+if and eq c 0 eq y a
+dlscan
+end
+end
+end
+
+fn dlbagg to void
+f = get R1P 3
+put DLFO 0 f
+put DLW 0 get R1P 2
+put DLN 0 0
+put DLA 0 0
+for b ulong 16
+put DLBC b 0
+end
+if or eq f 3 eq f 4
+top = shl ulong 1 get DLW 0
+for v ulong top
+put DLC v 0
+end
+end
+n = get R1N 0
+for i ulong n
+dladd dlmap get R1X i
+end
+end
+
+fn dlbfsm to void
+for s ulong 16
+put DLL s get R1P add 6 s
+end
+q = get R1P 4
+put DLQ 0 q
+sum = ulong 0
+n = get R1N 0
+for i ulong n
+q = dlstep q get R1X i
+put DLQ add i 1 q
+sum = add sum dllam q
+end
+put DLS 0 sum
+put DLN 0 n
+end
+
+fn dlbind t long to int
+if and eq get DLB 0 1 eq get DLTB 0 t
+ret 0
+end
+put DLB 0 0
+if ne r1valid 0
+ret 1
+end
+fam = get R1P 1
+put DLF 0 fam
+put DLTB 0 t
+put DLU 0 0
+if eq fam 1
+dlbagg
+end
+if eq fam 2
+if ge t 0
+put DLU 0 1
+end
+dlbfsm
+end
+if or eq fam 1 eq fam 2
+put DLB 0 1
+dlbump 8 1
+ret 0
+end
+ret 1
+end
+
+note a drop of LIVE delta state is one invalidation (dlinvn); dropping an unbound state counts none
+fn dldrop to void
+if eq get DLB 0 1
+dlbump 1 1
+end
+put DLB 0 0
+dlbump 9 1
+end
+
+fn dlsreset to void
+put DLB 0 0
+put DLTB 0 -1
+end
+
+note record one FSM recompute unit of sl steps; cut 1 = a cutoff was found
+fn dlfrec sl ulong cut ulong to void
+dlbump 3 1
+dlbump 6 sl
+if gt sl get DLST 7
+put DLST 7 sl
+end
+if eq cut 1
+dlbump 4 1
+end
+if and eq cut 0 gt sl 0
+dlbump 5 1
+end
+end
+
+note FSM: w_(i+1) changed (x_i); recompute from t = i+1, stop at the first equal stored q_t
+fn dlfset i ulong to void
+n = get DLN 0
+q = get DLQ i
+sum = get DLS 0
+t = add i 1
+cut = ulong 0
+sl = ulong 0
+while le t n bound 4097
+nq = dlstep q get R1X sub t 1
+sl = add sl 1
+old = get DLQ t
+if eq nq old
+cut = 1
+break
+end
+sum = add sub sum dllam old dllam nq
+put DLQ t nq
+q = nq
+t = add t 1
+end
+put DLS 0 sum
+dlfrec sl cut
+end
+
+note FSM INS at i (R1X already holds the insertion): new q_t is compared with the stored state of the
+note same symbol suffix, old q_(t-1); at the first equality the stored suffix shifts up by one
+fn dlfins i ulong to void
+n = get DLN 0
+q = get DLQ i
+po = q
+sum = get DLS 0
+t = add i 1
+cut = ulong 0
+sl = ulong 0
+while le t add n 1 bound 4098
+nq = dlstep q get R1X sub t 1
+sl = add sl 1
+if eq nq po
+cut = 1
+break
+end
+sum = add sum dllam nq
+if le t n
+nx = get DLQ t
+sum = sub sum dllam nx
+po = nx
+end
+put DLQ t nq
+q = nq
+t = add t 1
+end
+if eq cut 1
+sum = add sum dllam po
+s = n
+while ge s t bound 4097
+put DLQ add s 1 get DLQ s
+if eq s 0
+break
+end
+s = sub s 1
+end
+put DLQ t po
+end
+put DLS 0 sum
+put DLN 0 add n 1
+dlfrec sl cut
+end
+
+note FSM DEL at i (R1X already shifted down): new q_t is compared with old q_(t+1); at cutoff t (or
+note t = n with no cutoff) old q_t leaves the sum and the stored suffix from t+1 shifts down by one
+fn dlfdel i ulong to void
+n = get DLN 0
+q = get DLQ i
+sum = get DLS 0
+t = add i 1
+cut = ulong 0
+sl = ulong 0
+while lt t n bound 4097
+nq = dlstep q get R1X sub t 1
+sl = add sl 1
+if eq nq get DLQ add t 1
+cut = 1
+break
+end
+sum = add sub sum dllam get DLQ t dllam nq
+put DLQ t nq
+q = nq
+t = add t 1
+end
+sum = sub sum dllam get DLQ t
+s = t
+while lt s n bound 4097
+put DLQ s get DLQ add s 1
+s = add s 1
+end
+put DLS 0 sum
+put DLN 0 sub n 1
+dlfrec sl cut
+end
+
+fn dlfchg op ulong i ulong v ulong to int
+n = get DLN 0
+if eq op 3
+if ge i n
+ret 1
+end
+dlfset i
+ret 0
+end
+if eq op 4
+if gt i n
+ret 1
+end
+dlfins i
+ret 0
+end
+if eq op 5
+if ge i n
+ret 1
+end
+dlfdel i
+ret 0
+end
+if eq op 6
+if or ge i n ge v n
+ret 1
+end
+if lt i v
+dlfset i
+dlfset v
+end
+if gt i v
+dlfset v
+dlfset i
+end
+ret 0
+end
+ret 1
+end
+
+fn dlachg op ulong i ulong v ulong old ulong to int
+n = get DLN 0
+if eq op 3
+if ge i n
+ret 1
+end
+dladd dlmap v
+dlrem dlmap old
+ret 0
+end
+if eq op 4
+if gt i n
+ret 1
+end
+dladd dlmap v
+ret 0
+end
+if eq op 5
+if ge i n
+ret 1
+end
+dlrem dlmap old
+ret 0
+end
+if eq op 6
+if or ge i n ge v n
+ret 1
+end
+ret 0
+end
+ret 1
+end
+
+fn dlchg op ulong i ulong v ulong old ulong to int
+if eq get DLB 0 0
+ret 1
+end
+r = int 1
+if eq get DLF 0 1
+r = dlachg op i v old
+end
+if eq get DLF 0 2
+r = dlfchg op i v
+end
+if eq r 0
+if eq get DLN 0 get R1N 0
+dlbump 0 1
+ret 0
+end
+end
+put DLB 0 0
+dlbump 1 1
+ret 1
+end
+
+fn dlragg to void
+f = get DLFO 0
+n = get DLN 0
+r = get DLA 0
+if or eq f 3 eq f 4
+if eq n 0
+r = r1ident f
+end
+end
+if ge f 5
+r = r1ident f
+if gt n 0
+r = 0
+for b ulong 16
+c = get DLBC b
+if and eq f 5 gt c 0
+r = or r shl ulong 1 b
+end
+if and eq f 6 eq c n
+r = or r shl ulong 1 b
+end
+end
+end
+end
+put R1R 0 r
+end
+
+fn dlres to int
+if eq get DLB 0 0
+dlbump 11 1
+ret 1
+end
+if ne get DLN 0 get R1N 0
+put DLB 0 0
+dlbump 1 1
+dlbump 11 1
+ret 1
+end
+if eq get DLF 0 1
+dlragg
+put R1R 1 get DLN 0
+end
+if eq get DLF 0 2
+put R1R 0 get DLQ get DLN 0
+put R1R 1 get DLS 0
+end
+dlbump 10 1
+ret 0
+end
+note SPDX-License-Identifier: Apache-2.0
+note select.om: the REUSE-1 #744 frozen cost selector (contract v1.0 sections 5.1, 5.2, 12;
+note integrator decision 3 fixes the calibration layout). Unit order: sha256 r1 exp check delta
+note select lib methods router. Reads R1P word 1 (family) and R1N (n) of r1.om, and the delta
+note churn counters through dlinvn and dlmissn of delta.om. Nothing here learns, times itself or
+note writes a file: every choice is a pure function of the frozen calibration and the features.
+note
+note Calibration file R1CAL001: exactly 200 words (1600 bytes), little endian:
+note   0 magic 3544386010811150674, 1 version 1, 2 E_q x 1000, 3..7 zero;
+note   cell c = ((family - 1) * 4 + path) * 12 + nclass * 4 + cclass;
+note   word 8 + 2c = p50 ns, word 9 + 2c = p90 ns, 0 = missing.
+note   path 0 full, 1 method, 2 delta, 3 bind (bind only in cclass 0).
+note   nclass by n: 0 (n <= 64), 1 (<= 512), 2 (<= 4096). cclass by changes since the previous
+note   QUERY: 0 (0), 1 (1), 2 (2..64), 3 (> 64).
+note Any other size, magic, version or a nonzero word 3..7 refuses the whole file: nothing of it is
+note kept, and the selector runs the fixed rules (cold start). p90 is never read.
+note
+note Router protocol:
+note   SLPATH  calibration path bytes up to the first 0 byte; empty or "-" = no calibration.
+note   slload  once at start: 0 loaded, 1 absent or refused.
+note   slsess  at every accepted BEGIN: clears the session's validity marks and churn state.
+note   slbind t at BEGIN or PROGRAM, t = template index or -1: bind a method at all?
+note     no calibration, or a missing bind, full or method cell (cclass 0): bind iff t >= 0;
+note     else bind iff p50(bind) < E_q (p50(full) - p50(method)), compared exactly.
+note   slset meth dval before every QUERY: which paths are valid now (full always is).
+note   slpick nchg: 1 full, 3 method, 4 delta, only ever a valid path. Lowest p50 of the valid
+note     paths for (family, nclass, cclass), ties to delta, then method, then full; no calibration
+note     or a missing cell of a valid path: the fixed rule (delta if valid, else method if bound,
+note     else full). Churn: from 64 invalidations or 64 cutoff misses in the session (counted from
+note     the slsess snapshot) delta is invalid for the rest of the session.
+note   sloff: true iff churn has disabled delta for this session, as judged by the last slpick;
+note     stays true until the next slsess. The router may then drop the delta state and stop
+note     its maintenance for the session.
+note   An unsupported family (R1P word 1 not 1 or 2), n > 4096, template index outside -1..15, or
+note   a path or class id outside its range is refused before any lookup: slpick returns full,
+note   slbind returns false, and SLREF counts it (the #704 rule). No cell is indexed with such an id.
+note STATS: SLREF refusals, SLDIS churn disables (both process totals).
+
+global SLPATH uchar 4096
+global SLCAL ulong 200
+global SLOK ulong 1
+global SLBUF uchar 2048
+global SLMB ulong 1
+global SLDV ulong 1
+global SLOFF ulong 1
+global SLINV0 ulong 1
+global SLMIS0 ulong 1
+global SLREF ulong 1
+global SLDIS ulong 1
+
+fn slref to void
+put SLREF 0 add get SLREF 0 1
+end
+
+note bytes of SLPATH before the first 0; 4096 when there is none (refused by slload)
+fn slpathn to ulong
+for i ulong 4096
+if eq get SLPATH i 0
+ret i
+end
+end
+ret 4096
+end
+
+note read the open file into SLBUF until end of file; 2048 = too long or a read error
+fn slreadall fd int to ulong
+tot = ulong 0
+while lt tot 2048 bound 4096
+k = read fd SLBUF tot sub 2048 tot
+if lt k 0
+ret 2048
+end
+if eq k 0
+ret tot
+end
+tot = add tot ulong k
+end
+ret tot
+end
+
+note little-endian word i of SLBUF
+fn slword i ulong to ulong
+v = ulong 0
+p = mul i 8
+j = ulong 8
+while gt j 0 bound 8
+j = sub j 1
+v = or shl v 8 ulong get SLBUF add p j
+end
+ret v
+end
+
+note check the 1600 bytes in SLBUF; only a fully valid file is copied into SLCAL
+fn slparse to int
+if ne slword 0 3544386010811150674
+ret 1
+end
+if ne slword 1 1
+ret 1
+end
+for i ulong 5
+if ne slword add i 3 0
+ret 1
+end
+end
+for i ulong 200
+put SLCAL i slword i
+end
+put SLOK 0 1
+ret 0
+end
+
+fn slload to int
+put SLOK 0 0
+for i ulong 200
+put SLCAL i 0
+end
+pn = slpathn
+if or eq pn 0 ge pn 4096
+ret 1
+end
+if and eq pn 1 eq get SLPATH 0 45
+ret 1
+end
+fd = fopen SLPATH 0 pn 524288 0
+if lt fd 0
+ret 1
+end
+tot = slreadall int fd
+r = fclose int fd
+if or ne tot 1600 lt r 0
+ret 1
+end
+ret slparse
+end
+
+note p50 ns of one cell, 0 = missing; an id out of range is refused and counted, never indexed
+fn slcell fam ulong path ulong ncl ulong ccl ulong to ulong
+if or or lt fam 1 gt fam 2 or gt path 3 or gt ncl 2 gt ccl 3
+slref
+ret 0
+end
+if eq get SLOK 0 0
+ret 0
+end
+c = add mul add mul sub fam 1 4 path 12 add mul ncl 4 ccl
+ret get SLCAL add 8 mul 2 c
+end
+
+note n size class of R1N; 3 = unsupported (n > 4096)
+fn slncl to ulong
+n = get R1N 0
+if le n 64
+ret 0
+end
+if le n 512
+ret 1
+end
+if le n 4096
+ret 2
+end
+ret 3
+end
+
+note change class of the changes since the previous QUERY
+fn slccl nchg ulong to ulong
+if eq nchg 0
+ret 0
+end
+if eq nchg 1
+ret 1
+end
+if le nchg 64
+ret 2
+end
+ret 3
+end
+
+note high 64 bits of the 128-bit product a b
+fn slmulhi a ulong b ulong to ulong
+m = ulong 4294967295
+a0 = and a m
+a1 = shr a 32
+b0 = and b m
+b1 = shr b 32
+p01 = mul a0 b1
+p10 = mul a1 b0
+mid = add shr mul a0 b0 32 add and p01 m and p10 m
+h = add mul a1 b1 add shr p01 32 shr p10 32
+ret add h shr mid 32
+end
+
+note exact a b < c d over 128 bits
+fn slltp a ulong b ulong c ulong d ulong to bool
+h1 = slmulhi a b
+h2 = slmulhi c d
+if ne h1 h2
+ret lt h1 h2
+end
+ret lt mul a b mul c d
+end
+
+fn slsess to void
+put SLOFF 0 0
+put SLMB 0 0
+put SLDV 0 0
+put SLINV0 0 dlinvn
+put SLMIS0 0 dlmissn
+end
+
+fn slset meth bool dval bool to void
+put SLMB 0 0
+put SLDV 0 0
+if meth
+put SLMB 0 1
+end
+if dval
+put SLDV 0 1
+end
+end
+
+fn slbind t long to bool
+fam = get R1P 1
+ncl = slncl
+if or or lt fam 1 gt fam 2 gt ncl 2
+slref
+ret false
+end
+if or lt t -1 gt t 15
+slref
+ret false
+end
+if eq t -1
+ret false
+end
+if eq get SLOK 0 0
+ret true
+end
+cb = slcell fam 3 ncl 0
+cf = slcell fam 0 ncl 0
+cm = slcell fam 1 ncl 0
+if or or eq cb 0 eq cf 0 eq cm 0
+ret true
+end
+if le cf cm
+ret false
+end
+ret slltp cb 1000 get SLCAL 2 sub cf cm
+end
+
+note churn: 64 invalidations or 64 cutoff misses since slsess disable delta for the session
+fn slchurn to void
+if eq get SLOFF 0 1
+ret
+end
+inv = sub dlinvn get SLINV0 0
+mis = sub dlmissn get SLMIS0 0
+if or ge inv 64 ge mis 64
+put SLOFF 0 1
+put SLDIS 0 add get SLDIS 0 1
+end
+end
+
+fn sloff to bool
+ret eq get SLOFF 0 1
+end
+
+fn slfixed md ulong dv ulong to int
+if eq dv 1
+ret 4
+end
+if eq md 1
+ret 3
+end
+ret 1
+end
+
+note lowest p50 among the valid paths; a missing cell of a valid path gives the fixed rule
+fn slrank fam ulong ncl ulong ccl ulong md ulong dv ulong to int
+best = int 1
+cm = ulong 0
+cd = ulong 0
+bc = slcell fam 0 ncl ccl
+if eq bc 0
+ret slfixed md dv
+end
+if eq md 1
+cm = slcell fam 1 ncl ccl
+if eq cm 0
+ret slfixed md dv
+end
+if le cm bc
+best = 3
+bc = cm
+end
+end
+if eq dv 1
+cd = slcell fam 2 ncl ccl
+if eq cd 0
+ret slfixed md dv
+end
+if le cd bc
+best = 4
+end
+end
+ret best
+end
+
+fn slpick nchg ulong to int
+fam = get R1P 1
+ncl = slncl
+if or or lt fam 1 gt fam 2 gt ncl 2
+slref
+ret 1
+end
+slchurn
+md = get SLMB 0
+dv = get SLDV 0
+if eq get SLOFF 0 1
+dv = 0
+end
+ccl = slccl nchg
+if eq get SLOK 0 0
+ret slfixed md dv
+end
+ret slrank fam ncl ccl md dv
+end
+note SPDX-License-Identifier: Apache-2.0
+note lib.om: REUSE-1 library generations (contract v1.0 section 3.4, clarifications K1 K3 K16).
+note Part of every router (lbload, lblineage) and of drive.om (lbpub and helpers). lbload hands the
+note verified calibration bytes to the generation as a memfd on fd 7 (K16).
+note Needs sha256 (omsha), r1 and exp (exaload, exallow, EXAPATH, EXALEN) before it.
+note Manifest: 256 LE words in LBMAN, file bytes in LBMB; word 255 = FNV-1a 64 over the 2040 LE
+note bytes of words 0..254 (K3). CURRENT: 40 bytes, G LE then the 32 SHA-256 bytes of gen-G.man.
+note Digests are 4 words, word j = digest bytes 8j..8j+7 read big endian (contract 1.1).
+note lbload refusal codes (each check distinct, nothing is trusted before all pass):
+note  1 argv (count, LIBDIR length)   2 MANSHA not 64 hex digits   3 CURRENT unreadable
+note  4 CURRENT not exactly 40 bytes   5 gen-G.man unreadable   6 gen-G.man not exactly 2048 bytes
+note  7 SHA-256(gen-G.man) differs from the CURRENT digest   8 CURRENT digest differs from MANSHA
+note  9 magic   10 version   11 self-check   12 G differs from CURRENT or parent G >= G
+note  13 compiler SHA-256 is not the pinned omc   14 profile version   15 K > 16 or L > 8
+note  16 a reserved word is nonzero   17 ALLOW unreadable   18 a lineage digest not allowed
+note  19 gen-G.cal unreadable or 4096 bytes or more   20 gen-G.cal digest   21 gen-G.elf unreadable
+note  22 memfd (or dup onto fd 7) failed   23 copy into a memfd failed   24 ELF digest   25 exec failed
+
+global LBMAN ulong 256
+global LBMB uchar 2048
+global LBH ulong 4
+global LBCD ulong 4
+global LBMS ulong 4
+global LBDIR uchar 4096
+global LBDN ulong 1
+global LBP uchar 4096
+global LBPN ulong 1
+global LBPK uchar 4096
+global LBIO uchar 4096
+global LBST uchar 128
+global LBG ulong 1
+global LBLD ulong 32
+global LBLN ulong 1
+global LBGEN ulong 1
+global LBCAL ulong 1
+text LBTGEN "gen-"
+text LBTOM ".om"
+text LBTELF ".elf"
+text LBTMAN ".man"
+text LBTCAL ".cal"
+text LBTTMP ".tmp"
+text LBTCUR "CURRENT"
+text LBTFD "/proc/self/fd/"
+text LBTLD "loaded"
+text LBTMFD "r1gen"
+
+note byte swap of a 64-bit word
+fn lbbswap x ulong to ulong
+y = or shl and x 71777214294589695 8 and shr x 8 71777214294589695
+y = or shl and y 281470681808895 16 and shr y 16 281470681808895
+ret or shl y 32 shr y 32
+end
+
+note omsha's packed digest (w[i] holds digest bytes 8i..8i+7 little endian) into LBH
+fn lbdig w view ulong 64 to void
+for i ulong 4
+put LBH i lbbswap get w i
+end
+end
+
+note SHA-256 of a whole open file read with pread from position 0 into LBH; bytes or -errno
+fn lbhfd fd int to long
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+omsha c b 0 0 w b8
+tot = long 0
+while true bound 999999
+r = pread fd b 0 4096 tot
+if lt r 0
+ret r
+end
+if eq r 0
+break
+end
+omsha c b ulong r 1 w b8
+tot = add tot r
+end
+omsha c b 0 2 w b8
+lbdig w
+ret tot
+end
+
+note SHA-256 of the 2048 manifest bytes LBMB into LBH
+fn lbhman to void
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+for i ulong 2048
+put b i get LBMB i
+end
+omsha c b 0 0 w b8
+omsha c b 2048 1 w b8
+omsha c b 0 2 w b8
+lbdig w
+end
+
+note manifest words to bytes and back
+fn lbm2b to void
+for i ulong 256
+v = get LBMAN i
+for k ulong 8
+put LBMB add mul i 8 k uchar and shr v mul k 8 255
+end
+end
+end
+
+fn lbb2m to void
+for i ulong 256
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get LBMB add mul i 8 k mul k 8
+end
+put LBMAN i v
+end
+end
+
+note FNV-1a 64 over LBMB[0..2040) (fill LBMB with lbm2b first)
+fn lbfnv to ulong
+h = ulong 14695981039346656037
+for i ulong 2040
+h = xor h ulong get LBMB i
+h = mul h 1099511628211
+end
+ret h
+end
+
+note self-check word 255 of LBMAN (drive.om, tests)
+fn lbseal to void
+lbm2b
+put LBMAN 255 lbfnv
+lbm2b
+end
+
+note little/big endian word of LBIO at byte o
+fn lbgetle o ulong to ulong
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get LBIO add o k mul k 8
+end
+ret v
+end
+
+fn lbgetbe o ulong to ulong
+v = ulong 0
+for k ulong 8
+v = or shl v 8 ulong get LBIO add o k
+end
+ret v
+end
+
+fn lbputbe o ulong v ulong to void
+for k ulong 8
+put LBIO add o k uchar and shr v mul sub 7 k 8 255
+end
+end
+
+note path builder: LBP[0..LBPN)
+fn lbpz to void
+put LBPN 0 0
+end
+
+fn lbpc c ulong to void
+n = get LBPN 0
+if ge n 4095
+trap 3
+end
+put LBP n uchar c
+put LBPN 0 add n 1
+end
+
+fn lbpnum v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 24
+n = sub n 1
+lbpc ulong get d n
+end
+end
+
+note fixed name parts: 1 gen- 2 .om 3 .elf 4 .man 5 .cal 6 .tmp 7 CURRENT 8 /proc/self/fd/ 9 loaded
+fn lbptx k ulong to void
+if eq k 1
+for i ulong len LBTGEN
+lbpc ulong get LBTGEN i
+end
+end
+if eq k 2
+for i ulong len LBTOM
+lbpc ulong get LBTOM i
+end
+end
+if eq k 3
+for i ulong len LBTELF
+lbpc ulong get LBTELF i
+end
+end
+if eq k 4
+for i ulong len LBTMAN
+lbpc ulong get LBTMAN i
+end
+end
+if eq k 5
+for i ulong len LBTCAL
+lbpc ulong get LBTCAL i
+end
+end
+if eq k 6
+for i ulong len LBTTMP
+lbpc ulong get LBTTMP i
+end
+end
+if eq k 7
+for i ulong len LBTCUR
+lbpc ulong get LBTCUR i
+end
+end
+if eq k 8
+for i ulong len LBTFD
+lbpc ulong get LBTFD i
+end
+end
+if eq k 9
+for i ulong len LBTLD
+lbpc ulong get LBTLD i
+end
+end
+end
+
+fn lbpdir to void
+for i ulong get LBDN 0
+lbpc ulong get LBDIR i
+end
+lbpc 47
+end
+
+note LIBDIR/gen-G.EXT[.tmp], ext 1 om 2 elf 3 man 4 cal
+fn lbpgen g ulong ext ulong tmp bool to void
+lbpz
+lbpdir
+lbptx 1
+lbpnum g
+lbptx add ext 1
+if tmp
+lbptx 6
+end
+end
+
+fn lbpcurr tmp bool to void
+lbpz
+lbpdir
+lbptx 7
+if tmp
+lbptx 6
+end
+end
+
+note open LBP; descriptor or -1
+fn lbopen flags int mode int to int
+r = fopen LBP 0 get LBPN 0 flags mode
+if lt r 0
+ret -1
+end
+ret int r
+end
+
+note read up to cap (<= 4096) bytes of fd into LBIO; count or -errno
+fn lbrdio fd int cap ulong to long
+tot = ulong 0
+while lt tot cap bound 4097
+r = read fd LBIO tot sub cap tot
+if lt r 0
+ret r
+end
+if eq r 0
+break
+end
+tot = add tot ulong r
+end
+ret long tot
+end
+
+note write LBIO[0..n) completely; 0 or 1
+fn lbwrio fd int n ulong to int
+tot = ulong 0
+while lt tot n bound 4097
+r = write fd LBIO tot sub n tot
+if le r 0
+ret 1
+end
+tot = add tot ulong r
+end
+ret 0
+end
+
+note size of the file named by LBP, or -1
+fn lbfsize to long
+r = stat LBP 0 get LBPN 0 LBST 0 128
+if ne r 0
+ret -1
+end
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get LBST add 48 k mul k 8
+end
+ret long v
+end
+
+note SHA-256 of the file named by LBP into LBH; bytes or negative
+fn lbhpath to long
+fd = lbopen 524288 0
+if lt fd 0
+ret -1
+end
+n = lbhfd fd
+r = fclose fd
+ret n
+end
+
+fn lbhexd c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+if and ge c 65 le c 70
+ret sub c 55
+end
+ret 16
+end
+
+note 64 hex digits in LBIO[0..64) into 4 digest words at LBMS; 0 or 1
+fn lbhex2ms to int
+for j ulong 4
+v = ulong 0
+for k ulong 16
+d = lbhexd ulong get LBIO add mul j 16 k
+if gt d 15
+ret 1
+end
+v = or shl v 4 d
+end
+put LBMS j v
+end
+ret 0
+end
+
+note LIBDIR (argv 2) into LBDIR, MANSHA (argv 3) into LBMS
+fn lbargs to int
+if lt argcnt 7
+ret 1
+end
+n = argread 2 LBDIR 0 3000
+if or lt n 1 gt n 2999
+ret 1
+end
+put LBDN 0 ulong n
+m = argread 3 LBIO 0 4096
+if ne m 64
+ret 2
+end
+if ne lbhex2ms 0
+ret 2
+end
+ret 0
+end
+
+note CURRENT of LBDIR: G into LBG, digest words into LBCD; 0, 3 unreadable, 4 not 40 bytes
+fn lbcurrd to int
+lbpcurr false
+fd = lbopen 524288 0
+if lt fd 0
+ret 3
+end
+n = lbrdio fd 41
+r = fclose fd
+if ne n 40
+ret 4
+end
+put LBG 0 lbgetle 0
+for j ulong 4
+put LBCD j lbgetbe add 8 mul j 8
+end
+ret 0
+end
+
+note gen-G.man of LBDIR into LBMB and LBMAN; 0, 5 unreadable, 6 not 2048 bytes
+fn lbmanrd to int
+lbpgen get LBG 0 3 false
+fd = lbopen 524288 0
+if lt fd 0
+ret 5
+end
+n = lbrdio fd 2049
+r = fclose fd
+if ne n 2048
+ret 6
+end
+for i ulong 2048
+put LBMB i get LBIO i
+end
+lbb2m
+ret 0
+end
+
+note LBMAN words a..b-1 all zero
+fn lbzero a ulong b ulong to bool
+i = a
+while lt i b bound 257
+if ne get LBMAN i 0
+ret false
+end
+i = add i 1
+end
+ret true
+end
+
+note manifest field checks (LBMAN, LBMB); 0 or 9..16
+fn lbmchk to int
+if ne get LBMAN 0 3544386019401740626
+ret 9
+end
+if ne get LBMAN 1 1
+ret 10
+end
+lbm2b
+if ne lbfnv get LBMAN 255
+ret 11
+end
+g = get LBMAN 2
+if or ne g get LBG 0 ge get LBMAN 3 g
+ret 12
+end
+if or ne get LBMAN 14 8308871078283820969 ne get LBMAN 15 3511899704727027462
+ret 13
+end
+if or ne get LBMAN 16 15311527216533678964 ne get LBMAN 17 17706733685053746017
+ret 13
+end
+if ne get LBMAN 18 1
+ret 14
+end
+k = get LBMAN 4
+l = get LBMAN 19
+if or gt k 16 gt l 8
+ret 15
+end
+if not lbzero add 20 mul l 4 52
+ret 16
+end
+if not lbzero add 56 mul k 8 255
+ret 16
+end
+for t ulong k
+if ne get LBMAN add 63 mul t 8 0
+ret 16
+end
+end
+ret 0
+end
+
+note digest LBH equals 4 words of LBMAN at w
+fn lbhmeq w ulong to bool
+for j ulong 4
+if ne get LBH j get LBMAN add w j
+ret false
+end
+end
+ret true
+end
+
+note shared load prefix: argv, CURRENT, manifest, MANSHA, fields; 0 or 1..16
+fn lbman to int
+r = lbargs
+if ne r 0
+ret r
+end
+r = lbcurrd
+if ne r 0
+ret r
+end
+r = lbmanrd
+if ne r 0
+ret r
+end
+lbhman
+for j ulong 4
+if ne get LBH j get LBCD j
+ret 7
+end
+end
+for j ulong 4
+if ne get LBCD j get LBMS j
+ret 8
+end
+end
+ret lbmchk
+end
+
+note every lineage digest allowed by ALLOW (argv 4); 0, 17, 18
+fn lballow to int
+d = new ulong 4 0
+l = get LBMAN 19
+if eq l 0
+ret 0
+end
+n = argread 4 EXAPATH 0 4095
+if lt n 1
+ret 17
+end
+put EXAPATH ulong n 0
+put EXALEN 0 ulong n
+if ne exaload 0
+ret 17
+end
+for i ulong l
+for j ulong 4
+put d j get LBMAN add add 20 mul i 4 j
+end
+if ne exallow d 1
+ret 18
+end
+end
+ret 0
+end
+
+note SHA-256 of LBIO[0..n) (n <= 4096) into LBH
+fn lbhio n ulong to void
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+for i ulong n
+put b i get LBIO i
+end
+omsha c b 0 0 w b8
+omsha c b n 1 w b8
+omsha c b 0 2 w b8
+lbdig w
+end
+
+note calibration handoff (K1, K16): gen-G.cal read once into LBIO, SHA-256 of exactly those bytes
+note against manifest 52..55, the same bytes written into a memfd left on fd 7 without CLOEXEC for
+note the generation (which reads /proc/self/fd/7, never LIBDIR). 0, 19 unreadable or not under
+note 4096 bytes, 20 digest, 22 memfd or dup failed, 23 write failed. No calibration: 0, fd 7 untouched.
+fn lbcalchk to int
+if lbzero 52 56
+ret 0
+end
+lbpgen get LBG 0 4 false
+fd = lbopen 524288 0
+if lt fd 0
+ret 19
+end
+n = lbrdio fd 4096
+r = fclose fd
+if or lt n 1 ge n 4096
+ret 19
+end
+lbhio ulong n
+if not lbhmeq 52
+ret 20
+end
+m = memfd LBTMFD 0 len LBTMFD 0
+if lt m 0
+ret 22
+end
+mf = int m
+if ne lbwrio mf ulong n 0
+ret 23
+end
+if ne mf 7
+d = dupfd mf 7 0
+r = fclose mf
+if ne d 7
+ret 22
+end
+end
+ret 0
+end
+
+note gen-G.elf copied into a memfd whose SHA-256 must equal manifest 10..13; fd or -21..-24
+fn lbelfmem to int
+lbpgen get LBG 0 2 false
+fd = lbopen 524288 0
+if lt fd 0
+ret -21
+end
+m = memfd LBTMFD 0 len LBTMFD 1
+if lt m 0
+r = fclose fd
+ret -22
+end
+mf = int m
+while true bound 999999
+r = read fd LBIO 0 4096
+if lt r 0
+r = fclose fd
+ret -23
+end
+if eq r 0
+break
+end
+if ne lbwrio mf ulong r 0
+r = fclose fd
+ret -23
+end
+end
+r = fclose fd
+n = lbhfd mf
+if lt n 0
+ret -23
+end
+if not lbhmeq 10
+ret -24
+end
+ret mf
+end
+
+note append LBP to the packed list LBPK as one record at o; new offset
+fn lbpkadd o ulong to ulong
+n = get LBPN 0
+put LBPK o uchar and n 255
+put LBPK add o 1 uchar shr n 8
+for i ulong n
+put LBPK add add o 2 i get LBP i
+end
+ret add add o 2 n
+end
+
+note exec /proc/self/fd/MF with argv 1..6 and loaded; returns only on failure
+fn lbexec mf int to int
+put LBPK 0 8
+put LBPK 1 0
+lbpz
+lbptx 8
+lbpnum ulong mf
+o = lbpkadd 2
+for a ulong 6
+n = argread add a 1 LBPK add o 2 sub 4000 o
+if lt n 0
+ret 25
+end
+put LBPK o uchar and ulong n 255
+put LBPK add o 1 uchar shr ulong n 8
+o = add add o 2 ulong n
+if gt o 4000
+ret 25
+end
+end
+lbpz
+lbptx 9
+o = lbpkadd o
+r = execprog LBPK 0 o
+ret 25
+end
+
+note B's load (contract 3.4): 0 never (exec'd), nonzero = refused with the code listed above
+fn lbload to int
+if ne argcnt 7
+ret 1
+end
+r = lbman
+if ne r 0
+ret r
+end
+r = lballow
+if ne r 0
+ret r
+end
+r = lbcalchk
+if ne r 0
+ret r
+end
+mf = lbelfmem
+if lt mf 0
+ret neg mf
+end
+ret lbexec mf
+end
+
+note manifest lineage for revocation checks in a loaded generation: LBLD, LBLN, LBGEN, LBCAL
+fn lblineage to int
+r = lbman
+if ne r 0
+ret r
+end
+put LBLN 0 get LBMAN 19
+for i ulong 32
+put LBLD i get LBMAN add 20 i
+end
+put LBGEN 0 get LBG 0
+put LBCAL 0 0
+if not lbzero 52 56
+put LBCAL 0 1
+end
+ret 0
+end
+
+note drive.om side. Remove a stale unpublished generation g (crash leftovers) and CURRENT.tmp.
+fn lbclean g ulong to void
+for e ulong 4
+lbpgen g add e 1 false
+r = unlink LBP 0 get LBPN 0
+lbpgen g add e 1 true
+r = unlink LBP 0 get LBPN 0
+end
+lbpcurr true
+r = unlink LBP 0 get LBPN 0
+end
+
+note fsync the file named by LBP; 0 or 1
+fn lbsyncp to int
+fd = lbopen 524288 0
+if lt fd 0
+ret 1
+end
+r = fsync fd
+s = fclose fd
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+fn lbsyncdir to int
+r = fopen LBDIR 0 get LBDN 0 524288 0
+if lt r 0
+ret 1
+end
+fd = int r
+s = fsync fd
+r = fclose fd
+if ne s 0
+ret 1
+end
+ret 0
+end
+
+note gen-G.EXT.tmp: fsync, then renames flag 1 onto gen-G.EXT; 0 or 1
+fn lbrengen g ulong ext ulong to int
+lbpgen g ext true
+if ne lbsyncp 0
+ret 1
+end
+o = lbpkadd 2
+lbpgen g ext false
+o = lbpkadd o
+put LBPK 0 2
+put LBPK 1 0
+r = renames LBPK 0 o 1
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note publish generation LBG with manifest LBMAN (sealed) in ADR 0015 order. Expects gen-G.om.tmp,
+note gen-G.elf.tmp and, when manifest 52..55 is nonzero, gen-G.cal.tmp already written. Steps:
+note 1 om, 2 elf, 3 cal (no-op without calibration), 4 man.tmp written and fsync'd, 5 man renamed,
+note 6 LIBDIR fsync, 7 CURRENT.tmp written and fsync'd, 8 CURRENT renamed, 9 LIBDIR fsync.
+note crash = K stops after step K with 97 (control C8); 0 ok; 100 + step on failure.
+fn lbpub crash ulong to int
+g = get LBG 0
+if ne lbrengen g 1 0
+ret 101
+end
+if eq crash 1
+ret 97
+end
+if ne lbrengen g 2 0
+ret 102
+end
+if eq crash 2
+ret 97
+end
+if not lbzero 52 56
+if ne lbrengen g 4 0
+ret 103
+end
+end
+if eq crash 3
+ret 97
+end
+lbm2b
+lbpgen g 3 true
+fd = lbopen 524865 384
+if lt fd 0
+ret 104
+end
+w = write fd LBMB 0 2048
+s = fsync fd
+r = fclose fd
+if or ne w 2048 ne s 0
+ret 104
+end
+if eq crash 4
+ret 97
+end
+lbpgen g 3 true
+o = lbpkadd 2
+lbpgen g 3 false
+o = lbpkadd o
+put LBPK 0 2
+put LBPK 1 0
+r = renames LBPK 0 o 1
+if ne r 0
+ret 105
+end
+if eq crash 5
+ret 97
+end
+if ne lbsyncdir 0
+ret 106
+end
+if eq crash 6
+ret 97
+end
+lbhman
+for k ulong 8
+put LBIO k uchar and shr g mul k 8 255
+end
+for j ulong 4
+lbputbe add 8 mul j 8 get LBH j
+end
+lbpcurr true
+fd = lbopen 524865 384
+if lt fd 0
+ret 107
+end
+w2 = lbwrio fd 40
+s = fsync fd
+r = fclose fd
+if or ne w2 0 ne s 0
+ret 107
+end
+if eq crash 7
+ret 97
+end
+lbpcurr true
+o = lbpkadd 2
+lbpcurr false
+o = lbpkadd o
+put LBPK 0 2
+put LBPK 1 0
+r = renames LBPK 0 o 0
+if ne r 0
+ret 108
+end
+if eq crash 8
+ret 97
+end
+if ne lbsyncdir 0
+ret 109
+end
+if eq crash 9
+ret 97
+end
+ret 0
+end
+note SPDX-License-Identifier: Apache-2.0
+note methods.om: generated by om/reuse/codegen.om (REUSE-1 contract 3.2 and 12). Do not edit.
+fn mtl0 x ulong to ulong
+v = x
+v = shr v get R1P 6
+v = and v get R1P 8
+v = and add v get R1P 10 255
+v = and add v get R1P 12 255
+v = and shl v get R1P 14 255
+v = shr v get R1P 16
+ret v
+end
+fn mtr0 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl0 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl1 x ulong to ulong
+v = x
+v = and add v get R1P 6 65535
+ret v
+end
+fn mtr1 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl1 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl2 x ulong to ulong
+v = x
+v = and mul v get R1P 6 65535
+v = shr v get R1P 8
+v = xor v get R1P 10
+v = and sub v get R1P 12 65535
+ret v
+end
+fn mtr2 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl2 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl3 x ulong to ulong
+v = x
+v = and add v get R1P 6 255
+v = xor v get R1P 8
+ret v
+end
+fn mtr3 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl3 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl4 x ulong to ulong
+v = x
+v = and shl v get R1P 6 255
+v = shr v get R1P 8
+v = and sub v get R1P 10 255
+ret v
+end
+fn mtr4 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl4 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl5 x ulong to ulong
+v = x
+v = and sub v get R1P 6 65535
+ret v
+end
+fn mtr5 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl5 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl6 x ulong to ulong
+v = x
+v = and mul v get R1P 6 255
+v = or v get R1P 8
+v = and sub v get R1P 10 255
+v = and mul v get R1P 12 255
+ret v
+end
+fn mtr6 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl6 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl7 x ulong to ulong
+v = x
+v = and sub v get R1P 6 65535
+v = shr v get R1P 8
+v = and shl v get R1P 10 65535
+v = and shl v get R1P 12 65535
+ret v
+end
+fn mtr7 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl7 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl8 x ulong to ulong
+v = x
+v = shr v get R1P 6
+ret v
+end
+fn mtr8 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl8 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl9 x ulong to ulong
+v = x
+v = and add v get R1P 6 65535
+v = and mul v get R1P 8 65535
+ret v
+end
+fn mtr9 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl9 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl10 x ulong to ulong
+v = x
+v = or v get R1P 6
+v = shr v get R1P 8
+v = and add v get R1P 10 65535
+v = and mul v get R1P 12 65535
+ret v
+end
+fn mtr10 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl10 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl11 x ulong to ulong
+v = x
+v = xor v get R1P 6
+v = and shl v get R1P 8 65535
+v = and add v get R1P 10 65535
+v = and v get R1P 12
+v = xor v get R1P 14
+v = or v get R1P 16
+ret v
+end
+fn mtr11 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl11 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl12 x ulong to ulong
+v = x
+v = xor v get R1P 6
+ret v
+end
+fn mtr12 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl12 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl13 x ulong to ulong
+v = x
+v = and shl v get R1P 6 255
+v = or v get R1P 8
+ret v
+end
+fn mtr13 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl13 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtl14 x ulong to ulong
+v = x
+v = xor v get R1P 6
+ret v
+end
+fn mtr14 to void
+f = get R1P 3
+n = get R1N 0
+acc = r1ident f
+for i ulong n
+acc = r1fold f acc mtl14 get R1X i
+end
+put R1R 0 acc
+put R1R 1 n
+end
+fn mtr15 to void
+q = get R1P 4
+n = get R1N 0
+sum = ulong 0
+for i ulong n
+q = get R1T add mul q 16 get R1X i
+sum = add sum get R1P add 6 q
+end
+put R1R 0 q
+put R1R 1 sum
+end
+fn mtcount to ulong
+ret 16
+end
+fn mtshape t ulong to ulong
+if eq t 0
+ret 580110541832
+end
+if eq t 1
+ret 70672
+end
+if eq t 2
+ret 646137104
+end
+if eq t 3
+ret 6366216
+end
+if eq t 4
+ret 42414856
+end
+if eq t 5
+ret 135440
+end
+if eq t 6
+ret 844318216
+end
+if eq t 7
+ret 2005026320
+end
+if eq t 8
+ret 529936
+end
+if eq t 9
+ret 3219728
+end
+if eq t 10
+ret 830817296
+end
+if eq t 11
+ret 370465465360
+end
+if eq t 12
+ret 398352
+end
+if eq t 13
+ret 5710088
+end
+if eq t 14
+ret 398344
+end
+if eq t 15
+ret 1
+end
+ret 0
+end
+fn mtfind to long
+if ne r1valid 0
+ret -1
+end
+s = r1shape
+if eq s 580110541832
+ret 0
+end
+if eq s 70672
+ret 1
+end
+if eq s 646137104
+ret 2
+end
+if eq s 6366216
+ret 3
+end
+if eq s 42414856
+ret 4
+end
+if eq s 135440
+ret 5
+end
+if eq s 844318216
+ret 6
+end
+if eq s 2005026320
+ret 7
+end
+if eq s 529936
+ret 8
+end
+if eq s 3219728
+ret 9
+end
+if eq s 830817296
+ret 10
+end
+if eq s 370465465360
+ret 11
+end
+if eq s 398352
+ret 12
+end
+if eq s 5710088
+ret 13
+end
+if eq s 398344
+ret 14
+end
+if eq s 1
+ret 15
+end
+ret -1
+end
+fn mtlane t ulong x ulong to ulong
+if eq t 0
+ret mtl0 x
+end
+if eq t 1
+ret mtl1 x
+end
+if eq t 2
+ret mtl2 x
+end
+if eq t 3
+ret mtl3 x
+end
+if eq t 4
+ret mtl4 x
+end
+if eq t 5
+ret mtl5 x
+end
+if eq t 6
+ret mtl6 x
+end
+if eq t 7
+ret mtl7 x
+end
+if eq t 8
+ret mtl8 x
+end
+if eq t 9
+ret mtl9 x
+end
+if eq t 10
+ret mtl10 x
+end
+if eq t 11
+ret mtl11 x
+end
+if eq t 12
+ret mtl12 x
+end
+if eq t 13
+ret mtl13 x
+end
+if eq t 14
+ret mtl14 x
+end
+ret 0
+end
+fn mtrun t ulong to void
+if eq t 0
+mtr0
+ret
+end
+if eq t 1
+mtr1
+ret
+end
+if eq t 2
+mtr2
+ret
+end
+if eq t 3
+mtr3
+ret
+end
+if eq t 4
+mtr4
+ret
+end
+if eq t 5
+mtr5
+ret
+end
+if eq t 6
+mtr6
+ret
+end
+if eq t 7
+mtr7
+ret
+end
+if eq t 8
+mtr8
+ret
+end
+if eq t 9
+mtr9
+ret
+end
+if eq t 10
+mtr10
+ret
+end
+if eq t 11
+mtr11
+ret
+end
+if eq t 12
+mtr12
+ret
+end
+if eq t 13
+mtr13
+ret
+end
+if eq t 14
+mtr14
+ret
+end
+if eq t 15
+mtr15
+ret
+end
+r1full
+end
+fn mtsrc t ulong D edit ulong 4 to void
+if eq t 0
+put D 0 13956669196267666850
+put D 1 16257126963529257265
+put D 2 1405145371321743116
+put D 3 17760178884020577383
+ret
+end
+if eq t 1
+put D 0 16326708910157820744
+put D 1 3637440196527792780
+put D 2 7614385845250149790
+put D 3 2771496369924541204
+ret
+end
+if eq t 2
+put D 0 16877686864802232791
+put D 1 15111118989403976913
+put D 2 14528391367598743313
+put D 3 3401917217711249322
+ret
+end
+if eq t 3
+put D 0 13927010687405460251
+put D 1 11336324721807575576
+put D 2 14452245014462828173
+put D 3 17446810644995259200
+ret
+end
+if eq t 4
+put D 0 15534822331246716171
+put D 1 9506174321960071820
+put D 2 10887431937852286478
+put D 3 4072147763287097614
+ret
+end
+if eq t 5
+put D 0 16787454951761859370
+put D 1 17846581186593258686
+put D 2 6679271396805651942
+put D 3 63794893902553172
+ret
+end
+if eq t 6
+put D 0 16154932368086511111
+put D 1 4410123057694529404
+put D 2 2738225962833191960
+put D 3 3395758471500380270
+ret
+end
+if eq t 7
+put D 0 17213268167526360733
+put D 1 2734722253015343528
+put D 2 10361122349800966421
+put D 3 9644199633733047973
+ret
+end
+if eq t 8
+put D 0 10473156190873895805
+put D 1 12648395775458477319
+put D 2 9092058131804576619
+put D 3 7141339892388031631
+ret
+end
+if eq t 9
+put D 0 12154204761550884436
+put D 1 3845224749664794519
+put D 2 2863352576014568853
+put D 3 4735062814132508435
+ret
+end
+if eq t 10
+put D 0 12823728127347081233
+put D 1 2474108056008288794
+put D 2 11822154959845612860
+put D 3 6280287911338619165
+ret
+end
+if eq t 11
+put D 0 17312590123913157856
+put D 1 16754795256309437279
+put D 2 11323165121633928988
+put D 3 13689713254852536391
+ret
+end
+if eq t 12
+put D 0 816950227113715371
+put D 1 8364610021896710454
+put D 2 11166026112771622937
+put D 3 18409906715905725576
+ret
+end
+if eq t 13
+put D 0 7747653742871137153
+put D 1 1735523690990067922
+put D 2 16728278509358837195
+put D 3 6978874779406273489
+ret
+end
+if eq t 14
+put D 0 1944621461038878652
+put D 1 18439625667258543098
+put D 2 14812921912109527545
+put D 3 4804251481274239608
+ret
+end
+if eq t 15
+put D 0 5697826474538046150
+put D 1 17605239106479653115
+put D 2 2589925873017448613
+put D 3 11652210143643333060
+ret
+end
+put D 0 0
+put D 1 0
+put D 2 0
+put D 3 0
+end
+note SPDX-License-Identifier: Apache-2.0
+note router.om: the REUSE-1 arm process (docs/reuse/REUSE-1.md section 2, 3.4 load, 4 revocation, and
+note clarifications K1, K2, K9). Last unit; holds fn main. Every arm binary is this router.
+note argv: ARM LIBDIR MANSHA ALLOW TAPFILE SPLIT [loaded]; ARM echo full cache method delta select tap.
+note Startup exit codes (no response is written): 2 usage (argc, ARM), 2 tap refused (extopen).
+note Protocol: little-endian u64 words on stdin/stdout. Request op, p, p words; response status, q,
+note q words. Framing (K2): op outside 1..10 or p > 7234 -> 4 and exit 4 (the payload is not read);
+note otherwise the payload is read whole; a p that does not match its op -> 4; ops 2..8 without a
+note session -> 6; then the op's own statuses. EOF on stdin without END -> exit 3, no response.
+note Load (3.4): ARM method/delta/select, LIBDIR not "-", no trailing "loaded": lbload (lib.om) execs
+note the generation and never returns on success; on its nonzero return this process serves every
+note QUERY as full with route 5. A generation (argv ends in "loaded") never loads again; it reads its
+note lineage (lblineage) and checks it against ALLOW at every BEGIN and, whenever the stat snapshot
+note of ALLOW (inode, size, mtime ns, ctime ns) changed, at QUERY: a revoked or unverifiable lineage
+note gives route 5 from that QUERY on for the rest of the process. select in a generation reads its
+note calibration from /proc/self/fd/7, the memfd of verified bytes lbload left open before exec (K16),
+note iff the manifest names one (LBCAL); never LIBDIR/gen-G.cal. With LIBDIR "-" it has no calibration.
+note Arms at QUERY (route): echo 0 0 (0); full r1full (1); tap r1full and one experience record (1);
+note cache key SHA-256(program digest, n, state digest), the state digest recomputed only at the first
+note QUERY after a change, 4096 entries FIFO: hit (2), miss r1full (1); method mtrun (3) when a
+note template is bound and passed G3, else r1full (1), G3 failure r1full (5) for the session; delta:
+note the delta state (4) of the bound method or of the baseline (t = -1), rebuilt by dlbind at a QUERY
+note after a drop, else method (3) or full (1); select: slpick among full (1), method (3), delta (4);
+note once sloff reports churn (5.2) the delta state is dropped and not maintained for the session.
+note STATS answers 32 counters RTST: 0..5 QUERYs by route 0..5, 6 sessions, 7 change items applied,
+note 8 PROGRAMs applied, 9 refused requests, 10 ckbind calls, 11 bind failures, 12 G3 FIFO hits,
+note 13 G3 lane pairs, 14..25 dlstat 0..11, 26 select delta disables (SLDIS), 27 select refusals
+note (SLREF), 28 cache entries, 29 template count (mtcount), 30 load refusal code, 31 flags
+note (1 generation, 2 refused, 4 revoked, 8 calibration path set, 16 calibration loaded by slload).
+text RTTE "echo"
+text RTTF "full"
+text RTTC "cache"
+text RTTM "method"
+text RTTD "delta"
+text RTTS "select"
+text RTTT "tap"
+text RTTL "loaded"
+text RTTCAL "/proc/self/fd/7"
+global RTARM ulong 1
+global RTFLG ulong 1
+global RTLC ulong 1
+global RTLIN ulong 1
+global RTSES ulong 1
+global RTSN ulong 1
+global RTQN ulong 1
+global RTNC ulong 1
+global RTT long 1
+global RTBF ulong 1
+global RTDB ulong 1
+global RTSD ulong 1
+global RTPS ulong 64
+global RTQ ulong 7234
+global RTIB uchar 65536
+global RTIP ulong 2
+global RTOW ulong 34
+global RTOB uchar 272
+global RTST ulong 32
+global RTCK ulong 24576
+global RTCN ulong 1
+global RTCH ulong 1
+global RTKEY ulong 4
+global RTA uchar 4096
+
+note ---- input and output ----
+fn rtfill to bool
+k = read 0 RTIB 0 65536
+if le k 0
+ret false
+end
+put RTIP 0 0
+put RTIP 1 ulong k
+ret true
+end
+
+fn rtbyte to ulong
+p = get RTIP 0
+if ge p get RTIP 1
+if not rtfill
+exit 3
+end
+p = 0
+end
+put RTIP 0 add p 1
+ret ulong get RTIB p
+end
+
+fn rtword to ulong
+p = get RTIP 0
+if le add p 8 get RTIP 1
+v = ulong 0
+for i ulong 8
+v = or shl v 8 ulong get RTIB sub add p 7 i
+end
+put RTIP 0 add p 8
+ret v
+end
+v = ulong 0
+for i ulong 8
+v = or v shl rtbyte mul i 8
+end
+ret v
+end
+
+note status s, q words RTOW[0..q)
+fn rtresp s ulong q ulong to void
+rtputw 0 s
+rtputw 8 q
+for i ulong q
+rtputw mul add i 2 8 get RTOW i
+end
+n = mul add q 2 8
+off = ulong 0
+while lt off n bound 1000
+k = write 1 RTOB off sub n off
+if le k 0
+exit 5
+end
+off = add off ulong k
+end
+end
+
+fn rtputw o ulong w ulong to void
+v = w
+for i ulong 8
+put RTOB add o i uchar and v 255
+v = shr v 8
+end
+end
+
+fn rtstat s ulong to void
+if ne s 0
+put RTST 9 add get RTST 9 1
+end
+rtresp s 0
+end
+
+note ---- argv ----
+note argv i into RTA: its length, or -1
+fn rtarg i ulong to long
+n = argread i RTA 0 4096
+if or lt n 0 gt n 4095
+ret -1
+end
+ret n
+end
+
+fn rtdash i ulong to bool
+n = rtarg i
+ret and eq n 1 eq get RTA 0 45
+end
+
+note RTA[0..n) equals text id (1 echo .. 7 tap, 8 loaded)
+fn rteq id ulong n ulong to bool
+if eq id 1
+ret rteqe n
+end
+if eq id 2
+ret rteqf n
+end
+if eq id 3
+ret rteqc n
+end
+if eq id 4
+ret rteqm n
+end
+if eq id 5
+ret rteqd n
+end
+if eq id 6
+ret rteqs n
+end
+if eq id 7
+ret rteqt n
+end
+ret rteql n
+end
+
+fn rteqe n ulong to bool
+if ne n len RTTE
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTE i
+ret false
+end
+end
+ret true
+end
+
+fn rteqf n ulong to bool
+if ne n len RTTF
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTF i
+ret false
+end
+end
+ret true
+end
+
+fn rteqc n ulong to bool
+if ne n len RTTC
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTC i
+ret false
+end
+end
+ret true
+end
+
+fn rteqm n ulong to bool
+if ne n len RTTM
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTM i
+ret false
+end
+end
+ret true
+end
+
+fn rteqd n ulong to bool
+if ne n len RTTD
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTD i
+ret false
+end
+end
+ret true
+end
+
+fn rteqs n ulong to bool
+if ne n len RTTS
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTS i
+ret false
+end
+end
+ret true
+end
+
+fn rteqt n ulong to bool
+if ne n len RTTT
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTT i
+ret false
+end
+end
+ret true
+end
+
+fn rteql n ulong to bool
+if ne n len RTTL
+ret false
+end
+for i ulong n
+if ne get RTA i get RTTL i
+ret false
+end
+end
+ret true
+end
+
+note ARM: 1 echo 2 full 3 cache 4 method 5 delta 6 select 7 tap, 0 unknown
+fn rtparm to ulong
+n = rtarg 1
+if lt n 0
+ret 0
+end
+for id ulong 7
+if rteq add id 1 ulong n
+ret add id 1
+end
+end
+ret 0
+end
+
+note the arm has a library path: method, delta, select
+fn rtlibarm to bool
+a = get RTARM 0
+ret and ge a 4 le a 6
+end
+
+fn rtdelarm to bool
+a = get RTARM 0
+ret or eq a 5 eq a 6
+end
+
+note route 5 for every QUERY: refused generation or revoked lineage
+fn rtdead to bool
+ret ne and get RTFLG 0 6 0
+end
+
+note ---- startup ----
+fn rtsetallow to void
+if rtdash 4
+put EXALEN 0 0
+ret
+end
+n = ulong rtarg 4
+for i ulong n
+put EXAPATH i get RTA i
+end
+put EXALEN 0 n
+end
+
+fn rtcal to void
+if ne get LBCAL 0 1
+ret
+end
+for i ulong len RTTCAL
+put SLPATH i get RTTCAL i
+end
+put SLPATH len RTTCAL 0
+put RTFLG 0 or get RTFLG 0 8
+end
+
+note a refused generation load: code x (STATS 30; 255 when it is not 1..254), route 5 from now on
+fn rtrefuse x int to void
+c = ulong 255
+if and gt x 0 lt x 255
+c = ulong x
+end
+put RTLC 0 c
+put RTFLG 0 or get RTFLG 0 2
+end
+
+fn rtinit to void
+c = argcnt
+if and ne c 7 ne c 8
+exit 2
+end
+loaded = false
+if eq c 8
+n = rtarg 7
+if or lt n 0 not rteq 8 ulong n
+exit 2
+end
+loaded = true
+end
+a = rtparm
+if eq a 0
+exit 2
+end
+put RTARM 0 a
+put RTT 0 -1
+rtsetallow
+if eq a 7
+if ne extopen 0
+exit 2
+end
+end
+if and rtlibarm not rtdash 2
+if loaded
+rtgen
+else
+x = lbload
+rtrefuse x
+end
+end
+if eq a 6
+if eq slload 0
+put RTFLG 0 or get RTFLG 0 16
+end
+end
+end
+
+note a generation: lineage from the manifest pinned by MANSHA, calibration path
+fn rtgen to void
+put RTFLG 0 or get RTFLG 0 1
+x = lblineage
+if ne x 0
+rtrefuse x
+ret
+end
+if gt get LBLN 0 0
+put RTLIN 0 1
+end
+if eq get RTARM 0 6
+rtcal
+end
+end
+
+note ---- revocation ----
+note every lineage digest allowed by the loaded ALLOW
+fn rtlinok to bool
+d = new ulong 4 0
+n = get LBLN 0
+for e ulong n
+for j ulong 4
+put d j get LBLD add mul e 4 j
+end
+if ne exallow d 1
+ret false
+end
+end
+ret true
+end
+
+fn rtrevoke to void
+put RTFLG 0 or get RTFLG 0 4
+if rtdelarm
+dldrop
+end
+put RTDB 0 0
+put RTT 0 -1
+end
+
+note read ALLOW and check the lineage; snapshot its stat
+fn rtrecheck to void
+ch = exastat
+ok = false
+if gt get EXALEN 0 0
+if eq exaload 0
+ok = rtlinok
+end
+end
+if not ok
+rtrevoke
+end
+end
+
+fn rtrevq to void
+if or eq get RTLIN 0 0 rtdead
+ret
+end
+if exastat
+x = exaload
+if or ne x 0 not rtlinok
+rtrevoke
+end
+end
+end
+
+note ---- binding ----
+note bind for the current R1P (BEGIN or PROGRAM); the delta state was reset or dropped by the caller
+fn rtbind to void
+put RTT 0 -1
+put RTBF 0 0
+put RTDB 0 0
+a = get RTARM 0
+if or lt a 4 gt a 6
+ret
+end
+if rtdead
+ret
+end
+t = mtfind
+want = ge t 0
+if eq a 6
+want = and want slbind t
+end
+if want
+if eq ckbind ulong t 0
+put RTT 0 t
+else
+put RTBF 0 1
+ret
+end
+end
+if rtdelarm
+if rtseloff
+ret
+end
+if eq dlbind get RTT 0 0
+put RTDB 0 1
+end
+end
+end
+
+note select: churn disabled the delta path for this session (sloff, after the last slpick)
+fn rtseloff to bool
+if eq get RTARM 0 6
+ret sloff
+end
+ret false
+end
+
+note ---- requests ----
+fn rtsavep to void
+for i ulong 64
+put RTPS i get R1P i
+put R1P i get RTQ i
+end
+end
+
+fn rtrestp to void
+for i ulong 64
+put R1P i get RTPS i
+end
+end
+
+note BEGIN: payload PROG, n, n values (p checked by the caller)
+fn rtbegin to ulong
+n = get RTQ 64
+if gt n 4096
+ret 5
+end
+rtsavep
+if ne r1valid 0
+rtrestp
+ret 2
+end
+for i ulong n
+if not r1indom get RTQ add 65 i
+rtrestp
+ret 3
+end
+end
+put R1N 0 n
+for i ulong n
+put R1X i get RTQ add 65 i
+end
+put RTSES 0 1
+put RTSN 0 add get RTSN 0 1
+put RTQN 0 0
+put RTNC 0 0
+put RTSD 0 1
+put RTST 6 add get RTST 6 1
+if gt get RTLIN 0 0
+if not rtdead
+rtrecheck
+end
+end
+if eq get RTARM 0 6
+slsess
+end
+if rtdelarm
+dlsreset
+end
+if eq get RTARM 0 3
+r1pdig
+end
+rtbind
+ret 0
+end
+
+fn rtprog to ulong
+rtsavep
+if ne r1valid 0
+rtrestp
+ret 2
+end
+if not r1alldom
+rtrestp
+ret 3
+end
+put RTNC 0 add get RTNC 0 1
+put RTST 8 add get RTST 8 1
+if rtdelarm
+dldrop
+end
+if eq get RTARM 0 3
+r1pdig
+end
+rtbind
+ret 0
+end
+
+note apply one validated change and tell the delta state
+fn rtapply op ulong a ulong b ulong to void
+old = r1apply op a b
+put RTNC 0 add get RTNC 0 1
+put RTSD 0 1
+put RTST 7 add get RTST 7 1
+if eq get RTDB 0 1
+v = b
+if eq op 5
+v = 0
+end
+if ne dlchg op a v old 0
+put RTDB 0 0
+end
+end
+end
+
+fn rtchange op ulong to ulong
+a = get RTQ 0
+b = ulong 0
+if ne op 5
+b = get RTQ 1
+end
+if lt r1chg op a b get R1N 0 0
+ret 3
+end
+rtapply op a b
+ret 0
+end
+
+note BATCH item i: validity against a state of n values (the new n or -1), and application
+fn rtitemchk i ulong n ulong to long
+q = add 1 mul i 3
+op = get RTQ q
+a = get RTQ add q 1
+ret r1chg op a get RTQ add q 2 n
+end
+
+fn rtitem i ulong to void
+q = add 1 mul i 3
+op = get RTQ q
+a = get RTQ add q 1
+rtapply op a get RTQ add q 2
+end
+
+fn rtbatch to ulong
+m = get RTQ 0
+if or lt m 1 gt m 1024
+ret 3
+end
+n = long get R1N 0
+for i ulong m
+n = rtitemchk i ulong n
+if lt n 0
+ret 3
+end
+end
+for i ulong m
+rtitem i
+end
+ret 0
+end
+
+note ---- QUERY ----
+fn rtfull route ulong to ulong
+r1full
+ret route
+end
+
+fn rtcache to ulong
+if eq get RTSD 0 1
+r1sdig
+put RTSD 0 0
+end
+for j ulong 4
+r1putw mul j 8 r1bswap get R1PD j
+r1putw add 40 mul j 8 r1bswap get R1SD j
+end
+r1putw 32 get R1N 0
+r1hash 72
+for j ulong 4
+put RTKEY j get R1HD j
+end
+n = get RTCN 0
+for e ulong n
+if rtckeq mul e 6
+put R1R 0 get RTCK add mul e 6 4
+put R1R 1 get RTCK add mul e 6 5
+ret 2
+end
+end
+r1full
+h = get RTCH 0
+b = mul h 6
+for j ulong 4
+put RTCK add b j get RTKEY j
+end
+put RTCK add b 4 get R1R 0
+put RTCK add b 5 get R1R 1
+put RTCH 0 rem add h 1 4096
+if lt n 4096
+put RTCN 0 add n 1
+end
+ret 1
+end
+
+fn rtckeq b ulong to bool
+if ne get RTCK b get RTKEY 0
+ret false
+end
+for j ulong 3
+if ne get RTCK add b add j 1 get RTKEY add j 1
+ret false
+end
+end
+ret true
+end
+
+fn rttap to ulong
+t0 = monons
+r1full
+ns = ulong sub monons t0
+if ne extap get RTSN 0 get RTQN 0 get RTNC 0 ns 0
+exit 12
+end
+ret 1
+end
+
+fn rtmethod to ulong
+t = get RTT 0
+if ge t 0
+mtrun ulong t
+ret 3
+end
+ret rtfull 1
+end
+
+note the delta path: rebuild after a drop, then dlres; 1 when it could not answer
+fn rtdelta to bool
+if eq get RTDB 0 0
+if eq dlbind get RTT 0 0
+put RTDB 0 1
+end
+end
+if eq get RTDB 0 1
+if eq dlres 0
+ret true
+end
+end
+ret false
+end
+
+fn rtselect to ulong
+meth = ge get RTT 0 0
+slset meth true
+p = slpick get RTNC 0
+if rtseloff
+if eq get RTDB 0 1
+dldrop
+put RTDB 0 0
+end
+end
+if eq p 4
+if rtdelta
+ret 4
+end
+end
+if and eq p 3 meth
+ret rtmethod
+end
+if meth
+if ne p 1
+ret rtmethod
+end
+end
+ret rtfull 1
+end
+
+fn rtroute to ulong
+a = get RTARM 0
+if eq a 1
+put R1R 0 0
+put R1R 1 0
+ret 0
+end
+if eq a 2
+ret rtfull 1
+end
+if eq a 3
+ret rtcache
+end
+if eq a 7
+ret rttap
+end
+rtrevq
+if or rtdead eq get RTBF 0 1
+ret rtfull 5
+end
+if eq a 4
+ret rtmethod
+end
+if eq a 5
+if rtdelta
+ret 4
+end
+ret rtmethod
+end
+ret rtselect
+end
+
+fn rtquery to void
+put RTQN 0 add get RTQN 0 1
+r = rtroute
+put RTNC 0 0
+put RTST r add get RTST r 1
+put RTOW 0 get R1R 0
+put RTOW 1 get R1R 1
+put RTOW 2 r
+rtresp 0 3
+end
+
+fn rtstats to void
+for k ulong 14
+put RTOW k get RTST k
+end
+put RTOW 10 get CKST 0
+put RTOW 11 get CKST 1
+put RTOW 12 get CKST 2
+put RTOW 13 get CKST 4
+for k ulong 12
+put RTOW add 14 k dlstat k
+end
+put RTOW 26 get SLDIS 0
+put RTOW 27 get SLREF 0
+put RTOW 28 get RTCN 0
+put RTOW 29 mtcount
+put RTOW 30 get RTLC 0
+put RTOW 31 get RTFLG 0
+rtresp 0 32
+end
+
+fn rtend to void
+rtresp 0 0
+if eq get RTARM 0 7
+fd = int get EXTFD 0
+r = fsync fd
+r = fclose fd
+end
+exit 0
+end
+
+note p matches op (K2)
+fn rtpok op ulong p ulong to bool
+if eq op 1
+if lt p 65
+ret false
+end
+n = get RTQ 64
+ret and le n 7169 eq p add 65 n
+end
+if or eq op 3 or eq op 4 eq op 6
+ret eq p 2
+end
+if eq op 5
+ret eq p 1
+end
+if eq op 7
+if lt p 1
+ret false
+end
+m = get RTQ 0
+ret and le m 2411 eq p add 1 mul m 3
+end
+if eq op 8
+ret eq p 64
+end
+ret eq p 0
+end
+
+fn rtop op ulong p ulong to void
+if not rtpok op p
+rtstat 4
+ret
+end
+if eq op 10
+rtend
+end
+if eq op 9
+rtstats
+ret
+end
+if eq op 1
+rtstat rtbegin
+ret
+end
+if eq get RTSES 0 0
+rtstat 6
+ret
+end
+if eq op 2
+rtquery
+ret
+end
+if eq op 7
+rtstat rtbatch
+ret
+end
+if eq op 8
+rtstat rtprog
+ret
+end
+rtstat rtchange op
+end
+
+fn rtreq to void
+op = rtword
+p = rtword
+if or or lt op 1 gt op 10 gt p 7234
+rtstat 4
+exit 4
+end
+for i ulong p
+put RTQ i rtword
+end
+rtop op p
+end
+
+fn main to int
+rtinit
+for o ulong 1000
+for i ulong 999999
+rtreq
+end
+end
+ret 4
+end
