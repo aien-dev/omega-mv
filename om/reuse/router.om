@@ -19,7 +19,8 @@ note cache key SHA-256(program digest, n, state digest), the state digest recomp
 note QUERY after a change, 4096 entries FIFO: hit (2), miss r1full (1); method mtrun (3) when a
 note template is bound and passed G3, else r1full (1), G3 failure r1full (5) for the session; delta:
 note the delta state (4) of the bound method or of the baseline (t = -1), rebuilt by dlbind at a QUERY
-note after a drop, else method (3) or full (1); select: slpick among full (1), method (3), delta (4).
+note after a drop, else method (3) or full (1); select: slpick among full (1), method (3), delta (4);
+note once sloff reports churn (5.2) the delta state is dropped and not maintained for the session.
 note STATS answers 32 counters RTST: 0..5 QUERYs by route 0..5, 6 sessions, 7 change items applied,
 note 8 PROGRAMs applied, 9 refused requests, 10 ckbind calls, 11 bind failures, 12 G3 FIFO hits,
 note 13 G3 lane pairs, 14..25 dlstat 0..11, 26 select delta disables (SLDIS), 27 select refusals
@@ -464,10 +465,21 @@ ret
 end
 end
 if rtdelarm
+if rtseloff
+ret
+end
 if eq dlbind get RTT 0 0
 put RTDB 0 1
 end
 end
+end
+
+note select: churn disabled the delta path for this session (sloff, after the last slpick)
+fn rtseloff to bool
+if eq get RTARM 0 6
+ret sloff
+end
+ret false
 end
 
 note ---- requests ----
@@ -707,6 +719,12 @@ fn rtselect to ulong
 meth = ge get RTT 0 0
 slset meth true
 p = slpick get RTNC 0
+if rtseloff
+if eq get RTDB 0 1
+dldrop
+put RTDB 0 0
+end
+end
 if eq p 4
 if rtdelta
 ret 4

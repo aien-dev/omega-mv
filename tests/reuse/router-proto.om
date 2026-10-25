@@ -1410,7 +1410,89 @@ r = tnolib
 if ne r 0
 ret r
 end
+r = tchurn
+if ne r 0
+ret r
+end
 ret texits
+end
+
+note select churn (5.2): MIN over distinct values, 70 x (DEL of the minimum, INS, QUERY); every
+note DEL of the last copy of the extreme is an invalidation, so after 64 the delta path is off for
+note the session (sloff): routes go from 4 to 1, every answer stays exact, SLDIS counts 1
+fn tchurn to int
+put TARM 0 6
+put TCK 0 12000
+tpkargs 6 0 0 0
+if not tok eq tspawn 0
+ret 1
+end
+tagg 8 3 1 0
+put TQ 5 1
+put TQ 6 0
+if not tok tbegin 100 5 256 0
+ret 1
+end
+n4 = ulong 0
+last = ulong 0
+for r ulong 70
+if not tok tchg 5 tminat 0 0
+ret 1
+end
+if not tok tchg 4 0 255 0
+ret 1
+end
+last = tqany
+if not tok ne last 0
+ret 1
+end
+if eq last 4
+n4 = add n4 1
+end
+end
+if not tok and gt n4 0 eq last 1
+ret 1
+end
+if not tok tsend 9 0 0
+ret 1
+end
+if not tok trecv
+ret 1
+end
+if not tok eq get TR 26 1
+ret 1
+end
+note after the disable the delta state is dropped: fewer than the 140 changes were tracked
+if not tok lt get TR 14 140
+tputd get TR 14
+ret 1
+end
+if not tok tst 10 0 0
+ret 1
+end
+if not tok eq treap 0
+ret 1
+end
+ret 0
+end
+
+note a QUERY answered exactly on route 1 or 4: the route, or 0
+fn tqany to ulong
+if not tsend 2 0 0
+ret 0
+end
+if not trecv
+ret 0
+end
+r = get TR 2
+if and ne r 1 ne r 4
+ret 0
+end
+r1full
+if or ne get TR 0 get R1R 0 ne get TR 1 get R1R 1
+ret 0
+end
+ret r
 end
 
 fn main to int
