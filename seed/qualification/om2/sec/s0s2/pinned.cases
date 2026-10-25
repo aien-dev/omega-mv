@@ -21,6 +21,7 @@ s0-double-space emit seed/qualification/om2/sec/s0s2/s0/double-space.om - err:4:
 s0-indent emit seed/qualification/om2/sec/s0s2/s0/indent.om - err:4:16 16
 s0-upper emit seed/qualification/om2/sec/s0s2/s0/upper.om - err:4:16 16
 s0-blank-first emit seed/qualification/om2/sec/s0s2/s0/blank-first.om - err:5:16 16
+s0-blank-spaces-first emit seed/qualification/om2/sec/s0s2/s0/blank-spaces-first.om - err:5:16 16
 s0-names-fn run seed/qualification/om2/sec/s0s2/s0/names-fn.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/names-fn.out - 0
 s0-names-var run seed/qualification/om2/sec/s0s2/s0/names-var.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/names-var.out - 0
 s0-om1-crlf run seed/qualification/om2/sec/s0s2/s0/om1-crlf.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/om1-crlf.out - 5

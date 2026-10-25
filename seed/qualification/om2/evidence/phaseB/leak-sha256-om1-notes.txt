@@ -1,0 +1,52 @@
+OM-1 SHA static leakage evidence, revised under coordinator E11/E12 (supersedes structural-trap PASS).
+Contract §8 evidence (a); SOURCE evidence, scan executed on AArch64 host. Dynamic traces: NOT_RUN.
+Compiler seed/out/omc sha256 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61.
+Source om/sha256/sha256.om (main acb3f15) sha256 7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21.
+Artifact leak/fixtures/sha256-om1.bin sha256 3b0ee1ffd7247514b1fd685b5cd48e83ccda4d1ded40e18a4237e81eb44bc97f.
+Scanner identity: see leak-s1-rot.txt (same revised scanner used for both scans).
+
+Entry: omsha c b n op w b8 (sha256.om:11,1509). c,b,w,b8 public pointers; n/op public length/opcode.
+No xN DATA arguments. Explicit declaration pub:0:32:8 identifies the context count bytes [32,40),
+contract layout at 32, E5; E11 permits an explicit public-memory declaration. Its presence is shown
+as PUBLIC-DECL 0+32:8 in the full report.
+
+Commands (worktree root):
+ build/om2-qual/leakscan-e12 < seed/qualification/om2/leak/fixtures/sha256-om1.bin > seed/qualification/om2/evidence/phaseB/leak-sha256-om1.txt
+ build/om2-qual/leakscan-e12 pub:0:32:8 < seed/qualification/om2/leak/fixtures/sha256-om1.bin > seed/qualification/om2/evidence/phaseB/leak-sha256-om1-pub.txt
+Both exit 2, same classification counts:
+ SUMMARY branches=83 len=57 trap-check=10 data-branch=16 branch-unreached=0 mem=387 const=16
+ public-index=363 data-index=8 mem-unreached=0 unknown=0 unhandled=0
+ VERDICT TRACE-EQUIV-STATIC NOT_RUN
+Objdump 2.42 agrees on all 83 conditional branches/targets and all 387 non-SP memory accesses (773
+SP-only spills omitted from listings). Full cross-check: leak-sha256-om1-xcheck.txt.
+
+Ten DATA checks discharged by E12 AND known-bits:
+ @40: putle uchar(and x,255), @2446 @2456 @2466 @2476 @2486 @2496 @2506 @2516: rounds uint(and x,
+ 0xffffffff), @3209: final uchar(and shr bits sh,255). They use LSR then CBNZ, provably zero after
+ AND with a constant fitting the conversion target. These are the ONLY data never-taken-trap-checks.
+
+Sixteen branches remain MANUAL (data-branch summary field), including nine unproved trap checks:
+ @80: loadh uint(getle(...)) conversion, no AND proof.
+ @136 @143 @150 @157: schedb bounds checks.
+ @2540 @2543: tobuf bounds checks; @3107 zbuf bounds check; @3139 final bounds check.
+ @2528: tobuf loop condition; @2616 @2620 @2782 @2809: absorb condition/loops;
+ @3099: zbuf loop condition; @3160: final padding condition.
+Eight DATA addresses remain: @137 @144 @151 @158 (schedb), @2541 @2544 (tobuf), @3108 (zbuf),
+@3140 (final). No public declaration is applied to an OM-1 SHA load: getle shares calls for many
+fields, and uses a variable index p+i; exact constants are lost at context-insensitive joins/loops.
+This is the documented precision limit, not a silent expansion of the public range.
+
+Listed manual classification of the original 15 items (7 branches + 8 addresses), not a static PASS:
+ schedb @137 @144 @151 @158: input offset from absorb's off;
+ tobuf @2528 @2541 @2544: n / bo+i / 40+bi+i;
+ absorb @2616 @2620 @2782 @2809: bi, lf and off conditions;
+ zbuf @3099 @3108: start bi+1; final @3140 @3160: bi.
+All depend on count loaded by `cnt = getle c 32 8` (sha256.om:890,953), public length state under
+§8 equal lengths/call sequence and the explicit E11 declaration. A prior throwaway counterfactual
+replaced both count loads by a constant and removed all 15 findings; that is root-cause evidence,
+not execution evidence for the unchanged artifact. Nine additional E12 trap checks remain unproved
+as listed above, even after the manual count classification; no overall PASS is claimed.
+
+Required E12 false-PASS control and native reachability: leak/fixtures/reachable-trap.om scans data
+MANUAL trap=5 / NOT_RUN; program twins execute with 0 (exit0) and 2^32 (trap5, exit105). See gate receipts
+and leak-reachability.txt. The earlier assumption "branch to trap implies never taken" is retracted.

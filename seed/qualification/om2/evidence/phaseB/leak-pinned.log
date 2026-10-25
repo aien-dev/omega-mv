@@ -1,0 +1,185 @@
+OM2GATE START cases=seed/qualification/om2/leak/leak.cases scratch=build/om2-qual/leak-e12-pinned-final
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+DEADLINE 120
+CASE art-len-loop line=5
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/5.src > build/om2-qual/leak-e12-pinned-final/5.elf 2> build/om2-qual/leak-e12-pinned-final/5.cerr
+VERDICT art-len-loop PASS compile exit=0 expected=0 sha256=2f2d40510e226f208771122a572b1e1993af665757cbbf3db138e26720635b14 stderr=match
+CASE art-data-branch line=6
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/6.src > build/om2-qual/leak-e12-pinned-final/6.elf 2> build/om2-qual/leak-e12-pinned-final/6.cerr
+VERDICT art-data-branch PASS compile exit=0 expected=0 sha256=33cef92d0bda016cc9d9f2c59bc6e4684288c9f65850e6110587564664cd9f31 stderr=match
+CASE art-data-index line=7
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/7.src > build/om2-qual/leak-e12-pinned-final/7.elf 2> build/om2-qual/leak-e12-pinned-final/7.cerr
+VERDICT art-data-index PASS compile exit=0 expected=0 sha256=91350a4040f1b186f354673be7b30f71a8a6178b3b8e8bb738379f391f634838 stderr=match
+CASE art-trap-check line=8
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/8.src > build/om2-qual/leak-e12-pinned-final/8.elf 2> build/om2-qual/leak-e12-pinned-final/8.cerr
+VERDICT art-trap-check PASS compile exit=0 expected=0 sha256=a248f55ba2a89751ec19de673f252ebc2d8353d1596b2560641ce3b847519750 stderr=match
+CASE art-call-public line=9
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/9.src > build/om2-qual/leak-e12-pinned-final/9.elf 2> build/om2-qual/leak-e12-pinned-final/9.cerr
+VERDICT art-call-public PASS compile exit=0 expected=0 sha256=94cf35fb8b8a9ccdb4c036efc7f721f310ee68f991d553934a6b542f3d386bab stderr=match
+CASE art-call-data line=10
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/10.src > build/om2-qual/leak-e12-pinned-final/10.elf 2> build/om2-qual/leak-e12-pinned-final/10.cerr
+VERDICT art-call-data PASS compile exit=0 expected=0 sha256=4991fd1cd1136b3c76c87c24373528bf49613077d9017c6cc1e77b6974d5fabc stderr=match
+CASE art-flags line=11
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/11.src > build/om2-qual/leak-e12-pinned-final/11.elf 2> build/om2-qual/leak-e12-pinned-final/11.cerr
+VERDICT art-flags PASS compile exit=0 expected=0 sha256=0e89dcd1284414e8d735d7245719ba019edd80a833e59f4958d767e38f6fea1a stderr=match
+CASE art-local line=12
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/12.src > build/om2-qual/leak-e12-pinned-final/12.elf 2> build/om2-qual/leak-e12-pinned-final/12.cerr
+VERDICT art-local PASS compile exit=0 expected=0 sha256=b79fd23b5bf7f6a00fb7f4b6058ec436c4ba7cb81b244159086cb575cfc3ef51 stderr=match
+CASE art-svc line=13
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/13.src > build/om2-qual/leak-e12-pinned-final/13.elf 2> build/om2-qual/leak-e12-pinned-final/13.cerr
+VERDICT art-svc PASS compile exit=0 expected=0 sha256=b363a48acf9c0a8c6769cda57251e07200ee18884d3f3f87c154182d5a3f2735 stderr=match
+CASE art-elf line=14
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/14.src > build/om2-qual/leak-e12-pinned-final/14.elf 2> build/om2-qual/leak-e12-pinned-final/14.cerr
+VERDICT art-elf PASS compile exit=0 expected=0 sha256=4caebbb143d76413098649f9569eadc495aad8ca744a91ba7b29fe1bad4c7471 stderr=match
+CASE art-sha256-om1 line=15
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/15.src > build/om2-qual/leak-e12-pinned-final/15.elf 2> build/om2-qual/leak-e12-pinned-final/15.cerr
+VERDICT art-sha256-om1 PASS compile exit=0 expected=0 sha256=3b0ee1ffd7247514b1fd685b5cd48e83ccda4d1ded40e18a4237e81eb44bc97f stderr=match
+CASE art-public-in line=16
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/16.src > build/om2-qual/leak-e12-pinned-final/16.elf 2> build/om2-qual/leak-e12-pinned-final/16.cerr
+VERDICT art-public-in PASS compile exit=0 expected=0 sha256=cbe9a0ca26df3fe76fbc1391916bae2e149142bcb5a3516fda247970886ce09e stderr=match
+CASE art-public-out line=17
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/17.src > build/om2-qual/leak-e12-pinned-final/17.elf 2> build/om2-qual/leak-e12-pinned-final/17.cerr
+VERDICT art-public-out PASS compile exit=0 expected=0 sha256=4f2b4c9a3b45fddcab74ae8dfb09311fe95c5ba6104eca05d2864e70897064a2 stderr=match
+CASE art-reachable line=18
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/18.src > build/om2-qual/leak-e12-pinned-final/18.elf 2> build/om2-qual/leak-e12-pinned-final/18.cerr
+VERDICT art-reachable PASS compile exit=0 expected=0 sha256=be21c3c9b2edbd4c68bc43a79aea4427eb9d8639d08166381474e39efff74b3b stderr=match
+CASE s1-rot-refused line=20
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/20.src > build/om2-qual/leak-e12-pinned-final/20.elf 2> build/om2-qual/leak-e12-pinned-final/20.cerr
+VERDICT s1-rot-refused PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE scan-len-loop line=23
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/23.src > build/om2-qual/leak-e12-pinned-final/23.elf 2> build/om2-qual/leak-e12-pinned-final/23.cerr
+  $ build/om2-qual/leak-e12-pinned-final/23.elf < seed/qualification/om2/leak/fixtures/len-loop.bin > build/om2-qual/leak-e12-pinned-final/23.out 2> build/om2-qual/leak-e12-pinned-final/23.err
+VERDICT scan-len-loop PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-len-loop-x1 line=24
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/24.src > build/om2-qual/leak-e12-pinned-final/24.elf 2> build/om2-qual/leak-e12-pinned-final/24.cerr
+  $ build/om2-qual/leak-e12-pinned-final/24.elf x1 < seed/qualification/om2/leak/fixtures/len-loop.bin > build/om2-qual/leak-e12-pinned-final/24.out 2> build/om2-qual/leak-e12-pinned-final/24.err
+VERDICT scan-len-loop-x1 PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-data-branch line=26
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/26.src > build/om2-qual/leak-e12-pinned-final/26.elf 2> build/om2-qual/leak-e12-pinned-final/26.cerr
+  $ build/om2-qual/leak-e12-pinned-final/26.elf < seed/qualification/om2/leak/fixtures/data-branch.bin > build/om2-qual/leak-e12-pinned-final/26.out 2> build/om2-qual/leak-e12-pinned-final/26.err
+VERDICT scan-data-branch PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-data-index line=27
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/27.src > build/om2-qual/leak-e12-pinned-final/27.elf 2> build/om2-qual/leak-e12-pinned-final/27.cerr
+  $ build/om2-qual/leak-e12-pinned-final/27.elf < seed/qualification/om2/leak/fixtures/data-index.bin > build/om2-qual/leak-e12-pinned-final/27.out 2> build/om2-qual/leak-e12-pinned-final/27.err
+VERDICT scan-data-index PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-data-index-x0x5 line=28
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/28.src > build/om2-qual/leak-e12-pinned-final/28.elf 2> build/om2-qual/leak-e12-pinned-final/28.cerr
+  $ build/om2-qual/leak-e12-pinned-final/28.elf x5 x0 < seed/qualification/om2/leak/fixtures/data-index.bin > build/om2-qual/leak-e12-pinned-final/28.out 2> build/om2-qual/leak-e12-pinned-final/28.err
+VERDICT scan-data-index-x0x5 PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-trap-check line=30
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/30.src > build/om2-qual/leak-e12-pinned-final/30.elf 2> build/om2-qual/leak-e12-pinned-final/30.cerr
+  $ build/om2-qual/leak-e12-pinned-final/30.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e12-pinned-final/30.out 2> build/om2-qual/leak-e12-pinned-final/30.err
+VERDICT scan-trap-check PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-reachable-trap line=31
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/31.src > build/om2-qual/leak-e12-pinned-final/31.elf 2> build/om2-qual/leak-e12-pinned-final/31.cerr
+  $ build/om2-qual/leak-e12-pinned-final/31.elf < seed/qualification/om2/leak/fixtures/reachable-trap.bin > build/om2-qual/leak-e12-pinned-final/31.out 2> build/om2-qual/leak-e12-pinned-final/31.err
+VERDICT scan-reachable-trap PASS run exit=2 expected=2 stdout=match stderr=match
+CASE reachable-zero line=33
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/33.src > build/om2-qual/leak-e12-pinned-final/33.elf 2> build/om2-qual/leak-e12-pinned-final/33.cerr
+  $ build/om2-qual/leak-e12-pinned-final/33.elf < /dev/null > build/om2-qual/leak-e12-pinned-final/33.out 2> build/om2-qual/leak-e12-pinned-final/33.err
+VERDICT reachable-zero PASS run exit=0 expected=0 stdout=match stderr=match
+CASE reachable-big line=34
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/34.src > build/om2-qual/leak-e12-pinned-final/34.elf 2> build/om2-qual/leak-e12-pinned-final/34.cerr
+  $ build/om2-qual/leak-e12-pinned-final/34.elf < /dev/null > build/om2-qual/leak-e12-pinned-final/34.out 2> build/om2-qual/leak-e12-pinned-final/34.err
+VERDICT reachable-big PASS run exit=105 expected=105 stdout=match stderr=match
+CASE scan-call-public line=36
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/36.src > build/om2-qual/leak-e12-pinned-final/36.elf 2> build/om2-qual/leak-e12-pinned-final/36.cerr
+  $ build/om2-qual/leak-e12-pinned-final/36.elf < seed/qualification/om2/leak/fixtures/call-public.bin > build/om2-qual/leak-e12-pinned-final/36.out 2> build/om2-qual/leak-e12-pinned-final/36.err
+VERDICT scan-call-public PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-call-data line=37
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/37.src > build/om2-qual/leak-e12-pinned-final/37.elf 2> build/om2-qual/leak-e12-pinned-final/37.cerr
+  $ build/om2-qual/leak-e12-pinned-final/37.elf < seed/qualification/om2/leak/fixtures/call-data.bin > build/om2-qual/leak-e12-pinned-final/37.out 2> build/om2-qual/leak-e12-pinned-final/37.err
+VERDICT scan-call-data PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-flags line=38
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/38.src > build/om2-qual/leak-e12-pinned-final/38.elf 2> build/om2-qual/leak-e12-pinned-final/38.cerr
+  $ build/om2-qual/leak-e12-pinned-final/38.elf < seed/qualification/om2/leak/fixtures/flags.bin > build/om2-qual/leak-e12-pinned-final/38.out 2> build/om2-qual/leak-e12-pinned-final/38.err
+VERDICT scan-flags PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-local line=39
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/39.src > build/om2-qual/leak-e12-pinned-final/39.elf 2> build/om2-qual/leak-e12-pinned-final/39.cerr
+  $ build/om2-qual/leak-e12-pinned-final/39.elf < seed/qualification/om2/leak/fixtures/local.bin > build/om2-qual/leak-e12-pinned-final/39.out 2> build/om2-qual/leak-e12-pinned-final/39.err
+VERDICT scan-local PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-public-in line=41
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/41.src > build/om2-qual/leak-e12-pinned-final/41.elf 2> build/om2-qual/leak-e12-pinned-final/41.cerr
+  $ build/om2-qual/leak-e12-pinned-final/41.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-in.bin > build/om2-qual/leak-e12-pinned-final/41.out 2> build/om2-qual/leak-e12-pinned-final/41.err
+VERDICT scan-public-in PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-public-out line=42
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/42.src > build/om2-qual/leak-e12-pinned-final/42.elf 2> build/om2-qual/leak-e12-pinned-final/42.cerr
+  $ build/om2-qual/leak-e12-pinned-final/42.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-out.bin > build/om2-qual/leak-e12-pinned-final/42.out 2> build/om2-qual/leak-e12-pinned-final/42.err
+VERDICT scan-public-out PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-s1-rot line=44
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/44.src > build/om2-qual/leak-e12-pinned-final/44.elf 2> build/om2-qual/leak-e12-pinned-final/44.cerr
+  $ build/om2-qual/leak-e12-pinned-final/44.elf x0 x2 < seed/qualification/om2/leak/fixtures/s1-rot.bin > build/om2-qual/leak-e12-pinned-final/44.out 2> build/om2-qual/leak-e12-pinned-final/44.err
+VERDICT scan-s1-rot PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-svc line=46
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/46.src > build/om2-qual/leak-e12-pinned-final/46.elf 2> build/om2-qual/leak-e12-pinned-final/46.cerr
+  $ build/om2-qual/leak-e12-pinned-final/46.elf < seed/qualification/om2/leak/fixtures/svc.bin > build/om2-qual/leak-e12-pinned-final/46.out 2> build/om2-qual/leak-e12-pinned-final/46.err
+VERDICT scan-svc PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-unknown line=47
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/47.src > build/om2-qual/leak-e12-pinned-final/47.elf 2> build/om2-qual/leak-e12-pinned-final/47.cerr
+  $ build/om2-qual/leak-e12-pinned-final/47.elf < build/om2-qual/leak-e12-pinned-final/47.in > build/om2-qual/leak-e12-pinned-final/47.out 2> build/om2-qual/leak-e12-pinned-final/47.err
+VERDICT scan-unknown PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-empty line=48
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/48.src > build/om2-qual/leak-e12-pinned-final/48.elf 2> build/om2-qual/leak-e12-pinned-final/48.cerr
+  $ build/om2-qual/leak-e12-pinned-final/48.elf < /dev/null > build/om2-qual/leak-e12-pinned-final/48.out 2> build/om2-qual/leak-e12-pinned-final/48.err
+VERDICT scan-empty PASS run exit=91 expected=91 stdout=match stderr=match
+CASE scan-partial-word line=49
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/49.src > build/om2-qual/leak-e12-pinned-final/49.elf 2> build/om2-qual/leak-e12-pinned-final/49.cerr
+  $ build/om2-qual/leak-e12-pinned-final/49.elf < build/om2-qual/leak-e12-pinned-final/49.in > build/om2-qual/leak-e12-pinned-final/49.out 2> build/om2-qual/leak-e12-pinned-final/49.err
+VERDICT scan-partial-word PASS run exit=91 expected=91 stdout=match stderr=match
+CASE scan-elf line=50
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/50.src > build/om2-qual/leak-e12-pinned-final/50.elf 2> build/om2-qual/leak-e12-pinned-final/50.cerr
+  $ build/om2-qual/leak-e12-pinned-final/50.elf < seed/qualification/om2/leak/fixtures/elf.bin > build/om2-qual/leak-e12-pinned-final/50.out 2> build/om2-qual/leak-e12-pinned-final/50.err
+VERDICT scan-elf PASS run exit=91 expected=91 stdout=match stderr=match
+CASE scan-usage-x6 line=51
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/51.src > build/om2-qual/leak-e12-pinned-final/51.elf 2> build/om2-qual/leak-e12-pinned-final/51.cerr
+  $ build/om2-qual/leak-e12-pinned-final/51.elf x6 < /dev/null > build/om2-qual/leak-e12-pinned-final/51.out 2> build/om2-qual/leak-e12-pinned-final/51.err
+VERDICT scan-usage-x6 PASS run exit=90 expected=90 stdout=match stderr=match
+CASE scan-usage-word line=52
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/52.src > build/om2-qual/leak-e12-pinned-final/52.elf 2> build/om2-qual/leak-e12-pinned-final/52.cerr
+  $ build/om2-qual/leak-e12-pinned-final/52.elf data < /dev/null > build/om2-qual/leak-e12-pinned-final/52.out 2> build/om2-qual/leak-e12-pinned-final/52.err
+VERDICT scan-usage-word PASS run exit=90 expected=90 stdout=match stderr=match
+SUBST seed/qualification/om2/leak/mutants/cbtaint.from seed/qualification/om2/leak/mutants/cbtaint.to
+CASE kill-cbtaint line=55
+  MUTATE exact-once substitution at byte 23710
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/55.src > build/om2-qual/leak-e12-pinned-final/55.elf 2> build/om2-qual/leak-e12-pinned-final/55.cerr
+  $ build/om2-qual/leak-e12-pinned-final/55.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e12-pinned-final/55.out 2> build/om2-qual/leak-e12-pinned-final/55.err
+VERDICT kill-cbtaint PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 105 stderr=match
+SUBST seed/qualification/om2/leak/mutants/loadpub.from seed/qualification/om2/leak/mutants/loadpub.to
+CASE kill-loadpub line=57
+  MUTATE exact-once substitution at byte 19667
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/57.src > build/om2-qual/leak-e12-pinned-final/57.elf 2> build/om2-qual/leak-e12-pinned-final/57.cerr
+  $ build/om2-qual/leak-e12-pinned-final/57.elf < seed/qualification/om2/leak/fixtures/data-branch.bin > build/om2-qual/leak-e12-pinned-final/57.out 2> build/om2-qual/leak-e12-pinned-final/57.err
+VERDICT kill-loadpub PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 104 stderr=match
+SUBST seed/qualification/om2/leak/mutants/callexit.from seed/qualification/om2/leak/mutants/callexit.to
+CASE kill-callexit line=59
+  MUTATE exact-once substitution at byte 20485
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/59.src > build/om2-qual/leak-e12-pinned-final/59.elf 2> build/om2-qual/leak-e12-pinned-final/59.cerr
+  $ build/om2-qual/leak-e12-pinned-final/59.elf < seed/qualification/om2/leak/fixtures/call-data.bin > build/om2-qual/leak-e12-pinned-final/59.out 2> build/om2-qual/leak-e12-pinned-final/59.err
+VERDICT kill-callexit PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 107 stderr=match
+SUBST seed/qualification/om2/leak/mutants/slotoff.from seed/qualification/om2/leak/mutants/slotoff.to
+CASE kill-slotoff line=61
+  MUTATE exact-once substitution at byte 18698
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/61.src > build/om2-qual/leak-e12-pinned-final/61.elf 2> build/om2-qual/leak-e12-pinned-final/61.cerr
+  $ build/om2-qual/leak-e12-pinned-final/61.elf < seed/qualification/om2/leak/fixtures/call-public.bin > build/om2-qual/leak-e12-pinned-final/61.out 2> build/om2-qual/leak-e12-pinned-final/61.err
+VERDICT kill-slotoff PASS run exit=2 expected=2 killed: stdout differs from the oracle at byte 61 stderr=match
+SUBST seed/qualification/om2/leak/mutants/flagsweak.from seed/qualification/om2/leak/mutants/flagsweak.to
+CASE kill-flagsweak line=63
+  MUTATE exact-once substitution at byte 17673
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/63.src > build/om2-qual/leak-e12-pinned-final/63.elf 2> build/om2-qual/leak-e12-pinned-final/63.cerr
+  $ build/om2-qual/leak-e12-pinned-final/63.elf < seed/qualification/om2/leak/fixtures/flags.bin > build/om2-qual/leak-e12-pinned-final/63.out 2> build/om2-qual/leak-e12-pinned-final/63.err
+VERDICT kill-flagsweak PASS run exit=2 expected=2 killed: stdout differs from the oracle at byte 104 stderr=match
+SUBST seed/qualification/om2/leak/mutants/nostub.from seed/qualification/om2/leak/mutants/nostub.to
+CASE kill-nostub line=65
+  MUTATE exact-once substitution at byte 22810
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/65.src > build/om2-qual/leak-e12-pinned-final/65.elf 2> build/om2-qual/leak-e12-pinned-final/65.cerr
+  $ build/om2-qual/leak-e12-pinned-final/65.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e12-pinned-final/65.out 2> build/om2-qual/leak-e12-pinned-final/65.err
+VERDICT kill-nostub PASS run exit=2 expected=2 killed: stdout differs from the oracle at byte 110 stderr=match
+SUBST seed/qualification/om2/leak/mutants/pubrange.from seed/qualification/om2/leak/mutants/pubrange.to
+CASE kill-public-boundary line=67
+  MUTATE exact-once substitution at byte 30912
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/67.src > build/om2-qual/leak-e12-pinned-final/67.elf 2> build/om2-qual/leak-e12-pinned-final/67.cerr
+  $ build/om2-qual/leak-e12-pinned-final/67.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-out.bin > build/om2-qual/leak-e12-pinned-final/67.out 2> build/om2-qual/leak-e12-pinned-final/67.err
+VERDICT kill-public-boundary PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 103 stderr=match
+CASE sha256-om2-scan line=69
+VERDICT sha256-om2-scan NOT_RUN not run: OM-2 SHA artifact pending independent qualification
+OM2GATE NOT_RUN cases=46 pass=45 fail=0 invalid=0 not_run=1

@@ -1,0 +1,68 @@
+S1 rotate scan: SOURCE evidence, executed on AArch64 host; contract §3 lines 76-83 and §8 E12.
+No S1 compiler source was read. ARM DDI0487M.d: EXTR C6.2.160 p2201, RORV C6.2.349 p2580, NEG C6.2.295 p2475.
+Compiler /tmp/zl/omc-s1 sha256 3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f
+1552ce25751cc7bcff786cc85022c31eeafc62451701248b56e32fb6b4cff46c  seed/qualification/om2/leak/fixtures/s1-rot.om
+4e9c219ba3cd8c8b5615bf2b650345d1836db747f0f75fde982f22ce0ccd3553  seed/qualification/om2/leak/fixtures/s1-rot.bin
+87a384279111f5ef03214bb0a84432a9b1329c5e3a44e9d4f84e5cb360a4bbb9  seed/qualification/om2/leak/leakscan.om
+1d644284e21bb81d9ac59072fc9a862a61f08af656309a3816ed2203cff4047b  build/om2-qual/leakscan-e12
+
+Commands (repository root):
+  /tmp/zl/omc-s1 < seed/qualification/om2/leak/fixtures/s1-rot.om > seed/qualification/om2/leak/fixtures/s1-rot.bin   (exit 0)
+  build/om2-qual/leakscan-e12 x0 x2 < seed/qualification/om2/leak/fixtures/s1-rot.bin   (exit 0)
+
+LEAKSCAN 1 words=32 entry=@0 data=x0,x2
+BRANCH @5 b.cs ->@30 len trap=7
+BRANCH @9 b.cs ->@30 len trap=7
+BRANCH @18 b.cs ->@30 len trap=7
+BRANCH @22 b.cs ->@30 len trap=7
+MEM @28 ldr imm base=x7 index=- const trap-tail
+SUMMARY branches=4 len=4 trap-check=0 data-branch=0 branch-unreached=0 mem=1 const=1 public-index=0 data-index=0 mem-unreached=0 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC PASS
+
+  python3 seed/qualification/om2/oracle/leak/xcheck.py seed/qualification/om2/leak/fixtures/s1-rot.bin seed/qualification/om2/leak/expected/s1-rot.out   (exit 0)
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=32
+XCHECK branches objdump=4 leakscan=4
+XCHECK mem-non-sp objdump=1 leakscan=1 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+objdump -D -b binary -m aarch64 seed/qualification/om2/leak/fixtures/s1-rot.bin
+
+seed/qualification/om2/leak/fixtures/s1-rot.bin:     file format binary
+
+
+Disassembly of section .data:
+
+0000000000000000 <.data>:
+   0:	13801c04 	ror	w4, w0, #7
+   4:	aa0403e5 	mov	x5, x4
+   8:	13805404 	ror	w4, w0, #21
+   c:	ca0400a5 	eor	x5, x5, x4
+  10:	f100803f 	cmp	x1, #0x20
+  14:	54000322 	b.cs	0x78  // b.hs, b.nlast
+  18:	1ac12c04 	ror	w4, w0, w1
+  1c:	ca0400a5 	eor	x5, x5, x4
+  20:	f100803f 	cmp	x1, #0x20
+  24:	540002a2 	b.cs	0x78  // b.hs, b.nlast
+  28:	cb0103e6 	neg	x6, x1
+  2c:	1ac62c04 	ror	w4, w0, w6
+  30:	ca0400a5 	eor	x5, x5, x4
+  34:	93c24446 	ror	x6, x2, #17
+  38:	ca0600a5 	eor	x5, x5, x6
+  3c:	93c2a446 	ror	x6, x2, #41
+  40:	ca0600a5 	eor	x5, x5, x6
+  44:	f101007f 	cmp	x3, #0x40
+  48:	54000182 	b.cs	0x78  // b.hs, b.nlast
+  4c:	9ac32c46 	ror	x6, x2, x3
+  50:	ca0600a5 	eor	x5, x5, x6
+  54:	f101007f 	cmp	x3, #0x40
+  58:	54000102 	b.cs	0x78  // b.hs, b.nlast
+  5c:	cb0303e8 	neg	x8, x3
+  60:	9ac82c46 	ror	x6, x2, x8
+  64:	ca0600a0 	eor	x0, x5, x6
+  68:	d65f03c0 	ret
+  6c:	aa0703e0 	mov	x0, x7
+  70:	f94008f0 	ldr	x16, [x7, #16]
+  74:	d61f0200 	br	x16
+  78:	d28000e1 	mov	x1, #0x7                   	// #7
+  7c:	17fffffc 	b	0x6c

@@ -1,0 +1,19 @@
+E12 native reachability of loaded ulong-to-uint conversion. HOST evidence, pinned omc 734f0a39.
+Program-mode twins: loaded 0 returns0; loaded 2^32 traps5 and exits105.
+Exact command:
+ nice -n 19 build/om2-qual/gate-b seed/out/omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 seed/qualification/om2/leak/leak.cases build/om2-qual/leak-e12-pinned-final
+
+CASE scan-reachable-trap line=31
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/31.src > build/om2-qual/leak-e12-pinned-final/31.elf 2> build/om2-qual/leak-e12-pinned-final/31.cerr
+  $ build/om2-qual/leak-e12-pinned-final/31.elf < seed/qualification/om2/leak/fixtures/reachable-trap.bin > build/om2-qual/leak-e12-pinned-final/31.out 2> build/om2-qual/leak-e12-pinned-final/31.err
+VERDICT scan-reachable-trap PASS run exit=2 expected=2 stdout=match stderr=match
+CASE reachable-zero line=33
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/33.src > build/om2-qual/leak-e12-pinned-final/33.elf 2> build/om2-qual/leak-e12-pinned-final/33.cerr
+  $ build/om2-qual/leak-e12-pinned-final/33.elf < /dev/null > build/om2-qual/leak-e12-pinned-final/33.out 2> build/om2-qual/leak-e12-pinned-final/33.err
+VERDICT reachable-zero PASS run exit=0 expected=0 stdout=match stderr=match
+CASE reachable-big line=34
+  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/34.src > build/om2-qual/leak-e12-pinned-final/34.elf 2> build/om2-qual/leak-e12-pinned-final/34.cerr
+  $ build/om2-qual/leak-e12-pinned-final/34.elf < /dev/null > build/om2-qual/leak-e12-pinned-final/34.out 2> build/om2-qual/leak-e12-pinned-final/34.err
+VERDICT reachable-big PASS run exit=105 expected=105 stdout=match stderr=match
+
+OM2GATE NOT_RUN cases=46 pass=45 fail=0 invalid=0 not_run=1

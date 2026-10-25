@@ -75,6 +75,56 @@ for line in open(os.path.join(CAP, "build/gate669.log")):
 # 5. gate5 inline programs (gate5.sh 3b, 5d, 7) and the two capacity inputs over 8 MiB
 for n in ["ok", "e4", "e11", "e12", "e13", "bad", "m", "zm", "e14"]:
     add(open(os.path.join(G5, n + ".om"), "rb").read(), "gate5:" + n + ".om")
+# 6. the #748 lane's own OM-1 units (appended last, so entries of 1-5 keep their ids): every .om under
+#    OUT (seed/qualification/om2) and every SRC (a+b concatenation) of its case lists whose first line
+#    that is not a note or blank (E10) does not start with the word om2
+def is_om2(data):
+    for ln in data.split(b"\n"):
+        w = ln.split()
+        if not w or w[0] == b"note":
+            continue
+        return w[0] == b"om2"
+    return False
+
+def qual_src(spec):
+    if spec.startswith(("pack:", "cyc:")):
+        return None
+    data = b""
+    for p in spec.split("+"):
+        f = os.path.join(OUT, "../../..", p)
+        if not p.startswith("seed/qualification/om2/") and not p.startswith("om/"):
+            return None
+        if not os.path.isfile(f):
+            return None
+        data += open(f, "rb").read()
+    return data
+
+qroot = os.path.abspath(OUT)
+for dp, dn, fn in sorted(os.walk(qroot)):
+    dn.sort()
+    if os.path.relpath(dp, qroot).split(os.sep)[0] in ("c2", "evidence"):
+        continue
+    for f in sorted(fn):
+        p = os.path.join(dp, f)
+        rel = "seed/qualification/om2/" + os.path.relpath(p, qroot)
+        if f.endswith(".om"):
+            data = open(p, "rb").read()
+            if not is_om2(data):
+                add(data, "qual:" + rel)
+        elif f.endswith(".cases") and f != "manifest-c2.txt":
+            for line in open(p, encoding="latin-1"):
+                t = line.split()
+                if len(t) < 3 or t[0].startswith("#"):
+                    continue
+                specs = []
+                if t[1] in ("run", "kill", "refuse", "emit"):
+                    specs = [t[2]]
+                elif t[1] == "same" and len(t) >= 4:
+                    specs = [t[2], t[3]]
+                for s in specs:
+                    data = qual_src(s)
+                    if data is not None and not is_om2(data):
+                        add(data, "qual:%s:%s" % (rel, t[0]))
 
 def compile_(data):
     p = subprocess.run([OMC], input=data, capture_output=True, timeout=120)
@@ -173,7 +223,9 @@ hdr = [
     "# (seed/rung4/gate4.sh with omc in om4's place as gate5 runs it, seed/omc/gate5.sh inline programs",
     "# and seed/check/nextfuzz.sh 20, gate6-17, gate-ir, seed/host/gate.sh, security673/gate669.om).",
     "# Excluded: omc.om itself (C2), gate5 section 7 prefixes of omc.om, and gate5 error-1/2 I/O cases",
-    "# (a directory as input, /dev/full as output), which have no unit bytes. Entries=%d." % len(manifest),
+    "# (a directory as input, /dev/full as output), which have no unit bytes. Appended after those: the",
+    "# #748 lane's own OM-1 units (qual: origins; every .om and case-list source under",
+    "# seed/qualification/om2 that is not OM-2 by its first non-note, non-blank line). Entries=%d." % len(manifest),
     "deadline 120",
 ]
 open(os.path.join(OUT, "manifest-c2.txt"), "w").write("\n".join(hdr + manifest) + "\n")

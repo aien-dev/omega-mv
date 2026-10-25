@@ -1,0 +1,7 @@
+note leak fixture (contract spec/omegese-om2.md section 8, line 236: "the uint conversion range check
+note after and x 0xffffffff"): the uint conversion of a masked loaded value. Its range check
+note (LSR #32, CBNZ trap 5) depends on data and is never taken. Expected: data
+note never-taken-trap-check, TRACE-EQUIV-STATIC PASS.
+fn f a view ulong 4 to uint
+ret uint and get a 0 4294967295
+end

@@ -1,0 +1,99 @@
+Cross-check of revised E12 scanner, GNU objdump 2.42. Unknown/unhandled do not turn into PASS.
+
+call-data.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=20
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=1 leakscan=1 (sp/x29-only accesses not listed: 5)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+call-public.bin scanner-exit=0 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=51
+XCHECK branches objdump=3 leakscan=3
+XCHECK mem-non-sp objdump=3 leakscan=3 (sp/x29-only accesses not listed: 14)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+data-branch.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=8
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=1 leakscan=1 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+data-index.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=12
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=3 leakscan=3 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+flags.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=14
+XCHECK branches objdump=2 leakscan=2
+XCHECK mem-non-sp objdump=1 leakscan=1 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+len-loop.bin scanner-exit=0 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=27
+XCHECK branches objdump=3 leakscan=3
+XCHECK mem-non-sp objdump=2 leakscan=2 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+local.bin scanner-exit=0 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=14
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=3 leakscan=3 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+public-in.bin scanner-exit=0 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=8
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=1 leakscan=1 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+public-out.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=8
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=1 leakscan=1 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+reachable-trap.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=11
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=2 leakscan=2 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+s1-rot.bin scanner-exit=0 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=32
+XCHECK branches objdump=4 leakscan=4
+XCHECK mem-non-sp objdump=1 leakscan=1 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+sha256-om1.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=5130
+XCHECK branches objdump=83 leakscan=83
+XCHECK mem-non-sp objdump=387 leakscan=387 (sp/x29-only accesses not listed: 773)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+svc.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=29
+XCHECK branches objdump=2 leakscan=2
+XCHECK mem-non-sp objdump=1 leakscan=1 (sp/x29-only accesses not listed: 9)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+trap-check.bin scanner-exit=0 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=14
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=2 leakscan=2 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE

@@ -37,11 +37,14 @@ E6 Q4  a: trailing blank lines are error 6 (bad-trailblank). b: whitespace-only 
     blanks (x1, x3). e: whitespace next to ( or ) is kept as written (x3, x4). f: om2 fmt only at
     byte 0; elsewhere error 16 at its line (bad-fmtlater, notes-before, om2-then-fmt). g: CR is
     error 6 anywhere, including in text (bad-cr, bad-cr1, bad-crtext). h: the rest may be OM-1 (x5;
-    its same case runs under the pinned compiler now).
+    its same case runs under the pinned compiler now). Correction: s2-fmt-bad-crtext expected line 3,
+    but with the om2 fmt line and the fixture's note line the CR is on line 4 (err:4:6); the S1 run
+    exposed the miscount and the coordinator confirmed it.
 
 ASSUMPTIONS (where contract and errata are silent; each also stated next to its case)
-A1 0 line 13, literal: a blank line is "a line that is not a note", so a blank line before om2 makes
-   the unit OM-1 (s0-blank-first: error 16 at the om2 line). Lines with trailing text (om2 , om2 foo,
+A1 0 line 13 + erratum E10: blank lines (empty or only spaces) are skipped like notes when finding the
+   om2 line, so s0-blank-first and s0-blank-spaces-first are OM-2 units (they run, exit 0); OM-1 still
+   refuses them at the om2 line (pinned: error 16 at line 5). Lines with trailing text (om2 , om2 foo,
    om2 diag x, om2  diag, "  om2", OM2) are not the opt-in line: OM-1 units keeping the OM-1 result.
 A2 OM-1 codes for OM-2-only constructs in OM-1 units (s0/w-*) are what the pinned compiler gives
    today; C1 (line 17) requires the candidate to keep them (line 14: recognised only in OM-2 units).

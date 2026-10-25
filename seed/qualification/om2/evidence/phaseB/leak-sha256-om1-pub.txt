@@ -1,0 +1,474 @@
+LEAKSCAN 1 words=5130 entry=@5034 data=none
+PUBLIC-DECL 0+32:8
+BRANCH @5 b.ls ->@17 len
+BRANCH @7 b.cs ->@24 len trap=4
+BRANCH @13 b.cs ->@22 len trap=3
+MEM @14 ldrb reg base=x0 index=x8 public-index
+MEM @20 ldr imm base=x7 index=- const trap-tail
+BRANCH @30 b.cs ->@47 len
+BRANCH @34 b.cs ->@53 len trap=4
+BRANCH @40 cbnz ->@55 data never-taken-trap-check trap=5
+BRANCH @42 b.cs ->@51 len trap=3
+MEM @43 strb reg base=x0 index=x8 public-index
+MEM @49 ldr imm base=x7 index=- const trap-tail
+BRANCH @59 b.cs ->@86 len
+BRANCH @80 cbnz ->@92 data MANUAL trap=5
+BRANCH @82 b.cs ->@90 len trap=3
+MEM @83 str reg base=x1 index=x2 public-index
+MEM @88 ldr imm base=x7 index=- const trap-tail
+BRANCH @96 b.cs ->@122 len
+BRANCH @100 b.cs ->@126 len trap=3
+MEM @101 ldr reg base=x1 index=x2 public-index
+MEM @124 ldr imm base=x7 index=- const trap-tail
+BRANCH @130 b.cs ->@167 len
+BRANCH @136 b.cs ->@183 data MANUAL trap=3
+MEM @137 ldrb reg base=x0 index=x4 data-index
+BRANCH @143 b.cs ->@183 data MANUAL trap=3
+MEM @144 ldrb reg base=x0 index=x8 data-index
+BRANCH @150 b.cs ->@183 data MANUAL trap=3
+MEM @151 ldrb reg base=x0 index=x8 data-index
+BRANCH @157 b.cs ->@183 data MANUAL trap=3
+MEM @158 ldrb reg base=x0 index=x8 data-index
+BRANCH @163 b.cs ->@183 len trap=3
+MEM @164 str reg base=x2 index=x3 public-index
+MEM @181 ldr imm base=x7 index=- const trap-tail
+BRANCH @187 b.cs ->@221 len
+BRANCH @193 b.cs ->@235 len trap=3
+MEM @194 ldrb reg base=x0 index=x3 public-index
+BRANCH @199 b.cs ->@235 len trap=3
+MEM @200 ldrb reg base=x0 index=x6 public-index
+BRANCH @205 b.cs ->@235 len trap=3
+MEM @206 ldrb reg base=x0 index=x6 public-index
+BRANCH @211 b.cs ->@235 len trap=3
+MEM @212 ldrb reg base=x0 index=x6 public-index
+BRANCH @217 b.cs ->@235 len trap=3
+MEM @218 str reg base=x1 index=x2 public-index
+MEM @233 ldr imm base=x7 index=- const trap-tail
+MEM @238 ldr reg base=x0 index=x3 public-index
+MEM @241 ldr reg base=x0 index=x4 public-index
+MEM @244 ldr reg base=x0 index=x5 public-index
+MEM @247 ldr reg base=x0 index=x6 public-index
+MEM @250 ldr reg base=x0 index=x8 public-index
+MEM @253 ldr reg base=x0 index=x9 public-index
+MEM @256 ldr reg base=x0 index=x10 public-index
+MEM @259 ldr reg base=x0 index=x11 public-index
+MEM @264 ldr reg base=x1 index=x13 public-index
+MEM @298 ldr reg base=x1 index=x13 public-index
+MEM @332 ldr reg base=x1 index=x13 public-index
+MEM @366 ldr reg base=x1 index=x13 public-index
+MEM @400 ldr reg base=x1 index=x13 public-index
+MEM @434 ldr reg base=x1 index=x13 public-index
+MEM @468 ldr reg base=x1 index=x13 public-index
+MEM @502 ldr reg base=x1 index=x13 public-index
+MEM @536 ldr reg base=x1 index=x13 public-index
+MEM @570 ldr reg base=x1 index=x13 public-index
+MEM @604 ldr reg base=x1 index=x13 public-index
+MEM @638 ldr reg base=x1 index=x13 public-index
+MEM @672 ldr reg base=x1 index=x13 public-index
+MEM @706 ldr reg base=x1 index=x13 public-index
+MEM @740 ldr reg base=x1 index=x13 public-index
+MEM @774 ldr reg base=x1 index=x13 public-index
+MEM @808 ldr reg base=x1 index=x13 public-index
+MEM @842 ldr reg base=x1 index=x13 public-index
+MEM @876 ldr reg base=x1 index=x13 public-index
+MEM @910 ldr reg base=x1 index=x13 public-index
+MEM @944 ldr reg base=x1 index=x13 public-index
+MEM @978 ldr reg base=x1 index=x13 public-index
+MEM @1012 ldr reg base=x1 index=x13 public-index
+MEM @1046 ldr reg base=x1 index=x13 public-index
+MEM @1080 ldr reg base=x1 index=x13 public-index
+MEM @1114 ldr reg base=x1 index=x13 public-index
+MEM @1148 ldr reg base=x1 index=x13 public-index
+MEM @1182 ldr reg base=x1 index=x13 public-index
+MEM @1216 ldr reg base=x1 index=x13 public-index
+MEM @1250 ldr reg base=x1 index=x13 public-index
+MEM @1284 ldr reg base=x1 index=x13 public-index
+MEM @1318 ldr reg base=x1 index=x13 public-index
+MEM @1352 ldr reg base=x1 index=x13 public-index
+MEM @1386 ldr reg base=x1 index=x13 public-index
+MEM @1420 ldr reg base=x1 index=x13 public-index
+MEM @1454 ldr reg base=x1 index=x13 public-index
+MEM @1488 ldr reg base=x1 index=x13 public-index
+MEM @1522 ldr reg base=x1 index=x13 public-index
+MEM @1556 ldr reg base=x1 index=x13 public-index
+MEM @1590 ldr reg base=x1 index=x13 public-index
+MEM @1624 ldr reg base=x1 index=x13 public-index
+MEM @1658 ldr reg base=x1 index=x13 public-index
+MEM @1692 ldr reg base=x1 index=x13 public-index
+MEM @1726 ldr reg base=x1 index=x13 public-index
+MEM @1760 ldr reg base=x1 index=x13 public-index
+MEM @1794 ldr reg base=x1 index=x13 public-index
+MEM @1828 ldr reg base=x1 index=x13 public-index
+MEM @1862 ldr reg base=x1 index=x13 public-index
+MEM @1896 ldr reg base=x1 index=x13 public-index
+MEM @1930 ldr reg base=x1 index=x13 public-index
+MEM @1964 ldr reg base=x1 index=x13 public-index
+MEM @1998 ldr reg base=x1 index=x13 public-index
+MEM @2032 ldr reg base=x1 index=x13 public-index
+MEM @2066 ldr reg base=x1 index=x13 public-index
+MEM @2100 ldr reg base=x1 index=x13 public-index
+MEM @2134 ldr reg base=x1 index=x13 public-index
+MEM @2168 ldr reg base=x1 index=x13 public-index
+MEM @2202 ldr reg base=x1 index=x13 public-index
+MEM @2236 ldr reg base=x1 index=x13 public-index
+MEM @2270 ldr reg base=x1 index=x13 public-index
+MEM @2304 ldr reg base=x1 index=x13 public-index
+MEM @2338 ldr reg base=x1 index=x13 public-index
+MEM @2372 ldr reg base=x1 index=x13 public-index
+MEM @2406 ldr reg base=x1 index=x13 public-index
+MEM @2440 ldr reg base=x0 index=x13 public-index
+BRANCH @2446 cbnz ->@2523 data never-taken-trap-check trap=5
+MEM @2448 str reg base=x0 index=x17 public-index
+MEM @2450 ldr reg base=x0 index=x13 public-index
+BRANCH @2456 cbnz ->@2523 data never-taken-trap-check trap=5
+MEM @2458 str reg base=x0 index=x17 public-index
+MEM @2460 ldr reg base=x0 index=x13 public-index
+BRANCH @2466 cbnz ->@2523 data never-taken-trap-check trap=5
+MEM @2468 str reg base=x0 index=x17 public-index
+MEM @2470 ldr reg base=x0 index=x13 public-index
+BRANCH @2476 cbnz ->@2523 data never-taken-trap-check trap=5
+MEM @2478 str reg base=x0 index=x17 public-index
+MEM @2480 ldr reg base=x0 index=x13 public-index
+BRANCH @2486 cbnz ->@2523 data never-taken-trap-check trap=5
+MEM @2488 str reg base=x0 index=x17 public-index
+MEM @2490 ldr reg base=x0 index=x13 public-index
+BRANCH @2496 cbnz ->@2523 data never-taken-trap-check trap=5
+MEM @2498 str reg base=x0 index=x17 public-index
+MEM @2500 ldr reg base=x0 index=x13 public-index
+BRANCH @2506 cbnz ->@2523 data never-taken-trap-check trap=5
+MEM @2508 str reg base=x0 index=x17 public-index
+MEM @2510 ldr reg base=x0 index=x13 public-index
+BRANCH @2516 cbnz ->@2523 data never-taken-trap-check trap=5
+MEM @2518 str reg base=x0 index=x17 public-index
+MEM @2521 ldr imm base=x7 index=- const trap-tail
+BRANCH @2528 b.cs ->@2547 data MANUAL
+BRANCH @2532 b.cs ->@2553 len trap=4
+BRANCH @2540 b.cs ->@2551 data MANUAL trap=3
+MEM @2541 ldrb reg base=x2 index=x11 data-index
+BRANCH @2543 b.cs ->@2551 data MANUAL trap=3
+MEM @2544 strb reg base=x0 index=x10 data-index
+MEM @2549 ldr imm base=x7 index=- const trap-tail
+BRANCH @2557 b.ls ->@2559 len
+BRANCH @2558 b.al ->@2922 len always trap=3
+MEM @2563 str reg base=x4 index=x6 public-index
+BRANCH @2566 b.cc ->@2563 len
+BRANCH @2616 b.ls ->@2780 data MANUAL
+BRANCH @2620 b.cs ->@2651 data MANUAL
+BRANCH @2782 b.hi ->@2889 data MANUAL
+BRANCH @2809 b.hi ->@2866 data MANUAL
+BRANCH @2811 b.cs ->@2924 len trap=4
+MEM @2920 ldr imm base=x7 index=- const trap-tail
+MEM @3038 str reg base=x2 index=x4 public-index
+BRANCH @3041 b.cc ->@3038 len
+BRANCH @3099 b.cs ->@3111 data MANUAL
+BRANCH @3101 b.cs ->@3117 len trap=4
+BRANCH @3107 b.cs ->@3115 data MANUAL trap=3
+MEM @3108 strb reg base=x0 index=x6 data-index
+MEM @3113 ldr imm base=x7 index=- const trap-tail
+BRANCH @3139 b.cs ->@3283 data MANUAL trap=3
+MEM @3140 strb reg base=x0 index=x5 data-index
+BRANCH @3160 b.cc ->@3192 data MANUAL
+BRANCH @3196 b.cs ->@3215 len
+BRANCH @3204 b.cs ->@3287 len trap=7
+BRANCH @3209 cbnz ->@3285 data never-taken-trap-check trap=5
+BRANCH @3211 b.cs ->@3283 len trap=3
+MEM @3212 strb reg base=x0 index=x9 public-index
+MEM @3236 str reg base=x5 index=x8 public-index
+BRANCH @3239 b.cc ->@3236 len
+MEM @3281 ldr imm base=x7 index=- const trap-tail
+MEM @3292 str reg base=x0 index=x2 public-index
+MEM @3296 str reg base=x0 index=x2 public-index
+MEM @3300 str reg base=x0 index=x2 public-index
+MEM @3304 str reg base=x0 index=x2 public-index
+MEM @3308 str reg base=x0 index=x2 public-index
+MEM @3312 str reg base=x0 index=x2 public-index
+MEM @3316 str reg base=x0 index=x2 public-index
+MEM @3320 str reg base=x0 index=x2 public-index
+MEM @3326 ldr reg base=x0 index=x4 public-index
+MEM @3333 ldr reg base=x0 index=x4 public-index
+MEM @3341 ldr reg base=x0 index=x4 public-index
+MEM @3344 ldr reg base=x0 index=x4 public-index
+MEM @3350 str reg base=x0 index=x6 public-index
+MEM @3352 ldr reg base=x0 index=x4 public-index
+MEM @3359 ldr reg base=x0 index=x4 public-index
+MEM @3367 ldr reg base=x0 index=x4 public-index
+MEM @3370 ldr reg base=x0 index=x4 public-index
+MEM @3376 str reg base=x0 index=x6 public-index
+MEM @3378 ldr reg base=x0 index=x4 public-index
+MEM @3385 ldr reg base=x0 index=x4 public-index
+MEM @3393 ldr reg base=x0 index=x4 public-index
+MEM @3396 ldr reg base=x0 index=x4 public-index
+MEM @3402 str reg base=x0 index=x6 public-index
+MEM @3404 ldr reg base=x0 index=x4 public-index
+MEM @3411 ldr reg base=x0 index=x4 public-index
+MEM @3419 ldr reg base=x0 index=x4 public-index
+MEM @3422 ldr reg base=x0 index=x4 public-index
+MEM @3428 str reg base=x0 index=x6 public-index
+MEM @3430 ldr reg base=x0 index=x4 public-index
+MEM @3437 ldr reg base=x0 index=x4 public-index
+MEM @3445 ldr reg base=x0 index=x4 public-index
+MEM @3448 ldr reg base=x0 index=x4 public-index
+MEM @3454 str reg base=x0 index=x6 public-index
+MEM @3456 ldr reg base=x0 index=x4 public-index
+MEM @3463 ldr reg base=x0 index=x4 public-index
+MEM @3471 ldr reg base=x0 index=x4 public-index
+MEM @3474 ldr reg base=x0 index=x4 public-index
+MEM @3480 str reg base=x0 index=x6 public-index
+MEM @3482 ldr reg base=x0 index=x4 public-index
+MEM @3489 ldr reg base=x0 index=x4 public-index
+MEM @3497 ldr reg base=x0 index=x4 public-index
+MEM @3500 ldr reg base=x0 index=x4 public-index
+MEM @3506 str reg base=x0 index=x6 public-index
+MEM @3508 ldr reg base=x0 index=x4 public-index
+MEM @3515 ldr reg base=x0 index=x4 public-index
+MEM @3523 ldr reg base=x0 index=x4 public-index
+MEM @3526 ldr reg base=x0 index=x4 public-index
+MEM @3532 str reg base=x0 index=x6 public-index
+MEM @3534 ldr reg base=x0 index=x4 public-index
+MEM @3541 ldr reg base=x0 index=x4 public-index
+MEM @3549 ldr reg base=x0 index=x4 public-index
+MEM @3552 ldr reg base=x0 index=x4 public-index
+MEM @3558 str reg base=x0 index=x6 public-index
+MEM @3560 ldr reg base=x0 index=x4 public-index
+MEM @3567 ldr reg base=x0 index=x4 public-index
+MEM @3575 ldr reg base=x0 index=x4 public-index
+MEM @3578 ldr reg base=x0 index=x4 public-index
+MEM @3584 str reg base=x0 index=x6 public-index
+MEM @3586 ldr reg base=x0 index=x4 public-index
+MEM @3593 ldr reg base=x0 index=x4 public-index
+MEM @3601 ldr reg base=x0 index=x4 public-index
+MEM @3604 ldr reg base=x0 index=x4 public-index
+MEM @3610 str reg base=x0 index=x6 public-index
+MEM @3612 ldr reg base=x0 index=x4 public-index
+MEM @3619 ldr reg base=x0 index=x4 public-index
+MEM @3627 ldr reg base=x0 index=x4 public-index
+MEM @3630 ldr reg base=x0 index=x4 public-index
+MEM @3636 str reg base=x0 index=x6 public-index
+MEM @3638 ldr reg base=x0 index=x4 public-index
+MEM @3645 ldr reg base=x0 index=x4 public-index
+MEM @3653 ldr reg base=x0 index=x4 public-index
+MEM @3656 ldr reg base=x0 index=x4 public-index
+MEM @3662 str reg base=x0 index=x6 public-index
+MEM @3664 ldr reg base=x0 index=x4 public-index
+MEM @3671 ldr reg base=x0 index=x4 public-index
+MEM @3679 ldr reg base=x0 index=x4 public-index
+MEM @3682 ldr reg base=x0 index=x4 public-index
+MEM @3688 str reg base=x0 index=x6 public-index
+MEM @3690 ldr reg base=x0 index=x4 public-index
+MEM @3697 ldr reg base=x0 index=x4 public-index
+MEM @3705 ldr reg base=x0 index=x4 public-index
+MEM @3708 ldr reg base=x0 index=x4 public-index
+MEM @3714 str reg base=x0 index=x6 public-index
+MEM @3716 ldr reg base=x0 index=x4 public-index
+MEM @3723 ldr reg base=x0 index=x4 public-index
+MEM @3731 ldr reg base=x0 index=x4 public-index
+MEM @3734 ldr reg base=x0 index=x4 public-index
+MEM @3740 str reg base=x0 index=x6 public-index
+MEM @3742 ldr reg base=x0 index=x4 public-index
+MEM @3749 ldr reg base=x0 index=x4 public-index
+MEM @3757 ldr reg base=x0 index=x4 public-index
+MEM @3760 ldr reg base=x0 index=x4 public-index
+MEM @3766 str reg base=x0 index=x6 public-index
+MEM @3768 ldr reg base=x0 index=x4 public-index
+MEM @3775 ldr reg base=x0 index=x4 public-index
+MEM @3783 ldr reg base=x0 index=x4 public-index
+MEM @3786 ldr reg base=x0 index=x4 public-index
+MEM @3792 str reg base=x0 index=x6 public-index
+MEM @3794 ldr reg base=x0 index=x4 public-index
+MEM @3801 ldr reg base=x0 index=x4 public-index
+MEM @3809 ldr reg base=x0 index=x4 public-index
+MEM @3812 ldr reg base=x0 index=x4 public-index
+MEM @3818 str reg base=x0 index=x6 public-index
+MEM @3820 ldr reg base=x0 index=x4 public-index
+MEM @3827 ldr reg base=x0 index=x4 public-index
+MEM @3835 ldr reg base=x0 index=x4 public-index
+MEM @3838 ldr reg base=x0 index=x4 public-index
+MEM @3844 str reg base=x0 index=x6 public-index
+MEM @3846 ldr reg base=x0 index=x4 public-index
+MEM @3853 ldr reg base=x0 index=x4 public-index
+MEM @3861 ldr reg base=x0 index=x4 public-index
+MEM @3864 ldr reg base=x0 index=x4 public-index
+MEM @3870 str reg base=x0 index=x6 public-index
+MEM @3872 ldr reg base=x0 index=x4 public-index
+MEM @3879 ldr reg base=x0 index=x4 public-index
+MEM @3887 ldr reg base=x0 index=x4 public-index
+MEM @3890 ldr reg base=x0 index=x4 public-index
+MEM @3896 str reg base=x0 index=x6 public-index
+MEM @3898 ldr reg base=x0 index=x4 public-index
+MEM @3905 ldr reg base=x0 index=x4 public-index
+MEM @3913 ldr reg base=x0 index=x4 public-index
+MEM @3916 ldr reg base=x0 index=x4 public-index
+MEM @3922 str reg base=x0 index=x6 public-index
+MEM @3924 ldr reg base=x0 index=x4 public-index
+MEM @3931 ldr reg base=x0 index=x4 public-index
+MEM @3939 ldr reg base=x0 index=x4 public-index
+MEM @3942 ldr reg base=x0 index=x4 public-index
+MEM @3948 str reg base=x0 index=x6 public-index
+MEM @3950 ldr reg base=x0 index=x4 public-index
+MEM @3957 ldr reg base=x0 index=x4 public-index
+MEM @3965 ldr reg base=x0 index=x4 public-index
+MEM @3968 ldr reg base=x0 index=x4 public-index
+MEM @3974 str reg base=x0 index=x6 public-index
+MEM @3976 ldr reg base=x0 index=x4 public-index
+MEM @3983 ldr reg base=x0 index=x4 public-index
+MEM @3991 ldr reg base=x0 index=x4 public-index
+MEM @3994 ldr reg base=x0 index=x4 public-index
+MEM @4000 str reg base=x0 index=x6 public-index
+MEM @4002 ldr reg base=x0 index=x4 public-index
+MEM @4009 ldr reg base=x0 index=x4 public-index
+MEM @4017 ldr reg base=x0 index=x4 public-index
+MEM @4020 ldr reg base=x0 index=x4 public-index
+MEM @4026 str reg base=x0 index=x6 public-index
+MEM @4028 ldr reg base=x0 index=x4 public-index
+MEM @4035 ldr reg base=x0 index=x4 public-index
+MEM @4043 ldr reg base=x0 index=x4 public-index
+MEM @4046 ldr reg base=x0 index=x4 public-index
+MEM @4052 str reg base=x0 index=x6 public-index
+MEM @4054 ldr reg base=x0 index=x4 public-index
+MEM @4061 ldr reg base=x0 index=x4 public-index
+MEM @4069 ldr reg base=x0 index=x4 public-index
+MEM @4072 ldr reg base=x0 index=x4 public-index
+MEM @4078 str reg base=x0 index=x6 public-index
+MEM @4080 ldr reg base=x0 index=x4 public-index
+MEM @4087 ldr reg base=x0 index=x4 public-index
+MEM @4095 ldr reg base=x0 index=x4 public-index
+MEM @4098 ldr reg base=x0 index=x4 public-index
+MEM @4104 str reg base=x0 index=x6 public-index
+MEM @4106 ldr reg base=x0 index=x4 public-index
+MEM @4113 ldr reg base=x0 index=x4 public-index
+MEM @4121 ldr reg base=x0 index=x4 public-index
+MEM @4124 ldr reg base=x0 index=x4 public-index
+MEM @4130 str reg base=x0 index=x6 public-index
+MEM @4132 ldr reg base=x0 index=x4 public-index
+MEM @4139 ldr reg base=x0 index=x4 public-index
+MEM @4147 ldr reg base=x0 index=x4 public-index
+MEM @4150 ldr reg base=x0 index=x4 public-index
+MEM @4156 str reg base=x0 index=x6 public-index
+MEM @4158 ldr reg base=x0 index=x4 public-index
+MEM @4165 ldr reg base=x0 index=x4 public-index
+MEM @4173 ldr reg base=x0 index=x4 public-index
+MEM @4176 ldr reg base=x0 index=x4 public-index
+MEM @4182 str reg base=x0 index=x6 public-index
+MEM @4184 ldr reg base=x0 index=x4 public-index
+MEM @4191 ldr reg base=x0 index=x4 public-index
+MEM @4199 ldr reg base=x0 index=x4 public-index
+MEM @4202 ldr reg base=x0 index=x4 public-index
+MEM @4208 str reg base=x0 index=x6 public-index
+MEM @4210 ldr reg base=x0 index=x4 public-index
+MEM @4217 ldr reg base=x0 index=x4 public-index
+MEM @4225 ldr reg base=x0 index=x4 public-index
+MEM @4228 ldr reg base=x0 index=x4 public-index
+MEM @4234 str reg base=x0 index=x6 public-index
+MEM @4236 ldr reg base=x0 index=x4 public-index
+MEM @4243 ldr reg base=x0 index=x4 public-index
+MEM @4251 ldr reg base=x0 index=x4 public-index
+MEM @4254 ldr reg base=x0 index=x4 public-index
+MEM @4260 str reg base=x0 index=x6 public-index
+MEM @4262 ldr reg base=x0 index=x4 public-index
+MEM @4269 ldr reg base=x0 index=x4 public-index
+MEM @4277 ldr reg base=x0 index=x4 public-index
+MEM @4280 ldr reg base=x0 index=x4 public-index
+MEM @4286 str reg base=x0 index=x6 public-index
+MEM @4288 ldr reg base=x0 index=x4 public-index
+MEM @4295 ldr reg base=x0 index=x4 public-index
+MEM @4303 ldr reg base=x0 index=x4 public-index
+MEM @4306 ldr reg base=x0 index=x4 public-index
+MEM @4312 str reg base=x0 index=x6 public-index
+MEM @4314 ldr reg base=x0 index=x4 public-index
+MEM @4321 ldr reg base=x0 index=x4 public-index
+MEM @4329 ldr reg base=x0 index=x4 public-index
+MEM @4332 ldr reg base=x0 index=x4 public-index
+MEM @4338 str reg base=x0 index=x6 public-index
+MEM @4340 ldr reg base=x0 index=x4 public-index
+MEM @4347 ldr reg base=x0 index=x4 public-index
+MEM @4355 ldr reg base=x0 index=x4 public-index
+MEM @4358 ldr reg base=x0 index=x4 public-index
+MEM @4364 str reg base=x0 index=x6 public-index
+MEM @4366 ldr reg base=x0 index=x4 public-index
+MEM @4373 ldr reg base=x0 index=x4 public-index
+MEM @4381 ldr reg base=x0 index=x4 public-index
+MEM @4384 ldr reg base=x0 index=x4 public-index
+MEM @4390 str reg base=x0 index=x6 public-index
+MEM @4392 ldr reg base=x0 index=x4 public-index
+MEM @4399 ldr reg base=x0 index=x4 public-index
+MEM @4407 ldr reg base=x0 index=x4 public-index
+MEM @4410 ldr reg base=x0 index=x4 public-index
+MEM @4416 str reg base=x0 index=x6 public-index
+MEM @4418 ldr reg base=x0 index=x4 public-index
+MEM @4425 ldr reg base=x0 index=x4 public-index
+MEM @4433 ldr reg base=x0 index=x4 public-index
+MEM @4436 ldr reg base=x0 index=x4 public-index
+MEM @4442 str reg base=x0 index=x6 public-index
+MEM @4444 ldr reg base=x0 index=x4 public-index
+MEM @4451 ldr reg base=x0 index=x4 public-index
+MEM @4459 ldr reg base=x0 index=x4 public-index
+MEM @4462 ldr reg base=x0 index=x4 public-index
+MEM @4468 str reg base=x0 index=x6 public-index
+MEM @4470 ldr reg base=x0 index=x4 public-index
+MEM @4477 ldr reg base=x0 index=x4 public-index
+MEM @4485 ldr reg base=x0 index=x4 public-index
+MEM @4488 ldr reg base=x0 index=x4 public-index
+MEM @4494 str reg base=x0 index=x6 public-index
+MEM @4496 ldr reg base=x0 index=x4 public-index
+MEM @4503 ldr reg base=x0 index=x4 public-index
+MEM @4511 ldr reg base=x0 index=x4 public-index
+MEM @4514 ldr reg base=x0 index=x4 public-index
+MEM @4520 str reg base=x0 index=x6 public-index
+MEM @4522 ldr reg base=x0 index=x4 public-index
+MEM @4529 ldr reg base=x0 index=x4 public-index
+MEM @4537 ldr reg base=x0 index=x4 public-index
+MEM @4540 ldr reg base=x0 index=x4 public-index
+MEM @4546 str reg base=x0 index=x6 public-index
+MEM @4548 ldr reg base=x0 index=x4 public-index
+MEM @4555 ldr reg base=x0 index=x4 public-index
+MEM @4563 ldr reg base=x0 index=x4 public-index
+MEM @4566 ldr reg base=x0 index=x4 public-index
+MEM @4572 str reg base=x0 index=x6 public-index
+BRANCH @4576 b.cs ->@4622 len
+BRANCH @4579 b.cs ->@4626 len trap=3
+MEM @4580 ldr reg base=x0 index=x5 public-index
+BRANCH @4609 b.cs ->@4626 len trap=3
+MEM @4610 str reg base=x2 index=x6 public-index
+BRANCH @4618 b.cs ->@4626 len trap=3
+MEM @4619 str reg base=x2 index=x9 public-index
+MEM @4624 ldr imm base=x7 index=- const trap-tail
+BRANCH @4655 b.cs ->@4840 len trap=3
+MEM @4656 ldr reg base=x4 index=x6 public-index
+BRANCH @4662 b.cs ->@4844 len trap=7
+BRANCH @4672 b.cs ->@4844 len trap=7
+BRANCH @4678 b.cs ->@4840 len trap=3
+MEM @4679 str reg base=x4 index=x6 public-index
+BRANCH @4683 b.cs ->@4693 len
+BRANCH @4685 b.cs ->@4842 len trap=4
+BRANCH @4689 b.cs ->@4840 len trap=3
+MEM @4690 str reg base=x4 index=x11 public-index
+BRANCH @4694 b.cc ->@4761 len
+BRANCH @4754 b.cs ->@4761 len
+BRANCH @4757 b.cs ->@4840 len trap=3
+MEM @4758 str reg base=x4 index=x12 public-index
+MEM @4767 str reg base=x4 index=x15 public-index
+MEM @4774 str reg base=x4 index=x15 public-index
+MEM @4838 ldr imm base=x7 index=- const trap-tail
+BRANCH @4848 b.cs ->@4887 len
+BRANCH @4852 b.cs ->@4891 len trap=3
+MEM @4853 ldr reg base=x0 index=x3 public-index
+BRANCH @4856 b.cs ->@4891 len trap=3
+MEM @4857 ldr reg base=x0 index=x6 public-index
+BRANCH @4883 b.cs ->@4891 len trap=3
+MEM @4884 str reg base=x1 index=x2 public-index
+MEM @4889 ldr imm base=x7 index=- const trap-tail
+BRANCH @4895 b.cc ->@4897 len
+BRANCH @4896 b.al ->@5030 len always trap=3
+MEM @4901 str reg base=x3 index=x5 public-index
+BRANCH @4904 b.cc ->@4901 len
+BRANCH @4923 b.hi ->@4988 len
+BRANCH @4925 b.cs ->@5032 len trap=4
+MEM @5028 ldr imm base=x7 index=- const trap-tail
+BRANCH @5035 b.ne ->@5055 len
+BRANCH @5056 b.ne ->@5079 len
+BRANCH @5080 b.ne ->@5101 len
+BRANCH @5102 b.ne ->@5124 len
+BRANCH @5124 b.al ->@5128 len always trap=9
+MEM @5126 ldr imm base=x7 index=- const trap-tail
+SUMMARY branches=83 len=57 trap-check=10 data-branch=16 branch-unreached=0 mem=387 const=16 public-index=363 data-index=8 mem-unreached=0 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC NOT_RUN

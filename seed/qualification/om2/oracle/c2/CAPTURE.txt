@@ -40,3 +40,6 @@ Result: 5720 entries (610 accepted with output, 5110 refused; every refusal's st
 "omc: line N: error E" with exit E). Checks: gate-c on the manifest with the pinned omc PASS 5720/5720;
 every SCRATCH/<line>.src the gate rebuilt has the sha256 recorded in c2/index.tsv (sha256sum -c,
 5720 OK); with the Phase A shr-immediate mutant compiler (06f000e5...) the manifest FAILs 175 entries.
+7. Later the same day, enumerate.py source 6 appended the lane's own OM-1 units (every .om, and every
+   case-list SRC under seed/qualification/om2 that is not OM-2). The result is 5876 entries; entries
+   c2-00001..05720 are byte-identical. The pinned omc PASSes 5876/5876, and so does S1 (31342447).

@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 line 13 with erratum E10: a line of only spaces is blank and skipped like a note,
+note so this unit is OM-2 (it runs, exit 0); OM-1 still refuses it at the om2 line (error 16).
+   
+om2
+fn main to int
+ret 0
+end

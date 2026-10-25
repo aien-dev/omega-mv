@@ -28,8 +28,9 @@ s0-double-space emit seed/qualification/om2/sec/s0s2/s0/double-space.om - err:4:
 s0-indent emit seed/qualification/om2/sec/s0s2/s0/indent.om - err:4:16 16
 # lines 13/36: not exactly om2/om2 diag as first non-note line, so an OM-1 unit; C1 line 17 keeps the OM-1 error
 s0-upper emit seed/qualification/om2/sec/s0s2/s0/upper.om - err:4:16 16
-# line 13 literal reading (README A1): a blank first non-note line makes the unit OM-1; C1 line 17 keeps the OM-1 error
-s0-blank-first emit seed/qualification/om2/sec/s0s2/s0/blank-first.om - err:5:16 16
+# line 13 + erratum E10: blank lines (empty or only spaces) are skipped like notes, so these units are OM-2
+s0-blank-first run seed/qualification/om2/sec/s0s2/s0/blank-first.om - - - 0
+s0-blank-spaces-first run seed/qualification/om2/sec/s0s2/s0/blank-spaces-first.om - - - 0
 # lines 14-16: OM-1 user names spelled like OM-2 words keep their meaning (C1 line 17)
 s0-names-fn run seed/qualification/om2/sec/s0s2/s0/names-fn.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/names-fn.out - 0
 # lines 14-16: OM-1 user names spelled like OM-2 words keep their meaning (C1 line 17)
@@ -301,8 +302,9 @@ s2-fmt-bad-short emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualifi
 s2-fmt-bad-cr emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-cr.om - err:2:6 6
 # a single CR before the last LF is error 6 (line 66, E6 g); E6 Q3 line; nothing on stdout (line 70)
 s2-fmt-bad-cr1 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-cr1.om - err:6:6 6
-# CR inside a text literal is error 6 (E6 g); E6 Q3 line; nothing on stdout (line 70)
-s2-fmt-bad-crtext emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-crtext.om - err:3:6 6
+# CR inside a text literal is error 6 (E6 g); E6 Q3 line: hdr (1) + note (2) + om2 (3) puts the text, and
+# its CR, on line 4 (corrected 2026-10-25: was err:3:6, a fixture miscount found by the coordinator)
+s2-fmt-bad-crtext emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-crtext.om - err:4:6 6
 # om2 fmt anywhere but byte 0 is error 16 at its line (E6 f); E6 Q3 line; nothing on stdout (line 70)
 s2-fmt-bad-fmtlater emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-fmtlater.om - err:4:16 16
 # E6 (a): blank lines at the end of the input are error 6; the line of the error is not named, so refuse (code, empty stdout)
