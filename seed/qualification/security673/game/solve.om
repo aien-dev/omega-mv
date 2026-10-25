@@ -1,0 +1,405 @@
+note SC1-G-v1 synchronous greatest fixed point. Concatenate io.om first.
+global moves uint 2593
+global cert uint 2593
+global edges uint 420066
+global keep uchar 2593
+global next uchar 2593
+global mut uint 1
+global totals ulong 4
+fn phase s uint c uint to uint
+if eq c 0
+ret rem s 18
+end
+ret rem div s 18 18
+end
+fn replace s uint c uint p uint to uint
+old = phase s c
+if eq c 0
+ret add sub s old p
+end
+ret add sub s mul old 18 mul p 18
+end
+fn epoch s uint to uint
+ret rem div s 324 2
+end
+fn object s uint to uint
+ret rem div s 648 2
+end
+fn charge p uint to uint
+if lt p 2
+ret 0
+end
+if and ge p 12 le p 14
+ret 1
+end
+ret 2
+end
+fn invariant s uint to bool
+if ge s 2592
+ret false
+end
+a = phase s 0
+b = phase s 1
+if or eq a 17 eq b 17
+ret false
+end
+if gt add charge a charge b 3
+ret false
+end
+if or or eq a 15 eq a 16 or eq b 15 eq b 16
+ret eq rem div s 324 4 0
+end
+ret true
+end
+fn enabled s uint u uint to bool
+if not invariant s
+ret false
+end
+if ge s 1296
+ret eq u 1
+end
+if eq u 1
+ret false
+end
+if eq u 0
+ret and or eq phase s 0 0 eq phase s 0 14 or eq phase s 1 0 eq phase s 1 14
+end
+c = div sub u 2 8
+k = rem sub u 2 8
+p = phase s c
+if eq k 0
+ret and eq p 1 le add charge phase s 0 charge phase s 1 1
+end
+if eq k 1
+ret and ge p 1 le p 10
+end
+if eq k 2
+ret eq p 2
+end
+if or eq k 3 eq k 7
+if and ge p 3 le p 6
+ret true
+end
+ret and eq k 7 eq p 16
+end
+if eq k 4
+ret or and ge p 7 le p 10 eq p 15
+end
+if eq k 5
+ret or eq p 11 eq p 15
+end
+ret or eq p 12 eq p 13
+end
+fn environment s uint d uint to uint
+if eq d 1
+if eq phase s 0 0
+ret add s 1
+end
+end
+if eq d 2
+if eq phase s 1 0
+ret add s 18
+end
+end
+if eq d 3
+ret add s mul sub uint 1 epoch s 324
+end
+if eq d 4
+ret add s mul sub uint 1 object s 648
+end
+ret s
+end
+fn clean p uint to uint
+if and ge p 2 le p 10
+ret 0
+end
+if eq p 11
+ret 12
+end
+ret p
+end
+fn recover s uint to uint
+if or ge phase s 0 15 ge phase s 1 15
+ret 2592
+end
+s = replace s 0 clean phase s 0
+s = replace s 1 clean phase s 1
+ret rem s 1296
+end
+fn split s uint c uint k uint d uint to uint
+p = phase s c
+if eq d 7
+ret s
+end
+if eq d 5
+ret add replace s c 0 1296
+end
+if eq p 15
+if or and eq k 4 eq d 4 and eq k 5 eq d 3
+ret 2592
+end
+if or eq d 3 eq d 4
+ret environment replace s c 0 d
+end
+if eq d 6
+ret s
+end
+ret environment replace s c 14 d
+end
+if or eq d 3 eq d 4
+ret environment replace s c 0 d
+end
+ret environment replace s c 15 d
+end
+fn client s uint c uint k uint d uint to uint
+p = phase s c
+if eq k 0
+ret replace s c 2
+end
+if eq k 1
+ret replace s c 0
+end
+if eq k 2
+p = add uint 3 add epoch s mul object s 2
+ret replace s c p
+end
+if eq k 3
+if eq d 6
+ret s
+end
+ret replace s c add p 4
+end
+if eq k 4
+tag = sub p 7
+if ne get mut 0 3
+if ne tag rem div s 324 4
+ret s
+end
+end
+ret replace s c 11
+end
+if eq k 5
+if eq d 6
+if eq get mut 0 4
+ret replace s c 17
+end
+ret s
+end
+if eq d 8
+ret replace s c 13
+end
+ret replace s c 12
+end
+if eq k 6
+if eq d 8
+ret replace s c 13
+end
+ret replace s c 14
+end
+if ne rem div s 324 4 0
+ret s
+end
+ret replace s c 16
+end
+fn step s uint u uint d uint to uint
+if not enabled s u
+ret 2592
+end
+if ge u 2
+c = div sub u 2 8
+p = phase s c
+if or eq p 15 eq p 16
+if lt s 1296
+ret split s c rem sub u 2 8 d
+end
+end
+end
+if eq d 5
+ret add rem s 1296 1296
+end
+if eq d 7
+ret s
+end
+s = environment s d
+if eq u 0
+ret s
+end
+if eq u 1
+ret recover s
+end
+ret client s div sub u 2 8 rem sub u 2 8 d
+end
+fn index s uint u uint d uint to uint
+ret add mul add mul s 18 u 9 d
+end
+fn construct to void
+for i uint 4
+put totals i 0
+end
+for s uint 2593
+put keep s 0
+if invariant s
+put keep s 1
+end
+m = uint 0
+for u uint 18
+if enabled s u
+m = or m shl uint 1 u
+for d uint 9
+put edges index s u d step s u d
+put totals 0 add get totals 0 1
+end
+end
+end
+put moves s m
+end
+end
+fn safe s uint u uint to bool
+if eq and get moves s shl uint 1 u 0
+ret false
+end
+for d uint 9
+if not and eq get mut 0 2 eq d 4
+if eq get keep get edges index s u d 0
+ret false
+end
+end
+end
+ret true
+end
+fn existsaction s uint to bool
+for u uint 18
+if safe s u
+ret true
+end
+end
+ret false
+end
+fn swapped s uint to bool
+for d uint 9
+found = false
+for u uint 18
+if ne and get moves s shl uint 1 u 0
+if ne get keep get edges index s u d 0
+found = true
+end
+end
+end
+if not found
+ret false
+end
+end
+ret true
+end
+fn solve to void
+changed = true
+while changed bound 2594
+changed = false
+put totals 1 add get totals 1 1
+for s uint 2593
+v = false
+if ne get keep s 0
+if eq get mut 0 1
+v = swapped s
+else
+v = existsaction s
+end
+end
+put next s 0
+if v
+put next s 1
+end
+if ne get next s get keep s
+changed = true
+end
+end
+for s uint 2593
+put keep s get next s
+end
+if eq get mut 0 6
+ret
+end
+end
+end
+fn certificate to void
+for s uint 2593
+m = uint 0
+if ne get keep s 0
+put totals 2 add get totals 2 1
+for u uint 18
+if safe s u
+m = or m shl uint 1 u
+end
+end
+if or eq get mut 0 1 eq get mut 0 6
+if eq m 0
+m = get moves s
+end
+end
+end
+put cert s m
+end
+if eq get mut 0 5
+put cert 3 shl uint 1 9
+end
+end
+fn output to void
+sendword 1396912455
+sendword 1
+sendword 2593
+for s uint 2593
+sendword get moves s
+sendword get cert s
+for u uint 18
+if ne and get moves s shl uint 1 u 0
+for d uint 9
+sendword get edges index s u d
+end
+end
+end
+end
+flush
+end
+fn benchmark to void
+put mut 0 0
+for i ulong 101
+start = monons
+construct
+solve
+certificate
+put samples i ulong sub monons start
+end
+percentiles
+end
+fn main to int
+put mut 0 mode
+if eq get mut 0 7
+benchmark
+output
+ret 0
+end
+if gt get mut 0 6
+ret 90
+end
+start = monons
+construct
+label 0
+number ulong sub monons start
+start = monons
+solve
+certificate
+label 1
+number ulong sub monons start
+label 3
+number 2593
+label 4
+number get totals 0
+label 5
+number get totals 2
+label 6
+number get totals 1
+label 7
+number 1711182
+output
+ret 0
+end

@@ -1,0 +1,126 @@
+note SC1-G transport only. No transition or invariant code is shared.
+global wire uchar 4096
+global pos ulong 1
+global avail ulong 1
+global digits uchar 32
+global samples ulong 101
+text nl "\n"
+text sp " "
+text tags "construct_ns=\nsolve_ns=\ncheck_ns=\nstates=\nedges=\nwinning=\nrounds=\narray_bytes=\nPASS SC1-G finite model only\nFAIL QUANTIFIER\nFAIL OMITTED_DISTURBANCE\nFAIL STALE_EPOCH\nFAIL UNCERTAIN_REFUND\nFAIL UNSAFE_OPTIMIZER\nFAIL EARLY_STOP\nFAIL CERTIFICATE\nPASS witnesses serial capacity empty-set paired costs\nFAIL PAIRED_PRODUCT\npaired_states=\npaired_edges=\nsample_ns=\np50_ns=\np95_ns=\np99_ns=\n"
+fn label id uint to void
+p = ulong 0
+n = uint 0
+for j ulong len tags
+if eq get tags j 10
+if eq n id
+r = write 2 tags p add sub j p 1
+if ne r long add sub j p 1
+exit 90
+end
+ret
+end
+n = add n 1
+p = add j 1
+end
+end
+exit 90
+end
+fn number n ulong to void
+p = ulong 0
+while ge n 10 bound 32
+put digits p uchar add rem n 10 48
+n = div n 10
+p = add p 1
+end
+put digits p uchar add n 48
+p = add p 1
+for j ulong p
+r = write 2 digits sub sub p j 1 1
+if ne r 1
+exit 90
+end
+end
+r = write 2 nl 0 1
+if ne r 1
+exit 90
+end
+end
+fn mode to uint
+if eq argcnt 1
+ret 0
+end
+if ne argcnt 2
+exit 90
+end
+if ne argread 1 wire 0 1 1
+exit 90
+end
+m = get wire 0
+if or lt m 48 gt m 56
+exit 90
+end
+ret sub uint m 48
+end
+fn flush to void
+n = get pos 0
+if ne write 1 wire 0 n long n
+exit 90
+end
+put pos 0 0
+end
+fn sendword x uint to void
+for i ulong 4
+p = get pos 0
+put wire p uchar and shr x mul uint i 8 255
+put pos 0 add p 1
+if eq get pos 0 4096
+flush
+end
+end
+end
+fn recvword to uint
+x = uint 0
+for i ulong 4
+if eq get pos 0 get avail 0
+n = read 0 wire 0 len wire
+if le n 0
+exit 90
+end
+put avail 0 ulong n
+put pos 0 0
+end
+p = get pos 0
+x = or x shl uint get wire p mul uint i 8
+put pos 0 add p 1
+end
+ret x
+end
+fn endinput to void
+if ne get pos 0 get avail 0
+exit 90
+end
+if ne read 0 wire 0 len wire 0
+exit 90
+end
+end
+fn percentiles to void
+for i ulong 101
+label 20
+number get samples i
+end
+for i ulong 101
+for j ulong 100
+if gt get samples j get samples add j 1
+t = get samples j
+put samples j get samples add j 1
+put samples add j 1 t
+end
+end
+end
+label 21
+number get samples 50
+label 22
+number get samples 95
+label 23
+number get samples 99
+end
