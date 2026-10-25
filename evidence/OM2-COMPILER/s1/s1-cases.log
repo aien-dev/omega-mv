@@ -1,0 +1,148 @@
+OM2GATE START cases=seed/omc/om2/s1/s1.cases scratch=/tmp/om2c/g-s1
+IDENTITY omc /home/drakestapleton/workspace/om2-compiler/seed/out/omc sha256=3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f pinned=3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f match
+CASE s1-optin line=4
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/4.src > /tmp/om2c/g-s1/4.elf 2> /tmp/om2c/g-s1/4.cerr
+  $ /tmp/om2c/g-s1/4.elf < /dev/null > /tmp/om2c/g-s1/4.out 2> /tmp/om2c/g-s1/4.err
+VERDICT s1-optin PASS run exit=42 expected=42 stdout=match stderr=match
+CASE s1-hex-same line=5
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/5.src.b > /tmp/om2c/g-s1/5.elf.b 2> /tmp/om2c/g-s1/5.cerr.b
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/5.src > /tmp/om2c/g-s1/5.elf 2> /tmp/om2c/g-s1/5.cerr
+VERDICT s1-hex-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s1-hex-run line=6
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/6.src > /tmp/om2c/g-s1/6.elf 2> /tmp/om2c/g-s1/6.cerr
+  $ /tmp/om2c/g-s1/6.elf < /dev/null > /tmp/om2c/g-s1/6.out 2> /tmp/om2c/g-s1/6.err
+VERDICT s1-hex-run PASS run exit=255 expected=255 stdout=match stderr=match
+CASE s1-hex-max line=7
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/7.src > /tmp/om2c/g-s1/7.elf 2> /tmp/om2c/g-s1/7.cerr
+  $ /tmp/om2c/g-s1/7.elf < /dev/null > /tmp/om2c/g-s1/7.out 2> /tmp/om2c/g-s1/7.err
+VERDICT s1-hex-max PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s1-rot line=8
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/8.src > /tmp/om2c/g-s1/8.elf 2> /tmp/om2c/g-s1/8.cerr
+  $ /tmp/om2c/g-s1/8.elf < /dev/null > /tmp/om2c/g-s1/8.out 2> /tmp/om2c/g-s1/8.err
+VERDICT s1-rot PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s1-rot-trap-var line=9
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/9.src > /tmp/om2c/g-s1/9.elf 2> /tmp/om2c/g-s1/9.cerr
+  $ /tmp/om2c/g-s1/9.elf < /dev/null > /tmp/om2c/g-s1/9.out 2> /tmp/om2c/g-s1/9.err
+VERDICT s1-rot-trap-var PASS run exit=107 expected=107 stdout=match stderr=match
+CASE s1-rot-trap-const line=10
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/10.src > /tmp/om2c/g-s1/10.elf 2> /tmp/om2c/g-s1/10.cerr
+  $ /tmp/om2c/g-s1/10.elf < /dev/null > /tmp/om2c/g-s1/10.out 2> /tmp/om2c/g-s1/10.err
+VERDICT s1-rot-trap-const PASS run exit=107 expected=107 stdout=match stderr=match
+CASE s1-rot-trap-u8 line=11
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/11.src > /tmp/om2c/g-s1/11.elf 2> /tmp/om2c/g-s1/11.cerr
+  $ /tmp/om2c/g-s1/11.elf < /dev/null > /tmp/om2c/g-s1/11.out 2> /tmp/om2c/g-s1/11.err
+VERDICT s1-rot-trap-u8 PASS run exit=107 expected=107 stdout=match stderr=match
+CASE s1-om1-names line=12
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/12.src > /tmp/om2c/g-s1/12.elf 2> /tmp/om2c/g-s1/12.cerr
+  $ /tmp/om2c/g-s1/12.elf < /dev/null > /tmp/om2c/g-s1/12.out 2> /tmp/om2c/g-s1/12.err
+VERDICT s1-om1-names PASS run exit=2 expected=2 stdout=match stderr=match
+CASE s1-bad-hex-int line=14
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/14.src > /tmp/om2c/g-s1/14.elf 2> /tmp/om2c/g-s1/14.cerr
+VERDICT s1-bad-hex-int PASS compile exit=8 expected=8 refused with the expected error
+CASE s1-bad-hex-neg line=15
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/15.src > /tmp/om2c/g-s1/15.elf 2> /tmp/om2c/g-s1/15.cerr
+VERDICT s1-bad-hex-neg PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-upper line=16
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/16.src > /tmp/om2c/g-s1/16.elf 2> /tmp/om2c/g-s1/16.cerr
+VERDICT s1-bad-hex-upper PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-bigx line=17
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/17.src > /tmp/om2c/g-s1/17.elf 2> /tmp/om2c/g-s1/17.cerr
+VERDICT s1-bad-hex-bigx PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-empty line=18
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/18.src > /tmp/om2c/g-s1/18.elf 2> /tmp/om2c/g-s1/18.cerr
+VERDICT s1-bad-hex-empty PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-long line=19
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/19.src > /tmp/om2c/g-s1/19.elf 2> /tmp/om2c/g-s1/19.cerr
+VERDICT s1-bad-hex-long PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-under line=20
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/20.src > /tmp/om2c/g-s1/20.elf 2> /tmp/om2c/g-s1/20.cerr
+VERDICT s1-bad-hex-under PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-bad-hex-char line=21
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/21.src > /tmp/om2c/g-s1/21.elf 2> /tmp/om2c/g-s1/21.cerr
+VERDICT s1-bad-hex-char PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-om1-hex line=22
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/22.src > /tmp/om2c/g-s1/22.elf 2> /tmp/om2c/g-s1/22.cerr
+VERDICT s1-om1-hex PASS compile exit=6 expected=6 refused with the expected error
+CASE s1-om1-late line=23
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/23.src > /tmp/om2c/g-s1/23.elf 2> /tmp/om2c/g-s1/23.cerr
+VERDICT s1-om1-late PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-om1-space line=24
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/24.src > /tmp/om2c/g-s1/24.elf 2> /tmp/om2c/g-s1/24.cerr
+VERDICT s1-om1-space PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-reserved-fn line=25
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/25.src > /tmp/om2c/g-s1/25.elf 2> /tmp/om2c/g-s1/25.cerr
+VERDICT s1-bad-reserved-fn PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-reserved-var line=26
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/26.src > /tmp/om2c/g-s1/26.elf 2> /tmp/om2c/g-s1/26.cerr
+VERDICT s1-bad-reserved-var PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-reserved-par line=27
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/27.src > /tmp/om2c/g-s1/27.elf 2> /tmp/om2c/g-s1/27.cerr
+VERDICT s1-bad-reserved-par PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-rot-signed line=28
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/28.src > /tmp/om2c/g-s1/28.elf 2> /tmp/om2c/g-s1/28.cerr
+VERDICT s1-bad-rot-signed PASS compile exit=7 expected=7 refused with the expected error
+CASE s1-bad-rot-mixed line=29
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/29.src > /tmp/om2c/g-s1/29.elf 2> /tmp/om2c/g-s1/29.cerr
+VERDICT s1-bad-rot-mixed PASS compile exit=7 expected=7 refused with the expected error
+CASE s1-bad-rot-float line=30
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/30.src > /tmp/om2c/g-s1/30.elf 2> /tmp/om2c/g-s1/30.cerr
+VERDICT s1-bad-rot-float PASS compile exit=7 expected=7 refused with the expected error
+CASE s1-diag-eof line=32
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/32.src > /tmp/om2c/g-s1/32.elf 2> /tmp/om2c/g-s1/32.cerr
+VERDICT s1-diag-eof PASS compile exit=4 expected=4 stdout=match stderr=match
+CASE s1-diag-extra line=33
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/33.src > /tmp/om2c/g-s1/33.elf 2> /tmp/om2c/g-s1/33.cerr
+VERDICT s1-diag-extra PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE s1-diag-hex line=34
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/34.src > /tmp/om2c/g-s1/34.elf 2> /tmp/om2c/g-s1/34.cerr
+VERDICT s1-diag-hex PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s1-diag-lf line=35
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/35.src > /tmp/om2c/g-s1/35.elf 2> /tmp/om2c/g-s1/35.cerr
+VERDICT s1-diag-lf PASS compile exit=4 expected=4 stdout=match stderr=match
+CASE s1-diag-noend line=36
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/36.src > /tmp/om2c/g-s1/36.elf 2> /tmp/om2c/g-s1/36.cerr
+VERDICT s1-diag-noend PASS compile exit=15 expected=15 stdout=match stderr=match
+CASE s1-diag-range line=37
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/37.src > /tmp/om2c/g-s1/37.elf 2> /tmp/om2c/g-s1/37.cerr
+VERDICT s1-diag-range PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s1-diag-unknown line=38
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/38.src > /tmp/om2c/g-s1/38.elf 2> /tmp/om2c/g-s1/38.cerr
+VERDICT s1-diag-unknown PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE s1-diag-plain line=39
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/39.src > /tmp/om2c/g-s1/39.elf 2> /tmp/om2c/g-s1/39.cerr
+VERDICT s1-diag-plain PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s1-diag-ok line=40
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/40.src > /tmp/om2c/g-s1/40.elf 2> /tmp/om2c/g-s1/40.cerr
+VERDICT s1-diag-ok PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE s1-fmt line=42
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/42.src > /tmp/om2c/g-s1/42.elf 2> /tmp/om2c/g-s1/42.cerr
+VERDICT s1-fmt PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE s1-fmt-idem line=43
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/43.src > /tmp/om2c/g-s1/43.elf 2> /tmp/om2c/g-s1/43.cerr
+VERDICT s1-fmt-idem PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE s1-fmt-compile line=44
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/44.src.b > /tmp/om2c/g-s1/44.elf.b 2> /tmp/om2c/g-s1/44.cerr.b
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/44.src > /tmp/om2c/g-s1/44.elf 2> /tmp/om2c/g-s1/44.cerr
+VERDICT s1-fmt-compile PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s1-fmt-om1 line=45
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/45.src > /tmp/om2c/g-s1/45.elf 2> /tmp/om2c/g-s1/45.cerr
+VERDICT s1-fmt-om1 PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE s1-bad-fmt-cr line=46
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/46.src > /tmp/om2c/g-s1/46.elf 2> /tmp/om2c/g-s1/46.cerr
+VERDICT s1-bad-fmt-cr PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s1-bad-fmt-tail line=47
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/47.src > /tmp/om2c/g-s1/47.elf 2> /tmp/om2c/g-s1/47.cerr
+VERDICT s1-bad-fmt-tail PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s1-bad-fmt-tailws line=48
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/48.src > /tmp/om2c/g-s1/48.elf 2> /tmp/om2c/g-s1/48.cerr
+VERDICT s1-bad-fmt-tailws PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s1-bad-fmt-late line=49
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/49.src > /tmp/om2c/g-s1/49.elf 2> /tmp/om2c/g-s1/49.cerr
+VERDICT s1-bad-fmt-late PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s1-bad-fmt-nested line=50
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/50.src > /tmp/om2c/g-s1/50.elf 2> /tmp/om2c/g-s1/50.cerr
+VERDICT s1-bad-fmt-nested PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s1-bad-fmt-compile line=51
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1/51.src > /tmp/om2c/g-s1/51.elf 2> /tmp/om2c/g-s1/51.cerr
+VERDICT s1-bad-fmt-compile PASS compile exit=5 expected=5 stdout=match stderr=match
+OM2GATE PASS cases=45 pass=45 fail=0 invalid=0 not_run=0

@@ -1,0 +1,51 @@
+# S1 (#745/#655/#665) fixtures for the OM-2 compiler, run by seed/qualification/om2/gate.om (L836):
+#   gate OMC OMC_SHA256 seed/omc/om2/s1/s1.cases SCRATCH     (from the repository root)
+# valid units
+s1-optin run seed/omc/om2/s1/optin.om - - - 42
+s1-hex-same same seed/omc/om2/s1/hex-a.om seed/omc/om2/s1/hex-b.om
+s1-hex-run run seed/omc/om2/s1/hex-a.om - - - 255
+s1-hex-max run seed/omc/om2/s1/hex-max.om - - - 0
+s1-rot run seed/omc/om2/s1/rot.om - - - 0
+s1-rot-trap-var run seed/omc/om2/s1/rot-trap-var.om - - - 107
+s1-rot-trap-const run seed/omc/om2/s1/rot-trap-const.om - - - 107
+s1-rot-trap-u8 run seed/omc/om2/s1/rot-trap-u8.om - - - 107
+s1-om1-names run seed/omc/om2/s1/om1-names.om - - - 2
+# refusals
+s1-bad-hex-int refuse seed/omc/om2/s1/bad-hex-int.om 8
+s1-bad-hex-neg refuse seed/omc/om2/s1/bad-hex-neg.om 6
+s1-bad-hex-upper refuse seed/omc/om2/s1/bad-hex-upper.om 6
+s1-bad-hex-bigx refuse seed/omc/om2/s1/bad-hex-bigx.om 6
+s1-bad-hex-empty refuse seed/omc/om2/s1/bad-hex-empty.om 6
+s1-bad-hex-long refuse seed/omc/om2/s1/bad-hex-long.om 6
+s1-bad-hex-under refuse seed/omc/om2/s1/bad-hex-under.om 6
+s1-bad-hex-char refuse seed/omc/om2/s1/bad-hex-char.om 6
+s1-om1-hex refuse seed/omc/om2/s1/om1-hex.om 6
+s1-om1-late refuse seed/omc/om2/s1/om1-late.om 16
+s1-om1-space refuse seed/omc/om2/s1/om1-space.om 16
+s1-bad-reserved-fn refuse seed/omc/om2/s1/bad-reserved-fn.om 16
+s1-bad-reserved-var refuse seed/omc/om2/s1/bad-reserved-var.om 16
+s1-bad-reserved-par refuse seed/omc/om2/s1/bad-reserved-par.om 16
+s1-bad-rot-signed refuse seed/omc/om2/s1/bad-rot-signed.om 7
+s1-bad-rot-mixed refuse seed/omc/om2/s1/bad-rot-mixed.om 7
+s1-bad-rot-float refuse seed/omc/om2/s1/bad-rot-float.om 7
+# om2 diag records (exact stderr), a plain om2 unit (human line only), a valid diag unit (silent)
+s1-diag-eof emit seed/omc/om2/s1/diag-eof.om - file:seed/omc/om2/s1/diag-eof.err 4
+s1-diag-extra emit seed/omc/om2/s1/diag-extra.om - file:seed/omc/om2/s1/diag-extra.err 5
+s1-diag-hex emit seed/omc/om2/s1/diag-hex.om - file:seed/omc/om2/s1/diag-hex.err 6
+s1-diag-lf emit seed/omc/om2/s1/diag-lf.om - file:seed/omc/om2/s1/diag-lf.err 4
+s1-diag-noend emit seed/omc/om2/s1/diag-noend.om - file:seed/omc/om2/s1/diag-noend.err 15
+s1-diag-range emit seed/omc/om2/s1/diag-range.om - file:seed/omc/om2/s1/diag-range.err 8
+s1-diag-unknown emit seed/omc/om2/s1/diag-unknown.om - file:seed/omc/om2/s1/diag-unknown.err 3
+s1-diag-plain emit seed/omc/om2/s1/diag-plain.om - err:3:8 8
+s1-diag-ok emit seed/omc/om2/s1/diag-ok.om any - 0
+# om2 fmt: canonical text, idempotence, compile(fmt(x)) == compile(x), an OM-1 rest, refusals
+s1-fmt emit seed/omc/om2/s1/fmt-in.om file:seed/omc/om2/s1/fmt-out.txt - 0
+s1-fmt-idem emit seed/omc/om2/s1/fmt-idem.om file:seed/omc/om2/s1/fmt-out.txt - 0
+s1-fmt-compile same seed/omc/om2/s1/fmt-rest.om seed/omc/om2/s1/fmt-out.txt
+s1-fmt-om1 emit seed/omc/om2/s1/fmt-om1.om file:seed/omc/om2/s1/fmt-om1-out.txt - 0
+s1-bad-fmt-cr emit seed/omc/om2/s1/bad-fmt-cr.om - err:3:6 6
+s1-bad-fmt-tail emit seed/omc/om2/s1/bad-fmt-tail.om - err:5:6 6
+s1-bad-fmt-tailws emit seed/omc/om2/s1/bad-fmt-tailws.om - err:5:6 6
+s1-bad-fmt-late emit seed/omc/om2/s1/bad-fmt-late.om - err:2:16 16
+s1-bad-fmt-nested emit seed/omc/om2/s1/bad-fmt-nested.om - err:2:16 16
+s1-bad-fmt-compile emit seed/omc/om2/s1/bad-fmt-compile.om - err:3:5 5

@@ -1,0 +1,40 @@
+# S1 compiled mutants of omc.om (each built by the compiler under test from a one-place mutation of
+# seed/omc/omc.om). Expected verdicts, fixed in advance: every ctl-* case PASS (a self-built compiler
+# without a mutation), every m-* case FAIL (the mutation is detected). The list ends OM2GATE FAIL.
+deadline 60
+cc seed/omc/omc.om
+ctl-rot run seed/omc/om2/s1/rot.om - - - 0
+ctl-rot-trap run seed/omc/om2/s1/rot-trap-var.om - - - 107
+ctl-hex-max run seed/omc/om2/s1/hex-max.om - - - 0
+ctl-hex-upper refuse seed/omc/om2/s1/bad-hex-upper.om 6
+ctl-om1-names run seed/omc/om2/s1/om1-names.om - - - 2
+ctl-fmt emit seed/omc/om2/s1/fmt-in.om file:seed/omc/om2/s1/fmt-out.txt - 0
+ctl-diag-unknown emit seed/omc/om2/s1/diag-unknown.om - file:seed/omc/om2/s1/diag-unknown.err 3
+# rotl by a number becomes rotr
+subst seed/omc/om2/s1/mut/rotl.from seed/omc/om2/s1/mut/rotl.to
+cc seed/omc/omc.om
+m-rotl run seed/omc/om2/s1/rot.om - - - 0
+# the rotate amount check (trap 7) is dropped
+subst seed/omc/om2/s1/mut/rchk.from seed/omc/om2/s1/mut/rchk.to
+cc seed/omc/omc.om
+m-rchk run seed/omc/om2/s1/rot-trap-var.om - - - 107
+# hex digit a..f value off by one
+subst seed/omc/om2/s1/mut/hexd.from seed/omc/om2/s1/mut/hexd.to
+cc seed/omc/omc.om
+m-hexd run seed/omc/om2/s1/hex-max.om - - - 0
+# uppercase hex digits accepted
+subst seed/omc/om2/s1/mut/hexU.from seed/omc/om2/s1/mut/hexU.to
+cc seed/omc/omc.om
+m-hexU refuse seed/omc/om2/s1/bad-hex-upper.om 6
+# OM-2 words leak into OM-1 units (opt-in check removed)
+subst seed/omc/om2/s1/mut/optin.from seed/omc/om2/s1/mut/optin.to
+cc seed/omc/omc.om
+m-optin run seed/omc/om2/s1/om1-names.om - - - 2
+# fmt respaces next to a parenthesis
+subst seed/omc/om2/s1/mut/paren.from seed/omc/om2/s1/mut/paren.to
+cc seed/omc/omc.om
+m-paren emit seed/omc/om2/s1/fmt-in.om file:seed/omc/om2/s1/fmt-out.txt - 0
+# diag: an undeclared function is no longer sev=unknown
+subst seed/omc/om2/s1/mut/unk.from seed/omc/om2/s1/mut/unk.to
+cc seed/omc/omc.om
+m-unk emit seed/omc/om2/s1/diag-unknown.om - file:seed/omc/om2/s1/diag-unknown.err 3

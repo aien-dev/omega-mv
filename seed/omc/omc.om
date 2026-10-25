@@ -19,6 +19,24 @@ global tbig ulong 1
 global out uchar 8388608
 global oc ulong 1
 
+note ---- OM-2 profile (spec/omegese-om2.md, OMEGESE.md 9.13). om2 is 1 in an OM-2 unit (its first line
+note that is not a note or blank is exactly om2, om2 diag or om2 fmt); om2m 0 compile, 1 diag, 2 fmt;
+note om2ln/om2pos the line number and offset of that line; fmtm 1 while a unit is formatted; lbase and
+note sbase shift reported lines and bytes back to the original input in fmt mode; tka/tkb the byte span of
+note the last token; dexp what was being read (0 word 1 value 2 type 3 name 4 number 5 end 6 newline);
+note dsev 0 derived, 2 unknown (an undeclared function or struct), 3 error ----
+global om2 ulong 1
+global om2m ulong 1
+global om2ln ulong 1
+global om2pos ulong 1
+global fmtm ulong 1
+global lbase ulong 1
+global sbase ulong 1
+global tka ulong 1
+global tkb ulong 1
+global dexp ulong 1
+global dsev ulong 1
+
 note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
 global nm_name ulong 1024
 global nm_reg uchar 1024
@@ -91,7 +109,7 @@ ret 17
 end
 
 note ---- error reporting ----
-global msg uchar 64
+global msg uchar 512
 global mc ulong 1
 
 fn mputb b uchar to void
@@ -132,7 +150,7 @@ mputb 105
 mputb 110
 mputb 101
 mputb 32
-mputn get line 0
+mputn add get line 0 get lbase 0
 mputb 58
 mputb 32
 mputb 101
@@ -144,7 +162,198 @@ mputb 32
 mputn code
 mputb 10
 w = write 2 msg 0 get mc 0
+if ne get om2 0 0
+if eq get om2m 0 1
+drec code
+end
+end
 exit int code
+end
+
+note mputw: the first n bytes (at most 8) of the little-endian packed word w
+fn mputw w ulong n ulong to void
+i = ulong 0
+x = w
+while lt i n
+mputb uchar and x 255
+x = shr x 8
+i = add i 1
+end
+end
+
+note dcol: the 1-based column of byte a in its line
+fn dcol a ulong to ulong
+j = a
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if eq j 0
+go = false
+else
+if eq get inp sub j 1 10
+go = false
+else
+j = sub j 1
+end
+end
+m = add m 1
+end
+end
+ret add sub a j 1
+end
+
+note dsev_w: sev= incomplete when the failure is on the end-of-input token (or inside a text literal cut by
+note the end), unknown for an undeclared function or struct, else error
+fn dsev_w code ulong to void
+s = get dsev 0
+if eq s 0
+if eq get tk 0 3
+s = ulong 1
+end
+if and eq code 22 ge get cur 0 get inlen 0
+s = ulong 1
+end
+end
+if eq s 1
+mputw 7308339910638005865 8
+mputw 25972 2
+ret
+end
+if eq s 2
+mputw 31093567915781749 7
+ret
+end
+mputw 491496043109 5
+end
+
+note dexp_w: expect= the class of token being read (end for an open function at the end of the input)
+fn dexp_w code ulong to void
+e = get dexp 0
+if eq code 15
+e = ulong 5
+end
+if or eq code 6 eq code 8
+e = ulong 4
+end
+if eq e 1
+mputw 435761734006 5
+ret
+end
+if eq e 2
+mputw 1701869940 4
+ret
+end
+if eq e 3
+mputw 1701667182 4
+ret
+end
+if eq e 4
+mputw 125779768604014 6
+ret
+end
+if eq e 5
+mputw 6581861 3
+ret
+end
+if eq e 6
+mputw 28550371718161774 7
+ret
+end
+mputw 1685221239 4
+end
+
+note dobl_w: obligation= from the code: 27 init, 28 ctor, 29 layout, 21 bounds, 14 growth, 12 regs, else -
+fn dobl_w code ulong to void
+if eq code 27
+mputw 1953066601 4
+ret
+end
+if eq code 28
+mputw 1919906915 4
+ret
+end
+if eq code 29
+mputw 128047730221420 6
+ret
+end
+if eq code 21
+mputw 126875187113826 6
+ret
+end
+if eq code 14
+mputw 114849429287527 6
+ret
+end
+if eq code 12
+mputw 1936156018 4
+ret
+end
+mputb 45
+end
+
+note mputh: one byte as two lowercase hex digits
+fn mputh b ulong to void
+hi = shr b 4
+lo = and b 15
+if lt hi 10
+mputb uchar add hi 48
+else
+mputb uchar add hi 87
+end
+if lt lo 10
+mputb uchar add lo 48
+else
+mputb uchar add lo 87
+end
+end
+
+note drec: the om2 diag machine record after the human line (spec 1): code, sev, line (the human line),
+note col, the half-open byte span of the token being read, expect, found (at most 32 bytes, hex),
+note obligation, profile
+fn drec code ulong to void
+put mc 0 0
+mputw 7449351137626647919 8
+mputw 4424052638528581920 8
+mputn code
+mputw 263979365152 5
+dsev_w code
+mputw 67505853393952 6
+mputn add get line 0 get lbase 0
+a = get tka 0
+b = get tkb 0
+if le b a
+b = a
+if gt get cur 0 a
+b = get cur 0
+end
+end
+if gt b get inlen 0
+b = get inlen 0
+end
+mputw 263812244256 5
+mputn dcol a
+mputw 67544290456352 6
+mputn add a get sbase 0
+mputb 45
+mputn add b get sbase 0
+mputw 4428273620941825312 8
+dexp_w code
+mputw 17280399158765088 7
+if eq a b
+mputb 45
+end
+i = a
+while and lt i b lt sub i a 32
+mputh ulong get inp i
+i = add i 1
+end
+mputw 8386097683628191520 8
+mputw 1030647657 4
+dobl_w code
+mputw 7308332183992823840 8
+mputw 11210624683837 6
+w = write 2 msg 0 get mc 0
 end
 
 note emitb / emit: one byte / one 32-bit word (little-endian) to the output; error 14 when it is full
@@ -172,6 +381,11 @@ note tok_num: the word at [ts,cur) is [-]decimal, at most 20 digits, from -2^63 
 note bad number, 8 out of range). tw = its raw 64 bits (a negative one as two's complement); tbig = 1
 note when it is 2^63 or more (only a ulong holds it), else 0. As om4's TK_NUM.
 fn tok_num to void
+if ne get om2 0 0
+if ne tok_hex 0
+ret
+end
+end
 p = get ts 0
 e = get cur 0
 i = p
@@ -194,10 +408,10 @@ p = add p 1
 end
 ndig = sub e p
 if eq ndig 0
-fail 6
+nfail 6
 end
 if gt ndig 20
-fail 6
+nfail 6
 end
 v = ulong 0
 lim = ulong 1844674407370955161
@@ -205,13 +419,13 @@ i = p
 while lt i e
 d = sub ulong get inp i 48
 if gt d 9
-fail 6
+nfail 6
 end
 if gt v lim
-fail 8
+nfail 8
 end
 if and eq v lim gt d 5
-fail 8
+nfail 8
 end
 v = add mul v 10 d
 i = add i 1
@@ -220,7 +434,7 @@ half = shl ulong 1 63
 put tbig 0 0
 if minus
 if gt v half
-fail 8
+nfail 8
 end
 put tw 0 sub ulong 0 v
 else
@@ -352,21 +566,30 @@ if or or eq c 32 eq c 9 eq c 13
 put cur 0 add get cur 0 1
 else
 if eq c 10
+put tka 0 get cur 0
+put tkb 0 add get cur 0 1
 put cur 0 add get cur 0 1
 put line 0 add get line 0 1
 put tk 0 0
 ret
 end
+put tka 0 get cur 0
+put tkb 0 add get cur 0 1
 if lt c 32
 fail 16
 end
+put tka 0 get cur 0
+put tkb 0 get cur 0
 tok2 c
+put tkb 0 get cur 0
 ret
 end
 end
 n = add n 1
 end
 end
+put tka 0 get inlen 0
+put tkb 0 get inlen 0
 put tk 0 3
 end
 
@@ -850,7 +1073,503 @@ end
 if eq w 7310870969309884259
 ret 97
 end
+if eq get om2 0 0
 ret 0
+end
+ret kw2 w
+end
+
+note ======== OM-2 words (spec/omegese-om2.md): reserved only in an OM-2 unit. rotr 59, rotl 60 are
+note binary operators; the rest are statement and declaration words of later sections. ========
+fn kw2 w ulong to ulong
+if eq w 1920233330
+ret 59
+end
+if eq w 1819570034
+ret 60
+end
+if eq w 119212982038133
+ret 181
+end
+if eq w 111524889521769
+ret 182
+end
+if eq w 448612627046
+ret 183
+end
+if eq w 8386654075301880417
+ret 184
+end
+if eq w 1818322291
+ret 185
+end
+if eq w 1852141679
+ret 186
+end
+if eq w 495606067048
+ret 187
+end
+if eq w 128047730221420
+ret 188
+end
+if eq w 431315315046
+ret 189
+end
+if eq w 29793
+ret 190
+end
+if eq w 111516484659564
+ret 191
+end
+if eq w 6777186
+ret 192
+end
+if eq w 1953653104
+ret 193
+end
+if eq w 7632239
+ret 194
+end
+if eq w 128034844735589
+ret 195
+end
+if eq w 7565423
+ret 196
+end
+ret 0
+end
+
+note nfail: a bad number (diag expect=number); unkfail: an undeclared function or struct (sev=unknown)
+fn nfail code ulong to void
+put dexp 0 4
+fail code
+end
+
+fn unkfail code ulong to void
+put dsev 0 2
+put dexp 0 3
+fail code
+end
+
+note lineis: the n bytes at q are the packed word w and the line ends right after them
+fn lineis q ulong w ulong n ulong to ulong
+e = get inlen 0
+if gt add q n e
+ret 0
+end
+i = ulong 0
+x = w
+while lt i n
+if ne ulong get inp add q i and x 255
+ret 0
+end
+x = shr x 8
+i = add i 1
+end
+r = add q n
+if lt r e
+if ne get inp r 10
+ret 0
+end
+end
+ret 1
+end
+
+note isnote: the word at p is note (the lexer ends a word at a blank, a parenthesis or the end)
+fn isnote p ulong to ulong
+e = get inlen 0
+if gt add p 4 e
+ret 0
+end
+i = ulong 0
+x = ulong 1702129518
+while lt i 4
+if ne ulong get inp add p i and x 255
+ret 0
+end
+x = shr x 8
+i = add i 1
+end
+r = add p 4
+if lt r e
+b = get inp r
+if and gt b 32 and ne b 40 ne b 41
+ret 0
+end
+end
+ret 1
+end
+
+note om2lead: skip blank lines and note lines; when the next line is exactly om2 (1), om2 diag (2) or
+note om2 fmt (3) the unit is OM-2: om2, om2m, om2ln, om2pos. Anything else leaves the unit OM-1.
+fn om2lead to void
+e = get inlen 0
+p = ulong 0
+ln = ulong 1
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+q = skipbl p
+if ge q e
+go = false
+else
+if eq get inp q 10
+p = add q 1
+ln = add ln 1
+else
+if ne isnote q 0
+p = skipln q
+ln = add ln 1
+else
+r = ulong 0
+if eq q p
+if ne lineis q 3304815 3 0
+r = ulong 1
+end
+if ne lineis q 7449351137405332847 8 0
+r = ulong 2
+end
+if ne lineis q 32771382692703599 7 0
+r = ulong 3
+end
+end
+if ne r 0
+put om2 0 1
+put om2m 0 sub r 1
+put om2ln 0 ln
+put om2pos 0 q
+end
+go = false
+end
+end
+end
+m = add m 1
+end
+end
+end
+
+note ---- om2 fmt (spec 2, errata E4, E6): only when the input's first line, at byte 0, is om2 fmt (an om2
+note fmt line elsewhere is error 16). The rest (the bytes after the first LF) is compiled as a unit of
+note its own (OM-1 or OM-2 by its own first line) and, when it is accepted, its canonical text is written
+note instead of the artifact. A CR anywhere and blank lines at the end are error 6. Lines and spans are
+note reported against the whole input.
+global fst ulong 1
+global fpend ulong 1
+global fbo ulong 1
+global fprp ulong 1
+global flso ulong 1
+
+note fmttail: blank lines at the end of the rest (n bytes) are error 6, at the first such line
+fn fmttail n ulong to void
+lnb = ulong 0
+lnl = ulong 1
+ln = ulong 1
+i = ulong 0
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge i n
+go = false
+else
+b = get inp i
+if eq b 10
+ln = add ln 1
+else
+if and ne b 32 ne b 9
+lnb = add i 1
+lnl = ln
+end
+end
+i = add i 1
+end
+m = add m 1
+end
+end
+bad = false
+if eq lnb 0
+if gt n 0
+bad = true
+lnl = ulong 0
+end
+end
+k = lnb
+fl = n
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge k n
+go = false
+else
+if eq get inp k 10
+fl = k
+go = false
+end
+k = add k 1
+end
+m = add m 1
+end
+end
+if lt add fl 1 n
+bad = true
+end
+if bad
+put line 0 add lnl 1
+put tka 0 lnb
+put tkb 0 lnb
+fail 6
+end
+end
+
+fn fmtprep to void
+if ne get om2pos 0 0
+put line 0 get om2ln 0
+put tka 0 get om2pos 0
+put tkb 0 get om2pos 0
+fail 16
+end
+e = get inlen 0
+ln = ulong 1
+i = ulong 0
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge i e
+go = false
+else
+b = get inp i
+if eq b 13
+put line 0 ln
+put tka 0 i
+put tkb 0 add i 1
+fail 6
+end
+if eq b 10
+ln = add ln 1
+end
+i = add i 1
+end
+m = add m 1
+end
+end
+r = skipln get om2pos 0
+put lbase 0 get om2ln 0
+put sbase 0 r
+n = sub e r
+j = ulong 0
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge j n
+go = false
+else
+put inp j get inp add r j
+j = add j 1
+end
+m = add m 1
+end
+end
+put inlen 0 n
+fmttail n
+put om2 0 0
+put om2m 0 0
+put om2ln 0 0
+put fmtm 0 1
+om2lead
+if eq get om2m 0 2
+put line 0 get om2ln 0
+put tka 0 get om2pos 0
+put tkb 0 get om2pos 0
+fail 16
+end
+end
+
+note fmtbyte: one input byte of the canonical text. fst: 0 line start, 1 indentation (kept, dropped
+note again on a blank line), 2 note line (copied), 3 between words, 4 in a word, 5 in a text literal, 6
+note after a backslash in a text literal. A run of blanks between words (fpend, starting at output byte
+note fbo) is written as it comes, then becomes one space unless a parenthesis is next to it (fprp: the
+note word before it was one); at the end of the line it is dropped.
+fn fmtbyte p ulong to void
+b = get inp p
+s = get fst 0
+if eq b 10
+if lt s 2
+put oc 0 get flso 0
+else
+if ne get fpend 0 0
+put oc 0 get fbo 0
+end
+end
+emitb 10
+put fst 0 0
+put fpend 0 0
+put fprp 0 0
+put flso 0 get oc 0
+ret
+end
+if eq s 2
+emitb b
+ret
+end
+if eq s 5
+emitb b
+if eq b 92
+put fst 0 6
+end
+if eq b 34
+put fst 0 3
+put fprp 0 0
+end
+ret
+end
+if eq s 6
+emitb b
+put fst 0 5
+ret
+end
+blank = or eq b 32 eq b 9
+if lt s 2
+if blank
+emitb b
+put fst 0 1
+ret
+end
+if ne isnote p 0
+emitb b
+put fst 0 2
+ret
+end
+put fst 0 3
+put fpend 0 0
+end
+if blank
+if eq get fpend 0 0
+put fbo 0 get oc 0
+put fpend 0 1
+end
+emitb b
+put fst 0 3
+ret
+end
+paren = or eq b 40 eq b 41
+if and eq get fst 0 4 not paren
+emitb b
+ret
+end
+if ne get fpend 0 0
+if and eq get fprp 0 0 not paren
+put oc 0 get fbo 0
+emitb 32
+end
+end
+put fpend 0 0
+emitb b
+if eq b 34
+put fst 0 5
+put fprp 0 0
+ret
+end
+if paren
+put fst 0 3
+put fprp 0 1
+else
+put fst 0 4
+put fprp 0 0
+end
+end
+
+fn fmtout to void
+put oc 0 0
+put fst 0 0
+put fpend 0 0
+put fprp 0 0
+put flso 0 0
+e = get inlen 0
+p = ulong 0
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge p e
+go = false
+else
+fmtbyte p
+p = add p 1
+end
+m = add m 1
+end
+end
+if ge get fst 0 2
+if ne get fpend 0 0
+put oc 0 get fbo 0
+end
+emitb 10
+end
+put fmtm 0 0
+writeout 0
+end
+
+note tok_hex (OM-2): 0x and 1..16 digits 0-9 a-f is the unsigned value (tk 2, tbig as tok_num). A - before
+note 0x, 0X, no digits, more than 16 digits, an uppercase or any other character is error 6. 0 when the
+note word is not a hex literal.
+fn tok_hex to ulong
+p = get ts 0
+e = get cur 0
+if eq get inp p 45
+q = add p 1
+if lt add q 1 e
+if eq get inp q 48
+c = get inp add q 1
+if or eq c 120 eq c 88
+nfail 6
+end
+end
+end
+ret 0
+end
+if ge add p 1 e
+ret 0
+end
+if ne get inp p 48
+ret 0
+end
+c = get inp add p 1
+if eq c 88
+nfail 6
+end
+if ne c 120
+ret 0
+end
+n = sub e add p 2
+if eq n 0
+nfail 6
+end
+if gt n 16
+nfail 6
+end
+v = ulong 0
+i = add p 2
+while lt i e
+d = ulong get inp i
+if and ge d 48 le d 57
+v = or shl v 4 sub d 48
+else
+if and ge d 97 le d 102
+v = or shl v 4 sub d 87
+else
+nfail 6
+end
+end
+i = add i 1
+end
+put tbig 0 shr v 63
+put tw 0 v
+put tk 0 2
+ret 1
 end
 
 note ---- float literals: a token is the decimal value fsgn * fnd * 10^fp10, fsuf 0 none / 1 f32 / 2 f64.
@@ -1185,7 +1904,7 @@ fail 13
 end
 sid = findstruct get tw 0
 if eq sid 0
-fail 3
+unkfail 3
 end
 tok
 if ne get tk 0 1
@@ -1796,6 +2515,7 @@ end
 
 note typeword: read a type name -> 1..9
 fn typeword to ulong
+put dexp 0 2
 tok
 k = get tk 0
 if eq k 0
@@ -1830,6 +2550,7 @@ end
 
 note eol: the line must end here
 fn eol to void
+put dexp 0 6
 tok
 k = get tk 0
 if and ne k 0 ne k 3
@@ -1839,6 +2560,7 @@ end
 
 note arrname: read an array name -> its index + 1
 fn arrname to ulong
+put dexp 0 3
 tok
 k = get tk 0
 if eq k 0
@@ -2363,9 +3085,93 @@ end
 ret rd
 end
 
+note ---- rotate (OM-2, spec 3): rotr 59 / rotl 60 of an unsigned uchar..ulong by the same type. uint and
+note ulong with a number below the width: ROR (immediate) = EXTR Rd, Rn, Rn, #s (C6.2.347, C6.2.160);
+note otherwise the shift amount check (trap 7) then RORV (C6.2.349); rotl by n is ror by w - n (a number)
+note or by NEG n (C6.2.295) since RORV takes the amount modulo the width. uchar/ushort first replicate the
+note value through W16 with ORR (shifted register, LSL, C6.2.302), rotate the 32-bit pattern, then canon.
+fn rotrep ty ulong ra ulong to void
+if eq ty 3
+emit or or 704659472 shl ra 16 shl ra 5
+ret
+end
+emit or or 704651280 shl ra 16 shl ra 5
+emit 705708560
+end
+
+fn rotimm ty ulong ra ulong s ulong rd ulong to void
+if eq ty 5
+emit or or or 2478833664 shl ra 16 shl s 10 or shl ra 5 rd
+ret
+end
+if eq ty 4
+emit or or or 327155712 shl ra 16 shl s 10 or shl ra 5 rd
+ret
+end
+rotrep ty ra
+emit or or 328204800 shl s 10 rd
+canon rd ty
+end
+
+fn rotreg ty ulong ra ulong rr ulong rd ulong to void
+if eq ty 5
+emit or or 2596285440 shl rr 16 or shl ra 5 rd
+ret
+end
+if eq ty 4
+emit or or 448801792 shl rr 16 or shl ra 5 rd
+ret
+end
+rotrep ty ra
+emit or or 448802304 shl rr 16 rd
+canon rd ty
+end
+
+fn binrot op ulong dst ulong ix ulong to void
+ty = get fr add ix 2
+if or lt ty 2 gt ty 5
+fail 7
+end
+ra = matreg get fr ix get fr add ix 1 ty
+bk = get fr add ix 3
+bn = get fr add ix 4
+w = twid ty
+rb = ulong 0
+useimm = false
+if and eq bk 3 lt bn w
+useimm = true
+rb = bn
+else
+rb = matreg bk bn get fr add ix 5
+bo_schk ty rb
+end
+rd = destreg dst
+if useimm
+s = rb
+if and eq op 60 ne s 0
+s = sub w s
+end
+rotimm ty ra s rd
+else
+rr = rb
+if eq op 60
+rr = alloc
+emit or or 3405775840 shl rb 16 rr
+end
+rotreg ty ra rr rd
+end
+put rk 0 1
+put rv 0 rd
+put rt 0 ty
+end
+
 note binop: op 33..48, destination (255 none), ix the fr slot of a (kind, number/register, type) then b.
 note Result in rk/rv/rt. om4 BINOP.
 fn binop op ulong dst ulong ix ulong to void
+if or eq op 59 eq op 60
+binrot op dst ix
+ret
+end
 ty = get fr add ix 2
 ra = matreg get fr ix get fr add ix 1 ty
 if ge ty 10
@@ -4493,6 +5299,7 @@ note none). Out: rk kind (1 register, 2 bare number, 3 typed number, 4 flags), r
 note condition, rt type (for a bare number: 1 when written as 2^63 or more). Only the outermost op writes the
 note destination. Every value nests one level deeper (at most 1024, error 14); a call does not.
 fn rdval mode ulong exp ulong dst ulong fe ulong to void
+put dexp 0 1
 if eq mode 2
 cb = add mul get depth 0 32 8
 put fr add cb 18 ulong get fn_np sub fe 1
@@ -4573,7 +5380,7 @@ end
 if gt get tl 0 8
 f = findfn get tw 0 get tl 0 get ts 0
 if eq f 0
-fail 13
+unkfail 13
 end
 if eq get fn_ret sub f 1 10
 fail 7
@@ -4604,7 +5411,7 @@ ret
 end
 f = findfn get tw 0 0 0
 if eq f 0
-fail 3
+unkfail 3
 end
 if eq get fn_ret sub f 1 10
 fail 7
@@ -4754,10 +5561,10 @@ if eq c 56
 vdone 3 0 1
 ret
 end
-if gt sub c 33 17
+if and gt sub c 33 17 gt sub c 59 1
 fail 16
 end
-if ge c 49
+if and ge c 49 le c 50
 rdval 0 exp 255 0
 if and eq c 50 eq get rk 0 4
 put rv 0 xor get rv 0 1
@@ -4900,7 +5707,7 @@ fail 17
 end
 f = findfn get tw 0 get tl 0 get ts 0
 if eq f 0
-fail 13
+unkfail 13
 end
 if ne get fn_ret sub f 1 10
 fail 7
@@ -5744,6 +6551,9 @@ end
 note ======== the end of the input: the output ========
 note writeout: the output from byte st to the end, to stdout (error 2), then exit 0. om4 WRITEOUT.
 fn writeout st ulong to void
+if ne get fmtm 0 0
+fmtout
+end
 p = st
 go = true
 while go
@@ -5861,6 +6671,7 @@ end
 f = ulong 0
 while lt f get nf 0
 if eq get settled f 0
+put dsev 0 3
 fail 9
 end
 f = add f 1
@@ -5893,6 +6704,7 @@ end
 
 note stmt: one line. Returns 1 at the end of the input. om4 STMT.
 fn stmt to ulong
+put dexp 0 0
 put nslot 0 get held 0
 tok
 k = get tk 0
@@ -5905,6 +6717,12 @@ ret 1
 end
 if ne k 1
 fail 16
+end
+if ne get om2 0 0
+if eq get line 0 get om2ln 0
+skipnl
+ret 0
+end
 end
 if gt get tl 0 8
 s_long
@@ -7787,6 +8605,9 @@ end
 end
 end
 ir_encode
+if ne get fmtm 0 0
+fmtout
+end
 n = write 1 out 0 get oc 0
 exit 0
 end
@@ -7816,6 +8637,10 @@ m = add m 1
 end
 end
 put inlen 0 off
+om2lead
+if eq get om2m 0 2
+fmtprep
+end
 if ne ir_lead 0
 put irmode 0 1
 ir_run

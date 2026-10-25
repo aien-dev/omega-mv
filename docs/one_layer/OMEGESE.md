@@ -621,6 +621,44 @@ An integer constant is also accepted as a `trap` code (1..14) and as a `while ..
 (1..999999); a `for` count is an ordinary value, so a constant works there too. Out-of-range values
 keep error 8, and a float constant in any of these positions is error 16.
 
+### 9.13 Profile OM-2 (omc only, `spec/omegese-om2.md`, ledger L834)
+
+OM-2 is opt-in per unit; the contract `spec/omegese-om2.md` and its errata are normative, and this
+section lists what omc implements of it. Fixtures, expected results and compiled mutants:
+`seed/omc/om2/` (run by the #748 gate `seed/qualification/om2/gate.om`). Every OM-1 unit keeps its
+meaning and, for the C2 manifest, its exact output bytes or error.
+
+- **Opt-in.** Leading blank lines and `note` lines are skipped; when the next line is exactly `om2`,
+  `om2 diag` or `om2 fmt` (no other bytes on it) the unit is OM-2. Any other line leaves the unit OM-1,
+  where the `om2` line itself is error 16 as before. The words of this section are reserved only in an
+  OM-2 unit: `rotr rotl unroll inline fresh abstract seal open holds layout field at little big part out
+  export ops`. Using one as a name there is error 16; an OM-1 unit keeps them as ordinary names.
+- **`om2 diag`.** After the human line `omc: line N: error E` (unchanged), stderr gets one record
+  `omc-diag 1 code=E sev=S line=N col=C span=A-B expect=K found=H obligation=O profile=OM-2`. `line` is
+  the human line. `A-B` is the half-open byte span of the token being read (the LF for a line that ends
+  too early; `len-len` at the end of input) and `col` the 1-based byte column of A on its line. `found` is
+  the span's bytes in hex (at most 32 bytes), `-` when empty. `expect` is the class being read: `number`
+  for errors 6 and 8, `end` for error 15, `name` for an unknown name, otherwise `value`, `type`, `name`,
+  `newline` or `word` from the reader that failed. `sev` is `unknown` for an undeclared function or struct
+  (errors 3 and 13 at a call or `offsetof`), `incomplete` when the failure is on the end-of-input token or
+  in a text cut by the end (except the call-cycle error 9), else `error`. `obligation` is `bounds` (21),
+  `growth` (14), `regs` (12), `init` (27), `ctor` (28), `layout` (29) or `-`.
+- **Hex literals.** `0x` and 1..16 digits `0-9a-f` is the unsigned value and takes the type the place
+  needs under the decimal range rule (error 8 outside; `int 0xffffffff` is error 8). A `-` before it, `0X`,
+  no digits, more than 16 digits, an uppercase digit, `_` or any other character is error 6.
+- **`om2 fmt`.** Only when the input's first line, at byte 0, is `om2 fmt` (error 16 elsewhere). The rest
+  (the bytes after the first LF) is compiled as a unit of its own, OM-1 or OM-2 by its own first line;
+  if it is refused, the error is reported against the whole input and nothing is written. If it is
+  accepted, stdout gets its canonical text: note lines and text literal bytes exactly as written; the
+  indentation as written; each other run of blanks between words one space, except next to `(` or `)`
+  where it is kept; no blanks at a line end; a whitespace-only line empty; one LF after the last line. A
+  CR anywhere and blank lines at the end are error 6. fmt never adds or removes a line, is idempotent,
+  and compile(fmt(x)) is byte-identical to compile(x).
+- **Rotate.** `rotr x n` and `rotl x n`: x and n of one unsigned type (uchar, ushort, uint, ulong; else
+  error 7), the result x's type. n outside 0..w-1 traps 7 at run time, a number n included. uint/ulong
+  with a number n give one `ROR` (immediate, EXTR); otherwise the amount check, then `RORV` (rotl through
+  `NEG`). uchar/ushort replicate the value into a 32-bit pattern, rotate it, then truncate.
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original
