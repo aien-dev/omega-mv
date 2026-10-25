@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""Transparent host dispatch; v2 decoding and Zig generation run in seeded native Omega (#740)."""
+from pathlib import Path
+import hashlib,json,os,sys
+root=Path(__file__).resolve().parents[2]
+NAME='zig-export'
+if len(sys.argv)!=1:
+    print('ZIG_EXPORT_BAD_COMMAND: use stdin; no arguments',file=sys.stderr);raise SystemExit(64)
+try:
+    build=root/'build/L740';m=json.loads((build/'build.json').read_text());exe=build/NAME;a=m['artifacts'][NAME]
+    if m['compiler_sha256']!='191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9':raise ValueError('compiler identity')
+    if set(a['inputs'])!={'src/source-aware/vendor/sha256.om','src/source-aware/core-v2.om','src/adapters/zig-u64-export.om'}:raise ValueError('source closure')
+    for rel,digest in a['inputs'].items():
+        if hashlib.sha256((root/rel).read_bytes()).hexdigest()!=digest:raise ValueError('changed source '+rel)
+    if hashlib.sha256(exe.read_bytes()).hexdigest()!=a['binary_sha256']:raise ValueError('changed artifact')
+except (OSError,ValueError,KeyError,TypeError) as exc:
+    print('ZIG_EXPORT_STALE_OR_MISSING_BUILD: '+str(exc),file=sys.stderr);raise SystemExit(78)
+os.execv(exe,[str(exe)])

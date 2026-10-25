@@ -1,0 +1,1312 @@
+{
+ "schema": "omega.universal.fixtures.v1",
+ "set": "F2-zig",
+ "contract": "spec/universal/translation-compose-v2.md",
+ "profile": "spec/universal/zig-u64-v1.md",
+ "from": "tests/universal/translation/fixtures-f1.json",
+ "note": "Every F1 positive is expressible in zig-u64-wrapping-pure-v1; not_in_profile is empty. Unused C parameters are written as the discard _ (Zig rejects an unused named parameter); constant-only C operations (F1-P26, F1-P27) carry @as(u64, N) on one operand (Zig comptime_int arithmetic is exact, not modulo 2^64). Refusals are new Zig-profile fixtures, not F1 refusals.",
+ "positives": [
+  {
+   "id": "F2-zig-F1-P00",
+   "f1_id": "F1-P00",
+   "f1_sha256": "250e3228f00b4c0cd60df70092f50106dce54f081cc77d4f3a24f7d2b5af8c4c",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "7ae365122b7025954f34b1f4a31daad4fb0650539ef51394b8e0dfebe06599b7",
+   "source": "pub fn calc(a: u64, _: u64) u64 {\n    return a;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P01",
+   "f1_id": "F1-P01",
+   "f1_sha256": "cc4a3ac6374b8c68eb99de6540e6896ef4c41aea9eb5fb5c1f0ae4be52662456",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "2107072f9e4a3a9a564fbe1e53a14ec8f66da73d0d59b15b01f41a0f0edada05",
+   "source": "pub fn calc(_: u64, b: u64) u64 {\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P02",
+   "f1_id": "F1-P02",
+   "f1_sha256": "2ab81c70d64699c9afe59cda7d49edcb577e10a57e32f2402af6ad67a0632c3e",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "03e3ec24e333d8bceb14affdf54125801a93ef0770a48666138bb4a873c4a818",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P03",
+   "f1_id": "F1-P03",
+   "f1_sha256": "ce4e5d1d53ed51443e3b940939a21b8fff9bb35db202438920f398938c0f7fb6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "7b675000cc3622d14975003fb315ff33b01fa406ffa4bd12da82c737c0a06726",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a -% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P04",
+   "f1_id": "F1-P04",
+   "f1_sha256": "78db75440f5b5da2dafb59d0f771b696171c24d2698677f959e2ab430a2ebfd6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "21c361a3c989f603cc132462578969e42179f47b21ae09278e9a07572eb5112d",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a *% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P05",
+   "f1_id": "F1-P05",
+   "f1_sha256": "277232cc9416a0c4f06004c5b00dbaab33952fc411c7e42f505f324026ca1765",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "2fd4dab1c05381d159ed79bcef5d4c518ade21812e08e8d00c65120c5a776862",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return (a +% b) *% (a -% b);\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P06",
+   "f1_id": "F1-P06",
+   "f1_sha256": "4332e4105d4442afba0b586e9574f1f192d7ed740099228eae26ad15473a5099",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "15872f7c521fbe3542f9a987ebd31271fba78fd128954fb53425ab65bd945d4b",
+   "source": "pub fn calc(a: u64, _: u64) u64 {\n    return a +% 0;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P07",
+   "f1_id": "F1-P07",
+   "f1_sha256": "7339bf648758434626305006d637470ca6d97399010515134dd4358940641451",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b449bf2177367fb46c65534bf413d2841b1fe175fc94928357b7a6fdb633b3f9",
+   "source": "pub fn calc(a: u64, _: u64) u64 {\n    return a -% 1;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P08",
+   "f1_id": "F1-P08",
+   "f1_sha256": "9bb734b9718ebfbfac521731fa2bbd0ea59b201afc77ca385bcce151fa76a703",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c7f7c7c4e563cad4797461883d236a6ca3aa4ad91d35c4dd6c694452a66a6f90",
+   "source": "pub fn calc(a: u64, _: u64) u64 {\n    return a *% 2;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P09",
+   "f1_id": "F1-P09",
+   "f1_sha256": "9d409851a2558cf54315c84c4917ec67d1bee299ff7d371557d707416542b631",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c0c43a6245534d95cd26136198565c4379666390bca1d10f00076c2542fa0b9c",
+   "source": "pub fn calc(a: u64, _: u64) u64 {\n    return 0 -% a;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P10",
+   "f1_id": "F1-P10",
+   "f1_sha256": "aa0163f4a11aa259d38605ed3d26a56cbd80b381b32a9a20ffa10f82dbcd68ea",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "1736617d3ed50ad2a0998f2495e6891d2547d50af0322fffacabe329c1293fe6",
+   "source": "pub fn calc(a: u64, _: u64) u64 {\n    return 18446744073709551615 +% a;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P11",
+   "f1_id": "F1-P11",
+   "f1_sha256": "83d8dadc4e596492af0bd7c79b865fd5c5cb6b8536370706f95efd5c59f261d5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "70379dcbeea0b99db3886d9608edac4a16125883b050593c4faa7eaaf264faa2",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a *% b +% 3;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P12",
+   "f1_id": "F1-P12",
+   "f1_sha256": "a23775feb8d8822fc987bc087356a2dec17d4a85dd9a8fceb36606dac6e28572",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "d9ebc5adc4591d8330c93ee5ab6d4cadcc41da9237b3647e125d54c4edc03e85",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P13",
+   "f1_id": "F1-P13",
+   "f1_sha256": "23bc6a271dbba691f7a87f0f37e15ab125cecf8be229ab965777342266252ad2",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "81f327014c90dab4d6e86e3f0a6ebd13708a38ec1e112a506c054ad8c2b28103",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% (a +% b);\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P14",
+   "f1_id": "F1-P14",
+   "f1_sha256": "11c77e44f631b68afbf893f347a6e94498aae6213af99950deb03eea53f6da05",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "8c24dee6925bdc56474d05c428df12e63184e2287f6565f88d5d60da19a540dd",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a -% b -% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P15",
+   "f1_id": "F1-P15",
+   "f1_sha256": "c5f7c9fdc269761e8ad7a4a3fa9ed0a2a2ccd7115cd2721a503203c778a2da2f",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "2bdb1a2996c01507a397fb5ff19f91cc9c6838816be2db3c389d67fe7155ac88",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a -% (b -% b);\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P16",
+   "f1_id": "F1-P16",
+   "f1_sha256": "d17614f4cb5234a2234af049027f78f1f49a5f6f03d5f2e5c7c2b4b580f263c5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b6a395a3b6b0b3c68da0de5a61bfd0aca8867cfea71ee0154c47ee3e3488cd9b",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a *% b *% a;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P17",
+   "f1_id": "F1-P17",
+   "f1_sha256": "a686cff8ae29e41a88bd4904c479806fec36f691e87d5732de68f59f319c694d",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "74959d9de886514d808bb988d7a58c65366a37009bde6fe44fcc407afc784038",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a *% (b *% a);\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P18",
+   "f1_id": "F1-P18",
+   "f1_sha256": "262e9b705e8ba8c433e540f49209540cc7406bacb7e3b95c0b1cd5ad869af607",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "235bd95563e9f611c6e1897a5e8a2e39da3e51b73228ac180159eb890c60f71a",
+   "source": "pub fn calc(_: u64, _: u64) u64 {\n    return 123;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P19",
+   "f1_id": "F1-P19",
+   "f1_sha256": "0b7ae5fc5fcacdd7b3040571e1838c324ba755ab1e9ecf7ba363e4d05d118511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b1ab08aecb388f7ef11daea7fba16a95965c6cdfa1314a62c3fa2e69cb0c8995",
+   "source": "pub fn calc(a: u64, _: u64) u64 {\n    return ((a));\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P20",
+   "f1_id": "F1-P20",
+   "f1_sha256": "e83ba5c9beccb2a5639359cbca57afd15b7a508aa86d912ce861d7b14b335d50",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "29962b6fbacfa10b786fb7253c6177fac768132e68868d3943bad9ca15d10ab9",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return (a +% b) *% (b +% 1);\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P21",
+   "f1_id": "F1-P21",
+   "f1_sha256": "62ddab9112329da4fb6a45eb8ca1939e51c8bbfe0db85ba3784c4df0b078e757",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "e34453f295b74da96706fecc6235a544ed0ab64759338df0584be4533b5d8e18",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b *% 2;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P22",
+   "f1_id": "F1-P22",
+   "f1_sha256": "f2472d246de322a108e5bc3098e7d7e359e7511b9ca07723c2560130ffc86656",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "9eac810b67b76d3b87dfd4426d7e807d2ca9db1b7b2b47c290c3a0b73d040508",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return (a +% b) *% 2;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P23",
+   "f1_id": "F1-P23",
+   "f1_sha256": "6ac071f7821d7d29ca2e3961b90a89471e3f8f1a3150e06b1ab4642183ff6121",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "fa694484631a2713634b7d18837de77bd163be5ad4611a14a2b688c558e9c3ec",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a -% 2 *% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P24",
+   "f1_id": "F1-P24",
+   "f1_sha256": "f844f1cd780ee05f2e0218ce28afef6ae528d7d89c570253cdb8d82084784511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "8dfe9b872671f6bdf33d105b0f8ba9495bdffef1d16e1f61c1798502ed5a1613",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return (a -% 2) *% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P25",
+   "f1_id": "F1-P25",
+   "f1_sha256": "e446180a9b2462c5508e23bbd94371e2c0ee409a6b540a219a70026fe15fb568",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "ea9c54f335b337b6d27751924ac5d7ca29e4b3736fece40ae04eea34b8497ae5",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 18446744073709551615 *% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P26",
+   "f1_id": "F1-P26",
+   "f1_sha256": "26762c67b1d44a63563289ecd4c80ee13655629a93ac95bc727a9d59d74eccf7",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "e2995e56b7c173062054daa54df2d126052f98c6ee9c52cdc03cf3ea176470bd",
+   "source": "pub fn calc(_: u64, _: u64) u64 {\n    return @as(u64, 2) *% 3 +% 4;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P27",
+   "f1_id": "F1-P27",
+   "f1_sha256": "412ea121023c650878fc8e0dc12146e7dc9a083b3c9fde4adf813ace9baec525",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "982a6f69ed9a7403a8280438941947b0443f7fcb01bdfd1f569bf522c12b55b1",
+   "source": "pub fn calc(_: u64, _: u64) u64 {\n    return 2 *% (@as(u64, 3) +% 4);\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P28",
+   "f1_id": "F1-P28",
+   "f1_sha256": "e8b386f48e1ae8e8d91a073518e0c792e7c54e1a9cca283b37662aa66f636392",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "3538f8cfea31579f1cf1897b7874e200c09e741720abd85a24bff9502f08f14d",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a -% b +% a *% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P29",
+   "f1_id": "F1-P29",
+   "f1_sha256": "5ccf53bf81d312f299d2b5e916447830417b61a1e1a696460d7121dabb941106",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "0806fe334fa6792758f3f0e38989623b405ed05ce429c0547c4f08b157d502da",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return (a +% a) *% (b +% b);\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P30",
+   "f1_id": "F1-P30",
+   "f1_sha256": "01332f15d4dc15b52bfb8f1ad9ee7c5eeb1e9cbeec229e1ebe790678b28d7963",
+   "name": "calc",
+   "inputs": 0,
+   "sha256": "a932623d84ec27e4ee27e3c4e7faeac12dfa82392d650f5ca9f45c3b9c8605a6",
+   "source": "pub fn calc() u64 {\n    return 7;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P31",
+   "f1_id": "F1-P31",
+   "f1_sha256": "255692046d239f102f700df892a5519525d7615e3cba14517be1f383e2aa5644",
+   "name": "calc",
+   "inputs": 1,
+   "sha256": "d188d71242ff4912935d9feb63d1fe44ff5cbe94ed078a16dc8a8292db5acc1e",
+   "source": "pub fn calc(x: u64) u64 {\n    return x;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P32",
+   "f1_id": "F1-P32",
+   "f1_sha256": "14daf8acaa708f00035d3d6dcc7bb5ce341a4f859cb9fc89517d6a5a6b18bf5b",
+   "name": "calc",
+   "inputs": 6,
+   "sha256": "ef8f6556f2413768a55f61d59e2124a3d30fcfda746acce382fcc98dc477cb3e",
+   "source": "pub fn calc(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) u64 {\n    return a +% b +% c +% d +% e +% f;\n}\n"
+  },
+  {
+   "id": "F2-zig-F1-P33",
+   "f1_id": "F1-P33",
+   "f1_sha256": "48d398126ae85ad37b7fa9b96acd0d84a3bc980bed9c176843da4dc52ed4b6ef",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "6a3b7e4aad37570ab70a8b9b2881b7baccc657384de03390374dc312f1f96779",
+   "source": "// α comment retained\npub fn calc(left: u64, right: u64) u64 { // keep\n    return left *% right;\n}\r\n"
+  },
+  {
+   "id": "F2-zig-F1-P34",
+   "f1_id": "F1-P34",
+   "f1_sha256": "7c48737aa01323118ce87f9c95ed39edf11b554cd9fd9e8741b30fa548555dc6",
+   "name": "omega_fold",
+   "inputs": 2,
+   "sha256": "65bf0aa515e039e15f062603bcbb1af892e47eab6079d5a6c2f0278b95fcad01",
+   "source": "pub fn omega_fold(a: u64, b: u64) u64 {\n    return a *% b +% 42;\n}\n"
+  }
+ ],
+ "not_in_profile": [],
+ "refusals": [
+  {
+   "id": "F2-zig-N000",
+   "name": "plain-add",
+   "status": 68,
+   "reason": "plain operator: checked illegal behavior on overflow in Zig (panic in Debug/ReleaseSafe, undefined in ReleaseFast), not modulo 2^64",
+   "sha256": "27920674df848446f64b35d702781848b05b8098b42471fd064f3ff58509f3fc",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a + b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N001",
+   "name": "plain-sub",
+   "status": 68,
+   "reason": "plain operator: checked illegal behavior on overflow in Zig (panic in Debug/ReleaseSafe, undefined in ReleaseFast), not modulo 2^64",
+   "sha256": "b06d9a7fe7c3efb6b7a48804616618fa8b627dbb5f8af2add77943f45dbeefd0",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a - b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N002",
+   "name": "plain-mul",
+   "status": 68,
+   "reason": "plain operator: checked illegal behavior on overflow in Zig (panic in Debug/ReleaseSafe, undefined in ReleaseFast), not modulo 2^64",
+   "sha256": "ac36c98fa961a53b1a7c25604e3e25662646d5de4049321edc696f3e2f98878c",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a * b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N003",
+   "name": "plain-add-mixed",
+   "status": 68,
+   "reason": "plain operator: checked illegal behavior on overflow in Zig (panic in Debug/ReleaseSafe, undefined in ReleaseFast), not modulo 2^64",
+   "sha256": "e4bcd6f785b636c30f9e8189e73a41326ed7986faee91660e1316b354b1559b4",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b + a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N004",
+   "name": "plain-mul-literal",
+   "status": 68,
+   "reason": "plain operator: checked illegal behavior on overflow in Zig (panic in Debug/ReleaseSafe, undefined in ReleaseFast), not modulo 2^64",
+   "sha256": "8e2944a2092f73344d4a70ee21e23bba9b63012888a9662778199e4fda30f474",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a * 2;\n}\n"
+  },
+  {
+   "id": "F2-zig-N005",
+   "name": "div",
+   "status": 68,
+   "reason": "division is outside the S1 family (illegal behavior on zero divisor)",
+   "sha256": "59bb1eff317955fcae2dd697f4a061b3c44464283ca963c942e12fd2bd1a3a14",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a / b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N006",
+   "name": "mod",
+   "status": 68,
+   "reason": "remainder is not an S1 operation",
+   "sha256": "ff55fda25a90015d0cd86a72731cd3e6d6dd4a65dcd4692dc4362be37c5e25bf",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a % b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N007",
+   "name": "shl",
+   "status": 68,
+   "reason": "shifts are not S1 operations",
+   "sha256": "6fe080843ab3ece38453784aa13ab8d0f5134d830fcb2ffb39614603d985c5d6",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a << 1;\n}\n"
+  },
+  {
+   "id": "F2-zig-N008",
+   "name": "shr",
+   "status": 68,
+   "reason": "shifts are not S1 operations",
+   "sha256": "fb5ac0d837da1b09830dc33924e43d973f750541c92a311bbefcc03fc9843230",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a >> 1;\n}\n"
+  },
+  {
+   "id": "F2-zig-N009",
+   "name": "bit-and",
+   "status": 68,
+   "reason": "bitwise operators are not S1 operations",
+   "sha256": "894ea3b7bed1dfef7c3c18be5f9e18b29fe2f7ee118899694da4e8421c84e009",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a & b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N010",
+   "name": "bit-or",
+   "status": 68,
+   "reason": "bitwise operators are not S1 operations",
+   "sha256": "98427dd0483738594d666a05e3b13a55dd1c4f949cfdf243ebf523cc19154cc3",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a | b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N011",
+   "name": "bit-xor",
+   "status": 68,
+   "reason": "bitwise operators are not S1 operations",
+   "sha256": "a1c392bf296a1b5d7c78bf6a0cfed531e99f628fb83528ac83835622c8886a5e",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a ^ b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N012",
+   "name": "bit-not",
+   "status": 68,
+   "reason": "bitwise operators are not S1 operations",
+   "sha256": "b2c1fcf496e51125dd39854099e6af2ca678fc18ad8bfcbb200fe871d80ee71f",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return ~a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N013",
+   "name": "unary-minus",
+   "status": 68,
+   "reason": "unary negation is not an S1 operation (and checked on u64)",
+   "sha256": "a2638f2ffe3e3a773c18f663a3ccb063f18e81b732493f4d6dc072b29f16620a",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return -a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N014",
+   "name": "unary-wrap-neg",
+   "status": 68,
+   "reason": "wrapping negation -% has no S1 operation of its own; write 0 -% a",
+   "sha256": "6a49adb26086d3cc35749691f801be5a94255d6f3d870b3a68e95bff731542e0",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return -%a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N015",
+   "name": "sat-add",
+   "status": 68,
+   "reason": "saturating +| is not modulo 2^64",
+   "sha256": "d81040e7277c1e0055d58f73794ff20d5cbda1dc56932b9ec6cee9c8d38e0f94",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +| b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N016",
+   "name": "sat-sub",
+   "status": 68,
+   "reason": "saturating -| is not modulo 2^64",
+   "sha256": "7991672ee32ad56349119d91019a78be0b7acbf401b00720c9a8e070d9b9ec9a",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a -| b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N017",
+   "name": "sat-mul",
+   "status": 68,
+   "reason": "saturating *| is not modulo 2^64",
+   "sha256": "946ebb18cd0549c93f75815fcbef128fbdda142fb8608ab243a4dd6a1b80b0a6",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a *| b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N018",
+   "name": "sat-shl",
+   "status": 68,
+   "reason": "saturating shift <<| is not an S1 operation",
+   "sha256": "a24ad1b239269aa89714ef5b3350c37bfa4962a5105d1ce77e110ec0ceae6344",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a <<| 1;\n}\n"
+  },
+  {
+   "id": "F2-zig-N019",
+   "name": "compare",
+   "status": 68,
+   "reason": "comparison is not an S1 operation",
+   "sha256": "46ab01146c0e09e653ce8ffb64c8cf72412149d65c3cff097d1f9cda7815e6c5",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a == b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N020",
+   "name": "array-cat",
+   "status": 68,
+   "reason": "array operators are not S1 operations",
+   "sha256": "6af786e04b0695a5b9bc2b703d90361b0c74a838af25a2d93d63b229eccd8a14",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a ++ b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N021",
+   "name": "array-mul",
+   "status": 68,
+   "reason": "array operators are not S1 operations",
+   "sha256": "3ff6c4a5b2a6bf05b3704118747a63b9507d251903b078982c95e92ba612d383",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a ** b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N022",
+   "name": "compound-wrap-assign",
+   "status": 68,
+   "reason": "compound assignment is not an expression of the profile",
+   "sha256": "a6c6aad7c4f54d88a6b1a694967e9723beaff422244e26eb5169b82b31fccfeb",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +%= b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N023",
+   "name": "logical-not",
+   "status": 68,
+   "reason": "boolean operators are not S1 operations",
+   "sha256": "c601f88870796f360696a1da85f8b6d68ede8aebec5eb4815b65d77be6db5081",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return !a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N024",
+   "name": "comptime-add",
+   "status": 68,
+   "reason": "both operands are untyped comptime_int literals: Zig evaluates the operation exactly at compile time (no wrapping), so it is not modulo 2^64; write @as(u64, N)",
+   "sha256": "494ae84ec19c8c7088ce9b5484e414f75c6c232527ebec5dacd72c656755ef9f",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return 2 +% 3 +% a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N025",
+   "name": "comptime-mul-only",
+   "status": 68,
+   "reason": "both operands are untyped comptime_int literals: Zig evaluates the operation exactly at compile time (no wrapping), so it is not modulo 2^64; write @as(u64, N)",
+   "sha256": "2e53173e9c57c5c82849f45f5b9742c564ba951f9558d28378fade33c7641ffd",
+   "source": "pub fn calc() u64 {\n    return 2 *% 3;\n}\n"
+  },
+  {
+   "id": "F2-zig-N026",
+   "name": "comptime-paren",
+   "status": 68,
+   "reason": "both operands are untyped comptime_int literals: Zig evaluates the operation exactly at compile time (no wrapping), so it is not modulo 2^64; write @as(u64, N)",
+   "sha256": "9022de3de1f19a0d85f9d90da73c2bbe044d47a567c71f3ccce6cf92574afb7e",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return (2) *% (3) +% a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N027",
+   "name": "comptime-negative",
+   "status": 68,
+   "reason": "both operands are untyped comptime_int literals: Zig evaluates the operation exactly at compile time (no wrapping), so it is not modulo 2^64; write @as(u64, N) (0 -% 1 is -1 at comptime)",
+   "sha256": "7676b59bd68015496cd006c6d5d4a64c4c1d32b9722aa24b82ccae04934b9129",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return (0 -% 1) +% a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N028",
+   "name": "comptime-overflow",
+   "status": 68,
+   "reason": "both operands are untyped comptime_int literals: Zig evaluates the operation exactly at compile time (no wrapping), so it is not modulo 2^64; write @as(u64, N) (2^64 at comptime)",
+   "sha256": "bad7f4686fc1ed4c65f2c558dfd25dbedb7371a018e7e2b442d8770d96ab6fcd",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b +% (18446744073709551615 +% 1);\n}\n"
+  },
+  {
+   "id": "F2-zig-N029",
+   "name": "hex-literal",
+   "status": 68,
+   "reason": "literal spelling outside the profile (one decimal spelling per value)",
+   "sha256": "e904a11b7f336625eddedbc62b882f757f01b5b3e3f9a4636380e51f59957a5b",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 0x10 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N030",
+   "name": "octal-literal",
+   "status": 68,
+   "reason": "literal spelling outside the profile (one decimal spelling per value)",
+   "sha256": "e842bfd29b0c16cd88bef892875a299400d3761dc2dc2cfc763e151c0ecb2762",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 0o17 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N031",
+   "name": "binary-literal",
+   "status": 68,
+   "reason": "literal spelling outside the profile (one decimal spelling per value)",
+   "sha256": "b608894c35237bdc048a8bc76f99ee7c73232bfa3d80621bf3c606c4229d6263",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 0b1 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N032",
+   "name": "underscore-literal",
+   "status": 68,
+   "reason": "literal spelling outside the profile (one decimal spelling per value)",
+   "sha256": "53eb0f112c025b9ab174f4a0db1cfda1496fb99ff6003c334b85de541997358c",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 1_000 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N033",
+   "name": "leading-zero",
+   "status": 68,
+   "reason": "literal spelling outside the profile (one decimal spelling per value) (Zig rejects it too)",
+   "sha256": "830d8edcabbf43f8845a0352d944c8bb193b8104193499c7480b3ad92a5f1abe",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 010 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N034",
+   "name": "float-literal",
+   "status": 68,
+   "reason": "floating-point literal",
+   "sha256": "31730ba7526211aa203065e00c0d77de8fd119698a6e12239ecd7211668ccf1d",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 1.5 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N035",
+   "name": "exponent-literal",
+   "status": 68,
+   "reason": "literal spelling outside the profile (one decimal spelling per value)",
+   "sha256": "be219912bb758ffdccc25da7182b1d232a63c25857982cdb82b0130dc3621e53",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 1e3 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N036",
+   "name": "char-literal",
+   "status": 69,
+   "reason": "character literal",
+   "sha256": "95889c26c96e23d9fff71327101f672be1b339d5c56320aa14e67d7bdcd3c5d5",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 'x' +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N037",
+   "name": "missing-semicolon",
+   "status": 65,
+   "reason": "missing ; after the return expression",
+   "sha256": "ca7d27722362503a359eb7647b0e635340e8f4c508542bdd4db13f6e4adfedcf",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b\n}\n"
+  },
+  {
+   "id": "F2-zig-N038",
+   "name": "empty-body",
+   "status": 65,
+   "reason": "no return statement",
+   "sha256": "e597670391b5dc1ab816b3eea8c746c8f77de236e89a488b4edd46192197874d",
+   "source": "pub fn calc(a: u64, b: u64) u64 {}\n"
+  },
+  {
+   "id": "F2-zig-N039",
+   "name": "nul-byte",
+   "status": 65,
+   "reason": "NUL byte",
+   "sha256": "4599dccc7ca49af650480b1eca011e9d61ad034c14d912c12d5c465f10afd3a8",
+   "source_hex": "70756220666e2063616c6328613a207536342c20623a207536342920753634207b0a2020202072657475726e2061202b252062003b0a7d0a"
+  },
+  {
+   "id": "F2-zig-N040",
+   "name": "missing-expression",
+   "status": 65,
+   "reason": "return without an expression",
+   "sha256": "33c9259d1eac6a7c453da33b9331538e64c6611127baa68f10e6386315d58c9f",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return;\n}\n"
+  },
+  {
+   "id": "F2-zig-N041",
+   "name": "trailing-comma",
+   "status": 65,
+   "reason": "trailing comma in the parameter list (one spelling)",
+   "sha256": "74e668dc76a316006c97270c8bbdb0c550a8fea7539e49bd36f58d19e1e63c50",
+   "source": "pub fn calc(a: u64, b: u64,) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N042",
+   "name": "op-whitespace-left",
+   "status": 65,
+   "reason": "whitespace on one side of a binary operator only (Zig parse error)",
+   "sha256": "46787adc4c234de95a90fdbe40df02a40568c3654d1451892551c6254dba2400",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +%b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N043",
+   "name": "op-whitespace-right",
+   "status": 65,
+   "reason": "whitespace on one side of a binary operator only (Zig parse error)",
+   "sha256": "1ba9ef70ac17655043342ed0f3e7d92abce26ba40f9f9b7851e6af0a8b88f306",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a+% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N044",
+   "name": "op-comment-adjacent",
+   "status": 65,
+   "reason": "comment directly after the operator: whitespace on one side only",
+   "sha256": "457ad6fafe78bde41ba535c49b4c9c774f2c3cf80e2fb3b30af6f599d44bfc6d",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +%// c\n b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N045",
+   "name": "unbalanced-paren",
+   "status": 65,
+   "reason": "unclosed parenthesis",
+   "sha256": "31550ebb4e4993ecd9b699956a9b356398ffa6585abe84e3c7853e0b959bb6fa",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return (a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N046",
+   "name": "double-semicolon",
+   "status": 65,
+   "reason": "empty statement after return",
+   "sha256": "6aafac2f2b37896e4be6e854a4ffac5753e1042b445ff60adf4d66e4d0f2c939",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b;;\n}\n"
+  },
+  {
+   "id": "F2-zig-N047",
+   "name": "statement-after-return",
+   "status": 69,
+   "reason": "a second statement (statements are not in the profile)",
+   "sha256": "7e7dddb523f1b4115f9c6a1ef54a063e8a367c4cb639f00b380402f5f1f4bd44",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a;\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N048",
+   "name": "missing-operand",
+   "status": 65,
+   "reason": "binary operator without right operand",
+   "sha256": "3d1e09073d3453444c129f91123f4857d5e57cfad0a9136f66403845211db1da",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% ;\n}\n"
+  },
+  {
+   "id": "F2-zig-N049",
+   "name": "as-trailing-comma",
+   "status": 65,
+   "reason": "trailing comma in @as (one spelling)",
+   "sha256": "1585addbb8b5991bcf5407e534484b12eec8f8ad9a0e87b03edd7d84bb66cc86",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% @as(u64, 5,) +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N050",
+   "name": "as-one-argument",
+   "status": 65,
+   "reason": "@as needs a type and a literal",
+   "sha256": "39368cf9c2147e39b88ea52bf2f527f2edb7442a842224f22eb0f9e06060aa9e",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% @as(u64) +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N051",
+   "name": "param-u32",
+   "status": 66,
+   "reason": "parameter type other than u64",
+   "sha256": "c0c99b1259e1ff7bcd1dda7f502722fdd32b683993e3fac9ba473a826b65a509",
+   "source": "pub fn calc(a: u32, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N052",
+   "name": "param-i64",
+   "status": 66,
+   "reason": "parameter type other than u64",
+   "sha256": "a1e6448cd9c492aa62590a9e43fe489c22c9efdfc3cb9b626c087cc7d2339c49",
+   "source": "pub fn calc(a: i64, b: u64) u64 {\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N053",
+   "name": "param-usize",
+   "status": 66,
+   "reason": "parameter type other than u64",
+   "sha256": "c7e043ca947d5e5ac10ab69eaee1c60e50d0f9c50003a55d678e143f646ee7ac",
+   "source": "pub fn calc(a: usize, b: u64) u64 {\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N054",
+   "name": "param-pointer",
+   "status": 66,
+   "reason": "pointer type",
+   "sha256": "43797147b7ebc9a018b73213e4591ebe411e40118ec5b43ef011e89f20d63586",
+   "source": "pub fn calc(a: *u64, b: u64) u64 {\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N055",
+   "name": "param-optional",
+   "status": 66,
+   "reason": "optional type",
+   "sha256": "096aefbcf644a0ad8cc985ed6b6bcc7123b96dd473f466bd1fbe458726794350",
+   "source": "pub fn calc(a: ?u64, b: u64) u64 {\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N056",
+   "name": "param-array",
+   "status": 66,
+   "reason": "array type",
+   "sha256": "7d307003d372d4f9687c653f4100ea2d9b695a22cc9fb79821a3252f6f8941f0",
+   "source": "pub fn calc(a: [2]u64, b: u64) u64 {\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N057",
+   "name": "param-comptime-int",
+   "status": 66,
+   "reason": "comptime_int parameter",
+   "sha256": "aa431d4f01a79a61110c5758b4c2cbccebd8c2c4ba2bc6ef1a08d4fe568024d0",
+   "source": "pub fn calc(a: comptime_int, b: u64) u64 {\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N058",
+   "name": "return-u32",
+   "status": 66,
+   "reason": "return type other than u64",
+   "sha256": "3ac1d0ad092db07af2d243ba89851d08dfba86acfa71b37641dd71ea633615b1",
+   "source": "pub fn calc(a: u64, b: u64) u32 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N059",
+   "name": "as-u32",
+   "status": 66,
+   "reason": "@as to a type other than u64",
+   "sha256": "81b04a9daa98819a0289ef1d699366a067f57e9d577d6184cb18657656f5b14c",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% @as(u32, 5) +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N060",
+   "name": "type-in-expression",
+   "status": 66,
+   "reason": "a primitive type name used as a value",
+   "sha256": "aae554ba35f7566ac8a49488cc91d365ee7c3aaf91c6e74c08b07eb2fbafb6f4",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% u64;\n}\n"
+  },
+  {
+   "id": "F2-zig-N061",
+   "name": "bool-in-expression",
+   "status": 66,
+   "reason": "a primitive value other than an integer literal",
+   "sha256": "af2f61a80ed12503a4c55fe81ee31b6ab543b153d8966abb76325dacf999474a",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% true;\n}\n"
+  },
+  {
+   "id": "F2-zig-N062",
+   "name": "over-source-capacity",
+   "status": 67,
+   "reason": "more than 4096 bytes",
+   "sha256": "dc46598e1abf73a16f06488f0b628abbd83f74cbc7976055dc9d83ec44fe0e49",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          "
+  },
+  {
+   "id": "F2-zig-N063",
+   "name": "seven-params",
+   "status": 67,
+   "reason": "more than 6 parameters",
+   "sha256": "1117fd99f82759252fb2fc6740fef4a16d69544d1ff65cbbefa3fc7348bf389b",
+   "source": "pub fn calc(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64, g: u64) u64 {\n    return a +% b +% c +% d +% e +% f +% g;\n}\n"
+  },
+  {
+   "id": "F2-zig-N064",
+   "name": "literal-2-64",
+   "status": 67,
+   "reason": "literal above 2^64-1 (Zig rejects it too)",
+   "sha256": "62e118d8e8155c8dcbba030577d7d2dca90d3ad0e6d7cd3c79b598d1a07eeb25",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% 18446744073709551616 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N065",
+   "name": "non-pub",
+   "status": 69,
+   "reason": "non-pub fn is not reachable from another file; the profile imports the file interface",
+   "sha256": "1e8d90fb339ec3deed66b030fcab7924edcf5830fbd847587dc4c475b9314e34",
+   "source": "fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N066",
+   "name": "export-fn",
+   "status": 69,
+   "reason": "export fn (C ABI symbol)",
+   "sha256": "68453a9fcd85f2e1499223d86971b7c8d6ca91787d736f627f3c11b502af9d2e",
+   "source": "export fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N067",
+   "name": "pub-export-fn",
+   "status": 69,
+   "reason": "export fn (C ABI symbol)",
+   "sha256": "1394b52fd896cbc2753d00df36a14c77df250a351a1b1ffa8c01830ebc655a1e",
+   "source": "pub export fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N068",
+   "name": "inline-fn",
+   "status": 69,
+   "reason": "inline fn",
+   "sha256": "f4909e75ceed6236e2549387972eacd0fc402b767c037ec359c4c1b25a095412",
+   "source": "pub inline fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N069",
+   "name": "extern-fn",
+   "status": 69,
+   "reason": "extern fn",
+   "sha256": "f2351cc4cf908596ba4979dde37ec1694c6b178f96b48168ca41fe8ab530053e",
+   "source": "pub extern fn calc(a: u64, b: u64) u64;\n"
+  },
+  {
+   "id": "F2-zig-N070",
+   "name": "comptime-param",
+   "status": 69,
+   "reason": "comptime parameter",
+   "sha256": "5c2bb439c7083abb512414cd9cd585114bc0e56ec80c63ed8ca100298b664ed0",
+   "source": "pub fn calc(comptime a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N071",
+   "name": "noalias-param",
+   "status": 69,
+   "reason": "noalias parameter",
+   "sha256": "895a8371ea43b43365d8806d1016de406405d19ae849e31171741a557248d1ec",
+   "source": "pub fn calc(noalias a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N072",
+   "name": "error-union",
+   "status": 69,
+   "reason": "error union return type",
+   "sha256": "835aacff48b5c3fca4028eaea0970540fbdc50c140fe0d361b2dfbbd71aedd22",
+   "source": "pub fn calc(a: u64, b: u64) !u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N073",
+   "name": "callconv",
+   "status": 69,
+   "reason": "calling convention",
+   "sha256": "222cef3839e2c9bf9b66841e2d7f72173f3b3554c9263e7bfbc445279826bfeb",
+   "source": "pub fn calc(a: u64, b: u64) callconv(.c) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N074",
+   "name": "const-local",
+   "status": 69,
+   "reason": "local declarations",
+   "sha256": "547bd872904f4edf19e3abcb0441506ba577254b8957e29e278983ef0b59cc42",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    const c = a +% b;\n    return c;\n}\n"
+  },
+  {
+   "id": "F2-zig-N075",
+   "name": "var-local",
+   "status": 69,
+   "reason": "local declarations",
+   "sha256": "43e3a9ab63ac7c3c1645317adfd821283fa24a1635d2ac96801ddd7561e1e831",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    var c = a;\n    c +%= b;\n    return c;\n}\n"
+  },
+  {
+   "id": "F2-zig-N076",
+   "name": "discard-statement",
+   "status": 69,
+   "reason": "statements (write _ as the parameter name instead)",
+   "sha256": "0539568bfb6be811031e80d686e8cdfa6c3f6a6815223cbf95900aa0399cdaaf",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    _ = b;\n    return a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N077",
+   "name": "if-expr",
+   "status": 69,
+   "reason": "control flow",
+   "sha256": "99ab26d7fa7c4861577315e722b86c0a237fff7dc31b5a7b8a85b44b815f0281",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return if (a == 0) b else a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N078",
+   "name": "try",
+   "status": 69,
+   "reason": "error handling",
+   "sha256": "ed858022a963f34a84230fb6bd5077f0ccd816b34f3e2f0b064a062be85bf7ea",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return try a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N079",
+   "name": "catch",
+   "status": 69,
+   "reason": "error handling",
+   "sha256": "bab50c8695fc1df9a06ea0d049fe4ec9f340d6085bf3f6daabc622cd46e55811",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a catch b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N080",
+   "name": "switch",
+   "status": 69,
+   "reason": "control flow",
+   "sha256": "60b9cbffbb4286fde4ba9919c7527616d0cc151925a805500d0fb0bfae32421a",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return switch (a) { else => b };\n}\n"
+  },
+  {
+   "id": "F2-zig-N081",
+   "name": "while",
+   "status": 69,
+   "reason": "control flow",
+   "sha256": "3b7b4534cf7598bdd7fcd70cb399461965b32a67cde0612dd1d3e949fc860522",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    while (true) {}\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N082",
+   "name": "comptime-expr",
+   "status": 69,
+   "reason": "comptime evaluation",
+   "sha256": "d5f014a22b37426ed854113fe39e54654f16a52deb27e1f2a165a3eda018cc70",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return comptime a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N083",
+   "name": "unreachable",
+   "status": 69,
+   "reason": "unreachable",
+   "sha256": "459e1a2ed39ab107e30c2a6795acb33f8b53d550e975e872076fda7d6219e718",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return unreachable;\n}\n"
+  },
+  {
+   "id": "F2-zig-N084",
+   "name": "orelse",
+   "status": 69,
+   "reason": "optionals",
+   "sha256": "3a0f719c2bcbd33593136ed45c32de082d66d25351e8736e65a3099099fa418b",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a orelse b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N085",
+   "name": "error-value",
+   "status": 69,
+   "reason": "error sets",
+   "sha256": "5ea73dc90136033fb89ff502f2439a49141db773f86ea125dcb65db04d16e5d7",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return error.Overflow;\n}\n"
+  },
+  {
+   "id": "F2-zig-N086",
+   "name": "builtin-intcast",
+   "status": 69,
+   "reason": "builtins other than @as(u64, N)",
+   "sha256": "6ecf707d1eab1425121d0a9552ec1acfb497316df539ed706f825042af4fbecd",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return @intCast(a);\n}\n"
+  },
+  {
+   "id": "F2-zig-N087",
+   "name": "builtin-addwithoverflow",
+   "status": 69,
+   "reason": "builtins other than @as(u64, N)",
+   "sha256": "ec4152bb56f71ad3657ab2db8af40d40d25e6c523037546518e554bc95d50716",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return @addWithOverflow(a, b)[0];\n}\n"
+  },
+  {
+   "id": "F2-zig-N088",
+   "name": "builtin-truncate",
+   "status": 69,
+   "reason": "builtins other than @as(u64, N)",
+   "sha256": "1bc15b7d4b74e911cb20ae998ff35caf61a5cbbc75fa64cfb722e4d4385ffd86",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return @truncate(a);\n}\n"
+  },
+  {
+   "id": "F2-zig-N089",
+   "name": "as-variable",
+   "status": 69,
+   "reason": "@as accepts only a decimal literal",
+   "sha256": "063d89d91682e47047b01b85048a21d728de3f515f78fb39e3e3c00f1f37438b",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return @as(u64, a) +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N090",
+   "name": "quoted-identifier",
+   "status": 69,
+   "reason": "@\"...\" identifiers",
+   "sha256": "6d21e44b404741f17a685e2b4dbd89d003e7bd034e5ad07059b007aae982ec67",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return @\"a\" +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N091",
+   "name": "std-math",
+   "status": 69,
+   "reason": "library calls (std.math)",
+   "sha256": "9a7f56889486a1b6a59ba902832f9b821b1f24ea76f4efdc9472a1ca8eb62c57",
+   "source": "const std = @import(\"std\");\npub fn calc(a: u64, b: u64) u64 {\n    return std.math.add(u64, a, b) catch 0;\n}\n"
+  },
+  {
+   "id": "F2-zig-N092",
+   "name": "std-call",
+   "status": 69,
+   "reason": "library calls",
+   "sha256": "9864d3bbe1213e806153e3ae98fb6d42dd96386f4490dc21245f53b8eb3f9d88",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return std.math.mulWide(u64, a, b);\n}\n"
+  },
+  {
+   "id": "F2-zig-N093",
+   "name": "test-decl",
+   "status": 69,
+   "reason": "test declarations",
+   "sha256": "5144f03214c1021dcb2886fe161b8f18a52aed4f481d069bfd5c8802384c7391",
+   "source": "test \"t\" {}\npub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N094",
+   "name": "usingnamespace",
+   "status": 69,
+   "reason": "usingnamespace",
+   "sha256": "75a132647a767cc8b5f38c4b89ab99dfb401db6461ccb49826a4d1ad391b7abe",
+   "source": "usingnamespace @import(\"std\");\npub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N095",
+   "name": "second-fn",
+   "status": 69,
+   "reason": "a second declaration",
+   "sha256": "3b78c6d3aebb1022aa461a9c0ddac12d2251c593842df95a872225fa48ba438a",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\npub fn other(a: u64) u64 {\n    return a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N096",
+   "name": "recursive-call",
+   "status": 69,
+   "reason": "calls",
+   "sha256": "8bf146bd2bbd60f027e85dbfc8d6e83939c62f665e6d49fb45d4992dd06e9fd8",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return calc(a, b);\n}\n"
+  },
+  {
+   "id": "F2-zig-N097",
+   "name": "discard-in-expression",
+   "status": 69,
+   "reason": "_ is not a value (Zig rejects it)",
+   "sha256": "1ffabd4093eeee498f06cc9aaf234c4d1580a090fa93c73b117b386fe0467e07",
+   "source": "pub fn calc(a: u64, _: u64) u64 {\n    return a +% _;\n}\n"
+  },
+  {
+   "id": "F2-zig-N098",
+   "name": "non-ascii-code",
+   "status": 69,
+   "reason": "non-ASCII outside comments",
+   "sha256": "50c544be981b19fbc4f4d9b6f1a6e235b3ed5dd85023d77b40f7451460f7f934",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% b ;\n}\n"
+  },
+  {
+   "id": "F2-zig-N099",
+   "name": "block-expr",
+   "status": 69,
+   "reason": "blocks",
+   "sha256": "76830b92560a8d68a7ff5484263899440e875ecae090c86c8823569b0b0a66ab",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return blk: { break :blk a; };\n}\n"
+  },
+  {
+   "id": "F2-zig-N100",
+   "name": "field-access",
+   "status": 69,
+   "reason": "field access",
+   "sha256": "2e28f87ab6d7642b19f4d52bbcd5a1ff6ffaefdb99c0680c12235536d3562d90",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a.b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N101",
+   "name": "unknown-identifier",
+   "status": 70,
+   "reason": "identifier that is not a parameter",
+   "sha256": "2f4532f5b41f92d30c78510c60e03e3837a6730bfc7c20960b9fb383a13d98b1",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a +% c;\n}\n"
+  },
+  {
+   "id": "F2-zig-N102",
+   "name": "fn-name",
+   "status": 71,
+   "reason": "function name must be calc or omega_<ident>",
+   "sha256": "efd6caea8654c093481f351b1375cdfed947b5760f77c8cdeb0f59a6396d0aae",
+   "source": "pub fn foo(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N103",
+   "name": "fn-name-main",
+   "status": 71,
+   "reason": "function name must be calc or omega_<ident>",
+   "sha256": "aefb5985768559a9071b1c69d5ef6f207b66b54f14affbabd65e3cb845802eb3",
+   "source": "pub fn main(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N104",
+   "name": "fn-name-omega-empty",
+   "status": 71,
+   "reason": "omega_ needs at least one identifier byte",
+   "sha256": "9edde47ffde16e4dc7a3cb385daa628578e7452cd1f9098f6353c879013d0951",
+   "source": "pub fn omega_(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N105",
+   "name": "param-primitive-i0",
+   "status": 71,
+   "reason": "parameter name shadows the primitive type i0 (Zig rejects it)",
+   "sha256": "b9bbd74dd87373f087b855be6aae108791ed10740c6377dd9815aba5c1df5a3b",
+   "source": "pub fn calc(i0: u64, b: u64) u64 {\n    return i0 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N106",
+   "name": "param-primitive-u8",
+   "status": 71,
+   "reason": "parameter name shadows the primitive type u8",
+   "sha256": "61073dc06e3128b4863f995cb38ee889d8bc1b53c840d41039a310852b65ad51",
+   "source": "pub fn calc(u8: u64, b: u64) u64 {\n    return u8 +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N107",
+   "name": "param-primitive-bool",
+   "status": 71,
+   "reason": "parameter name shadows the primitive bool",
+   "sha256": "6e69c068ef526653579aa6dfb9f271f515afde13f5e1de77dd4cc445b4c8ef5b",
+   "source": "pub fn calc(bool: u64, b: u64) u64 {\n    return bool +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N108",
+   "name": "param-keyword",
+   "status": 71,
+   "reason": "parameter name is a keyword",
+   "sha256": "62f02a1f04c1a5ad8afac1053930bb6e66daa1629fabb8df12ff73d6682a0695",
+   "source": "pub fn calc(error: u64, b: u64) u64 {\n    return b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N109",
+   "name": "param-shadows-fn",
+   "status": 71,
+   "reason": "parameter shadows the function declaration (Zig rejects it)",
+   "sha256": "a2307bfe8b1b8cef5ea8b035d719c3e65c72aa7d198ae0f04605bb0b7df75c60",
+   "source": "pub fn calc(calc: u64, b: u64) u64 {\n    return calc +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N110",
+   "name": "duplicate-param",
+   "status": 71,
+   "reason": "duplicate parameter name",
+   "sha256": "29191995460be068da158a2605bdfe8c0f993f023a3bc215b4d0a17c3e258081",
+   "source": "pub fn calc(a: u64, a: u64) u64 {\n    return a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N111",
+   "name": "unused-param",
+   "status": 71,
+   "reason": "unused named parameter (Zig rejects it; write _)",
+   "sha256": "15f4f1edfe6e96c1b8cd19324cbc36625bab49419f1ebdadf6d11eebe7b64f62",
+   "source": "pub fn calc(a: u64, b: u64) u64 {\n    return a;\n}\n"
+  },
+  {
+   "id": "F2-zig-N112",
+   "name": "param-uppercase",
+   "status": 71,
+   "reason": "parameter names start with a..z",
+   "sha256": "55ff44bcfea012671a7d476ab896e428249441a8d884df373c61936c2f643285",
+   "source": "pub fn calc(A: u64, b: u64) u64 {\n    return A +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N113",
+   "name": "param-underscore-prefix",
+   "status": 71,
+   "reason": "parameter names start with a..z",
+   "sha256": "4b50611d4653a8c7e86928822504b9015abb595323d0be933ec545876c029013",
+   "source": "pub fn calc(_a: u64, b: u64) u64 {\n    return _a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N114",
+   "name": "param-too-long",
+   "status": 71,
+   "reason": "parameter name over 32 bytes",
+   "sha256": "ff655ab8f3945a8c7d48be6e5f9c258f9a5ecb8e2a8bf275d4b53557c4323920",
+   "source": "pub fn calc(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: u64, b: u64) u64 {\n    return aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N115",
+   "name": "invalid-utf8",
+   "status": 72,
+   "reason": "invalid UTF-8",
+   "sha256": "bcedbb2171b8c56a4af39b25aad440651746d0de3f7a556126a06b6f7e4bdf1e",
+   "source_hex": "2f2f20ff0a70756220666e2063616c6328613a207536342c20623a207536342920753634207b0a2020202072657475726e2061202b2520623b0a7d0a"
+  },
+  {
+   "id": "F2-zig-N116",
+   "name": "bom",
+   "status": 72,
+   "reason": "byte-order mark (one spelling)",
+   "sha256": "b704a3abc8072e5c57c0475703ace9898ad1a39311d3ce0b1d0f1da08047deb8",
+   "source_hex": "efbbbf70756220666e2063616c6328613a207536342c20623a207536342920753634207b0a2020202072657475726e2061202b2520623b0a7d0a"
+  },
+  {
+   "id": "F2-zig-N117",
+   "name": "doc-comment",
+   "status": 72,
+   "reason": "doc comment (attribute-like; refused)",
+   "sha256": "6bb74ba56e6bd2e87a0013b09d8eaad48360a7e8fc095f4b5c0b6cedafba81a9",
+   "source": "/// doc\npub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N118",
+   "name": "container-doc-comment",
+   "status": 72,
+   "reason": "top-level doc comment",
+   "sha256": "49fd7324c46b2082e1e872bcbaf19e41a1b1e477eaaae026364e142785a8278c",
+   "source": "//! doc\npub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N119",
+   "name": "comment-tab",
+   "status": 72,
+   "reason": "tab inside a comment (Zig rejects it)",
+   "sha256": "9f41d4031f300f2c06eae53af8cb9f258a0d601fdb6340d3cd3d7ca1b197581b",
+   "source": "// a\tb\npub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N120",
+   "name": "comment-control",
+   "status": 72,
+   "reason": "control byte inside a comment (Zig rejects it)",
+   "sha256": "5bc024514d4096279c7cb27eea0d4f43a473c29c15be4f671492d21ee096a80e",
+   "source": "// a\u0001b\npub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N121",
+   "name": "comment-del",
+   "status": 72,
+   "reason": "DEL inside a comment (Zig rejects it)",
+   "sha256": "0aa0befb159d54505b04857ec66deacc885a79b68c87466a05a24c3aa39f6bfc",
+   "source": "// ab\npub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  },
+  {
+   "id": "F2-zig-N122",
+   "name": "comment-bare-cr",
+   "status": 72,
+   "reason": "CR not followed by LF inside a comment (Zig rejects it)",
+   "sha256": "e8c5bdad8e758e6130e7e59584179f74801fad84aa02f201c3747edd30407871",
+   "source": "// a\rb\npub fn calc(a: u64, b: u64) u64 {\n    return a +% b;\n}\n"
+  }
+ ]
+}
