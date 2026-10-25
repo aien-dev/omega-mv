@@ -667,8 +667,11 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   right as for a call; a scalar argument in a named register is copied, one in a temporary is used as it
   is. The caller's locals are hidden from the body, and `ret` becomes a branch to the body's end (a last
   one is dropped). The standalone function is still emitted. `new` in it, or an inline function reached
-  again while it is being inlined (itself included), is error 9; a fifth nested inline level is
-  error 14. Calls to other functions stay calls. Removing `inline` leaves behaviour unchanged.
+  again while it is being inlined (itself included), is error 9; so is an inline function that reaches
+  itself anywhere in the call graph, through non-inline calls too (checked at the end of the input). A
+  fifth nested inline level is error 14. Calls to other functions stay calls. Removing `inline` leaves
+  behaviour unchanged. An argument that is a number is copied to a register, so folding does not reach
+  through parameters.
 - **Folding and checks.** Only inside an unrolled or inlined body, an operation (`add` .. `shr`,
   comparisons, `rotr`/`rotl`, `neg`, `not`) on two typed numbers is computed with OM-1 arithmetic. One
   that would trap (signed overflow, a divisor 0, an amount at or above the width) is not folded and keeps
@@ -677,10 +680,79 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   unsigned offset) with no runtime check. Every other index keeps its runtime check.
 - **Bounds.** At most 65536 emitted words per function after unrolling and inlining, 64 copies per
   unrolled loop and 4 inline levels (error 14, `obligation=growth`). 16 registers stay the limit
-  (error 12, `obligation=regs`).
+  (error 12, `obligation=regs`). Expansion fuel (E14, E16): each function has 65536; an unrolled loop is
+  charged K when it starts, at its line, before any copy expands, and an inline expansion 1 at its call
+  line, in emission order at every nesting depth (nested unrolls multiply). The charge that takes the
+  total above 65536 is error 14 (`growth`) on its line; exactly 65536 is allowed. So two nested 64-copy
+  unrolls (4160) compile and three do not. An inline function's standalone body is compiled with its own
+  fuel where it stands in the source. The inline call graph keeps each edge once.
 - **Trap sites.** With `om2 diag`, an accepted unit's stderr gets one `omc-site 1 line=N iter=k` record
   per runtime trap site, in emission order: N the source line, k the counters of the open unrolled loops
   outer to inner joined by `.`, or `-`. stdout is unchanged.
+- **External layout.** `layout NAME SIZE`, then one line `field F T [COUNT] at OFF little|big` per field
+  (note lines allowed), then `end`, at top level before the first `fn`. NAME and F at most 8 bytes and not
+  OM-2 words; NAME is a new name (error 10), F unique in its layout (error 10); T an integer type
+  (`uchar` .. `long`; else error 7). SIZE outside 1..4096 or a `layout` after the first `fn` is error 29
+  on the layout line; a COUNT outside 1..4096, an OFF or field extent past SIZE, or a byte shared with an
+  earlier field is error 29 on the field line (`obligation=layout`). No COUNT is a scalar field (E5).
+  A parameter `c view NAME` / `c edit NAME` is a `uchar` array of exactly SIZE bytes (another array is
+  error 7; ABI: one pointer). `get c F` / `get c F i` and `put c F v` / `put c F i v` load / store the field
+  at OFF + i * width with its width and byte order (unscaled register-offset LDR/STR, REV16/REV for
+  big; signed fields sign-extended). The index is checked like an array's: a number outside COUNT is
+  error 21, a run-time one traps 3. A missing index on an array field is error 4, an extra one on a
+  scalar field error 5, `put` through a view error 20. Any other word after `c` reads it as the plain
+  `uchar` array (`get c i`, `len c`, passing it on). Structs (9.7) are unchanged.
+- **Fresh scratch.** A parameter `s edit T N fresh` (N at most 64, else error 14 `obligation=init`; on
+  a view error 16) has unspecified incoming elements. omc tracks, per such array, which elements are
+  definitely written on the path being compiled: a `put` with a number index (after unrolling,
+  inlining and folding) marks its element; a `get` with a number index needs that element, any other
+  `get` all N (else error 27, `obligation=init`, on the get line). An if without else, a while and a
+  rolled for leave the set as it was when they opened (no induction); an if/else keeps the elements
+  written in both arms, or in the arm that does not end in `ret`; an unrolled or inlined body keeps
+  what it wrote. Passing the array to a non-inline call, `read`, `write` or a host operation is error
+  27 on that line; an inline callee works on the same set, and its own `fresh` parameter starts empty.
+  At most 16 fresh arrays per function, inline ones included (error 14). The generated code is unchanged.
+- **Abstract types.** `abstract NAME T [ops W ...]` (T `uint` or `ulong`, else error 7; W from `rotr rotl
+  and or xor`, else error 16) and `holds NAME dup32`, at top level before the first `fn` (error 9 after
+  it). NAME is a type distinct from T. A value of it is made only by `seal NAME v` (v of type T) in the
+  function named NAME followed by `mk` that returns NAME, inlined or not; a `seal` anywhere else is
+  error 28 (`obligation=ctor`) on its line. `open v` gives the T value. A T value or a number where NAME
+  is needed, a conversion, comparison or any operation on it not listed by `ops`, an array or struct
+  field or `const` of it, `sizeof`/`bitcast` of it, and NAME as a parameter or result of the entry of a
+  function-mode unit are error 7. Listed operations run on T and give NAME: `rotr`/`rotl` of NAME by a T
+  count (E9; 64 traps 7), `and`/`or`/`xor` of two NAME values. `holds NAME dup32` (ulong only; any
+  other predicate, or a uint NAME, is error 28 on the holds line) makes every seal check high32 ==
+  low32 at run time (LSR, CMP UXTW, B.NE trap 10), except when the constructor's body is exactly the
+  line `ret seal NAME or shl ulong x 32 ulong x`, x a uint parameter, then `end` (the check is erased,
+  rule `dup32`: uint values are held zero-extended). With `om2 diag` each seal compiled writes
+  `omc-check 1 kept|erased line=N rule=dup32|-` (N the seal line) with the omc-site records.
+- **Unsized views.** A parameter `NAME view T *` / `NAME edit T *` takes an array of element type T of any
+  length (error 7 for another type): a sized array (E2, also on internal functions), an unsized one or a
+  text (view only). `len NAME` is its run-time count, a ulong value. Every index into it, a number too,
+  is checked at run time against the count (CMP, B.HS trap 3; no error 21, no elimination); `read`,
+  `write`, `pread`, `pwrite` and the host words keep their slice checks against the count. An unsized
+  array never goes to a sized parameter (error 7); view / edit rules, distinct names (19) and fresh (27)
+  are as for sized arrays. `new` stays sized; `fresh` needs a length (error 16).
+- **Parameter slots.** Parameters take x0..x5 in order, in both modes: an unsized view or edit two slots
+  (pointer, then count), every other parameter one (a scalar, a sized array, a layout or a struct by its
+  pointer). A parameter that needs a seventh slot is error 9 on the fn line.
+- **Part.** `part A o k` (o, k ulong; another type is error 7), only as an argument for an unsized
+  parameter of a call (a sized parameter is error 7; anywhere else, `read`/`write` included, error 9), is
+  the k elements of A from o. A is a name: a local, a view, an edit or a text (a global is error 19, a fresh
+  array error 27). o is read, then k, then the checks run in this order: o <= len A, then k <= len A - o
+  (CMP, B.HI trap 3; the wrapped o + k is never formed). The callee gets A + o * size and count k. A part
+  of a local or an edit is an edit, or a view with `view` in front; a part of a view or a text is a view
+  (to an edit parameter error 20). For distinct names a part is its base A: A and a part of it, or two
+  parts of A, in one call are error 19 whatever the ranges.
+- **Out.** A parameter `NAME out T N` (N a length; `*` or `fresh` is error 16) is written by the unit;
+  the bridge owns the buffer and copies it out after status 0 (spec 6, E1). Inside the unit it is an edit
+  of T N in one slot (its pointer): `get`, `put`, passing it on as an edit; a view or an array of another
+  length passed to it is error 20 / 7.
+- **Export.** `export fn NAME ...` at top level (error 16 elsewhere, and when `fn` does not follow) marks a
+  function-mode entry (with `fn main` error 9; a 33rd export error 14). With any export, words 0 .. E-1
+  are `B` to the exports in source order and the code starts at word E; the other functions are private.
+  Without export the OM-1 rule holds (one function: its bare words; more: word 0 is `B` to the last). The
+  entry rules of the abstract types apply to each export (to the last function when there is none).
 
 ## 10. Native host extension (2026-10-23)
 

@@ -1,0 +1,5 @@
+note S3 C1 control: fresh stays an ordinary name in an OM-1 unit
+fn main to int
+fresh = ulong 5
+ret int fresh
+end

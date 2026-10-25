@@ -1,0 +1,75 @@
+OM2GATE START cases=/tmp/om2c/s3/sec5.cases scratch=/tmp/om2c/s3/g-layout-s5s7-sec5
+IDENTITY omc /tmp/om2c/s3/omc-layout sha256=8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 pinned=8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 match
+CASE l5-shactx line=1
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/1.src > /tmp/om2c/s3/g-layout-s5s7-sec5/1.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/1.cerr
+  $ /tmp/om2c/s3/g-layout-s5s7-sec5/1.elf < /dev/null > /tmp/om2c/s3/g-layout-s5s7-sec5/1.out 2> /tmp/om2c/s3/g-layout-s5s7-sec5/1.err
+VERDICT l5-shactx PASS run exit=0 expected=0 stdout=match stderr=match
+CASE l5-endian line=2
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/2.src > /tmp/om2c/s3/g-layout-s5s7-sec5/2.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/2.cerr
+  $ /tmp/om2c/s3/g-layout-s5s7-sec5/2.elf < /dev/null > /tmp/om2c/s3/g-layout-s5s7-sec5/2.out 2> /tmp/om2c/s3/g-layout-s5s7-sec5/2.err
+VERDICT l5-endian PASS run exit=0 expected=0 stdout=match stderr=match
+CASE l5-scalar line=3
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/3.src > /tmp/om2c/s3/g-layout-s5s7-sec5/3.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/3.cerr
+  $ /tmp/om2c/s3/g-layout-s5s7-sec5/3.elf < /dev/null > /tmp/om2c/s3/g-layout-s5s7-sec5/3.out 2> /tmp/om2c/s3/g-layout-s5s7-sec5/3.err
+VERDICT l5-scalar PASS run exit=0 expected=0 stdout=match stderr=match
+CASE l5-scalar-idx line=4
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/4.src > /tmp/om2c/s3/g-layout-s5s7-sec5/4.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/4.cerr
+VERDICT l5-scalar-idx PASS compile exit=5 expected=5 refused with the expected error
+CASE l5-count1-noidx line=5
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/5.src > /tmp/om2c/s3/g-layout-s5s7-sec5/5.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/5.cerr
+VERDICT l5-count1-noidx PASS compile exit=4 expected=4 refused with the expected error
+CASE l5-trap line=6
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/6.src > /tmp/om2c/s3/g-layout-s5s7-sec5/6.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/6.cerr
+  $ /tmp/om2c/s3/g-layout-s5s7-sec5/6.elf < /dev/null > /tmp/om2c/s3/g-layout-s5s7-sec5/6.out 2> /tmp/om2c/s3/g-layout-s5s7-sec5/6.err
+VERDICT l5-trap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE l5-const-idx line=7
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/7.src > /tmp/om2c/s3/g-layout-s5s7-sec5/7.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/7.cerr
+VERDICT l5-const-idx PASS compile exit=21 expected=21 refused with the expected error
+CASE l5-fit line=8
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/8.src > /tmp/om2c/s3/g-layout-s5s7-sec5/8.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/8.cerr
+VERDICT l5-fit PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE l5-max line=9
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/9.src > /tmp/om2c/s3/g-layout-s5s7-sec5/9.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/9.cerr
+VERDICT l5-max PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE l5-overlap line=10
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/10.src > /tmp/om2c/s3/g-layout-s5s7-sec5/10.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/10.cerr
+VERDICT l5-overlap PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-past line=11
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/11.src > /tmp/om2c/s3/g-layout-s5s7-sec5/11.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/11.cerr
+VERDICT l5-past PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-past1 line=12
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/12.src > /tmp/om2c/s3/g-layout-s5s7-sec5/12.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/12.cerr
+VERDICT l5-past1 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-count0 line=13
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/13.src > /tmp/om2c/s3/g-layout-s5s7-sec5/13.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/13.cerr
+VERDICT l5-count0 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-count4097 line=14
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/14.src > /tmp/om2c/s3/g-layout-s5s7-sec5/14.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/14.cerr
+VERDICT l5-count4097 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-off line=15
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/15.src > /tmp/om2c/s3/g-layout-s5s7-sec5/15.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/15.cerr
+VERDICT l5-off PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-size0 line=16
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/16.src > /tmp/om2c/s3/g-layout-s5s7-sec5/16.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/16.cerr
+VERDICT l5-size0 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-size4097 line=17
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/17.src > /tmp/om2c/s3/g-layout-s5s7-sec5/17.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/17.cerr
+VERDICT l5-size4097 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-after-fn line=18
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/18.src > /tmp/om2c/s3/g-layout-s5s7-sec5/18.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/18.cerr
+VERDICT l5-after-fn PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-view-put line=19
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/19.src > /tmp/om2c/s3/g-layout-s5s7-sec5/19.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/19.cerr
+VERDICT l5-view-put PASS compile exit=20 expected=20 refused with the expected error
+CASE l5-wrong-size line=20
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/20.src > /tmp/om2c/s3/g-layout-s5s7-sec5/20.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/20.cerr
+VERDICT l5-wrong-size PASS compile exit=7 expected=7 refused with the expected error
+CASE t-shactx line=21
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/21.src > /tmp/om2c/s3/g-layout-s5s7-sec5/21.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/21.cerr
+  $ /tmp/om2c/s3/g-layout-s5s7-sec5/21.elf < /dev/null > /tmp/om2c/s3/g-layout-s5s7-sec5/21.out 2> /tmp/om2c/s3/g-layout-s5s7-sec5/21.err
+VERDICT t-shactx PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-endian line=22
+  $ /tmp/om2c/s3/omc-layout < /tmp/om2c/s3/g-layout-s5s7-sec5/22.src > /tmp/om2c/s3/g-layout-s5s7-sec5/22.elf 2> /tmp/om2c/s3/g-layout-s5s7-sec5/22.cerr
+  $ /tmp/om2c/s3/g-layout-s5s7-sec5/22.elf < /dev/null > /tmp/om2c/s3/g-layout-s5s7-sec5/22.out 2> /tmp/om2c/s3/g-layout-s5s7-sec5/22.err
+VERDICT t-endian PASS run exit=0 expected=0 stdout=match stderr=match
+OM2GATE PASS cases=22 pass=22 fail=0 invalid=0 not_run=0

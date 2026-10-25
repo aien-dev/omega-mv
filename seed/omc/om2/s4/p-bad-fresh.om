@@ -1,0 +1,15 @@
+note S4 with S3 fresh (spec 5): a fresh array passed to part is error 27 on the call line 10.
+om2
+fn h v view uchar * to ulong
+ret len v
+end
+fn f s edit uchar 4 fresh to ulong
+for i ulong 4 unroll
+put s i 1
+end
+ret h part s 0 2
+end
+fn main to int
+a = new uchar 4 0
+ret int f a
+end

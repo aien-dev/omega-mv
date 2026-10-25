@@ -1,0 +1,19 @@
+note S4 out: inside the unit an out is a sized edit; an internal function fills a local through it
+note and reads it back. Exit 0 when the values hold.
+om2
+fn fill r out ulong 3 v ulong to ulong
+for i ulong 3
+put r i add v i
+end
+ret get r 2
+end
+fn main to int
+a = new ulong 3 0
+if ne fill a 10 12
+ret 1
+end
+if ne get a 0 10
+ret 2
+end
+ret 0
+end

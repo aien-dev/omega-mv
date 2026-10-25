@@ -1,0 +1,31 @@
+note S3 abstract: an inlined exact constructor, values passed through a function, a uint-based abstract
+note type with no invariant, xor/rotr/rotl/and/or where listed. Exit 0 when every opened value is right.
+om2
+abstract dup32 ulong ops rotr rotl xor
+holds dup32 dup32
+abstract tag uint ops and or
+fn dup32mk x uint to dup32 inline
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn tagmk x uint to tag
+ret seal tag x
+end
+fn pass d dup32 n ulong to dup32
+ret rotl rotr d n 3
+end
+fn main to int
+d = dup32mk 0x80000001
+e = pass d 8
+if ne open e 0x0c0000000c000000
+ret 1
+end
+if ne open xor e d 0x8c0000018c000001
+ret 2
+end
+t = or tagmk 12 tagmk 3
+u = and t tagmk 5
+if ne open u 5
+ret 3
+end
+ret 0
+end

@@ -1,0 +1,5 @@
+note S4: export must be followed by fn (error 16).
+om2
+export f a ulong to ulong
+ret a
+end

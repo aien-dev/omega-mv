@@ -1,0 +1,5 @@
+S3 feature 3 (abstract types, seal/open/holds dup32, spec 5, errata E8/E9; L834), evidence class HOST. omc 98cd1621ca4f69c5589641b3437e7e512838596fdfbf2f7775a48de19c284b16 (birth stage1 == stage2 == stage3). Runner gate-c 6c8691c2...acefa.
+C2 5876/5876; s1 48/48; s2 21/21; s3 68/68; mutants s1 8/8 (tyunk.from retargeted: typeword now looks up abstract names first), s2 7/7, s3 15/15 detected (18 controls PASS); s5s7 section 5 rows (l5, f5 without f5-part, a5, OM-1 twins) 60/60.
+Full s5s7 candidate.cases: 73 PASS, 48 NOT_RUN (ABI/SHA rows, as the list states), 23 FAIL, all section 6 rows (v6-*, m6-*, abiv/abiw-compiles) and f5-part (needs part): outside this slice. s3s4 candidate verdicts identical to omc 20d00b6e.
+birth, seed/host/check.sh, tests/gates/run.sh seed (0 SKIP), om-units (OMC_PIN moved), qualify-ir-trap: RC=0.
+NOT_RUN: gate5 section 7 timing; f5-part (section 6).

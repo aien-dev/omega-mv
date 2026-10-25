@@ -1,0 +1,87 @@
+OM2GATE START cases=/tmp/om2c/s4/sec6a.cases scratch=/tmp/om2c/s4/g-part-s5s7-sec6a
+IDENTITY omc /tmp/om2c/s4/omc-part sha256=72eb116963608b176d0049bb932c3ee6d60a462c83d3e1f1dea1e0154e1888e6 pinned=72eb116963608b176d0049bb932c3ee6d60a462c83d3e1f1dea1e0154e1888e6 match
+CASE v6-sum line=1
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/1.src > /tmp/om2c/s4/g-part-s5s7-sec6a/1.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/1.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/1.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/1.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/1.err
+VERDICT v6-sum PASS run exit=0 expected=0 stdout=match stderr=match
+CASE v6-idx line=2
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/2.src > /tmp/om2c/s4/g-part-s5s7-sec6a/2.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/2.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/2.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/2.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/2.err
+VERDICT v6-idx PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-idx-edit line=3
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/3.src > /tmp/om2c/s4/g-part-s5s7-sec6a/3.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/3.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/3.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/3.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/3.err
+VERDICT v6-idx-edit PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-write line=4
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/4.src > /tmp/om2c/s4/g-part-s5s7-sec6a/4.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/4.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/4.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/4.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/4.err
+VERDICT v6-write PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-slots7 line=5
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/5.src > /tmp/om2c/s4/g-part-s5s7-sec6a/5.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/5.cerr
+VERDICT v6-slots7 PASS compile exit=9 expected=9 refused with the expected error
+CASE v6-slots6 line=6
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/6.src > /tmp/om2c/s4/g-part-s5s7-sec6a/6.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/6.cerr
+VERDICT v6-slots6 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE v6-fm-e2 line=7
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/7.src > /tmp/om2c/s4/g-part-s5s7-sec6a/7.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/7.cerr
+VERDICT v6-fm-e2 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE t-dup line=8
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/8.src > /tmp/om2c/s4/g-part-s5s7-sec6a/8.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/8.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/8.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/8.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/8.err
+VERDICT t-dup PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-allops line=9
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/9.src > /tmp/om2c/s4/g-part-s5s7-sec6a/9.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/9.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/9.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/9.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/9.err
+VERDICT t-allops PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-shactx line=10
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/10.src > /tmp/om2c/s4/g-part-s5s7-sec6a/10.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/10.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/10.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/10.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/10.err
+VERDICT t-shactx PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-endian line=11
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/11.src > /tmp/om2c/s4/g-part-s5s7-sec6a/11.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/11.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/11.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/11.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/11.err
+VERDICT t-endian PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-sum line=12
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/12.src > /tmp/om2c/s4/g-part-s5s7-sec6a/12.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/12.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/12.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/12.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/12.err
+VERDICT t-sum PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-edit line=13
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/13.src > /tmp/om2c/s4/g-part-s5s7-sec6a/13.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/13.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/13.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/13.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/13.err
+VERDICT t-edit PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-sle line=14
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/14.src > /tmp/om2c/s4/g-part-s5s7-sec6a/14.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/14.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/14.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/14.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/14.err
+VERDICT t-sle PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-names line=15
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/15.src > /tmp/om2c/s4/g-part-s5s7-sec6a/15.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/15.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/15.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/15.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/15.err
+VERDICT t-names PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-slw line=16
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/16.src > /tmp/om2c/s4/g-part-s5s7-sec6a/16.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/16.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/16.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/16.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/16.err
+VERDICT t-slw PASS run exit=103 expected=103 stdout=match stderr=match
+CASE t-slt line=17
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/17.src > /tmp/om2c/s4/g-part-s5s7-sec6a/17.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/17.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/17.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/17.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/17.err
+VERDICT t-slt PASS run exit=103 expected=103 stdout=match stderr=match
+CASE t-slo line=18
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/18.src > /tmp/om2c/s4/g-part-s5s7-sec6a/18.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/18.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/18.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/18.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/18.err
+VERDICT t-slo PASS run exit=103 expected=103 stdout=match stderr=match
+CASE t-order line=19
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/19.src > /tmp/om2c/s4/g-part-s5s7-sec6a/19.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/19.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/19.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/19.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/19.err
+VERDICT t-order PASS run exit=102 expected=102 stdout=match stderr=match
+CASE t-trap10 line=20
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/20.src > /tmp/om2c/s4/g-part-s5s7-sec6a/20.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/20.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/20.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/20.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/20.err
+VERDICT t-trap10 PASS run exit=110 expected=110 stdout=match stderr=match
+CASE t-shl64 line=21
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/21.src > /tmp/om2c/s4/g-part-s5s7-sec6a/21.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/21.cerr
+  $ /tmp/om2c/s4/g-part-s5s7-sec6a/21.elf < /dev/null > /tmp/om2c/s4/g-part-s5s7-sec6a/21.out 2> /tmp/om2c/s4/g-part-s5s7-sec6a/21.err
+VERDICT t-shl64 PASS run exit=107 expected=107 stdout=match stderr=match
+CASE t-unsized16 line=22
+  $ /tmp/om2c/s4/omc-part < /tmp/om2c/s4/g-part-s5s7-sec6a/22.src > /tmp/om2c/s4/g-part-s5s7-sec6a/22.elf 2> /tmp/om2c/s4/g-part-s5s7-sec6a/22.cerr
+VERDICT t-unsized16 PASS compile exit=16 expected=16 stdout=match stderr=match
+OM2GATE PASS cases=22 pass=22 fail=0 invalid=0 not_run=0

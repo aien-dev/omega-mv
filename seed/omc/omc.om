@@ -73,11 +73,18 @@ global u_it ulong 512
 global u_k ulong 512
 global u_nn ulong 512
 global u_held ulong 512
+note fuel (E14, E16): the expansion fuel used by the function being compiled: an unrolled loop costs K when
+note it starts, an inline expansion 1, at most 65536 in all (error 14)
+global fuel ulong 1
 global fok ulong 1
 global fval ulong 1
 global fty ulong 1
 global sitebuf uchar 8388608
 global nsite ulong 1
+global ie_from ulong 16384
+global ie_to ulong 16384
+global nie ulong 1
+global reach uchar 512
 
 note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
 global nm_name ulong 1024
@@ -137,6 +144,73 @@ global svk ulong 16
 global svv ulong 16
 global svt ulong 16
 
+note ---- OM-2 section 5 external layouts (16) and their fields (256): name, SIZE, first field, field count,
+note the cursor and line after the block's end (the body pass jumps there). Field: name, type, COUNT (0 a
+note scalar), byte offset, 1 big-endian. lymap marks the bytes taken while a layout is read. nm_lay /
+note fn_play: the layout (index + 1) of a layout parameter name / parameter slot, else 0 ----
+global ly_name ulong 16
+global ly_size ulong 16
+global ly_fo ulong 16
+global ly_nf ulong 16
+global ly_ec ulong 16
+global ly_el ulong 16
+global nly ulong 1
+global lf_name ulong 256
+global lf_type uchar 256
+global lf_cnt ulong 256
+global lf_off ulong 256
+global lf_big uchar 256
+global nlf ulong 1
+global lymap uchar 4096
+global nm_lay uchar 1024
+global fn_play uchar 3072
+
+note ---- OM-2 section 5 fresh scratch (erratum E8). fn_pfr: 1 for a `fresh` parameter slot. nm_fr: the
+note written-set slot (index + 1) a name's elements are tracked in, else 0. fz_n slots in use by the
+note function being compiled (16), fz_len their N, fz_cur the elements definitely written on the path
+note being compiled (bit i for element i); fz_ent / fz_thn (16 per block): the sets when the block opened
+note and at its else. il_fz: fz_n when an inline frame opened. dobx 1: error 14 reports obligation=init ----
+global fn_pfr uchar 3072
+global nm_fr uchar 1024
+global fz_n ulong 1
+global fz_len ulong 16
+global fz_cur ulong 16
+global fz_ent ulong 8192
+global fz_thn ulong 8192
+global il_fz ulong 8
+global dobx ulong 1
+
+note ---- OM-2 section 5 abstract types (16; type 64 + index): name, its length, representation type (4 uint,
+note 5 ulong), the preserving operations listed (1 rotr, 2 rotl, 4 and, 8 or, 16 xor), 1 when `holds NAME
+note dup32` is declared. aw_*: the word reader of the exact-constructor test (place, packed word, length,
+note newlines crossed before it) ----
+global ab_name ulong 16
+global ab_len ulong 16
+global ab_base uchar 16
+global ab_ops ulong 16
+global ab_holds uchar 16
+global nab ulong 1
+global aw_p ulong 1
+global aw_w ulong 1
+global aw_l ulong 1
+global aw_nl ulong 1
+
+note ---- OM-2 section 6 unsized views (spec 4 slots, 6, erratum E2). An unsized `view T *` / `edit T *`
+note name has length 0 in nm_len and its run-time element count in register nm_lr. Parameters take the
+note registers x0..x5 by slots: an unsized array two (pointer, then count), every other parameter one
+note (pwid, pslot); psl counts the slots of the fn line being read (6 at most, error 9). ul_k / ul_v: the
+note count (kind 1 register / 3 number) of argument i of the call at value depth d, at d * 6 + i ----
+global nm_lr uchar 1024
+global psl ulong 1
+global ul_k ulong 6156
+global ul_v ulong 6156
+note ---- OM-2 section 6 multi-entry units: nexp `export fn` lines (32 at most, function mode only), fn_exp 1
+note for an exported function, expf 1 while an `export fn` line is read. With any export, words 0 .. E-1
+note of the code are B to each export in source order and the code starts at byte 176 + 4E ----
+global nexp ulong 1
+global expf ulong 1
+global fn_exp uchar 512
+
 note ======== leaf helpers ========
 
 note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
@@ -148,6 +222,26 @@ if lt i 15
 ret add i 1
 end
 ret 17
+end
+
+note pwid: the parameter slots of fn table entry p: 2 for an unsized array (pointer, count), else 1
+fn pwid p ulong to ulong
+k = ulong get fn_pk p
+if and or eq k 2 eq k 3 eq get fn_pl p 0
+ret 2
+end
+ret 1
+end
+
+note pslot: the first slot (register) of parameter i of function f (index)
+fn pslot f ulong i ulong to ulong
+s = ulong 0
+j = ulong 0
+while lt j i
+s = add s pwid add mul f 6 j
+j = add j 1
+end
+ret s
 end
 
 note ---- error reporting ----
@@ -321,6 +415,10 @@ ret
 end
 if eq code 21
 mputw 126875187113826 6
+ret
+end
+if and eq code 14 ne get dobx 0 0
+mputw 1953066601 4
 ret
 end
 if eq code 14
@@ -1940,6 +2038,9 @@ vdone 3 mul n 8 5
 ret
 end
 t = typeword
+if ge t 64
+fail 7
+end
 v = shl 1 tlog t
 vdone 3 v 5
 end
@@ -2233,6 +2334,12 @@ if le l 8
 if ne findname w 0
 fail 10
 end
+if ne findlay w 0
+fail 10
+end
+if ne findab w 0
+fail 10
+end
 end
 if ne findfn w l s 0
 fail 10
@@ -2251,6 +2358,9 @@ put nm_type n uchar t
 put nm_len n ln
 put nm_kind n uchar k
 put nm_addr n a
+put nm_lay n 0
+put nm_fr n 0
+put nm_lr n 0
 put nn 0 add n 1
 end
 
@@ -2523,6 +2633,7 @@ put breg n reg
 put btyp n ty
 put bdead n 0
 put nb 0 add n 1
+fz_push n
 end
 
 fn pushnh names ulong hd ulong to void
@@ -2535,6 +2646,9 @@ note ======== small readers ========
 fn elemtype t ulong to void
 if lt t 2
 fail 9
+end
+if ge t 64
+fail 7
 end
 end
 
@@ -2598,6 +2712,10 @@ fail 16
 end
 c = kw get tw 0
 if eq c 0
+a = findab get tw 0
+if ne a 0
+ret add a 63
+end
 unkfail 16
 end
 if eq c 76
@@ -2646,6 +2764,9 @@ fail 16
 end
 if gt get tl 0 8
 fail 13
+end
+if eq kw get tw 0 193
+fail 9
 end
 e = findname get tw 0
 if eq e 0
@@ -3446,6 +3567,8 @@ note elemaddr: array name e (index + 1), index value (kind, number or register, 
 note be inside the array (error 21) and needs no check; a register index: CMP Xi, #len (C6.2.96) or CMP Xi,
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
 note (the array's register, or a new one holding its address), ea_i index register. om4 ELEMADDR.
+note OM-2 unsized array (nm_len 0): every index, a number too, is checked against its count register nm_lr
+note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6).
 fn elemaddr e ulong k ulong v ulong t ulong to void
 if or eq t 1 ge t 10
 fail 7
@@ -3453,6 +3576,11 @@ end
 i = sub e 1
 ln = get nm_len i
 x = v
+if eq ln 0
+x = matreg k v t
+emit or or 3942645791 shl ulong get nm_lr i 16 shl x 5
+trapc 2 3
+else
 if eq k 3
 if ge v ln
 fail 21
@@ -3473,6 +3601,7 @@ matconst y ln
 emit or or 3942645791 shl y 16 shl v 5
 end
 trapc 2 3
+end
 end
 put ea_i 0 x
 if ge get nm_kind i 4
@@ -3503,18 +3632,28 @@ note arrarg: an array argument for parameter pi of function f (index + 1): [view
 note length must equal the parameter's; an edit parameter needs a writable array (local or edit, error 20;
 note a view passed to it is error 20, OMEGESE.md 9.4); a global is never passed (error 19). Out: rk 5
 note (register rv) or 6 (address rv, a text), rt the name entry. om4 ARRARG.
+note OM-2: an unsized parameter (length 0) takes an array of any length (erratum E2), whose count goes to
+note ul_k / ul_v at depth * 6 + pi: its count register, or its length as a number. `part` is read by arrpart.
 fn arrarg f ulong pi ulong to void
 md = ulong 0
 aa_word
 w = get tw 0
 c = kw w
 if ne c 0
+if eq c 193
+arrpart f pi 0
+ret
+end
 if or lt c 57 gt c 58
 fail 16
 end
 md = c
 aa_word
 w = get tw 0
+if eq kw w 193
+arrpart f pi md
+ret
+end
 end
 e = findname w
 if eq e 0
@@ -3547,8 +3686,19 @@ end
 if ne get nm_type i get fn_pt p
 fail 7
 end
+ux = add mul get depth 0 6 pi
+if eq get fn_pl p 0
+if eq get nm_len i 0
+put ul_k ux 1
+put ul_v ux ulong get nm_lr i
+else
+put ul_k ux 3
+put ul_v ux get nm_len i
+end
+else
 if ne get nm_len i get fn_pl p
 fail 7
+end
 end
 put rt 0 e
 if eq k 5
@@ -3558,6 +3708,83 @@ else
 put rk 0 5
 put rv 0 ulong get nm_reg i
 end
+end
+
+note arrpart (OM-2, spec 6): `part A o k` as argument pi of function f (index + 1); md 57 / 58 when `view` /
+note `edit` was written before it. A is a name (a global is error 19, a fresh array 27); o, then k, are
+note ulong values. Checks, in this order: o <= len A (CMP Xo, Xlen; B.HI trap 3), then k <= len A - o (SUB,
+note CMP, B.HI trap 3); the wrapped o + k is never formed. The part is a view of A + o * size with count k:
+note an edit when A is writable (local or edit) and no `view` was written, else a view. It goes only to an
+note unsized parameter (error 7). Out as arrarg; rt is A, so for error 19 the part counts as its base.
+fn arrpart f ulong pi ulong md ulong to void
+p = add mul sub f 1 6 pi
+e = arrname
+i = sub e 1
+k = ulong get nm_kind i
+if ge k 6
+fail 7
+end
+if eq k 4
+fail 19
+end
+fz_arg e
+if eq get fn_pk p 3
+if eq md 57
+fail 20
+end
+if and ne k 1 ne k 3
+fail 20
+end
+else
+if eq md 58
+fail 7
+end
+end
+if ne ulong get nm_type i ulong get fn_pt p
+fail 7
+end
+if ne get fn_pl p 0
+fail 7
+end
+rdval 0 5 255 0
+if ne get rt 0 5
+fail 7
+end
+ro = matreg get rk 0 get rv 0 5
+rdval 0 5 255 0
+if ne get rt 0 5
+fail 7
+end
+rn = matreg get rk 0 get rv 0 5
+d = partck i ro rn
+ux = add mul get depth 0 6 pi
+put ul_k ux 1
+put ul_v ux rn
+put rt 0 e
+put rk 0 5
+put rv 0 d
+end
+
+note partck: the two checks of part (name index i, o in ro, k in rn), then the part's base register
+fn partck i ulong ro ulong rn ulong to ulong
+rl = ulong get nm_lr i
+if ne get nm_len i 0
+rl = alloc
+matconst rl get nm_len i
+end
+emit or or 3942645791 shl rl 16 shl ro 5
+trapc 8 3
+d = alloc
+e3 3405774848 d rl ro
+emit or or 3942645791 shl d 16 shl rn 5
+trapc 8 3
+b = ulong get nm_reg i
+if eq get nm_kind i 5
+b = alloc
+matconst b get nm_addr i
+end
+emit or or or or 2332033024 shl ro 16 shl tlog ulong get nm_type i 10 shl b 5 d
+ret d
 end
 
 note ======== the parts of the value reader that read no further value ========
@@ -3720,10 +3947,14 @@ if ne get nm_type sub e 1 2
 fail 7
 end
 t = alloc
+l = ulong get nm_lr sub e 1
+if ne get nm_len sub e 1 0
+l = t
 matconst t get nm_len sub e 1
-emit or or 3942645791 shl rn 5 shl t 16
+end
+emit or or 3942645791 shl rn 5 shl l 16
 trapc 8 3
-e3 3405774848 t t rn
+e3 3405774848 t l rn
 emit or or 3942645791 shl ro 5 shl t 16
 trapc 8 3
 end
@@ -3782,7 +4013,12 @@ np = get fr add cb 18
 i = ulong 0
 while lt i np
 q = add cb mul i 3
-loadarg i get fr q get fr add q 1
+s = pslot sub f 1 i
+loadarg s get fr q get fr add q 1
+if eq pwid add mul sub f 1 6 i 2
+ux = add mul div cb 32 6 i
+loadarg add s 1 get ul_k ux get ul_v ux
+end
 i = add i 1
 end
 ca_bl f
@@ -3811,6 +4047,7 @@ put fr add x 10 get rv 0
 end
 
 fn vs_arr c ulong e ulong to void
+fz_arg e
 if ge get nm_kind sub e 1 6
 fail 7
 end
@@ -4094,6 +4331,7 @@ end
 if ne writable 0
 vs_arr 53 e
 end
+fz_arg e
 put fr add x 20 e
 harg x 0 5
 harg x 1 5
@@ -5435,6 +5673,7 @@ if ge get fn_pk p 6
 ca_st fe i cb
 else
 ca_arr fe i cb
+fz_arg get rt 0
 end
 end
 i = add i 1
@@ -5458,6 +5697,9 @@ end
 if eq get tk 0 5
 if ne get irmode 0 0
 fail 9
+end
+if ge exp 64
+fail 7
 end
 fparse get ts 0 get tl 0
 t = ulong 0
@@ -5487,6 +5729,9 @@ if eq get tk 0 2
 if eq exp 0
 vdone 2 get tw 0 get tbig 0
 ret
+end
+if ge exp 64
+fail 7
 end
 range get tw 0 exp get tbig 0
 vdone 3 get tw 0 exp
@@ -5541,6 +5786,9 @@ if eq c 89
 t = ulong 11
 end
 rdval 0 0 255 0
+if ge get rt 0 64
+fail 7
+end
 if eq get rk 0 6
 v = fspan t get rv 0
 put rk 0 7
@@ -5570,6 +5818,9 @@ fail 11
 end
 ft = get rt 0
 if eq ft 1
+fail 7
+end
+if or ge ft 64 ge tt 64
 fail 7
 end
 if ne twid ft twid tt
@@ -5606,6 +5857,9 @@ vdone 3 get tw 0 c
 ret
 end
 rdval 1 0 255 0
+if ge get rt 0 64
+fail 7
+end
 if eq get rk 0 2
 fail 11
 end
@@ -5628,11 +5882,22 @@ end
 vdec
 ret
 end
-if eq c 77
+if or eq c 77 eq c 193
 fail 9
 end
 if and ge c 100 le c 177
 hostval c dst
+ret
+end
+if eq c 186
+rdval 0 0 255 0
+ab_open
+vdec
+ret
+end
+if eq c 185
+ab_seal
+vdec
 ret
 end
 if eq c 51
@@ -5642,7 +5907,12 @@ vt_fget e dst
 vdec
 ret
 end
+if ne ly_get e dst 0
+vdec
+ret
+end
 rdval 0 5 255 0
+fz_get e
 vt_get e dst
 vdec
 ret
@@ -5651,6 +5921,10 @@ if eq c 52
 e = arrname
 if ge get nm_kind sub e 1 6
 fail 7
+end
+if eq get nm_len sub e 1 0
+vdone 1 ulong get nm_lr sub e 1 5
+ret
 end
 vdone 3 get nm_len sub e 1 5
 ret
@@ -5681,6 +5955,9 @@ fail 16
 end
 if and ge c 49 le c 50
 rdval 0 exp 255 0
+if ge get rt 0 64
+fail 7
+end
 if and eq c 50 eq get rk 0 4
 put rv 0 xor get rv 0 1
 vdec
@@ -5710,6 +5987,18 @@ if eq bk 4
 bv = matreg 4 bv bt
 bk = ulong 1
 bt = ulong 1
+end
+if or ge at 64 ge bt 64
+x = mul get depth 0 32
+put fr x ak
+put fr add x 1 av
+put fr add x 2 at
+put fr add x 3 bk
+put fr add x 4 bv
+put fr add x 5 bt
+ab_bin c dst x
+vdec
+ret
 end
 if and eq ak 6 eq bk 6
 fail 11
@@ -5966,6 +6255,10 @@ c = kw get tw 0
 t = ulong 0
 ln = ulong 0
 k = ulong 0
+if eq c 194
+fn_p_out f np pw
+ret
+end
 if or eq c 57 eq c 58
 k = sub c 55
 sid = peek_struct
@@ -5973,10 +6266,27 @@ if ne sid 0
 fn_p_st f np pw sid k
 ret
 end
+if ne get om2 0 0
+lid = peek_lay
+if ne lid 0
+fn_p_ly f np pw lid k
+ret
+end
+end
 t = typeword
 elemtype t
+if and ne get om2 0 0 ne peekstar 0
+tok
+else
 ln = lenval 16
 arrlen ln
+if ne get om2 0 0
+if eq peekw 183
+tok
+fz_par f np k ln
+end
+end
+end
 else
 if eq c 88
 t = ulong 10
@@ -5985,17 +6295,37 @@ if eq c 89
 t = ulong 11
 else
 if gt sub c 1 8
-fail 16
-end
+t = abty
+else
 t = c
 end
 end
 end
-addname pw poolc np t ln k 0
+end
+addname pw poolc get psl 0 t ln k 0
+if and ne k 0 eq ln 0
+put nm_lr sub get nn 0 1 uchar poolc add get psl 0 1
+end
+fz_bind add mul f 6 np ln
 p = add mul f 6 np
 put fn_pt p uchar t
 put fn_pl p ln
 put fn_pk p uchar k
+end
+
+note fn_p_out (OM-2, spec 6, erratum E1): `NAME out T N`, a sized array the unit writes and the bridge owns
+note (copied out only after status 0). Inside the unit it is an edit of T N (kind 3) in one slot, its
+note pointer; a length `*` is error 16, and so is `fresh` after it.
+fn fn_p_out f ulong np ulong pw ulong to void
+t = typeword
+elemtype t
+ln = lenval 16
+arrlen ln
+addname pw poolc get psl 0 t ln 3 0
+p = add mul f 6 np
+put fn_pt p uchar t
+put fn_pl p ln
+put fn_pk p 3
 end
 
 note fn_to: to T | to void at the end of a fn line; the function's state starts. om4 FN_TO .. FN_T2.
@@ -6022,7 +6352,7 @@ if eq c 89
 r = ulong 11
 else
 if gt sub c 1 8
-fail 16
+r = abty
 end
 end
 end
@@ -6032,7 +6362,7 @@ put fn_ret f uchar r
 put fn_np f uchar np
 put stkbytes 0 0
 put dead 0 0
-put npar 0 np
+put npar 0 get psl 0
 put nslot 0 0
 put held 0 0
 put nb 0 0
@@ -6074,14 +6404,18 @@ put fn_ret f 0
 put fn_np f 0
 put fn_nmlen f l
 put fn_off f s
+put fn_exp f uchar get expf 0
 else
 f = sub findfn w l s 1
 put curfn 0 add f 1
 put lastfn 0 add f 1
 put fn_addr f get oc 0
 put fstart 0 get oc 0
+put fuel 0 0
+put fz_n 0 0
 end
 put nn 0 get nglob 0
+put psl 0 0
 np = ulong 0
 go = true
 while go
@@ -6104,15 +6438,20 @@ if ne c 0
 fail 16
 end
 newname pw get tl 0 get ts 0
-if ge np 6
+if ge get psl 0 6
 fail 9
 end
 fn_p f np pw
 put fn_pn add mul f 6 np pw
+put psl 0 add get psl 0 pwid add mul f 6 np
+if gt get psl 0 6
+fail 9
+end
 np = add np 1
 end
 end
 fn_to f np
+ab_entry f
 if eq get scanning 0 1
 put curret 0 0
 put nn 0 0
@@ -6248,6 +6587,9 @@ end
 if or eq k 2 eq k 5
 fail 20
 end
+if ne ly_put e 0
+ret
+end
 rdval 0 5 255 0
 ik = get rk 0
 iv = get rv 0
@@ -6258,6 +6600,7 @@ if ne get rt 0 t
 fail 7
 end
 v = matreg get rk 0 get rv 0 get rt 0
+fz_put e ik iv
 elemaddr e ik iv it
 stel t v
 eol
@@ -6279,6 +6622,9 @@ fail 16
 end
 newname w get tl 0 get ts 0
 t = typeword
+if ge t 64
+fail 7
+end
 if ge t 10
 note float constant: rdval reads the float token as a value (kind 6); fspan converts it to the
 note target type's bits and rdval has already balanced the nesting depth.
@@ -6401,6 +6747,7 @@ emit 335544320
 patch19 get bbr i get oc 0
 put bkind i 2
 put bbr i b
+fz_else i
 put nn 0 get bnames i
 put held 0 get bheld i
 put bdead i get dead 0
@@ -6572,6 +6919,26 @@ sf_val w t kr sn sh
 end
 
 note ======== OM-2 section 4: unroll, inline, folding, the growth bound and trap-site records ========
+note peekstar: 1 when the next word is `*` (an unsized array, OM-2), without reading it
+fn peekstar to ulong
+c0 = get cur 0
+l0 = get line 0
+a0 = get tka 0
+b0 = get tkb 0
+tok
+r = ulong 0
+if and eq get tk 0 1 eq get tl 0 1
+if eq get tw 0 42
+r = ulong 1
+end
+end
+put cur 0 c0
+put line 0 l0
+put tka 0 a0
+put tkb 0 b0
+ret r
+end
+
 note peekw: the keyword code of the next word (0 for anything else) without reading it
 fn peekw to ulong
 c0 = get cur 0
@@ -6598,6 +6965,7 @@ fn s_unroll w ulong t ulong kk ulong sn ulong sh ulong to void
 if or eq kk 0 gt kk 64
 fail 8
 end
+fuelc get line 0 kk
 tok
 eol
 addname w 0 t 0 9 0
@@ -6611,6 +6979,16 @@ put u_k n kk
 put u_nn n get nn 0
 put u_held n get held 0
 put fzone 0 add get fzone 0 1
+end
+
+note fuelc: charge n to the function's fuel at the construct on line ln, before anything of it expands; a
+note total above 65536 is error 14 on line ln (E14, E16)
+fn fuelc ln ulong n ulong to void
+if gt add get fuel 0 n 65536
+put line 0 ln
+fail 14
+end
+put fuel 0 add get fuel 0 n
 end
 
 note s_unr: the end of an unrolled body: read it again with the next value of i, or close the block
@@ -6697,7 +7075,8 @@ end
 
 note inl_par: bind parameter i of inline function fe to its argument in frame cb. A scalar held in a
 note temporary register (pool index hb or above) is taken as it is; any other scalar is copied to a new
-note register. An array or struct takes its base register; a text's address is loaded into one.
+note register. An array or struct takes its base register; a text's address is loaded into one. An
+note unsized array parameter also takes its count register, or a new one holding a number count.
 fn inl_par fe ulong cb ulong i ulong hb ulong to void
 p = add mul sub fe 1 6 i
 q = add cb mul i 3
@@ -6720,6 +7099,21 @@ matconst r v
 end
 end
 inl_add p r
+if eq pwid p 2
+inl_lr add mul div cb 32 6 i
+end
+fz_inl p get fr add q 2
+end
+
+note inl_lr: the unsized parameter name just added gets the count of argument ux (ul_k / ul_v): its
+note register, or a new one holding the number
+fn inl_lr ux ulong to void
+lr = get ul_v ux
+if ne get ul_k ux 1
+lr = alloc
+matconst lr get ul_v ux
+end
+put nm_lr sub get nn 0 1 uchar lr
 end
 
 note inl_add: the name of parameter slot p on register r (a view struct is name kind 8, an edit one 7)
@@ -6734,13 +7128,34 @@ if eq pk 6
 nk = ulong 8
 end
 addname get fn_pn p r ulong get fn_pt p get fn_pl p nk 0
+put nm_lay sub get nn 0 1 get fn_play p
+end
+
+note inl_edge: record the call-graph edge (expanding function -> inline function) once (16384 edges, error 14)
+fn inl_edge a ulong b ulong to void
+n = get nie 0
+j = ulong 0
+while lt j n
+if and eq get ie_from j a eq get ie_to j b
+ret
+end
+j = add j 1
+end
+if ge n 16384
+fail 14
+end
+put ie_from n a
+put ie_to n b
+put nie 0 add n 1
 end
 
 note inl_body: at most 4 nested inline frames (error 14); an inline function reached again while it is
 note being inlined, or from its own body, is error 9. The caller's local names are hidden, the parameters
 note bound, and the body's lines compiled here until its end (s_inlx) closes the frame.
+note Each expansion costs one unit of the function's fuel (E14).
 fn inl_body fe ulong cb ulong ns ulong rres ulong to void
 lv = get inl 0
+fuelc get line 0 1
 if ge lv 4
 fail 14
 end
@@ -6754,6 +7169,7 @@ fail 9
 end
 j = add j 1
 end
+inl_edge get curfn 0 fe
 put il_cur lv get cur 0
 put il_line lv get line 0
 put il_ret lv get curret 0
@@ -6764,6 +7180,7 @@ put il_ns lv ns
 put il_res lv rres
 put il_fn lv fe
 put il_p0 lv get nilp 0
+put il_fz lv get fz_n 0
 inl_bind fe cb
 pushb 0 6 0 fe 0
 pushnh get il_nn lv get il_held lv
@@ -6862,6 +7279,7 @@ put nslot 0 get il_ns lv
 put dead 0 0
 put inl 0 lv
 put fzone 0 sub get fzone 0 1
+put fz_n 0 get il_fz lv
 put rk 0 1
 put rv 0 get il_res lv
 put rt 0 ulong get fn_ret sub fe 1
@@ -7329,6 +7747,7 @@ ret
 end
 put nb 0 i
 k = get bkind i
+fz_join i k
 if eq k 2
 put dead 0 and get dead 0 get bdead i
 else
@@ -7518,13 +7937,85 @@ end
 end
 end
 
-fn s_eof to void
+note inlcyc (OM-2): an inline function that reaches itself through the whole call graph (the calls made,
+note plus an edge from each function to every inline function expanded in it) is error 9 at the end.
+fn inlcyc to void
+f = ulong 1
+while le f get nf 0
+if ne get fn_inl sub f 1 0
+if ne reachself f 0
+put dsev 0 3
+fail 9
+end
+end
+f = add f 1
+end
+end
 
+note reachself: 1 when function f (index + 1) reaches itself
+fn reachself f ulong to ulong
+i = ulong 0
+while lt i get nf 0
+put reach i 0
+i = add i 1
+end
+put reach sub f 1 1
+go = true
+pass = ulong 0
+while and go le pass get nf 0
+r = rscan f 0
+if eq r 2
+ret 1
+end
+s = rscan f 1
+if eq s 2
+ret 1
+end
+go = or ne r 0 ne s 0
+pass = add pass 1
+end
+ret 0
+end
+
+note rscan: one pass over the calls (w 0) or the inline edges (w 1): 2 when an edge from a reached
+note function leads to f, 1 when a function was newly reached, else 0
+fn rscan f ulong w ulong to ulong
+n = get ncalls 0
+if ne w 0
+n = get nie 0
+end
+ch = ulong 0
+j = ulong 0
+while lt j n
+a = get callfrom j
+b = get callto j
+if ne w 0
+a = get ie_from j
+b = get ie_to j
+end
+if ne get reach sub a 1 0
+if eq b f
+ret 2
+end
+if eq get reach sub b 1 0
+put reach sub b 1 1
+ch = ulong 1
+end
+end
+j = add j 1
+end
+ret ch
+end
+
+fn s_eof to void
 if ne get curret 0 0
 fail 15
 end
 if eq get nf 0 0
 fail 16
+end
+if ne get om2 0 0
+inlcyc
 end
 resolve
 if ne get progmode 0 0
@@ -7533,12 +8024,29 @@ end
 if ne get nglob 0 0
 fail 9
 end
+if ne get nexp 0 0
+expwords
+writeout 176
+end
 if eq get nf 0 1
 writeout 180
 end
 a = get fn_addr sub get lastfn 0 1
 wrword 176 or 335544320 and shr sub a 176 2 67108863
 writeout 176
+end
+
+note expwords (OM-2, spec 6): words 0 .. E-1 of a multi-entry unit, B to each export in source order
+fn expwords to void
+at = ulong 176
+f = ulong 0
+while lt f get nf 0
+if ne get fn_exp f 0
+wrword at or 335544320 and shr sub get fn_addr f at 2 67108863
+at = add at 4
+end
+f = add f 1
+end
 end
 
 note stmt: one line. Returns 1 at the end of the input. om4 STMT.
@@ -7591,6 +8099,18 @@ s_const
 ret 0
 end
 if eq c 85
+skipnl
+ret 0
+end
+if eq c 195
+s_export
+ret 0
+end
+if eq c 188
+s_lyskip
+ret 0
+end
+if or eq c 184 eq c 187
 skipnl
 ret 0
 end
@@ -7650,7 +8170,7 @@ end
 if or or or eq c 77 eq c 78 eq c 79 eq c 81
 fail 9
 end
-if eq c 85
+if or eq c 85 eq c 193
 fail 9
 end
 fail 16
@@ -7804,7 +8324,9 @@ else
 if and eq get tk 0 1 eq get tw 0 500152823651
 s_const
 else
+if eq ns_om2 0
 skipnl
+end
 end
 end
 end
@@ -7890,6 +8412,9 @@ if ne field_dup fo fw 0
 fail 10
 end
 t = typeword
+if ge t 64
+fail 7
+end
 ln = ulong 0
 p = get cur 0
 ln0 = get line 0
@@ -8029,9 +8554,9 @@ t = add si 16
 ln = ulong get st_cells si
 sk = add k 4
 if eq k 2
-addname pw poolc np t ln 8 0
+addname pw poolc get psl 0 t ln 8 0
 else
-addname pw poolc np t ln 7 0
+addname pw poolc get psl 0 t ln 7 0
 end
 p = add mul f 6 np
 put fn_pt p uchar t
@@ -8166,6 +8691,1085 @@ tmp = alloc
 idx = alloc
 st_write r tmp idx si
 addname w r add si 16 cells 6 0
+end
+
+note ======== OM-2 section 5: abstract types (spec 5, errata E8, E9). `abstract NAME T [ops W..]` and
+note `holds NAME dup32` at top level before the first fn (names pass). NAME is type 64 + index: a value of
+note it comes only from `seal NAME v` inside the function NAMEmk returning NAME (else error 28), `open v`
+note gives the T value, and the listed operations (rotr/rotl with a T count, and/or/xor of two NAME
+note values) keep NAME; anything else on it, a T value or a number where NAME is needed, an array of it and
+note the entry function's parameters and result are error 7. With holds, seal checks high32 == low32
+note (LSR, CMP ..., UXTW, B.NE trap 10) unless the constructor body is exactly `ret seal NAME or shl ulong
+note x 32 ulong x` with x a uint parameter (rule dup32: uint values are held zero-extended). om2 diag
+note reports each check as omc-check 1 kept|erased line=N rule=dup32|-. ========
+fn findab w ulong to ulong
+i = ulong 0
+while lt i get nab 0
+if eq get ab_name i w
+ret add i 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note abty: the current word (not a type word) as an abstract type; anything else is error 16
+fn abty to ulong
+a = findab get tw 0
+if eq a 0
+fail 16
+end
+ret add a 63
+end
+
+note opbit: the ops bit of a preserving operation (rotr rotl and or xor), else 0
+fn opbit c ulong to ulong
+if eq c 59
+ret 1
+end
+if eq c 60
+ret 2
+end
+if eq c 38
+ret 4
+end
+if eq c 39
+ret 8
+end
+if eq c 40
+ret 16
+end
+ret 0
+end
+
+note s_abstract: abstract NAME uint|ulong [ops W ..] (another type is error 7, another op word 16)
+fn s_abstract to void
+if ne get nf 0 0
+fail 9
+end
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+w = get tw 0
+if ne kw w 0
+fail 16
+end
+newname w get tl 0 get ts 0
+n = get nab 0
+if ge n 16
+fail 14
+end
+put ab_len n get tl 0
+t = typeword
+if and ne t 4 ne t 5
+fail 7
+end
+ops = ulong 0
+tok
+if eq get tk 0 1
+if or gt get tl 0 8 ne kw get tw 0 196
+fail 5
+end
+go = true
+while go
+tok
+k = get tk 0
+if or eq k 0 eq k 3
+go = false
+else
+if or ne k 1 gt get tl 0 8
+fail 16
+end
+b = opbit kw get tw 0
+if eq b 0
+fail 16
+end
+ops = or ops b
+end
+end
+else
+if and ne get tk 0 0 ne get tk 0 3
+fail 5
+end
+end
+put ab_name n w
+put ab_base n uchar t
+put ab_ops n ops
+put nab 0 add n 1
+end
+
+note s_holds: holds NAME dup32 (ulong representation only); any other predicate is error 28 on this line
+fn s_holds to void
+if ne get nf 0 0
+fail 9
+end
+tok
+if ne get tk 0 1
+fail 16
+end
+a = ulong 0
+if le get tl 0 8
+a = findab get tw 0
+end
+if eq a 0
+fail 16
+end
+a = sub a 1
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 28
+end
+if or ne get tl 0 5 ne get tw 0 215611372900
+fail 28
+end
+if ne get ab_base a 5
+fail 28
+end
+if ne get ab_holds a 0
+fail 10
+end
+put ab_holds a 1
+eol
+end
+
+note ab_entry: function f (index) is the entry of a function-mode unit: no abstract parameter or result
+fn ab_entry f ulong to void
+if eq get om2 0 0
+ret
+end
+if ne get scanning 0 0
+ret
+end
+if ne get progmode 0 0
+ret
+end
+if ne get nexp 0 0
+if eq get fn_exp f 0
+ret
+end
+else
+if ne add f 1 get nf 0
+ret
+end
+end
+if ge get fn_ret f 64
+fail 7
+end
+i = ulong 0
+while lt i ulong get fn_np f
+if ge get fn_pt add mul f 6 i 64
+fail 7
+end
+i = add i 1
+end
+end
+
+note ab_open: open v (the value read): an abstract value becomes its representation type
+fn ab_open to void
+t = get rt 0
+if lt t 64
+fail 7
+end
+put rt 0 ulong get ab_base sub t 64
+end
+
+note ab_seal: seal NAME v, only in the function NAMEmk (inlined or not) returning NAME (else error 28)
+fn ab_seal to void
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+a = ulong 0
+if and eq get tk 0 1 le get tl 0 8
+a = findab get tw 0
+end
+if eq a 0
+fail 16
+end
+a = sub a 1
+fe = get curfn 0
+if ne get inl 0 0
+fe = get il_fn sub get inl 0 1
+end
+if eq ab_ctor fe a 0
+fail 28
+end
+t = ulong get ab_base a
+rdval 0 t 255 0
+if ne get rt 0 t
+fail 7
+end
+r = matreg get rk 0 get rv 0 get rt 0
+if ne get ab_holds a 0
+ab_check fe a r
+end
+put rk 0 1
+put rv 0 r
+put rt 0 add a 64
+end
+
+note ab_ctor: 1 when function fe (index + 1) is NAMEmk for abstract a and returns it
+fn ab_ctor fe ulong a ulong to ulong
+if eq fe 0
+ret 0
+end
+f = sub fe 1
+if ne ulong get fn_ret f add a 64
+ret 0
+end
+l = get ab_len a
+if ne get fn_nmlen f add l 2
+ret 0
+end
+o = get fn_off f
+w = get ab_name a
+i = ulong 0
+while lt i l
+if ne ulong get inp add o i and shr w shl i 3 255
+ret 0
+end
+i = add i 1
+end
+if ne get inp add o l 109
+ret 0
+end
+if ne get inp add add o l 1 107
+ret 0
+end
+ret 1
+end
+
+note ab_check: the dup32 check of a seal (value in r): erased for the exact body, else LSR Xt, Xr, #32
+note (UBFM, C6.2.487); CMP Xt, Wr, UXTW (SUBS extended, C6.2.463); B.NE trap 10
+fn ab_check fe ulong a ulong r ulong to void
+ex = ab_exact fe a
+if eq get om2m 0 1
+ab_rec ex
+end
+if eq ex 0
+t = alloc
+emit or or 3546348544 t shl r 5
+emit or or 3944759327 shl r 16 shl t 5
+trapc 1 10
+end
+end
+
+note ab_rec: omc-check 1 kept|erased line=N rule=dup32|- (om2 diag, with the omc-site records)
+fn ab_rec ex ulong to void
+sitew 7162245557575183727 8
+sitew 540090475 4
+if ne ex 0
+sitew 110386890240613 6
+else
+sitew 1953523051 4
+end
+sitew 67505853393952 6
+siten add get line 0 get lbase 0
+sitew 67505820627488 6
+if ne ex 0
+sitew 215611372900 5
+else
+siteb 45
+end
+siteb 10
+end
+
+note aw_next: the next word of the input from aw_p (blanks skipped, newlines counted in aw_nl)
+fn aw_next to void
+p = get aw_p 0
+e = get inlen 0
+nl = ulong 0
+go = true
+while and go lt p e
+b = get inp p
+if or eq b 32 eq b 9
+p = add p 1
+else
+if eq b 10
+nl = add nl 1
+p = add p 1
+else
+go = false
+end
+end
+end
+w = ulong 0
+l = ulong 0
+go2 = true
+while and go2 lt p e
+c = get inp p
+if or or eq c 32 eq c 9 eq c 10
+go2 = false
+else
+if lt l 8
+w = or w shl ulong c shl l 3
+end
+l = add l 1
+p = add p 1
+end
+end
+put aw_p 0 p
+put aw_w 0 w
+put aw_l 0 l
+put aw_nl 0 nl
+end
+
+note aw_is: the next word is w (length l) after exactly nl newlines
+fn aw_is w ulong l ulong nl ulong to ulong
+aw_next
+if ne get aw_w 0 w
+ret 0
+end
+if ne get aw_l 0 l
+ret 0
+end
+if ne get aw_nl 0 nl
+ret 0
+end
+ret 1
+end
+
+note ab_upar: x (length xl) is a uint scalar parameter of function f (index)
+fn ab_upar f ulong x ulong xl ulong to ulong
+if gt xl 8
+ret 0
+end
+i = ulong 0
+while lt i ulong get fn_np f
+p = add mul f 6 i
+if eq get fn_pn p x
+if eq get fn_pk p 0
+if eq get fn_pt p 4
+ret 1
+end
+end
+end
+i = add i 1
+end
+ret 0
+end
+
+note ab_exact: the body of constructor fe is exactly `ret seal NAME or shl ulong x 32 ulong x` then `end`
+fn ab_exact fe ulong a ulong to ulong
+f = sub fe 1
+put aw_p 0 get fn_body f
+if eq aw_is 7628146 3 0 0
+ret 0
+end
+if eq aw_is 1818322291 4 0 0
+ret 0
+end
+if eq aw_is get ab_name a get ab_len a 0 0
+ret 0
+end
+if eq aw_is 29295 2 0 0
+ret 0
+end
+if eq aw_is 7104627 3 0 0
+ret 0
+end
+if eq aw_is 444234427509 5 0 0
+ret 0
+end
+aw_next
+if ne get aw_nl 0 0
+ret 0
+end
+x = get aw_w 0
+xl = get aw_l 0
+if eq ab_upar f x xl 0
+ret 0
+end
+if eq aw_is 12851 2 0 0
+ret 0
+end
+if eq aw_is 444234427509 5 0 0
+ret 0
+end
+if eq aw_is x xl 0 0
+ret 0
+end
+if eq aw_is 6581861 3 1 0
+ret 0
+end
+aw_next
+if and ne get aw_l 0 0 eq get aw_nl 0 0
+ret 0
+end
+ret 1
+end
+
+note ab_bin: a binary operation whose operand (fr[x..x+5]) is abstract: only a listed preserving one, run
+note on the representation type T and giving NAME; rotr/rotl take a T count (E9), and/or/xor two NAME values
+fn ab_bin c ulong dst ulong x ulong to void
+at = get fr add x 2
+if lt at 64
+fail 7
+end
+a = sub at 64
+b = opbit c
+if eq b 0
+fail 7
+end
+if eq and get ab_ops a b 0
+fail 7
+end
+t = ulong get ab_base a
+bk = get fr add x 3
+bt = get fr add x 5
+if or eq c 59 eq c 60
+if eq bk 2
+range get fr add x 4 t bt
+put fr add x 3 3
+else
+if ne bt t
+fail 7
+end
+end
+else
+if ne bt at
+fail 7
+end
+end
+put fr add x 2 t
+put fr add x 5 t
+binop c dst x
+put rt 0 at
+end
+
+note ======== OM-2 section 5: fresh scratch (spec 5, erratum E8). `NAME edit T N fresh` (N <= 64): the
+note incoming elements are unspecified. Each such array has a written set (bit i: element i definitely
+note written on the path being compiled). A put with a number index (after unrolling and inlining) sets
+note its bit; a get with a number index needs its bit, any other get all N bits (else error 27,
+note obligation=init). Joins: an if without else, a while and a rolled for keep the set they opened with;
+note an if/else takes the intersection of its arms (or the arm that does not end in ret); an unrolled
+note body and an inlined body keep what they wrote. Passing the array to a non-inline call, read, write or
+note a host operation is error 27; an inline callee works on the same set. ========
+note fz_par: parameter slot f*6+np of kind k with N = ln is fresh: an edit only (else 16), N <= 64 (else 14)
+fn fz_par f ulong np ulong k ulong ln ulong to void
+if ne k 3
+fail 16
+end
+if gt ln 64
+put dobx 0 1
+fail 14
+end
+put fn_pfr add mul f 6 np 1
+end
+
+note fz_bind: the parameter name just added for slot p gets a new written set in the body pass
+fn fz_bind p ulong ln ulong to void
+if eq get fn_pfr p 0
+ret
+end
+if ne get scanning 0 0
+ret
+end
+fz_new sub get nn 0 1 ln
+end
+
+note fz_new: a new, empty written set of N elements for name index n (16 per function, error 14)
+fn fz_new n ulong ln ulong to void
+s = get fz_n 0
+if ge s 16
+put dobx 0 1
+fail 14
+end
+put fz_len s ln
+put fz_cur s 0
+put nm_fr n uchar add s 1
+put fz_n 0 add s 1
+end
+
+note fz_inl: an inline parameter slot p bound to array name e: its own fresh set, or e's set
+fn fz_inl p ulong e ulong to void
+pk = ulong get fn_pk p
+if or eq pk 0 ge pk 6
+ret
+end
+n = sub get nn 0 1
+if ne get fn_pfr p 0
+fz_new n get fn_pl p
+ret
+end
+put nm_fr n get nm_fr sub e 1
+end
+
+note fz_push / fz_else / fz_join: the sets when block n opens; at its else (the then sets kept, the
+note opening sets back); at its end (kind k: 1 if, 2 else, 3 while, 4 for)
+fn fz_push n ulong to void
+j = ulong 0
+while lt j get fz_n 0
+put fz_ent add mul n 16 j get fz_cur j
+j = add j 1
+end
+end
+
+fn fz_else i ulong to void
+j = ulong 0
+while lt j get fz_n 0
+x = add mul i 16 j
+put fz_thn x get fz_cur j
+put fz_cur j get fz_ent x
+j = add j 1
+end
+end
+
+fn fz_join i ulong k ulong to void
+td = get bdead i
+ed = get dead 0
+j = ulong 0
+while lt j get fz_n 0
+x = add mul i 16 j
+if eq k 2
+v = and get fz_cur j get fz_thn x
+if and ne td 0 eq ed 0
+v = get fz_cur j
+end
+if and ne ed 0 eq td 0
+v = get fz_thn x
+end
+put fz_cur j v
+else
+put fz_cur j get fz_ent x
+end
+j = add j 1
+end
+end
+
+note fz_get: get e i with the index in rk/rv/rt
+fn fz_get e ulong to void
+s = ulong get nm_fr sub e 1
+if eq s 0
+ret
+end
+s = sub s 1
+n = get fz_len s
+if eq get rk 0 3
+v = get rv 0
+if lt v n
+if eq and shr get fz_cur s v 1 0
+fail 27
+end
+end
+ret
+end
+if ne get fz_cur s fmask n
+fail 27
+end
+end
+
+note fz_put: put e i v with index (k, v): a number index sets its bit
+fn fz_put e ulong k ulong v ulong to void
+s = ulong get nm_fr sub e 1
+if eq s 0
+ret
+end
+s = sub s 1
+if eq k 3
+if lt v get fz_len s
+put fz_cur s or get fz_cur s shl ulong 1 v
+end
+end
+end
+
+note fz_arg: array name e leaves the analysis (a non-inline call, read, write, a host operation): error 27
+note when it is tracked
+fn fz_arg e ulong to void
+if ne get nm_fr sub e 1 0
+fail 27
+end
+end
+
+note ======== OM-2 section 5: external layouts (spec 5, errata E5, E8, E9). `layout NAME SIZE`, then one
+note `field F T [COUNT] at OFF little|big` per line, then `end`, before the first fn. Read in the names pass;
+note the body pass jumps over the block. A parameter `c view|edit NAME` is a uchar array of SIZE bytes (one
+note pointer); `get c F [i]` / `put c F [i] v` load / store the field at its width and byte order:
+note LDR/STR (register, unscaled offset; C6.2.216 family) at base + OFF + i * width, REV16 / REV (C6.2.333,
+note C6.2.331) for big, a run-time index checked like an array's (CMP, B.HS trap 3) ========
+note findlay: packed name -> layout index + 1, or 0
+fn findlay w ulong to ulong
+i = ulong 0
+while lt i get nly 0
+if eq get ly_name i w
+ret add i 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note findlf: layout index li, packed field name -> field-table index + 1, or 0
+fn findlf li ulong w ulong to ulong
+fo = get ly_fo li
+i = ulong 0
+while lt i get ly_nf li
+if eq get lf_name add fo i w
+ret add add fo i 1
+end
+i = add i 1
+end
+ret 0
+end
+
+note ns_om2: an OM-2 declaration line in the names pass (1 when it was read), else 0
+fn ns_om2 to ulong
+if eq get om2 0 0
+ret 0
+end
+if ne get tk 0 1
+ret 0
+end
+if gt get tl 0 8
+ret 0
+end
+if eq get tw 0 128047730221420
+s_layout
+ret 1
+end
+if eq get tw 0 8386654075301880417
+s_abstract
+ret 1
+end
+if eq get tw 0 495606067048
+s_holds
+ret 1
+end
+if eq get tw 0 128034844735589
+s_export
+ret 1
+end
+ret 0
+end
+
+note s_export (OM-2, spec 6): `export fn ...` at top level: the fn line of an exported entry, in both
+note passes. Function mode only (error 9), at most 32 (error 14), counted and marked in the names pass.
+fn s_export to void
+tok
+if or ne get tk 0 1 ne get tw 0 28262
+fail 16
+end
+if eq get scanning 0 1
+if ne get progmode 0 0
+fail 9
+end
+if ge get nexp 0 32
+fail 14
+end
+put nexp 0 add get nexp 0 1
+end
+put expf 0 1
+s_fn
+put expf 0 0
+end
+
+note ly_num: the next token must be a number (error 4 at the line end, 16 for another token, 29 when it
+note was written as 2^63 or more)
+fn ly_num to ulong
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 2
+fail 16
+end
+if ne get tbig 0 0
+fail 29
+end
+ret get tw 0
+end
+
+note s_layout: SIZE 1..4096 and a layout after the first fn are error 29 on the layout line
+fn s_layout to void
+if ne get nf 0 0
+fail 29
+end
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+w = get tw 0
+if ne kw w 0
+fail 16
+end
+newname w get tl 0 get ts 0
+if ge get nly 0 16
+fail 14
+end
+sz = ly_num
+if or eq sz 0 gt sz 4096
+fail 29
+end
+eol
+li = get nly 0
+fo = get nlf 0
+i = ulong 0
+while lt i sz
+put lymap i 0
+i = add i 1
+end
+go = true
+while go
+tok
+k = get tk 0
+if eq k 3
+fail 4
+end
+if eq k 1
+c = ulong 0
+if le get tl 0 8
+c = kw get tw 0
+end
+if eq c 66
+eol
+go = false
+else
+if eq c 83
+skipnl
+else
+if ne c 189
+fail 16
+end
+ly_field fo sz
+end
+end
+else
+if ne k 0
+fail 16
+end
+end
+end
+put ly_name li w
+put ly_size li sz
+put ly_fo li fo
+put ly_nf li sub get nlf 0 fo
+put ly_ec li get cur 0
+put ly_el li get line 0
+put nly 0 add li 1
+end
+
+note ly_field: F T [COUNT] at OFF little|big. A field over SIZE, a COUNT outside 1..4096, an OFF out of range
+note or two fields sharing a byte are error 29 on the field line. Field types are the integer types.
+fn ly_field fo ulong sz ulong to void
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+fw = get tw 0
+if ne kw fw 0
+fail 16
+end
+n = get nlf 0
+i = fo
+while lt i n
+if eq get lf_name i fw
+fail 10
+end
+i = add i 1
+end
+if ge n 256
+fail 14
+end
+t = typeword
+if or lt t 2 gt t 9
+fail 7
+end
+cnt = ulong 0
+tok
+if eq get tk 0 2
+if ne get tbig 0 0
+fail 29
+end
+cnt = get tw 0
+if or eq cnt 0 gt cnt 4096
+fail 29
+end
+tok
+end
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+if ne kw get tw 0 190
+fail 16
+end
+off = ly_num
+big = ly_end
+ly_mark off cnt t sz
+eol
+put lf_name n fw
+put lf_type n uchar t
+put lf_cnt n cnt
+put lf_off n off
+put lf_big n uchar big
+put nlf 0 add n 1
+end
+
+note ly_end: little (0) or big (1)
+fn ly_end to ulong
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+c = kw get tw 0
+if eq c 191
+ret 0
+end
+if eq c 192
+ret 1
+end
+fail 16
+ret 0
+end
+
+note ly_mark: the bytes OFF .. OFF + max(COUNT, 1) * width must lie inside SIZE and be free (error 29)
+fn ly_mark off ulong cnt ulong t ulong sz ulong to void
+n = cnt
+if eq n 0
+n = ulong 1
+end
+by = shl n tlog t
+if gt off sz
+fail 29
+end
+e = add off by
+if gt e sz
+fail 29
+end
+i = off
+while lt i e
+if ne get lymap i 0
+fail 29
+end
+put lymap i 1
+i = add i 1
+end
+end
+
+note s_lyskip: the body pass jumps to the place after the layout's end (read in the names pass)
+fn s_lyskip to void
+tok
+li = sub findlay get tw 0 1
+put cur 0 get ly_ec li
+put line 0 get ly_el li
+end
+
+note peek_lay: if the next word is a layout name, consume it and return index + 1; else rewind
+fn peek_lay to ulong
+p = get cur 0
+ln = get line 0
+tok
+if eq get tk 0 1
+if le get tl 0 8
+lid = findlay get tw 0
+if ne lid 0
+ret lid
+end
+end
+end
+put cur 0 p
+put line 0 ln
+ret 0
+end
+
+note fn_p_ly: parameter pw is a layout (view k 2 / edit k 3): a uchar array of SIZE bytes, name kind 2 / 3
+fn fn_p_ly f ulong np ulong pw ulong lid ulong k ulong to void
+ln = get ly_size sub lid 1
+addname pw poolc get psl 0 2 ln k 0
+put nm_lay sub get nn 0 1 uchar lid
+p = add mul f 6 np
+put fn_pt p 2
+put fn_pl p ln
+put fn_pk p uchar k
+put fn_play p uchar lid
+end
+
+note ly_fld: for a layout name e, when the next word is one of its fields: consume it, return the field-table
+note index + 1; otherwise rewind and return 0 (the name is then an ordinary uchar array)
+fn ly_fld e ulong to ulong
+lid = ulong get nm_lay sub e 1
+if eq lid 0
+ret 0
+end
+p = get cur 0
+ln = get line 0
+tok
+if eq get tk 0 1
+if le get tl 0 8
+j = findlf sub lid 1 get tw 0
+if ne j 0
+ret j
+end
+end
+end
+put cur 0 p
+put line 0 ln
+ret 0
+end
+
+note ldun / stun: LDRB / LDRH / LDR w / LDR x and the stores, register offset, LSL #0 (S = 0)
+fn ldun t ulong to ulong
+if or eq t 2 eq t 6
+ret 945842176
+end
+if or eq t 3 eq t 7
+ret 2019584000
+end
+if or eq t 4 eq t 8
+ret 3093325824
+end
+ret 4167067648
+end
+
+fn stun t ulong to ulong
+if or eq t 2 eq t 6
+ret 941647872
+end
+if or eq t 3 eq t 7
+ret 2015389696
+end
+if or eq t 4 eq t 8
+ret 3089131520
+end
+ret 4162873344
+end
+
+note ly_rev: Rd = the bytes of Rs reversed at width t: REV16 Wd (C6.2.333), REV Wd, REV Xd (C6.2.331)
+fn ly_rev t ulong s ulong d ulong to void
+if or eq t 3 eq t 7
+emit or or 1522533376 d shl s 5
+end
+if or eq t 4 eq t 8
+emit or or 1522534400 d shl s 5
+end
+if or eq t 5 eq t 9
+emit or or 3670019072 d shl s 5
+end
+end
+
+note ly_ix: the byte-offset register of element (k, v, t) of array field j: a number index must be below
+note COUNT (error 21); a register index: CMP Xi, #COUNT or Xc (C6.2.96 / C6.2.97), B.HS trap 3, then
+note Xo = OFF; ADD Xo, Xo, Xi, LSL #log2 width (C6.2.6)
+fn ly_ix j ulong k ulong v ulong t ulong to ulong
+if or eq t 1 ge t 10
+fail 7
+end
+cnt = get lf_cnt j
+sh = tlog ulong get lf_type j
+x = alloc
+if eq k 3
+if ge v cnt
+fail 21
+end
+matconst x add get lf_off j shl v sh
+ret x
+end
+r = matreg k v t
+if le cnt 4095
+emit or or 4043309087 shl cnt 10 shl r 5
+else
+y = alloc
+matconst y cnt
+emit or or 3942645791 shl y 16 shl r 5
+end
+trapc 2 3
+matconst x get lf_off j
+emit or or or or 2332033024 x shl x 5 shl r 16 shl sh 10
+ret x
+end
+
+note ly_get: get c F [i] on a layout name e (1 when it was a field, the value in rk/rv/rt), else 0
+fn ly_get e ulong dst ulong to ulong
+j = ly_fld e
+if eq j 0
+ret 0
+end
+j = sub j 1
+ft = ulong get lf_type j
+x = ulong 0
+if eq get lf_cnt j 0
+x = alloc
+matconst x get lf_off j
+else
+rdval 0 5 255 0
+x = ly_ix j get rk 0 get rv 0 get rt 0
+end
+rd = destreg dst
+emit or or or ldun ft rd shl ulong get nm_reg sub e 1 5 shl x 16
+if ne get lf_big j 0
+ly_rev ft rd rd
+end
+if gt ft 5
+canon rd ft
+end
+put rk 0 1
+put rv 0 rd
+put rt 0 ft
+ret 1
+end
+
+note ly_put: put c F [i] v on a layout name e (an edit; a view was refused 20 before): index, value, then
+note the store; 1 when it was a field, else 0
+fn ly_put e ulong to ulong
+j = ly_fld e
+if eq j 0
+ret 0
+end
+j = sub j 1
+if ne get lf_cnt j 0
+rdval 0 5 255 0
+put svk 0 get rk 0
+put svv 0 get rv 0
+put svt 0 get rt 0
+end
+ly_st e j
+eol
+ret 1
+end
+
+note ly_st: the value of field j (index saved in svk/svv/svt), then the store through layout name e
+fn ly_st e ulong j ulong to void
+ft = ulong get lf_type j
+cnt = get lf_cnt j
+rdval 0 ft 255 0
+if ne get rt 0 ft
+fail 7
+end
+v = matreg get rk 0 get rv 0 get rt 0
+x = ulong 0
+if eq cnt 0
+x = alloc
+matconst x get lf_off j
+else
+x = ly_ix j get svk 0 get svv 0 get svt 0
+end
+if and ne get lf_big j 0 ne tlog ft 0
+y = alloc
+ly_rev ft v y
+v = y
+end
+emit or or or stun ft v shl ulong get nm_reg sub e 1 5 shl x 16
 end
 
 note vt_fget_go: field j of struct name e. Scalar, or an index then the element.
@@ -9494,7 +11098,11 @@ ir_run
 end
 prescan
 namescan
+if eq get nexp 0 0
 put oc 0 180
+else
+put oc 0 add 176 shl get nexp 0 2
+end
 put line 0 1
 done = false
 while not done

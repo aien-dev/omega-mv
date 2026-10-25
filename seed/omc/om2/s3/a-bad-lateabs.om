@@ -1,0 +1,11 @@
+note S3 abstract refusal
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+abstract g ulong ops xor
+fn main to int
+ret 0
+end

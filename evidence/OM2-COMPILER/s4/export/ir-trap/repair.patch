@@ -1,0 +1,64 @@
+--- /home/drakestapleton/workspace/omega-in-omega/seed/omc/omc.om	2026-10-22 07:02:14.540523908 -0500
++++ seed/omc/omc.om	2026-10-22 14:45:59.040184305 -0500
+@@ -4044,7 +4044,11 @@
+ p = add p 1
+ end
+ emitb uchar get ir_npar 0
++if eq get ir_ret 0 76
++emitb 0
++else
+ emitb uchar get ir_ret 0
++end
+ ir_w16 get ir_nreg 0
+ i = ulong 0
+ while lt i get ir_nreg 0
+@@ -4374,12 +4378,49 @@
+ end
+ end
+ 
++note ir_trap: OMEGESE section 4. A trap ends the path but the IR still
++note needs an unreachable ret terminator (zero of the return type, or void).
++note trap is packed little endian 1885434484; independently checked in Wolfram.
++fn ir_trap to void
++tok
++if ne get tk 0 2
++fail 4
++end
++code = get tw 0
++if or lt code 1 gt code 14
++fail 8
++end
++tok
++if not or eq get tk 0 0 eq get tk 0 3
++fail 4
++end
++ir_op 12 code 0 0 0
++z = ulong 65535
++if ne get ir_ret 0 76
++z = ir_lit 0 get ir_ret 0
++end
++ir_op 15 z 0 0 0
++put ir_dead 0 1
++end
++
+ fn ir_stmt to ulong
+ tok
+ if or eq get tk 0 0 eq get tk 0 3
+ ret 0
+ end
+ c = kw get tw 0
++if and ne c 66 ne c 68
++if ne get ir_dead 0 0
++fail 17
++end
++end
++if eq c 77
++if eq get tw 0 1885434484
++ir_trap
++ret 0
++end
++fail 9
++end
+ if eq c 66
+ ir_end
+ ret 0

@@ -1,0 +1,5 @@
+S2 fix D-S2-2 (erratum E14 expansion fuel; L834), evidence class HOST. omc f195e2198f9c9d1a53b1d5006477461d3569a2ac8d5df8039ba894254ae1fa9d (birth stage1 == stage2 == stage3). Runner gate-c 6c8691c2...acefa.
+C2 5876/5876; s1 48/48; s2 21/21; s3 26/26 (fuel-d2 4160 copies compiles, fuel-d3 error 14 line 6, fuel-inl14 compiles, fuel-inl16 error 14 line 15); mutants s1 8/8, s2 7/7, s3 5/5 detected (m-fuel: depth 3 compiles without the check); s5s7 l5 22/22.
+qualification sec/s3s4 candidate.cases: verdicts identical to omc 20d00b6e (181 PASS, 21 FAIL section 6 rows, 3 NOT_RUN).
+birth, seed/host/check.sh, tests/gates/run.sh seed (0 SKIP), om-units (OMC_PIN moved), qualify-ir-trap: RC=0.
+Largest accepted cases, compile time (median of 41): fuel-time.txt. NOT_RUN: gate5 section 7 timing.
