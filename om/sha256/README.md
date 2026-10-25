@@ -2,7 +2,7 @@
 
 The SHA-256 API of `src/sha256.h` (`sha256_ctx`, `sha256_init/update/final/hash`) is the OM-2 unit
 `sha256-om2.om`, compiled by the seed-born `omc` and called in-process through the omega-bridge
-native call ABI v2 (`docs/NATIVE-ABI.md`, aien-dev/omega-bridge feat/slice-abi 22c99b1). No C computes or
+native call ABI v2 (`docs/NATIVE-ABI.md`, aien-dev/omega-bridge feat/slice-abi a8959fb1). No C computes or
 adapts it: `src/sha256.c` and the OM-1 unit with its 4096-byte adapter are gone (#747). The 894
 call sites are unchanged (`om2-evidence/AUDIT-L838.txt`).
 
@@ -18,7 +18,7 @@ call sites are unchanged (`om2-evidence/AUDIT-L838.txt`).
 | `om/sha256/om2-evidence/` | caller audit, compile log per compiler slice, baseline at acb3f15c, cutover plan, desk check, S4 run |
 
 Pins: omc `49923639…803ec` (om2/compiler-s4 f6a6492fd, born by `seed/omega-from-seed.sh`);
-generator `src/native.om` of omega-bridge `22c99b1` (om/omega-bridge.lock; sha256 `24f252b9…1fac`).
+generator `src/native.om` of omega-bridge `a8959fb1` (om/omega-bridge.lock; sha256 `24f252b9…1fac`).
 
 ## Behaviour (spec/omegese-om2.md section 7, errata E3)
 

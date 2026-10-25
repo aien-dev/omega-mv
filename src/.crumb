@@ -145,14 +145,14 @@
           "purpose": "Ionic-droplet reservoir simulator (omega#440): binary32 fixed-step RK4 of the authors' droplet m"
         },
         {
-          "digest": "c6af24b823d6a18a8ad1593003a214fcd577955d1d134bc4304a5c097a71cd35",
-          "last_commit": "d863780eb",
+          "digest": "1e400d9b84494347892448fd576be7bf596ef810ed6e88bcd70f7e7d9a6b5746",
+          "last_commit": "97a960f5c",
           "name": "runtime",
           "purpose": "Directory src/runtime. Purpose not yet described by a human."
         },
         {
-          "digest": "af5fcc64fe83dc35f782724372854febde5461f5eab8b327f3c3ed75f8572053",
-          "last_commit": "d863780eb",
+          "digest": "71502e9ef65e0620b94ea156cef5034e4c97d703d5ea13c489e4b65713014f84",
+          "last_commit": "97a960f5c",
           "name": "searchtrace",
           "purpose": "Directory src/searchtrace. Purpose not yet described by a human."
         },
@@ -187,15 +187,15 @@
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:4460b4a6d5ed4054d462af660a6a02691350a35a8f44197e60ce605e243f698e",
-      "compiled_at": "2026-10-25T21:57:22Z",
+      "children_root": "sha256:2f729945214be989a74d7c2064ae4ba3c2deb52ebea3f334b459198a7bd032ed",
+      "compiled_at": "2026-10-25T23:14:34Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:71c5cd88870b045acf9bf25c9a1361e45d5f92c8f11417205af6a57afb4c609b",
+      "digest": "sha256:048e516b279329e7ed8b84cd3505e55250e8892af1a90a81cb12f966c3c327c1",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 568,
-      "generated_at_commit": "992a8e254658cecb2ca9e1eb74cf42c85d9e6816",
-      "source_tree": "sha256:c9e57741b017feb4618abab4ff3f8e67747f3ca1359fb7df477bdf94c8e63401"
+      "generated_at_commit": "889879521eb5b1572f80a4a34d09dc590ec8b45a",
+      "source_tree": "sha256:7e87accce7b7152634a4b6ae4d064413deec5e30a5378d59da941f5293c5225c"
     },
     "owner_lane": "",
     "provenance": {
