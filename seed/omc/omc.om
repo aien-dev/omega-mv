@@ -19,6 +19,22 @@ global tbig ulong 1
 global out uchar 8388608
 global oc ulong 1
 
+note x86 targets retain the parser's sixteen logical slots, stored in each native frame.
+note No A64 instruction may pass emit once the explicit target is selected (error 25).
+global xtarget ulong 1
+global xnaddr ulong 1
+global xasite ulong 65536
+global xavalue ulong 65536
+global xexit ulong 1
+global xexsite ulong 8192
+global xnexit ulong 1
+global xbss ulong 1
+global xenerr ulong 1
+global xerrpos ulong 256
+global xerrcode ulong 256
+global xenend ulong 1
+global xendpos ulong 256
+
 note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
 global nm_name ulong 1024
 global nm_reg uchar 1024
@@ -28,17 +44,17 @@ global nm_kind uchar 1024
 global nm_addr ulong 1024
 global nn ulong 1
 
-note ---- function table (512): name, address (byte offset in out), return type, parameter count,
+note ---- function table (1024): name, address (byte offset in out), return type, parameter count,
 note per-parameter type/length/kind (6 each), name length, name offset in the input ----
-global fn_name ulong 512
-global fn_addr ulong 512
-global fn_ret uchar 512
-global fn_np uchar 512
-global fn_pt uchar 3072
-global fn_pl ulong 3072
-global fn_pk uchar 3072
-global fn_nmlen ulong 512
-global fn_off ulong 512
+global fn_name ulong 1024
+global fn_addr ulong 1024
+global fn_ret uchar 1024
+global fn_np uchar 1024
+global fn_pt uchar 6144
+global fn_pl ulong 6144
+global fn_pk uchar 6144
+global fn_nmlen ulong 1024
+global fn_off ulong 1024
 global nf ulong 1
 global lastfn ulong 1
 global scanning ulong 1
@@ -46,7 +62,7 @@ global ncalls ulong 1
 global callsite ulong 65536
 global callfrom ulong 65536
 global callto ulong 65536
-global settled uchar 512
+global settled uchar 1024
 
 
 note ---- compiler state ----
@@ -159,6 +175,9 @@ put oc 0 add o 1
 end
 
 fn emit w ulong to void
+if ne get xtarget 0 0
+fail 25
+end
 if ge get oc 0 8388608
 fail 14
 end
@@ -373,6 +392,9 @@ end
 note ======== keyword lookup (original om4 KWTAB plus native host words 100..177) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
+if and eq w 6907493 eq get xtarget 0 2
+ret 178
+end
 if eq w 6584163
 ret 132
 end
@@ -1512,6 +1534,10 @@ emit w
 end
 
 fn trapc cc ulong code ulong to void
+if ne get xtarget 0 0
+xtrap cc code
+ret
+end
 trapsite or 1409286144 cc code
 end
 
@@ -1545,6 +1571,10 @@ end
 
 note patch19: the word distance from a B.cond / CBZ / CBNZ at `at` to `target`, into bits 5..23
 fn patch19 at ulong target ulong to void
+if ne get xtarget 0 0
+xpatch at target
+ret
+end
 d = disp19 at target
 wrword at or rdword at shl d 5
 end
@@ -1553,12 +1583,21 @@ note patch26: the word distance from a B at `at` to `target`, into bits 0..25. N
 note the output pool is 8 MiB = 2^23 bytes, below the 2^25-word reach, and every position in it is a
 note word boundary, so the displacement is aligned and inside the signed 26-bit field by construction.
 fn patch26 at ulong target ulong to void
+if ne get xtarget 0 0
+xpatch at target
+ret
+end
 d = and shr sub target at 2 67108863
 wrword at or rdword at d
 end
 
 note back: emit B to an earlier place (C6.2.35)
 fn back addr ulong to void
+if ne get xtarget 0 0
+p = xbranch 14
+xpatch p addr
+ret
+end
 emit or 335544320 and shr sub addr get oc 0 2 67108863
 end
 
@@ -1566,6 +1605,11 @@ note matconst: put a 64-bit value in register r: MOVZ (C6.2.285) or, for a value
 note MOVN (C6.2.284) with the first halfword that differs from the fill, then MOVK (C6.2.283) for each
 note other such halfword. om4 MATCONST.
 fn matconst r ulong v ulong to void
+if ne get xtarget 0 0
+ximm 0 v
+xstore 0 r
+ret
+end
 fill = ulong 0
 mop = ulong 3531603968
 if ne shr v 63 0
@@ -1593,6 +1637,10 @@ end
 
 note canon: u8/u16/u32 UBFM Xr, Xr, #0, #w-1 (C6.2.487); i8/i16/i32 SBFM (C6.2.355); else nothing
 fn canon r ulong t ulong to void
+if ne get xtarget 0 0
+xcanon r t
+ret
+end
 if lt t 2
 ret
 end
@@ -1611,6 +1659,10 @@ end
 
 note chkext: CMP Xr, Wr, SXTB/SXTH/SXTW (SUBS extended, C6.2.463), then B.NE trap code
 fn chkext r ulong t ulong code ulong to void
+if ne get xtarget 0 0
+xext r t code
+ret
+end
 emit or or or 3944742943 shl sub t 2 13 shl r 16 shl r 5
 trapc 1 code
 end
@@ -1651,11 +1703,25 @@ end
 
 note cset: CSET Xr, cond = CSINC Xr, XZR, XZR, opposite cond (C6.2.141)
 fn cset r ulong cc ulong to void
+if ne get xtarget 0 0
+xb 15 add 144 xcc cc 192
+xb 72 15 182
+emitb 192
+xstore 0 r
+ret
+end
 emit or or 2594113504 r shl xor cc 1 12
 end
 
 note force: put a value (kind 1 register, 3 number, 4 flags) in register r; a bare number is error 11
 fn force k ulong v ulong t ulong r ulong to void
+if ne get xtarget 0 0
+if eq k 1
+xload 0 v
+xstore 0 r
+ret
+end
+end
 if eq k 1
 if ne v r
 emit or or 2852127712 r shl v 16
@@ -1697,15 +1763,26 @@ end
 end
 
 fn spadd bytes ulong to void
+if ne get xtarget 0 0
+xsp 0 bytes
+ret
+end
 spop 2432696320 bytes
 end
 
 fn spsub bytes ulong to void
+if ne get xtarget 0 0
+xsp 1 bytes
+ret
+end
 spop 3506438144 bytes
 end
 
 note stkchk: program mode only: CMP SP, X28 (C6.2.463); B.LO trap 6
 fn stkchk to void
+if ne get xtarget 0 0
+ret
+end
 if ne get progmode 0 0
 emit 3946603519
 trapc 3 6
@@ -1714,6 +1791,12 @@ end
 
 note epi: give back the stack of the local arrays, then RET (C6.2.338)
 fn epi to void
+if ne get xtarget 0 0
+xload 0 0
+emitb 201
+emitb 195
+ret
+end
 spadd get stkbytes 0
 emit 3596551104
 end
@@ -1919,6 +2002,10 @@ end
 
 note add, sub: u32 the 32-bit form; i64 ADDS/SUBS + B.VS trap 1; others 64-bit then bo_fix (om4 BO_ADD)
 fn bo_add op ulong ty ulong ra ulong rb ulong imm ulong rd ulong to void
+if ne get xtarget 0 0
+xarith op ty ra rb imm rd
+ret
+end
 fx = ulong 2332033024
 if eq op 34
 fx = ulong 3405774848
@@ -1944,6 +2031,10 @@ end
 
 note mul: i64 SMULH t, MUL, CMP t, rd, ASR #63, B.NE trap 1 (om4 BO_MUL)
 fn bo_mul ty ulong ra ulong rb ulong rd ulong to void
+if ne get xtarget 0 0
+xarith 35 ty ra rb 0 rd
+ret
+end
 if eq ty 9
 t = alloc
 e3 2604694528 t ra rb
@@ -1964,6 +2055,10 @@ note div, rem (om4 BO_DIV, BO_SDIV): CBZ Xb trap 2 unless fl bit 1 (b a number o
 note SDIV; rem: t = a / b, rd = a - t * b (MSUB); i64 div: CMN Xb, #1; B.NE +3; NEGS XZR, Xa; B.VS trap 1,
 note unless fl bit 2 (b a number other than -1)
 fn bo_div op ulong ty ulong ra ulong rb ulong rd ulong fl ulong to void
+if ne get xtarget 0 0
+xdiv op ty ra rb rd
+ret
+end
 if eq and fl 1 0
 trapsite or 3019898880 rb 2
 end
@@ -1997,6 +2092,10 @@ end
 
 note and, or, xor (om4 BO_LOG)
 fn bo_log op ulong ra ulong rb ulong rd ulong to void
+if ne get xtarget 0 0
+xarith op 5 ra rb 0 rd
+ret
+end
 fx = ulong 2315255808
 if eq op 39
 fx = ulong 2852126720
@@ -2009,6 +2108,10 @@ end
 
 note bo_lsl: LSL Xd, Xn, #s as UBFM Xd, Xn, #(64-s) mod 64, #63-s
 fn bo_lsl ra ulong s ulong rd ulong to void
+if ne get xtarget 0 0
+xshift 41 5 ra s 1 rd
+ret
+end
 r = shl and sub 64 s 63 16
 r = or r shl sub 63 s 10
 r = or r shl ra 5
@@ -2018,6 +2121,10 @@ end
 note shl (om4 BO_SHL, BS_64): by a number s: UBFM Xd, Xn, #(64-s) mod 64, #63-s; by a register: the amount
 note check, LSLV; i64: t = a << s, X16 = t >> s arithmetic, CMP X16, Xa, B.NE trap 1, MOV Xd, Xt
 fn bo_shl ty ulong ra ulong rb ulong imm ulong rd ulong to void
+if ne get xtarget 0 0
+xshift 41 ty ra rb imm rd
+ret
+end
 if eq ty 9
 t = alloc
 if ne imm 0
@@ -2050,6 +2157,10 @@ end
 note shr: unsigned LSR, signed ASR; by a number UBFM / SBFM Xd, Xn, #s, #63; by a register the amount check
 note then LSRV / ASRV (om4 BO_SHR)
 fn bo_shr ty ulong ra ulong rb ulong imm ulong rd ulong to void
+if ne get xtarget 0 0
+xshift 42 ty ra rb imm rd
+ret
+end
 if ne imm 0
 fi = ulong 3544251392
 if ge ty 6
@@ -2068,10 +2179,14 @@ end
 
 note comparisons: CMP Xa, #imm or CMP Xa, Xb; the result is the flags and a condition (om4 BO_CMP)
 fn bo_cmp op ulong ty ulong ra ulong rb ulong imm ulong to void
+if ne get xtarget 0 0
+xcmp ra rb imm
+else
 if ne imm 0
 emit or or 4043309087 shl rb 10 shl ra 5
 else
 emit or or 3942645791 shl rb 16 shl ra 5
+end
 end
 i = mul sub op 43 2
 if ge ty 6
@@ -2458,6 +2573,10 @@ note save: n = registers in use (parameters + pool slots), A = 8 (n + 1) rounded
 note (C6.2.457); the stack check; STR Xr, [SP, #8j] for each (C6.2.415); STR X30, [SP, #8n]. Out: svn n,
 note sva A. om4 SAVE.
 fn save to void
+if ne get xtarget 0 0
+xsave
+ret
+end
 n = add get npar 0 get nslot 0
 a = shl shr add n 2 1 4
 put svn 0 n
@@ -2475,6 +2594,10 @@ end
 note loadarg: register t from an argument: kind 1 or 5 a register v, read back from its save slot (LDR Xt,
 note [SP, #8 slot], C6.2.216); kind 3, 6 or 7 the number, address or float bits v. om4 LOADARG.
 fn loadarg t ulong k ulong v ulong to void
+if ne get xtarget 0 0
+xarg t k v
+ret
+end
 if or or eq k 3 eq k 6 eq k 7
 matconst t v
 ret
@@ -2487,7 +2610,7 @@ note address. om4 BASEARG.
 fn basearg t ulong e ulong to void
 i = sub e 1
 if ge get nm_kind i 4
-matconst t get nm_addr i
+mataddr t get nm_addr i
 ret
 end
 loadarg t 1 ulong get nm_reg i
@@ -2498,6 +2621,9 @@ note arguments, n saved count, a save bytes, res 1 if there is a result in X0. M
 note each register in use before the arguments except Xd (C6.2.216); LDR X30; ADD SP, SP, #A (C6.2.5).
 note Returns Xd (255 when no result). om4 RESTORE.
 fn restore d ulong slot ulong n ulong a ulong res ulong to ulong
+if ne get xtarget 0 0
+ret xrestore d slot res
+end
 put nslot 0 slot
 rd = ulong 255
 if ne res 0
@@ -2534,7 +2660,12 @@ put callfrom n get curfn 0
 put callto n f
 put ncalls 0 add n 1
 
+if ne get xtarget 0 0
+emitb 232
+xword 0
+else
 emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
+end
 end
 
 note ======== element addresses and array arguments ========
@@ -2545,6 +2676,10 @@ note be inside the array (error 21) and needs no check; a register index: CMP Xi
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
 note (the array's register, or a new one holding its address), ea_i index register. om4 ELEMADDR.
 fn elemaddr e ulong k ulong v ulong t ulong to void
+if ne get xtarget 0 0
+xelem e k v t
+ret
+end
 if or eq t 1 ge t 10
 fail 7
 end
@@ -2671,6 +2806,10 @@ note XZR, C6.2.458; the 32-bit form for u32), i64 NEGS + B.VS trap 1 (C6.2.465),
 note sign check; not: bool EOR Xd, Xn, #1 (C6.2.155), else MVN (ORN from XZR, C6.2.300), then the wrap.
 note om4 VU1 .. VU_E.
 fn vt_un c ulong dst ulong to void
+if ne get xtarget 0 0
+xunary c dst
+ret
+end
 ty = get rt 0
 if ge ty 10
 if eq c 50
@@ -2728,6 +2867,10 @@ note vt_conv: the value in rk/rv/rt converted to type tt (neither bool, error 9)
 note at or above s is set: LSR Xt, Xa, #s (UBFM, C6.2.487); CBNZ Xt trap 5 (C6.2.77); signed to a narrower
 note signed type: the sign-extension check, trap 5. om4 VTT1 .. VC_OK.
 fn vt_conv tt ulong to void
+if ne get xtarget 0 0
+xconv tt
+ret
+end
 ft = get rt 0
 if or ge ft 10 ge tt 10
 if eq ft 1
@@ -2788,6 +2931,11 @@ end
 note vt_get: get A i with the index value in rk/rv/rt: the element address, then the load of the element
 note type, register offset (LDOP table). om4 VT_GET.
 fn vt_get e ulong dst ulong to void
+if ne get xtarget 0 0
+elemaddr e get rk 0 get rv 0 get rt 0
+st_ld get ea_b 0 get ea_i 0 ulong get nm_type sub e 1 dst
+ret
+end
 elemaddr e get rk 0 get rv 0 get rt 0
 rd = destreg dst
 ty = ulong get nm_type sub e 1
@@ -2801,6 +2949,10 @@ end
 note vs_chk: read / write bounds: n <= len A and off <= len A - n, else trap 3 (CMP C6.2.97, B.HI C6.2.34,
 note SUB C6.2.458). om4 VT_SYS.
 fn vs_chk e ulong ro ulong rn ulong to void
+if ne get xtarget 0 0
+xslice e ro rn
+ret
+end
 if ne get nm_type sub e 1 2
 fail 7
 end
@@ -2816,6 +2968,10 @@ end
 note vs_call: save the registers in use, X0 = fd, X1 = A + off (ADD through X16, C6.2.6), X2 = n, X8 = 63
 note (read) or 64 (write) (MOVZ C6.2.285), SVC #0 (C6.2.466). om4 VT_SYS.
 fn vs_call c ulong fk ulong fv ulong e ulong ro ulong rn ulong to void
+if ne get xtarget 0 0
+xio c fk fv e ro rn
+ret
+end
 save
 loadarg 0 fk fv
 basearg 1 e
@@ -4352,6 +4508,9 @@ end
 end
 
 fn hostval c ulong dst ulong to void
+if ne get xtarget 0 0
+fail 25
+end
 if eq get progmode 0 0
 fail 9
 end
@@ -4583,6 +4742,10 @@ vdec
 ret
 end
 c = kw get tw 0
+if eq c 178
+xefival dst
+ret
+end
 if eq c 0
 e = findname get tw 0
 if ne e 0
@@ -4854,6 +5017,18 @@ end
 note cond: read a condition (a bool value); emit a branch taken when it is false: B.cond with the opposite
 note condition (C6.2.34), or CBZ Xr (C6.2.78). Returns that branch's place. om4 COND.
 fn cond to ulong
+if ne get xtarget 0 0
+rdval 0 1 255 0
+if ne get rt 0 1
+fail 7
+end
+if eq get rk 0 4
+ret xbranch xor get rv 0 1
+end
+r = matreg get rk 0 get rv 0 get rt 0
+xcmp r 0 1
+ret xbranch 0
+end
 rdval 0 1 255 0
 if ne get rt 0 1
 fail 7
@@ -4911,6 +5086,11 @@ end
 
 note blo: B.LO back to an earlier place (C6.2.34)
 fn blo at ulong to void
+if ne get xtarget 0 0
+p = xbranch 3
+xpatch p at
+ret
+end
 d = disp19 get oc 0 at
 emit or 1409286147 shl d 5
 end
@@ -4920,6 +5100,10 @@ note outermost block, so the stack held by local arrays is known at every ret. S
 note mode: the stack check; MOV Xb, SP (ADD immediate, C6.2.5); then the fill loop: STR v, [Xb, Xi, LSL];
 note ADD Xi, Xi, #1; CMP Xi, #N or Xn; B.LO back (C6.2.34). om4 SA_ARR.
 fn sa_arr w ulong to void
+if ne get xtarget 0 0
+xarray w
+ret
+end
 if ne get nb 0 0
 fail 9
 end
@@ -5116,6 +5300,9 @@ put held 0 0
 put nb 0 0
 put nt 0 0
 eol
+if and ne get xtarget 0 0 eq get scanning 0 0
+xpro np
+end
 end
 
 note s_fn: fn name (param type | param view T N | param edit T N)* to type | void. om4 S_FN.
@@ -5140,7 +5327,7 @@ f = ulong 0
 if eq get scanning 0 1
 newname w l s
 f = get nf 0
-if ge f 512
+if ge f 1024
 fail 14
 end
 put nf 0 add f 1
@@ -5222,8 +5409,13 @@ if ne get rt 0 8
 fail 7
 end
 force get rk 0 get rv 0 get rt 0 0
+if ne get xtarget 0 0
+xload 0 0
+xleave
+else
 emit 3531606952
 emit 3556769793
+end
 dead1
 eol
 end
@@ -5252,7 +5444,11 @@ end
 put brkpos n get oc 0
 put brkblk n bi
 put nbrk 0 add n 1
+if ne get xtarget 0 0
+p = xbranch 14
+else
 emit 1409286158
+end
 dead1
 eol
 end
@@ -5281,7 +5477,11 @@ end
 put cpos n get oc 0
 put cblk n bi
 put ncont 0 add n 1
+if ne get xtarget 0 0
+p = xbranch 14
+else
 emit 1409286158
+end
 dead1
 eol
 end
@@ -5300,6 +5500,10 @@ end
 
 note stel: the checked store of v (type t) at ea_b / ea_i (the STOP table: register offset, scaled)
 fn stel t ulong v ulong to void
+if ne get xtarget 0 0
+xmemval 1 get ea_b 0 get ea_i 0 t v
+ret
+end
 b = shl get ea_b 0 5
 i = shl get ea_i 0 16
 emit or or or stop t v b i
@@ -5465,7 +5669,11 @@ if ne get bkind i 1
 fail 15
 end
 b = get oc 0
+if ne get xtarget 0 0
+p = xbranch 14
+else
 emit 335544320
+end
 patch19 get bbr i get oc 0
 put bkind i 2
 put bbr i b
@@ -5479,6 +5687,12 @@ end
 note lpcnt: the hidden counter check of a loop: CMP Xc, #N (C6.2.96) or CMP Xc, Xn (C6.2.97); B.HS trap
 note 4; ADD Xc, Xc, #1 (C6.2.5). om4 SW_NOB .. SW_G and the same in S_FOR.
 fn lpcnt c ulong n ulong to void
+if ne get xtarget 0 0
+xcmp c n 1
+trapc 2 4
+xarith 33 5 c 1 1 c
+ret
+end
 if le n 4095
 emit or or 4043309087 shl n 10 shl c 5
 else
@@ -5497,7 +5711,11 @@ sn = get nn 0
 sh = get held 0
 c = alloc
 put held 0 get nslot 0
+if ne get xtarget 0 0
+matconst c 0
+else
 emit or 3531603968 c
+end
 hd = get oc 0
 br = cond
 n = ulong 1000000
@@ -5528,6 +5746,12 @@ end
 note sf_br: B.HS (unsigned) or B.GE (signed) to the loop exit, C6.2.34 (distance filled at end); returns
 note its place. om4 SF_BR.
 fn sf_br t ulong to ulong
+if ne get xtarget 0 0
+if lt t 6
+ret xbranch 2
+end
+ret xbranch 10
+end
 at = get oc 0
 if lt t 6
 emit 1409286146
@@ -5540,6 +5764,10 @@ end
 note sf_num: for i T K with K a number: i = 0 (MOVZ, C6.2.285); head: CMP Xi, #K or Xk; B.HS/B.GE exit.
 note om4 SF_NUM .. SF_PUSH.
 fn sf_num w ulong t ulong kk ulong sn ulong sh ulong to void
+if ne get xtarget 0 0
+xfornum w t kk sn sh
+ret
+end
 eol
 i = alloc
 put held 0 get nslot 0
@@ -5561,6 +5789,10 @@ end
 note sf_val: for i T K with K a value of type T in register kr: i = 0; the hidden counter c = 0; head: CMP
 note Xi, Xk; B.HS/B.GE exit; the counter guard of a while with no bound. om4 SF_VAL.
 fn sf_val w ulong t ulong kr ulong sn ulong sh ulong to void
+if ne get xtarget 0 0
+xforval w t kr sn sh
+ret
+end
 eol
 i = alloc
 put held 0 get nslot 0
@@ -5631,6 +5863,10 @@ note one returns; then the trap stubs: shared tail, function mode MOV X0, X7; LD
 note (C6.2.282, C6.2.216, C6.2.46: OscRt.trap); program mode ADD X0, X1, #100; MOVZ X8, #93; SVC #0 (exit
 note 100 + code). Per trap code used: MOVZ X1, #code (C6.2.285); B tail. om4 FINISH.
 fn finish to void
+if ne get xtarget 0 0
+xfinish
+ret
+end
 eol
 if eq get dead 0 0
 if ne get curret 0 10
@@ -5793,6 +6029,10 @@ note LSL 16; MOV SP, X16 (ADD immediate, C6.2.5); BL main (C6.2.43); [MOVZ X0, #
 note #93; SVC #0. The entry word after the header is a B to it; the header gets the file and pool sizes.
 note om4 EOF_PROG.
 fn eof_prog to void
+if ne get xtarget 0 0
+xeof
+ret
+end
 f = findfn 1852399981 4 0
 if eq f 0
 fail 16
@@ -5831,7 +6071,11 @@ i = ulong 0
 while lt i n
 s = get callsite i
 f = sub get callto i 1
+if ne get xtarget 0 0
+wrword add s 1 sub get fn_addr f add s 5
+else
 wrword s or 2483027968 and shr sub get fn_addr f s 2 67108863
+end
 i = add i 1
 end
 if eq get progmode 0 0
@@ -6431,6 +6675,16 @@ note st_ixreg: runtime element index iv, field length fl, cell offset off. CMP +
 note (elemaddr, C6.2.96 / C6.2.34), then ADD Xidx, Xiv, #off (C6.2.5, base word 2432696320) and
 note LSL by 3 - tlog (bo_lsl) so the STOP store lands on (off + i) * 8.
 fn st_ixreg idx ulong iv ulong off ulong fl ulong t ulong to void
+if ne get xtarget 0 0
+xcmp iv fl 1
+trapc 2 3
+xarith 33 5 iv off 1 idx
+sh = sub 3 tlog t
+if ne sh 0
+bo_lsl idx sh idx
+end
+ret
+end
 emit or or 4043309087 shl fl 10 shl iv 5
 trapc 2 3
 emit or or or 2432696320 idx shl iv 5 shl off 10
@@ -6443,8 +6697,12 @@ end
 note st_ld: LDR of type t from base + idx into dst (or a new register). LDOP table, as vt_get.
 fn st_ld base ulong idx ulong t ulong dst ulong to void
 rd = destreg dst
+if ne get xtarget 0 0
+xmemval 0 base idx t rd
+else
 w = or ldop t rd
 emit or or w shl base 5 shl idx 16
+end
 put rk 0 1
 put rv 0 rd
 put rt 0 t
@@ -6496,7 +6754,11 @@ put held 0 get nslot 0
 st_read si
 spsub by
 stkchk
+if ne get xtarget 0 0
+xmovsp r
+else
 emit or 2432697312 r
+end
 tmp = alloc
 idx = alloc
 st_write r tmp idx si
@@ -7816,6 +8078,7 @@ m = add m 1
 end
 end
 put inlen 0 off
+xlead
 if ne ir_lead 0
 put irmode 0 1
 ir_run
@@ -7823,6 +8086,15 @@ end
 prescan
 namescan
 put oc 0 180
+if ne get xtarget 0 0
+if eq get progmode 0 0
+fail 25
+end
+put oc 0 512
+if eq get xtarget 0 2
+put oc 0 520
+end
+end
 put line 0 1
 done = false
 while not done
@@ -7835,4 +8107,1749 @@ m = add m 1
 end
 end
 ret 0
+end
+
+note ======== Native x86-64 semantic backend ========
+note Intel SDM volume 2 instruction entries MOV, LEA, CALL, RET, Jcc, SETcc, MOVSX,
+note MOVZX, ADD, SUB, IMUL, DIV, IDIV, SHL, SHR, SAR, SYSCALL; volume 2 chapter 2
+note supplies REX, ModRM and SIB. No A64 word decoding occurs in this backend.
+fn xb a ulong b ulong c ulong to void
+emitb uchar a
+emitb uchar b
+emitb uchar c
+end
+
+fn xword v ulong to void
+emitb uchar and v 255
+emitb uchar and shr v 8 255
+emitb uchar and shr v 16 255
+emitb uchar and shr v 24 255
+end
+
+fn ximm r ulong v ulong to void
+emitb uchar add 72 shr r 3
+emitb uchar add 184 and r 7
+xword v
+xword shr v 32
+end
+
+note Hardware registers are private emitter operands. Language values are RBP slots.
+fn xrr op ulong d ulong s ulong to void
+emitb uchar add add 72 shl shr s 3 2 shr d 3
+emitb uchar op
+emitb uchar add add 192 shl and s 7 3 and d 7
+end
+
+fn xmem op ulong r ulong b ulong off ulong to void
+emitb uchar add add 72 shl shr r 3 2 shr b 3
+emitb uchar op
+emitb uchar add add 128 shl and r 7 3 and b 7
+if eq and b 7 4
+emitb 36
+end
+xword off
+end
+
+fn xload r ulong s ulong to void
+xmem 139 r 5 sub ulong 0 mul add s 1 8
+end
+
+fn xstore r ulong s ulong to void
+xmem 137 r 5 sub ulong 0 mul add s 1 8
+end
+
+fn xcc cc ulong to ulong
+if eq cc 0
+ret 4
+end
+if eq cc 1
+ret 5
+end
+if eq cc 2
+ret 3
+end
+if eq cc 3
+ret 2
+end
+if eq cc 6
+ret 0
+end
+if eq cc 7
+ret 1
+end
+if eq cc 8
+ret 7
+end
+if eq cc 9
+ret 6
+end
+if eq cc 10
+ret 13
+end
+if eq cc 11
+ret 12
+end
+if eq cc 12
+ret 15
+end
+if eq cc 13
+ret 14
+end
+fail 25
+ret 0
+end
+
+note Every branch reserves six bytes; all targets are byte offsets, not word offsets.
+fn xbranch cc ulong to ulong
+p = get oc 0
+if eq cc 14
+emitb 233
+xword 0
+emitb 144
+else
+emitb 15
+emitb uchar add 128 xcc cc
+xword 0
+end
+ret p
+end
+
+fn xpatch p ulong dest ulong to void
+if eq get out p 233
+wrword add p 1 sub dest add p 5
+else
+wrword add p 2 sub dest add p 6
+end
+end
+
+fn xtrap cc ulong code ulong to void
+n = get nt 0
+if ge n 8192
+fail 14
+end
+put tcode n code
+put tsite n xbranch cc
+put nt 0 add n 1
+end
+
+fn xcmp a ulong b ulong imm ulong to void
+xload 0 a
+if ne imm 0
+ximm 1 b
+else
+xload 1 b
+end
+xrr 57 0 1
+end
+
+note Canonicalization uses shifts, preserving the checked language's signed widths.
+fn xcanrax t ulong to void
+w = twid t
+if eq w 64
+ret
+end
+xb 72 193 224
+emitb uchar sub 64 w
+xb 72 193 232
+if ge t 6
+put out sub get oc 0 1 248
+end
+emitb uchar sub 64 w
+end
+
+fn xcanon r ulong t ulong to void
+xload 0 r
+xcanrax t
+xstore 0 r
+end
+
+fn xext r ulong t ulong code ulong to void
+xload 0 r
+xrr 137 2 0
+xcanrax t
+xrr 57 0 2
+xtrap 1 code
+end
+
+fn xarith op ulong ty ulong a ulong b ulong imm ulong d ulong to void
+if ge ty 10
+fail 25
+end
+xload 0 a
+if ne imm 0
+ximm 1 b
+else
+xload 1 b
+end
+if eq op 33
+xrr 1 0 1
+end
+if eq op 34
+xrr 41 0 1
+end
+if eq op 35
+xb 72 15 175
+emitb 193
+end
+if eq op 38
+xrr 33 0 1
+end
+if eq op 39
+xrr 9 0 1
+end
+if eq op 40
+xrr 49 0 1
+end
+if and eq ty 9 le op 35
+xtrap 6 1
+end
+xstore 0 d
+if le op 35
+bo_fix d ty
+end
+end
+
+fn xdiv op ulong ty ulong a ulong b ulong d ulong to void
+if ge ty 10
+fail 25
+end
+xload 0 a
+xload 1 b
+xrr 133 1 1
+xtrap 0 2
+done = ulong 0
+if ge ty 6
+note IDIV faults on MIN/-1 even for remainder: bypass with zero remainder.
+ximm 2 18446744073709551615
+xrr 57 1 2
+other = xbranch 1
+if eq op 37
+ximm 0 0
+done = xbranch 14
+else
+xb 72 247 216
+xtrap 6 1
+done = xbranch 14
+end
+xpatch other get oc 0
+xb 72 153 144
+xb 72 247 249
+else
+xrr 49 2 2
+xb 72 247 241
+end
+if eq op 37
+xrr 137 0 2
+end
+if ne done 0
+xpatch done get oc 0
+end
+xstore 0 d
+bo_fix d ty
+end
+
+fn xshift op ulong ty ulong a ulong b ulong imm ulong d ulong to void
+xload 0 a
+if ne imm 0
+ximm 1 b
+else
+xload 1 b
+end
+ximm 2 twid ty
+xrr 57 1 2
+xtrap 2 7
+xrr 137 2 0
+if eq op 41
+xb 72 211 224
+if ge ty 6
+xrr 137 8 0
+xb 73 211 248
+xrr 57 8 2
+xtrap 1 1
+end
+else
+if ge ty 6
+xb 72 211 248
+else
+xb 72 211 232
+end
+end
+xstore 0 d
+if eq op 41
+bo_fix d ty
+end
+end
+
+fn xunary op ulong dst ulong to void
+ty = get rt 0
+if ge ty 10
+fail 25
+end
+a = matreg get rk 0 get rv 0 ty
+d = destreg dst
+xload 0 a
+if eq op 50
+if eq ty 1
+ximm 1 1
+xrr 49 0 1
+else
+xb 72 247 208
+end
+else
+if eq ty 1
+fail 7
+end
+xb 72 247 216
+if eq ty 9
+xtrap 6 1
+end
+end
+xstore 0 d
+if eq op 50
+canon d ty
+else
+bo_fix d ty
+end
+put rk 0 1
+put rv 0 d
+put rt 0 ty
+end
+
+fn xconv tt ulong to void
+ft = get rt 0
+if or ge ft 10 ge tt 10
+fail 25
+end
+if or eq ft 1 eq tt 1
+fail 9
+end
+r = matreg get rk 0 get rv 0 ft
+wf = twid ft
+wt = twid tt
+s = ulong 99
+if lt ft 6
+if ge tt 6
+if ge wf wt
+s = sub wt 1
+end
+else
+if gt wf wt
+s = wt
+end
+end
+else
+if lt tt 6
+s = wt
+if gt s 63
+s = ulong 63
+end
+else
+if gt wf wt
+xext r tt 5
+end
+end
+end
+if ne s 99
+xload 0 r
+xb 72 193 232
+emitb uchar s
+xrr 133 0 0
+xtrap 1 5
+end
+put rk 0 1
+put rv 0 r
+put rt 0 tt
+end
+
+note Reserve checked stack BEFORE stores, CALL return addresses, or PUSH.
+fn xcheck bytes ulong to void
+xmem 141 0 4 sub ulong 0 bytes
+xrr 57 0 15
+xtrap 3 6
+end
+
+fn xsp down ulong bytes ulong to void
+if eq bytes 0
+ret
+end
+if ne down 0
+xcheck bytes
+xb 72 129 236
+else
+xb 72 129 196
+end
+xword bytes
+end
+
+fn xmovsp r ulong to void
+xrr 137 0 4
+xstore 0 r
+end
+
+fn xpro np ulong to void
+xrr 137 11 5
+emitb 85
+xrr 137 5 4
+xb 72 129 236
+xword 256
+j = ulong 0
+while lt j np
+xmem 139 0 11 sub ulong 0 mul add j 1 8
+xstore 0 j
+j = add j 1
+end
+end
+
+fn xsave to void
+put svn 0 add get npar 0 get nslot 0
+put sva 0 256
+xsp 1 256
+j = ulong 0
+while lt j 18
+xload 0 j
+xmem 137 0 4 mul j 8
+j = add j 1
+end
+note Reserve the callee's return address, frame pointer and slot area before CALL.
+xcheck 272
+end
+
+fn xarg t ulong k ulong v ulong to void
+if eq k 6
+mataddr t v
+ret
+end
+if or eq k 3 eq k 7
+matconst t v
+ret
+end
+xmem 139 0 4 mul v 8
+xstore 0 t
+end
+
+fn xrestore d ulong slot ulong res ulong to ulong
+put nslot 0 slot
+rd = ulong 255
+if ne res 0
+rd = destreg d
+xstore 0 rd
+end
+j = ulong 0
+while lt j 18
+if ne j rd
+xmem 139 0 4 mul j 8
+xstore 0 j
+end
+j = add j 1
+end
+xsp 0 256
+ret rd
+end
+
+note Typed addresses carry origin through fixup records. Numeric constants never relocate.
+fn mataddr r ulong v ulong to void
+if eq get xtarget 0 0
+matconst r v
+ret
+end
+xaddr 0 v
+xstore 0 r
+end
+
+fn xaddr r ulong v ulong to void
+n = get xnaddr 0
+if ge n 65536
+fail 14
+end
+emitb uchar add 72 shl shr r 3 2
+emitb 141
+emitb uchar add 5 shl and r 7 3
+put xasite n get oc 0
+put xavalue n v
+put xnaddr 0 add n 1
+xword 0
+end
+
+fn xelem e ulong k ulong v ulong t ulong to void
+if or eq t 1 ge t 10
+fail 7
+end
+i = sub e 1
+ln = get nm_len i
+x = v
+if eq k 3
+if ge v ln
+fail 21
+end
+x = alloc
+matconst x v
+else
+xcmp v ln 1
+xtrap 2 3
+end
+put ea_i 0 x
+if ge get nm_kind i 4
+b = alloc
+mataddr b get nm_addr i
+put ea_b 0 b
+else
+put ea_b 0 ulong get nm_reg i
+end
+end
+
+note Indexed load/store uses RDX=base+index*element-size; pointers never enter source scalars.
+fn xmemval store ulong base ulong idx ulong ty ulong val ulong to void
+if ge ty 10
+fail 25
+end
+xload 2 base
+xload 1 idx
+xb 72 193 225
+emitb uchar tlog ty
+xrr 1 2 1
+if ne store 0
+xload 0 val
+if eq twid ty 16
+emitb 102
+end
+if eq twid ty 64
+emitb 72
+end
+if le twid ty 8
+emitb 136
+else
+emitb 137
+end
+emitb 2
+else
+if eq twid ty 64
+xb 72 139 2
+else
+if eq twid ty 32
+if ge ty 6
+xb 72 99 2
+else
+emitb 139
+emitb 2
+end
+else
+emitb 72
+emitb 15
+op = ulong 182
+if eq twid ty 16
+op = ulong 183
+end
+if ge ty 6
+op = add op 8
+end
+emitb uchar op
+emitb 2
+end
+end
+xstore 0 val
+end
+end
+
+fn xslice e ulong ro ulong rn ulong to void
+if ne get nm_type sub e 1 2
+fail 7
+end
+xload 1 rn
+ximm 0 get nm_len sub e 1
+xrr 57 1 0
+xtrap 8 3
+xrr 41 0 1
+xload 1 ro
+xrr 57 1 0
+xtrap 8 3
+end
+
+fn xbase r ulong e ulong to void
+i = sub e 1
+if ge get nm_kind i 4
+xaddr r get nm_addr i
+else
+xload r ulong get nm_reg i
+end
+end
+
+fn xio c ulong fk ulong fv ulong e ulong ro ulong rn ulong to void
+if ne get xtarget 0 1
+fail 25
+end
+save
+xbase 6 e
+xmem 139 0 4 mul ro 8
+xrr 1 6 0
+if eq fk 3
+ximm 7 fv
+else
+xmem 139 7 4 mul fv 8
+end
+xmem 139 2 4 mul rn 8
+ximm 0 sub c 53
+emitb 15
+emitb 5
+end
+
+fn xarray w ulong to void
+if ne get nb 0 0
+fail 9
+end
+t = typeword
+elemtype t
+n = lenval 16
+arrlen n
+by = shl shr add shl n tlog t 15 4 4
+if gt add get stkbytes 0 by 4194304
+fail 23
+end
+put stkbytes 0 add get stkbytes 0 by
+r = alloc
+put held 0 get nslot 0
+rdval 0 t 255 0
+if ne get rt 0 t
+fail 7
+end
+v = matreg get rk 0 get rv 0 t
+xsp 1 by
+xmovsp r
+i = alloc
+matconst i 0
+lp = get oc 0
+xmemval 1 r i t v
+xarith 33 5 i 1 1 i
+xcmp i n 1
+blo lp
+addname w r t n 1 0
+end
+
+fn xfornum w ulong t ulong k ulong sn ulong sh ulong to void
+eol
+i = alloc
+put held 0 get nslot 0
+addname w i t 0 0 0
+matconst i 0
+hd = get oc 0
+xcmp i k 1
+br = sf_br t
+pushb br 4 hd i t
+pushnh sn sh
+end
+
+fn xforval w ulong t ulong kr ulong sn ulong sh ulong to void
+eol
+i = alloc
+put held 0 get nslot 0
+addname w i t 0 0 0
+matconst i 0
+c = alloc
+put held 0 get nslot 0
+matconst c 0
+hd = get oc 0
+xcmp i kr 0
+br = sf_br t
+lpcnt c 1000000
+pushb br 4 hd i t
+pushnh sn sh
+end
+
+fn xleave to void
+if eq get xtarget 0 1
+xrr 137 7 0
+ximm 0 60
+emitb 15
+emitb 5
+else
+n = get xnexit 0
+if ge n 8192
+fail 14
+end
+put xexsite n xbranch 14
+put xnexit 0 add n 1
+end
+end
+
+fn xfinish to void
+eol
+if eq get dead 0 0
+if ne get curret 0 10
+fail 18
+end
+epi
+end
+j = ulong 0
+n = get nt 0
+while lt j n
+xpatch get tsite j get oc 0
+if eq get xtarget 0 2
+note UEFI Appendix D: high bit marks an error; the code keeps Omega's exit 100+N.
+ximm 0 or 9223372036854775808 add 100 get tcode j
+else
+ximm 0 add 100 get tcode j
+end
+xleave
+j = add j 1
+end
+put curret 0 0
+put nn 0 get nglob 0
+put curfn 0 0
+put nbrk 0 0
+put ncont 0 0
+end
+
+fn xlead to void
+note Only the exact bytes "target " at offset zero select x86. Default parsing is untouched.
+if lt get inlen 0 8
+ret
+end
+if or ne get inp 0 116 ne get inp 1 97
+ret
+end
+if or ne get inp 2 114 ne get inp 3 103
+ret
+end
+if or ne get inp 4 101 ne get inp 5 116
+ret
+end
+if ne get inp 6 32
+ret
+end
+put cur 0 0
+put line 0 1
+tok
+if true
+tok
+if eq get tw 0 8679965255892613240
+put xtarget 0 1
+else
+if eq get tw 0 115888505632888
+put xtarget 0 2
+else
+fail 25
+end
+end
+eol
+p = ulong 0
+while lt p get cur 0
+if ne get inp p 10
+put inp p 32
+end
+p = add p 1
+end
+end
+put cur 0 0
+put line 0 1
+end
+
+fn xfixaddr to void
+i = ulong 0
+while lt i get xnaddr 0
+p = get xasite i
+v = get xavalue i
+if ge v 268435456
+if eq get xtarget 0 1
+v = sub v 4194304
+else
+v = add get xbss 0 sub v 268435456
+end
+else
+v = sub v 4194304
+if eq get xtarget 0 2
+v = add v 3584
+end
+end
+if eq get xtarget 0 2
+p = add p 3584
+end
+wrword get xasite i sub v add p 4
+i = add i 1
+end
+end
+
+fn xelf entry ulong to void
+elfhdr
+wrword 16 4063234
+wrword 24 add 4194304 entry
+wrword 96 get oc 0
+wrword 104 get oc 0
+wrword 160 add get poolb 0 8388608
+end
+
+note PE32+ UEFI application. Section/file alignment 4096/512; all executable
+note addresses are RIP-relative, so the image is genuinely position independent.
+note A valid empty relocation block retains loader relocation support without absolute fixups.
+fn xpe entry ulong to void
+while ne and get oc 0 511 0
+emitb 0
+end
+raw = sub get oc 0 512
+bs = shl shr add add raw 4096 4095 12 12
+put xbss 0 bs
+wrword 0 23117
+wrword 60 64
+wrword 64 17744
+wrword 68 165476
+wrword 84 2228464
+wrword 88 523
+wrword 92 raw
+wrword 100 add get poolb 0 8388608
+wrword 104 add entry 3584
+wrword 108 4096
+wrword 112 4194304
+wrword 120 4096
+wrword 124 512
+wrword 128 6
+wrword 136 6
+wrword 144 shl shr add add bs add get poolb 0 8388608 4095 12 12
+wrword 148 512
+wrword 156 4194314
+wrword 160 1048576
+wrword 168 4096
+wrword 176 1048576
+wrword 184 4096
+wrword 196 16
+wrword 512 0
+wrword 516 8
+note Base relocation directory points to the first eight bytes of .text, reserved below.
+wrword 240 4096
+wrword 244 8
+wrword 328 2019914798
+wrword 332 116
+wrword 336 raw
+wrword 340 4096
+wrword 344 raw
+wrword 348 512
+wrword 364 1610612768
+wrword 368 1936941614
+wrword 376 add get poolb 0 8388608
+wrword 380 bs
+wrword 404 3221225600
+end
+
+fn xeof to void
+f = findfn 1852399981 4 0
+if eq f 0
+fail 16
+end
+if ne get fn_np sub f 1 0
+fail 9
+end
+entry = get oc 0
+if eq get xtarget 0 2
+xefient
+else
+ximm 15 268435456
+ximm 4 276824064
+ximm 5 0
+end
+emitb 232
+p = get oc 0
+xword sub get fn_addr sub f 1 add p 4
+if eq get fn_ret sub f 1 10
+ximm 0 0
+end
+xleave
+if eq get xtarget 0 2
+xefiend
+xpe entry
+else
+xelf entry
+end
+xfixaddr
+writeout 0
+end
+
+note ======== Checked firmware boundary, UEFI 2.10 ========
+note efi OP ARG A OFF N -> ulong EFI_STATUS. OP is a literal 0..10; A is writable
+note uchar storage, bounds checked before any firmware call. ARG is never a pointer.
+note Private state occupies the first 16 KiB of the owned PE .bss, below the stack.
+note Calling convention: UEFI 2.3.4.2, RCX/RDX/R8/R9, 32-byte home area, up to ten
+note arguments in an 80-byte aligned reservation. All firmware errors retain 64 bits.
+fn xpriv r ulong off ulong to void
+xaddr r add 268435456 off
+end
+
+fn xpget r ulong off ulong to void
+xpriv r off
+xmem 139 r r 0
+end
+
+fn xpset r ulong off ulong to void
+xpriv 10 off
+xmem 137 r 10 0
+end
+
+fn xboot off ulong to void
+xpget 11 0
+xmem 139 11 11 96
+xmem 139 11 11 off
+xb 65 255 211
+end
+
+fn xmethod slot ulong off ulong to void
+xpget 1 slot
+xmem 139 11 1 off
+xb 65 255 211
+end
+
+fn xeerr cc ulong code ulong to void
+n = get xenerr 0
+if ge n 256
+fail 14
+end
+put xerrpos n xbranch cc
+put xerrcode n code
+put xenerr 0 add n 1
+end
+
+fn xedone to void
+n = get xenend 0
+if ge n 256
+fail 14
+end
+put xendpos n xbranch 14
+put xenend 0 add n 1
+end
+
+fn xeclose to void
+xedone
+j = ulong 0
+while lt j get xenerr 0
+xpatch get xerrpos j get oc 0
+ximm 0 or 9223372036854775808 get xerrcode j
+xedone
+j = add j 1
+end
+j = ulong 0
+while lt j get xenend 0
+xpatch get xendpos j get oc 0
+j = add j 1
+end
+end
+
+fn xeminc n ulong to void
+ximm 0 n
+xrr 57 13 0
+xeerr 3 5
+end
+
+fn xeneed slot ulong to void
+xpget 1 slot
+xrr 133 1 1
+xeerr 0 3
+end
+
+fn xeguid k ulong to ulong
+br = xbranch 14
+p = get oc 0
+a = ulong 5348063987722529246
+b = ulong 7661046075708078998
+if eq k 1
+a = ulong 1284559596355596985
+b = ulong 5602828850577812890
+end
+if eq k 2
+a = ulong 4845287014151666853
+b = ulong 4908688144209030790
+end
+if eq k 3
+a = ulong 1284945866654190727
+b = ulong 5602828850577821594
+end
+if eq k 4
+a = ulong 5398063699126244139
+b = ulong 4839848993530975643
+end
+xword a
+xword shr a 32
+xword b
+xword shr b 32
+xpatch br get oc 0
+ret add p 4194304
+end
+
+fn xelocate kind ulong slot ulong to void
+g = xeguid kind
+xaddr 1 g
+ximm 2 0
+xpriv 8 slot
+xboot 320
+note LocateProtocol is optional. Failed output is discarded, never dereferenced.
+xrr 133 0 0
+ok = xbranch 0
+ximm 0 0
+xpset 0 slot
+xpatch ok get oc 0
+end
+
+fn xeabort to void
+xrr 133 0 0
+ok = xbranch 0
+xleave
+xpatch ok get oc 0
+end
+
+fn xetimer to void
+note Intel SDM20.17.1 invariant TSC and CPUID.80000007H:EDX[8].
+note Firmware timer callbacks can coalesce; calibrate elapsed time instead.
+ximm 0 1
+emitb 15
+emitb 162
+ximm 0 16
+xrr 33 2 0
+xrr 133 2 2
+no1 = xbranch 0
+ximm 0 2147483648
+emitb 15
+emitb 162
+ximm 2 2147483655
+xrr 57 0 2
+no2 = xbranch 3
+ximm 0 2147483655
+emitb 15
+emitb 162
+ximm 0 256
+xrr 33 2 0
+xrr 133 2 2
+no3 = xbranch 0
+xrdtsc
+xpset 0 160
+ximm 1 100000
+xboot 248
+xeabort
+xrdtsc
+xpget 1 160
+xrr 41 0 1
+nonmono = xbranch 3
+ximm 1 100
+ximm 2 0
+xb 72 247 241
+xpset 0 176
+xrdtsc
+xpset 0 168
+xpatch no1 get oc 0
+xpatch no2 get oc 0
+xpatch no3 get oc 0
+xpatch nonmono get oc 0
+end
+
+fn xefient to void
+note Preserve every integer nonvolatile touched, before installing the owned stack.
+emitb 83
+emitb 85
+emitb 86
+emitb 87
+xb 65 84 65
+emitb 85
+xb 65 86 65
+emitb 87
+xrr 137 14 4
+xpset 1 8
+xpset 2 0
+xpriv 15 16384
+xpriv 4 8388608
+ximm 5 0
+note Entry has its own 80-byte EFI home/argument reservation, not an Omega frame.
+xb 72 129 236
+xword 80
+ximm 1 0
+ximm 2 0
+ximm 8 0
+ximm 9 0
+xboot 256
+xeabort
+note TX storage outlives the image if firmware fails to release an in-flight packet.
+ximm 1 2
+ximm 2 2048
+xpriv 8 96
+xboot 64
+xeabort
+xelocate 0 16
+xelocate 2 32
+xelocate 3 40
+xelocate 4 48
+xetimer
+xb 72 129 196
+xword 80
+end
+
+fn xefiend to void
+put xexit 0 get oc 0
+j = ulong 0
+while lt j get xnexit 0
+xpatch get xexsite j get oc 0
+j = add j 1
+end
+note Restore a known-good private stack even when an Omega stack check failed.
+xpriv 4 8388608
+xb 72 129 236
+xword 80
+xpset 0 88
+xetxend
+xpget 0 88
+xrr 137 4 14
+xb 65 95 65
+emitb 94
+xb 65 93 65
+emitb 92
+emitb 95
+emitb 94
+emitb 93
+emitb 91
+emitb 195
+end
+
+fn xefival dst ulong to void
+if ne get xtarget 0 2
+fail 25
+end
+x = mul get depth 0 32
+put fr add x 7 get nslot 0
+op = lenval 4
+if gt op 10
+fail 25
+end
+harg x 2 5
+e = harray x 1
+arg = matreg get fr add x 12 get fr add x 13 5
+xload 3 arg
+xbase 12 e
+xload 0 get fr add x 21
+xrr 1 12 0
+xload 13 get fr add x 22
+put xenerr 0 0
+put xenend 0 0
+xsp 1 80
+xeop op
+xeclose
+xsp 0 80
+put nslot 0 get fr add x 7
+r = destreg dst
+xstore 0 r
+vdone 1 r 5
+end
+
+note Information layout v1: u32 version,flags,width,height,pixelFormat,pitch;
+note MAC[6] at24; u32 maxPacket@32,hwAddrSize@36,media@40,state@44,txBusy@48.
+fn xeinfo to void
+xeminc 64
+ximm 0 0
+j = ulong 0
+while lt j 64
+xmem 137 0 12 j
+j = add j 8
+end
+ximm 0 1
+xmem 137 0 12 0
+xpget 1 16
+xrr 133 1 1
+nogop = xbranch 0
+xmem 139 1 1 24
+xmem 139 1 1 8
+note Paired 32-bit fields are copied together; no pointer fields escape.
+xmem 139 0 1 4
+xmem 137 0 12 8
+xraw 0 1 12 4
+xput32 0 12 16
+xraw 0 1 32 4
+xput32 0 12 20
+ximm 0 1
+xput32 0 12 4
+xpatch nogop get oc 0
+xpget 1 24
+xrr 133 1 1
+nonet = xbranch 0
+xmem 139 1 1 120
+xraw 0 1 552 4
+xput32 0 12 24
+xraw 0 1 556 2
+xput32 0 12 28
+xraw 0 1 12 4
+xput32 0 12 32
+xraw 0 1 4 4
+xput32 0 12 36
+xraw 0 1 652 1
+xput32 0 12 40
+xraw 0 1 0 4
+xput32 0 12 44
+xpget 0 72
+xput32 0 12 48
+xeflag 2
+xpatch nonet get oc 0
+xpget 1 32
+xrr 133 1 1
+norng = xbranch 0
+xeflag 4
+xpatch norng get oc 0
+xpget 1 40
+xpget 2 48
+xrr 9 1 2
+xrr 133 1 1
+noptr = xbranch 0
+xeflag 8
+xpatch noptr get oc 0
+ximm 0 0
+end
+
+note Private packed firmware reads. This helper is not a source-language operation.
+fn xraw r ulong b ulong off ulong size ulong to void
+emitb uchar add add 64 shl shr r 3 2 shr b 3
+if lt size 4
+emitb 15
+if eq size 1
+emitb 182
+else
+emitb 183
+end
+else
+emitb 139
+end
+emitb uchar add add 128 shl and r 7 3 and b 7
+if eq and b 7 4
+emitb 36
+end
+xword off
+end
+
+fn xput32 r ulong b ulong off ulong to void
+emitb uchar add add 64 shl shr r 3 2 shr b 3
+emitb 137
+emitb uchar add add 128 shl and r 7 3 and b 7
+if eq and b 7 4
+emitb 36
+end
+xword off
+end
+
+fn xeflag mask ulong to void
+xraw 0 12 4 4
+ximm 2 mask
+xrr 9 0 2
+xput32 0 12 4
+end
+
+fn xekey to void
+xeminc 4
+xpget 1 0
+xmem 139 1 1 48
+xrr 133 1 1
+xeerr 0 3
+xrr 137 2 12
+xmem 139 11 1 8
+xb 65 255 211
+end
+
+note OP3 ARG: width bits0..31, height bits32..47, destination row bits48..63.
+note GOP Blt EfiBltBufferToVideo (UEFI 12.9.2); dest row + height must fit vertically.
+fn xegop to void
+xeneed 16
+xrr 137 8 3
+xb 73 193 232
+emitb 32
+ximm 0 65535
+xrr 33 8 0
+xrr 137 10 3
+xb 73 193 234
+emitb 48
+xrr 137 9 3
+ximm 0 4294967295
+xrr 33 9 0
+xrr 133 8 8
+xeerr 0 2
+xrr 133 9 9
+xeerr 0 2
+xmem 139 2 1 24
+xmem 139 2 2 8
+xraw 0 2 4 4
+xrr 57 9 0
+xeerr 8 2
+xraw 0 2 8 4
+xrr 41 0 10
+xeerr 3 2
+xrr 57 8 0
+xeerr 8 2
+xrr 137 0 8
+xb 73 15 175
+emitb 193
+xb 72 193 224
+emitb 2
+xrr 57 0 13
+xeerr 1 2
+xmem 137 9 4 56
+xmem 137 8 4 64
+ximm 0 0
+xmem 137 0 4 32
+xmem 137 0 4 40
+xmem 137 10 4 48
+xmem 137 0 4 72
+xrr 137 2 12
+ximm 8 2
+ximm 9 0
+xmethod 16 16
+end
+
+fn xetime to void
+xeminc 16
+xpget 11 0
+xmem 139 11 11 88
+xmem 139 11 11 24
+xrr 137 1 12
+ximm 2 0
+xb 65 255 211
+end
+
+note Intel SDM CPUID leaf1 ECX bit30 and RDRAND (REX.W 0F C7 /6), CF indicates
+note valid entropy. Ten attempts per byte, then EFI_NOT_READY, never fallback data.
+fn xerdrand to void
+ximm 0 0
+emitb 15
+emitb 162
+ximm 2 1
+xrr 57 0 2
+xeerr 3 3
+ximm 0 1
+emitb 15
+emitb 162
+ximm 2 1073741824
+xrr 33 1 2
+xrr 133 1 1
+xeerr 0 3
+xrr 137 7 12
+xrr 137 6 13
+loop = get oc 0
+xrr 133 6 6
+done = xbranch 0
+ximm 1 10
+retry = get oc 0
+xb 72 15 199
+emitb 240
+ok = xbranch 3
+xb 72 255 201
+p = xbranch 1
+xpatch p retry
+xeerr 14 6
+xpatch ok get oc 0
+emitb 136
+emitb 7
+xb 72 255 199
+xb 72 255 206
+back loop
+xpatch done get oc 0
+ximm 0 0
+end
+
+fn xerng to void
+xpget 1 32
+xrr 133 1 1
+fallback = xbranch 0
+ximm 2 0
+xrr 137 8 13
+xrr 137 9 12
+xmethod 32 8
+xedone
+xpatch fallback get oc 0
+xerdrand
+end
+
+fn xerecv to void
+xeminc 9
+xeneed 24
+xrr 137 0 13
+xb 72 131 232
+emitb 8
+xmem 137 0 12 0
+ximm 2 0
+xrr 137 8 12
+xmem 141 9 12 8
+ximm 0 0
+xmem 137 0 4 32
+xmem 137 0 4 40
+xmem 137 0 4 48
+xmethod 24 104
+end
+
+note Transmit always owns its private packet until GetStatus reclaims that exact
+note address (UEFI24.1.12). Caller storage is never retained by firmware.
+fn xetx to void
+xeneed 24
+xeminc 14
+ximm 0 2048
+xrr 57 13 0
+xeerr 8 4
+xpget 0 72
+xrr 133 0 0
+idle = xbranch 0
+ximm 0 0
+xpset 0 80
+ximm 2 0
+xpriv 8 80
+xmethod 24 88
+xrr 133 0 0
+xeerr 1 6
+xpget 0 80
+xpget 2 96
+xrr 57 0 2
+xeerr 1 6
+ximm 0 0
+xpset 0 72
+xpatch idle get oc 0
+xrr 137 6 12
+xpget 7 96
+xrr 137 1 13
+note REP MOVSB uses only our checked slice and dedicated 2048-byte private buffer.
+emitb 252
+emitb 243
+emitb 164
+ximm 2 0
+xrr 137 8 13
+xpget 9 96
+ximm 0 0
+xmem 137 0 4 32
+xmem 137 0 4 40
+xmem 137 0 4 48
+xmethod 24 96
+xrr 133 0 0
+bad = xbranch 1
+ximm 2 1
+xpset 2 72
+xpatch bad get oc 0
+end
+
+fn xepointer to void
+xeminc 32
+xpget 1 40
+xrr 133 1 1
+absolute = xbranch 0
+xpriv 2 256
+xmethod 40 8
+xrr 133 0 0
+bad = xbranch 1
+xpriv 2 256
+ximm 0 1
+xmem 137 0 12 0
+xraw 0 2 12 1
+xraw 1 2 13 1
+xb 72 193 225
+emitb 1
+xrr 9 0 1
+xput32 0 12 4
+j = ulong 0
+while lt j 3
+note MOVSXD rax,dword [rdx+disp32], Intel MOVSX/MOVSXD.
+xb 72 99 130
+xword mul j 4
+xmem 137 0 12 add 8 mul j 8
+j = add j 1
+end
+ximm 0 0
+xpatch bad get oc 0
+xedone
+xpatch absolute get oc 0
+xeneed 48
+xpriv 2 256
+xmethod 48 8
+xrr 133 0 0
+bad2 = xbranch 1
+xpriv 2 256
+ximm 0 2
+xmem 137 0 12 0
+xraw 0 2 24 4
+xput32 0 12 4
+j = ulong 0
+while lt j 3
+xmem 139 0 2 mul j 8
+xmem 137 0 12 add 8 mul j 8
+j = add j 1
+end
+ximm 0 0
+xpatch bad2 get oc 0
+end
+
+fn xeop op ulong to void
+if eq op 0
+xeinfo
+end
+if eq op 1
+xekey
+end
+if eq op 2
+xrr 137 1 3
+xboot 248
+end
+if eq op 3
+xegop
+end
+if eq op 4
+xetime
+end
+if eq op 5
+xerng
+end
+if eq op 6
+xerecv
+end
+if eq op 7
+xetx
+end
+if eq op 8
+xenet
+end
+if eq op 9
+xepointer
+end
+if eq op 10
+xeminc 8
+xelazy
+xetimeup
+end
+end
+
+note UEFI24.1 SNP mode: MAC array capacity16, 32-byte MAC cells, current@552,
+note IfType@648, MediaPresentSupported@651, MediaPresent@652. IfType1 alone
+note does NOT identify wired hardware; all candidates are tried for a live link.
+fn xeprobe to void
+put xenerr 0 0
+put xenend 0 0
+ximm 0 0
+xpset 0 136
+xpset 0 144
+xpget 1 128
+xmem 139 2 1 120
+xraw 0 2 4 4
+ximm 8 6
+xrr 57 0 8
+xeerr 1 3
+xraw 0 2 648 1
+ximm 8 1
+xrr 57 0 8
+xeerr 1 3
+xraw 0 2 0 4
+xrr 133 0 0
+started = xbranch 1
+xmethod 128 8
+xrr 133 0 0
+xeerr 1 7
+ximm 0 1
+xpset 0 136
+xpatch started get oc 0
+xpget 1 128
+xmem 139 2 1 120
+xraw 0 2 0 4
+ximm 8 1
+xrr 57 0 8
+inited = xbranch 1
+ximm 2 0
+ximm 8 0
+xmethod 128 24
+xrr 133 0 0
+xeerr 1 7
+ximm 0 1
+xpset 0 144
+xpatch inited get oc 0
+ximm 2 0
+ximm 8 0
+xmethod 128 88
+xrr 133 0 0
+xeerr 1 7
+xpget 1 128
+xmem 139 2 1 120
+xraw 0 2 0 4
+ximm 8 2
+xrr 57 0 8
+xeerr 1 6
+note MediaPresent is binding only when the driver says media detection is supported.
+xraw 0 2 651 1
+xrr 133 0 0
+unknown = xbranch 0
+xraw 0 2 652 1
+xrr 133 0 0
+xeerr 0 12
+xpatch unknown get oc 0
+xraw 0 2 24 4
+ximm 8 5
+xrr 33 0 8
+xrr 57 0 8
+xeerr 1 3
+ximm 2 5
+ximm 8 0
+ximm 9 0
+ximm 0 0
+xmem 137 0 4 32
+xmem 137 0 4 40
+xmethod 128 48
+xeclose
+end
+
+fn xenreject to void
+xpget 0 144
+xrr 133 0 0
+nos = xbranch 0
+xmethod 128 40
+xpatch nos get oc 0
+xpget 0 144
+xrr 133 0 0
+noinit = xbranch 0
+note Only stop an interface that this application started, after its shutdown.
+xpatch noinit get oc 0
+xpget 0 136
+xrr 133 0 0
+nostop = xbranch 0
+xmethod 128 16
+xpatch nostop get oc 0
+end
+
+fn xenet to void
+xpget 1 24
+xrr 133 1 1
+already = xbranch 1
+g = xeguid 1
+ximm 1 2
+xaddr 2 g
+ximm 8 0
+xpriv 9 104
+xpriv 0 112
+xmem 137 0 4 32
+xboot 312
+xrr 133 0 0
+locerr = xbranch 1
+xpget 6 112
+xpget 7 104
+ximm 0 1024
+xrr 57 7 0
+large = xbranch 8
+xenscan g
+saved = xbranch 14
+xpatch large get oc 0
+ximm 0 9223372036854775813
+xpatch saved get oc 0
+xpset 0 152
+xrr 137 1 6
+xboot 72
+xrr 133 0 0
+freeerr = xbranch 1
+xpget 0 152
+done = xbranch 14
+xpatch already get oc 0
+ximm 0 0
+xpatch done get oc 0
+xpatch locerr get oc 0
+xpatch freeerr get oc 0
+put xenerr 0 0
+put xenend 0 0
+end
+
+fn xenscan g ulong to void
+ximm 3 0
+loop = get oc 0
+xrr 57 3 7
+exitp = xbranch 2
+xrr 137 0 3
+xb 72 193 224
+emitb 3
+xrr 1 0 6
+xmem 139 1 0 0
+xaddr 2 g
+xpriv 8 128
+xboot 152
+xrr 133 0 0
+skip = xbranch 1
+xeprobe
+xrr 133 0 0
+bad = xbranch 1
+xpget 0 128
+xpset 0 24
+selected = xbranch 14
+xpatch bad get oc 0
+xenreject
+xpatch skip get oc 0
+xb 72 255 195
+back loop
+xpatch exitp get oc 0
+ximm 0 9223372036854775822
+fin = xbranch 14
+xpatch selected get oc 0
+ximm 0 0
+xpatch fin get oc 0
+end
+
+fn xrdtsc to void
+note Intel SDM RDTSC: LFENCE before and after serializes local instruction execution.
+xb 15 174 232
+emitb 15
+emitb 49
+xb 15 174 232
+xb 72 193 226
+emitb 32
+xrr 9 0 2
+end
+
+fn xelazy to void
+note Repair the elapsed-time calibration on first use when the early CPUID gates did not
+note pass (some TCG CPU models clear CPUID.80000007H:EDX[8]). Slot 176 holds ticks per
+note millisecond and 168 the base TSC; both are set here from a measured firmware Stall.
+xpget 1 176
+xrr 133 1 1
+ok = xbranch 1
+xrdtsc
+xpset 0 160
+ximm 1 100000
+xboot 248
+xeabort
+xrdtsc
+xpget 1 160
+xrr 41 0 1
+ximm 1 100
+ximm 2 0
+xb 72 247 241
+xpset 0 176
+xrdtsc
+xpset 0 168
+xpatch ok get oc 0
+end
+
+fn xetimeup to void
+xpget 1 176
+xrr 133 1 1
+xeerr 0 3
+xrdtsc
+xpget 2 168
+xrr 41 0 2
+xeerr 3 3
+ximm 2 0
+xb 72 247 241
+xmem 137 0 12 0
+ximm 0 0
+end
+
+fn xetxend to void
+xpget 1 96
+xrr 133 1 1
+none = xbranch 0
+xpget 0 72
+xrr 133 0 0
+idle = xbranch 0
+ximm 0 0
+xpset 0 80
+ximm 2 0
+xpriv 8 80
+xmethod 24 88
+xpget 0 80
+xpget 2 96
+xrr 57 0 2
+busy = xbranch 1
+xpatch idle get oc 0
+xpget 1 96
+xboot 72
+xrr 133 0 0
+freed = xbranch 0
+xpset 0 88
+xpatch freed get oc 0
+done = xbranch 14
+xpatch busy get oc 0
+note Do not free or reuse an unreturned DMA buffer. Expose NOT_READY on exit.
+ximm 0 9223372036854775814
+xpset 0 88
+xpatch done get oc 0
+xpatch none get oc 0
 end
