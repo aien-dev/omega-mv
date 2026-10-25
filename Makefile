@@ -46,6 +46,8 @@ SRCS += src/omega_blackwell_codegen_gdn.c src/omega_gpu_gdn_api.c
 SRCS += src/omega_gpu_cmdlist.c src/omega_blackwell_codegen_dec.c
 # C3 (docs/OMEGA.md): reductions and prefix sums of any length, bit-exact against the frozen-order host reference.
 SRCS += src/omega_gpu_scan.c src/omega_gpu_scan_ref.c
+# C3: matrix multiply of any shape, BF16 and FP8, both layouts, on the tensor cores (pack kernels + one multiply kernel).
+SRCS += src/omega_gpu_gemm.c
 SRCS += src/omega_gpu_mem_cached.c
 SRCS += src/omega_gpu_decode_graph.c
 # sc #642 (2026-10-18): one Qwen3.8-27B decode token as one command list (GDN + hd256 attention layers, dense MLP)
@@ -2698,3 +2700,13 @@ $(GPU_SCAN_TEST): tests/gpu_scan_test.c tests/bw_warp_sim.h src/omega_gpu_scan.h
 .PHONY: test-gpu-scan
 test-gpu-scan: $(GPU_SCAN_TEST)
 	./$(GPU_SCAN_TEST) --sim
+
+# C3 (docs/OMEGA.md): matrix multiply of any shape, BF16 and FP8 (e4m3), both layouts, on the tensor cores; bit-exact
+# against the chip-measured tensor-core model. test-gpu-gemm: host refusals and codegen, then the warp simulator.
+# The chip tier is "$(GPU_GEMM_TEST)" with no flag (>= 200 shapes up to 8192, speed vs the measured ceiling), under the GB10 lock.
+GPU_GEMM_TEST = $(OUT_DIR)/gpu_gemm_test
+$(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_model.h tests/bw_qmma_model.h src/omega_gpu_gemm.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+.PHONY: test-gpu-gemm
+test-gpu-gemm: $(GPU_GEMM_TEST)
+	./$(GPU_GEMM_TEST) --sim
