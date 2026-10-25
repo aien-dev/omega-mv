@@ -1414,6 +1414,10 @@ r = tchurn
 if ne r 0
 ret r
 end
+r = tpchurn
+if ne r 0
+ret r
+end
 ret texits
 end
 
@@ -1465,6 +1469,55 @@ end
 note after the disable the delta state is dropped: fewer than the 140 changes were tracked
 if not tok lt get TR 14 140
 tputd get TR 14
+ret 1
+end
+if not tok tst 10 0 0
+ret 1
+end
+if not tok eq treap 0
+ret 1
+end
+ret 0
+end
+
+note select churn by PROGRAM (5.2, review P1): empty library, BEGIN, then 70 x (PROGRAM, QUERY);
+note every PROGRAM drops the delta state (one invalidation each), so QUERYs 1..63 are delta (4) and
+note from the 64th on the delta path is disabled (route 1); answers exact; STATS 26 (SLDIS) = 1
+fn tpchurn to int
+put TARM 0 6
+put TCK 0 13000
+tpkargs 6 0 0 0
+if not tok eq tspawn 0
+ret 1
+end
+tagg 16 1 2 3
+if not tok tbegin 200 7 65536 0
+ret 1
+end
+for k ulong 70
+tagg 16 1 2 add k 4
+if not tok tprog 0
+ret 1
+end
+want = ulong 1
+if lt k 63
+want = 4
+end
+r = tqany
+if not tok eq r want
+tputd k
+tputd r
+ret 1
+end
+end
+if not tok tsend 9 0 0
+ret 1
+end
+if not tok trecv
+ret 1
+end
+if not tok eq get TR 26 1
+tputd get TR 26
 ret 1
 end
 if not tok tst 10 0 0
