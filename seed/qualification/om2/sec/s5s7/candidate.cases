@@ -312,3 +312,8 @@ t-shl64 run seed/qualification/om2/sec/s5s7/om1/t-shl64.om+seed/qualification/om
 t-unsized16 emit seed/qualification/om2/sec/s5s7/om1/t-unsized16.om - err:5:16 16
 # erratum E1: the OM-1 ABI unit stays OM-1 and compiles
 abi1-om1 emit seed/qualification/om2/sec/s5s7/abi/abi1.om any - 0
+# E17 (2): 32 exports compile (function mode); the 33rd export is error 14 at its line (line 100)
+m6-export32 emit seed/qualification/om2/sec/s5s7/m6-export32.om any - 0
+m6-export33 emit seed/qualification/om2/sec/s5s7/m6-export33.om - err:100:14 14
+# E17 (1): export with fn main is error 9 (code only: E17 does not name the line)
+m6-export-main refuse seed/qualification/om2/sec/s5s7/m6-export-main.om 9

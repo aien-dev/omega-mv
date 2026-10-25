@@ -1,305 +1,314 @@
-OM2GATE START cases=seed/qualification/om2/sec/s5s7/pinned.cases scratch=build/om2-qual/s5s7-pinned
+OM2GATE START cases=seed/qualification/om2/sec/s5s7/pinned.cases scratch=build/om2-qual/s5s7x-p
 IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
 CASE pin-f5-branch line=15
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/15.src > build/om2-qual/s5s7-pinned/15.elf 2> build/om2-qual/s5s7-pinned/15.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/15.src > build/om2-qual/s5s7x-p/15.elf 2> build/om2-qual/s5s7x-p/15.cerr
 VERDICT pin-f5-branch PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-loop line=17
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/17.src > build/om2-qual/s5s7-pinned/17.elf 2> build/om2-qual/s5s7-pinned/17.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/17.src > build/om2-qual/s5s7x-p/17.elf 2> build/om2-qual/s5s7x-p/17.cerr
 VERDICT pin-f5-loop PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-line line=19
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/19.src > build/om2-qual/s5s7-pinned/19.elf 2> build/om2-qual/s5s7-pinned/19.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/19.src > build/om2-qual/s5s7x-p/19.elf 2> build/om2-qual/s5s7x-p/19.cerr
 VERDICT pin-f5-line PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-unroll-all line=21
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/21.src > build/om2-qual/s5s7-pinned/21.elf 2> build/om2-qual/s5s7-pinned/21.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/21.src > build/om2-qual/s5s7x-p/21.elf 2> build/om2-qual/s5s7x-p/21.cerr
 VERDICT pin-f5-unroll-all PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-n64 line=23
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/23.src > build/om2-qual/s5s7-pinned/23.elf 2> build/om2-qual/s5s7-pinned/23.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/23.src > build/om2-qual/s5s7x-p/23.elf 2> build/om2-qual/s5s7x-p/23.cerr
 VERDICT pin-f5-n64 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-n65 line=25
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/25.src > build/om2-qual/s5s7-pinned/25.elf 2> build/om2-qual/s5s7-pinned/25.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/25.src > build/om2-qual/s5s7x-p/25.elf 2> build/om2-qual/s5s7x-p/25.cerr
 VERDICT pin-f5-n65 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-partial line=27
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/27.src > build/om2-qual/s5s7-pinned/27.elf 2> build/om2-qual/s5s7-pinned/27.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/27.src > build/om2-qual/s5s7x-p/27.elf 2> build/om2-qual/s5s7x-p/27.cerr
 VERDICT pin-f5-partial PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-call line=29
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/29.src > build/om2-qual/s5s7-pinned/29.elf 2> build/om2-qual/s5s7-pinned/29.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/29.src > build/om2-qual/s5s7x-p/29.elf 2> build/om2-qual/s5s7x-p/29.cerr
 VERDICT pin-f5-call PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-write line=31
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/31.src > build/om2-qual/s5s7-pinned/31.elf 2> build/om2-qual/s5s7-pinned/31.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/31.src > build/om2-qual/s5s7x-p/31.elf 2> build/om2-qual/s5s7x-p/31.cerr
 VERDICT pin-f5-write PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-read line=33
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/33.src > build/om2-qual/s5s7-pinned/33.elf 2> build/om2-qual/s5s7-pinned/33.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/33.src > build/om2-qual/s5s7x-p/33.elf 2> build/om2-qual/s5s7x-p/33.cerr
 VERDICT pin-f5-read PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-part line=35
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/35.src > build/om2-qual/s5s7-pinned/35.elf 2> build/om2-qual/s5s7-pinned/35.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/35.src > build/om2-qual/s5s7x-p/35.elf 2> build/om2-qual/s5s7x-p/35.cerr
 VERDICT pin-f5-part PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-ifelse line=37
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/37.src > build/om2-qual/s5s7-pinned/37.elf 2> build/om2-qual/s5s7-pinned/37.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/37.src > build/om2-qual/s5s7x-p/37.elf 2> build/om2-qual/s5s7x-p/37.cerr
 VERDICT pin-f5-ifelse PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-join-diff line=39
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/39.src > build/om2-qual/s5s7-pinned/39.elf 2> build/om2-qual/s5s7-pinned/39.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/39.src > build/om2-qual/s5s7x-p/39.elf 2> build/om2-qual/s5s7x-p/39.cerr
 VERDICT pin-f5-join-diff PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-f5-inline line=43
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/43.src > build/om2-qual/s5s7-pinned/43.elf 2> build/om2-qual/s5s7-pinned/43.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/43.src > build/om2-qual/s5s7x-p/43.elf 2> build/om2-qual/s5s7x-p/43.cerr
 VERDICT pin-f5-inline PASS compile exit=5 expected=5 stdout=match stderr=match
 CASE pin-a5-exact line=45
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/45.src > build/om2-qual/s5s7-pinned/45.elf 2> build/om2-qual/s5s7-pinned/45.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/45.src > build/om2-qual/s5s7x-p/45.elf 2> build/om2-qual/s5s7x-p/45.cerr
 VERDICT pin-a5-exact PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-allops line=47
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/47.src > build/om2-qual/s5s7-pinned/47.elf 2> build/om2-qual/s5s7-pinned/47.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/47.src > build/om2-qual/s5s7x-p/47.elf 2> build/om2-qual/s5s7x-p/47.cerr
 VERDICT pin-a5-allops PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-rot64 line=49
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/49.src > build/om2-qual/s5s7-pinned/49.elf 2> build/om2-qual/s5s7-pinned/49.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/49.src > build/om2-qual/s5s7x-p/49.elf 2> build/om2-qual/s5s7x-p/49.cerr
 VERDICT pin-a5-rot64 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-exact-diag line=51
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/51.src > build/om2-qual/s5s7-pinned/51.elf 2> build/om2-qual/s5s7-pinned/51.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/51.src > build/om2-qual/s5s7x-p/51.elf 2> build/om2-qual/s5s7x-p/51.cerr
 VERDICT pin-a5-exact-diag PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-kept line=53
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/53.src > build/om2-qual/s5s7-pinned/53.elf 2> build/om2-qual/s5s7-pinned/53.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/53.src > build/om2-qual/s5s7x-p/53.elf 2> build/om2-qual/s5s7x-p/53.cerr
 VERDICT pin-a5-kept PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-kept-diag line=55
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/55.src > build/om2-qual/s5s7-pinned/55.elf 2> build/om2-qual/s5s7-pinned/55.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/55.src > build/om2-qual/s5s7x-p/55.elf 2> build/om2-qual/s5s7x-p/55.cerr
 VERDICT pin-a5-kept-diag PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-swap line=57
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/57.src > build/om2-qual/s5s7-pinned/57.elf 2> build/om2-qual/s5s7-pinned/57.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/57.src > build/om2-qual/s5s7x-p/57.elf 2> build/om2-qual/s5s7x-p/57.cerr
 VERDICT pin-a5-swap PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-swap-diag line=59
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/59.src > build/om2-qual/s5s7-pinned/59.elf 2> build/om2-qual/s5s7-pinned/59.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/59.src > build/om2-qual/s5s7x-p/59.elf 2> build/om2-qual/s5s7x-p/59.cerr
 VERDICT pin-a5-swap-diag PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-seal-main line=61
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/61.src > build/om2-qual/s5s7-pinned/61.elf 2> build/om2-qual/s5s7-pinned/61.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/61.src > build/om2-qual/s5s7x-p/61.elf 2> build/om2-qual/s5s7x-p/61.cerr
 VERDICT pin-a5-seal-main PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-seal-other line=63
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/63.src > build/om2-qual/s5s7-pinned/63.elf 2> build/om2-qual/s5s7-pinned/63.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/63.src > build/om2-qual/s5s7x-p/63.elf 2> build/om2-qual/s5s7x-p/63.cerr
 VERDICT pin-a5-seal-other PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-raw-num line=65
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/65.src > build/om2-qual/s5s7-pinned/65.elf 2> build/om2-qual/s5s7-pinned/65.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/65.src > build/om2-qual/s5s7x-p/65.elf 2> build/om2-qual/s5s7x-p/65.cerr
 VERDICT pin-a5-raw-num PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-raw-arg line=67
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/67.src > build/om2-qual/s5s7-pinned/67.elf 2> build/om2-qual/s5s7-pinned/67.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/67.src > build/om2-qual/s5s7x-p/67.elf 2> build/om2-qual/s5s7x-p/67.cerr
 VERDICT pin-a5-raw-arg PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-raw-ret line=69
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/69.src > build/om2-qual/s5s7-pinned/69.elf 2> build/om2-qual/s5s7-pinned/69.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/69.src > build/om2-qual/s5s7x-p/69.elf 2> build/om2-qual/s5s7x-p/69.cerr
 VERDICT pin-a5-raw-ret PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-raw-assign line=71
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/71.src > build/om2-qual/s5s7-pinned/71.elf 2> build/om2-qual/s5s7-pinned/71.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/71.src > build/om2-qual/s5s7x-p/71.elf 2> build/om2-qual/s5s7x-p/71.cerr
 VERDICT pin-a5-raw-assign PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-op-and line=73
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/73.src > build/om2-qual/s5s7-pinned/73.elf 2> build/om2-qual/s5s7-pinned/73.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/73.src > build/om2-qual/s5s7x-p/73.elf 2> build/om2-qual/s5s7x-p/73.cerr
 VERDICT pin-a5-op-and PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-op-rotl line=75
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/75.src > build/om2-qual/s5s7-pinned/75.elf 2> build/om2-qual/s5s7-pinned/75.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/75.src > build/om2-qual/s5s7x-p/75.elf 2> build/om2-qual/s5s7x-p/75.cerr
 VERDICT pin-a5-op-rotl PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-op-add line=77
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/77.src > build/om2-qual/s5s7-pinned/77.elf 2> build/om2-qual/s5s7-pinned/77.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/77.src > build/om2-qual/s5s7x-p/77.elf 2> build/om2-qual/s5s7x-p/77.cerr
 VERDICT pin-a5-op-add PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-pred line=79
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/79.src > build/om2-qual/s5s7-pinned/79.elf 2> build/om2-qual/s5s7-pinned/79.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/79.src > build/om2-qual/s5s7x-p/79.elf 2> build/om2-qual/s5s7x-p/79.cerr
 VERDICT pin-a5-pred PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-entry-param line=81
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/81.src > build/om2-qual/s5s7-pinned/81.elf 2> build/om2-qual/s5s7-pinned/81.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/81.src > build/om2-qual/s5s7x-p/81.elf 2> build/om2-qual/s5s7x-p/81.cerr
 VERDICT pin-a5-entry-param PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-entry-ret line=83
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/83.src > build/om2-qual/s5s7-pinned/83.elf 2> build/om2-qual/s5s7-pinned/83.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/83.src > build/om2-qual/s5s7x-p/83.elf 2> build/om2-qual/s5s7x-p/83.cerr
 VERDICT pin-a5-entry-ret PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-array line=85
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/85.src > build/om2-qual/s5s7-pinned/85.elf 2> build/om2-qual/s5s7-pinned/85.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/85.src > build/om2-qual/s5s7x-p/85.elf 2> build/om2-qual/s5s7x-p/85.cerr
 VERDICT pin-a5-array PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-shactx line=87
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/87.src > build/om2-qual/s5s7-pinned/87.elf 2> build/om2-qual/s5s7-pinned/87.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/87.src > build/om2-qual/s5s7x-p/87.elf 2> build/om2-qual/s5s7x-p/87.cerr
 VERDICT pin-l5-shactx PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-endian line=89
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/89.src > build/om2-qual/s5s7-pinned/89.elf 2> build/om2-qual/s5s7-pinned/89.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/89.src > build/om2-qual/s5s7x-p/89.elf 2> build/om2-qual/s5s7x-p/89.cerr
 VERDICT pin-l5-endian PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-scalar line=91
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/91.src > build/om2-qual/s5s7-pinned/91.elf 2> build/om2-qual/s5s7-pinned/91.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/91.src > build/om2-qual/s5s7x-p/91.elf 2> build/om2-qual/s5s7x-p/91.cerr
 VERDICT pin-l5-scalar PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-trap line=93
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/93.src > build/om2-qual/s5s7-pinned/93.elf 2> build/om2-qual/s5s7-pinned/93.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/93.src > build/om2-qual/s5s7x-p/93.elf 2> build/om2-qual/s5s7x-p/93.cerr
 VERDICT pin-l5-trap PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-const-idx line=95
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/95.src > build/om2-qual/s5s7-pinned/95.elf 2> build/om2-qual/s5s7-pinned/95.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/95.src > build/om2-qual/s5s7x-p/95.elf 2> build/om2-qual/s5s7x-p/95.cerr
 VERDICT pin-l5-const-idx PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-fit line=97
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/97.src > build/om2-qual/s5s7-pinned/97.elf 2> build/om2-qual/s5s7-pinned/97.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/97.src > build/om2-qual/s5s7x-p/97.elf 2> build/om2-qual/s5s7x-p/97.cerr
 VERDICT pin-l5-fit PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-max line=99
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/99.src > build/om2-qual/s5s7-pinned/99.elf 2> build/om2-qual/s5s7-pinned/99.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/99.src > build/om2-qual/s5s7x-p/99.elf 2> build/om2-qual/s5s7x-p/99.cerr
 VERDICT pin-l5-max PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-overlap line=101
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/101.src > build/om2-qual/s5s7-pinned/101.elf 2> build/om2-qual/s5s7-pinned/101.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/101.src > build/om2-qual/s5s7x-p/101.elf 2> build/om2-qual/s5s7x-p/101.cerr
 VERDICT pin-l5-overlap PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-past line=103
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/103.src > build/om2-qual/s5s7-pinned/103.elf 2> build/om2-qual/s5s7-pinned/103.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/103.src > build/om2-qual/s5s7x-p/103.elf 2> build/om2-qual/s5s7x-p/103.cerr
 VERDICT pin-l5-past PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-past1 line=105
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/105.src > build/om2-qual/s5s7-pinned/105.elf 2> build/om2-qual/s5s7-pinned/105.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/105.src > build/om2-qual/s5s7x-p/105.elf 2> build/om2-qual/s5s7x-p/105.cerr
 VERDICT pin-l5-past1 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-count0 line=107
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/107.src > build/om2-qual/s5s7-pinned/107.elf 2> build/om2-qual/s5s7-pinned/107.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/107.src > build/om2-qual/s5s7x-p/107.elf 2> build/om2-qual/s5s7x-p/107.cerr
 VERDICT pin-l5-count0 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-count4097 line=109
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/109.src > build/om2-qual/s5s7-pinned/109.elf 2> build/om2-qual/s5s7-pinned/109.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/109.src > build/om2-qual/s5s7x-p/109.elf 2> build/om2-qual/s5s7x-p/109.cerr
 VERDICT pin-l5-count4097 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-off line=111
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/111.src > build/om2-qual/s5s7-pinned/111.elf 2> build/om2-qual/s5s7-pinned/111.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/111.src > build/om2-qual/s5s7x-p/111.elf 2> build/om2-qual/s5s7x-p/111.cerr
 VERDICT pin-l5-off PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-size0 line=113
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/113.src > build/om2-qual/s5s7-pinned/113.elf 2> build/om2-qual/s5s7-pinned/113.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/113.src > build/om2-qual/s5s7x-p/113.elf 2> build/om2-qual/s5s7x-p/113.cerr
 VERDICT pin-l5-size0 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-size4097 line=115
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/115.src > build/om2-qual/s5s7-pinned/115.elf 2> build/om2-qual/s5s7-pinned/115.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/115.src > build/om2-qual/s5s7x-p/115.elf 2> build/om2-qual/s5s7x-p/115.cerr
 VERDICT pin-l5-size4097 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-after-fn line=117
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/117.src > build/om2-qual/s5s7-pinned/117.elf 2> build/om2-qual/s5s7-pinned/117.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/117.src > build/om2-qual/s5s7x-p/117.elf 2> build/om2-qual/s5s7x-p/117.cerr
 VERDICT pin-l5-after-fn PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-view-put line=119
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/119.src > build/om2-qual/s5s7-pinned/119.elf 2> build/om2-qual/s5s7-pinned/119.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/119.src > build/om2-qual/s5s7x-p/119.elf 2> build/om2-qual/s5s7x-p/119.cerr
 VERDICT pin-l5-view-put PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-wrong-size line=121
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/121.src > build/om2-qual/s5s7-pinned/121.elf 2> build/om2-qual/s5s7-pinned/121.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/121.src > build/om2-qual/s5s7x-p/121.elf 2> build/om2-qual/s5s7x-p/121.cerr
 VERDICT pin-l5-wrong-size PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-count1-noidx line=123
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/123.src > build/om2-qual/s5s7-pinned/123.elf 2> build/om2-qual/s5s7-pinned/123.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/123.src > build/om2-qual/s5s7x-p/123.elf 2> build/om2-qual/s5s7x-p/123.cerr
 VERDICT pin-l5-count1-noidx PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-sum line=125
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/125.src > build/om2-qual/s5s7-pinned/125.elf 2> build/om2-qual/s5s7-pinned/125.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/125.src > build/om2-qual/s5s7x-p/125.elf 2> build/om2-qual/s5s7x-p/125.cerr
 VERDICT pin-v6-sum PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-edit line=127
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/127.src > build/om2-qual/s5s7-pinned/127.elf 2> build/om2-qual/s5s7-pinned/127.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/127.src > build/om2-qual/s5s7x-p/127.elf 2> build/om2-qual/s5s7x-p/127.cerr
 VERDICT pin-v6-edit PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-idx line=129
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/129.src > build/om2-qual/s5s7-pinned/129.elf 2> build/om2-qual/s5s7-pinned/129.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/129.src > build/om2-qual/s5s7x-p/129.elf 2> build/om2-qual/s5s7x-p/129.cerr
 VERDICT pin-v6-idx PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-idx-edit line=131
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/131.src > build/om2-qual/s5s7-pinned/131.elf 2> build/om2-qual/s5s7-pinned/131.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/131.src > build/om2-qual/s5s7x-p/131.elf 2> build/om2-qual/s5s7x-p/131.cerr
 VERDICT pin-v6-idx-edit PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-wrap line=133
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/133.src > build/om2-qual/s5s7-pinned/133.elf 2> build/om2-qual/s5s7-pinned/133.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/133.src > build/om2-qual/s5s7x-p/133.elf 2> build/om2-qual/s5s7x-p/133.cerr
 VERDICT pin-v6-part-wrap PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-tail line=135
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/135.src > build/om2-qual/s5s7-pinned/135.elf 2> build/om2-qual/s5s7-pinned/135.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/135.src > build/om2-qual/s5s7x-p/135.elf 2> build/om2-qual/s5s7x-p/135.cerr
 VERDICT pin-v6-part-tail PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-empty line=137
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/137.src > build/om2-qual/s5s7-pinned/137.elf 2> build/om2-qual/s5s7-pinned/137.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/137.src > build/om2-qual/s5s7x-p/137.elf 2> build/om2-qual/s5s7x-p/137.cerr
 VERDICT pin-v6-part-empty PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-o line=139
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/139.src > build/om2-qual/s5s7-pinned/139.elf 2> build/om2-qual/s5s7-pinned/139.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/139.src > build/om2-qual/s5s7x-p/139.elf 2> build/om2-qual/s5s7x-p/139.cerr
 VERDICT pin-v6-part-o PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-order line=141
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/141.src > build/om2-qual/s5s7-pinned/141.elf 2> build/om2-qual/s5s7-pinned/141.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/141.src > build/om2-qual/s5s7x-p/141.elf 2> build/om2-qual/s5s7x-p/141.cerr
 VERDICT pin-v6-part-order PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-local line=143
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/143.src > build/om2-qual/s5s7-pinned/143.elf 2> build/om2-qual/s5s7-pinned/143.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/143.src > build/om2-qual/s5s7x-p/143.elf 2> build/om2-qual/s5s7x-p/143.cerr
 VERDICT pin-v6-part-local PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-view-edit line=145
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/145.src > build/om2-qual/s5s7-pinned/145.elf 2> build/om2-qual/s5s7-pinned/145.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/145.src > build/om2-qual/s5s7x-p/145.elf 2> build/om2-qual/s5s7x-p/145.cerr
 VERDICT pin-v6-part-view-edit PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-two line=147
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/147.src > build/om2-qual/s5s7-pinned/147.elf 2> build/om2-qual/s5s7-pinned/147.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/147.src > build/om2-qual/s5s7x-p/147.elf 2> build/om2-qual/s5s7x-p/147.cerr
 VERDICT pin-v6-part-two PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-part-base line=149
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/149.src > build/om2-qual/s5s7-pinned/149.elf 2> build/om2-qual/s5s7-pinned/149.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/149.src > build/om2-qual/s5s7x-p/149.elf 2> build/om2-qual/s5s7x-p/149.cerr
 VERDICT pin-v6-part-base PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-write line=151
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/151.src > build/om2-qual/s5s7-pinned/151.elf 2> build/om2-qual/s5s7-pinned/151.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/151.src > build/om2-qual/s5s7x-p/151.elf 2> build/om2-qual/s5s7x-p/151.cerr
 VERDICT pin-v6-write PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-slots7 line=153
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/153.src > build/om2-qual/s5s7-pinned/153.elf 2> build/om2-qual/s5s7-pinned/153.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/153.src > build/om2-qual/s5s7x-p/153.elf 2> build/om2-qual/s5s7x-p/153.cerr
 VERDICT pin-v6-slots7 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-slots6 line=155
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/155.src > build/om2-qual/s5s7-pinned/155.elf 2> build/om2-qual/s5s7-pinned/155.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/155.src > build/om2-qual/s5s7x-p/155.elf 2> build/om2-qual/s5s7x-p/155.cerr
 VERDICT pin-v6-slots6 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-fm-e2 line=157
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/157.src > build/om2-qual/s5s7-pinned/157.elf 2> build/om2-qual/s5s7-pinned/157.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/157.src > build/om2-qual/s5s7x-p/157.elf 2> build/om2-qual/s5s7x-p/157.cerr
 VERDICT pin-v6-fm-e2 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-out line=159
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/159.src > build/om2-qual/s5s7-pinned/159.elf 2> build/om2-qual/s5s7-pinned/159.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/159.src > build/om2-qual/s5s7x-p/159.elf 2> build/om2-qual/s5s7x-p/159.cerr
 VERDICT pin-v6-out PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-m6-export2 line=161
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/161.src > build/om2-qual/s5s7-pinned/161.elf 2> build/om2-qual/s5s7-pinned/161.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/161.src > build/om2-qual/s5s7x-p/161.elf 2> build/om2-qual/s5s7x-p/161.cerr
 VERDICT pin-m6-export2 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-m6-noexport line=163
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/163.src > build/om2-qual/s5s7-pinned/163.elf 2> build/om2-qual/s5s7-pinned/163.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/163.src > build/om2-qual/s5s7x-p/163.elf 2> build/om2-qual/s5s7x-p/163.cerr
 VERDICT pin-m6-noexport PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-m6-export-layout line=165
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/165.src > build/om2-qual/s5s7-pinned/165.elf 2> build/om2-qual/s5s7-pinned/165.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/165.src > build/om2-qual/s5s7x-p/165.elf 2> build/om2-qual/s5s7x-p/165.cerr
 VERDICT pin-m6-export-layout PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-abiv line=167
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/167.src > build/om2-qual/s5s7-pinned/167.elf 2> build/om2-qual/s5s7-pinned/167.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/167.src > build/om2-qual/s5s7x-p/167.elf 2> build/om2-qual/s5s7x-p/167.cerr
 VERDICT pin-abiv PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-abiw line=169
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/169.src > build/om2-qual/s5s7-pinned/169.elf 2> build/om2-qual/s5s7-pinned/169.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/169.src > build/om2-qual/s5s7x-p/169.elf 2> build/om2-qual/s5s7x-p/169.cerr
 VERDICT pin-abiw PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-l5-scalar-idx line=171
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/171.src > build/om2-qual/s5s7-pinned/171.elf 2> build/om2-qual/s5s7-pinned/171.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/171.src > build/om2-qual/s5s7x-p/171.elf 2> build/om2-qual/s5s7x-p/171.cerr
 VERDICT pin-l5-scalar-idx PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-a5-name-seal line=173
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/173.src > build/om2-qual/s5s7-pinned/173.elf 2> build/om2-qual/s5s7-pinned/173.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/173.src > build/om2-qual/s5s7x-p/173.elf 2> build/om2-qual/s5s7x-p/173.cerr
 VERDICT pin-a5-name-seal PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE pin-v6-name-part line=175
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/175.src > build/om2-qual/s5s7-pinned/175.elf 2> build/om2-qual/s5s7-pinned/175.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/175.src > build/om2-qual/s5s7x-p/175.elf 2> build/om2-qual/s5s7x-p/175.cerr
 VERDICT pin-v6-name-part PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE t-dup line=179
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/179.src > build/om2-qual/s5s7-pinned/179.elf 2> build/om2-qual/s5s7-pinned/179.cerr
-  $ build/om2-qual/s5s7-pinned/179.elf < /dev/null > build/om2-qual/s5s7-pinned/179.out 2> build/om2-qual/s5s7-pinned/179.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/179.src > build/om2-qual/s5s7x-p/179.elf 2> build/om2-qual/s5s7x-p/179.cerr
+  $ build/om2-qual/s5s7x-p/179.elf < /dev/null > build/om2-qual/s5s7x-p/179.out 2> build/om2-qual/s5s7x-p/179.err
 VERDICT t-dup PASS run exit=0 expected=0 stdout=match stderr=match
 CASE t-allops line=181
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/181.src > build/om2-qual/s5s7-pinned/181.elf 2> build/om2-qual/s5s7-pinned/181.cerr
-  $ build/om2-qual/s5s7-pinned/181.elf < /dev/null > build/om2-qual/s5s7-pinned/181.out 2> build/om2-qual/s5s7-pinned/181.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/181.src > build/om2-qual/s5s7x-p/181.elf 2> build/om2-qual/s5s7x-p/181.cerr
+  $ build/om2-qual/s5s7x-p/181.elf < /dev/null > build/om2-qual/s5s7x-p/181.out 2> build/om2-qual/s5s7x-p/181.err
 VERDICT t-allops PASS run exit=0 expected=0 stdout=match stderr=match
 CASE t-shactx line=183
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/183.src > build/om2-qual/s5s7-pinned/183.elf 2> build/om2-qual/s5s7-pinned/183.cerr
-  $ build/om2-qual/s5s7-pinned/183.elf < /dev/null > build/om2-qual/s5s7-pinned/183.out 2> build/om2-qual/s5s7-pinned/183.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/183.src > build/om2-qual/s5s7x-p/183.elf 2> build/om2-qual/s5s7x-p/183.cerr
+  $ build/om2-qual/s5s7x-p/183.elf < /dev/null > build/om2-qual/s5s7x-p/183.out 2> build/om2-qual/s5s7x-p/183.err
 VERDICT t-shactx PASS run exit=0 expected=0 stdout=match stderr=match
 CASE t-endian line=185
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/185.src > build/om2-qual/s5s7-pinned/185.elf 2> build/om2-qual/s5s7-pinned/185.cerr
-  $ build/om2-qual/s5s7-pinned/185.elf < /dev/null > build/om2-qual/s5s7-pinned/185.out 2> build/om2-qual/s5s7-pinned/185.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/185.src > build/om2-qual/s5s7x-p/185.elf 2> build/om2-qual/s5s7x-p/185.cerr
+  $ build/om2-qual/s5s7x-p/185.elf < /dev/null > build/om2-qual/s5s7x-p/185.out 2> build/om2-qual/s5s7x-p/185.err
 VERDICT t-endian PASS run exit=0 expected=0 stdout=match stderr=match
 CASE t-sum line=187
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/187.src > build/om2-qual/s5s7-pinned/187.elf 2> build/om2-qual/s5s7-pinned/187.cerr
-  $ build/om2-qual/s5s7-pinned/187.elf < /dev/null > build/om2-qual/s5s7-pinned/187.out 2> build/om2-qual/s5s7-pinned/187.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/187.src > build/om2-qual/s5s7x-p/187.elf 2> build/om2-qual/s5s7x-p/187.cerr
+  $ build/om2-qual/s5s7x-p/187.elf < /dev/null > build/om2-qual/s5s7x-p/187.out 2> build/om2-qual/s5s7x-p/187.err
 VERDICT t-sum PASS run exit=0 expected=0 stdout=match stderr=match
 CASE t-edit line=189
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/189.src > build/om2-qual/s5s7-pinned/189.elf 2> build/om2-qual/s5s7-pinned/189.cerr
-  $ build/om2-qual/s5s7-pinned/189.elf < /dev/null > build/om2-qual/s5s7-pinned/189.out 2> build/om2-qual/s5s7-pinned/189.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/189.src > build/om2-qual/s5s7x-p/189.elf 2> build/om2-qual/s5s7x-p/189.cerr
+  $ build/om2-qual/s5s7x-p/189.elf < /dev/null > build/om2-qual/s5s7x-p/189.out 2> build/om2-qual/s5s7x-p/189.err
 VERDICT t-edit PASS run exit=0 expected=0 stdout=match stderr=match
 CASE t-sle line=191
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/191.src > build/om2-qual/s5s7-pinned/191.elf 2> build/om2-qual/s5s7-pinned/191.cerr
-  $ build/om2-qual/s5s7-pinned/191.elf < /dev/null > build/om2-qual/s5s7-pinned/191.out 2> build/om2-qual/s5s7-pinned/191.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/191.src > build/om2-qual/s5s7x-p/191.elf 2> build/om2-qual/s5s7x-p/191.cerr
+  $ build/om2-qual/s5s7x-p/191.elf < /dev/null > build/om2-qual/s5s7x-p/191.out 2> build/om2-qual/s5s7x-p/191.err
 VERDICT t-sle PASS run exit=0 expected=0 stdout=match stderr=match
 CASE t-names line=193
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/193.src > build/om2-qual/s5s7-pinned/193.elf 2> build/om2-qual/s5s7-pinned/193.cerr
-  $ build/om2-qual/s5s7-pinned/193.elf < /dev/null > build/om2-qual/s5s7-pinned/193.out 2> build/om2-qual/s5s7-pinned/193.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/193.src > build/om2-qual/s5s7x-p/193.elf 2> build/om2-qual/s5s7x-p/193.cerr
+  $ build/om2-qual/s5s7x-p/193.elf < /dev/null > build/om2-qual/s5s7x-p/193.out 2> build/om2-qual/s5s7x-p/193.err
 VERDICT t-names PASS run exit=0 expected=0 stdout=match stderr=match
 CASE t-slw line=195
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/195.src > build/om2-qual/s5s7-pinned/195.elf 2> build/om2-qual/s5s7-pinned/195.cerr
-  $ build/om2-qual/s5s7-pinned/195.elf < /dev/null > build/om2-qual/s5s7-pinned/195.out 2> build/om2-qual/s5s7-pinned/195.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/195.src > build/om2-qual/s5s7x-p/195.elf 2> build/om2-qual/s5s7x-p/195.cerr
+  $ build/om2-qual/s5s7x-p/195.elf < /dev/null > build/om2-qual/s5s7x-p/195.out 2> build/om2-qual/s5s7x-p/195.err
 VERDICT t-slw PASS run exit=103 expected=103 stdout=match stderr=match
 CASE t-slt line=197
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/197.src > build/om2-qual/s5s7-pinned/197.elf 2> build/om2-qual/s5s7-pinned/197.cerr
-  $ build/om2-qual/s5s7-pinned/197.elf < /dev/null > build/om2-qual/s5s7-pinned/197.out 2> build/om2-qual/s5s7-pinned/197.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/197.src > build/om2-qual/s5s7x-p/197.elf 2> build/om2-qual/s5s7x-p/197.cerr
+  $ build/om2-qual/s5s7x-p/197.elf < /dev/null > build/om2-qual/s5s7x-p/197.out 2> build/om2-qual/s5s7x-p/197.err
 VERDICT t-slt PASS run exit=103 expected=103 stdout=match stderr=match
 CASE t-slo line=199
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/199.src > build/om2-qual/s5s7-pinned/199.elf 2> build/om2-qual/s5s7-pinned/199.cerr
-  $ build/om2-qual/s5s7-pinned/199.elf < /dev/null > build/om2-qual/s5s7-pinned/199.out 2> build/om2-qual/s5s7-pinned/199.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/199.src > build/om2-qual/s5s7x-p/199.elf 2> build/om2-qual/s5s7x-p/199.cerr
+  $ build/om2-qual/s5s7x-p/199.elf < /dev/null > build/om2-qual/s5s7x-p/199.out 2> build/om2-qual/s5s7x-p/199.err
 VERDICT t-slo PASS run exit=103 expected=103 stdout=match stderr=match
 CASE t-order line=201
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/201.src > build/om2-qual/s5s7-pinned/201.elf 2> build/om2-qual/s5s7-pinned/201.cerr
-  $ build/om2-qual/s5s7-pinned/201.elf < /dev/null > build/om2-qual/s5s7-pinned/201.out 2> build/om2-qual/s5s7-pinned/201.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/201.src > build/om2-qual/s5s7x-p/201.elf 2> build/om2-qual/s5s7x-p/201.cerr
+  $ build/om2-qual/s5s7x-p/201.elf < /dev/null > build/om2-qual/s5s7x-p/201.out 2> build/om2-qual/s5s7x-p/201.err
 VERDICT t-order PASS run exit=102 expected=102 stdout=match stderr=match
 CASE t-trap10 line=203
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/203.src > build/om2-qual/s5s7-pinned/203.elf 2> build/om2-qual/s5s7-pinned/203.cerr
-  $ build/om2-qual/s5s7-pinned/203.elf < /dev/null > build/om2-qual/s5s7-pinned/203.out 2> build/om2-qual/s5s7-pinned/203.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/203.src > build/om2-qual/s5s7x-p/203.elf 2> build/om2-qual/s5s7x-p/203.cerr
+  $ build/om2-qual/s5s7x-p/203.elf < /dev/null > build/om2-qual/s5s7x-p/203.out 2> build/om2-qual/s5s7x-p/203.err
 VERDICT t-trap10 PASS run exit=110 expected=110 stdout=match stderr=match
 CASE t-shl64 line=205
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/205.src > build/om2-qual/s5s7-pinned/205.elf 2> build/om2-qual/s5s7-pinned/205.cerr
-  $ build/om2-qual/s5s7-pinned/205.elf < /dev/null > build/om2-qual/s5s7-pinned/205.out 2> build/om2-qual/s5s7-pinned/205.err
+  $ seed/out/omc < build/om2-qual/s5s7x-p/205.src > build/om2-qual/s5s7x-p/205.elf 2> build/om2-qual/s5s7x-p/205.cerr
+  $ build/om2-qual/s5s7x-p/205.elf < /dev/null > build/om2-qual/s5s7x-p/205.out 2> build/om2-qual/s5s7x-p/205.err
 VERDICT t-shl64 PASS run exit=107 expected=107 stdout=match stderr=match
 CASE t-unsized16 line=207
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/207.src > build/om2-qual/s5s7-pinned/207.elf 2> build/om2-qual/s5s7-pinned/207.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/207.src > build/om2-qual/s5s7x-p/207.elf 2> build/om2-qual/s5s7x-p/207.cerr
 VERDICT t-unsized16 PASS compile exit=16 expected=16 stdout=match stderr=match
 CASE abi1-om1 line=209
-  $ seed/out/omc < build/om2-qual/s5s7-pinned/209.src > build/om2-qual/s5s7-pinned/209.elf 2> build/om2-qual/s5s7-pinned/209.cerr
+  $ seed/out/omc < build/om2-qual/s5s7x-p/209.src > build/om2-qual/s5s7x-p/209.elf 2> build/om2-qual/s5s7x-p/209.cerr
 VERDICT abi1-om1 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
-OM2GATE PASS cases=96 pass=96 fail=0 invalid=0 not_run=0
+CASE m6-export32-pinned line=210
+  $ seed/out/omc < build/om2-qual/s5s7x-p/210.src > build/om2-qual/s5s7x-p/210.elf 2> build/om2-qual/s5s7x-p/210.cerr
+VERDICT m6-export32-pinned PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE m6-export33-pinned line=211
+  $ seed/out/omc < build/om2-qual/s5s7x-p/211.src > build/om2-qual/s5s7x-p/211.elf 2> build/om2-qual/s5s7x-p/211.cerr
+VERDICT m6-export33-pinned PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE m6-export-main-pinned line=212
+  $ seed/out/omc < build/om2-qual/s5s7x-p/212.src > build/om2-qual/s5s7x-p/212.elf 2> build/om2-qual/s5s7x-p/212.cerr
+VERDICT m6-export-main-pinned PASS compile exit=16 expected=16 stdout=match stderr=match
+OM2GATE PASS cases=99 pass=99 fail=0 invalid=0 not_run=0

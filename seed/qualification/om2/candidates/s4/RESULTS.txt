@@ -16,3 +16,31 @@ view-nocheck (B7 on the unsized view path; drops CMP/B.HS trap 3): v6-idx is exp
 stdout); the mutant reads past the view, prints, and exits 0. Killed. The mutant still hashes abc and passes v6-sum.
 Control: sec/s3s4/mutant-kills.cases run with the unmutated head gives 31/31 FAIL (no false kills).
 Verdict: PASS in scope (C2, §0-§5, §6 views, fuel E16); D-S3-1 fixed. 18/18 mutants killed.
+
+S4 complete: om2/compiler-s4 @ f6a6492fd1a3b608f0413a75685ddbb712075a73 (PR #764), 2026-10-25. Both new commits were born in
+their own worktrees: 626110c1 part "PASS omc fixpoint 72eb1169…88e6"; f6a6492f out/export "PASS omc fixpoint
+499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec". Evidence: evidence/phaseB/s4-f6a6492f/.
+| check | 626110c1 (part) | f6a6492f (head) |
+|---|---|---|
+| C2 5876 | PASS | PASS |
+| §0-§2 | 161/0/2 | 161/0/2 |
+| §3-§4 | 200 PASS, 2 FAIL (slots-out6/7, need out), 3 NOT_RUN | 202 PASS, 0 FAIL, 3 NOT_RUN |
+| fuel | 8/8 | 8/8 |
+| §5-§6 (s5s7) | 91 PASS, 5 FAIL (out/export), 48 NOT_RUN | 99 PASS, 0 FAIL, 48 NOT_RUN (with E17 export rows) |
+Head §6 rows that pass:
+- part: v6-part-wrap (len 10, o = 2^64-2, k = 4: trap 3), -tail (o = len-2, k = 4: trap 3), -empty, -o, -order (o is
+  evaluated before k: exit 102), -local (9), -view-edit (20), -two and -base (19, a part counts as its base),
+  v6-edit, f5-part (27), ce-view-* A-F with their -plain and -om1 twins.
+- out: v6-out, slots-out6/7.
+- export: m6-export2, m6-export-layout, m6-noexport, plus new E17 rows m6-export32 (compiles), m6-export33
+  (error 14 at line 99, the 33rd export) and m6-export-main (9). The ABI units abiv and abiw compile.
+- The 48 NOT_RUN rows are 31 ABI-driver rows (no v2 generator yet), 16 OM-2 SHA rows, and the in-unit 2^64-1 golden.
+Mutants at the head (each still hashes abc and passes v6-part-empty, o = len and k = 0):
+- part-wrapped (independent wrapped-sum mutant: ADD o+k, CMP with len, B.HI): v6-part-wrap prints "4", exit 0. Killed.
+- part-nosecond (k <= len - o dropped): v6-part-tail prints "4". Killed.
+- part-nofirst (o <= len dropped): v6-part-o prints "0". Killed.
+- view-nocheck: kill-ce-view-A/C/D/F differ at bytes 14/14/0/26, exactly as predicted before S4 was read. Killed.
+- S1 10, S2 3, S3 4, S4 view 1: identical verdicts. Control: mutant-kills.cases with the unmutated head gives
+  31/31 FAIL (no false kills).
+- NOT_RUN: B9b order mutant (k evaluated before o). Its fixture v6-part-order passes, but no anchor was written.
+Verdict: S4 PASS in scope; mutants 22/22 killed.

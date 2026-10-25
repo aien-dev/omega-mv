@@ -207,3 +207,6 @@ t-shl64 run seed/qualification/om2/sec/s5s7/om1/t-shl64.om+seed/qualification/om
 t-unsized16 emit seed/qualification/om2/sec/s5s7/om1/t-unsized16.om - err:5:16 16
 # erratum E1: the OM-1 ABI unit stays OM-1 and compiles
 abi1-om1 emit seed/qualification/om2/sec/s5s7/abi/abi1.om any - 0
+m6-export32-pinned emit seed/qualification/om2/sec/s5s7/m6-export32.om - err:3:16 16
+m6-export33-pinned emit seed/qualification/om2/sec/s5s7/m6-export33.om - err:3:16 16
+m6-export-main-pinned emit seed/qualification/om2/sec/s5s7/m6-export-main.om - err:3:16 16
