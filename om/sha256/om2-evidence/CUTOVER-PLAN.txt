@@ -4,7 +4,12 @@ Status: PLAN. Nothing below is applied. src/sha256.c stays until L836 qualifies 
 
 Inputs (pins to fill when they exist)
   omc      OM-2 compiler born by seed/omega-from-seed.sh from the merged compiler-s1..s4 (sha256 TBD)
-  bridge   omega-bridge commit whose generator emits ABI v2, omega_api.h and omega2_ident (L837, TBD)
+  bridge   omega-bridge commit whose generator emits ABI v2, omega_api.h and omega2_ident (L837).
+           Candidate: feat/slice-abi @ 1392549 (draft PR #15, stacked on #14), not yet run with S4
+           code. tools/native takes OMEGA_NATIVE_OMC2=<S4 omc>; unit name sha256_om2, so the
+           identity is omega2_ident_sha256_om2(). Layout param = one uint8_t pointer, out = one
+           pointer, view = (ptr, element count); an edit range overlapping another argument is
+           status 32 (audit: no update passes data inside its own ctx).
   unit     om/sha256/sha256-om2.om (sha256 of its exact bytes, recorded by the generator)
 
 Preconditions (each is a NOT_RUN item until done)
