@@ -68,7 +68,7 @@ m19r_build_canon() {
     M19R_TMP=$(mktemp -d "${TMPDIR:-/tmp}/m19r-qualify.XXXXXX") || return 1
     JSON_CANON=$M19R_TMP/json_canon
     gcc -std=gnu11 -O2 -Wall -Wextra -Werror -I"$M19R_OMEGA/src" -o "$JSON_CANON" \
-        "$M19R_OMEGA/tools/json_canon.c" "$M19R_OMEGA/src/sha256.c" -lm
+        "$M19R_OMEGA/tools/json_canon.c" "$M19R_OMEGA/src/omega_om_units.c" -lm
 }
 
 # JSON string literal for arbitrary text.

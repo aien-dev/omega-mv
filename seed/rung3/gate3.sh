@@ -38,7 +38,7 @@ done
 
 # 3. the reference runner (seed/check/runner.c, links the repo C path: osc_ir decode, osc_cg, osc_rt)
 cc -O1 -Isrc -Isrc/compiler -o $B/runner seed/check/runner.c \
-  $(ls src/compiler/*.c | grep -v oscc_main.c) src/sha256.c
+  $(ls src/compiler/*.c | grep -v oscc_main.c) src/omega_om_units.c
 [ -x build/omegese/omegese ] && [ -x build/omega_emit/omega_emit ] || { bad "C path tools not built"; exit 1; }
 
 # 4. the 10 dev tasks: same results as the C path and as the expected file; word counts

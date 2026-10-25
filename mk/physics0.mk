@@ -20,7 +20,7 @@ P0_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 P0_LEARNER_SRCS = src/physics0/pd0_chan.c src/physics0/pd0_wire.c src/physics0/pd0_rng.c src/physics0/pd0_relation.c
 # world side
 P0_WORLD_SRCS = src/physics0/pd0_gen.c src/physics0/pd0_world.c src/physics0/pd0_guard.c
-P0_SRCS = $(P0_LEARNER_SRCS) $(P0_WORLD_SRCS) src/sha256.c
+P0_SRCS = $(P0_LEARNER_SRCS) $(P0_WORLD_SRCS) src/omega_om_units.c
 P0_HDRS = $(wildcard src/physics0/*.h) src/sha256.h
 P0_CALIB = tests/physics0/pd0_calib.c tests/physics0/pd0_sparse.c
 P0_CALIB_HDRS = tests/physics0/pd0_calib.h tests/physics0/pd0_sparse.h
@@ -66,12 +66,12 @@ $(P0_DIR)/pd0-oracle-mutant-latent: tests/physics0/pd0_oracle.c $(P0_CALIB) $(P0
 	@mkdir -p $(P0_DIR)
 	$(CC) $(P0_CFLAGS) -DPD0_MUTANT_LATENT_SIGN -o $@ tests/physics0/pd0_oracle.c $(P0_CALIB) $(P0_SRCS) -lm
 
-$(P0_DIR)/test_pd0_osc: tests/physics0/test_pd0_osc.c $(P0_OSC_LIB) $(P0_LEARNER_SRCS) src/sha256.c $(P0_HDRS)
+$(P0_DIR)/test_pd0_osc: tests/physics0/test_pd0_osc.c $(P0_OSC_LIB) $(P0_LEARNER_SRCS) src/omega_om_units.c $(P0_HDRS)
 	@mkdir -p $(P0_DIR)
-	$(CC) $(P0_OSC_CFLAGS) -o $@ tests/physics0/test_pd0_osc.c $(P0_OSC_LIB) $(P0_LEARNER_SRCS) src/sha256.c -lm
-$(P0_DIR)/test_pd0_osc_asan: tests/physics0/test_pd0_osc.c $(P0_OSC_LIB) $(P0_LEARNER_SRCS) src/sha256.c $(P0_HDRS)
+	$(CC) $(P0_OSC_CFLAGS) -o $@ tests/physics0/test_pd0_osc.c $(P0_OSC_LIB) $(P0_LEARNER_SRCS) src/omega_om_units.c -lm
+$(P0_DIR)/test_pd0_osc_asan: tests/physics0/test_pd0_osc.c $(P0_OSC_LIB) $(P0_LEARNER_SRCS) src/omega_om_units.c $(P0_HDRS)
 	@mkdir -p $(P0_DIR)
-	$(CC) $(P0_OSC_CFLAGS) $(P0_ASAN) -o $@ tests/physics0/test_pd0_osc.c $(P0_OSC_LIB) $(P0_LEARNER_SRCS) src/sha256.c -lm
+	$(CC) $(P0_OSC_CFLAGS) $(P0_ASAN) -o $@ tests/physics0/test_pd0_osc.c $(P0_OSC_LIB) $(P0_LEARNER_SRCS) src/omega_om_units.c -lm
 
 physics0-test: $(P0_DIR)/test_pd0_world $(P0_DIR)/test_pd0_world_asan $(P0_LEARNER_OBJS) $(P0_DIR)/learner/pd0_gen.o \
 		$(P0_DIR)/pd0-oracle $(P0_DIR)/pd0-oracle_asan $(P0_DIR)/pd0-oracle-mutant $(P0_DIR)/pd0-oracle-mutant-latent \

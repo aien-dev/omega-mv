@@ -72,7 +72,7 @@ e1_build_canon() {
     E1_TMP=$(mktemp -d "${TMPDIR:-/tmp}/e1combine.XXXXXX") || return 1
     JSON_CANON=$E1_TMP/json_canon
     gcc -std=gnu11 -O2 -Wall -Wextra -Werror -I"$E1_OMEGA/src" -o "$JSON_CANON" \
-        "$E1_OMEGA/tools/json_canon.c" "$E1_OMEGA/src/sha256.c" -lm
+        "$E1_OMEGA/tools/json_canon.c" "$E1_OMEGA/src/omega_om_units.c" -lm
 }
 
 e1_sha() { sha256sum -- "$1" | cut -c1-64; }

@@ -209,7 +209,7 @@ if "$E" frob > /dev/null 2>&1; then bad "unknown command accepted"; else ok "unk
 
 # ---- 4. mutants: one defence removed at a time; a check above must catch it ------------------------
 echo "mutants (each must be caught):"
-SRCS="$(ls src/compiler/*.c | grep -v oscc_main) src/sha256.c"
+SRCS="$(ls src/compiler/*.c | grep -v oscc_main) src/omega_om_units.c"
 mut() { # mut <name> <sed>
   sed "$2" "$HERE/omega_emit.c" > "$T/m_$1.c"
   cmp -s "$HERE/omega_emit.c" "$T/m_$1.c" && { bad "mutant $1: sed changed nothing"; return 1; }

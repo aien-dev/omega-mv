@@ -9,7 +9,7 @@ P0P_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=2008
   -Isrc -Isrc/physics0/ladder -Isrc/physics0/planner -Itests/physics0/planner
 P0P_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 # planner objects: verifier formats only, no generator, no world
-P0P_SRCS = src/physics0/planner/pd0_planner.c src/physics0/ladder/pd0_fmt.c src/sha256.c
+P0P_SRCS = src/physics0/planner/pd0_planner.c src/physics0/ladder/pd0_fmt.c src/omega_om_units.c
 P0P_HDRS = src/physics0/planner/pd0_planner.h src/physics0/ladder/pd0_fmt.h src/physics0/ladder/pd0_rng.h
 # bridge object: substrate formats, links the generator on purpose (harness side)
 P0P_BRIDGE_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itests/physics0/planner

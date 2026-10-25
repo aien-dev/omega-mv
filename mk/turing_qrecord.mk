@@ -11,7 +11,7 @@ TURING_QRECORD_MK := 1
 TYQR_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc
 TYQR_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 TYQR_SRCS = src/turing/ty_qrecord.c src/turing/ty_record.c src/turing/ty_math.c src/turing/ty_ctr1.c \
-	src/turing/ty_model.c src/turing/ty_profile.c src/omega_canonical.c src/sha256.c
+	src/turing/ty_model.c src/turing/ty_profile.c src/omega_canonical.c src/omega_om_units.c
 TYQR_HDRS = src/turing/ty_qrecord.h src/turing/ty_record.h src/turing/ty_math.h src/turing/ty_ctr1.h \
 	src/turing/ty_model.h src/omega_canonical.h src/omega_types.h src/sha256.h
 TYQR_DIR = $(OUT_DIR)/tests-turing-qrecord

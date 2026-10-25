@@ -6,7 +6,7 @@
 # src/visor/rx/ is outside the src/visor/*.c wildcard, so build/omega never links
 # visor_world_rx.c or any runtime object.
 VISOR_WORLD_RX_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
-	src/sha256.c src/visor/rx/visor_world_rx.c tests/visor/test_visor_world.c
+	src/omega_om_units.c src/visor/rx/visor_world_rx.c tests/visor/test_visor_world.c
 VISOR_WORLD_TEST = $(OUT_DIR)/tests-visor-world/test_visor_world
 
 $(OUT_DIR)/tests-visor-world:

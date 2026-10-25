@@ -3479,7 +3479,7 @@ static bool test_m15_zero_toolchain(void) {
     const char *files[] = {
         "src/omega_accelerator.c",
         "src/omega_accelerator.h",
-        "src/sha256.c",
+        "src/omega_om_units.c",
         "src/sha256.h"
     };
     for (size_t i = 0; i < sizeof(files) / sizeof(files[0]); i++) {

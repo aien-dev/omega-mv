@@ -18,7 +18,7 @@ P0L2_LEARNER_SRCS = src/physics0/learner_v2/pd0_learner.c src/physics0/ladder/pd
 P0L2_HDRS = src/physics0/learner_v2/pd0_learner.h src/physics0/ladder/pd0_fmt.h src/physics0/ladder/pd0_rng.h src/physics0/ladder/pd0_ladder.h src/physics0/ladder/pd0_codes.h src/physics0/score/pd0_score.h src/physics0/controls/pd0_controls.h
 # world side of the dev drivers: the generator, world and regime switch, partially linked and with every symbol but four made local,
 # so the verifier-side byte formats (pd0_fmt.c) and the substrate's own pd0_wire.c can coexist in one process image
-P0L2_WORLD_SRCS = src/physics0/pd0_gen.c src/physics0/pd0_world.c src/physics0/pd0_guard.c src/physics0/pd0_wire.c src/physics0/pd0_rng.c src/physics0/pd0_relation.c src/physics0/pd0_chan.c src/physics0/regime/pd0_regime.c src/sha256.c
+P0L2_WORLD_SRCS = src/physics0/pd0_gen.c src/physics0/pd0_world.c src/physics0/pd0_guard.c src/physics0/pd0_wire.c src/physics0/pd0_rng.c src/physics0/pd0_relation.c src/physics0/pd0_chan.c src/physics0/regime/pd0_regime.c src/omega_om_units.c
 P0L2_WORLD_OBJS = $(patsubst %.c,$(P0L2_DIR)/world/%.o,$(notdir $(P0L2_WORLD_SRCS))) $(P0L2_DIR)/world/pd0_dev_world.o
 P0L2_REC = tests/physics0/learner_v2/receipts
 
@@ -36,12 +36,12 @@ p0l2-isolation: $(P0L2_DIR)/obj/pd0_learner.o $(P0L2_DIR)/obj/pd0_fmt.o $(P0L2_D
 	@if nm $(P0L2_DIR)/obj/pd0_learner.o $(P0L2_DIR)/obj/pd0_fmt.o | grep -E 'truth_|oracle|rx_|aienos_|argus_|forge_|mmap|fork|exec|socket|getenv|system|regime'; then echo "v2 learner object references forbidden symbol"; exit 1; fi
 	@echo "p0l2-isolation: v2 learner objects carry no generator, world, regime, file, process or authority symbol"
 
-$(P0L2_DIR)/test_pd0_learner2: tests/physics0/learner_v2/test_pd0_learner2.c $(P0L2_LEARNER_SRCS) src/physics0/ladder/pd0_ladder.c src/physics0/ladder/pd0_codes.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/sha256.c $(P0L2_HDRS)
+$(P0L2_DIR)/test_pd0_learner2: tests/physics0/learner_v2/test_pd0_learner2.c $(P0L2_LEARNER_SRCS) src/physics0/ladder/pd0_ladder.c src/physics0/ladder/pd0_codes.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/omega_om_units.c $(P0L2_HDRS)
 	@mkdir -p $(P0L2_DIR)
-	$(CC) $(P0L2_CFLAGS) -o $@ $< $(P0L2_LEARNER_SRCS) src/physics0/ladder/pd0_codes.c src/physics0/ladder/pd0_ladder.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/sha256.c -lm
-$(P0L2_DIR)/test_pd0_learner2_asan: tests/physics0/learner_v2/test_pd0_learner2.c $(P0L2_LEARNER_SRCS) src/physics0/ladder/pd0_ladder.c src/physics0/ladder/pd0_codes.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/sha256.c $(P0L2_HDRS)
+	$(CC) $(P0L2_CFLAGS) -o $@ $< $(P0L2_LEARNER_SRCS) src/physics0/ladder/pd0_codes.c src/physics0/ladder/pd0_ladder.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/omega_om_units.c -lm
+$(P0L2_DIR)/test_pd0_learner2_asan: tests/physics0/learner_v2/test_pd0_learner2.c $(P0L2_LEARNER_SRCS) src/physics0/ladder/pd0_ladder.c src/physics0/ladder/pd0_codes.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/omega_om_units.c $(P0L2_HDRS)
 	@mkdir -p $(P0L2_DIR)
-	$(CC) $(P0L2_CFLAGS) $(P0L2_ASAN) -o $@ $< $(P0L2_LEARNER_SRCS) src/physics0/ladder/pd0_codes.c src/physics0/ladder/pd0_ladder.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/sha256.c -lm
+	$(CC) $(P0L2_CFLAGS) $(P0L2_ASAN) -o $@ $< $(P0L2_LEARNER_SRCS) src/physics0/ladder/pd0_codes.c src/physics0/ladder/pd0_ladder.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/omega_om_units.c -lm
 
 $(P0L2_DIR)/world/%.o: src/physics0/%.c $(wildcard src/physics0/*.h) src/physics0/regime/pd0_regime.h
 	@mkdir -p $(P0L2_DIR)/world
@@ -49,7 +49,7 @@ $(P0L2_DIR)/world/%.o: src/physics0/%.c $(wildcard src/physics0/*.h) src/physics
 $(P0L2_DIR)/world/pd0_regime.o: src/physics0/regime/pd0_regime.c src/physics0/regime/pd0_regime.h $(wildcard src/physics0/*.h)
 	@mkdir -p $(P0L2_DIR)/world
 	$(CC) -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -c -o $@ $<
-$(P0L2_DIR)/world/sha256.o: src/sha256.c
+$(P0L2_DIR)/world/omega_om_units.o: src/omega_om_units.c
 	@mkdir -p $(P0L2_DIR)/world
 	$(CC) -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -c -o $@ $<
 $(P0L2_DIR)/world/pd0_dev_world.o: tests/physics0/learner_v2/pd0_dev_world.c tests/physics0/learner_v2/pd0_dev_world.h src/physics0/regime/pd0_regime.h
@@ -60,7 +60,7 @@ $(P0L2_DIR)/world_sealed.o: $(P0L2_WORLD_OBJS)
 	printf 'dev_world_open\ndev_world_call\ndev_world_switch\ndev_world_close\n' > $(P0L2_DIR)/keep.txt
 	objcopy --keep-global-symbols=$(P0L2_DIR)/keep.txt $(P0L2_DIR)/world_all.o $@
 
-P0L2_DRV_SRCS = tests/physics0/learner_v2/pd0_dev2.c src/physics0/ladder/pd0_fmt.c src/sha256.c $(P0L2_DIR)/world_sealed.o
+P0L2_DRV_SRCS = tests/physics0/learner_v2/pd0_dev2.c src/physics0/ladder/pd0_fmt.c src/omega_om_units.c $(P0L2_DIR)/world_sealed.o
 $(P0L2_DIR)/pd0-dev2: $(P0L2_DRV_SRCS) src/physics0/learner_v2/pd0_learner.c $(P0L2_HDRS)
 	$(CC) $(P0L2_CFLAGS) -Itests/physics0/learner_v2 -o $@ $(P0L2_DRV_SRCS) src/physics0/learner_v2/pd0_learner.c -lm
 $(P0L2_DIR)/pd0-dev1: $(P0L2_DRV_SRCS) src/physics0/learner/pd0_learner.c src/physics0/learner/pd0_learner.h

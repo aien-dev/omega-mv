@@ -172,7 +172,7 @@ num_build() {
         src/omega_numeric_divsqrt_gb10.c \
         src/omega_numeric_provenance.c src/omega_blackwell_codegen.c \
         src/omega_blackwell_encoder.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c \
-        src/forge_realization.c src/aegis_verification.c src/sha256.c \
+        src/forge_realization.c src/aegis_verification.c src/omega_om_units.c \
         "$p/forge/forge_descriptor.c" "$p/forge/forge_realize.c" "$p/sha256_clean.c" \
         "$p/nvrm/nvrm.c" "$p/m16/m16_native.c") > "$log" 2>&1 ||
         m19r_fail "build failed; see $log" || return 1

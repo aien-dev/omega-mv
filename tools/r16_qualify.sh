@@ -627,7 +627,7 @@ if [ "$DRY" = 1 ]; then
 else
     # Canonical writer built into the untracked output dir. The receipt goes beside the
     # raw dir, untracked; a later human/agent step copies it under evidence/R16/ and commits.
-    ${CC:-cc} -std=gnu11 -O2 -Isrc -o "$RAW_DIR/json_canon" tools/json_canon.c src/sha256.c -lm
+    ${CC:-cc} -std=gnu11 -O2 -Isrc -o "$RAW_DIR/json_canon" tools/json_canon.c src/omega_om_units.c -lm
     "$RAW_DIR/json_canon" --pretty < "$OUT_RECEIPT_TMP" > "$RAW_DIR/receipt.pretty.json"
     RECEIPT_SHA=$(sha256sum "$RAW_DIR/receipt.pretty.json" | cut -d' ' -f1)
     mkdir -p "$OUT_ROOT/receipts"

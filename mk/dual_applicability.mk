@@ -16,7 +16,7 @@ include mk/estimation.mk
 .PHONY: test-dual-applicability dual-applic-purity dual-applic-run
 DAP_CFLAGS = $(EST_CFLAGS) -Isrc/dual_experiment
 DAP_DIR = $(OUT_DIR)/dual-applicability
-DAP_SRCS = src/dual_experiment/applic_sim.c src/dual_experiment/applic_predict.c src/dual_experiment/applic_metrics.c src/sha256.c
+DAP_SRCS = src/dual_experiment/applic_sim.c src/dual_experiment/applic_predict.c src/dual_experiment/applic_metrics.c src/omega_om_units.c
 DAP_HDRS = src/dual_experiment/applic.h src/dual_experiment/applic_params.h src/sha256.h
 DAP_EVIDENCE = evidence/DUAL/applicability
 
