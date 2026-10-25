@@ -1,0 +1,1041 @@
+{
+ "schema": "omega.universal.fixtures.v1",
+ "set": "F2-python",
+ "contract": "spec/universal/translation-compose-v1.md",
+ "profile": "spec/universal/python-u64-v1.md",
+ "from": "tests/universal/translation/fixtures-f1.json",
+ "positives": [
+  {
+   "id": "F2-python-F1-P00",
+   "f1": "F1-P00",
+   "f1_sha256": "250e3228f00b4c0cd60df70092f50106dce54f081cc77d4f3a24f7d2b5af8c4c",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "5c3a2b3b6c68bb98fcd2a32b728a199a52e6535340e8f814f3ae6f5c31f1facb",
+   "source": "def calc(a, b):\n    return a\n"
+  },
+  {
+   "id": "F2-python-F1-P01",
+   "f1": "F1-P01",
+   "f1_sha256": "cc4a3ac6374b8c68eb99de6540e6896ef4c41aea9eb5fb5c1f0ae4be52662456",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "ed47f66dcb2893a80de7fd7f9af896570e3b09817e55fd6de24d322b327ebc45",
+   "source": "def calc(a, b):\n    return b\n"
+  },
+  {
+   "id": "F2-python-F1-P02",
+   "f1": "F1-P02",
+   "f1_sha256": "2ab81c70d64699c9afe59cda7d49edcb577e10a57e32f2402af6ad67a0632c3e",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "13e0e33c6b6a3b3a88469e8c6a87ee888cdc6af3b0877f83ac227789c51eef2b",
+   "source": "def calc(a, b):\n    return (a + b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P03",
+   "f1": "F1-P03",
+   "f1_sha256": "ce4e5d1d53ed51443e3b940939a21b8fff9bb35db202438920f398938c0f7fb6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "f5c28ed35c2dd65ef364dfbf9b46f519e3436b982b4ea1ff87a5c3fd9b6fb974",
+   "source": "def calc(a, b):\n    return (a - b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P04",
+   "f1": "F1-P04",
+   "f1_sha256": "78db75440f5b5da2dafb59d0f771b696171c24d2698677f959e2ab430a2ebfd6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "8b2ac6b160c47bcc064d35f6ef263405b99ae12d1a953e1ad13e7cae289ae5a5",
+   "source": "def calc(a, b):\n    return (a * b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P05",
+   "f1": "F1-P05",
+   "f1_sha256": "277232cc9416a0c4f06004c5b00dbaab33952fc411c7e42f505f324026ca1765",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "96a67e8d43750796fd111cd4bc6a6e5c87918955528c4d5fb2b7f923face907b",
+   "source": "def calc(a, b):\n    return (((a + b) & 0xFFFFFFFFFFFFFFFF) * ((a - b) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P06",
+   "f1": "F1-P06",
+   "f1_sha256": "4332e4105d4442afba0b586e9574f1f192d7ed740099228eae26ad15473a5099",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "6b58627bfd6362fcccd6397eda3b2eb83d830b54eddc1ed870ab71e03ddbb583",
+   "source": "def calc(a, b):\n    return (a + 0) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P07",
+   "f1": "F1-P07",
+   "f1_sha256": "7339bf648758434626305006d637470ca6d97399010515134dd4358940641451",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "97278c608897d8cccb0a1fbad458ab29fe48fde67cee2059bf3e56dbf283c504",
+   "source": "def calc(a, b):\n    return (a - 1) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P08",
+   "f1": "F1-P08",
+   "f1_sha256": "9bb734b9718ebfbfac521731fa2bbd0ea59b201afc77ca385bcce151fa76a703",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "3e2cfa393ef56abec05d5d133e28185ab7d61bd3dc0b14f02b0d3e09eb709cb4",
+   "source": "def calc(a, b):\n    return (a * 2) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P09",
+   "f1": "F1-P09",
+   "f1_sha256": "9d409851a2558cf54315c84c4917ec67d1bee299ff7d371557d707416542b631",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "aa368284bebdfacd812a570cdbffdd8c450f209cc1be52d3726cb451c1d751a7",
+   "source": "def calc(a, b):\n    return (0 - a) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P10",
+   "f1": "F1-P10",
+   "f1_sha256": "aa0163f4a11aa259d38605ed3d26a56cbd80b381b32a9a20ffa10f82dbcd68ea",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "7754fb460f2e4321c3be5c9308e68ce350ec5354a09734e915168cd7bc2fcbcc",
+   "source": "def calc(a, b):\n    return (18446744073709551615 + a) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P11",
+   "f1": "F1-P11",
+   "f1_sha256": "83d8dadc4e596492af0bd7c79b865fd5c5cb6b8536370706f95efd5c59f261d5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "4ca5e7a8b631d2494d250ca0d6a26709834dffadff8be568a713c922d9fa62e4",
+   "source": "def calc(a, b):\n    return (((a * b) & 0xFFFFFFFFFFFFFFFF) + 3) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P12",
+   "f1": "F1-P12",
+   "f1_sha256": "a23775feb8d8822fc987bc087356a2dec17d4a85dd9a8fceb36606dac6e28572",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "147013d9c30fba23efdbb6c7809751f0fb0a352b53e9e36ae74111c1f755a907",
+   "source": "def calc(a, b):\n    return (((a + a) & 0xFFFFFFFFFFFFFFFF) + b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P13",
+   "f1": "F1-P13",
+   "f1_sha256": "23bc6a271dbba691f7a87f0f37e15ab125cecf8be229ab965777342266252ad2",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "be73462ecd1ab20405dd56689db3e9d5063a333e2635510b1c4d7d285d35338b",
+   "source": "def calc(a, b):\n    return (a + ((a + b) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P14",
+   "f1": "F1-P14",
+   "f1_sha256": "11c77e44f631b68afbf893f347a6e94498aae6213af99950deb03eea53f6da05",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "8eb68aed051adbe8628acc7d1a39d8e278d732b2f95353e6c2026f32fc05e5af",
+   "source": "def calc(a, b):\n    return (((a - b) & 0xFFFFFFFFFFFFFFFF) - b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P15",
+   "f1": "F1-P15",
+   "f1_sha256": "c5f7c9fdc269761e8ad7a4a3fa9ed0a2a2ccd7115cd2721a503203c778a2da2f",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "e7ee4c218d9e52611cdb1ac3aeb50e1cf9c9df6293e37164f7d814cfd5baaeaf",
+   "source": "def calc(a, b):\n    return (a - ((b - b) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P16",
+   "f1": "F1-P16",
+   "f1_sha256": "d17614f4cb5234a2234af049027f78f1f49a5f6f03d5f2e5c7c2b4b580f263c5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "42889c6c9c2e9e307131a0299f77f349739dbf6ac6952dd1a8df534cea1008c6",
+   "source": "def calc(a, b):\n    return (((a * b) & 0xFFFFFFFFFFFFFFFF) * a) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P17",
+   "f1": "F1-P17",
+   "f1_sha256": "a686cff8ae29e41a88bd4904c479806fec36f691e87d5732de68f59f319c694d",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "5c6c61d8edb4628daba93131648c527712b15b2d2e40913fd1f24aa7361f2ef7",
+   "source": "def calc(a, b):\n    return (a * ((b * a) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P18",
+   "f1": "F1-P18",
+   "f1_sha256": "262e9b705e8ba8c433e540f49209540cc7406bacb7e3b95c0b1cd5ad869af607",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c70e9ad63fed5ad0b3bdfdd7c7652f7def845dd572946bd8aa9f659e6879ffec",
+   "source": "def calc(a, b):\n    return 123\n"
+  },
+  {
+   "id": "F2-python-F1-P19",
+   "f1": "F1-P19",
+   "f1_sha256": "0b7ae5fc5fcacdd7b3040571e1838c324ba755ab1e9ecf7ba363e4d05d118511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "bd3146ef3c6c30cd2bd03a93dca4a9dc79b1bf21a22ecb9d6df449f7f6ae6fda",
+   "source": "def calc(a, b):\n    return ((a))\n",
+   "note": "redundant parentheses kept as written"
+  },
+  {
+   "id": "F2-python-F1-P20",
+   "f1": "F1-P20",
+   "f1_sha256": "e83ba5c9beccb2a5639359cbca57afd15b7a508aa86d912ce861d7b14b335d50",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "c189652842b35c3f28d083b427622ec7e0768caa7036942a18ce26faf4b9c02a",
+   "source": "def calc(a, b):\n    return (((a + b) & 0xFFFFFFFFFFFFFFFF) * ((b + 1) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P21",
+   "f1": "F1-P21",
+   "f1_sha256": "62ddab9112329da4fb6a45eb8ca1939e51c8bbfe0db85ba3784c4df0b078e757",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "fc1019ec4228ce6e5c2e42c043c86b6e56b620d1364c98e6f29ce76953ce4ae6",
+   "source": "def calc(a, b):\n    return (a + ((b * 2) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P22",
+   "f1": "F1-P22",
+   "f1_sha256": "f2472d246de322a108e5bc3098e7d7e359e7511b9ca07723c2560130ffc86656",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "3f6e3543543019aa6da166761bfe6e33d63b31afe9031279f11b2d751d34dfe9",
+   "source": "def calc(a, b):\n    return (((a + b) & 0xFFFFFFFFFFFFFFFF) * 2) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P23",
+   "f1": "F1-P23",
+   "f1_sha256": "6ac071f7821d7d29ca2e3961b90a89471e3f8f1a3150e06b1ab4642183ff6121",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "174f6e3b3e69317702ab4fb0080eccbebbe44aedd5e404c629a9e322cb460fb4",
+   "source": "def calc(a, b):\n    return (a - ((2 * b) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P24",
+   "f1": "F1-P24",
+   "f1_sha256": "f844f1cd780ee05f2e0218ce28afef6ae528d7d89c570253cdb8d82084784511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "2b1cec712dd1199b372e3d5aaf2d06cccdcdf8133b9a741ef381ea954d4fe7d5",
+   "source": "def calc(a, b):\n    return (((a - 2) & 0xFFFFFFFFFFFFFFFF) * b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P25",
+   "f1": "F1-P25",
+   "f1_sha256": "e446180a9b2462c5508e23bbd94371e2c0ee409a6b540a219a70026fe15fb568",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "64e5436b4e94ef7806d5c277869f48881036e2110b39ffe53639fa2cf2c58756",
+   "source": "def calc(a, b):\n    return (a + ((18446744073709551615 * b) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P26",
+   "f1": "F1-P26",
+   "f1_sha256": "26762c67b1d44a63563289ecd4c80ee13655629a93ac95bc727a9d59d74eccf7",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "9f8ddc6f8080e7203d34aa9fa41c027cdce068dbf93c5edd4f82b1e1b7b2d679",
+   "source": "def calc(a, b):\n    return (((2 * 3) & 0xFFFFFFFFFFFFFFFF) + 4) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P27",
+   "f1": "F1-P27",
+   "f1_sha256": "412ea121023c650878fc8e0dc12146e7dc9a083b3c9fde4adf813ace9baec525",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "284a247f37dd1aae6c46bf27c621428a3c80b6b55008e14b2476c433c973fcf4",
+   "source": "def calc(a, b):\n    return (2 * ((3 + 4) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P28",
+   "f1": "F1-P28",
+   "f1_sha256": "e8b386f48e1ae8e8d91a073518e0c792e7c54e1a9cca283b37662aa66f636392",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "fa47fc616e8bc06ebcc0fa561756fbbd1f5ee78ed1b9c0a32accab64961f295f",
+   "source": "def calc(a, b):\n    return (((a - b) & 0xFFFFFFFFFFFFFFFF) + ((a * b) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P29",
+   "f1": "F1-P29",
+   "f1_sha256": "5ccf53bf81d312f299d2b5e916447830417b61a1e1a696460d7121dabb941106",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "a235d1a660a22c4e137457e170fc94bbf1c14bfd325f6e2eb89decb67d116485",
+   "source": "def calc(a, b):\n    return (((a + a) & 0xFFFFFFFFFFFFFFFF) * ((b + b) & 0xFFFFFFFFFFFFFFFF)) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P30",
+   "f1": "F1-P30",
+   "f1_sha256": "01332f15d4dc15b52bfb8f1ad9ee7c5eeb1e9cbeec229e1ebe790678b28d7963",
+   "name": "calc",
+   "inputs": 0,
+   "sha256": "28265ec9bf3935b18f79495a3c1cff5ddc5b2b6421d8cd29b8484bd48576dd72",
+   "source": "def calc():\n    return 7\n"
+  },
+  {
+   "id": "F2-python-F1-P31",
+   "f1": "F1-P31",
+   "f1_sha256": "255692046d239f102f700df892a5519525d7615e3cba14517be1f383e2aa5644",
+   "name": "calc",
+   "inputs": 1,
+   "sha256": "eedeb939b353ff477ad10f0b1c4519a6592903abdb1b9267ebb4ca64a9d0d561",
+   "source": "def calc(x):\n    return x\n"
+  },
+  {
+   "id": "F2-python-F1-P32",
+   "f1": "F1-P32",
+   "f1_sha256": "14daf8acaa708f00035d3d6dcc7bb5ce341a4f859cb9fc89517d6a5a6b18bf5b",
+   "name": "calc",
+   "inputs": 6,
+   "sha256": "b8fdd4250a00d235fa83eeafdd130c438bbb5ba813d109106e1e9bfde6d9a7c7",
+   "source": "def calc(a, b, c, d, e, f):\n    return (((((((((a + b) & 0xFFFFFFFFFFFFFFFF) + c) & 0xFFFFFFFFFFFFFFFF) + d) & 0xFFFFFFFFFFFFFFFF) + e) & 0xFFFFFFFFFFFFFFFF) + f) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-F1-P33",
+   "f1": "F1-P33",
+   "f1_sha256": "48d398126ae85ad37b7fa9b96acd0d84a3bc980bed9c176843da4dc52ed4b6ef",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "89b88691a930fc26f20cd586a1620a70982ad36d01f98b2c25a703e03da94ac0",
+   "source": "def calc(left, right):\n    return (left * right) & 0xFFFFFFFFFFFFFFFF\n",
+   "note": "C block comments, the non-ASCII comment and CRLF are source decoration, not expression; Python profile refuses comments/CRLF (72), so the expression is rewritten without them"
+  },
+  {
+   "id": "F2-python-F1-P34",
+   "f1": "F1-P34",
+   "f1_sha256": "7c48737aa01323118ce87f9c95ed39edf11b554cd9fd9e8741b30fa548555dc6",
+   "name": "omega_fold",
+   "inputs": 2,
+   "sha256": "21d1e616ff2b9fe63b051d0dc5b45e049c609608a1f1530d60b4705fd67fb607",
+   "source": "def omega_fold(a, b):\n    return (((a * b) & 0xFFFFFFFFFFFFFFFF) + 42) & 0xFFFFFFFFFFFFFFFF\n"
+  }
+ ],
+ "controls": [
+  {
+   "id": "F2-python-ctl-exact-source-capacity",
+   "control": "exact-source-capacity",
+   "name": "calc",
+   "inputs": 2,
+   "at_5_7": 12,
+   "sha256": "161f72880be982b7cc8a471e0d5b92e3a8be031ca1ed2bb10e922a4a1503f4e0",
+   "source": "def calc(a, b):\n    return (a + b) & 0xFFFFFFFFFFFFFFFF                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \n",
+   "note": "trailing spaces before the final LF pad the source to exactly 4096 bytes"
+  },
+  {
+   "id": "F2-python-ctl-operation-capacity",
+   "control": "operation-capacity",
+   "name": "calc",
+   "inputs": 2,
+   "at_5_7": 305,
+   "sha256": "ad277e76547ff24d4abef4a7b3452d436d006f3efc619205330829f05d25b49c",
+   "source": "def calc(a, b):\n    return (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((a + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF) + a) & 0xFFFFFFFFFFFFFFFF\n",
+   "note": "61-term chain: 2 inputs + 60 masked adds + synthetic pair = 64 operations"
+  },
+  {
+   "id": "F2-python-ctl-nesting-limit",
+   "control": "nesting-limit",
+   "name": "calc",
+   "inputs": 2,
+   "at_5_7": 5,
+   "sha256": "7d95201c67f7488f134e379d24600b4b3942373f544baf06ce24324603138047",
+   "source": "def calc(a, b):\n    return ((((((((((((((((a))))))))))))))))\n",
+   "note": "16 redundant parentheses (the C importer limit)"
+  },
+  {
+   "id": "F2-python-ctl-python-nesting-limit",
+   "control": "python-nesting-limit",
+   "name": "calc",
+   "inputs": 2,
+   "at_5_7": 5,
+   "sha256": "4d0e09fb3323daa9a163dc3b3fa7ef946aba36ee4ce6f7595a6099bead9f1e65",
+   "source": "def calc(a, b):\n    return ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((a))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))\n",
+   "note": "128 redundant parentheses, the Python profile limit"
+  }
+ ],
+ "not_in_profile": [
+  {
+   "id": "F2-python-ctl-comment-at-capacity",
+   "control": "comment-at-capacity",
+   "reason": "the Python profile accepts no comments: `#` is refused (72) because a comment in the first two lines can be a PEP 263 coding declaration that changes how CPython decodes the remaining bytes"
+  }
+ ],
+ "refusals": [
+  {
+   "id": "F2-python-N00",
+   "status": 68,
+   "why": "unmasked add: CPython bigint semantics (profile 3), not S1",
+   "sha256": "b186083da0f99fa9ff4b6b95f9046c4f89c2aeb4ff60a907a7b15a3321706f61",
+   "source": "def calc(a, b):\n    return a + b\n"
+  },
+  {
+   "id": "F2-python-N01",
+   "status": 68,
+   "why": "mask other than the 64-bit canonical spelling",
+   "sha256": "901a02591c830b9671cbdf08ccf4c95463d189161765f7e55b590bf89a0303fb",
+   "source": "def calc(a, b):\n    return (a + b) & 0xFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N02",
+   "status": 68,
+   "why": "unmasked sub",
+   "sha256": "0ab73fc7f703a58cdfbe990301b8048fdb8a29133661312a56c7d126186f6299",
+   "source": "def calc(a, b):\n    return a - b\n"
+  },
+  {
+   "id": "F2-python-N03",
+   "status": 68,
+   "why": "unmasked mul",
+   "sha256": "69bd7bb49ecb781ad18d15b916d93a054a4639257bfe7b22aa750deff85308e6",
+   "source": "def calc(a, b):\n    return a * b\n"
+  },
+  {
+   "id": "F2-python-N04",
+   "status": 68,
+   "why": "two operations under one mask: the inner a + b is unmasked",
+   "sha256": "e33fe08a28ce2945c080690c977778329f27c9eb52690e71f97747c94e79289b",
+   "source": "def calc(a, b):\n    return (a + b + a) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N05",
+   "status": 68,
+   "why": "precedence chain under one mask",
+   "sha256": "d65081645d84798bbd0dd17c912b3051f612ddbc92c28107c2f0aa621d0068e9",
+   "source": "def calc(a, b):\n    return (a * b + a) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N06",
+   "status": 68,
+   "why": "non-canonical (lowercase) mask spelling",
+   "sha256": "108286813329f5436b0699ce37ae85a87034f1be415aa3742021c2a83a367688",
+   "source": "def calc(a, b):\n    return (a + b) & 0xffffffffffffffff\n"
+  },
+  {
+   "id": "F2-python-N07",
+   "status": 68,
+   "why": "non-canonical (decimal) mask spelling",
+   "sha256": "958c0d937e919107c335841bd6b1c74611810ad869abb812f8a59caed8c769d0",
+   "source": "def calc(a, b):\n    return (a + b) & 18446744073709551615\n"
+  },
+  {
+   "id": "F2-python-N08",
+   "status": 68,
+   "why": "modulo instead of mask",
+   "sha256": "be973068e1299e7bccad3b9fba29825e64a6d0008fad1a03295506faac7c438c",
+   "f1_analog": "F1-N05",
+   "source": "def calc(a, b):\n    return (a + b) % 18446744073709551616\n"
+  },
+  {
+   "id": "F2-python-N09",
+   "status": 68,
+   "why": "mask without an operation",
+   "sha256": "83b31dfca9aa710e9430cac56985b4e1e353c89202009ccccd4b8415db9a26b0",
+   "source": "def calc(a, b):\n    return a & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N10",
+   "status": 68,
+   "why": "double mask",
+   "sha256": "0598ce52a3531295e84b8870181a9304dfdefaaa83c1af5b5478d112d150a086",
+   "source": "def calc(a, b):\n    return ((a + b) & 0xFFFFFFFFFFFFFFFF) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N11",
+   "status": 68,
+   "why": "Python precedence: the mask binds 0xFFFFFFFFFFFFFFFF + a",
+   "sha256": "49036c89b42b8afa7fcb63f32ea4e4bcae83c1a7988838ce6f8a730a3acd9cce",
+   "source": "def calc(a, b):\n    return (a + b) & 0xFFFFFFFFFFFFFFFF + a\n"
+  },
+  {
+   "id": "F2-python-N12",
+   "status": 68,
+   "why": "masked operand without its own parentheses",
+   "sha256": "21f89a98cfae9d30c3f919cfbd5d6c1ff09cac47a5606df84df64bee1cda38d3",
+   "source": "def calc(a, b):\n    return ((a + b) & 0xFFFFFFFFFFFFFFFF + a)\n"
+  },
+  {
+   "id": "F2-python-N13",
+   "status": 68,
+   "why": "right masked operand without parentheses",
+   "sha256": "58e3f91b08458780987b10cacdb0767c91ed66c3ee42146a4e3b723a3600454d",
+   "source": "def calc(a, b):\n    return (a + (b + a) & 0xFFFFFFFFFFFFFFFF) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N14",
+   "status": 68,
+   "why": "unary minus",
+   "sha256": "1dae4e3efed4f6c8f58cd931ff0800d0e3b91f488c37574f0852bb1096fc1803",
+   "f1_analog": "F1-N13",
+   "source": "def calc(a, b):\n    return -a\n"
+  },
+  {
+   "id": "F2-python-N15",
+   "status": 68,
+   "why": "bitwise not",
+   "sha256": "ddfef10dc2b51de676d9dbe4a6013276f1de8a5cc98d6d7b39c0e91de16279ad",
+   "f1_analog": "F1-N15",
+   "source": "def calc(a, b):\n    return ~a\n"
+  },
+  {
+   "id": "F2-python-N16",
+   "status": 68,
+   "why": "floor division",
+   "sha256": "c59e6f3e380252e9361fc86d6b5e70fb563561cc4af28ee50441451acf600794",
+   "f1_analog": "F1-N04",
+   "source": "def calc(a, b):\n    return (a // b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N17",
+   "status": 68,
+   "why": "true division",
+   "sha256": "01d8423eb2e8e2fb612f286b3b43c7a3209df4581e977b6d33299d726f72c82e",
+   "source": "def calc(a, b):\n    return (a / b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N18",
+   "status": 68,
+   "why": "modulo",
+   "sha256": "b922a87f889bc211b2567724b5e88781edf01bdebd2447374988ad672cec0d81",
+   "f1_analog": "F1-N05",
+   "source": "def calc(a, b):\n    return (a % b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N19",
+   "status": 68,
+   "why": "power",
+   "sha256": "ab6a27ef8bd88b7b0d7925ad96baa7bcf18322f216c9d035b834d780ca0790f0",
+   "source": "def calc(a, b):\n    return (a ** b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N20",
+   "status": 68,
+   "why": "left shift",
+   "sha256": "7cfdeced00c2a9e152d29d023843cbf3efb72420be3dee41b9cd4959cb50e16a",
+   "f1_analog": "F1-N06",
+   "source": "def calc(a, b):\n    return (a << b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N21",
+   "status": 68,
+   "why": "right shift",
+   "sha256": "7ea67033042bf8952e7682e480a3a868e803d05d8d999b8fe58dcf05cdfb0a05",
+   "f1_analog": "F1-N07",
+   "source": "def calc(a, b):\n    return (a >> b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N22",
+   "status": 68,
+   "why": "bitwise and of inputs",
+   "sha256": "75144934c844be09bd46431ef31bce4298fc063b76b12eb51daa644e8ff5fb82",
+   "f1_analog": "F1-N08",
+   "source": "def calc(a, b):\n    return a & b\n"
+  },
+  {
+   "id": "F2-python-N23",
+   "status": 68,
+   "why": "bitwise or",
+   "sha256": "7165c613aefde6c78f6eddc182dcc3c6800fffa4558f1795f6129280a804d13e",
+   "f1_analog": "F1-N09",
+   "source": "def calc(a, b):\n    return a | b\n"
+  },
+  {
+   "id": "F2-python-N24",
+   "status": 68,
+   "why": "bitwise xor",
+   "sha256": "beb56ed3d802c207c036c7187603b99da9a25fde5ae743062f8d395aa91e3df5",
+   "f1_analog": "F1-N10",
+   "source": "def calc(a, b):\n    return a ^ b\n"
+  },
+  {
+   "id": "F2-python-N25",
+   "status": 68,
+   "why": "comparison",
+   "sha256": "fc7c9fcb6643e0249f9c1443ae615f1549ce3cd8f354df2c4bb2d622b3593a76",
+   "f1_analog": "F1-N11",
+   "source": "def calc(a, b):\n    return a == b\n"
+  },
+  {
+   "id": "F2-python-N26",
+   "status": 68,
+   "why": "comparison",
+   "sha256": "cd6de90eec9a3c79fbcc8bd16bd0b38a5e3a3323077f4d6aaddee8e719049bdd",
+   "source": "def calc(a, b):\n    return a < b\n"
+  },
+  {
+   "id": "F2-python-N27",
+   "status": 68,
+   "why": "float literal",
+   "sha256": "dee5a03c1853d142f3c564894b3e81427a631dbc84ac0d9024ac76f14fca9c2a",
+   "f1_analog": "F1-N23",
+   "source": "def calc(a, b):\n    return 1.0\n"
+  },
+  {
+   "id": "F2-python-N28",
+   "status": 68,
+   "why": "hexadecimal literal",
+   "sha256": "48aa672d24e909312c5b0e8ef4b45f24d8dc7ec9f0c73117830514190291bb3b",
+   "source": "def calc(a, b):\n    return 0x10\n"
+  },
+  {
+   "id": "F2-python-N29",
+   "status": 68,
+   "why": "leading-zero literal (SyntaxError in Python 3)",
+   "sha256": "389f1739d968d066125c28616b7d038d309175c83d7bdbec155c8eccd8b0cf9a",
+   "f1_analog": "F1-N40",
+   "source": "def calc(a, b):\n    return 010\n"
+  },
+  {
+   "id": "F2-python-N30",
+   "status": 68,
+   "why": "leading-zero spelling of zero",
+   "sha256": "1a390eb221b30e9a477463991f0573deebf99c203fe901653a56aee0f84564bc",
+   "f1_analog": "F1-N41",
+   "source": "def calc(a, b):\n    return 00\n"
+  },
+  {
+   "id": "F2-python-N31",
+   "status": 68,
+   "why": "underscore digit separators",
+   "sha256": "64adaf88d5e06dcf372ce052a0fbfaf503f4453767c8e55239b5a07caa852514",
+   "source": "def calc(a, b):\n    return 1_000\n"
+  },
+  {
+   "id": "F2-python-N32",
+   "status": 68,
+   "why": "imaginary literal",
+   "sha256": "5eb924e7148e31fe1cc613a72537feaf0c6fd70a6a76c146d5714e901ba63872",
+   "source": "def calc(a, b):\n    return 1j\n"
+  },
+  {
+   "id": "F2-python-N33",
+   "status": 67,
+   "why": "literal above 2^64-1",
+   "sha256": "71bb0e34bc48882526c6c48e5df9629d2b54e457f15723057b6fd3a91093cab7",
+   "f1_analog": "F1-N22",
+   "source": "def calc(a, b):\n    return 18446744073709551616\n"
+  },
+  {
+   "id": "F2-python-N34",
+   "status": 69,
+   "why": "conditional expression",
+   "sha256": "c748777eb6a22894bde3dcaa5a3e27d7682e3f52513cd670079f09e77841b4a5",
+   "f1_analog": "F1-N12",
+   "source": "def calc(a, b):\n    return b if a else a\n"
+  },
+  {
+   "id": "F2-python-N35",
+   "status": 69,
+   "why": "statement other than return",
+   "sha256": "93de2affc9a2ee4225decf50c3f1e4759618ec3469db04f750c8af29ff3b0176",
+   "f1_analog": "F1-N16",
+   "source": "def calc(a, b):\n    if a:\n        return b\n    return a\n"
+  },
+  {
+   "id": "F2-python-N36",
+   "status": 69,
+   "why": "loop",
+   "sha256": "86186bb369b91c206cf05d3bf3d40101601283e8945d9379222a78e6a26969f6",
+   "f1_analog": "F1-N17",
+   "source": "def calc(a, b):\n    while a:\n        pass\n    return a\n"
+  },
+  {
+   "id": "F2-python-N37",
+   "status": 70,
+   "why": "call of an unknown name",
+   "sha256": "9ee5b848e2a916c4e11b0dcd3abe07c8a1678d78149c5e9939fa89d9f2b0c1b0",
+   "f1_analog": "F1-N19",
+   "source": "def calc(a, b):\n    return other(a)\n"
+  },
+  {
+   "id": "F2-python-N38",
+   "status": 69,
+   "why": "call of a parameter",
+   "sha256": "add7d8b8e1600de351f79d5d822aa278a0efa13f2decb854bcb88a9e751ad4bf",
+   "source": "def calc(a, b):\n    return a(b)\n"
+  },
+  {
+   "id": "F2-python-N39",
+   "status": 69,
+   "why": "string literal",
+   "sha256": "16a33e4d7e80a8d6a091ab76b6c1e1fd69f7a0b9574656d67dedce64e320c55e",
+   "f1_analog": "F1-N24",
+   "source": "def calc(a, b):\n    return \"abc\"\n"
+  },
+  {
+   "id": "F2-python-N40",
+   "status": 70,
+   "why": "name other than a parameter",
+   "sha256": "fb1bde1fc0d82d534c3d7bf0c2e4db945ef93258a7d89e71e53d4d48b59655e8",
+   "f1_analog": "F1-N25",
+   "source": "def calc(a, b):\n    return unknown\n"
+  },
+  {
+   "id": "F2-python-N41",
+   "status": 71,
+   "why": "duplicate parameter",
+   "sha256": "43b95b6fd929d3cc5290a1737cf39365a40120619fb5002ad6fdc8e59c049dda",
+   "f1_analog": "F1-N26",
+   "source": "def calc(a, a):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N42",
+   "status": 69,
+   "why": "second definition",
+   "sha256": "e8165fbb511ae5bcac9fc73bf436e94b4a855f151e14583d557202b033e2ba4d",
+   "f1_analog": "F1-N28",
+   "source": "def calc(a, b):\n    return a\ndef extra():\n    return 1\n"
+  },
+  {
+   "id": "F2-python-N43",
+   "status": 65,
+   "why": "missing final LF",
+   "sha256": "9320263f4294b8314b8b353204ca6be9f15f14918ef15f1f4c8dae0e64bcfed1",
+   "f1_analog": "F1-N31",
+   "source": "def calc(a, b):\n    return (a + b) & 0xFFFFFFFFFFFFFFFF"
+  },
+  {
+   "id": "F2-python-N44",
+   "status": 71,
+   "why": "keyword as parameter",
+   "sha256": "01e54d274b7c88be369407b5646eedbcda2b16c4e8e6d7c7948d6f6ae12d465b",
+   "f1_analog": "F1-N32",
+   "source": "def calc(return):\n    return 1\n"
+  },
+  {
+   "id": "F2-python-N45",
+   "status": 71,
+   "why": "name not starting with a lowercase letter",
+   "sha256": "d28497f7d18c7e2bdf9fa1ef77929dc15760cb88aead2faecdabf545737ded31",
+   "f1_analog": "F1-N33",
+   "source": "def calc(_private):\n    return _private\n"
+  },
+  {
+   "id": "F2-python-N46",
+   "status": 67,
+   "why": "seven parameters",
+   "sha256": "64e96fb38632deca528ab63b6ad4d4bb92a78278fe9ed2f07b2959d45e55f064",
+   "f1_analog": "F1-N34",
+   "source": "def calc(a, b, c, d, e, f, g):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N47",
+   "status": 65,
+   "why": "NUL byte",
+   "sha256": "2c522200259fd9e3567ed358c5a36e208e290e67a8b68db2ce0254a26a1e872b",
+   "f1_analog": "F1-N38",
+   "source": "def calc():\n    return 1\n\u0000"
+  },
+  {
+   "id": "F2-python-N48",
+   "status": 67,
+   "why": "more than 4096 bytes",
+   "sha256": "3e97197f4b8d46a893067c94ab15e195e3d97fb5f24eede5ef047b571240d92b",
+   "f1_analog": "F1-N39",
+   "source_hex": "7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878"
+  },
+  {
+   "id": "F2-python-N49",
+   "status": 66,
+   "why": "parameter annotation",
+   "sha256": "12c3c37fa611b03a769e02a61003e0a91606a8e61588c8a3b28b309edc35b421",
+   "f1_analog": "F1-N00",
+   "source": "def calc(a: int, b: int):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N50",
+   "status": 66,
+   "why": "return annotation",
+   "sha256": "2efb1cb14d3d4fdcd7134b1f2a124a37c16d8e2eda780d117d7e8222566fa0df",
+   "f1_analog": "F1-N01",
+   "source": "def calc(a, b) -> int:\n    return a\n"
+  },
+  {
+   "id": "F2-python-N51",
+   "status": 71,
+   "why": "default argument",
+   "sha256": "bdc856b0f8ed7dde698ca38be652b9448fcd091fbe5f1526f54cb685588f68e9",
+   "source": "def calc(a, b=1):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N52",
+   "status": 71,
+   "why": "*args",
+   "sha256": "e717ff061355f0d3f2c73dd961249d048d274f5719ce8899cea04349004c2699",
+   "source": "def calc(*args):\n    return 1\n"
+  },
+  {
+   "id": "F2-python-N53",
+   "status": 71,
+   "why": "**kwargs",
+   "sha256": "ff27e5c31f14e906f006f589e351982a32aac159a19569316ddd786c99a3c16a",
+   "source": "def calc(**kw):\n    return 1\n"
+  },
+  {
+   "id": "F2-python-N54",
+   "status": 71,
+   "why": "positional-only marker",
+   "sha256": "6d243231a151676d92062623a7b2756eda053ce43a6432f4dbcdf20c5d169b73",
+   "source": "def calc(a, /, b):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N55",
+   "status": 71,
+   "why": "trailing comma in parameters",
+   "sha256": "40345ddab35b526e6bd3ad119de7230a72352a928cc15ac7380f804045dc253e",
+   "source": "def calc(a, b,):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N56",
+   "status": 69,
+   "why": "decorator",
+   "sha256": "a4aedadb36367ca33823f6dac3ad4b078ca200df1e2ca8d639c22a3cc186ef07",
+   "source": "@staticmethod\ndef calc(a, b):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N57",
+   "status": 69,
+   "why": "lambda assignment instead of def",
+   "sha256": "c816c4b88d0c6dab258e3577fc09ac80fe5563ee76830b4570388a60434e6bc4",
+   "source": "calc = lambda a, b: a\n"
+  },
+  {
+   "id": "F2-python-N58",
+   "status": 69,
+   "why": "lambda expression",
+   "sha256": "dc42eea12ba20bc5ab52bafb79dfe6ed81b0135afa4d7d5beed4f5241bac86b0",
+   "source": "def calc(a, b):\n    return lambda: a\n"
+  },
+  {
+   "id": "F2-python-N59",
+   "status": 69,
+   "why": "async def",
+   "sha256": "dc83f5e919afd0aafdd7dfd19cff1de2928142ef8429ab27887ee4508adefde4",
+   "source": "async def calc(a, b):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N60",
+   "status": 69,
+   "why": "global statement",
+   "sha256": "b2f51f2fb85f4f76afdc7a13f30121adacee0264f513722f29c1747dc543afff",
+   "source": "def calc(a, b):\n    global a\n    return a\n"
+  },
+  {
+   "id": "F2-python-N61",
+   "status": 69,
+   "why": "input-domain assert is not in the grammar (obligation, not source)",
+   "sha256": "2f8608b9263c89d4c38eeefef40166910b0044ddb5c93b57bfafef7aed67cdec",
+   "source": "def calc(a, b):\n    assert 0 <= a < 2**64\n    return a\n"
+  },
+  {
+   "id": "F2-python-N62",
+   "status": 72,
+   "why": "tab indentation",
+   "sha256": "ff2b0cc685613473b751af6bd6fdda76cc7dbb2d75210cc40c534956aab7354c",
+   "source": "def calc(a, b):\n\treturn a\n"
+  },
+  {
+   "id": "F2-python-N63",
+   "status": 72,
+   "why": "CRLF line ends",
+   "sha256": "7e7007b6d5550daa64568246f1141e9a6286a1adb6db8c5c42bb584cab7b6aba",
+   "source": "def calc(a, b):\r\n    return a\r\n"
+  },
+  {
+   "id": "F2-python-N64",
+   "status": 72,
+   "why": "comment",
+   "sha256": "83d9ccc830a2d33a03aad94fe6df5c1474639f1421e1c53538be6525ade0c068",
+   "f1_analog": "F1-N43",
+   "source": "def calc(a, b):\n    return a  # comment\n"
+  },
+  {
+   "id": "F2-python-N65",
+   "status": 72,
+   "why": "PEP 263 coding declaration",
+   "sha256": "d89379b73043d45717fe00e5b55f7d39b7b1a42cd2007bb44277508317d88d1f",
+   "source": "# coding: utf-7\ndef calc(a, b):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N66",
+   "status": 72,
+   "why": "backslash line continuation",
+   "sha256": "2226ad863de6b84bf4e30f37e2d42198525d769c1504aca761371df522b0d8d0",
+   "f1_analog": "F1-N43",
+   "source": "def calc(a, b):\n    return (a + \\\n        b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N67",
+   "status": 72,
+   "why": "invalid UTF-8 byte",
+   "sha256": "31c5745cd53e7055fc01cfb77e3f3494090030dd86812ff08c01ef4edce3feaf",
+   "source_hex": "6465662063616c6328612c2062293a0a2020202072657475726e20ff0a"
+  },
+  {
+   "id": "F2-python-N68",
+   "status": 72,
+   "why": "non-ASCII identifier (NFKC-normalised to a by CPython)",
+   "sha256": "290dc8977e4ceb58597a8fd2cbd2a950ad0ec9d96e22211352d47b3c3a0ec9ba",
+   "source_hex": "6465662063616c6328efbd812c2062293a0a2020202072657475726e20efbd810a"
+  },
+  {
+   "id": "F2-python-N69",
+   "status": 65,
+   "why": "two-space indentation",
+   "sha256": "cbea0a82b3652508db50e422589203d69bf65378e4d3fed627f21cc581085909",
+   "source": "def calc(a, b):\n  return a\n"
+  },
+  {
+   "id": "F2-python-N70",
+   "status": 65,
+   "why": "eight-space indentation",
+   "sha256": "0282b526334d80192a6a2748f86c43d156fcdc34bf156f7464cc51ec42fb1119",
+   "source": "def calc(a, b):\n        return a\n"
+  },
+  {
+   "id": "F2-python-N71",
+   "status": 65,
+   "why": "indented def",
+   "sha256": "3e3ca8e70771e3e9f408aad7b987f5e3e892cbdc809eece3dc04b03281231f18",
+   "source": " def calc(a, b):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N72",
+   "status": 69,
+   "why": "one-line suite",
+   "sha256": "0a5119c253ab98d24005bf46c6465e1eb7f171b7763f4165a0e52776b998437a",
+   "source": "def calc(a, b): return a\n"
+  },
+  {
+   "id": "F2-python-N73",
+   "status": 65,
+   "why": "blank line before the body",
+   "sha256": "056ad03cedb8011e7e5492c276f07f783e60edfef54adba35c0d2243c934a53d",
+   "source": "def calc(a, b):\n\n    return a\n"
+  },
+  {
+   "id": "F2-python-N74",
+   "status": 69,
+   "why": "trailing line after the body",
+   "sha256": "6d5616a60f06fa615269d0d68eb8571d3783b27c58be65dff573090e69c99d93",
+   "source": "def calc(a, b):\n    return a\n\n"
+  },
+  {
+   "id": "F2-python-N75",
+   "status": 65,
+   "why": "expression split over lines",
+   "sha256": "af8aaaba125ab491cf23822288113429312690b66a6cc4f2249219e26df36ac3",
+   "source": "def calc(a, b):\n    return (a +\n        b) & 0xFFFFFFFFFFFFFFFF\n"
+  },
+  {
+   "id": "F2-python-N76",
+   "status": 65,
+   "why": "bare return",
+   "sha256": "5535588437d75334e242e814e2d45487323b5c92c22d746327de052bd6d40437",
+   "source": "def calc(a, b):\n    return\n"
+  },
+  {
+   "id": "F2-python-N77",
+   "status": 65,
+   "why": "empty source",
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "source": ""
+  },
+  {
+   "id": "F2-python-N78",
+   "status": 71,
+   "why": "keyword as function name",
+   "sha256": "82bb811ea2459e53e5b7d53f97cc65c7c717892abb5ad46d0715a16b1b56accc",
+   "source": "def class(a):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N79",
+   "status": 71,
+   "why": "function name not starting with a lowercase letter",
+   "sha256": "5825de5493e6ce956d3be86b9ac8e9af24cfa3a905d6ee8e46aa52fc3c6ad027",
+   "f1_analog": "F1-N46",
+   "source": "def Calc(a):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N80",
+   "status": 71,
+   "why": "name longer than 32 bytes",
+   "sha256": "45aaccfd8995dd6e1dee96cfc06b7cee9daca01b17845a582dea92298dd9ae13",
+   "source": "def ccccccccccccccccccccccccccccccccc(a):\n    return a\n"
+  },
+  {
+   "id": "F2-python-N81",
+   "status": 69,
+   "why": "tuple result",
+   "sha256": "65d93088ac8c64069b7bb498da5c18d37923a4b063c3f030ddaaa4ec4dfdc4d9",
+   "source": "def calc(a, b):\n    return a, b\n"
+  },
+  {
+   "id": "F2-python-N82",
+   "status": 69,
+   "why": "statement separator",
+   "sha256": "3bc7f782ac7a599ca75316e2b092aeda1fcd081e38397c8fce867a3302988360",
+   "source": "def calc(a, b):\n    return a;\n"
+  },
+  {
+   "id": "F2-python-N83",
+   "status": 69,
+   "why": "keyword value",
+   "sha256": "43c24a5c874f42cc2d28c6531b67119fe8d93de9eb10b21c847317e96b52dedd",
+   "source": "def calc(a, b):\n    return True\n"
+  },
+  {
+   "id": "F2-python-N84",
+   "status": 69,
+   "why": "attribute access",
+   "sha256": "93fab29831f1fc90b405e9e291924a821bf0d2d7acd2bbb4967157cf20abd527",
+   "source": "def calc(a, b):\n    return a.real\n"
+  },
+  {
+   "id": "F2-python-N85",
+   "status": 69,
+   "why": "subscript",
+   "sha256": "d24f00bea4482ce1df3f49dea86b4fecc27a0920cb09bdb39e87dfa7548f8982",
+   "source": "def calc(a, b):\n    return a[0]\n"
+  },
+  {
+   "id": "F2-python-N86",
+   "status": 67,
+   "why": "parentheses nested deeper than 128",
+   "sha256": "1d42b351017cba901804d039832219d530b0055d8a77db13309ce727a3859505",
+   "source": "def calc(a, b):\n    return (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((a)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))\n"
+  },
+  {
+   "id": "F2-python-N87",
+   "status": 69,
+   "why": "assignment statement",
+   "sha256": "bdb92dcca1d5988b0bc972b08912d73a8588c0780b1ece93aaa0433b96f18e7b",
+   "source": "def calc(a, b):\n    x = a\n    return x\n"
+  },
+  {
+   "id": "F2-python-N88",
+   "status": 67,
+   "why": "operation capacity exceeded (65 operations)",
+   "sha256": "30bbbe01e91b751199e277607d41a87543d44e55d7b80ee5c4d50291cf6a26d5",
+   "source_hex": "6465662063616c6328612c2062293a0a2020202072657475726e202828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282861202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b20612920262030784646464646464646464646464646464629202b2061292026203078464646464646464646464646464646460a"
+  },
+  {
+   "id": "F2-python-N89",
+   "status": 67,
+   "why": "source capacity exceeded (4097 bytes)",
+   "sha256": "ce164f0669eeddf605691ebcbdf461763a2584daedc6e53fa901f4323f865074",
+   "source_hex": "6465662063616c6328612c2062293a0a2020202072657475726e202861202b2062292026203078464646464646464646464646464646462020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020200a"
+  }
+ ]
+}

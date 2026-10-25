@@ -1,0 +1,453 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten S1-family upper-to-Python3 exporter (python-explicit-u64-pure-v1, spec/universal/python-u64-v1.md).
+note Prepended unchanged at build: src/source-aware/vendor/sha256.om and src/source-aware/core.om (decode n).
+note Input frame: one byte name length L (0 = calc), L name bytes, then one OMSB envelope to EOF.
+note Output is generated from the OMSA operation records only; the OMSP sidecar is validated by decode, never read.
+global Yn uchar 1
+global Ynm uchar 32
+global Yone uchar 1
+global Yo uchar 4096
+global Yl ulong 1
+global Yni ulong 1
+global Yln ulong 64
+global Ydp ulong 64
+global Ycn ulong 64
+text Ycalc "calc"
+text Ywords "def return False None True and as assert async await break class continue del elif else except finally for from global if import in is lambda nonlocal not or pass raise try while with yield match case type"
+text Ydef "def "
+text Ymid "):\n    return "
+text Ymask " & 0xFFFFFFFFFFFFFFFF"
+text YBad "PY_EXPORT_BAD_COMMAND\n"
+text YMal "PY_EXPORT_MALFORMED\n"
+text YLim "PY_EXPORT_LIMIT\n"
+text YProf "PY_EXPORT_PROFILE_MISMATCH\n"
+text YIO "PY_EXPORT_IO\n"
+
+fn ydie code ulong to void
+if eq code 64
+w = write 2 YBad 0 len YBad
+end
+if eq code 65
+w = write 2 YMal 0 len YMal
+end
+if eq code 67
+w = write 2 YLim 0 len YLim
+end
+if eq code 68
+w = write 2 YProf 0 len YProf
+end
+if eq code 77
+w = write 2 YIO 0 len YIO
+end
+exit int code
+end
+
+fn ybyte c ulong to void
+put Yo get Yl 0 uchar c
+put Yl 0 add get Yl 0 1
+end
+
+fn ydigits v ulong to ulong
+d = ulong 1
+x = div v 10
+while gt x 0
+d = add d 1
+x = div x 10
+end
+ret d
+end
+
+fn ydec v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+while gt i 0
+i = sub i 1
+ybyte ulong get d i
+end
+end
+
+fn yidc c ulong to bool
+if and ge c 48 le c 57
+ret true
+end
+if and ge c 65 le c 90
+ret true
+end
+if and ge c 97 le c 122
+ret true
+end
+ret eq c 95
+end
+
+fn ywrd p ulong to bool
+if ge p len Ywords
+ret false
+end
+ret ne get Ywords p 32
+end
+
+fn ysame off ulong count ulong to bool
+if ne count ulong get Yn 0
+ret false
+end
+for i ulong count
+if ne get Ynm i get Ywords add off i
+ret false
+end
+end
+ret true
+end
+
+fn ykeyword to bool
+p = ulong 0
+while lt p len Ywords
+b = p
+while ywrd p
+p = add p 1
+end
+if ysame b sub p b
+ret true
+end
+p = add p 1
+end
+ret false
+end
+
+fn ynameok to bool
+n = ulong get Yn 0
+if eq n 0
+ret true
+end
+c = ulong get Ynm 0
+if or lt c 97 gt c 122
+ret false
+end
+for j ulong n
+if not yidc ulong get Ynm j
+ret false
+end
+end
+ret not ykeyword
+end
+
+fn ykind i ulong obl ulong to ulong
+c = get Oc i
+if or ne get Ot i 1 ne get Oef i 0
+ret 68
+end
+if ne get Oal i 0
+ret 68
+end
+if eq c 9
+if or ne get Oat i 0 ne get Oob i 1
+ret 68
+end
+put Yni 0 add get Yni 0 1
+ret 0
+end
+if eq c 1
+if or ne get Oat i 1 ne get Oob i 0
+ret 68
+end
+ret 0
+end
+if or lt c 2 gt c 4
+ret 68
+end
+if or ne get Oat i 1 ne get Oob i obl
+ret 68
+end
+ret 0
+end
+
+fn yfamily to ulong
+l = get M 0
+p = get M 1
+obl = ulong 0
+if and eq l 1 eq p 1
+obl = 1
+end
+if and eq l 2 eq p 2
+obl = 1
+end
+if and eq l 3 eq p 4
+obl = 5
+end
+if eq obl 0
+ret 68
+end
+if or ne get M 2 0 ne get M 3 1
+ret 68
+end
+put Yni 0 0
+for i ulong get M 4
+if ne ykind i obl 0
+ret 68
+end
+end
+for j ulong get M 4
+if eq get Oc j 9
+if ge get Oi j get Yni 0
+ret 68
+end
+end
+end
+ret 0
+end
+
+fn ysat v ulong to ulong
+if gt v 1048576
+ret 1048576
+end
+ret v
+end
+
+fn ymetric k ulong to void
+c = get Oc k
+put Ydp k 0
+if eq c 9
+put Yln k 2
+put Ycn k 0
+ret
+end
+if eq c 1
+put Yln k ydigits get Oi k
+put Ycn k 1
+ret
+end
+a = get Oa k
+b = get Ob k
+put Yln k ysat add add get Yln a get Yln b 28
+da = get Ydp a
+db = get Ydp b
+if gt da db
+put Ydp k ysat add da 2
+else
+put Ydp k ysat add db 2
+end
+put Ycn k ysat add add get Ycn a get Ycn b 1
+end
+
+fn yemit k ulong top ulong to void
+c = get Oc k
+if eq c 9
+ybyte 105
+ybyte add 48 get Oi k
+ret
+end
+if eq c 1
+ydec get Oi k
+ret
+end
+if eq top 0
+ybyte 40
+end
+ybyte 40
+yemit get Oa k 0
+ybyte 32
+if eq c 2
+ybyte 43
+end
+if eq c 3
+ybyte 45
+end
+if eq c 4
+ybyte 42
+end
+ybyte 32
+yemit get Ob k 0
+ybyte 41
+for i ulong len Ymask
+ybyte ulong get Ymask i
+end
+if eq top 0
+ybyte 41
+end
+end
+
+fn yroot to ulong
+n = get M 4
+if lt n 3
+ret sub n 1
+end
+z = sub n 2
+y = sub n 1
+if or ne get Oc z 1 ne get Oi z 0
+ret y
+end
+if or ne get Oc y 2 ne get Ob y z
+ret y
+end
+if ge get Oa y z
+ret y
+end
+ret get Oa y
+end
+
+fn yparams to ulong
+ni = get Yni 0
+if eq ni 0
+ret 0
+end
+ret sub mul ni 4 2
+end
+
+fn ysignature to void
+for i ulong len Ydef
+ybyte ulong get Ydef i
+end
+if eq ulong get Yn 0 0
+for j ulong len Ycalc
+ybyte ulong get Ycalc j
+end
+else
+for j ulong ulong get Yn 0
+ybyte ulong get Ynm j
+end
+end
+ybyte 40
+for s ulong get Yni 0
+if gt s 0
+ybyte 44
+ybyte 32
+end
+ybyte 105
+ybyte add 48 s
+end
+for u ulong len Ymid
+ybyte ulong get Ymid u
+end
+end
+
+fn yreadname to void
+r = read 0 Yn 0 1
+if lt r 0
+ydie 77
+end
+if eq r 0
+ydie 64
+end
+n = ulong get Yn 0
+if gt n 32
+ydie 64
+end
+got = ulong 0
+while lt got n
+r = read 0 Ynm got sub n got
+if lt r 0
+ydie 77
+end
+if eq r 0
+ydie 64
+end
+got = add got ulong r
+end
+if not ynameok
+ydie 64
+end
+end
+
+fn yreadunit to ulong
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub ulong 8192 n
+if lt r 0
+ydie 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+if eq n 8192
+r = read 0 Yone 0 1
+if lt r 0
+ydie 77
+end
+if gt r 0
+ydie 65
+end
+end
+ret n
+end
+
+fn ytotal root ulong to ulong
+t = add add len Ydef len Ymid 2
+t = add t yparams
+if eq ulong get Yn 0 0
+t = add t len Ycalc
+else
+t = add t ulong get Yn 0
+end
+if eq get Oc root 2
+ret add t sub get Yln root 2
+end
+if eq get Oc root 3
+ret add t sub get Yln root 2
+end
+if eq get Oc root 4
+ret add t sub get Yln root 2
+end
+ret add t get Yln root
+end
+
+fn main to int
+constants
+yreadname
+n = yreadunit
+code = decode n
+if eq code 68
+ydie 68
+end
+if ne code 0
+ydie 65
+end
+if ne yfamily 0
+ydie 68
+end
+for k ulong get M 4
+ymetric k
+end
+root = yroot
+total = ytotal root
+if gt total 4096
+ydie 67
+end
+if gt get Ydp root 129
+ydie 67
+end
+if gt add add get Yni 0 get Ycn root 2 64
+ydie 67
+end
+put Yl 0 0
+ysignature
+if or or eq get Oc root 2 eq get Oc root 3 eq get Oc root 4
+yemit root 1
+else
+yemit root 0
+end
+ybyte 10
+if ne get Yl 0 total
+ydie 65
+end
+sent = ulong 0
+while lt sent total
+r = write 1 Yo sent sub total sent
+if le r 0
+ydie 77
+end
+sent = add sent ulong r
+end
+ret 0
+end
