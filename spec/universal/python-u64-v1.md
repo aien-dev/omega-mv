@@ -158,9 +158,10 @@ source or binary (78).
 
 ```sh
 make -f mk/python-u64.mk test-python-u64
-# SA_SEED_REPO (default ~/workspace/omega-bridge) holds bridge commit 0fc7d866.
-# PY_SA_ROOT (default ~/workspace/universal-read): reference codec `bash tools/source-aware/sa`
-#   and the C importer build/L589/c-import.
+# SA_SEED_REPO (absolute path; default ~/workspace/omega-bridge) holds bridge commit 0fc7d866.
+# The target first builds this tree's #621 codec (mk/source-aware.mk source-aware) and C importer
+# (mk/c-u64-import.mk c-u64-import). PY_SA_ROOT (default: this tree) is where `bash tools/source-aware/sa`
+# runs; PY_C_IMPORT (default: this tree's build/L589/c-import) is the C importer.
 # PY_C_EXPORT=<path>/tools/adapters/c-export runs Python -> C; empty means Python -> C is NOT_RUN.
 tools/adapters/python-import < computation.py > unit.upper
 tools/adapters/python-export [NAME] < unit.upper > generated.py
