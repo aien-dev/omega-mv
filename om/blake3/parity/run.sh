@@ -4,7 +4,7 @@
 # vectors (tests/resolve/blake3_vectors.txt) and 1000 inputs (boundaries, random to 3 MiB) must agree.
 # Then the two mutants that make test-resolve used to apply to the C (B3M:merge, B3M:root) are
 # applied to b3unit.om; each rebuilt library must fail the official vectors.
-#   OMEGA_OMC, OMEGA_BRIDGE as for om/units.sh (exit 3 NOT_RUN without them; the mutants need them)
+#   OMEGA_OMC, OMEGA_BRIDGE as for om/units.sh (exit 3 NOT_RUN without them)
 set -eu
 ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
@@ -23,7 +23,8 @@ build() { # build <src dir> <out>
 build "$ROOT/src" "$T/par"
 out=$("$T/par" "$V" | tail -1); echo "$out"
 [ "$out" = "vectors=35 vecfail=0 cases=1000 diff=0" ] || { echo "BLAKE3-PARITY FAIL"; exit 1; }
-[ -n "${OMEGA_OMC:-}" ] && [ -n "${OMEGA_BRIDGE:-}" ] || { echo "BLAKE3-PARITY PASS (mutants NOT_RUN: set OMEGA_OMC and OMEGA_BRIDGE)"; exit 0; }
+# The mutants are part of the verdict: without the pinned tools this is NOT_RUN (exit 3), never PASS.
+[ -n "${OMEGA_OMC:-}" ] && [ -n "${OMEGA_BRIDGE:-}" ] || { echo "BLAKE3-PARITY NOT_RUN: the mutants need OMEGA_OMC and OMEGA_BRIDGE"; exit 3; }
 mutant() { # mutant <name> <exact line> <replacement>
   rm -rf "$T/m"; mkdir -p "$T/m/om"; cp -r "$ROOT/om/." "$T/m/om/"; cp -r "$ROOT/src" "$T/m/src"
   python3 - "$T/m/om/blake3/b3unit.om" "$2" "$3" <<'PY'

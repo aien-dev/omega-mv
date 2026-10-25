@@ -2193,7 +2193,7 @@ test-resolve: tests/test_omega_resolve.c $(OUT_DIR)/compiler/oscv $(RESOLVE_SRC)
 	  mp_run build_mutant prod-authority-trim      prod-authority         receipt  receipt-refuses-production-blank-authority       '        if (b == 0) { ef(&e, "receipt: PRODUCTION receipts require an authority reference%s", ""); goto done; }'; \
 	  mp_run build_mutant prod-spelling            prod-spelling          receipt  receipt-refuses-production-test-only-authority   '        int bad = strstr(low, "test-only") || strstr(low, "testonly");'; \
 	  mp_run build_mutant prod-bad-refused         prod-bad-refused       receipt  receipt-refuses-production-test-only-authority   '        if (bad && 0) { ef(&e, "receipt: a TEST_ONLY signer cannot produce a PRODUCTION receipt%s", ""); goto done; }'; mp_wait
-	@echo "test-resolve: PASS (all checks, ASan/UBSan clean, all 66 mutants killed)"
+	@echo "test-resolve: PASS (all checks, ASan/UBSan clean, all 64 mutants killed; the 2 BLAKE3 mutants run in om/blake3/parity/run.sh)"
 
 # VC1-GENESIS (VC1 stage 6): the pinned Genesis Set, the private store doors, the mandatory
 # source/IR recheck in the build domain. The resolver and the store now rebuild the program from

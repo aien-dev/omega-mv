@@ -12,75 +12,8 @@ note omsha c b n op o:
 note   op 0  init: count 0, FIPS initial hash value
 note   op 1  absorb b[0..n), n <= 4096, with src/sha256.c's buffering rules
 note   op 2  final: pad, absorb the bit length, write the 32-byte digest into o
+note   op 3  one shot: the digest of b[0..n), n < 4096, written into o; c is not used
 note n > 4096 traps 3; any other op traps 9.
-
-
-fn initk k edit ulong 64 to void
-put k 0 1116352408
-put k 1 1899447441
-put k 2 3049323471
-put k 3 3921009573
-put k 4 961987163
-put k 5 1508970993
-put k 6 2453635748
-put k 7 2870763221
-put k 8 3624381080
-put k 9 310598401
-put k 10 607225278
-put k 11 1426881987
-put k 12 1925078388
-put k 13 2162078206
-put k 14 2614888103
-put k 15 3248222580
-put k 16 3835390401
-put k 17 4022224774
-put k 18 264347078
-put k 19 604807628
-put k 20 770255983
-put k 21 1249150122
-put k 22 1555081692
-put k 23 1996064986
-put k 24 2554220882
-put k 25 2821834349
-put k 26 2952996808
-put k 27 3210313671
-put k 28 3336571891
-put k 29 3584528711
-put k 30 113926993
-put k 31 338241895
-put k 32 666307205
-put k 33 773529912
-put k 34 1294757372
-put k 35 1396182291
-put k 36 1695183700
-put k 37 1986661051
-put k 38 2177026350
-put k 39 2456956037
-put k 40 2730485921
-put k 41 2820302411
-put k 42 3259730800
-put k 43 3345764771
-put k 44 3516065817
-put k 45 3600352804
-put k 46 4094571909
-put k 47 275423344
-put k 48 430227734
-put k 49 506948616
-put k 50 659060556
-put k 51 883997877
-put k 52 958139571
-put k 53 1322822218
-put k 54 1537002063
-put k 55 1747873779
-put k 56 1955562222
-put k 57 2024104815
-put k 58 2227730452
-put k 59 2361852424
-put k 60 2428436474
-put k 61 2756734187
-put k 62 3204031479
-put k 63 3329325298
-end
 
 note little-endian word of nb bytes at byte offset p of the context
 fn getle c edit uchar 104 p ulong nb ulong to ulong
@@ -101,106 +34,875 @@ x = shr x 8
 end
 end
 
-note big-endian message schedule of block blk into w
-fn sched blk edit uchar 64 w edit ulong 64 to void
+note the hash words of the context into h, and back
+fn loadh c edit uchar 104 h edit uint 8 to void
+for i ulong 8
+put h i uint getle c mul i 4 4
+end
+end
+
+fn storeh c edit uchar 104 h edit uint 8 to void
+for i ulong 8
+putle c mul i 4 4 ulong get h i
+end
+end
+
+note big-endian schedule of the block at byte o of b
+fn schedb b view uchar 4096 o ulong w edit uint 64 to void
 for i ulong 16
-o = mul i 4
-v = ulong get blk o
-v = or shl v 8 ulong get blk add o 1
-v = or shl v 8 ulong get blk add o 2
-v = or shl v 8 ulong get blk add o 3
+q = add o mul i 4
+v = uint get b q
+v = or shl v 8 uint get b add q 1
+v = or shl v 8 uint get b add q 2
+v = or shl v 8 uint get b add q 3
 put w i v
 end
 for j ulong 48
 i = add j 16
 x = get w sub i 2
-u = and or shr x 17 shl x 15 4294967295
-u = xor u and or shr x 19 shl x 13 4294967295
+u = or shr x 17 shl x 15
+u = xor u or shr x 19 shl x 13
 u = xor u shr x 10
 x = get w sub i 15
-v = and or shr x 7 shl x 25 4294967295
-v = xor v and or shr x 18 shl x 14 4294967295
+v = or shr x 7 shl x 25
+v = xor v or shr x 18 shl x 14
 v = xor v shr x 3
 u = add u v
 u = add u get w sub i 7
-put w i and add u get w sub i 16 4294967295
+put w i add u get w sub i 16
 end
 end
 
-note the 64 rounds over the working state s; sigma, ch and maj are written out because every call
-note spills and reloads the caller's live values
-fn rounds s edit ulong 8 k view ulong 64 w edit ulong 64 to void
-for i ulong 64
-e = get s 4
-u = and or shr e 6 shl e 26 4294967295
-v = and or shr e 11 shl e 21 4294967295
-u = xor u v
-v = and or shr e 25 shl e 7 4294967295
-u = xor u v
-f = get s 5
-g = get s 6
-v = xor and e f and and not e 4294967295 g
-t1 = add u v
-t1 = add t1 get s 7
-t1 = add t1 get k i
-t1 = and add t1 get w i 4294967295
-a = get s 0
-u = and or shr a 2 shl a 30 4294967295
-v = and or shr a 13 shl a 19 4294967295
-u = xor u v
-v = and or shr a 22 shl a 10 4294967295
-u = xor u v
-f = get s 1
-g = get s 2
-v = xor and a f xor and a g and f g
-u = and add u v 4294967295
-put s 7 get s 6
-put s 6 get s 5
-put s 5 e
-v = get s 3
-put s 4 and add v t1 4294967295
-put s 3 g
-put s 2 f
-put s 1 a
-put s 0 and add t1 u 4294967295
+note big-endian schedule of the block at byte 40 of b
+fn schedc b edit uchar 104 w edit uint 64 to void
+for i ulong 16
+q = add 40 mul i 4
+v = uint get b q
+v = or shl v 8 uint get b add q 1
+v = or shl v 8 uint get b add q 2
+v = or shl v 8 uint get b add q 3
+put w i v
+end
+for j ulong 48
+i = add j 16
+x = get w sub i 2
+u = or shr x 17 shl x 15
+u = xor u or shr x 19 shl x 13
+u = xor u shr x 10
+x = get w sub i 15
+v = or shr x 7 shl x 25
+v = xor v or shr x 18 shl x 14
+v = xor v shr x 3
+u = add u v
+u = add u get w sub i 7
+put w i add u get w sub i 16
 end
 end
 
-note one compression of blk into the context's state words
-fn comp c edit uchar 104 blk edit uchar 64 k view ulong 64 to void
-w = new ulong 64 0
-s = new ulong 8 0
-sched blk w
-for i ulong 8
-put s i getle c mul i 4 4
-end
-rounds s k w
-for i ulong 8
-p = mul i 4
-putle c p 4 and add getle c p 4 get s i 4294967295
-end
+note the 64 rounds, unrolled with the working words in locals (names rotate instead of moving);
+note uint arithmetic wraps mod 2^32, so no masks; the round constants K are immediates. Generated by a loop over i; t and u are scratch.
+fn rounds h edit uint 8 w view uint 64 to void
+a = get h 0
+b = get h 1
+c = get h 2
+d = get h 3
+e = get h 4
+f = get h 5
+g = get h 6
+x = get h 7
+t = uint 0
+u = uint 0
+t = add x add get w 0 uint 1116352408
+u = or shr e 6 shl e 26
+u = xor u or shr e 11 shl e 21
+u = xor u or shr e 25 shl e 7
+t = add t u
+t = add t xor g and e xor f g
+u = or shr a 2 shl a 30
+u = xor u or shr a 13 shl a 19
+u = xor u or shr a 22 shl a 10
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 1 uint 1899447441
+u = or shr d 6 shl d 26
+u = xor u or shr d 11 shl d 21
+u = xor u or shr d 25 shl d 7
+t = add t u
+t = add t xor f and d xor e f
+u = or shr x 2 shl x 30
+u = xor u or shr x 13 shl x 19
+u = xor u or shr x 22 shl x 10
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 2 uint 3049323471
+u = or shr c 6 shl c 26
+u = xor u or shr c 11 shl c 21
+u = xor u or shr c 25 shl c 7
+t = add t u
+t = add t xor e and c xor d e
+u = or shr g 2 shl g 30
+u = xor u or shr g 13 shl g 19
+u = xor u or shr g 22 shl g 10
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 3 uint 3921009573
+u = or shr b 6 shl b 26
+u = xor u or shr b 11 shl b 21
+u = xor u or shr b 25 shl b 7
+t = add t u
+t = add t xor d and b xor c d
+u = or shr f 2 shl f 30
+u = xor u or shr f 13 shl f 19
+u = xor u or shr f 22 shl f 10
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 4 uint 961987163
+u = or shr a 6 shl a 26
+u = xor u or shr a 11 shl a 21
+u = xor u or shr a 25 shl a 7
+t = add t u
+t = add t xor c and a xor b c
+u = or shr e 2 shl e 30
+u = xor u or shr e 13 shl e 19
+u = xor u or shr e 22 shl e 10
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 5 uint 1508970993
+u = or shr x 6 shl x 26
+u = xor u or shr x 11 shl x 21
+u = xor u or shr x 25 shl x 7
+t = add t u
+t = add t xor b and x xor a b
+u = or shr d 2 shl d 30
+u = xor u or shr d 13 shl d 19
+u = xor u or shr d 22 shl d 10
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 6 uint 2453635748
+u = or shr g 6 shl g 26
+u = xor u or shr g 11 shl g 21
+u = xor u or shr g 25 shl g 7
+t = add t u
+t = add t xor a and g xor x a
+u = or shr c 2 shl c 30
+u = xor u or shr c 13 shl c 19
+u = xor u or shr c 22 shl c 10
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 7 uint 2870763221
+u = or shr f 6 shl f 26
+u = xor u or shr f 11 shl f 21
+u = xor u or shr f 25 shl f 7
+t = add t u
+t = add t xor x and f xor g x
+u = or shr b 2 shl b 30
+u = xor u or shr b 13 shl b 19
+u = xor u or shr b 22 shl b 10
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 8 uint 3624381080
+u = or shr e 6 shl e 26
+u = xor u or shr e 11 shl e 21
+u = xor u or shr e 25 shl e 7
+t = add t u
+t = add t xor g and e xor f g
+u = or shr a 2 shl a 30
+u = xor u or shr a 13 shl a 19
+u = xor u or shr a 22 shl a 10
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 9 uint 310598401
+u = or shr d 6 shl d 26
+u = xor u or shr d 11 shl d 21
+u = xor u or shr d 25 shl d 7
+t = add t u
+t = add t xor f and d xor e f
+u = or shr x 2 shl x 30
+u = xor u or shr x 13 shl x 19
+u = xor u or shr x 22 shl x 10
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 10 uint 607225278
+u = or shr c 6 shl c 26
+u = xor u or shr c 11 shl c 21
+u = xor u or shr c 25 shl c 7
+t = add t u
+t = add t xor e and c xor d e
+u = or shr g 2 shl g 30
+u = xor u or shr g 13 shl g 19
+u = xor u or shr g 22 shl g 10
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 11 uint 1426881987
+u = or shr b 6 shl b 26
+u = xor u or shr b 11 shl b 21
+u = xor u or shr b 25 shl b 7
+t = add t u
+t = add t xor d and b xor c d
+u = or shr f 2 shl f 30
+u = xor u or shr f 13 shl f 19
+u = xor u or shr f 22 shl f 10
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 12 uint 1925078388
+u = or shr a 6 shl a 26
+u = xor u or shr a 11 shl a 21
+u = xor u or shr a 25 shl a 7
+t = add t u
+t = add t xor c and a xor b c
+u = or shr e 2 shl e 30
+u = xor u or shr e 13 shl e 19
+u = xor u or shr e 22 shl e 10
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 13 uint 2162078206
+u = or shr x 6 shl x 26
+u = xor u or shr x 11 shl x 21
+u = xor u or shr x 25 shl x 7
+t = add t u
+t = add t xor b and x xor a b
+u = or shr d 2 shl d 30
+u = xor u or shr d 13 shl d 19
+u = xor u or shr d 22 shl d 10
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 14 uint 2614888103
+u = or shr g 6 shl g 26
+u = xor u or shr g 11 shl g 21
+u = xor u or shr g 25 shl g 7
+t = add t u
+t = add t xor a and g xor x a
+u = or shr c 2 shl c 30
+u = xor u or shr c 13 shl c 19
+u = xor u or shr c 22 shl c 10
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 15 uint 3248222580
+u = or shr f 6 shl f 26
+u = xor u or shr f 11 shl f 21
+u = xor u or shr f 25 shl f 7
+t = add t u
+t = add t xor x and f xor g x
+u = or shr b 2 shl b 30
+u = xor u or shr b 13 shl b 19
+u = xor u or shr b 22 shl b 10
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 16 uint 3835390401
+u = or shr e 6 shl e 26
+u = xor u or shr e 11 shl e 21
+u = xor u or shr e 25 shl e 7
+t = add t u
+t = add t xor g and e xor f g
+u = or shr a 2 shl a 30
+u = xor u or shr a 13 shl a 19
+u = xor u or shr a 22 shl a 10
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 17 uint 4022224774
+u = or shr d 6 shl d 26
+u = xor u or shr d 11 shl d 21
+u = xor u or shr d 25 shl d 7
+t = add t u
+t = add t xor f and d xor e f
+u = or shr x 2 shl x 30
+u = xor u or shr x 13 shl x 19
+u = xor u or shr x 22 shl x 10
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 18 uint 264347078
+u = or shr c 6 shl c 26
+u = xor u or shr c 11 shl c 21
+u = xor u or shr c 25 shl c 7
+t = add t u
+t = add t xor e and c xor d e
+u = or shr g 2 shl g 30
+u = xor u or shr g 13 shl g 19
+u = xor u or shr g 22 shl g 10
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 19 uint 604807628
+u = or shr b 6 shl b 26
+u = xor u or shr b 11 shl b 21
+u = xor u or shr b 25 shl b 7
+t = add t u
+t = add t xor d and b xor c d
+u = or shr f 2 shl f 30
+u = xor u or shr f 13 shl f 19
+u = xor u or shr f 22 shl f 10
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 20 uint 770255983
+u = or shr a 6 shl a 26
+u = xor u or shr a 11 shl a 21
+u = xor u or shr a 25 shl a 7
+t = add t u
+t = add t xor c and a xor b c
+u = or shr e 2 shl e 30
+u = xor u or shr e 13 shl e 19
+u = xor u or shr e 22 shl e 10
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 21 uint 1249150122
+u = or shr x 6 shl x 26
+u = xor u or shr x 11 shl x 21
+u = xor u or shr x 25 shl x 7
+t = add t u
+t = add t xor b and x xor a b
+u = or shr d 2 shl d 30
+u = xor u or shr d 13 shl d 19
+u = xor u or shr d 22 shl d 10
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 22 uint 1555081692
+u = or shr g 6 shl g 26
+u = xor u or shr g 11 shl g 21
+u = xor u or shr g 25 shl g 7
+t = add t u
+t = add t xor a and g xor x a
+u = or shr c 2 shl c 30
+u = xor u or shr c 13 shl c 19
+u = xor u or shr c 22 shl c 10
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 23 uint 1996064986
+u = or shr f 6 shl f 26
+u = xor u or shr f 11 shl f 21
+u = xor u or shr f 25 shl f 7
+t = add t u
+t = add t xor x and f xor g x
+u = or shr b 2 shl b 30
+u = xor u or shr b 13 shl b 19
+u = xor u or shr b 22 shl b 10
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 24 uint 2554220882
+u = or shr e 6 shl e 26
+u = xor u or shr e 11 shl e 21
+u = xor u or shr e 25 shl e 7
+t = add t u
+t = add t xor g and e xor f g
+u = or shr a 2 shl a 30
+u = xor u or shr a 13 shl a 19
+u = xor u or shr a 22 shl a 10
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 25 uint 2821834349
+u = or shr d 6 shl d 26
+u = xor u or shr d 11 shl d 21
+u = xor u or shr d 25 shl d 7
+t = add t u
+t = add t xor f and d xor e f
+u = or shr x 2 shl x 30
+u = xor u or shr x 13 shl x 19
+u = xor u or shr x 22 shl x 10
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 26 uint 2952996808
+u = or shr c 6 shl c 26
+u = xor u or shr c 11 shl c 21
+u = xor u or shr c 25 shl c 7
+t = add t u
+t = add t xor e and c xor d e
+u = or shr g 2 shl g 30
+u = xor u or shr g 13 shl g 19
+u = xor u or shr g 22 shl g 10
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 27 uint 3210313671
+u = or shr b 6 shl b 26
+u = xor u or shr b 11 shl b 21
+u = xor u or shr b 25 shl b 7
+t = add t u
+t = add t xor d and b xor c d
+u = or shr f 2 shl f 30
+u = xor u or shr f 13 shl f 19
+u = xor u or shr f 22 shl f 10
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 28 uint 3336571891
+u = or shr a 6 shl a 26
+u = xor u or shr a 11 shl a 21
+u = xor u or shr a 25 shl a 7
+t = add t u
+t = add t xor c and a xor b c
+u = or shr e 2 shl e 30
+u = xor u or shr e 13 shl e 19
+u = xor u or shr e 22 shl e 10
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 29 uint 3584528711
+u = or shr x 6 shl x 26
+u = xor u or shr x 11 shl x 21
+u = xor u or shr x 25 shl x 7
+t = add t u
+t = add t xor b and x xor a b
+u = or shr d 2 shl d 30
+u = xor u or shr d 13 shl d 19
+u = xor u or shr d 22 shl d 10
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 30 uint 113926993
+u = or shr g 6 shl g 26
+u = xor u or shr g 11 shl g 21
+u = xor u or shr g 25 shl g 7
+t = add t u
+t = add t xor a and g xor x a
+u = or shr c 2 shl c 30
+u = xor u or shr c 13 shl c 19
+u = xor u or shr c 22 shl c 10
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 31 uint 338241895
+u = or shr f 6 shl f 26
+u = xor u or shr f 11 shl f 21
+u = xor u or shr f 25 shl f 7
+t = add t u
+t = add t xor x and f xor g x
+u = or shr b 2 shl b 30
+u = xor u or shr b 13 shl b 19
+u = xor u or shr b 22 shl b 10
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 32 uint 666307205
+u = or shr e 6 shl e 26
+u = xor u or shr e 11 shl e 21
+u = xor u or shr e 25 shl e 7
+t = add t u
+t = add t xor g and e xor f g
+u = or shr a 2 shl a 30
+u = xor u or shr a 13 shl a 19
+u = xor u or shr a 22 shl a 10
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 33 uint 773529912
+u = or shr d 6 shl d 26
+u = xor u or shr d 11 shl d 21
+u = xor u or shr d 25 shl d 7
+t = add t u
+t = add t xor f and d xor e f
+u = or shr x 2 shl x 30
+u = xor u or shr x 13 shl x 19
+u = xor u or shr x 22 shl x 10
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 34 uint 1294757372
+u = or shr c 6 shl c 26
+u = xor u or shr c 11 shl c 21
+u = xor u or shr c 25 shl c 7
+t = add t u
+t = add t xor e and c xor d e
+u = or shr g 2 shl g 30
+u = xor u or shr g 13 shl g 19
+u = xor u or shr g 22 shl g 10
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 35 uint 1396182291
+u = or shr b 6 shl b 26
+u = xor u or shr b 11 shl b 21
+u = xor u or shr b 25 shl b 7
+t = add t u
+t = add t xor d and b xor c d
+u = or shr f 2 shl f 30
+u = xor u or shr f 13 shl f 19
+u = xor u or shr f 22 shl f 10
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 36 uint 1695183700
+u = or shr a 6 shl a 26
+u = xor u or shr a 11 shl a 21
+u = xor u or shr a 25 shl a 7
+t = add t u
+t = add t xor c and a xor b c
+u = or shr e 2 shl e 30
+u = xor u or shr e 13 shl e 19
+u = xor u or shr e 22 shl e 10
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 37 uint 1986661051
+u = or shr x 6 shl x 26
+u = xor u or shr x 11 shl x 21
+u = xor u or shr x 25 shl x 7
+t = add t u
+t = add t xor b and x xor a b
+u = or shr d 2 shl d 30
+u = xor u or shr d 13 shl d 19
+u = xor u or shr d 22 shl d 10
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 38 uint 2177026350
+u = or shr g 6 shl g 26
+u = xor u or shr g 11 shl g 21
+u = xor u or shr g 25 shl g 7
+t = add t u
+t = add t xor a and g xor x a
+u = or shr c 2 shl c 30
+u = xor u or shr c 13 shl c 19
+u = xor u or shr c 22 shl c 10
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 39 uint 2456956037
+u = or shr f 6 shl f 26
+u = xor u or shr f 11 shl f 21
+u = xor u or shr f 25 shl f 7
+t = add t u
+t = add t xor x and f xor g x
+u = or shr b 2 shl b 30
+u = xor u or shr b 13 shl b 19
+u = xor u or shr b 22 shl b 10
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 40 uint 2730485921
+u = or shr e 6 shl e 26
+u = xor u or shr e 11 shl e 21
+u = xor u or shr e 25 shl e 7
+t = add t u
+t = add t xor g and e xor f g
+u = or shr a 2 shl a 30
+u = xor u or shr a 13 shl a 19
+u = xor u or shr a 22 shl a 10
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 41 uint 2820302411
+u = or shr d 6 shl d 26
+u = xor u or shr d 11 shl d 21
+u = xor u or shr d 25 shl d 7
+t = add t u
+t = add t xor f and d xor e f
+u = or shr x 2 shl x 30
+u = xor u or shr x 13 shl x 19
+u = xor u or shr x 22 shl x 10
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 42 uint 3259730800
+u = or shr c 6 shl c 26
+u = xor u or shr c 11 shl c 21
+u = xor u or shr c 25 shl c 7
+t = add t u
+t = add t xor e and c xor d e
+u = or shr g 2 shl g 30
+u = xor u or shr g 13 shl g 19
+u = xor u or shr g 22 shl g 10
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 43 uint 3345764771
+u = or shr b 6 shl b 26
+u = xor u or shr b 11 shl b 21
+u = xor u or shr b 25 shl b 7
+t = add t u
+t = add t xor d and b xor c d
+u = or shr f 2 shl f 30
+u = xor u or shr f 13 shl f 19
+u = xor u or shr f 22 shl f 10
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 44 uint 3516065817
+u = or shr a 6 shl a 26
+u = xor u or shr a 11 shl a 21
+u = xor u or shr a 25 shl a 7
+t = add t u
+t = add t xor c and a xor b c
+u = or shr e 2 shl e 30
+u = xor u or shr e 13 shl e 19
+u = xor u or shr e 22 shl e 10
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 45 uint 3600352804
+u = or shr x 6 shl x 26
+u = xor u or shr x 11 shl x 21
+u = xor u or shr x 25 shl x 7
+t = add t u
+t = add t xor b and x xor a b
+u = or shr d 2 shl d 30
+u = xor u or shr d 13 shl d 19
+u = xor u or shr d 22 shl d 10
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 46 uint 4094571909
+u = or shr g 6 shl g 26
+u = xor u or shr g 11 shl g 21
+u = xor u or shr g 25 shl g 7
+t = add t u
+t = add t xor a and g xor x a
+u = or shr c 2 shl c 30
+u = xor u or shr c 13 shl c 19
+u = xor u or shr c 22 shl c 10
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 47 uint 275423344
+u = or shr f 6 shl f 26
+u = xor u or shr f 11 shl f 21
+u = xor u or shr f 25 shl f 7
+t = add t u
+t = add t xor x and f xor g x
+u = or shr b 2 shl b 30
+u = xor u or shr b 13 shl b 19
+u = xor u or shr b 22 shl b 10
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 48 uint 430227734
+u = or shr e 6 shl e 26
+u = xor u or shr e 11 shl e 21
+u = xor u or shr e 25 shl e 7
+t = add t u
+t = add t xor g and e xor f g
+u = or shr a 2 shl a 30
+u = xor u or shr a 13 shl a 19
+u = xor u or shr a 22 shl a 10
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 49 uint 506948616
+u = or shr d 6 shl d 26
+u = xor u or shr d 11 shl d 21
+u = xor u or shr d 25 shl d 7
+t = add t u
+t = add t xor f and d xor e f
+u = or shr x 2 shl x 30
+u = xor u or shr x 13 shl x 19
+u = xor u or shr x 22 shl x 10
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 50 uint 659060556
+u = or shr c 6 shl c 26
+u = xor u or shr c 11 shl c 21
+u = xor u or shr c 25 shl c 7
+t = add t u
+t = add t xor e and c xor d e
+u = or shr g 2 shl g 30
+u = xor u or shr g 13 shl g 19
+u = xor u or shr g 22 shl g 10
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 51 uint 883997877
+u = or shr b 6 shl b 26
+u = xor u or shr b 11 shl b 21
+u = xor u or shr b 25 shl b 7
+t = add t u
+t = add t xor d and b xor c d
+u = or shr f 2 shl f 30
+u = xor u or shr f 13 shl f 19
+u = xor u or shr f 22 shl f 10
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 52 uint 958139571
+u = or shr a 6 shl a 26
+u = xor u or shr a 11 shl a 21
+u = xor u or shr a 25 shl a 7
+t = add t u
+t = add t xor c and a xor b c
+u = or shr e 2 shl e 30
+u = xor u or shr e 13 shl e 19
+u = xor u or shr e 22 shl e 10
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 53 uint 1322822218
+u = or shr x 6 shl x 26
+u = xor u or shr x 11 shl x 21
+u = xor u or shr x 25 shl x 7
+t = add t u
+t = add t xor b and x xor a b
+u = or shr d 2 shl d 30
+u = xor u or shr d 13 shl d 19
+u = xor u or shr d 22 shl d 10
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 54 uint 1537002063
+u = or shr g 6 shl g 26
+u = xor u or shr g 11 shl g 21
+u = xor u or shr g 25 shl g 7
+t = add t u
+t = add t xor a and g xor x a
+u = or shr c 2 shl c 30
+u = xor u or shr c 13 shl c 19
+u = xor u or shr c 22 shl c 10
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 55 uint 1747873779
+u = or shr f 6 shl f 26
+u = xor u or shr f 11 shl f 21
+u = xor u or shr f 25 shl f 7
+t = add t u
+t = add t xor x and f xor g x
+u = or shr b 2 shl b 30
+u = xor u or shr b 13 shl b 19
+u = xor u or shr b 22 shl b 10
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+t = add x add get w 56 uint 1955562222
+u = or shr e 6 shl e 26
+u = xor u or shr e 11 shl e 21
+u = xor u or shr e 25 shl e 7
+t = add t u
+t = add t xor g and e xor f g
+u = or shr a 2 shl a 30
+u = xor u or shr a 13 shl a 19
+u = xor u or shr a 22 shl a 10
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 57 uint 2024104815
+u = or shr d 6 shl d 26
+u = xor u or shr d 11 shl d 21
+u = xor u or shr d 25 shl d 7
+t = add t u
+t = add t xor f and d xor e f
+u = or shr x 2 shl x 30
+u = xor u or shr x 13 shl x 19
+u = xor u or shr x 22 shl x 10
+u = add u xor a and xor x a xor a b
+c = add c t
+g = add t u
+t = add f add get w 58 uint 2227730452
+u = or shr c 6 shl c 26
+u = xor u or shr c 11 shl c 21
+u = xor u or shr c 25 shl c 7
+t = add t u
+t = add t xor e and c xor d e
+u = or shr g 2 shl g 30
+u = xor u or shr g 13 shl g 19
+u = xor u or shr g 22 shl g 10
+u = add u xor x and xor g x xor x a
+b = add b t
+f = add t u
+t = add e add get w 59 uint 2361852424
+u = or shr b 6 shl b 26
+u = xor u or shr b 11 shl b 21
+u = xor u or shr b 25 shl b 7
+t = add t u
+t = add t xor d and b xor c d
+u = or shr f 2 shl f 30
+u = xor u or shr f 13 shl f 19
+u = xor u or shr f 22 shl f 10
+u = add u xor g and xor f g xor g x
+a = add a t
+e = add t u
+t = add d add get w 60 uint 2428436474
+u = or shr a 6 shl a 26
+u = xor u or shr a 11 shl a 21
+u = xor u or shr a 25 shl a 7
+t = add t u
+t = add t xor c and a xor b c
+u = or shr e 2 shl e 30
+u = xor u or shr e 13 shl e 19
+u = xor u or shr e 22 shl e 10
+u = add u xor f and xor e f xor f g
+x = add x t
+d = add t u
+t = add c add get w 61 uint 2756734187
+u = or shr x 6 shl x 26
+u = xor u or shr x 11 shl x 21
+u = xor u or shr x 25 shl x 7
+t = add t u
+t = add t xor b and x xor a b
+u = or shr d 2 shl d 30
+u = xor u or shr d 13 shl d 19
+u = xor u or shr d 22 shl d 10
+u = add u xor e and xor d e xor e f
+g = add g t
+c = add t u
+t = add b add get w 62 uint 3204031479
+u = or shr g 6 shl g 26
+u = xor u or shr g 11 shl g 21
+u = xor u or shr g 25 shl g 7
+t = add t u
+t = add t xor a and g xor x a
+u = or shr c 2 shl c 30
+u = xor u or shr c 13 shl c 19
+u = xor u or shr c 22 shl c 10
+u = add u xor d and xor c d xor d e
+f = add f t
+b = add t u
+t = add a add get w 63 uint 3329325298
+u = or shr f 6 shl f 26
+u = xor u or shr f 11 shl f 21
+u = xor u or shr f 25 shl f 7
+t = add t u
+t = add t xor x and f xor g x
+u = or shr b 2 shl b 30
+u = xor u or shr b 13 shl b 19
+u = xor u or shr b 22 shl b 10
+u = add u xor c and xor b c xor c d
+e = add e t
+a = add t u
+put h 0 add get h 0 a
+put h 1 add get h 1 b
+put h 2 add get h 2 c
+put h 3 add get h 3 d
+put h 4 add get h 4 e
+put h 5 add get h 5 f
+put h 6 add get h 6 g
+put h 7 add get h 7 x
 end
 
-note copy n bytes of b from bo into the context buffer at index bi
 fn tobuf c edit uchar 104 bi ulong b view uchar 4096 bo ulong n ulong to void
 for i ulong n
 put c add 40 add bi i get b add bo i
 end
 end
 
-note copy the 64 bytes of b at bo into blk
-fn toblk blk edit uchar 64 b view uchar 4096 bo ulong to void
-for i ulong 64
-put blk i get b add bo i
-end
-end
-
 note absorb b[0..n), n <= 4096, exactly as src/sha256.c sha256_update does for that piece
-fn absorb c edit uchar 104 b view uchar 4096 n ulong k view ulong 64 to void
+fn absorb c edit uchar 104 b view uchar 4096 n ulong to void
 if gt n 4096
 trap 3
 end
-blk = new uchar 64 0
+w = new uint 64 0
+h = new uint 8 0
 cnt = getle c 32 8
 bi = and cnt 63
 putle c 32 8 add cnt n
@@ -212,16 +914,20 @@ tobuf c bi b 0 n
 ret
 end
 tobuf c bi b 0 lf
-for i ulong 64
-put blk i get c add 40 i
-end
-comp c blk k
+loadh c h
+schedc c w
+rounds h w
+storeh c h
 off = lf
 end
+if le add off 64 n
+loadh c h
 while le add off 64 n bound 65
-toblk blk b off
-comp c blk k
+schedb b off w
+rounds h w
 off = add off 64
+end
+storeh c h
 end
 tobuf c 0 b off sub n off
 end
@@ -239,12 +945,6 @@ putle c 28 4 1541459225
 end
 
 note big-endian 64-bit bit count into p[0..8)
-fn lenbe p edit uchar 4096 bits ulong to void
-for i ulong 8
-put p i uchar and shr bits mul sub 7 i 8 255
-end
-end
-
 note the state words, big endian, into o
 fn digest c edit uchar 104 o edit uchar 32 to void
 for i ulong 8
@@ -257,24 +957,148 @@ put o add q 3 uchar and v 255
 end
 end
 
-note src/sha256.c sha256_final: 0x80, zeros to 56 mod 64, the 64-bit big-endian bit count, digest
-fn final c edit uchar 104 o edit uchar 32 k view ulong 64 to void
-p = new uchar 4096 0
+note compress the context's own block buffer (bytes 40..103) into its hash words
+fn compbuf c edit uchar 104 to void
+w = new uint 64 0
+h = new uint 8 0
+loadh c h
+schedc c w
+rounds h w
+storeh c h
+end
+
+note zero buffer bytes s..e-1 (indices into the 64-byte block)
+fn zbuf c edit uchar 104 s ulong e ulong to void
+i = s
+while lt i e bound 64
+put c add 40 i 0
+i = add i 1
+end
+end
+
+note sha256_final of src/sha256.c, padding in place: 0x80, zeros to 56 mod 64 (one more block
+note when the pending part is 56 bytes or more), the 64-bit big-endian bit count, then the digest.
+note The count field is left as it was (src/sha256.c adds the padding to it; nothing reads it after).
+fn final c edit uchar 104 o edit uchar 32 to void
 cnt = getle c 32 8
 bi = and cnt 63
-pl = sub 120 bi
-if lt bi 56
-pl = sub 56 bi
+put c add 40 bi 128
+zbuf c add bi 1 64
+if ge bi 56
+compbuf c
+zbuf c 0 56
 end
-put p 0 128
-absorb c p 1 k
-put p 0 0
-if gt pl 1
-absorb c p sub pl 1 k
+bits = mul cnt 8
+for i ulong 8
+sh = mul sub 7 i 8
+put c add 96 i uchar and shr bits sh 255
 end
-lenbe p mul cnt 8
-absorb c p 8 k
+compbuf c
 digest c o
+end
+
+note IV into h
+fn initiv h edit uint 8 to void
+put h 0 uint 1779033703
+put h 1 uint 3144134277
+put h 2 uint 1013904242
+put h 3 uint 2773480762
+put h 4 uint 1359893119
+put h 5 uint 2600822924
+put h 6 uint 528734635
+put h 7 uint 1541459225
+end
+
+note h, big endian, into o
+fn digesth h edit uint 8 o edit uchar 32 to void
+for i ulong 8
+v = get h i
+q = mul i 4
+put o q uchar shr v 24
+put o add q 1 uchar and shr v 16 255
+put o add q 2 uchar and shr v 8 255
+put o add q 3 uchar and v 255
+end
+end
+
+note expand w[0..16) into the full 64-word schedule
+fn expand w edit uint 64 to void
+for j ulong 48
+i = add j 16
+x = get w sub i 2
+u = or shr x 17 shl x 15
+u = xor u or shr x 19 shl x 13
+u = xor u shr x 10
+x = get w sub i 15
+v = or shr x 7 shl x 25
+v = xor v or shr x 18 shl x 14
+v = xor v shr x 3
+u = add u v
+u = add u get w sub i 7
+put w i add u get w sub i 16
+end
+end
+
+note the padded tail b[off..n) (less than 64 bytes) written straight into schedule words:
+note whole big-endian words, the word holding 0x80, zeros, the 64-bit bit count in words 14 and 15;
+note a second block when the tail is 56 bytes or more
+fn tail h edit uint 8 b view uchar 4096 off ulong n ulong w edit uint 64 to void
+r = sub n off
+fw = shr r 2
+for i ulong fw
+q = add off mul i 4
+v = uint get b q
+v = or shl v 8 uint get b add q 1
+v = or shl v 8 uint get b add q 2
+v = or shl v 8 uint get b add q 3
+put w i v
+end
+put w fw partw b add off mul fw 4 and r 3
+i = add fw 1
+while lt i 16 bound 16
+put w i 0
+i = add i 1
+end
+if ge r 56
+expand w
+rounds h w
+for j ulong 14
+put w j 0
+end
+end
+bits = mul n 8
+put w 14 uint shr bits 32
+put w 15 uint and bits 4294967295
+expand w
+rounds h w
+end
+
+note the big-endian word of nr (0..3) bytes of b at q, then 0x80, then zeros
+fn partw b view uchar 4096 q ulong nr ulong to uint
+v = uint 0
+for j ulong nr
+v = or shl v 8 uint get b add q j
+end
+v = or shl v 8 128
+ret shl v mul sub 3 nr 8
+end
+
+note SHA-256 of b[0..n), n < 4096, with the state in locals only (sha256_hash's short path)
+fn oneshot b view uchar 4096 n ulong o edit uchar 32 to void
+if ge n 4096
+trap 3
+end
+w = new uint 64 0
+h = new uint 8 0
+initiv h
+off = ulong 0
+while le add off 64 n bound 64
+schedb b off w
+rounds h w
+off = add off 64
+end
+tail h b off n w
+digesth h o
 end
 
 fn omsha c edit uchar 104 b view uchar 4096 n ulong op ulong o edit uchar 32 to void
@@ -282,14 +1106,16 @@ if eq op 0
 init c
 ret
 end
-k = new ulong 64 0
-initk k
 if eq op 1
-absorb c b n k
+absorb c b n
 ret
 end
 if eq op 2
-final c o k
+final c o
+ret
+end
+if eq op 3
+oneshot b n o
 ret
 end
 trap 9
