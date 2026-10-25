@@ -58,7 +58,7 @@ Local-valid state15 is losing: epoch-only action6 loses to substitute4, object-o
 
 The product consumes the proposed safe masks and public selection. Enabled masks must agree across the pair; the safe mask is contained in both, one public selected action is shared, and each proposed action uses the same disturbance. Public observations and successor projections must match; successors remain in the proposed region with well-formed hidden labels. The source explicitly keeps secret labels out of protected transitions. This is by-construction equality plus exhaustive finite checking, not machine leakage, timing, complete secret closure or actual scheduler qualification. The hidden-dependent admission baseline fails against the positive corpus.
 
-Generic epoch invalidation is NOT TKA parent-state/fork-choice authorization. Fixed operation identities, idempotent retry, complete atomic reservations, cleanup, recovery and fencing remain model assumptions. Rename is linearization; settle represents directory-sync acknowledgement eligibility, not a power-loss/writeback-EIO guarantee. Formal proof, diverse compilation and emulated execution are not claimed. Actual omnet correspondence, general #647 integration, #623 consumer translation and runtime adoption remain BLOCKED with their existing owners. Independent final-source review and clean integration replay remain the parent's work.
+Generic epoch invalidation is NOT TKA parent-state/fork-choice authorization. Fixed operation identities, idempotent retry, complete atomic reservations, cleanup, recovery and fencing remain model assumptions. Rename is linearization; settle represents directory-sync acknowledgement eligibility, not a power-loss/writeback-EIO guarantee. Formal proof, diverse compilation and emulated execution are not claimed. Actual omnet correspondence, general #647 integration, #623 consumer translation and runtime adoption remain BLOCKED with their existing owners.
 
 ## Measured overhead
 
@@ -139,3 +139,9 @@ nice -n 19 /usr/bin/time -v build/security760-v3/roundtrip
 ```
 
 Use a new scratch checkout for roundtrip replay: an existing `roundtrip.bin` refuses exclusive creation. No release gates, live model/GPU workload or service deployment were exercised by this lane.
+
+## Independent final review and clean replay
+
+GameReview rechecked source46c0cd2e200cf136e5f8a2715bc6625e0de0758b and found no remaining actionable defects within the finite/offline scope. `clean-replay.json` records a separate fresh-checkout bootstrap, all ten successful builds, the exact positive corpus hash above, normal controls71/72/73/74/75/76/78 and all three measurements. The initial checker benchmark invocation incorrectly supplied a pipe; exit90 is retained as INVALID setup. The documented seekable-file invocation then completed0. No code was changed to obtain that result.
+
+The native-v3 receipt's README hash refers to its historical46c0cd2 documentation bytes. This final review/replay section is later documentation, not a rebind of those old measurements. Current clean-run raw samples are separate; host-load variation is not a measured regression or a calibrated tail guarantee.
