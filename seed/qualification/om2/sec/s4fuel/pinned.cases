@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# Under the pinned OM-1 omc every E14 fixture is an OM-2 unit, refused 16 at its om2 line (line 3); fuel-inl
+# has `inline` signatures, refused 5 at the first one (line 4), per the names-pass rule.
+fuel-d2-pinned emit seed/qualification/om2/sec/s4fuel/fuel-d2.om - err:3:16 16
+fuel-d3-pinned emit seed/qualification/om2/sec/s4fuel/fuel-d3.om - err:3:16 16
+fuel-d4-pinned emit seed/qualification/om2/sec/s4fuel/fuel-d4.om - err:3:16 16
+fuel-inl-pinned emit seed/qualification/om2/sec/s4fuel/fuel-inl.om - err:4:5 5
