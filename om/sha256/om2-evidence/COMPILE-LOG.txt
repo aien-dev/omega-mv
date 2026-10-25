@@ -78,3 +78,14 @@ Constructs used by the unit, and the slice that is expected to provide each
   Result: 158/158 vectors with the E3 copy receipt and the section 7 reuse receipt holding on every
   message (program mode, exit 3 otherwise); receipt mutants caught (156 and 158 exit 3). HOST.
   Not yet compilable: view uchar *, part, out, export (S4). NOT_RUN: hash(d,32,d) receipt (needs out).
+
+2026-10-25T20:10Z  compiler-s4 @ f6a6492fd (PR #764), omc 49923639…803ec (born here, rc 0)
+  @ 4c8aa0ff7 the delivered unit stopped at "omc: line 268: error 12" (absorb; CompilerS4's report).
+  absorb restructured (fn tobuf); no grammar change.
+  Delivered unit om/sha256/sha256-om2.om (344 lines, src dbf002dd…): COMPILES, exit 0, 21340 bytes,
+  576 ROR immediate, 0 RORV, 0 SVC. Every construct in the unit compiles: om2, hex, rotr (S1); unroll
+  (S2); layout with scalar count, fresh (S3); view uchar *, len, part, out, export (S4).
+  Bridge feat/slice-abi @ 3bb8b8a: omega2_sha256_init/update/final/hash, omega2_ident_sha256_om2,
+  omega_api.h. 158/158 vectors; all section 7 / E3 receipts PASS incl. a 2^32+4094-byte update. HOST.
+  Details: s4/README.txt. The s1-s3 test units are removed (their READMEs keep hashes and results;
+  the sources are in git history at 4c8aa0ff7).

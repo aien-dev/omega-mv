@@ -240,8 +240,17 @@ end
 put c count 0
 end
 
+note k bytes of d from o into the context's buffer at bi (bi + k <= 64). A function of its own: inside
+note absorb the copy loop needs more than the 16 registers (error 12 under compiler-s4).
+fn tobuf c edit shactx bi ulong d view uchar * o ulong k ulong to void
+for i ulong k
+put c buf add bi i get d add o i
+end
+end
+
 note Whole blocks are hashed straight from d; the bytes that complete a pending block go through blk.
-fn absorb c edit shactx d view uchar * bi ulong n ulong to void
+fn absorb c edit shactx d view uchar * bi ulong to void
+n = len d
 s = new uint 8 0
 w = new uint 64 0
 kt = new uint 64 0
@@ -264,9 +273,7 @@ end
 nb = shr sub n off 6
 blocks s w kt part d off shl nb 6
 off = add off shl nb 6
-for i ulong sub n off
-put c buf i get d add off i
-end
+tobuf c 0 d off sub n off
 for i ulong 8 unroll
 put c state i get s i
 end
@@ -279,12 +286,10 @@ cnt = get c count
 bi = and cnt 63
 put c count add cnt n
 if lt n sub 64 bi
-for i ulong n
-put c buf add bi i get d i
-end
+tobuf c bi d 0 n
 ret
 end
-absorb c d bi n
+absorb c d bi
 end
 
 export fn sha256_final c edit shactx o out uchar 32 to void
