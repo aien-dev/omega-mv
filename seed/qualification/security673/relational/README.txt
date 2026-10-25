@@ -37,7 +37,7 @@ The pinned existing PR752 gate completed qualification.cases56/56, bindings.case
 consumer.cases4/4 expected outcomes. binding-negative.cases correctly returns1 with2 FAIL rows.
 Logs and exact compiled inputs/outputs: evidence/run4/{qualification,bindings,consumer,wrongbindings}.
 These gate PASS counts include expected scanner refusals and the explicit L4 unsupported-policy
-witness. They are not blanket SC1-L or service PASS counts. Independent final review/replay pending.
+witness. They are not blanket SC1-L or service PASS counts.
 
 paired.om now executes4,186,878 comparison assertions: each of32 positions, all256 base values,
 all255 nonzero mismatch masks, and complemented paired inputs with the same mismatch. It also
@@ -96,12 +96,23 @@ PR752155ff3178f35013e405ed40d09a7dd75ede2a403. Compiler was rebuilt through exis
 required SHA734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61.
 From security673-scanner, set P=../security673-relational/seed/qualification/security673/relational,
 C=../security673-relational/seed/out/omc, H=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61.
-Use fresh scratch paths and the pinned gate (or rebuild its source with C):
+Use fresh scratch paths and the pinned gate, or rebuild seed/qualification/om2/gate.om
+with C. Do not use the unrelated seed/qualification/security673/gate669.om conductor.
 
   nice -n19 "$P/evidence/run1/gate.bin" "$C" "$H" "$P/qualification.cases" "$P/evidence/replay-r2-qualification"
   nice -n19 "$P/evidence/run1/gate.bin" "$C" "$H" "$P/bindings.cases" "$P/evidence/replay-r2-bindings"
   nice -n19 "$P/evidence/run1/gate.bin" "$C" "$H" "$P/consumer.cases" "$P/evidence/replay-r2-consumer"
   nice -n19 "$P/evidence/run1/gate.bin" "$C" "$H" "$P/binding-negative.cases" "$P/evidence/replay-r2-negative"
 
-Expected exits0,0,0,1. Never overwrite old scratch/evidence. No GPU, deployment, publication,
-new scanner/checker authority, compiler edits or consumer edits occurred. Parent owns final review.
+Expected exits0,0,0,1. Never overwrite old scratch/evidence. No GPU, deployment,
+new scanner/checker authority, compiler edits or consumer edits occurred.
+
+Independent final review/replay
+RelationalReview rechecked sourceacf6cecc24a2f691a9cbebea3bac77ea009f25e5 and found no
+remaining actionable findings within bounded comparison/static-evidence scope.
+clean-replay.json records a fresh sibling-checkout bootstrap and rebuilt existing
+OM2 case runner:56/56,16/16,4/4 and exactly two expected binding-negative FAIL rows.
+The parent's initial invocation of the unrelated gate669 API refused90; that setup
+error is retained and does not count as qualification. No source fix was needed.
+L4/L5/L6/L7 owner blockers above remain unchanged. Historical run4 documentation
+bindings refer to acf6cecc, not this later review/replay note.

@@ -33,7 +33,9 @@
   },
   "authenticated_relation_binding": "BLOCKED_OWNER_623_624",
   "target_model_disclosure_mismatch_validation": "BLOCKED_OWNER_623_624",
-  "independent_final_review": "PENDING_MAIN",
+  "independent_final_review": "RelationalReview: no actionable findings within bounded comparison/static scope; source acf6cecc24a2f691a9cbebea3bac77ea009f25e5",
+  "clean_replay_file": "clean-replay.json",
+  "post_review_documentation": "README/review status updated after run4; implementation, model, policy and native artifacts unchanged. Original current bindings remain at acf6cecc24a2f691a9cbebea3bac77ea009f25e5.",
   "obligations": {
     "L1": {
       "status": "VERIFIED",
@@ -95,7 +97,7 @@
     "FROZEN-R2.txt": "c40e98cca50125401ae59bd35e7ae05aea43ae9d098f0d7a4569501bd716a082",
     "FROZEN.txt": "8ab006f91ca6f30790be746fd600e0834c479da2435985c5faa621440676ff43",
     "OMNET-AUDIT.txt": "8f152fc4f8f4d7453cf8191098f7bca625930afd000f0d0251dd85bd106d385c",
-    "README.txt": "a7e3bfbe3ee516bab7fac1689bc75630d99cd762fdec6c394dfd466bb03c11d9",
+    "README.txt": "78736e194219e958b9b600754ec54dd4cdb56753d01fae8f2aae970901aca524",
     "SC1-L.txt": "d0bbe25079f62f7ec4670a737734a09b416707c5ecd075aed88bb290443a5a5e",
     "address-main.om": "71f312f76a371441bf1d0e59c7d9aff6d95b73fc61b1839398c1d73ae63122c4",
     "address.om": "385a94645ecfa33d95b34a06ee84b645c81e90f30cf54737b09255ef68a96bfd",
