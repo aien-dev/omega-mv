@@ -52,3 +52,13 @@ Constructs used by the unit, and the slice that is expected to provide each
   Change to the delivered unit: each Sigma in two lines through t, the schedule step in two lines
   through x (error 12 under S2 for the one-line forms). Unit now 339 lines.
   Not yet compilable: layout, fresh (S3); view uchar *, part, out, export (S4).
+
+2026-10-25T18:00Z  re-run against CompilerLane's current heads (HOST)
+  S1 head om2/compiler-s1 @ 874fec3b, omc ce4facbe…f019, born here by sh seed/omega-from-seed.sh
+    (nice -n 19, rc 0, s1/birth-874fec3b.log). s1/sha256-s1.om compiles to a binary byte-identical
+    to the one from omc 31342447 (sha 70e1a6e6…); 158/158 vectors. Delivered unit: line 114 error 16.
+  S2 fix D-S2-1 om2/compiler-s3 @ 9a92f3c4, omc 20d00b6e…bf87 (CompilerLane's build; current
+    unroll/inline head). s2/sha256-s2.om compiles byte-identical to the c23b3376 output
+    (sha 0b0c074d…); 158/158. s1/sha256-s1.om compiles (binary differs from S1's; 158/158).
+    Delivered unit: line 114 error 16 (fresh).
+  S3 (fresh, layout) and S4 (views, part, out, export) not implemented yet (CompilerLane): NOT_RUN.
