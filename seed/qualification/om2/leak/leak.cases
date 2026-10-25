@@ -1,4 +1,4 @@
-# Contract §8 lines 230-241, E11 public count field and E12 known-bits proof / NOT_RUN.
+# Contract §8 lines 230-241, E11 public count field, E12 known-bits and E13 store revocation.
 # Hand-derived expected reports; see oracle/leak/PROVENANCE.txt. Run from repository root.
 deadline 120
 # Pinned identities of function-mode input artifacts (not candidate-output expectations).
@@ -16,9 +16,20 @@ art-sha256-om1 emit om/sha256/sha256.om sha:3b0ee1ffd7247514b1fd685b5cd48e83ccda
 art-public-in emit seed/qualification/om2/leak/fixtures/public-in.om sha:cbe9a0ca26df3fe76fbc1391916bae2e149142bcb5a3516fda247970886ce09e - 0
 art-public-out emit seed/qualification/om2/leak/fixtures/public-out.om sha:4f2b4c9a3b45fddcab74ae8dfb09311fe95c5ba6104eca05d2864e70897064a2 - 0
 art-reachable emit seed/qualification/om2/leak/fixtures/reachable-trap.om sha:be21c3c9b2edbd4c68bc43a79aea4427eb9d8639d08166381474e39efff74b3b - 0
+art-pub-secret emit seed/qualification/om2/leak/fixtures/pub-secret.om sha:00780e1f17e8229ffff3c093b8ef26905b56cfe5a03b9c19f8c6699ac228221e - 0
+art-pub-unknown emit seed/qualification/om2/leak/fixtures/pub-unknown.om sha:4d31acd40061380d4dc161c7f09668bd5c055161f562d2687f1babff827f17ea - 0
+art-pub-outside-store emit seed/qualification/om2/leak/fixtures/pub-outside-store.om sha:9caab7022a8521feddad502528dd451f31ab3c9b6af6f8c3c098e8fa0c61c6ce - 0
 # OM-1 refuses the OM-2 opt-in on exactly line 1; candidate.cases compiles this unit instead.
 s1-rot-refused emit seed/qualification/om2/leak/fixtures/s1-rot.om - err:1:16 16
 # BEGIN common scan cases (all sources below are OM-1; C1 applies under an OM-2 candidate).
+# E13 store-poisoned declarations must not suppress DATA branches; unknown store addresses may overlap.
+scan-pub-secret run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/pub-secret.bin file:seed/qualification/om2/leak/expected/pub-secret.out - 2 pub:0:32:8
+scan-pub-unknown run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/pub-unknown.bin file:seed/qualification/om2/leak/expected/pub-unknown.out - 2 pub:0:32:8
+# Proven disjoint store remains allowed; public field load is still explicitly listed.
+scan-pub-outside-store run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/pub-outside-store.bin file:seed/qualification/om2/leak/expected/pub-outside-store.out - 0 pub:0:32:8
+# Native program twins execute the same counterexample with secret input bytes 0 / 1.
+pub-secret-native-zero run seed/qualification/om2/leak/fixtures/pub-secret.om+seed/qualification/om2/leak/fixtures/pub-secret-zero.om - - - 0
+pub-secret-native-one run seed/qualification/om2/leak/fixtures/pub-secret.om+seed/qualification/om2/leak/fixtures/pub-secret-one.om - - - 1
 # §8 length/public loop; declared DATA length converts its loop condition to E12 MANUAL.
 scan-len-loop run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/len-loop.bin file:seed/qualification/om2/leak/expected/len-loop.out - 0
 scan-len-loop-x1 run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/len-loop.bin file:seed/qualification/om2/leak/expected/len-loop-x1.out - 2 x1
@@ -65,5 +76,8 @@ subst seed/qualification/om2/leak/mutants/nostub.from seed/qualification/om2/lea
 kill-nostub kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/trap-check.bin file:seed/qualification/om2/leak/expected/trap-check.out - 2
 subst seed/qualification/om2/leak/mutants/pubrange.from seed/qualification/om2/leak/mutants/pubrange.to
 kill-public-boundary kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/public-out.bin file:seed/qualification/om2/leak/expected/public-out.out - 0 pub:0:32:8
+# Omitting E13 revocation recreates the false PASS and must be killed.
+subst seed/qualification/om2/leak/mutants/norevoke.from seed/qualification/om2/leak/mutants/norevoke.to
+kill-no-revocation kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/pub-secret.bin file:seed/qualification/om2/leak/expected/pub-secret.out - 0 pub:0:32:8
 # Runtime code for the OM-2 SHA unit remains unavailable to this independent lane.
 sha256-om2-scan notrun OM-2 SHA artifact pending independent qualification

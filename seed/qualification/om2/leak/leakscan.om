@@ -47,6 +47,9 @@ global ps ulong 2097152
 global pe ulong 2097152
 global pc ulong 128
 global pdecl ulong 96
+note E13 whole-artifact revocation: rv[word] lists the public-range bits revoked by that store.
+global rv ulong 2097152
+text revmsg "PUBLIC-MEM-REVOKED @"
 text pmsg "PUBLIC-DECL \nPUBLIC-MEM @\n public-mem \n+\n:\nprovenance-cap\nusage: leakscan [x0..x5 | pub:SLOT:OFF:LEN ...] < function-mode artifact\n"
 text e12 "data MANUAL\nVERDICT TRACE-EQUIV-STATIC NOT_RUN\n"
 note decoded fields, indices into dc
@@ -1569,6 +1572,7 @@ if ge j n
 break
 end
 rep j
+rvshow j
 end
 end
 v = summary
@@ -1658,7 +1662,7 @@ bad
 end
 prep
 seed
-fix
+rvfix
 ret report
 end
 
@@ -1957,7 +1961,7 @@ if ne get dc dmt2 255
 size = mul size 2
 end
 for i ulong get gv 19
-if pinrange mul i 3 k off size
+if and eq tnt get gv 20 i 0 pinrange mul i 3 k off size
 ret v
 end
 end
@@ -2284,3 +2288,145 @@ note ARM DDI0487M.d C6.2.160 (p2201): EXTR sf|00|100111|N|0|Rm|imms|Rn|Rd, N=sf;
 note C6.2.349 (p2580): RORV sf|00|11010110|Rm|001011|Rn|Rd (DP2 opcode 11).
 note C6.2.295 (p2475): NEG is SUB shifted-register with Rn=31 (XZR), not SP.
 note dalu already covers these instruction classes; E12 zero/provenance transfer drops rotate knowledge.
+
+note E13 fallback: revoke ranges globally if any DATA/unclassified store may overlap.
+note Re-run the analysis after revocation so declassified-load dependencies cannot retain false PUBLIC.
+fn rvoutside decl ulong addr ulong size ulong to bool
+b = mul decl 3
+if eq get pdecl add b 2 0
+ret true
+end
+if ne shr addr 56 add get pdecl b 2
+ret false
+end
+off = pval addr
+endoff = add off size
+lo = get pdecl add b 1
+hi = add lo get pdecl add b 2
+if ne shr off 63 0
+if ne shr endoff 63 0
+ret true
+end
+ret le endoff lo
+end
+ret or ge off hi le endoff lo
+end
+fn rvbad w ulong to bool
+if ne get uh w 0
+ret true
+end
+if eq get dc dkind 10
+ret true
+end
+if ne get dc dmk 2
+ret false
+end
+if eq get dep w 0
+ret true
+end
+r = get rm w
+v = or tnt r get dc dmt tnt r get dc dmt2
+if ne get dc dmb 31
+v = or v tnt r get dc dmb
+end
+v = or v tnt r get dc dmi
+ret ne v 0
+end
+fn rvstore w ulong to void
+dec ulong get wd w w
+if not rvbad w
+ret
+end
+addr = ulong 0
+size = ulong 0
+if and eq get dc dmk 2 ne get dep w 0
+note Proven current-frame SP spills cannot alias entry-parameter ranges (existing A1 invariant).
+if and eq get uh w 0 pspmem
+ret
+end
+pload w
+addr = paddr ulong get wd w
+size = get dc dms
+if ne get dc dmt2 255
+size = mul size 2
+end
+end
+for i ulong get gv 19
+if not rvoutside i addr size
+bit = shl ulong 1 i
+put rv w or get rv w bit
+put gv 20 or get gv 20 bit
+end
+end
+end
+fn rvcollect to void
+n = get gv 0
+for a ulong 5
+for b ulong 500000
+j = add mul a 500000 b
+if ge j n
+ret
+end
+rvstore j
+end
+end
+end
+fn rvclearword w ulong to void
+put dep w 0
+put ex w 0
+put exs w 0
+put inq w 0
+put ps w 0
+put pe w 0
+end
+fn rvreset to void
+put gv 1 0
+put gv 18 0
+put gv 16 0
+for i ulong 128
+put pc i 0
+end
+n = get gv 0
+for a ulong 5
+for b ulong 500000
+j = add mul a 500000 b
+if ge j n
+ret
+end
+rvclearword j
+end
+end
+end
+fn rvfix to void
+for pass ulong 33
+fix
+if eq get gv 19 0
+ret
+end
+before = get gv 20
+rvcollect
+if eq before get gv 20
+ret
+end
+rvreset
+seed
+end
+exit 92
+end
+fn rvshow w ulong to void
+for i ulong get gv 19
+if ne tnt get rv w i 0
+for j ulong len revmsg
+ob1 get revmsg j
+end
+od w
+psay 2
+od get pdecl mul i 3
+psay 3
+od get pdecl add mul i 3 1
+psay 4
+od get pdecl add mul i 3 2
+onl
+end
+end
+end

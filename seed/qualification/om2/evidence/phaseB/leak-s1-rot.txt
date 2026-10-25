@@ -1,14 +1,14 @@
-S1 rotate scan: SOURCE evidence, executed on AArch64 host; contract §3 lines 76-83 and §8 E12.
+S1 rotate scan: SOURCE evidence, executed on AArch64 host; contract §3 lines 76-83 and §8 E12/E13.
 No S1 compiler source was read. ARM DDI0487M.d: EXTR C6.2.160 p2201, RORV C6.2.349 p2580, NEG C6.2.295 p2475.
 Compiler /tmp/zl/omc-s1 sha256 3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f
 1552ce25751cc7bcff786cc85022c31eeafc62451701248b56e32fb6b4cff46c  seed/qualification/om2/leak/fixtures/s1-rot.om
 4e9c219ba3cd8c8b5615bf2b650345d1836db747f0f75fde982f22ce0ccd3553  seed/qualification/om2/leak/fixtures/s1-rot.bin
-87a384279111f5ef03214bb0a84432a9b1329c5e3a44e9d4f84e5cb360a4bbb9  seed/qualification/om2/leak/leakscan.om
-1d644284e21bb81d9ac59072fc9a862a61f08af656309a3816ed2203cff4047b  build/om2-qual/leakscan-e12
+6b14fd9bb6f174de4a87e14b5ae38c9984de48c91a0b18c468bb1197adb2c82c  seed/qualification/om2/leak/leakscan.om
+aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633  build/om2-qual/leakscan-e13
 
 Commands (repository root):
   /tmp/zl/omc-s1 < seed/qualification/om2/leak/fixtures/s1-rot.om > seed/qualification/om2/leak/fixtures/s1-rot.bin   (exit 0)
-  build/om2-qual/leakscan-e12 x0 x2 < seed/qualification/om2/leak/fixtures/s1-rot.bin   (exit 0)
+  build/om2-qual/leakscan-e13 x0 x2 < seed/qualification/om2/leak/fixtures/s1-rot.bin   (exit 0)
 
 LEAKSCAN 1 words=32 entry=@0 data=x0,x2
 BRANCH @5 b.cs ->@30 len trap=7

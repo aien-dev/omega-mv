@@ -1,16 +1,16 @@
-OM-2 qualification leakage lane (#748, L836): contract §8 evidence (a), revised by E11/E12.
+OM-2 qualification leakage lane (#748, L836): contract §8 evidence (a), revised by E11/E12/E13.
 All implementation is handwritten seeded OM-1 Omega in leakscan.om. External objdump/Python are
 oracles only (../oracle/leak/PROVENANCE.txt). No compiler-lane or SHA-lane source was read.
 
 Build/run (repository root)
-  seed/out/omc < seed/qualification/om2/leak/leakscan.om > build/om2-qual/leakscan-e12
-  chmod +x build/om2-qual/leakscan-e12
-  build/om2-qual/leakscan-e12 [xN | pub:SLOT:OFF:LEN ...] < ARTIFACT
+  seed/out/omc < seed/qualification/om2/leak/leakscan.om > build/om2-qual/leakscan-e13
+  chmod +x build/om2-qual/leakscan-e13
+  build/om2-qual/leakscan-e13 [xN | pub:SLOT:OFF:LEN ...] < ARTIFACT
 N/SLOT are entry parameter slots 0..5. xN marks DATA; otherwise entry parameters are public pointers,
-lengths/opcodes. pub declares public contents for the full execution in bytes [OFF,OFF+LEN) relative
-to the original entry pointer in that slot. Up to 32 ranges, decimal nonnegative OFF/LEN with sum
-<= 2^55-1. An incorrect declaration is an unsupported caller assertion, not a proof by the scanner.
-A store of secret data into a declared public range violates that assertion.
+lengths/opcodes. pub declares initially public bytes [OFF,OFF+LEN) relative to that entry pointer.
+Up to 32 ranges, nonnegative decimal OFF/LEN with sum <= 2^55-1. An incorrect initial declaration is
+an unsupported caller assertion. E13 checks preservation: a DATA or unclassified store that may hit
+the range REVOKES it; secret stores are not excused as a caller assertion violation.
 Exit: 0 PASS; 1 FAIL (data-index with no MANUAL); 2 NOT_RUN (any MANUAL, UNKNOWN or UNHANDLED);
 90 invalid argv; 91 malformed artifact (empty, ELF, partial word, over 8 MiB); 92 worklist limit;
 93 output I/O failure. NOT_RUN is never PASS.
@@ -21,6 +21,7 @@ Output
   MEM @N mnemonic form base=reg index=reg const | public-index | data-index | unreached
   PUBLIC-DECL SLOT+OFF:LEN
   PUBLIC-MEM @N public-mem SLOT+OFF       EVERY load the declaration classifies public is listed here.
+  PUBLIC-MEM-REVOKED @N public-mem SLOT+OFF:LEN   potentially poisoning store (or unclassified word).
   UNKNOWN @N 0xword; UNHANDLED @N reason; SUMMARY class counts; VERDICT TRACE-EQUIV-STATIC ...
 The legacy summary field trap-check counts only E12 PROVED checks; data-branch counts MANUAL branches
 (trap targets included). MANUAL-ITEMS enumerates UNKNOWN/UNHANDLED; data MANUAL branches are listed
@@ -88,12 +89,29 @@ exit summaries carry the same domain. Unequal provenance joins to unknown. No in
 induction or call specialization. Constants/offsets outside signed 56 bits are conservatively unknown.
 Whole aligned eight-byte spills preserve identity; partial stores invalidate every overlapping slot.
 All bytes of a load (both elements of a pair) must fit a declaration; no wrap or one-past-end admission.
-P1 is resolved by EXPLICIT DECLARATION, not by silently declaring context memory public or treating
-structural trap checks as safe. It works for constant layout-field accesses; the fixtures prove the
-half-open boundary. Current OM-1 SHA getle(c,p,nb) shares call sites and loops over p+i, so its count
-loads remain unknown in this exact domain even with pub:0:32:8. The 15 count-derived items are still
-listed for manual classification, not passed. See leak-sha256-om1-notes.txt. E12 additionally leaves
-nine unproved DATA trap checks MANUAL. Dynamic traces and the OM-2 SHA artifact are NOT_RUN here.
+P1 uses explicit declarations, never an implicit blanket memory declassification. E13 also requires
+the declared range to survive the store scan below. Current OM-1 SHA getle(c,p,nb) shares call sites
+and loops over p+i, so its count loads remain unknown in this exact domain even without revocation.
+With E13, pub:0:32:8 is conservatively revoked by 68 stores. Its 15 original count-derived items
+remain listed for manual classification, not passed; E12 adds nine unproved DATA trap checks.
+Result: ten discharged checks, 16 MANUAL branches, eight data-index accesses, NOT_RUN. See notes.
+
+E13 preservation check (sound whole-artifact fallback, not flow-sensitive memory contents)
+After CFG fixpoint, inspect EVERY word, including stores with no reached state. A DATA value or
+address, unreached/unclassified store, UNKNOWN instruction or UNHANDLED construct is potentially
+poisoning. An unknown base/address may hit every nonempty declaration; different entry-slot roots
+are not assumed disjoint. A store is proven outside only when exact same-slot byte extents do not
+overlap, or when it is a proven current-frame SP+immediate spill (existing A1 frame-separation rule).
+Classified public-value/public-address stores are length-dependent and do not revoke declarations.
+For every poisoning word/range pair, record PUBLIC-MEM-REVOKED with its word offset. Revoke the
+whole range for the entire scan, including earlier loads; reset taint, provenance and summaries,
+and rerun to fixpoint. Repeat until no new range is revoked (at most 32 revocations). This also
+handles stores whose DATA dependencies are revealed only by a prior declaration revocation.
+Public-load annotations come only from the final analysis, never from a provisional pass.
+pub-secret.om pins the reported E13 false PASS; pub-unknown.om pins unknown-address revocation;
+pub-outside-store.om proves a secret store at byte40 does not poison public [32,40). Native drivers
+pub-secret-zero/one concatenate with the same function and execute exits0/1, showing different paths.
+Dynamic traces and the OM-2 SHA artifact remain NOT_RUN here.
 
 Cases/evidence (all paths relative to seed/qualification/om2)
 leak/leak.cases runs now under 734f0a39; leak/candidate.cases runs common cases under a candidate and
@@ -101,7 +119,7 @@ compiles s1-rot.om. Binary input identities are in leak.cases; expected reports 
 construction and objdump offsets, not copied as behavioral truth from a compiler under test.
 evidence/phaseB/leak-pinned.log and leak-candidate-s1.log record gates; leak-sha256-om1.txt and
 leak-sha256-om1-pub.txt hold full corrected scans; leak-s1-rot.txt records source/artifact identities,
-scan and objdump cross-check. leak-reachability.txt records native negative-control gate outcomes.
+scan and objdump cross-check. leak-reachability.txt records both E12 and E13 native control outcomes.
 leak-corpus-xcheck.txt: 31 baseline function-mode units cross-checked. leak-fuzz.txt: historical decoder
 fuzz before E12; decoder classes unchanged, not evidence for the added provenance/known-bits analysis.
 
@@ -110,6 +128,7 @@ cbtaint/trap-check: exit0, check mislabeled len; loadpub/data-branch: exit0 fals
 callexit/call-data: exit0 false PASS; slotoff/call-public: exit2 ret-x30-data;
 flagsweak/flags: exit2, public compare wrongly DATA; nostub/trap-check: exit2 br-indirect;
 pubrange/public-out: exit0 false PASS because one-past-end byte incorrectly declared public.
+norevoke/pub-secret: exit0 false PASS when the E13 store scan is omitted; must differ from NOT_RUN.
 Native-reachability controls pin the earlier false-PASS defect. Candidate compiler leak mutants
 must produce a new MANUAL branch, data-index, UNKNOWN or UNHANDLED item; they are never accepted
 as PASS. Removing unroll is not a leak mutant (constant-bound loop branches remain public).

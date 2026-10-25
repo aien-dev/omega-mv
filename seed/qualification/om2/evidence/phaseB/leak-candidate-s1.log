@@ -1,143 +1,169 @@
-OM2GATE START cases=seed/qualification/om2/leak/candidate.cases scratch=build/om2-qual/leak-e12-candidate-final
+OM2GATE START cases=seed/qualification/om2/leak/candidate.cases scratch=build/om2-qual/leak-e13-s1
 IDENTITY omc /tmp/zl/omc-s1 sha256=3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f pinned=3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f match
 DEADLINE 120
-CASE s1-rot-build line=4
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/4.src > build/om2-qual/leak-e12-candidate-final/4.elf 2> build/om2-qual/leak-e12-candidate-final/4.cerr
+CASE s1-rot-build line=3
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/3.src > build/om2-qual/leak-e13-s1/3.elf 2> build/om2-qual/leak-e13-s1/3.cerr
 VERDICT s1-rot-build PASS compile exit=0 expected=0 stdout=unchecked stderr=match
-CASE scan-len-loop line=7
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/7.src > build/om2-qual/leak-e12-candidate-final/7.elf 2> build/om2-qual/leak-e12-candidate-final/7.cerr
-  $ build/om2-qual/leak-e12-candidate-final/7.elf < seed/qualification/om2/leak/fixtures/len-loop.bin > build/om2-qual/leak-e12-candidate-final/7.out 2> build/om2-qual/leak-e12-candidate-final/7.err
+CASE scan-pub-secret line=6
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/6.src > build/om2-qual/leak-e13-s1/6.elf 2> build/om2-qual/leak-e13-s1/6.cerr
+  $ build/om2-qual/leak-e13-s1/6.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-secret.bin > build/om2-qual/leak-e13-s1/6.out 2> build/om2-qual/leak-e13-s1/6.err
+VERDICT scan-pub-secret PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-pub-unknown line=7
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/7.src > build/om2-qual/leak-e13-s1/7.elf 2> build/om2-qual/leak-e13-s1/7.cerr
+  $ build/om2-qual/leak-e13-s1/7.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-unknown.bin > build/om2-qual/leak-e13-s1/7.out 2> build/om2-qual/leak-e13-s1/7.err
+VERDICT scan-pub-unknown PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-pub-outside-store line=9
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/9.src > build/om2-qual/leak-e13-s1/9.elf 2> build/om2-qual/leak-e13-s1/9.cerr
+  $ build/om2-qual/leak-e13-s1/9.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-outside-store.bin > build/om2-qual/leak-e13-s1/9.out 2> build/om2-qual/leak-e13-s1/9.err
+VERDICT scan-pub-outside-store PASS run exit=0 expected=0 stdout=match stderr=match
+CASE pub-secret-native-zero line=11
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/11.src > build/om2-qual/leak-e13-s1/11.elf 2> build/om2-qual/leak-e13-s1/11.cerr
+  $ build/om2-qual/leak-e13-s1/11.elf < /dev/null > build/om2-qual/leak-e13-s1/11.out 2> build/om2-qual/leak-e13-s1/11.err
+VERDICT pub-secret-native-zero PASS run exit=0 expected=0 stdout=match stderr=match
+CASE pub-secret-native-one line=12
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/12.src > build/om2-qual/leak-e13-s1/12.elf 2> build/om2-qual/leak-e13-s1/12.cerr
+  $ build/om2-qual/leak-e13-s1/12.elf < /dev/null > build/om2-qual/leak-e13-s1/12.out 2> build/om2-qual/leak-e13-s1/12.err
+VERDICT pub-secret-native-one PASS run exit=1 expected=1 stdout=match stderr=match
+CASE scan-len-loop line=14
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/14.src > build/om2-qual/leak-e13-s1/14.elf 2> build/om2-qual/leak-e13-s1/14.cerr
+  $ build/om2-qual/leak-e13-s1/14.elf < seed/qualification/om2/leak/fixtures/len-loop.bin > build/om2-qual/leak-e13-s1/14.out 2> build/om2-qual/leak-e13-s1/14.err
 VERDICT scan-len-loop PASS run exit=0 expected=0 stdout=match stderr=match
-CASE scan-len-loop-x1 line=8
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/8.src > build/om2-qual/leak-e12-candidate-final/8.elf 2> build/om2-qual/leak-e12-candidate-final/8.cerr
-  $ build/om2-qual/leak-e12-candidate-final/8.elf x1 < seed/qualification/om2/leak/fixtures/len-loop.bin > build/om2-qual/leak-e12-candidate-final/8.out 2> build/om2-qual/leak-e12-candidate-final/8.err
+CASE scan-len-loop-x1 line=15
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/15.src > build/om2-qual/leak-e13-s1/15.elf 2> build/om2-qual/leak-e13-s1/15.cerr
+  $ build/om2-qual/leak-e13-s1/15.elf x1 < seed/qualification/om2/leak/fixtures/len-loop.bin > build/om2-qual/leak-e13-s1/15.out 2> build/om2-qual/leak-e13-s1/15.err
 VERDICT scan-len-loop-x1 PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-data-branch line=10
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/10.src > build/om2-qual/leak-e12-candidate-final/10.elf 2> build/om2-qual/leak-e12-candidate-final/10.cerr
-  $ build/om2-qual/leak-e12-candidate-final/10.elf < seed/qualification/om2/leak/fixtures/data-branch.bin > build/om2-qual/leak-e12-candidate-final/10.out 2> build/om2-qual/leak-e12-candidate-final/10.err
+CASE scan-data-branch line=17
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/17.src > build/om2-qual/leak-e13-s1/17.elf 2> build/om2-qual/leak-e13-s1/17.cerr
+  $ build/om2-qual/leak-e13-s1/17.elf < seed/qualification/om2/leak/fixtures/data-branch.bin > build/om2-qual/leak-e13-s1/17.out 2> build/om2-qual/leak-e13-s1/17.err
 VERDICT scan-data-branch PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-data-index line=11
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/11.src > build/om2-qual/leak-e12-candidate-final/11.elf 2> build/om2-qual/leak-e12-candidate-final/11.cerr
-  $ build/om2-qual/leak-e12-candidate-final/11.elf < seed/qualification/om2/leak/fixtures/data-index.bin > build/om2-qual/leak-e12-candidate-final/11.out 2> build/om2-qual/leak-e12-candidate-final/11.err
+CASE scan-data-index line=18
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/18.src > build/om2-qual/leak-e13-s1/18.elf 2> build/om2-qual/leak-e13-s1/18.cerr
+  $ build/om2-qual/leak-e13-s1/18.elf < seed/qualification/om2/leak/fixtures/data-index.bin > build/om2-qual/leak-e13-s1/18.out 2> build/om2-qual/leak-e13-s1/18.err
 VERDICT scan-data-index PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-data-index-x0x5 line=12
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/12.src > build/om2-qual/leak-e12-candidate-final/12.elf 2> build/om2-qual/leak-e12-candidate-final/12.cerr
-  $ build/om2-qual/leak-e12-candidate-final/12.elf x5 x0 < seed/qualification/om2/leak/fixtures/data-index.bin > build/om2-qual/leak-e12-candidate-final/12.out 2> build/om2-qual/leak-e12-candidate-final/12.err
+CASE scan-data-index-x0x5 line=19
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/19.src > build/om2-qual/leak-e13-s1/19.elf 2> build/om2-qual/leak-e13-s1/19.cerr
+  $ build/om2-qual/leak-e13-s1/19.elf x5 x0 < seed/qualification/om2/leak/fixtures/data-index.bin > build/om2-qual/leak-e13-s1/19.out 2> build/om2-qual/leak-e13-s1/19.err
 VERDICT scan-data-index-x0x5 PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-trap-check line=14
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/14.src > build/om2-qual/leak-e12-candidate-final/14.elf 2> build/om2-qual/leak-e12-candidate-final/14.cerr
-  $ build/om2-qual/leak-e12-candidate-final/14.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e12-candidate-final/14.out 2> build/om2-qual/leak-e12-candidate-final/14.err
+CASE scan-trap-check line=21
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/21.src > build/om2-qual/leak-e13-s1/21.elf 2> build/om2-qual/leak-e13-s1/21.cerr
+  $ build/om2-qual/leak-e13-s1/21.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e13-s1/21.out 2> build/om2-qual/leak-e13-s1/21.err
 VERDICT scan-trap-check PASS run exit=0 expected=0 stdout=match stderr=match
-CASE scan-reachable-trap line=15
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/15.src > build/om2-qual/leak-e12-candidate-final/15.elf 2> build/om2-qual/leak-e12-candidate-final/15.cerr
-  $ build/om2-qual/leak-e12-candidate-final/15.elf < seed/qualification/om2/leak/fixtures/reachable-trap.bin > build/om2-qual/leak-e12-candidate-final/15.out 2> build/om2-qual/leak-e12-candidate-final/15.err
+CASE scan-reachable-trap line=22
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/22.src > build/om2-qual/leak-e13-s1/22.elf 2> build/om2-qual/leak-e13-s1/22.cerr
+  $ build/om2-qual/leak-e13-s1/22.elf < seed/qualification/om2/leak/fixtures/reachable-trap.bin > build/om2-qual/leak-e13-s1/22.out 2> build/om2-qual/leak-e13-s1/22.err
 VERDICT scan-reachable-trap PASS run exit=2 expected=2 stdout=match stderr=match
-CASE reachable-zero line=17
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/17.src > build/om2-qual/leak-e12-candidate-final/17.elf 2> build/om2-qual/leak-e12-candidate-final/17.cerr
-  $ build/om2-qual/leak-e12-candidate-final/17.elf < /dev/null > build/om2-qual/leak-e12-candidate-final/17.out 2> build/om2-qual/leak-e12-candidate-final/17.err
+CASE reachable-zero line=24
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/24.src > build/om2-qual/leak-e13-s1/24.elf 2> build/om2-qual/leak-e13-s1/24.cerr
+  $ build/om2-qual/leak-e13-s1/24.elf < /dev/null > build/om2-qual/leak-e13-s1/24.out 2> build/om2-qual/leak-e13-s1/24.err
 VERDICT reachable-zero PASS run exit=0 expected=0 stdout=match stderr=match
-CASE reachable-big line=18
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/18.src > build/om2-qual/leak-e12-candidate-final/18.elf 2> build/om2-qual/leak-e12-candidate-final/18.cerr
-  $ build/om2-qual/leak-e12-candidate-final/18.elf < /dev/null > build/om2-qual/leak-e12-candidate-final/18.out 2> build/om2-qual/leak-e12-candidate-final/18.err
+CASE reachable-big line=25
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/25.src > build/om2-qual/leak-e13-s1/25.elf 2> build/om2-qual/leak-e13-s1/25.cerr
+  $ build/om2-qual/leak-e13-s1/25.elf < /dev/null > build/om2-qual/leak-e13-s1/25.out 2> build/om2-qual/leak-e13-s1/25.err
 VERDICT reachable-big PASS run exit=105 expected=105 stdout=match stderr=match
-CASE scan-call-public line=20
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/20.src > build/om2-qual/leak-e12-candidate-final/20.elf 2> build/om2-qual/leak-e12-candidate-final/20.cerr
-  $ build/om2-qual/leak-e12-candidate-final/20.elf < seed/qualification/om2/leak/fixtures/call-public.bin > build/om2-qual/leak-e12-candidate-final/20.out 2> build/om2-qual/leak-e12-candidate-final/20.err
+CASE scan-call-public line=27
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/27.src > build/om2-qual/leak-e13-s1/27.elf 2> build/om2-qual/leak-e13-s1/27.cerr
+  $ build/om2-qual/leak-e13-s1/27.elf < seed/qualification/om2/leak/fixtures/call-public.bin > build/om2-qual/leak-e13-s1/27.out 2> build/om2-qual/leak-e13-s1/27.err
 VERDICT scan-call-public PASS run exit=0 expected=0 stdout=match stderr=match
-CASE scan-call-data line=21
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/21.src > build/om2-qual/leak-e12-candidate-final/21.elf 2> build/om2-qual/leak-e12-candidate-final/21.cerr
-  $ build/om2-qual/leak-e12-candidate-final/21.elf < seed/qualification/om2/leak/fixtures/call-data.bin > build/om2-qual/leak-e12-candidate-final/21.out 2> build/om2-qual/leak-e12-candidate-final/21.err
+CASE scan-call-data line=28
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/28.src > build/om2-qual/leak-e13-s1/28.elf 2> build/om2-qual/leak-e13-s1/28.cerr
+  $ build/om2-qual/leak-e13-s1/28.elf < seed/qualification/om2/leak/fixtures/call-data.bin > build/om2-qual/leak-e13-s1/28.out 2> build/om2-qual/leak-e13-s1/28.err
 VERDICT scan-call-data PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-flags line=22
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/22.src > build/om2-qual/leak-e12-candidate-final/22.elf 2> build/om2-qual/leak-e12-candidate-final/22.cerr
-  $ build/om2-qual/leak-e12-candidate-final/22.elf < seed/qualification/om2/leak/fixtures/flags.bin > build/om2-qual/leak-e12-candidate-final/22.out 2> build/om2-qual/leak-e12-candidate-final/22.err
+CASE scan-flags line=29
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/29.src > build/om2-qual/leak-e13-s1/29.elf 2> build/om2-qual/leak-e13-s1/29.cerr
+  $ build/om2-qual/leak-e13-s1/29.elf < seed/qualification/om2/leak/fixtures/flags.bin > build/om2-qual/leak-e13-s1/29.out 2> build/om2-qual/leak-e13-s1/29.err
 VERDICT scan-flags PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-local line=23
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/23.src > build/om2-qual/leak-e12-candidate-final/23.elf 2> build/om2-qual/leak-e12-candidate-final/23.cerr
-  $ build/om2-qual/leak-e12-candidate-final/23.elf < seed/qualification/om2/leak/fixtures/local.bin > build/om2-qual/leak-e12-candidate-final/23.out 2> build/om2-qual/leak-e12-candidate-final/23.err
+CASE scan-local line=30
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/30.src > build/om2-qual/leak-e13-s1/30.elf 2> build/om2-qual/leak-e13-s1/30.cerr
+  $ build/om2-qual/leak-e13-s1/30.elf < seed/qualification/om2/leak/fixtures/local.bin > build/om2-qual/leak-e13-s1/30.out 2> build/om2-qual/leak-e13-s1/30.err
 VERDICT scan-local PASS run exit=0 expected=0 stdout=match stderr=match
-CASE scan-public-in line=25
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/25.src > build/om2-qual/leak-e12-candidate-final/25.elf 2> build/om2-qual/leak-e12-candidate-final/25.cerr
-  $ build/om2-qual/leak-e12-candidate-final/25.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-in.bin > build/om2-qual/leak-e12-candidate-final/25.out 2> build/om2-qual/leak-e12-candidate-final/25.err
+CASE scan-public-in line=32
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/32.src > build/om2-qual/leak-e13-s1/32.elf 2> build/om2-qual/leak-e13-s1/32.cerr
+  $ build/om2-qual/leak-e13-s1/32.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-in.bin > build/om2-qual/leak-e13-s1/32.out 2> build/om2-qual/leak-e13-s1/32.err
 VERDICT scan-public-in PASS run exit=0 expected=0 stdout=match stderr=match
-CASE scan-public-out line=26
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/26.src > build/om2-qual/leak-e12-candidate-final/26.elf 2> build/om2-qual/leak-e12-candidate-final/26.cerr
-  $ build/om2-qual/leak-e12-candidate-final/26.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-out.bin > build/om2-qual/leak-e12-candidate-final/26.out 2> build/om2-qual/leak-e12-candidate-final/26.err
+CASE scan-public-out line=33
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/33.src > build/om2-qual/leak-e13-s1/33.elf 2> build/om2-qual/leak-e13-s1/33.cerr
+  $ build/om2-qual/leak-e13-s1/33.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-out.bin > build/om2-qual/leak-e13-s1/33.out 2> build/om2-qual/leak-e13-s1/33.err
 VERDICT scan-public-out PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-s1-rot line=28
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/28.src > build/om2-qual/leak-e12-candidate-final/28.elf 2> build/om2-qual/leak-e12-candidate-final/28.cerr
-  $ build/om2-qual/leak-e12-candidate-final/28.elf x0 x2 < seed/qualification/om2/leak/fixtures/s1-rot.bin > build/om2-qual/leak-e12-candidate-final/28.out 2> build/om2-qual/leak-e12-candidate-final/28.err
+CASE scan-s1-rot line=35
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/35.src > build/om2-qual/leak-e13-s1/35.elf 2> build/om2-qual/leak-e13-s1/35.cerr
+  $ build/om2-qual/leak-e13-s1/35.elf x0 x2 < seed/qualification/om2/leak/fixtures/s1-rot.bin > build/om2-qual/leak-e13-s1/35.out 2> build/om2-qual/leak-e13-s1/35.err
 VERDICT scan-s1-rot PASS run exit=0 expected=0 stdout=match stderr=match
-CASE scan-svc line=30
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/30.src > build/om2-qual/leak-e12-candidate-final/30.elf 2> build/om2-qual/leak-e12-candidate-final/30.cerr
-  $ build/om2-qual/leak-e12-candidate-final/30.elf < seed/qualification/om2/leak/fixtures/svc.bin > build/om2-qual/leak-e12-candidate-final/30.out 2> build/om2-qual/leak-e12-candidate-final/30.err
+CASE scan-svc line=37
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/37.src > build/om2-qual/leak-e13-s1/37.elf 2> build/om2-qual/leak-e13-s1/37.cerr
+  $ build/om2-qual/leak-e13-s1/37.elf < seed/qualification/om2/leak/fixtures/svc.bin > build/om2-qual/leak-e13-s1/37.out 2> build/om2-qual/leak-e13-s1/37.err
 VERDICT scan-svc PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-unknown line=31
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/31.src > build/om2-qual/leak-e12-candidate-final/31.elf 2> build/om2-qual/leak-e12-candidate-final/31.cerr
-  $ build/om2-qual/leak-e12-candidate-final/31.elf < build/om2-qual/leak-e12-candidate-final/31.in > build/om2-qual/leak-e12-candidate-final/31.out 2> build/om2-qual/leak-e12-candidate-final/31.err
+CASE scan-unknown line=38
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/38.src > build/om2-qual/leak-e13-s1/38.elf 2> build/om2-qual/leak-e13-s1/38.cerr
+  $ build/om2-qual/leak-e13-s1/38.elf < build/om2-qual/leak-e13-s1/38.in > build/om2-qual/leak-e13-s1/38.out 2> build/om2-qual/leak-e13-s1/38.err
 VERDICT scan-unknown PASS run exit=2 expected=2 stdout=match stderr=match
-CASE scan-empty line=32
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/32.src > build/om2-qual/leak-e12-candidate-final/32.elf 2> build/om2-qual/leak-e12-candidate-final/32.cerr
-  $ build/om2-qual/leak-e12-candidate-final/32.elf < /dev/null > build/om2-qual/leak-e12-candidate-final/32.out 2> build/om2-qual/leak-e12-candidate-final/32.err
+CASE scan-empty line=39
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/39.src > build/om2-qual/leak-e13-s1/39.elf 2> build/om2-qual/leak-e13-s1/39.cerr
+  $ build/om2-qual/leak-e13-s1/39.elf < /dev/null > build/om2-qual/leak-e13-s1/39.out 2> build/om2-qual/leak-e13-s1/39.err
 VERDICT scan-empty PASS run exit=91 expected=91 stdout=match stderr=match
-CASE scan-partial-word line=33
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/33.src > build/om2-qual/leak-e12-candidate-final/33.elf 2> build/om2-qual/leak-e12-candidate-final/33.cerr
-  $ build/om2-qual/leak-e12-candidate-final/33.elf < build/om2-qual/leak-e12-candidate-final/33.in > build/om2-qual/leak-e12-candidate-final/33.out 2> build/om2-qual/leak-e12-candidate-final/33.err
+CASE scan-partial-word line=40
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/40.src > build/om2-qual/leak-e13-s1/40.elf 2> build/om2-qual/leak-e13-s1/40.cerr
+  $ build/om2-qual/leak-e13-s1/40.elf < build/om2-qual/leak-e13-s1/40.in > build/om2-qual/leak-e13-s1/40.out 2> build/om2-qual/leak-e13-s1/40.err
 VERDICT scan-partial-word PASS run exit=91 expected=91 stdout=match stderr=match
-CASE scan-elf line=34
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/34.src > build/om2-qual/leak-e12-candidate-final/34.elf 2> build/om2-qual/leak-e12-candidate-final/34.cerr
-  $ build/om2-qual/leak-e12-candidate-final/34.elf < seed/qualification/om2/leak/fixtures/elf.bin > build/om2-qual/leak-e12-candidate-final/34.out 2> build/om2-qual/leak-e12-candidate-final/34.err
+CASE scan-elf line=41
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/41.src > build/om2-qual/leak-e13-s1/41.elf 2> build/om2-qual/leak-e13-s1/41.cerr
+  $ build/om2-qual/leak-e13-s1/41.elf < seed/qualification/om2/leak/fixtures/elf.bin > build/om2-qual/leak-e13-s1/41.out 2> build/om2-qual/leak-e13-s1/41.err
 VERDICT scan-elf PASS run exit=91 expected=91 stdout=match stderr=match
-CASE scan-usage-x6 line=35
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/35.src > build/om2-qual/leak-e12-candidate-final/35.elf 2> build/om2-qual/leak-e12-candidate-final/35.cerr
-  $ build/om2-qual/leak-e12-candidate-final/35.elf x6 < /dev/null > build/om2-qual/leak-e12-candidate-final/35.out 2> build/om2-qual/leak-e12-candidate-final/35.err
+CASE scan-usage-x6 line=42
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/42.src > build/om2-qual/leak-e13-s1/42.elf 2> build/om2-qual/leak-e13-s1/42.cerr
+  $ build/om2-qual/leak-e13-s1/42.elf x6 < /dev/null > build/om2-qual/leak-e13-s1/42.out 2> build/om2-qual/leak-e13-s1/42.err
 VERDICT scan-usage-x6 PASS run exit=90 expected=90 stdout=match stderr=match
-CASE scan-usage-word line=36
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/36.src > build/om2-qual/leak-e12-candidate-final/36.elf 2> build/om2-qual/leak-e12-candidate-final/36.cerr
-  $ build/om2-qual/leak-e12-candidate-final/36.elf data < /dev/null > build/om2-qual/leak-e12-candidate-final/36.out 2> build/om2-qual/leak-e12-candidate-final/36.err
+CASE scan-usage-word line=43
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/43.src > build/om2-qual/leak-e13-s1/43.elf 2> build/om2-qual/leak-e13-s1/43.cerr
+  $ build/om2-qual/leak-e13-s1/43.elf data < /dev/null > build/om2-qual/leak-e13-s1/43.out 2> build/om2-qual/leak-e13-s1/43.err
 VERDICT scan-usage-word PASS run exit=90 expected=90 stdout=match stderr=match
 SUBST seed/qualification/om2/leak/mutants/cbtaint.from seed/qualification/om2/leak/mutants/cbtaint.to
-CASE kill-cbtaint line=39
-  MUTATE exact-once substitution at byte 23710
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/39.src > build/om2-qual/leak-e12-candidate-final/39.elf 2> build/om2-qual/leak-e12-candidate-final/39.cerr
-  $ build/om2-qual/leak-e12-candidate-final/39.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e12-candidate-final/39.out 2> build/om2-qual/leak-e12-candidate-final/39.err
+CASE kill-cbtaint line=46
+  MUTATE exact-once substitution at byte 23865
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/46.src > build/om2-qual/leak-e13-s1/46.elf 2> build/om2-qual/leak-e13-s1/46.cerr
+  $ build/om2-qual/leak-e13-s1/46.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e13-s1/46.out 2> build/om2-qual/leak-e13-s1/46.err
 VERDICT kill-cbtaint PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 105 stderr=match
 SUBST seed/qualification/om2/leak/mutants/loadpub.from seed/qualification/om2/leak/mutants/loadpub.to
-CASE kill-loadpub line=41
-  MUTATE exact-once substitution at byte 19667
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/41.src > build/om2-qual/leak-e12-candidate-final/41.elf 2> build/om2-qual/leak-e12-candidate-final/41.cerr
-  $ build/om2-qual/leak-e12-candidate-final/41.elf < seed/qualification/om2/leak/fixtures/data-branch.bin > build/om2-qual/leak-e12-candidate-final/41.out 2> build/om2-qual/leak-e12-candidate-final/41.err
+CASE kill-loadpub line=48
+  MUTATE exact-once substitution at byte 19822
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/48.src > build/om2-qual/leak-e13-s1/48.elf 2> build/om2-qual/leak-e13-s1/48.cerr
+  $ build/om2-qual/leak-e13-s1/48.elf < seed/qualification/om2/leak/fixtures/data-branch.bin > build/om2-qual/leak-e13-s1/48.out 2> build/om2-qual/leak-e13-s1/48.err
 VERDICT kill-loadpub PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 104 stderr=match
 SUBST seed/qualification/om2/leak/mutants/callexit.from seed/qualification/om2/leak/mutants/callexit.to
-CASE kill-callexit line=43
-  MUTATE exact-once substitution at byte 20485
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/43.src > build/om2-qual/leak-e12-candidate-final/43.elf 2> build/om2-qual/leak-e12-candidate-final/43.cerr
-  $ build/om2-qual/leak-e12-candidate-final/43.elf < seed/qualification/om2/leak/fixtures/call-data.bin > build/om2-qual/leak-e12-candidate-final/43.out 2> build/om2-qual/leak-e12-candidate-final/43.err
+CASE kill-callexit line=50
+  MUTATE exact-once substitution at byte 20640
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/50.src > build/om2-qual/leak-e13-s1/50.elf 2> build/om2-qual/leak-e13-s1/50.cerr
+  $ build/om2-qual/leak-e13-s1/50.elf < seed/qualification/om2/leak/fixtures/call-data.bin > build/om2-qual/leak-e13-s1/50.out 2> build/om2-qual/leak-e13-s1/50.err
 VERDICT kill-callexit PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 107 stderr=match
 SUBST seed/qualification/om2/leak/mutants/slotoff.from seed/qualification/om2/leak/mutants/slotoff.to
-CASE kill-slotoff line=45
-  MUTATE exact-once substitution at byte 18698
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/45.src > build/om2-qual/leak-e12-candidate-final/45.elf 2> build/om2-qual/leak-e12-candidate-final/45.cerr
-  $ build/om2-qual/leak-e12-candidate-final/45.elf < seed/qualification/om2/leak/fixtures/call-public.bin > build/om2-qual/leak-e12-candidate-final/45.out 2> build/om2-qual/leak-e12-candidate-final/45.err
+CASE kill-slotoff line=52
+  MUTATE exact-once substitution at byte 18853
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/52.src > build/om2-qual/leak-e13-s1/52.elf 2> build/om2-qual/leak-e13-s1/52.cerr
+  $ build/om2-qual/leak-e13-s1/52.elf < seed/qualification/om2/leak/fixtures/call-public.bin > build/om2-qual/leak-e13-s1/52.out 2> build/om2-qual/leak-e13-s1/52.err
 VERDICT kill-slotoff PASS run exit=2 expected=2 killed: stdout differs from the oracle at byte 61 stderr=match
 SUBST seed/qualification/om2/leak/mutants/flagsweak.from seed/qualification/om2/leak/mutants/flagsweak.to
-CASE kill-flagsweak line=47
-  MUTATE exact-once substitution at byte 17673
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/47.src > build/om2-qual/leak-e12-candidate-final/47.elf 2> build/om2-qual/leak-e12-candidate-final/47.cerr
-  $ build/om2-qual/leak-e12-candidate-final/47.elf < seed/qualification/om2/leak/fixtures/flags.bin > build/om2-qual/leak-e12-candidate-final/47.out 2> build/om2-qual/leak-e12-candidate-final/47.err
+CASE kill-flagsweak line=54
+  MUTATE exact-once substitution at byte 17828
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/54.src > build/om2-qual/leak-e13-s1/54.elf 2> build/om2-qual/leak-e13-s1/54.cerr
+  $ build/om2-qual/leak-e13-s1/54.elf < seed/qualification/om2/leak/fixtures/flags.bin > build/om2-qual/leak-e13-s1/54.out 2> build/om2-qual/leak-e13-s1/54.err
 VERDICT kill-flagsweak PASS run exit=2 expected=2 killed: stdout differs from the oracle at byte 104 stderr=match
 SUBST seed/qualification/om2/leak/mutants/nostub.from seed/qualification/om2/leak/mutants/nostub.to
-CASE kill-nostub line=49
-  MUTATE exact-once substitution at byte 22810
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/49.src > build/om2-qual/leak-e12-candidate-final/49.elf 2> build/om2-qual/leak-e12-candidate-final/49.cerr
-  $ build/om2-qual/leak-e12-candidate-final/49.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e12-candidate-final/49.out 2> build/om2-qual/leak-e12-candidate-final/49.err
+CASE kill-nostub line=56
+  MUTATE exact-once substitution at byte 22965
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/56.src > build/om2-qual/leak-e13-s1/56.elf 2> build/om2-qual/leak-e13-s1/56.cerr
+  $ build/om2-qual/leak-e13-s1/56.elf < seed/qualification/om2/leak/fixtures/trap-check.bin > build/om2-qual/leak-e13-s1/56.out 2> build/om2-qual/leak-e13-s1/56.err
 VERDICT kill-nostub PASS run exit=2 expected=2 killed: stdout differs from the oracle at byte 110 stderr=match
 SUBST seed/qualification/om2/leak/mutants/pubrange.from seed/qualification/om2/leak/mutants/pubrange.to
-CASE kill-public-boundary line=51
-  MUTATE exact-once substitution at byte 30912
-  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e12-candidate-final/51.src > build/om2-qual/leak-e12-candidate-final/51.elf 2> build/om2-qual/leak-e12-candidate-final/51.cerr
-  $ build/om2-qual/leak-e12-candidate-final/51.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-out.bin > build/om2-qual/leak-e12-candidate-final/51.out 2> build/om2-qual/leak-e12-candidate-final/51.err
+CASE kill-public-boundary line=58
+  MUTATE exact-once substitution at byte 31078
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/58.src > build/om2-qual/leak-e13-s1/58.elf 2> build/om2-qual/leak-e13-s1/58.cerr
+  $ build/om2-qual/leak-e13-s1/58.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/public-out.bin > build/om2-qual/leak-e13-s1/58.out 2> build/om2-qual/leak-e13-s1/58.err
 VERDICT kill-public-boundary PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 103 stderr=match
-CASE sha256-om2-scan line=53
+SUBST seed/qualification/om2/leak/mutants/norevoke.from seed/qualification/om2/leak/mutants/norevoke.to
+CASE kill-no-revocation line=61
+  MUTATE exact-once substitution at byte 39173
+  $ /tmp/zl/omc-s1 < build/om2-qual/leak-e13-s1/61.src > build/om2-qual/leak-e13-s1/61.elf 2> build/om2-qual/leak-e13-s1/61.cerr
+  $ build/om2-qual/leak-e13-s1/61.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-secret.bin > build/om2-qual/leak-e13-s1/61.out 2> build/om2-qual/leak-e13-s1/61.err
+VERDICT kill-no-revocation PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 150 stderr=match
+CASE sha256-om2-scan line=63
 VERDICT sha256-om2-scan NOT_RUN not run: OM-2 SHA artifact pending independent qualification
-OM2GATE NOT_RUN cases=32 pass=31 fail=0 invalid=0 not_run=1
+OM2GATE NOT_RUN cases=38 pass=37 fail=0 invalid=0 not_run=1

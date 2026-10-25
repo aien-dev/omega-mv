@@ -1,4 +1,4 @@
-Cross-check of revised E12 scanner, GNU objdump 2.42. Unknown/unhandled do not turn into PASS.
+E13 final decoder offset cross-check against GNU objdump 2.42.
 
 call-data.bin scanner-exit=2 xcheck-exit=0
 XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=20
@@ -46,6 +46,27 @@ local.bin scanner-exit=0 xcheck-exit=0
 XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=14
 XCHECK branches objdump=1 leakscan=1
 XCHECK mem-non-sp objdump=3 leakscan=3 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+pub-outside-store.bin scanner-exit=0 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=13
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=3 leakscan=3 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+pub-secret.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=13
+XCHECK branches objdump=1 leakscan=1
+XCHECK mem-non-sp objdump=3 leakscan=3 (sp/x29-only accesses not listed: 0)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+
+pub-unknown.bin scanner-exit=2 xcheck-exit=0
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=19
+XCHECK branches objdump=2 leakscan=2
+XCHECK mem-non-sp objdump=4 leakscan=4 (sp/x29-only accesses not listed: 0)
 XCHECK undecodable objdump=0 leakscan-unknown=0
 XCHECK AGREE
 

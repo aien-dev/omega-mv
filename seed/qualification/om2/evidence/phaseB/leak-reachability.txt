@@ -1,19 +1,43 @@
-E12 native reachability of loaded ulong-to-uint conversion. HOST evidence, pinned omc 734f0a39.
-Program-mode twins: loaded 0 returns0; loaded 2^32 traps5 and exits105.
+E12/E13 native reachability: HOST process exits under pinned omc 734f0a39.
 Exact command:
- nice -n 19 build/om2-qual/gate-b seed/out/omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 seed/qualification/om2/leak/leak.cases build/om2-qual/leak-e12-pinned-final
+ nice -n 19 build/om2-qual/gate-b seed/out/omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 seed/qualification/om2/leak/leak.cases build/om2-qual/leak-e13-pinned
 
-CASE scan-reachable-trap line=31
-  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/31.src > build/om2-qual/leak-e12-pinned-final/31.elf 2> build/om2-qual/leak-e12-pinned-final/31.cerr
-  $ build/om2-qual/leak-e12-pinned-final/31.elf < seed/qualification/om2/leak/fixtures/reachable-trap.bin > build/om2-qual/leak-e12-pinned-final/31.out 2> build/om2-qual/leak-e12-pinned-final/31.err
+CASE scan-pub-secret line=26
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/26.src > build/om2-qual/leak-e13-pinned/26.elf 2> build/om2-qual/leak-e13-pinned/26.cerr
+  $ build/om2-qual/leak-e13-pinned/26.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-secret.bin > build/om2-qual/leak-e13-pinned/26.out 2> build/om2-qual/leak-e13-pinned/26.err
+VERDICT scan-pub-secret PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-pub-unknown line=27
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/27.src > build/om2-qual/leak-e13-pinned/27.elf 2> build/om2-qual/leak-e13-pinned/27.cerr
+  $ build/om2-qual/leak-e13-pinned/27.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-unknown.bin > build/om2-qual/leak-e13-pinned/27.out 2> build/om2-qual/leak-e13-pinned/27.err
+VERDICT scan-pub-unknown PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-pub-outside-store line=29
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/29.src > build/om2-qual/leak-e13-pinned/29.elf 2> build/om2-qual/leak-e13-pinned/29.cerr
+  $ build/om2-qual/leak-e13-pinned/29.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-outside-store.bin > build/om2-qual/leak-e13-pinned/29.out 2> build/om2-qual/leak-e13-pinned/29.err
+VERDICT scan-pub-outside-store PASS run exit=0 expected=0 stdout=match stderr=match
+CASE pub-secret-native-zero line=31
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/31.src > build/om2-qual/leak-e13-pinned/31.elf 2> build/om2-qual/leak-e13-pinned/31.cerr
+  $ build/om2-qual/leak-e13-pinned/31.elf < /dev/null > build/om2-qual/leak-e13-pinned/31.out 2> build/om2-qual/leak-e13-pinned/31.err
+VERDICT pub-secret-native-zero PASS run exit=0 expected=0 stdout=match stderr=match
+CASE pub-secret-native-one line=32
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/32.src > build/om2-qual/leak-e13-pinned/32.elf 2> build/om2-qual/leak-e13-pinned/32.cerr
+  $ build/om2-qual/leak-e13-pinned/32.elf < /dev/null > build/om2-qual/leak-e13-pinned/32.out 2> build/om2-qual/leak-e13-pinned/32.err
+VERDICT pub-secret-native-one PASS run exit=1 expected=1 stdout=match stderr=match
+CASE scan-reachable-trap line=42
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/42.src > build/om2-qual/leak-e13-pinned/42.elf 2> build/om2-qual/leak-e13-pinned/42.cerr
+  $ build/om2-qual/leak-e13-pinned/42.elf < seed/qualification/om2/leak/fixtures/reachable-trap.bin > build/om2-qual/leak-e13-pinned/42.out 2> build/om2-qual/leak-e13-pinned/42.err
 VERDICT scan-reachable-trap PASS run exit=2 expected=2 stdout=match stderr=match
-CASE reachable-zero line=33
-  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/33.src > build/om2-qual/leak-e12-pinned-final/33.elf 2> build/om2-qual/leak-e12-pinned-final/33.cerr
-  $ build/om2-qual/leak-e12-pinned-final/33.elf < /dev/null > build/om2-qual/leak-e12-pinned-final/33.out 2> build/om2-qual/leak-e12-pinned-final/33.err
+CASE reachable-zero line=44
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/44.src > build/om2-qual/leak-e13-pinned/44.elf 2> build/om2-qual/leak-e13-pinned/44.cerr
+  $ build/om2-qual/leak-e13-pinned/44.elf < /dev/null > build/om2-qual/leak-e13-pinned/44.out 2> build/om2-qual/leak-e13-pinned/44.err
 VERDICT reachable-zero PASS run exit=0 expected=0 stdout=match stderr=match
-CASE reachable-big line=34
-  $ seed/out/omc < build/om2-qual/leak-e12-pinned-final/34.src > build/om2-qual/leak-e12-pinned-final/34.elf 2> build/om2-qual/leak-e12-pinned-final/34.cerr
-  $ build/om2-qual/leak-e12-pinned-final/34.elf < /dev/null > build/om2-qual/leak-e12-pinned-final/34.out 2> build/om2-qual/leak-e12-pinned-final/34.err
+CASE reachable-big line=45
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/45.src > build/om2-qual/leak-e13-pinned/45.elf 2> build/om2-qual/leak-e13-pinned/45.cerr
+  $ build/om2-qual/leak-e13-pinned/45.elf < /dev/null > build/om2-qual/leak-e13-pinned/45.out 2> build/om2-qual/leak-e13-pinned/45.err
 VERDICT reachable-big PASS run exit=105 expected=105 stdout=match stderr=match
+CASE kill-no-revocation line=81
+  MUTATE exact-once substitution at byte 39173
+  $ seed/out/omc < build/om2-qual/leak-e13-pinned/81.src > build/om2-qual/leak-e13-pinned/81.elf 2> build/om2-qual/leak-e13-pinned/81.cerr
+  $ build/om2-qual/leak-e13-pinned/81.elf pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-secret.bin > build/om2-qual/leak-e13-pinned/81.out 2> build/om2-qual/leak-e13-pinned/81.err
+VERDICT kill-no-revocation PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 150 stderr=match
 
-OM2GATE NOT_RUN cases=46 pass=45 fail=0 invalid=0 not_run=1
+OM2GATE NOT_RUN cases=55 pass=54 fail=0 invalid=0 not_run=1

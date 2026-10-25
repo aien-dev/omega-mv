@@ -12,9 +12,9 @@ xcheck.py ARTIFACT REPORT runs exactly:
 and independently compares conditional branch offsets and targets, load/store offsets whose address
 uses a non-SP/x29 register, and undecodable words. It does not copy leakscan's decoder. The tool's
 PUBLIC-MEM annotations are ignored by the offset oracle (they are not instructions).
-Revised E12 report receipt: evidence/phaseB/leak-fixture-xcheck.txt, fourteen artifacts, all AGREE.
+Revised E13 report receipt: evidence/phaseB/leak-fixture-xcheck.txt, seventeen artifacts, all AGREE.
 Commands (worktree root), for every leak/fixtures/*.bin except deliberately program-mode elf.bin:
- build/om2-qual/leakscan-e12 [x0 x2 for s1-rot | pub:0:32:8 for public-*] < BIN
+ build/om2-qual/leakscan-e13 [x0 x2 for s1-rot | pub:0:32:8 for pub*/public-*] < BIN
  python3 seed/qualification/om2/oracle/leak/xcheck.py BIN seed/qualification/om2/leak/expected/NAME.out
 SHA instead uses the full report evidence/phaseB/leak-sha256-om1-pub.txt. This checks decoder offsets,
 not taint proofs. All input artifact identities are in leak.cases or leak-s1-rot.txt.
@@ -39,13 +39,21 @@ This is not evidence for the later provenance/known-bits additions. leak-corpus-
 a historical pre-E12 check of 31 baseline function-mode units, not the current verdict on SHA.
 
 Qualification commands (repository root), exact receipts saved:
- nice -n 19 build/om2-qual/gate-b seed/out/omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 seed/qualification/om2/leak/leak.cases build/om2-qual/leak-e12-pinned-final
- -> evidence/phaseB/leak-pinned.log: OM2GATE NOT_RUN cases=46 pass=45 fail=0 invalid=0 not_run=1
- nice -n 19 build/om2-qual/gate-b /tmp/zl/omc-s1 3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f seed/qualification/om2/leak/candidate.cases build/om2-qual/leak-e12-candidate-final
- -> evidence/phaseB/leak-candidate-s1.log: OM2GATE NOT_RUN cases=32 pass=31 fail=0 invalid=0 not_run=1
+ nice -n 19 build/om2-qual/gate-b seed/out/omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 seed/qualification/om2/leak/leak.cases build/om2-qual/leak-e13-pinned
+ -> evidence/phaseB/leak-pinned.log: OM2GATE NOT_RUN cases=55 pass=54 fail=0 invalid=0 not_run=1
+ nice -n 19 build/om2-qual/gate-b /tmp/zl/omc-s1 3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f seed/qualification/om2/leak/candidate.cases build/om2-qual/leak-e13-s1
+ -> evidence/phaseB/leak-candidate-s1.log: OM2GATE NOT_RUN cases=38 pass=37 fail=0 invalid=0 not_run=1
 The one NOT_RUN is the unavailable OM-2 SHA artifact. A gate PASS case that expects the scanner to
 return NOT_RUN verifies refusal/classification, not trace equivalence of that input.
 
 Native reachability: gate cases reachable-zero and reachable-big execute actual program-mode twins
 of uint(get a 0), initial element 0 or 2^32, checking process exit 0 or 105. Exact output excerpt in
 leak-reachability.txt. This retracts the earlier unsound inference from trap-path structure alone.
+
+E13: new expectations derive from the mandated revocation rule and fixture construction; objdump
+cross-checks offsets independently. Scanner output was observed before those expected files were saved.
+Native counterexample twins concatenate pub-secret.om with pub-secret-zero.om / pub-secret-one.om
+and actually exit0 / exit1 under both pinned and S1 compilers. Disabling rvcollect via exact-once
+mutant norevoke recreates false PASS (exit0), killed by the pub-secret expectation (NOT_RUN).
+SHA count declaration now has 68 PUBLIC-MEM-REVOKED store offsets, no public loads applied; counts
+remain ten discharged checks, 16 MANUAL branches, eight data-index accesses and overall NOT_RUN.

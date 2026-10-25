@@ -1,4 +1,4 @@
-OM-1 SHA static leakage evidence, revised under coordinator E11/E12 (supersedes structural-trap PASS).
+OM-1 SHA static leakage evidence, revised under E11/E12/E13 (supersedes both earlier false-PASS rules).
 Contract §8 evidence (a); SOURCE evidence, scan executed on AArch64 host. Dynamic traces: NOT_RUN.
 Compiler seed/out/omc sha256 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61.
 Source om/sha256/sha256.om (main acb3f15) sha256 7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21.
@@ -11,8 +11,8 @@ contract layout at 32, E5; E11 permits an explicit public-memory declaration. It
 as PUBLIC-DECL 0+32:8 in the full report.
 
 Commands (worktree root):
- build/om2-qual/leakscan-e12 < seed/qualification/om2/leak/fixtures/sha256-om1.bin > seed/qualification/om2/evidence/phaseB/leak-sha256-om1.txt
- build/om2-qual/leakscan-e12 pub:0:32:8 < seed/qualification/om2/leak/fixtures/sha256-om1.bin > seed/qualification/om2/evidence/phaseB/leak-sha256-om1-pub.txt
+ build/om2-qual/leakscan-e13 < seed/qualification/om2/leak/fixtures/sha256-om1.bin > seed/qualification/om2/evidence/phaseB/leak-sha256-om1.txt
+ build/om2-qual/leakscan-e13 pub:0:32:8 < seed/qualification/om2/leak/fixtures/sha256-om1.bin > seed/qualification/om2/evidence/phaseB/leak-sha256-om1-pub.txt
 Both exit 2, same classification counts:
  SUMMARY branches=83 len=57 trap-check=10 data-branch=16 branch-unreached=0 mem=387 const=16
  public-index=363 data-index=8 mem-unreached=0 unknown=0 unhandled=0
@@ -32,9 +32,9 @@ Sixteen branches remain MANUAL (data-branch summary field), including nine unpro
  @2528: tobuf loop condition; @2616 @2620 @2782 @2809: absorb condition/loops;
  @3099: zbuf loop condition; @3160: final padding condition.
 Eight DATA addresses remain: @137 @144 @151 @158 (schedb), @2541 @2544 (tobuf), @3108 (zbuf),
-@3140 (final). No public declaration is applied to an OM-1 SHA load: getle shares calls for many
-fields, and uses a variable index p+i; exact constants are lost at context-insensitive joins/loops.
-This is the documented precision limit, not a silent expansion of the public range.
+@3140 (final). E13 conservatively revokes pub:0:32:8 at 68 potentially poisoning store offsets (each
+listed PUBLIC-MEM-REVOKED). No declaration is applied to any SHA load. Independently, getle shares
+calls for many fields and loops over p+i, losing exact constants. Both limitations are conservative.
 
 Listed manual classification of the original 15 items (7 branches + 8 addresses), not a static PASS:
  schedb @137 @144 @151 @158: input offset from absorb's off;
@@ -50,3 +50,9 @@ as listed above, even after the manual count classification; no overall PASS is 
 Required E12 false-PASS control and native reachability: leak/fixtures/reachable-trap.om scans data
 MANUAL trap=5 / NOT_RUN; program twins execute with 0 (exit0) and 2^32 (trap5, exit105). See gate receipts
 and leak-reachability.txt. The earlier assumption "branch to trap implies never taken" is retracted.
+
+E13 retracts any claim that a declaration can declassify a secret overwritten field. The required
+pub-secret counterexample revokes the declaration at @3; its reloaded-byte branch is MANUAL/NOT_RUN.
+Native message-byte twins actually exit0 and exit1. Unknown-address stores revoke too; proven
+same-base disjoint stores do not. The no-revocation mutant is killed. See leak-public-store.txt and
+the updated gate receipts; whole-artifact revocation iterates the entire analysis to stability.
