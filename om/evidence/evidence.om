@@ -1,0 +1,1288 @@
+note SPDX-License-Identifier: Apache-2.0
+note evidence.om: seeded Omega port of the computing parts of src/omega_vector.c and
+note src/omega_evidence.c (aien-dev/omega-mv#726). Parity is byte for byte against the C as the
+note product builds it (gcc -std=gnu11 -O2, Makefile CFLAGS, aarch64); see README.md.
+note
+note Exported functions (omega-bridge native call ABI v1: ulong/long scalars, fixed-length
+note ulong/uchar arrays, ulong/long/void result). Arrays of uint32 travel as their little-endian
+note bytes, exactly as the C arrays hold them in memory; strings as bytes with explicit lengths.
+note   vecspec nm has n onm dig fld  omega_vector_spec_init: name, digest, fixed fields
+note   vecadd a b c n                 omega_vector_oracle_u32 over at most 4096 elements
+note   vecver a b c n idx             omega_vector_verify_oracle (idx 0 = first mismatch)
+note   vecgen a b c n                 omega_vector_generate_deterministic
+note   lnacc buf out n                trim_line + the length rule of popen_read_line and
+note                                  omega_evidence_physics_commit, on the bytes fgets returned
+note   cmtacc buf out                 omega_evidence_run_commit on the line git printed
+note   runid secs buf got out         omega_evidence_run_id: UTC stamp + "-" + short sha
+note   evpath rid rel rl cand n       the string part of omega_evidence_path
+note   digrel stem sl ext el dig rel  the name part of omega_evidence_write_digest
+note   hwhex uuid out                 gpu_uuid_hex of omega_evidence_hardware_from_nvrm
+note   shainit st / shaupd st p n / shafin st p n dig   SHA-256, the state in st (9 words)
+note Process, file and directory effects (popen, fopen, mkdir, open O_EXCL, readlink, getenv,
+note access) stay with the caller; the parity harness at the end of this file performs them in
+note program mode exactly as the C does.
+
+note ---- SHA-256 (FIPS 180-4), tools/zero-legacy/sha256.om with the state in parameters ----
+note st 0..7 the hash words, st 8 the bytes absorbed. 32-bit words live in ulong cells, masked
+note after every add (4294967295).
+
+fn kinit k edit ulong 64 to void
+put k 0 1116352408
+put k 1 1899447441
+put k 2 3049323471
+put k 3 3921009573
+put k 4 961987163
+put k 5 1508970993
+put k 6 2453635748
+put k 7 2870763221
+put k 8 3624381080
+put k 9 310598401
+put k 10 607225278
+put k 11 1426881987
+put k 12 1925078388
+put k 13 2162078206
+put k 14 2614888103
+put k 15 3248222580
+put k 16 3835390401
+put k 17 4022224774
+put k 18 264347078
+put k 19 604807628
+put k 20 770255983
+put k 21 1249150122
+put k 22 1555081692
+put k 23 1996064986
+put k 24 2554220882
+put k 25 2821834349
+put k 26 2952996808
+put k 27 3210313671
+put k 28 3336571891
+put k 29 3584528711
+put k 30 113926993
+put k 31 338241895
+put k 32 666307205
+put k 33 773529912
+put k 34 1294757372
+put k 35 1396182291
+put k 36 1695183700
+put k 37 1986661051
+put k 38 2177026350
+put k 39 2456956037
+put k 40 2730485921
+put k 41 2820302411
+put k 42 3259730800
+put k 43 3345764771
+put k 44 3516065817
+put k 45 3600352804
+put k 46 4094571909
+put k 47 275423344
+put k 48 430227734
+put k 49 506948616
+put k 50 659060556
+put k 51 883997877
+put k 52 958139571
+put k 53 1322822218
+put k 54 1537002063
+put k 55 1747873779
+put k 56 1955562222
+put k 57 2024104815
+put k 58 2227730452
+put k 59 2361852424
+put k 60 2428436474
+put k 61 2756734187
+put k 62 3204031479
+put k 63 3329325298
+end
+
+fn rotr x ulong r ulong to ulong
+ret and or shr x r shl x sub 32 r 4294967295
+end
+
+fn bsig0 x ulong to ulong
+ret xor rotr x 2 xor rotr x 13 rotr x 22
+end
+
+fn bsig1 x ulong to ulong
+ret xor rotr x 6 xor rotr x 11 rotr x 25
+end
+
+fn ssig0 x ulong to ulong
+ret xor rotr x 7 xor rotr x 18 shr x 3
+end
+
+fn ssig1 x ulong to ulong
+ret xor rotr x 17 xor rotr x 19 shr x 10
+end
+
+fn ch x ulong y ulong z ulong to ulong
+ret xor and x y and and not x 4294967295 z
+end
+
+fn maj x ulong y ulong z ulong to ulong
+ret xor and x y xor and x z and y z
+end
+
+note the 16 big-endian words of the block at byte o of p into w, then the schedule
+fn sched p view uchar 4096 o ulong w edit ulong 64 to void
+for i ulong 16
+q = add o mul i 4
+v = ulong get p q
+v = or shl v 8 ulong get p add q 1
+v = or shl v 8 ulong get p add q 2
+v = or shl v 8 ulong get p add q 3
+put w i v
+end
+for j ulong 48
+i = add j 16
+s = add ssig1 get w sub i 2 get w sub i 7
+s = add s ssig0 get w sub i 15
+s = add s get w sub i 16
+put w i and s 4294967295
+end
+end
+
+fn round s edit ulong 8 kw ulong to void
+a = get s 0
+e = get s 4
+t1 = add get s 7 bsig1 e
+t1 = add t1 ch e get s 5 get s 6
+t1 = and add t1 kw 4294967295
+t2 = and add bsig0 a maj a get s 1 get s 2 4294967295
+put s 7 get s 6
+put s 6 get s 5
+put s 5 e
+put s 4 and add get s 3 t1 4294967295
+put s 3 get s 2
+put s 2 get s 1
+put s 1 a
+put s 0 and add t1 t2 4294967295
+end
+
+note compress the block at byte o of p into st
+fn shacmp st edit ulong 9 p view uchar 4096 o ulong to void
+w = new ulong 64 0
+k = new ulong 64 0
+s = new ulong 8 0
+kinit k
+sched p o w
+for i ulong 8
+put s i get st i
+end
+for i ulong 64
+round s add get k i get w i
+end
+for i ulong 8
+put st i and add get st i get s i 4294967295
+end
+end
+
+fn shainit st edit ulong 9 to void
+put st 0 1779033703
+put st 1 3144134277
+put st 2 1013904242
+put st 3 2773480762
+put st 4 1359893119
+put st 5 2600822924
+put st 6 528734635
+put st 7 1541459225
+put st 8 0
+end
+
+note absorb p[0..n): n a multiple of 64, at most 4096 (trap 4 otherwise)
+fn shaupd st edit ulong 9 p view uchar 4096 n ulong to void
+if ne rem n 64 0
+trap 4
+end
+b = ulong 0
+while lt b n bound 65
+shacmp st p b
+b = add b 64
+end
+put st 8 add get st 8 n
+end
+
+note absorb the last n <= 4096 bytes of p, pad, and write the 32-byte digest into dig
+fn shafin st edit ulong 9 p view uchar 4096 n ulong dig edit uchar 32 to void
+full = sub n rem n 64
+shaupd st p full
+t = new uchar 4096 0
+r = sub n full
+for i ulong r
+put t i get p add full i
+end
+put t r 128
+m = ulong 64
+if ge r 56
+m = 128
+end
+padlen t m mul add get st 8 r 8
+shacmp st t 0
+if eq m 128
+shacmp st t 64
+end
+digout st dig
+end
+
+fn digout st edit ulong 9 dig edit uchar 32 to void
+for i ulong 32
+sh = mul sub 3 rem i 4 8
+w = get st div i 4
+put dig i uchar and shr w sh 255
+end
+end
+
+note the 64-bit big-endian bit count at the end of the m-byte padded tail
+fn padlen t edit uchar 4096 m ulong bits ulong to void
+for i ulong 8
+v = and shr bits mul sub 7 i 8 255
+put t add sub m 8 i uchar v
+end
+end
+
+note ---- byte helpers ----
+
+fn hexdig v ulong to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+
+note ---- src/omega_vector.c ----
+
+fn rd32 a view uchar 16384 i ulong to ulong
+o = mul i 4
+v = ulong get a add o 3
+v = or shl v 8 ulong get a add o 2
+v = or shl v 8 ulong get a add o 1
+ret or shl v 8 ulong get a o
+end
+
+fn wr32 a edit uchar 16384 i ulong v ulong to void
+o = mul i 4
+for j ulong 4
+put a add o j uchar and shr v mul j 8 255
+end
+end
+
+note omega_vector_spec_init. has 0 is a NULL name. nm holds the first 64 bytes of the name (the C
+note strncpy reads at most 63, stopping at the first zero byte). On success onm gets spec->name,
+note dig spec->spec_digest (spec_id is the same 32 bytes), fld element_type, element_width,
+note element_count, overflow. n above 2^32 - 1 traps 5 (the C parameter is uint32_t).
+fn vecspec nm view uchar 64 has ulong n ulong onm edit uchar 64 dig edit uchar 32 fld edit ulong 4 to long
+nn = ulong uint n
+if or eq has 0 eq nn 0
+ret -1
+end
+c = uchar 0
+for i ulong 63
+if ne i 0
+if ne c 0
+c = get nm i
+end
+end
+if eq i 0
+c = get nm 0
+end
+put onm i c
+end
+put onm 63 0
+p = new uchar 4096 0
+vsmsg p nn
+st = new ulong 9 0
+shainit st
+shafin st p 23 dig
+put fld 0 3
+put fld 1 32
+put fld 2 nn
+put fld 3 1
+ret 0
+end
+
+note "OMEGA_VECADD_U32" || element_width (uint16 LE, 32) || element_count (uint32 LE) || overflow
+fn vsmsg p edit uchar 4096 n ulong to void
+put p 0 79
+put p 1 77
+put p 2 69
+put p 3 71
+put p 4 65
+put p 5 95
+put p 6 86
+put p 7 69
+put p 8 67
+put p 9 65
+put p 10 68
+put p 11 68
+put p 12 95
+put p 13 85
+put p 14 51
+put p 15 50
+put p 16 32
+put p 17 0
+for j ulong 4
+put p add 18 j uchar and shr n mul j 8 255
+end
+put p 22 1
+end
+
+note omega_vector_oracle_u32: c[i] = a[i] + b[i] mod 2^32 for i < n (n 0: nothing written)
+fn vecadd a view uchar 16384 b view uchar 16384 c edit uchar 16384 n ulong to void
+for i ulong n
+wr32 c i and add rd32 a i rd32 b i 4294967295
+end
+end
+
+note omega_vector_verify_oracle: 0 on exact match, -1 on mismatch (idx 0 = its index) or n 0
+fn vecver a view uchar 16384 b view uchar 16384 c view uchar 16384 n ulong idx edit ulong 1 to long
+if eq n 0
+ret -1
+end
+for i ulong n
+if ne rd32 c i and add rd32 a i rd32 b i 4294967295
+put idx 0 i
+ret -1
+end
+end
+ret 0
+end
+
+note omega_vector_generate_deterministic (n 0: nothing written)
+fn vecgen a edit uchar 16384 b edit uchar 16384 c edit uchar 16384 n ulong to void
+for i ulong n
+x = add 1000 i
+y = add 2000 mul i 2
+if eq i 0
+x = 4294967294
+y = 3
+end
+if eq i 1
+x = 2147483648
+y = 2147483648
+end
+wr32 a i x
+wr32 b i y
+wr32 c i 3735928559
+end
+end
+
+note ---- src/omega_evidence.c ----
+
+note strlen of a zero-terminated buffer (no zero byte in it traps 4)
+fn slen256 b view uchar 256 to ulong
+for i ulong 256
+if eq get b i 0
+ret i
+end
+end
+trap 4
+end
+
+note buf is the 256-byte buffer fgets filled (zero-terminated; all zero when fgets returned
+note NULL is handled by the caller). trim_line, then refuse an empty line or one whose length is
+note >= n, else copy it with its zero byte into out. 1 accepted, 0 refused.
+fn lnacc buf view uchar 256 out edit uchar 256 n ulong to long
+l = slen256 buf
+while gt l 0 bound 257
+c = get buf sub l 1
+if and ne c 10 and ne c 13 ne c 32
+break
+end
+l = sub l 1
+end
+if or eq l 0 ge l n
+ret 0
+end
+for i ulong l
+put out i get buf i
+end
+put out l 0
+ret 1
+end
+
+note omega_evidence_run_commit: the first line git printed (n 64), exactly 40 bytes, copied with
+note its zero byte into out (41 bytes). 1 accepted, 0 refused (out untouched).
+fn cmtacc buf view uchar 256 out edit uchar 41 to long
+t = new uchar 256 0
+if eq lnacc buf t 64 0
+ret 0
+end
+if ne slen256 view t 40
+ret 0
+end
+for i ulong 41
+put out i get t i
+end
+ret 1
+end
+
+note floor division of a signed value by a positive one
+fn fdiv a long b long to long
+q = div a b
+if and lt rem a b 0 ne rem a b 0
+q = sub q 1
+end
+ret q
+end
+
+note decimal digits of v (v >= 0) at o of out; returns the new offset; w is the minimum width
+fn putdec out edit uchar 96 o ulong v long w ulong to ulong
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put d n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+if and eq x 0 ge n w
+break
+end
+end
+p = o
+for i ulong n
+put out p get d sub sub n 1 i
+p = add p 1
+end
+ret p
+end
+
+note civil date of a day number (days since 1970-01-01) into ymd: year, month, day
+fn civil z0 long ymd edit ulong 3 to void
+z = add z0 719468
+era = fdiv z 146097
+doe = sub z mul era 146097
+yoe = civyoe doe
+t = add mul 365 yoe div yoe 4
+civmd sub doe sub t div yoe 100 add yoe mul era 400 ymd
+end
+
+note month and day of a day of year (March-based), and the year corrected for Jan/Feb
+fn civmd doy long y long ymd edit ulong 3 to void
+mp = div add mul 5 doy 2 153
+d = sub doy div add mul 153 mp 2 5
+put ymd 2 ulong add d 1
+m = add mp 3
+if ge mp 10
+m = sub mp 9
+end
+yy = y
+if le m 2
+yy = add y 1
+end
+put ymd 0 ulong yy
+put ymd 1 ulong m
+end
+
+note year of era of a day of era (Hinnant's civil_from_days)
+fn civyoe doe long to long
+a = sub doe div doe 1460
+a = add a div doe 36524
+a = sub a div doe 146096
+ret div a 365
+end
+
+note omega_evidence_run_id: strftime("%Y%m%dT%H%M%SZ") of gmtime(secs) + "-" + the short sha line
+note (popen_read_line with n 64; got 0 when popen or fgets failed, then "unknown"). Writes the
+note zero-terminated id into out and returns its length. secs must lie in years 1..9999 (trap 4).
+fn runid secs long buf view uchar 256 got ulong out edit uchar 96 to ulong
+if or lt secs -62135596800 gt secs 253402300799
+trap 4
+end
+sha = new uchar 256 0
+ok = long 0
+if ne got 0
+ok = lnacc buf sha 64
+end
+ymd = new ulong 3 0
+civil fdiv secs 86400 ymd
+p = putdec out 0 long get ymd 0 1
+p = putdec out p long get ymd 1 2
+p = putdec out p long get ymd 2 2
+put out p 84
+sod = sub secs mul fdiv secs 86400 86400
+p = putdec out add p 1 div sod 3600 2
+p = putdec out p div rem sod 3600 60 2
+p = putdec out p rem sod 60 2
+put out p 90
+put out add p 1 45
+p = add p 2
+if eq ok 0
+p = unknown out p
+end
+if ne ok 0
+l = slen256 view sha
+for i ulong l
+put out add p i get sha i
+end
+p = add p l
+end
+put out p 0
+ret p
+end
+
+fn unknown out edit uchar 96 p ulong to ulong
+put out p 117
+put out add p 1 110
+put out add p 2 107
+put out add p 3 110
+put out add p 4 111
+put out add p 5 119
+put out add p 6 110
+ret add p 7
+end
+
+note the string part of omega_evidence_path: cand = "build/qual-runs/" rid "/" rel[0..rl), zero
+note terminated. rid is the zero-terminated run id. -1 when the path is 1024 bytes or longer
+note (nothing written); -2 when it is built but its length is >= n (the C still creates its
+note directories, then refuses); 0 otherwise. A NULL relpath or out, and n 0, are the caller's.
+fn evpath rid view uchar 96 rel view uchar 1024 rl ulong cand edit uchar 1024 n ulong to long
+ridl = ulong 0
+while ne get rid ridl 0 bound 96
+ridl = add ridl 1
+end
+if ge rl 1024
+ret -1
+end
+tot = add add 17 ridl rl
+if ge tot 1024
+ret -1
+end
+bqr cand
+for i ulong ridl
+put cand add 16 i get rid i
+end
+put cand add 16 ridl 47
+o = add 17 ridl
+for i ulong rl
+put cand add o i get rel i
+end
+put cand tot 0
+if ge tot n
+ret -2
+end
+ret 0
+end
+
+fn bqr c edit uchar 1024 to void
+put c 0 98
+put c 1 117
+put c 2 105
+put c 3 108
+put c 4 100
+put c 5 47
+put c 6 113
+put c 7 117
+put c 8 97
+put c 9 108
+put c 10 45
+put c 11 114
+put c 12 117
+put c 13 110
+put c 14 115
+put c 15 47
+end
+
+note the name part of omega_evidence_write_digest: rel = stem "." hex(dig) "." ext, zero terminated.
+note Returns its length, or -1 when that is 768 bytes or longer (the C's rel[768]).
+fn digrel stem view uchar 768 sl ulong ext view uchar 768 el ulong dig view uchar 32 rel edit uchar 768 to long
+if or ge sl 768 ge el 768
+ret -1
+end
+k = add add sl el 66
+if ge k 768
+ret -1
+end
+for i ulong sl
+put rel i get stem i
+end
+put rel sl 46
+for i ulong 32
+put rel add add sl 1 mul i 2 hexdig shr ulong get dig i 4
+put rel add add sl 2 mul i 2 hexdig and ulong get dig i 15
+end
+put rel add sl 65 46
+for i ulong el
+put rel add add sl 66 i get ext i
+end
+put rel k 0
+ret long k
+end
+
+note gpu_uuid_hex: 32 lowercase hex digits and a zero byte
+fn hwhex uuid view uchar 16 out edit uchar 33 to void
+for i ulong 16
+put out mul i 2 hexdig shr ulong get uuid i 4
+put out add mul i 2 1 hexdig and ulong get uuid i 15
+end
+put out 32 0
+end
+
+note ==== parity harness: program mode only; everything above this line is the library ====
+note usage: evidence STREAM < corpus/STREAM.txt (om/evidence/parity/corpus.py); one result line per
+note record, the format of the C oracle driver. The harness also does the C's process and file
+note effects: it emulates popen+fgets on the record's bytes, writes physics.lock, creates
+note directories (mkdir_p_for_file) and the content-addressed file (open O_EXCL, mode 0444).
+
+global ib uchar 1048576
+global ist ulong 2
+global ob uchar 1048576
+global obn ulong 1
+global tb uchar 65536
+global tn ulong 1
+global arg uchar 16
+
+fn inb to ulong
+p = get ist 0
+if ge p get ist 1
+r = read 0 ib 0 1048576
+if le r 0
+ret 256
+end
+put ist 1 ulong r
+p = 0
+end
+put ist 0 add p 1
+ret ulong get ib p
+end
+
+fn obflush to void
+n = get obn 0
+if gt n 0
+r = write 1 ob 0 n
+end
+put obn 0 0
+end
+
+fn ob1 c ulong to void
+n = get obn 0
+if ge n 1048576
+obflush
+n = 0
+end
+put ob n uchar c
+put obn 0 add n 1
+end
+
+fn hexval c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+ret 16
+end
+
+note skip to the next record; false at end of input
+fn nextrec to bool
+c = inb
+while eq c 10 bound 999999
+c = inb
+end
+if eq c 256
+ret false
+end
+put ist 0 sub get ist 0 1
+ret true
+end
+
+fn rdhex to ulong
+c = inb
+while eq c 32 bound 999999
+c = inb
+end
+v = ulong 0
+while lt hexval c 16 bound 17
+v = or shl v 4 hexval c
+c = inb
+end
+ret v
+end
+
+note one hex byte-string token into tb; returns the byte count ("-" is empty)
+fn rdbytes to ulong
+c = inb
+while eq c 32 bound 999999
+c = inb
+end
+if eq c 45
+c = inb
+put tn 0 0
+ret 0
+end
+n = ulong 0
+while lt hexval c 16 bound 999999
+d = inb
+put tb n uchar or shl hexval c 4 hexval d
+n = add n 1
+c = inb
+end
+put tn 0 n
+ret n
+end
+
+fn ohexn v ulong to void
+ob1 32
+ohexr v
+end
+
+fn ohexr v ulong to void
+s = ulong 60
+while and gt s 0 eq and shr v s 15 0 bound 16
+s = sub s 4
+end
+while true bound 17
+ob1 ulong hexdig and shr v s 15
+if eq s 0
+break
+end
+s = sub s 4
+end
+end
+
+fn orc v long to void
+if lt v 0
+ob1 45
+ob1 add 48 ulong neg v
+ret
+end
+ob1 add 48 ulong v
+end
+
+fn ohb b ulong to void
+ob1 ulong hexdig shr b 4
+ob1 ulong hexdig and b 15
+end
+
+fn obytes64 a view uchar 64 n ulong to void
+ob1 32
+for i ulong n
+ohb ulong get a i
+end
+end
+
+fn obytes32 a view uchar 32 to void
+ob1 32
+for i ulong 32
+ohb ulong get a i
+end
+end
+
+fn obytesv a view uchar 16384 n ulong to void
+ob1 32
+if eq n 0
+ob1 45
+end
+for i ulong n
+ohb ulong get a i
+end
+end
+
+fn obytes256 a view uchar 256 n ulong to void
+ob1 32
+for i ulong n
+ohb ulong get a i
+end
+end
+
+fn obytes96 a view uchar 96 n ulong to void
+ob1 32
+if eq n 0
+ob1 45
+end
+for i ulong n
+ohb ulong get a i
+end
+end
+
+fn obytesk a view uchar 1024 n ulong to void
+ob1 32
+for i ulong n
+ohb ulong get a i
+end
+end
+
+fn eol to void
+ob1 10
+end
+
+fn tb64 d edit uchar 64 to void
+n = get tn 0
+if gt n 64
+n = 64
+end
+for i ulong n
+put d i get tb i
+end
+end
+
+fn tbv d edit uchar 16384 to void
+for i ulong get tn 0
+put d i get tb i
+end
+end
+
+fn dovspec to void
+has = rdhex
+l = rdbytes
+n = rdhex
+nm = new uchar 64 0
+tb64 nm
+onm = new uchar 64 170
+dig = new uchar 32 170
+fld = new ulong 4 0
+rc = vecspec nm has n onm dig fld
+orc rc
+if eq rc 0
+obytes64 onm 64
+obytes32 dig
+obytes32 dig
+for i ulong 4
+ohexn get fld i
+end
+end
+eol
+end
+
+fn dovadd to void
+n = rdhex
+a = new uchar 16384 0
+b = new uchar 16384 0
+act = new uchar 16384 0
+c = new uchar 16384 90
+l = rdbytes
+tbv a
+l = rdbytes
+tbv b
+l = rdbytes
+tbv act
+vecadd a b c n
+idx = new ulong 1 18446744073709551615
+rc = vecver a b act n idx
+orc rc
+ohexn get idx 0
+obytesv c mul n 4
+eol
+end
+
+fn dovgen to void
+n = rdhex
+a = new uchar 16384 17
+b = new uchar 16384 34
+c = new uchar 16384 51
+vecgen a b c n
+m = mul n 4
+if eq n 0
+m = 16
+end
+obytesv a m
+obytesv b m
+obytesv c m
+eol
+end
+
+note fgets(buf, 256) on the bytes in tb: up to and including the first newline, at most 255
+note bytes, then a zero byte. false when there are no bytes (fgets NULL).
+fn fgetstb buf edit uchar 256 to bool
+n = get tn 0
+if eq n 0
+ret false
+end
+i = ulong 0
+while and lt i n lt i 255 bound 256
+put buf i get tb i
+i = add i 1
+if eq get tb sub i 1 10
+break
+end
+end
+put buf i 0
+ret true
+end
+
+note omega_evidence_physics_commit: fopen physics.lock, fgets 256, lnacc with n
+fn physcm out edit uchar 256 n ulong to long
+pn = new uchar 12 0
+pnm pn
+fd = int fopen pn 0 12 0 0
+if lt fd 0
+ret 0
+end
+raw = new uchar 256 0
+t = ulong 0
+while lt t 255 bound 256
+r = read fd raw t sub 255 t
+if le r 0
+break
+end
+t = add t ulong r
+end
+c = fclose fd
+if eq t 0
+ret 0
+end
+buf = new uchar 256 0
+i = ulong 0
+while lt i t bound 256
+put buf i get raw i
+i = add i 1
+if eq get raw sub i 1 10
+break
+end
+end
+ret lnacc buf out n
+end
+
+fn pnm p edit uchar 12 to void
+put p 0 112
+put p 1 104
+put p 2 121
+put p 3 115
+put p 4 105
+put p 5 99
+put p 6 115
+put p 7 46
+put p 8 108
+put p 9 111
+put p 10 99
+put p 11 107
+end
+
+fn wrphys to void
+pn = new uchar 12 0
+pnm pn
+fd = int fopen pn 0 12 577 420
+w = write fd tb 0 get tn 0
+c = fclose fd
+end
+
+fn rmphys to void
+pn = new uchar 12 0
+pnm pn
+r = unlink pn 0 12
+end
+
+fn doline to void
+k = rdhex
+l = rdbytes
+n = rdhex
+buf = new uchar 256 0
+out = new uchar 256 90
+rc = long 0
+c41 = new uchar 41 90
+if lt k 2
+if eq k 0
+if fgetstb buf
+rc = cmtacc buf c41
+end
+end
+orc rc
+if eq rc 1
+ob1 32
+for i ulong 41
+ohb ulong get c41 i
+end
+end
+end
+if or eq k 2 eq k 3
+rmphys
+if eq k 2
+wrphys
+end
+rc = physcm out n
+orc rc
+if eq rc 1
+obytes256 out add slen256 view out 1
+end
+rmphys
+end
+if ge k 4
+rc = 1
+if eq k 4
+if not fgetstb buf
+rc = 0
+end
+end
+orc rc
+end
+eol
+end
+
+fn dorunid to void
+s = bitcast long rdhex
+k = rdhex
+l = rdbytes
+buf = new uchar 256 0
+got = ulong 0
+if eq k 0
+if fgetstb buf
+got = 1
+end
+end
+out = new uchar 96 0
+n = runid s buf got out
+orc 1
+obytes96 out n
+eol
+end
+
+fn dohw to void
+has = rdhex
+cc = rdhex
+sm = rdhex
+l = rdbytes
+u = new uchar 16 0
+for i ulong 16
+put u i get tb i
+end
+hx = new uchar 33 0
+if eq has 0
+cc = 0
+sm = 0
+end
+if ne has 0
+hwhex u hx
+end
+ohexr cc
+ohexn sm
+ob1 32
+for i ulong 33
+ohb ulong get hx i
+end
+ob1 32
+ob1 115
+ob1 109
+ob1 95
+ob1 49
+ob1 50
+ob1 49
+eol
+end
+
+note the run id the C computes from the driver's fixed clock and git line
+fn fixrid rid edit uchar 96 to void
+buf = new uchar 256 0
+put buf 0 97
+put buf 1 99
+put buf 2 98
+put buf 3 51
+put buf 4 102
+put buf 5 49
+put buf 6 53
+put buf 7 99
+put buf 8 100
+put buf 9 48
+put buf 10 97
+put buf 11 98
+put buf 12 10
+n = runid 1792900000 buf 1 rid
+end
+
+note mkdir_p_for_file: every prefix of p ending before a "/" (from byte 1), mode 0755
+fn mkdirp p view uchar 1024 to void
+i = ulong 1
+while ne get p i 0 bound 1024
+if eq get p i 47
+r = makedir p 0 i 493
+end
+i = add i 1
+end
+end
+
+fn pathlen p view uchar 1024 to ulong
+i = ulong 0
+while ne get p i 0 bound 1024
+i = add i 1
+end
+ret i
+end
+
+note omega_evidence_path as the C does it: evpath, mkdir_p, the n check, copy into out
+fn evfull rid view uchar 96 rel view uchar 1024 rl ulong out edit uchar 1024 n ulong to long
+if eq n 0
+ret -1
+end
+cand = new uchar 1024 0
+r = evpath rid rel rl cand n
+if eq r -1
+ret -1
+end
+mkdirp cand
+if eq r -2
+ret -1
+end
+for i ulong add pathlen view cand 1
+put out i get cand i
+end
+ret 0
+end
+
+fn dopath to void
+rid = new uchar 96 0
+fixrid rid
+has = rdhex
+l = rdbytes
+n = rdhex
+rel = new uchar 1024 0
+m = l
+if gt m 1024
+m = 1024
+end
+for i ulong m
+put rel i get tb i
+end
+out = new uchar 1024 90
+rc = long -1
+if ne has 0
+rc = evfull rid rel l out n
+end
+orc rc
+if eq rc 0
+obytesk out add pathlen view out 1
+end
+eol
+end
+
+note sha256 of the tb bytes into dig, 4096 bytes at a time
+fn shatb dig edit uchar 32 to void
+st = new ulong 9 0
+shainit st
+p = new uchar 4096 0
+n = get tn 0
+o = ulong 0
+while gt sub n o 4096 bound 17
+for i ulong 4096
+put p i get tb add o i
+end
+shaupd st p 4096
+o = add o 4096
+end
+for i ulong sub n o
+put p i get tb add o i
+end
+shafin st p sub n o dig
+end
+
+note the O_EXCL 0444 create and write loop of omega_evidence_write_digest: 0, 1 exists, -1
+fn excl out view uchar 1024 to long
+l = pathlen out
+fd = fopen out 0 l 524481 292
+if eq fd -17
+ret 1
+end
+if lt fd 0
+ret -1
+end
+d = int fd
+o = ulong 0
+n = get tn 0
+while lt o n bound 999999
+w = write d tb o sub n o
+if eq w -4
+continue
+end
+if le w 0
+c1 = fclose d
+r1 = unlink out 0 l
+ret -1
+end
+o = add o ulong w
+end
+if ne fclose d 0
+r2 = unlink out 0 l
+ret -1
+end
+ret 0
+end
+
+fn dodigest to void
+stem = new uchar 768 0
+ext = new uchar 768 0
+hs = rdhex
+sl = rdbytes
+for i ulong sl
+if lt i 768
+put stem i get tb i
+end
+end
+he = rdhex
+el = rdbytes
+for i ulong el
+if lt i 768
+put ext i get tb i
+end
+end
+hb = rdhex
+bl = rdbytes
+n = rdhex
+out = new uchar 1024 90
+rc = long -1
+ok = and ne hs 0 ne he 0
+ok = and ok or ne hb 0 eq bl 0
+if and ok ne n 0
+rc = digfull stem sl ext el out n
+end
+orc rc
+if ge rc 0
+obytesk out add pathlen view out 1
+end
+eol
+end
+
+fn digfull stem view uchar 768 sl ulong ext view uchar 768 el ulong out edit uchar 1024 n ulong to long
+rid = new uchar 96 0
+fixrid rid
+dig = new uchar 32 0
+shatb dig
+rel = new uchar 768 0
+k = digrel stem sl ext el dig rel
+if lt k 0
+ret -1
+end
+r = new uchar 1024 0
+for i ulong ulong k
+put r i get rel i
+end
+if ne evfull rid r ulong k out n 0
+ret -1
+end
+ret excl out
+end
+
+fn argis a0 ulong a1 ulong a2 ulong to bool
+x = and eq get arg 0 uchar a0 eq get arg 1 uchar a1
+ret and x eq get arg 2 uchar a2
+end
+
+fn main to int
+if ne argcnt 2
+ret 2
+end
+l = argread 1 arg 0 15
+while nextrec bound 999999
+if argis 118 115 112
+dovspec
+end
+if argis 118 97 100
+dovadd
+end
+if argis 118 103 101
+dovgen
+end
+if argis 108 105 110
+doline
+end
+if argis 114 117 110
+dorunid
+end
+if argis 104 119 0
+dohw
+end
+if argis 112 97 116
+dopath
+end
+if argis 100 105 103
+dodigest
+end
+end
+obflush
+ret 0
+end
