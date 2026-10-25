@@ -1,0 +1,75 @@
+text r1 "R1 capacity6 requests4\n"
+text binding "R2 binding slot/id/request/owner/grant/object/version/epoch\n"
+text life "R2 reserve uncertain commit reclaim replay fuel\n"
+text atom "R2 all-or-nothing eight stocks\n"
+text over "R2 u64 extrema and id exhaustion\n"
+text rec "R4 durable60 ledger40 refuses60\n"
+text env "E1-E5 baseline leak protected events release restart\n"
+text ok "PASS "
+text bad "FAIL "
+fn say result bool which ulong to void
+if result
+n = write 1 ok 0 len ok
+else
+n = write 1 bad 0 len bad
+end
+if eq which 1
+n = write 1 r1 0 len r1
+end
+if eq which 2
+n = write 1 binding 0 len binding
+end
+if eq which 3
+n = write 1 life 0 len life
+end
+if eq which 4
+n = write 1 atom 0 len atom
+end
+if eq which 5
+n = write 1 over 0 len over
+end
+if eq which 6
+n = write 1 rec 0 len rec
+end
+if eq which 7
+n = write 1 env 0 len env
+end
+end
+fn main to int
+r = test_r1
+say r 1
+if not r
+ret 1
+end
+r = test_binding
+say r 2
+if not r
+ret 2
+end
+r = test_lifecycle
+say r 3
+if not r
+ret 3
+end
+r = test_atomic
+say r 4
+if not r
+ret 4
+end
+r = test_extrema
+say r 5
+if not r
+ret 5
+end
+r = test_recovery
+say r 6
+if not r
+ret 6
+end
+r = and baseline_leaks test_envelope
+say r 7
+if not r
+ret 7
+end
+ret 0
+end

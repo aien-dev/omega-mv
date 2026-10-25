@@ -1,0 +1,63 @@
+note R3 independent enumeration. No reserve.om calls. State code u*9+r1*3+r2.
+note Frozen capacity3, reserve1/2, commit0..q, release1, whole-service crash.
+global seen uchar 36
+global edges uchar 1296
+text pass "PASS R3 states=18 edges=78 whole-service-effectfree-crash\n"
+text fail "FAIL R3 states18_edges78\n"
+fn edge a ulong b ulong to void
+put edges add mul a 36 b 1
+put seen b 1
+end
+fn expand a ulong to void
+u = div a 9
+x = rem div a 3 3
+y = rem a 3
+edge a mul u 9
+if gt u 0
+edge a sub a 9
+end
+for j ulong 2
+q = x
+scale = ulong 3
+if eq j 1
+q = y
+scale = 1
+end
+if eq q 0
+for k ulong 2
+want = add k 1
+if le add add u x add y want 3
+edge a add a mul want scale
+end
+end
+else
+for c ulong add q 1
+edge a add sub a mul q scale mul c 9
+end
+end
+end
+end
+fn main to int
+put seen 0 1
+for round ulong 36
+for a ulong 36
+if ne get seen a 0
+expand a
+end
+end
+end
+n = ulong 0
+e = ulong 0
+for a ulong 36
+n = add n ulong get seen a
+end
+for a ulong 1296
+e = add e ulong get edges a
+end
+if or ne n 18 ne e 78
+w = write 1 fail 0 len fail
+ret 1
+end
+w = write 1 pass 0 len pass
+ret 0
+end

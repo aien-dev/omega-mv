@@ -1,0 +1,12 @@
+SC1-R/E fixtures frozen before implementation, contract 8bc52be7a480e279fb77673648a2f7775ba6d4841a8b1e6c427531b25d4d1860.
+Plan: 1 implement pure serial transitions and envelope; 2 independent R3 oracle and helper-driven fixtures/negative controls; 3 pinned native runs and helper measurement; 4 document exact owner integration blockers.
+R1 B=6, two q=4: first accepts, second refuses unchanged.
+R2 eight-dimensional atomic reserve/commit/reclaim, c<=q, wrong token, duplicate request, stale id, unknown/cancel retention, spent fuel no refund, exhausted id, overflow and last-dimension failure leave all words unchanged.
+R3 independent finite oracle: capacity3, u/r1/r2, q1/2, c0..q, release1, whole-service effectfree crash including selfloop. Reachable states18, distinct edges78. Per-client crash is not this model.
+R4 capacity100, ledger40, actual durable60: recovered used60, new60 refuses.
+E1 baseline capacity2 occupancy1/2 admits public1 differently. Presecret full envelope2 gives equal public observations.
+E2 completion/cancel/error/supervisor-work events never release protected charge; four separate negative controls must report the named paired assertion.
+E3 release requires public boundary AND authoritative quiescence. Unknown retains charge, not a noninterference claim for a secret-dependent delay.
+E4 snapshot-copy/restart retains owner, id, boundary and charge.
+E5 mutant public-refund path must compile and fail named assertion normally; traps are invalid.
+Native measurements are helper overhead only, not scheduler/service throughput or secrecy proof.

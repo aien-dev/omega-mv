@@ -1,0 +1,89 @@
+note 63 paired samples of100 reserve/commit/reclaim cycles, same state/token/vector.
+note Baseline uses trusted unchecked scalar mutation, not a safe implementation.
+note Nanoseconds per100 cycles; host scheduling noise remains. No service throughput claim.
+text title "MEASURE helper cycles=100 samples=63 baseline_ns p50/p95/p99 then checked_ns p50/p95/p99\n"
+text nl "\n"
+global digits uchar 32
+fn number n ulong to void
+p = ulong 32
+while gt n 9 bound 20
+p = sub p 1
+put digits p add uchar rem n 10 48
+n = div n 10
+end
+p = sub p 1
+put digits p add uchar n 48
+w = write 1 digits p sub 32 p
+w = write 1 nl 0 1
+end
+fn order a edit ulong 63 to void
+for i ulong 63
+for j ulong 62
+if gt get a j get a add j 1
+v = get a j
+put a j get a add j 1
+put a add j 1 v
+end
+end
+end
+end
+fn cycles s edit ulong 64 t edit ulong 8 q view ulong 8 checked bool to bool
+for k ulong 100
+put t 1 get s 56
+put t 2 add get s 59 1
+if checked
+if ne rv_reserve s t q 0 0
+ret false
+end
+if ne rv_commit s t q true true 0
+ret false
+end
+if ne rv_reclaim s t q true true 0
+ret false
+end
+else
+for d ulong 8
+put s add 16 d get q d
+put s add 8 d add get s add 8 d get q d
+put s add 8 d sub get s add 8 d get q d
+put s add 16 d 0
+end
+put s 56 add get s 56 1
+put s 59 get t 2
+end
+end
+ret true
+end
+fn main to int
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 4
+a = new ulong 63 0
+b = new ulong 63 0
+if ne setup s 6 0
+ret 1
+end
+token t 0 1 1
+for i ulong 63
+start = monons
+if not cycles s t q false
+ret 2
+end
+put a i ulong sub monons start
+start = monons
+if not cycles s t q true
+ret 3
+end
+put b i ulong sub monons start
+end
+order a
+order b
+w = write 1 title 0 len title
+number get a 31
+number get a 59
+number get a 62
+number get b 31
+number get b 59
+number get b 62
+ret 0
+end

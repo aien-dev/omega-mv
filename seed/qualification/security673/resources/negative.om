@@ -1,0 +1,75 @@
+note Compiled bad adapter controls, never linked into production.
+note Argument event digit1..4 selects secret completion/cancel/error/supervisor refund.
+note Argument5 selects partial-vector mutation before a late failed admission.
+text failed "FAIL expected assertion: "
+text pair "paired_public_observation\n"
+text atom "all_or_nothing_vector\n"
+global arg uchar 8
+fn bad_event e edit ulong 8 event ulong to ulong
+r = ep_event e event
+if eq r 0
+put e 4 0
+end
+ret r
+end
+fn bad_reserve s edit ulong 64 t view ulong 8 q view ulong 8 to ulong
+for d ulong 8
+if gt get q d rv_room s d
+ret 3
+end
+put s add rv_charge get t 0 d get q d
+end
+ret 0
+end
+fn partial to int
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 4
+old = new ulong 64 0
+if ne setup s 6 0
+ret 90
+end
+token t 0 1 1
+put q 7 7
+copy64 old s
+r = bad_reserve s t q
+if and eq r 3 not same s old
+w = write 1 failed 0 len failed
+w = write 1 atom 0 len atom
+ret 25
+end
+ret 90
+end
+fn main to int
+if ne argcnt 2
+ret 90
+end
+n = argread 1 arg 0 8
+if ne n 1
+ret 90
+end
+mode = sub ulong get arg 0 48
+if or lt mode 1 gt mode 5
+ret 90
+end
+if eq mode 5
+ret partial
+end
+a = new ulong 8 0
+b = new ulong 8 0
+if ne ep_open a 11 1 9 2 2 0
+ret 90
+end
+if ne ep_open b 11 1 9 2 2 0
+ret 90
+end
+if ne bad_event a mode 0
+ret 90
+end
+if ne ep_available a ep_available b
+w = write 1 failed 0 len failed
+w = write 1 pair 0 len pair
+ret add int mode 20
+end
+ret 90
+end

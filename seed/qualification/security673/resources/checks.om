@@ -1,0 +1,271 @@
+note Concatenate reserve.om envelope.om checks.om and one driver.
+fn setup s edit ulong 64 cap ulong to ulong
+b = new ulong 8 cap
+o = new ulong 2 0
+put o 0 11
+put o 1 22
+ret rv_init s b o 100
+end
+fn token t edit ulong 8 slot ulong id ulong req ulong to void
+put t 0 slot
+put t 1 id
+put t 2 req
+put t 3 mul add slot 1 11
+for i ulong 4
+put t add 4 i add i 1
+end
+end
+fn same a view ulong 64 b view ulong 64 to bool
+for i ulong 64
+if ne get a i get b i
+ret false
+end
+end
+ret true
+end
+fn copy64 a edit ulong 64 b view ulong 64 to void
+for i ulong 64
+put a i get b i
+end
+end
+fn test_r1 to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 4
+old = new ulong 64 0
+if ne setup s 6 0
+ret false
+end
+token t 0 1 1
+if ne rv_reserve s t q 7 0
+ret false
+end
+copy64 old s
+token t 1 2 1
+if ne rv_reserve s t q 7 3
+ret false
+end
+ret and same s old eq rv_valid s 0
+end
+fn test_binding to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 2
+old = new ulong 64 0
+if ne setup s 6 0
+ret false
+end
+token t 0 1 1
+if ne rv_reserve s t q 1 0
+ret false
+end
+copy64 old s
+for i ulong 8
+v = get t i
+put t i add v 1
+if eq rv_commit s t q true true 0
+ret false
+end
+put t i v
+if not same s old
+ret false
+end
+end
+ret true
+end
+fn test_lifecycle to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 4
+c = new ulong 8 2
+z = new ulong 8 0
+if ne setup s 6 0
+ret false
+end
+token t 0 1 1
+if ne rv_reserve s t q 7 0
+ret false
+end
+if ne rv_uncertain s t 4
+ret false
+end
+if ne get s 16 4
+ret false
+end
+if ne rv_commit s t c false true 4
+ret false
+end
+if ne rv_commit s t c true false 4
+ret false
+end
+if ne rv_commit s t c true true 0
+ret false
+end
+if or ne get s 8 2 ne get s 16 2
+ret false
+end
+if ne rv_commit s t z true true 2
+ret false
+end
+if ne rv_reclaim s t c false true 4
+ret false
+end
+if ne rv_reclaim s t c true true 0
+ret false
+end
+if or ne get s 8 0 ne get s 57 7
+ret false
+end
+put t 1 2
+if ne rv_reserve s t q 1 2
+ret false
+end
+put t 2 2
+if ne rv_reserve s t q 1 0
+ret false
+end
+if ne rv_commit s t z true true 0
+ret false
+end
+if ne rv_reclaim s t z true true 0
+ret false
+end
+ret and eq get s 57 8 eq rv_valid s 0
+end
+fn test_atomic to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 4
+old = new ulong 64 0
+if ne setup s 6 0
+ret false
+end
+token t 0 1 1
+put q 7 7
+copy64 old s
+if ne rv_reserve s t q 1 3
+ret false
+end
+if not same s old
+ret false
+end
+put q 7 4
+if ne rv_reserve s t q 1 0
+ret false
+end
+copy64 old s
+put q 7 5
+if ne rv_commit s t q true true 3
+ret false
+end
+ret same s old
+end
+fn test_extrema to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 18446744073709551615
+old = new ulong 64 0
+if ne setup s 18446744073709551615 0
+ret false
+end
+token t 0 1 1
+if ne rv_reserve s t q 100 0
+ret false
+end
+if ne rv_commit s t q true true 0
+ret false
+end
+token t 1 2 1
+put q 0 1
+copy64 old s
+if ne rv_reserve s t q 0 3
+ret false
+end
+if not same s old
+ret false
+end
+put s 56 18446744073709551615
+put t 1 18446744073709551615
+copy64 old s
+if ne rv_reserve s t q 0 2
+ret false
+end
+ret same s old
+end
+fn test_recovery to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 60
+old = new ulong 64 0
+if ne setup s 100 0
+ret false
+end
+for d ulong 8
+put s add 8 d 40
+end
+if ne rv_recover s q 0
+ret false
+end
+if ne get s 8 60
+ret false
+end
+token t 0 1 1
+copy64 old s
+if ne rv_reserve s t q 0 3
+ret false
+end
+if not same s old
+ret false
+end
+put q 7 101
+if ne rv_recover s q 3
+ret false
+end
+ret same s old
+end
+fn test_envelope to bool
+a = new ulong 8 0
+b = new ulong 8 0
+if ne ep_open a 11 1 9 2 2 0
+ret false
+end
+if ne ep_open b 11 1 9 2 2 0
+ret false
+end
+for event ulong 4
+if ne ep_event a add event 1 0
+ret false
+end
+if ne ep_available a ep_available b
+ret false
+end
+end
+if ne ep_release a 8 true 2
+ret false
+end
+if ne ep_release a 9 false 4
+ret false
+end
+for i ulong 8
+put b i get a i
+end
+if ne ep_valid b 0
+ret false
+end
+if or ne get b 1 11 or ne get b 2 1 ne get b 3 9
+ret false
+end
+if ne ep_available b 0
+ret false
+end
+if ne ep_release b 9 true 0
+ret false
+end
+ret eq ep_available b 2
+end
+note Pair secret occupancies1/2: baseline available1/0, hence request1 differs.
+fn baseline_leaks to bool
+return1 = ge sub ulong 2 1 1
+return2 = ge sub ulong 2 2 1
+ret ne return1 return2
+end
