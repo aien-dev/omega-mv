@@ -1,0 +1,1850 @@
+note SPDX-License-Identifier: Apache-2.0
+note omega-mv#700 ORIGSEL evaluator: the Turing measurement of the ORIG matvec arm chooser
+note under calibration/profiles/Turing-profile-ORIGSEL-v1.1.toml, exactly as
+note native/turing/REPORT-CONTRACT.md. Concatenated after the pinned units (add32, mul32,
+note metadata, affine, fixture, world, omexp, omexpfix, select), origsel_kappa.om, then
+note origselmain.om. It reads one stream on fd 0 and writes one result on fd 1:
+note mode byte, config (8 LE words: 0 arm code 1..10 for P and M, 1 V1 bytes, 2..6 canonical
+note P2 bytes of select.om, oxrule, oxstatic, oxnearok+oxl1+oxnear, origsel_kappa.om,
+note 7 flags: bit 0 coder block present), allow block (4096), digests (96: profile, model,
+note dataset), three SI19SLCK images (M1, CSH, CUN; 11560 bytes each), V1 bytes, coder block
+note (480 bytes when flagged: 10 arms x rans, range x roundtrip, ideal_ub, coded_bits),
+note then the collected records to end of input.
+note Modes: R report, H report plus h1 lines, P TPS1 body of one arm (trailer by the glue),
+note Y TSY1 body, M model code bytes of one arm, A audit derivative C', K image comparison.
+note Arms (index, code - 1): 0 U, 1 O0, 2 FR, 3 S, 4 R, 5 M1, 6 M2, 7 A, 8 CSH, 9 CUN.
+note TQZ: 0 n, 1 burned, 2 F, 3 fresh, 4 v1fam, 5 p1r, 6 ntrain, 7 bit count, 8 9 S orders,
+note 11 records, 12 V1 records, 13 record bytes, 14 allow length, 15 cf blocks, 30 rng,
+note 32..41 dl sums, 42..51 fresh sums, 52..61 v1fam sums.
+note TQT: 3 longs (total, lb, ub) per statistic index; 90..92 the last tqst result.
+global TQK uchar 64
+global TQD uchar 96
+global TQI uchar 34680
+global TQV uchar 524288
+global TQC uchar 480
+global TQM uchar 1
+global TQO ulong 20480
+global TQN ulong 200
+global TQQ ulong 200
+global TQL ulong 16
+global TQ2 ulong 16
+global TQP ulong 16
+global TQZ ulong 64
+global TQDL ulong 2048
+global TQPL ulong 2048
+global TQVK ulong 2048
+global TQU ulong 20480
+global TQB ulong 512
+global TQBS long 5120
+global TQR long 100000
+global TQS long 10001
+global TQW uchar 16384
+global TQF uchar 512
+global TQOB uchar 131072
+global TQT long 96
+global TQDG uchar 24
+text TQH0 "ORIGSEL v1.1\n"
+text TQA0 "admit records="
+text TQA1 " admitted="
+text TQA2 " train="
+text TQA3 " validation="
+text TQA4 " heldout="
+text TQD0 "d n="
+text TQD1 " burned="
+text TQD2 " F="
+text TQD3 " fresh="
+text TQD4 " v1fam="
+text TQD5 " p1r="
+text TQR0 "arm "
+text TQR1 " p1="
+text TQR2 " p2="
+text TQR3 " dl="
+text TQR4 " rows="
+text TQT0 "t "
+text TQT1 " total="
+text TQT2 " lb="
+text TQT3 " ub="
+text TQT4 "dl "
+text TQT5 "delta M2 M1"
+text TQT6 "tcf "
+text TQT7 "nmin "
+text TQT8 "verdict "
+text TQT9 "experiment "
+text TQNM "UO0FRSRM1M2ACSHCUN"
+text TQV0 "QUALIFIED_IMPROVEMENT"
+text TQV1 "NO_IMPROVEMENT(COST_BOUND)"
+text TQV2 "NO_IMPROVEMENT"
+text TQV3 "INCONCLUSIVE(UNDERPOWERED)"
+text TQV4 "INCONCLUSIVE"
+text TQV5 "QUALIFIED_IMPROVEMENT(UNISOLATED)"
+text TQE0 "refused allow\n"
+text TQE1 "refused admission "
+text TQE2 "refused image "
+text TQK0 "K same\n"
+text TQK1 "K diff "
+text TQX0 "h1 "
+text TQX1 " rans"
+text TQX2 " range"
+text TQX3 " rt="
+text TQX4 " ideal="
+text TQX5 " delta="
+text TQX6 " band="
+text TQX7 "match"
+text TQX8 "mismatch"
+text TQX9 "ok"
+text TQY0 "fail"
+text TQY1 "h1t "
+text TQY2 " treal="
+text TQY3 " lbreal="
+text TQY4 " h1="
+text TQY5 " compression="
+text TQY6 "pass"
+text TQY7 "yes"
+text TQY8 "no"
+text TQY9 " FR"
+text TQSP " "
+text TQNL "\n"
+text TQMI "-"
+text TQCM ","
+text TQSC ";"
+text TQRS "ORS1"
+
+note ---------------------------------------------------------------- output
+
+fn tqnl to void
+w = write 1 TQNL 0 1
+end
+
+fn tqsp to void
+w = write 1 TQSP 0 1
+end
+
+fn tqsn x long to void
+note Signed decimal.
+if lt x 0
+w = write 1 TQMI 0 1
+wnum ulong neg x
+ret
+end
+wnum ulong x
+end
+
+fn tqnoff x ulong to ulong
+note Offset * 16 + length of arm x's name in TQNM.
+if eq x 0
+ret 1
+end
+if eq x 1
+ret 18
+end
+if eq x 2
+ret 50
+end
+if eq x 3
+ret 81
+end
+if eq x 4
+ret 97
+end
+if eq x 5
+ret 114
+end
+if eq x 6
+ret 146
+end
+if eq x 7
+ret 177
+end
+if eq x 8
+ret 195
+end
+ret 243
+end
+
+fn tqname x ulong to void
+v = tqnoff x
+w = write 1 TQNM shr v 4 and v 15
+end
+
+fn tqvw v ulong to void
+note Verdict word v (0..5).
+if eq v 0
+w = write 1 TQV0 0 len TQV0
+end
+if eq v 1
+w = write 1 TQV1 0 len TQV1
+end
+if eq v 2
+w = write 1 TQV2 0 len TQV2
+end
+if eq v 3
+w = write 1 TQV3 0 len TQV3
+end
+if eq v 4
+w = write 1 TQV4 0 len TQV4
+end
+if eq v 5
+w = write 1 TQV5 0 len TQV5
+end
+end
+
+fn tqout n ulong to void
+note Write TQOB[0..n) to fd 1.
+o = ulong 0
+while lt o n bound 999999
+w = write 1 TQOB o sub n o
+if le w 0
+exit 74
+end
+o = add o ulong w
+end
+end
+
+fn tqpb p ulong v ulong k ulong to void
+note k little-endian bytes of v at TQOB[p].
+for i ulong k
+put TQOB add p i uchar and shr v mul i 8 255
+end
+end
+
+note ---------------------------------------------------------------- input
+
+fn tqrdk to bool
+o = ulong 0
+while lt o 64 bound 64
+r = read 0 TQK o sub 64 o
+if le r 0
+ret false
+end
+o = add o ulong r
+end
+ret true
+end
+
+fn tqkw i ulong to ulong
+v = ulong 0
+for k ulong 8
+v = or v shl ulong get TQK add mul i 8 k mul k 8
+end
+ret v
+end
+
+fn tqrdlb to bool
+note The allow block into LB (4096 bytes); TQZ[14] = used length.
+o = ulong 0
+while lt o 4096 bound 4096
+r = read 0 LB o sub 4096 o
+if le r 0
+ret false
+end
+o = add o ulong r
+end
+n = ulong 0
+for i ulong 4096
+if ne get LB i 0
+n = add i 1
+end
+end
+put TQZ 14 n
+ret true
+end
+
+fn tqrdd to bool
+o = ulong 0
+while lt o 96 bound 96
+r = read 0 TQD o sub 96 o
+if le r 0
+ret false
+end
+o = add o ulong r
+end
+ret true
+end
+
+fn tqrdi to bool
+o = ulong 0
+while lt o 34680 bound 34680
+r = read 0 TQI o sub 34680 o
+if le r 0
+ret false
+end
+o = add o ulong r
+end
+ret true
+end
+
+fn tqrdv n ulong to bool
+o = ulong 0
+while lt o n bound 524288
+r = read 0 TQV o sub n o
+if le r 0
+ret false
+end
+o = add o ulong r
+end
+ret true
+end
+
+fn tqrdc to bool
+o = ulong 0
+while lt o 480 bound 480
+r = read 0 TQC o sub 480 o
+if le r 0
+ret false
+end
+o = add o ulong r
+end
+ret true
+end
+
+fn tqrdrb to ulong
+note Records to end of input into RB; 524289 when more than the capacity arrived.
+o = ulong 0
+while lt o 524288 bound 999999
+r = read 0 RB o sub 524288 o
+if lt r 0
+exit 74
+end
+if eq r 0
+ret o
+end
+o = add o ulong r
+end
+r = read 0 TQM 0 1
+if ne r 0
+ret 524289
+end
+ret o
+end
+
+fn tqcw a ulong i ulong to ulong
+note Coder block word i of arm a (6 words per arm: rans rt, ideal, bits, range rt, ideal, bits).
+v = ulong 0
+b = add mul a 48 mul i 8
+for k ulong 8
+v = or v shl ulong get TQC add b k mul k 8
+end
+ret v
+end
+
+fn tqiw k ulong j ulong to ulong
+note Low 32 bits of the u64 at image k offset j.
+b = add mul k 11560 j
+v = ulong 0
+for i ulong 4
+v = or v shl ulong get TQI add b i mul i 8
+end
+ret v
+end
+
+fn tqv1w q ulong i ulong to ulong
+v = ulong 0
+b = add mul q 256 mul i 8
+for k ulong 8
+v = or v shl ulong get TQV add b k mul k 8
+end
+ret v
+end
+
+fn tqv1 to void
+note V1 shape keys (M * 16384 + N) and cells.
+k = div tqkw 1 256
+put TQZ 12 k
+for q ulong k
+m = tqv1w q 5
+n = tqv1w q 6
+put TQVK q add mul m 16384 n
+if and ge m 1 ge n 1
+c = add mul oxfl m 16 oxfl n
+if lt c 512
+put TQF c 1
+end
+end
+end
+end
+
+note ---------------------------------------------------------------- record classes
+
+fn tqfit r ulong to bool
+note R1 fit set: admitted VALIDATION, pressure 0, core 0 or 1.
+if ne oxpart r 1
+ret false
+end
+if ne oxpress r 0
+ret false
+end
+ret le oxcore r 1
+end
+
+fn tqheld r ulong p ulong to bool
+if ne oxpart r 2
+ret false
+end
+if ne oxpress r p
+ret false
+end
+ret le oxcore r 1
+end
+
+fn tqburn r ulong to bool
+key = add mul oxm r 16384 oxn r
+k = get TQZ 12
+for q ulong k
+if eq get TQVK q key
+ret true
+end
+end
+ret false
+end
+
+note ---------------------------------------------------------------- orders
+
+fn tqidp to ulong
+ret 274960
+end
+
+fn tqarm pk ulong j ulong to ulong
+ret and shr pk mul 4 j 15
+end
+
+fn tqrank pk ulong a ulong to ulong
+for j ulong 5
+if eq tqarm pk j a
+ret j
+end
+end
+exit 92
+end
+
+fn tqord5 k view long 5 to ulong
+note Arms ascending by key, ties to the lower index, packed 4 bits per rank.
+used = ulong 0
+pk = ulong 0
+for j ulong 5
+b = ulong 5
+for a ulong 5
+if eq and shr used a 1 0
+if eq b 5
+b = a
+else
+if lt get k a get k b
+b = a
+end
+end
+end
+end
+used = or used shl 1 b
+pk = or pk shl b mul 4 j
+end
+ret pk
+end
+
+fn tqfr r ulong to ulong
+ra = ulong 3
+if le oxn r 8
+ra = 2
+end
+pk = ra
+p = ulong 1
+for a ulong 5
+if ne a ra
+pk = or pk shl a mul 4 p
+p = add p 1
+end
+end
+ret pk
+end
+
+fn tqqord q ulong to ulong
+note Arms of record q ascending by its measured ps.
+k = new long 5 0
+for a ulong 5
+put k a long oxcost q a
+end
+ret tqord5 k
+end
+
+fn tqstat to void
+note S: per core class 0 and 1, arms ascending by total TRAIN ps (both pressures).
+k = new long 5 0
+for c ulong 2
+for a ulong 5
+put k a 0
+end
+for q ulong get TQZ 11
+if and eq oxpart q 0 eq oxcore q c
+for a ulong 5
+put k a add get k a long oxcost q a
+end
+end
+end
+put TQZ add 8 c tqord5 k
+end
+end
+
+fn tqnear r ulong to ulong
+q = oxnear r
+if ge q 1048576
+ret tqidp
+end
+ret tqqord q
+end
+
+fn tqmlp r ulong to ulong
+k = new long 5 0
+for a ulong 5
+put k a slkey slfwd r a
+end
+ret tqord5 k
+end
+
+fn tqctx x ulong r ulong to ulong
+if or eq x 6 eq x 7
+ret tkappa r
+end
+ret 0
+end
+
+fn tqnctx x ulong to ulong
+if or eq x 6 eq x 7
+ret 4
+end
+ret 1
+end
+
+fn tqneed r ulong to bool
+if tqfit r
+ret true
+end
+if eq oxpart r 2
+ret le oxcore r 1
+end
+ret false
+end
+
+fn tqorders to void
+note Non-MLP orders for every needed record.
+for r ulong get TQZ 11
+if tqneed r
+put TQO r tqidp
+put TQO add 2048 r tqidp
+put TQO add 4096 r tqfr r
+put TQO add 6144 r get TQZ add 8 oxcore r
+put TQO add 8192 r tqnear r
+put TQO add 14336 r tqidp
+end
+end
+end
+
+fn tqimg k ulong to int
+note Install image k (0 M1, 1 CSH, 2 CUN) through sladmit, best-on-VALIDATION params.
+b = mul k 11560
+for i ulong 11560
+put SI i get TQI add b i
+end
+st = sladmit 0 11560
+if ne st 0
+ret st
+end
+if or ne get SS 0 2 ne get SS 1 32
+ret -20
+end
+if ne get SS 20 1
+ret -21
+end
+slbest
+ret 0
+end
+
+fn tqmord k ulong to void
+note MLP orders of image k into its arms (k 0: M1 and M2, 1: CSH, 2: CUN).
+for r ulong get TQZ 11
+if tqneed r
+pk = tqmlp r
+if eq k 0
+put TQO add 10240 r pk
+put TQO add 12288 r pk
+end
+if eq k 1
+put TQO add 16384 r pk
+end
+if eq k 2
+put TQO add 18432 r pk
+end
+end
+end
+end
+
+note ---------------------------------------------------------------- rows (F1)
+
+fn tqcount to void
+for i ulong 200
+put TQN i 0
+end
+for r ulong get TQZ 11
+if tqfit r
+x = oxbest r
+for a ulong 9
+v = add a 1
+c = tqctx v r
+k = tqrank get TQO add mul v 2048 r x
+i = add add mul v 20 mul c 5 k
+put TQN i add get TQN i 1
+end
+end
+end
+end
+
+fn tqrow x ulong c ulong to void
+note F1 for arm x, context c.
+b = add mul x 20 mul c 5
+n = ulong 0
+for r ulong 5
+n = add n get TQN add b r
+end
+s = ulong 0
+for r ulong 5
+nr = add mul 2 get TQN add b r 1
+dn = add mul 2 n 5
+q = add 1 div mul 65531 nr dn
+put TQQ add b r q
+s = add s q
+end
+m = ulong 0
+for r ulong 5
+if gt get TQN add b r get TQN add b m
+m = r
+end
+end
+qm = add get TQQ add b m sub 65536 s
+put TQQ add b m qm
+end
+
+fn tqrows to void
+put TQQ 0 13108
+for r ulong 4
+put TQQ add r 1 13107
+end
+for i ulong 9
+x = add i 1
+for c ulong tqnctx x
+tqrow x c
+end
+end
+end
+
+fn tqrown x ulong c ulong to ulong
+b = add mul x 20 mul c 5
+n = ulong 0
+for r ulong 5
+n = add n get TQN add b r
+end
+ret n
+end
+
+note ---------------------------------------------------------------- model codes
+
+fn tqwclr to void
+for i ulong 16384
+put TQW i 0
+end
+put TQZ 7 0
+end
+
+fn tqbit b ulong to void
+c = get TQZ 7
+if ge c 131072
+exit 93
+end
+if ne b 0
+i = div c 8
+v = ulong get TQW i
+v = or v shl 1 sub 7 rem c 8
+put TQW i uchar v
+end
+put TQZ 7 add c 1
+end
+
+fn tqbits v ulong w ulong to void
+for j ulong w
+tqbit and shr v sub sub w 1 j 1
+end
+end
+
+fn tqgam v ulong to void
+note Elias gamma of v >= 1.
+l = oxfl v
+for i ulong l
+tqbit 0
+end
+tqbits v add l 1
+end
+
+fn tqbin n ulong k ulong to ulong
+if gt k n
+ret 0
+end
+r = ulong 1
+for i ulong k
+r = div mul r sub n i add i 1
+end
+ret r
+end
+
+fn tqclg v ulong to ulong
+if le v 1
+ret 0
+end
+ret add oxfl sub v 1 1
+end
+
+fn tqenum x ulong c ulong to ulong
+note Lexicographic index of the count vector among 5-part compositions of N.
+b = add mul x 20 mul c 5
+rr = tqrown x c
+idx = ulong 0
+for i ulong 4
+ni = get TQN add b i
+for v ulong ni
+idx = add idx tqbin sub add rr sub 3 i v sub 3 i
+end
+rr = sub rr ni
+end
+ret idx
+end
+
+fn tqwrow x ulong c ulong to void
+n = tqrown x c
+tqgam add n 1
+tqbits tqenum x c tqclg tqbin add n 4 4
+end
+
+fn tqtgfr to void
+note TG1 of the incumbent: one test (word 6 <= 8), leaves arm 2 and arm 3.
+tqgam 2
+tqbits 3 3
+tqbit 0
+tqgam 9
+tqbits 2 3
+tqbits 3 3
+end
+
+fn tqtgk to void
+note TG1 of kappa: tests word 3 = 1 and word 6 <= 8, no leaves.
+tqgam 3
+tqbits 0 3
+tqbit 1
+tqgam 2
+tqbits 3 3
+tqbit 0
+tqgam 9
+end
+
+fn tqfac m ulong to ulong
+if eq m 4
+ret 24
+end
+if eq m 3
+ret 6
+end
+if eq m 2
+ret 2
+end
+ret 1
+end
+
+fn tqpidx pk ulong to ulong
+idx = ulong 0
+for i ulong 5
+ai = tqarm pk i
+cnt = ulong 0
+for j ulong 5
+if and gt j i lt tqarm pk j ai
+cnt = add cnt 1
+end
+end
+idx = add idx mul cnt tqfac sub 4 i
+end
+ret idx
+end
+
+fn tqwmlp k ulong to void
+note MLP metadata (kind 2, H 32, 705 params) and the 705 SB patterns of image k.
+tqbits 2 8
+tqbits 32 8
+tqbits 705 16
+for i ulong 705
+tqbits tqiw k add 5912 mul i 8 32
+end
+end
+
+fn tqwret to void
+note R: the stored TRAIN table.
+tqbits get TQZ 6 12
+for q ulong get TQZ 11
+if eq oxpart q 0
+tqbits oxcore q 2
+tqbits oxpress q 1
+tqbits oxlg16 oxm q 8
+tqbits oxlg16 oxn q 8
+tqbits tqpidx tqqord q 7
+end
+end
+end
+
+fn tqcode x ulong to ulong
+note Write arm x's canonical model code into TQW; returns its length in bits (P1).
+tqwclr
+if eq x 1
+tqwrow 1 0
+end
+if eq x 2
+tqtgfr
+tqwrow 2 0
+end
+if eq x 3
+tqbits tqpidx get TQZ 8 7
+tqbits tqpidx get TQZ 9 7
+tqwrow 3 0
+end
+if eq x 4
+tqwret
+tqwrow 4 0
+end
+if eq x 5
+tqwmlp 0
+tqwrow 5 0
+end
+if eq x 6
+tqwmlp 0
+tqtgk
+for c ulong 4
+tqwrow 6 c
+end
+end
+if eq x 7
+tqtgk
+for c ulong 4
+tqwrow 7 c
+end
+end
+if eq x 8
+tqwmlp 1
+tqwrow 8 0
+end
+if eq x 9
+tqwmlp 2
+tqwrow 9 0
+end
+ret get TQZ 7
+end
+
+fn tqp2b x ulong to ulong
+note Canonical P2 source bytes of arm x (config words 2..6).
+if or eq x 5 or eq x 8 eq x 9
+ret tqkw 2
+end
+if eq x 2
+ret tqkw 3
+end
+if eq x 3
+ret tqkw 4
+end
+if eq x 4
+ret tqkw 5
+end
+if eq x 6
+ret add tqkw 2 tqkw 6
+end
+if eq x 7
+ret tqkw 6
+end
+ret 0
+end
+
+fn tqlens to void
+for x ulong 10
+l = tqcode x
+put TQL x l
+put TQ2 x add l mul 8 tqp2b x
+end
+end
+
+note ---------------------------------------------------------------- ub (CODER_SPEC s.8)
+
+fn tqsq m ulong to ulong
+note floor(m * m / 2^62) for m < 2^63, through 32-bit limbs.
+a = shr m 32
+b = and m 4294967295
+p0 = mul b b
+p1 = mul a b
+p2 = mul a a
+c = shl p1 1
+mid = add shr p0 32 and c 4294967295
+lo = or and p0 4294967295 shl and mid 4294967295 32
+hi = add add p2 shr c 32 shr mid 32
+ret or shl hi 2 shr lo 62
+end
+
+fn tqub q ulong to ulong
+ip = oxfl q
+m = shl q sub 62 ip
+f = ulong 0
+for i ulong 32
+m = tqsq m
+if ge m 9223372036854775808
+f = or f shl 1 sub 31 i
+m = shr m 1
+end
+end
+l = or shl ip 32 f
+x = sub 68719476736 l
+ret shr add mul x 1000000 2147483648 32
+end
+
+fn tqq x ulong r ulong a ulong to ulong
+note q of arm a at record r under arm x.
+c = tqctx x r
+k = tqrank get TQO add mul x 2048 r a
+ret get TQQ add add mul x 20 mul c 5 k
+end
+
+note ---------------------------------------------------------------- D, blocks, sums
+
+fn tqsel to void
+note D, P1R, burned, F, fresh / v1fam counts.
+n = ulong 0
+p = ulong 0
+bu = ulong 0
+for i ulong 512
+put TQB i 0
+end
+for r ulong get TQZ 11
+if tqheld r 0
+if tqburn r
+bu = add bu 1
+else
+put TQDL n r
+n = add n 1
+put TQB oxcell r 1
+end
+end
+if tqheld r 1
+if not tqburn r
+put TQPL p r
+p = add p 1
+end
+end
+end
+f = ulong 0
+for c ulong 512
+if ne get TQB c 0
+f = add f 1
+put TQB c f
+end
+end
+put TQZ 0 n
+put TQZ 1 bu
+put TQZ 2 f
+put TQZ 5 p
+fr = ulong 0
+for t ulong n
+if eq get TQF oxcell get TQDL t 0
+fr = add fr 1
+end
+end
+put TQZ 3 fr
+put TQZ 4 sub n fr
+end
+
+fn tqntr to void
+k = ulong 0
+for q ulong get TQZ 11
+if eq oxpart q 0
+k = add k 1
+end
+end
+put TQZ 6 k
+end
+
+fn tqzadd i ulong u ulong to void
+put TQZ i add get TQZ i u
+end
+
+fn tqubs to void
+note Per-decision ub of every arm over D, dl / fresh / v1fam sums.
+for i ulong 30
+put TQZ add 32 i 0
+end
+for t ulong get TQZ 0
+r = get TQDL t
+x = oxbest r
+v1 = ne get TQF oxcell r 0
+for a ulong 10
+u = tqub tqq a r x
+put TQU add mul a 2048 t u
+tqzadd add 32 a u
+if v1
+tqzadd add 52 a u
+else
+tqzadd add 42 a u
+end
+end
+end
+end
+
+fn tqp1rs x ulong to ulong
+s = ulong 0
+for t ulong get TQZ 5
+r = get TQPL t
+s = add s tqub tqq x r oxbest r
+end
+ret s
+end
+
+fn tqbadd i ulong v long to void
+put TQBS i add get TQBS i v
+end
+
+fn tqbrec t ulong j ulong to void
+for a ulong 10
+k = add mul a 512 j
+v = long get TQU add mul a 2048 t
+tqbadd k v
+end
+end
+
+fn tqbsum cf bool to void
+note Block sums of every arm: family blocks, or (cell, core) blocks when cf.
+for i ulong 5120
+put TQBS i 0
+end
+for t ulong get TQZ 0
+r = get TQDL t
+j = sub get TQB oxcell r 1
+if cf
+j = sub get TQB add mul oxcell r 2 oxcore r 1
+end
+tqbrec t j
+end
+end
+
+fn tqcfb to ulong
+note (cell, core) block ids into TQB (key 2 cell + core); returns their count.
+for i ulong 512
+put TQB i 0
+end
+for t ulong get TQZ 0
+r = get TQDL t
+put TQB add mul oxcell r 2 oxcore r 1
+end
+f = ulong 0
+for c ulong 512
+if ne get TQB c 0
+f = add f 1
+put TQB c f
+end
+end
+ret f
+end
+
+note ---------------------------------------------------------------- bootstrap
+
+fn tqsm to ulong
+note splitmix64 (wrapping), state TQZ[30].
+s = add get TQZ 30 11400714819323198485
+put TQZ 30 s
+z = s
+z = mul xor z shr z 30 13787848793156543929
+z = mul xor z shr z 27 10723151780598845931
+ret xor z shr z 31
+end
+
+fn tqboot nb ulong to void
+acc = new long 10 0
+put TQZ 30 20261025
+for i ulong 10000
+for x ulong 10
+put acc x 0
+end
+for k ulong nb
+p = rem tqsm nb
+for x ulong 10
+put acc x add get acc x get TQBS add mul x 512 p
+end
+end
+for x ulong 10
+put TQR add mul i 10 x get acc x
+end
+end
+end
+
+fn tqsift s ulong e ulong to void
+r = s
+c = add mul r 2 1
+while lt c e bound 64
+d = add c 1
+if lt d e
+if lt get TQS c get TQS d
+c = d
+end
+end
+if lt get TQS r get TQS c
+t = get TQS r
+put TQS r get TQS c
+put TQS c t
+r = c
+c = add mul r 2 1
+else
+c = e
+end
+end
+end
+
+fn tqhsort to void
+s = ulong 5000
+while gt s 0 bound 5001
+s = sub s 1
+tqsift s 10000
+end
+e = ulong 10000
+while gt e 1 bound 10001
+e = sub e 1
+t = get TQS 0
+put TQS 0 get TQS e
+put TQS e t
+tqsift 0 e
+end
+end
+
+fn tqst m ulong y ulong cost bool to void
+note Statistic S_Y - S_M (- 10^6 (P1 M - P1 Y) when cost): total, lb, ub into TQT[90..92].
+d = long 0
+if cost
+d = mul 1000000 sub long get TQL m long get TQL y
+end
+for i ulong 10000
+va = get TQR add mul i 10 y
+vb = get TQR add mul i 10 m
+put TQS i sub sub va vb d
+end
+tqhsort
+va = long get TQZ add 32 y
+vb = long get TQZ add 32 m
+put TQT 90 sub sub va vb d
+put TQT 91 get TQS 166
+put TQT 92 get TQS 9833
+end
+
+fn tqkeep i ulong to void
+put TQT mul i 3 get TQT 90
+put TQT add mul i 3 1 get TQT 91
+put TQT add mul i 3 2 get TQT 92
+end
+
+fn tqtlu to void
+w = write 1 TQT1 0 len TQT1
+tqsn get TQT 90
+w = write 1 TQT2 0 len TQT2
+tqsn get TQT 91
+w = write 1 TQT3 0 len TQT3
+tqsn get TQT 92
+tqnl
+end
+
+fn tqmy i ulong to ulong
+note Arm of t-line row i: M1 M2 A R CSH CUN.
+if eq i 0
+ret 5
+end
+if eq i 1
+ret 6
+end
+if eq i 2
+ret 7
+end
+if eq i 3
+ret 4
+end
+if eq i 4
+ret 8
+end
+ret 9
+end
+
+fn tqyy j ulong to ulong
+note Baseline of column j: FR U O0 S.
+if eq j 0
+ret 2
+end
+if eq j 1
+ret 0
+end
+if eq j 2
+ret 1
+end
+ret 3
+end
+
+note ---------------------------------------------------------------- report
+
+fn tqarml x ulong to void
+w = write 1 TQR0 0 len TQR0
+tqname x
+w = write 1 TQR1 0 len TQR1
+wnum get TQL x
+w = write 1 TQR2 0 len TQR2
+wnum get TQ2 x
+w = write 1 TQR3 0 len TQR3
+wnum get TQZ add 32 x
+w = write 1 TQD3 0 len TQD3
+wnum get TQZ add 42 x
+w = write 1 TQD4 0 len TQD4
+wnum get TQZ add 52 x
+w = write 1 TQD5 0 len TQD5
+wnum tqp1rs x
+w = write 1 TQR4 0 len TQR4
+if eq x 0
+w = write 1 TQMI 0 1
+else
+for c ulong tqnctx x
+if gt c 0
+w = write 1 TQSC 0 1
+end
+for r ulong 5
+if gt r 0
+w = write 1 TQCM 0 1
+end
+wnum get TQN add add mul x 20 mul c 5 r
+end
+end
+end
+tqnl
+end
+
+fn tqhead to void
+w = write 1 TQH0 0 len TQH0
+w = write 1 TQA0 0 len TQA0
+wnum get TQZ 11
+w = write 1 TQA1 0 len TQA1
+wnum get RC 10
+w = write 1 TQA2 0 len TQA2
+wnum get RC 4
+w = write 1 TQA3 0 len TQA3
+wnum get RC 5
+w = write 1 TQA4 0 len TQA4
+wnum get RC 6
+tqnl
+w = write 1 TQD0 0 len TQD0
+wnum get TQZ 0
+w = write 1 TQD1 0 len TQD1
+wnum get TQZ 1
+w = write 1 TQD2 0 len TQD2
+wnum get TQZ 2
+w = write 1 TQD3 0 len TQD3
+wnum get TQZ 3
+w = write 1 TQD4 0 len TQD4
+wnum get TQZ 4
+w = write 1 TQD5 0 len TQD5
+wnum get TQZ 5
+tqnl
+end
+
+fn tqtlines to void
+note t, dl and delta lines; kept in TQT by index (t: 4 i + j, dl: 24, 25, delta: 26).
+for i ulong 6
+m = tqmy i
+for j ulong 4
+y = tqyy j
+tqst m y true
+tqkeep add mul i 4 j
+w = write 1 TQT0 0 len TQT0
+tqname m
+tqsp
+tqname y
+tqtlu
+end
+end
+tqst 5 8 false
+tqkeep 24
+w = write 1 TQT4 0 len TQT4
+tqname 5
+tqsp
+tqname 8
+tqtlu
+tqst 5 9 false
+tqkeep 25
+w = write 1 TQT4 0 len TQT4
+tqname 5
+tqsp
+tqname 9
+tqtlu
+tqst 6 5 true
+tqkeep 26
+w = write 1 TQT5 0 len TQT5
+tqtlu
+end
+
+fn tqtcf to void
+for i ulong 3
+m = tqmy i
+tqst m 2 true
+w = write 1 TQT6 0 len TQT6
+tqname m
+w = write 1 TQY9 0 len TQY9
+tqtlu
+end
+end
+
+fn tqnmin m ulong to ulong
+v = mul get TQL m 1000000
+q = div v 2321950
+if ne rem v 2321950 0
+q = add q 1
+end
+ret q
+end
+
+fn tqlb i ulong to long
+ret get TQT add mul i 3 1
+end
+
+fn tqverd i ulong to ulong
+note Verdict word of candidate row i (0 M1, 1 M2, 2 A).
+m = tqmy i
+if or lt get TQZ 2 20 lt get TQZ 0 100
+ret 3
+end
+b = mul i 4
+q = gt get TQT mul b 3 0
+for j ulong 4
+if le tqlb add b j 0
+q = false
+end
+end
+if lt i 2
+if or le tqlb 24 0 le tqlb 25 0
+q = false
+end
+end
+if q
+ret 0
+end
+if le get TQT add mul b 3 2 0
+if lt get TQZ 0 tqnmin m
+ret 1
+end
+ret 2
+end
+ret 4
+end
+
+fn tqverds to void
+for i ulong 3
+w = write 1 TQT7 0 len TQT7
+tqname tqmy i
+tqsp
+wnum tqnmin tqmy i
+tqnl
+end
+anyq = false
+alln = true
+for i ulong 3
+v = tqverd i
+if eq v 0
+anyq = true
+end
+if gt v 2
+alln = false
+end
+if eq v 0
+alln = false
+end
+w = write 1 TQT8 0 len TQT8
+tqname tqmy i
+tqsp
+tqvw v
+tqnl
+end
+w = write 1 TQT9 0 len TQT9
+if anyq
+tqvw 5
+else
+if alln
+tqvw 2
+else
+tqvw 4
+end
+end
+tqnl
+end
+
+fn tqbw n ulong to ulong
+note H1 band in micro-bits: (64 + ceil(n / 64)) 10^6.
+c = div n 64
+if ne rem n 64 0
+c = add c 1
+end
+ret mul add 64 c 1000000
+end
+
+fn tqdel a ulong k ulong to long
+note delta of arm a under coder k (0 rans, 1 range) in micro-bits.
+ret sub mul long tqcw a add mul k 3 2 1000000 long get TQZ add 32 a
+end
+
+fn tqaok a ulong k ulong to bool
+note Round trip, ideal agreement and band of arm a under coder k.
+if ne tqcw a mul k 3 1
+ret false
+end
+if ne tqcw a add mul k 3 1 get TQZ add 32 a
+ret false
+end
+e = sub tqdel a k 448000000
+ret le wsabs e long tqbw get TQZ 0
+end
+
+fn tqh1a a ulong k ulong to void
+w = write 1 TQX0 0 len TQX0
+tqname a
+if eq k 0
+w = write 1 TQX1 0 len TQX1
+else
+w = write 1 TQX2 0 len TQX2
+end
+w = write 1 TQX3 0 len TQX3
+wnum tqcw a mul k 3
+w = write 1 TQX4 0 len TQX4
+if eq tqcw a add mul k 3 1 get TQZ add 32 a
+w = write 1 TQX7 0 len TQX7
+else
+w = write 1 TQX8 0 len TQX8
+end
+w = write 1 TQX5 0 len TQX5
+tqsn tqdel a k
+w = write 1 TQX6 0 len TQX6
+if tqaok a k
+w = write 1 TQX9 0 len TQX9
+else
+w = write 1 TQY0 0 len TQY0
+end
+tqnl
+end
+
+fn tqh1t i ulong k ulong to void
+m = tqmy i
+dd = sub tqdel 2 k tqdel m k
+ok = and tqaok 2 k tqaok m k
+if gt wsabs dd mul 2 long tqbw get TQZ 0
+ok = false
+end
+lbr = add tqlb mul i 4 dd
+w = write 1 TQY1 0 len TQY1
+tqname m
+w = write 1 TQY9 0 len TQY9
+if eq k 0
+w = write 1 TQX1 0 len TQX1
+else
+w = write 1 TQX2 0 len TQX2
+end
+w = write 1 TQY2 0 len TQY2
+tqsn add get TQT mul mul i 4 3 dd
+w = write 1 TQY3 0 len TQY3
+tqsn lbr
+w = write 1 TQY4 0 len TQY4
+if ok
+w = write 1 TQY6 0 len TQY6
+else
+w = write 1 TQY0 0 len TQY0
+end
+w = write 1 TQY5 0 len TQY5
+if and ok gt lbr 0
+w = write 1 TQY7 0 len TQY7
+else
+w = write 1 TQY8 0 len TQY8
+end
+tqnl
+end
+
+fn tqh1 to void
+for a ulong 10
+for k ulong 2
+tqh1a a k
+end
+end
+for i ulong 3
+for k ulong 2
+tqh1t i k
+end
+end
+end
+
+note ---------------------------------------------------------------- TPS1, TSY1, model code bytes
+
+fn tqtps a ulong to void
+note TPS1 header and records of arm a (trailer appended by the glue).
+n = get TQZ 0
+for i ulong 128
+put TQOB i 0
+end
+tqpb 0 827543636 4
+tqpb 4 1 2
+tqpb 6 5 1
+tqpb 7 16 1
+tqpb 12 n 8
+tqpb 20 34 4
+for i ulong 96
+put TQOB add 28 i get TQD i
+end
+for t ulong n
+r = get TQDL t
+p = add 128 mul t 34
+tqpb p t 8
+tqpb add p 8 oxseq r 8
+tqpb add p 16 sub get TQB oxcell r 1 4
+tqpb add p 20 65536 4
+for x ulong 5
+tqpb add add p 24 mul x 2 tqq a r x 2
+end
+end
+tqout add 128 mul n 34
+end
+
+fn tqtsy to void
+note TSY1 header and symbols (trailer appended by the glue).
+n = get TQZ 0
+for i ulong 56
+put TQOB i 0
+end
+tqpb 0 827937620 4
+tqpb 4 1 2
+tqpb 6 5 1
+tqpb 8 n 8
+for i ulong 32
+put TQOB add 24 i get TQD add 64 i
+end
+for t ulong n
+put TQOB add 56 t uchar oxbest get TQDL t
+end
+tqout add 56 n
+end
+
+fn tqmcb a ulong to void
+note Model code bytes: ORS1, arm code, code bits MSB first zero padded.
+l = tqcode a
+w = write 1 TQRS 0 4
+put TQOB 0 uchar add a 1
+tqout 1
+n = div add l 7 8
+o = ulong 0
+while lt o n bound 999999
+w = write 1 TQW o sub n o
+if le w 0
+exit 74
+end
+o = add o ulong w
+end
+end
+
+fn tqrbput p ulong v ulong to void
+for i ulong 8
+put RB add p i uchar and shr v mul i 8 255
+end
+end
+
+fn tqaudr r ulong b ulong to void
+note ps of arm a of record r = 10^6 (1 + ((a - b) mod 5)).
+for a ulong 5
+v = mul 1000000 add 1 rem sub add a 5 b 5
+p = add mul r 256 mul add 16 a 8
+tqrbput p v
+end
+end
+
+fn tqaud nul bool to void
+note A (C'): in every admitted HELD-OUT record, b = (oxbest + 1) mod 5. N (null fixture): in
+note every admitted record, b = splitmix64(state 1) mod 5, independent of the state. Then
+note tqaudr; every other byte unchanged.
+put TQZ 30 1
+for r ulong get TQZ 11
+go = eq oxpart r 2
+if nul
+go = lt oxpart r 3
+end
+if go
+b = rem add oxbest r 1 5
+if nul
+b = rem tqsm 5
+end
+tqaudr r b
+end
+end
+o = ulong 0
+n = get TQZ 13
+while lt o n bound 999999
+w = write 1 RB o sub n o
+if le w 0
+exit 74
+end
+o = add o ulong w
+end
+end
+
+fn tqcmp to int
+note K: two images and an FNV word. Same outside bytes 104..111 and the trailer; the second
+note image's binding word equals the given FNV and its trailer equals FNV-1a of its prefix.
+o = ulong 0
+while lt o 23128 bound 23128
+r = read 0 SI o sub 23128 o
+if le r 0
+ret 68
+end
+o = add o ulong r
+end
+for i ulong 11560
+if or lt i 104 and ge i 112 lt i 11552
+if ne get SI i get SI add 11560 i
+w = write 1 TQK1 0 len TQK1
+wnum i
+tqnl
+ret 1
+end
+end
+end
+fv = siget 23120
+if ne siget 11664 fv
+w = write 1 TQK1 0 len TQK1
+wnum 104
+tqnl
+ret 1
+end
+if ne siget 23112 sifnv 11560 11552
+w = write 1 TQK1 0 len TQK1
+wnum 11552
+tqnl
+ret 1
+end
+w = write 1 TQK0 0 len TQK0
+ret 0
+end
+
+note ---------------------------------------------------------------- driver
+
+fn tqload to int
+note Read the stream (after the mode byte) and admit; 0 ok, else the exit code.
+if not tqrdk
+ret 68
+end
+nv = tqkw 1
+if or gt nv 524288 ne rem nv 256 0
+ret 68
+end
+if not tqrdlb
+ret 68
+end
+if not tqrdd
+ret 68
+end
+if not tqrdi
+ret 68
+end
+if gt nv 0
+if not tqrdv nv
+ret 68
+end
+end
+if ne and tqkw 7 1 0
+if not tqrdc
+ret 68
+end
+end
+n = tqrdrb
+if gt n 524288
+ret 68
+end
+put TQZ 13 n
+st = oxallow get TQZ 14 oxfnv n
+if lt st 0
+w = write 1 TQE0 0 len TQE0
+ret 67
+end
+st = oxadm2 n
+if ne st 0
+w = write 1 TQE1 0 len TQE1
+wnum ulong neg long st
+tqnl
+ret 66
+end
+put TQZ 11 get RC 0
+tqv1
+ret 0
+end
+
+fn tqprep to int
+note Everything before output: orders, rows, code lengths, D, ub, blocks.
+tqntr
+tqstat
+tqorders
+for k ulong 3
+st = tqimg k
+if ne st 0
+w = write 1 TQE2 0 len TQE2
+wnum k
+tqsp
+tqsn long st
+tqnl
+ret 65
+end
+tqmord k
+end
+tqcount
+tqrows
+tqlens
+tqsel
+tqubs
+ret 0
+end
+
+fn tqsynq t ulong r ulong to ulong
+note Count of rank r in the synthetic coder row of position t.
+ret rem add mul t 7 mul r 13 50
+end
+
+fn tqsyn sym bool to void
+note Q / W: a synthetic K = 5 stream of n = config word 0 positions (coder band
+note qualification, no record involved): row t = F1 of counts (7 t + 13 r) mod 50, symbol t =
+note splitmix64(state 7) mod 5. Q writes the TPS1 body, W the TSY1 body.
+n = tqkw 0
+put TQZ 30 7
+for i ulong 128
+put TQOB i 0
+end
+if sym
+tqpb 0 827937620 4
+tqpb 4 1 2
+tqpb 6 5 1
+tqpb 8 n 8
+for t ulong n
+put TQOB add 56 t uchar rem tqsm 5
+end
+tqout add 56 n
+ret
+end
+tqpb 0 827543636 4
+tqpb 4 1 2
+tqpb 6 5 1
+tqpb 7 16 1
+tqpb 12 n 8
+tqpb 20 34 4
+for t ulong n
+for r ulong 5
+put TQN r tqsynq t r
+end
+tqrow 0 0
+p = add 128 mul t 34
+tqpb p t 8
+tqpb add p 8 t 8
+tqpb add p 20 65536 4
+for r ulong 5
+tqpb add add p 24 mul r 2 get TQQ r 2
+end
+end
+tqout add 128 mul n 34
+end
+
+fn tqband to int
+note B: config words 0 n, 1 ideal_ub, 2 coded bits, 3 round trip (1 ok); band of h1_bridge.
+if not tqrdk
+ret 68
+end
+d = sub mul long tqkw 2 1000000 long tqkw 1
+ok = and eq tqkw 3 1 le wsabs sub d 448000000 long tqbw tqkw 0
+w = write 1 TQX5 0 len TQX5
+tqsn d
+w = write 1 TQX6 0 len TQX6
+if ok
+w = write 1 TQX9 0 len TQX9
+tqnl
+ret 0
+end
+w = write 1 TQY0 0 len TQY0
+tqnl
+ret 1
+end
+
+fn tqmok m ulong to bool
+note Modes R H P Y M A N Q W.
+if or eq m 82 or eq m 72 or eq m 80 eq m 89
+ret true
+end
+if or eq m 77 or eq m 65 eq m 78
+ret true
+end
+ret or eq m 81 eq m 87
+end
+
+fn tqrun m ulong to int
+if not tqmok m
+ret 64
+end
+st = tqload
+if ne st 0
+ret st
+end
+if or eq m 65 eq m 78
+tqaud eq m 78
+ret 0
+end
+if or eq m 81 eq m 87
+if or lt tqkw 0 1 gt tqkw 0 2048
+ret 68
+end
+tqsyn eq m 87
+ret 0
+end
+st = tqprep
+if ne st 0
+ret st
+end
+if eq m 80
+a = tqkw 0
+if or lt a 1 gt a 10
+ret 68
+end
+tqtps sub a 1
+ret 0
+end
+if eq m 89
+tqtsy
+ret 0
+end
+if eq m 77
+a = tqkw 0
+if or lt a 1 gt a 10
+ret 68
+end
+tqmcb sub a 1
+ret 0
+end
+if and eq m 72 eq and tqkw 7 1 0
+ret 68
+end
+tqhead
+for x ulong 10
+tqarml x
+end
+tqbsum false
+tqboot get TQZ 2
+tqtlines
+nb = tqcfb
+put TQZ 15 nb
+tqbsum true
+tqboot nb
+tqtcf
+tqverds
+if eq m 72
+tqh1
+end
+ret 0
+end

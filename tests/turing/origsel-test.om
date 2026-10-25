@@ -1,0 +1,105 @@
+note SPDX-License-Identifier: Apache-2.0
+note omega-mv#700 ORIGSEL evaluator in-process tests (caller unit after origsel.om): ub golden
+note values of CODER_SPEC s.8, splitmix64 outputs, binomials, ceil log2, gamma and enumerative
+note code lengths, permutation index, order ties, the F1 row rule. Exit 0 = pass, else the
+note number of the first failing check.
+text TPASS "ORIGSEL_TEST_PASS checks=17\n"
+
+fn tchk1 to ulong
+if ne tqub 1 16000000
+ret 1
+end
+if ne tqub 32768 1000000
+ret 2
+end
+if ne tqub 43481 591903
+ret 3
+end
+if ne tqub 46819 485194
+ret 4
+end
+if ne tqub 13107 2321950
+ret 5
+end
+if ne tqub 13108 2321840
+ret 6
+end
+if ne tqub 65536 0
+ret 7
+end
+ret 0
+end
+
+fn tchk2 to ulong
+put TQZ 30 20261025
+if ne tqsm 10346940957598392952
+ret 8
+end
+if ne tqsm 10284689419445729823
+ret 9
+end
+if or ne tqbin 10 4 210 ne tqbin 3 4 0
+ret 10
+end
+if or ne tqclg 1 0 ne tqclg 5 3
+ret 11
+end
+if or ne tqpidx tqidp 0 ne tqpidx 4660 119
+ret 12
+end
+ret 0
+end
+
+fn tchk3 to ulong
+k = new long 5 0
+put k 0 3
+put k 1 1
+put k 2 1
+put k 3 5
+put k 4 0
+note expected order 4, 1, 2, 0, 3
+if ne tqord5 k 197140
+ret 13
+end
+tqwclr
+tqgam 1
+tqgam 9
+if ne get TQZ 7 8
+ret 14
+end
+for i ulong 200
+put TQN i 0
+end
+tqrow 1 0
+if or ne get TQQ 20 13108 ne get TQQ 24 13107
+ret 15
+end
+tqwclr
+tqwrow 1 0
+if ne get TQZ 7 1
+ret 16
+end
+put TQN 20 3
+put TQN 24 2
+tqwclr
+tqwrow 1 0
+if ne get TQZ 7 add 5 tqclg tqbin 9 4
+ret 17
+end
+ret 0
+end
+
+fn main to int
+e = tchk1
+if eq e 0
+e = tchk2
+end
+if eq e 0
+e = tchk3
+end
+if ne e 0
+ret int e
+end
+w = write 1 TPASS 0 len TPASS
+ret 0
+end
