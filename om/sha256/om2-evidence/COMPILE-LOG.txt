@@ -11,6 +11,12 @@ Constructs used by the unit, and the slice that is expected to provide each
   Not used: inline (sched and rounds stay calls: 16 registers, no spilling), part, abstract/dup32.
   Erratum E5 (1): a field without COUNT is a scalar. The unit declares `field count ulong at 32 little`
   and reads and writes it as `get c count` / `put c count v` (commit after 57272e65).
+  Errata E6-E8 reviewed against the unit (SOURCE, by grep): no declared name is an OM-2 reserved word
+  (functions kinit iv sched rounds compress finish absorb + 4 exports; locals a-h t k kt n nb off p q
+  s v w x y bi bits blk cnt); every rotr operand is uint with a constant uint amount (E7 same-type
+  rule); unroll counts 16, 48, 64, 8 and 8x4 nested (E7: 1..64 per loop); no fresh over 64 (64), no
+  abstract, no part; layout before the first fn, SIZE 104; field arity: state i, buf i, count scalar
+  (E8). No change needed.
 
 2026-10-25T16:40Z  omc 734f0a39 (OM-1, main acb3f15c, /tmp/zl/main/seed/out/omc)
   result: refused, "omc: line 114: error 16", exit 16, nothing on stdout.
