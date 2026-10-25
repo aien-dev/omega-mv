@@ -63,7 +63,7 @@ copy64 old s
 for i ulong 8
 v = get t i
 put t i add v 1
-if eq rv_commit s t q true true 0
+if ne rv_commit s t q true true 2
 ret false
 end
 put t i v
@@ -72,6 +72,86 @@ ret false
 end
 end
 ret true
+end
+fn test_replay to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 2
+z = new ulong 8 0
+old = new ulong 64 0
+if ne setup s 6 0
+ret false
+end
+token t 0 1 1
+if ne rv_reserve s t q 1 0
+ret false
+end
+if ne rv_commit s t z true true 0
+ret false
+end
+if ne rv_reclaim s t z true true 0
+ret false
+end
+copy64 old s
+if ne rv_commit s t z true true 2
+ret false
+end
+if ne rv_reclaim s t z true true 2
+ret false
+end
+put t 2 2
+if ne rv_reserve s t q 1 2
+ret false
+end
+if not same s old
+ret false
+end
+put t 1 2
+if ne rv_reserve s t q 1 0
+ret false
+end
+copy64 old s
+put t 1 1
+put t 2 1
+if ne rv_uncertain s t 2
+ret false
+end
+ret same s old
+end
+fn test_attrib to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 2
+old = new ulong 64 0
+if ne setup s 6 0
+ret false
+end
+token t 0 1 1
+if ne rv_reserve s t q 1 0
+ret false
+end
+if ne rv_commit s t q true true 0
+ret false
+end
+token t 1 2 1
+if ne rv_reserve s t q 1 0
+ret false
+end
+if ne rv_commit s t q true true 0
+ret false
+end
+copy64 old s
+for d ulong 8
+put q d 3
+end
+token t 0 1 1
+if ne rv_reclaim s t q true true 3
+ret false
+end
+if ne get s 8 4
+ret false
+end
+ret same s old
 end
 fn test_lifecycle to bool
 s = new ulong 64 0
@@ -263,9 +343,64 @@ ret false
 end
 ret eq ep_available b 2
 end
-note Pair secret occupancies1/2: baseline available1/0, hence request1 differs.
+note Baseline admission is a mutable capacity2 stock, secret occupancy then public request1.
+fn public_admit stock edit ulong 2 request ulong to bool
+if gt get stock 1 get stock 0
+ret false
+end
+if gt request sub get stock 0 get stock 1
+ret false
+end
+put stock 1 add get stock 1 request
+ret true
+end
 fn baseline_leaks to bool
-return1 = ge sub ulong 2 1 1
-return2 = ge sub ulong 2 2 1
-ret ne return1 return2
+a = new ulong 2 0
+b = new ulong 2 0
+put a 0 2
+put b 0 2
+if not public_admit a 1
+ret false
+end
+if not public_admit b 2
+ret false
+end
+ra = public_admit a 1
+rb = public_admit b 1
+ret and ra not rb
+end
+fn occupy amount ulong to ulong
+s = new ulong 2 0
+put s 0 2
+if not public_admit s amount
+ret 3
+end
+ret get s 1
+end
+fn envelope_admit e view ulong 8 request ulong to bool
+s = new ulong 2 0
+put s 0 ep_available e
+ret public_admit s request
+end
+note Protected admission uses public maxima, not secret stock1/2.
+fn protected_pair to bool
+a = new ulong 8 0
+b = new ulong 8 0
+if ne ep_open a 11 1 9 2 2 0
+ret false
+end
+if ne ep_open b 11 1 9 2 2 0
+ret false
+end
+sa = occupy 1
+sb = occupy 2
+if or ne sa 1 ne sb 2
+ret false
+end
+ra = envelope_admit a 1
+rb = envelope_admit b 1
+if or ra rb
+ret false
+end
+ret and eq ra rb ne sa sb
 end

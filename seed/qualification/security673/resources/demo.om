@@ -4,7 +4,7 @@ text life "R2 reserve uncertain commit reclaim replay fuel\n"
 text atom "R2 all-or-nothing eight stocks\n"
 text over "R2 u64 extrema and id exhaustion\n"
 text rec "R4 durable60 ledger40 refuses60\n"
-text env "E1-E5 baseline leak protected events release restart\n"
+text env "E1-E6 paired_admission events release restart\n"
 text ok "PASS "
 text bad "FAIL "
 fn say result bool which ulong to void
@@ -41,12 +41,12 @@ say r 1
 if not r
 ret 1
 end
-r = test_binding
+r = and test_binding test_replay
 say r 2
 if not r
 ret 2
 end
-r = test_lifecycle
+r = and test_lifecycle test_attrib
 say r 3
 if not r
 ret 3
@@ -66,7 +66,7 @@ say r 6
 if not r
 ret 6
 end
-r = and baseline_leaks test_envelope
+r = and protected_pair and baseline_leaks test_envelope
 say r 7
 if not r
 ret 7

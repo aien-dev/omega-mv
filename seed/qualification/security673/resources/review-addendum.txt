@@ -1,0 +1,75 @@
+Resource qualification repair after independent ResourceReview
+Contract: SC1 revision2 ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496.
+This addendum supersedes README.txt's old negative-driver commands, five-bad-adapter
+claim, E fixture numbering and summary-only measurement description. Parent owns
+README.txt and the separate R3 full-edge additions. No production module changed.
+
+Historical receipt946b6219 remains an immutable draft-contract result. Its negative
+controls compared duplicated assertions, not the actual demo checker, and its four
+event labels represented one universal refund mutant. It does not qualify rev2.
+
+The repaired negative.om is an exact-source mutator, not an alternate checker.
+It accepts original module bytes on stdin, requires exactly one complete target
+substring and emits the changed module. Modes1..4 insert an event-specific refund
+inside actual ep_event; each only triggers completion/cancel/error/supervisor-work,
+respectively. Mode5 changes actual rv_reserve to write each vector component before
+checking later dimensions. The generated sources compile with the SAME unmodified
+checks.om and demo.om as the good implementation. All five compiled and executed:
+- E2-E5 modes1..4: normal exit7, FAIL E1-E6 paired_admission events release restart.
+- R2 mode5: normal exit4, FAIL R2 all-or-nothing eight stocks.
+All earlier demo assertions execute normally before those named failures. There is
+no independent assertion in negative.om that can stand in for a weakened checker.
+Missing/duplicate source patterns return4 with empty output. Signals, compile errors
+and unrelated exits never count as successful negative controls.
+
+E1 now executes admission operations: mutable baseline capacity2 first admits secret
+occupancy1 or2, then public request1 succeeds only in the occupancy1 arm. Protected
+arms initialize fixed public envelope2 before their separate secret occupancy runs;
+public request1 then refuses equally using ep_available, not actual secret stock.
+This is a bounded untimed helper model, not real scheduler correspondence.
+
+R2 now checks binding refusal exactly2, reserve id<next-id unchanged, old token after
+slot clearing unchanged, old token after slot reuse unchanged, and attributable
+reclamation refusing3 when requested3 exceeds slot charge2 even though total used4.
+The original lifecycle, fuel, overflow, partial-vector, R4 and448 finite cases remain.
+
+E6 helper release/recovered identity passes; actual scheduler/store remains BLOCKED.
+R3 source, full edge corpus, external reference and native-edge replay are owned and
+recorded separately by Main. R3 is a spec model, NOT correspondence to reserve.om:
+it pools committed stock and clears effect-free reservations at crash; this helper
+holds attributed slots through actual reclaim and retains uncertain reservations.
+
+Caller obligations stay explicit. Revalidate current epoch/version and grant inside
+the actual serialized owner before commit; token equality is not policy currency.
+Bind envelope owner/id to the single authoritative reservation before release.
+Copies cannot become independent writers or public capacity. Fuel charge is the
+trusted caller's actual-work policy; the benchmark uses0 and proves no work pricing.
+Recovery census must classify and attribute in-flight versus committed stock. A
+census including in-flight effects plus a retained reservation can double-charge;
+this is conservative but can permanently lose utilization. No claim of efficient
+recovery, scheduler fairness, unlimited availability or real durable enforcement.
+
+Replay from repository root, pinned seeded compiler734f0a39...b61:
+  nice -n 19 seed/out/omc < seed/qualification/security673/resources/negative.om > /tmp/sc1-mutator
+  chmod +x /tmp/sc1-mutator
+For an envelope event (example mode2, cancellation):
+  nice -n 19 /tmp/sc1-mutator 2 < seed/authority/envelope.om > /tmp/sc1-envelope-mutant.om
+  cat seed/authority/reserve.om /tmp/sc1-envelope-mutant.om seed/qualification/security673/resources/checks.om seed/qualification/security673/resources/demo.om | nice -n 19 seed/out/omc > /tmp/sc1-mutant
+  chmod +x /tmp/sc1-mutant
+  nice -n 19 /tmp/sc1-mutant
+Expect normal exit7 and the named FAIL above. Repeat modes1,3,4 independently.
+For vector rollback:
+  nice -n 19 /tmp/sc1-mutator 5 < seed/authority/reserve.om > /tmp/sc1-reserve-mutant.om
+  cat /tmp/sc1-reserve-mutant.om seed/authority/envelope.om seed/qualification/security673/resources/checks.om seed/qualification/security673/resources/demo.om | nice -n 19 seed/out/omc > /tmp/sc1-mutant
+  chmod +x /tmp/sc1-mutant
+  nice -n 19 /tmp/sc1-mutant
+Expect normal exit4 and the named R2 FAIL. Good demo/exhaust/measure retain the
+README composition command; negative is no longer linked with those modules.
+
+Measurement now writes63 raw baseline/checked pairs in execution order before the
+quantiles. The new receipt preserves complete stdout, raw samples, actual argv,
+execution cwd, source/compiler/executable hashes and the resource-measured repeat.
+p99 with63 samples is the maximum; no tail-confidence claim. The checked helper is
+slower than the unsafe unchecked baseline, retained as a no-win overhead result.
+Numbers from different runs are not controlled cross-revision performance claims.
+No service throughput, secrecy proof, process-crash or power-loss result follows.

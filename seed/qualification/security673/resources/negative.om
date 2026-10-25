@@ -1,75 +1,104 @@
-note Compiled bad adapter controls, never linked into production.
-note Argument event digit1..4 selects secret completion/cancel/error/supervisor refund.
-note Argument5 selects partial-vector mutation before a late failed admission.
-text failed "FAIL expected assertion: "
-text pair "paired_public_observation\n"
-text atom "all_or_nothing_vector\n"
+note Exact-once source mutator. stdin original module; stdout mutated module.
+note argv1=1..4 mutates ep_event for that event only;5 mutates rv_reserve rollback.
+note Compile emitted module with UNCHANGED checks.om and demo.om. Expected exits7/4.
+note Reject missing/duplicate pattern, oversized source and I/O errors normally.
+global source uchar 16384
+global needle uchar 256
+global params ulong 2
 global arg uchar 8
-fn bad_event e edit ulong 8 event ulong to ulong
-r = ep_event e event
-if eq r 0
-put e 4 0
+text epfind "if or lt event 1 gt event 4\nret 1\nend\nret 0\nend\n"
+text rvfind "for d ulong 8\nif gt get q d rv_room s d\nret 3\nend\nend\n"
+text eppre "if or lt event 1 gt event 4\nret 1\nend\nif eq event "
+text eppost "\nput e 4 0\nend\nret 0\nend\n"
+text rvbad "for d ulong 8\nif gt get q d rv_room s d\nret 3\nend\nput s add rv_charge j d get q d\nend\n"
+fn choose mode ulong to void
+if eq mode 5
+put params 1 len rvfind
+for i ulong len rvfind
+put needle i get rvfind i
 end
-ret r
+else
+put params 1 len epfind
+for i ulong len epfind
+put needle i get epfind i
 end
-fn bad_reserve s edit ulong 64 t view ulong 8 q view ulong 8 to ulong
-for d ulong 8
-if gt get q d rv_room s d
-ret 3
 end
-put s add rv_charge get t 0 d get q d
 end
-ret 0
+fn matches at ulong to bool
+for i ulong get params 1
+if ne get source add at i get needle i
+ret false
 end
-fn partial to int
-s = new ulong 64 0
-t = new ulong 8 0
-q = new ulong 8 4
-old = new ulong 64 0
-if ne setup s 6 0
-ret 90
 end
-token t 0 1 1
-put q 7 7
-copy64 old s
-r = bad_reserve s t q
-if and eq r 3 not same s old
-w = write 1 failed 0 len failed
-w = write 1 atom 0 len atom
-ret 25
+ret true
 end
-ret 90
+fn input to bool
+size = ulong 0
+while lt size len source bound 16384
+n = read 0 source size sub len source size
+if lt n 0
+ret false
+end
+if eq n 0
+put params 0 size
+ret true
+end
+size = add size ulong n
+end
+ret false
+end
+fn replacement mode ulong to bool
+if eq mode 5
+ret eq write 1 rvbad 0 len rvbad long len rvbad
+end
+if ne write 1 eppre 0 len eppre long len eppre
+ret false
+end
+if ne write 1 arg 0 1 1
+ret false
+end
+ret eq write 1 eppost 0 len eppost long len eppost
 end
 fn main to int
 if ne argcnt 2
-ret 90
+ret 2
 end
-n = argread 1 arg 0 8
-if ne n 1
-ret 90
+if ne argread 1 arg 0 8 1
+ret 2
 end
-mode = sub ulong get arg 0 48
-if or lt mode 1 gt mode 5
-ret 90
+mode = ulong get arg 0
+if or lt mode 49 gt mode 53
+ret 2
 end
-if eq mode 5
-ret partial
+mode = sub mode 48
+choose mode
+if not input
+ret 3
 end
-a = new ulong 8 0
-b = new ulong 8 0
-if ne ep_open a 11 1 9 2 2 0
-ret 90
+if lt get params 0 get params 1
+ret 4
 end
-if ne ep_open b 11 1 9 2 2 0
-ret 90
+count = ulong 0
+found = ulong 0
+for at ulong add sub get params 0 get params 1 1
+if matches at
+count = add count 1
+found = at
 end
-if ne bad_event a mode 0
-ret 90
 end
-if ne ep_available a ep_available b
-w = write 1 failed 0 len failed
-w = write 1 pair 0 len pair
-ret add int mode 20
+if ne count 1
+ret 4
 end
-ret 90
+if ne write 1 source 0 found long found
+ret 5
+end
+if not replacement mode
+ret 5
+end
+start = add found get params 1
+size = sub get params 0 start
+if ne write 1 source start size long size
+ret 5
+end
+ret 0
 end

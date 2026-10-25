@@ -2,6 +2,7 @@ note 63 paired samples of100 reserve/commit/reclaim cycles, same state/token/vec
 note Baseline uses trusted unchecked scalar mutation, not a safe implementation.
 note Nanoseconds per100 cycles; host scheduling noise remains. No service throughput claim.
 text title "MEASURE helper cycles=100 samples=63 baseline_ns p50/p95/p99 then checked_ns p50/p95/p99\n"
+text samples "RAW paired samples: baseline_ns then checked_ns, 63 pairs in execution order\n"
 text nl "\n"
 global digits uchar 32
 fn number n ulong to void
@@ -75,6 +76,11 @@ if not cycles s t q true
 ret 3
 end
 put b i ulong sub monons start
+end
+w = write 1 samples 0 len samples
+for i ulong 63
+number get a i
+number get b i
 end
 order a
 order b
