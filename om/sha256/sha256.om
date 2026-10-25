@@ -1,0 +1,296 @@
+note SPDX-License-Identifier: Apache-2.0
+note sha256.om: FIPS 180-4 SHA-256 as one function-mode unit, bound through the omega-bridge native
+note call ABI (docs/NATIVE-ABI.md) and exported as omega_omsha. It replaces the algorithm of
+note src/sha256.c: the C file keeps only the sha256_* entry points that cut caller data into
+note pieces of at most 4096 bytes.
+note
+note The whole hash state lives in the caller's sha256_ctx (104 bytes, src/sha256.h):
+note   bytes 0..31   state[8], uint32 little endian
+note   bytes 32..39  count, uint64 little endian (bytes absorbed so far)
+note   bytes 40..103 buffer, the pending partial block
+note omsha c b n op o:
+note   op 0  init: count 0, FIPS initial hash value
+note   op 1  absorb b[0..n), n <= 4096, with src/sha256.c's buffering rules
+note   op 2  final: pad, absorb the bit length, write the 32-byte digest into o
+note n > 4096 traps 3; any other op traps 9.
+
+
+fn initk k edit ulong 64 to void
+put k 0 1116352408
+put k 1 1899447441
+put k 2 3049323471
+put k 3 3921009573
+put k 4 961987163
+put k 5 1508970993
+put k 6 2453635748
+put k 7 2870763221
+put k 8 3624381080
+put k 9 310598401
+put k 10 607225278
+put k 11 1426881987
+put k 12 1925078388
+put k 13 2162078206
+put k 14 2614888103
+put k 15 3248222580
+put k 16 3835390401
+put k 17 4022224774
+put k 18 264347078
+put k 19 604807628
+put k 20 770255983
+put k 21 1249150122
+put k 22 1555081692
+put k 23 1996064986
+put k 24 2554220882
+put k 25 2821834349
+put k 26 2952996808
+put k 27 3210313671
+put k 28 3336571891
+put k 29 3584528711
+put k 30 113926993
+put k 31 338241895
+put k 32 666307205
+put k 33 773529912
+put k 34 1294757372
+put k 35 1396182291
+put k 36 1695183700
+put k 37 1986661051
+put k 38 2177026350
+put k 39 2456956037
+put k 40 2730485921
+put k 41 2820302411
+put k 42 3259730800
+put k 43 3345764771
+put k 44 3516065817
+put k 45 3600352804
+put k 46 4094571909
+put k 47 275423344
+put k 48 430227734
+put k 49 506948616
+put k 50 659060556
+put k 51 883997877
+put k 52 958139571
+put k 53 1322822218
+put k 54 1537002063
+put k 55 1747873779
+put k 56 1955562222
+put k 57 2024104815
+put k 58 2227730452
+put k 59 2361852424
+put k 60 2428436474
+put k 61 2756734187
+put k 62 3204031479
+put k 63 3329325298
+end
+
+note little-endian word of nb bytes at byte offset p of the context
+fn getle c edit uchar 104 p ulong nb ulong to ulong
+v = ulong 0
+i = nb
+while gt i 0 bound 8
+i = sub i 1
+v = or shl v 8 ulong get c add p i
+end
+ret v
+end
+
+fn putle c edit uchar 104 p ulong nb ulong v ulong to void
+x = v
+for i ulong nb
+put c add p i uchar and x 255
+x = shr x 8
+end
+end
+
+note big-endian message schedule of block blk into w
+fn sched blk edit uchar 64 w edit ulong 64 to void
+for i ulong 16
+o = mul i 4
+v = ulong get blk o
+v = or shl v 8 ulong get blk add o 1
+v = or shl v 8 ulong get blk add o 2
+v = or shl v 8 ulong get blk add o 3
+put w i v
+end
+for j ulong 48
+i = add j 16
+x = get w sub i 2
+u = and or shr x 17 shl x 15 4294967295
+u = xor u and or shr x 19 shl x 13 4294967295
+u = xor u shr x 10
+x = get w sub i 15
+v = and or shr x 7 shl x 25 4294967295
+v = xor v and or shr x 18 shl x 14 4294967295
+v = xor v shr x 3
+u = add u v
+u = add u get w sub i 7
+put w i and add u get w sub i 16 4294967295
+end
+end
+
+note the 64 rounds over the working state s; sigma, ch and maj are written out because every call
+note spills and reloads the caller's live values
+fn rounds s edit ulong 8 k view ulong 64 w edit ulong 64 to void
+for i ulong 64
+e = get s 4
+u = and or shr e 6 shl e 26 4294967295
+v = and or shr e 11 shl e 21 4294967295
+u = xor u v
+v = and or shr e 25 shl e 7 4294967295
+u = xor u v
+f = get s 5
+g = get s 6
+v = xor and e f and and not e 4294967295 g
+t1 = add u v
+t1 = add t1 get s 7
+t1 = add t1 get k i
+t1 = and add t1 get w i 4294967295
+a = get s 0
+u = and or shr a 2 shl a 30 4294967295
+v = and or shr a 13 shl a 19 4294967295
+u = xor u v
+v = and or shr a 22 shl a 10 4294967295
+u = xor u v
+f = get s 1
+g = get s 2
+v = xor and a f xor and a g and f g
+u = and add u v 4294967295
+put s 7 get s 6
+put s 6 get s 5
+put s 5 e
+v = get s 3
+put s 4 and add v t1 4294967295
+put s 3 g
+put s 2 f
+put s 1 a
+put s 0 and add t1 u 4294967295
+end
+end
+
+note one compression of blk into the context's state words
+fn comp c edit uchar 104 blk edit uchar 64 k view ulong 64 to void
+w = new ulong 64 0
+s = new ulong 8 0
+sched blk w
+for i ulong 8
+put s i getle c mul i 4 4
+end
+rounds s k w
+for i ulong 8
+p = mul i 4
+putle c p 4 and add getle c p 4 get s i 4294967295
+end
+end
+
+note copy n bytes of b from bo into the context buffer at index bi
+fn tobuf c edit uchar 104 bi ulong b view uchar 4096 bo ulong n ulong to void
+for i ulong n
+put c add 40 add bi i get b add bo i
+end
+end
+
+note copy the 64 bytes of b at bo into blk
+fn toblk blk edit uchar 64 b view uchar 4096 bo ulong to void
+for i ulong 64
+put blk i get b add bo i
+end
+end
+
+note absorb b[0..n), n <= 4096, exactly as src/sha256.c sha256_update does for that piece
+fn absorb c edit uchar 104 b view uchar 4096 n ulong k view ulong 64 to void
+if gt n 4096
+trap 3
+end
+blk = new uchar 64 0
+cnt = getle c 32 8
+bi = and cnt 63
+putle c 32 8 add cnt n
+off = ulong 0
+if gt bi 0
+lf = sub 64 bi
+if lt n lf
+tobuf c bi b 0 n
+ret
+end
+tobuf c bi b 0 lf
+for i ulong 64
+put blk i get c add 40 i
+end
+comp c blk k
+off = lf
+end
+while le add off 64 n bound 65
+toblk blk b off
+comp c blk k
+off = add off 64
+end
+tobuf c 0 b off sub n off
+end
+
+fn init c edit uchar 104 to void
+putle c 32 8 0
+putle c 0 4 1779033703
+putle c 4 4 3144134277
+putle c 8 4 1013904242
+putle c 12 4 2773480762
+putle c 16 4 1359893119
+putle c 20 4 2600822924
+putle c 24 4 528734635
+putle c 28 4 1541459225
+end
+
+note big-endian 64-bit bit count into p[0..8)
+fn lenbe p edit uchar 4096 bits ulong to void
+for i ulong 8
+put p i uchar and shr bits mul sub 7 i 8 255
+end
+end
+
+note the state words, big endian, into o
+fn digest c edit uchar 104 o edit uchar 32 to void
+for i ulong 8
+v = getle c mul i 4 4
+q = mul i 4
+put o q uchar shr v 24
+put o add q 1 uchar and shr v 16 255
+put o add q 2 uchar and shr v 8 255
+put o add q 3 uchar and v 255
+end
+end
+
+note src/sha256.c sha256_final: 0x80, zeros to 56 mod 64, the 64-bit big-endian bit count, digest
+fn final c edit uchar 104 o edit uchar 32 k view ulong 64 to void
+p = new uchar 4096 0
+cnt = getle c 32 8
+bi = and cnt 63
+pl = sub 120 bi
+if lt bi 56
+pl = sub 56 bi
+end
+put p 0 128
+absorb c p 1 k
+put p 0 0
+if gt pl 1
+absorb c p sub pl 1 k
+end
+lenbe p mul cnt 8
+absorb c p 8 k
+digest c o
+end
+
+fn omsha c edit uchar 104 b view uchar 4096 n ulong op ulong o edit uchar 32 to void
+if eq op 0
+init c
+ret
+end
+k = new ulong 64 0
+initk k
+if eq op 1
+absorb c b n k
+ret
+end
+if eq op 2
+final c o k
+ret
+end
+trap 9
+end
