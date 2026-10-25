@@ -67,3 +67,14 @@ Constructs used by the unit, and the slice that is expected to provide each
   MOV + register offset; folding in unrolled/inlined bodies does the same. Behaviour unchanged
   (158/158 here); OM-1 units byte-identical under S2 (CompilerLane's C2 run, 5876/5876; not re-run
   by L838).
+
+2026-10-25T18:40Z  compiler-s3 @ ad220c05 (PR #754), omc 98cd1621…4b16
+  Delivered unit: refused, "omc: line 114: error 16", om2 diag col=44 found=2a (`*`): fresh is
+  accepted; the unsized view is S4.
+  Reduced test unit s3/sha256-s3.om (see s3/README.txt):
+    layout shactx 104, count scalar (E5), get/put c state i, c buf i, c count ... compiles
+    w edit uint 64 fresh in sched ................ compiles; w[15] left unwritten -> error 27 line 109
+    layout overlap / field past SIZE ............. error 29 at the field line
+  Result: 158/158 vectors with the E3 copy receipt and the section 7 reuse receipt holding on every
+  message (program mode, exit 3 otherwise); receipt mutants caught (156 and 158 exit 3). HOST.
+  Not yet compilable: view uchar *, part, out, export (S4). NOT_RUN: hash(d,32,d) receipt (needs out).
