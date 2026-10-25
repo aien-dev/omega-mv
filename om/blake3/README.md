@@ -30,9 +30,18 @@ sh om/blake3/test-output.sh ./blake3
 ```
 
 The fixture compares the complete empty-input digest, including its newline, and
-checks /dev/full and closed-stdout failures. Native compilation and execution of
-this output-handling revision are **NOT_RUN** in the review environment. Positive
-short writes and EINTR are not forced by this fixture.
+checks /dev/full and closed-stdout failures. Positive short writes and EINTR are not
+forced by this fixture.
+
+Native run on the Spark (arm64 host, 2026-10-25), omc 734f0a39…6b61 built by
+`sh seed/omega-from-seed.sh`: this source (sha256 c7c96a26…a150) compiles to an
+8,664-byte binary, sha256 f3e343d2…2dbd. `test-output.sh` exits 0 on it and 1 on the
+PR #732 binary (c51199a3…f77b), which exits 0 for /dev/full (ENOSPC) and closed
+stdout (EBADF). A forced positive short write (`ulimit -f 1`, SIGXFSZ ignored, 994-byte
+file opened for append) shows `write(1, …, 65) = 30` then `write(1, …+30, 35) = -1
+EFBIG` and exit 74. The 64-case corpus below, rerun against this binary with a fresh
+-O2 build of `src/omega_blake3.c` as oracle, gives 64/64, and the binary matches
+`tests/resolve/blake3_vectors.txt` 35/35.
 
 ## Construction
 
