@@ -1,0 +1,429 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten extended-S1-family upper-to-Zig 0.17 exporter (spec/universal/zig-u64-v1.md section 4).
+note Prepended unchanged at build: src/source-aware/vendor/sha256.om and src/source-aware/core-v2.om (decode n).
+note Input: one OMSB envelope to EOF. Output is generated from the OMSA operation records only; the
+note OMSP sidecar is validated by the v2 decoder, never read for output.
+global Zone uchar 1
+global Zo uchar 4096
+global Zl ulong 1
+global Zni ulong 1
+global Zob ulong 1
+global Zpr ulong 64
+global Zln ulong 64
+global Zdp ulong 64
+global Zcn ulong 64
+global Zrc ulong 64
+global Zus ulong 6
+text Zhead "pub fn calc("
+text Zpar ": u64"
+text Zret ") u64 {\n    return "
+text Ztail ";\n}\n"
+text Zas "@as(u64, "
+text Zop " +%  -%  *% "
+text ZMal "ZIG_EXPORT_MALFORMED\n"
+text ZLim "ZIG_EXPORT_LIMIT\n"
+text ZProf "ZIG_EXPORT_PROFILE_MISMATCH\n"
+text ZIO "ZIG_EXPORT_IO\n"
+
+fn zdie code ulong to void
+if eq code 65
+w = write 2 ZMal 0 len ZMal
+end
+if eq code 67
+w = write 2 ZLim 0 len ZLim
+end
+if eq code 68
+w = write 2 ZProf 0 len ZProf
+end
+if eq code 77
+w = write 2 ZIO 0 len ZIO
+end
+exit int code
+end
+
+fn zbyte c ulong to void
+put Zo get Zl 0 uchar c
+put Zl 0 add get Zl 0 1
+end
+
+fn ztext off ulong n ulong to void
+for i ulong n
+zbyte ulong get Zop add off i
+end
+end
+
+fn zdigits v ulong to ulong
+d = ulong 1
+x = div v 10
+while gt x 0
+d = add d 1
+x = div x 10
+end
+ret d
+end
+
+fn zdec v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+while gt i 0
+i = sub i 1
+zbyte ulong get d i
+end
+end
+
+note Family membership per translation-compose-v2 section 1, on fields already validated by decode.
+fn zkind i ulong to ulong
+c = get Oc i
+if or ne get Ot i 1 ne get Oef i 0
+ret 68
+end
+if ne get Oal i 0
+ret 68
+end
+if eq c 9
+if or ne get Oat i 0 ne get Oob i 1
+ret 68
+end
+put Zni 0 add get Zni 0 1
+ret 0
+end
+if eq c 1
+if or ne get Oat i 1 ne get Oob i 0
+ret 68
+end
+ret 0
+end
+if or lt c 2 gt c 4
+ret 68
+end
+if or ne get Oat i 1 ne get Oob i get Zob 0
+ret 68
+end
+ret 0
+end
+
+note (language, profile) -> arithmetic obligations: C 1/1, Rust 2/2, Python 3/4 (5), C++ 5/7, Zig 6/8, Go 7/9.
+fn zmember to ulong
+l = get M 0
+p = get M 1
+if and eq l 1 eq p 1
+ret 1
+end
+if and eq l 2 eq p 2
+ret 1
+end
+if and eq l 3 eq p 4
+ret 5
+end
+if and eq l 5 eq p 7
+ret 1
+end
+if and eq l 6 eq p 8
+ret 1
+end
+if and eq l 7 eq p 9
+ret 1
+end
+ret 0
+end
+
+fn zs1 to ulong
+ob = zmember
+if eq ob 0
+ret 68
+end
+put Zob 0 ob
+if or ne get M 2 0 ne get M 3 1
+ret 68
+end
+put Zni 0 0
+for i ulong get M 4
+if ne zkind i 0
+ret 68
+end
+end
+for j ulong get M 4
+if eq get Oc j 9
+if ge get Oi j get Zni 0
+ret 68
+end
+end
+end
+ret 0
+end
+
+fn zsat v ulong to ulong
+if gt v 1048576
+ret 1048576
+end
+ret v
+end
+
+note Left operand parenthesised iff its precedence is lower than the parent's, right iff lower or equal.
+fn zpa k ulong to ulong
+if lt get Zpr get Oa k get Zpr k
+ret 1
+end
+ret 0
+end
+
+fn zpb k ulong to ulong
+if le get Zpr get Ob k get Zpr k
+ret 1
+end
+ret 0
+end
+
+note Two constant operands: the left one is written @as(u64, N) so the operation is u64, not comptime_int.
+fn zwrap k ulong to ulong
+if and eq get Oc get Oa k 1 eq get Oc get Ob k 1
+ret 1
+end
+ret 0
+end
+
+note Length, parenthesis depth and re-import operation count of each result's expression.
+fn zmetric k ulong to void
+c = get Oc k
+put Zdp k 0
+if eq c 9
+put Zpr k 3
+put Zln k 2
+put Zcn k 0
+ret
+end
+if eq c 1
+put Zpr k 3
+put Zln k zdigits get Oi k
+put Zcn k 1
+ret
+end
+put Zpr k 1
+if eq c 4
+put Zpr k 2
+end
+a = get Oa k
+b = get Ob k
+pa = zpa k
+pb = zpb k
+wr = zwrap k
+l = add get Zln a get Zln b
+l = add l add 4 mul 2 add pa pb
+l = add l mul 10 wr
+put Zln k zsat l
+da = add add get Zdp a pa wr
+db = add get Zdp b pb
+if gt da db
+put Zdp k da
+else
+put Zdp k db
+end
+put Zcn k zsat add add get Zcn a get Zcn b 1
+end
+
+fn zemit k ulong to void
+c = get Oc k
+if eq c 9
+zbyte 120
+zbyte add 48 get Oi k
+ret
+end
+if eq c 1
+zdec get Oi k
+ret
+end
+pa = zpa k
+pb = zpb k
+wr = zwrap k
+if eq pa 1
+zbyte 40
+end
+if eq wr 1
+for i ulong len Zas
+zbyte ulong get Zas i
+end
+end
+zemit get Oa k
+if eq wr 1
+zbyte 41
+end
+if eq pa 1
+zbyte 41
+end
+ztext mul sub c 2 4 4
+if eq pb 1
+zbyte 40
+end
+zemit get Ob k
+if eq pb 1
+zbyte 41
+end
+end
+
+note translation-v1 section 4: the pre-normalization root of a NORMALIZED unit, else the last result.
+fn zroot to ulong
+n = get M 4
+if lt n 3
+ret sub n 1
+end
+z = sub n 2
+y = sub n 1
+if or ne get Oc z 1 ne get Oi z 0
+ret y
+end
+if or ne get Oc y 2 ne get Ob y z
+ret y
+end
+if ge get Oa y z
+ret y
+end
+ret get Oa y
+end
+
+note Input slots reached from the root are named x<slot>; every other slot is the discard _ (Zig rejects
+note an unused named parameter).
+fn zreach root ulong to void
+for i ulong 64
+put Zrc i 0
+end
+for s ulong 6
+put Zus s 0
+end
+put Zrc root 1
+k = add root 1
+while gt k 0
+k = sub k 1
+if eq get Zrc k 1
+c = get Oc k
+if and ge c 2 le c 4
+put Zrc get Oa k 1
+put Zrc get Ob k 1
+end
+if eq c 9
+put Zus get Oi k 1
+end
+end
+end
+end
+
+fn zparams to ulong
+ni = get Zni 0
+if eq ni 0
+ret 0
+end
+t = sub mul ni 8 2
+for s ulong ni
+t = add t get Zus s
+end
+ret t
+end
+
+note ", " separators; a used slot is "x<s>: u64" (7 bytes), an unused one "_: u64" (6 bytes).
+fn zsignature to void
+for i ulong len Zhead
+zbyte ulong get Zhead i
+end
+for s ulong get Zni 0
+if gt s 0
+zbyte 44
+zbyte 32
+end
+if eq get Zus s 1
+zbyte 120
+zbyte add 48 s
+else
+zbyte 95
+end
+for t ulong len Zpar
+zbyte ulong get Zpar t
+end
+end
+for u ulong len Zret
+zbyte ulong get Zret u
+end
+end
+
+fn zreadunit to ulong
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub ulong 8192 n
+if lt r 0
+zdie 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+if eq n 8192
+r = read 0 Zone 0 1
+if lt r 0
+zdie 77
+end
+if gt r 0
+zdie 65
+end
+end
+ret n
+end
+
+fn main to int
+constants
+n = zreadunit
+code = decode n
+if eq code 68
+zdie 68
+end
+if ne code 0
+zdie 65
+end
+if ne zs1 0
+zdie 68
+end
+for k ulong get M 4
+zmetric k
+end
+root = zroot
+zreach root
+total = add add len Zhead len Zret len Ztail
+total = add total zparams
+total = add total get Zln root
+if gt total 4096
+zdie 67
+end
+if gt get Zdp root 16
+zdie 67
+end
+if gt add add get Zni 0 get Zcn root 2 64
+zdie 67
+end
+put Zl 0 0
+zsignature
+zemit root
+for i ulong len Ztail
+zbyte ulong get Ztail i
+end
+if ne get Zl 0 total
+zdie 65
+end
+sent = ulong 0
+while lt sent total
+r = write 1 Zo sent sub total sent
+if le r 0
+zdie 77
+end
+sent = add sent ulong r
+end
+ret 0
+end
