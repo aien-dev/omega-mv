@@ -1,0 +1,1215 @@
+note SPDX-License-Identifier: Apache-2.0
+note aarch64.om: seeded Omega port of src/aarch64_encoder.c (the legacy AArch64 instruction writer)
+note and src/aarch64_decoder.c (its decoder and code-buffer validator), with the enum numbering of
+note src/aarch64_target.h and src/aarch64_decoder.h (aien-dev/omega-mv#726). Same words, same
+note decode fields, same refusals, same validator messages as the C built with the Makefile CFLAGS.
+note
+note Exported functions (omega-bridge native call ABI v1: ulong/long scalars, fixed-length
+note ulong/uchar arrays, long result). Each a64<form> returns the 32-bit instruction word the
+note matching aarch64_emit_<form> writes, or a refusal code where the C prints
+note A64_LEGACY_FIELD_OUT_OF_RANGE and aborts: -(k+1) when field k (1-based, in the C parameter order
+note after max_len) is out of its architectural range, the first such field in the C's check order.
+note a64put b st w is the C's emit_u32_le: a refusal code passes through unwritten, else -1 when
+note st 0 + 4 > st 1 (pos, max_len), else the word goes little-endian to b at st 0, st 0 += 4, 0.
+note So aarch64_emit_<form>(buf, &pos, max_len, fields) = a64put b st a64<form> fields.
+note   a64addreg sf rd rn rm      a64subreg  a64mulreg  a64andreg  a64orrreg  a64eorreg  (same fields)
+note   a64movreg sf rd rm         a64movz sf rd imm16 shift   a64movk sf rd imm16 shift
+note   a64ret                     a64b imm26                  a64bcond cond imm19
+note   a64cbz sf rt imm19         a64cbnz sf rt imm19         a64adr rd imm21
+note   a64ldruoff sf rt rn uoff   a64struoff sf rt rn uoff    a64ldrbuoff rt rn uoff  a64strbuoff rt rn uoff
+note   a64ldrpost rt rn simm9     a64strpost  a64ldrxpost  a64strxpost  (same fields)
+note   a64subsimm sf rd rn imm12  a64subsreg sf rd rn rm
+note   a64put b st w              b edit uchar 4096 (AARCH64_MAX_CODE_BYTES), st edit ulong 2
+note   a64decode insn out         aarch64_decode_instruction; out edit ulong 9 = DecodedInsn cells
+note                              op sf rd rn rm imm16 hw branch_imm cond; returns 0 or -1
+note   a64validate code n msg ml  aarch64_validate_code_buffer; code view uchar 4096, msg edit uchar 256
+note A value outside the C parameter's type (bool sf, uint8_t register or shift, uint16_t imm16/uoff/
+note imm12, int16_t simm9, int32_t immediates and cond) traps 5: the C cannot receive it.
+
+note ---- conversions the C does by parameter type: trap 5 where the value does not fit ----
+
+fn nbool v ulong to void
+if gt v 1
+trap 5
+end
+end
+
+fn nu8 v ulong to void
+if gt v 255
+trap 5
+end
+end
+
+fn nu16 v ulong to void
+if gt v 65535
+trap 5
+end
+end
+
+fn ni16 v long to void
+if or lt v -32768 gt v 32767
+trap 5
+end
+end
+
+fn ni32 v long to void
+if or lt v -2147483648 gt v 2147483647
+trap 5
+end
+end
+
+note ---- encoder: src/aarch64_encoder.c ----
+
+note base | sf<<31 | rm<<16 | rn<<5 | rd, after CHECK3(rd, rn, rm); fields sf rd rn rm = 1 2 3 4
+fn a64rrr base ulong sf ulong rd ulong rn ulong rm ulong to long
+nbool sf
+nu8 rd
+nu8 rn
+nu8 rm
+if gt rd 31
+ret -3
+end
+if gt rn 31
+ret -4
+end
+if gt rm 31
+ret -5
+end
+w = or base shl sf 31
+w = or w shl rm 16
+w = or w shl rn 5
+ret long or w rd
+end
+
+note 0x0B000000
+fn a64addreg sf ulong rd ulong rn ulong rm ulong to long
+ret a64rrr 184549376 sf rd rn rm
+end
+
+note 1<<30 | 0x0B000000
+fn a64subreg sf ulong rd ulong rn ulong rm ulong to long
+ret a64rrr 1258291200 sf rd rn rm
+end
+
+note MADD Xd, Xn, Xm, XZR: 0x1B000000 | 0x1f<<10
+fn a64mulreg sf ulong rd ulong rn ulong rm ulong to long
+ret a64rrr 453016576 sf rd rn rm
+end
+
+note 0x0A000000
+fn a64andreg sf ulong rd ulong rn ulong rm ulong to long
+ret a64rrr 167772160 sf rd rn rm
+end
+
+note 0x2A000000
+fn a64orrreg sf ulong rd ulong rn ulong rm ulong to long
+ret a64rrr 704643072 sf rd rn rm
+end
+
+note 0x4A000000
+fn a64eorreg sf ulong rd ulong rn ulong rm ulong to long
+ret a64rrr 1241513984 sf rd rn rm
+end
+
+note ORR rd, XZR, rm after its own CHECK_REG(rd), CHECK_REG(rm); fields sf rd rm = 1 2 3
+fn a64movreg sf ulong rd ulong rm ulong to long
+nbool sf
+nu8 rd
+nu8 rm
+if gt rd 31
+ret -3
+end
+if gt rm 31
+ret -4
+end
+ret a64orrreg sf rd 31 rm
+end
+
+note MOVZ/MOVK: base | sf<<31 | (shift/16 & 3)<<21 | imm16<<5 | rd; fields sf rd imm16 shift = 1 2 3 4
+fn a64hw base ulong sf ulong rd ulong imm ulong sh ulong to long
+nbool sf
+nu8 rd
+nu16 imm
+nu8 sh
+if gt rd 31
+ret -3
+end
+mx = ulong 16
+if eq sf 1
+mx = 48
+end
+if or ne rem sh 16 0 gt sh mx
+ret -5
+end
+w = or base shl sf 31
+w = or w shl and div sh 16 3 21
+w = or w shl imm 5
+ret long or w rd
+end
+
+note 0x52800000
+fn a64movz sf ulong rd ulong imm ulong sh ulong to long
+ret a64hw 1384120320 sf rd imm sh
+end
+
+note 0x72800000
+fn a64movk sf ulong rd ulong imm ulong sh ulong to long
+ret a64hw 1920991232 sf rd imm sh
+end
+
+note 0xD65F03C0
+fn a64ret to long
+ret 3596551104
+end
+
+note 0x14000000 | imm26 & 0x03FFFFFF; imm26 in [-2^25, 2^25) is field 1
+fn a64b imm long to long
+ni32 imm
+if or lt imm -33554432 ge imm 33554432
+ret -2
+end
+ret long or 335544320 and bitcast ulong imm 67108863
+end
+
+note 0x54000000 | (imm19 & 0x7FFFF)<<5 | cond; cond 0..15 field 1, imm19 field 2
+fn a64bcond cond long imm long to long
+ni32 cond
+ni32 imm
+if or lt cond 0 gt cond 15
+ret -2
+end
+if or lt imm -262144 ge imm 262144
+ret -3
+end
+w = shl and bitcast ulong imm 524287 5
+ret long or or 1409286144 w bitcast ulong cond
+end
+
+note CBZ/CBNZ: base | sf<<31 | (imm19 & 0x7FFFF)<<5 | rt; fields sf rt imm19 = 1 2 3
+fn a64cbx base ulong sf ulong rt ulong imm long to long
+nbool sf
+nu8 rt
+ni32 imm
+if gt rt 31
+ret -3
+end
+if or lt imm -262144 ge imm 262144
+ret -4
+end
+w = or base shl sf 31
+w = or w shl and bitcast ulong imm 524287 5
+ret long or w rt
+end
+
+note 0x34000000
+fn a64cbz sf ulong rt ulong imm long to long
+ret a64cbx 872415232 sf rt imm
+end
+
+note 0x35000000
+fn a64cbnz sf ulong rt ulong imm long to long
+ret a64cbx 889192448 sf rt imm
+end
+
+note 0x10000000 | (imm21 & 3)<<29 | ((imm21 >> 2) & 0x7FFFF)<<5 | rd; fields rd imm21 = 1 2
+fn a64adr rd ulong imm long to long
+nu8 rd
+ni32 imm
+if gt rd 31
+ret -2
+end
+if or lt imm -1048576 ge imm 1048576
+ret -3
+end
+x = and bitcast ulong imm 2097151
+w = or 268435456 shl and x 3 29
+w = or w shl shr x 2 5
+ret long or w rd
+end
+
+note LDR/STR (unsigned offset): (sf ? bx : bw) | (uoff >> (sf ? 3 : 2))<<10 | rn<<5 | rt;
+note CHECK_SCALED: uoff a multiple of 8 (sf) or 4 with uoff/size <= 4095; fields sf rt rn uoff = 1 2 3 4
+fn a64ls bx ulong bw ulong sf ulong rt ulong rn ulong uo ulong to long
+nbool sf
+nu8 rt
+nu8 rn
+nu16 uo
+if gt rt 31
+ret -3
+end
+if gt rn 31
+ret -4
+end
+sc = ulong 2
+sz = ulong 4
+base = bw
+if eq sf 1
+sc = 3
+sz = 8
+base = bx
+end
+if or ne rem uo sz 0 gt div uo sz 4095
+ret -5
+end
+w = or base shl and shr uo sc 4095 10
+w = or w shl rn 5
+ret long or w rt
+end
+
+note 0xF9400000 / 0xB9400000
+fn a64ldruoff sf ulong rt ulong rn ulong uo ulong to long
+ret a64ls 4181721088 3107979264 sf rt rn uo
+end
+
+note 0xF9000000 / 0xB9000000
+fn a64struoff sf ulong rt ulong rn ulong uo ulong to long
+ret a64ls 4177526784 3103784960 sf rt rn uo
+end
+
+note LDRB/STRB (unsigned offset): base | uoff<<10 | rn<<5 | rt; uoff 0..4095; fields rt rn uoff = 1 2 3
+fn a64lsb base ulong rt ulong rn ulong uo ulong to long
+nu8 rt
+nu8 rn
+nu16 uo
+if gt rt 31
+ret -2
+end
+if gt rn 31
+ret -3
+end
+if gt uo 4095
+ret -4
+end
+w = or base shl uo 10
+w = or w shl rn 5
+ret long or w rt
+end
+
+note 0x39400000
+fn a64ldrbuoff rt ulong rn ulong uo ulong to long
+ret a64lsb 960495616 rt rn uo
+end
+
+note 0x39000000
+fn a64strbuoff rt ulong rn ulong uo ulong to long
+ret a64lsb 956301312 rt rn uo
+end
+
+note post-index: base | (simm9 & 0x1FF)<<12 | rn<<5 | rt; simm9 in [-256, 255]; fields rt rn simm9 = 1 2 3
+fn a64post base ulong rt ulong rn ulong imm long to long
+nu8 rt
+nu8 rn
+ni16 imm
+if gt rt 31
+ret -2
+end
+if gt rn 31
+ret -3
+end
+if or lt imm -256 ge imm 256
+ret -4
+end
+w = or base shl and bitcast ulong imm 511 12
+w = or w shl rn 5
+ret long or w rt
+end
+
+note 0xB8400400
+fn a64ldrpost rt ulong rn ulong imm long to long
+ret a64post 3091203072 rt rn imm
+end
+
+note 0xB8000400
+fn a64strpost rt ulong rn ulong imm long to long
+ret a64post 3087008768 rt rn imm
+end
+
+note 0xF8400400
+fn a64ldrxpost rt ulong rn ulong imm long to long
+ret a64post 4164944896 rt rn imm
+end
+
+note 0xF8000400
+fn a64strxpost rt ulong rn ulong imm long to long
+ret a64post 4160750592 rt rn imm
+end
+
+note SUBS (immediate): (sf ? 0xF1000000 : 0x71000000) | imm12<<10 | rn<<5 | rd; fields sf rd rn imm12 = 1 2 3 4
+fn a64subsimm sf ulong rd ulong rn ulong imm ulong to long
+nbool sf
+nu8 rd
+nu8 rn
+nu16 imm
+if gt rd 31
+ret -3
+end
+if gt rn 31
+ret -4
+end
+if gt imm 4095
+ret -5
+end
+base = ulong 1895825408
+if eq sf 1
+base = 4043309056
+end
+w = or base shl imm 10
+w = or w shl rn 5
+ret long or w rd
+end
+
+note SUBS (shifted register): (sf ? 0xEB000000 : 0x6B000000) | rm<<16 | rn<<5 | rd, which is
+note 0x6B000000 | sf<<31 | ...
+fn a64subsreg sf ulong rd ulong rn ulong rm ulong to long
+ret a64rrr 1795162112 sf rd rn rm
+end
+
+note emit_u32_le over a 4096-byte buffer; st 0 = *pos, st 1 = max_len. Where the C would write past
+note a 4096-byte buffer (max_len above 4096, or pos + 4 wrapping), the first byte at index 4096 or
+note beyond traps 3; the bytes below 4096 are already written.
+fn a64put b edit uchar 4096 st edit ulong 2 w long to long
+if lt w 0
+ret w
+end
+x = ulong uint w
+p = get st 0
+if gt add p 4 get st 1
+ret -1
+end
+put b p uchar and x 255
+put b add p 1 uchar and shr x 8 255
+put b add p 2 uchar and shr x 16 255
+put b add p 3 uchar shr x 24
+put st 0 add p 4
+ret 0
+end
+
+note ---- decoder: src/aarch64_decoder.c ----
+
+note op; sf = bit sb of insn unless sb is 32; rd; rn when n >= 2; rm when n >= 3
+fn dregs out edit ulong 9 op ulong insn ulong sb ulong n ulong to void
+put out 0 op
+if lt sb 32
+put out 1 and shr insn sb 1
+end
+put out 2 and insn 31
+if ge n 2
+put out 3 and shr insn 5 31
+end
+if ge n 3
+put out 4 and shr insn 16 31
+end
+end
+
+note MOVZ/MOVK fields
+fn dwide out edit ulong 9 op ulong insn ulong to void
+dregs out op insn 31 1
+put out 5 and shr insn 5 65535
+put out 6 and shr insn 21 3
+end
+
+note the checks of aarch64_decode_instruction 1-9 (RET .. SUB); 0 matched, 1 not
+fn dec1 insn ulong out edit ulong 9 to ulong
+if eq insn 3596551104
+put out 0 8
+put out 3 30
+ret 0
+end
+if eq and insn 4227858432 335544320
+put out 0 9
+put out 7 and insn 67108863
+ret 0
+end
+if eq and insn 4278190096 1409286144
+put out 0 10
+put out 8 and insn 15
+put out 7 and shr insn 5 524287
+ret 0
+end
+m = and insn 2130706432
+if eq m 872415232
+dregs out 11 insn 31 1
+put out 7 and shr insn 5 524287
+ret 0
+end
+if eq m 889192448
+dregs out 12 insn 31 1
+put out 7 and shr insn 5 524287
+ret 0
+end
+if eq and insn 2139095040 1384120320
+dwide out 7 insn
+ret 0
+end
+if eq and insn 2145418240 453016576
+dregs out 3 insn 31 3
+ret 0
+end
+m = and insn 2132803584
+if eq m 167772160
+dregs out 4 insn 31 3
+ret 0
+end
+if eq m 704643072
+dregs out 5 insn 31 3
+ret 0
+end
+if eq m 1241513984
+dregs out 6 insn 31 3
+ret 0
+end
+if eq m 184549376
+dregs out 1 insn 31 3
+ret 0
+end
+if eq m 1258291200
+dregs out 2 insn 31 3
+ret 0
+end
+ret 1
+end
+
+note the checks 10-15 (MOVK .. SUBS); 0 matched, 1 not
+fn dec2 insn ulong out edit ulong 9 to ulong
+if eq and insn 2139095040 1920991232
+dwide out 13 insn
+ret 0
+end
+if eq and insn 2667577344 268435456
+dregs out 14 insn 32 1
+ret 0
+end
+m = and insn 3208642560
+if eq m 3107979264
+dregs out 15 insn 30 2
+ret 0
+end
+if eq m 3103784960
+dregs out 16 insn 30 2
+ret 0
+end
+m = and insn 3219129344
+if eq m 3091203072
+dregs out 15 insn 30 2
+ret 0
+end
+if eq m 3087008768
+dregs out 16 insn 30 2
+ret 0
+end
+m = and insn 4290772992
+if eq m 960495616
+dregs out 17 insn 32 2
+ret 0
+end
+if eq m 956301312
+dregs out 18 insn 32 2
+ret 0
+end
+if eq and insn 2139095040 1895825408
+dregs out 19 insn 31 2
+ret 0
+end
+if eq and insn 2132803584 1795162112
+dregs out 19 insn 31 3
+ret 0
+end
+ret 1
+end
+
+note aarch64_decode_instruction: out = DecodedInsn (op sf rd rn rm imm16 hw branch_imm cond), all
+note zero first; 0, or -1 with op 0 (DECODED_INVALID). branch_imm is the raw field, not sign-extended.
+fn a64decode insn ulong out edit ulong 9 to long
+nu32 insn
+for i ulong 9
+put out i 0
+end
+if eq dec1 insn out 0
+ret 0
+end
+if eq dec2 insn out 0
+ret 0
+end
+put out 0 0
+ret -1
+end
+
+fn nu32 v ulong to void
+if gt v 4294967295
+trap 5
+end
+end
+
+note ---- validator: aarch64_validate_code_buffer and its snprintf messages ----
+
+note append the c low bytes of v (little-endian) to t at n; the new length
+fn app t edit uchar 128 n ulong v ulong c ulong to ulong
+for i ulong c
+put t add n i uchar and shr v mul i 8 255
+end
+ret add n c
+end
+
+fn hexch v ulong to ulong
+if lt v 10
+ret add v 48
+end
+ret add v 87
+end
+
+note %x of v with at least w digits (w >= 1): %08x is w 8, %zx is w 1
+fn apphex t edit uchar 128 n ulong v ulong w ulong to ulong
+k = ulong 1
+while lt k 16 bound 16
+if eq shr v mul k 4 0
+break
+end
+k = add k 1
+end
+if lt k w
+k = w
+end
+for i ulong k
+put t add n i uchar hexch and shr v mul sub sub k 1 i 4 15
+end
+ret add n k
+end
+
+note %zu / %d (nonnegative) of v
+fn appdec t edit uchar 128 n ulong v ulong to ulong
+k = ulong 1
+q = div v 10
+while gt q 0 bound 20
+k = add k 1
+q = div q 10
+end
+q = v
+for i ulong k
+put t add n sub sub k 1 i uchar add 48 rem q 10
+q = div q 10
+end
+ret add n k
+end
+
+note snprintf(msg, ml, ...) of the n bytes in t: at most ml - 1 bytes and a NUL, nothing when ml is 0
+fn snp msg edit uchar 256 ml ulong t view uchar 128 n ulong to void
+if eq ml 0
+ret
+end
+m = n
+if gt m sub ml 1
+m = sub ml 1
+end
+for i ulong m
+put msg i get t i
+end
+put msg m 0
+end
+
+note "Empty or null code buffer"
+fn msgnull t edit uchar 128 to ulong
+n = app t 0 8245845148755324229 8
+n = app t n 8026294610952547872 8
+n = app t n 7306640099798705508 8
+ret app t n 114 1
+end
+
+note "Code buffer length %zu is not a multiple of 4 bytes"
+fn msglen t edit uchar 128 v ulong to ulong
+n = app t 0 7382915055423352643 8
+n = app t n 7453005948419990886 8
+n = app t n 2123892 3
+n = appdec t n v
+n = app t n 2338616625293650208 8
+n = app t n 8100133413977923681 8
+n = app t n 2320515332325795180 8
+ret app t n 495623371106 5
+end
+
+note "Undefined/unrecognized AArch64 opcode 0x%08x at offset 0x%zx"
+fn msgop t edit uchar 128 w ulong o ulong to ulong
+n = app t 0 7308895133777555029 8
+n = app t n 8026370503058206564 8
+n = app t n 4692861198728261223 8
+n = app t n 8007457545748968001 8
+n = app t n 8660457703282271088 8
+n = apphex t n w 8
+n = app t n 8315446389458100512 8
+n = app t n 516203508837 5
+ret apphex t n o 1
+end
+
+note "Function does not terminate with RET (terminates with op %d)"
+fn msgret t edit uchar 128 op ulong to ulong
+n = app t 0 7957695015192261958 8
+n = app t n 8029390865643299872 8
+n = app t n 7956010554822500468 8
+n = app t n 7526756837608485985 8
+n = app t n 7310512214447051296 8
+n = app t n 8315180248822541682 8
+n = app t n 8101729887664568096 8
+n = app t n 32 1
+n = appdec t n op
+ret app t n 41 1
+end
+
+fn ld32 a view uchar 4096 o ulong to ulong
+x = ulong get a add o 3
+x = or shl x 8 ulong get a add o 2
+x = or shl x 8 ulong get a add o 1
+ret or shl x 8 ulong get a o
+end
+
+note the instruction loop of the validator over c words: 0 when valid, else the message length in t
+fn valscan code view uchar 4096 c ulong t edit uchar 128 d edit ulong 9 to ulong
+for i ulong c
+o = mul i 4
+w = ld32 code o
+if or ne a64decode w d 0 eq get d 0 0
+ret msgop t w o
+end
+if and eq i sub c 1 ne get d 0 8
+ret msgret t get d 0
+end
+end
+ret 0
+end
+
+note aarch64_validate_code_buffer(code, n, msg, ml): 0, or -1 with the C's message in msg.
+note ml above 256 (more capacity than msg has) traps 3 before anything is read or written.
+fn a64validate code view uchar 4096 n ulong msg edit uchar 256 ml ulong to long
+if gt ml 256
+trap 3
+end
+t = new uchar 128 0
+d = new ulong 9 0
+if eq n 0
+k = msgnull t
+snp msg ml t k
+ret -1
+end
+if ne rem n 4 0
+k = msglen t n
+snp msg ml t k
+ret -1
+end
+k = valscan code div n 4 t d
+if gt k 0
+snp msg ml t k
+ret -1
+end
+ret 0
+end
+
+note ==== parity harness: program mode only; everything above this line is the library ====
+note Reads corpus records on stdin (om/aarch64/parity/corpus.py), writes one result line per record:
+note   E form f1 f2 f3 f4   one emitter call (aarch64_emit_<form> into a fresh 4096-byte buffer), then
+note                        the decode of the written word and the round-trip mark (see README)
+note   P maxlen pos n calls a sequence of emitter calls into one buffer (buffer-full path)
+note   D word               aarch64_decode_instruction
+note   V len ml bytes       aarch64_validate_code_buffer
+note Numbers are lowercase hex without leading zeros (words: 8 digits), refusal values signed decimal.
+
+text enm "add_reg sub_reg mul_reg and_reg orr_reg eor_reg mov_reg movz ret b b_cond cbz cbnz movk adr ldr_uoff str_uoff ldrb_uoff strb_uoff ldr_post str_post ldr_x_post str_x_post subs_imm subs_reg "
+text fnm "sf rd rn rm |sf rd rn rm |sf rd rn rm |sf rd rn rm |sf rd rn rm |sf rd rn rm |sf rd rm |sf rd imm16 shift |- |imm26 |cond imm19 |sf rt imm19 |sf rt imm19 |sf rd imm16 shift |rd imm21 |sf rt rn uoff |sf rt rn uoff |rt rn uoff |rt rn uoff |rt rn simm9 |rt rn simm9 |rt rn simm9 |rt rn simm9 |sf rd rn imm12 |sf rd rn rm |"
+text tref "A64_LEGACY_FIELD_OUT_OF_RANGE aarch64_emit_"
+
+global ib uchar 1048576
+global ist ulong 2
+global ob uchar 1048576
+global obn ulong 1
+global fv ulong 4
+
+fn inb to ulong
+p = get ist 0
+if ge p get ist 1
+r = read 0 ib 0 1048576
+if le r 0
+ret 256
+end
+put ist 1 ulong r
+p = 0
+end
+put ist 0 add p 1
+ret ulong get ib p
+end
+
+fn obflush to void
+n = get obn 0
+if gt n 0
+r = write 1 ob 0 n
+end
+put obn 0 0
+end
+
+fn ob1 c ulong to void
+n = get obn 0
+if ge n 1048576
+obflush
+n = 0
+end
+put ob n uchar c
+put obn 0 add n 1
+end
+
+fn ohx v ulong to void
+ob1 32
+k = ulong 1
+while lt k 16 bound 16
+if eq shr v mul k 4 0
+break
+end
+k = add k 1
+end
+for i ulong k
+ob1 hexch and shr v mul sub sub k 1 i 4 15
+end
+end
+
+fn ohx8 v ulong to void
+ob1 32
+for i ulong 8
+ob1 hexch and shr v mul sub 7 i 4 15
+end
+end
+
+fn ohxb b ulong to void
+ob1 hexch shr b 4
+ob1 hexch and b 15
+end
+
+fn odec v long to void
+if lt v 0
+ob1 45
+end
+u = ulong 0
+if lt v 0
+u = add not bitcast ulong v 1
+else
+u = ulong v
+end
+t = new uchar 24 0
+k = ulong 0
+while true bound 21
+put t k uchar add 48 rem u 10
+k = add k 1
+u = div u 10
+if eq u 0
+break
+end
+end
+for i ulong k
+ob1 ulong get t sub sub k 1 i
+end
+end
+
+fn hexval c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+ret 16
+end
+
+fn rdcode to ulong
+c = inb
+while or eq c 10 eq c 32 bound 999999
+c = inb
+end
+ret c
+end
+
+fn rdhex to ulong
+c = inb
+while eq c 32 bound 999999
+c = inb
+end
+v = ulong 0
+while lt hexval c 16 bound 17
+v = or shl v 4 hexval c
+c = inb
+end
+ret v
+end
+
+fn sgnl v ulong to long
+if ge v 9223372036854775808
+ret neg long add not v 1
+end
+ret long v
+end
+
+note the word of emitter form f (1..25, the order of aarch64_encoder.h) on the fields in fv
+fn enca f ulong to long
+a = get fv 0
+b = get fv 1
+c = get fv 2
+d = get fv 3
+if eq f 1
+ret a64addreg a b c d
+end
+if eq f 2
+ret a64subreg a b c d
+end
+if eq f 3
+ret a64mulreg a b c d
+end
+if eq f 4
+ret a64andreg a b c d
+end
+if eq f 5
+ret a64orrreg a b c d
+end
+if eq f 6
+ret a64eorreg a b c d
+end
+if eq f 7
+ret a64movreg a b c
+end
+if eq f 8
+ret a64movz a b c d
+end
+if eq f 9
+ret a64ret
+end
+if eq f 10
+ret a64b sgnl a
+end
+if eq f 11
+ret a64bcond sgnl a sgnl b
+end
+if eq f 12
+ret a64cbz a b sgnl c
+end
+ret encb f
+end
+
+fn encb f ulong to long
+a = get fv 0
+b = get fv 1
+c = get fv 2
+d = get fv 3
+if eq f 13
+ret a64cbnz a b sgnl c
+end
+if eq f 14
+ret a64movk a b c d
+end
+if eq f 15
+ret a64adr a sgnl b
+end
+if eq f 16
+ret a64ldruoff a b c d
+end
+if eq f 17
+ret a64struoff a b c d
+end
+if eq f 18
+ret a64ldrbuoff a b c
+end
+if eq f 19
+ret a64strbuoff a b c
+end
+if eq f 20
+ret a64ldrpost a b sgnl c
+end
+if eq f 21
+ret a64strpost a b sgnl c
+end
+if eq f 22
+ret a64ldrxpost a b sgnl c
+end
+if eq f 23
+ret a64strxpost a b sgnl c
+end
+if eq f 24
+ret a64subsimm a b c d
+end
+if eq f 25
+ret a64subsreg a b c d
+end
+trap 9
+end
+
+note print the k-th (from 1) space-ended word of the f-th |-ended entry of fnm
+fn ofield f ulong k ulong to void
+e = ulong 1
+w = ulong 1
+for i ulong len fnm
+c = ulong get fnm i
+if eq c 124
+e = add e 1
+w = 1
+continue
+end
+if eq c 32
+w = add w 1
+continue
+end
+if and eq e f eq w k
+ob1 c
+end
+end
+end
+
+fn oname f ulong to void
+e = ulong 1
+for i ulong len enm
+c = ulong get enm i
+if eq c 32
+e = add e 1
+continue
+end
+if eq e f
+ob1 c
+end
+end
+end
+
+note the C's stderr line for a refusal code r of form f
+fn orefuse f ulong r long to void
+for i ulong len tref
+ob1 ulong get tref i
+end
+oname f
+ob1 32
+k = ulong sub neg r 1
+ofield f k
+ob1 61
+odec sgnl get fv sub k 1
+end
+
+fn sx v ulong bits ulong to long
+h = shl ulong 1 sub bits 1
+if ge v h
+ret sub long v long shl h 1
+end
+ret long v
+end
+
+note re-encode a decoded word whose op carries every field (-100 for the others)
+fn reenc d edit ulong 9 to long
+op = get d 0
+if and ge op 1 le op 6
+ret enc4 op get d 1 get d 2 get d 3 get d 4
+end
+if eq op 7
+ret a64movz get d 1 get d 2 get d 5 mul get d 6 16
+end
+if eq op 13
+ret a64movk get d 1 get d 2 get d 5 mul get d 6 16
+end
+if eq op 8
+ret a64ret
+end
+if eq op 9
+ret a64b sx get d 7 26
+end
+if eq op 10
+ret a64bcond long get d 8 sx get d 7 19
+end
+if eq op 11
+ret a64cbz get d 1 get d 2 sx get d 7 19
+end
+if eq op 12
+ret a64cbnz get d 1 get d 2 sx get d 7 19
+end
+ret -100
+end
+
+fn enc4 op ulong a ulong b ulong c ulong d ulong to long
+if eq op 1
+ret a64addreg a b c d
+end
+if eq op 2
+ret a64subreg a b c d
+end
+if eq op 3
+ret a64mulreg a b c d
+end
+if eq op 4
+ret a64andreg a b c d
+end
+if eq op 5
+ret a64orrreg a b c d
+end
+ret a64eorreg a b c d
+end
+
+note for a form whose decode drops fields: does the decode show the expected op and the input fields?
+fn lossok f ulong d edit ulong 9 to bool
+op = get d 0
+if eq f 15
+ret and eq op 14 eq get d 2 get fv 0
+end
+if and ge f 20 le f 23
+ret lospost f d
+end
+if and ge f 18 le f 19
+ok = and eq op sub f 1 eq get d 2 get fv 0
+ret and ok eq get d 3 get fv 1
+end
+if or lt f 16 gt f 25
+ret false
+end
+note forms 16 17 24 25: op, sf, rd, rn; and rm (0 for subs_imm) for 24 25
+eop = sub f 1
+if ge f 24
+eop = 19
+end
+ok = and eq op eop eq get d 1 get fv 0
+ok = and ok eq get d 2 get fv 1
+ok = and ok eq get d 3 get fv 2
+if eq f 24
+ok = and ok eq get d 4 0
+end
+if eq f 25
+ok = and ok eq get d 4 get fv 3
+end
+ret ok
+end
+
+fn lospost f ulong d edit ulong 9 to bool
+eop = ulong 15
+if or eq f 21 eq f 23
+eop = 16
+end
+esf = ulong 0
+if ge f 22
+esf = 1
+end
+ok = and eq get d 0 eop eq get d 1 esf
+ok = and ok eq get d 2 get fv 0
+ret and ok eq get d 3 get fv 1
+end
+
+note E form f1 f2 f3 f4
+fn doenc to void
+b = new uchar 4096 170
+st = new ulong 2 0
+d = new ulong 9 0
+f = rdhex
+for i ulong 4
+put fv i rdhex
+end
+put st 1 4096
+w = enca f
+if lt w 0
+orefuse f w
+ret
+end
+r = a64put b st w
+x = ld32 b 0
+ob1 69
+ohx8 x
+ohx bitcast ulong a64decode x d
+for i ulong 9
+ohx get d i
+end
+ob1 32
+e = reenc d
+if ge e 0
+if eq ulong e x
+ob1 61
+else
+ob1 33
+end
+ret
+end
+if lossok f d
+ob1 126
+else
+ob1 33
+end
+end
+
+note P maxlen pos n, then n times form f1 f2 f3 f4
+fn dobuf to void
+b = new uchar 4096 170
+st = new ulong 2 0
+put st 1 rdhex
+p0 = rdhex
+put st 0 p0
+n = rdhex
+ob1 80
+for j ulong n
+f = rdhex
+for i ulong 4
+put fv i rdhex
+end
+ob1 32
+odec a64put b st enca f
+end
+ohx get st 0
+ob1 32
+e = add p0 mul n 4
+if gt e 4096
+e = 4096
+end
+for i ulong sub e p0
+ohxb ulong get b add p0 i
+end
+end
+
+fn dodec to void
+d = new ulong 9 0
+w = rdhex
+ob1 68
+ohx bitcast ulong a64decode w d
+for i ulong 9
+ohx get d i
+end
+end
+
+note V len ml bytes: bytes is one hex token of len bytes ("-" when empty)
+fn doval to void
+code = new uchar 4096 0
+msg = new uchar 256 170
+n = rdhex
+ml = rdhex
+c = inb
+while eq c 32 bound 999999
+c = inb
+end
+k = ulong 0
+while lt hexval c 16 bound 999999
+e = inb
+put code k uchar or shl hexval c 4 hexval e
+k = add k 1
+c = inb
+end
+r = a64validate code n msg ml
+ob1 86
+ob1 32
+odec r
+ob1 32
+for i ulong 100
+ohxb ulong get msg i
+end
+end
+
+fn main to int
+for q ulong 4294967296
+c = rdcode
+if eq c 256
+break
+end
+if eq c 69
+doenc
+end
+if eq c 80
+dobuf
+end
+if eq c 68
+dodec
+end
+if eq c 86
+doval
+end
+ob1 10
+end
+obflush
+ret 0
+end
