@@ -1,0 +1,320 @@
+note SPDX-License-Identifier: Apache-2.0
+note select.om: the REUSE-1 #744 frozen cost selector (contract v1.0 sections 5.1, 5.2, 12;
+note integrator decision 3 fixes the calibration layout). Unit order: sha256 r1 exp check delta
+note select lib methods router. Reads R1P word 1 (family) and R1N (n) of r1.om, and the delta
+note churn counters through dlinvn and dlmissn of delta.om. Nothing here learns, times itself or
+note writes a file: every choice is a pure function of the frozen calibration and the features.
+note
+note Calibration file R1CAL001: exactly 200 words (1600 bytes), little endian:
+note   0 magic 3544386010811150674, 1 version 1, 2 E_q x 1000, 3..7 zero;
+note   cell c = ((family - 1) * 4 + path) * 12 + nclass * 4 + cclass;
+note   word 8 + 2c = p50 ns, word 9 + 2c = p90 ns, 0 = missing.
+note   path 0 full, 1 method, 2 delta, 3 bind (bind only in cclass 0).
+note   nclass by n: 0 (n <= 64), 1 (<= 512), 2 (<= 4096). cclass by changes since the previous
+note   QUERY: 0 (0), 1 (1), 2 (2..64), 3 (> 64).
+note Any other size, magic, version or a nonzero word 3..7 refuses the whole file: nothing of it is
+note kept, and the selector runs the fixed rules (cold start). p90 is never read.
+note
+note Router protocol:
+note   SLPATH  calibration path bytes up to the first 0 byte; empty or "-" = no calibration.
+note   slload  once at start: 0 loaded, 1 absent or refused.
+note   slsess  at every accepted BEGIN: clears the session's validity marks and churn state.
+note   slbind t at BEGIN or PROGRAM, t = template index or -1: bind a method at all?
+note     no calibration, or a missing bind, full or method cell (cclass 0): bind iff t >= 0;
+note     else bind iff p50(bind) < E_q (p50(full) - p50(method)), compared exactly.
+note   slset meth dval before every QUERY: which paths are valid now (full always is).
+note   slpick nchg: 1 full, 3 method, 4 delta, only ever a valid path. Lowest p50 of the valid
+note     paths for (family, nclass, cclass), ties to delta, then method, then full; no calibration
+note     or a missing cell of a valid path: the fixed rule (delta if valid, else method if bound,
+note     else full). Churn: from 64 invalidations or 64 cutoff misses in the session (counted from
+note     the slsess snapshot) delta is invalid for the rest of the session.
+note   An unsupported family (R1P word 1 not 1 or 2), n > 4096, template index outside -1..15, or
+note   a path or class id outside its range is refused before any lookup: slpick returns full,
+note   slbind returns false, and SLREF counts it (the #704 rule). No cell is indexed with such an id.
+note STATS: SLREF refusals, SLDIS churn disables (both process totals).
+
+global SLPATH uchar 4096
+global SLCAL ulong 200
+global SLOK ulong 1
+global SLBUF uchar 2048
+global SLMB ulong 1
+global SLDV ulong 1
+global SLOFF ulong 1
+global SLINV0 ulong 1
+global SLMIS0 ulong 1
+global SLREF ulong 1
+global SLDIS ulong 1
+
+fn slref to void
+put SLREF 0 add get SLREF 0 1
+end
+
+note bytes of SLPATH before the first 0; 4096 when there is none (refused by slload)
+fn slpathn to ulong
+for i ulong 4096
+if eq get SLPATH i 0
+ret i
+end
+end
+ret 4096
+end
+
+note read the open file into SLBUF until end of file; 2048 = too long or a read error
+fn slreadall fd int to ulong
+tot = ulong 0
+while lt tot 2048 bound 4096
+k = read fd SLBUF tot sub 2048 tot
+if lt k 0
+ret 2048
+end
+if eq k 0
+ret tot
+end
+tot = add tot ulong k
+end
+ret tot
+end
+
+note little-endian word i of SLBUF
+fn slword i ulong to ulong
+v = ulong 0
+p = mul i 8
+j = ulong 8
+while gt j 0 bound 8
+j = sub j 1
+v = or shl v 8 ulong get SLBUF add p j
+end
+ret v
+end
+
+note check the 1600 bytes in SLBUF; only a fully valid file is copied into SLCAL
+fn slparse to int
+if ne slword 0 3544386010811150674
+ret 1
+end
+if ne slword 1 1
+ret 1
+end
+for i ulong 5
+if ne slword add i 3 0
+ret 1
+end
+end
+for i ulong 200
+put SLCAL i slword i
+end
+put SLOK 0 1
+ret 0
+end
+
+fn slload to int
+put SLOK 0 0
+for i ulong 200
+put SLCAL i 0
+end
+pn = slpathn
+if or eq pn 0 ge pn 4096
+ret 1
+end
+if and eq pn 1 eq get SLPATH 0 45
+ret 1
+end
+fd = fopen SLPATH 0 pn 524288 0
+if lt fd 0
+ret 1
+end
+tot = slreadall int fd
+r = fclose int fd
+if or ne tot 1600 lt r 0
+ret 1
+end
+ret slparse
+end
+
+note p50 ns of one cell, 0 = missing; an id out of range is refused and counted, never indexed
+fn slcell fam ulong path ulong ncl ulong ccl ulong to ulong
+if or or lt fam 1 gt fam 2 or gt path 3 or gt ncl 2 gt ccl 3
+slref
+ret 0
+end
+if eq get SLOK 0 0
+ret 0
+end
+c = add mul add mul sub fam 1 4 path 12 add mul ncl 4 ccl
+ret get SLCAL add 8 mul 2 c
+end
+
+note n size class of R1N; 3 = unsupported (n > 4096)
+fn slncl to ulong
+n = get R1N 0
+if le n 64
+ret 0
+end
+if le n 512
+ret 1
+end
+if le n 4096
+ret 2
+end
+ret 3
+end
+
+note change class of the changes since the previous QUERY
+fn slccl nchg ulong to ulong
+if eq nchg 0
+ret 0
+end
+if eq nchg 1
+ret 1
+end
+if le nchg 64
+ret 2
+end
+ret 3
+end
+
+note high 64 bits of the 128-bit product a b
+fn slmulhi a ulong b ulong to ulong
+m = ulong 4294967295
+a0 = and a m
+a1 = shr a 32
+b0 = and b m
+b1 = shr b 32
+p01 = mul a0 b1
+p10 = mul a1 b0
+mid = add shr mul a0 b0 32 add and p01 m and p10 m
+h = add mul a1 b1 add shr p01 32 shr p10 32
+ret add h shr mid 32
+end
+
+note exact a b < c d over 128 bits
+fn slltp a ulong b ulong c ulong d ulong to bool
+h1 = slmulhi a b
+h2 = slmulhi c d
+if ne h1 h2
+ret lt h1 h2
+end
+ret lt mul a b mul c d
+end
+
+fn slsess to void
+put SLOFF 0 0
+put SLMB 0 0
+put SLDV 0 0
+put SLINV0 0 dlinvn
+put SLMIS0 0 dlmissn
+end
+
+fn slset meth bool dval bool to void
+put SLMB 0 0
+put SLDV 0 0
+if meth
+put SLMB 0 1
+end
+if dval
+put SLDV 0 1
+end
+end
+
+fn slbind t long to bool
+fam = get R1P 1
+ncl = slncl
+if or or lt fam 1 gt fam 2 gt ncl 2
+slref
+ret false
+end
+if or lt t -1 gt t 15
+slref
+ret false
+end
+if eq t -1
+ret false
+end
+if eq get SLOK 0 0
+ret true
+end
+cb = slcell fam 3 ncl 0
+cf = slcell fam 0 ncl 0
+cm = slcell fam 1 ncl 0
+if or or eq cb 0 eq cf 0 eq cm 0
+ret true
+end
+if le cf cm
+ret false
+end
+ret slltp cb 1000 get SLCAL 2 sub cf cm
+end
+
+note churn: 64 invalidations or 64 cutoff misses since slsess disable delta for the session
+fn slchurn to void
+if eq get SLOFF 0 1
+ret
+end
+inv = sub dlinvn get SLINV0 0
+mis = sub dlmissn get SLMIS0 0
+if or ge inv 64 ge mis 64
+put SLOFF 0 1
+put SLDIS 0 add get SLDIS 0 1
+end
+end
+
+fn slfixed md ulong dv ulong to int
+if eq dv 1
+ret 4
+end
+if eq md 1
+ret 3
+end
+ret 1
+end
+
+note lowest p50 among the valid paths; a missing cell of a valid path gives the fixed rule
+fn slrank fam ulong ncl ulong ccl ulong md ulong dv ulong to int
+best = int 1
+cm = ulong 0
+cd = ulong 0
+bc = slcell fam 0 ncl ccl
+if eq bc 0
+ret slfixed md dv
+end
+if eq md 1
+cm = slcell fam 1 ncl ccl
+if eq cm 0
+ret slfixed md dv
+end
+if le cm bc
+best = 3
+bc = cm
+end
+end
+if eq dv 1
+cd = slcell fam 2 ncl ccl
+if eq cd 0
+ret slfixed md dv
+end
+if le cd bc
+best = 4
+end
+end
+ret best
+end
+
+fn slpick nchg ulong to int
+fam = get R1P 1
+ncl = slncl
+if or or lt fam 1 gt fam 2 gt ncl 2
+slref
+ret 1
+end
+slchurn
+md = get SLMB 0
+dv = get SLDV 0
+if eq get SLOFF 0 1
+dv = 0
+end
+ccl = slccl nchg
+if eq get SLOK 0 0
+ret slfixed md dv
+end
+ret slrank fam ncl ccl md dv
+end
