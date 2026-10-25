@@ -23,7 +23,7 @@ At minimum inspect:
 aien-spark/omega
 aien-spark/aien-sovereign-core
 aien-spark/aegis-runtime
-aien-spark/aienos
+aien-dev/aienux
 aien-spark/physics
 
 Search for:
