@@ -1233,8 +1233,9 @@ static int promote_phase(const RxCostModel *m, RxCostModel *durable) {
 /* ---- coverage sample (default off; ORIG v2, aien-train#24/#25, benchmarks#45) ----
  * OMEGA_EMPIRICAL_COVERAGE=<n> with the record tap on: after the held-out
  * phase, n further log-uniform shapes per present core class (M, N in
- * [1, 8192], M N <= MAX_ELEMS, seed 9000 + core) are measured with the same
- * truth table and tapped as family 5. Observation only: no policy, judge,
+ * [1, 8192], M N <= MAX_ELEMS, seed base + core, base 9000 unless
+ * OMEGA_EMPIRICAL_COVERAGE_SEED=<base> is set: omega-mv#700 Turing-profile-ORIGSEL-v1.1 C3) are
+ * measured with the same truth table and tapped as family 5. Observation only: no policy, judge,
  * learner or verdict of this harness sees them. Without the tap it does nothing. */
 #define COVERAGE_MAX 640u
 
@@ -1245,14 +1246,20 @@ static uint32_t coverage_count(void) {
     return v > COVERAGE_MAX ? COVERAGE_MAX : (uint32_t)v;
 }
 
+static uint64_t coverage_base(void) {
+    const char *e = getenv("OMEGA_EMPIRICAL_COVERAGE_SEED");
+    return (e && e[0]) ? (uint64_t)strtoull(e, NULL, 10) : 9000u;
+}
+
 static void coverage_sample(uint32_t k, uint32_t count) {
-    uint64_t s = 9000u + k;
+    uint64_t base = coverage_base();
+    uint64_t s = base + k;
     uint32_t n = 0;
     tap_ctx(5, k, 0);
     while (n < count) {
         uint32_t M = log_uniform(&s, 0.0, 13.0), N = log_uniform(&s, 0.0, 13.0);
         if (M < 1 || N < 1 || (uint64_t)M * N > MAX_ELEMS || M > MAX_M || N > MAX_N) continue;
-        Job j = { M, N, calls_for(M, N), 9000u + k + (uint64_t)n * 2654435761u, 0 };
+        Job j = { M, N, calls_for(M, N), base + k + (uint64_t)n * 2654435761u, 0 };
         job_load(&j);
         uint64_t table[N_ARMS];
         truth_table_tap(&j, table);
