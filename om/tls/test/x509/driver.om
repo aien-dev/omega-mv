@@ -413,7 +413,9 @@ put ds 5 0
 put ds 7 0
 put ds 3 add get ds 3 1
 if ne drv_store st view part tk 0 n 0
+if ne e 0
 drv_mis DRERR DRBAD
+end
 ret
 end
 k = ulong 0
@@ -570,7 +572,9 @@ end
 if eq c 70
 drv_f st cl tk
 end
+if ne c 10
 drv_eol
+end
 end
 r = write 1 DRSUM 0 len DRSUM
 drv_prn get ds 3

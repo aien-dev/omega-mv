@@ -1408,6 +1408,12 @@ tls_hsdone c th
 if ne tls_gn c TLHF 4 0
 ret TLEUNEX
 end
+ret tls_apkeys c th
+end
+
+note application traffic secrets from the transcript through server Finished; installs the read key
+fn tls_apkeys c edit uchar * th view ulong * to ulong
+h = new uchar 32 0
 tls_th th h
 r = tls_drv c tls_sel TLCAP TLMS 32 TLICAP h
 r = or r tls_drv c tls_sel TLSAP TLMS 32 TLISAP h
