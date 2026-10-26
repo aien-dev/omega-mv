@@ -229,3 +229,172 @@ build `tests/compiler/test_osc_ir_decode.c` plain and with ASan/UBSan. Measured 
 - **Domain tag string.** Identity is versioned by the magic and version byte inside the hashed
   bytes (section 6), not by a separate `omega.osc.vN` tag string in the style of
   spec/program-identity.md. Adopting such a tag would change every existing OSC unit identity.
+
+## 10. Seeded memory profile: IR v2 milestone, OSC wire v7
+
+**Specification only; producer and backend qualification is separate.** The
+milestone name “IR v2 memory” does not change the meaning of wire version 2,
+which already carries structs. Wire versions 1..5 and their identity bytes
+remain unchanged. Wire version 6 remains reserved by draft PR #525 for its
+numeric-identifier/structured-contract proposal; this profile neither closes
+nor supersedes that proposal. The memory extension uses version 7. A backend
+that has not implemented this profile must refuse it, not ignore its regions.
+
+### 10.1 Header and regions
+
+All fields remain unsigned little-endian integers without wire padding:
+
+```
+magic[7] = "OSC1IR\0"
+version:u8 = 7
+nstructs:u8, structs[nstructs]       existing section 3.2 encoding
+nregions:u16, regions[nregions]
+nfuncs:u16, functions[nfuncs]        existing section 3.3 encoding
+```
+
+The struct table stays before the region table. Supporting this profile does
+not imply supporting structs: a backend may explicitly refuse a nonempty
+struct table. A region has the following encoding:
+
+| Field | Encoding and rule |
+|---|---|
+| name | u8 length, then 1..63 non-NUL ASCII bytes |
+| element | u8 scalar tag: 2..9, 13 f32, or 14 f64 |
+| storage | u8 class from the table below |
+| owner | u16 function index, or 65535 for module scope |
+| count | u32 number of elements |
+| initial length | u32 byte count |
+| initial data | exactly initial-length bytes |
+
+Region IDs are zero-based table indices, not addresses or value registers.
+Table order is source declaration order; names and order participate in
+identity. Names are unique within an owner scope and may not shadow a module
+region in an owning function. The initial profile admits at most 1024 regions.
+Mutable regions have 1..16777216 elements; an empty read-only text is allowed.
+Existing native aggregate capacity limits still apply to source compilation.
+Backends check each element-count multiplication, alignment and aggregate
+addition for overflow before allocating or emitting memory. Source global
+pools retain the native 1 GiB aggregate limit and local arrays the native
+4 MiB aggregate limit. Backend input/output limits remain independently
+enforced; an unsupported size is a capacity refusal, never truncation.
+
+| Class | Meaning | Owner and initialization |
+|---|---|---|
+| 0 | Module-private mutable global | owner 65535; no initial data; zero-filled once per module instance |
+| 1 | Function-local mutable array | owner is its function; no initial data; fresh logical storage on every invocation |
+| 2 | Read-only text | owner 65535; element u8; initial length equals count; no implicit NUL |
+| 3 | Reserved Workgroup | refused until initialization, synchronization and invocation ownership have a specified extension |
+
+No other class is admitted. Function-local regions are accessible only by
+their owning function. Calls remain restricted to earlier functions, so
+there is no recursive or reentrant invocation within a module call.
+An implementation may reuse physical storage for a function-local region
+between calls, but no previous invocation's values may be observed.
+The source initializer is evaluated once, at the `new` declaration, and fills
+every element before the array is accessible. Its value is not a module data
+segment. Input validation must establish that every local-region access is
+dominated by initialization of that region on the current invocation.
+
+Global and local scalar storage use a one-element region. This does not
+introduce a new source spelling for scalar globals.
+
+For a future SPIR-V backend, class 1 maps to Function storage and class 2 to
+read-only constant storage. Class 0 requires an explicitly persistent
+CrossWorkgroup state ABI, or a named refusal: SPIR-V Private storage is
+per-work-item and cannot implement persistence between module calls.
+Class 3 is reserved rather than pretending a CPU global supplies barriers.
+
+### 10.2 Instructions and bounds
+
+Existing opcodes, including reference LOAD/STORE 9/10, retain their meaning.
+The following instructions are appended; every operand below is u16:
+
+| Opcode | Name | Operands |
+|---|---|---|
+| 30 | RLOAD | destination register, region ID, index register |
+| 31 | RSTORE | region ID, index register, source register |
+| 32 | BITCAST | destination register, source register |
+
+RLOAD's destination and RSTORE's source have exactly the region element type.
+Indices have an integer tag 2..9, never bool or float. Signed negative indices
+and indices greater than or equal to count trap with Omega bounds trap 3
+(native exit 103). Bounds are checked before multiplication, addition,
+pointer formation or narrowing to a wasm32 address. An invalid operation
+does not read or write its target element. Earlier side effects remain.
+RSTORE into read-only storage is invalid IR, not a silently ignored store.
+Index and source registers participate in definite-assignment validation.
+
+There is no unchecked access mode in this profile. An explicit source bounds
+test can select a nontrapping path, but it does not disable checks on the
+access. The backend may eliminate a check only when it proves the same
+in-bounds condition. Whole-linear-memory wasm bounds checks alone are
+insufficient: crossing into the next region must still trap.
+
+Arrays use packed element widths: u8/i8 one byte, u16/i16 two, u32/i32/f32
+four, u64/i64/f64 eight. Each region starts at an address aligned to its
+element width; no padding exists between elements. Region base addresses
+are backend layout, not IR identity. Struct cells retain their separate
+existing layout. Loads/stores preserve little-endian scalar bits.
+
+BITCAST requires equal scalar widths, excludes bool and references, and
+reinterprets bits without numeric conversion. Unsupported combinations are
+invalid IR.
+
+### 10.3 Floating-point types and canonical version selection
+
+Wire tags 13 and 14 mean f32 and f64. Tags 10..12 keep their historical
+reference/bytes/cells meanings. The producer must explicitly map its
+internal float tags rather than serialize them as wire tags.
+CONST keeps its eight-byte immediate: f32 occupies the low half with a zero
+upper half; f64 occupies the complete immediate.
+
+Existing BIN add/sub/mul/div, UN negation, and CMP eq/ne/lt/le/gt/ge accept
+matching float operands. Float bitwise operations, shifts and remainder
+are invalid. NaN comparisons follow IEEE semantics: only ne is true.
+CAST follows the native conversion contract, including truncating,
+saturating float-to-integer conversion and NaN to zero; ordinary trapping
+wasm float conversion is not an equivalent lowering. Floating-point
+intrinsics need their own specified subcodes and are not silently lowered
+as ordinary calls.
+
+Select wire v7 if and only if the unit has a region, a float type, or an
+opcode introduced by this profile. Otherwise retain the existing v1..5
+selection rule. A gratuitous v7 encoding of an old-only unit is refused.
+Old readers remain valid for their declared versions and must refuse v7.
+
+### 10.4 Backend and qualification obligations
+
+The wasm backend exports its memory as `memory` and every function by its
+original unique ASCII name. That name is reserved against a function export
+collision. Read-only initial bytes become active data segments; the source
+read-only property is enforced for generated Omega instructions, not a
+security barrier against a JavaScript holder of exported memory.
+An immutable i32 global named `region.NAME` exports each module region's
+byte offset; local arrays have no exported address. Source names cannot
+contain the dot separator. Consumers use a typed view of exported memory
+and call exported scalar functions once per frame. There are no imports,
+WASI calls, implicit rendering loop, or allocation through JavaScript.
+
+Wasm traps are `WebAssembly.RuntimeError`; MVP does not preserve numeric
+Omega trap codes. A producer reports ordinary source errors: 7 type
+mismatch, 9 unsupported context, 14 table capacity, 20 write to text/view,
+21 constant index out of bounds and 23 storage capacity. A v7 backend keeps
+the existing named refusal exits and empty stdout on parse/type/capacity
+refusal; unknown storage classes are INVALID, unsupported profile features
+are UNSUPPORTED_OP or UNSUPPORTED_TAG, and unsupported wire versions are
+VERSION. Refusal is not a successful empty module.
+
+Required qualification includes native/wasm scalar and memory parity;
+u8/i32/f32/f64 round trips; text data; local reinitialization on repeated
+calls; region-boundary, negative and wide-index traps; refusal of read-only
+stores and foreign local ownership; deterministic module bytes; an RGBX
+gradient framebuffer checksum comparison; a real pinned renderer primitive
+with a full-buffer pixel comparison; and a changed-store or missing-check
+mutant rejected by those checks. Existing v1 parity and refusal suites must
+remain unchanged and green. Host evidence does not qualify GPU execution.
+The new wire also needs an independent read-only oracle that decodes its
+region table, validates ownership/types/initialization, and executes memory
+instructions. Native/wasm agreement alone is not sufficient if both share a
+producer bug. Hand-encoded valid and malformed units challenge that oracle
+and both backends; the original pinned C renderer remains an independent
+pixel reference rather than a translation of the Omega implementation.
