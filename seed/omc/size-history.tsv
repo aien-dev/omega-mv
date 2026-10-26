@@ -1,0 +1,6 @@
+rewrite	change	source_lines	functions	words	sha256
+R5	first omc, om4 subset only (calls go to earlier functions only, so the value reader is one self-recursive function)	3101	123	18641	10d7565239ca6bd3cca344b65a03c0f3498acd95e82ab3d420bd01408b01398e
+R5b	names pass: a call may name any function in the unit; mutual recursion in program mode; a call cycle in function mode is error 9; a function name used as a statement is error 7	3212	125	19143	191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+R6-IR-trap	experimental scalar IR + explicit trap lowering (L524); bounded R6 checkpoint	4551	185	29096	d61d76156688320aa7f70327a34cc34901814bfbaa15e4659bc9cf13714fbf76
+R6-unified-eol	unified omc (lang/all merged into the native line): lenval takes the end-of-line error code, so a pool, new array or parameter without its length is error 16 again (as om4 and OMEGESE s.7) while trap and bound keep error 4; om4-superset list for gate5 section 3	7838	266	56103	734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+RM2-contracts	executable pure contracts, debug checks and release erasure	11505	389	76931	378652893d0475a41ec5d48ce43754e3886d606f5a6fb1e41172d998d729b48a
