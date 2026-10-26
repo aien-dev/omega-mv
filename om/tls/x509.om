@@ -1430,7 +1430,8 @@ continue
 end
 if or lt c 48 gt c 57
 dig = 0
-if not or or and ge c 97 le c 122 and ge c 65 le c 90 eq c 45
+lc = chain_low c
+if and or lt lc 97 gt lc 122 ne c 45
 ret X5ENAME
 end
 end
@@ -1585,22 +1586,36 @@ if or lt kt 2 gt kt 3
 ret X5EALG
 end
 end
-dl = sha2_digest hb part cd get rr X5RTBO get rr X5RTBL edit hs
+p = new ulong 6 0
+put p 0 add div sub a 1 3 1
+put p 1 hb
+put p 2 get rr add X5RSZ X5RKO
+put p 3 get rr add X5RSZ X5RKL
+put p 4 kt
+to = get rr X5RTBO
+tl = get rr X5RTBL
+put p 5 sha2_digest hb part cd to tl edit hs
+dl = get p 5
 so = get rr X5RSGO
 for i ulong sl
 put hs add dl i get cd add so i
 end
-ko = get rr add X5RSZ X5RKO
-kl = get rr add X5RSZ X5RKL
+ret chain_vfy kd view part hs 0 add dl sl p
+end
+
+note chain_vfy: hs = digest (p[5] bytes) || signature, key in kd[p[2] .. +p[3]); p[0] 1 PKCS#1 v1.5,
+note 2 PSS, 3 ECDSA; p[1] hash, p[4] key type. 0 or X5ESIG.
+fn chain_vfy kd view uchar * hs view uchar * p view ulong * to ulong
+k = get p 0
 v = ulong 1
-if le a 3
-v = rsa_verify_pkcs1 hb part kd ko kl view part hs 0 add dl sl dl
+if eq k 1
+v = rsa_verify_pkcs1 get p 1 part kd get p 2 get p 3 hs get p 5
 end
-if and ge a 4 le a 6
-v = rsa_verify_pss chain_ctl hb part kd ko kl view part hs 0 add dl sl dl
+if eq k 2
+v = rsa_verify_pss chain_ctl get p 1 part kd get p 2 get p 3 hs get p 5
 end
-if ge a 7
-v = ecdsa_verify chain_crv kt part kd ko kl view part hs 0 add dl sl dl
+if eq k 3
+v = ecdsa_verify chain_crv get p 4 part kd get p 2 get p 3 hs get p 5
 end
 if ne v 0
 ret X5ESIG

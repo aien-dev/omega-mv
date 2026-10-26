@@ -1592,3 +1592,475 @@ end
 put c TLPH 1
 ret 0
 end
+
+note ---- application data ----
+note KeyUpdate (RFC 8446 section 4.6.3): new read key; answer update_requested once
+fn tls_kupd c edit uchar * to ulong
+if ne tls_gn c add TLHB 1 3 1
+ret TLEDEC
+end
+v = ulong get c add TLHB 4
+if gt v 1
+ret TLEKUPD
+end
+tls_hsdrop c
+if ne tls_gn c TLHF 4 0
+ret TLEUNEX
+end
+e = new uchar 1 0
+r = tls_drv c tls_sel TLSAP TLSAP 32 TLIUPD part e 0 0
+r = or r tls_keys c TLSAP 1
+if eq v 1
+b = add TLWB 5
+put c b 24
+tls_pn c add b 1 1 3
+put c add b 4 0
+x = tls_wrbuf c 22 5
+if ne x 0
+ret x
+end
+r = or r tls_drv c tls_sel TLCAP TLCAP 32 TLIUPD part e 0 0
+r = or r tls_keys c TLCAP 0
+end
+if ne r 0
+ret TLEARG
+end
+ret 0
+end
+
+note post-handshake handshake records: NewSessionTicket is ignored (no resumption), KeyUpdate
+note handled, anything else refused
+fn tls_post c edit uchar * to ulong
+f = tls_gn c TLHF 4
+n = tls_gn c add TLRB 3 2
+if or eq n 0 gt add f n TLHBSZ
+ret TLEUNEX
+end
+tls_mov c add TLHB f add TLRB 5 n
+f = add f n
+tls_pn c TLHF f 4
+while ge f 4 bound 4096
+ml = add tls_gn c add TLHB 1 3 4
+if gt ml TLHBSZ
+ret TLEBIG
+end
+if lt f ml
+ret 0
+end
+t = ulong get c TLHB
+if eq t 4
+tls_hsdrop c
+else
+if ne t 24
+ret TLEUNEX
+end
+e = tls_kupd c
+if ne e 0
+ret e
+end
+end
+f = tls_gn c TLHF 4
+end
+ret 0
+end
+
+note copy pending application bytes into o; returns the count
+fn tls_take c edit uchar * o edit uchar * to ulong
+po = tls_gn c TLPO 4
+pn = tls_gn c TLPN 4
+n = pn
+if gt n len o
+n = len o
+end
+for i ulong n
+put o i get c add add add TLRB 5 po i
+end
+tls_pn c TLPO add po n 4
+tls_pn c TLPN sub pn n 4
+ret n
+end
+
+note tls_read: decrypted application bytes into o. Returns the count (> 0), 0 at the peer's
+note close_notify, or minus an error code (a TCP end without close_notify is -TLS_ERR_EOF)
+fn tls_read c edit uchar * o edit uchar * to long
+ph = get c TLPH
+if eq ph 2
+ret 0
+end
+if ne ph 1
+ret neg long TLESTAT
+end
+if eq len o 0
+ret 0
+end
+while true bound 999999
+if gt tls_gn c TLPN 4 0
+ret long tls_take c o
+end
+e = tls_rdrec c
+if eq e 0
+e = tls_rdapp c
+end
+if eq e TLCLOSE
+put c TLPH 2
+ret 0
+end
+if ne e 0
+ret neg long tls_abort c e
+end
+end
+ret neg long tls_abort c TLEUNEX
+end
+
+note dispatch one received record after the handshake
+fn tls_rdapp c edit uchar * to ulong
+ty = ulong get c TLRB
+if eq ty 23
+tls_pn c TLPO 0 4
+tls_pn c TLPN tls_gn c add TLRB 3 2 4
+ret 0
+end
+if eq ty 21
+ret tls_ralert c
+end
+if eq ty 22
+ret tls_post c
+end
+ret TLEUNEX
+end
+
+note tls_write: send all of m as application data; returns len m or minus an error code
+fn tls_write c edit uchar * m view uchar * to long
+if ne get c TLPH 1
+ret neg long TLESTAT
+end
+off = ulong 0
+while lt off len m bound 999999
+k = sub len m off
+if gt k 16384
+k = 16384
+end
+for i ulong k
+put c add add TLWB 5 i get m add off i
+end
+e = tls_wrbuf c 23 k
+if ne e 0
+ret neg long tls_abort c e
+end
+off = add off k
+end
+ret long len m
+end
+
+note tls_close: send close_notify (when connected) and wipe the key material. The caller closes fd.
+fn tls_close c edit uchar * to void
+if eq get c TLPH 1
+put c add TLWB 5 1
+put c add TLWB 6 0
+e = tls_wrbuf c 21 2
+end
+put c TLPH 2
+tls_zero c TLWKEY 96
+tls_zero c TLCAP 64
+tls_zero c TLEPK 320
+end
+
+note ---- DNS A lookup (RFC 1035) over UDP to the first IPv4 nameserver in /etc/resolv.conf ----
+note Only A records (IPv4). The first A record of class IN in the answer section is used.
+note Response checks: id, QR, opcode 0, RCODE 0, TC clear, one question equal to ours.
+const DNBUF ulong 4096
+
+note parse dotted IPv4 at b[o..z) into ip[0..4); 1 on success
+fn dns_ip4 b view uchar * o ulong z ulong ip edit uchar * to ulong
+k = ulong 0
+v = ulong 0
+dg = ulong 0
+p = o
+while lt p z bound 64
+ch = ulong get b p
+if and ge ch 48 le ch 57
+v = add mul v 10 sub ch 48
+dg = add dg 1
+if or gt v 255 gt dg 3
+ret 0
+end
+else
+if or ne ch 46 or eq dg 0 ge k 3
+ret 0
+end
+put ip k uchar v
+k = add k 1
+v = 0
+dg = 0
+end
+p = add p 1
+end
+if or ne k 3 eq dg 0
+ret 0
+end
+put ip 3 uchar v
+ret 1
+end
+
+note first "nameserver a.b.c.d" line of /etc/resolv.conf into ip; 0 or TLEDNS
+fn dns_conf ip edit uchar * to ulong
+b = new uchar 4096 0
+fd = fopen TLRESOLV 0 len TLRESOLV 524288 0
+if lt fd 0
+ret TLEDNS
+end
+n = read int fd b 0 4096
+x = fclose int fd
+if le n 0
+ret TLEDNS
+end
+z = ulong n
+s = ulong 0
+while lt s z bound 4096
+e = s
+while and lt e z ne get b e 10 bound 4096
+e = add e 1
+end
+if eq dns_nsline b s e ip 1
+ret 0
+end
+s = add e 1
+end
+ret TLEDNS
+end
+
+note 1 when b[s..e) is "nameserver" whitespace IPv4 (parsed into ip)
+fn dns_nsline b view uchar * s ulong e ulong ip edit uchar * to ulong
+if lt sub e s 12
+ret 0
+end
+if ne tls_cteq TLNS b s 10 0
+ret 0
+end
+p = add s 10
+if and ne get b p 32 ne get b p 9
+ret 0
+end
+while and lt p e or eq get b p 32 eq get b p 9 bound 4096
+p = add p 1
+end
+q = p
+while and lt q e and ne get b q 32 and ne get b q 9 ne get b q 13 bound 4096
+q = add q 1
+end
+ret dns_ip4 b p q ip
+end
+
+note query for hn type A at q[0..); returns its length (0 when hn is not a valid name)
+fn dns_query q edit uchar * hn view uchar * id ulong to ulong
+tls_pn q 0 id 2
+tls_pn q 2 256 2
+tls_pn q 4 1 2
+tls_zero q 6 6
+p = ulong 12
+s = ulong 0
+hl = len hn
+for i ulong add hl 1
+if or eq i hl eq get hn i 46
+l = sub i s
+if or eq l 0 gt l 63
+ret 0
+end
+put q p uchar l
+for j ulong l
+put q add add p 1 j get hn add s j
+end
+p = add add p 1 l
+s = add i 1
+end
+end
+put q p 0
+tls_pn q add p 1 1 2
+tls_pn q add p 3 1 2
+ret add p 5
+end
+
+note skip a (possibly compressed) name at r[p..z); returns the offset after it or 0
+fn dns_skip r view uchar * p0 ulong z ulong to ulong
+p = p0
+while lt p z bound 128
+l = ulong get r p
+if eq l 0
+ret add p 1
+end
+if eq and l 192 192
+if gt add p 2 z
+ret 0
+end
+ret add p 2
+end
+if ne and l 192 0
+ret 0
+end
+p = add add p 1 l
+end
+ret 0
+end
+
+note answer check and first A record into ip; q is our whole query; 0 or TLEDNS
+fn dns_parse r view uchar * q view uchar * ip edit uchar * to ulong
+ql = len q
+if lt len r ql
+ret TLEDNS
+end
+if ne tls_cteq q r 0 2 0
+ret TLEDNS
+end
+fl = tls_gn r 2 2
+if ne and fl 33295 32768
+ret TLEDNS
+end
+if ne tls_gn r 4 2 1
+ret TLEDNS
+end
+if ne dns_qeq q r ql 0
+ret TLEDNS
+end
+an = tls_gn r 6 2
+ret dns_ans r ql an ip
+end
+
+note 0 when the question of r equals ours (ASCII case-insensitive), q[12..ql)
+fn dns_qeq q view uchar * r view uchar * ql ulong to ulong
+for i ulong sub ql 12
+a = ulong get q add 12 i
+b = ulong get r add 12 i
+if and ge a 65 le a 90
+a = add a 32
+end
+if and ge b 65 le b 90
+b = add b 32
+end
+if ne a b
+ret 1
+end
+end
+ret 0
+end
+
+fn dns_ans r view uchar * p0 ulong an ulong ip edit uchar * to ulong
+p = p0
+z = len r
+for k ulong an
+p = dns_skip r p z
+if or eq p 0 gt add p 10 z
+ret TLEDNS
+end
+t = tls_gn r p 2
+cl = tls_gn r add p 2 2
+dl = tls_gn r add p 8 2
+p = add p 10
+if gt add p dl z
+ret TLEDNS
+end
+if and eq t 1 and eq cl 1 eq dl 4
+for i ulong 4
+put ip i get r add p i
+end
+ret 0
+end
+p = add p dl
+end
+ret TLEDNS
+end
+
+note sockaddr_in for ip:port into sa[0..16)
+fn tcp_sa sa edit uchar * ip view uchar * port ulong to void
+tls_zero sa 0 16
+put sa 0 2
+tls_pn sa 2 port 2
+for i ulong 4
+put sa add 4 i get ip i
+end
+end
+
+note resolve hn to an IPv4 address in ip[0..4) (two attempts, 3 s each); 0 or TLEDNS
+fn dns_a4 hn view uchar * ip edit uchar * to ulong
+ns = new uchar 4 0
+if ne dns_conf ns 0
+ret TLEDNS
+end
+q = new uchar 300 0
+idb = new uchar 2 0
+if ne random idb 0 2 0 2
+ret TLERAND
+end
+ql = dns_query q hn tls_gn idb 0 2
+if eq ql 0
+ret TLEDNS
+end
+for t ulong 2
+if eq dns_try ns part q 0 ql ip 0
+ret 0
+end
+end
+ret TLEDNS
+end
+
+fn dns_try ns view uchar * q view uchar * ip edit uchar * to ulong
+sa = new uchar 16 0
+r = new uchar 4096 0
+tcp_sa sa ns 53
+fd = socknew 2 524290 0
+if lt fd 0
+ret TLEDNS
+end
+f = int fd
+e = ulong TLEDNS
+if eq connect f sa 0 16 0
+if eq send f q 0 len q 0 long len q
+w = waitio f 1 3000000000
+if gt w 0
+n = recv f r 0 4096 0
+if gt n 0
+e = dns_parse part r 0 ulong n q ip
+end
+end
+end
+end
+x = fclose f
+ret e
+end
+
+note TCP connect to ip:port, non-blocking with a 10 s limit; returns fd (>= 0) or minus a code
+fn tcp_open4 ip view uchar * port ulong to long
+sa = new uchar 16 0
+tcp_sa sa ip port
+fd = socknew 2 526337 0
+if lt fd 0
+ret neg long TLECONN
+end
+f = int fd
+r = connect f sa 0 16
+if eq r -115
+w = waitio f 4 10000000000
+if le w 0
+x = fclose f
+ret neg long TLECONN
+end
+r = connect f sa 0 16
+if eq r -106
+r = 0
+end
+end
+if ne r 0
+x = fclose f
+ret neg long TLECONN
+end
+ret fd
+end
+
+note tls_dial: DNS A lookup of hn and a TCP connection to port; fd or minus a code
+fn tls_dial hn view uchar * port ulong to long
+ip = new uchar 4 0
+e = dns_a4 hn ip
+if ne e 0
+ret neg long e
+end
+ret tcp_open4 ip port
+end

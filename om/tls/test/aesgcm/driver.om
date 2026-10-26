@@ -1,0 +1,745 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: program-mode test driver for om/tls/aesgcm.om (concatenated after `om2` and the
+note library). Reads records from stdin (at most 16 MiB), one per line, fields separated by one space,
+note hex fields in lowercase or uppercase, "-" for an empty field:
+note   B KEY PT CT                      FIPS 197 single block: AES-KEY(PT) = CT (16-byte blocks)
+note   E KEY IV AAD PT CT TAG           CAVP encrypt vector: seal(PT) = CT || TAG, open(CT || TAG)
+note                                    = PT, and open with the last tag byte flipped returns 1 and
+note                                    zeroes the data area (tamper control)
+note   D KEY IV AAD CT TAG PT           CAVP decrypt vector: open(CT || TAG) = PT; PT is FAIL when
+note                                    open must return 1 and zero the data area
+note   W TCID V|I KEY IV AAD MSG CT TAG Wycheproof: V as E; I: open returns 1 and zeroes the data
+note                                    area, or, for an empty IV, seal and open both return 2
+note   X CTL KIALEN BUFLEN WANT         seal and open with ctl on zero arrays both return WANT
+note   Y KNLEN AADLEN BUFLEN WANT       aead_aes128gcm_seal/open on zero arrays both return WANT
+note   T N                              seal then open N zero bytes (N <= 1048576, key/IV fixed);
+note                                    prints "aesgcm speed bytes=N seal_ns=S open_ns=O"
+note Every E, D and W vector whose shape is AES-128, 12-byte IV, 16-byte tag also runs through
+note aead_aes128gcm_seal/open (same expectations, tamper control included).
+note Lines that are empty or start with # are skipped; a trailing carriage return is allowed.
+note Prints "MISMATCH line L" (wrong result) or "BAD line L" (malformed record) per failure, then
+note "aesgcm driver: C checks, F failed". Exit 0 only when F is 0 and C is above 0; exit 1 otherwise;
+note exit 2 when the input cannot be read or exceeds 16 MiB.
+
+global inp uchar 16777216
+global st ulong 16
+global ob uchar 32
+global one uchar 1
+text tfail "MISMATCH line "
+text tbad "BAD line "
+text tsum "aesgcm driver: "
+text tchk " checks, "
+text tfld " failed\n"
+text tnl "\n"
+text tio "aesgcm driver: cannot read input or input over 16 MiB\n"
+text tspd "aesgcm speed bytes="
+text tsns " seal_ns="
+text tons " open_ns="
+
+note st: 0 input length, 1 cursor, 2 line number, 3 malformed flag, 4 line start,
+note 5 key bytes, 6 iv bytes, 7 aad bytes, 8 plaintext bytes, 9 ciphertext bytes, 10 tag bytes,
+note 11 expected-failure flag (D FAIL, W I)
+
+fn dslurp to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+r = read 0 one 0 1
+if ne r 0
+ret 2
+end
+break
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put st 0 t
+ret 0
+end
+
+fn dpeek to ulong
+c = get st 1
+if ge c get st 0
+ret 256
+end
+ret ulong get inp c
+end
+
+fn dadv to void
+put st 1 add get st 1 1
+end
+
+fn dbad to void
+put st 3 1
+end
+
+fn dhexv c ulong to ulong
+if ge c 48
+if le c 57
+ret sub c 48
+end
+end
+if ge c 97
+if le c 102
+ret sub c 87
+end
+end
+if ge c 65
+if le c 70
+ret sub c 55
+end
+end
+ret 16
+end
+
+fn dspace to void
+if ne dpeek 32
+dbad
+ret
+end
+dadv
+end
+
+note a decimal number at the cursor (1 to 9 digits)
+fn dnum to ulong
+v = ulong 0
+k = ulong 0
+while true bound 10
+c = dpeek
+if lt c 48
+break
+end
+if gt c 57
+break
+end
+v = add mul v 10 sub c 48
+k = add k 1
+dadv
+end
+if eq k 0
+dbad
+end
+if gt k 9
+dbad
+end
+ret v
+end
+
+note a hex field at the cursor into a[o ..); the byte count ("-" is 0 bytes)
+fn dhexf a edit uchar 65536 o ulong to ulong
+if eq dpeek 45
+dadv
+ret 0
+end
+n = ulong 0
+while true bound 65537
+hi = dhexv dpeek
+if gt hi 15
+break
+end
+dadv
+lo = dhexv dpeek
+if gt lo 15
+dbad
+break
+end
+dadv
+if ge add o n 65536
+dbad
+break
+end
+put a add o n uchar or shl hi 4 lo
+n = add n 1
+end
+if eq n 0
+dbad
+end
+ret n
+end
+
+fn deor to void
+if eq dpeek 13
+dadv
+end
+c = dpeek
+if eq c 10
+dadv
+ret
+end
+if ne c 256
+dbad
+end
+end
+
+fn dskip to void
+while true bound 999999
+c = dpeek
+if eq c 256
+ret
+end
+dadv
+if eq c 10
+ret
+end
+end
+end
+
+note 0 when a[0..n) = b[0..n)
+fn dcmp a view uchar 65536 b view uchar 65536 n ulong to ulong
+d = ulong 0
+for i ulong n
+if ne get a i get b i
+d = 1
+end
+end
+ret d
+end
+
+note 0 when a[0..n) is all zero
+fn dzero a view uchar 65536 n ulong to ulong
+d = ulong 0
+for i ulong n
+if ne get a i 0
+d = 1
+end
+end
+ret d
+end
+
+fn dcopy a edit uchar 65536 b view uchar 65536 n ulong to void
+for i ulong n
+put a i get b i
+end
+end
+
+fn dprn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put ob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 ob sub 32 k k
+end
+
+fn dmsg bad ulong ln ulong to void
+if eq bad 1
+r = write 1 tbad 0 len tbad
+else
+r = write 1 tfail 0 len tfail
+end
+dprn ln
+r = write 1 tnl 0 1
+end
+
+note ctl of the current record: klen + 256 tlen + 65536 ivlen
+fn dctl to ulong
+ret or or get st 5 shl get st 10 8 shl get st 6 16
+end
+
+note key || iv || aad length
+fn dka to ulong
+ret add add get st 5 get st 6 get st 7
+end
+
+note data || tag length
+fn dbn to ulong
+ret add get st 8 get st 10
+end
+
+note 1 when the record has the TLS shape (AES-128, 12-byte IV, 16-byte tag)
+fn dtls to ulong
+if ne get st 5 16
+ret 0
+end
+if ne get st 6 12
+ret 0
+end
+if ne get st 10 16
+ret 0
+end
+ret 1
+end
+
+note seal pt into buf; 0 when it returns 0 and buf = ex (data || tag)
+fn dseal kia view uchar 65536 pt view uchar 65536 ex view uchar 65536 buf edit uchar 65536 to ulong
+n = dbn
+dcopy buf pt get st 8
+r = aes_gcm_seal dctl part kia 0 dka part buf 0 n
+if ne r 0
+ret 1
+end
+ret dcmp buf ex n
+end
+
+note open buf (data || tag); 0 when it returns 0 and buf[0..pl) = pt
+fn dopen kia view uchar 65536 pt view uchar 65536 buf edit uchar 65536 to ulong
+r = aes_gcm_open dctl part kia 0 dka part buf 0 dbn
+if ne r 0
+ret 1
+end
+ret dcmp buf pt get st 8
+end
+
+note open buf; 0 when it returns want and, for want 1, the data area is zero
+fn dfail kia view uchar 65536 buf edit uchar 65536 want ulong to ulong
+r = aes_gcm_open dctl part kia 0 dka part buf 0 dbn
+if ne r want
+ret 1
+end
+if eq want 1
+ret dzero buf get st 8
+end
+ret 0
+end
+
+note tamper control: ex with its last byte flipped must be refused (1, data area zero)
+fn dtamp kia view uchar 65536 ex view uchar 65536 buf edit uchar 65536 to ulong
+n = dbn
+dcopy buf ex n
+put buf sub n 1 xor get buf sub n 1 1
+ret dfail kia buf 1
+end
+
+note aad of the record (kia after key and iv) into aa
+fn daad kia view uchar 65536 aa edit uchar 65536 to void
+o = add get st 5 get st 6
+for i ulong get st 7
+put aa i get kia add o i
+end
+end
+
+note aead_aes128gcm_open on buf; 0 when it returns want and, for 0, buf = pt, for 1, zero data
+fn daopen kia view uchar 65536 pt view uchar 65536 buf edit uchar 65536 aa view uchar 65536 want ulong to ulong
+r = aead_aes128gcm_open part kia 0 28 part aa 0 get st 7 part buf 0 dbn
+if ne r want
+ret 1
+end
+if eq want 0
+ret dcmp buf pt get st 8
+end
+ret dzero buf get st 8
+end
+
+note the TLS-shaped encrypt checks through aead_aes128gcm_*: seal, open, tamper
+fn daseal kia view uchar 65536 pt view uchar 65536 ex view uchar 65536 buf edit uchar 65536 aa edit uchar 65536 to ulong
+daad kia aa
+n = dbn
+dcopy buf pt get st 8
+f = ulong 0
+if ne aead_aes128gcm_seal part kia 0 28 part aa 0 get st 7 part buf 0 n 0
+f = 1
+end
+f = or f dcmp buf ex n
+f = or f daopen kia pt buf aa 0
+dcopy buf ex n
+put buf sub n 1 xor get buf sub n 1 1
+f = or f daopen kia pt buf aa 1
+ret f
+end
+
+note an encrypt-direction vector (E, W V): seal, open, tamper, and the TLS path
+fn dvalid kia view uchar 65536 pt view uchar 65536 ex view uchar 65536 buf edit uchar 65536 aa edit uchar 65536 to ulong
+if ne get st 8 get st 9
+dbad
+ret 2
+end
+f = dseal kia pt ex buf
+dcopy buf ex dbn
+f = or f dopen kia pt buf
+f = or f dtamp kia ex buf
+if eq dtls 1
+f = or f daseal kia pt ex buf aa
+end
+ret f
+end
+
+note a vector that must be refused (D FAIL, W I)
+fn dinval kia view uchar 65536 pt view uchar 65536 ex view uchar 65536 buf edit uchar 65536 aa edit uchar 65536 to ulong
+n = dbn
+dcopy buf ex n
+if eq get st 6 0
+f = dfail kia buf 2
+dcopy buf ex n
+if ne aes_gcm_seal dctl part kia 0 dka part buf 0 n 2
+f = 1
+end
+ret f
+end
+f = dfail kia buf 1
+if eq dtls 1
+daad kia aa
+dcopy buf ex n
+f = or f daopen kia pt buf aa 1
+end
+ret f
+end
+
+note a decrypt vector with a plaintext (D)
+fn ddec kia view uchar 65536 pt view uchar 65536 ex view uchar 65536 buf edit uchar 65536 aa edit uchar 65536 to ulong
+n = dbn
+dcopy buf ex n
+f = dopen kia pt buf
+if eq dtls 1
+daad kia aa
+dcopy buf ex n
+f = or f daopen kia pt buf aa 0
+end
+ret f
+end
+
+note key, iv and aad fields into kia
+fn dkia kia edit uchar 65536 to void
+put st 5 dhexf kia 0
+dspace
+put st 6 dhexf kia get st 5
+dspace
+put st 7 dhexf kia add get st 5 get st 6
+end
+
+note ct then tag fields into ex
+fn dcttag ex edit uchar 65536 to void
+put st 9 dhexf ex 0
+dspace
+put st 10 dhexf ex get st 9
+end
+
+note E record after the tag
+fn drece kia edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 buf edit uchar 65536 aa edit uchar 65536 to ulong
+dspace
+dkia kia
+dspace
+put st 8 dhexf pt 0
+dspace
+dcttag ex
+deor
+if eq get st 3 1
+ret 2
+end
+ret dvalid kia pt ex buf aa
+end
+
+note D record after the tag
+fn drecd kia edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 buf edit uchar 65536 aa edit uchar 65536 to ulong
+dspace
+dkia kia
+dspace
+dcttag ex
+dspace
+put st 8 get st 9
+put st 11 0
+if eq dpeek 70
+put st 11 1
+for i ulong 4
+dadv
+end
+else
+if ne dhexf pt 0 get st 9
+dbad
+end
+end
+deor
+if eq get st 3 1
+ret 2
+end
+if eq get st 11 1
+ret dinval kia pt ex buf aa
+end
+ret ddec kia pt ex buf aa
+end
+
+note W record after the tag
+fn drecw kia edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 buf edit uchar 65536 aa edit uchar 65536 to ulong
+dspace
+t = dnum
+dspace
+c = dpeek
+dadv
+put st 11 1
+if eq c 86
+put st 11 0
+else
+if ne c 73
+dbad
+end
+end
+dspace
+dkia kia
+dspace
+put st 8 dhexf pt 0
+dspace
+dcttag ex
+deor
+if eq get st 3 1
+ret 2
+end
+if eq get st 11 1
+ret dinval kia pt ex buf aa
+end
+ret dvalid kia pt ex buf aa
+end
+
+note B record after the tag: one FIPS 197 block through aes_setkey and aes_enc4 (lane 0)
+fn drecb kia edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 to ulong
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+dspace
+kl = dhexf kia 0
+dspace
+pl = dhexf pt 0
+dspace
+cl = dhexf ex 0
+deor
+if eq get st 3 1
+ret 2
+end
+if ne pl 16
+dbad
+ret 2
+end
+if ne cl 16
+dbad
+ret 2
+end
+if ne gcm_chk or kl 0x11000 kl 16 0
+dbad
+ret 2
+end
+aes_setkey k s part kia 0 kl
+h = ulong 0
+l = ulong 0
+for i ulong 8
+h = or shl h 8 ulong get pt i
+l = or shl l 8 ulong get pt add i 8
+end
+put s 150 h
+put s 151 l
+aes_enc4 k s
+h = get s 150
+l = get s 151
+for i ulong 8
+put pt sub 7 i uchar and h 0xff
+put pt sub 15 i uchar and l 0xff
+h = shr h 8
+l = shr l 8
+end
+ret dcmp pt ex 16
+end
+
+note X record: seal and open with ctl on zero arrays of the given lengths must both return want
+fn drecx kia edit uchar 65536 buf edit uchar 65536 to ulong
+dspace
+ctl = dnum
+dspace
+ka = dnum
+dspace
+bl = dnum
+dspace
+want = dnum
+deor
+if eq get st 3 1
+ret 2
+end
+if gt ka 65536
+dbad
+ret 2
+end
+if gt bl 65536
+dbad
+ret 2
+end
+for i ulong 65536
+put kia i 0
+put buf i 0
+end
+f = ulong 0
+if ne aes_gcm_seal ctl part kia 0 ka part buf 0 bl want
+f = 1
+end
+if ne aes_gcm_open ctl part kia 0 ka part buf 0 bl want
+f = 1
+end
+ret f
+end
+
+note Y record: aead_aes128gcm_seal and _open on zero arrays must both return want
+fn drecy kia edit uchar 65536 aa edit uchar 65536 buf edit uchar 65536 to ulong
+dspace
+kn = dnum
+dspace
+al = dnum
+dspace
+bl = dnum
+dspace
+want = dnum
+deor
+if eq get st 3 1
+ret 2
+end
+if gt kn 65536
+dbad
+ret 2
+end
+if gt al 65536
+dbad
+ret 2
+end
+if gt bl 65536
+dbad
+ret 2
+end
+for i ulong 65536
+put kia i 0
+put aa i 0
+put buf i 0
+end
+f = ulong 0
+if ne aead_aes128gcm_seal part kia 0 kn part aa 0 al part buf 0 bl want
+f = 1
+end
+if ne aead_aes128gcm_open part kia 0 kn part aa 0 al part buf 0 bl want
+f = 1
+end
+ret f
+end
+
+note T record: seal then open n bytes in place with a fixed key and 12-byte IV, timed
+fn drect kia edit uchar 65536 to ulong
+big = new uchar 1048592 0
+dspace
+n = dnum
+deor
+if eq get st 3 1
+ret 2
+end
+if gt n 1048576
+dbad
+ret 2
+end
+for i ulong 28
+put kia i uchar i
+end
+ctl = ulong 0xc1010
+t0 = monons
+r = aes_gcm_seal ctl part kia 0 28 part big 0 add n 16
+t1 = monons
+r = or r aes_gcm_open ctl part kia 0 28 part big 0 add n 16
+t2 = monons
+w = write 1 tspd 0 len tspd
+dprn n
+w = write 1 tsns 0 len tsns
+dprn ulong sub t1 t0
+w = write 1 tons 0 len tons
+dprn ulong sub t2 t1
+w = write 1 tnl 0 1
+if ne r 0
+ret 1
+end
+ret dzero big n
+end
+
+note one record at the cursor; adds to st 12 (checks) and st 13 (failures)
+fn drec kia edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 buf edit uchar 65536 aa edit uchar 65536 to void
+c = dpeek
+res = ulong 0
+if eq c 35
+dskip
+ret
+end
+if eq c 10
+dadv
+ret
+end
+if eq c 13
+dskip
+ret
+end
+dadv
+if eq c 66
+res = drecb kia pt ex
+else
+if eq c 69
+res = drece kia pt ex buf aa
+else
+if eq c 68
+res = drecd kia pt ex buf aa
+else
+if eq c 87
+res = drecw kia pt ex buf aa
+else
+if eq c 88
+res = drecx kia buf
+else
+if eq c 89
+res = drecy kia aa buf
+else
+if eq c 84
+res = drect kia
+else
+dbad
+end
+end
+end
+end
+end
+end
+end
+put st 12 add get st 12 1
+if ne res 0
+put st 13 add get st 13 1
+if eq get st 3 1
+dmsg 1 get st 2
+else
+dmsg 0 get st 2
+end
+end
+end
+
+fn main to int
+kia = new uchar 65536 0
+pt = new uchar 65536 0
+ex = new uchar 65536 0
+buf = new uchar 65536 0
+aa = new uchar 65536 0
+if ne dslurp 0
+r = write 2 tio 0 len tio
+ret 2
+end
+put st 1 0
+put st 2 0
+put st 12 0
+put st 13 0
+while lt get st 1 get st 0 bound 999999
+put st 2 add get st 2 1
+put st 3 0
+put st 4 get st 1
+drec kia pt ex buf aa
+if eq get st 3 1
+put st 1 get st 4
+dskip
+end
+end
+r = write 1 tsum 0 len tsum
+dprn get st 12
+r = write 1 tchk 0 len tchk
+dprn get st 13
+r = write 1 tfld 0 len tfld
+if ne get st 13 0
+ret 1
+end
+if eq get st 12 0
+ret 1
+end
+ret 0
+end

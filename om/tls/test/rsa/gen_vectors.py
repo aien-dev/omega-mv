@@ -104,8 +104,8 @@ def wycheproof(wdir):
             sha = g["sha"]
             mgf = g.get("mgfSha", sha) if kind == "pss" else sha
             if kind == "pss" and g.get("mgf", "MGF1") != "MGF1":
-                skipped.setdefault(f"mgf {g.get('mgf')}", 0)
-                skipped[f"mgf {g.get('mgf')}"] += len(g["tests"])
+                r = f"hash {sha} mgf {g.get('mgf')}: SHAKE (RFC 8702 PSS) not in scope (SHA-256/384/512 with MGF1 only)"
+                skipped[r] = skipped.get(r, 0) + len(g["tests"])
                 continue
             if sha not in HASHES or mgf not in HASHES:
                 r = hash_reason(sha, mgf) if kind == "pkcs1" else \
@@ -183,7 +183,6 @@ def edge(wdir):
     e = int(g["publicKey"]["publicExponent"], 16)
     k = (n.bit_length() + 7) // 8
     c32 = ctl(256, 256, 32)
-    dg = dig(256, msg)
     ncb, ecb = dint(n), dint(e)
     cases = []
 
@@ -267,7 +266,6 @@ def fuzz(wdir):
     sig = bytes.fromhex(t["sig"])
     k = len(sig)
     c32 = ctl(256, 256, 32)
-    dg = dig(256, msg)
     out = []
 
     def add(mode, c, kk, s, ident):
@@ -298,6 +296,8 @@ def fuzz(wdir):
         kk = bytearray(key)
         for _ in range(rnd.randrange(1, 4)):
             kk[rnd.randrange(len(kk))] = rnd.randrange(256)
+        if bytes(kk) == key:
+            kk[0] ^= 1
         add("s", c32, bytes(kk), sig, f"key-rand-{i}")
     with open(os.path.join(vdir, "fuzz.txt"), "w") as o:
         o.write("# no-trap corpus built by gen_vectors.py (random.Random(8017)) from Wycheproof "
