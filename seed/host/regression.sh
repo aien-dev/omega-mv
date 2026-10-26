@@ -6,11 +6,12 @@ mkdir -p build/seed/host
 stage=$(mktemp -d build/seed/host/regression.XXXXXX)
 trap 'rm -rf "$stage"' EXIT HUP INT TERM
 # Struct, break, trap, f32 and f64 are omc-only features (OMEGESE 9.7 to 9.9): om4 refuses them by
-# design, and gate6, gate7 and gate8 own those semantics. The strict byte-equality corpus leaves out
-# those fixture directories and keeps everything else under the full comparison.
+# design, and gate6, gate7 and gate8 own those semantics. The query fixtures hold a `??` hole, which
+# only omc's om2 query answers (gate19 owns them). The strict byte-equality corpus leaves out those
+# fixture directories and keeps everything else under the full comparison.
 : > "$stage/inputs"
 git ls-files seed/rung4/tests seed/omc/tests tests/one_layer/omegese tools/exp445/arms/examples \
-    | grep -vE '^seed/omc/tests/(struct|loop|float|paren|layout|keywords)/' \
+    | grep -vE '^seed/omc/tests/(struct|loop|float|paren|layout|keywords|query)/' \
     | sed -n '/\.om$/p; /\.omegese$/p' > "$stage/all"
 while IFS= read -r f; do
     [ -f "$f" ] || continue
