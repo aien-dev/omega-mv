@@ -350,6 +350,10 @@ wire-tag sets: {2 u8, 6 i8}, {3 u16, 7 i16},
 {4 u32, 8 i32, 13 f32}, {5 u64, 9 i64, 14 f64}. Same-type pairs are allowed.
 It reinterprets bits without numeric conversion. Bool, void, references,
 and pairs crossing sets are invalid IR.
+Only declared-width bits are reinterpreted. The destination value register
+then uses its canonical representation: narrow signed integers are
+sign-extended; unsigned integers and f32 are zero-extended. These high
+register bits are representation, not additional array-element bytes.
 
 RINIT is valid only for a function-local region owned by the current
 function; its initializer register has exactly the element type and must
