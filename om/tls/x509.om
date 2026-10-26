@@ -1601,7 +1601,7 @@ note cd[p[8] .. +p[9]) (at most 1024 bytes, else X5ESIG) with the key in kd
 fn chain_hsig cd view uchar * kd view uchar * p edit ulong * to ulong
 hs = new uchar 1100 0
 sl = get p 9
-if gt sl 1024
+if or eq sl 0 gt sl 1024
 ret X5ESIG
 end
 put p 5 sha2_digest get p 1 part cd get p 6 get p 7 edit hs
@@ -1860,7 +1860,14 @@ end
 
 note x509_chain_verify: validate the server chain. cl = TLS 1.3 certificate_list contents, leaf
 note first; st = store from x509_store_load(f); hq = 8-byte big-endian unix time || host name.
-note 0 valid, else a reject code (see the table at the top). At most X5MAXC entries in cl.
+note 0 valid, else a reject code (see the table at the top). Limits (X5EMAL beyond them): at most
+note X5MAXC (16) entries in cl, presented issuer certificates at most X5KBUF (16384) bytes, signatures
+note at most 1024 bytes (X5ESIG), now at most 253402300799 (9999-12-31T23:59:59Z).
+note Rules, all fail closed: leaf = entry 0 (chain_leaf); issuers by path building (chain_path);
+note trust anchors are name + key only (no validity, CA or usage checks on anchors, RFC 5280 6.1.1 d);
+note names are compared as DER bytes, not with the RFC 5280 7.1 / 4.1.2.4 matching rules (case and
+note whitespace folding of PrintableString/UTF8String are NOT applied: an issuer whose encoding of
+note the same name differs from the subject encoding is reported X5EUNK).
 fn x509_chain_verify cl view uchar * st view uchar * hq view uchar * to ulong
 w = new ulong 128 0
 if lt len hq 8
