@@ -7374,39 +7374,29 @@ trapc 2 4
 emit or or 2432697344 c shl c 5
 end
 
-note lpdown (OM-2): the hidden counter counts down from N: SUBS Xc, Xc, #1 (C6.2.465); B.LO trap 4 (the
-note counter was 0, so N passes were made). The trap falls on the same pass and at the same place as
-note lpcnt's. A register stays taken for an N above 4095 as in lpcnt, so error 12 falls where it did.
-fn lpdown c ulong n ulong to void
-if gt n 4095
-m = alloc
+note lpalign (OM-2): NOP (C6.2.238) up to a 16-byte boundary before a loop head, so the head starts a fetch
+note block. The pad does not count toward the function's 262144-byte bound (error 14): fstart moves with it.
+fn lpalign to void
+if eq get om2 0 0
+ret
 end
-emit or or 4043310080 c shl c 5
-trapc 3 4
+while ne and get oc 0 15 0 bound 4
+put fstart 0 add get fstart 0 4
+emit 3573751839
 end
-
-note lpinit (OM-2): patch the two words at w (reserved at the loop's start) to MOVZ Xc, #N lo; MOVK Xc,
-note #N hi, LSL 16 (C6.2.285, C6.2.283); N is at most 1000000
-fn lpinit w ulong c ulong n ulong to void
-wrword w or or 3531603968 shl and n 65535 5 c
-wrword add w 4 or or 4070572032 shl shr n 16 5 c
 end
 
 note s_while: while cond [bound N]: hidden counter = 0; head: cond false -> exit; counter >= N -> trap 4;
 note counter = counter + 1; body; B head. N is 1 .. 999999 (error 8), 1000000 with no bound. om4 S_WHILE.
-note In an OM-2 unit the counter starts at N (MOVZ, MOVK reserved at the start, patched when N is read)
-note and counts down (lpdown).
+note In an OM-2 unit the head is aligned to 16 bytes (lpalign).
 fn s_while to void
 kvclr
 sn = get nn 0
 sh = get held 0
 c = alloc
 put held 0 get nslot 0
-cw = get oc 0
 emit or 3531603968 c
-if ne get om2 0 0
-emit or 4070572032 c
-end
+lpalign
 hd = get oc 0
 cp_head skipln get cur 0 add get line 0 1
 br = cond
@@ -7430,12 +7420,7 @@ end
 n = v
 eol
 end
-if ne get om2 0 0
-lpinit cw c n
-lpdown c n
-else
 lpcnt c n
-end
 pushb br 3 hd c 0
 pushnh sn sh
 cp_skip
@@ -7461,6 +7446,7 @@ i = alloc
 put held 0 get nslot 0
 addname w i t 0 0 0
 emit or 3531603968 i
+lpalign
 hd = get oc 0
 cp_head get cur 0 get line 0
 if le kk 4095
@@ -7478,7 +7464,7 @@ end
 
 note sf_val: for i T K with K a value of type T in register kr: i = 0; the hidden counter c = 0; head: CMP
 note Xi, Xk; B.HS/B.GE exit; the counter guard of a while with no bound. om4 SF_VAL. In an OM-2 unit the
-note counter counts down from 1000000 (lpdown).
+note head is aligned (lpalign).
 fn sf_val w ulong t ulong kr ulong sn ulong sh ulong to void
 eol
 i = alloc
@@ -7487,24 +7473,17 @@ addname w i t 0 0 0
 emit or 3531603968 i
 c = alloc
 put held 0 get nslot 0
-if ne get om2 0 0
-matconst c 1000000
-else
 emit or 3531603968 c
-end
+lpalign
 hd = get oc 0
 cp_head get cur 0 get line 0
 emit or or 3942645791 shl kr 16 shl i 5
 br = sf_br t
-if ne get om2 0 0
-lpdown c 1000000
-else
 m = alloc
 matconst m 1000000
 emit or or 3942645791 shl c 5 shl m 16
 trapc 2 4
 emit or or 2432697344 c shl c 5
-end
 pushb br 4 hd i t
 pushnh sn sh
 cp_skip
