@@ -50,8 +50,9 @@ struct_length|32|const N uint 4\nstruct S a uchar N end\nfn main to int\np = new
 const_bound|2|const B ulong 3\nfn main to int\nx = ulong 0\nwhile lt x ulong 2 bound B\nx = add x 1\nend\nret int x\nend
 trap_const|102|const T uint 2\nfn main to int\ntrap T\nend
 for_const|4|const K ulong 4\nfn main to int\nx = ulong 0\nfor i ulong K\nx = add x 1\nend\nret int x\nend
+const_order|12|const kk ulong 4\nfn a fs edit long kk to void\nput fs 0 1\nend\nconst k2 ulong 3\nfn b fs edit long kk gs edit long k2 to long\nput fs 3 7\nput gs 2 5\nret add get fs 3 get gs 2\nend\nfn main to int\nx = new long kk 0\ny = new long k2 0\na x\nret int b x y\nend
 RUN
-[ "$n" = 18 ] || bad "value table ran $n of 18 cases"
+[ "$n" = 19 ] || bad "value table ran $n of 19 cases"
 
 n=0
 while IFS='|' read -r name want src; do
@@ -126,5 +127,5 @@ fm_float|const H f64 0.1\nfn f a f64 to f64\nret add a H\nend|fn f a f64 to f64\
 FM
 [ "$n" = 9 ] || bad "function-mode table ran $n of 9 cases"
 
-say "PASS gate16 18 constant programs, 27 refusals and 9 function-mode units"
+say "PASS gate16 19 constant programs, 27 refusals and 9 function-mode units"
 exit 0

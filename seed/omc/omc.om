@@ -3255,25 +3255,7 @@ else
 emit or or 509755392 shl ra 5 rd
 end
 else
-if eq ft 10
-if eq twid tt 32
-emit or or 506986496 shl ra 5 rd
-if ge tt 6
-emit or or 2470476800 rd shl rd 5
-end
-else
-emit or or 2654470144 shl ra 5 rd
-end
-else
-if eq twid tt 32
-emit or or 511180800 shl ra 5 rd
-if ge tt 6
-emit or or 2470476800 rd shl rd 5
-end
-else
-emit or or 2658664448 shl ra 5 rd
-end
-end
+fp_toint ft tt rd
 end
 else
 sgn = false
@@ -3314,6 +3296,87 @@ if ge tt 10
 fv2x tt rd rd
 end
 ret rd
+end
+
+note fp_toint: float (v0) to integer rd: truncate toward zero, saturate to the destination's own range, NaN
+note to 0 (OMEGESE 9.9; spec/one-layer-format.md 10.3). 32/64-bit: FCVTZS/FCVTZU (C7.2.90/C7.2.94) by
+note signedness, int sign-extended (SXTW). 8/16-bit: the scalar SIMD FCVTZ[SU] in v0, then saturating
+note narrows (SQXTN/UQXTN, C7.2.311/C7.2.374) to the width, FMOV W (C7.2.130), then SXTB/SXTH for signed.
+fn fp_toint ft ulong tt ulong rd ulong to void
+w = twid tt
+sg = ge tt 6
+if eq w 64
+if sg
+if eq ft 10
+emit or 2654470144 rd
+else
+emit or 2658664448 rd
+end
+else
+if eq ft 10
+emit or 2654535680 rd
+else
+emit or 2658729984 rd
+end
+end
+ret
+end
+if eq w 32
+if sg
+if eq ft 10
+emit or 506986496 rd
+else
+emit or 511180800 rd
+end
+emit or or 2470476800 rd shl rd 5
+else
+if eq ft 10
+emit or 507052032 rd
+else
+emit or 511246336 rd
+end
+end
+ret
+end
+fp_narrow ft sg w
+emit or 505806848 rd
+if sg
+if eq w 8
+emit or or 2470452224 rd shl rd 5
+else
+emit or or 2470460416 rd shl rd 5
+end
+end
+end
+
+note fp_narrow: convert v0 in place to a saturated integer of width w (8 or 16) in its low bits.
+fn fp_narrow ft ulong sg bool w ulong to void
+if eq ft 10
+if sg
+emit 1587656704
+emit 1583433728
+else
+emit 2124527616
+emit 2120304640
+end
+else
+if sg
+emit 1591851008
+emit 1587628032
+emit 1583433728
+else
+emit 2128721920
+emit 2124498944
+emit 2120304640
+end
+end
+if eq w 8
+if sg
+emit 1579239424
+else
+emit 2116110336
+end
+end
 end
 
 note ---- rotate (OM-2, spec 3): rotr 59 / rotl 60 of an unsigned uchar..ulong by the same type. uint and
@@ -6689,7 +6752,8 @@ cp_entry
 end
 if eq get scanning 0 1
 put curret 0 0
-put nn 0 0
+note keep the top-level consts read so far: a later const must not take an earlier one's slot.
+put nn 0 get nglob 0
 end
 end
 
