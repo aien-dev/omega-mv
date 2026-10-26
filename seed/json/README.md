@@ -302,3 +302,5 @@ made the parity run fail. If any of the hashes above change, this record no long
 the gate.
 
 Re-verified 2026-10-26 after refresh onto main `c5d981041` with reseeded `seed/out/omc` `189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54`: `JSONGATE PASS rows=8758 mutants=5`; gate pin updated.
+
+Re-verified 2026-10-26 on `integ/omc-batch2` with the batch 2 `seed/out/omc` `2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f`: `JSONGATE PASS rows=8758 mutants=5`; gate pin updated. Negative controls: the 189ada82 compiler, and the old pin given through `JSON_OMC_PIN`, both end in `JSONGATE FAIL ... differs from pin` (exit 1).
