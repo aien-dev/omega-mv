@@ -1,0 +1,26 @@
+note f32 results are values, not void. Expected binary32 bits were computed with Wolfram Language:
+note ExportByteArray Real32 then UnsignedInteger32: 0.1 -> 1036831949, 3.75 -> 1081081856.
+fn same x f32 to f32
+ret x
+end
+fn addf x f32 y f32 to f32
+ret add x y
+end
+fn tenth to f32
+ret f32 0.1
+end
+fn none to void
+ret
+end
+fn main to int
+a = addf f32 1.5 f32 2.25
+if ne bitcast uint a uint 1081081856
+ret 1
+end
+b = same tenth
+if ne bitcast uint b uint 1036831949
+ret 2
+end
+none
+ret 0
+end
