@@ -254,7 +254,8 @@ MEASURED on 2026-10-26 with omc 2c824805 (binary sha256 3eb8e93e..., 188,268 byt
 - N=30 paired runs per core class and model delay, arm order alternating;
 - client pinned with `taskset` to X925 cpu 5 or A725 cpu 1;
 - all 240 runs graded ok;
-- warm page cache, Spark under its usual background load.
+- warm page cache; the Spark was heavily loaded by other work (load average 22 to 30), so absolute
+  times are noisy, while the paired order keeps the comparison fair.
 
 Wall times include the same Python launcher and `/usr/bin/time` for both arms. Medians, with ratios
 from Wolfram:
