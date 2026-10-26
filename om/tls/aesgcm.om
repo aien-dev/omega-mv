@@ -21,11 +21,13 @@ note     in-place buffer and return codes as aead_chacha_*; 2 when len kn is not
 note
 note Constant time. AES is bitsliced (BearSSL aes_ct64 layout by T. Pornin, MIT licence: four
 note blocks in eight 64-bit planes, plane j holding bit j of every state byte). SubBytes is the
-note Boyar-Peralta depth-16 straight-line program for the AES S-box (J. Boyar, R. Peralta, "A small
-note depth-16 circuit for the AES S-box", IFIP SEC 2012, LNCS 376, pp. 287-298; eprint 2011/332),
-note transcribed from the authors' file https://www.cs.yale.edu/homes/peralta/CircuitStuff/
-note AESDEPTH16SIZE125 (125 gates: 34 AND, 91 XOR/XNOR; sha256 b72f635d5a58e06b44d4040b95901da2
-note 7418ec5a037f9123392155e96966f162). The key schedule's SubWord uses the same circuit. GHASH is
+note Boyar-Peralta depth-16 straight-line program for the AES S-box (J. Boyar, R. Peralta, "A Small
+note Depth-16 Circuit for the AES S-Box", SEC 2012, IFIP AICT 376, pp. 287-298, doi
+note 10.1007/978-3-642-30436-1_24; preprint IACR eprint 2011/332). The paper's circuit has 128 gates;
+note this is the authors' later 125-gate depth-16 version (34 AND, 91 XOR/XNOR), transcribed gate
+note for gate from https://www.cs.yale.edu/homes/peralta/CircuitStuff/AESDEPTH16SIZE125 (sha256
+note b72f635d5a58e06b44d4040b95901da27418ec5a037f9123392155e96966f162, fetched 2026-10-26). The
+note key schedule's SubWord uses the same circuit. GHASH is
 note the bit-serial multiply of SP 800-38D Algorithm 1 with every conditional replaced by an
 note all-ones/all-zeros mask. No array is indexed by key, data, H or any other secret; every
 note branch and loop count depends only on lengths, the key size and the tag-check outcome.

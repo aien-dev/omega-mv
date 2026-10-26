@@ -6,7 +6,7 @@ note   MODE smtp : implicit-TLS SMTP: reads the banner, sends EHLO and QUIT, wri
 note   MODE hs   : handshake only, then close_notify
 note CONNECTHOST (default HOST) is the name resolved for TCP; HOST is the TLS name (SNI and
 note certificate check), so a local server can be checked against a chosen name.
-note STOREFILE (default the system bundle) is a PEM bundle of trust anchors.
+note STOREFILE (default, or "-", the system bundle) is a PEM bundle of trust anchors.
 note Exit 0 on success; on a TLS failure exit 10 + code and print "TLSERR <name> detail <n>".
 note Exit 2 for a usage error, 3 for a DNS/connect failure.
 
@@ -14,6 +14,7 @@ text cusage "usage: client HOST PORT get|smtp|hs [CONNECTHOST [STOREFILE [PATH]]
 text cterr "TLSERR "
 text cdet " detail "
 text cnl "\n"
+text csp " "
 text cget1 "GET "
 text cget2 " HTTP/1.1\nHost: "
 text cget3 "\nUser-Agent: omega-tls/1\nAccept: */*\nConnection: close\n\n"
@@ -68,8 +69,14 @@ w = write 2 cterr 0 len cterr
 n = tls_errname e m
 w = write 2 m 0 n
 w = write 2 cdet 0 len cdet
-n = cl_dec tls_detail c m
+d = tls_detail c
+n = cl_dec d m
 w = write 2 m 0 n
+if or eq e 17 eq e 19
+n = x509_errname d m
+w = write 2 csp 0 1
+w = write 2 m 0 n
+end
 w = write 2 cnl 0 1
 ret int add 10 e
 end
@@ -242,7 +249,10 @@ put v 2 pl
 end
 put v 5 0
 if ge na 6
-put v 5 cl_arg 5 part w 1536 4096
+sl = cl_arg 5 part w 1536 4096
+if or ne sl 1 ne get w 1536 45
+put v 5 sl
+end
 end
 ret 0
 end
