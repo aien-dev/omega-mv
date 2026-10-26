@@ -1,8 +1,9 @@
 # Audit scope: om/tls and seed/net
 
 For an outside, independent security audit of the Omega TLS 1.3 client and the HTTP/1.1 unit it
-transports. Revision: branch `audit/tls-outside-review` on aien-dev/omega-mv (base main `705c0f01`,
-compiler `seed/out/omc` sha256 `189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54`).
+transports. Revision: branch `audit/tls-outside-review` on aien-dev/omega-mv (base main `0b77e6ea` after the merge
+of `705c0f01` work; compiler `seed/out/omc` sha256
+`2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f`, also run on `189ada82`).
 
 ## In scope
 
@@ -46,7 +47,7 @@ Every implementation byte is `.om` compiled by the pinned `omc`. Python (`fakesr
 
 ```
 git clone https://github.com/aien-dev/omega-mv.git && cd omega-mv && git checkout audit/tls-outside-review
-sha256sum seed/out/omc                      # must print 189ada82...3b54
+sha256sum seed/out/omc                      # must print 2c824805...029f
 sh om/tls/test/tls/run.sh "$PWD/seed/out/omc"              # add TLS_NET=1 for the live rows
 python3 seed/net/tests/check.py --keep /tmp/netcheck       # add TLS_NET=1 for the live HTTPS GETs
 python3 om/tls/test/tls/residue.py "$PWD/build/tls/tls/client/bin" "$PWD/build/tls/interop"

@@ -177,7 +177,7 @@ Not covered, or covered only partly:
 
 ## Tests (run from the repository root)
 
-| command | final line observed 2026-10-26 (omc `189ada82`; identical on `2c824805`, including `net=PASS`) |
+| command | final line observed 2026-10-27 (omc `2c824805`; identical on `189ada82`; `net=PASS` observed 2026-10-26 on both) |
 |---|---|
 | `sh om/tls/test/sha2/run.sh OMC` | `SHA2 PASS vectors=1777 (wycheproof=774) mutants=5/5` |
 | `sh om/tls/test/x25519/run.sh OMC` | `X25519 PASS vectors=531 (wycheproof=518) mutants=7/7` |
@@ -186,7 +186,7 @@ Not covered, or covered only partly:
 | `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
-| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` |
+| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` (`net=NOT_RUN` without `TLS_NET`, observed on both compilers 2026-10-27) |
 | `nice -n 19 taskset -c CPU build/tls/tls/timing WHAT N` (`test/tls/timing.om`) | dudect samples, statistics outside; see `THREAT_MODEL.md` |
 
 How the suites are built:
