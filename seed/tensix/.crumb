@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T22:28:36Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:372b1b4b795ba2bd545e33914be1ef5b7c52e900359d2a933dcdc62bf29551ee",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "369dbc96daa1684db2d7c2c7085bbf16b3fd77ee",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "layer": "seed",
+  "name": "tensix",
+  "purpose": "Tenstorrent Tensix RV32IM vecadd via asm2 table with interop-oracle gate (ttsim WH/BH, qemu, two disassemblers)",
+  "schema_version": "1.0.0"
+}
