@@ -1,0 +1,317 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/sha3.om: SHA3-256, SHA3-512, SHAKE128, SHAKE256 (FIPS 202) as an OM-2 library unit (no om2
+note line, no main, no globals). Module code S3; functions sha3_*. Composition: after x25519, before mlkem.
+note
+note API (c: S3CN = 29 ulong cells, caller owns all state)
+note   sha3_init c edit ulong * rate ulong dom ulong     rate in bytes (multiple of 8, 8..200), dom the
+note                                                     domain byte with the first pad bit (0x06 SHA3, 0x1f SHAKE)
+note   sha3_256_init / sha3_512_init / sha3_shake128_init / sha3_shake256_init c   the four FIPS 202 instances
+note   sha3_absorb c edit ulong * m view uchar *         any length, any chunking, before the first squeeze
+note   sha3_squeeze c edit ulong * o edit uchar *        fills all of o; the first call pads and permutes;
+note                                                     later calls continue the output stream (XOF)
+note   sha3_256 m view uchar * o edit uchar *            one-shot, writes o[0..32) (o shorter traps 3)
+note   sha3_512 m view uchar * o edit uchar *            one-shot, writes o[0..64)
+note   sha3_shake128 / sha3_shake256 m o                  one-shot XOF, writes all len o bytes
+note Absorbing after a squeeze is a caller error (it xors into the squeeze state; not detected).
+note
+note Context cells: 0..24 the Keccak-f[1600] lanes A[x + 5y] (FIPS 202 3.1.2: byte p of the state is
+note bits 8 (p mod 8) .. of lane p / 8, little-endian), 25 rate in bytes, 26 byte position in the
+note current block, 27 domain byte, 28 phase (0 absorbing, 1 squeezing).
+note Padding (FIPS 202 5.1 pad10*1 with the 6.1 / 6.2 suffix bits 01 / 1111): dom xor at the position,
+note 0x80 xor at byte rate - 1 (one byte 0x86 / 0x9f when they coincide).
+note Constant time: every branch, loop count and index depends only on lengths, the rate and the
+note position (public counts), never on message or state bytes. The local state, theta and pi
+note arrays are zeroed before return; the context is the caller's to wipe. omc emits plain AArch64;
+note we rely on EOR/AND/BIC-style ops, ROR and shifts being data-independent (no DIT bit is set).
+note Message length: each absorb or squeeze call runs in chunks of 2^19 bytes (a rolled for traps 4
+note after 10^6 passes; while bound 999999 chunks).
+
+const S3CN ulong 29
+
+note RC[ir] for ir 0..23 (FIPS 202 3.2.5, rc(t) from the LFSR x^8 + x^6 + x^5 + x^4 + 1, bit 2^j - 1
+note of RC[ir] = rc(j + 7 ir)). Computed with the Wolfram Language evaluator (2026-10-26):
+note rcbit[t_] (Algorithm 5); rc=Table[Sum[rcbit[j+7 ir] 2^(2^j-1),{j,0,6}],{ir,0,23}] -> the values below.
+fn sha3_rcs k edit ulong 24 to void
+put k 0 0x0000000000000001
+put k 1 0x0000000000008082
+put k 2 0x800000000000808a
+put k 3 0x8000000080008000
+put k 4 0x000000000000808b
+put k 5 0x0000000080000001
+put k 6 0x8000000080008081
+put k 7 0x8000000000008009
+put k 8 0x000000000000008a
+put k 9 0x0000000000000088
+put k 10 0x0000000080008009
+put k 11 0x000000008000000a
+put k 12 0x000000008000808b
+put k 13 0x800000000000008b
+put k 14 0x8000000000008089
+put k 15 0x8000000000008003
+put k 16 0x8000000000008002
+put k 17 0x8000000000000080
+put k 18 0x000000000000800a
+put k 19 0x800000008000000a
+put k 20 0x8000000080008081
+put k 21 0x8000000000008080
+put k 22 0x0000000080000001
+put k 23 0x8000000080008008
+end
+
+note theta (FIPS 202 3.2.1): C[x] = xor of column x, D[x] = C[x-1] xor rot(C[x+1], 1), A[x,y] ^= D[x]
+fn sha3_theta a edit ulong 25 t edit ulong 5 to void
+put t 0 xor xor xor xor get a 0 get a 5 get a 10 get a 15 get a 20
+put t 1 xor xor xor xor get a 1 get a 6 get a 11 get a 16 get a 21
+put t 2 xor xor xor xor get a 2 get a 7 get a 12 get a 17 get a 22
+put t 3 xor xor xor xor get a 3 get a 8 get a 13 get a 18 get a 23
+put t 4 xor xor xor xor get a 4 get a 9 get a 14 get a 19 get a 24
+d = xor get t 4 rotl get t 1 1
+put a 0 xor get a 0 d
+put a 5 xor get a 5 d
+put a 10 xor get a 10 d
+put a 15 xor get a 15 d
+put a 20 xor get a 20 d
+d = xor get t 0 rotl get t 2 1
+put a 1 xor get a 1 d
+put a 6 xor get a 6 d
+put a 11 xor get a 11 d
+put a 16 xor get a 16 d
+put a 21 xor get a 21 d
+d = xor get t 1 rotl get t 3 1
+put a 2 xor get a 2 d
+put a 7 xor get a 7 d
+put a 12 xor get a 12 d
+put a 17 xor get a 17 d
+put a 22 xor get a 22 d
+d = xor get t 2 rotl get t 4 1
+put a 3 xor get a 3 d
+put a 8 xor get a 8 d
+put a 13 xor get a 13 d
+put a 18 xor get a 18 d
+put a 23 xor get a 23 d
+d = xor get t 3 rotl get t 0 1
+put a 4 xor get a 4 d
+put a 9 xor get a 9 d
+put a 14 xor get a 14 d
+put a 19 xor get a 19 d
+put a 24 xor get a 24 d
+end
+
+note rho and pi (3.2.2, 3.2.3): B[y, 2x + 3y] = rot(A[x, y], r[x, y]). Offsets r[x + 5y] from the 3.2.2
+note walk, Wolfram: (x,y)=(1,0); rho[x,y]=Mod[(t+1)(t+2)/2,64]; (x,y)=(y,Mod[2x+3y,5]) for t 0..23 ->
+note 0 1 62 28 27 36 44 6 55 20 3 10 43 25 39 41 45 15 21 8 18 2 61 56 14 (index x + 5y).
+fn sha3_rhopi a view ulong 25 b edit ulong 25 to void
+put b 0 get a 0
+put b 10 rotl get a 1 1
+put b 20 rotl get a 2 62
+put b 5 rotl get a 3 28
+put b 15 rotl get a 4 27
+put b 16 rotl get a 5 36
+put b 1 rotl get a 6 44
+put b 11 rotl get a 7 6
+put b 21 rotl get a 8 55
+put b 6 rotl get a 9 20
+put b 7 rotl get a 10 3
+put b 17 rotl get a 11 10
+put b 2 rotl get a 12 43
+put b 12 rotl get a 13 25
+put b 22 rotl get a 14 39
+put b 23 rotl get a 15 41
+put b 8 rotl get a 16 45
+put b 18 rotl get a 17 15
+put b 3 rotl get a 18 21
+put b 13 rotl get a 19 8
+put b 14 rotl get a 20 18
+put b 24 rotl get a 21 2
+put b 9 rotl get a 22 61
+put b 19 rotl get a 23 56
+put b 4 rotl get a 24 14
+end
+
+note chi (3.2.4): A[x,y] = B[x,y] xor ((not B[x+1,y]) and B[x+2,y])
+fn sha3_chi a edit ulong 25 b view ulong 25 to void
+put a 0 xor get b 0 and not get b 1 get b 2
+put a 1 xor get b 1 and not get b 2 get b 3
+put a 2 xor get b 2 and not get b 3 get b 4
+put a 3 xor get b 3 and not get b 4 get b 0
+put a 4 xor get b 4 and not get b 0 get b 1
+put a 5 xor get b 5 and not get b 6 get b 7
+put a 6 xor get b 6 and not get b 7 get b 8
+put a 7 xor get b 7 and not get b 8 get b 9
+put a 8 xor get b 8 and not get b 9 get b 5
+put a 9 xor get b 9 and not get b 5 get b 6
+put a 10 xor get b 10 and not get b 11 get b 12
+put a 11 xor get b 11 and not get b 12 get b 13
+put a 12 xor get b 12 and not get b 13 get b 14
+put a 13 xor get b 13 and not get b 14 get b 10
+put a 14 xor get b 14 and not get b 10 get b 11
+put a 15 xor get b 15 and not get b 16 get b 17
+put a 16 xor get b 16 and not get b 17 get b 18
+put a 17 xor get b 17 and not get b 18 get b 19
+put a 18 xor get b 18 and not get b 19 get b 15
+put a 19 xor get b 19 and not get b 15 get b 16
+put a 20 xor get b 20 and not get b 21 get b 22
+put a 21 xor get b 21 and not get b 22 get b 23
+put a 22 xor get b 22 and not get b 23 get b 24
+put a 23 xor get b 23 and not get b 24 get b 20
+put a 24 xor get b 24 and not get b 20 get b 21
+end
+
+note Keccak-f[1600] on cells 0..24 of c: 24 rounds theta, rho, pi, chi, iota (3.3, 3.4)
+fn sha3_perm c edit ulong * to void
+a = new ulong 25 0
+b = new ulong 25 0
+t = new ulong 5 0
+k = new ulong 24 0
+sha3_rcs k
+for i ulong 25 unroll
+put a i get c i
+end
+for r ulong 24
+sha3_theta a t
+sha3_rhopi a b
+sha3_chi a b
+put a 0 xor get a 0 get k r
+end
+for i ulong 25 unroll
+put c i get a i
+put a i 0
+put b i 0
+end
+for i ulong 5 unroll
+put t i 0
+end
+end
+
+fn sha3_init c edit ulong * rate ulong dom ulong to void
+for i ulong S3CN
+put c i 0
+end
+put c 25 rate
+put c 27 dom
+end
+
+fn sha3_256_init c edit ulong * to void
+sha3_init c 136 6
+end
+
+fn sha3_512_init c edit ulong * to void
+sha3_init c 72 6
+end
+
+fn sha3_shake128_init c edit ulong * to void
+sha3_init c 168 31
+end
+
+fn sha3_shake256_init c edit ulong * to void
+sha3_init c 136 31
+end
+
+note absorb m (at most 2^19 bytes): xor each byte into the state at the position, permute at the rate
+fn sha3_abs1 c edit ulong * m view uchar * to void
+r = get c 25
+p = get c 26
+for i ulong len m
+q = shr p 3
+put c q xor get c q shl ulong get m i shl and p 7 3
+p = add p 1
+if eq p r
+sha3_perm c
+p = 0
+end
+end
+put c 26 p
+end
+
+fn sha3_absorb c edit ulong * m view uchar * to void
+n = len m
+q = ulong 0
+k = ulong 0
+while lt q n bound 999999
+k = sub n q
+if gt k 0x80000
+k = 0x80000
+end
+sha3_abs1 c part m q k
+q = add q k
+end
+end
+
+note pad10*1 with the domain bits, the last absorbing permutation, then the squeezing phase
+fn sha3_pad c edit ulong * to void
+p = get c 26
+r = get c 25
+q = shr p 3
+put c q xor get c q shl get c 27 shl and p 7 3
+q = shr sub r 1 3
+put c q xor get c q shl ulong 0x80 shl and sub r 1 7 3
+sha3_perm c
+put c 26 0
+put c 28 1
+end
+
+note squeeze o (at most 2^19 bytes) from the position
+fn sha3_sq1 c edit ulong * o edit uchar * to void
+r = get c 25
+p = get c 26
+for i ulong len o
+if eq p r
+sha3_perm c
+p = 0
+end
+x = shr get c shr p 3 shl and p 7 3
+put o i uchar and x 0xff
+p = add p 1
+end
+put c 26 p
+end
+
+fn sha3_squeeze c edit ulong * o edit uchar * to void
+if eq get c 28 0
+sha3_pad c
+end
+n = len o
+q = ulong 0
+k = ulong 0
+while lt q n bound 999999
+k = sub n q
+if gt k 0x80000
+k = 0x80000
+end
+sha3_sq1 c part o q k
+q = add q k
+end
+end
+
+note one-shot: c initialised by the caller; absorbs m, squeezes o, wipes c
+fn sha3_once c edit ulong * m view uchar * o edit uchar * to void
+sha3_absorb c m
+sha3_squeeze c o
+for i ulong S3CN
+put c i 0
+end
+end
+
+fn sha3_256 m view uchar * o edit uchar * to void
+c = new ulong S3CN 0
+sha3_256_init c
+sha3_once c m part o 0 32
+end
+
+fn sha3_512 m view uchar * o edit uchar * to void
+c = new ulong S3CN 0
+sha3_512_init c
+sha3_once c m part o 0 64
+end
+
+fn sha3_shake128 m view uchar * o edit uchar * to void
+c = new ulong S3CN 0
+sha3_shake128_init c
+sha3_once c m o
+end
+
+fn sha3_shake256 m view uchar * o edit uchar * to void
+c = new ulong S3CN 0
+sha3_shake256_init c
+sha3_once c m o
+end
