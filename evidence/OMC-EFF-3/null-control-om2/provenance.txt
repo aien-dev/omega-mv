@@ -1,0 +1,23 @@
+date_utc 2026-10-26T16:30:00Z
+mode ab
+profile om2
+source c0cb1f48134dc3df33596e75a1316eaccf8fcfec
+source_dirty 0
+omc /tmp/omega-eff/seed/out/omc
+omc_sha256 befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+cand /tmp/omega-eff/seed/out/omc
+cand_sha256 befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+protocol_sha256 ae1d1b2ace22bd30993f2ac14965d0e5ec62d9d66ae4b4e9521a417e5c74033a
+protocol2_sha256 28e8d77308baf4da3fdfedd1c00721bc1b6df578c2d19634da218080e62adac5
+protocol3_sha256 d559ddd87ba9a790bc115c6d2ebd4c57c666d69901f7c6bcb6bec9de315dfea5
+gcc gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+perf perf version 7.0.14
+kernel Linux 7.0.0-1019-nvidia aarch64
+cpu_pin 19
+cpu_model 3900.0000 MHz max
+loadavg_start 16.02 16.48 13.51 8/3828 3972750
+rounds 21 warm 3 seed 20261029 build_rounds 10 build_warm 1 build_seed 20261029
+build_B_rc 0
+build_C_rc 0
+run_rc 0
+loadavg_end 8.73 13.77 12.89 4/3762 4135138
