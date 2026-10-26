@@ -4052,7 +4052,7 @@ i = add i 1
 end
 ca_bl f
 hr = ulong 1
-if eq get fn_ret sub f 1 10
+if eq get fn_ret sub f 1 12
 hr = ulong 0
 end
 n = get svn 0
@@ -5777,7 +5777,7 @@ f = findfn get tw 0 get tl 0 get ts 0
 if eq f 0
 unkfail 13
 end
-if eq get fn_ret sub f 1 10
+if eq get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 dst f
@@ -5822,7 +5822,7 @@ f = findfn get tw 0 0 0
 if eq f 0
 unkfail 3
 end
-if eq get fn_ret sub f 1 10
+if eq get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 dst f
@@ -6162,7 +6162,7 @@ f = findfn get tw 0 get tl 0 get ts 0
 if eq f 0
 unkfail 13
 end
-if ne get fn_ret sub f 1 10
+if ne get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 255 f
@@ -6283,7 +6283,7 @@ if eq f 0
 s_assign w
 ret
 end
-if ne get fn_ret sub f 1 10
+if ne get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 255 f
@@ -6392,7 +6392,7 @@ end
 c = kw get tw 0
 r = c
 if eq c 76
-r = ulong 10
+r = ulong 12
 else
 if eq c 88
 r = ulong 10
@@ -6517,7 +6517,7 @@ s_iret
 ret
 end
 r = get curret 0
-if eq r 10
+if eq r 12
 eol
 cp_post 0 0 r
 epi
@@ -7124,7 +7124,7 @@ fn inl_call fe ulong dst ulong to void
 s0 = get nslot 0
 rres = ulong 255
 ns = s0
-if ne get fn_ret sub fe 1 10
+if ne get fn_ret sub fe 1 12
 if eq dst 255
 rres = alloc
 ns = add s0 1
@@ -7321,7 +7321,7 @@ note s_iret: ret inside an inlined body: the value into the frame's result regis
 fn s_iret to void
 lv = sub get inl 0 1
 r = get curret 0
-if eq r 10
+if eq r 12
 eol
 cp_post 0 0 r
 inlb
@@ -7358,10 +7358,10 @@ eol
 lv = sub get inl 0 1
 fe = get il_fn lv
 if eq get dead 0 0
-if ne get fn_ret sub fe 1 10
+if ne get fn_ret sub fe 1 12
 fail 18
 end
-cp_post 0 0 10
+cp_post 0 0 12
 end
 inl_pat get il_p0 lv
 put nb 0 i
@@ -7782,10 +7782,10 @@ note 100 + code). Per trap code used: MOVZ X1, #code (C6.2.285); B tail. om4 FIN
 fn finish to void
 eol
 if eq get dead 0 0
-if ne get curret 0 10
+if ne get curret 0 12
 fail 18
 end
-cp_post 0 0 10
+cp_post 0 0 12
 epi
 end
 nt0 = get nt 0
@@ -7974,7 +7974,7 @@ emit 3533832220
 emit 3533836304
 emit 2432696863
 emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
-if eq get fn_ret sub f 1 10
+if eq get fn_ret sub f 1 12
 emit 3531603968
 end
 emit 3531606952
@@ -11414,7 +11414,7 @@ else
 put cfhas lv 1
 ns = get nslot 0
 put crtype 0 get curret 0
-if ne get curret 0 10
+if ne get curret 0 12
 put crkind 0 1
 put crval 0 alloc
 end
