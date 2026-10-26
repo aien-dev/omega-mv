@@ -377,7 +377,7 @@ def build(omc, out):
         raise RuntimeError("build failed: " + p.stderr.decode()[:400])
     with open(out, "wb") as fh:
         fh.write(p.stdout)
-    os.chmod(out, 0o755)
+    os.chmod(out, 0o700)
 
 
 # source mutants: each weakens one safety or protocol rule; the cases must catch every one
@@ -404,7 +404,7 @@ def run_mutants(omc, port, base):
         mb = os.path.join(base, "mut-" + name)
         with open(mb, "wb") as fh:
             fh.write(p.stdout)
-        os.chmod(mb, 0o755)
+        os.chmod(mb, 0o700)
         caught = []
         for c in cases(port):
             f, _, _, _ = run_case(mb, port, base, c)
