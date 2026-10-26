@@ -37,6 +37,21 @@ global tkb ulong 1
 global dexp ulong 1
 global dsev ulong 1
 
+note ---- executable contracts: OM-2 debug by default, release erases only validated pure predicates.
+note Function prefixes are replayed at returns with their declaration scope, including inline frames.
+global crel ulong 1
+global cpure ulong 1
+global cvalid ulong 1
+global clim ulong 1
+global crkind ulong 1
+global crval ulong 1
+global crtype ulong 1
+global cfpos ulong 8
+global cfline ulong 8
+global cflim ulong 8
+global cfhas ulong 8
+global csnap ulong 8
+
 note ---- OM-2 section 4 (unroll, inline, folding, bounds, sites). fn_inl/fn_body/fn_bln/fn_pn: a function's
 note inline mark, its body offset and line, its parameter names. fstart: where the function being compiled
 note starts (65536 words at most in OM-2). nmlo: names below it and at or above nglob are hidden while an
@@ -1380,6 +1395,9 @@ end
 if ne lineis q 32771382692703599 7 0
 r = ulong 3
 end
+if eq r 0
+r = cp_mode q
+end
 end
 if ne r 0
 put om2 0 1
@@ -2272,6 +2290,9 @@ note findname: packed name -> its index + 1 among the names in scope (0 none). o
 fn findname w ulong to ulong
 i = ulong 0
 n = get nn 0
+if ne get cpure 0 0
+n = get clim 0
+end
 if eq i get nglob 0
 if gt get nmlo 0 i
 i = get nmlo 0
@@ -3789,6 +3810,9 @@ end
 
 note ======== the parts of the value reader that read no further value ========
 fn vdec to void
+if and ne get cpure 0 0 ge get rt 0 10
+fail 30
+end
 put depth 0 sub get depth 0 1
 end
 
@@ -5648,6 +5672,9 @@ note destination. Every value nests one level deeper (at most 1024, error 14); a
 fn rdval mode ulong exp ulong dst ulong fe ulong to void
 put dexp 0 1
 if eq mode 2
+if ne get cpure 0 0
+fail 30
+end
 if ne get om2 0 0
 if ne get fn_inl sub fe 1 0
 inl_call fe dst
@@ -5683,6 +5710,9 @@ ret
 end
 if eq mode 0
 tok
+end
+if ne get cpure 0 0
+cp_token
 end
 put depth 0 add get depth 0 1
 if gt get depth 0 1024
@@ -5751,6 +5781,15 @@ ret
 end
 c = kw get tw 0
 if eq c 0
+if ne get cpure 0 0
+if eq get tw 0 128009175786866
+if eq get crkind 0 0
+fail 30
+end
+vdone get crkind 0 get crval 0 get crtype 0
+ret
+end
+end
 e = findname get tw 0
 if ne e 0
 if eq get nm_kind sub e 1 9
@@ -5767,6 +5806,11 @@ if ne get nm_kind sub e 1 0
 fail 7
 end
 vdone 1 ulong get nm_reg sub e 1 ulong get nm_type sub e 1
+if ne get cpure 0 0
+if ge get rt 0 10
+fail 30
+end
+end
 ret
 end
 f = findfn get tw 0 0 0
@@ -6452,6 +6496,9 @@ end
 end
 fn_to f np
 ab_entry f
+if eq get scanning 0 0
+cp_entry
+end
 if eq get scanning 0 1
 put curret 0 0
 put nn 0 0
@@ -6467,18 +6514,31 @@ end
 r = get curret 0
 if eq r 10
 eol
+cp_post 0 0 r
 epi
 dead1
 ret
 end
-rdval 0 r 0 0
+dst = ulong 0
+if and ne get cfhas 0 0 eq get crel 0 0
+dst = ulong 255
+end
+rdval 0 r dst 0
 if ne get rt 0 r
 fail 7
 end
+if and ne get cfhas 0 0 eq get crel 0 0
+rr = matreg get rk 0 get rv 0 r
+eol
+cp_post 1 rr r
+force 1 rr r 0
+else
 force get rk 0 get rv 0 get rt 0 0
+eol
+cp_post 1 0 r
+end
 epi
 dead1
-eol
 end
 
 note s_exit: exit value (int): Linux exit (system call 93: MOVZ X8, #93, C6.2.285; SVC #0, C6.2.466); the
@@ -6778,6 +6838,7 @@ c = alloc
 put held 0 get nslot 0
 emit or 3531603968 c
 hd = get oc 0
+cp_head skipln get cur 0 add get line 0 1
 br = cond
 n = ulong 1000000
 tok
@@ -6802,6 +6863,7 @@ end
 lpcnt c n
 pushb br 3 hd c 0
 pushnh sn sh
+cp_skip
 end
 
 note sf_br: B.HS (unsigned) or B.GE (signed) to the loop exit, C6.2.34 (distance filled at end); returns
@@ -6825,6 +6887,7 @@ put held 0 get nslot 0
 addname w i t 0 0 0
 emit or 3531603968 i
 hd = get oc 0
+cp_head get cur 0 get line 0
 if le kk 4095
 emit or or 4043309087 shl kk 10 shl i 5
 else
@@ -6835,6 +6898,7 @@ end
 br = sf_br t
 pushb br 4 hd i t
 pushnh sn sh
+cp_skip
 end
 
 note sf_val: for i T K with K a value of type T in register kr: i = 0; the hidden counter c = 0; head: CMP
@@ -6849,6 +6913,7 @@ c = alloc
 put held 0 get nslot 0
 emit or 3531603968 c
 hd = get oc 0
+cp_head get cur 0 get line 0
 emit or or 3942645791 shl kr 16 shl i 5
 br = sf_br t
 m = alloc
@@ -6858,6 +6923,7 @@ trapc 2 4
 emit or or 2432697344 c shl c 5
 pushb br 4 hd i t
 pushnh sn sh
+cp_skip
 end
 
 note s_for: for i T K: i = 0; head: not i < K -> exit; body; latch i = add i 1; B head. K a number, or a
@@ -6979,6 +7045,8 @@ put u_k n kk
 put u_nn n get nn 0
 put u_held n get held 0
 put fzone 0 add get fzone 0 1
+cp_head get cur 0 get line 0
+cp_skip
 end
 
 note fuelc: charge n to the function's fuel at the construct on line ln, before anything of it expands; a
@@ -7000,11 +7068,19 @@ put u_it i it
 put nm_addr get breg i it
 put nn 0 get u_nn i
 put held 0 get u_held i
+put nslot 0 get u_held i
 put dead 0 0
 put cur 0 get u_cur i
 put line 0 get u_line i
+cp_head get cur 0 get line 0
+cp_skip
 ret
 end
+put u_it i it
+put nm_addr get breg i it
+put nn 0 get u_nn i
+put nslot 0 get u_held i
+cp_head get u_cur i get u_line i
 put nb 0 i
 put nn 0 get bnames i
 put held 0 get bheld i
@@ -7190,6 +7266,7 @@ put curret 0 ulong get fn_ret sub fe 1
 put dead 0 0
 put cur 0 get fn_body sub fe 1
 put line 0 get fn_bln sub fe 1
+cp_entry
 inl_run lv
 end
 
@@ -7241,18 +7318,31 @@ lv = sub get inl 0 1
 r = get curret 0
 if eq r 10
 eol
+cp_post 0 0 r
 inlb
 dead1
 ret
 end
+if and ne get cfhas get inl 0 0 eq get crel 0 0
+rdval 0 r 255 0
+if ne get rt 0 r
+fail 7
+end
+rr = matreg get rk 0 get rv 0 r
+eol
+cp_post 1 rr r
+force 1 rr r get il_res lv
+else
 rdval 0 r get il_res lv 0
 if ne get rt 0 r
 fail 7
 end
 force get rk 0 get rv 0 get rt 0 get il_res lv
+eol
+cp_post 1 get il_res lv r
+end
 inlb
 dead1
-eol
 end
 
 note s_inlx: the end of an inlined body: a value function must not reach it (error 18). A last ret's B
@@ -7266,6 +7356,7 @@ if eq get dead 0 0
 if ne get fn_ret sub fe 1 10
 fail 18
 end
+cp_post 0 0 10
 end
 inl_pat get il_p0 lv
 put nb 0 i
@@ -7689,6 +7780,7 @@ if eq get dead 0 0
 if ne get curret 0 10
 fail 18
 end
+cp_post 0 0 10
 epi
 end
 nt0 = get nt 0
@@ -8070,6 +8162,9 @@ if eq get line 0 get om2ln 0
 skipnl
 ret 0
 end
+end
+if ne cp_kind 0
+fail 30
 end
 if gt get tl 0 8
 s_long
@@ -9246,6 +9341,9 @@ end
 
 note fz_get: get e i with the index in rk/rv/rt
 fn fz_get e ulong to void
+if ne get cvalid 0 0
+ret
+end
 s = ulong get nm_fr sub e 1
 if eq s 0
 ret
@@ -11061,6 +11159,295 @@ fmtout
 end
 n = write 1 out 0 get oc 0
 exit 0
+end
+
+note ======== executable contract predicates (OM-2, native targets) ========
+note Token packs below: Wolfram FromDigits[Reverse[ToCharacterCode[word]],256].
+note Contract words are contextual: OM-1 name meanings and keyword-table bytes do not change.
+note Explicit native build policy, with syntax and purity checked in both policies.
+note om2 debug / om2 release and om2 diag debug / om2 diag release; fmt stays canonical.
+fn cp_mode q ulong to ulong
+if gt add q 4 get inlen 0
+ret 0
+end
+if ne get inp q 111
+ret 0
+end
+if ne get inp add q 1 109
+ret 0
+end
+if ne get inp add q 2 50
+ret 0
+end
+if ne get inp add q 3 32
+ret 0
+end
+p = add q 4
+m = ulong 1
+if le add p 5 get inlen 0
+if and eq get inp p 100 eq get inp add p 1 105
+if and eq get inp add p 2 97 eq get inp add p 3 103
+if eq get inp add p 4 32
+p = add p 5
+m = ulong 2
+end
+end
+end
+end
+if ne lineis p 28555834798400882 7 0
+put crel 0 1
+ret m
+end
+if ne lineis p 444351014244 5 0
+ret m
+end
+ret 0
+end
+
+fn cp_kind to ulong
+if eq get om2 0 0
+ret 0
+end
+if ne get tk 0 1
+ret 0
+end
+if and eq get tl 0 8 eq get tw 0 8315178084276987250
+ret 1
+end
+if and eq get tl 0 7 eq get tw 0 32481164592901733
+ret 2
+end
+if and eq get tl 0 9 eq get tw 0 7953754356895346281
+if eq get inp add get ts 0 8 116
+ret 3
+end
+end
+ret 0
+end
+
+note cp_next reads the next prefix clause, ignoring comments and blanks; a nonclause is unread.
+fn cp_next to ulong
+p = get cur 0
+l = get line 0
+go = true
+while go
+tok
+if eq get tk 0 1
+if and eq get tl 0 4 eq get tw 0 1702129518
+skipnl
+else
+go = false
+end
+else
+if ne get tk 0 0
+go = false
+end
+end
+end
+k = cp_kind
+if eq k 0
+put cur 0 p
+put line 0 l
+end
+ret k
+end
+
+note Recursive purity allowlist, before rdval dispatch. No calls, floats, host or mapped operations.
+fn cp_token to void
+if eq get tk 0 2
+ret
+end
+if ne get tk 0 1
+fail 30
+end
+if gt get tl 0 8
+fail 30
+end
+c = kw get tw 0
+if eq c 0
+ret
+end
+if le sub c 1 8
+ret
+end
+if le sub c 33 19
+ret
+end
+if or eq c 55 eq c 56
+ret
+end
+if or or eq c 59 eq c 60 eq c 74
+ret
+end
+fail 30
+end
+
+note Pure evaluation changes no names, calls, inline frames or writes.
+note Snapshot emission effects, including trap records, diagnostic sites and branch targets.
+fn cp_save to void
+put csnap 0 get oc 0
+put csnap 1 get nt 0
+put csnap 2 get nsite 0
+put csnap 3 get nslot 0
+put csnap 4 get fzone 0
+put csnap 5 get tgoc 0
+put csnap 6 get lastb 0
+end
+
+fn cp_erase to void
+put oc 0 get csnap 0
+put nt 0 get csnap 1
+put nsite 0 get csnap 2
+put tgoc 0 get csnap 5
+put lastb 0 get csnap 6
+end
+
+fn cp_eval code ulong erase ulong to void
+ln = get line 0
+cp_save
+put cpure 0 1
+put fzone 0 1
+rdval 0 1 255 0
+if ne get rt 0 1
+fail 7
+end
+eol
+nextln = get line 0
+put line 0 ln
+if and eq get rk 0 3 ne get rv 0 0
+cp_erase
+else
+if or ne erase 0 ne get crel 0 0
+cp_erase
+else
+if eq get rk 0 3
+trapc 14 code
+else
+if eq get rk 0 4
+trapc xor get rv 0 1 code
+else
+r = matreg get rk 0 get rv 0 get rt 0
+trapsite or 3019898880 r code
+end
+end
+end
+end
+put line 0 nextln
+put cpure 0 0
+put cvalid 0 0
+put fzone 0 get csnap 4
+put nslot 0 get csnap 3
+end
+
+note Function prefix predicates bind only globals and parameters visible on entry.
+fn cp_entry to void
+lv = get inl 0
+put cfhas lv 0
+if eq get om2 0 0
+ret
+end
+put cfpos lv get cur 0
+put cfline lv get line 0
+put cflim lv get nn 0
+put clim 0 get nn 0
+k = cp_next
+n = ulong 0
+while ne k 0
+if ge n 64
+fail 14
+end
+if eq k 3
+fail 30
+end
+put crkind 0 0
+if eq k 1
+cp_eval 9 0
+else
+put cfhas lv 1
+ns = get nslot 0
+put crtype 0 get curret 0
+if ne get curret 0 10
+put crkind 0 1
+put crval 0 alloc
+end
+put cvalid 0 1
+cp_eval 10 1
+put nslot 0 ns
+end
+n = add n 1
+k = cp_next
+end
+end
+
+note Return expressions are evaluated once, before postconditions, without overwriting argument X0.
+fn cp_post kind ulong value ulong ty ulong to void
+lv = get inl 0
+if eq get cfhas lv 0
+ret
+end
+p = get cur 0
+l = get line 0
+put cur 0 get cfpos lv
+put line 0 get cfline lv
+put clim 0 get cflim lv
+put crkind 0 kind
+put crval 0 value
+put crtype 0 ty
+k = cp_next
+while ne k 0
+if eq k 2
+cp_eval 10 0
+else
+skipnl
+end
+k = cp_next
+end
+put cur 0 p
+put line 0 l
+end
+
+note Loop invariants execute at the head, including zero trips and final false condition.
+note Continue reaches the checked head (for increments first); break bypasses it.
+fn cp_head pos ulong ln ulong to void
+if eq get om2 0 0
+ret
+end
+p = get cur 0
+l = get line 0
+put cur 0 pos
+put line 0 ln
+put clim 0 get nn 0
+put crkind 0 0
+k = cp_next
+n = ulong 0
+while eq k 3
+if ge n 64
+fail 14
+end
+cp_eval 10 0
+n = add n 1
+k = cp_next
+end
+put cur 0 p
+put line 0 l
+end
+
+note Head clauses have already been checked and emitted before the condition, never at body entry.
+fn cp_skip to void
+if eq get om2 0 0
+ret
+end
+p = get cur 0
+l = get line 0
+k = cp_next
+while eq k 3
+skipnl
+p = get cur 0
+l = get line 0
+k = cp_next
+end
+put cur 0 p
+put line 0 l
 end
 
 note main: read all of stdin

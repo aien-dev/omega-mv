@@ -21,6 +21,24 @@ sh seed/omc/gate15.sh
 sh seed/omc/gate16.sh
 sh seed/omc/gate17.sh
 sh seed/omc/gate18.sh
+# Executable contracts use the existing fail-closed Omega conductor.
+B=build/seed/contracts
+mkdir -p "$B"
+seed/out/omc < seed/qualification/om2/gate.om > "$B/gate"
+chmod +x "$B/gate"
+pin=$(sha256sum seed/out/omc | cut -d' ' -f1)
+run=$(mktemp -d "$B/run.XXXXXX")
+"$B/gate" seed/out/omc "$pin" seed/omc/contracts/contracts.cases "$run/cases"
+if "$B/gate" seed/out/omc "$pin" seed/omc/contracts/mutant.cases "$run/mutant" > "$run/mutant.log"; then
+    echo 'FAIL contract-enforcement mutant survived' >&2
+    exit 1
+else
+    status=$?
+    [ "$status" = 1 ] || { cat "$run/mutant.log"; exit 1; }
+fi
+grep -qx 'VERDICT mutant-requires FAIL run exit=0 expected=109 stdout=match stderr=match' "$run/mutant.log"
+grep -qx 'OM2GATE FAIL cases=1 pass=0 fail=1 invalid=0 not_run=0' "$run/mutant.log"
+echo 'PASS contract-enforcement mutant detected by exact runtime-status mismatch'
 sh seed/host/gate.sh
 sh seed/host/negative.sh
 sh seed/host/regression.sh
